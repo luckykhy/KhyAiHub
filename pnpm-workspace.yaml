@@ -1,0 +1,28 @@
+packages:
+  - platform/packages/shared
+  - platform/packages/ui-shared
+  - platform/packages/plugin-sdk
+  - services/backend
+  - services/ai-backend
+  - apps/ai-frontend
+  - apps/khyos-desktop
+  - apps/provider-hub
+  - extensions/tools/khy-markdown
+
+onlyBuiltDependencies:
+  - better-sqlite3
+  - electron
+  - esbuild
+  - node-pty
+
+overrides:
+  khy-ai-backend>@khy/shared: workspace:*
+  khy-os-backend>@khy/shared: link:services/backend/vendor/shared
+  khy-os-backend>khy-ai-backend: workspace:*
+  # 可选 peerDep：后端以 try/catch 包着 require，缺包走内置回退校验器。
+  # 在 workspace checkout 里解析到 live 源码（与 @khy/shared 同机制），
+  # 发布 tarball 里 prepack 会拷成 vendor 真实副本，两端都不悬空。
+  khy-os-backend>@khy/plugin-sdk: workspace:*
+
+patchedDependencies:
+  node-pty@1.0.0: patches/node-pty@1.0.0.patch
