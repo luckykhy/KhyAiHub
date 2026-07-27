@@ -1,0 +1,236 @@
+name: Dual-Channel Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      skip_pip:
+        description: 'Skip PyPI publish'
+        required: false
+        default: 'false'
+      skip_npm:
+        description: 'Skip npm publish'
+        required: false
+        default: 'false'
+      test_pypi:
+        description: 'Upload to TestPyPI instead of PyPI'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: write
+  id-token: write    # OIDC token for sigstore/cosign keyless signing
+
+# 发布绝不允许并发，也绝不允许被取消：
+# publish-dual.sh 会推 tag、上传 PyPI 与 npm —— 中途被砍会留下
+# 「npm 已发布、PyPI 未发布」这类无法回滚的半成品状态。
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          # 显式 pin，与根 package.json 的 packageManager 保持一致。
+          # 版本漂移会在发布流程里表现为「本地能打包、CI 报 ERR_PNPM_*」。
+          version: 10.18.0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        # install:core is the root package.json pnpm filtered install (the
+        # pnpm-workspace.yaml and lockfile live at the repo root); it must run
+        # from the root. Inside a workspace subdir, `npm run` resolves the
+        # nearest package.json (khy-os-backend) and fails with Missing script.
+        run: npm run install:core
+
+      - name: Run test suite (Jest)
+        working-directory: services/backend
+        run: npm test -- --passWithNoTests
+
+      - name: Run Node built-in tests
+        working-directory: services/backend
+        run: npm run test:node
+
+      - name: Install publish dependencies
+        run: |
+          npm install --no-save --ignore-scripts --workspaces=false esbuild@0.28.1 @yao-pkg/pkg@6.21.0
+          pip install twine build sigstore cyclonedx-bom cyclonedx-py
+
+      - name: Verify version sync
+        run: node scripts/ci/check-version-sync.js
+
+      - name: Verify CHANGELOG
+        run: node scripts/release/changelog-new.js --check
+
+      - name: Verify update index protocol
+        run: node --test scripts/tests/updateIndex.test.js
+
+      - name: Run release gate (deterministic checks)
+        run: node scripts/release/release-gate.js
+        env:
+          NODE_ENV: release-gate
+
+      - name: Build executables
+        run: |
+          node packaging/build/esbuild-modules.js --prod
+          node packaging/build/pack-executable.js --all
+
+      - name: Build on-demand payload assets
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          else
+            VERSION="$(node -p "require('./services/backend/package.json').version")"
+          fi
+          node scripts/release/build-payload-assets.js --version "$VERSION" --out publish/payloads
+          node -e "const m=require('./publish/payloads/khy-payload-manifest.json'); if(m.version!==process.argv[1]) process.exit(1); if(Object.values(m.payloads).some(p=>p.files.some(f=>!/^[a-f0-9]{64}$/.test(f.sha256)||f.size<=0))) process.exit(1)" "$VERSION"
+
+      # ── Sign artifacts before publishing ─────────────────────────────────────
+      # Sigstore keyless signing (OIDC) provides cryptographic proof that the
+      # artifacts were produced by this CI run. No long-lived secrets needed.
+      #
+      # 校验不是可选项（D4 判据）：签名失败必须使整次发布 NO-GO，不得降级为
+      # "non-fatal, continuing"。逐产物继续尝试是为了**一次报出全部失败项**，
+      # 而非容忍失败——末尾统一 exit 1。回退 = 恢复原先的 `|| echo`（不推荐：
+      # 那会把"产物有签名"变成一句无法兑现的承诺）。
+      - name: Sign PyPI artifacts (sigstore)
+        if: ${{ inputs.test_pypi != 'true' }}
+        run: |
+          # Sign the wheel and sdist with sigstore (keyless, OIDC-backed).
+          # The signature .sig files are attached to the PyPI upload as
+          # provenance metadata and can be verified offline.
+          failed=()
+          for f in dist/*.whl dist/*.tar.gz; do
+            [ -f "$f" ] || continue
+            echo "Signing $f..."
+            if ! sigstore sign --yes "$f"; then
+              failed+=("$f")
+            fi
+          done
+          if [ ${#failed[@]} -gt 0 ]; then
+            echo "::error::产物签名失败 ${#failed[@]} 项：${failed[*]} —— 发布中止（不发布未签名产物）"
+            exit 1
+          fi
+          echo "签名完成：全部 PyPI 产物均已签名"
+
+      - name: Sign npm package contents (sigstore)
+        if: ${{ inputs.skip_npm != 'true' }}
+        run: |
+          # Create a tarball of what npm would publish and sign it.
+          # This signs the exact artifact users download, not a transient build.
+          ( cd packaging/npm && npm pack --dry-run > /dev/null 2>&1 )
+          PACK_TARBALL=$(cd packaging/npm && npm pack --dry-run 2>/dev/null | tail -1)
+          if [ -z "$PACK_TARBALL" ]; then
+            echo "::error::npm pack 未产出 tarball（packaging/npm）—— 无可签名产物，发布中止"
+            exit 1
+          fi
+          echo "Signing npm package: $PACK_TARBALL"
+          sigstore sign --yes "$PACK_TARBALL"
+          echo "签名完成：npm 包 $PACK_TARBALL 已签名"
+
+      # ── Generate SBOMs ────────────────────────────────────────────────────────
+      # CycloneDX SBOMs enable downstream consumers to perform vulnerability
+      # scanning against the exact dependency tree shipped in each release.
+      - name: Generate SBOM (npm)
+        if: ${{ inputs.skip_npm != 'true' }}
+        run: |
+          npm install --no-save @cyclonedx/cyclonedx-npm@1
+          npx @cyclonedx/cyclonedx-npm --output-file sbom-npm.json .
+
+      - name: Generate SBOM (pip)
+        if: ${{ inputs.test_pypi != 'true' }}
+        run: |
+          pip install cyclonedx-py
+          cyclonedx-py environment --output-file sbom-pip.json .
+
+      - name: Upload SBOMs as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ github.ref_name }}
+          path: |
+            sbom-npm.json
+            sbom-pip.json
+          retention-days: 90
+          compression-level: 1
+
+      # ── Consume the SBOMs ────────────────────────────────────────────────────
+      # D6 判据：SBOM 必须被消费。只生成 + upload-artifact 的 SBOM 是装饰，
+      # 不是保障——没有任何一步会因漏洞而停下，等于对下游隐瞒了依赖风险。
+      # 故此处用 grype 消费刚生成的 SBOM，high/critical 即阻断发布（fail-build）。
+      # 阈值取 high 而非默认 medium：medium 级告警多来自传递性开发依赖，
+      # 直接阻断会让发布频繁红；收紧时改本处 severity-cutoff 即可，无需改判定逻辑。
+      # 顺序刻意放在 upload 之后：产物先留存供诊断，再由扫描决定能否继续发布。
+      - name: Scan SBOM pip (grype)
+        if: ${{ inputs.test_pypi != 'true' }}
+        uses: anchore/scan-action@v7
+        with:
+          sbom: sbom-pip.json
+          fail-build: true
+          severity-cutoff: high
+          output-format: table
+
+      - name: Scan SBOM npm (grype)
+        if: ${{ inputs.skip_npm != 'true' }}
+        uses: anchore/scan-action@v7
+        with:
+          sbom: sbom-npm.json
+          fail-build: true
+          severity-cutoff: high
+          output-format: table
+
+      - name: Publish dual-channel
+        run: |
+          chmod +x scripts/release/publish-dual.sh
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          else
+            VERSION="$(node -p "require('./services/backend/package.json').version")"
+          fi
+          ARGS=( "--version" "$VERSION" "--rehearse" )
+          if [ "${{ inputs.skip_pip || 'false' }}" = 'true' ]; then ARGS+=( "--skip-pip" ); fi
+          if [ "${{ inputs.skip_npm || 'false' }}" = 'true' ]; then ARGS+=( "--skip-npm" ); fi
+          if [ "${{ inputs.test_pypi || 'false' }}" = 'true' ]; then ARGS+=( "--test-pypi" ); fi
+          if [ "${{ github.event_name }}" = 'workflow_dispatch' ]; then ARGS+=( "--tag" "--push" "-y" ); fi
+          bash scripts/release/publish-dual.sh "${ARGS[@]}"
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload on-demand payloads to GitHub Release
+        if: ${{ inputs.test_pypi != 'true' }}
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          else
+            VERSION="$(node -p "require('./services/backend/package.json').version")"
+          fi
+          TAG="v${VERSION}"
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" --title "khy OS ${VERSION}" --notes "khy OS ${VERSION} release assets"
+          gh release upload "$TAG" publish/payloads/* --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
