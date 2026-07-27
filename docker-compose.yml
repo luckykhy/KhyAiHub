@@ -1,0 +1,119 @@
+# docker-compose.yml — khy-os 一键部署
+#
+#   docker compose up -d --build      # 一键启动（默认只起后端 API）
+#   docker compose ps                 # 状态
+#   docker compose logs -f backend    # 日志
+#   docker compose down               # 停止（保留数据卷）
+#
+# ── 一键部署的边界 ────────────────────────────────────────────────────────────
+#
+# 默认只起 **backend** 一个服务，理由：它是 `khy-os` 这个产品本体（GHCR 上发布的
+# 就是这个镜像），且它是唯一「起来就有用」的服务 —— HTTP API + WebSocket + 内置
+# 前端托管都在它里面。前端与 ai-backend 属于按需扩展，用 profile 显式启用：
+#
+#   docker compose --profile ai up -d --build     # + ai-backend（9090）
+#   docker compose --profile web up -d --build    # + 前端静态站 + ai-backend（自动带上）
+#
+# ── 依赖来源纪律（PROCESS-013）────────────────────────────────────────────────
+#
+# 本文件与它引用的 Dockerfile **一律使用官方源**（pypi.org / registry.npmjs.org /
+# deb.debian.org），不提供任何镜像源注入开关。原因不是洁癖：构建期一旦走公共镜像，
+# 同一份 Dockerfile 在不同网络下会拉到不同 tarball（镜像同步延迟时甚至是旧版本），
+# 而构建照样成功 —— 产物不可复现，且没有任何守卫会报出来。
+# 守卫：`npm run check:native-registry`（扫描 Dockerfile / compose / .npmrc / 锁文件 / CI）。
+#
+# 用户本机的网络加速（~/.npmrc 指向镜像）不在管辖内：那是**用户环境**而非交付物。
+
+name: khy-os
+
+services:
+  # ── 产品本体：HTTP API（默认启动）──────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${KHY_IMAGE:-khy-os:local}
+    restart: unless-stopped
+    ports:
+      # 宿主 13000 → 容器 3000。容器内端口由 docker-entrypoint.js 钉死为 3000
+      # （禁止自动顺延：端口漂移会让编排层把流量转发到空端口，故障极难排查）。
+      - "${KHY_HTTP_PORT:-13000}:3000"
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      KHY_CONTAINER: "1"
+      KHY_HOME: /home/khy/.khy
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      # 生产务必覆盖：`JWT_SECRET=$(openssl rand -hex 32)`
+      JWT_SECRET: ${JWT_SECRET:-change_this_in_production}
+      # AI 供应商凭据按需注入（留空即该能力不可用，不会回落成假 key）
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    volumes:
+      # 运行态数据（sqlite / 日志 / 缓存）。命名卷而非绑定挂载：绑定挂载在
+      # Windows/macOS 上会带来属主与性能问题，而镜像内这两个目录已 chown 给 khy 用户。
+      - khy_home:/home/khy/.khy
+      - khy_data:/app/services/backend/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:3000/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      # 首次启动要装 Python 启动器 + 起 Node 后端，给足冷启动时间
+      start_period: 40s
+    stop_grace_period: 15s
+
+  # ── 扩展：AI 后端（profile: ai / web）──────────────────────────────────────
+  ai-backend:
+    profiles: ["ai", "web"]
+    build:
+      context: .
+      dockerfile: services/ai-backend/Dockerfile
+    image: ${KHY_AI_IMAGE:-khy-ai-backend:local}
+    restart: unless-stopped
+    ports:
+      - "${KHY_AI_PORT:-19090}:9090"
+    environment:
+      NODE_ENV: production
+      PORT: "9090"
+      JWT_SECRET: ${JWT_SECRET:-change_this_in_production}
+    volumes:
+      - ai_backend_data:/app/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9090/api/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ── 扩展：AI 前端静态站（profile: web）────────────────────────────────────
+  # nginx 把 /api 与 /ws 反代到 ai-backend:9090（见 apps/ai-frontend/nginx.conf），
+  # 所以构建期的 VITE_AI_API_BASE_URL 必须留空 = 同源（前端调用路径本身就以 /api 开头）。
+  web:
+    profiles: ["web"]
+    build:
+      context: .
+      dockerfile: apps/ai-frontend/Dockerfile
+      args:
+        VITE_AI_API_BASE_URL: ""
+    image: ${KHY_WEB_IMAGE:-khy-ai-frontend:local}
+    restart: unless-stopped
+    ports:
+      - "${KHY_WEB_PORT:-8080}:80"
+    depends_on:
+      ai-backend:
+        condition: service_healthy
+    # 显式声明而非依赖镜像内的 HEALTHCHECK：`depends_on: service_healthy`
+    # 在编排层的可读性依赖这里能直接看到判据。
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  khy_home:
+  khy_data:
+  ai_backend_data:
