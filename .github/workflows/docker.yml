@@ -1,0 +1,180 @@
+name: Docker CI
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g. 1.1.8) — defaults to git tag'
+        required: false
+
+permissions:
+  contents: read
+  packages: write      # push to GHCR
+  attestations: write  # provenance attestation (GHCR)
+  id-token: write      # required by attest-build-provenance for OIDC signing
+
+# 本流水线包含 arm64 的 QEMU 交叉构建，是仓库里最贵的常规流水线之一。
+# 分支 push 可以取消旧运行；tag 构建绝不取消 —— 那是不可重放的发布产物。
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+# 两阶段构建（docker/build-push-action 官方多平台矩阵写法）：
+#   build  —— 每个平台只按 digest 推送，**不打任何 tag**
+#   merge  —— 用 imagetools 把各平台 digest 合成一份多架构清单，再打 tag
+# 为什么不能让矩阵各自打 tag：tag 是平台无关的，两个作业推同一组 tag 会互相
+# 覆盖，最后 :main 只剩后完成的那一个架构，另一半算力纯属白烧。曾经就是这样。
+jobs:
+  build:
+    name: Build (${{ matrix.platform }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [linux/amd64, linux/arm64]
+
+    steps:
+      - name: Normalize platform name
+        run: echo "PLATFORM_PAIR=${PLATFORM//\//-}" >> "$GITHUB_ENV"
+        env:
+          PLATFORM: ${{ matrix.platform }}
+
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (labels only)
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            KHY_OS_VERSION=${{ github.event.inputs.version || '' }}
+          outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
+          # 缓存 ref 必须带平台后缀。共用 :buildcache 时 amd64 与 arm64 会互相
+          # 覆盖对方的缓存，两边都长期未命中 —— 这是 tag 覆盖之外的同类 bug。
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-${{ env.PLATFORM_PAIR }}
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-${{ env.PLATFORM_PAIR }},mode=max
+
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest='${{ steps.build.outputs.digest }}'
+          [ -n "$digest" ] || { echo '::error::build 未产出 digest'; exit 1; }
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v6
+        with:
+          name: digests-${{ env.PLATFORM_PAIR }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    name: Merge manifest & attest
+    runs-on: ubuntu-24.04
+    needs: [build]
+
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v7
+        with:
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags)
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}},enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            # {{branch}} 在 tag 事件上是空串，prefix 会退化成裸 "-"，产出 "-sha-abc1234"。
+            # OCI 规定 tag 不得以 "-" 开头，而 metadata-action 的清洗只替换非法字符
+            # 序列、不会剥掉行首的 "-" —— 于是每一次 tag 推送都在 push 那步直接失败，
+            # 而分支推送（{{branch}} 非空）永远正常。所以两种事件必须分开出 tag。
+            type=sha,prefix={{branch}}-,enable=${{ github.ref_type == 'branch' }}
+            type=sha,prefix=sha-,enable=${{ github.ref_type == 'tag' }}
+
+      - name: Create multi-arch manifest and push tags
+        working-directory: /tmp/digests
+        run: |
+          set -euo pipefail
+          ls -1 | grep -qE '^[0-9a-f]{64}$' || { echo '::error::没有拿到任何平台 digest'; exit 1; }
+          echo "参与合并的 digest： $(ls -1 | tr '\n' ' ')"
+          tag_args=$(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON")
+          [ -n "$tag_args" ] || { echo '::error::metadata-action 没产出任何 tag，拒绝推一个无 tag 的清单'; exit 1; }
+          echo "将要打的 tag： $tag_args"
+          docker buildx imagetools create $tag_args \
+            $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
+
+      - name: Resolve index digest
+        id: index
+        run: |
+          set -euo pipefail
+          tag=$(jq -cr '.tags[0]' <<< "$DOCKER_METADATA_OUTPUT_JSON")
+          digest=$(docker buildx imagetools inspect --format '{{json .Manifest}}' "$tag" | jq -r '.digest')
+          [ -n "$digest" ] && [ "$digest" != null ] || { echo '::error::取不到清单 digest'; exit 1; }
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "多架构清单 $tag -> $digest"
+
+      # 断言合并结果真的是多架构：曾经 :main 只剩 amd64 且无人发现，
+      # 所以这里把它变成硬门禁 —— 少一个平台就红灯，而不是静默降级。
+      - name: Verify manifest covers both platforms
+        run: |
+          set -euo pipefail
+          tag=$(jq -cr '.tags[0]' <<< "$DOCKER_METADATA_OUTPUT_JSON")
+          docker buildx imagetools inspect "$tag"
+          got=$(docker buildx imagetools inspect --raw "$tag" \
+            | jq -r '[.manifests[] | select(.platform.os != "unknown")
+                     | "\(.platform.os)/\(.platform.architecture)"] | sort | join(",")')
+          echo "实际覆盖平台： $got"
+          [ "$got" = 'linux/amd64,linux/arm64' ] || { echo "::error::多架构清单不完整，期望 linux/amd64,linux/arm64，实得 $got"; exit 1; }
+
+      - name: Generate provenance attestation
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.index.outputs.digest }}
+          push-to-registry: true
