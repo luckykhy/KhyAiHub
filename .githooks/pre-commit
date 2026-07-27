@@ -1,0 +1,149 @@
+#!/bin/bash
+# .githooks/pre-commit
+# 
+# Git pre-commit hook
+# 检查：
+# 1. 无 tmp-* 临时文件
+# 2. 无大文件（>10MB）
+# 3. 无敏感信息
+# 4. 规则执行器 commit 快档（[DESIGN-ARCH-111]：只跑支持 --changed 的执行器）
+# 5. Commit message 格式正确
+
+set -e
+
+# 获取仓库根目录
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+echo "🔍 Pre-commit 检查...\n"
+
+# 1. 检查是否有 tmp-* 文件
+echo "📋 检查临时文件..."
+TEMP_FILES=$(git diff --cached --name-only | grep -E "^tmp-|^.*\.tmp$" || true)
+if [ -n "$TEMP_FILES" ]; then
+  echo "❌ 错误：检测到临时文件："
+  echo "$TEMP_FILES"
+  echo ""
+  echo "请先清理这些文件："
+  echo "  git reset HEAD <file>"
+  echo "  rm <file>"
+  exit 1
+fi
+echo "  ✅ 无临时文件\n"
+
+# 2. 检查是否有大文件（>10MB）
+echo "📏 检查大文件..."
+LARGE_FILES=""
+# ⚠ 必须用 `-z` + `while IFS= read -r -d ''`，不能用 `for file in $(...)`：
+# 本仓大量文件名含空格与方括号（如 `docs/10_规范/DESIGN-LAY/[DESIGN-LAY-004] build-root-demo.js`），
+# 词分割会把一个路径切成多个 token → `[ -f "$file" ]` 恒假 → 整个大文件检查静默失效。
+while IFS= read -r -d '' file; do
+  if [ -f "$file" ]; then
+    # 跨平台获取文件大小
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+      SIZE=$(stat -f%z "$file" 2>/dev/null || echo 0)
+    else
+      SIZE=$(stat -c%s "$file" 2>/dev/null || echo 0)
+    fi
+    case "$SIZE" in
+      '' | *[!0-9]*) SIZE=0 ;;
+    esac
+
+    if [ "$SIZE" -gt 10485760 ]; then
+      # 用 shell 整数算术而非 `bc`：本机 Git Bash 没有 bc（`command -v bc` 为空），
+      # 原来那句会静默产出空串并往 stderr 喷 `bc: command not found`。
+      LARGE_FILES="${LARGE_FILES}${file} ($((SIZE / 1048576))MB)\n"
+    fi
+  fi
+done < <(git diff --cached --name-only -z)
+
+if [ -n "$LARGE_FILES" ]; then
+  echo "❌ 错误：检测到大文件（>10MB）："
+  echo -e "$LARGE_FILES"
+  echo "请使用 Git LFS 或移至外部存储"
+  exit 1
+fi
+echo "  ✅ 无大文件\n"
+
+# 3. 检查是否有敏感信息（真源：scripts/ci/check-staged-secrets.js）
+#    形态集合与豁免策略都在那个检查器里：它读 scripts/release/hygiene-allowlist.json
+#    的「文件 + 完整值」豁免，并用 \b 词边界避免把 task-template-hint-injection
+#    这类标识符判成密钥形态。原来这里是一段裸 grep，既不读白名单也无词边界，
+#    导致测试夹具与白名单自身被误拦。
+echo "🔒 检查敏感信息..."
+if ! node "$ROOT/scripts/ci/check-staged-secrets.js"; then
+  echo ""
+  echo "请确保密钥未被提交："
+  echo "  git reset HEAD <file>"
+  echo "  将密钥移至 .env 文件"
+  exit 1
+fi
+echo "  ✅ 无敏感信息\n"
+
+# 4. 规则执行器 commit 快档（[DESIGN-ARCH-111]）
+#    门成员资格从 docs/10_规范/RULES-REGISTRY.json 派生，不在此硬编码。
+#    commit 档只跑 gate=commit 且声明了 --changed 的执行器（秒级），
+#    全仓库检查留给 PR 门（npm run rules:gate）。
+#    违规留痕在 .khy/ruleguard/violations.jsonl；抑制用
+#    `// khy-allow-<RULE-ID>: 理由`，必须带理由且只作用于所在行。
+echo "📐 规则检查（commit 快档）..."
+# check-change-safety 的基线限定：默认 HEAD 即「只统计本次暂存内容」
+# （git diff HEAD...HEAD 为空，执行器 fall through 到 --cached 分支）。
+# 若需按远端基线统计全部未提交改动，设 KHY_RULEGUARD_BASE=origin/main。
+export GIT_BASE_REF="${KHY_RULEGUARD_BASE:-HEAD}"
+if ! node "$ROOT/scripts/ruleguard/index.js" run --mode commit --no-ledger; then
+  echo ""
+  echo "❌ 规则检查未通过。修复后重新提交，或先查看："
+  echo "  npm run rules:manifest   # 看每条规则的执行器与归类"
+  echo "  npm run rules:apply -- <文件路径>   # 看某文件适用哪些规则"
+  exit 1
+fi
+echo "  ✅ commit 快档通过\n"
+
+# 4.2 软著就绪（PROCESS-010 / [DESIGN-IP-001]）
+#      这条规则声明了 gate=pr，所以**不会**被上面的 commit 快档带上；
+#      但「不得把 AI 列为作者」是唯一必须**在提交时**就挡住的判据 ——
+#      AI 署名一旦进了历史就是既成事实（本仓已有 88 条，不改写历史），
+#      事后任何 PR 门都只能记录、不能挽回。
+#      所以这里单独调用执行器，且**按其 STAGE 常量决定是否拦截**：
+#      当前 STAGE=S1（观察者），执行器恒 exit 0 —— 本段只做可见回执，不阻断。
+#      升到 S3 后执行器自己有非零退出码，预提交自动开始拦截（无需改本文件）。
+#      ⚠ 不要在这里硬编码判据：判据真源是 docs/10_规范/registry/COPYRIGHT.json
+#      与执行器的 STAGE 常量，改本文件只会让两者各说各话。
+echo "📜 软著就绪检查（PROCESS-010，S1 观察者档）..."
+if ! node "$ROOT/scripts/ci/check-copyright-readiness.js" --changed; then
+  echo ""
+  echo "❌ 软著就绪检查未通过（当前为 S3+ 阶段，已开始拦截）。修复："
+  echo "  npm run check:copyright:explain   # 看每条判据与修复方向"
+  echo "  最常见的情况：提交信息里有 Co-Authored-By: <AI> 一行 —— 删掉即可，代码不用动"
+  exit 1
+fi
+echo "  ✅ 软著就绪回执完成\n"
+
+# 4.5 GitHub Actions 工作流体检
+#      只检查本次改动的工作流文件。挡的是「push 之后才发现整个 workflow
+#      废掉」这类问题：step name 里的裸冒号、pinn 版本漂移、Windows 路径等。
+#      这些在本地静态可查，没必要花一轮 CI 才发现。
+if git diff --cached --name-only | grep -qE '^\.github/workflows/.*\.ya?ml$'; then
+  echo "🔧 检查 GitHub Actions 工作流..."
+  if ! node "$ROOT/scripts/ci/check-workflow-sanity.js" --changed; then
+    echo ""
+    echo "❌ 工作流体检未通过。全部检查：npm run check:workflow-sanity:all"
+    exit 1
+  fi
+fi
+
+# 5. commit message 格式 —— **已移出本钩子**（2026-09-24）
+#
+#    原实现校验 `$ROOT/.git/COMMIT_EDITMSG`，但 git 的 pre-commit 契约是
+#    「在取得提交信息**之前**」运行：此时该文件里是**上一次**的提交信息，
+#    首次提交时它甚至还不存在。实测对照（两提交实验）：
+#      第 2 次提交时 pre-commit 读到 `feat(alpha): 第一次提交`
+#     ⇒ 既会假阳性阻塞（上一条消息不合规 → 本条被拦），
+#       又从未校验真正要进历史的那条消息（AI 署名硬拦截等于 fail-open）。
+#
+#    校验已移至 `.githooks/commit-msg` —— 那里 git 会把本次消息文件路径作为 $1
+#    传入，是唯一正确的位置。判据真源仍是 `scripts/ci/check-commit-message.js`。
+#    ⚠ 不要在 pre-commit 里重新加回消息校验：位置错了，写得再对也是错的。
+
+echo "✅ Pre-commit 检查通过\n"
