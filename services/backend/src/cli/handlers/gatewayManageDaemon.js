@@ -1,0 +1,1733 @@
+'use strict';
+
+/**
+ * gatewayManageDaemon.js — AI 管理后台守护进程生命周期子系统（从 handlers/gateway.js 抽出）。
+ *
+ * 覆盖：运行时文件读写、守护进程 spawn/停止、健康探测、管理台 URL 组装与浏览器打开、
+ * WSL/Windows 访问提示。刻意 **不自称纯零 IO 叶子**：读写 runtime 文件、spawn 子进程、
+ * 发起 HTTP 探测、打开浏览器。宿主 handlers/gateway.js 单向 require 本叶子并按同名 re-export，
+ * 保持 handleGatewayManage/handleAiServer 契约字节不变（零反向依赖，无需 DI）。
+ */
+const { spawn } = require('child_process');
+const fs = require('fs');
+const http = require('http');
+const net = require('net');
+const os = require('os');
+const path = require('path');
+
+const chalkModule = require('chalk');
+
+const chalk = chalkModule.default || chalkModule;
+const { getAiBackendUrl, WEB_FRONTEND_PORT } = require('../../constants/serviceDefaults');
+const {
+  buildGatewayManageFeatureLabel,
+  getFeatureFamilyPrefix,
+  joinFeatureKey,
+} = require('../../services/featureKeyBuilder');
+const { getDataHome, getLegacyDataHome } = require('../../utils/dataHome');
+// 复用优先：8090 只是基准端口，入口不能假定「AI 前端就在 8090」。
+const { discoverKhyFrontend, readFrontendRuntime, describePortOwner } = require('../../services/aiFrontendLocator');
+
+// AI-manage 运行时常量（镜像自 handlers/gateway.js 头部；同目录叶子 → __dirname 一致 → 路径逐字节相同）。
+const AI_MANAGE_RUNTIME_FILE = path.join(getDataHome(), 'ai_manage_runtime.json');
+const AI_MANAGE_RUNTIME_FILE_LEGACY = path.join(getLegacyDataHome(), 'ai_manage_runtime.json');
+// 整栈冷启动（web 后端 120s 上限 + vite dev server）实测可达 90s+，
+// 默认就绪等待放宽到 180s；AI_MANAGE_READY_TIMEOUT_MS 仍可覆盖。
+const AI_MANAGE_READY_TIMEOUT_MS = Math.max(
+  20000,
+  parseInt(process.env.AI_MANAGE_READY_TIMEOUT_MS || '180000', 10) || 180000
+);
+const AI_MANAGE_HEALTH_WAIT_MS = Math.max(
+  5000,
+  parseInt(process.env.AI_MANAGE_HEALTH_WAIT_MS || '18000', 10) || 18000
+);
+const AI_MANAGE_HEALTH_POLL_MS = Math.max(
+  200,
+  parseInt(process.env.AI_MANAGE_HEALTH_POLL_MS || '600', 10) || 600
+);
+const AI_MANAGE_DAEMON_SCRIPT = path.resolve(__dirname, '../../../scripts/ai-manage-daemon.js');
+
+// Resolve the admin seed script (backend/scripts/seed.js) to an absolute path at
+// runtime so the printed command works from any cwd. Backend root is derived from
+// __dirname (handlers -> cli -> src -> backend), never hardcoded. The path is
+// quoted when it contains spaces so the command stays copy-paste safe.
+function _buildSeedAdminCommand() {
+  const scriptPath = path.resolve(__dirname, '../../../scripts/seed.js');
+  const quoted = scriptPath.includes(' ') ? `"${scriptPath}"` : scriptPath;
+  let exists = false;
+  try {
+    exists = fs.existsSync(scriptPath);
+  } catch {
+    exists = false;
+  }
+  return { exists, scriptPath, command: `node ${quoted}` };
+}
+
+function _parsePort(value, fallback) {
+  const n = parseInt(String(value ?? '').trim(), 10);
+  if (!Number.isFinite(n) || n <= 0 || n > 65535) {
+    return fallback;
+  }
+  return n;
+}
+
+function _parseIntWithMin(value, fallback, min = 1) {
+  const n = parseInt(String(value ?? '').trim(), 10);
+  if (!Number.isFinite(n) || n < min) {
+    return fallback;
+  }
+  return n;
+}
+
+function _isPidAlive(pid) {
+  const p = parseInt(pid, 10);
+  if (!Number.isFinite(p) || p <= 0) {
+    return false;
+  }
+  try {
+    process.kill(p, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function _loadAiManageRuntime() {
+  const files = [AI_MANAGE_RUNTIME_FILE, AI_MANAGE_RUNTIME_FILE_LEGACY];
+  for (const file of files) {
+    try {
+      if (!fs.existsSync(file)) {
+        continue;
+      }
+      const raw = JSON.parse(fs.readFileSync(file, 'utf-8'));
+      if (!raw || typeof raw !== 'object') {
+        continue;
+      }
+      return raw;
+    } catch {
+      // try next
+    }
+  }
+  return null;
+}
+
+function _clearAiManageRuntime() {
+  for (const file of [AI_MANAGE_RUNTIME_FILE, AI_MANAGE_RUNTIME_FILE_LEGACY]) {
+    try {
+      if (fs.existsSync(file)) {
+        fs.unlinkSync(file);
+      }
+    } catch {
+      // best effort
+    }
+  }
+}
+
+// Targeted Chinese advice for OS-level error codes found in daemon/frontend logs,
+// so a resource-exhaustion crash (spawn ENOMEM etc.) never ends as a vague failure.
+const _SYSTEM_ERROR_ADVICE = {
+  ENOMEM: '系统内存不足，请关闭占用内存较多的程序后重试',
+  EACCES: '权限不足，请检查当前用户对相关文件/端口的访问权限',
+  EPERM: '操作被系统拒绝，请检查权限或安全软件拦截',
+  EMFILE: '进程可打开的文件句柄已耗尽，请关闭部分程序后重试',
+  ENFILE: '系统文件句柄已耗尽，请关闭部分程序后重试',
+  EAGAIN: '系统资源暂时不足（无法创建进程），请稍后重试',
+};
+
+// Map wildcard bind hosts to loopback for local TCP probing.
+function _probeHostForPort(host) {
+  const h = String(host || '').trim();
+  if (!h || h === '0.0.0.0' || h === '::' || h === '[::]') {
+    return '127.0.0.1';
+  }
+  return h;
+}
+
+// TCP-probe whether a port still has a live listener (connect success = occupied).
+function _isPortListening(host, port, timeoutMs = 900) {
+  return new Promise((resolve) => {
+    const socket = net.createConnection({ host, port });
+    socket.setTimeout(timeoutMs);
+    socket.once('connect', () => {
+      socket.destroy();
+      resolve(true);
+    });
+    socket.once('timeout', () => {
+      socket.destroy();
+      resolve(false);
+    });
+    socket.once('error', () => resolve(false));
+  });
+}
+
+// Reap a managed frontend (dev server tree) that outlived its daemon. On Windows the
+// daemon may die (crash / force kill) without running its own cleanup, leaving the
+// dev server tree holding the frontend port and causing silent port drift on next open.
+// Guard against OS pid reuse: only tree-kill when the recorded frontend port is still
+// occupied — a recycled pid pointing at an unrelated process must never be killed.
+async function _reapManagedFrontend(runtime) {
+  if (!runtime || !runtime.frontendManaged) {
+    return false;
+  }
+  const pid = parseInt(runtime.frontendPid, 10);
+  if (!Number.isFinite(pid) || pid <= 0 || !_isPidAlive(pid)) {
+    return false;
+  }
+  const port = parseInt(runtime.frontendPort, 10);
+  if (!Number.isFinite(port) || port <= 0) {
+    return false;
+  }
+  const occupied = await _isPortListening(_probeHostForPort(runtime.frontendHost), port);
+  if (!occupied) {
+    printInfo(`检测到前端端口 ${port} 已释放，跳过进程回收 (PID:${pid})，仅清理运行时记录。`);
+    return false;
+  }
+  const { safeKill } = require('../../tools/platformUtils');
+  try {
+    safeKill(pid, 'SIGTERM', 3000);
+  } catch {
+    /* best effort */
+  }
+  printInfo(`正在回收残留前端进程 (PID:${pid})，释放端口 ${port}...`);
+  return true;
+}
+
+function _resolveAiFrontendDir(options = {}) {
+  const candidates = [];
+  const explicit = String(
+    options['frontend-dir'] ||
+      options.frontendDir ||
+      process.env.AI_FRONTEND_DIR ||
+      process.env.KHY_AI_FRONTEND_DIR ||
+      ''
+  ).trim();
+  if (explicit) {
+    candidates.push(path.resolve(explicit));
+  }
+  if (process.env.KHYQUANT_ROOT) {
+    // forest layout: KHYQUANT_ROOT = services/backend, apps/ai-frontend is two levels up
+    candidates.push(path.resolve(process.env.KHYQUANT_ROOT, '..', '..', 'apps', 'ai-frontend'));
+    candidates.push(path.resolve(process.env.KHYQUANT_ROOT, '..', 'apps', 'ai-frontend'));
+    candidates.push(path.resolve(process.env.KHYQUANT_ROOT, 'apps', 'ai-frontend'));
+  }
+  candidates.push(path.resolve(process.cwd(), 'apps', 'ai-frontend'));
+  candidates.push(path.resolve(process.cwd(), 'ai-frontend'));
+  // forest layout (source + mirrored bundle): apps/ai-frontend is two levels above services/backend
+  candidates.push(path.resolve(__dirname, '..', '..', '..', '..', '..', 'apps', 'ai-frontend'));
+
+  for (const dir of candidates) {
+    try {
+      if (fs.existsSync(path.join(dir, 'package.json'))) {
+        return dir;
+      }
+    } catch {
+      // try next
+    }
+  }
+  return null;
+}
+
+function _resolveAiFrontendDistDir(options = {}, frontendDir = null) {
+  const candidates = [];
+  const seen = new Set();
+  const push = (value) => {
+    const text = String(value || '').trim();
+    if (!text) {
+      return;
+    }
+    const resolved = path.resolve(text);
+    if (seen.has(resolved)) {
+      return;
+    }
+    seen.add(resolved);
+    candidates.push(resolved);
+  };
+
+  push(
+    options['frontend-dist-dir'] ||
+      options.frontendDistDir ||
+      process.env.AI_FRONTEND_DIST_DIR ||
+      process.env.KHY_AI_FRONTEND_DIST_DIR ||
+      ''
+  );
+
+  if (frontendDir) {
+    push(path.join(frontendDir, 'dist'));
+    push(path.join(frontendDir, 'build'));
+  }
+
+  if (process.env.KHYQUANT_ROOT) {
+    const root = path.resolve(process.env.KHYQUANT_ROOT);
+    const parent = path.resolve(root, '..');
+    const grandParent = path.resolve(root, '..', '..');
+    // forest layout: KHYQUANT_ROOT = services/backend, apps/ai-frontend is two levels up
+    const roots = [grandParent, parent, root];
+    for (const base of roots) {
+      push(path.join(base, 'apps', 'ai-frontend', 'dist'));
+    }
+  }
+
+  push(path.resolve(process.cwd(), 'apps', 'ai-frontend', 'dist'));
+  push(path.resolve(process.cwd(), 'ai-frontend', 'dist'));
+  // forest layout (source + mirrored bundle): apps/ai-frontend is two levels above services/backend
+  push(path.resolve(__dirname, '..', '..', '..', '..', '..', 'apps', 'ai-frontend', 'dist'));
+
+  for (const dir of candidates) {
+    try {
+      if (fs.existsSync(path.join(dir, 'index.html'))) {
+        return dir;
+      }
+    } catch {
+      // try next
+    }
+  }
+  return null;
+}
+
+/**
+ * Can the frontend dev server actually be spawned from `frontendDir`?
+ *
+ * Replaces the old `node_modules/.package-lock.json` probe. npm writes that marker
+ * only at the WORKSPACE ROOT, and apps/ai-frontend is a member of the root `Khy-OS`
+ * workspace — its own node_modules holds just the hoist-stragglers and legitimately
+ * never carries the marker. The old check therefore reported "未就绪" for a fully
+ * hydrated install and sent healthy users to run a pointless `npm install`. Same
+ * defect class already fixed for services/backend in freshInstallDoctor.js.
+ * The real question is "does the `dev` script's binary resolve?", so we ask that,
+ * walking ancestors the way npm resolves member bins.
+ *
+ * Fail-soft: any error yields { usable: false, command: '' }.
+ *
+ * @returns {{usable: boolean, command: string}}
+ */
+function _frontendDevUsable(frontendDir) {
+  const result = { usable: false, command: '' };
+  if (!frontendDir) {
+    return result;
+  }
+
+  let pkg = null;
+  try {
+    pkg = JSON.parse(fs.readFileSync(path.join(frontendDir, 'package.json'), 'utf8'));
+  } catch {
+    return result; // unreadable manifest: cannot verify the dev tool
+  }
+  const command = String((pkg.scripts && pkg.scripts.dev) || '')
+    .trim()
+    .split(/\s+/)[0];
+  if (!command || command.includes('=')) {
+    return result;
+  }
+  result.command = command;
+
+  const variants =
+    process.platform === 'win32'
+      ? [command, `${command}.cmd`, `${command}.CMD`, `${command}.ps1`, `${command}.exe`]
+      : [command];
+
+  // npm resolves a member's bins against every ancestor node_modules/.bin, so the
+  // hoisted root bin dir counts — walking up is what makes workspace installs pass.
+  const binDirs = [];
+  let cursor = frontendDir;
+  for (let depth = 0; depth < 6; depth += 1) {
+    binDirs.push(path.join(cursor, 'node_modules', '.bin'));
+    const parent = path.dirname(cursor);
+    if (parent === cursor) {
+      break;
+    }
+    cursor = parent;
+  }
+
+  for (const binDir of binDirs) {
+    for (const variant of variants) {
+      try {
+        if (fs.existsSync(path.join(binDir, variant))) {
+          result.usable = true;
+          return result;
+        }
+      } catch {
+        // unreadable dir: keep walking
+      }
+    }
+  }
+
+  // Some setups skip the .bin shims entirely; plain resolution still proves the dep.
+  try {
+    const pkgJson = require.resolve(`${command}/package.json`, { paths: [frontendDir] });
+    result.usable = fs.existsSync(pkgJson);
+  } catch {
+    // unresolved
+  }
+  return result;
+}
+
+/**
+ * The daemon/frontend log paths as they actually exist on disk, for failure hints.
+ *
+ * These were hardcoded as `~/.khy/logs/...`, which is wrong whenever the checkout
+ * ships its own `.khy/` directory: `getDataHome()` then resolves project-local,
+ * the hint pointed at a directory that never gets created, and users (including
+ * the author) wasted time reading a path that does not exist.
+ *
+ * @returns {string} "daemon.log 与 frontend.log" with resolved absolute paths
+ */
+function _daemonLogHint() {
+  const logsDir = path.join(getDataHome(), 'logs');
+  return `${path.join(logsDir, 'ai_manage_daemon.log')} 与 ${path.join(logsDir, 'ai_frontend_dev.log')}`;
+}
+
+const _sleep = require('../../utils/sleep'); // single-source sleep ([MGMT-RPT-020] REQ-2026-010)
+const { printSuccess, printError, printInfo } = require('../formatters');
+
+function _requestAiManageControl(
+  runtime,
+  method = 'GET',
+  endpoint = '/status',
+  body = null,
+  timeoutMs = 2500
+) {
+  return new Promise((resolve, reject) => {
+    if (!runtime || !runtime.controlPort || !runtime.controlToken) {
+      reject(new Error('runtime control 信息缺失'));
+      return;
+    }
+
+    const queryJoiner = endpoint.includes('?') ? '&' : '?';
+    const endpointWithToken = `${endpoint}${queryJoiner}token=${encodeURIComponent(runtime.controlToken)}`;
+    const payload = body ? JSON.stringify(body) : null;
+    const req = http.request(
+      {
+        host: '127.0.0.1',
+        port: runtime.controlPort,
+        path: endpointWithToken,
+        method,
+        timeout: timeoutMs,
+        headers: {
+          'X-Khy-Token': runtime.controlToken,
+          ...(payload
+            ? {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(payload),
+              }
+            : {}),
+        },
+      },
+      (res) => {
+        let raw = '';
+        res.on('data', (chunk) => {
+          raw += chunk.toString();
+        });
+        res.on('end', () => {
+          let parsed = {};
+          try {
+            parsed = raw ? JSON.parse(raw) : {};
+          } catch {
+            parsed = {};
+          }
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(parsed);
+          } else {
+            reject(new Error(parsed.error || `HTTP ${res.statusCode}`));
+          }
+        });
+      }
+    );
+
+    req.on('error', reject);
+    req.on('timeout', () => req.destroy(new Error('control request timeout')));
+    if (payload) {
+      req.write(payload);
+    }
+    req.end();
+  });
+}
+
+async function _syncManageAuthBootstrapFromCli(runtime, options = {}) {
+  const cliAuth = require('../../services/cliAuthService');
+  const session =
+    typeof cliAuth.checkSession === 'function'
+      ? cliAuth.checkSession() || { loggedIn: false }
+      : { loggedIn: false };
+  const token =
+    typeof cliAuth.getSessionAuthToken === 'function'
+      ? String(cliAuth.getSessionAuthToken() || '').trim()
+      : '';
+  const username = String(session.username || '').trim();
+  const role = session.role || 'user';
+  const ttlMs = _parseIntWithMin(
+    options['auth-ttl-ms'] ?? options.authTtlMs ?? process.env.AI_MANAGE_AUTH_BOOTSTRAP_TTL_MS,
+    30 * 60 * 1000,
+    30_000
+  );
+  const enabled = !!token || session.loggedIn;
+
+  try {
+    await _requestAiManageControl(
+      runtime,
+      'POST',
+      '/auth/bootstrap',
+      {
+        enabled,
+        token,
+        username,
+        role,
+        ttlMs,
+      },
+      3000
+    );
+    return {
+      ok: true,
+      enabled,
+      username,
+      loggedIn: !!session.loggedIn,
+      hasServerToken: !!token,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      enabled: false,
+      username,
+      loggedIn: !!session.loggedIn,
+      hasServerToken: !!token,
+      error: err && err.message ? err.message : String(err || ''),
+    };
+  }
+}
+
+async function _waitAiManageRuntimeReady(timeoutMs = 15000) {
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    const runtime = _loadAiManageRuntime();
+    if (runtime?.pid && _isPidAlive(runtime.pid) && runtime.controlPort && runtime.controlToken) {
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        const status = await _requestAiManageControl(runtime, 'GET', '/status');
+        if (status?.ok) {
+          return { runtime, status };
+        }
+      } catch {
+        // still starting
+      }
+    }
+    // eslint-disable-next-line no-await-in-loop
+    await _sleep(250);
+  }
+  return null;
+}
+
+function _openUrlInBrowser(url) {
+  const { openDefault } = require('../../tools/platformUtils');
+  try {
+    openDefault(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** 探测/展示用主机：WSL 下会传入 0.0.0.0，但那是**绑定**地址，连接要用回环地址。 */
+function _resolveFrontendProbeHost(options = {}) {
+  const raw =
+    String(
+      options['frontend-host'] || process.env.AI_FRONTEND_HOST || process.env.KHY_MANAGE_FRONTEND_HOST || ''
+    ).trim() || '127.0.0.1';
+  return raw === '0.0.0.0' || raw === '::' ? '127.0.0.1' : raw;
+}
+
+/** 入口默认前端端口（基准端口，来自单一真源，不在本文件重复字面量）。 */
+function _defaultFrontendPort(options = {}) {
+  return _parsePort(
+    options['frontend-port'] ??
+      options.port ??
+      process.env.AI_FRONTEND_PORT ??
+      process.env.VITE_AI_FRONTEND_PORT,
+    WEB_FRONTEND_PORT
+  );
+}
+
+/**
+ * 管理页地址。端口是**基准**不是契约：优先用守护会话记录的，其次用前端自己上报的
+ * 运行态文件；两者都没有时返回空串 —— 宁可显示「未知」，也不猜一个可能属于别人的端口。
+ */
+function _buildManageOpenUrl(runtime) {
+  const base = _resolveManageFrontendUrl(runtime);
+  if (!base) {
+    return '';
+  }
+  if (!runtime?.controlPort || !runtime?.controlToken) {
+    return base;
+  }
+  const ctl = `http://127.0.0.1:${runtime.controlPort}`;
+  const joiner = base.includes('?') ? '&' : '?';
+  return `${base}${joiner}khy_manage_ctl=${encodeURIComponent(ctl)}&khy_manage_token=${encodeURIComponent(runtime.controlToken)}`;
+}
+
+/** 解析出「当前这个 KHY 前端的基址」，未知则 ''。 */
+function _resolveManageFrontendUrl(runtime = {}) {
+  const recorded = String(runtime?.frontendUrl || '').trim();
+  if (recorded) {
+    return recorded;
+  }
+  const port = _toValidPort(runtime?.frontendPort);
+  const host = String(runtime?.frontendHost || '').trim() || '127.0.0.1';
+  if (port) {
+    return `http://${host}:${port}`;
+  }
+  const published = readFrontendRuntime();
+  if (published && published.port) {
+    return published.url || `http://${published.host}:${published.port}`;
+  }
+  return '';
+}
+
+/**
+ * 复用优先（入口 open，未显式 --daemon）：KHY 前端已经在跑就直接进它。
+ *
+ * 为什么不是「先起一套再说」：8090 是基准端口，被占用时新实例会漂到 8091/8092，
+ * 于是同一台机器上并存两个前端 —— 用户从入口进的那个和实际在跑的那个不是同一个，
+ * 表现为「页面空白」或看到旧代码。认到人（身份端点/标题/运行态文件）即复用，
+ * 认不到才算「没人跑」，此时才去启动。
+ * @returns {Promise<object|null>} 复用的前端信息；没有在跑的前端则 null（调用方继续启动）。
+ */
+/** 该端口能否绑定（能绑定=空闲）。绑不上才说明真有进程占着。 */
+function _canBindProbePort(host, port) {
+  return new Promise((resolve) => {
+    const server = net.createServer();
+    server.once('error', () => resolve(false));
+    server.once('listening', () => {
+      server.close(() => resolve(true));
+    });
+    server.listen(port, host);
+  });
+}
+
+async function _reuseRunningFrontend(options = {}) {
+  const host = _resolveFrontendProbeHost(options);
+  const basePort = _defaultFrontendPort(options);
+  let found = null;
+  try {
+    found = await discoverKhyFrontend({ host, basePort });
+  } catch {
+    found = null; // 探测失败 = 没找到，不是错误
+  }
+  if (!found) {
+    // 没有在跑的 KHY 前端，但基准端口被占 → 用户马上会看到「启动失败/漂移」，
+    // 先把占用者报出来（只读查询），并给出可操作的出路，而不是让用户猜。
+    const probePort = _toValidPort(basePort);
+    if (probePort && !(await _canBindProbePort(host, probePort))) {
+      let owner = '';
+      try {
+        owner = await describePortOwner(probePort, { host });
+      } catch {
+        owner = '';
+      }
+      if (owner) {
+        printInfo(`${owner} —— 不是 KHY 前端，本次启动将改用下一个空闲端口。`);
+      } else {
+        printInfo(`基准端口 ${probePort} 被未知进程占用 —— 本次启动将改用下一个空闲端口。`);
+      }
+      printInfo('如果那不是你自己的服务，可先停掉它；或用 --frontend-port <端口> 换一个基准端口。');
+    }
+    return null;
+  }
+
+  const url = _buildManageOpenUrl({
+    frontendUrl: found.url,
+    frontendHost: found.host,
+    frontendPort: found.port,
+  });
+  // WSL: a Windows browser cannot reach the guest's 127.0.0.1 — mirror the same
+  // substitution the daemon path does before opening.
+  let openUrl = url;
+  if (_isLikelyWslRuntime()) {
+    const extIp = _pickFirstExternalIPv4();
+    if (extIp) {
+      openUrl = url.replace(/127\.0\.0\.1|localhost/gi, extIp);
+    }
+  }
+  const sourceLabel = found.source === 'runtime-file' ? '前端运行态文件' : '端口身份探测';
+  printSuccess(
+    `复用已在运行的 KHY 前端: ${url}（端口 ${found.port}，来源 ${sourceLabel}，未新起前端进程）`
+  );
+  printInfo('未占用新端口：已复用现有实例。');
+  printInfo('如需独立守护会话（守护端接口/保活直链）: khy gateway manage open --daemon');
+  if (!_openUrlInBrowser(openUrl)) {
+    printInfo(`请手动打开: ${openUrl}`);
+  }
+  return found;
+}
+
+function _isLoopbackHost(host = '') {
+  const h = String(host || '')
+    .trim()
+    .toLowerCase();
+  return h === '127.0.0.1' || h === 'localhost' || h === '::1' || h === '[::1]';
+}
+
+function _isLikelyWslRuntime() {
+  return !!(process.env.WSL_INTEROP || process.env.WSL_DISTRO_NAME);
+}
+
+function _pickFirstExternalIPv4() {
+  try {
+    const os = require('os');
+    const nets = os.networkInterfaces ? os.networkInterfaces() : {};
+    for (const group of Object.values(nets || {})) {
+      for (const row of group || []) {
+        if (!row || row.internal) {
+          continue;
+        }
+        if ((row.family === 'IPv4' || row.family === 4) && row.address) {
+          const ip = String(row.address || '').trim();
+          if (ip && ip !== '0.0.0.0' && !ip.startsWith('169.254.')) {
+            return ip;
+          }
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return '';
+}
+
+function _printWindowsAccessHint(runtimeForOpen = {}) {
+  if (!_isLikelyWslRuntime()) {
+    return;
+  }
+  if (!_isLoopbackHost(runtimeForOpen.frontendHost)) {
+    return;
+  }
+  const port = _toValidPort(runtimeForOpen.frontendPort);
+  if (!port) {
+    // 端口未知时不给「Windows 建议打开」，否则等于让用户去访问一个猜来的端口。
+    return;
+  }
+  const ip = _pickFirstExternalIPv4();
+  printInfo('检测到 WSL 环境：Windows 浏览器可能无法直接访问 127.0.0.1 管理页。');
+  printInfo(
+    '可执行: khy gateway manage stop && khy gateway manage open --daemon --frontend-host 0.0.0.0'
+  );
+  printInfo('跨设备访问请优先使用“前端地址”（不要使用带 khy_manage_ctl 的保活直链）。');
+  if (ip) {
+    printInfo(`Windows 建议打开: http://${ip}:${port}`);
+  } else {
+    printInfo(`Windows 建议打开: http://<Linux_IP>:${port}`);
+  }
+}
+
+function _truthyFlag(value) {
+  if (value === true) {
+    return true;
+  }
+  const raw = String(value || '')
+    .trim()
+    .toLowerCase();
+  return raw === '1' || raw === 'true' || raw === 'yes' || raw === 'on';
+}
+
+function _normalizePath(pathname = '/admin/ai-gateway') {
+  const raw = String(pathname || '').trim();
+  if (!raw) {
+    return '/admin/ai-gateway';
+  }
+  return raw.startsWith('/') ? raw : `/${raw}`;
+}
+
+function _toValidPort(raw) {
+  const n = parseInt(String(raw ?? '').trim(), 10);
+  if (!Number.isFinite(n) || n <= 0 || n > 65535) {
+    return 0;
+  }
+  return n;
+}
+
+function _appendPath(baseUrl, pathname = '/admin/ai-gateway') {
+  const pathValue = _normalizePath(pathname);
+  try {
+    const parsed = new URL(String(baseUrl || '').trim());
+    parsed.pathname = pathValue;
+    parsed.search = '';
+    parsed.hash = '';
+    return parsed.toString().replace(/\/$/, '');
+  } catch {
+    return '';
+  }
+}
+
+function _buildMainAdminUrlCandidates(options = {}) {
+  const candidates = [];
+  const seen = new Set();
+  const push = (url) => {
+    const text = String(url || '').trim();
+    if (!text || seen.has(text)) {
+      return;
+    }
+    seen.add(text);
+    candidates.push(text);
+  };
+
+  const adminPath = _normalizePath(
+    options['admin-path'] || process.env.KHY_ADMIN_PATH || '/admin/ai-gateway'
+  );
+
+  const explicitFull = String(options['admin-url'] || process.env.KHY_ADMIN_URL || '').trim();
+  if (explicitFull) {
+    if (/^https?:\/\//i.test(explicitFull)) {
+      push(_appendPath(explicitFull, adminPath));
+    } else {
+      push(_appendPath(`http://${explicitFull}`, adminPath));
+    }
+  }
+
+  const explicitBase = String(
+    options['web-url'] ||
+      options['web-base'] ||
+      process.env.KHY_WEB_URL ||
+      process.env.KHY_WEB_BASE_URL ||
+      ''
+  ).trim();
+  if (explicitBase) {
+    if (/^https?:\/\//i.test(explicitBase)) {
+      push(_appendPath(explicitBase, adminPath));
+    } else {
+      push(_appendPath(`http://${explicitBase}`, adminPath));
+    }
+  }
+
+  const host =
+    String(options['web-host'] || process.env.KHY_WEB_HOST || '127.0.0.1').trim() || '127.0.0.1';
+  const portCandidates = [];
+  const portValues = [
+    options['web-port'],
+    options.port,
+    process.env.KHY_WEB_PORT,
+    process.env.FRONTEND_PORT,
+    process.env.VITE_PORT,
+    process.env.PORT,
+    // Common local dev/prod ports; values can still be overridden by env/flags.
+    5173,
+    3000,
+  ];
+  for (const value of portValues) {
+    const p = _toValidPort(value);
+    if (!p) {
+      continue;
+    }
+    if (!portCandidates.includes(p)) {
+      portCandidates.push(p);
+    }
+  }
+
+  for (const port of portCandidates) {
+    push(`http://${host}:${port}${adminPath}`);
+    if (host === '127.0.0.1') {
+      push(`http://localhost:${port}${adminPath}`);
+    }
+  }
+  return candidates;
+}
+
+function _probeUrlReachable(url, timeoutMs = 1200) {
+  return new Promise((resolve) => {
+    let parsed = null;
+    try {
+      parsed = new URL(String(url || '').trim());
+    } catch {
+      resolve({ ok: false, statusCode: 0 });
+      return;
+    }
+    const transport = parsed.protocol === 'https:' ? require('https') : require('http');
+    const req = transport.request(
+      {
+        hostname: parsed.hostname,
+        port: parsed.port || undefined,
+        path: `${parsed.pathname}${parsed.search || ''}`,
+        method: 'GET',
+        timeout: timeoutMs,
+        headers: { Accept: 'text/html,application/json;q=0.9,*/*;q=0.8' },
+      },
+      (res) => {
+        const statusCode = Number(res.statusCode || 0);
+        if (statusCode < 200 || statusCode >= 400) {
+          res.resume();
+          resolve({ ok: false, statusCode });
+          return;
+        }
+        const isApiPath = /^\/api(?:\/|$)/i.test(String(parsed.pathname || ''));
+        if (isApiPath) {
+          res.resume();
+          resolve({ ok: true, statusCode });
+          return;
+        }
+        // 读取响应体前 2KB，验证是否是 KHY 管理页
+        let body = '';
+        res.setEncoding('utf8');
+        res.on('data', (chunk) => {
+          body += chunk;
+          if (body.length > 2048) {
+            res.destroy();
+          }
+        });
+        res.on('end', () => {
+          // 检查特征标记：KHY 管理页 HTML 中应包含 khy 或 ai-gateway 关键字
+          const isKhy = /khy|ai-gateway|khyquant|ai.manage/i.test(body);
+          resolve({ ok: isKhy || !body, statusCode });
+        });
+        res.on('error', () => resolve({ ok: false, statusCode }));
+      }
+    );
+    req.on('error', () => resolve({ ok: false, statusCode: 0 }));
+    req.on('timeout', () => req.destroy(new Error('timeout')));
+    req.end();
+  });
+}
+
+function _buildRuntimeForOpen(statusRuntime = {}, runtime = {}) {
+  // 没有守护会话时（例如复用一个手工起的前端），前端地址只能来自前端自己的
+  // 运行态文件 —— 不落回字面量端口。
+  const published = _toValidPort(statusRuntime?.frontendPort) || _toValidPort(runtime?.frontendPort)
+    ? null
+    : readFrontendRuntime();
+  return {
+    ...(statusRuntime || {}),
+    controlPort: statusRuntime?.controlPort || runtime?.controlPort || 0,
+    controlToken: runtime?.controlToken || statusRuntime?.controlToken || '',
+    frontendHost:
+      statusRuntime?.frontendHost ||
+      runtime?.frontendHost ||
+      (published && published.host) ||
+      '127.0.0.1',
+    frontendPort:
+      _toValidPort(statusRuntime?.frontendPort) ||
+      _toValidPort(runtime?.frontendPort) ||
+      (published ? published.port : 0),
+    frontendUrl:
+      statusRuntime?.frontendUrl || runtime?.frontendUrl || (published ? published.url || '' : ''),
+  };
+}
+
+function _resolveAiManageApiBaseUrl(statusRuntime = {}, runtime = {}) {
+  const apiPort = _toValidPort(statusRuntime?.apiPort || runtime?.apiPort || 0);
+  if (apiPort) {
+    return `http://127.0.0.1:${apiPort}`;
+  }
+
+  return String(
+    getAiBackendUrl({
+      ...process.env,
+      AI_BACKEND_URL: '',
+    }) || ''
+  ).trim();
+}
+
+// 前端「从哪来」的中文标签：复用与新建必须能一眼分清，否则用户不知道自己进的是
+// 已在跑的那个实例，还是刚被拉起来的第二个。
+const FRONTEND_REASON_LABELS = {
+  'reused-runtime': '复用已在运行的前端（前端运行态文件）',
+  reused: '复用已在运行的前端（端口身份探测）',
+  external: '复用外部已监听的端口',
+  managed: '本会话托管启动',
+  disabled: '已禁用（--no-frontend）',
+  unavailable: '未就绪',
+};
+
+/** Web 后端一行的展示文本：托管/复用/缺失要说清楚，端口未知就别猜。 */
+function _formatWebBackendLine(statusRuntime = {}, runtime = {}) {
+  const port = _toValidPort(statusRuntime?.webBackendPort) || _toValidPort(runtime?.webBackendPort);
+  if (!port) {
+    return { text: '未运行（用户/渠道/跨平台同步接口不可用）', tone: 'warn' };
+  }
+  const managed = statusRuntime?.webBackendManaged ?? runtime?.webBackendManaged;
+  const suffix = managed === false ? '（复用已有实例）' : '（本会话托管）';
+  return { text: `http://127.0.0.1:${port}${suffix}`, tone: 'ok' };
+}
+
+function _describeFrontendReason(reason) {
+  const key = String(reason || '').trim();
+  if (!key) {
+    return '';
+  }
+  return FRONTEND_REASON_LABELS[key] || key;
+}
+
+function _printManageKeepaliveStatus({
+  chalk,
+  keepaliveUrl,
+  frontendAvailable,
+  frontendReachable,
+}) {
+  const hasUrl = !!String(keepaliveUrl || '').trim();
+  if (frontendAvailable && frontendReachable && hasUrl) {
+    console.log(`  ${chalk.gray('保活直链:')} ${chalk.dim('已生成（复制下一行）')}`);
+    console.log(`    ${chalk.dim(keepaliveUrl)}`);
+    return;
+  }
+
+  if (frontendAvailable && hasUrl) {
+    console.log(`  ${chalk.gray('保活直链:')} ${chalk.yellow('暂不可用（前端地址当前不可达）')}`);
+    return;
+  }
+
+  console.log(`  ${chalk.gray('保活直链:')} ${chalk.yellow('未生成（前端未就绪）')}`);
+}
+
+function _formatManageRecommendedEntry({ frontendAvailable, frontendReachable, apiReachable }) {
+  if (frontendAvailable && frontendReachable) {
+    return 'khychat  或  khy gateway manage open';
+  }
+  if (frontendAvailable) {
+    return '前端地址（当前不可达，请先恢复 Web 入口）';
+  }
+  // 「API 直管」推荐只在 API 探针已验证可达时成立；探针失败（未就绪/不可达）
+  // 时如实退回 status 提示，不宣称未验证的 API 可用。
+  if (apiReachable) {
+    return 'API 直管（当前无可用前端）';
+  }
+  return 'khy gateway manage status（先确认 API/前端状态）';
+}
+
+async function _collectManageHealth(runtime = {}, liveStatus = null, probeTimeoutMs = 1200) {
+  const statusRuntime = liveStatus?.runtime || runtime;
+  const runtimeForOpen = _buildRuntimeForOpen(statusRuntime, runtime);
+  const frontendAvailable = !!statusRuntime?.frontendAvailable;
+  const frontendReason = String(
+    statusRuntime?.frontendReason || runtime?.frontendReason || ''
+  ).trim();
+  const frontendLogFile = String(
+    statusRuntime?.frontendLogFile || runtime?.frontendLogFile || ''
+  ).trim();
+  const apiDisplay = _resolveAiManageApiBaseUrl(statusRuntime, runtime);
+  const frontendDisplay =
+    String(runtimeForOpen.frontendUrl || '').trim() ||
+    (_toValidPort(runtimeForOpen.frontendPort)
+      ? `http://${runtimeForOpen.frontendHost}:${runtimeForOpen.frontendPort}`
+      : '');
+  const keepaliveUrl = _buildManageOpenUrl(runtimeForOpen);
+  const apiHealthUrl = `${apiDisplay}/api/health`;
+  let apiReachable = false;
+  let frontendReachable = false;
+  try {
+    const apiProbe = await _probeUrlReachable(apiHealthUrl, probeTimeoutMs);
+    apiReachable = !!apiProbe.ok;
+  } catch {
+    apiReachable = false;
+  }
+  try {
+    const frontendProbe = await _probeUrlReachable(frontendDisplay, probeTimeoutMs);
+    frontendReachable = !!frontendProbe.ok;
+  } catch {
+    frontendReachable = false;
+  }
+
+  return {
+    runtimeForOpen,
+    statusRuntime,
+    frontendAvailable,
+    frontendReason,
+    frontendLogFile,
+    apiDisplay,
+    frontendDisplay,
+    keepaliveUrl,
+    apiHealthUrl,
+    apiReachable,
+    frontendReachable,
+  };
+}
+
+async function _waitManageHealthReady(runtime = {}, options = {}) {
+  const timeoutMs = _parseIntWithMin(
+    options.timeoutMs ?? AI_MANAGE_HEALTH_WAIT_MS,
+    AI_MANAGE_HEALTH_WAIT_MS,
+    1000
+  );
+  const requireFrontend = options.requireFrontend !== false;
+  const probeTimeoutMs = _parseIntWithMin(options.probeTimeoutMs ?? 1200, 1200, 300);
+  const startedAt = Date.now();
+  let latestRuntime = { ...(runtime || {}) };
+  let latestStatus = null;
+  let lastHealth = null;
+
+  while (Date.now() - startedAt < timeoutMs) {
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      latestStatus = await _requestAiManageControl(
+        latestRuntime,
+        'GET',
+        '/status',
+        null,
+        Math.max(2200, probeTimeoutMs + 800)
+      );
+      if (latestStatus?.runtime) {
+        latestRuntime = {
+          ...latestRuntime,
+          ...latestStatus.runtime,
+          controlPort: latestRuntime.controlPort || latestStatus.runtime.controlPort || 0,
+          controlToken: latestRuntime.controlToken || latestStatus.runtime.controlToken || '',
+        };
+      }
+    } catch {
+      // ignore transient control request failures and continue probing
+    }
+
+    // eslint-disable-next-line no-await-in-loop
+    lastHealth = await _collectManageHealth(latestRuntime, latestStatus, probeTimeoutMs);
+    const frontendReady =
+      !requireFrontend || (lastHealth.frontendAvailable && lastHealth.frontendReachable);
+    if (lastHealth.apiReachable && frontendReady) {
+      return { ok: true, health: lastHealth, runtime: latestRuntime, status: latestStatus };
+    }
+    if (
+      requireFrontend &&
+      String(lastHealth.frontendReason || '')
+        .trim()
+        .toLowerCase() === 'disabled'
+    ) {
+      return {
+        ok: false,
+        health: lastHealth,
+        runtime: latestRuntime,
+        status: latestStatus,
+        reason: 'frontend-disabled',
+      };
+    }
+    // eslint-disable-next-line no-await-in-loop
+    await _sleep(AI_MANAGE_HEALTH_POLL_MS);
+  }
+
+  return {
+    ok: false,
+    health: lastHealth,
+    runtime: latestRuntime,
+    status: latestStatus,
+    reason: 'wait-timeout',
+  };
+}
+
+async function _openMainAdminIfAvailable(options = {}) {
+  const candidates = _buildMainAdminUrlCandidates(options);
+  for (const url of candidates) {
+    // eslint-disable-next-line no-await-in-loop
+    const probe = await _probeUrlReachable(url, 1200);
+    if (!probe.ok) {
+      continue;
+    }
+    const opened = _openUrlInBrowser(url);
+    return { success: true, url, opened };
+  }
+  return { success: false, candidates };
+}
+
+async function _waitPidExit(pid, timeoutMs = 6000) {
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    if (!_isPidAlive(pid)) {
+      return true;
+    }
+    // eslint-disable-next-line no-await-in-loop
+    await _sleep(150);
+  }
+  return !_isPidAlive(pid);
+}
+
+function _spawnAiManageDaemon({
+  apiPort,
+  frontendPort,
+  idleMs,
+  frontendHost,
+  frontendDir,
+  frontendDistDir,
+  noFrontend = false,
+  noAutoFrontend = false,
+}) {
+  if (!fs.existsSync(AI_MANAGE_DAEMON_SCRIPT)) {
+    throw new Error(`未找到守护脚本: ${AI_MANAGE_DAEMON_SCRIPT}`);
+  }
+
+  const args = [
+    AI_MANAGE_DAEMON_SCRIPT,
+    '--api-port',
+    String(apiPort),
+    '--frontend-port',
+    String(frontendPort),
+    '--idle-ms',
+    String(idleMs),
+    '--frontend-host',
+    String(frontendHost || '127.0.0.1'),
+  ];
+
+  if (frontendDir) {
+    args.push('--frontend-dir', frontendDir);
+  }
+  if (frontendDistDir) {
+    args.push('--frontend-dist-dir', frontendDistDir);
+  }
+  if (noFrontend) {
+    args.push('--no-frontend');
+  }
+  if (noAutoFrontend) {
+    args.push('--no-auto-frontend');
+  }
+
+  let fd = null;
+  let stdio = 'ignore';
+  try {
+    const logDir = path.join(path.dirname(AI_MANAGE_RUNTIME_FILE), 'logs');
+    fs.mkdirSync(logDir, { recursive: true });
+    const daemonLogFile = path.join(logDir, 'ai_manage_daemon.log');
+    fd = fs.openSync(daemonLogFile, 'a');
+    stdio = ['ignore', fd, fd];
+  } catch {
+    stdio = 'ignore';
+  }
+
+  let child;
+  // Decide the daemon's cwd so it does NOT lock the site-packages bundle on
+  // Windows. The old cwd (KHYQUANT_ROOT || __dirname/../..) resolves inside the
+  // pip bundle, and a running process's cwd locks that dir against pip's
+  // rename/delete on upgrade → WinError 32 → corruption. On win32 we relocate
+  // cwd to ~/.khy and pin KHYQUANT_ROOT (path resolution never uses cwd), so pip
+  // can overwrite the bundle even while khy runs. Gated + fail-soft; on any
+  // non-qualifying case the current behavior is preserved byte-for-byte.
+  const resolvedRoot = process.env.KHYQUANT_ROOT || path.resolve(__dirname, '../..');
+  let daemonCwd = resolvedRoot;
+  const daemonEnv = { ...process.env };
+  try {
+    const { resolveDaemonSpawnLocation } = require('../../services/daemonSpawnLocation');
+    const gateRaw = String(process.env.KHY_DAEMON_SITEPKG_UNLOCK ?? '')
+      .trim()
+      .toLowerCase();
+    const gateEnabled = !['0', 'false', 'off', 'no'].includes(gateRaw);
+    let dataHome = null;
+    try {
+      const h = getDataHome();
+      if (h && fs.existsSync(h)) {
+        dataHome = h;
+      }
+    } catch {
+      /* fail-soft */
+    }
+    const loc = resolveDaemonSpawnLocation({
+      platform: process.platform,
+      resolvedRoot,
+      dataHome,
+      gateEnabled,
+    });
+    daemonCwd = loc.cwd;
+    Object.assign(daemonEnv, loc.envPatch);
+  } catch {
+    /* keep resolvedRoot / process.env */
+  }
+  try {
+    child = spawn(process.execPath, args, {
+      detached: true,
+      stdio,
+      env: daemonEnv,
+      cwd: daemonCwd,
+      windowsHide: true,
+    });
+  } catch (err) {
+    if (fd != null) {
+      try {
+        fs.closeSync(fd);
+      } catch {
+        /* ignore */
+      }
+    }
+    throw err;
+  }
+  child.on('error', () => {
+    /* detached daemon — best effort */
+  });
+  if (fd != null) {
+    try {
+      fs.closeSync(fd);
+    } catch {
+      /* ignore */
+    }
+  }
+  child.unref();
+  return child.pid || 0;
+}
+
+async function handleGatewayManage(args = [], options = {}) {
+  const action = String(args[0] || 'open')
+    .trim()
+    .toLowerCase();
+  const { requireFeatureAccess } = require('../../services/authGuard');
+  const auth = requireFeatureAccess(
+    joinFeatureKey(getFeatureFamilyPrefix('gateway', 'manage'), action || 'open'),
+    buildGatewayManageFeatureLabel()
+  );
+  if (!auth.ok) {
+    printError(auth.error);
+    require('../../utils/markProcessFailure')();
+    return;
+  }
+  const validActions = new Set(['open', 'start', 'status', 'stop']);
+  if (!validActions.has(action)) {
+    printError(`未知 manage 操作: ${action}`);
+    printInfo(
+      `用法: gateway manage [open|start|status|stop] [--daemon] [--frontend-host 127.0.0.1] [--frontend-port ${WEB_FRONTEND_PORT}] [--api-port 9090] [--idle-ms 600000] [--wait-ms 18000] [--frontend-dir <path>] [--frontend-dist-dir <path>]`
+    );
+    require('../../utils/markProcessFailure')();
+    return;
+  }
+
+  const forceDaemon = _truthyFlag(options.daemon);
+  // WSL: auto-adjust to 0.0.0.0 + external IP so Windows browser can reach the page
+  if (_isLikelyWslRuntime() && !options['frontend-host'] && !process.env.KHY_MANAGE_FRONTEND_HOST) {
+    options['frontend-host'] = '0.0.0.0';
+  }
+
+  if (action === 'open' && !forceDaemon) {
+    printInfo('正在检测主站管理页...');
+    const webOpen = await _openMainAdminIfAvailable(options);
+    if (webOpen.success) {
+      if (webOpen.opened) {
+        printSuccess(`已打开管理页面: ${webOpen.url}`);
+      } else {
+        printInfo(`请手动打开管理页面: ${webOpen.url}`);
+      }
+      printInfo('如需使用独立守护会话入口，可运行: khy gateway manage open --daemon');
+      return;
+    }
+    const previewList = (webOpen.candidates || []).slice(0, 2);
+    if (previewList.length > 0) {
+      printInfo('主站管理页未就绪，已回退独立会话模式。');
+      for (const url of previewList) {
+        printInfo(`探测地址: ${url}`);
+      }
+    } else {
+      printInfo('主站管理页未就绪，已回退独立会话模式。');
+    }
+  }
+
+  let runtime = _loadAiManageRuntime();
+  let liveStatus = null;
+  if (runtime?.pid && _isPidAlive(runtime.pid)) {
+    try {
+      liveStatus = await _requestAiManageControl(runtime, 'GET', '/status');
+      if (!liveStatus?.ok) {
+        throw new Error('status not ok');
+      }
+    } catch {
+      runtime = null;
+      liveStatus = null;
+      _clearAiManageRuntime();
+    }
+  } else if (runtime) {
+    // Daemon pid is gone but the runtime file remains: reap any leftover managed
+    // frontend before clearing, otherwise it keeps the port and forces port drift.
+    await _reapManagedFrontend(runtime);
+    _clearAiManageRuntime();
+    runtime = null;
+  }
+
+  if (action === 'stop') {
+    if (!runtime) {
+      printInfo('AI 管理会话未运行');
+      return;
+    }
+
+    try {
+      await _requestAiManageControl(runtime, 'POST', '/shutdown', {});
+    } catch {
+      // fallback to signal
+      const { safeSignal: _sig } = require('../../tools/platformUtils');
+      try {
+        _sig(runtime.pid, 'SIGTERM');
+      } catch {
+        /* ignore */
+      }
+    }
+
+    const exited = await _waitPidExit(runtime.pid, 8000);
+    if (!exited) {
+      const { safeSignal: _sigKill } = require('../../tools/platformUtils');
+      try {
+        _sigKill(runtime.pid, 'SIGKILL');
+      } catch {
+        /* ignore */
+      }
+      await _waitPidExit(runtime.pid, 2000);
+    }
+    // On Windows a force-killed daemon never runs its own shutdown cleanup, so the
+    // managed frontend (dev server tree) can outlive it and keep the port occupied.
+    // Reap it here via tree kill using the pid recorded in the runtime file.
+    await _reapManagedFrontend(runtime);
+    _clearAiManageRuntime();
+    printSuccess('AI 管理会话已停止，端口已释放');
+    return;
+  }
+
+  if (action === 'status' && !runtime) {
+    printInfo('AI 管理会话未运行');
+    printInfo('启动命令: khy gateway manage');
+    printInfo('主站入口: khy guanli');
+    return;
+  }
+
+  // 复用优先：没有守护会话，但 KHY 前端已经在跑（手工 dev server / 预构建静态站 /
+  // 上一会话残留）→ 直接进它，不再 spawn 第二个实例、不再占用另一个端口。
+  if (!runtime && action === 'open' && !forceDaemon) {
+    const reused = await _reuseRunningFrontend(options);
+    if (reused) {
+      return;
+    }
+  }
+
+  if (!runtime) {
+    const frontendPort = _defaultFrontendPort(options);
+    const apiPort = _parsePort(options['api-port'] ?? process.env.AI_MGMT_PORT, 9090);
+    const idleMs = _parseIntWithMin(
+      options['idle-ms'] ?? process.env.AI_MANAGE_IDLE_MS,
+      10 * 60 * 1000,
+      10000
+    );
+    const frontendHost =
+      String(options['frontend-host'] || process.env.AI_FRONTEND_HOST || '127.0.0.1').trim() ||
+      '127.0.0.1';
+    const frontendDir = _resolveAiFrontendDir(options);
+    const frontendDistDir = _resolveAiFrontendDistDir(options, frontendDir);
+    const noFrontend = _truthyFlag(options['no-frontend']) || _truthyFlag(options.noFrontend);
+    // pip 安装包含 ai-frontend 源码但没有 node_modules（或仅空目录壳），
+    // 无法启动 dev server，自动跳过避免 spawn EINVAL / 启动超时
+    let noAutoFrontend =
+      _truthyFlag(options['no-auto-frontend']) || _truthyFlag(options.noAutoFrontend);
+    let frontendSkipReason = '';
+    if (noAutoFrontend) {
+      frontendSkipReason = '显式禁用（--no-auto-frontend）';
+    }
+    if (!noAutoFrontend && frontendDir) {
+      // Guard the dev-server spawn: a pip install ships ai-frontend source without
+      // node_modules (or with only an empty shell), which makes the spawn fail with
+      // EINVAL or time out. Verify the `dev` binary resolves instead of probing for
+      // npm's workspace-root-only .package-lock.json marker.
+      const devCheck = _frontendDevUsable(frontendDir);
+      if (!devCheck.usable) {
+        noAutoFrontend = true;
+        frontendSkipReason = devCheck.command
+          ? `未解析到 dev 脚本依赖 ${devCheck.command}（node_modules/.bin）`
+          : 'package.json 无 scripts.dev';
+      }
+    }
+
+    if (!frontendDir && !frontendDistDir && !noFrontend) {
+      printInfo('未检测到 ai-frontend 目录或预构建 dist。管理页将以纯 API 模式启动。');
+      printInfo('如需完整管理页：cd ai-frontend && npm install && npm run build');
+    } else if (noAutoFrontend && !frontendDistDir) {
+      printInfo(`ai-frontend dev server 已跳过：${frontendSkipReason || '依赖不可用'}。`);
+      printInfo('如需前端：在仓库根执行 npm install（工作区依赖提升到根 node_modules），或传 --frontend-dist-dir 指向预构建产物。');
+    }
+    printInfo(`正在启动 AI 管理会话 (API:${apiPort}, 前端:${frontendPort})...`);
+    _spawnAiManageDaemon({
+      apiPort,
+      frontendPort,
+      idleMs,
+      frontendHost,
+      frontendDir,
+      frontendDistDir,
+      noFrontend,
+      noAutoFrontend,
+    });
+    const ready = await _waitAiManageRuntimeReady(AI_MANAGE_READY_TIMEOUT_MS);
+    if (!ready) {
+      printError(`启动 AI 管理会话失败或超时 (API:${apiPort}, 前端:${frontendPort})`);
+      require('../../utils/markProcessFailure')();
+      printInfo(`可检查日志: ${_daemonLogHint()}`);
+      // Surface last few lines of daemon log if available, plus targeted advice
+      // when an OS-level error code (ENOMEM/EACCES/...) appears in the tail.
+      try {
+        const logFile = path.join(getDataHome(), 'logs', 'ai_manage_daemon.log');
+        if (fs.existsSync(logFile)) {
+          const tail = fs
+            .readFileSync(logFile, 'utf8')
+            .split(/\r?\n/)
+            .filter(Boolean)
+            .slice(-5)
+            .join('\n');
+          if (tail) {
+            printInfo(`最近日志:\n${tail}`);
+          }
+          const codeMatch = tail.match(/\b(ENOMEM|EACCES|EPERM|EMFILE|ENFILE|EAGAIN)\b/);
+          if (codeMatch && _SYSTEM_ERROR_ADVICE[codeMatch[1]]) {
+            printInfo(`检测到系统级错误 [${codeMatch[1]}]：${_SYSTEM_ERROR_ADVICE[codeMatch[1]]}`);
+          }
+        }
+      } catch {
+        /* best-effort */
+      }
+      return;
+    }
+    runtime = ready.runtime;
+    liveStatus = ready.status;
+  }
+
+  if (!liveStatus) {
+    try {
+      liveStatus = await _requestAiManageControl(runtime, 'GET', '/status');
+    } catch {
+      liveStatus = null;
+    }
+  }
+
+  if (action === 'open' || action === 'start') {
+    const authSync = await _syncManageAuthBootstrapFromCli(runtime, options);
+    if (authSync.ok && authSync.enabled) {
+      printInfo(`已同步 CLI 登录态到管理页（用户: ${authSync.username || 'cli-user'}）`);
+    } else if (authSync.ok && authSync.loggedIn && !authSync.hasServerToken) {
+      printInfo('检测到 CLI 为本地离线登录态，管理页将进入登录页（可在页面登录）。');
+      printInfo('诊断: 当前 CLI 会话缺少服务端 token，无法桥接管理页自动免登录。');
+      printInfo('下一步 1/2: 在 CLI 执行 `/login`，完成服务端账号登录。');
+      printInfo('下一步 2/2: 重新执行 `khychat` 或 `khy gateway manage open`。');
+    } else if (authSync.ok && !authSync.loggedIn) {
+      printInfo('CLI 当前未登录，管理页将进入登录页。可先执行 `/login`。');
+    }
+  }
+
+  let health = await _collectManageHealth(runtime, liveStatus, 1200);
+  if (action !== 'status') {
+    const waitMs = _parseIntWithMin(
+      options['wait-ms'] ?? options.waitMs ?? process.env.AI_MANAGE_HEALTH_WAIT_MS,
+      AI_MANAGE_HEALTH_WAIT_MS,
+      1000
+    );
+    const initiallyReady =
+      health.apiReachable && health.frontendAvailable && health.frontendReachable;
+    if (!initiallyReady) {
+      printInfo(`正在确认管理页可达（API+前端，最长 ${Math.round(waitMs / 1000)}s）...`);
+      const waited = await _waitManageHealthReady(runtime, {
+        timeoutMs: waitMs,
+        requireFrontend: true,
+        probeTimeoutMs: 1200,
+      });
+      if (waited?.runtime) {
+        runtime = waited.runtime;
+      }
+      if (waited?.status) {
+        liveStatus = waited.status;
+      }
+      if (waited?.health) {
+        health = waited.health;
+      }
+    }
+  }
+
+  const statusRuntime = health.statusRuntime || liveStatus?.runtime || runtime;
+  const runtimeForOpen = health.runtimeForOpen || _buildRuntimeForOpen(statusRuntime, runtime);
+  const frontendAvailable = !!health.frontendAvailable;
+  const frontendReason = String(health.frontendReason || '').trim();
+  const frontendLogFile = String(health.frontendLogFile || '').trim();
+  const apiDisplay =
+    String(health.apiDisplay || '').trim() || _resolveAiManageApiBaseUrl(statusRuntime, runtime);
+  const frontendDisplay =
+    String(health.frontendDisplay || '').trim() ||
+    String(runtimeForOpen.frontendUrl || '').trim() ||
+    (_toValidPort(runtimeForOpen.frontendPort)
+      ? `http://${runtimeForOpen.frontendHost}:${runtimeForOpen.frontendPort}`
+      : '');
+  const keepaliveUrl = String(health.keepaliveUrl || _buildManageOpenUrl(runtimeForOpen)).trim();
+  const apiHealthUrl = String(health.apiHealthUrl || `${apiDisplay}/api/health`).trim();
+  const apiReachable = !!health.apiReachable;
+  const frontendReachable = !!health.frontendReachable;
+  const recommendedEntry = _formatManageRecommendedEntry({
+    frontendAvailable,
+    frontendReachable,
+    apiReachable,
+  });
+
+  if (action === 'status') {
+    const runningHealthy = apiReachable && frontendAvailable && frontendReachable;
+    console.log('');
+    console.log(`  ${chalk.cyan.bold('AI 管理会话状态')}`);
+    console.log('');
+    console.log(
+      `  ${chalk.gray('运行状态:')} ${runningHealthy ? chalk.green('● 运行中') : chalk.yellow('● 运行中（服务未完全就绪）')}`
+    );
+    console.log(`  ${chalk.gray('守护进程 PID:')} ${statusRuntime.pid || runtime.pid}`);
+    console.log(
+      `  ${chalk.gray('API:')} ${apiReachable ? chalk.cyan(apiHealthUrl) : chalk.yellow(`${apiHealthUrl} (不可达)`)}`
+    );
+    if (!frontendAvailable) {
+      console.log(`  ${chalk.gray('前端:')} ${chalk.yellow('未就绪')}`);
+      if (frontendReason) {
+        console.log(`  ${chalk.gray('前端原因:')} ${chalk.yellow(_describeFrontendReason(frontendReason))}`);
+      }
+      if (frontendLogFile) {
+        console.log(`  ${chalk.gray('前端日志:')} ${chalk.dim(frontendLogFile)}`);
+      }
+    } else {
+      console.log(
+        `  ${chalk.gray('前端:')} ${frontendReachable ? chalk.cyan(frontendDisplay) : chalk.yellow(`${frontendDisplay} (不可达)`)}`
+      );
+      if (frontendReason) {
+        console.log(
+          `  ${chalk.gray('前端来源:')} ${chalk.cyan(_describeFrontendReason(frontendReason))}`
+        );
+      }
+    }
+    console.log(`  ${chalk.gray('推荐入口:')} ${chalk.cyan(recommendedEntry)}`);
+    const webBackendLine = _formatWebBackendLine(statusRuntime, runtime);
+    console.log(
+      `  ${chalk.gray('Web 后端:')} ${webBackendLine.tone === 'ok' ? chalk.cyan(webBackendLine.text) : chalk.yellow(webBackendLine.text)}`
+    );
+    _printManageKeepaliveStatus({ chalk, keepaliveUrl, frontendAvailable, frontendReachable });
+    console.log(`  ${chalk.gray('自动关闭:')} ${chalk.cyan('页面关闭后空闲自动释放端口')}`);
+    console.log(`  ${chalk.gray('活跃页面:')} ${String(statusRuntime.sessions || 0)}`);
+    if (!runningHealthy) {
+      printInfo(
+        '检测到管理会话未完全就绪。可先运行: khy gateway manage stop && khy gateway manage start --daemon'
+      );
+      printInfo(`若仍失败，请检查日志: ${_daemonLogHint()}`);
+    }
+    _printWindowsAccessHint(runtimeForOpen);
+    console.log('');
+    return;
+  }
+
+  let openUrl = _buildManageOpenUrl(runtimeForOpen);
+  // WSL: replace loopback with external IP so Windows browser can reach it
+  if (_isLikelyWslRuntime()) {
+    const extIp = _pickFirstExternalIPv4();
+    if (extIp) {
+      openUrl = openUrl.replace(/127\.0\.0\.1|localhost/gi, extIp);
+    }
+  }
+  if (action === 'start') {
+    printSuccess('AI 管理会话已启动');
+  } else {
+    if (frontendAvailable && frontendReachable) {
+      const opened = _openUrlInBrowser(openUrl);
+      if (opened) {
+        printSuccess(`已打开管理页面: ${frontendDisplay}`);
+      } else {
+        printInfo(`请手动打开管理页面: ${openUrl}`);
+      }
+    } else {
+      printInfo('管理前端未就绪。');
+      if (apiReachable) {
+        printInfo(`API 已启动，可通过 API 直接管理: ${apiHealthUrl.replace('/api/health', '')}`);
+      }
+      if (frontendReason) {
+        printInfo(`原因: ${_describeFrontendReason(frontendReason)}`);
+      }
+    }
+  }
+
+  console.log('');
+  console.log(
+    `  ${chalk.gray('API:')} ${apiReachable ? chalk.cyan(apiHealthUrl) : chalk.yellow(`${apiHealthUrl} (不可达)`)}`
+  );
+  if (!frontendAvailable) {
+    console.log(`  ${chalk.gray('前端:')} ${chalk.yellow('未就绪')}`);
+    if (frontendReason) {
+      console.log(`  ${chalk.gray('前端原因:')} ${chalk.yellow(frontendReason)}`);
+    }
+    if (frontendLogFile) {
+      console.log(`  ${chalk.gray('前端日志:')} ${chalk.dim(frontendLogFile)}`);
+    }
+  } else {
+    console.log(
+      `  ${chalk.gray('前端:')} ${frontendReachable ? chalk.cyan(frontendDisplay) : chalk.yellow(`${frontendDisplay} (不可达)`)}`
+    );
+  }
+  console.log(`  ${chalk.gray('推荐入口:')} ${chalk.cyan(recommendedEntry)}`);
+  _printManageKeepaliveStatus({
+    chalk,
+    keepaliveUrl: openUrl,
+    frontendAvailable,
+    frontendReachable,
+  });
+  console.log(`  ${chalk.gray('状态:')} ${chalk.dim('khychat status')}`);
+  console.log(`  ${chalk.gray('停止:')} ${chalk.dim('khychat stop')}`);
+  if (frontendAvailable && frontendReachable) {
+    const seededPw = String(process.env.DEFAULT_ADMIN_PASSWORD || '').trim();
+    const seedCmd = _buildSeedAdminCommand();
+    let hint;
+    if (seededPw) {
+      hint = 'admin / <DEFAULT_ADMIN_PASSWORD 中设置的密码>';
+    } else if (seedCmd.exists) {
+      hint = `请在任意目录运行 ${seedCmd.command} 创建管理员账号`;
+    } else {
+      hint = `未找到管理员初始化脚本（预期位置: ${seedCmd.scriptPath}），请检查后端安装是否完整`;
+    }
+    console.log(`  ${chalk.gray('登录提示:')} ${chalk.dim(hint)}`);
+    if (seedCmd.exists) {
+      console.log(`  ${chalk.gray('重置账号:')} ${chalk.dim(seedCmd.command)}`);
+    }
+  }
+  console.log('');
+
+  _printWindowsAccessHint(runtimeForOpen);
+
+  if (!frontendAvailable || !frontendReachable || !apiReachable) {
+    printInfo(
+      '管理服务未完全就绪。可先运行: khy gateway manage stop && khy gateway manage start --daemon'
+    );
+    printInfo(
+      '可选：显式指定前端目录 `--frontend-dir <ai-frontend绝对路径>`，或静态目录 `--frontend-dist-dir <dist绝对路径>`。'
+    );
+    printInfo('若使用源码前端开发模式，请先在仓库根执行 `npm install`（工作区依赖提升到根 node_modules）。');
+    printInfo(`若仍失败，请检查日志: ${_daemonLogHint()}`);
+  }
+}
+
+/**
+ * Start/stop/status the AI management backend server.
+ * @param {string} action - 'start' | 'stop' | 'status'
+ */
+async function handleAiServer(action) {
+  const server = require('../../services/aiManagementServer');
+
+  if (action === 'stop') {
+    if (!server.isRunning()) {
+      printInfo('AI 管理服务未运行');
+      return;
+    }
+    await server.stop();
+    printSuccess('AI 管理服务已停止');
+    return;
+  }
+
+  if (action === 'status') {
+    if (server.isRunning()) {
+      printSuccess(`AI 管理服务运行中: http://localhost:${server.getPort()}`);
+    } else {
+      printInfo('AI 管理服务未运行');
+    }
+    return;
+  }
+
+  // Default: start
+  if (server.isRunning()) {
+    printInfo(`AI 管理服务已在运行: http://localhost:${server.getPort()}`);
+    return;
+  }
+
+  const port = await server.start();
+  console.log('');
+  printSuccess('AI 管理服务已启动');
+  console.log('');
+  console.log(chalk.bold(`  🌐 API:       ${chalk.cyan(`http://localhost:${port}/api/health`)}`));
+  console.log(chalk.bold(`  🔌 WebSocket: ${chalk.cyan(`ws://localhost:${port}/ws`)}`));
+  console.log('');
+  console.log(chalk.dim('  REST 端点:'));
+  console.log(chalk.dim('    GET  /api/status          — 适配器状态'));
+  console.log(chalk.dim('    GET  /api/models          — 模型列表 (含健康指标)'));
+  console.log(chalk.dim('    POST /api/test/:adapter   — 两步连通测试'));
+  console.log(chalk.dim('    GET  /api/config          — 网关配置'));
+  console.log(chalk.dim('    PUT  /api/config          — 更新配置'));
+  console.log(chalk.dim('    GET  /api/conversations   — 会话列表'));
+  console.log(chalk.dim('    GET  /api/usage           — Token 用量'));
+  console.log(chalk.dim('    GET  /api/tools           — 工具列表'));
+  console.log(chalk.dim('    POST /api/tools/:name     — 执行工具'));
+  console.log('');
+}
+
+module.exports = {
+  handleGatewayManage,
+  handleAiServer,
+  _resolveAiManageApiBaseUrl,
+  _parseIntWithMin,
+};
