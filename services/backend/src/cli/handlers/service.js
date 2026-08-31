@@ -1,0 +1,261 @@
+/**
+ * Service management CLI handlers: server start/status, db init/seed/status.
+ */
+const { execFileSync } = require('child_process');
+const http = require('http');
+const net = require('net');
+const path = require('path');
+
+const chalk = require('chalk').default || require('chalk');
+const { bootstrap } = require('../bootstrap');
+const { printSuccess, printError, printInfo, printTable, withSpinner } = require('../formatters');
+
+const BACKEND_DIR = path.resolve(__dirname, '../../../');
+
+async function findAvailablePort(startPort, maxAttempts = 20) {
+  for (let offset = 0; offset < maxAttempts; offset += 1) {
+    const port = startPort + offset;
+    const state = await new Promise((resolve) => {
+      const probe = net.createServer();
+      probe.once('error', (err) => resolve(err.code === 'EADDRINUSE' ? 'occupied' : 'error'));
+      probe.once('listening', () => probe.close(() => resolve('free')));
+      probe.listen(port, '127.0.0.1');
+    });
+    if (state === 'free') return port;
+  }
+  return null;
+}
+
+async function portResponds(port) {
+  return new Promise((resolve) => {
+    const req = http.get(`http://127.0.0.1:${port}/health`, { timeout: 250 }, (res) => {
+      let body = '';
+      res.setEncoding('utf8');
+      res.on('data', (chunk) => { body += chunk; });
+      res.once('end', () => {
+        try {
+          const data = JSON.parse(body);
+          resolve(data.status === 'ok' || data.status === 'degraded');
+        } catch {
+          resolve(false);
+        }
+      });
+    });
+    req.once('error', () => resolve(false));
+    req.once('timeout', () => { req.destroy(); resolve(false); });
+  });
+}
+
+async function handleServerStart(options = {}) {
+  const { spawn } = require('child_process');
+  const requestedPort = parseInt(options.port || process.env.PORT || '3000', 10);
+  let port = requestedPort;
+  if (await portResponds(requestedPort)) {
+    printSuccess(`后端服务已在运行 (端口 ${requestedPort})`);
+    return requestedPort;
+  }
+
+  port = await findAvailablePort(requestedPort);
+  if (port == null) {
+    printError(`后端服务启动失败 (端口 ${requestedPort}-${requestedPort + 19} 均不可用)`);
+    return null;
+  }
+  if (port !== requestedPort) {
+    printInfo(`端口 ${requestedPort} 已占用，自动切换到 ${port}`);
+  }
+  process.env.PORT = String(port);
+  const STARTUP_WAIT_MS = parseInt(process.env.KHY_SERVER_START_WAIT_MS || '6000', 10);
+  const MAX_ERR_CHARS = 1200;
+
+  printInfo('启动后端服务...');
+  const serverScript = path.join(BACKEND_DIR, 'server.js');
+  const child = spawn(process.execPath, [serverScript], {
+    cwd: BACKEND_DIR,
+    env: { ...process.env, PORT: String(port) },
+    detached: true,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  child.unref();
+
+  let earlyExit = false;
+  let exitCode = null;
+  let earlyError = '';
+  const captureEarlyOutput = (chunk) => {
+    if (earlyError.length >= MAX_ERR_CHARS) {
+      return;
+    }
+    earlyError += String(chunk || '').slice(0, MAX_ERR_CHARS - earlyError.length);
+  };
+  child.on('exit', (code) => {
+    earlyExit = true;
+    exitCode = code;
+  });
+  child.stdout.on('data', captureEarlyOutput);
+  child.stderr.on('data', captureEarlyOutput);
+
+  // Wait for server to bind
+  await new Promise((r) => setTimeout(r, STARTUP_WAIT_MS));
+  const portInUse = async () => (await findAvailablePort(port, 1)) == null;
+  let nowRunning = await portInUse();
+  if (!nowRunning) {
+    await new Promise((r) => setTimeout(r, 1500));
+    nowRunning = await portInUse();
+  }
+
+  if (nowRunning) {
+    printSuccess(`后端服务已启动 → http://localhost:${port}`);
+    return;
+  }
+
+  if (earlyExit) {
+    printError(`后端服务启动失败 (exit code: ${exitCode == null ? 'unknown' : exitCode})`);
+    const hint = String(earlyError || '')
+      .split('\n')
+      .map((s) => s.trim())
+      .find(Boolean);
+    if (hint) {
+      printInfo(`错误摘要: ${hint.slice(0, 180)}`);
+    } else {
+      printInfo('请直接运行: node backend/server.js 查看详细错误');
+    }
+    return;
+  }
+
+  const bindError = /listen\\s+E(?:PERM|ADDRINUSE|ACCES)|uncaught\\s+exception/i.test(earlyError);
+  if (bindError) {
+    printError('后端服务启动失败 (端口监听异常)');
+    const hint =
+      String(earlyError || '')
+        .split('\n')
+        .map((s) => s.trim())
+        .find((s) => /listen\\s+E(?:PERM|ADDRINUSE|ACCES)|uncaught\\s+exception/i.test(s)) ||
+      String(earlyError || '')
+        .split('\n')
+        .map((s) => s.trim())
+        .find(Boolean);
+    if (hint) {
+      printInfo(`错误摘要: ${hint.slice(0, 180)}`);
+    }
+    return;
+  }
+
+  printInfo(`后端服务启动中... (端口 ${port})，请稍后用 server status 检查`);
+}
+
+async function handleServerStatus() {
+  const port = process.env.PORT || '3000';
+  const host = process.env.HOST || '127.0.0.1';
+  const url = `http://${host}:${port}/health`;
+
+  return new Promise((resolve) => {
+    const req = http.get(url, { timeout: 3000 }, (res) => {
+      let body = '';
+      res.on('data', (chunk) => {
+        body += chunk;
+      });
+      res.on('end', () => {
+        try {
+          const data = JSON.parse(body);
+          printSuccess(`服务运行中 :${port}`);
+          printTable(
+            ['指标', '值'],
+            [
+              ['数据库', data.database || data.db || '-'],
+              ['运行时间', data.uptime ? Math.floor(data.uptime) + 's' : '-'],
+            ]
+          );
+        } catch {
+          printSuccess(`服务运行中 (端口 ${port})`);
+        }
+        resolve();
+      });
+    });
+
+    req.on('error', () => {
+      printError(`服务未运行 (端口 ${port})`);
+      printInfo('运行 server start 启动服务');
+      resolve();
+    });
+
+    req.on('timeout', () => {
+      req.destroy();
+      printError(`服务响应超时 (端口 ${port})`);
+      resolve();
+    });
+  });
+}
+
+async function handleDbInit() {
+  await withSpinner('初始化数据库...', () => bootstrap({ syncSchema: true }));
+  const mode = process.env.DB_MODE || 'sqlite';
+  printSuccess(`数据库已初始化 (${mode})`);
+}
+
+async function handleDbSeed() {
+  await bootstrap({ syncSchema: true, silent: true });
+
+  printInfo('填充示例数据...');
+  try {
+    execFileSync('node', ['scripts/seed.js'], {
+      cwd: BACKEND_DIR,
+      stdio: 'inherit',
+      timeout: 30000,
+    });
+    printSuccess('示例数据填充完成');
+  } catch (err) {
+    printError('数据填充失败: ' + (err.message || 'unknown error'));
+  }
+}
+
+async function handleDbStatus() {
+  await bootstrap({ silent: true });
+
+  const { sequelize, User, Strategy, Instrument, Backtest, Trade } = require('../../models');
+  const mode = process.env.DB_MODE || 'unknown';
+
+  printSuccess(`数据库连接正常 (${mode})`);
+
+  // Old `count().catch(() => 0)` rendered broken queries as genuine zeros,
+  // indistinguishable from empty tables (Rule 2.2). Failures now show in-cell
+  // and one error line reports how many failed + the first raw message.
+  const countOr = async (Model) => {
+    try {
+      return { ok: true, n: await Model.count() };
+    } catch (err) {
+      return { ok: false, err: err.message || 'unknown error' };
+    }
+  };
+  const results = await Promise.all([
+    countOr(User),
+    countOr(Strategy),
+    countOr(Instrument),
+    countOr(Backtest),
+    countOr(Trade),
+  ]);
+  const labels = ['用户 (User)', '策略 (Strategy)', '品种 (Instrument)', '回测 (Backtest)', '交易 (Trade)'];
+
+  printTable(
+    ['表', '记录数'],
+    results.map((r, i) => [labels[i], r.ok ? String(r.n) : '查询失败'])
+  );
+
+  const failed = results.filter((r) => !r.ok);
+  if (failed.length > 0) {
+    printError(`${failed.length}/5 张表记录数查询失败: ${failed[0].err}；若尚未初始化数据库，可运行 khy db init 后重试`);
+  }
+
+  if (mode === 'sqlite') {
+    const { getSQLitePath } = require('../../config/database');
+    printTable(['存储', '路径'], [['SQLite', getSQLitePath()]]);
+  }
+}
+
+module.exports = {
+  handleServerStart,
+  handleServerStatus,
+  findAvailablePort,
+  portResponds,
+  handleDbInit,
+  handleDbSeed,
+  handleDbStatus,
+};
