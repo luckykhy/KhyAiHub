@@ -1,0 +1,299 @@
+/**
+ * Tool Profile — predefined tool sets for different agent roles.
+ *
+ * Inspired by OpenClaw's tool-catalog.ts profile system:
+ *   minimal   → read-only tools for exploration
+ *   coding    → minimal + edit/execute/git tools for development
+ *   analysis  → minimal + quant/finance tools
+ *   full      → all tools (default)
+ *
+ * Each profile specifies an allow-list of tool names.
+ * Tools not in the allow-list are hidden from the AI prompt,
+ * reducing token usage and preventing unintended actions.
+ */
+
+// ── Profile Definitions ────────────────────────────────────────────
+
+const PROFILES = {
+  minimal: {
+    description: 'Read-only tools for exploration and search',
+    tools: [
+      'readFile',
+      'glob',
+      'grep',
+      'search',
+      'toolSearch',
+      'quote',
+      'dataFetch',
+      'webSearch',
+      'taste',
+      // Self-introspection: `KhySelf` is risk:'safe' + isReadOnly()===true, so it
+      // carries NO write channel and is legal in a read-only profile
+      // ([DESIGN-AGENT-002] A2-2 forbids write channels here, not read-only
+      // self-knowledge). It must be visible because the system prompt actively
+      // instructs the model to call it ("调 KhySelf(action:self_audit_verify) 取
+      // 逐项证据" — selfAuditRegistry.formatForSystemPrompt) and to find its own
+      // source via KhySelf(action:location). Without this grant, the Claude
+      // direct path (claudeAdapter.buildDirectToolDefs → 'coding') told the model
+      // to call a tool that was absent from its list. See [DESIGN-ARCH-153] D2.
+      // Granting here covers minimal + everything that `extends` it
+      // (coding / analysis / verification).
+      'KhySelf',
+      'khy_self',
+      'self_info',
+    ],
+  },
+
+  coding: {
+    description: 'Development tools: read, edit, execute, test, git',
+    extends: 'minimal',
+    tools: [
+      'editFile',
+      'writeFile',
+      'scaffoldFiles',
+      'scaffold_files',
+      'shellCommand',
+      'bash',
+      'powershell',
+      'cmd',
+      'MultiEdit',
+      'multiEdit',
+      'multi_edit',
+      'gitStatus',
+      'gitDiff',
+      'gitCommit',
+      // Prefer canonical snake_case names; keep legacy camelCase for compatibility.
+      'build_project',
+      'run_tests',
+      'lint_code',
+      'buildProject',
+      'runTests',
+      'lintCode',
+      'compile_file',
+      'compileFile',
+      'executeCode',
+      // Headless browser automation (navigate/click/fill/screenshot/getText/…) so
+      // weak (T3) models trimmed to this profile can still drive the web.
+      'WebBrowser',
+      'web_browser',
+      'verify_artifact',
+      'verifyArtifact',
+      'unpack',
+      'projectTemplate',
+      'project_template',
+      'createDocument',
+      'create_document',
+      // Image generation (绘图/文生图) + editing (图改图) + video (文生视频) —
+      // kept in the coding profile so weak (T3) models, which get trimmed to
+      // this profile, can still draw, edit images, and generate video.
+      'image_generate',
+      'imageGenerate',
+      'generate_image',
+      'image_edit',
+      'imageEdit',
+      'edit_image',
+      'img2img',
+      'video_generate',
+      'videoGenerate',
+      'generate_video',
+      // Computer-use / desktop control (auto-revealed by toolClusterActivation
+      // when user intent is desktop). Deferred: hidden until intent-gate fires.
+      'ComputerUse',
+      'DesktopControl',
+      'TerminalCapture',
+      // KHY OS bare-metal kernel: deep low-level ops (disk/memory/process/syscall)
+      // inside QEMU. Available to coding agents, not just the `full` profile.
+      'khyos',
+      'KhyOs',
+      'kernel_exec',
+    ],
+  },
+
+  analysis: {
+    description: 'Quantitative analysis and financial tools',
+    extends: 'minimal',
+    tools: ['backtest', 'strategyList', 'optimizeConfig'],
+  },
+
+  verification: {
+    description: 'Read + execute tools for testing/validation (no file writes)',
+    extends: 'minimal',
+    tools: [
+      'shellCommand',
+      'shell_command',
+      'bash',
+      'powershell',
+      'cmd',
+      'LSP',
+      'lsp',
+      'listDir',
+      'list_directory',
+      'build_project',
+      'run_tests',
+      'lint_code',
+      'buildProject',
+      'runTests',
+      'lintCode',
+      'compile_file',
+      'compileFile',
+    ],
+  },
+
+  explore: {
+    description: 'Read-only tools for codebase exploration (search + read only)',
+    // [DESIGN-AGENT-002] A2-2: a read-only profile MUST NOT carry any write
+    // channel. Bash was removed here because it can write files (redirection,
+    // `sed -i`, `tee`) and mutate repo/system state (`git add`, `npm install`) —
+    // the prompt-level "never use Bash for mkdir/rm/..." was unenforced text.
+    // Roles that genuinely need to run commands (verify: build/test) must be
+    // granted `verification` explicitly, not inherit it from `explore`.
+    tools: [
+      'readFile',
+      'Read',
+      'read_file',
+      'glob',
+      'Glob',
+      'grep',
+      'Grep',
+      'search',
+      'toolSearch',
+      // Read-only self-knowledge: an explorer that cannot locate khy's own source
+      // dir or command catalog guesses names and hunts its own files in the user's
+      // cwd. `explore` does NOT `extends minimal`, so it needs its own entry.
+      'KhySelf',
+      'khy_self',
+      'self_info',
+    ],
+  },
+
+  full: {
+    description: 'All available tools (default)',
+    tools: null, // null = no filtering
+  },
+};
+
+// ── Resolved cache (profile → Set<string>) ─────────────────────────
+
+const _resolved = new Map();
+
+// Legacy profile names to canonical tool names.
+const LEGACY_TOOL_NAME_ALIASES = Object.freeze({
+  buildProject: 'build_project',
+  runTests: 'run_tests',
+  lintCode: 'lint_code',
+  verifyArtifact: 'verify_artifact',
+});
+
+/**
+ * Resolve a profile's full tool list (following extends chain).
+ * @param {string} profileId
+ * @returns {Set<string>|null}  null means "all tools"
+ */
+function _resolve(profileId) {
+  // Cache only KNOWN profiles: an unknown id must never be memoized, and must
+  // never resolve to "all tools". Fail-closed per [DESIGN-AGENT-002] A2-3.
+  if (typeof profileId === 'string' && _resolved.has(profileId)) {
+    return _resolved.get(profileId);
+  }
+
+  const profile = PROFILES[profileId];
+  if (!profile) {
+    // Default deny: an unknown profile grants NOTHING (empty set), never
+    // everything. Callers that intend full access must pass 'full' explicitly.
+    return new Set();
+  }
+
+  if (profile.tools === null) {
+    _resolved.set(profileId, null);
+    return null;
+  }
+
+  const set = new Set(profile.tools);
+  // Add canonical names for legacy aliases to avoid profile miss and tool starvation.
+  for (const name of profile.tools) {
+    const canonical = LEGACY_TOOL_NAME_ALIASES[name];
+    if (canonical) {
+      set.add(canonical);
+    }
+  }
+
+  // Resolve extends chain
+  if (profile.extends) {
+    const parent = _resolve(profile.extends);
+    if (parent) {
+      for (const name of parent) {
+        set.add(name);
+      }
+    }
+  }
+
+  _resolved.set(profileId, set);
+  return set;
+}
+
+// ── Public API ─────────────────────────────────────────────────────
+
+/**
+ * Get the list of tool names allowed by a profile.
+ * @param {string} profileId  One of: minimal, coding, analysis, verification, explore, full
+ * @returns {string[]|null}   null means all tools are allowed (only for `full`);
+ *                            an unknown profile returns [] (deny-all, not allow-all)
+ */
+function getProfileTools(profileId) {
+  if (profileId === 'full') {
+    return null;
+  }
+  const set = _resolve(profileId);
+  return set ? [...set] : [];
+}
+
+/**
+ * Filter a tools Map by profile.
+ * @param {Map<string, object>} toolsMap
+ * @param {string} profileId
+ * @returns {Map<string, object>}  Filtered map (or original if full)
+ */
+function filterToolsByProfile(toolsMap, profileId) {
+  // Only an EXPLICIT 'full' (or omitted profile) means "all tools". An unknown
+  // profile name is a configuration error, NOT a licence for full access
+  // ([DESIGN-AGENT-002] A2-3: authorization must never fail open).
+  if (!profileId || profileId === 'full') {
+    return toolsMap;
+  }
+
+  const allowed = _resolve(profileId);
+  if (!allowed || allowed.size === 0) {
+    return new Map();
+  }
+
+  const filtered = new Map();
+  for (const [name, tool] of toolsMap) {
+    if (allowed.has(name)) {
+      filtered.set(name, tool);
+    }
+    // Also check aliases
+    if (tool.aliases && Array.isArray(tool.aliases)) {
+      for (const alias of tool.aliases) {
+        if (allowed.has(alias) && !filtered.has(name)) {
+          filtered.set(name, tool);
+          break;
+        }
+      }
+    }
+  }
+  return filtered;
+}
+
+/**
+ * List all available profile IDs and their descriptions.
+ * @returns {Array<{id: string, description: string, toolCount: number|string}>}
+ */
+function listProfiles() {
+  return Object.entries(PROFILES).map(([id, p]) => ({
+    id,
+    description: p.description,
+    toolCount: p.tools === null ? 'all' : _resolve(id)?.size || 0,
+  }));
+}
+
+module.exports = { getProfileTools, filterToolsByProfile, listProfiles, PROFILES };
