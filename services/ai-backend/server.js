@@ -1,0 +1,244 @@
+/**
+ * KHY-Quant AI Management Backend
+ *
+ * Standalone Express server for AI gateway management, monitoring,
+ * protocol conversion, plugin chain, OAuth, and TLS sidecar.
+ *
+ * Port: AI_MGMT_PORT (default 9090)
+ * Shared database with trading backend via @khy/shared.
+ * @pattern Singleton
+ */
+const path = require('path');
+
+// Set KHYQUANT_ROOT so shared config finds the right .env and data/ dir
+if (!process.env.KHYQUANT_ROOT) {
+  process.env.KHYQUANT_ROOT = path.resolve(__dirname, '../backend');
+}
+
+// Load environment
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+
+const express = require('express');
+const cors = require('cors');
+const { authenticateToken, requireAdmin } = require('./src/middleware/auth');
+
+const app = express();
+
+// ── Database readiness flag (M4 graceful degradation) ──
+// When the shared database is unreachable, the server keeps serving but marks
+// itself as degraded so the health check can report 503 and load balancers /
+// orchestrators can react. A background timer retries the connection.
+let _dbReady = false;
+
+// ── Middleware ──
+app.use(
+  cors({
+    origin: process.env.AI_MGMT_CORS_ORIGINS || '*',
+    credentials: true,
+  })
+);
+// Coze collection uploads (a 200+ workflow zip, base64-encoded) far exceed the
+// default body limit. Parse the import paths with a larger, env-tunable limit
+// BEFORE the global parser; once parsed, express.json below is a no-op for them.
+app.use(
+  '/api/workflow/import/coze',
+  express.json({ limit: process.env.KHY_COZE_UPLOAD_LIMIT || '64mb' })
+);
+app.use(express.json({ limit: '2mb' }));
+
+// ── Health Check (no auth) ──
+// Reflects DB readiness: 200/ok when the database is connected, 503/degraded
+// otherwise so upstream health probes see the degraded state.
+app.get('/api/health', (req, res) => {
+  const healthy = _dbReady === true;
+  res.status(healthy ? 200 : 503).json({
+    status: healthy ? 'ok' : 'degraded',
+    service: 'khy-ai-backend',
+    database: healthy ? 'connected' : 'disconnected',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// ── Auth (login — shared credentials with trading system) ──
+app.use('/api/auth', require('./src/routes/auth'));
+
+// ── AI Chat & Analysis (auth required) ──
+app.use('/api/ai', require('./src/routes/ai'));
+
+// ── AI Gateway Admin (admin only) ──
+app.use('/api/ai-gateway', require('./src/routes/aiGatewayAdmin'));
+
+// ── User-domain Gateway (per-user, auth only — multi-tenant) ──
+app.use('/api/user-gateway', require('./src/routes/userGateway'));
+
+// ── Visual Workflows (per-user, auth only — drag-and-drop editor) ──
+app.use('/api/workflow', require('./src/routes/workflow'));
+
+// ── Plugin marketplace (per-user, auth only — Coze-compatible OpenAPI tools) ──
+app.use('/api/marketplace', require('./src/routes/marketplace'));
+app.use('/api/plugins', require('./src/routes/plugins'));
+
+// ── Markdown 工作台：服务器文件目录读写（登录 + 路径 confinement + 文本扩展名 allowlist）──
+// 仅当特性门控 KHY_AI_MD_WORKBENCH_FILES 开（default-on）时挂载；门关整段不可达（逐字节回退，
+// 等价于该增强从未存在）。浏览器内编辑版块在前端，无需登录、不经此路由。
+const mdWorkbench = require('./src/routes/mdWorkbench');
+if (mdWorkbench.enabled()) {
+  app.use('/api/md-workbench', mdWorkbench);
+}
+
+// ── News Data (for AI agents) ──
+app.use('/api/news', require('./src/routes/news'));
+
+// ── 四端配置同步 (auth required, 后端即同步中心) ──
+// 门控 KHY_CONFIG_SYNC 关时路由返回 503, 客户端降级本地文件
+// 故障容忍: config-sync 路由只在交易后端 (KHYQUANT_ROOT) 里存在。若本安装解析不到
+// 该路由文件, 降级为 503 桩 (客户端读本地文件), 绝不让单个缺失的路由文件阻塞整个服务启动。
+function _mountConfigSync(app) {
+  const candidates = [
+    path.join(__dirname, 'src/routes/configSync'),
+    path.join(process.env.KHYQUANT_ROOT, 'src/routes/configSync'),
+  ];
+  for (const candidate of candidates) {
+    try {
+      app.use('/api/config-sync', require(candidate));
+      return;
+    } catch {
+      /* 候选解析失败 — 尝试下一个, 全失败才落 503 桩 */
+    }
+  }
+  app.use('/api/config-sync', (req, res) => {
+    res.status(503).json({
+      ok: false,
+      code: 'SYNC_DISABLED',
+      message: '配置同步路由不可用（路由文件缺失），请改用本地配置',
+    });
+  });
+}
+_mountConfigSync(app);
+
+// ── Database Initialization ──
+async function start() {
+  const PORT = parseInt(process.env.AI_MGMT_PORT, 10) || 9090;
+  // ARCH-074: 默认绑 0.0.0.0，让 LAN 上其他机器可以通过 /api/auth/login 等公开端点
+  // 使用账号密码登录本机。AI_MGMT_HOST 可由 env 覆盖（如收紧到 127.0.0.1 仅本机）。
+  // 单端口争用时由 PORT 自动探测下一可用端口（与 backend 同样的端口韧性契约）。
+  let AI_MGMT_HOST = '0.0.0.0';
+  try {
+    const { AI_MGMT_HOST: hostFromDefaults } = require('./src/constants/serviceDefaults');
+    if (typeof hostFromDefaults === 'string' && hostFromDefaults.length > 0) {
+      AI_MGMT_HOST = hostFromDefaults;
+    }
+  } catch {
+    /* serviceDefaults 加载失败时退回硬编码默认 */
+  }
+  if (process.env.AI_MGMT_HOST && process.env.AI_MGMT_HOST.length > 0) {
+    AI_MGMT_HOST = process.env.AI_MGMT_HOST;
+  }
+
+  const { sequelize } = require('./src/config/database');
+  let _dbRetryTimer = null;
+
+  // Retry the DB connection every 30s until it succeeds; once connected the
+  // service leaves the degraded state. unref() so the timer never blocks exit.
+  function scheduleDbReconnect() {
+    if (_dbRetryTimer) return;
+    _dbRetryTimer = setInterval(async () => {
+      try {
+        await sequelize.authenticate();
+        _dbReady = true;
+        clearInterval(_dbRetryTimer);
+        _dbRetryTimer = null;
+        console.log(`  [OK] Database reconnected`);
+      } catch (err) {
+        console.warn(`  [WARN] Database retry: ${err.message}`);
+      }
+    }, 30000);
+    _dbRetryTimer.unref();
+  }
+
+  try {
+    await sequelize.authenticate();
+    _dbReady = true;
+    console.log(`  [OK] Database connected`);
+  } catch (err) {
+    console.warn(`  [WARN] Database: ${err.message}`);
+    scheduleDbReconnect();
+  }
+
+  // Port resilience: a contended AI_MGMT_PORT must NOT crash the process on an
+  // unhandled EADDRINUSE. Auto-detect the next free port (same contract as the
+  // main backend) and publish the ACTUAL port to the banner + consumers.
+  const PORT_RETRY_LIMIT = Number(process.env.AI_MGMT_PORT_RETRY || 10);
+  let _actualPort = PORT;
+  const server = await new Promise((resolve, reject) => {
+    function tryListen(p) {
+      const srv = app.listen(p, AI_MGMT_HOST);
+      srv.once('listening', () => {
+        _actualPort = p;
+        resolve(srv);
+      });
+      srv.once('error', (err) => {
+        if (err.code === 'EADDRINUSE' && p - PORT < PORT_RETRY_LIMIT) {
+          console.warn(`  [WARN] port ${p} in use (EADDRINUSE); trying ${p + 1}`);
+          srv.removeAllListeners('error');
+          srv.close(() => tryListen(p + 1));
+          return;
+        }
+        reject(err);
+      });
+    }
+    tryListen(PORT);
+  });
+
+  console.log('');
+  console.log('  ╔══════════════════════════════════════╗');
+  console.log('  ║   KHY AI Management Backend          ║');
+  console.log(`  ║   Running on port ${_actualPort}              ║`);
+  console.log(`  ║   Bound to ${AI_MGMT_HOST}              ║`);
+  console.log('  ╚══════════════════════════════════════╝');
+  console.log('');
+  console.log(`  Health:   http://localhost:${_actualPort}/api/health`);
+  console.log(`  Gateway:  http://localhost:${_actualPort}/api/ai-gateway/status`);
+  if (AI_MGMT_HOST === '0.0.0.0' || AI_MGMT_HOST === '::') {
+    console.log(`  LAN:      ${_actualPort}/tcp 放行后,其他机器可 http://<本机IP>:${_actualPort}/api/auth/login`);
+  }
+  if (_actualPort !== PORT) {
+    console.log(`  [NOTE] requested ${PORT}; actually serving on ${_actualPort} (port in use)`);
+  }
+  console.log('');
+
+  // WebSocket support for real-time AI chat (optional)
+  try {
+    const { WebSocketServer } = require('ws');
+    const wss = new WebSocketServer({ server, path: '/ws' });
+    wss.on('connection', (ws) => {
+      ws.send(JSON.stringify({ type: 'connected', service: 'khy-ai-backend' }));
+    });
+    console.log('  [OK] WebSocket enabled on /ws');
+  } catch (err) {
+    console.warn('  [WARN] WebSocket:', err.message);
+  }
+
+  // ── Graceful shutdown ──
+  // Stop accepting new connections and let in-flight requests drain before exit.
+  function shutdown(signal) {
+    console.log(`\n  [INFO] Received ${signal}, shutting down gracefully...`);
+    server.close(() => {
+      console.log('  [OK] HTTP server closed');
+      process.exit(0);
+    });
+  }
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+
+  return server;
+}
+
+start().catch((err) => {
+  console.error('AI Backend failed to start:', err);
+  process.exit(1);
+});
+
+module.exports = app;
