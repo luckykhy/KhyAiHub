@@ -1,0 +1,13 @@
+  console.warn
+    [ccOverlayFit] skipped — needs NODE_OPTIONS=--experimental-vm-modules. Run: npm run --workspace backend test:tui
+
+    [0m [90m 38 |[39m [36mif[39m ([33m![39m[33mVM_MODULES[39m) {
+     [90m 39 |[39m   [90m// eslint-disable-next-line no-console[39m
+    [31m[1m>[22m[39m[90m 40 |[39m   console[33m.[39mwarn(
+     [90m    |[39m           [31m[1m^[22m[39m
+     [90m 41 |[39m     [32m'[ccOverlayFit] skipped — needs NODE_OPTIONS=--experimental-vm-modules. '[39m [33m+[39m
+     [90m 42 |[39m       [32m'Run: npm run --workspace backend test:tui'[39m
+     [90m 43 |[39m   )[33m;[39m[0m
+
+      at Object.warn (tests/tui/ccOverlayFit.test.js:40:11)
+
