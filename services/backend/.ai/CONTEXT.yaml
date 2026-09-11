@@ -1,0 +1,862 @@
+# CONTEXT — backend 契约与符号 (khy 自动生成种子文档)
+# 机器可读。stack/entry_points/build 来自 manifest；symbols 来自轻量正则。
+generated:
+  mode: auto                # auto = 机器自有，可被 refresh 覆盖；改为 manual 则人工接管
+  tool: "khy-metadata/4"
+  fingerprint: 827777870c045271
+project: backend
+stack: [node, "node>=20.18.1", docker]
+entry_points:
+  - { path: server.js, kind: "node-main", hint: "package.json#main" }
+  - { path: ./bin/khy.js, kind: "cli-bin", hint: "bin:khyquant" }
+  - { path: ./bin/khy.js, kind: "cli-bin", hint: "bin:khy-os" }
+  - { path: ./bin/khy.js, kind: "cli-bin", hint: "bin:khy" }
+build:
+  install: [npm install]
+  build:   []
+  run:     [npm start, npm run dev]
+  test:    [npm test]
+deps:
+  primary: ["@aws/codewhisperer-streaming-client", "@babel/parser", "@khy/shared", "@simplewebauthn/server", axios, bcryptjs, chalk, cheerio, "cli-table3", cors, dotenv, express, "express-rate-limit", "express-validator", helmet, "iconv-lite", ink, inquirer, ipaddr.js, "js-yaml"]
+config_files:
+  - .env
+  - ".env.bak-20260914-codexpin"
+  - ".env.bak-20260917-statusfix"
+  - ".env.bak-cleanup"
+  - .env.example
+  - babel.config.json
+  - esbuild.config.js
+  - eslint.config.js
+  - jest.config.js
+  - config/resources.json
+  - "config/runtime-binaries.json"
+  - src/.env
+  - config/models/features.json
+  - config/models/style_templates.js
+  - src/config/a2aConfig.js
+  - src/config/database.js
+  - src/config/env.js
+  - src/config/settingsWhitelist.js
+  - "src/config/sqlite-adapter.js"
+  - src/config/sqliteCompat.js
+  - src/routes/settings.js
+  - src/vim/settings.js
+  - tests/cli/config.handler.test.js
+  - tests/config/database.test.js
+  - tests/config/env.test.js
+  - tests/config/settingsWhitelist.test.js
+  - tests/gateway/codexAdapter.tomlEditing.test.js
+  - src/cli/handlers/config.js
+  - src/services/config/index.js
+symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
+  TmpKoh.java:
+    lang: java
+    decls:
+      - { kind: class, name: TmpKoh }
+  "check-env.js":
+    lang: javascript
+    decls: []
+  "create-test-users.js":
+    lang: javascript
+    decls: []
+  "docker-entrypoint.js":
+    lang: javascript
+    decls: []
+  esbuild.config.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: build }
+      - { kind: const, name: sizeKB }
+  eslint.config.js:
+    lang: javascript
+    decls: []
+  inference_server.py:
+    lang: python
+    decls:
+      - { kind: def, name: get_model }
+      - { kind: class, name: InferenceHandler }
+      - { kind: def, name: log_message }
+      - { kind: def, name: _send_json }
+      - { kind: def, name: do_GET }
+      - { kind: def, name: do_POST }
+      - { kind: def, name: _timeout_handler }
+      - { kind: def, name: main }
+  jest.config.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: findNodeTestFiles }
+      - { kind: fn, name: findStandaloneTestFiles }
+      - { kind: const, name: escapeRegExp }
+  make_proxy.py:
+    lang: python
+    decls:
+      - { kind: def, name: od }
+  proxy.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: sj }
+      - { kind: fn, name: se }
+      - { kind: fn, name: ct }
+      - { kind: fn, name: at2o }
+  proxy_test2.js:
+    lang: javascript
+    decls: []
+  "reset-database.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: main }
+  server.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: _buildDefaultCorsOrigins }
+      - { kind: fn, name: _discoverPgPaths }
+      - { kind: fn, name: mountOptional }
+      - { kind: fn, name: reportSkippedMounts }
+      - { kind: fn, name: createAiProxy }
+      - { kind: const, name: healthHandler }
+      - { kind: fn, name: getActiveWsClientCount }
+      - { kind: fn, name: resetIdleShutdown }
+      - { kind: fn, name: startIdleShutdownIfEmpty }
+      - { kind: fn, name: startWsProtocolHeartbeat }
+      - { kind: fn, name: stopWsProtocolHeartbeat }
+      - { kind: fn, name: wsRateLimitCheck }
+      - { kind: fn, name: autoStartPostgreSQL }
+      - { kind: fn, name: listenWithAutoPort }
+      - { kind: const, name: tryListen }
+      - { kind: const, name: onError }
+      - { kind: const, name: onListening }
+      - { kind: fn, name: startServer }
+      - { kind: fn, name: gracefulShutdown }
+  setup.js:
+    lang: javascript
+    decls:
+      - { kind: const, name: ok }
+      - { kind: const, name: fail }
+      - { kind: const, name: warn }
+      - { kind: const, name: info }
+      - { kind: const, name: step }
+      - { kind: fn, name: getPlatform }
+      - { kind: fn, name: cnMirrorOptIn }
+      - { kind: fn, name: runSilent }
+      - { kind: fn, name: runVisible }
+      - { kind: fn, name: createPrompt }
+      - { kind: const, name: ask }
+      - { kind: const, name: confirm }
+      - { kind: const, name: select }
+      - { kind: const, name: close }
+      - { kind: fn, name: checkNode }
+      - { kind: fn, name: checkPython }
+      - { kind: fn, name: checkPip }
+      - { kind: fn, name: checkGit }
+      - { kind: fn, name: checkPythonPackage }
+      - { kind: fn, name: generateJwtSecret }
+      - { kind: fn, name: generateEnv }
+      - { kind: fn, name: main }
+      - { kind: fn, name: generateEnvInteractive }
+  "start-daemon.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: main }
+  "start-with-db.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: findPostgreSQLPath }
+      - { kind: fn, name: checkPostgreSQLStatus }
+      - { kind: fn, name: startPostgreSQL }
+      - { kind: fn, name: startBackend }
+      - { kind: fn, name: main }
+  "test-db-connection.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: main }
+  akshare_scripts/akshare_data.py:
+    lang: python
+    decls:
+      - { kind: def, name: setup_session }
+      - { kind: def, name: patched_get }
+      - { kind: def, name: patched_post }
+      - { kind: def, name: get_stock_realtime }
+      - { kind: def, name: get_stock_kline }
+      - { kind: def, name: get_index_realtime }
+  akshare_scripts/akshare_data_fixed.py:
+    lang: python
+    decls:
+      - { kind: def, name: create_session }
+      - { kind: def, name: get_stock_realtime }
+      - { kind: def, name: get_stock_kline }
+      - { kind: def, name: get_index_realtime }
+  akshare_scripts/akshare_data_full_history.py:
+    lang: python
+    decls:
+      - { kind: def, name: get_stock_realtime }
+      - { kind: def, name: get_stock_kline }
+      - { kind: def, name: get_index_realtime }
+  akshare_scripts/akshare_data_server.py:
+    lang: python
+    decls:
+      - { kind: def, name: get_stock_kline }
+  akshare_scripts/akshare_data_v2.py:
+    lang: python
+    decls:
+      - { kind: def, name: get_stock_kline }
+  akshare_scripts/alternative_data_sources.py:
+    lang: python
+    decls:
+      - { kind: def, name: normalize_symbol }
+      - { kind: def, name: http_get }
+      - { kind: def, name: fetch_eastmoney_kline }
+      - { kind: def, name: fetch_eastmoney_quote }
+      - { kind: def, name: fetch_tencent_kline }
+      - { kind: def, name: fetch_tencent_quote }
+      - { kind: def, name: fetch_sina_quote }
+      - { kind: def, name: fetch_netease_kline }
+      - { kind: def, name: fetch_netease_quote }
+      - { kind: def, name: fetch_yahoo_kline }
+      - { kind: def, name: fetch_kline_with_fallback }
+      - { kind: def, name: fetch_quote_with_fallback }
+      - { kind: def, name: test_all_sources }
+      - { kind: def, name: main }
+  "migrations/add-close-fields.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: migrate }
+  "migrations/add-order-type-field.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: addOrderTypeField }
+  "migrations/add-webauthn-to-users.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: up }
+  "migrations/create-kline-cache-table.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: up }
+      - { kind: fn, name: down }
+  "migrations/create-user-favorites-table.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: createUserFavoritesTable }
+  "migrations/fix-instruments-name-nullable.js":
+    lang: javascript
+    decls: []
+  scripts/_tmp_dbg.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: _bracketBodyEnd }
+  scripts/_tmp_dbg10.js:
+    lang: javascript
+    decls: []
+  scripts/_tmp_dbg11.js:
+    lang: javascript
+    decls:
+      - { kind: class, name: must }
+      - { kind: class, name: immediately }
+  scripts/_tmp_dbg12.js:
+    lang: javascript
+    decls:
+      - { kind: class, name: safely }
+  scripts/_tmp_dbg14.js:
+    lang: javascript
+    decls: []
+  scripts/_tmp_dbg15.js:
+    lang: javascript
+    decls:
+      - { kind: class, name: must }
+      - { kind: class, name: escapes }
+      - { kind: class, name: char }
+  scripts/_tmp_dbg16.js:
+    lang: javascript
+    decls:
+      - { kind: class, name: built }
+      - { kind: class, name: means }
+      - { kind: class, name: members }
+  scripts/_tmp_dbg18.js:
+    lang: javascript
+    decls:
+      - { kind: class, name: excluding }
+  scripts/_tmp_dbg2.js:
+    lang: javascript
+    decls: []
+  scripts/_tmp_dbg3.js:
+    lang: javascript
+    decls: []
+  scripts/_tmp_dbg4.js:
+    lang: javascript
+    decls: []
+  scripts/_tmp_dbg5.js:
+    lang: javascript
+    decls:
+      - { kind: class, name: should }
+      - { kind: class, name: match }
+  scripts/_tmp_dbg6.js:
+    lang: javascript
+    decls:
+      - { kind: class, name: in }
+  scripts/_tmp_dbg7.js:
+    lang: javascript
+    decls: []
+  scripts/_tmp_dbg8.js:
+    lang: javascript
+    decls: []
+  scripts/_tmp_dbg9.js:
+    lang: javascript
+    decls:
+      - { kind: class, name: is }
+      - { kind: class, name: is }
+      - { kind: class, name: must }
+      - { kind: class, name: containing }
+  "scripts/ai-manage-daemon.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: _runtimeFiles }
+      - { kind: fn, name: addActivityProbe }
+      - { kind: fn, name: anyProbeActive }
+      - { kind: fn, name: noteRequestActivity }
+      - { kind: fn, name: getState }
+      - { kind: fn, name: _resetForTests }
+      - { kind: fn, name: parseIntArg }
+      - { kind: fn, name: parsePortArg }
+      - { kind: fn, name: parseStringArg }
+      - { kind: fn, name: hasFlag }
+      - { kind: fn, name: ensureDir }
+      - { kind: fn, name: writeRuntime }
+      - { kind: fn, name: clearRuntime }
+      - { kind: fn, name: isPidAlive }
+      - { kind: fn, name: waitForExit }
+      - { kind: fn, name: terminatePid }
+      - { kind: fn, name: canBindPort }
+      - { kind: fn, name: isPortOpen }
+      - { kind: fn, name: findAvailablePort }
+      - { kind: fn, name: waitPortOpen }
+      - { kind: fn, name: safeJsonParse }
+      - { kind: fn, name: sendJson }
+      - { kind: fn, name: readBody }
+      - { kind: fn, name: readAuthToken }
+      - { kind: fn, name: quoteForCmd }
+      - { kind: fn, name: _decodeConsoleLine }
+      - { kind: fn, name: _pipeConsoleToUtf8Log }
+      - { kind: const, name: flushLine }
+      - { kind: fn, name: startFrontendProcess }
+      - { kind: fn, name: resolveFrontend }
+  scripts/archDebtScan.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: intEnv }
+      - { kind: fn, name: ratioEnv }
+      - { kind: fn, name: listJsFiles }
+      - { kind: fn, name: rel }
+      - { kind: fn, name: _prevSignificant }
+      - { kind: fn, name: _startsRegex }
+      - { kind: fn, name: stripComments }
+      - { kind: fn, name: extractRequires }
+      - { kind: fn, name: scanLayering }
+      - { kind: fn, name: scanGodFiles }
+      - { kind: fn, name: scanGodGrowth }
+      - { kind: fn, name: classifyChangedLoc }
+      - { kind: fn, name: scanGodReport }
+      - { kind: const, name: countMatches }
+      - { kind: const, name: sectionBanners }
+      - { kind: fn, name: resolveModule }
+      - { kind: fn, name: buildRequireGraph }
+      - { kind: fn, name: _sccComponents }
+      - { kind: const, name: iterativeStrongConnect }
+      - { kind: fn, name: findCycles }
+      - { kind: fn, name: scanCycles }
+      - { kind: fn, name: NAME }
+      - { kind: fn, name: _blankNonCode }
+      - { kind: fn, name: K }
+      - { kind: fn, name: scanDriftR4 }
+      - { kind: fn, name: NAME }
+      - { kind: fn, name: name }
+      - { kind: fn, name: _giantSizeOf }
+      - { kind: fn, name: analyzeGiantScc }
+      - { kind: const, name: label }
+  scripts/ccCommandParityAudit.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: norm }
+      - { kind: fn, name: loadCcCommands }
+      - { kind: fn, name: loadKhyCommands }
+      - { kind: fn, name: main }
+  "scripts/check-file-headers.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: collectJsFiles }
+      - { kind: fn, name: hasJsDocHeader }
+      - { kind: fn, name: main }
+      - { kind: const, name: coveragePercent }
+  "scripts/check-routes-load.js":
+    lang: javascript
+    decls: []
+  "scripts/comprehensive-instruments.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: getAllInstruments }
+      - { kind: fn, name: getInstrumentsByType }
+      - { kind: fn, name: getInstrumentsBySector }
+      - { kind: fn, name: getAllSectors }
+      - { kind: fn, name: getAllMarkets }
+      - { kind: fn, name: searchInstruments }
+  "scripts/create-admin.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: createDefaultAdmin }
+  scripts/gateBRunner.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: createResultTemplate }
+      - { kind: fn, name: generateReport }
+      - { kind: fn, name: main }
+  scripts/gateCScorecard.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: req }
+      - { kind: const, name: score }
+      - { kind: const, name: score }
+      - { kind: fn, name: computeScorecard }
+      - { kind: fn, name: main }
+  "scripts/khyos-console.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: parseArgs }
+      - { kind: fn, name: main }
+      - { kind: const, name: shutdown }
+  scripts/makeSourceSnapshot.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: parseArgs }
+      - { kind: fn, name: git }
+      - { kind: fn, name: warn }
+      - { kind: fn, name: info }
+      - { kind: fn, name: findRestoreDoc }
+      - { kind: fn, name: isWorkingTreeDirty }
+      - { kind: fn, name: countTreeFiles }
+      - { kind: fn, name: captureSource }
+      - { kind: fn, name: main }
+      - { kind: const, name: mb }
+  scripts/parityScorecard.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: req }
+      - { kind: fn, name: safe }
+      - { kind: fn, name: hasFns }
+      - { kind: fn, name: hasKeys }
+      - { kind: fn, name: v1AgenticLoop }
+      - { kind: fn, name: v2ToolCoverage }
+      - { kind: fn, name: v3ToolContract }
+      - { kind: fn, name: v4Convergence }
+      - { kind: fn, name: v5Safety }
+      - { kind: const, name: hit }
+      - { kind: fn, name: v6SelfAwareness }
+      - { kind: fn, name: s1PlanMode }
+      - { kind: fn, name: s2PlanVerify }
+      - { kind: fn, name: hasRuntimeEvidence }
+      - { kind: fn, name: isStepExecutionFailure }
+      - { kind: const, name: hit }
+      - { kind: fn, name: s3SpecClosedLoop }
+      - { kind: const, name: hit }
+      - { kind: fn, name: s4TaskDecomp }
+      - { kind: fn, name: s5SpecSkill }
+      - { kind: fn, name: s6ExternalOrch }
+      - { kind: const, name: hit }
+      - { kind: fn, name: x1TestScale }
+      - { kind: fn, name: computeScorecard }
+      - { kind: const, name: sum }
+      - { kind: fn, name: pct }
+      - { kind: fn, name: renderText }
+      - { kind: const, name: cell }
+      - { kind: fn, name: main }
+  src/index.js:
+    lang: javascript
+    decls: []
+  tests/a2a.test.js:
+    lang: javascript
+    decls: []
+  tests/acceptsZhArgHoist.test.js:
+    lang: javascript
+    decls: []
+  tests/acpTransport.test.js:
+    lang: javascript
+    decls: []
+  tests/actionAttribution.test.js:
+    lang: javascript
+    decls: []
+  tests/actionContractVerifier.test.js:
+    lang: javascript
+    decls:
+      - { kind: const, name: ev }
+      - { kind: const, name: ev }
+      - { kind: const, name: ev }
+      - { kind: const, name: ev }
+      - { kind: const, name: ev }
+      - { kind: const, name: ev }
+  tests/activeAssist.test.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: load }
+  tests/adapterVisionCapability.test.js:
+    lang: javascript
+    decls: []
+  "tests/agent-context.test.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: test }
+      - { kind: fn, name: group }
+  tests/agentConstraints.test.js:
+    lang: javascript
+    decls: []
+  tests/agentFsService.test.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: _gitAvailable }
+  tests/agnesImage.test.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: clearImgEnv }
+      - { kind: fn, name: mockFetch }
+      - { kind: fn, name: okJson }
+  tests/agnesProvisioner.test.js:
+    lang: javascript
+    decls: []
+  tests/agnesVideo.test.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: clearVidEnv }
+      - { kind: fn, name: mockFetch }
+      - { kind: fn, name: okJson }
+  tests/aiBackendDataHomeConvergence.test.js:
+    lang: javascript
+    decls: []
+  tests/aiBackendPortResilience.test.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: grabPort }
+      - { kind: fn, name: probeHealth }
+      - { kind: fn, name: runServerOnPort }
+  tests/aiChat.controlRequest.ui.test.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: exports }
+      - { kind: fn, name: loadModule }
+      - { kind: fn, name: $ }
+  tests/aiCli.concurrentPreferredIsolation.test.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: setupAiModule }
+  tests/aiCli.feedback.stability.test.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: createGatewayMock }
+      - { kind: fn, name: setupAiModule }
+  tests/aiCli.greetingFastpath.test.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: setupAiModule }
+  tests/aiCli.lightweightToolCuration.test.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: setupAiModule }
+      - { kind: const, name: toolNamesOf }
+  tests/aiCli.reactiveCompact.test.js:
+    lang: javascript
+    decls: []
+  tests/aiCli.requestTraceForwarding.test.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: setupAiModule }
+  tests/aiCli.smallTaskIdleTimeout.test.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: setupAiModule }
+  tests/aiCli.studyModePrompt.test.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: setupAiModule }
+      - { kind: const, name: defaultGenerate }
+  tests/aiCli.toolPrefaceStreaming.test.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: loadCreateInterceptor }
+  tests/aiCli.truncationRecovery.test.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: setupAiModule }
+  tests/aiGateway.apiPoolStrategy.test.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: buildGatewayWithApiAdapter }
+  tests/aiGateway.contextOverflowShrink.test.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: cleanupGatewaySingleton }
+      - { kind: fn, name: createOverflowAdapter }
+      - { kind: fn, name: makeFakeGateway }
+      - { kind: const, name: attempt }
+  "wasm-chain/chain.mbt":
+    lang: moonbit
+    decls:
+      - { kind: fn, name: render_template }
+      - { kind: fn, name: string_replace }
+      - { kind: fn, name: count_placeholders }
+      - { kind: fn, name: extract_placeholders }
+      - { kind: fn, name: format_history }
+      - { kind: fn, name: estimate_history_tokens }
+      - { kind: fn, name: max_turns_for_budget }
+      - { kind: fn, name: parse_react_response }
+      - { kind: fn, name: validate_input }
+      - { kind: fn, name: estimate_chain_tokens }
+      - { kind: fn, name: string_index_of }
+      - { kind: fn, name: string_trim }
+      - { kind: fn, name: escape_json }
+  "wasm-chain/chain_test.mbt":
+    lang: moonbit
+    decls: []
+  "wasm-context/context_utils.mbt":
+    lang: moonbit
+    decls:
+      - { kind: fn, name: estimate_tokens }
+      - { kind: fn, name: estimate_tokens_with_margin }
+      - { kind: fn, name: fnv1a_hash }
+      - { kind: fn, name: fnv1a_combine }
+      - { kind: fn, name: truncate_position }
+      - { kind: fn, name: check_overflow }
+      - { kind: fn, name: single_tool_result_cap }
+      - { kind: fn, name: preemptive_threshold }
+  "wasm-indicators/indicators.mbt":
+    lang: moonbit
+    decls:
+      - { kind: fn, name: sma }
+      - { kind: fn, name: ema }
+      - { kind: fn, name: macd }
+      - { kind: fn, name: rsi }
+      - { kind: fn, name: bollinger_bands }
+  "wasm-indicators/indicators_test.mbt":
+    lang: moonbit
+    decls: []
+  "wasm-indicators/indicators_wbtest.mbt":
+    lang: moonbit
+    decls: []
+  config/models/style_templates.js:
+    lang: javascript
+    decls: []
+  src/agents/builtInAgents.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: getBuiltInAgents }
+      - { kind: fn, name: getActiveAgentsFromList }
+      - { kind: fn, name: formatAgentLine }
+  src/agents/ccAgentBridge.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: isCcAgentBridgeEnabled }
+      - { kind: fn, name: ccAgentSearchDirs }
+      - { kind: const, name: push }
+  src/agents/constraints.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: readOnlyProhibitions }
+  src/agents/index.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: getAgentDefinitions }
+  src/agents/loadAgents.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: parseFrontmatter }
+      - { kind: fn, name: parseAgentFromMarkdown }
+      - { kind: fn, name: _findNestedAgentDirs }
+      - { kind: const, name: walk }
+      - { kind: fn, name: loadCustomAgents }
+      - { kind: fn, name: clearAgentCache }
+      - { kind: fn, name: parseAgentFromJson }
+  src/agents/loadBuiltInMarkdownAgents.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: loadBuiltInMarkdownAgents }
+      - { kind: fn, name: _extractBuiltinFlag }
+      - { kind: fn, name: clearMarkdownBuiltInCache }
+  src/agents/prompt.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: getAgentToolPrompt }
+      - { kind: fn, name: definition }
+      - { kind: fn, name: that }
+      - { kind: fn, name: isPrime }
+  src/agents/types.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: isBuiltInAgent }
+      - { kind: fn, name: isCustomAgent }
+      - { kind: fn, name: isPluginAgent }
+  src/assistant/autoDream.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: _archiveMemoryFile }
+      - { kind: fn, name: shouldDream }
+      - { kind: const, name: hoursSince }
+      - { kind: fn, name: runDream }
+  src/assistant/consolidationLock.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: _lockPath }
+      - { kind: fn, name: _isProcessRunning }
+      - { kind: fn, name: readLastConsolidatedAt }
+      - { kind: fn, name: tryAcquireLock }
+      - { kind: fn, name: releaseLock }
+      - { kind: fn, name: rollbackLock }
+  src/assistant/dailyLog.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: _logsDir }
+      - { kind: fn, name: _logPath }
+      - { kind: fn, name: appendLog }
+      - { kind: fn, name: readTodayLog }
+      - { kind: fn, name: readLogForDate }
+      - { kind: fn, name: getRecentLogs }
+      - { kind: fn, name: getLogFileCount }
+  src/assistant/index.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: isAssistantMode }
+      - { kind: fn, name: _getDreamingEngine }
+      - { kind: fn, name: getDreamingEngine }
+      - { kind: fn, name: _dreamPromoteEnabled }
+      - { kind: fn, name: _dreamDeepEnabled }
+      - { kind: fn, name: _promoteDreamInsights }
+      - { kind: fn, name: activate }
+      - { kind: fn, name: deactivate }
+      - { kind: fn, name: getStatus }
+      - { kind: fn, name: logInteraction }
+  src/assistant/proactive.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: isProactiveActive }
+      - { kind: fn, name: activate }
+      - { kind: fn, name: deactivate }
+      - { kind: fn, name: pause }
+      - { kind: fn, name: resume }
+      - { kind: fn, name: subscribe }
+      - { kind: fn, name: _emit }
+      - { kind: fn, name: _runTick }
+  src/bootstrap/adminAutoInit.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: isDisabled }
+      - { kind: fn, name: ensureDefaultAdmin }
+  src/bootstrap/aiBackendModuleResolve.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: _backendNodeModulesDir }
+      - { kind: fn, name: ensureAiBackendResolvable }
+      - { kind: export, name: __test__ }
+  src/bootstrap/chalkCompat.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: _hexPairToAnsi }
+      - { kind: fn, name: _ansi256PairToAnsi }
+      - { kind: fn, name: _rgbPairToAnsi }
+      - { kind: fn, name: _applyChain }
+      - { kind: fn, name: _buildCompat }
+      - { kind: fn, name: _isStyleProp }
+      - { kind: fn, name: makeChained }
+      - { kind: fn, name: install }
+  src/bootstrap/dbAutoMigration.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: compareVersions }
+      - { kind: fn, name: resolveCurrentVersion }
+      - { kind: fn, name: resolveStateFile }
+      - { kind: fn, name: readState }
+      - { kind: fn, name: writeState }
+      - { kind: fn, name: isWritableDir }
+      - { kind: fn, name: log }
+      - { kind: fn, name: warn }
+      - { kind: fn, name: _run }
+      - { kind: fn, name: runAutoDbMigration }
+  src/bootstrap/ensureAuthSecret.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: _canonicalEnvPath }
+      - { kind: fn, name: _readEnvValueFromFile }
+      - { kind: fn, name: ensureJwtSecret }
+  src/bootstrap/ensureProxyCoreEnv.js:
+    lang: javascript
+    decls:
+      - { kind: const, name: _REAL_HOMEDIR }
+      - { kind: fn, name: _setDeps }
+      - { kind: fn, name: restore }
+      - { kind: fn, name: isAutoseedEnabled }
+      - { kind: fn, name: _overlayPath }
+      - { kind: fn, name: _fileHasFlag }
+      - { kind: fn, name: ensureProxyCoreEnv }
+  src/bootstrap/expandEnvPlaceholders.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: _hasPlaceholder }
+      - { kind: fn, name: expandEnvPlaceholders }
+  src/bootstrap/init.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: getDbHealthInitPromise }
+      - { kind: fn, name: init }
+      - { kind: fn, name: _doInit }
+      - { kind: const, name: userEnvPath }
+      - { kind: const, name: _initDbHealth }
+      - { kind: fn, name: isComplete }
+  src/bootstrap/migrations.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: compareVersions }
+      - { kind: fn, name: _getVersionFilePath }
+      - { kind: fn, name: _readVersionFile }
+      - { kind: fn, name: _writeVersionFile }
+      - { kind: fn, name: runMigrations }
+      - { kind: fn, name: getCurrentVersion }
+  src/bootstrap/moduleSelfHeal.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: isEnabled }
+      - { kind: fn, name: _scanDir }
+      - { kind: fn, name: _buildIndex }
+      - { kind: fn, name: _ensureIndex }
+      - { kind: fn, name: _tryHeal }
+      - { kind: fn, name: install }
+      - { kind: fn, name: _selfHealingResolve }
+      - { kind: fn, name: getHealLog }
+      - { kind: fn, name: isInstalled }
+  src/bootstrap/prefetch.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: parallelPrefetch }
+      - { kind: fn, name: deferredPrefetch }
+      - { kind: const, name: busy }
+      - { kind: const, name: deliver }
+      - { kind: const, name: flush }
+      - { kind: const, name: emit }
+      - { kind: const, name: emitFootprintNotice }
+  src/bootstrap/setup.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: setup }
+  src/bootstrap/shutdown.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: to }
+      - { kind: fn, name: addShutdownHook }
+      - { kind: fn, name: removeShutdownHook }
+      - { kind: fn, name: requestShutdown }
+      - { kind: fn, name: registerShutdownHandlers }
+      - { kind: fn, name: _tryRequireLogger }
+  src/bootstrap/startupFailureExplain.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: isEnabled }
+      - { kind: fn, name: _safeStr }
+      - { kind: fn, name: _missingModuleName }
+      - { kind: fn, name: _packageNameFromSpec }
+      - { kind: fn, name: _specPathTail }
+      - { kind: fn, name: _looksHollow }
+      - { kind: fn, name: _fixIsSafe }
+      - { kind: fn, name: _render }
+      - { kind: fn, name: explainStartupFailure }
