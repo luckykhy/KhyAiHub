@@ -1,0 +1,116 @@
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+
+/**
+ * Some suites under tests/ AND src/ (e.g. `__tests__/` colocated next to their
+ * implementation) are authored for Node's built-in `node:test` runner (they
+ * `require('node:test')`), not Jest. Jest tears its environment down before
+ * those suites' async bodies execute, which surfaces as spurious "import after
+ * teardown" / "not a function" / "must contain at least one test" failures even
+ * though the suites pass cleanly under `node --test` (see the `test:node`
+ * script).
+ *
+ * A second group under tests/ are standalone self-running scripts: they execute
+ * their assertions at top level and print a summary (e.g. `process.exit(1)` on
+ * failure), registering no test at all — Jest rejects them with "must contain
+ * at least one test" even though they pass under plain `node tests/foo.test.js`
+ * and under `node --test` (which runs the file body as the test).
+ *
+ * Rather than hand-maintain an ignore list, discover those files by their
+ * runner marker so the two runners stay cleanly separated as suites are added
+ * or removed.
+ */
+function findNodeTestFiles(dir) {
+  const found = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name === 'node_modules') continue;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      found.push(...findNodeTestFiles(full));
+    } else if (entry.name.endsWith('.test.js')) {
+      const src = fs.readFileSync(full, 'utf8');
+      if (src.includes("require('node:test')") || src.includes('require("node:test")')) {
+        found.push(full);
+      }
+    }
+  }
+  return found;
+}
+
+// Registration markers of a real Jest suite. `it.each(...)(...)` / `test.each`
+// / `describe.each` register tests too, so `.each` is covered explicitly.
+const JEST_REGISTER_RE =
+  /(?:describe|test|it)\s*\.\s*each\s*\(|\b(?:describe|test|it)\s*\(\s*['"`]/;
+const NODE_TEST_RE = /require\s*\(\s*['"]node:test['"]\s*\)|from\s*['"]node:test['"]/;
+
+function findStandaloneTestFiles(dir) {
+  const found = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name === 'node_modules') continue;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      found.push(...findStandaloneTestFiles(full));
+    } else if (entry.name.endsWith('.test.js')) {
+      const src = fs.readFileSync(full, 'utf8');
+      if (!JEST_REGISTER_RE.test(src) && !NODE_TEST_RE.test(src)) {
+        found.push(full);
+      }
+    }
+  }
+  return found;
+}
+
+const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// Every root that can hold a `.test.js`, so a node:test suite is never left
+// unignored just because it lives outside tests/ or src/ (e.g. the vendored
+// shared runtime under vendor/). Missing roots are skipped rather than throwing,
+// since vendor/ is only present in the packaged/vendored layout.
+const TEST_ROOTS = ['tests', 'src', 'test', 'vendor'];
+
+const existingRoots = TEST_ROOTS.map((r) => path.join(__dirname, r)).filter((p) =>
+  fs.existsSync(p),
+);
+
+const nodeTestIgnores = [
+  ...existingRoots.flatMap(findNodeTestFiles),
+  ...existingRoots.flatMap(findStandaloneTestFiles),
+].map(escapeRegExp);
+
+const moduleExports = {
+  testPathIgnorePatterns: ['/node_modules/', ...nodeTestIgnores],
+  // string-width@5 (and its ESM deps) ship only an ESM entry point. The TUI
+  // wrapCell/fill-width leaves require it at runtime; under Jest's CJS transform
+  // that require would hit an ESM file and fail to parse. A no-op transform lets
+  // the default babel-jest/Babel pipeline handle the ESM in node_modules for
+  // those specific packages while leaving the rest of node_modules untouched.
+  transform: {
+    '^.+\\.[jt]s$': 'babel-jest',
+  },
+  transformIgnorePatterns: [
+    '/node_modules/',
+    // Let the ESM-only width/char library through the transform.
+    '/node_modules/(string-width|strip-ansi|get-east-asian-width|ansi-regex|grapheme-splitter)/',
+  ],
+  // Inject a portable Git onto PATH in the MAIN jest process (before workers
+  // fork) so suites that execFileSync('git', …) resolve on machines without a
+  // system Git for Windows. Must be globalSetup, not setupFiles: the sandbox
+  // env is a snapshot copy that child spawns do not see. See the file's header.
+  globalSetup: '<rootDir>/tests/jest.gitGlobalSetup.js',
+  // Pin the jest suite to RTK-off so native command-shape assertions are
+  // deterministic regardless of whether an `rtk` binary is on PATH (see the
+  // setup file's header for the rationale). RTK logic is covered separately by
+  // tests/rtkMode.test.js (node:test, injected spawn).
+  setupFiles: [
+    '<rootDir>/tests/jest.rtkOff.setup.js',
+    // Pin data home to a throwaway dir so the task-store singleton never
+    // touches the live task list (see the setup file's header).
+    '<rootDir>/tests/jest.taskStoreIsolation.setup.js',
+    // Pin the log dir likewise, so suites stop appending fixture noise to the
+    // real app-/error-<date>.log files (see the setup file's header).
+    '<rootDir>/tests/jest.logIsolation.setup.js',
+  ],
+};
+module.exports = moduleExports;
