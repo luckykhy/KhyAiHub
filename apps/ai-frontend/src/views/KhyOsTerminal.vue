@@ -1,0 +1,340 @@
+<template>
+  <div class="khyos-view">
+    <div class="khyos-toolbar">
+      <div class="khyos-title">
+        <el-icon><Cpu /></el-icon>
+        <span>KHY OS 内核终端</span>
+        <el-tag :type="statusTag.type" size="small" effect="dark">{{ statusTag.label }}</el-tag>
+      </div>
+      <div class="khyos-actions">
+        <el-button size="small" type="primary" :icon="Monitor" @click="enterDesktop"
+          >进入桌面</el-button
+        >
+        <el-button size="small" :disabled="connecting" @click="reconnect">重新连接</el-button>
+        <el-button
+          size="small"
+          type="danger"
+          plain
+          :disabled="status !== 'ready'"
+          @click="stopKernel"
+          >停止内核</el-button
+        >
+      </div>
+    </div>
+    <div ref="termEl" class="khyos-term"></div>
+    <div class="khyos-hint">
+      裸机内核运行于 QEMU，串口桥接至浏览器。试试 <code>help</code> / <code>ps</code> /
+      <code>ls /bin</code>。 <code>/disk</code> 下文件持久化（KhyFS）。
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, reactive, computed, onMounted, onBeforeUnmount, shallowRef } from 'vue';
+import { useRouter } from 'vue-router';
+import { resolveWsUrl } from '@/utils/ws';
+import { useUserStore } from '@/stores/user';
+import { Cpu, Monitor } from '@element-plus/icons-vue';
+import { Terminal } from '@xterm/xterm';
+import { FitAddon } from '@xterm/addon-fit';
+import '@xterm/xterm/css/xterm.css';
+
+const userStore = useUserStore();
+const router = useRouter();
+
+const termEl = ref(null);
+const status = ref('idle'); // idle|booting|ready|error|exited|stopped
+const connecting = ref(false);
+
+let term = null;
+let fitAddon = null;
+let ws = null;
+let authed = false;
+let resizeObserver = null;
+let manualClose = false;
+let wheelHandler = null;
+
+const statusTag = computed(() => {
+  switch (status.value) {
+    case 'booting':
+      return { type: 'warning', label: '启动中' };
+    case 'ready':
+      return { type: 'success', label: '已连接' };
+    case 'error':
+      return { type: 'danger', label: '错误' };
+    case 'exited':
+      return { type: 'info', label: '已退出' };
+    case 'stopped':
+      return { type: 'info', label: '已停止' };
+    default:
+      return { type: 'info', label: '未连接' };
+  }
+});
+
+function b64encode(str) {
+  // str is a binary string of bytes; encode to base64.
+  return btoa(str);
+}
+
+function b64decodeToUint8(b64) {
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return arr;
+}
+
+function closeSocket() {
+  if (ws) {
+    manualClose = true;
+    try {
+      ws.close();
+    } catch {
+      /* ignore */
+    }
+    ws = null;
+  }
+  authed = false;
+}
+
+function connect() {
+  if (connecting.value) return;
+  connecting.value = true;
+  manualClose = false;
+  authed = false;
+  status.value = 'booting';
+
+  ws = new WebSocket(resolveWsUrl('/ws'));
+
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ type: 'auth', token: userStore.token || '' }));
+  };
+
+  ws.onmessage = (event) => {
+    let msg = null;
+    try {
+      msg = JSON.parse(String(event.data || '{}'));
+    } catch {
+      return;
+    }
+    const type = String(msg?.type || '');
+
+    if (type === 'auth_ok') {
+      authed = true;
+      connecting.value = false;
+      // Boot the kernel for this session.
+      ws.send(JSON.stringify({ type: 'khyos_start' }));
+      return;
+    }
+    if (type === 'auth_error') {
+      connecting.value = false;
+      status.value = 'error';
+      writeLine(`\x1b[31m认证失败: ${msg.message || ''}\x1b[0m`);
+      return;
+    }
+    if (!authed) return;
+
+    if (type === 'khyos_data') {
+      const bytes = b64decodeToUint8(msg.data || '');
+      if (term) term.write(bytes);
+      return;
+    }
+    if (type === 'khyos_status') {
+      status.value = msg.status || status.value;
+      if (msg.status === 'error') writeLine(`\x1b[31m[内核] ${msg.message || '启动失败'}\x1b[0m`);
+      if (msg.status === 'exited') writeLine(`\x1b[90m[内核] QEMU 已退出\x1b[0m`);
+      return;
+    }
+    if (type === 'error') {
+      writeLine(`\x1b[31m[服务] ${msg.message || ''}\x1b[0m`);
+    }
+  };
+
+  ws.onerror = () => {
+    connecting.value = false;
+    status.value = 'error';
+    writeLine('\x1b[31mWebSocket 连接失败\x1b[0m');
+  };
+
+  ws.onclose = () => {
+    connecting.value = false;
+    authed = false;
+    if (!manualClose && status.value === 'ready') {
+      status.value = 'exited';
+      writeLine('\x1b[90m连接已断开。点击「重新连接」继续。\x1b[0m');
+    }
+  };
+}
+
+function writeLine(s) {
+  if (term) term.write(`\r\n${s}\r\n`);
+}
+
+function reconnect() {
+  closeSocket();
+  if (term) term.clear();
+  connect();
+}
+
+function stopKernel() {
+  if (ws && authed) ws.send(JSON.stringify({ type: 'khyos_stop' }));
+}
+
+// ── Ctrl+滚轮 缩放 (修复 xterm 缩放后留残影) ────────────────────────────────
+//
+// xterm.js 在字体变更后只重画 cell,但底层 canvas 不重置 → 残留旧字号痕迹。
+// 手动接管 Ctrl+wheel:阻止浏览器原生滚动,改完 fontSize 后立刻
+//   1) clear 清空底层 cell buffer
+//   2) fitAddon.fit() 重新按新字号反算 cols/rows
+//   3) refresh(0, rows-1) 强制全屏重绘
+// 这样三步把 xterm 的内部 dirty tracking 整盘作废,canvas 纹理就不会保留旧 glyph。
+function zoomTerminal(delta) {
+  if (!term) return;
+  const cur = Number(term.options.fontSize || 14);
+  const next = Math.min(32, Math.max(8, cur + delta));
+  if (next === cur) return;
+  term.options.fontSize = next;
+  try {
+    term.clear();
+  } catch {
+    /* xterm 内部异常不影响流程 */
+  }
+  try {
+    fitAddon && fitAddon.fit();
+  } catch {
+    /* 忽略:字体过大时容器宽度不够,fit 可能抛 */
+  }
+  try {
+    term.refresh(0, Math.max(0, term.rows - 1));
+  } catch {
+    /* 忽略 */
+  }
+}
+
+// Navigate to the graphical desktop viewer. The kernel keeps running for this
+// session (the desktop view reuses the same /ws session and re-sends khyos_start,
+// which is idempotent server-side), so the framebuffer is available immediately.
+function enterDesktop() {
+  router.push('/khyos/desktop');
+}
+
+onMounted(() => {
+  term = new Terminal({
+    cursorBlink: true,
+    fontFamily: 'Menlo, Consolas, "DejaVu Sans Mono", monospace',
+    fontSize: 14,
+    theme: { background: 'var(--khy-code-bg)', foreground: 'var(--khy-gray-200)' },
+    convertEol: false,
+  });
+  fitAddon = new FitAddon();
+  term.loadAddon(fitAddon);
+  term.open(termEl.value);
+  try {
+    fitAddon.fit();
+  } catch {
+    /* ignore */
+  }
+
+  // Keystrokes → serial input bytes (base64 over /ws). xterm's onData yields a
+  // string of bytes already encoded the way a terminal would send them (\r for
+  // Enter, \x7f for backspace, \x1b[A for arrows) — exactly what the kernel
+  // shell parses, so we forward verbatim.
+  term.onData((data) => {
+    if (ws && authed && status.value === 'ready') {
+      ws.send(JSON.stringify({ type: 'khyos_input', data: b64encode(data) }));
+    }
+  });
+
+  resizeObserver = new ResizeObserver(() => {
+    try {
+      fitAddon.fit();
+    } catch {
+      /* ignore */
+    }
+  });
+  resizeObserver.observe(termEl.value);
+
+  // Ctrl+滚轮 = 调字号:阻止浏览器原生滚动,改完字号后清空 cell buffer 并全屏 refresh,
+  // 避免 xterm.js 缩放后旧字号残影 (Issue: Ctrl+wheel leaves ghost glyphs)。
+  wheelHandler = (ev) => {
+    if (!ev || !ev.ctrlKey) return;
+    // 阻止 ctrl+wheel 在浏览器里触发系统级页面缩放 + 防止页面外溢滚动。
+    ev.preventDefault();
+    ev.stopPropagation();
+    // deltaY > 0 = 向下滚 → 字号变小;向上滚 → 字号变大。一次 ±1,避免跳级。
+    const delta = ev.deltaY > 0 ? -1 : 1;
+    zoomTerminal(delta);
+  };
+  termEl.value.addEventListener('wheel', wheelHandler, { passive: false });
+
+  connect();
+});
+
+onBeforeUnmount(() => {
+  if (ws && authed) {
+    try {
+      ws.send(JSON.stringify({ type: 'khyos_stop' }));
+    } catch {
+      /* ignore */
+    }
+  }
+  closeSocket();
+  if (resizeObserver) {
+    try {
+      resizeObserver.disconnect();
+    } catch {
+      /* ignore */
+    }
+    resizeObserver = null;
+  }
+  if (term) {
+    try {
+      term.dispose();
+    } catch {
+      /* ignore */
+    }
+    term = null;
+  }
+});
+</script>
+
+<style scoped>
+.khyos-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: 12px;
+  box-sizing: border-box;
+}
+.khyos-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.khyos-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+.khyos-term {
+  flex: 1;
+  min-height: 0;
+  background: var(--khy-code-bg);
+  border: 1px solid var(--el-border-color, var(--khy-code-border));
+  border-radius: 8px;
+  padding: 8px;
+  overflow: hidden;
+}
+.khyos-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary, var(--khy-gray-400));
+}
+.khyos-hint code {
+  background: var(--el-fill-color-light, var(--khy-code-surface));
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+</style>
