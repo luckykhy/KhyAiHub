@@ -1,0 +1,814 @@
+/* =========================================================================
+ * KHY AI Frontend — design tokens & Element Plus theming
+ *
+ * Token-driven, dual-theme (light / dark). The design language is adapted
+ * from new-api's shadcn/oklch palette but expressed as hex/rgb so it can map
+ * cleanly onto Element Plus CSS variables.
+ *
+ * Theme switching is driven by the `dark` class on <html> (see
+ * src/composables/useTheme.js). Element Plus dark css-vars are imported in
+ * main.js; the overrides below re-point both EP and our --khy-* tokens so the
+ * whole surface reacts to a single class toggle.
+ * ========================================================================= */
+
+:root {
+  /* Structural whites — must be defined here, not assumed (FE-001 G1 fix) */
+  --khy-white: #ffffff;
+
+  /* Gray scale (FE-001 G4 fix — replaces scattered hardcoded grays) */
+  --khy-gray-50: #f5f7fa;
+  --khy-gray-100: #ebeef5;
+  --khy-gray-200: #d1d9e0;
+  --khy-gray-300: #c0c4cc;
+  --khy-gray-400: #909399;
+  --khy-gray-500: #606266;
+  --khy-gray-600: #59636e;
+  --khy-gray-700: #303133;
+  --khy-gray-800: #1e1e2e;
+  --khy-gray-900: #1f2328;
+
+  /* Code/terminal surfaces (FE-001 G7 — replaces scattered terminal backgrounds) */
+  --khy-code-bg: #0b0e14;
+  --khy-code-surface: #1f2430;
+  --khy-code-border: #2a2f3a;
+  --khy-code-text: #d7d7d7;
+
+  /* Metric accent colors (used by metric-card / metric-icon variants) */
+  --khy-rose: #f43f5e;
+  --khy-rose-soft: #ffe4e6;
+  --khy-indigo: #6366f1;
+  --khy-indigo-soft: #e0e7ff;
+  --khy-violet: #8b5cf6;
+  --khy-violet-soft: #ede9fe;
+  --khy-cyan-strong: #06b6d4;
+  --khy-cyan-strong-soft: #cffafe;
+
+  /* Markdown syntax highlighting (GitHub-style, FE-001 G7) */
+  --khy-md-link: #0969da;
+  --khy-md-code-bg: #161b22;
+  --khy-md-code-border: #30363d;
+  --khy-md-green: #1a7f37;
+  --khy-md-red: #cf222e;
+  --khy-md-blue: #4493f8;
+  --khy-md-amber: #574c1c;
+  --khy-md-muted: #9198a1;
+  --khy-md-border: #d0d7de;
+  --khy-md-bg: #e6edf3;
+  --khy-md-highlight: #fff8c5;
+  --khy-md-hover-bg: #ecf5ff;
+  --khy-md-surface: #eef1f4;
+
+  /* Surfaces */
+  --khy-bg-main: #f4f7fc;
+  --khy-bg-elevated: var(--khy-white);
+  --khy-bg-card: var(--khy-white);
+  --khy-bg-card-grad: linear-gradient(180deg, var(--khy-white), #fcfdff);
+  --khy-bg-soft: #eff4ff;
+  --khy-bg-hover: #f5f8ff;
+
+  /* Text */
+  --khy-text-main: #1f2937;
+  --khy-text-strong: #101828;
+  --khy-text-secondary: #475467;
+  --khy-text-muted: #667085;
+
+  /* Lines */
+  --khy-border: #d6e0ef;
+  --khy-border-light: #e5ebf5;
+
+  /* Brand / semantic（低饱和度，ZCode 对齐） */
+  --khy-primary: #2563eb;
+  --khy-primary-strong: #1d4ed8;
+  --khy-primary-soft: #dbeafe;
+  --khy-success: #059669;
+  --khy-warning: #d97706;
+  --khy-danger: #dc2626;
+
+  /* Geometry（更精致的圆角） */
+  --khy-radius: 8px;
+  --khy-radius-sm: 6px;
+  --khy-radius-lg: 16px;
+  --khy-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  --khy-shadow-lift: 0 14px 36px rgba(15, 23, 42, 0.10);
+
+  /* Spacing scale — proportional (1 : 1.6 : 2.4 jumps), not linear. Adopted by
+   * the page skeleton (.khy-page gap), cards and section rows so the vertical
+   * rhythm is one decision, re-declared zero times per view. */
+  --khy-space-1: 4px;
+  --khy-space-2: 8px;
+  --khy-space-3: 12px;
+  --khy-space-4: 16px;
+  --khy-space-5: 20px;
+  --khy-space-6: 24px;
+  --khy-space-8: 32px;
+  --khy-space-10: 40px;
+  --khy-space-12: 48px;
+  --khy-space-16: 64px;
+
+  /* Page-level rhythm: gutter inside .layout-main, gap between page sections,
+   * and the content cap so wide screens stay readable instead of stretched. */
+  --khy-gap-page: var(--khy-space-5);
+  --khy-gap-section: var(--khy-space-5);
+  --khy-gap-card: var(--khy-space-4);
+  --khy-page-max: 1320px;
+
+  /* Type scale — 3.5x+ jump between page title and body keeps hierarchy legible
+   * at a glance; the mono stack below serves keys / IDs / metric values. */
+  --khy-text-xs: 12px;
+  --khy-text-sm: 13px;
+  --khy-text-md: 15px;
+  --khy-text-lg: 17px;
+  --khy-text-xl: 20px;
+  --khy-text-2xl: 24px;
+  --khy-leading-tight: 1.3;
+  --khy-leading-normal: 1.5;
+  --khy-tracking-tight: -0.01em;
+
+  --khy-font: 'Public Sans', 'Segoe UI', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  /* Monospace stack — many cards reference var(--khy-font-mono, monospace) for
+   * keys / IDs / model names. Defining it here upgrades all of them from raw
+   * `monospace` to a coherent, legible dev-font stack in one place. */
+  --khy-font-mono: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', 'Fira Code', 'Menlo', 'Consolas', 'Roboto Mono', 'Noto Sans Mono', monospace;
+
+  /* Page background layers (radial light + base gradient) */
+  --khy-bg-glow-1: rgba(86, 137, 255, 0.14);
+  --khy-bg-glow-2: rgba(82, 177, 255, 0.12);
+  --khy-bg-base: linear-gradient(180deg, #f9fbff 0%, #f4f7fc 100%);
+
+  /* Skeleton shimmer */
+  --khy-skeleton-base: #e8eef7;
+  --khy-skeleton-highlight: #f6f9ff;
+
+  /* Khy brand accent — the float ball's purple. Status aliases below reuse the
+   * --khy-* semantics so a theme change reaches every status dot at once. */
+  --khy-accent: #6d5efc;
+  --khy-accent-mid: #8b5cf6;
+  --khy-accent-end: #d946ef;
+  --khy-accent-soft: rgba(109, 94, 252, 0.18);
+  --khy-accent-soft-end: rgba(217, 70, 239, 0.16);
+  --khy-accent-tint: #c4b5fd;
+  --khy-accent-glow: rgba(109, 94, 252, 0.42);
+  --khy-accent-glow-strong: rgba(139, 92, 246, 0.6);
+  --khy-accent-glow-halo: rgba(139, 92, 246, 0.8);
+  --khy-accent-ring: rgba(139, 92, 246, 0.45);
+
+  --khy-ok: #22c55e;
+  --khy-ok-glow: rgba(34, 197, 94, 0.8);
+  --khy-busy: #eab308;
+  --khy-rest: #a78bfa;
+  --khy-off: #8b93a3;
+  --khy-off-strong: #6b7280;
+  --khy-fade: rgba(154, 162, 177, 0.5);
+  --khy-ink: #e7e9ee;
+  --khy-ink-dim: #9aa2b1;
+  --khy-ink-mute: #8b93a3;
+  --khy-panel: #1c2130;
+  --khy-cyan: #a5f3fc;
+  --khy-cyan-soft: rgba(34, 211, 238, 0.18);
+
+  /* Structural whites / shadows — alpha ramps, not palette entries */
+  --khy-highlight: rgba(255, 255, 255, 0.35);
+  --khy-highlight-strong: rgba(255, 255, 255, 0.45);
+  --khy-ripple: color-mix(in srgb, #fff 55%, transparent);
+  --khy-ripple-fade: color-mix(in srgb, #fff 0%, transparent);
+  --khy-overlay-shadow: 0 14px 40px rgba(0, 0, 0, 0.42);
+
+  /* Element Plus global mapping — kept in this same :root so the whole token
+   * surface lives in one place. EP's own vars come from
+   * element-plus/theme-chalk/dark/css-vars.css, which is imported before this
+   * file, so these still win by source order. */
+  --el-bg-color: var(--khy-bg-main);
+  --el-bg-color-page: var(--khy-bg-main);
+  --el-bg-color-overlay: var(--khy-bg-elevated);
+  --el-fill-color-light: var(--khy-bg-soft);
+  --el-fill-color-lighter: var(--khy-bg-soft);
+  --el-fill-color-blank: var(--khy-bg-card);
+  --el-border-color: var(--khy-border);
+  --el-border-color-light: var(--khy-border-light);
+  --el-border-color-lighter: var(--khy-border-light);
+  --el-text-color-primary: var(--khy-text-strong);
+  --el-text-color-regular: var(--khy-text-main);
+  --el-text-color-secondary: var(--khy-text-secondary);
+  --el-text-color-placeholder: var(--khy-text-muted);
+  --el-color-primary: var(--khy-primary);
+  --el-color-primary-light-3: #5f9af9;
+  --el-color-primary-light-5: #82b1fb;
+  --el-color-primary-light-7: #b7d4fd;
+  --el-color-primary-light-9: var(--khy-primary-soft);
+  --el-color-primary-dark-2: var(--khy-primary-strong);
+  --el-mask-color: rgba(12, 16, 26, 0.45);
+  --el-mask-color-extra-light: rgba(12, 16, 26, 0.2);
+}
+
+html.dark {
+  /* Gray scale — dark theme overrides (FE-001 G4 fix) */
+  --khy-gray-50: #1e2533;
+  --khy-gray-100: #283245;
+  --khy-gray-200: #313c4f;
+  --khy-gray-300: #4a5568;
+  --khy-gray-400: #7c8aa3;
+  --khy-gray-500: #9aa7bd;
+  --khy-gray-600: #b0bdd1;
+  --khy-gray-700: #d4dbe8;
+  --khy-gray-800: #eef2f8;
+  --khy-gray-900: #f8fafc;
+
+  /* Code/terminal surfaces — dark theme (same as light, terminals are always dark) */
+  --khy-code-bg: #0b0e14;
+  --khy-code-surface: #1f2430;
+  --khy-code-border: #2a2f3a;
+  --khy-code-text: #d7d7d7;
+
+  /* Metric accent colors — dark theme (slightly brighter for visibility) */
+  --khy-rose: #fb7185;
+  --khy-rose-soft: rgba(244,63,94,0.12);
+  --khy-indigo: #818cf8;
+  --khy-indigo-soft: rgba(99,102,241,0.12);
+  --khy-violet: #a78bfa;
+  --khy-violet-soft: rgba(139,92,246,0.12);
+  --khy-cyan-strong: #22d3ee;
+  --khy-cyan-strong-soft: rgba(6,182,212,0.12);
+
+  /* Markdown syntax — dark theme */
+  --khy-md-link: #58a6ff;
+  --khy-md-code-bg: #0d1117;
+  --khy-md-code-border: #30363d;
+  --khy-md-green: #3fb950;
+  --khy-md-red: #f85149;
+  --khy-md-blue: #79c0ff;
+  --khy-md-amber: #d29922;
+  --khy-md-muted: #8b949e;
+  --khy-md-border: #30363d;
+  --khy-md-bg: #161b22;
+  --khy-md-highlight: rgba(187,128,9,0.4);
+  --khy-md-hover-bg: rgba(56,139,253,0.15);
+  --khy-md-surface: #21262d;
+
+  /* Surfaces — deep blue-grey, raised cards (adapted from new-api .dark) */
+  --khy-bg-main: #161b26;
+  --khy-bg-elevated: #1e2533;
+  --khy-bg-card: #1e2533;
+  --khy-bg-card-grad: linear-gradient(180deg, #232b3b, #1c2330);
+  --khy-bg-soft: #232c3d;
+  --khy-bg-hover: #283245;
+
+  /* Text */
+  --khy-text-main: #d4dbe8;
+  --khy-text-strong: #eef2f8;
+  --khy-text-secondary: #9aa7bd;
+  --khy-text-muted: #7c8aa3;
+
+  /* Lines */
+  --khy-border: #313c4f;
+  --khy-border-light: #2a3445;
+
+  /* Brand / semantic（低饱和度，ZCode 对齐） */
+  --khy-primary: #3b82f6;
+  --khy-primary-strong: #60a5fa;
+  --khy-primary-soft: #1e2d4a;
+  --khy-success: #10b981;
+  --khy-warning: #f59e0b;
+  --khy-danger: #ef4444;
+
+  --khy-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  --khy-shadow-lift: 0 16px 40px rgba(0, 0, 0, 0.45);
+
+  --khy-bg-glow-1: rgba(64, 110, 200, 0.16);
+  --khy-bg-glow-2: rgba(46, 120, 180, 0.12);
+  --khy-bg-base: linear-gradient(180deg, #181e2a 0%, #141925 100%);
+
+  --khy-skeleton-base: #283142;
+  --khy-skeleton-highlight: #36425a;
+
+  --khy-accent: #8b7cff;
+  --khy-accent-mid: #a78bfa;
+  --khy-accent-end: #e879f9;
+  --khy-accent-soft: rgba(139, 124, 255, 0.22);
+  --khy-accent-soft-end: rgba(232, 121, 249, 0.18);
+  --khy-accent-tint: #c4b5fd;
+  --khy-accent-glow: rgba(139, 124, 255, 0.42);
+  --khy-accent-glow-strong: rgba(167, 139, 250, 0.55);
+  --khy-accent-glow-halo: rgba(167, 139, 250, 0.75);
+  --khy-accent-ring: rgba(167, 139, 250, 0.45);
+
+  --khy-ok: #34d399;
+  --khy-ok-glow: rgba(52, 211, 153, 0.8);
+  --khy-busy: #fbbf24;
+  --khy-rest: #a78bfa;
+  --khy-off: #9aa2b1;
+  --khy-off-strong: #6b7280;
+  --khy-fade: rgba(154, 162, 177, 0.5);
+  --khy-ink: #eef2f8;
+  --khy-ink-dim: #9aa7bd;
+  --khy-ink-mute: #8b93a3;
+  --khy-panel: #1c2130;
+  --khy-cyan: #67e8f9;
+  --khy-cyan-soft: rgba(34, 211, 238, 0.18);
+
+  --khy-highlight: rgba(255, 255, 255, 0.28);
+  --khy-highlight-strong: rgba(255, 255, 255, 0.4);
+  --khy-ripple: color-mix(in srgb, #fff 55%, transparent);
+  --khy-ripple-fade: color-mix(in srgb, #fff 0%, transparent);
+  --khy-overlay-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
+
+  /* Dark-side half of the Element Plus mapping (see the :root block above). */
+  --el-color-primary-light-3: #4f86e0;
+  --el-color-primary-light-5: #3f6cb8;
+  --el-color-primary-light-7: #2f4f86;
+  --el-color-primary-light-9: var(--khy-primary-soft);
+  --el-mask-color: rgba(0, 0, 0, 0.6);
+  --el-mask-color-extra-light: rgba(0, 0, 0, 0.35);
+}
+
+html,
+body {
+  height: 100%;
+  /* Prevent a whole-page scrollbar; internal content containers own scrolling. */
+  overflow: hidden;
+}
+
+#app {
+  height: 100%;
+  /* No overflow:hidden here so the inner layout can manage its own scrolling. */
+}
+
+body {
+  margin: 0;
+  font-family: var(--khy-font);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--khy-text-main);
+  background:
+    radial-gradient(circle at 10% 0%, var(--khy-bg-glow-1), transparent 36%),
+    radial-gradient(circle at 88% 2%, var(--khy-bg-glow-2), transparent 34%),
+    var(--khy-bg-base);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.el-card {
+  border: 1px solid var(--khy-border);
+  border-radius: var(--khy-radius);
+  background: var(--khy-bg-card-grad);
+  box-shadow: var(--khy-shadow);
+}
+
+.el-card__header {
+  border-bottom-color: var(--khy-border-light);
+}
+
+.el-table {
+  color: var(--khy-text-main);
+  --el-table-header-bg-color: var(--khy-bg-soft);
+  --el-table-row-hover-bg-color: var(--khy-bg-hover);
+  --el-table-tr-bg-color: var(--khy-bg-card);
+  --el-table-bg-color: var(--khy-bg-card);
+  --el-table-border-color: var(--khy-border-light);
+  --el-table-text-color: var(--khy-text-main);
+  --el-table-header-text-color: var(--khy-text-secondary);
+}
+
+.el-table th.el-table__cell {
+  color: var(--khy-text-secondary);
+  font-weight: 700;
+}
+
+.el-table td.el-table__cell,
+.el-descriptions__content,
+.el-form-item__content {
+  color: var(--khy-text-main);
+}
+
+.el-descriptions__label {
+  color: var(--khy-text-secondary);
+}
+
+.el-input__wrapper,
+.el-textarea__inner,
+.el-select__wrapper {
+  background-color: var(--khy-bg-card);
+  box-shadow: 0 0 0 1px var(--khy-border) inset;
+}
+
+.el-input__inner,
+.el-textarea__inner {
+  color: var(--khy-text-main);
+}
+
+.el-input__inner::placeholder,
+.el-textarea__inner::placeholder {
+  color: var(--khy-text-muted);
+}
+
+.el-button:not(.is-text):not(.is-link) {
+  font-weight: 600;
+}
+
+.el-statistic__head,
+.el-statistic .el-statistic__head {
+  color: var(--khy-text-secondary);
+  font-weight: 600;
+}
+
+.el-statistic__content,
+.el-statistic .el-statistic__content {
+  color: var(--khy-text-strong) !important;
+}
+
+.el-dialog {
+  border: 1px solid var(--khy-border);
+  border-radius: var(--khy-radius);
+  background: var(--khy-bg-elevated);
+}
+
+/* Vertical menu (sidebar) */
+.el-menu {
+  --el-menu-bg-color: transparent;
+  --el-menu-text-color: var(--khy-text-secondary);
+  --el-menu-hover-text-color: var(--khy-primary-strong);
+  --el-menu-hover-bg-color: var(--khy-bg-soft);
+  --el-menu-active-color: var(--khy-primary-strong);
+  border-right: none;
+}
+
+.el-menu--horizontal > .el-menu-item {
+  color: var(--khy-text-secondary);
+  font-weight: 600;
+}
+
+.el-menu--horizontal > .el-menu-item:hover,
+.el-menu--horizontal > .el-menu-item.is-active {
+  color: var(--khy-primary-strong);
+}
+
+.khy-page-title {
+  margin: 0 0 var(--khy-space-4) 0;
+  color: var(--khy-text-strong);
+  font-size: var(--khy-text-2xl);
+  font-weight: 750;
+  line-height: var(--khy-leading-tight);
+  letter-spacing: var(--khy-tracking-tight);
+}
+
+/* ── Page wrapper (single source of truth) ──
+   `.layout-main` already owns the outer gutter, so a routed view's root must
+   NOT re-add its own padding (that double-pads the page). This utility centers
+   the content, caps its width, and — as a flex column with gap — gives every
+   page section the same vertical rhythm instead of each view inventing its own
+   margin stack. Adopt it on a view root instead of a bespoke `padding: 20px`.
+   Full-height "app" pages (chat, terminal, editors) deliberately opt out: they
+   manage their own internal scroll and must not gain a section gap. */
+.khy-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--khy-gap-section);
+  max-width: var(--khy-page-max);
+  margin: 0 auto;
+  min-height: 0;
+}
+
+/* Section rhythm inside a khy-page: a section that is itself a plain wrapper
+   (not a card/row) gets the same gap without re-declaring it. */
+.khy-page .khy-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--khy-gap-card);
+  min-width: 0;
+}
+
+/* Flex gap already spaces every direct child. Per-view scoped
+   `margin-bottom` on those same children would stack on top of the gap (a
+   36px visual gap between sections), so reset it here once. `!important` is
+   deliberate: view-scoped rules compile to `.child[data-v-x]` (0,2,0) and
+   would beat a plain global rule regardless of stylesheet order. */
+.khy-page > * {
+  margin-bottom: 0 !important;
+}
+
+/* ── Unified card hover lift ── */
+.el-card[class*="section-card"],
+.el-card[class*="metric-card"],
+.el-card[class*="home-card"] {
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.el-card[class*="section-card"]:hover,
+.el-card[class*="metric-card"]:hover,
+.el-card[class*="home-card"]:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--khy-shadow-lift);
+}
+
+/* ── Smooth page transitions ── */
+.layout-main .ai-dashboard-page,
+.layout-main .ai-gateway-admin,
+.layout-main .ai-monitor-page,
+.layout-main .bridge-page,
+.layout-main .account-pool-page,
+.layout-main .assets-customers-page,
+.layout-main .ai-chat-page,
+.layout-main .user-home-page {
+  animation: khy-fade-in 0.28s ease-out;
+}
+
+@keyframes khy-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Metric card gradient variants ── */
+.metric-card--blue  { border-left: 3px solid var(--khy-primary); background: linear-gradient(135deg, var(--khy-primary-50) 0%, var(--khy-white) 60%); }
+.metric-card--green { border-left: 3px solid var(--khy-success); background: linear-gradient(135deg, #ecfdf5 0%, var(--khy-white) 60%); }
+.metric-card--amber { border-left: 3px solid var(--khy-warning); background: linear-gradient(135deg, #fffbeb 0%, var(--khy-white) 60%); }
+.metric-card--purple { border-left: 3px solid #8b5cf6; background: linear-gradient(135deg, #f5f3ff 0%, var(--khy-white) 60%); }
+.metric-card--rose  { border-left: 3px solid #f43f5e; background: linear-gradient(135deg, #fff1f2 0%, var(--khy-white) 60%); }
+.metric-card--cyan  { border-left: 3px solid #06b6d4; background: linear-gradient(135deg, #ecfeff 0%, var(--khy-white) 60%); }
+
+/* Dark variants: tint the left border, keep card surface from token */
+html.dark .metric-card--blue   { background: linear-gradient(135deg, rgba(59,130,246,0.12) 0%, var(--khy-bg-card) 60%); }
+html.dark .metric-card--green  { background: linear-gradient(135deg, rgba(16,185,129,0.12) 0%, var(--khy-bg-card) 60%); }
+html.dark .metric-card--amber  { background: linear-gradient(135deg, rgba(245,158,11,0.12) 0%, var(--khy-bg-card) 60%); }
+html.dark .metric-card--purple { background: linear-gradient(135deg, rgba(139,92,246,0.12) 0%, var(--khy-bg-card) 60%); }
+html.dark .metric-card--rose   { background: linear-gradient(135deg, rgba(244,63,94,0.12) 0%, var(--khy-bg-card) 60%); }
+html.dark .metric-card--cyan   { background: linear-gradient(135deg, rgba(6,182,212,0.12) 0%, var(--khy-bg-card) 60%); }
+
+/* ── Metric card icon area ── */
+.metric-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.metric-icon--blue   { background: #dbeafe; color: #2563eb; }
+.metric-icon--green  { background: #d1fae5; color: #059669; }
+.metric-icon--amber  { background: #fef3c7; color: #d97706; }
+.metric-icon--purple { background: #ede9fe; color: #7c3aed; }
+.metric-icon--rose   { background: #ffe4e6; color: #e11d48; }
+.metric-icon--cyan   { background: #cffafe; color: #0891b2; }
+
+html.dark .metric-icon--blue   { background: rgba(37,99,235,0.22);  color: #7fb0ff; }
+html.dark .metric-icon--green  { background: rgba(5,150,105,0.22);  color: #5ee0ad; }
+html.dark .metric-icon--amber  { background: rgba(217,119,6,0.22);  color: #fcc25a; }
+html.dark .metric-icon--purple { background: rgba(124,58,237,0.22); color: #b69bff; }
+html.dark .metric-icon--rose   { background: rgba(225,29,72,0.22);  color: #ff8aa1; }
+html.dark .metric-icon--cyan   { background: rgba(8,145,178,0.22);  color: #56d3ec; }
+
+/* ── Status dot indicator ── */
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.status-dot--green  { background: var(--khy-success); box-shadow: 0 0 6px rgba(16, 185, 129, 0.45); }
+.status-dot--yellow { background: var(--khy-warning); box-shadow: 0 0 6px rgba(245, 158, 11, 0.45); }
+.status-dot--red    { background: var(--khy-danger); box-shadow: 0 0 6px rgba(239, 68, 68, 0.45); }
+.status-dot--gray   { background: #9ca3af; }
+
+/* ── Tag improvements ── */
+.el-tag {
+  border-radius: 6px;
+}
+
+/* ── Brand logo tile (single source of truth) ──
+   The gradient badge used in the sidebar, login, and landing hero. The glyph
+   inside is the KhyIcon "logo" mark (SVG-drawn monogram, KhyLogo.vue) — no
+   typed letters: the mark renders identically under every font/theme.
+   Use the size modifiers instead of re-declaring the gradient per view. */
+.khy-brand-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--khy-primary), var(--khy-primary-strong));
+  color: var(--khy-white);
+  font-weight: 800;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.khy-brand-logo--sm { width: 30px; height: 30px; border-radius: 9px;  font-size: 17px; }
+.khy-brand-logo--md { width: 46px; height: 46px; border-radius: 13px; font-size: 24px; box-shadow: 0 8px 20px rgba(47, 126, 247, 0.32); }
+.khy-brand-logo--lg { width: 52px; height: 52px; border-radius: 14px; font-size: 26px; }
+/* The SVG glyph scales with the tile (percentage of the box, not font px). */
+.khy-brand-logo .khy-icon {
+  --khy-icon-size: 62%;
+  width: 62%;
+  height: 62%;
+}
+
+/* ── User avatar (gradient circle + SVG silhouette) ──
+   Letter avatars (username initial) replaced: the silhouette is identical for
+   every account and reads cleaner at 28–30px than a typographic initial. */
+.khy-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--khy-primary), var(--khy-primary-strong));
+  flex-shrink: 0;
+}
+.khy-avatar .khy-icon {
+  --khy-icon-size: 58%;
+  width: 58%;
+  height: 58%;
+}
+
+/* ── Better empty state ── */
+.el-empty__description p {
+  color: var(--khy-text-muted);
+}
+
+/* ── Skeleton shimmer (loading placeholder) ── */
+.khy-skeleton {
+  border-radius: var(--khy-radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--khy-skeleton-base) 0%,
+    var(--khy-skeleton-base) 33%,
+    var(--khy-skeleton-highlight) 50%,
+    var(--khy-skeleton-base) 67%,
+    var(--khy-skeleton-base) 100%
+  );
+  background-size: 300% 100%;
+  animation: khy-skeleton-shimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes khy-skeleton-shimmer {
+  0%   { background-position: 100% 50%; }
+  100% { background-position: -100% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .khy-skeleton {
+    animation: none;
+    background: var(--khy-skeleton-base);
+  }
+  body { transition: none; }
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--khy-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--khy-text-muted);
+}
+
+/* =========================================================================
+ * Interaction polish pass
+ *
+ * Tasteful micro-interactions layered on top of the token system: soft focus
+ * halos on fields, a gentle hover lift on buttons, crisper card headers, a
+ * segmented-control sheen, and deeper dialog elevation. Pure presentation —
+ * everything resolves through the same --khy-* tokens, so light + dark and
+ * reduced-motion all stay correct. Loaded last (main.js), so these win on
+ * equal specificity with Element Plus' own theme.
+ * ========================================================================= */
+
+/* Fields: hairline hover, soft primary halo on focus (replaces the flat ring).
+   The base wrapper ring is declared above; these add interaction states. */
+.el-input__wrapper:hover,
+.el-textarea__inner:hover,
+.el-select__wrapper:hover {
+  box-shadow: 0 0 0 1px var(--khy-primary-strong) inset;
+}
+.el-input__wrapper.is-focus,
+.el-textarea__inner:focus,
+.el-select__wrapper.is-focused,
+.el-select__wrapper.is-focus {
+  box-shadow: 0 0 0 1px var(--khy-primary) inset, 0 0 0 3px var(--khy-primary-soft);
+  border-color: var(--khy-primary);
+}
+
+/* Buttons: a 1px lift + shadow swell on hover, settling on press. Filled
+   primaries carry a soft brand glow so the main action reads first. */
+.el-button {
+  transition: transform 0.12s ease, box-shadow 0.2s ease,
+    background-color 0.2s ease, border-color 0.2s ease;
+}
+.el-button--primary:not(.is-text):not(.is-link) {
+  box-shadow: 0 4px 12px rgba(47, 126, 247, 0.24);
+}
+html.dark .el-button--primary:not(.is-text):not(.is-link) {
+  box-shadow: 0 4px 14px rgba(95, 160, 255, 0.28);
+}
+.el-button:not(.is-text):not(.is-link):not(.is-disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: var(--khy-shadow);
+}
+.el-button:not(.is-text):not(.is-link):not(.is-disabled):active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* Card header: heavier title, hairline accent under the rule for definition. */
+.el-card__header {
+  font-weight: 700;
+  color: var(--khy-text-strong);
+}
+
+/* Segmented control (el-radio-button) — used by the catalog pivot switcher. */
+.el-radio-button__inner {
+  transition: color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.el-radio-button:first-child .el-radio-button__inner { border-radius: var(--khy-radius-sm) 0 0 var(--khy-radius-sm); }
+.el-radio-button:last-child .el-radio-button__inner { border-radius: 0 var(--khy-radius-sm) var(--khy-radius-sm) 0; }
+
+/* Tags: a touch more rounding for a softer, modern read. */
+.el-tag { border-radius: 7px; }
+
+/* Dialogs / message boxes: deeper elevation so modals clearly float. */
+.el-dialog,
+.el-message-box {
+  box-shadow: var(--khy-shadow-lift);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .el-button,
+  .el-button:not(.is-text):not(.is-link):not(.is-disabled):hover,
+  .el-button:not(.is-text):not(.is-link):not(.is-disabled):active {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* =========================================================================
+ * Keyboard focus & shell polish
+ *
+ * Element Plus keeps its own focus rings; these rules cover the surfaces we
+ * own (shell chrome, page skeleton, custom clickables) so keyboard users get
+ * one consistent, high-contrast ring instead of a browser-default outline or
+ * nothing at all. All values resolve through --khy-* tokens, so light/dark
+ * both stay correct.
+ * ========================================================================= */
+
+:focus-visible {
+  outline: 2px solid var(--khy-primary);
+  outline-offset: 2px;
+  border-radius: var(--khy-radius-sm);
+}
+
+/* Layout main: gutter and section rhythm from tokens (was a literal 20px). */
+.layout-main {
+  padding: var(--khy-gap-page);
+}
+
+@media (max-width: 768px) {
+  .layout-main {
+    padding: var(--khy-space-3);
+  }
+}
+
+/* Page header spacing from the same token as the skeleton gap. */
+.khy-page-head {
+  margin-bottom: var(--khy-space-4);
+}
+
+/* Console-switch pill: one consistent surface in both shells, ≥44px tall on
+   touch widths so the cross-console hop stays thumb-friendly. */
+.header-console-link {
+  min-height: 32px;
+  border-radius: 999px;
+  border: 1px solid var(--khy-border);
+  background: var(--khy-bg-card);
+  gap: var(--khy-space-2);
+  font-weight: 600;
+}
+
+.header-console-link:hover {
+  border-color: var(--khy-primary);
+}
+
+@media (max-width: 768px) {
+  .header-console-link {
+    min-height: 44px;
+  }
+}
+
+/* Sidebar group titles: uppercase micro-label with breathing room, so the two
+   halves of a shell's menu read as sections, not a wall of items. */
+.aside-group-title {
+  display: block;
+  padding: var(--khy-space-3) var(--khy-space-2) var(--khy-space-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header-console-link,
+  .layout-aside {
+    transition: none;
+  }
+}
