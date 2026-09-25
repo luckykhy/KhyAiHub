@@ -1,0 +1,284 @@
+'use strict';
+
+/**
+ * quantApp seam 契约测试 —— [DESIGN-TOOL-002] §2.2/§3.4 的机器化。
+ *
+ * 这个 seam 存在的唯一理由是把「核点名 software/khyquant 这个磁盘位置」换成
+ * 「核点名 quant-app 这个服务」。所以要测的不是「能 require 到东西」，而是三件
+ * 会在 Phase 1 搬目录时真正决定成败的事：
+ *   1. 有人用 provides 声明了这个服务 → 走契约，**不看** L4 现址；
+ *   2. 没人声明 → 落到迁移期兜底，行为与迁移前一致（Phase 0 是纯重构）；
+ *   3. 「未安装」与「装了但坏了」是两档，不能都被吞成 null。
+ *
+ * 第 3 条是本文件的重点。通用解析点 providerModule.requireFromProvider 把两者都
+ * 吞成 null，那会让一个路由模块里的真 bug 从启动期大声崩退化成静默 404。下面
+ * 「模块存在但加载抛错 → 照抛」那一例就是钉住这个区别的。
+ *
+ * **每个用例起一个子进程**：seam 有目录解析缓存、require 有模块缓存，而
+ * KHY_EXTENSION_PATH 只在模块加载时读一次。同进程内连着测两种根，测到的是缓存
+ * 行为不是契约行为。
+ */
+
+const { describe, test, after } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const cp = require('child_process');
+
+const BACKEND = path.resolve(__dirname, '..', '..');
+const REPO = path.resolve(BACKEND, '..', '..');
+const L4_DIR = path.join(REPO, 'software', 'khyquant');
+const SEAM = path.join(BACKEND, 'src', 'services', 'extensions', 'quantApp.js');
+const tempDirs = [];
+
+/** 子进程里加载 seam 的前缀，各用例的脚本都拼在它后面。 */
+const Q = "const q=require('./src/services/extensions/quantApp');";
+
+after(() => {
+  for (const d of tempDirs) fs.rmSync(d, { recursive: true, force: true });
+});
+
+/** 一个空的拓展根：用来证明「没人声明 quant-app」时的兜底行为。 */
+function emptyRoot() {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-quant-none-'));
+  tempDirs.push(root);
+  return root;
+}
+
+/**
+ * 「默认应用」此刻应命中的目录：L4 迁移兜底还在（目录移回 / 回滚态）用 L4；
+ * 不在则用外部注册文件 —— 拆分后的常态通道（[DESIGN-ARCH-144] §10）。
+ * dataHome 与运行时同源：显式 KHY_DATA_HOME 跟 env，否则仓库内 .khy/。
+ * 都不命中返回 null —— 那本身就是「整体缺席」这一档的期望值。
+ */
+function expectedAppDir() {
+  if (fs.existsSync(L4_DIR)) return L4_DIR;
+  const dataHome = process.env.KHY_DATA_HOME || path.join(REPO, '.khy');
+  try {
+    const cfg = JSON.parse(fs.readFileSync(path.join(dataHome, 'quant-app.json'), 'utf8'));
+    if (cfg && cfg.dir && fs.statSync(path.resolve(cfg.dir)).isDirectory()) {
+      return path.resolve(cfg.dir);
+    }
+  } catch (_) { /* 无注册 / 坏 JSON / 目录不在 */ }
+  return null;
+}
+
+/**
+ * 造一个声明了 `provides: ['quant-app']` 的假量化应用。
+ * 里面放三种模块，正好对应三档结果：能加载 / 不存在 / 加载即抛。
+ */
+function makeQuantRoot({ id = 'khy-quant-fixture', provides = ['quant-app'], category = null } = {}) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-quant-'));
+  tempDirs.push(root);
+  const dir = category ? path.join(root, ...category.split('/'), id) : path.join(root, id);
+  fs.mkdirSync(path.join(dir, 'routes'), { recursive: true });
+
+  fs.writeFileSync(
+    path.join(dir, 'khy.extension.json'),
+    JSON.stringify({
+      id, name: id, version: '1.0.0', kind: 'runtime', main: 'index.js',
+      capabilities: [], provides,
+    }, null, 2),
+    'utf8'
+  );
+  fs.writeFileSync(path.join(dir, 'index.js'), 'module.exports = {};\n', 'utf8');
+  fs.writeFileSync(path.join(dir, 'routes', 'ok.js'), "module.exports = { tag: 'fixture-ok' };\n", 'utf8');
+  fs.writeFileSync(
+    path.join(dir, 'routes', 'boom.js'),
+    "throw new Error('fixture module body exploded');\n",
+    'utf8'
+  );
+  return { root, dir };
+}
+
+/** 在子进程里对 seam 提问，返回它最后一行打印的 JSON。 */
+function ask(root, script, extraEnv = {}) {
+  const res = cp.spawnSync(process.execPath, ['-e', Q + script], {
+    cwd: BACKEND,
+    encoding: 'utf8',
+    env: { ...process.env, KHY_EXTENSION_PATH: root, KHY_APP_ROOT: REPO, ...extraEnv },
+  });
+  if (res.status !== 0) {
+    throw new Error('子进程退出 ' + res.status + ':\n' + res.stdout + '\n' + res.stderr);
+  }
+  return JSON.parse(res.stdout.trim().split('\n').pop());
+}
+
+/** 同上，但**期待**子进程失败，返回 stderr 给调用方断言错误内容。 */
+function askExpectThrow(root, script, extraEnv = {}) {
+  const res = cp.spawnSync(process.execPath, ['-e', Q + script], {
+    cwd: BACKEND,
+    encoding: 'utf8',
+    env: { ...process.env, KHY_EXTENSION_PATH: root, KHY_APP_ROOT: REPO, ...extraEnv },
+  });
+  assert.notEqual(res.status, 0, '本例的全部意义在于它必须抛出来，而不是被吞成 null');
+  return res.stderr;
+}
+
+describe('quantApp seam：核点名服务，不点名位置', () => {
+  test('有人 provides 了 quant-app → 解析到那个拓展，而不是 L4 现址', () => {
+    const { root, dir } = makeQuantRoot();
+    const out = ask(root, 'console.log(JSON.stringify({dir:q.resolveDir()}))');
+    assert.equal(out.dir, dir, 'provides 声明必须胜过迁移期兜底，否则 Phase 1 搬完目录仍会读旧址');
+    assert.notEqual(out.dir, L4_DIR);
+  });
+
+  test('声明的是别的服务名 → 不认领；服务名不是模糊匹配', () => {
+    const { root, dir } = makeQuantRoot({ provides: ['quant-something-else'] });
+    const out = ask(root, 'console.log(JSON.stringify({dir:q.resolveDir()}))');
+    assert.equal(
+      out.dir,
+      expectedAppDir(),
+      '没人声明 quant-app，就该落到默认应用通道（L4 在则 L4，否则外部注册），而不是抓一个名字像的'
+    );
+    assert.notEqual(out.dir, dir, '更不能抓一个名字像的拓展顶数');
+  });
+
+  test('躺在分类目录里也能被发现（§2.3 两层深度）', () => {
+    const { root, dir } = makeQuantRoot({ category: 'software' });
+    const out = ask(root, 'console.log(JSON.stringify({dir:q.resolveDir()}))');
+    assert.equal(out.dir, dir, 'Phase 1 的落点正是 extensions/software/<id>，这一层必须能被下探到');
+  });
+
+  test('SERVICE 常量就是核唯一该知道的字符串', () => {
+    const out = ask(emptyRoot(), 'console.log(JSON.stringify({s:q.SERVICE}))');
+    assert.equal(out.s, 'quant-app');
+  });
+});
+
+describe('quantApp seam：默认应用通道（迁移期兜底 + 外部注册）', () => {
+  test('没人声明 → L4 在则 L4，L4 已随拆分移走则落外部注册 dir', () => {
+    // 拆分前这一支断言 L4（Phase 0 纯重构）；拆分后 L4 目录不在仓库里，
+    // 常态命中是注册文件里的独立项目 dir。helper 把两态都盖住：目录移回
+    // （回滚）时本用例自动切回断言 L4，不需要改测试。
+    const out = ask(emptyRoot(), 'console.log(JSON.stringify({dir:q.resolveDir()}))');
+    assert.equal(
+      out.dir,
+      expectedAppDir(),
+      '迁移兜底与外部注册是同一条「默认应用」通道的两段，谁在用谁'
+    );
+  });
+
+  test('兜底路径里不含拓展 id —— 不触 §1.3「核不点名拓展 id」', () => {
+    // 这条不是风格洁癖：check-repo-layout 的 extension-id-hardcode 基线是 0，
+    // 兜底一旦写成 khy-quant 就会把这个门禁染红，Phase 0 反而卡死。
+    const src = fs.readFileSync(SEAM, 'utf8');
+    const code = src.split('\n').filter((l) => !/^\s*(\*|\/\*|\/\/)/.test(l)).join('\n');
+    assert.ok(!code.includes('khy-quant'), '兜底应写 L4 目录名 khyquant，不是拓展 id khy-quant');
+  });
+});
+
+describe('quantApp seam：「未安装」与「装了但坏了」是两档', () => {
+  test('模块存在 → 正常加载', () => {
+    const { root } = makeQuantRoot();
+    const out = ask(root, "console.log(JSON.stringify({m:q.loadModule('routes/ok')}))");
+    assert.deepEqual(out.m, { tag: 'fixture-ok' });
+  });
+
+  test('省略 .js 后缀与写全后缀等价', () => {
+    const { root } = makeQuantRoot();
+    const out = ask(
+      root,
+      "console.log(JSON.stringify({a:q.loadModule('routes/ok'),b:q.loadModule('routes/ok.js')}))"
+    );
+    assert.deepEqual(out.a, out.b);
+  });
+
+  test('模块不存在 → null，且不抛（这一档才是「未安装」）', () => {
+    const { root } = makeQuantRoot();
+    const out = ask(root, "console.log(JSON.stringify({m:q.loadModule('routes/nope')}))");
+    assert.equal(out.m, null);
+  });
+
+  test('模块存在但加载抛错 → 照抛，不吞成 null', () => {
+    // 本文件最重要的一条。吞掉它意味着 khyquant 路由里的真 bug 会表现为静默 404，
+    // 而不是启动期一声脆响 —— 那种 bug 要查一整天。
+    const { root } = makeQuantRoot();
+    const err = askExpectThrow(root, "q.loadModule('routes/boom');console.log('{}')");
+    assert.match(err, /fixture module body exploded/, '原始错误必须原样冒出来，不能被 seam 抹掉');
+  });
+
+  test('垃圾入参不抛，只是解析不到', () => {
+    const { root } = makeQuantRoot();
+    const out = ask(
+      root,
+      'console.log(JSON.stringify({a:q.loadModule(null),b:q.loadModule(""),c:q.loadModule(42)}))'
+    );
+    assert.deepEqual(out, { a: null, b: null, c: null });
+  });
+
+  // 「应用整体缺席 → loadModule/resolveDir 全线落空」在拆分前**不可断言**
+  // ——迁移期兜底总会命中真实的 software/khyquant。拆分后（[DESIGN-ARCH-144] §10）
+  // L4 目录不在了，这一档成立了，用例补在下面。这里仍不造假绿灯占位。
+});
+
+describe('quantApp seam：应用整体缺席（拆分后成立的契约）', () => {
+  test('L4 不在 + env 指向空处 → resolveDir 落空返回 null', () => {
+    // resolveExternalDir 的 env 通道显式且失效时直接短路、不落回注册文件
+    // （避免双通道打架），正好用来构造「谁都不在」：① provides 空根不认领、
+    // ② L4 目录已随拆分移出、③ env 明示一个不存在的目录 → 必须是 null。
+    const out = ask(
+      emptyRoot(),
+      'console.log(JSON.stringify({dir:q.resolveDir()}))',
+      { KHY_QUANT_APP_DIR: path.join(REPO, 'software', 'khyquant-gone-fixture') }
+    );
+    assert.equal(out.dir, null, '谁都不在就该是 null，不该抓 L4 旧址或注册文件顶数');
+  });
+});
+
+describe('quantApp seam：壳里的模块路径必须真的存在', () => {
+  // 改写前，这些壳写的是相对 require，check-repo-layout 的 unresolved-require 规则
+  // 能静态验出写错的路径。改成 loadModule('routes/market') 之后实参是个字符串，
+  // 那条门禁验不了了 —— 静态可验性是真丢了一块。这一组用例把它挣回来：扫出核里
+  // 全部 loadModule 实参，逐个断言目标在量化应用里存在。少了它，一个拼错的模块名
+  // 会安静地退化成 null，然后在某个请求路径上炸成 TypeError。
+  const CALL = /loadModule\(\s*'([^']+)'\s*\)/g;
+
+  /** 递归收集核里所有 loadModule 实参。 */
+  function collect(dir, out = []) {
+    for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (ent.name === 'node_modules') continue;
+      const p = path.join(dir, ent.name);
+      if (ent.isDirectory()) { collect(p, out); continue; }
+      if (!ent.name.endsWith('.js')) continue;
+      const txt = fs.readFileSync(p, 'utf8');
+      if (!txt.includes('quantApp')) continue;
+      for (const m of txt.matchAll(CALL)) out.push({ file: p, mod: m[1] });
+    }
+    return out;
+  }
+
+  test('核里每一处 loadModule 实参都能在量化应用里找到对应文件', () => {
+    const calls = collect(path.join(BACKEND, 'src'));
+    assert.ok(calls.length >= 57, '至少该扫到 57 个兼容壳，扫到 ' + calls.length + ' 个——扫描逻辑可能坏了');
+
+    const missing = [];
+    const appDir = expectedAppDir();
+    for (const { file, mod } of calls) {
+      // 拆分后核验基准跟着默认应用通道走：L4 在则 L4，否则外部注册 dir。
+      const abs = appDir ? path.join(appDir, mod.endsWith('.js') ? mod : mod + '.js') : null;
+      if (!abs || !fs.existsSync(abs)) {
+        missing.push(path.relative(BACKEND, file) + " → '" + mod + "'");
+      }
+    }
+    assert.deepEqual(missing, [], '这些壳指向的模块不存在，会静默解析成 null');
+  });
+});
+
+describe('quantApp seam：对真实 khyquant 的核验', () => {
+  test('真实应用的路由模块能通过 seam 取到，且是个 express router', () => {
+    const out = ask(
+      emptyRoot(),
+      "const m=q.loadModule('routes/market');" +
+        "console.log(JSON.stringify({t:typeof m,router:!!(m&&m.stack&&typeof m.use==='function')}))"
+    );
+    assert.equal(out.t, 'function');
+    assert.equal(out.router, true, 'server.js 要能把它直接 app.use 上去，形状不能变');
+  });
+
+  test('真实应用的 model 也能取到 —— 57 个壳里不止路由', () => {
+    const out = ask(emptyRoot(), "console.log(JSON.stringify({ok:!!q.loadModule('models/Trade')}))");
+    assert.equal(out.ok, true);
+  });
+});
