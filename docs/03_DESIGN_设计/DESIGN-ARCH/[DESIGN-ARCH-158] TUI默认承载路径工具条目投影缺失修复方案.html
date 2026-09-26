@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-ARCH-158] TUI默认承载路径工具条目投影缺失修复方案.md -->
+<title>[DESIGN-ARCH-158] TUI 默认承载路径工具条目投影缺失修复方案 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>[DESIGN-ARCH-158] TUI 默认承载路径工具条目投影缺失修复方案</div>
+      <header class="hero reveal"><h1>[DESIGN-ARCH-158] TUI 默认承载路径工具条目投影缺失修复方案</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-158-tui-默认承载路径工具条目投影缺失修复方案">[DESIGN-ARCH-158] TUI 默认承载路径工具条目投影缺失修复方案</a></li><li class="lvl-2"><a href="#0-一句话结论">0. 一句话结论</a></li><li class="lvl-3"><a href="#0-1-病灶总表">0.1 病灶总表</a></li><li class="lvl-3"><a href="#0-2-与既有件的边界-补空白-另起炉灶">0.2 与既有件的边界（补空白 &gt; 另起炉灶）</a></li><li class="lvl-2"><a href="#1-现状实证-file-line-可复核">1. 现状实证（file:line 可复核）</a></li><li class="lvl-3"><a href="#1-1-承载路径-默认不是-ink-组件-而是-纯文本行-应用内-viewport">1.1 承载路径：默认不是 ink 组件，而是「纯文本行 + 应用内 Viewport」</a></li><li class="lvl-3"><a href="#1-2-真源形状-vs-消费面">1.2 真源形状 vs 消费面</a></li><li class="lvl-3"><a href="#1-3-为什么单测全绿-判定面与真源不同形">1.3 为什么单测全绿（判定面与真源不同形）</a></li><li class="lvl-3"><a href="#1-4-探针实测-修复前">1.4 探针实测（修复前）</a></li><li class="lvl-2"><a href="#2-设计公理-不可让渡">2. 设计公理（不可让渡）</a></li><li class="lvl-2"><a href="#3-修法">3. 修法</a></li><li class="lvl-3"><a href="#3-1-候选-a-推荐-抽出零依赖归并叶子-投影器消费同一份">3.1 候选 A（推荐）：抽出零依赖归并叶子，投影器消费同一份</a></li><li class="lvl-3"><a href="#3-2-候选-b-否决-在提交边界把-timeline-存成分组形状">3.2 候选 B（否决）：在提交边界把 timeline 存成分组形状</a></li><li class="lvl-3"><a href="#3-3-候选-c-降级备选-transcriptlines-内联三行归并">3.3 候选 C（降级备选）：`transcriptLines` 内联三行归并</a></li><li class="lvl-3"><a href="#3-4-分期">3.4 分期</a></li><li class="lvl-2"><a href="#4-接线清单-b-l2-三步-一次提交只做一步">4. 接线清单（B-L2 三步，一次提交只做一步）</a></li><li class="lvl-2"><a href="#5-验证与反例清单">5. 验证与反例清单</a></li><li class="lvl-2"><a href="#6-防呆铁律">6. 防呆铁律</a></li><li class="lvl-2"><a href="#7-未决问题-需人裁决-本方案不代为决定">7. 未决问题（需人裁决，本方案不代为决定）</a></li><li class="lvl-2"><a href="#8-验证状态">8. 验证状态</a></li><li class="lvl-2"><a href="#附录-a-探针全文-可直接粘贴复跑">附录 A：探针全文（可直接粘贴复跑）</a></li><li class="lvl-2"><a href="#附录-b-复现命令">附录 B：复现命令</a></li><li class="lvl-2"><a href="#变更记录">变更记录</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="design-arch-158-tui-默认承载路径工具条目投影缺失修复方案">[DESIGN-ARCH-158] TUI 默认承载路径工具条目投影缺失修复方案<a class="anchor" href="#design-arch-158-tui-默认承载路径工具条目投影缺失修复方案" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>状态</strong>：提案（待评审，未落码）<br><strong>定位</strong>：本文件管「TUI <strong>默认</strong>转录承载路径里，一次工具调用<strong>有没有被画出来</strong>」。<strong>写什么</strong>（一行语法）以 <code>[DESIGN-ARCH-155]</code> 为准；布局/行高/键位/门控预算以 <code>[DESIGN-ARCH-102]</code> 为准；桌面端工具卡片的数据通路以 <code>[DESIGN-ARCH-152]</code> 为准（边界见 §0.2）。<br><strong>范围</strong>：<code>services/backend/src/cli/tui/transcriptLines.js</code>（投影器）、<code>services/backend/src/cli/tui/hooks/useQueryBridge.js</code>（折叠判定一处）、<code>services/backend/tests/cli/tui/transcriptLines.test.js</code><br><strong>上游依赖</strong>：零新增依赖、<strong>零新增 env 门控</strong>（<code>check-tui-gates</code> 的唯一 token 数<strong>现查 232 / 上限 227</strong>，HEAD 上即已超限）<br><strong>调研指针</strong>：<code>[DESIGN-ARCH-152]</code>（桌面端工具卡片接线）、<code>[DESIGN-ARCH-155]</code>（工具调用短显示规范）、<code>[DESIGN-ARCH-102]</code>（TUI 统一规则手册）、<code>[DESIGN-ARCH-146]</code>（卡片挂点/展开，同族「判定面白名单」教训）<br><strong>模板合规</strong>：非借鉴类改动，B-P2 七字段按体例「不适用」——依据：全文只复用本仓既有模块（<code>ProcessGroup.groupConsecutiveTools</code>、<code>ToolLines.summarizeArgs</code>、<code>transcriptLines</code>），无外部项目、代码或设计稿借鉴。</p></blockquote>
+<hr>
+<h2 id="0-一句话结论">0. 一句话结论<a class="anchor" href="#0-一句话结论" aria-label="锚点">#</a></h2>
+<p><strong>工具条目在默认承载路径上不是被「压成一行」，而是被整条丢弃。</strong></p>
+<p>真源 timeline 的条目形状是 <code>{ type: 'tool', tool }</code>（<code>queryBridgeTimeline.js:41</code> 的 <code>tlPushTool</code>），<br>而投影器 <code>transcriptLines._timelineLines</code> 只认 <code>{ type: 'tools', tools: [] }</code>（<code>transcriptLines.js:212</code>）——<br>那是 <code>ProcessGroup.groupConsecutiveTools()</code> <strong>分组之后</strong>的产物。<br>于是「说明」（合成叙述文本段）照常渲染，<strong>工具本身一条不剩</strong>：用户看到的就是「只有说明、没有工具卡片」。</p>
+<h3 id="0-1-病灶总表">0.1 病灶总表<a class="anchor" href="#0-1-病灶总表" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>#</th><th>症状（用户可见）</th><th>根因</th><th>位置</th><th>等级</th></tr></thead><tbody><tr><td><strong>P0</strong></td><td>转录里<strong>看不到任何工具</strong>，只剩合成叙述（「我先定位…」「这轮 14 处，接着往下核对。」）；工具在提交瞬间从屏幕消失</td><td>投影器不认真源形状 <code>{type:'tool'}</code>，<code>continue</code> 静默跳过</td><td><code>transcriptLines.js:212</code>（分支表 <code>:186-220</code>）</td><td><strong>P0</strong></td></tr><tr><td><strong>P2</strong></td><td>以工具为主的回合 <strong>Ctrl+O 判为不可折叠</strong>；<code>expansion</code> 视图里工具条目整条消失</td><td>同一形状判据写歪：<code>_entryIsFoldable</code> 只认 <code>{type:'tools'}</code></td><td><code>useQueryBridge.js:240</code>（判定）/ <code>:285</code>（过滤）</td><td>P1</td></tr><tr><td><strong>P0-b</strong></td><td>同一个工具「运行中」与「已提交」<strong>形态不一致</strong>（<code>  ● name summary</code> ↔ <code>  ◆ name(summary)</code>）</td><td>流式投影是<strong>手写的第二套格式</strong>，与投影器不同源</td><td><code>App.js:5975-5982</code></td><td>P2</td></tr></tbody></table>
+<h3 id="0-2-与既有件的边界-补空白-另起炉灶">0.2 与既有件的边界（补空白 &gt; 另起炉灶）<a class="anchor" href="#0-2-与既有件的边界-补空白-另起炉灶" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>既有件</th><th>它管什么</th><th>本方案做什么</th><th>边界</th></tr></thead><tbody><tr><td><code>[DESIGN-ARCH-155]</code></td><td>一次工具调用<strong>写成哪一行</strong>（行语法契约，四端统一）</td><td>这些行<strong>有没有</strong>被投影出来</td><td>本方案不动行内文案、动词、图标语义；行内容变更一律归 155</td></tr><tr><td><code>[DESIGN-ARCH-152]</code></td><td><strong>桌面端</strong>（<code>apps/khyos-desktop</code>）工具卡片的<strong>数据通路</strong></td><td><strong>TUI</strong> 侧承载路径的投影接线</td><td>152 的范围不含 <code>services/backend/src/cli/tui/**</code></td></tr><tr><td><code>[DESIGN-ARCH-102]</code></td><td>TUI 布局 / 行高 / 键位 / 门控数量</td><td>条目形状归一</td><td>不新增门控、不改行高与键位</td></tr><tr><td><code>[DESIGN-ARCH-146]</code></td><td>卡片点击命中与展开（挂点决定粒度）</td><td>—</td><td>只借用其「判定面常是白名单清单」的教训（见 §1.3）</td></tr></tbody></table>
+<blockquote><p>检索记录：<code>grep -rl &quot;工具卡片\|transcriptLines&quot; docs/ --include=&quot;*.md&quot;</code> 命中 152/155 等 20 件，<br><strong>无一件把 <code>transcriptLines.js</code> 纳入范围</strong>——本方案落在这个空白上。</p></blockquote>
+<hr>
+<h2 id="1-现状实证-file-line-可复核">1. 现状实证（file:line 可复核）<a class="anchor" href="#1-现状实证-file-line-可复核" aria-label="锚点">#</a></h2>
+<h3 id="1-1-承载路径-默认不是-ink-组件-而是-纯文本行-应用内-viewport">1.1 承载路径：默认不是 ink 组件，而是「纯文本行 + 应用内 Viewport」<a class="anchor" href="#1-1-承载路径-默认不是-ink-组件-而是-纯文本行-应用内-viewport" aria-label="锚点">#</a></h3>
+<pre><code>App.js:215  _inlineTranscriptEnabled()   除 0/false/off/no 外**默认开**（:6087 取值）
+   ⇒ 默认：转录由**应用内 Viewport** 承载，内容是 transcriptLines 产出的**纯文本行数组**
+        App.js:5932 _mainContentLines → :5942 buildTranscriptLines(query.messages, …)
+   ⇒ 仅当显式 KHY_INLINE_TRANSCRIPT=0 时才回退 &lt;Static&gt; + ink 组件（App.js:197 _STATIC_BANNER_ONLY）</code></pre>
+<p>推论（决定了用户看到什么）：</p>
+<ul><li><code>ToolLines</code> 的<strong>卡片</strong>（圆角 Box / <code>⎿</code> 结果体 / ±diff / 折叠）<strong>只存在于两条路径</strong>：</li></ul>
+<p>live 流式区（<code>StreamingBlock.js:283</code> → <code>ToolLines</code>）与 <code>KHY_INLINE_TRANSCRIPT=0</code> 的 <code>&lt;Static&gt;</code> 路径。</p>
+<ul><li><strong>默认路径没有卡片，只有文本行。</strong> 所以本方案的目标不是「把卡片搬过来」，而是先保证</li></ul>
+<p><strong>工具行至少存在</strong>（P0），形态问题另按 §7-4 裁决。</p>
+<h3 id="1-2-真源形状-vs-消费面">1.2 真源形状 vs 消费面<a class="anchor" href="#1-2-真源形状-vs-消费面" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>消费者</th><th>位置</th><th>吃 <code>{type:'tool'}</code>（真源形状）</th><th>吃 <code>{type:'tools'}</code>（分组后）</th><th>结论</th></tr></thead><tbody><tr><td><strong>投影器</strong>（默认承载）</td><td><code>transcriptLines.js:212</code></td><td>❌ <strong>静默跳过</strong></td><td>✅</td><td><strong>P0 缺陷</strong></td></tr><tr><td>committed ink 路径</td><td><code>Transcript.js:367</code></td><td>先 <code>groupTimeline</code> 归一</td><td>✅</td><td>正确</td></tr><tr><td>live 流式区</td><td><code>StreamingBlock.js:283</code></td><td>先 <code>groupConsecutiveTools</code> 归一</td><td>✅</td><td>正确</td></tr><tr><td>折叠判定</td><td><code>useQueryBridge.js:240</code> / <code>:285</code></td><td>❌</td><td>✅</td><td><strong>P2 缺陷</strong></td></tr><tr><td>归并器（真源）</td><td><code>ProcessGroup.js:328</code>（<code>:335</code> 认 <code>'tool'</code>）</td><td>它就是归一器</td><td>产出</td><td>正确</td></tr></tbody></table>
+<p>⇒ <strong>投影器是唯一「直接吃原始 timeline」的消费者</strong>——因为它是纯叶子，不能 require ink 组件树<br>（现依赖面只有 <code>wrapCell</code> + <code>permissionNotice</code>，见文件头契约）。这不是它写错的理由，但解释了<br>为什么它成了唯一的漏网者。</p>
+<h3 id="1-3-为什么单测全绿-判定面与真源不同形">1.3 为什么单测全绿（判定面与真源不同形）<a class="anchor" href="#1-3-为什么单测全绿-判定面与真源不同形" aria-label="锚点">#</a></h3>
+<p><code>tests/cli/tui/transcriptLines.test.js:57</code> 喂的是 <code>{ type: 'tools', tools: [...] }</code>——<br><strong>分组后的形状，真实 timeline 从不产生它</strong>。测试与真源<strong>不同形</strong> ⇒ 恒绿。</p>
+<p>这与 <code>[DESIGN-ARCH-146]</code> 记的教训同族：<strong>判定面常是一份白名单清单，漏一项＝一类静默漏检</strong>。<br>此处漏的正是「真源形状」这一项。</p>
+<h3 id="1-4-探针实测-修复前">1.4 探针实测（修复前）<a class="anchor" href="#1-4-探针实测-修复前" aria-label="锚点">#</a></h3>
+<pre><code>① 真源 timeline 直接投影（用户实际所见）
+   0 | &quot;我先定位渲染逻辑，用 Grep 检索相关实现文件。&quot;
+   1 | &quot;&quot;
+   2 | &quot;这轮 14 处，接着往下核对。&quot;
+② 先经 ProcessGroup.groupTimeline() 分组后投影（对照）
+   2 | &quot;  ✓ Grep(tool_use|toolCall)&quot;
+   6 | &quot;  ✓ Read(src/cli/toolDisplay.js)&quot;
+--- 不变量（判定面＝工具行形状 /^\s{2}[◆✓✗]\s+名(/）---
+① 真源形状下工具行数 : 0  ← 应为 2
+② 分组形状下工具行数 : 2  ← 对照，应为 2
+结论 : FAIL（工具条目被静默丢弃）        EXIT=1</code></pre>
+<p>⚠ 探针首版的不变量写成「行里出现 <code>Grep</code>/<code>Read</code> 字样」，被<strong>合成叙述文本</strong>命中 ⇒ 断言恒真、<br>报出假的 <code>PASS</code>。判定面已收窄为<strong>工具行的形状</strong>（缩进 2 + <code>◆✓✗</code> + <code>名(</code>）。全文见附录 A。</p>
+<hr>
+<h2 id="2-设计公理-不可让渡">2. 设计公理（不可让渡）<a class="anchor" href="#2-设计公理-不可让渡" aria-label="锚点">#</a></h2>
+<ol><li><strong>投影器必须吃真源形状。</strong> <code>transcriptLines</code> 的入参永远是 <code>query.messages</code> 的原始 timeline</li></ol>
+<p>（<code>App.js:5942</code>/<code>:6040</code> 就是这么传的）。「先分组」是调用方的可选优化，不是它的契约。</p>
+<ol><li><strong>形状归一化只允许一处实现。</strong> <code>{type:'tool'}</code> → <code>{type:'tools'}</code> 的归并逻辑只能有一个真源；</li></ol>
+<p>投影器不得为绕过依赖面而自带第二份（否则两条路径会各自漂移）。</p>
+<ol><li><strong>纯叶子契约不可破。</strong> <code>transcriptLines</code> 零 IO、确定性、绝不抛、<strong>不得 require ink/React 组件树</strong>。</li><li><strong>静默跳过是默认危险，但本方案不加门控。</strong> 未知条目类型今天被 <code>continue</code> 吞掉；</li></ol>
+<p><code>check-tui-gates</code> 的 token 预算已顶格，<strong>不引入任何新 <code>KHY_*</code> 名</strong>——改由<strong>测试钉住形状</strong>（§5 R3/R4）。</p>
+<hr>
+<h2 id="3-修法">3. 修法<a class="anchor" href="#3-修法" aria-label="锚点">#</a></h2>
+<h3 id="3-1-候选-a-推荐-抽出零依赖归并叶子-投影器消费同一份">3.1 候选 A（推荐）：抽出零依赖归并叶子，投影器消费同一份<a class="anchor" href="#3-1-候选-a-推荐-抽出零依赖归并叶子-投影器消费同一份" aria-label="锚点">#</a></h3>
+<pre><code class="language-js"><span class="hljs-comment">// 新增 services/backend/src/cli/tui/timelineGroups.js —— 纯叶子：零 IO、确定性、绝不抛</span>
+<span class="hljs-comment">// 内容＝ ProcessGroup.js:328-350 的 groupConsecutiveTools **原样搬入**（不改逻辑）</span>
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">groupConsecutiveTools</span>(<span class="hljs-params">timeline</span>) { <span class="hljs-comment">/* … */</span> }
+<span class="hljs-variable language_">module</span>.<span class="hljs-property">exports</span> = { groupConsecutiveTools };</code></pre>
+<pre><code class="language-js"><span class="hljs-comment">// ProcessGroup.js：保留同名转发（既有调用点与单测一律不动）</span>
+<span class="hljs-variable language_">module</span>.<span class="hljs-property">exports</span>.<span class="hljs-property">groupConsecutiveTools</span> = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;../timelineGroups&#x27;</span>).<span class="hljs-property">groupConsecutiveTools</span>;
+
+<span class="hljs-comment">// transcriptLines.js：入口一次归一，既有三分支**逐字节不动**</span>
+<span class="hljs-keyword">const</span> { groupConsecutiveTools } = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;./timelineGroups&#x27;</span>);
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">_timelineLines</span>(<span class="hljs-params">timeline, ctx</span>) {
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> e <span class="hljs-keyword">of</span> <span class="hljs-title function_">groupConsecutiveTools</span>(timeline)) { <span class="hljs-comment">/* 既有 text/thinking/tools 分支不变 */</span> }
+}</code></pre>
+<p>收益：① 投影器与 ink 路径<strong>同一份分组语义</strong>；② 不破纯叶子契约（新叶子只依赖自己）；<br>③ 分组形状的输入输出<strong>逐字节不变</strong> ⇒ 对既有测试零风险。</p>
+<h3 id="3-2-候选-b-否决-在提交边界把-timeline-存成分组形状">3.2 候选 B（否决）：在提交边界把 timeline 存成分组形状<a class="anchor" href="#3-2-候选-b-否决-在提交边界把-timeline-存成分组形状" aria-label="锚点">#</a></h3>
+<p>改动真源形状 ⇒ 波及 <code>tlResolveTool</code> / <code>reduceAgentTree</code> / <code>liveHeightClamp</code> / <code>tailTruncation</code> /<br>持久化 <code>_timeline</code> 的全部消费者，还要迁移存量会话。归一器已经存在，收益为零。<strong>否决。</strong></p>
+<h3 id="3-3-候选-c-降级备选-transcriptlines-内联三行归并">3.3 候选 C（降级备选）：<code>transcriptLines</code> 内联三行归并<a class="anchor" href="#3-3-候选-c-降级备选-transcriptlines-内联三行归并" aria-label="锚点">#</a></h3>
+<p>改动最小，但制造<strong>第二份</strong>归并实现（违反公理 2）。仅在不接受新增文件时采用。</p>
+<h3 id="3-4-分期">3.4 分期<a class="anchor" href="#3-4-分期" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>期</th><th>内容</th><th>风险</th></tr></thead><tbody><tr><td><strong>P0</strong></td><td>形状归一（候选 A）+ 回归对照测试</td><td>低（分组形状输出不变）</td></tr><tr><td><strong>P2</strong></td><td><code>_entryIsFoldable</code>（<code>useQueryBridge.js:240</code>）与 <code>buildExpansionMessage</code>（<code>:285</code>）同步接受两种形状</td><td>低（纯判据收窄）</td></tr><tr><td><strong>P0-b</strong></td><td><code>App.js:5975</code> 流式投影改为复用投影器的同一纯函数，消掉「提交瞬间形态跳变」</td><td><strong>中</strong>——它改的是<strong>当前唯一能看见工具</strong>的路径，须独立验收</td></tr><tr><td><strong>P1</strong></td><td>工具行的<strong>内容</strong>（结果量/耗时/是否升级为多行块）</td><td>边界外，归 <code>[DESIGN-ARCH-155]</code>，本方案不裁决</td></tr></tbody></table>
+<hr>
+<h2 id="4-接线清单-b-l2-三步-一次提交只做一步">4. 接线清单（B-L2 三步，一次提交只做一步）<a class="anchor" href="#4-接线清单-b-l2-三步-一次提交只做一步" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>步</th><th>动作</th><th>内容</th><th>验收</th></tr></thead><tbody><tr><td>1 标记</td><td>新增纯叶子 + 两处 require 收口</td><td><code>timelineGroups.js</code>；<code>ProcessGroup</code> 转发；<code>transcriptLines</code> 消费</td><td><code>node --test tests/cli/tui/*.test.js</code> 全绿；<code>check:tui-gates</code> 的 token 数<strong>不变</strong>（现查 232）</td></tr><tr><td>2 迁移</td><td>投影器归一 + 折叠判定收口</td><td><code>_timelineLines</code> 入口归一；<code>_entryIsFoldable</code> 接受两种形状</td><td>§5 的 R1–R6 全绿，含 R3 双向相等</td></tr><tr><td>3 收口</td><td>P0-b 流式格式统一（可选，独立验收）</td><td><code>App.js:5975</code> 复用同一投影函数</td><td>流式↔提交形态一致；live 区回归对照</td></tr></tbody></table>
+<p>⚠ <strong>不新增任何 <code>KHY_*</code> 门控</strong>：<code>check-tui-gates</code> 的唯一 token 数<strong>现查 232 / 上限 227</strong>（HEAD 上即已超限，非本次引入）。<br>⚠ 新增 1 个 <code>.js</code> 文件本身<strong>不增加</strong> token 计数（先例：178 → 179 文件，token 数不变）。</p>
+<hr>
+<h2 id="5-验证与反例清单">5. 验证与反例清单<a class="anchor" href="#5-验证与反例清单" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>反例</th><th>预期</th><th>当前实测</th></tr></thead><tbody><tr><td><strong>R1</strong></td><td>真源形状 <code>[{text},{tool},{tool}]</code></td><td>出 2 条工具行</td><td>❌ <strong>0 条</strong>（探针 FAIL）</td></tr><tr><td><strong>R2</strong></td><td>分组形状 <code>[{text},{tools:[…]}]</code></td><td>仍出工具行（<strong>回归对照</strong>）</td><td>✅ 2 条</td></tr><tr><td><strong>R3</strong></td><td>同一份数据，两种形状<strong>输出逐字节相等</strong></td><td>必须相等</td><td>待补 —— <strong>这正是 P0 的目标断言</strong></td></tr><tr><td><strong>R4</strong></td><td>未知类型 <code>{type:'weird'}</code></td><td>不崩、不改变既有行数</td><td>待补（钉住「静默跳过是有意的」）</td></tr><tr><td><strong>R5</strong></td><td>工具与文本交错</td><td>与 <code>&lt;Static&gt;</code> 路径同序</td><td>待补</td></tr><tr><td><strong>R6</strong></td><td>折叠判定：仅含工具的回合</td><td><code>selectLastFoldableMessage</code> 非 null</td><td>待补（P2 判据）</td></tr></tbody></table>
+<p>⚠ <strong>R3 必须与 R1 同时存在</strong>：只测 R1（「会出」）不测 R2/R3（「分组形状别退化」），<br>等于给了一条<strong>可以靠删掉 <code>'tools'</code> 分支来通过</strong>的单向断言。</p>
+<hr>
+<h2 id="6-防呆铁律">6. 防呆铁律<a class="anchor" href="#6-防呆铁律" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>铁律</th><th>可自动判的判据</th></tr></thead><tbody><tr><td>1</td><td>投影器只吃真源形状</td><td>单测喂的 timeline 必须与 <code>tlPushTool</code> 产出的<strong>字面量同形</strong>；断言 R3 双向相等</td></tr><tr><td>2</td><td>归并只允许一处实现</td><td><code>cli/tui/**</code> 里<strong>归并实现</strong>只有 1 处（<code>timelineGroups.js</code>）；其余要么 <code>require</code> 它、要么只处理分组形状</td></tr><tr><td>3</td><td>纯叶子契约不可破</td><td><code>transcriptLines.js</code> 的 require 面不得出现 ink/React（应只命中 <code>wrapCell</code> / <code>permissionNotice</code> / 新叶子）</td></tr><tr><td>4</td><td>新增 timeline 条目类型必须登记</td><td>§1.2 的表与 <code>tlPushTool</code> 的类型字面量<strong>同批更新</strong>；新增类型无消费者分支 ⇒ 测试红</td></tr></tbody></table>
+<hr>
+<h2 id="7-未决问题-需人裁决-本方案不代为决定">7. 未决问题（需人裁决，本方案不代为决定）<a class="anchor" href="#7-未决问题-需人裁决-本方案不代为决定" aria-label="锚点">#</a></h2>
+<ol><li><strong>是否接受新增 1 个 <code>.js</code></strong>（候选 A）？不接受则降级候选 C，并接受「两份归并」的漂移风险。</li><li><strong>P0-b 是否同批</strong>？它改的是当前唯一能看见工具的路径，建议独立验收。</li><li><strong><code>App.js:5975</code> 与 <code>transcriptLines._toolLines</code> 的文案/字形分歧</strong>（<code>●</code> vs <code>◆</code>、<code>name summary</code> vs</li></ol>
+<p><code>name(summary)</code>）是缺陷还是 <code>[DESIGN-ARCH-155]</code> 有意保留的两态？<strong>归 155 裁决。</strong></p>
+<ol><li><strong>用户说的「工具卡片」到底是哪种形态？</strong> 本方案只保证「工具行存在」。</li></ol>
+<p>若要求多行块 / 可折叠 / 带 ±diff，则属于<strong>承载路径切换</strong>（<code>KHY_INLINE_TRANSCRIPT=0</code>，<br>   或让 Viewport 支持富行），是另一个量级的提案。<strong>需产品裁决。</strong></p>
+<hr>
+<h2 id="8-验证状态">8. 验证状态<a class="anchor" href="#8-验证状态" aria-label="锚点">#</a></h2>
+<p><strong>已实测（附可复跑证据）</strong></p>
+<ul><li>P0 缺陷存在：探针（附录 A）真源形状 <strong>0</strong> 条工具行 / 分组形状 <strong>2</strong> 条，<code>EXIT=1</code>。</li><li>真源形状：<code>queryBridgeTimeline.js:41-43</code>。</li><li>投影器分支表：<code>transcriptLines.js:186-220</code>（<code>:212</code> 只认 <code>'tools'</code>）。</li><li>默认承载路径：<code>App.js:215</code> / <code>:6087</code>（默认开）、<code>:5932</code> / <code>:5942</code> / <code>:6040</code>（投影调用点）。</li><li>测试判定面：<code>transcriptLines.test.js:57</code> 只喂分组形状。</li><li>对照路径正确：<code>Transcript.js:367</code>、<code>StreamingBlock.js:283</code> 均先归一；<code>ProcessGroup.js:328/335</code> 认 <code>'tool'</code>。</li><li>流式手写投影：<code>App.js:5975-5982</code>。</li></ul>
+<p><strong>仅主张（本轮未执行真代码验证）</strong></p>
+<ul><li><strong>P2</strong>（<code>_entryIsFoldable</code> 同族）由读源码得出，<strong>未跑 Ctrl+O 端到端</strong>。</li></ul>
+<p>补测方式：构造 <code>{ role:'assistant', timeline:[{type:'tool', tool:{…}}] }</code> 调 <code>selectLastFoldableMessage</code>，断言非 null。</p>
+<ul><li><strong>P0-b</strong> 的「形态跳变」由两处源码对比得出，<strong>未在真终端观察</strong>。</li></ul>
+<p><strong>本轮未做什么（防止被误读为已落地）</strong></p>
+<ul><li><strong>未改任何源码</strong>——本文件是提案。</li><li><strong>未跑全站建站</strong>（<code>node scripts/docs/build_docs_site.js</code>）：它会重写 700+ 已跟踪 <code>.html</code> 并卷入他人 WIP，</li></ul>
+<p>⇒ 本文件的 <code>.html</code> 孪生件<strong>待生成</strong>。<code>docs:verify</code> 未接线到任何门档（仅 <code>package.json:165</code> 一个别名），故不阻断。</p>
+<ul><li><strong>未回写既有漏收录</strong>：<code>00_INDEX_DESIGN-ARCH-总目录.md</code> 原称「收录 128 篇」，实际 153 个 <code>.md</code>，</li></ul>
+<p>且 147–157 未收录——<strong>只报告，不擅自替他人补</strong>。</p>
+<ul><li>探针落 <code>.khyos/diag/</code>（gitignore）⇒ 不随文档入仓；全文见附录 A，可直接粘贴复跑。</li></ul>
+<hr>
+<h2 id="附录-a-探针全文-可直接粘贴复跑">附录 A：探针全文（可直接粘贴复跑）<a class="anchor" href="#附录-a-探针全文-可直接粘贴复跑" aria-label="锚点">#</a></h2>
+<pre><code class="language-js"><span class="hljs-meta">&#x27;use strict&#x27;</span>;
+<span class="hljs-comment">// 落点：.khyos/diag/tool-card-projection-probe.js</span>
+<span class="hljs-keyword">const</span> path = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;path&#x27;</span>);
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">SB</span> = path.<span class="hljs-title function_">join</span>(__dirname, <span class="hljs-string">&#x27;..&#x27;</span>, <span class="hljs-string">&#x27;..&#x27;</span>, <span class="hljs-string">&#x27;services&#x27;</span>, <span class="hljs-string">&#x27;backend&#x27;</span>);
+<span class="hljs-keyword">const</span> { buildTranscriptLines } = <span class="hljs-built_in">require</span>(path.<span class="hljs-title function_">join</span>(<span class="hljs-variable constant_">SB</span>, <span class="hljs-string">&#x27;src/cli/tui/transcriptLines&#x27;</span>));
+<span class="hljs-keyword">const</span> <span class="hljs-title class_">ProcessGroup</span> = <span class="hljs-built_in">require</span>(path.<span class="hljs-title function_">join</span>(<span class="hljs-variable constant_">SB</span>, <span class="hljs-string">&#x27;src/cli/tui/ink-components/ProcessGroup&#x27;</span>));
+
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">RAW_TIMELINE</span> = [
+  { <span class="hljs-attr">type</span>: <span class="hljs-string">&#x27;text&#x27;</span>, <span class="hljs-attr">text</span>: <span class="hljs-string">&#x27;我先定位渲染逻辑，用 Grep 检索相关实现文件。&#x27;</span> },
+  { <span class="hljs-attr">type</span>: <span class="hljs-string">&#x27;tool&#x27;</span>, <span class="hljs-attr">tool</span>: { <span class="hljs-attr">name</span>: <span class="hljs-string">&#x27;Grep&#x27;</span>, <span class="hljs-attr">input</span>: { <span class="hljs-attr">pattern</span>: <span class="hljs-string">&#x27;tool_use|toolCall&#x27;</span> }, <span class="hljs-attr">id</span>: <span class="hljs-string">&#x27;toolu_01&#x27;</span>,
+      <span class="hljs-attr">result</span>: { <span class="hljs-attr">success</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">output</span>: <span class="hljs-string">&#x27;src 里 14 处&#x27;</span> } } },
+  { <span class="hljs-attr">type</span>: <span class="hljs-string">&#x27;text&#x27;</span>, <span class="hljs-attr">text</span>: <span class="hljs-string">&#x27;这轮 14 处，接着往下核对。&#x27;</span> },
+  { <span class="hljs-attr">type</span>: <span class="hljs-string">&#x27;tool&#x27;</span>, <span class="hljs-attr">tool</span>: { <span class="hljs-attr">name</span>: <span class="hljs-string">&#x27;Read&#x27;</span>, <span class="hljs-attr">input</span>: { <span class="hljs-attr">file_path</span>: <span class="hljs-string">&#x27;src/cli/toolDisplay.js&#x27;</span> }, <span class="hljs-attr">id</span>: <span class="hljs-string">&#x27;toolu_02&#x27;</span>,
+      <span class="hljs-attr">result</span>: { <span class="hljs-attr">success</span>: <span class="hljs-literal">true</span> } } },
+];
+<span class="hljs-keyword">const</span> <span class="hljs-title function_">msgOf</span> = (<span class="hljs-params">timeline</span>) =&gt; ({ <span class="hljs-attr">role</span>: <span class="hljs-string">&#x27;assistant&#x27;</span>, <span class="hljs-attr">content</span>: <span class="hljs-string">&#x27;&#x27;</span>, timeline });
+
+<span class="hljs-keyword">const</span> rawLines = <span class="hljs-title function_">buildTranscriptLines</span>([<span class="hljs-title function_">msgOf</span>(<span class="hljs-variable constant_">RAW_TIMELINE</span>)], { <span class="hljs-attr">cols</span>: <span class="hljs-number">80</span> });
+<span class="hljs-keyword">const</span> groupedLines = <span class="hljs-title function_">buildTranscriptLines</span>([<span class="hljs-title function_">msgOf</span>(<span class="hljs-title class_">ProcessGroup</span>.<span class="hljs-title function_">groupTimeline</span>(<span class="hljs-variable constant_">RAW_TIMELINE</span>))], { <span class="hljs-attr">cols</span>: <span class="hljs-number">80</span> });
+
+<span class="hljs-comment">// ⚠ 判定面必须是**工具行的形状**，不能用「行里出现 Grep/Read 字样」——合成叙述文本里也会出现工具名 ⇒ 断言恒真</span>
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">TOOL_ROW_RE</span> = <span class="hljs-regexp">/^\s{2}[◆✓✗]\s+\S+\(/</span>;
+<span class="hljs-keyword">const</span> <span class="hljs-title function_">rows</span> = (<span class="hljs-params">ls</span>) =&gt; ls.<span class="hljs-title function_">filter</span>(<span class="hljs-function">(<span class="hljs-params">l</span>) =&gt;</span> <span class="hljs-variable constant_">TOOL_ROW_RE</span>.<span class="hljs-title function_">test</span>(l));
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;① 真源形状工具行数 :&#x27;</span>, <span class="hljs-title function_">rows</span>(rawLines).<span class="hljs-property">length</span>, <span class="hljs-string">&#x27;（应为 2）&#x27;</span>);
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;② 分组形状工具行数 :&#x27;</span>, <span class="hljs-title function_">rows</span>(groupedLines).<span class="hljs-property">length</span>, <span class="hljs-string">&#x27;（对照，应为 2）&#x27;</span>);
+process.<span class="hljs-title function_">exit</span>(<span class="hljs-title function_">rows</span>(rawLines).<span class="hljs-property">length</span> &gt;= <span class="hljs-number">2</span> ? <span class="hljs-number">0</span> : <span class="hljs-number">1</span>);</code></pre>
+<h2 id="附录-b-复现命令">附录 B：复现命令<a class="anchor" href="#附录-b-复现命令" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-comment"># 1) 缺陷复现（修复前应 EXIT=1）</span>
+node .khyos/diag/tool-card-projection-probe.js; <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;EXIT=$?&quot;</span>
+
+<span class="hljs-comment"># 2) 现有单测（当前全绿 —— 因为它喂的是分组形状）</span>
+<span class="hljs-built_in">cd</span> services/backend &amp;&amp; node --<span class="hljs-built_in">test</span> tests/cli/tui/transcriptLines.test.js
+
+<span class="hljs-comment"># 3) 改动后必跑</span>
+node scripts/ci/check-tui-gates.js          <span class="hljs-comment"># token 数应不变（现查 232；HEAD 上本就超限，勿拿它当回归信号）</span>
+node scripts/ci/check-agent-rules.js --changed</code></pre>
+<hr>
+<h2 id="变更记录">变更记录<a class="anchor" href="#变更记录" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>日期</th><th>变更</th></tr></thead><tbody><tr><td>2026-09-26</td><td>初版提案（含承载路径实证、真源形状 vs 消费面对照表、探针实测输出、P0/P2/P0-b 三处病灶、双向反例清单）</td></tr></tbody></table>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-157] 文件修改红绿diff三端统一规格.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-157] 文件修改红绿 diff 三端统一规格</div></a><a class="next" href="../../../docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-159] CLI命令输出层次化与缩进统一方案.html"><div class="dir">下一篇 →</div><div class="ttl">《khy-os CLI 命令输出层次化与缩进统一方案》</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../";window.__KHY_CUR__="docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-158] TUI默认承载路径工具条目投影缺失修复方案.html";</script>
+<script src="../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
