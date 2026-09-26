@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [IMPL-RPT-061] OpenCode-Zen-免鉴权通道-核实的方案-2026-09-23.md -->
+<title>[IMPL-RPT-061] OpenCode Zen 免鉴权通道 — 核实的方案 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>04_IMPL_实现<span class="sep">›</span>IMPL-RPT<span class="sep">›</span>[IMPL-RPT-061] OpenCode Zen 免鉴权通道 — 核实的方案</div>
+      <header class="hero reveal"><h1>[IMPL-RPT-061] OpenCode Zen 免鉴权通道 — 核实的方案</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#impl-rpt-061-opencode-zen-免鉴权通道-核实的方案">[IMPL-RPT-061] OpenCode Zen 免鉴权通道 — 核实的方案</a></li><li class="lvl-2"><a href="#一-结论-先看这个">一、结论（先看这个）</a></li><li class="lvl-2"><a href="#二-门禁四要素-已-live-核实">二、门禁四要素（已 live 核实）</a></li><li class="lvl-2"><a href="#三-路由-为什么-只选-free-才走免鉴权">三、路由：为什么「只选 free 才走免鉴权」</a></li><li class="lvl-3"><a href="#3-1-调用链">3.1 调用链</a></li><li class="lvl-3"><a href="#3-2-三处-free-清单-必须一致">3.2 三处 free 清单（必须一致）</a></li><li class="lvl-2"><a href="#四-核实证据">四、核实证据</a></li><li class="lvl-2"><a href="#五-日常使用约束">五、日常使用约束</a></li><li class="lvl-2"><a href="#六-改动面-本轮">六、改动面（本轮）</a></li><li class="lvl-3"><a href="#6-1-jev-1-13-free-上游故障与首选切换-2026-09-23">6.1 `jev-1.13-free` 上游故障与首选切换（2026-09-23）</a></li><li class="lvl-2"><a href="#七-一句话备忘">七、一句话备忘</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="impl-rpt-061-opencode-zen-免鉴权通道-核实的方案">[IMPL-RPT-061] OpenCode Zen 免鉴权通道 — 核实的方案<a class="anchor" href="#impl-rpt-061-opencode-zen-免鉴权通道-核实的方案" aria-label="锚点">#</a></h1>
+<table><thead><tr><th>项</th><th>值</th></tr></thead><tbody><tr><td>日期</td><td>2026-09-23</td></tr><tr><td>现场</td><td><code>D:/Portable/khy-os</code></td></tr><tr><td>状态</td><td>已核实（live 直连 + 网关层双通过）</td></tr><tr><td>真源</td><td><code>zenGatekeeper.js</code> / <code>multiFreeService.js</code> / <code>customProviderRegistrar.js</code> / <code>freeModelChannels.js</code></td></tr><tr><td>口径</td><td><strong>仅当选中 <code>api:opencode-zen:*-free</code> 模型时，才注入免鉴权路径；其余通道不受影响</strong></td></tr></tbody></table>
+<hr>
+<h2 id="一-结论-先看这个">一、结论（先看这个）<a class="anchor" href="#一-结论-先看这个" aria-label="锚点">#</a></h2>
+<p><strong>只有选中 OpenCode 的 free 模型时，才走 OpenCode 免鉴权路径。</strong></p>
+<p>判定链（自上而下，命中即定）：</p>
+<table><thead><tr><th>#</th><th>条件</th><th>命中动作</th></tr></thead><tbody><tr><td>1</td><td>模型三段式前缀不是 <code>api:opencode-zen:</code></td><td>不进 Zen 门禁，走该通道既有鉴权/裸请求</td></tr><tr><td>2</td><td>池 key = <code>opencode-zen</code> 且 <code>isZenEndpoint(baseUrl)</code> 为真</td><td>注入 Zen 门禁头 + <code>stream:true</code> + 门禁工具</td></tr><tr><td>3</td><td>模型 id <strong>不以</strong> <code>-free</code> 结尾</td><td>上游 401（付费档需真实 key），<strong>不</strong>按免鉴权放行</td></tr><tr><td>4</td><td>模型 id 以 <code>-free</code> 结尾</td><td>免鉴权通过（<code>Bearer public</code> 即可 200）</td></tr></tbody></table>
+<p>简言之：<strong>endpoint 匹配 Zen SSOT → 注入门禁；模型后缀 <code>-free</code> → 免 401。</strong> 两者缺一，都不走「免鉴权可用」这条路径。</p>
+<hr>
+<h2 id="二-门禁四要素-已-live-核实">二、门禁四要素（已 live 核实）<a class="anchor" href="#二-门禁四要素-已-live-核实" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>要素</th><th>实现位置</th><th>核实结论</th></tr></thead><tbody><tr><td><strong>Headers</strong></td><td><code>zenGatekeeper.buildZenHeaders()</code></td><td><code>Authorization: Bearer public</code>、<code>User-Agent</code>（SSOT）、<code>x-opencode-session/request/client/project</code>、<code>x-session-id</code>；header 本身基本不限</td></tr><tr><td><strong>ID 格式</strong></td><td><code>newSessionId()</code> / <code>newRequestId()</code></td><td><code>prefix_</code> + <strong>12 hex 时间戳</strong> + <strong>14 base62</strong>；session 用 descending（<code>~(Date.now()*0x1000+1)</code> 取 6 字节），message 用 ascending。纯 base62 / lower36 → <strong>403</strong>；正确格式 → <strong>200</strong></td></tr><tr><td><strong>Body 门</strong></td><td><code>applyZenBodyGate()</code></td><td><code>stream:true</code> 必需；<code>tools[]</code> 必须含名为 <code>bash</code> 与 <code>read</code> 的工具（大小写敏感，只看名字）；无调用方工具时 <code>tool_choice:&quot;none&quot;</code>，避免模型去调门禁合成工具</td></tr><tr><td><strong>模型后缀</strong></td><td>上游 401 门 + 本地清单三处对齐</td><td><strong>仅 <code>*-free</code> 免鉴权</strong>；<code>claude-fable-5</code> / <code>gpt-6-astra</code> / <code>gemini-3-flash</code> 等 → <strong>401</strong>；<code>mimo-v2.6-flash-free</code> → <strong>200</strong></td></tr></tbody></table>
+<p>ID 算法对齐 OpenCode 官方 <code>Identifier.create</code>（<code>id/id.ts</code>）；Body 门经 mitmproxy 对官方 <code>1.18.27</code> 抓包逆向得到。</p>
+<hr>
+<h2 id="三-路由-为什么-只选-free-才走免鉴权">三、路由：为什么「只选 free 才走免鉴权」<a class="anchor" href="#三-路由-为什么-只选-free-才走免鉴权" aria-label="锚点">#</a></h2>
+<h3 id="3-1-调用链">3.1 调用链<a class="anchor" href="#3-1-调用链" aria-label="锚点">#</a></h3>
+<pre><code>选中模型 api:opencode-zen:&lt;model&gt;
+        │
+        ▼
+multiFreeService.callOpenAI
+        │
+        ├─ isZenEndpoint(baseUrl)?  ──否──▶ 不注入 Zen 头/体门（其它通道原样）
+        │         │是
+        │         ▼
+        │  buildZenHeaders() + applyZenBodyGate(body)
+        │         │
+        │         ▼
+        │  Authorization: Bearer &lt;pool.apiKey&gt;
+        │  （opencode-zen 池 key 固定为 &quot;public&quot;）
+        │
+        ▼
+上游网关
+        │
+        ├─ 模型不以 -free 结尾 ──▶ 401（需付费 key）
+        └─ 模型以 -free 结尾   ──▶ 200 免鉴权</code></pre>
+<p>关键门在 <code>multiFreeService.js</code>：先 <code>isZenEndpoint(baseUrl)</code>，为真才 <code>buildZenHeaders()</code> / <code>applyZenBodyGate()</code>；为假则 <strong>完全不碰</strong> Zen 门禁。<code>opencode-zen</code> 不在 <code>BUILTIN_POOL_KEYS</code>，池 key 三段式仍是 <code>api:opencode-zen:&lt;model&gt;</code>。</p>
+<h3 id="3-2-三处-free-清单-必须一致">3.2 三处 free 清单（必须一致）<a class="anchor" href="#3-2-三处-free-清单-必须一致" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>文件</th><th>作用</th></tr></thead><tbody><tr><td><code>customProviderRegistrar.BUILTIN_ZEN</code></td><td>seed 内置池：<code>defaultModel: mimo-v2.6-flash-free</code>，<code>key: public</code>，6 个 <code>*-free</code></td></tr><tr><td><code>freeModelChannels.js</code> opencode-zen</td><td>渠道目录展示的 6 个 <code>*-free</code></td></tr><tr><td><code>dynamicFreeModelService.extractFreeModelsFromZen</code></td><td>拉远端 <code>/v1/models</code> 后 <code>.filter(m =&gt; m.id.endsWith('-free'))</code>（目录混有 401 付费名）</td></tr></tbody></table>
+<p>当前 6 个真免费模型（均 <code>-free</code> 后缀）：</p>
+<pre><code>mimo-v2.6-flash-free
+mimo-v2.5-free
+deepseek-v4-flash-free
+jev-1.13-free
+ling-3.0-flash-fin-free
+nemotron-3-ultra-free</code></pre>
+<hr>
+<h2 id="四-核实证据">四、核实证据<a class="anchor" href="#四-核实证据" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>层级</th><th>命令/方式</th><th>结果</th></tr></thead><tbody><tr><td>直连</td><td><code>multiFreeService.callOpenAI</code> → Zen</td><td><code>LIVE_OK &quot;PONG&quot;</code></td></tr><tr><td>网关</td><td><code>aiGateway.generate('api:opencode-zen:mimo-v2.6-flash-free')</code></td><td><code>GW_OK &quot;GATEWAY_OK&quot;</code></td></tr><tr><td>反例（非 free 模型）</td><td>同路径请求 <code>claude-fable-5</code> 等</td><td><strong>401</strong>（非免鉴权路径）</td></tr><tr><td>反例（坏 ID）</td><td>纯 base62 / lower36 session</td><td><strong>403</strong></td></tr><tr><td>单测</td><td><code>node --test</code>（zenGatekeeper + freeModelChannels）</td><td>20/20 绿</td></tr><tr><td>单测</td><td>jest（ensureBuiltinZen / zenGate / customProviderRegistrar）</td><td>3 suites / 16 tests 绿</td></tr><tr><td>服务默认</td><td>serviceDefaults + registrar + zenGate</td><td>21 tests 绿</td></tr></tbody></table>
+<p>端到端烟测脚本：<code>C:\Users\25789\AppData\Local\Temp\opencode\gw_smoke.js</code>（临时件，不入仓）。</p>
+<hr>
+<h2 id="五-日常使用约束">五、日常使用约束<a class="anchor" href="#五-日常使用约束" aria-label="锚点">#</a></h2>
+<ol><li><strong>免 key</strong>：<code>Bearer public</code>（池 key），<code>khy init</code> / 网关 <code>_doInit</code> 自动 <code>ensureBuiltinZen</code> seed，跨机器 clone 后开箱可用。</li><li><strong>模型写法</strong>：<code>api:opencode-zen:&lt;id&gt;</code>，<code>&lt;id&gt;</code> 必须以 <code>-free</code> 结尾。</li><li><strong>免费档有限额</strong>：门禁为逆向（按官方 <code>1.18.27</code> 实现），对方改 ID 格式 / body 指纹 / 后缀白名单可能失效；失效时优先查 <code>zenGatekeeper.js</code> 注释与本文门禁表。</li><li><strong>端点 SSOT</strong>：<code>ZEN_BASE_URL</code> 只在 <code>constants/serviceDefaults.js</code>（RUNTIME-001）；<code>isZenEndpoint</code> 容忍尾斜杠与任一侧 <code>/v1</code>。</li></ol>
+<hr>
+<h2 id="六-改动面-本轮">六、改动面（本轮）<a class="anchor" href="#六-改动面-本轮" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>改动</th></tr></thead><tbody><tr><td><code>zenGatekeeper.js</code></td><td>ID 生成按官方算法重写（<code>_timeHex</code> + <code>_base62(14)</code>）</td></tr><tr><td><code>freeModelChannels.js</code></td><td>opencode-zen <code>freeModels</code> → 6 个真 <code>-free</code></td></tr><tr><td><code>customProviderRegistrar.js</code></td><td><code>BUILTIN_ZEN</code> defaultModel / models 对齐 6 个</td></tr><tr><td><code>dynamicFreeModelService.js</code></td><td>Zen 模型列表加 <code>-free</code> 过滤</td></tr><tr><td><code>multiFreeService.zenGate.test.js</code></td><td>断言模型改 <code>mimo-v2.6-flash-free</code></td></tr><tr><td><code>builtinProviderConfig.js</code></td><td>目录补 <code>opencode-zen</code>（freeNoKey、端点走 <code>ZEN_BASE_URL</code> SSOT）</td></tr><tr><td><code>providerConnectivitySpec.js</code></td><td><code>opencode-zen</code> 协议族 openai；免 key 探针；注入 zen 门禁头 + body gate</td></tr><tr><td><code>services/backend/.env</code></td><td><code>GATEWAY_PREFERRED_MODEL</code> → <code>api:opencode-zen:mimo-v2.6-flash-free</code>；<code>GATEWAY_PREFERRED_STRICT=false</code></td></tr></tbody></table>
+<p>未改：其它免费通道（OpenRouter <code>:free</code>、SenseNova 等）的鉴权路径，<strong>不受本方案影响</strong>。</p>
+<h3 id="6-1-jev-1-13-free-上游故障与首选切换-2026-09-23">6.1 <code>jev-1.13-free</code> 上游故障与首选切换（2026-09-23）<a class="anchor" href="#6-1-jev-1-13-free-上游故障与首选切换-2026-09-23" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>判据</th><th>结果</th></tr></thead><tbody><tr><td>直连 zen <code>jev-1.13-free</code></td><td><strong>7/7 次 HTTP 500</strong>（与 max_tokens/stream/tools 组合无关）</td></tr><tr><td>同端点 <code>mimo-v2.6-flash-free</code> 等</td><td><strong>200</strong>（对照证明非本机 header/body 问题）</td></tr><tr><td>原 <code>.env</code></td><td><code>GATEWAY_PREFERRED_MODEL=api:opencode-zen:jev-1.13-free</code> + <code>STRICT=true</code> → TUI <code>strict_pinned_skip</code> 硬失败</td></tr><tr><td>改后</td><td>preferred → <code>mimo-v2.6-flash-free</code>，<code>STRICT=false</code>；流式 generate <code>success=true</code> <code>&quot;PONG&quot;</code></td></tr><tr><td>连通探针</td><td><code>khy test-key opencode-zen</code> → <code>verdict=ok</code> status 200</td></tr></tbody></table>
+<p><code>jev-1.13-free</code> 仍在 <code>listModels</code> / <code>PROXY_MODEL_ROUTE_MAP</code> 中；显式选中它仍会 500（上游未恢复）。首选路径与 <code>STRICT=false</code> 级联已不受其拖累。</p>
+<p>存证：<code>.khy/feedback/fix-tui-jev-preferred-500/</code>（complaint / repro-before / differential / repro-after / mode.json）。</p>
+<hr>
+<h2 id="七-一句话备忘">七、一句话备忘<a class="anchor" href="#七-一句话备忘" aria-label="锚点">#</a></h2>
+<blockquote><p><strong>选中 <code>opencode-zen</code> 的 free 模型 → 注入 Zen 门禁（头 + ID + body）+ <code>Bearer public</code> → 免鉴权 200；其它模型 / 其它端点 → 不走这条路径。</strong></p></blockquote>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../docs/04_IMPL_实现/IMPL-RPT/[IMPL-RPT-060] KhyOS规范落地自查报告-2026-09-21.html"><div class="dir">← 上一篇</div><div class="ttl">Khy OS 规范落地自查报告</div></a><a class="next" href="../../../docs/04_IMPL_实现/IMPL-RPT/00_INDEX_IMPL-RPT-总目录.html"><div class="dir">下一篇 →</div><div class="ttl">IMPL-RPT</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../";window.__KHY_CUR__="docs/04_IMPL_实现/IMPL-RPT/[IMPL-RPT-061] OpenCode-Zen-免鉴权通道-核实的方案-2026-09-23.html";</script>
+<script src="../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
