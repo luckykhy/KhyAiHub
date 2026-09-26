@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-ARCH-149] TUI选区复制携带ANSI残留修复方案.md -->
+<title>[DESIGN-ARCH-149] TUI选区复制携带ANSI残留修复方案 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>[DESIGN-ARCH-149] TUI选区复制携带ANSI残留修复方案</div>
+      <header class="hero reveal"><h1>[DESIGN-ARCH-149] TUI选区复制携带ANSI残留修复方案</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-149-tui选区复制携带ansi残留修复方案">[DESIGN-ARCH-149] TUI选区复制携带ANSI残留修复方案</a></li><li class="lvl-2"><a href="#0-一句话结论">0. 一句话结论</a></li><li class="lvl-2"><a href="#1-现状实证-file-line-可复核">1. 现状实证（file:line 可复核）</a></li><li class="lvl-3"><a href="#1-1-颜色从哪来-markdown-渲染层">1.1 颜色从哪来：markdown 渲染层</a></li><li class="lvl-3"><a href="#1-2-带色文本怎么进入复制来源">1.2 带色文本怎么进入复制来源</a></li><li class="lvl-3"><a href="#1-3-复制产出点为什么不干净">1.3 复制产出点为什么不干净</a></li><li class="lvl-3"><a href="#1-4-次要病灶-列换算把-esc-字节当可见字符">1.4 次要病灶：列换算把 ESC 字节当可见字符</a></li><li class="lvl-3"><a href="#1-5-对照组-cc-模式为什么没事">1.5 对照组：CC 模式为什么没事</a></li><li class="lvl-3"><a href="#1-6-修具已存在-不许另造">1.6 修具已存在，不许另造</a></li><li class="lvl-2"><a href="#2-借鉴提案-b-p2-七字段">2. 借鉴提案（B-P2 七字段）</a></li><li class="lvl-2"><a href="#3-目标形态-组件级契约">3. 目标形态（组件级契约）</a></li><li class="lvl-2"><a href="#4-实施分期-每期独立可回滚">4. 实施分期（每期独立可回滚）</a></li><li class="lvl-2"><a href="#5-诚实边界-刻意不纳入">5. 诚实边界（刻意不纳入）</a></li><li class="lvl-2"><a href="#6-反模式-这条路别走">6. 反模式（这条路别走）</a></li><li class="lvl-2"><a href="#7-验收方式-可复现命令-关联门禁">7. 验收方式（可复现命令 + 关联门禁）</a></li><li class="lvl-2"><a href="#8-待核实项">8. 待核实项</a></li><li class="lvl-2"><a href="#9-变更日志">9. 变更日志</a></li><li class="lvl-2"><a href="#10-实施记录-2026-09-24">10. 实施记录（2026-09-24）</a></li><li class="lvl-3"><a href="#10-1-落地清单">10.1 落地清单</a></li><li class="lvl-3"><a href="#10-2-与方案的偏离">10.2 与方案的偏离</a></li><li class="lvl-3"><a href="#10-3-验收实测-基线对照">10.3 验收实测（基线对照）</a></li><li class="lvl-3"><a href="#10-4-门禁红归因-check-tui-gates-229-227-非本案引入">10.4 门禁红归因（check-tui-gates 229 &gt; 227，非本案引入）</a></li><li class="lvl-3"><a href="#10-5-明确不做">10.5 明确不做</a></li></ul></nav>
+      <article class="doc-body">
+<blockquote><p>状态：提案（待确认后实施）｜范围：<code>services/backend/src/cli/tui/selection.js</code>（可选带 <code>ccMessageProjection.js</code> 一处）｜上游依赖：无｜调研指针：本文 §1｜模板合规：B-P2 七字段据实声明见 §2</p></blockquote>
+<h1 id="design-arch-149-tui选区复制携带ansi残留修复方案">[DESIGN-ARCH-149] TUI选区复制携带ANSI残留修复方案<a class="anchor" href="#design-arch-149-tui选区复制携带ansi残留修复方案" aria-label="锚点">#</a></h1>
+<h2 id="0-一句话结论">0. 一句话结论<a class="anchor" href="#0-一句话结论" aria-label="锚点">#</a></h2>
+<p>用户从 TUI 拖选复制出的文本里带着 <code>\x1b[1m</code>、<code>\x1b[38;2;97;175;239m</code> 这类<strong>着色转义序列</strong>（粘贴后 ESC 字节被接收方丢弃，只剩 <code>[1m</code>、<code>[36m</code> 残骸），病灶是 <strong>markdown 渲染层的 ANSI 着色原样进入 <code>_mainContentLines</code>，而 <code>extractText</code> 按原样切片、零剥离</strong>；修法是让选区叶子层「<strong>列换算跳过序列、产出前剥净 ANSI</strong>」两处纯函数级修复，不碰渲染层、不碰剪贴板出口。</p>
+<table><thead><tr><th>环节</th><th>病灶</th><th>严重度</th></tr></thead><tbody><tr><td>复制产出</td><td>文本夹带 SGR 转义序列，粘贴即乱码</td><td><strong>主诉</strong></td></tr><tr><td>列换算</td><td>ESC 字节被当可见字符计宽，反色高亮在带色行上与指针错位</td><td>同族次要</td></tr></tbody></table>
+<h2 id="1-现状实证-file-line-可复核">1. 现状实证（file:line 可复核）<a class="anchor" href="#1-现状实证-file-line-可复核" aria-label="锚点">#</a></h2>
+<h3 id="1-1-颜色从哪来-markdown-渲染层">1.1 颜色从哪来：markdown 渲染层<a class="anchor" href="#1-1-颜色从哪来-markdown-渲染层" aria-label="锚点">#</a></h3>
+<ul><li><code>services/backend/src/cli/renderTheme.js:9-10</code> — <code>c()</code> 懒加载 <strong>chalk</strong>，真彩输出 <code>ESC[38;2;R;G;Bm</code>。</li><li><code>services/backend/src/cli/markdownRenderer.js:68-74</code> — 着色默认值：<ul><li><code>mdBold: '#E5C07B'</code> = RGB(229,192,123)；</li><li><code>mdListNumber</code> / <code>mdH3 / mdBullet: '#61AFEF'</code> = RGB(97,175,239)。</li></ul></li><li><strong>与用户粘贴残骸逐一吻合</strong>：粘贴里的 <code>[38;2;229;192;123m</code>（粗体标题）与 <code>[38;2;97;175;239m</code>（有序列表序号 <code>1.</code> <code>2.</code>）正是这两个色值经 chalk 输出的 SGR 序列、ESC 字节在粘贴时被丢弃后的残骸。</li></ul>
+<h3 id="1-2-带色文本怎么进入复制来源">1.2 带色文本怎么进入复制来源<a class="anchor" href="#1-2-带色文本怎么进入复制来源" aria-label="锚点">#</a></h3>
+<ul><li><code>services/backend/src/cli/tui/ink-components/Transcript.js:33-52</code> — <code>renderMarkdown</code> 委托 <code>markdownRenderer.renderMarkdownLite</code>，返回<strong>已着色的整段字符串</strong>。</li><li><code>services/backend/src/cli/tui/transcriptLines.js:197,249,255</code> — <code>buildTranscriptLines</code> 把渲染结果按 cols 折行后逐行 push，行内容<strong>含 ANSI</strong>。</li><li><code>services/backend/src/cli/tui/ink-components/App.js:5925-5943</code> — <code>_mainContentLines</code> 投影直接消费上述行 ⇒ <strong>投影行数组整体带 ANSI</strong>。</li><li><code>App.js:6066</code> — <code>_mainContentLinesRef.current = _mainContentLines</code>，选区层拿到的就是这份。</li></ul>
+<h3 id="1-3-复制产出点为什么不干净">1.3 复制产出点为什么不干净<a class="anchor" href="#1-3-复制产出点为什么不干净" aria-label="锚点">#</a></h3>
+<ul><li><code>App.js:1694-1701</code> — 松手即定稿：<code>const text = sel.extractText(_mainContentLinesRef.current, finished)</code> → <code>clip.writeClipboard(text)</code>。<strong>整条链路唯一的产出点</strong>。</li><li><code>services/backend/src/cli/tui/selection.js:501-530</code> — <code>extractText</code> 对行<strong>原样 <code>slice(from, to)</code></strong>，无任何 ANSI 处理 ⇒ 剪贴板拿到带 SGR 的文本。</li><li><code>services/backend/src/cli/tui/utils/ccClipboard.js</code> — 统一出口只搬运传入文本（<code>:157-191</code>），<strong>自身无病</strong>；病在来源。</li></ul>
+<h3 id="1-4-次要病灶-列换算把-esc-字节当可见字符">1.4 次要病灶：列换算把 ESC 字节当可见字符<a class="anchor" href="#1-4-次要病灶-列换算把-esc-字节当可见字符" aria-label="锚点">#</a></h3>
+<ul><li><code>selection.js:148-167</code> — <code>charColForDisplay</code> 逐字符 <code>visWidth(ch)</code> 计宽换算「显示列 → 字符下标」。ESC（0x1B）、<code>[</code>、数字、<code>m</code> 这些 SGR 组成字节<strong>被当作各占 1 列的可见字符</strong>参与累计 ⇒ 带色行上，指针显示列 → 原文下标的映射整体后移，反色高亮与取词在带色行上<strong>双双偏离指针</strong>（与 [DESIGN-ARCH-132] 的锚点漂移不同源、独立存在）。</li></ul>
+<h3 id="1-5-对照组-cc-模式为什么没事">1.5 对照组：CC 模式为什么没事<a class="anchor" href="#1-5-对照组-cc-模式为什么没事" aria-label="锚点">#</a></h3>
+<ul><li><code>services/backend/src/cli/tui/ink-components/ccMessageProjection.js:257,502,848</code> — CC 模式复制走 <code>extractByAnchors</code>，从 <code>msgTexts</code>（消息<strong>原文</strong>）取词，不经过屏幕行切片 ⇒ 天然干净。<strong>本案只需修 legacy 路径</strong>。</li></ul>
+<h3 id="1-6-修具已存在-不许另造">1.6 修具已存在，不许另造<a class="anchor" href="#1-6-修具已存在-不许另造" aria-label="锚点">#</a></h3>
+<ul><li><code>services/backend/src/utils/stripAnsi.js</code> — 「剥 ANSI」单一真源，委托 <code>cli/ansiSanitizer.js</code>（完整 CSI/OSC/DCS 覆盖、零依赖、永不抛）。其头部 <code>:12-19</code> 明确记录：旧式 <code>/\x1b\[[0-9;]*m/g</code> 正则<strong>实测漏剥 5/6 种形式</strong>（冒号真彩、光标模式、清屏、光标移动），且 <code>1m</code> 残骸症状 2026-09-22 已在输出卫生层修过一次 —— <strong>同一症状家族的第二处发病点</strong>。</li></ul>
+<h2 id="2-借鉴提案-b-p2-七字段">2. 借鉴提案（B-P2 七字段）<a class="anchor" href="#2-借鉴提案-b-p2-七字段" aria-label="锚点">#</a></h2>
+<p><strong>全部不适用，依据如下</strong>：本提案是本仓自身缺陷修复，<strong>零外部借鉴</strong> —— 不引入任何上游项目、代码、结论或测试形状。B-P2 管的是「借鉴外部」（第 1 字段即「项目名 + 版本/commit」），无借鉴则无字段可填。</p>
+<table><thead><tr><th>#</th><th>字段</th><th>声明</th></tr></thead><tbody><tr><td>1</td><td>借鉴对象</td><td>不适用 —— 无外部项目</td></tr><tr><td>2</td><td>借鉴内容</td><td>不适用 —— 修复思路来自本仓 §1.6 既有单一真源（<code>utils/stripAnsi.js</code>）与其 2026-09-22 修复记录</td></tr><tr><td>3</td><td>解决的问题</td><td>适用（本仓缺口）：§1.1-1.4 所列复制夹带 ANSI</td></tr><tr><td>4</td><td>许可证与代码性质</td><td>不适用 —— 不引入上游代码</td></tr><tr><td>5</td><td>借鉴方式</td><td>不适用</td></tr><tr><td>6</td><td>落点与现有实现对比</td><td>落点 <code>selection.js</code> 为既有文件；实现复用既有 canonical <code>utils/stripAnsi.js</code>（已搜索 `stripAnsi</td></tr><tr><td>7</td><td>验收方式</td><td>见 §7</td></tr></tbody></table>
+<p><strong>B-P1 豁免判定（实测核过，不凭印象）</strong>：<code>docs/10_规范/registry/FEATURE-OWNERSHIP.json</code> 现有 10 个 domain（<code>ai-gateway</code>…<code>tui-approval-cards</code>，行 8-207），<strong>无 selection / clipboard 域登记</strong>；<code>packaging/modules/modules.json</code> 亦不含 TUI 文件。即：严格按 SOURCING-001 B-P1 的「已登记能力域」判据，本域<strong>未登记</strong>、豁免前提不成立；但本提案同时<strong>零借鉴</strong>，B-P2 的触发条件（借鉴外部）也不成立 —— 属于两门都进不去的纯自修 bugfix，按 B-P2 体例据实声明如上，不留空。</p>
+<h2 id="3-目标形态-组件级契约">3. 目标形态（组件级契约）<a class="anchor" href="#3-目标形态-组件级契约" aria-label="锚点">#</a></h2>
+<p>两处改动都在 <code>selection.js</code> 纯叶子内（零 IO / 不抛 / 不改入参 / 不读 env），App 层零改动：</p>
+<ol><li><strong><code>charColForDisplay(lineText, displayCol)</code></strong>：走字符串时识别 CSI/SGR 序列（<code>\x1b</code> 起头的完整控制序列），序列内字节<strong>计宽 0、下标整段跳过</strong>。⇒ 带色行上「指针列 → 原文下标」重新对准；纯 ASCII / 纯中文行为逐字节不变（无序列时退化恒等，现有 DC-01~DC-07 断言原样绿）。</li><li><strong><code>extractText(lines, sel)</code></strong>：切片仍在原文（raw 下标）上进行 —— 与 <code>Viewport.sliceLineForSelection</code> 的 raw 下标口径保持同源；<strong>产出前对每段 <code>stripAnsi</code></strong>（经 <code>../../utils/stripAnsi</code> 委托 <code>ansiSanitizer</code>，外裹 fail-soft 保「绝不抛」纪律）。⇒ 剪贴板拿到的是纯文本。</li></ol>
+<p>顺序不可颠倒：只做 2 不做 1，会得到「干净但错位」的复制（切片边界仍按「ESC 计宽」的旧口径算）；只做 1 不做 2，复制产物仍带 SGR。</p>
+<p>回滚能力走<strong>可选参数</strong>（<code>undefined</code> → 新行为；显式传旧开关 → 旧行为），<strong>不新增 <code>KHY_*</code> env 门</strong> —— 「让功能变正确」不构成用户可见权衡（判据见 check-tui-gates 的门预算棘轮与 selectGates.js:18 注释）。</p>
+<h2 id="4-实施分期-每期独立可回滚">4. 实施分期（每期独立可回滚）<a class="anchor" href="#4-实施分期-每期独立可回滚" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>期</th><th>内容</th><th>落点</th><th>回滚</th></tr></thead><tbody><tr><td>P1</td><td><code>charColForDisplay</code> 序列跳过 + 单测</td><td><code>selection.js:148-167</code></td><td>撤调用方一处 / git revert</td></tr><tr><td>P2</td><td><code>extractText</code> 产出剥 ANSI + 单测</td><td><code>selection.js:501-530</code></td><td>同上</td></tr><tr><td>P3（可选）</td><td><code>ccMessageProjection.extractByAnchors</code> 的<strong>结构行退化路径</strong>（<code>:841-842</code> 按列切屏幕行的那条）同样剥 ANSI</td><td><code>ccMessageProjection.js</code></td><td>独立 revert</td></tr></tbody></table>
+<p>P1+P2 必须同一提交落地（新测试进 <code>services/backend/tests/</code> 会被 CI 的 <code>test:node</code> 全量 glob 扫到，<strong>落地即绿</strong>是硬约束 —— 红探针先行会直接染红流水线）。</p>
+<h2 id="5-诚实边界-刻意不纳入">5. 诚实边界（刻意不纳入）<a class="anchor" href="#5-诚实边界-刻意不纳入" aria-label="锚点">#</a></h2>
+<ul><li><strong>不动 markdownRenderer 的着色</strong> —— 屏幕上要颜色，那是显示层职责；病只在「复制产出没剥」。</li><li><strong>不动 <code>ccClipboard.js</code></strong> —— 统一出口是搬运工；把剥离塞进去会连带污染 CC 锚点路径提取的<strong>原文</strong>（原文不该被二次加工），且混淆「提取」与「写出」两层职责。</li><li><strong>不动 <code>_fp</code> 指纹逻辑</strong> —— 指纹在按下帧与松手帧之间自洽比较，剥不剥 ANSI 两帧一致即可；改它要重写 R-01~R-16 全套断言，收益为零。</li><li><strong>不处理跨软换行多 <code>\n</code></strong> —— <code>selection.js</code> 头部已登记的已知偏差，独立议题。</li><li><strong>不碰 [DESIGN-ARCH-132] 的 D-02/D-04 两条红</strong> —— 基线实测 56 条中 54 绿 2 红（§7），那两条是锚点漂移的既有病灶，本案验收<strong>只要求不新增失败</strong>，不替别的提案收账。</li></ul>
+<h2 id="6-反模式-这条路别走">6. 反模式（这条路别走）<a class="anchor" href="#6-反模式-这条路别走" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>❌ 别做</th><th>为什么</th></tr></thead><tbody><tr><td>在 <code>writeClipboard</code> 统一出口里全局剥 ANSI</td><td>把「提取层」的债记到「写出层」头上；CC 原文路径会被连带加工，违反 P1-1 单一真源的职责边界</td></tr><tr><td>内联手写 <code>/\x1b\[[0-9;]*m/g</code> 正则</td><td><code>stripAnsi.js:12-19</code> 实测该式漏剥 5/6 种序列形式；仓里已有全量覆盖的 <code>ansiSanitizer</code>，再造一把轮子就是把 2026-09-22 修过的坑再挖开</td></tr><tr><td>列换算改成「先 stripAnsi 整行、再按净文本算下标」</td><td>产出的下标对不上 <strong>raw 行</strong>，而 <code>Viewport.sliceLineForSelection</code> 高亮切片吃的是 raw 行 ⇒ 反色错得更远。正解是「跳过序列但保留 raw 下标」</td></tr><tr><td>为回滚新开 <code>KHY_CLIP_PLAIN</code> 之类的 env 门</td><td>撞门预算棘轮（<code>check-tui-gates.js:32</code> MAX_GATES 只降不升）；「让功能变正确」不构成用户可见权衡；且会把纯叶子拖进「读 env」的违约区</td></tr><tr><td>把 D-02/D-04 顺手修了</td><td>两套病灶一套测试，混修后回归无法归因（[DESIGN-ARCH-132] 的账）</td></tr></tbody></table>
+<h2 id="7-验收方式-可复现命令-关联门禁">7. 验收方式（可复现命令 + 关联门禁）<a class="anchor" href="#7-验收方式-可复现命令-关联门禁" aria-label="锚点">#</a></h2>
+<p><strong>基线（2026-09-24 实测，验收尺子）</strong>：</p>
+<pre><code>node --test services/backend/tests/cli/tui/selection{,DisplayCol,AnchorDrift,Relocate}.test.js
+→ # tests 56 / # pass 54 / # fail 2（D-02、D-04，[DESIGN-ARCH-132] 已知红）</code></pre>
+<p>实施后：<strong>≥54 绿、失败仍恰为 D-02/D-04 两条、零新增红</strong>。</p>
+<ol><li>新增 <code>services/backend/tests/cli/tui/selectionPlainCopy.test.js</code>（<code>node:test</code> 风格，<strong>禁 jest 全局</strong> —— node --test glob 会扫走，落地即红）：<ul><li>带色行 <code>'\x1b[38;2;97;175;239m1.\x1b[0m 正文'</code> 上 <code>extractText</code> 产出不含 <code>\x1b</code> / <code>[38;2</code> / <code>[0m</code> 残片；</li><li><code>charColForDisplay</code> 指针停在可见首字符 → 下标 0（不被序列字节顶走）；</li><li>纯 ASCII / 纯中文行回归恒等（DC-02/DC-03 原断言复刻）；</li><li>畸形输入（null 行、非字符串）不抛（S-31/S-32 纪律复刻）。</li></ul></li><li><code>node scripts/ci/check-leaf-contract.js services/backend/src/cli/tui/selection.js</code> → no violations。</li><li><code>node scripts/ci/check-tui-gates.js</code> → <code>KHY_*</code> token 计数零漂移（本案不加门）。</li><li>人工端到端：TUI 内让模型输出带 <code>**粗体**</code> 与有序列表的 markdown → 鼠标拖选 → 粘贴至记事本 → 不得出现 <code>[38;2;</code> <code>[1m</code> <code>[36m</code> 等残片。</li><li>CI 覆盖说明（如实限制）：<code>test:node</code> 会跑到新增用例；<code>test:tui</code>（ink 真帧）不在 CI 内，本案不依赖它。</li></ol>
+<h2 id="8-待核实项">8. 待核实项<a class="anchor" href="#8-待核实项" aria-label="锚点">#</a></h2>
+<ul><li><del>「selection.js 是否已登记为能力域」</del> —— <strong>已当场查清</strong>：<code>FEATURE-OWNERSHIP.json</code> 无此域、<code>modules.json</code> 不含 TUI 文件；结论已写进 §2，不动摇提案（零借鉴 ⇒ B-P2 本就不触发）。</li><li>无其余待核实项。premise 级问题（CI 扫描范围、红探针与 CI 的冲突）已按 6.3 的实测结论消化进 §4。</li></ul>
+<h2 id="9-变更日志">9. 变更日志<a class="anchor" href="#9-变更日志" aria-label="锚点">#</a></h2>
+<ul><li>2026-09-24 初稿：定位复制夹带 ANSI 的病灶链（§1），修复方案 P1/P2/P3（§3-4），基线实测 56/54/2（§7）。</li><li>2026-09-24 实施：P1+P2 落地，见 §10。</li></ul>
+<h2 id="10-实施记录-2026-09-24">10. 实施记录（2026-09-24）<a class="anchor" href="#10-实施记录-2026-09-24" aria-label="锚点">#</a></h2>
+<h3 id="10-1-落地清单">10.1 落地清单<a class="anchor" href="#10-1-落地清单" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>项</th><th>位置</th><th>内容</th></tr></thead><tbody><tr><td>P1</td><td><code>selection.js</code> <code>charColForDisplay</code></td><td>新增第三参 <code>opts</code>；无 ESC 行走<strong>快路径</strong>（与旧实现逐字节相同），含 ESC 行走 ANSI 感知扫描：CSI 序列计宽 0、下标整段跳过</td></tr><tr><td>P2</td><td><code>selection.js</code> <code>extractText</code></td><td>新增第三参 <code>opts</code>；切片仍在 raw 下标上进行，<code>join</code> 后对产出剥一次 ANSI（序列不跨 <code>\n</code>，与逐段剥等价）</td></tr><tr><td>复用</td><td><code>utils/stripAnsi</code>（→ <code>cli/ansiSanitizer</code>）</td><td>剥离走单一真源；CSI 扫描正则借 <code>RE_CSI.source</code> <strong>自建局部实例</strong>（<code>/g</code> 的 lastIndex 是共享状态，直接复用导出实例会嵌套污染）</td></tr><tr><td>测试</td><td><code>tests/cli/tui/selectionPlainCopy.test.js</code>（新）</td><td>PC-01~PC-09：单行/跨行剥净、指针列对准、快路径恒等、回滚钩子还原、畸形输入不抛、端到端复现用户症状。旧口径期望值用<strong>参照实现</strong>钉住（<code>visWidth</code> 对 ESC 计 0、对参数字节计 1，写死数字会随 string-width 装没装漂移）</td></tr><tr><td>文档</td><td>本文件</td><td>头部已知偏差 +3、两函数 JSDoc、§10</td></tr></tbody></table>
+<h3 id="10-2-与方案的偏离">10.2 与方案的偏离<a class="anchor" href="#10-2-与方案的偏离" aria-label="锚点">#</a></h3>
+<ol><li><strong>P3（ccMessageProjection 结构行退化路径剥 ANSI）未做</strong> —— 提案已标「可选」；结构行本无「原文」可言，无真实症状前不动，避免为对齐而对齐。</li><li><strong><code>extractText</code> 在 <code>join</code> 后剥一次</strong>，而非提案 §3 字面的「对每段剥」—— 序列不跨 <code>\n</code>，两者等价，少一次逐段开销。已在代码注释写明。</li></ol>
+<h3 id="10-3-验收实测-基线对照">10.3 验收实测（基线对照）<a class="anchor" href="#10-3-验收实测-基线对照" aria-label="锚点">#</a></h3>
+<pre><code>node --test tests/cli/tui/selection{,DisplayCol,AnchorDrift,Relocate,PlainCopy}.test.js
+→ # tests 65 / # pass 63 / # fail 2</code></pre>
+<ul><li>失败恰为 <strong>D-02 / D-04</strong>（[DESIGN-ARCH-132] 既有红），零新增失败；基线 54 绿全数保留 + 新增 9 条全绿。</li><li><code>node scripts/ci/check-leaf-contract.js services/backend/src/cli/tui/selection.js</code> → <strong>passed, no violations</strong>。</li></ul>
+<h3 id="10-4-门禁红归因-check-tui-gates-229-227-非本案引入">10.4 门禁红归因（check-tui-gates 229 &gt; 227，非本案引入）<a class="anchor" href="#10-4-门禁红归因-check-tui-gates-229-227-非本案引入" aria-label="锚点">#</a></h3>
+<p>逐文件 <code>git show HEAD:&lt;f&gt;</code> 与工作树做 <code>KHY_*</code> token 集合差：<strong><code>selection.js</code> 为 <code>+[] -[]</code></strong>（零漂移）。超标 token 全部来自并行会话的新门：<code>KHY_ALT_SCREEN</code>(mouseButtons) / <code>KHY_TERM_FALLBACK_ROWS</code>(ccLayout) / <code>KHY_UI_LANG</code>(HistorySearchOverlay) / <code>KHY_PROGRESS_PACED</code>·<code>KHY_REDUCED_MOTION</code>·<code>KHY_TUI_LOW_POWER</code>(ProgressBar) / <code>KHY_CC_OVERLAY_FIT</code> / <code>KHY_PERMISSION_NOTICE</code> / <code>KHY_TUI_CONSOLE_LOG</code> / <code>KHY_WATCHDOG_*</code> / <code>KHY_CARD_CLICK</code> / <code>KHY_L2_SESSION_ALLOW</code> / <code>KHY_INLINE_TRANSCRIPT</code> 等（另有 <code>KHY_USER_MSG_FG</code>、<code>KHY_VIM_PASTE_CAP</code> 为<strong>搬家</strong>非净增，<code>KHY_MOUSE_BUTTONS</code> 从 app.js 移除为净减）。<strong>未代为棘轮基线</strong> —— 227→229 的账由加门的会话自己结算。</p>
+<h3 id="10-5-明确不做">10.5 明确不做<a class="anchor" href="#10-5-明确不做" aria-label="锚点">#</a></h3>
+<ul><li>markdownRenderer 着色、<code>ccClipboard</code>、<code>_fp</code> 指纹、跨软换行 <code>\n</code>、D-02/D-04 —— 均见 §5 诚实边界，实施期未越界。</li><li>生效方式：<code>services/backend</code> 为源码直跑（非桌面端构建产物），<strong>重启 TUI 会话即生效</strong>，无需重建 <code>out/</code>。</li></ul>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-148] README漏斗式重设计与真源指针化方案.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-148] README 漏斗式重设计与真源指针化方案</div></a><a class="next" href="../../../docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-150] 模型设置页排版减负与配置动线重设计.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-150] 模型设置页排版减负与配置动线重设计</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../";window.__KHY_CUR__="docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-149] TUI选区复制携带ANSI残留修复方案.html";</script>
+<script src="../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
