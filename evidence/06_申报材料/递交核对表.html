@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: 递交核对表.md -->
+<title>递交核对表（现行口径：D-名2，2026-09-28） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../docs/index.html">📘 Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>evidence<span class="sep">›</span>06_申报材料<span class="sep">›</span>递交核对表（现行口径：D-名2，2026-09-28）</div>
+      <header class="hero reveal"><h1>递交核对表（现行口径：D-名2，2026-09-28）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#递交核对表-现行口径-d-名2-2026-09-28">递交核对表（现行口径：D-名2，2026-09-28）</a></li><li class="lvl-2"><a href="#一-申请表字段定稿值">一、申请表字段定稿值</a></li><li class="lvl-2"><a href="#二-逐件状态">二、逐件状态</a></li><li class="lvl-2"><a href="#三-名称五处一致-c-mat2-3-现状-如实">三、名称五处一致（C-MAT2/3 现状，如实）</a></li><li class="lvl-2"><a href="#四-递交前检查">四、递交前检查</a></li><li class="lvl-2"><a href="#五-新名称与既有-60-页选材不匹配-须人定案-ai-不代选">五、**新名称与既有 60 页选材不匹配**（须人定案，AI 不代选）</a></li><li class="lvl-2"><a href="#六-顺手发现的一处缺陷-低危-仅记录-本仓不代改">六、顺手发现的一处缺陷（低危，仅记录，本仓不代改）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="递交核对表-现行口径-d-名2-2026-09-28">递交核对表（现行口径：D-名2，2026-09-28）<a class="anchor" href="#递交核对表-现行口径-d-名2-2026-09-28" aria-label="锚点">#</a></h1>
+<blockquote><p>定稿值与依据见 <code>docs/08_MGMT_项目管理/MGMT-OTHER/[MGMT-OTHER-006]</code> §一/§三；<br>谁定的见 <code>../01_人类贡献/决策记录.md</code> D-名2（D-名1 已被其取代）。<br>本表只管一件事：<strong>每件递交东西现在是什么状态，缺什么</strong>。</p></blockquote>
+<h2 id="一-申请表字段定稿值">一、申请表字段定稿值<a class="anchor" href="#一-申请表字段定稿值" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>字段</th><th>值</th></tr></thead><tbody><tr><td>软件全称</td><td>基于执行轨迹记录与链路校验技术的AI助手平台</td></tr><tr><td>软件简称</td><td>（留空）—— 新全称内不含 <code>Khy</code>/<code>OS</code>，仓外旧包填的 <code>KhyOS</code> 已不合法（简称只能复用全称里出现过的字）</td></tr><tr><td>版本号</td><td><code>V1.2.0</code> —— 沿用仓库真实版本，仅在明示要求时才改</td></tr><tr><td>软件作品说明</td><td>原创软件</td></tr><tr><td>开发方式</td><td>单独开发</td></tr><tr><td>权利取得方式</td><td>原始取得</td></tr><tr><td>权利范围</td><td>全部权利</td></tr><tr><td>发表状态</td><td>已发表（PyPI + npm），首次发表日期＝首个 wheel 上传日（<strong>待查填</strong>）</td></tr><tr><td>覆盖范围</td><td>平台底座（AI 网关 + 终端 + 轨迹子系统），<strong>不含 khyquant</strong></td></tr></tbody></table>
+<p>全称 22 字，全称栏内不写版本号。</p>
+<p><strong>已同步</strong>：仓库侧机器可读真源 <code>docs/10_规范/registry/COPYRIGHT.json</code> 的 <code>name</code> / <code>shortName</code> /<br><code>version</code> / <code>engineeringVersion</code> 已按本表改写（2026-09-28），<code>check:copyright</code> 即读该文件比对界面标题。<br><strong>未同步</strong>：仓外字段真源 <code>D:/Portable/软著交付/Khy-OS/06_工具/registration.json</code> 仍为 2026-09-20 的<br><code>KhyOS人工智能平台操作系统</code> / <code>KhyOS</code> / <code>V1.1</code>（其 <code>version_status</code> 自记<br><code>recommended_pending_confirmation</code>，即那版版本号从未由人拍板），已被本表整体取代；<br>改它须连带跑 <code>sync_name.py --apply</code>，会重写仓外十余份文档，故留给人执行。</p>
+<h2 id="二-逐件状态">二、逐件状态<a class="anchor" href="#二-逐件状态" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>递交件</th><th>状态</th><th>缺什么</th></tr></thead><tbody><tr><td>1</td><td>申请表（R11）在线填写</td><td>未开始</td><td>字段值已定稿，见上表</td></tr><tr><td>2</td><td>源程序 60 页</td><td><strong>草稿已在，但页眉是旧名，且选材与新名称不匹配</strong></td><td><code>软著交付/Khy-OS/01_草稿/代码-前30页.md</code>、<code>代码-后30页.md</code>（2026-09-21，页眉 <code>KhyOS人工智能平台操作系统 V1.1</code>）。只改名 → 重跑一条 <code>06_工具/verify_material.py</code>（<strong>实测：换页眉不改页数</strong>，30 个 <code>.page</code> 块 × 56 行）；换选材须先定 §五</td></tr><tr><td>3</td><td>说明文档</td><td>前置未过</td><td>仓外 <code>01_草稿/业务理解.md</code> 四项口径待人确认（09-21 记为 D7）；本名称只需<strong>一节</strong>（轨迹记录与链路校验），配第 4 项那张主证据图即闭环</td></tr><tr><td>4</td><td>主证据截图 <code>khy trajectory list</code></td><td><strong>已采集</strong>：<code>../03_图片/终端截图/06_trajectory_list.png</code>（同表内「条数」= 轨迹记录、「链」列 <code>完整(n)</code> = 链路校验，两词一图）</td><td>两条递交前须知见下方 ⚠</td></tr><tr><td>5</td><td>辅助截图 <code>khy gateway status</code></td><td>已就位</td><td><code>../03_图片/终端截图/05_gateway_status.png</code></td></tr><tr><td>6</td><td>版本截图 <code>--version</code> / <code>khy about</code></td><td>已就位，<strong>内容需复核</strong></td><td><code>../03_图片/终端截图/01_version.png</code>：仓外旧包登记值是 <code>V1.1</code>，本表是 <code>V1.2.0</code> → 重拍一张画面含 <code>1.2.0</code> 的</td></tr><tr><td>7</td><td>中间省略说明页</td><td>草稿已在</td><td><code>软著交付/Khy-OS/01_草稿/中间省略说明页.md</code>（09-20）；其引用的源程序量随 §五 选材定案后复核</td></tr><tr><td>8</td><td>签章页</td><td>未开始</td><td>1:1 A4 打印后扫描为 PDF；承诺条款本身 09-21 记为待核实决策（仓外 <code>05_待办/签章页承诺条款_核实与决策.md</code>）</td></tr><tr><td>9</td><td>身份证明文件</td><td>未开始</td><td>著作权人自定</td></tr></tbody></table>
+<blockquote><p>⚠ <strong>第 4 项的两条递交前须知（不粉饰）</strong>：</p>
+<ol><li><strong>标题栏是合成的</strong>。终端图顶部那条 <code>khy-os — khy trajectory list</code> 由采集器</li></ol>
+<p>（<code>scripts/evidence/capture-runtime.js:147</code>）绘制，<strong>不是产品自绘的窗口标识</strong>；<br>   正文 stdout 逐字未改。递交前需确认审查侧是否接受终端图作「运行界面」，<br>   若不接受则改交界面图（受 §三第 4 项改名阻塞）。</p>
+<ol><li><strong>表内是用户真实输入原文</strong>，含第三方品牌名与私人事务性提问，采集器按「不改写任何字符」</li></ol>
+<p>不做脱敏（脱敏即改图）。要作登记材料应在<strong>干净数据目录</strong>下跑同一命令重拍，而非编辑本图。</p></blockquote>
+<h2 id="三-名称五处一致-c-mat2-3-现状-如实">三、名称五处一致（C-MAT2/3 现状，如实）<a class="anchor" href="#三-名称五处一致-c-mat2-3-现状-如实" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>应出现处</th><th>现状</th></tr></thead><tbody><tr><td>1</td><td>申请材料（本夹 + 申请表）</td><td>本表已定稿；仓外 <code>registration.json</code> 仍是旧名 → 待同步</td></tr><tr><td>2</td><td>源程序页眉</td><td><strong>旧名 + 旧版本</strong>（<code>KhyOS人工智能平台操作系统 V1.1</code>），按 §一 重渲染即可，不改页数</td></tr><tr><td>3</td><td>说明书封面与功能节</td><td>待做（见 §二第 3 项）；本名称只需<strong>一节</strong>（轨迹记录与链路校验），配第 4 项那张主证据图即可闭环</td></tr><tr><td>4</td><td>软件界面标题</td><td><strong>不一致，唯一硬阻塞</strong>：<code>npm run check:copyright</code> 现报 <strong>10 处</strong>与登记全称不符（明细由该命令输出，不手抄）。其中 <code>apps/khyos-desktop/dist-electron/win-unpacked/LICENSES.chromium.html → &quot;Credits&quot;</code> 是<strong>第三方 Chromium 许可页</strong>，按 C-X3 本就不进材料，属误报；真实待改的是 4 个模块的入口标题（<code>apps/ai-frontend</code>、<code>apps/khyos-desktop</code>(×2)、<code>apps/provider-hub</code>、<code>software/khyquant/frontend</code>）。仓外 09-21 的改名清单在 <code>软著交付/Khy-OS/05_待办/阶段2_改名执行清单.md</code></td></tr><tr><td>5</td><td>README</td><td><strong>已同步</strong>：<code>README.md:223</code> 许可节的登记全称已改为新全称（该处原写 09-20 旧名，是 C-MAT2 要求 README 必须出现登记全称所致）</td></tr></tbody></table>
+<p>第 4 项是<strong>目前唯一的硬阻塞</strong>：界面标题不改，界面图整步作废（仓外 09-21 已按同一条理由把<br><code>03_截图/</code> 两个投放目录留空并写了说明）。改名属产品侧改动、且 <code>khyquant</code> 子应用是否一并改<br>仍未定（旧记 D6），须人单独拍板，不在本夹自行处理。<br><strong>注意</strong>：终端图（§二第 4 项）不受「产品界面改名」阻塞——它拍的是 CLI stdout；<br>但其<strong>合成标题条</strong>现写 <code>khy-os — khy trajectory list</code>（采集器绘制，见 §二第 4 项 ⚠1），<br>同样不含登记全称。若采用终端图作运行界面证据，标题条文案须随 §一 定稿值改<br><code>scripts/evidence/capture-runtime.js</code> 后<strong>重跑 <code>npm run evidence:runtime</code></strong>，不得手工改图。</p>
+<h2 id="四-递交前检查">四、递交前检查<a class="anchor" href="#四-递交前检查" aria-label="锚点">#</a></h2>
+<pre><code>npm run check:copyright
+node services/backend/bin/khy.js trajectory list     # 出图前确认表内非空
+grep -m1 '^version' pyproject.toml                   # 应为 1.2.0，与 V1.2.0 对应</code></pre>
+<p>禁用命令：<code>khy history</code>（实测返回「暂无保存的对话记录」，空画面不得作证据）。</p>
+<h2 id="五-新名称与既有-60-页选材不匹配-须人定案-ai-不代选">五、<strong>新名称与既有 60 页选材不匹配</strong>（须人定案，AI 不代选）<a class="anchor" href="#五-新名称与既有-60-页选材不匹配-须人定案-ai-不代选" aria-label="锚点">#</a></h2>
+<p>现选材（仓外 <code>01_草稿/代码文件选择.json</code>，12 个文件；<code>06_工具/extract_code.py</code> 内以常量硬编码同一份清单）：</p>
+<table><thead><tr><th>段</th><th>文件</th><th>与新名称的关系</th></tr></thead><tbody><tr><td>前 30 页</td><td><code>platform/khy_platform/__main__.py</code>、<code>cli.py</code>（备选 <code>_bootstrap.py</code>）</td><td>Python 启动器，与「轨迹记录 / 链路校验」无关</td></tr><tr><td>后 30 页</td><td><code>kernel/boot/*.asm</code>、<code>kernel/src/{sched,vmm,process}.c</code>（后备 <code>syscall.c</code>）</td><td>手写内核；全仓 <code>.c/.asm</code> 100% 在此，是独创硬资产</td></tr><tr><td>中段（不提交）</td><td><code>services/backend/bin/khy.js</code></td><td><strong>名称两个词的载体全不在 60 页内</strong>：<code>sessionPersistence.js:625 verifyTraceChain</code>、<code>cli/handlers/trace.js:111</code>、<code>domain/trajectory/trajectoryProvenance/</code>（8 文件）均属 JS 服务层</td></tr></tbody></table>
+<p>三条路，代价已算清：</p>
+<table><thead><tr><th>方案</th><th>做法</th><th>代价 / 风险</th></tr></thead><tbody><tr><td><strong>A</strong></td><td>选材不动，只改页眉</td><td>最省（一条命令）。风险：审查比对「说明书主要功能 ↔ 源程序里有对应代码」，而 60 页内找不到轨迹与链路校验的任何一行</td></tr><tr><td><strong>B（本表建议）</strong></td><td><strong>前 30 页</strong>换成 <code>sessionPersistence.js</code> + <code>cli/handlers/trace.js</code> + <code>trajectoryProvenance/</code>，<strong>后 30 页内核不动</strong></td><td>名称两词与独创硬资产<strong>同时</strong>在材料内；代价 = 重跑 <code>extract_code.py</code> + <code>calibrate_final.py</code>，页数须重新实测（⚠「换页眉不改页数」的结论<strong>不适用</strong>于换选材）</td></tr><tr><td><strong>C</strong></td><td>换后 30 页塞进 JS</td><td><strong>不建议</strong>：09-21 已实测否决——后 30 页是仓内唯一的 C/asm 原创层，换业务 JS 削弱原创证明力，而「独创性不足」比「行数不足」更难补正</td></tr></tbody></table>
+<p>未定案前不得生成正式件：页眉、封面、申请表三处随名称联动，先出必返工<br>（仓外 <code>02_正式资料/_状态说明.md</code> 同口径，该目录至今<strong>合规地保持为空</strong>）。</p>
+<h2 id="六-顺手发现的一处缺陷-低危-仅记录-本仓不代改">六、顺手发现的一处缺陷（低危，仅记录，本仓不代改）<a class="anchor" href="#六-顺手发现的一处缺陷-低危-仅记录-本仓不代改" aria-label="锚点">#</a></h2>
+<p>仓外 <code>01_草稿/代码文件选择.json</code> 第 45 行的值内含<strong>未转义的英文双引号</strong><br>（<code>理由不是&quot;更保险&quot;</code>），整份文件因此不是合法 JSON。当前无脚本 <code>json.load</code> 它<br>（<code>extract_code.py</code> 硬编码同一份清单），故不影响产物；但任何后续工具一旦改读该文件即报错。<br>修法：把那对引号换成中文引号。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../evidence/05_索引与对账/对账表.html"><div class="dir">← 上一篇</div><div class="ttl">对账表（数字 ↔ 出处 ↔ 复算命令）</div></a><a class="next" href="../../evidence/06_申报材料/README.html"><div class="dir">下一篇 →</div><div class="ttl">06申报材料 —— 递交件工作区（不是依据文档）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__="evidence/06_申报材料/递交核对表.html";</script>
+<script src="../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

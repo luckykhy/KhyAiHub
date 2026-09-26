@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: 图片证据说明.md -->
+<title>图片证据说明（每张图怎么来的、能不能当登记材料） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../docs/index.html">📘 Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>evidence<span class="sep">›</span>03_图片<span class="sep">›</span>图片证据说明（每张图怎么来的、能不能当登记材料）</div>
+      <header class="hero reveal"><h1>图片证据说明（每张图怎么来的、能不能当登记材料）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#图片证据说明-每张图怎么来的-能不能当登记材料">图片证据说明（每张图怎么来的、能不能当登记材料）</a></li><li class="lvl-2"><a href="#一-四类图片与它们的用途">一、四类图片与它们的用途</a></li><li class="lvl-2"><a href="#一之二-模块依赖图为什么算-实测-而不是手绘">一之二、模块依赖图为什么算「实测」而不是手绘</a></li><li class="lvl-2"><a href="#二-终端截图的可信度机制">二、终端截图的可信度机制</a></li><li class="lvl-2"><a href="#三-界面截图为什么-暂不可-作登记材料-两条硬伤-如实写">三、界面截图为什么**暂不可**作登记材料（两条硬伤，如实写）</a></li><li class="lvl-2"><a href="#四-重拍清单-阶段-2-改名完成后执行">四、重拍清单（阶段 2 改名完成后执行）</a></li><li class="lvl-2"><a href="#五-图片完整性">五、图片完整性</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="图片证据说明-每张图怎么来的-能不能当登记材料">图片证据说明（每张图怎么来的、能不能当登记材料）<a class="anchor" href="#图片证据说明-每张图怎么来的-能不能当登记材料" aria-label="锚点">#</a></h1>
+<p>本目录 16 张 PNG 分四类，<strong>全部由脚本生成或采集，无一张手工拼图</strong>。<br>两份清单是逐张的机器可读说明：</p>
+<table><thead><tr><th>清单</th><th>内容</th></tr></thead><tbody><tr><td><code>图片清单.json</code></td><td>6 张图表 + 2 张架构图：判据、数据来源、复算命令、PNG sha256</td></tr><tr><td><code>运行截图清单.json</code></td><td>6 张终端图 + 2 张界面图：真实 stdout / 渲染后元素数 / 可见文本长度 / 风险标注</td></tr></tbody></table>
+<p>再生：<code>npm run evidence:images</code>（图表与架构图）、<code>npm run evidence:runtime</code>（终端与界面）。</p>
+<hr>
+<h2 id="一-四类图片与它们的用途">一、四类图片与它们的用途<a class="anchor" href="#一-四类图片与它们的用途" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>类</th><th>目录</th><th>张数</th><th>性质</th><th>能否作<strong>登记材料</strong>截图</th></tr></thead><tbody><tr><td>仓库数据派生图表</td><td><code>图表/</code></td><td>6</td><td>由 <code>04_机器可读/contribution-metrics.json</code> 渲染</td><td>否——用于<strong>答复追问</strong>（贡献度量），不是软件功能界面</td></tr><tr><td>架构与依赖图</td><td><code>架构图/</code></td><td>2</td><td>分层图取自 <code>[DESIGN-LAY-005]</code>；<code>02_模块依赖图_实测.png</code> 的节点与边<strong>由源码真实引用解析得出</strong></td><td>否——说明书插图可用，非运行界面</td></tr><tr><td>终端会话截图</td><td><code>终端截图/</code></td><td>6</td><td>子进程<strong>真实 stdout</strong>（保留 ANSI 颜色）包进终端外观</td><td><strong>视情况</strong>：内容真实，但需确认是否作为「运行界面」提交</td></tr><tr><td>真实运行界面</td><td><code>界面截图/</code></td><td>2</td><td>构建产物经本地静态站 + CDP 渲染后截图</td><td><strong>暂不可</strong>——见 §三</td></tr></tbody></table>
+<hr>
+<h2 id="一之二-模块依赖图为什么算-实测-而不是手绘">一之二、模块依赖图为什么算「实测」而不是手绘<a class="anchor" href="#一之二-模块依赖图为什么算-实测-而不是手绘" aria-label="锚点">#</a></h2>
+<p><code>架构图/02_模块依赖图_实测.png</code> 的每个节点、每条边都来自 <code>collect-contribution.js</code> 第 6 段<br>对源码 specifier 的解析（<code>require()</code> / <code>import</code> / <code>export … from</code> / 动态 <code>import()</code>）：<br>相对路径按文件所在目录解析并补 <code>.js/.json/.vue/.ts/index.js</code> 落点，<code>@khy/*</code> 解析到<br><code>platform/packages/*</code>，前端 <code>@/*</code> 解析到该应用 <code>src</code>；裸包名（npm 依赖）<strong>不计为内部边</strong>。<br>同目录内的引用算自环并剔除。</p>
+<table><thead><tr><th>实测读数</th><th>含义</th></tr></thead><tbody><tr><td>源文件 3,459 个</td><td>参与解析的代码范围（8 个统计根目录）</td></tr><tr><td>内部可解析边 4,346 条</td><td>真实引用次数总和</td></tr><tr><td>目录节点 71 个 / 目录级边 257 条</td><td>图上的点与边（图取权重前 16 的节点）</td></tr><tr><td>未解析 61</td><td>相对引用指向了不存在的落点——如实登记，不当 0 处理</td></tr><tr><td>外部 npm 包引用 4,076 处</td><td>与内部边分列，避免把第三方引用算成自己的架构</td></tr></tbody></table>
+<p>最强边 <code>backend:cli → backend:services</code> 1,103 次，可用<br><code>grep -rhoE &quot;require\('\.\./(services|utils|constants)/&quot; services/backend/src/cli --include=*.js | wc -l</code><br>做同向抽查（该 grep 只覆盖 <code>../</code> 一种写法，读数必然小于 1,103，方向一致即为通过）。</p>
+<hr>
+<h2 id="二-终端截图的可信度机制">二、终端截图的可信度机制<a class="anchor" href="#二-终端截图的可信度机制" aria-label="锚点">#</a></h2>
+<p><code>captureTerminals()</code> 的做法：<code>execFileSync(node, [bin/khy.js, ...args])</code> 捕获 stdout 原文，<br>只把 ANSI SGR 颜色翻译成 CSS，<strong>不改写任何字符</strong>；页面底部写明采集命令。<br><strong>唯一非产品自绘的元素是顶部那条标题栏</strong>（<code>khy-os — &lt;命令&gt;</code>，由 <code>capture-runtime.js:147</code> 合成），<br>它不是产品窗口标识——递交前须知见 <code>../06_申报材料/递交核对表.md</code> §二 ⚠。</p>
+<table><thead><tr><th>文件</th><th>命令</th><th>证明了什么</th></tr></thead><tbody><tr><td><code>01_version.png</code></td><td><code>khy --version</code></td><td>软件可启动并自报版本</td></tr><tr><td><code>02_commands.png</code></td><td><code>khy commands</code></td><td>CLI 命令面真实注册</td></tr><tr><td><code>03_hq_status.png</code></td><td><code>khy hq status</code></td><td>任务/Bug 台账可读，17 条 Bug + 29 条任务如实显示</td></tr><tr><td><code>04_storage_status.png</code></td><td><code>khy storage status</code></td><td>数据落点寻址可用</td></tr><tr><td><code>05_gateway_status.png</code></td><td><code>khy gateway status</code></td><td>多供应商通道面读数：一次输出列出 17 个已启用适配器（Kiro / Cursor / Trae / Claude / Codex / Ollama / 中转 / CLI…）与逐通道连通状态。名称改版（D-名2）后<strong>不再是名称载体</strong>，改作「AI 助手」一词的运行时佐证</td></tr><tr><td><code>06_trajectory_list.png</code></td><td><code>khy trajectory list</code></td><td><strong>现行登记全称两个关键词的运行时读数</strong>：同一张表里「条数」列 = 执行轨迹记录，「链」列的 <code>完整(n)</code> = <code>verifyTraceChain()</code> 的链路校验结论（三态：无链 / 完整(n) / 断链@#n）。<code>khy trace list</code> 渲染同一张表，实测逐行相同</td></tr></tbody></table>
+<p>第 1–4 条与第 6 条是只读离线命令；第 5 条 <code>gateway status</code> <strong>会对外探测</strong>已启用通道的连通性<br>（实测打印「并行探测 7/17 个已启用通道（上限 22s）」），且部分通道的探测会触发一次最小模型调用<br>——同一张截图底部能看到「已收到模型响应」字样。<strong>因此本底档不宣称该采集零成本</strong>，<br>只如实标注可能产生少量费用。<code>运行截图清单.json</code> 里该条带 <code>对外探测: true</code>。</p>
+<blockquote><p>⚠ <strong><code>06_trajectory_list.png</code> 递交前需人工过目</strong>：「在做什么」列是<strong>用户真实输入原文</strong><br>（含第三方品牌名与私人事务性提问），非演示数据。采集器按「不改写任何字符」的纪律<br>不做脱敏——脱敏即改图，与「截图不得有剪切/PS 痕迹」冲突。若要作登记材料，<br>正确做法是<strong>在干净数据目录下跑同一命令重拍</strong>，而不是编辑本图。</p></blockquote>
+<hr>
+<h2 id="三-界面截图为什么-暂不可-作登记材料-两条硬伤-如实写">三、界面截图为什么<strong>暂不可</strong>作登记材料（两条硬伤，如实写）<a class="anchor" href="#三-界面截图为什么-暂不可-作登记材料-两条硬伤-如实写" aria-label="锚点">#</a></h2>
+<ol><li><strong>界面标题与登记全称不一致。</strong> 登记全称现行值（D-名2，真源 <code>[MGMT-OTHER-006]</code> §一）为</li></ol>
+<p>《基于执行轨迹记录与链路校验技术的AI助手平台》，版本号另栏填 <code>V1.2.0</code>（沿用仓库 G1 现值），<br>   而实测浏览器内标题仍是：</p>
+<ul><li><code>apps/ai-frontend</code> → <code>登录 · KHY AI 管理平台</code></li><li><code>apps/khyos-desktop</code> → <code>KhyOS Desktop</code></li></ul>
+<p>「界面名称与申请表软件全称不一致」是实务高频补正点，改名（阶段 2）后必须重拍。</p>
+<ol><li><strong>未连接后端。</strong> 本组截图是本地静态托管构建产物渲染的结果：</li></ol>
+<p>ai-frontend 停在登录页（无凭据），桌面端显示的是前端内置演示会话、状态栏为「未连接」。<br>   这类画面能证明「界面存在且能渲染」，不能证明功能闭环。</p>
+<p><strong>非空白保证</strong>：界面截图走 CDP 渲染，采集器轮询 <code>document.body.innerText</code> 长度与元素数，<br>实测到 ≥20 字符且 &gt;30 个元素才截图；不满足则<strong>该条不会生成</strong>（宁可缺，不交空白图）。<br>每张的实测读数记在 <code>运行截图清单.json</code> 的 <code>渲染后元素数</code> / <code>渲染后可见文本长度</code> / <code>可见文本抽样</code>。</p>
+<hr>
+<h2 id="四-重拍清单-阶段-2-改名完成后执行">四、重拍清单（阶段 2 改名完成后执行）<a class="anchor" href="#四-重拍清单-阶段-2-改名完成后执行" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>要做的事</th><th>命令 / 位置</th></tr></thead><tbody><tr><td>1</td><td>全局改名 13 处显示名（含两个前端的 <code>&lt;title&gt;</code>、桌面端窗口标题、包元数据、README）</td><td>见 <code>05_待办/人工待办清单.md</code>（软著交付目录）</td></tr><tr><td>2</td><td>起后端并登录，拍<strong>功能闭环</strong>界面（AI 管理台首页 / 会话、量化终端、Provider Hub、桌面端）</td><td>人工或后续脚本化</td></tr><tr><td>3</td><td>补拍 <code>apps/provider-hub</code>（当前无 <code>dist/index.html</code>，采集器已如实跳过）</td><td>先构建该前端</td></tr><tr><td>4</td><td>重跑采集并核对</td><td><code>npm run evidence:runtime &amp;&amp; npm run check:copyright</code></td></tr></tbody></table>
+<hr>
+<h2 id="五-图片完整性">五、图片完整性<a class="anchor" href="#五-图片完整性" aria-label="锚点">#</a></h2>
+<ul><li>尺寸统一 1500×1000（<code>--window-size</code> / CDP <code>Emulation.setDeviceMetricsOverride</code>）</li><li>每张在清单里带 <code>字节</code> 与 <code>sha256</code>；<code>npm run check:copyright</code> 会对 0 字节图片判 <strong>error</strong></li><li><strong>本节四类分类标准有执行器</strong>：<code>check-copyright-readiness.js</code> 逐类查 <code>图表/ 界面截图/ 架构图/ 终端截图/</code></li></ul>
+<p>是否各有非 0 字节图片，缺类报 <code>copyright-evidence-image-kinds</code>（S1 阶段降级 warning，不拦截）。<br>  此前只有文档声明、无守卫兜底，属「声明面有标准、执行面不查」的缺口，现已补上</p>
+<ul><li><code>../05_索引与对账/证据总清单.json</code> 逐文件登记路径/字节/sha256/行数（PNG 另记宽高），</li></ul>
+<p>改过一个字节就会被对出来</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../evidence/02_独创性/原创代码规模.html"><div class="dir">← 上一篇</div><div class="ttl">原创代码规模与第三方边界</div></a><a class="next" href="../../evidence/05_索引与对账/对账表.html"><div class="dir">下一篇 →</div><div class="ttl">对账表（数字 ↔ 出处 ↔ 复算命令）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__="evidence/03_图片/图片证据说明.html";</script>
+<script src="../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

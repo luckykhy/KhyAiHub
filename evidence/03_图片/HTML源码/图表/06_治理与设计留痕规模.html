@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><style>body{margin:0;background:#fff;color:#111827;font-family:"Microsoft YaHei","Segoe UI",sans-serif;padding:28px 34px}
+h1{font-size:26px;margin:0 0 4px}
+.sub{font-size:14px;color:#4b5563;margin-bottom:20px}
+.src{font-size:12px;color:#6b7280;margin-top:22px;border-top:1px solid #e5e7eb;padding-top:10px;line-height:1.6}
+.bar-row{display:flex;align-items:center;margin:9px 0;font-size:14px}
+.bar-label{width:280px;flex:none;text-align:right;padding-right:12px;color:#374151}
+.bar-track{flex:1;background:#f3f4f6;border-radius:3px;height:26px;position:relative}
+.bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#1d4ed8,#3b82f6)}
+.bar-val{position:absolute;left:calc(100% + 8px);top:4px;font-size:13px;color:#111827;white-space:nowrap}
+.tiles{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.tile{flex:1;min-width:210px;border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;background:#f9fafb}
+.tile .n{font-size:30px;font-weight:700;color:#1d4ed8}
+.tile .k{font-size:13px;color:#374151;margin-top:4px;line-height:1.5}
+.chart{margin:6px 0 2px}
+svg{display:block}
+.tag{display:inline-block;font-size:12px;color:#374151;border:1px solid #d1d5db;border-radius:11px;padding:1px 9px;margin-right:6px}</style></head><body>
+<h1>人提出的约束有多少：治理体系与文档留痕规模</h1>
+<div class="sub">C-E2 设计决策落文档 + C-M4 第②③类痕迹</div>
+<div><span class="tag">规则 94 条（82 条有执行器）</span><span class="tag">检查器 78 个</span><span class="tag">快照 2026-09-28</span></div>
+<div class="chart"><div class="tiles"><div class="tile"><div class="n">78</div><div class="k">CI 检查器（scripts/ci/check-*）</div></div><div class="tile"><div class="n">82</div><div class="k">有执行器的规则（门会真的挡回提交）</div></div><div class="tile"><div class="n">12</div><div class="k">纯人工判据的规则</div></div><div class="tile"><div class="n">19</div><div class="k">提示词库文件（9 个分类）</div></div></div><div class="bar-row"><div class="bar-label">01_INIT_立项</div><div class="bar-track"><div class="bar-fill" style="width:2.80%"></div><div class="bar-val">8</div></div></div>
+<div class="bar-row"><div class="bar-label">02_CONCEPTS_概念入门</div><div class="bar-track"><div class="bar-fill" style="width:12.62%"></div><div class="bar-val">36</div></div></div>
+<div class="bar-row"><div class="bar-label">03_DESIGN_设计</div><div class="bar-track"><div class="bar-fill" style="width:82.00%"></div><div class="bar-val">234</div></div></div>
+<div class="bar-row"><div class="bar-label">04_IMPL_实现</div><div class="bar-track"><div class="bar-fill" style="width:22.08%"></div><div class="bar-val">63</div></div></div>
+<div class="bar-row"><div class="bar-label">05_TEST_测试</div><div class="bar-track"><div class="bar-fill" style="width:4.56%"></div><div class="bar-val">13</div></div></div>
+<div class="bar-row"><div class="bar-label">06_DEPLOY_部署</div><div class="bar-track"><div class="bar-fill" style="width:10.86%"></div><div class="bar-val">31</div></div></div>
+<div class="bar-row"><div class="bar-label">07_OPS_运维</div><div class="bar-track"><div class="bar-fill" style="width:67.63%"></div><div class="bar-val">193</div></div></div>
+<div class="bar-row"><div class="bar-label">08_MGMT_项目管理</div><div class="bar-track"><div class="bar-fill" style="width:21.03%"></div><div class="bar-val">60</div></div></div>
+<div class="bar-row"><div class="bar-label">09_STORY_修仙学AI</div><div class="bar-track"><div class="bar-fill" style="width:14.02%"></div><div class="bar-val">40</div></div></div>
+<div class="bar-row"><div class="bar-label">10_规范</div><div class="bar-track"><div class="bar-fill" style="width:74.29%"></div><div class="bar-val">212</div></div></div>
+<div class="bar-row"><div class="bar-label">11_报告</div><div class="bar-track"><div class="bar-fill" style="width:13.67%"></div><div class="bar-val">39</div></div></div>
+<div class="bar-row"><div class="bar-label">12_模板</div><div class="bar-track"><div class="bar-fill" style="width:0.35%"></div><div class="bar-val">1</div></div></div>
+<div class="bar-row"><div class="bar-label">13_传承</div><div class="bar-track"><div class="bar-fill" style="width:1.05%"></div><div class="bar-val">3</div></div></div>
+<div class="bar-row"><div class="bar-label">14_维护者</div><div class="bar-track"><div class="bar-fill" style="width:0.70%"></div><div class="bar-val">2</div></div></div>
+<div class="bar-row"><div class="bar-label">15_维护记录</div><div class="bar-track"><div class="bar-fill" style="width:1.05%"></div><div class="bar-val">3</div></div></div>
+<div class="bar-row"><div class="bar-label">16_设计模式</div><div class="bar-track"><div class="bar-fill" style="width:0.70%"></div><div class="bar-val">2</div></div></div>
+<div class="bar-row"><div class="bar-label">17_AI协作预设包</div><div class="bar-track"><div class="bar-fill" style="width:8.06%"></div><div class="bar-val">23</div></div></div>
+<div class="bar-row"><div class="bar-label">18_归档</div><div class="bar-track"><div class="bar-fill" style="width:3.15%"></div><div class="bar-val">9</div></div></div>
+<div class="bar-row"><div class="bar-label">19_资产</div><div class="bar-track"><div class="bar-fill" style="width:0.70%"></div><div class="bar-val">2</div></div></div></div>
+<div class="src">数据来源：治理体系度量 / 原创性度量.文档分轴md数<br>生成命令：<code>node scripts/evidence/render-images.js</code><br>复算命令：<code>ls scripts/ci/check-*.js scripts/ci/check-*.py | wc -l</code> ｜ <code>node scripts/ci/check-rules-registry.js</code></div>
+</body></html>

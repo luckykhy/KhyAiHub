@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>06申报材料 —— 递交件工作区（不是依据文档） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../docs/index.html">📘 Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>evidence<span class="sep">›</span>06_申报材料<span class="sep">›</span>06申报材料 —— 递交件工作区（不是依据文档）</div>
+      <header class="hero reveal"><h1>06申报材料 —— 递交件工作区（不是依据文档）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#06-申报材料-递交件工作区-不是依据文档">06_申报材料 —— 递交件工作区（不是依据文档）</a></li><li class="lvl-2"><a href="#一-两处工位-本夹是-定稿投放处-生成器在仓外">一、两处工位：本夹是**定稿投放处**，生成器在仓外</a></li><li class="lvl-2"><a href="#二-目标结构-件未生成的-本文件即占位说明">二、目标结构（件未生成的，本文件即占位说明）</a></li><li class="lvl-2"><a href="#三-生成规程-顺序不可颠倒-工具已在仓外就位-不重写一遍">三、生成规程（顺序不可颠倒；工具已在仓外就位，不重写一遍）</a></li><li class="lvl-2"><a href="#四-复算入口">四、复算入口</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="06-申报材料-递交件工作区-不是依据文档">06_申报材料 —— 递交件工作区（不是依据文档）<a class="anchor" href="#06-申报材料-递交件工作区-不是依据文档" aria-label="锚点">#</a></h1>
+<p><strong>与 <code>docs/[MGMT-OTHER-006]</code> 的分工</strong>（别在这里重做决策）：</p>
+<table><thead><tr><th>位置</th><th>装什么</th><th>角色</th></tr></thead><tbody><tr><td><code>docs/08_MGMT_项目管理/MGMT-OTHER/[MGMT-OTHER-006]</code></td><td>定名的<strong>依据</strong>、命名口径、被否的论证与理由、被否的候选</td><td>语义真源（决策）</td></tr><tr><td><code>evidence/01_人类贡献/决策记录.md</code> D-名1 / D-名2</td><td>谁拍的、什么时候、原话或转述</td><td>人的意愿痕迹（C-M4）</td></tr><tr><td><strong>本文件夹</strong></td><td>交上去的那份<strong>东西</strong>本身：申请表字段定稿值、源程序 60 页、说明文档、截图、签章页</td><td>递交件（工作区）</td></tr></tbody></table>
+<p>本文件夹存在的理由就是用户 2026-09-28 的要求：<strong>申报材料单独一个文件夹，不要和原文档混在一起</strong>。<br>它落在根目录 <code>evidence/</code> 板块内而非新建顶层目录——<code>[DESIGN-LAY-005]</code> §1.2 已把 <code>evidence/</code><br>登记为「软著登记底档」的证据横切目录，再造一个顶层夹会出现两个真源，且需改层级登记表。</p>
+<hr>
+<h2 id="一-两处工位-本夹是-定稿投放处-生成器在仓外">一、两处工位：本夹是<strong>定稿投放处</strong>，生成器在仓外<a class="anchor" href="#一-两处工位-本夹是-定稿投放处-生成器在仓外" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>工位</th><th>装什么</th><th>为什么在那</th></tr></thead><tbody><tr><td><strong>本夹 <code>evidence/06_申报材料/</code></strong></td><td>核对表 + 将要递交的定稿（<code>源程序/</code> <code>说明文档/</code> <code>截图/</code>）</td><td>用户 2026-09-28 要求：申报材料单独一个文件夹，不与原文档混放。落在根 <code>evidence/</code> 板块内而非新建顶层目录，理由见上</td></tr><tr><td><code>D:/Portable/软著交付/Khy-OS/</code></td><td><strong>生成工具链与历史体检记录</strong>（<code>06_工具/*.py</code>、<code>01_草稿/</code>、<code>00_体检报告/</code>）</td><td>2026-09-20 起建，含已校准的选材与页数实测；不随仓库克隆传播</td></tr></tbody></table>
+<blockquote><p>⚠ <strong>仓外工位现持有已被取代的值</strong>：<code>06_工具/registration.json</code> 仍是<br><code>KhyOS人工智能平台操作系统</code> / 简称 <code>KhyOS</code> / <code>V1.1</code>（2026-09-20「用户授权 AI 代定」；<br>其 <code>version_status</code> 自记为 <code>recommended_pending_confirmation</code>，即版本号从未由人拍板）。<br>D-名2 已把这三值整体取代。<strong>改法</strong>：改该文件 → 跑 <code>sync_name.py --apply</code> + <code>collect_decisions.py</code>，<br>其余十几份文档机械同步；派生值不手改（页眉 = 全称 + 空格 + 版本号）。<br>本仓不代跑：它会重写仓库外的十余份文件，那是人自己点头的活。</p></blockquote>
+<hr>
+<h2 id="二-目标结构-件未生成的-本文件即占位说明">二、目标结构（件未生成的，本文件即占位说明）<a class="anchor" href="#二-目标结构-件未生成的-本文件即占位说明" aria-label="锚点">#</a></h2>
+<pre><code>evidence/06_申报材料/
+├── README.md              ← 本文件
+├── 递交核对表.md           ← 字段定稿值 + 逐件状态 + 复算命令（先看这份）
+├── 源程序/                ← 60 页 .docx/.pdf（前 30 + 后 30，每页 ≥50 行，页眉印全称+版本+页码）
+├── 说明文档/              ← 操作手册 .docx/.pdf（封面 + 功能一节）
+└── 截图/                  ← 真实运行画面 PNG，逐张登记来源命令</code></pre>
+<hr>
+<h2 id="三-生成规程-顺序不可颠倒-工具已在仓外就位-不重写一遍">三、生成规程（顺序不可颠倒；工具已在仓外就位，不重写一遍）<a class="anchor" href="#三-生成规程-顺序不可颠倒-工具已在仓外就位-不重写一遍" aria-label="锚点">#</a></h2>
+<ol><li><strong>定字段真源</strong>：改 <code>软著交付/Khy-OS/06_工具/registration.json</code> 三值，</li></ol>
+<p>取值抄本夹 <code>递交核对表.md</code> §一。</p>
+<ol><li><strong>实拍截图</strong>，逐张记命令，落 <code>截图/</code>。主证据是 <code>khy trajectory list</code></li></ol>
+<p>（一张图同时证「执行轨迹记录」与「链路校验」两词，<code>完整(54)</code> 由 <code>verifyTraceChain()</code> 算出）。<br>   <strong>禁用 <code>khy history</code></strong>——实测返回「暂无保存的对话记录」，空表截图等于没有证据。<br>   界面截图前须先解决界面标题与登记全称不一致（核对表 §三第 4 项），否则这一整步作废。</p>
+<ol><li><strong>抽源程序 60 页</strong>（仓外 <code>06_工具/</code>）：<code>extract_code.py</code> 选材 → <code>calibrate_final.py</code> 校准</li></ol>
+<p>→ <code>verify_material.py --name &quot;&lt;全称&gt;&quot; --version &quot;&lt;登记版本&gt;&quot;</code> 一条命令同时完成<br>   重渲染两端 md（换页眉）+ 生成 PDF + 逐页核验（页数 / 每页页眉 / 每页 ≥50 行）。<br>   <strong>实测已冻结的事实</strong>：换页眉<strong>不改变页数</strong>——HTML 里是恰好 30 个 <code>.page</code> 块，<br>   每块 55 行代码 + 1 行页眉，<code>1649 + 1 = 1650 = 30 × 55</code>，不需重新校准选材。<br>   产物落本夹 <code>源程序/</code>。</p>
+<blockquote><p>⚠ <strong>现有选材与新名称不匹配，须先定案</strong>，见核对表 §五。</p></blockquote>
+<ol><li><strong>写说明书</strong>，落 <code>说明文档/</code>：硬件环境 / 软件环境 / 编程语言 / 源程序量四项按实际填，</li></ol>
+<p>主要功能一节对应「执行轨迹记录与链路校验」；某模块若无截图，正文保留可见文字<br>   <code>【截图预留：模块名】</code>，<strong>不得用 HTML 注释</strong>（Word 里看不见，会被当成漏了）。</p>
+<ol><li><strong>对账</strong>：更新 <code>递交核对表.md</code> 的逐件状态，再跑本仓守卫，不许凭印象说齐了。</li></ol>
+<hr>
+<h2 id="四-复算入口">四、复算入口<a class="anchor" href="#四-复算入口" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>要验什么</th><th>命令</th></tr></thead><tbody><tr><td>底档完整性</td><td><code>npm run check:copyright</code>（缺件、空图片判 error）</td></tr><tr><td>全量口径（含 --all）</td><td><code>npm run check:copyright:all</code></td></tr><tr><td>主证据画面</td><td><code>node services/backend/bin/khy.js trajectory list</code></td></tr><tr><td>链路校验确为算法</td><td><code>grep -n &quot;function verifyTraceChain&quot; services/backend/src/services/sessionPersistence.js</code></td></tr><tr><td>登记版本与仓库一致</td><td><code>grep -m1 '^version' pyproject.toml</code> → <code>1.2.0</code></td></tr><tr><td>60 页重渲染 + 逐页核验</td><td><code>&quot;D:/Portable/软著交付/Khy-OS/06_工具/verify_material.py&quot; --name … --version …</code></td></tr></tbody></table>
+      </article>
+      <nav class="pager"><a class="prev" href="../../evidence/06_申报材料/递交核对表.html"><div class="dir">← 上一篇</div><div class="ttl">递交核对表（现行口径：D-名2，2026-09-28）</div></a><a class="next" href="../../evidence/README.html"><div class="dir">下一篇 →</div><div class="ttl">evidence/ —— 软件著作权登记底档（人类贡献与原创性证据）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__="evidence/06_申报材料/README.html";</script>
+<script src="../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

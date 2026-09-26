@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: 设计决策.md -->
+<title>设计决策索引与原创机制清单（C-E2 设计决策必须落文档） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../docs/index.html">📘 Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>evidence<span class="sep">›</span>02_独创性<span class="sep">›</span>设计决策索引与原创机制清单（C-E2 设计决策必须落文档）</div>
+      <header class="hero reveal"><h1>设计决策索引与原创机制清单（C-E2 设计决策必须落文档）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#设计决策索引与原创机制清单-c-e2-设计决策必须落文档">设计决策索引与原创机制清单（C-E2 设计决策必须落文档）</a></li><li class="lvl-2"><a href="#一-文档规模-实测-可用复算命令核对">一、文档规模（实测，可用复算命令核对）</a></li><li class="lvl-2"><a href="#二-本仓自行设计的机制-每条给出规范真源-可点开读">二、本仓自行设计的机制（每条给出规范真源，可点开读）</a></li><li class="lvl-2"><a href="#三-原创代码的硬指标-不是文档-是能数的行数">三、原创代码的硬指标（不是文档，是能数的行数）</a></li><li class="lvl-2"><a href="#四-怎么追问这些决策">四、怎么追问这些决策</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="设计决策索引与原创机制清单-c-e2-设计决策必须落文档">设计决策索引与原创机制清单（C-E2 设计决策必须落文档）<a class="anchor" href="#设计决策索引与原创机制清单-c-e2-设计决策必须落文档" aria-label="锚点">#</a></h1>
+<blockquote><p>判据不是「有没有设计文档」，而是「<strong>决策过程是否留下了可追问的文字</strong>」。<br>本仓 234 份设计文档 + 212 份规范，全部在 git 里，逐份可查作者与日期。</p></blockquote>
+<hr>
+<h2 id="一-文档规模-实测-可用复算命令核对">一、文档规模（实测，可用复算命令核对）<a class="anchor" href="#一-文档规模-实测-可用复算命令核对" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">find docs/03_DESIGN_设计 -name <span class="hljs-string">&#x27;*.md&#x27;</span> | <span class="hljs-built_in">wc</span> -l     <span class="hljs-comment"># 234</span>
+find docs/10_规范        -name <span class="hljs-string">&#x27;*.md&#x27;</span> | <span class="hljs-built_in">wc</span> -l     <span class="hljs-comment"># 212</span></code></pre>
+<table><thead><tr><th>分类</th><th>md 数</th><th>位置</th></tr></thead><tbody><tr><td>DESIGN-ARCH（架构）</td><td>160</td><td><code>docs/03_DESIGN_设计/DESIGN-ARCH/</code></td></tr><tr><td>其它设计</td><td>31</td><td><code>docs/03_DESIGN_设计/其它设计/</code></td></tr><tr><td>DESIGN-MEM（记忆系统）</td><td>8</td><td><code>docs/03_DESIGN_设计/DESIGN-MEM/</code></td></tr><tr><td>DESIGN-PERF / RES / FE / CPA / OTHER / FOLD</td><td>5/4/4/4/6/2</td><td>各自子目录</td></tr><tr><td><code>_archive_已删除孤儿引擎</code></td><td>8</td><td><strong>被否决并归档的方案也留着</strong></td></tr></tbody></table>
+<blockquote><p>「被否决的方案留档」这一条本身就是痕迹：只有真做过取舍的人才会保留自己否掉的东西。</p></blockquote>
+<hr>
+<h2 id="二-本仓自行设计的机制-每条给出规范真源-可点开读">二、本仓自行设计的机制（每条给出规范真源，可点开读）<a class="anchor" href="#二-本仓自行设计的机制-每条给出规范真源-可点开读" aria-label="锚点">#</a></h2>
+<p>以下机制不是照搬某个开源项目的现成组件，而是本项目<strong>自己定义并写成规范、再配执行器</strong>的。<br>每条都列「它解决什么」与「机器在哪里强制」。</p>
+<table><thead><tr><th>#</th><th>机制</th><th>解决什么问题</th><th>规范真源</th><th>执行器</th></tr></thead><tbody><tr><td>1</td><td><strong>三模态反馈契约</strong>（修复=看病 / 新增=求学 / 删除=搓澡）</td><td>AI 报「已修好」但没人验证；改坏一片</td><td><code>[DESIGN-ARCH-113] AI修改三模态反馈契约-客户模式</code></td><td><code>scripts/ci/check-agent-feedback.js</code>（规则 5/6/7 = <code>RUNTIME-007/008/009</code>）</td></tr><tr><td>2</td><td><strong>规则遵守保障机制</strong>（门成员资格从登记表派生，不在 CI 里硬编码）</td><td>加了规则但门不跑；或门跑了规则已删</td><td><code>[DESIGN-ARCH-111] 规则遵守保障机制</code></td><td><code>scripts/ruleguard/</code> + <code>npm run rules:gate</code> / <code>rules:coverage</code> / <code>check:wiring</code></td></tr><tr><td>3</td><td><strong>五通道决策矩阵</strong>（状态直读 / 服务直调 / CLI / Web API / 看屏幕）</td><td>一次操作该走哪条路全靠临场判断</td><td><code>[DESIGN-ARCH-071] 通道选择决策矩阵</code></td><td>规则层 + <code>check:gov-rules</code></td></tr><tr><td>4</td><td><strong>委派边界第六通道</strong>（默认自做，委派需过 G1/G2/G3 三闸门）</td><td>把活随手甩给外部智能体，边界失控</td><td><code>[DESIGN-PROCESS-001] 委派边界决策矩阵</code></td><td><code>scripts/ci/check-delegation-boundary.js</code></td></tr><tr><td>5</td><td><strong>新机制落地四阶段</strong>（S1 观察者 → S2 顾问 → S3 门禁 → S4 主动修复，毕业看样本量不看时间）</td><td>新写的检查器一上来就拦人，误报即瘫痪</td><td><code>[DESIGN-PROCESS-002] 新机制落地四阶段流程</code></td><td><code>scripts/ci/check-rollout-stage.js</code>（含「登记表 stage 必须等于执行器常量」的漂移检查）</td></tr><tr><td>6</td><td><strong>智能体工具授权矩阵</strong>（默认拒绝；只读角色不得持 <code>Bash</code>；禁止 fail-open）</td><td>提示词里说「你没权限」，机制上却照样能执行</td><td><code>[DESIGN-AGENT-002] 智能体工具授权矩阵</code></td><td><code>scripts/ci/check-agent-authz.js</code></td></tr><tr><td>7</td><td><strong>仓库层级板块规范</strong>（L0 <code>kernel</code>→L6 <code>tools</code> + 横切，依赖方向单向可查）</td><td>目录自由生长，跨层引用无人拦</td><td><code>[DESIGN-LAY-005] 仓库层级板块规范</code></td><td><code>npm run check:layout</code></td></tr><tr><td>8</td><td><strong>构建产物单一根</strong>（可再生产物统一落 <code>entries/&lt;producer&gt;</code>，<code>.gitignore</code> 由登记表派生）</td><td>构建垃圾散落根目录；忽略清单手写第二份必然漂移</td><td><code>[DESIGN-LAY-004]</code></td><td><code>npm run check:build-root</code> / <code>check:build-artifacts</code></td></tr><tr><td>9</td><td><strong>三态目录立体分层 + 数据落点寻址表</strong>（T0–T4 × 八领域）</td><td>「这个文件该放哪」没有答案，根目录平铺到 211 项</td><td><code>[DESIGN-LAY-007] 三态目录立体分层方案</code></td><td><code>npm run check:data-layout</code>（<code>DATA-LOCATIONS.json</code>）</td></tr><tr><td>10</td><td><strong>可交付性基线 D1–D10</strong>（度量必须有一根表针朝外：发布物是否真实存在）</td><td>93 条规则全守内部自洽，0 条检查发布物存在</td><td><code>[DESIGN-DELIV-001]</code> + <code>[DESIGN-DELIV-002]</code></td><td><code>npm run check:delivery</code>（命令/别名/handler 三只棘轮）</td></tr><tr><td>11</td><td><strong>依赖来源原生</strong>（构建与交付链路只走官方源；镜像须显式 opt-in）</td><td>同一份 Dockerfile 在不同网络产出不同镜像，无人知晓</td><td><code>[DESIGN-DEP-001]</code> §10 + <code>[DESIGN-DEPLOY-001]</code> §3.3</td><td><code>scripts/ci/check-native-registry.js</code></td></tr><tr><td>12</td><td><strong>软件著作权就绪规范</strong>（判据=有没有人的意愿，四条硬线 C-M/C-X/C-E/C-MAT）</td><td>「用没用 AI」被当成唯一标准，实际无从举证</td><td><code>[DESIGN-IP-001]</code></td><td><code>npm run check:copyright</code>（本目录即其产物）</td></tr><tr><td>13</td><td><strong>规则元规范</strong>（正文只做指针 + 摘要，语义真源另存；三元字段约束/权力/福利）</td><td>同一规则五处表述互相矛盾</td><td><code>[MGMT-STD-008] 规则编写与管理规范（元规则）</code></td><td><code>npm run check:rules</code>（登记表与真源双向可达）</td></tr><tr><td>14</td><td><strong>治理总纲十板块</strong>（MOD/MEM/TOOL/ACP/API/BORROW/RUNTIME/PROCESS/SECURITY/DOCS）</td><td>规则散落不可检索</td><td><code>[DESIGN-GOV-001] 治理总纲与可执行规则</code></td><td><code>scripts/ci/check-gov-rules.js</code></td></tr><tr><td>15</td><td><strong>工具调用能力判定与文本拦截协议</strong>（负向裁决要求正面证据）</td><td>「回了文字没回 tool_calls」被误判成「不支持工具」，一次误判锁死该模型</td><td><code>[DESIGN-ARCH-138] 工具调用能力判定与文本拦截协议</code></td><td><code>services/backend/src/services/gateway/</code>（<code>toolCapabilityStore</code> 非对称继承）</td></tr><tr><td>16</td><td><strong>HQ 能力吸收与多机协作</strong>（单仓 + 租约 <code>claimed_by/claimed_at/lease_expires</code>，取代双仓同步）</td><td>两个仓库靠脚本同步，冲突时谁都不认账</td><td><code>[DESIGN-ARCH-118] HQ 能力吸收与多机协作规范</code></td><td><code>khy hq verify</code> + <code>.ai/hq/</code> schema 守卫 <code>check-memory-schema.js</code></td></tr><tr><td>17</td><td><strong>版本三轨道九真源</strong>（G1/G2/G3 组内相等、组间刻意不同；先写 CHANGELOG 再 bump）</td><td>「版本号对齐」被误解成所有包同版本</td><td><code>[DESIGN-SEMVER-002] 版本管理与发布触发规范</code></td><td><code>scripts/ci/check-version-sync.js</code></td></tr><tr><td>18</td><td><strong>借鉴与实现统一规则</strong>（借鉴什么 / 怎么借鉴 / 同一功能由谁实现）</td><td>抄了外部实现却不留出处，日后无法解释</td><td><code>[DESIGN-SOURCING-001] 借鉴与实现统一规则</code></td><td>规则层 + <code>check:layout</code> 的 vendor 边界</td></tr></tbody></table>
+<blockquote><p>说明：本表只列「本项目自己定义并落成可执行机制」的部分，不声称任何算法领先；<br>表格里的每一行都能用 <code>npm run rules:apply -- &lt;相关文件&gt;</code> 反查它受哪些规则约束。</p></blockquote>
+<hr>
+<h2 id="三-原创代码的硬指标-不是文档-是能数的行数">三、原创代码的硬指标（不是文档，是能数的行数）<a class="anchor" href="#三-原创代码的硬指标-不是文档-是能数的行数" aria-label="锚点">#</a></h2>
+<p>登记材料的源程序建议取 <strong>L0 <code>kernel/</code> 手写层</strong>——它不含第三方、不含生成物：</p>
+<table><thead><tr><th>项</th><th>实测</th></tr></thead><tbody><tr><td>kernel 手写层总行数（已剔除第三方）</td><td><strong>33,866</strong></td></tr><tr><td>其中 <code>.c</code></td><td>13,185（44 文件）</td></tr><tr><td>其中 <code>.h</code></td><td>10,014（80 文件）</td></tr><tr><td>其中 <code>.asm</code></td><td>5,381（42 文件）</td></tr><tr><td>其中 <code>.py</code> / <code>.js</code> / <code>.ld</code></td><td>1,612 / 2,420 / 50</td></tr><tr><td><strong>被剔除的 vendor 行数</strong></td><td>3,912（5 文件，逐文件明细见 <code>原创代码规模.md</code>）</td></tr></tbody></table>
+<p>复算与逐文件清单：<code>原创代码规模.md</code>（由 <code>npm run evidence:build</code> 生成，数字来自 <code>../04_机器可读/contribution-metrics.json</code>）。</p>
+<hr>
+<h2 id="四-怎么追问这些决策">四、怎么追问这些决策<a class="anchor" href="#四-怎么追问这些决策" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>追问</th><th>打开哪里</th></tr></thead><tbody><tr><td>为什么这么设计？</td><td>对应设计文档的「背景 / 备选方案 / 结论」段</td></tr><tr><td>谁决定的？</td><td><code>git log main --follow --format='%ad %an %s' -- &lt;文档路径&gt;</code></td></tr><tr><td>有没有落地？</td><td>该规范引用的执行器脚本 + <code>npm run rules:gate</code> 是否包含它</td></tr><tr><td>落地到什么强度？</td><td><code>docs/10_规范/registry/FEATURE-OWNERSHIP.json</code> 的 <code>rollout.mechanisms[].stage</code></td></tr></tbody></table>
+      </article>
+      <nav class="pager"><a class="prev" href="../../evidence/01_人类贡献/ai-usage.html"><div class="dir">← 上一篇</div><div class="ttl">AI 参与范围自述（C-M2 / C-M3）</div></a><a class="next" href="../../evidence/02_独创性/原创代码规模.html"><div class="dir">下一篇 →</div><div class="ttl">原创代码规模与第三方边界</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__="evidence/02_独创性/设计决策.html";</script>
+<script src="../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

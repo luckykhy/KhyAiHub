@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: 对账表.md -->
+<title>对账表（数字 ↔ 出处 ↔ 复算命令） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../docs/index.html">📘 Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>evidence<span class="sep">›</span>05_索引与对账<span class="sep">›</span>对账表（数字 ↔ 出处 ↔ 复算命令）</div>
+      <header class="hero reveal"><h1>对账表（数字 ↔ 出处 ↔ 复算命令）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#对账表-数字-出处-复算命令">对账表（数字 ↔ 出处 ↔ 复算命令）</a></li><li class="lvl-2"><a href="#一-主数字对账">一、主数字对账</a></li><li class="lvl-2"><a href="#二-口径冲突的处理方式-本表的价值所在">二、口径冲突的处理方式（本表的价值所在）</a></li><li class="lvl-2"><a href="#三-已知不一致与未做的事-不粉饰">三、已知不一致与未做的事（不粉饰）</a></li><li class="lvl-2"><a href="#四-完整性核对">四、完整性核对</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="对账表-数字-出处-复算命令">对账表（数字 ↔ 出处 ↔ 复算命令）<a class="anchor" href="#对账表-数字-出处-复算命令" aria-label="锚点">#</a></h1>
+<p>用途：被追问任何一个数字时，<strong>当场重跑</strong>。凡本表列出的数字，都同时存在于<br><code>../04_机器可读/contribution-metrics.json</code>（真源）与渲染出的文档/图片里；<br>两边不一致即为生成链漂移，以重跑结果为准。</p>
+<pre><code class="language-bash">npm run evidence:collect &amp;&amp; npm run evidence:build &amp;&amp; npm run evidence:images</code></pre>
+<hr>
+<h2 id="一-主数字对账">一、主数字对账<a class="anchor" href="#一-主数字对账" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>数字</th><th>值</th><th>出现在</th><th>复算命令</th></tr></thead><tbody><tr><td><code>main</code> 提交数</td><td>62</td><td><code>01_人类贡献/ai-usage.md</code>、<code>图表/01_提交活跃度_全分支按月.png</code></td><td>`git log main --oneline \</td></tr><tr><td>全分支提交数</td><td>920（36 分支）</td><td>同上</td><td><code>git rev-list --count --all</code></td></tr><tr><td>提交日期范围</td><td>2026-07-25 → 2026-09-28</td><td><code>01_人类贡献/开发过程说明.md</code></td><td>`git log main --format=%ad --date=short \</td></tr><tr><td>作者数</td><td>1（<code>孔浩原 &lt;2578974124@qq.com&gt;</code>，62/62）</td><td><code>ai-usage.md</code></td><td>`git log main --format=%an \</td></tr><tr><td>已跟踪文件数</td><td>10,659</td><td><code>02_独创性/原创代码规模.md</code></td><td>`git ls-files \</td></tr><tr><td>反馈存证任务目录</td><td>245</td><td><code>开发过程说明.md</code>、<code>图表/02</code>、<code>图表/03</code></td><td>`find .khy/feedback -maxdepth 1 -type d \</td></tr><tr><td>复现→复诊往返</td><td>141</td><td><code>图表/02</code>、<code>迭代与验收.md</code></td><td>见 <code>contribution-metrics.json</code> → <code>反馈存证.复算命令</code></td></tr><tr><td>存证活跃日 / 跨度</td><td>10 天（2026-09-18 → 09-27）</td><td><code>图表/03_存证按日分布.png</code></td><td>同上</td></tr><tr><td><code>source:</code> 行（去重 / 人类指向）</td><td>117 / 110 / 57</td><td><code>人类指令语料.md</code>、<code>图表/04</code></td><td>`grep -rn &quot;source:&quot; .khy/feedback --include=*.md \</td></tr><tr><td>用户引述句（去重）</td><td>152 / 145</td><td>同上</td><td>`grep -rn &quot;用户原话\</td></tr><tr><td>人写的验收标准</td><td>29</td><td><code>人类指令语料.md</code> §四</td><td>`node -e &quot;console.log(require('./.ai/hq/PROGRESS.json').tasks.filter(t=&gt;t.验收标准\</td></tr><tr><td>kernel 手写层行数</td><td>33,866</td><td><code>原创代码规模.md</code>、<code>图表/05</code></td><td>见该文件「复算命令」</td></tr><tr><td>被剔除 vendor 行数</td><td>3,912（5 文件）</td><td>同上</td><td><code>wc -l kernel/vendor/**/*</code> 逐文件</td></tr><tr><td>设计文档 md 数</td><td>234</td><td><code>设计决策.md</code>、<code>图表/06</code></td><td>`find docs/03_DESIGN_设计 -name '*.md' \</td></tr><tr><td>规范文档 md 数</td><td>212</td><td><code>图表/06</code></td><td>`find docs/10_规范 -name '*.md' \</td></tr><tr><td>CI 检查器</td><td>78</td><td><code>ai-usage.md</code>、<code>图表/06</code></td><td>`ls scripts/ci/check-*.js \</td></tr><tr><td>规则总数 / 有执行器</td><td>94 / 82</td><td><code>ai-usage.md</code></td><td><code>npm run rules:coverage</code></td></tr><tr><td>提示词文件</td><td>19（9 类）</td><td><code>开发过程说明.md</code></td><td>`find .ai/hq/prompts -name '*.md' \</td></tr><tr><td>每日工作笔记</td><td>16 个文件（2026-09-14 → 09-28）</td><td><code>开发过程说明.md</code></td><td>`ls .workbuddy/memory \</td></tr><tr><td>证据图片</td><td>16 张 PNG（6 图表 + 2 架构 + 6 终端 + 2 界面）</td><td><code>../03_图片/图片证据说明.md</code></td><td>`find evidence/03_图片 -name '*.png' \</td></tr><tr><td>内部可解析依赖边</td><td>4,346 条（3,459 个源文件 → 71 个目录节点 / 257 条目录级边）</td><td><code>架构图/02_模块依赖图_实测.png</code>、<code>../03_图片/图片证据说明.md</code> §一之二</td><td><code>node -e &quot;const d=require('./evidence/04_机器可读/contribution-metrics.json').模块依赖度量;console.log(d.可解析边,d.目录节点数,d.目录级边数)&quot;</code></td></tr><tr><td>最强目录级边</td><td><code>backend:cli → backend:services</code> 1,103 次</td><td>同上</td><td>`grep -rhoE &quot;require\('\.\./(services\</td></tr></tbody></table>
+<hr>
+<h2 id="二-口径冲突的处理方式-本表的价值所在">二、口径冲突的处理方式（本表的价值所在）<a class="anchor" href="#二-口径冲突的处理方式-本表的价值所在" aria-label="锚点">#</a></h2>
+<p>同一件事往往有两个以上口径。本仓的做法是<strong>两个都记、标明口径</strong>，而不是挑一个好看的：</p>
+<table><thead><tr><th>议题</th><th>口径 A</th><th>口径 B</th><th>用法</th></tr></thead><tbody><tr><td>提交数</td><td><code>main</code> 62</td><td>全分支 920</td><td><code>main</code> 是 2026-09-24 重建的短历史；说「开发过程」用 B，说「当前分支」用 A</td></tr><tr><td>AI 署名提交</td><td><code>main</code> 0</td><td>全分支 88（9.6%）</td><td>C-M3 的合规判断用 A；治理范围与诚实申报用 B</td></tr><tr><td>代码行数</td><td>累计新增 2,480,083 行（git numstat）</td><td>kernel 手写 33,866 行</td><td>前者含锁文件/生成物/文档，<strong>不可</strong>用作原创性主张；后者才是登记材料建议口径</td></tr><tr><td>版本号</td><td>G1 <code>1.2.0</code>（四源一致，仓库发布轨道）</td><td><code>.ai/hq/PROGRESS.json</code> 的 <code>khy_os_version</code> = <code>1.1.11</code>（台账字段滞后）</td><td>日常与守卫以 G1 为准；台账值不引用。<strong>软著登记栏填 <code>V1.2.0</code> = G1 现值</strong>（人明示「先沿用现在的」，D-名2），故截图版本串与申请表天然一致、无需修图；代价是登记后版本号只允许增减「V」，见 <code>[MGMT-OTHER-006]</code> §三。⚠ <code>1.2.0</code> 尚未打 tag（最新 <code>v1.1.15</code>）</td></tr><tr><td>测量用的 ref</td><td><code>HEAD</code>（正常检出时）</td><td><code>main</code>（HEAD 未出生时自动退化）/ <code>--all</code>（连 main 都没有时）</td><td>采集器把实际 ref 记在 <code>contribution-metrics.json</code> → <code>人类贡献度量.git.测量ref</code> 与 <code>测量口径</code>；两者不一致时必须声明</td></tr></tbody></table>
+<hr>
+<h2 id="三-已知不一致与未做的事-不粉饰">三、已知不一致与未做的事（不粉饰）<a class="anchor" href="#三-已知不一致与未做的事-不粉饰" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>事实</th><th>影响</th><th>处置</th></tr></thead><tbody><tr><td>1</td><td><code>khy hq status</code> 打印 <code>khy_os v1.1.11</code>，而 G1 版本轨道是 <code>1.2.0</code></td><td><code>终端截图/03_hq_status.png</code> 里的版本读数与 <code>发布记录.md</code> 不同</td><td>该字段读自 <code>.ai/hq/PROGRESS.json</code>（<code>last_updated</code> 2026-09-23），属<strong>台账字段滞后</strong>，非包版本漂移；<code>check-version-sync.js</code> 的校验面不含它。留给维护者更新，本底档不改数据</td></tr><tr><td>2</td><td><code>apps/provider-hub</code> 与 <code>software/khyquant/frontend</code> 无 <code>dist/index.html</code></td><td>界面截图只有 2 张，未覆盖四个模块</td><td>采集器如实跳过并写明原因；需先构建（见 <code>../03_图片/图片证据说明.md</code> §四）</td></tr><tr><td>3</td><td>全局改名（阶段 2）未执行</td><td>界面标题与登记全称不一致，2 张界面图<strong>不得</strong>作登记材料截图</td><td>已在 <code>运行截图清单.json</code> 逐条打 <code>风险标注</code>；改名后重拍</td></tr><tr><td>4</td><td>登记全称现行口径（D-名2 / <code>[MGMT-OTHER-006]</code> §一）：《基于执行轨迹记录与链路校验技术的AI助手平台》V1.2.0；同日曾三次改名，本底档现跟随现行值</td><td>C-MAT2「五处一致」现状 1/5 就绪，材料仍不可直接提交</td><td>逐处现状见 <code>../01_人类贡献/决策记录.md</code> D-名2；<strong>名称真源是 <code>[MGMT-OTHER-006]</code>，不是本底档</strong>——再改版时改本表跟随，不改本表来「定名」</td></tr><tr><td>5</td><td>AI 在候选名阶段给出并<strong>已被语料推翻</strong>的三个断言：版本号不该进名称、「操作系统」不可注册、名称宜 4–10 字</td><td>若未推翻会直接导致命名失误</td><td>推翻依据是 50+ 条<strong>已登记</strong>名称的实测（含《基于分布式架构和大模型技术的多模态智能体操作系统V1.0》等）；结论：命名判据必须来自真实登记实例，不来自科普文。已记入 D-名1 §语料</td></tr><tr><td>6</td><td><code>终端截图/05_gateway_status.png</code> 采集的命令<strong>会对外探测</strong>，且部分通道探测会触发一次最小模型调用（同图底部有「已收到模型响应」）</td><td>与 README 原「只跑离线只读命令」的自述不一致，且<strong>不保证零成本</strong></td><td>已改 README/图片说明的措辞为如实标注，并在 <code>运行截图清单.json</code> 打 <code>对外探测: true</code>；采集器页脚同步改写后重拍</td></tr><tr><td>7</td><td>本底档只覆盖<strong>过程证据</strong>，不含源程序 60 页与操作手册</td><td>递交材料另在 <code>D:/Portable/软著交付/Khy-OS/</code></td><td>见 <code>evidence/README.md</code> §五</td></tr><tr><td>8</td><td>图片由 Edge 无头渲染，非真机屏幕抓取</td><td>图表与终端图无影响；界面图属「本地渲染」证据</td><td>已在 <code>运行截图清单.json</code> 的 <code>渲染方式</code> 逐条写明</td></tr><tr><td>9</td><td>生成本底档时（2026-09-28）工作区正处于<strong>历史重建进行中</strong>：HEAD 指向尚未出生的分支</td><td>直接跑 <code>git log</code> 会报 <code>does not have any commits yet</code></td><td>采集器按 <code>HEAD → main → --all</code> 顺序降级并记录实际 ref（本次为 <code>main</code>）；重跑命令见 §一</td></tr></tbody></table>
+<hr>
+<h2 id="四-完整性核对">四、完整性核对<a class="anchor" href="#四-完整性核对" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">node scripts/evidence/build-index.js          <span class="hljs-comment"># 重生成 证据总清单.json（逐文件 sha256/字节/行数）</span>
+node scripts/docs/build_docs_site.js          <span class="hljs-comment"># 重生成各 md 的 html 孪生</span>
+node scripts/evidence/build-index.js          <span class="hljs-comment"># 再跑一次，让清单记到刚生成的孪生</span>
+npm run check:copyright                        <span class="hljs-comment"># 底档齐件 + 无 0 字节图片</span>
+node -e <span class="hljs-string">&quot;const l=require(&#x27;./evidence/05_索引与对账/证据总清单.json&#x27;);console.log(l.条目数)&quot;</span></code></pre>
+<p><strong>清单追踪 html 孪生，所以顺序有讲究</strong>：<code>build-index</code> 自己会重生成 3 份 md，<br>若在孪生之前跑，孪生就落后一版；上表三步（清单 → 孪生 → 清单）才是收敛顺序。</p>
+<p><strong>自指不入哈希</strong>：<code>证据总清单.json</code> 里含自身条目，其 <code>生成时间</code> 与 <code>字节/sha256</code><br>每次重跑必变（实测连跑两次只差这 3 行：第 2、483、484 行）。这是清单的时间戳，<br>不是被篡改的痕迹——核对图片时按 PNG 条目对，不要按自身条目对。</p>
+<p><code>证据总清单.json</code> 里每个 PNG 条目带 <code>宽/高/sha256</code>；任何一张被手工替换过，<br>sha256 与尺寸都会变，与本表 §一 的「16 张」以及两份清单即可对出。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../evidence/03_图片/图片证据说明.html"><div class="dir">← 上一篇</div><div class="ttl">图片证据说明（每张图怎么来的、能不能当登记材料）</div></a><a class="next" href="../../evidence/06_申报材料/递交核对表.html"><div class="dir">下一篇 →</div><div class="ttl">递交核对表（现行口径：D-名2，2026-09-28）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__="evidence/05_索引与对账/对账表.html";</script>
+<script src="../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><style>body{margin:0;background:#fff;color:#111827;font-family:"Microsoft YaHei","Segoe UI",sans-serif;padding:28px 34px}
+h1{font-size:26px;margin:0 0 4px}
+.sub{font-size:14px;color:#4b5563;margin-bottom:20px}
+.src{font-size:12px;color:#6b7280;margin-top:22px;border-top:1px solid #e5e7eb;padding-top:10px;line-height:1.6}
+.bar-row{display:flex;align-items:center;margin:9px 0;font-size:14px}
+.bar-label{width:280px;flex:none;text-align:right;padding-right:12px;color:#374151}
+.bar-track{flex:1;background:#f3f4f6;border-radius:3px;height:26px;position:relative}
+.bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#1d4ed8,#3b82f6)}
+.bar-val{position:absolute;left:calc(100% + 8px);top:4px;font-size:13px;color:#111827;white-space:nowrap}
+.tiles{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.tile{flex:1;min-width:210px;border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;background:#f9fafb}
+.tile .n{font-size:30px;font-weight:700;color:#1d4ed8}
+.tile .k{font-size:13px;color:#374151;margin-top:4px;line-height:1.5}
+.chart{margin:6px 0 2px}
+svg{display:block}
+.tag{display:inline-block;font-size:12px;color:#374151;border:1px solid #d1d5db;border-radius:11px;padding:1px 9px;margin-right:6px}</style></head><body>
+<h1>手写内核层（L0）代码规模与第三方剔除</h1>
+<div class="sub">C-X3：第三方不得冒充原创；口径 = 非 vendor、非 *_gen.*</div>
+<div><span class="tag">已剔除 5 个 vendor 文件</span><span class="tag">快照 2026-09-28</span></div>
+<div class="chart"><div class="tiles"><div class="tile"><div class="n">33866</div><div class="k">手写行数（剔除第三方后）</div></div><div class="tile"><div class="n">44</div><div class="k">.c 文件数</div></div><div class="tile"><div class="n">42</div><div class="k">.asm 文件数</div></div><div class="tile"><div class="n">113</div><div class="k">vendor/ 下文件数（不进登记材料）</div></div></div><div class="bar-row"><div class="bar-label">kernel/.c</div><div class="bar-track"><div class="bar-fill" style="width:82.00%"></div><div class="bar-val">13,185</div></div></div>
+<div class="bar-row"><div class="bar-label">kernel/.h</div><div class="bar-track"><div class="bar-fill" style="width:62.28%"></div><div class="bar-val">10,014</div></div></div>
+<div class="bar-row"><div class="bar-label">kernel/.asm</div><div class="bar-track"><div class="bar-fill" style="width:33.47%"></div><div class="bar-val">5,381</div></div></div>
+<div class="bar-row"><div class="bar-label">kernel/.py</div><div class="bar-track"><div class="bar-fill" style="width:10.03%"></div><div class="bar-val">1,612</div></div></div>
+<div class="bar-row"><div class="bar-label">kernel/.js</div><div class="bar-track"><div class="bar-fill" style="width:15.05%"></div><div class="bar-val">2,420</div></div></div>
+<div class="bar-row"><div class="bar-label">被剔除的 vendor / 生成物（不计原创）</div><div class="bar-track"><div class="bar-fill" style="width:24.33%"></div><div class="bar-val">3,912</div></div></div></div>
+<div class="src">数据来源：原创性度量.内核手写层 / 第三方与生成物<br>生成命令：<code>node scripts/evidence/render-images.js</code><br>复算命令：<code>find kernel -name "*.c" -not -path "*vendor*" | xargs wc -l | tail -1</code></div>
+</body></html>

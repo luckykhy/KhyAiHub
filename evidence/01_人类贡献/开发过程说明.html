@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: 开发过程说明.md -->
+<title>开发过程说明（C-E1 / C-X1） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../docs/index.html">📘 Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>evidence<span class="sep">›</span>01_人类贡献<span class="sep">›</span>开发过程说明（C-E1 / C-X1）</div>
+      <header class="hero reveal"><h1>开发过程说明（C-E1 / C-X1）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#开发过程说明-c-e1-c-x1">开发过程说明（C-E1 / C-X1）</a></li><li class="lvl-2"><a href="#一-开发形态-单人-编码智能体-按-三模态契约-推进">一、开发形态：单人 + 编码智能体，按「三模态契约」推进</a></li><li class="lvl-2"><a href="#二-时间线-按仓库实测-不按回忆">二、时间线（按仓库实测，不按回忆）</a></li><li class="lvl-2"><a href="#三-需求是怎么进来的">三、需求是怎么进来的</a></li><li class="lvl-2"><a href="#四-进入登记材料的代码-人怎么解释-c-x1-c-x2">四、进入登记材料的代码，人怎么解释（C-X1 / C-X2）</a></li><li class="lvl-2"><a href="#五-验收-改完跑什么">五、验收：改完跑什么</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="开发过程说明-c-e1-c-x1">开发过程说明（C-E1 / C-X1）<a class="anchor" href="#开发过程说明-c-e1-c-x1" aria-label="锚点">#</a></h1>
+<p>这份文件回答「<strong>这个人到底是怎么做这个软件的</strong>」，并给出每个环节的原始存证位置。<br>它不叙述功能，只叙述过程——登记审查关心的正是过程。</p>
+<hr>
+<h2 id="一-开发形态-单人-编码智能体-按-三模态契约-推进">一、开发形态：单人 + 编码智能体，按「三模态契约」推进<a class="anchor" href="#一-开发形态-单人-编码智能体-按-三模态契约-推进" aria-label="锚点">#</a></h2>
+<p>本仓把工程过程写成了可校验的规则（<code>AGENTS.md</code> 工程规则 5/6/7 = <code>RUNTIME-007/008/009</code>），<br>每一次改动按主模态留下不同存证，全部落在 <code>.khy/feedback/&lt;任务-id&gt;/</code>：</p>
+<table><thead><tr><th>模态</th><th>规则</th><th>必须留下的存证</th><th>实测数量</th></tr></thead><tbody><tr><td><strong>修复</strong>（FIX）</td><td>规则 5 修复先复现</td><td><code>complaint.md</code> → <code>repro-before.txt</code> → <code>differential.md</code> → <code>repro-after.txt</code></td><td>主诉 146 ｜ 复现前 171 ｜ 鉴别诊断 114 ｜ 复诊 149</td></tr><tr><td><strong>新增</strong>（BUILD）</td><td>规则 6 新增先提问</td><td><code>requirement-5q.md</code>（谁用/何时用/替代做法/成功长什么样/不做会怎样，每条带 <code>source: 用户原话</code>）</td><td>21</td></tr><tr><td><strong>删除</strong>（DELETE）</td><td>规则 7 删除先报部位</td><td><code>scrub-plan.md</code> + <strong>可执行</strong>的 <code>rollback.txt</code></td><td>回滚 47 ｜ 模态声明 22</td></tr><tr><td>合计任务目录</td><td>—</td><td>—</td><td><strong>245</strong>（`ls .khy/feedback \</td></tr></tbody></table>
+<p><strong>「复现修复往返数」= 141</strong>：同一目录里既有 <code>repro-before.txt</code> 又有 <code>repro-after.txt</code>，<br>即「先看到病、改完再跑同一条命令复诊」完整走通的次数。存证活跃跨度 10 天（2026-09-18 → 09-27）。</p>
+<blockquote><p>为什么这一节对软著有用：它证明代码不是「一键生成后没看过」。<br>每一次修复都有病案、有候选病因、有改前改后的真实输出。</p></blockquote>
+<p>复算：</p>
+<pre><code class="language-bash">find .khy/feedback -maxdepth 2 -<span class="hljs-built_in">type</span> f | sed <span class="hljs-string">&#x27;s#.*/##&#x27;</span> | <span class="hljs-built_in">sort</span> | <span class="hljs-built_in">uniq</span> -c
+<span class="hljs-built_in">ls</span> .khy/feedback | <span class="hljs-built_in">wc</span> -l</code></pre>
+<hr>
+<h2 id="二-时间线-按仓库实测-不按回忆">二、时间线（按仓库实测，不按回忆）<a class="anchor" href="#二-时间线-按仓库实测-不按回忆" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>时间</th><th>事件</th><th>证据</th></tr></thead><tbody><tr><td>2026-07-25</td><td><code>main</code> 首个提交（短历史起点）</td><td>`git log main --reverse --format=%ad --date=short \</td></tr><tr><td>2026-07 ~ 09</td><td>全分支 920 次提交（43 / 373 / 504 按月）</td><td><code>git rev-list --count --all</code></td></tr><tr><td>2026-09-14 起</td><td>每日工作笔记连续 15 天（09-14 → 09-28）</td><td><code>.workbuddy/memory/2026-09-*.md</code>（16 个文件，含 <code>MEMORY.md</code>）</td></tr><tr><td>2026-09-17</td><td>多机协作从「双仓」收敛为单仓 + 租约，HQ 能力吸收进本仓</td><td><code>[DESIGN-ARCH-118]</code></td></tr><tr><td>2026-09-18 起</td><td>三模态存证开始成批落盘（10 个活跃日）</td><td><code>.khy/feedback/</code> 按日分布</td></tr><tr><td>2026-09-28</td><td>建立本底档目录 <code>evidence/</code>（裁决 D-E1）</td><td><code>01_人类贡献/决策记录.md</code></td></tr></tbody></table>
+<p>版本发布：<code>v1.1.8</code> → <code>v1.1.9</code> → <code>v1.1.12</code> → <code>v1.1.14</code> → <code>v1.1.15</code>（git tag），<br>当前 G1 版本轨道三源均为 <code>1.2.0</code>，详见 <code>发布记录.md</code>。</p>
+<hr>
+<h2 id="三-需求是怎么进来的">三、需求是怎么进来的<a class="anchor" href="#三-需求是怎么进来的" aria-label="锚点">#</a></h2>
+<p>任务与 Bug 有<strong>机器可读的台账</strong>，不是聊天记录：</p>
+<table><thead><tr><th>台账</th><th>内容</th><th>实测</th></tr></thead><tbody><tr><td><code>.ai/hq/PROGRESS.json</code></td><td>任务：<code>id</code> / 标题 / 优先级 / 状态 / <strong>验收标准</strong></td><td>29 条（todo 18 ｜ doing 3 ｜ done 8）</td></tr><tr><td><code>.ai/hq/BUGS.json</code></td><td>Bug：严重级 / 状态 / 归因</td><td>17 条（closed 8 ｜ open 4 ｜ pending_verify 5）</td></tr><tr><td><code>.khy/feedback/**/requirement-5q.md</code></td><td>需求五问 + <code>source: 用户原话</code></td><td>21 份</td></tr><tr><td><code>.workbuddy/memory/*.md</code></td><td>每日工作笔记（当天做了什么、卡在哪）</td><td>16 个文件</td></tr></tbody></table>
+<p>其中 <strong>29 条由人写下的验收标准</strong>是最硬的一类痕迹：<br>它出现在代码之前，规定了「什么算做完」。逐条原文见 <code>迭代与验收.md</code>。</p>
+<hr>
+<h2 id="四-进入登记材料的代码-人怎么解释-c-x1-c-x2">四、进入登记材料的代码，人怎么解释（C-X1 / C-X2）<a class="anchor" href="#四-进入登记材料的代码-人怎么解释-c-x1-c-x2" aria-label="锚点">#</a></h2>
+<p>判据是<strong>可解释性</strong>，不是生成方式。本仓的可解释性由三样东西支撑：</p>
+<ol><li><strong>层级单一真源</strong> <code>[DESIGN-LAY-005]</code>：L0 <code>kernel/</code> → L6 <code>tools/</code> 的依赖方向由</li></ol>
+<p><code>npm run check:layout</code> 强制，任何一个模块「凭什么能引用另一个」有规则可查。</p>
+<ol><li><strong>规则绑定层</strong> <code>scripts/ruleguard/</code>：94 条规则登记在 <code>RULES-REGISTRY.json</code>，</li></ol>
+<p>82 条有执行器；<code>npm run rules:apply -- &lt;文件&gt;</code> 可直接问「改这个文件适用哪些规则」。</p>
+<ol><li><strong>设计文档</strong> <code>docs/03_DESIGN_设计/</code> 234 份：机制、取舍、被否决的方案都留了字。</li></ol>
+<p>索引见 <code>../02_独创性/设计决策.md</code>。</p>
+<p>第三方与生成物<strong>逐文件剔除</strong>并公开明细（<code>../02_独创性/原创代码规模.md</code>）：<br>kernel 手写层 33,866 行，另 3,912 行 vendor 被排除在原创口径之外。</p>
+<hr>
+<h2 id="五-验收-改完跑什么">五、验收：改完跑什么<a class="anchor" href="#五-验收-改完跑什么" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">npm run rules:gate            <span class="hljs-comment"># PR 档：按登记表派生门成员，逐条执行</span>
+npm run check:layout          <span class="hljs-comment"># 顶层目录层级与依赖方向</span>
+npm run check:copyright       <span class="hljs-comment"># 本底档齐件 + 图片非空</span>
+node scripts/ci/check-agent-rules.js --changed   <span class="hljs-comment"># 四条工程红线</span></code></pre>
+<p>新克隆 / 换机器的自举步骤写在 <code>AGENTS.md</code>「多机协作自举」一节，<br><code>node services/backend/bin/khy.js hq verify</code> 应报 <code>0 error / 0 warning</code>。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../evidence/01_人类贡献/决策记录.html"><div class="dir">← 上一篇</div><div class="ttl">决策记录（C-M4 人的意愿必须留下痕迹）</div></a><a class="next" href="../../evidence/01_人类贡献/人类指令语料.html"><div class="dir">下一篇 →</div><div class="ttl">人类指令语料（需求来源原文）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__="evidence/01_人类贡献/开发过程说明.html";</script>
+<script src="../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

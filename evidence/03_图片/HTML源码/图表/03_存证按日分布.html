@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><style>body{margin:0;background:#fff;color:#111827;font-family:"Microsoft YaHei","Segoe UI",sans-serif;padding:28px 34px}
+h1{font-size:26px;margin:0 0 4px}
+.sub{font-size:14px;color:#4b5563;margin-bottom:20px}
+.src{font-size:12px;color:#6b7280;margin-top:22px;border-top:1px solid #e5e7eb;padding-top:10px;line-height:1.6}
+.bar-row{display:flex;align-items:center;margin:9px 0;font-size:14px}
+.bar-label{width:280px;flex:none;text-align:right;padding-right:12px;color:#374151}
+.bar-track{flex:1;background:#f3f4f6;border-radius:3px;height:26px;position:relative}
+.bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#1d4ed8,#3b82f6)}
+.bar-val{position:absolute;left:calc(100% + 8px);top:4px;font-size:13px;color:#111827;white-space:nowrap}
+.tiles{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.tile{flex:1;min-width:210px;border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;background:#f9fafb}
+.tile .n{font-size:30px;font-weight:700;color:#1d4ed8}
+.tile .k{font-size:13px;color:#374151;margin-top:4px;line-height:1.5}
+.chart{margin:6px 0 2px}
+svg{display:block}
+.tag{display:inline-block;font-size:12px;color:#374151;border:1px solid #d1d5db;border-radius:11px;padding:1px 9px;margin-right:6px}</style></head><body>
+<h1>过程存证的按日分布（每格 = 当天有活动的任务数）</h1>
+<div class="sub">C-M4 第④类痕迹：多轮「提出 → 实现 → 反馈 → 修改」</div>
+<div><span class="tag">活跃日 10 天</span><span class="tag">2026-09-18 → 2026-09-27</span><span class="tag">时间取存证文件 mtime</span></div>
+<div class="chart"><div class="bar-row"><div class="bar-label">2026-09-18</div><div class="bar-track"><div class="bar-fill" style="width:14.14%"></div><div class="bar-val">15</div></div></div>
+<div class="bar-row"><div class="bar-label">2026-09-19</div><div class="bar-track"><div class="bar-fill" style="width:1.89%"></div><div class="bar-val">2</div></div></div>
+<div class="bar-row"><div class="bar-label">2026-09-20</div><div class="bar-track"><div class="bar-fill" style="width:2.83%"></div><div class="bar-val">3</div></div></div>
+<div class="bar-row"><div class="bar-label">2026-09-21</div><div class="bar-track"><div class="bar-fill" style="width:3.77%"></div><div class="bar-val">4</div></div></div>
+<div class="bar-row"><div class="bar-label">2026-09-22</div><div class="bar-track"><div class="bar-fill" style="width:23.56%"></div><div class="bar-val">25</div></div></div>
+<div class="bar-row"><div class="bar-label">2026-09-23</div><div class="bar-track"><div class="bar-fill" style="width:66.92%"></div><div class="bar-val">71</div></div></div>
+<div class="bar-row"><div class="bar-label">2026-09-24</div><div class="bar-track"><div class="bar-fill" style="width:82.00%"></div><div class="bar-val">87</div></div></div>
+<div class="bar-row"><div class="bar-label">2026-09-25</div><div class="bar-track"><div class="bar-fill" style="width:5.66%"></div><div class="bar-val">6</div></div></div>
+<div class="bar-row"><div class="bar-label">2026-09-26</div><div class="bar-track"><div class="bar-fill" style="width:16.97%"></div><div class="bar-val">18</div></div></div>
+<div class="bar-row"><div class="bar-label">2026-09-27</div><div class="bar-track"><div class="bar-fill" style="width:13.20%"></div><div class="bar-val">14</div></div></div></div>
+<div class="src">数据来源：人类贡献度量.反馈存证.按日分布<br>生成命令：<code>node scripts/evidence/render-images.js</code><br>复算命令：<code>node scripts/evidence/collect-contribution.js（第 2/5 段）</code></div>
+</body></html>

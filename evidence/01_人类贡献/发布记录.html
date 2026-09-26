@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: 发布记录.md -->
+<title>发布记录（C-MAT2 软件名称与版本稳定） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../docs/index.html">📘 Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>evidence<span class="sep">›</span>01_人类贡献<span class="sep">›</span>发布记录（C-MAT2 软件名称与版本稳定）</div>
+      <header class="hero reveal"><h1>发布记录（C-MAT2 软件名称与版本稳定）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#发布记录-c-mat2-软件名称与版本稳定">发布记录（C-MAT2 软件名称与版本稳定）</a></li><li class="lvl-2"><a href="#一-三条独立版本轨道-真源-scripts-ci-check-version-sync-js-的-specs-数组">一、三条独立版本轨道（真源 = `scripts/ci/check-version-sync.js` 的 `specs` 数组）</a></li><li class="lvl-2"><a href="#二-发布-tag-与历史重建-如实记录">二、发布 tag 与历史重建（如实记录）</a></li><li class="lvl-2"><a href="#三-changelog-段落-版本段推导的依据">三、CHANGELOG 段落（版本段推导的依据）</a></li><li class="lvl-2"><a href="#四-发布链路-谁自动-谁人工">四、发布链路（谁自动、谁人工）</a></li><li class="lvl-2"><a href="#五-名称一致性-c-mat3-与已知不一致点">五、名称一致性（C-MAT3）与已知不一致点</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="发布记录-c-mat2-软件名称与版本稳定">发布记录（C-MAT2 软件名称与版本稳定）<a class="anchor" href="#发布记录-c-mat2-软件名称与版本稳定" aria-label="锚点">#</a></h1>
+<blockquote><p>本文件只写<strong>仓库里可核到</strong>的发布事实。软著登记表的「版本号」栏现行值是 <strong><code>V1.2.0</code></strong>，<br>取自本文件的 G1 发布轨道现值（人明示「先沿用现在的，只有我说修改了才修改」，见 <code>决策记录.md</code> D-名2）——<br>两者<strong>刻意相等</strong>，因此截图里的版本串与申请表天然一致，无需修图。<br>但登记值本身的真源仍是 <code>[MGMT-OTHER-006]</code> §一，不是本文件；本文件若与它冲突，以 <code>[MGMT-OTHER-006]</code> 为准。</p>
+<p>⚠ <strong><code>1.2.0</code> 尚未打 tag</strong>（实测最新为 <code>v1.1.15</code>，见 §二）。登记口径把「首次发表日期」锚在<br><strong>首个 wheel 的上传日</strong>（<code>[MGMT-OTHER-006]</code> §一），不是 tag；发表状态与版本号是两个独立字段，<br>官方并无「首次登记必须 V1.0」的要求。故此处只登记一个可核事实：版本号栏与 tag 轨道当前不同步，<br>若要在递交前补发 <code>v1.2.0</code>，走 <code>PROCESS-005</code>，由人决定。</p></blockquote>
+<hr>
+<h2 id="一-三条独立版本轨道-真源-scripts-ci-check-version-sync-js-的-specs-数组">一、三条独立版本轨道（真源 = <code>scripts/ci/check-version-sync.js</code> 的 <code>specs</code> 数组）<a class="anchor" href="#一-三条独立版本轨道-真源-scripts-ci-check-version-sync-js-的-specs-数组" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>轨道</th><th>含义</th><th>当前值</th><th>校验源</th></tr></thead><tbody><tr><td><strong>G1</strong></td><td>主包 <code>khy-os</code>（pip + npm 渠道）</td><td><strong>1.2.0</strong></td><td><code>pyproject.toml</code>、<code>packaging/npm/package.json</code>、<code>services/backend/package.json</code>、<code>packaging/modules/modules.json</code></td></tr><tr><td><strong>G2</strong></td><td>ai-backend 生态（随 wheel 捆绑发布）</td><td>1.6.5</td><td><code>services/ai-backend/package.json</code>、<code>platform/packages/shared/package.json</code></td></tr><tr><td><strong>G3</strong></td><td>浏览器 UI 共享包及其消费者</td><td>0.1.0</td><td><code>platform/packages/ui-shared/package.json</code> 与两个前端的依赖声明</td></tr></tbody></table>
+<p>G1/G2 <strong>刻意不同</strong>（1.2.0 vs 1.6.5）：两条发布单元节奏不同，这不是漂移。<br>规则见 <code>[DESIGN-SEMVER-002]</code>，强制入口：</p>
+<pre><code class="language-bash">node scripts/ci/check-version-sync.js     <span class="hljs-comment"># 组内必须完全一致，组间允许不同</span></code></pre>
+<p>复算：</p>
+<pre><code class="language-bash">node -e <span class="hljs-string">&quot;console.log(require(&#x27;./services/backend/package.json&#x27;).version)&quot;</span>
+grep -n <span class="hljs-string">&#x27;^version&#x27;</span> pyproject.toml</code></pre>
+<hr>
+<h2 id="二-发布-tag-与历史重建-如实记录">二、发布 tag 与历史重建（如实记录）<a class="anchor" href="#二-发布-tag-与历史重建-如实记录" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">git for-each-ref --format=<span class="hljs-string">&#x27;%(refname:short) %(creatordate:short)&#x27;</span> refs/tags</code></pre>
+<table><thead><tr><th>tag</th><th>创建日期</th><th>性质</th></tr></thead><tbody><tr><td><code>v1.1.8</code> / <code>v1.1.9</code> / <code>v1.1.12</code> / <code>v1.1.14</code> / <code>v1.1.15</code></td><td>2026-09-27</td><td>发布 tag</td></tr><tr><td><code>backup-pre-rebuild-20260924</code></td><td>2026-09-24</td><td><strong>历史重建前的工作区备份</strong></td></tr><tr><td><code>rebuild-57-verified</code></td><td>2026-09-27</td><td>重建后 57 项核验通过的标记</td></tr><tr><td><code>119-plumbing-20260918</code>、<code>stash-recovered-shizuku-*</code></td><td>2026-09-18</td><td>工程标记 / stash 恢复留档</td></tr></tbody></table>
+<p><strong>必须一起说明的事实</strong>：<code>main</code> 是 2026-09-24 前后<strong>被重建的短历史</strong>（62 个提交），<br>完整开发过程（920 个提交、36 个分支）保留在其余分支与上述备份 tag 上。<br>引用提交数时必须指明口径，两个口径都记在<br><code>../04_机器可读/contribution-metrics.json</code> 的 <code>人类贡献度量.git.全分支口径</code>。</p>
+<hr>
+<h2 id="三-changelog-段落-版本段推导的依据">三、CHANGELOG 段落（版本段推导的依据）<a class="anchor" href="#三-changelog-段落-版本段推导的依据" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">grep -n <span class="hljs-string">&#x27;^## &#x27;</span> CHANGELOG.md</code></pre>
+<table><thead><tr><th>段</th><th>位置</th><th>类型</th></tr></thead><tbody><tr><td><code>1.2.0</code></td><td>CHANGELOG.md:8</td><td><code>### Fixed</code> + <code>### Added</code> → MINOR</td></tr><tr><td><code>1.1.14</code></td><td>:53</td><td>修复段</td></tr><tr><td><code>1.1.12</code></td><td>:118</td><td>修复段</td></tr><tr><td><code>1.1.9</code></td><td>:139</td><td>修复段</td></tr><tr><td><code>1.1.8</code></td><td>:241</td><td>修复段</td></tr></tbody></table>
+<p>本仓的版本段是<strong>可机判</strong>的：<code>### Added</code> → MINOR，<code>### Changed/Removed/Security</code> → MAJOR/MINOR，<br>仅 <code>### Fixed</code> → PATCH（<code>[DESIGN-SEMVER-002]</code>）。先写 CHANGELOG 段、再 bump 版本号，<br>由 <code>changelog-new.js --check</code> 以 <code>pyproject.toml</code> 为锚校验。</p>
+<hr>
+<h2 id="四-发布链路-谁自动-谁人工">四、发布链路（谁自动、谁人工）<a class="anchor" href="#四-发布链路-谁自动-谁人工" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>环节</th><th>触发</th><th>是否人工点头</th></tr></thead><tbody><tr><td>写 CHANGELOG 段 → bump 三源版本号</td><td>人决定发版</td><td>✅ 人</td></tr><tr><td>推 <code>main</code></td><td>人执行 commit/push（红线 R1 禁止 AI 自动提交）</td><td>✅ 人</td></tr><tr><td>推 <code>vX.Y.Z</code> tag</td><td>人执行</td><td>✅ 人（<strong>唯一一次点头</strong>）</td></tr><tr><td>tag 之后：测试→版本校验→release-gate→构建→签名→SBOM→发包→Release 资产</td><td>CI 自动</td><td>❌ 不再人工</td></tr><tr><td>Gitee 镜像同步</td><td>推 main / tag 自动</td><td>❌</td></tr></tbody></table>
+<p>四条硬阻断（<code>check-version-sync</code>、<code>changelog-new --check</code>、<code>release-gate.js</code>、tag 与 <code>pyproject.toml</code> 相等）<br><strong>禁止改成 <code>continue-on-error</code></strong>。完整规则见 <code>AGENTS.md</code>「何时 bump、推哪里、什么自动触发」与 <code>[DESIGN-SEMVER-002]</code>。</p>
+<hr>
+<h2 id="五-名称一致性-c-mat3-与已知不一致点">五、名称一致性（C-MAT3）与已知不一致点<a class="anchor" href="#五-名称一致性-c-mat3-与已知不一致点" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>位置</th><th>当前文本</th><th>状态</th></tr></thead><tbody><tr><td>登记用软件全称</td><td>见 <code>D:/Portable/软著交付/Khy-OS/</code> 申请表（改名属阶段 2，尚未执行）</td><td>⏳ 待定</td></tr><tr><td><code>apps/ai-frontend</code> 浏览器内标题</td><td><code>KHY AI 管理平台</code></td><td>⚠ 与全称不一致</td></tr><tr><td><code>apps/khyos-desktop</code> 窗口标题</td><td><code>KhyOS Desktop</code></td><td>⚠ 与全称不一致</td></tr><tr><td><code>.ai/hq/PROGRESS.json</code> 的 <code>khy_os_version</code></td><td><code>1.1.11</code>（<code>last_updated</code> 2026-09-23）</td><td>⚠ 台账字段滞后于 G1 的 <code>1.2.0</code>，<code>khy hq status</code> 打印的就是它</td></tr></tbody></table>
+<p>这三条不一致<strong>在图片清单里逐条标注为「过程证据，不得作登记材料截图」</strong>，<br>改名（阶段 2）后须重拍界面截图。第三项属台账字段维护，不影响包版本正确性<br>（<code>check-version-sync.js</code> 的校验面不含该字段）。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../evidence/01_人类贡献/迭代与验收.html"><div class="dir">← 上一篇</div><div class="ttl">迭代与验收（不是一次成型的证据）</div></a><a class="next" href="../../evidence/01_人类贡献/决策记录.html"><div class="dir">下一篇 →</div><div class="ttl">决策记录（C-M4 人的意愿必须留下痕迹）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__="evidence/01_人类贡献/发布记录.html";</script>
+<script src="../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
