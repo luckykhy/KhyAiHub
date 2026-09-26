@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [INIT-PRD-004] 用户定位与增长路线.md -->
+<title>[INIT-PRD-004] 用户定位与增长路线 —— 主攻用户、价值主张与三阶段路线 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>01_INIT_立项<span class="sep">›</span>INIT-PRD<span class="sep">›</span>[INIT-PRD-004] 用户定位与增长路线 —— 主攻用户、价值主张与三阶段路线</div>
+      <header class="hero reveal"><h1>[INIT-PRD-004] 用户定位与增长路线 —— 主攻用户、价值主张与三阶段路线</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#init-prd-004-用户定位与增长路线-主攻用户-价值主张与三阶段路线">[INIT-PRD-004] 用户定位与增长路线 —— 主攻用户、价值主张与三阶段路线</a></li><li class="lvl-2"><a href="#〇-一句话">〇、一句话</a></li><li class="lvl-2"><a href="#一-为什么现在必须定这个">一、为什么现在必须定这个</a></li><li class="lvl-2"><a href="#二-用户群体-四层-只主攻一层">二、用户群体：四层，只主攻一层</a></li><li class="lvl-2"><a href="#三-凭什么需要-四条真实理由-一条反例">三、「凭什么需要」：四条真实理由 + 一条反例</a></li><li class="lvl-2"><a href="#四-40-倍效率论-从口号变成三把尺子">四、40 倍效率论：从口号变成三把尺子</a></li><li class="lvl-2"><a href="#五-三阶段路线-出口条件制-不达标不进下一阶段">五、三阶段路线（出口条件制，不达标不进下一阶段）</a></li><li class="lvl-3"><a href="#阶段-a-0-1-约-4-6-周-把-订阅套利终端-做实">阶段 A（0→1，约 4~6 周）：把「订阅套利终端」做实</a></li><li class="lvl-3"><a href="#阶段-b-1-10-约-2-3-个月-放大-随身性">阶段 B（1→10，约 2~3 个月）：放大「随身性」</a></li><li class="lvl-3"><a href="#阶段-c-10-100-3-6-个月-垂直纵深-验证-平台-心智">阶段 C（10→100，3~6 个月）：垂直纵深，验证「平台」心智</a></li><li class="lvl-3"><a href="#恒定线-产能封顶-30-与停做清单">恒定线（产能封顶 30%）与停做清单</a></li><li class="lvl-2"><a href="#七-与既有文档的关系-真源归属">七、与既有文档的关系（真源归属）</a></li><li class="lvl-2"><a href="#八-定位的代码化-2026-09-23-t-029-done">八、定位的代码化（2026-09-23，T-029 done）</a></li><li class="lvl-2"><a href="#附录-复现命令">附录 · 复现命令</a></li><li class="lvl-2"><a href="#变更记录">变更记录</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- 文档分类: INIT-PRD-004 | 阶段: 立项 | 原路径: 新建 --&gt;</p>
+<h1 id="init-prd-004-用户定位与增长路线-主攻用户-价值主张与三阶段路线">[INIT-PRD-004] 用户定位与增长路线 —— 主攻用户、价值主张与三阶段路线<a class="anchor" href="#init-prd-004-用户定位与增长路线-主攻用户-价值主张与三阶段路线" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>定位</strong>：回答三个此前全仓无真源的问题——<strong>khy-os 的用户是谁、用户凭什么需要它、接下来按什么顺序做</strong>。<br><strong>性质</strong>：定位层文档，与 <span class="deadlink" title="目标不存在：INIT-PRD-002%20项目-定位.html"><code>INIT-PRD-002</code></span>（对外叙事）、<span class="deadlink" title="目标不存在：INIT-PRD-003%20KhyOS%20的核心-定位口径单一真源.html"><code>INIT-PRD-003</code></span>（核心口径收口）互补：002 讲「我们是什么」，003 讲「核心是哪几块」，<strong>本文讲「为谁做、凭什么、先做什么」</strong>。<br><strong>证据基线</strong>：2026-09-23。PyPI/npm 下载数为当日实拉（复现命令见附录）；路线图任务面以 <code>.ai/hq/PROGRESS.json</code> 24 条任务当日读数为准。<br><strong>状态</strong>：定稿（2026-09-23）。本文不新增规范、不新增守卫；排期裁决真源仍是 <code>PROCESS-102</code>，本文的三阶段是它在<strong>用户价值维度的排序输入</strong>。</p></blockquote>
+<hr>
+<h2 id="〇-一句话">〇、一句话<a class="anchor" href="#〇-一句话" aria-label="锚点">#</a></h2>
+<p><strong>khy-os 的滩头用户是「中文 AI 重度用户——手里攥着 2~5 家 AI 订阅、成本敏感、想要一个终端吃遍所有 AI 的超级个体」；获客主张不是「又一个 Claude Code」，而是 Claude Code 结构上给不了的四件事：订阅套利（省钱）、随身性（微信/手机）、本土化、数据私有。</strong></p>
+<p>增长路线三阶段：<strong>A 收窄（订阅套利终端做实）→ B 放大（随身性）→ C 纵深（垂直场景验证「平台」心智）</strong>。维护类任务产能封顶 30%（见 §四）。</p>
+<hr>
+<h2 id="一-为什么现在必须定这个">一、为什么现在必须定这个<a class="anchor" href="#一-为什么现在必须定这个" aria-label="锚点">#</a></h2>
+<p>2026-09-23 对 <code>.ai/hq/PROGRESS.json</code> 全 24 条任务的盘点结论：</p>
+<table><thead><tr><th>任务面</th><th>条目</th><th>占比</th></tr></thead><tbody><tr><td><strong>内视型</strong>（拆文件/提速/lint/文档一致性/多机协作——服务维护者效率）</td><td>T-002/003/004/005/012/016~021/006</td><td>~67%</td></tr><tr><td><strong>用户可见型</strong>（微信通道/手机 APK/四端同步/KeyManager/运行时管理）</td><td>T-001/008/009/013/014/015/022/023</td><td>~33%</td></tr></tbody></table>
+<p><strong>诊断</strong>：项目已具备「为建造者建造」的完整闭环（规则门、验收清算门、HQ 协作、24 条任务账本），但<strong>没有一篇文档回答「用户是谁」</strong>——全 docs 检索「目标用户/用户画像/北极星/产品定位」零命中。产能七成投向内视，说明排序缺了「用户价值」这一维。本文补上这个真源。</p>
+<hr>
+<h2 id="二-用户群体-四层-只主攻一层">二、用户群体：四层，只主攻一层<a class="anchor" href="#二-用户群体-四层-只主攻一层" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>层</th><th>画像</th><th>凭什么用</th><th>裁决</th></tr></thead><tbody><tr><td><strong>S1 中文多订阅重度用户</strong></td><td>手里 2~5 家 AI 订阅（Claude/Codex/Cursor/Kiro/Trae/国内模型），月花 ¥200~800，Windows 便携党，成本敏感</td><td>一个 CLI 吃遍所有订阅 + 自动故障转移 + 人民币计价省钱报告</td><td><strong>主攻，滩头阵地（本文全部分析围绕它）</strong></td></tr><tr><td>S2 量化爱好者</td><td>想用 AI 辅助做策略研究/回测的散户</td><td>khyquant 内置应用</td><td>第二阶段纵深，不当第一卖点（003 已裁决 khyquant=示例应用）</td></tr><tr><td>S3 想要「随身 AI」的个人</td><td>希望在微信/手机上随时使唤自己的 agent</td><td>微信 ilink + 手机 APK + 四端同步</td><td>第二阶段放大（独有 wow 点）</td></tr><tr><td>S4 私有部署者</td><td>内网/隐私敏感、想自托管 AI 工作台</td><td>便携版、数据全本地、source-available</td><td>顺带承接，不专门投入</td></tr></tbody></table>
+<p><strong>明确不是用户</strong>：被「手写 C 内核」吸引来的人。内核是招牌与练兵场（003 §4.1 已裁决其为实验分支），保持叙事资产地位、零工程投入。</p>
+<p><strong>S1 为什么是滩头</strong>：AI 重度用户的剩余瓶颈不再是「AI 会不会写」，而是<strong>订阅太贵、额度分散、网络不稳、换机环境重配、离开电脑就使唤不了 agent</strong>。这些恰是 khy-os 已有资产的射程，也恰是 Claude Code 的结构盲区（它永远不会帮你接 Cursor 的订阅）。</p>
+<p><strong>基线数字（2026-09-23 实拉，作为一切增长验证的对照组）</strong>：</p>
+<table><thead><tr><th>渠道</th><th>指标</th><th>数值</th></tr></thead><tbody><tr><td>PyPI（pypistats.org）</td><td>近一日 / 近一周 / 近一月下载</td><td>5 / 92 / 173</td></tr><tr><td>npm（api.npmjs.org）</td><td>近一周 / 近一月下载</td><td>12 / 61</td></tr></tbody></table>
+<blockquote><p>口径说明：PyPI 含镜像去重前口径（pypistats <code>without_mirrors</code> 与 total 差异大），npm 为 point 口径。基线的意义不在绝对值大小，在于<strong>此后任何增长动作都必须能用这组数字验证</strong>。</p></blockquote>
+<hr>
+<h2 id="三-凭什么需要-四条真实理由-一条反例">三、「凭什么需要」：四条真实理由 + 一条反例<a class="anchor" href="#三-凭什么需要-四条真实理由-一条反例" aria-label="锚点">#</a></h2>
+<p>对照基线定为「用户直接用 Claude Code」，逐条过：</p>
+<ol><li><strong>省钱是硬通货</strong>。网关熔断/故障转移 + 19 个 <code>*Adapter.js</code>（含大量订阅态 relay 型适配器），等于「订阅额度自动套利」；<code>tokenUsageService</code> 已按人民币计价，只差最后一公里：<strong>「直连官方价 vs 实际花费 = 省了 ¥X」的月度报告</strong>。这是唯一能用<strong>钱</strong>而非体验证明的差异点。</li><li><strong>随身性是独有 wow</strong>。微信里发一句话、agent 干完活回来汇报——当前主流工具没有这个入口。T-001 完成即天然传播素材。</li><li><strong>本土化</strong>：中文/拼音别名（<code>aliases.js</code>）、中文错误消息（AGENTS.md 规则 2.2 错误模板）、国内模型优先、国内镜像。</li><li><strong>私有与便携</strong>：数据全本地、便携版、<code>khy doctor</code>、source-available。对 S4 是必要条件，对 S1 是加分项。</li></ol>
+<p><strong>反例（不作为获客卖点）</strong>：「平台/操作系统」心智。它是<strong>留存</strong>故事（用顺了离不开），不是<strong>获客</strong>故事（新用户不会为「可装 App 的基座」付费）。「OS」一词留给内核与愿景；获客话术必须落在上述四条。</p>
+<p><strong>一句话定位（README 首屏候选）</strong>：</p>
+<blockquote><p><strong>khy-os：给中文 AI 重度用户的一台「AI 主机」——一个终端吃遍你所有 AI 订阅，自动省钱、自动容错；微信和手机上，随时使唤它。</strong></p></blockquote>
+<hr>
+<h2 id="四-40-倍效率论-从口号变成三把尺子">四、40 倍效率论：从口号变成三把尺子<a class="anchor" href="#四-40-倍效率论-从口号变成三把尺子" aria-label="锚点">#</a></h2>
+<p>40x 的正确用法不是宣传语，是<strong>排期过滤器</strong>。三个机制：</p>
+<ol><li><strong>任务登记加一维 <code>user-delta</code></strong>：PROCESS-102 已有 cod/conf/size 三字段（hqStore 已实现校验），再加一个「这活让哪类用户的什么动作，从 X 分钟/¥Y 变成多少」。填不出来（只能说「代码更整洁」）的任务自动归维护预算线，<strong>封顶 30% 产能</strong>。</li><li><strong>40x 自我记账</strong>：作者本人是 S1 的 0 号用户。把「本月 khy 替我省了多少时间/钱」按月记入 CHANGELOG 或月报——40x 不是宣称出来的，是<strong>记出来的</strong>，且是现成营销素材。</li><li><strong>一票否决判定</strong>：任何功能若唯一立项理由是「别人有所以我们也要有」，40x 检验不过——砍。现有反例：横向继续加第 20 个 adapter（除非种子用户的订阅真的需要）。</li></ol>
+<blockquote><p>落地注：<code>user-delta</code> 字段的登记位置与机器校验属独立一轮工作（改 <code>hqStore.validateTask</code> + <code>PROGRESS.json</code> schema + 提示词模板），本文只登记语义，不擅自改命令面。</p></blockquote>
+<hr>
+<h2 id="五-三阶段路线-出口条件制-不达标不进下一阶段">五、三阶段路线（出口条件制，不达标不进下一阶段）<a class="anchor" href="#五-三阶段路线-出口条件制-不达标不进下一阶段" aria-label="锚点">#</a></h2>
+<h3 id="阶段-a-0-1-约-4-6-周-把-订阅套利终端-做实">阶段 A（0→1，约 4~6 周）：把「订阅套利终端」做实<a class="anchor" href="#阶段-a-0-1-约-4-6-周-把-订阅套利终端-做实" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>#</th><th>动作</th><th>对应资产/任务</th></tr></thead><tbody><tr><td>A1</td><td><code>khy onboard</code> 一键纳管：探测本机已有 Claude/Codex/Cursor/Kiro/Trae 登录态与 key，一键接入网关</td><td><strong>T-023 KeyManager（done，2026-09-23 过验收清算门）就是这条的钥匙</strong>；<code>codexCredentialProbe.js</code>/<code>ccEnvAdoptPolicy.js</code>/<code>ideDetector.js</code> 已是地基</td></tr><tr><td>A2</td><td>月度省钱报告：直连官方价 vs 实际花费，人民币结算</td><td>tokenUsageService 人民币计价已有</td></tr><tr><td>A3</td><td>首跑 10 分钟承诺：<code>pip install khy-os &amp;&amp; khy</code> 后 10 分钟内跑通第一次对话；README 首屏从架构语言改写成用户语言</td><td><code>khy preflight</code>/<code>khy doctor</code> 已有；定位话术见 §三</td></tr><tr><td>A4</td><td>种子用户 10~30 人（V2EX/知乎/即刻/linux.do/微信群），只问一个问题：「你为什么留下/卸载？」</td><td>答案按 RUNTIME-008 五问格式落档，<strong>必须带 <code>source: 用户原话</code></strong></td></tr></tbody></table>
+<p><strong>出口条件</strong>：① ≥10 个非本人用户周留存，且留存理由落在「省钱/中文/便携」三关键词内；② 增长以 §二基线数字为对照。</p>
+<h3 id="阶段-b-1-10-约-2-3-个月-放大-随身性">阶段 B（1→10，约 2~3 个月）：放大「随身性」<a class="anchor" href="#阶段-b-1-10-约-2-3-个月-放大-随身性" aria-label="锚点">#</a></h3>
+<ul><li><strong>B1</strong> 收尾 T-001 微信 ilink 闭环 → 拍「在微信里使唤 khy」演示视频（全项目最便宜的获客素材）。</li><li><strong>B2</strong> T-022 四端同步<strong>砍成最小闭环</strong>：先只做「手机 APK ↔ 桌面端同一会话续聊」，不一上来铺四端。APK 骨架 T-013 保留，T-014/15 顺延。</li><li><strong>B3</strong> 网关实盘透明化：<code>khy gateway status</code> 显示各家近 7 天成功率/延迟/切换次数——故障转移从「有」变成「用户看得见、敢托付」。</li><li><strong>B4</strong> 插件故事最小化：现有 <code>extensions/</code> 约定（删目录即卸载）包装成「3 行写一个 khy 插件」教程，<strong>不做插件市场</strong>。</li></ul>
+<p><strong>出口条件</strong>：微信通道被种子用户日常使用；手机续聊跑通；「哪家稳/哪家省」数据可截屏传播。</p>
+<h3 id="阶段-c-10-100-3-6-个月-垂直纵深-验证-平台-心智">阶段 C（10→100，3~6 个月）：垂直纵深，验证「平台」心智<a class="anchor" href="#阶段-c-10-100-3-6-个月-垂直纵深-验证-平台-心智" aria-label="锚点">#</a></h3>
+<ul><li><strong>C1</strong> khyquant 作为「基座+内置应用」模式的样板间：若 S1 用户里长不出 10 个量化日活，「AI OS 能装 App」叙事即证伪——<strong>这是整个 OS 心智的试金石</strong>。</li><li><strong>C2</strong> 运行时管理 T-008/009（网页端装 node/jdk 环境）排入此阶段，强化「这台机器管一切」心智。</li><li><strong>C3</strong> 内核线转纯品牌内容（视频/文章），不占工程产能。</li></ul>
+<h3 id="恒定线-产能封顶-30-与停做清单">恒定线（产能封顶 30%）与停做清单<a class="anchor" href="#恒定线-产能封顶-30-与停做清单" aria-label="锚点">#</a></h3>
+<ul><li><strong>恒定线</strong>：质量债（T-016~021 重构按既有计划）、版本/发布纪律。地基不必天天浇。</li><li><strong>建议停做/降级</strong>：T-006（多机 N 机协作扩张——作者的问题不是用户的问题，降 P3）；T-019（死功能盘点，P3 保持）；横向新增 adapter（冻结，除非种子用户点名）。</li></ul>
+<hr>
+<h2 id="七-与既有文档的关系-真源归属">七、与既有文档的关系（真源归属）<a class="anchor" href="#七-与既有文档的关系-真源归属" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>问题</th><th>真源</th></tr></thead><tbody><tr><td>「我们是什么」（对外叙事）</td><td>[<code>INIT-PRD-002</code>]</td></tr><tr><td>「核心是哪几块」（A⊂B 收口）</td><td>[<code>INIT-PRD-003</code>]</td></tr><tr><td><strong>「为谁做、凭什么、先做什么」（用户排序与增长节奏）</strong></td><td><strong>本文</strong></td></tr><tr><td>「现在最该做哪条任务」（档内裁决）</td><td><code>PROCESS-102</code>（本文三阶段是其排序输入）</td></tr></tbody></table>
+<p>本文不推翻 002/003 的任何口径；khyquant=内置示例应用、内核=实验分支的裁决沿用 003。</p>
+<hr>
+<h2 id="八-定位的代码化-2026-09-23-t-029-done">八、定位的代码化（2026-09-23，T-029 done）<a class="anchor" href="#八-定位的代码化-2026-09-23-t-029-done" aria-label="锚点">#</a></h2>
+<p>定位不是文档专属品——<strong>话术真源已落入代码，产品面全部同源渲染</strong>：</p>
+<table><thead><tr><th>落点</th><th>作用</th></tr></thead><tbody><tr><td><code>services/backend/src/constants/positioning.js</code></td><td><strong>定位话术单一真源</strong>（tagline/一句话/四主张/人群/OS 释义/doc 指针），纯叶子零 IO</td></tr><tr><td><code>services/backend/src/cli/handlers/about.js</code></td><td><strong><code>khy about</code></strong>（别名 <code>关于</code>/<code>guanyu</code>，自注册命令）：一屏回答「为谁做/凭什么/OS 何来」</td></tr><tr><td><code>bannerDataService.js</code> / <code>formatters.js</code> / <code>repl/startupHeader.js</code></td><td>经典横幅三条路径（共享数据服务/全横幅/盒式首屏）第二行渲染 tagline</td></tr><tr><td><code>tui/ink-components/WelcomeBanner.js</code></td><td>TUI 横幅版本行下渲染 tagline（<code>ROWS_BEFORE_VERSION=0</code> 契约不受影响）</td></tr><tr><td><code>cli/tui/utils/ccBrand.js</code></td><td><code>tagline</code>/<code>welcomeSubtitle</code> 改取自定位真源——品牌串不再有两份口径，BootScreen/CcLogo 链式跟随</td></tr><tr><td><code>services/backend/tests/positioning.test.js</code></td><td>锁定不变式：形状完整/四主张恒在/品牌链同源（<code>logoArt.TAGLINE === BRAND.tagline === POSITIONING.tagline</code>）/渲染面可见/manifest 合法</td></tr></tbody></table>
+<p><strong>「OS」之名的代码映射</strong>（<code>khy about</code> 直接对外讲的四层栈）：</p>
+<ul><li><code>kernel</code> — 手写 C 内核（实验分支，QEMU 可引导，<code>khy os</code>）；</li><li><code>runtime</code> — 壳 → 漏斗 → 网关（不可卸载核，模型调用即系统调用，[INIT-PRD-003] 口径）；</li><li><code>apps</code> — ai-frontend / 桌面端 / 手机端 / khyquant（可增删）；</li><li><code>extensions</code> — 一个目录一个拓展，删目录即卸载。</li></ul>
+<p>即：<strong>khy-os 的 OS = 统一收口的运行时（内核类比）+ 可增删的应用/拓展单元（生态类比）</strong>，这两点在代码结构里本就成立，<code>khy about</code> 只是把它们说给用户听。</p>
+<hr>
+<h2 id="附录-复现命令">附录 · 复现命令<a class="anchor" href="#附录-复现命令" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-comment"># PyPI 基线（近一日/周/月）</span>
+curl -s <span class="hljs-string">&quot;https://pypistats.org/api/packages/khy-os/recent&quot;</span>
+<span class="hljs-comment"># npm 基线（近一周/月）</span>
+curl -s <span class="hljs-string">&quot;https://api.npmjs.org/downloads/point/last-week/@khy-os/khy-os&quot;</span>
+curl -s <span class="hljs-string">&quot;https://api.npmjs.org/downloads/point/last-month/@khy-os/khy-os&quot;</span>
+
+<span class="hljs-comment"># 任务面盘点（内视/用户可见占比）</span>
+node services/backend/bin/khy.js hq status</code></pre>
+<hr>
+<h2 id="变更记录">变更记录<a class="anchor" href="#变更记录" aria-label="锚点">#</a></h2>
+<ul><li>2026-09-23：初版。定滩头用户 S1 与四层模型；四条价值主张与一条反例；40x 三把尺子（user-delta 语义登记，实现另轮）；A/B/C 三阶段与出口条件；PyPI/npm 基线实拉入档。</li><li>2026-09-23（同日二批）：新增 §八「定位的代码化」（T-029 done）——positioning 真源模块、<code>khy about</code>（关于/guanyu）、四条横幅路径同源渲染、OS 之名的代码映射；原 §六 改号 §七。</li></ul>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../docs/01_INIT_立项/INIT-PRD/[INIT-PRD-003] KhyOS 的核心-定位口径单一真源.html"><div class="dir">← 上一篇</div><div class="ttl">[INIT-PRD-003] KhyOS 的核心 —— 定位口径单一真源</div></a><a class="next" href="../../../docs/01_INIT_立项/INIT-PRD/[INIT-PRD-005] 市场立足点与竞品格局.html"><div class="dir">下一篇 →</div><div class="ttl">[INIT-PRD-005] 市场立足点与竞品格局 —— 七家在场者面前的定位裁决</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../";window.__KHY_CUR__="docs/01_INIT_立项/INIT-PRD/[INIT-PRD-004] 用户定位与增长路线.html";</script>
+<script src="../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
