@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-ARCH-157] 文件修改红绿diff三端统一规格.md -->
+<title>[DESIGN-ARCH-157] 文件修改红绿 diff 三端统一规格 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>[DESIGN-ARCH-157] 文件修改红绿 diff 三端统一规格</div>
+      <header class="hero reveal"><h1>[DESIGN-ARCH-157] 文件修改红绿 diff 三端统一规格</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-157-文件修改红绿-diff-三端统一规格">[DESIGN-ARCH-157] 文件修改红绿 diff 三端统一规格</a></li><li class="lvl-2"><a href="#0-一句话结论">0. 一句话结论</a></li><li class="lvl-3"><a href="#0-1-病灶总表-实测-file-line-非推测">0.1 病灶总表（实测 file:line，非推测）</a></li><li class="lvl-2"><a href="#1-规格架构-唯一真源">1. 规格架构（唯一真源）</a></li><li class="lvl-3"><a href="#1-2-主门控与回退">1.2 主门控与回退</a></li><li class="lvl-2"><a href="#2-两项视觉裁决-用户-2026-09-26-选定">2. 两项视觉裁决（用户 2026-09-26 选定）</a></li><li class="lvl-2"><a href="#3-实施四刀-每刀独立可回退-顺序-a-b-c-d-可并行">3. 实施四刀（每刀独立可回退，顺序 A→B→C，D 可并行）</a></li><li class="lvl-3"><a href="#3-1-守卫-s1-观察者档起步-遵守-process-008">3.1 守卫（S1 观察者档起步，遵守 `PROCESS-008`）</a></li><li class="lvl-2"><a href="#4-非目标-本轮不做">4. 非目标（本轮不做）</a></li><li class="lvl-2"><a href="#5-变更记录">5. 变更记录</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="design-arch-157-文件修改红绿-diff-三端统一规格">[DESIGN-ARCH-157] 文件修改红绿 diff 三端统一规格<a class="anchor" href="#design-arch-157-文件修改红绿-diff-三端统一规格" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>状态</strong>：已采纳（2026-09-26 用户确认「先设计成文档，然后开始实施」；两项视觉裁决见 §2）<br><strong>定位</strong>：本文件管「一次文件修改的红/绿 diff 在界面上<strong>长什么样</strong>」，是 TUI 工具卡片 / 经典 REPL 回显 / 审批框预览 / <code>ui/diffViewer</code> 四个消费面的视觉契约单一真源。<br>「一行的头行怎么写」以 <code>[DESIGN-ARCH-155]</code> 为准（本规范只管 diff 详情体，即其 L2 层的 ±行部分）；TUI 布局/键位/门控数量仍以 <code>[DESIGN-ARCH-102]</code> 为准。<br><strong>范围</strong>：新增 <code>services/backend/src/cli/diffSpec.js</code>、新增 <code>services/backend/src/cli/writeDiffRows.js</code>、修改 <code>cli/tui/ink-components/ToolLines.js</code>、<code>cli/repl/toolOutputRender.js</code>、<code>cli/diffRenderer.js</code>、<code>cli/aiRenderer.js</code>、<code>cli/ui/diffViewer.js</code>、<code>services/editDiffPreview.js</code>（仅引用改路径）<br><strong>上游依赖</strong>：零新增第三方依赖；复用既有叶子 <code>diffGutter.js</code> / <code>previewOverflowMarker.js</code> / <code>editStatLine.js</code> / <code>wordDiff.js</code> / themeRegistry。<br><strong>模板合规</strong>：非借鉴类改动，B-P2 七字段按体例「不适用」——全文只复用本仓既有模块，无外部项目借鉴。<br><strong>篇幅说明</strong>：约 150 行，在 <code>[DESIGN-DOC-001]</code> §12 预算内。</p></blockquote>
+<hr>
+<h2 id="0-一句话结论">0. 一句话结论<a class="anchor" href="#0-一句话结论" aria-label="锚点">#</a></h2>
+<p>diff 的<strong>计算</strong>早已统一（<code>diffRenderer.computeStructuredDiffHunks</code> 是 LCS/hunk/±计数的唯一引擎），但 diff 的<strong>画法</strong>散在四份实现里：颜色有 5 份真源、折叠账本两份、gutter 基准两套、词级高亮三种默认值、色条宽度两种形态。本规范把「画法」收敛为：<strong>一张 token 表（<code>diffSpec.js</code>）+ 一份行模型（<code>writeDiffRows.js</code>）+ 两个薄渲染器（ink / chalk）</strong>，四端消费同一 rows，只保留渲染技术差异。</p>
+<h3 id="0-1-病灶总表-实测-file-line-非推测">0.1 病灶总表（实测 file:line，非推测）<a class="anchor" href="#0-1-病灶总表-实测-file-line-非推测" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>#</th><th>病灶</th><th>位置</th><th>后果</th></tr></thead><tbody><tr><td>D1</td><td>颜色 5 份真源：主题 JSON 有完整 diff 色板（<code>diffAdded</code>/<code>diffRemoved</code>/<code>diffAddedWord</code>/<code>diffRemovedWord</code>），但其余各端各自为政</td><td><code>cli/themes/*.json</code>（正源）；<code>cli/aiRenderer.js:17-20</code>（THEME 字面量）；<code>cli/repl/toolOutputRender.js:77,100</code>（裸写 <code>#225C2B</code>/<code>#7A2936</code>，完全绕过主题系统）；<code>ToolLines.js</code>（<code>DIFF_ADD_BG</code>/<code>DIFF_DEL_BG</code>/<code>*_WORD_BG</code> 常量）；<code>cli/ui/diffViewer.js:276-279</code>（又一份消费）</td><td>切 solarized/ocean/sunset 主题时三端漂移：REPL 预览永不换色，TUI 与 diffViewer 换色不同步</td></tr><tr><td>D2</td><td>行模型只有 TUI 有</td><td><code>buildWriteDiffRows</code>/<code>buildShellDiffRows</code> 住在 <code>ToolLines.js:406,540</code>；REPL 的 <code>maybeRenderWriteDiff</code>（<code>toolOutputRender.js:20-117</code>）自己另实现新建/删除文件三分支</td><td>每条规则要改两处；审批框（<code>editDiffPreview</code> → ToolLines）与 REPL 无法共享判断</td></tr><tr><td>D3</td><td>折叠账本不一致</td><td>shell unified diff：TUI <code>MAX_DIFF_ROWS_COLLAPSED=60</code>（<code>ToolLines.js:370</code>）vs REPL 硬编码 120（<code>toolOutputRender.js:140</code>）</td><td>同一段 <code>git diff</code> 输出两端看到的行数不同</td></tr><tr><td>D4</td><td>gutter 位宽基准不一致</td><td>TUI 按<strong>全部行</strong>最大行号算（<code>computeDiffGutterWidth(rows)</code>）；REPL 新建文件预览按<strong>已显示行</strong>算（<code>toolOutputRender.js:74</code> <code>computeDiffGutterWidthForMax(shown.length)</code>）</td><td>11 行以上的新建文件预览，两端缩进宽度不同</td></tr><tr><td>D5</td><td>词级高亮三端三种状态</td><td>经典 shell 路径默认<strong>开</strong>（<code>diffRenderer.renderDiff:311</code>）；经典结构化路径<strong>故意不做</strong>（<code>_emitChangeBlock:375-380</code> 注释「先红后绿不配对」）；TUI 默认<strong>关</strong>（<code>KHY_TUI_WORD_DIFF</code>，<code>ToolLines.js:614-619</code>）</td><td>同一处「改一行里两个词」在不同路径观感完全不同，且无统一开关</td></tr><tr><td>D6</td><td>色条宽度两种形态</td><td>chalk 端 <code>_padToFull</code> 铺整行满宽背景；ink 端背景只铺到文字宽度</td><td>两终端并排对比时 diff 体明显不同形</td></tr></tbody></table>
+<hr>
+<h2 id="1-规格架构-唯一真源">1. 规格架构（唯一真源）<a class="anchor" href="#1-规格架构-唯一真源" aria-label="锚点">#</a></h2>
+<pre><code>diffSpec.js（新纯叶子，绝不抛）
+ ├─ COLORS(env)      → { add, addWord, del, delWord, ctx, hint, text }  ← themeRegistry 唯一入口，缺省 = CC 值
+ ├─ FOLD             → { preview: 10, diffCollapsed: 60, expanded: Infinity }
+ ├─ GUTTER 规则      → 一律按全部行的最大行号（复用 diffGutter.computeDiffGutterWidth）
+ └─ GRAMMAR          → add/del: `${num} ${sign} ${text}`（满宽色条）；ctx: `${num}   ${text}`（dim）；
+                       间隙: `⋯ N unchanged lines`（dim）；统计: `└ …`（editStatLine 真源不变）
+        │
+writeDiffRows.js（buildWriteDiffRows / buildShellDiffRows / planWordDiffPairs 从 ToolLines 下移，签名不变）
+        │
+ ├─ ToolLines.renderDiffRows(ink)         ← TUI 卡片 + 审批框（PermissionsPrompt 经 editDiffPreview 复用，引用改路径）
+ ├─ diffRenderer.renderDiffRowsChalk(rows)← 经典 REPL maybeRenderWriteDiff 改消费 rows（新函数）
+ └─ ui/diffViewer.js                      ← 改读 COLORS</code></pre>
+<p><strong>不变量</strong>：<code>computeStructuredDiffHunks</code> 仍是计算引擎唯一真源（本规范不动它）；<code>rows</code> 数组（<code>{kind:'add'|'del'|'ctx'|'meta'|'more'|'stat', num, text}</code>）是跨端契约形状，渲染器不得在内部再算折叠/再算 gutter。</p>
+<h3 id="1-2-主门控与回退">1.2 主门控与回退<a class="anchor" href="#1-2-主门控与回退" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>门控</th><th>默认</th><th>语义</th></tr></thead><tbody><tr><td><code>KHY_DIFF_SPEC_V1</code></td><td>开</td><td>总闸：关 → A/B/C 三刀逐字节回退现状（旧裸 hex、旧三分支、旧 120 行账本原样保留为 fallback 分支）</td></tr><tr><td><code>KHY_DIFF_WORD_HIGHLIGHT</code></td><td>开</td><td>词级高亮三端统一开关；旧名 <code>KHY_TUI_WORD_DIFF</code> 继续解析（旧名显式 <code>0</code> 在 TUI 侧仍生效，兼容既有排障手册），新名对三端同时生效</td></tr></tbody></table>
+<hr>
+<h2 id="2-两项视觉裁决-用户-2026-09-26-选定">2. 两项视觉裁决（用户 2026-09-26 选定）<a class="anchor" href="#2-两项视觉裁决-用户-2026-09-26-选定" aria-label="锚点">#</a></h2>
+<ol><li><strong>词级高亮全端默认开</strong>：删改一行时只亮真正变化的词（<code>diffAddedWord</code>/<code>diffRemovedWord</code> 亮底），其余用行底色。配对逻辑唯一真源 <code>planWordDiffPairs</code>（del 连段紧邻 add 连段 1:1 配对，<code>wordLevel</code> 不达标退回整行色）；经典结构化路径的「先红后绿不配对」行为改为门控关时的字节回退档。</li><li><strong>整行满宽色条</strong>：红/绿行背景铺到终端右缘。chalk 端维持 <code>_padToFull</code>；ink 端在 <code>renderDiffRows</code> 对 add/del 行按 <code>clipW − displayWidth(body)</code> 补背景空格（展开态 wrap 由 ink 背景自然延续）。</li></ol>
+<hr>
+<h2 id="3-实施四刀-每刀独立可回退-顺序-a-b-c-d-可并行">3. 实施四刀（每刀独立可回退，顺序 A→B→C，D 可并行）<a class="anchor" href="#3-实施四刀-每刀独立可回退-顺序-a-b-c-d-可并行" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>刀</th><th>内容</th><th>触及</th><th>验收</th></tr></thead><tbody><tr><td><strong>A 颜色</strong></td><td>建 <code>diffSpec.js</code>；5 处色来源改读 <code>COLORS(env)</code>；REPL 预览分支顺带获得主题感知</td><td>diffSpec(新) + toolOutputRender / ToolLines / aiRenderer / diffViewer</td><td>切 ocean 主题，三端 diff 底色一致；<code>KHY_DIFF_SPEC_V1=0</code> 全端逐字节现状</td></tr><tr><td><strong>B 行模型</strong></td><td><code>buildWriteDiffRows</code>/<code>buildShellDiffRows</code>/<code>planWordDiffPairs</code> 及折叠常量下移至 <code>writeDiffRows.js</code>；ToolLines 与 editDiffPreview 改 require；REPL <code>maybeRenderWriteDiff</code> 三分支改「取 rows → <code>renderDiffRowsChalk</code>」</td><td>writeDiffRows(新) / ToolLines / toolOutputRender / diffRenderer</td><td>D2/D4 消失：rows 同源；<code>tests/writeDiff.test.js</code> 全绿；⚠ 动工前确认 <code>ToolLines.js</code> 工作区干净（#7 在途 god-file 家族，不与作者重构抢刀）</td></tr><tr><td><strong>C 折叠</strong></td><td><code>FOLD</code> 账本进 diffSpec；REPL shell diff 120→60；gutter 统一全行基准</td><td>diffSpec / toolOutputRender / ToolLines</td><td>同输入两端折叠行数相等（D3/D4）</td></tr><tr><td><strong>D 视觉</strong></td><td>词级高亮统一开关全端开 + ink 满宽色条</td><td>ToolLines / diffRenderer / wordDiff 接线</td><td>同一 before/after 截图级同形（D5/D6）</td></tr></tbody></table>
+<h3 id="3-1-守卫-s1-观察者档起步-遵守-process-008">3.1 守卫（S1 观察者档起步，遵守 <code>PROCESS-008</code>）<a class="anchor" href="#3-1-守卫-s1-观察者档起步-遵守-process-008" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>守卫</th><th>内容</th></tr></thead><tbody><tr><td>跨端等价测试</td><td>同一 <code>_khyWriteDiff</code> 输入，断言 ink 与 chalk 渲染器消费的 rows 逐条相等（含新建/删除/编辑三分支、多 hunk、溢出标记）</td></tr><tr><td>色字面量检查</td><td><code>scripts/ci/</code> 新增检查：diff 色 hex 字面量只许出现在 <code>diffSpec.js</code> 与 <code>cli/themes/</code>，命中他处报 finding；<strong>登记 FEATURE-OWNERSHIP.json 为 S1，只记录不阻断</strong></td></tr><tr><td>回归</td><td>既有 <code>writeDiff.test.js</code> / <code>editDiffPreview.test.js</code> / <code>displayFormatters.test.js</code> / <code>ccMessageProjection</code> 系列必须全绿；<code>node scripts/ci/check-agent-rules.js --changed</code> 零新增 error</td></tr></tbody></table>
+<hr>
+<h2 id="4-非目标-本轮不做">4. 非目标（本轮不做）<a class="anchor" href="#4-非目标-本轮不做" aria-label="锚点">#</a></h2>
+<ul><li>不动 <code>computeStructuredDiffHunks</code> 的算法/hunk 合并策略；</li><li>不做「独立全屏 diff 视图」（现有 ctrl+o 展开 + 转录视图已承载，另立议题）；</li><li>不改头行语法（<code>✓ 编辑 x.js · 3 处替换 · 1.2s</code> 属 <code>[DESIGN-ARCH-155]</code> 地盘）；</li><li>不动 <code>_khyWriteDiff</code> 的采集链路（<code>_finalizeWriteDiff</code> 属在途重构 #7 区，不碰）。</li></ul>
+<h2 id="5-变更记录">5. 变更记录<a class="anchor" href="#5-变更记录" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>日期</th><th>变更</th></tr></thead><tbody><tr><td>2026-09-26</td><td>初版：病灶 D1–D6 实测登记；四刀方案；词级高亮全端开 + 满宽色条两项裁决采纳</td></tr></tbody></table>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-156] TUI帧生成管线契约化-高度账本与字节出口单一所有者方案.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-156] TUI 帧生成管线契约化 —— 高度账本与字节出口的单一所有者方案</div></a><a class="next" href="../../../docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-158] TUI默认承载路径工具条目投影缺失修复方案.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-158] TUI 默认承载路径工具条目投影缺失修复方案</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../";window.__KHY_CUR__="docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-157] 文件修改红绿diff三端统一规格.html";</script>
+<script src="../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
