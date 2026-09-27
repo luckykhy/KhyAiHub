@@ -250,3 +250,14 @@ _tmp_dbg*
 *.tmp-*
 
 
+
+# --- 2026-09-27 源码目录精确取回（重建历史时实测发现）---
+# 上方 assets/、kotlin/、res/、AndroidManifest.xml、publish/ 等「按目录名一刀切」的规则
+# 本意是拦构建产物，却把已跟踪的源文件也罩住（git add 被拒，check-ignore --no-index
+# 实测 29 处）。此处按最窄目录粒度取回；其它同名目录（构建产物侧，如
+# apps/khyos-desktop/zcode-analysis/**）维持忽略。语义：gitignore 末段后写者优先。
+!apps/khy-os-client-app/android/app/src/**
+!services/backend/assets/
+!software/khyquant/frontend/public/assets/
+!software/khyquant/frontend/src/assets/
+!scripts/release/publish/
