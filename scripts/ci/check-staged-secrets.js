@@ -87,7 +87,9 @@ function stagedAddedLines() {
   for (const raw of diff.split('\n')) {
     const line = raw.replace(/\r$/, '');
     if (line.startsWith('+++ b/')) {
-      current = line.slice(6);
+      // 路径含 [ ] 等特殊字符时，git 会在 +++ 行尾补一个制表符消歧（ASCII 路径没有）。
+      // 不剥掉它，白名单按 file 字面相等比对就对全部这类路径失效（实测：中文文档名全中招）。
+      current = line.slice(6).replace(/\t$/, '');
       continue;
     }
     if (line.startsWith('+++ /dev/null')) {
@@ -126,9 +128,9 @@ function run() {
   if (json) {
     process.stdout.write(JSON.stringify({ findings }, null, 2) + '\n');
   } else if (findings.length === 0) {
-    process.stdout.write('  ✅ 无敏感信息（已按 hygiene-allowlist.json 豁免过滤）\n');
+    process.stdout.write('  ✓ 无敏感信息（已按 hygiene-allowlist.json 豁免过滤）\n');
   } else {
-    process.stdout.write('❌ 错误：暂存区检测到可能的密钥泄露（' + findings.length + ' 处）：\n');
+    process.stdout.write('✗ 错误：暂存区检测到可能的密钥泄露（' + findings.length + ' 处）：\n');
     for (const f of findings) {
       process.stdout.write('  ' + f.file + '  [' + f.pattern + ']  ' + f.value.slice(0, 12) + '…\n');
     }

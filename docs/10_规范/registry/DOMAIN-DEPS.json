@@ -1,0 +1,177 @@
+{
+  "_note": "五域（D1-D5）名义边界与允许的依赖方向。真源：docs/11_报告/RESEARCH/[RESEARCH-018] 5-3-1架构符合性调研与迁移设计-2026-09-28.md 第 2.1/2.3 节（域划分）与第 4 节 C-7（可机判判据）。执行守卫 scripts/ci/check-repo-layout.js 的 domain-direction 规则读本文件派生检查范围——改本文件即改守卫，不在守卫里硬编码路径清单。",
+  "_why_nominal": "第 2.1 节的结论是「D1-D5 是现行 L0-L6 板块的聚合，不是另起炉灶」。因此本文件只给既有物理目录挂域名义标签并声明方向，不移动任何文件。[RESEARCH-018] 第 3.1 节 P1 行的原话：「把 fan-in>30 的 30 个枢纽收进 D3 名义边界（先只加声明与守卫，不搬文件）」。",
+  "_non_overlap": {
+    "check:layout": "板块级（L0-L6 / workspace）跨根 require 与深层相对 require，见 cross-layer-require / unresolved-require。本文件不重复判板块轴。",
+    "archDebtScan R1": "src/services/** → src/cli/** 的分层倒挂（服务层回调 TUI）。这恰是 D1 内部与 D2→D1 的重叠区，故本守卫刻意不判 D2→D1，避免同一批边有两份真源。",
+    "archDebtScan R3": "require 图的强连通分量（环）。本守卫不判环。",
+    "ARCHITECTURE-POLICY.json": "单文件行数上限与纳管名单（M1/M6/M7）。与域方向无关。",
+    "本守卫只管": "两条 C-7 明列且无人管辖的边：D3 纯净性（共享底座不得反向知道业务/运行时/交付面）与 D5 不可依赖（任何运行时代码不得伸进工程档案区）。"
+  },
+  "_why_only_two_rules": "声明面（mayDependOn）写全五域，执行面只放开 D3 纯净性与 →D5 两条判据。原因：D2→D1 若即刻判定，实测会把 domain/ 对同层服务的既海量既有边一次性锁进基线——那是「名义边界」还没收敛就先造出一根没人看的数字。判据真源见 [RESEARCH-018] 第 4 节 C-7 与第 2.5 节对照表（顶层已有 check:layout，缺的是域内方向）。升档（把 D1/D2/D4→D3 之外的方向也纳入判定）属人的决定，见 [DESIGN-PROCESS-002] 的 S1-S4 样本门槛。【2026-09-29 更新】Q1 裁决已由人给出（任务 #17 第 19 项/§12.43 裁决表的拍板指令），D2→D1 判据以第三条 enforced 登记落为 S1 观察者；R3 运行时对账（§12.53）证实 196 团在四条诊断命令路径上零第一方成环尝试，首档读数 162（全域口径，§12.43 预估）按基线登记，不阻断。",
+  "updated": "2026-09-29",
+  "source": "[RESEARCH-018] §2.1（域划分依据：5-3-1 §3「5 个顶级域按生命周期或变更频率划分（非技术类型）」）",
+  "domains": {
+    "D1": {
+      "name": "运行时内核",
+      "lifecycle": "平台作为操作系统跑起来：引导、启动器、Node 运行时、CLI 会话",
+      "tier": "热",
+      "roots": [
+        "kernel",
+        "platform",
+        "services/backend/bin",
+        "services/backend/src/cli",
+        "services/backend/src/routes",
+        "services/backend/src/services"
+      ],
+      "mayDependOn": [
+        "D1",
+        "D2",
+        "D3"
+      ],
+      "overrides": [
+        {
+          "prefix": "services/backend/src/services/domain",
+          "domain": "D2"
+        }
+      ]
+    },
+    "D2": {
+      "name": "业务上下文",
+      "lifecycle": "平台对外提供的业务能力，各自内聚一块业务（messaging / trajectory / project / network / security …）",
+      "tier": "热/温",
+      "roots": [
+        "services/backend/src/services/domain"
+      ],
+      "mayDependOn": [
+        "D2",
+        "D3"
+      ]
+    },
+    "D3": {
+      "name": "共享底座",
+      "lifecycle": "被大量复用的策略与设施：只被依赖，不反向依赖",
+      "tier": "温",
+      "evidence": "fan-in>30 的 30 个枢纽（[RESEARCH-018] §1.4）绝大多数就落在这两个目录里，例如 utils/dataHome.js 入度 323、constants/serviceDefaults.js。缺的从来不是物理载体，而是显式命名与方向闸门。",
+      "roots": [
+        "services/backend/src/utils",
+        "services/backend/src/constants"
+      ],
+      "mayDependOn": [
+        "D3"
+      ]
+    },
+    "D4": {
+      "name": "交付与接入",
+      "lifecycle": "面向最终用户的产物与接入面：前端、桌面、手机、拓展、便携包",
+      "tier": "热/温",
+      "roots": [
+        "apps",
+        "software",
+        "extensions",
+        "tools",
+        "electron",
+        "entries",
+        "packaging"
+      ],
+      "mayDependOn": [
+        "D1",
+        "D2",
+        "D3",
+        "D4"
+      ]
+    },
+    "D5": {
+      "name": "工程与档案",
+      "lifecycle": "造它/验它/记它的东西，以及已退役与实验残留",
+      "tier": "冷",
+      "roots": [
+        "scripts",
+        "docs",
+        ".github",
+        "deploy",
+        "patches"
+      ],
+      "mayDependOn": [
+        "D1",
+        "D2",
+        "D3",
+        "D4",
+        "D5"
+      ],
+      "_asymmetry": "D5 作为**依赖目标**是禁止边（任何域不得 require 进 D5），但作为**依赖源**不受限——工程脚本读运行时代码是它的职责。故 sources 只取 D1-D4。"
+    }
+  },
+  "enforced": [
+    {
+      "id": "d3-purity",
+      "from": [
+        "D3"
+      ],
+      "forbidTargets": [
+        "D1",
+        "D2",
+        "D4",
+        "D5"
+      ],
+      "clause": "5-3-1 §5「基础设施层不得反向知道业务」/ [RESEARCH-018] §2.3 禁止边 + §4 C-7「D3 不依赖 D2」"
+    },
+    {
+      "id": "no-reach-into-archive",
+      "from": [
+        "D1",
+        "D2",
+        "D3",
+        "D4"
+      ],
+      "forbidTargets": [
+        "D5"
+      ],
+      "clause": "5-3-1 §3「D5 不被任何域依赖」/ [RESEARCH-018] §2.3 + §4 C-7「任何域不依赖 D5」"
+    },
+    {
+      "id": "d2-no-reach-into-d1",
+      "from": [
+        "D2"
+      ],
+      "forbidTargets": [
+        "D1"
+      ],
+      "clause": "5-3-1 §5「领域层不依赖基础设施层」单向约束的 D2 侧落实；判据 = domains.D2.mayDependOn=[D2,D3] 的真实 require 化。Q1 裁决 2026-09-29（用户指令「落地 P2 切割集裁决」），S1 观察者档：warning + 基线棘轮只降不升，首档读数见 repo-layout-baseline.json domain-direction。与既有两条判据共用执行器（check-repo-layout.js 泛型 enforced[] 机制），零新代码。"
+    }
+  ],
+  "declared_not_enforced": [
+    {
+      "edge": "D2 → D1",
+      "why": "与 archDebtScan R1（services→cli）同源，两处判定即两份真源（[MGMT-STD-008] §2.2「重叠即违规」）。R1 已有基线棘轮（scripts/arch-debt-baseline.json，43→39 于 2026-09-28 P2 第 1 批下调），归它管。",
+      "owner": "archDebtScan R1/R3"
+    },
+    {
+      "edge": "D4 → D1/D2 的「只能走公开接口」",
+      "why": "需要「公开接口」的定义（[RESEARCH-018] §2.3 的 khy.module.json），该契约尚不存在（§4 C-4 实测功能单元模板零落地）。先有契约再谈判定，否则守卫无判据。",
+      "owner": "待 P3 功能单元模板落地"
+    }
+  ],
+  "_entry_buffer": {
+    "_note": "5-3-1 §4「入口缓冲：新代码禁直写核心域」的机器化，判据真源 [RESEARCH-018] §4 C-5「核心域内新文件必须带 lifecycle: staged→stable 记录」（现状列：机制不存在）与 §3 P5 行「新代码必须落 D5/quarantine/<日期>/ 再晋级，晋级判据 = 有测试 + 有 README + fan-in 声明」。核心域里的每个源文件都必须被一份 khy.module.json 覆盖（从文件所在目录向上到所属 root 边界内的第一份），记录 lifecycle.stage。",
+    "_why_here": "本规则的适用范围是「域」的子集，而域清单与方向的真源就是本表。另建一份核心域清单会立刻长出第二真源（[MGMT-STD-008] §2.2「重叠即违规」）。执行器 scripts/ci/check-repo-layout.js 的 entry-buffer 规则读本块派生扫描范围——改本块即改守卫，不在守卫里硬编码目录清单。",
+    "_why_under_scripts": "D5 的第 2 层轴按 §2.2 就是生命周期阶段（build / verify / record / quarantine），所以缓冲区的名字是 quarantine 而不是新建一个根级 quarantine/。放 scripts/ 下有两个理由：① 根白名单是封闭集合（[MGMT-STD-001] §1.3），新增根级目录属 [DESIGN-LAY-005] A 档动作，而 A 档的前置（本篇第 0 步 .git 重建 + 引用审计）尚未闭合；② scripts 已经在下面 D5.roots 里，于是「任何运行时代码不得 require 进缓冲区」这条**已由 enforced 的 no-reach-into-archive 顺带强制**——缓冲区天然不可被依赖，不必再造第三条禁止边规则。",
+    "_upgrade_note": "若第 0 步闭合后要把缓冲区升为根级 quarantine/（更贴 §2.2 的 D5 记法），只需把 bufferRoot 改成新值并在 D5.roots 里补一项；守卫无硬编码，改表即改判据。",
+    "coreDomains": [
+      "D1",
+      "D2",
+      "D3"
+    ],
+    "bufferRoot": "scripts/quarantine",
+    "manifestName": "khy.module.json",
+    "stages": [
+      "staged",
+      "stable"
+    ],
+    "promotionCriteria": [
+      "单元目录有 README.md",
+      "manifest 有整数 fanIn 声明",
+      "每个源文件有同名同目录测试"
+    ]
+  }
+}

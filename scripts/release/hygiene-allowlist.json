@@ -1,6 +1,6 @@
 {
   "$note": "发布源卫生豁免：只允许 具体文件 + 完整匹配值，禁止整目录/整模式豁免（会掩未来的泄漏）。每条须带 reason 与到期复核。",
-  "updated": "2026-09-27",
+  "updated": "2026-09-29",
   "exemptions": [
     {
       "file": "scripts/tests/releaseHygiene.test.js",
@@ -37,6 +37,18 @@
       "match": "sk-abcd1234EFGH5678ijkl",
       "reason": "测试夹具（假值，用于验证脱敏/截断逻辑）",
       "until": "2027-09-20"
+    },
+    {
+      "file": "docs/10_规范/DESIGN-LAY/[DESIGN-LAY-008] 目录层级重设计执行路线图.md",
+      "match": "-----BEGIN PRIVATE KEY-----",
+      "reason": "文档引文：该处讨论密钥扫描器字符类缺陷（无算法名 PKCS#8 头漏判），引用的是模式字面量本身，非真密钥",
+      "until": "2027-09-29"
+    },
+    {
+      "file": "docs/10_规范/DESIGN-LAY/[DESIGN-LAY-008] 目录层级重设计执行路线图.html",
+      "match": "-----BEGIN PRIVATE KEY-----",
+      "reason": "同上：md 的站点构建孪生（docs:build 生成物），内容随 md 派生",
+      "until": "2027-09-29"
     }
   ],
   "symlinks": []
