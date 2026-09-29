@@ -4155,6 +4155,53 @@ node scripts/ci/check-repo-layout.js --list=functional-unit 2>/dev/null \
 `.khy/sync/mirror-queue.json` 欠账**，不破坏远端——这是机制的正确行为，不是故障。
 若要真正推上去，须先裁 §12.0b 的三出路（force 重推 / 无关历史合并 / 改镜像协议），那是另一个决定。
 
+### 12.54 第 49 批：根目录 69 → 66 清创（root-whitelist 清零，`check:layout` 首次 0 error）+ A 档引用审计首层（2026-09-29 深夜）
+
+用户以截图问「树根目录下还有很多文件不符合 531 原则吧」。答：是——实测 **69 项**（tracked 53 / untracked 3 /
+ignored 10 / 空 dir 3），对 §1 的「5±2」超 10 倍；但 RESEARCH-018 §2.4 已裁定根 ≤7 物理不可达
+（工具契约下限 15 项），现行裁决是 §11.1 的 **A 档 ≈20**（B 档 ≤10 留二期）。本批做 A 档的清创半场 + 审计首层。
+
+**清创（LAY-003 隔离通道，manifest：`.khyos/housekeeping/2026-09-29-root-a/`，可原路撤回）**：
+
+| 条目 | 定性 | 处置 |
+| --- | --- | --- |
+| `wc-groups.txt`（1 129 B，untracked，mtime 当日 07:55） | **Q2 的 D1 目标消费面普查**（apiKeyPool 41 文件 / flagRegistry 235…，正是 §12.43 裁决表的输入数据），产出车道已收口但把分析产物落在了根 | 隔离 |
+| `.research-tmp/`（gitignored，最新 mtime 09-17） | RESEARCH-019 书稿抽取的工作现场，停滞 12 天 | 隔离（整树 5 件） |
+| `_产物/` | **空目录**（git 从不跟踪空目录， Explorer 可见而已） | 移除（无物可保，manifest 记一条） |
+
+**明确不动（各自有主）**：`.claude/`（worktrees 在用）、`.workbuddy/`、`.workbuddy-ai/`（外部工具状态目录，
+§11.3 起待认领，搬工具状态目录有断链风险）、`khy-Trajectory` 符号链接（§2 起**两批仍待认领**——若确认是人工
+快捷方式习惯，说一声即隔离）、`tools/deepseek-eyes`（运行时数据住在 L6 代码位，`git ls-files tools` 为空 ⇒
+它不受版本管理——这是 LAY-007 数据落点问题，登记不搬）、`build/` `dist/` `khy_os.egg-info/`（生成物出根 =
+Phase 3 G-2 任务，需翻转 `BUILD-OUTPUTS.json` 条目并改各工具 outDir，不属清创）。
+
+**验收**：根 69 → **66**（tracked 53 不变；`check:data-layout` 顶层可寻址 **64**，预算 20，较 §6 基线 77 改善）；
+`check-repo-layout` 的 `root-whitelist` error **清零**——**本守卫自建档以来首次 0 error**（余 5 条全 warning 且在基线内）。
+
+**A 档引用审计首层**（`git grep -l -F <token>`，剔除 `*.html`；探针 `.khyos/tmp/a-tier-refcount.js`）：
+
+| A 档候选 | 提及总文件 | **代码/配置面（硬引用）** | 硬面代表 |
+| --- | --- | --- | --- |
+| `scripts/` | 999 | **584** | `.ai/CONTEXT.yaml`、`.ai/MAP.md`、Dockerfile 面 |
+| `tools/` | 744 | **583** | `.ai/*`、hq 台账 |
+| `tests/` | 682 | **403** | `.ai/MAP.md`、hq 台账 |
+| `.ai/` | 240 | **138** | 自引 + 守卫 |
+| `packaging/` | 118 | **64** | CONTEXT.yaml、GUARDS.md |
+| `.github/` | 116 | **54** | `.githooks/pre-commit`、labels |
+| `deploy/` | 48 | **37** | `.gitignore`、workflow |
+| `entries/` | 48 | **26** | `.dockerignore` |
+| `electron/` | 46 | **24** | prompts、CONTEXT.yaml |
+| `evidence/` | 36 | **25** | AGENTS.md、CLAUDE.md |
+| `.zcode/` `.commandcode/` `.githooks` `.cursor/` `.clinerules` `.opencode/` | 10–31 | 3–16 | `.gitignore`、CLI 源码 |
+
+⇒ **A 档结论（给下一手的执行口径）**：① `meta/` 收纳是**数百硬引用的重指工程**（仅 scripts/tests/tools 三家就是
+1 570 个硬引用文件），必须按 §11.1 独立成批、逐族 sub-batch（先 `patches/`(8) 与 `deploy/`(37) 这类小面练手，
+`scripts/` 最后）；② **点目录不建议进 `meta/`**——`.claude/` `.cursor/` `.opencode/` `.zcode/` `.commandcode/`
+`.githooks/` `.github/` 是各工具**在仓库根读取的契约位**（同 AGENTS.md 红线 §4.3），搬走 = 断工具链；
+A 档的 ≈20 应主要由「垃圾清零（本批）+ 生成物出根（G-2）+ 小面横切收纳」达成，点目录留在根并在
+`00_INDEX_仓库根.md` 里按「工具契约」族登记；③ `tools/` 的 583 硬引用 + 内容不受版本管理，建议 A 档把它
+从「板块候选」改成「数据落点候选」（LAY-007），先审计 `deepseek-eyes` 的消费方再定。
+
 ## 关联
 
 - 设计真源：`[DESIGN-LAY-005]`（层）、`[DESIGN-LAY-006]`（可发现性）、`[DESIGN-LAY-007]`（三态 × 五轴，**本篇的上位**）、`[DESIGN-LAY-003]`（回收通道）、`[DESIGN-LAY-004]`（产物单一根）
