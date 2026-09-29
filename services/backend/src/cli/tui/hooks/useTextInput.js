@@ -491,6 +491,20 @@ function useTextInput({ onSubmit, onChange, onHistoryEmpty, mouseModule, onShell
 
       // ── Delete backward (Backspace = \x7f → key.delete on most terminals) ─
       if (key.backspace || key.delete) {
+        if (key.ctrl) {
+          // Ctrl+Delete (\x1b[3;5~) kills the word ahead; Ctrl+Backspace kills
+          // behind — only terminals that report it with the ctrl flag (Kitty
+          // protocol) reach that branch. A bare \x08 must stay a single-character
+          // delete below, because legacy terminals send it for a plain Backspace.
+          const { cursor: c, killed } = key.delete
+            ? cur.deleteWordAfter()
+            : cur.deleteWordBefore();
+          if (killed) {
+            killRing.current.push(killed);
+          }
+          edit(c);
+          return;
+        }
         if (key.meta) {
           const { cursor: c, killed } = cur.deleteWordBefore();
           if (killed) {
@@ -504,11 +518,13 @@ function useTextInput({ onSubmit, onChange, onHistoryEmpty, mouseModule, onShell
       }
 
       // ── Arrow / navigation keys ──────────────────────────────────────────
+      // Ctrl+arrows (\x1b[1;5D / \x1b[1;5C) are the word chords Windows and
+      // Linux terminals actually deliver; Alt+arrows are their macOS counterpart.
       if (key.leftArrow) {
-        return move(key.meta ? cur.wordLeft() : cur.left());
+        return move(key.meta || key.ctrl ? cur.wordLeft() : cur.left());
       }
       if (key.rightArrow) {
-        return move(key.meta ? cur.wordRight() : cur.right());
+        return move(key.meta || key.ctrl ? cur.wordRight() : cur.right());
       }
       if (key.home) {
         return move(cur.startOfLine());
