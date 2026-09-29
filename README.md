@@ -168,7 +168,7 @@ User → khy 命令 → Python cli.py → Node.js services/backend/bin/khy.js
 | L1 | `platform/` | Python 启动器、`@khy/shared` / `@khy/ui-shared` / plugin-sdk 包、多渠道交付编排 |
 | L2 | `services/` | `backend`（CLI、AI 网关、各类服务、Web API）+ `ai-backend`（独立版本轨道） |
 | L3 | `apps/` | `ai-frontend`（Vue 3 管理 UI）、Electron 桌面端、provider-hub、Flutter Android App |
-| L4 | `software/` | 内置应用：khyquant 量化终端（内置默认应用，而非项目本身）、akshare_scripts |
+| L4 | `software/` | 随平台分发的独立项目接入载体：khyquant 量化终端（**独立项目**，连接 Khy OS 使用，非其内置组成）、akshare_scripts |
 | L5 | `extensions/` | 内置拓展：一个目录一个拓展，删目录即卸载（tools / bridges / scripts） |
 | L6 | `tools/` | 独立开发者工具，不参与运行时 |
 
@@ -215,6 +215,8 @@ npm run rules:apply -- <改动文件路径>              # 查「我要改这个
 
 规则登记表在 `docs/10_规范/registry/RULES-REGISTRY.json`，**门的成员资格由登记表派生**；
 覆盖率与红线用 `npm run rules:coverage` 查看。
+
+> 维护者导航：仓库根 66 项按六族分组索引见 [docs/00_INDEX_仓库根.md](docs/00_INDEX_仓库根.md)——机器契约族位置即契约，永不动。
 
 代码风格：JS 用 2 空格缩进、单引号、分号；命名 camelCase（JS）/ snake_case（Python）；面向用户的字符串用中文，代码注释用英文。
 
