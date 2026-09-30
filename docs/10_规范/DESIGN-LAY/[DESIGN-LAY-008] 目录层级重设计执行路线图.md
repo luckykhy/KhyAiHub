@@ -4770,6 +4770,126 @@ W3 分域化 → W10 → W4 pip 构建根 → W5 Docker 族 → W2 治理文档�
 **目标档（D-1 … D-5）选哪一档。** 选 D-4/D-5 即同时点名退役对应 AI 工具位（每退一个，规则 7 走程序：
 报部位 + 回滚提交）。架构侧 §15.1 对所有档位同构，不存在「为了达标还要再改架构」的隐藏成本。
 
+## §16 方案 P · 树状目录设计图（文件级去向，待用户点头后施工）
+
+> 用户 2026-09-30：「设计需要按照 531 设计形成树状目录图，管理到每个文件，画好后我点头再动手」。
+> 本节 = 该图。**未获点头前零移动**。设计档位 = §15 的 **D-4**（根 7 项）；每行带批次号（W/P），
+> 逐行可圈可否。设计输入全是实测：`services/` 137 目录 = **98 个再导出壳 + 39 个真身**；
+> `services/` 直属 `.js` 683 个；`domain/` 31 上下文；根 60 项。
+
+### 16.1 目标树（第二层全展开；「整族平移」= 内部文件不动，只改容器路径）
+
+```text
+khy-os/                                    ← 根 = 7 项（D-4 档）
+├── runtime/                    D1 运行时内核（第二层轴=抽象层级，6 项）
+│   ├── boot/                   引导层：kernel/ + platform/ + backend/bin + src/bootstrap
+│   │   ├── kernel/             ← 根 kernel/（整族平移）
+│   │   ├── platform/           ← 根 platform/（整族平移）
+│   │   └── node/               ← src/bootstrap、backend/bin、main.js、index.js
+│   ├── substrate/              D3 共享底座（登记仍独立域；轴=设施类别）
+│   │   ├── io/  config/  format/  policy/  text/   ← src/utils + src/constants 按类别拆（P1 逐文件表另出）
+│   ├── interfaces/             入口适配层：src/cli(含 tui/classic) routes controllers middleware
+│   │                             bridge vim plugin-loader entrypoints
+│   ├── engine/                 服务引擎（39 真身分 7 族，见 16.3）
+│   ├── swarm/                  多智能体协调：src/agents buddy coordinator jobs tasks memdir
+│   └── bin/                    6 个启动器（W6；对外迁移公告一次）
+├── business/                   D2 业务上下文（第二层轴=上下文族 7 个，第三层=31 上下文整族平移）
+│   ├── dialogue/               session messaging collab onboarding
+│   ├── intelligence/           agents memory state skills
+│   ├── tooling/                catalog extensions gateway-stuff
+│   ├── data/                   data backup structured trajectory query
+│   ├── project/                project quality eval build docs
+│   ├── platform/               network desktop deploy account cpa config
+│   └── guard/                  security maintenance system workspace
+├── delivery/                   D4 交付与接入（第二层轴=交付形态，6 个）
+│   ├── web/                    ← apps/ai-frontend apps/provider-hub
+│   ├── desktop/                ← apps/khyos-desktop electron/（electron 退役案另裁）
+│   ├── mobile/                 ← apps/khy-os-client-app software/akshare_scripts?（akshare 属数据脚本→works，P4 逐行裁）
+│   ├── extension/              ← extensions/（bridges scripts tools 三子族原样）
+│   ├── artifact/               ← entries/（产物单一根整迁）
+│   └── channel/                ← packaging/ + software/khyquant（独立项目随仓载体定位不变）
+├── works/                      D5 工程与档案（第二层轴=生命周期，7 个）
+│   ├── build/                  ← scripts/（整族）+ .githooks/（W10 走 core.hooksPath）
+│   ├── verify/                 ← tests/
+│   ├── record/                 ← docs/ evidence/ .ai/ CHANGELOG.md .env.example .mailmap
+│   ├── ship/                   ← deploy/ Dockerfile docker-compose.yml fly.staging.toml
+│   ├── quarantine/             ← patches/ + scripts/quarantine/（入口缓冲，已在）
+│   ├── data/                   ← .khy/ .khyos/ .workbuddy/ .workbuddy-ai/ khy-Trajectory（W9：dataHome 是自家代码可重定向）
+│   └── archive/                ← 18_归档类冷数据（现于 docs 内，P5 逐行裁）
+├── .github/                    不可动（GitHub 平台契约；D5 在册豁免）
+├── README.md                   不可动（GitHub 首页）
+└── AGENTS.md                   不可动（Qoder 等 agent 的根读取位）
+（.git 原生不可见；CLAUDE.md 并入 AGENTS.md、.claude/.cursor/.opencode/.zcode/.commandcode/.clinerules
+ 随 D-4 退役——每位置退役单列一行，可单独圈留）
+```
+
+### 16.2 根 60 项逐条去向表（一行不省）
+
+| 现根项 | 去向 | 批 | 备注 |
+|---|---|---|---|
+| `.ai/` | works/record/ai/ | W9 | khy metadata 自家码重定向 |
+| `.claude/` `.cursor/` `.opencode/` `.zcode/` `.commandcode/` `.clinerules/` | **退役**（D-4） | 点名批 | 圈留哪个就留哪个（留则根+1） |
+| `.dockerignore` | runtime/Dockerfile.dockerignore | W5 | BuildKit 同名惯例 |
+| `.editorconfig` | 五域各一份 | W3 | 规范支持就近向上找 |
+| `.env.example` | works/record/ | W2 | 6 消费点全自家脚本 |
+| `.git/` | 不动 | — | 原生不可见 |
+| `.gitattributes` | 五域各一份 | W3 | git 支持子树 |
+| `.githooks/` | works/build/githooks/ | W10 | bootstrap 写 core.hooksPath（per-machine，断同步风险已注） |
+| `.github/` | 不动 | — | 豁免 |
+| `.gitignore` | .git/info/exclude（bootstrap 落盘）**或留根** | W10 | 留根则终局 8 项——此行为达标关键行，请明确圈 |
+| `.khy/` `.khyos/` `.workbuddy/` `.workbuddy-ai/` | works/data/ | W9 | dataHome 自家码；AGENTS 数据节同批改 |
+| `.mailmap` | works/record/ | W10 | mailmap.file config |
+| `.npmrc` | runtime/ | W7 | 随工作区根 |
+| `.portable` | runtime/.portable | W9 | 上溯逻辑自家码同批改 |
+| `AGENTS.md` `README.md` | 留根 | — | 不可动 |
+| `CHANGELOG.md` | works/record/ | W2 | PROCESS-005 bump 锚改指 |
+| `CLAUDE.md` | 并入 AGENTS.md | D-4 | 圈留则 +1 |
+| `CONTRIBUTING.md` `SECURITY.md` | .github/ | W2 | GitHub 官方认该位 |
+| `Dockerfile` `docker-compose.yml` `fly.staging.toml` | works/ship/ | W5 | -f/-c 重指 |
+| `MANIFEST.in` `pyproject.toml` | delivery/channel/pip/ | W4 | R3 锚外科批（9 真源之一，动它一批一验） |
+| `install-khy.ps1` `khy.bat` `khy-cli.bat` `khy.sh` `portable-setup.bat` `portable-setup.sh` | runtime/bin/ | W6 | 对外公告一次 |
+| `apps/` | delivery/（按 16.1 拆） | P4 | |
+| `deploy/` `patches/` `evidence/` `docs/` `scripts/` `tests/` | works/（对应族） | P5 | 1570 硬引用重指主体批 |
+| `electron/` | 退役案（规则 7，§12.58 证据在案）**或** delivery/desktop/ | 待裁 | |
+| `entries/` `packaging/` `extensions/` `software/` | delivery/ | P4 | |
+| `kernel/` `platform/` | runtime/boot/ | P3 | |
+| `khy-Trajectory` | 退役（两批待认领）或 works/data/ | 待裁 | |
+| `node_modules/` `package.json` `package-lock.json` `pnpm-lock.yaml` `pnpm-workspace.yaml` | runtime/（lock 若 npm 退役则删） | W7 | 298 脚本+hooks+CI 全链 `pnpm -C runtime` |
+| `services/` | 三分：utils+constants→runtime/substrate（P1）；src/services/domain→business/（P2）；其余→runtime/（P3） | P1-3 | |
+| `tools/` | works/data/deepseek-eyes（运行时数据，§12.54 已定性） | P5 | |
+
+### 16.3 runtime/engine/ 的 39 真身归组（7 族）+ 98 壳退役 + 683 文件规则
+
+| 族 | 成员（现 services/ 直属真身目录） |
+|---|---|
+| gateway/ | gateway modelRouter endpoints passthrough responses a2a realtime entrypoints inertia |
+| providers/ | anthropic googleGenAI imageGenProviders ocrProviders sttProviders ttsProviders videoGenProviders searchProviders rerank vectorStore secretManagers |
+| agent-loop/ | tool assistants assistants-loop 相关真身（tool 及 engine 内联文件） |
+| context-data/ | compression caching repositories files credentialLease |
+| self-evolve/ | fineTuning evals batches upstreamStudy* |
+| platform-infra/ | crossPlatform containers desktop sandbox wasm-sandbox* syscallGateway* deviceApps* diskAnalyze* diskCleanup* |
+| misc/ | 余量（P3 开工时逐目录点名，禁止静默入 misc——misc 占比设 10% 上限棘轮） |
+
+（* 标壳者随 P2 真身迁 business/ 后退役。）**98 个壳 = 退役清单**：不搬家——每条壳的下游消费者
+重指到 business/ 真身后删壳（P2 收尾批，逐壳一提交可 revert；这也是 cross-layer-require 与
+`@khy/*` 包名化的同一刀）。**683 个 services/ 直属 .js**：按名族脚本聚类进上述 7 族，
+**逐族清单逐族点**（P3 前置产物，不一次性过 683 行大表）。
+
+### 16.4 施工顺序与每批验收（点头后生效）
+
+W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-3/D-4 退役批。
+每批四判：① root census 棘轮 −N 对上；② `check:layout` exit 0 + 观测器单调降；
+③ R5 四件套（layout/build-root/delivery/wheel）；④ 单提交可 revert。
+**在飞硬闸**：check-repo-layout.js / package.json / FEATURE-OWNERSHIP 为 ` M` 的批次（W2/W7/P3）
+开工前先核实已干净。
+
+### 16.5 待你点头的面（圈否清单）
+
+1. **整图**（16.1 树 + 16.2 逐行表）——点头即按 16.4 顺序开工；
+2. 单行可圈改：`.gitignore` 留根（终局 8）还是走 exclude（7，多机断同步风险）；
+   AI 工具位逐个圈留；`electron/` 退役或迁；`khy-Trajectory` 认领；`CLAUDE.md` 并或留；
+3. 683 文件的逐族清单 = P3 前置另批（族归类规则已定，不阻塞整图点头）。
+
 ## 关联
 
 - 设计真源：`[DESIGN-LAY-005]`（层）、`[DESIGN-LAY-006]`（可发现性）、`[DESIGN-LAY-007]`（三态 × 五轴，**本篇的上位**）、`[DESIGN-LAY-003]`（回收通道）、`[DESIGN-LAY-004]`（产物单一根）
