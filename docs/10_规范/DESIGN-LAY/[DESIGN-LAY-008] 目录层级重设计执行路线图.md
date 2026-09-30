@@ -4709,6 +4709,67 @@ W8 方案 P 物理搬家（§14.3 P1–P5 不变）。
 
 本批已执行：W1（−1，根 61→60）+ 本台账。W2 起逐批推进，每批一提交一复测（root census 棘轮同步下调）。
 
+## §15 方案 P · 终版设计（2026-09-30，用户「按照你的建议设计」；含 §12.64 算术更正）
+
+### 15.0 先更正：§12.64 的「终局 7~8 项」漏数了不可动项
+
+那一版只数了可重定向的契约，**漏了第三方程序写死读根位的 AI 工具配置位（.claude/.cursor/.opencode/
+.zcode/.commandcode/.clinerules/.ai = 7 项）与运行时数据家（.khy/.khyos/.workbuddy/.workbuddy-ai = 4 项）**。
+补全后的终局是**阶梯**——根宽 = 工具面，不再是架构问题：
+
+| 档 | 附加动作 | 根可见数 |
+|---|---|---|
+| D-1 保守 | 方案 P + W2–W8 全做，接口零退役 | ~20 |
+| D-2 自家码迁移 | + 数据家入 `works/data/`（dataHome 是本仓代码，可重定向）、`.githooks`→works/（bootstrap 写 `core.hooksPath`）、`.portable`→runtime/、gitattributes/editorconfig 分域、mailmap 走 config | **~13** |
+| D-3 点死工具 | 菜单 C 点名：只保留真在用的 AI 工具位 | ~9（留 2 个时） |
+| D-4 仅 Qoder | AGENTS.md 即 Qoder 原生读取面；CLAUDE.md 并入 AGENTS、.claude 退役 | **7 ✓ 字面达标** |
+| D-5 零 AI 位 | 纯 CLI/git 工作流 | 6 |
+
+⇒ **≤7 的充分必要条件是「只用 Qoder 一个 AI 工具」**（D-4）。架构侧全部档位都已备好，差的只是工具面点名。
+
+### 15.1 终态树（D-2 骨架；AI 位随档位增减）
+
+```text
+khy-os/
+  runtime/                  D1 运行时内核
+    substrate/              D3 共享底座（utils+constants+枢纽；d3-purity 门照旧独立判定）
+    boot/                   原 kernel/ + platform/（引导与启动器层）
+    node/                   原 services/backend 本体（cli/routes/services）
+    bin/                    启动器族（W6，配迁移公告）
+    .portable               便携标记（W9，上溯逻辑同批改）
+  business/                 D2 = 原 services/domain 整迁，31 功能单元结构原样（域内零超限已实测）
+  delivery/                 D4 = web/ desktop/ mobile/ extension/ artifact/ channel/（第二层单轴=交付形态）
+  works/                    D5 = build/ verify/ record/ ship/ quarantine/ data/（第二层单轴=生命周期阶段）
+  .github/                  GitHub 平台契约（不可动，D5 在册豁免）
+  README.md  AGENTS.md      人读面（D-4 档再并掉 CLAUDE.md）
+  .gitignore  (.git)         git 原生（.git 资源管理器不显）
+```
+
+P-D 裁决（随「按建议设计」生效）：**substrate 物理并入 `runtime/substrate`**——DOMAIN-DEPS 登记
+仍五域、`targets.D3 = runtime/substrate` 已同步改；观测器终态读数 = exceptions(1)。
+
+### 15.2 每域第二层验算（§1 单轴 + ≤7）
+
+| 域 | 第二层（根数） | 轴 | 依据 |
+|---|---|---|---|
+| runtime | substrate/boot/node/bin（4） | 抽象层级（底座→引导→运行时→入口） | §2.2 D1 行原案，substrate 由并列降为子层 |
+| business | 现 14+ 上下文目录——**先按 C-3 词表归并到 ≤7 上下文族**（messaging/trajectory/project/network/security/data/agents…） | 业务上下文 | §3 DDD 原轴；归并动作=方案 P 的 P2 前置小批 |
+| delivery | web/desktop/mobile/extension/artifact/channel（6） | 交付形态 | §2.2 D4 行 |
+| works | build/verify/record/ship/quarantine/data（6） | 生命周期阶段 | §2.2 D5 行 + §4 状态迁移（data=新数据家，W9） |
+
+### 15.3 W 清单增补与执行序
+
+W1 ✅（死项退役）。**新增**：W9 数据家重定向（dataHome/housekeeping/autopull/nightly 全链 + AGENTS.md
+数据存储节同批改）；W10 配置位收编（core.hooksPath/mailmap.file 由 bootstrap 落盘，.githooks/.mailmap 出根）。
+**执行序**（每批一提交一复测：root census 棘轮 + `check:layout` exit 0 + R5 四件套 + 观测器单调降）：
+W3 分域化 → W10 → W4 pip 构建根 → W5 Docker 族 → W2 治理文档迁（硬闸：等 check-repo-layout.js 等 ` M` 干净）
+→ W9 → W6+P6 启动器窗 → W7 工作区根下沉（最重，独占冻结窗）→ P1–P5 五域搬家（10-27 窗，§14.3 不变）。
+
+### 15.4 唯一待你点名的决定
+
+**目标档（D-1 … D-5）选哪一档。** 选 D-4/D-5 即同时点名退役对应 AI 工具位（每退一个，规则 7 走程序：
+报部位 + 回滚提交）。架构侧 §15.1 对所有档位同构，不存在「为了达标还要再改架构」的隐藏成本。
+
 ## 关联
 
 - 设计真源：`[DESIGN-LAY-005]`（层）、`[DESIGN-LAY-006]`（可发现性）、`[DESIGN-LAY-007]`（三态 × 五轴，**本篇的上位**）、`[DESIGN-LAY-003]`（回收通道）、`[DESIGN-LAY-004]`（产物单一根）

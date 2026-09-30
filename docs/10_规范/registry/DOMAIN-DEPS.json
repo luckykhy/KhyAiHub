@@ -156,7 +156,8 @@
     "_note": "方案 P（[DESIGN-LAY-008] §14）三点裁决 2026-09-30（用户「按照你的建议，逻辑，物理，视觉保持一致」）：P-A 采纳五域物理化为 B 档完全体；P-B 目录名取业务术语 runtime/business/substrate/delivery/works；P-C 前置重述为「可达面健康三判据」（rev-parse 正常 + 可达侧 fsck 0 error + tar 备份与 salvage refs 在位），repack/gc 择窗执行，共享工作树下禁 prune=now（并行窗口 staged blob 提交前不可达会被误删）。targets = 各域物理终态的根级域目录；domains.*.roots 中前缀不等于所属域 target 的条目 = roots-not-isomorphic 发现（观测器 scripts/ci/check-roots-isomorphic.js，S1 只记录恒 exit 0；接线进 check:layout 的时机 = 该文件不再被并行窗口持有）。exceptions = 声明为域成员但物理位置被平台契约钉死的项。",
     "adjudicated": "2026-09-30",
     "windowOpens": "2026-10-27",
-    "targets": { "D1": "runtime", "D2": "business", "D3": "substrate", "D4": "delivery", "D5": "works" },
+    "targets": { "D1": "runtime", "D2": "business", "D3": "runtime/substrate", "D4": "delivery", "D5": "works" },
+    "_targets_note": "P-D 裁决（2026-09-30「按照你的建议设计」，[DESIGN-LAY-008] §15.1）：substrate 物理并入 runtime/substrate 以让根字面 ≤7（D-4 档）；D3 登记独立性不变，d3-purity 门按 roots 前缀照旧独立判定。",
     "exceptions": [".github"]
   },
   "_entry_buffer": {
