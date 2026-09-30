@@ -152,6 +152,13 @@
       "owner": "待 P3 功能单元模板落地"
     }
   ],
+  "_physicalization": {
+    "_note": "方案 P（[DESIGN-LAY-008] §14）三点裁决 2026-09-30（用户「按照你的建议，逻辑，物理，视觉保持一致」）：P-A 采纳五域物理化为 B 档完全体；P-B 目录名取业务术语 runtime/business/substrate/delivery/works；P-C 前置重述为「可达面健康三判据」（rev-parse 正常 + 可达侧 fsck 0 error + tar 备份与 salvage refs 在位），repack/gc 择窗执行，共享工作树下禁 prune=now（并行窗口 staged blob 提交前不可达会被误删）。targets = 各域物理终态的根级域目录；domains.*.roots 中前缀不等于所属域 target 的条目 = roots-not-isomorphic 发现（观测器 scripts/ci/check-roots-isomorphic.js，S1 只记录恒 exit 0；接线进 check:layout 的时机 = 该文件不再被并行窗口持有）。exceptions = 声明为域成员但物理位置被平台契约钉死的项。",
+    "adjudicated": "2026-09-30",
+    "windowOpens": "2026-10-27",
+    "targets": { "D1": "runtime", "D2": "business", "D3": "substrate", "D4": "delivery", "D5": "works" },
+    "exceptions": [".github"]
+  },
   "_entry_buffer": {
     "_note": "5-3-1 §4「入口缓冲：新代码禁直写核心域」的机器化，判据真源 [RESEARCH-018] §4 C-5「核心域内新文件必须带 lifecycle: staged→stable 记录」（现状列：机制不存在）与 §3 P5 行「新代码必须落 D5/quarantine/<日期>/ 再晋级，晋级判据 = 有测试 + 有 README + fan-in 声明」。核心域里的每个源文件都必须被一份 khy.module.json 覆盖（从文件所在目录向上到所属 root 边界内的第一份），记录 lifecycle.stage。",
     "_why_here": "本规则的适用范围是「域」的子集，而域清单与方向的真源就是本表。另建一份核心域清单会立刻长出第二真源（[MGMT-STD-008] §2.2「重叠即违规」）。执行器 scripts/ci/check-repo-layout.js 的 entry-buffer 规则读本块派生扫描范围——改本块即改守卫，不在守卫里硬编码目录清单。",

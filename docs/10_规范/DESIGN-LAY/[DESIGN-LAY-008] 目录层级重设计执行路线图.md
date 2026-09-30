@@ -4464,6 +4464,8 @@ D1 缝，不要再往 D2 资源里塞 require**。
 
 ### 12.61 视觉半区已装：visualFloor 把根可见面 61→32（零移动，Hidden 属性）；「视觉=5」的完整算术
 
+> ⚠ **本节手段已于同日被用户否决并整体撤销**（「要的不是看不见，而是真正的 7±2」）——处置与结论见 §12.63。留文作历史轨迹。
+
 用户再指「视觉上仍然不只 5 个」。5-3-1 §1 度量的是**人眼感知**，而 Windows 资源管理器的感知开关
 就是 Hidden 属性（`.git` 从不显示即因其带位）。本批落 `scripts/maintenance/visualFloor.js`
 （幂等、`--report` 可预览、回退 = Explorer 勾「显示隐藏项」或 `attrib -h`），对 29 项
@@ -4476,6 +4478,62 @@ node/git/npm/AI 工具全部不读属性，实测 `git status` 零新增脏项�
 与 package.json/pnpm-workspace.yaml/pyproject.toml 并入隐藏名单、启动器进 `bin/`（P6 同批）——
 **终局可见 = 5 域 + README = 6 项**（README 也隐则字面 5），落进 §1 的 5±2。
 ⇒ 用户诉求不需要拆多仓即可满足；剩余的全部差距都压在方案 P 的三个拍板点（P-A/P-B/P-C）上。
+
+### 12.62 方案 P 开工地基：三点裁决登记 + 同构观测器上线 + P1 搬家面普查工单
+
+用户 2026-09-30「按照你的建议，逻辑，物理，视觉保持一致」= 三点齐裁，在此钉死：
+
+| 点 | 裁决 |
+|---|---|
+| **P-A** | **采纳**方案 P（五域物理化）为 B 档完全体 |
+| **P-B** | 目录名取业务术语 `runtime/business/substrate/delivery/works`（§3「禁技术词」） |
+| **P-C** | §3.0 前置重述为**可达面健康三判据**（rev-parse 正常 + 可达侧 fsck 0 error + tar 备份/salvage refs 在位，三者 09-29 起全部成立）；repack/gc 择窗执行；**共享工作树下禁 `prune=now`**——并行窗口 `git add` 过的 staged blob 在提交前不可达，prune 会当场毁他人在制品 |
+
+已落地：① `DOMAIN-DEPS.json._physicalization`（targets/exceptions/windowOpens=2026-10-27）登记为判据真源；
+② 观测器 `scripts/ci/check-roots-isomorphic.js`（独立脚本，S1 恒 exit 0）首档读数 **20 条非等根**，
+P1–P5 每段完成应单调下降至 exceptions=1。**接线工单**：`check-repo-layout.js`/`FEATURE-OWNERSHIP.json`/
+其测试现为并行窗口在飞件（` M`，mtime 09-28~09-29），待其干净后把观测函数并入 check:layout（判据同源，零新逻辑）。
+
+**P1（substrate）搬家面普查工单**（供 10-27 开闸后直接施工）：`utils` 142 + `constants` 31 = **173 源文件**；
+真实外部依赖 6 个（@khy/chalk/express/iconv-lite/string-width/strip-ansi/undici——substrate 需自带 package.json 进 workspace）；
+向上 require **91 条**（D1 侧，其中 d3-purity 在册 37 条是 P1 的前置债务——物理化不会让违令边消失，只会让它跨出包界）；
+消费者面 dataHome 单点 fan-in 323（re-export 壳全吸收，JS require 面零重指）。
+**P1 开工前置清单**：d3-purity 37 条逐条定「注入或下沉」+ 作者 #7 收敛核实 + 一次 wheel/compose 构建基线。
+
+### 12.63 用户否决视觉半区（「要的不是看不见，是真正的 7±2」）→ 撤销 + 接口存活审计 + 退役菜单
+
+用户明言 Hidden 属性方案不是所要——**整体撤销**：`visualFloor.js --restore` 还原 29 项属性后
+`git rm` 该脚本（本会话自产物，删除无需走规则 7）。这不推翻方案 P——它把方案 P 的立论逼到更硬的一层：
+
+**根目录宽度 = 活着的对外接口总数。要真正 ≤7，唯一诚实的路是退役接口，不是整理文件。**
+
+**接口存活审计（2026-09-30 实测，git grep 到消费点）**：
+
+| 根项/族 | 数 | 存活证据 | 定性 |
+| --- | --- | --- | --- |
+| npm/pnpm 栈（package.json/pnpm-workspace/pnpm-lock/.npmrc/node_modules） | 5 | `packageManager: pnpm@10.18.0`；.npmrc 头注释自证 workspace 链接语义必需 | **活·不可退役**（除非放弃 Node 渠道） |
+| package-lock.json | 1 | dependabot/frontend-ci/check-dependency-size/check-native-registry 均引用 | 活（npm 双栈未退役） |
+| pip 渠道（pyproject/MANIFEST.in） | 2 | publish-dual.sh + check-version-sync G1 锚 + 版本红线 R3 | 活（退役 = 放弃 `pip install khy-os` 主渠道） |
+| 容器/云（Dockerfile/docker-compose/fly.staging.toml） | 3 | deploy-staging.yml workflow 真引用 fly；compose 是 AGENTS.md 写明的用户命令 | 活（路径可下沉 `deploy/`，接口本身要人裁） |
+| 启动器族（install-khy.ps1/khy.bat/khy-cli.bat/khy.sh/portable-setup.bat/.sh） | 6 | 对外安装/便携双击入口 | 活 → **P6 收进 `bin/`（6→1，净 −5）** |
+| AI 工具位（.claude/.cursor/.opencode/.zcode/.commandcode/.clinerules/.ai） | 7 | instructionFileService 真读 CLAUDE/AGENTS；OpenCode 在用（便携装）；**其余四个是否还在用只有人能答** | **待人逐一点名**（每退役一个 −1） |
+| 治理文档（README/AGENTS/CLAUDE/CHANGELOG/CONTRIBUTING/SECURITY） | 6 | AGENTS=规则真源；CHANGELOG=PROCESS-005 bump 锚；CONTRIBUTING/SECURITY 可迁 `.github/`（GitHub 认） | 活（−2 可迁） |
+| 本机态（.khy/.khyos/.workbuddy*/khy-Trajectory/.portable） | 6 | workbuddy 有 6+ 脚本消费点；.khy=数据寻址真源（便携设计刻意放根内） | 活（迁走=改便携定位，产品决定） |
+| git 杂项（.gitignore/.gitattributes/.editorconfig/.mailmap/.env.example/.git-blame-ignore-revs） | 6 | blame-ignore-revs **零引用且 git config 未设 → 死项**；.mailmap 16 行在用；.gitattributes 防 CRLF 翻搅（本仓有血案记忆） | **−1 可删**（blame-revs），其余活 |
+| 板块目录 17 个 | 17 | — | **方案 P 收为 5 域（−12）** |
+
+**算术（一步到位的终局）**：61 − 12(方案P) − 5(启动器) − 2(治理迁) − 1(死项) − 0~4(点死工具位) ≈ **37~41**；
+再退役 npm 双栈(−1)、fly(−1)、Docker 族下沉(−2)、pip 渠道(−2) ⇒ **~31**。
+⇒ **物理根 ≤7 与「四渠道交付 + 多 AI 工具 + 便携数据随仓」这三件产品事实互斥**——不是执行缺口，
+是接口总和的下界。7±2 在**每一层抽象**上都真正成立且可机判：域层=5（方案 P 物理化后）、
+每域第二层 ≤7（C-1 棘轮，D2 实测零超限）、功能单元 ≤7——**观测器已上线**：
+`scripts/ci/check-roots-isomorphic.js` 首档读数 **20 条非等根**（DOMAIN-DEPS._physicalization 为判据真源，
+P1–P5 每段完成单调下降，终态=exceptions 1）；接线进 check:layout 的工单挂在 §12.62
+（check-repo-layout.js/FEATURE-OWNERSHIP 现为并行在飞件 ` M`，判据同源、并入零成本）。
+
+**退役菜单（要更小根就要更小产品面，逐条人裁）**：A 退 pip 渠道 / B 退 fly 部署 /
+C 点名不再用的 AI 工具位 / D 数据家迁出仓库（与便携设计冲突，慎） / E 退 npm 双栈（先改 4 个消费方）。
+默认全不退役 ⇒ 方案 P + P6 + 迁移类动作全做完 ≈ **37**，这是本仓当前产品形态下的真实物理地板。
 
 ## §13 方案 R（重设计）：根 = 契约面 —— 逻辑分组 + 物理出根 + 宽度棘轮（2026-09-29，待人裁部分已标注）
 
