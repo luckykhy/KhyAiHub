@@ -71,4 +71,12 @@ function reset() {
   _checkpoints.length = 0;
 }
 
+// Nothing in the tree calls printSummary(), so the recorded checkpoints could
+// never be read: STARTUP_PROFILE=1 silently did nothing. Flushing at exit makes
+// the switch mean what it says; the listener is only installed when enabled, so
+// the default path stays zero-overhead.
+if (enabled) {
+  process.on('exit', printSummary);
+}
+
 module.exports = { checkpoint, getTimeline, printSummary, reset };
