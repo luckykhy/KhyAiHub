@@ -4244,6 +4244,8 @@ assemble-pip-runtime.js:34 消费 / pack-executable.js / khy-portable` 生产-�
 根 `dist/modules` 因此暂留（⑥ 族索引已注明）。② R4 横切收纳逐族待裁（§13.5 第 3 项）。
 ③ `.khyos/` 未归位数因 housekeeping 批次增到 127——隔离是 LAY-003 的合法通道，但它的账确实记在自己头上，如实入档。
 
+**验收读数**：根 66 → **61 → 63**（收口复核发现 `.workbuddy*` 与 `khy-Trajectory` 在隔离数小时内**自愈复生**——前者是外部工具运行态、后者是 khy 运行时自建且已列入 `check-commit-timing.js` / `pip_packaging_rules.py` 的 LOCAL_STATE 排除清单。定性随之订正：它们不是待认领垃圾而是**自愈型本机态**，正确处置是登记（索引 ⑥）而非反复清理；本批 root-b 隔离对这两件属「清了一个快照」，教训记档。
+
 **验收读数**：根 66 → **61**（tracked 53 不变、untracked 0、ignored 6）；索引覆盖探针 `COVERAGE OK`；
 `check-repo-layout` **0 error**；`check-debt-ledger` 0/0；`check:data-layout` 顶层可寻址 **60**（预算 20）。
 

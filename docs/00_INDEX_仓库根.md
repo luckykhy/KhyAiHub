@@ -1,11 +1,11 @@
 <!-- 文档分类: INDEX | 阶段: 常驻 | 上位: [MGMT-STD-001] 第 1.3 条 / [DESIGN-LAY-005] -->
 # 00_INDEX — 仓库根楼层索引
 
-> 根目录共 **61 项**，按消费方分六族。米勒定律的兑现方式是**先分组**：人记 6 族，不记 61 项；
+> 根目录共 **63 项**，按消费方分六族。米勒定律的兑现方式是**先分组**：人记 6 族，不记 61 项；
 > 族内「机器按根路径读取」的条目位置即契约，**永不动**（真源 [DESIGN-LAY-008] §3 裁决二、§4 不变量 3）。
 > 变更根条目前先读 `docs/10_规范/DESIGN-LAY/[DESIGN-LAY-008] 目录层级重设计执行路线图.md` §13（方案 R）。
 > 本索引由探针 `.khyos/tmp/root-census.js` + `.khyos/tmp/index-coverage.js` 对账（覆盖全部根条目才算数），
-> 最后核对 2026-09-29（R2 后：66 → 61，生成物与待认领项已出根）。
+> 最后核对 2026-09-29（R2 后：66 → 61 → 63——`.workbuddy*` 与 `khy-Trajectory` 隔离后**自愈复生**，系运行中工具的自动生成物，按「自愈型本机态」登记，见 ⑥）。
 
 ## ① 七层板块（L0–L6，真源 [DESIGN-LAY-005]）— 7 项
 
@@ -49,4 +49,6 @@
 | `node_modules/` | 依赖 |
 | `dist/` | **executables 族构建产物**（`esbuild-modules → dist/modules → 装配/打包/便携` 生产-消费链；生产者在飞，下一批整族迁 `entries/executables`，§12.55） |
 | `.commandcode/` | 工具私有（ignored 变体） |
+| `.workbuddy/` `.workbuddy-ai/` | 自愈型外部工具态（隔离后复生，2026-09-29 起登记不清理） |
+| `khy-Trajectory` | 自愈型符号链接 → `.khy`（khy 运行时自建，已在 `check-commit-timing.js` / `pip_packaging_rules.py` 的 LOCAL_STATE 清单登记） |
 | `.claude/` | Claude Code worktrees（本机在用） |
