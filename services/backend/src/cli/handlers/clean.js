@@ -61,12 +61,12 @@ const SCAN_SKIP = new Set([
  */
 const BUILD_TARGETS = [
   {
-    rel: 'dist/modules',
-    why: 'esbuild 六个模块 bundle 的公共输出目录',
+    rel: 'entries/executables/modules',
+    why: 'esbuild 六个模块 bundle 的公共输出目录（[LAYOUT-005] 单一根，2026-09-29 由 dist/modules 迁入）',
     rebuild: 'node packaging/build/esbuild-modules.js --prod',
   },
   {
-    rel: 'dist/debug-symbols',
+    rel: 'entries/executables/debug-symbols',
     why: '生产构建显式导出的 source map 留档',
     rebuild: 'node packaging/build/esbuild-modules.js --prod --debug-symbols',
   },
@@ -128,9 +128,9 @@ const BUILD_TARGETS = [
  */
 const BUILD_GLOBS = [
   {
-    dir: 'dist',
+    dir: 'entries/pip',
     match: /\.(whl|tar\.gz)$/,
-    why: 'pip sdist / wheel 发布包',
+    why: 'pip sdist / wheel 发布包（[LAYOUT-005] 单一根，2026-09-29 由 dist/ 迁入）',
     rebuild: 'bash scripts/release/build-and-audit-pip-purity.sh',
   },
   {

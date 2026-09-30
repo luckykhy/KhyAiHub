@@ -4329,6 +4329,38 @@ styleTemplates 19 / textEmphasisPolicy 20，合计 **91 例 / 0 fail**，显式�
 
 ---
 
+### 12.57 第 52 批（方案 R 车道）：executables 族出根 —— 根级生成物清零，宽度棘轮 60 → 61（+1 为自愈件，如实记）（2026-09-29 深夜）
+
+§12.55 留下的「下一批」在飞条件已解除（三个生产者脚本 mtime 均为数天前、git status 干净），本批整族翻转：
+
+**翻转面（11 文件，逐替换断言命中）**：生产者 `packaging/build/esbuild-modules.js`（modules + debug-symbols）、
+`pack-executable.js`；消费者 `verify-executable.js`、`packaging/installer/build_installer.js`（4 处路径 + 报错文案）、
+**NSIS 双脚本 OutFile**（dist/releases → entries/executables/releases）、
+`packaging/npm/scripts/assemble.js`、`audit-purity.js`、`scripts/ci/check-dependency-size.js`、
+`scripts/release/assemble-pip-runtime.js`（path.join 形态，首轮 grep 漏抓、宽口径补到）、
+`extensions/scripts/khy-portable/build-portable-artifact.js`（dist/portable 与 package-portable.js 收敛到同一 entries/portable 登记位）；
+双 clean 清单（`scripts/maintenance/clean.js`、`services/backend/src/cli/handlers/clean.js`）同步改指。
+残差 grep **0 命中**。`check-runtime-placement.js` 经查只管 bundled/runtime staging，不钉 dist/modules，无需翻转。
+
+**登记**：`BUILD-OUTPUTS.json` 新增 `entries/executables`（legacyPath = dist/modules, dist/executables, dist/releases,
+dist/debug-symbols；producer 三段链；rebuild 一条命令）；`.gitignore` 对 entries/ 是默认忽略，零改动。
+
+**物理搬迁**：`dist/modules` → `entries/executables/modules`，根 `dist/` 删除。
+
+**验证（全实跑）**：
+1. `node packaging/build/esbuild-modules.js --prod` → 6 份 bundle 全部落 **entries/executables/modules/**（17.05 MB khy 等）；
+2. `npm run build:pip` 全链绿——装配步消费的正是新路径的 bundle.mjs，sdist allowlist 5095 文件全对、纯净度审计 PASS；
+3. `check-dependency-size.js` 读新路径：**6 份 bundle 合计基线 187.8 MB → 当前 95.7 MB（−49%）**——旧 dist/modules
+   里的双份残留随搬迁一并清掉，这是本批的意外收益；
+4. sdist 是否会吞下 64 MB 模块：实证不会——现产 sdist 5995 成员中 entries/dist 命中 **0**（MANIFEST 的 graft 粒度
+   不含根级 entries/），无需改 pip_packaging_rules。
+
+**棘轮**：data-layout 顶层可寻址 **61**（批中曾到 60；+1 为 `.workbuddy` 自愈复生，自愈型本机态非新增债务，如实记）。
+台账 measured 60 → 61，note 附全轨迹。根 census 66 → **62**（tracked 53 不变）。
+
+**边界如实记**：① `check-dependency-size` 的 node_modules 实测 +6.71% 超预算——超在 `*_tmp_44912` 等
+pnpm 并行安装临时目录，非本批作用面（本批反而把 bundle 降了 49%），登记不修不 update；② R4 横切收纳仍逐族待裁。
+
 ## §13 方案 R（重设计）：根 = 契约面 —— 逻辑分组 + 物理出根 + 宽度棘轮（2026-09-29，待人裁部分已标注）
 
 用户对 §11.1 A 档提出「重新设计」。本节替代 A 档作为根目录收敛的现行方案；§11.1 保留作历史裁决记录。

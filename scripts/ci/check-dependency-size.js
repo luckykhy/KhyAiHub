@@ -271,7 +271,7 @@ function measureTree(rootNm, layout) {
  * 基线记 mode，模式不一致时不做对比 —— 拿压缩产物比未压缩产物只会得到假结论。
  */
 function measureBundles() {
-  const dir = path.join(ROOT, 'dist', 'modules');
+  const dir = path.join(ROOT, 'entries', 'executables', 'modules');
   const out = [];
   let ids;
   try {
@@ -453,7 +453,7 @@ line('依赖包数', counts.prodPackages, Number(b.prodPackages), (n) => n + ' �
 console.log('  其中 optional               ' + counts.optionalPackages + ' 个（按平台挑，不会全装）');
 
 console.log('');
-console.log('发布产物（dist/modules/*/bundle.mjs —— pip 与 npm 实际发出去的东西）');
+console.log('发布产物（entries/executables/modules/*/bundle.mjs —— pip 与 npm 实际发出去的东西）');
 if (bundles.length) {
   line('' + bundles.length + ' 份 bundle 合计', bundleBytes, Number(b.bundleBytes), mb, false);
   for (const [id, bytes] of bundles) {

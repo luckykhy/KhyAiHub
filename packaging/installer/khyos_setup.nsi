@@ -15,7 +15,7 @@
 
 ; ── General ──
 Name "${PRODUCT_NAME} ${VERSION}"
-OutFile "..\..\dist\releases\khy-os_setup_v${VERSION}.exe"
+OutFile "..\..\entries\executables\releases\khy-os_setup_v${VERSION}.exe"
 InstallDir "$LOCALAPPDATA\Programs\khy-os"
 InstallDirRegKey HKCU "Software\khy-os" "InstallDir"
 RequestExecutionLevel highest

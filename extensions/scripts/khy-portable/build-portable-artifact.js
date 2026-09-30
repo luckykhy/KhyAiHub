@@ -41,7 +41,7 @@ function parseArgs(argv) {
     kind: '',
     platform: current.platform,
     arch: current.arch,
-    out: path.join(ROOT, 'dist', 'portable'),
+    out: path.join(ROOT, 'entries', 'portable'),
     nodeRuntime: '',
     pythonRuntime: '',
     npmCache: '',
@@ -103,7 +103,7 @@ function resolveInputs(options) {
     artifactDir: path.join(options.out, `${options.kind}-${VERSION}-${slug}`),
     aiFrontend: path.join(ROOT, 'apps', 'ai-frontend', 'dist'),
     quantFrontend: path.join(ROOT, 'software', 'khyquant', 'frontend', 'dist'),
-    runtimeBundle: path.join(ROOT, 'dist', 'modules', 'khy', 'bundle.mjs'),
+    runtimeBundle: path.join(ROOT, 'entries', 'executables', 'modules', 'khy', 'bundle.mjs'),
   };
 }
 

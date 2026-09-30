@@ -12,7 +12,7 @@
 
 ; ── General ──
 Name "${PRODUCT_NAME} Uninstaller"
-OutFile "..\..\dist\releases\khy-os-uninstall.exe"
+OutFile "..\..\entries\executables\releases\khy-os-uninstall.exe"
 RequestExecutionLevel highest
 ShowInstDetails show
 ShowUnInstDetails show

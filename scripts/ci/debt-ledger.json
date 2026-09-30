@@ -293,14 +293,14 @@
       "id": "layout.root-top-level",
       "guard": "scripts/ci/check-data-layout.js",
       "metric": "root-top-level",
-      "measured": 60,
+      "measured": 61,
       "measuredAt": "2026-09-29",
       "target": 20,
       "risk": "P3",
       "owner": "platform",
       "dueBy": "2026-12-31",
       "status": "open",
-      "note": "仓库顶层可寻址项（check:data-layout 读数，安装产物 node_modules 豁免不计）。方案 R（[DESIGN-LAY-008] §13）的宽度棘轮：起点 64（2026-09-29 R2 前），本批 R2a 生成物出根后实测 60；target 20 = 方案 R 渐近线，只降不升。剩余大头是 executables 族根级 dist/（esbuild→modules→装配/打包/便携 生产-消费链，在飞区，下一批整族翻转）。",
+      "note": "仓库顶层可寻址项（check:data-layout 读数，安装产物 node_modules 豁免不计）。方案 R（[DESIGN-LAY-008] §13）的宽度棘轮：起点 64（2026-09-29 R2 前），本批 R2a 生成物出根后实测 60；target 20 = 方案 R 渐近线，只降不升。剩余大头是 executables 族根级 dist/（esbuild→modules→装配/打包/便携 生产-消费链，在飞区，下一批整族翻转）。 【R2 终读数】executables 族出根后 data-layout 实测 61（批中曾到 60；+1 为 .workbuddy 自愈复生，属自愈型本机态非新增债务）。pip/executables 两族已 registered，根级生成物清零。",
       "plan": "[阶段R2-R4·方案R] 逐族物理出根/收纳：R2a pip 族已迁（entries/pip，登记表 registered）；下一批 executables 族（esbuild-modules→dist/modules→装配/打包/便携 生产-消费链 + CI 上传路径，登记 entries/executables）——在飞区，须等作者车道收口；再后按硬面升序做横切收纳（patches 8 → electron 24 → evidence 25 → deploy 37 → packaging 64），scripts/tests 留根。每族一个提交、全引用重指、check:layout+docs:verify 兜链，读数随批下调。"
     }
   ]

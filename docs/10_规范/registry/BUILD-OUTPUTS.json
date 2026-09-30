@@ -324,6 +324,18 @@
       "status": "registered",
       "sunset": "2026-12-31",
       "note": "2026-09-29 随方案 R-R2 迁入；CI build-executables.yml 上传路径同步。"
+    },
+    {
+      "id": "executables",
+      "path": "entries/executables",
+      "legacyPath": "dist/modules, dist/executables, dist/releases, dist/debug-symbols",
+      "group": "build",
+      "producer": "packaging/build/esbuild-modules.js（modules/debug-symbols）→ packaging/build/pack-executable.js（executables）→ packaging/installer/build_installer.js + NSIS（releases）",
+      "rebuild": "node packaging/build/esbuild-modules.js --prod && node packaging/build/pack-executable.js --all",
+      "inBuildAll": true,
+      "status": "registered",
+      "sunset": "2026-12-31",
+      "note": "2026-09-29 方案 R-R2 executables 族整链迁入；生产者、5 个消费者、双 clean 清单与 NSIS OutFile 同步重指（[DESIGN-LAY-008] §12.56）。"
     }
   ]
 }

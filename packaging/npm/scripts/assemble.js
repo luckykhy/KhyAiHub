@@ -35,7 +35,7 @@ try {
     root: npmRoot,
     entries: [
       {
-        from: path.join(repoRoot, 'dist', 'modules', 'khy', 'bundle.mjs'),
+        from: path.join(repoRoot, 'entries', 'executables', 'modules', 'khy', 'bundle.mjs'),
         to: 'runtime/khy/bundle.mjs',
       },
     ],

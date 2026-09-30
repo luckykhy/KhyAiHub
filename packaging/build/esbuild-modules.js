@@ -19,13 +19,13 @@
  * （packaging/npm、便携包）从来只拷 bundle.mjs，map 一直是白建的。
  *
  * 但 map 不能直接丢掉：线上栈回溯没有它就只剩压缩后的行号。所以走分流——
- * `--debug-symbols` 把 map 写到 dist/debug-symbols/<module>/ 下，作为**独立**
+ * `--debug-symbols` 把 map 写到 entries/executables/debug-symbols/<module>/ 下，作为**独立**
  * 的 debug artifact 留档，不进任何运行时产物目录。开发构建（不带 --prod）
  * 仍然内联 map，本地调试体验不变。
  *
  * ── 留档必须能自证新旧 ──────────────────────────────────────────────────
  * `--prod` 不带 `--debug-symbols` 时 esbuild 根本不产 map，所以此刻躺在
- * dist/modules/ 里的那份必定是**上一次**构建的残留，对着的是另一个 bundle。
+ * entries/executables/modules/ 里的那份必定是**上一次**构建的残留，对着的是另一个 bundle。
  * 它会被**删掉，而不是搬进 debug-symbols**：一份错的符号冒充权威留档，比明确
  * 没有符号难查得多——解出来的行号指向另一个函数，而「看起来解开了」。
  *
@@ -43,10 +43,10 @@ const crypto = require('crypto');
 const ROOT = path.resolve(__dirname, '../..');
 const BACKEND_ROOT = path.join(ROOT, 'services/backend');
 const MODULES_JSON = path.join(ROOT, 'packaging/modules/modules.json');
-const DIST_ROOT = path.join(ROOT, 'dist/modules');
-// debug 符号刻意放在 dist/modules 之外：便携/发布脚本拷的是 dist/modules/<id>/，
+const DIST_ROOT = path.join(ROOT, 'entries', 'executables', 'modules');
+// debug 符号刻意放在 entries/executables/modules 之外：便携/发布脚本拷的是 entries/executables/modules/<id>/，
 // 同级目录不会被顺手带进产物，留档和分发因此天然分开。
-const DEBUG_SYMBOLS_ROOT = path.join(ROOT, 'dist/debug-symbols');
+const DEBUG_SYMBOLS_ROOT = path.join(ROOT, 'entries', 'executables', 'debug-symbols');
 
 // ── Load configurations ──
 const catalog = JSON.parse(fs.readFileSync(MODULES_JSON, 'utf8'));
@@ -210,7 +210,7 @@ async function buildModule(moduleConfig) {
         // 符号冒充权威留档:拿它去解压缩后的栈回溯,得到的行号指向另一个函数,而
         // 「看起来解开了」比「明确没有符号」难查得多。所以是删,不是搬。
         //
-        // 它也不能留在 dist/modules/ 里:那是发布脚本拷贝的源目录,64 MB 的 map
+        // 它也不能留在 entries/executables/modules/ 里:那是发布脚本拷贝的源目录,64 MB 的 map
         // 离进分发包只差有人把 copyFileSync 写成 copyTree。
         fs.rmSync(mapPath, { force: true });
         console.log('    stale source map removed (本次未请求 --debug-symbols)');

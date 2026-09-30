@@ -31,7 +31,7 @@ try {
     root,
     entries: [
       {
-        from: path.join(root, 'dist', 'modules', 'khy', 'bundle.mjs'),
+        from: path.join(root, 'entries', 'executables', 'modules', 'khy', 'bundle.mjs'),
         to: 'runtime/khy/bundle.mjs',
       },
     ],

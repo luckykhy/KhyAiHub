@@ -9,7 +9,7 @@
  *   - No compiled/build artifacts (.so, .dylib, .o, .bin, .elf, …)
  *   - Required package files must be present
  *
- * The npm channel publishes standalone executables under dist/executables/<platform>/.
+ * The npm channel publishes standalone executables under entries/executables/executables/<platform>/.
  * This script audits that directory tree.
  *
  * Exit 0 on pass, 1 on first violation.
@@ -215,7 +215,7 @@ function main() {
   });
 
   if (platforms.length === 0) {
-    fail('No platform directories found under dist/executables/');
+    fail('No platform directories found under entries/executables/executables/');
   }
 
   if (platformFilter) {

@@ -10,7 +10,7 @@
  *
  * Prerequisites:
  *   - NSIS 3.x installed and in PATH (makensis)
- *   - dist/executables/win-x64/khy-win-x64.exe exists (run build-all.js first)
+ *   - entries/executables/executables/win-x64/khy-win-x64.exe exists (run build-all.js first)
  *   - packaging/installer/assets/ contains wizard.ico and header.bmp
  */
 
@@ -21,7 +21,7 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '../..');
 const PAYLOAD_DIR = path.join(__dirname, 'payload');
 const ASSETS_DIR = path.join(__dirname, 'assets');
-const RELEASES_DIR = path.join(ROOT, 'dist', 'releases');
+const RELEASES_DIR = path.join(ROOT, 'entries', 'executables', 'releases');
 
 // ── Read version from pyproject.toml ──
 function getVersion() {
@@ -35,15 +35,15 @@ function getVersion() {
 // ── Locate the khy executable ──
 function findKhyExecutable(version) {
   const candidates = [
-    path.join(ROOT, 'dist', 'executables', 'win-x64', 'khy-win-x64.exe'),
-    path.join(ROOT, 'dist', 'executables', 'win-x64', `khy-${version}-win-x64.exe`),
-    path.join(ROOT, 'dist', 'executables', 'win-x64', 'khy-os-win-x64.exe'),
+    path.join(ROOT, 'entries', 'executables', 'executables', 'win-x64', 'khy-win-x64.exe'),
+    path.join(ROOT, 'entries', 'executables', 'executables', 'win-x64', `khy-${version}-win-x64.exe`),
+    path.join(ROOT, 'entries', 'executables', 'executables', 'win-x64', 'khy-os-win-x64.exe'),
   ];
   for (const c of candidates) {
     if (fs.existsSync(c)) return c;
   }
   // Fallback: glob for any .exe
-  const exeDir = path.join(ROOT, 'dist', 'executables', 'win-x64');
+  const exeDir = path.join(ROOT, 'entries', 'executables', 'executables', 'win-x64');
   if (fs.existsSync(exeDir)) {
     const files = fs.readdirSync(exeDir).filter(f => f.endsWith('.exe'));
     if (files.length > 0) return path.join(exeDir, files[0]);
@@ -157,7 +157,7 @@ async function main() {
   const khyExe = findKhyExecutable(version);
   if (!khyExe) {
     console.error('[build_installer] khy executable not found. Run "node packaging/build/build-all.js" first.');
-    console.error('[build_installer] Expected at: dist/executables/win-x64/khy-win-x64.exe');
+    console.error('[build_installer] Expected at: entries/executables/executables/win-x64/khy-win-x64.exe');
     process.exit(1);
   }
   console.log(`  Executable: ${path.relative(ROOT, khyExe)}`);

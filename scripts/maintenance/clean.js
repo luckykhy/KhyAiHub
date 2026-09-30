@@ -72,10 +72,10 @@ const TARGETS = [
     rebuild: 'pnpm run electron:dev',
   },
   {
-    rel: 'dist',
+    rel: 'entries/executables',
     group: 'build',
-    what: 'Python sdist/wheel 与 dist/modules 下的 6 份模块 bundle',
-    rebuild: 'node packaging/build/esbuild-modules.js（模块 bundle）/ scripts/release/publish-dual.sh（sdist+wheel）',
+    what: 'esbuild 模块 bundle、打包可执行文件与安装器输出（[LAYOUT-005] 单一根，2026-09-29 由 dist/ 迁入）',
+    rebuild: 'node packaging/build/esbuild-modules.js --prod（模块 bundle）/ node packaging/build/pack-executable.js --all（可执行）/ packaging/installer/build_installer.js（安装器）',
   },
   {
     rel: 'build',

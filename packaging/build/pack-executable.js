@@ -18,8 +18,8 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '../..');
 const MODULES_JSON = path.join(ROOT, 'packaging/modules/modules.json');
 const NATIVE_MODULES_JSON = path.join(__dirname, 'native-modules.json');
-const DIST_MODULES = path.join(ROOT, 'dist/modules');
-const DIST_EXECUTABLES = path.join(ROOT, 'dist/executables');
+const DIST_MODULES = path.join(ROOT, 'entries', 'executables', 'modules');
+const DIST_EXECUTABLES = path.join(ROOT, 'entries', 'executables', 'executables');
 
 const catalog = JSON.parse(fs.readFileSync(MODULES_JSON, 'utf8'));
 const nativeConfig = JSON.parse(fs.readFileSync(NATIVE_MODULES_JSON, 'utf8'));
