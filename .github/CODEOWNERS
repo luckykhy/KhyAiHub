@@ -639,7 +639,7 @@ services/backend/tests/gateway/ocrRescueStatusNoticeRealImage.test.js @ocr-rescu
 services/backend/tests/gateway/_ocrGatewayHarness.js @ci-duplication-guard
 scripts/lib/duplicationGuard.js @ci-duplication-guard
 scripts/check-duplication.js @ci-duplication-guard
-.duplication-baseline.json @ci-duplication-guard
+scripts/ci/duplication-baseline.json @ci-duplication-guard
 scripts/tests/duplicationGuard.test.js @ci-duplication-guard
 scripts/tests/check-duplication.test.js @ci-duplication-guard
 

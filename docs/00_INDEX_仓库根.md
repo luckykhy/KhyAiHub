@@ -1,11 +1,11 @@
 <!-- 文档分类: INDEX | 阶段: 常驻 | 上位: [MGMT-STD-001] 第 1.3 条 / [DESIGN-LAY-005] -->
 # 00_INDEX — 仓库根楼层索引
 
-> 根目录共 **62 项**，按消费方分六族。米勒定律的兑现方式是**先分组**：人记 6 族，不记 61 项；
+> 根目录共 **61 项**，按消费方分六族。米勒定律的兑现方式是**先分组**：人记 6 族，不记 61 项；
 > 族内「机器按根路径读取」的条目位置即契约，**永不动**（真源 [DESIGN-LAY-008] §3 裁决二、§4 不变量 3）。
 > 变更根条目前先读 `docs/10_规范/DESIGN-LAY/[DESIGN-LAY-008] 目录层级重设计执行路线图.md` §13（方案 R）。
 > 本索引由探针 `.khyos/tmp/root-census.js` + `.khyos/tmp/index-coverage.js` 对账（覆盖全部根条目才算数），
-> 最后核对 2026-09-29（R2 全批后：66 → 62，pip/executables 两族生成物全部出根——`.workbuddy*` 与 `khy-Trajectory` 隔离后**自愈复生**，系运行中工具的自动生成物，按「自愈型本机态」登记，见 ⑥）。
+> 最后核对 2026-09-29（R2/R4 后：66 → 62 → 61（duplication-baseline 迁 scripts/ci/），pip/executables 两族生成物全部出根——`.workbuddy*` 与 `khy-Trajectory` 隔离后**自愈复生**，系运行中工具的自动生成物，按「自愈型本机态」登记，见 ⑥）。
 
 ## ① 七层板块（L0–L6，真源 [DESIGN-LAY-005]）— 7 项
 
@@ -24,7 +24,7 @@
 - **git 族（7）**：`.git/` `.gitignore` `.gitattributes` `.mailmap` `.git-blame-ignore-revs` `.githooks/`（`core.hooksPath` 指此）`.github/`
 - **包管理族（8）**：`package.json` `package-lock.json` `pnpm-lock.yaml` `pnpm-workspace.yaml` `.npmrc` `pyproject.toml` `MANIFEST.in` `.portable`
 - **部署/构建族（5）**：`Dockerfile` `docker-compose.yml` `fly.staging.toml` `.dockerignore` `.env.example`
-- **工具链杂项（4）**：`.editorconfig` `.clinerules` `.duplication-baseline.json` `.ai/`（khy metadata 种子文档，`khy metadata refresh` 维护）
+- **工具链杂项（3）**：`.editorconfig` `.clinerules` `.duplication-baseline.json` `.ai/`（khy metadata 种子文档，`khy metadata refresh` 维护）
 - **AI 工具配置（3，tracked）**：`.cursor/` `.opencode/` `.zcode/`
 
 ## ③ 入口族（零依赖引导壳，裁决二：留根不进 `entries/`）— 6 项

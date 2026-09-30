@@ -14,7 +14,7 @@
  *   node scripts/check-duplication.js                 # 扫默认 scope(warn)
  *   node scripts/check-duplication.js --changed       # 仅报涉及改动文件的克隆类
  *   node scripts/check-duplication.js --gate --strict-warnings
- *   node scripts/check-duplication.js --write-baseline # 生成/刷新 .duplication-baseline.json
+ *   node scripts/check-duplication.js --write-baseline # 生成/刷新 scripts/ci/duplication-baseline.json
  *   node scripts/check-duplication.js <dir> [more...]  # positional 覆盖 scope
  */
 'use strict';
@@ -36,8 +36,8 @@ const rawTargets = args.filter((a) => !a.startsWith('--'));
 // 默认扫描范围:OCR 网关测试族(本次去重的主战场)。positional 参数可覆盖。
 const DEFAULT_SCOPE = ['services/backend/tests/gateway'];
 const DEFAULT_MODE = 'warn'; // 阶段一;翻转硬门时改此常量为 'gate'。
-// 基线路径:默认仓库根 .duplication-baseline.json;KHY_DUPLICATION_BASELINE 可覆盖(测试隔离用)。
-const BASELINE_PATH = path.resolve(cwd, process.env.KHY_DUPLICATION_BASELINE || '.duplication-baseline.json');
+// 基线路径:默认 scripts/ci/duplication-baseline.json(2026-09-29 由仓库根迁入,与 ruleguard-baseline 同址;方案 R-R4,[DESIGN-LAY-008] §12.58);KHY_DUPLICATION_BASELINE 可覆盖(测试隔离用)。
+const BASELINE_PATH = path.resolve(cwd, process.env.KHY_DUPLICATION_BASELINE || 'scripts/ci/duplication-baseline.json');
 
 const SCAN_EXTS = new Set(['.js', '.cjs', '.mjs', '.ts']);
 const IGNORE_DIRS = new Set(['.git', 'node_modules', 'dist', 'build', '.cache', '.tmp', 'coverage', 'logs']);
@@ -50,7 +50,7 @@ function isSelfIgnored(rel) {
   const norm = rel.replace(/\\/g, '/');
   if (SELF_IGNORE.has(norm)) return true;
   if (norm.startsWith('scripts/tests/')) return true; // e2e/单测 fixture 与构造串
-  if (norm === '.duplication-baseline.json') return true;
+  if (norm === 'scripts/ci/duplication-baseline.json' || norm === '.duplication-baseline.json') return true;
   return false;
 }
 

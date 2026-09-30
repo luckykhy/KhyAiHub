@@ -4361,6 +4361,28 @@ dist/debug-symbols；producer 三段链；rebuild 一条命令）；`.gitignore`
 **边界如实记**：① `check-dependency-size` 的 node_modules 实测 +6.71% 超预算——超在 `*_tmp_44912` 等
 pnpm 并行安装临时目录，非本批作用面（本批反而把 bundle 降了 49%），登记不修不 update；② R4 横切收纳仍逐族待裁。
 
+### 12.58 第 53 批（方案 R 车道）：R4 终裁 —— 逐族契约钉点定案，duplication-baseline 迁 scripts/ci/（2026-09-30）
+
+用户再次以根目录截图追问 5-3-1 符合性。本批把 §13 R4 的「逐族拍板」用**机器契约钉点证据**定案（探针
+`.khyos/tmp/r4-contract-audit.js`，只扫机器面：pnpm/Dockerfile/package.json/CODEOWNERS/CI/守卫）：
+
+| 候选 | 机器面钉点（实测） | 终裁 |
+| --- | --- | --- |
+| `patches/` | `pnpm-workspace.yaml:28` patchedDependencies 按路径引用 **且 pnpm 在读锁文件阶段即校验补丁**（Dockerfile:91 注释自证）+ `Dockerfile:96 COPY patches/`；离线环境无法重建锁文件验证搬迁 | **钉死，留根** |
+| `packaging/` | 机器面 **80 处**：CODEOWNERS 5+、CI、Docker、npm 链 | **钉死，留根** |
+| `evidence/` | `package.json` 五条 `evidence:*` 入口 + CODEOWNERS + 软著申报链（PROCESS-010） | **钉死，留根** |
+| `deploy/` | 机器面仅 3 处且全是描述性；内容 = `deploy/free-test/` 自包含试验子树（自带 .github/apps/supabase/ps1）。搬迁收益 1 项、收益/扰动比过低 | **留根**（登记：自包含试验子树，唯一成员） |
+| `electron/` | **疑似退役壳**：目录仅 main.js/preload.js/services，**无 package.json**；BUILD-OUTPUTS 登记的 producer（"pnpm exec electron-builder"）在全仓机器面**零调用点**。但它是 tracked 代码——删除必须走规则 7（scrub-plan + rollback + 文档背书核查） | **退役候选**，登记待 scrub 程序 + 所有者裁决，本批不删 |
+| `.duplication-baseline.json` | 唯一消费者 `check-duplication.js`（env 可覆盖）+ CODEOWNERS 1 行 | **已迁移** → `scripts/ci/duplication-baseline.json`（`git mv` 保历史；与 ruleguard-baseline 同址惯例）；checker 默认路径/自指豁免/CODEOWNERS 同步，套件 8/8 绿，守卫 0 error |
+| `.portable` | 桌面端/provider-hub 沿目录上溯找此标记定位便携根——**位置即契约** | 留根 |
+
+**R4 结论**：根物理收敛到**契约地板**——剩余 61 项中 33 项为机器契约+入口族（位置即契约）、9 项横切层族代表
+（scripts/tests 留根已裁、其余四族被上表钉死）、7 项自愈型本机态。进一步的物理出根只剩 B 档
+（§13 R5：七层降级 + 启动器进 bin/ + 发布冻结窗口），触发条件未满足。
+
+**验收**：根 census 62 → **61**；data-layout 顶层可寻址 **60**（台账 measured 61 → 60 同步）；
+索引覆盖探针 OK；`check-duplication` 0 error（373 warning 为存量建议，advisory）；`check-debt-ledger` 0/0。
+
 ## §13 方案 R（重设计）：根 = 契约面 —— 逻辑分组 + 物理出根 + 宽度棘轮（2026-09-29，待人裁部分已标注）
 
 用户对 §11.1 A 档提出「重新设计」。本节替代 A 档作为根目录收敛的现行方案；§11.1 保留作历史裁决记录。

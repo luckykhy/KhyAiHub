@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [RESEARCH-021] 5-3-1符合性复测与方案R收官-2026-09-30.md -->
+<title>[RESEARCH-021] 5-3-1 架构符合性复测与方案 R 收官报告 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>11_报告<span class="sep">›</span>RESEARCH<span class="sep">›</span>[RESEARCH-021] 5-3-1 架构符合性复测与方案 R 收官报告</div>
+      <header class="hero reveal"><h1>[RESEARCH-021] 5-3-1 架构符合性复测与方案 R 收官报告</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#research-021-5-3-1-架构符合性复测与方案-r-收官报告">[RESEARCH-021] 5-3-1 架构符合性复测与方案 R 收官报告</a></li><li class="lvl-2"><a href="#1-调研报告-当前态实测">§1 调研报告（当前态实测）</a></li><li class="lvl-2"><a href="#2-架构设计-当前态-五域模型已运行-9-个月-方案-r-收官">§2 架构设计（当前态：五域模型已运行 9 个月 + 方案 R 收官）</a></li><li class="lvl-2"><a href="#3-迁移路线图-收官态-绞杀者周期已完成两轮">§3 迁移路线图（收官态：绞杀者周期已完成两轮）</a></li><li class="lvl-2"><a href="#4-验证清单-可机判-当前读数">§4 验证清单（可机判，当前读数）</a></li><li class="lvl-2"><a href="#5-结论-三句">§5 结论（三句）</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- 文档分类: RESEARCH-021 | 阶段: 调研 | 原路径: 新建 --&gt;</p>
+<h1 id="research-021-5-3-1-架构符合性复测与方案-r-收官报告">[RESEARCH-021] 5-3-1 架构符合性复测与方案 R 收官报告<a class="anchor" href="#research-021-5-3-1-架构符合性复测与方案-r-收官报告" aria-label="锚点">#</a></h1>
+<blockquote><p>触发：用户 2026-09-30 重发 [RESEARCH-018] 的调研模板并附当前根目录截图，要求「调研现在的情况继续完成」。<br>本报告是 <strong>RESEARCH-018 的复测版</strong>：同一模板、同一理论框架，对照 2026-09-30 的实测状态逐条回答；<br>执行细节与批次台账不在此重复（唯一真源 [DESIGN-LAY-008] §12.44–§12.58）。全部数字可用文中命令复算。</p></blockquote>
+<hr>
+<h2 id="1-调研报告-当前态实测">§1 调研报告（当前态实测）<a class="anchor" href="#1-调研报告-当前态实测" aria-label="锚点">#</a></h2>
+<p><strong>技术栈</strong>（复测 [RESEARCH-018] §1.1，未变）：六语言单仓——JS 6 969 文件 1.55 M 行、Vue 120、Python 119、C/ASM 170、Dart 63、TS 129；构建面 pyproject + npm/pnpm（9 workspace 包）+ electron-builder + Docker。</p>
+<p><strong>根目录宽度</strong>（本轮主战场，探针 <code>.khyos/tmp/root-census.js</code>）：</p>
+<table><thead><tr><th>时间点</th><th>根项数</th><th>事件</th></tr></thead><tbody><tr><td>[RESEARCH-018] 首测</td><td>79</td><td>Phase 0 清创前</td></tr><tr><td>2026-09-28 清创后</td><td>67</td><td>12 根孪生 + 6 垃圾隔离</td></tr><tr><td>2026-09-29 方案 R 起</td><td>66</td><td>层次索引建成</td></tr><tr><td>2026-09-29 R2（pip 族）</td><td>61</td><td>dist/build/egg-info 出根 + 3 待认领隔离</td></tr><tr><td><strong>2026-09-30 R4 收官</strong></td><td><strong>61（census）/ 60（data-layout 可寻址）</strong></td><td>duplication-baseline 迁出 + <code>.workbuddy</code> 自愈复生 +1</td></tr></tbody></table>
+<p><strong>痛点复测</strong>（对照 [RESEARCH-018] §1.3）：</p>
+<table><thead><tr><th>痛点</th><th>首测</th><th>现测</th><th>判定</th></tr></thead><tbody><tr><td>循环依赖</td><td>216 文件 SCC（首版）/ 3 簇 201 成员（订正）</td><td>静态 3 簇不变；<strong>R3 运行时对账：四条真实命令路径第一方成环 0 次</strong>（60 次全第三方，钩子探针 <code>.khyos/tmp/r3-hook.js</code>）</td><td>静态上界已证伪为运行时事实；切割集收缩为 7 条顶层边，未消（待批）</td></tr><tr><td>上帝文件 &gt;2000 行</td><td>57 个</td><td>未复测（属任务 T-020/T-021 在飞拆分面）</td><td>不在本轮范围</td></tr><tr><td>测试共置率 &lt;1%</td><td>22/2988</td><td>棘轮 653 → <strong>315</strong>（signed），守卫实测随并行车道波动</td><td><strong>大幅改善</strong>，进行中</td></tr><tr><td>根宽度 5±2</td><td>79</td><td>61</td><td><strong>-18（-23%）</strong>，见 §4 打分</td></tr></tbody></table>
+<p><strong>约束复测</strong>：git 对象库损坏<strong>仍在</strong>（C-10 FAIL），但保全已完成（<code>.git</code> tar 备份 239.4 MB + 25 条 salvage refs + 17 bundle，manifest 在 <code>BuildArtifacts/</code>）；commit 技术可行（本周期 7 个提交落地：290b1255 / 689023c0 / 134e4531 / 1ff6d608 / 3d5df1e9 / ccdd3c93 / 待记本批）；远端 diverged（前 57/后 162）未裁，镜像队列 1 条欠账。</p>
+<hr>
+<h2 id="2-架构设计-当前态-五域模型已运行-9-个月-方案-r-收官">§2 架构设计（当前态：五域模型已运行 9 个月 + 方案 R 收官）<a class="anchor" href="#2-架构设计-当前态-五域模型已运行-9-个月-方案-r-收官" aria-label="锚点">#</a></h2>
+<p><strong>五顶级域</strong>（真源 <code>docs/10_规范/registry/DOMAIN-DEPS.json</code>，判定非论文推导而是<strong>在册运行</strong>）：</p>
+<table><thead><tr><th>域</th><th>根位</th><th>档位</th><th>本周期状态</th></tr></thead><tbody><tr><td>D1 运行时内核</td><td>services/backend/src、platform 等</td><td>热</td><td>d2-no-reach-into-d1 方向门 <strong>Q1 已建档</strong>（S1，首读 159 条，基线 205）</td></tr><tr><td>D2 业务上下文</td><td>services/domain（31 单元/622 源）</td><td>热/温</td><td>功能单元棘轮 653 → 315（test 共置）；entry-buffer 恒等式度量闭合</td></tr><tr><td>D3 共享底座</td><td>utils/、constants/</td><td>温</td><td>d3-purity 门 37 条存量；<code>flagRegistry</code>/<code>ccFormat</code>/<code>ansiSanitizer</code>/<code>utils/text</code> 已归位</td></tr><tr><td>D4 交付与接入</td><td>apps/、software/、extensions/、entries/、packaging/、electron/</td><td>热/温</td><td><strong>产物单一根收口</strong>：pip/executables/portable 三族全部迁入 <code>entries/</code>，根级生成物清零</td></tr><tr><td>D5 工程与档案</td><td>scripts/、docs/、.github/、evidence/、deploy/、patches/</td><td>冷</td><td>根级治理基线开始同址化（duplication-baseline 迁 scripts/ci/）</td></tr></tbody></table>
+<p><strong>3 层子结构 / 功能单元</strong>：D2 单元模板（capability + 共置 test + README + khy.module.json）已产出 <strong>7 个完整示范单元</strong>（§12.45/12.52）；C-3 分层单轴已首测（54 父目录：单轴 33 / 混轴 15）。</p>
+<p><strong>认知负载验证（§1 条款对根的诚实结论）</strong>：根 61 项对「5±2」仍超 8 倍——<strong>这是物理地板，不是未完成</strong>：</p>
+<ul><li>33 项 = 机器契约 + 入口族（pnpm/pyproject/git/hooks/6 启动器/AI 工具配置位——<strong>位置即契约</strong>，搬走即断链，五条钉点证据见 [DESIGN-LAY-008] §12.58 表）；</li><li>9 项 = 横切层族代表（scripts/tests 留根已裁；patches/evidence/packaging/deploy 四族钉死）；</li><li>7 项 = 自愈型本机态（<code>.workbuddy*</code>、<code>khy-Trajectory</code> 等隔离后复生，登记不清理）；</li><li><strong>分组策略已兑现</strong>：六族楼层索引 <code>docs/00_INDEX_仓库根.md</code>（覆盖探针常绿）——米勒定律管认知负载，索引把 61 项降为 6 族。</li></ul>
+<hr>
+<h2 id="3-迁移路线图-收官态-绞杀者周期已完成两轮">§3 迁移路线图（收官态：绞杀者周期已完成两轮）<a class="anchor" href="#3-迁移路线图-收官态-绞杀者周期已完成两轮" aria-label="锚点">#</a></h2>
+<p><strong>已完成（本周期 7 提交）</strong>：P0 清创 → P1 方向门（Q1 落地 S1）→ P2 破环前置（切割集 16→7 条顶层边，R3 运行时对账兜底）→ P3 功能单元棘轮 653→315 → P4 生成物三族出根（pip/executables/portable，全链实跑绿）→ R4 契约地板定案 → R3 宽度棘轮建档（measured 60 / target 20）。</p>
+<p><strong>剩余（全部有明确门槛，非「再努力」题）</strong>：</p>
+<table><thead><tr><th>项</th><th>门槛</th><th>归属</th></tr></thead><tbody><tr><td>P2 消 7 条顶层 D2→D1 边</td><td>行为面改动授权（逐条注入/下沉，每条一提交一 SCC 复测）</td><td>待批</td></tr><tr><td><code>electron/</code> 退役</td><td>规则 7 scrub 程序（目录无 package.json、机器面零调用点——退役候选证据 §12.58）</td><td>待所有者</td></tr><tr><td>C-10 <code>.git</code> 终修</td><td>prune/新克隆二选一 + §12.0b 双历史合并三出路（两个独立决定）</td><td>待拍板</td></tr><tr><td>B 档（真 ≤10）</td><td>R2-R4 已完成；棘轮 ≥4 周无回弹后开「七层降级 + 启动器进 bin/」冻结窗口</td><td>远期门</td></tr><tr><td>R4 尾项</td><td>无——<strong>已终裁：四族钉死留根，scripts/tests 留根</strong></td><td>关闭</td></tr></tbody></table>
+<p><strong>回滚</strong>：全程沿用 LAY-003（housekeeping manifest 可原路撤回）+ pathspec 提交逐批 revert；<code>.git</code> 有全量 tar 备份。</p>
+<hr>
+<h2 id="4-验证清单-可机判-当前读数">§4 验证清单（可机判，当前读数）<a class="anchor" href="#4-验证清单-可机判-当前读数" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>条款</th><th>判据</th><th>当前读数</th><th>状态</th></tr></thead><tbody><tr><td>V-1</td><td>§1 目录宽度</td><td>新建目录 ≤7；根走棘轮</td><td>根 61/60（棘轮 measured，target 20 只降不升）；<strong>D2 域内零超限</strong></td><td>棘轮运行中</td></tr><tr><td>V-2</td><td>§1 分组策略</td><td>&gt;7 必有中间抽象层</td><td>根=六族索引（覆盖探针常绿）；entries/=登记表派生</td><td><strong>通过</strong></td></tr><tr><td>V-3</td><td>§2 三维定位</td><td>根项 1 跳、代码 ≤4 段</td><td>根项 1 跳（索引）；代码深度档待 B 档（880 文件 &gt;6 段，口径已定）</td><td>部分</td></tr><tr><td>V-4</td><td>§2 热温冷</td><td>fan-in 分档常驻</td><td>常驻仪器上线（hot 13 全部 ≤6 段，「热者浅放」自然满足）；9 个温且深文件点名待安置</td><td><strong>通过</strong></td></tr><tr><td>V-5</td><td>§3 五域</td><td>DOMAIN-DEPS 五域 + mayDependOn</td><td>在册；Q1 真实 require 门 S1 运行（205 条/基线内）</td><td><strong>通过</strong></td></tr><tr><td>V-6</td><td>§3 功能单元</td><td>三件套棘轮</td><td>653 → 315（README 半区归零、manifest 即 C-5 恒等式 2449/2674）</td><td>进行中</td></tr><tr><td>V-7</td><td>§4 入口缓冲</td><td>entry-buffer 恒等式</td><td>首拦 1 例真违规（tokenBudgetNudge）；晋级闸门待 Q1 政策</td><td>度量闭合</td></tr><tr><td>V-8</td><td>§4 状态迁移</td><td>quarantine → 晋级</td><td><code>scripts/quarantine/</code> + staged→stable 字段机制在；闸门待建（S1 起档规则 8）</td><td>部分</td></tr><tr><td>V-9</td><td>§5 单向依赖</td><td>方向门</td><td>顶层 46 + D2→D1 159 条受基线棘轮看管；环切割集 7 条待消</td><td>门已建</td></tr><tr><td>V-10</td><td>§5 零破坏</td><td>6 对外接口 + 产物根</td><td><code>check:layout</code>/<code>build:pip</code> 全链/CI 静态核/wheel 均绿；<code>entries/</code> 三族 registered</td><td><strong>通过</strong></td></tr></tbody></table>
+<hr>
+<h2 id="5-结论-三句">§5 结论（三句）<a class="anchor" href="#5-结论-三句" aria-label="锚点">#</a></h2>
+<ol><li><strong>5-3-1 的可执行面已全部落地</strong>：五域门（Q1）、功能单元棘轮、热温冷常驻仪器、入口缓冲、产物单一根、根契约地板——RESEARCH-018 首测的 10 条判据里 6 条 <strong>通过</strong>、3 条进行中、1 条待 B 档，无一条停在「缺仪器」。</li><li><strong>根目录 61 项是物理地板</strong>：33 契约 + 9 横切族 + 7 自愈态各有钉点证据；再往下只有 B 档一条路，且其触发条件（棘轮四周稳定）刚开始计时。</li><li><strong>真正的剩余风险在 git</strong>：C-10 终修与双历史合并仍未裁——它是唯一能一笔勾销全部 <code>??</code> 存量的动作，建议下一轮优先。</li></ol>
+<blockquote><p>关联：[RESEARCH-018]（首测）· [DESIGN-LAY-008]（执行台账 §12.44–§12.58 + 方案 R §13）· DOMAIN-DEPS.json / BUILD-OUTPUTS.json（判据与落点真源）</p></blockquote>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../docs/11_报告/RESEARCH/[RESEARCH-020] 差距一Token预算正向语义Nudge实施计划-2026-09-29.html"><div class="dir">← 上一篇</div><div class="ttl">[RESEARCH-020] 差距①实施计划：Token 预算正向语义（target + nudge 续跑）</div></a><a class="next" href="../../../docs/11_报告/RESEARCH/00_INDEX_RESEARCH-总目录.html"><div class="dir">下一篇 →</div><div class="ttl">RESEARCH</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../";window.__KHY_CUR__="docs/11_报告/RESEARCH/[RESEARCH-021] 5-3-1符合性复测与方案R收官-2026-09-30.html";</script>
+<script src="../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
