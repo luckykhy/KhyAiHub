@@ -765,7 +765,10 @@ async function applyUpdate(opts = {}) {
       result = { success: true, changed: true, to: current.target.commit };
     } else if (current.source.type === 'package') {
       if (typeof opts.applyPackage === 'function') result = await opts.applyPackage(current, opts);
-      else result = require('./domain/network/updateAdapters/packageAdapter').applyPackageUpdate(current, opts);
+      else result = require('./domain/network/updateAdapters/packageAdapter').applyPackageUpdate(current, {
+        ...opts,
+        selfUpdate: opts.selfUpdate || require('./khySelfUpdateService'),
+      });
     } else if (current.source.type === 'portable') {
       const portableOpts = {
         ...opts,

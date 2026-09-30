@@ -127,7 +127,7 @@ async function stagePackageUpdate(state, opts = {}) {
     return { success: false, error: 'package target or installed channel is missing' };
   }
 
-  const allowed = require('../../../versionService').PACKAGE_CANDIDATES;
+  const allowed = require('../../../../constants/serviceDefaults').UPDATE.PACKAGE_CANDIDATES;
   if (pip && !allowed.includes(pip.name)) {
     return { success: false, error: 'pip package is outside the update allowlist' };
   }
@@ -201,7 +201,7 @@ function validateDescriptor(state, descriptor, opts = {}) {
   if (!descriptor || descriptor.version !== (state.target && state.target.version)) {
     return { ok: false, error: 'staged package descriptor does not match the update target' };
   }
-  const allowed = require('../../../versionService').PACKAGE_CANDIDATES;
+  const allowed = require('../../../../constants/serviceDefaults').UPDATE.PACKAGE_CANDIDATES;
   if (descriptor.package && !allowed.includes(descriptor.package)) {
     return { ok: false, error: 'staged pip package is outside the update allowlist' };
   }
@@ -239,7 +239,12 @@ function applyPackageUpdate(state, opts = {}) {
     }
   }
   const localNpm = npm && descriptor.artifacts.npm;
-  const selfUpdate = opts.selfUpdate || require('../../../khySelfUpdateService');
+  // Deps come from the D1 assembly (updateCoordinator) — [RESEARCH-018] P2 E7:
+  // D2 must not require into D1 (gate d2-no-reach-into-d1).
+  const selfUpdate = opts.selfUpdate;
+  if (!selfUpdate) {
+    return { success: false, error: 'selfUpdate 依赖未注入：请经 updateCoordinator 装配入口调用 applyPackageUpdate' };
+  }
   const pipResult = selfUpdate.applyUpdate({
     env: localNpm
       ? { ...(opts.env || process.env), KHY_MULTI_CHANNEL_SYNC: '0' }

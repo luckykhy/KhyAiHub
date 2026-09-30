@@ -23,9 +23,9 @@ function _appHome() {
 }
 const CACHE_FILE = path.join(_appHome(), 'version_cache.json');
 const CHECK_INTERVAL_MS = 4 * 3600 * 1000; // check at most every 4 hours
-// Single source of truth: published PyPI package names, in priority order.
-// Consumed here and by the `update` command in cli/router.js — keep it one place.
-const PACKAGE_CANDIDATES = ['khy-os', 'khy-quant'];
+// Single source of truth lives in constants/serviceDefaults.js (UPDATE.PACKAGE_CANDIDATES);
+// this alias keeps existing consumers (`PACKAGE_CANDIDATES` export below) stable.
+const PACKAGE_CANDIDATES = require('../constants/serviceDefaults').UPDATE.PACKAGE_CANDIDATES;
 
 /**
  * Get currently installed version.

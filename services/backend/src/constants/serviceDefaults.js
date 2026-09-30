@@ -465,6 +465,8 @@ const UPDATE = Object.freeze({
   ENABLED_CHANNELS: Object.freeze(['github', 'pypi', 'npm', 'local']),
   PYPI_BASE_URL: process.env.KHY_UPDATE_PYPI_BASE_URL || 'https://pypi.org/pypi',
   NPM_REGISTRY_URL: process.env.KHY_UPDATE_NPM_REGISTRY_URL || 'https://registry.npmjs.org',
+  // Published PyPI package names, in priority order. Update allowlist — never from model input.
+  PACKAGE_CANDIDATES: Object.freeze(['khy-os', 'khy-quant']),
 });
 
 // Runtime assets excluded from install packages live beside their immutable

@@ -13,15 +13,33 @@
 const path = require('path');
 
 const { getDataHome } = require('../../../../../utils/dataHome');
-const pool = require('../../../../apiKeyPool');
-const registrar = require('../../../../customProviderRegistrar');
-const customRegistry = require('../../../../customProviderRegistry');
+
+// Deps are injected by the D1 assembly entry (services/management/index.js).
+// [RESEARCH-018] P2 cut-set E1-E3: D2 must not require into D1 (gate d2-no-reach-into-d1).
+let _pool = null;
+let _registrar = null;
+let _registry = null;
+
+function bind(deps) {
+  _pool = deps.pool;
+  _registrar = deps.registrar;
+  _registry = deps.registry;
+}
+
+function _bound(name, dep) {
+  if (!dep) {
+    throw new Error(
+      `custom-providers 资源未绑定依赖 ${name}：请经装配入口 services/management 调用，勿直接 require D2 资源模块`
+    );
+  }
+  return dep;
+}
 
 const REGISTRY_FILE = path.join(getDataHome(), 'custom_providers.json');
 
 function _keyCount(poolKey) {
   try {
-    return (pool.getPoolStatus(poolKey) || []).length;
+    return (_bound('pool', _pool).getPoolStatus(poolKey) || []).length;
   } catch {
     return 0;
   }
@@ -51,7 +69,7 @@ const contract = {
   },
   ops: {
     async list() {
-      const providers = customRegistry.listProviders().map((p) => ({
+      const providers = _bound('registry', _registry).listProviders().map((p) => ({
         name: p.name,
         poolKey: p.poolKey,
         endpoint: p.endpoint,
@@ -60,10 +78,10 @@ const contract = {
         ...(p.tier ? { tier: p.tier } : {}),
         keyCount: _keyCount(p.poolKey),
       }));
-      return { providers, presets: registrar.getPresets() };
+      return { providers, presets: _bound('registrar', _registrar).getPresets() };
     },
     async add(args) {
-      const result = registrar.registerCustomProvider({
+      const result = _bound('registrar', _registrar).registerCustomProvider({
         displayName: args.displayName,
         poolKey: args.poolKey,
         endpoint: args.endpoint,
@@ -81,11 +99,13 @@ const contract = {
       if (!args || !args.poolKey) {
         throw new Error('poolKey is required');
       }
-      return registrar.unregisterCustomProvider(args.poolKey, {
+      return _bound('registrar', _registrar).unregisterCustomProvider(args.poolKey, {
         removeKeys: args.removeKeys === true,
       });
     },
   },
 };
+
+contract.bind = bind;
 
 module.exports = contract;
