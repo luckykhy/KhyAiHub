@@ -300,8 +300,8 @@
       "owner": "platform",
       "dueBy": "2026-12-31",
       "status": "open",
-      "note": "仓库顶层可寻址项（check:data-layout 读数，安装产物 node_modules 豁免不计）。方案 R（[DESIGN-LAY-008] §13）的宽度棘轮：起点 64（2026-09-29 R2 前），本批 R2a 生成物出根后实测 60；target 20 = 方案 R 渐近线，只降不升。剩余大头是 executables 族根级 dist/（esbuild→modules→装配/打包/便携 生产-消费链，在飞区，下一批整族翻转）。 【R2 终读数】executables 族出根后 data-layout 实测 61（批中曾到 60；+1 为 .workbuddy 自愈复生，属自愈型本机态非新增债务）。pip/executables 两族已 registered，根级生成物清零。 【R4 收官】.duplication-baseline.json 迁 scripts/ci/duplication-baseline.json（与 ruleguard-baseline 同址），data-layout 实测 60。R4 终裁：patches(pnpm 锁文件+Dockerfile COPY 钉死)/evidence(5 条 npm 入口+软著链)/packaging(80 机器引用)/deploy(自包含试验子树)四族契约钉死留根，electron/ 无 package.json 无调用点=退役候选待规则 7 程序，scripts/tests 留根。根物理收敛到此为契约地板。",
-      "plan": "[阶段R2-R4·方案R] 逐族物理出根/收纳：R2a pip 族已迁（entries/pip，登记表 registered）；下一批 executables 族（esbuild-modules→dist/modules→装配/打包/便携 生产-消费链 + CI 上传路径，登记 entries/executables）——在飞区，须等作者车道收口；再后按硬面升序做横切收纳（patches 8 → electron 24 → evidence 25 → deploy 37 → packaging 64），scripts/tests 留根。每族一个提交、全引用重指、check:layout+docs:verify 兜链，读数随批下调。"
+      "note": "仓库顶层可寻址项（check:data-layout 读数，安装产物 node_modules 豁免不计）。方案 R（[DESIGN-LAY-008] §13）的宽度棘轮：起点 64（2026-09-29 R2 前），本批 R2a 生成物出根后实测 60；target 20 = 方案 R 渐近线，只降不升。剩余大头是 executables 族根级 dist/（esbuild→modules→装配/打包/便携 生产-消费链，在飞区，下一批整族翻转）。 【R2 终读数】executables 族出根后 data-layout 实测 61（批中曾到 60；+1 为 .workbuddy 自愈复生，属自愈型本机态非新增债务）。pip/executables 两族已 registered，根级生成物清零。 【R4 收官】.duplication-baseline.json 迁 scripts/ci/duplication-baseline.json（与 ruleguard-baseline 同址），data-layout 实测 60。R4 终裁：patches(pnpm 锁文件+Dockerfile COPY 钉死)/evidence(5 条 npm 入口+软著链)/packaging(80 机器引用)/deploy(自包含试验子树)四族契约钉死留根，electron/ 无 package.json 无调用点=退役候选待规则 7 程序，scripts/tests 留根。根物理收敛到此为契约地板。【人裁 2026-09-30，§12.60】用户裁定按方案走：B 档最早 2026-10-27 开闸（4 周无回弹自 09-29 起算），期间本棘轮任何一次回弹重置计时；「仓库下沉强行 ≤5」与「立即开 B 档」两路被拒；终局预期 ≈20 非 5。",
+      "plan": "[阶段R5·B档远期门] R2（pip/executables 两族出根，第 50/52 批已完）与 R4（四族契约钉死留根，第 53 批已终裁）均已收口；本棘轮剩余动作只剩 B 档——七层降级 + 启动器进 bin/ + 发布冻结窗口 + 对外安装契约迁移公告，最早 2026-10-27 开闸（人裁 2026-09-30），开闸前 60 读数只降不升、回弹即重置 4 周。原「下一批 executables 族」一行系第 50 批口径，已由第 52 批完成，留痕不删。"
     }
   ]
 }
