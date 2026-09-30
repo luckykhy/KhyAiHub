@@ -18,8 +18,8 @@ function parseArgs(argv, defaults = {}) {
   const target = hostTarget(defaults.platform, defaults.arch);
   const options = {
     kind: 'runtime',
-    out: path.join(ROOT, 'dist', 'releases'),
-    artifactOut: path.join(ROOT, 'dist', 'portable'),
+    out: path.join(ROOT, 'entries', 'portable', 'releases'),
+    artifactOut: path.join(ROOT, 'entries', 'portable'),
     platform: target.platform,
     arch: target.arch,
     nodeRuntime: '',
@@ -60,8 +60,8 @@ function printHelp() {
     'Usage: node extensions/scripts/khy-portable/package-portable.js [options]',
     '',
     '  --kind <runtime|dev>       Package type (default: runtime)',
-    '  --out <dir>                Zip output directory (default: dist/releases)',
-    '  --artifact-out <dir>       Assembled artifact parent (default: dist/portable)',
+    '  --out <dir>                Zip output directory (default: entries/portable/releases)',
+    '  --artifact-out <dir>       Assembled artifact parent (default: entries/portable)',
     '  --skip-build               Reuse existing frontend build outputs',
     '  --keep-artifact            Keep the assembled directory after creating the zip',
     '  --node-runtime <dir>       Embedded Node runtime override',

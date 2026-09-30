@@ -122,7 +122,7 @@ jobs:
           # The signature .sig files are attached to the PyPI upload as
           # provenance metadata and can be verified offline.
           failed=()
-          for f in dist/*.whl dist/*.tar.gz; do
+          for f in entries/pip/*.whl entries/pip/*.tar.gz; do
             [ -f "$f" ] || continue
             echo "Signing $f..."
             if ! sigstore sign --yes "$f"; then

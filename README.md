@@ -216,7 +216,7 @@ npm run rules:apply -- <改动文件路径>              # 查「我要改这个
 规则登记表在 `docs/10_规范/registry/RULES-REGISTRY.json`，**门的成员资格由登记表派生**；
 覆盖率与红线用 `npm run rules:coverage` 查看。
 
-> 维护者导航：仓库根 66 项按六族分组索引见 [docs/00_INDEX_仓库根.md](docs/00_INDEX_仓库根.md)——机器契约族位置即契约，永不动。
+> 维护者导航：仓库根 61 项按六族分组索引见 [docs/00_INDEX_仓库根.md](docs/00_INDEX_仓库根.md)——机器契约族位置即契约，永不动。
 
 代码风格：JS 用 2 空格缩进、单引号、分号；命名 camelCase（JS）/ snake_case（Python）；面向用户的字符串用中文，代码注释用英文。
 

@@ -246,7 +246,7 @@ def _audit_wheel(artifact: Path, workspace: Path) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--dist-dir", default="dist", help="Directory containing built distributions")
+    parser.add_argument("--dist-dir", default="entries/pip", help="Directory containing built distributions ([LAYOUT-005] single root)")
     args = parser.parse_args(argv)
 
     dist_dir = Path(args.dist_dir).resolve()

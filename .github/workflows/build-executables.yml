@@ -115,8 +115,8 @@ jobs:
         with:
           name: khy-os-${{ matrix.platform }}
           path: |
-            dist/portable/portable-*-${{ matrix.platform }}/
-            dist/releases/portable-*-${{ matrix.platform }}.zip
+            entries/portable/portable-*-${{ matrix.platform }}/
+            entries/portable/releases/portable-*-${{ matrix.platform }}.zip
           retention-days: 30
 
   publish-dev-index:

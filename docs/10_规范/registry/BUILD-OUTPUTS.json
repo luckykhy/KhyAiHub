@@ -2,7 +2,7 @@
   "meta": {
     "root": "entries",
     "version": "1.0.0",
-    "updated": "2026-09-19",
+    "updated": "2026-09-29",
     "rule": "LAYOUT-005",
     "ssot": "docs/10_规范/DESIGN-LAY/[DESIGN-LAY-004] 构建产物单一根规范.md",
     "parasiticBudget": 6,
@@ -160,9 +160,9 @@
       "producer": "python -m build → --outdir",
       "rebuild": "python -m build --outdir entries/pip",
       "inBuildAll": true,
-      "status": "migrating",
+      "status": "registered",
       "sunset": "2026-12-31",
-      "note": "check:pip-packaging 的 --dist-dir 需同步改为 entries/pip。"
+      "note": "2026-09-29 已迁移：build-pip-dist.js / bash 孪生 / 平台 wheel 脚本 / CI 签名步全部指向 entries/pip（[DESIGN-LAY-008] §12.55）。"
     },
     {
       "id": "pip-build",
@@ -172,7 +172,7 @@
       "producer": "setuptools 中间目录 → --build-base",
       "rebuild": "python -m build --outdir entries/pip --build-base entries/pip/build",
       "inBuildAll": true,
-      "status": "migrating",
+      "status": "registered",
       "sunset": "2026-12-31"
     },
     {
@@ -183,7 +183,7 @@
       "producer": "setuptools editable install",
       "rebuild": "pip install -e .",
       "inBuildAll": true,
-      "status": "migrating",
+      "status": "registered",
       "sunset": "2026-12-31"
     },
     {
@@ -312,6 +312,18 @@
       "hook": "pip install -e（机器本地，不参与 CI）",
       "sunset": "2027-06-30",
       "note": "tools/deepseek-eyes 整棵不参与 git（根 .gitignore 明文「stays entirely out of git」），其产物路径不在 CI 视野内。"
+    },
+    {
+      "id": "portable",
+      "path": "entries/portable",
+      "legacyPath": "dist/portable, dist/releases",
+      "group": "build",
+      "producer": "extensions/scripts/khy-portable/package-portable.js（--out / --artifact-out 默认值）",
+      "rebuild": "node extensions/scripts/khy-portable/package-portable.js --kind runtime",
+      "inBuildAll": true,
+      "status": "registered",
+      "sunset": "2026-12-31",
+      "note": "2026-09-29 随方案 R-R2 迁入；CI build-executables.yml 上传路径同步。"
     }
   ]
 }

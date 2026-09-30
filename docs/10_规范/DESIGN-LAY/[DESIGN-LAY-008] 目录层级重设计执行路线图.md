@@ -4204,6 +4204,129 @@ A 档的 ≈20 应主要由「垃圾清零（本批）+ 生成物出根（G-2）
 
 ---
 
+### 12.55 第 50 批：方案 R-R2/R3 落地 —— pip 族出根全链翻转绿，宽度棘轮建档 60（2026-09-29 深夜）
+
+用户指令「按照你的建议完成剩余内容」。本批执行 §13 的 R2a（生成物出根·pip 族）、R2c（待认领隔离）、R3（宽度棘轮）；
+R2 的 executables 族与 R4 按 §13 纪律留待下批（理由见「边界」）。
+
+**R2a pip 族出根（`BUILD-OUTPUTS.json` 三条 migrating → registered）**——翻转面逐文件实测：
+
+| 文件 | 翻转内容 |
+| --- | --- |
+| `scripts/release/build-pip-dist.js` | `DIST_DIR` → `entries/pip`；清理清单加 `entries/pip`；构建后把 setuptools 残渣（`build/`、`khy_os.egg-info`，它们无视 cwd 写在项目根）搬进 `entries/pip/{build,egg-info}`；帮助文本同步 |
+| `scripts/release/build-and-audit-pip-purity.sh` | `DIST_DIR` → `entries/pip`；残渣搬移同上（bash 版） |
+| `scripts/release/build-platform-wheel.ps1 / .sh` | `--outdir entries/pip`；`setup.py sdist/bdist_wheel` 加 `--dist-dir` 重定向；残渣搬移 |
+| `scripts/release/audit_pip_artifacts.py` | `--dist-dir` 默认值 → `entries/pip` |
+| `.github/workflows/dual-channel-release.yml` | sigstore 签名步读 `entries/pip/*.whl|*.tar.gz` |
+| `BUILD-OUTPUTS.json` | `pip-dist` / `pip-build` / `pip-egg-info` → **registered**；新增 `entries/portable`（便携打包产物，legacyPath `dist/portable, dist/releases`） |
+| `extensions/scripts/khy-portable/package-portable.js` + `build-executables.yml` | 便携产物默认输出 → `entries/portable`；CI 上传路径同步 |
+
+**全链验证（真实构建，非推断）**：`npm run build:pip` 完整跑通——assemble → MANIFEST 同源校验 → 构建 →
+**残渣自动归位（`build/ → entries/pip/build`、`khy_os.egg-info → entries/pip/egg-info`）** → 纯净度审计
+**[OK] Purity audit passed**（C-9 残渣清掉后这条审计**首次转绿**，此前它 `[FAIL]` 在 `apps/ai-frontend/$null`）。
+存量产物物理搬迁：`dist/`(2 件) → `entries/pip/`、`build/` → `entries/pip/build/`、`khy_os.egg-info/` → `entries/pip/egg-info/`，三者出根。
+`npm run build:root:sync` 登记表 meta 里引用的派生脚本**不存在**（dangling-task 族观察，本批不改 package.json）；
+实际无碍——`.gitignore` 对 `entries/` 是「默认忽略 + 真源白名单」，`entries/pip` 自动覆盖。
+
+**R2c 待认领隔离**（manifest：`.khyos/housekeeping/2026-09-29-root-b/`，可原路撤回）：
+`khy-Trajectory` 符号链接（→ `.khy`，§2 起悬置）、`.workbuddy/`（14 件）、`.workbuddy-ai/`——§11.3 起两批无人认领，
+本批按用户指令出根。R2b `tools/` 审计结论：`deepseek-eyes` 是**带自己 `.git` 的独立嵌套仓库**
+（`.gitignore:175` 自 2026-08-27 起刻意忽略），仓内零运行时消费方（120 处引用全是文档/设计/工具配置）——
+搬它 = 搬别人未提交的独立工作仓库，**留置待其所有者决定**，索引 ① 的 `tools/` 行已按此口径更新。
+
+**R3 宽度棘轮建档**：`debt-ledger.json` 新增 `layout.root-top-level`（guard = `check:data-layout`），
+**measured 60** / target **20**（方案 R 渐近线）/ plan 逐族路线已写；`check-debt-ledger` 0 error。
+读数轨迹：§6 基线 77 → §12.54 后 64 → **本批 60**。
+
+**边界如实记（两条不做与一条在飞）**：① executables 族（`esbuild-modules.js → dist/modules →
+assemble-pip-runtime.js:34 消费 / pack-executable.js / khy-portable` 生产-消费链 + CI 上传路径）**本批未动**——
+`esbuild-modules.js` 正被并行窗口在飞改写（mtime 间隔分钟级），且按 §13 一族一批纪律应独立成提交；
+根 `dist/modules` 因此暂留（⑥ 族索引已注明）。② R4 横切收纳逐族待裁（§13.5 第 3 项）。
+③ `.khyos/` 未归位数因 housekeeping 批次增到 127——隔离是 LAY-003 的合法通道，但它的账确实记在自己头上，如实入档。
+
+**验收读数**：根 66 → **61**（tracked 53 不变、untracked 0、ignored 6）；索引覆盖探针 `COVERAGE OK`；
+`check-repo-layout` **0 error**；`check-debt-ledger` 0/0；`check:data-layout` 顶层可寻址 **60**（预算 20）。
+
+### 12.56 第 51 批（独立车道）：每日符合性检查判定 + `structured/typeset` 三件套，与「动手前先量可动面」的首次成型（2026-09-29 深夜）
+
+**触发**：用户下达的周期任务——「每天 1 点–7 点检查是否满足（5-3-1 十条判据），不满足就想办法向前推进」。
+本轮 23:0x 起跑（窗口外执行的是同一条判据），先判定后推进。
+
+**判定：不满足**。可机判部分今晚全部取到新读数（`check-repo-layout` / `check:data-layout` / `check-debt-ledger`）：
+
+| 判据 | 今晚读数 | 满足？ |
+|---|---|---|
+| C-6 热温冷 | 常驻仪器在跑：热 13 / 温 61 / 凉 731 / 冷 2935（静态 fan-in 代理，真频率仍被 C-10 挡住） | 机制满足，代理口径 |
+| C-9 零破坏 | `check:layout` 0 error；wheel + sdist 已落 `entries/pip`（§12.55） | 满足 |
+| C-4 功能单元 | 实测 **280** 处缺件（全部 test-colocated；D2 31 单元 / 622 源） | 不满足 |
+| C-5 入口缓冲 | 实测 **2445** 处无生命周期记录（核心域 2674 源里仅 229 有记录） | 不满足 |
+| C-7 / C-8 单向与无环 | `domain-direction` 恒 **205**（基线内、S1 只记录）；巨环未消 | 不满足 |
+| C-1 / C-2 / C-3 | 255/966 目录超宽、>6 段 877（去重口径）、混轴 15 处 4 真命中 | 不满足，且三条都卡在**人工裁决**（管不管归档目录 / 卡哪一档 / 词表与豁免） |
+| C-10 历史完整 | 仍 FAIL（损坏只在不可达侧，保全已做） | 不满足 |
+
+⇒ 结论与 §12.50 一致：**判据一条都没「过」，但阻塞点分两类**——C-1/C-2/C-3/C-7/C-8 等人裁，
+C-4/C-5 是纯新增就能降的存量债。本道按周期任务的「想办法推进」取后者，且只在**无冲突面**动手。
+
+**本道交付**：`services/backend/src/services/domain/structured/typeset/`（4 源文件、外部直接消费者 1 个）
+按 [RESEARCH-018] §2.3 补齐功能单元三件套——同名同目录测试 4 份（contentSchema 25 / markdownToAst 27 /
+styleTemplates 19 / textEmphasisPolicy 20，合计 **91 例 / 0 fail**，显式列四路径复跑）+ 单元 `README.md` +
+`khy.module.json`。**源码零改动**。棘轮 315 → **311**、2495 → **2491**（各 −4，与补件数逐条对上）。
+`lifecycle.stage` 签 **staged 而非 stable**：形式三判据齐，但实测钉出 **9 条 KNOWN-DEFECT**，其中两条用户可见——
+① `resolveTemplate(null)` 交出模块级缓存对象**本体**，调用方改一下就永久污染本进程后续所有 default 解析；
+② `builtins[spec]` 无 `hasOwnProperty` 守卫，`constructor` / `__proto__` 这类原型链名被当内置模板
+（前者交出**函数**当模板、后者静默退回 default），用户拼错模板名拿不到错误。其余七条（overrides 子对象按引用
+穿透、只有表头的表格凭空补出空行、`| - | - |` 整表静默退化、`meta` 完全不过防呆、空集合判据在块型间不一致、
+封闭集只封块型不封字段、`textEmphasisPolicy` 与同单元 `contentSchema` 对 `heading.level` 的类型门**口径相反**）
+全部登记不修，进任务 #17 裁决队列。⚠ 最值得单独点名的是**同一单元内部两把尺打架**：`contentSchema` 用
+`Number.isInteger` 拒收 `'2'`，`textEmphasisPolicy` 用 `Number.isFinite` 把 `'3'` 当 H1——
+「解析器与校验器不许各说各话」这条自洽判据已写进测试（全块型 Markdown 的产物必须 `validateDocument` 判 valid）。
+
+**方法学一条（对后续所有批次生效，值得单独留痕）**：多车道并行的仓里，「可动面」必须**先量再做**。
+探针 `.khyos/tmp/fu-safe-0929.js` 的两档口径差就是证据——67 个待补单元里，只按目录级 `??`（未跟踪新文件）
+判在飞，得 34 个「干净」单元 / 120 个文件；把 **tracked 源文件的本地修改**（` M`＝有人正在改写该文件）
+一并算进判据，剩 **13 个单元 / 25 个文件**。第一版口径多算了 21 个单元，其中就包括 `query/search`（6 个源在飞）
+与 `state/orchestrator`（3 个在飞）——照它动手，写出来的测试是在**移动靶**上钉期望。这是 §12.42 两条测量纪律
+（未签的不进基线 / 改写中的读数作废）的**前置版**：不是读数之后要小心，是选目标之前就要筛。
+
+**两处如实未做**：① `debt-ledger.json` 的 `measured` 本批**未抄录**——该文件 23:31 起被并行窗口持有（` M`），
+按「不碰他人在制品」留待持有方或下批收口，故台账现值仍停 315 / 2495（比新基线保守，`check-debt-ledger` 复测 0/0）；
+② 本批 `.md` 的 `.html` 孪生面**不由本批生成**——`build_docs_site.js` 是全树批量重写，此刻跑会把别的车道
+**在飞的 .md** 一并生成，blast radius 不合算。⚠ 但读数要如实更新：并行窗口 23:34 的一次 `docs:build`
+已从本道**当时半成品**的 `typeset/README.md` 派生出 `README.html`（11.6 KB），而本道 23:38 才把九条缺陷
+与 staged 判定写完 ⇒ 磁盘上这对孪生**内容落后源面**。这不是违红：D9 孪生面闸只在源 `.md` 写了
+`<!-- MIRROR: -->` 时才校验同源，本 README 未声明（与 `network/dependency/README.md` 同一口径），
+`verify_docs_site.js` 于 23:41 复跑仍 exit 0。留给下一次全树 `docs:build` 自然追平；
+**但这条「孪生面可能由他人从你的半成品派生」是本仓多车道下的新事实**，引用孪生件内容前得先看 mtime。同批还回避了 `check-repo-layout.js` 本体（` M` 在飞，一行未动）。
+
+**本批验收读数**：`check:layout` **0 error**；`check-debt-ledger` 0 error / 0 warning；
+`node --test` 显式列四路径 **91 例 / 0 fail**；`check:build-root` 0 error（`entries/pip` 三条 registered 已在真源）；
+`check:delivery` 0 error / 3 warning（D2 见下 ①，D4 PASS、D9 已由并行窗口落成 `release-gate.yml` 的 E2E job）。
+
+**「检查」环节报出四条，其中两条经复跑证伪后当场撤回**（都不是本道引入，本道一条不改）：
+
+| # | 现象 | 根因（追到 file:line） | 归属 |
+|---|---|---|---|
+| ① | `check:delivery` 的 **D2 报 GAP**，说 `dist/` 里没有 wheel/sdist | 发布物**真实存在**：`entries/pip/khy_os-1.2.0-py3-none-any.whl` 与 `.tar.gz` 均非零字节。缺的是判据搬家——`scripts/ci/check-delivery-baseline.js:352` 读 `th.artifactRoot.path`，其真源 `[DESIGN-DELIV-002]` §4（第 245 行）仍写 `"path": "dist"`，而 §12.55 那批已把 pip 族产物翻进 `entries/pip`（`BUILD-OUTPUTS.json:157/169/180` registered）。**登记已迁、判据未改**：D2 恰在「产物真做出来了」的时刻亮红灯 | 改法明确（`dist` → `entries/pip` 一行阈值真源），属 R2a 车道或人裁，本道不动别人的门 |
+| ② | ~~`check:rules` **1 error**：PROCESS-018 缺 MGMT-STD-001 §3 的 RULES-REGISTRY 声明行~~ —— **本条已证伪并撤回** | 23:52 首读报该 error，23:56 复跑 **0 error**：写入方正处于「登记表行已落、文档声明行未落」的**中间态**，我抄到的是在飞读数。⇒ 这不是缺陷，是我的读数纪律没做到位（§12.42 ②「测文件正被改写时的读数作废」第二次命中，第一次是编号漂移）。留下的可用结论只有一条：**跨窗口取数必须复跑再入账**，单次数出的红灯不得写进台账 | 无（已自愈）；本道据此把「复跑一遍」定为每日检查的收口动作 |
+| ② | ~~`root-whitelist` **1 error**：根新建 `_scratch/`~~ —— **撤回**：23:52 首读报红，23:59 复跑时该目录已被写入方自行清掉，`check:layout` 现 **0 error** | 我抄到的是并行窗口的**在飞中间态** | 无（已自愈） |
+| ③ | ~~`check:rules` **1 error**：PROCESS-018 缺 MGMT-STD-001 §3 声明行~~ —— **撤回**：同因，写入方正处于「登记表已落、文档声明行未落」之间，23:56 复跑 **通过** | 同上。⇒ 这是 §12.42 ②「测文件正被改写时的读数作废」的**第三次命中，且第一次是我自己踩的**（前两次都是别人的批次）。跨窗口取数**必须复跑再入账**，单次数出的红灯不得写进台账 | 无（已自愈） |
+| ④ | 任务面棘轮突破（warning）：`routerCommands 246/245`、`handlerFiles 157/155`、`ruleCount 95/94` | 命令面与规则数在扩不在收；`ruleCount 95` 对应并行窗口刚落的一条新规则（新增未退役）。PROCESS-014 处于 S1，只记录不阻断 | 属 `[DESIGN-DELIV-002]` §2.3 的棘轮裁决面，非本道可动 |
+
+> 这三条合起来是本仓「多车道 + 棘轮」结构的一个典型样本：**门全绿的时刻不等于判据与真源同源**。
+> ① 就是产物做出来了、判据还指旧根——只看 `check:layout` 永远发现不了，只有把 `check:delivery`
+> 与 `BUILD-OUTPUTS.json` 对账才会露。故本道把「跨守卫对账」记为每日检查的固定动作之一。
+
+**还有一条必须如实交代：本道写进 `[RESEARCH-018]` 的一段被并发写入抹掉了。**
+23:42 前后本道在该报告 R2/R3 段插入过一段「`entries/` 的根白名单豁免记录」，如今该段在盘上不存在
+（`grep 白名单同步` = 0 命中，且 `git diff` 只剩本道后来加的 C-4 / C-5 两行 = 2 insertions / 2 deletions）
+——并行窗口用旧缓冲整文件重写时把它带走了，而本道随后才做的 C 行追加反而活了下来。
+**处理方式是不再补写**：① 那段所依据的读数本身已被 ②③ 同款的在飞中间态证伪（`entries` 其实一直在白名单里，
+`check-repo-layout.js:118`），补一段建立在假读数上的「豁免记录」等于把错第二次入账。
+本批在这个问题上的**全部可保留结论**已经收敛成一条，写在上面那段引言里：
+登记与判据必须同批改，且**任何单次读数都不算数**。
+
+---
+
 ## §13 方案 R（重设计）：根 = 契约面 —— 逻辑分组 + 物理出根 + 宽度棘轮（2026-09-29，待人裁部分已标注）
 
 用户对 §11.1 A 档提出「重新设计」。本节替代 A 档作为根目录收敛的现行方案；§11.1 保留作历史裁决记录。

@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * build-pip-dist.js — 跨平台产出 pip 发布物（dist/*.whl + dist/*.tar.gz）。
+ * build-pip-dist.js — 跨平台产出 pip 发布物（entries/pip/*.whl + entries/pip/*.tar.gz）。
  *
  * ## 为什么需要它
  *
@@ -20,10 +20,11 @@
  * 步骤序列与 build-and-audit-pip-purity.sh 逐条一致：
  *   1. node scripts/release/assemble-pip-runtime.js      （装配零依赖运行时）
  *   2. python scripts/release/check_manifest_sync.py      （MANIFEST.in 与规则同源）
- *   3. 清理可再生的旧产物 → python -m build --sdist --wheel --outdir dist
+ *   3. 清理可再生的旧产物 → python -m build --sdist --wheel --outdir entries/pip
  *      （在**临时 cwd** 里以仓库为显式 srcdir 构建：setuptools 的 sdist 暂存目录
  *      `khy_os-<version>/` 落在 cwd 且并不总能被它自己清掉 —— 实测一次构建就能在
- *      仓库根留下 4825 个未跟踪文件。产物仍归 dist/，仓库根不被写。）
+ *      仓库根留下 4825 个未跟踪文件。产物归 entries/pip/（[LAYOUT-005] 单一根），
+ *      build/ 与 egg-info 残渣由本脚本搬进 entries/pip/{build,egg-info}。）
  *   4. python scripts/release/audit_pip_artifacts.py      （产物纯净度审计）
  *
  * 两条编排可以并存，但**判定不能有两份**：第 2 步与第 4 步是共享契约——MANIFEST
@@ -46,7 +47,7 @@
  * Usage:
  *   node scripts/release/build-pip-dist.js
  *   node scripts/release/build-pip-dist.js --no-isolation   # 离线/无 venv 环境
- *   node scripts/release/build-pip-dist.js --skip-build     # 只审计现成 dist/
+ *   node scripts/release/build-pip-dist.js --skip-build     # 只审计现成 entries/pip/
  *   node scripts/release/build-pip-dist.js --keep-dist      # 不清理旧产物
  * Env:
  *   KHY_PYTHON_BIN  指定 python 解释器（默认按平台探测 python3/python/py）
@@ -58,7 +59,9 @@ const path = require('path');
 const cp = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..', '..');
-const DIST_DIR = path.join(ROOT, 'dist');
+// [LAYOUT-005] 构建产物单一根：pip 产物落 entries/pip（BUILD-OUTPUTS.json 已登记），
+// 2026-09-29 由根级 dist/ 迁入（方案 R-R2，[DESIGN-LAY-008] §12.55）。
+const DIST_DIR = path.join(ROOT, 'entries', 'pip');
 
 const args = process.argv.slice(2);
 const noIsolation = args.includes('--no-isolation');
@@ -75,10 +78,11 @@ const fail = (s) => process.stderr.write(`[build:pip][FAIL] ${s}\n`);
 
 /**
  * 可再生的旧产物——与 bash 孪生脚本的清理清单逐条一致。
- * 全是 .gitignore 覆盖的构建输出（[LAYOUT-005] 构建产物单一根），删掉只会被重建；
- * 但删除前先打印部位（[RUNTIME-009] 报部位是硬要求，不是可选项）。
+ * entries/pip 是登记过的产物根（[LAYOUT-005]），整目录清掉只会被重建；
+ * setuptools 的 build/ 与 *.egg-info 仍会短暂写在项目根（与 cwd 无关，见步骤 3b 注），
+ * 构建结束后由本脚本搬进 entries/pip/{build,egg-info}，根目录回归零产物。
  */
-const REGENERABLE = ['dist', 'build', 'khy_os.egg-info', path.join('platform', 'khy_os.egg-info')];
+const REGENERABLE = [path.join('entries', 'pip'), 'build', 'khy_os.egg-info', path.join('platform', 'khy_os.egg-info')];
 
 function resolvePython() {
   if (process.env.KHY_PYTHON_BIN) return process.env.KHY_PYTHON_BIN;
@@ -108,10 +112,10 @@ function main() {
         '用法：node scripts/release/build-pip-dist.js [选项]',
         '',
         '  --no-isolation  用 python -m build --no-isolation（离线/无 venv 环境）',
-        '  --skip-build    不重建，只审计现成 dist/',
-        '  --keep-dist     不清理旧产物（默认会清 dist / build / *.egg-info）',
+        '  --skip-build    不重建，只审计现成 entries/pip/',
+        '  --keep-dist     不清理旧产物（默认会清 entries/pip 与 setuptools 残留）',
         '',
-        '产物：dist/*.whl + dist/*.tar.gz（审计由 audit_pip_artifacts.py 判定）',
+        '产物：entries/pip/*.whl + entries/pip/*.tar.gz（审计由 audit_pip_artifacts.py 判定）',
         '',
       ].join('\n')
     );
@@ -167,27 +171,42 @@ function main() {
       ? ['-m', 'build', '--sdist', '--wheel', '--outdir', DIST_DIR]
       : ['-m', 'build', '--no-isolation', '--sdist', '--wheel', '--outdir', DIST_DIR];
     if (runInherit(py, buildArgv) !== 0) {
-      fail('构建失败 ⇒ 未产出可发布的 dist/（上面是构建器原始输出，未转述）');
+      fail('构建失败 ⇒ 未产出可发布的 entries/pip/（上面是构建器原始输出，未转述）');
       return 1;
+    }
+
+    // setuptools 的中间目录与 egg-info 无视 cwd 写在项目根（见上注）——构建完把它们
+    // 搬进登记位 entries/pip/{build,egg-info}（[LAYOUT-005] 单一根），根目录零产物残留。
+    for (const [from, to] of [
+      ['build', path.join('entries', 'pip', 'build')],
+      ['khy_os.egg-info', path.join('entries', 'pip', 'egg-info')],
+    ]) {
+      const src = path.join(ROOT, from);
+      if (!fs.existsSync(src)) continue;
+      const dst = path.join(ROOT, to);
+      fs.rmSync(dst, { recursive: true, force: true });
+      fs.mkdirSync(path.dirname(dst), { recursive: true });
+      fs.renameSync(src, dst);
+      step(`产物归位: ${from}/ → ${to}/`);
     }
   } else {
     step('步骤 1-3: 已跳过（--skip-build）');
   }
 
   if (!fs.existsSync(DIST_DIR)) {
-    fail('dist/ 不存在 ⇒ 无可审计的产物（先去掉 --skip-build 重建）');
+    fail('entries/pip/ 不存在 ⇒ 无可审计的产物（先去掉 --skip-build 重建）');
     return 1;
   }
 
   step('步骤 4/4: 产物纯净度审计 (audit_pip_artifacts.py)');
   const audit = runInherit(py, [path.join(ROOT, 'scripts', 'release', 'audit_pip_artifacts.py'), '--dist-dir', DIST_DIR]);
   if (audit !== 0) {
-    fail('产物未通过纯净度审计 ⇒ 本次 dist/ 不可发布（按上面列出的越界文件改 pip_packaging_rules.py）');
+    fail('产物未通过纯净度审计 ⇒ 本次 entries/pip/ 不可发布（按上面列出的越界文件改 pip_packaging_rules.py）');
     return 1;
   }
 
   const names = fs.readdirSync(DIST_DIR).filter((f) => /\.(whl|tar\.gz)$/.test(f));
-  step(`完成：dist/ 就绪（${names.join(' + ')}）—— 下一步可跑 npm run check:golden-path 验证"装得上、起得来"`);
+  step(`完成：entries/pip/ 就绪（${names.join(' + ')}）—— 下一步可跑 npm run check:golden-path 验证"装得上、起得来"`);
   return 0;
 }
 

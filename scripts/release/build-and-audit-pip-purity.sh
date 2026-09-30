@@ -32,7 +32,9 @@ fail() { echo -e "${RED}[FAIL]${NC}  $*"; exit 1; }
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT_DIR"
 
-DIST_DIR="$ROOT_DIR/dist"
+# [LAYOUT-005] 构建产物单一根：pip 产物落 entries/pip（BUILD-OUTPUTS.json 已登记），
+# 2026-09-29 由根级 dist/ 迁入（方案 R-R2，[DESIGN-LAY-008] §12.55）——与 build-pip-dist.js 同一常量语义。
+DIST_DIR="$ROOT_DIR/entries/pip"
 NO_ISOLATION='0'   # default: isolated build (the packaging law)
 SKIP_BUILD='0'
 
@@ -45,8 +47,8 @@ Options:
   --no-isolation   Build with `python -m build --no-isolation` (offline env
                    that already has build/setuptools/wheel installed). The
                    default builds in an isolated environment.
-  --skip-build     Audit existing artifacts in ./dist without rebuilding.
-  --dist-dir PATH  Distribution directory (default: ./dist)
+  --skip-build     Audit existing artifacts in ./entries/pip without rebuilding.
+  --dist-dir PATH  Distribution directory (default: ./entries/pip)
   -h, --help       Show this help
 EOF
 }
@@ -94,6 +96,16 @@ if [[ "$SKIP_BUILD" == '0' ]]; then
     info "Building in ISOLATED clean environment..."
     python3 -m build --sdist --wheel --outdir "$DIST_DIR"
   fi
+
+  # setuptools 残渣（无视 cwd 写在项目根）搬进登记位（[LAYOUT-005] 单一根）。
+  for pair in "build:build" "khy_os.egg-info:egg-info"; do
+    src="${pair%%:*}"; dst="$ROOT_DIR/entries/pip/${pair##*:}"
+    [[ -e "$ROOT_DIR/$src" ]] || continue
+    rm -rf "$dst"
+    mkdir -p "$(dirname "$dst")"
+    mv "$ROOT_DIR/$src" "$dst"
+    info "Relocated $src/ -> ${dst#$ROOT_DIR/}"
+  done
 fi
 
 [[ -d "$DIST_DIR" ]] || fail "Distribution directory not found: $DIST_DIR"
