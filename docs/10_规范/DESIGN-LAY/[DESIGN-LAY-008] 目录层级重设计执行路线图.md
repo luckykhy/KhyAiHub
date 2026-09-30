@@ -4668,6 +4668,47 @@ pip/npm/docker/软著四链重建 + 跨仓原子提交消失——本方案不�
 - **P-C** C-10 终修三选一（P0 前置，不裁则 P1 起全部冻结）。
 - 本批未动任何文件——§14 只立方案不施工，开工信号 = P-A/P-B/P-C 三点齐。
 
+### 12.64 授权升级「接口引用可以修改」→ 终局重算为 7~8 项，W 清单开工；第一批：死接口退役
+
+用户 2026-09-30 追加裁决（原话大意）：**「接口的引用，在满足这个原则后可以修改就行了」**——
+这推翻了 §12.63 立论的前提。此前把「外部工具按根路径读取」当作不可动；现在授权把**本仓可控的引用面**
+全部重定向。逐项重判可动性（关键区分：改**自己写的脚本/CI/文档**=可控；改**第三方程序的行为**=不可控）：
+
+| 根项 | 重定向路径 | 可控性 |
+| --- | --- | --- |
+| package.json/pnpm-workspace/pnpm-lock/.npmrc/node_modules | 工作区根下沉 `runtime/`；一切 `npm run`/hook/CI 改 `pnpm -C runtime`（pnpm 原生支持 -C） | **可控**（引用面大：298 脚本+hooks+CI，是 W 清单最重一项） |
+| package-lock.json | 同上随迁；dependabot 的 directory 字段可指子目录 | 可控 |
+| pyproject.toml + MANIFEST.in | pip 构建根迁 `packaging/pip/`（`python -m build` 本就按目录跑）；check-version-sync/changelog-new/publish-dual 的锚路径是**本仓代码**，可改 | 可控（触 R3 红线锚，须一次外科批） |
+| Dockerfile / docker-compose.yml / fly.staging.toml | `docker build -f`、`compose -f`、`fly -c` 全支持非根路径；CI workflow 的 path 字段可改 | 可控 |
+| 6 个启动器 | → `bin/`；文档/快捷方式/install 链改指 | 可控（对外习惯迁移需公告一次） |
+| .gitignore | → `.git/info/exclude`（per-machine，bootstrap 脚本落盘）——多机协作有断同步风险，**保守保留根位** | 半可控 |
+| .gitattributes | git 支持子树各放一份 → 五域各一份 | 可控 |
+| .editorconfig | 各域根各放一份（editorconfig 规范支持自文件向上找 root=true） | 可控 |
+| .mailmap | `git config mailmap.file works/.mailmap`（bootstrap 落盘，per-machine） | 半可控 |
+| .env.example | 6+ 消费点全是本仓脚本 → 可迁 docs/ | 可控 |
+| CHANGELOG/CONTRIBUTING/SECURITY | CONTRIBUTING/SECURITY → `.github/`（GitHub 官方认）；CHANGELOG → works/ 改 bump 链锚 | 可控（SECURITY 的引用方含 ` M` 在飞守卫，**接线须等文件干净**） |
+| .claude/.opencode/.cursor/.zcode/.commandcode/.clinerules/.ai | 前六个是**第三方程序**写死读根位——引用改不了它们的源码；退役只能靠「不再用该工具」 | **不可控**（菜单 C 仍在） |
+| .github/ | GitHub 服务端写死 | 不可动 |
+| .git/ | git 定义 | 不可动（资源管理器天然不显） |
+
+**终局算术（重定向全做完 + 方案 P 物理化）**：
+根 = `runtime/ business/ substrate/ delivery/ works/` + `README.md AGENTS.md .github/` = **8 项**
+（.git 不显形，视觉 8）。要字面 ≤7 的唯一解是 §1 与 §3 二选一：把 substrate 物理并入
+`runtime/substrate`（DOMAIN-DEPS.roots 支持任意前缀，D3 纯度门**照旧独立判定**，登记表仍是 5 域）
+→ 根 = 4 顶层目录 + 3 项 = **7 项，视觉 7**。此为 P-B 命名裁决的追加待裁点（§14.6 P-D）。
+
+**W 清单（重定向工程，按风险升序）**：
+W1 死项退役（本批已做：`.git-blame-ignore-revs` 零引用零 config，`git rm`，回滚=revert 单提交）；
+W2 CONTRIBUTING/SECURITY → `.github/`（SECURITY 半边被在飞守卫卡接线，CODEOWNERS 已指 .github 惯例）；
+W3 .gitattributes/.editorconfig 分域化；W4 pip 构建根迁 packaging/pip（R3 锚外科批，一次提交）；
+W5 Docker 族迁 deploy/ + CI path 重指；W6 启动器 → bin/（=P6 同窗）；
+W7 工作区根下沉 runtime/（最重，298 脚本+hooks+CI+autopull+nightly 全链，须独占一个冻结窗）；
+W8 方案 P 物理搬家（§14.3 P1–P5 不变）。
+**依赖序**：W7 是 W8-P3 的前置（runtime/ 目录先于服务解体存在）；W4/W5 独立可并行；
+在飞件（check-repo-layout.js/package.json ` M`）是 W2/W7 的硬闸——先核干净再动。
+
+本批已执行：W1（−1，根 61→60）+ 本台账。W2 起逐批推进，每批一提交一复测（root census 棘轮同步下调）。
+
 ## 关联
 
 - 设计真源：`[DESIGN-LAY-005]`（层）、`[DESIGN-LAY-006]`（可发现性）、`[DESIGN-LAY-007]`（三态 × 五轴，**本篇的上位**）、`[DESIGN-LAY-003]`（回收通道）、`[DESIGN-LAY-004]`（产物单一根）
