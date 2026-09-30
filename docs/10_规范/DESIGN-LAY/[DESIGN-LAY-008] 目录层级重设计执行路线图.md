@@ -4781,17 +4781,13 @@ W3 分域化 → W10 → W4 pip 构建根 → W5 Docker 族 → W2 治理文档�
 
 ```text
 khy-os/                                    ← 根 = 7 项（D-4 档）
-├── runtime/                    D1 运行时内核（第二层轴=抽象层级，6 项）
+├── runtime/                    D1 运行时内核（第二层轴=抽象层级，5 项）
 │   ├── boot/                   引导层：kernel/ + platform/ + backend/bin + src/bootstrap
-│   │   ├── kernel/             ← 根 kernel/（整族平移）
-│   │   ├── platform/           ← 根 platform/（整族平移）
-│   │   └── node/               ← src/bootstrap、backend/bin、main.js、index.js
-│   ├── substrate/              D3 共享底座（登记仍独立域；轴=设施类别）
-│   │   ├── io/  config/  format/  policy/  text/   ← src/utils + src/constants 按类别拆（P1 逐文件表另出）
-│   ├── interfaces/             入口适配层：src/cli(含 tui/classic) routes controllers middleware
-│   │                             bridge vim plugin-loader entrypoints
-│   ├── engine/                 服务引擎（39 真身分 7 族，见 16.3）
-│   ├── swarm/                  多智能体协调：src/agents buddy coordinator jobs tasks memdir
+│   ├── substrate/              D3 共享底座（登记仍独立域；轴=设施类别 io/config/format/policy/text）
+│   │                             ← src/utils + src/constants 抽包（P1，抽出处留壳吸收相对路径）
+│   ├── node/                   backend 包**整包平移**（P3；含 src 其余全部与 683 直属文件——
+│   │                             包边界不动 = 3000+ 相对 require 零破坏；内部再分组降为可选 P3b）
+│   ├── ai-backend/             services/ai-backend 整包（G2 版本轨道成员）
 │   └── bin/                    6 个启动器（W6；对外迁移公告一次）
 ├── business/                   D2 业务上下文（第二层轴=上下文族 7 个，第三层=31 上下文整族平移）
 │   ├── dialogue/               session messaging collab onboarding
@@ -4858,7 +4854,10 @@ khy-os/                                    ← 根 = 7 项（D-4 档）
 | `services/` | 三分：utils+constants→runtime/substrate（P1）；src/services/domain→business/（P2）；其余→runtime/（P3） | P1-3 | |
 | `tools/` | works/data/deepseek-eyes（运行时数据，§12.54 已定性） | P5 | |
 
-### 16.3 runtime/engine/ 的 39 真身归组（7 族）+ 98 壳退役 + 683 文件规则
+### 16.3 runtime/node/ 内部（P3b 可选重组）+ 98 壳退役 + 附录A 全量文件表
+
+**P3 主案 = 整包平移**（`services/backend/** → runtime/node/**`，包边界与 3000+ 相对 require 零破坏）。
+下表 7 族归组是 **P3b 可选内部重组**（做与不做都不影响根 7 项达标；建议随 #7 重构自然收敛而非专项）：
 
 | 族 | 成员（现 services/ 直属真身目录） |
 |---|---|
@@ -4872,8 +4871,10 @@ khy-os/                                    ← 根 = 7 项（D-4 档）
 
 （* 标壳者随 P2 真身迁 business/ 后退役。）**98 个壳 = 退役清单**：不搬家——每条壳的下游消费者
 重指到 business/ 真身后删壳（P2 收尾批，逐壳一提交可 revert；这也是 cross-layer-require 与
-`@khy/*` 包名化的同一刀）。**683 个 services/ 直属 .js**：按名族脚本聚类进上述 7 族，
-**逐族清单逐族点**（P3 前置产物，不一次性过 683 行大表）。
+`@khy/*` 包名化的同一刀）。**683 个 services/ 直属 .js**：随 P3 整包平移进 `runtime/node/src/services/`
+（零单独决策）；仅当 P3b 启动时才需要名族聚类逐族点审。
+**全量逐文件去向 = 附录A `[DESIGN-LAY-008] 附录A 方案P全量文件去向表.md`**（git ls-files 10 816 行全覆盖：
+迁移 10 690 · 退役 120 · 孪生随 docs:build 再生 6 · UNMAPPED 0；由 `.khyos/tmp/b54-tree.js` 生成，构建产物不得手改）。
 
 ### 16.4 施工顺序与每批验收（点头后生效）
 
@@ -4888,7 +4889,8 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 1. **整图**（16.1 树 + 16.2 逐行表）——点头即按 16.4 顺序开工；
 2. 单行可圈改：`.gitignore` 留根（终局 8）还是走 exclude（7，多机断同步风险）；
    AI 工具位逐个圈留；`electron/` 退役或迁；`khy-Trajectory` 认领；`CLAUDE.md` 并或留；
-3. 683 文件的逐族清单 = P3 前置另批（族归类规则已定，不阻塞整图点头）。
+3. **附录A 全量文件表**（10 816 行逐文件去向，UNMAPPED=0）——点头 = 认可该表为施工基线；
+   任何单行不同意，报现路径即可改判（生成器规则改一行重跑）。
 
 ## 关联
 
