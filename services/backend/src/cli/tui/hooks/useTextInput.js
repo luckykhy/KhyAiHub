@@ -526,11 +526,16 @@ function useTextInput({ onSubmit, onChange, onHistoryEmpty, mouseModule, onShell
       if (key.rightArrow) {
         return move(key.meta || key.ctrl ? cur.wordRight() : cur.right());
       }
+      // Ctrl+Home/End (\x1b[1;5H / \x1b[1;5F) is the buffer-level half of the same
+      // unwired-chord family: ink raises the ctrl flag, and the box goes multi-line
+      // routinely (modifier+Enter inserts a newline, pastes carry newlines), so
+      // ignoring ctrl made the chord a silent duplicate of plain Home/End. Ctrl+A/E
+      // keep their emacs LINE meaning above — this stays the only buffer jump.
       if (key.home) {
-        return move(cur.startOfLine());
+        return move(key.ctrl ? cur.start() : cur.startOfLine());
       }
       if (key.end) {
-        return move(cur.endOfLine());
+        return move(key.ctrl ? cur.end() : cur.endOfLine());
       }
 
       if (key.upArrow) {

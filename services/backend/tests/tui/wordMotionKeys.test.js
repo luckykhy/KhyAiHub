@@ -142,3 +142,32 @@ test('live sequence to replay in the pty: "hello world" + Ctrl+Left x2 + Ctrl+De
   h.onInput('\x1b[3;5~', delKey({ ctrl: true }));
   console.log('[seq final]              ', dump(h));
 });
+
+// Buffer-level half of the same family (2026-10-01): the box goes multi-line
+// routinely — modifier+Enter inserts a newline and pastes carry newlines — and ink
+// does raise ctrl for \x1b[1;5H / \x1b[1;5F, so dropping the flag made those
+// chords a silent duplicate of plain Home/End. The last two arms pin what must NOT
+// change: plain Home stays at the line start, Ctrl+E keeps its emacs line-end.
+test('Ctrl+Home jumps to the START of the whole buffer', () => {
+  const h = fresh('line one\nline two\nline three', 21);
+  h.onInput('\x1b[1;5H', { ...baseKey, home: true, ctrl: true });
+  assert.strictEqual(h.liveCursor.offset, 0);
+});
+
+test('Ctrl+End jumps to the END of the whole buffer', () => {
+  const h = fresh('line one\nline two\nline three', 3);
+  h.onInput('\x1b[1;5F', { ...baseKey, end: true, ctrl: true });
+  assert.strictEqual(h.liveCursor.offset, 'line one\nline two\nline three'.length);
+});
+
+test('control: plain Home still goes to the LINE start, not the buffer start', () => {
+  const h = fresh('line one\nline two\nline three', 21);
+  h.onInput('\x1b[H', { ...baseKey, home: true });
+  assert.strictEqual(h.liveCursor.offset, 18);
+});
+
+test('control: Ctrl+E keeps its emacs LINE-end meaning (no buffer jump)', () => {
+  const h = fresh('line one\nline two\nline three', 3);
+  h.onInput('e', { ...baseKey, ctrl: true });
+  assert.strictEqual(h.liveCursor.offset, 8);
+});
