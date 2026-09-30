@@ -4514,6 +4514,87 @@ A 档把全部杠杆押在「物理搬目录进 `meta/`」上，结果被自己�
 3. **R4 各族目标位**：进既有板块（如 `evidence/` 并入 `docs/` 姊妹位）还是新建 `meta/`——逐族一裁；
 4. **待认领 3 项**：`khy-Trajectory`、`.workbuddy/`、`.workbuddy-ai/`（认领或隔离，§11.3 悬置至今）。
 
+## §14 方案 P（五域物理化）：抽象层级 = 物理目录 = 视觉层级（2026-09-30，待人裁）
+
+### 14.0 需求出处与五问（规则 6）
+
+人的原话（2026-09-30）：「**抽象层级与物理必须对应……抽象层级与视觉必须对应。帮我设计个方案**」。
+这是对 §13 方案 R「逻辑分组（索引）兑现 §1」的**否决性追加**：分组索引降的是读文档人的负载，
+不降打开资源管理器的人看到的 61。五问速答：①谁用——仓库所有者本人（单人仓）+ 一切打开根目录的工具；
+②何时用——每次浏览/导航/新机器克隆；③替代做法——六族索引（已建，被明言不够）；
+④成功长什么样——根目录直接子项 = **5 个域目录 + 一张封闭的契约清单**，域内第二层 ≤7；
+⑤不做会怎样——抽象（D1–D5 登记表）与物理（L0–L6 + 契约平铺）永久两张皮，5-3-1 的 §3 只在纸面成立。
+
+### 14.1 目标形态
+
+```text
+khy-os/
+  runtime/     D1 运行时内核   ← kernel/ platform/ services/backend/{bin,src/{cli,routes,services\domain 之外}}
+  business/    D2 业务上下文   ← services/backend/src/services/domain/**（31 单元，已实测域内零超限）
+  substrate/   D3 共享底座     ← services/backend/src/{utils,constants} + fan-in>30 枢纽
+  delivery/    D4 交付与接入   ← apps/ software/ extensions/ tools/ electron/ entries/ packaging/
+  works/       D5 工程与档案   ← scripts/ docs/ tests/ deploy/ patches/（.github 因平台契约留根，仍按 D5 申报）
+  ── 契约地板（封闭白名单，非架构组件，目标 ≤18）──
+  .git/ .github/ package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc node_modules/
+  README.md AGENTS.md CLAUDE.md .gitignore .gitattributes .editorconfig .mailmap .portable
+  .claude/ .cursor/ .opencode/ .zcode/ .commandcode/ .clinerules/ .ai/ .githooks/
+  bin/（6 个启动器，B 档迁移公告后自根下沉）
+```
+
+根直接子项 = **5 域 + 契约**。5-3-1 §3「五个顶级域」从登记表现实化为目录事实；
+§1「绝不超过 7」在**架构层**（5 域、每域第二层 ≤7）字面成立，契约地板作为「机器间」显式声明豁免——
+这不是重开 §2.4 的裁决，而是把豁免面从 61 项压到封闭的 ~18 项并给出不可再压的证明（14.5）。
+
+### 14.2 为什么守卫体系不碎：真源已经抽象好了
+
+`DOMAIN-DEPS.json.domains.*.roots` 就是「抽象↔物理」的**唯一映射点**——`check:layout` 的
+domain-direction / entry-buffer / functional-unit 三个判据全部从它派生扫描范围（守卫内不硬编码目录清单，
+这是既有设计决定）。物理化 = 翻转 roots 映射 + 搬家，**门自动跟着走**，且新形态可加一条同构校验：
+`roots 必须全部以域目录为前缀`（`.github` 类平台契约进例外表）。
+另一处顺带收编：`cross-layer-require` 39 处的处方本来就是「改 workspace 包名引用」——
+物理化的正确形态是把 runtime/business/substrate 做成 **pnpm workspace 成员**（各自 package.json），
+跨域 require 走 `@khy/*` 包名。也就是说物理化与这 39 条债务的清偿是**同一刀**。
+
+### 14.3 绞杀者分阶段（拓扑序：先叶后根，每段一窗一发布）
+
+| 段 | 动作 | 吸收面 | 回滚 |
+|---|---|---|---|
+| **P0 前置** | C-10 `.git` 终修（prune 或换库，人已裁三选一）+ §12.0b 双历史处置——**git mv 的合法地基** | — | 已有 tar 备份+salvage refs |
+| **P1 substrate** | utils/constants/枢纽 → `substrate/`，旧路径留**恰一句** re-export 壳（守卫已有壳豁免判据，57 处先例） | require 面全被壳吸收；字符串路径 grep 重指 | 壳反指 + housekeeping manifest |
+| **P2 business** | `services/domain/**` → `business/`（整域一次，31 单元目录结构原样平移）+ 建 package.json 入 workspace | 壳吸收；软著 60 页选材路径（COPYRIGHT-MATERIALS.json）同批改 | 同上 |
+| **P3 runtime** | kernel/platform/cli/routes/services 余量 → `runtime/`；**services/backend 解体为本段最大动作**（node_modules 归属、jest 配置、Dockerfile 19 条 COPY 逐条重指） | wheel/npm 两渠道构建面全量复跑 | 同上 |
+| **P4 delivery** | 七目录 → `delivery/`（pnpm 成员路径、electron-builder、compose profile 重指） | 构建链四件套 | 同上 |
+| **P5 works** | scripts/docs/tests/deploy/patches → `works/`（**1 570 个硬引用重指主体**，全字符串面，`docs:verify` 兜链） | autopull/nightly cron/.ai 种子/CODEOWNERS 逐面改 | 同上 |
+| **P6 地板收敛** | 启动器进 `bin/` + 发布冻结窗口 + 对外安装契约迁移公告（= 原 B 档内容，**并入本窗**，不再单开一轮） | 迁移公告、tag 链复跑 | 版本冻结前不发布即整体可撤 |
+
+**节奏约束**：与作者 #7 重构（replSession/toolUseLoop）**串行不并行**——每段开工前核实在飞面；
+单人带宽下每段独立成窗，禁止跨段合并提交（R6）。**P6 与 §13 R5 的 4 周观察窗合并**：
+2026-10-27 开闸后按 P1→P6 顺序执行，方案 P 就是 B 档的完全体。
+
+### 14.4 验收（进门前三问已答，判据可机判）
+
+1. 根直接子项 = 5 域目录 + 契约白名单（封闭集，逐名枚举进 `check:data-layout` 的 root-whitelist 改版）；
+2. 每域第二层 ≤7（新目录硬约束、存量棘轮，沿用 C-1 分档口径）；
+3. `DOMAIN-DEPS.roots` 与物理前缀同构（新 finding：`roots-not-isomorphic`）；
+4. R5 四件套 + wheel + compose 静态核全绿；`archDebtScan` SCC **不升**（壳不算新边）；
+5. 三轨道版本/软著选材/CHANGELOG 链复验（PROCESS-005 四硬阻断原样生效）。
+
+### 14.5 不可解证明（为什么连契约地板也压不进 7）
+
+仓库根同时持有四个身份：git 工作树（`.git` 只认根）、npm/pnpm workspace 根（清单三件套只认根）、
+GitHub 仓库（`.github/`、README、AGENTS/CLAUDE 只认根）、8 个 AI 工具的 project-root 配置位。
+每个身份的读取路径都是**外部程序写死的**，不属本仓可裁决面；`.khy/.khyos/node_modules` 等本机态
+git 不跟踪但资源管理器可见。⇒ 任何单仓方案在视觉上都有 ~15–18 的地板。
+**唯一能字面 ≤5 的架构是拆多仓**（每仓根自然小）：代价 = 打破 `[DESIGN-ARCH-118]` 单仓自举 +
+pip/npm/docker/软著四链重建 + 跨仓原子提交消失——本方案不推荐，列出仅为完备。
+
+### 14.6 决策点（人拍板，AI 不代改）
+
+- **P-A** 是否采纳方案 P 作为 B 档完全体（替代 §13 R5 的「七层降级」原案）。
+- **P-B** 域目录命名：`runtime/business/substrate/delivery/works`（业务术语，§3 要求）还是保留 `D1..D5`。
+- **P-C** C-10 终修三选一（P0 前置，不裁则 P1 起全部冻结）。
+- 本批未动任何文件——§14 只立方案不施工，开工信号 = P-A/P-B/P-C 三点齐。
+
 ## 关联
 
 - 设计真源：`[DESIGN-LAY-005]`（层）、`[DESIGN-LAY-006]`（可发现性）、`[DESIGN-LAY-007]`（三态 × 五轴，**本篇的上位**）、`[DESIGN-LAY-003]`（回收通道）、`[DESIGN-LAY-004]`（产物单一根）
