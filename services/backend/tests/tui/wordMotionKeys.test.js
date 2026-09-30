@@ -171,3 +171,33 @@ test('control: Ctrl+E keeps its emacs LINE-end meaning (no buffer jump)', () => 
   h.onInput('e', { ...baseKey, ctrl: true });
   assert.strictEqual(h.liveCursor.offset, 8);
 });
+
+// Kill chords (2026-10-01 §2). Ctrl+K at a line end used to be a silent no-op,
+// which is the only way a hard-wrapped paste can be unwrapped without retyping.
+test('Ctrl+K at the end of a line kills the line break (readline parity)', () => {
+  const h = fresh('alpha\nbravo\ncharlie', 5);
+  h.onInput('k', { ...baseKey, ctrl: true });
+  assert.strictEqual(h.liveCursor.text, 'alphabravo\ncharlie');
+  assert.strictEqual(h.liveCursor.offset, 5);
+});
+
+test('Ctrl+Y puts the killed line break back', () => {
+  const h = fresh('alpha\nbravo\ncharlie', 5);
+  h.onInput('k', { ...baseKey, ctrl: true });
+  h.onInput('y', { ...baseKey, ctrl: true });
+  assert.strictEqual(h.liveCursor.text, 'alpha\nbravo\ncharlie');
+});
+
+test('control: Ctrl+K mid-line still kills only to the line end', () => {
+  const h = fresh('alpha\nbravo\ncharlie', 9);
+  h.onInput('k', { ...baseKey, ctrl: true });
+  assert.strictEqual(h.liveCursor.text, 'alpha\nbra\ncharlie');
+});
+
+test('control: Ctrl+K at the very end of the buffer stays a no-op', () => {
+  const b = 'alpha\nbravo\ncharlie';
+  const h = fresh(b, b.length);
+  h.onInput('k', { ...baseKey, ctrl: true });
+  assert.strictEqual(h.liveCursor.text, b);
+  assert.strictEqual(h.liveCursor.offset, b.length);
+});

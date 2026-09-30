@@ -562,6 +562,18 @@ function useTextInput({ onSubmit, onChange, onHistoryEmpty, mouseModule, onShell
             const { cursor: c, killed } = cur.deleteToLineEnd();
             if (killed) {
               killRing.current.push(killed);
+              return edit(c);
+            }
+            // Nothing left on this line: kill the line break itself (readline
+            // parity), which is how a hard-wrapped paste gets unwrapped. Without
+            // it Ctrl+K was a silent no-op at every line end. Kept in the kill
+            // ring so Ctrl+Y puts the break back.
+            if (cur.text[cur.offset] === '\n') {
+              killRing.current.push('\n');
+              return edit(new Cursor(
+                cur.text.slice(0, cur.offset) + cur.text.slice(cur.offset + 1),
+                cur.offset
+              ));
             }
             return edit(c);
           }
