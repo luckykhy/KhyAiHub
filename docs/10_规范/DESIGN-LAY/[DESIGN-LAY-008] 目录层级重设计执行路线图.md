@@ -4383,6 +4383,70 @@ pnpm 并行安装临时目录，非本批作用面（本批反而把 bundle 降�
 **验收**：根 census 62 → **61**；data-layout 顶层可寻址 **60**（台账 measured 61 → 60 同步）；
 索引覆盖探针 OK；`check-duplication` 0 error（373 warning 为存量建议，advisory）；`check-debt-ledger` 0/0。
 
+### 12.59 第 54 批（5-3-1 实施车道）：P2 首档消边**首次真动代码** + 三件套第 54 批 —— 巨环 196→194，两个 D2 成员真实退环（2026-09-30）
+
+用户 2026-09-30 两次下达「按照 [RESEARCH-018] 方案实现」并追加「还是没有 531 实现」。本批把它按
+**P2 行为面改动授权已给出**处理——此前 §12.53 Q2 写的是「消边=改 import 面，仍属行为面改动，本批未动
+任何一条」，等的就是这个字。本批动了，且每步都有复测。
+
+**① P2 首档切割集：7 条顶层真边消掉 5 条（守卫 findings −6，含 :204 加项）**
+
+| 边 | 型 | 做法 | 验收 |
+| --- | --- | --- | --- |
+| customProviders.resource:16/17/18 → apiKeyPool / customProviderRegistrar / customProviderRegistry | 注入参数 | 资源模块改 bind 依赖槽（未绑定时按规则 2.2 报具体错误），**D1 装配入口 `services/management/index.js` 由纯 re-export 壳升级为装配点**（头注释自证原为壳、现承担 bind） | 已入库 `tests/management.test.js`（含真实 invoke('custom-providers','list')）+ parityGuard 两套共 35 例全绿；运行时冒烟经唯一漏斗真调：3 providers / 11 presets（本机真实数据，非摆拍） |
+| packageAdapter:130 与 :204 → versionService.PACKAGE_CANDIDATES | 常量下沉 D3 | `PACKAGE_CANDIDATES` 移入 `constants/serviceDefaults.js` 的 UPDATE 块（Object.freeze），versionService 改**别名引用**、对外导出逐字节同值 | 已入库更新链四套件 31 例通过（除③两条存量红）；冻结安全性=全仓无 `PACKAGE_CANDIDATES` 变异点（grep 实测 push 命中全是无关局部变量） |
+| packageAdapter:242 → khySelfUpdateService 兜底 require | 注入参数 | fallback 删除，改由 `updateCoordinator:768` 装配注入（与 :279/:372 同一惯例）；未注入时返回具体错误 | 并行车道在飞的 `packageAdapter.test.js`（??，未签）在改动后复跑 **0 fail**——其委托用例本就显式注入 selfUpdate，地基未抽 |
+
+**复测（Q2 要求的「每消一条看 SCC」按批次做了一次）**：`archDebtScan --json` 巨环 **196 → 194**，
+D2 成员 **27 → 25**——`customProviders.resource.js` 与 `packageAdapter.js` **双双真实退环**。
+这是本路线建档以来第一次用改代码而不是改口径让环变小。
+
+**② 两条不动的边与理由（门控登记，非回避）**：`apiKeys.resource:12`——并行车道的
+`apiKeys.resource.test.js`（??，未签）**整支建立在 require.cache 桩 `services/apiKeyPool` 之上**，
+改 bind 会直接抽掉它的地基；待该车道签后随其测试迁移一起做。`replayLedger:167`——目标
+`sessionPersistence.js` 为 ` M` 在飞件。两者都在任务 #17/#18 面上有据。
+
+**③ 更新链四套件里两条红全部判为存量、非本批引入（逐条证）**：
+(a) `routerDispatchOpsLeaf.test.js:133` 期望 `['apply', undefined]` 而实测 `['apply',
+{onProgress,onStatus}]`——该测试桩掉整个 coordinator 模块，本批对 updateCoordinator 的改动**不在其
+require 链上**；且 `git show HEAD:routerDispatchOps.js` 与在飞工作树在 :96/:162 两个调用点逐字相同，
+期望不匹配在 HEAD 就成立 ⇒ 测试与叶子的漂移早于本批（叶子现为作者 ` M` 在飞件，37+/37− churn）。
+(b) `updateCoordinatorBlockedHint.test.js` 报 `ReferenceError: describe is not defined`——它是
+**jest 方言文件被 `node --test` 直跑**所致（本仓 tests/ 混 node:test + jest 的既有口径问题），
+与本批改动无关。(a)(b) 登记不修（无甲/乙裁决）。
+
+**④ C-4/C-5 三件套第 54 批（与 P2 同批、改动集不混：全部纯新增）**：fu-safe 探针 09-30 复测
+67 待补单元 → **12 SAFE / 21 文件**（13→12 之差 = typeset 已在第 51 批签出）。四车道派工
+（A adapters 6 份 53 例 / B plugins+uninstall 6 份 59 例 / C1 单源 5 份 80 例 / C2 单源 4 份 41 例），
+合计 **21 份共置测试 / 233 例 / 0 fail**，本道对四车道全部**显式路径逐一复跑**后才签。
+三件套另半区：3 个多文件单元手写 `khy.module.json`+README（fanIn 逐条核到消费者——顺带钉死
+`unit-profile.js` 的列表语义缺陷：它打印的是**被消费的单元文件**而非消费者，新仪器
+`.khyos/tmp/b54-unit-consumers.js` 补上）；9 个单源目录走**ALLOW 白名单限定**的批量登记器
+（buffer-bulk-register.js 加 ALLOW/SINCE 参数，DRY 先核对命中恰为本道 9 个，绝不代登他车道候选）。
+12 份 stage 一律 **staged**：adapters 的 fanIn=0 是动态 require 盲区（registry.js:86 证据入册）、
+plugins/uninstall 各有在册 D1 出边（4 条 / 1 条）与实测怪异点未过人审——签 stable 就是把
+promotion-incomplete 防的那张假证自己签出去（第 30/31 批口径）。
+
+**⑤ 棘轮与台账**：`repo-layout-baseline.json` functional-unit **311 → 290**、entry-buffer
+**2491 → 2470**、domain-direction **205 → 199**（**零缓冲**：守卫实测 == 基线 == 199，本批消边
+逐条可归因，与并行噪声无关——三方降幅 21/21/6 与本批补件数/消边数逐字对上）。debt-ledger 三条
+measured 同步，`check-debt-ledger` **0 error / 0 warning**；`check:layout` 整体 **exit 0**（余 5 条
+warning 均在基线内）。d2-no-reach-into-d1 **159 → 153**。
+
+**⑥ 订正两条「未建」表述**：§12.44 与 [RESEARCH-021] V-8 记「P5 晋级闸门未建」——实测
+`check-repo-layout.js` 的 `promotion-incomplete` 判据与 `DOMAIN-DEPS.json._entry_buffer.promotionCriteria`
+均已建成（第 51 批复测读数 0），真正未闭合的是**晋级动作本身**（第 3 步 `git mv` 被 §3.0/C-10 前置
+挡住）。度量侧建成 ≠ 流转侧跑通，两处文字下次复测时订正。
+
+**给下一手**：E4（apiKeys）随其车道测试签出后同法做（bind + 测试迁 inject 要同批）；
+E5（replayLedger）待 sessionPersistence 安静；`d2-no-reach-into-d1` 余 153 的下一档仍按 §12.53 Q2
+的注入/下沉两型逐族磨；`services/management/index.js` 已是装配点，**后续任何 D2→D1 注入都走这类
+D1 缝，不要再往 D2 资源里塞 require**。
+
+**本批留痕一处如实更正**：拆分提交中 C2（12 份多文件单元测试）的提交标题把 53+33+26=**112** 例
+误写为「88 例」——正文与本台账数字（53/33/26、合计 233）为准；未推出的本地历史**不重写**，
+在此登记代替。
+
 ## §13 方案 R（重设计）：根 = 契约面 —— 逻辑分组 + 物理出根 + 宽度棘轮（2026-09-29，待人裁部分已标注）
 
 用户对 §11.1 A 档提出「重新设计」。本节替代 A 档作为根目录收敛的现行方案；§11.1 保留作历史裁决记录。
