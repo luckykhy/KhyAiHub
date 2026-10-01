@@ -4894,18 +4894,60 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 
 ### 16.6 施工执行状态（点头后逐批登记）
 
+> **2026-10-02 01:20 节**：本节**无未门控的 W/P 批次**——W2/W4/W5/W9/W10b/P1–P5 全部命中在飞闸，
+> W3/W6/W7 前置未备，逐批各闸现状见下表（每格给可复验的证据，不给结论性形容词）。
+> 本道只做两件自净（HK 清根残留、DL 债务台账逾期处置），**不改目录结构**，
+> 故签署口径 root census **59 不变**（守卫可寻址读数 81→79 的降幅全部来自未跟踪残留，非搬家）。
+
 | 批 | 状态 | 读数 |
 |---|---|---|
 | W1 `.git-blame-ignore-revs` 退役 | ✅ `608eb6bb` | 根 61→60 |
 | W10a `.mailmap`→`docs/.mailmap` + `mailmap.file` config（install-hooks.sh 落盘 per-machine） | ✅ 本批 | 根 60→59（本道净贡献） |
-| W2 余量（CONTRIBUTING/SECURITY/CHANGELOG/.env.example） | ⛔ 门控 | 消费方含 5 个 ` M` 在飞件（check-commit-message/docs.js/publish.js/forgeCore/pip_packaging_rules）；CHANGELOG 另需核 check-repo-layout.js:145 的引用语义（该文件在飞）。等车道收口即动 |
-| W5/W4/W7/P1–P5 | 排队 | 按 §16.4 序 |
+| W2 余量（CONTRIBUTING/SECURITY/CHANGELOG/.env.example） | ⛔ 门控（2026-10-02 复核：仍未解除） | 上节记的 5 个在飞消费方中 docs.js/publish.js/forgeCore **已收口**，但本批仍不可动：`CONTRIBUTING.md`→`.github/` 的消费方 `check-commit-message.js`、`check-repo-layout.js` 仍 ` M`；`SECURITY.md` 有 8 个在飞消费方（含落点真源 `DATA-LOCATIONS.json`、`check-repo-layout.js` 及其测试）；`CHANGELOG.md` **本体即 ` M`** 且消费方含 `AGENTS.md`、`.ai/hq/ROADMAP.md`；`.env.example` 消费方 12+ 在飞（`.ai/**`、`pip_packaging_rules.py`、`handlers/publish.js`、`RULES-REGISTRY.json`） |
+| W3 `.gitattributes`/`.editorconfig` 分域 | ⛔ 前置未备 | 五域目录尚未创建（§16.2 的「五域各一份」依赖 P1–P5）；且根位 `.gitattributes` 一旦拆散，**仍留在根的全部跟踪文件将失去行尾/合并规则覆盖**——只能与域目录创建同批做，不可单独提前 |
+| W4 pyproject/MANIFEST→`delivery/channel/pip/` | ⛔ 门控 | 本体 `pyproject.toml` 为 ` M`（R3 版本锚 9 真源之一，本体在飞即不可动）；且 `delivery/` 尚不存在 |
+| W5 Docker 族（Dockerfile/docker-compose/fly/.dockerignore） | ⛔ 门控 | 四件本体全 clean，但消费方 3 个在飞：`check-native-registry.js`、`check-change-safety.js`、`pip_packaging_rules.py`；另有 14 份文档 `.md` 在飞需同批改指 |
+| W9 点目录归堆（.ai / .khy / .khyos / .workbuddy*） | ⛔ 门控 | `.ai/` 48 项在飞；重定向落点 `dataHome` 属 `services/backend`（该目录 1063 项在飞）；`works/` 尚不存在 |
+| W10b `.githooks`→`works/build/githooks/` | ⛔ 门控 | 28 个消费方中 **27 个在飞**：`check-touch-cost.js:87` 的 pathspec（真路径消费）、`RULES-REGISTRY.json`、`维护映射表.json`、以及 DESIGN-GIT-003/004、DESIGN-DOC-002、DESIGN-ARCH-111/127/137、OPS-MAN-044/067/206、IMPL-RPT-060 等 **8 份设计文档的 `.md` 真源**（`.gitignore` 只在注释里命中，无路径规则，不算消费方） |
+| P1–P5 五域搬家 | ⛔ 门控 | `services/` 1063、`docs/` 1459、`software/` 78、`scripts/` 62 项在飞；作者 #7 重构面未收口 |
+| HK 根残留清理（非 W/P 批，本道自净） | ✅ 本道 | 清出两件 0 字节根残留：① `.tmp-guard.txt`（mtime 10-01 15:51，gitignore 命中 `*.tmp-*`、全仓零引用）按 `check-repo-layout` 自己的处方收容进 `.khy/tmp/2026-10-02-tmp-guard.txt`；② `$null`（mtime 10-01 23:32，未跟踪、**不在 .gitignore 内**、全仓零引用，PowerShell 重定向 `>$null` 在非 PowerShell shell 下落成真实文件名的那类残留）按 `LAYOUT-004`「只隔离不删除」进 `.khyos/housekeeping/2026-10-02-root-litter/dollar-null` + `manifest.json`（含原路撤回命令）。效果：`root-junk` + `root-whitelist` 两个 **error 清零**，`check-repo-layout` **exit 1 → exit 0**；`check:data-layout` 顶层可寻址 **81 → 79** |
+| DL 债务台账两条逾期处置（判据③前置） | ✅ 本道 | `check-debt-ledger` 2 error → **0 error / 0 warning**：`layout.extension-id-hardcode` 复测真归零后置 closed（原债位 `"khy-markdown"` 字面量已从代码消失、仅剩注释，非仪器口径变化）；`standards.namingViolations` 按守卫处方置 `slipped` + 理由 + 期限顺延 2026-11-30，读数校正见 §16.6 末「新事实 B」 |
+| W6 启动器族→`runtime/bin/` | ⛔ 前置未备 + 待人 | 6 个启动器本体全 clean，但落点 `runtime/bin/` 尚不存在（`runtime/` 由 W7/P3 造）；且 §14.3 把 W6 钉在 **P6 发布冻结窗**并要求「对外安装契约迁移公告一次」——公告内容属人的决定，本道不代拟 |
+| W7 工作区根下沉 `runtime/` | ⛔ 门控 | 本体 `package.json` 为 ` M`（在飞）；且 298 脚本 + hooks + CI + autopull + nightly 全链改指须在**独占冻结窗**内做，与积压的 2236 件在飞面正面冲突 |
+
+**新事实 A（10-02 本节·在飞积压的性质判定，决定闸门何时解除）**：工作区 2236 个 ` M` + 626 个 `??`
+并非活跃进程正在写入——逐文件 mtime 显示上表全部**闸文件**停在 09-28 09:56 ~ 09-29 21:17
+（`pyproject.toml` 09-28 09:56、`check-commit-message.js`/`check-touch-cost.js`/`check-native-registry.js`
+09-28 12:03、`CHANGELOG.md` 09-28 13:59、`check-repo-layout.js` 09-29 21:17），顶层目录 mtime 中
+只有 `scripts/`（10-01 10:24）与 `docs/`（10-01 15:54）昨日有动静。⇒ 这是作者车道**积压未提交的批次**，
+不会「等到它自己收口」；**要么由作者提交/回退，要么本节之后所有 W/P 批次永久冻结**。
+晨审建议：确认这批是否可提交，一次解除 W2/W4/W5/W9/W10b 五道闸。
+
+**新事实 B（10-02 本节·NAM-001 读数的仪器假阳性，非本道债）**：`check-code-standards.js` 现报
+namingViolations **11 > 基线 4**（BASELINE BREACH，exit 1）。逐条核对：4 处为已跟踪件上的原有违规
+（与台账 measured 一致，**HEAD 口径未退化**），其余 **7 处全部来自并行车道未提交（`??`）的 test 文件**，
+且是正则把测试名的英文散文误判成类名——实物是 `test('module exports the class plus a memoized singleton …')`、
+`test('the module exports the class and one factory')` 这类字符串，被 `class (\w+)` 命中并断言
+`Class "plus"` / `Class "and"` 不是 PascalCase。**修法顺序必须是先修检测口径（正则不该命中字符串与注释），
+再谈命名**；把 11 记进债账等于把别的车道的在飞件和仪器误判固化成债，故台账 measured 保持 4、
+在 `slippedReason` 里留下这条复测证据。命名债归属 `standards`/platform 车道，不在目录整理道。
+
+**新事实 C（10-02 本节·`$null` 这类残留现在拦不住，两处都得由别人改）**：`root-junk` 签名只认
+tmp 命名法（`^tmp-` / `.tmp` 一类），`$null` 这种 0 字节、非 tmp 命名的重定向残留**不触发 error**，
+本道全靠肉眼在 census 里发现；而唯一能防复发的落点 `.gitignore` 本体是 ` M` 在飞件，本道不可动。
+⇒ 待作者车道收口 `.gitignore` 后补一条 `$null` 规则，或把该形态扩进 `check-repo-layout` 的
+root-junk 签名（属守卫判据变更，走规则 8 阶段口径，不由目录整理道代做）。
+
 
 **新事实（census 60→79 的归因，非本道债务）**：根目录出现 15+ 个 `*.baiduyun.uploading.cfg`
 ——**百度网盘客户端正在同步本仓库根**，这些是它的上传临时件（会随同步再生，隔离无效）。
 两条处置待人执行：① 在百度网盘同步范围里**排除 khy-os 目录**（同步活 git 仓 + node_modules
 本身有对象库损坏风险，与 C-10 的既有损坏是否同源待查）；② 排除后残留 cfg 走 root-junk 签名拦截。
 root-top-level 棘轮**不为此调口径**——79 读数含客户端在制件，本道只签自己 −1 的净账。
+> 趋势补记（2026-10-02 本节实测）：`*.baiduyun.uploading.cfg` **15+ → 18 个**，客户端仍在同步本仓根，
+> 未排除。当前 `check:data-layout` 顶层可寻址 79 项，**含这 18 件**；剔除后本道口径 61，
+> 对台账 `layout.root-top-level` measured 60（2026-09-29）净 **+1**——**本道不签这 +1、不动棘轮**，
+> 棘轮只降不升，来源（疑为 `.workbuddy*` 自愈复生一族）留待下节逐名归因。
 
 ### 16.7 每夜自动施工节登记（用户 2026-09-30 指令：「每天 1 点到 7 点整理目录符合 531 包括视觉」）
 
