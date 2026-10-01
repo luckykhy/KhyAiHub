@@ -4894,6 +4894,11 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 
 ### 16.6 施工执行状态（点头后逐批登记）
 
+> **2026-10-02 02:20 节（第 2 节）**：**仍无未门控批次**（工作区 2895 件，作者积压与上节同源，闸文件未转干净）。
+> 本节不动文件，产出是**把上节的门控评估改对**——上节按 grep 命中把若干「文件名词」当成了路径消费方，
+> 判据过粗；逐条读实物后 W5 的真闸、W2 的真闸都与上节所记不同，另发现 §16.2 有一行去向**经核实存疑**
+> （见「新事实 E」，待人改判，本道不代裁）。这类精化直接决定积压提交后第一批该动谁。
+
 > **2026-10-02 01:20 节**：本节**无未门控的 W/P 批次**——W2/W4/W5/W9/W10b/P1–P5 全部命中在飞闸，
 > W3/W6/W7 前置未备，逐批各闸现状见下表（每格给可复验的证据，不给结论性形容词）。
 > 本道只做两件自净（HK 清根残留、DL 债务台账逾期处置），**不改目录结构**，
@@ -4903,10 +4908,10 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 |---|---|---|
 | W1 `.git-blame-ignore-revs` 退役 | ✅ `608eb6bb` | 根 61→60 |
 | W10a `.mailmap`→`docs/.mailmap` + `mailmap.file` config（install-hooks.sh 落盘 per-machine） | ✅ 本批 | 根 60→59（本道净贡献） |
-| W2 余量（CONTRIBUTING/SECURITY/CHANGELOG/.env.example） | ⛔ 门控（2026-10-02 复核：仍未解除） | 上节记的 5 个在飞消费方中 docs.js/publish.js/forgeCore **已收口**，但本批仍不可动：`CONTRIBUTING.md`→`.github/` 的消费方 `check-commit-message.js`、`check-repo-layout.js` 仍 ` M`；`SECURITY.md` 有 8 个在飞消费方（含落点真源 `DATA-LOCATIONS.json`、`check-repo-layout.js` 及其测试）；`CHANGELOG.md` **本体即 ` M`** 且消费方含 `AGENTS.md`、`.ai/hq/ROADMAP.md`；`.env.example` 消费方 12+ 在飞（`.ai/**`、`pip_packaging_rules.py`、`handlers/publish.js`、`RULES-REGISTRY.json`） |
+| W2 余量（CONTRIBUTING/SECURITY/CHANGELOG/.env.example） | ⛔ 门控（第 2 节收窄，见新事实 D） | `CONTRIBUTING.md`/`SECURITY.md` 半批的**真闸收窄为一条**：`check-repo-layout.js:143–149` 的根文档白名单数组（含 `CHANGELOG.md`/`CONTRIBUTING.md`/`SECURITY.md`）在飞——`check-commit-message.js:59` 只是报错文案、非路径消费，`CODEOWNERS:96` 干净可随批改。`SECURITY.md` 仍有 8 个在飞消费方（含落点真源 `DATA-LOCATIONS.json`）；`CHANGELOG.md` **本体即 ` M`** 且消费方含 `AGENTS.md`、`.ai/hq/ROADMAP.md`；`.env.example` 消费方 12+ 在飞（`.ai/**`、`pip_packaging_rules.py`、`handlers/publish.js`、`RULES-REGISTRY.json`） |
 | W3 `.gitattributes`/`.editorconfig` 分域 | ⛔ 前置未备 | 五域目录尚未创建（§16.2 的「五域各一份」依赖 P1–P5）；且根位 `.gitattributes` 一旦拆散，**仍留在根的全部跟踪文件将失去行尾/合并规则覆盖**——只能与域目录创建同批做，不可单独提前 |
 | W4 pyproject/MANIFEST→`delivery/channel/pip/` | ⛔ 门控 | 本体 `pyproject.toml` 为 ` M`（R3 版本锚 9 真源之一，本体在飞即不可动）；且 `delivery/` 尚不存在 |
-| W5 Docker 族（Dockerfile/docker-compose/fly/.dockerignore） | ⛔ 门控 | 四件本体全 clean，但消费方 3 个在飞：`check-native-registry.js`、`check-change-safety.js`、`pip_packaging_rules.py`；另有 14 份文档 `.md` 在飞需同批改指 |
+| W5 Docker 族（Dockerfile/docker-compose/fly/.dockerignore） | ⛔ 门控（判据已于第 2 节更正，见新事实 D） | 四件本体全 clean。上节记的三个闸**不成立**（三者都是 basename 正则/样本夹具，搬家后照样命中）；真闸 = 70 个消费方中 **19 个在飞**，关键是落点真源 `DATA-LOCATIONS.json` 与 `AGENTS.md`。真路径消费只有 4 处：`docker.yml:76`、`deploy-staging.yml:121`（`file: ./Dockerfile`）、`deploy-staging.yml:148`（`--config fly.staging.toml`）、`docker-compose.yml:34`（`dockerfile: Dockerfile`） |
 | W9 点目录归堆（.ai / .khy / .khyos / .workbuddy*） | ⛔ 门控 | `.ai/` 48 项在飞；重定向落点 `dataHome` 属 `services/backend`（该目录 1063 项在飞）；`works/` 尚不存在 |
 | W10b `.githooks`→`works/build/githooks/` | ⛔ 门控 | 28 个消费方中 **27 个在飞**：`check-touch-cost.js:87` 的 pathspec（真路径消费）、`RULES-REGISTRY.json`、`维护映射表.json`、以及 DESIGN-GIT-003/004、DESIGN-DOC-002、DESIGN-ARCH-111/127/137、OPS-MAN-044/067/206、IMPL-RPT-060 等 **8 份设计文档的 `.md` 真源**（`.gitignore` 只在注释里命中，无路径规则，不算消费方） |
 | P1–P5 五域搬家 | ⛔ 门控 | `services/` 1063、`docs/` 1459、`software/` 78、`scripts/` 62 项在飞；作者 #7 重构面未收口 |
@@ -4939,6 +4944,41 @@ tmp 命名法（`^tmp-` / `.tmp` 一类），`$null` 这种 0 字节、非 tmp �
 本道全靠肉眼在 census 里发现；而唯一能防复发的落点 `.gitignore` 本体是 ` M` 在飞件，本道不可动。
 ⇒ 待作者车道收口 `.gitignore` 后补一条 `$null` 规则，或把该形态扩进 `check-repo-layout` 的
 root-junk 签名（属守卫判据变更，走规则 8 阶段口径，不由目录整理道代做）。
+
+**新事实 D（10-02 第 2 节·上节门控判据过粗，逐条读实物后更正）**：判「是不是消费方」要看它是
+**路径消费**还是**文件名词**，只看 grep 命中会把不该闸的文件算成闸。实测三例：
+
+| 上节记为闸 | 实物 | 判定 |
+|---|---|---|
+| `check-native-registry.js`（W5） | 第 114/115 行 `/^Dockerfile(\..+)?$/i`、`/^docker-compose.*\.ya?ml$/i` 是 **basename 正则**；第 438/448 行是自带样本夹具 | **不是路径消费**——Docker 族搬进 `deploy/` 后守卫照样命中，无需改指 |
+| `check-change-safety.js`（W5） | 第 96 行 `(?:^\|\/)docker-compose[^/]*\.ya?ml$/i` | 同上，**不是闸** |
+| `pip_packaging_rules.py`（W5/W2） | 第 625 行 `"Dockerfile*"` 属 `SDIST_ALLOWED_BASENAMES`，其口径注释（第 586 行）明写「basename 匹配」 | **不是路径消费**；它仍是 W2/.env.example 的闸（别处有真路径），但**不闸 W5** |
+| `check-commit-message.js`（W2） | 第 59 行是报错示例文案 `docs: 更新 CONTRIBUTING.md` | 文案陈旧问题，非路径消费 |
+
+⇒ **W5 的真闸**重算为：根 Docker 族共 70 个消费方文件，其中 **19 个在飞**，而这 19 个里最关键的是
+`docs/10_规范/registry/DATA-LOCATIONS.json`（落点真源，任何根项搬迁必须同批改它）与 `AGENTS.md`；
+CI 侧真路径消费只有 `.github/workflows/deploy-staging.yml:121`（`file: ./Dockerfile`）与
+`:148`（`--config fly.staging.toml`）、`.github/workflows/docker.yml:76` 与
+`docker-compose.yml:34`（`dockerfile: Dockerfile`）四处，**四件本体全 clean**。
+⇒ **W2 CONTRIBUTING/SECURITY 半批的真闸**收窄为一条：`check-repo-layout.js` 第 143–149 行的
+**根文档白名单数组**（列有 `CHANGELOG.md`/`CONTRIBUTING.md`/`SECURITY.md`）——该文件在飞即不可动；
+`.github/CODEOWNERS:96` 是 clean 的，随批一改即可。
+⇒ 结论对晨审有用：**积压一旦提交，W5 的真编辑面是 4 处 CI/compose 路径 + 51 个当前干净消费方**，
+但 51 个已超单提交 20 文件闸（`SECURITY-001`），**必须分片成 ≥3 个提交**（本体 1 + 消费方按族分 2）——
+它是当下最接近可动的整批，但不是一提交能收口的批次，开工前要先认这个分片计划。
+
+**新事实 E（10-02 第 2 节·§16.2 的 `.dockerignore` 去向行经核实存疑，待人改判）**：该行写的是
+「`.dockerignore` → `runtime/Dockerfile.dockerignore`（W5）」，但同一篇 §16.1 把 `Dockerfile` 判给
+`works/ship/`——两者不同目录，就近 ignore 文件必须与 Dockerfile **同目录**才生效。
+官方规则原文（docker.com/build/concepts/context，2026-10-02 查证）：
+「Place your ignore-file in the same directory as the Dockerfile」，且
+「A Dockerfile-specific ignore-file takes precedence over the `.dockerignore` file at the root of the
+build context if both exist」。本仓两条构建路径确实走 BuildKit
+（`.github/workflows/docker.yml:56/73`、`deploy-staging.yml:108/118` 用
+`docker/setup-buildx-action` + `docker/build-push-action`），故就近规则适用、按 §16.2 字面执行会落空。
+**两种改判供人二选一**（本道不代裁）：① 该行改为 `works/ship/Dockerfile.dockerignore`（随 W5/P5 同目录）；
+② 根 `.dockerignore` **暂不出根**——上下文根 `.dockerignore` 在无就近件时仍生效，
+先搬 Docker 三件（根 −3），`.dockerignore` 留作后续单独一行，代价是终局根宽 +1。
 
 **本节自我更正（10-02 02:0x，提交 `6a3afe35` 之后复核）**：上表「HK 根残留清理」与「新事实 A」两处
 数字是我自己测错了口径，现按逐文件复核更正——
