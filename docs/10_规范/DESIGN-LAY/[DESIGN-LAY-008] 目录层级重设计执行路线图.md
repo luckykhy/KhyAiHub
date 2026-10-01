@@ -4894,6 +4894,13 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 
 ### 16.6 施工执行状态（点头后逐批登记）
 
+> **2026-10-02 04:20 节（第 4 节）**：**仍无未门控批次**，零文件移动。脏件 2895 与前三节同源未变，
+> 四道关键闸（`DATA-LOCATIONS.json`/`AGENTS.md`/`check-repo-layout.js`/`RULES-REGISTRY.json`）全在飞，
+> 百度件 20、根项 80、架构根宽 59 持平。本节把门控地图收完整：用同一套「路径消费 vs 文件名词」
+> 判据（探针 `.khyos/tmp/w4w9-gate.js`，输出留档 `.khyos/tmp/w4w9-gate.out`）把最后两条粗判批次
+> **W4 与 W9** 重判了一遍，结果见新事实 H 与下表；另查出一类**被 git 跟踪的构建残留**落在
+> `check:build-root` 的类型盲区（已实测其判决，非推测）。
+
 > **2026-10-02 03:20 节（第 3 节）**：**仍无未门控批次**，零文件移动。
 > 积压与上节完全同源（脏件 2895 未变、`DATA-LOCATIONS.json`/`AGENTS.md`/`check-repo-layout.js`/
 > `RULES-REGISTRY.json` 四闸仍在飞），百度在制件 20、根项 80、架构根宽 59 全部持平——
@@ -4921,9 +4928,9 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 | W10a `.mailmap`→`docs/.mailmap` + `mailmap.file` config（install-hooks.sh 落盘 per-machine） | ✅ 本批 | 根 60→59（本道净贡献） |
 | W2 余量（CONTRIBUTING/SECURITY/CHANGELOG/.env.example） | ⛔ 门控（第 2 节收窄，见新事实 D） | `CONTRIBUTING.md`/`SECURITY.md` 半批的**真闸收窄为一条**：`check-repo-layout.js:143–149` 的根文档白名单数组（含 `CHANGELOG.md`/`CONTRIBUTING.md`/`SECURITY.md`）在飞——`check-commit-message.js:59` 只是报错文案、非路径消费，`CODEOWNERS:96` 干净可随批改。`SECURITY.md` 仍有 8 个在飞消费方（含落点真源 `DATA-LOCATIONS.json`）；`CHANGELOG.md` **本体即 ` M`** 且消费方含 `AGENTS.md`、`.ai/hq/ROADMAP.md`；`.env.example` 消费方 12+ 在飞（`.ai/**`、`pip_packaging_rules.py`、`handlers/publish.js`、`RULES-REGISTRY.json`） |
 | W3 `.gitattributes`/`.editorconfig` 分域 | ⛔ 前置未备 | 五域目录尚未创建（§16.2 的「五域各一份」依赖 P1–P5）；且根位 `.gitattributes` 一旦拆散，**仍留在根的全部跟踪文件将失去行尾/合并规则覆盖**——只能与域目录创建同批做，不可单独提前 |
-| W4 pyproject/MANIFEST→`delivery/channel/pip/` | ⛔ 门控 | 本体 `pyproject.toml` 为 ` M`（R3 版本锚 9 真源之一，本体在飞即不可动）；且 `delivery/` 尚不存在 |
+| W4 pyproject/MANIFEST→`delivery/channel/pip/` | ⛔ 门控 | 本体 `pyproject.toml` 为 ` M`（R3 版本锚 9 真源之一，本体在飞即不可动）；且 `delivery/` 尚不存在。**第 4 节精化**：真编辑面远大于「改指三处」——77 个路径消费方（63 干净 / 14 在飞），须拆 ≥4 提交，见新事实 H |
 | W5 Docker 族（Dockerfile/docker-compose/fly/.dockerignore） | ⛔ 门控（判据已于第 2 节更正，见新事实 D） | 四件本体全 clean。上节记的三个闸**不成立**（三者都是 basename 正则/样本夹具，搬家后照样命中）；真闸 = 70 个消费方中 **19 个在飞**，关键是落点真源 `DATA-LOCATIONS.json` 与 `AGENTS.md`。真路径消费只有 4 处：`docker.yml:76`、`deploy-staging.yml:121`（`file: ./Dockerfile`）、`deploy-staging.yml:148`（`--config fly.staging.toml`）、`docker-compose.yml:34`（`dockerfile: Dockerfile`） |
-| W9 点目录归堆（.ai / .khy / .khyos / .workbuddy*） | ⛔ 门控 | `.ai/` 48 项在飞；重定向落点 `dataHome` 属 `services/backend`（该目录 1063 项在飞）；`works/` 尚不存在 |
+| W9 点目录归堆（.ai / .khy / .khyos / .workbuddy*） | ⛔ 门控 | `.ai/` 48 项在飞；重定向落点 `dataHome` 属 `services/backend`（该目录 1063 项在飞）；`works/` 尚不存在。**第 4 节精化**：消费方 1680 / 路径命中 443 / 在飞 54 —— 需 ≥22 提交，§15.3 把它排在 P5 前在带宽上不成立，见新事实 H 第 3 点 |
 | W10b `.githooks`→`works/build/githooks/` | ⛔ 门控（第 3 节判据精化，见新事实 F） | 上节记「28 个消费方中 27 个在飞」**过粗**——逐条读实物后：真**路径**消费 11 个，其中在飞**只有 3 个**：`scripts/ci/check-touch-cost.js:87`（git grep pathspec）、`services/backend/.../deploy/publish/bundleCommon.js:34`（`A ` 暂存态）、**`docs/10_规范/registry/RULES-REGISTRY.json:921` 的 `".githooks/**"` 规则作用域 glob**（漏改则该目录下改动不再命中任何规则，静默失守——本批最危险的一处）。其余 8 个路径消费方全干净（`install-hooks.sh` 的 `core.hooksPath`、`install-git-hooks.js:13`、`ruleguard/lib/wiring.js:131`、`backfill-fields.js:131`、`cli/commitTiming.js:86`、`evolutionPolicy.js:179`、钩子本体两件）。文档侧另有 **11 份 `docs/**/*.md` 在飞**需同批改指（散文非路径，但本批必须一起改准）。`.gitignore` 仅注释命中，不算消费方 |
 | P1–P5 五域搬家 | ⛔ 门控 | `services/` 1063、`docs/` 1459、`software/` 78、`scripts/` 62 项在飞；作者 #7 重构面未收口 |
 | HK 根残留清理（非 W/P 批，本道自净） | ✅ 本道 | 清出两件 0 字节根残留：① `.tmp-guard.txt`（mtime 10-01 15:51，gitignore 命中 `*.tmp-*`、全仓零引用）按 `check-repo-layout` 自己的处方收容进 `.khy/tmp/2026-10-02-tmp-guard.txt`；② `$null`（mtime 10-01 23:32，未跟踪、**不在 .gitignore 内**、全仓零引用，PowerShell 重定向 `>$null` 在非 PowerShell shell 下落成真实文件名的那类残留）按 `LAYOUT-004`「只隔离不删除」进 `.khyos/housekeeping/2026-10-02-root-litter/dollar-null` + `manifest.json`（含原路撤回命令）。效果：`root-junk` + `root-whitelist` 两个 **error 清零**，`check-repo-layout` **exit 1 → exit 0**；`check:data-layout` 顶层可寻址 **81 → 79** |
@@ -5046,6 +5053,39 @@ W9    .khy/{hooks,permissions}.json ← PROCESS-006/007；.khy/skills/** ← SKI
 > 两条系统性解法待你选（本道不代裁，也不擅自改登记表）：① 逐批手工改写这 21/279 条 `paths`；
 > ② 把根项声明改成目录无关形态（如 `Dockerfile` → `**/Dockerfile`），搬家免改但**扩大作用域**到任意
 > 同名文件，需评估 PROCESS-013 这类零容忍判据会不会因此误伤用户子项目里的同名件。
+
+**新事实 H（10-02 第 4 节·W4/W9 量级重判，结果推翻 §16.2 的执行序假设）**：探针输出显示两批的
+实际编辑面远比设计稿预估大，且判据还需要**第三层区分**：
+
+| 批 | 消费方 | 真路径消费 | 其中在飞（=最小解锁集） | §16.2/§15.3 的预估 |
+|---|---|---|---|---|
+| W4 pip 构建根 | 189（代码 107 / 文档 82） | **77** | **14**：`package.json`、`scripts/release/pip_packaging_rules.py`、`check-copyright-readiness.js`、`gen-rules-cards.js`、`DATA-LOCATIONS.json`、`RULES-REGISTRY.json`、`维护映射表.json`、`tests/check-repo-layout.test.js`、`handlers/project.js`、`forgeCore.js`、`publish/projectState.js`、`fileSalience.js`、`tools/buildProject.js`、`site/dead-links.json` |  nightly 只写「改指 check-version-sync/publish-dual/build:pip」三处 |
+| W9 数据家归堆 | **1680**（代码 1254 / 文档 426） | **443** | **54** | 排在与 P5 之前的「小批」 |
+
+三点必须说清的口径修正：
+1. **77 里还要再分一层**：`pyproject.toml` 这个名字有大量命中指的是**用户子项目自己的**
+   pyproject（`projectDetector.js`、`tools/manageDeps.js`、`tools/runTests.js`、`lspClient.js`、
+   `cliAnythingGenerator.js` 等），它们读的是被分析项目的文件，本仓根搬家对它们是**免疫**的。
+   真正读「本仓根 pyproject」的核心约 15 个（`check-version-sync.js`、`changelog-new.js`、
+   `check-release-triggers.js`、`export-pyproject-dependencies.py`、`check_manifest_sync.py`、
+   `render_manifest.py`、`publish-dual.sh`、`publish/_common.sh`、`publish/publish-pip.sh`、
+   `platform/khy_platform/__init__.py` 等）。逐条定夺留给 W4 开工节，本节不下结论。
+2. **W4 按 20 文件/提交闸要拆 ≥4 个提交**（63 个干净路径消费方），它名义上是「外科批」，实际不是。
+3. **W9 的 443 个路径命中若成立，需 ≥22 个提交**——把它排在 P5 之前（§15.3 现序）在带宽上不成立，
+   建议人裁时把 W9 挪到 P5 之后或与 `works/` 创建同窗（`works/` 不存在这一点本来就已锁死它）。
+
+**新事实 I（10-02 第 4 节·被 git 跟踪的构建残料落在 `check:build-root` 的类型盲区）**：实测
+`git ls-files` 里有 **5 个** `apps/ai-frontend/vite.config.js.timestamp-<数字>-<hash>.mjs`
+（vite 编译配置的一次性临时件）与 **62 个** `apps/khyos-desktop/dist-ts/**` + `apps/provider-hub/.build-tmp/**`
+生成物；`BUILD-OUTPUTS.json` 对这三类**登记命中为 0**。跑 `node scripts/ci/check-build-root.js --json`
+复核：18 条 finding（`legacy-path`/`outside-root`/`not-in-build-all`/`legacy-without-status`）里
+对 `timestamp` / `dist-ts` / `build-tmp` / `vite.config` **零命中** —— 不是我推测的漏网，是该守卫的
+**判定单元为「产物目录」**（`scanned: 24` 走盘 + 登记表差异），所以 ① 单个临时**文件**结构性不可见，
+② `dist-ts` 这类命名不在它的产物目录启发式内。该守卫头注本就记过同类事故（`check-build-artifacts`
+scope 过窄，绿着放行 10 个已跟踪产物），本条是同一族的新实例。
+> 处置**留给本道之外**（本节不动文件）：这些是已跟踪件，删除要走规则 7 的搓澡程序
+> （`scrub-plan.md` 部位清单 + 可执行 `rollback.txt`，并先查 `docs/` 有无背书），
+> 且防复发需要 `.gitignore` 补条——而 `.gitignore` 本体在飞。建议列进晨审，与 `$null` 那条（新事实 C）并一件处理。
 
 **本节自我更正（10-02 02:0x，提交 `6a3afe35` 之后复核）**：上表「HK 根残留清理」与「新事实 A」两处
 数字是我自己测错了口径，现按逐文件复核更正——
