@@ -4892,6 +4892,21 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 3. **附录A 全量文件表**（10 816 行逐文件去向，UNMAPPED=0）——点头 = 认可该表为施工基线；
    任何单行不同意，报现路径即可改判（生成器规则改一行重跑）。
 
+### 16.6 施工执行状态（点头后逐批登记）
+
+| 批 | 状态 | 读数 |
+|---|---|---|
+| W1 `.git-blame-ignore-revs` 退役 | ✅ `608eb6bb` | 根 61→60 |
+| W10a `.mailmap`→`docs/.mailmap` + `mailmap.file` config（install-hooks.sh 落盘 per-machine） | ✅ 本批 | 根 60→59（本道净贡献） |
+| W2 余量（CONTRIBUTING/SECURITY/CHANGELOG/.env.example） | ⛔ 门控 | 消费方含 5 个 ` M` 在飞件（check-commit-message/docs.js/publish.js/forgeCore/pip_packaging_rules）；CHANGELOG 另需核 check-repo-layout.js:145 的引用语义（该文件在飞）。等车道收口即动 |
+| W5/W4/W7/P1–P5 | 排队 | 按 §16.4 序 |
+
+**新事实（census 60→79 的归因，非本道债务）**：根目录出现 15+ 个 `*.baiduyun.uploading.cfg`
+——**百度网盘客户端正在同步本仓库根**，这些是它的上传临时件（会随同步再生，隔离无效）。
+两条处置待人执行：① 在百度网盘同步范围里**排除 khy-os 目录**（同步活 git 仓 + node_modules
+本身有对象库损坏风险，与 C-10 的既有损坏是否同源待查）；② 排除后残留 cfg 走 root-junk 签名拦截。
+root-top-level 棘轮**不为此调口径**——79 读数含客户端在制件，本道只签自己 −1 的净账。
+
 ## 关联
 
 - 设计真源：`[DESIGN-LAY-005]`（层）、`[DESIGN-LAY-006]`（可发现性）、`[DESIGN-LAY-007]`（三态 × 五轴，**本篇的上位**）、`[DESIGN-LAY-003]`（回收通道）、`[DESIGN-LAY-004]`（产物单一根）
