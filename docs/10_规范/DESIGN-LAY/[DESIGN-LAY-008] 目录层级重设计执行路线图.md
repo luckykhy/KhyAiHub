@@ -4894,7 +4894,14 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 
 ### 16.6 施工执行状态（点头后逐批登记）
 
-> **2026-10-02 02:20 节（第 2 节）**：**仍无未门控批次**（工作区 2895 件，作者积压与上节同源，闸文件未转干净）。
+> **2026-10-02 03:20 节（第 3 节）**：**仍无未门控批次**，零文件移动。
+> 积压与上节完全同源（脏件 2895 未变、`DATA-LOCATIONS.json`/`AGENTS.md`/`check-repo-layout.js`/
+> `RULES-REGISTRY.json` 四闸仍在飞），百度在制件 20、根项 80、架构根宽 59 全部持平——
+> 本节沿用上节方法把 **W10b 的闸重判了一遍**（上节记「28 个消费方中 27 个在飞」同样过粗）：
+> 真路径消费且仍在飞的**只有 3 个**，见新事实 F。这是本节对该批的实际推进——解锁集从 27 收窄到 3。
+
+> **2026-10-02 02:20 节（第 2 节）**：**仍无未门控批次**
+> （工作区 2895 件，作者积压与上节同源，闸文件未转干净）。
 > 本节不动文件，产出是**把上节的门控评估改对**——上节按 grep 命中把若干「文件名词」当成了路径消费方，
 > 判据过粗；逐条读实物后 W5 的真闸、W2 的真闸都与上节所记不同，另发现 §16.2 有一行去向**经核实存疑**
 > （见「新事实 E」，待人改判，本道不代裁）。这类精化直接决定积压提交后第一批该动谁。
@@ -4913,7 +4920,7 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 | W4 pyproject/MANIFEST→`delivery/channel/pip/` | ⛔ 门控 | 本体 `pyproject.toml` 为 ` M`（R3 版本锚 9 真源之一，本体在飞即不可动）；且 `delivery/` 尚不存在 |
 | W5 Docker 族（Dockerfile/docker-compose/fly/.dockerignore） | ⛔ 门控（判据已于第 2 节更正，见新事实 D） | 四件本体全 clean。上节记的三个闸**不成立**（三者都是 basename 正则/样本夹具，搬家后照样命中）；真闸 = 70 个消费方中 **19 个在飞**，关键是落点真源 `DATA-LOCATIONS.json` 与 `AGENTS.md`。真路径消费只有 4 处：`docker.yml:76`、`deploy-staging.yml:121`（`file: ./Dockerfile`）、`deploy-staging.yml:148`（`--config fly.staging.toml`）、`docker-compose.yml:34`（`dockerfile: Dockerfile`） |
 | W9 点目录归堆（.ai / .khy / .khyos / .workbuddy*） | ⛔ 门控 | `.ai/` 48 项在飞；重定向落点 `dataHome` 属 `services/backend`（该目录 1063 项在飞）；`works/` 尚不存在 |
-| W10b `.githooks`→`works/build/githooks/` | ⛔ 门控 | 28 个消费方中 **27 个在飞**：`check-touch-cost.js:87` 的 pathspec（真路径消费）、`RULES-REGISTRY.json`、`维护映射表.json`、以及 DESIGN-GIT-003/004、DESIGN-DOC-002、DESIGN-ARCH-111/127/137、OPS-MAN-044/067/206、IMPL-RPT-060 等 **8 份设计文档的 `.md` 真源**（`.gitignore` 只在注释里命中，无路径规则，不算消费方） |
+| W10b `.githooks`→`works/build/githooks/` | ⛔ 门控（第 3 节判据精化，见新事实 F） | 上节记「28 个消费方中 27 个在飞」**过粗**——逐条读实物后：真**路径**消费 11 个，其中在飞**只有 3 个**：`scripts/ci/check-touch-cost.js:87`（git grep pathspec）、`services/backend/.../deploy/publish/bundleCommon.js:34`（`A ` 暂存态）、**`docs/10_规范/registry/RULES-REGISTRY.json:921` 的 `".githooks/**"` 规则作用域 glob**（漏改则该目录下改动不再命中任何规则，静默失守——本批最危险的一处）。其余 8 个路径消费方全干净（`install-hooks.sh` 的 `core.hooksPath`、`install-git-hooks.js:13`、`ruleguard/lib/wiring.js:131`、`backfill-fields.js:131`、`cli/commitTiming.js:86`、`evolutionPolicy.js:179`、钩子本体两件）。文档侧另有 **11 份 `docs/**/*.md` 在飞**需同批改指（散文非路径，但本批必须一起改准）。`.gitignore` 仅注释命中，不算消费方 |
 | P1–P5 五域搬家 | ⛔ 门控 | `services/` 1063、`docs/` 1459、`software/` 78、`scripts/` 62 项在飞；作者 #7 重构面未收口 |
 | HK 根残留清理（非 W/P 批，本道自净） | ✅ 本道 | 清出两件 0 字节根残留：① `.tmp-guard.txt`（mtime 10-01 15:51，gitignore 命中 `*.tmp-*`、全仓零引用）按 `check-repo-layout` 自己的处方收容进 `.khy/tmp/2026-10-02-tmp-guard.txt`；② `$null`（mtime 10-01 23:32，未跟踪、**不在 .gitignore 内**、全仓零引用，PowerShell 重定向 `>$null` 在非 PowerShell shell 下落成真实文件名的那类残留）按 `LAYOUT-004`「只隔离不删除」进 `.khyos/housekeeping/2026-10-02-root-litter/dollar-null` + `manifest.json`（含原路撤回命令）。效果：`root-junk` + `root-whitelist` 两个 **error 清零**，`check-repo-layout` **exit 1 → exit 0**；`check:data-layout` 顶层可寻址 **81 → 79** |
 | DL 债务台账两条逾期处置（判据③前置） | ✅ 本道 | `check-debt-ledger` 2 error → **0 error / 0 warning**：`layout.extension-id-hardcode` 复测真归零后置 closed（原债位 `"khy-markdown"` 字面量已从代码消失、仅剩注释，非仪器口径变化）；`standards.namingViolations` 按守卫处方置 `slipped` + 理由 + 期限顺延 2026-11-30，读数校正见 §16.6 末「新事实 B」 |
@@ -4979,6 +4986,62 @@ build context if both exist」。本仓两条构建路径确实走 BuildKit
 **两种改判供人二选一**（本道不代裁）：① 该行改为 `works/ship/Dockerfile.dockerignore`（随 W5/P5 同目录）；
 ② 根 `.dockerignore` **暂不出根**——上下文根 `.dockerignore` 在无就近件时仍生效，
 先搬 Docker 三件（根 −3），`.dockerignore` 留作后续单独一行，代价是终局根宽 +1。
+
+**新事实 F（10-02 第 3 节·门控判据的第二例，并附最小解锁清单）**：连续两批（W5、W10b）用同一把尺子
+重判后，闸的数量都从「几十个 grep 命中」塌缩到个位数。判据是二分的：
+**路径消费**（搬家会让行为失效——`path.join` / `fs.existsSync` / `git config core.hooksPath` /
+git grep 的 pathspec / 配置里的作用域 glob）算闸；**文件名词**（basename 正则、样本夹具、报错文案、
+注释与文档散文）不算——前者搬家后照样命中，后者只是文字陈旧。
+W10b 按此重判得到一份可直接交晨审的**最小解锁清单**：作者只要先收口提交
+`scripts/ci/check-touch-cost.js`、`services/backend/src/services/domain/deploy/publish/bundleCommon.js`、
+`docs/10_规范/registry/RULES-REGISTRY.json` 这三件（外加 11 份 `docs/**/*.md` 的散文改指），
+W10b 的代码面即可一次改全（其余 8 个路径消费方全干净，随批带走），根 −1。
+其中最危险的一条不是脚本：`RULES-REGISTRY.json:918–923` 的 `paths` 数组（属规则
+**`TOOLING-005`「本地与 CI 双注册」**，执行器 `scripts/ci/check-wiring.js`，`gate: pr`）里列着
+`".githooks/**"`——这一处漏改，搬家后钩子目录的任何改动**不再命中该规则**，而所有守卫仍然全绿、
+pr 门照样通过，属「看起来一切正常、实际已失守」那一类，优先级高于本批其余各项。
+> 建议（待你点头再落进真源，本道不擅自改 §16.4）：把上述二分判据写进 §16.4 的门控扫描步骤，
+> 每节**先分类再计数**，免得每节都重出一个「几十个消费方」这种既不准又吓人的闸。
+
+**新事实 G（10-02 第 3 节·搬家会静默削窄规则声明面，已实测）**：`RULES-REGISTRY.json` 的 `paths`
+是**锚定的仓库根相对 glob**（实现在 `scripts/ruleguard/lib/glob.js`：字面量转成 anchored RegExp，
+`services/**` 这类尾双星才吃子路径），所以根项一旦搬家，声明面**自动变窄**而不会有任何守卫报红。
+用 `npm run rules:apply -- <路径>` 实测两组对照（同一台机器、当下可复跑）：
+
+| 命令 | 读数 |
+|---|---|
+| `rules:apply -- Dockerfile` | 适用 **2** 条（PROCESS-013 + PROCESS-014） |
+| `rules:apply -- deploy/Dockerfile` | 适用 **1** 条（PROCESS-014 已丢） |
+| `rules:apply -- .githooks/pre-commit` | 适用 1 条（TOOLING-005 本地与 CI 双注册） |
+| `rules:apply -- works/build/githooks/pre-commit` | **规则：无匹配** |
+
+这正是 AGENTS.md 规则 10 判据 A2-4 的反面形态：执行器仍在管（`check-native-registry.js` 用
+basename 正则照收 `deploy/Dockerfile`），但**声明面不再说它管**——查「我该改这个文件要守哪些规则」的人
+得到空答案，门却全绿。W/P 每一批都必须同批改写登记表 `paths`，不是可选项。
+
+按此清点，**W 批次需同批改写的登记表条目共 21 条**（`paths` 命中我打算搬的根项）：
+
+```text
+W10b  .githooks/**            ← TOOLING-005   (gate=pr, check-wiring.js)
+W2    CHANGELOG.md            ← PROCESS-005   (gate=pr, check-release-triggers.js)
+W5    Dockerfile              ← PROCESS-013   (gate=commit, check-native-registry.js)
+W5    Dockerfile              ← PROCESS-014   (gate=commit, check-delivery-baseline.js)
+W4    pyproject.toml          ← PROCESS-002 / PROCESS-005 / PROCESS-010 / PROCESS-014
+W9    .ai/**                  ← MEMORY-003    (gate=pr, check-memory-schema.js)
+W9    .ai/GOVERNANCE-LEDGER.md← SOURCING-006  (gate=pr, check-proposal-index.js)
+W9    .ai/hq/{BUGS,PROGRESS}.json ← PROCESS-102 (gate=manual)
+W9    .khy/**                 ← LAYOUT-007    (gate=advisory, check-data-layout.js)
+W9    .khyos/**               ← LAYOUT-007
+W9    .khyos/housekeeping/**  ← LAYOUT-004    (gate=pr, organize.py)
+W9    .khy/{hooks,permissions}.json ← PROCESS-006/007；.khy/skills/** ← SKILL-001 (均 gate=manual)
+```
+
+（P 批的量级一并给出，供排期：`paths` 命中 `services/**` 103 条、`docs/**` 46、`scripts/**` 28、
+`apps/**` 17、`platform/**` 15、`software/**` 14、`tools/**` 10、`kernel/**` 8、`extensions/**` 8、
+`packaging/**` 8、`electron` 1 —— 合计 279 条。P5 搬 `docs/`+`scripts/` 时这是主战场。）
+> 两条系统性解法待你选（本道不代裁，也不擅自改登记表）：① 逐批手工改写这 21/279 条 `paths`；
+> ② 把根项声明改成目录无关形态（如 `Dockerfile` → `**/Dockerfile`），搬家免改但**扩大作用域**到任意
+> 同名文件，需评估 PROCESS-013 这类零容忍判据会不会因此误伤用户子项目里的同名件。
 
 **本节自我更正（10-02 02:0x，提交 `6a3afe35` 之后复核）**：上表「HK 根残留清理」与「新事实 A」两处
 数字是我自己测错了口径，现按逐文件复核更正——
