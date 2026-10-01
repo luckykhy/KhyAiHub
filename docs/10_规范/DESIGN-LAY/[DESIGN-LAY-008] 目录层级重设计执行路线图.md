@@ -4900,6 +4900,20 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 > 本节把前四节的逐批清单合成一件决策物：**跨批次最小解锁集**（见新事实 J）。
 > 探针 `.khyos/tmp/unlock-set.js`，输出 `.khyos/tmp/unlock-set.out`（两件都在 gitignore 的
 > `.khyos/tmp/` 里，不入库；下节若要复用得先确认还在）。
+>
+> ⚠ **顺带查出一件会影响本任务书本身可持续性的事**：§16.6/§16.3 要求「跑了文件移动的批次就重跑
+> `.khyos/tmp/b54-tree.js` 刷新附录A」，而该生成器**未被 git 跟踪**（`git ls-files --error-unmatch`
+> 报 "Did you forget to 'git add'?"），与 348 个 `.js` 临时件同住在 `.khyos/tmp/`。同目录还有本三节
+> 新造的 `w4w9-gate.js` / `unlock-set.js`。
+> **风险机制（已查证，不是「会被 clean 掉」）**：`services/backend/src/cli/handlers/clean.js` 的
+> `TARGETS` 只列构建产物（`entries/**`、`build`、`bundled` 等），其 `--runtime` 侧的 `tmp` 目标是
+> `.khy/tmp`（`RUNTIME_KEEP_PREFIXES.tmp=['quarantine']` 可证），`scripts/maintenance/organize.py`
+> 也只往 `.khyos/housekeeping/` 写、不扫 `.khyos/tmp/` —— **没有任何自动清理会删它**。
+> 真正的风险是反过来的：它**只存在于这台机器的这个目录**，`[DESIGN-ARCH-118]` 的多机协作下
+> 换机/新克隆就永久没有（附录A 10 816 行退化成不可刷新的死表，每节门控判据从零重做），
+> 且无备份、无 rebuild 登记。入库位置属新增文件决定（`[DESIGN-LAY-005]` 板块归属 +
+> `[DESIGN-LAY-004]` 产物登记），**本道不擅自建文件**，列此待人裁决：要么把探针收进 `scripts/`
+> 并登记，要么接受每节重造工具 + 附录A 只能冻结的代价。
 
 > **2026-10-02 04:20 节（第 4 节）**：**仍无未门控批次**，零文件移动。脏件 2895 与前三节同源未变，
 > 四道关键闸（`DATA-LOCATIONS.json`/`AGENTS.md`/`check-repo-layout.js`/`RULES-REGISTRY.json`）全在飞，
