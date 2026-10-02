@@ -51,6 +51,7 @@ const KEYBINDING_CATALOG = Object.freeze([
     bindings: Object.freeze([
       { keys: 'Ctrl + C', desc: '忙时取消当前回合;空闲时连按两次退出' },
       { keys: 'Ctrl + D', desc: '有文本时向后删除;空行时连按两次退出' },
+      { keys: 'Ctrl + G', desc: '折叠/展开网关提示(反向历史搜索浮层打开时改为取消搜索)' },
       { keys: 'Ctrl + L', desc: '清屏(清除已提交的对话记录)' },
       { keys: 'Ctrl + O', desc: '打开/关闭会话记录视图(可滚动回看整段会话并展开任意段落)' },
       { keys: 'Ctrl + T', desc: '显示/隐藏任务清单面板(仅宽屏终端，默认 ≥120 列)' },
@@ -109,7 +110,7 @@ const KEYBINDING_CATALOG = Object.freeze([
       { keys: 'Meta + ← / →', desc: '按词移动光标' },
       { keys: 'Home / End', desc: '移到行首 / 行尾' },
       { keys: '↑ / ↓', desc: '逐条浏览历史(含换行的提交算一条);首次 ↑ 会暂存当前草稿,↓ 走过最新一条时还原' },
-      { keys: 'Ctrl + R', desc: '反向增量搜索历史命令;再按跳到更旧一条,Enter/Tab 灌入输入框' },
+      { keys: 'Ctrl + R', desc: '反向增量搜索历史命令;再按跳到更旧一条(不回绕),Enter/Tab/方向键取用当前匹配并关闭,退格缩短查询,Esc/Ctrl+G/Ctrl+C 取消' },
     ]),
   },
   {
