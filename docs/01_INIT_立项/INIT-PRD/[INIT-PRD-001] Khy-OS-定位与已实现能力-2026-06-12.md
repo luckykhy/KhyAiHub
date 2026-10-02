@@ -7,7 +7,7 @@
 > ① Khy-OS 凭什么有**真正的商业价值**；② 它如何**对个人当下即不可或缺**。
 > 本文基于对源码、文档、测试的实际通读 + 工具核验，路径相对仓库根。
 >
-> ⚠️ **2026-09-23 退役标注**：Windsurf 适配器已随其 IDE 被 Cognition 退役更名 Devin Desktop 而下线
+> ⚠ **2026-09-23 退役标注**：Windsurf 适配器已随其 IDE 被 Cognition 退役更名 Devin Desktop 而下线
 > （存证 `.khy/feedback/windsurf-adapter-retire-20260923/`）。故本文全文出现的「16 个后端 / 16 个适配器」
 > 为 2026-06-12 成文时的快照，**当前真源为 17 个适配器**（详见 `DESIGN-ARCH-031`、`DEPLOY-MAN-019`）；
 > 下文 §2.3 的适配器清单同样保留快照原样。
@@ -69,16 +69,16 @@ WASM/应用运行时，作为一个**垂直整合的平台**统一交付（`pip 
 
 | 子系统          | 文件                                                                                 | 现状                              |
 | ------------ | ---------------------------------------------------------------------------------- | ------------------------------- |
-| 进程/调度        | `process.c`、`sched.c`                                                              | fork/exec/wait + 抢占式调度 ✅        |
-| 内存/分页        | `vmm.c`(4 级页表/COW/缺页)、`pmm.c`、`kheap.c`                                            | 按需分页 + COW fork ✅               |
-| 系统调用         | `syscall.c`(INT 0x80，最大模块)                                                         | 文件/进程/内存/信号/IPC/agentask ✅      |
-| IPC          | `ipc.c`                                                                            | 端口寻址 + 阻塞 + `ipc_call` ✅        |
-| 双格式加载        | `elf.c` + `pe.c` + `wincompat.c`                                                   | 自动检测 ELF/PE，跨平台 ✅               |
-| 文件系统         | `vfs.c`、`ramfs.c`、`diskfs.c`、`ata.c`、`persist.c`                                   | VFS + RAM/磁盘 FS + `/disk` 持久化 ✅ |
-| 信号/管道/fd     | sigaction·sigreturn、per-process fd、fd 0–2、shell `\|`                               | ✅ QEMU 实测                       |
-| 驱动/Shell     | `keyboard.c`、`serial.c`、`framebuffer.c`、`net.c`、`wm.c`、`shell.c`                   | ✅                               |
-| **AgentBus** | `agentbus.c`/`agentask.c`/`agentconf.c`/`agentctl.c`/`agentevent.c`/`agentframe.c` | 内核态智能体总线（三面，COM2，COBS+CRC16）✅   |
-| MoonBit      | `moonbit_bridge.c`、`moonbit_os_api.c`                                              | 内核内嵌 MoonBit ✅                  |
+| 进程/调度        | `process.c`、`sched.c`                                                              | fork/exec/wait + 抢占式调度 ✓        |
+| 内存/分页        | `vmm.c`(4 级页表/COW/缺页)、`pmm.c`、`kheap.c`                                            | 按需分页 + COW fork ✓               |
+| 系统调用         | `syscall.c`(INT 0x80，最大模块)                                                         | 文件/进程/内存/信号/IPC/agentask ✓      |
+| IPC          | `ipc.c`                                                                            | 端口寻址 + 阻塞 + `ipc_call` ✓        |
+| 双格式加载        | `elf.c` + `pe.c` + `wincompat.c`                                                   | 自动检测 ELF/PE，跨平台 ✓               |
+| 文件系统         | `vfs.c`、`ramfs.c`、`diskfs.c`、`ata.c`、`persist.c`                                   | VFS + RAM/磁盘 FS + `/disk` 持久化 ✓ |
+| 信号/管道/fd     | sigaction·sigreturn、per-process fd、fd 0–2、shell `\|`                               | ✓ QEMU 实测                       |
+| 驱动/Shell     | `keyboard.c`、`serial.c`、`framebuffer.c`、`net.c`、`wm.c`、`shell.c`                   | ✓                               |
+| **AgentBus** | `agentbus.c`/`agentask.c`/`agentconf.c`/`agentctl.c`/`agentevent.c`/`agentframe.c` | 内核态智能体总线（三面，COM2，COBS+CRC16）✓   |
+| MoonBit      | `moonbit_bridge.c`、`moonbit_os_api.c`                                              | 内核内嵌 MoonBit ✓                  |
 
 - **构建/产物**：`kernel/Makefile` + `linker.ld`；产物 `kernel/build/khy-os.bin` +
   可启动 ISO `khy-os-kernel.iso`；`qemu-system-x86_64 -cdrom <iso>` 运行。
@@ -94,7 +94,7 @@ WASM/应用运行时，作为一个**垂直整合的平台**统一交付（`pip 
 
 ### 2.3 AI 网关 Provider 适配器（16 个）
 
-> ⚠️ 2026-09-23 更新：Windsurf 适配器已随其 IDE 被 Cognition 退役更名 Devin Desktop 而下线
+> ⚠ 2026-09-23 更新：Windsurf 适配器已随其 IDE 被 Cognition 退役更名 Devin Desktop 而下线
 > （存证 `.khy/feedback/windsurf-adapter-retire-20260923/`），下表为 2026-06-12 立项时的快照，保留原样。
 
 ```
@@ -247,13 +247,13 @@ khy iso build        # 产可启动 ISO，挂 QEMU/VMware 跑
 
 |                | **Khy-OS** | Claude Code | Ollama | Linux 发行版 |
 | -------------- |:----------:|:-----------:|:------:|:---------:|
-| Agentic 编码 CLI | ✅          | ✅           | ❌      | ❌         |
-| 多 provider 无锁定 | ✅(16)      | ❌(1)        | ✅(本地)  | —         |
-| 自带密钥/自托管       | ✅          | ❌           | ✅      | —         |
-| 内置网关 + 失败转移    | ✅          | ❌           | ❌      | ❌         |
-| 手写 OS 内核       | ✅          | ❌           | ❌      | ✅(一个团队)   |
-| 应用生态协议         | ✅          | ❌           | ❌      | ✅         |
-| 一键安装           | ✅          | ✅           | ✅      | ❌         |
+| Agentic 编码 CLI | ✓          | ✓           | ✗      | ✗         |
+| 多 provider 无锁定 | ✓(16)      | ✗(1)        | ✓(本地)  | —         |
+| 自带密钥/自托管       | ✓          | ✗           | ✓      | —         |
+| 内置网关 + 失败转移    | ✓          | ✗           | ✗      | ✗         |
+| 手写 OS 内核       | ✓          | ✗           | ✗      | ✓(一个团队)   |
+| 应用生态协议         | ✓          | ✗           | ✗      | ✓         |
+| 一键安装           | ✓          | ✓           | ✓      | ✗         |
 
 > Khy-OS 不在单一维度上击败谁——它是唯一**同时是所有这些**、从内核到 agent 全栈贯通的项目（且出自单人之手）。
 
