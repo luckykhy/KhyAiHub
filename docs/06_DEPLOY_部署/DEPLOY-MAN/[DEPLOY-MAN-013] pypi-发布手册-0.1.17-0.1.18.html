@@ -50,7 +50,7 @@
 <p>如果任何 token 曾在聊天/日志/终端截图中暴露，请立即吊销并创建新的 PyPI token。</p>
 <h3 id="4-2-上传命令-非交互式">4.2 上传命令（非交互式）<a class="anchor" href="#4-2-上传命令-非交互式" aria-label="锚点">#</a></h3>
 <pre><code class="language-bash">TWINE_USERNAME=__token__ TWINE_PASSWORD=<span class="hljs-string">&#x27;pypi-&lt;NEW_TOKEN&gt;&#x27;</span> \
-python3 -m twine upload {$HOME}/Downloads/khy_os-0.1.17-py3-none-win_amd64.whl</code></pre>
+python3 -m twine upload {<span class="hljs-variable">$HOME</span>}/Downloads/khy_os-0.1.17-py3-none-win_amd64.whl</code></pre>
 <h3 id="4-3-校验">4.3 校验<a class="anchor" href="#4-3-校验" aria-label="锚点">#</a></h3>
 <pre><code class="language-bash">python3 - &lt;&lt;<span class="hljs-string">&#x27;PY&#x27;</span>
 import json, urllib.request
