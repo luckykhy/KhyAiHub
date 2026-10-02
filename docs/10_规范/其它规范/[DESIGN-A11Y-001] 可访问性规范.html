@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -38,7 +38,7 @@
 <h2 id="2-语义化-html">2. 语义化 HTML<a class="anchor" href="#2-语义化-html" aria-label="锚点">#</a></h2>
 <h3 id="2-1-使用语义化标签">2.1 使用语义化标签<a class="anchor" href="#2-1-使用语义化标签" aria-label="锚点">#</a></h3>
 <pre><code class="language-vue">&lt;template&gt;
-  &lt;!-- ✅ 正确：使用语义化标签 --&gt;
+  &lt;!-- ✓ 正确：使用语义化标签 --&gt;
   &lt;header&gt;
     &lt;nav aria-label=&quot;主导航&quot;&gt;
       &lt;ul&gt;
@@ -69,13 +69,13 @@
 &lt;/template&gt;</code></pre>
 <h3 id="2-2-标题层级">2.2 标题层级<a class="anchor" href="#2-2-标题层级" aria-label="锚点">#</a></h3>
 <pre><code class="language-vue">&lt;template&gt;
-  &lt;!-- ✅ 正确：标题层级清晰 --&gt;
+  &lt;!-- ✓ 正确：标题层级清晰 --&gt;
   &lt;h1&gt;页面标题&lt;/h1&gt;
   &lt;h2&gt;主要章节&lt;/h2&gt;
   &lt;h3&gt;子章节&lt;/h3&gt;
   &lt;h4&gt;小节&lt;/h4&gt;
   
-  &lt;!-- ❌ 错误：跳级使用标题 --&gt;
+  &lt;!-- ✗ 错误：跳级使用标题 --&gt;
   &lt;h1&gt;页面标题&lt;/h1&gt;
   &lt;h4&gt;子章节&lt;/h4&gt;  &lt;!-- 跳过了 h2 和 h3 --&gt;
 &lt;/template&gt;</code></pre>
@@ -224,7 +224,7 @@ const handleKeyDown = (event) =&gt; {
 <h3 id="5-1-对比度要求">5.1 对比度要求<a class="anchor" href="#5-1-对比度要求" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>级别</th><th>正文</th><th>大文本</th><th>UI 组件</th></tr></thead><tbody><tr><td>AA</td><td>4.5:1</td><td>3:1</td><td>3:1</td></tr><tr><td>AAA</td><td>7:1</td><td>4.5:1</td><td>3:1</td></tr></tbody></table>
 <h3 id="5-2-颜色使用">5.2 颜色使用<a class="anchor" href="#5-2-颜色使用" aria-label="锚点">#</a></h3>
-<pre><code class="language-css"><span class="hljs-comment">/* ✅ 正确：不仅依赖颜色传达信息 */</span>
+<pre><code class="language-css"><span class="hljs-comment">/* ✓ 正确：不仅依赖颜色传达信息 */</span>
 <span class="hljs-selector-class">.status</span> {
   <span class="hljs-attribute">display</span>: flex;
   <span class="hljs-attribute">align-items</span>: center;
@@ -241,7 +241,7 @@ const handleKeyDown = (event) =&gt; {
   <span class="hljs-attribute">color</span>: <span class="hljs-number">#ef4444</span>;
 }
 
-<span class="hljs-comment">/* ❌ 错误：仅依赖颜色 */</span>
+<span class="hljs-comment">/* ✗ 错误：仅依赖颜色 */</span>
 <span class="hljs-selector-class">.status</span><span class="hljs-selector-class">.success</span> {
   <span class="hljs-attribute">color</span>: <span class="hljs-number">#10b981</span>;
 }
@@ -265,14 +265,14 @@ const handleKeyDown = (event) =&gt; {
 <h2 id="6-表单可访问性">6. 表单可访问性<a class="anchor" href="#6-表单可访问性" aria-label="锚点">#</a></h2>
 <h3 id="6-1-标签关联">6.1 标签关联<a class="anchor" href="#6-1-标签关联" aria-label="锚点">#</a></h3>
 <pre><code class="language-vue">&lt;template&gt;
-  &lt;!-- ✅ 正确：使用 label 关联 --&gt;
+  &lt;!-- ✓ 正确：使用 label 关联 --&gt;
   &lt;label for=&quot;username&quot;&gt;用户名&lt;/label&gt;
   &lt;input id=&quot;username&quot; type=&quot;text&quot; /&gt;
   
-  &lt;!-- ✅ 正确：使用 aria-label --&gt;
+  &lt;!-- ✓ 正确：使用 aria-label --&gt;
   &lt;input aria-label=&quot;搜索&quot; type=&quot;search&quot; /&gt;
   
-  &lt;!-- ✅ 正确：使用 aria-labelledby --&gt;
+  &lt;!-- ✓ 正确：使用 aria-labelledby --&gt;
   &lt;span id=&quot;search-label&quot;&gt;搜索&lt;/span&gt;
   &lt;input aria-labelledby=&quot;search-label&quot; type=&quot;search&quot; /&gt;
 &lt;/template&gt;</code></pre>

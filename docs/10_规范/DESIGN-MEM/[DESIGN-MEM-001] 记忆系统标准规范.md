@@ -7,9 +7,9 @@
 >
 > | 文档 | 角色 | 是否承载约束 |
 > | --- | --- | --- |
-> | **本篇 `MEM-001`** | **约束真源**：分类/层级/格式/生命周期/清理 | ✅ **真源** |
-> | `[DESIGN-MEM-006] 记忆与维护元数据生命周期规范` | 各自独立 scope：GOV-MEM 契约冻结（session/persistent 判定、`.ai/` 指定入口） | ✅ 独立真源 |
-> | `[DESIGN-MEM-000] 记忆系统总结` | **存档**：当年清理工作的过程记录，非约束 | ❌ 不承载约束 |
+> | **本篇 `MEM-001`** | **约束真源**：分类/层级/格式/生命周期/清理 | ✓ **真源** |
+> | `[DESIGN-MEM-006] 记忆与维护元数据生命周期规范` | 各自独立 scope：GOV-MEM 契约冻结（session/persistent 判定、`.ai/` 指定入口） | ✓ 独立真源 |
+> | `[DESIGN-MEM-000] 记忆系统总结` | **存档**：当年清理工作的过程记录，非约束 | ✗ 不承载约束 |
 > | `[DESIGN-MEM-002] 记忆时机指南` | 参考：何时该记什么（操作指导） | 参考 |
 > | `[DESIGN-MEM-003] 记忆模板库` | 参考：可直接抄的记录模板 | 参考 |
 > | `[DESIGN-MEM-004] 记忆快速参考卡` | 参考卡：本篇的压缩速查，**内容非增量** | 参考卡 |
@@ -42,9 +42,9 @@
 
 | 层级 | 名称 | 说明 | 持久化 |
 |------|------|------|--------|
-| Layer 1 | `short_term` | 会话内记忆，会话结束即遗忘 | ❌ 不落盘 |
-| Layer 2 | `cross_session` | 跨会话持久记忆，按保鲜期自然老化 | ✅ 落盘 |
-| Layer 3 | `permanent` | 永久记忆，永不自动遗忘 | ✅ 落盘 |
+| Layer 1 | `short_term` | 会话内记忆，会话结束即遗忘 | ✗ 不落盘 |
+| Layer 2 | `cross_session` | 跨会话持久记忆，按保鲜期自然老化 | ✓ 落盘 |
+| Layer 3 | `permanent` | 永久记忆，永不自动遗忘 | ✓ 落盘 |
 
 ---
 
@@ -251,7 +251,7 @@ function resetGrowthData() {
 function clearMemory(options = {}) {
   const { dryRun = true, level = 'all' } = options;
   
-  console.log(`\n🧹 记忆清空${dryRun ? '预览' : '执行'}\n`);
+  console.log(`\n记忆清空${dryRun ? '预览' : '执行'}\n`);
   
   if (dryRun) {
     console.log('将执行以下操作:');
@@ -272,7 +272,7 @@ function clearMemory(options = {}) {
   resetGrowthData();
   console.log('✓ 已重置成长数据');
   
-  console.log('\n✅ 记忆清空完成');
+  console.log('\n✓ 记忆清空完成');
   console.log('恢复命令: /memory distill restore');
 }
 

@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -45,7 +45,7 @@
 <hr>
 <h2 id="2-发布面-agent-card">2. 发布面：Agent Card<a class="anchor" href="#2-发布面-agent-card" aria-label="锚点">#</a></h2>
 <h3 id="2-1-端点">2.1 端点<a class="anchor" href="#2-1-端点" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>路径</th><th>状态</th><th>说明</th></tr></thead><tbody><tr><td><code>GET /.well-known/agent-card.json</code></td><td>✅ 发布</td><td>标准 A2A v0.3.0 发现端点（RFC 8615）</td></tr><tr><td><code>GET /.well-known/agent.json</code></td><td>⚪ 默认 404</td><td>v0.2.x 历史路径。需 <code>KHY_A2A_LEGACY_AGENT_JSON=1</code> 显式开启</td></tr><tr><td><code>GET /.well-known/*</code></td><td>404</td><td>其余一律 JSON 404</td></tr></tbody></table>
+<table><thead><tr><th>路径</th><th>状态</th><th>说明</th></tr></thead><tbody><tr><td><code>GET /.well-known/agent-card.json</code></td><td>✓ 发布</td><td>标准 A2A v0.3.0 发现端点（RFC 8615）</td></tr><tr><td><code>GET /.well-known/agent.json</code></td><td>○ 默认 404</td><td>v0.2.x 历史路径。需 <code>KHY_A2A_LEGACY_AGENT_JSON=1</code> 显式开启</td></tr><tr><td><code>GET /.well-known/*</code></td><td>404</td><td>其余一律 JSON 404</td></tr></tbody></table>
 <p>实现：<code>src/routes/wellKnown.js</code>，挂载于 <code>server.js</code> 的 <code>app.use('/.well-known', …)</code>。</p>
 <h3 id="2-2-三条硬约束">2.2 三条硬约束<a class="anchor" href="#2-2-三条硬约束" aria-label="锚点">#</a></h3>
 <p><strong>A2A-1（公开）</strong> Agent Card 端点<strong>必须</strong>无需鉴权即可读取 —— 它正是外部 orchestrator<br>用来判断「要不要给我令牌」的依据，挂上鉴权会让发现流程死锁。卡片只含能力元数据，<br><code>securitySchemes</code> 描述的是<strong>如何</strong>鉴权，不是密钥本身。</p>
@@ -97,7 +97,7 @@ failed | rejected | auth-required | unknown</code></pre>
 <p>两者互补，<strong>不得</strong>互相替代。Agent Card 的 <code>description</code> 中应明确写清「工具面走<br>MCP」，避免外部 orchestrator 误以为 A2A 是工具通道。</p>
 <hr>
 <h2 id="8-迁移路线">8. 迁移路线<a class="anchor" href="#8-迁移路线" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>阶段</th><th>内容</th><th>状态</th></tr></thead><tbody><tr><td><strong>P1 划清边界</strong></td><td>Agent Card 端点、契约 schema、状态映射、<code>tasks/cancel</code>、Part <code>kind</code>、能力诚实化、命名纪律条款</td><td>✅ 本规范落地</td></tr><tr><td><strong>P2 让私有方言名副其实</strong></td><td>评估把 <code>a2a*</code> 模块改名为 <code>acp*</code>（含 14 处内置 agent 注册、router、facade、测试）</td><td>⬜ 待决策</td></tr><tr><td><strong>P3 服务端任务面</strong></td><td>实现 <code>message/send</code> / <code>tasks/get</code> / <code>tasks/cancel</code> 的服务端 handler + 任务存储（当前只有出站客户端）</td><td>⬜ 未开始</td></tr><tr><td><strong>P4 流式</strong></td><td>SSE <code>message/stream</code>、<code>TaskStatusUpdateEvent</code> / <code>TaskArtifactUpdateEvent</code>，然后把 <code>capabilities.streaming</code> 改为 <code>true</code></td><td>⬜ 未开始</td></tr><tr><td><strong>P5 推送</strong></td><td><code>tasks/pushNotificationConfig/*</code></td><td>⬜ 未开始</td></tr><tr><td><strong>P6 一致性验证</strong></td><td>接入官方 <code>a2a-tck</code> / <code>a2a-inspector</code> 做端到端合规测试</td><td>⬜ 未开始</td></tr></tbody></table>
+<table><thead><tr><th>阶段</th><th>内容</th><th>状态</th></tr></thead><tbody><tr><td><strong>P1 划清边界</strong></td><td>Agent Card 端点、契约 schema、状态映射、<code>tasks/cancel</code>、Part <code>kind</code>、能力诚实化、命名纪律条款</td><td>✓ 本规范落地</td></tr><tr><td><strong>P2 让私有方言名副其实</strong></td><td>评估把 <code>a2a*</code> 模块改名为 <code>acp*</code>（含 14 处内置 agent 注册、router、facade、测试）</td><td>□ 待决策</td></tr><tr><td><strong>P3 服务端任务面</strong></td><td>实现 <code>message/send</code> / <code>tasks/get</code> / <code>tasks/cancel</code> 的服务端 handler + 任务存储（当前只有出站客户端）</td><td>□ 未开始</td></tr><tr><td><strong>P4 流式</strong></td><td>SSE <code>message/stream</code>、<code>TaskStatusUpdateEvent</code> / <code>TaskArtifactUpdateEvent</code>，然后把 <code>capabilities.streaming</code> 改为 <code>true</code></td><td>□ 未开始</td></tr><tr><td><strong>P5 推送</strong></td><td><code>tasks/pushNotificationConfig/*</code></td><td>□ 未开始</td></tr><tr><td><strong>P6 一致性验证</strong></td><td>接入官方 <code>a2a-tck</code> / <code>a2a-inspector</code> 做端到端合规测试</td><td>□ 未开始</td></tr></tbody></table>
 <p><strong>P3 是真正的能力缺口</strong>：khy 目前能被外部<strong>发现</strong>（P1 已做到），但被<strong>调用</strong>时<br>没有服务端任务处理面。这是与「真做 A2A」之间最大的一步。</p>
 <hr>
 <h2 id="9-验证">9. 验证<a class="anchor" href="#9-验证" aria-label="锚点">#</a></h2>

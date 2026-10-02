@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -121,9 +121,9 @@ guard.<span class="hljs-title function_">done</span>();
 <ol><li><strong>每个 Watchdog 必须有 <code>.done()</code> 清理路径</strong>（成功 / 失败 / 取消 都要调）</li><li><strong>超时回调不得吞异常</strong>——必须向上传播（reject promise 或 throw）</li><li><strong>Watchdog timer 必须 <code>.unref()</code></strong>——不得阻塞进程退出</li><li><strong>内存监控每 30 秒检查一次</strong>，超过 80% heap 触发 GC，超过 95% 告警</li></ol>
 <h3 id="3-5-覆盖要求">3.5 覆盖要求<a class="anchor" href="#3-5-覆盖要求" aria-label="锚点">#</a></h3>
 <p><strong>状态术语定义</strong>：</p>
-<ul><li><strong>✅ 有</strong> = <code>startWatchdog()</code> 在该路径显式创建，且 <code>.done()</code> 清理覆盖成功 / 失败 / 取消所有路径；</li><li><strong>⚠️ 间接有</strong> = Watchdog 只存在于下层依赖中，上层调用方无法感知/处理其超时信号，<strong>不满足要求</strong>，须升级为显式挂载；</li><li><strong>&quot;需要 touch 链&quot;</strong> = 每次进度事件（工具完成、流式分块、迭代推进）都调用 <code>guard.touch()</code>，使 timeoutMs 从固定超时变为真正的空闲超时。</li></ul>
+<ul><li><strong>✓ 有</strong> = <code>startWatchdog()</code> 在该路径显式创建，且 <code>.done()</code> 清理覆盖成功 / 失败 / 取消所有路径；</li><li><strong>⚠ 间接有</strong> = Watchdog 只存在于下层依赖中，上层调用方无法感知/处理其超时信号，<strong>不满足要求</strong>，须升级为显式挂载；</li><li><strong>&quot;需要 touch 链&quot;</strong> = 每次进度事件（工具完成、流式分块、迭代推进）都调用 <code>guard.touch()</code>，使 timeoutMs 从固定超时变为真正的空闲超时。</li></ul>
 <p>以下路径<strong>必须</strong>有 Watchdog 保护：</p>
-<table><thead><tr><th>路径</th><th>当前状态</th><th>要求</th><th>具体行动</th></tr></thead><tbody><tr><td><code>runNaturalToolCall</code></td><td>✅ 有 (120s)</td><td>保持</td><td>无需改动</td></tr><tr><td>AI gateway <code>generate()</code></td><td>✅ 有 (hard/idle)</td><td>保持</td><td>无需改动</td></tr><tr><td><code>baseSelfCheckService</code></td><td>✅ 有 (<code>withTimeout</code>)</td><td>保持</td><td>无需改动</td></tr><tr><td>Shell 执行 (<code>safeExec</code>)</td><td>✅ 有 (30s)</td><td>保持</td><td>无需改动</td></tr><tr><td>工具循环 <code>runToolUseLoop</code></td><td>⚠️ 间接有</td><td>必须显式挂载</td><td>在循环入口显式 <code>startWatchdog()</code>，每轮迭代/工具完成时 <code>touch()</code>，循环退出（含异常）时 <code>.done()</code></td></tr><tr><td>AgentTool 子任务</td><td>⚠️ 有 timeoutMs 但无 Watchdog touch</td><td>需要 touch 链</td><td>在子任务迭代推进/工具完成时调用 <code>guard.touch()</code>，将固定 timeoutMs 转为空闲超时</td></tr></tbody></table>
+<table><thead><tr><th>路径</th><th>当前状态</th><th>要求</th><th>具体行动</th></tr></thead><tbody><tr><td><code>runNaturalToolCall</code></td><td>✓ 有 (120s)</td><td>保持</td><td>无需改动</td></tr><tr><td>AI gateway <code>generate()</code></td><td>✓ 有 (hard/idle)</td><td>保持</td><td>无需改动</td></tr><tr><td><code>baseSelfCheckService</code></td><td>✓ 有 (<code>withTimeout</code>)</td><td>保持</td><td>无需改动</td></tr><tr><td>Shell 执行 (<code>safeExec</code>)</td><td>✓ 有 (30s)</td><td>保持</td><td>无需改动</td></tr><tr><td>工具循环 <code>runToolUseLoop</code></td><td>⚠ 间接有</td><td>必须显式挂载</td><td>在循环入口显式 <code>startWatchdog()</code>，每轮迭代/工具完成时 <code>touch()</code>，循环退出（含异常）时 <code>.done()</code></td></tr><tr><td>AgentTool 子任务</td><td>⚠ 有 timeoutMs 但无 Watchdog touch</td><td>需要 touch 链</td><td>在子任务迭代推进/工具完成时调用 <code>guard.touch()</code>，将固定 timeoutMs 转为空闲超时</td></tr></tbody></table>
 <h3 id="3-6-实现参考">3.6 实现参考<a class="anchor" href="#3-6-实现参考" aria-label="锚点">#</a></h3>
 <ul><li><code>services/backend/src/services/resourceGuard.js</code> — Watchdog + 内存监控</li><li><code>services/backend/src/cli/aiGatewayGenerateHelpers.js:178</code> — 自然工具 Watchdog</li><li><code>services/backend/bin/khy.js:1054</code> — Gateway 超时配置</li></ul>
 <hr>

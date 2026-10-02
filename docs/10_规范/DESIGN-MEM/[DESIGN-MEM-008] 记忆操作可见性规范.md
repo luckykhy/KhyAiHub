@@ -26,11 +26,11 @@
 
 | # | 事实 | 取证 |
 |---|------|------|
-| F1 | 纯叶**存在且正确** | `node -e` 直调 `formatRecallNotice(new Set(['a.md','b.md']))` → `🧠 召回 2 条相关记忆：a、b` |
+| F1 | 纯叶**存在且正确** | `node -e` 直调 `formatRecallNotice(new Set(['a.md','b.md']))` → `召回 2 条相关记忆：a、b` |
 | F2 | 召回链**确实产出文件名** | `buildProactiveMemoryResult()` 实测返回 `filenames:["feedback_tool-execution-results_a3d9521e.md", …]` |
 | F3 | 告知语经 `onStatus({phase:'init'})` 发出 | `aiChatCore.js:2333-2335` |
 | F4 | **但 `init` 在 REPL 是「瞬时行」** | `replSession.js:10354` `_writeOnStatusTransient` 用 `\r\x1b[K` 原地覆盖 ⇒ 后随的 `步骤 2/5`、`步骤 3/5` **毫秒级擦除** |
-| F5 | **在 TUI 只是 spinner 后缀** | `useQueryBridge.js:2246` `safeSetDetail` → `App.js:6903` `detail: query.statusDetail`，渲染成 `思考中… · 🧠 召回…`；`deriveLiveActivity` 对 `streaming` 返回 `''` ⇒ 一开流即清空 |
+| F5 | **在 TUI 只是 spinner 后缀** | `useQueryBridge.js:2246` `safeSetDetail` → `App.js:6903` `detail: query.statusDetail`，渲染成 `思考中… · 召回…`；`deriveLiveActivity` 对 `streaming` 返回 `''` ⇒ 一开流即清空 |
 | F6 | **本地记忆库近乎为空** | `.khy/memory/` 仅 3 条；`user/`、`feedback/`、`project/`、`reference/` 中 3 个目录为空 |
 | F7 | **「正在记忆」进行时态完全不存在** | `formatWriteNotice` 措辞是「已写入」（完成时）；无任何过程播报 |
 
@@ -124,7 +124,7 @@ memoryOpsNotice.formatRecallNotice(filenames, ctx)   ← 纯叶（已有，扩�
 
 > ⚠⚠ **措辞纪律（V4 的强要求，实施时最易违反）**：
 > 意图子句在既有文案中**只做「插入」**，**不得改动任何既有字符**。
-> 真源原文是 **`🧠 召回 N 条相关记忆：…`** ——
+> 真源原文是 **`召回 N 条相关记忆：…`** ——
 > **不得**顺手改成「回忆起」「回忆到」「记得」等更"自然"的词。
 > 理由：`ctx` 缺省时整行必须与今日**逐字节相等**（见下方原型验证），
 > 改词即等于在"回退"路径上也改了输出，**V4 不成立**。
@@ -133,7 +133,7 @@ memoryOpsNotice.formatRecallNotice(filenames, ctx)   ← 纯叶（已有，扩�
 **渲染样例**（确定性、可单测断言；**注意动词是「召回」**）：
 
 ```
-🧠 召回 2 条相关记忆（为了遵守你此前给过的协作偏好）：feedback_tool-execution-results、feedback_system-收尾保障
+召回 2 条相关记忆（为了遵守你此前给过的协作偏好）：feedback_tool-execution-results、feedback_system-收尾保障
 ```
 
 **诚实边界**：意图子句是**类型标签的派生陈述**，不是对模型真实动机的断言。
@@ -180,13 +180,13 @@ memoryOpsNotice.formatRecallNotice(filenames, ctx)   ← 纯叶（已有，扩�
 >
 > | 条目 | 参与召回？ | 说明 |
 > |---|---|---|
-> | `feedback_system----_1c477a3f.md` | **✅** | 系统纠错提示 —— **噪声** |
-> | `feedback_tool-execution-results_a3d9521e.md` | **✅** | 工具循环拦截日志 —— **噪声** |
-> | `user/zlibrary-access.md` | ❌ | 在**子目录**，非递归扫不到 |
-> | `logs/**`（含 `[Turn]` 记录） | ❌ | 是**目录**；虽为 `.md` 但非递归扫不到 |
-> | `.archive/**`、`feedback/**`、`project/**`、`reference/**` | ❌ | 均为子目录 |
-> | `MEMORY.md`（索引） | ❌ | 被 `f !== MEMORY_INDEX_NAME` 显式排除 |
-> | `.distill.json` | ❌ | 非 `.md` |
+> | `feedback_system----_1c477a3f.md` | **✓** | 系统纠错提示 —— **噪声** |
+> | `feedback_tool-execution-results_a3d9521e.md` | **✓** | 工具循环拦截日志 —— **噪声** |
+> | `user/zlibrary-access.md` | ✗ | 在**子目录**，非递归扫不到 |
+> | `logs/**`（含 `[Turn]` 记录） | ✗ | 是**目录**；虽为 `.md` 但非递归扫不到 |
+> | `.archive/**`、`feedback/**`、`project/**`、`reference/**` | ✗ | 均为子目录 |
+> | `MEMORY.md`（索引） | ✗ | 被 `f !== MEMORY_INDEX_NAME` 显式排除 |
+> | `.distill.json` | ✗ | 非 `.md` |
 >
 > ⇒ **参与召回的两个文件恰好就是那两条噪声 —— 有效记忆 0 条。**
 > （⚠ 此前本规范两处曾误判：把 `logs/` 的 `[Turn]` 记录当作"落库噪声"、
@@ -195,7 +195,7 @@ memoryOpsNotice.formatRecallNotice(filenames, ctx)   ← 纯叶（已有，扩�
 > ⚠⚠ 预热段是 **query 无关** 的（tier×recency），
 > ⇒ **这两条系统噪声几乎每一轮对话都会被召回**。
 > 按本规范 V2 渲染，用户将**每轮都看到**：
-> 「🧠 召回 2 条相关记忆（**为了遵守你此前给过的协作偏好**）：feedback_system-收尾保障、feedback_tool-execution-results」
+> 「召回 2 条相关记忆（**为了遵守你此前给过的协作偏好**）：feedback_system-收尾保障、feedback_tool-execution-results」
 > ⇒ **措辞正确、内容完全错误，且高频重复**。
 >
 > ⇒ **落地本规范前必须先做记忆库卫生**（见 §4 第 0 项）。否则不是"告知用户回忆了什么"，
@@ -221,8 +221,8 @@ memoryOpsNotice.formatRecallNotice(filenames, ctx)   ← 纯叶（已有，扩�
 }
 ```
 
-实测后果：`'bad'` → `🧠 召回 3 条相关记忆：b、a、d`；
-`'a.md'` → `🧠 召回 4 条相关记忆：a、.、m 等 4 条`。
+实测后果：`'bad'` → `召回 3 条相关记忆：b、a、d`；
+`'a.md'` → `召回 4 条相关记忆：a、.、m 等 4 条`。
 
 **当前不是活的 bug**——唯一调用点 `aiChatCore.js:2333` 传的是 `_memSurfaced`（`Set`），
 永远命中 `Set` 分支。但它与本仓「**低精度守卫比没有守卫更糟**」同族：
@@ -240,7 +240,7 @@ memoryOpsNotice.formatRecallNotice(filenames, ctx)   ← 纯叶（已有，扩�
 | REPL | `_printOnStatusTerminal`（**非** transient） | 走 `_writeOnStatusTransient`（F4） | 给 `init` 加「记忆类告知」白名单走 terminal 分支 |
 
 REPL 侧的**最小改动**：`replSession.js:10340` 分类链中，`init` 阶段命中记忆告知
-（识别前缀 `🧠` 或更稳的 `message.kind` 字段）→ 走 `_printOnStatusTerminal`
+（识别前缀 `` 或更稳的 `message.kind` 字段）→ 走 `_printOnStatusTerminal`
 而非 `_writeOnStatusTransient`。
 
 > ⚠ **别用字符串前缀做判据**。应给 `onStatus` 载荷加一个可选 `kind` 字段
@@ -342,21 +342,21 @@ REPL 侧的**最小改动**：`replSession.js:10340` 分类链中，`init` 阶�
 
 | # | 状态 | 落点（实测行号） |
 |---|---|---|
-| **0** | ✅ **已执行 + 根因已修**（2026-09-27） | 2 条噪声已归档（见 §4.1）；~~根因未修 ⇒ 会再生~~ ⇒ **根因已于 §4.2 修复**（`SYSTEM_INJECT_RE` 护栏），实测系统注入文本**不再落盘** |
-| 1 | ✅ 已实现 | `memoryOpsNotice.js`：`deriveIntentClause` / `formatRecallNotice(f,ctx)` / `formatRecallNoticePayload` |
-| — | ✅ 已实现（新增） | `memoryEngine/index.js` `_formatMemoryBlock` 补 `types`（与 `filenames` 平行的 `frontmatter.type`）——**§3.2 意图取数的前提，原清单未列，实施时补入** |
-| 2 | ✅ 已实现 | `aiChatCore.js:2390` `noticeInbox.push` 主通道 + `:2396` 回落 `onStatus({kind:'memory-notice'})`；门 `KHY_MEMORY_NOTICE_PERSIST` |
-| 3 | ✅ 已实现 | `replSession.js:10216` `phase==='init'` 块内按 `status.kind` 分流到持久打印 |
-| 4 | ✅ 已实现 | `useQueryBridge.js:2247` `onStatus` 在 `safeSetDetail` 前按 `evt.kind` 落 `role:'notice'` |
-| 5 | ✅ 已实现 | `package.json` 新增 `test:memory-notice`；测试扩到 **22/22** |
-| 6 | ✅ 已实现 | `[OPS-MAN-103]` 加「已升格」指针 + 订正 §验证 的假 script 引用 |
-| 7 | ✅ **已实现（2026-09-27 拍板）** | **结论：不再等 007** —— 007 MR-R4① 已明定「同 topic key 原地 supersede」为既有行为，第 7 项可落地。实现两处：① `memoryEngine/index.js:502/519/600` 补 **action 透传**（实测修前 `action` 只有 `write`/`skip`/`skip-duplicate`，**没有 `supersede`**）；② `memoryOpsNotice.js:136` 在 `formatWriteNotice` 既有 `skip` 分支后加 `supersede` 分支（**复用既有写告知通道**，不新造）。端到端实测：`🧠 已更新既有身份记忆（原记录已被替换）：user-name`，且不堆叠 |
-| 8 | ✅ 已实现 | 字符串入参 fail-soft（`'bad'` 从「3 条:b、a、d」改为「1 条:bad」），契约注释已同步 |
-| **9** | ✅ 已实现 | `memoryOpsNotice.js`：`RECALL_PROCESS_TEXT='正在回忆相关记忆…'`（`:52`）+ `formatRecallProcessPayload`（`:249`），导出面增 2 项 |
-| **10** | ✅ 已实现 | `aiChatCore.js:2375` 发 `starting`；`:2470-2480` `finally` 内按 `KHY_MEMORY_RECALL_MIN_MS` 等足后发 `done`。**起点刻意放在 `require` 成功之后**（C2）、**终点在 `finally`**（C3） |
-| **11** | ✅ 已实现 | `replSession.js:10259` `spinner.setPhase(status.stage === 'done' ? 'request' : 'memory-recall')` |
-| **12** | ✅ 已实现 | `useQueryBridge.js:2268` 按 `stage` 分流；`done` 分支受 `settled` / `turnSeqRef` 保护后清 detail 并回 `thinking` |
-| **13** | ✅ 已实现 | `renderTheme.js:148`（短标签「正在回忆相关记忆」）/ `appHostHelpers.js:195`（「正在回忆相关记忆…」）/ `statusLiveActivity.js:132` 返 `''` |
+| **0** | ✓ **已执行 + 根因已修**（2026-09-27） | 2 条噪声已归档（见 §4.1）；~~根因未修 ⇒ 会再生~~ ⇒ **根因已于 §4.2 修复**（`SYSTEM_INJECT_RE` 护栏），实测系统注入文本**不再落盘** |
+| 1 | ✓ 已实现 | `memoryOpsNotice.js`：`deriveIntentClause` / `formatRecallNotice(f,ctx)` / `formatRecallNoticePayload` |
+| — | ✓ 已实现（新增） | `memoryEngine/index.js` `_formatMemoryBlock` 补 `types`（与 `filenames` 平行的 `frontmatter.type`）——**§3.2 意图取数的前提，原清单未列，实施时补入** |
+| 2 | ✓ 已实现 | `aiChatCore.js:2390` `noticeInbox.push` 主通道 + `:2396` 回落 `onStatus({kind:'memory-notice'})`；门 `KHY_MEMORY_NOTICE_PERSIST` |
+| 3 | ✓ 已实现 | `replSession.js:10216` `phase==='init'` 块内按 `status.kind` 分流到持久打印 |
+| 4 | ✓ 已实现 | `useQueryBridge.js:2247` `onStatus` 在 `safeSetDetail` 前按 `evt.kind` 落 `role:'notice'` |
+| 5 | ✓ 已实现 | `package.json` 新增 `test:memory-notice`；测试扩到 **22/22** |
+| 6 | ✓ 已实现 | `[OPS-MAN-103]` 加「已升格」指针 + 订正 §验证 的假 script 引用 |
+| 7 | ✓ **已实现（2026-09-27 拍板）** | **结论：不再等 007** —— 007 MR-R4① 已明定「同 topic key 原地 supersede」为既有行为，第 7 项可落地。实现两处：① `memoryEngine/index.js:502/519/600` 补 **action 透传**（实测修前 `action` 只有 `write`/`skip`/`skip-duplicate`，**没有 `supersede`**）；② `memoryOpsNotice.js:136` 在 `formatWriteNotice` 既有 `skip` 分支后加 `supersede` 分支（**复用既有写告知通道**，不新造）。端到端实测：`已更新既有身份记忆（原记录已被替换）：user-name`，且不堆叠 |
+| 8 | ✓ 已实现 | 字符串入参 fail-soft（`'bad'` 从「3 条:b、a、d」改为「1 条:bad」），契约注释已同步 |
+| **9** | ✓ 已实现 | `memoryOpsNotice.js`：`RECALL_PROCESS_TEXT='正在回忆相关记忆…'`（`:52`）+ `formatRecallProcessPayload`（`:249`），导出面增 2 项 |
+| **10** | ✓ 已实现 | `aiChatCore.js:2375` 发 `starting`；`:2470-2480` `finally` 内按 `KHY_MEMORY_RECALL_MIN_MS` 等足后发 `done`。**起点刻意放在 `require` 成功之后**（C2）、**终点在 `finally`**（C3） |
+| **11** | ✓ 已实现 | `replSession.js:10259` `spinner.setPhase(status.stage === 'done' ? 'request' : 'memory-recall')` |
+| **12** | ✓ 已实现 | `useQueryBridge.js:2268` 按 `stage` 分流；`done` 分支受 `settled` / `turnSeqRef` 保护后清 detail 并回 `thinking` |
+| **13** | ✓ 已实现 | `renderTheme.js:148`（短标签「正在回忆相关记忆」）/ `appHostHelpers.js:195`（「正在回忆相关记忆…」）/ `statusLiveActivity.js:132` 返 `''` |
 
 > ⚠ **实施期发现的两处「清单外必需项」**（记录以备复核）：
 > ① **`types` 取数**（上表第 — 行）：清单第 1 项要求 `deriveIntentClause(ctx)`，但
@@ -368,7 +368,7 @@ REPL 侧的**最小改动**：`replSession.js:10340` 分类链中，`init` 阶�
 
 #### 4.1 第 0 项的**正确处置路径**（2026-09-24 实测核定；2026-09-27 已执行）
 
-> ✅ **已执行（2026-09-27）**：两条噪声已按下方「最小干预」做法归档到
+> ✓ **已执行（2026-09-27）**：两条噪声已按下方「最小干预」做法归档到
 > `.khy/memory/.archive/`（带时间戳后缀，未覆盖 Sep-3 的既有同名归档）：
 >
 > | 原文件 | 归档为 |
@@ -402,22 +402,22 @@ node scripts/memory/restore-memory.js --type feedback   # 按类型恢复
 > 非归档工具）。`clear-memory.js` 尾注写的 `khy memory distill restore` **同样不存在** ——
 > 该脚本的注释与实现背离，属**既有文档失真**（与 §1.1 的 `test:memory-notice` 同族）。
 
-#### 4.2 第 0 项的**根因 —— ✅ 已于 2026-09-27 修复**
+#### 4.2 第 0 项的**根因 —— ✓ 已于 2026-09-27 修复**
 
 > 原标注「须另立条目，本规范不负责修」。**该判断已被推翻**：根因就在
 > `classify()` 入口（系统注入文本被当用户消息分类），属本规范可修范围，已根治。
 
-**✅ 修复（2026-09-27）**：`memoryTrigger.js` 新增 `SYSTEM_INJECT_RE` 护栏（`:88`），
+**✓ 修复（2026-09-27）**：`memoryTrigger.js` 新增 `SYSTEM_INJECT_RE` 护栏（`:88`），
 在 `classify()` 的①之前拦截系统/工具注入消息（`:191`）⇒ 一律不捕获。
 
 | 验证（受控实验，探针 `.khyos/diag/probe-explicit-pollution.js`） | 修前 | 修后 |
 |---|---|---|
-| `[SYSTEM 收尾保障] …不要再说…`（真源生成） | ❌ `explicit / feedback` | ✅ `none` |
-| `[Tool execution results] …不要再…`（真源生成） | ❌ `explicit / feedback` | ✅ `none` |
-| 「记住：部署走 khy-mirror」 | ✅ `explicit` | ✅ `explicit`（**未退化**） |
-| 「以后不要再给我看这些日志」 | ✅ `explicit / feedback` | ✅ `explicit / feedback`（**未退化**） |
-| 「别再用 rm -rf 了」 | ✅ `explicit / feedback` | ✅ `explicit / feedback`（**未退化**） |
-| 「我叫菜鸟」 | ✅ `proactive / user-name` | ✅ `proactive / user-name`（**未退化**） |
+| `[SYSTEM 收尾保障] …不要再说…`（真源生成） | ✗ `explicit / feedback` | ✓ `none` |
+| `[Tool execution results] …不要再…`（真源生成） | ✗ `explicit / feedback` | ✓ `none` |
+| 「记住：部署走 khy-mirror」 | ✓ `explicit` | ✓ `explicit`（**未退化**） |
+| 「以后不要再给我看这些日志」 | ✓ `explicit / feedback` | ✓ `explicit / feedback`（**未退化**） |
+| 「别再用 rm -rf 了」 | ✓ `explicit / feedback` | ✓ `explicit / feedback`（**未退化**） |
+| 「我叫菜鸟」 | ✓ `proactive / user-name` | ✓ `proactive / user-name`（**未退化**） |
 
 **写入路径端到端**（`probe-pollution-not-regenerated.js`，隔离目录）：
 ①② 系统文本 ⇒ `_maybeAutoSaveMemory()` 返 `false`、**零文件落盘**；
@@ -436,16 +436,16 @@ node scripts/memory/restore-memory.js --type feedback   # 按类型恢复
 | 根目录 `feedback_tool-execution-results_a3d9521e.md` | **Sep-24 18:15** 又出现 ⇒ **再生** |
 | 来源文本 | `[SYSTEM 收尾保障] …`（`deliverableClosure.js:168`）、`[Tool execution results] …`（`deliveryFormatter.js:56`、`queryEngine.js:230`、`toolUseLoopHelpers.js:103`） |
 
-🔴 **召回面实测（决定性，2026-09-24）**：`memdir.js` 三处扫描（`:503`/`:557`/`:929`）
+● **召回面实测（决定性，2026-09-24）**：`memdir.js` 三处扫描（`:503`/`:557`/`:929`）
 **全部是非递归的 `readdirSync(memoryDir)` + `.filter(f => f.endsWith('.md') && f !== 'MEMORY.md')`**：
 
 | 项 | 是否参与召回 | 原因 |
 |---|---|---|
-| 根目录 `feedback_system----_1c477a3f.md` | ✅ **参与** | 根目录 + `.md` |
-| 根目录 `feedback_tool-execution-results_a3d9521e.md` | ✅ **参与** | 根目录 + `.md` |
-| `user/zlibrary-access.md` | ❌ **不参与** | 在**子目录**中（非递归 ⇒ 扫不到） |
-| `feedback/`、`project/`、`reference/`、`logs/`、`.archive/` | ❌ 不参与 | 均为目录 |
-| `.distill.json` | ❌ 不参与 | 非 `.md` |
+| 根目录 `feedback_system----_1c477a3f.md` | ✓ **参与** | 根目录 + `.md` |
+| 根目录 `feedback_tool-execution-results_a3d9521e.md` | ✓ **参与** | 根目录 + `.md` |
+| `user/zlibrary-access.md` | ✗ **不参与** | 在**子目录**中（非递归 ⇒ 扫不到） |
+| `feedback/`、`project/`、`reference/`、`logs/`、`.archive/` | ✗ 不参与 | 均为目录 |
+| `.distill.json` | ✗ 不参与 | 非 `.md` |
 
 ⇒ **当前召回面 = 100% 系统噪声，0% 有效记忆。** 不是"三条里两条脏"，
 而是**整个可见召回面只有那两条噪声**。这使第 0 项从"卫生"升级为**硬阻塞**。
@@ -454,10 +454,10 @@ node scripts/memory/restore-memory.js --type feedback   # 按类型恢复
 > `.khy/memory/logs/2026/09/2026-09-24.md` 的 `[Turn]` 记录写成噪声的「落库路径」——
 > **该写法误导**：`logs/` 是**目录**，**不参与召回**；它只说明"这些文本在某处被记过"，
 > 与"进入召回面"是两件事。已在 v0.1.6 订正。
-> ⚠ 同理，§7 曾把 `user/zlibrary-access.md` 标为「✅ 唯一真实用户记忆」——
+> ⚠ 同理，§7 曾把 `user/zlibrary-access.md` 标为「✓ 唯一真实用户记忆」——
 > 它**同样不参与召回**（在子目录），该标记亦已订正。
 
-🔴 **根因已定位（2026-09-27，受控实验，机制级）** —— 此前「分类器本身是对的 / 写入绕过
+● **根因已定位（2026-09-27，受控实验，机制级）** —— 此前「分类器本身是对的 / 写入绕过
 `classify()`」的判断**是错的**，现订正：
 
 **触发词是 `不要再`，藏在系统注入文本里。**
@@ -467,7 +467,7 @@ node scripts/memory/restore-memory.js --type feedback   # 按类型恢复
 | `'不要再说「让我…」「我来看看…」这类过程话'` | **`explicit` + `type:'feedback'` + `cross_session`** |
 | `[SYSTEM 收尾保障] …` **全文**（含「不要再」） | **`explicit` + `feedback`** |
 | `[Tool execution results] …` **全文**（含「不要再 web_search」） | **`explicit` + `feedback`** |
-| **同一段文本，仅删掉「不要再」** | **`none`** ✅ 对照 |
+| **同一段文本，仅删掉「不要再」** | **`none`** ✓ 对照 |
 
 机制：`memoryTrigger.js:70` 的
 
@@ -514,7 +514,7 @@ const EXPLICIT_RE = /(记住|记一下|…|别再|不要再|…)/i;
 | 反模式 | 为什么 |
 |---|---|
 | 继续加长 `onStatus` 字符串 | F4/F5 证明该通道对长文本**结构性地**不适合承载告知 |
-| 用 `includes('🧠')` 做分类判据 | 低精度判据；文案一改即静默失效 |
+| 用 `includes('')` 做分类判据 | 低精度判据；文案一改即静默失效 |
 | 只修 TUI 不修 REPL（或反之） | V3 明确要求双前端；单修会制造「一半用户看不到」 |
 | 让模型自述「我记得你…」当唯一手段 | 不可控、不保证出现；本仓已有 `[PROACTIVE_MEMORY]` 提示词，属**补充**非**替代** |
 | 意图子句由模型生成后拼进告知语 | 告知语必须**确定性可单测**；模型参与即失稳 |
@@ -527,7 +527,7 @@ const EXPLICIT_RE = /(记住|记一下|…|别再|不要再|…)/i;
 ## 6. 验收
 
 ```bash
-# ✅ 已落地（2026-09-27）：45/45
+# ✓ 已落地（2026-09-27）：45/45
 #    28 = 纯叶单测（memoryOpsNotice.test.js）
 #     9 = 跨文件**接线**测试（memoryRecallProcessWiring.test.js）
 #     8 = **交付路径**测试（memoryNoticeDelivery.test.js）
@@ -613,7 +613,7 @@ node .khyos/diag/probe-recall-e2e-material.js
 ```
 
 **人工验收（V1/V3，机器判不了）**：
-1. ~~**先做 §4 第 0 项**（记忆库卫生）~~ ✅ **已于 2026-09-27 执行**；但⚠ 召回面现为**空**
+1. ~~**先做 §4 第 0 项**（记忆库卫生）~~ ✓ **已于 2026-09-27 执行**；但⚠ 召回面现为**空**
    ⇒ 看不到告知是**正常的**（没有具名召回可播报）。要验收请先**造素材**：
    用 `/remember` 在根目录写 2–3 条（`reference` 型最佳），见 §7 前置 2。
 2. 在 TUI（`KHY_CC_TUI=1`）里制造一次具名召回，确认转录区出现持久行，且**下一轮仍在**。
@@ -651,11 +651,11 @@ node .khyos/diag/probe-recall-e2e-material.js
 
   | 位置 | 内容 | **参与召回？** | 可用性 |
   |---|---|---|---|
-  | 根目录 `feedback_system----_1c477a3f.md` | `type: feedback`，正文是**发给模型的纠错提示** | ✅ **参与** | ❌ 非用户偏好 |
-  | 根目录 `feedback_tool-execution-results_a3d9521e.md` | `type: feedback`，正文是**工具循环拦截日志** | ✅ **参与** | ❌ 非用户偏好 |
-  | `user/zlibrary-access.md` | `type: user` | ❌ **不参与**（子目录，非递归扫不到） | ⚠ 真实但**召不到** |
-  | `feedback/`、`project/`、`reference/` | 空 | ❌ 目录 | — |
-  | `logs/`、`.archive/`、`.distill.json` | 日志/归档/配置 | ❌ 目录或非 `.md` | — |
+  | 根目录 `feedback_system----_1c477a3f.md` | `type: feedback`，正文是**发给模型的纠错提示** | ✓ **参与** | ✗ 非用户偏好 |
+  | 根目录 `feedback_tool-execution-results_a3d9521e.md` | `type: feedback`，正文是**工具循环拦截日志** | ✓ **参与** | ✗ 非用户偏好 |
+  | `user/zlibrary-access.md` | `type: user` | ✗ **不参与**（子目录，非递归扫不到） | ⚠ 真实但**召不到** |
+  | `feedback/`、`project/`、`reference/` | 空 | ✗ 目录 | — |
+  | `logs/`、`.archive/`、`.distill.json` | 日志/归档/配置 | ✗ 目录或非 `.md` | — |
 
   ⇒ **不是「库为空」，也不是「3 条里 2 条脏」——是「整个召回面只有那 2 条噪声」**。
   ⇒ 且**无法自行验收**：唯一真实记忆 `user/zlibrary-access.md` 因在子目录而**召回不到**，
@@ -664,7 +664,7 @@ node .khyos/diag/probe-recall-e2e-material.js
   > ⚠ 这也意味着：**`user/` 子目录的存在本身是一个待查的目录约定不一致**
   > （与 `memdir` 扁平写入约定冲突，见 §3.2）—— 但属既有状态，本规范不整改。
 
-- ✅ **前置 3 已核实：`_memSurfaced` 确实会被填充（V1 不是美化死信号）**。
+- ✓ **前置 3 已核实：`_memSurfaced` 确实会被填充（V1 不是美化死信号）**。
   实测（2026-09-24，探针 `.khyos/diag/probe-mem-surfaced.js`）：
 
   | 段 | query | 结果 |
@@ -720,11 +720,11 @@ node .khyos/diag/probe-recall-e2e-material.js
 | 0.1.3 | 2026-09-24 | **可实施性原型实跑**（真源码等价替换，探针 `.khyos/diag/`）⇒ ① 新增 §3.2.1 原型结论（锚点 4/4 唯一、语法合法、V2 行为 7/7、**V4 回退 6/6 逐字节相等**）；② 订正 §3.2 渲染样例的动词（原写「回忆起」⇒ **改为真源原词「召回」**），并加**措辞纪律**警告（改词即破 V4，实测 6/6 diff）；③ 订正函数签名为 `deriveIntentClause(ctx)`；④ 新增 §3.2.2 可选加固项（字符串入参被逐字符拆开的既有行为，当前非活 bug） |
 | 0.1.4 | 2026-09-24 | **地基实测**（探针 `.khyos/diag/probe-mem-surfaced.js`）⇒ ① §3.2 失真声明**从"已知失真"升级为"系统性/高频失真"**：实测预热段 **query 无关、恒命中那两条系统噪声** ⇒ 告警语**几乎每轮触发且内容错误**；② §4 新增**第 0 项阻塞前置**（记忆库卫生）——不做则本规范"做得越显眼、伤害越大"；③ §4 新增第 8 项（可选加固）；④ §7 前置重排为三条，新增**前置 3「`_memSurfaced` 确实会被填充」实测表**（V1 不是美化死信号）；⑤ §6 加探针复验命令，人工验收步骤改为先做第 0 项 |
 | 0.1.5 | 2026-09-24 | **第 0 项处置路径核定 + 三次自我纠错**：① 查明 **`khy memory` 命令不存在**（v0.1.2–0.1.4 的 §4 第 0 项建议有误）⇒ 订正；② 实测 `npm run memory:clear` 是**全量清空**（P0 重置 `MEMORY.md` + 10 个成长文件；P1 归档 75 个学习缓存）⇒ **明令不得用于本项**；③ 新增 §4.1 给出**最小干预**处置 + 真实恢复命令（`restore-memory.js --file`）；④ 新增 §4.2 根因说明：噪声**持续再生**（`.archive/` Sep-3 归档过、根目录 Sep-24 又现），但 `memoryTrigger.classify()` 对系统文本返回 `none` ⇒ **写入绕过分类器或另有入口，须另立条目**；⑤ §1.1 补登两处新发现失真（`clear-memory.js` 尾注命令不存在；本规范自身的 `khy memory` 误引） |
-| 0.1.6 | 2026-09-24 | **召回面核定（决定性取证）+ 两处自纠**：① 查实 `memdir.js` **三处扫描全部非递归**（`:503-504`/`:557-558`/`:929-930`）+ 写入扁平（`:508`/`:562`）⇒ **只有根目录 `.md` 参与召回**；据此 §3.2 失真声明从「混入 2 条噪声」升级为「**召回面 100% 噪声、有效记忆 0 条**」，并附逐条参与召回核对表；② 订正 §4.2 误导写法（曾把 `logs/**/[Turn]` 当"落库噪声" ⇒ 实为**目录、不参与召回**）；③ 订正 §7 前置 2（`user/zlibrary-access.md` 曾标「✅ 唯一真实用户记忆」⇒ 实为**子目录、召回不到**），结论从「3 条里 2 条脏」改为「整个召回面只有那 2 条噪声」 |
-| **0.2.0** | **2026-09-27** | **按方案落地（生产代码首次改动）**：① **第 0 项已执行**（2 条噪声归档到 `.archive/`，召回面清空；**根因未修 ⇒ 会再生**）；② **🔴 根因定位成功（机制级、受控实验）** —— 触发词是 `EXPLICIT_RE` 里的 **`不要再`**，而 `deliverableClosure.js:168` 的 `[SYSTEM 收尾保障]` 与 `deliveryFormatter.js:56` 等的 `[Tool execution results]` 正文**恰好都含它** ⇒ **系统提示词被当作"用户偏好"存进记忆库**；**推翻了 v0.1.x「分类器本身是对的、写入绕过了 classify()」的旧判断**（旧判断只在**截断文本**上测过，测全文即复现）；③ 新增 §4.0 落地状态表（含**两处清单外必需项**：`types` 取数缺失会让功能**静默不生效而测试全绿**；REPL `_printOnStatusTerminal` 的 **TDZ 陷阱**）；④ 纯叶扩至 `deriveIntentClause` / `formatRecallNotice(f,ctx)` / `formatRecallNoticePayload` / 字符串加固；⑤ `memoryEngine._formatMemoryBlock` 补 `types`；⑥ `aiChatCore` 接 noticeInbox 主通道 + `onStatus({kind})` 回落；⑦ `replSession` / `useQueryBridge` 双前端按 `kind` 分流；⑧ `test:memory-notice` 落地，测试 11 → **22 例**；⑨ `[OPS-MAN-103]` 升格指针 + 假 script 引用订正 |
+| 0.1.6 | 2026-09-24 | **召回面核定（决定性取证）+ 两处自纠**：① 查实 `memdir.js` **三处扫描全部非递归**（`:503-504`/`:557-558`/`:929-930`）+ 写入扁平（`:508`/`:562`）⇒ **只有根目录 `.md` 参与召回**；据此 §3.2 失真声明从「混入 2 条噪声」升级为「**召回面 100% 噪声、有效记忆 0 条**」，并附逐条参与召回核对表；② 订正 §4.2 误导写法（曾把 `logs/**/[Turn]` 当"落库噪声" ⇒ 实为**目录、不参与召回**）；③ 订正 §7 前置 2（`user/zlibrary-access.md` 曾标「✓ 唯一真实用户记忆」⇒ 实为**子目录、召回不到**），结论从「3 条里 2 条脏」改为「整个召回面只有那 2 条噪声」 |
+| **0.2.0** | **2026-09-27** | **按方案落地（生产代码首次改动）**：① **第 0 项已执行**（2 条噪声归档到 `.archive/`，召回面清空；**根因未修 ⇒ 会再生**）；② **● 根因定位成功（机制级、受控实验）** —— 触发词是 `EXPLICIT_RE` 里的 **`不要再`**，而 `deliverableClosure.js:168` 的 `[SYSTEM 收尾保障]` 与 `deliveryFormatter.js:56` 等的 `[Tool execution results]` 正文**恰好都含它** ⇒ **系统提示词被当作"用户偏好"存进记忆库**；**推翻了 v0.1.x「分类器本身是对的、写入绕过了 classify()」的旧判断**（旧判断只在**截断文本**上测过，测全文即复现）；③ 新增 §4.0 落地状态表（含**两处清单外必需项**：`types` 取数缺失会让功能**静默不生效而测试全绿**；REPL `_printOnStatusTerminal` 的 **TDZ 陷阱**）；④ 纯叶扩至 `deriveIntentClause` / `formatRecallNotice(f,ctx)` / `formatRecallNoticePayload` / 字符串加固；⑤ `memoryEngine._formatMemoryBlock` 补 `types`；⑥ `aiChatCore` 接 noticeInbox 主通道 + `onStatus({kind})` 回落；⑦ `replSession` / `useQueryBridge` 双前端按 `kind` 分流；⑧ `test:memory-notice` 落地，测试 11 → **22 例**；⑨ `[OPS-MAN-103]` 升格指针 + 假 script 引用订正 |
 | **0.3.0** | **2026-09-27** | **新增 V5「过程态」判据**（用户诉求：主动记忆要**有过程 + spinner**，不能只有事后一行）：① 新增 §3.5 —— 范式复用 `compacting`/`compacted` 的「**过程态 + 终止符**」对；六条硬约束 **C1–C6**（两态成对 / 起点在 `require` 成功后 / 终点在 `finally` / 过程态不停 spinner 不落持久行 / 文案单一真源 / 按字段判别）；② §3.5.3 **最短可视窗口**是**最易漏的一条**：REPL spinner `_render()` 每 **120ms** 才重绘一帧，而召回常**几十毫秒** ⇒ 不等下限则过程态在下一帧前就被切走 ⇒ **代码全对、测试全绿、用户一帧都看不到**；门 `KHY_MEMORY_RECALL_MIN_MS`（默认 400、上限 2000、`0` 关），且**仅当 `_memSurfaced.size > 0` 才等** ⇒ 无召回零延迟；③ §4 清单补第 **9–13** 项 + §4.0 落地状态（7 文件实改）；④ §5 反模式补三条（发过程态却不发终止符 / 只做结果态不做过程态 / 三处各写一份文案）；⑤ §6 验收：`test:memory-notice` **22 → 28 例**（新增 6 例过程态：两态载荷形状、`stage` 归一、门关返 `null`、**文案诚实断言**（含「正在」、不含数字、不含 `.md`、与结果态可区分）、绝不抛），语法检查扩至 7 文件（**7/7 通过**），人工验收加第 5 条（含 `KHY_MEMORY_RECALL_MIN_MS=2000` 拉长观察窗口的调试技巧）；⑥ **跨文件接线测试另立文件**（`memoryRecallProcessWiring.test.js`）—— 纯叶单测证明不了「消费点真认这个 phase」（标签表少一个 key 单测照样全绿）⇒ 接线测试改调**消费点真函数**；并做**反向验证**：删掉 `renderTheme.js` 的 `'memory-recall'` 行 ⇒ 实测用例 #33 立刻变红（36 pass / 1 fail），恢复后回 **37/37** ⇒ 证明非恒真断言（测试 **28 → 37**）；⑦ **受控实验**探针（`probe-recall-e2e-material.js`）证明「**召回面为空 ⇒ 看不到告知」是正常现象、非接线失败**（换 `KHY_MEMORY_DIR` 造 2 条素材 ⇒ 2 条具名召回），并**证实上一轮补的 `types` 字段真实存在** |
-| **0.4.0** | **2026-09-27** | **三项收尾（用户指令）**：① **种子数据**：写入 3 条 `reference` 型**临时**种子（`.khy/memory/reference_seed-*.md`），召回面由空 → 3 条，实测告知语 `🧠 召回 3 条相关记忆（为了查证外部资料）：…`；观察窗口用 `KHY_MEMORY_RECALL_MIN_MS=2000`（**命令行注入**，**未建 `.env`** —— 项目只有 `.env.example`、无 dotenv 加载点，建文件会改整个后端配置加载，风险不符比例）；⚠ **验收后须删除种子**（清理命令见 §6）。② 🔴 **根因根治**（§4.2，推翻「须另立条目、本规范不负责修」的旧判断）：新增 `SYSTEM_INJECT_RE` 护栏（`memoryTrigger.js:88` 定义、`:191` 拦截）⇒ 系统/工具注入文本**一律不捕获**；**刻意保留** `EXPLICIT_RE` 里的「不要再」（它是真实用户意图「以后不要再给我看这些日志」的捕获词，删了会丢功能）⇒ 治「**送进来的东西不对**」而非「匹配词太宽」；受控实验 6 组修前/修后对照 + 写入路径端到端（**零文件落盘**）+ 对照组仍落盘（通道未坏）+ jest **12/12**。③ **第 7 项拍板并落地**：结论是**不再等 007**（007 MR-R4① 已明定「同 topic key 原地 supersede」是既有行为）；实测修前 `addStructuredMemory` **只取 `decision.tier`、丢弃 `action`** ⇒ 上层永远拿不到 `'supersede'` ⇒ 补透传（`index.js:502/519/600`）；告知语**复用既有 `formatWriteNotice` 通道**加 `supersede` 分支（`memoryOpsNotice.js:136`，不新造函数）；**措辞订正**：是「**已被替换**」**不是**「已归档」（supersede 不改文件名、不归档旧记录，归档只发生在 forget 路径）；端到端实测 `🧠 已更新既有身份记忆（原记录已被替换）：user-name` 且不堆叠；测试 **37 → 39** |
-| **0.5.0** | **2026-09-27** | **补第三层「交付路径」测试 + 删种子**：① 新增 `memoryNoticeDelivery.test.js`（8 例）—— 前两层测试都证明不了「`kind` 字段真的穿过传输层到两个消费点」（字段名写错 ⇒ **两个前端都静默而前两层照样全绿**）⇒ 补：payload 键集恒为 `{kind,text}`、REPL/TUI 各自分支判据、**三处字面量一致性**（把 producer 实际产出的 kind 串回两个 consumer 源码核对）、反模式护栏（**禁按 `🧠` 前缀判别**）、门关返 `null`；② **双反向验证**：删 `renderTheme.js` 的 `'memory-recall'` ⇒ #33 红；改 `useQueryBridge.js` 的 `'memory-notice'` ⇒ #4/#5 红（43 pass / 2 fail）；恢复后均**逐字节一致**、回 **45/45**（28+9+8）；③ **REPL 分支真驱动**（探针 `probe-repl-notice-branch.js`，受控替换 `const renderer = require('./aiRenderer')` 为 spy，跑完**逐字节还原** 590344 bytes 一致）⇒ 证明 `payload.kind === 'memory-notice'` 与分支判据同源；④ **删除 3 条临时种子**（`.khy/memory/reference_seed-*.md`），召回面回到空（**这是数据条件，非缺陷** —— 探针已加 skip 语义） |
+| **0.4.0** | **2026-09-27** | **三项收尾（用户指令）**：① **种子数据**：写入 3 条 `reference` 型**临时**种子（`.khy/memory/reference_seed-*.md`），召回面由空 → 3 条，实测告知语 `召回 3 条相关记忆（为了查证外部资料）：…`；观察窗口用 `KHY_MEMORY_RECALL_MIN_MS=2000`（**命令行注入**，**未建 `.env`** —— 项目只有 `.env.example`、无 dotenv 加载点，建文件会改整个后端配置加载，风险不符比例）；⚠ **验收后须删除种子**（清理命令见 §6）。② ● **根因根治**（§4.2，推翻「须另立条目、本规范不负责修」的旧判断）：新增 `SYSTEM_INJECT_RE` 护栏（`memoryTrigger.js:88` 定义、`:191` 拦截）⇒ 系统/工具注入文本**一律不捕获**；**刻意保留** `EXPLICIT_RE` 里的「不要再」（它是真实用户意图「以后不要再给我看这些日志」的捕获词，删了会丢功能）⇒ 治「**送进来的东西不对**」而非「匹配词太宽」；受控实验 6 组修前/修后对照 + 写入路径端到端（**零文件落盘**）+ 对照组仍落盘（通道未坏）+ jest **12/12**。③ **第 7 项拍板并落地**：结论是**不再等 007**（007 MR-R4① 已明定「同 topic key 原地 supersede」是既有行为）；实测修前 `addStructuredMemory` **只取 `decision.tier`、丢弃 `action`** ⇒ 上层永远拿不到 `'supersede'` ⇒ 补透传（`index.js:502/519/600`）；告知语**复用既有 `formatWriteNotice` 通道**加 `supersede` 分支（`memoryOpsNotice.js:136`，不新造函数）；**措辞订正**：是「**已被替换**」**不是**「已归档」（supersede 不改文件名、不归档旧记录，归档只发生在 forget 路径）；端到端实测 `已更新既有身份记忆（原记录已被替换）：user-name` 且不堆叠；测试 **37 → 39** |
+| **0.5.0** | **2026-09-27** | **补第三层「交付路径」测试 + 删种子**：① 新增 `memoryNoticeDelivery.test.js`（8 例）—— 前两层测试都证明不了「`kind` 字段真的穿过传输层到两个消费点」（字段名写错 ⇒ **两个前端都静默而前两层照样全绿**）⇒ 补：payload 键集恒为 `{kind,text}`、REPL/TUI 各自分支判据、**三处字面量一致性**（把 producer 实际产出的 kind 串回两个 consumer 源码核对）、反模式护栏（**禁按 `` 前缀判别**）、门关返 `null`；② **双反向验证**：删 `renderTheme.js` 的 `'memory-recall'` ⇒ #33 红；改 `useQueryBridge.js` 的 `'memory-notice'` ⇒ #4/#5 红（43 pass / 2 fail）；恢复后均**逐字节一致**、回 **45/45**（28+9+8）；③ **REPL 分支真驱动**（探针 `probe-repl-notice-branch.js`，受控替换 `const renderer = require('./aiRenderer')` 为 spy，跑完**逐字节还原** 590344 bytes 一致）⇒ 证明 `payload.kind === 'memory-notice'` 与分支判据同源；④ **删除 3 条临时种子**（`.khy/memory/reference_seed-*.md`），召回面回到空（**这是数据条件，非缺陷** —— 探针已加 skip 语义） |
 
 
 ---

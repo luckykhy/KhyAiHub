@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -52,12 +52,12 @@
 <p>列出候选与各自一句话理由；回答与选定结果应回写登记（补字段或直接开工）；</p>
 <ol><li>不得推荐未登记在 PROGRESS.json/BUGS.json 的任务——先走登记再排程。</li></ol>
 <h2 id="反例">反例<a class="anchor" href="#反例" aria-label="锚点">#</a></h2>
-<pre><code>❌ 「我觉得最近该搞一下 APK 那边」——无档位、无证据、来源是印象
-❌ 两条 P1 并列时 next 推登记更早的 T-013——顺序不是优先级
-❌ 有 6 个 Bug 卡在 pending_verify 却继续推荐新开工任务——闭环未合又开新口</code></pre>
-<pre><code>✅ 「G0 命中：3 个 review 任务 + 6 个待验收 Bug + 1 个过期租约。先验收 T-023
+<pre><code>✗ 「我觉得最近该搞一下 APK 那边」——无档位、无证据、来源是印象
+✗ 两条 P1 并列时 next 推登记更早的 T-013——顺序不是优先级
+✗ 有 6 个 Bug 卡在 pending_verify 却继续推荐新开工任务——闭环未合又开新口</code></pre>
+<pre><code>✓ 「G0 命中：3 个 review 任务 + 6 个待验收 Bug + 1 个过期租约。先验收 T-023
    （密钥中心，P1）：khy hq next --task T-023。清完后才是 APK/同步之争」
-✅ G4：「P1 待办并列 2 条：T-022 四端同步（无评分字段）、T-XXX…——今天想动哪个方向？
+✓ G4：「P1 待办并列 2 条：T-022 四端同步（无评分字段）、T-XXX…——今天想动哪个方向？
    或给它们补 cod/conf/size：khy hq task note T-022 --cod 4 --conf 2 --size L」</code></pre>
 <h2 id="授予权力">授予权力<a class="anchor" href="#授予权力" aria-label="锚点">#</a></h2>
 <p>见 frontmatter <code>grants</code>：G4 反问权 + 人的显式指定权（<code>--task</code> / <code>--verify</code> / <code>--skip-health</code>）。</p>

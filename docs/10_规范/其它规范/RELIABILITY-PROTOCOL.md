@@ -183,20 +183,20 @@ const elapsed = guard.elapsed();
 
 **状态术语定义**：
 
-- **✅ 有** = `startWatchdog()` 在该路径显式创建，且 `.done()` 清理覆盖成功 / 失败 / 取消所有路径；
-- **⚠️ 间接有** = Watchdog 只存在于下层依赖中，上层调用方无法感知/处理其超时信号，**不满足要求**，须升级为显式挂载；
+- **✓ 有** = `startWatchdog()` 在该路径显式创建，且 `.done()` 清理覆盖成功 / 失败 / 取消所有路径；
+- **⚠ 间接有** = Watchdog 只存在于下层依赖中，上层调用方无法感知/处理其超时信号，**不满足要求**，须升级为显式挂载；
 - **"需要 touch 链"** = 每次进度事件（工具完成、流式分块、迭代推进）都调用 `guard.touch()`，使 timeoutMs 从固定超时变为真正的空闲超时。
 
 以下路径**必须**有 Watchdog 保护：
 
 | 路径 | 当前状态 | 要求 | 具体行动 |
 |------|----------|------|----------|
-| `runNaturalToolCall` | ✅ 有 (120s) | 保持 | 无需改动 |
-| AI gateway `generate()` | ✅ 有 (hard/idle) | 保持 | 无需改动 |
-| `baseSelfCheckService` | ✅ 有 (`withTimeout`) | 保持 | 无需改动 |
-| Shell 执行 (`safeExec`) | ✅ 有 (30s) | 保持 | 无需改动 |
-| 工具循环 `runToolUseLoop` | ⚠️ 间接有 | 必须显式挂载 | 在循环入口显式 `startWatchdog()`，每轮迭代/工具完成时 `touch()`，循环退出（含异常）时 `.done()` |
-| AgentTool 子任务 | ⚠️ 有 timeoutMs 但无 Watchdog touch | 需要 touch 链 | 在子任务迭代推进/工具完成时调用 `guard.touch()`，将固定 timeoutMs 转为空闲超时 |
+| `runNaturalToolCall` | ✓ 有 (120s) | 保持 | 无需改动 |
+| AI gateway `generate()` | ✓ 有 (hard/idle) | 保持 | 无需改动 |
+| `baseSelfCheckService` | ✓ 有 (`withTimeout`) | 保持 | 无需改动 |
+| Shell 执行 (`safeExec`) | ✓ 有 (30s) | 保持 | 无需改动 |
+| 工具循环 `runToolUseLoop` | ⚠ 间接有 | 必须显式挂载 | 在循环入口显式 `startWatchdog()`，每轮迭代/工具完成时 `touch()`，循环退出（含异常）时 `.done()` |
+| AgentTool 子任务 | ⚠ 有 timeoutMs 但无 Watchdog touch | 需要 touch 链 | 在子任务迭代推进/工具完成时调用 `guard.touch()`，将固定 timeoutMs 转为空闲超时 |
 
 ### 3.6 实现参考
 

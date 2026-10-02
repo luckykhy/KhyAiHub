@@ -2,7 +2,7 @@
 
 > 本夹由 [MGMT-PLAN-009] B9「按标签 `[XXX-YYY-NNN]` 归夹」生成（2026-09-18）。
 > 父目录：[../](../00_INDEX_规范-总目录.html)　就近索引：[00_INDEX_规范-总目录.html](../00_INDEX_规范-总目录.html)
-> 收录 67 篇。
+> 收录 68 篇。
 
 ## 文件清单
 
@@ -38,6 +38,7 @@
 - [[[DESIGN-GW-002] AI 模型降级与熔断规范]]([DESIGN-GW-002] AI 模型降级与熔断规范.md)
 - [[[DESIGN-I18N-001] 国际化规范]]([DESIGN-I18N-001] 国际化规范.md)
 - [[[DESIGN-IP-001] 软件著作权就绪规范]]([DESIGN-IP-001] 软件著作权就绪规范.md)
+- [[[DESIGN-IP-002] 软著材料生成器与在仓契约]]([DESIGN-IP-002] 软著材料生成器与在仓契约.md)
 - [[[DESIGN-IR-001] 事件响应规范]]([DESIGN-IR-001] 事件响应规范.md)
 - [[[DESIGN-LOG-001] 日志规范]]([DESIGN-LOG-001] 日志规范.md)
 - [[[DESIGN-MCP-001] MCP 协议实现规范]]([DESIGN-MCP-001] MCP 协议实现规范.md)

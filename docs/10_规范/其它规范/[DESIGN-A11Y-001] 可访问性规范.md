@@ -26,7 +26,7 @@
 
 ```vue
 <template>
-  <!-- ✅ 正确：使用语义化标签 -->
+  <!-- ✓ 正确：使用语义化标签 -->
   <header>
     <nav aria-label="主导航">
       <ul>
@@ -61,13 +61,13 @@
 
 ```vue
 <template>
-  <!-- ✅ 正确：标题层级清晰 -->
+  <!-- ✓ 正确：标题层级清晰 -->
   <h1>页面标题</h1>
   <h2>主要章节</h2>
   <h3>子章节</h3>
   <h4>小节</h4>
   
-  <!-- ❌ 错误：跳级使用标题 -->
+  <!-- ✗ 错误：跳级使用标题 -->
   <h1>页面标题</h1>
   <h4>子章节</h4>  <!-- 跳过了 h2 和 h3 -->
 </template>
@@ -265,7 +265,7 @@ const handleKeyDown = (event) => {
 ### 5.2 颜色使用
 
 ```css
-/* ✅ 正确：不仅依赖颜色传达信息 */
+/* ✓ 正确：不仅依赖颜色传达信息 */
 .status {
   display: flex;
   align-items: center;
@@ -282,7 +282,7 @@ const handleKeyDown = (event) => {
   color: #ef4444;
 }
 
-/* ❌ 错误：仅依赖颜色 */
+/* ✗ 错误：仅依赖颜色 */
 .status.success {
   color: #10b981;
 }
@@ -316,14 +316,14 @@ const handleKeyDown = (event) => {
 
 ```vue
 <template>
-  <!-- ✅ 正确：使用 label 关联 -->
+  <!-- ✓ 正确：使用 label 关联 -->
   <label for="username">用户名</label>
   <input id="username" type="text" />
   
-  <!-- ✅ 正确：使用 aria-label -->
+  <!-- ✓ 正确：使用 aria-label -->
   <input aria-label="搜索" type="search" />
   
-  <!-- ✅ 正确：使用 aria-labelledby -->
+  <!-- ✓ 正确：使用 aria-labelledby -->
   <span id="search-label">搜索</span>
   <input aria-labelledby="search-label" type="search" />
 </template>

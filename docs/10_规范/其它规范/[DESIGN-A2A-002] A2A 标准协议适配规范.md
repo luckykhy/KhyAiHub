@@ -57,8 +57,8 @@ HTTP + SSE 完全不同），状态集写成一套无人认识的私有集合。
 
 | 路径 | 状态 | 说明 |
 |------|------|------|
-| `GET /.well-known/agent-card.json` | ✅ 发布 | 标准 A2A v0.3.0 发现端点（RFC 8615） |
-| `GET /.well-known/agent.json` | ⚪ 默认 404 | v0.2.x 历史路径。需 `KHY_A2A_LEGACY_AGENT_JSON=1` 显式开启 |
+| `GET /.well-known/agent-card.json` | ✓ 发布 | 标准 A2A v0.3.0 发现端点（RFC 8615） |
+| `GET /.well-known/agent.json` | ○ 默认 404 | v0.2.x 历史路径。需 `KHY_A2A_LEGACY_AGENT_JSON=1` 显式开启 |
 | `GET /.well-known/*` | 404 | 其余一律 JSON 404 |
 
 实现：`src/routes/wellKnown.js`，挂载于 `server.js` 的 `app.use('/.well-known', …)`。
@@ -221,12 +221,12 @@ MCP」，避免外部 orchestrator 误以为 A2A 是工具通道。
 
 | 阶段 | 内容 | 状态 |
 |------|------|------|
-| **P1 划清边界** | Agent Card 端点、契约 schema、状态映射、`tasks/cancel`、Part `kind`、能力诚实化、命名纪律条款 | ✅ 本规范落地 |
-| **P2 让私有方言名副其实** | 评估把 `a2a*` 模块改名为 `acp*`（含 14 处内置 agent 注册、router、facade、测试） | ⬜ 待决策 |
-| **P3 服务端任务面** | 实现 `message/send` / `tasks/get` / `tasks/cancel` 的服务端 handler + 任务存储（当前只有出站客户端） | ⬜ 未开始 |
-| **P4 流式** | SSE `message/stream`、`TaskStatusUpdateEvent` / `TaskArtifactUpdateEvent`，然后把 `capabilities.streaming` 改为 `true` | ⬜ 未开始 |
-| **P5 推送** | `tasks/pushNotificationConfig/*` | ⬜ 未开始 |
-| **P6 一致性验证** | 接入官方 `a2a-tck` / `a2a-inspector` 做端到端合规测试 | ⬜ 未开始 |
+| **P1 划清边界** | Agent Card 端点、契约 schema、状态映射、`tasks/cancel`、Part `kind`、能力诚实化、命名纪律条款 | ✓ 本规范落地 |
+| **P2 让私有方言名副其实** | 评估把 `a2a*` 模块改名为 `acp*`（含 14 处内置 agent 注册、router、facade、测试） | □ 待决策 |
+| **P3 服务端任务面** | 实现 `message/send` / `tasks/get` / `tasks/cancel` 的服务端 handler + 任务存储（当前只有出站客户端） | □ 未开始 |
+| **P4 流式** | SSE `message/stream`、`TaskStatusUpdateEvent` / `TaskArtifactUpdateEvent`，然后把 `capabilities.streaming` 改为 `true` | □ 未开始 |
+| **P5 推送** | `tasks/pushNotificationConfig/*` | □ 未开始 |
+| **P6 一致性验证** | 接入官方 `a2a-tck` / `a2a-inspector` 做端到端合规测试 | □ 未开始 |
 
 **P3 是真正的能力缺口**：khy 目前能被外部**发现**（P1 已做到），但被**调用**时
 没有服务端任务处理面。这是与「真做 A2A」之间最大的一步。

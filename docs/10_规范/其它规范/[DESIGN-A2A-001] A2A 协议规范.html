@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -28,7 +28,7 @@
       <article class="doc-body">
 <h1 id="design-a2a-001-a2a-协议规范">[DESIGN-A2A-001] A2A 协议规范<a class="anchor" href="#design-a2a-001-a2a-协议规范" aria-label="锚点">#</a></h1>
 <p>&lt;!-- naming-guard: exempt 本文档保留历史错误命名作为对照，供读过旧版本的读者自查 --&gt;</p>
-<blockquote><p>⚠️ <strong>定位更正（2026-09-15）—— 请先读这一段再读正文。</strong></p>
+<blockquote><p>⚠ <strong>定位更正（2026-09-15）—— 请先读这一段再读正文。</strong></p>
 <p>本文档描述的是 khy-os 自有的<strong>进程内 ACP 方言</strong>，<strong>不是</strong> Linux Foundation 的<br>Agent2Agent (A2A) 标准协议。二者<strong>仅命名撞车</strong>，方法集无一重合：</p>
 <table><thead><tr><th></th><th>本文档（私有 ACP 方言）</th><th>标准 A2A v0.3.0</th></tr></thead><tbody><tr><td>方法名</td><td>点分形式 <code>&lt;域&gt;.&lt;动作&gt;</code>（见 §0）</td><td>斜杠形式 <code>message/send</code> / <code>tasks/get</code> / <code>tasks/cancel</code> / <code>message/stream</code> …</td></tr><tr><td>协议版本</td><td><code>1.0</code>（私有）</td><td><code>0.3.0</code></td></tr><tr><td>传输</td><td>WebSocket / HTTP-2 / gRPC（均为自建）</td><td>JSON-RPC 2.0 over HTTP + <strong>SSE</strong>（非 WebSocket）</td></tr><tr><td>状态集</td><td>私有集合</td><td><code>submitted</code> / <code>working</code> / <code>input-required</code> / <code>completed</code> / <code>canceled</code> / <code>failed</code> / <code>rejected</code> / <code>auth-required</code> / <code>unknown</code></td></tr><tr><td>发现</td><td>自建注册表</td><td><code>GET /.well-known/agent-card.json</code></td></tr><tr><td>作用域</td><td><strong>进程内</strong></td><td>跨厂商、跨网络</td></tr></tbody></table>
 <p>因此<strong>下游消费者请勿依据本文档对接</strong>。标准 A2A 的适配规范、契约 schema、<br>Agent Card 发布面与 TaskState 映射表见<br><strong>[<code>[DESIGN-A2A-002] A2A 标准协议适配规范</code>]([DESIGN-A2A-002] A2A 标准协议适配规范.md)</strong>；<br>两者的术语区分见<br><strong>[<code>[DESIGN-NAM-002] A2A 与 ACP 命名及术语规范</code>]([DESIGN-NAM-002] A2A 与 ACP 命名及术语规范.md)</strong>。</p>
@@ -139,7 +139,7 @@
 <table><thead><tr><th>错误码</th><th>名称</th><th>说明</th></tr></thead><tbody><tr><td>-32700</td><td>Parse Error</td><td>JSON 解析错误</td></tr><tr><td>-32600</td><td>Invalid Request</td><td>无效请求</td></tr><tr><td>-32601</td><td>Method Not Found</td><td>方法不存在</td></tr><tr><td>-32602</td><td>Invalid Params</td><td>无效参数</td></tr><tr><td>-32603</td><td>Internal Error</td><td>内部错误</td></tr><tr><td>-32000</td><td>Agent Not Found</td><td>智能体不存在</td></tr><tr><td>-32001</td><td>Capability Not Available</td><td>能力不可用</td></tr><tr><td>-32002</td><td>Task Rejected</td><td>任务被拒绝</td></tr><tr><td>-32003</td><td>Authentication Failed</td><td>认证失败</td></tr><tr><td>-32004</td><td>Authorization Failed</td><td>授权失败</td></tr><tr><td>-32005</td><td>Rate Limited</td><td>请求限流</td></tr><tr><td>-32006</td><td>Timeout</td><td>请求超时</td></tr></tbody></table>
 <hr>
 <h2 id="4-核心方法定义">4. 核心方法定义<a class="anchor" href="#4-核心方法定义" aria-label="锚点">#</a></h2>
-<blockquote><p>⚠️ <strong>本节方法名已废弃。</strong> 下列方法名是早期设计草案的写法，<strong>实现中零存在</strong><br>（实测全仓只出现在文档里）。实际存在的方法集与逐条对照见 <strong>§0 方法集更正表</strong>。<br>本节保留仅为记录设计演进过程 —— 请勿据此处对接，也不要在新代码/新文档里引用这些名字。<br>命名纪律由 <code>[DESIGN-NAM-002]</code> NAM-A2A-1 与 <code>scripts/ci/check-protocol-naming.js</code> 强制。</p></blockquote>
+<blockquote><p>⚠ <strong>本节方法名已废弃。</strong> 下列方法名是早期设计草案的写法，<strong>实现中零存在</strong><br>（实测全仓只出现在文档里）。实际存在的方法集与逐条对照见 <strong>§0 方法集更正表</strong>。<br>本节保留仅为记录设计演进过程 —— 请勿据此处对接，也不要在新代码/新文档里引用这些名字。<br>命名纪律由 <code>[DESIGN-NAM-002]</code> NAM-A2A-1 与 <code>scripts/ci/check-protocol-naming.js</code> 强制。</p></blockquote>
 <h3 id="4-1-发现类方法-discovery">4.1 发现类方法 (Discovery)<a class="anchor" href="#4-1-发现类方法-discovery" aria-label="锚点">#</a></h3>
 <h4 id="4-1-1-智能体注册">4.1.1 智能体注册<a class="anchor" href="#4-1-1-智能体注册" aria-label="锚点">#</a></h4>
 <p><strong>方法</strong>：<code>a2a.discovery.register</code></p>

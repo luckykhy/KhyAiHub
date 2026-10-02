@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -29,7 +29,7 @@
 <h1 id="design-mem-001-记忆系统标准规范">[DESIGN-MEM-001] 记忆系统标准规范<a class="anchor" href="#design-mem-001-记忆系统标准规范" aria-label="锚点">#</a></h1>
 <blockquote><p><strong>定位</strong>：记忆系统<strong>约束条文</strong>的唯一真源——记忆分类、保留层级、文件格式、生命周期、清空与恢复流程。</p>
 <p><strong>【记忆族 scope 边界 2026-09-17，依据 <code>[MGMT-STD-008]</code> §2.2「重叠即违规」】</strong><br><code>[DESIGN-MEM-000]</code>–<code>005</code> 共 6 篇 + <code>[DESIGN-MEM-006]</code>，此前职责互有交叠。裁定如下：</p>
-<table><thead><tr><th>文档</th><th>角色</th><th>是否承载约束</th></tr></thead><tbody><tr><td><strong>本篇 <code>MEM-001</code></strong></td><td><strong>约束真源</strong>：分类/层级/格式/生命周期/清理</td><td>✅ <strong>真源</strong></td></tr><tr><td><code>[DESIGN-MEM-006] 记忆与维护元数据生命周期规范</code></td><td>各自独立 scope：GOV-MEM 契约冻结（session/persistent 判定、<code>.ai/</code> 指定入口）</td><td>✅ 独立真源</td></tr><tr><td><code>[DESIGN-MEM-000] 记忆系统总结</code></td><td><strong>存档</strong>：当年清理工作的过程记录，非约束</td><td>❌ 不承载约束</td></tr><tr><td><code>[DESIGN-MEM-002] 记忆时机指南</code></td><td>参考：何时该记什么（操作指导）</td><td>参考</td></tr><tr><td><code>[DESIGN-MEM-003] 记忆模板库</code></td><td>参考：可直接抄的记录模板</td><td>参考</td></tr><tr><td><code>[DESIGN-MEM-004] 记忆快速参考卡</code></td><td>参考卡：本篇的压缩速查，<strong>内容非增量</strong></td><td>参考卡</td></tr><tr><td><code>[DESIGN-MEM-005] 记忆系统使用指南</code></td><td>参考：上手流程</td><td>参考</td></tr></tbody></table>
+<table><thead><tr><th>文档</th><th>角色</th><th>是否承载约束</th></tr></thead><tbody><tr><td><strong>本篇 <code>MEM-001</code></strong></td><td><strong>约束真源</strong>：分类/层级/格式/生命周期/清理</td><td>✓ <strong>真源</strong></td></tr><tr><td><code>[DESIGN-MEM-006] 记忆与维护元数据生命周期规范</code></td><td>各自独立 scope：GOV-MEM 契约冻结（session/persistent 判定、<code>.ai/</code> 指定入口）</td><td>✓ 独立真源</td></tr><tr><td><code>[DESIGN-MEM-000] 记忆系统总结</code></td><td><strong>存档</strong>：当年清理工作的过程记录，非约束</td><td>✗ 不承载约束</td></tr><tr><td><code>[DESIGN-MEM-002] 记忆时机指南</code></td><td>参考：何时该记什么（操作指导）</td><td>参考</td></tr><tr><td><code>[DESIGN-MEM-003] 记忆模板库</code></td><td>参考：可直接抄的记录模板</td><td>参考</td></tr><tr><td><code>[DESIGN-MEM-004] 记忆快速参考卡</code></td><td>参考卡：本篇的压缩速查，<strong>内容非增量</strong></td><td>参考卡</td></tr><tr><td><code>[DESIGN-MEM-005] 记忆系统使用指南</code></td><td>参考：上手流程</td><td>参考</td></tr></tbody></table>
 <p>一句话边界：<strong>「记忆系统的规则是什么」看本篇（+ <code>MEM-006</code>）；<br>「什么时候记、记成什么样」看 <code>002</code>/<code>003</code>/<code>005</code>；「一页速查」看 <code>004</code>；<br><code>000</code> 是历史总结，读它只为了解来由，不要拿它当规范。</strong></p>
 <p>本裁定同时回应 <code>[MGMT-PLAN-009]</code> §1.4 记忆系统主题 —— 原方案拟「7 篇 → 2 篇」，<br>实测 <code>000</code>/<code>002</code>/<code>003</code>/<code>005</code> 面向不同读者（过程记录 / 时机 / 模板 / 上手），<br>属同源异构而非重复，<strong>改为按角色分层而非合并</strong>；真正无增量的是 <code>004</code>（参考卡）。</p></blockquote>
 <blockquote><p>本文档定义 khy-os 记忆系统的标准规范，包括记忆分类、文件格式、生命周期管理、清空与恢复流程。</p></blockquote>
@@ -38,7 +38,7 @@
 <h3 id="1-1-语义类型-semantic-types">1.1 语义类型（Semantic Types）<a class="anchor" href="#1-1-语义类型-semantic-types" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>类型</th><th>说明</th><th>默认保留层级</th><th>保鲜天数</th><th>典型内容</th></tr></thead><tbody><tr><td><code>user</code></td><td>用户身份、核心偏好</td><td>permanent</td><td>3650</td><td>用户姓名、语言偏好、工作习惯</td></tr><tr><td><code>feedback</code></td><td>反馈偏好、交互风格</td><td>cross_session</td><td>540</td><td>回复风格偏好、错误反馈模式</td></tr><tr><td><code>reference</code></td><td>外部资源、参考资料</td><td>cross_session</td><td>365</td><td>文档链接、API 参考、知识库</td></tr><tr><td><code>project</code></td><td>项目背景、上下文</td><td>cross_session</td><td>180</td><td>项目架构、技术栈、开发约定</td></tr></tbody></table>
 <h3 id="1-2-保留层级-retention-tiers">1.2 保留层级（Retention Tiers）<a class="anchor" href="#1-2-保留层级-retention-tiers" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>层级</th><th>名称</th><th>说明</th><th>持久化</th></tr></thead><tbody><tr><td>Layer 1</td><td><code>short_term</code></td><td>会话内记忆，会话结束即遗忘</td><td>❌ 不落盘</td></tr><tr><td>Layer 2</td><td><code>cross_session</code></td><td>跨会话持久记忆，按保鲜期自然老化</td><td>✅ 落盘</td></tr><tr><td>Layer 3</td><td><code>permanent</code></td><td>永久记忆，永不自动遗忘</td><td>✅ 落盘</td></tr></tbody></table>
+<table><thead><tr><th>层级</th><th>名称</th><th>说明</th><th>持久化</th></tr></thead><tbody><tr><td>Layer 1</td><td><code>short_term</code></td><td>会话内记忆，会话结束即遗忘</td><td>✗ 不落盘</td></tr><tr><td>Layer 2</td><td><code>cross_session</code></td><td>跨会话持久记忆，按保鲜期自然老化</td><td>✓ 落盘</td></tr><tr><td>Layer 3</td><td><code>permanent</code></td><td>永久记忆，永不自动遗忘</td><td>✓ 落盘</td></tr></tbody></table>
 <hr>
 <h2 id="2-记忆文件格式规范">2. 记忆文件格式规范<a class="anchor" href="#2-记忆文件格式规范" aria-label="锚点">#</a></h2>
 <h3 id="2-1-文件命名规则">2.1 文件命名规则<a class="anchor" href="#2-1-文件命名规则" aria-label="锚点">#</a></h3>
@@ -161,7 +161,7 @@
 <span class="hljs-keyword">function</span> <span class="hljs-title function_">clearMemory</span>(<span class="hljs-params">options = {}</span>) {
   <span class="hljs-keyword">const</span> { dryRun = <span class="hljs-literal">true</span>, level = <span class="hljs-string">&#x27;all&#x27;</span> } = options;
   
-  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`\n🧹 记忆清空<span class="hljs-subst">${dryRun ? <span class="hljs-string">&#x27;预览&#x27;</span> : <span class="hljs-string">&#x27;执行&#x27;</span>}</span>\n`</span>);
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`\n记忆清空<span class="hljs-subst">${dryRun ? <span class="hljs-string">&#x27;预览&#x27;</span> : <span class="hljs-string">&#x27;执行&#x27;</span>}</span>\n`</span>);
   
   <span class="hljs-keyword">if</span> (dryRun) {
     <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;将执行以下操作:&#x27;</span>);
@@ -182,7 +182,7 @@
   <span class="hljs-title function_">resetGrowthData</span>();
   <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;✓ 已重置成长数据&#x27;</span>);
   
-  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;\n✅ 记忆清空完成&#x27;</span>);
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;\n✓ 记忆清空完成&#x27;</span>);
   <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;恢复命令: /memory distill restore&#x27;</span>);
 }
 
