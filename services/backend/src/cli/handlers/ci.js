@@ -32,13 +32,13 @@ const { printInfo, printWarn, printError, printSuccess } = require('../formatter
 function formatClassification(classification) {
   switch (String(classification || '').toLowerCase()) {
     case 'pass':
-      return chalk.green('✅ 通过 (pass)');
+      return chalk.green('✓ 通过 (pass)');
     case 'fail':
-      return chalk.red('❌ 失败 (fail)');
+      return chalk.red('✗ 失败 (fail)');
     case 'pending':
-      return chalk.yellow('⏳ 进行中 (pending)');
+      return chalk.yellow('进行中 (pending)');
     default:
-      return chalk.gray('❔ 未知 (unknown)');
+      return chalk.gray('? 未知 (unknown)');
   }
 }
 
@@ -114,7 +114,7 @@ async function handleCi(subCommand, args = [], options = {}, deps = {}) {
   // ── watch: poll until terminal state ──────────────────────────────
   if (sub === 'watch') {
     if (!options.json) {
-      printInfo(chalk.cyan('👀 正在轮询 CI 状态（直至结束或超时）…'));
+      printInfo(chalk.cyan('正在轮询 CI 状态（直至结束或超时）…'));
     }
     let result;
     try {
@@ -134,19 +134,19 @@ async function handleCi(subCommand, args = [], options = {}, deps = {}) {
       return true;
     }
     if (result && result.error) {
-      printError(`❌ ${result.error}`);
+      printError(`✗ ${result.error}`);
     } else if (result && result.classification === 'pass') {
-      printSuccess(`✅ CI 通过（${result.polls} 次轮询）`);
+      printSuccess(`✓ CI 通过（${result.polls} 次轮询）`);
       if (result.url) {
         printInfo(result.url);
       }
     } else if (result && result.classification === 'fail') {
-      printError(`❌ CI 失败（${result.polls} 次轮询）`);
+      printError(`✗ CI 失败（${result.polls} 次轮询）`);
       if (result.url) {
         printInfo(result.url);
       }
     } else {
-      printWarn(`⏳ 未在限定时间内结束（${(result && result.status) || 'timeout'}）`);
+      printWarn(`未在限定时间内结束（${(result && result.status) || 'timeout'}）`);
     }
     return true;
   }

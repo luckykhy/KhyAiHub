@@ -117,8 +117,8 @@ function _handleEco() {
     const total = eco.files.reduce((n, f) => n + Object.keys(f.servers).length, 0);
     const head = hit.length
       ? total
-        ? `✅ ${eco.label}(${id}):${total} 台`
-        : `➖ ${eco.label}(${id}):有配置文件,未解析出可用 server`
+        ? `✓ ${eco.label}(${id}):${total} 台`
+        : `- ${eco.label}(${id}):有配置文件,未解析出可用 server`
       : `·  ${eco.label}(${id}):未安装/无配置`;
     printInfo(head);
     for (const f of eco.files) {

@@ -110,7 +110,7 @@ function _checkHttps(host, timeoutMs = 3500) {
 
 function _printLinuxHelp() {
   console.log('');
-  console.log(chalk.cyan.bold('  🐧 Linux 能力'));
+  console.log(chalk.cyan.bold('  Linux 能力'));
   console.log('');
   console.log('  linux status                    系统与运行环境状态');
   const defaultNetHost = require('../../constants/serviceDefaults').CLOUD_DEFAULT_HOST;

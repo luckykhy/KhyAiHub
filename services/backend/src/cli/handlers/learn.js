@@ -124,7 +124,7 @@ async function _resolveLearnMode() {
       model: true,
       vector,
       remote: vector,
-      label: `📡 模式3 · 有模型 + ${vector ? '混合RAG(词法+向量)' : '词法RAG'}`,
+      label: `模式3 · 有模型 + ${vector ? '混合RAG(词法+向量)' : '词法RAG'}`,
     };
   } else {
     let remote = false;
@@ -140,7 +140,7 @@ async function _resolveLearnMode() {
           model: false,
           vector: false,
           remote: true,
-          label: '📡 模式2 · 有网络无模型 · 离线教学 + 远端补取',
+          label: '模式2 · 有网络无模型 · 离线教学 + 远端补取',
         }
       : {
           mode: 1,
@@ -148,7 +148,7 @@ async function _resolveLearnMode() {
           model: false,
           vector: false,
           remote: false,
-          label: '📡 模式1 · 本地无网络无模型 · 纯本地检索',
+          label: '模式1 · 本地无网络无模型 · 纯本地检索',
         };
   }
   _modeCache = out;
@@ -328,7 +328,7 @@ function _checkMilestone(layerId, curriculum) {
   if (done === total && total > 0) {
     console.log('');
     console.log(
-      `  ${chalk.bold.green('🎉 恭喜！')} ${chalk.bold.white(`第 ${layerId} 层 · ${layer.title}`)} ${chalk.bold.green('全部完成！ +50 XP')}`
+      `  ${chalk.bold.green('恭喜！')} ${chalk.bold.white(`第 ${layerId} 层 · ${layer.title}`)} ${chalk.bold.green('全部完成！ +50 XP')}`
     );
     const nextLayer = curriculum.getLayer(layerId + 1);
     if (nextLayer) {
@@ -341,7 +341,7 @@ function _checkMilestone(layerId, curriculum) {
     const remaining = total - done;
     const pct = Math.round((done / total) * 100);
     if (pct >= 50) {
-      console.log(`  ${chalk.yellow(`⚡ 第 ${layerId} 层进度 ${pct}%，还差 ${remaining} 个！`)}`);
+      console.log(`  ${chalk.yellow(`第 ${layerId} 层进度 ${pct}%，还差 ${remaining} 个！`)}`);
     }
   }
 }
@@ -396,7 +396,7 @@ async function _offlineLayerListInteract(curriculum) {
         value: { action: 'layer', layer: l },
       };
     });
-    options.push({ label: chalk.cyan('📊 学习进度'), value: { action: 'progress' } });
+    options.push({ label: chalk.cyan('学习进度'), value: { action: 'progress' } });
     options.push({ label: chalk.dim('✕ 退出'), value: { action: 'exit' } });
 
     const choice = await _askChoice('选择层级:', options);
@@ -430,7 +430,7 @@ async function _offlineLayerInteract(layer, curriculum) {
       };
     });
     if (layer.topics.length >= 3) {
-      options.push({ label: chalk.cyan('📝 概念自测'), value: { action: 'quiz' } });
+      options.push({ label: chalk.cyan('概念自测'), value: { action: 'quiz' } });
     }
     options.push({ label: chalk.dim('↩ 返回课程列表'), value: { action: 'back' } });
 
@@ -471,7 +471,7 @@ async function _offlineTopicInteract(layer, startTopic, curriculum) {
     if (!done) {
       options.push({ label: chalk.green('✓ 标记完成'), value: 'done' });
     }
-    options.push({ label: chalk.cyan('🧠 理解检查'), value: 'quiz' });
+    options.push({ label: chalk.cyan('理解检查'), value: 'quiz' });
     options.push({ label: chalk.dim('↩ 返回层级'), value: 'back' });
 
     const choice = await _askChoice('操作:', options);
@@ -501,7 +501,7 @@ async function _offlineBugListInteract(curriculum) {
     console.log(curriculum.formatBugCaseList());
 
     const progress = curriculum.getProgress();
-    const sevIcon = { critical: '🔴', high: '🟠', medium: '🟡' };
+    const sevIcon = { critical: '●', high: '●', medium: '○' };
     const options = BUG_CASES.map((c, i) => {
       const done = progress.completedTopics.includes(`10:${c.id}`);
       const mark = done ? chalk.green('✓') : chalk.gray('○');
@@ -533,7 +533,7 @@ async function _offlineBugCaseInteract(bugCase, curriculum) {
   ];
 
   console.log('');
-  console.log(`  ${chalk.bold.cyan('🔍 Bug 案例:')} ${chalk.bold.white(bugCase.title)}`);
+  console.log(`  ${chalk.bold.cyan('Bug 案例:')} ${chalk.bold.white(bugCase.title)}`);
   console.log("");
   console.log(
     `  ${chalk.dim('严重等级:')} ${bugCase.severity}  ${chalk.dim('标签:')} ${bugCase.tags.map((t) => chalk.cyan(t)).join(chalk.dim(', '))}`
@@ -654,7 +654,7 @@ async function _runTopicQuiz(layer, topic, curriculum) {
 
   let correct = 0;
   console.log('');
-  console.log(`  ${chalk.bold.cyan('🧠 理解检查:')} ${chalk.white(topic.title)}`);
+  console.log(`  ${chalk.bold.cyan('理解检查:')} ${chalk.white(topic.title)}`);
   console.log("");
 
   for (let i = 0; i < questions.length; i++) {
@@ -696,7 +696,7 @@ async function _runLayerQuiz(layer, curriculum) {
 
   console.log('');
   console.log(
-    `  ${chalk.bold.cyan('📝 概念自测:')} ${chalk.white(`第 ${layer.id} 层 — ${layer.title}`)}`
+    `  ${chalk.bold.cyan('概念自测:')} ${chalk.white(`第 ${layer.id} 层 — ${layer.title}`)}`
   );
   console.log("");
   console.log(`  ${chalk.dim('根据描述，选择对应的知识点')}`);
@@ -1389,7 +1389,7 @@ function _formatFindings(items) {
       '\n'
     );
   }
-  const lines = ['', '  ' + chalk.bold.white(`📋 改进清单（共 ${items.length} 条，最新在前）`), ''];
+  const lines = ['', '  ' + chalk.bold.white(`改进清单（共 ${items.length} 条，最新在前）`), ''];
   for (const f of items) {
     const where =
       f.layerId != null ? `第${f.layerId}层${f.topicTitle ? `·${f.topicTitle}` : ''}` : '未绑定';

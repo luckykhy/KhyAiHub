@@ -494,25 +494,178 @@ async function _syncManageAuthBootstrapFromCli(runtime, options = {}) {
   }
 }
 
-async function _waitAiManageRuntimeReady(timeoutMs = 15000) {
+// [DESIGN-ARCH-169] P1b: phase-aware readiness wait.
+// Old behavior: poll runtime + /status for the full budget even against a dead
+// daemon, and print nothing — the user stared at a silent terminal for 180s.
+// New: (a) a missing runtime file or dead daemon pid fails immediately instead
+// of burning the remaining budget against a ghost; (b) phase='starting' prints
+// a ~3s progress line naming the current stage; (c) success requires /status ok
+// AND phase ready/absent — legacy daemons publish no phase field and are treated
+// as ready so old/new binaries coexist (§4 P1b); (d) the failure result carries
+// the last seen stage for the error line.
+async function _waitAiManageRuntimeReady(timeoutMs = 15000, spawnPid = 0) {
   const started = Date.now();
+  let lastProgressAt = 0;
+  let lastPhase = '';
+  let lastPhaseDetail = '';
+  let drewProgress = false;
+  // A freshly spawned detached daemon needs seconds to boot node and require its
+  // dependency tree before beginStartupPhase() creates the runtime file. While that
+  // child is provably alive, an absent file means "still booting" — NOT startup
+  // failure — so the wait must keep polling. Without a child we launched (adopt /
+  // legacy / unit tests), there is no liveness evidence and the immediate ghost
+  // fail-fast below applies unchanged.
+  const hasKnownChild = Number.isFinite(spawnPid) && spawnPid > 0;
+
   while (Date.now() - started < timeoutMs) {
     const runtime = _loadAiManageRuntime();
-    if (runtime?.pid && _isPidAlive(runtime.pid) && runtime.controlPort && runtime.controlToken) {
-      try {
-        // eslint-disable-next-line no-await-in-loop
-        const status = await _requestAiManageControl(runtime, 'GET', '/status');
-        if (status?.ok) {
-          return { runtime, status };
-        }
-      } catch {
-        // still starting
+
+    const pidDead =
+      (hasKnownChild && !_isPidAlive(spawnPid)) ||
+      (!hasKnownChild && runtime && runtime.pid && !_isPidAlive(runtime.pid));
+    if (pidDead) {
+      // The process we are waiting on is gone — waiting longer cannot help.
+      return {
+        ok: false,
+        reason: 'daemon-pid-dead',
+        phase: lastPhase,
+        phaseDetail: lastPhaseDetail,
+        waitedMs: Date.now() - started,
+      };
+    }
+
+    const unregistered =
+      !runtime || !runtime.pid || !runtime.controlPort || !runtime.controlToken;
+    if (unregistered) {
+      if (hasKnownChild) {
+        // Child still alive but not yet registered: still booting, keep polling.
+        await _sleep(250);
+        continue;
       }
+      // No spawned child to prove liveness: an absent/partial file is a ghost.
+      return {
+        ok: false,
+        reason: !runtime ? 'runtime-file-missing' : 'daemon-pid-dead',
+        phase: lastPhase,
+        phaseDetail: lastPhaseDetail,
+        waitedMs: Date.now() - started,
+      };
+    }
+
+    let status = null;
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      status = await _requestAiManageControl(runtime, 'GET', '/status');
+    } catch {
+      status = null;
+    }
+    const statusRuntime = status && status.runtime ? status.runtime : null;
+    const phase = String(
+      (statusRuntime && statusRuntime.phase) || runtime.phase || ''
+    ).trim();
+    const phaseDetail = String(
+      (statusRuntime && statusRuntime.phaseDetail) || runtime.phaseDetail || ''
+    ).trim();
+    const phaseSince = Number(
+      (statusRuntime && statusRuntime.phaseSince) || runtime.phaseSince || 0
+    );
+    lastPhase = phase;
+    lastPhaseDetail = phaseDetail;
+    if (status && status.ok && (phase === '' || phase === 'ready')) {
+      return {
+        ok: true,
+        runtime,
+        status,
+        phase,
+        phaseDetail,
+        waitedMs: Date.now() - started,
+      };
+    }
+    const nowMs = Date.now();
+    if (nowMs - lastProgressAt >= 1000) {
+      lastProgressAt = nowMs;
+      const stageSeconds =
+        phaseSince > 0 ? Math.round((nowMs - phaseSince) / 1000) : null;
+      const stageLabel = phaseDetail
+        ? `${phaseDetail}${stageSeconds === null ? '' : ` ${stageSeconds}s`}`
+        : phase || 'starting';
+      const line = `管理会话启动中 · ${stageLabel} · 已等待 ${Math.round(
+        (nowMs - started) / 1000
+      )}s/${Math.round(timeoutMs / 1000)}s`;
+      // 原地刷新单行：先把上一帧画的行擦掉（光标上移一行 + 清除到行尾），再画新行。
+      // 这是光标移动 + EL，不是 DECSTBM 滚动区（RUNTIME-004 只禁后者），且等待期间
+      // 本进程是唯一输出源，最后一行必属我们。把每 1s 一帧的倒计时压成一行自更新，
+      // 不再像旧版每 3s 追加一行、一个慢前端阶段刷出十几行「管理会话启动中…」。
+      if (drewProgress) process.stdout.write('\x1B[1A\x1B[K');
+      printInfo(line);
+      drewProgress = true;
     }
     // eslint-disable-next-line no-await-in-loop
     await _sleep(250);
   }
-  return null;
+  return {
+    ok: false,
+    reason: 'timeout',
+    phase: lastPhase,
+    phaseDetail: lastPhaseDetail,
+    waitedMs: Date.now() - started,
+  };
+}
+
+// [DESIGN-ARCH-169] P1b: single failure printer for both startup paths (fresh
+// spawn wait and adopted starting session) — the message names the last stage
+// instead of a generic "失败或超时" (提案 §3.2).
+function _printAiManageStartupFailure(ready, apiPort, frontendPort) {
+  const waitedSec = Math.round(((ready && ready.waitedMs) || 0) / 1000);
+  const detail =
+    ready && ready.reason === 'runtime-file-missing'
+      ? '守护进程未登记运行时（可能启动即失败）'
+      : ready && ready.reason === 'daemon-pid-dead'
+        ? '守护进程已退出'
+        : ready && ready.phaseDetail
+          ? `卡在 ${ready.phaseDetail} 阶段 (最后状态 ${ready.phaseDetail}，已等待 ${waitedSec}s)`
+          : '超时';
+  printError(`启动 AI 管理会话失败：${detail} (API:${apiPort}, 前端:${frontendPort})`);
+  require('../../utils/markProcessFailure')();
+  printInfo(`可检查日志: ${_daemonLogHint()}`);
+  // Surface last few lines of daemon log if available, plus targeted advice when
+  // an OS-level error code (ENOMEM/EACCES/...) appears in the tail.
+  try {
+    const logFile = path.join(getDataHome(), 'logs', 'ai_manage_daemon.log');
+    if (fs.existsSync(logFile)) {
+      const tail = fs
+        .readFileSync(logFile, 'utf8')
+        .split(/\r?\n/)
+        .filter(Boolean)
+        .slice(-5)
+        .join('\n');
+      if (tail) {
+        printInfo(`最近日志:\n${tail}`);
+      }
+      const codeMatch = tail.match(/\b(ENOMEM|EACCES|EPERM|EMFILE|ENFILE|EAGAIN)\b/);
+      if (codeMatch && _SYSTEM_ERROR_ADVICE[codeMatch[1]]) {
+        printInfo(`检测到系统级错误 [${codeMatch[1]}]：${_SYSTEM_ERROR_ADVICE[codeMatch[1]]}`);
+      }
+    }
+  } catch {
+    /* best-effort */
+  }
+}
+
+// [DESIGN-ARCH-169] P1b: precheck branch selector (pure, unit seam).
+//  - 'adopt-starting': daemon pid alive and phase 'starting' — the caller must
+//    NOT reap/clear (that orphans a live daemon and its half-started frontend),
+//    it joins the ongoing startup instead.
+//  - 'reuse-ready': daemon fully up — reuse as today.
+//  - 'recover-clear': control plane unreachable with no phase info (legacy
+//    daemon) — today's clear-and-respawn behavior.
+function _precheckRuntimeAction(runtime, status) {
+  const statusRuntime = status && status.runtime ? status.runtime : null;
+  const phase = String(
+    (statusRuntime && statusRuntime.phase) || (runtime && runtime.phase) || ''
+  ).trim();
+  if (phase === 'starting') return 'adopt-starting';
+  return status && status.ok ? 'reuse-ready' : 'recover-clear';
 }
 
 function _openUrlInBrowser(url) {
@@ -1004,11 +1157,21 @@ async function _collectManageHealth(runtime = {}, liveStatus = null, probeTimeou
       ? `http://${runtimeForOpen.frontendHost}:${runtimeForOpen.frontendPort}`
       : '');
   const keepaliveUrl = _buildManageOpenUrl(runtimeForOpen);
+  // 探管理守护进程(默认 9090)的自有状态端点 /api/health —— 它由
+  // aiManagementServer.handleHealth 直接返回进程健康，不查 DB、不要鉴权、恒 200，
+  // 是「守护进程可接连接」的正解。
+  //
+  // 注意：不能用 /healthz。/healthz 是 **web 后端(server.js, 默认 3000)** 的存活
+  // 探针（见 scripts/ai-manage-daemon.js 的 WEB_BACKEND_PROBE_PATH 注释）；管理守护
+  // 进程上没有这个路由，GET /healthz 会落到鉴权闸门返回 401，于是一个完全健康的
+  // 守护进程被误判成「API 不可达」。这里的 apiDisplay 解析到的正是守护进程端口，
+  // 所以必须探 /api/health（同时也是展示给用户的那个 URL）。
   const apiHealthUrl = `${apiDisplay}/api/health`;
+  const apiLivenessUrl = apiHealthUrl;
   let apiReachable = false;
   let frontendReachable = false;
   try {
-    const apiProbe = await _probeUrlReachable(apiHealthUrl, probeTimeoutMs);
+    const apiProbe = await _probeUrlReachable(apiLivenessUrl, probeTimeoutMs);
     apiReachable = !!apiProbe.ok;
   } catch {
     apiReachable = false;
@@ -1306,12 +1469,37 @@ async function handleGatewayManage(args = [], options = {}) {
   let runtime = _loadAiManageRuntime();
   let liveStatus = null;
   if (runtime?.pid && _isPidAlive(runtime.pid)) {
+    let status = null;
     try {
-      liveStatus = await _requestAiManageControl(runtime, 'GET', '/status');
-      if (!liveStatus?.ok) {
-        throw new Error('status not ok');
-      }
+      status = await _requestAiManageControl(runtime, 'GET', '/status');
     } catch {
+      status = null;
+    }
+    // [DESIGN-ARCH-169] P1b: phase-aware precheck. A mid-startup daemon already
+    // owns this run — reaping/clearing here would orphan a live daemon (and its
+    // half-started frontend) and poison the next start (提案 §3.2 断言 6).
+    const precheckAction = _precheckRuntimeAction(runtime, status);
+    if (precheckAction === 'adopt-starting' && (action === 'open' || action === 'start')) {
+      const statusRuntime = status && status.runtime ? status.runtime : null;
+      const startingDetail = String(
+        (statusRuntime && statusRuntime.phaseDetail) || runtime.phaseDetail || ''
+      ).trim();
+      printInfo(`检测到启动中的管理会话（${startingDetail || 'starting'}），继续等待...`);
+      const joined = await _waitAiManageRuntimeReady(AI_MANAGE_READY_TIMEOUT_MS);
+      if (joined && joined.ok) {
+        runtime = joined.runtime;
+        liveStatus = joined.status;
+      } else {
+        _printAiManageStartupFailure(
+          joined,
+          _parsePort(options['api-port'] ?? process.env.AI_MGMT_PORT, 9090),
+          _defaultFrontendPort(options)
+        );
+        return;
+      }
+    } else if (status && status.ok) {
+      liveStatus = status;
+    } else {
       runtime = null;
       liveStatus = null;
       _clearAiManageRuntime();
@@ -1421,7 +1609,7 @@ async function handleGatewayManage(args = [], options = {}) {
       printInfo('如需前端：在仓库根执行 npm install（工作区依赖提升到根 node_modules），或传 --frontend-dist-dir 指向预构建产物。');
     }
     printInfo(`正在启动 AI 管理会话 (API:${apiPort}, 前端:${frontendPort})...`);
-    _spawnAiManageDaemon({
+    const spawnPid = _spawnAiManageDaemon({
       apiPort,
       frontendPort,
       idleMs,
@@ -1431,33 +1619,11 @@ async function handleGatewayManage(args = [], options = {}) {
       noFrontend,
       noAutoFrontend,
     });
-    const ready = await _waitAiManageRuntimeReady(AI_MANAGE_READY_TIMEOUT_MS);
-    if (!ready) {
-      printError(`启动 AI 管理会话失败或超时 (API:${apiPort}, 前端:${frontendPort})`);
-      require('../../utils/markProcessFailure')();
-      printInfo(`可检查日志: ${_daemonLogHint()}`);
-      // Surface last few lines of daemon log if available, plus targeted advice
-      // when an OS-level error code (ENOMEM/EACCES/...) appears in the tail.
-      try {
-        const logFile = path.join(getDataHome(), 'logs', 'ai_manage_daemon.log');
-        if (fs.existsSync(logFile)) {
-          const tail = fs
-            .readFileSync(logFile, 'utf8')
-            .split(/\r?\n/)
-            .filter(Boolean)
-            .slice(-5)
-            .join('\n');
-          if (tail) {
-            printInfo(`最近日志:\n${tail}`);
-          }
-          const codeMatch = tail.match(/\b(ENOMEM|EACCES|EPERM|EMFILE|ENFILE|EAGAIN)\b/);
-          if (codeMatch && _SYSTEM_ERROR_ADVICE[codeMatch[1]]) {
-            printInfo(`检测到系统级错误 [${codeMatch[1]}]：${_SYSTEM_ERROR_ADVICE[codeMatch[1]]}`);
-          }
-        }
-      } catch {
-        /* best-effort */
-      }
+    const ready = await _waitAiManageRuntimeReady(AI_MANAGE_READY_TIMEOUT_MS, spawnPid);
+    if (!ready || !ready.ok) {
+      // [DESIGN-ARCH-169] P1b: the failure line names the last stage (or the
+      // fast-fail reason) instead of a generic "失败或超时".
+      _printAiManageStartupFailure(ready, apiPort, frontendPort);
       return;
     }
     runtime = ready.runtime;
@@ -1474,7 +1640,12 @@ async function handleGatewayManage(args = [], options = {}) {
 
   if (action === 'open' || action === 'start') {
     const authSync = await _syncManageAuthBootstrapFromCli(runtime, options);
-    if (authSync.ok && authSync.enabled) {
+    // hasServerToken belongs in this gate: `enabled` is also true for a
+    // local-only session (enabled = !!token || loggedIn), and announcing
+    // "已同步登录态" in that case claimed a bridge that was never established —
+    // the pushed token was empty, so the page still landed on the login screen
+    // while the CLI reported success.
+    if (authSync.ok && authSync.enabled && authSync.hasServerToken) {
       printInfo(`已同步 CLI 登录态到管理页（用户: ${authSync.username || 'cli-user'}）`);
     } else if (authSync.ok && authSync.loggedIn && !authSync.hasServerToken) {
       printInfo('检测到 CLI 为本地离线登录态，管理页将进入登录页（可在页面登录）。');
@@ -1709,8 +1880,8 @@ async function handleAiServer(action) {
   console.log('');
   printSuccess('AI 管理服务已启动');
   console.log('');
-  console.log(chalk.bold(`  🌐 API:       ${chalk.cyan(`http://localhost:${port}/api/health`)}`));
-  console.log(chalk.bold(`  🔌 WebSocket: ${chalk.cyan(`ws://localhost:${port}/ws`)}`));
+  console.log(chalk.bold(`  API:       ${chalk.cyan(`http://localhost:${port}/api/health`)}`));
+  console.log(chalk.bold(`  WebSocket: ${chalk.cyan(`ws://localhost:${port}/ws`)}`));
   console.log('');
   console.log(chalk.dim('  REST 端点:'));
   console.log(chalk.dim('    GET  /api/status          — 适配器状态'));
@@ -1730,4 +1901,7 @@ module.exports = {
   handleAiServer,
   _resolveAiManageApiBaseUrl,
   _parseIntWithMin,
+  // [DESIGN-ARCH-169] P1b test seams: phase-aware wait + precheck selector
+  _waitAiManageRuntimeReady,
+  _precheckRuntimeAction,
 };

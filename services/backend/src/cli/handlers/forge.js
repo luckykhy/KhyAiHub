@@ -57,7 +57,7 @@ function _renderSearch(res) {
     printWarn(`未找到匹配「${res.query}」的仓库（${res.platform}）`);
     return;
   }
-  printInfo(chalk.cyan(`🔎 ${res.platform} 上「${res.query}」的前 ${res.results.length} 个结果:`));
+  printInfo(chalk.cyan(`${res.platform} 上「${res.query}」的前 ${res.results.length} 个结果:`));
   for (const r of res.results) {
     const stars = r.stars ? chalk.yellow(`★${r.stars}`) : '';
     const lang = r.language ? chalk.gray(`[${r.language}]`) : '';
@@ -78,7 +78,7 @@ function _renderRecon(res) {
     return;
   }
   const m = res.meta || {};
-  printInfo(chalk.cyan(`🔬 ${res.platform} 仓库侦察:${chalk.bold(m.fullName || '')}`));
+  printInfo(chalk.cyan(`${res.platform} 仓库侦察:${chalk.bold(m.fullName || '')}`));
   if (m.description) {
     console.log(`    ${chalk.gray(m.description)}`);
   }
@@ -176,7 +176,7 @@ function _renderCommits(res) {
   const commits = Array.isArray(res.commits) ? res.commits : [];
   const gc = _gradeColor(q.grade);
   printInfo(
-    chalk.cyan(`📜 ${res.platform} 最近 ${commits.length} 条提交 — 质量评分 `) +
+    chalk.cyan(`${res.platform} 最近 ${commits.length} 条提交 — 质量评分 `) +
       gc(`${q.score != null ? q.score : '?'}/100 (${q.grade || 'N/A'})`)
   );
   if (Array.isArray(q.notes)) {
@@ -205,7 +205,7 @@ function _renderCode(res) {
     printWarn(`未找到匹配「${res.query}」的代码(${res.platform})`);
     return;
   }
-  printInfo(chalk.cyan(`🔎 ${res.platform} 代码搜索「${res.query}」前 ${results.length} 个结果:`));
+  printInfo(chalk.cyan(`${res.platform} 代码搜索「${res.query}」前 ${results.length} 个结果:`));
   for (const r of results) {
     console.log(`    ${chalk.bold(r.repo)} ${chalk.gray(r.path)}`);
     if (r.url) {
@@ -241,7 +241,7 @@ function _renderRateLimit(res) {
   };
   printInfo(
     chalk.cyan(
-      `⏱️  ${res.platform} API 速率限制${rate.hasToken ? chalk.green('(已鉴权)') : chalk.yellow('(匿名)')}`
+      `⏱  ${res.platform} API 速率限制${rate.hasToken ? chalk.green('(已鉴权)') : chalk.yellow('(匿名)')}`
     )
   );
   printInfo(
@@ -289,7 +289,7 @@ async function handleForge(subCommand, args = [], options = {}, deps = {}) {
   if (sub === 'search' || sub === 'find') {
     const query = args.join(' ').trim() || String(options.query || '').trim();
     if (!query) {
-      printError('❌ 用法:khy forge search "<关键词>"');
+      printError('✗ 用法:khy forge search "<关键词>"');
       return true;
     }
     let res;
@@ -314,11 +314,11 @@ async function handleForge(subCommand, args = [], options = {}, deps = {}) {
   if (sub === 'recon' || sub === 'inspect' || sub === 'explore') {
     const repo = String(args[0] || options.repo || '').trim();
     if (!repo) {
-      printError('❌ 用法:khy forge recon <owner/repo 或 git URL>');
+      printError('✗ 用法:khy forge recon <owner/repo 或 git URL>');
       return true;
     }
     if (!options.json) {
-      printInfo(chalk.cyan(`🔬 正在侦察 ${repo} …`));
+      printInfo(chalk.cyan(`正在侦察 ${repo} …`));
     }
     let res;
     try {
@@ -342,11 +342,11 @@ async function handleForge(subCommand, args = [], options = {}, deps = {}) {
   if (sub === 'commits' || sub === 'log' || sub === 'history') {
     const repo = String(args[0] || options.repo || '').trim();
     if (!repo) {
-      printError('❌ 用法:khy forge commits <owner/repo 或 git URL>');
+      printError('✗ 用法:khy forge commits <owner/repo 或 git URL>');
       return true;
     }
     if (!options.json) {
-      printInfo(chalk.cyan(`📜 正在读取 ${repo} 的提交历史 …`));
+      printInfo(chalk.cyan(`正在读取 ${repo} 的提交历史 …`));
     }
     let res;
     try {
@@ -372,11 +372,11 @@ async function handleForge(subCommand, args = [], options = {}, deps = {}) {
   if (sub === 'code' || sub === 'code-search' || sub === 'grep') {
     const query = args.join(' ').trim() || String(options.query || '').trim();
     if (!query) {
-      printError('❌ 用法:khy forge code "<查询>" [--repo owner/repo]');
+      printError('✗ 用法:khy forge code "<查询>" [--repo owner/repo]');
       return true;
     }
     if (!options.json) {
-      printInfo(chalk.cyan(`🔎 正在搜索代码「${query}」…`));
+      printInfo(chalk.cyan(`正在搜索代码「${query}」…`));
     }
     let res;
     try {
@@ -417,11 +417,11 @@ async function handleForge(subCommand, args = [], options = {}, deps = {}) {
   if (sub === 'clone' || sub === 'pull-down' || sub === 'get') {
     const repo = String(args[0] || options.repo || '').trim();
     if (!repo) {
-      printError('❌ 用法:khy forge clone <owner/repo 或 git URL>');
+      printError('✗ 用法:khy forge clone <owner/repo 或 git URL>');
       return true;
     }
     if (!options.json) {
-      printInfo(chalk.cyan(`⬇️  正在克隆 ${repo} …`));
+      printInfo(chalk.cyan(`↓  正在克隆 ${repo} …`));
     }
     let res;
     try {
@@ -447,9 +447,9 @@ async function handleForge(subCommand, args = [], options = {}, deps = {}) {
       return true;
     }
     if (res.ok) {
-      printSuccess(`✅ 已克隆到 ${res.dir || '当前目录'}（${res.url}）`);
+      printSuccess(`✓ 已克隆到 ${res.dir || '当前目录'}（${res.url}）`);
     } else {
-      printError(`❌ 克隆失败:${res.error}`);
+      printError(`✗ 克隆失败:${res.error}`);
     }
     return true;
   }
@@ -458,7 +458,7 @@ async function handleForge(subCommand, args = [], options = {}, deps = {}) {
   if (sub === 'update' || sub === 'pull') {
     const dir = String(args[0] || options.dir || process.cwd()).trim();
     if (!options.json) {
-      printInfo(chalk.cyan(`🔄 正在更新 ${dir} …`));
+      printInfo(chalk.cyan(`正在更新 ${dir} …`));
     }
     let res;
     try {
@@ -482,12 +482,12 @@ async function handleForge(subCommand, args = [], options = {}, deps = {}) {
       return true;
     }
     if (res.ok) {
-      printSuccess(`✅ 已更新 ${res.dir}`);
+      printSuccess(`✓ 已更新 ${res.dir}`);
       if (res.output) {
         printInfo(chalk.gray(res.output));
       }
     } else {
-      printError(`❌ 更新失败:${res.error}`);
+      printError(`✗ 更新失败:${res.error}`);
     }
     return true;
   }

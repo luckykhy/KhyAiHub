@@ -76,7 +76,7 @@ async function handleFeatures(subCommand, args = [], options = {}) {
   }
 
   console.log(
-    chalk.bold('\n  🧭 khy 功能索引') +
+    chalk.bold('\n  khy 功能索引') +
       chalk.dim(`  (共 ${catalog.total} 项命令，可 /features <关键字> 过滤)\n`)
   );
   if (catalog.total === 0) {

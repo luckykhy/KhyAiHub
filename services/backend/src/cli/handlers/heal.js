@@ -210,7 +210,7 @@ async function handleHeal(subCommand, args = [], options = {}) {
   }
 
   console.log(
-    chalk.bold('\n  🔧 源码自愈体检') +
+    chalk.bold('\n  源码自愈体检') +
       chalk.dim(
         `  (缺失 ${summary.missing || 0} · 损坏 ${summary.corrupt || 0} · 待处理 ${planCount})\n`
       )

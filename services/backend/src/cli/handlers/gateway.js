@@ -449,11 +449,11 @@ function _formatConnectionTag(model = {}) {
     return '';
   }
   const map = {
-    direct: chalk.cyan('⚡直连'),
-    bridge: chalk.yellow('🔗中转桥接'),
-    proxy: chalk.dim('🔗代理中转'),
-    local: chalk.green('📦本地推理'),
-    auto: chalk.magenta('✨自动'),
+    direct: chalk.cyan('直连'),
+    bridge: chalk.yellow('中转桥接'),
+    proxy: chalk.dim('代理中转'),
+    local: chalk.green('本地推理'),
+    auto: chalk.magenta('自动'),
   };
   return map[mode] || chalk.dim(mode);
 }
@@ -517,7 +517,7 @@ function _formatVisionTag(model = {}) {
         isVision = vc.isVisionCapableModel(id, { env: process.env });
       }
     }
-    return isVision ? chalk.magenta('👁 视觉') : '';
+    return isVision ? chalk.magenta('视觉') : '';
   } catch {
     return '';
   }

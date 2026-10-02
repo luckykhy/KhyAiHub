@@ -48,7 +48,7 @@ async function handleDeliveries(subCommand, args, options) {
 
   if (cmd === 'stats') {
     const stats = ledger.ledgerStats();
-    console.log(chalk.bold('\n  📦 交付台账\n'));
+    console.log(chalk.bold('\n  交付台账\n'));
     console.log(`  路径: ${chalk.dim(stats.path)}`);
     console.log(`  条数: ${chalk.cyan(String(stats.count))}`);
     console.log(chalk.dim('\n  用法: deliveries [--limit n] [--status <状态>] · stats 查看本页\n'));
@@ -79,7 +79,7 @@ async function handleDeliveries(subCommand, args, options) {
   const taskId = options.task || undefined;
   const rows = ledger.listDeliveries({ limit, status, taskId });
 
-  console.log(chalk.bold('\n  📦 交付台账\n'));
+  console.log(chalk.bold('\n  交付台账\n'));
   if (rows.length === 0) {
     printInfo(
       status

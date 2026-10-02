@@ -92,7 +92,7 @@ async function handleGatewayRelay() {
   console.log('');
   printSuccess(`AI 中转服务已启动`);
   console.log('');
-  console.log(chalk.bold(`  🌐 打开浏览器访问: ${chalk.cyan(`http://localhost:${port}`)}`));
+  console.log(chalk.bold(`  打开浏览器访问: ${chalk.cyan(`http://localhost:${port}`)}`));
   console.log('');
   console.log(chalk.dim('  使用方式:'));
   console.log(chalk.dim('    1. 终端发送 AI 请求后，提示会出现在网页上'));
@@ -195,7 +195,7 @@ async function handleGatewayDetect(options = {}) {
               name: `设置 ${r.name} 安装路径`,
               value: r.name,
             })),
-            { name: '↩️  返回', value: 'back' },
+            { name: '↩  返回', value: 'back' },
           ],
         },
       ]);

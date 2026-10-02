@@ -21,6 +21,10 @@ const chalkModule = require('chalk');
 
 const chalk = chalkModule.default || chalkModule;
 const { printSuccess, printError, printInfo } = require('../formatters');
+// 分组语义 / 行内分层：与 TUI `ModelPicker` 共用的**同一片叶子**（放 cli/ 根下，
+// 避免 handlers → tui 的反向依赖）。经典路径过去只平铺 `c.name`，实测 94% 的行
+// 重复 `(执行:…)`、宽度中位 91 列 ⇒ 80 列终端下每行折 2 行（[DESIGN-ARCH-167] §11）。
+const modelChoiceGrouping = require('../modelChoiceGrouping');
 
 // ── Host callbacks + shared STRICT_OPERATIONAL_ADAPTERS injected via DI (avoid require cycle) ──
 let promptWithReplGuard = null;
@@ -183,6 +187,24 @@ function isSelectableNow(selected) {
   } catch {
     return true;
   }
+}
+
+/**
+ * 剥掉模型名里夹带的供应商前缀。
+ *
+ * api 适配器把行名拼成 `${provider} / ${mid}`，于是供应商名夹在模型名中间
+ * （[DESIGN-ARCH-167] 截图里「划分不清楚」的本体之一）。供应商升格为分组标题后，
+ * 行内只该留模型本体。**只在确实以该前缀开头时剥**，剥不动就原样返回——
+ * 宁可显示得啰嗦，也不静默改掉一个模型名。
+ */
+function _stripProviderPrefix(nameText, provider) {
+  const text = String(nameText || '');
+  const p = String(provider || '').trim();
+  if (!p) {
+    return text;
+  }
+  const prefix = `${p} / `;
+  return text.startsWith(prefix) ? text.slice(prefix.length) : text;
 }
 
 /**
@@ -546,6 +568,10 @@ async function buildGatewayModelChoices({ onNotice = () => {}, onError = () => {
       ? chalk.yellow(`● ${test.generation.error || '实测告警'}`)
       : chalk.green(`● ${test.connectivity.latencyMs}ms`);
     const statusTag = generationWarn ? chalk.yellow('[可用-告警]') : chalk.green('[可用]');
+    // 组级三件套：同一 adapter 下每一行都相同，留在行内就是「每行重复」（截图病根）。
+    // 升格到分组标题只写一次；段太短没画标题时由渲染侧回落到行内（ModelPicker 的 orphan）。
+    const adapterTag = chalk.dim(`(执行:${s.name}/${s.type})`);
+    const groupMeta = `${statusTag} ${indicator} ${adapterTag}`;
 
     let listModelsErr;
     try {
@@ -571,9 +597,26 @@ async function buildGatewayModelChoices({ onNotice = () => {}, onError = () => {
           const connTag = _formatConnectionTag(m);
           const upstreamTag = _formatUpstreamTag(m);
           const visionTag = _formatVisionTag(m);
-          const adapterTag = chalk.dim(`(执行:${s.name}/${s.type})`);
+          // 分组依据优先取结构化上游供应商：api 适配器下几十个模型同属一个 adapter，
+          // 按 adapter 分等于不分，能真正分层的是上游供应商（[DESIGN-ARCH-167] P1）。
+          const provider = String(m.upstreamProvider || '').trim();
+          const group = provider || s.name || s.type;
+          const secondary = [
+            visionTag,
+            sourceTag,
+            upstreamTag,
+            connTag,
+            m.isDefault ? chalk.green('✓ 当前') : '',
+          ]
+            .filter(Boolean)
+            .join(' ');
           modelChoices.push({
+            // `name` 只增不减：advisor.js 拿它当 label，拆了会静默丢标签。
             name: `${statusTag} ${m.name || m.id}${visionTag ? ` ${visionTag}` : ''}${sourceTag ? ` ${sourceTag}` : ''}${upstreamTag ? ` ${upstreamTag}` : ''}${connTag ? ` ${connTag}` : ''} ${adapterTag} ${indicator}${m.isDefault ? chalk.green(' ✓ 当前') : ''}`,
+            primary: _stripProviderPrefix(m.name || m.id, provider),
+            secondary,
+            group,
+            groupMeta,
             value: { adapter: s.type, model: m.id },
             disabled: false,
           });
@@ -582,6 +625,10 @@ async function buildGatewayModelChoices({ onNotice = () => {}, onError = () => {
         // Adapter available but no model list (e.g. relay)
         modelChoices.push({
           name: `${statusTag} ${s.name} ${chalk.dim('(默认模型)')} ${indicator}`,
+          primary: s.name || s.type,
+          secondary: chalk.dim('(默认模型)'),
+          group: s.name || s.type,
+          groupMeta,
           value: { adapter: s.type, model: null },
           disabled: false,
         });
@@ -598,6 +645,10 @@ async function buildGatewayModelChoices({ onNotice = () => {}, onError = () => {
         // and runtime can refresh models in background.
         modelChoices.push({
           name: `${statusTag} ${s.name} ${chalk.dim('(模型列表超时，使用默认模型)')} ${indicator}`,
+          primary: s.name || s.type,
+          secondary: chalk.dim('(模型列表超时，使用默认模型)'),
+          group: s.name || s.type,
+          groupMeta,
           value: { adapter: s.type, model: null },
           disabled: false,
         });
@@ -645,10 +696,15 @@ async function buildGatewayModelChoices({ onNotice = () => {}, onError = () => {
         (pm) => enabledTypes.has(String(pm.adapter || '').trim().toLowerCase())
       );
       for (const pm of projectedShown) {
-        const connTag = pm.protocol === 'anthropic' ? chalk.yellow('🔗中继') : chalk.cyan('⚡直连');
+        const connTag = pm.protocol === 'anthropic' ? chalk.yellow('中继') : chalk.cyan('直连');
         const keyTag = pm.hasKey ? chalk.green('● ready') : chalk.dim('● 未含 key');
         modelChoices.push({
           name: `${chalk.green('[可用]')} ${pm.name}${connTag ? ` ${connTag}` : ''} ${keyTag}`,
+          primary: pm.name || pm.model,
+          // 投影行没有 per-adapter 探测状态，组级三件套里只有 key 就绪度可挂。
+          secondary: `${connTag} ${keyTag}`.trim(),
+          group: pm.adapter,
+          groupMeta: `${chalk.green('[可用]')} ${keyTag}`,
           value: { adapter: pm.adapter, model: pm.model },
           disabled: false,
           externalAgent: true,
@@ -722,7 +778,7 @@ async function buildGatewayModelChoices({ onNotice = () => {}, onError = () => {
         (s) => String(s.type || '').toLowerCase() === 'claude' && s.available
       );
       if (claudeAdapterAvailable) {
-        onNotice(`💡 提示: 若需使用 Claude Opus 4.8/4.7 等模型，可切换到 Claude 适配器`);
+        onNotice(`提示: 若需使用 Claude Opus 4.8/4.7 等模型，可切换到 Claude 适配器`);
         onNotice(`   快速切换: export GATEWAY_PREFERRED_ADAPTER=claude && khy`);
       }
     }
@@ -928,11 +984,9 @@ async function handleGatewaySelectModel(args = [], options = {}) {
           name: 'selectedValue',
           message: '选择模型（上下方向键选择，回车确认）:',
           choices: [
-            ...modelChoices.map((c) => ({
-              name: c.name,
-              value: c.value,
-              disabled: c.disabled ? '不可选' : false,
-            })),
+            // 组边界画 Separator（不可选中 ⇒ 不会打乱选择语义），模型行只放
+            // primary + 次信息 —— 与 TUI 同一套分组/分层（共享叶子）。
+            ...buildClassicInquirerChoices(modelChoices, inquirer, chalk),
             new inquirer.Separator(),
             { name: '返回', value: null },
           ],
@@ -968,30 +1022,31 @@ async function handleGatewaySelectModel(args = [], options = {}) {
       }
 
       // Fallback: numeric selection for environments where inquirer is unavailable.
+      // 与 inquirer 路径共用同一份显示条目 ⇒ 分组标题照画，**编号只给模型行**。
+      const numeric = buildClassicNumericLines(modelChoices, chalk);
       console.log('');
-      for (let i = 0; i < modelChoices.length; i++) {
-        const c = modelChoices[i];
-        const unavailable = c.disabled ? chalk.dim(' (不可选)') : '';
-        console.log(`  ${chalk.white(`${i + 1}.`)} ${c.name}${unavailable}`);
+      for (const line of numeric.lines) {
+        console.log(line);
       }
       console.log(`  ${chalk.dim('0. 返回')}`);
       console.log('');
 
       const answer = await askLine(chalk.dim('  输入编号: '));
-      const idx = Number.parseInt(String(answer || '').trim(), 10);
-      if (!Number.isFinite(idx) || idx === 0) {
-        printInfo('已取消模型选择');
+      // 编号 → choice 的映射由渲染侧给出（显示序），不再按原始下标取 ——
+      // 否则归并（stableGroupOrder）后「输入 3」会落到另一个模型上。
+      // 解析逻辑抽在纯函数 `resolveNumericPick` 里（可单测，见 gatewayModelChoicesLeaf.test.js）。
+      const pick = resolveNumericPick(numeric, answer);
+      if (!pick.ok) {
+        if (pick.reason === 'cancel') {
+          printInfo('已取消模型选择');
+        } else if (pick.reason === 'out-of-range') {
+          printError('编号超出范围');
+        } else {
+          printError('该模型当前不可选，请选择可用模型');
+        }
         return;
       }
-      if (idx < 1 || idx > modelChoices.length) {
-        printError('编号超出范围');
-        return;
-      }
-      picked = modelChoices[idx - 1];
-      if (!picked || picked.disabled) {
-        printError('该模型当前不可选，请选择可用模型');
-        return;
-      }
+      picked = pick.choice;
       selected = picked.value;
     }
 
@@ -1094,11 +1149,7 @@ async function handleModelSwitchByVendor({ vendor, modelHint = '' } = {}) {
           name: 'selectedValue',
           message: `选择 ${vendor} 模型（上下方向键选择，回车确认）:`,
           choices: [
-            ...modelChoices.map((c) => ({
-              name: c.name,
-              value: c.value,
-              disabled: c.disabled ? '不可选' : false,
-            })),
+            ...buildClassicInquirerChoices(modelChoices, inquirer, chalk),
             new inquirer.Separator(),
             { name: '返回', value: null },
           ],
@@ -1123,29 +1174,26 @@ async function handleModelSwitchByVendor({ vendor, modelHint = '' } = {}) {
         return;
       }
       // Numeric fallback for environments where inquirer is unavailable.
+      const numeric = buildClassicNumericLines(modelChoices, chalk);
       console.log('');
-      for (let i = 0; i < modelChoices.length; i++) {
-        const c = modelChoices[i];
-        const unavailable = c.disabled ? chalk.dim(' (不可选)') : '';
-        console.log(`  ${chalk.white(`${i + 1}.`)} ${c.name}${unavailable}`);
+      for (const line of numeric.lines) {
+        console.log(line);
       }
       console.log(`  ${chalk.dim('0. 返回')}`);
       console.log('');
       const answer = await askLine(chalk.dim('  输入编号: '));
-      const idx = Number.parseInt(String(answer || '').trim(), 10);
-      if (!Number.isFinite(idx) || idx === 0) {
-        printInfo('已取消模型选择');
+      const pick = resolveNumericPick(numeric, answer);
+      if (!pick.ok) {
+        if (pick.reason === 'cancel') {
+          printInfo('已取消模型选择');
+        } else if (pick.reason === 'out-of-range') {
+          printError('编号超出范围');
+        } else {
+          printError('该模型当前不可选，请选择可用模型');
+        }
         return;
       }
-      if (idx < 1 || idx > modelChoices.length) {
-        printError('编号超出范围');
-        return;
-      }
-      picked = modelChoices[idx - 1];
-      if (!picked || picked.disabled) {
-        printError('该模型当前不可选，请选择可用模型');
-        return;
-      }
+      picked = pick.choice;
       selected = picked.value;
     }
 
@@ -1161,6 +1209,99 @@ async function handleModelSwitchByVendor({ vendor, modelHint = '' } = {}) {
   }
 }
 
+/**
+ * 经典 REPL `/model` 的**显示条目**：分组语义与行内分层都取自共享叶子
+ * `cli/modelChoiceGrouping`（与 TUI `ModelPicker` 同一套 —— 同一份 modelChoices 的
+ * 两个消费表面不得各写一份，否则就是第二真源）。
+ *
+ * 为什么这里没有 TUI 那套「模型下标 ↔ 条目下标」的桥：inquirer 的 `Separator`
+ * **不可选中**（方向键会跳过它），所以「屏幕上第 n 行」与「按 n 命中」不会脱节 ——
+ * 那是 ink 自己排版才有的风险（[DESIGN-ARCH-167] §2.3）。
+ */
+function classicDisplayEntries(modelChoices) {
+  const list = Array.isArray(modelChoices) ? modelChoices : [];
+  return modelChoiceGrouping.buildEntries(modelChoiceGrouping.stableGroupOrder(list), '');
+}
+
+/** 标题行的展示文本（两个经典渲染共用一处，避免 inquirer 与数字兜底各写一份）。 */
+function classicSectionText(entry) {
+  return `── ${entry.name} · ${entry.count} 个 ──${entry.meta ? ` ${entry.meta}` : ''}`;
+}
+
+/**
+ * 经典 inquirer 列表的 choices（分组标题 → Separator；模型行 → primary + 次信息）。
+ * `inquirer`/`chalk` 由调用方注入 ⇒ 本函数可单测（不必真起 inquirer）。
+ */
+function buildClassicInquirerChoices(modelChoices, inquirer, chalkRef) {
+  const out = [];
+  for (const e of classicDisplayEntries(modelChoices)) {
+    if (e.kind === 'section') {
+      out.push(new inquirer.Separator(chalkRef.dim(classicSectionText(e))));
+      continue;
+    }
+    const { primary, secondary } = modelChoiceGrouping.layeredTextOf(e);
+    out.push({
+      name: secondary ? `${primary}  ${chalkRef.dim(secondary)}` : primary,
+      value: e.choice.value,
+      disabled: e.choice.disabled ? '不可选' : false,
+    });
+  }
+  return out;
+}
+
+/**
+ * 数字兜底渲染（inquirer 不可用时的环境）：标题行照画，**编号只给模型行**
+ * （与 TUI「标题行不占号」同一约定），返回的 `models` 就是编号 → choice 的映射，
+ * 调用方按 `models[idx-1]` 取，不再按原始下标取。
+ */
+function buildClassicNumericLines(modelChoices, chalkRef) {
+  const lines = [];
+  const models = [];
+  for (const e of classicDisplayEntries(modelChoices)) {
+    if (e.kind === 'section') {
+      lines.push(chalkRef.dim(`  ${classicSectionText(e)}`));
+      continue;
+    }
+    const { primary, secondary } = modelChoiceGrouping.layeredTextOf(e);
+    models.push(e.choice);
+    const tail = secondary ? `  ${chalkRef.dim(secondary)}` : '';
+    const unavailable = e.choice.disabled ? chalkRef.dim(' (不可选)') : '';
+    lines.push(`  ${chalkRef.white(`${models.length}.`)} ${primary}${tail}${unavailable}`);
+  }
+  return { lines, models };
+}
+
+/**
+ * 把「用户在数字兜底里输入的编号」解析成一条 choice —— **纯函数**（不打印、不退出、不 IO）。
+ *
+ * 为什么单独抽出来：这是经典路径上**唯一**把「屏幕上的编号」接回「模型」的那一步，
+ * 判据必须挂在它身上。原先它是两处内联的 3 行（`picked = numeric.models[idx - 1]`），
+ * 没有任何测试覆盖 —— 改回 `modelChoices[idx - 1]` 不会让任何断言变红，而症状恰好是
+ * 本方案的主题：「屏幕上写 3.」与「按 3 选中」脱节（[DESIGN-ARCH-167] §9-16）。
+ *
+ * 判据：编号活在**显示序**上 —— `models` 由 `buildClassicNumericLines` 给出（归并后的序），
+ * **不是**原始 `modelChoices` 的下标。
+ *
+ * @param {{models:Array}} numeric `buildClassicNumericLines` 的返回值
+ * @param {*} rawAnswer 用户输入（字符串/数字/null）
+ * @returns {{ok:true, choice:object} | {ok:false, reason:'cancel'|'out-of-range'|'disabled'}}
+ */
+function resolveNumericPick(numeric, rawAnswer) {
+  const models = numeric && Array.isArray(numeric.models) ? numeric.models : [];
+  const idx = Number.parseInt(String(rawAnswer == null ? '' : rawAnswer).trim(), 10);
+  if (!Number.isFinite(idx) || idx === 0) {
+    return { ok: false, reason: 'cancel' };
+  }
+  if (idx < 1 || idx > models.length) {
+    return { ok: false, reason: 'out-of-range' };
+  }
+  const choice = models[idx - 1];
+  if (!choice || choice.disabled) {
+    return { ok: false, reason: 'disabled' };
+  }
+  return { ok: true, choice };
+}
+
 module.exports = {
   buildGatewayModelChoices,
   applyGatewayModelSelection,
@@ -1170,4 +1311,8 @@ module.exports = {
   getLastSelectableKeys,
   isSelectableNow,
   setGatewayModelChoicesDeps,
+  // 纯函数，导出给单测（真起 inquirer 才能验的东西不该只能靠手测）
+  buildClassicInquirerChoices,
+  buildClassicNumericLines,
+  resolveNumericPick,
 };

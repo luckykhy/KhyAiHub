@@ -238,7 +238,7 @@ function renderMarkdown(content) {
 
 async function handleDocsQuickstart() {
   console.log('');
-  console.log(chalk.cyan.bold('  🚀 khy OS 快速开始'));
+  console.log(chalk.cyan.bold('  khy OS 快速开始'));
   console.log("");
   console.log('');
   console.log('  ' + chalk.bold('5 分钟上手：'));
@@ -269,7 +269,7 @@ async function handleDocsQuickstart() {
   console.log('  ' + chalk.cyan('docs maintainer') + '  查看仓库维护入口');
   console.log('  ' + chalk.cyan('help') + '            查看全部命令');
   console.log('');
-  console.log(chalk.dim('  💡 提示: 直接输入中文问题，AI 会理解并执行'));
+  console.log(chalk.dim('  提示: 直接输入中文问题，AI 会理解并执行'));
   console.log('');
 }
 
@@ -283,7 +283,7 @@ async function handleDocsAiFastlane(args = [], options = {}) {
   const written = writeAiFastlaneContextPack();
 
   console.log('');
-  console.log(chalk.cyan.bold('  ⚡ KHY AI 快速通道'));
+  console.log(chalk.cyan.bold('  KHY AI 快速通道'));
   console.log("");
   console.log('');
   if (shouldCopy) {
@@ -359,7 +359,7 @@ async function handleDocsClaude() {
           name: f.replace('.md', '').replace(/^\d+-/, ''),
           value: f,
         })),
-        { name: '↩️  返回', value: 'back' },
+        { name: '↩  返回', value: 'back' },
       ],
     },
   ]);
@@ -381,7 +381,7 @@ async function handleDocsClaude() {
 
 async function handleDocsGateway() {
   console.log('');
-  console.log(chalk.cyan.bold('  🌐 AI 网关使用指南'));
+  console.log(chalk.cyan.bold('  AI 网关使用指南'));
   console.log("");
   console.log('');
   console.log('  khy OS 支持多种 AI 通道，按优先级自动选择:');
@@ -456,7 +456,7 @@ async function handleDocsGateway() {
 
 async function handleDocsStrategy() {
   console.log('');
-  console.log(chalk.cyan.bold('  📊 量化策略入门'));
+  console.log(chalk.cyan.bold('  量化策略入门'));
   console.log("");
   console.log('');
   console.log('  ' + chalk.bold('内置策略:'));
@@ -481,7 +481,7 @@ async function handleDocsStrategy() {
 
 async function handleDocsFaq() {
   console.log('');
-  console.log(chalk.cyan.bold('  🔧 常见问题 FAQ'));
+  console.log(chalk.cyan.bold('  常见问题 FAQ'));
   console.log("");
   console.log('');
   console.log(chalk.bold('  Q: 安装时报 "WinError 5 拒绝访问"?'));
@@ -514,10 +514,10 @@ async function handleDocsFaq() {
 
 async function handleDocsSubscription() {
   console.log('');
-  console.log(chalk.cyan.bold('  💳 AI 模型订阅与获取指南'));
+  console.log(chalk.cyan.bold('  AI 模型订阅与获取指南'));
   console.log("");
   console.log('');
-  console.log(chalk.bold.green('  🆓 免费方案 (国内直接可用):'));
+  console.log(chalk.bold.green('  免费方案 (国内直接可用):'));
   console.log('');
   console.log('  ' + chalk.green('1.') + chalk.bold(' Kiro IDE') + ' — 免费 Claude 4 Sonnet 额度');
   console.log(chalk.dim('     下载: https://kiro.dev'));
@@ -535,7 +535,7 @@ async function handleDocsSubscription() {
   console.log(chalk.dim('     推荐模型: ollama pull qwen2.5:7b'));
   console.log(chalk.dim('     高配推荐: ollama pull qwen2.5:32b'));
   console.log('');
-  console.log(chalk.bold.yellow('  💰 付费订阅 (需代理/VPN):'));
+  console.log(chalk.bold.yellow('  付费订阅 (需代理/VPN):'));
   console.log('');
   console.log('  ' + chalk.yellow('4.') + chalk.bold(' Claude (Anthropic)'));
   console.log(chalk.dim('     订阅: https://claude.ai/pricing'));
@@ -550,7 +550,7 @@ async function handleDocsSubscription() {
   console.log(chalk.dim('     订阅: https://cursor.com/pricing'));
   console.log(chalk.dim('     Pro $20/月，含 Claude/GPT 额度'));
   console.log('');
-  console.log(chalk.bold.cyan('  🇨🇳 国内直连 API (无需代理):'));
+  console.log(chalk.bold.cyan('  国内直连 API (无需代理):'));
   console.log('');
   console.log('  ' + chalk.cyan('7.') + chalk.bold(' 智谱AI (GLM)'));
   console.log(chalk.dim('     注册: https://open.bigmodel.cn'));
@@ -562,12 +562,12 @@ async function handleDocsSubscription() {
   console.log('  ' + chalk.cyan('9.') + chalk.bold(' DeepSeek'));
   console.log(chalk.dim('     注册: https://platform.deepseek.com'));
   console.log('');
-  console.log(chalk.bold('  🌐 代理配置 (中国大陆访问海外 AI):'));
+  console.log(chalk.bold('  代理配置 (中国大陆访问海外 AI):'));
   console.log(chalk.dim('     运行 /proxy 自动检测 Clash 代理'));
   console.log(chalk.dim('     支持 HTTP/SOCKS5 手动配置'));
   console.log(chalk.dim('     配置后 Claude/OpenAI/Cursor 均可正常使用'));
   console.log('');
-  console.log(chalk.bold.magenta('  🔗 API 中转渠道 (国内直连 Claude/GPT):'));
+  console.log(chalk.bold.magenta('  API 中转渠道 (国内直连 Claude/GPT):'));
   console.log('');
   console.log('  ' + chalk.magenta('10.') + chalk.bold(' AWS Bedrock 中转'));
   console.log(chalk.dim('      通过 AWS 中国区或亚太区 Lambda/API Gateway 访问'));
@@ -598,7 +598,7 @@ async function handleDocsMaintainer() {
   const contributingPath = getContributingPath();
 
   console.log('');
-  console.log(chalk.cyan.bold('  🛠 仓库维护入口'));
+  console.log(chalk.cyan.bold('  仓库维护入口'));
   console.log("");
   console.log('');
   console.log('  目标: 让小白人工、小模型、大模型都能按同一套入口维护 KHY-OS。');
@@ -704,7 +704,7 @@ async function handleDocsFreshness(args, options = {}) {
   });
 
   console.log('');
-  console.log(chalk.cyan.bold('  📄 文档新鲜度自检'));
+  console.log(chalk.cyan.bold('  文档新鲜度自检'));
   console.log("");
 
   if (!result.ran) {
@@ -845,7 +845,7 @@ async function handleDocsBrowse(args, options) {
       scriptDir: workbench.dir,
       autoShutdown: true,
     });
-    console.log(`  ✅ khyosMarkdown 文档浏览器已就绪: ${result.url}`);
+    console.log(`  ✓ khyosMarkdown 文档浏览器已就绪: ${result.url}`);
   } catch (e) {
     printInfo('启动文档浏览器失败: ' + e.message);
   }
@@ -863,7 +863,7 @@ async function handleDocsSearch(query, options) {
     return;
   }
 
-  console.log(`  🔍 搜索文档: "${query}"…`);
+  console.log(`  搜索文档: "${query}"…`);
   const results = [];
 
   function searchDir(dir) {
@@ -904,7 +904,7 @@ async function handleDocsSearch(query, options) {
   } else {
     console.log(`  找到 ${results.length} 处匹配:\n`);
     results.slice(0, 20).forEach((r) => {
-      console.log(`  📄 ${r.file}:${r.line}`);
+      console.log(`  ${r.file}:${r.line}`);
       console.log(`     ${r.text}\n`);
     });
     if (results.length > 20) {

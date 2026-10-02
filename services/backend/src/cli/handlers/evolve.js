@@ -64,13 +64,13 @@ function _changedFiles(cwd) {
 function tierLabel(tier) {
   switch (String(tier || '').toLowerCase()) {
     case 'immutable':
-      return chalk.red('🔒 不可变 (immutable)');
+      return chalk.red('不可变 (immutable)');
     case 'guarded':
-      return chalk.yellow('🛡️ 受护 (guarded)');
+      return chalk.yellow('受护 (guarded)');
     case 'evolvable':
-      return chalk.green('🌱 可进化 (evolvable)');
+      return chalk.green('可进化 (evolvable)');
     default:
-      return chalk.gray('❔ 未知 (unknown)');
+      return chalk.gray('? 未知 (unknown)');
   }
 }
 
@@ -227,46 +227,46 @@ function _printAssessment(assessment, options) {
     const overridden = assessment.immutable.filter((im) => im.overridden);
     const blocking = assessment.immutable.filter((im) => !im.overridden);
     if (blocking.length) {
-      printError('🔒 触碰了不可变区域(自治进化会被回滚 / 须人工同意):');
+      printError('触碰了不可变区域(自治进化会被回滚 / 须人工同意):');
       for (const im of blocking) {
         printError(`${im.file} — ${im.reason}`);
       }
     }
     if (overridden.length) {
-      printWarn('🔓 以下不可变改动已获显式人工授权越权(KHY_EVOLUTION_OVERRIDE,审计留痕,不阻断):');
+      printWarn('以下不可变改动已获显式人工授权越权(KHY_EVOLUTION_OVERRIDE,审计留痕,不阻断):');
       for (const im of overridden) {
         printWarn(`${im.file} — ${im.reason}`);
       }
     }
   }
   if (assessment.guarded.length) {
-    printWarn('🛡️ 触碰了受护区域(可改但需谨慎 + 联动):');
+    printWarn('触碰了受护区域(可改但需谨慎 + 联动):');
     for (const g of assessment.guarded) {
       printWarn(`${g.file} — ${g.reason}`);
     }
   }
   const unmet = assessment.cascades.filter((c) => c.kind === 'co-change' && c.satisfied === false);
   if (unmet.length) {
-    printWarn('🔗 联动缺口(改了 A 应随改 B,尚未完成):');
+    printWarn('联动缺口(改了 A 应随改 B,尚未完成):');
     for (const c of unmet) {
       printWarn(c.message);
     }
   }
   const actions = assessment.cascades.filter((c) => c.kind === 'action');
   for (const c of actions) {
-    printInfo(`📌 ${c.message}`);
+    printInfo(`${c.message}`);
   }
   const overrodeCount = assessment.immutable.filter((im) => im.overridden).length;
   if (!assessment.blocked && !unmet.length) {
     if (overrodeCount) {
       printSuccess(
-        `✅ 无未授权的不可变触碰、联动义务无缺口(${overrodeCount} 处不可变改动经显式授权越权)。`
+        `✓ 无未授权的不可变触碰、联动义务无缺口(${overrodeCount} 处不可变改动经显式授权越权)。`
       );
     } else {
-      printSuccess('✅ 未触碰不可变区域,联动义务无缺口。');
+      printSuccess('✓ 未触碰不可变区域,联动义务无缺口。');
     }
   } else if (assessment.blocked) {
-    printError('⛔ 结论:触碰不可变区域 — 自治进化不应保留此改动。');
+    printError('◉ 结论:触碰不可变区域 — 自治进化不应保留此改动。');
   }
 }
 
@@ -335,7 +335,7 @@ async function handleEvolve(subCommand, args = [], options = {}) {
     }
     for (const c of cascades) {
       const mark =
-        c.kind === 'action' ? '📌' : c.satisfied ? chalk.green('✅') : chalk.yellow('🔗');
+        c.kind === 'action' ? chalk.cyan('▸') : c.satisfied ? chalk.green('✓') : chalk.yellow('○');
       printInfo(`${mark} [${c.id}] ${c.message}`);
     }
     return true;

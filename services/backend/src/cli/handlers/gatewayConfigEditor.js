@@ -106,7 +106,7 @@ async function handleGatewayConfig(options = {}) {
     { label: '高级: 供应商映射 (alias/service/default-model)', value: 'api-provider-map' },
     { label: '设置 Web 中转端口', value: 'relay-port' },
     { label: '设置中转超时时间', value: 'relay-timeout' },
-    { label: '↩️  返回', value: 'back' },
+    { label: '↩  返回', value: 'back' },
   ];
 
   if (asJson || !isInteractive) {
@@ -202,7 +202,7 @@ async function handleGatewayConfig(options = {}) {
             { name: '手动配置 HTTP 代理', value: 'http' },
             { name: '管理 VPN/Clash 订阅链接', value: 'subscription' },
             { name: '关闭代理', value: 'off' },
-            { name: '↩️  返回', value: 'back' },
+            { name: '↩  返回', value: 'back' },
           ],
         },
       ]);
@@ -228,7 +228,7 @@ async function handleGatewayConfig(options = {}) {
               { name: '应用激活订阅到本地代理', value: 'apply' },
               { name: '切换激活订阅', value: 'use' },
               { name: '删除订阅', value: 'remove' },
-              { name: '↩️  返回', value: 'back' },
+              { name: '↩  返回', value: 'back' },
             ],
           },
         ]);
@@ -612,7 +612,7 @@ async function handleGatewayConfig(options = {}) {
                     ? chalk.yellow('○')
                     : chalk.red('○');
               const cooldown =
-                s.cooldownRemaining > 0 ? chalk.yellow(` ⏳${s.cooldownRemaining}s`) : '';
+                s.cooldownRemaining > 0 ? chalk.yellow(`${s.cooldownRemaining}s`) : '';
               console.log(
                 `    ${icon} ${chalk.dim(s.keyPreview)}  ${s.label || ''}  P:${s.priority}  ${chalk.dim(`${s.totalRequests} req`)}${cooldown}`
               );
@@ -641,7 +641,7 @@ async function handleGatewayConfig(options = {}) {
             { name: '添加 API Key', value: 'add' },
             { name: '移除 API Key', value: 'remove' },
             { name: '查看 Key 池详情', value: 'status' },
-            { name: '↩️  返回', value: 'back' },
+            { name: '↩  返回', value: 'back' },
           ],
         },
       ]);
@@ -660,7 +660,7 @@ async function handleGatewayConfig(options = {}) {
               ...PROVIDERS.map((p) => ({ name: p.name, value: p })),
               new inquirer.Separator(),
               { name: '+ 添加自定义 Provider (OpenAI-compatible)', value: '__custom__' },
-              { name: '↩️  返回', value: null },
+              { name: '↩  返回', value: null },
             ],
           },
         ]);
@@ -843,7 +843,7 @@ async function handleGatewayConfig(options = {}) {
             type: 'list',
             name: 'toRemove',
             message: '选择要移除的 Key:',
-            choices: [...removeChoices, { name: '↩️  返回', value: null }],
+            choices: [...removeChoices, { name: '↩  返回', value: null }],
           },
         ]);
         if (toRemove) {
@@ -900,7 +900,7 @@ async function handleGatewayConfig(options = {}) {
                   ? chalk.yellow('○')
                   : chalk.red('○');
             const cooldown =
-              k.cooldownRemaining > 0 ? chalk.yellow(` ⏳ ${k.cooldownRemaining}s`) : '';
+              k.cooldownRemaining > 0 ? chalk.yellow(` ${k.cooldownRemaining}s`) : '';
             const error = k.lastError ? chalk.red(` · ${k.lastError.slice(0, 40)}`) : '';
             console.log(
               `    ${icon} ${chalk.dim(k.keyPreview)}  ${k.label || ''}  P:${k.priority}  ${chalk.dim(`✓ ${k.totalRequests} req · ✗ ${k.totalFailures} fail`)}${cooldown}${error}`
@@ -946,7 +946,7 @@ async function handleGatewayConfig(options = {}) {
             { name: '移除规则', value: 'remove' },
             { name: '清空所有规则', value: 'clear' },
             { name: '设置 strict 默认值', value: 'strict' },
-            { name: '↩️  返回', value: 'back' },
+            { name: '↩  返回', value: 'back' },
           ],
         },
       ]);
@@ -1006,7 +1006,7 @@ async function handleGatewayConfig(options = {}) {
             message: '选择要移除的规则:',
             choices: [
               ...keys.map((k) => ({ name: k, value: k })),
-              { name: '↩️  返回', value: null },
+              { name: '↩  返回', value: null },
             ],
           },
         ]);
@@ -1114,7 +1114,7 @@ async function handleGatewayConfig(options = {}) {
               message: '选择要移除的 provider:',
               choices: [
                 ...keys.map((k) => ({ name: `${k} => ${nextMap[k]}`, value: k })),
-                { name: '↩️  返回', value: null },
+                { name: '↩  返回', value: null },
               ],
             },
           ]);
@@ -1134,7 +1134,7 @@ async function handleGatewayConfig(options = {}) {
               choices: [
                 ...API_POOL_PROVIDER_KEYS.map((k) => ({ name: k, value: k })),
                 { name: '自定义 provider', value: '__custom__' },
-                { name: '↩️  返回', value: null },
+                { name: '↩  返回', value: null },
               ],
             },
           ]);
@@ -1240,7 +1240,7 @@ async function handleGatewayConfig(options = {}) {
           message: '选择映射类型:',
           choices: [
             ...MAP_PRESETS.map((p) => ({ name: `${p.title} (${p.envKey})`, value: p })),
-            { name: '↩️  返回', value: null },
+            { name: '↩  返回', value: null },
           ],
         },
       ]);
@@ -1298,7 +1298,7 @@ async function handleGatewayConfig(options = {}) {
               message: '选择要移除的键:',
               choices: [
                 ...keys.map((k) => ({ name: k, value: k })),
-                { name: '↩️  返回', value: null },
+                { name: '↩  返回', value: null },
               ],
             },
           ]);

@@ -72,6 +72,17 @@ function _bool(options, ...names) {
   return false;
 }
 
+/**
+ * 单破折号短旗标探测:parseInput 只把 `--x` 解析进 options,`-n` 这类长度 2 的
+ * 短旗标原样落 args(router.js 选项循环只认 `--` 前缀;bin/khy.js normalizeArgs
+ * 只转换 length>2 的单横线)。破坏性命令(restore/prune)的 `-n` dry-run 必须
+ * 在 args 里兜底,否则承诺的预演静默失效、直接走真删分支(hci-audit #45)。
+ */
+function _boolArg(args, ...flags) {
+  const list = Array.isArray(args) ? args.map(String) : [];
+  return flags.some((f) => list.includes(f));
+}
+
 function _num(options, name) {
   const raw = options && options[name];
   const n = parseInt(String(raw ?? ''), 10);
@@ -175,9 +186,9 @@ function _verify(args, options) {
 // ── restore ──
 
 async function _restore(args, options) {
-  const id = (args && args[0]) || '--latest';
   const quiet = _bool(options, 'quiet', 'q');
-  const dryRun = _bool(options, 'dry-run', 'dryRun', 'n');
+  const dryRun = _bool(options, 'dry-run', 'dryRun', 'n') || _boolArg(args, '-n', '--dry-run');
+  const id = (Array.isArray(args) ? args.filter((a) => a !== '-n' && a !== '--dry-run') : args)[0] || '--latest';
 
   const res = await restoreService.restoreBackup(id, {
     ..._commonOpts(options),
@@ -223,7 +234,7 @@ async function _restore(args, options) {
 // ── prune ──
 
 function _prune(args, options) {
-  const dryRun = _bool(options, 'dry-run', 'dryRun', 'n');
+  const dryRun = _bool(options, 'dry-run', 'dryRun', 'n') || _boolArg(args, '-n', '--dry-run');
   const res = backupService.pruneBackups({
     ..._commonOpts(options),
     dryRun,

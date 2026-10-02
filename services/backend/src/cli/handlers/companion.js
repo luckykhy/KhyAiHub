@@ -88,7 +88,7 @@ async function handleCompanion(subCommand, args, options = {}) {
         printInfo('还没有 companion。用 `khy companion create <name>` 创建一个。');
         return true;
       }
-      console.log(chalk.bold('\n  🤝 数字同伴 (AgentFS)\n'));
+      console.log(chalk.bold('\n  数字同伴 (AgentFS)\n'));
       const activeId = svc.getActiveAgentId();
       printTable(
         ['', 'ID', 'Name', 'Model', 'Description'],
@@ -139,7 +139,7 @@ async function handleCompanion(subCommand, args, options = {}) {
           printInfo('没有版本历史（git 不可用，或尚无提交）。');
           return true;
         }
-        console.log(chalk.bold(`\n  🕑 ${id} 版本历史\n`));
+        console.log(chalk.bold(`\n  ${id} 版本历史\n`));
         for (const c of log) {
           console.log('  ' + chalk.yellow(c.hash) + '  ' + chalk.dim(c.subject));
         }
@@ -178,14 +178,14 @@ async function handleCompanion(subCommand, args, options = {}) {
           countReceipts: (cid) => rcpt.listReceipts({ companionId: cid, limit: 1000 }).length,
         });
         const agent = svc.getAgent(id);
-        console.log(chalk.bold(`\n  🧬 ${agent ? agent.manifest.name : id} 五类资产\n`));
+        console.log(chalk.bold(`\n  ${agent ? agent.manifest.name : id} 五类资产\n`));
         // Pad labels by display width to the widest label: labels mix ASCII +
         // full-width CJK (e.g. "Persona（人格）"=13 cols vs "Tool Body（工具身体）"
         // =21 cols), so a fixed padEnd(char-count) leaves the summary ragged.
         const labelGutter = assets.reduce((m, a) => Math.max(m, displayWidth(a.label)), 0);
         const padLabel = (s) => s + ' '.repeat(Math.max(0, labelGutter - displayWidth(s)));
         for (const a of assets) {
-          const mark = a.present ? chalk.green('✅') : chalk.dim('—');
+          const mark = a.present ? chalk.green('✓') : chalk.dim('—');
           console.log(`  ${mark} ${chalk.bold(padLabel(a.label))} ${chalk.dim(a.summary)}`);
           for (const f of a.files || []) {
             console.log(chalk.dim(`        ${f.rel}  (${f.bytes}B)`));
@@ -217,7 +217,7 @@ async function handleCompanion(subCommand, args, options = {}) {
           printInfo(`${id} 还没有行动回执。激活它（companion use ${id}）后产生的对话会记入。`);
           return true;
         }
-        console.log(chalk.bold(`\n  🧾 ${id} 行动回执\n`));
+        console.log(chalk.bold(`\n  ${id} 行动回执\n`));
         for (const r of rows) {
           const risk = r.maxRisk && r.maxRisk !== 'safe' ? chalk.yellow(` [${r.maxRisk}]`) : '';
           console.log(
@@ -290,7 +290,7 @@ async function handleCompanion(subCommand, args, options = {}) {
       const md = svc.readAsset(id, svc.ASSET_FILES.heartbeat) || '';
       const list = hb.parseChecklist(md);
 
-      console.log(chalk.bold(`\n  💓 ${id} 心跳巡检 (HEARTBEAT.md)\n`));
+      console.log(chalk.bold(`\n  ${id} 心跳巡检 (HEARTBEAT.md)\n`));
       console.log(`  开关: ${globalOn ? chalk.green('on') : chalk.dim('off (KHY_HEARTBEAT=off)')}`);
       console.log(
         `  清单: ${list.enabled ? chalk.green('已启用') : chalk.dim('未启用（留空或全为注释 → 静默）')}`
