@@ -141,10 +141,10 @@
 
 ### P2-1 图标资产失真：全部用 emoji 占位，非 ZCode 图标体系
 - **真源（092 §5）**：ZCode 用 `icon-*` 图标文件 + `GLM 图标素材`（品牌资产，不可复用，需自研替换）。
-- **现状**：`Sidebar`/`WorkspaceSidebar`/`Composer`/`LoginPage` 全部用 `📋📁🔀💻🌐🔔⚙️📝📂➕`
+- **现状**：`Sidebar`/`WorkspaceSidebar`/`Composer`/`LoginPage` 全部用 `⚙+`
   等 emoji 作图标。
 - **偏差**：ZCode 是矢量图标（lucide/自制），emoji 在 Windows 下渲染不一致（实测截图里
-  `📂`/`🐛` 渲染为彩色 emoji，与 ZCode 单色线性图标观感不符）。
+  ``/`` 渲染为彩色 emoji，与 ZCode 单色线性图标观感不符）。
 - **修法**：引入 lucide-react（ZCode 同款）或自研 SVG 图标集，替换全部 emoji；
   图标命名与 `sidebar`(55)/`workspaceSidebar`(44) 键对应。
 
@@ -165,7 +165,7 @@
 - **偏差**：CH-2 服务直调缺失。`sessionPersistence.listPersistedSessions()` 已存在且含
   title/model/messageCount/createdAt/updatedAt/cwd/firstUserMessage 完整真源字段，
   但桌面端未接线。
-- **修法**（✅ 已完成 2026-09-13，第八轮）：host 进程新增 `session.list` 消息类型，
+- **修法**（✓ 已完成 2026-09-13，第八轮）：host 进程新增 `session.list` 消息类型，
   动态 require `services/backend/src/services/sessionPersistence.js`（与 aiGateway 同通道、
   同 fail-soft 契约）；main 的 `session:list` 改为经 host fork IPC 转发（15s 超时兜底）；
   preload `listSessions(limit)` 透传参数；`AppLayout.tsx` 删除全部 mock task，改为
@@ -183,7 +183,7 @@
   `AppLayout.tsx` `viewMode` 初始值 `grouped`。
 - **偏差**：文案与默认选中态均与 ZCode 实测不符；「时间线」概念（按时间线浏览）在 ZCode
   中不存在，ZCode 用的是「项目」维度。
-- **修法**（✅ 已完成 2026-09-13，第九轮）：`WorkspaceSidebar.tsx` 视图切换改「项目」
+- **修法**（✓ 已完成 2026-09-13，第九轮）：`WorkspaceSidebar.tsx` 视图切换改「项目」
   （对应 chronological）/「分组」（对应 grouped），顺序与 ZCode 一致（项目在前）；
   `AppLayout.tsx` `viewMode` 初始值改 `chronological`（项目）。已重建验证：a281/a282 渲染
   `分组`/`项目`，默认选中「项目」。
@@ -199,7 +199,7 @@
 - **偏差**：CH-2 服务直调缺失。`tokenUsageService` 已存在且提供 `getMonthUsage`/
   `getTodayUsage`/`getRemainingQuota` 真源方法（本机实测本月 62,714,194 tokens / 690 次
   请求），但 UI 侧栏未接线，显示自造数据误导用户。
-- **修法**（✅ 已完成 2026-09-13，第九轮）：host 进程新增 `token.usage` 消息类型，
+- **修法**（✓ 已完成 2026-09-13，第九轮）：host 进程新增 `token.usage` 消息类型，
   动态 require `services/backend/src/services/tokenUsageService.js`（与 aiGateway/
   sessionPersistence 同通道、同 fail-soft 契约）；main 新增 `token:usage` ipcMain.handle
   经 host fork IPC 转发（15s 超时兜底）；preload 加 `getTokenUsage()`；`ContextUsage.tsx`
@@ -219,7 +219,7 @@
   `DiffViewer.tsx` 的 `mockDiff` 是写死的 quicksort 代码行。
 - **偏差**：假数据冒充真数据（同 P3-1 性质）。ZCode 空态下不渲染此区段，
   复刻端始终显示 mock diff 误导用户。
-- **修法**（✅ 已完成 2026-09-13，第九轮）：`App.tsx` 移除写死的 quicksort mock，
+- **修法**（✓ 已完成 2026-09-13，第九轮）：`App.tsx` 移除写死的 quicksort mock，
   `DiffSummary` 改为 `diffFiles.length > 0` 条件渲染（当前 `diffFiles=[]` 空，
   空态下隐藏，与 ZCode 一致）。真实文件改动追踪需 host 接改动事件流
   （git diff / fs watch），属下轮处理项。`DiffViewer.tsx` 的 `mockDiff` 保留
@@ -237,7 +237,7 @@
   窗口是**会话 prompt 预算**概念，两者完全不同。
 - **偏差**：P3-3 接对了服务但接错了语义——「上下文已用/总量」需会话级
   prompt token 估算，月配额账本不能替代。且空态渲染策略与 ZCode 相反。
-- **修法**（✅ 已完成 2026-09-14，第十轮）：
+- **修法**（✓ 已完成 2026-09-14，第十轮）：
   1. 上下文估算真源：host 新增 `context.size` 桥，动态 require
      `tokenUsageService.estimateTokens(text)`（后端 `/cost` 与 gateway
      token-budget 同源启发式，非字符数粗估），返回 `{ used, total }`；
@@ -262,7 +262,7 @@
   （placeholder「提出后续修改要求」）。共 7 个独立控件。
 - **现状（2026-09-14 实查）**：复刻 `Composer.tsx` 工具行只有
   `上传图片/语音输入/添加附件` + `@/#/$ 提示` + `模型名(禁用)` + `停止生成`
-  + `发送`；`ModeSelector`（默认模式）与思考强度（💭最高）被 `App.tsx`
+  + `发送`；`ModeSelector`（默认模式）与思考强度（最高）被 `App.tsx`
   单独塞在 Composer 上方一行（非 ZCode 的「同一行右下角一簇」形态）；
   「添加上下文」（P3-5 修复后已有上下文已用按钮，但无独立的「添加上下文」
   菜单按钮，`has_menu`）、「打开运行中的后台任务」（Bash/子智能体计数）
@@ -293,7 +293,7 @@
   模型：OpenAI/Anthropic/Google Gemini/Vertex/DeepSeek/Agnes/胜算云/
   PackyCode/Moonshot/通义千问/智谱 GLM/OpenRouter/Groq/Together/Ollama），
   但桌面端模型选择器未接线。
-- **修法**（✅ 已完成 2026-09-15，第十一轮）：host 新增 `models.list` 消息
+- **修法**（✓ 已完成 2026-09-15，第十一轮）：host 新增 `models.list` 消息
   类型，动态 require `providerPresets.js` + `builtinProviderConfig.js`（poolKey
   映射）（与 aiGateway/sessionPersistence 同通道、同 fail-soft 契约）；
   main 加 `models:list` ipcMain.handle（15s 超时兜底 + pendingModelList map）；
@@ -314,11 +314,11 @@
   （`chat.toolbar.thoughtLevel.*`，值「高」）。
 - **现状（2026-09-15 实查）**：复刻 `Composer.tsx` 工具行虽有「上下文已用/
   总量」按钮（P3-5 已做），但**无独立的「添加上下文」菜单按钮**（@ 提及是
-  触发式，非独立 has_menu 按钮）；推理强度（💭最高）仍在 `App.tsx` Composer
+  触发式，非独立 has_menu 按钮）；推理强度（最高）仍在 `App.tsx` Composer
   上方独立行，未并入工具行右下角同簇。
 - **偏差**：P3-6 余项未闭环——「添加上下文」菜单按钮缺失、推理强度位置
   与 ZCode 不同（ZCode 在右下角同簇，复刻在上方独立行）。
-- **修法**（✅ 已完成 2026-09-15，第十一轮）：`Composer.tsx` 新增
+- **修法**（✓ 已完成 2026-09-15，第十一轮）：`Composer.tsx` 新增
   `AddContextButton`（has_menu 下拉：工作区文件/网页/会话，对齐
   `chat.composer.actionMenu`）+ `ThoughtLevelButton`（对齐
   `chat.toolbar.thoughtLevel.*`，值「不思考/低/高/最高」）；两者并入工具行
@@ -394,16 +394,16 @@
 ## 2. 对齐方案（按优先级，可勾选）
 
 ### P0（必须先做，结构对齐）
-- [x] **A1 拆登录闸门**（✅ 已完成 2026-09-12）：`App.tsx` 删 `login`/`welcome` 视图，首屏直接渲染 `AppLayout`；`LoginPage` 组件保留在 `components/auth` 供未来「设置→账号」入口。已构建验证：首屏即主布局，与 ZCode 一致。
+- [x] **A1 拆登录闸门**（✓ 已完成 2026-09-12）：`App.tsx` 删 `login`/`welcome` 视图，首屏直接渲染 `AppLayout`；`LoginPage` 组件保留在 `components/auth` 供未来「设置→账号」入口。已构建验证：首屏即主布局，与 ZCode 一致。
 - [ ] **A2 任务侧栏对齐**：`WorkspaceSidebar` 宽度改 `--workspace-sidebar-panel-width` 可拖拽；补顶部 `新建任务(Ctrl+N)/搜索(Ctrl+K)/自动化/插件市场` + `项目/分组` 视图 tab + 归档分区；任务接 host 真实数据。（当前 280px 固定宽 + 分组/时间线 tab 已有，顶部导航区/拖拽仍缺）
 - [ ] **A3 Composer 右下角整簇**：合并 `添加上下文/模式/输入(排队后续修改)/上下文用量/模型选择器/停止生成` 到 Composer 同一行右下角。（当前模式/思考强度在左侧，模型选择器/停止生成/上下文用量仍缺）
-- [x] **A4 状态栏改账号入口**（✅ 已完成 2026-09-12）：删除窗口底部 `StatusBar`（ZCode 实测无底状态栏）；`WorkspaceSidebar` 底部新增账号区（头像+用户名 chip + 移动端远程控制 + 设置，对齐 ZCode C1-C3 实测形态）。已构建验证。
-- [x] **A5 TitleBar 改会话 tab 头**（✅ 部分完成 2026-09-12）：TitleBar 左侧改为 会话标题「新任务」+ `khy-os` 工作区 chip（对齐 D5 实测）。仍缺：切换侧边栏/前进/后退图标、右侧 面板/终端/窗口菜单按钮（D1-D4）。
-- [x] **A6 preload 断链修复（P0-6）**（✅ 已完成 2026-09-12，方案修正）：根因不是扩展名而是 **Electron 沙箱 preload 不支持 ESM**（`index.mjs` 报 `Cannot use import statement outside a module`；真源 ZCode 的 preload 也是 `.cjs`）。修法：`electron.vite.config.ts` preload 段强制 `output: { format: 'cjs', entryFileNames: '[name].js' }`，main 两处引用保持 `index.js`。已验证：preload 注入成功、`Unable to load preload script` 0 条、`__KHYOS__` 可用。
+- [x] **A4 状态栏改账号入口**（✓ 已完成 2026-09-12）：删除窗口底部 `StatusBar`（ZCode 实测无底状态栏）；`WorkspaceSidebar` 底部新增账号区（头像+用户名 chip + 移动端远程控制 + 设置，对齐 ZCode C1-C3 实测形态）。已构建验证。
+- [x] **A5 TitleBar 改会话 tab 头**（✓ 部分完成 2026-09-12）：TitleBar 左侧改为 会话标题「新任务」+ `khy-os` 工作区 chip（对齐 D5 实测）。仍缺：切换侧边栏/前进/后退图标、右侧 面板/终端/窗口菜单按钮（D1-D4）。
+- [x] **A6 preload 断链修复（P0-6）**（✓ 已完成 2026-09-12，方案修正）：根因不是扩展名而是 **Electron 沙箱 preload 不支持 ESM**（`index.mjs` 报 `Cannot use import statement outside a module`；真源 ZCode 的 preload 也是 `.cjs`）。修法：`electron.vite.config.ts` preload 段强制 `output: { format: 'cjs', entryFileNames: '[name].js' }`，main 两处引用保持 `index.js`。已验证：preload 注入成功、`Unable to load preload script` 0 条、`__KHYOS__` 可用。
 
 ### P0-新增（修复过程中发现的新根因，2026-09-12）
-- [x] **N1 React error #527 白屏**（✅ 已修复）：`react@19.2.8` 与 `react-dom@19.3.0` 版本不匹配触发 React 19 一致性校验，renderer 白屏（pnpm 对 `^19.2.4` 解析漂移所致）。修法：`package.json` 钉死 `"react": "19.3.0"` + `"react-dom": "19.3.0"`，`pnpm install` 重装对齐。已验证：#527 消失、界面渲染。
-- [x] **N2 Tailwind 未接入构建链**（✅ 已修复）：组件全部用 Tailwind 类名（`bg-card`/`text-foreground/70`/`border-border` 等），但 `electron.vite.config.ts` renderer 没接 `@tailwindcss/vite`，`globals.css` 是「纯 CSS 方案」只手写了少部分类 → 数百个类无效、界面呈原生 HTML 观感。修法：renderer plugins 加 `tailwindcss()`；`globals.css` 头部 `@import "tailwindcss"` + `@theme` 注册全部语义色令牌（暗色默认值，`:root`/`.theme-zai-light` 继续做主题切换）。产物 CSS 19KB→70KB。已验证：暗色主题贯穿、组件样式与 ZCode 观感一致。
+- [x] **N1 React error #527 白屏**（✓ 已修复）：`react@19.2.8` 与 `react-dom@19.3.0` 版本不匹配触发 React 19 一致性校验，renderer 白屏（pnpm 对 `^19.2.4` 解析漂移所致）。修法：`package.json` 钉死 `"react": "19.3.0"` + `"react-dom": "19.3.0"`，`pnpm install` 重装对齐。已验证：#527 消失、界面渲染。
+- [x] **N2 Tailwind 未接入构建链**（✓ 已修复）：组件全部用 Tailwind 类名（`bg-card`/`text-foreground/70`/`border-border` 等），但 `electron.vite.config.ts` renderer 没接 `@tailwindcss/vite`，`globals.css` 是「纯 CSS 方案」只手写了少部分类 → 数百个类无效、界面呈原生 HTML 观感。修法：renderer plugins 加 `tailwindcss()`；`globals.css` 头部 `@import "tailwindcss"` + `@theme` 注册全部语义色令牌（暗色默认值，`:root`/`.theme-zai-light` 继续做主题切换）。产物 CSS 19KB→70KB。已验证：暗色主题贯穿、组件样式与 ZCode 观感一致。
 
 ### P0-第二轮修复（2026-09-12，边发现边改 + 后端接线）
 - [x] **A2 任务侧栏（部分完成）**：`WorkspaceSidebar` 宽度改 `var(--workspace-sidebar-panel-width, 330px)`；新增顶部导航区四按钮 `新建任务 Ctrl+N / 搜索 Ctrl+K / 自动化 / 插件市场`（对齐 ZCode B1-B4 实测）；`AppLayout` 移除自造 12px 图标条（ZCode 无此元素），侧栏显隐由 TitleBar「切换侧边栏」控制。已 computer-use 验证。仍缺：拖拽调宽、`项目/分组` 视图 tab 文案（现为 分组/时间线）、任务项 hover 三按钮、接 host 真实任务数据。
@@ -415,7 +415,7 @@
   - 后端发现：`KHY_OS_DIR` env 优先，回退 `cwd/../..`（零硬编码合规）。
   - 文件：`src/host/index.ts`（消息驱动桥 + 流式 onChunk 回传）、`src/main/index.ts`（`ai:send` 转发 + pendingAi map + 分发）、`src/preload/index.ts`（事件订阅）、`Composer.tsx`（dispatch addMessage/updateMessage + aiSend）、`MessageBubble.tsx`（MessageList 从 Redux store 读真实消息）、`App.tsx`（ai:chunk → appendMessageContent）。
   - 验证：host 日志 `[host] aiGateway 已加载: D:\...\aiGateway.js` 实证桥接成功；界面发送「你好，请用一句话介绍你自己」→ 用户/AI 气泡正常入流、无崩溃。
-  - ✅ **端到端闭环已达成（2026-09-12 10:44）**：AI 气泡显示 aiGateway 真实回复——「我是 Agnes-3.0-flash，由 Sapiens AI 开发。很高兴为您服务。请问有什么可以帮您的吗？」。全链路 renderer→main→host→aiGateway→agnes-cn→真实模型→气泡渲染验证通过。
+  - ✓ **端到端闭环已达成（2026-09-12 10:44）**：AI 气泡显示 aiGateway 真实回复——「我是 Agnes-3.0-flash，由 Sapiens AI 开发。很高兴为您服务。请问有什么可以帮您的吗？」。全链路 renderer→main→host→aiGateway→agnes-cn→真实模型→气泡渲染验证通过。
   - **网关配置方法（留档）**：`PROXY_PRIMARY_ADAPTER=relay_api + PROXY_PRIMARY_STRICT=true` 强制主通道为 API 中转；把可用的 OpenAI 兼容通道写入 `services/backend/.env`：`RELAY_API_KEY/RELAY_API_ENDPOINT/RELAY_API_MODEL=agnes-3.0-flash/RELAY_API_PROVIDER=openai-compatible`（本机用 ZCode 已配置的 Agnes 中国站凭据）。注意 `GATEWAY_PREFERRED_ADAPTER` 只认网关注册名（如 `api`/`relay_api`），`agnes` 等名字未注册会静默空返回。
   - **接线健壮性（本轮新增）**：host 预加载 `services/backend/.env`（不覆盖已有 env）；aiGateway 返回结构按实际 `{success, content, provider, actualAdapter, fallbackReason, attempts, errorType}` 提取（正文在 `content`）；网关 onChunk 的 `status` 事件（通道重试/冷却/切换）以斜体状态行透传到 AI 气泡，最终结果覆盖——前端与网关状态透明对齐；发送中 Composer 显示「正在等待 KhyOS 网关回复（host 已加载 aiGateway，多通道重试中）…」+ 停止按钮（`ai:abort` 放弃等待并如实说明底层请求仍在后台）。
   - **余留（网关侧，非接线问题）**：`require(...).getModelMesh is not a function` 的 mesh 路由 fail-soft 提示；模型名 `agnes-3.0-flash` 每次回复自报（khy 网关未做品牌别名映射，属后端网关配置项）。
@@ -429,7 +429,7 @@
   `src/main/index.ts`、`src/preload/index.ts`、`AppLayout.tsx`、`WorkspaceSidebar.tsx`。
   `check-agent-rules.js` 零违规、`check-version-sync.js` 通过（主轨道 1.1.15 /
   ai-backend 轨道 1.6.5）。
-- [x] **Composer 右下整簇余项（P0-3 收尾 + P3-2/3/4）**（✅ 已完成 2026-09-13，第九轮）：
+- [x] **Composer 右下整簇余项（P0-3 收尾 + P3-2/3/4）**（✓ 已完成 2026-09-13，第九轮）：
   ① Composer placeholder 在 `sending` 状态切换为「继续输入以排队后续修改」（对齐 ZCode
   排队语义，空闲态保留功能型文案）；② 侧栏视图 tab 改「项目/分组」+ 默认「项目」（P3-2）；
   ③ 上下文用量条接 `tokenUsageService` 真源（P3-3，host 新增 `token.usage` 桥）；
@@ -439,7 +439,7 @@
   `check-agent-rules.js`（8 文件）零违规、`check-version-sync.js` 通过。
 
 ### P0-第九轮修复（2026-09-13，每日 4 点自动任务）
-- [x] **P3-2/P3-3/P3-4 + Composer 排队占位符**：见 P0-第八轮修复条目「✅ 已完成 2026-09-13，
+- [x] **P3-2/P3-3/P3-4 + Composer 排队占位符**：见 P0-第八轮修复条目「✓ 已完成 2026-09-13，
   第九轮」子项。余留：① DiffSummary 真实文件改动追踪需 host 接改动事件流（git diff /
   fs watch），下轮处理；② `quota.limit` 默认 100K（免费档）导致真实用量 62.7M 显示
   超额，属订阅档配置项非接线问题；③ P2-2 i18n 键名校准（`workspaceSidebar.*`）随 B3
@@ -508,15 +508,15 @@
   预览/源码双视图切换 + 自动换行开关 + 四态渲染；`OpenFilePane.tsx` 文件
   选择列表；`CommandCenter` 新增「打开文件」命令（→ `openFileTab`，与
   磁贴/侧栏同路径）。
-- [x] **余留⑥ 引导独立项去组头 + 余留② 「搜索标签页」下拉**（✅ 已完成
+- [x] **余留⑥ 引导独立项去组头 + 余留② 「搜索标签页」下拉**（✓ 已完成
   2026-09-14，第十二轮，见下方审计日志）：两项均落地并过全部门禁。
 - [ ] **余留（下轮）**：① 终端 PTY 接线（ZCode 实测为原生 PowerShell、
   目录＝工作区根；当前 `Terminal.tsx` onData 仅回显 stub，需 node-pty +
-  main 侧 PTY 服务）；② ~~「搜索标签页」按钮~~（✅ 已完成 2026-09-14
+  main 侧 PTY 服务）；② ~~「搜索标签页」按钮~~（✓ 已完成 2026-09-14
   第十二轮）；③ 多标签当前仅渲染活动标签（ZCode 并存渲染策略待核）；
   ④ 主进程 BrowserView* RPC 群（002 M2）未接，`<webview>` 为 renderer
   侧等效实现；⑤ 设置页 I3-I12 内容页多为薄空态/Pattern-B 列表，002 暂不
-  翻绿、留待逐项深核对；⑥ ~~引导独立项带组标签「主要项」~~（✅ 已完成
+  翻绿、留待逐项深核对；⑥ ~~引导独立项带组标签「主要项」~~（✓ 已完成
   2026-09-14 第十二轮）。
 
 ### P0-第十二轮修复（2026-09-15，每日 4 点自动任务）
@@ -551,7 +551,7 @@
 - 检查：`check-agent-rules.js`（6 改动文件）零违规；`check-version-sync.js`
   通过（主轨道 1.1.15，ai-backend 轨道 1.6.5）。
 - [x] **P3-6①「打开运行中的后台任务」计数按钮 + P3-7② 模型选中态持久化
-  + P3-7③ 动态模型拉取 + P1-1④ GLM 品牌默认名清除**（✅ 已完成 2026-09-16，
+  + P3-7③ 动态模型拉取 + P1-1④ GLM 品牌默认名清除**（✓ 已完成 2026-09-16，
   第十五轮）：
   ① host 新增 `background.status` 消息类型（`activeGenerations` Set 统计在途
   ai.generate，含自动化运行 `auto_` 前缀 id），`backgroundTaskStatus()`
@@ -613,7 +613,7 @@
 - **偏差**：注释自述「刻意不默认完全访问（本地无账号级沙箱兜底）」——属
   主动安全偏移而非遗漏，但违反 1:1 对齐目标（P1 尺寸与文案：模式 chip
   文案与 ZCode 首屏实测不同）。
-- **修法（✅ 已修复 2026-09-16，第十六轮）**：`ModeSelector.tsx` 改
+- **修法（✓ 已修复 2026-09-16，第十六轮）**：`ModeSelector.tsx` 改
   `DEFAULT_AGENT_MODE = 'fullAccess'`；`settingsStore.ts` DEFAULTS 改
   `desktopAgentMode: 'fullAccess'`（与 ZCode 同源 i18n 值对齐）。用户显式
   切换后仍经 `settings.desktopAgentMode` 持久化覆盖默认值，行为不变；
@@ -621,11 +621,11 @@
   默认拦截。
 
 ### P1（品牌与文案）
-- [x] **B1 删 `GLM-5.3Max` 硬编码**（✅ 已完成 2026-09-12）：`App.tsx` 定义单一 `DEFAULT_MODEL_NAME = 'GLM-5.3-Flash'`（对齐实测模型名）下传两组件；`AppHeader` 移除字面量默认值。
-- [x] **P1-1④ GLM-5.3-Flash 静态默认名清除**（✅ 已完成 2026-09-16，第十五轮）：`App.tsx` 删 `DEFAULT_MODEL_NAME = 'GLM-5.3-Flash'`，改经 `getModelOptionLabel`（全量选项表 label 解析 + 未选中「选择模型」占位符）下传 AppHeader/Composer，品牌残留归零（见上方第十五轮改动清单④）。B2 品牌扫描余留仍待跑。
+- [x] **B1 删 `GLM-5.3Max` 硬编码**（✓ 已完成 2026-09-12）：`App.tsx` 定义单一 `DEFAULT_MODEL_NAME = 'GLM-5.3-Flash'`（对齐实测模型名）下传两组件；`AppHeader` 移除字面量默认值。
+- [x] **P1-1④ GLM-5.3-Flash 静态默认名清除**（✓ 已完成 2026-09-16，第十五轮）：`App.tsx` 删 `DEFAULT_MODEL_NAME = 'GLM-5.3-Flash'`，改经 `getModelOptionLabel`（全量选项表 label 解析 + 未选中「选择模型」占位符）下传 AppHeader/Composer，品牌残留归零（见上方第十五轮改动清单④）。B2 品牌扫描余留仍待跑。
 - [ ] **B2 品牌残留扫描**：跑 `check-brand-replacement.js`，清掉 81 键里任何 `ZCode/GLM/智谱/zcode.z.ai` 原词（保留 `Welcome to KhyOS` 等已替换值）。
 - [ ] **B3 组件全量走 i18n**：所有 .tsx 裸中文改 `t('<ns>.key')`；补 `check-i18n-fidelity.js` CI 拦裸中文。（部分完成：Composer 占位符已对齐真源值 `向 KhyOS 提问，使用 @ 添加上下文，使用 / 选择命令或能力`；WelcomePage 问候语已对齐 `chat.empty.greeting.*` 六时段真源尾字）
-- [x] **B4 工具链补齐（P1-4）**（✅ 已完成 2026-09-11/12）：npm 10.9.2 已装；`package.json` 脚本改 node 直调 bin 后 `npm run build`/`npm run electron:dev` 实测可跑；React 版本钉死后 pnpm 10.18.0 install 亦可正常工作。
+- [x] **B4 工具链补齐（P1-4）**（✓ 已完成 2026-09-11/12）：npm 10.9.2 已装；`package.json` 脚本改 node 直调 bin 后 `npm run build`/`npm run electron:dev` 实测可跑；React 版本钉死后 pnpm 10.18.0 install 亦可正常工作。
 
 ### P2（资产与进程）
 - [ ] **C1 图标自研替换 emoji**：引入 lucide-react / 自制 SVG，按 `sidebar`/`workspaceSidebar` 键映射。
@@ -664,7 +664,7 @@ npx electron .                                      # 或 npm run electron:dev �
 | P1-2 | i18n 真源可能含未替换品牌原词 | 092 §13.2 品牌替换完整 | `zh-CN.json` 81 键命中 KhyOS/khyquant.top（需查是否混入 ZCode/GLM/智谱） | P1 |
 | P1-3 | 组件裸中文不走 i18n | 092 §6 i18n 零 diff | `Login/Welcome/Workspace/Status/TitleBar/Composer` 全写死中文 | P1 |
 | P1-4 | 工具链缺口：`.bin` shim 缺失 + npm 未装，`npm run electron:dev` 不可跑 | 092 §0.4 验收命令 | `node_modules/.bin` 目录不存在；`where npm` 无命中（npm 10.9.2 已手工补装，见 §5） | P1 |
-| P2-1 | 图标全用 emoji | 092 矢量图标体系（GLM 资产需自研替换） | 各组件 `📋📁🔀💻🌐🔔⚙️📝📂` 等 | P2 |
+| P2-1 | 图标全用 emoji | 092 矢量图标体系（GLM 资产需自研替换） | 各组件 `⚙` 等 | P2 |
 | P2-2 | 侧栏 tab 文案值对但没走键 | `organizeGrouped/organizeChronologicalList` | `WorkspaceSidebar.tsx` 写死 `分组/时间线` | P2 |
 | P2-3 | host/scheduler 子进程未确认启动 | 092 Phase 0d 四进程 | 仅 `main+preload` 起来，host/scheduler fork 未验证 | P2 |
 
@@ -694,9 +694,9 @@ node .fourproc_accept.cjs
 ```
 
 实测输出摘要：
-- `[scheduler] 进程启动, pid: 22456` ✅（scheduler 需单独起，main 未 fork → P2-3）
-- `[host] 进程启动, pid: 13056` + `[host] {"type":"ready","pid":13056}` ✅（main fork host 正常）
-- `[ERR] Unable to load preload script: out\preload\index.js` → `ENOENT`（主窗口 + 密钥窗口共 2 条）❌ → **P0-6**
+- `[scheduler] 进程启动, pid: 22456` ✓（scheduler 需单独起，main 未 fork → P2-3）
+- `[host] 进程启动, pid: 13056` + `[host] {"type":"ready","pid":13056}` ✓（main fork host 正常）
+- `[ERR] Unable to load preload script: out\preload\index.js` → `ENOENT`（主窗口 + 密钥窗口共 2 条）✗ → **P0-6**
   - 根因：`out/preload/index.mjs`（ESM 产物，`package.json type:module`）vs main 引用 `index.js`。
   - 影响：`window.__KHYOS__` 全部失效，TitleBar 最小化/最大化/关闭、菜单 IPC、127 RPC 均断。
 - 结论：四进程 **PASS（main/host/scheduler 存活）但 preload 断链（P0-6）**——renderer「能渲染」是绕过 preload 的假象，交互层空壳。
