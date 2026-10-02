@@ -1,0 +1,35 @@
+{
+  "name": "toolCatalog",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "按 DOMAIN-DEPS.json 的 D2 名义边界声明。实测出域边：D3 共 6 处（合法）；被路径前缀判成 D1 的 4 处里，3 处实为 `src/tools/**`（toolCatalog.js:144、toolContract.js:113、toolContract.js:150）—— src/tools 在 DOMAIN-DEPS 里没有域根映射（§12.43 Q4 的归属空洞），另 1 处 `toolContract.js:40` → `services/flagRegistry.js` 是 D3 归位（P2 第 17 批）后留下的兼容壳，语义为 D2→D3。⇒ 本单元同时命中两个「建真实 require 方向门前必须先定判据」的样本，登记而不写白名单。",
+  "fanIn": 3,
+  "fanInEvidence": [
+    "services/backend/src/cli/handlers/toollist.js",
+    "services/backend/src/cli/handlers/toolcheck.js",
+    "services/backend/src/services/toolCatalog/index.js"
+  ],
+  "_fanIn_note": "已定性的外部非测试消费者 3 个：/toollist 命令面、/toolcheck 命令面、D1 历史路径再导出壳。另有 1 处路径命中 `src/utils/trimIfString.js` **已定性**为其头注释里列举消费者的 JSDoc 行（`:7`），不是 require ⇒ 既不计入 fanIn，也不构成 D3→D2 违令边。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-29",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "晋级三判据齐：单元级 README.md（本批补）、整数 fanIn、3 个源文件全部有同名同目录测试 —— 本批以显式路径复跑 **55 例 / 55 pass / 0 fail**（2026-09-29 08:40），pins 由 grep 实测 2。单元早于 entry-buffer 守卫，缓冲区从未被经过。",
+  "contract": {
+    "purpose": "工具发现面的三份契约：`toolCatalog` 把注册表整形为分类目录（类别序、组内字母序、同桶按 cmd 去重、未知类别兜底「其他」），`toolContract` 定义工具条目必须满足的形状与可用性判定，`auditRules` 提供目录审计规则（重复、缺字段、不可达条目）。",
+    "ioOwner": "本单元不拥有 IO：工具清单来自注册表与 `src/tools` 的既有真源，本单元只做整形与判定；CLI 渲染（颜色、分页）归 `cli/handlers/toollist.js` 与 `toolcheck.js`，不落盘。",
+    "gates": "`toolContract.js:40` 经 flagRegistry 取可用性开关；注册表不可用时该叶子按既有 fail-soft 口径处理（本清单不断言其具体分支，以免与实现漂移）。",
+    "coverage_note": "purpose/ioOwner/gates 覆盖本轮实测到的面（3 份头注释 + 55 例共置测试 + require 站点行号），不是逐行审计结论。"
+  },
+  "knownDefectsPinned": [
+    "2 处 KNOWN-DEFECT（grep -c 实测），其中 `toolCatalog.js:63` 的 `CATEGORY_META[cat] || CATEGORY_META.other` 对 cat='constructor' 返回 truthy 的 Object 函数、兜底分支被绕过 ⇒ label/order 变 undefined，/toollist 显示与排序受害（原型键一族第五次出现，已入任务 #17）"
+  ],
+  "_known_defects_note": "登记不修：收紧取值域或改兜底都是行为变更，需甲/乙裁决。",
+  "tests": [
+    "auditRules.test.js",
+    "toolCatalog.test.js",
+    "toolContract.test.js"
+  ]
+}

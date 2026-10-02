@@ -1,0 +1,61 @@
+{
+  "_note": "功能单元清单（[RESEARCH-018] §2.3 模板第 3 件 / 5-3-1 §3）。执行器 scripts/ci/check-repo-layout.js 的 entry-buffer 规则读本文件的 domain / mayDependOn / fanIn / lifecycle.stage 四个字段，其余字段是给人读的。字段真源与判据枚举见 docs/10_规范/registry/DOMAIN-DEPS.json 的 _entry_buffer 块。",
+  "name": "capabilityMatrix",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "D2 的名义边界是 [D2, D3]（docs/10_规范/registry/DOMAIN-DEPS.json domains.D2.mayDependOn）。实测本单元 7 个源文件的仓内 require 全部落在名义内：单元内互引（index.js → ./composer ./descriptors ./predicates ./routePresets，composer.js → ./seams，descriptors.js → ./seams）与两条 D3 边（predicates.js → ../../../../utils/envFlagEnabled、index.js → ../../../../utils/dataHome）。其余 require 为 node 内建 fs/os/path，不构成域边。",
+  "_deviation_note": "有一条边不在名义集合里，如实登记而不是把它写进 mayDependOn 冒充许可：descriptors.js:91 在 unknownProblem 描述符的 isEnabledFn 里惰性 `require('../../../unknownProblemHandler').isEnabled()`（src/services/unknownProblemHandler.js = D1）。它是 module-kind 方言唯一的跨域取数点，也是惰性加载——不在文件头，故 descriptors.js 本体仍符合「data-only」声明。D2 → D1 在 DOMAIN-DEPS.json 里是 declared_not_enforced 条目，owner = archDebtScan R1/R3，真源基线 scripts/arch-debt-baseline.json（即 check:layout 的 cross-layer-require 计数），不在本清单的管辖内，也不得由本清单私自豁免。若要摘掉它，办法是把门控函数改为构造期注入（index.js 已具备 deps 注入口），不是改本字段。",
+  "fanIn": 4,
+  "fanInEvidence": [
+    "services/backend/src/services/capabilityMatrix/index.js",
+    "services/backend/src/services/tool/toolCalling.js",
+    "services/backend/src/services/tool/toolUseLoopCore.js",
+    "services/backend/src/services/tool/toolUseLoopHelpers.js"
+  ],
+  "_fanIn_note": "4 个仓内消费者（实测 2026-09-28 探针 .khyos/tmp/b22-fanin.js：git ls-files 全量扫 require 路径并解析到本单元 7 个成员，去重计数，不含 *.test.js，不含单元内互引）。第一条 services/capabilityMatrix/index.js 是归位后留下的再导出壳——三处 tool/* 消费者走的都是它（require('../capabilityMatrix')），壳按 [DESIGN-LAY-008] 第 0 步约定仍算真实入口，故如实计入。注释里提到本单元的文件（如 syscallGateway/actionContractVerifier.js、utils/envFlagEnabled.js）不计入：探针只认 require 解析结果，不认文本提及。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-28",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null,
+    "_stage_note": "stable 的依据是三条晋级判据此刻都在盘上：单元级 README.md、整数 fanIn 声明、7 个源文件各有同名同目录测试。provenance 如实写明它是机制建立后补记的存量：本单元由能力矩阵改造（cut 1「观测不改行为」）落进 D2/catalog/，早于入口缓冲守卫，缓冲区从未被经过，enteredVia: null。"
+  },
+  "contract": {
+    "purity": "seams/predicates/routePresets/composer/route 五件为纯函数叶子（零 IO、确定性、env 一律注入）；descriptors.js 声明为「data-only, carries NO logic」；只有 index.js 有 IO（fs.existsSync + readFileSync 读覆盖文件，全程 fail-soft）",
+    "ioOwner": "index.js 是本单元唯一的 IO 面：它只读 ~/.khyquant/capability_matrix.json（经 utils/dataHome.getAppHome，不可用时回退 os.homedir），读失败/JSON 解析失败一律返回 null 并按「无覆盖」继续；它绝不写盘、不发网络",
+    "injectionPoints": [
+      "makeCapabilityMatrix({env, descriptors, overrides})：DI 工厂，永不 memoize，测试与调用方均可注入（index.js）",
+      "composeRoute({descriptors, flagResolver, requirementsMatcher, capabilityVector, budget, ctx, preset, signals})：flag 解析由调用方闭包提供，composer 本身不读 env（composer.js）",
+      "resolveFlag(flagSpec, {env, isEnabledFn})：env 与模块门控函数都是入参（predicates.js）",
+      "serializeRoute(route)：把运行期 Route 压成观测字段，route.js 不持有状态"
+    ],
+    "gates": [
+      "KHY_CAPABILITY_MATRIX_JSON：内联 JSON 覆盖（逐条 descriptor 浅合并；畸形 JSON 忽略不抛）",
+      "~/.khyquant/capability_matrix.json：文件覆盖，优先级低于内联",
+      "KHY_SELF_HEAL / KHY_SYSCALL_GATEWAY / KHY_METACONSTRAINT / KHY_EVO_ENGINE / KHY_DEP_HEALING：offDisables 方言（原始值 !== 'off'，不 trim 不 lowercase）",
+      "KHY_STRUCTURED_FURNACE：zeroDisables 方言（String(v||'').trim() !== '0'）",
+      "KHY_PROACTIVE_COLLAB / KHY_VERIFY_GATE / KHY_VERIFY_NONEDIT / KHY_PROJECT_COHERENCE / KHY_DELIVERABLE_CLOSURE / KHY_SELF_KICKOFF / KHY_RALPH_LOOP / KHY_DELIVERY_GATE / KHY_AUDIT_FIX / KHY_UNIFIED_SEARCH：envFlagDefault 三态方言（默认为开）",
+      "KHY_COGNITIVE_SNAPSHOT / KHY_CONTEXT_SCOPE：onEnables 方言（默认关，显式 1/on 才开）",
+      "KHY_UNKNOWN_PROBLEM_HANDLER：module 方言，实为 unknownProblemHandler.isEnabled()，抛异常按 fail-closed 计为关"
+    ],
+    "byte_identity": "wired: true 的 13 条描述符是逐字节替换旧内联 process.env.KHY_* 检查而设计的：flag.kind 必须对每个 env 取值复现原表达式的布尔值，preconditions 必须是原内联守卫的子集。证明在单元级 predicates/composer 测试与仓级 tests/root-level/capabilityMatrixParity.test.js（jest 方言，须经 jest-lite 跑）。"
+  },
+  "tests": [
+    "seams.test.js",
+    "route.test.js",
+    "routePresets.test.js",
+    "predicates.test.js",
+    "composer.test.js",
+    "descriptors.test.js",
+    "index.test.js"
+  ],
+  "behaviourTestsOutsideUnit": [
+    "services/backend/tests/services/capabilityMatrix/predicates.test.js",
+    "services/backend/tests/services/capabilityMatrix/composer.test.js",
+    "services/backend/tests/services/capabilityMatrix/route.test.js",
+    "services/backend/tests/services/capabilityMatrix/index.test.js",
+    "services/backend/tests/services/capabilityMatrix/descriptors.contract.test.js",
+    "services/backend/tests/root-level/capabilityMatrixParity.test.js"
+  ],
+  "_test_dialect_note": "仓内两套方言混用：本目录 7 份共置测试一律 node:test（`node --test` 传 7 个显式文件名，目录参数在 Windows 下会当模块路径报错）；tests/ 下 6 份里 capabilityMatrixParity.test.js 用 describe/it（jest 方言），只能经 `node .khyos/tmp/jest-lite.js <文件>` 跑，直接 node --test 会以 ReferenceError: describe is not defined 整文件失败。"
+}
