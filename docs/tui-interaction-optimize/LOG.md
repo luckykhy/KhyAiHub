@@ -208,7 +208,7 @@ did-you-mean 距离-1 兜底自动执行（router.js:2660-2675），落**瞬态*
   （`formatCostReport` 以空行开头，通知渲染只前缀第一行），肉眼等于「无标记通知」。
 - 修复：`tuiCommandReports.js::_textLines` 去首尾空行；新增回归测试，套件 18/18 绿；
   `check-agent-rules.js` 对两文件 0 违规。
-- 实机验证（node-pty, 工作树实例）：`/cost` 后连续 5 帧首行为 `·   💰 Token 用量 & 费用`，
+- 实机验证（node-pty, 工作树实例）：`/cost` 后连续 5 帧首行为 `·   Token 用量 & 费用`，
   上下方向键重绘后仍存活——前缀可见且持久。日志 `.khy/tmp/pty_wt2.log`；测试进程全部清理。
 - 阻断点（维持人工急件）：坏 blob `121661084...`（HEAD 树内 `CLAUDE.html`）复查仍缺失，
   本分支依旧无法创建任何提交。本节三产物 + 上节 LOG.md 追加均保留在工作树，
@@ -219,7 +219,7 @@ did-you-mean 距离-1 兜底自动执行（router.js:2660-2675），落**瞬态*
 - 上节遗留的三产物已在 **bc70abc3** 提交（pathspec 直提，恰含 3 文件、无扫尾）。
   对象库坏 blob 已被修复（`git cat-file -e` 通过），旧历史仍有零星断链（不影响新提交）。
 - 实机复验（当前工作树、含他人 49 个 dirty TUI 文件）：`/usage` 与 `/cost` 通知首行均为
-  `· 💰 Token 用量 & 费用`，上下方向键重绘后驻留 transcript（↑20/↑42）。证据 `.khy/tmp/pty_s5b.log`。
+  `· Token 用量 & 费用`，上下方向键重绘后驻留 transcript（↑20/↑42）。证据 `.khy/tmp/pty_s5b.log`。
 - 驱动通道变更：node-repl 内核（Electron, ABI 148）加载不了 node-pty（ABI 127），
   改用 `D:/Portable/2-tools/node-runtime/node.exe`（v22.18.0）+ 仓库根 pnpm node-pty，
   以确定性脚本 + Bash 后台任务驱动。**注意**：`"/usage\r"` 一次性合写在本工作树上不被提交，

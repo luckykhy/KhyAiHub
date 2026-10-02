@@ -14,7 +14,7 @@ khy-os 当前形态：
 | **CLI 终端** | `khy` / `khyquant` 命令 | Ink (React) TUI + `bin/khy.js:1192 startRepl()` |
 | **Web UI** | 浏览器访问 `http://localhost:3000` | Vue 3 SPA + Element Plus + `apps/ai-frontend/` |
 | **移动端** | `apps/khy-mobile/release/*.apk` | Capacitor + Android WebView |
-| **桌面端** | ❌ 无 | 全仓零 `electron`/`tauri`/`wails`/`neutralino`/`nwjs` |
+| **桌面端** | ✗ 无 | 全仓零 `electron`/`tauri`/`wails`/`neutralino`/`nwjs` |
 
 **唯一移动壳是 Capacitor**，桌面壳**完全空缺**。这是用户希望填补的空白。
 
@@ -41,7 +41,7 @@ khy-os 当前形态：
 | 主题 | **强制深色**（黑底贯穿） |
 | 整体调性 | IDE 风 + 极简控制台（Cursor/VSCode 骨架） |
 | 侧栏 | 4 主功能图标 + 任务分组 + 项目树 + 用户头像 |
-| 顶栏 | 单行面包屑 + ⚙/🗗 |
+| 顶栏 | 单行面包屑 + ⚙/|
 | 中央 | 巨幅时段问候 + 渐变 logo 水印 + 居中圆角输入框 + 快捷入口胶囊 |
 | 主色 | **暖橙 #f76b1c**（发送按钮 / Ctrl+K 选中条 / 限额警示 / 链接） |
 | Ctrl+K | 屏幕正中毛玻璃弹窗（4 标签 + 最近任务 + 建议 + 面板） |
@@ -110,18 +110,18 @@ window.loadURL(`http://127.0.0.1:${backendPort}`);
 
 | 能力 | 现状 | 桌面端增量 |
 |------|------|------------|
-| 多 LLM | ✅ | 0 |
-| 长记忆 / 轨迹 | ✅ `khy-Trajectory/` | 0 |
-| MCP 协议 | ✅ | 0 |
-| 浏览器自动化 | ✅（部分） | Tauri/Electron 内嵌浏览器 |
-| 鼠标键盘控制 | ❌（DESIGN-ARCH-056 留接口） | 增量补 |
-| 语音 | ❌ | Tauri/Electron 麦克风 |
-| Office 插件 | ❌ | 远期 |
-| 多窗口 | ❌ | IPC 体系增量 |
-| 系统托盘 | ❌ | tray icon |
-| 全局快捷键 | ❌ | `globalShortcut` |
-| 协议 deeplink | ❌ | `khy://` 注册 |
-| Auto-update | ❌ | electron-updater / Tauri updater |
+| 多 LLM | ✓ | 0 |
+| 长记忆 / 轨迹 | ✓ `khy-Trajectory/` | 0 |
+| MCP 协议 | ✓ | 0 |
+| 浏览器自动化 | ✓（部分） | Tauri/Electron 内嵌浏览器 |
+| 鼠标键盘控制 | ✗（DESIGN-ARCH-056 留接口） | 增量补 |
+| 语音 | ✗ | Tauri/Electron 麦克风 |
+| Office 插件 | ✗ | 远期 |
+| 多窗口 | ✗ | IPC 体系增量 |
+| 系统托盘 | ✗ | tray icon |
+| 全局快捷键 | ✗ | `globalShortcut` |
+| 协议 deeplink | ✗ | `khy://` 注册 |
+| Auto-update | ✗ | electron-updater / Tauri updater |
 
 ## 八、待用户/团队决策
 

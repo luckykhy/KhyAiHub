@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -115,7 +115,7 @@
 <p>（<code>formatCostReport</code> 以空行开头，通知渲染只前缀第一行），肉眼等于「无标记通知」。</p>
 <ul><li>修复：<code>tuiCommandReports.js::_textLines</code> 去首尾空行；新增回归测试，套件 18/18 绿；</li></ul>
 <p><code>check-agent-rules.js</code> 对两文件 0 违规。</p>
-<ul><li>实机验证（node-pty, 工作树实例）：<code>/cost</code> 后连续 5 帧首行为 <code>·   💰 Token 用量 &amp; 费用</code>，</li></ul>
+<ul><li>实机验证（node-pty, 工作树实例）：<code>/cost</code> 后连续 5 帧首行为 <code>·   Token 用量 &amp; 费用</code>，</li></ul>
 <p>上下方向键重绘后仍存活——前缀可见且持久。日志 <code>.khy/tmp/pty_wt2.log</code>；测试进程全部清理。</p>
 <ul><li>阻断点（维持人工急件）：坏 blob <code>121661084...</code>（HEAD 树内 <code>CLAUDE.html</code>）复查仍缺失，</li></ul>
 <p>本分支依旧无法创建任何提交。本节三产物 + 上节 LOG.md 追加均保留在工作树，<br>  待对象库修复后 pathspec 一次性提交。详见夜检台账 <code>.khy/tui-nightlog/2026-09-23.md</code>。</p>
@@ -123,7 +123,7 @@
 <ul><li>上节遗留的三产物已在 <strong>bc70abc3</strong> 提交（pathspec 直提，恰含 3 文件、无扫尾）。</li></ul>
 <p>对象库坏 blob 已被修复（<code>git cat-file -e</code> 通过），旧历史仍有零星断链（不影响新提交）。</p>
 <ul><li>实机复验（当前工作树、含他人 49 个 dirty TUI 文件）：<code>/usage</code> 与 <code>/cost</code> 通知首行均为</li></ul>
-<p><code>· 💰 Token 用量 &amp; 费用</code>，上下方向键重绘后驻留 transcript（↑20/↑42）。证据 <code>.khy/tmp/pty_s5b.log</code>。</p>
+<p><code>· Token 用量 &amp; 费用</code>，上下方向键重绘后驻留 transcript（↑20/↑42）。证据 <code>.khy/tmp/pty_s5b.log</code>。</p>
 <ul><li>驱动通道变更：node-repl 内核（Electron, ABI 148）加载不了 node-pty（ABI 127），</li></ul>
 <p>改用 <code>D:/Portable/2-tools/node-runtime/node.exe</code>（v22.18.0）+ 仓库根 pnpm node-pty，<br>  以确定性脚本 + Bash 后台任务驱动。<strong>注意</strong>：<code>&quot;/usage\r&quot;</code> 一次性合写在本工作树上不被提交，<br>  分开两次写（先文本、间隔 1.2s、再 <code>&quot;\r&quot;</code>）才复现提交流程——待后续节判定是否真实转义处理问题。</p>
 <ul><li>上轮日志中 <code>桌面应该在d盘上</code> 幽灵文本已查明 = 方向键上翻触发输入行<strong>历史召回</strong>，非缺陷注入。</li><li><strong>钩子缺陷（人工件）</strong>：git 在 pre-commit 通过后才写 <code>.git/COMMIT_EDITMSG</code>，</li></ul>

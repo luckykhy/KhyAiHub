@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -55,7 +55,7 @@
 <p><strong>非空白保证</strong>：界面截图走 CDP 渲染，采集器轮询 <code>document.body.innerText</code> 长度与元素数，<br>实测到 ≥20 字符且 &gt;30 个元素才截图；不满足则<strong>该条不会生成</strong>（宁可缺，不交空白图）。<br>每张的实测读数记在 <code>运行截图清单.json</code> 的 <code>渲染后元素数</code> / <code>渲染后可见文本长度</code> / <code>可见文本抽样</code>。</p>
 <hr>
 <h2 id="四-重拍清单-阶段-2-改名完成后执行">四、重拍清单（阶段 2 改名完成后执行）<a class="anchor" href="#四-重拍清单-阶段-2-改名完成后执行" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>#</th><th>要做的事</th><th>命令 / 位置</th></tr></thead><tbody><tr><td>1</td><td>全局改名 13 处显示名（含两个前端的 <code>&lt;title&gt;</code>、桌面端窗口标题、包元数据、README）</td><td>见 <code>05_待办/人工待办清单.md</code>（软著交付目录）</td></tr><tr><td>2</td><td>起后端并登录，拍<strong>功能闭环</strong>界面（AI 管理台首页 / 会话、量化终端、Provider Hub、桌面端）</td><td>人工或后续脚本化</td></tr><tr><td>3</td><td>补拍 <code>apps/provider-hub</code>（当前无 <code>dist/index.html</code>，采集器已如实跳过）</td><td>先构建该前端</td></tr><tr><td>4</td><td>重跑采集并核对</td><td><code>npm run evidence:runtime &amp;&amp; npm run check:copyright</code></td></tr></tbody></table>
+<table><thead><tr><th>#</th><th>要做的事</th><th>命令 / 位置</th></tr></thead><tbody><tr><td>1</td><td>全局改名：本件范围内为 <strong>5 处界面标题</strong>（<code>apps/ai-frontend</code>、<code>apps/khyos-desktop</code>×2、<code>apps/provider-hub</code>、<code>extensions/tools/khy-markdown</code>）；仓外 09-21 的「13 处显示名」清单成文于旧口径，含 <code>software/khyquant/frontend/</code> 的 3 处，<strong>那 3 处已移出本件</strong>（khyquant 为独立项目，另案申报）</td><td>见 <code>05_待办/人工待办清单.md</code>（软著交付目录）；实测以 <code>node scripts/ci/check-copyright-readiness.js</code> 输出为准</td></tr><tr><td>2</td><td>起后端并登录，拍<strong>功能闭环</strong>界面（AI 管理台首页 / 会话、Provider Hub、桌面端）。<strong>不拍量化终端</strong>——khyquant 是独立项目（人 2026-09-28 明示），不在本件客体里，它的界面图归它自己的申报</td><td>人工或后续脚本化</td></tr><tr><td>3</td><td>补拍 <code>apps/provider-hub</code>（当前无 <code>dist/index.html</code>，采集器已如实跳过）</td><td>先构建该前端</td></tr><tr><td>4</td><td>重跑采集并核对</td><td><code>npm run evidence:runtime &amp;&amp; npm run check:copyright</code></td></tr></tbody></table>
 <hr>
 <h2 id="五-图片完整性">五、图片完整性<a class="anchor" href="#五-图片完整性" aria-label="锚点">#</a></h2>
 <ul><li>尺寸统一 1500×1000（<code>--window-size</code> / CDP <code>Emulation.setDeviceMetricsOverride</code>）</li><li>每张在清单里带 <code>字节</code> 与 <code>sha256</code>；<code>npm run check:copyright</code> 会对 0 字节图片判 <strong>error</strong></li><li><strong>本节四类分类标准有执行器</strong>：<code>check-copyright-readiness.js</code> 逐类查 <code>图表/ 界面截图/ 架构图/ 终端截图/</code></li></ul>

@@ -90,7 +90,7 @@ trae --install-extension khy-trae-bridge-0.2.1.vsix
 如果需要立即刷新登录态：
 
 - **命令面板**：`Ctrl+Shift+P` → 输入 `KHY: 同步 Trae 登录态`
-- **状态栏**：点击右下角 `🔑 KHY Bridge` 图标
+- **状态栏**：点击右下角 `KHY Bridge` 图标
 
 ### 查看日志
 

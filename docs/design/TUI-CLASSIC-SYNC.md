@@ -219,14 +219,14 @@ const answers = await promptCompat(questions);
 **问题**：`services/query/index.js` shim 错误加载 `.test.js` 文件
 **影响**：两个模式都会执行测试代码，TAP 输出写入 stdout
 **修复**：删除 shim 中对 `.test.js` 的导出
-**同步状态**：✅ 自动同步（共享代码路径）
+**同步状态**：✓ 自动同步（共享代码路径）
 
 ### 2. Gateway Pool Maps（已修复）
 
 **问题**：`sensenova`/`stepfun` 在 gateway pool maps 中缺失
 **影响**：两个模式都无法路由到这些 provider
 **修复**：补齐 `DEFAULT_API_POOL_PROVIDER_ALIASES` 和 `DEFAULT_API_POOL_TO_SERVICE_PROVIDER`
-**同步状态**：✅ 自动同步（共享代码路径）
+**同步状态**：✓ 自动同步（共享代码路径）
 
 ### 3. Banner 重复显示（已修复）
 
@@ -237,14 +237,14 @@ const answers = await promptCompat(questions);
 - 还原 `railOn` 同步初始化
 - banner 移至 `<Static>` 区域
 - `staticItems[0]` 作为 banner item
-**同步状态**：✅ TUI 已修复
+**同步状态**：✓ TUI 已修复
 
 ### 4. 熔断器注释错误（已修复）
 
 **问题**：注释说"5次/60s"，代码实际是"3次/30s"
 **影响**：两个模式的文档可读性
 **修复**：修正注释
-**同步状态**：✅ 自动同步（共享代码路径）
+**同步状态**：✓ 自动同步（共享代码路径）
 
 ---
 

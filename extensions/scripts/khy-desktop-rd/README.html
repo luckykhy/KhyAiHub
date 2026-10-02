@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -30,7 +30,7 @@
 <blockquote><p>调研日期: 2026-08-31<br>调研者: Claude Code<br>触发: 用户希望给 khy-os 加独立桌面端，参考 D:\Portable\4-output\ZCode-UI\running\ 截图风格<br>目标: 把&quot;桌面端路线选型&quot;需要的参考项目材料归档到此，等用户/团队评审后再进入实施</p></blockquote>
 <h2 id="一-为什么存在这个目录">一、为什么存在这个目录<a class="anchor" href="#一-为什么存在这个目录" aria-label="锚点">#</a></h2>
 <p>khy-os 当前形态：</p>
-<table><thead><tr><th>用户面</th><th>入口</th><th>形态</th></tr></thead><tbody><tr><td><strong>CLI 终端</strong></td><td><code>khy</code> / <code>khyquant</code> 命令</td><td>Ink (React) TUI + <code>bin/khy.js:1192 startRepl()</code></td></tr><tr><td><strong>Web UI</strong></td><td>浏览器访问 <code>http://localhost:3000</code></td><td>Vue 3 SPA + Element Plus + <code>apps/ai-frontend/</code></td></tr><tr><td><strong>移动端</strong></td><td><code>apps/khy-mobile/release/*.apk</code></td><td>Capacitor + Android WebView</td></tr><tr><td><strong>桌面端</strong></td><td>❌ 无</td><td>全仓零 <code>electron</code>/<code>tauri</code>/<code>wails</code>/<code>neutralino</code>/<code>nwjs</code></td></tr></tbody></table>
+<table><thead><tr><th>用户面</th><th>入口</th><th>形态</th></tr></thead><tbody><tr><td><strong>CLI 终端</strong></td><td><code>khy</code> / <code>khyquant</code> 命令</td><td>Ink (React) TUI + <code>bin/khy.js:1192 startRepl()</code></td></tr><tr><td><strong>Web UI</strong></td><td>浏览器访问 <code>http://localhost:3000</code></td><td>Vue 3 SPA + Element Plus + <code>apps/ai-frontend/</code></td></tr><tr><td><strong>移动端</strong></td><td><code>apps/khy-mobile/release/*.apk</code></td><td>Capacitor + Android WebView</td></tr><tr><td><strong>桌面端</strong></td><td>✗ 无</td><td>全仓零 <code>electron</code>/<code>tauri</code>/<code>wails</code>/<code>neutralino</code>/<code>nwjs</code></td></tr></tbody></table>
 <p><strong>唯一移动壳是 Capacitor</strong>，桌面壳<strong>完全空缺</strong>。这是用户希望填补的空白。</p>
 <p>后端已经是 <strong>Express + ws 同进程</strong>形态（<code>services/backend/server.js</code>），已经托管前端 dist、已经有 <code>IDLE_SHUTDOWN_MS=60000</code> 自动关停、已经有 <code>bin/khy.js:1100-1194</code> 的&quot;spawn 后端 + 探测端口 + 拉前端&quot;路径——<strong>桌面壳嵌入后端的工程阻力非常低</strong>。</p>
 <h2 id="二-调研结论-4-个核心参考项目">二、调研结论：4 个核心参考项目<a class="anchor" href="#二-调研结论-4-个核心参考项目" aria-label="锚点">#</a></h2>
@@ -38,7 +38,7 @@
 <blockquote><p>完整 README + 关键源码 + 架构对比都在各子目录下。</p></blockquote>
 <h2 id="三-目标视觉风格-zcode-3-10-1">三、目标视觉风格：ZCode 3.10.1<a class="anchor" href="#三-目标视觉风格-zcode-3-10-1" aria-label="锚点">#</a></h2>
 <p>源: <code>D:\Portable\4-output\ZCode-UI\running\</code> 14 张截图</p>
-<table><thead><tr><th>维度</th><th>描述</th></tr></thead><tbody><tr><td>主题</td><td><strong>强制深色</strong>（黑底贯穿）</td></tr><tr><td>整体调性</td><td>IDE 风 + 极简控制台（Cursor/VSCode 骨架）</td></tr><tr><td>侧栏</td><td>4 主功能图标 + 任务分组 + 项目树 + 用户头像</td></tr><tr><td>顶栏</td><td>单行面包屑 + ⚙/🗗</td></tr><tr><td>中央</td><td>巨幅时段问候 + 渐变 logo 水印 + 居中圆角输入框 + 快捷入口胶囊</td></tr><tr><td>主色</td><td><strong>暖橙 #f76b1c</strong>（发送按钮 / Ctrl+K 选中条 / 限额警示 / 链接）</td></tr><tr><td>Ctrl+K</td><td>屏幕正中毛玻璃弹窗（4 标签 + 最近任务 + 建议 + 面板）</td></tr><tr><td>对话页</td><td>用户消息 + AI 长响应（含&quot;测试/验证&quot;章节 + 命令徽章）+ 限额提示</td></tr><tr><td>自动化页</td><td>&quot;还没有定时任务&quot;卡片 + 模板卡</td></tr><tr><td>字体</td><td>正文系统中文；代码 <strong>JetBrains Mono</strong> 等宽</td></tr><tr><td>密度</td><td>比 EP 默认稍紧凑；圆角 10-12px；hairline <code>#2a1a1a</code></td></tr></tbody></table>
+<table><thead><tr><th>维度</th><th>描述</th></tr></thead><tbody><tr><td>主题</td><td><strong>强制深色</strong>（黑底贯穿）</td></tr><tr><td>整体调性</td><td>IDE 风 + 极简控制台（Cursor/VSCode 骨架）</td></tr><tr><td>侧栏</td><td>4 主功能图标 + 任务分组 + 项目树 + 用户头像</td></tr><tr><td>顶栏</td><td>单行面包屑 + ⚙/</td></tr><tr><td>中央</td><td>巨幅时段问候 + 渐变 logo 水印 + 居中圆角输入框 + 快捷入口胶囊</td></tr><tr><td>主色</td><td><strong>暖橙 #f76b1c</strong>（发送按钮 / Ctrl+K 选中条 / 限额警示 / 链接）</td></tr><tr><td>Ctrl+K</td><td>屏幕正中毛玻璃弹窗（4 标签 + 最近任务 + 建议 + 面板）</td></tr><tr><td>对话页</td><td>用户消息 + AI 长响应（含&quot;测试/验证&quot;章节 + 命令徽章）+ 限额提示</td></tr><tr><td>自动化页</td><td>&quot;还没有定时任务&quot;卡片 + 模板卡</td></tr><tr><td>字体</td><td>正文系统中文；代码 <strong>JetBrains Mono</strong> 等宽</td></tr><tr><td>密度</td><td>比 EP 默认稍紧凑；圆角 10-12px；hairline <code>#2a1a1a</code></td></tr></tbody></table>
 <h2 id="四-技术路线推荐-待用户决策">四、技术路线推荐（待用户决策）<a class="anchor" href="#四-技术路线推荐-待用户决策" aria-label="锚点">#</a></h2>
 <h3 id="路线-a-electron-内嵌现有-vue-内嵌-node-子进程-复用度-95">路线 A：Electron + 内嵌现有 Vue + 内嵌 Node 子进程（<strong>复用度 95%</strong>）<a class="anchor" href="#路线-a-electron-内嵌现有-vue-内嵌-node-子进程-复用度-95" aria-label="锚点">#</a></h3>
 <ul><li><strong>优点</strong>：零改动现有前端 dist 和 Express server.js；xterm/剪贴板/通知/tray 都能补</li><li><strong>代价</strong>：包大 ~150-200MB，内存 200-400MB</li><li><strong>关键参考</strong>：goose（IPC 体系）+ kbar（Ctrl+K）</li></ul>
@@ -57,7 +57,7 @@
 <span class="hljs-variable language_">window</span>.<span class="hljs-title function_">loadURL</span>(<span class="hljs-string">`http://127.0.0.1:<span class="hljs-subst">${backendPort}</span>`</span>);</code></pre>
 <p>这条路径 khy-os 已经有 <code>apps/ai-frontend/backendDiscovery.mjs:29-38</code> 的 mirror pattern。</p>
 <h2 id="七-桌面端-vs-现有能力对照">七、桌面端 vs 现有能力对照<a class="anchor" href="#七-桌面端-vs-现有能力对照" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>能力</th><th>现状</th><th>桌面端增量</th></tr></thead><tbody><tr><td>多 LLM</td><td>✅</td><td>0</td></tr><tr><td>长记忆 / 轨迹</td><td>✅ <code>khy-Trajectory/</code></td><td>0</td></tr><tr><td>MCP 协议</td><td>✅</td><td>0</td></tr><tr><td>浏览器自动化</td><td>✅（部分）</td><td>Tauri/Electron 内嵌浏览器</td></tr><tr><td>鼠标键盘控制</td><td>❌（DESIGN-ARCH-056 留接口）</td><td>增量补</td></tr><tr><td>语音</td><td>❌</td><td>Tauri/Electron 麦克风</td></tr><tr><td>Office 插件</td><td>❌</td><td>远期</td></tr><tr><td>多窗口</td><td>❌</td><td>IPC 体系增量</td></tr><tr><td>系统托盘</td><td>❌</td><td>tray icon</td></tr><tr><td>全局快捷键</td><td>❌</td><td><code>globalShortcut</code></td></tr><tr><td>协议 deeplink</td><td>❌</td><td><code>khy://</code> 注册</td></tr><tr><td>Auto-update</td><td>❌</td><td>electron-updater / Tauri updater</td></tr></tbody></table>
+<table><thead><tr><th>能力</th><th>现状</th><th>桌面端增量</th></tr></thead><tbody><tr><td>多 LLM</td><td>✓</td><td>0</td></tr><tr><td>长记忆 / 轨迹</td><td>✓ <code>khy-Trajectory/</code></td><td>0</td></tr><tr><td>MCP 协议</td><td>✓</td><td>0</td></tr><tr><td>浏览器自动化</td><td>✓（部分）</td><td>Tauri/Electron 内嵌浏览器</td></tr><tr><td>鼠标键盘控制</td><td>✗（DESIGN-ARCH-056 留接口）</td><td>增量补</td></tr><tr><td>语音</td><td>✗</td><td>Tauri/Electron 麦克风</td></tr><tr><td>Office 插件</td><td>✗</td><td>远期</td></tr><tr><td>多窗口</td><td>✗</td><td>IPC 体系增量</td></tr><tr><td>系统托盘</td><td>✗</td><td>tray icon</td></tr><tr><td>全局快捷键</td><td>✗</td><td><code>globalShortcut</code></td></tr><tr><td>协议 deeplink</td><td>✗</td><td><code>khy://</code> 注册</td></tr><tr><td>Auto-update</td><td>✗</td><td>electron-updater / Tauri updater</td></tr></tbody></table>
 <h2 id="八-待用户-团队决策">八、待用户/团队决策<a class="anchor" href="#八-待用户-团队决策" aria-label="锚点">#</a></h2>
 <ol><li><strong>技术路线</strong>：A (Electron) / B (Tauri 2) / C (MVP 先出) — 已初步倾向 A（推荐路线），但用户暂未决定</li><li><strong>主题风格</strong>：保留 khy 蓝 / 切 ZCode 暖橙 / 双主题可切 — <strong>用户已选&quot;先不急&quot;</strong></li><li><strong>下一步</strong>：用户希望<strong>先把参考项目保存到本地</strong>（当前文档所在目录），然后再决定方案</li></ol>
 <h2 id="九-文件清单">九、文件清单<a class="anchor" href="#九-文件清单" aria-label="锚点">#</a></h2>
