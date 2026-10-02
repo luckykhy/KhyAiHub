@@ -174,3 +174,53 @@ describe('commandRiskClassifier — pre-existing behaviour must not regress', ()
     expect(RISK_ORDER[v.risk]).toBeLessThan(RISK_ORDER.high);
   });
 });
+
+describe('commandRiskClassifier — cmd.exe /c /k carrier penetration', () => {
+  // The 2026-09-17 risk-gate round deferred this gap on purpose: a cmd.exe
+  // carrier hid the inner command from the mapper's first-token word lists, so
+  // `cmd /c del C:\secret.txt` rated medium / non-destructive while the bare
+  // `del` rated high. The inner command must be classified through the
+  // compound-aware mapper entry, and the rating may only move UP (the unknown
+  // default medium stays the floor — the carrier is an untrusted context).
+
+  test('cmd /c del penetrates to high + destructive', () => {
+    const v = classifyCommandRisk(String.raw`cmd /c del C:\secret.txt`);
+    expect(v.isDestructive).toBe(true);
+    expect(RISK_ORDER[v.risk]).toBeGreaterThanOrEqual(RISK_ORDER.high);
+  });
+
+  test('cmd /k rd /s /q penetrates to high + destructive', () => {
+    const v = classifyCommandRisk(String.raw`cmd /k rd /s /q D:\data`);
+    expect(v.isDestructive).toBe(true);
+    expect(RISK_ORDER[v.risk]).toBeGreaterThanOrEqual(RISK_ORDER.high);
+  });
+
+  test('cmd.exe basename normalises to the same carrier', () => {
+    const v = classifyCommandRisk(String.raw`cmd.exe /c del C:\secret.txt`);
+    expect(v.isDestructive).toBe(true);
+    expect(RISK_ORDER[v.risk]).toBeGreaterThanOrEqual(RISK_ORDER.high);
+  });
+
+  test('quoted compound inner takes the strictest segment (del not hidden by dir)', () => {
+    const v = classifyCommandRisk('cmd /c "dir & del C:\\secret.txt"');
+    expect(v.isDestructive).toBe(true);
+    expect(RISK_ORDER[v.risk]).toBeGreaterThanOrEqual(RISK_ORDER.high);
+  });
+
+  test('benign inner stays at the medium floor (never loosened)', () => {
+    const v = classifyCommandRisk('cmd /c dir');
+    expect(v.risk).toBe('medium');
+    expect(v.isDestructive).toBe(false);
+  });
+
+  test('empty inner (bare cmd /c) stays medium', () => {
+    const v = classifyCommandRisk('cmd /c');
+    expect(v.risk).toBe('medium');
+  });
+
+  test('bare del keeps its 0917 rating (no regression)', () => {
+    const v = classifyCommandRisk(String.raw`del C:\secret.txt`);
+    expect(v.isDestructive).toBe(true);
+    expect(RISK_ORDER[v.risk]).toBeGreaterThanOrEqual(RISK_ORDER.high);
+  });
+});

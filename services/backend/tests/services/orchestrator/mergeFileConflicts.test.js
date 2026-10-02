@@ -167,11 +167,11 @@ test('门默认（未设 env）→ 检测开启', () => {
   }
 });
 
-test('formatConflictWarning：非空冲突 → 含 ⚠️ + 文件名 + labels', () => {
+test('formatConflictWarning：非空冲突 → 含 ⚠ + 文件名 + labels', () => {
   const warning = formatConflictWarning([
     { file: 'a.js', labels: ['子任务 1', '子任务 2'] },
   ]);
-  assert.ok(warning.includes('⚠️'), '应含警示符');
+  assert.ok(warning.includes('⚠'), '应含警示符');
   assert.ok(warning.includes('a.js'), '应含文件名');
   assert.ok(warning.includes('子任务 1'), '应含 label 1');
   assert.ok(warning.includes('子任务 2'), '应含 label 2');
@@ -215,7 +215,7 @@ const { mergeResults } = require('../../../src/services/taskDecomposer');
 const sub = (prompt, originIndex) => ({ prompt, role: 'general', originIndex });
 const agg = (n, result) => ({ name: `subtask-${n}`, result });
 
-test('接线：门开 + 两并行子任务改同一文件 → mergeResults footer 含 ⚠️ 并行写冲突行', () => {
+test('接线：门开 + 两并行子任务改同一文件 → mergeResults footer 含 ⚠ 并行写冲突行', () => {
   withGate(undefined, () => {
     const subtasks = [sub('实现 A', 0), sub('实现 B', 1)];
     const aggregated = [
@@ -223,7 +223,7 @@ test('接线：门开 + 两并行子任务改同一文件 → mergeResults foote
       agg(2, { success: true, text: 'B done', filesModified: ['shared.js', 'b.js'] }),
     ];
     const out = mergeResults(subtasks, aggregated);
-    assert.ok(out.includes('⚠️ 并行写冲突'), 'footer 应含冲突告警');
+    assert.ok(out.includes('⚠ 并行写冲突'), 'footer 应含冲突告警');
     assert.ok(out.includes('shared.js'), '应指名冲突文件 shared.js');
     assert.ok(out.includes('子任务 1') && out.includes('子任务 2'), '应指名两个冲突子任务');
     // 既有「修改文件」行仍在（纯加性，不替换）
@@ -239,7 +239,7 @@ test('接线：门开 + 无重叠文件 → mergeResults footer 无冲突行（�
       agg(2, { success: true, text: 'B', filesModified: ['b.js'] }),
     ];
     const out = mergeResults(subtasks, aggregated);
-    assert.ok(!out.includes('⚠️ 并行写冲突'), '无重叠不应告警');
+    assert.ok(!out.includes('⚠ 并行写冲突'), '无重叠不应告警');
   });
 });
 
@@ -251,7 +251,7 @@ test('接线：门关（KHY_MERGE_FILE_CONFLICT=0）+ 冲突输入 → mergeResu
       agg(2, { success: true, text: 'B', filesModified: ['shared.js'] }),
     ];
     const out = mergeResults(subtasks, aggregated);
-    assert.ok(!out.includes('⚠️ 并行写冲突'), '门关时不应告警');
+    assert.ok(!out.includes('⚠ 并行写冲突'), '门关时不应告警');
     // 既有去重「修改文件」行仍在（今日行为不变）
     assert.ok(out.includes('- 修改文件: shared.js'), '门关时既有去重行为不变');
   });

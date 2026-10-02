@@ -150,7 +150,7 @@ test('buildEndurancePersistReport:有变更 → 列出写入键 + envPath + 落�
   assert.ok(joined.includes('落盘'));
   assert.ok(joined.includes('/home/u/.khy/.env'));
   assert.ok(joined.includes('KHY_GOAL_IDLE_MS=0'));
-  assert.ok(joined.includes('落盘后 · 目标判定:✅'), '空→endurance 后应可连续运行');
+  assert.ok(joined.includes('落盘后 · 目标判定:✓'), '空→endurance 后应可连续运行');
   assert.ok(joined.includes('撤销'));
 });
 
@@ -209,11 +209,11 @@ test('assessSessionEndurance:绝不抛(无参 / null / 垃圾)', () => {
   assert.doesNotThrow(() => end.assessSessionEndurance({ env: 123, targetHours: 'x' }));
 });
 
-test('buildSessionEnduranceReport:enduring → ✅ 判定行 + 会话终身 note', () => {
+test('buildSessionEnduranceReport:enduring → ✓ 判定行 + 会话终身 note', () => {
   const a = end.assessSessionEndurance({ env: end.buildSessionEnduranceEnv() });
   const joined = end.buildSessionEnduranceReport(a).join('\n');
   assert.ok(joined.includes('交互式会话'));
-  assert.ok(joined.includes('✅'));
+  assert.ok(joined.includes('✓'));
   assert.ok(joined.includes('无闲置退出'));
 });
 
@@ -245,13 +245,13 @@ test('buildEndurancePersistPlan:未知 scope 退回 all', () => {
   assert.equal(plan.scope, 'all');
 });
 
-test('buildEnduranceHeadline:两维度 after 都 enduring → 两行 ✅;scope 过滤', () => {
+test('buildEnduranceHeadline:两维度 after 都 enduring → 两行 ✓;scope 过滤', () => {
   const sessionAfter = end.assessSessionEndurance({ env: end.buildSessionEnduranceEnv() });
   const goalAfter = end.assessGoalEndurance({ env: end.buildEnduranceEnv() });
   const all = end.buildEnduranceHeadline({ sessionAfter, goalAfter, scope: 'all' });
   assert.equal(all.length, 2);
-  assert.ok(all[0].includes('交互式会话') && all[0].includes('✅'));
-  assert.ok(all[1].includes('目标') && all[1].includes('✅'));
+  assert.ok(all[0].includes('交互式会话') && all[0].includes('✓'));
+  assert.ok(all[1].includes('目标') && all[1].includes('✓'));
   const sessOnly = end.buildEnduranceHeadline({ sessionAfter, goalAfter, scope: 'session' });
   assert.equal(sessOnly.length, 1);
   assert.ok(sessOnly[0].includes('交互式会话'));
@@ -259,10 +259,10 @@ test('buildEnduranceHeadline:两维度 after 都 enduring → 两行 ✅;scope �
 
 test('buildEndurancePersistReport:scope=session 标题 + headline 透传', () => {
   const plan = end.buildEndurancePersistPlan({ env: {}, scope: 'session' });
-  const headline = ['落盘后 · 交互式会话:✅ 默认可连续跑几天不中断。'];
+  const headline = ['落盘后 · 交互式会话:✓ 默认可连续跑几天不中断。'];
   const joined = end.buildEndurancePersistReport({ plan, headline, envPath: '/x/.env' }).join('\n');
   assert.ok(joined.includes('交互会话'), '标题应含 scope 标签');
-  assert.ok(joined.includes('落盘后 · 交互式会话:✅'));
+  assert.ok(joined.includes('落盘后 · 交互式会话:✓'));
 });
 
 // ── 无人值守自动作答 + 模型无感续接维度(goal 2026-07-11)──────────────────

@@ -108,7 +108,7 @@ test('buildVerdictFeedback: incorrect → first-person directive + display namin
   assert.match(fb.directive, /\[SYSTEM:/);
   assert.match(fb.directive, /不对/);
   assert.match(fb.directive, /a\.js/);
-  assert.match(fb.display, /❌/);
+  assert.match(fb.display, /✗/);
   assert.match(fb.display, /a\.js/);
 });
 
@@ -116,7 +116,7 @@ test('buildVerdictFeedback: correct → non-blocking confirmation, includes file
   const v = leaf.classifyVerdict({ syntax: [], guards: [] }, { checkedCount: 3 });
   const fb = leaf.buildVerdictFeedback(v, { files: ['a.js', 'b.js', 'c.js'] });
   assert.match(fb.directive, /没有发现阻断性问题/);
-  assert.match(fb.display, /✅/);
+  assert.match(fb.display, /✓/);
   assert.match(fb.display, /3/);
 });
 
@@ -124,7 +124,7 @@ test('buildVerdictFeedback: uncertain → explicitly refuses to claim correctnes
   const v = leaf.classifyVerdict({ syntax: [], guards: [] }, { checkedCount: 0 });
   const fb = leaf.buildVerdictFeedback(v, { files: ['notes.md'] });
   assert.match(fb.directive, /无法判断对错/);
-  assert.match(fb.display, /❓/);
+  assert.match(fb.display, /\?/);
 });
 
 test('fail-soft: buildVerdictFeedback tolerates junk verdict', () => {

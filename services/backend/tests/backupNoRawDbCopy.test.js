@@ -23,11 +23,11 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const BACKUP_DIR = path.join(__dirname, '..', 'src', 'services', 'backup');
+const BACKUP_DIR = path.join(__dirname, '..', 'src', 'services', 'domain', 'backup', 'backup');
 const HANDLER = path.join(__dirname, '..', 'src', 'cli', 'handlers', 'backup.js');
 const HOT_COPY = 'sqliteHotCopy.js';
 
-/** 备份域的全部源文件:services/backup/*.js + CLI handler。 */
+/** 备份域的全部源文件:services/domain/backup/backup/*.js + CLI handler。 */
 function _sources() {
   const out = fs
     .readdirSync(BACKUP_DIR)

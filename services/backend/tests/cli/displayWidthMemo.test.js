@@ -153,9 +153,14 @@ test('integration: repeated identical measurement is stable', () => {
   }
 });
 
-test('LIVE wiring: formatters.js delegates through displayWidthMemo', () => {
+test('LIVE wiring: the width SSOT delegates through displayWidthMemo', () => {
+  // The memo hop moved to the shared-substrate leaf on 2026-09-28 ([RESEARCH-018] §3.1 P2);
+  // what must stay true is that exactly one implementation exists and it goes through the memo.
+  const leaf = fs.readFileSync(path.resolve(__dirname, '../../src/utils/text/width.js'), 'utf8');
+  assert.ok(/require\(['"]\.\/displayWidthMemo['"]\)/.test(leaf), 'the leaf requires the memo');
+  assert.ok(/getDisplayWidth\(str,\s*_computeDisplayWidth/.test(leaf), 'delegates via getDisplayWidth(str, _computeDisplayWidth, ...)');
+  assert.ok(/function _computeDisplayWidth\(str\)/.test(leaf), 'compute body renamed to _computeDisplayWidth');
   const src = fs.readFileSync(path.resolve(__dirname, '../../src/cli/formatters.js'), 'utf8');
-  assert.ok(/require\(['"]\.\/displayWidthMemo['"]\)/.test(src), 'requires the memo');
-  assert.ok(/getDisplayWidth\(str,\s*_computeDisplayWidth/.test(src), 'delegates via getDisplayWidth(str, _computeDisplayWidth, ...)');
-  assert.ok(/function _computeDisplayWidth\(str\)/.test(src), 'compute body renamed to _computeDisplayWidth');
+  assert.ok(/require\(['"]\.\.\/utils\/text\/width['"]\)/.test(src), 'formatters binds the leaf');
+  assert.ok(!/function displayWidth\(/.test(src), 'formatters holds no second displayWidth implementation');
 });

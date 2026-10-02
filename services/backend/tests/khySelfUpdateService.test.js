@@ -295,4 +295,37 @@ describe('khySelfUpdateService', () => {
     assert.equal(npmCh.success, false);
     assert.match(r.notice, /npm 更新失败|npm 渠道/);
   });
+
+  // ── 子进程 stderr 不得继承父进程(2026-09-29 截图实测)────────────────────
+  // execSync 未声明 stdio 时子进程 fd 2 直接继承父进程,而这条 pip show 跑在启动
+  // +5s 的后台检查里 —— 那行 `WARNING: Package(s) not found` 会绕开 prefetch 的
+  // 输出队列,落在 TUI 输入框与状态栏下方。下面两条锁住 opts.stdio 的存在与形状。
+  test('_readInstalledVersion pins child stdio (fd 2 must not inherit)', () => {
+    const seen = [];
+    const exec = (cmd, opts) => {
+      seen.push({ cmd, opts });
+      return 'Version: 0.1.100\n';
+    };
+    svc._readInstalledVersion(exec, 'khy-os');
+    assert.equal(seen.length, 1);
+    const { opts } = seen[0];
+    assert.ok(opts && opts.stdio, 'execSync opts must declare stdio explicitly');
+    assert.deepEqual(opts.stdio, ['pipe', 'pipe', 'pipe']);
+    // fd 2 才是那条 WARNING 的出口;'inherit' 与 undefined 都是漏。
+    assert.equal(opts.stdio[2], 'pipe');
+    assert.notEqual(opts.stdio[2], 'inherit');
+  });
+
+  test('_detectInstalledPackage pins stdio on every candidate probe', () => {
+    // 候选表有两项 ⇒ 首个未装时必须走第二轮;两轮都得带上 stdio,否则漏一半。
+    const stdios = [];
+    const exec = (cmd, opts) => {
+      stdios.push(opts && opts.stdio);
+      return /khy-os/.test(cmd) ? '' : 'Version: 0.1.100\n';
+    };
+    const pkg = svc._detectInstalledPackage(exec, ['khy-os', 'khy-quant']);
+    assert.equal(pkg, 'khy-quant');
+    assert.equal(stdios.length, 2, 'both candidates must be probed');
+    for (const s of stdios) assert.deepEqual(s, ['pipe', 'pipe', 'pipe']);
+  });
 });

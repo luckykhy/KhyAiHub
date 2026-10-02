@@ -40,7 +40,7 @@ const build = (msgs, opts) => buildTranscriptLines(msgs, { cols: COLS, ...(opts 
 
 test('user message: prompt marker + image count', () => {
   const out = build([{ role: 'user', content: '帮我读配置', imageCount: 2 }]);
-  assert.deepStrictEqual(out, ['❯ 帮我读配置', '  📎×2']);
+  assert.deepStrictEqual(out, ['❯ 帮我读配置', '  ×2']);
 });
 
 test('user message without images has no attachment line', () => {
@@ -64,7 +64,7 @@ test('assistant timeline: thinking summary, tool head, answer text', () => {
     },
   ]);
   assert.deepStrictEqual(out, [
-    '💭 思考 · 5 字（Ctrl+O 展开）',
+    '思考 · 5 字（Ctrl+O 展开）',
     '',
     '  ✓ readFile(/tmp/a.json)',
     '',
@@ -111,7 +111,7 @@ test('bash command / output / empty output', () => {
 test('error and turn-stats', () => {
   assert.deepStrictEqual(build([{ role: 'error', content: 'boom' }]), ['✗ 错误：boom']);
   // turn-stats 原样透传 content(不做任何包装)
-  assert.deepStrictEqual(build([{ role: 'turn-stats', content: '⏱ 1m30s' }]), ['⏱ 1m30s']);
+  assert.deepStrictEqual(build([{ role: 'turn-stats', content: '✓ 1m 30s' }]), ['✓ 1m 30s']);
   assert.deepStrictEqual(build([{ role: 'turn-stats', content: '' }]), []);
 });
 
@@ -138,8 +138,8 @@ test('unknown roles degrade to a text projection and are skipped when empty', ()
 
 test('showAll expands thinking in full instead of a char summary', () => {
   const msgs = [{ role: 'assistant', timeline: [{ type: 'thinking', text: '一\n二' }] }];
-  assert.deepStrictEqual(build(msgs), ['💭 思考 · 2 字（Ctrl+O 展开）']);
-  assert.deepStrictEqual(build(msgs, { showAll: true }), ['💭 思考', '一', '二']);
+  assert.deepStrictEqual(build(msgs), ['思考 · 2 字（Ctrl+O 展开）']);
+  assert.deepStrictEqual(build(msgs, { showAll: true }), ['思考', '一', '二']);
 });
 
 // 折叠行文案的 SSOT 是 cli/thinkingDuration.js —— 内联转录区此前自己拼字符串,
@@ -148,11 +148,11 @@ test('folded thinking line carries the real duration and the caller hint', () =>
   const msgs = [
     { role: 'assistant', timeline: [{ type: 'thinking', text: '一\n二', durationMs: 12000 }] },
   ];
-  assert.deepStrictEqual(build(msgs), ['💭 思考 12s · 2 字（Ctrl+O 展开）']);
+  assert.deepStrictEqual(build(msgs), ['思考 12s · 2 字（Ctrl+O 展开）']);
   assert.deepStrictEqual(build(msgs, { thinkingHint: '（点击展开）' }), [
-    '💭 思考 12s · 2 字（点击展开）',
+    '思考 12s · 2 字（点击展开）',
   ]);
-  assert.deepStrictEqual(build(msgs, { showAll: true })[0], '💭 思考 12s');
+  assert.deepStrictEqual(build(msgs, { showAll: true })[0], '思考 12s');
 });
 
 test('showAll expands the tool result body, indented under its head', () => {

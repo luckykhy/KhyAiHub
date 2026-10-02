@@ -13,6 +13,7 @@ const React = require('react');
 const TOOL_LINES_PATH = '../../../../src/cli/tui/ink-components/ToolLines';
 const PROCESS_GROUP_PATH = '../../../../src/cli/tui/ink-components/ProcessGroup';
 const SPINNER_PATH = '../../../../src/cli/tui/ink-components/Spinner';
+const TRANSCRIPT_VIEW_PATH = '../../../../src/cli/tui/ink-components/TranscriptView';
 
 const TOOL_LINES_STATICS = [
   'buildWriteDiffRows', 'renderDiffRows', 'buildShellDiffRows',
@@ -26,6 +27,7 @@ const PROCESS_GROUP_STATICS = [
   'groupConsecutiveTools', 'groupTimeline', 'statusSummary', 'groupTitle', 'classifyTool',
 ];
 const SPINNER_STATICS = ['buildSpinnerMeta'];
+const TRANSCRIPT_VIEW_STATICS = ['bodyHeight'];
 
 // The gate is read at module-load time, so gate-variation tests must re-require
 // with a fresh cache entry (only the component's own entry — deps stay cached).
@@ -64,6 +66,7 @@ test('default (gate on): exports are memo-wrapped yet renderable, statics reacha
     [TOOL_LINES_PATH, TOOL_LINES_STATICS, 'ToolLines'],
     [PROCESS_GROUP_PATH, PROCESS_GROUP_STATICS, 'ProcessGroup'],
     [SPINNER_PATH, SPINNER_STATICS, 'Spinner'],
+    [TRANSCRIPT_VIEW_PATH, TRANSCRIPT_VIEW_STATICS, 'TranscriptView'],
   ];
   for (const [p, statics, label] of cases) {
     const mod = freshRequire(p, undefined); // default → memo on
@@ -79,6 +82,7 @@ test('gate off (KHY_TUI_COMPONENT_MEMO=0): plain function exports, statics reach
     [TOOL_LINES_PATH, TOOL_LINES_STATICS, 'ToolLines'],
     [PROCESS_GROUP_PATH, PROCESS_GROUP_STATICS, 'ProcessGroup'],
     [SPINNER_PATH, SPINNER_STATICS, 'Spinner'],
+    [TRANSCRIPT_VIEW_PATH, TRANSCRIPT_VIEW_STATICS, 'TranscriptView'],
   ];
   for (const [p, statics, label] of cases) {
     const mod = freshRequire(p, '0');
@@ -103,4 +107,17 @@ test('toolsPropsEqual: identity over tool elements, field compare on primitives'
   assert.equal(eq({ tools: [t1], expanded: false, live: false }, { tools: [t1], expanded: false, live: true }), false);
   // Length change → not equal.
   assert.equal(eq({ tools: [t1], expanded: false, live: false }, { tools: [t1, t2], expanded: false, live: false }), false);
+});
+
+// TranscriptView also exports NUMERIC statics (CHROME_ROWS / MIN_BODY_ROWS) that
+// assertStatics cannot cover (it asserts typeof === 'function'). Pin them here so a
+// memo wrap that silently drops them is caught.
+test('TranscriptView numeric statics survive the memo wrap', () => {
+  for (const envValue of [undefined, '0']) {
+    const mod = freshRequire(TRANSCRIPT_VIEW_PATH, envValue);
+    assert.equal(typeof mod.CHROME_ROWS, 'number', 'CHROME_ROWS must stay a number');
+    assert.equal(typeof mod.MIN_BODY_ROWS, 'number', 'MIN_BODY_ROWS must stay a number');
+    assert.equal(mod.CHROME_ROWS, 12);
+    assert.equal(mod.MIN_BODY_ROWS, 4);
+  }
 });

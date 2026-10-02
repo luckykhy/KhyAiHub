@@ -142,9 +142,9 @@ test('门开非 falsy 值（如 on/1/空串）→ 启用', () => {
 
 // ── formatEmptySuccessWarning ────────────────────────────────────────
 
-test('formatEmptySuccessWarning：count≥1 → 含 ⚠️ + N', () => {
+test('formatEmptySuccessWarning：count≥1 → 含 ⚠ + N', () => {
   const w = formatEmptySuccessWarning(2);
-  assert.match(w, /⚠️/);
+  assert.match(w, /⚠/);
   assert.match(w, /2 项/);
   assert.match(w, /无产出/);
 });
@@ -177,7 +177,7 @@ const { mergeResults } = require('../../../src/services/taskDecomposer');
 const sub = (prompt, originIndex) => ({ prompt, role: 'general', originIndex });
 const agg = (n, result) => ({ name: `subtask-${n}`, result });
 
-test('接线：门开 + 一个空成功子任务 → status 渲「⚠️ 完成（无产出）」+ footer 计数', () => {
+test('接线：门开 + 一个空成功子任务 → status 渲「⚠ 完成（无产出）」+ footer 计数', () => {
   withGate(undefined, () => {
     const subtasks = [sub('干活的 A', 0), sub('空转的 B', 1)];
     const aggregated = [
@@ -185,8 +185,8 @@ test('接线：门开 + 一个空成功子任务 → status 渲「⚠️ 完成�
       agg(2, { success: true, output: '', filesModified: [], toolCalls: 0 }),
     ];
     const out = mergeResults(subtasks, aggregated);
-    assert.ok(out.includes('⚠️ 完成（无产出）'), 'status 应标注空产出');
-    assert.ok(out.includes('⚠️ 完成但无产出: 1 项'), 'footer 应含空成功计数');
+    assert.ok(out.includes('⚠ 完成（无产出）'), 'status 应标注空产出');
+    assert.ok(out.includes('⚠ 完成但无产出: 1 项'), 'footer 应含空成功计数');
     // 干活的 A 仍渲普通「完成」（不误标）
     assert.ok(/状态\*\*: 完成\n/.test(out) || out.includes('**状态**: 完成'), 'A 应渲普通完成');
   });
@@ -220,6 +220,6 @@ test('接线：空成功不改 successCount 总数（仍计入「完成 N/N」�
     const aggregated = [agg(1, { success: true, output: '', filesModified: [] })];
     const out = mergeResults(subtasks, aggregated);
     assert.ok(out.includes('- 完成: 1/1 项'), '空成功仍计入完成总数（它确实没失败）');
-    assert.ok(out.includes('⚠️ 完成但无产出: 1 项'), '但 footer 醒目提示复查');
+    assert.ok(out.includes('⚠ 完成但无产出: 1 项'), '但 footer 醒目提示复查');
   });
 });

@@ -78,14 +78,14 @@ describe('detectTestOutcome — deterministic test-runner parsing', () => {
 describe('composeFindingReport — rendering', () => {
   test('green report', () => {
     const r = kf.composeFindingReport({ kind: 'test', passed: 23, failed: 0, total: 23, green: true, failures: [] });
-    expect(r).toContain('✅');
+    expect(r).toContain('✓');
     expect(r).toContain('23');
   });
 
   test('failure report lists names + next step, truncates to 5', () => {
     const failures = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
     const r = kf.composeFindingReport({ kind: 'test', passed: 1, failed: 7, total: 8, green: false, failures });
-    expect(r).toContain('❌');
+    expect(r).toContain('✗');
     expect(r).toContain('7 失败');
     expect(r).toContain('· a');
     expect(r).toContain('下一步');
@@ -125,9 +125,9 @@ describe('model findings — parse / strip / compose', () => {
   });
 
   test('composeModelFinding renders typed headers', () => {
-    expect(kf.composeModelFinding({ kind: 'model', type: 'root_cause', text: 'X' })).toContain('🔎');
-    expect(kf.composeModelFinding({ kind: 'model', type: 'breakthrough', text: 'X' })).toContain('💡');
-    expect(kf.composeModelFinding({ kind: 'model', type: 'blocked', text: 'X' })).toContain('⛔');
+    expect(kf.composeModelFinding({ kind: 'model', type: 'root_cause', text: 'X' })).toContain('根因');
+    expect(kf.composeModelFinding({ kind: 'model', type: 'breakthrough', text: 'X' })).toContain('突破');
+    expect(kf.composeModelFinding({ kind: 'model', type: 'blocked', text: 'X' })).toContain('◉');
     expect(kf.composeModelFinding({ kind: 'model', type: 'root_cause', text: '' })).toBe('');
   });
 

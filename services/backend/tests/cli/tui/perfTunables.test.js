@@ -14,13 +14,14 @@ const {
   heartbeatAlignDelayMs,
   topicBarAnimMs,
   suspendSettleMs,
+  taskSnapshotTtlMs,
   INK_THROTTLE_MS,
 } = require('../../../src/cli/tui/perfTunables');
 
-test('defaults (env unset): 160 / 1000 / 320', () => {
+test('defaults (env unset): 160 / 1000 / 180', () => {
   assert.equal(spinnerFrameMs({}), 160);
   assert.equal(heartbeatMs({}), 1000);
-  assert.equal(topicBarAnimMs({}), 320);
+  assert.equal(topicBarAnimMs({}), 180);
 });
 
 test('per-knob env overrides accept any finite positive number', () => {
@@ -35,7 +36,7 @@ test('garbage values (NaN/0/negative/empty) fall back to defaults', () => {
   for (const v of ['abc', 'NaN', '0', '-50', '', '  ', 'Infinity ms']) {
     assert.equal(spinnerFrameMs({ KHY_SPINNER_FRAME_MS: v }), 160, `spinner garbage ${JSON.stringify(v)}`);
     assert.equal(heartbeatMs({ KHY_HEARTBEAT_MS: v }), 1000, `heartbeat garbage ${JSON.stringify(v)}`);
-    assert.equal(topicBarAnimMs({ KHY_TOPIC_BAR_ANIM_MS: v }), 320, `topicBar garbage ${JSON.stringify(v)}`);
+    assert.equal(topicBarAnimMs({ KHY_TOPIC_BAR_ANIM_MS: v }), 180, `topicBar garbage ${JSON.stringify(v)}`);
   }
   // Infinity is positive but NOT finite — rejected too.
   assert.equal(spinnerFrameMs({ KHY_SPINNER_FRAME_MS: 'Infinity' }), 160);
@@ -48,12 +49,22 @@ test('KHY_TUI_LOW_POWER=1 umbrella relaxes the cadence defaults to 320 / 2000 / 
   assert.equal(topicBarAnimMs(env), 640);
 });
 
+// ── spinnerFrameMs 默认 160ms 是**裁决值**，不是随手放宽 ──────────────────────
+// [DESIGN-ARCH-101] §8 冲突 1 裁定「以 perfTunables 的 160ms 为准」，并把 80ms 判为
+// 陈旧第三源（另见 079 §12.6.1 / 102 §6.4 / 115 §2.2）；134 警告 80ms 在帧高饱和时
+// 每 tick 近乎整屏重写。本断言把裁决钉住：要改回 80ms 必须先动那五篇规范。
+// 组件兜底值与 §3.3 表仍是 80 —— 那是**已知待收敛**的陈旧侧，不是本值的反例。
+test('spinnerFrameMs 默认 160ms 是裁决值(改回 80 需先动 [DESIGN-ARCH-101] §8 等规范)', () => {
+  assert.equal(spinnerFrameMs({}), 160);
+  assert.equal(spinnerFrameMs({ KHY_TUI_LOW_POWER: '1' }), 320);
+});
+
 test('umbrella is strict "1": other writings do not activate it', () => {
   for (const v of ['true', 'on', 'yes', '0', '']) {
     const env = { KHY_TUI_LOW_POWER: v };
     assert.equal(spinnerFrameMs(env), 160, `umbrella writing ${JSON.stringify(v)}`);
     assert.equal(heartbeatMs(env), 1000);
-    assert.equal(topicBarAnimMs(env), 320);
+    assert.equal(topicBarAnimMs(env), 180);
   }
 });
 
@@ -164,4 +175,32 @@ test('suspendSettleMs 垃圾值回落默认 50', () => {
 
 test('suspendSettleMs 不受 LOW_POWER umbrella 放宽(它是屏障不是节奏)', () => {
   assert.equal(suspendSettleMs({ KHY_TUI_LOW_POWER: '1' }), 50);
+});
+
+// ── taskSnapshotTtlMs:任务清单「扫盘结果」的新鲜度窗口 ────────────────────────
+// 它**不是节拍**而是数据新鲜度窗口(让渲染变便宜,不是让动画变慢),故与
+// suspendSettleMs 同族:LOW_POWER 不放宽。语义见 perfTunables 该函数 docstring。
+
+test('taskSnapshotTtlMs 默认 250ms', () => {
+  assert.equal(taskSnapshotTtlMs({}), 250);
+});
+
+test('taskSnapshotTtlMs 受 LOW_POWER 放宽到 1000ms', () => {
+  assert.equal(taskSnapshotTtlMs({ KHY_TUI_LOW_POWER: '1' }), 1000);
+});
+
+test('taskSnapshotTtlMs umbrella 是严格 "1":其他写法不激活', () => {
+  for (const v of ['true', 'on', 'yes', '0', '']) {
+    assert.equal(taskSnapshotTtlMs({ KHY_TUI_LOW_POWER: v }), 250, `umbrella ${JSON.stringify(v)}`);
+  }
+});
+
+test('taskSnapshotTtlMs 默认 env 参数(process.env)不抛', () => {
+  assert.ok(Number.isFinite(taskSnapshotTtlMs()));
+});
+
+test('taskSnapshotTtlMs 刻意无独立 env override(锁定 §7 R4「净新增门控 = 0」)', () => {
+  // 这不是疏漏:新增 KHY_TASK_SNAPSHOT_TTL_MS 会让 check-tui-gates 计数上升(现 236/227 已超标)。
+  assert.equal(taskSnapshotTtlMs({ KHY_TASK_SNAPSHOT_TTL_MS: '9999' }), 250);
+  assert.equal(taskSnapshotTtlMs({ KHY_TASK_SNAPSHOT_TTL_MS: '9999', KHY_TUI_LOW_POWER: '1' }), 1000);
 });

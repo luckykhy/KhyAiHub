@@ -35,26 +35,26 @@ const { buildStallLine, buildSpinnerMeta, statusSegmentOf } = Spinner;
 test('buildStallLine:目标 + 实际停滞秒数（规则 2.5 的合规形状）', () => {
   assert.strictEqual(
     buildStallLine('执行 npm run build', 30),
-    '⏳ 等待中 · 执行 npm run build（已 30s）'
+    '等待中 · 执行 npm run build（已 30s）'
   );
 });
 
 test('buildStallLine:有目标无秒数 → 不加空后缀，也不编一个数', () => {
-  assert.strictEqual(buildStallLine('读取 src/index.js', 0), '⏳ 等待中 · 读取 src/index.js');
-  assert.strictEqual(buildStallLine('读取 src/index.js', undefined), '⏳ 等待中 · 读取 src/index.js');
-  assert.strictEqual(buildStallLine('读取 src/index.js', null), '⏳ 等待中 · 读取 src/index.js');
+  assert.strictEqual(buildStallLine('读取 src/index.js', 0), '等待中 · 读取 src/index.js');
+  assert.strictEqual(buildStallLine('读取 src/index.js', undefined), '等待中 · 读取 src/index.js');
+  assert.strictEqual(buildStallLine('读取 src/index.js', null), '等待中 · 读取 src/index.js');
 });
 
 test('buildStallLine:无目标但有秒数 → 必须带数，不得退化成光秃秃一句等待中', () => {
   // 规则 2.5 的 ❌ 反例正是「⏳ 等待中」/「⏳ 请稍候…」这种什么都没说的行。
-  assert.strictEqual(buildStallLine('', 12), '⏳ 等待中（已 12s）');
-  assert.strictEqual(buildStallLine('   ', 12), '⏳ 等待中（已 12s）');
+  assert.strictEqual(buildStallLine('', 12), '等待中（已 12s）');
+  assert.strictEqual(buildStallLine('   ', 12), '等待中（已 12s）');
 });
 
 test('buildStallLine:目标里的换行/多空格折成一格（单行渲染，行数预算不能被撑坏）', () => {
   assert.strictEqual(
     buildStallLine('等待模型\n  响应中', 5),
-    '⏳ 等待中 · 等待模型 响应中（已 5s）'
+    '等待中 · 等待模型 响应中（已 5s）'
   );
 });
 
@@ -62,11 +62,11 @@ test('buildStallLine:junk 输入不产出 "undefined"/"NaN"', () => {
   for (const v of [undefined, null, 0, {}, [], () => {}]) {
     const out = buildStallLine(v, 7);
     assert.doesNotMatch(out, /undefined|null|NaN/);
-    assert.ok(out.startsWith('⏳ 等待中'));
+    assert.ok(out.startsWith('等待中'));
   }
   // 秒数为垃圾 → 视作未知，不编造
   for (const v of ['abc', {}, [], NaN, -5]) {
-    assert.strictEqual(buildStallLine('X', v), '⏳ 等待中 · X');
+    assert.strictEqual(buildStallLine('X', v), '等待中 · X');
   }
 });
 

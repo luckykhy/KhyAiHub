@@ -21,11 +21,10 @@ describe('Gateway Vision Badge', () => {
     expect(tag).toContain('视觉');
   });
   
-  test('GLM 视觉模型 → 含「👁 视觉」徽章', () => {
+  test('GLM 视觉模型 → 含「视觉」徽章', () => {
       for (const id of ['glm-4.6v-flash', 'glm-4v-flash', 'glm-4.6v']) {
         const tag = strip(_formatVisionTag({ id }));
         expect(tag.includes('视觉')).toBeTruthy();
-        expect(tag.includes('👁')).toBeTruthy();
       }
   });
 

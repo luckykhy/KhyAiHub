@@ -288,19 +288,19 @@ describe('formatAssistantText(text) 中间叙述格式化', () => {
 describe('formatAssistantMessage(content) 用户可见中间消息', () => {
   test('单行 → 加气泡图标前缀', () => {
     expect(hp.formatAssistantMessage('我无法直接识别图片内容。正在调用 glm-4.6v-flash 进行识别，请稍候...'))
-      .toBe('💬 我无法直接识别图片内容。正在调用 glm-4.6v-flash 进行识别，请稍候...');
+      .toBe('我无法直接识别图片内容。正在调用 glm-4.6v-flash 进行识别，请稍候...');
   });
   test('多行:首行气泡·续行对齐缩进', () => {
-    expect(hp.formatAssistantMessage('line1\nline2')).toBe('💬 line1\n   line2');
+    expect(hp.formatAssistantMessage('line1\nline2')).toBe('line1\n   line2');
   });
   test('折叠 3+ 连续空行为 1', () => {
-    expect(hp.formatAssistantMessage('a\n\n\n\nb')).toBe('💬 a\n\n   b');
+    expect(hp.formatAssistantMessage('a\n\n\n\nb')).toBe('a\n\n   b');
   });
   test('丢弃首尾空行 + 逐行右侧去空白', () => {
-    expect(hp.formatAssistantMessage('\n\n  real  \n\n')).toBe('💬 real');
+    expect(hp.formatAssistantMessage('\n\n  real  \n\n')).toBe('real');
   });
   test('CRLF 归一化为 LF', () => {
-    expect(hp.formatAssistantMessage('x\r\ny')).toBe('💬 x\n   y');
+    expect(hp.formatAssistantMessage('x\r\ny')).toBe('x\n   y');
   });
   test('空 / 纯空白 / 非串 → 空串(调用方据此跳过·fail-soft)', () => {
     expect(hp.formatAssistantMessage('')).toBe('');
@@ -331,9 +331,9 @@ describe('isHeartbeatEnabled(env)', () => {
 });
 
 describe('formatToolHeartbeat(name, elapsedMs)', () => {
-  test('长时工具 → ⏳ + 显示名 + 运行中 + 耗时(单行·2 空格缩进)', () => {
+  test('长时工具 → 显示名 + 运行中 + 耗时(单行·2 空格缩进)', () => {
     const l = hp.formatToolHeartbeat('shellCommand', 7000);
-    expect(l.startsWith('  ⏳ ')).toBe(true);
+    expect(l.startsWith('  ')).toBe(true);
     expect(l).toContain('运行中');
     expect(l).toContain('7s');
     expect(l).not.toContain('\n');

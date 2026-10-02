@@ -86,7 +86,7 @@ test('formatRoleTag enabled by default (undefined env) and for non-falsy', () =>
 test('formatRoleFailureSummary counts by bucket in declaration order', () => {
   withGate('1', () => {
     const line = formatRoleFailureSummary(['explore', 'implement', 'implement']);
-    assert.strictEqual(line, '⚠️ 失败分布: 实现 2 项、探索 1 项');
+    assert.strictEqual(line, '⚠ 失败分布: 实现 2 项、探索 1 项');
   });
 });
 
@@ -102,7 +102,7 @@ test('formatRoleFailureSummary buckets unknown/malformed roles into 通用 (neve
   withGate('1', () => {
     // 3 failures: unknown + null + general → all land in 通用 → count sums to 3.
     const line = formatRoleFailureSummary(['wat', null, 'general']);
-    assert.strictEqual(line, '⚠️ 失败分布: 通用 3 项');
+    assert.strictEqual(line, '⚠ 失败分布: 通用 3 项');
   });
 });
 
@@ -165,7 +165,7 @@ test('WIRED: real mergeResults footer surfaces failed-role distribution + verify
       agg(2, { success: false, error: '测试失败' }),
     ];
     const out = mergeResults(subtasks, aggregated);
-    assert.ok(out.includes('⚠️ 失败分布: 验证 1 项'), out);
+    assert.ok(out.includes('⚠ 失败分布: 验证 1 项'), out);
     assert.ok(out.includes('验证失败=结果未经校验'), out);
   });
 });
@@ -195,6 +195,6 @@ test('WIRED: an unexecuted (null-result) subtask still contributes its role to t
     const aggregated = [agg(99, { success: true, text: 'x' })]; // no subtask-1 match → null
     const out = mergeResults(subtasks, aggregated);
     assert.ok(out.includes('未执行'), out);
-    assert.ok(out.includes('⚠️ 失败分布: 探索 1 项'), out);
+    assert.ok(out.includes('⚠ 失败分布: 探索 1 项'), out);
   });
 });

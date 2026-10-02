@@ -192,21 +192,21 @@ test('intent: 大小写与首尾空白归一', () => {
 test('recall+ctx: 子句插在「条相关记忆」与「：」之间', () => {
   withGate(undefined, () => {
     const s = NOTICE.formatRecallNotice(new Set(['a.md', 'b.md']), { types: ['feedback'] });
-    assert.strictEqual(s, '🧠 召回 2 条相关记忆（为了遵守你此前给过的协作偏好）：a、b');
+    assert.strictEqual(s, '召回 2 条相关记忆（为了遵守你此前给过的协作偏好）：a、b');
   });
 });
 
 test('recall+ctx: ctx 缺省 / 全未知 ⇒ 与旧版**逐字节相等**（V4 回退）', () => {
   withGate(undefined, () => {
     // 真值断言：钉住确切的字节，而不是复刻一份实现去对比。
-    assert.strictEqual(NOTICE.formatRecallNotice(new Set(['a.md', 'b.md'])), '🧠 召回 2 条相关记忆：a、b');
+    assert.strictEqual(NOTICE.formatRecallNotice(new Set(['a.md', 'b.md'])), '召回 2 条相关记忆：a、b');
     assert.strictEqual(
       NOTICE.formatRecallNotice(new Set(['a.md', 'b.md']), { types: ['mystery'] }),
-      '🧠 召回 2 条相关记忆：a、b'
+      '召回 2 条相关记忆：a、b'
     );
     assert.strictEqual(
       NOTICE.formatRecallNotice(new Set(['a.md', 'b.md']), undefined),
-      '🧠 召回 2 条相关记忆：a、b'
+      '召回 2 条相关记忆：a、b'
     );
     // 动词必须是真源原词「召回」——改成「回忆起」会破 V4（实测踩过）。
     assert.ok(!NOTICE.formatRecallNotice(new Set(['a.md']), { types: ['user'] }).includes('回忆起'));
@@ -216,7 +216,7 @@ test('recall+ctx: ctx 缺省 / 全未知 ⇒ 与旧版**逐字节相等**（V4 �
 test('recall+ctx: 等 N 条 tail 与子句共存', () => {
   withGate(undefined, () => {
     const s = NOTICE.formatRecallNotice(['a.md', 'b.md', 'c.md', 'd.md', 'e.md'], { types: ['project'] });
-    assert.strictEqual(s, '🧠 召回 5 条相关记忆（为了对齐项目约定）：a、b、c 等 5 条');
+    assert.strictEqual(s, '召回 5 条相关记忆（为了对齐项目约定）：a、b、c 等 5 条');
   });
 });
 
@@ -226,7 +226,7 @@ test('payload: 形状 {kind,text}；kind 恒为 memory-notice', () => {
   withGate(undefined, () => {
     const p = NOTICE.formatRecallNoticePayload(new Set(['a.md']), { types: ['user'] });
     assert.strictEqual(p.kind, 'memory-notice');
-    assert.strictEqual(p.text, '🧠 召回 1 条相关记忆（为了沿用你的既有设定）：a');
+    assert.strictEqual(p.text, '召回 1 条相关记忆（为了沿用你的既有设定）：a');
   });
 });
 
@@ -245,8 +245,8 @@ test('payload: 门关 / 空召回 ⇒ null（调用方不 push、不 onStatus）
 test('hardening: 字符串入参不被逐字符拆开', () => {
   withGate(undefined, () => {
     // 旧行为是 Array.from('bad') ⇒ '召回 3 条：b、a、d'（荒谬输出）。
-    assert.strictEqual(NOTICE.formatRecallNotice('bad'), '🧠 召回 1 条相关记忆：bad');
-    assert.strictEqual(NOTICE.formatRecallNotice('a.md'), '🧠 召回 1 条相关记忆：a');
+    assert.strictEqual(NOTICE.formatRecallNotice('bad'), '召回 1 条相关记忆：bad');
+    assert.strictEqual(NOTICE.formatRecallNotice('a.md'), '召回 1 条相关记忆：a');
   });
 });
 

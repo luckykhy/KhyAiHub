@@ -62,23 +62,23 @@ console.log('=== deliveryGateReporter 单元测试 ===\n');
 // 测试 1: 生成 PASS 报告
 console.log('测试 1: 生成 PASS 结果的 markdown 报告');
 const passReport = generateDeliveryReport(mockPassResult, { format: 'markdown' });
-assert(passReport.includes('# DeliveryGate Report ✅'), '应包含 PASS 标题');
+assert(passReport.includes('# DeliveryGate Report ✓'), '应包含 PASS 标题');
 assert(passReport.includes('**Verdict**: PASS'), '应显示 PASS verdict');
 assert(passReport.includes('Passed: 5 / 5'), '应显示统计信息');
-assert(passReport.includes('## ✅ Passed Checks'), '应有通过检查章节');
-assert(!passReport.includes('## ❌ Required Missing'), '不应有缺失项章节');
+assert(passReport.includes('## ✓ Passed Checks'), '应有通过检查章节');
+assert(!passReport.includes('## ✗ Required Missing'), '不应有缺失项章节');
 console.log('  ✓ PASS 报告生成正确\n');
 
 // 测试 2: 生成 FAIL 报告
 console.log('测试 2: 生成 FAIL 结果的 markdown 报告');
 const failReport = generateDeliveryReport(mockFailResult, { format: 'markdown', includeRemediation: true });
-assert(failReport.includes('# DeliveryGate Report ❌'), '应包含 FAIL 标题');
+assert(failReport.includes('# DeliveryGate Report ✗'), '应包含 FAIL 标题');
 assert(failReport.includes('**Verdict**: FAIL'), '应显示 FAIL verdict');
-assert(failReport.includes('## ❌ Required Missing (BLOCKING)'), '应有必需缺失项章节');
+assert(failReport.includes('## ✗ Required Missing (BLOCKING)'), '应有必需缺失项章节');
 assert(failReport.includes('README exists'), '应列出 README 缺失');
 assert(failReport.includes('Tests present'), '应列出测试缺失');
-assert(failReport.includes('## ⚠️ Optional Warnings'), '应有可选警告章节');
-assert(failReport.includes('## 🔧 Remediation Suggestions'), '应有改进建议章节');
+assert(failReport.includes('## ⚠ Optional Warnings'), '应有可选警告章节');
+assert(failReport.includes('## Remediation Suggestions'), '应有改进建议章节');
 assert(failReport.includes('Create the missing file'), '应给出具体建议');
 console.log('  ✓ FAIL 报告生成正确\n');
 
@@ -137,7 +137,7 @@ assert.strictEqual(returned, outPath, 'saveDeliveryReport 应返回写入路径'
 assert(fs.existsSync(outPath), '报告文件应存在');
 const onDisk = fs.readFileSync(outPath, 'utf-8');
 assert.strictEqual(onDisk, generateDeliveryReport(mockFailResult, { format: 'markdown' }), '落盘内容应与 markdown 报告逐字节一致');
-assert(onDisk.includes('# DeliveryGate Report ❌'), '落盘报告应含标题');
+assert(onDisk.includes('# DeliveryGate Report ✗'), '落盘报告应含标题');
 try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch { /* best effort */ }
 console.log('  ✓ saveDeliveryReport 落盘并返回路径\n');
 

@@ -10,7 +10,12 @@
 const test = require('node:test');
 const assert = require('node:assert');
 
-const { ensureMcpConnected, autoConnectEnabled } = require('../src/services/domain/messaging/mcp/autoConnect');
+const {
+  ensureMcpConnected,
+  autoConnectEnabled,
+  formatConnectFailure,
+  formatConnectFailureSummary,
+} = require('../src/services/domain/messaging/mcp/autoConnect');
 
 /** Build a fake MCP manager recording connectAll calls. */
 function makeManager({ servers = [], connectResult, connectThrows = false } = {}) {
@@ -107,4 +112,44 @@ test('failed connections are surfaced in the result', async () => {
   assert.deepStrictEqual(res.connected, ['fs']);
   assert.strictEqual(res.failed.length, 1);
   assert.strictEqual(res.failed[0].name, 'broken');
+});
+
+// --- 用户可见文案（措辞锁定）------------------------------------------------
+//
+// 这组用例存在的理由不是「函数能跑」，而是**锁死措辞**：MCP server 是可选工具，
+// 连不上不影响页面/对话；历史上失败行用 ✗（红色叉）被读成「khy 启动出错」，
+// 让一个无害噪声混进了「启动慢」的抱怨。措辞一旦被改回 ✗ 或丢掉「可选」定性，
+// 必须有人（或 CI）当场知道 —— 所以这里逐字断言，不做模糊匹配。
+
+test('failed-connect 文案：含未连接事实 + 「可选/不影响使用」定性，且不用 ✗', () => {
+  const s = formatConnectFailure({ name: 'deepseek-eyes', error: 'ETIMEDOUT' });
+  assert.strictEqual(s, '! deepseek-eyes 未连接（可选工具，不影响使用）: ETIMEDOUT');
+  assert.ok(!s.includes('✗'), 'must not use the red-cross glyph (read as "startup error")');
+});
+
+test('failed-connect 文案：带进度前缀时保留 [done/total pct%] 形状', () => {
+  const s = formatConnectFailure({ name: 'fs', error: 'ENOENT' }, { done: 2, total: 3 });
+  assert.strictEqual(s, '[2/3  66.7%] ! fs 未连接（可选工具，不影响使用）: ENOENT');
+});
+
+test('failed-connect 文案：缺字段也不抛，降级为 unknown 占位', () => {
+  assert.strictEqual(formatConnectFailure(null), '! unknown 未连接（可选工具，不影响使用）: unknown error');
+  assert.strictEqual(formatConnectFailure({}), '! unknown 未连接（可选工具，不影响使用）: unknown error');
+});
+
+test('failed-connect 文案：进度字段非有限数时不加前缀（不产出 NaN%）', () => {
+  const s = formatConnectFailure({ name: 'fs', error: 'x' }, { done: NaN, total: 3 });
+  assert.ok(!s.includes('NaN'), 'NaN must never leak into a user-facing line');
+  assert.ok(s.startsWith('! fs'));
+});
+
+test('整轮汇总文案：计数正确 + 「不影响页面与对话」定性', () => {
+  assert.strictEqual(
+    formatConnectFailureSummary([{}, {}, {}]),
+    '3 个可选工具未连接（不影响页面与对话，需要时可在设置里重连）:'
+  );
+  assert.strictEqual(
+    formatConnectFailureSummary(null),
+    '0 个可选工具未连接（不影响页面与对话，需要时可在设置里重连）:'
+  );
 });
