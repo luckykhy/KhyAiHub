@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>messaging — 消息渠道、MCP 与 iLink 协议面（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>messaging<span class="sep">›</span>messaging — 消息渠道、MCP 与 iLink 协议面（D2）</div>
+      <header class="hero reveal"><h1>messaging — 消息渠道、MCP 与 iLink 协议面（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#messaging-消息渠道-mcp-与-ilink-协议面-d2">messaging — 消息渠道、MCP 与 iLink 协议面（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="messaging-消息渠道-mcp-与-ilink-协议面-d2">messaging — 消息渠道、MCP 与 iLink 协议面（D2）<a class="anchor" href="#messaging-消息渠道-mcp-与-ilink-协议面-d2" aria-label="锚点">#</a></h1>
+<p>业务上下文：<code>/msg</code>、<code>/wx</code>、<code>/feishu</code> 三个渠道命令与 <code>/mcp</code> 系列<br>（连接、列工具、调用、配置）背后的全部收发逻辑。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong>收 webhook 的人</strong>：<code>routes/webhooks.js:72,89</code> 取 <code>channels/messageRouter.js</code>；</li></ul>
+<p>HTTP 侧 <code>routes/wx.js:26-28</code>。</p>
+<ul><li><strong>跑 <code>/mcp</code> 的人</strong>：<code>constants/commandSchema.js:191</code> 声明（子命令 <code>:860</code>），</li></ul>
+<p>处理器 <code>cli/handlers/mcp.js:25</code> 取 <code>mcp/mcpAddSpec.js</code>、<code>:29</code> 取 <code>mcp/mcpConfigStore.js</code>。</p>
+<ul><li><strong>跑 <code>/msg</code> <code>/wx</code> <code>/feishu</code> 的人</strong>：<code>commandSchema.js:146,147,148</code> →</li></ul>
+<p><code>cli/handlers/{msg,wx,feishu}.js</code>。</p>
+<ul><li><strong>让模型调用 MCP 工具的人</strong>：<code>services/tool/toolUseLoopCore.js:2008,2584</code></li></ul>
+<p>（自动连接与工具池）；<code>cli/tui/ink-components/App.js:535</code>（生态注册表）；<br>  定时任务 <code>services/cronScheduler.js:510</code> 与 <code>daemonEntry.js:213,284</code>。</p>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p>这一层同时存在<strong>三种必须分开的东西</strong>：外部协议（<code>mcp/mcpServerProtocol.js</code>、<br><code>channels/ilinkProtocol.js</code>、<code>ilinkMessageCodec.js</code>、<code>ilinkCrypto.js</code> 是纯编解码与<br>协议常量）、本地态存储（<code>mcpConfigStore</code> / <code>oauthTokenStore</code> /<br><code>ilink{Account,Binding,Cursor,Session}State</code> 各自管一份落盘）、以及发送与派发<br>（<code>msgSender</code> / <code>ilinkDispatcher</code> / <code>ilinkFileDelivery</code>）。把编解码与协议判定做成<br>纯叶子，是为了让「对端改了字段」这类故障能在不开网、不等回调的情况下断言——<br><code>tests/services/messaging/ilinkCore.test.js</code> 就是这条边界的存在理由。<br>MCP 侧同理：<code>mcpAddSpec</code> / <code>mcpDisclosurePlan</code> / <code>mcpServeToolPolicy</code> 是纯计划函数，<br>真正的连接才在 <code>mcp/index.js</code> 的 <code>connectMCPServer / listMCPTools / callMCPTool</code>。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/services/messaging/ilinkCore.test.js        <span class="hljs-comment"># 20 tests / 20 pass / 0 fail</span></code></pre>
+<p>同族还有 <code>tests/services/{messaging,channels,mcp}/</code> 下的其余 node:test 文件；<br>jest 形态的走 <code>npm test</code>（本 shell 无 npm/npx，未在卡内复跑）。</p>
+<h2 id="已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）<a class="anchor" href="#已知缺陷-登记-不在本单元擅自修" aria-label="锚点">#</a></h2>
+<p>改动进行中：<code>channels/ilinkDispatchDiagnostics.js</code>、<code>channels/ilinkDispatcher.js</code>、<br><code>channels/ilinkFileDelivery.js</code>、<code>messaging/ilinkLogin.js</code>、<br><code>messaging/ilinkSendPolicy.js</code> 五个文件当前是 <code> M</code>。本卡对 iLink 派发细节<br><strong>只登记文件名，不复述行为</strong>，待作者落地后复核。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../services/backend/src/services/domain/messaging/mcp/README.html"><div class="dir">← 上一篇</div><div class="ttl">domain/messaging/mcp — khy 的 MCP 双面单元（既当客户端，也当服务器）</div></a><a class="next" href="../../../../../../services/backend/src/services/domain/network/dependency/README.html"><div class="dir">下一篇 →</div><div class="ttl">dependency — Agent 依赖自愈子系统</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/messaging/README.html";</script>
+<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
