@@ -32,14 +32,14 @@
 
 | 目标形态构成 | 现状 | 位置 |
 |---|---|---|
-| 大字问候（按时段） | ✅ 已有 5 档文案 | `EmptyState.tsx:120-128` |
-| 居中悬浮输入卡片 | ✅ `variant="card"` | `Composer.tsx:738-740`；`App.tsx:330-343` |
-| 占位文案「使用 @ 添加上下文 / 选择命令或能力」 | ✅ 已对齐 | `Composer.tsx:817` |
-| 工具行左：`+` 添加上下文 | ✅ 5 项菜单 | `Composer.tsx:22-83` |
-| 工具行左：模式选择器（如「变更前确认」） | ✅ | `Composer.tsx:848`、`ModeSelector.tsx` |
-| 工具行右：模型 / 推理强度 / 发送 | ✅ 同簇 | `Composer.tsx:835-889` |
-| 卡片下方快捷 chips | ✅ 6 张 | `EmptyState.tsx:98-105` |
-| **输入框上方：工作空间选择行** | ❌ **完全缺失** | — |
+| 大字问候（按时段） | ✓ 已有 5 档文案 | `EmptyState.tsx:120-128` |
+| 居中悬浮输入卡片 | ✓ `variant="card"` | `Composer.tsx:738-740`；`App.tsx:330-343` |
+| 占位文案「使用 @ 添加上下文 / 选择命令或能力」 | ✓ 已对齐 | `Composer.tsx:817` |
+| 工具行左：`+` 添加上下文 | ✓ 5 项菜单 | `Composer.tsx:22-83` |
+| 工具行左：模式选择器（如「变更前确认」） | ✓ | `Composer.tsx:848`、`ModeSelector.tsx` |
+| 工具行右：模型 / 推理强度 / 发送 | ✓ 同簇 | `Composer.tsx:835-889` |
+| 卡片下方快捷 chips | ✓ 6 张 | `EmptyState.tsx:98-105` |
+| **输入框上方：工作空间选择行** | ✗ **完全缺失** | — |
 
 **结论：本次不动卡片的版式，只加一个 `header` 槽位。**
 
@@ -191,10 +191,10 @@ interface WorkspacePickerProps {
 
 | 步 | 动作 | 文件 | 可独立提交 |
 |---|---|---|---|
-| 1 | `settingsStore` 增 `desktopRecentWorkspaces`（MRU ≤8） | `main/settingsStore.ts` | ✅ |
-| 2 | 新增 `workspace:list` / `workspace:open` IPC，open 复用 `openDirectoryPicker` + 广播 `khy:workspace-changed` | `main/index.ts`、`preload/index.ts` | ✅ |
-| 3 | 抽出 `openWorkspace()` 共用函数，`TitleBar` / `WorkspaceSidebar` 改为调用 | `renderer/workspace/*` 或 `renderer/utils/` | ✅ |
-| 4 | 新建 `WorkspacePicker.tsx`；`Composer` 增 `header` 槽位；`ChatEmptyState` 传入 | 渲染层 3 文件 | ✅ |
+| 1 | `settingsStore` 增 `desktopRecentWorkspaces`（MRU ≤8） | `main/settingsStore.ts` | ✓ |
+| 2 | 新增 `workspace:list` / `workspace:open` IPC，open 复用 `openDirectoryPicker` + 广播 `khy:workspace-changed` | `main/index.ts`、`preload/index.ts` | ✓ |
+| 3 | 抽出 `openWorkspace()` 共用函数，`TitleBar` / `WorkspaceSidebar` 改为调用 | `renderer/workspace/*` 或 `renderer/utils/` | ✓ |
+| 4 | 新建 `WorkspacePicker.tsx`；`Composer` 增 `header` 槽位；`ChatEmptyState` 传入 | 渲染层 3 文件 | ✓ |
 
 **本期不删任何旧入口**（窗口菜单、侧栏「添加项目」保留），因此**不触发 B-L2 迁移流程**（无 deprecated 标记动作）。
 

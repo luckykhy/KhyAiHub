@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -81,10 +81,10 @@
 <h3 id="3-2-固定底部-帧高硬约束-chrome-账本">3.2 固定底部：帧高硬约束 + chrome 账本<a class="anchor" href="#3-2-固定底部-帧高硬约束-chrome-账本" aria-label="锚点">#</a></h3>
 <p>输入框钉底不是「用 CSS 固定在底部」，而是<strong>帧高必须 ≤ <code>rows − 1</code></strong>：<br>ink 把 live 区整体重画，只要它不滚动、输入框在帧内的相对位置自然不变。</p>
 <p>ink 的 fullscreen 判定是 <code>lastOutputHeight &gt;= stdout.rows</code>（<code>node_modules/ink/build/ink.js:320</code>，<br>用的是<strong>上一帧</strong>的 <code>outputHeight</code>，且 <code>outputHeight = output.split('\n').length</code>）。<br>一旦命中就走 <code>clearTerminal + fullStaticOutput + output</code> —— 本 TUI 跑在备用缓冲区里，<br>没有回滚缓冲，那条清屏会<strong>连转录一起抹掉</strong>；而且判定会<strong>自锁</strong>：一旦某帧高度 ≥ rows，<br>此后<strong>每一帧</strong>都清屏。</p>
-<pre><code>❌ 禁止让 live 区（含所有 chrome 兄弟节点）合计高度 ≥ rows
-❌ 禁止新增固定高度的兄弟节点却不登记进 chrome 账本
-✅ 高度一律走 chromeBudget.liveBudget(rows, shares)，shares 逐项列出
-✅ 排障先开 KHY_TUI_DIAG_H=1 打印账本，再和实测帧行数对照</code></pre>
+<pre><code>✗ 禁止让 live 区（含所有 chrome 兄弟节点）合计高度 ≥ rows
+✗ 禁止新增固定高度的兄弟节点却不登记进 chrome 账本
+✓ 高度一律走 chromeBudget.liveBudget(rows, shares)，shares 逐项列出
+✓ 排障先开 KHY_TUI_DIAG_H=1 打印账本，再和实测帧行数对照</code></pre>
 <p><strong>容易漏计的 chrome</strong>（按实测，不是按注释）：</p>
 <table><thead><tr><th>项</th><th>PreviewLayout</th><th>legacy</th></tr></thead><tbody><tr><td>标题栏 Topbar</td><td>1</td><td>—</td></tr><tr><td>底部固定层顶上的分隔线</td><td>1</td><td>—</td></tr><tr><td>PromptFrame</td><td>3</td><td>3</td></tr><tr><td>FooterBar</td><td>1</td><td>1</td></tr><tr><td>忙态 spinner 块</td><td>3</td><td>3</td></tr><tr><td>任务清单</td><td><code>3 + 条数 (+1 尾切提示)</code>，无清单 0</td><td>同左</td></tr><tr><td>slack（conpty pending-wrap 纪律）</td><td>1</td><td>1</td></tr></tbody></table>
 <p><strong>实测下限：可用高度 ≈ 14 行</strong>（legacy 13 行边缘可用）。低于此值固定 chrome 物理上装不下 ——<br>这不是 bug，是几何不可能。</p>
@@ -98,10 +98,10 @@
 <ul><li>盒子高度<strong>硬上界</strong>，永远不会自己顶穿视口。</li></ul>
 <h3 id="3-3-滚轮-必须在应用内消化-a-d-冲突的根因">3.3 滚轮：必须在应用内消化（A↔D 冲突的根因）<a class="anchor" href="#3-3-滚轮-必须在应用内消化-a-d-冲突的根因" aria-label="锚点">#</a></h3>
 <p>这是四件事里<strong>最反直觉</strong>的一条。备用缓冲区<strong>没有回滚缓冲</strong>，所以终端会把滚轮<br><strong>合成为 <code>↑</code>/<code>↓</code> 键</strong>送进 stdin；而 <code>arrowRouting</code> 把 <code>↑</code>/<code>↓</code> 绑定在<br><code>history:previous/next</code> —— 用户看到的「滚轮回溯历史记录」<strong>其实是键位串扰</strong>，<br>不是设计如此。</p>
-<pre><code>❌ 禁止在备用缓冲区下把滚轮交给 onNative（= 交还终端）
-✅ 滚轮优先走 dispatcher 的 onWheel(dir)，驱动应用内视口
-✅ onWheel 缺失时才回退 onNative（逐字节保留旧行为）
-✅ onWheel 抛异常必须被吞掉，且**不得**顺带触发 onNative</code></pre>
+<pre><code>✗ 禁止在备用缓冲区下把滚轮交给 onNative（= 交还终端）
+✓ 滚轮优先走 dispatcher 的 onWheel(dir)，驱动应用内视口
+✓ onWheel 缺失时才回退 onNative（逐字节保留旧行为）
+✓ onWheel 抛异常必须被吞掉，且**不得**顺带触发 onNative</code></pre>
 <p><strong>判据顺序是根因级的</strong>（<code>mouseButtons.createMouseDispatcher</code>）：<br><code>isWheel</code> 分支走在<strong>修饰键放行之前</strong>，因为 <code>Shift+滚轮</code> 在终端里是<strong>横向滚动</strong>，<br>不是「我要拖选」。步长 <code>WHEEL_LINES_PER_NOTCH = 3</code>（终端惯例，与 <code>scroll:lineUp</code> 同族），<br>逐格累加且<strong>共用贴底语义</strong>（滚到底自动回写 <code>null</code>）。</p>
 <p>门控 <code>KHY_MOUSE_WHEEL</code> 默认开；<code>app.js</code> 在 <code>ALT_SCREEN_ENABLED &amp;&amp; !mouseExplicitlyDisabled()</code> 时<br><strong>强制接管</strong>鼠标。回归测试 <code>mouseWheel.test.js</code>。</p>
 <blockquote><p><strong>设计后果（诚实记录）</strong>：一旦滚轮被应用接管，<strong>主屏模式下的原生滚动也就被剥夺了</strong>。<br>这是为了让备屏可用而付出的对称代价；退路是 <code>KHY_MOUSE=off</code>（整层不接管）。</p></blockquote>
@@ -207,10 +207,10 @@
 <p>DECSET 的三个追踪模式是<strong>同一能力的不同档位，互斥</strong>，只能开一个：</p>
 <table><thead><tr><th>模式</th><th>上报内容</th><th>谁需要</th></tr></thead><tbody><tr><td><code>1000</code> X11 basic</td><td>按下 / 松开</td><td>点击层（按钮高亮）</td></tr><tr><td><code>1002</code> button-event</td><td>按下 / 松开 / <strong>按住时的位移</strong></td><td><strong>应用内自绘选择</strong>（选区要跟手扩展）</td></tr><tr><td><code>1003</code> any-motion</td><td>一切移动（60~120Hz 洪流）</td><td>悬停高亮（<strong>必然</strong>吞掉拖选）</td></tr></tbody></table>
 <p><code>1006</code> 是 SGR 坐标编码，与追踪模式<strong>正交</strong>，永远都要带。</p>
-<pre><code>❌ 禁止叠加写 1000h 与 1002h（终端按哪一档解释变得不确定）
-✅ enableBytes({ select: true }) 写 1002h 时**不写** 1000h（替换语义）
-✅ 1003 只在 hover=true 时追加，与 select 正交
-✅ 重新接管追踪（enterNativePassthrough 的超时回调）必须与初始开启**同档** ——
+<pre><code>✗ 禁止叠加写 1000h 与 1002h（终端按哪一档解释变得不确定）
+✓ enableBytes({ select: true }) 写 1002h 时**不写** 1000h（替换语义）
+✓ 1003 只在 hover=true 时追加，与 select 正交
+✓ 重新接管追踪（enterNativePassthrough 的超时回调）必须与初始开启**同档** ——
    漏了 select 会退回 1000，拖动位移从此不再上报，表现为
    「滚一下滚轮之后拖选就失灵了」这类间歇性故障</code></pre>
 <blockquote><p>⚠ <strong>一条曾被写反的因果</strong>（2026-09-17 修正）：历史注释称「1002 报位移意味着按下已被<br>吃掉，所以必须降到 1000」。<strong>因果是反的</strong> —— 按下被吃掉是因为 dispatcher 对 <code>press</code><br>无条件 <code>return true</code>，与开哪一档无关；1000 下 press 照样上报、照样被吃。降档只是<br>顺手删掉了自绘选择唯一需要的位移信息。<br>⇒ 纪律：<strong>「不报 X」不等于「不报 Y」</strong>，判据要按<strong>事件类别</strong>逐项写清。</p></blockquote>

@@ -16,7 +16,7 @@
 > **上游依据**：`[DESIGN-ARCH-121]`（CC Harness 借鉴）、`[DESIGN-ARCH-127]`（可维护性减负，
 > 本方案是其「并发编排」子项）、`code 现状`（下方全部行号均实测）。
 >
-> ⚠️ **状态：提案（S1 观察期）**。本文件落 S1；`PROCESS-012` 的执行器 `gate:commit` +
+> ⚠ **状态：提案（S1 观察期）**。本文件落 S1；`PROCESS-012` 的执行器 `gate:commit` +
 > `severity:advisory`（**不是** `gate:"advisory"` —— 那会让规则永不执行，见 §7.3）。
 
 ---
@@ -27,9 +27,9 @@
 
 | 面 | 启动入口 | 结果落点 | 取回入口 |
 |---|---|---|---|
-| **后台 shell** | `shellCommand` 的 `run_in_background:true`（`tools/shellCommandEngine.js:355`） | `backgroundShellRegistry.backgroundShells`（`tools/backgroundShellRegistry.js:29`） | ✅ `BashOutputTool`（按需读）+ 自动 `<task_notification>` |
-| **后台 agent** | `AgentTool` 的 `run_in_background:true`（`tools/AgentTool/index.js:699`） | `_backgroundAgents` Map（`AgentTool/index.js:122`） | ⚠️ **仅自动通知，无按需读取入口**（§1.3） |
-| **后台 durable 任务** | `khy tasks run` → `backgroundTaskLauncher` → 分离进程 `task-runner.js` | durable store `largeTaskRuntimeStore` | ✅ `TaskOutputTool`（按需读 + block 等待） |
+| **后台 shell** | `shellCommand` 的 `run_in_background:true`（`tools/shellCommandEngine.js:355`） | `backgroundShellRegistry.backgroundShells`（`tools/backgroundShellRegistry.js:29`） | ✓ `BashOutputTool`（按需读）+ 自动 `<task_notification>` |
+| **后台 agent** | `AgentTool` 的 `run_in_background:true`（`tools/AgentTool/index.js:699`） | `_backgroundAgents` Map（`AgentTool/index.js:122`） | ⚠ **仅自动通知，无按需读取入口**（§1.3） |
+| **后台 durable 任务** | `khy tasks run` → `backgroundTaskLauncher` → 分离进程 `task-runner.js` | durable store `largeTaskRuntimeStore` | ✓ `TaskOutputTool`（按需读 + block 等待） |
 
 ### 1.2 取回机制的真源（这是本方案的基石）
 
@@ -48,7 +48,7 @@
 |---|---|---|
 | `TaskOutputTool` | `tools/TaskOutputTool/index.js:55-72` | `block=true` 时**活动式**等待：仅在 `running` 时轮询，输出变化即重置计时器（**正确实现了 `RUNTIME-003`**） |
 | `BashOutputTool` | `tools/BashOutputTool/index.js` | 按需读后台 shell；诚实声明「**不增量流式**，只在终态一次性填充」 |
-| 后台 agent 读取 | ❌ **不存在** | 见 §1.3 |
+| 后台 agent 读取 | ✗ **不存在** | 见 §1.3 |
 
 ### 1.3 实测发现：一个真实的「空头支票」
 
@@ -62,10 +62,10 @@
 
 | 环节 | 事实 |
 |---|---|
-| 函数定义 | ✅ `AgentTool/index.js:124` `function getBackgroundAgent(id)` |
-| 模块导出 | ✅ `AgentTool/index.js:2173` `module.exports.getBackgroundAgent = ...` |
-| **被注册为工具** | ❌ 无 —— `AgentTool` 只有一个 `static toolName = 'Agent'`（`:227`） |
-| **生产调用点** | ❌ **0 处** —— 全部调用方（`toolUseLoopCore.js:4770`、`teammateBus.js:91`、`orchestrationService.js:102` 等）都只用 `agentTool.execute(...)` |
+| 函数定义 | ✓ `AgentTool/index.js:124` `function getBackgroundAgent(id)` |
+| 模块导出 | ✓ `AgentTool/index.js:2173` `module.exports.getBackgroundAgent = ...` |
+| **被注册为工具** | ✗ 无 —— `AgentTool` 只有一个 `static toolName = 'Agent'`（`:227`） |
+| **生产调用点** | ✗ **0 处** —— 全部调用方（`toolUseLoopCore.js:4770`、`teammateBus.js:91`、`orchestrationService.js:102` 等）都只用 `agentTool.execute(...)` |
 | 旁证 | `TaskOutputTool` 走 `_taskStore`，而 `_taskStore._assertToolTask` 要求 `payload_json.source === 'tool_task_store'`（`_taskStore.js:72`）⇒ **读不到** `_backgroundAgents` 里的 `bg-*` 条目 |
 
 **结论**：模型被指示去调一个**没有工具可调**的函数。后台 agent 的产出只有「一次性通知」这一条路，
@@ -76,10 +76,10 @@
 
 | 判定面 | 真源 | 现状 |
 |---|---|---|
-| 前台还是后台 | — | ❌ **无任何规则**。`run_in_background` 是否传，由模型临场决定 |
-| 工具能否并发 | `isConcurrencySafe()`（181 个文件有声明） | ✅ 有声明，但**只服务同轮并行**，不回答「要不要跨轮后台」 |
-| 同一时刻能跑几个 | `concurrencyLimiter.js` / `concurrencySlots.js` | ✅ 有池子，但**无「后台任务总数上限」** |
-| 超时怎么算 | `RUNTIME-003` + `check-agent-rules.js` 的 `no-hard-timeout-kill` | ✅ 有规则，但**扫描面有结构性边界**（§1.5） |
+| 前台还是后台 | — | ✗ **无任何规则**。`run_in_background` 是否传，由模型临场决定 |
+| 工具能否并发 | `isConcurrencySafe()`（181 个文件有声明） | ✓ 有声明，但**只服务同轮并行**，不回答「要不要跨轮后台」 |
+| 同一时刻能跑几个 | `concurrencyLimiter.js` / `concurrencySlots.js` | ✓ 有池子，但**无「后台任务总数上限」** |
+| 超时怎么算 | `RUNTIME-003` + `check-agent-rules.js` 的 `no-hard-timeout-kill` | ✓ 有规则，但**扫描面有结构性边界**（§1.5） |
 
 ### 1.5 实测发现：现有超时守卫的**结构性盲区**
 
@@ -133,7 +133,7 @@ const timeoutRegex = /setTimeout\s*\([\s\S]{0,220}?,\s*(\d{3,})\s*\)/g;
 ① 不消费主线尚未产生的数据；② 不产出主线下一步要用的数据；③ 不与主线写同一批文件。
 任何一条说不清 ⇒ **不独立** ⇒ 前台。
 
-> ⚠️ **Q0 为什么是第 0 问**：写工作区的活丢后台，等于把改动移出主线视野，并发写冲突无人仲裁。
+> ⚠ **Q0 为什么是第 0 问**：写工作区的活丢后台，等于把改动移出主线视野，并发写冲突无人仲裁。
 > 这与 `AGENT-001` 的 AG-3（派发必须显式声明所有权）配套：**后台只做只读或不冲突的活**。
 > 若确实要后台写，必须走 §6 的 worktree 隔离（`bindWorktree`），不能裸写。
 
@@ -170,7 +170,7 @@ const timeoutRegex = /setTimeout\s*\([\s\S]{0,220}?,\s*(\d{3,})\s*\)/g;
 `payload_json.writes_workspace === false`（新增字段）时必须与 `prompt` 中的写意图一致。
 反例场景：`--scenario=bg-write`。
 
-### F3 —— 无取回入口者不得长跑后台 ⭐（本方案的核心修补）
+### F3 —— 无取回入口者不得长跑后台 ★（本方案的核心修补）
 
 **约束**：任何可后台的产物类型，**必须同时具备**：
 ① 一次性完成通知（已具备，`drainCompletedBackgroundAgents`）；
@@ -183,14 +183,14 @@ const timeoutRegex = /setTimeout\s*\([\s\S]{0,220}?,\s*(\d{3,})\s*\)/g;
 
 | 处置 | 动作 | 代价 | 裁决 |
 |---|---|---|---|
-| **方案甲（**采纳**）** | 新增 `BackgroundAgentOutputTool`（同构 `BashOutputTool`），读 `_backgroundAgents`，`block`/`timeout` 语义对齐 `TaskOutputTool` | 一个工具 + 单测（**注册表零改动**，目录自动扫描） | ✅ **已落地**，见 §10.2 |
-| **方案乙** | 把 `AgentTool` 后台条目**写进 `_taskStore`**（`source:'tool_task_store'`），复用现成 `TaskOutputTool` | 改派发路径 + 状态机映射，动存量 | ❌ 否决（造第二套真源） |
+| **方案甲（**采纳**）** | 新增 `BackgroundAgentOutputTool`（同构 `BashOutputTool`），读 `_backgroundAgents`，`block`/`timeout` 语义对齐 `TaskOutputTool` | 一个工具 + 单测（**注册表零改动**，目录自动扫描） | ✓ **已落地**，见 §10.2 |
+| **方案乙** | 把 `AgentTool` 后台条目**写进 `_taskStore`**（`source:'tool_task_store'`），复用现成 `TaskOutputTool` | 改派发路径 + 状态机映射，动存量 | ✗ 否决（造第二套真源） |
 
 ⇒ 甲是**补空白**（既有范式照搬），乙是**改真源**（碰状态机）。按 `[MGMT-STD-008]`「补空白 > 另起炉灶」，**采纳甲**。
 **落地证据**：`services/backend/src/tools/BackgroundAgentOutputTool/index.js`，
 测试 `services/backend/tests/tools/BackgroundAgentOutputTool.test.js`（9/9 绿），详见 §10.2。
 
-### F4 —— 禁止轮询等待，且补现有守卫的盲区 ⭐
+### F4 —— 禁止轮询等待，且补现有守卫的盲区 ★
 
 **约束**：等待后台结果**只能**由「一次性通知事件」或「活动式超时（`RUNTIME-003`）」驱动。
 禁止 `while` / 固定间隔轮询等结果。
@@ -207,7 +207,7 @@ const timeoutRegex = /setTimeout\s*\([\s\S]{0,220}?,\s*(\d{3,})\s*\)/g;
 | `--scenario=await-notification`（依赖 drain 通知） | 放行 |
 | `--scenario=idle-timeout`（活动式超时，`RUNTIME-003` 合规） | 放行 |
 
-> ⚠️ **必须补「应放行」场景**：只测「会拦」不测「会放行」，等于给了一个恒真断言（本仓技能 §5.7）。
+> ⚠ **必须补「应放行」场景**：只测「会拦」不测「会放行」，等于给了一个恒真断言（本仓技能 §5.7）。
 
 ### F5 —— 后台任务必须有上限、可停止、可观测
 
@@ -262,12 +262,12 @@ const timeoutRegex = /setTimeout\s*\([\s\S]{0,220}?,\s*(\d{3,})\s*\)/g;
 
 1. **文档落盘**：本文件 → `docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-130] 前台与后台任务编排方案.md`
 2. **就近索引回写**：`docs/03_DESIGN_设计/DESIGN-ARCH/00_INDEX_DESIGN-ARCH-总目录.md`
-   - 追加一行；**「收录 121 篇」→ 123 篇**（⚠️ 该行含全角标点，**必须用脚本改，不能用 Edit**）
-   - ⚠️ 二级目录索引**不在** `docs-index-complete` 扫描面内（`check-repo-layout.js:327` 的
+   - 追加一行；**「收录 121 篇」→ 123 篇**（⚠ 该行含全角标点，**必须用脚本改，不能用 Edit**）
+   - ⚠ 二级目录索引**不在** `docs-index-complete` 扫描面内（`check-repo-layout.js:327` 的
      `STAGE_DIR_RE = /^0[1-9]_/` 只扫直接子文件）⇒ 回写是 CP-3 要求，不写**不会**变红
    - 主索引 `docs/00_INDEX_文档索引.md` **不必**回写（同上：二级目录不经它逐条点名）
 3. **生成 `.html` 孪生件**：`node scripts/docs/build_docs_site.js`（**不要**用 `npm run docs:build`）
-   - ⚠️ 它会重写全站陈旧孪生件（实测历史 232 个），属**预期且有益**（修断链）
+   - ⚠ 它会重写全站陈旧孪生件（实测历史 232 个），属**预期且有益**（修断链）
 
 ### 步 2：规则执行器 + 登记（四件必须同批）
 
@@ -298,12 +298,12 @@ const timeoutRegex = /setTimeout\s*\([\s\S]{0,220}?,\s*(\d{3,})\s*\)/g;
 2. F4 的双向场景全绿（含「应放行」）
 3. **改守卫而不是改仓库**的原则已执行：任何误报先核验真伪，收窄判据并补对照场景
 
-### 7.3 ⚠️ S1 观察期的正确表达（本仓已实测的坑）
+### 7.3 ⚠ S1 观察期的正确表达（本仓已实测的坑）
 
 | 写法 | 后果 |
 |---|---|
-| ❌ `gate: "advisory"` | **规则永不执行**（`GATE_ORDER.advisory = 4 > max = 2`），且 `check:wiring`/`check:gov-rules` **全绿** —— 空接线最难发现 |
-| ✅ `gate: "commit"` + `severity: "advisory"` | 执行器**真被调用**（须支持 `--changed`），finding **只记录不阻断** |
+| ✗ `gate: "advisory"` | **规则永不执行**（`GATE_ORDER.advisory = 4 > max = 2`），且 `check:wiring`/`check:gov-rules` **全绿** —— 空接线最难发现 |
+| ✓ `gate: "commit"` + `severity: "advisory"` | 执行器**真被调用**（须支持 `--changed`），finding **只记录不阻断** |
 
 必做实证（否则就是空接线）：
 ```bash
@@ -326,7 +326,7 @@ npm run rules:gate:commit 2>&1 | grep "check-bg-lane"
 | 7 | **`--scenario=idle-timeout`（活动式超时）** | **放行** | — |
 | 8 | **`--scenario=true-independent`（真独立 + 有入口）** | **放行** | — |
 
-⚠️ 6/7/8 是**必须的「应放行」对照**：只测 1–5 会让断言恒真（本仓技能 §5.7）。
+⚠ 6/7/8 是**必须的「应放行」对照**：只测 1–5 会让断言恒真（本仓技能 §5.7）。
 
 ---
 
@@ -370,12 +370,12 @@ grep -rn "getBackgroundAgent" services/backend/src/ --include="*.js"
 
 | # | 项 | 状态 | 实证 |
 |---|---|---|---|
-| 1 | `services/backend/src/tools/BackgroundAgentOutputTool/index.js`（新工具） | ✅ **已落地** | §10.2 |
-| 2 | 工具注册表登记 | ✅ **无需改动** | 注册表按**目录扫描**自动发现（`tools/index.js:140-170`，Case 4「BaseTool 子类 → 实例化」）；实测新工具与 `BashOutput` 同批入池（共 72 个） |
-| 3 | 门控 `KHY_BG_AGENT_OUTPUT_TOOL`（默认 ON，关闭即字节回退） | ✅ **已落地** | 测试用例「门控默认开 …{0,false,off,no} 关」 |
-| 4 | 单测 + `--scenario=no-retrieval` 反例转为「应放行」 | ✅ **已落地** | `tests/tools/BackgroundAgentOutputTool.test.js` 9/9 绿 |
+| 1 | `services/backend/src/tools/BackgroundAgentOutputTool/index.js`（新工具） | ✓ **已落地** | §10.2 |
+| 2 | 工具注册表登记 | ✓ **无需改动** | 注册表按**目录扫描**自动发现（`tools/index.js:140-170`，Case 4「BaseTool 子类 → 实例化」）；实测新工具与 `BashOutput` 同批入池（共 72 个） |
+| 3 | 门控 `KHY_BG_AGENT_OUTPUT_TOOL`（默认 ON，关闭即字节回退） | ✓ **已落地** | 测试用例「门控默认开 …{0,false,off,no} 关」 |
+| 4 | 单测 + `--scenario=no-retrieval` 反例转为「应放行」 | ✓ **已落地** | `tests/tools/BackgroundAgentOutputTool.test.js` 9/9 绿 |
 
-> ⚠️ 第 2 项**推翻**了 §10 Q-1 表里的预估：本仓工具注册是**目录自动扫描**，
+> ⚠ 第 2 项**推翻**了 §10 Q-1 表里的预估：本仓工具注册是**目录自动扫描**，
 > 不存在需要手改的「注册表文件」。**这是「先读真源再估工作量」的又一次胜利** ——
 > 若按预估去改某个不存在的注册表，会白改或改错地方。
 
@@ -383,15 +383,15 @@ grep -rn "getBackgroundAgent" services/backend/src/ --include="*.js"
 
 | 验证项 | 命令 | 结果 |
 |---|---|---|
-| 语法 | `node --check …/BackgroundAgentOutputTool/index.js` | ✅ |
-| 被注册表发现 | 复现 `tools/index.js` 扫描逻辑 | ✅ 与 `BashOutput` 同批，72 个工具，0 error |
-| 契约测试 | `node --test tests/tools/BackgroundAgentOutputTool.test.js` | ✅ **9/9 pass** |
-| 同构回归 | `node --test tests/tools/BashOutputTool.test.js` | ✅ 10/10 pass（无回归） |
-| 契约扫描 | `node --test tests/tools/toolContract.sweep.test.js` | ✅ 6/6 pass |
-| 注册表去重 | `node --test tests/toolRegistryDedup.test.js tests/services/toolCatalog.test.js` | ✅ 20/20 pass |
-| **超时守卫** | `node scripts/ci/check-agent-rules.js …/BackgroundAgentOutputTool/index.js` | ✅ **no violations**（活动式等待不触发 `no-hard-timeout-kill`） |
-| 改动后 `AgentTool` | `node scripts/ci/check-agent-rules.js …/AgentTool/index.js` | ✅ no violations |
-| 结构守卫 | `node scripts/ci/check-repo-layout.js` | ✅ 计数**与改动前逐项相同** |
+| 语法 | `node --check …/BackgroundAgentOutputTool/index.js` | ✓ |
+| 被注册表发现 | 复现 `tools/index.js` 扫描逻辑 | ✓ 与 `BashOutput` 同批，72 个工具，0 error |
+| 契约测试 | `node --test tests/tools/BackgroundAgentOutputTool.test.js` | ✓ **9/9 pass** |
+| 同构回归 | `node --test tests/tools/BashOutputTool.test.js` | ✓ 10/10 pass（无回归） |
+| 契约扫描 | `node --test tests/tools/toolContract.sweep.test.js` | ✓ 6/6 pass |
+| 注册表去重 | `node --test tests/toolRegistryDedup.test.js tests/services/toolCatalog.test.js` | ✓ 20/20 pass |
+| **超时守卫** | `node scripts/ci/check-agent-rules.js …/BackgroundAgentOutputTool/index.js` | ✓ **no violations**（活动式等待不触发 `no-hard-timeout-kill`） |
+| 改动后 `AgentTool` | `node scripts/ci/check-agent-rules.js …/AgentTool/index.js` | ✓ no violations |
+| 结构守卫 | `node scripts/ci/check-repo-layout.js` | ✓ 计数**与改动前逐项相同** |
 
 **测试覆盖的关键断言（双向，非空转）**：
 - **应拦**：缺 `agent_id` → error；未知 id → `not found`（**黑洞必须可见**，不得静默成功）；gate off → `disabled`
@@ -400,7 +400,7 @@ grep -rn "getBackgroundAgent" services/backend/src/ --include="*.js"
   ⇒ 证明不是死等（若照抄 `BashOutputTool` 的 `deadline` 循环，此断言会失败）
 - **不消耗**：读后条目仍在注册表，且**不得**替 drain 标 `notified`（F6 的正面先例）
 
-> ⚠️ **并发写冲突留痕（2026-09-22 实测）**：本仓有**并行智能体实时改写同一文件**。
+> ⚠ **并发写冲突留痕（2026-09-22 实测）**：本仓有**并行智能体实时改写同一文件**。
 > 本次 `AgentTool/index.js` 在我编辑期间被另一路改动（`normalizeAgentRole` 的 require 目标
 > 由 `roleToolScope` 换为 `claudeCompat`；新增 `_EXPLORE_PROFILE_ROLES` 常量，约 22 行）。
 > **判归属的正确手法**（勿用 `git stash`——本仓已因此丢过数据）：
@@ -430,7 +430,7 @@ grep -rn "getBackgroundAgent" services/backend/src/ --include="*.js"
 ③ 真正的跨会话需求**另立提案**（候选落点 `DESIGN-ARCH-131`），
 前置依赖是把 `AgentTool` 的后台执行也走 `backgroundTaskLauncher` 的分离进程范式。
 
-> ⚠️ **不得**用「写进 durable store」当作 Q-2 的实现 —— 那只搬了**记录**，没搬**执行**，
+> ⚠ **不得**用「写进 durable store」当作 Q-2 的实现 —— 那只搬了**记录**，没搬**执行**，
 > 会产生「任务显示 running 但进程早没了」的僵尸态（比现状更糟）。
 
 ### Q-3 【已决】`writes_workspace` **新增字段**，但 F2 仍先走 advisory
@@ -456,15 +456,15 @@ grep -rn "getBackgroundAgent" services/backend/src/ --include="*.js"
 
 | 契约字段 | 真源实况 | 处置 |
 |---|---|---|
-| 输入 `agent_id` | `getBackgroundAgent(id)` 的 id 即派发返回的 `agentId`（`bg-<ts>-<rand>`，`AgentTool/index.js:700`） | ✅ 存在，直接用 |
-| 输入 `block` / `timeout` | 与 `BashOutputTool` / `TaskOutputTool` **同参数名同语义** | ✅ 照搬，不发明 |
-| 输出 `status` | `entry.status` ∈ `running`/`completed`/`failed` | ✅ 存在 |
-| 输出 `result` | 终态写 `entry.result`（`:741`） | ✅ 存在 |
-| 输出 `error` | 失败写 `entry.error`（`:749`） | ✅ 存在 |
-| 输出 `subagentType` | `entry.subagentType`（`:733`） | ✅ 存在（shell 侧无此字段，属增量） |
-| 阻塞等待的实现 | ⚠️ `RUNTIME-003`：**不得**固定时长 kill。`BashOutputTool` 用的是 `deadline` 轮询（无活动重置，因其无增量输出） | ⚠️ **不得照抄这段**。agent 侧有 `status` 变化，应实现为**活动式**等待（同 `TaskOutputTool` 的 `lastOutput` 重置范式） |
+| 输入 `agent_id` | `getBackgroundAgent(id)` 的 id 即派发返回的 `agentId`（`bg-<ts>-<rand>`，`AgentTool/index.js:700`） | ✓ 存在，直接用 |
+| 输入 `block` / `timeout` | 与 `BashOutputTool` / `TaskOutputTool` **同参数名同语义** | ✓ 照搬，不发明 |
+| 输出 `status` | `entry.status` ∈ `running`/`completed`/`failed` | ✓ 存在 |
+| 输出 `result` | 终态写 `entry.result`（`:741`） | ✓ 存在 |
+| 输出 `error` | 失败写 `entry.error`（`:749`） | ✓ 存在 |
+| 输出 `subagentType` | `entry.subagentType`（`:733`） | ✓ 存在（shell 侧无此字段，属增量） |
+| 阻塞等待的实现 | ⚠ `RUNTIME-003`：**不得**固定时长 kill。`BashOutputTool` 用的是 `deadline` 轮询（无活动重置，因其无增量输出） | ⚠ **不得照抄这段**。agent 侧有 `status` 变化，应实现为**活动式**等待（同 `TaskOutputTool` 的 `lastOutput` 重置范式） |
 
-> ⚠️ **最后一行是本契约唯一不能照搬的地方**：照抄 `BashOutputTool` 的 `deadline` 轮询
+> ⚠ **最后一行是本契约唯一不能照搬的地方**：照抄 `BashOutputTool` 的 `deadline` 轮询
 > 会引进一个**不过 `RUNTIME-003`** 的等待（虽然它是工具内部等待、不 kill 进程，属规则豁免区，
 > 但既然 agent 侧有活动信号，就没有理由退化成死等）。
 

@@ -130,10 +130,10 @@ pattern "* | sh"   → command "curl x | sh"   → false   ← 预期拦截，�
 
 | 落点文件 | 状态 | 对本方案的影响 |
 | --- | --- | --- |
-| `domain/extensions/hooks/hookRegistry.js` | 已改 `17+` 行 | ✅ **利好**：配置路径已从 `.khyquant/hooks.json` 改为**`.khy/hooks.json`**，且新增 `hookDef.source` 作为 hook 身份键——**K-03 的落点假设被证实**，`.khy/hooks.json` 已能生效 |
-| `domain/extensions/hooks/hookConfigSchema.js` | **新文件**（6,697 B） | ✅ **利好**：hook 配置 schema 正在被建，K-03 可复用 |
-| `services/backend/src/skills/index.js` | 已改 `9+` 行 | ⚠️ **K-02 落点已被他人动过**：`formatSkillListing` 的 `overhead` 已加 `hintLen()`（把 `whenToUse` 计入预算）。行号 `:286-293` 与本文档首轮登记的 `:273`/`:293` **已不一致** |
-| `CLAUDE.md` | 已改（`159+` 行 diff） | ⚠️ **K-06 落点已被改动**，施工前必须重读 |
+| `domain/extensions/hooks/hookRegistry.js` | 已改 `17+` 行 | ✓ **利好**：配置路径已从 `.khyquant/hooks.json` 改为**`.khy/hooks.json`**，且新增 `hookDef.source` 作为 hook 身份键——**K-03 的落点假设被证实**，`.khy/hooks.json` 已能生效 |
+| `domain/extensions/hooks/hookConfigSchema.js` | **新文件**（6,697 B） | ✓ **利好**：hook 配置 schema 正在被建，K-03 可复用 |
+| `services/backend/src/skills/index.js` | 已改 `9+` 行 | ⚠ **K-02 落点已被他人动过**：`formatSkillListing` 的 `overhead` 已加 `hintLen()`（把 `whenToUse` 计入预算）。行号 `:286-293` 与本文档首轮登记的 `:273`/`:293` **已不一致** |
+| `CLAUDE.md` | 已改（`159+` 行 diff） | ⚠ **K-06 落点已被改动**，施工前必须重读 |
 | `tmp-cmp/`（顶层空目录） | 新增 | `root-junk` + `layer-registry` 两条 error，**非本盘点引入** |
 
 **处置**：本文档 §一 的行号**施工前一律需复核**。
@@ -145,37 +145,37 @@ K-02 的 `maxDescLen = 62` 精算值**需重新计算**——但这反而降低�
 
 ## 一、逐条盘点表
 
-图例：**落点状态** ✅已具备 / 🔧需接线 / 🆕需新建 ｜ **巨石** ⚠️ 是 / — 否
+图例：**落点状态** ✓已具备 /需接线 /需新建 ｜ **巨石** ⚠ 是 / — 否
 
 ### 第一轮（零代码，6 条）
 
 | 编号 | 落点 | 落点状态 | 巨石 | 改动量 | 门禁风险 |
 | --- | --- | --- | --- | --- | --- |
-| K-06 | `CLAUDE.md`（201 行）+ `CLAUDE.html` 孪生 | 🔧 加两节 | — | +40~60 行 | 需登记 `RULES-REGISTRY.json`；`CLAUDE.html` 由 `docs:build` 生成 |
-| K-09 | 新建 `docs/10_规范/[DESIGN-SKILL-001]`（SKILL 段空闲） | 🆕 | — | 新文件 | 需登记 3 处索引 |
-| K-11 | 新建 `docs/10_规范/[DESIGN-PROCESS-…]` | 🆕 | — | 新文件 | 同上 |
-| K-04 | 新建 `AGENT-HANDOFF-PROTOCOL.md` | 🆕 | — | 新文件 | 同上；另需核对 26 个 agent 的现有产出格式 |
-| K-05 | 新建判据卡（并入 K-11 或独立） | 🆕 | — | 新文件 | 同上 |
-| K-12(a) | `.khy/permissions.json` | 🔧 **见修正 1/2** | — | 配置 | 需先开 flag 再写 `patternRules`（顺序敏感） |
+| K-06 | `CLAUDE.md`（201 行）+ `CLAUDE.html` 孪生 | 加两节 | — | +40~60 行 | 需登记 `RULES-REGISTRY.json`；`CLAUDE.html` 由 `docs:build` 生成 |
+| K-09 | 新建 `docs/10_规范/[DESIGN-SKILL-001]`（SKILL 段空闲） | | — | 新文件 | 需登记 3 处索引 |
+| K-11 | 新建 `docs/10_规范/[DESIGN-PROCESS-…]` | | — | 新文件 | 同上 |
+| K-04 | 新建 `AGENT-HANDOFF-PROTOCOL.md` | | — | 新文件 | 同上；另需核对 26 个 agent 的现有产出格式 |
+| K-05 | 新建判据卡（并入 K-11 或独立） | | — | 新文件 | 同上 |
+| K-12(a) | `.khy/permissions.json` | **见修正 1/2** | — | 配置 | 需先开 flag 再写 `patternRules`（顺序敏感） |
 
 ### 第二轮（配置化 + 低风险代码，5 条）
 
 | 编号 | 落点 | 落点状态 | 巨石 | 改动量 | 门禁风险 |
 | --- | --- | --- | --- | --- | --- |
-| K-03 S1 | 新建 `.khy/hooks.json` + `scripts/hooks/`（**目录不存在**） | 🆕 | — | 新文件 | `KHY_HOOKS_*` 无已注册 flag，需新增 |
-| K-02 | `services/backend/src/skills/index.js`（**798 行**） | 🔧 字段已有，**渲染层未过滤** | — | +10~20 行 | 低 |
-| K-12(b) | `toolCallingPermissions.js`（**973 行**） | 🔧 | — | +30~60 行 | 低 |
-| K-01 | 新建 `.khy/rules/` + 选取器（`domain/extensions/` 新子目录） | 🆕 无目录、无读取逻辑 | — | 新文件 + 接入 | 低 |
-| K-08 | 新建 `scripts/ci/check-skill-triggers.js` + 6 个测试集 | 🆕 | — | 新文件 | 建议**不进三守卫**（概率性） |
+| K-03 S1 | 新建 `.khy/hooks.json` + `scripts/hooks/`（**目录不存在**） | | — | 新文件 | `KHY_HOOKS_*` 无已注册 flag，需新增 |
+| K-02 | `services/backend/src/skills/index.js`（**798 行**） | 字段已有，**渲染层未过滤** | — | +10~20 行 | 低 |
+| K-12(b) | `toolCallingPermissions.js`（**973 行**） | | — | +30~60 行 | 低 |
+| K-01 | 新建 `.khy/rules/` + 选取器（`domain/extensions/` 新子目录） | 无目录、无读取逻辑 | — | 新文件 + 接入 | 低 |
+| K-08 | 新建 `scripts/ci/check-skill-triggers.js` + 6 个测试集 | | — | 新文件 | 建议**不进三守卫**（概率性） |
 
 ### 第三轮（高风险，4 条）
 
 | 编号 | 落点 | 落点状态 | 巨石 | 改动量 | 门禁风险 |
 | --- | --- | --- | --- | --- | --- |
-| K-07 | `.khy/agents/`（空）+ `~/.khy/agents/`（空） | 🔧 **加载器/校验/调用链全具备** | — | 放文件 + 格式裁决 | **中**（原判「高」偏保守） |
-| K-03 S2 | `scripts/hooks/protect-secrets.js` 等 | 🆕 | — | 新文件 | 需 S1 样本量毕业 |
-| K-10 | `toolUseLoopCore.js` | 🔧 | ⚠️ **12,105 行** | 受 R2b 约束 | **高**——须抽叶子 |
-| K-06(c) | `AGENTS.md`（**796 行**）拆分 | 🔧 | — | 大 | 需 K-01 稳定后 |
+| K-07 | `.khy/agents/`（空）+ `~/.khy/agents/`（空） | **加载器/校验/调用链全具备** | — | 放文件 + 格式裁决 | **中**（原判「高」偏保守） |
+| K-03 S2 | `scripts/hooks/protect-secrets.js` 等 | | — | 新文件 | 需 S1 样本量毕业 |
+| K-10 | `toolUseLoopCore.js` | | ⚠ **12,105 行** | 受 R2b 约束 | **高**——须抽叶子 |
+| K-06(c) | `AGENTS.md`（**796 行**）拆分 | | — | 大 | 需 K-01 稳定后 |
 
 ### 三条巨石约束（实测复核，与上轮一致）
 
@@ -217,7 +217,7 @@ R2 巨石文件（>2500 行）总数：26
 
 ## 三、施工前置检查（每次动手前跑）
 
-> ⚠️ **本次盘点新增强制项**：因本仓多智能体共写，第 0 步不可跳过。
+> ⚠ **本次盘点新增强制项**：因本仓多智能体共写，第 0 步不可跳过。
 
 ```bash
 cd /d/Portable/khy-os
@@ -228,7 +228,7 @@ git diff -- <本次落点文件...>
 
 # 1. 施工前基线（巨石 / R1 / R2b / R3）
 node services/backend/scripts/archDebtScan.js --changed
-#    ⚠️ 实测 --changed 会把全仓 3486 个并行改动算进来，
+#    ⚠ 实测 --changed 会把全仓 3486 个并行改动算进来，
 #       报「改动且已扫描的 src/**.js: 0 个」而无法给基线。
 #       并行改动期请改用定向方式复核巨石体积。
 

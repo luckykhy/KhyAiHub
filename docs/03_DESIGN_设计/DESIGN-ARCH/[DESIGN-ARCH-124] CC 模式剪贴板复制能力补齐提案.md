@@ -22,12 +22,12 @@
 
 | 层 | 文件 | 状态 |
 |---|---|---|
-| 进程级鼠标层 | `tui/app.js` §294–329 | ✅ 已按 `KHY_SELECT` 开 1002 —— **CC 模式已经在收 SGR 事件** |
-| 事件分发 | `tui/mouseButtons.js` `createMouseDispatcher` | ✅ `onSelectEvent` 通道完整 |
-| 选区算法 | `tui/selection.js`（12 导出，零 IO） | ✅ 纯叶子，27/27 测试绿 |
-| 反色渲染 | `tui/ink-components/Viewport.js` | ✅ `selection` prop 通用，16/16 绿 |
-| 剪贴板出口 | `tui/utils/ccClipboard.js` | ✅ `writeClipboard()` 20/20 绿 |
-| **消费者** | **`tui/ink-components/CcApp.js`** | ❌ **零命中** |
+| 进程级鼠标层 | `tui/app.js` §294–329 | ✓ 已按 `KHY_SELECT` 开 1002 —— **CC 模式已经在收 SGR 事件** |
+| 事件分发 | `tui/mouseButtons.js` `createMouseDispatcher` | ✓ `onSelectEvent` 通道完整 |
+| 选区算法 | `tui/selection.js`（12 导出，零 IO） | ✓ 纯叶子，27/27 测试绿 |
+| 反色渲染 | `tui/ink-components/Viewport.js` | ✓ `selection` prop 通用，16/16 绿 |
+| 剪贴板出口 | `tui/utils/ccClipboard.js` | ✓ `writeClipboard()` 20/20 绿 |
+| **消费者** | **`tui/ink-components/CcApp.js`** | ✗ **零命中** |
 
 实测（`Grep` over `CcApp.js`）：
 
@@ -105,7 +105,7 @@ function projectMessages(messages, width) { ... }
 保留现有渲染，额外维护一张「屏幕行 → (msgIdx, lineInMsg)」映射表，
 `onSelectEvent` 收到 `(line, col)` 后反查。**不推荐**：
 
-> ⚠️ **反模式，这条路别走**：这张映射表必须复刻 ink 的 yoga 布局
+> ⚠ **反模式，这条路别走**：这张映射表必须复刻 ink 的 yoga 布局
 > （`marginTop`、软换行、`●` 宽度），一旦复刻不精确就整体错位 ——
 > 正是 `AGENTS.md:268–269` 明令禁止的「用实时几何反查坐标」的翻版。
 > 维护成本高、且**错位是静默的**（选到隔壁行），排查成本极高。
@@ -167,7 +167,7 @@ const _selectTextRef     = React.useRef('');
 const _mainContentLinesRef = React.useRef([]);
 ```
 
-> ⚠️ **ref 镜像是强制的，不是优化**：`onSelectEvent` 是渲染期早建的 `useCallback`
+> ⚠ **ref 镜像是强制的，不是优化**：`onSelectEvent` 是渲染期早建的 `useCallback`
 > 闭包，直接读 state 拿到的是**上一帧**的值。这段在 Legacy 已经踩过，
 > CC 侧必须同样在渲染体里同步。
 
@@ -183,7 +183,7 @@ const line = Math.max(0, Math.min(Math.trunc(Number(ev.row)) + offset, Math.max(
 const col  = Math.max(0, Math.trunc(Number(ev.col)));
 ```
 
-> ⚠️ **方向是 `+ offset`，不是 `− offset`**。且 `null`/负数偏移要按「贴底」解释成
+> ⚠ **方向是 `+ offset`，不是 `− offset`**。且 `null`/负数偏移要按「贴底」解释成
 > `maxScroll`（`AGENTS.md` §0.9.1 的贴底哨兵）。
 
 ### 3.4 事件四态（照抄 `App.js:1457–1518`）
@@ -232,8 +232,8 @@ const res = clip.writeClipboard(text);   // {ok, channels, bytes, reasons}
 
 | 键 | Legacy | CC 现状 |
 |---|---|---|
-| `Ctrl+Y` | 无 | ✅ 已有 → `handleCopyLast()`（`CcApp.js:360–363`），复制**最近助手回复** |
-| `Ctrl+C` | 无特殊 | ✅ 已占用 → **双击退出**（`CcApp.js:299–309`） |
+| `Ctrl+Y` | 无 | ✓ 已有 → `handleCopyLast()`（`CcApp.js:360–363`），复制**最近助手回复** |
+| `Ctrl+C` | 无特殊 | ✓ 已占用 → **双击退出**（`CcApp.js:299–309`） |
 | `v` | 无 | 无 |
 | `y` | 无 | 无 |
 
@@ -269,28 +269,28 @@ const res = clip.writeClipboard(text);   // {ok, channels, bytes, reasons}
 
 ```
 ### 0.1 零破坏原则
-❌ 禁止修改 Legacy 模式（KHY_CC_TUI 未设置）下的任何代码路径
-❌ 禁止删除或重命名现有组件/函数（除非显式标记为废弃）
-❌ 禁止改变现有 public API 的签名或行为
-❌ 禁止引入新的全局副作用
-✅ 所有 CC 模式代码必须通过 KHY_CC_TUI=1 门控
-✅ 门控关闭时，行为必须与修改前逐字节相同
-✅ 新增文件优先于修改现有文件
+✗ 禁止修改 Legacy 模式（KHY_CC_TUI 未设置）下的任何代码路径
+✗ 禁止删除或重命名现有组件/函数（除非显式标记为废弃）
+✗ 禁止改变现有 public API 的签名或行为
+✗ 禁止引入新的全局副作用
+✓ 所有 CC 模式代码必须通过 KHY_CC_TUI=1 门控
+✓ 门控关闭时，行为必须与修改前逐字节相同
+✓ 新增文件优先于修改现有文件
 ```
 
-同目录还有更紧的两条：`AGENTS.md:626` `❌ 禁止修改 Legacy 组件的内部实现`、
-`AGENTS.md:627` `❌ 禁止在 CC 组件中直接引用 Legacy 组件`。
+同目录还有更紧的两条：`AGENTS.md:626` `✗ 禁止修改 Legacy 组件的内部实现`、
+`AGENTS.md:627` `✗ 禁止在 CC 组件中直接引用 Legacy 组件`。
 
 ### 适用范围判定
 
 | 本改动的动作 | 是否触碰 | 判定 |
 |---|---|---|
-| **新增** `ccMessageProjection.js` | 否 | ✅ 明确鼓励（`AGENTS.md:27`） |
-| **新增** CC 侧鼠标守卫 / 选区状态 | 否（全在 `CcApp.js`，只在 `KHY_CC_TUI=1` 下被 require） | ✅ 合规 |
-| **修改** `CcApp.js` 消息区渲染 | 否（该文件只在 CC 分支加载，`app.js:96–103`） | ✅ 合规 |
-| **复用** `Viewport.js` / `selection.js` / `ccClipboard.js` | 只读引用，不改内部 | ✅ 合规（这三者是**共用叶子**，非 Legacy 组件） |
-| **抽取** `_selectEnabled` 等到共用叶子 → 需改 `App.js` 的 require 行 | 是 | ⚠️ **需评审**；保守做法：CC 侧抄一份 |
-| **修改** `app.js` 进程级鼠标层 | 否（已存在，且不新增行为） | ✅ 无需改 |
+| **新增** `ccMessageProjection.js` | 否 | ✓ 明确鼓励（`AGENTS.md:27`） |
+| **新增** CC 侧鼠标守卫 / 选区状态 | 否（全在 `CcApp.js`，只在 `KHY_CC_TUI=1` 下被 require） | ✓ 合规 |
+| **修改** `CcApp.js` 消息区渲染 | 否（该文件只在 CC 分支加载，`app.js:96–103`） | ✓ 合规 |
+| **复用** `Viewport.js` / `selection.js` / `ccClipboard.js` | 只读引用，不改内部 | ✓ 合规（这三者是**共用叶子**，非 Legacy 组件） |
+| **抽取** `_selectEnabled` 等到共用叶子 → 需改 `App.js` 的 require 行 | 是 | ⚠ **需评审**；保守做法：CC 侧抄一份 |
+| **修改** `app.js` 进程级鼠标层 | 否（已存在，且不新增行为） | ✓ 无需改 |
 
 **结论**：本提案主体**落在规则允许范围内**。唯一需要单独确认的是 §3.1 的
 「抽取三个门控助手到共用叶子」——两个选项：
@@ -320,10 +320,10 @@ services/backend/tests/cli/tui/ccClipboard.test.js                     20/20 pas
 
 | 文件 | 覆盖 | 状态（2026-09-18） |
 |---|---|---|
-| `tests/cli/tui/ccMessageProjection.test.js` | 纯叶子：折行、`●` 前缀、`marginTop` 空行、`row==index` 不变量、空输入不抛 | ✅ 36/36 |
-| `tests/cli/tui/ccMessageProjection.oracle.test.js` | **零容忍逐字节对拍**：手写投影 vs `renderToString`（列宽 20–120、ASCII/CJK、`●` 永不消失） | ✅ 13/13 |
-| `tests/cli/tui/ccSelectionWiring.test.js` | **接线后**的布局（`Viewport` 渲染消息段）与投影仍逐行一致；`row==index` 恒等；拖选 → 原文 | ✅ 8/8 |
-| `tests/cli/tui/ccMouseGuard.test.js` | 原始 SGR 字节 → 剪贴板文本全链；普通输入**不**被误判成鼠标；Shift/滚轮不产选区 | ✅ 8/8 |
+| `tests/cli/tui/ccMessageProjection.test.js` | 纯叶子：折行、`●` 前缀、`marginTop` 空行、`row==index` 不变量、空输入不抛 | ✓ 36/36 |
+| `tests/cli/tui/ccMessageProjection.oracle.test.js` | **零容忍逐字节对拍**：手写投影 vs `renderToString`（列宽 20–120、ASCII/CJK、`●` 永不消失） | ✓ 13/13 |
+| `tests/cli/tui/ccSelectionWiring.test.js` | **接线后**的布局（`Viewport` 渲染消息段）与投影仍逐行一致；`row==index` 恒等；拖选 → 原文 | ✓ 8/8 |
+| `tests/cli/tui/ccMouseGuard.test.js` | 原始 SGR 字节 → 剪贴板文本全链；普通输入**不**被误判成鼠标；Shift/滚轮不产选区 | ✓ 8/8 |
 | 扩 `viewportSelection.test.js` | `lines` 来自投影时反色范围正确 | 既有文件已覆盖 `sliceLineForSelection` 恒等（`head+mid+tail===line`），未另扩 |
 
 ### 6.2.1 实施期的根因发现（比本提案更严重，已一并修）
@@ -370,16 +370,16 @@ npm run --workspace services/backend test:tui          # 期望全绿
 
 | 步骤 | 改动前 | 改动后期望 |
 |---|---|---|
-| 拖选消息区正文 | ❌ 无反应 | ✅ 反色跟随鼠标 |
-| 松手 | ❌ 无写入 | ✅ 剪贴板有内容，`Get-Clipboard` 读回 == 屏幕选中文本 |
-| 跨消息拖选 | ❌ | ✅ 用 `\n` 连接（`extractText` 语义） |
-| 拖选含空行 | ❌ | ✅ 空行产出空串**不被丢弃** |
-| `y`（有选区） | ❌ 无此键 | ✅ 复制当前选区 + Toast 提示字符数 |
-| `Ctrl+Y` | ✅ 复制最近回复 | ✅ **行为不变** |
-| `Ctrl+C` 单击 / 双击 | ✅ 提示 / 退出 | ✅ **行为不变** |
-| 拖动时滚动 | — | ✅ 无异常，坐标不漂 |
-| 拖动中 `resize` | — | ✅ 不崩，选区可继续 |
-| `KHY_SELECT=0` 启动 CC | — | ✅ 鼠标层关闭，无回归 |
+| 拖选消息区正文 | ✗ 无反应 | ✓ 反色跟随鼠标 |
+| 松手 | ✗ 无写入 | ✓ 剪贴板有内容，`Get-Clipboard` 读回 == 屏幕选中文本 |
+| 跨消息拖选 | ✗ | ✓ 用 `\n` 连接（`extractText` 语义） |
+| 拖选含空行 | ✗ | ✓ 空行产出空串**不被丢弃** |
+| `y`（有选区） | ✗ 无此键 | ✓ 复制当前选区 + Toast 提示字符数 |
+| `Ctrl+Y` | ✓ 复制最近回复 | ✓ **行为不变** |
+| `Ctrl+C` 单击 / 双击 | ✓ 提示 / 退出 | ✓ **行为不变** |
+| 拖动时滚动 | — | ✓ 无异常，坐标不漂 |
+| 拖动中 `resize` | — | ✓ 不崩，选区可继续 |
+| `KHY_SELECT=0` 启动 CC | — | ✓ 鼠标层关闭，无回归 |
 
 **通用不变量**（两条路径都要）：反色覆盖的列区间与 `Get-Clipboard` 文本**逐字符对应**；
 `KHY_SELECT=0` 时行为与改动前逐字节一致。
@@ -438,7 +438,7 @@ ARCH-110 ~ 118  各 2 个文件（.md + .html）→ 已占用
 ARCH-119        4 个文件（正文 + 验收标准，各带 .html）→ 已占用
 ARCH-120        4 个文件（移动端合并 + 本文件撞号）→ 冲突源
 ARCH-121 ~ 123  各 2 个文件 → 已占用
-ARCH-124        0 个文件 → ✅ 下一个空闲号
+ARCH-124        0 个文件 → ✓ 下一个空闲号
 ```
 
 选号依据是**连续性优先**：不跳跃、不回收旧号，取紧随其后的第一个空闲号。
@@ -468,10 +468,10 @@ grep -n "DESIGN-ARCH-12[04]" docs/03_DESIGN_设计/00_INDEX_设计-分类索引.
 编号冲突的根因是**落盘前没查号**。后续新建设计文档的固定前置动作：
 
 ```
-✅ 先跑 §A.3 的 ①（占用扫描）拿到第一个空闲号
-✅ 再跑 §A.3 的 ②（全仓双向确认）确认该号真的没人用
-✅ 最后才写文件 —— 文件名、H1 标题、索引三处编号必须一致
-❌ 不要凭"看起来没人用"猜号
+✓ 先跑 §A.3 的 ①（占用扫描）拿到第一个空闲号
+✓ 再跑 §A.3 的 ②（全仓双向确认）确认该号真的没人用
+✓ 最后才写文件 —— 文件名、H1 标题、索引三处编号必须一致
+✗ 不要凭"看起来没人用"猜号
 ```
 
 ⚠ 本次的教训值得记下：**索引条目在冲突曝光时就已经写好了**（`00_INDEX:111` 那条

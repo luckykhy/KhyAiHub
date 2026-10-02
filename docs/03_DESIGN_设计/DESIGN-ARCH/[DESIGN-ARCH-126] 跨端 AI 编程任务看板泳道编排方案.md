@@ -64,7 +64,7 @@ Cline Kanban 表面是一个看板 UI，实质是**三个机制的组合**：
 | 编排器 / worker | `services/backend/src/tasks/largeTaskOrchestrator.js`、`largeTaskWorkerService.js` | 均有 `create*` 工厂 + 默认单例导出 |
 | HTTP 契约 | `services/backend/src/routes/largeTasks.js` | **1668 行 / 29 端点**，含 `/events/stream`、`/retry-policy/approvals/stream`、`/retry-policy/approvals/retention/stream`、`/handover/snapshot` |
 | worktree 机制 | `services/backend/src/services/worktreeManager.js` + `tools/_taskStore.js` | **411 行**：`createWorktree` / `removeWorktree` / `keepWorktree` / `listWorktrees` / `logEvent` / `readEvents`。⚠ **与任务对象的绑定（`bindWorktree`）存在，但生产代码零调用点** —— 见 §4.5 |
-| 执行体注册表 | `services/backend/src/services/agentLauncherRegistry.js` | `AGENT_LAUNCHERS` **8 项**（`kiro` / `cursor` / `claude` / `codex` / `trae` / `opencode` / `warp` / `vscode`），开关 `KHY_AGENT_LAUNCHERS`；**纯叶子**（零 require），可安全被守卫消费。⚠️ 2026-09-23：原第 9 项 `windsurf` 随其 IDE 退役下线（存证 `.khy/feedback/windsurf-module-purge-20260923/`） |
+| 执行体注册表 | `services/backend/src/services/agentLauncherRegistry.js` | `AGENT_LAUNCHERS` **8 项**（`kiro` / `cursor` / `claude` / `codex` / `trae` / `opencode` / `warp` / `vscode`），开关 `KHY_AGENT_LAUNCHERS`；**纯叶子**（零 require），可安全被守卫消费。⚠ 2026-09-23：原第 9 项 `windsurf` 随其 IDE 退役下线（存证 `.khy/feedback/windsurf-module-purge-20260923/`） |
 | 计划层真源 | `.ai/hq/PROGRESS.json` | **23 个任务**；`TASK_STATES = ['todo','doing','review','done']`（4 态）；租约 `LEASE_MINUTES=120` |
 | 计划层数据层 | `services/backend/src/cli/hqStore.js` | **1002 行**；`TASK_TRANSITIONS` / `BUG_TRANSITIONS` / 机器 ID / 租约 |
 | 多端真源 | `entries/entries.json` | **8 端**：`desktop`(ready) / `web`(ready) / `web-quant`(ready) / `mobile`(ready) + 4 个 cli 端 |
@@ -86,15 +86,15 @@ Cline Kanban 表面是一个看板 UI，实质是**三个机制的组合**：
 
 | 既有件 | 它管什么 | 本方案做什么 | **边界（不得越线）** |
 |---|---|---|---|
-| `largeTaskRuntimeStore` | 单任务的**执行语义**：状态、转移、租约、重试、死信、检查点、幂等 | 只**读**状态与事件 | ❌ 不得新增第 12 个状态；❌ 不得在前端复制 `STATUS_TRANSITIONS` |
-| `routes/largeTasks.js`（29 端点） | 运行时 HTTP 契约 | 复用；**仅新增 1 个只读聚合端点** `/large-tasks/board` | ❌ 不新增任何**写**语义端点 |
-| `entries/entries.json`（8 端） | 端的入口 / 构建 / 产物真源 | 看板作为**能力**落在既有 4 个端上 | ❌ 不新增端条目，不改 `entries.json` |
-| `.ai/hq/PROGRESS.json`（4 态） | **计划层**：给人看的开发任务、Bug、跨机租约 | 作为卡片来源之一，经**单向映射**投影 | ❌ 不合并两套状态机；❌ 不把 11 态写进 `status` 字段 |
-| `agentLauncherRegistry.js`（7 执行体） | `khy <agent>` 可启动集 SSOT | 泳道枚举**直接引用它** | ❌ 不另立一份执行体清单 |
-| `worktreeManager.js` | worktree 生命周期 + 事件日志 | 卡片「一卡一 worktree」直接调它 | ❌ 不新建 worktree 机制 |
-| `taskPanelState.js` | **TUI** 内联任务面板（单进程内存） | 不触碰 | ❌ TUI 面板 ≠ 看板；可共享**状态名**，不共享实现 |
-| `[DESIGN-ARCH-117]` / `[DESIGN-ARCH-120]` | 多端入口矩阵 / 移动端能力对等 | 本方案是其**下游消费者** | ❌ 不重定义端矩阵与移动端契约 |
-| `[DESIGN-ARCH-111]` | 规则遵守保障（门档从登记表派生） | 步 1 新增的守卫按它接线 | ❌ 不改 `qualityGateStages.js` / `package.json` 的 `&&` 链 |
+| `largeTaskRuntimeStore` | 单任务的**执行语义**：状态、转移、租约、重试、死信、检查点、幂等 | 只**读**状态与事件 | ✗ 不得新增第 12 个状态；✗ 不得在前端复制 `STATUS_TRANSITIONS` |
+| `routes/largeTasks.js`（29 端点） | 运行时 HTTP 契约 | 复用；**仅新增 1 个只读聚合端点** `/large-tasks/board` | ✗ 不新增任何**写**语义端点 |
+| `entries/entries.json`（8 端） | 端的入口 / 构建 / 产物真源 | 看板作为**能力**落在既有 4 个端上 | ✗ 不新增端条目，不改 `entries.json` |
+| `.ai/hq/PROGRESS.json`（4 态） | **计划层**：给人看的开发任务、Bug、跨机租约 | 作为卡片来源之一，经**单向映射**投影 | ✗ 不合并两套状态机；✗ 不把 11 态写进 `status` 字段 |
+| `agentLauncherRegistry.js`（7 执行体） | `khy <agent>` 可启动集 SSOT | 泳道枚举**直接引用它** | ✗ 不另立一份执行体清单 |
+| `worktreeManager.js` | worktree 生命周期 + 事件日志 | 卡片「一卡一 worktree」直接调它 | ✗ 不新建 worktree 机制 |
+| `taskPanelState.js` | **TUI** 内联任务面板（单进程内存） | 不触碰 | ✗ TUI 面板 ≠ 看板；可共享**状态名**，不共享实现 |
+| `[DESIGN-ARCH-117]` / `[DESIGN-ARCH-120]` | 多端入口矩阵 / 移动端能力对等 | 本方案是其**下游消费者** | ✗ 不重定义端矩阵与移动端契约 |
+| `[DESIGN-ARCH-111]` | 规则遵守保障（门档从登记表派生） | 步 1 新增的守卫按它接线 | ✗ 不改 `qualityGateStages.js` / `package.json` 的 `&&` 链 |
 
 ---
 
@@ -172,9 +172,9 @@ Summary: 1 error(s), 0 warning(s).
 **映射方向单向**：
 
 ```
-计划层 ──(展开)────────────────> 执行层        ✅ 允许
-执行层 ──(仅终态回写)──────────> 计划层        ✅ 允许，且只回写终态（4 个全覆盖，见 §3.4）
-运行时 11 态 ──> PROGRESS.json 的 status ──>   ❌ 禁止（会造成两套状态机互相污染）
+计划层 ──(展开)────────────────> 执行层        ✓ 允许
+执行层 ──(仅终态回写)──────────> 计划层        ✓ 允许，且只回写终态（4 个全覆盖，见 §3.4）
+运行时 11 态 ──> PROGRESS.json 的 status ──>   ✗ 禁止（会造成两套状态机互相污染）
 ```
 
 ### 3.4 连接键：`<hq_id>.<attempt>`（**实测缺口：两边零连接**）
@@ -227,7 +227,7 @@ Summary: 1 error(s), 0 warning(s).
 |---|---|---|---|---|
 | 桌面 | `desktop` | `apps/khyos-desktop`（Electron） | 全二维矩阵（列 × 泳道） | 需新建视图 |
 | 网页 | `web` | `apps/ai-frontend`（Vue） | 全二维矩阵 | 需新建视图；与桌面共用组件 |
-| 网页(量化) | `web-quant` | `software/khyquant/frontend`（Vue + Capacitor） | 全二维矩阵 | **✅ 已有 `api/largeTasks.js` + `useDashboardHandover.js`** |
+| 网页(量化) | `web-quant` | `software/khyquant/frontend`（Vue + Capacitor） | 全二维矩阵 | **✓ 已有 `api/largeTasks.js` + `useDashboardHandover.js`** |
 | 手机 | `mobile` | `apps/khy-os-client-app`（Flutter） | **单泳道纵向流** | 需新建 screen；挂在 `home_shell` 第 6 个导航项 |
 
 ### 4.1 响应式降级规则（不可让渡）
@@ -292,13 +292,13 @@ last_error  last_result
 | 初稿写的 | 真源实况 | 处置 |
 |---|---|---|
 | `taskId` | 字段名是 `id` | 改名 |
-| `status` | ✅ `status` | 保留 |
+| `status` | ✓ `status` | 保留 |
 | `lane` | 派生（`LANE_MAP` 折叠），非真源字段 | 保留（明确标注为派生） |
-| **`swimlane`** | ❌ **任务对象上没有执行体字段** | **改为派生自 `payload_json.source`**，见 §4.4 |
-| **`title`** | ❌ 无 `title` 字段 | 降级为 `payload_json.title`，缺失时回退 `type + id` 短哈希 |
+| **`swimlane`** | ✗ **任务对象上没有执行体字段** | **改为派生自 `payload_json.source`**，见 §4.4 |
+| **`title`** | ✗ 无 `title` 字段 | 降级为 `payload_json.title`，缺失时回退 `type + id` 短哈希 |
 | `updatedAt` | 真源是 `updated_at` | 改 snake_case |
 | `attemptCount` | 真源是 `attempt_count` | 改 snake_case |
-| **`checkpointAt`** | ❌ 不在任务对象上（在 `task_checkpoints[id]`） | **从首屏契约移除**，详情页再拉 |
+| **`checkpointAt`** | ✗ 不在任务对象上（在 `task_checkpoints[id]`） | **从首屏契约移除**，详情页再拉 |
 
 **第 4 处错误（不在契约里，在 §一 的现状读数里）**：初稿把 `AGENT_LAUNCHERS` 记成 **7 项**，
 真源实为 **9 项**（漏了 `vscode` 与 `windsurf`）。
@@ -309,7 +309,7 @@ last_error  last_result
 ⇒ 任何消费这份注册表的守卫，**必须带一条「文本抽取条数 == require 条数」的自校验**，
 否则漏抽的执行体永远不会进入反向检查，形成**静默假绿**。详见 §八 末尾。
 
-> ⚠️ **2026-09-23 现状更新**：`windsurf` 已随其 IDE 退役下线，注册表现有 **8 项**。
+> ⚠ **2026-09-23 现状更新**：`windsurf` 已随其 IDE 退役下线，注册表现有 **8 项**。
 > 实测当前 8 条**全部是单行写法**（`Object.freeze({ command: '…' })`），故该坑暂时不会触发；
 > 但判据必须保留 —— 任何一条改成多行写法，按行抽取就会重新**静默漏项**。
 > 本段记录的 7→9 计数是当时的历史读数，保留原样。
@@ -353,10 +353,10 @@ last_error  last_result
 
 | 环节 | 事实 | 证据 |
 |---|---|---|
-| 字段存在 | ✅ `payload_json.worktree` | `tools/_taskStore.js:64`（`worktree: payload.worktree \|\| null`） |
-| 写入函数存在 | ✅ `bindWorktree(taskId, name)` | `tools/_taskStore.js:546` |
+| 字段存在 | ✓ `payload_json.worktree` | `tools/_taskStore.js:64`（`worktree: payload.worktree \|\| null`） |
+| 写入函数存在 | ✓ `bindWorktree(taskId, name)` | `tools/_taskStore.js:546` |
 | 由谁触发 | `worktreeManager.createWorktree({taskId})` 内部调它 | `services/worktreeManager.js:206` |
-| **有调用点吗** | ❌ **零调用点** | `EnterWorktreeTool/index.js:54` 与 `cli/repl/worktreeCommand.js:126` 调 `createWorktree` 时**都不传 `taskId`** |
+| **有调用点吗** | ✗ **零调用点** | `EnterWorktreeTool/index.js:54` 与 `cli/repl/worktreeCommand.js:126` 调 `createWorktree` 时**都不传 `taskId`** |
 | 额外约束 | `bindWorktree` 只接受 `payload_json.source === 'tool_task_store'` 的任务 | `tools/_taskStore.js:13, 70-76` |
 
 ⇒ `payload_json.worktree` **今天恒为 `null`**。F4 若按「非空 或 带豁免理由」判，**永远走豁免分支**。
@@ -368,7 +368,7 @@ last_error  last_result
    这是本方案**唯一需要新增的执行侧接线**，其余全部复用。
 2. 若步 1 不接线 ⇒ **F4 必须降级为 advisory**，并在文档里写明「当前不可判」。
    留一条永远为真的铁律**比没有更坏**：它会让人以为这里有守卫。
-3. ❌ 不要为了「让 F4 能过」而在卡片层伪造一个 worktree 字段 —— 那是第二套真源。
+3. ✗ 不要为了「让 F4 能过」而在卡片层伪造一个 worktree 字段 —— 那是第二套真源。
 
 ⚠ **这条判据已固化为探针的 `K2-unwired`**：它读 `bindWorktree` 是否存在、
 扫两个调用方是否传 `taskId`，只要调用点为 0 就报警（默认 warning）。
@@ -412,20 +412,20 @@ K1 立刻报 2 个 error（`swimlane` 与 `source`）。
 
 | # | 铁律 | 自动判据 | 现状 |
 |---|---|---|---|
-| **F1** | 卡片状态只能来自真源 11 态，且每态恰好落一列 | 探针 `L1-partition`（划分完备 + 互斥） | ✅ 已实证 0 error |
-| **F2** | 列级 `terminal` 声明必须与承接状态的实际终态性吻合（三态双向） | 探针 `L3-terminal` | ✅ 已实证（并因此把 `closed` 改为 `mixed`） |
-| **F3** | 前端**不得**复制状态转移表 | `git grep STATUS_TRANSITIONS -- '**/frontend/**'` 必须为空 | ✅ 已落地（前端零 `STATUS_TRANSITIONS`，实测空；⚠ 校验须用 ripgrep，`git grep` **不搜未跟踪文件**，用它会得出假绿） |
-| **F4** | 每张执行卡必须有 worktree，或显式豁免理由 | 卡片 `worktree` 非空 **或** `no_worktree_reason` 非空。⚠ 字段出处是 **`payload_json.worktree`**（由 `tools/_taskStore.bindWorktree(taskId, name)` 写入），**不是** `worktreeManager` 事件日志的 join。⚠⚠ **但该绑定在生产代码里零调用点**（`EnterWorktreeTool` 与 `worktreeCommand` 调 `createWorktree` 时都不传 `taskId`）⇒ **今天跑这条判据只会走豁免分支 = 空转**。**步 1 必须新增接线**（让启动器把自己的 task id 传给 `createWorktree`），否则 F4 降级为 advisory。探针 `K2-unwired` 盯着这一点 | ⏳ 步 1（**含新增接线**） |
-| **F5** | 终态卡片不可再流转；按钮态由**卡片 status** 派生 | 前端不得读列级 `terminal` 做动作门控 | ✅ 已落地（动作只从卡片 `actions` 派生；`board.test.js` 断言 CSS 只认 `data-tone`、且 `model.js` 除 `STATUS_TONE` 外无状态字面量） |
-| **F6** | 手机端不做横向滚动矩阵 | 组件层断点断言（<640px 不渲染网格） | ✅ 已落地（矩阵仅在 `mode==='desktop'`（≥1024px）渲染；<640px = 列切换器 + 扁平单列） |
-| **F7** | 运行时状态不得写进 `PROGRESS.json` 的 `status` | 该字段只允许 4 值；由 `check-memory-schema.js` 体系兜底 | ⏳ 步 1 扩判据 |
-| **F8** | 泳道取值只能来自 `payload_json.source`；**未登记 / 为空的 source 必须落「未归属」泳道，不得静默丢弃** | 探针 R6：`cards[].swimlane` 必非空，且每个 `swimlane.source` 能在卡片 `source` 集合里找到来源 | ✅ 已落地（`largeTaskBoard.test.js`：兜底泳道恰好一个、未登记/空/非字符串 source 一律落兜底、不返回 null） |
-| **F9** | `kind='agent'` 的泳道，其 `source` 必须在 `AGENT_LAUNCHERS` 的 `command` 集合内 | 探针 S3（**双向**：真源每个执行体也必须都有泳道） | ✅ 已实证 |
-| **F10** | 运行时任务 id 必须是 `<hq_id>.<attempt>`，attempt 为 ≥1 的整数；反查必须带尾部分隔符 | 探针 J1/J2/J3/J5 | ✅ 已实证（含非法 attempt 拒绝 + 合法值放行的双向对照） |
-| **F11** | **每个运行时终态都必须有回写目标**，非终态不得配回写 | 探针 J4（完备性 + 可靠性双向） | ✅ 已实证（并据此补上漏掉的 `cancelled`） |
-| **F12** | 消费文本抽取型清单的守卫，必须带「抽取条数 == `require` 条数」自校验 | 步 1 守卫内置断言 | ✅ 已落地（且**结构性消除**：运行时模块不消费文本抽取，执行体清单由路由层调 `getLauncherCommands()` 传入；`board.test.js` 与真源双向比对，条数不等即红） |
-| **F13** | 契约里**每个卡片字段**都必须能追溯到「真源字段 / 被消费的 payload 键 / 可解析的派生源 / 写明写入方的新增约定」四类之一 | 探针 `K1-ghost-field`（逐字段复核；`convention` 类必须写入方非空） | ✅ 已实证 0 error（13 字段全部归类；反例 `ghost-field` 触发 2 error） |
-| **F14** | **任何铁律的判据都必须能被真实数据触发**；若其依赖的写入路径在生产代码里零调用点，该铁律必须降级或补接线 | 探针 `K2-unwired`（数 `bindWorktree` 的真实调用点） | ⚠ 已实证：F4 当前**零调用点 ⇒ 空转**；步 1 接线后转 ✅ |
+| **F1** | 卡片状态只能来自真源 11 态，且每态恰好落一列 | 探针 `L1-partition`（划分完备 + 互斥） | ✓ 已实证 0 error |
+| **F2** | 列级 `terminal` 声明必须与承接状态的实际终态性吻合（三态双向） | 探针 `L3-terminal` | ✓ 已实证（并因此把 `closed` 改为 `mixed`） |
+| **F3** | 前端**不得**复制状态转移表 | `git grep STATUS_TRANSITIONS -- '**/frontend/**'` 必须为空 | ✓ 已落地（前端零 `STATUS_TRANSITIONS`，实测空；⚠ 校验须用 ripgrep，`git grep` **不搜未跟踪文件**，用它会得出假绿） |
+| **F4** | 每张执行卡必须有 worktree，或显式豁免理由 | 卡片 `worktree` 非空 **或** `no_worktree_reason` 非空。⚠ 字段出处是 **`payload_json.worktree`**（由 `tools/_taskStore.bindWorktree(taskId, name)` 写入），**不是** `worktreeManager` 事件日志的 join。⚠⚠ **但该绑定在生产代码里零调用点**（`EnterWorktreeTool` 与 `worktreeCommand` 调 `createWorktree` 时都不传 `taskId`）⇒ **今天跑这条判据只会走豁免分支 = 空转**。**步 1 必须新增接线**（让启动器把自己的 task id 传给 `createWorktree`），否则 F4 降级为 advisory。探针 `K2-unwired` 盯着这一点 | … 步 1（**含新增接线**） |
+| **F5** | 终态卡片不可再流转；按钮态由**卡片 status** 派生 | 前端不得读列级 `terminal` 做动作门控 | ✓ 已落地（动作只从卡片 `actions` 派生；`board.test.js` 断言 CSS 只认 `data-tone`、且 `model.js` 除 `STATUS_TONE` 外无状态字面量） |
+| **F6** | 手机端不做横向滚动矩阵 | 组件层断点断言（<640px 不渲染网格） | ✓ 已落地（矩阵仅在 `mode==='desktop'`（≥1024px）渲染；<640px = 列切换器 + 扁平单列） |
+| **F7** | 运行时状态不得写进 `PROGRESS.json` 的 `status` | 该字段只允许 4 值；由 `check-memory-schema.js` 体系兜底 | … 步 1 扩判据 |
+| **F8** | 泳道取值只能来自 `payload_json.source`；**未登记 / 为空的 source 必须落「未归属」泳道，不得静默丢弃** | 探针 R6：`cards[].swimlane` 必非空，且每个 `swimlane.source` 能在卡片 `source` 集合里找到来源 | ✓ 已落地（`largeTaskBoard.test.js`：兜底泳道恰好一个、未登记/空/非字符串 source 一律落兜底、不返回 null） |
+| **F9** | `kind='agent'` 的泳道，其 `source` 必须在 `AGENT_LAUNCHERS` 的 `command` 集合内 | 探针 S3（**双向**：真源每个执行体也必须都有泳道） | ✓ 已实证 |
+| **F10** | 运行时任务 id 必须是 `<hq_id>.<attempt>`，attempt 为 ≥1 的整数；反查必须带尾部分隔符 | 探针 J1/J2/J3/J5 | ✓ 已实证（含非法 attempt 拒绝 + 合法值放行的双向对照） |
+| **F11** | **每个运行时终态都必须有回写目标**，非终态不得配回写 | 探针 J4（完备性 + 可靠性双向） | ✓ 已实证（并据此补上漏掉的 `cancelled`） |
+| **F12** | 消费文本抽取型清单的守卫，必须带「抽取条数 == `require` 条数」自校验 | 步 1 守卫内置断言 | ✓ 已落地（且**结构性消除**：运行时模块不消费文本抽取，执行体清单由路由层调 `getLauncherCommands()` 传入；`board.test.js` 与真源双向比对，条数不等即红） |
+| **F13** | 契约里**每个卡片字段**都必须能追溯到「真源字段 / 被消费的 payload 键 / 可解析的派生源 / 写明写入方的新增约定」四类之一 | 探针 `K1-ghost-field`（逐字段复核；`convention` 类必须写入方非空） | ✓ 已实证 0 error（13 字段全部归类；反例 `ghost-field` 触发 2 error） |
+| **F14** | **任何铁律的判据都必须能被真实数据触发**；若其依赖的写入路径在生产代码里零调用点，该铁律必须降级或补接线 | 探针 `K2-unwired`（数 `bindWorktree` 的真实调用点） | ⚠ 已实证：F4 当前**零调用点 ⇒ 空转**；步 1 接线后转 ✓ |
 
 ---
 
@@ -487,16 +487,16 @@ npm run rules:gate:commit 2>&1 | grep check-board-lanes
 
 | 计划项 | 实际 | 差异与原因 |
 |---|---|---|
-| 步 1 · `GET /large-tasks/board` | ✅ 已落地 | `services/backend/src/routes/largeTasks.js`，声明在 `/metrics` 之后、`/:taskId` **之前**（顺序由测试锁死，否则被通配遮蔽） |
-| 步 1 · 聚合逻辑抽成纯叶子 | ✅ 已落地，但落**运行时目录** | `services/backend/src/tasks/largeTaskBoard.js`（零 require / 零 IO / 绝不抛）。放这里而非 `scripts/lib/`：它是**运行时**真源、被路由直接 require；`scripts/lib/` 会被 `cross-layer-require` 判跨层 |
+| 步 1 · `GET /large-tasks/board` | ✓ 已落地 | `services/backend/src/routes/largeTasks.js`，声明在 `/metrics` 之后、`/:taskId` **之前**（顺序由测试锁死，否则被通配遮蔽） |
+| 步 1 · 聚合逻辑抽成纯叶子 | ✓ 已落地，但落**运行时目录** | `services/backend/src/tasks/largeTaskBoard.js`（零 require / 零 IO / 绝不抛）。放这里而非 `scripts/lib/`：它是**运行时**真源、被路由直接 require；`scripts/lib/` 会被 `cross-layer-require` 判跨层 |
 | 步 1 · 表漂移守卫 | ⚠ **改为 jest 测试，未做 `$g` 检查器** | `services/backend/tests/tasks/largeTaskBoard.test.js`（28 条）从 `TASK_STATUSES` / `TERMINAL_STATUSES` / `STATUS_TRANSITIONS` / `AGENT_LAUNCHERS` **反推**并复核三张表；路由契约 `tests/routes/largeTasks.board.route.test.js`（11 条，含路由顺序断言） |
-| 步 1 · `API-005` 登记 + 规则卡 + 阶段表 | ❌ **未做** | 属独立接线的四处触点（登记表 / 标记行 / `docs:rules-cards` / 阶段表），未与本次 UI 混做 |
-| 步 2 · `web-quant` 落看板 | ✅ 已落地 | `views/TaskBoard.vue` + `api/largeTasks.js` + 路由 `/tasks` + `HOST_MENU_ITEMS` 一项 |
-| 步 2 · 复用 `useDashboardHandover` 的 SSE 骨架 | ❌ **未复用** | 该骨架面向「交接快照」，与看板聚合端点语义不同；本次用「取数 + 手动刷新」。实时刷新留待后续 |
-| 步 3 · 抽公共组件 | ✅ 已落地 | `platform/packages/ui-shared/src/board/`（`model.js` + `TaskBoard.vue` + `TaskCard.vue`），**两端共用同一份** |
-| 步 3 · 桌面端接入 | ✅ `apps/ai-frontend` 接入 `/admin/tasks` | 放 **admin 组**：数据源 `largeTaskRuntimeStore` 是全局的（含平台后台任务），不含用户隔离，暴露给普通用户等于泄露他人任务信息 |
-| 步 3 · 移动端单泳道纵向流 | ✅ 组件内置三档断点 | `<640px` = 列切换器 + 扁平单列（泳道以 chip 标在卡上）；`640–1023px` = 列切换器 + 泳道分组；`≥1024px` = 二维矩阵 |
-| 步 3 · 收紧守卫强度 | ❌ 未做（依赖尚未登记的规则） | — |
+| 步 1 · `API-005` 登记 + 规则卡 + 阶段表 | ✗ **未做** | 属独立接线的四处触点（登记表 / 标记行 / `docs:rules-cards` / 阶段表），未与本次 UI 混做 |
+| 步 2 · `web-quant` 落看板 | ✓ 已落地 | `views/TaskBoard.vue` + `api/largeTasks.js` + 路由 `/tasks` + `HOST_MENU_ITEMS` 一项 |
+| 步 2 · 复用 `useDashboardHandover` 的 SSE 骨架 | ✗ **未复用** | 该骨架面向「交接快照」，与看板聚合端点语义不同；本次用「取数 + 手动刷新」。实时刷新留待后续 |
+| 步 3 · 抽公共组件 | ✓ 已落地 | `platform/packages/ui-shared/src/board/`（`model.js` + `TaskBoard.vue` + `TaskCard.vue`），**两端共用同一份** |
+| 步 3 · 桌面端接入 | ✓ `apps/ai-frontend` 接入 `/admin/tasks` | 放 **admin 组**：数据源 `largeTaskRuntimeStore` 是全局的（含平台后台任务），不含用户隔离，暴露给普通用户等于泄露他人任务信息 |
+| 步 3 · 移动端单泳道纵向流 | ✓ 组件内置三档断点 | `<640px` = 列切换器 + 扁平单列（泳道以 chip 标在卡上）；`640–1023px` = 列切换器 + 泳道分组；`≥1024px` = 二维矩阵 |
+| 步 3 · 收紧守卫强度 | ✗ 未做（依赖尚未登记的规则） | — |
 
 **五条落地时才发现、必须回写计划的判据**：
 
@@ -543,16 +543,16 @@ npm run rules:gate:commit 2>&1 | grep check-board-lanes
 
 | 场景 | 命令 | 预期 finding | 实测 |
 |---|---|---|---|
-| 默认（真实真源） | `node scripts/ci/check-board-lane-map.js` | 仅 `K2-unwired`（F4 已知空转） | ✅ `0 error(s), 1 warning(s)` / exit 0（11 状态 / 6 列 / **9 执行体** / 23 计划任务 / **19 任务字段**） |
-| 漏映射一个状态 | `--scenario=drop` | `L1-partition` 静默丢单 | ✅ 2 error / exit 1（`L1` `L3`） |
-| 一个状态落两列 | `--scenario=dup` | `L1-partition` 卡片重复 | ✅ 1 error / exit 1（`L1`） |
-| 列终态声明与实际不符 | （初版设计即命中） | `L3-terminal` | ✅ 已据此把 `closed` 改为 `mixed` |
-| 泳道表塞入幽灵执行体 | `--scenario=orphan-source` | `S3-launcher` | ✅ 1 error / exit 1（`S3`） |
-| 移除兜底泳道 | `--scenario=no-fallback` | `S1-fallback` **+** `S4-fallback` | ✅ 6 error / exit 1（`S1` `S4`） |
-| 终态缺回写目标 | `--scenario=no-writeback` | `J4-writeback` 完备性 | ✅ 1 error / exit 1（`J4`） |
-| 计划任务 id 形成连接前缀歧义 | `--scenario=collide` | `J2-ambiguous` **+** `J5-prefix` | ✅ 2 error / exit 1（`J2` `J5`） |
-| 契约里塞一个**取不到值**的字段 | `--scenario=ghost-field` | `K1-ghost-field`（抽掉 payload 的 `source` 键，模拟初稿的 `swimlane`） | ✅ 2 error / exit 1（`K1`×2） |
-| F4 接线补齐之后 | `--scenario=worktree-wired` | 无 | ✅ `0 error(s), 0 warning(s)` / exit 0（证明 `K2` **不是恒真断言**） |
+| 默认（真实真源） | `node scripts/ci/check-board-lane-map.js` | 仅 `K2-unwired`（F4 已知空转） | ✓ `0 error(s), 1 warning(s)` / exit 0（11 状态 / 6 列 / **9 执行体** / 23 计划任务 / **19 任务字段**） |
+| 漏映射一个状态 | `--scenario=drop` | `L1-partition` 静默丢单 | ✓ 2 error / exit 1（`L1` `L3`） |
+| 一个状态落两列 | `--scenario=dup` | `L1-partition` 卡片重复 | ✓ 1 error / exit 1（`L1`） |
+| 列终态声明与实际不符 | （初版设计即命中） | `L3-terminal` | ✓ 已据此把 `closed` 改为 `mixed` |
+| 泳道表塞入幽灵执行体 | `--scenario=orphan-source` | `S3-launcher` | ✓ 1 error / exit 1（`S3`） |
+| 移除兜底泳道 | `--scenario=no-fallback` | `S1-fallback` **+** `S4-fallback` | ✓ 6 error / exit 1（`S1` `S4`） |
+| 终态缺回写目标 | `--scenario=no-writeback` | `J4-writeback` 完备性 | ✓ 1 error / exit 1（`J4`） |
+| 计划任务 id 形成连接前缀歧义 | `--scenario=collide` | `J2-ambiguous` **+** `J5-prefix` | ✓ 2 error / exit 1（`J2` `J5`） |
+| 契约里塞一个**取不到值**的字段 | `--scenario=ghost-field` | `K1-ghost-field`（抽掉 payload 的 `source` 键，模拟初稿的 `swimlane`） | ✓ 2 error / exit 1（`K1`×2） |
+| F4 接线补齐之后 | `--scenario=worktree-wired` | 无 | ✓ `0 error(s), 0 warning(s)` / exit 0（证明 `K2` **不是恒真断言**） |
 
 ⚠ **第四类空头支票（本次新增的判据）**：前三类反例测的都是「字段/连接**不存在**」，
 而 `K1`/`K2` 测的是「**存在但没人写**」：
@@ -657,10 +657,10 @@ node -e "const p=require('./scripts/ci/check-board-lane-map');const s=require('f
 
 | Cline 的做法 | 本方案 | 理由 |
 |---|---|---|
-| 每卡一个 worktree | ✅ 采纳，调既有 `worktreeManager.js`；**但需补 `taskId` 接线**（§4.5） | 机制已存在，**绑定路径却从未被调用过** |
-| 列 = 状态 | ✅ 采纳，但 11 态折叠为 6 列 | 瞬态会造成跳列闪烁 |
-| 泳道 | ✅ **扩展**：Cline 无泳道，本方案加执行体泳道 | 用户明确要求管三种执行体 |
+| 每卡一个 worktree | ✓ 采纳，调既有 `worktreeManager.js`；**但需补 `taskId` 接线**（§4.5） | 机制已存在，**绑定路径却从未被调用过** |
+| 列 = 状态 | ✓ 采纳，但 11 态折叠为 6 列 | 瞬态会造成跳列闪烁 |
+| 泳道 | ✓ **扩展**：Cline 无泳道，本方案加执行体泳道 | 用户明确要求管三种执行体 |
 | diff 内联评论回灌 | ⏸ 暂不做 | 需 agent 侧支持结构化反馈，属后续 |
 | 依赖链自动接续 | ⏸ 暂不做 | 真源无依赖字段，扩状态机风险高 |
-| `npx kanban` 本地服务 + 浏览器 | ❌ 不采纳 | khy-os 已有 4 个端条目，**不新增端**，复用既有载体 |
+| `npx kanban` 本地服务 + 浏览器 | ✗ 不采纳 | khy-os 已有 4 个端条目，**不新增端**，复用既有载体 |
 | Auto-commit / Auto-PR | ⏸ 暂不做 | 与 `SECURITY-001` 的改动面约束需先对齐 |

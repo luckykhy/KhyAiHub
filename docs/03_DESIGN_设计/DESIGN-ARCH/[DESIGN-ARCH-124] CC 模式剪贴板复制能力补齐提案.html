@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -34,7 +34,7 @@
 <hr>
 <h2 id="1-盲区实证-file-line-可复核">1. 盲区实证（file:line 可复核）<a class="anchor" href="#1-盲区实证-file-line-可复核" aria-label="锚点">#</a></h2>
 <h3 id="1-1-断点定位">1.1 断点定位<a class="anchor" href="#1-1-断点定位" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>层</th><th>文件</th><th>状态</th></tr></thead><tbody><tr><td>进程级鼠标层</td><td><code>tui/app.js</code> §294–329</td><td>✅ 已按 <code>KHY_SELECT</code> 开 1002 —— <strong>CC 模式已经在收 SGR 事件</strong></td></tr><tr><td>事件分发</td><td><code>tui/mouseButtons.js</code> <code>createMouseDispatcher</code></td><td>✅ <code>onSelectEvent</code> 通道完整</td></tr><tr><td>选区算法</td><td><code>tui/selection.js</code>（12 导出，零 IO）</td><td>✅ 纯叶子，27/27 测试绿</td></tr><tr><td>反色渲染</td><td><code>tui/ink-components/Viewport.js</code></td><td>✅ <code>selection</code> prop 通用，16/16 绿</td></tr><tr><td>剪贴板出口</td><td><code>tui/utils/ccClipboard.js</code></td><td>✅ <code>writeClipboard()</code> 20/20 绿</td></tr><tr><td><strong>消费者</strong></td><td><strong><code>tui/ink-components/CcApp.js</code></strong></td><td>❌ <strong>零命中</strong></td></tr></tbody></table>
+<table><thead><tr><th>层</th><th>文件</th><th>状态</th></tr></thead><tbody><tr><td>进程级鼠标层</td><td><code>tui/app.js</code> §294–329</td><td>✓ 已按 <code>KHY_SELECT</code> 开 1002 —— <strong>CC 模式已经在收 SGR 事件</strong></td></tr><tr><td>事件分发</td><td><code>tui/mouseButtons.js</code> <code>createMouseDispatcher</code></td><td>✓ <code>onSelectEvent</code> 通道完整</td></tr><tr><td>选区算法</td><td><code>tui/selection.js</code>（12 导出，零 IO）</td><td>✓ 纯叶子，27/27 测试绿</td></tr><tr><td>反色渲染</td><td><code>tui/ink-components/Viewport.js</code></td><td>✓ <code>selection</code> prop 通用，16/16 绿</td></tr><tr><td>剪贴板出口</td><td><code>tui/utils/ccClipboard.js</code></td><td>✓ <code>writeClipboard()</code> 20/20 绿</td></tr><tr><td><strong>消费者</strong></td><td><strong><code>tui/ink-components/CcApp.js</code></strong></td><td>✗ <strong>零命中</strong></td></tr></tbody></table>
 <p>实测（<code>Grep</code> over <code>CcApp.js</code>）：</p>
 <pre><code>pattern=&quot;isMouseSequence|onInput|mouseDispatcher|_mouse&quot;  → No matches found
 pattern=&quot;onSelectEvent|_selectOn|selection&quot;               → 0 hits（上一轮已确认）</code></pre>
@@ -65,7 +65,7 @@ pattern=&quot;onSelectEvent|_selectOn|selection&quot;               → 0 hits�
 <p><strong>代价</strong>：CC 消息区失去 per-message 的富组件渲染能力（颜色分段、折叠块）。<br>若 <code>CcAssistantMessage</code> 目前有颜色分段（实测：只有 <code>●</code> 用 <code>CC_COLORS.dimColor</code>，<br>正文是裸 <code>&lt;Text&gt;</code>，<strong>没有富分段</strong>），方案 A 视觉损失≈0。</p>
 <h3 id="2-2-方案-b-备选-保留组件树-另建行映射">2.2 方案 B（备选）：保留组件树，另建行映射<a class="anchor" href="#2-2-方案-b-备选-保留组件树-另建行映射" aria-label="锚点">#</a></h3>
 <p>保留现有渲染，额外维护一张「屏幕行 → (msgIdx, lineInMsg)」映射表，<br><code>onSelectEvent</code> 收到 <code>(line, col)</code> 后反查。<strong>不推荐</strong>：</p>
-<blockquote><p>⚠️ <strong>反模式，这条路别走</strong>：这张映射表必须复刻 ink 的 yoga 布局<br>（<code>marginTop</code>、软换行、<code>●</code> 宽度），一旦复刻不精确就整体错位 ——<br>正是 <code>AGENTS.md:268–269</code> 明令禁止的「用实时几何反查坐标」的翻版。<br>维护成本高、且<strong>错位是静默的</strong>（选到隔壁行），排查成本极高。</p></blockquote>
+<blockquote><p>⚠ <strong>反模式，这条路别走</strong>：这张映射表必须复刻 ink 的 yoga 布局<br>（<code>marginTop</code>、软换行、<code>●</code> 宽度），一旦复刻不精确就整体错位 ——<br>正是 <code>AGENTS.md:268–269</code> 明令禁止的「用实时几何反查坐标」的翻版。<br>维护成本高、且<strong>错位是静默的</strong>（选到隔壁行），排查成本极高。</p></blockquote>
 <hr>
 <h3 id="2-3-实际采用-c3-手写投影-运行时-rendertostring-当测试-oracle">2.3 实际采用：C3 —— 手写投影（运行时）+ <code>renderToString</code> 当测试 oracle<a class="anchor" href="#2-3-实际采用-c3-手写投影-运行时-rendertostring-当测试-oracle" aria-label="锚点">#</a></h3>
 <p>方案 A 的方向对，但<strong>落地方式</strong>在上轮侦察后被替换成 C3：</p>
@@ -89,7 +89,7 @@ pattern=&quot;onSelectEvent|_selectOn|selection&quot;               → 0 hits�
 <span class="hljs-keyword">const</span> _selectingRef      = <span class="hljs-title class_">React</span>.<span class="hljs-title function_">useRef</span>(<span class="hljs-literal">false</span>);
 <span class="hljs-keyword">const</span> _selectTextRef     = <span class="hljs-title class_">React</span>.<span class="hljs-title function_">useRef</span>(<span class="hljs-string">&#x27;&#x27;</span>);
 <span class="hljs-keyword">const</span> _mainContentLinesRef = <span class="hljs-title class_">React</span>.<span class="hljs-title function_">useRef</span>([]);</code></pre>
-<blockquote><p>⚠️ <strong>ref 镜像是强制的，不是优化</strong>：<code>onSelectEvent</code> 是渲染期早建的 <code>useCallback</code><br>闭包，直接读 state 拿到的是<strong>上一帧</strong>的值。这段在 Legacy 已经踩过，<br>CC 侧必须同样在渲染体里同步。</p></blockquote>
+<blockquote><p>⚠ <strong>ref 镜像是强制的，不是优化</strong>：<code>onSelectEvent</code> 是渲染期早建的 <code>useCallback</code><br>闭包，直接读 state 拿到的是<strong>上一帧</strong>的值。这段在 Legacy 已经踩过，<br>CC 侧必须同样在渲染体里同步。</p></blockquote>
 <h3 id="3-3-坐标换算-照抄-app-js-1431-1456">3.3 坐标换算（照抄 <code>App.js:1431–1456</code>）<a class="anchor" href="#3-3-坐标换算-照抄-app-js-1431-1456" aria-label="锚点">#</a></h3>
 <pre><code class="language-js"><span class="hljs-keyword">const</span> viewH = <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">max</span>(<span class="hljs-number">1</span>, <span class="hljs-title class_">Number</span>(_viewportHeightRef.<span class="hljs-property">current</span>) || <span class="hljs-number">1</span>);
 <span class="hljs-keyword">const</span> total = <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">max</span>(<span class="hljs-number">0</span>, <span class="hljs-title class_">Number</span>(_viewportTotalLinesRef.<span class="hljs-property">current</span>) || <span class="hljs-number">0</span>);
@@ -98,7 +98,7 @@ pattern=&quot;onSelectEvent|_selectOn|selection&quot;               → 0 hits�
 <span class="hljs-keyword">const</span> offset = !<span class="hljs-title class_">Number</span>.<span class="hljs-built_in">isFinite</span>(n) || n &lt; <span class="hljs-number">0</span> ? maxScroll : <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">max</span>(<span class="hljs-number">0</span>, <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">min</span>(n, maxScroll));
 <span class="hljs-keyword">const</span> line = <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">max</span>(<span class="hljs-number">0</span>, <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">min</span>(<span class="hljs-title class_">Math</span>.<span class="hljs-title function_">trunc</span>(<span class="hljs-title class_">Number</span>(ev.<span class="hljs-property">row</span>)) + offset, <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">max</span>(<span class="hljs-number">0</span>, total - <span class="hljs-number">1</span>)));
 <span class="hljs-keyword">const</span> col  = <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">max</span>(<span class="hljs-number">0</span>, <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">trunc</span>(<span class="hljs-title class_">Number</span>(ev.<span class="hljs-property">col</span>)));</code></pre>
-<blockquote><p>⚠️ <strong>方向是 <code>+ offset</code>，不是 <code>− offset</code></strong>。且 <code>null</code>/负数偏移要按「贴底」解释成<br><code>maxScroll</code>（<code>AGENTS.md</code> §0.9.1 的贴底哨兵）。</p></blockquote>
+<blockquote><p>⚠ <strong>方向是 <code>+ offset</code>，不是 <code>− offset</code></strong>。且 <code>null</code>/负数偏移要按「贴底」解释成<br><code>maxScroll</code>（<code>AGENTS.md</code> §0.9.1 的贴底哨兵）。</p></blockquote>
 <h3 id="3-4-事件四态-照抄-app-js-1457-1518">3.4 事件四态（照抄 <code>App.js:1457–1518</code>）<a class="anchor" href="#3-4-事件四态-照抄-app-js-1457-1518" aria-label="锚点">#</a></h3>
 <table><thead><tr><th><code>kind</code></th><th>动作</th></tr></thead><tbody><tr><td><code>down</code></td><td><code>beginSelection(_selectRegionRef.current, line, col)</code> → <code>setSelectRegion</code></td></tr><tr><td><code>move</code></td><td><code>_selectingRef.current</code> 守卫 → <code>extendSelection</code></td></tr><tr><td><code>up</code></td><td><code>endSelection</code> → <code>normalizeSelection</code>；无区间则清 <code>_selectTextRef</code>；否则 <code>extractText(_mainContentLinesRef.current, sel)</code> → <code>writeClipboard(text)</code>（<code>_selectClipEnabled</code> 守卫）</td></tr><tr><td><code>cancel</code></td><td><code>clearSelection()</code></td></tr></tbody></table>
 <h3 id="3-5-鼠标序列守卫-cc-侧新增-legacy-也缺">3.5 鼠标序列守卫（<strong>CC 侧新增，Legacy 也缺</strong>）<a class="anchor" href="#3-5-鼠标序列守卫-cc-侧新增-legacy-也缺" aria-label="锚点">#</a></h3>
@@ -117,7 +117,7 @@ pattern=&quot;onSelectEvent|_selectOn|selection&quot;               → 0 hits�
 <hr>
 <h2 id="4-键盘路径-ctrl-c-v-y-ctrl-y-需先定语义">4. 键盘路径（Ctrl+C / <code>v</code> / <code>y</code> / Ctrl+Y）—— 需先定语义<a class="anchor" href="#4-键盘路径-ctrl-c-v-y-ctrl-y-需先定语义" aria-label="锚点">#</a></h2>
 <h3 id="4-1-实测现状">4.1 实测现状<a class="anchor" href="#4-1-实测现状" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>键</th><th>Legacy</th><th>CC 现状</th></tr></thead><tbody><tr><td><code>Ctrl+Y</code></td><td>无</td><td>✅ 已有 → <code>handleCopyLast()</code>（<code>CcApp.js:360–363</code>），复制<strong>最近助手回复</strong></td></tr><tr><td><code>Ctrl+C</code></td><td>无特殊</td><td>✅ 已占用 → <strong>双击退出</strong>（<code>CcApp.js:299–309</code>）</td></tr><tr><td><code>v</code></td><td>无</td><td>无</td></tr><tr><td><code>y</code></td><td>无</td><td>无</td></tr></tbody></table>
+<table><thead><tr><th>键</th><th>Legacy</th><th>CC 现状</th></tr></thead><tbody><tr><td><code>Ctrl+Y</code></td><td>无</td><td>✓ 已有 → <code>handleCopyLast()</code>（<code>CcApp.js:360–363</code>），复制<strong>最近助手回复</strong></td></tr><tr><td><code>Ctrl+C</code></td><td>无特殊</td><td>✓ 已占用 → <strong>双击退出</strong>（<code>CcApp.js:299–309</code>）</td></tr><tr><td><code>v</code></td><td>无</td><td>无</td></tr><tr><td><code>y</code></td><td>无</td><td>无</td></tr></tbody></table>
 <p>且 Legacy 的 <code>_selectTextRef</code> <strong>只写不读</strong>（实测：写在 <code>App.js:1492/1500</code>，<br><code>5589–5602</code> 同步进 ref，<strong>全仓无读取点</strong>）。</p>
 <p>⇒ 结论：<strong><code>v</code> / <code>y</code> / <code>Ctrl+C 复制当前选区</code> 是净新增，不是移植。</strong> Legacy 没有可抄的语义。</p>
 <h3 id="4-2-提案-需用户拍板">4.2 提案（需用户拍板）<a class="anchor" href="#4-2-提案-需用户拍板" aria-label="锚点">#</a></h3>
@@ -129,16 +129,16 @@ pattern=&quot;onSelectEvent|_selectOn|selection&quot;               → 0 hits�
 <h2 id="5-题目-3-agents-md-20-规则对本改动的适用范围">5. 题目 3：<code>AGENTS.md:20</code> 规则对本改动的适用范围<a class="anchor" href="#5-题目-3-agents-md-20-规则对本改动的适用范围" aria-label="锚点">#</a></h2>
 <p>用户引用的「禁止修改 Legacy 模式代码路径」<strong>不在根 <code>AGENTS.md</code></strong>，实测在<br><strong><code>services/backend/src/cli/tui/AGENTS.md:20</code></strong>（根目录那份没有这条）：</p>
 <pre><code>### 0.1 零破坏原则
-❌ 禁止修改 Legacy 模式（KHY_CC_TUI 未设置）下的任何代码路径
-❌ 禁止删除或重命名现有组件/函数（除非显式标记为废弃）
-❌ 禁止改变现有 public API 的签名或行为
-❌ 禁止引入新的全局副作用
-✅ 所有 CC 模式代码必须通过 KHY_CC_TUI=1 门控
-✅ 门控关闭时，行为必须与修改前逐字节相同
-✅ 新增文件优先于修改现有文件</code></pre>
-<p>同目录还有更紧的两条：<code>AGENTS.md:626</code> <code>❌ 禁止修改 Legacy 组件的内部实现</code>、<br><code>AGENTS.md:627</code> <code>❌ 禁止在 CC 组件中直接引用 Legacy 组件</code>。</p>
+✗ 禁止修改 Legacy 模式（KHY_CC_TUI 未设置）下的任何代码路径
+✗ 禁止删除或重命名现有组件/函数（除非显式标记为废弃）
+✗ 禁止改变现有 public API 的签名或行为
+✗ 禁止引入新的全局副作用
+✓ 所有 CC 模式代码必须通过 KHY_CC_TUI=1 门控
+✓ 门控关闭时，行为必须与修改前逐字节相同
+✓ 新增文件优先于修改现有文件</code></pre>
+<p>同目录还有更紧的两条：<code>AGENTS.md:626</code> <code>✗ 禁止修改 Legacy 组件的内部实现</code>、<br><code>AGENTS.md:627</code> <code>✗ 禁止在 CC 组件中直接引用 Legacy 组件</code>。</p>
 <h3 id="适用范围判定">适用范围判定<a class="anchor" href="#适用范围判定" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>本改动的动作</th><th>是否触碰</th><th>判定</th></tr></thead><tbody><tr><td><strong>新增</strong> <code>ccMessageProjection.js</code></td><td>否</td><td>✅ 明确鼓励（<code>AGENTS.md:27</code>）</td></tr><tr><td><strong>新增</strong> CC 侧鼠标守卫 / 选区状态</td><td>否（全在 <code>CcApp.js</code>，只在 <code>KHY_CC_TUI=1</code> 下被 require）</td><td>✅ 合规</td></tr><tr><td><strong>修改</strong> <code>CcApp.js</code> 消息区渲染</td><td>否（该文件只在 CC 分支加载，<code>app.js:96–103</code>）</td><td>✅ 合规</td></tr><tr><td><strong>复用</strong> <code>Viewport.js</code> / <code>selection.js</code> / <code>ccClipboard.js</code></td><td>只读引用，不改内部</td><td>✅ 合规（这三者是<strong>共用叶子</strong>，非 Legacy 组件）</td></tr><tr><td><strong>抽取</strong> <code>_selectEnabled</code> 等到共用叶子 → 需改 <code>App.js</code> 的 require 行</td><td>是</td><td>⚠️ <strong>需评审</strong>；保守做法：CC 侧抄一份</td></tr><tr><td><strong>修改</strong> <code>app.js</code> 进程级鼠标层</td><td>否（已存在，且不新增行为）</td><td>✅ 无需改</td></tr></tbody></table>
+<table><thead><tr><th>本改动的动作</th><th>是否触碰</th><th>判定</th></tr></thead><tbody><tr><td><strong>新增</strong> <code>ccMessageProjection.js</code></td><td>否</td><td>✓ 明确鼓励（<code>AGENTS.md:27</code>）</td></tr><tr><td><strong>新增</strong> CC 侧鼠标守卫 / 选区状态</td><td>否（全在 <code>CcApp.js</code>，只在 <code>KHY_CC_TUI=1</code> 下被 require）</td><td>✓ 合规</td></tr><tr><td><strong>修改</strong> <code>CcApp.js</code> 消息区渲染</td><td>否（该文件只在 CC 分支加载，<code>app.js:96–103</code>）</td><td>✓ 合规</td></tr><tr><td><strong>复用</strong> <code>Viewport.js</code> / <code>selection.js</code> / <code>ccClipboard.js</code></td><td>只读引用，不改内部</td><td>✓ 合规（这三者是<strong>共用叶子</strong>，非 Legacy 组件）</td></tr><tr><td><strong>抽取</strong> <code>_selectEnabled</code> 等到共用叶子 → 需改 <code>App.js</code> 的 require 行</td><td>是</td><td>⚠ <strong>需评审</strong>；保守做法：CC 侧抄一份</td></tr><tr><td><strong>修改</strong> <code>app.js</code> 进程级鼠标层</td><td>否（已存在，且不新增行为）</td><td>✓ 无需改</td></tr></tbody></table>
 <p><strong>结论</strong>：本提案主体<strong>落在规则允许范围内</strong>。唯一需要单独确认的是 §3.1 的<br>「抽取三个门控助手到共用叶子」——两个选项：<br>① CC 侧抄一份（重复 ~40 行，零 Legacy 触碰，<strong>推荐</strong>）；<br>② 抽共用叶子（去重，但要动 Legacy require 行，需走评审）。</p>
 <blockquote><p>判定依据不是「看起来像」，而是 <code>app.js:96–103</code> 的三元分支：<br><strong>Legacy 路径 = 未设 <code>KHY_CC_TUI</code> 时 require 的那个文件树</strong>。新增文件 +<br>只改 CC 分支内文件，天然不触碰 Legacy。</p></blockquote>
 <hr>
@@ -151,7 +151,7 @@ services/backend/tests/cli/tui/ink-components/viewportSelection.test.js 16/16 pa
 services/backend/tests/cli/tui/ccClipboard.test.js                     20/20 pass
                                                              合计 87/87</code></pre>
 <h3 id="6-2-改动后必须新增的测试">6.2 改动后必须新增的测试<a class="anchor" href="#6-2-改动后必须新增的测试" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>文件</th><th>覆盖</th><th>状态（2026-09-18）</th></tr></thead><tbody><tr><td><code>tests/cli/tui/ccMessageProjection.test.js</code></td><td>纯叶子：折行、<code>●</code> 前缀、<code>marginTop</code> 空行、<code>row==index</code> 不变量、空输入不抛</td><td>✅ 36/36</td></tr><tr><td><code>tests/cli/tui/ccMessageProjection.oracle.test.js</code></td><td><strong>零容忍逐字节对拍</strong>：手写投影 vs <code>renderToString</code>（列宽 20–120、ASCII/CJK、<code>●</code> 永不消失）</td><td>✅ 13/13</td></tr><tr><td><code>tests/cli/tui/ccSelectionWiring.test.js</code></td><td><strong>接线后</strong>的布局（<code>Viewport</code> 渲染消息段）与投影仍逐行一致；<code>row==index</code> 恒等；拖选 → 原文</td><td>✅ 8/8</td></tr><tr><td><code>tests/cli/tui/ccMouseGuard.test.js</code></td><td>原始 SGR 字节 → 剪贴板文本全链；普通输入<strong>不</strong>被误判成鼠标；Shift/滚轮不产选区</td><td>✅ 8/8</td></tr><tr><td>扩 <code>viewportSelection.test.js</code></td><td><code>lines</code> 来自投影时反色范围正确</td><td>既有文件已覆盖 <code>sliceLineForSelection</code> 恒等（<code>head+mid+tail===line</code>），未另扩</td></tr></tbody></table>
+<table><thead><tr><th>文件</th><th>覆盖</th><th>状态（2026-09-18）</th></tr></thead><tbody><tr><td><code>tests/cli/tui/ccMessageProjection.test.js</code></td><td>纯叶子：折行、<code>●</code> 前缀、<code>marginTop</code> 空行、<code>row==index</code> 不变量、空输入不抛</td><td>✓ 36/36</td></tr><tr><td><code>tests/cli/tui/ccMessageProjection.oracle.test.js</code></td><td><strong>零容忍逐字节对拍</strong>：手写投影 vs <code>renderToString</code>（列宽 20–120、ASCII/CJK、<code>●</code> 永不消失）</td><td>✓ 13/13</td></tr><tr><td><code>tests/cli/tui/ccSelectionWiring.test.js</code></td><td><strong>接线后</strong>的布局（<code>Viewport</code> 渲染消息段）与投影仍逐行一致；<code>row==index</code> 恒等；拖选 → 原文</td><td>✓ 8/8</td></tr><tr><td><code>tests/cli/tui/ccMouseGuard.test.js</code></td><td>原始 SGR 字节 → 剪贴板文本全链；普通输入<strong>不</strong>被误判成鼠标；Shift/滚轮不产选区</td><td>✓ 8/8</td></tr><tr><td>扩 <code>viewportSelection.test.js</code></td><td><code>lines</code> 来自投影时反色范围正确</td><td>既有文件已覆盖 <code>sliceLineForSelection</code> 恒等（<code>head+mid+tail===line</code>），未另扩</td></tr></tbody></table>
 <h3 id="6-2-1-实施期的根因发现-比本提案更严重-已一并修">6.2.1 实施期的根因发现（比本提案更严重，已一并修）<a class="anchor" href="#6-2-1-实施期的根因发现-比本提案更严重-已一并修" aria-label="锚点">#</a></h3>
 <p>接线时发现：<strong><code>createMouseDispatcher</code> 根本没实现 <code>onSelectEvent</code></strong> —— <code>App.js</code><br>把它传进去了，但 <code>mouseButtons.js</code> 既没在解构里收，也没在 <code>onInput</code> 里调。<br>后果是「自绘选择」这条链在 <strong>Legacy 与 CC 两种模式下一次都没触发过</strong>，<br><code>mouseSelectEvent.test.js</code> 15 条里 5 条是红的。</p>
 <blockquote><p>这正是「文档写了、组件接了、测试也有，但功能一次都没跑起来」的那类缝：<br>事件层的<strong>契约</strong>（测试）与<strong>实现</strong>（dispatcher）各自自洽，中间那根线没接。<br>已实现 <code>fireSelect</code> + <code>down/move/up/cancel</code> 四态 + <code>reset()</code> 发 <code>cancel</code>，<br>判据顺序按 §2.3 的①②③固定，15/15 绿。</p></blockquote>
@@ -173,7 +173,7 @@ npm run --workspace services/backend <span class="hljs-built_in">test</span>:tui
 <p><strong>Legacy 路径</strong>（<code>KHY_CC_TUI</code> 未设）：</p>
 <table><thead><tr><th>步骤</th><th>期望</th></tr></thead><tbody><tr><td><code>KHY_SELECT=0 khy</code> 拖选</td><td>与改动前<strong>逐字节相同</strong>（走终端原生拖选）</td></tr><tr><td><code>KHY_SELECT=1 khy</code> 拖选正文</td><td>反色跟手；松手 <code>Get-Clipboard</code> 读回一致</td></tr><tr><td><code>KHY_SELECT_CLIP=0 khy</code> 拖选</td><td>能选中能看，<strong>不</strong>自动写剪贴板</td></tr></tbody></table>
 <p><strong>CC 路径</strong>（<code>KHY_CC_TUI=1</code>，改动前<strong>全部不可用</strong>）：</p>
-<table><thead><tr><th>步骤</th><th>改动前</th><th>改动后期望</th></tr></thead><tbody><tr><td>拖选消息区正文</td><td>❌ 无反应</td><td>✅ 反色跟随鼠标</td></tr><tr><td>松手</td><td>❌ 无写入</td><td>✅ 剪贴板有内容，<code>Get-Clipboard</code> 读回 == 屏幕选中文本</td></tr><tr><td>跨消息拖选</td><td>❌</td><td>✅ 用 <code>\n</code> 连接（<code>extractText</code> 语义）</td></tr><tr><td>拖选含空行</td><td>❌</td><td>✅ 空行产出空串<strong>不被丢弃</strong></td></tr><tr><td><code>y</code>（有选区）</td><td>❌ 无此键</td><td>✅ 复制当前选区 + Toast 提示字符数</td></tr><tr><td><code>Ctrl+Y</code></td><td>✅ 复制最近回复</td><td>✅ <strong>行为不变</strong></td></tr><tr><td><code>Ctrl+C</code> 单击 / 双击</td><td>✅ 提示 / 退出</td><td>✅ <strong>行为不变</strong></td></tr><tr><td>拖动时滚动</td><td>—</td><td>✅ 无异常，坐标不漂</td></tr><tr><td>拖动中 <code>resize</code></td><td>—</td><td>✅ 不崩，选区可继续</td></tr><tr><td><code>KHY_SELECT=0</code> 启动 CC</td><td>—</td><td>✅ 鼠标层关闭，无回归</td></tr></tbody></table>
+<table><thead><tr><th>步骤</th><th>改动前</th><th>改动后期望</th></tr></thead><tbody><tr><td>拖选消息区正文</td><td>✗ 无反应</td><td>✓ 反色跟随鼠标</td></tr><tr><td>松手</td><td>✗ 无写入</td><td>✓ 剪贴板有内容，<code>Get-Clipboard</code> 读回 == 屏幕选中文本</td></tr><tr><td>跨消息拖选</td><td>✗</td><td>✓ 用 <code>\n</code> 连接（<code>extractText</code> 语义）</td></tr><tr><td>拖选含空行</td><td>✗</td><td>✓ 空行产出空串<strong>不被丢弃</strong></td></tr><tr><td><code>y</code>（有选区）</td><td>✗ 无此键</td><td>✓ 复制当前选区 + Toast 提示字符数</td></tr><tr><td><code>Ctrl+Y</code></td><td>✓ 复制最近回复</td><td>✓ <strong>行为不变</strong></td></tr><tr><td><code>Ctrl+C</code> 单击 / 双击</td><td>✓ 提示 / 退出</td><td>✓ <strong>行为不变</strong></td></tr><tr><td>拖动时滚动</td><td>—</td><td>✓ 无异常，坐标不漂</td></tr><tr><td>拖动中 <code>resize</code></td><td>—</td><td>✓ 不崩，选区可继续</td></tr><tr><td><code>KHY_SELECT=0</code> 启动 CC</td><td>—</td><td>✓ 鼠标层关闭，无回归</td></tr></tbody></table>
 <p><strong>通用不变量</strong>（两条路径都要）：反色覆盖的列区间与 <code>Get-Clipboard</code> 文本<strong>逐字符对应</strong>；<br><code>KHY_SELECT=0</code> 时行为与改动前逐字节一致。</p>
 <h3 id="6-5-仓库级守卫">6.5 仓库级守卫<a class="anchor" href="#6-5-仓库级守卫" aria-label="锚点">#</a></h3>
 <pre><code class="language-bash">npm run check:agent-rules     <span class="hljs-comment"># RUNTIME-001~004（零硬编码 / 状态透明 / 活动式超时 / 无滚动区）</span>
@@ -199,7 +199,7 @@ npm run verify                <span class="hljs-comment"># 18 份快照（含 do
 ARCH-119        4 个文件（正文 + 验收标准，各带 .html）→ 已占用
 ARCH-120        4 个文件（移动端合并 + 本文件撞号）→ 冲突源
 ARCH-121 ~ 123  各 2 个文件 → 已占用
-ARCH-124        0 个文件 → ✅ 下一个空闲号</code></pre>
+ARCH-124        0 个文件 → ✓ 下一个空闲号</code></pre>
 <p>选号依据是<strong>连续性优先</strong>：不跳跃、不回收旧号，取紧随其后的第一个空闲号。<br>（回收已删除文档的旧号会破坏「编号→文档」的历史可追溯性，不做。）</p>
 <h3 id="a-3-复核命令-可复现">A.3 复核命令（可复现）<a class="anchor" href="#a-3-复核命令-可复现" aria-label="锚点">#</a></h3>
 <pre><code class="language-bash"><span class="hljs-built_in">cd</span> D:/Portable/khy-os
@@ -218,10 +218,10 @@ grep -rn <span class="hljs-string">&quot;DESIGN-ARCH-124&quot;</span> --include=
 grep -n <span class="hljs-string">&quot;DESIGN-ARCH-12[04]&quot;</span> docs/03_DESIGN_设计/00_INDEX_设计-分类索引.md</code></pre>
 <h3 id="a-4-防复发">A.4 防复发<a class="anchor" href="#a-4-防复发" aria-label="锚点">#</a></h3>
 <p>编号冲突的根因是<strong>落盘前没查号</strong>。后续新建设计文档的固定前置动作：</p>
-<pre><code>✅ 先跑 §A.3 的 ①（占用扫描）拿到第一个空闲号
-✅ 再跑 §A.3 的 ②（全仓双向确认）确认该号真的没人用
-✅ 最后才写文件 —— 文件名、H1 标题、索引三处编号必须一致
-❌ 不要凭&quot;看起来没人用&quot;猜号</code></pre>
+<pre><code>✓ 先跑 §A.3 的 ①（占用扫描）拿到第一个空闲号
+✓ 再跑 §A.3 的 ②（全仓双向确认）确认该号真的没人用
+✓ 最后才写文件 —— 文件名、H1 标题、索引三处编号必须一致
+✗ 不要凭&quot;看起来没人用&quot;猜号</code></pre>
 <p>⚠ 本次的教训值得记下：<strong>索引条目在冲突曝光时就已经写好了</strong>（<code>00_INDEX:111</code> 那条<br>自己标注了「同号 120 撞号」）—— 也就是说，<strong>索引比文件名更早发现冲突，但没有人在<br>落盘那一刻去比对索引</strong>。索引是事后补救的载体，不能当作事前校验的替代。</p>
       </article>
       <nav class="pager"><a class="prev" href="../../../docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-123] K-01~K-12 施工盘点清单.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-123] K-01~K-12 施工盘点清单</div></a><a class="next" href="../../../docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-125] 桌面端新对话卡片工作空间选择与快捷键统一登记.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-125] 桌面端新对话卡片工作空间选择与快捷键统一登记</div></a></nav>

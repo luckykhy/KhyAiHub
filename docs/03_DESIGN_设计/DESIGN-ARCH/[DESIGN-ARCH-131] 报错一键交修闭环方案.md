@@ -86,9 +86,9 @@ git grep -n "khy/feedback\|evidenceDir" -- 'services/**' 'scripts/**' | grep -v 
 
 | 证据 | 结论 |
 |---|---|
-| `readEvidence(dir, file)`（`:173`） | ✅ 只读 |
+| `readEvidence(dir, file)`（`:173`） | ✓ 只读 |
 | `fs.writeFileSync`（`:435`） | ⚠ 仅在 `--scenario=` 自测分支内 |
-| 生产调用点（服务/CLI/routes 调它写存证） | ❌ **0 处** |
+| 生产调用点（服务/CLI/routes 调它写存证） | ✗ **0 处** |
 
 ⇒ **契约把「写存证」的责任完全留给 AI 的自觉，没有任何机器通道帮它落盘。**
 结果是：`fix-without-repro` 这条 error 判据在真实运行时**永远命不中**——因为没人写，也没人查。
@@ -192,8 +192,8 @@ TUI 侧只有自由文本 `push('error', tuiErrorOf(err, {action, target}))`（`
 
 | 按钮 | 语义 | 错误信息去向 |
 |---|---|---|
-| 重试 | 原样再发一次 | ❌ 不进上下文 |
-| **交给 AI 修** | **带着错误证据请 agent 排查修复** | ✅ 作为证据进上下文 |
+| 重试 | 原样再发一次 | ✗ 不进上下文 |
+| **交给 AI 修** | **带着错误证据请 agent 排查修复** | ✓ 作为证据进上下文 |
 
 ### 5.2 环节 [3] 交修单（RepairTicket）
 
@@ -259,10 +259,10 @@ TUI 侧只有自由文本 `push('error', tuiErrorOf(err, {action, target}))`（`
 | 初稿写的字段 | 真源实况 | 处置 |
 |---|---|---|
 | `msg.error.detail` | 前端 `applyStructuredError` **未接收** `detail`（只取 `reason` 作 `why`） | **降级**：从 attribution 的 timeline 取原始错误对象 |
-| `msg.error.requestId` | ✅ 存在（`structuredErrorEvent` 归一，`AIChat.vue:2240`） | 保留，作为拉证据的支点 |
-| `msg.error.retryable` | ✅ 存在 | 保留（用于决定是否同时显示「重试」） |
+| `msg.error.requestId` | ✓ 存在（`structuredErrorEvent` 归一，`AIChat.vue:2240`） | 保留，作为拉证据的支点 |
+| `msg.error.retryable` | ✓ 存在 | 保留（用于决定是否同时显示「重试」） |
 | `msg.error.resumable / continueHint` | 后端**有**，但 `structuredErrorEvent` **未透传** | **需扩前端归一**（见 §7 步 1） |
-| `msg.error.code / category / why / how` | ✅ 存在 | 保留 |
+| `msg.error.code / category / why / how` | ✓ 存在 | 保留 |
 
 ⇒ **结论**：`requestId` 是本方案**唯一真正的支点字段**，且**已存在**。
 `resumable` / `continueHint` 需补透传（这是一处**新增**，不是现状）。
@@ -437,14 +437,14 @@ function judgeFix(beforeText, afterText, signature) {
 
 | 码 | 类别 | 可交修 | 理由 |
 |---|---|---|---|
-| E01 | 模型静默空响应 | ❌ | 模型侧；引导「重试 / 换通道」 |
-| E02 | 模型强制中断 | ❌（且 `sensitive`） | 安全策略，不得绕 |
-| E03 | 上下文溢出 | ❌ | 需压缩上下文，非代码缺陷 |
-| **E04** | **工具执行崩溃** | ✅ | **代码/工具可修，首选场景** |
-| **E05** | **依赖缺失阻断** | ✅ | 装依赖 / 修 require 路径 |
-| E06 | 网络熔断 | ❌ | 网络侧 |
-| E07 | 权限拦截 | ❌（且 `sensitive`） | 安全策略，不得绕 |
-| E08 | 格式校验失败 | ✅ | 契约/校验器可修 |
+| E01 | 模型静默空响应 | ✗ | 模型侧；引导「重试 / 换通道」 |
+| E02 | 模型强制中断 | ✗（且 `sensitive`） | 安全策略，不得绕 |
+| E03 | 上下文溢出 | ✗ | 需压缩上下文，非代码缺陷 |
+| **E04** | **工具执行崩溃** | ✓ | **代码/工具可修，首选场景** |
+| **E05** | **依赖缺失阻断** | ✓ | 装依赖 / 修 require 路径 |
+| E06 | 网络熔断 | ✗ | 网络侧 |
+| E07 | 权限拦截 | ✗（且 `sensitive`） | 安全策略，不得绕 |
+| E08 | 格式校验失败 | ✓ | 契约/校验器可修 |
 
 ⇒ **可实现交修的只有 3/8**。这条必须写进文档，否则会被误当成「万能修错按钮」。
 

@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -62,7 +62,7 @@ msg.<span class="hljs-property">content</span> = <span class="hljs-string">&#x27
 <span class="hljs-comment"># ② 写入函数在吗 → 只有 checker 内部自测才写（:435 fs.writeFileSync，在 scenario 分支内）</span>
 git grep -n <span class="hljs-string">&quot;khy/feedback\|evidenceDir&quot;</span> -- <span class="hljs-string">&#x27;services/**&#x27;</span> <span class="hljs-string">&#x27;scripts/**&#x27;</span> | grep -v <span class="hljs-string">&quot;/tests/&quot;</span>
 <span class="hljs-comment"># → 生产侧命中 0 处 createEvidence/writeEvidence；checker 侧全部是 readEvidence()</span></code></pre>
-<table><thead><tr><th>证据</th><th>结论</th></tr></thead><tbody><tr><td><code>readEvidence(dir, file)</code>（<code>:173</code>）</td><td>✅ 只读</td></tr><tr><td><code>fs.writeFileSync</code>（<code>:435</code>）</td><td>⚠ 仅在 <code>--scenario=</code> 自测分支内</td></tr><tr><td>生产调用点（服务/CLI/routes 调它写存证）</td><td>❌ <strong>0 处</strong></td></tr></tbody></table>
+<table><thead><tr><th>证据</th><th>结论</th></tr></thead><tbody><tr><td><code>readEvidence(dir, file)</code>（<code>:173</code>）</td><td>✓ 只读</td></tr><tr><td><code>fs.writeFileSync</code>（<code>:435</code>）</td><td>⚠ 仅在 <code>--scenario=</code> 自测分支内</td></tr><tr><td>生产调用点（服务/CLI/routes 调它写存证）</td><td>✗ <strong>0 处</strong></td></tr></tbody></table>
 <p>⇒ <strong>契约把「写存证」的责任完全留给 AI 的自觉，没有任何机器通道帮它落盘。</strong><br>结果是：<code>fix-without-repro</code> 这条 error 判据在真实运行时<strong>永远命不中</strong>——因为没人写，也没人查。<br>（这正是 <code>[DESIGN-ARCH-113]</code> 自己都点出的「存证靠自觉」的漏洞。）</p>
 <h3 id="1-4-端侧能力缺口-tui-侧">1.4 端侧能力缺口（TUI 侧）<a class="anchor" href="#1-4-端侧能力缺口-tui-侧" aria-label="锚点">#</a></h3>
 <pre><code class="language-bash">git grep -n <span class="hljs-string">&quot;errorCode\|error_code\|E0[1-8]&quot;</span> -- <span class="hljs-string">&#x27;services/backend/src/cli/tui/**&#x27;</span> | grep -v <span class="hljs-string">&quot;.html&quot;</span>
@@ -103,7 +103,7 @@ git grep -n <span class="hljs-string">&quot;khy/feedback\|evidenceDir&quot;</spa
 <table><thead><tr><th>项</th><th>内容</th></tr></thead><tbody><tr><td><strong>输入</strong></td><td><code>msg.error = {code, category, why, how, retryable, sensitive, requestId}</code></td></tr><tr><td><strong>输出</strong></td><td><code>click → openRepairDialog(msg)</code>；或 <code>sensitive === true</code> 时<strong>不提供</strong>该按钮</td></tr><tr><td><strong>显示条件</strong></td><td><code>msg.error.code</code> 存在 <strong>且</strong> <code>!msg.error.sensitive</code></td></tr><tr><td><strong>按钮文案</strong></td><td>「交给 AI 修」（与「重试」并列，语义必须可区分）</td></tr></tbody></table>
 <p><strong>为什么 <code>sensitive</code> 要挡</strong>：E02（安全审查）/ E07（权限拦截）的 <code>sensitive = true</code>，<br>其 <code>detail</code> 与 <code>fields</code> 按 <code>errorCodes.js</code> 头部约定<strong>不得泄露命中的具体安全策略</strong>。<br>把这类错误喂给 agent 会绕开这条脱敏边界。</p>
 <p><strong>与「重试」的区别（必须让用户看懂）</strong>：</p>
-<table><thead><tr><th>按钮</th><th>语义</th><th>错误信息去向</th></tr></thead><tbody><tr><td>重试</td><td>原样再发一次</td><td>❌ 不进上下文</td></tr><tr><td><strong>交给 AI 修</strong></td><td><strong>带着错误证据请 agent 排查修复</strong></td><td>✅ 作为证据进上下文</td></tr></tbody></table>
+<table><thead><tr><th>按钮</th><th>语义</th><th>错误信息去向</th></tr></thead><tbody><tr><td>重试</td><td>原样再发一次</td><td>✗ 不进上下文</td></tr><tr><td><strong>交给 AI 修</strong></td><td><strong>带着错误证据请 agent 排查修复</strong></td><td>✓ 作为证据进上下文</td></tr></tbody></table>
 <h3 id="5-2-环节-3-交修单-repairticket">5.2 环节 [3] 交修单（RepairTicket）<a class="anchor" href="#5-2-环节-3-交修单-repairticket" aria-label="锚点">#</a></h3>
 <p><strong>输入</strong>：<code>msg.error</code> + 会话上下文 + 环境信息<br><strong>输出</strong>：<code>RepairTicket</code> 对象（§6 定义）</p>
 <p>组装动作分三步：</p>
@@ -128,7 +128,7 @@ git grep -n <span class="hljs-string">&quot;khy/feedback\|evidenceDir&quot;</spa
   retryable, resumable, continueHint, sensitive, requestId, partial, fallback }</code></pre>
 <h3 id="6-2-5-5-契约可行性实证-逐字段回真源核对">6.2 §5.5 契约可行性实证（逐字段回真源核对）<a class="anchor" href="#6-2-5-5-契约可行性实证-逐字段回真源核对" aria-label="锚点">#</a></h3>
 <p>初稿曾想直接复用前端 <code>msg.error</code> 当交修单。<strong>逐字段核对后发现有 3 处不成立</strong>：</p>
-<table><thead><tr><th>初稿写的字段</th><th>真源实况</th><th>处置</th></tr></thead><tbody><tr><td><code>msg.error.detail</code></td><td>前端 <code>applyStructuredError</code> <strong>未接收</strong> <code>detail</code>（只取 <code>reason</code> 作 <code>why</code>）</td><td><strong>降级</strong>：从 attribution 的 timeline 取原始错误对象</td></tr><tr><td><code>msg.error.requestId</code></td><td>✅ 存在（<code>structuredErrorEvent</code> 归一，<code>AIChat.vue:2240</code>）</td><td>保留，作为拉证据的支点</td></tr><tr><td><code>msg.error.retryable</code></td><td>✅ 存在</td><td>保留（用于决定是否同时显示「重试」）</td></tr><tr><td><code>msg.error.resumable / continueHint</code></td><td>后端<strong>有</strong>，但 <code>structuredErrorEvent</code> <strong>未透传</strong></td><td><strong>需扩前端归一</strong>（见 §7 步 1）</td></tr><tr><td><code>msg.error.code / category / why / how</code></td><td>✅ 存在</td><td>保留</td></tr></tbody></table>
+<table><thead><tr><th>初稿写的字段</th><th>真源实况</th><th>处置</th></tr></thead><tbody><tr><td><code>msg.error.detail</code></td><td>前端 <code>applyStructuredError</code> <strong>未接收</strong> <code>detail</code>（只取 <code>reason</code> 作 <code>why</code>）</td><td><strong>降级</strong>：从 attribution 的 timeline 取原始错误对象</td></tr><tr><td><code>msg.error.requestId</code></td><td>✓ 存在（<code>structuredErrorEvent</code> 归一，<code>AIChat.vue:2240</code>）</td><td>保留，作为拉证据的支点</td></tr><tr><td><code>msg.error.retryable</code></td><td>✓ 存在</td><td>保留（用于决定是否同时显示「重试」）</td></tr><tr><td><code>msg.error.resumable / continueHint</code></td><td>后端<strong>有</strong>，但 <code>structuredErrorEvent</code> <strong>未透传</strong></td><td><strong>需扩前端归一</strong>（见 §7 步 1）</td></tr><tr><td><code>msg.error.code / category / why / how</code></td><td>✓ 存在</td><td>保留</td></tr></tbody></table>
 <p>⇒ <strong>结论</strong>：<code>requestId</code> 是本方案<strong>唯一真正的支点字段</strong>，且<strong>已存在</strong>。<br><code>resumable</code> / <code>continueHint</code> 需补透传（这是一处<strong>新增</strong>，不是现状）。</p>
 <h3 id="6-3-repairticket-结构-本方案新增-snake-case-沿用真源">6.3 RepairTicket 结构（本方案新增，<code>snake_case</code> 沿用真源）<a class="anchor" href="#6-3-repairticket-结构-本方案新增-snake-case-沿用真源" aria-label="锚点">#</a></h3>
 <pre><code class="language-js">{
@@ -215,7 +215,7 @@ git grep -n <span class="hljs-string">&quot;khy/feedback\|evidenceDir&quot;</spa
 <table><thead><tr><th>#</th><th>反例</th><th>预期</th></tr></thead><tbody><tr><td>1</td><td>agent 只写 <code>repro-after.txt</code>，不改代码</td><td><code>not-fixed</code>（两文件相同）</td></tr><tr><td>2</td><td>agent 改了代码但没跑复现命令</td><td><code>inconclusive</code>（缺 after）</td></tr><tr><td>3</td><td>agent 顺手重构，错误确实消失</td><td><code>fixed</code>，但 <code>fix-blast-radius</code> 判据同时报 warning</td></tr><tr><td>4</td><td>错误是 E01（模型静默空响应）</td><td><strong>不应交修</strong>——模型侧问题，非代码缺陷；入口需按码分级</td></tr><tr><td>5</td><td>错误是 E02 / E07（<code>sensitive</code>）</td><td><strong>入口不出现</strong>（§5.1）</td></tr><tr><td>6</td><td>用户连点 3 次「交给 AI 修」</td><td>第二次起应被「已有进行中 ticket」挡住</td></tr><tr><td>7</td><td>复现命令本身需要交互输入</td><td><code>inconclusive</code>，且提示用户命令不可自动化</td></tr></tbody></table>
 <p>⚠ <strong>反例 4 是设计上的一个重要分流</strong>：<code>E01/E02/E03/E06</code> 属<strong>模型/网络/安全</strong>侧，<br>交修毫无意义（改了代码也不会好）。<strong>只有 E04/E05/E08 是代码侧可修的</strong>。<br>入口应按 <code>error_code</code> 分级，不能一视同仁。</p>
 <h3 id="8-4-error-code-是否可交修-映射表">8.4 <code>error_code</code> → 是否可交修（映射表）<a class="anchor" href="#8-4-error-code-是否可交修-映射表" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>码</th><th>类别</th><th>可交修</th><th>理由</th></tr></thead><tbody><tr><td>E01</td><td>模型静默空响应</td><td>❌</td><td>模型侧；引导「重试 / 换通道」</td></tr><tr><td>E02</td><td>模型强制中断</td><td>❌（且 <code>sensitive</code>）</td><td>安全策略，不得绕</td></tr><tr><td>E03</td><td>上下文溢出</td><td>❌</td><td>需压缩上下文，非代码缺陷</td></tr><tr><td><strong>E04</strong></td><td><strong>工具执行崩溃</strong></td><td>✅</td><td><strong>代码/工具可修，首选场景</strong></td></tr><tr><td><strong>E05</strong></td><td><strong>依赖缺失阻断</strong></td><td>✅</td><td>装依赖 / 修 require 路径</td></tr><tr><td>E06</td><td>网络熔断</td><td>❌</td><td>网络侧</td></tr><tr><td>E07</td><td>权限拦截</td><td>❌（且 <code>sensitive</code>）</td><td>安全策略，不得绕</td></tr><tr><td>E08</td><td>格式校验失败</td><td>✅</td><td>契约/校验器可修</td></tr></tbody></table>
+<table><thead><tr><th>码</th><th>类别</th><th>可交修</th><th>理由</th></tr></thead><tbody><tr><td>E01</td><td>模型静默空响应</td><td>✗</td><td>模型侧；引导「重试 / 换通道」</td></tr><tr><td>E02</td><td>模型强制中断</td><td>✗（且 <code>sensitive</code>）</td><td>安全策略，不得绕</td></tr><tr><td>E03</td><td>上下文溢出</td><td>✗</td><td>需压缩上下文，非代码缺陷</td></tr><tr><td><strong>E04</strong></td><td><strong>工具执行崩溃</strong></td><td>✓</td><td><strong>代码/工具可修，首选场景</strong></td></tr><tr><td><strong>E05</strong></td><td><strong>依赖缺失阻断</strong></td><td>✓</td><td>装依赖 / 修 require 路径</td></tr><tr><td>E06</td><td>网络熔断</td><td>✗</td><td>网络侧</td></tr><tr><td>E07</td><td>权限拦截</td><td>✗（且 <code>sensitive</code>）</td><td>安全策略，不得绕</td></tr><tr><td>E08</td><td>格式校验失败</td><td>✓</td><td>契约/校验器可修</td></tr></tbody></table>
 <p>⇒ <strong>可实现交修的只有 3/8</strong>。这条必须写进文档，否则会被误当成「万能修错按钮」。</p>
 <hr>
 <h2 id="9-用户端反馈交互设计">9. 用户端反馈交互设计<a class="anchor" href="#9-用户端反馈交互设计" aria-label="锚点">#</a></h2>

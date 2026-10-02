@@ -246,10 +246,10 @@ FE-004    P2  前端 CSS 与样式架构规范
 
 | 落点 | 内容 | 状态 |
 |---|---|---|
-| `scripts/lib/ruleScaffold.js` | **纯叶子**：零 IO、确定性、绝不抛、可单测。`auditRule(ruleEntry, ctx)` → 返回「哪几处触点缺失」的**判定对象**，不落盘 | ✅ 已落地（2026-09-22） |
-| `scripts/ci/check-rule-scaffold.js` | 走盘层：采集磁盘事实喂给叶子，输出缺口报告（**只报不改**） | ✅ 已落地 |
-| `scripts/lib/touchCostProbe.js` | **纯叶子**：6 个 `measure*` 纯函数，计算四类维护成本读数 | ✅ 已落地 |
-| `scripts/ci/check-touch-cost.js` | 走盘层：采集 git/文件系统事实，渲染读数 | ✅ 已落地 |
+| `scripts/lib/ruleScaffold.js` | **纯叶子**：零 IO、确定性、绝不抛、可单测。`auditRule(ruleEntry, ctx)` → 返回「哪几处触点缺失」的**判定对象**，不落盘 | ✓ 已落地（2026-09-22） |
+| `scripts/ci/check-rule-scaffold.js` | 走盘层：采集磁盘事实喂给叶子，输出缺口报告（**只报不改**） | ✓ 已落地 |
+| `scripts/lib/touchCostProbe.js` | **纯叶子**：6 个 `measure*` 纯函数，计算四类维护成本读数 | ✓ 已落地 |
+| `scripts/ci/check-touch-cost.js` | 走盘层：采集 git/文件系统事实，渲染读数 | ✓ 已落地 |
 | `scripts/ci/scaffold-rule.js` | 走盘层：`--check`（只报缺口）/ `--apply`（幂等落盘） | ⏸ **刻意缓建**，理由见下 |
 
 > **为什么 `--apply` 那一半刻意缓建**：本仓所有通过评审的机制都是「检测 + 报告 + 建议」，
@@ -283,9 +283,9 @@ node --test scripts/tests/ruleScaffold.test.js     # 19 pass / 0 fail
 node --test scripts/tests/touchCostProbe.test.js   # 18 pass / 0 fail
 npm run check:rule-scaffold                        # 90 条规则 → 5 条 gap + 15 条 advisory（恒 exit 0）
 npm run check:touch-cost                           # 四项读数（恒 exit 0）
-npm run check:wiring                               # ✅ 90 个检查器全部接线
-npm run check:rules                                # ✅ 登记表与真源双向可达、规则卡逐字节一致
-npm run docs:verify                                # ✅ 1191 md 全有 html
+npm run check:wiring                               # ✓ 90 个检查器全部接线
+npm run check:rules                                # ✓ 登记表与真源双向可达、规则卡逐字节一致
+npm run docs:verify                                # ✓ 1191 md 全有 html
 npm run rules:gate:commit                          # action=start 两条新执行器 → 阻断 0
 ```
 > **反例场景（必测）**：手工把某条规则的卡片删掉 → `--check` **必须**报出来。
@@ -346,7 +346,7 @@ console.log('advisory 剩余:', j.rules.filter(r=>r.gate==='advisory').length)" 
 
 **强度守恒验收**：
 ```bash
-node scripts/docs/verify_docs_site.js    # 必须仍「✅ 全部通过」——被豁免的集合要显式登记
+node scripts/docs/verify_docs_site.js    # 必须仍「✓ 全部通过」——被豁免的集合要显式登记
 ```
 > ⚠ **必须显式登记豁免集**（文件路径清单 + 理由），否则等于给全体开绿灯。
 > ⚠ 本措施**必须排在 M1 之后**：M1 让孪生件生成变便宜，M3 只减少必须生成的**数量**。
@@ -398,7 +398,7 @@ node _产物/touch-cost-probe.js --json | node -e "
 
 > 依据 `[DESIGN-SOURCING-001]` B-L2（标记 → 迁移 → 收口）+ `SOURCING-006`。
 
-### 第 1 步「标记」（**本方案交付即可做，零风险**）—— ✅ 已完成 2026-09-22
+### 第 1 步「标记」（**本方案交付即可做，零风险**）—— ✓ 已完成 2026-09-22
 
 - [x] 把 `_产物/touch-cost-probe.js` 迁入 **`scripts/lib/touchCostProbe.js`**（纳入版本控制）
       ⚠ `_产物/` 是 gitignore 暂存区，**不迁就等于没交付**
@@ -409,7 +409,7 @@ node _产物/touch-cost-probe.js --json | node -e "
 - [x] 回写 `DESIGN-ARCH/00_INDEX_*.md`（**二级目录索引：不回写也不红，但 CP-3 要求**）
 - [x] `docs/00_INDEX_文档索引.md` **不改**（`STAGE_DIR_RE` 只扫 `01`–`09`）
 
-### 第 2 步「迁移」（M1 落地）—— ✅ 检测半边已完成；`--apply` 刻意缓建
+### 第 2 步「迁移」（M1 落地）—— ✓ 检测半边已完成；`--apply` 刻意缓建
 
 - [x] `scripts/lib/ruleScaffold.js`（纯叶子）+ `scripts/ci/check-rule-scaffold.js`（走盘，**只报不改**）
 - [x] 接线四处（见 §7）—— `TOOLING-009` / `TOOLING-010` 均在 `rules:gate:commit` 里实测被 spawn
@@ -489,13 +489,13 @@ node _产物/touch-cost-probe.js --json | node -e "
 
 | 执行器 | 破坏手段 | 结果 |
 |---|---|---|
-| `ruleScaffold` | 改空判定（`auditRule` 恒 ok） | 16 pass / **3 fail** ✅ |
-| `ruleScaffold` | 改坏 `targetPath`（退回「整串当路径」的初版 bug） | 15 pass / **4 fail** ✅ |
-| `touchCostProbe` | `REQUIRED_TOUCH_RULE` 改恒 true | 17 pass / **1 fail** ✅ |
-| `touchCostProbe` | `findNeverExecuting` 过滤改恒 false | 16 pass / **2 fail** ✅ |
-| `touchCostProbe` | 去掉除零保护（md=0 ⇒ Infinity） | 17 pass / **1 fail** ✅ |
-| `touchCostProbe` | 积压分类退回「只看第 1 位」（漏掉最常见的 `" M"`） | 16 pass / **2 fail** ✅ |
-| `touchCostProbe` | `summarize` 不排序 | 17 pass / **1 fail** ✅ |
+| `ruleScaffold` | 改空判定（`auditRule` 恒 ok） | 16 pass / **3 fail** ✓ |
+| `ruleScaffold` | 改坏 `targetPath`（退回「整串当路径」的初版 bug） | 15 pass / **4 fail** ✓ |
+| `touchCostProbe` | `REQUIRED_TOUCH_RULE` 改恒 true | 17 pass / **1 fail** ✓ |
+| `touchCostProbe` | `findNeverExecuting` 过滤改恒 false | 16 pass / **2 fail** ✓ |
+| `touchCostProbe` | 去掉除零保护（md=0 ⇒ Infinity） | 17 pass / **1 fail** ✓ |
+| `touchCostProbe` | 积压分类退回「只看第 1 位」（漏掉最常见的 `" M"`） | 16 pass / **2 fail** ✓ |
+| `touchCostProbe` | `summarize` 不排序 | 17 pass / **1 fail** ✓ |
 
 > 全部 7 项破坏均被捕获，且还原后逐字节一致、复验全绿 ⇒ **断言非空转**。
 > ⚠ 反向验证脚本本身**不得落守卫扫描目录**（本仓纪律），已落 `.khyos/tmp/`。

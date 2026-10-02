@@ -73,11 +73,11 @@
 
 | 输入 | 是否剥净 |
 |------|---------|
-| `ESC[0m` / `ESC[1m` / `ESC[22m`（纯数字 SGR） | ✅ |
-| `ESC[38:2:255:0:0m`（冒号分隔真彩 SGR） | ❌ 漏 |
-| `ESC[?25l` / `ESC[?25h`（光标私有模式） | ❌ 漏 |
-| `ESC[2J`（清屏） | ❌ 漏 |
-| `ESC[2A`（光标上移） | ❌ 漏 |
+| `ESC[0m` / `ESC[1m` / `ESC[22m`（纯数字 SGR） | ✓ |
+| `ESC[38:2:255:0:0m`（冒号分隔真彩 SGR） | ✗ 漏 |
+| `ESC[?25l` / `ESC[?25h`（光标私有模式） | ✗ 漏 |
+| `ESC[2J`（清屏） | ✗ 漏 |
+| `ESC[2A`（光标上移） | ✗ 漏 |
 
 漏剥率 **5/6**。更隐蔽的是：该正则**只在 `strip-ansi` 包加载失败时才生效**，即「输出卫生」取决于运行时包是否可用——不可接受的偶然性。
 
@@ -207,19 +207,19 @@ body 由 `str.replace(/\x1b\[[0-9;]*m/g, '')` 改为委托 `stripAnsiSequences(s
 
 | 测试 | 结果 |
 |------|------|
-| `tests/ansiSanitizer.test.js`（新增，21 条：CSI 全覆盖 / ESC 短序列 / OSC·DCS / 保留正文与换行 / 纯叶子契约 / 截图回归） | ✅ PASS |
-| `tests/stripAnsi.test.js`（预期随修复反转：`ESC[2A` 由「保留」改为「剥离」） | ✅ PASS |
-| `tests/modelTextNormalizer.test.js` | ✅ PASS |
-| 回归批次（`--testPathPattern "underscore\|markdown\|modelText\|renderer\|formatter"`，14 套 / 206 条） | ✅ 206/206 PASS |
+| `tests/ansiSanitizer.test.js`（新增，21 条：CSI 全覆盖 / ESC 短序列 / OSC·DCS / 保留正文与换行 / 纯叶子契约 / 截图回归） | ✓ PASS |
+| `tests/stripAnsi.test.js`（预期随修复反转：`ESC[2A` 由「保留」改为「剥离」） | ✓ PASS |
+| `tests/modelTextNormalizer.test.js` | ✓ PASS |
+| 回归批次（`--testPathPattern "underscore\|markdown\|modelText\|renderer\|formatter"`，14 套 / 206 条） | ✓ 206/206 PASS |
 
 ### 6.3 守卫
 
 | 守卫 | 结果 |
 |------|------|
-| `check:leaf-contract`（对新增文件单查） | ✅ 无违规 |
-| `check:flag-registry` | ✅ 结构完好 |
-| `check-agent-feedback --evidence=.khy/feedback/structured-output-20260922` | ✅ 0 error / 0 warning |
-| `node --check`（三改文件语法） | ✅ |
+| `check:leaf-contract`（对新增文件单查） | ✓ 无违规 |
+| `check:flag-registry` | ✓ 结构完好 |
+| `check-agent-feedback --evidence=.khy/feedback/structured-output-20260922` | ✓ 0 error / 0 warning |
+| `node --check`（三改文件语法） | ✓ |
 
 ### 6.4 验收标准（可复现命令）
 

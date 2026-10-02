@@ -135,10 +135,10 @@ ink 的 fullscreen 判定是 `lastOutputHeight >= stdout.rows`（`node_modules/i
 此后**每一帧**都清屏。
 
 ```
-❌ 禁止让 live 区（含所有 chrome 兄弟节点）合计高度 ≥ rows
-❌ 禁止新增固定高度的兄弟节点却不登记进 chrome 账本
-✅ 高度一律走 chromeBudget.liveBudget(rows, shares)，shares 逐项列出
-✅ 排障先开 KHY_TUI_DIAG_H=1 打印账本，再和实测帧行数对照
+✗ 禁止让 live 区（含所有 chrome 兄弟节点）合计高度 ≥ rows
+✗ 禁止新增固定高度的兄弟节点却不登记进 chrome 账本
+✓ 高度一律走 chromeBudget.liveBudget(rows, shares)，shares 逐项列出
+✓ 排障先开 KHY_TUI_DIAG_H=1 打印账本，再和实测帧行数对照
 ```
 
 **容易漏计的 chrome**（按实测，不是按注释）：
@@ -178,10 +178,10 @@ ink 的 fullscreen 判定是 `lastOutputHeight >= stdout.rows`（`node_modules/i
 不是设计如此。
 
 ```
-❌ 禁止在备用缓冲区下把滚轮交给 onNative（= 交还终端）
-✅ 滚轮优先走 dispatcher 的 onWheel(dir)，驱动应用内视口
-✅ onWheel 缺失时才回退 onNative（逐字节保留旧行为）
-✅ onWheel 抛异常必须被吞掉，且**不得**顺带触发 onNative
+✗ 禁止在备用缓冲区下把滚轮交给 onNative（= 交还终端）
+✓ 滚轮优先走 dispatcher 的 onWheel(dir)，驱动应用内视口
+✓ onWheel 缺失时才回退 onNative（逐字节保留旧行为）
+✓ onWheel 抛异常必须被吞掉，且**不得**顺带触发 onNative
 ```
 
 **判据顺序是根因级的**（`mouseButtons.createMouseDispatcher`）：
@@ -429,10 +429,10 @@ DECSET 的三个追踪模式是**同一能力的不同档位，互斥**，只能
 `1006` 是 SGR 坐标编码，与追踪模式**正交**，永远都要带。
 
 ```
-❌ 禁止叠加写 1000h 与 1002h（终端按哪一档解释变得不确定）
-✅ enableBytes({ select: true }) 写 1002h 时**不写** 1000h（替换语义）
-✅ 1003 只在 hover=true 时追加，与 select 正交
-✅ 重新接管追踪（enterNativePassthrough 的超时回调）必须与初始开启**同档** ——
+✗ 禁止叠加写 1000h 与 1002h（终端按哪一档解释变得不确定）
+✓ enableBytes({ select: true }) 写 1002h 时**不写** 1000h（替换语义）
+✓ 1003 只在 hover=true 时追加，与 select 正交
+✓ 重新接管追踪（enterNativePassthrough 的超时回调）必须与初始开启**同档** ——
    漏了 select 会退回 1000，拖动位移从此不再上报，表现为
    「滚一下滚轮之后拖选就失灵了」这类间歇性故障
 ```
