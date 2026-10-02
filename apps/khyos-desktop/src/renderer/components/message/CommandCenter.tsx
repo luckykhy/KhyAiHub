@@ -66,12 +66,12 @@ export function CommandCenter({ visible, onClose, onPanelAction, onNewTask, onRe
     if (onNewTask) {
       list.push({
         id: 'new-task', label: '新建任务', description: '清空当前对话，回到启动卡片页',
-        icon: '➕', shortcut: keyLabelFor('newTask'), category: '任务', action: () => onNewTask(),
+        icon: '+', shortcut: keyLabelFor('newTask'), category: '任务', action: () => onNewTask(),
       })
     }
     list.push({
       id: 'open-workspace', label: '打开工作区', description: '切换工作空间：最近打开 / 选择其他文件夹',
-      icon: '📂', shortcut: keyLabelFor('openWorkspace'), category: '任务', action: () => { void openWorkspace() },
+      icon: '▾', shortcut: keyLabelFor('openWorkspace'), category: '任务', action: () => { void openWorkspace() },
     })
     if (onReloadSession) {
       list.push({
@@ -85,16 +85,16 @@ export function CommandCenter({ visible, onClose, onPanelAction, onNewTask, onRe
       list.push(
         {
           id: 'toggle-sidepane', label: '切换面板', description: '显示/隐藏侧边面板',
-          icon: '📋', shortcut: keyLabelFor('toggleSidePane'), category: '视图', action: () => onPanelAction('toggleSidePane'),
+          icon: '☰', shortcut: keyLabelFor('toggleSidePane'), category: '视图', action: () => onPanelAction('toggleSidePane'),
         },
         {
           id: 'toggle-terminal', label: '切换终端', description: '显示/隐藏终端面板',
-          icon: '💻', shortcut: keyLabelFor('toggleTerminal'), category: '视图', action: () => onPanelAction('toggleTerminal'),
+          icon: '◆', shortcut: keyLabelFor('toggleTerminal'), category: '视图', action: () => onPanelAction('toggleTerminal'),
         },
-        { id: 'add-terminal-tab', label: '添加终端标签', description: '在侧边面板打开终端标签', icon: '🖥️', category: '视图', action: () => onPanelAction('addTerminalTab') },
-        { id: 'add-browser-tab', label: '添加浏览器标签', description: '在侧边面板打开浏览器标签', icon: '🌐', category: '视图', action: () => onPanelAction('addBrowserTab') },
-        { id: 'add-review-tab', label: '添加审查标签', description: '在侧边面板打开 Git 审查标签', icon: '🔍', category: '视图', action: () => onPanelAction('addReviewTab') },
-        { id: 'add-selection-chat-tab', label: '新建辅助对话', description: '在侧边面板打开辅助对话标签', icon: '💬', category: '视图', action: () => onPanelAction('addSelectionChatTab') },
+        { id: 'add-terminal-tab', label: '添加终端标签', description: '在侧边面板打开终端标签', icon: '❖', category: '视图', action: () => onPanelAction('addTerminalTab') },
+        { id: 'add-browser-tab', label: '添加浏览器标签', description: '在侧边面板打开浏览器标签', icon: '◉', category: '视图', action: () => onPanelAction('addBrowserTab') },
+        { id: 'add-review-tab', label: '添加审查标签', description: '在侧边面板打开 Git 审查标签', icon: '⌕', category: '视图', action: () => onPanelAction('addReviewTab') },
+        { id: 'add-selection-chat-tab', label: '新建辅助对话', description: '在侧边面板打开辅助对话标签', icon: '✎', category: '视图', action: () => onPanelAction('addSelectionChatTab') },
       )
     }
 
@@ -102,7 +102,7 @@ export function CommandCenter({ visible, onClose, onPanelAction, onNewTask, onRe
     if (onPanelAction) {
       list.push({
         id: 'open-file', label: '打开文件', description: '从当前工作区选择文件并在侧边面板打开',
-        icon: '📄', category: '文件', action: () => onPanelAction('openFileTab'),
+        icon: '▤', category: '文件', action: () => onPanelAction('openFileTab'),
       })
     }
 
@@ -110,10 +110,10 @@ export function CommandCenter({ visible, onClose, onPanelAction, onNewTask, onRe
     list.push(
       {
         id: 'settings', label: '设置', description: '打开应用设置',
-        icon: '⚙️', shortcut: keyLabelFor('openSettings'), category: '应用', action: () => { window.location.hash = '#/settings' },
+        icon: '✱', shortcut: keyLabelFor('openSettings'), category: '应用', action: () => { window.location.hash = '#/settings' },
       },
-      { id: 'switch-theme-dark', label: '切换主题到深色', description: '深色主题', icon: '🌙', category: '应用', action: () => applyTheme('dark') },
-      { id: 'switch-theme-light', label: '切换主题到浅色', description: '浅色主题', icon: '☀️', category: '应用', action: () => applyTheme('light') },
+      { id: 'switch-theme-dark', label: '切换主题到深色', description: '深色主题', icon: '●', category: '应用', action: () => applyTheme('dark') },
+      { id: 'switch-theme-light', label: '切换主题到浅色', description: '浅色主题', icon: '○', category: '应用', action: () => applyTheme('light') },
     )
 
     return list
