@@ -16,7 +16,6 @@
   "//": "任务入口按域分组，命名规约 <域>:<动作>[:<变体>] 见 docs/10_规范/DESIGN-LAY/[DESIGN-LAY-005] 仓库层级板块规范.md 第五节；逐条说明见 docs/07_OPS_运维/OPS-MAN/[OPS-MAN-174] 任务入口总表.md。每个入口都指向一个已存在的脚本文件——check:layout 的 dangling-task 规则会守住这条。",
   "scripts": {
     "preinstall": "node scripts/install/link-shared-dev.js",
-    "electron:dev": "node scripts/electron-dev.js",
     "//check": "── CI 守卫：会亮红灯的检查（scripts/ci/*）──",
     "check:layout": "node scripts/ci/check-repo-layout.js",
     "check:cycle-deps": "node services/backend/scripts/archDebtScan.js --scc",
