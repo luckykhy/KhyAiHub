@@ -16,9 +16,9 @@
 
 | 面 | 出口代码 | 形状 | 契约 |
 |---|---|---|---|
-| REST/SSE/WS | `services/backend/src/routes/**` | `{ok:false, error:{code,…}}` | ✅ API-003 已冻结 |
-| ACP JSON-RPC | `services/backend/src/contracts/acp/` | `{error:{code:-320xx}}` | ✅ COMMS-004 已冻结 |
-| **CLI / TUI** | `src/cli/aiChatCore.js:3273`、`src/cli/aiGatewayGenerateHelpers.js:802` | **中文散文 + 手拼清单** | ❌ **无契约（本文补齐）** |
+| REST/SSE/WS | `services/backend/src/routes/**` | `{ok:false, error:{code,…}}` | ✓ API-003 已冻结 |
+| ACP JSON-RPC | `services/backend/src/contracts/acp/` | `{error:{code:-320xx}}` | ✓ COMMS-004 已冻结 |
+| **CLI / TUI** | `src/cli/aiChatCore.js:3273`、`src/cli/aiGatewayGenerateHelpers.js:802` | **中文散文 + 手拼清单** | ✗ **无契约（本文补齐）** |
 
 ### 1.1 实证链路（2026-09-17 事故）
 
@@ -51,7 +51,7 @@ gateway generate 级联耗尽
 | F3 | **机器码不可检索** | 全链路只有中文散文，无稳定 `code` | 用户无法 grep、无法提交可复现的 bug、支持无法归因 |
 | F4 | **推广清单抢占首要位置** | 静态清单长度 > 实际诊断 | 首屏被 12 行推广占据，真正的「按代理/密钥/钉选去修」被压到屏外 |
 
-> ⚠️ 注意 `errorType:'unavailable'` 与真实根因**不一致**：本次事故（2026-09-17）根因是
+> ⚠ 注意 `errorType:'unavailable'` 与真实根因**不一致**：本次事故（2026-09-17）根因是
 > `services/backend/.env` 中 `GATEWAY_PREFERRED_ADAPTER=windsurf` + `GATEWAY_PREFERRED_STRICT=true`
 > 钉死在**本机未安装**的 windsurf 通道上（`aiGatewayGenerateMethod.js:3695` 的 strict 前置块会
 > 直接对未注册/未启用通道返回 `unavailable`，**不回退**）。这与 09-13→15 连续三天误诊为
@@ -89,11 +89,11 @@ CLI/TUI 的失败展示**必须**由**一个结构化对象**渲染，禁止再�
 
 | 字段 | 必填 | 约束 |
 |---|---|---|
-| `code` | ✅ | **稳定机器码**，枚举见 §3 表；新增码先入表再用（与 API-003 §2 同制） |
-| `title` | ✅ | 人话一句话，遵循 `AGENTS.md` 规则 2.2（问题 + 识别码 + 修复建议） |
-| `cause` | ✅（有 attempts 时） | **一个**主因（按 `failureReasonRanking` 的 live-优先排序取首条），非一份清单 |
-| `routing` | ✅ | `mode ∈ {auto, pinned-strict, user-pinned}`；`fallbackSuppressed` 为真时 `hint` **必须**首条给解钉方法 |
-| `hint` | ✅ | 可执行命令数组，每条 ≤ 1 行；**推广清单不得进入 `hint`**（见 §2.2） |
+| `code` | ✓ | **稳定机器码**，枚举见 §3 表；新增码先入表再用（与 API-003 §2 同制） |
+| `title` | ✓ | 人话一句话，遵循 `AGENTS.md` 规则 2.2（问题 + 识别码 + 修复建议） |
+| `cause` | ✓（有 attempts 时） | **一个**主因（按 `failureReasonRanking` 的 live-优先排序取首条），非一份清单 |
+| `routing` | ✓ | `mode ∈ {auto, pinned-strict, user-pinned}`；`fallbackSuppressed` 为真时 `hint` **必须**首条给解钉方法 |
+| `hint` | ✓ | 可执行命令数组，每条 ≤ 1 行；**推广清单不得进入 `hint`**（见 §2.2） |
 | `attempts` | 选 | 完整逐通道记录（内部字段），默认折叠，`khy --verbose` 展开 |
 | `resumable` | 选 | 决定是否追加 `_CONTINUE_HINT`（沿用现状语义） |
 | `traceId` | 选 | 与 API-003 §5 最小披露一致；**不得**外露堆栈、绝对路径、密钥 |
@@ -115,7 +115,7 @@ CLI/TUI 的失败展示**必须**由**一个结构化对象**渲染，禁止再�
   内部已尝试: N 次请求（…）
 
 第 3 屏（**仅在无任何 hint 可给时**才出现）
-  🆓 免费方案 / 💰 付费订阅 / ⚡ 快速配置
+  免费方案 / 付费订阅 / ✱ 快速配置
 ```
 
 **红线 R-GW-1**：静态推广清单**永不**出现在第 1 屏。它的定位是「用户确实没有任何可用通道且不知从何配起」的
@@ -147,7 +147,7 @@ CLI/TUI 的失败展示**必须**由**一个结构化对象**渲染，禁止再�
 
 **互斥性**：一次失败只落**一个** `code`（按上表自上而下首次命中即停），与 API-003 §3 四终态同构。
 
-### 3.1 钉选优先的严格边界（⚠️ 本规范最容易做错的一处）
+### 3.1 钉选优先的严格边界（⚠ 本规范最容易做错的一处）
 
 「钉选是元原因」**不可无条件前置**。必须区分两种情形：
 
@@ -168,13 +168,13 @@ CLI/TUI 的失败展示**必须**由**一个结构化对象**渲染，禁止再�
 
 | # | 文件 | 改动 | 复用（不重写） | 状态 |
 |---|---|---|---|---|
-| 1 | `services/backend/src/services/gateway/cliFailureEnvelope.js` | **新增**：纯叶子，`buildCliFailureEnvelope(result, env) → §2 对象`。零 IO、确定性、绝不抛、门控 `KHY_CLI_FAILURE_ENVELOPE`（默认开） | `gatewayErrorClassifier.classifyError`、`buildChannelFailureAdvice`、`failureReasonRanking`、`visionExhaustionDiagnostic` | ✅ 已落地 |
-| 2 | `src/cli/aiChatCore.js:3259-3317` | 失败分支改为「先渲染信封」；信封不可用/门关 → 逐字节回退旧 `errorMsg` 拼接；`failureDetails` 保留为第 2 屏；返回值新增 `failureCode` | `_formatGatewayFailureDetails`、`_buildRecoveryAttemptsNote`（降为第 2 屏） | ✅ 已落地 |
-| 3 | `src/cli/aiChatCore.js`（同处） | 推广清单门控（R-GW-1）：`showPromoPanel` 为假时按行剔除 🆓/💰/⚡ 三段及各自链接行 | 清单文本不动，仅决定是否保留 | ✅ 已落地 |
-| 4 | `services/backend/tests/gateway/cliFailureEnvelope.test.js` | **新增**：27 个用例，覆盖 §5 A1–A4 与 §3.1 钉选边界 | — | ✅ 已落地 |
-| 5 | `docs/10_规范/registry/RULES-REGISTRY.json` | 登记 `RUNTIME-005`，gate=commit | 登记表 + `check-gov-rules.js` | ✅ 已登记 |
-| 6 | `scripts/ci/check-agent-rules.js` | 新增 finding `cli-raw-error-truncate`（检测对失败文本做 `.slice()` 截断） | 既有检查框架 | ⏳ 待实现 |
-| 7 | `src/cli/aiGatewayGenerateHelpers.js` | `_buildRecoverySuggestions` 输出并入 `hint[]`（当前仍是独立第 2 屏） | 现有 `_buildRecoverySuggestions` | ⏳ 待收敛 |
+| 1 | `services/backend/src/services/gateway/cliFailureEnvelope.js` | **新增**：纯叶子，`buildCliFailureEnvelope(result, env) → §2 对象`。零 IO、确定性、绝不抛、门控 `KHY_CLI_FAILURE_ENVELOPE`（默认开） | `gatewayErrorClassifier.classifyError`、`buildChannelFailureAdvice`、`failureReasonRanking`、`visionExhaustionDiagnostic` | ✓ 已落地 |
+| 2 | `src/cli/aiChatCore.js:3259-3317` | 失败分支改为「先渲染信封」；信封不可用/门关 → 逐字节回退旧 `errorMsg` 拼接；`failureDetails` 保留为第 2 屏；返回值新增 `failureCode` | `_formatGatewayFailureDetails`、`_buildRecoveryAttemptsNote`（降为第 2 屏） | ✓ 已落地 |
+| 3 | `src/cli/aiChatCore.js`（同处） | 推广清单门控（R-GW-1）：`showPromoPanel` 为假时按行剔除//✱ 三段及各自链接行 | 清单文本不动，仅决定是否保留 | ✓ 已落地 |
+| 4 | `services/backend/tests/gateway/cliFailureEnvelope.test.js` | **新增**：27 个用例，覆盖 §5 A1–A4 与 §3.1 钉选边界 | — | ✓ 已落地 |
+| 5 | `docs/10_规范/registry/RULES-REGISTRY.json` | 登记 `RUNTIME-005`，gate=commit | 登记表 + `check-gov-rules.js` | ✓ 已登记 |
+| 6 | `scripts/ci/check-agent-rules.js` | 新增 finding `cli-raw-error-truncate`（检测对失败文本做 `.slice()` 截断） | 既有检查框架 | … 待实现 |
+| 7 | `src/cli/aiGatewayGenerateHelpers.js` | `_buildRecoverySuggestions` 输出并入 `hint[]`（当前仍是独立第 2 屏） | 现有 `_buildRecoverySuggestions` | … 待收敛 |
 
 > **注**：第 6/7 项不阻塞验收——信封已接管首屏，`failureCode` 已随返回值外露，
 > A1–A4 判据均已满足。剩余两项是把第 2 屏也收进同一契约的收敛工作。
@@ -188,7 +188,7 @@ CLI/TUI 的失败展示**必须**由**一个结构化对象**渲染，禁止再�
 | A1 | 首屏 ≤ 8 行，含 `code` + 主因通道 + 解钉/修复 hint | 快照测试 + 用户实测截图 |
 | A2 | 钉选 + 通道不存在 → code 为 `CHANNEL_ABSENT_PINNED`，hint 首条为解钉 | 夹具：`{preferredAdapter:'trae', attempts:[unavailable/0]}`（原夹具用 `windsurf`；该适配器已退役，改用现存通道等价表达） |
 | A3 | 钉选 + 真实 401 → code 为 `AUTH_FAILED_PINNED`（**不得**被钉选掩盖），且仍披露回退被抑制 | 夹具：`{preferredAdapter:'api', attempts:[auth/401]}` |
-| A4 | `hint.length > 0` 时，输出中**不含**「🆓 免费方案」 | 断言 `!/免费方案/.test(rendered)` |
+| A4 | `hint.length > 0` 时，输出中**不含**「免费方案」 | 断言 `!/免费方案/.test(rendered)` |
 | A5 | 任何失败路径均不出现截断后自然语言（无 `…` 结尾的失败信息行） | finding `cli-raw-error-truncate` 归零 |
 | A6 | 门关时输出与 2026-09-17 前逐字节一致 | 门开/门关双快照 diff |
 

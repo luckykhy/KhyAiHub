@@ -79,9 +79,9 @@ TerminalBench 基准中，仅优化 Harness 即使同一模型从基线以下跃
 
 | 痛点 | 所需工件 | khyos 现状 |
 | --- | --- | --- |
-| 失忆 | 自动加载的项目指令 | ✅ 已解决（三文件加载，见 3.1） |
-| 风格飘忽 | 可被自动触发的代码规范载体 | ⚠️ 未解决（描述预算饥荒，见 3.2） |
-| 上下文溢出 | 子智能体定义与委派 | ⚠️ 部分（内置 agent 已在用，用户级定义目录为空） |
+| 失忆 | 自动加载的项目指令 | ✓ 已解决（三文件加载，见 3.1） |
+| 风格飘忽 | 可被自动触发的代码规范载体 | ⚠ 未解决（描述预算饥荒，见 3.2） |
+| 上下文溢出 | 子智能体定义与委派 | ⚠ 部分（内置 agent 已在用，用户级定义目录为空） |
 
 ---
 
@@ -136,10 +136,10 @@ Hooks（唯一具备拦截能力，同构于 Web 中间件）。两要点：**�
 
 | 组件 | khyos 现状 | 证据 |
 | --- | --- | --- |
-| Commands | ❌ 空（历史遗留目录） | `.khy/commands/` 仅 `README.md`（716 字节） |
-| Skills | ⚠️ 部分，见下 | 43 目录 + builtin/bridge 共 **48** 个 |
-| SubAgents | ⚠️ **用户级空，内置已在用** | `.khy/agents/` 0 文件；`src/agents/built-in/` 有 5 个内置 agent |
-| Hooks | ⚠️ 运行时完整、零挂载 | `.khy/hooks.json` 不存在 |
+| Commands | ✗ 空（历史遗留目录） | `.khy/commands/` 仅 `README.md`（716 字节） |
+| Skills | ⚠ 部分，见下 | 43 目录 + builtin/bridge 共 **48** 个 |
+| SubAgents | ⚠ **用户级空，内置已在用** | `.khy/agents/` 0 文件；`src/agents/built-in/` 有 5 个内置 agent |
+| Hooks | ⚠ 运行时完整、零挂载 | `.khy/hooks.json` 不存在 |
 
 **Skills 现状详解**：
 
@@ -148,7 +148,7 @@ Hooks（唯一具备拦截能力，同构于 Web 中间件）。两要点：**�
 | 元数据真源 | `manifest.json` + `prompt.md`，**43/43 齐备** | `services/backend/src/cli/handlers/initVerifiers.js:13-15`、`services/domain/skills/skills/verifierScaffoldPlan.js:28`（`DEFAULT_SKILLS_DIR = '.khy/skills'`，注释「绝不写 .claude/skills」） |
 | SKILL.md 兼容导入 | **0 个**（原 `frontend-beautify` 已删除，§3.2.4）；非平级，是**被导入方** | `skills/index.js:153-161` 回调 `discoverSkillsDeep`，`if (!skills.has(id))` 才添加 |
 | 字段映射 | 几乎无语义损失：`when_to_use`→`whenToUse`、`allowed-tools`→`allowedTools`、`layer`→`category`、`context==='fork'`、`model`；但 `handlerPath` 硬编码 `null` | `skills/index.js:701` `_convertLegacySkill` |
-| 语义触发 | ⚠️ 线通、信号被削，见「§3.2.1 预算饥荒」 | `services/skillSearch.js:202` → `skills/index.js:243` |
+| 语义触发 | ⚠ 线通、信号被削，见「§3.2.1 预算饥荒」 | `services/skillSearch.js:202` → `skills/index.js:243` |
 | 死代码 | `matchSkills`（`skillLoader.js:228` 定义、`:450` 导出）全仓零调用 —— **已删除（2026-09-16）** | `grep -rn matchSkills services/backend/` 零命中 |
 | allowed-tools | 闸门就绪、**0/48 配置**；**且对 prompt 型技能是空操作**（见下注） | `toolCalling.js:212` `_checkActiveSkillPolicy`；激活点仅 `skills/index.js:568`（handler 块内） |
 
@@ -156,7 +156,7 @@ Hooks（唯一具备拦截能力，同构于 Web 中间件）。两要点：**�
 （`trigger`、`aliases`、`user_invocable`、`handlerPath` 只有 manifest 能表达；
 `frontend-beautify` 的中文别名 `/美化`、`/ui` 就在 manifest 里）。
 
-**⚠️ 真源选择：以 manifest.json 为准，SKILL.md 仅作兼容导入。**
+**⚠ 真源选择：以 manifest.json 为准，SKILL.md 仅作兼容导入。**
 
 #### 3.2.1 预算饥荒（本章新发现）
 
@@ -303,9 +303,9 @@ Tools/Resources/Prompts 三大能力）。扩展层在「体内」强化机能�
 
 | 机制 | khyos 现状 | 证据 |
 | --- | --- | --- |
-| Headless | ✅ 基本齐 | `services/backend/src/cli/printOutputFormat.js`：`-p`、`--output-format text\|json\|stream-json`、`--max-turns`（cap 100）、`--allowed-tools`、`--disallowed-tools`；文件头注释「Mirrors `claude -p "<query>" --output-format`」 |
-| MCP | ⚠️ 部分 | `.khy/mcp.json` 1 个服务器 `deepseek-eyes`（stdio，`python -m deepseek_eyes`）；注意路径是 `.khy/mcp.json` 而非 `.mcp.json` |
-| 外部生态接入 | ⚠️ 意外能力 | `services/skills/ccSkillBridge.js`（`KHY_CC_SKILL_BRIDGE` 默认 ON）+ OpenClaw bridge，可发现 `~/.claude/skills`、`~/.claude/plugins/cache`、`~/.claude/local-plugins` |
+| Headless | ✓ 基本齐 | `services/backend/src/cli/printOutputFormat.js`：`-p`、`--output-format text\|json\|stream-json`、`--max-turns`（cap 100）、`--allowed-tools`、`--disallowed-tools`；文件头注释「Mirrors `claude -p "<query>" --output-format`」 |
+| MCP | ⚠ 部分 | `.khy/mcp.json` 1 个服务器 `deepseek-eyes`（stdio，`python -m deepseek_eyes`）；注意路径是 `.khy/mcp.json` 而非 `.mcp.json` |
+| 外部生态接入 | ⚠ 意外能力 | `services/skills/ccSkillBridge.js`（`KHY_CC_SKILL_BRIDGE` 默认 ON）+ OpenClaw bridge，可发现 `~/.claude/skills`、`~/.claude/plugins/cache`、`~/.claude/local-plugins` |
 
 **缺口**：`.github/workflows/` 存在但未接 khy headless 调用（第 7 章）；MCP 无作用域
 分层（用户级/项目级/本地级）与信任评估流程（第 6 章）；MCP 生态深度浅（仅 1 服务器）。
@@ -320,8 +320,8 @@ Tools/Resources/Prompts 三大能力）。扩展层在「体内」强化机能�
 
 **khyos 现状**：
 
-- ❌ **无对外 SDK**：无可 `require('khy')` 的库入口，外部程序只能起子进程。
-- ⚠️ **但 harness 内核存在且相当重**：`services/backend/src/services/toolUseLoopCore.js`
+- ✗ **无对外 SDK**：无可 `require('khy')` 的库入口，外部程序只能起子进程。
+- ⚠ **但 harness 内核存在且相当重**：`services/backend/src/services/toolUseLoopCore.js`
   8000+ 行，含 `IterationBudget`、token-budget governor（`ceiling` 参数，0 时禁用并
   保持 byte-identical legacy 行为）、`_maxTokensRecovery`、`doomLoopGuard.js`。
   这就是 khyos 自己的 SDK 层，缺的是稳定 API 边界。
@@ -339,11 +339,11 @@ Tools/Resources/Prompts 三大能力）。扩展层在「体内」强化机能�
 
 | 要素 | 刻度 | khyos 实现 |
 | --- | --- | --- |
-| 工具系统 | ✅ 有 | `services/toolCalling.js:3475` `registerTool` + `services/toolCatalog/` + `toolRegistryDedup.collapseRedundant` 去重折叠；`toolCalling.js:212` active-skill `allowed-tools` 白名单闸门（0/48 配置，**且仅对 handler 技能生效**，§3.2.3） |
-| 权限控制 | ⚠️ 机制强、默认宽 | `.khy/permissions.json`（`profile: "yolo"`、`version: 2`）+ `.khy/tool_permissions.json` + `toolCallingPermissions.js` + `execApproval.js` / `approvalLedger.js` / `guardApproval.js`；`ToolPermission` hook 只能**收紧**裁决（`hookContribSeams.tighten` 强制单调性） |
-| 上下文管理 | ✅ 有 | `contextCompressor.js` + `contextWindowGuard.js` + 技能目录 `charBudget` 预算 + `memoryCompressor.js` |
-| 会话持久化 | ✅ 有 | `.khy/sessions.db`（SQLite，含 `-shm`/`-wal`）+ `.khy/session.json` + `.khy/sessions/`（24 条）+ `sessionChecklistResetService.js` + `sessionFileRepair.js` |
-| 事件钩子 | ⚠️ 通电未挂线 | `hookRegistry.js` 11 事件 + `hr.blocked` 阻断 + `preventContinuation` 优雅停机 + `_stopHookActive` 防无限续跑；`.khy/hooks.json` 不存在 → 零挂载 |
+| 工具系统 | ✓ 有 | `services/toolCalling.js:3475` `registerTool` + `services/toolCatalog/` + `toolRegistryDedup.collapseRedundant` 去重折叠；`toolCalling.js:212` active-skill `allowed-tools` 白名单闸门（0/48 配置，**且仅对 handler 技能生效**，§3.2.3） |
+| 权限控制 | ⚠ 机制强、默认宽 | `.khy/permissions.json`（`profile: "yolo"`、`version: 2`）+ `.khy/tool_permissions.json` + `toolCallingPermissions.js` + `execApproval.js` / `approvalLedger.js` / `guardApproval.js`；`ToolPermission` hook 只能**收紧**裁决（`hookContribSeams.tighten` 强制单调性） |
+| 上下文管理 | ✓ 有 | `contextCompressor.js` + `contextWindowGuard.js` + 技能目录 `charBudget` 预算 + `memoryCompressor.js` |
+| 会话持久化 | ✓ 有 | `.khy/sessions.db`（SQLite，含 `-shm`/`-wal`）+ `.khy/session.json` + `.khy/sessions/`（24 条）+ `sessionChecklistResetService.js` + `sessionFileRepair.js` |
+| 事件钩子 | ⚠ 通电未挂线 | `hookRegistry.js` 11 事件 + `hr.blocked` 阻断 + `preventContinuation` 优雅停机 + `_stopHookActive` 防无限续跑；`.khy/hooks.json` 不存在 → 零挂载 |
 
 **刻度：3 有 / 2 部分 / 0 无。**
 

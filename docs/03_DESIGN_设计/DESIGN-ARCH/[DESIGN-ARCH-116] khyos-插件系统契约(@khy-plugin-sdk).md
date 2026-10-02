@@ -68,12 +68,12 @@ CC 侧继续「发现/安装」，khyos 侧「运行/校验」。
 
 | # | source | eager | 说明 |
 |---|--------|-------|------|
-| 1 | `config` | ✅ | `~/.khyquant/config.json` 的 `plugins` 列表——显式 path |
-| 2 | `workspace` | ✅ | `node_modules/khy-*` 与 `@scope/khy-*` |
-| 3 | `global` | ✅ | npm 全局 `khy-*` |
-| 4 | `ext:builtin` | ❌ **惰性** | extensionRoots 目录扫描（`KHY_PLUGIN_LAZY_LOAD` 门控） |
-| 5 | `dir` | ✅ | `~/.khyquant/plugins/<name>/` 目录扫描 |
-| 6 | `env` | ✅ | `KHY_PLUGINS=名1,名2` require.resolve |
+| 1 | `config` | ✓ | `~/.khyquant/config.json` 的 `plugins` 列表——显式 path |
+| 2 | `workspace` | ✓ | `node_modules/khy-*` 与 `@scope/khy-*` |
+| 3 | `global` | ✓ | npm 全局 `khy-*` |
+| 4 | `ext:builtin` | ✗ **惰性** | extensionRoots 目录扫描（`KHY_PLUGIN_LAZY_LOAD` 门控） |
+| 5 | `dir` | ✓ | `~/.khyquant/plugins/<name>/` 目录扫描 |
+| 6 | `env` | ✓ | `KHY_PLUGINS=名1,名2` require.resolve |
 
 **只有第 4 路（目录扫描）是惰性的**——这是 `[DESIGN-TOOL-002] §4` 的边界：
 目录扫描源用户可能随手丢个文件夹进来，启动期激活会把每个内置拓展的模块体
@@ -147,10 +147,10 @@ Hooks 配置真源是 `services/backend/src/services/domain/extensions/hooks/hoo
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | `version` | number | 推荐 | 缺则 warning 级（兼容旧配置，不阻断加载） |
-| `hooks` | array | ✅ | 每个元素是一个 hook |
+| `hooks` | array | ✓ | 每个元素是一个 hook |
 | `disabled` | string[] | 否 | 被禁用的 hook `source` 标识 |
-| `hooks[].event` | HOOK_EVENTS 之一 | ✅ | 11 事件见 `hookRegistry.HOOK_EVENTS` |
-| `hooks[].command` | string | ✅（command 型） | JSON 配置只收 command 型；`handler` 是运行时函数，不可序列化 |
+| `hooks[].event` | HOOK_EVENTS 之一 | ✓ | 11 事件见 `hookRegistry.HOOK_EVENTS` |
+| `hooks[].command` | string | ✓（command 型） | JSON 配置只收 command 型；`handler` 是运行时函数，不可序列化 |
 | `hooks[].pattern` | string | 否 | 必须可编译为 `RegExp`；过滤 `context.toolName`/`context.prompt` |
 | `hooks[].timeout` | number > 0 | 否 | 默认 10000 |
 | `hooks[].priority` | int ≥ 0 | 否 | 默认 100，小者优先 |

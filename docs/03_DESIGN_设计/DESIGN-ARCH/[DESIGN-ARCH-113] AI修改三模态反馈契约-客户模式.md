@@ -298,7 +298,7 @@ N1 意图确认 → N2 范围确认 → N3 分片执行 → N4 自证 → N5 交
 1. 把 §7 的硬三条升为 error；
 2. 更新 `scripts/ci/ruleguard-baseline.json`。
 
-> ⚠️ 步骤 2/3 **不需要**改 `qualityGateStages.js`，也**不需要**改 `package.json` 的 `&&` 链 —— 这正是 [DESIGN-ARCH-111] 的卖点：**门成员资格从登记表派生**，不在门里硬编码。
+> ⚠ 步骤 2/3 **不需要**改 `qualityGateStages.js`，也**不需要**改 `package.json` 的 `&&` 链 —— 这正是 [DESIGN-ARCH-111] 的卖点：**门成员资格从登记表派生**，不在门里硬编码。
 
 ---
 
@@ -320,12 +320,12 @@ N1 意图确认 → N2 范围确认 → N3 分片执行 → N4 自证 → N5 交
 
 | 项 | 方式 | 结果 |
 |---|---|---|
-| 模态判定确定性 | 纯函数，同输入同输出 | ✅ 7 场景可复现 |
-| 反例拦截 | 见 §11 逐条报出预期 finding | ✅ 全部命中 |
-| 不误伤 | 存证齐全时不得报 error | ✅ 场景 2 得 0 error |
-| 零外部依赖 | 只 require `fs` / `path` / `child_process` | ✅ |
-| 离线可跑 | 不联网、不调模型 | ✅ |
-| 语法自检 | `node --check` | ✅ syntax OK |
+| 模态判定确定性 | 纯函数，同输入同输出 | ✓ 7 场景可复现 |
+| 反例拦截 | 见 §11 逐条报出预期 finding | ✓ 全部命中 |
+| 不误伤 | 存证齐全时不得报 error | ✓ 场景 2 得 0 error |
+| 零外部依赖 | 只 require `fs` / `path` / `child_process` | ✓ |
+| 离线可跑 | 不联网、不调模型 | ✓ |
+| 语法自检 | `node --check` | ✓ syntax OK |
 
 ---
 

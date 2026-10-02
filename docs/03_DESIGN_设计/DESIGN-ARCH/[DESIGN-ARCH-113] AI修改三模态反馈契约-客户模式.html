@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -121,14 +121,14 @@
 <ol><li>把 gate 从 advisory 升到 commit / pr；</li><li>观察一个周期，<strong>只报 warning 不拦</strong>；</li><li>违规落 <code>.khy/ruleguard/violations.jsonl</code>，基线只降不升。</li></ol>
 <h3 id="步骤-3-收口-再一次提交">步骤 3「收口」（再一次提交）<a class="anchor" href="#步骤-3-收口-再一次提交" aria-label="锚点">#</a></h3>
 <ol><li>把 §7 的硬三条升为 error；</li><li>更新 <code>scripts/ci/ruleguard-baseline.json</code>。</li></ol>
-<blockquote><p>⚠️ 步骤 2/3 <strong>不需要</strong>改 <code>qualityGateStages.js</code>，也<strong>不需要</strong>改 <code>package.json</code> 的 <code>&amp;&amp;</code> 链 —— 这正是 [DESIGN-ARCH-111] 的卖点：<strong>门成员资格从登记表派生</strong>，不在门里硬编码。</p></blockquote>
+<blockquote><p>⚠ 步骤 2/3 <strong>不需要</strong>改 <code>qualityGateStages.js</code>，也<strong>不需要</strong>改 <code>package.json</code> 的 <code>&amp;&amp;</code> 链 —— 这正是 [DESIGN-ARCH-111] 的卖点：<strong>门成员资格从登记表派生</strong>，不在门里硬编码。</p></blockquote>
 <hr>
 <h2 id="9-与既有机制的边界-不重复造">9. 与既有机制的边界（不重复造）<a class="anchor" href="#9-与既有机制的边界-不重复造" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>既有件</th><th>它管什么</th><th>本方案做什么</th><th>边界</th></tr></thead><tbody><tr><td>[DESIGN-ARCH-041] <code>intentArbiter</code></td><td><strong>用户输入</strong>的意图裁决</td><td><strong>改动</strong>的模态裁决</td><td>只复用其「歧义带必须确认」思想，不碰其代码</td></tr><tr><td>[DESIGN-ARCH-111] ruleguard</td><td>规则 → 门档的绑定</td><td>只<strong>登记新规则</strong></td><td>不新造绑定层</td></tr><tr><td><code>check-change-safety.js</code></td><td>改动集的<strong>客观度量</strong></td><td><strong>消费</strong>它的输出</td><td>不重算爆炸半径</td></tr><tr><td><code>check-proposal-index.js</code></td><td>提案先行 + 三步分离</td><td>DELETE 模态<strong>引用</strong>它</td><td>不重复实现</td></tr><tr><td>[DESIGN-ARCH-077] 核心任务循环</td><td>交付闭环</td><td>其<strong>服务侧的对话层</strong></td><td>不新状态机</td></tr></tbody></table>
 <p><strong>SOURCING-005 四步检索结论</strong>（实现唯一性）：全库检索「客户模式 / 主动反馈 / 反向提问 / 待宰」→ <strong>0 命中</strong>；检索「复现存证 / rollback 存证」→ <strong>无现成机制</strong>。本方案不重复既有实现。</p>
 <hr>
 <h2 id="10-验证">10. 验证<a class="anchor" href="#10-验证" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>项</th><th>方式</th><th>结果</th></tr></thead><tbody><tr><td>模态判定确定性</td><td>纯函数，同输入同输出</td><td>✅ 7 场景可复现</td></tr><tr><td>反例拦截</td><td>见 §11 逐条报出预期 finding</td><td>✅ 全部命中</td></tr><tr><td>不误伤</td><td>存证齐全时不得报 error</td><td>✅ 场景 2 得 0 error</td></tr><tr><td>零外部依赖</td><td>只 require <code>fs</code> / <code>path</code> / <code>child_process</code></td><td>✅</td></tr><tr><td>离线可跑</td><td>不联网、不调模型</td><td>✅</td></tr><tr><td>语法自检</td><td><code>node --check</code></td><td>✅ syntax OK</td></tr></tbody></table>
+<table><thead><tr><th>项</th><th>方式</th><th>结果</th></tr></thead><tbody><tr><td>模态判定确定性</td><td>纯函数，同输入同输出</td><td>✓ 7 场景可复现</td></tr><tr><td>反例拦截</td><td>见 §11 逐条报出预期 finding</td><td>✓ 全部命中</td></tr><tr><td>不误伤</td><td>存证齐全时不得报 error</td><td>✓ 场景 2 得 0 error</td></tr><tr><td>零外部依赖</td><td>只 require <code>fs</code> / <code>path</code> / <code>child_process</code></td><td>✓</td></tr><tr><td>离线可跑</td><td>不联网、不调模型</td><td>✓</td></tr><tr><td>语法自检</td><td><code>node --check</code></td><td>✓ syntax OK</td></tr></tbody></table>
 <hr>
 <h2 id="11-实测-7-场景矩阵-原型真实输出">11. 实测：7 场景矩阵（原型真实输出）<a class="anchor" href="#11-实测-7-场景矩阵-原型真实输出" aria-label="锚点">#</a></h2>
 <pre><code>fix-no-repro           exit=1 | Summary: 1 error(s), 3 warning(s).

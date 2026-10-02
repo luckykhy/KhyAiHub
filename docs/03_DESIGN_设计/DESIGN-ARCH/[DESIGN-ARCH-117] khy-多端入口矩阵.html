@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -42,7 +42,7 @@
 <p><code>apps/khyos-desktop/</code>（唯一配齐 electron-builder）、<code>apps/provider-hub/</code>（只有 electron-vite 构建，无安装包）。</p>
 <ul><li><strong>移动三条线</strong>：Flutter <code>apps/khy-os-client-app/</code>（唯一有完整构建链）、</li></ul>
 <p>Capacitor <code>apps/khy-mobile/</code>（已损坏）、<code>software/khyquant/frontend</code> 的 Capacitor 配置（依赖不存在的 <code>android/</code>）。</p>
-<ul><li><strong>网页两条线</strong>：<code>apps/ai-frontend/</code>（平台自带）、<code>software/khyquant/frontend/</code>（内置应用界面）。</li></ul>
+<ul><li><strong>网页两条线</strong>：<code>apps/ai-frontend/</code>（平台自带）、<code>software/khyquant/frontend/</code>（独立项目 khyquant 的界面，随平台分发）。</li></ul>
 <p><strong>结论</strong>：问题不在「缺一个目录」，在<strong>缺一份能同时被机器读、被人读、且会自我检活的端清单</strong>。<br>新增目录只是这份清单的载体。</p>
 <hr>
 <h2 id="二-落点决策-数据在根-entries-实现在-l2">二、落点决策：数据在根 <code>entries/</code>，实现在 L2<a class="anchor" href="#二-落点决策-数据在根-entries-实现在-l2" aria-label="锚点">#</a></h2>
@@ -99,12 +99,12 @@ services/backend/src/services/entrypoints/    ← L2，读表的实现
 <p>取舍写清楚：<strong>读登记表 ≠ 把 path 抄进 <code>entries.json</code></strong>。抄一份 path 就是第二份真源，<br>而消灭第二份真源正是 LAYOUT-005 的目的；读登记表则天然跟着走——登记表改了坐标，<br>端矩阵立刻跟着改。解析结果里 <code>path</code>（目标）与 <code>legacyPath</code>（尚未迁完的当前位置）<strong>都探</strong>，<br>谁有内容报谁：报目标位置而磁盘上还没迁过去，等于骗人。空目录不算有内容——<br>构建失败留下的空壳报「已产出」，代价是让人白跑一趟构建。</p>
 <h3 id="4-4-entryfiles-与-artifactoutput-为什么是两件事">4.4 <code>entryFiles</code> 与 <code>artifactOutput</code> 为什么是两件事<a class="anchor" href="#4-4-entryfiles-与-artifactoutput-为什么是两件事" aria-label="锚点">#</a></h3>
 <p>终端端把这两个概念撞在一起了：<code>khy.bat</code> <strong>现在就在</strong>，pip wheel <strong>没构建</strong>。<br>只报一个「在/不在」必然误导——报「未产出」让人以为终端不能用，报「已产出」<br>让人以为分发包好了。所以分开：</p>
-<table><thead><tr><th>字段</th><th>回答</th><th>对终端端</th></tr></thead><tbody><tr><td><code>entryFiles</code></td><td>日常怎么进</td><td><code>khy.bat</code> / <code>khy.sh</code> / <code>khy-cli.bat</code> —— ✅ 现在就有</td></tr><tr><td><code>artifactOutput</code></td><td>可分发力产物在哪</td><td><code>pip-dist</code>（pip wheel）—— 尚未构建</td></tr></tbody></table>
-<p><code>khy entry status</code> 对 <code>shell</code> 类端先报 <code>entryFiles</code>（带 ✅/❌），再报打包形态。</p>
+<table><thead><tr><th>字段</th><th>回答</th><th>对终端端</th></tr></thead><tbody><tr><td><code>entryFiles</code></td><td>日常怎么进</td><td><code>khy.bat</code> / <code>khy.sh</code> / <code>khy-cli.bat</code> —— ✓ 现在就有</td></tr><tr><td><code>artifactOutput</code></td><td>可分发力产物在哪</td><td><code>pip-dist</code>（pip wheel）—— 尚未构建</td></tr></tbody></table>
+<p><code>khy entry status</code> 对 <code>shell</code> 类端先报 <code>entryFiles</code>（带 ✓/✗），再报打包形态。</p>
 <hr>
 <h2 id="五-检活语义-仓库级-vs-本机级">五、检活语义：仓库级 vs 本机级<a class="anchor" href="#五-检活语义-仓库级-vs-本机级" aria-label="锚点">#</a></h2>
 <p><code>khy entry probe</code> 跑四项检查，但<strong>只有三项参与定档</strong>：</p>
-<table><thead><tr><th>#</th><th>检查</th><th>层级</th><th>参与定档</th></tr></thead><tbody><tr><td>1</td><td><code>source</code>：源目录在不在</td><td>仓库级</td><td>✅ 缺失 → <code>broken</code></td></tr><tr><td>2</td><td><code>markers</code>：标记文件在不在</td><td>仓库级</td><td>✅ 缺失 → <code>broken</code>（一个都没命中）/ <code>degraded</code>（部分命中）</td></tr><tr><td>3</td><td><code>toolchain</code>：本机命令在不在</td><td><strong>本机级</strong></td><td>❌ <strong>不参与</strong></td></tr><tr><td>4</td><td><code>deliverable</code>：声明 exe/apk/html 却有没有构建档</td><td>仓库级</td><td>✅ 缺失 → <code>degraded</code></td></tr></tbody></table>
+<table><thead><tr><th>#</th><th>检查</th><th>层级</th><th>参与定档</th></tr></thead><tbody><tr><td>1</td><td><code>source</code>：源目录在不在</td><td>仓库级</td><td>✓ 缺失 → <code>broken</code></td></tr><tr><td>2</td><td><code>markers</code>：标记文件在不在</td><td>仓库级</td><td>✓ 缺失 → <code>broken</code>（一个都没命中）/ <code>degraded</code>（部分命中）</td></tr><tr><td>3</td><td><code>toolchain</code>：本机命令在不在</td><td><strong>本机级</strong></td><td>✗ <strong>不参与</strong></td></tr><tr><td>4</td><td><code>deliverable</code>：声明 exe/apk/html 却有没有构建档</td><td>仓库级</td><td>✓ 缺失 → <code>degraded</code></td></tr></tbody></table>
 <p><strong>为什么工具链必须被踢出定档</strong>：一台 CI 机器通常没有 Flutter。若把工具链算进定档，<br>每次 probe 都会给手机端判一次「降级」，手机端的真实不一致就再也看不见了——<br>假警报会淹掉真警报。工具链的结论放在独立的 <code>machine</code> 字段里，<br>输出为「本机缺少 flutter，本机无法构建或运行本端（<strong>仓库级声明不受影响</strong>）」。</p>
 <p><strong>漂移（drift）与说明（note）的分工</strong>：</p>
 <ul><li><strong><code>drift</code></strong> = 磁盘比表<strong>悲观</strong>。探测能确证的不一致（表说就绪、磁盘上 <code>package.json</code> 没了）。</li></ul>

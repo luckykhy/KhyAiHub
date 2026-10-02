@@ -36,11 +36,11 @@
 
 | HQ 的能力 | khy-os 现有对应物 | 实测结论 |
 |---|---|---|
-| 入库的状态目录 | `.ai/` **已入库**（`git ls-files .ai` = 4 个 `.md`，含 `.html` 孪生件） | ✅ **已有先例**，不必新发明 |
-| 多机同步通道 | khy-os 自带 3 个远端（`origin` / `gitee` / `khy-mirror`） | ✅ 通道现成；HQ 的 `sync.py` 双仓编排是**多余的一层** |
-| 任务服务层 | `taskControlService` / `taskClosure` / `taskScheduler` / `taskDecomposer` / `planModeService` / `goalModeService` / `todoStorePath` 等约 30 个模块 | ✅ 任务基础设施已相当完备 |
-| 机械检查 | `scripts/ci/` **61 个检查器** + `ruleguard` 门禁 + `check-wiring` | ✅ 足以吸收 HQ 的自检 |
-| CLI 命令 | `src/cli/handlers/` **152 个自注册 handler** | ✅ 加命令是常规操作（自注册，无需改路由） |
+| 入库的状态目录 | `.ai/` **已入库**（`git ls-files .ai` = 4 个 `.md`，含 `.html` 孪生件） | ✓ **已有先例**，不必新发明 |
+| 多机同步通道 | khy-os 自带 3 个远端（`origin` / `gitee` / `khy-mirror`） | ✓ 通道现成；HQ 的 `sync.py` 双仓编排是**多余的一层** |
+| 任务服务层 | `taskControlService` / `taskClosure` / `taskScheduler` / `taskDecomposer` / `planModeService` / `goalModeService` / `todoStorePath` 等约 30 个模块 | ✓ 任务基础设施已相当完备 |
+| 机械检查 | `scripts/ci/` **61 个检查器** + `ruleguard` 门禁 + `check-wiring` | ✓ 足以吸收 HQ 的自检 |
+| CLI 命令 | `src/cli/handlers/` **152 个自注册 handler** | ✓ 加命令是常规操作（自注册，无需改路由） |
 
 > **注意区分**：`.khy/`、`.khyos/`、`.khyquant/` 均被 gitignore（**本机态，不入库**）——
 > HQ 的状态数据**必须放 `.ai/`**，放上述目录会导致多机不同步。
@@ -152,11 +152,11 @@ git add -A && git commit -m "..." && git push
 
 | 步骤 | 动作 | 校验 | 状态 |
 |---|---|---|---|
-| 1 | `_meta/*` → `.ai/hq/`（5 个文件） | JSON 可解析；任务/Bug 计数与源一致（**23 任务 / 8 Bug**） | ✅ 已完成 |
-| 2 | `prompts/**` → `.ai/hq/prompts/`（19 个） | 文件数一致；`{{XX}}` 占位符完整 | ✅ 已完成 |
-| 3 | 写 `khy hq` 命令 | 状态机非法迁移被拒；`status` 输出与原 `next.py --status` 等价 | ✅ 已完成 |
-| 4 | 验证双机流程跑通 | 两台机器 `khy hq status` 一致 | ⚠️ **跳过**（当时只有一台机器，见 §3.6） |
-| 5 | **归档废弃 HQ**（先 `git clone --mirror`） | 镜像校验通过；本机工作副本删除 | ✅ 已完成 |
+| 1 | `_meta/*` → `.ai/hq/`（5 个文件） | JSON 可解析；任务/Bug 计数与源一致（**23 任务 / 8 Bug**） | ✓ 已完成 |
+| 2 | `prompts/**` → `.ai/hq/prompts/`（19 个） | 文件数一致；`{{XX}}` 占位符完整 | ✓ 已完成 |
+| 3 | 写 `khy hq` 命令 | 状态机非法迁移被拒；`status` 输出与原 `next.py --status` 等价 | ✓ 已完成 |
+| 4 | 验证双机流程跑通 | 两台机器 `khy hq status` 一致 | ⚠ **跳过**（当时只有一台机器，见 §3.6） |
+| 5 | **归档废弃 HQ**（先 `git clone --mirror`） | 镜像校验通过；本机工作副本删除 | ✓ 已完成 |
 
 ### 3.6 步骤 4 跳过与直接归档的决策记录（2026-09-17）
 
@@ -216,7 +216,7 @@ git add -A && git commit -m "..." && git push
 `push` 目标正确解析为 `khy-mirror`。双机一致性验证需在第二台机器上执行
 `git pull --ff-only && khy hq status`，比对计数与占用状态。
 
-> ⚠️ **双轨期**：步骤 1–4 完成前，**HQ 仓库保持只读可用**（不再写入）。
+> ⚠ **双轨期**：步骤 1–4 完成前，**HQ 仓库保持只读可用**（不再写入）。
 > 步骤 5 建议先 mirror 归档，确认新流程跑顺 2 周后再废弃远端。
 
 ---
@@ -228,8 +228,8 @@ git add -A && git commit -m "..." && git push
 | 写 `khy hq` 命令（读状态 + 渲染提示词 + 状态机） | 中（~300-500 行，可拆叶子 + 测试） | 否，这是核心 |
 | 迁移 5 个数据文件 + 19 个提示词 | 低 | 否 |
 | 计划任务重写（单仓 autopull） | 低 | 否 |
-| **丢弃 HQ 的 57 个 commit 历史** | **不可逆** | ✅ mirror 归档可缓解 |
-| **`drivability` 的「双入口必须同改」机械保障** | 中 | ✅ **已由 `DOCS-003` D9-mirror 补上**（见下） |
+| **丢弃 HQ 的 57 个 commit 历史** | **不可逆** | ✓ mirror 归档可缓解 |
+| **`drivability` 的「双入口必须同改」机械保障** | 中 | ✓ **已由 `DOCS-003` D9-mirror 补上**（见下） |
 
 > **最大一处损失，已就地补上**：HQ 的 `drivability` 检查强制
 > 「`CLAUDE.md` 与 `AGENTS.md` 必须同步修改」，而 khy-os 侧原本**没有等价守卫**。
@@ -271,15 +271,15 @@ npm run check:structure           # 既有门禁不回归
 
 | 验收项 | 结果 |
 |---|---|
-| `khy hq status` | ✅ 23 任务 / 8 Bug / 占用状态可读 |
-| `khy hq next` | ✅ 渲染非空，【工作目录】= 仓库根（非 `.ai/hq`） |
-| `khy hq verify` | ✅ 5 项通过：23 任务 / 8 Bug / 13 模板 / 4 模型 / 提示词结构 |
-| 状态机非法迁移 | ✅ `todo→done` 拒、`todo→doing` 过、`done→todo` 拒、`open→closed` 拒、`pending_verify→in_progress` 过、`closed→open` 拒、`wontfix→open` 过 |
-| 多机租约 | ✅ A 领 T-003 成功 → B 被拒（报占用主机与租约到期）→ A 小写重领放行 → `release` 后 B 可领 |
-| `verify` 负向测试 | ✅ 注入 ROADMAP 不同步 + 幽灵行 + 错 `next_id` → 3 条 error，`exitCode=1` |
-| `bug new` | ✅ 分配 BUG-009；非法 severity/domain/空标题均被拒 |
-| `bug note` | ✅ `notes` 追加且 `status` 不变 |
-| 数据逐字节一致 | ✅ 四个文件与 HQ 源 `cmp` 均 `SAME` |
+| `khy hq status` | ✓ 23 任务 / 8 Bug / 占用状态可读 |
+| `khy hq next` | ✓ 渲染非空，【工作目录】= 仓库根（非 `.ai/hq`） |
+| `khy hq verify` | ✓ 5 项通过：23 任务 / 8 Bug / 13 模板 / 4 模型 / 提示词结构 |
+| 状态机非法迁移 | ✓ `todo→done` 拒、`todo→doing` 过、`done→todo` 拒、`open→closed` 拒、`pending_verify→in_progress` 过、`closed→open` 拒、`wontfix→open` 过 |
+| 多机租约 | ✓ A 领 T-003 成功 → B 被拒（报占用主机与租约到期）→ A 小写重领放行 → `release` 后 B 可领 |
+| `verify` 负向测试 | ✓ 注入 ROADMAP 不同步 + 幽灵行 + 错 `next_id` → 3 条 error，`exitCode=1` |
+| `bug new` | ✓ 分配 BUG-009；非法 severity/domain/空标题均被拒 |
+| `bug note` | ✓ `notes` 追加且 `status` 不变 |
+| 数据逐字节一致 | ✓ 四个文件与 HQ 源 `cmp` 均 `SAME` |
 
 ---
 
@@ -305,7 +305,7 @@ npm run check:structure           # 既有门禁不回归
 | `scripts/sync/sync-status.js` | 硬编码自动探测 `<khy-os 父目录>/khy-os-hq`，归档后**永久指向不存在的路径** | 改为 **opt-in**：只在显式设置 `KHY_OS_HQ_DIR` 时才纳入视图（考古/对照用）。实测：默认只显示 khy-os；指向归档副本时正确显示 `khy-os-hq (archived)` |
 | `.ai/hq/`（46 文件） | **既未跟踪也未 gitignore** —— 一旦干净检出，任务/Bug 状态真源全部丢失，**直接摧毁多机协作** | `git add .ai/hq/`（**45 个入库**）。`logs/activity.log` 由既有 `logs/`+`*.log` 规则忽略（瞬态日志非状态真源，正确） |
 
-> ⚠️ `.ai/hq/` 必须入库，这是**方案自身的前提**（§二「注意区分」）：
+> ⚠ `.ai/hq/` 必须入库，这是**方案自身的前提**（§二「注意区分」）：
 > `.khy/`/`.khyos/`/`.khyquant/` 都被 gitignore（本机态），
 > 所以 HQ 状态**只能**放 `.ai/`，放别处会导致多机不同步。
 > 归档前它处于未跟踪状态 = 该前提没被满足，本次一并修正。

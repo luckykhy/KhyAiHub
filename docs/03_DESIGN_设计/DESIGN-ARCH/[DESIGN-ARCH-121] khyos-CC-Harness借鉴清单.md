@@ -55,51 +55,51 @@
 
 | 标记 | 含义 |
 | --- | --- |
-| ✅ **采纳** | 书有、khyos 缺或无对应语义，且 khyos 架构允许直接落地 |
-| 🔄 **改造采纳** | 书的做法有价值但载体/路径与 khyos 协议冲突，需换载体后落地 |
-| 🔁 **已具备** | khyos 现状等于或强于书的做法，**不重复建设**，只登记防止误改 |
-| ❌ **不采纳** | 与 khyos 架构或文件格式协议冲突，或收益低于成本 |
+| ✓ **采纳** | 书有、khyos 缺或无对应语义，且 khyos 架构允许直接落地 |
+| **改造采纳** | 书的做法有价值但载体/路径与 khyos 协议冲突，需换载体后落地 |
+| **已具备** | khyos 现状等于或强于书的做法，**不重复建设**，只登记防止误改 |
+| ✗ **不采纳** | 与 khyos 架构或文件格式协议冲突，或收益低于成本 |
 
 | # | 书中机制 | 出处 | 决策 | khyos 现状（2026-09-17 实测） |
 | --- | --- | --- | --- | --- |
-| M-01 | 五层记忆体系（企业/用户/项目/**规则**/本地） | ch02 §2.2 | 🔄 | 三文件加载已强于书；**规则级、本地级未成体系** |
-| M-02 | `.claude/rules/` + `paths:` Glob 条件化加载 | ch02 §2.4 / ch10 §10.4.1 | ✅ **P0** | `.khy/rules/` **不存在** |
-| M-03 | CLAUDE.md 500 行 / 「三问框架」/ 脆弱性测试 | ch02 §2.3 / ch10 §10.5.1 | ✅ | `CLAUDE.md` 201 行✅；`AGENTS.md` **796 行**❌ 超阈 |
-| M-04 | 渐进式披露三层模型 | ch03 §3.3 | 🔄 | `formatSkillListing` 有 budget，但无「正文 / 引用文件」分层 |
-| M-05 | description = 语义指纹（含 `Use when`/`Not for`） | ch03 §3.4.2–3.4.3 | 🔁 → ✅ | `when_to_use` **16/43**；无 `Not for` 负向约束字段 |
-| M-06 | 参考型 vs 任务型 Skill（`disable-model-invocation`） | ch03 §3.4.4 | ✅ **P0** | 字段不存在；副作用技能与知识技能混在同一预算池 |
-| M-07 | allowed-tools 最小权限 + `Bash(prefix:*)` 前缀语法 | ch03 §3.6 | 🔄 | 闸门 `toolCalling.js:212` 就绪、**0/48 配置**；**且仅对 handler 技能生效** |
-| M-08 | `$ARGUMENTS` 参数传递 + `` !`command` `` 动态注入 | ch03 §3.7 | ✅ | 无对应机制 |
-| M-09 | Skill 测试三件套（触发/功能/性能，90%/5% 阈值） | ch03 §3.11 | ✅ **P0** | 无任何 skill 测试 |
-| M-10 | 作用域四级 + 优先级（企业>个人>项目>Plugin） | ch03 §3.8 | 🔁 | 已有 `builtin/bridge` 双轨 + `skills/index.js:140` 发现顺序 |
-| M-11 | SKILL.md 正文 = **路由器**（Quick Reference 表） | ch03 §3.5.1 | ✅ | `prompt.md` 多为线性散文 |
-| M-12 | 契约式引用（触发时机 + 资源位置 + 预期产出） | ch03 §3.5.2 | ✅ | 无引用契约规范 |
-| M-13 | 子智能体五模式（只读/执行/并行/流水线/团队） | ch04 §4.4 | ✅ | **26 个**内置 agent 存在，**模式未显式化** |
-| M-14 | 上下文「报文传输」不可共享内存 → **交接契约** | ch04 §4.3/§4.4.4/§4.8 | ✅ **P0** | 无交接契约规范 |
-| M-15 | 子智能体 Token 经济学（输入>>输出 判据） | ch04 §4.6 | ✅ | 无委派判据 |
-| M-16 | 子智能体 Frontmatter 内联 hooks | ch05 §5.8.1 | 🔄 | 用户级 agents 目录空；hook 事件面已铺 |
-| M-17 | Hooks 17 事件 / 3 处理器阶梯 / 退出码 2 / `stop_hook_active` | ch05 §5.2–5.5 | ✅ **P0** | 11 事件已实现 + `hr.blocked`；**`.khy/hooks.json` 不存在** |
-| M-18 | 「先观测后管控」三步走（先用 `matcher:"*"` 审计） | ch05 §5.11 | ✅ **P0** | 无审计 hook |
-| M-19 | 异步 hooks（`async:true`，仅 command 型，无拦截力） | ch05 §5.9 | ✅ | 无 |
-| M-20 | 权限 5 模式 + `deny→ask→allow` 评估序 | ch10 §10.3 | 🔄 | `permissions.json: profile "yolo"`，`rules: {}` **空** |
-| M-21 | `.md` 忽略 + `permissions.deny` 双保险 | ch10 §10.3.3 | ✅ | 无 read 级 deny |
-| M-22 | 成本控制：模型分层 / `--max-budget-usd` / 缓存 / 思考预算 | ch10 §10.1 | 🔄 | 有 `IterationBudget` + token governor（`ceiling`），**`ceiling=0` 时禁用** |
-| M-23 | 调试三支柱（`--debug` / `stream-json` / 审计 hook / 会话种子） | ch10 §10.2 | 🔄 | `--output-format stream-json` 已有；无 debug 类别过滤 |
-| M-24 | 异常三分类诊断序（上下文缺失 → 指令冲突 → 权限不足） | ch10 §10.2.5 | ✅ **P0** | 无诊断协议 |
-| M-25 | 大型代码库六项（层次化 CLAUDE.md / 引导式搜索 / Explore / 压缩） | ch10 §10.4 | ✅ | 有 `contextCompressor`、Explore 型内置 agent |
-| M-26 | 团队落地四阶段 + `.claude/` 共享策略表 | ch10 §10.6 | ✅ **P0** | `.khy/` 全被 gitignore → **无共享策略** |
-| M-27 | 受管设置（managed-settings，不可覆盖） | ch10 §10.6.3 | ❌→✅ | khyos 单机单用户，无组织级；但 `profile:"yolo"` 需等效硬顶 |
-| M-28 | MCP 三层作用域 + 首次审批 + OAuth + 版本锁定 | ch06 §6.8 / ch10 §10.3.5 | 🔄 | `.khy/mcp.json` 1 服务器，无分层/无信任流程 |
-| M-29 | MCP + Skills = 厨房 + 菜谱 | ch06 §6.9 | ✅ | 两者均已有，**缺显式协作约定** |
-| M-30 | Headless 四维度参数 + JSON 成本元数据 | ch07 §7.2 | 🔁 → ✅ | 五参数全在 `printOutputFormat.js`；**未接 CI** |
-| M-31 | CI 落地四阶段（观察者→顾问→门禁→主动修复） | ch07 §7.12 | ✅ | `.github/workflows/` 存在但未接 khy |
-| M-32 | Agent SDK 四道安全防线 | ch08 | 🔁 | 无对外 SDK（`[DESIGN-ARCH-112]` §3.4 留第 8 章裁决） |
-| M-33 | 自定义工具 = 进程内 MCP 服务器（`@tool`） | ch08 §8.6 | ✅ | 无 |
-| M-34 | Plugin 打包 + 命名空间 + 可逆安装 | ch09 | 🔁 | **已有** `[DESIGN-ARCH-116]` `@khy/plugin-sdk` 契约（26 测试全绿） |
-| M-35 | 六层加载优先级 + 子智能体 > 项目 > 用户 | ch02/ch04/ch10 | 🔁 | `prompts.js:1746` KHY>CLAUDE>AGENTS 已实现 |
-| M-36 | SDD 四层生态 + 工作流组合 | ch10 §10.7 | 🔄 | `.khy/plans/` 已有 plan JSON；无跨平台规范层 |
+| M-01 | 五层记忆体系（企业/用户/项目/**规则**/本地） | ch02 §2.2 | | 三文件加载已强于书；**规则级、本地级未成体系** |
+| M-02 | `.claude/rules/` + `paths:` Glob 条件化加载 | ch02 §2.4 / ch10 §10.4.1 | ✓ **P0** | `.khy/rules/` **不存在** |
+| M-03 | CLAUDE.md 500 行 / 「三问框架」/ 脆弱性测试 | ch02 §2.3 / ch10 §10.5.1 | ✓ | `CLAUDE.md` 201 行✓；`AGENTS.md` **796 行**✗ 超阈 |
+| M-04 | 渐进式披露三层模型 | ch03 §3.3 | | `formatSkillListing` 有 budget，但无「正文 / 引用文件」分层 |
+| M-05 | description = 语义指纹（含 `Use when`/`Not for`） | ch03 §3.4.2–3.4.3 | → ✓ | `when_to_use` **16/43**；无 `Not for` 负向约束字段 |
+| M-06 | 参考型 vs 任务型 Skill（`disable-model-invocation`） | ch03 §3.4.4 | ✓ **P0** | 字段不存在；副作用技能与知识技能混在同一预算池 |
+| M-07 | allowed-tools 最小权限 + `Bash(prefix:*)` 前缀语法 | ch03 §3.6 | | 闸门 `toolCalling.js:212` 就绪、**0/48 配置**；**且仅对 handler 技能生效** |
+| M-08 | `$ARGUMENTS` 参数传递 + `` !`command` `` 动态注入 | ch03 §3.7 | ✓ | 无对应机制 |
+| M-09 | Skill 测试三件套（触发/功能/性能，90%/5% 阈值） | ch03 §3.11 | ✓ **P0** | 无任何 skill 测试 |
+| M-10 | 作用域四级 + 优先级（企业>个人>项目>Plugin） | ch03 §3.8 | | 已有 `builtin/bridge` 双轨 + `skills/index.js:140` 发现顺序 |
+| M-11 | SKILL.md 正文 = **路由器**（Quick Reference 表） | ch03 §3.5.1 | ✓ | `prompt.md` 多为线性散文 |
+| M-12 | 契约式引用（触发时机 + 资源位置 + 预期产出） | ch03 §3.5.2 | ✓ | 无引用契约规范 |
+| M-13 | 子智能体五模式（只读/执行/并行/流水线/团队） | ch04 §4.4 | ✓ | **26 个**内置 agent 存在，**模式未显式化** |
+| M-14 | 上下文「报文传输」不可共享内存 → **交接契约** | ch04 §4.3/§4.4.4/§4.8 | ✓ **P0** | 无交接契约规范 |
+| M-15 | 子智能体 Token 经济学（输入>>输出 判据） | ch04 §4.6 | ✓ | 无委派判据 |
+| M-16 | 子智能体 Frontmatter 内联 hooks | ch05 §5.8.1 | | 用户级 agents 目录空；hook 事件面已铺 |
+| M-17 | Hooks 17 事件 / 3 处理器阶梯 / 退出码 2 / `stop_hook_active` | ch05 §5.2–5.5 | ✓ **P0** | 11 事件已实现 + `hr.blocked`；**`.khy/hooks.json` 不存在** |
+| M-18 | 「先观测后管控」三步走（先用 `matcher:"*"` 审计） | ch05 §5.11 | ✓ **P0** | 无审计 hook |
+| M-19 | 异步 hooks（`async:true`，仅 command 型，无拦截力） | ch05 §5.9 | ✓ | 无 |
+| M-20 | 权限 5 模式 + `deny→ask→allow` 评估序 | ch10 §10.3 | | `permissions.json: profile "yolo"`，`rules: {}` **空** |
+| M-21 | `.md` 忽略 + `permissions.deny` 双保险 | ch10 §10.3.3 | ✓ | 无 read 级 deny |
+| M-22 | 成本控制：模型分层 / `--max-budget-usd` / 缓存 / 思考预算 | ch10 §10.1 | | 有 `IterationBudget` + token governor（`ceiling`），**`ceiling=0` 时禁用** |
+| M-23 | 调试三支柱（`--debug` / `stream-json` / 审计 hook / 会话种子） | ch10 §10.2 | | `--output-format stream-json` 已有；无 debug 类别过滤 |
+| M-24 | 异常三分类诊断序（上下文缺失 → 指令冲突 → 权限不足） | ch10 §10.2.5 | ✓ **P0** | 无诊断协议 |
+| M-25 | 大型代码库六项（层次化 CLAUDE.md / 引导式搜索 / Explore / 压缩） | ch10 §10.4 | ✓ | 有 `contextCompressor`、Explore 型内置 agent |
+| M-26 | 团队落地四阶段 + `.claude/` 共享策略表 | ch10 §10.6 | ✓ **P0** | `.khy/` 全被 gitignore → **无共享策略** |
+| M-27 | 受管设置（managed-settings，不可覆盖） | ch10 §10.6.3 | ✗→✓ | khyos 单机单用户，无组织级；但 `profile:"yolo"` 需等效硬顶 |
+| M-28 | MCP 三层作用域 + 首次审批 + OAuth + 版本锁定 | ch06 §6.8 / ch10 §10.3.5 | | `.khy/mcp.json` 1 服务器，无分层/无信任流程 |
+| M-29 | MCP + Skills = 厨房 + 菜谱 | ch06 §6.9 | ✓ | 两者均已有，**缺显式协作约定** |
+| M-30 | Headless 四维度参数 + JSON 成本元数据 | ch07 §7.2 | → ✓ | 五参数全在 `printOutputFormat.js`；**未接 CI** |
+| M-31 | CI 落地四阶段（观察者→顾问→门禁→主动修复） | ch07 §7.12 | ✓ | `.github/workflows/` 存在但未接 khy |
+| M-32 | Agent SDK 四道安全防线 | ch08 | | 无对外 SDK（`[DESIGN-ARCH-112]` §3.4 留第 8 章裁决） |
+| M-33 | 自定义工具 = 进程内 MCP 服务器（`@tool`） | ch08 §8.6 | ✓ | 无 |
+| M-34 | Plugin 打包 + 命名空间 + 可逆安装 | ch09 | | **已有** `[DESIGN-ARCH-116]` `@khy/plugin-sdk` 契约（26 测试全绿） |
+| M-35 | 六层加载优先级 + 子智能体 > 项目 > 用户 | ch02/ch04/ch10 | | `prompts.js:1746` KHY>CLAUDE>AGENTS 已实现 |
+| M-36 | SDD 四层生态 + 工作流组合 | ch10 §10.7 | | `.khy/plans/` 已有 plan JSON；无跨平台规范层 |
 
-**统计**：36 条中 ✅ 采纳 17 条、🔄 改造采纳 10 条、🔁 已具备 8 条、❌ 不采纳 1 条。
+**统计**：36 条中 ✓ 采纳 17 条、改造采纳 10 条、已具备 8 条、✗ 不采纳 1 条。
 
 ---
 
@@ -113,7 +113,7 @@ P1 = 需要新增小规模代码或规范；P2 = 需要设计决策或跨模块�
 
 ### K-01 `.khy/rules/` 条件化规则系统 —— 修复「规则散在三处」
 
-**优先级 P0** ｜ 书中出处 ch02 §2.4、ch10 §10.4.1 ｜ 决策 ✅ 采纳
+**优先级 P0** ｜ 书中出处 ch02 §2.4、ch10 §10.4.1 ｜ 决策 ✓ 采纳
 
 **【书中的做法】** 在 `.claude/rules/` 下放多个独立 `.md`，每个文件在 YAML frontmatter 里用
 `paths:` 声明一组 Glob：
@@ -189,7 +189,7 @@ paths:
 
 ### K-02 Skill 参考型 / 任务型二分 + `disable-model-invocation`
 
-**优先级 P0** ｜ 书中出处 ch03 §3.4.4 ｜ 决策 ✅ 采纳
+**优先级 P0** ｜ 书中出处 ch03 §3.4.4 ｜ 决策 ✓ 采纳
 
 **【书中的做法】** `disable-model-invocation: true` 的技能，`description` **不注入**模型上下文，
 只能由用户 `/skill-name` 显式触发。判据是「**最坏情况测试**」：
@@ -260,7 +260,7 @@ khyos 当前的失效模式**恰好是书描述的极端情形**：
 
 ### K-03 Hooks 落地：先审计、后拦截的三步走
 
-**优先级 P0** ｜ 书中出处 ch05 §5.11、§5.6 ｜ 决策 ✅ 采纳 ｜ **高风险章，须 dry-run**
+**优先级 P0** ｜ 书中出处 ch05 §5.11、§5.6 ｜ 决策 ✓ 采纳 ｜ **高风险章，须 dry-run**
 
 **【书中的做法】** 明确的三步演进：
 
@@ -373,7 +373,7 @@ khyos 当前的失效模式**恰好是书描述的极端情形**：
 
 ### K-04 子智能体「交接契约」（Handoff Contract）
 
-**优先级 P0** ｜ 书中出处 ch04 §4.4.4、§4.8 ｜ 决策 ✅ 采纳
+**优先级 P0** ｜ 书中出处 ch04 §4.4.4、§4.8 ｜ 决策 ✓ 采纳
 
 **【书中的做法】** 书中把这个机制讲得比任何一节都细：
 
@@ -396,7 +396,7 @@ khyos 当前的失效模式**恰好是书描述的极端情形**：
    `SubAgentStart` / `SubAgentEnd` 事件面已预留。
    `[DESIGN-ARCH-112]` §3.2.2 的落点修正说得很准：
    **不是从零建机制，而是「缺用户级定义格式与委派链路的权限收敛」**。
-   > 📌 2026-09-18 复核订正：原稿此处写「5 个内置 agent」，**实测为 26 个**。
+   > 2026-09-18 复核订正：原稿此处写「5 个内置 agent」，**实测为 26 个**。
    > 且加载器 `services/backend/src/agents/loadAgents.js`（314 行）、schema、
    > 六层优先级（`builtIn→plugin→user→project→flag→managed`）、调用链
    > （`agents/index.js:30 → loadCustomAgents(cwd)`）**全部已具备**，
@@ -454,7 +454,7 @@ agent 定义文件格式由 `[DESIGN-ARCH-115]`（子智能体设计）定稿，
 
 ### K-05 子智能体委派的 Token 经济学判据
 
-**优先级 P0** ｜ 书中出处 ch04 §4.6 ｜ 决策 ✅ 采纳
+**优先级 P0** ｜ 书中出处 ch04 §4.6 ｜ 决策 ✓ 采纳
 
 **【书中的做法】** 书给了一个反直觉结论并**附了可核算的算式**：
 合理使用子智能体不是增加成本，而是降低总 Token。
@@ -494,7 +494,7 @@ agent 定义文件格式由 `[DESIGN-ARCH-115]`（子智能体设计）定稿，
    不同供应商的 input/output 价差比书中的 Claude 单品更大。
    书 §10.1.1 的洞察「输出成本远高于输入，因此控制输出长度比控制输入更有效」
    在 khyos 的多供应商场景下**乘以供应商价差倍数**。
-3. ⚠️ **khyos 有一处必须与书不同的地方**：khyos 已有 `prompt` 缓存与
+3. ⚠ **khyos 有一处必须与书不同的地方**：khyos 已有 `prompt` 缓存与
    token-budget governor（`toolUseLoopCore.js` 的 `ceiling` 参数）。
    书的 6.8% 在 khyos 会被缓存进一步稀释。
    **因此本文档建议：把书的三条收益按 khyos 优先级重排为
@@ -539,7 +539,7 @@ agent 定义文件格式由 `[DESIGN-ARCH-115]`（子智能体设计）定稿，
 
 ### K-06 大型代码库：引导式搜索 + 压缩保留清单
 
-**优先级 P0** ｜ 书中出处 ch10 §10.4.2、§10.4.4 ｜ 决策 ✅ 采纳
+**优先级 P0** ｜ 书中出处 ch10 §10.4.2、§10.4.4 ｜ 决策 ✓ 采纳
 
 **【书中的做法】**
 
@@ -630,7 +630,7 @@ agent 定义文件格式由 `[DESIGN-ARCH-115]`（子智能体设计）定稿，
 
 ### K-07 用户级子智能体定义格式与权限收敛
 
-**优先级 P1** ｜ 书中出处 ch04 §4.3、§4.4.1–4.4.2 ｜ 决策 ✅ 采纳
+**优先级 P1** ｜ 书中出处 ch04 §4.3、§4.4.1–4.4.2 ｜ 决策 ✓ 采纳
 
 **【书中的做法】** 子智能体定义文件 = YAML frontmatter（身份）+ Markdown 正文（职责）。
 关键字段的**设计意图**书都点明了：
@@ -692,7 +692,7 @@ agent 定义文件格式由 `[DESIGN-ARCH-115]`（子智能体设计）定稿，
 1. `permissionMode: "plan"` 必须在**运行时**映射到 khyos 已有的
    `toolCalling.js:212` 白名单闸门 + `constraintLattice.js:275` 逃生地板
    （`ask_user` / `abort`）。
-   ⚠️ **但要注意 `[DESIGN-ARCH-112]` §3.2.3 的发现**：该闸门目前**只对 handler 技能生效**，
+   ⚠ **但要注意 `[DESIGN-ARCH-112]` §3.2.3 的发现**：该闸门目前**只对 handler 技能生效**，
    且激活点仅在 `skills/index.js:568` 的 handler 块内。
    **agent 侧的激活窗口与技能的激活窗口不同**（agent 有明确的 start/end 事件，
    技能没有），所以 agent 白名单**可以**可靠生效——
@@ -713,7 +713,7 @@ agent 定义文件格式由 `[DESIGN-ARCH-115]`（子智能体设计）定稿，
 | 4 | 首个用户级 agent：只加**只读型**（书 §4.4.1），不加执行型 | 最小权限起步 |
 | 5 | 确认稳定后再考虑执行型（`Bash(prefix:*)` 精细白名单） | 书 §3.6.2 前缀语法 |
 
-> 📌 **2026-09-18 复核订正（两条）**：
+> **2026-09-18 复核订正（两条）**：
 >
 > **（1）原稿的「5 个内置 agent」与「5 步落地序」基于错误数量。** 实测 26 个，
 > 且**加载器 / schema / 六层优先级 / 调用链全部已具备**——
@@ -756,7 +756,7 @@ agent 定义文件格式由 `[DESIGN-ARCH-115]`（子智能体设计）定稿，
 
 ### K-08 Skill 测试三件套（触发率 90% / 误触发 5%）
 
-**优先级 P1** ｜ 书中出处 ch03 §3.11、§3.4.3 ｜ 决策 ✅ 采纳
+**优先级 P1** ｜ 书中出处 ch03 §3.11、§3.4.3 ｜ 决策 ✓ 采纳
 
 **【书中的做法】** 书给了**可量化的验收阈值**，这对一个「软」机制非常罕见：
 
@@ -842,7 +842,7 @@ agent 定义文件格式由 `[DESIGN-ARCH-115]`（子智能体设计）定稿，
 
 ### K-09 description 作为「语义指纹」的写作规范
 
-**优先级 P1** ｜ 书中出处 ch03 §3.4.2 ｜ 决策 ✅ 采纳
+**优先级 P1** ｜ 书中出处 ch03 §3.4.2 ｜ 决策 ✓ 采纳
 
 **【书中的做法】** 书把这个字段的地位抬得极高：「**description 是此机制的灵魂**」，
 并给出可执行的写作结构：
@@ -943,7 +943,7 @@ agent 定义文件格式由 `[DESIGN-ARCH-115]`（子智能体设计）定稿，
 
 ### K-10 成本护栏与可观测性
 
-**优先级 P1** ｜ 书中出处 ch10 §10.1、§10.2 ｜ 决策 🔄 改造采纳
+**优先级 P1** ｜ 书中出处 ch10 §10.1、§10.2 ｜ 决策 改造采纳
 
 **【书中的做法】** 书把成本控制拆成可操作的几层：
 
@@ -995,7 +995,7 @@ khyos 的供应商是可替换的（`aiGateway.js`），所以**不能用美元�
 宽松值（如单会话 2 M 输出 token），理由是书给的证据：
 无限制的失败模式是**灾难性**（一夜千美元），有限制的失败模式是**可恢复的**（重跑）。
 
-> ⚠️ **施工约束（2026-09-17 实测新增，直接影响本节可行性）**：
+> ⚠ **施工约束（2026-09-17 实测新增，直接影响本节可行性）**：
 > `ceiling` 参数所在的 `services/backend/src/services/toolUseLoopCore.js`
 > **实测 12,105 行**，是本仓库**第二大巨石文件**，且 `archDebtScan.js` 的 R2b 规则为
 > **「存量巨石只许减不许增」**（本次扫描实测报出 `toolCalling.js` 同类违规：
@@ -1022,9 +1022,9 @@ khyos 的 `manifest.json` 已有 `model` 字段映射（`_convertLegacySkill`）
 | 书中手段 | khyos 现状 | 动作 |
 | --- | --- | --- |
 | `--debug` 全量日志 | 无 | 新增 `--debug[=category]`（书 §10.2.1 的类别过滤语法 `api,hooks` / `!statsig`） |
-| `--output-format stream-json` | ✅ **已有** | 直接可用，无需开发 |
+| `--output-format stream-json` | ✓ **已有** | 直接可用，无需开发 |
 | PostToolUse 审计 hook | 见 K-03 | 由 K-03 覆盖 |
-| 会话文件 `{sessionId}.jsonl` | ✅ 有 `.khy/sessions/`（24 条）+ `sessions.db` | 补一份**读取指引**，说明如何定位「Claude 当时收到了什么」 |
+| 会话文件 `{sessionId}.jsonl` | ✓ 有 `.khy/sessions/`（24 条）+ `sessions.db` | 补一份**读取指引**，说明如何定位「Claude 当时收到了什么」 |
 | `--resume <session-id>` 时光倒流 | 需核实 | 纳入 `[DESIGN-ARCH-118]`（Headless）范围 |
 | `/cost` 交互式查成本 | 需核实 | 有 `token_usage.json` 可支撑 |
 
@@ -1043,7 +1043,7 @@ khyos 的 `manifest.json` 已有 `model` 字段映射（`_convertLegacySkill`）
 
 ### K-11 「先观测后管控」的工程纪律（推广为通用方法论）
 
-**优先级 P1** ｜ 书中出处 ch05 §5.11、ch10 §10.2.5、ch10 §10.6.4 ｜ 决策 ✅ 采纳
+**优先级 P1** ｜ 书中出处 ch05 §5.11、ch10 §10.2.5、ch10 §10.6.4 ｜ 决策 ✓ 采纳
 
 **【书中的做法】** 书里这条原则**反复出现了三次**，每次都针对不同机制——
 说明作者认为它是可迁移的方法论，而非 Hooks 专属技巧：
@@ -1139,7 +1139,7 @@ S4 自动化（修复）    ── 允许自动改
 > （详见下方「为什么对 khyos 适用」第 1 条），但 `rules`/`patternRules` 仍为空，
 > 故本条的实质是**补规则**，而非改模式。
 
-**优先级 P0**（仅补规则）/ **P1**（规则集扩充）｜ 书中出处 ch10 §10.3 ｜ 决策 🔄 改造采纳
+**优先级 P0**（仅补规则）/ **P1**（规则集扩充）｜ 书中出处 ch10 §10.3 ｜ 决策 改造采纳
 
 **【书中的做法】**
 
@@ -1183,7 +1183,7 @@ S4 自动化（修复）    ── 允许自动改
      这条优先级设计**直接照抄书**，因为它与 khyos 的
      `hookContribSeams.tighten`（hook 只能收紧不能放宽）是**同一条哲学**，
      两者可以统一表达为「**任何收敛机制只能单向收紧**」。
-   - 📌 实测发现 khyos **已经实现**了 deny 优先：
+   - 实测发现 khyos **已经实现**了 deny 优先：
      `permissionStore.js:326` 先判 deny、`:333` 再判 allow，**fail-closed**。
      所以本条的「deny 优先」**不需要新写逻辑**，只需**开启 pattern rules 并填规则**。
 3. khyos 的 `RULES-REGISTRY.json` 已有 67 条登记，
@@ -1192,16 +1192,16 @@ S4 自动化（修复）    ── 允许自动改
    其中**第 3 层「运行时阻断」在 khyos 完全缺失**：
    | 书的 4 层 | khyos 现状 |
    | --- | --- |
-   | 存储隔离（.env） | ✅ |
-   | 版本控制排除（.gitignore） | ✅ |
-   | **运行时阻断（permissions.deny）** | ❌ **缺** |
-   | 提交前拦截（PreToolUse Hook） | ❌ 缺（→ K-03） |
+   | 存储隔离（.env） | ✓ |
+   | 版本控制排除（.gitignore） | ✓ |
+   | **运行时阻断（permissions.deny）** | ✗ **缺** |
+   | 提交前拦截（PreToolUse Hook） | ✗ 缺（→ K-03） |
 
 **【可落地方案】**
 
 **（a）deny 规则集（第一批，对齐 R2）**
 
-> ⚠️ **2026-09-18 复核订正（本条原方案的落点写错了，必须改）**
+> ⚠ **2026-09-18 复核订正（本条原方案的落点写错了，必须改）**
 >
 > **错误**：原方案把 `"deny"` / `"ask"` 数组填进 `.khy/permissions.json` 的 **`rules`** 字段。
 > **实测**：`rules` 是**精确匹配**（`toolName` 全等），**不支持 `Bash(git push *)` 前缀语法**。
@@ -1256,10 +1256,10 @@ S4 自动化（修复）    ── 允许自动改
 > ```
 >
 > **注意**：`patternMatcher` 的语法已在本轮盘点中**读码 + 跑用例双重确认**（详见下方
-> 「📌 2026-09-18 实测订正」），**不要**把它写成 `Bash(prefix:*)` 的形式——
+> 「2026-09-18 实测订正」），**不要**把它写成 `Bash(prefix:*)` 的形式——
 > 那是书的写法，khyos 用 `{ toolName, pattern }` 两字段形态。
 
-> 📌 **2026-09-18 实测订正（读码 + 跑用例）**：
+> **2026-09-18 实测订正（读码 + 跑用例）**：
 >
 > **① 单星不跨分隔符，带 URL/路径的参数必须用双星。**
 >
@@ -1325,10 +1325,10 @@ S4 自动化（修复）    ── 允许自动改
   这是把 `CLAUDE.md` **红线 R1 从「建议」升级为「机制」**。
   R1 目前只写在章程里（书口径：交通标志），
   变成 `ask` 后，AI 想 commit 必须**弹窗给用户确认**——这才是路障。
-  > ⚠️ 这一条**必须经用户明确同意**后再启用：它改变的是 R1 的强制力级别，
+  > ⚠ 这一条**必须经用户明确同意**后再启用：它改变的是 R1 的强制力级别，
   > 属治理决策而非技术决策。本次盘点**未擅自开启**。
 
-> 🔁 **已撤回的说法（2026-09-18 实测）**：
+> **已撤回的说法（2026-09-18 实测）**：
 > 上一轮曾把 `Bash(* | sh)` / `Bash(* | bash)` 列为「curl 若不被 deny 时的最后防线」。
 > **实测证明它永远不命中**（`|` 使 `extractCommandPrefix` 返回 null，见上方订正②）。
 > **该说法作废，两条规则已删除。**
@@ -1340,7 +1340,7 @@ S4 自动化（修复）    ── 允许自动改
 
 **（b）`rulePrecedence` 的实现位置**：
 
-> 📌 **2026-09-18 复核订正：本节描述的逻辑「已经存在」，不需要新写。**
+> **2026-09-18 复核订正：本节描述的逻辑「已经存在」，不需要新写。**
 > 原方案说要在 `toolCallingPermissions.js` 里「加一条先于 profile 判定的 deny 短路」。
 > **实测**：`services/backend/src/services/permissionStore.js:317-339` 的 `check()`
 > 已实现完全相同的语义——pattern 分支先判 `deny` 直接返回（`:326`），
@@ -1348,7 +1348,7 @@ S4 自动化（修复）    ── 允许自动改
 > → **K-12(b) 的工作量从「数十行代码」降为 0**，只剩「开启 flag + 填规则」。
 > → 唯一需要新写的是 `deny` 对 `profile` 的**跨层**优先级（pattern 分支目前
 >   在 exact rules 之后、session approvals 之前，但 `profile` 判定的先后需施工时确认），
->   若已满足则本条可标记为「✅ 已具备」。
+>   若已满足则本条可标记为「✓ 已具备」。
 
 **（c）profile 默认值**：
 本文档**建议**从 `yolo` 改为 `default`（书的第一道防线），
@@ -1357,7 +1357,7 @@ S4 自动化（修复）    ── 允许自动改
 拿到数据后由用户裁决。**不擅自改默认值**——
 这条对齐 `[DESIGN-ARCH-112]` §七 病灶 12 的「评估默认姿态，与 hooks.json 落地一并决定」。
 
-> 📌 **2026-09-18 复核订正**：实测 profile 已由第三方改为 **`acceptEdits`**
+> **2026-09-18 复核订正**：实测 profile 已由第三方改为 **`acceptEdits`**
 > （文件 `updatedAt: 2026-09-17T08:25:29.980Z`，非本文档作者所改），
 > 已优于本节的建议值 `default` 的上一档。**本条 (c) 事实上已被部分执行**，
 > 是否继续收紧为 `default` 仍待用户裁决。
@@ -1391,7 +1391,7 @@ S4 自动化（修复）    ── 允许自动改
 | `.claude/rules/*.md` + `paths:` frontmatter | **`.khy/rules/<id>/rule.json` + `body.md`** | 同上。语义照抄，载体换掉 |
 | `.claude/agents/*.md` + frontmatter | **`.khy/agents/<name>/agent.json` + `body.md`** | 同上 |
 
-⚠️ **这三条是整个借鉴工作里最容易出错的地方**：
+⚠ **这三条是整个借鉴工作里最容易出错的地方**：
 书里三种机制的示例**全都是 YAML frontmatter**。
 若直接照抄会同时触犯格式协议（`check-change-safety.js` 拦截）与已拍板决策 B。
 **必须先换载体再落地。**
@@ -1435,7 +1435,7 @@ S4 自动化（修复）    ── 允许自动改
 khyos 的 Harness **不是缺零件，是缺接线和配置**。
 本文档 12 条 P0/P1 中，**7 条是「填配置」而非「写代码」**，与此判断一致。
 
-> 📌 **2026-09-18 盘点进一步强化了这个结论**：复核发现「缺接线」比本文档初稿估计的更彻底——
+> **2026-09-18 盘点进一步强化了这个结论**：复核发现「缺接线」比本文档初稿估计的更彻底——
 > agent 体系（加载器/schema/六层优先级/调用链）、skill 的 `disableModelInvocation` 字段解析、
 > 权限的 pattern rules（含 deny 优先 + fail-closed）**均已存在**。
 > 详见 [`[DESIGN-ARCH-123]`](%5BDESIGN-ARCH-123%5D%[DESIGN-ARCH-123] K-01~K-12 施工盘点清单.md顺序
@@ -1571,7 +1571,7 @@ prompts.js:1733 段              skills/index.js                    toolCallingP
 | plugin.json 清单格式（khyos 已有 `@khy/plugin-sdk`，需对齐） | `120` 空闲（留作缓冲） | 可考虑占用 `120`，但须先与并行的 HQ 收口件协调 |
 | 全书收口的《khyos 工程对齐报告》 | 本文档已占用 `121` | 改由执行手册 §7 的收口件承接，建议用 `[DESIGN-REPORT-001]` 或顺延 `122` |
 
-⚠️ **编号冲突提示（未裁决，待你处置）**：执行手册 §5.1 原计划把 `121` 分配给
+⚠ **编号冲突提示（未裁决，待你处置）**：执行手册 §5.1 原计划把 `121` 分配给
 「工程化最佳实践」收口件，本文档已占用 `121`。两条处置路径：
 ① 执行手册 §5.1 的收口件改用 `[DESIGN-REPORT-001]`（跨类新号不占 ARCH 段）；
 ② 收口件顺延 `122`，并把 `120` 释放给上表「plugin.json 清单格式」。
@@ -1588,16 +1588,16 @@ prompts.js:1733 段              skills/index.js                    toolCallingP
 
 | 文档内简写 | 已验证完整路径 | 关键行 | 复核结论 |
 | --- | --- | --- | --- |
-| `skills/index.js` | `services/backend/src/skills/index.js` | `243` `formatSkillListing` 定义<br>`273` `descLen = 250` 首次渲染<br>`293` `maxDescLen` 兜底降档<br>`567-568` `setActiveSkill`（闸门激活点） | ✅ 一致。注意**不是** `services/skills/` 也**不是** `services/skills/extensions/` |
-| `toolCalling.js` | `services/backend/src/services/toolCalling.js` | `184-193` capability policy 白名单<br>`212-236` `_checkActiveSkillPolicy` | ✅ 路径一致。⚠️ **3598 行，已在 R2 巨石名单，R2b「只许减不许增」**；另有未清 R1 分层倒置（`:1993`）；**不宜作新增逻辑载体** |
+| `skills/index.js` | `services/backend/src/skills/index.js` | `243` `formatSkillListing` 定义<br>`273` `descLen = 250` 首次渲染<br>`293` `maxDescLen` 兜底降档<br>`567-568` `setActiveSkill`（闸门激活点） | ✓ 一致。注意**不是** `services/skills/` 也**不是** `services/skills/extensions/` |
+| `toolCalling.js` | `services/backend/src/services/toolCalling.js` | `184-193` capability policy 白名单<br>`212-236` `_checkActiveSkillPolicy` | ✓ 路径一致。⚠ **3598 行，已在 R2 巨石名单，R2b「只许减不许增」**；另有未清 R1 分层倒置（`:1993`）；**不宜作新增逻辑载体** |
 | — | `services/backend/src/services/activeSkillContext.js` | — | 闸门的实际状态载体，文档正文未点名，补录 |
-| — | `services/backend/src/services/toolCallingPermissions.js` | 全文 **973 行** | ✅ K-12(b) 的落点，**不在巨石名单**，可安全新增 |
-| `toolUseLoopCore.js` | `services/backend/src/services/toolUseLoopCore.js` | governor `ceiling` | ⚠️ **12,105 行**，本仓第二大巨石，R2b 同约束。K-10(a) 见该节施工约束 |
-| `hookRegistry.js` | `services/backend/src/services/domain/extensions/hooks/hookRegistry.js` | `20-35` `HOOK_EVENTS`（11 个） | ✅ 一致。**11 事件 = 8 工具/会话事件 + `Stop` + 插件注册点 `ToolPermission`/`PromptSection`** |
+| — | `services/backend/src/services/toolCallingPermissions.js` | 全文 **973 行** | ✓ K-12(b) 的落点，**不在巨石名单**，可安全新增 |
+| `toolUseLoopCore.js` | `services/backend/src/services/toolUseLoopCore.js` | governor `ceiling` | ⚠ **12,105 行**，本仓第二大巨石，R2b 同约束。K-10(a) 见该节施工约束 |
+| `hookRegistry.js` | `services/backend/src/services/domain/extensions/hooks/hookRegistry.js` | `20-35` `HOOK_EVENTS`（11 个） | ✓ 一致。**11 事件 = 8 工具/会话事件 + `Stop` + 插件注册点 `ToolPermission`/`PromptSection`** |
 | — | `services/backend/src/cli/hooks/hookRegistry.js` | 全文 14 行 | re-export shim（R1 分层倒置修复留下的兼容壳），**不要改它**，改上游 |
-| `prompts.js` | `services/backend/src/constants/prompts.js` | `2110` `getSkillCatalogSection`<br>`2119-2125` 预算模型 | ✅ 一致 |
-| `skillSearch.js` | `services/backend/src/services/skillSearch.js` | `212` MCP 切片 | ✅ 一致 |
-| `promptSectionTaxonomy.js` | `services/backend/src/constants/promptSectionTaxonomy.js` | `226` 鲜度键、`260` `cacheKeySource`、`357` tier | ✅ 一致 |
+| `prompts.js` | `services/backend/src/constants/prompts.js` | `2110` `getSkillCatalogSection`<br>`2119-2125` 预算模型 | ✓ 一致 |
+| `skillSearch.js` | `services/backend/src/services/skillSearch.js` | `212` MCP 切片 | ✓ 一致 |
+| `promptSectionTaxonomy.js` | `services/backend/src/constants/promptSectionTaxonomy.js` | `226` 鲜度键、`260` `cacheKeySource`、`357` tier | ✓ 一致 |
 
 **复核方法**（可重跑）：
 
@@ -1620,7 +1620,7 @@ node services/backend/scripts/archDebtScan.js --changed # 施工前必跑（只�
 | --- | --- | --- | --- |
 | `services/toolUseLoopCore.js` | **12,105** | K-10(a) 成本护栏 | 抽新叶子 `tokenBudgetGovernor.js`，净增 ≤2 行 |
 | `services/toolCalling.js` | **3,598** | K-07 权限双重保险、K-12(b) 部分 | 新增逻辑落 `toolCallingPermissions.js`（973 行，安全）或新建 `activeAgentContext.js` |
-| `services/toolCallingPermissions.js` | 973 | K-12(b) `rulePrecedence` | ✅ **安全落点**，无巨石约束 |
+| `services/toolCallingPermissions.js` | 973 | K-12(b) `rulePrecedence` | ✓ **安全落点**，无巨石约束 |
 
 **通用原则**：本文档 §5.2 的三轮施工序是按「风险」排的，**未按「落点文件的巨石状态」排**。
 施工时若发现某条目的首选落点是巨石文件，**应先执行「抽叶子」再实现功能**，

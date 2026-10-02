@@ -41,7 +41,7 @@
   `apps/khyos-desktop/`（唯一配齐 electron-builder）、`apps/provider-hub/`（只有 electron-vite 构建，无安装包）。
 - **移动三条线**：Flutter `apps/khy-os-client-app/`（唯一有完整构建链）、
   Capacitor `apps/khy-mobile/`（已损坏）、`software/khyquant/frontend` 的 Capacitor 配置（依赖不存在的 `android/`）。
-- **网页两条线**：`apps/ai-frontend/`（平台自带）、`software/khyquant/frontend/`（内置应用界面）。
+- **网页两条线**：`apps/ai-frontend/`（平台自带）、`software/khyquant/frontend/`（独立项目 khyquant 的界面，随平台分发）。
 
 **结论**：问题不在「缺一个目录」，在**缺一份能同时被机器读、被人读、且会自我检活的端清单**。
 新增目录只是这份清单的载体。
@@ -231,10 +231,10 @@ services/backend/src/services/entrypoints/    ← L2，读表的实现
 
 | 字段 | 回答 | 对终端端 |
 |---|---|---|
-| `entryFiles` | 日常怎么进 | `khy.bat` / `khy.sh` / `khy-cli.bat` —— ✅ 现在就有 |
+| `entryFiles` | 日常怎么进 | `khy.bat` / `khy.sh` / `khy-cli.bat` —— ✓ 现在就有 |
 | `artifactOutput` | 可分发力产物在哪 | `pip-dist`（pip wheel）—— 尚未构建 |
 
-`khy entry status` 对 `shell` 类端先报 `entryFiles`（带 ✅/❌），再报打包形态。
+`khy entry status` 对 `shell` 类端先报 `entryFiles`（带 ✓/✗），再报打包形态。
 
 ---
 
@@ -244,10 +244,10 @@ services/backend/src/services/entrypoints/    ← L2，读表的实现
 
 | # | 检查 | 层级 | 参与定档 |
 |---|---|---|---|
-| 1 | `source`：源目录在不在 | 仓库级 | ✅ 缺失 → `broken` |
-| 2 | `markers`：标记文件在不在 | 仓库级 | ✅ 缺失 → `broken`（一个都没命中）/ `degraded`（部分命中） |
-| 3 | `toolchain`：本机命令在不在 | **本机级** | ❌ **不参与** |
-| 4 | `deliverable`：声明 exe/apk/html 却有没有构建档 | 仓库级 | ✅ 缺失 → `degraded` |
+| 1 | `source`：源目录在不在 | 仓库级 | ✓ 缺失 → `broken` |
+| 2 | `markers`：标记文件在不在 | 仓库级 | ✓ 缺失 → `broken`（一个都没命中）/ `degraded`（部分命中） |
+| 3 | `toolchain`：本机命令在不在 | **本机级** | ✗ **不参与** |
+| 4 | `deliverable`：声明 exe/apk/html 却有没有构建档 | 仓库级 | ✓ 缺失 → `degraded` |
 
 **为什么工具链必须被踢出定档**：一台 CI 机器通常没有 Flutter。若把工具链算进定档，
 每次 probe 都会给手机端判一次「降级」，手机端的真实不一致就再也看不见了——

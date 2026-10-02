@@ -466,7 +466,7 @@ const LINES = [
 > 实现者应把「SGR 事件 → 选区动作」的映射抽成一个可注入的回调集合，
 > 使本节的测试无需真 TTY、无需 React 渲染器。
 
-### ⚠️ 本节全部用例的前置条件（`A-00`）
+### ⚠ 本节全部用例的前置条件（`A-00`）
 
 > **不满足这一条，`A-01` 之后的每一条都会「单测绿、真机死」。**
 
@@ -480,9 +480,9 @@ const LINES = [
 
 | 档位 | 代码 | 报按下/松开 | 报位移 | 拖动可用 | 代价 |
 |---|---|---|---|---|---|
-| X11 basic | `?1000h` | ✅ | ❌ | **不可用** | 无（但拖不动） |
-| button-event | `?1002h` | ✅ | **仅按住时** | **✅ 本方案采用** | 按住期间原生拖选不可用 |
-| any-event | `?1003h` | ✅ | 任何移动（60~120Hz）| 可用（但洪流）| 持续占用，仅 `full` 档显式 opt-in |
+| X11 basic | `?1000h` | ✓ | ✗ | **不可用** | 无（但拖不动） |
+| button-event | `?1002h` | ✓ | **仅按住时** | **✓ 本方案采用** | 按住期间原生拖选不可用 |
+| any-event | `?1003h` | ✓ | 任何移动（60~120Hz）| 可用（但洪流）| 持续占用，仅 `full` 档显式 opt-in |
 | alt-scroll | `?1007h` | — | — | 无关 | 见设计文档 §4.4，另立项 |
 
 ### A-00 tracking 档位前置（本组的第一条，**必须先绿**）
@@ -728,7 +728,7 @@ node --test "tests/cli/tui/*.test.js"
 > **`node` 指可用的 Node 22**（`node --version` 应为 `v22.x`）。本文不写死机器相关的
 > 绝对路径 —— 那属于 `RUNTIME-001` 禁止的硬编码，且换机即失效。
 
-> ⚠️ **先做 2b-0（tracking 档位）再做本节的命令 2–3**。若跳过 2b-0，
+> ⚠ **先做 2b-0（tracking 档位）再做本节的命令 2–3**。若跳过 2b-0，
 > 命令 1（`selection.test.js`）仍会全绿 —— 它是纯逻辑，不经过通道；
 > 只有 `A-00` 的字节断言 + 真机冒烟能暴露「通道没开」。**不要以命令 1 全绿
 > 当作交互层可用的证据。**
@@ -752,11 +752,11 @@ node --test "tests/cli/tui/*.test.js"
 
 | 项 | 命令 | 实测 |
 |---|---|---|
-| `S-xx` 模型层（27 条）| 命令 1 | ✅ **27/27** |
-| 第一层回归（`X-01`）| 命令 4 | ✅ **44/44**（含 `S-xx`）|
-| 全 TUI 测试集（`X-02`）| 命令 5 | ✅ **771/771，fail 0**（基线 744 + 新增 27）|
-| `X-03` 纯叶子纪律 | 静态扫描 | ✅ 5 项禁令零命中 |
-| `N-xx` 反例核验 | 逐个注入错误实现 | ✅ **5/5 均能检出**（N-02/03/04/05/09）|
+| `S-xx` 模型层（27 条）| 命令 1 | ✓ **27/27** |
+| 第一层回归（`X-01`）| 命令 4 | ✓ **44/44**（含 `S-xx`）|
+| 全 TUI 测试集（`X-02`）| 命令 5 | ✓ **771/771，fail 0**（基线 744 + 新增 27）|
+| `X-03` 纯叶子纪律 | 静态扫描 | ✓ 5 项禁令零命中 |
+| `N-xx` 反例核验 | 逐个注入错误实现 | ✓ **5/5 均能检出**（N-02/03/04/05/09）|
 
 **核验方式（可复现）**：对 `selection.js` 逐个注入「错误实现」，确认至少一个用例由绿转红：
 
@@ -820,14 +820,14 @@ KHY_SELECT_MAX_BYTES=20 khy        # 复制超 20 字节应截断并提示
 
 | 文件 | 性质 | 状态 |
 |---|---|---|
-| `docs/03_DESIGN_设计/[DESIGN-ARCH-119] TUI文本选择与复制-验收标准.md` | 本文（验收标准真源）| ✅ |
-| `services/backend/tests/cli/tui/selection.test.js` | `S-xx` 验收测试（27 条）| ✅ 27/27 |
-| `services/backend/src/cli/tui/selection.js` | **参考实现**（纯叶子）| ✅ 27/27 |
-| `services/backend/src/cli/tui/mouseButtons.js` `enableBytes` | `A-00` 的被测件（`select` → `?1002h`）| ⬜ 待改（2b-0）|
-| `services/backend/tests/cli/tui/mouseWheel.test.js` | `A-00` 两条字节断言 | ⬜ 待写（2b-0）|
-| `services/backend/tests/cli/tui/viewportSelection.test.js` | `V-xx` 渲染层验收测试 | ⬜ 待写（2b-1）|
-| `services/backend/tests/cli/tui/selectionInteraction.test.js` | `A-xx` 交互层验收测试 | ⬜ 待写（2b-2）|
-| `ink-components/Viewport.js` / `App.js` / `flagRegistry.js` | 被测件（接线）| ⬜ 待改（2b-1 / 2b-2）|
+| `docs/03_DESIGN_设计/[DESIGN-ARCH-119] TUI文本选择与复制-验收标准.md` | 本文（验收标准真源）| ✓ |
+| `services/backend/tests/cli/tui/selection.test.js` | `S-xx` 验收测试（27 条）| ✓ 27/27 |
+| `services/backend/src/cli/tui/selection.js` | **参考实现**（纯叶子）| ✓ 27/27 |
+| `services/backend/src/cli/tui/mouseButtons.js` `enableBytes` | `A-00` 的被测件（`select` → `?1002h`）| □ 待改（2b-0）|
+| `services/backend/tests/cli/tui/mouseWheel.test.js` | `A-00` 两条字节断言 | □ 待写（2b-0）|
+| `services/backend/tests/cli/tui/viewportSelection.test.js` | `V-xx` 渲染层验收测试 | □ 待写（2b-1）|
+| `services/backend/tests/cli/tui/selectionInteraction.test.js` | `A-xx` 交互层验收测试 | □ 待写（2b-2）|
+| `ink-components/Viewport.js` / `App.js` / `flagRegistry.js` | 被测件（接线）| □ 待改（2b-1 / 2b-2）|
 
 > **`selection.js` 已作为参考实现落地**：它不是为了「抢跑」，而是为了证明本标准
 > **可执行**——一个真实实现能让全部 `S-xx` 断言转绿，且 §8 的 5 条反例都能被检出。

@@ -66,7 +66,7 @@
 ### 2.2 C-2 Spinner 帧率 —— 建议 160ms（待维护者确认）
 
 - `tui/AGENTS.md` §3.3 计时器优先级表：`Spinner 80ms`
-- `[DESIGN-ARCH-102]` §5.3 C9：`帧间隔 160ms（⚠️ 非 ccTimers 的 80ms）` —— 102 已显式点出这个分歧并判 160
+- `[DESIGN-ARCH-102]` §5.3 C9：`帧间隔 160ms（⚠ 非 ccTimers 的 80ms）` —— 102 已显式点出这个分歧并判 160
 - 实现：`BootScreen.js:24` `const FRAME_MS = 80;` **硬编码**，违反 `tui/AGENTS.md` §3.1「计时器常量唯一来源 `utils/ccTimers` 的 `TIMING`」
 
 **建议**：统一到 `ccTimers.TIMING.spinner.interval` 单一常量，取 **160ms**（102 是统一规则手册，优先于 CC 复刻工程约束），同步改 `tui/AGENTS.md` §3.3 与 `BootScreen.js`。
@@ -144,12 +144,12 @@ khy.bat:112 → python -m khy_platform → cli.py:2436 main()
 
 | 拍 | id | 真实工作 | 确定性完成信号 | critical |
 | --- | --- | --- | --- | --- |
-| 1 | `env` | `.env` 加载、settings 级联、`init()` 五路、dbHealth | `init()` resolve | ✅ |
-| 2 | `auth` | `ensureAuthenticated()` | 认证态确定（含失败） | ✅ |
-| 3 | `render` | Ink 装载、首帧 commit、anchor | 首帧 effect 触发 | ✅ |
-| 4 | `workspace` | 命令可用性预热、workspace trust、git init | 各 promise settle | ❌ |
-| 5 | `gateway` | `gateway.init()`、适配器就绪、skill sync | adapter 数确定 | ❌ |
-| 6 | `session` | 会话恢复、banner 数据、onboarding | 会话态确定 | ❌ |
+| 1 | `env` | `.env` 加载、settings 级联、`init()` 五路、dbHealth | `init()` resolve | ✓ |
+| 2 | `auth` | `ensureAuthenticated()` | 认证态确定（含失败） | ✓ |
+| 3 | `render` | Ink 装载、首帧 commit、anchor | 首帧 effect 触发 | ✓ |
+| 4 | `workspace` | 命令可用性预热、workspace trust、git init | 各 promise settle | ✗ |
+| 5 | `gateway` | `gateway.init()`、适配器就绪、skill sync | adapter 数确定 | ✗ |
+| 6 | `session` | 会话恢复、banner 数据、onboarding | 会话态确定 | ✗ |
 
 **「就绪」不是第 7 拍，而是第 6 拍完成后的**一次原子重绘**（见 §4.3）。**
 

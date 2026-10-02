@@ -30,30 +30,30 @@
 >
 > | 改动 | 文件 | 状态 |
 > |---|---|---|
-> | `parseSgrMouse` 补 `isShift/isAlt/isCtrl` | `services/backend/src/cli/tui/mouseButtons.js` | ✅ |
-> | `onInput` 加修饰键前置放行（排除 `isWheel`）| 同上 | ✅ |
-> | `press` 分支改「命中按钮才吞」| 同上 | ✅ |
-> | `release` 分支改「按命中决定，不按 armed」| 同上 | ✅ |
-> | 修正头部错误断言 + `app.js` 注释同步 | `mouseButtons.js` / `app.js` | ✅ |
-> | 9 条回归测试 | `services/backend/tests/cli/tui/mouseNativeSelection.test.js` | ✅ 9/9 |
-> | 全 TUI 测试集无回归 | `tests/cli/tui/*.test.js` | ✅ 744/744 |
+> | `parseSgrMouse` 补 `isShift/isAlt/isCtrl` | `services/backend/src/cli/tui/mouseButtons.js` | ✓ |
+> | `onInput` 加修饰键前置放行（排除 `isWheel`）| 同上 | ✓ |
+> | `press` 分支改「命中按钮才吞」| 同上 | ✓ |
+> | `release` 分支改「按命中决定，不按 armed」| 同上 | ✓ |
+> | 修正头部错误断言 + `app.js` 注释同步 | `mouseButtons.js` / `app.js` | ✓ |
+> | 9 条回归测试 | `services/backend/tests/cli/tui/mouseNativeSelection.test.js` | ✓ 9/9 |
+> | 全 TUI 测试集无回归 | `tests/cli/tui/*.test.js` | ✓ 744/744 |
 >
 > **实现期新发现（原方案未预见，已补进判据）**：`release` 分支若按 `pendingClick`
 > 无条件吞，会把「从按钮上按下、拖出后松开」这一手势的**终点**也吃掉 —— 与缺陷 A
 > 同一类病（起点在按钮上被吞、终点在空白处被吞，整段手势两头都缺）。故改为按
 > **命中**而非按 `armed` 决定。反例矩阵 R10 即此条。
 >
-> **第二层（应用内自绘选择）—— ✅ 已实施（2026-09-17 晚）**。四步全部落地，
+> **第二层（应用内自绘选择）—— ✓ 已实施（2026-09-17 晚）**。四步全部落地，
 > 端到端探针 **17/17 绿**、**真渲染器探针 13/13 绿**；全 TUI 测试 **869/871**
 > （2 条失败为改动前既有，与本提案无关）。
 >
 > | 步骤 | 产物 | 状态 |
 > | --- | --- | --- |
-> | 2a 模型 | `cli/tui/selection.js`（12 导出，零 IO 绝不抛）+ `tests/cli/tui/selection.test.js` | ✅ 27/27 |
-> | 2b-0 档位 | `enableBytes({select})` 用 `1002` **替换** `1000`；`mouseWheel.test.js` 补三档断言 | ✅ 17/17 |
-> | 2b-1 渲染 | `Viewport` 的 `selection` prop（三段 `Text`，中段 `inverse`）；不传时**逐字节不变** | ✅ 16/16 |
-> | 2b-2 接线 | `createMouseDispatcher` 的 `onSelectEvent` + `App.js` 接线 + 4 个 `KHY_SELECT_*` 登记 | ✅ 15/15 |
-> | 4 真渲染 | 真 ink 渲染器逐帧确认反色落点（**碰真渲染器**，不只碰逻辑） | ✅ 13/13 |
+> | 2a 模型 | `cli/tui/selection.js`（12 导出，零 IO 绝不抛）+ `tests/cli/tui/selection.test.js` | ✓ 27/27 |
+> | 2b-0 档位 | `enableBytes({select})` 用 `1002` **替换** `1000`；`mouseWheel.test.js` 补三档断言 | ✓ 17/17 |
+> | 2b-1 渲染 | `Viewport` 的 `selection` prop（三段 `Text`，中段 `inverse`）；不传时**逐字节不变** | ✓ 16/16 |
+> | 2b-2 接线 | `createMouseDispatcher` 的 `onSelectEvent` + `App.js` 接线 + 4 个 `KHY_SELECT_*` 登记 | ✓ 15/15 |
+> | 4 真渲染 | 真 ink 渲染器逐帧确认反色落点（**碰真渲染器**，不只碰逻辑） | ✓ 13/13 |
 >
 > **三层探针抓出的三个真实缺陷（各自那层的单测都发现不了）** ——
 > 这条经验值得单独记下：**各层自洽 ≠ 串起来正确；逻辑正确 ≠ 真机画对了**。
@@ -117,7 +117,7 @@
 > 它是**修复前快照**：断言 `parseSgrMouse` 不暴露 `isShift/isAlt/isCtrl`（期望 `undefined`），
 > 而实测已是 `boolean` —— 恰好反证修复已落地。该文件的价值是留证，不是回归门。
 >
-> 🔴 **未收口（唯一实质风险）：整条修复尚未进入版本库。** 复核时 `selection.js` 与
+> ● **未收口（唯一实质风险）：整条修复尚未进入版本库。** 复核时 `selection.js` 与
 > `selection.test.js` / `mouseSelectEvent.test.js` / `viewportSelection.test.js` /
 > `mouseNativeSelection.test.js` / `mouseWheel.test.js` 等均为 **git 未跟踪（`??`）**；
 > `mouseButtons.js` / `App.js` / `Viewport.js` / `flagRegistry.js` / `tui/AGENTS.md` 等为
@@ -353,7 +353,7 @@ const isCtrl  = (button & 16) !== 0;
 // createMouseDispatcher.onInput 里,在既有 wheel / motion / press-release 三个分支之前
 // 插一条**前置放行**判据(顺序是根因级的关键:必须在 wheel 判定之后、press 判定之前)
 //
-//   ⚠️ shift+滚轮 必须仍然走 wheel 分支(终端里 Shift+滚轮的语义就是横向滚动,
+//   ⚠ shift+滚轮 必须仍然走 wheel 分支(终端里 Shift+滚轮的语义就是横向滚动,
 //      不是「我要拖选」)—— 所以放行判据里要排除 isWheel。
 if (!ev.isWheel && (ev.isShift || ev.isAlt || ev.isCtrl)) {
   return false;            // 不消费
@@ -406,9 +406,9 @@ if (ev.isPress) {
 
 | 候选 | 字节 | 拖动可行性 | 代价 | 结论 |
 |---|---|---|---|---|
-| **`1000`（现状）** | `?1000h` | ❌ 无位移 | 无 | 自绘拖选**不可行**，只能做「两次点击选区间」 |
-| **`1002`（推荐）** | `?1002h` | ✅ 按住期间报位移 | 拖动期间本进程独占鼠标 | **推荐**：正是自绘选择需要的粒度 |
-| `1003` | `?1003h` | ✅ 全位移 | 60~120Hz 洪流，且**必然**吞掉终端原生拖选 | 不采用（`hover` 档已有明确定位） |
+| **`1000`（现状）** | `?1000h` | ✗ 无位移 | 无 | 自绘拖选**不可行**，只能做「两次点击选区间」 |
+| **`1002`（推荐）** | `?1002h` | ✓ 按住期间报位移 | 拖动期间本进程独占鼠标 | **推荐**：正是自绘选择需要的粒度 |
+| `1003` | `?1003h` | ✓ 全位移 | 60~120Hz 洪流，且**必然**吞掉终端原生拖选 | 不采用（`hover` 档已有明确定位） |
 | `1007` | `?1007h` | — | 备屏滚轮合成 `↑/↓` | 与选择无关，见 §4.4 |
 
 **`1002` 的取舍必须在计划里写明**：启用 `1002` 意味着拖动期间鼠标归本进程，
@@ -774,7 +774,7 @@ v1 把 `?1007h`（备屏滚动 → 合成 `↑/↓`）当作唯一出路。v2 �
 > **注意**：本方案不新增 `scripts/ci/` 检查器、不改 `RULES-REGISTRY.json`、不改
 > `package.json`、不动门档。改动集落在 `services/backend/src/cli/tui/` + 测试 + 文档。
 
-### 步骤 1 —— 判据收窄（✅ 已完成）
+### 步骤 1 —— 判据收窄（✓ 已完成）
 
 1. `services/backend/src/cli/tui/mouseButtons.js`：`parseSgrMouse` 加三个修饰位字段；
    `onInput` 加前置放行（排除 `isWheel`）；press/release 改条件性吞；改掉头部错误断言。
@@ -872,7 +872,7 @@ node --test tests/cli/tui/mouseWheel.test.js
 # 看到即通;看不到说明这一步没做成,不要继续 2b-1。
 ```
 
-> ⚠️ **本步的已知代价（须在 §六 显式登记）**：`1002` 打开期间，**按住键**的整段时间
+> ⚠ **本步的已知代价（须在 §六 显式登记）**：`1002` 打开期间，**按住键**的整段时间
 > 鼠标事件归本进程所有，终端原生拖选在此期间不可用 —— 这正是 v1 说「互斥」的那个
 > 约束，但它的作用域从「永久」缩小到「仅按住期间」。松开后 `1002` 仍在，但
 > **不按键的移动不报**，所以不按键时的原生悬停/原生拖选**照常**。用户若想用终端
@@ -956,7 +956,7 @@ KHY_TUI_DIAG=1 khy      # 拖选 → 应看到选区反色;松手 → 剪贴板�
 KHY_SELECT=0 khy        # 回滚验证:与步骤 1 完成态逐字节一致
 ```
 
-### 步骤 3 —— 文档与登记收口（✅ 2026-09-18 完成主要项）
+### 步骤 3 —— 文档与登记收口（✓ 2026-09-18 完成主要项）
 
 14. `[DESIGN-ARCH-102]` §6.2 表格补判据：`Shift` 是**实现义务**（`isShift` 必须被检查）；
     补「应用内自绘选择」一节，指明它与 P6「不得劫持终端原生选择」**不冲突**
@@ -965,7 +965,7 @@ KHY_SELECT=0 khy        # 回滚验证:与步骤 1 完成态逐字节一致
 15. `[DESIGN-ARCH-102]` §6.1：`v`/`y` 的**定案已落地**（2026-09-17）——
     该表已把两者标为「未实现（deferred）」并补注「文本选择的真实通道是终端原生拖选，
     修复见 `[DESIGN-ARCH-119]`」。**本步骤只需核对，不需要改**。
-    > ⚠️ **一处需要对齐的矛盾**：该注同时写着「`v`/`y` 作为『应用内自主选择』是
+    > ⚠ **一处需要对齐的矛盾**：该注同时写着「`v`/`y` 作为『应用内自主选择』是
     > **另一条路**，与原生拖选正交，且**优先级更低**……保持 deferred」。
     > 这与第二层落地后的事实**不再一致**：第二层就是「应用内自主选择」，
     > 而它不是「另一条路」，是**已选定的主路**。⇒ 本步骤应在该注末尾补一句
@@ -977,23 +977,23 @@ KHY_SELECT=0 khy        # 回滚验证:与步骤 1 完成态逐字节一致
       —— **已落地**（`AGENTS.md:285-288`，含 `KHY_MOUSE_WHEEL` 与 `KHY_ALT_SCREEN`，
       共五行）。本步骤**只需核对**，不需重写；
     - §1.2 新增 `KHY_SELECT` / `KHY_SELECT_CLIP` / `KHY_SELECT_DRAG` 三行
-      （2b-2 的产物，与 `flagRegistry.js:2849-2851` 同步）—— ✅ **已落地**；
+      （2b-2 的产物，与 `flagRegistry.js:2849-2851` 同步）—— ✓ **已落地**；
     - §0.8 的「鼠标：增强键盘，**Shift** 绕过」改为列出各终端修饰键
       （VS Code/WT/xterm `Shift` / iTerm2 `Option` / Terminal.app `Fn`），
-      并补「放行判据必须排除 `isWheel`」—— ✅ **已落地（2026-09-18）**；
+      并补「放行判据必须排除 `isWheel`」—— ✓ **已落地（2026-09-18）**；
     - 新增 §0.9.5：应用内选择层的纪律（不得把滚轮交给 `onNative`；选区是覆盖态、
-      不得新增固定高度节点）—— ✅ **已落地（§0.9.5「拖选走应用内自绘」）**；
-    - §0.9.4 补三档 tracking 说明（2b-0 的第 7 步）—— ✅ **已落地**；
-    - 排障表 —— ✅ **已落地（2026-09-18，新增 §1.2b「鼠标层排障表」）**，含
+      不得新增固定高度节点）—— ✓ **已落地（§0.9.5「拖选走应用内自绘」）**；
+    - §0.9.4 补三档 tracking 说明（2b-0 的第 7 步）—— ✓ **已落地**；
+    - 排障表 —— ✓ **已落地（2026-09-18，新增 §1.2b「鼠标层排障表」）**，含
       §七 风险 8 的 `1002` 残留行（症状「该终端里按住鼠标拖动会显示 `[<32;...M` 文本」，
       修法 `printf '\033[?1002l\033[?1000l\033[?1003l\033[?1006l'` 或重开终端）。
 17. `App.js` 的 `_mainContentLines` 上方补注释：该数组当前是「纯文本投影、无消息元数据」
     这一契约（§七 风险 1）；并说明传给 `Viewport` 的 `width` 是**死 prop**
-    （`Viewport` 从不读它）—— ✅ **已落地（2026-09-18，`App.js:5492` 与 `App.js:6194`）**。
+    （`Viewport` 从不读它）—— ✓ **已落地（2026-09-18，`App.js:5492` 与 `App.js:6194`）**。
 18. `docs/03_DESIGN_设计/00_INDEX_设计-分类索引.md` 更新本文件那一行的摘要
-    —— ✅ **已落地**（索引摘要已含「v2 三层方案：判据收窄 → 应用内自绘选择 → 门控与登记收口」）。
+    —— ✓ **已落地**（索引摘要已含「v2 三层方案：判据收窄 → 应用内自绘选择 → 门控与登记收口」）。
 19. `[DESIGN-ARCH-101]` §8 第 6 条更新为「已修但被绕过」（§七 风险 6）
-    —— ✅ **已落地（2026-09-18）**。
+    —— ✓ **已落地（2026-09-18）**。
 
 > **不要把这几步合成一次提交**：违反 `SOURCING-006`，且步骤 1 的行为改动、步骤 2 的
 > 渲染改动、步骤 3 的文档改动混在一起时，回归定位会失焦。
@@ -1031,11 +1031,11 @@ node --test tests/cli/tui/selection.test.js tests/cli/tui/mouseNativeSelection.t
 
 | 文件 | 改动 | 性质 |
 |---|---|---|
-| `services/backend/src/cli/tui/mouseButtons.js` | `parseSgrMouse` +3 字段；`onInput` 加放行判据；press/release 条件性吞；修头部错误注释 | 业务（步骤 1 ✅）|
-| `tests/cli/tui/mouseNativeSelection.test.js` | R1–R13 场景 | 测试（步骤 1 ✅）|
-| **`docs/03_DESIGN_设计/[DESIGN-ARCH-119] TUI文本选择与复制-验收标准.md`** | **验收标准真源（`S-xx`/`V-xx`/`A-xx`/`X-xx`/`N-xx`）** | **文档（步骤 2a ✅）** |
-| **`services/backend/src/cli/tui/selection.js`** | **选择模型纯叶子（参考实现）** | **业务（步骤 2a ✅）** |
-| **`tests/cli/tui/selection.test.js`** | **`S-01`–`S-37` 验收测试（27 条全绿）** | **测试（步骤 2a ✅）** |
+| `services/backend/src/cli/tui/mouseButtons.js` | `parseSgrMouse` +3 字段；`onInput` 加放行判据；press/release 条件性吞；修头部错误注释 | 业务（步骤 1 ✓）|
+| `tests/cli/tui/mouseNativeSelection.test.js` | R1–R13 场景 | 测试（步骤 1 ✓）|
+| **`docs/03_DESIGN_设计/[DESIGN-ARCH-119] TUI文本选择与复制-验收标准.md`** | **验收标准真源（`S-xx`/`V-xx`/`A-xx`/`X-xx`/`N-xx`）** | **文档（步骤 2a ✓）** |
+| **`services/backend/src/cli/tui/selection.js`** | **选择模型纯叶子（参考实现）** | **业务（步骤 2a ✓）** |
+| **`tests/cli/tui/selection.test.js`** | **`S-01`–`S-37` 验收测试（27 条全绿）** | **测试（步骤 2a ✓）** |
 | **`mouseButtons.js` `enableBytes`** | **加 `select` 参数 → 写 `?1002h`（不再写 `?1000h`）** | **业务（步骤 2b-0）** |
 | **`tests/cli/tui/mouseWheel.test.js`** | **`enableBytes` 两条字节级断言** | **测试（步骤 2b-0）** |
 | **`ink-components/Viewport.js`** | **`lines` 模式加可选 `selection` prop；复用 `resolveViewportOffset`** | **业务（步骤 2b-1）** |
@@ -1044,9 +1044,9 @@ node --test tests/cli/tui/selection.test.js tests/cli/tui/mouseNativeSelection.t
 | **`tests/cli/tui/mouseDispatcherSelect.test.js`** | **`onSelectEvent` 的 `begin`/`extend`/`end` 序列** | **测试（步骤 2b-2）** |
 | **`tests/cli/tui/selectionInteraction.test.js`** | **`KHY_SELECT=0` 回滚等价** | **测试（步骤 2b-2）** |
 | `services/backend/src/services/flagRegistry.js` | 登记 4 个 `KHY_SELECT_*` | 业务（步骤 2b-2） |
-| `docs/03_DESIGN_设计/[DESIGN-ARCH-102] Khy TUI 统一规则手册.md` | §6.1 `v`/`y` 定案（✅ 已落地）；§6.2 补判据、自绘选择节、三档 tracking | 文档（步骤 3）|
-| `services/backend/src/cli/tui/AGENTS.md` | §1.2 五个 `KHY_MOUSE*`（✅ `AGENTS.md:285-288`）；待补：§1.2 四个 `KHY_SELECT_*`、§0.8 修饰键口径、§0.9.x 选区纪律与 tracking 三档、排障表 | 文档（步骤 3）|
-| `services/backend/src/services/flagRegistry.js` | 5 个 `KHY_MOUSE*` + `KHY_ALT_SCREEN`（✅ `flagRegistry.js:2828-2832`）| 业务（步骤 1 已落地，风险 4 作废）|
+| `docs/03_DESIGN_设计/[DESIGN-ARCH-102] Khy TUI 统一规则手册.md` | §6.1 `v`/`y` 定案（✓ 已落地）；§6.2 补判据、自绘选择节、三档 tracking | 文档（步骤 3）|
+| `services/backend/src/cli/tui/AGENTS.md` | §1.2 五个 `KHY_MOUSE*`（✓ `AGENTS.md:285-288`）；待补：§1.2 四个 `KHY_SELECT_*`、§0.8 修饰键口径、§0.9.x 选区纪律与 tracking 三档、排障表 | 文档（步骤 3）|
+| `services/backend/src/services/flagRegistry.js` | 5 个 `KHY_MOUSE*` + `KHY_ALT_SCREEN`（✓ `flagRegistry.js:2828-2832`）| 业务（步骤 1 已落地，风险 4 作废）|
 | `docs/03_DESIGN_设计/00_INDEX_设计-分类索引.md` | 更新本文件摘要行 | 索引（步骤 3）|
 | `docs/10_规范/...`（台账所在文件）| `[DESIGN-ARCH-101]` §8 第 6 条改「已修但被绕过」 | 文档（步骤 3）|
 
