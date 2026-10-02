@@ -176,7 +176,7 @@ function copy(text) {
 ```javascript
 // 使用 ED0 而非 ED2 — 保留滚动历史
 process.stdout.write('\x1B[0J');  // 清除光标到末尾（保留历史）
-// ❌ process.stdout.write('\x1B[2J');  // 全屏清除（擦除历史）
+// ✗ process.stdout.write('\x1B[2J');  // 全屏清除（擦除历史）
 
 // 保存/恢复光标位置
 process.stdout.write('\x1B7');  // 保存光标
@@ -276,7 +276,7 @@ process.stdout.write('\x1B8');  // 恢复光标
 
 - 极简无边框输入框
 - `●` 前缀助手消息
-- `🔧` 工具调用卡片
+- `` 工具调用卡片
 - 状态栏单行紧凑格式
 - 思考块可折叠
 - 流式输出用 `<Static>` 不重绘历史

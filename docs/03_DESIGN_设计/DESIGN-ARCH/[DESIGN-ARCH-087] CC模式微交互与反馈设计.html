@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -28,7 +28,7 @@
       <article class="doc-body">
 <h1 id="design-arch-087-cc-模式微交互与反馈设计">[DESIGN-ARCH-087] CC 模式微交互与反馈设计<a class="anchor" href="#design-arch-087-cc-模式微交互与反馈设计" aria-label="锚点">#</a></h1>
 <blockquote><p><strong>隶属</strong>：本文属 <strong>TUI 设计族</strong>（20 编号 / 21 文件），总纲与 scope 裁决见 <code>[DESIGN-ARCH-122] TUI 设计族总纲</code>；规则冲突一律以 <code>[DESIGN-ARCH-102] Khy TUI 统一规则手册</code> 为准。</p></blockquote>
-<blockquote><h2 id="规则条款的归属已变更">📌 规则条款的归属已变更<a class="anchor" href="#规则条款的归属已变更" aria-label="锚点">#</a></h2>
+<blockquote><h2 id="规则条款的归属已变更">规则条款的归属已变更<a class="anchor" href="#规则条款的归属已变更" aria-label="锚点">#</a></h2>
 <p>本文的<strong>规范条款</strong>已收口至 <strong><code>[DESIGN-ARCH-102] Khy TUI 统一规则手册</code></strong>：复制反馈文案与优先级 → 102 §6.5；Toast 时长与类型 → 102 §6.5；滚动指示器 → 102 §6.7；提示（hint/placeholder）→ 102 §6.6；状态栏 → 102 §5 C11。<br><strong>本文保留其自身职责</strong>：微交互与反馈的<strong>设计推导与来源说明</strong>（为何这样设计、参照了哪些上游模式）。<br><strong>规则冲突一律以 102 为准。</strong></p></blockquote>
 <blockquote><p><strong>定位</strong>：<del>定义 CC 模式下所有微交互、瞬态反馈、状态提示的设计规范。</del> → <strong>规范部分见上方横幅，已并入 102。</strong><br><strong>适用边界</strong>：复制反馈、滚动指示、Toast 消息、工具执行反馈、系统状态提示。<br><strong>参考来源</strong>：<code>interaction-patterns.md</code> (Confirmation, Error States) + <code>advanced-patterns.md</code> (Status Bar, Clipboard)</p></blockquote>
 <hr>
@@ -213,7 +213,7 @@ Sonnet 4 │ Context 45% │ $0.42  │  ✓ Copied 42 chars     ← Toast 显�
 <hr>
 <h2 id="4-工具执行反馈设计">4. 工具执行反馈设计<a class="anchor" href="#4-工具执行反馈设计" aria-label="锚点">#</a></h2>
 <h3 id="4-1-执行状态反馈">4.1 执行状态反馈<a class="anchor" href="#4-1-执行状态反馈" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>状态</th><th>显示</th><th>示例</th></tr></thead><tbody><tr><td>等待执行</td><td><code>◦ Waiting...</code></td><td>灰色空心圆</td></tr><tr><td>执行中</td><td><code>⏳ Running...</code></td><td>黄色 + spinner</td></tr><tr><td>重试中</td><td><code>🔄 Retry (2/3)...</code></td><td>黄色 + 计数</td></tr><tr><td>超时</td><td><code>⏱ Timeout (30s)</code></td><td>红色 + 时间</td></tr><tr><td>被中断</td><td><code>⊘ Interrupted</code></td><td>灰色</td></tr><tr><td>完成</td><td><code>✓ Done</code></td><td>绿色</td></tr><tr><td>失败</td><td><code>✗ Failed</code></td><td>红色</td></tr></tbody></table>
+<table><thead><tr><th>状态</th><th>显示</th><th>示例</th></tr></thead><tbody><tr><td>等待执行</td><td><code>◦ Waiting...</code></td><td>灰色空心圆</td></tr><tr><td>执行中</td><td><code>… Running...</code></td><td>黄色 + spinner</td></tr><tr><td>重试中</td><td><code>Retry (2/3)...</code></td><td>黄色 + 计数</td></tr><tr><td>超时</td><td><code>⏱ Timeout (30s)</code></td><td>红色 + 时间</td></tr><tr><td>被中断</td><td><code>⊘ Interrupted</code></td><td>灰色</td></tr><tr><td>完成</td><td><code>✓ Done</code></td><td>绿色</td></tr><tr><td>失败</td><td><code>✗ Failed</code></td><td>红色</td></tr></tbody></table>
 <h3 id="4-2-超时反馈">4.2 超时反馈<a class="anchor" href="#4-2-超时反馈" aria-label="锚点">#</a></h3>
 <pre><code>✗ Timeout (30s): npm test
 

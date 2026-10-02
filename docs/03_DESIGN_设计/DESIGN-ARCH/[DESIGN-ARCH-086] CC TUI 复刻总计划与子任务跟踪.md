@@ -2,7 +2,7 @@
 
 > **隶属**：本文属 **TUI 设计族**（20 编号 / 21 文件），总纲与 scope 裁决见 `[DESIGN-ARCH-122] TUI 设计族总纲`；规则冲突一律以 `[DESIGN-ARCH-102] Khy TUI 统一规则手册` 为准。
 
-> ## 📌 规则条款的归属已变更
+> ## 规则条款的归属已变更
 >
 > 本文包含的**规则性条款**（复制反馈文案、滚动指示器、Toast 时长、任务看板形态等）已收口至 **`[DESIGN-ARCH-102] Khy TUI 统一规则手册`**：微交互与反馈 → 102 §6.5；键盘 → 102 §6.1；组件 → 102 §5；看板 → 102 §5 C17。
 > **本文保留其自身职责**：CC 复刻工程的**总计划与子任务跟踪**（Phase 划分、验证清单、风险登记、变更记录）——这部分 102 不管，仍以本文为准。
@@ -27,16 +27,16 @@
 
 | # | 文档 | 状态 | 优先级 | 完成度 |
 |---|------|------|--------|--------|
-| 081 | 主设计规范（品牌、OpenAI、MCP、性能） | ✅ 完成 | P0 | 100% |
-| 082 | 输入框与光标设计 | ✅ 完成 | P0 | 100% |
-| 083 | 表格与折叠设计 | ✅ 完成 | P0 | 100% |
-| 084 | 注意力与选择设计 | ✅ 完成 | P1 | 100% |
-| 085 | 子视图、子菜单、卡片与滚动 | ✅ 完成 | P1 | 100% |
-| 087 | 微交互与反馈设计 | ✅ 完成 | P1 | 100% |
-| 088 | 快捷键系统、Redo/Fork 与执行偏差处理 | ✅ 完成 | P0 | 100% |
-| 089 | TUI 设计模式调研报告（100 项目） | ✅ 完成 | P0 | 100% |
-| 090 | TUI 用户评价调研与痛点分析 | ✅ 完成 | P0 | 100% |
-| 095 | TUI 交互完善调研与实施路线（089/090 之后的收口件：差距分析 + P0–P3 路线） | ✅ 定稿 | P0 | 100% |
+| 081 | 主设计规范（品牌、OpenAI、MCP、性能） | ✓ 完成 | P0 | 100% |
+| 082 | 输入框与光标设计 | ✓ 完成 | P0 | 100% |
+| 083 | 表格与折叠设计 | ✓ 完成 | P0 | 100% |
+| 084 | 注意力与选择设计 | ✓ 完成 | P1 | 100% |
+| 085 | 子视图、子菜单、卡片与滚动 | ✓ 完成 | P1 | 100% |
+| 087 | 微交互与反馈设计 | ✓ 完成 | P1 | 100% |
+| 088 | 快捷键系统、Redo/Fork 与执行偏差处理 | ✓ 完成 | P0 | 100% |
+| 089 | TUI 设计模式调研报告（100 项目） | ✓ 完成 | P0 | 100% |
+| 090 | TUI 用户评价调研与痛点分析 | ✓ 完成 | P0 | 100% |
+| 095 | TUI 交互完善调研与实施路线（089/090 之后的收口件：差距分析 + P0–P3 路线） | ✓ 定稿 | P0 | 100% |
 
 ---
 
@@ -46,67 +46,67 @@
 
 | 任务 | 状态 | 验证方式 |
 |------|------|----------|
-| 环境变量门控体系 | ✅ | `KHY_CC_TUI=1` 门控检测 |
-| 品牌替换（Khy） | ✅ | `ccBrand.js` 集中管理 |
-| OpenAI 协议支持 | ✅ | 模型名/上下文/定价 |
-| MCP 状态显示 | ✅ | 状态栏 + 详情面板 |
-| 性能优化策略 | ✅ | Resize/渲染/计时器/启动 |
+| 环境变量门控体系 | ✓ | `KHY_CC_TUI=1` 门控检测 |
+| 品牌替换（Khy） | ✓ | `ccBrand.js` 集中管理 |
+| OpenAI 协议支持 | ✓ | 模型名/上下文/定价 |
+| MCP 状态显示 | ✓ | 状态栏 + 详情面板 |
+| 性能优化策略 | ✓ | Resize/渲染/计时器/启动 |
 
 ### 1.2 Phase 1: 核心视觉（已完成）
 
 | 任务 | 状态 | 验证方式 |
 |------|------|----------|
-| 配色方案（青色系工具标识） | ✅ | `ccTheme.js` |
-| 用户消息无背景框 | ✅ | 纯文本显示 |
-| 助手消息 ● 前缀 | ✅ | `CcAssistantMessage.js` |
-| 工具调用卡片（🔧 + 粗体青色） | ✅ | `CcToolCard.js` |
-| 工具结果边框块 | ✅ | `┌─` / `└─` 边框 |
-| 思考折叠块（▸/▾） | ✅ | `CcThinkingBlock.js` |
-| 状态栏单行格式 | ✅ | `CcStatusLine.js` |
-| 输入框无边框 + 光标 | ✅ | `CcPromptInput.js` |
+| 配色方案（青色系工具标识） | ✓ | `ccTheme.js` |
+| 用户消息无背景框 | ✓ | 纯文本显示 |
+| 助手消息 ● 前缀 | ✓ | `CcAssistantMessage.js` |
+| 工具调用卡片（+ 粗体青色） | ✓ | `CcToolCard.js` |
+| 工具结果边框块 | ✓ | `┌─` / `└─` 边框 |
+| 思考折叠块（▸/▾） | ✓ | `CcThinkingBlock.js` |
+| 状态栏单行格式 | ✓ | `CcStatusLine.js` |
+| 输入框无边框 + 光标 | ✓ | `CcPromptInput.js` |
 
 ### 1.3 Phase 2: 交互组件（已完成）
 
 | 任务 | 状态 | 验证方式 |
 |------|------|----------|
-| 单选列表（▸ + 反显） | ✅ | `CcSelectableList.js` |
-| 多选列表（[x]/[ ]） | ✅ | `CcMultiSelectList.js` |
-| 权限提示（默认安全） | ✅ | `CcPermissionPrompt.js` |
-| 消息提示（错误/警告/信息） | ✅ | `CcMessageBar.js` |
-| 折叠组件（▸/▾） | ✅ | `CcCollapsible.js` |
-| 表格组件（表头 + 对齐） | ✅ | `CcTable.js` |
-| MCP 服务器表格 | ✅ | `CcMcpTable.js` |
-| 命令面板（Ctrl+P） | ✅ | `CcCommandPalette.js` |
-| 历史搜索（Ctrl+R） | ✅ | `CcHistorySearch.js` |
+| 单选列表（▸ + 反显） | ✓ | `CcSelectableList.js` |
+| 多选列表（[x]/[ ]） | ✓ | `CcMultiSelectList.js` |
+| 权限提示（默认安全） | ✓ | `CcPermissionPrompt.js` |
+| 消息提示（错误/警告/信息） | ✓ | `CcMessageBar.js` |
+| 折叠组件（▸/▾） | ✓ | `CcCollapsible.js` |
+| 表格组件（表头 + 对齐） | ✓ | `CcTable.js` |
+| MCP 服务器表格 | ✓ | `CcMcpTable.js` |
+| 命令面板（Ctrl+P） | ✓ | `CcCommandPalette.js` |
+| 历史搜索（Ctrl+R） | ✓ | `CcHistorySearch.js` |
 
 ### 1.4 Phase 3: 高级功能（已完成）
 
 | 任务 | 状态 | 验证方式 |
 |------|------|----------|
-| 视图栈管理 | ✅ | `ViewProvider.js` |
-| 命令面板 | ✅ | `CcCommandPalette.js` |
-| 历史搜索 | ✅ | `CcHistorySearch.js` |
-| 任务完成卡片 | ✅ | `CcTaskCompleteCard.js` |
-| 剪贴板（OSC 52） | ✅ | `ccClipboard.js` |
-| 历史持久化 | ✅ | `ccHistory.js` |
+| 视图栈管理 | ✓ | `ViewProvider.js` |
+| 命令面板 | ✓ | `CcCommandPalette.js` |
+| 历史搜索 | ✓ | `CcHistorySearch.js` |
+| 任务完成卡片 | ✓ | `CcTaskCompleteCard.js` |
+| 剪贴板（OSC 52） | ✓ | `ccClipboard.js` |
+| 历史持久化 | ✓ | `ccHistory.js` |
 
 ### 1.5 Phase 4: 微交互与反馈（已完成设计）
 
 | 任务 | 状态 | 验证方式 |
 |------|------|----------|
-| 复制字符提示 | ✅ 已落地 | `copied N chars` —— CcApp `handleCopyLast` 走 `ccFormatters.formatCopyFeedback` 单一真源（emoji 安全 code-point 计数，门控 `KHY_CC_COPY_TOAST`，`0` → 中文旧文案逐字节回退；2026-09-15） |
-| 滚动指示器 | ✅ 已落地 | `⋯ (3 above)` —— `CcTranscriptView` 分页视口 + `CcScrollIndicators`（2026-09-12 接入，见变更记录） |
-| 瞬态消息/Toast | ✅ | 3 秒自动消失 |
-| Token 用量警告 | ✅ | 80% 黄色 / 95% 红色 |
-| 上下文窗口警告 | ✅ | 接近上限提示 |
-| 工具执行超时反馈 | ✅ | 超时 + 重试建议 |
-| 流式输出中断反馈 | ✅ | `Interrupted` 提示 |
-| 粘贴大文本反馈 | ✅ | `Pasted ~200 lines` |
-| 大输出截断反馈 | ✅ | `... (truncated, 50 lines)` |
-| 权限模式切换反馈 | ✅ | 模式变化 Toast |
-| 双击 Ctrl+C 退出 | ✅ | 首次提示，二次退出 |
-| 会话恢复提示 | ✅ | `Resumed from checkpoint` |
-| 连接状态变化 | ✅ | 断开/重连 Toast |
+| 复制字符提示 | ✓ 已落地 | `copied N chars` —— CcApp `handleCopyLast` 走 `ccFormatters.formatCopyFeedback` 单一真源（emoji 安全 code-point 计数，门控 `KHY_CC_COPY_TOAST`，`0` → 中文旧文案逐字节回退；2026-09-15） |
+| 滚动指示器 | ✓ 已落地 | `⋯ (3 above)` —— `CcTranscriptView` 分页视口 + `CcScrollIndicators`（2026-09-12 接入，见变更记录） |
+| 瞬态消息/Toast | ✓ | 3 秒自动消失 |
+| Token 用量警告 | ✓ | 80% 黄色 / 95% 红色 |
+| 上下文窗口警告 | ✓ | 接近上限提示 |
+| 工具执行超时反馈 | ✓ | 超时 + 重试建议 |
+| 流式输出中断反馈 | ✓ | `Interrupted` 提示 |
+| 粘贴大文本反馈 | ✓ | `Pasted ~200 lines` |
+| 大输出截断反馈 | ✓ | `... (truncated, 50 lines)` |
+| 权限模式切换反馈 | ✓ | 模式变化 Toast |
+| 双击 Ctrl+C 退出 | ✓ | 首次提示，二次退出 |
+| 会话恢复提示 | ✓ | `Resumed from checkpoint` |
+| 连接状态变化 | ✓ | 断开/重连 Toast |
 
 ---
 
@@ -143,7 +143,7 @@
 
 | 场景 | 反馈 | 示例 |
 |------|------|------|
-| 执行中 | `⏳ Running...` | spinner |
+| 执行中 | `… Running...` | spinner |
 | 超时 | `Timeout (30s)` | + 重试建议 |
 | 重试中 | `Retrying (2/3)...` | — |
 | 被中断 | `Interrupted` | — |
@@ -173,22 +173,22 @@
 ## 3. 实施路线图
 
 ```
-Phase 0 ──────────────────────────────────────────────── ✅ 设计完成
+Phase 0 ──────────────────────────────────────────────── ✓ 设计完成
   门控体系 / 品牌替换 / OpenAI / MCP / 性能策略
 
-Phase 1 ──────────────────────────────────────────────── ✅ 设计完成
+Phase 1 ──────────────────────────────────────────────── ✓ 设计完成
   配色 / 消息样式 / 工具卡片 / 状态栏 / 输入框
 
-Phase 2 ──────────────────────────────────────────────── ✅ 设计完成
+Phase 2 ──────────────────────────────────────────────── ✓ 设计完成
   选择列表 / 权限提示 / 折叠 / 表格 / 命令面板
 
-Phase 3 ──────────────────────────────────────────────── ✅ 设计完成
+Phase 3 ──────────────────────────────────────────────── ✓ 设计完成
   视图栈 / 剪贴板 / 历史 / 完成卡片
 
-Phase 4 ──────────────────────────────────────────────── ✅ 设计完成
+Phase 4 ──────────────────────────────────────────────── ✓ 设计完成
   复制反馈 / 滚动指示 / Toast / 工具反馈 / 系统状态
 
-Phase 5 ──────────────────────────────────────────────── ✅ 设计完成
+Phase 5 ──────────────────────────────────────────────── ✓ 设计完成
   快捷键系统 / Redo/Fork / 执行偏差处理
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -205,36 +205,36 @@ Phase 5 ────────────────────────
 
 | 文件 | 路径 | 状态 |
 |------|------|------|
-| 总计划 | `docs/03_DESIGN_设计/[DESIGN-ARCH-086]` | ✅ |
-| 主设计规范 | `docs/03_DESIGN_设计/[DESIGN-ARCH-081]` | ✅ |
-| 输入框与光标 | `docs/03_DESIGN_设计/[DESIGN-ARCH-082]` | ✅ |
-| 表格与折叠 | `docs/03_DESIGN_设计/[DESIGN-ARCH-083]` | ✅ |
-| 注意力与选择 | `docs/03_DESIGN_设计/[DESIGN-ARCH-084]` | ✅ |
-| 子视图/菜单/卡片 | `docs/03_DESIGN_设计/[DESIGN-ARCH-085]` | ✅ |
-| 微交互与反馈 | `docs/03_DESIGN_设计/[DESIGN-ARCH-087]` | ✅ |
-| 快捷键/Redo/Fork | `docs/03_DESIGN_设计/[DESIGN-ARCH-088]` | ✅ |
-| 100 项目调研 | `docs/03_DESIGN_设计/[DESIGN-ARCH-089]` | ✅ |
-| 用户评价调研 | `docs/03_DESIGN_设计/[DESIGN-ARCH-090]` | ✅ |
+| 总计划 | `docs/03_DESIGN_设计/[DESIGN-ARCH-086]` | ✓ |
+| 主设计规范 | `docs/03_DESIGN_设计/[DESIGN-ARCH-081]` | ✓ |
+| 输入框与光标 | `docs/03_DESIGN_设计/[DESIGN-ARCH-082]` | ✓ |
+| 表格与折叠 | `docs/03_DESIGN_设计/[DESIGN-ARCH-083]` | ✓ |
+| 注意力与选择 | `docs/03_DESIGN_设计/[DESIGN-ARCH-084]` | ✓ |
+| 子视图/菜单/卡片 | `docs/03_DESIGN_设计/[DESIGN-ARCH-085]` | ✓ |
+| 微交互与反馈 | `docs/03_DESIGN_设计/[DESIGN-ARCH-087]` | ✓ |
+| 快捷键/Redo/Fork | `docs/03_DESIGN_设计/[DESIGN-ARCH-088]` | ✓ |
+| 100 项目调研 | `docs/03_DESIGN_设计/[DESIGN-ARCH-089]` | ✓ |
+| 用户评价调研 | `docs/03_DESIGN_设计/[DESIGN-ARCH-090]` | ✓ |
 
 ### 4.2 工程约束文件
 
 | 文件 | 路径 | 状态 |
 |------|------|------|
-| CC TUI 工程约束 | `services/backend/src/cli/tui/AGENTS.md` | ✅ |
-| 项目上下文 | `CLAUDE.md` | ✅ |
-| opencode 配置 | `.opencode/config.json` | ✅ |
+| CC TUI 工程约束 | `services/backend/src/cli/tui/AGENTS.md` | ✓ |
+| 项目上下文 | `CLAUDE.md` | ✓ |
+| opencode 配置 | `.opencode/config.json` | ✓ |
 
 ### 4.3 参考实现文件
 
 | 文件 | 路径 | 状态 |
 |------|------|------|
-| CC 输入框 | `tui/ink-components/CcPromptInput.js` | ✅ |
-| CC 折叠组件 | `tui/ink-components/CcCollapsible.js` | ✅ |
-| CC 表格组件 | `tui/ink-components/CcTable.js` | ✅ |
-| CC 选择组件 | `tui/ink-components/CcSelectable.js` | ✅ |
-| CC 视图栈 | `tui/ink-components/CcViewStack.js` | ✅ |
-| 剪贴板工具 | `tui/utils/ccClipboard.js` | ✅ |
-| 历史管理 | `tui/utils/ccHistory.js` | ✅ |
+| CC 输入框 | `tui/ink-components/CcPromptInput.js` | ✓ |
+| CC 折叠组件 | `tui/ink-components/CcCollapsible.js` | ✓ |
+| CC 表格组件 | `tui/ink-components/CcTable.js` | ✓ |
+| CC 选择组件 | `tui/ink-components/CcSelectable.js` | ✓ |
+| CC 视图栈 | `tui/ink-components/CcViewStack.js` | ✓ |
+| 剪贴板工具 | `tui/utils/ccClipboard.js` | ✓ |
+| 历史管理 | `tui/utils/ccHistory.js` | ✓ |
 
 ---
 
@@ -319,7 +319,7 @@ Phase 5 ────────────────────────
 | 2026-09-13 | 095 §4 P0-2 帧高纪律四子步落地：①`ToolLines.estimateLiteralRows`（完成态字面输出体行数估算，与渲染共用 memo，±diff/shell 折叠体/展开透明体/12 行预览帽逐分支同源）；②`liveHeightClamp.tailTimelineToVisualRows` 新增 `toolCostOf` 回调 + StreamingBlock 下传 `estimateToolEntryRows`（tool 条目从恒记 1 行改为真实渲染行计费，消 [IMPL-RPT-044]「同段输出重复多份」的 fullscreen 重绘诱因；门控 `KHY_TOOL_ROW_BUDGET`）；③`ccLayout.messageAreaCap` 份额算术 + CcApp 消息区尾窗 slice（尾窗超帽时 `⋯ 已收起上方 N 条消息（Ctrl+O 查看完整转录）` 截断诚实提示；门控 `KHY_CC_MESSAGE_CAP`）；④flagRegistry 登记（总数 475）。**顺带修复 CcApp 挂载即崩的 ReferenceError ×3**（estimateAllAgents/formatDuration 未 import、AgentTree/CcTranscriptView 裸引用未走 getAgentTree()/getCcTranscriptView() 懒加载器——KHY_CC_TUI=1 此前完全无法挂载，生产路径实渲染证实已修复）。测试：ccLayout.test.js 18/18（含 messageAreaCap 算术 6 例 + CcApp 源级契约 2 例）、liveHeightClamp.test.js 27/27（toolCostOf 计费/回退/超帽兜底 5 例）、toolEntryRows.test.js 从 mojibake 空壳恢复 14/14（DEBT.md §六同步除名） |
 | 2026-09-13 | 095 §4 P1-2 启动进度条与状态文案合规化：`bootPhaseLine.js` 重写为 `write(text, step, totalSteps)` 签名（无分母时每 1s 刷新 elapsed「已等待 Xs」，有分母时静态「(step/total)」；`stopElapsedTimer` 在 clear/end 均触发，`elapsedTimer.unref()` 防阻塞退出）；`bin/khy.js` 5 处调用点改传 step/total=5；裸等待文案合规化（规则 2）：`noiseFilter.js` 11 条 RULES 全改走 `formatStatusMessage(action, target, progress)`；`replyGuard.buildRetryStatusLabel` 与 `toolUseLoopCore` 续接 label 无 counter 时补「(第 1 次)」。check-agent-rules 5 文件零违规 |
 | 2026-09-13 | 095 §4 P1-1 剪贴板统一出口落地：`ccClipboard.js` 整体重写为全模式剪贴板服务（native 系统工具先行 + OSC 52 非 TTY 兜底 + TMUX/STY DCS passthrough + 100KB 上限 + CJK UTF-8 字节）；legacy `/copy`（handlers/copy.js）、`/share`（routerDispatchSlash.js）与 CC 模式（CcApp Ctrl+Y 复制最近助手回复 + CcPromptInput vim `y` 剪贴板双写 + 命令面板 `/copy` 项 + CcHelpMenu/keybindingCatalog 补 Ctrl+Y）三路全收敛同一出口；`copyReply.describeClipboardFailure` 新纯叶子按 reasons 出具修复建议文案（gate/native/osc52:tty/oversize/全空五分支）；flagRegistry 登记 5 门控（KHY_CC_CLIPBOARD/KHY_CLIPBOARD_OSC52/KHY_CLIPBOARD_DUAL/KHY_CLIPBOARD_PASSTHROUGH/KHY_CLIPBOARD_MAX_BYTES，总数 480）。测试：ccClipboard.test.js（node:test）20/20 + copyReply.test.js 13/13 + router.test.js 55/55 回归绿 |
-| 2026-09-15 | 复制/Toast 反馈对齐 [DESIGN-ARCH-087] §1 CC 规范（今日单项，优先级④）：① 修复 `CcApp.js` `handleCopyLast` 的 **TDZ 崩溃**（`addToast`/`dismissToast` 声明晚于其使用点，CC 模式挂载即抛 `Cannot access 'addToast' before initialization`，整树白屏）——将 Toast 管理块前移至 `handleCopyLast` 之前；② `handleCopyLast` 复制回执改走 `ccFormatters.formatCopyFeedback` 单一真源（`copied N chars / N lines / N.NKB` CC 规范文案），门控 `KHY_CC_COPY_TOAST`（默认开=CC 文案；显式 `0` → 中文旧文案逐字节回退，零破坏）；③ 修 `ccFormatters.formatCopyFeedback`/`formatPasteFeedback` 的 emoji 过计数 bug——字符计数由 `text.length`（UTF-16 码元，`😀` 记 2）改为 `[...text].length`（code-point，`😀` 记 1），对齐 Claude Code CHANGELOG「copied N chars overcounting emoji」修正；④ `CcToast.js` 顶层 `inkRuntime.get()` 改惰性（与 CcScrollIndicators 同模式，消除 require 期抛错）。调研背书：[RESEARCH-001] TUI微交互调研（opencode 单槽替换 toast 5s、CC 带 N 计数 toast、bubbles list 行内 1s、KHY_* 门控默认=旧行为+`0`回退惯例）。验证：node --check 3 文件 OK；check-agent-rules 零违规；formatCopyFeedback 纯 emoji 串（3 个 😀）正确输出 `copied 3 chars`；CcApp+CcToast+ccFormatters 加载 OK。flagRegistry 无需新增（KHY_CC_COPY_TOAST 随 KHY_CC_TUI 主开关，默认开） |
+| 2026-09-15 | 复制/Toast 反馈对齐 [DESIGN-ARCH-087] §1 CC 规范（今日单项，优先级④）：① 修复 `CcApp.js` `handleCopyLast` 的 **TDZ 崩溃**（`addToast`/`dismissToast` 声明晚于其使用点，CC 模式挂载即抛 `Cannot access 'addToast' before initialization`，整树白屏）——将 Toast 管理块前移至 `handleCopyLast` 之前；② `handleCopyLast` 复制回执改走 `ccFormatters.formatCopyFeedback` 单一真源（`copied N chars / N lines / N.NKB` CC 规范文案），门控 `KHY_CC_COPY_TOAST`（默认开=CC 文案；显式 `0` → 中文旧文案逐字节回退，零破坏）；③ 修 `ccFormatters.formatCopyFeedback`/`formatPasteFeedback` 的 emoji 过计数 bug——字符计数由 `text.length`（UTF-16 码元，`` 记 2）改为 `[...text].length`（code-point，`` 记 1），对齐 Claude Code CHANGELOG「copied N chars overcounting emoji」修正；④ `CcToast.js` 顶层 `inkRuntime.get()` 改惰性（与 CcScrollIndicators 同模式，消除 require 期抛错）。调研背书：[RESEARCH-001] TUI微交互调研（opencode 单槽替换 toast 5s、CC 带 N 计数 toast、bubbles list 行内 1s、KHY_* 门控默认=旧行为+`0`回退惯例）。验证：node --check 3 文件 OK；check-agent-rules 零违规；formatCopyFeedback 纯 emoji 串（3 个）正确输出 `copied 3 chars`；CcApp+CcToast+ccFormatters 加载 OK。flagRegistry 无需新增（KHY_CC_COPY_TOAST 随 KHY_CC_TUI 主开关，默认开） |
 | 2026-09-16 | 子视图 ViewStack 完善落地（今日单项，优先级⑤，[DESIGN-ARCH-085] §1/§4.1）：`CcViewStack.js` 是 CcApp import 了但从未接入的死代码，且自身有 3 个挂载即崩的 bug——① 顶层 `inkRuntime.get()`（loadInk 前 require 即抛错，改惰性，与 CcToast/CcScrollIndicators 同模式）；② `CcCommandPalette`/`CcHistorySearch` 用了 `Text`/`useInput` 却从未 import（挂载即 `ReferenceError`）——补惰性导入；③ 真正接入 `CcApp`：门控 `KHY_CC_VIEW_STACK`（默认开）下 CC 模式 Ctrl+P 命令面板改走 `CcCommandPalette`（分组 + 实时过滤 + ↑/↓ 导航 + Enter 执行），`=0` 逐字节回退既有 `CcFuzzyPicker` 路径；`/copy` 命令在两路径下均路由到 `handleCopyLast`。对齐 [DESIGN-ARCH-085] §1「视图栈：Esc 返回 / 子视图不影响主对话 / 滚动独立」。验证：node --check 2 文件 OK；check-agent-rules 零违规；CcCommandPalette/CcHistorySearch 单独挂载 + CcApp 门控开/关两路径挂载全绿；ccClipboard.test.js 20/20 回归。`CcHistorySearch`（Ctrl+R 历史搜索）本次只修通、未接入 CcApp（遗留：下轮接 Ctrl+R 并走 ViewProvider 状态缓存） |
 | 2026-09-17 | CcApp 子视图收尾落地（优先级⑤ 续，[DESIGN-ARCH-085] §1/§4.3 + [DESIGN-ARCH-087] §2.4 双击退出）：① `CcHistorySearch` 真正接入 `CcApp`——Ctrl+R 打开历史搜索覆盖层（反向增量搜索 `ccHistory.searchHistory` 持久化历史，选中条目回填 CcPromptInput 输入框，Esc 关闭），完成「子视图 ViewStack 完善」遗留项；② 修 CcApp 退出行为对齐 [DESIGN-ARCH-087] 验收项「双击 Ctrl+C 退出：首次提示，二次退出」——原 Ctrl+C/Ctrl+D 单按即 `exit()` 的裸行为改为 3s 窗口双击确认（`ccTimers.TIMING.doubleTapExit.windowMs` 单一真源），首次只发 `再按一次 Ctrl+C 退出` 警告 Toast。验证：node --check OK；check-agent-rules 零违规；CcApp 门控开/关（KHY_CC_VIEW_STACK）两路径挂载全绿；ccClipboard.test.js 20/20 回归。Legacy 模式（KHY_CC_TUI 未设置）未触碰 |
 

@@ -23,14 +23,14 @@
 
 | # | 主题 | ycode 有 | khy-os 现状 | 判定 |
 |---|------|---------|-------------|------|
-| A | 按回合撤销 turn_undo | ✅ 8 模块严格状态机 + 内容寻址快照 + CAS 令牌 + 崩溃恢复 | ⚠️ 有 per-edit 快照 + 四级 rollback 门面，但缺「按回合多文件原子恢复 + 冲突零写入 + 语义纠正」 | PARTIAL |
-| B | 星轨自动化任务 | ✅ daemon 调度引擎 + CAS 认领 + 无人值守权限 + 运行历史 + GUI | ✅ 双 cron 引擎 + taskScheduler（已借鉴），但缺「定时发起真实 agent 回合」与无人值守自动化权限语义 | PARTIAL |
-| C | 上下文压缩提速 | ✅ 0.85 预压缩 + 0.95 关键水位 + 真实用量基线 + 熔断 1.2× 刻意的注释 | ✅ /compact 三档 + autoCompactTriggerTokens 推导式 | 部分重叠 |
-| D | 内置技能指纹升级 | ✅ 内容指纹 + 释放名单 + 未改动自动升级 + 恢复内置版 | ❌ 内置技能仅按 `builtin:true` 扫描 + 24h 缓存，无版本/指纹/升级 | LACKS |
-| E | CLI 对齐 GUI | ✅ 批次 /undo /changes /queue /paste-image /update /computer browser | ⚠️ /undo /paste 有，/changes /queue 无，深度能力 CLI 有 Web 无 | PARTIAL |
-| F | 事件 seq 断点续传 | ✅ 单调 seq + 128 条环形缓冲 + 重连 last_seq 回放 + 白名单关键事件 | ⚠️ WS 有 50 条整段重放、移动端契约有 `sequence` 字段，但无断点续传（Last-Event-ID 游标） | PARTIAL |
-| G | 流式等待实时冲刷 + 硬上限 | ✅ 空心跳哨兵实时冲刷 + REQUEST_WAIT_GIVE_UP_SECONDS=600 | ✅ gatewayIdleTimeoutPolicy idle60/hard180（更严，khy 量级已足够） | khy 更强 |
-| H | 权限档位按会话绑定 | ✅ sessions.permission_mode，切换会话互不覆盖 | ⚠️ 有 7 模式 + 6 profile + safetyGate 频谱，但会话级权限档位未入 sessions 快照 | PARTIAL |
+| A | 按回合撤销 turn_undo | ✓ 8 模块严格状态机 + 内容寻址快照 + CAS 令牌 + 崩溃恢复 | ⚠ 有 per-edit 快照 + 四级 rollback 门面，但缺「按回合多文件原子恢复 + 冲突零写入 + 语义纠正」 | PARTIAL |
+| B | 星轨自动化任务 | ✓ daemon 调度引擎 + CAS 认领 + 无人值守权限 + 运行历史 + GUI | ✓ 双 cron 引擎 + taskScheduler（已借鉴），但缺「定时发起真实 agent 回合」与无人值守自动化权限语义 | PARTIAL |
+| C | 上下文压缩提速 | ✓ 0.85 预压缩 + 0.95 关键水位 + 真实用量基线 + 熔断 1.2× 刻意的注释 | ✓ /compact 三档 + autoCompactTriggerTokens 推导式 | 部分重叠 |
+| D | 内置技能指纹升级 | ✓ 内容指纹 + 释放名单 + 未改动自动升级 + 恢复内置版 | ✗ 内置技能仅按 `builtin:true` 扫描 + 24h 缓存，无版本/指纹/升级 | LACKS |
+| E | CLI 对齐 GUI | ✓ 批次 /undo /changes /queue /paste-image /update /computer browser | ⚠ /undo /paste 有，/changes /queue 无，深度能力 CLI 有 Web 无 | PARTIAL |
+| F | 事件 seq 断点续传 | ✓ 单调 seq + 128 条环形缓冲 + 重连 last_seq 回放 + 白名单关键事件 | ⚠ WS 有 50 条整段重放、移动端契约有 `sequence` 字段，但无断点续传（Last-Event-ID 游标） | PARTIAL |
+| G | 流式等待实时冲刷 + 硬上限 | ✓ 空心跳哨兵实时冲刷 + REQUEST_WAIT_GIVE_UP_SECONDS=600 | ✓ gatewayIdleTimeoutPolicy idle60/hard180（更严，khy 量级已足够） | khy 更强 |
+| H | 权限档位按会话绑定 | ✓ sessions.permission_mode，切换会话互不覆盖 | ⚠ 有 7 模式 + 6 profile + safetyGate 频谱，但会话级权限档位未入 sessions 快照 | PARTIAL |
 
 **总体结论**：ycode 这次更新的主线是「**把被动优化升级成主动能力**」——按回合撤销、无人值守自动化、技能随版升级、断线补发。khy-os 在流式稳健性、权限频谱、回滚门面、测试规模（2420 个 Jest 测试）、CLI 命令数（209 条）上**明显更强**；真正的借鉴缺口集中在 **A（按回合撤销的工程化深化）、D（技能指纹升级）、F（事件断点续传）**，以及 **B 的「定时 agent 回合」语义**。
 

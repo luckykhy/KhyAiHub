@@ -41,15 +41,15 @@
 
 | 工具 | 写入器 | 模式 A | 模式 B | 协议约束（preflight） | Agent 导出 | 会话扫描 |
 |---|---|---|---|---|---|---|
-| claude-code | `claudeCodeAdapter`（settings.json env 块） | ✅ | ✅ | 任意（代理转换） | ✅（ccAgentBridge 已读） | ✅ |
-| codex | `codexWriter`（config.toml + auth.json） | ✅ | ✅ | openai/responses | ⏳ P2 | ✅ |
-| opencode | `opencodeAdapter`（opencode.json provider 树） | ✅（`{env:}`/`{file:}` 原生替换） | ✅ | openai/anthropic | ⏳ P2 | ✅ |
-| gemini | `geminiCliAdapter`（settings.json env 块） | ✅ | ✅ | — | ⏳ P2 | ✅ |
-| command-code | `commandCodeAdapter`（providers.json BYOK，env 引用） | ✅ | ✅ | openai/anthropic/responses | — | ✅ |
-| ycode | `ycodeAdapter`（config.json provider 块，env 引用） | ✅ | ✅ | openai/responses | — | ✅ |
-| deepseek / reasonix | `deepseekTuiAdapter` / `reasonixAdapter` | ✅ | ✅ | — | — | ✅ |
-| **zcode** | **`zcodeAdapter`（本规范 P1）** | ✅ | ⚠️ 内联 key（见 §5） | **openai/anthropic** | ⏳ P2（plugin 包） | ✅（taste 侧） |
-| openclaw / coze | adapter 已存在，未入 ccSwitch APPS 表 | ⏳ P2 | ⏳ P2 | — | — | — |
+| claude-code | `claudeCodeAdapter`（settings.json env 块） | ✓ | ✓ | 任意（代理转换） | ✓（ccAgentBridge 已读） | ✓ |
+| codex | `codexWriter`（config.toml + auth.json） | ✓ | ✓ | openai/responses | … P2 | ✓ |
+| opencode | `opencodeAdapter`（opencode.json provider 树） | ✓（`{env:}`/`{file:}` 原生替换） | ✓ | openai/anthropic | … P2 | ✓ |
+| gemini | `geminiCliAdapter`（settings.json env 块） | ✓ | ✓ | — | … P2 | ✓ |
+| command-code | `commandCodeAdapter`（providers.json BYOK，env 引用） | ✓ | ✓ | openai/anthropic/responses | — | ✓ |
+| ycode | `ycodeAdapter`（config.json provider 块，env 引用） | ✓ | ✓ | openai/responses | — | ✓ |
+| deepseek / reasonix | `deepseekTuiAdapter` / `reasonixAdapter` | ✓ | ✓ | — | — | ✓ |
+| **zcode** | **`zcodeAdapter`（本规范 P1）** | ✓ | ⚠ 内联 key（见 §5） | **openai/anthropic** | … P2（plugin 包） | ✓（taste 侧） |
+| openclaw / coze | adapter 已存在，未入 ccSwitch APPS 表 | … P2 | … P2 | — | — | — |
 
 ## 5. zcodeAdapter 规范（P1 已实现）
 

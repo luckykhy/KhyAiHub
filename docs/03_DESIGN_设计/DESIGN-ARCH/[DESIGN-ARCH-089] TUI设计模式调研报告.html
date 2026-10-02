@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -110,7 +110,7 @@ C++/C#/Other              ████████              8%</code></pre>
 <h3 id="2-2-滚动实现-保留终端滚动历史">2.2 滚动实现（保留终端滚动历史）<a class="anchor" href="#2-2-滚动实现-保留终端滚动历史" aria-label="锚点">#</a></h3>
 <pre><code class="language-javascript"><span class="hljs-comment">// 使用 ED0 而非 ED2 — 保留滚动历史</span>
 process.<span class="hljs-property">stdout</span>.<span class="hljs-title function_">write</span>(<span class="hljs-string">&#x27;\x1B[0J&#x27;</span>);  <span class="hljs-comment">// 清除光标到末尾（保留历史）</span>
-<span class="hljs-comment">// ❌ process.stdout.write(&#x27;\x1B[2J&#x27;);  // 全屏清除（擦除历史）</span>
+<span class="hljs-comment">// ✗ process.stdout.write(&#x27;\x1B[2J&#x27;);  // 全屏清除（擦除历史）</span>
 
 <span class="hljs-comment">// 保存/恢复光标位置</span>
 process.<span class="hljs-property">stdout</span>.<span class="hljs-title function_">write</span>(<span class="hljs-string">&#x27;\x1B7&#x27;</span>);  <span class="hljs-comment">// 保存光标</span>
@@ -155,7 +155,7 @@ process.<span class="hljs-property">stdout</span>.<span class="hljs-title functi
 <hr>
 <h2 id="5-对-khy-os-的启示">5. 对 khy-os 的启示<a class="anchor" href="#5-对-khy-os-的启示" aria-label="锚点">#</a></h2>
 <h3 id="5-1-从-claude-code-学习">5.1 从 Claude Code 学习<a class="anchor" href="#5-1-从-claude-code-学习" aria-label="锚点">#</a></h3>
-<ul><li>极简无边框输入框</li><li><code>●</code> 前缀助手消息</li><li><code>🔧</code> 工具调用卡片</li><li>状态栏单行紧凑格式</li><li>思考块可折叠</li><li>流式输出用 <code>&lt;Static&gt;</code> 不重绘历史</li></ul>
+<ul><li>极简无边框输入框</li><li><code>●</code> 前缀助手消息</li><li>`` 工具调用卡片</li><li>状态栏单行紧凑格式</li><li>思考块可折叠</li><li>流式输出用 <code>&lt;Static&gt;</code> 不重绘历史</li></ul>
 <h3 id="5-2-从-gitui-lazygit-学习">5.2 从 gitui/lazygit 学习<a class="anchor" href="#5-2-从-gitui-lazygit-学习" aria-label="锚点">#</a></h3>
 <ul><li>异步操作不阻塞 UI</li><li>操作栈撤销/重做</li><li>多面板布局</li><li>数字键跳转面板</li></ul>
 <h3 id="5-3-从-k9s-gh-dash-学习">5.3 从 k9s/gh-dash 学习<a class="anchor" href="#5-3-从-k9s-gh-dash-学习" aria-label="锚点">#</a></h3>
