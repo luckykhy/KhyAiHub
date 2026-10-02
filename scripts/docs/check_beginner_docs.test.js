@@ -66,7 +66,7 @@ test('坏样本 dead-end：内容文档无任何同目录导航链接', () => {
   assert.ok(k.includes('dead-end'), '应检出 dead-end，实际: ' + k.join(','));
 });
 
-test('坏样本 no-fanren：故事类目录缺 📒 凡人笔记', () => {
+test('坏样本 no-fanren：故事类目录缺「凡人笔记」小节', () => {
   const { repoRoot, section } = scaffold({
     '00_INDEX_x.md': '# 索引\n- [章一](./c1.md)\n',
     'c1.md': '# 第一章\n剧情……\n[回总目录](./00_INDEX_x.md)\n',
@@ -75,10 +75,10 @@ test('坏样本 no-fanren：故事类目录缺 📒 凡人笔记', () => {
   assert.ok(k.includes('no-fanren'), '应检出 no-fanren，实际: ' + k.join(','));
 });
 
-test('好样本 story：有 📒 凡人笔记则不报 no-fanren', () => {
+test('好样本 story：有「凡人笔记」小节则不报 no-fanren', () => {
   const { repoRoot, section } = scaffold({
     '00_INDEX_x.md': '# 索引\n- [章一](./c1.md)\n',
-    'c1.md': '# 第一章\n剧情……\n## 📒 凡人笔记\n翻译表\n[回总目录](./00_INDEX_x.md)\n',
+    'c1.md': '# 第一章\n剧情……\n## 凡人笔记\n翻译表\n[回总目录](./00_INDEX_x.md)\n',
   }, { kind: 'story', requireFanren: true });
   assert.deepStrictEqual(checkSection(repoRoot, section), []);
 });

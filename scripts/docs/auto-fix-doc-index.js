@@ -55,7 +55,7 @@ function findSimilarFile(baseDir, targetName) {
 }
 
 function main() {
-  console.log('🔍 自动修复文档索引中的断链...\n');
+  console.log('自动修复文档索引中的断链...\n');
   
   let content = fs.readFileSync(INDEX_FILE, 'utf8');
   const lines = content.split('\n');
@@ -110,10 +110,10 @@ function main() {
     }
   });
   
-  console.log(`📊 找到 ${fixes.length} 个可修复的断链`);
+  console.log(`找到 ${fixes.length} 个可修复的断链`);
   
   if (fixes.length > 0) {
-    console.log('\n📋 修复列表：');
+    console.log('\n修复列表：');
     fixes.forEach(fix => {
       console.log(`   行 ${fix.line}:`);
       console.log(`     旧: ${fix.oldFile}`);
@@ -121,7 +121,7 @@ function main() {
     });
     
     if (APPLY) {
-      console.log('\n🔧 执行修复...');
+      console.log('\n执行修复...');
       
       let fixedCount = 0;
       fixes.forEach(fix => {
@@ -130,12 +130,12 @@ function main() {
       });
       
       fs.writeFileSync(INDEX_FILE, content, 'utf8');
-      console.log(`\n✅ 共修复 ${fixedCount} 个断链`);
+      console.log(`\n✓ 共修复 ${fixedCount} 个断链`);
     } else {
-      console.log('\n💡 运行 `node scripts/docs/auto-fix-doc-index.js --apply` 执行修复');
+      console.log('\n运行 `node scripts/docs/auto-fix-doc-index.js --apply` 执行修复');
     }
   } else {
-    console.log('\n✅ 没有可自动修复的断链');
+    console.log('\n✓ 没有可自动修复的断链');
   }
   
   return fixes.length;

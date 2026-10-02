@@ -42,6 +42,9 @@ function walkMarkdown(dir, acc) {
       if (SKIP_PATH_PARTS.some((p) => ("/" + rel + "/").includes(p))) continue;
       walkMarkdown(full, acc);
     } else if (e.isFile() && /\.md$/i.test(e.name)) {
+      // 根级 .md 已停用 .html 孪生（2026-09-28 裁决，见 build_docs_site.js 同处注释），
+      // 配对判据必须同步豁免，否则 6 个根级 .md 各报一条「缺少 HTML」error。
+      if (!rel.includes("/")) continue;
       if (SKIP_PATH_PARTS.some((p) => ("/" + rel).includes(p))) continue;
       acc.push(rel);
     }
@@ -114,9 +117,9 @@ if (warnings.length) {
   warnings.slice(0, 20).forEach((w) => console.log("  - " + w));
 }
 if (errors.length) {
-  console.error(`\n[verify] ❌ 失败：${errors.length} 个问题`);
+  console.error(`\n[verify] ✗ 失败：${errors.length} 个问题`);
   errors.slice(0, 40).forEach((e) => console.error("  ✗ " + e));
   if (errors.length > 40) console.error(`  …还有 ${errors.length - 40} 个`);
   process.exit(1);
 }
-console.log("[verify] ✅ 全部通过：每个 md 都有 html，所有本地链接可达，资源齐全。");
+console.log("[verify] ✓ 全部通过：每个 md 都有 html，所有本地链接可达，资源齐全。");

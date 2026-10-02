@@ -30,35 +30,35 @@ function findOrphanHtml(dir) {
 }
 
 function main() {
-  console.log('🔍 扫描没有 MD 源文件的 HTML 文件...\n');
+  console.log('扫描没有 MD 源文件的 HTML 文件...\n');
   
   const orphans = findOrphanHtml(path.join(ROOT, 'docs'));
   
-  console.log(`📊 找到 ${orphans.length} 个孤立 HTML 文件`);
+  console.log(`找到 ${orphans.length} 个孤立 HTML 文件`);
   
   if (orphans.length > 0) {
-    console.log('\n📋 孤立文件列表：');
+    console.log('\n孤立文件列表：');
     orphans.forEach(f => {
       console.log(`   ${path.relative(ROOT, f)}`);
     });
     
     if (APPLY) {
-      console.log('\n🗑️  删除孤立 HTML 文件...');
+      console.log('\n删除孤立 HTML 文件...');
       
       let deleted = 0;
       orphans.forEach(f => {
         try {
           fs.unlinkSync(f);
           deleted++;
-          console.log(`   ✅ 删除: ${path.relative(ROOT, f)}`);
+          console.log(`   ✓ 删除: ${path.relative(ROOT, f)}`);
         } catch (e) {
-          console.log(`   ❌ 失败: ${path.relative(ROOT, f)} - ${e.message}`);
+          console.log(`   ✗ 失败: ${path.relative(ROOT, f)} - ${e.message}`);
         }
       });
       
-      console.log(`\n✅ 共删除 ${deleted} 个孤立 HTML 文件`);
+      console.log(`\n✓ 共删除 ${deleted} 个孤立 HTML 文件`);
     } else {
-      console.log('\n💡 运行 `node scripts/docs/cleanup-orphan-html.js --apply` 执行清理');
+      console.log('\n运行 `node scripts/docs/cleanup-orphan-html.js --apply` 执行清理');
     }
   }
   

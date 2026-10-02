@@ -9,7 +9,7 @@
  *   很容易破坏作者约定的「房屋风格」而结构却仍然合法：
  *     - 新加了一篇概念/章节，却忘了在该目录的 00_INDEX 索引里挂链接（孤儿页，读者走不到）；
  *     - CONCEPT 编号跳号（读者顺读时断链心智地图）；
- *     - 故事章节漏写 `## 📒 凡人笔记`（少了「仙法→真实 AI 术语」的翻译，教材属性丢失）；
+ *     - 故事章节漏写 `## 凡人笔记`（少了「仙法→真实 AI 术语」的翻译，教材属性丢失）；
  *     - 正文成了死胡同：底部没有任何「同目录导航链接」（回索引/上一篇/下一篇），读者到页尾走投无路。
  *   本脚本把这些「房屋风格不变量」固化成体检项，让单人维护者/小模型改完一眼看红绿。
  *
@@ -23,7 +23,7 @@
  *       { dir: 'docs/XX_你的目录', kind: 'concept' | 'story', requireFanren: bool, numberPrefix: 'CONCEPT' | null }
  *     - dir            目录相对仓库根路径；目录内须有一个 00_INDEX*.md 作索引。
  *     - kind           仅用于报告分组文案。
- *     - requireFanren  该目录每篇内容文档是否必须含 `## 📒 凡人笔记`（故事=true，纯概念=false）。
+ *     - requireFanren  该目录每篇内容文档是否必须含 `## 凡人笔记`（故事=true，纯概念=false）。
  *     - numberPrefix   若该目录用 `[前缀-NN]` 连续编号（如 CONCEPT），填前缀做「不许跳号」检查；否则 null。
  *  2) 想加一条「新的房屋风格不变量」：在 checkSection() 里加一段 push 到 problems，
  *     并在 check_beginner_docs.test.js 补一个坏样本 + 好样本断言（坏必红、好必绿）。
@@ -110,12 +110,15 @@ function checkSection(repoRoot, section) {
     }
   }
 
-  // 4) 凡人笔记：故事类目录每篇必须含 `## 📒`（仙法→真实术语的翻译）。
+  // 4) 凡人笔记：故事类目录每篇必须含「## 凡人笔记」（仙法→真实术语的翻译）。
+  //    认**标题文字**而不是认某个字形：裁决 2026-09-28 把彩色 emoji 逐出文档面之后，
+  //    旧写法（标题前带一个笔记本 emoji）已随正文一并清掉；若这里仍守着那个字形，
+  //    文档清完这条门就恒红 —— 判据要跟着真源走，不是跟着旧截图走。
   if (section.requireFanren) {
     for (const f of contentFiles) {
       const s = fs.readFileSync(path.join(absDir, f), 'utf8');
-      if (!/##\s*📒/u.test(s)) {
-        problems.push({ dir: section.dir, kind: 'no-fanren', file: f, detail: `缺 \`## 📒 凡人笔记\`（教材属性丢失）` });
+      if (!/^##+\s*凡人笔记/mu.test(s)) {
+        problems.push({ dir: section.dir, kind: 'no-fanren', file: f, detail: `缺 \`## 凡人笔记\` 小节（教材属性丢失）` });
       }
     }
   }
@@ -163,10 +166,10 @@ function main(argv) {
   console.log('[docs:check-beginner] 面向小白文档 + 修仙故事 · 单人维护体检');
   console.log('[docs:check-beginner] 体检目录: ' + result.sections.join(' , '));
   if (result.ok) {
-    console.log('[docs:check-beginner] ✅ 全部通过：无孤儿页、编号连续、故事均有凡人笔记、正文均有底部导航。');
+    console.log('[docs:check-beginner] ✓ 全部通过：无孤儿页、编号连续、故事均有凡人笔记、正文均有底部导航。');
     process.exit(0);
   }
-  console.error(`[docs:check-beginner] ❌ 发现 ${result.problems.length} 处房屋风格问题：`);
+  console.error(`[docs:check-beginner] ✗ 发现 ${result.problems.length} 处房屋风格问题：`);
   for (const p of result.problems) {
     const loc = p.file ? `${p.dir}/${p.file}` : p.dir;
     console.error(`  - [${p.kind}] ${loc} :: ${p.detail}`);

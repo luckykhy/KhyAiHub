@@ -88,7 +88,7 @@ function isLinkValid(filePath, linkPath) {
 
 // 主函数
 function main() {
-  console.log('🔍 扫描文档链接...\n');
+  console.log('扫描文档链接...\n');
   
   const mdFiles = findMdFiles(path.join(ROOT, 'docs'));
   const issues = [];
@@ -133,12 +133,12 @@ function main() {
   const encodingIssues = issues.filter(i => i.type === 'encoding');
   const missingIssues = issues.filter(i => i.type === 'missing');
   
-  console.log(`📊 扫描完成：${mdFiles.length} 个文件，${issues.length} 个问题`);
+  console.log(`扫描完成：${mdFiles.length} 个文件，${issues.length} 个问题`);
   console.log(`   - 编码问题：${encodingIssues.length} 个`);
   console.log(`   - 缺失文件：${missingIssues.length} 个`);
   
   if (encodingIssues.length > 0) {
-    console.log('\n📋 编码问题示例：');
+    console.log('\n编码问题示例：');
     encodingIssues.slice(0, 5).forEach(issue => {
       console.log(`   ${issue.file}:${issue.line}`);
       console.log(`     原始: ${issue.raw}`);
@@ -147,7 +147,7 @@ function main() {
   }
   
   if (missingIssues.length > 0) {
-    console.log('\n📋 缺失文件示例：');
+    console.log('\n缺失文件示例：');
     missingIssues.slice(0, 5).forEach(issue => {
       console.log(`   ${issue.file}:${issue.line}`);
       console.log(`     链接: ${issue.decoded}`);
@@ -156,7 +156,7 @@ function main() {
   
   // 修复编码问题
   if (APPLY && encodingIssues.length > 0) {
-    console.log('\n🔧 修复编码问题...');
+    console.log('\n修复编码问题...');
     
     const fileGroups = {};
     encodingIssues.forEach(issue => {
@@ -179,10 +179,10 @@ function main() {
       });
       
       fs.writeFileSync(fullPath, content, 'utf8');
-      console.log(`   ✅ 修复: ${file} (${issues.length} 个链接)`);
+      console.log(`   ✓ 修复: ${file} (${issues.length} 个链接)`);
     });
     
-    console.log(`\n✅ 共修复 ${fixedCount} 个编码问题`);
+    console.log(`\n✓ 共修复 ${fixedCount} 个编码问题`);
   }
   
   return issues.length;

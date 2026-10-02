@@ -210,7 +210,7 @@ function lintScene(findings, file, startLine, body) {
   if (raws.length === 0) {
     findings.push({
       file, line: startLine, level: "error", code: "scene-empty",
-      msg: `scene 里一格都没有。每行写 "表情 角色 | 台词"（如 "🤖 Khy | 交给我"），或以 "> " 开头写一句旁白。`,
+      msg: `scene 里一格都没有。每行写 "标记 角色 | 台词"（如 "◆ Khy | 交给我"，标记取单色符号，不用彩色 emoji），或以 "> " 开头写一句旁白。`,
     });
     return;
   }
@@ -232,7 +232,7 @@ function lintScene(findings, file, startLine, body) {
     if (who === "") {
       findings.push({
         file, line: startLine + 1 + k, level: "error", code: "scene-empty-who",
-        msg: `scene 第 ${k + 1} 行 "|" 左边没有说话人。写成 "表情 角色 | 台词"（如 "👦 小明 | …"）。`,
+        msg: `scene 第 ${k + 1} 行 "|" 左边没有说话人。写成 "标记 角色 | 台词"（如 "◆ 小明 | …"）。`,
       });
     }
     if (say === "") {
@@ -366,7 +366,7 @@ function main() {
   };
   if (warnings.length && !QUIET) print(warnings.slice(0, 40), "⚠");
   if (errors.length) {
-    console.error(`\n[widget-lint] ❌ ${errors.length} 个必须修的问题：`);
+    console.error(`\n[widget-lint] ✗ ${errors.length} 个必须修的问题：`);
     print(errors.slice(0, 60), "✗");
   }
 
@@ -377,7 +377,7 @@ function main() {
     );
     process.exit(1);
   }
-  if (!QUIET) console.log("[widget-lint] ✅ 所有互动件（callout/quiz/flip/popover）写法正确。");
+  if (!QUIET) console.log("[widget-lint] ✓ 所有互动件（callout/quiz/flip/popover）写法正确。");
 }
 
 if (require.main === module) main();

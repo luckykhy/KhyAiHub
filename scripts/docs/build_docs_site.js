@@ -24,6 +24,8 @@
 
 const fs = require("fs");
 const path = require("path");
+// 渲染边界复用守卫自己的码位判定，禁止在此复制一份 emoji 表（两处会漂移）。
+const emojiPolicy = require("../ci/check-no-emoji.js");
 
 const ROOT = path.resolve(__dirname, "..", "..");
 const ASSETS_DIRNAME = path.join("docs", "19_资产", "site");
@@ -193,12 +195,14 @@ function highlightCode(code, lang) {
 //   4) 悬浮弹窗：    行内写 +[显示文字](悬浮解释) —— 纯 CSS 弹出，无需点击。
 //   5) 时间轴：      ```timeline  每行 `标签 | 描述`，展示演进/阶段流程。
 // ============================================================
+// 种类标记一律取单色词表（✓ ✗ ⚠ ★ ❯ → ● ○ ◉ ▸ ◆ ✱ ⌕）：彩色 emoji 不得用作标记或头像
+// （用户裁决 2026-09-28），mascot 同色同形，仅字号不同，故与 icon 共用一个字形。
 const CALLOUT_KINDS = {
-  tip:  { icon: "💡", label: "小提示",   mascot: "🐣" },
-  note: { icon: "📌", label: "小笔记",   mascot: "🐧" },
-  warn: { icon: "⚠️", label: "要小心",   mascot: "🦉" },
-  star: { icon: "⭐", label: "划重点",   mascot: "🦊" },
-  ask:  { icon: "🙋", label: "小白发问", mascot: "🐥" },
+  tip:  { icon: "✱", label: "小提示",   mascot: "✱" },
+  note: { icon: "◆", label: "小笔记",   mascot: "◆" },
+  warn: { icon: "⚠", label: "要小心",   mascot: "⚠" },
+  star: { icon: "★", label: "划重点",   mascot: "★" },
+  ask:  { icon: "❯", label: "小白发问", mascot: "❯" },
 };
 
 // 吉祥物插话：一段带表情吉祥物的旁白，用来把话「插」在正文里。
@@ -238,10 +242,10 @@ function renderQuiz(body) {
     `<span class="quiz-text">${renderInline(o.text)}</span></button></li>`
   ).join("");
   const expl = explain.length
-    ? `<div class="quiz-explain" hidden>💬 ${renderInline(explain.join("\n")).replace(/\n/g, "<br>")}</div>`
+    ? `<div class="quiz-explain" hidden>▸ ${renderInline(explain.join("\n")).replace(/\n/g, "<br>")}</div>`
     : "";
   return `<div class="quiz reveal" data-multi="${multi ? "1" : "0"}">` +
-    `<div class="quiz-q">🧠 ${renderInline(question)}</div>` +
+    `<div class="quiz-q">❯ ${renderInline(question)}</div>` +
     `<ul class="quiz-opts">${opts}</ul>` +
     `<div class="quiz-feedback" aria-live="polite"></div>${expl}</div>`;
 }
@@ -258,7 +262,7 @@ function renderFlip(body) {
   const ri = (s) => renderInline(s).replace(/\n/g, "<br>");
   return `<div class="flip reveal" tabindex="0" role="button" aria-label="点击翻转卡片">` +
     `<div class="flip-inner">` +
-    `<div class="flip-face flip-front">${ri(front)}<div class="flip-hint">👆 点我翻面看答案</div></div>` +
+    `<div class="flip-face flip-front">${ri(front)}<div class="flip-hint">▸ 点我翻面看答案</div></div>` +
     `<div class="flip-face flip-back">${ri(back)}</div>` +
     `</div></div>`;
 }
@@ -539,6 +543,9 @@ function walkMarkdown(dir, acc) {
       if (SKIP_PATH_PARTS.some((p) => ("/" + rel + "/").includes(p))) continue;
       walkMarkdown(full, acc);
     } else if (e.isFile() && /\.md$/i.test(e.name)) {
+      // 根级 .md（README/AGENTS/CLAUDE/…）不再生成 .html 孪生 —— 2026-09-28 裁决
+      // ([DESIGN-LAY-008] §11)，根目录只保留 .md 单源；docs/ 内孪生照常。
+      if (!rel.includes("/")) continue;
       if (SKIP_PATH_PARTS.some((p) => ("/" + rel).includes(p))) continue;
       acc.push(rel);
     }
@@ -548,7 +555,20 @@ function walkMarkdown(dir, acc) {
 
 function firstHeading(src) {
   const m = src.match(/^\s*#{1,6}\s+(.+?)\s*#*\s*$/m);
-  return m ? m[1].replace(/[`*_]/g, "").trim() : null;
+  if (!m) return null;
+  // 标题会被原样取用成站点导航/卡片文字。仓库外的 `.md`（如 gitignore 的第三方 tools/）
+  // 里的彩色 emoji 不该流入本站画面，在唯一的取用处滤掉。
+  return dropBanned(m[1].replace(/[`*_]/g, "")).trim();
+}
+
+function dropBanned(text) {
+  let out = "";
+  for (const ch of String(text)) {
+    const cp = ch.codePointAt(0);
+    if (emojiPolicy.isBannedCodePoint(cp)) continue;
+    out += ch;
+  }
+  return out;
 }
 
 // 顶层分组名（docs 下用二级目录，其它用一级目录）
@@ -589,13 +609,13 @@ ${mirrorMeta}<title>${escapeHtml(title)} · Khy-OS 文档</title>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="${rootPrefix}docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="${rootPrefix}docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="${rootPrefix}docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="${rootPrefix}docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -649,7 +669,7 @@ function neutralizeDeadLinks(html, htmlAbsPath, deadAcc, willExist) {
       if (isExternal(src) || resolvesLocally(src)) return m;
       deadAcc.push({ from: fromRel, type: "img", href: src });
       const alt = (m.match(/alt="([^"]*)"/) || [, ""])[1];
-      return `<span class="deadimg" title="图片不存在：${escapeAttr(src)}">🖼️ ${escapeHtml(alt || "图片缺失")}</span>`;
+      return `<span class="deadimg" title="图片不存在：${escapeAttr(src)}">□ ${escapeHtml(alt || "图片缺失")}</span>`;
     });
   return html;
 }
@@ -769,17 +789,17 @@ function writeIndex(docs, navData, deadLinks, willExist) {
     '  B --> C["③ Tool Loop<br/>工具循环"]',
     '  C --> D["④ MCP<br/>模型上下文协议"]',
     '  D --> E["⑤ Skill<br/>技能"]',
-    '  E --> F["🚀 上手 Khy-OS"]',
+    '  E --> F["★ 上手 Khy-OS"]',
   ].join("\n");
 
   const conceptGroup = cards.find((c) => c.group.includes("CONCEPTS") || c.group.includes("概念"));
   const rest = cards.filter((c) => c !== conceptGroup);
 
   const body =
-    `<section class="reveal"><h2>🧭 新手学习路线</h2>` +
+    `<section class="reveal"><h2>▸ 新手学习路线</h2>` +
     `<p>如果你是第一次接触 AI 编程助手，按下面的顺序读五个核心概念，再上手 Khy-OS。每个方框都可点进对应文档。</p>` +
     `<pre class="mermaid">${escapeHtml(learnPath)}</pre></section>` +
-    (conceptGroup ? `<section class="reveal"><h2>📖 核心概念（先读这个）</h2><div class="card-grid">${conceptGroup.items.join("")}</div></section>` : "") +
+    (conceptGroup ? `<section class="reveal"><h2>◆ 核心概念（先读这个）</h2><div class="card-grid">${conceptGroup.items.join("")}</div></section>` : "") +
     rest.map((c) =>
       `<section class="reveal"><h2>${escapeHtml(c.group)}</h2><div class="card-grid">${c.items.join("")}</div></section>`
     ).join("\n");

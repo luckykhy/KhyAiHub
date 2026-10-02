@@ -58,7 +58,7 @@ function findActualFile(baseDir, relativePath) {
 }
 
 function main() {
-  console.log('🔍 检查文档索引中的链接...\n');
+  console.log('检查文档索引中的链接...\n');
   
   const content = fs.readFileSync(INDEX_FILE, 'utf8');
   const lines = content.split('\n');
@@ -106,30 +106,30 @@ function main() {
     }
   });
   
-  console.log(`📊 检查完成：${lines.length} 行，${issues.length} 个断链`);
+  console.log(`检查完成：${lines.length} 行，${issues.length} 个断链`);
   
   if (issues.length > 0) {
-    console.log('\n📋 断链列表：');
+    console.log('\n断链列表：');
     issues.forEach(issue => {
       console.log(`   行 ${issue.line}: [${issue.text}](${issue.rawLink})`);
     });
     
     if (APPLY) {
-      console.log('\n🔧 修复断链...');
+      console.log('\n修复断链...');
       
       // 这里可以添加自动修复逻辑
       // 目前只报告问题，需要手动修复
       
-      console.log('\n⚠️  需要手动修复以下断链：');
+      console.log('\n⚠  需要手动修复以下断链：');
       issues.forEach(issue => {
         console.log(`   行 ${issue.line}: ${issue.rawLink}`);
         console.log(`     → 文件不存在，请检查文件名或删除链接`);
       });
     } else {
-      console.log('\n💡 运行 `node scripts/docs/fix-doc-index.js --apply` 查看修复建议');
+      console.log('\n运行 `node scripts/docs/fix-doc-index.js --apply` 查看修复建议');
     }
   } else {
-    console.log('\n✅ 所有链接有效');
+    console.log('\n✓ 所有链接有效');
   }
   
   return issues.length;

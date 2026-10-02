@@ -49,19 +49,19 @@ const ENRICH = {
     verify: '`npm run arch:god --workspace services/backend`（阈值真源 `projectHygiene/thresholds.js` 的 `godFileLoc()`）',
   },
   'RUNTIME-001': {
-    counter: '❌ 业务代码里写死后端端点 `fetch("http://<host>:<port>/api")` → ✅ 从 `VITE_BACKEND_HOST` / `VITE_BACKEND_PORT` 读取',
+    counter: '✗ 业务代码里写死后端端点 `fetch("http://<host>:<port>/api")` → ✓ 从 `VITE_BACKEND_HOST` / `VITE_BACKEND_PORT` 读取',
     verify: '`node scripts/ci/check-agent-rules.js --changed`；`grep -rn "localhost:[0-9]" --include="*.js" --include="*.vue" --include="*.ts"`',
   },
   'RUNTIME-002': {
-    counter: '❌ `正在工作…` / `Loading…` → ✅ `解析 AST (已处理 340/1200 节点)…`',
+    counter: '✗ `正在工作…` / `Loading…` → ✓ `解析 AST (已处理 340/1200 节点)…`',
     verify: '`node scripts/ci/check-agent-rules.js --changed`（generic-status 检查）',
   },
   'RUNTIME-003': {
-    counter: '❌ `const start = Date.now(); if (Date.now() - start > 120_000) kill()` → ✅ 每次产出事件重置 `lastActivity`，仅在空闲超限时触发',
+    counter: '✗ `const start = Date.now(); if (Date.now() - start > 120_000) kill()` → ✓ 每次产出事件重置 `lastActivity`，仅在空闲超限时触发',
     verify: '`node scripts/ci/check-agent-rules.js --changed`（hard-timeout 检查）+ 人工评审',
   },
   'RUNTIME-004': {
-    counter: '❌ `\\x1B[1;{rows-1}r`（DECSTBM 滚动区，丢弃越界内容、杀死回滚）→ ✅ `\\x1B7` 保存光标 + 绝对定位 + `\\x1B[K` 清行 + `\\x1B8` 恢复',
+    counter: '✗ `\\x1B[1;{rows-1}r`（DECSTBM 滚动区，丢弃越界内容、杀死回滚）→ ✓ `\\x1B7` 保存光标 + 绝对定位 + `\\x1B[K` 清行 + `\\x1B8` 恢复',
     verify: '`node scripts/ci/check-agent-rules.js --changed`（scroll-region 检查 DECSTBM）',
   },
   'PROCESS-001': {
@@ -77,7 +77,7 @@ const ENRICH = {
     verify: '`CLAUDE.md` §三 验收门禁命令清单（`node --check`、三守卫、`arch:god`、映射表覆盖）+ 人工核对',
   },
   'PROCESS-101': {
-    counter: '❌ 在 issue 里口头讨论「要不要加条规则」却不落卡 → ✅ 直接 `npm run rules:scaffold PROCESS` 起草草案提 PR',
+    counter: '✗ 在 issue 里口头讨论「要不要加条规则」却不落卡 → ✓ 直接 `npm run rules:scaffold PROCESS` 起草草案提 PR',
     verify: '`node scripts/ci/check-gov-rules.js`（字段齐全 + 查重）+ PR 评审',
   },
   'SECURITY-001': {
