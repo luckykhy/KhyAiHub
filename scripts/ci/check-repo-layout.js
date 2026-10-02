@@ -1222,6 +1222,10 @@ function checkCrossLayerRequires(findings, counts) {
     const secondColon = line.indexOf(':', firstColon + 1);
     if (firstColon < 0 || secondColon < 0) continue;
     const file = toPosix(line.slice(0, firstColon));
+    // require() 只可能出现在 JS 里；.json 清单（如 khy.module.json 的 `_test_dialect_note`
+    // 等散文注记）里提到 `require('../../x')` 只是文字说明，git grep 会连它一起抓，
+    // 再按清单自身目录解析 `../` 必然算出双写路径的假悬空。排除非可执行 JSON。
+    if (file.endsWith('.json')) continue;
     // 这条规则约束可发布的运行时模块图。测试可直接加载相邻 workspace 的
     // fixture / implementation 做契约验证，不会形成产品运行时依赖边。
     if (isTestFixture(file)) continue;
