@@ -243,7 +243,7 @@ function _firstEnableGuidance(mode) {
 
 function _guidanceText(mode) {
   return [
-    `🖐️ 桌面操控已首次开启（KHY_DESKTOP_CONTROL=${mode}）。这是高危能力：Khyos 可接管真实鼠标/键盘。`,
+    `桌面操控已首次开启（KHY_DESKTOP_CONTROL=${mode}）。这是高危能力：Khyos 可接管真实鼠标/键盘。`,
     '分级确认（按操作风险 low/medium/high/critical 决定确认强度）：',
     '  • on 模式：low/medium 自主放行，high 本会话首次确认，critical 每次确认；',
     '  • ask 模式：low 自主，medium 及以上本会话首次确认；',
