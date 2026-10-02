@@ -687,13 +687,18 @@ node --test services/backend/tests/semanticProjection.test.js
 node --test services/backend/tests/tui/taskPanelFrameNeutrality.test.js
 #    断言：去框线后总行数 = 改前 - 2；App.js:6501 与 chromeRegistry.js:85 两处同步
 
-# ⑤ 既有基线零回归（先实测取真值，不许估）
-node --test services/backend/tests/tui/taskPanelLines.test.js \
-             services/backend/tests/tui/taskPanelHeader.test.js \
-             services/backend/tests/tui/sidebarPanelLines.test.js \
-             services/backend/tests/tui/liveFrameGeometry.test.js
+# ⑤ 既有基线零回归 ★ 路径已由 E0 实测订正（不是 tests/tui/，而是 tests/cli/tui/）
+#    基线真值 = 132 绿 / 2 存量红（taskPanelState + liveFrameGeometry，同一根因 describe 未定义）
+node --test services/backend/tests/cli/tui/ccThemeBg.test.js \
+             services/backend/tests/cli/tui/ink-components/taskPanelHeader.test.js \
+             services/backend/tests/cli/tui/taskPanelLines.test.js \
+             services/backend/tests/cli/tui/sidebarPanel.test.js \
+             services/backend/tests/cli/tui/ccTheme.test.js \
+             services/backend/tests/cli/taskLineStyle.test.js \
+             services/backend/tests/cli/taskLinesMemo.test.js
 
 # ⑥ 真帧验证（用 tests/tui/vtScreen.js 读最终屏幕态，不数累积字节流）
+#    ⚠ 该文件当前是存量红（jest 风格），先修它再当门禁
 node --test services/backend/tests/tui/liveFrameGeometry.test.js
 
 # ⑦ 桌面端契约（D6 强制 preload↔main 两侧一致；D9 禁品牌文本）
@@ -742,3 +747,5 @@ node scripts/ci/check-tui-gates.js
 | 2026-10-02 | 门预算订正：`check-tui-gates.js:41` `MAX_GATES` 实为 **227**（非 skill 文档记的 220）；`:28-30` 明写用户偏好应迁 `~/.khyquant/tui.json` ⇒ 覆盖项走 `tuiConfig` 而非新增 env 门。 |
 | 2026-10-02 | **175 初稿**：基于桌面端截图（红框消息区 + 独立输入框），实测 `Terminal.tsx`（stub `:38-39`）、`AppLayout.tsx:375`、`preload/index.ts:47-70`、`index.ts:189-195`+`:357-358`，得出「两端已共用 `runToolUseLoop`，统一点在渲染层之下」的核心判断；否掉 PTY 方案（三条硬理由）。 |
 | 2026-10-02 | **合并为 176（本文件）**：174 + 175 物理合并，两份原提案连同其 `.html` 生成物**已删除**。统一编号体系（`P*` 面板 / `E*` 跨端），补充跨期顺序纪律与 VS Code 反例佐证。 |
+| 2026-10-02 | **E0 实测订正三处**（实施前必读）：<br>① **测试真实路径是 `tests/cli/tui/`，不是 `tests/tui/`** —— §11 ⑤⑥ 的命令路径写错了，真实文件为 `tests/cli/tui/{taskPanelHeader,taskPanelLines,sidebarPanel,ccTheme}.test.js` + `tests/cli/{taskLineStyle,taskLinesMemo}.test.js`<br>② **基线实测 = 132 绿 / 2 存量红**。两个红是 `taskPanelState.test.js` 与 `tui/liveFrameGeometry.test.js`，**同一根因**：用了裸 jest 全局（无 `require('node:test')`）⇒ `describe is not defined`。**属既存缺陷，非本方案引入**<br>③ **`backgroundMode` 全仓只有 1 处**（`terminalCapabilities.js` 自身），**零外部消费者** ⇒ §9 #4 的第三态兼容风险**不成立**，P0b 可安全引入 `'unknown'` |
+| 2026-10-02 | **P0 实施完成**（`ccThemeBg.js` + `ccThemeBg.test.js` 20 条全绿）。<br>**实施中抓出并修掉 2 个真 bug**：<br>① `resolveBackgroundMode` 对三段式 `COLORFGBG=15;default;0` 会读末段 `0` ⇒ 误判 dark。xterm 约定「不可知时该位写 `default`」⇒ **已修为判 `unknown`**<br>② `normalizeDepth(Symbol)` 抛 `TypeError`（`Number(symbol)` 会抛）⇒ 违反「绝不抛」铁律。**已加类型守卫**<br>**门预算归因闭合**：`check-tui-gates` 报 236 > 227（超 9），但 `ccThemeBg.js` 的 `KHY_*` token 数 = **0**（纯叶子不读 env 的直接结果），且 TUI 目录唯一新文件即本次产物 ⇒ **超标 9 个系既存，非本方案引入**。算术校验：227 + 9 = 236 ✅ |
