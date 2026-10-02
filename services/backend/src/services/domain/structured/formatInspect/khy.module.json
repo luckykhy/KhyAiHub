@@ -1,0 +1,45 @@
+{
+  "name": "formatInspect",
+  "domain": "D2",
+  "mayDependOn": ["D2"],
+  "_mayDependOn_note": "实测边：fileFormatDetector.js → fs/path（node 内建，不构成域边）+ ./fileFormatData（单元内，D2）；textAddress.js 零 require（纯函数叶子）；fileFormatData.js 零 require（纯字面量叶子）。故本单元只声明 D2 内部边，未使用 D3。",
+  "fanIn": 6,
+  "fanInEvidence": [
+    "services/backend/src/services/formatInspect/index.js",
+    "services/backend/src/tools/FileReadTool/index.js",
+    "services/backend/src/tools/inspectDocument.js",
+    "services/backend/src/tools/readBinaryGuard.js",
+    "services/backend/src/tools/readFile.js",
+    "services/backend/src/tools/replaceAtLocation.js"
+  ],
+  "_fanIn_note": "计非测试消费者 6 个（D1 再导出壳 1 + 工具面 5）。services/backend/tests/formatInspect.test.js 是仓级行为测试，按本仓口径不计入 fan-in，登记在 behaviourTestsOutsideUnit。",
+  "behaviourTestsOutsideUnit": [
+    "services/backend/tests/formatInspect.test.js"
+  ],
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-29",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "单元早于 entry-buffer 守卫，缓冲区从未被经过，故 enteredVia=null。晋级三判据齐：单元级 README.md、整数 fanIn、三个源文件各有同名同目录测试。",
+  "contract": {
+    "purity": "textAddress.js 与 fileFormatData.js 是零 IO 纯叶子；fileFormatDetector.js 只有 detectFile/inspectProject/_readHeadTail 触盘，纯判定面（fromExtension/detectByMagic/looksBinary/detectBuffer）不落 IO。",
+    "ioOwner": "唯一 IO 面在 fileFormatDetector.js（fs.openSync/fstatSync/readSync 与目录遍历）；_readHeadTail 只读普通文件，非普通文件（设备节点/socket）直接放弃——防不可返回的 read 锁死调用方事件循环（RUNTIME-003）。",
+    "injectionPoints": [
+      "detectBuffer(buf, name) — 内容与文件名由调用方给定，不读盘",
+      "detectByMagic(buf) / looksBinary(buf) — 只吃 Buffer",
+      "fromExtension(ext) — 只吃字符串，点/无点、大小写均可",
+      "replaceAtLocation(text, loc) / locateWord(text, word) — 纯字符串入参"
+    ],
+    "gates": "无 env 开关：本单元是纯判定与纯定位层，不受任何 KHY_* 门控。",
+    "byte_identity": "textAddress.replaceAtLocation 在原始字符串上按区间从后往前裁切重组：除目标处外原文逐字不变，替换串长度不同也不影响后续文本。",
+    "no_inherited_keys": "原型键检查（本仓单元默认项）：fromExtension 把入参一律归一成带点形式（'js'→'.js'），再用 `EXT_FORMAT[key] ? ...` 判定，因此 'constructor'/'__proto__' 之类只会变成 '.constructor'/'.__proto__' 这类不存在的键，走 UNKNOWN 分支——裸查找在本单元不可达，已由测试钉住。"
+  },
+  "tests": [
+    "textAddress.test.js",
+    "fileFormatData.test.js",
+    "fileFormatDetector.test.js"
+  ],
+  "_test_dialect_note": "三份共置测试均为 node:test 方言（node --test <显式文件名>，Windows 下不可只给目录）。仓级 tests/formatInspect.test.js 亦为 node:test 方言。"
+}
