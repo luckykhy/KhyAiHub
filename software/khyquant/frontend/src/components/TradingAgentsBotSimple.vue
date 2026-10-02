@@ -160,7 +160,7 @@
                 </div>
                 <div class="agent-description">{{ agent.description }}</div>
                 <div v-if="agent.algorithmDesc" class="algorithm-description">
-                  🤖 {{ agent.algorithmDesc }}
+                  {{ agent.algorithmDesc }}
                 </div>
                 <div v-if="agent.progress > 0" class="agent-progress">
                   <el-progress 
@@ -1669,13 +1669,13 @@ const addAssistantGreeting = () => {
   
   const result = analysisResult.value
   const greetings = [
-    `你好!我是小K 👋\n\n我已经完成了对 ${result.stockCode} 的深度分析。基于${result.agentResults.length}个智能体的综合研判,当前建议是"${result.recommendation}",置信度${result.confidence}%。\n\n有什么想了解的吗?我可以为您详细解读技术面、基本面、风险评估等各个方面~`,
+    `你好!我是小K\n\n我已经完成了对 ${result.stockCode} 的深度分析。基于${result.agentResults.length}个智能体的综合研判,当前建议是"${result.recommendation}",置信度${result.confidence}%。\n\n有什么想了解的吗?我可以为您详细解读技术面、基本面、风险评估等各个方面~`,
     
-    `您好!小K为您服务 😊\n\n${result.stockCode} 的分析报告已经生成!综合${result.agentResults.length}位智能体的专业意见,我们给出"${result.recommendation}"的投资建议,置信度达到${result.confidence}%。\n\n想深入了解哪个方面呢?技术指标、基本面、还是风险控制?`,
+    `您好!小K为您服务\n\n${result.stockCode} 的分析报告已经生成!综合${result.agentResults.length}位智能体的专业意见,我们给出"${result.recommendation}"的投资建议,置信度达到${result.confidence}%。\n\n想深入了解哪个方面呢?技术指标、基本面、还是风险控制?`,
     
-    `嗨!小K在这里 🤖\n\n刚刚完成了${result.stockCode}的全方位分析!${result.agentResults.length}个智能体团队一致认为应该"${result.recommendation}",我们对这个判断有${result.confidence}%的把握。\n\n有任何疑问随时问我,我会结合分析结果为您详细解答!`,
+    `嗨!小K在这里\n\n刚刚完成了${result.stockCode}的全方位分析!${result.agentResults.length}个智能体团队一致认为应该"${result.recommendation}",我们对这个判断有${result.confidence}%的把握。\n\n有任何疑问随时问我,我会结合分析结果为您详细解答!`,
     
-    `你好呀!我是您的量化助手小K ✨\n\n${result.stockCode}的智能分析已完成!经过${result.agentResults.length}个专业智能体的深度研判,当前投资建议是"${result.recommendation}",置信度${result.confidence}%。\n\n想了解具体的分析依据吗?或者有其他问题也可以问我~`
+    `你好呀!我是您的量化助手小K\n\n${result.stockCode}的智能分析已完成!经过${result.agentResults.length}个专业智能体的深度研判,当前投资建议是"${result.recommendation}",置信度${result.confidence}%。\n\n想了解具体的分析依据吗?或者有其他问题也可以问我~`
   ]
   
   const greeting = greetings[Math.floor(Math.random() * greetings.length)]

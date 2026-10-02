@@ -1,7 +1,7 @@
 <template>
   <div class="recent-trades-panel">
     <div class="panel-header">
-      <span>📝 最近交易</span>
+      <span>最近交易</span>
       <div class="header-actions">
         <el-button size="small" @click="loadTrades" :loading="loading">
           <el-icon><Refresh /></el-icon>
@@ -74,10 +74,10 @@ const loadTrades = async () => {
     
     if (response.success) {
       trades.value = response.data.trades || response.data.list || []
-      if (import.meta.env.DEV) { console.log('✅ 最近交易加载成功:', trades.value.length, '条') }
+      if (import.meta.env.DEV) { console.log('✓ 最近交易加载成功:', trades.value.length, '条') }
     }
   } catch (error) {
-    console.error('❌ 加载交易记录失败:', error)
+    console.error('✗ 加载交易记录失败:', error)
     ElMessage.error('加载交易记录失败')
   } finally {
     loading.value = false
@@ -180,7 +180,7 @@ defineExpose({
 }
 
 .recent-trades-panel::after {
-  content: '💱';
+  content: '';
   position: absolute;
   right: 15px;
   bottom: 15px;

@@ -877,7 +877,7 @@ async function applyStrategy() {
 
   applying.value = true
   try {
-    if (import.meta.env.DEV) { console.log('🚀 应用策略:', adaptedStrategy.value.name) }
+    if (import.meta.env.DEV) { console.log('应用策略:', adaptedStrategy.value.name) }
 
     // 应用策略到交易界面
     emit('strategy-applied', adaptedStrategy.value)
@@ -897,7 +897,7 @@ async function applyStrategy() {
 /** applyRecommendedStrategy —— 一键选择并应用推荐策略（选择 + 应用的快捷操作）*/
 async function applyRecommendedStrategy(strategy) {
   try {
-    if (import.meta.env.DEV) { console.log('🚀 应用推荐策略:', strategy.name) }
+    if (import.meta.env.DEV) { console.log('应用推荐策略:', strategy.name) }
     
     // 先选择策略
     selectRecommendedStrategy(strategy)
@@ -919,7 +919,7 @@ async function applyRecommendedStrategy(strategy) {
  */
 async function generateAndEmitSignals(strategy) {
   try {
-    if (import.meta.env.DEV) { console.log('🔄 生成策略信号:', strategy.name) }
+    if (import.meta.env.DEV) { console.log('生成策略信号:', strategy.name) }
     
     // 🔥 修改：executeStrategyForSignals 现在返回 { signals, auxiliaryData }
     const result = await executeStrategyForSignals(strategy)
@@ -928,12 +928,12 @@ async function generateAndEmitSignals(strategy) {
     const auxiliaryData = result.auxiliaryData || {}
     
     if (!signals || signals.length === 0) {
-      console.warn('⚠️ 策略没有生成任何信号')
+      console.warn('⚠ 策略没有生成任何信号')
       ElMessage.warning(`策略 "${strategy.name}" 没有生成交易信号`)
       
       // 即使没有信号，也要发送辅助线数据
       if (Object.keys(auxiliaryData).length > 0) {
-        if (import.meta.env.DEV) { console.log('📊 虽然没有信号，但有辅助线数据，仍然发送') }
+        if (import.meta.env.DEV) { console.log('虽然没有信号，但有辅助线数据，仍然发送') }
         emit('signals-generated', {
           strategy: strategy,
           signals: [],
@@ -950,7 +950,7 @@ async function generateAndEmitSignals(strategy) {
       auxiliaryData: auxiliaryData  // 🔥 新增：传递辅助线数据
     })
     
-    if (import.meta.env.DEV) { console.log('✅ 策略信号已生成并发送:', {
+    if (import.meta.env.DEV) { console.log('✓ 策略信号已生成并发送:', {
       signals: signals.length,
       auxiliaryLines: Object.keys(auxiliaryData).length
     }) }
@@ -963,7 +963,7 @@ async function generateAndEmitSignals(strategy) {
     }
     
   } catch (error) {
-    console.error('❌ 生成策略信号失败:', error)
+    console.error('✗ 生成策略信号失败:', error)
     ElMessage.error(`生成策略信号失败: ${error.message}`)
     
     // 即使失败也尝试发送空数据，避免界面卡住
@@ -986,7 +986,7 @@ async function generateAndEmitSignals(strategy) {
  */
 async function executeStrategyForSignals(strategy) {
   try {
-    if (import.meta.env.DEV) { console.log('🔄 执行策略获取信号:', strategy.name) }
+    if (import.meta.env.DEV) { console.log('执行策略获取信号:', strategy.name) }
     
     // 生成模拟K线数据
     const mockKlineData = generateMockKlineData()
@@ -998,7 +998,7 @@ async function executeStrategyForSignals(strategy) {
     // 如果策略有代码，尝试执行实际的策略代码
     if (strategy.code) {
       try {
-        if (import.meta.env.DEV) { console.log('📊 执行实际策略代码:', strategy.name) }
+        if (import.meta.env.DEV) { console.log('执行实际策略代码:', strategy.name) }
 
         // 执行策略 - 使用策略的参数或默认参数
         const params = strategy.parameters || {
@@ -1016,12 +1016,12 @@ async function executeStrategyForSignals(strategy) {
           language: strategy.language || 'javascript'
         })
         
-        if (import.meta.env.DEV) { console.log('📊 策略执行结果类型:', typeof strategyResults, Array.isArray(strategyResults) ? '数组' : '对象') }
+        if (import.meta.env.DEV) { console.log('策略执行结果类型:', typeof strategyResults, Array.isArray(strategyResults) ? '数组' : '对象') }
         
         // 🔥 关键修复:处理新旧两种返回格式
         if (strategyResults && typeof strategyResults === 'object' && !Array.isArray(strategyResults)) {
           // 新格式：{ signals, auxiliaryData }
-          if (import.meta.env.DEV) { console.log('✅ 检测到新格式（对象）') }
+          if (import.meta.env.DEV) { console.log('✓ 检测到新格式（对象）') }
           
           // 🔥 确保 signals 是数组
           const rawSignals = Array.isArray(strategyResults.signals) ? strategyResults.signals : []
@@ -1041,7 +1041,7 @@ async function executeStrategyForSignals(strategy) {
           // 🔥 提取辅助线数据
           auxiliaryData = strategyResults.auxiliaryData || {}
           
-          if (import.meta.env.DEV) { console.log('✅ 新格式解析成功:', {
+          if (import.meta.env.DEV) { console.log('✓ 新格式解析成功:', {
             signals: signals.length,
             auxiliaryLines: Object.keys(auxiliaryData).length,
             auxiliaryLineNames: Object.keys(auxiliaryData)
@@ -1051,7 +1051,7 @@ async function executeStrategyForSignals(strategy) {
           if (Object.keys(auxiliaryData).length > 0) {
             Object.keys(auxiliaryData).forEach(lineName => {
               const lineData = auxiliaryData[lineName]
-              if (import.meta.env.DEV) { console.log(`📊 辅助线 "${lineName}":`, {
+              if (import.meta.env.DEV) { console.log(`辅助线 "${lineName}":`, {
                 dataPoints: lineData.data?.length || 0,
                 firstPoint: lineData.data?.[0],
                 lastPoint: lineData.data?.[lineData.data.length - 1]
@@ -1060,7 +1060,7 @@ async function executeStrategyForSignals(strategy) {
           }
         } else if (Array.isArray(strategyResults)) {
           // 旧格式：直接返回信号数组
-          if (import.meta.env.DEV) { console.log('⚠️ 检测到旧格式（数组）') }
+          if (import.meta.env.DEV) { console.log('⚠ 检测到旧格式（数组）') }
           signals = strategyResults
             .filter(s => s && (s.type === 'buy' || s.type === 'sell'))
             .map((signal, index) => ({
@@ -1074,22 +1074,22 @@ async function executeStrategyForSignals(strategy) {
             }))
           
           auxiliaryData = {}
-          if (import.meta.env.DEV) { console.log('⚠️ 旧格式不包含辅助线数据') }
+          if (import.meta.env.DEV) { console.log('⚠ 旧格式不包含辅助线数据') }
         } else {
           // 🔥 未知格式，使用空数组
-          console.warn('⚠️ 策略返回了未知格式，使用空信号数组')
+          console.warn('⚠ 策略返回了未知格式，使用空信号数组')
           signals = []
           auxiliaryData = {}
         }
         
-        if (import.meta.env.DEV) { console.log('✅ 策略代码执行成功，生成信号:', signals.length, '个，辅助线:', Object.keys(auxiliaryData).length, '条') }
+        if (import.meta.env.DEV) { console.log('✓ 策略代码执行成功，生成信号:', signals.length, '个，辅助线:', Object.keys(auxiliaryData).length, '条') }
         
         // 🔥 新增：详细检查辅助线数据
         if (Object.keys(auxiliaryData).length > 0) {
-          console.error('🔍🔍🔍 详细检查辅助线数据 🔍🔍🔍')  // 使用 error 确保显眼
+          console.error('详细检查辅助线数据')  // 使用 error 确保显眼
           Object.keys(auxiliaryData).forEach(lineName => {
             const lineData = auxiliaryData[lineName]
-            console.error(`  📊 ${lineName}:`)
+            console.error(`  ${lineName}:`)
             console.error(`    - name: ${lineData.name}`)
             console.error(`    - color: ${lineData.color}`)
             console.error(`    - data 类型: ${typeof lineData.data}`)
@@ -1100,15 +1100,15 @@ async function executeStrategyForSignals(strategy) {
               console.error(`    - 第一个数据点:`, lineData.data[0])
               console.error(`    - 最后一个数据点:`, lineData.data[lineData.data.length - 1])
             } else {
-              console.error(`    ❌❌❌ data 数组为空！`)
+              console.error(`    ✗✗✗ data 数组为空！`)
             }
           })
         } else {
-          console.error('❌❌❌ 没有辅助线数据！')
+          console.error('✗✗✗ 没有辅助线数据！')
         }
         
       } catch (codeError) {
-        console.warn('⚠️ 策略代码执行失败，使用默认信号生成:', codeError.message)
+        console.warn('⚠ 策略代码执行失败，使用默认信号生成:', codeError.message)
         signals = generateDefaultSignals(strategy, mockKlineData)
         auxiliaryData = {}
       }
@@ -1118,8 +1118,8 @@ async function executeStrategyForSignals(strategy) {
       auxiliaryData = {}
     }
     
-    if (import.meta.env.DEV) { console.log('✅ 策略信号生成成功:', signals.length, '个信号，', Object.keys(auxiliaryData).length, '条辅助线') }
-    if (import.meta.env.DEV) { console.log('📍 信号详情:', Array.isArray(signals) ? signals.slice(0, 3).map(s => ({
+    if (import.meta.env.DEV) { console.log('✓ 策略信号生成成功:', signals.length, '个信号，', Object.keys(auxiliaryData).length, '条辅助线') }
+    if (import.meta.env.DEV) { console.log('信号详情:', Array.isArray(signals) ? signals.slice(0, 3).map(s => ({
       type: s.type,
       index: s.index,
       time: new Date(s.time).toLocaleDateString(),
@@ -1127,7 +1127,7 @@ async function executeStrategyForSignals(strategy) {
     })) : []) }
     
     if (Object.keys(auxiliaryData).length > 0) {
-      if (import.meta.env.DEV) { console.log('📍 辅助线详情:', Object.keys(auxiliaryData).map(key => ({
+      if (import.meta.env.DEV) { console.log('辅助线详情:', Object.keys(auxiliaryData).map(key => ({
         name: key,
         dataPoints: auxiliaryData[key]?.data?.length || 0
       }))) }
@@ -1140,7 +1140,7 @@ async function executeStrategyForSignals(strategy) {
     }
     
   } catch (error) {
-    console.error('❌ 执行策略获取信号失败:', error)
+    console.error('✗ 执行策略获取信号失败:', error)
     throw error
   }
 }
@@ -1233,9 +1233,9 @@ function generateMockKlineData() {
     basePrice = close
   }
   
-  if (import.meta.env.DEV) { console.log('📊 生成K线数据:', data.length, '条，时间范围:', new Date(data[0].time * 1000).toLocaleDateString(), '到', new Date(data[data.length-1].time * 1000).toLocaleDateString()) }
-  if (import.meta.env.DEV) { console.log('📊 价格范围:', Math.min(...data.map(d => d.low)).toFixed(2), '-', Math.max(...data.map(d => d.high)).toFixed(2)) }
-  if (import.meta.env.DEV) { console.log('📊 时间格式: 秒级时间戳 (与 lightweight-charts 兼容)') }
+  if (import.meta.env.DEV) { console.log('生成K线数据:', data.length, '条，时间范围:', new Date(data[0].time * 1000).toLocaleDateString(), '到', new Date(data[data.length-1].time * 1000).toLocaleDateString()) }
+  if (import.meta.env.DEV) { console.log('价格范围:', Math.min(...data.map(d => d.low)).toFixed(2), '-', Math.max(...data.map(d => d.high)).toFixed(2)) }
+  if (import.meta.env.DEV) { console.log('时间格式: 秒级时间戳 (与 lightweight-charts 兼容)') }
   return data
 }
 
@@ -1370,7 +1370,7 @@ async function createIntelligentStrategy() {
  */
 async function loadStrategyTemplates() {
   try {
-    if (import.meta.env.DEV) { console.log('📋 加载用户策略作为模板...') }
+    if (import.meta.env.DEV) { console.log('加载用户策略作为模板...') }
     
     // 从 strategyStore 加载用户创建的策略
     if (strategyStore.strategies.length === 0) {
@@ -1389,9 +1389,9 @@ async function loadStrategyTemplates() {
       parameters: strategy.parameters || {}
     }))
     
-    if (import.meta.env.DEV) { console.log('✅ 已加载用户策略作为模板:', strategyTemplates.value.length, '个') }
+    if (import.meta.env.DEV) { console.log('✓ 已加载用户策略作为模板:', strategyTemplates.value.length, '个') }
   } catch (error) {
-    console.error('❌ 加载策略模板失败:', error)
+    console.error('✗ 加载策略模板失败:', error)
     ElMessage.error('加载策略失败: ' + error.message)
   }
 }
@@ -1481,7 +1481,7 @@ function mergeStrategySources(...sources) {
 async function loadExistingStrategies() {
   loadingExistingStrategies.value = true
   try {
-    if (import.meta.env.DEV) { console.log('📋 加载已有策略列表...') }
+    if (import.meta.env.DEV) { console.log('加载已有策略列表...') }
     
     // 从 strategyStore 加载用户创建的策略
     if (strategyStore.strategies.length === 0) {
@@ -1500,9 +1500,9 @@ async function loadExistingStrategies() {
       }
     }
     
-    if (import.meta.env.DEV) { console.log('✅ 已加载已有策略:', existingStrategies.value.length, '个') }
+    if (import.meta.env.DEV) { console.log('✓ 已加载已有策略:', existingStrategies.value.length, '个') }
   } catch (error) {
-    console.error('❌ 加载已有策略失败:', error)
+    console.error('✗ 加载已有策略失败:', error)
     ElMessage.error('加载策略列表失败: ' + error.message)
     // 🔥 失败时确保使用空数组
     existingStrategies.value = []
@@ -1534,7 +1534,7 @@ async function handleExistingStrategySelect(strategyId) {
       return
     }
     
-    if (import.meta.env.DEV) { console.log('⚡ 选择已有策略:', strategy.name) }
+    if (import.meta.env.DEV) { console.log('选择已有策略:', strategy.name) }
     
     // 设置为当前适配策略
     adaptedStrategy.value = {
@@ -1558,7 +1558,7 @@ async function handleExistingStrategySelect(strategyId) {
     }, 300)
     
   } catch (error) {
-    console.error('❌ 选择策略失败:', error)
+    console.error('✗ 选择策略失败:', error)
     ElMessage.error('选择策略失败: ' + error.message)
   }
 }
@@ -1901,7 +1901,7 @@ function showParametersDialog() {
   
   showParametersEditor.value = true
   
-  if (import.meta.env.DEV) { console.log('📝 打开参数编辑器，当前参数:', parametersForm.value) }
+  if (import.meta.env.DEV) { console.log('打开参数编辑器，当前参数:', parametersForm.value) }
 }
 
 /**
@@ -1928,7 +1928,7 @@ async function saveParameters() {
     // 更新策略参数
     adaptedStrategy.value.parameters = newParams
     
-    if (import.meta.env.DEV) { console.log('✅ 参数已更新:', newParams) }
+    if (import.meta.env.DEV) { console.log('✓ 参数已更新:', newParams) }
     
     // 关闭对话框
     showParametersEditor.value = false
@@ -1944,7 +1944,7 @@ async function saveParameters() {
     }
     
   } catch (error) {
-    console.error('❌ 保存参数失败:', error)
+    console.error('✗ 保存参数失败:', error)
     ElMessage.error('保存参数失败: ' + error.message)
   }
 }
@@ -2091,7 +2091,7 @@ watch(parametersJsonStr, (newValue) => {
 }
 
 .strategy-card::after {
-  content: '📈';
+  content: '';
   position: absolute;
   right: 15px;
   top: 15px;

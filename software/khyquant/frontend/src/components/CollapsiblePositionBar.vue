@@ -206,12 +206,12 @@ let pendingPollTimer = null
 
 // 切换面板展开/收起
 const togglePanel = (event) => {
-  if (import.meta.env.DEV) { console.log('🔥🔥🔥 togglePanel 被调用 🔥🔥🔥') }
-  if (import.meta.env.DEV) { console.log('🔥 事件类型:', event?.type) }
-  if (import.meta.env.DEV) { console.log('🔥 事件目标:', event?.target) }
-  if (import.meta.env.DEV) { console.log('🔥 当前状态 isExpanded:', isExpanded.value) }
-  if (import.meta.env.DEV) { console.log('🔥 持仓数量:', props.positions.length) }
-  if (import.meta.env.DEV) { console.log('🔥 DOM 元素存在:', document.querySelector('.position-panel') ? '是' : '否') }
+  if (import.meta.env.DEV) { console.log('togglePanel 被调用') }
+  if (import.meta.env.DEV) { console.log('事件类型:', event?.type) }
+  if (import.meta.env.DEV) { console.log('事件目标:', event?.target) }
+  if (import.meta.env.DEV) { console.log('当前状态 isExpanded:', isExpanded.value) }
+  if (import.meta.env.DEV) { console.log('持仓数量:', props.positions.length) }
+  if (import.meta.env.DEV) { console.log('DOM 元素存在:', document.querySelector('.position-panel') ? '是' : '否') }
   
   // 阻止事件冒泡和默认行为
   if (event) {
@@ -221,8 +221,8 @@ const togglePanel = (event) => {
   
   isExpanded.value = !isExpanded.value
   
-  if (import.meta.env.DEV) { console.log('🔥 切换后状态 isExpanded:', isExpanded.value) }
-  if (import.meta.env.DEV) { console.log('🔥🔥🔥 togglePanel 执行完毕 🔥🔥🔥') }
+  if (import.meta.env.DEV) { console.log('切换后状态 isExpanded:', isExpanded.value) }
+  if (import.meta.env.DEV) { console.log('togglePanel 执行完毕') }
   
   // 移动端触觉反馈
   if (window.navigator && window.navigator.vibrate) {

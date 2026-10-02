@@ -20,7 +20,7 @@ class InstrumentController {
         search
       } = req.query;
       
-      console.log('📋 获取标的列表:', { type, category, status, limit, offset, search });
+      console.log('获取标的列表:', { type, category, status, limit, offset, search });
       
       const result = await instrumentService.getInstruments({
         type,
@@ -38,7 +38,7 @@ class InstrumentController {
       });
       
     } catch (error) {
-      console.error('❌ 获取标的列表失败:', error);
+      console.error('✗ 获取标的列表失败:', error);
       res.status(500).json({
         success: false,
         error: error.message,
@@ -71,7 +71,7 @@ class InstrumentController {
       });
       
     } catch (error) {
-      console.error('❌ 获取标的失败:', error);
+      console.error('✗ 获取标的失败:', error);
       res.status(500).json({
         success: false,
         error: error.message,
@@ -86,7 +86,7 @@ class InstrumentController {
    */
   async syncInstruments(req, res) {
     try {
-      console.log('🔄 开始手动同步标的列表...');
+      console.log('开始手动同步标的列表...');
       
       const result = await instrumentService.syncInstrumentsFromAData();
       
@@ -97,7 +97,7 @@ class InstrumentController {
       });
       
     } catch (error) {
-      console.error('❌ 同步标的列表失败:', error);
+      console.error('✗ 同步标的列表失败:', error);
       res.status(500).json({
         success: false,
         error: error.message,
@@ -124,7 +124,7 @@ class InstrumentController {
       });
       
     } catch (error) {
-      console.error('❌ 更新标的失败:', error);
+      console.error('✗ 更新标的失败:', error);
       res.status(500).json({
         success: false,
         error: error.message,
@@ -150,7 +150,7 @@ class InstrumentController {
       });
       
     } catch (error) {
-      console.error('❌ 删除标的失败:', error);
+      console.error('✗ 删除标的失败:', error);
       res.status(500).json({
         success: false,
         error: error.message,
@@ -174,7 +174,7 @@ class InstrumentController {
       });
       
     } catch (error) {
-      console.error('❌ 获取统计信息失败:', error);
+      console.error('✗ 获取统计信息失败:', error);
       res.status(500).json({
         success: false,
         error: error.message,
@@ -198,7 +198,7 @@ class InstrumentController {
         });
       }
       
-      console.log(`📋 批量保存 ${instruments.length} 个标的...`);
+      console.log(`批量保存 ${instruments.length} 个标的...`);
       
       const result = await instrumentService.batchSaveInstruments(instruments);
       
@@ -209,7 +209,7 @@ class InstrumentController {
       });
       
     } catch (error) {
-      console.error('❌ 批量保存失败:', error);
+      console.error('✗ 批量保存失败:', error);
       res.status(500).json({
         success: false,
         error: error.message,

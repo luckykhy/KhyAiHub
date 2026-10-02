@@ -3,7 +3,7 @@
     <!-- 头部 -->
     <div class="center-header">
       <div class="header-left">
-        <span class="title">💹 实时交易中心</span>
+        <span class="title">实时交易中心</span>
         <el-badge :value="pendingCount" :hidden="pendingCount === 0" type="warning">
           <el-tag size="small" type="info">{{ orders.length }} 笔订单</el-tag>
         </el-badge>

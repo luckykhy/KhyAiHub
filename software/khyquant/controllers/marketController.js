@@ -24,13 +24,13 @@ class MarketController {
     try {
       const { limit = 100, type, useCache = 'true' } = req.query;
       
-      console.log(`📋 获取标的列表: limit=${limit}, type=${type}`);
+      console.log(`获取标的列表: limit=${limit}, type=${type}`);
       
       // 🔥 第一步:立即从数据库加载缓存数据
       const dbInstruments = await this.loadInstrumentsFromDatabase(type, parseInt(limit));
       
       if (dbInstruments && dbInstruments.length > 0) {
-        console.log(`✅ 从数据库加载 ${dbInstruments.length} 个标的(缓存)`);
+        console.log(`✓ 从数据库加载 ${dbInstruments.length} 个标的(缓存)`);
         
         // 立即返回数据库缓存
         const stats = {
@@ -53,21 +53,21 @@ class MarketController {
         
         // 🔥 后台异步更新数据
         this.updateInstrumentsInBackground(type).catch(err => {
-          console.error('❌ 后台更新标的失败:', err.message);
+          console.error('✗ 后台更新标的失败:', err.message);
         });
         
         return res.json(response);
       }
       
       // 🔥 第二步:如果数据库没有数据,从AData获取
-      console.log('⚠️ 数据库无缓存,从AData获取...');
+      console.log('⚠ 数据库无缓存,从AData获取...');
       
       // 检查内存缓存
       const cacheKey = `symbols_${limit}_${type || 'all'}`;
       const cached = this.symbolsCache.get(cacheKey);
       
       if (useCache === 'true' && cached && Date.now() - cached.timestamp < this.cacheTimeout) {
-        console.log('✅ 使用内存缓存的标的列表');
+        console.log('✓ 使用内存缓存的标的列表');
         return res.json(cached.data);
       }
       
@@ -127,17 +127,17 @@ class MarketController {
         timestamp: Date.now()
       });
       
-      console.log(`✅ 返回 ${instruments.length} 个标的 (指数:${stats.indices}, 股票:${stats.stocks}, ETF:${stats.etfs}, 可转债:${stats.bonds})`);
+      console.log(`✓ 返回 ${instruments.length} 个标的 (指数:${stats.indices}, 股票:${stats.stocks}, ETF:${stats.etfs}, 可转债:${stats.bonds})`);
       
       // 🔥 保存到数据库
       this.saveInstrumentsToDatabase(result.data || instruments).catch(err => {
-        console.error('❌ 保存标的到数据库失败:', err.message);
+        console.error('✗ 保存标的到数据库失败:', err.message);
       });
       
       res.json(response);
       
     } catch (error) {
-      console.error('❌ 获取标的列表失败:', error);
+      console.error('✗ 获取标的列表失败:', error);
       res.status(500).json({
         success: false,
         error: error.message,
@@ -165,7 +165,7 @@ class MarketController {
     try {
       const { symbol } = req.params;
       
-      console.log(`📊 获取标的信息: ${symbol}`);
+      console.log(`获取标的信息: ${symbol}`);
       
       // 从 comprehensiveDataService 获取标的信息
       const instrumentInfo = comprehensiveDataService.identifyInstrument(symbol);
@@ -177,7 +177,7 @@ class MarketController {
       });
       
     } catch (error) {
-      console.error('❌ 获取标的信息失败:', error);
+      console.error('✗ 获取标的信息失败:', error);
       res.status(500).json({
         success: false,
         error: error.message,
@@ -199,7 +199,7 @@ class MarketController {
       });
       
     } catch (error) {
-      console.error('❌ 清除缓存失败:', error);
+      console.error('✗ 清除缓存失败:', error);
       res.status(500).json({
         success: false,
         error: error.message,
@@ -281,7 +281,7 @@ class MarketController {
         }));
 
     } catch (error) {
-      console.error('❌ 从数据库加载标的失败:', error.message);
+      console.error('✗ 从数据库加载标的失败:', error.message);
       return [];
     }
   }
@@ -291,7 +291,7 @@ class MarketController {
    */
   async updateInstrumentsInBackground(type) {
     try {
-      console.log('🔄 后台开始更新标的数据...');
+      console.log('后台开始更新标的数据...');
       
       // 从AData获取最新数据
       let result = await pythonDataSourceService.getStockAndIndexOnly().catch(err => {
@@ -309,11 +309,11 @@ class MarketController {
       if (result.success && result.data && result.data.length > 0) {
         // 保存到数据库
         await this.saveInstrumentsToDatabase(result.data);
-        console.log(`✅ 后台更新完成: ${result.data.length} 个标的`);
+        console.log(`✓ 后台更新完成: ${result.data.length} 个标的`);
       }
       
     } catch (error) {
-      console.error('❌ 后台更新标的失败:', error.message);
+      console.error('✗ 后台更新标的失败:', error.message);
     }
   }
 
@@ -323,10 +323,10 @@ class MarketController {
    */
   async saveInstrumentsToDatabase(instruments) {
     try {
-      console.log('💾 开始缓存标的到数据库...');
+      console.log('开始缓存标的到数据库...');
       
       if (!instruments || instruments.length === 0) {
-        console.log('⚠️ 没有标的需要保存');
+        console.log('⚠ 没有标的需要保存');
         return;
       }
       
@@ -346,10 +346,10 @@ class MarketController {
         validate: true
       });
       
-      console.log(`✅ 已缓存 ${dbInstruments.length} 个标的到数据库`);
+      console.log(`✓ 已缓存 ${dbInstruments.length} 个标的到数据库`);
       
     } catch (error) {
-      console.error('❌ 保存标的到数据库失败:', error.message);
+      console.error('✗ 保存标的到数据库失败:', error.message);
       // 不抛出错误,避免影响主流程
     }
   }
@@ -374,7 +374,7 @@ class MarketController {
    */
   async persistInstruments(req, res) {
     try {
-      console.log('💾 开始持久化标的列表到数据库...');
+      console.log('开始持久化标的列表到数据库...');
       
       // 获取所有标的
       const result = await pythonDataSourceService.getAllInstrumentsByType();
@@ -405,7 +405,7 @@ class MarketController {
         count: instruments.length
       }, null, 2));
       
-      console.log(`✅ 成功持久化 ${instruments.length} 个标的到文件系统`);
+      console.log(`✓ 成功持久化 ${instruments.length} 个标的到文件系统`);
       
       res.json({
         success: true,
@@ -417,7 +417,7 @@ class MarketController {
       });
       
     } catch (error) {
-      console.error('❌ 持久化标的列表失败:', error);
+      console.error('✗ 持久化标的列表失败:', error);
       res.status(500).json({
         success: false,
         error: error.message,
@@ -448,7 +448,7 @@ class MarketController {
       const age = Date.now() - timestamp;
       const ageHours = Math.floor(age / (1000 * 60 * 60));
       
-      console.log(`📂 从文件系统加载 ${count} 个标的 (${ageHours}小时前)`);
+      console.log(`从文件系统加载 ${count} 个标的 (${ageHours}小时前)`);
       
       res.json({
         success: true,
@@ -462,7 +462,7 @@ class MarketController {
       });
       
     } catch (error) {
-      console.error('❌ 加载持久化标的列表失败:', error);
+      console.error('✗ 加载持久化标的列表失败:', error);
       res.status(500).json({
         success: false,
         error: error.message,
@@ -479,13 +479,13 @@ class MarketController {
    */
   async getETFRealData(req, res) {
     try {
-      console.log('📊 获取ETF实时行情数据...');
+      console.log('获取ETF实时行情数据...');
       
       // 🔥 第一步:从数据库获取所有ETF列表(不限制数量)
       const instruments = await this.loadInstrumentsFromDatabase('etf', 10000);
       
       if (!instruments || instruments.length === 0) {
-        console.log('⚠️ 数据库中没有ETF数据');
+        console.log('⚠ 数据库中没有ETF数据');
         return res.json({
           success: true,
           data: [],
@@ -494,7 +494,7 @@ class MarketController {
         });
       }
       
-      console.log(`📋 从数据库加载了 ${instruments.length} 个ETF`);
+      console.log(`从数据库加载了 ${instruments.length} 个ETF`);
       
       // 🔥 第二步:尝试获取真实行情数据
       const comprehensiveDataService = require('../services/comprehensiveDataService');
@@ -594,7 +594,7 @@ class MarketController {
         results.push(...batchResults);
       }
       
-      console.log(`✅ ETF行情获取完成: 总数${results.length}, 真实数据${successCount}, 缓存数据${cacheCount}, 模拟数据${mockCount}`);
+      console.log(`✓ ETF行情获取完成: 总数${results.length}, 真实数据${successCount}, 缓存数据${cacheCount}, 模拟数据${mockCount}`);
       
       res.json({
         success: true,
@@ -623,7 +623,7 @@ class MarketController {
    */
   async getBondRealData(req, res) {
     try {
-      console.log('📊 获取可转债实时行情数据...');
+      console.log('获取可转债实时行情数据...');
       
       // 从数据库获取所有可转债列表(不限制数量)
       const instruments = await this.loadInstrumentsFromDatabase('bond', 10000);
@@ -679,7 +679,7 @@ class MarketController {
       const results = await Promise.all(quotesPromises);
       const validResults = results.filter(r => r !== null);
       
-      console.log(`✅ 成功获取${validResults.length}个可转债实时行情`);
+      console.log(`✓ 成功获取${validResults.length}个可转债实时行情`);
       
       res.json({
         success: true,
@@ -702,7 +702,7 @@ class MarketController {
    */
   async getStockRealData(req, res) {
     try {
-      console.log('📊 获取股票实时行情数据...');
+      console.log('获取股票实时行情数据...');
       
       // 从数据库获取所有股票列表(不限制数量)
       const instruments = await this.loadInstrumentsFromDatabase('stock', 10000);
@@ -758,7 +758,7 @@ class MarketController {
       const results = await Promise.all(quotesPromises);
       const validResults = results.filter(r => r !== null);
       
-      console.log(`✅ 成功获取${validResults.length}个股票实时行情`);
+      console.log(`✓ 成功获取${validResults.length}个股票实时行情`);
       
       res.json({
         success: true,
@@ -781,7 +781,7 @@ class MarketController {
    */
   async getIndexRealData(req, res) {
     try {
-      console.log('📊 获取指数实时行情数据...');
+      console.log('获取指数实时行情数据...');
       
       // 从数据库获取所有指数列表(不限制数量)
       const instruments = await this.loadInstrumentsFromDatabase('index', 10000);
@@ -837,7 +837,7 @@ class MarketController {
       const results = await Promise.all(quotesPromises);
       const validResults = results.filter(r => r !== null);
       
-      console.log(`✅ 成功获取${validResults.length}个指数实时行情`);
+      console.log(`✓ 成功获取${validResults.length}个指数实时行情`);
       
       res.json({
         success: true,
@@ -862,7 +862,7 @@ class MarketController {
    */
   async getETFCacheData(req, res) {
     try {
-      console.log('💾 从缓存获取ETF数据...');
+      console.log('从缓存获取ETF数据...');
       
       // 从数据库获取所有ETF列表作为缓存(不限制数量)
       const instruments = await this.loadInstrumentsFromDatabase('etf', 10000);
@@ -908,7 +908,7 @@ class MarketController {
    */
   async getBondCacheData(req, res) {
     try {
-      console.log('💾 从缓存获取可转债数据...');
+      console.log('从缓存获取可转债数据...');
       
       // 从数据库获取所有可转债列表作为缓存(不限制数量)
       const instruments = await this.loadInstrumentsFromDatabase('bond', 10000);
@@ -954,7 +954,7 @@ class MarketController {
    */
   async getStockCacheData(req, res) {
     try {
-      console.log('💾 从缓存获取股票数据...');
+      console.log('从缓存获取股票数据...');
       
       // 从数据库获取所有股票列表作为缓存(不限制数量)
       const instruments = await this.loadInstrumentsFromDatabase('stock', 10000);
@@ -1000,7 +1000,7 @@ class MarketController {
    */
   async getIndexCacheData(req, res) {
     try {
-      console.log('💾 从缓存获取指数数据...');
+      console.log('从缓存获取指数数据...');
       
       // 从数据库获取所有指数列表作为缓存(不限制数量)
       const instruments = await this.loadInstrumentsFromDatabase('index', 10000);
@@ -1049,7 +1049,7 @@ class MarketController {
   async saveETFCache(req, res) {
     try {
       const { data } = req.body;
-      console.log(`💾 保存${data?.length || 0}个ETF到缓存...`);
+      console.log(`保存${data?.length || 0}个ETF到缓存...`);
       
       // 这里可以实现将数据保存到数据库的逻辑
       // 目前简单返回成功
@@ -1075,7 +1075,7 @@ class MarketController {
   async saveBondCache(req, res) {
     try {
       const { data } = req.body;
-      console.log(`💾 保存${data?.length || 0}个可转债到缓存...`);
+      console.log(`保存${data?.length || 0}个可转债到缓存...`);
       
       res.json({
         success: true,
@@ -1098,7 +1098,7 @@ class MarketController {
   async saveStockCache(req, res) {
     try {
       const { data } = req.body;
-      console.log(`💾 保存${data?.length || 0}个股票到缓存...`);
+      console.log(`保存${data?.length || 0}个股票到缓存...`);
       
       res.json({
         success: true,
@@ -1121,7 +1121,7 @@ class MarketController {
   async saveIndexCache(req, res) {
     try {
       const { data } = req.body;
-      console.log(`💾 保存${data?.length || 0}个指数到缓存...`);
+      console.log(`保存${data?.length || 0}个指数到缓存...`);
       
       res.json({
         success: true,

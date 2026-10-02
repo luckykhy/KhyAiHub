@@ -134,7 +134,7 @@ window.addEventListener('error', (event) => {
 if (import.meta.env.DEV) {
   app.config.warnHandler = (msg, instance, trace) => {
     if (msg.includes('slice') || msg.includes('array')) {
-      console.warn('⚠️ [Global Warn Handler] Array-related warning:', {
+      console.warn('⚠ [Global Warn Handler] Array-related warning:', {
         message: msg,
         componentName: instance?.$options?.name || 'Unknown',
         trace: trace

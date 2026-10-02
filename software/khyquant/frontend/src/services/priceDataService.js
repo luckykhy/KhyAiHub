@@ -33,14 +33,14 @@ class PriceDataService {
     if (useCache) {
       const cached = this.cache.get(cacheKey)
       if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
-        if (import.meta.env.DEV) { console.log(`📦 使用缓存数据: ${symbol}`) }
+        if (import.meta.env.DEV) { console.log(`使用缓存数据: ${symbol}`) }
         return cached.data
       }
     }
 
     // 检查是否有正在进行的请求
     if (this.pendingRequests.has(cacheKey)) {
-      if (import.meta.env.DEV) { console.log(`⏳ 等待正在进行的请求: ${symbol}`) }
+      if (import.meta.env.DEV) { console.log(`等待正在进行的请求: ${symbol}`) }
       return this.pendingRequests.get(cacheKey)
     }
 
@@ -82,7 +82,7 @@ class PriceDataService {
       // 添加时间戳防止浏览器缓存
       url += `&_t=${Date.now()}`
 
-      if (import.meta.env.DEV) { console.log(`🌐 获取K线数据: ${symbol}`) }
+      if (import.meta.env.DEV) { console.log(`获取K线数据: ${symbol}`) }
       if (import.meta.env.DEV) { console.log(`   API: ${url}`) }
 
       const response = await fetch(url, {
@@ -104,14 +104,14 @@ class PriceDataService {
         throw new Error('返回数据为空')
       }
 
-      if (import.meta.env.DEV) { console.log(`✅ K线数据获取成功: ${symbol}`) }
+      if (import.meta.env.DEV) { console.log(`✓ K线数据获取成功: ${symbol}`) }
       if (import.meta.env.DEV) { console.log(`   数据源: ${data.source}`) }
       if (import.meta.env.DEV) { console.log(`   数据条数: ${data.kline.length}`) }
       if (import.meta.env.DEV) { console.log(`   最新价格: ${data.kline[data.kline.length - 1].close}`) }
 
       return data
     } catch (error) {
-      console.error(`❌ 获取K线数据失败: ${symbol}`, error)
+      console.error(`✗ 获取K线数据失败: ${symbol}`, error)
       return this.generateMockKlineData(symbol, startDate, endDate)
     }
   }
@@ -201,7 +201,7 @@ class PriceDataService {
         dataSource: data.source
       }
     } catch (error) {
-      console.error(`❌ 获取最新价格失败: ${symbol}`, error)
+      console.error(`✗ 获取最新价格失败: ${symbol}`, error)
       throw error
     }
   }
@@ -235,11 +235,11 @@ class PriceDataService {
           this.cache.delete(key)
         }
       }
-      if (import.meta.env.DEV) { console.log(`🗑️ 已清除 ${symbol} 的缓存`) }
+      if (import.meta.env.DEV) { console.log(`已清除 ${symbol} 的缓存`) }
     } else {
       // 清除所有缓存
       this.cache.clear()
-      if (import.meta.env.DEV) { console.log(`🗑️ 已清除所有缓存`) }
+      if (import.meta.env.DEV) { console.log(`已清除所有缓存`) }
     }
   }
 

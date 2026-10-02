@@ -1,7 +1,7 @@
 <template>
   <div class="enhanced-positions-panel">
     <div class="panel-header">
-      <span>💼 持仓明细</span>
+      <span>持仓明细</span>
       <el-button size="small" @click="loadPositions" :loading="loading">
         <el-icon><Refresh /></el-icon>
       </el-button>
@@ -252,10 +252,10 @@ const loadPositions = async () => {
     const response = await request.get('/trading/positions')
     if (response.success) {
       positions.value = response.data || []
-      if (import.meta.env.DEV) { console.log('✅ 持仓加载成功:', positions.value.length, '个') }
+      if (import.meta.env.DEV) { console.log('✓ 持仓加载成功:', positions.value.length, '个') }
     }
   } catch (error) {
-    console.error('❌ 加载持仓失败:', error)
+    console.error('✗ 加载持仓失败:', error)
     ElMessage.error('加载持仓失败')
   } finally {
     loading.value = false
@@ -270,7 +270,7 @@ const loadAccountInfo = async () => {
       accountInfo.value = response.data
     }
   } catch (error) {
-    console.error('❌ 加载账户信息失败:', error)
+    console.error('✗ 加载账户信息失败:', error)
   }
 }
 
@@ -364,7 +364,7 @@ const confirmClose = async () => {
       throw new Error(response.message || '平仓失败')
     }
   } catch (error) {
-    console.error('❌ 平仓失败:', error)
+    console.error('✗ 平仓失败:', error)
     ElMessage.error(`平仓失败: ${error.message}`)
   } finally {
     closingPosition.value = null
@@ -408,7 +408,7 @@ const quickCloseAll = async (position) => {
     }
   } catch (error) {
     if (error !== 'cancel') {
-      console.error('❌ 平仓失败:', error)
+      console.error('✗ 平仓失败:', error)
       ElMessage.error(`平仓失败: ${error.message}`)
     }
   } finally {

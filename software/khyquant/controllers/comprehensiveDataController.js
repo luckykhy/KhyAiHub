@@ -40,7 +40,7 @@ class ComprehensiveDataController {
 
 
 
-      console.log(`📊 获取K线数据请求: ${symbol}`, { startDate, endDate, period, testMode, instrumentType });
+      console.log(`获取K线数据请求: ${symbol}`, { startDate, endDate, period, testMode, instrumentType });
 
 
 
@@ -64,7 +64,7 @@ class ComprehensiveDataController {
 
       // 🔥 强制日志：查看后端实际返回的source
 
-      console.log('🔍 Controller收到Service返回:');
+      console.log('Controller收到Service返回:');
 
       console.log('   source:', data.source);
 
@@ -134,7 +134,7 @@ class ComprehensiveDataController {
 
       
 
-      console.log('📤 Controller返回的dataComposition:', JSON.stringify(responseData.dataComposition));
+      console.log('Controller返回的dataComposition:', JSON.stringify(responseData.dataComposition));
 
 
 
@@ -146,7 +146,7 @@ class ComprehensiveDataController {
 
     } catch (error) {
 
-      console.error('❌ K-line data sources failed, generating mock data:', error.message);
+      console.error('✗ K-line data sources failed, generating mock data:', error.message);
 
 
 
@@ -462,7 +462,7 @@ class ComprehensiveDataController {
 
       
 
-      console.log('📋 获取标的列表 (从数据库):', { category, market, type, limit, offset });
+      console.log('获取标的列表 (从数据库):', { category, market, type, limit, offset });
 
       
 
@@ -522,7 +522,7 @@ class ComprehensiveDataController {
 
       
 
-      console.log(`✅ 从数据库查询到 ${rows.length} 个标的 (总计: ${count})`);
+      console.log(`✓ 从数据库查询到 ${rows.length} 个标的 (总计: ${count})`);
 
       
 
@@ -588,7 +588,7 @@ class ComprehensiveDataController {
 
     } catch (error) {
 
-      console.error('❌ 获取标的列表失败:', error);
+      console.error('✗ 获取标的列表失败:', error);
 
       res.status(500).json({
 
@@ -1295,7 +1295,7 @@ class ComprehensiveDataController {
 
 
 
-      console.log(`🧪 测试数据源: ${sourceId}, 标的数量限制: ${limit}`);
+      console.log(`测试数据源: ${sourceId}, 标的数量限制: ${limit}`);
 
       
 
@@ -1423,7 +1423,7 @@ class ComprehensiveDataController {
 
         try {
 
-          console.log(`📊 测试标的 ${i + 1}/${limit}: ${testItem.symbol} (${testItem.name})`);
+          console.log(`测试标的 ${i + 1}/${limit}: ${testItem.symbol} (${testItem.name})`);
 
 
 
@@ -1527,17 +1527,17 @@ class ComprehensiveDataController {
 
 
 
-            console.log(`✅ ${testItem.symbol}: 价格=${latestKline.close}, 数据源=${data.source}, 预定义=${isPredefined}`);
+            console.log(`✓ ${testItem.symbol}: 价格=${latestKline.close}, 数据源=${data.source}, 预定义=${isPredefined}`);
 
           } else {
 
-            console.warn(`⚠️ ${testItem.symbol}: 无数据`);
+            console.warn(`⚠ ${testItem.symbol}: 无数据`);
 
           }
 
         } catch (error) {
 
-          console.error(`❌ ${testItem.symbol} 测试失败:`, error.message);
+          console.error(`✗ ${testItem.symbol} 测试失败:`, error.message);
 
         }
 
@@ -1557,7 +1557,7 @@ class ComprehensiveDataController {
 
       
 
-      console.log(`✅ 测试完成: 成功 ${samples.length}/${limit} 个标的, 响应时间=${responseTime}ms`);
+      console.log(`✓ 测试完成: 成功 ${samples.length}/${limit} 个标的, 响应时间=${responseTime}ms`);
 
       console.log(`   全部预定义=${allPredefined}, 部分预定义=${somePredefined}`);
 
@@ -1587,7 +1587,7 @@ class ComprehensiveDataController {
 
     } catch (error) {
 
-      console.error('❌ 测试数据源失败:', error);
+      console.error('✗ 测试数据源失败:', error);
 
       res.status(500).json({
 
@@ -1735,7 +1735,7 @@ class ComprehensiveDataController {
 
       if (config) {
 
-        console.log(`🔧 Data source config received: ${sourceKey}`, config);
+        console.log(`Data source config received: ${sourceKey}`, config);
 
         return res.json({
 
@@ -1765,7 +1765,7 @@ class ComprehensiveDataController {
 
 
 
-      console.log(`🔧 更新数据源配置: ${sourceKey} = ${enabled}`);
+      console.log(`更新数据源配置: ${sourceKey} = ${enabled}`);
 
 
 
@@ -1815,7 +1815,7 @@ class ComprehensiveDataController {
 
     try {
 
-      console.log('📊 获取已启用的数据源列表');
+      console.log('获取已启用的数据源列表');
 
       
 
@@ -1857,11 +1857,11 @@ class ComprehensiveDataController {
 
       
 
-      console.log(`✅ 找到 ${enabledSources.length} 个已启用的数据源`);
+      console.log(`✓ 找到 ${enabledSources.length} 个已启用的数据源`);
 
       if (isLocked) {
 
-        console.log(`🔒 当前锁定: ${lockedSource.name} (剩余 ${remainingSeconds}秒)`);
+        console.log(`当前锁定: ${lockedSource.name} (剩余 ${remainingSeconds}秒)`);
 
       }
 
@@ -1941,7 +1941,7 @@ class ComprehensiveDataController {
 
       
 
-      console.log(`🔄 切换数据源: ${sourceKey}`);
+      console.log(`切换数据源: ${sourceKey}`);
 
       
 
@@ -1989,7 +1989,7 @@ class ComprehensiveDataController {
 
       
 
-      console.log(`✅ 数据源已切换到: ${source.name}`);
+      console.log(`✓ 数据源已切换到: ${source.name}`);
 
       
 
@@ -2045,7 +2045,7 @@ class ComprehensiveDataController {
 
       
 
-      console.log(`🔍 获取市场行情列表, 限制: ${limit}`);
+      console.log(`获取市场行情列表, 限制: ${limit}`);
 
       
 
@@ -2099,7 +2099,7 @@ class ComprehensiveDataController {
 
         try {
 
-          console.log(`📊 获取 ${item.symbol} (${item.name}) 行情...`);
+          console.log(`获取 ${item.symbol} (${item.name}) 行情...`);
 
           
 
@@ -2115,7 +2115,7 @@ class ComprehensiveDataController {
 
           
 
-          console.log(`✅ ${item.symbol} 数据源: ${data?.source || '无'}`);
+          console.log(`✓ ${item.symbol} 数据源: ${data?.source || '无'}`);
 
           
 
@@ -2171,7 +2171,7 @@ class ComprehensiveDataController {
 
         } catch (error) {
 
-          console.error(`❌ 获取 ${item.symbol} 行情失败:`, error.message);
+          console.error(`✗ 获取 ${item.symbol} 行情失败:`, error.message);
 
           return null;
 
@@ -2205,9 +2205,9 @@ class ComprehensiveDataController {
 
 
 
-      console.log('📊 行情数据源统计:', sourceCounts);
+      console.log('行情数据源统计:', sourceCounts);
 
-      console.log(`✅ 成功获取 ${validQuotes.length}/${limitNum} 个行情`);
+      console.log(`✓ 成功获取 ${validQuotes.length}/${limitNum} 个行情`);
 
 
 

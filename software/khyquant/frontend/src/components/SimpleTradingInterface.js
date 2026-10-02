@@ -132,7 +132,7 @@ export default {
 
         if (!Array.isArray(value)) {
 
-          console.error('❌ [Props Validator] signals prop is not an array:', {
+          console.error('✗ [Props Validator] signals prop is not an array:', {
 
             type: typeof value,
 
@@ -160,7 +160,7 @@ export default {
 
         if (typeof value !== 'object' || value === null || Array.isArray(value)) {
 
-          console.error('❌ [Props Validator] auxiliaryData prop is not an object:', {
+          console.error('✗ [Props Validator] auxiliaryData prop is not an object:', {
 
             type: typeof value,
 
@@ -400,7 +400,7 @@ export default {
 
       const name = props.contractName || getInstrumentName(code)
 
-      if (import.meta.env.DEV) { console.log('🏷️ 当前合约信息更新:', {
+      if (import.meta.env.DEV) { console.log('当前合约信息更新:', {
 
         code, 
 
@@ -490,7 +490,7 @@ export default {
 
       const result = nameMap[cleanCode] || `合约 ${cleanCode}`
 
-      if (import.meta.env.DEV) { console.log('📛 获取合约名称:', code, '->', cleanCode, '->', result) }
+      if (import.meta.env.DEV) { console.log('获取合约名称:', code, '->', cleanCode, '->', result) }
 
       return result
 
@@ -637,13 +637,13 @@ export default {
 
           }))
 
-          if (import.meta.env.DEV) { console.log('✅ 持仓加载成功:', mockPositions.value.length, '个') }
+          if (import.meta.env.DEV) { console.log('✓ 持仓加载成功:', mockPositions.value.length, '个') }
 
         }
 
       } catch (error) {
 
-        console.error('❌ 加载持仓失败:', error)
+        console.error('✗ 加载持仓失败:', error)
 
         // 失败时使用硬编码的演示数据
 
@@ -1429,13 +1429,13 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('✅ 图表初始化成功') }
+        if (import.meta.env.DEV) { console.log('✓ 图表初始化成功') }
 
         loadChartData()
 
       } catch (error) {
 
-        console.error('❌ 图表初始化失败:', error)
+        console.error('✗ 图表初始化失败:', error)
 
         ElMessage.error('图表初始化失败')
 
@@ -1453,7 +1453,7 @@ export default {
 
         refreshing.value = true
 
-        if (import.meta.env.DEV) { console.log('🔄 手动刷新数据...') }
+        if (import.meta.env.DEV) { console.log('手动刷新数据...') }
 
         
 
@@ -1478,11 +1478,11 @@ export default {
         if (instrumentInfo && instrumentInfo.listingDate) {
           const listingDate = new Date(instrumentInfo.listingDate)
           startDateParam = `&startDate=${listingDate.toISOString().split('T')[0]}`
-          if (import.meta.env.DEV) { console.log(`📅 从上市日期开始: ${listingDate.toLocaleDateString()}`) }
+          if (import.meta.env.DEV) { console.log(`从上市日期开始: ${listingDate.toLocaleDateString()}`) }
         } else {
           const defaultStart = new Date('1990-01-01')
           startDateParam = `&startDate=${defaultStart.toISOString().split('T')[0]}`
-          if (import.meta.env.DEV) { console.log(`📅 使用默认起始日期: ${defaultStart.toLocaleDateString()}`) }
+          if (import.meta.env.DEV) { console.log(`使用默认起始日期: ${defaultStart.toLocaleDateString()}`) }
         }
 
         
@@ -1545,7 +1545,7 @@ export default {
 
           const data = await response.json()
 
-          if (import.meta.env.DEV) { console.log('✅ 刷新成功:', data.source, '数据条数:', data.kline?.length || 0) }
+          if (import.meta.env.DEV) { console.log('✓ 刷新成功:', data.source, '数据条数:', data.kline?.length || 0) }
 
           
 
@@ -1713,7 +1713,7 @@ export default {
 
       } catch (error) {
 
-        console.error('❌ 刷新数据失败:', error)
+        console.error('✗ 刷新数据失败:', error)
 
         ElMessage.error('刷新数据失败，请稍后重试')
 
@@ -1783,7 +1783,7 @@ export default {
 
       
 
-      console.warn(`⚠️ 无法标准化标的代码: ${symbol}, 返回原值`)
+      console.warn(`⚠ 无法标准化标的代码: ${symbol}, 返回原值`)
 
       return symbol
 
@@ -1797,7 +1797,7 @@ export default {
 
       try {
 
-        if (import.meta.env.DEV) { console.log('📊 开始加载图表数据...') }
+        if (import.meta.env.DEV) { console.log('开始加载图表数据...') }
 
         
 
@@ -1813,7 +1813,7 @@ export default {
 
         const normalizedSymbol = normalizeSymbolCode(symbol)
 
-        if (import.meta.env.DEV) { console.log(`🔍 标的代码转换: ${symbol} -> ${normalizedSymbol}`) }
+        if (import.meta.env.DEV) { console.log(`标的代码转换: ${symbol} -> ${normalizedSymbol}`) }
 
         
 
@@ -1833,7 +1833,7 @@ export default {
 
             if (retryCount > 0) {
 
-              if (import.meta.env.DEV) { console.log(`🔄 第 ${retryCount + 1} 次尝试获取数据...`) }
+              if (import.meta.env.DEV) { console.log(`第 ${retryCount + 1} 次尝试获取数据...`) }
 
               // 🔥 增加重试延迟: 3秒, 5秒, 8秒（支持大数据量加载）
 
@@ -1845,7 +1845,7 @@ export default {
 
             
 
-            if (import.meta.env.DEV) { console.log('🌐 尝试从后端API获取真实数据:', normalizedSymbol) }
+            if (import.meta.env.DEV) { console.log('尝试从后端API获取真实数据:', normalizedSymbol) }
 
             
 
@@ -1875,7 +1875,7 @@ export default {
 
               startDateParam = `&startDate=${listingDate.toISOString().split('T')[0]}`
 
-              if (import.meta.env.DEV) { console.log(`📅 从上市日期开始: ${listingDate.toLocaleDateString()}`) }
+              if (import.meta.env.DEV) { console.log(`从上市日期开始: ${listingDate.toLocaleDateString()}`) }
 
             } else {
 
@@ -1885,7 +1885,7 @@ export default {
 
               startDateParam = `&startDate=${defaultStartDate.toISOString().split('T')[0]}`
 
-              if (import.meta.env.DEV) { console.log(`📅 使用默认起始日期: ${defaultStartDate.toLocaleDateString()}`) }
+              if (import.meta.env.DEV) { console.log(`使用默认起始日期: ${defaultStartDate.toLocaleDateString()}`) }
 
             }
 
@@ -1935,7 +1935,7 @@ export default {
 
             const apiUrl = `${getApiBaseUrl()}/comprehensive-data/kline?symbol=${normalizedSymbol}${startDateParam}&endDate=${endDate.toISOString().split('T')[0]}&period=${period}${testParam}${futuresParam}`
 
-            if (import.meta.env.DEV) { console.log(`📡 API URL: ${apiUrl}`) }
+            if (import.meta.env.DEV) { console.log(`API URL: ${apiUrl}`) }
 
             
 
@@ -1973,7 +1973,7 @@ export default {
 
                 // 🔥 添加详细日志
 
-                if (import.meta.env.DEV) { console.log('📥 前端收到响应:'); }
+                if (import.meta.env.DEV) { console.log('前端收到响应:'); }
 
                 if (import.meta.env.DEV) { console.log('   success:', data.success); }
 
@@ -1983,7 +1983,7 @@ export default {
 
                 
 
-                if (import.meta.env.DEV) { console.log('✅ 后端API响应:', data.source, '数据条数:', data.kline?.length || 0) }
+                if (import.meta.env.DEV) { console.log('✓ 后端API响应:', data.source, '数据条数:', data.kline?.length || 0) }
 
                 
 
@@ -1999,7 +1999,7 @@ export default {
 
                   // 🔥 根据后端返回的source和dataQuality更新数据源状态
 
-                  if (import.meta.env.DEV) { console.log('🔍 更新数据源状态, source =', data.source, ', dataQuality =', data.dataQuality); }
+                  if (import.meta.env.DEV) { console.log('更新数据源状态, source =', data.source, ', dataQuality =', data.dataQuality); }
 
                   
 
@@ -2013,7 +2013,7 @@ export default {
 
                   })
 
-                  if (import.meta.env.DEV) { console.log(`✅ 数据源状态已更新为: ${data.source} (${data.dataQuality?.toUpperCase() || 'MEDIUM'})`) }
+                  if (import.meta.env.DEV) { console.log(`✓ 数据源状态已更新为: ${data.source} (${data.dataQuality?.toUpperCase() || 'MEDIUM'})`) }
 
                   
 
@@ -2021,7 +2021,7 @@ export default {
 
                   apiSuccess = true
 
-                  if (import.meta.env.DEV) { console.log(`✅ API调用成功! 获取 ${klineData.length} 条K线数据`) }
+                  if (import.meta.env.DEV) { console.log(`✓ API调用成功! 获取 ${klineData.length} 条K线数据`) }
 
                 } else {
 
@@ -2053,13 +2053,13 @@ export default {
 
             retryCount++
 
-            console.warn(`⚠️ 第 ${retryCount} 次API调用失败:`, apiError.message)
+            console.warn(`⚠ 第 ${retryCount} 次API调用失败:`, apiError.message)
 
             
 
             if (retryCount >= maxRetries) {
 
-              console.error(`❌ API调用失败，已重试 ${maxRetries} 次，将使用模拟数据`)
+              console.error(`✗ API调用失败，已重试 ${maxRetries} 次，将使用模拟数据`)
 
             }
 
@@ -2073,7 +2073,7 @@ export default {
 
         if (klineData.length === 0) {
 
-          if (import.meta.env.DEV) { console.log('📊 使用增强模拟数据作为后备') }
+          if (import.meta.env.DEV) { console.log('使用增强模拟数据作为后备') }
 
           klineData = generateMockKlineData()
 
@@ -2185,7 +2185,7 @@ export default {
 
                   if (import.meta.env.DEV) { console.log(`Visible range set: ${new Date(firstTime * 1000).toISOString().slice(0, 10)} to ${new Date(lastTime * 1000).toISOString().slice(0, 10)}`) }
 
-                  if (import.meta.env.DEV) { console.log('✅ 图表已自动缩放以显示所有数据') }
+                  if (import.meta.env.DEV) { console.log('✓ 图表已自动缩放以显示所有数据') }
 
                 }, 100)
 
@@ -2241,13 +2241,13 @@ export default {
 
           
 
-          if (import.meta.env.DEV) { console.log('✅ K线数据加载成功，共', klineData.length, '条数据，当前价格:', lastCandle.close) }
+          if (import.meta.env.DEV) { console.log('✓ K线数据加载成功，共', klineData.length, '条数据，当前价格:', lastCandle.close) }
 
         }
 
       } catch (error) {
 
-        console.error('❌ 加载图表数据失败:', error)
+        console.error('✗ 加载图表数据失败:', error)
 
         ElMessage.error('加载图表数据失败')
 
@@ -2479,7 +2479,7 @@ export default {
 
     const onSymbolChange = (symbol) => {
 
-      if (import.meta.env.DEV) { console.log('📈 切换合约:', symbol) }
+      if (import.meta.env.DEV) { console.log('切换合约:', symbol) }
 
       emit('contract-change', symbol)
 
@@ -2491,7 +2491,7 @@ export default {
 
     const onPeriodChange = (period) => {
 
-      if (import.meta.env.DEV) { console.log('⏰ 切换周期:', period) }
+      if (import.meta.env.DEV) { console.log('切换周期:', period) }
 
       emit('period-change', period)
 
@@ -2505,7 +2505,7 @@ export default {
 
       // 🔥 打开策略选择对话框
 
-      if (import.meta.env.DEV) { console.log('📋 打开策略选择对话框...') }
+      if (import.meta.env.DEV) { console.log('打开策略选择对话框...') }
 
       
 
@@ -2541,7 +2541,7 @@ export default {
 
       try {
 
-        if (import.meta.env.DEV) { console.log('📋 选择策略:', strategy.name) }
+        if (import.meta.env.DEV) { console.log('选择策略:', strategy.name) }
 
         loadedStrategy.value = strategy
 
@@ -2555,7 +2555,7 @@ export default {
 
         // 🔥 执行策略代码，获取信号和辅助线数据
 
-        if (import.meta.env.DEV) { console.log('📊 开始执行策略代码...') }
+        if (import.meta.env.DEV) { console.log('开始执行策略代码...') }
 
         await executeStrategyCode()
 
@@ -2571,7 +2571,7 @@ export default {
 
         if (signals.value.length > 0) {
 
-          if (import.meta.env.DEV) { console.log('🎯 自动显示信号到图表，信号数量:', signals.value.length) }
+          if (import.meta.env.DEV) { console.log('自动显示信号到图表，信号数量:', signals.value.length) }
 
           displaySignalsOnChart()
 
@@ -2585,7 +2585,7 @@ export default {
 
         if (auxiliaryData.value && Object.keys(auxiliaryData.value).length > 0) {
 
-          if (import.meta.env.DEV) { console.log('🎨 检测到辅助线数据，自动显示:', Object.keys(auxiliaryData.value)) }
+          if (import.meta.env.DEV) { console.log('检测到辅助线数据，自动显示:', Object.keys(auxiliaryData.value)) }
 
           displayAuxiliaryLines()
 
@@ -2613,7 +2613,7 @@ export default {
 
       } catch (error) {
 
-        console.error('❌ 加载策略失败:', error)
+        console.error('✗ 加载策略失败:', error)
 
         ElMessage.error('加载策略失败: ' + error.message)
 
@@ -2649,7 +2649,7 @@ export default {
 
       try {
 
-        if (import.meta.env.DEV) { console.log('⚡ 快速加载策略:', strategy.name) }
+        if (import.meta.env.DEV) { console.log('快速加载策略:', strategy.name) }
 
         loadedStrategy.value = strategy
 
@@ -2663,7 +2663,7 @@ export default {
 
         // 执行策略代码，获取信号和辅助线数据
 
-        if (import.meta.env.DEV) { console.log('📊 开始执行策略代码...') }
+        if (import.meta.env.DEV) { console.log('开始执行策略代码...') }
 
         await executeStrategyCode()
 
@@ -2679,7 +2679,7 @@ export default {
 
         if (signals.value.length > 0) {
 
-          if (import.meta.env.DEV) { console.log('🎯 自动显示信号到图表，信号数量:', signals.value.length) }
+          if (import.meta.env.DEV) { console.log('自动显示信号到图表，信号数量:', signals.value.length) }
 
           displaySignalsOnChart()
 
@@ -2693,7 +2693,7 @@ export default {
 
         if (auxiliaryData.value && Object.keys(auxiliaryData.value).length > 0) {
 
-          if (import.meta.env.DEV) { console.log('🎨 检测到辅助线数据，自动显示:', Object.keys(auxiliaryData.value)) }
+          if (import.meta.env.DEV) { console.log('检测到辅助线数据，自动显示:', Object.keys(auxiliaryData.value)) }
 
           displayAuxiliaryLines()
 
@@ -2721,7 +2721,7 @@ export default {
 
       } catch (error) {
 
-        console.error('❌ 快速加载策略失败:', error)
+        console.error('✗ 快速加载策略失败:', error)
 
         ElMessage.error('加载策略失败: ' + error.message)
 
@@ -2785,7 +2785,7 @@ export default {
 
       try {
 
-        if (import.meta.env.DEV) { console.log('🚀 重新执行当前策略:', loadedStrategy.value.name) }
+        if (import.meta.env.DEV) { console.log('重新执行当前策略:', loadedStrategy.value.name) }
 
         
 
@@ -2841,7 +2841,7 @@ export default {
 
       } catch (error) {
 
-        console.error('❌ 执行策略失败:', error)
+        console.error('✗ 执行策略失败:', error)
 
         ElMessage.error('执行策略失败: ' + error.message)
 
@@ -2861,7 +2861,7 @@ export default {
 
       if (!loadedStrategy.value) {
 
-        console.warn('⚠️ 没有加载的策略')
+        console.warn('⚠ 没有加载的策略')
 
         return
 
@@ -2877,7 +2877,7 @@ export default {
 
         if (!klineData || klineData.length === 0) {
 
-          console.warn('⚠️ 没有K线数据')
+          console.warn('⚠ 没有K线数据')
 
           return
 
@@ -2885,7 +2885,7 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('📊 准备执行策略代码:', {
+        if (import.meta.env.DEV) { console.log('准备执行策略代码:', {
           策略名称: loadedStrategy.value.name,
           策略类型: loadedStrategy.value.type,
           K线数据长度: klineData.length,
@@ -2898,7 +2898,7 @@ export default {
 
         if (loadedStrategy.value.code) {
 
-          if (import.meta.env.DEV) { console.log('🚀 执行真实策略代码...') }
+          if (import.meta.env.DEV) { console.log('执行真实策略代码...') }
 
           const result = await executeRealStrategyCode(loadedStrategy.value, klineData)
 
@@ -2916,7 +2916,7 @@ export default {
 
               auxiliaryData.value = {}
 
-              if (import.meta.env.DEV) { console.log('✅ 策略返回信号数组（旧格式）:', signals.value.length, '个信号') }
+              if (import.meta.env.DEV) { console.log('✓ 策略返回信号数组（旧格式）:', signals.value.length, '个信号') }
 
             } else if (result.signals) {
 
@@ -2926,7 +2926,7 @@ export default {
 
               auxiliaryData.value = result.auxiliaryData || {}
 
-              if (import.meta.env.DEV) { console.log('✅ 策略返回完整数据（新格式）:', {
+              if (import.meta.env.DEV) { console.log('✓ 策略返回完整数据（新格式）:', {
 
                 信号数量: signals.value.length,
 
@@ -2938,7 +2938,7 @@ export default {
 
           } else {
 
-            console.warn('⚠️ 策略执行无返回结果，使用模拟数据')
+            console.warn('⚠ 策略执行无返回结果，使用模拟数据')
 
             generateStrategySignals()
 
@@ -2948,7 +2948,7 @@ export default {
 
           // 没有策略代码，使用模拟信号生成
 
-          if (import.meta.env.DEV) { console.log('📊 策略无代码，使用模拟信号生成') }
+          if (import.meta.env.DEV) { console.log('策略无代码，使用模拟信号生成') }
 
           generateStrategySignals()
 
@@ -2958,11 +2958,11 @@ export default {
 
       } catch (error) {
 
-        console.error('❌ 执行策略代码失败:', error)
+        console.error('✗ 执行策略代码失败:', error)
 
         // 失败时使用模拟信号
 
-        if (import.meta.env.DEV) { console.log('📊 执行失败，回退到模拟信号生成') }
+        if (import.meta.env.DEV) { console.log('执行失败，回退到模拟信号生成') }
 
         generateStrategySignals()
 
@@ -2978,7 +2978,7 @@ export default {
 
       try {
 
-        if (import.meta.env.DEV) { console.log('🔧 开始执行策略代码...') }
+        if (import.meta.env.DEV) { console.log('开始执行策略代码...') }
 
         
 
@@ -2989,7 +2989,7 @@ export default {
         
 
         // All languages execute via backend vm sandbox
-        if (import.meta.env.DEV) { console.log('📦 策略沙箱执行, 语言:', strategy.language || 'javascript') }
+        if (import.meta.env.DEV) { console.log('策略沙箱执行, 语言:', strategy.language || 'javascript') }
 
         const result = await executeSandbox({
           code: strategy.code,
@@ -2998,13 +2998,13 @@ export default {
           language: strategy.language || 'javascript'
         })
 
-        if (import.meta.env.DEV) { console.log('✅ 策略沙箱执行完成, signals:', result.signals?.length || 0) }
+        if (import.meta.env.DEV) { console.log('✓ 策略沙箱执行完成, signals:', result.signals?.length || 0) }
 
         return result
 
       } catch (error) {
 
-        console.error('❌ 执行策略代码异常:', error)
+        console.error('✗ 执行策略代码异常:', error)
 
         throw error
 
@@ -3019,7 +3019,7 @@ export default {
       const mockSignals = generateMockSignalsHelper()
       signals.value = mockSignals
 
-      if (import.meta.env.DEV) { console.log('📊 SimpleTradingInterface: 生成模拟信号', {
+      if (import.meta.env.DEV) { console.log('SimpleTradingInterface: 生成模拟信号', {
         信号数量: mockSignals.length,
         时间范围: `${new Date(mockSignals[0].time * 1000).toLocaleDateString()} - ${new Date(mockSignals[mockSignals.length - 1].time * 1000).toLocaleDateString()}`,
         前3个信号: mockSignals.slice(0, 3),
@@ -3030,13 +3030,13 @@ export default {
     // 生成基于策略的信号
     const generateStrategySignals = () => {
       if (!loadedStrategy.value) {
-        if (import.meta.env.DEV) { console.log('⚠️ 没有加载的策略，无法生成信号') }
+        if (import.meta.env.DEV) { console.log('⚠ 没有加载的策略，无法生成信号') }
         return
       }
 
       const klineData = generateMockKlineData()
       if (!klineData || klineData.length === 0) {
-        if (import.meta.env.DEV) { console.log('⚠️ 没有K线数据，无法生成信号') }
+        if (import.meta.env.DEV) { console.log('⚠ 没有K线数据，无法生成信号') }
         return
       }
 
@@ -3046,7 +3046,7 @@ export default {
       })
 
       signals.value = strategySignals
-      if (import.meta.env.DEV) { console.log('📊 SimpleTradingInterface: 生成策略信号', {
+      if (import.meta.env.DEV) { console.log('SimpleTradingInterface: 生成策略信号', {
         策略名称: loadedStrategy.value.name,
         策略类型: loadedStrategy.value.type,
         信号数量: strategySignals.length,
@@ -3059,7 +3059,7 @@ export default {
 
     const toggleSignals = () => {
 
-      if (import.meta.env.DEV) { console.log('🔄 toggleSignals 被调用，当前状态:', {
+      if (import.meta.env.DEV) { console.log('toggleSignals 被调用，当前状态:', {
 
         showSignals: showSignals.value,
 
@@ -3095,7 +3095,7 @@ export default {
 
         if (signals.value.length === 0) {
 
-          if (import.meta.env.DEV) { console.log('📊 没有信号数据，重新生成策略信号') }
+          if (import.meta.env.DEV) { console.log('没有信号数据，重新生成策略信号') }
 
           generateStrategySignals()
 
@@ -3107,7 +3107,7 @@ export default {
 
         if (signals.value.length > 0) {
 
-          if (import.meta.env.DEV) { console.log('🎯 显示信号到图表，信号数量:', signals.value.length) }
+          if (import.meta.env.DEV) { console.log('显示信号到图表，信号数量:', signals.value.length) }
 
           displaySignalsOnChart()
 
@@ -3115,7 +3115,7 @@ export default {
 
         } else {
 
-          if (import.meta.env.DEV) { console.log('⚠️ 没有可显示的信号') }
+          if (import.meta.env.DEV) { console.log('⚠ 没有可显示的信号') }
 
           ElMessage.warning('没有可显示的交易信号')
 
@@ -3127,7 +3127,7 @@ export default {
 
         // 隐藏信号
 
-        if (import.meta.env.DEV) { console.log('🧹 隐藏信号标记') }
+        if (import.meta.env.DEV) { console.log('隐藏信号标记') }
 
         clearSignalsFromChart()
 
@@ -3137,7 +3137,7 @@ export default {
 
       
 
-      if (import.meta.env.DEV) { console.log('✅ toggleSignals 完成，最终状态:', {
+      if (import.meta.env.DEV) { console.log('✓ toggleSignals 完成，最终状态:', {
 
         showSignals: showSignals.value,
 
@@ -3175,7 +3175,7 @@ export default {
 
       nextTick(() => {
 
-        if (import.meta.env.DEV) { console.log('📊 DOM 更新后的状态:', panelCollapsed.value) }
+        if (import.meta.env.DEV) { console.log('DOM 更新后的状态:', panelCollapsed.value) }
 
         
 
@@ -3197,7 +3197,7 @@ export default {
 
             
 
-            if (import.meta.env.DEV) { console.log('📊 调整图表大小:', {
+            if (import.meta.env.DEV) { console.log('调整图表大小:', {
 
               width: newWidth, 
 
@@ -3241,7 +3241,7 @@ export default {
 
             } else {
 
-              console.warn('⚠️ 容器尺寸无效，跳过图表调整')
+              console.warn('⚠ 容器尺寸无效，跳过图表调整')
 
             }
 
@@ -3261,7 +3261,7 @@ export default {
 
       if (!candlestickSeries.value || !signals.value || signals.value.length === 0) {
 
-        if (import.meta.env.DEV) { console.log('⚠️ 无法显示信号：图表或信号数据不存在', {
+        if (import.meta.env.DEV) { console.log('⚠ 无法显示信号：图表或信号数据不存在', {
 
           candlestickSeries存在: !!candlestickSeries.value,
 
@@ -3283,7 +3283,7 @@ export default {
 
         if (!klineData || klineData.length === 0) {
 
-          if (import.meta.env.DEV) { console.log('⚠️ 无K线数据，无法显示信号') }
+          if (import.meta.env.DEV) { console.log('⚠ 无K线数据，无法显示信号') }
 
           return
 
@@ -3297,7 +3297,7 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('📊 K线时间范围:', {
+        if (import.meta.env.DEV) { console.log('K线时间范围:', {
 
           最小时间: new Date(minTime * 1000).toLocaleString(),
 
@@ -3311,7 +3311,7 @@ export default {
 
         // 🔥 调试：查看原始信号数据
 
-        if (import.meta.env.DEV) { console.log('🔍 原始信号数据（前3个）:', signals.value.slice(0, 3).map(s => ({
+        if (import.meta.env.DEV) { console.log('原始信号数据（前3个）:', signals.value.slice(0, 3).map(s => ({
 
           type: s.type,
 
@@ -3369,7 +3369,7 @@ export default {
 
             if (!item.inRange) {
 
-              if (import.meta.env.DEV) { console.log('⚠️ 信号时间超出范围:', {
+              if (import.meta.env.DEV) { console.log('⚠ 信号时间超出范围:', {
 
                 time: item.timeValue,
 
@@ -3415,7 +3415,7 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('🎯 准备显示信号标记:', {
+        if (import.meta.env.DEV) { console.log('准备显示信号标记:', {
 
           原始信号数量: signals.value.length,
 
@@ -3439,7 +3439,7 @@ export default {
 
         if (markers.length === 0) {
 
-          console.warn('⚠️ 警告：所有信号都被过滤掉了！')
+          console.warn('⚠ 警告：所有信号都被过滤掉了！')
 
           console.warn('   可能原因：信号时间戳与K线时间戳不匹配')
 
@@ -3461,7 +3461,7 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('✅ 信号标记已设置到K线系列上:', markers.length, '个标记') }
+        if (import.meta.env.DEV) { console.log('✓ 信号标记已设置到K线系列上:', markers.length, '个标记') }
 
         
 
@@ -3477,7 +3477,7 @@ export default {
 
       } catch (error) {
 
-        console.error('❌ 显示信号标记失败:', error)
+        console.error('✗ 显示信号标记失败:', error)
 
         console.error('错误堆栈:', error.stack)
 
@@ -3497,7 +3497,7 @@ export default {
 
         candlestickSeries.value.setMarkers([])
 
-        if (import.meta.env.DEV) { console.log('🧹 图表信号标记已清除') }
+        if (import.meta.env.DEV) { console.log('图表信号标记已清除') }
 
         
 
@@ -3511,7 +3511,7 @@ export default {
 
       } else {
 
-        if (import.meta.env.DEV) { console.log('⚠️ candlestickSeries 不存在，无法清除标记') }
+        if (import.meta.env.DEV) { console.log('⚠ candlestickSeries 不存在，无法清除标记') }
 
       }
 
@@ -3543,9 +3543,9 @@ export default {
 
     const toggleMA = () => {
 
-      if (import.meta.env.DEV) { console.log('🔘 toggleMA 被调用, 当前状态:', showMA.value) }
+      if (import.meta.env.DEV) { console.log('toggleMA 被调用, 当前状态:', showMA.value) }
 
-      if (import.meta.env.DEV) { console.log('📊 均线系列状态:', {
+      if (import.meta.env.DEV) { console.log('均线系列状态:', {
 
         ma5: !!ma5Series.value,
 
@@ -3555,7 +3555,7 @@ export default {
 
       }) }
 
-      if (import.meta.env.DEV) { console.log('📈 均线数据长度:', {
+      if (import.meta.env.DEV) { console.log('均线数据长度:', {
 
         ma5: ma5Data.value.length,
 
@@ -3575,7 +3575,7 @@ export default {
 
         // 显示均线 - 恢复数据
 
-        if (import.meta.env.DEV) { console.log('✅ 显示均线') }
+        if (import.meta.env.DEV) { console.log('✓ 显示均线') }
 
         if (ma5Series.value && ma5Data.value.length > 0) {
 
@@ -3607,7 +3607,7 @@ export default {
 
         // 隐藏均线 - 清空数据
 
-        if (import.meta.env.DEV) { console.log('❌ 隐藏均线') }
+        if (import.meta.env.DEV) { console.log('✗ 隐藏均线') }
 
         if (ma5Series.value) {
 
@@ -3695,7 +3695,7 @@ export default {
 
       if (!chart.value || !auxiliaryData.value) {
 
-        console.warn('⚠️ 图表或辅助线数据不存在')
+        console.warn('⚠ 图表或辅助线数据不存在')
 
         return
 
@@ -3707,7 +3707,7 @@ export default {
 
       if (!candlestickSeries.value) {
 
-        console.warn('⚠️ K线系列不存在，先初始化图表')
+        console.warn('⚠ K线系列不存在，先初始化图表')
 
         initChart()
 
@@ -3725,11 +3725,11 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('🎨 开始显示辅助线:', Object.keys(auxiliaryData.value)) }
+        if (import.meta.env.DEV) { console.log('开始显示辅助线:', Object.keys(auxiliaryData.value)) }
 
-        if (import.meta.env.DEV) { console.log('🎨 辅助线数据详情:', auxiliaryData.value) }
+        if (import.meta.env.DEV) { console.log('辅助线数据详情:', auxiliaryData.value) }
 
-        if (import.meta.env.DEV) { console.log('📊 当前K线系列状态:', candlestickSeries.value ? '存在' : '不存在') }
+        if (import.meta.env.DEV) { console.log('当前K线系列状态:', candlestickSeries.value ? '存在' : '不存在') }
 
         
 
@@ -3757,11 +3757,11 @@ export default {
 
               safeRemoveSeries(candlestickSeries.value)
 
-              if (import.meta.env.DEV) { console.log('🗑️ 已移除旧的K线系列') }
+              if (import.meta.env.DEV) { console.log('已移除旧的K线系列') }
 
             } catch (e) {
 
-              console.warn('⚠️ 移除K线系列失败:', e.message)
+              console.warn('⚠ 移除K线系列失败:', e.message)
 
             }
 
@@ -3795,7 +3795,7 @@ export default {
 
           candlestickSeries.value.setData(klineData)
 
-          if (import.meta.env.DEV) { console.log('✅ K线系列重新创建成功，数据点数:', klineData.length) }
+          if (import.meta.env.DEV) { console.log('✓ K线系列重新创建成功，数据点数:', klineData.length) }
 
           
 
@@ -3807,7 +3807,7 @@ export default {
 
               chart.value.timeScale().fitContent()
 
-              if (import.meta.env.DEV) { console.log('✅ 图表已自动缩放以显示所有数据') }
+              if (import.meta.env.DEV) { console.log('✓ 图表已自动缩放以显示所有数据') }
 
             }
 
@@ -3837,7 +3837,7 @@ export default {
 
         } catch (rebuildError) {
 
-          console.error('❌ 重建图表失败:', rebuildError)
+          console.error('✗ 重建图表失败:', rebuildError)
 
         }
 
@@ -3859,7 +3859,7 @@ export default {
 
           if (!lineConfig || !lineConfig.data || !Array.isArray(lineConfig.data)) {
 
-            console.warn(`⚠️ 辅助线 "${lineName}" 数据格式不正确:`, lineConfig)
+            console.warn(`⚠ 辅助线 "${lineName}" 数据格式不正确:`, lineConfig)
 
             failCount++
 
@@ -3869,7 +3869,7 @@ export default {
 
           
 
-          if (import.meta.env.DEV) { console.log(`📊 处理辅助线 "${lineName}"，原始数据点数:`, lineConfig.data.length) }
+          if (import.meta.env.DEV) { console.log(`处理辅助线 "${lineName}"，原始数据点数:`, lineConfig.data.length) }
 
           
 
@@ -3877,7 +3877,7 @@ export default {
 
           // 这样可以确保辅助线和K线的价格范围完全匹配
 
-          if (import.meta.env.DEV) { console.log(`🔄 基于当前K线数据重新计算辅助线 "${lineName}"`) }
+          if (import.meta.env.DEV) { console.log(`基于当前K线数据重新计算辅助线 "${lineName}"`) }
 
           
 
@@ -3911,7 +3911,7 @@ export default {
 
             })
 
-            if (import.meta.env.DEV) { console.log(`✅ 多线重新计算完成: ${expandedLineData.length} 个数据点`) }
+            if (import.meta.env.DEV) { console.log(`✓ 多线重新计算完成: ${expandedLineData.length} 个数据点`) }
 
           } else if (lineName === '空线' || lineName.includes('下轨')) {
 
@@ -3935,7 +3935,7 @@ export default {
 
             })
 
-            if (import.meta.env.DEV) { console.log(`✅ 空线重新计算完成: ${expandedLineData.length} 个数据点`) }
+            if (import.meta.env.DEV) { console.log(`✓ 空线重新计算完成: ${expandedLineData.length} 个数据点`) }
 
           } else if (lineName === '箱体中线' || lineName.includes('中线')) {
 
@@ -3963,13 +3963,13 @@ export default {
 
             })
 
-            if (import.meta.env.DEV) { console.log(`✅ 箱体中线重新计算完成: ${expandedLineData.length} 个数据点`) }
+            if (import.meta.env.DEV) { console.log(`✓ 箱体中线重新计算完成: ${expandedLineData.length} 个数据点`) }
 
           } else {
 
             // 未知类型的辅助线，跳过
 
-            console.warn(`⚠️ 未知辅助线类型 "${lineName}"，跳过`)
+            console.warn(`⚠ 未知辅助线类型 "${lineName}"，跳过`)
 
             failCount++
 
@@ -4031,11 +4031,11 @@ export default {
 
             successCount++
 
-            if (import.meta.env.DEV) { console.log(`✅ 辅助线 "${title}" 已添加到图表`) }
+            if (import.meta.env.DEV) { console.log(`✓ 辅助线 "${title}" 已添加到图表`) }
 
           } catch (seriesError) {
 
-            console.error(`❌ 添加辅助线 "${title}" 失败:`, seriesError)
+            console.error(`✗ 添加辅助线 "${title}" 失败:`, seriesError)
 
             failCount++
 
@@ -4045,7 +4045,7 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log(`✅ 辅助线显示完成: 成功 ${successCount} 条, 失败 ${failCount} 条`) }
+        if (import.meta.env.DEV) { console.log(`✓ 辅助线显示完成: 成功 ${successCount} 条, 失败 ${failCount} 条`) }
 
         
 
@@ -4053,7 +4053,7 @@ export default {
 
         if (showMA.value) {
 
-          if (import.meta.env.DEV) { console.log('🔄 重新显示均线...') }
+          if (import.meta.env.DEV) { console.log('重新显示均线...') }
 
           nextTick(() => {
 
@@ -4087,7 +4087,7 @@ export default {
 
         if (signals.value && signals.value.length > 0) {
 
-          if (import.meta.env.DEV) { console.log('🔄 重新显示交易信号...') }
+          if (import.meta.env.DEV) { console.log('重新显示交易信号...') }
 
           nextTick(() => {
 
@@ -4105,15 +4105,15 @@ export default {
 
         // 用户可以手动缩放查看不同范围
 
-        if (import.meta.env.DEV) { console.log('✅ 辅助线已添加，保持当前视图（K线应该仍然可见）') }
+        if (import.meta.env.DEV) { console.log('✓ 辅助线已添加，保持当前视图（K线应该仍然可见）') }
 
-        if (import.meta.env.DEV) { console.log('💡 提示: 如果看不到K线，请双击图表或使用鼠标滚轮调整视图') }
+        if (import.meta.env.DEV) { console.log('提示: 如果看不到K线，请双击图表或使用鼠标滚轮调整视图') }
 
         
 
       } catch (error) {
 
-        console.error('❌ 显示辅助线失败:', error)
+        console.error('✗ 显示辅助线失败:', error)
 
         ElMessage.error('显示辅助线失败: ' + error.message)
 
@@ -4133,7 +4133,7 @@ export default {
 
       try {
 
-        if (import.meta.env.DEV) { console.log('🧹 开始清除辅助线，当前数量:', Object.keys(auxiliarySeries.value).length) }
+        if (import.meta.env.DEV) { console.log('开始清除辅助线，当前数量:', Object.keys(auxiliarySeries.value).length) }
 
         
 
@@ -4147,13 +4147,13 @@ export default {
 
               safeRemoveSeries(series)
 
-              if (import.meta.env.DEV) { console.log(`🧹 已移除辅助线: ${name}`) }
+              if (import.meta.env.DEV) { console.log(`已移除辅助线: ${name}`) }
 
             }
 
           } catch (removeError) {
 
-            console.warn(`⚠️ 移除辅助线 "${name}" 时出错:`, removeError.message)
+            console.warn(`⚠ 移除辅助线 "${name}" 时出错:`, removeError.message)
 
           }
 
@@ -4167,13 +4167,13 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('✅ 辅助线已全部清除') }
+        if (import.meta.env.DEV) { console.log('✓ 辅助线已全部清除') }
 
         
 
       } catch (error) {
 
-        console.error('❌ 清除辅助线失败:', error)
+        console.error('✗ 清除辅助线失败:', error)
 
         // 即使出错也要清空对象，避免残留引用
 
@@ -4235,7 +4235,7 @@ export default {
 
         // 🔥 从 strategyStore 加载真实的策略列表
 
-        if (import.meta.env.DEV) { console.log('📋 开始加载策略列表...') }
+        if (import.meta.env.DEV) { console.log('开始加载策略列表...') }
 
         
 
@@ -4243,7 +4243,7 @@ export default {
 
         if (strategyStore.strategies.length === 0) {
 
-          if (import.meta.env.DEV) { console.log('📥 策略列表为空，从后端加载...') }
+          if (import.meta.env.DEV) { console.log('策略列表为空，从后端加载...') }
 
           await strategyStore.loadStrategies()
 
@@ -4281,9 +4281,9 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('✅ 策略列表加载成功:', availableStrategies.value.length, '个策略') }
+        if (import.meta.env.DEV) { console.log('✓ 策略列表加载成功:', availableStrategies.value.length, '个策略') }
 
-        if (import.meta.env.DEV) { console.log('📊 策略详情:', availableStrategies.value.map(s => ({ id: s.id, name: s.name, type: s.type }))) }
+        if (import.meta.env.DEV) { console.log('策略详情:', availableStrategies.value.map(s => ({ id: s.id, name: s.name, type: s.type }))) }
 
         
 
@@ -4291,7 +4291,7 @@ export default {
 
         if (availableStrategies.value.length === 0) {
 
-          console.warn('⚠️ 没有可用的策略，请先在策略管理页面创建策略')
+          console.warn('⚠ 没有可用的策略，请先在策略管理页面创建策略')
 
           ElMessage.warning('没有可用的策略，请先在策略管理页面创建策略')
 
@@ -4299,7 +4299,7 @@ export default {
 
       } catch (error) {
 
-        console.error('❌ 加载策略列表失败:', error)
+        console.error('✗ 加载策略列表失败:', error)
 
         ElMessage.error('加载策略列表失败: ' + error.message)
 
@@ -4331,7 +4331,7 @@ export default {
 
       if (strategy) {
 
-        if (import.meta.env.DEV) { console.log('📋 选择策略:', strategy.name) }
+        if (import.meta.env.DEV) { console.log('选择策略:', strategy.name) }
 
         // 同步更新selectedStrategyId
 
@@ -4439,7 +4439,7 @@ export default {
 
       if (isBacktesting.value) {
 
-        console.warn('⚠️ 回测正在进行中，忽略重复调用')
+        console.warn('⚠ 回测正在进行中，忽略重复调用')
 
         ElMessage.warning('当前回测任务尚未完成，请等待结果返回后再发起新的回测')
 
@@ -4449,13 +4449,13 @@ export default {
 
       
 
-      if (import.meta.env.DEV) { console.log('🚀 runBacktest 函数开始执行') }
+      if (import.meta.env.DEV) { console.log('runBacktest 函数开始执行') }
 
       
 
       if (!backtestFormRef.value) {
 
-        console.error('❌ backtestFormRef 不存在')
+        console.error('✗ backtestFormRef 不存在')
 
         ElMessage.error('表单引用错误')
 
@@ -4471,17 +4471,17 @@ export default {
 
       try {
 
-        if (import.meta.env.DEV) { console.log('📋 开始表单验证') }
+        if (import.meta.env.DEV) { console.log('开始表单验证') }
 
         await backtestFormRef.value.validate()
 
-        if (import.meta.env.DEV) { console.log('✅ 表单验证通过') }
+        if (import.meta.env.DEV) { console.log('✓ 表单验证通过') }
 
         
 
         if (!backtestParams.strategyId) {
 
-          console.warn('⚠️ 未选择策略')
+          console.warn('⚠ 未选择策略')
 
           ElMessage.warning('请先选择策略')
 
@@ -4491,7 +4491,7 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('📊 选中的策略ID:', backtestParams.strategyId) }
+        if (import.meta.env.DEV) { console.log('选中的策略ID:', backtestParams.strategyId) }
 
         
 
@@ -4505,7 +4505,7 @@ export default {
 
         if (!strategy) {
 
-          console.error('❌ 未找到选中的策略')
+          console.error('✗ 未找到选中的策略')
 
           throw new Error('未找到选中的策略')
 
@@ -4513,7 +4513,7 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('✅ 策略信息:', {
+        if (import.meta.env.DEV) { console.log('✓ 策略信息:', {
 
           id: strategy.id,
 
@@ -4525,7 +4525,7 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('🚀 开始回测计算:', {
+        if (import.meta.env.DEV) { console.log('开始回测计算:', {
 
           strategyName: strategy.name,
 
@@ -4559,13 +4559,13 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('📅 日期验证通过') }
+        if (import.meta.env.DEV) { console.log('日期验证通过') }
 
         
 
         // 🔥 真实执行策略回测
 
-        if (import.meta.env.DEV) { console.log('⏳ 开始真实策略回测...') }
+        if (import.meta.env.DEV) { console.log('开始真实策略回测...') }
 
         
 
@@ -4573,9 +4573,9 @@ export default {
 
         const klineData = generateMockKlineData()
 
-        if (import.meta.env.DEV) { console.log('📊 生成K线数据:', klineData.length, '条') }
+        if (import.meta.env.DEV) { console.log('生成K线数据:', klineData.length, '条') }
 
-        if (import.meta.env.DEV) { console.log('📊 K线数据时间范围:', {
+        if (import.meta.env.DEV) { console.log('K线数据时间范围:', {
 
           开始: new Date(klineData[0].time * 1000).toLocaleString(),
 
@@ -4607,9 +4607,9 @@ export default {
 
           if (strategy.code) {
 
-            if (import.meta.env.DEV) { console.log('🚀 执行策略代码...') }
+            if (import.meta.env.DEV) { console.log('执行策略代码...') }
 
-            if (import.meta.env.DEV) { console.log('📋 策略信息:', {
+            if (import.meta.env.DEV) { console.log('策略信息:', {
 
               name: strategy.name,
 
@@ -4631,9 +4631,9 @@ export default {
 
             
 
-            if (import.meta.env.DEV) { console.log('✅ 策略执行完成') }
+            if (import.meta.env.DEV) { console.log('✓ 策略执行完成') }
 
-            if (import.meta.env.DEV) { console.log('📊 策略返回结果:', {
+            if (import.meta.env.DEV) { console.log('策略返回结果:', {
 
               类型: typeof result,
 
@@ -4655,9 +4655,9 @@ export default {
 
         } catch (strategyError) {
 
-          console.error('❌ 策略执行失败:', strategyError)
+          console.error('✗ 策略执行失败:', strategyError)
 
-          console.error('❌ 错误堆栈:', strategyError.stack)
+          console.error('✗ 错误堆栈:', strategyError.stack)
 
           throw new Error('策略执行失败: ' + strategyError.message)
 
@@ -4669,15 +4669,15 @@ export default {
 
         const strategySignals = strategyResult?.signals || []
 
-        if (import.meta.env.DEV) { console.log('📊 策略信号数量:', strategySignals.length) }
+        if (import.meta.env.DEV) { console.log('策略信号数量:', strategySignals.length) }
 
         
 
         if (strategySignals.length === 0) {
 
-          console.warn('⚠️ 策略没有生成任何信号！')
+          console.warn('⚠ 策略没有生成任何信号！')
 
-          console.warn('⚠️ 可能原因:')
+          console.warn('⚠ 可能原因:')
 
           console.warn('   1. 数据量不足（当前:', klineData.length, '条）')
 
@@ -4685,17 +4685,17 @@ export default {
 
           console.warn('   3. 策略代码逻辑问题')
 
-          console.warn('⚠️ 建议: 检查策略代码中的数据量要求和参数设置')
+          console.warn('⚠ 建议: 检查策略代码中的数据量要求和参数设置')
 
           
 
           // 🔥 不再抛出错误，而是继续执行，显示0交易的回测结果
 
-          if (import.meta.env.DEV) { console.log('⚠️ 继续执行回测，将生成0交易的回测结果') }
+          if (import.meta.env.DEV) { console.log('⚠ 继续执行回测，将生成0交易的回测结果') }
 
         } else {
 
-          if (import.meta.env.DEV) { console.log('📊 前3个信号:', strategySignals.slice(0, 3).map(s => ({
+          if (import.meta.env.DEV) { console.log('前3个信号:', strategySignals.slice(0, 3).map(s => ({
 
             type: s.type,
 
@@ -4715,7 +4715,7 @@ export default {
 
         // 4. 执行回测计算
 
-        if (import.meta.env.DEV) { console.log('💰 开始回测计算...') }
+        if (import.meta.env.DEV) { console.log('开始回测计算...') }
 
         let capital = backtestParams.initialCapital
 
@@ -4729,15 +4729,15 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('💰 初始资金:', capital) }
+        if (import.meta.env.DEV) { console.log('初始资金:', capital) }
 
-        if (import.meta.env.DEV) { console.log('📊 策略信号总数:', strategySignals.length) }
+        if (import.meta.env.DEV) { console.log('策略信号总数:', strategySignals.length) }
 
         
 
         if (strategySignals.length === 0) {
 
-          console.warn('⚠️ 没有交易信号，回测结果将显示0交易')
+          console.warn('⚠ 没有交易信号，回测结果将显示0交易')
 
         } else {
 
@@ -4753,7 +4753,7 @@ export default {
 
             if (!dataPoint) {
 
-              console.warn(`⚠️ 信号 #${i+1} 的K线数据不存在，索引:`, signal.index)
+              console.warn(`⚠ 信号 #${i+1} 的K线数据不存在，索引:`, signal.index)
 
               continue
 
@@ -4807,7 +4807,7 @@ export default {
 
                 
 
-                if (import.meta.env.DEV) { console.log(`✅ 买入交易 #${trades.length}:`, {
+                if (import.meta.env.DEV) { console.log(`✓ 买入交易 #${trades.length}:`, {
 
                   日期: tradeRecord.date,
 
@@ -4821,7 +4821,7 @@ export default {
 
               } else {
 
-                console.warn('⚠️ 资金不足，无法买入')
+                console.warn('⚠ 资金不足，无法买入')
 
               }
 
@@ -4867,7 +4867,7 @@ export default {
 
               
 
-              if (import.meta.env.DEV) { console.log(`✅ 卖出交易 #${trades.length}:`, {
+              if (import.meta.env.DEV) { console.log(`✓ 卖出交易 #${trades.length}:`, {
 
                 日期: tradeRecord.date,
 
@@ -4893,11 +4893,11 @@ export default {
 
               if (isBuySignal && position > 0) {
 
-                if (import.meta.env.DEV) { console.log(`⏭️ 跳过买入信号 #${i+1}: 已有持仓`) }
+                if (import.meta.env.DEV) { console.log(`⏭ 跳过买入信号 #${i+1}: 已有持仓`) }
 
               } else if (isSellSignal && position === 0) {
 
-                if (import.meta.env.DEV) { console.log(`⏭️ 跳过卖出信号 #${i+1}: 无持仓`) }
+                if (import.meta.env.DEV) { console.log(`⏭ 跳过卖出信号 #${i+1}: 无持仓`) }
 
               }
 
@@ -4909,15 +4909,15 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('💰 回测计算完成，生成交易记录:', trades.length, '条') }
+        if (import.meta.env.DEV) { console.log('回测计算完成，生成交易记录:', trades.length, '条') }
 
         if (trades.length > 0) {
 
-          if (import.meta.env.DEV) { console.log('📊 交易记录详情:', trades) }
+          if (import.meta.env.DEV) { console.log('交易记录详情:', trades) }
 
         } else {
 
-          console.warn('⚠️ 没有生成任何交易记录')
+          console.warn('⚠ 没有生成任何交易记录')
 
         }
 
@@ -4925,7 +4925,7 @@ export default {
 
         // 5. 计算回测指标
 
-        if (import.meta.env.DEV) { console.log('📊 开始计算回测指标...') }
+        if (import.meta.env.DEV) { console.log('开始计算回测指标...') }
 
         
 
@@ -4967,7 +4967,7 @@ export default {
 
           totalProfit += floatingProfit
 
-          if (import.meta.env.DEV) { console.log('💰 当前持仓浮动盈亏:', floatingProfit.toFixed(2)) }
+          if (import.meta.env.DEV) { console.log('当前持仓浮动盈亏:', floatingProfit.toFixed(2)) }
 
         }
 
@@ -4979,7 +4979,7 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('💰 收益计算:', {
+        if (import.meta.env.DEV) { console.log('收益计算:', {
 
           初始资金: backtestParams.initialCapital,
 
@@ -5033,7 +5033,7 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('📅 交易周期:', {
+        if (import.meta.env.DEV) { console.log('交易周期:', {
 
           回测天数: ((backtestParams.endDate - backtestParams.startDate) / (1000 * 60 * 60 * 24)).toFixed(0),
 
@@ -5055,7 +5055,7 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('🎯 交易统计:', {
+        if (import.meta.env.DEV) { console.log('交易统计:', {
 
           总交易次数: trades.length,
 
@@ -5125,7 +5125,7 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('📉 回撤分析:', {
+        if (import.meta.env.DEV) { console.log('回撤分析:', {
 
           最高权益: peak.toFixed(2),
 
@@ -5201,7 +5201,7 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('✅ 回测指标计算完成:', {
+        if (import.meta.env.DEV) { console.log('✓ 回测指标计算完成:', {
 
           总收益率: (totalReturn * 100).toFixed(2) + '%',
 
@@ -5309,7 +5309,7 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('📊 月度收益:', monthlyReturns.map(m => ({
+        if (import.meta.env.DEV) { console.log('月度收益:', monthlyReturns.map(m => ({
           月份: m.month,
           收益率: (m.return * 100).toFixed(2) + '%',
           盈亏: m.profit.toFixed(2),
@@ -5319,13 +5319,13 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('✅ 回测计算完成') }
+        if (import.meta.env.DEV) { console.log('✓ 回测计算完成') }
 
         
 
         // 创建回测结果对象
 
-        if (import.meta.env.DEV) { console.log('🏗️ 创建回测结果对象...') }
+        if (import.meta.env.DEV) { console.log('创建回测结果对象...') }
 
         const backtestResult = {
 
@@ -5431,7 +5431,7 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('✅ 回测结果对象创建完成:', {
+        if (import.meta.env.DEV) { console.log('✓ 回测结果对象创建完成:', {
 
           id: backtestResult.id,
 
@@ -5457,7 +5457,7 @@ export default {
 
         // 保存到本地存储
 
-        if (import.meta.env.DEV) { console.log('💾 保存到本地存储...') }
+        if (import.meta.env.DEV) { console.log('保存到本地存储...') }
 
         try {
 
@@ -5467,11 +5467,11 @@ export default {
 
           localStorage.setItem('backtestResults', JSON.stringify(existingResults))
 
-          if (import.meta.env.DEV) { console.log('✅ 本地存储保存成功，当前总数:', existingResults.length) }
+          if (import.meta.env.DEV) { console.log('✓ 本地存储保存成功，当前总数:', existingResults.length) }
 
         } catch (storageError) {
 
-          console.error('❌ 本地存储失败:', storageError)
+          console.error('✗ 本地存储失败:', storageError)
 
         }
 
@@ -5519,11 +5519,11 @@ export default {
 
           })
 
-          if (import.meta.env.DEV) { console.log('✅ 回测结果已保存到数据库') }
+          if (import.meta.env.DEV) { console.log('✓ 回测结果已保存到数据库') }
 
         } catch (dbError) {
 
-          console.error('❌ 保存到数据库失败:', dbError)
+          console.error('✗ 保存到数据库失败:', dbError)
 
         }
 
@@ -5533,13 +5533,13 @@ export default {
 
         showBacktestDialog.value = false
 
-        if (import.meta.env.DEV) { console.log('✅ 回测对话框已关闭') }
+        if (import.meta.env.DEV) { console.log('✓ 回测对话框已关闭') }
 
         
 
         // 显示完成提示
 
-        if (import.meta.env.DEV) { console.log('🎉 准备显示完成提示对话框') }
+        if (import.meta.env.DEV) { console.log('准备显示完成提示对话框') }
 
         
 
@@ -5567,7 +5567,7 @@ export default {
 
 
 
-⚠️ 注意：策略在回测期间没有生成任何交易信号。
+⚠ 注意：策略在回测期间没有生成任何交易信号。
 
 
 
@@ -5619,7 +5619,7 @@ export default {
 
           
 
-          if (import.meta.env.DEV) { console.log('📊 回测结果摘要:', {
+          if (import.meta.env.DEV) { console.log('回测结果摘要:', {
 
             策略名称: strategy.name,
 
@@ -5661,7 +5661,7 @@ export default {
 
           
 
-          if (import.meta.env.DEV) { console.log('✅ 用户选择查看结果，准备跳转') }
+          if (import.meta.env.DEV) { console.log('✓ 用户选择查看结果，准备跳转') }
 
           
 
@@ -5685,7 +5685,7 @@ export default {
 
           
 
-          if (import.meta.env.DEV) { console.log('✅ 页面跳转成功，将自动显示最新回测结果') }
+          if (import.meta.env.DEV) { console.log('✓ 页面跳转成功，将自动显示最新回测结果') }
 
           
 
@@ -5693,7 +5693,7 @@ export default {
 
           if (dialogError === 'cancel') {
 
-            if (import.meta.env.DEV) { console.log('📝 用户选择稍后查看') }
+            if (import.meta.env.DEV) { console.log('用户选择稍后查看') }
 
             ElMessage({
 
@@ -5707,7 +5707,7 @@ export default {
 
           } else {
 
-            console.error('❌ 对话框错误:', dialogError)
+            console.error('✗ 对话框错误:', dialogError)
 
             console.error('错误详情:', dialogError)
 
@@ -5721,7 +5721,7 @@ export default {
 
       } catch (error) {
 
-        console.error('❌ 回测执行过程中发生错误:', error)
+        console.error('✗ 回测执行过程中发生错误:', error)
 
         console.error('错误类型:', typeof error)
 
@@ -5743,7 +5743,7 @@ export default {
 
         isBacktesting.value = false
 
-        if (import.meta.env.DEV) { console.log(`🏁 回测结束，重置完成 (耗时 ${(Date.now() - btStart) / 1000}s)`) }
+        if (import.meta.env.DEV) { console.log(`回测结束，重置完成 (耗时 ${(Date.now() - btStart) / 1000}s)`) }
 
       }
 
@@ -5819,7 +5819,7 @@ export default {
 
       try {
 
-        if (import.meta.env.DEV) { console.log('🔄 切换数据源:', sourceKey) }
+        if (import.meta.env.DEV) { console.log('切换数据源:', sourceKey) }
 
         await switchDataSource(sourceKey)
 
@@ -5833,7 +5833,7 @@ export default {
 
       } catch (error) {
 
-        console.error('❌ 切换数据源失败:', error)
+        console.error('✗ 切换数据源失败:', error)
 
         ElMessage.error(`切换数据源失败: ${error.message}`)
 
@@ -5845,7 +5845,7 @@ export default {
 
     const handleManageDataSource = () => {
 
-      if (import.meta.env.DEV) { console.log('🔧 打开数据源管理') }
+      if (import.meta.env.DEV) { console.log('打开数据源管理') }
 
       // Data-source management lives under the /trading route's quotes tab
       // (there is no standalone /data-sources route); object form so the
@@ -5860,7 +5860,7 @@ export default {
 
     const handleSelectPosition = (position) => {
 
-      if (import.meta.env.DEV) { console.log('📊 选中持仓:', position) }
+      if (import.meta.env.DEV) { console.log('选中持仓:', position) }
 
       // 可以在这里联动下单面板，自动填充标的和数量
 
@@ -5874,7 +5874,7 @@ export default {
 
     const handleClosePosition = async (position) => {
 
-      if (import.meta.env.DEV) { console.log('💰 平仓操作:', position) }
+      if (import.meta.env.DEV) { console.log('平仓操作:', position) }
 
       
 
@@ -5928,7 +5928,7 @@ export default {
 
       onDataSourceEvent('source-changed', (data) => {
 
-        if (import.meta.env.DEV) { console.log('📡 数据源已变更:', data) }
+        if (import.meta.env.DEV) { console.log('数据源已变更:', data) }
 
         ElMessage.info(`数据源已切换: ${data.name}`)
 
@@ -5954,7 +5954,7 @@ export default {
 
       onDataSourceEvent('status-refreshed', (data) => {
 
-        if (import.meta.env.DEV) { console.log('🔄 数据源状态已刷新:', data) }
+        if (import.meta.env.DEV) { console.log('数据源状态已刷新:', data) }
 
       })
 
@@ -6212,7 +6212,7 @@ export default {
 
       if (newContract && newContract !== selectedSymbol.value) {
 
-        if (import.meta.env.DEV) { console.log('📊 合约代码已变化:', newContract) }
+        if (import.meta.env.DEV) { console.log('合约代码已变化:', newContract) }
 
         selectedSymbol.value = newContract
 
@@ -6239,7 +6239,7 @@ export default {
 
       if (newStrategy) {
 
-        if (import.meta.env.DEV) { console.log('👀 检测到父组件策略变化:', newStrategy) }
+        if (import.meta.env.DEV) { console.log('检测到父组件策略变化:', newStrategy) }
 
         loadedStrategy.value = newStrategy
 
@@ -6269,7 +6269,7 @@ export default {
 
         // 策略被卸载的情况
 
-        if (import.meta.env.DEV) { console.log('👀 检测到策略被卸载') }
+        if (import.meta.env.DEV) { console.log('检测到策略被卸载') }
 
         loadedStrategy.value = null
 
@@ -6293,7 +6293,7 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('✅ 策略已卸载，信号已清除') }
+        if (import.meta.env.DEV) { console.log('✓ 策略已卸载，信号已清除') }
 
       }
 
@@ -6305,7 +6305,7 @@ export default {
 
     watch(() => props.signals, (newSignals) => {
 
-      if (import.meta.env.DEV) { console.log('👀 检测到父组件signals变化:', newSignals?.length || 0, '个信号') }
+      if (import.meta.env.DEV) { console.log('检测到父组件signals变化:', newSignals?.length || 0, '个信号') }
 
       
 
@@ -6317,9 +6317,9 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('✅ signals已更新，准备显示到图表') }
+        if (import.meta.env.DEV) { console.log('✓ signals已更新，准备显示到图表') }
 
-        if (import.meta.env.DEV) { console.log('📊 信号详情:', signals.value.map(s => ({
+        if (import.meta.env.DEV) { console.log('信号详情:', signals.value.map(s => ({
           type: s.type,
           time: s.time,
           price: s.price,
@@ -6339,11 +6339,11 @@ export default {
 
             showSignals.value = true
 
-            if (import.meta.env.DEV) { console.log('✅ 信号已自动显示到图表') }
+            if (import.meta.env.DEV) { console.log('✓ 信号已自动显示到图表') }
 
           } else {
 
-            console.warn('⚠️ K线系列尚未初始化，延迟显示信号')
+            console.warn('⚠ K线系列尚未初始化，延迟显示信号')
 
             setTimeout(() => {
 
@@ -6363,7 +6363,7 @@ export default {
 
       } else if (!newSignals || newSignals.length === 0) {
 
-        if (import.meta.env.DEV) { console.log('👀 signals被清空') }
+        if (import.meta.env.DEV) { console.log('signals被清空') }
 
         signals.value = []
 
@@ -6381,7 +6381,7 @@ export default {
 
     watch(() => props.auxiliaryData, (newAuxiliaryData) => {
 
-      if (import.meta.env.DEV) { console.log('👀 检测到父组件auxiliaryData变化:', Object.keys(newAuxiliaryData || {}).length, '条辅助线') }
+      if (import.meta.env.DEV) { console.log('检测到父组件auxiliaryData变化:', Object.keys(newAuxiliaryData || {}).length, '条辅助线') }
 
       
 
@@ -6393,9 +6393,9 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('✅ auxiliaryData已更新，准备显示到图表') }
+        if (import.meta.env.DEV) { console.log('✓ auxiliaryData已更新，准备显示到图表') }
 
-        if (import.meta.env.DEV) { console.log('📊 辅助线详情:', Object.keys(auxiliaryData.value)) }
+        if (import.meta.env.DEV) { console.log('辅助线详情:', Object.keys(auxiliaryData.value)) }
 
         
 
@@ -6409,11 +6409,11 @@ export default {
 
             showAuxiliaryLines.value = true
 
-            if (import.meta.env.DEV) { console.log('✅ 辅助线已自动显示到图表') }
+            if (import.meta.env.DEV) { console.log('✓ 辅助线已自动显示到图表') }
 
           } else {
 
-            console.warn('⚠️ 图表尚未初始化，延迟显示辅助线')
+            console.warn('⚠ 图表尚未初始化，延迟显示辅助线')
 
             setTimeout(() => {
 
@@ -6433,7 +6433,7 @@ export default {
 
       } else {
 
-        if (import.meta.env.DEV) { console.log('👀 auxiliaryData被清空') }
+        if (import.meta.env.DEV) { console.log('auxiliaryData被清空') }
 
         auxiliaryData.value = {}
 
@@ -6453,13 +6453,13 @@ export default {
 
       if (import.meta.env.DEV) { console.log('=' .repeat(80)) }
 
-      if (import.meta.env.DEV) { console.log('👀👀👀 watch检测到合约变化！') }
+      if (import.meta.env.DEV) { console.log('watch检测到合约变化！') }
 
-      if (import.meta.env.DEV) { console.log('👀 旧合约:', oldContract) }
+      if (import.meta.env.DEV) { console.log('旧合约:', oldContract) }
 
-      if (import.meta.env.DEV) { console.log('👀 新合约:', newContract) }
+      if (import.meta.env.DEV) { console.log('新合约:', newContract) }
 
-      if (import.meta.env.DEV) { console.log('👀 当前时间:', new Date().toLocaleString()) }
+      if (import.meta.env.DEV) { console.log('当前时间:', new Date().toLocaleString()) }
 
       if (import.meta.env.DEV) { console.log('=' .repeat(80)) }
 
@@ -6467,11 +6467,11 @@ export default {
 
       if (newContract && newContract !== oldContract) {
 
-        if (import.meta.env.DEV) { console.log('✅ 合约确实发生了变化，开始更新...') }
+        if (import.meta.env.DEV) { console.log('✓ 合约确实发生了变化，开始更新...') }
 
         selectedSymbol.value = newContract
 
-        if (import.meta.env.DEV) { console.log('✅ selectedSymbol.value 已更新为:', selectedSymbol.value) }
+        if (import.meta.env.DEV) { console.log('✓ selectedSymbol.value 已更新为:', selectedSymbol.value) }
 
         
 
@@ -6479,15 +6479,15 @@ export default {
 
         if (chart.value && candlestickSeries.value) {
 
-          if (import.meta.env.DEV) { console.log('✅ 图表和K线系列存在，调用 loadChartData()') }
+          if (import.meta.env.DEV) { console.log('✓ 图表和K线系列存在，调用 loadChartData()') }
 
           loadChartData()
 
-          if (import.meta.env.DEV) { console.log('✅ loadChartData() 调用完成') }
+          if (import.meta.env.DEV) { console.log('✓ loadChartData() 调用完成') }
 
         } else {
 
-          console.warn('⚠️ 图表或K线系列不存在')
+          console.warn('⚠ 图表或K线系列不存在')
 
           console.warn('   - chart.value:', !!chart.value)
 
@@ -6497,7 +6497,7 @@ export default {
 
       } else {
 
-        if (import.meta.env.DEV) { console.log('⚠️ 合约未变化或为空，跳过更新') }
+        if (import.meta.env.DEV) { console.log('⚠ 合约未变化或为空，跳过更新') }
 
       }
 
@@ -6509,7 +6509,7 @@ export default {
 
     watch(() => props.auxiliaryData, (newAuxiliaryData) => {
 
-      if (import.meta.env.DEV) { console.log('👀 检测到辅助线数据变化:', newAuxiliaryData) }
+      if (import.meta.env.DEV) { console.log('检测到辅助线数据变化:', newAuxiliaryData) }
 
       
 
@@ -6519,9 +6519,9 @@ export default {
 
         
 
-        if (import.meta.env.DEV) { console.log('🎨 准备显示辅助线，数量:', Object.keys(newAuxiliaryData).length) }
+        if (import.meta.env.DEV) { console.log('准备显示辅助线，数量:', Object.keys(newAuxiliaryData).length) }
 
-        if (import.meta.env.DEV) { console.log('🎨 辅助线详情:', Object.keys(newAuxiliaryData).map(key => ({
+        if (import.meta.env.DEV) { console.log('辅助线详情:', Object.keys(newAuxiliaryData).map(key => ({
           name: key,
           dataPoints: newAuxiliaryData[key]?.data?.length || 0
         }))
@@ -6543,7 +6543,7 @@ export default {
 
           } else {
 
-            console.warn('⚠️ 图表尚未初始化，延迟显示辅助线')
+            console.warn('⚠ 图表尚未初始化，延迟显示辅助线')
 
             setTimeout(() => {
 
@@ -6565,7 +6565,7 @@ export default {
 
         // 清除辅助线
 
-        if (import.meta.env.DEV) { console.log('🧹 辅助线数据为空，清除现有辅助线') }
+        if (import.meta.env.DEV) { console.log('辅助线数据为空，清除现有辅助线') }
 
         auxiliaryData.value = {}
 

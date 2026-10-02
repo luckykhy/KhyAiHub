@@ -369,7 +369,7 @@ function getCurrentPrice(symbol) {
 function formatPrice(value) {
   const num = parseFloat(value)
   if (isNaN(num)) {
-    console.warn('⚠️ formatPrice: 无效的价格值:', value)
+    console.warn('⚠ formatPrice: 无效的价格值:', value)
     return '0.00'
   }
   return num.toFixed(2)
@@ -647,12 +647,12 @@ async function loadTrades() {
     if (response.success) {
       // 🔥 使用 validateApiArrayField 验证响应数据，正确的路径是 data.list
       trades.value = validateApiArrayField(response, 'data.list', [])
-      if (import.meta.env.DEV) { console.log('✅ 加载交易记录成功:', trades.value.length, '条') }
+      if (import.meta.env.DEV) { console.log('✓ 加载交易记录成功:', trades.value.length, '条') }
     } else {
       trades.value = []
     }
   } catch (error) {
-    console.error('❌ 加载交易记录失败:', error)
+    console.error('✗ 加载交易记录失败:', error)
     trades.value = []
     ElMessage.error('加载交易记录失败')
   } finally {
@@ -663,7 +663,7 @@ async function loadTrades() {
 // 🔥 新增：处理新订单事件
 function handleNewOrder(event) {
   const newTrade = event.detail
-  if (import.meta.env.DEV) { console.log('📥 收到新订单:', newTrade) }
+  if (import.meta.env.DEV) { console.log('收到新订单:', newTrade) }
   
   // 添加到列表顶部
   trades.value.unshift(newTrade)
