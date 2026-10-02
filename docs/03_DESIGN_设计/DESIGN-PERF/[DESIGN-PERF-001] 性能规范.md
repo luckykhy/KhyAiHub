@@ -125,14 +125,14 @@ workbox.routing.registerRoute(
 
 **查询优化**：
 ```javascript
-// ✅ 正确：只查询需要的字段
+// ✓ 正确：只查询需要的字段
 const users = await User.findAll({
   attributes: ['id', 'username', 'email'],
   where: { status: 'active' },
   limit: 20
 });
 
-// ❌ 错误：查询所有字段
+// ✗ 错误：查询所有字段
 const users = await User.findAll({
   where: { status: 'active' }
 });
@@ -140,7 +140,7 @@ const users = await User.findAll({
 
 **N+1 查询优化**：
 ```javascript
-// ✅ 正确：使用关联查询
+// ✓ 正确：使用关联查询
 const users = await User.findAll({
   include: [{
     model: Profile,
@@ -148,7 +148,7 @@ const users = await User.findAll({
   }]
 });
 
-// ❌ 错误：N+1 查询
+// ✗ 错误：N+1 查询
 const users = await User.findAll();
 for (const user of users) {
   user.profile = await Profile.findOne({ where: { userId: user.id } });

@@ -263,10 +263,10 @@ spawnSync                                          @ node:internal/child_process
 
 | 直觉方案 | 实际效果 | 正确做法 |
 |---|---|---|
-| 更懒（`React.lazy`、更多 try-require） | ❌ 把成本推进渲染窗口 | **不在关键路径上**：让该工作不参与首帧（异步落值 / 缓存 / 消除） |
-| ~~**更早**：挪进 `replSession.js` 既有异步预热窗口~~ | ❌ **已证伪**（§6.0 ①）：同步工作换个位置仍是同步工作，只**推迟挂载** | 见上：位置无关紧要 |
-| 零加载（首帧不加载任何模块） | ❌ 物理不可能：ink 不装载就画不出 | **首帧零 IO**：模块可已备好，但首帧不 touch 磁盘、不派生进程 |
-| 换更快加载器 / 打包 | ⚠️ 有效但重（`[DESIGN-PERF-002]` 阶段 A） | 与本文正交，**不应混在一次提交** |
+| 更懒（`React.lazy`、更多 try-require） | ✗ 把成本推进渲染窗口 | **不在关键路径上**：让该工作不参与首帧（异步落值 / 缓存 / 消除） |
+| ~~**更早**：挪进 `replSession.js` 既有异步预热窗口~~ | ✗ **已证伪**（§6.0 ①）：同步工作换个位置仍是同步工作，只**推迟挂载** | 见上：位置无关紧要 |
+| 零加载（首帧不加载任何模块） | ✗ 物理不可能：ink 不装载就画不出 | **首帧零 IO**：模块可已备好，但首帧不 touch 磁盘、不派生进程 |
+| 换更快加载器 / 打包 | ⚠ 有效但重（`[DESIGN-PERF-002]` 阶段 A） | 与本文正交，**不应混在一次提交** |
 
 ---
 
@@ -281,7 +281,7 @@ spawnSync                                          @ node:internal/child_process
 | L0 | 首帧零 IO（验收基线） | 守住 | 首帧已由 `startupBeats` / `BootScreen` 承担 |
 | **L1** | **加载/预热前移** | **已证伪，未采纳** | 首帧均值 5013 → **7975ms**（§6.0 ①） |
 | **L1b** | `localLLMService` 顶层探测改惰性 | **已实现 → 已回滚** | 打破 TUI 套件一条**原本是绿**的测试（§6.0 ②） |
-| **L2a** | `listPersistedSessions` 解析缓存 | **✅ 已落地** | 重复调用 5206ms → **17ms**；输出逐字段相同 |
+| **L2a** | `listPersistedSessions` 解析缓存 | **✓ 已落地** | 重复调用 5206ms → **17ms**；输出逐字段相同 |
 | L2b | 合并两次 `getCurrentSessionId` | **被 L2a 吸收** | 缓存使第二次近乎免费，无需改调用方 |
 | L2c | `_readMergedTaskLines` 移出首帧 | 待办 | 需动帧高账本，单独评审 |
 | **B4** | 横幅逐适配器探测移出渲染 | 待办（**最大单点**） | 1806–2196ms，见 §4 B4 |
@@ -325,7 +325,7 @@ spawnSync                                          @ node:internal/child_process
 
 ### L2 · 去阻塞（部分落地）
 
-#### L2a · `listPersistedSessions` 解析缓存 —— ✅ 已落地
+#### L2a · `listPersistedSessions` 解析缓存 —— ✓ 已落地
 
 **落点**：`services/backend/src/services/sessionPersistence.js`（`listPersistedSessions` 及其新增的 `_buildSessionMeta` / `_readSessionMetaCached`）。
 
@@ -361,7 +361,7 @@ spawnSync                                          @ node:internal/child_process
 
 ### L3 · 把既有硬约束变成机器可校验（防回潮）
 
-**背景**：`tui/AGENTS.md` §0.2 写着「❌ 禁止同步阻塞事件循环超过 16ms」，**但目前没有任何检查器执行它**——这正是 B1/B2 能长期存在而无人报警的原因。
+**背景**：`tui/AGENTS.md` §0.2 写着「✗ 禁止同步阻塞事件循环超过 16ms」，**但目前没有任何检查器执行它**——这正是 B1/B2 能长期存在而无人报警的原因。
 
 **做法**：把本文 P3 的探针思路做成一条**渲染期同步代价守卫**：在渲染窗口内命中 `readFileSync` / `spawnSync` / 首次 `require` 即记录（finding）。
 
@@ -392,8 +392,8 @@ spawnSync                                          @ node:internal/child_process
 
 | 指标 | 基线（2026-09-22 实测） | 目标 | 当前状态 |
 |---|---|---|---|
-| 同进程第 2 次会话列表扫描 | 约 276ms（与第 1 次同量级） | 近乎免费 | **✅ 17ms（L2a 已落地）** |
-| `listPersistedSessions` 的 profile 自耗时 | **554ms（榜首）** | 跌出榜首 | **✅ 已跌出榜首（L2a）** |
+| 同进程第 2 次会话列表扫描 | 约 276ms（与第 1 次同量级） | 近乎免费 | **✓ 17ms（L2a 已落地）** |
+| `listPersistedSessions` 的 profile 自耗时 | **554ms（榜首）** | 跌出榜首 | **✓ 已跌出榜首（L2a）** |
 | 首字节 | 297–1558ms | 不变 | — |
 | Ink 进备用屏 | 2377–11476ms | < 2500ms | **未达标** |
 | BootScreen 首帧 | 2885–15867ms | < 3000ms | **未达标** |
@@ -432,9 +432,9 @@ spawnSync                                          @ node:internal/child_process
 
 | 阶段 | 内容 | 对应阻塞点 | 风险 | 结果 |
 |---|---|---|---|---|
-| P0 | L2a 会话列表解析缓存 | B1 | 中 | **✅ 已落地** — 重复扫描 5206→17ms；`test:tui` 46/46 绿 |
-| ~~P0~~ | ~~L1 加载前移（预热 aiGateway/横幅/任务链）~~ | B2、B3、B4 | — | **❌ A/B 证伪，未采纳**（§6.0 ①） |
-| ~~P0~~ | ~~L1b `localLLMService` 顶层探测惰性化~~ | B2 | — | **❌ 打破一条绿测试，已回滚**（§6.0 ②） |
+| P0 | L2a 会话列表解析缓存 | B1 | 中 | **✓ 已落地** — 重复扫描 5206→17ms；`test:tui` 46/46 绿 |
+| ~~P0~~ | ~~L1 加载前移（预热 aiGateway/横幅/任务链）~~ | B2、B3、B4 | — | **✗ A/B 证伪，未采纳**（§6.0 ①） |
+| ~~P0~~ | ~~L1b `localLLMService` 顶层探测惰性化~~ | B2 | — | **✗ 打破一条绿测试，已回滚**（§6.0 ②） |
 | **P0（推荐下一轮）** | **L2d 横幅逐适配器探测移出渲染** | **B4（最大单点，1806–2196ms）** | 中高（须动帧高账本） | 待办 |
 | P1 | L2c `_readMergedTaskLines` 移出首帧 | B1 残余 | 中高（须动帧高账本） | 待办 |
 | P1 | L3 渲染期同步 IO 守卫（S1 观察者起步） | 防回潮 | 低 | 待办 |

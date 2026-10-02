@@ -52,10 +52,10 @@
 
 | Codewhale | khy-os | 对齐度 |
 |-----------|--------|--------|
-| Plan（只读） | dontAsk / plan 模式 | ✅ 已对齐 |
-| Ask（需确认） | normal / strict | ✅ 已对齐 |
-| Auto-Review | acceptEdits / auto | ✅ 已对齐 |
-| Full Access | yolo | ✅ 已对齐 |
+| Plan（只读） | dontAsk / plan 模式 | ✓ 已对齐 |
+| Ask（需确认） | normal / strict | ✓ 已对齐 |
+| Auto-Review | acceptEdits / auto | ✓ 已对齐 |
+| Full Access | yolo | ✓ 已对齐 |
 
 **可借鉴点**：
 - `/goal` 命令（明确任务目标）
@@ -136,12 +136,12 @@
 
 | 特性 | khy-os 状态 | 竞品对比 |
 |------|-------------|----------|
-| 4 级审批模式 | ✅ 6 profile 映射 4 级 | Codewhale 验证 |
-| 权限 wildcard 规则 | ✅ 已启用 | Claude Code 对齐 |
-| 父子 Agent 工具树 | ✅ AgentTree 已集成 | ZCode 对齐 |
-| 任务时间预估 | ✅ ccTaskEstimate | ZCode 对齐 |
-| 外部编辑器 Ctrl+E | ✅ 已实现 | OpenCode 对齐 |
-| Vim 模式 | ✅ NORMAL/INSERT/VISUAL | Claude Code 对齐 |
+| 4 级审批模式 | ✓ 6 profile 映射 4 级 | Codewhale 验证 |
+| 权限 wildcard 规则 | ✓ 已启用 | Claude Code 对齐 |
+| 父子 Agent 工具树 | ✓ AgentTree 已集成 | ZCode 对齐 |
+| 任务时间预估 | ✓ ccTaskEstimate | ZCode 对齐 |
+| 外部编辑器 Ctrl+E | ✓ 已实现 | OpenCode 对齐 |
+| Vim 模式 | ✓ NORMAL/INSERT/VISUAL | Claude Code 对齐 |
 
 ### 3.2 可借鉴的新方向
 
@@ -162,10 +162,10 @@
 **现状**：AgentTree 仅显示文字状态（running/completed）
 
 **建议**：增加颜色编码的状态指示器
-- 🟢 绿色 = completed
-- 🟡 黄色 = running
-- 🔴 红色 = error/blocked
-- ⚪ 灰色 = idle/pending
+- ○ 绿色 = completed
+- ◐ 黄色 = running
+- ● 红色 = error/blocked
+- ○ 灰色 = idle/pending
 
 **文件**：`services/backend/src/cli/tui\ink-components\AgentTree.js`
 

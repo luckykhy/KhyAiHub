@@ -1,4 +1,4 @@
-> ⚠️ **已归档（孤儿设计稿）· 请勿据此实现** ⚠️
+> ⚠ **已归档（孤儿设计稿）· 请勿据此实现** ⚠
 >
 > 本规范描述的治理引擎 `envSymbiosis（与已在产 platformUtils 平行重造）` 经 2026-06-14「接线或删除」证据级核实为 **ORPHAN**
 > （零消费者、从 `executeTool`/`toolUseLoop`/`aiManagementServer` 三入口均不可达），

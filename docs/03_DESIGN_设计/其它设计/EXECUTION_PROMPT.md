@@ -5,7 +5,7 @@
 
 ---
 
-## 🎯 项目目标
+## ◎ 项目目标
 
 在 khy-os 的 `services/backend/src/cli/tui/` 目录下，实现 Claude Code TUI 的 1:1 视觉与交互复刻：
 - 品牌替换为 **Khy**
@@ -16,7 +16,7 @@
 
 ---
 
-## 📋 实施前必读
+## 实施前必读
 
 按以下顺序阅读设计文档：
 
@@ -32,29 +32,29 @@
 
 ---
 
-## 🔴 绝对红线（不可违反）
+## ● 绝对红线（不可违反）
 
 ```
-❌ 禁止修改 Legacy 模式（KHY_CC_TUI 未设置）下的任何代码路径
-❌ 禁止使用 \x1B[n;mr（DECSTBM 滚动区）
-❌ 禁止使用 \x1B[2J（全屏清除）
-❌ 禁止同步阻塞事件循环超过 16ms
-❌ 禁止在渲染路径中执行 IO 操作
-❌ 禁止在 CC 模式 UI 中出现 "Claude Code" 或 "Claude" 品牌文本
-❌ 禁止冷启动超过 100ms
-❌ 禁止单次渲染超过 16ms
+✗ 禁止修改 Legacy 模式（KHY_CC_TUI 未设置）下的任何代码路径
+✗ 禁止使用 \x1B[n;mr（DECSTBM 滚动区）
+✗ 禁止使用 \x1B[2J（全屏清除）
+✗ 禁止同步阻塞事件循环超过 16ms
+✗ 禁止在渲染路径中执行 IO 操作
+✗ 禁止在 CC 模式 UI 中出现 "Claude Code" 或 "Claude" 品牌文本
+✗ 禁止冷启动超过 100ms
+✗ 禁止单次渲染超过 16ms
 
-✅ 所有 CC 模式代码必须通过 KHY_CC_TUI=1 门控
-✅ 门控关闭时，行为必须与修改前逐字节相同
-✅ 使用 \x1B[0J（ED0）清除光标到末尾
-✅ 使用保存/恢复光标 + 绝对定位进行局部更新
-✅ 品牌文本使用 "Khy"（定义在 ccBrand.js）
-✅ 新增文件优先于修改现有文件
+✓ 所有 CC 模式代码必须通过 KHY_CC_TUI=1 门控
+✓ 门控关闭时，行为必须与修改前逐字节相同
+✓ 使用 \x1B[0J（ED0）清除光标到末尾
+✓ 使用保存/恢复光标 + 绝对定位进行局部更新
+✓ 品牌文本使用 "Khy"（定义在 ccBrand.js）
+✓ 新增文件优先于修改现有文件
 ```
 
 ---
 
-## 📐 实施步骤
+## 实施步骤
 
 ### 步骤 1: 基础设施（Phase 0）
 
@@ -82,7 +82,7 @@ khy               # Legacy 模式行为不变
 **目标**：实现 CC 风格的核心 UI 组件
 
 - [ ] 2.1 创建 `tui/ink-components/CcAssistantMessage.js` — 助手消息（● 前缀）
-- [ ] 2.2 创建 `tui/ink-components/CcToolCard.js` — 工具调用卡片（🔧 + 粗体青色）
+- [ ] 2.2 创建 `tui/ink-components/CcToolCard.js` — 工具调用卡片（+ 粗体青色）
 - [ ] 2.3 创建 `tui/ink-components/CcStatusLine.js` — 单行状态栏
 - [ ] 2.4 创建 `tui/ink-components/CcPromptInput.js` — 无边框输入框 + 光标
 - [ ] 2.5 创建 `tui/ink-components/CcLogo.js` — Khy 品牌 Logo
@@ -94,7 +94,7 @@ khy               # Legacy 模式行为不变
 KHY_CC_TUI=1 khy
 # 检查：用户消息无背景框
 # 检查：助手消息以 ● 开头
-# 检查：工具调用显示 🔧 + 粗体青色
+# 检查：工具调用显示 + 粗体青色
 # 检查：状态栏为单行
 # 检查：输入框无边框
 ```
@@ -185,32 +185,32 @@ KHY_CC_TUI=1 khy
 
 ---
 
-## 🔧 代码风格约束
+## 代码风格约束
 
 ```javascript
-// ✅ 正确：2 空格缩进、单引号、分号
+// ✓ 正确：2 空格缩进、单引号、分号
 const x = 1;
 const y = 'hello';
 
-// ✅ 正确：camelCase 命名
+// ✓ 正确：camelCase 命名
 const isCcMode = true;
 function formatModelName() {}
 
-// ✅ 正确：英文注释
+// ✓ 正确：英文注释
 // Detect terminal color support
 const supportsColor = process.env.COLORTERM === 'truecolor';
 
-// ✅ 正确：面向用户的中文字符串
+// ✓ 正确：面向用户的中文字符串
 const message = '正在连接数据库...'; // 用户可见
 const label = 'model'; // 内部标识，英文
 
-// ✅ 正确：函数组件 + React.memo
+// ✓ 正确：函数组件 + React.memo
 function CcStatusLine({ model, context, cost }) {
   return <Text>{model}</Text>;
 }
 module.exports = { CcStatusLine: React.memo(CcStatusLine) };
 
-// ✅ 正确：门控模式
+// ✓ 正确：门控模式
 function FooterBar() {
   if (process.env.KHY_CC_TUI === '1') {
     return <CcStatusLine />;
@@ -218,7 +218,7 @@ function FooterBar() {
   return <LegacyFooterBar />;
 }
 
-// ❌ 错误：在组件内判断
+// ✗ 错误：在组件内判断
 function Message({ text }) {
   const color = isCcMode ? '#00D4D4' : '#00BCD4'; // 禁止！
   return <Text color={color}>{text}</Text>;
@@ -227,7 +227,7 @@ function Message({ text }) {
 
 ---
 
-## 🧪 测试验证
+## 测试验证
 
 ### 功能测试
 
@@ -278,7 +278,7 @@ KHY_CC_TUI=1 khy
 
 ---
 
-## 📁 文件组织
+## 文件组织
 
 ```
 services/backend/src/cli/tui/
@@ -334,7 +334,7 @@ services/backend/src/cli/tui/
 
 ---
 
-## ⚠️ 常见陷阱
+## ⚠ 常见陷阱
 
 | 陷阱 | 正确做法 |
 |------|----------|
@@ -348,7 +348,7 @@ services/backend/src/cli/tui/
 
 ---
 
-## 📊 验收标准
+## 验收标准
 
 ### 功能验收
 
@@ -385,7 +385,7 @@ services/backend/src/cli/tui/
 
 ---
 
-## 🚀 开始执行
+## 开始执行
 
 1. **确认已阅读所有设计文档**
 2. **按步骤 1-6 顺序实施**
