@@ -74,7 +74,7 @@ function safeDelete(filePath, archiveDir) {
  * P0: 归档核心记忆文件
  */
 function archiveMemoryFiles(dryRun) {
-  console.log(chalk.bold('\n📦 P0: 归档核心记忆文件'));
+  console.log(chalk.bold('\nP0: 归档核心记忆文件'));
   
   if (!fs.existsSync(MEMORY_DIR)) {
     console.log(chalk.dim('  记忆目录不存在，跳过'));
@@ -115,7 +115,7 @@ function archiveMemoryFiles(dryRun) {
  * P0: 重置 MEMORY.md 为模板
  */
 function resetMemoryIndex(dryRun) {
-  console.log(chalk.bold('\n📝 P0: 重置 MEMORY.md'));
+  console.log(chalk.bold('\nP0: 重置 MEMORY.md'));
   
   const memoryIndex = path.join(MEMORY_DIR, 'MEMORY.md');
   
@@ -145,7 +145,7 @@ function resetMemoryIndex(dryRun) {
  * P0: 重置成长数据
  */
 function resetGrowthData(dryRun) {
-  console.log(chalk.bold('\n📈 P0: 重置成长数据'));
+  console.log(chalk.bold('\nP0: 重置成长数据'));
   
   if (!fs.existsSync(GROWTH_DIR)) {
     console.log(chalk.dim('  成长目录不存在，跳过'));
@@ -204,7 +204,7 @@ function resetGrowthData(dryRun) {
  * P1: 归档学习缓存
  */
 function archiveSkillsCache(dryRun) {
-  console.log(chalk.bold('\n📚 P1: 归档学习缓存'));
+  console.log(chalk.bold('\nP1: 归档学习缓存'));
   
   if (!fs.existsSync(SKILLS_DIR)) {
     console.log(chalk.dim('  学习缓存目录不存在，跳过'));
@@ -246,7 +246,7 @@ function archiveSkillsCache(dryRun) {
  * P1: 清空训练数据
  */
 function clearTrainingData(dryRun) {
-  console.log(chalk.bold('\n🎯 P1: 清空训练数据'));
+  console.log(chalk.bold('\nP1: 清空训练数据'));
   
   if (!fs.existsSync(TRAINING_DIR)) {
     console.log(chalk.dim('  训练数据目录不存在，跳过'));
@@ -282,7 +282,7 @@ function clearTrainingData(dryRun) {
  * P2: 清理会话数据
  */
 function cleanSessionData(dryRun) {
-  console.log(chalk.bold('\n💬 P2: 清理会话数据'));
+  console.log(chalk.bold('\nP2: 清理会话数据'));
   
   let cleaned = 0;
   
@@ -334,7 +334,7 @@ function cleanSessionData(dryRun) {
 function clearMemory(options = {}) {
   const { dryRun = true, level = 'all' } = options;
   
-  console.log(chalk.bold('\n🧹 khy-os 记忆清空系统'));
+  console.log(chalk.bold('\nkhy-os 记忆清空系统'));
   console.log(chalk.dim(`  模式: ${dryRun ? '预览 (dry-run)' : '执行 (apply)'}`));
   console.log(chalk.dim(`  级别: ${level.toUpperCase()}`));
   
@@ -363,7 +363,7 @@ function clearMemory(options = {}) {
   }
   
   // 汇总
-  console.log(chalk.bold('\n📊 清理汇总'));
+  console.log(chalk.bold('\n清理汇总'));
   console.log(chalk.dim(`  记忆文件: ${stats.memoryFiles} 个`));
   console.log(chalk.dim(`  成长数据: ${stats.growthFiles} 个`));
   console.log(chalk.dim(`  学习缓存: ${stats.skillsFiles} 个`));
@@ -371,10 +371,10 @@ function clearMemory(options = {}) {
   console.log(chalk.dim(`  会话数据: ${stats.sessionFiles} 个`));
   
   if (dryRun) {
-    console.log(chalk.yellow('\n⚠️  这是预览模式，使用 --apply 参数执行实际操作'));
+    console.log(chalk.yellow('\n⚠  这是预览模式，使用 --apply 参数执行实际操作'));
     console.log(chalk.dim('恢复命令: khy memory distill restore [filename]'));
   } else {
-    console.log(chalk.green('\n✅ 记忆清空完成'));
+    console.log(chalk.green('\n✓ 记忆清空完成'));
     console.log(chalk.dim('恢复命令: khy memory distill restore [filename]'));
   }
 }

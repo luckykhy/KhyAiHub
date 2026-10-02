@@ -26,7 +26,7 @@ const TEMP_PATTERNS = [
   '*.egg-info/',
 ];
 
-console.log('🔍 扫描临时文件...\n');
+console.log('扫描临时文件...\n');
 
 let totalSize = 0;
 let fileCount = 0;
@@ -55,9 +55,9 @@ TEMP_PATTERNS.forEach(pattern => {
               
               if (APPLY) {
                 fs.rmSync(fullPath, { recursive: true, force: true });
-                console.log(`  🗑️  删除: ${file}`);
+                console.log(`  删除: ${file}`);
               } else {
-                console.log(`  📄 ${file} (${(stat.size / 1024).toFixed(1)} KB)`);
+                console.log(`  ${file} (${(stat.size / 1024).toFixed(1)} KB)`);
               }
             }
           } catch (e) {
@@ -71,10 +71,10 @@ TEMP_PATTERNS.forEach(pattern => {
   }
 });
 
-console.log(`\n📊 统计: ${fileCount} 个文件, ${(totalSize / 1024 / 1024).toFixed(2)} MB`);
+console.log(`\n统计: ${fileCount} 个文件, ${(totalSize / 1024 / 1024).toFixed(2)} MB`);
 
 if (!APPLY) {
-  console.log('\n💡 运行 `node scripts/maintenance/clean-temp.js --apply` 执行清理');
+  console.log('\n运行 `node scripts/maintenance/clean-temp.js --apply` 执行清理');
 } else {
-  console.log('\n✅ 清理完成');
+  console.log('\n✓ 清理完成');
 }

@@ -285,7 +285,7 @@ function processFile(filePath, options = {}) {
 function fixHardcodedColors(options = {}) {
   const { apply = false, file = null } = options;
   
-  console.log(chalk.bold('\n🎨 前端硬编码颜色修复工具'));
+  console.log(chalk.bold('\n前端硬编码颜色修复工具'));
   console.log(chalk.dim(`  模式: ${apply ? '执行' : '预览'}`));
   console.log(chalk.dim(`  颜色映射: ${Object.keys(COLOR_MAP).length} 个`));
   
@@ -318,13 +318,13 @@ function fixHardcodedColors(options = {}) {
   }
   
   // 显示结果
-  console.log(chalk.bold('\n📊 修复汇总'));
+  console.log(chalk.bold('\n修复汇总'));
   console.log(chalk.dim(`  处理文件: ${files.length} 个`));
   console.log(chalk.dim(`  修改文件: ${results.length} 个`));
   console.log(chalk.dim(`  总变更数: ${totalChanges} 个`));
   
   if (results.length > 0) {
-    console.log(chalk.bold('\n📝 变更详情'));
+    console.log(chalk.bold('\n变更详情'));
     
     for (const result of results.slice(0, 20)) { // 只显示前 20 个
       console.log(chalk.cyan(`\n  ${result.file}`));
@@ -344,9 +344,9 @@ function fixHardcodedColors(options = {}) {
   }
   
   if (!apply) {
-    console.log(chalk.yellow('\n⚠️  这是预览模式，使用 --apply 参数执行实际修复'));
+    console.log(chalk.yellow('\n⚠  这是预览模式，使用 --apply 参数执行实际修复'));
   } else {
-    console.log(chalk.green('\n✅ 硬编码颜色修复完成'));
+    console.log(chalk.green('\n✓ 硬编码颜色修复完成'));
   }
 }
 

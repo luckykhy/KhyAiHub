@@ -55,7 +55,7 @@ const AI_NAMES =
 const AI_LINE_RES = [
   new RegExp(`^\\s*co-authored-by:\\s*[^\\n<]*(?:${AI_NAMES})[^\\n]*<[^>]+>\\s*$`, 'i'),
   new RegExp(`^\\s*generated with\\s+\\[?(?:${AI_NAMES})`, 'i'),
-  /^\s*🤖\s*generated/i,
+  /^\s*🤖\s*generated/i,  // khy-allow-no-emoji: 匹配待清除的 AI 署名尾注，🤖 是匹配对象而非展示标记
 ];
 
 const isAiAttributionLine = (line) => AI_LINE_RES.some((re) => re.test(line));
@@ -109,18 +109,18 @@ function runCapture(cmd) {
 }
 
 // ── 门 0：必须在健康的仓库里跑 ────────────────────────────────────────────
-console.log('🔍 B 方案 · 清除历史 AI 署名尾注');
+console.log('B 方案 · 清除历史 AI 署名尾注');
 console.log('='.repeat(64));
 
 const headSha = trySh('git rev-parse HEAD');
 if (!headSha) {
-  console.error('❌ 当前目录不是 git 仓库。');
+  console.error('✗ 当前目录不是 git 仓库。');
   process.exit(2);
 }
 
 // ① shallow / 部分克隆 一律拒绝：原地重写会把残缺固化
 if (fs.existsSync(path.join(ROOT, '.git', 'shallow'))) {
-  console.error('❌ 这是浅克隆（.git/shallow 存在），历史不完整，禁止原地重写。');
+  console.error('✗ 这是浅克隆（.git/shallow 存在），历史不完整，禁止原地重写。');
   console.error('   请在一个全新的完整克隆里执行本脚本。');
   process.exit(2);
 }
@@ -149,7 +149,7 @@ const canTraverse = revlist.status === 0;
 const healthy = brokenLinks === 0 && invalidSha === 0 && couldNotRead === 0 && missingObj === 0 && canTraverse;
 
 if (!healthy) {
-  console.error('❌ 对象库不健康，禁止在此仓库上改写历史。');
+  console.error('✗ 对象库不健康，禁止在此仓库上改写历史。');
   console.error('');
   console.error(`   broken link（含 tree/commit 断链）：${brokenLinks}`);
   console.error(`   invalid sha1 pointer（索引 cache-tree 失效）：${invalidSha}`);
@@ -170,10 +170,10 @@ if (!healthy) {
   console.error('   注：新克隆也会带上本脚本，因为本脚本已随提交进入仓库。');
   process.exit(2);
 }
-console.log(`✅ 对象库健康（HEAD ${headSha.slice(0, 8)}，提交数 ${revlist.stdout.trim()}）`);
+console.log(`✓ 对象库健康（HEAD ${headSha.slice(0, 8)}，提交数 ${revlist.stdout.trim()}）`);
 
 // ── 门 1：统计待清除的署名 ────────────────────────────────────────────────
-console.log('\n📋 扫描全历史署名尾注…');
+console.log('\n扫描全历史署名尾注…');
 
 const raw = trySh("git log --all --format=%H%x01%B%x02");
 const commits = raw
@@ -226,7 +226,7 @@ for (const block of commits) {
 }
 
 if (!hitCount) {
-  console.log('✅ 全历史未发现 AI 署名尾注，无需改写。');
+  console.log('✓ 全历史未发现 AI 署名尾注，无需改写。');
   process.exit(0);
 }
 
@@ -263,7 +263,7 @@ const branchesWithAttribution = localBranches.filter((b) => {
   return out.split('\n').some(isAiAttributionLine);
 });
 
-console.log(`\n🌿 会被改写的本地分支（${localBranches.length}${ONLY_MAIN ? '，已限定 main' : ''} / 共 ${branches.length} 个）：`);
+console.log(`\n会被改写的本地分支（${localBranches.length}${ONLY_MAIN ? '，已限定 main' : ''} / 共 ${branches.length} 个）：`);
 localBranches.forEach((b) => {
   const n = trySh(`git rev-list --count ${b}`, '?');
   const hit = branchesWithAttribution.includes(b) ? '  ← 含署名' : '';
@@ -271,14 +271,14 @@ localBranches.forEach((b) => {
 });
 
 if (ONLY_MAIN && branchesWithAttribution.some((b) => b !== 'main')) {
-  console.log('\n⚠️  提示：其它分支也含署名，名单不会被清干净。试水后请补跑全量。');
+  console.log('\n⚠  提示：其它分支也含署名，名单不会被清干净。试水后请补跑全量。');
 }
 const missedBranches = branches.filter((b) => !isTempBackupRef(b) && !localBranches.includes(b));
 if (missedBranches.length) {
-  console.log(`\n⚠️  以下分支不会被动到，其署名尾注将保留：${missedBranches.join(' / ')}`);
+  console.log(`\n⚠  以下分支不会被动到，其署名尾注将保留：${missedBranches.join(' / ')}`);
 }
 
-console.log('\n🛟 需要的回退动作（PP-4：回退不依赖未提交代码）：');
+console.log('\n需要的回退动作（PP-4：回退不依赖未提交代码）：');
 localBranches.forEach((b) => {
   console.log(`     git branch backup/ai-strip-$(date +%Y%m%d)/${b.replace(/\//g, '--')} ${b}`);
 });
@@ -287,7 +287,7 @@ console.log('     git push origin "refs/heads/backup/*:refs/heads/backup/*"');
 // ── 干跑到此结束 ──────────────────────────────────────────────────────────
 if (!APPLY) {
   console.log('\n' + '='.repeat(64));
-  console.log('🔸 干跑模式，未做任何改动。');
+  console.log('干跑模式，未做任何改动。');
   console.log('   复查上面清单无误后，加 --apply 执行。');
   console.log('   建议先在备份副本上跑一遍。');
   process.exit(0);
@@ -295,7 +295,7 @@ if (!APPLY) {
 
 // ── 真跑 ──────────────────────────────────────────────────────────────────
 console.log('\n' + '='.repeat(64));
-console.log('⚠️  即将改写提交历史。同一仓库的所有 clone/fork 会失效。');
+console.log('⚠  即将改写提交历史。同一仓库的所有 clone/fork 会失效。');
 
 // 回退引用必须先建立（filter-repo 之后旧 SHA 就难找了）
 // ⚠ 命名用「打平」形式（`/` 换成 `--`）：分支名本身含 `/`（如 dependabot/pip/xxx）
@@ -324,15 +324,15 @@ for (const b of localBranches) {
     backupCreated++;
   } catch (e) {
     backupOk = false;
-    console.error(`   ❌ 备份 ${b} 失败：${e.message.split('\n')[0]}`);
+    console.error(`   ✗ 备份 ${b} 失败：${e.message.split('\n')[0]}`);
   }
 }
 if (!backupOk) {
-  console.error('\n❌ 备份未全部成功，中止改写。');
+  console.error('\n✗ 备份未全部成功，中止改写。');
   process.exit(1);
 }
 console.log(
-  `✅ 回退引用就绪：backup/ai-strip-${stamp}/*（新建 ${backupCreated} 个，沿用已有 ${backupKept} 个）`
+  `✓ 回退引用就绪：backup/ai-strip-${stamp}/*（新建 ${backupCreated} 个，沿用已有 ${backupKept} 个）`
 );
 if (backupKept > 0) {
   console.log('   （已有的不覆盖：备份语义是「首次动手前的 SHA」，重跑不能污染它）');
@@ -420,13 +420,13 @@ fs.writeFileSync(
 
 const branchArgs = localBranches.flatMap((b) => ['--refs', b]).join(' ');
 
-console.log('\n🔧 生成改写 helper：.git/khy_strip_ai_attr.py');
-console.log('🔧 生成回调 BODY：.git/khy_strip_body.py');
+console.log('\n生成改写 helper：.git/khy_strip_ai_attr.py');
+console.log('生成回调 BODY：.git/khy_strip_body.py');
 console.log('\n要执行的命令（filter-repo，BODY 以文件路径传入）：');
 console.log(`   git filter-repo --force --message-callback .git/khy_strip_body.py ${branchArgs}`);
 
 if (!hasFilterRepo) {
-  console.log('\n⚠️  本机未安装 git-filter-repo。安装方式：');
+  console.log('\n⚠  本机未安装 git-filter-repo。安装方式：');
   console.log('     pip install git-filter-repo');
   console.log('   或参考 https://github.com/newren/git-filter-repo/blob/main/INSTALL.md');
   console.log('\n   两个文件已生成，安装后手动执行上面那条命令即可。');
@@ -448,7 +448,7 @@ let rewriteFailed = null;
 for (const b of localBranches) {
   try {
     sh(`git filter-repo --force --message-callback .git/khy_strip_body.py --refs ${b}`);
-    process.stdout.write(`   ✅ ${b}\n`);
+    process.stdout.write(`   ✓ ${b}\n`);
   } catch (e) {
     const detail = e.stderr ? e.stderr.toString().trim().split('\n').slice(-3).join(' | ') : e.message.split('\n')[0];
     rewriteFailed = `${b} → ${detail}`;
@@ -457,12 +457,12 @@ for (const b of localBranches) {
 }
 
 if (rewriteFailed) {
-  console.error('❌ filter-repo 执行失败：' + rewriteFailed);
+  console.error('✗ filter-repo 执行失败：' + rewriteFailed);
   console.error('   回退（全部）：git push --force origin "refs/heads/backup/ai-strip-*/<分支>:<分支>"');
   console.error('   回退（本地）：git branch -f <分支> backup/ai-strip-' + stamp + '/<分支打平名>');
   process.exit(1);
 }
-console.log('✅ 历史改写完成。');
+console.log('✓ 历史改写完成。');
 
 // ── 改写后自检 ────────────────────────────────────────────────────────────
 // ⚠ 自检范围只能是**被改写的分支**。早期版本用 `git log --all`，
@@ -488,8 +488,8 @@ for (const b of localBranches) {
   if (hits > 0) residualByBranch.push(`${b}(${hits})`);
 }
 
-console.log(`\n🔎 改写后自检`);
-console.log(`   残留署名提交（仅限被改写分支）：${afterHits} 条 ${afterHits === 0 ? '✅' : '❌'}`);
+console.log(`\n改写后自检`);
+console.log(`   残留署名提交（仅限被改写分支）：${afterHits} 条 ${afterHits === 0 ? '✓' : '✗'}`);
 if (residualByBranch.length) console.log(`   未清干净的分支：${residualByBranch.join('  ')}`);
 console.log(`   各分支提交数（应与改写前一致）：${afterCounts.join('  ')}`);
 
@@ -509,13 +509,13 @@ try {
   const beforeSet = new Set(beforeList);
   const notIn = afterList.filter((t) => !beforeSet.has(t));
   treeChanged = notIn.length;
-  console.log(`   文件内容零变化校验：${treeChanged === 0 ? '✅ tree 全部与改写前一致' : `❌ ${treeChanged} 个 tree 与改写前不符`}`);
+  console.log(`   文件内容零变化校验：${treeChanged === 0 ? '✓ tree 全部与改写前一致' : `✗ ${treeChanged} 个 tree 与改写前不符`}`);
 } catch (e) {
   console.log(`   文件内容零变化校验：跳过（${e.message.split('\n')[0]}）`);
 }
 
 if (afterHits !== 0) {
-  console.error('\n❌ 被改写分支上仍有残留，请勿推送。');
+  console.error('\n✗ 被改写分支上仍有残留，请勿推送。');
   console.error('   排查方向（按可能性排序）：');
   console.error('   1) filter-repo 只处理了部分分支 —— 本脚本已改为**逐分支**调用；');
   console.error('      若你手工跑的是「多 --refs 一条命令」，这正是已知的静默半途退出。');
@@ -523,7 +523,7 @@ if (afterHits !== 0) {
   process.exit(1);
 }
 if (treeChanged !== 0) {
-  console.error('\n❌ 检出文件内容被改动，这不是「只改 message」应有的结果。');
+  console.error('\n✗ 检出文件内容被改动，这不是「只改 message」应有的结果。');
   console.error(`   请回退：git branch -f <分支> backup/ai-strip-${stamp}/<分支>`);
   process.exit(1);
 }
@@ -549,7 +549,7 @@ const PUSH_REMOTES = (() => {
 const pushCmds = localBranches.map((b) => `git push --force-with-lease ${PUSH_REMOTES[0]} ${b}`);
 
 if (!PUSH) {
-  console.log('🔸 未加 --push，历史已改写但未推送。');
+  console.log('未加 --push，历史已改写但未推送。');
   console.log('   推送前请确认：');
   console.log('     1) 上面自检全绿；');
   console.log('     2) 无人（含 CI、fork）还依赖旧 SHA；');
@@ -564,19 +564,19 @@ if (!PUSH) {
     console.log('\n   ③ 镜像远端（需另行显式指定，默认不动）：');
     console.log(`     npm run strip:ai-attribution -- --push --remotes=origin,khy-mirror,gitee`);
   }
-  console.log('\n   ⚠️  用 --force-with-lease 而非 --force：前者在远端有意外更新时会拒绝。');
-  console.log(`   ⚠️  本次改写了 ${localBranches.length} 个分支，远端同名的都要推，否则名单清不干净。`);
+  console.log('\n   ⚠  用 --force-with-lease 而非 --force：前者在远端有意外更新时会拒绝。');
+  console.log(`   ⚠  本次改写了 ${localBranches.length} 个分支，远端同名的都要推，否则名单清不干净。`);
   process.exit(0);
 }
 
-console.log(`🚀 推送中（${PUSH_REMOTES.join(' / ')}，使用 --force-with-lease）…`);
+console.log(`推送中（${PUSH_REMOTES.join(' / ')}，使用 --force-with-lease）…`);
 console.log('   ① 回退引用…');
 for (const r of PUSH_REMOTES) {
   try {
     sh(`git push ${r} "refs/heads/backup/ai-strip-${stamp}/*:refs/heads/backup/ai-strip-${stamp}/*"`);
-    console.log(`      ✅ ${r} 回退引用已推`);
+    console.log(`      ✓ ${r} 回退引用已推`);
   } catch (e) {
-    console.error(`      ❌ ${r} 回退引用推送失败：${e.message.split('\n')[0]}`);
+    console.error(`      ✗ ${r} 回退引用推送失败：${e.message.split('\n')[0]}`);
     console.error('      → 回退引用没上去就不要继续强推。已中止。');
     process.exit(1);
   }
@@ -587,16 +587,16 @@ for (const r of PUSH_REMOTES) {
   for (const b of localBranches) {
     try {
       sh(`git push --force-with-lease ${r} ${b}`);
-      console.log(`      ✅ ${r} ${b}`);
+      console.log(`      ✓ ${r} ${b}`);
     } catch (e) {
-      console.error(`      ❌ ${r} ${b} 失败：${e.message.split('\n')[0]}`);
+      console.error(`      ✗ ${r} ${b} 失败：${e.message.split('\n')[0]}`);
       console.error(`      → 回退该分支：git push --force ${r} ${backupNameFor(b)}:${b}`);
       process.exit(1);
     }
   }
 }
 
-console.log('\n🎉 完成。GitHub Contributors 名单会在几分钟后刷新。');
+console.log('\n完成。GitHub Contributors 名单会在几分钟后刷新。');
 console.log('   注：claude / CommandCodeBot 的账号本身未被修改（也改不了），');
 console.log('   只是历史里不再有指向它们的尾注，名单因而不再包含它们。');
 console.log('\n   收尾建议：');

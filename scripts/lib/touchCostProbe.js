@@ -58,7 +58,12 @@ const TOUCH_RULE = Object.freeze([
   { name: '规则卡 .md（生成物）', required: true, why: 'npm run docs:rules-cards', kind: KIND.AUTO },
   { name: '规则卡 .html（生成物）', required: true, why: 'build_docs_site 出，非卡片生成器', kind: KIND.AUTO },
   { name: 'AGENTS.md 标记行 + 规则正文', required: true, why: '改代码的人不必跳文件（MGMT-STD-008 §4.6）', kind: KIND.MANUAL },
-  { name: 'AGENTS.html 孪生件', required: true, why: '孪生件', kind: KIND.AUTO },
+  {
+    name: 'AGENTS.html 孪生件',
+    required: false,
+    why: '根级孪生已于 2026-09-28 停用（[DESIGN-LAY-008] §11），根 .md 即单源',
+    kind: KIND.AUTO,
+  },
   { name: 'package.json 别名', required: true, why: 'check-wiring：零接线判 error', kind: KIND.AUTO },
   { name: '执行器 scripts/ci/*.js 本体', required: true, why: '规则真正被 spawn 的东西', kind: KIND.MANUAL },
   { name: '纯叶子 scripts/lib/*.js', required: false, why: '可选：判定逻辑与 IO 分层', kind: KIND.MANUAL },

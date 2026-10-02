@@ -94,7 +94,7 @@ function restoreFile(archiveDir, targetDir, filename) {
  * 列出可恢复的记忆
  */
 function listRecoverableMemories() {
-  console.log(chalk.bold('\n📋 可恢复的记忆\n'));
+  console.log(chalk.bold('\n可恢复的记忆\n'));
   
   // 核心记忆
   const memoryFiles = listArchivedFiles(ARCHIVE_DIR);
@@ -148,7 +148,7 @@ function listRecoverableMemories() {
  * 恢复指定文件
  */
 function restoreSpecificFile(filename) {
-  console.log(chalk.bold(`\n🔄 恢复文件: ${filename}`));
+  console.log(chalk.bold(`\n恢复文件: ${filename}`));
   
   // 检查核心记忆归档
   if (fs.existsSync(path.join(ARCHIVE_DIR, filename))) {
@@ -185,7 +185,7 @@ function restoreSpecificFile(filename) {
  * 恢复所有归档记忆
  */
 function restoreAllMemories() {
-  console.log(chalk.bold('\n🔄 恢复所有归档记忆\n'));
+  console.log(chalk.bold('\n恢复所有归档记忆\n'));
   
   let restored = 0;
   
@@ -228,10 +228,10 @@ function restoreAllMemories() {
     }
   }
   
-  console.log(chalk.bold(`\n📊 恢复汇总: ${restored} 个文件`));
+  console.log(chalk.bold(`\n恢复汇总: ${restored} 个文件`));
   
   if (restored > 0) {
-    console.log(chalk.green('\n✅ 记忆恢复完成'));
+    console.log(chalk.green('\n✓ 记忆恢复完成'));
   } else {
     console.log(chalk.dim('\n没有需要恢复的记忆'));
   }
@@ -241,7 +241,7 @@ function restoreAllMemories() {
  * 恢复指定类型的记忆
  */
 function restoreByType(type) {
-  console.log(chalk.bold(`\n🔄 恢复类型: ${type}`));
+  console.log(chalk.bold(`\n恢复类型: ${type}`));
   
   let restored = 0;
   
@@ -258,10 +258,10 @@ function restoreByType(type) {
     }
   }
   
-  console.log(chalk.bold(`\n📊 恢复汇总: ${restored} 个文件`));
+  console.log(chalk.bold(`\n恢复汇总: ${restored} 个文件`));
   
   if (restored > 0) {
-    console.log(chalk.green('\n✅ 记忆恢复完成'));
+    console.log(chalk.green('\n✓ 记忆恢复完成'));
   } else {
     console.log(chalk.dim('\n没有需要恢复的记忆'));
   }

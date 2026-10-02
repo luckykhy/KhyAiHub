@@ -365,8 +365,9 @@ BASE_COPY_PAYLOADS = [
     ("kernel/alpine", "alpine"),
     # Full root scripts/ tree (workshop completeness, consistent with kernel/
     # moonbit/khyquant source shipping). Ships guard cores (scripts/lib/*),
-    # install/portable/khytogo/docs/ci helpers, and scripts/alpine (Docker ISO
-    # build). scripts/lib/* is *runtime-referenced*: selfRepair/primitives.js
+    # install/portable/khytogo/docs/ci helpers. (The Docker ISO build moved to
+    # extensions/scripts/khy-alpine-iso in the 2026-08-19 extension import and
+    # ships via the extensions payload below.) scripts/lib/* is *runtime-referenced*: selfRepair/primitives.js
     # does require('../../../../../scripts/lib/leafContractGuard') which resolves
     # to bundled/scripts/lib in the installed layout — shipping it enables the
     # self-repair guard cores in a pip install instead of the null fail-soft.

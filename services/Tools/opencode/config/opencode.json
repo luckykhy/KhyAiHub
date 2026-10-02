@@ -13,19 +13,7 @@
           "name": "agnes-2.0-flash"
         }
       }
-    },
-    "deepseek": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "deepseek",
-      "options": {
-        "baseURL": "https://api.deepseek.com/v1"
-      },
-      "models": {
-        "deepseek-chat": {
-          "name": "deepseek-chat"
-        }
-      }
     }
   },
-  "model": "deepseek/deepseek-chat"
+  "model": "opencode/agnes-2.0-flash"
 }

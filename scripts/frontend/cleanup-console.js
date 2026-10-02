@@ -162,7 +162,7 @@ function processFile(filePath, options = {}) {
 function cleanupConsole(options = {}) {
   const { apply = false, remove = false, file = null } = options;
   
-  console.log(chalk.bold('\n🧹 前端 console 清理工具'));
+  console.log(chalk.bold('\n前端 console 清理工具'));
   console.log(chalk.dim(`  模式: ${apply ? '执行' : '预览'}`));
   console.log(chalk.dim(`  策略: ${remove ? '完全移除' : '包装在 DEV 检查中'}`));
   
@@ -195,13 +195,13 @@ function cleanupConsole(options = {}) {
   }
   
   // 显示结果
-  console.log(chalk.bold('\n📊 清理汇总'));
+  console.log(chalk.bold('\n清理汇总'));
   console.log(chalk.dim(`  处理文件: ${files.length} 个`));
   console.log(chalk.dim(`  修改文件: ${results.length} 个`));
   console.log(chalk.dim(`  总变更数: ${totalChanges} 个`));
   
   if (results.length > 0) {
-    console.log(chalk.bold('\n📝 变更详情'));
+    console.log(chalk.bold('\n变更详情'));
     
     for (const result of results.slice(0, 20)) { // 只显示前 20 个
       console.log(chalk.cyan(`\n  ${result.file}`));
@@ -220,10 +220,10 @@ function cleanupConsole(options = {}) {
   }
   
   if (!apply) {
-    console.log(chalk.yellow('\n⚠️  这是预览模式，使用 --apply 参数执行实际清理'));
+    console.log(chalk.yellow('\n⚠  这是预览模式，使用 --apply 参数执行实际清理'));
     console.log(chalk.dim('使用 --remove 参数完全移除 console 语句'));
   } else {
-    console.log(chalk.green('\n✅ console 清理完成'));
+    console.log(chalk.green('\n✓ console 清理完成'));
   }
 }
 

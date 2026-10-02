@@ -277,9 +277,9 @@ function archPage(m) {
     </div>
     <div style="flex:1">
       <div style="font-size:15px;font-weight:700;margin-bottom:8px">允许的依赖方向（白名单）</div>
-      ${EDGES.map((e) => `<div style="font-size:13.5px;color:#065f46;margin:5px 0">✅ ${e}</div>`).join('')}
+      ${EDGES.map((e) => `<div style="font-size:13.5px;color:#065f46;margin:5px 0">✓ ${e}</div>`).join('')}
       <div style="font-size:15px;font-weight:700;margin:16px 0 8px">禁止边（守卫 cross-layer-require 执行）</div>
-      ${FORBID.map((e) => `<div style="font-size:13.5px;color:#991b1b;margin:5px 0">⛔ ${e}</div>`).join('')}
+      ${FORBID.map((e) => `<div style="font-size:13.5px;color:#991b1b;margin:5px 0">◉ ${e}</div>`).join('')}
     </div>
   </div>`;
   return {
