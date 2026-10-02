@@ -111,6 +111,7 @@ const KEYBINDING_CATALOG = Object.freeze([
       { keys: 'Meta + ← / →', desc: '按词移动光标' },
       { keys: 'Home / End', desc: '移到行首 / 行尾' },
       { keys: '↑ / ↓', desc: '逐条浏览历史(含换行的提交算一条);首次 ↑ 会暂存当前草稿,↓ 走过最新一条时还原' },
+      { keys: 'PageUp / PageDown', desc: '上下翻整页会话内容(内容超出视口时;Preview 布局下右栏看板同步)' },
       { keys: 'Ctrl + R', desc: '反向增量搜索历史命令;再按跳到更旧一条(不回绕),Enter/Tab/方向键取用当前匹配并关闭,退格缩短查询,Esc/Ctrl+G/Ctrl+C 取消' },
     ]),
   },
@@ -119,6 +120,7 @@ const KEYBINDING_CATALOG = Object.freeze([
     label: '补全菜单',
     bindings: Object.freeze([
       { keys: '↑ / ↓', desc: '在补全/命令菜单中移动选择' },
+      { keys: 'PageUp / PageDown', desc: '整页移动高亮(菜单多于一页时;每页条数随框高)' },
       { keys: 'Tab', desc: '接受补全到输入框' },
       { keys: 'Enter', desc: '运行所选斜杠命令 / 接受所选文件' },
       { keys: 'Esc', desc: '关闭补全菜单' },
@@ -129,6 +131,7 @@ const KEYBINDING_CATALOG = Object.freeze([
     label: '会话记录视图(Ctrl + O 打开)',
     bindings: Object.freeze([
       { keys: '↑ / ↓ 或 j / k', desc: '上下滚动一行' },
+      { keys: 'PageUp / PageDown', desc: '上下翻整页' },
       { keys: 'Ctrl + U / Ctrl + D', desc: '上下翻半页' },
       { keys: 'Ctrl + B / Ctrl + F', desc: '上下翻整页(空格同 Ctrl + F,b 同 Ctrl + B)' },
       { keys: 'Ctrl + P / Ctrl + N', desc: '上下滚动一行(同 ↑ / ↓)' },
