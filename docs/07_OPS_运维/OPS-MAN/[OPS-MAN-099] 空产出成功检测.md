@@ -14,7 +14,7 @@ producer（`agenticHarnessService.js:1016` `success: result.success !== false`�
 `mergeResults`（`taskDecomposer.js`）把这种「空成功」计进 `successCount`、渲成 `完成`，
 与真干了活的子任务**无法区分**。本条新增纯叶 `mergeEmptySuccess.js`（`isEmptySuccess`
 + `formatEmptySuccessWarning`），`mergeResults` 消费它：空成功子任务的状态行渲成
-`⚠️ 完成（无产出）`，footer 额外渲一行 `- ⚠️ 完成但无产出: N 项（可能空响应/被截断/no-op，请复查）`。
+`⚠ 完成（无产出）`，footer 额外渲一行 `- ⚠ 完成但无产出: N 项（可能空响应/被截断/no-op，请复查）`。
 
 ## 为什么需要它（真实缺口 = 空产出成功在报告里不可见）
 
@@ -50,14 +50,14 @@ producer（`agenticHarnessService.js:1016` `success: result.success !== false`�
   后皆空）且 无 filesModified 且 无 toolCalls。
 - `formatEmptySuccessWarning(count)` 渲一行 footer 告警字符串，`count<1` → `''`。
 - **消费点**：`mergeResults` 的成功分支——`emptySuccess` 为真时 status 渲
-  `⚠️ 完成（无产出）` 且 `emptyCount++`（successCount 不变，它确实没失败）；footer 段
+  `⚠ 完成（无产出）` 且 `emptyCount++`（successCount 不变，它确实没失败）；footer 段
   在既有行后追加告警行。既有 skip(092)/fail/success 计数、去重 Set、098 写冲突行**一字不改**。
 
 ## 语义与保守降级（绝不误报）
 
 | 情形 | 行为 |
 | 门关 `KHY_MERGE_EMPTY_SUCCESS=0/false/off/no` | `isEmptySuccess` 恒 `false` = 逐字节回退今日（成功项渲 `完成`、无告警行） |
-| 门开 + 成功 + 无 body + 无文件 + 无工具调用 | `true` → status 渲 `⚠️ 完成（无产出）` + footer 计数 |
+| 门开 + 成功 + 无 body + 无文件 + 无工具调用 | `true` → status 渲 `⚠ 完成（无产出）` + footer 计数 |
 | 门开 + 有 text/output/filesModified/toolCalls 任一 | `false`（有真产出，不标） |
 | 门开 + `success:false` | `false`（失败另有归属，不重复标） |
 | 门开 + `skipped:true`（092） | `false`（跳过项另有归属） |

@@ -50,13 +50,13 @@ khy restore ./Khy-OS        # 解包后自动对账：落地数 === 清单数 �
 ## 横幅行为（诚实但克制）
 
 - `complete` / `unverifiable` / 门关 → **保持原横幅字节等价**（不多喊、不误降级）。
-- `incomplete` → 降级为 ⚠️ 告警，打印「落地 A · 清单 B · 缺 C」+ 排障提示（清空目录后
+- `incomplete` → 降级为 ⚠ 告警，打印「落地 A · 清单 B · 缺 C」+ 排障提示（清空目录后
   加 `--force` 重试）。
-- `over-extracted` → 成功横幅 + ⚠️ 提示目标目录可能有残留。
+- `over-extracted` → 成功横幅 + ⚠ 提示目标目录可能有残留。
 
 ## 恒久红线
 
-- **纯诊断叠加层：绝不让还原失败**。对账最坏只把成功横幅降级为 ⚠️ 告警，
+- **纯诊断叠加层：绝不让还原失败**。对账最坏只把成功横幅降级为 ⚠ 告警，
   `handleRestore` 仍 `return true`，绝不 `_markFailure`。
 - 门控 `KHY_RESTORE_VERIFY_COMPLETENESS`（default-on；仅 env ∈ {0,false,off,no}
   归一后关闭）：关 → 不对账、横幅字节等价旧行为。

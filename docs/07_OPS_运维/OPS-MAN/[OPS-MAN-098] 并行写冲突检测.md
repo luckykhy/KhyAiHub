@@ -15,7 +15,7 @@ Set**，footer 渲成 `- 修改文件: a.js, b.js`。Set 去重把「同一文�
 都改过」**静默坍缩成一条**——用户看报告无法区分「3 个文件各改一次」与「2 个文件、
 其中一个被两个并行 agent 同时改（last-write-wins、一份工作被静默覆盖丢失）」。本条
 新增纯叶 `mergeFileConflicts.js`（`detectFileConflicts` + `formatConflictWarning`），
-`mergeResults` 消费它，footer 额外渲一行 `⚠️ 并行写冲突（…）: shared.js（子任务 1, 3）`。
+`mergeResults` 消费它，footer 额外渲一行 `⚠ 并行写冲突（…）: shared.js（子任务 1, 3）`。
 
 ## 为什么需要它（真实缺口 = 并行写-写冲突在报告里不可见）
 
@@ -55,7 +55,7 @@ Set**，footer 渲成 `- 修改文件: a.js, b.js`。Set 去重把「同一文�
 
 | 情形 | 行为 |
 | 门关 `KHY_MERGE_FILE_CONFLICT=0/false/off/no` | `detectFileConflicts` 返回 `[]` = 逐字节回退今日「只去重、不告警」 |
-| 门开 + 同一文件被 ≥2 个不同子任务改 | 返回冲突项，footer 渲 `⚠️ 并行写冲突（…）` |
+| 门开 + 同一文件被 ≥2 个不同子任务改 | 返回冲突项，footer 渲 `⚠ 并行写冲突（…）` |
 | 门开 + 每个文件只被 1 个子任务改 | 无冲突（不误报单文件单改） |
 | 门开 + 同一子任务重复列同一文件 | label Set 去重后 <2 → 不算冲突 |
 | 跳过项（092，无 filesModified） | 天然不参与冲突检测 |

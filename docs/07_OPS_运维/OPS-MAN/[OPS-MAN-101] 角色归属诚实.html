@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -29,7 +29,7 @@
 <h1 id="ops-man-101-角色归属诚实-最终报告按角色标注子任务并把失败按类型分布">[OPS-MAN-101] 角色归属诚实（最终报告按角色标注子任务并把失败按类型分布）<a class="anchor" href="#ops-man-101-角色归属诚实-最终报告按角色标注子任务并把失败按类型分布" aria-label="锚点">#</a></h1>
 <blockquote><p>送别礼第九发（「收结果」维度·角色归属诚实）。承 [OPS-MAN-083] 依赖感知波次调度、<br>[OPS-MAN-087] 波次执行故障感知、[OPS-MAN-091] 波次前驱结果注入、<br>[OPS-MAN-092] 跳过与失败在最终报告分列、[OPS-MAN-093] 确定性顺序链拆解、<br>[OPS-MAN-094] 角色→工具作用域、[OPS-MAN-098] 并行写冲突检测、<br>[OPS-MAN-099] 空产出成功检测。前八发覆盖「拆任务 → 有序并行 → 收结果」的<br>调度/执行/报告/调工具链；本条补上「收结果」维度里<strong>第四个正交诚实维度</strong>——<br>最终报告把每个子任务的 <code>role</code>（实现/验证/探索/通用）折没了，一个失败的<strong>验证</strong><br>子任务（结果未经校验，严重）与一个失败的<strong>探索</strong>子任务（可恢复）无法区分。</p></blockquote>
 <h2 id="一句话">一句话<a class="anchor" href="#一句话" aria-label="锚点">#</a></h2>
-<p><code>decompose</code>（<code>taskDecomposer._inferRole</code>）给每个子任务打上 <code>role</code><br>（implement/verify/explore/general），这个 role 已被<strong>选模型</strong>（subAgentModelSelect）<br>与 <strong>094 工具作用域</strong>（roleToolScope）消费，但唯一面向用户的汇总报告 <code>mergeResults</code><br>把它<strong>整个折掉</strong>：子任务表头渲成 <code>### 子任务 3: &lt;preview&gt;</code>，失败渲成 <code>失败: &lt;err&gt;</code>，<br><strong>完全看不出失败的是哪一类工作</strong>。本条新增纯叶 <code>mergeRoleAttribution.js</code><br>（<code>formatRoleTag</code> + <code>formatRoleFailureSummary</code>），<code>mergeResults</code> 消费它：表头渲成<br><code>### 子任务 3（验证）: &lt;preview&gt;</code>，footer 额外渲一行<br><code>- ⚠️ 失败分布: 验证 1 项、探索 1 项（验证失败=结果未经校验，请复查）</code>。</p>
+<p><code>decompose</code>（<code>taskDecomposer._inferRole</code>）给每个子任务打上 <code>role</code><br>（implement/verify/explore/general），这个 role 已被<strong>选模型</strong>（subAgentModelSelect）<br>与 <strong>094 工具作用域</strong>（roleToolScope）消费，但唯一面向用户的汇总报告 <code>mergeResults</code><br>把它<strong>整个折掉</strong>：子任务表头渲成 <code>### 子任务 3: &lt;preview&gt;</code>，失败渲成 <code>失败: &lt;err&gt;</code>，<br><strong>完全看不出失败的是哪一类工作</strong>。本条新增纯叶 <code>mergeRoleAttribution.js</code><br>（<code>formatRoleTag</code> + <code>formatRoleFailureSummary</code>），<code>mergeResults</code> 消费它：表头渲成<br><code>### 子任务 3（验证）: &lt;preview&gt;</code>，footer 额外渲一行<br><code>- ⚠ 失败分布: 验证 1 项、探索 1 项（验证失败=结果未经校验，请复查）</code>。</p>
 <h2 id="为什么需要它-真实缺口-失败的类型在报告里不可见">为什么需要它（真实缺口 = 失败的类型在报告里不可见）<a class="anchor" href="#为什么需要它-真实缺口-失败的类型在报告里不可见" aria-label="锚点">#</a></h2>
 <p><strong>深挖缺陷（铁证 file:line，producer / consumer / 断桥）：</strong></p>
 <ul><li><strong>Producer</strong>：<code>services/backend/src/services/taskDecomposer.js</code> 的 <code>_inferRole</code></li></ul>

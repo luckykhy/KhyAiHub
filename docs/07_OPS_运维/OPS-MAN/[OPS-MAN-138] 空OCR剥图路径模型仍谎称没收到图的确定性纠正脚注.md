@@ -14,7 +14,7 @@
 `api:agnes:agnes-2.0-flash`)复现的**最后一条断桥**:
 
 ```
-❯ 请先描述图片中的关键信息…  📎×1
+❯ 请先描述图片中的关键信息…×1
 … 正在调用 glm/glm-4.6v-flash 进行识别…（404 model_not_found）
 … 正在调用 glm-4v-flash 进行识别…（socket hang up）
 我注意到你发了一条结构化提示，但消息里没有附带图片。

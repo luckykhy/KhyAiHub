@@ -30,7 +30,7 @@ khy 有三块「还原」能力，消费者不同：
    any(node_modules.iterdir())`——**内容无关**，只看目录非空）。
    失败 → 原因：首启依赖水合未完成（缺失或空壳）；解决方法：项目根跑 `khy`（触发水合）或 `npm install`。
 
-   > ⚠️ **深挖修正（SSOT 对齐）**：早期实现用名单探针（`express` / `.package-lock.json` /
+   > ⚠ **深挖修正（SSOT 对齐）**：早期实现用名单探针（`express` / `.package-lock.json` /
    > `.bin`）判定「已水合」。但 khy 用**提升式（hoisted / workspace）** node_modules——
    > 真实依赖装在**仓库根** `node_modules`，`services/backend/node_modules` 只留少量
    > 提升残留（如 `ansi-regex` / `@khy`），既无 `express` 也无 `.package-lock.json`。

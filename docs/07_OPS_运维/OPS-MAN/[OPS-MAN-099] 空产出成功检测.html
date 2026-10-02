@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -31,7 +31,7 @@
 <h2 id="一句话">一句话<a class="anchor" href="#一句话" aria-label="锚点">#</a></h2>
 <p>producer（<code>agenticHarnessService.js:1016</code> <code>success: result.success !== false</code>）把<strong>任何非<br>显式 <code>false</code></strong> 的结果都算成功，哪怕 output 空、filesModified 空、toolCalls 0。consumer<br><code>mergeResults</code>（<code>taskDecomposer.js</code>）把这种「空成功」计进 <code>successCount</code>、渲成 <code>完成</code>，<br>与真干了活的子任务<strong>无法区分</strong>。本条新增纯叶 <code>mergeEmptySuccess.js</code>（<code>isEmptySuccess</code></p>
 <ul><li><code>formatEmptySuccessWarning</code>），<code>mergeResults</code> 消费它：空成功子任务的状态行渲成</li></ul>
-<p><code>⚠️ 完成（无产出）</code>，footer 额外渲一行 <code>- ⚠️ 完成但无产出: N 项（可能空响应/被截断/no-op，请复查）</code>。</p>
+<p><code>⚠ 完成（无产出）</code>，footer 额外渲一行 <code>- ⚠ 完成但无产出: N 项（可能空响应/被截断/no-op，请复查）</code>。</p>
 <h2 id="为什么需要它-真实缺口-空产出成功在报告里不可见">为什么需要它（真实缺口 = 空产出成功在报告里不可见）<a class="anchor" href="#为什么需要它-真实缺口-空产出成功在报告里不可见" aria-label="锚点">#</a></h2>
 <p><strong>深挖缺陷（铁证 file:line，producer / consumer / 断桥）：</strong></p>
 <ul><li><strong>Producer</strong>：<code>services/backend/src/services/agenticHarnessService.js:1016-1021</code></li></ul>
@@ -46,11 +46,11 @@
 <ul><li><code>isEmptySuccess(result)</code>（<code>services/backend/src/services/orchestrator/mergeEmptySuccess.js</code>）</li></ul>
 <p>是唯一的空成功判定函数，纯、零 IO、绝不抛。返回 <code>true</code> 当且仅当：门开 且 <code>result</code><br>  是对象 且 <code>success !== false</code> 且 <code>skipped !== true</code> 且 无有效 body（text/output trim<br>  后皆空）且 无 filesModified 且 无 toolCalls。</p>
 <ul><li><code>formatEmptySuccessWarning(count)</code> 渲一行 footer 告警字符串，<code>count&lt;1</code> → <code>''</code>。</li><li><strong>消费点</strong>：<code>mergeResults</code> 的成功分支——<code>emptySuccess</code> 为真时 status 渲</li></ul>
-<p><code>⚠️ 完成（无产出）</code> 且 <code>emptyCount++</code>（successCount 不变，它确实没失败）；footer 段<br>  在既有行后追加告警行。既有 skip(092)/fail/success 计数、去重 Set、098 写冲突行<strong>一字不改</strong>。</p>
+<p><code>⚠ 完成（无产出）</code> 且 <code>emptyCount++</code>（successCount 不变，它确实没失败）；footer 段<br>  在既有行后追加告警行。既有 skip(092)/fail/success 计数、去重 Set、098 写冲突行<strong>一字不改</strong>。</p>
 <h2 id="语义与保守降级-绝不误报">语义与保守降级（绝不误报）<a class="anchor" href="#语义与保守降级-绝不误报" aria-label="锚点">#</a></h2>
 <p>| 情形 | 行为 |</p>
 <p>| 门关 <code>KHY_MERGE_EMPTY_SUCCESS=0/false/off/no</code> | <code>isEmptySuccess</code> 恒 <code>false</code> = 逐字节回退今日（成功项渲 <code>完成</code>、无告警行） |</p>
-<p>| 门开 + 成功 + 无 body + 无文件 + 无工具调用 | <code>true</code> → status 渲 <code>⚠️ 完成（无产出）</code> + footer 计数 |</p>
+<p>| 门开 + 成功 + 无 body + 无文件 + 无工具调用 | <code>true</code> → status 渲 <code>⚠ 完成（无产出）</code> + footer 计数 |</p>
 <p>| 门开 + 有 text/output/filesModified/toolCalls 任一 | <code>false</code>（有真产出，不标） |</p>
 <p>| 门开 + <code>success:false</code> | <code>false</code>（失败另有归属，不重复标） |</p>
 <p>| 门开 + <code>skipped:true</code>（092） | <code>false</code>（跳过项另有归属） |</p>

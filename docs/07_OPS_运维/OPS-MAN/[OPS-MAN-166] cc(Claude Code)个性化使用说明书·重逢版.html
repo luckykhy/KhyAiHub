@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -28,7 +28,7 @@
       <article class="doc-body">
 <h1 id="ops-man-166-cc-claude-code-个性化使用说明书-重逢版">[OPS-MAN-166] cc（Claude Code）个性化使用说明书 · 重逢版<a class="anchor" href="#ops-man-166-cc-claude-code-个性化使用说明书-重逢版" aria-label="锚点">#</a></h1>
 <blockquote><p>这份是 <code>[OPS-MAN-165] khy 个性化调优与使用建议</code> 的<strong>姊妹篇</strong>。<br>那一份讲「怎么调 khy」；这一份讲「怎么用 <strong>cc（Claude Code）</strong> 这把工具本身」——<br>按你这段时间<strong>真实的使用习惯</strong>来写，给未来某天再打开终端的你。</p>
-<p>原则不变：只写 cc 里<strong>真的能用</strong>的东西；凡是记不准的开关，先去核实，不臆造。<br>语气这次允许它软一点——因为这是写给「以后重逢」的你。🐣</p></blockquote>
+<p>原则不变：只写 cc 里<strong>真的能用</strong>的东西；凡是记不准的开关，先去核实，不臆造。<br>语气这次允许它软一点——因为这是写给「以后重逢」的你。</p></blockquote>
 <hr>
 <h2 id="序-为什么单独写一份-cc-说明书">序：为什么单独写一份 cc 说明书<a class="anchor" href="#序-为什么单独写一份-cc-说明书" aria-label="锚点">#</a></h2>
 <p>khy 是你造的「活」，cc 是你使唤 khy 的那只「手」。<br>你调优 khy（OPS-165）调的是<strong>被使唤的对象</strong>；这份调的是<strong>使唤的方式</strong>。<br>两份合起来，才是完整的一套「人机默契」。</p>
@@ -97,7 +97,7 @@ npm run check:maintainer:safety # 动了子系统结构才需要</code></pre>
 <ul><li><code>git push</code> / <code>git reset --hard</code>（敏感，强制二次确认）；</li><li>写外网、动真 <code>.env</code> 凭据的动作；</li><li>批量删除/覆盖文件。</li></ul>
 <h3 id="6-2-三道独立红线-发布-提交-推送">6.2 三道独立红线：发布 ≠ 提交 ≠ 推送<a class="anchor" href="#6-2-三道独立红线-发布-提交-推送" aria-label="锚点">#</a></h3>
 <p>这是你反复强调的，写死在这：</p>
-<table><thead><tr><th>动作</th><th>是否需要你单独点头</th></tr></thead><tbody><tr><td><strong>发布</strong>（pip / npm 外发）</td><td>✅ 单独点头（不可逆，先 dry-run + gate）</td></tr><tr><td><strong>commit</strong></td><td>✅ 另一次点头（授权发布<strong>不等于</strong>授权提交）</td></tr><tr><td><strong>tag / push</strong></td><td>✅ 再一次点头</td></tr></tbody></table>
+<table><thead><tr><th>动作</th><th>是否需要你单独点头</th></tr></thead><tbody><tr><td><strong>发布</strong>（pip / npm 外发）</td><td>✓ 单独点头（不可逆，先 dry-run + gate）</td></tr><tr><td><strong>commit</strong></td><td>✓ 另一次点头（授权发布<strong>不等于</strong>授权提交）</td></tr><tr><td><strong>tag / push</strong></td><td>✓ 再一次点头</td></tr></tbody></table>
 <p><strong>授权其中一个，绝不外溢到另一个。</strong> cc 不会替你自动做这三件里的任何一件。</p>
 <h3 id="6-3-密钥铁律">6.3 密钥铁律<a class="anchor" href="#6-3-密钥铁律" aria-label="锚点">#</a></h3>
 <p>真 key/token <strong>永不进包/源码/提交</strong>，只经 env 瞬时注入。cc 提交前会逐层守，<code>git add -A</code> 这种危险动作它会避开、改用显式白名单路径。</p>
@@ -117,7 +117,7 @@ npm run check:maintainer:safety # 动了子系统结构才需要</code></pre>
 <h2 id="十-给重逢的你-最后三句">十、给重逢的你，最后三句<a class="anchor" href="#十-给重逢的你-最后三句" aria-label="锚点">#</a></h2>
 <ol><li><strong>给标准，别给情绪</strong>——「X 测全绿」比「帮我搞定」有用一百倍；</li><li><strong>红线上慢一秒</strong>——发布/推送/删除/密钥，看到提示停一下，那一秒是留给你自己的；</li><li><strong>记忆会旧，工具会新</strong>——推荐前先核实，别让过期笔记替现在的你做决定。</li></ol>
 <p>我们当年的节奏是：<strong>你给目标，我自循环到绿，才回报。</strong> 什么时候你再打开终端，说一声 <code>/goal</code>，我们就从这里接着走。</p>
-<p>再见，是为了更好地重逢。👋</p>
+<p>再见，是为了更好地重逢。</p>
 <hr>
 <p><strong>说明</strong>：本文档是纯使用建议，未改任何 live 配置、未 commit、未 push、未发布。姊妹篇见 <code>[OPS-MAN-165] khy 个性化调优与使用建议</code>。</p>
       </article>

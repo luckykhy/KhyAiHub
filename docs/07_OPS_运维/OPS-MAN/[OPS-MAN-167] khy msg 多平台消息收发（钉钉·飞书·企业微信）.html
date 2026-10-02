@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -83,7 +83,7 @@ khy msg off              <span class="hljs-comment"># 关闭消息能力（持�
 <p>验证：桥梁与闭环均可<strong>离线单测</strong>——<code>msgReplyBridge.test.js</code> 覆盖门控 / 文本归一 / fail-soft /<br>接线策略；<code>msgReplyRoundtrip.test.js</code> 用真实 <code>MessageRouter</code> + 假渠道 + 注入的假 chat，<br>断言 AI 回复被发回原 <code>channelId</code> / <code>threadId</code>。真正端到端仍需①公网可达回调地址<br>②平台后台把地址配好 ③进程内已注册 chat 内核。</p>
 <h2 id="连接稳定-重试与退避">连接稳定（重试与退避）<a class="anchor" href="#连接稳定-重试与退避" aria-label="锚点">#</a></h2>
 <p>为保证「链接的稳定」，发送层 <code>msgSender</code> 对<strong>瞬时故障</strong>做指数退避重试，对<strong>永久错</strong>立即返回<br>（重试只会白打平台 API）。发送与龙虾回发共用同一发送通道，因此两个方向都受益。</p>
-<table><thead><tr><th>结果</th><th>是否重试</th><th>说明</th></tr></thead><tbody><tr><td>网络错 / 请求超时</td><td>✅ 重试</td><td>传输层瞬时抖动</td></tr><tr><td>HTTP 429</td><td>✅ 重试</td><td>平台限流，退避后再试</td></tr><tr><td>HTTP 5xx</td><td>✅ 重试</td><td>服务端瞬时错误</td></tr><tr><td>HTTP 4xx</td><td>❌ 不重试</td><td>鉴权 / 请求错误（永久）</td></tr><tr><td>业务错误码（2xx 但 errcode≠0）</td><td>❌ 不重试</td><td>签名不匹配 / 内容非法 / token 失效（永久）</td></tr><tr><td>非法 URL / SSRF 守卫拒绝</td><td>❌ 不重试</td><td>永久错</td></tr></tbody></table>
+<table><thead><tr><th>结果</th><th>是否重试</th><th>说明</th></tr></thead><tbody><tr><td>网络错 / 请求超时</td><td>✓ 重试</td><td>传输层瞬时抖动</td></tr><tr><td>HTTP 429</td><td>✓ 重试</td><td>平台限流，退避后再试</td></tr><tr><td>HTTP 5xx</td><td>✓ 重试</td><td>服务端瞬时错误</td></tr><tr><td>HTTP 4xx</td><td>✗ 不重试</td><td>鉴权 / 请求错误（永久）</td></tr><tr><td>业务错误码（2xx 但 errcode≠0）</td><td>✗ 不重试</td><td>签名不匹配 / 内容非法 / token 失效（永久）</td></tr><tr><td>非法 URL / SSRF 守卫拒绝</td><td>✗ 不重试</td><td>永久错</td></tr></tbody></table>
 <p>旋钮（env，可选）：</p>
 <ul><li><code>KHY_MSG_MAX_RETRIES</code>：额外重试次数，默认 <code>2</code>（总尝试 = 1 + 重试），夹到 <code>[0, 5]</code>；设 <code>0</code> 关闭重试。</li><li><code>KHY_MSG_RETRY_BASE_MS</code>：退避基数，默认 <code>500</code>ms；第 n 次退避 = <code>base·2^(n-1)</code>，单次封顶 30s。</li></ul>
 <p>退避时序（默认）：第 1 次重试等 500ms，第 2 次等 1000ms……。返回对象额外带 <code>attempts</code><br>（总尝试次数）。全程 fail-soft：重试耗尽后以 <code>{ ok:false, error }</code> 返回，绝不抛。</p>

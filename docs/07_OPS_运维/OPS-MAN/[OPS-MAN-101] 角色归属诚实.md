@@ -18,7 +18,7 @@
 **完全看不出失败的是哪一类工作**。本条新增纯叶 `mergeRoleAttribution.js`
 （`formatRoleTag` + `formatRoleFailureSummary`），`mergeResults` 消费它：表头渲成
 `### 子任务 3（验证）: <preview>`，footer 额外渲一行
-`- ⚠️ 失败分布: 验证 1 项、探索 1 项（验证失败=结果未经校验，请复查）`。
+`- ⚠ 失败分布: 验证 1 项、探索 1 项（验证失败=结果未经校验，请复查）`。
 
 ## 为什么需要它（真实缺口 = 失败的类型在报告里不可见）
 

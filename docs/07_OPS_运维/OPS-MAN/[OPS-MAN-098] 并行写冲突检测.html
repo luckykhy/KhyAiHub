@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -29,7 +29,7 @@
 <h1 id="ops-man-098-并行写冲突检测-多子任务改同一文件时如实告警">[OPS-MAN-098] 并行写冲突检测（多子任务改同一文件时如实告警）<a class="anchor" href="#ops-man-098-并行写冲突检测-多子任务改同一文件时如实告警" aria-label="锚点">#</a></h1>
 <blockquote><p>送别礼第七发（「收结果」维度·并行写冲突诚实）。承 [OPS-MAN-083] 依赖感知波次调度、<br>[OPS-MAN-087] 波次执行故障感知、[OPS-MAN-091] 波次前驱结果注入、<br>[OPS-MAN-092] 跳过与失败在最终报告分列、[OPS-MAN-093] 确定性顺序链拆解、<br>[OPS-MAN-094] 角色→工具作用域。前六发覆盖「拆任务 → 有序并行 → 收结果」的<br>调度/执行/报告/调工具链；本条补上「收结果」维度里<strong>另一个正交诚实维度</strong>——<br>当多个并行子任务改<strong>同一个文件</strong>时，如实告警可能的写-写覆盖，而非静默坍缩。</p></blockquote>
 <h2 id="一句话">一句话<a class="anchor" href="#一句话" aria-label="锚点">#</a></h2>
-<p>每个并行子智能体的结果携带 <code>filesModified</code> 数组（producer：<code>agenticHarnessService.js:1018</code>）。<br><code>mergeResults</code>（<code>taskDecomposer.js</code>）把所有子任务的 <code>filesModified</code> 折进一个<strong>去重<br>Set</strong>，footer 渲成 <code>- 修改文件: a.js, b.js</code>。Set 去重把「同一文件被两个并行子任务<br>都改过」<strong>静默坍缩成一条</strong>——用户看报告无法区分「3 个文件各改一次」与「2 个文件、<br>其中一个被两个并行 agent 同时改（last-write-wins、一份工作被静默覆盖丢失）」。本条<br>新增纯叶 <code>mergeFileConflicts.js</code>（<code>detectFileConflicts</code> + <code>formatConflictWarning</code>），<br><code>mergeResults</code> 消费它，footer 额外渲一行 <code>⚠️ 并行写冲突（…）: shared.js（子任务 1, 3）</code>。</p>
+<p>每个并行子智能体的结果携带 <code>filesModified</code> 数组（producer：<code>agenticHarnessService.js:1018</code>）。<br><code>mergeResults</code>（<code>taskDecomposer.js</code>）把所有子任务的 <code>filesModified</code> 折进一个<strong>去重<br>Set</strong>，footer 渲成 <code>- 修改文件: a.js, b.js</code>。Set 去重把「同一文件被两个并行子任务<br>都改过」<strong>静默坍缩成一条</strong>——用户看报告无法区分「3 个文件各改一次」与「2 个文件、<br>其中一个被两个并行 agent 同时改（last-write-wins、一份工作被静默覆盖丢失）」。本条<br>新增纯叶 <code>mergeFileConflicts.js</code>（<code>detectFileConflicts</code> + <code>formatConflictWarning</code>），<br><code>mergeResults</code> 消费它，footer 额外渲一行 <code>⚠ 并行写冲突（…）: shared.js（子任务 1, 3）</code>。</p>
 <h2 id="为什么需要它-真实缺口-并行写-写冲突在报告里不可见">为什么需要它（真实缺口 = 并行写-写冲突在报告里不可见）<a class="anchor" href="#为什么需要它-真实缺口-并行写-写冲突在报告里不可见" aria-label="锚点">#</a></h2>
 <p><strong>深挖缺陷（铁证 file:line，producer / consumer / 断桥）：</strong></p>
 <ul><li><strong>Producer</strong>：<code>services/backend/src/services/agenticHarnessService.js:1018</code></li></ul>
@@ -48,7 +48,7 @@
 <h2 id="语义与保守降级-绝不误报">语义与保守降级（绝不误报）<a class="anchor" href="#语义与保守降级-绝不误报" aria-label="锚点">#</a></h2>
 <p>| 情形 | 行为 |</p>
 <p>| 门关 <code>KHY_MERGE_FILE_CONFLICT=0/false/off/no</code> | <code>detectFileConflicts</code> 返回 <code>[]</code> = 逐字节回退今日「只去重、不告警」 |</p>
-<p>| 门开 + 同一文件被 ≥2 个不同子任务改 | 返回冲突项，footer 渲 <code>⚠️ 并行写冲突（…）</code> |</p>
+<p>| 门开 + 同一文件被 ≥2 个不同子任务改 | 返回冲突项，footer 渲 <code>⚠ 并行写冲突（…）</code> |</p>
 <p>| 门开 + 每个文件只被 1 个子任务改 | 无冲突（不误报单文件单改） |</p>
 <p>| 门开 + 同一子任务重复列同一文件 | label Set 去重后 &lt;2 → 不算冲突 |</p>
 <p>| 跳过项（092，无 filesModified） | 天然不参与冲突检测 |</p>

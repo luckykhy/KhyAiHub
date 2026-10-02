@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -32,7 +32,7 @@
 <h2 id="一-背景与断桥-b1-先想">一、背景与断桥(B1 先想)<a class="anchor" href="#一-背景与断桥-b1-先想" aria-label="锚点">#</a></h2>
 <p>基线目标(每轮相同):纯文本 / 非多模态 / 识图模型不可用时,khy 收到图片要能<strong>正确落到 OCR 兜底路径</strong>、<br>准确提取图片信息,并用<strong>真实图片</strong>核验跑通,做到「无感<em>明显</em>告知用户用了 OCR 但能正确识别图片」。</p>
 <p>本轮针对用户 2026-07-12 实测失败现象(<code>paste-cache 92c0154d</code>,截图 khy OS v0.1.193、模型<br><code>api:agnes:agnes-2.0-flash</code>)复现的<strong>最后一条断桥</strong>:</p>
-<pre><code>❯ 请先描述图片中的关键信息…  📎×1
+<pre><code>❯ 请先描述图片中的关键信息…×1
 … 正在调用 glm/glm-4.6v-flash 进行识别…（404 model_not_found）
 … 正在调用 glm-4v-flash 进行识别…（socket hang up）
 我注意到你发了一条结构化提示，但消息里没有附带图片。

@@ -18,8 +18,8 @@
 
 写记忆与召回记忆的**执行**早就接好了，但**告知**这一步从缺——`_maybeAutoSaveMemory` 成功后
 只把结果当布尔丢掉，召回的记忆名字（`_memSurfaced`）也从不回流给用户。本条抽纯叶
-`memoryOpsNotice.js`：把「写入成功的记忆」渲染成 `🧠 已写入…记忆（已落盘/本会话）：<name>`，
-把「本轮召回的命名记忆」渲染成 `🧠 召回 N 条相关记忆：a、b、c 等 N 条`，经既有 `onStatus`
+`memoryOpsNotice.js`：把「写入成功的记忆」渲染成 `已写入…记忆（已落盘/本会话）：<name>`，
+把「本轮召回的命名记忆」渲染成 `召回 N 条相关记忆：a、b、c 等 N 条`，经既有 `onStatus`
 状态通道推给用户。零 IO、绝不抛、门控 default-on。
 
 ## 为什么需要它（真实缺口 = 已有动作静默无回声）
@@ -39,18 +39,18 @@
 - `isNoticeEnabled()`：门 `KHY_MEMORY_NOTICE`，default-on；CANON falsy
   `['0','false','off','no']`（大小写/空白归一）才关闭。**不进 flagRegistry**（sibling 门各自读 env）。
 - `formatWriteNotice(result)`：只对 `{kind:'memory', success:true}` 且有非空 `name` 的富描述符
-  渲染；`action` 为 `skip`/`skip-duplicate` → `🧠 记忆已存在（未重复写入）：<类型>·<name>`；
-  否则按 `ephemeral` 渲 `已落盘`/`本会话` → `🧠 已写入<类型>记忆（<where>）：<name>`。
+  渲染；`action` 为 `skip`/`skip-duplicate` → `记忆已存在（未重复写入）：<类型>·<name>`；
+  否则按 `ephemeral` 渲 `已落盘`/`本会话` → `已写入<类型>记忆（<where>）：<name>`。
   类型标签 `_TYPE_LABEL`（user→身份 / feedback→反馈 / project→项目 / reference→参考，缺省「记忆」）。
   任何非法输入（null/非对象/非 memory/未成功/空名/门关）→ 返回 `''`（静默）。
 - `formatRecallNotice(filenames, ctx)`：接受数组 / Set / 字符串（按单个文件名，见 008 §3.2.2 加固）
   / 任意可迭代；逐项 `_prettyName`（剥 `.md`）；
   取前 `_RECALL_NAME_CAP`（3）个展示，超出加 ` 等 N 条` 尾巴 →
-  `🧠 召回 N 条相关记忆：a、b、c 等 N 条`。空/无命名项/门关 → `''`。
+  `召回 N 条相关记忆：a、b、c 等 N 条`。空/无命名项/门关 → `''`。
   **`ctx`（可选，`{types}`）** 由 `deriveIntentClause` 派生「用以完成什么」子句，
   插在「条相关记忆」与「：」之间；**`ctx` 缺省时输出与旧版逐字节相等**（008 V4 回退）。
 - `formatRecallNoticePayload(filenames, ctx)`：把 `kind:'memory-notice'` 与 `text` 在同一处派生，
-  供消费点**按字段**分流（不得用 `includes('🧠')` 之类文案前缀——文案一改即静默失效）。
+  供消费点**按字段**分流（不得用 `includes('')` 之类文案前缀——文案一改即静默失效）。
 - 全部 `try/catch` 兜底返回 `''`——通知是 best-effort，绝不因渲染异常打断对话。
 
 **接线**（均 additive、门关逐字节回退）：

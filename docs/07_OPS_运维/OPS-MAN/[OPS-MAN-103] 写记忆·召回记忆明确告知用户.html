@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -30,7 +30,7 @@
 <blockquote><p>⚠ <strong>本条已升格</strong>：可见化的<strong>落点、门控与双前端一致性</strong>以<br><a href="../../10_规范/DESIGN-MEM/[DESIGN-MEM-008]%20记忆操作可见性规范.html"><code>[DESIGN-MEM-008] 记忆操作可见性规范</code></a> 为准。<br>本条的<strong>纯叶设计</strong>（零 IO / 确定性 / 绝不抛 / 门控 default-on）<strong>保留不变</strong>，008 是它的<br><strong>修正与升格</strong>——008 查明本条声称的「经既有 <code>onStatus</code> 状态通道推给用户」在两个前端<br><strong>结构性地看不见</strong>（REPL 被 <code>步骤 N/5</code> 毫秒级擦除；TUI 只是 spinner 后缀，一开流即清空），<br>并给出 noticeInbox 主通道 + <code>kind:'memory-notice'</code> 回落。详见 008 §1 取证 F1–F7。</p></blockquote>
 <blockquote><p>直接回应用户诉求：「然后在关键节点主动写记忆文件，包括全局记忆和项目记忆等，<br>需要用时主动召回记忆，<strong>写记忆和回忆时明确告知用户</strong>。」<br>本条闭合两条断桥：khy 已经会<strong>自动写记忆</strong>（<code>_maybeAutoSaveMemory</code>）与<strong>自动召回记忆</strong><br>（memory engine surface + [RELEVANT_MEMORY] 注入），但两条路径都<strong>静默执行</strong>——用户看不到<br>「khy 刚记住了什么」或「khy 这轮召回了哪些记忆」。本条补一个纯叶把这两个已有动作<strong>渲染成<br>用户可见的状态提示</strong>，让「主动写/召回记忆」这件事对用户透明。</p></blockquote>
 <h2 id="一句话">一句话<a class="anchor" href="#一句话" aria-label="锚点">#</a></h2>
-<p>写记忆与召回记忆的<strong>执行</strong>早就接好了，但<strong>告知</strong>这一步从缺——<code>_maybeAutoSaveMemory</code> 成功后<br>只把结果当布尔丢掉，召回的记忆名字（<code>_memSurfaced</code>）也从不回流给用户。本条抽纯叶<br><code>memoryOpsNotice.js</code>：把「写入成功的记忆」渲染成 <code>🧠 已写入…记忆（已落盘/本会话）：&lt;name&gt;</code>，<br>把「本轮召回的命名记忆」渲染成 <code>🧠 召回 N 条相关记忆：a、b、c 等 N 条</code>，经既有 <code>onStatus</code><br>状态通道推给用户。零 IO、绝不抛、门控 default-on。</p>
+<p>写记忆与召回记忆的<strong>执行</strong>早就接好了，但<strong>告知</strong>这一步从缺——<code>_maybeAutoSaveMemory</code> 成功后<br>只把结果当布尔丢掉，召回的记忆名字（<code>_memSurfaced</code>）也从不回流给用户。本条抽纯叶<br><code>memoryOpsNotice.js</code>：把「写入成功的记忆」渲染成 <code>已写入…记忆（已落盘/本会话）：&lt;name&gt;</code>，<br>把「本轮召回的命名记忆」渲染成 <code>召回 N 条相关记忆：a、b、c 等 N 条</code>，经既有 <code>onStatus</code><br>状态通道推给用户。零 IO、绝不抛、门控 default-on。</p>
 <h2 id="为什么需要它-真实缺口-已有动作静默无回声">为什么需要它（真实缺口 = 已有动作静默无回声）<a class="anchor" href="#为什么需要它-真实缺口-已有动作静默无回声" aria-label="锚点">#</a></h2>
 <ul><li><strong>写记忆断桥</strong>：<code>ai.js</code> 的 <code>_maybeAutoSaveMemory</code> 成功路径原本 <code>return !!(res &amp;&amp; res.success)</code></li></ul>
 <p>——把「记住了什么类型、什么名字、落盘还是本会话」全部坍缩成一个布尔后丢弃，<br>  <code>aiChatCore.js</code> 调用点连布尔都不看。用户无从得知 khy 刚刚记住了一条身份/反馈/项目记忆。</p>
@@ -42,11 +42,11 @@
 <ul><li><code>isNoticeEnabled()</code>：门 <code>KHY_MEMORY_NOTICE</code>，default-on；CANON falsy</li></ul>
 <p><code>['0','false','off','no']</code>（大小写/空白归一）才关闭。<strong>不进 flagRegistry</strong>（sibling 门各自读 env）。</p>
 <ul><li><code>formatWriteNotice(result)</code>：只对 <code>{kind:'memory', success:true}</code> 且有非空 <code>name</code> 的富描述符</li></ul>
-<p>渲染；<code>action</code> 为 <code>skip</code>/<code>skip-duplicate</code> → <code>🧠 记忆已存在（未重复写入）：&lt;类型&gt;·&lt;name&gt;</code>；<br>  否则按 <code>ephemeral</code> 渲 <code>已落盘</code>/<code>本会话</code> → <code>🧠 已写入&lt;类型&gt;记忆（&lt;where&gt;）：&lt;name&gt;</code>。<br>  类型标签 <code>_TYPE_LABEL</code>（user→身份 / feedback→反馈 / project→项目 / reference→参考，缺省「记忆」）。<br>  任何非法输入（null/非对象/非 memory/未成功/空名/门关）→ 返回 <code>''</code>（静默）。</p>
+<p>渲染；<code>action</code> 为 <code>skip</code>/<code>skip-duplicate</code> → <code>记忆已存在（未重复写入）：&lt;类型&gt;·&lt;name&gt;</code>；<br>  否则按 <code>ephemeral</code> 渲 <code>已落盘</code>/<code>本会话</code> → <code>已写入&lt;类型&gt;记忆（&lt;where&gt;）：&lt;name&gt;</code>。<br>  类型标签 <code>_TYPE_LABEL</code>（user→身份 / feedback→反馈 / project→项目 / reference→参考，缺省「记忆」）。<br>  任何非法输入（null/非对象/非 memory/未成功/空名/门关）→ 返回 <code>''</code>（静默）。</p>
 <ul><li><code>formatRecallNotice(filenames, ctx)</code>：接受数组 / Set / 字符串（按单个文件名，见 008 §3.2.2 加固）</li></ul>
-<p>/ 任意可迭代；逐项 <code>_prettyName</code>（剥 <code>.md</code>）；<br>  取前 <code>_RECALL_NAME_CAP</code>（3）个展示，超出加 <code> 等 N 条</code> 尾巴 →<br>  <code>🧠 召回 N 条相关记忆：a、b、c 等 N 条</code>。空/无命名项/门关 → <code>''</code>。<br>  <strong><code>ctx</code>（可选，<code>{types}</code>）</strong> 由 <code>deriveIntentClause</code> 派生「用以完成什么」子句，<br>  插在「条相关记忆」与「：」之间；<strong><code>ctx</code> 缺省时输出与旧版逐字节相等</strong>（008 V4 回退）。</p>
+<p>/ 任意可迭代；逐项 <code>_prettyName</code>（剥 <code>.md</code>）；<br>  取前 <code>_RECALL_NAME_CAP</code>（3）个展示，超出加 <code> 等 N 条</code> 尾巴 →<br>  <code>召回 N 条相关记忆：a、b、c 等 N 条</code>。空/无命名项/门关 → <code>''</code>。<br>  <strong><code>ctx</code>（可选，<code>{types}</code>）</strong> 由 <code>deriveIntentClause</code> 派生「用以完成什么」子句，<br>  插在「条相关记忆」与「：」之间；<strong><code>ctx</code> 缺省时输出与旧版逐字节相等</strong>（008 V4 回退）。</p>
 <ul><li><code>formatRecallNoticePayload(filenames, ctx)</code>：把 <code>kind:'memory-notice'</code> 与 <code>text</code> 在同一处派生，</li></ul>
-<p>供消费点<strong>按字段</strong>分流（不得用 <code>includes('🧠')</code> 之类文案前缀——文案一改即静默失效）。</p>
+<p>供消费点<strong>按字段</strong>分流（不得用 <code>includes('')</code> 之类文案前缀——文案一改即静默失效）。</p>
 <ul><li>全部 <code>try/catch</code> 兜底返回 <code>''</code>——通知是 best-effort，绝不因渲染异常打断对话。</li></ul>
 <p><strong>接线</strong>（均 additive、门关逐字节回退）：</p>
 <ul><li><code>ai.js</code> <code>_maybeAutoSaveMemory</code> 成功路径改为返回富描述符</li></ul>

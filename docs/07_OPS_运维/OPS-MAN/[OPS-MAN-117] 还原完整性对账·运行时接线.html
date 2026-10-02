@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -42,11 +42,11 @@
 <ul><li><strong>对账口径</strong>：<code>expected</code> = 快照头 <code>fileCount</code>（<code>makeSourceSnapshot</code> 用</li></ul>
 <p><code>git ls-tree -r --name-only</code> 数出、<code>git archive</code> 同一 treeish 打包的应有文件数）；<br>  <code>actual</code> = <code>sourceHealService._collectRelFiles(dest).length</code>（递归数还原目录里的<br>  常规文件，跳过 <code>node_modules</code>/<code>.git</code>/<code>__pycache__</code>/<code>.pytest_cache</code>）。两者对齐<br>  <code>git archive</code> 落地口径，故干净成功还原时 <code>actual === expected</code>（OPS-095 已 LIVE 证实）。</p>
 <h2 id="横幅行为-诚实但克制">横幅行为（诚实但克制）<a class="anchor" href="#横幅行为-诚实但克制" aria-label="锚点">#</a></h2>
-<ul><li><code>complete</code> / <code>unverifiable</code> / 门关 → <strong>保持原横幅字节等价</strong>（不多喊、不误降级）。</li><li><code>incomplete</code> → 降级为 ⚠️ 告警，打印「落地 A · 清单 B · 缺 C」+ 排障提示（清空目录后</li></ul>
+<ul><li><code>complete</code> / <code>unverifiable</code> / 门关 → <strong>保持原横幅字节等价</strong>（不多喊、不误降级）。</li><li><code>incomplete</code> → 降级为 ⚠ 告警，打印「落地 A · 清单 B · 缺 C」+ 排障提示（清空目录后</li></ul>
 <p>加 <code>--force</code> 重试）。</p>
-<ul><li><code>over-extracted</code> → 成功横幅 + ⚠️ 提示目标目录可能有残留。</li></ul>
+<ul><li><code>over-extracted</code> → 成功横幅 + ⚠ 提示目标目录可能有残留。</li></ul>
 <h2 id="恒久红线">恒久红线<a class="anchor" href="#恒久红线" aria-label="锚点">#</a></h2>
-<ul><li><strong>纯诊断叠加层：绝不让还原失败</strong>。对账最坏只把成功横幅降级为 ⚠️ 告警，</li></ul>
+<ul><li><strong>纯诊断叠加层：绝不让还原失败</strong>。对账最坏只把成功横幅降级为 ⚠ 告警，</li></ul>
 <p><code>handleRestore</code> 仍 <code>return true</code>，绝不 <code>_markFailure</code>。</p>
 <ul><li>门控 <code>KHY_RESTORE_VERIFY_COMPLETENESS</code>（default-on；仅 env ∈ {0,false,off,no}</li></ul>
 <p>归一后关闭）：关 → 不对账、横幅字节等价旧行为。</p>

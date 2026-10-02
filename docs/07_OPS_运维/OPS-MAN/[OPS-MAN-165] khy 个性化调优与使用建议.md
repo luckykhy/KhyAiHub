@@ -126,11 +126,11 @@ KHY_POOL_EVENT_AUTO_IMPORT_USE_DEFAULT_SOURCE = false
 
 | 你的习惯 | 对应的 khy 真实旋钮 | 现状 |
 |----------|--------------------|------|
-| 少打断，编辑不拦 | 权限档 `acceptEdits` | ✅ 本次已切 |
-| 四红线每条必确认 | 不可绕过的 critical gate（与档位无关） | ✅ 天然强制 |
-| `/goal` 目标驱动 | `/goal` 技能 + B2 纪律（章程） | ✅ 已是主力（162 次） |
-| 按任务分模型 | `GATEWAY_PREFERRED_MODEL` / `PROXY_MODEL_ROUTE_MAP` | ✅ 已配置 |
-| 本地模型混用 | 根 `.env` 的 16 个 `KHY_LOCAL_*` / `KHY_OLLAMA_*` | ✅ 已调 |
+| 少打断，编辑不拦 | 权限档 `acceptEdits` | ✓ 本次已切 |
+| 四红线每条必确认 | 不可绕过的 critical gate（与档位无关） | ✓ 天然强制 |
+| `/goal` 目标驱动 | `/goal` 技能 + B2 纪律（章程） | ✓ 已是主力（162 次） |
+| 按任务分模型 | `GATEWAY_PREFERRED_MODEL` / `PROXY_MODEL_ROUTE_MAP` | ✓ 已配置 |
+| 本地模型混用 | 根 `.env` 的 16 个 `KHY_LOCAL_*` / `KHY_OLLAMA_*` | ✓ 已调 |
 | 详细回答 | 交流约定（非配置项） | — 靠对话习惯维持 |
 
 ---
