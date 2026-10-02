@@ -202,7 +202,7 @@ const _KNOWN_BARE_STRIP =
 // JSON + `<function=…>` tags). fail-soft: missing copy → legacy strip unchanged.
 let _toolCallNoise;
 try {
-  _toolCallNoise = require('../cli/toolCallNoise');
+  _toolCallNoise = require('../utils/toolCallNoise');
 } catch {
   _toolCallNoise = null;
 }
@@ -489,7 +489,7 @@ function buildDeliverySummary(toolCallLog) {
     sections.push('|------|------|------|');
     const display = allFileChanges.slice(0, 10);
     for (const f of display) {
-      const status = f.ok ? '' : ' ❌';
+      const status = f.ok ? '' : ' ✗';
       sections.push(`| \`${_basename(f.path)}\` | ${f.op} | ${f.diff}${status} |`);
     }
     if (allFileChanges.length > 10) {
@@ -502,7 +502,7 @@ function buildDeliverySummary(toolCallLog) {
     sections.push(`**执行命令 (${cmdOps.length})**`);
     const display = cmdOps.slice(0, 5);
     for (const c of display) {
-      sections.push(`  \`$ ${c.cmd}\`${c.success ? '' : ' ❌'}`);
+      sections.push(`  \`$ ${c.cmd}\`${c.success ? '' : ' ✗'}`);
     }
     if (cmdOps.length > 5) {
       sections.push(`  ...+${cmdOps.length - 5} more`);
