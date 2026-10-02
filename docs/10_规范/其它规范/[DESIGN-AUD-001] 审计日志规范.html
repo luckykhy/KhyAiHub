@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -64,7 +64,7 @@
 <span class="hljs-punctuation">}</span></code></pre>
 <hr>
 <h2 id="4-五字段">4. 五字段<a class="anchor" href="#4-五字段" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>字段</th><th>必选</th><th>说明</th></tr></thead><tbody><tr><td><code>actor</code></td><td>✅</td><td>谁（用户 ID / 系统 / 服务账号）</td></tr><tr><td><code>action</code></td><td>✅</td><td>做了什么（动词）</td></tr><tr><td><code>target</code></td><td>✅</td><td>对什么（资源类型 + ID）</td></tr><tr><td><code>timestamp</code></td><td>✅</td><td>何时（ISO 8601）</td></tr><tr><td><code>result</code></td><td>✅</td><td>结果（success / failure / denied）</td></tr></tbody></table>
+<table><thead><tr><th>字段</th><th>必选</th><th>说明</th></tr></thead><tbody><tr><td><code>actor</code></td><td>✓</td><td>谁（用户 ID / 系统 / 服务账号）</td></tr><tr><td><code>action</code></td><td>✓</td><td>做了什么（动词）</td></tr><tr><td><code>target</code></td><td>✓</td><td>对什么（资源类型 + ID）</td></tr><tr><td><code>timestamp</code></td><td>✓</td><td>何时（ISO 8601）</td></tr><tr><td><code>result</code></td><td>✓</td><td>结果（success / failure / denied）</td></tr></tbody></table>
 <hr>
 <h2 id="5-必须审计的事件">5. 必须审计的事件<a class="anchor" href="#5-必须审计的事件" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>事件</th><th>级别</th></tr></thead><tbody><tr><td>登录成功/失败</td><td>INFO</td></tr><tr><td>登出</td><td>INFO</td></tr><tr><td>密码修改</td><td>INFO</td></tr><tr><td>权限变更</td><td>INFO</td></tr><tr><td>数据创建/修改/删除</td><td>INFO</td></tr><tr><td>数据导出</td><td>INFO</td></tr><tr><td>配置变更</td><td>INFO</td></tr><tr><td>权限被拒绝</td><td>WARN</td></tr><tr><td>多次登录失败</td><td>WARN</td></tr><tr><td>批量删除</td><td>WARN</td></tr><tr><td>系统启动/关闭</td><td>INFO</td></tr></tbody></table>

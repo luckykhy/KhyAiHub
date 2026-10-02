@@ -434,7 +434,7 @@ const verifyPassword = async (password, hash) => {
 ### 8.2 SQL 注入防护
 
 ```javascript
-// ✅ 正确：使用参数化查询
+// ✓ 正确：使用参数化查询
 const users = await sequelize.query(
   'SELECT * FROM users WHERE id = :id',
   {
@@ -443,7 +443,7 @@ const users = await sequelize.query(
   }
 );
 
-// ❌ 错误：字符串拼接
+// ✗ 错误：字符串拼接
 const users = await sequelize.query(
   `SELECT * FROM users WHERE id = ${userId}`
 );

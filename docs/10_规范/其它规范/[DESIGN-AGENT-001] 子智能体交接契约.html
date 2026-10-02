@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -50,7 +50,7 @@ You MUST still provide a detailed, self-contained prompt with all necessary cont
 <hr>
 <h2 id="3-交接信封-两向">3. 交接信封（两向）<a class="anchor" href="#3-交接信封-两向" aria-label="锚点">#</a></h2>
 <h3 id="3-1-下行-派发信封-主-子">3.1 下行：派发信封（主 → 子）<a class="anchor" href="#3-1-下行-派发信封-主-子" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>字段</th><th>必填</th><th>内容</th><th>对应红线</th></tr></thead><tbody><tr><td><code>description</code></td><td>✅</td><td>3–5 词任务概括</td><td>AG-2</td></tr><tr><td><code>prompt</code></td><td>✅</td><td><strong>自包含</strong>任务书：目标 / 输入 / 约束 / 期望产出</td><td>AG-2</td></tr><tr><td><code>parent_context_summary</code></td><td>承载性信息时 ✅</td><td>父对话摘要（<strong>显式传</strong>，不指望自动推导）</td><td>AG-2</td></tr><tr><td><code>subagent_type</code></td><td>✅</td><td>选型（<code>Explore</code> / <code>audit</code> / <code>fix</code> / <code>research</code> / <code>reading</code> / <code>map</code> / <code>general-purpose</code>）</td><td>AG-6</td></tr><tr><td><strong>所有权声明</strong>（写进 <code>prompt</code>）</td><td>✅</td><td>可写的文件/模块；不可碰的边界</td><td>AG-3</td></tr><tr><td><code>subtasks</code></td><td>仅并行型</td><td><strong>仅限真正独立</strong>的子任务</td><td>AG-4</td></tr></tbody></table>
+<table><thead><tr><th>字段</th><th>必填</th><th>内容</th><th>对应红线</th></tr></thead><tbody><tr><td><code>description</code></td><td>✓</td><td>3–5 词任务概括</td><td>AG-2</td></tr><tr><td><code>prompt</code></td><td>✓</td><td><strong>自包含</strong>任务书：目标 / 输入 / 约束 / 期望产出</td><td>AG-2</td></tr><tr><td><code>parent_context_summary</code></td><td>承载性信息时 ✓</td><td>父对话摘要（<strong>显式传</strong>，不指望自动推导）</td><td>AG-2</td></tr><tr><td><code>subagent_type</code></td><td>✓</td><td>选型（<code>Explore</code> / <code>audit</code> / <code>fix</code> / <code>research</code> / <code>reading</code> / <code>map</code> / <code>general-purpose</code>）</td><td>AG-6</td></tr><tr><td><strong>所有权声明</strong>（写进 <code>prompt</code>）</td><td>✓</td><td>可写的文件/模块；不可碰的边界</td><td>AG-3</td></tr><tr><td><code>subtasks</code></td><td>仅并行型</td><td><strong>仅限真正独立</strong>的子任务</td><td>AG-4</td></tr></tbody></table>
 <p><strong>所有权声明的写法</strong>（书侧 ch04 的 handoff contract，khyos 用散文承载）：</p>
 <pre><code class="language-text">【你可以写】services/backend/src/permissions/patternMatcher.js
 【禁止触碰】.khy/permissions.json（配置真源，由主流程改）
@@ -58,7 +58,7 @@ You MUST still provide a detailed, self-contained prompt with all necessary cont
 <h3 id="3-2-上行-回报信封-子-主">3.2 上行：回报信封（子 → 主）<a class="anchor" href="#3-2-上行-回报信封-子-主" aria-label="锚点">#</a></h3>
 <p>子智能体的产出<strong>没有强制 schema</strong>（返回 <code>{success, output, ...}</code>，<code>output</code> 是自由文本），<br>故本规范给出<strong>内容契约</strong>——<code>output</code> 必须包含：</p>
 <table><thead><tr><th>#</th><th>段</th><th>要求</th></tr></thead><tbody><tr><td>1</td><td><strong>结论</strong></td><td>一句话先行</td></tr><tr><td>2</td><td><strong>证据</strong></td><td>每条结论带 <code>file:line</code>（AG-5）</td></tr><tr><td>3</td><td><strong>未决</strong></td><td>没做完的、需要父决策的，显式列出</td></tr><tr><td>4</td><td><strong>风险</strong></td><td>引入的新风险 / 未验证的假设</td></tr></tbody></table>
-<blockquote><p>⚠️ <strong><code>output</code> 是自由文本而非结构化字段</strong>，故 AG-5 目前<strong>无法自动校验</strong>，<br>属评审 checklist 项。若要机械化，需先给 <code>_runStandaloneAgent</code> 的返回加 schema——<br>那是接口变更，须先过 <code>[DESIGN-SOURCING-001]</code> 的提案流程。</p></blockquote>
+<blockquote><p>⚠ <strong><code>output</code> 是自由文本而非结构化字段</strong>，故 AG-5 目前<strong>无法自动校验</strong>，<br>属评审 checklist 项。若要机械化，需先给 <code>_runStandaloneAgent</code> 的返回加 schema——<br>那是接口变更，须先过 <code>[DESIGN-SOURCING-001]</code> 的提案流程。</p></blockquote>
 <hr>
 <h2 id="4-五种子智能体模式与交接形态的对应">4. 五种子智能体模式与交接形态的对应<a class="anchor" href="#4-五种子智能体模式与交接形态的对应" aria-label="锚点">#</a></h2>
 <p>书侧（ch04）归纳五种模式，khyos 的 26 个内置 agent 可直接映射：</p>
@@ -66,7 +66,7 @@ You MUST still provide a detailed, self-contained prompt with all necessary cont
 <blockquote><p><code>audit → fix</code> 是 khyos 显式设计的一对（<code>AgentTool/index.js:340</code>：<br>「audit finds, fix closes」），<strong>是流水线型的现行范例</strong>，可作为其他链路的模板。</p></blockquote>
 <hr>
 <h2 id="5-校验-守卫">5. 校验（守卫）<a class="anchor" href="#5-校验-守卫" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>红线</th><th>守卫</th><th>状态</th></tr></thead><tbody><tr><td>AG-1 / AG-2 / AG-3 / AG-4</td><td><code>scripts/ci/check-agent-handoff.js</code></td><td><strong>待建</strong></td></tr><tr><td>AG-5</td><td>依赖产出 schema 化</td><td>待工具化</td></tr><tr><td>AG-6</td><td><strong>已有硬闸</strong>：<code>exploreAgent.js</code> 的 <code>disallowedTools</code></td><td>✅ 已经具备</td></tr><tr><td>AG-7 / AG-8 / AG-9</td><td>无自动守卫，评审 checklist</td><td>待工具化</td></tr></tbody></table>
+<table><thead><tr><th>红线</th><th>守卫</th><th>状态</th></tr></thead><tbody><tr><td>AG-1 / AG-2 / AG-3 / AG-4</td><td><code>scripts/ci/check-agent-handoff.js</code></td><td><strong>待建</strong></td></tr><tr><td>AG-5</td><td>依赖产出 schema 化</td><td>待工具化</td></tr><tr><td>AG-6</td><td><strong>已有硬闸</strong>：<code>exploreAgent.js</code> 的 <code>disallowedTools</code></td><td>✓ 已经具备</td></tr><tr><td>AG-7 / AG-8 / AG-9</td><td>无自动守卫，评审 checklist</td><td>待工具化</td></tr></tbody></table>
 <blockquote><p>建议的机械化切入点（成本最低）：解析 <code>AgentTool</code> 调用日志，<br>统计「未传 <code>parent_context_summary</code> 但 prompt 长度 &lt; 200 字符」的派发，<br>这类几乎必然是 AG-2 违规。见 §K-11 的 S1 观测阶段。</p></blockquote>
 <hr>
 <h2 id="6-版本历史">6. 版本历史<a class="anchor" href="#6-版本历史" aria-label="锚点">#</a></h2>

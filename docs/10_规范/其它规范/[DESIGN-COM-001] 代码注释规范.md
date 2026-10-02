@@ -211,17 +211,17 @@ Standards: DESIGN-ACP-001, DESIGN-COMM-001
 ### 6.1 正确示例
 
 ```javascript
-// ✅ 解释 WHY
+// ✓ 解释 WHY
 // Use exponential backoff with jitter to avoid thundering herd
 // when multiple clients retry simultaneously (see DESIGN-COMM-001 §4.3)
 const delay = Math.min(baseDelay * 2 ** attempt + Math.random() * jitter, MAX_DELAY);
 
-// ✅ 标注 FIXME 带上下文
+// ✓ 标注 FIXME 带上下文
 // FIXME(DESIGN-ARCH-081): Current spinner doesn't support streaming output
 // Replace with stream-aware spinner once TUI v2 is merged
 showSpinner('Thinking...');
 
-// ✅ 解释约束
+// ✓ 解释约束
 // RS256 (asymmetric) required because the verification key
 // is shared across services; HS256 would expose the secret
 const algorithm = 'RS256';
@@ -230,19 +230,19 @@ const algorithm = 'RS256';
 ### 6.2 错误示例
 
 ```javascript
-// ❌ 重复代码（命名好就不需要注释）
+// ✗ 重复代码（命名好就不需要注释）
 // Set user ID
 const userId = user.id;
 
-// ❌ 过时的注释
+// ✗ 过时的注释
 // Get user by email — actually this fetches by username now
 const user = await getUserByName(query);
 
-// ❌ 无意义标签
+// ✗ 无意义标签
 // TODO: fix this  ← 没有 scope 和 owner，等于没有写
 const x = hackyFix();
 
-// ❌ 大段注释遮蔽代码
+// ✗ 大段注释遮蔽代码
 /* ============================================
    SECTION 1: DO STUFF
    ============================================ */

@@ -29,7 +29,7 @@
 |------|------|------|------|
 | 单个函数 | **15** | error | PR 阻断 |
 | 单个函数 | 10–14 | warning | PR 报告 |
-| 单个函数 | ≤ 10 | ✅ | 通过 |
+| 单个函数 | ≤ 10 | ✓ | 通过 |
 
 ### 2.3 降低复杂度的策略
 
@@ -45,7 +45,7 @@
 ### 2.4 示例
 
 ```javascript
-// ❌ 复杂度 12
+// ✗ 复杂度 12
 async function processRequest(req, res) {
   if (req.method === 'POST') {
     if (req.body.type === 'chat') {
@@ -64,7 +64,7 @@ async function processRequest(req, res) {
   }
 }
 
-// ✅ 复杂度 4 — 卫语句 + 提取子函数
+// ✓ 复杂度 4 — 卫语句 + 提取子函数
 async function processRequest(req, res) {
   if (req.method !== 'POST' && req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -97,7 +97,7 @@ async function handleGet(req, res) { /* ... */ }
 ### 3.2 拆分策略
 
 ```javascript
-// ❌ 80 行的 handleCommand
+// ✗ 80 行的 handleCommand
 async function handleCommand(input) {
   // 解析（20 行）
   // 验证（15 行）
@@ -105,7 +105,7 @@ async function handleCommand(input) {
   // 格式化输出（15 行）
 }
 
-// ✅ 拆分为 4 个函数，每个 < 30 行
+// ✓ 拆分为 4 个函数，每个 < 30 行
 async function handleCommand(input) {
   const parsed = parseInput(input);
   validateInput(parsed);
@@ -124,20 +124,20 @@ async function handleCommand(input) {
 |------|------|------|
 | 普通函数 | **3 个** | error |
 | 4–5 个 | warning | 建议重构 |
-| ≤ 3 个 | ✅ | 通过 |
+| ≤ 3 个 | ✓ | 通过 |
 
 ### 4.2 超过上限的解决方案
 
 ```javascript
-// ❌ 5 个参数
+// ✗ 5 个参数
 function createStrategy(name, broker, stopLoss, takeProfit, atrPeriod) { }
 
-// ✅ 配置对象（超过 3 个时使用）
+// ✓ 配置对象（超过 3 个时使用）
 function createStrategy({ name, broker, stopLoss, takeProfit, atrPeriod }) {
   // destructure at call site
 }
 
-// ✅ 构建器模式（复杂场景）
+// ✓ 构建器模式（复杂场景）
 const strategy = StrategyBuilder
   .name('mean-reversion')
   .broker('binance')
@@ -156,12 +156,12 @@ const strategy = StrategyBuilder
 |------|------|------|
 | 任何嵌套 | **3 层** | error |
 | 2–3 层 | warning | 建议重构 |
-| ≤ 2 层 | ✅ | 通过 |
+| ≤ 2 层 | ✓ | 通过 |
 
 ### 5.2 降低嵌套
 
 ```javascript
-// ❌ 4 层嵌套
+// ✗ 4 层嵌套
 async function handle(req, res) {
   if (req.user) {
     if (req.user.role === 'admin') {
@@ -174,7 +174,7 @@ async function handle(req, res) {
   }
 }
 
-// ✅ 卫语句降到 1 层
+// ✓ 卫语句降到 1 层
 async function handle(req, res) {
   if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
@@ -194,7 +194,7 @@ async function handle(req, res) {
 |------|-------------|------|
 | JS 源文件 | **400 行** | error |
 | 400–600 行 | warning | 建议拆分 |
-| < 400 行 | ✅ | 通过 |
+| < 400 行 | ✓ | 通过 |
 
 ### 6.2 拆分策略
 

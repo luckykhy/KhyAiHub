@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -150,34 +150,34 @@ Standards: DESIGN-ACP-001, DESIGN-COMM-001
 <hr>
 <h2 id="6-注释纪律">6. 注释纪律<a class="anchor" href="#6-注释纪律" aria-label="锚点">#</a></h2>
 <h3 id="6-1-正确示例">6.1 正确示例<a class="anchor" href="#6-1-正确示例" aria-label="锚点">#</a></h3>
-<pre><code class="language-javascript"><span class="hljs-comment">// ✅ 解释 WHY</span>
+<pre><code class="language-javascript"><span class="hljs-comment">// ✓ 解释 WHY</span>
 <span class="hljs-comment">// Use exponential backoff with jitter to avoid thundering herd</span>
 <span class="hljs-comment">// when multiple clients retry simultaneously (see DESIGN-COMM-001 §4.3)</span>
 <span class="hljs-keyword">const</span> delay = <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">min</span>(baseDelay * <span class="hljs-number">2</span> ** attempt + <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">random</span>() * jitter, <span class="hljs-variable constant_">MAX_DELAY</span>);
 
-<span class="hljs-comment">// ✅ 标注 FIXME 带上下文</span>
+<span class="hljs-comment">// ✓ 标注 FIXME 带上下文</span>
 <span class="hljs-comment">// FIXME(DESIGN-ARCH-081): Current spinner doesn&#x27;t support streaming output</span>
 <span class="hljs-comment">// Replace with stream-aware spinner once TUI v2 is merged</span>
 <span class="hljs-title function_">showSpinner</span>(<span class="hljs-string">&#x27;Thinking...&#x27;</span>);
 
-<span class="hljs-comment">// ✅ 解释约束</span>
+<span class="hljs-comment">// ✓ 解释约束</span>
 <span class="hljs-comment">// RS256 (asymmetric) required because the verification key</span>
 <span class="hljs-comment">// is shared across services; HS256 would expose the secret</span>
 <span class="hljs-keyword">const</span> algorithm = <span class="hljs-string">&#x27;RS256&#x27;</span>;</code></pre>
 <h3 id="6-2-错误示例">6.2 错误示例<a class="anchor" href="#6-2-错误示例" aria-label="锚点">#</a></h3>
-<pre><code class="language-javascript"><span class="hljs-comment">// ❌ 重复代码（命名好就不需要注释）</span>
+<pre><code class="language-javascript"><span class="hljs-comment">// ✗ 重复代码（命名好就不需要注释）</span>
 <span class="hljs-comment">// Set user ID</span>
 <span class="hljs-keyword">const</span> userId = user.<span class="hljs-property">id</span>;
 
-<span class="hljs-comment">// ❌ 过时的注释</span>
+<span class="hljs-comment">// ✗ 过时的注释</span>
 <span class="hljs-comment">// Get user by email — actually this fetches by username now</span>
 <span class="hljs-keyword">const</span> user = <span class="hljs-keyword">await</span> <span class="hljs-title function_">getUserByName</span>(query);
 
-<span class="hljs-comment">// ❌ 无意义标签</span>
+<span class="hljs-comment">// ✗ 无意义标签</span>
 <span class="hljs-comment">// <span class="hljs-doctag">TODO:</span> fix this  ← 没有 scope 和 owner，等于没有写</span>
 <span class="hljs-keyword">const</span> x = <span class="hljs-title function_">hackyFix</span>();
 
-<span class="hljs-comment">// ❌ 大段注释遮蔽代码</span>
+<span class="hljs-comment">// ✗ 大段注释遮蔽代码</span>
 <span class="hljs-comment">/* ============================================
    SECTION 1: DO STUFF
    ============================================ */</span></code></pre>

@@ -287,8 +287,8 @@ app.use('/api/', csrfProtection({
 
 | Cookie | SameSite | HttpOnly | Secure | 用途 |
 |--------|----------|----------|--------|------|
-| `refresh_token` | `strict` | ✅ | 生产环境 | Refresh Token |
-| `session_id` | `lax` | ✅ | 生产环境 | 可选：服务端 Session 标识 |
+| `refresh_token` | `strict` | ✓ | 生产环境 | Refresh Token |
+| `session_id` | `lax` | ✓ | 生产环境 | 可选：服务端 Session 标识 |
 
 ---
 
@@ -307,7 +307,7 @@ app.use('/api/', csrfProtection({
 ### 8.2 Token 安全最佳实践
 
 ```javascript
-// ✅ 黑名单（短期缓存）
+// ✓ 黑名单（短期缓存）
 const revokedJtis = new Set(); // 生产环境用 Redis
 
 // 验证时检查
@@ -319,9 +319,9 @@ function verifyToken(token) {
   return decoded;
 }
 
-// ✅ 短期 Access Token + 轮换 Refresh Token
-// ✅ 登录态变动时 Revoke 相关 Session
-// ✅ 关键操作（改密码、删资源）要求重新认证
+// ✓ 短期 Access Token + 轮换 Refresh Token
+// ✓ 登录态变动时 Revoke 相关 Session
+// ✓ 关键操作（改密码、删资源）要求重新认证
 ```
 
 ---

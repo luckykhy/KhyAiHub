@@ -64,11 +64,11 @@
 
 | 字段 | 必选 | 说明 |
 |------|------|------|
-| `actor` | ✅ | 谁（用户 ID / 系统 / 服务账号） |
-| `action` | ✅ | 做了什么（动词） |
-| `target` | ✅ | 对什么（资源类型 + ID） |
-| `timestamp` | ✅ | 何时（ISO 8601） |
-| `result` | ✅ | 结果（success / failure / denied） |
+| `actor` | ✓ | 谁（用户 ID / 系统 / 服务账号） |
+| `action` | ✓ | 做了什么（动词） |
+| `target` | ✓ | 对什么（资源类型 + ID） |
+| `timestamp` | ✓ | 何时（ISO 8601） |
+| `result` | ✓ | 结果（success / failure / denied） |
 
 ---
 

@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -128,16 +128,16 @@ app.<span class="hljs-title function_">options</span>(<span class="hljs-string">
 <hr>
 <h2 id="6-凭证模式">6. 凭证模式<a class="anchor" href="#6-凭证模式" aria-label="锚点">#</a></h2>
 <h3 id="6-1-何时开启-credentials-true">6.1 何时开启 <code>credentials: true</code><a class="anchor" href="#6-1-何时开启-credentials-true" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>场景</th><th>需要凭证</th><th>说明</th></tr></thead><tbody><tr><td>前端 Web 应用</td><td>✅</td><td>Refresh Token 存 httpOnly cookie</td></tr><tr><td>移动端 App</td><td>✅</td><td>原生 Cookie 存储</td></tr><tr><td>第三方 API 调用</td><td>❌</td><td>走 API Key header</td></tr></tbody></table>
+<table><thead><tr><th>场景</th><th>需要凭证</th><th>说明</th></tr></thead><tbody><tr><td>前端 Web 应用</td><td>✓</td><td>Refresh Token 存 httpOnly cookie</td></tr><tr><td>移动端 App</td><td>✓</td><td>原生 Cookie 存储</td></tr><tr><td>第三方 API 调用</td><td>✗</td><td>走 API Key header</td></tr></tbody></table>
 <h3 id="6-2-凭证模式约束">6.2 凭证模式约束<a class="anchor" href="#6-2-凭证模式约束" aria-label="锚点">#</a></h3>
 <pre><code class="language-javascript"><span class="hljs-comment">// credentials: true 时不允许通配符 origin</span>
-<span class="hljs-comment">// ✅ 正确</span>
+<span class="hljs-comment">// ✓ 正确</span>
 app.<span class="hljs-title function_">use</span>(<span class="hljs-title function_">cors</span>({
   <span class="hljs-attr">origin</span>: <span class="hljs-string">&#x27;https://khyquant.top&#x27;</span>,      <span class="hljs-comment">// 明确域名</span>
   <span class="hljs-attr">credentials</span>: <span class="hljs-literal">true</span>
 }));
 
-<span class="hljs-comment">// ❌ 错误 — credentials + wildcard 会被浏览器拒绝</span>
+<span class="hljs-comment">// ✗ 错误 — credentials + wildcard 会被浏览器拒绝</span>
 app.<span class="hljs-title function_">use</span>(<span class="hljs-title function_">cors</span>({
   <span class="hljs-attr">origin</span>: <span class="hljs-string">&#x27;*&#x27;</span>,
   <span class="hljs-attr">credentials</span>: <span class="hljs-literal">true</span>   <span class="hljs-comment">// CORS 协议禁止此组合</span>

@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -226,13 +226,13 @@ app.<span class="hljs-title function_">use</span>(<span class="hljs-string">&#x2
 }));</code></pre>
 <hr>
 <h2 id="7-samesite-与-cookie-策略">7. SameSite 与 Cookie 策略<a class="anchor" href="#7-samesite-与-cookie-策略" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>Cookie</th><th>SameSite</th><th>HttpOnly</th><th>Secure</th><th>用途</th></tr></thead><tbody><tr><td><code>refresh_token</code></td><td><code>strict</code></td><td>✅</td><td>生产环境</td><td>Refresh Token</td></tr><tr><td><code>session_id</code></td><td><code>lax</code></td><td>✅</td><td>生产环境</td><td>可选：服务端 Session 标识</td></tr></tbody></table>
+<table><thead><tr><th>Cookie</th><th>SameSite</th><th>HttpOnly</th><th>Secure</th><th>用途</th></tr></thead><tbody><tr><td><code>refresh_token</code></td><td><code>strict</code></td><td>✓</td><td>生产环境</td><td>Refresh Token</td></tr><tr><td><code>session_id</code></td><td><code>lax</code></td><td>✓</td><td>生产环境</td><td>可选：服务端 Session 标识</td></tr></tbody></table>
 <hr>
 <h2 id="8-安全实践">8. 安全实践<a class="anchor" href="#8-安全实践" aria-label="锚点">#</a></h2>
 <h3 id="8-1-禁止事项">8.1 禁止事项<a class="anchor" href="#8-1-禁止事项" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>禁止</th><th>原因</th></tr></thead><tbody><tr><td>在 localStorage 存 Refresh Token</td><td>XSS 可窃取</td></tr><tr><td>Access Token 有效期 &gt; 30 分钟</td><td>泄露窗口过大</td></tr><tr><td>Refresh Token 永不过期</td><td>泄露后永久有效</td></tr><tr><td>URL 传 Token</td><td>日志/浏览器历史泄露</td></tr><tr><td>JWT Secret 硬编码</td><td>必须走 env / secrets manager</td></tr></tbody></table>
 <h3 id="8-2-token-安全最佳实践">8.2 Token 安全最佳实践<a class="anchor" href="#8-2-token-安全最佳实践" aria-label="锚点">#</a></h3>
-<pre><code class="language-javascript"><span class="hljs-comment">// ✅ 黑名单（短期缓存）</span>
+<pre><code class="language-javascript"><span class="hljs-comment">// ✓ 黑名单（短期缓存）</span>
 <span class="hljs-keyword">const</span> revokedJtis = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Set</span>(); <span class="hljs-comment">// 生产环境用 Redis</span>
 
 <span class="hljs-comment">// 验证时检查</span>
@@ -244,9 +244,9 @@ app.<span class="hljs-title function_">use</span>(<span class="hljs-string">&#x2
   <span class="hljs-keyword">return</span> decoded;
 }
 
-<span class="hljs-comment">// ✅ 短期 Access Token + 轮换 Refresh Token</span>
-<span class="hljs-comment">// ✅ 登录态变动时 Revoke 相关 Session</span>
-<span class="hljs-comment">// ✅ 关键操作（改密码、删资源）要求重新认证</span></code></pre>
+<span class="hljs-comment">// ✓ 短期 Access Token + 轮换 Refresh Token</span>
+<span class="hljs-comment">// ✓ 登录态变动时 Revoke 相关 Session</span>
+<span class="hljs-comment">// ✓ 关键操作（改密码、删资源）要求重新认证</span></code></pre>
 <hr>
 <h2 id="9-登录态修复">9. 登录态修复<a class="anchor" href="#9-登录态修复" aria-label="锚点">#</a></h2>
 <h3 id="9-1-401-401-自动刷新">9.1 401 → 401 + 自动刷新<a class="anchor" href="#9-1-401-401-自动刷新" aria-label="锚点">#</a></h3>

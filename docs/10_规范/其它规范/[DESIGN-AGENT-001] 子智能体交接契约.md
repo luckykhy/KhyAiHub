@@ -66,11 +66,11 @@ You MUST still provide a detailed, self-contained prompt with all necessary cont
 
 | 字段 | 必填 | 内容 | 对应红线 |
 | --- | --- | --- | --- |
-| `description` | ✅ | 3–5 词任务概括 | AG-2 |
-| `prompt` | ✅ | **自包含**任务书：目标 / 输入 / 约束 / 期望产出 | AG-2 |
-| `parent_context_summary` | 承载性信息时 ✅ | 父对话摘要（**显式传**，不指望自动推导） | AG-2 |
-| `subagent_type` | ✅ | 选型（`Explore` / `audit` / `fix` / `research` / `reading` / `map` / `general-purpose`） | AG-6 |
-| **所有权声明**（写进 `prompt`） | ✅ | 可写的文件/模块；不可碰的边界 | AG-3 |
+| `description` | ✓ | 3–5 词任务概括 | AG-2 |
+| `prompt` | ✓ | **自包含**任务书：目标 / 输入 / 约束 / 期望产出 | AG-2 |
+| `parent_context_summary` | 承载性信息时 ✓ | 父对话摘要（**显式传**，不指望自动推导） | AG-2 |
+| `subagent_type` | ✓ | 选型（`Explore` / `audit` / `fix` / `research` / `reading` / `map` / `general-purpose`） | AG-6 |
+| **所有权声明**（写进 `prompt`） | ✓ | 可写的文件/模块；不可碰的边界 | AG-3 |
 | `subtasks` | 仅并行型 | **仅限真正独立**的子任务 | AG-4 |
 
 **所有权声明的写法**（书侧 ch04 的 handoff contract，khyos 用散文承载）：
@@ -93,7 +93,7 @@ You MUST still provide a detailed, self-contained prompt with all necessary cont
 | 3 | **未决** | 没做完的、需要父决策的，显式列出 |
 | 4 | **风险** | 引入的新风险 / 未验证的假设 |
 
-> ⚠️ **`output` 是自由文本而非结构化字段**，故 AG-5 目前**无法自动校验**，
+> ⚠ **`output` 是自由文本而非结构化字段**，故 AG-5 目前**无法自动校验**，
 > 属评审 checklist 项。若要机械化，需先给 `_runStandaloneAgent` 的返回加 schema——
 > 那是接口变更，须先过 `[DESIGN-SOURCING-001]` 的提案流程。
 
@@ -122,7 +122,7 @@ You MUST still provide a detailed, self-contained prompt with all necessary cont
 | --- | --- | --- |
 | AG-1 / AG-2 / AG-3 / AG-4 | `scripts/ci/check-agent-handoff.js` | **待建** |
 | AG-5 | 依赖产出 schema 化 | 待工具化 |
-| AG-6 | **已有硬闸**：`exploreAgent.js` 的 `disallowedTools` | ✅ 已经具备 |
+| AG-6 | **已有硬闸**：`exploreAgent.js` 的 `disallowedTools` | ✓ 已经具备 |
 | AG-7 / AG-8 / AG-9 | 无自动守卫，评审 checklist | 待工具化 |
 
 > 建议的机械化切入点（成本最低）：解析 `AgentTool` 调用日志，

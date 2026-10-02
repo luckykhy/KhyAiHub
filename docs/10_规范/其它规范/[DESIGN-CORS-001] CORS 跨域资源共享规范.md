@@ -166,21 +166,21 @@ app.options('*', cors({
 
 | 场景 | 需要凭证 | 说明 |
 |------|---------|------|
-| 前端 Web 应用 | ✅ | Refresh Token 存 httpOnly cookie |
-| 移动端 App | ✅ | 原生 Cookie 存储 |
-| 第三方 API 调用 | ❌ | 走 API Key header |
+| 前端 Web 应用 | ✓ | Refresh Token 存 httpOnly cookie |
+| 移动端 App | ✓ | 原生 Cookie 存储 |
+| 第三方 API 调用 | ✗ | 走 API Key header |
 
 ### 6.2 凭证模式约束
 
 ```javascript
 // credentials: true 时不允许通配符 origin
-// ✅ 正确
+// ✓ 正确
 app.use(cors({
   origin: 'https://khyquant.top',      // 明确域名
   credentials: true
 }));
 
-// ❌ 错误 — credentials + wildcard 会被浏览器拒绝
+// ✗ 错误 — credentials + wildcard 会被浏览器拒绝
 app.use(cors({
   origin: '*',
   credentials: true   // CORS 协议禁止此组合

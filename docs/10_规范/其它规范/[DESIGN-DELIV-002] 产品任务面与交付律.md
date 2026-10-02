@@ -70,7 +70,7 @@
 
 四个族**各自是任务**，不是一个功能清单。一个周期只硬化其中**一个**（§2.2）。
 
-### 1.4 T2 —— 垂直应用（是"默认应用"，不是基座）
+### 1.4 T2 —— 垂直应用（独立项目 khyquant 接入，不是基座）
 
 khyquant 量化交易终端：`quote` `data` `backtest` `market` `watch` `account` `position`。
 它装在基座之上（`[DESIGN-LAY-005]` 的 L4），**不应与基座命令共享同一张 help 菜单**。
@@ -85,9 +85,9 @@ khyquant 量化交易终端：`quote` `data` `backtest` `market` `watch` `accoun
 
 | 渠道 | 清单 | CI |
 |---|---|---|
-| PyPI（`pip install khy-os`） | `pyproject.toml` | ✅ `dual-channel-release.yml` |
-| npm（`@khy-os/khy-os`） | `packaging/npm/package.json` | ✅ `dual-channel-release.yml` |
-| Docker（GHCR） | `Dockerfile` / `docker-compose.yml` | ✅ `docker.yml` |
+| PyPI（`pip install khy-os`） | `pyproject.toml` | ✓ `dual-channel-release.yml` |
+| npm（`@khy-os/khy-os`） | `packaging/npm/package.json` | ✓ `dual-channel-release.yml` |
+| Docker（GHCR） | `Dockerfile` / `docker-compose.yml` | ✓ `docker.yml` |
 
 ### 1.6 非目标（冻结，不再扩）
 
@@ -171,21 +171,21 @@ khyquant 量化交易终端：`quote` `data` `backtest` `market` `watch` `accoun
 
 | OS × 架构 | Python 层 | Node 后端 | Docker |
 |---|---|---|---|
-| Windows x64 | ✅ | ✅ | ✅（WSL2 / Docker Desktop） |
-| Linux x64 (glibc) | ✅ | ✅ | ✅ |
-| macOS arm64 | ✅ | ✅ | ✅ |
-| macOS x64 | ✅ | ✅ | ✅ |
-| Linux arm64 | ⚠️ 未在 CI 覆盖 | ⚠️ 未在 CI 覆盖 | ⚠️ 未在 CI 覆盖 |
-| Windows arm64 | ❌ **不支持** | ❌ **不支持** | ❌ **不支持** |
+| Windows x64 | ✓ | ✓ | ✓（WSL2 / Docker Desktop） |
+| Linux x64 (glibc) | ✓ | ✓ | ✓ |
+| macOS arm64 | ✓ | ✓ | ✓ |
+| macOS x64 | ✓ | ✓ | ✓ |
+| Linux arm64 | ⚠ 未在 CI 覆盖 | ⚠ 未在 CI 覆盖 | ⚠ 未在 CI 覆盖 |
+| Windows arm64 | ✗ **不支持** | ✗ **不支持** | ✗ **不支持** |
 
 ### 3.2 明确不支持清单
 
-- ❌ **Windows arm64**：无 CI 矩阵、无原生依赖预编译产物，直说不支持。
-- ❌ **免 Node 安装**：pip/npm 渠道在 build 期已内嵌 bundled 运行时，
+- ✗ **Windows arm64**：无 CI 矩阵、无原生依赖预编译产物，直说不支持。
+- ✗ **免 Node 安装**：pip/npm 渠道在 build 期已内嵌 bundled 运行时，
   但本仓**不发布**每平台独立二进制 tarball（opencode 式的 `postinstall` 选型未做）。
-- ❌ **包管理器生态**：Homebrew / Scoop / AUR / Nix —— **一个字都没有**，不承诺。
-- ❌ **`order` 真实下单**：khyquant 的下单是预览占位（§1.4），不是可交易的终端。
-- ❌ **`khy-dual-channel` 以外的渠道**：Electron 桌面、Android APK、NSIS 安装器、
+- ✗ **包管理器生态**：Homebrew / Scoop / AUR / Nix —— **一个字都没有**，不承诺。
+- ✗ **`order` 真实下单**：khyquant 的下单是预览占位（§1.4），不是可交易的终端。
+- ✗ **`khy-dual-channel` 以外的渠道**：Electron 桌面、Android APK、NSIS 安装器、
   便携版四条**有代码、有构建脚本，但没有 CI workflow**，一律标为
   **实验性、不承诺交付**。要进 T3，先补 CI 与端到端验证。
 
@@ -283,11 +283,11 @@ Summary: PASS n · PARTIAL n · GAP n · 阶段 S1 只记录不阻断
 ### 5.3 反例（本规则要挡的东西）
 
 ```
-❌ 新增第 246 个命令，且未退役任何命令      → delivery-surface-ratchet-breach
-❌ 把 §4 的 JSON 块删掉"以让检查通过"        → delivery-thresholds-missing
-❌ 有构建脚本但没有 CI workflow 的渠道       → delivery-channel-no-ci
-❌ 边界文档删掉"不支持清单"                   → delivery-boundary-no-unsupported-list
-❌ 记分板恒返回 0（空转断言）                 → 由 §6 的反向验证测试挡
+✗ 新增第 246 个命令，且未退役任何命令      → delivery-surface-ratchet-breach
+✗ 把 §4 的 JSON 块删掉"以让检查通过"        → delivery-thresholds-missing
+✗ 有构建脚本但没有 CI workflow 的渠道       → delivery-channel-no-ci
+✗ 边界文档删掉"不支持清单"                   → delivery-boundary-no-unsupported-list
+✗ 记分板恒返回 0（空转断言）                 → 由 §6 的反向验证测试挡
 ```
 
 ---
