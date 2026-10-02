@@ -13,20 +13,20 @@ interface Attachment {
 }
 
 const statusConfig: Record<AttachmentStatus, { label: string; color: string; icon: string }> = {
-  queued: { label: '排队中', color: 'text-foreground/40', icon: '⏳' },
-  uploading: { label: '上传中', color: 'text-brand', icon: '⬆️' },
-  finishing: { label: '正在完成上传', color: 'text-brand', icon: '🔄' },
-  completed: { label: '上传完成', color: 'text-success', icon: '✅' },
-  failed: { label: '上传失败', color: 'text-destructive', icon: '❌' },
-  retrying: { label: '重试上传', color: 'text-warning', icon: '🔄' },
+  queued: { label: '排队中', color: 'text-foreground/40', icon: '⋯' },
+  uploading: { label: '上传中', color: 'text-brand', icon: '↑' },
+  finishing: { label: '正在完成上传', color: 'text-brand', icon: '↻' },
+  completed: { label: '上传完成', color: 'text-success', icon: '✓' },
+  failed: { label: '上传失败', color: 'text-destructive', icon: '✗' },
+  retrying: { label: '重试上传', color: 'text-warning', icon: '↻' },
 }
 
 const typeIcons: Record<string, string> = {
-  image: '🖼️',
-  pdf: '📄',
-  video: '🎬',
-  text: '📝',
-  file: '📎',
+  image: '□',
+  pdf: '▤',
+  video: '►',
+  text: '▸',
+  file: '·',
 }
 
 function formatSize(bytes: number): string {
@@ -48,7 +48,7 @@ export function AttachmentList({ attachments, onRemove, onRetry }: {
         const status = statusConfig[att.status]
         return (
           <div key={att.id} className="flex items-center gap-3 p-3 bg-card border border-card-border rounded-xl">
-            <span className="text-lg">{typeIcons[att.type] || '📎'}</span>
+            <span className="text-lg">{typeIcons[att.type] || '·'}</span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-foreground truncate">{att.name}</span>
