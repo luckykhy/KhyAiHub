@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -33,7 +33,7 @@
 <h2 id="怎么用这份文档-先读这段">怎么用这份文档（先读这段）<a class="anchor" href="#怎么用这份文档-先读这段" aria-label="锚点">#</a></h2>
 <p>实施这种重塑<strong>最忌讳</strong>一句&quot;照着文档实现&quot;就甩给 AI——文档有 4 大块、触及十几个核心文件，一次性做必然失控、必然幻觉。</p>
 <p>这份文档给你<strong>两种用法</strong>，按你的情况二选一：</p>
-<ul><li><strong>🟢 一键自动（推荐给不想逐步盯的人）</strong>：复制 <a href="#0-一键自动用-goal-完成推荐">§0 的 goal 指令</a> 粘进 <code>/goal</code>，AI 自己按 B→A→C→D 跑完。<strong>人工批准闸被换成&quot;测试必须绿才放行&quot;的自动闸</strong>——AI 靠每阶段的数学性质测试自我验收，失败就停下报告，不会偷偷跳过。</li><li><strong>🔵 逐步手动（想全程盯着）</strong>：用 <a href="#1-启动总纲只发一次建立纪律">§1 启动总纲</a> + <a href="#2-阶段提示词逐阶段下发">§2 阶段提示词</a>，每阶段你亲自看一眼再放行。</li></ul>
+<ul><li><strong>○ 一键自动（推荐给不想逐步盯的人）</strong>：复制 <a href="#0-一键自动用-goal-完成推荐">§0 的 goal 指令</a> 粘进 <code>/goal</code>，AI 自己按 B→A→C→D 跑完。<strong>人工批准闸被换成&quot;测试必须绿才放行&quot;的自动闸</strong>——AI 靠每阶段的数学性质测试自我验收，失败就停下报告，不会偷偷跳过。</li><li><strong>○ 逐步手动（想全程盯着）</strong>：用 <a href="#1-启动总纲只发一次建立纪律">§1 启动总纲</a> + <a href="#2-阶段提示词逐阶段下发">§2 阶段提示词</a>，每阶段你亲自看一眼再放行。</li></ul>
 <p>无论哪种，三条铁纪律不变：<strong>顺序锁死 B→A→C→D</strong>（设计文档 §6 已论证第一刀必须是零回归的 §4.B）、<strong>先读后改核对行号</strong>、<strong>失败就停不准粉饰</strong>。</p>
 <hr>
 <h2 id="0-一键自动-用-goal-完成-推荐">§0 一键自动：用 /goal 完成（推荐）<a class="anchor" href="#0-一键自动-用-goal-完成-推荐" aria-label="锚点">#</a></h2>

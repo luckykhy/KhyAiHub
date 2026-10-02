@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -109,7 +109,7 @@
 <h2 id="7-验收方式">7. 验收方式<a class="anchor" href="#7-验收方式" aria-label="锚点">#</a></h2>
 <ul><li>编号唯一：<code>DESIGN-MEM-007</code> 未与既有文档撞号（已枚举 DESIGN-MEM 目录 000–006）。</li><li>语义零冲突：本文引用 001/002/006 处全部为指针 + 章节号，未复制改写其规则正文；人工对照 006 §1–§4 逐条过。</li><li>守卫现状：<code>node scripts/ci/check-memory-schema.js</code> 在本文落地前后行为不变（本文不改任何被它消费的文件）。</li><li>测试基线（实测 2026-09-23）：7 文件 <code>node --test</code> = <strong>56 条 / 54 绿 / 2 红</strong>（红因 §1#11，B 类欠账）；S2 后 <strong>≥56 绿 / 0 红</strong>，54 条既有绿断言逐条保留。</li><li>E 系列覆盖完备性：§3 各系列每条规则在 §3.F 四层依托表中至少出现一层；唯一依托为 E4 的规则已逐条在 §5 点名。</li><li>S1 落地后：<code>npm run check:rules</code> 校验新登记的 MEMORY-005/006 双向可达。</li></ul>
 <h2 id="8-待核实项">8. 待核实项<a class="anchor" href="#8-待核实项" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>#</th><th>项</th><th>状态</th></tr></thead><tbody><tr><td>1</td><td><code>KHY_MEMORY_*</code> env 是否全部实际接线</td><td>已核：<code>memoryTrigger.js:38-66</code> 三道捕获门、<code>aiChatCore.js</code> 消费 prime/proactive（§1#3/#7）✅</td></tr><tr><td>2</td><td>memdir seam 的行号</td><td>已核：<code>memdir.js:344/414/440</code> ✅</td></tr><tr><td>3</td><td>prime 注入的 N（最近 cross_session 条数）现有实现取值多少、是否可配</td><td><strong>未核</strong> —— 不阻断 S1/S2 设计，S2 接线核对时确认</td></tr><tr><td>4</td><td><code>memoryEngine.addStructuredMemory</code> 的 <code>decideUpdate</code> supersede 行为是否与 MR-R4① 完全一致</td><td><strong>未核</strong> —— memoryTrigger.js 文件头自述如此（:24-26），S2 时对实现逐行确认</td></tr></tbody></table>
+<table><thead><tr><th>#</th><th>项</th><th>状态</th></tr></thead><tbody><tr><td>1</td><td><code>KHY_MEMORY_*</code> env 是否全部实际接线</td><td>已核：<code>memoryTrigger.js:38-66</code> 三道捕获门、<code>aiChatCore.js</code> 消费 prime/proactive（§1#3/#7）✓</td></tr><tr><td>2</td><td>memdir seam 的行号</td><td>已核：<code>memdir.js:344/414/440</code> ✓</td></tr><tr><td>3</td><td>prime 注入的 N（最近 cross_session 条数）现有实现取值多少、是否可配</td><td><strong>未核</strong> —— 不阻断 S1/S2 设计，S2 接线核对时确认</td></tr><tr><td>4</td><td><code>memoryEngine.addStructuredMemory</code> 的 <code>decideUpdate</code> supersede 行为是否与 MR-R4① 完全一致</td><td><strong>未核</strong> —— memoryTrigger.js 文件头自述如此（:24-26），S2 时对实现逐行确认</td></tr></tbody></table>
 <h2 id="9-变更日志">9. 变更日志<a class="anchor" href="#9-变更日志" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>日期</th><th>版本</th><th>变更</th></tr></thead><tbody><tr><td>2026-09-23</td><td>0.1</td><td>初稿：覆盖面矩阵 + MR-W/F/T/L/R 五组规则 + 四期实施计划</td></tr><tr><td>2026-09-23</td><td>0.2</td><td>新增 §3.F 遵守保障（MR-E1–E5 四层依托模型）+ §1 实证 #9–#11（saveMemory 仅 type 校验 / deleteMemory 裸删矛盾 / 测试基线 56 条 54 绿 2 红）；分期重排（seam 登记提前至 S1，E1 先记录后阻断）；诚实边界点名 W2/W3/R1 唯一依托 E4</td></tr></tbody></table>
       </article>

@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -58,7 +58,7 @@
 <span class="hljs-comment">/* 骨架屏 */</span>
 <span class="hljs-selector-tag">var</span>(<span class="hljs-attr">--khy-skeleton-base</span>)  <span class="hljs-selector-tag">var</span>(<span class="hljs-attr">--khy-skeleton-highlight</span>)</code></pre>
 <p><strong>纪律</strong>：</p>
-<ul><li>新样式一律 <code>var(--khy-*)</code>，禁字面量 hex（扫存量：<code>npm run frontend:fix-colors</code>）；</li><li>新 token 必须 <code>:root</code> + <code>html.dark</code> <strong>成对定义</strong>；</li><li>间距/字号<strong>没有 token</strong>——间距用 4px 倍数（8/12/16/24），正文 14px、页标题 20px；不要引用不存在的 <code>--khy-space-*</code>；</li><li><code>--khy-accent*</code> 紫色族只用于浮动球等品牌场景；</li><li>⚠️ <code>--khy-white</code> 当前被引用但未定义（缺口 G1），收敛前写 <code>#fff</code> 以外的表面色请用 <code>--khy-bg-elevated</code>。</li></ul>
+<ul><li>新样式一律 <code>var(--khy-*)</code>，禁字面量 hex（扫存量：<code>npm run frontend:fix-colors</code>）；</li><li>新 token 必须 <code>:root</code> + <code>html.dark</code> <strong>成对定义</strong>；</li><li>间距/字号<strong>没有 token</strong>——间距用 4px 倍数（8/12/16/24），正文 14px、页标题 20px；不要引用不存在的 <code>--khy-space-*</code>；</li><li><code>--khy-accent*</code> 紫色族只用于浮动球等品牌场景；</li><li>⚠ <code>--khy-white</code> 当前被引用但未定义（缺口 G1），收敛前写 <code>#fff</code> 以外的表面色请用 <code>--khy-bg-elevated</code>。</li></ul>
 <hr>
 <h2 id="组件速查">组件速查<a class="anchor" href="#组件速查" aria-label="锚点">#</a></h2>
 <p><strong>基座是 Element Plus，不要重新封装。</strong> 不存在 <code>KhyButton/KhyInput/KhyCard</code>，需要按钮就 <code>el-button</code>（颜色随 <code>--el-*</code> 映射自动跟主题）。</p>
@@ -78,7 +78,7 @@
 <hr>
 <h2 id="状态与文案速查">状态与文案速查<a class="anchor" href="#状态与文案速查" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>场景</th><th>做法</th></tr></thead><tbody><tr><td>全局加载</td><td>GlobalProgressBar（自动）</td></tr><tr><td>区块加载</td><td>骨架屏（<code>--khy-skeleton-*</code>）</td></tr><tr><td>空态</td><td><code>KhyEmpty</code>：没什么 + 如何有 + 入口按钮</td></tr><tr><td>区块错误</td><td><code>LoadErrorBanner</code>：<code>{问题}：{原因}，{修复建议}</code></td></tr><tr><td>toast</td><td>统一走 <code>api/notify.js</code>，禁止裸 <code>ElMessage.error('出错了')</code></td></tr></tbody></table>
-<p>文案红线：<code>加载中…</code>❌ → <code>加载渠道列表（第 2 次重试）…</code>✅；<code>请求失败</code>❌ → <code>限流 (429)：请求过多，稍后重试或运行 khy gateway config 切换通道</code>✅。</p>
+<p>文案红线：<code>加载中…</code>✗ → <code>加载渠道列表（第 2 次重试）…</code>✓；<code>请求失败</code>✗ → <code>限流 (429)：请求过多，稍后重试或运行 khy gateway config 切换通道</code>✓。</p>
 <hr>
 <h2 id="响应式-主题-性能">响应式 / 主题 / 性能<a class="anchor" href="#响应式-主题-性能" aria-label="锚点">#</a></h2>
 <ul><li>断点：<code>&lt;640</code> / <code>640–1023</code> / <code>≥1024</code>；khyquant 布局间距用 <code>clamp()</code>（见 <code>theme.css</code>）。</li><li>暗色：<code>useTheme.js</code> 切 <code>html.dark</code>；PR 前双主题自查（表面分层、文本对比、投影量级）。</li><li>性能：路由懒加载默认；重组件（Vue Flow/xterm/K线）异步 chunk；预取走 <code>useRoutePrefetch</code>；体积门 <code>npm run check:frontend-size</code>（基线只降不升）。</li></ul>

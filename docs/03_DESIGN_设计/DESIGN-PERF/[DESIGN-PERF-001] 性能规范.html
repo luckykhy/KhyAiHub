@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -96,19 +96,19 @@ workbox.<span class="hljs-property">routing</span>.<span class="hljs-title funct
 <p><strong>索引优化</strong>：</p>
 <ul><li>所有外键必须有索引</li><li>频繁查询的列创建索引</li><li>避免过度索引</li></ul>
 <p><strong>查询优化</strong>：</p>
-<pre><code class="language-javascript"><span class="hljs-comment">// ✅ 正确：只查询需要的字段</span>
+<pre><code class="language-javascript"><span class="hljs-comment">// ✓ 正确：只查询需要的字段</span>
 <span class="hljs-keyword">const</span> users = <span class="hljs-keyword">await</span> <span class="hljs-title class_">User</span>.<span class="hljs-title function_">findAll</span>({
   <span class="hljs-attr">attributes</span>: [<span class="hljs-string">&#x27;id&#x27;</span>, <span class="hljs-string">&#x27;username&#x27;</span>, <span class="hljs-string">&#x27;email&#x27;</span>],
   <span class="hljs-attr">where</span>: { <span class="hljs-attr">status</span>: <span class="hljs-string">&#x27;active&#x27;</span> },
   <span class="hljs-attr">limit</span>: <span class="hljs-number">20</span>
 });
 
-<span class="hljs-comment">// ❌ 错误：查询所有字段</span>
+<span class="hljs-comment">// ✗ 错误：查询所有字段</span>
 <span class="hljs-keyword">const</span> users = <span class="hljs-keyword">await</span> <span class="hljs-title class_">User</span>.<span class="hljs-title function_">findAll</span>({
   <span class="hljs-attr">where</span>: { <span class="hljs-attr">status</span>: <span class="hljs-string">&#x27;active&#x27;</span> }
 });</code></pre>
 <p><strong>N+1 查询优化</strong>：</p>
-<pre><code class="language-javascript"><span class="hljs-comment">// ✅ 正确：使用关联查询</span>
+<pre><code class="language-javascript"><span class="hljs-comment">// ✓ 正确：使用关联查询</span>
 <span class="hljs-keyword">const</span> users = <span class="hljs-keyword">await</span> <span class="hljs-title class_">User</span>.<span class="hljs-title function_">findAll</span>({
   <span class="hljs-attr">include</span>: [{
     <span class="hljs-attr">model</span>: <span class="hljs-title class_">Profile</span>,
@@ -116,7 +116,7 @@ workbox.<span class="hljs-property">routing</span>.<span class="hljs-title funct
   }]
 });
 
-<span class="hljs-comment">// ❌ 错误：N+1 查询</span>
+<span class="hljs-comment">// ✗ 错误：N+1 查询</span>
 <span class="hljs-keyword">const</span> users = <span class="hljs-keyword">await</span> <span class="hljs-title class_">User</span>.<span class="hljs-title function_">findAll</span>();
 <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> user <span class="hljs-keyword">of</span> users) {
   user.<span class="hljs-property">profile</span> = <span class="hljs-keyword">await</span> <span class="hljs-title class_">Profile</span>.<span class="hljs-title function_">findOne</span>({ <span class="hljs-attr">where</span>: { <span class="hljs-attr">userId</span>: user.<span class="hljs-property">id</span> } });

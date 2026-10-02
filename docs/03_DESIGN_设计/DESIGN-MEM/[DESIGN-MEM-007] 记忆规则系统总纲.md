@@ -264,8 +264,8 @@ W 系列**只回答「写不写」**；T 系列**只回答「落到哪、什么�
 
 | # | 项 | 状态 |
 |---|---|---|
-| 1 | `KHY_MEMORY_*` env 是否全部实际接线 | 已核：`memoryTrigger.js:38-66` 三道捕获门、`aiChatCore.js` 消费 prime/proactive（§1#3/#7）✅ |
-| 2 | memdir seam 的行号 | 已核：`memdir.js:344/414/440` ✅ |
+| 1 | `KHY_MEMORY_*` env 是否全部实际接线 | 已核：`memoryTrigger.js:38-66` 三道捕获门、`aiChatCore.js` 消费 prime/proactive（§1#3/#7）✓ |
+| 2 | memdir seam 的行号 | 已核：`memdir.js:344/414/440` ✓ |
 | 3 | prime 注入的 N（最近 cross_session 条数）现有实现取值多少、是否可配 | **未核** —— 不阻断 S1/S2 设计，S2 接线核对时确认 |
 | 4 | `memoryEngine.addStructuredMemory` 的 `decideUpdate` supersede 行为是否与 MR-R4① 完全一致 | **未核** —— memoryTrigger.js 文件头自述如此（:24-26），S2 时对实现逐行确认 |
 

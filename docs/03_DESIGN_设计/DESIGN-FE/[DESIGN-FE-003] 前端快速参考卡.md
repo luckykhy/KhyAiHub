@@ -50,7 +50,7 @@ var(--khy-skeleton-base)  var(--khy-skeleton-highlight)
 - 新 token 必须 `:root` + `html.dark` **成对定义**；
 - 间距/字号**没有 token**——间距用 4px 倍数（8/12/16/24），正文 14px、页标题 20px；不要引用不存在的 `--khy-space-*`；
 - `--khy-accent*` 紫色族只用于浮动球等品牌场景；
-- ⚠️ `--khy-white` 当前被引用但未定义（缺口 G1），收敛前写 `#fff` 以外的表面色请用 `--khy-bg-elevated`。
+- ⚠ `--khy-white` 当前被引用但未定义（缺口 G1），收敛前写 `#fff` 以外的表面色请用 `--khy-bg-elevated`。
 
 ---
 
@@ -111,7 +111,7 @@ const data2 = await request.get('/api/x', { silent: true }); // 自带降级 UI 
 | 区块错误 | `LoadErrorBanner`：`{问题}：{原因}，{修复建议}` |
 | toast | 统一走 `api/notify.js`，禁止裸 `ElMessage.error('出错了')` |
 
-文案红线：`加载中…`❌ → `加载渠道列表（第 2 次重试）…`✅；`请求失败`❌ → `限流 (429)：请求过多，稍后重试或运行 khy gateway config 切换通道`✅。
+文案红线：`加载中…`✗ → `加载渠道列表（第 2 次重试）…`✓；`请求失败`✗ → `限流 (429)：请求过多，稍后重试或运行 khy gateway config 切换通道`✓。
 
 ---
 

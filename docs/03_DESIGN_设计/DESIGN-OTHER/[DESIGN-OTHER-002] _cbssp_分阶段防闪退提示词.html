@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -32,7 +32,7 @@
 <h2 id="为什么要这份文档">为什么要这份文档<a class="anchor" href="#为什么要这份文档" aria-label="锚点">#</a></h2>
 <p>原 <code>/goal</code> 一键指令把 B→A→C→D 四阶段塞进<strong>一次自主会话</strong>，每阶段还反复跑全量回归套件。<br>单轮上下文只增不减，几百次工具调用 + 成千行测试输出灌入 → 上下文/内存峰值爆掉，Claude 闪退。</p>
 <p><strong>修法</strong>：拆成<strong>四次独立会话</strong>，每阶段一进一出、各自落盘提交；读重活外包子 agent，测试只看摘要。</p>
-<blockquote><p>⚠️ 单靠提示词&quot;劝模型自律&quot;修不住闪退：<code>Read 全文</code> 和 <code>Bash stdout</code> 是<strong>无条件</strong>进上下文的——<br>等模型读到&quot;请克制&quot;那句，几千行测试输出/上万行源码早已灌进上下文。所以防线必须<strong>下沉到命令层物理拦截</strong>：<br>用 <code>npm run test:summary</code>（全量 stdout 落盘 <code>.cbssp-test.log</code>，只回吐摘要）替代直接 <code>npm test</code>，<br>用 <code>grep -n</code> 锚点 + Read 切片替代整文件 Read。下面【公共引导块】已把这两条写成硬约束。</p></blockquote>
+<blockquote><p>⚠ 单靠提示词&quot;劝模型自律&quot;修不住闪退：<code>Read 全文</code> 和 <code>Bash stdout</code> 是<strong>无条件</strong>进上下文的——<br>等模型读到&quot;请克制&quot;那句，几千行测试输出/上万行源码早已灌进上下文。所以防线必须<strong>下沉到命令层物理拦截</strong>：<br>用 <code>npm run test:summary</code>（全量 stdout 落盘 <code>.cbssp-test.log</code>，只回吐摘要）替代直接 <code>npm test</code>，<br>用 <code>grep -n</code> 锚点 + Read 切片替代整文件 Read。下面【公共引导块】已把这两条写成硬约束。</p></blockquote>
 <h2 id="用法">用法<a class="anchor" href="#用法" aria-label="锚点">#</a></h2>
 <ul><li><strong>每个阶段开一个全新的 Claude 会话</strong>（防闪退的根本）。</li><li>每次先贴【公共引导块】，再贴对应阶段提示词。</li><li>阶段做完会写 <code>docs/03_DESIGN_设计/[DESIGN-ARCH-004] _cbssp_progress.md</code> 进度文件并 git 提交，下个会话靠它续接。</li><li>顺序锁死 <strong>B→A→C→D</strong>（设计文档 §6 已论证第一刀必须是零回归的 §4.B）。</li></ul>
 <hr>

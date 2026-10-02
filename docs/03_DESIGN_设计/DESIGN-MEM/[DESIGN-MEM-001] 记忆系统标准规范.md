@@ -19,9 +19,9 @@
 
 | 层级 | 名称 | 说明 | 持久化 |
 |------|------|------|--------|
-| Layer 1 | `short_term` | 会话内记忆，会话结束即遗忘 | ❌ 不落盘 |
-| Layer 2 | `cross_session` | 跨会话持久记忆，按保鲜期自然老化 | ✅ 落盘 |
-| Layer 3 | `permanent` | 永久记忆，永不自动遗忘 | ✅ 落盘 |
+| Layer 1 | `short_term` | 会话内记忆，会话结束即遗忘 | ✗ 不落盘 |
+| Layer 2 | `cross_session` | 跨会话持久记忆，按保鲜期自然老化 | ✓ 落盘 |
+| Layer 3 | `permanent` | 永久记忆，永不自动遗忘 | ✓ 落盘 |
 
 ---
 
@@ -228,7 +228,7 @@ function resetGrowthData() {
 function clearMemory(options = {}) {
   const { dryRun = true, level = 'all' } = options;
   
-  console.log(`\n🧹 记忆清空${dryRun ? '预览' : '执行'}\n`);
+  console.log(`\n记忆清空${dryRun ? '预览' : '执行'}\n`);
   
   if (dryRun) {
     console.log('将执行以下操作:');
@@ -249,7 +249,7 @@ function clearMemory(options = {}) {
   resetGrowthData();
   console.log('✓ 已重置成长数据');
   
-  console.log('\n✅ 记忆清空完成');
+  console.log('\n✓ 记忆清空完成');
   console.log('恢复命令: /memory distill restore');
 }
 

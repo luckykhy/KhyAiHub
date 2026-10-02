@@ -125,9 +125,9 @@ npm run memory:restore:all    # 恢复所有记忆
 
 | 层级 | 名称 | 说明 | 持久化 |
 |------|------|------|--------|
-| Layer 1 | `short_term` | 会话内记忆 | ❌ 不落盘 |
-| Layer 2 | `cross_session` | 跨会话持久记忆 | ✅ 落盘 |
-| Layer 3 | `permanent` | 永久记忆 | ✅ 落盘 |
+| Layer 1 | `short_term` | 会话内记忆 | ✗ 不落盘 |
+| Layer 2 | `cross_session` | 跨会话持久记忆 | ✓ 落盘 |
+| Layer 3 | `permanent` | 永久记忆 | ✓ 落盘 |
 
 ### 3.2 语义类型
 
