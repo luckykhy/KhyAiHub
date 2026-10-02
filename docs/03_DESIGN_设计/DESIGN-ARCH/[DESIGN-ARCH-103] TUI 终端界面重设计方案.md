@@ -2,7 +2,7 @@
 
 > **隶属**：本文属 **TUI 设计族**（20 编号 / 21 文件），总纲与 scope 裁决见 `[DESIGN-ARCH-122] TUI 设计族总纲`；规则冲突一律以 `[DESIGN-ARCH-102] Khy TUI 统一规则手册` 为准。
 
-> ## ⚠️ 本文档的规则部分已并入 [DESIGN-ARCH-102] Khy TUI 统一规则手册
+> ## ⚠ 本文档的规则部分已并入 [DESIGN-ARCH-102] Khy TUI 统一规则手册
 >
 > **自 2026-09-15 起，本文的硬约束与布局规则不再维护**，全部并入 `[DESIGN-ARCH-102]` §3（硬约束 H1–H10）、§4（布局规范）、§5（组件目录）。
 > 本文保留作为**渲染架构的设计说明与 GitHub 调研证据存档**：三区模型的推导、缩放三条根因的论证、四条目标项目（opencode / Claude Code / dsh-TUI / command-code）对照、P0–P3 实施路线、外部证据索引（ink#907 / duo#2747 / claude-code#2479 等）。
@@ -53,7 +53,7 @@
 | 布局 | Legacy 单栏（079 §1.1 路径 A） | Three-Column 三栏（路径 B） | 两套组件树，需分别验证 |
 | 看板 | 右栏 rail **带外 ANSI 绝对坐标绘制**（默认开） | in-tree `SidebarPanel` | 两套几何 + 两套宽度取数 |
 | 状态栏 | `FooterBar`（2 行，Legacy） | `Statusbar`（1 行，三栏） | chrome 行数不一致 |
-| 用户消息 | 086 Phase 1 声称「无背景框，纯文本 ✅」 | 079 §12.4.1 称「白底模式（默认）背景 `#F0EAD6` 奶油色」 | **两份"单一真源"直接矛盾** |
+| 用户消息 | 086 Phase 1 声称「无背景框，纯文本 ✓」 | 079 §12.4.1 称「白底模式（默认）背景 `#F0EAD6` 奶油色」 | **两份"单一真源"直接矛盾** |
 
 **已实测确认的两处数值分歧**（同一概念两个公式）：
 
@@ -205,8 +205,8 @@ h(Text, { color: borderColor, dimColor: busy }, border)
 |------|--------------|-----------------|-------------|------------------|
 | 渲染栈 | SolidJS + **@opentui/core**（Zig 原生） | React + **自研渲染器**（弃用 Ink 上游） | React + **Ink** | CLI（细节未公开） |
 | 差分粒度 | **Cell 级**：Zig 比较 current/next buffer，只发变化单元格的 ANSI | **Cell 级**：自研 diff | 行级（Ink） | — |
-| 双缓冲 | ✅ 两块 2MiB ANSI buffer 交替提交 | ✅ | ❌ | — |
-| 损伤追踪 | ✅ render list + scissor + culling | ✅ damage tracking | ❌ | — |
+| 双缓冲 | ✓ 两块 2MiB ANSI buffer 交替提交 | ✓ | ✗ | — |
+| 损伤追踪 | ✓ render list + scissor + culling | ✓ damage tracking | ✗ | — |
 | 同步输出 | 支持 | **DEC 2026**（BSU/ESU） | — | — |
 | 屏幕模式 | alternate / main / **split-footer** 三模式；`writeToScrollback()` | 主屏（明确拒绝 alt mode） | 全屏 | — |
 | 线程模型 | **UI 线程 + Worker 业务线程**（默认 RPC 直连，免 HTTP） | — | — | — |
@@ -296,7 +296,7 @@ h(Text, { color: borderColor, dimColor: busy }, border)
 
 | | rail 带外绘制（现状，默认） | 三区模型（新方案，默认） |
 |---|---|---|
-| 跨坐标系 | ✅ 有（ink 内容坐标系 + 屏幕绝对坐标系） | ❌ 无 |
+| 跨坐标系 | ✓ 有（ink 内容坐标系 + 屏幕绝对坐标系） | ✗ 无 |
 | resize 正确性 | 需 union-clear 才正确（易错） | 天然正确（同一坐标系） |
 | 行数账本 | 不计入 live 区（优点） | 计入（但有唯一账本） |
 | 宽度分歧 | `contentCols()` 与组件各自读取 | props 下发，无分歧 |

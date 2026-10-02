@@ -6,7 +6,7 @@
 > 本文描述**目标结构**与**迁移路径**。
 > **目标**：① 提升前缀缓存命中率；② 让模型更准确地理解用户意图；③ 让两部分（静态/动态）的组织方式与加载时机可被机器校验。
 >
-> ⚠️ **已被调研修正（2026-09-15）**：横向比对 Claude Code / opencode / Codex CLI / Gemini CLI /
+> ⚠ **已被调研修正（2026-09-15）**：横向比对 Claude Code / opencode / Codex CLI / Gemini CLI /
 > DeepSeek Harness 后，本文 **§3 的「项目章程搬进 L1 前缀」与 §7 改动 9 的路径被修正**——
 > 改为 Codex 式的 **messages 增量注入**。原因：khy 走自建 relay 路径、无跨用户共享缓存，
 > 前缀方案与 messages 方案命中率等价，但后者下**前缀永不因项目文件改动而作废**。
@@ -408,13 +408,13 @@ L0 明确一条链，全局只此一处：
 
 | 阶段 | 内容 | 状态 |
 |------|------|------|
-| **P0** | 装配锚点：`id + slot` 描述符 → `<!-- khy:<slot>:<id> -->` 标记（门控默认关） | ✅ 已落地 |
-| **P1** | 三处新鲜度 cacheKey（git_status / project_instructions / skill_catalog） | ✅ 已落地 |
-| **度量/守卫** | 逐段字节计量、单条 token 上限、前缀稳定度测试、门控登记守卫 | ✅ 已落地 |
-| P2 | boundary 后移（`using_your_tools` + output-style 派生内容移出前缀） | ❌ 未落地 |
-| P3 | L4 本轮意图块（含 taskScale 从 `khy_specific` 键中移出） | ❌ 未落地 |
-| P4 | 规则去重（验证类 13 段 → ≤2 段） | ❌ 未落地 |
-| 099 R1 | 每轮状态改 messages 增量注入 | ❌ 未落地（最高收益也最高风险） |
+| **P0** | 装配锚点：`id + slot` 描述符 → `<!-- khy:<slot>:<id> -->` 标记（门控默认关） | ✓ 已落地 |
+| **P1** | 三处新鲜度 cacheKey（git_status / project_instructions / skill_catalog） | ✓ 已落地 |
+| **度量/守卫** | 逐段字节计量、单条 token 上限、前缀稳定度测试、门控登记守卫 | ✓ 已落地 |
+| P2 | boundary 后移（`using_your_tools` + output-style 派生内容移出前缀） | ✗ 未落地 |
+| P3 | L4 本轮意图块（含 taskScale 从 `khy_specific` 键中移出） | ✗ 未落地 |
+| P4 | 规则去重（验证类 13 段 → ≤2 段） | ✗ 未落地 |
+| 099 R1 | 每轮状态改 messages 增量注入 | ✗ 未落地（最高收益也最高风险） |
 
 **P2–P4 未落地的原因**：① 098 §8 明确「P2 必须晚于 P1」；② 099 §6 已把「项目章程进 L1 前缀」修正为 Codex 式 messages 增量注入，需单独设计；③ 三项都会**改变模型可见文本**，属行为变更，需要独立的回归验证窗口，不宜与度量设施同批交付。
 
@@ -422,23 +422,23 @@ L0 明确一条链，全局只此一处：
 
 | # | 验收条件 | 验证方式 | 预期结果 | 实测结果 |
 |---|---------|---------|---------|---------|
-| AC-1 | 门控关时产物零变更 | 改动前后各跑一次快照，逐元素 SHA 比对 | 35 段全一致、flatSha 相同 | ✅ 35/35 一致，flatSha `94bf5f198f92b1c0` 相同 |
-| AC-2 | 默认配置下不引入新的产物差异 | 同口径复跑，逐元素比对 | 仅环境性差异（时间戳 / 目录树） | ✅ 仅 `# Environment`（含墙钟时间，与时钟门无关）与 `# Project structure`（我新增了文件）2 段不同 |
-| AC-3 | 锚点纯附加 | 开锚点数组去掉标记元素 == 关锚点数组 | 逐元素相同 | ✅ 逐元素相同（35 段） |
-| AC-4 | 扁平产物不含锚点 | `assembleSystemPrompt` 结果断言 | 开/关锚点逐字节相同 | ✅ 逐字节相同、无 `<!-- khy:` 残留 |
-| AC-5 | 每个段有唯一锚点 | 解析标记 id | >20 段、id 无重复 | ✅ 35 段、id 唯一 |
-| AC-6 | 槽位落点单调 | 解析 slot 序列，按 prefix→dynamic→trailing→tail 校验 | 单调不回退 | ✅ 单调 |
-| AC-7 | boundary 落点 | 源码断言 _push 顺序 | 最后一个 prefix < boundary < 第一个 dynamic | ✅ 满足 |
-| AC-8 | 易变段在 tail 槽 | 与 `promptCacheOrder.VOLATILE_SECTION_IDS` 交叉校验 | 5 段全在 tail | ✅ 全在 tail |
-| AC-9 | 内核段在 prefix 槽 | simple_intro / simple_system | 在 prefix | ✅ 满足 |
-| AC-10 | 每轮必变字节预算 | 汇总 tail 槽中易变子集 | ≤ 8,000 字符（§5.1） | ✅ **7,212 字符** |
-| AC-11 | 单条内容硬上限可计量 | 逐段估算 token，比对 10k | 能列出超限条目 | ✅ 列出 `project_instructions = 11,693 tok`（超限，需 P4/R2 修复） |
-| AC-12 | 三处新鲜度键已接线 | 单测断言键值 | 门控开 ≠ 旧键；门控关 == 旧键 | ✅ 均满足 |
-| AC-13 | git_status 不再冻结 | 键含时间桶 | 跨桶变化 | ✅ 键形如 `cwd|<idx>|<head>|<bucket>` |
-| AC-14 | 前缀稳定度 | 同会话连续两次装配 | 每段的字节数不变 | ✅ 全段一致 |
-| AC-15 | 门控登记口径 | 守卫读 flagRegistry 默认值 | anchors 默认关、fresh 默认开 | ✅ 与实现一致 |
-| AC-16 | 既有测试不回归 | 跑既有提示词套件 | 全绿 | ✅ node:test 21 项、jest 提示词套件全绿 |
-| AC-17 | 分层守卫不回归 | `check-prompt-taxonomy` | exit 0 | ✅ exit 0 |
+| AC-1 | 门控关时产物零变更 | 改动前后各跑一次快照，逐元素 SHA 比对 | 35 段全一致、flatSha 相同 | ✓ 35/35 一致，flatSha `94bf5f198f92b1c0` 相同 |
+| AC-2 | 默认配置下不引入新的产物差异 | 同口径复跑，逐元素比对 | 仅环境性差异（时间戳 / 目录树） | ✓ 仅 `# Environment`（含墙钟时间，与时钟门无关）与 `# Project structure`（我新增了文件）2 段不同 |
+| AC-3 | 锚点纯附加 | 开锚点数组去掉标记元素 == 关锚点数组 | 逐元素相同 | ✓ 逐元素相同（35 段） |
+| AC-4 | 扁平产物不含锚点 | `assembleSystemPrompt` 结果断言 | 开/关锚点逐字节相同 | ✓ 逐字节相同、无 `<!-- khy:` 残留 |
+| AC-5 | 每个段有唯一锚点 | 解析标记 id | >20 段、id 无重复 | ✓ 35 段、id 唯一 |
+| AC-6 | 槽位落点单调 | 解析 slot 序列，按 prefix→dynamic→trailing→tail 校验 | 单调不回退 | ✓ 单调 |
+| AC-7 | boundary 落点 | 源码断言 _push 顺序 | 最后一个 prefix < boundary < 第一个 dynamic | ✓ 满足 |
+| AC-8 | 易变段在 tail 槽 | 与 `promptCacheOrder.VOLATILE_SECTION_IDS` 交叉校验 | 5 段全在 tail | ✓ 全在 tail |
+| AC-9 | 内核段在 prefix 槽 | simple_intro / simple_system | 在 prefix | ✓ 满足 |
+| AC-10 | 每轮必变字节预算 | 汇总 tail 槽中易变子集 | ≤ 8,000 字符（§5.1） | ✓ **7,212 字符** |
+| AC-11 | 单条内容硬上限可计量 | 逐段估算 token，比对 10k | 能列出超限条目 | ✓ 列出 `project_instructions = 11,693 tok`（超限，需 P4/R2 修复） |
+| AC-12 | 三处新鲜度键已接线 | 单测断言键值 | 门控开 ≠ 旧键；门控关 == 旧键 | ✓ 均满足 |
+| AC-13 | git_status 不再冻结 | 键含时间桶 | 跨桶变化 | ✓ 键形如 `cwd|<idx>|<head>|<bucket>` |
+| AC-14 | 前缀稳定度 | 同会话连续两次装配 | 每段的字节数不变 | ✓ 全段一致 |
+| AC-15 | 门控登记口径 | 守卫读 flagRegistry 默认值 | anchors 默认关、fresh 默认开 | ✓ 与实现一致 |
+| AC-16 | 既有测试不回归 | 跑既有提示词套件 | 全绿 | ✓ node:test 21 项、jest 提示词套件全绿 |
+| AC-17 | 分层守卫不回归 | `check-prompt-taxonomy` | exit 0 | ✓ exit 0 |
 
 ### 12.3 完成定义（DoD）
 

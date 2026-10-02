@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -45,12 +45,12 @@
 │  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │
 └─────────────────────────────────────────────────────────────┘</code></pre>
 <h3 id="1-2-规范状态矩阵">1.2 规范状态矩阵<a class="anchor" href="#1-2-规范状态矩阵" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>规范领域</th><th>状态</th><th>文档</th><th>实现</th><th>CI 强制</th></tr></thead><tbody><tr><td><strong>MCP 协议</strong></td><td>✅ 成熟</td><td>✅ 3 份文档</td><td>✅ 客户端+服务端+桥接</td><td>✅ 15+ 测试</td></tr><tr><td><strong>A2A 协议</strong></td><td>❌ 缺失</td><td>❌ 无</td><td>❌ 无</td><td>❌ 无</td></tr><tr><td><strong>记忆规范</strong></td><td>✅ 完成</td><td>✅ 6 份文档</td><td>🟡 部分实现</td><td>✅ 蒸馏机制</td></tr><tr><td><strong>通信协议</strong></td><td>🟡 部分</td><td>❌ 缺失总纲</td><td>✅ 代码实现</td><td>🟡 部分强制</td></tr><tr><td><strong>代码规范</strong></td><td>✅ 强制</td><td>✅ ARCH-015</td><td>✅ ESLint/Prettier</td><td>✅ CI</td></tr><tr><td><strong>文档规范</strong></td><td>✅ 强制</td><td>✅ MGMT-STD-001</td><td>✅ 索引系统</td><td>✅ 检查脚本</td></tr><tr><td><strong>测试规范</strong></td><td>✅ 强制</td><td>✅ 多份文档</td><td>✅ 测试框架</td><td>✅ CI</td></tr><tr><td><strong>部署规范</strong></td><td>✅ 完成</td><td>✅ 多份文档</td><td>✅ 脚本</td><td>✅ 门禁</td></tr></tbody></table>
+<table><thead><tr><th>规范领域</th><th>状态</th><th>文档</th><th>实现</th><th>CI 强制</th></tr></thead><tbody><tr><td><strong>MCP 协议</strong></td><td>✓ 成熟</td><td>✓ 3 份文档</td><td>✓ 客户端+服务端+桥接</td><td>✓ 15+ 测试</td></tr><tr><td><strong>A2A 协议</strong></td><td>✗ 缺失</td><td>✗ 无</td><td>✗ 无</td><td>✗ 无</td></tr><tr><td><strong>记忆规范</strong></td><td>✓ 完成</td><td>✓ 6 份文档</td><td>◐ 部分实现</td><td>✓ 蒸馏机制</td></tr><tr><td><strong>通信协议</strong></td><td>◐ 部分</td><td>✗ 缺失总纲</td><td>✓ 代码实现</td><td>◐ 部分强制</td></tr><tr><td><strong>代码规范</strong></td><td>✓ 强制</td><td>✓ ARCH-015</td><td>✓ ESLint/Prettier</td><td>✓ CI</td></tr><tr><td><strong>文档规范</strong></td><td>✓ 强制</td><td>✓ MGMT-STD-001</td><td>✓ 索引系统</td><td>✓ 检查脚本</td></tr><tr><td><strong>测试规范</strong></td><td>✓ 强制</td><td>✓ 多份文档</td><td>✓ 测试框架</td><td>✓ CI</td></tr><tr><td><strong>部署规范</strong></td><td>✓ 完成</td><td>✓ 多份文档</td><td>✓ 脚本</td><td>✓ 门禁</td></tr></tbody></table>
 <hr>
 <h2 id="2-mcp-协议规范-工具集成">2. MCP 协议规范（工具集成）<a class="anchor" href="#2-mcp-协议规范-工具集成" aria-label="锚点">#</a></h2>
 <h3 id="2-1-协议概述">2.1 协议概述<a class="anchor" href="#2-1-协议概述" aria-label="锚点">#</a></h3>
 <p><strong>MCP (Model Context Protocol)</strong> 是 AI 工具集成的标准协议，定义了 AI 模型与外部工具之间的通信方式。</p>
-<p><strong>当前状态</strong>：✅ 成熟实现</p>
+<p><strong>当前状态</strong>：✓ 成熟实现</p>
 <h3 id="2-2-核心组件">2.2 核心组件<a class="anchor" href="#2-2-核心组件" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>组件</th><th>文件</th><th>功能</th></tr></thead><tbody><tr><td>MCP 客户端</td><td><code>services/backend/src/services/domain/messaging/mcp/index.js</code></td><td>连接外部 MCP 服务器</td></tr><tr><td>MCP 服务端</td><td><code>services/backend/src/services/domain/messaging/mcp/mcpServerProtocol.js</code></td><td>暴露 khy 工具</td></tr><tr><td>生态桥接</td><td><code>mcpEcosystemRegistry.js</code></td><td>支持 14+ IDE/Agent</td></tr><tr><td>治理策略</td><td><code>mcpGovernance.js</code></td><td>配置优先级和审批</td></tr></tbody></table>
 <h3 id="2-3-协议规范">2.3 协议规范<a class="anchor" href="#2-3-协议规范" aria-label="锚点">#</a></h3>
@@ -87,7 +87,7 @@
 <h2 id="3-a2a-协议规范-智能体通信">3. A2A 协议规范（智能体通信）<a class="anchor" href="#3-a2a-协议规范-智能体通信" aria-label="锚点">#</a></h2>
 <h3 id="3-1-协议概述">3.1 协议概述<a class="anchor" href="#3-1-协议概述" aria-label="锚点">#</a></h3>
 <p><strong>A2A (Agent-to-Agent)</strong> 是智能体间通信的标准协议，定义了智能体如何发现、协商和协作。</p>
-<p><strong>当前状态</strong>：❌ 完全缺失</p>
+<p><strong>当前状态</strong>：✗ 完全缺失</p>
 <h3 id="3-2-设计目标">3.2 设计目标<a class="anchor" href="#3-2-设计目标" aria-label="锚点">#</a></h3>
 <ol><li><strong>智能体发现</strong>：自动发现网络中的其他智能体</li><li><strong>能力广播</strong>：智能体广播自己的能力和服务</li><li><strong>任务协商</strong>：智能体之间协商任务分配</li><li><strong>状态同步</strong>：智能体状态实时同步</li><li><strong>安全通信</strong>：加密和认证机制</li></ol>
 <h3 id="3-3-协议架构">3.3 协议架构<a class="anchor" href="#3-3-协议架构" aria-label="锚点">#</a></h3>
@@ -167,18 +167,18 @@
 <h2 id="4-记忆系统规范-存储管理">4. 记忆系统规范（存储管理）<a class="anchor" href="#4-记忆系统规范-存储管理" aria-label="锚点">#</a></h2>
 <h3 id="4-1-规范概述">4.1 规范概述<a class="anchor" href="#4-1-规范概述" aria-label="锚点">#</a></h3>
 <p><strong>记忆系统</strong>定义了 AI 助手如何存储、检索和管理持久化信息。</p>
-<p><strong>当前状态</strong>：✅ 规范完成，🟡 部分实现</p>
+<p><strong>当前状态</strong>：✓ 规范完成，◐ 部分实现</p>
 <h3 id="4-2-核心组件">4.2 核心组件<a class="anchor" href="#4-2-核心组件" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>组件</th><th>说明</th><th>状态</th></tr></thead><tbody><tr><td>记忆分类</td><td>user/feedback/project/reference</td><td>✅ 定义完成</td></tr><tr><td>保留层级</td><td>short_term/cross_session/permanent</td><td>✅ 定义完成</td></tr><tr><td>生命周期</td><td>创建→活跃→老化→归档→恢复</td><td>✅ 定义完成</td></tr><tr><td>蒸馏机制</td><td>去重、清理、归档</td><td>✅ 实现完成</td></tr><tr><td>检索机制</td><td>关键词、向量、主动回忆</td><td>🟡 部分实现</td></tr></tbody></table>
+<table><thead><tr><th>组件</th><th>说明</th><th>状态</th></tr></thead><tbody><tr><td>记忆分类</td><td>user/feedback/project/reference</td><td>✓ 定义完成</td></tr><tr><td>保留层级</td><td>short_term/cross_session/permanent</td><td>✓ 定义完成</td></tr><tr><td>生命周期</td><td>创建→活跃→老化→归档→恢复</td><td>✓ 定义完成</td></tr><tr><td>蒸馏机制</td><td>去重、清理、归档</td><td>✓ 实现完成</td></tr><tr><td>检索机制</td><td>关键词、向量、主动回忆</td><td>◐ 部分实现</td></tr></tbody></table>
 <h3 id="4-3-相关文档">4.3 相关文档<a class="anchor" href="#4-3-相关文档" aria-label="锚点">#</a></h3>
 <ul><li><code>[DESIGN-MEM-000]</code> 记忆系统总结</li><li><code>[DESIGN-MEM-001]</code> 记忆系统标准规范</li><li><code>[DESIGN-MEM-002]</code> 记忆时机指南</li><li><code>[DESIGN-MEM-003]</code> 记忆模板库</li><li><code>[DESIGN-MEM-004]</code> 记忆快速参考卡</li><li><code>[DESIGN-MEM-005]</code> 记忆系统使用指南</li></ul>
 <hr>
 <h2 id="5-通信协议规范-服务间通信">5. 通信协议规范（服务间通信）<a class="anchor" href="#5-通信协议规范-服务间通信" aria-label="锚点">#</a></h2>
 <h3 id="5-1-协议概述">5.1 协议概述<a class="anchor" href="#5-1-协议概述" aria-label="锚点">#</a></h3>
 <p><strong>通信协议</strong>定义了 khy-os 内部服务之间、以及与外部系统的通信方式。</p>
-<p><strong>当前状态</strong>：🟡 部分实现，❌ 缺少统一文档</p>
+<p><strong>当前状态</strong>：◐ 部分实现，✗ 缺少统一文档</p>
 <h3 id="5-2-协议层次">5.2 协议层次<a class="anchor" href="#5-2-协议层次" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>层次</th><th>协议</th><th>用途</th><th>状态</th></tr></thead><tbody><tr><td><strong>应用层</strong></td><td>HTTP REST API</td><td>前端↔后端通信</td><td>✅ 实现</td></tr><tr><td><strong>应用层</strong></td><td>WebSocket</td><td>实时通信</td><td>✅ 实现</td></tr><tr><td><strong>应用层</strong></td><td>SSE</td><td>服务器推送</td><td>✅ 实现</td></tr><tr><td><strong>传输层</strong></td><td>HTTP/2</td><td>高性能传输</td><td>✅ 实现</td></tr><tr><td><strong>传输层</strong></td><td>gRPC</td><td>高效 RPC</td><td>🟡 部分</td></tr><tr><td><strong>传输层</strong></td><td>TCP/UDP</td><td>底层传输</td><td>✅ 实现</td></tr><tr><td><strong>安全层</strong></td><td>TLS/SSL</td><td>加密传输</td><td>✅ 实现</td></tr><tr><td><strong>安全层</strong></td><td>JWT</td><td>身份认证</td><td>✅ 实现</td></tr></tbody></table>
+<table><thead><tr><th>层次</th><th>协议</th><th>用途</th><th>状态</th></tr></thead><tbody><tr><td><strong>应用层</strong></td><td>HTTP REST API</td><td>前端↔后端通信</td><td>✓ 实现</td></tr><tr><td><strong>应用层</strong></td><td>WebSocket</td><td>实时通信</td><td>✓ 实现</td></tr><tr><td><strong>应用层</strong></td><td>SSE</td><td>服务器推送</td><td>✓ 实现</td></tr><tr><td><strong>传输层</strong></td><td>HTTP/2</td><td>高性能传输</td><td>✓ 实现</td></tr><tr><td><strong>传输层</strong></td><td>gRPC</td><td>高效 RPC</td><td>◐ 部分</td></tr><tr><td><strong>传输层</strong></td><td>TCP/UDP</td><td>底层传输</td><td>✓ 实现</td></tr><tr><td><strong>安全层</strong></td><td>TLS/SSL</td><td>加密传输</td><td>✓ 实现</td></tr><tr><td><strong>安全层</strong></td><td>JWT</td><td>身份认证</td><td>✓ 实现</td></tr></tbody></table>
 <h3 id="5-3-消息格式规范">5.3 消息格式规范<a class="anchor" href="#5-3-消息格式规范" aria-label="锚点">#</a></h3>
 <p><strong>HTTP 响应信封</strong>：</p>
 <pre><code class="language-json"><span class="hljs-punctuation">{</span>

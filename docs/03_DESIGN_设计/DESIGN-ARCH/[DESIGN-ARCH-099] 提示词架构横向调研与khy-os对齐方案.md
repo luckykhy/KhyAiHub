@@ -18,7 +18,7 @@
 |---|------|--------|---------------------|---------|
 | **R1** | **每轮状态改为 messages 增量注入** | Codex CLI | 每轮重算 52,817 字符 | 系统提示词整段会话**逐字节不变**，命中率拉到理论上限 |
 | **R2** | **单条注入内容设硬上限（≤10k tokens/条目）** | Codex CLI | `# claudeMd` 单条 26,378 字符（≈15–20k tokens） | 消灭超限条目；防止项目文件继续膨胀 |
-| **R3** | **缓存失效归因细化到「段」** | Claude Code | ⚠️ **修正**：khy 不是「无」——早有 `KHY_CACHE_PREFIX_SHAPE` + `constants/promptPrefixShape.js`（SHA-256 短哈希，system/tools/order 三维度）。缺的是 **per-section 粒度**：只能说「系统提示变了」，说不出哪一段变了 | 每次失效可回答「是谁变了」 |
+| **R3** | **缓存失效归因细化到「段」** | Claude Code | ⚠ **修正**：khy 不是「无」——早有 `KHY_CACHE_PREFIX_SHAPE` + `constants/promptPrefixShape.js`（SHA-256 短哈希，system/tools/order 三维度）。缺的是 **per-section 粒度**：只能说「系统提示变了」，说不出哪一段变了 | 每次失效可回答「是谁变了」 |
 | **R4** | **工具使用纪律下沉到工具 description** | Gemini CLI / opencode | 纪律在 system 段与工具实现里各写一份 | 削减静态段 + 纪律离开「决策点」更近 |
 | **R5** | **前缀稳定性测试套件** | Codex CLI | 无（只有段缓存功能测试） | 把「前缀不被击穿」变成回归可测的硬约束 |
 
@@ -38,11 +38,11 @@
 
 | 项目 | 开源 | 证据等级 | 说明 |
 |------|------|---------|------|
-| **Claude Code** | ❌ 闭源 | **B（社区逆向）** | 基于多份源码级分析（v2.1.88）与流量抓包，细节高度一致但**非官方**；引用时标注 |
-| **opencode**（sst/opencode） | ✅ | **A（源码）** | 可直接引用文件路径与实现描述 |
-| **Codex CLI**（openai/codex） | ✅ Apache-2.0 | **A（源码）** | Rust；有官方目录结构与测试文件路径可引 |
-| **Gemini CLI**（google-gemini/gemini-cli） | ✅ | **A（源码）** | TypeScript；`prompts.ts` / `promptProvider.ts` / `snippets.ts` |
-| **DeepSeek Harness**（deepseek-ai/deepseek-harness） | ✅ MIT | **A−（源码 + 官方文档）** | v0.1 预览版（2026-08-13），接口仍在变 |
+| **Claude Code** | ✗ 闭源 | **B（社区逆向）** | 基于多份源码级分析（v2.1.88）与流量抓包，细节高度一致但**非官方**；引用时标注 |
+| **opencode**（sst/opencode） | ✓ | **A（源码）** | 可直接引用文件路径与实现描述 |
+| **Codex CLI**（openai/codex） | ✓ Apache-2.0 | **A（源码）** | Rust；有官方目录结构与测试文件路径可引 |
+| **Gemini CLI**（google-gemini/gemini-cli） | ✓ | **A（源码）** | TypeScript；`prompts.ts` / `promptProvider.ts` / `snippets.ts` |
+| **DeepSeek Harness**（deepseek-ai/deepseek-harness） | ✓ MIT | **A−（源码 + 官方文档）** | v0.1 预览版（2026-08-13），接口仍在变 |
 
 > **诚实声明**：Claude Code 的具体行号与内部常量名来自第三方分析，可能随版本漂移；
 > 本文凡标注 B 级的结论只用于**印证设计意图**，不作为「照抄某个实现」的依据。
@@ -359,7 +359,7 @@ append-only 会话日志重建。模型上下文不是累积状态，而是由 `
 
 ### R3　缓存失效归因细化到「段」　【中】
 
-> ⚠️ **调研修正（2026-09-15）**：初稿写「khy 无任何缓存失效归因能力 → 高」。实施 098 时核查发现
+> ⚠ **调研修正（2026-09-15）**：初稿写「khy 无任何缓存失效归因能力 → 高」。实施 098 时核查发现
 > khy **早已有** `KHY_CACHE_PREFIX_SHAPE`（默认开）与 `constants/promptPrefixShape.js`：
 > 每轮对 system / tools 拍 SHA-256 短哈希并跨轮比对，输出 `PrefixChangeReasons(['system','tools','order'])`，
 > 由 `cli/cacheWarning.js` 展示中文归因。所以差距不是「有没有」，而是**粒度**——

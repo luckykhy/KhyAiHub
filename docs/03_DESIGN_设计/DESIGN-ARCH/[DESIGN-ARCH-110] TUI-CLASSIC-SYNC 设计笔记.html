@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -141,15 +141,15 @@
 <hr>
 <h2 id="已知同步点-2026-09-04-已修复">已知同步点（2026-09-04 已修复）<a class="anchor" href="#已知同步点-2026-09-04-已修复" aria-label="锚点">#</a></h2>
 <h3 id="1-shim-测试文件加载-已修复">1. shim 测试文件加载（已修复）<a class="anchor" href="#1-shim-测试文件加载-已修复" aria-label="锚点">#</a></h3>
-<p><strong>问题</strong>：<code>services/query/index.js</code> shim 错误加载 <code>.test.js</code> 文件<br><strong>影响</strong>：两个模式都会执行测试代码，TAP 输出写入 stdout<br><strong>修复</strong>：删除 shim 中对 <code>.test.js</code> 的导出<br><strong>同步状态</strong>：✅ 自动同步（共享代码路径）</p>
+<p><strong>问题</strong>：<code>services/query/index.js</code> shim 错误加载 <code>.test.js</code> 文件<br><strong>影响</strong>：两个模式都会执行测试代码，TAP 输出写入 stdout<br><strong>修复</strong>：删除 shim 中对 <code>.test.js</code> 的导出<br><strong>同步状态</strong>：✓ 自动同步（共享代码路径）</p>
 <h3 id="2-gateway-pool-maps-已修复">2. Gateway Pool Maps（已修复）<a class="anchor" href="#2-gateway-pool-maps-已修复" aria-label="锚点">#</a></h3>
-<p><strong>问题</strong>：<code>sensenova</code>/<code>stepfun</code> 在 gateway pool maps 中缺失<br><strong>影响</strong>：两个模式都无法路由到这些 provider<br><strong>修复</strong>：补齐 <code>DEFAULT_API_POOL_PROVIDER_ALIASES</code> 和 <code>DEFAULT_API_POOL_TO_SERVICE_PROVIDER</code><br><strong>同步状态</strong>：✅ 自动同步（共享代码路径）</p>
+<p><strong>问题</strong>：<code>sensenova</code>/<code>stepfun</code> 在 gateway pool maps 中缺失<br><strong>影响</strong>：两个模式都无法路由到这些 provider<br><strong>修复</strong>：补齐 <code>DEFAULT_API_POOL_PROVIDER_ALIASES</code> 和 <code>DEFAULT_API_POOL_TO_SERVICE_PROVIDER</code><br><strong>同步状态</strong>：✓ 自动同步（共享代码路径）</p>
 <h3 id="3-banner-重复显示-已修复">3. Banner 重复显示（已修复）<a class="anchor" href="#3-banner-重复显示-已修复" aria-label="锚点">#</a></h3>
 <p><strong>问题</strong>：TUI 模式中 banner 重复显示两次<br><strong>影响</strong>：TUI 模式<br><strong>修复</strong>：</p>
 <ul><li>删除 shim 测试文件导出</li><li>还原 <code>railOn</code> 同步初始化</li><li>banner 移至 <code>&lt;Static&gt;</code> 区域</li><li><code>staticItems[0]</code> 作为 banner item</li></ul>
-<p><strong>同步状态</strong>：✅ TUI 已修复</p>
+<p><strong>同步状态</strong>：✓ TUI 已修复</p>
 <h3 id="4-熔断器注释错误-已修复">4. 熔断器注释错误（已修复）<a class="anchor" href="#4-熔断器注释错误-已修复" aria-label="锚点">#</a></h3>
-<p><strong>问题</strong>：注释说&quot;5次/60s&quot;，代码实际是&quot;3次/30s&quot;<br><strong>影响</strong>：两个模式的文档可读性<br><strong>修复</strong>：修正注释<br><strong>同步状态</strong>：✅ 自动同步（共享代码路径）</p>
+<p><strong>问题</strong>：注释说&quot;5次/60s&quot;，代码实际是&quot;3次/30s&quot;<br><strong>影响</strong>：两个模式的文档可读性<br><strong>修复</strong>：修正注释<br><strong>同步状态</strong>：✓ 自动同步（共享代码路径）</p>
 <hr>
 <h2 id="同步检查清单">同步检查清单<a class="anchor" href="#同步检查清单" aria-label="锚点">#</a></h2>
 <p>修改代码时，按以下清单检查：</p>

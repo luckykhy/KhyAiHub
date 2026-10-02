@@ -281,7 +281,7 @@ handleMultiProtocol(req, res, PROTOCOLS.ANTHROPIC)          [proxyServer.js:1385
 
 ---
 
-## 7. 落地步骤（✅ 2026-09-24 已实施）
+## 7. 落地步骤（✓ 2026-09-24 已实施）
 
 ### 步骤 1：在 appWriters 实现代理模式写入（核心改动）
 
@@ -369,7 +369,7 @@ services/backend/src/services/domain/config/ccSwitch/proxyAccess.js（新建）
 
 ---
 
-## 8. 文件改动清单（✅ 2026-09-24 已实施）
+## 8. 文件改动清单（✓ 2026-09-24 已实施）
 
 ### 后端
 
