@@ -259,6 +259,23 @@ describe('check-repo-layout: 任务入口与跨层引用', () => {
     assert.match(stdout, /unresolved-require/);
     assert.match(stdout, /software\/services\/marketDataService/);
   });
+
+  test('unresolved-require: .json 清单散文注记里的 require 文本不算悬空边（Q1′ 修复回归）', () => {
+    const root = makeFixture((dir) => {
+      // 真实 require 在 JS 里，指向存在的目标 → 不该报。
+      writeFile(dir, 'software/khyquant/package.json', '{"name":"khyquant"}\n');
+      writeFile(dir, 'software/khyquant/services/real.js', 'module.exports = {};\n');
+      // khy.module.json 的 _note 散文里出现 `require('../../does-not-exist')` 只是文字说明，
+      // JSON 不含可执行 require，扫描必须跳过 .json，否则按清单目录解 ../ 会算出假悬空。
+      writeFile(dir, 'software/khyquant/unit/khy.module.json',
+        JSON.stringify({ unit: 'unit', _note: "外部经 require('../../does-not-exist') 命中本单元" }, null, 2) + '\n');
+      writeFile(dir, 'software/khyquant/unit/index.js', "require('../services/real');\n");
+    });
+    const { status, stdout } = runGuard(root, ['--list=unresolved-require']);
+    assert.equal(status, 0, stdout);
+    assert.match(stdout, /"unresolved-require":0/);
+    assert.doesNotMatch(stdout, /does-not-exist/);
+  });
 });
 
 describe('check-repo-layout: 拓展契约（[DESIGN-TOOL-002]）', () => {
