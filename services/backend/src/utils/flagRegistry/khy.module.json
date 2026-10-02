@@ -1,0 +1,39 @@
+{
+  "_note": "功能单元清单（[RESEARCH-018] §2.3 模板第 3 件 / 5-3-1 §3）。执行器 scripts/ci/check-repo-layout.js 的 entry-buffer 规则读本文件的 domain / mayDependOn / fanIn / lifecycle.stage 四个字段，其余字段是给人读的。字段真源与判据枚举见 docs/10_规范/registry/DOMAIN-DEPS.json 的 _entry_buffer 块。",
+  "name": "flagRegistry",
+  "domain": "D3",
+  "mayDependOn": [],
+  "_mayDependOn_note": "刻意声明空集：index.js 全文零 require（唯一命中的 `require(` 出现在注释里解释回退语义）。真身因此可原样住在共享底座而不引入任何边。",
+  "fanIn": 223,
+  "fanInEvidence": [
+    "services/backend/src/cli/router.js",
+    "services/backend/src/adapters/im/adapterRegistry.js",
+    "services/backend/src/utils/gateOn.js"
+  ],
+  "_fanIn_note": "223 = 实测（2026-09-28，第 17 批）：以 grep 递归匹配 require 括号内路径含 flagRegistry 的非测试源文件，命中 225 个，减去再导出壳自身（services/flagRegistry.js）与真身注释里的一处自述（utils/flagRegistry/index.js）= 223 个消费者。例证分别是入口（router.js:149）、适配器层（adapterRegistry.js:93）与同目录 D3 helper（gateOn.js）。223 的入度正是 DOMAIN-DEPS.json D3 evidence 所说「fan-in>30 枢纽」的量级样本。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-28",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null,
+    "_stage_note": "stable 的依据：本单元被 223 个源文件依赖、契约测试 4 例在盘（index.test.js）+ 行为契约 40 例在 tests/services/flagRegistry.test.js。provenance 如实写明它是**存量归位**（从 services/flagRegistry.js 迁入 D3，旧路径留一行再导出壳），不是经 scripts/quarantine/ 晋级；enteredVia: null。"
+  },
+  "contract": {
+    "purity": "零 require / 零 IO / 确定性 / 绝不抛（未知 flag 保守放行）",
+    "ioOwner": "无：只读调用方传入的 env（缺省 process.env），不读写文件与网络",
+    "injectionPoints": [
+      "isRegistryEnabled(env)",
+      "isFlagEnabled(name, env, _seen)",
+      "resolveNumeric(name, env)",
+      "listFlags()"
+    ]
+  },
+  "tests": [
+    "flagRegistry/index.test.js"
+  ],
+  "behaviourTestsOutsideUnit": [
+    "services/backend/tests/services/flagRegistry.test.js",
+    "services/backend/tests/services/featureFlags.test.js"
+  ],
+  "_move_note": "本单元是 [RESEARCH-018] P2 第 17 批的产物：把 8 处 D3→D1 反向边（utils/gateOn、utils/isEnabledDefaultOn、utils/resolveNumericFlag、utils/pythonPath、constants/prompts ×4）收敛为 D3 内部边。旧路径 services/backend/src/services/flagRegistry.js 成为再导出壳，225 个消费者的 require 串逐字节未改。"
+}

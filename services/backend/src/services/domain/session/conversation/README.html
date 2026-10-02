@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>conversation — /btw 旁注的纯文本叶子与进程级队列（D2 功能单元） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>session<span class="sep">›</span>conversation<span class="sep">›</span>conversation — /btw 旁注的纯文本叶子与进程级队列（D2 功能单元）</div>
+      <header class="hero reveal"><h1>conversation — /btw 旁注的纯文本叶子与进程级队列（D2 功能单元）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#conversation-btw-旁注的纯文本叶子与进程级队列-d2-功能单元">conversation — `/btw` 旁注的纯文本叶子与进程级队列（D2 功能单元）</a></li><li class="lvl-2"><a href="#逐成员">逐成员</a></li><li class="lvl-2"><a href="#消费者-实测-fan-in-5-均非测试文件">消费者（实测 fan-in = 5，均非测试文件）</a></li><li class="lvl-2"><a href="#契约-每条都对应命名测试">契约（每条都对应命名测试）</a></li><li class="lvl-2"><a href="#已知限制">已知限制</a></li><li class="lvl-2"><a href="#怎么跑">怎么跑</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="conversation-btw-旁注的纯文本叶子与进程级队列-d2-功能单元">conversation — <code>/btw</code> 旁注的纯文本叶子与进程级队列（D2 功能单元）<a class="anchor" href="#conversation-btw-旁注的纯文本叶子与进程级队列-d2-功能单元" aria-label="锚点">#</a></h1>
+<p>一句话：把「模型正在忙时补一句、等下一回合并入用户输入」这条语义收敛成两层——<br><code>btwNote.js</code> 只算文本（零 IO、确定性、绝不抛），<code>btwNoteQueue.js</code> 只持有队列状态<br>（进程级单例、零文件 IO）。历史上这套语义是 <code>cli/repl.js</code> 的闭包私有变量 <code>_btwQueue</code>，<br>router 分发与 ink TUI 都看不见它；本单元把那部分纯逻辑提出来，让三个入口共用。</p>
+<p>清单：<code>khy.module.json</code>（<code>domain</code> / <code>mayDependOn</code> / <code>fanIn</code> / <code>lifecycle.stage</code> 四字段被<br><code>npm run check:layout</code> 的 entry-buffer 规则读取，其余给人看）。</p>
+<h2 id="逐成员">逐成员<a class="anchor" href="#逐成员" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>角色</th><th>require</th><th>同名测试</th></tr></thead><tbody><tr><td><code>btwNote.js</code></td><td>纯叶子：<code>normalizeNote</code>（trim + 4000 上限）、<code>mergeHints</code>（并入格式单一真源）、<code>isEnabled</code>（KHY_BTW 门控，env 经入参）</td><td>无</td><td><code>btwNote.test.js</code></td></tr><tr><td><code>btwNoteQueue.js</code></td><td>薄壳存储：<code>enqueue</code> / <code>count</code> / <code>drainAll</code> / <code>clear</code>，模块级单例，只在内存</td><td><code>./btwNote</code></td><td><code>btwNoteQueue.test.js</code></td></tr></tbody></table>
+<h2 id="消费者-实测-fan-in-5-均非测试文件">消费者（实测 fan-in = 5，均非测试文件）<a class="anchor" href="#消费者-实测-fan-in-5-均非测试文件" aria-label="锚点">#</a></h2>
+<p><code>cli/handlers/btw.js</code>、<code>cli/tui/ink-components/App.js</code>、<code>cli/replSession.js</code>、<br><code>services/conversation/index.js</code>（D1 再导出壳）、<code>services/selfEditWatcher.js</code>。<br>方向合法：D1 依赖 D2。注意 <code>cli/replSession.js</code> 是作者 in-flight 文件，本单元只读其引用关系。</p>
+<h2 id="契约-每条都对应命名测试">契约（每条都对应命名测试）<a class="anchor" href="#契约-每条都对应命名测试" aria-label="锚点">#</a></h2>
+<ol><li><strong>规范化</strong>：去首尾空白、内部空白保留；<code>null</code>/空白一律 <code>''</code>（调用方据此不入队）；</li></ol>
+<p>非字符串走 <code>String()</code>；超长截到 4000 而不是拒绝。<br>   → <code>normalizeNote: trims edges, keeps inner text, empty-ish yields empty string</code>、<br>   <code>normalizeNote: non-strings are stringified, then capped at _MAX_NOTE_LEN</code></p>
+<ol><li><strong>并入格式是单一真源</strong>：<code>${input}\n\n[附加提示]\n${逐条一行}</code>，</li></ol>
+<p>无提示时输入逐字节不变；非数组/空数组/全空白提示都不加尾巴。<br>   → <code>mergeHints: SSOT join format is exactly ...</code>、<br>   <code>mergeHints: no hints means the input is returned byte-identical</code></p>
+<ol><li><strong>门控默认开、显式关</strong>：<code>KHY_BTW</code> 缺省为真，<code>'0'/'false'/'off'/'no'/空</code> 关，</li></ol>
+<p>大小写与首尾空白容错；叶子绝不读 <code>process.env</code>。<br>   → <code>isEnabled: default on, explicit falsy off, case and padding tolerated</code>、<br>   <code>the leaf reads no env and no fs (purity lock on the source text)</code></p>
+<ol><li><strong>队列状态语义</strong>：入队即规范化后的文本（拒绝空条目且不计数）；</li></ol>
+<p>FIFO 保序；<code>drainAll</code> 一次清空并返回脱离引用的副本（改副本不能回填队列）；<br>   <code>clear</code> 是无返回值的丢弃操作，与 <code>drainAll</code> 区分。<br>   → <code>enqueue normalizes through the leaf and reports whether it stored anything</code>、<br>   <code>FIFO order is preserved and capped the same way as the leaf</code>、<br>   <code>drainAll empties in one shot and hands back a detached copy</code>、<br>   <code>clear drops pending notes without returning them</code></p>
+<ol><li><strong>每进程一份 = 每会话一份</strong>：<code>require</code> 缓存保证单例，跨句柄看到同一状态。</li></ol>
+<p>→ <code>the queue is one instance per process (require cache is the single source)</code></p>
+<ol><li><strong>本单元零 IO</strong>：存储层不写盘、不起进程、不发请求；IO 与回显归 call-site。</li></ol>
+<p>→ <code>the store holds no file/network IO (purity lock on the source text)</code></p>
+<h2 id="已知限制">已知限制<a class="anchor" href="#已知限制" aria-label="锚点">#</a></h2>
+<ul><li>队列只在内存，进程退出即丢——设计如此（旁注是「下一回合」的短生命周期输入），不做起盘持久化。</li><li><code>mergeHints</code> 的头部字面量 <code>[附加提示]</code> 是对外可见格式的一部分，改它等于改历史 REPL 行为，</li></ul>
+<p>属跨入口协议变更，须同步 <code>tests/services/conversation/*</code> 与 TUI 投影，不在本单元内擅改。</p>
+<h2 id="怎么跑">怎么跑<a class="anchor" href="#怎么跑" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">node --<span class="hljs-built_in">test</span> services/backend/src/services/domain/session/conversation/btwNote.test.js \
+  services/backend/src/services/domain/session/conversation/btwNoteQueue.test.js
+node scripts/ci/check-repo-layout.js --list=functional-unit | grep -c <span class="hljs-string">&quot;session/conversation&quot;</span>   <span class="hljs-comment"># 期望 0</span>
+node scripts/ci/check-repo-layout.js --list=entry-buffer | grep -c <span class="hljs-string">&quot;domain/session/conversation&quot;</span> <span class="hljs-comment"># 期望 0</span></code></pre>
+<p>新增 <code>README.md</code> 后须跑 <code>node scripts/docs/build_docs_site.js</code> 生成同名 <code>.html</code> 孪生，<br>否则 <code>node scripts/docs/verify_docs_site.js</code> 会报缺件（<code>check:layout</code> 对此不报错）。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../services/backend/src/services/domain/session/chatStateIsolation/README.html"><div class="dir">← 上一篇</div><div class="ttl">index</div></a><a class="next" href="../../../../../../../services/backend/src/services/domain/session/README.html"><div class="dir">下一篇 →</div><div class="ttl">session — 会话上下文计量、分叉与拓扑（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/session/conversation/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

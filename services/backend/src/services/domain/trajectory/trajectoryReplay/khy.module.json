@@ -1,0 +1,83 @@
+{
+  "name": "trajectoryReplay",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "实测出边（9 个源文件全数清点，非抽样；含惰性 require 与双引号形态）：D3 两条 —— replayLedger.js:173 的 `../../../../utils/dataHome`（_contentStoreDir）与 replayBundle.js:42 的同名 require（_defaultOutDir），两处都在函数体内惰性取用。**同域 1 条** —— replayBundle.js:141 惰性 require `../trajectoryProvenance/traceChain`（便携包顺带拷贝防篡改链，try/catch 包裹，缺席即 chainStatus.available:false）。内建：fs/path/os/crypto/child_process。**零第三方出边**。其余成员的本地 require 全部指向同目录 ./ 兄弟。",
+  "_deviation_note": "登记而非白名单，四笔：(1) **D2→D1 五条**，逐条实名：artifactHash.js:14 `../../../sourceSnapshotCrypto`（sha256Hex 单一实现，重写它只会造成两套哈希）、replayLedger.js:167 `../../../sessionPersistence`（jsonlPathFor 是会话路径的 SSOT，账本边车必须跟着它）、replayBundle.js:96 `../../../sessionPersistence`（同一理由的第二个站点）、replayEngine.js:46 `../../../toolCalling`（惰性取 executeTool：回放必须走同一个执行漏斗，文件锁/路径归一/注册表校验才继续生效）、replayStepPolicy.js:44 与 :55 `../../../execApproval`（matchCommandPattern 与 EXEC_APPROVED 符号，两处）。D2→D1 在 DOMAIN-DEPS 里是 declared_not_enforced，真源归 archDebtScan R1/R3 与 cross-layer-require 棘轮，本清单如实登记、不写白名单把它合法化（与 reverseEngineer 同一口径）。(2) tierRegistry.js:29 require `../../../../tools/_writeToolNames`，而 `src/tools/**` **不属于 DOMAIN-DEPS.json 的任何域根**——既非 D1 也非 D4，这条边在方向判定上是「未映射」，不能说合规也不能说违规；它是 FILE 档的派生源（删掉它 FILE_TOOLS 就失去唯一真源），域归属缺口的裁决见任务 #17。(3) 桶 index.js 生产零消费者（六个消费者全直连成员文件），桶只作为公开面的机器可读清单存在。(4) 录制热路径的入边来自作者 in-flight 的 `src/services/tool/toolUseLoopCore.js`（两处 recordToolTurn），该文件当前为 ` M`，本批**未触碰**、也未据其临时行为下任何结论。",
+  "fanIn": 6,
+  "fanInEvidence": [
+    "services/backend/src/cli/handlers/replay.js",
+    "services/backend/src/cli/handlers/guide.js",
+    "services/backend/src/services/tool/toolUseLoopCore.js",
+    "services/backend/src/services/domain/trajectory/trajectoryGuide/mapAuthor.js",
+    "services/backend/src/services/domain/eval/guiEval/recordingCollector.js",
+    "services/backend/src/services/domain/eval/guiEval/checkpointVerifier.js"
+  ],
+  "_fanIn_note": "非测试消费者 6 个文件 / 11 个 require 站点（按「直接 require 本单元路径」计，文件形态与成员形态都算，计数排除 *.test.js）：replay.js 取 4 个成员（replayBundle/replayEngine/replayLedger/tierRegistry），guide.js 取 2 个（replayBundle/replayLedger），toolUseLoopCore.js 取 replayLedger 的两个站点，mapAuthor.js 取 2 个（artifactHash/tierRegistry），guiEval 的 recordingCollector.js 与 checkpointVerifier.js 各取 artifactHash 一个（惰性 + try/catch）。域构成：3 个 D1（cli×2 + tool×1）+ 3 个 D2，全部是允许方向入边。注：本单元的扇入统计对目录形态 require 敏感——早期只匹配成员形态的探针会把 `require('.../syscallGateway')` 这类整包引用漏掉，故本数字经一次「文件形态 + 目录形态」双匹配探针复测。",
+  "behaviourTestsOutsideUnit": [
+    "services/backend/tests/services/domain/trajectory/trajectoryReplay/tierRegistry.test.js",
+    "services/backend/tests/cli/handlers/replayHandler.test.js",
+    "services/backend/tests/cli/handlers/guideHandler.test.js",
+    "services/backend/tests/cli/handlers/replayHandlerAi.test.js",
+    "services/backend/tests/services/trajectoryReplay/p1Ledger.test.js",
+    "services/backend/tests/services/trajectoryReplay/p2EnvFingerprint.test.js",
+    "services/backend/tests/services/trajectoryReplay/p3Bundle.test.js",
+    "services/backend/tests/services/trajectoryReplay/p4Engine.test.js",
+    "services/backend/tests/services/trajectoryReplay/g2EngineRepairSeam.test.js",
+    "services/backend/tests/services/trajectoryReplay/e2eReplay.test.js",
+    "services/backend/tests/services/trajectoryGuide/aiBridge.test.js"
+  ],
+  "_outside_test_note": "全仓 grep `trajectoryReplay` 命中 11 份单元外测试（一次清点即全数，未抽样），逐份按方言实跑：**75 例 / 0 fail / 0 skip**。6 份是 node:test 可直接跑（replayHandler 6、p1Ledger 9、p2EnvFingerprint 7、p3Bundle 6、p4Engine 8、e2eReplay 2）；5 份是 jest 方言，本便携环境未安装 jest（`node_modules/.bin/jest` 是悬空 shim），在 `node --test` 下加载期即失败，都用一次性方言垫片复跑核实（镜像树 tierRegistry 17、guideHandler 6、replayHandlerAi 3、g2EngineRepairSeam 6、trajectoryGuide/aiBridge 5）。「跑不了」不等于「红」，但错误文本必须读，且垫片本身要能给出真判据。⚠ 一处**同名不同物**：`tests/services/domain/trajectory/trajectoryReplay/tierRegistry.test.js`（jest 方言，17 例）与单元内共置的 `tierRegistry.test.js`（node:test，13 例）名字相同、方言不同、用例数不同，两者都是活的，不是重复件的残留——判「哪份是影子」时不可只看文件名。另需注意：本单元的测试覆盖横跨两种方言与两棵树（tests/ 镜像树 + 共置），任何一次「全绿」结论都必须两边都跑，只跑一边会少 75 或 147 例。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-29",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "晋级三判据齐（DOMAIN-DEPS._entry_buffer.promotionCriteria）：单元目录有 README.md、本清单有整数 fanIn、9 个源文件**全部**有同名同目录测试（147 例 / 0 skip / 全绿，源文件 `^test(` 行数与 runner 报告的 `# tests` 逐一相等）。把 KHY_DATA_HOME/KHY_PROJECT_DATA_HOME/KHY_LOG_DIR 指向空临时目录复跑一次，读数不变 → 这 147 例不依赖真实用户数据（replayBundle.test.js 自带重定向与 after() 清理）。",
+  "contract": {
+    "pipeline": "四阶段（[DESIGN-ARCH-048]）：① replayLedger 录制每个工具轮次的**完整未截断** params + 各类哈希（JSONL 边车 `<base>.replay-ledger.jsonl`）；② envFingerprint 采环境指纹；③ replayBundle 打成自包含便携包（manifest + 账本原文 + 内容寻址 blob + env.json + 可选 chain.json）；④ replayEngine 在无 AI 前提下按 seq 升序重放。档层 tierRegistry 与两个纯叶子（replayStepPolicy / replayArtifactGuards）服务于 ④。",
+    "hashIsSoleOracle": "成功与否**只由重算 sha256 判定**：后置校验哈希不符即 HALT（status:'diverged' + divergedAt + expected/actual），AI 修复桥也不得改写录制文件或录制哈希来凑匹配（`_maybeRepair 修复后哈希校验通过判 repaired——sha256 仍是唯一裁判`）。",
+    "neverReplayNondeterministic": "NETWORK_AI 档永不重放，如实计 skipped 并给理由「不可确定性复现（网络/AI）」；SHELL 档必须命中预批准模式或 opts.confirm 返回真值，confirm 抛错算未批准。未知工具折叠为 SHELL（要审批），绝不折叠为 FILE（自动重放）。",
+    "neverClobberUnrecorded": "前置守卫比对 beforeHash 与盘上实际：modify/delete 遇未录制的前置状态即 halt；create 遇已存在且内容不同即 halt；已在录制终态判 satisfied 并跳过（幂等）。未知 op 保守放行由执行层兜底（实测边界，已钉住）。",
+    "hotPathUntouched": "录制侧全程 best-effort：recordToolTurn 包 try/catch 返回 {ok:false,error} 而不抛，绝不因账本失败拖垮工具调用，也不改调用方 result 或模型可见内容。写盘默认延迟（debounce `KHY_REPLAY_LEDGER_FLUSH_MS` 150ms 或满 32 行批量），read() 并轨未刷条目，导出与进程退出走 drainSync。",
+    "noAIByDefault": "引擎不 import 任何模型；修复能力只能经 opts.repair 注入闭包提供，钩子缺席/返回 null/declined 三态都逐字节回落纯确定性路径（零回归门）。",
+    "gates": "KHY_REPLAY_LEDGER_FLUSH_MS(150)、KHY_REPLAY_LEDGER_SYNC(默认关，真值 1/on/true/yes)、KHY_REPLAY_CAPTURE_CONTENT(默认开，假值 0/off/false/no)、KHY_REPLAY_STEP_TIMEOUT_MS(120000)、KHY_REPLAY_SHELL_ALLOW(空)、KHY_REPLAY_L2_CONFIRM(YES)、KHY_REPLAY_FINGERPRINT_TOOLS(node)、KHY_REPLAY_PROBE_TIMEOUT_MS(3000)。全部 `parseInt(process.env.X, 10)` 或 String 归一后回落默认值，零硬编码端点；单步超时是活动式 Promise.race + clearTimeout（RUNTIME-003 合规，非硬 kill 整任务）。",
+    "injectionPoints": [
+      "replay(bundle, opts) — bundle 可为包目录路径 / readBundle 结果 / 裸 manifest 三种形态；opts.force、opts.preApprovedShell、opts.confirm、opts.resumeFromSeq、opts.onStep、opts.activityTimeoutMs、opts.repair 全可注入",
+      "exportBundle(sessionId, {outDir, includeContent, manifestPath}) — 导出根目录与内容拷贝都可指定",
+      "envFingerprint.capture({cwd, manifestPath}) — cwd 可覆盖，使跨目录复现的判定可控",
+      "replayLedger 的 flush()/drainSync()/pendingCount() — 队列状态可观测，测试据此断言「入队而未落盘」与「已清零」两个瞬间",
+      "_resetSeq(sessionId) — 测试/维护用，先 drainSync 再清内存计数并按盘上账本长度重播种"
+    ],
+    "knownBoundaries": [
+      "「空包也是合法包」是当前契约：exportBundle 对从未录制的 sessionId 返回 ok:true 且 steps 为空，调用方**不可**把 ok 当「确实录到过东西」（replayBundle.test.js 头部注释是这条的登记处）。",
+      "内容库同步写、账本行异步写这一不对称由 drainSync 兜住，代价是导出路径多一次同步 I/O（replayLedger.js:177-179 注释登记）。",
+      "KHY_REPLAY_CAPTURE_CONTENT=off 时包里 content/ 为空，verifyBundle 对每个 FILE 步报「缺内容 blob」——诚实报无法复现，不放行。",
+      "环境指纹里 cwd 参与比对：换工作目录重放即判 env-mismatch，需显式 opts.force。capturedAt 刻意忽略（时钟漂移不算分歧）。",
+      "_replayControlResponder 在构造时读 KHY_REPLAY_L2_CONFIRM，之后改 env 无效——注入必须在构造前设值。",
+      "seq 的两种语义：自动模式单调递增，**显式传入的 seq 原样采用且不推进计数器**（实测，非笔误），因此手工补录可造成 verifyLedger 判定的断号。"
+    ],
+    "registered_defects": [
+      "B28-S5（**安全相关，需人裁决**）replayStepPolicy.js:75-78 的应答器恒返 `{behavior:'allow', typed:'YES'}`，网关 L2 门只比对确认串，于是回放中一个 L2 破坏性步骤被自动键入确认串放行。实测：经 `syscallGateway.makeControlPrompter(responder)` 喂给 `approvalRouter.route`，`delete/project` 判 L2 时返回 `user-allow`，reasons 为「用户键入确认串「YES」，放行本次 L2」；对照组交互器返回空串则 `deny` + `confirm-mismatch`。限制面：只有引擎决定重放的步走到这里（NETWORK_AI 提前 skip）、FILE 档只重放录制过的路径、前置守卫仍会因 beforeHash 分歧 HALT。但这与 approvalRouter.js:12「非交互环境一律 fail-closed 拒绝」的表述冲突 → 任务 #17。",
+      "B28-S6：_preconditionCheck 非 total——replayArtifactGuards.js:18-19 无 try/catch，null 入参直接 TypeError。流水线内不可达（引擎恒传对象），已按实测钉住。",
+      "B28-S7：hashCanonical 名不符实，只做 JSON.stringify 不排序键（artifactHash.js:52-62），键序不同哈希即不同。录制侧与校验侧算同一对象故不误判，但跨来源比 canonical 哈希的设想不成立。",
+      "B28-S8：envFingerprint.compare 把 null 与 undefined 判为分歧，而 diff 项两侧都被 `== null ? null :` 归一成 null（envFingerprint.js:127-128），报出来的分歧读起来像没分歧。已按实测钉住。",
+      "B28-S9：artifactHash 的第五个导出 sha256Hex 是原样透传，对 null 抛 TypeError，与同文件四个包装函数口径不同（artifactHash.js:64）。",
+      "B28-S10：两套 env 开关词汇并存且一份逐字重复——_captureContentEnabled 的假值集合在 replayLedger.js:152 与 replayBundle.js:35 各写一遍，_ledgerSyncForced 用另一套真值集合。语义不同故非同一 bug，但词汇表分叉，与第 27 批 `_OFF`/`utils/isOffValue` 漂移同族 → 任务 #17。"
+    ],
+    "fixed_in_this_unit": "无。本批**零修改源文件**：19 份新增共置测试里本单元占 9 份，全部缺陷以登记代替动手（无甲/乙裁决；B28-S5 涉及红线语义，更不可自改）。"
+  },
+  "tests": [
+    "artifactHash.test.js",
+    "envFingerprint.test.js",
+    "index.test.js",
+    "replayArtifactGuards.test.js",
+    "replayBundle.test.js",
+    "replayEngine.test.js",
+    "replayLedger.test.js",
+    "replayStepPolicy.test.js",
+    "tierRegistry.test.js"
+  ],
+  "_test_dialect_note": "9 份全部 node:test 方言、同目录同名、共置；合计 147 例 / 0 skip / 全绿。逐文件 22/22/7/19/14/18/19/13/13 例（断言 28/40/24/36/63/54/74/36/41，共 396 条）。README.md 的每条契约引用命中真实测试标题（引用探针：24 条 matched），全部 `file:NN` 行号引用经校验探针核对（23 处，文件存在且行内容支持该论断）。外部套件另见 behaviourTestsOutsideUnit。"
+}

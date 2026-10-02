@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>skills — 技能蒸馏、威胁扫描与验收脚手架（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>skills<span class="sep">›</span>skills — 技能蒸馏、威胁扫描与验收脚手架（D2）</div>
+      <header class="hero reveal"><h1>skills — 技能蒸馏、威胁扫描与验收脚手架（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#skills-技能蒸馏-威胁扫描与验收脚手架-d2">skills — 技能蒸馏、威胁扫描与验收脚手架（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="skills-技能蒸馏-威胁扫描与验收脚手架-d2">skills — 技能蒸馏、威胁扫描与验收脚手架（D2）<a class="anchor" href="#skills-技能蒸馏-威胁扫描与验收脚手架-d2" aria-label="锚点">#</a></h1>
+<p>业务上下文：<code>/learn</code>（从目录或 URL 学一个技能）、<code>skill journey</code>、<br><code>/init-verifiers</code>。本目录五个文件<strong>全部纯函数</strong>，读写盘留在<br><code>services/skillLearningService.js</code>。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong>跑 <code>/learn</code> 的人</strong>：<code>constants/commandSchema.js:166</code>（子命令 <code>:358</code>，</li></ul>
+<p>路由 <code>:2067</code>）→ <code>services/skillLearningService.js:21,22,873</code> 取<br>  <code>skillSourceDistiller</code> 与 <code>skillThreatScanner</code>。</p>
+<ul><li><strong>看技能历程的人</strong>：<code>cli/handlers/skill.js:387-388</code> 取 <code>journeyTimeline</code>。</li><li><strong>初始化验收器的人</strong>：<code>commandSchema.js:1080-1084</code> →</li></ul>
+<p><code>cli/handlers/initVerifiers.js:21</code> 取 <code>verifierScaffoldPlan</code>。</p>
+<ul><li><strong>门控文档</strong>：<code>services/flagRegistry.js:1116-1136</code> 记录这几个开关的语义。</li><li>壳：<code>services/skills/index.js:4-7</code>。</li></ul>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p>「从外部内容生成技能」是一条<strong>把不可信输入变成可执行资产</strong>的通路，所以判级必须<br>与写入分离且能独立追问：<code>skillSourceDistiller.js</code>（<code>:9,16</code> 的头部注释即声明<br>fs/HTTP 留在调用方）负责抽取——<code>deriveSkillName / clampDescription / extractCommands /<br>extractHeadings / buildSkillBody</code>；<code>skillThreatPatterns.js</code> 是<strong>数据表</strong><br>（<code>_THREAT_PATTERNS</code>、<code>_SEVERITY_ORDER</code>、<code>_INVISIBLE_CHARS</code> 与三档判定常量），<br><code>skillThreatScanner.js</code> 只做 <code>runThreatScan</code> / <code>deriveVerdict</code> / <code>shouldAllowLearn</code>。<br>这样「为什么这条被标 dangerous」的答案永远落在一张表上，而不是散在 if 里；<br><code>_INVISIBLE_CHARS</code> 单独列出，防的是零宽字符伪装（同 <code>[RESEARCH-018]</code> 对<br>不可信输入透明性的要求）。<code>verifierScaffoldPlan.js</code> 把 <code>/init-verifiers</code> 的<br>命名与脚手架指令做成纯计划（<code>VERIFIER_TYPES</code> / <code>planVerifierNameScoped</code>）。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/services/skills/skillThreatScanner.test.js     <span class="hljs-comment"># 16 tests / 13 pass / 3 fail</span></code></pre>
+<p><strong>当前是红的</strong>，原样记录：16 tests / 13 pass / <strong>3 fail</strong>（失败用例名未在本卡采集，<br>不做分布推断）。同一时刻 <code>skills/skillThreatPatterns.js</code> 是本目录唯一脏文件<br>（<code> M</code>），而它正是 Scanner 的数据源——红点与该脏文件<strong>同侧</strong>是观察，不是因果结论；<br>需按规则 5 复现并立独立改动集。<br>同族（本卡未逐条复跑）：<code>tests/services/skills/{journeyTimeline,<br>skillSourceDistiller,verifierScaffoldPlan}.test.js</code>，<br>接线锁在 <code>tests/services/skillLearningServiceLearnFromSource.test.js:92,173</code>。</p>
+<h2 id="已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）<a class="anchor" href="#已知缺陷-登记-不在本单元擅自修" aria-label="锚点">#</a></h2>
+<ol><li>上述 3 条红（与 <code>skillThreatPatterns.js</code> 的在做中改动同侧）。</li><li><code>skillThreatPatterns.js</code> 无同名测试，只经 Scanner 间接覆盖。</li></ol>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../services/backend/src/services/domain/session/README.html"><div class="dir">← 上一篇</div><div class="ttl">session — 会话上下文计量、分叉与拓扑（D2）</div></a><a class="next" href="../../../../../../services/backend/src/services/domain/state/README.html"><div class="dir">下一篇 →</div><div class="ttl">state — 意图裁决、编排与阶段状态机（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/skills/README.html";</script>
+<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

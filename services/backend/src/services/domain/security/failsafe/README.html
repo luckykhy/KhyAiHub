@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>failsafe — 零静默失败与精准归因子系统 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>security<span class="sep">›</span>failsafe<span class="sep">›</span>failsafe — 零静默失败与精准归因子系统</div>
+      <header class="hero reveal"><h1>failsafe — 零静默失败与精准归因子系统</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#failsafe-零静默失败与精准归因子系统">failsafe — 零静默失败与精准归因子系统</a></li><li class="lvl-2"><a href="#各文件的职责-取自各文件头注释">各文件的职责（取自各文件头注释）</a></li><li class="lvl-2"><a href="#谁在用本单元-非测试外部消费者-去重-2-个">谁在用本单元（非测试外部消费者，去重 2 个）</a></li><li class="lvl-2"><a href="#出域边-如实登记-不写白名单">出域边（如实登记，不写白名单）</a></li><li class="lvl-2"><a href="#已知缺陷-共置测试钉住-一律登记不修">已知缺陷（共置测试钉住，一律登记不修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="failsafe-零静默失败与精准归因子系统">failsafe — 零静默失败与精准归因子系统<a class="anchor" href="#failsafe-零静默失败与精准归因子系统" aria-label="锚点">#</a></h1>
+<p>D2 业务上下文里的一个功能单元：把<strong>任意原始失败信号</strong>归并到 E01–E08 错误码，<br>并保证失败不会被静默吞掉（拦截器基座 + 兜底协议不可绕过）。</p>
+<p>6 个源文件，全部有同名同目录的共置测试（27 处 <code>KNOWN-DEFECT</code> 断言钉住实测错误行为）。</p>
+<h2 id="各文件的职责-取自各文件头注释">各文件的职责（取自各文件头注释）<a class="anchor" href="#各文件的职责-取自各文件头注释" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>角色</th></tr></thead><tbody><tr><td><code>index.js</code></td><td>单元门面</td></tr><tr><td><code>classifier.js</code></td><td><code>ErrorClassifier</code>：把任意原始失败信号归并到 E01–E08</td></tr><tr><td><code>classifierSignals.js</code></td><td>分类器的「信号识别 + 文本脱敏/裁剪」层</td></tr><tr><td><code>errorCodes.js</code></td><td>精准归因错误字典，<strong>单一真源</strong></td></tr><tr><td><code>safeResponse.js</code></td><td><code>SafeResponseWrapper</code>：零静默失败拦截器基座</td></tr><tr><td><code>streamInjector.js</code></td><td><code>StreamFailSafeInjector</code>：兜底协议不可绕过</td></tr></tbody></table>
+<h2 id="谁在用本单元-非测试外部消费者-去重-2-个">谁在用本单元（非测试外部消费者，去重 2 个）<a class="anchor" href="#谁在用本单元-非测试外部消费者-去重-2-个" aria-label="锚点">#</a></h2>
+<ul><li><code>src/services/failsafe/index.js:4</code> —— D1 侧历史路径再导出壳（<code>module.exports = require('../domain/security/failsafe')</code>）。</li><li><code>src/services/domain/maintenance/selfHeal/errorDiagnostician.js:41</code> —— D2 内惰性 require，自愈诊断面。</li></ul>
+<h2 id="出域边-如实登记-不写白名单">出域边（如实登记，不写白名单）<a class="anchor" href="#出域边-如实登记-不写白名单" aria-label="锚点">#</a></h2>
+<ul><li><code>classifierSignals.js:24</code> → <code>services/errorClassifier.js</code>（<strong>D1</strong>）。D2 的名义边界只有 <code>[&quot;D2&quot;,&quot;D3&quot;]</code>，</li></ul>
+<p>这条属 <code>DOMAIN-DEPS.json</code> 的 <code>declared_not_enforced</code> D2→D1，交 <code>archDebtScan</code> R1 / <code>cross-layer-require</code> 棘轮管辖<br>  （逐条裁决面见 <code>[DESIGN-LAY-008]</code> §12.43）。本单元没有任何指向 D3 的 require。</p>
+<h2 id="已知缺陷-共置测试钉住-一律登记不修">已知缺陷（共置测试钉住，一律登记不修）<a class="anchor" href="#已知缺陷-共置测试钉住-一律登记不修" aria-label="锚点">#</a></h2>
+<ul><li>再归因（幂等）只保住错误码，必填字段全部退化成 unknown。</li><li><code>ctx</code> 里过期的 <code>error_code</code> 压过 <code>input</code> 更强的显式信号；原型链上的 <code>error_code</code> 被当成显式归因（凭空信任继承属性）。</li><li>只读（frozen）失败信号被降级成 E04，本应归 E06；<code>auth</code> / <code>billing</code> / 404 一类网关侧失败被归成「工具执行崩溃」。</li><li><code>detail</code> 用真值判断渲染，值为 <code>0</code> 的数字字段被从文案里抹掉；E07 的授权级别 <code>0</code>（L0）被当成缺失。</li><li><code>ctx</code> 传 <code>null</code> / 缺省时 <code>_readMissingDep</code>、<code>_detectKind</code> 直接解引用抛 TypeError —— 兜底路径自身会抛。</li><li>嵌套 <code>error.code</code> 绕过全大写形态校验，任意字符串都被当作合法错误码。</li></ul>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../services/backend/src/services/domain/query/README.html"><div class="dir">← 上一篇</div><div class="ttl">query — 检索必要性、续写、压缩管线与搜索证据链（D2）</div></a><a class="next" href="../../../../../../../services/backend/src/services/domain/security/marshal/README.html"><div class="dir">下一篇 →</div><div class="ttl">capabilityVector</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/security/failsafe/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

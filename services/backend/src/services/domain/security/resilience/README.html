@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>resilience — 有限窗口降级与强制兜底协议单元 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>security<span class="sep">›</span>resilience<span class="sep">›</span>resilience — 有限窗口降级与强制兜底协议单元</div>
+      <header class="hero reveal"><h1>resilience — 有限窗口降级与强制兜底协议单元</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#resilience-有限窗口降级与强制兜底协议单元">resilience — 有限窗口降级与强制兜底协议单元</a></li><li class="lvl-2"><a href="#成员表">成员表</a></li><li class="lvl-2"><a href="#消费者与实测-fan-in">消费者与实测 fan-in</a></li><li class="lvl-2"><a href="#编号契约-命名测试">编号契约 → 命名测试</a></li><li class="lvl-2"><a href="#manifest-裁决">Manifest 裁决</a></li><li class="lvl-2"><a href="#偏差与已知缺陷">偏差与已知缺陷</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="resilience-有限窗口降级与强制兜底协议单元">resilience — 有限窗口降级与强制兜底协议单元<a class="anchor" href="#resilience-有限窗口降级与强制兜底协议单元" aria-label="锚点">#</a></h1>
+<p>隶属 <code>services/backend/src/services/domain/security/</code>。把「每个核心意图绑定一棵有限深度<br>降级熔断树 + 预算闸门 + 死循环检测 + 强制兜底交差」这套协议收成一个可注入的门面<br>（<code>ResilienceCoordinator</code>），供 toolCalling、adversarial、selfHeal 等上层以非侵入方式接入<br>（不改 <code>toolUseLoop</code>，接入点只是把 <code>executeTool</code> 包成 runner）。</p>
+<h2 id="成员表">成员表<a class="anchor" href="#成员表" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>角色</th><th>requires（单元内）</th><th>对应测试</th></tr></thead><tbody><tr><td><code>errorSignature.js</code></td><td>调用签名 + 失败归类（纯叶子，绝不抛）</td><td>—</td><td><code>errorSignature.test.js</code></td></tr><tr><td><code>fallbackTree.js</code></td><td>降级树 builder，硬上限 depth=3 / retry=1 / 冻结产物</td><td>—</td><td><code>fallbackTree.test.js</code></td></tr><tr><td><code>deadLoopDetector.js</code></td><td>「同一发子弹」检测（纯内存，可 reset）</td><td><code>errorSignature</code></td><td><code>deadLoopDetector.test.js</code></td></tr><tr><td><code>budgetAdapters.js</code></td><td>步数/Token 预算适配器，统一 <code>snapshot()</code> 契约</td><td><code>fallbackTree</code></td><td><code>budgetAdapters.test.js</code></td></tr><tr><td><code>budgetExecutor.js</code></td><td>协议心脏：预算闸门阶梯、修复门控唯一重试、失败降级注入</td><td><code>deadLoopDetector</code> <code>errorSignature</code> <code>fallbackTree</code> <code>salvage</code> <code>budgetAdapters</code></td><td><code>budgetExecutor.test.js</code></td></tr><tr><td><code>intentTrees.js</code></td><td>内置意图→降级树注册表（当前 1 棵：<code>fetch-web-content</code>）+ 残料抽取</td><td><code>fallbackTree</code></td><td><code>intentTrees.test.js</code></td></tr><tr><td><code>salvage.js</code></td><td>强制兜底 JSON 组装（SalvageProtector）</td><td>—</td><td><code>salvage.test.js</code>（钉的是集中修复后的行为，见 D3）</td></tr><tr><td><code>index.js</code></td><td>门面：<code>ResilienceCoordinator</code> + <code>makeToolRunner</code> + 全量再导出</td><td>上列全部</td><td><code>index.test.js</code></td></tr></tbody></table>
+<h2 id="消费者与实测-fan-in">消费者与实测 fan-in<a class="anchor" href="#消费者与实测-fan-in" aria-label="锚点">#</a></h2>
+<p>单元外真实 <code>require</code>（grep 实测，2026-09 计数口径：<strong>生产 5 + 测试 3 = 8</strong>）：</p>
+<table><thead><tr><th>消费者</th><th>路径</th><th>引用方式</th></tr></thead><tbody><tr><td>兼容 shim</td><td><code>services/backend/src/services/resilience/index.js</code></td><td><code>require('../domain/security/resilience')</code></td></tr><tr><td>工具调用主循环</td><td><code>services/backend/src/services/tool/toolCalling.js</code></td><td><code>require('../resilience')</code>（经 shim）</td></tr><tr><td>对抗压力台</td><td><code>services/backend/src/services/domain/security/adversarial/stressHarness.js</code></td><td><code>require('../resilience')</code></td></tr><tr><td>自愈·树供给</td><td><code>services/backend/src/services/domain/maintenance/selfHeal/fallbackTree.js</code></td><td><code>require('../../security/resilience')</code></td></tr><tr><td>自愈·错误诊断</td><td><code>services/backend/src/services/domain/maintenance/selfHeal/errorDiagnostician.js</code></td><td><code>require('../../security/resilience')</code></td></tr><tr><td>测试 ×3</td><td><code>tests/services/{adversarial,resilience,selfHeal}/*.test.js</code></td><td>经 shim</td></tr></tbody></table>
+<h2 id="编号契约-命名测试">编号契约 → 命名测试<a class="anchor" href="#编号契约-命名测试" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>契约</th><th>测试（文件 · 用例名）</th></tr></thead><tbody><tr><td>C1</td><td>树深/重试硬上限、builder 拒绝超限、产物冻结</td><td><code>fallbackTree.test.js</code>（既有）</td></tr><tr><td>C2</td><td>预算 <code>snapshot()</code> 语义；显式 0 = 真枯竭不回落缺省</td><td><code>budgetAdapters.test.js</code>（既有）</td></tr><tr><td>C3</td><td>预算阶梯：地板/不足/中途熔断时<strong>精确存活集 + 丢弃项原因串</strong>（如 <code>skipped:budget-floor(33%&lt;40%)</code>）</td><td><code>budgetExecutor.test.js</code> · <code>gate ①…</code> / <code>gate ②…</code> / <code>mid-ladder floor cut…</code></td></tr><tr><td>C4</td><td>绝不开启第二遍循环；穷尽即 tree-exhausted 兜底</td><td><code>budgetExecutor.test.js</code> · <code>full ladder exhausted…</code></td></tr><tr><td>C5</td><td>唯一重试仅限「修复且真的换了输入」，死循环探针二次否决</td><td><code>budgetExecutor.test.js</code> · <code>repair-gated retry…</code> 等 4 例</td></tr><tr><td>C6</td><td>内置 <code>fetch-web-content</code> 树形状、三 Plan 的 buildParams 精确形状、冻结</td><td><code>intentTrees.test.js</code> · <code>buildWebContentTree: intent…</code> / <code>per-plan buildParams contract…</code></td></tr><tr><td>C7</td><td>意图注册表冻结且仅一项；<code>getIntentTree</code> 命中给<strong>新树</strong>（无记忆化）、未命中给 null、容忍首尾空白</td><td><code>intentTrees.test.js</code> · <code>INTENT_TREE_BUILDERS: frozen registry…</code> / <code>getIntentTree: hit → fresh…</code></td></tr><tr><td>C8</td><td><code>_textSalvage</code> 候选优先级、trim 门、results 列表编号拼接、4000 字符上限</td><td><code>intentTrees.test.js</code> · <code>_textSalvage: …</code> 4 例</td></tr><tr><td>C9</td><td>门面 16 键精确导出，且全部为同源<strong>同一绑定</strong>（禁止重新实现/记忆化包装）</td><td><code>index.test.js</code> · <code>face: exports exactly…</code> / <code>face: every re-export is the SAME binding…</code></td></tr><tr><td>C10</td><td><code>makeToolRunner</code> 拒绝非函数；trace = baseTrace + <code>resiliencePlan/resilienceRetry</code>（无 meta 时键仍在）</td><td><code>index.test.js</code> · <code>makeToolRunner: …</code> 2 例</td></tr><tr><td>C11</td><td>协调器缺省预算=树深、<code>opts.budget/floorPct/detector/onDegrade/availableTools</code> 全部透传；未注入 detector 时每次 <code>run()</code> 全新（无跨 run 状态泄漏）</td><td><code>index.test.js</code> · <code>coordinator: default budget…</code> 等 6 例</td></tr><tr><td>C12</td><td>未知意图/非法输入<strong>必须交差</strong>兜底 JSON（<code>unknown-intent</code> / <code>executor-error</code>），不抛给调用方</td><td><code>index.test.js</code> · <code>coordinator.run: unknown intent still 交差…</code> / <code>coordinator.run: non-string non-tree…</code></td></tr></tbody></table>
+<h2 id="manifest-裁决">Manifest 裁决<a class="anchor" href="#manifest-裁决" aria-label="锚点">#</a></h2>
+<p>本工作流开始时，任务简报所称「父级 <code>security/khy.module.json</code> 管辖整个子树」<strong>与磁盘不符</strong><br>（<code>find services/backend/src/services/domain/security -name khy.module.json</code> 为空）。按简报<br>指令「除非父清单确有不符才考虑单元清单，否则把决定记在 README」——我未创建任何清单文件。<br>会话进行中，并行编排进程已在本目录落下单元级 <code>khy.module.json</code>（domain D2、fanIn 5、<br>stage stable），本单元自此受其管辖，不存在也不需要第二个竞争真源。其 <code>fanIn: 5</code> 与本<br>README 的生产消费者计数一致（其口径不含 <code>*.test.js</code>；加上 tests/ 下 3 份外部行为测试<br>即上表的 8）。该清单另钉了两条 <code>_textSalvage</code> 内容级偏差（null 条目抛错、字符串条目<br>命中 <code>String.prototype.link</code>），复现归并行进程（<code>.khy/feedback/b23-resilience/</code>），与本<br>README D2 所记 <code>getIntentTree</code> 原型链泄漏（<code>.khy/feedback/b23-resilience-2/</code>）互不覆盖。</p>
+<h2 id="偏差与已知缺陷">偏差与已知缺陷<a class="anchor" href="#偏差与已知缺陷" aria-label="锚点">#</a></h2>
+<ul><li><strong>D1 缺口清单过期</strong>：简报称 <code>budgetExecutor.test.js</code> 缺失，实际已在盘（16.6 KB、</li></ul>
+<p>24 用例，经逐条核对断言的是真实阶梯行为），本工作流未触碰它，只补了<br>  <code>intentTrees.test.js</code> 与 <code>index.test.js</code>。</p>
+<ul><li><strong>D2 <code>getIntentTree</code> 原型链泄漏（真实缺陷，已集中修复）</strong>：注册表查找曾走原型链，</li></ul>
+<p><code>getIntentTree('valueOf'/'hasOwnProperty')</code> 抛 TypeError、<code>'constructor'</code> 返回 <code>{}</code>、<br>  <code>'toString'</code> 返回字符串；连带门面 <code>run('valueOf')</code> 违反 C12「绝不抛」直接 reject。<br>  复现存证：<code>.khy/feedback/b23-resilience-2/repro-before.txt</code> 与<br>  <code>.khy/feedback/b23-resilience/repro-before.txt</code>（缺陷 2，探针<br>  <code>.khyos/tmp/b23-proto-lookup-probe.js</code>）。修复（2026-09-28，编排方集中落地）：查找前加<br>  <code>Object.prototype.hasOwnProperty.call</code>，只认自有键；测试已翻正为修复后契约<br>  （<code>getIntentTree: inherited keys return null…</code>），原 skip 的期望契约用例已删除。</p>
+<ul><li><strong>D3 <code>salvage.js</code> 纯空白池缺陷</strong>：由编排方集中修复，本单元不触碰</li></ul>
+<p><code>salvage.js</code>，<code>salvage.test.js</code> 断言的即修复后行为（空白池 → <code>''</code>）。</p>
+<ul><li><strong>D3b <code>_textSalvage</code> 两条偏差（本批已修，复诊见 repro-after）</strong>：results[] 含 null 条目抛</li></ul>
+<p>TypeError（违背函数自身「绝不抛错」JSDoc）、字符串条目命中 <code>String.prototype.link</code><br>  把原生函数串渲染进残料——生产路径靠 <code>_salvageOf</code> 的 try/catch 兜住第一条。<br>  见 <code>intentTrees.test.js</code> 的两条同名用例（已改写为钉住修后契约），<br>  复现存证 <code>.khy/feedback/b23-resilience/repro-before.txt</code>（缺陷 1）。</p>
+<ul><li><strong>D4 测试基线</strong>：<code>node --test</code> 八个文件名逐一传入（Windows 下目录参数会被当模块路径）</li></ul>
+<p>→ 129 tests / 129 pass / 0 fail / 0 skip；测试全内存、有界，不使用任何计时器。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../services/backend/src/services/domain/security/README.html"><div class="dir">← 上一篇</div><div class="ttl">security — 权限策略、失效兜底、韧性、数据主权与红队训练（D2）</div></a><a class="next" href="../../../../../../../services/backend/src/services/domain/security/security/codeScanner/README.html"><div class="dir">下一篇 →</div><div class="ttl">index</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/security/resilience/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

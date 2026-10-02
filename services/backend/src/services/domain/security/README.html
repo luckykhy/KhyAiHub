@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>security — 权限策略、失效兜底、韧性、数据主权与红队训练（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>security<span class="sep">›</span>security — 权限策略、失效兜底、韧性、数据主权与红队训练（D2）</div>
+      <header class="hero reveal"><h1>security — 权限策略、失效兜底、韧性、数据主权与红队训练（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#security-权限策略-失效兜底-韧性-数据主权与红队训练-d2">security — 权限策略、失效兜底、韧性、数据主权与红队训练（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="security-权限策略-失效兜底-韧性-数据主权与红队训练-d2">security — 权限策略、失效兜底、韧性、数据主权与红队训练（D2）<a class="anchor" href="#security-权限策略-失效兜底-韧性-数据主权与红队训练-d2" aria-label="锚点">#</a></h1>
+<p>业务上下文：<code>/permissions</code>、<code>/sandbox-toggle</code>、<code>security_scan</code> 工具，<br>以及每一次模型输出都要过的兜底（failsafe）、韧性回退（resilience）与<br>红队演练（redpass / adversarial）。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong><code>/permissions</code></strong>：<code>cli/routerDispatchTail.js:750</code>（case <code>'permissions'</code>），</li></ul>
+<p>经壳 <code>services/permissionPolicy/index.js</code> 取本目录。</p>
+<ul><li><strong><code>/sandbox-toggle</code></strong>：<code>constants/commandSchema.js:1073-1078</code>（category security）。</li><li><strong>TUI 的红队与主权链</strong>：<code>cli/tui/hooks/useQueryBridge.js:1348,1373,1488,3628</code>、</li></ul>
+<p><code>cli/tui/ink-components/App.js:3449,5288,5299</code>。</p>
+<ul><li><strong>代码扫描工具</strong>：<code>tools/securityScan.js:38,393</code>；</li></ul>
+<p><code>services/securityGuardService.js:536</code>；<code>services/cliErrorDescriptor.js:31</code><br>  取 <code>failsafe</code> 错误码；<code>permissions/patternMatcher.js:123</code>。</p>
+<ul><li><strong>韧性回退</strong>：<code>services/domain/maintenance/selfHeal/fallbackTree.js:77</code></li></ul>
+<p>经壳 <code>services/resilience</code>。</p>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p>安全件的失效模式是「判级与执行分离，改了文案以为改了策略」，所以每条链都要求<br><strong>判据可点名、执行可拦截</strong>（规则 10 A2-4）：<br><code>permissionPolicy/{config,matchers,index}</code> 提供 <code>evaluate</code> / <code>addPathRule</code> /<br><code>addUrlRule</code> 与 glob→正则的匹配（<code>globToRegExp</code> 的红队样本另见<br><code>tests/globDoublestarAnchor.test.js</code>，那是「双星锚点」这类误放过的锁）；<br><code>failsafe/</code> 把上游异常归成有限错误码（<code>ERROR_CODES</code> / <code>classify</code> /<br><code>SafeResponseWrapper</code> / <code>StreamFailSafeInjector</code>），直接服务规则 2.2 的<br>「问题 + 识别码 + 修复建议」；<code>resilience/</code> 管预算与回退<br>（<code>BudgetAwareExecutor</code> / <code>FallbackTreeBuilder</code> / <code>DeadLoopDetector</code> /<br><code>SalvageProtector</code> / <code>MAX_FALLBACK_DEPTH</code>）；<code>marshal/capabilityVector</code> 是纯向量判级；<br><code>dataSovereignty/</code> 处理幽灵值污染（<code>GhostValueAnnotator</code> / <code>ConflictQuencher</code>）；<br><code>adversarial/</code> 与 <code>redpass/</code> 是攻击面训练（<code>attackVectors</code> 的 VECTORS 表、<br><code>survivalCriteria</code> 的不变量、<code>redpassEngine</code> 的覆盖率报告与拒绝检测）。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/services/failsafe/failsafe.test.js             <span class="hljs-comment"># 35 tests / 35 pass / 0 fail</span>
+node --<span class="hljs-built_in">test</span> tests/services/resilience/resilience.test.js         <span class="hljs-comment"># 23 tests / 23 pass / 0 fail</span></code></pre>
+<p>同族（node:test，本卡未逐条复跑）：<br><code>tests/services/marshal/capabilityVector.test.js</code>、<br><code>tests/services/dataSovereignty/dataSovereignty.test.js</code>、<br><code>tests/services/adversarial/adversarialEngine.test.js</code>、<br><code>tests/globDoublestarAnchor.test.js</code>、<code>tests/hookContribSeams.test.js</code>。<br><code>tests/services/permissionPolicy/permissionPolicy.test.js</code> 是 jest 形态，<br><strong>本便携安装的 jest 跑不起来</strong>（见 已知缺陷 2）。</p>
+<h2 id="已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）<a class="anchor" href="#已知缺陷-登记-不在本单元擅自修" aria-label="锚点">#</a></h2>
+<ol><li><code>security/skillLedger/index.js</code> 的对外五个动作（`certifySkill / verifySkill /</li></ol>
+<p>listCertifiedSkills / getAuditTrail / initKeys<code>）除自身壳<br>   </code>services/security/index.js:6<code> 外**未发现消费者**；同时 </code>redpass/<code> 5 个文件与<br>   </code>failsafe/classifierSignals.js` 无同名测试。删/接需人裁决（规则 7）。</p>
+<ol><li>在做中改动：<code>adversarial/attackVectors.js</code>、<code>redpass/redpassPrompts.js</code>（均 <code> M</code>）。</li><li>本机 jest 渠道不可用：<code>services/backend/node_modules/.bin/jest</code> 执行即</li></ol>
+<p>MODULE_NOT_FOUND（<code>jest-cli</code> 未落盘），故所有 jest 形态套件在此机器无执行渠道。<br>   这是环境事实，不是判据结论；修法是补装依赖，属独立改动集。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../services/backend/src/services/domain/security/marshal/README.html"><div class="dir">← 上一篇</div><div class="ttl">capabilityVector</div></a><a class="next" href="../../../../../../services/backend/src/services/domain/security/resilience/README.html"><div class="dir">下一篇 →</div><div class="ttl">resilience — 有限窗口降级与强制兜底协议单元</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/security/README.html";</script>
+<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
