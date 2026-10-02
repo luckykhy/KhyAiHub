@@ -194,7 +194,7 @@ function _buildReason(top, hasEvidence, count) {
 function buildRecommendText(rec) {
   const r = rec && typeof rec === 'object' ? rec : {};
   const lines = [];
-  lines.push('🧭 模型顾问(advisor) —— 基于实测表现推荐当前最佳可执行模型');
+  lines.push('模型顾问(advisor) —— 基于实测表现推荐当前最佳可执行模型');
   if (!r.recommended) {
     lines.push(`  ${r.reason || '当前无可推荐模型。'}`);
     return lines.join('\n');
@@ -224,7 +224,7 @@ function buildStatusText(rec) {
   const r = rec && typeof rec === 'object' ? rec : {};
   const ranked = Array.isArray(r.ranked) ? r.ranked : [];
   const lines = [];
-  lines.push('🧭 模型顾问 · 实测表现快照');
+  lines.push('模型顾问 · 实测表现快照');
   if (ranked.length === 0) {
     lines.push('  当前无可执行候选(请先用 /model 或 /gateway 配置可用通道)。');
     return lines.join('\n');
