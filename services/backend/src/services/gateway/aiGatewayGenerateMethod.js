@@ -558,7 +558,8 @@ async function _callMcpVisionTool(mcpServerName, images) {
     _xcode && typeof _xcode._resolveFfmpeg === 'function' ? _xcode._resolveFfmpeg() : null;
 
   try {
-    const mcp = require('../../cli/handlers/mcp');
+    // The CLI handler exports only handleMcp; callTool lives in the domain module.
+    const mcp = require('../domain/messaging/mcp');
     for (let i = 0; i < images.length; i++) {
       const img = images[i];
       if (!img || !img.base64) {
@@ -2830,7 +2831,7 @@ const AIGatewayGenerateMethod = {
       }
       if (_nativeVisionAdapter) {
         emitStatus(
-          `🖼 识图方法: 原生视觉 — 首选通道 ${_leadAdapterKey} 直接读图`
+          `识图方法: 原生视觉 — 首选通道 ${_leadAdapterKey} 直接读图`
         );
       } else {
         try {
@@ -2942,7 +2943,7 @@ const AIGatewayGenerateMethod = {
               let _lastRawError = null;
               // v2: 始终告知用户当前识图方法（不依赖 verbose）
               emitStatus(
-                `🖼 识图方法: 视觉模型代理 — 调用 ${_primaryModel} 识图，结果回传当前模型作答`
+                `识图方法: 视觉模型代理 — 调用 ${_primaryModel} 识图，结果回传当前模型作答`
               );
               // OPS-MAN-145:级联候选索引 + 前一候选模型名,供 visionCascadeAttemptNotice 把候选 2..N 的
               // 冗余首句「我无法直接识别图片内容。」折成「<prev> 不可用，正在改用 <model> 继续识别...」。
@@ -3298,7 +3299,7 @@ const AIGatewayGenerateMethod = {
             // 门关(describe-return / failure-summary)/ 叶子不可用 → 既有 switch-model 替换(逐字节回退)。
             const prevModel = options.model;
             options = { ...options, model: decision.model };
-            emitStatus(`🖼 识图方法: 模型替换 — 改选视觉模型 ${decision.model} 直接作答`);
+            emitStatus(`识图方法: 模型替换 — 改选视觉模型 ${decision.model} 直接作答`);
               if (decision.reason === 'switched_to_pinned_vision_model') {
                 // 跨 pool 视觉兜底(KHY_VISION_FALLBACK_MODEL):钉选模型可能不在当前 pool
                 // (如当前 SenseNova、兜底 relay/gpt-4o-mini)。_resolveApiPoolProviderForRequest
@@ -3322,7 +3323,7 @@ const AIGatewayGenerateMethod = {
             // 由当前纯文本模型作答。失败则退到同 provider 视觉兄弟模型，再失败才 OCR。
             const mcpServerName = decision.mcpServer || process.env.KHY_MCP_VISION_SERVER;
             let mcpVisionText = '';
-            emitStatus(`🖼 识图方法: MCP 视觉工具 — ${mcpServerName} 识图中…`);
+            emitStatus(`识图方法: MCP 视觉工具 — ${mcpServerName} 识图中…`);
             try {
               const mcpResult = await _callMcpVisionTool(mcpServerName, options.images);
               const _mcpErrors = Array.isArray(mcpResult.errors) ? mcpResult.errors : [];
@@ -3355,7 +3356,7 @@ const AIGatewayGenerateMethod = {
                   _mcpVisionText: mcpVisionText,
                 };
                 hasImageInput = false;
-                emitStatus(`🖼 识图方法: MCP ${mcpServerName} 识别完成 ✓`);
+                emitStatus(`识图方法: MCP ${mcpServerName} 识别完成 ✓`);
               } else if (_mcpErrors.length) {
                 const errSummary = _mcpErrors.join('；');
                 emitStatus(
@@ -3511,7 +3512,7 @@ const AIGatewayGenerateMethod = {
               // 任何视觉模型,故无论 OCR 成败,图都**必须**被剥离:成功 → 注入 OCR 文本;失败/抛错
               // /无文本 → 注入诚实「收到图但读不出」说明并清图。把提取包进本地 try,抛错等价于「无
               // 文本」,保证「非视觉模型永不收到裸图」这一不变量。
-              emitStatus('🖼 识图方法: 本地 OCR — 无可用视觉模型，提取图片文字后由当前模型作答');
+              emitStatus('识图方法: 本地 OCR — 无可用视觉模型，提取图片文字后由当前模型作答');
               let ocrTexts = [];
             let ocrDetails = [];
             try {
@@ -6527,19 +6528,19 @@ const AIGatewayGenerateMethod = {
       [
         '所有 AI 通道均不可用。',
         '',
-        '🆓 免费方案 (推荐):',
+        '免费方案 (推荐):',
         '  • Kiro IDE — 免费 Claude 4 额度: https://kiro.dev',
         '  • Trae IDE — 免费 Claude/GPT 额度: https://trae.ai',
         '  • Ollama 本地模型 — 无需网络，运行 /models 安装',
         '',
-        '💰 付费订阅:',
+        '付费订阅:',
         '  • Claude: https://claude.ai/pricing',
         '  • OpenAI: https://platform.openai.com',
         '  • Cursor: https://cursor.com/pricing',
         '  • 智谱AI (国内直连): https://open.bigmodel.cn',
         '  • 通义千问 (国内直连): https://dashscope.aliyun.com',
         '',
-        '⚡ 快速配置:',
+        '快速配置:',
         '  • ai config — 配置 API 密钥',
         '  • /proxy — 配置代理 (Clash/VPN)',
         '  • khy gateway relay — 启动 Web 中转服务',

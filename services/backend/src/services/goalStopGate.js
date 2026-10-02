@@ -260,7 +260,7 @@ const _EVIDENCE_RE = new RegExp(
     '(?:tests?|suites?|assertions?)\\s*[:：]\\s*\\d+',
     '\\bok\\s+\\d+\\b',
     '#\\s*(?:pass|fail|tests?)\\b',
-    '[✓✔√✅❌✗×]',
+    '[✓✔√✓✗✗×]',
     '\\bPASS\\b',
     '\\bFAIL\\b',
     '(?:^|\\n)\\s*\\$\\s+\\S',

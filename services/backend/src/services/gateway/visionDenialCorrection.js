@@ -131,7 +131,7 @@ function buildDenialCorrectionNote({ count, env, ocrTextRead } = {}) {
       return null;
     }
     return (
-      `\n\n———\n📎 ${DENIAL_CORRECTION_OCR_READ_MARKER}更正:你确实上传了${noun}。` +
+      `\n\n———\n${DENIAL_CORRECTION_OCR_READ_MARKER}更正:你确实上传了${noun}。` +
       `当前模型不支持直接看图,但本地 OCR **已成功读出图中文字**并作为上下文提供给我作答——` +
       `图片**已经收到**,并非「没有图片」。若上文未据此展开,是模型未采用已读出的 OCR 文本。` +
       `可行方案:① 直接说「请据 OCR 读出的文字重新作答」,我会据此回答;` +
@@ -143,7 +143,7 @@ function buildDenialCorrectionNote({ count, env, ocrTextRead } = {}) {
     return null;
   }
   return (
-    `\n\n———\n📎 ${DENIAL_CORRECTION_MARKER}更正:你确实上传了${noun}。` +
+    `\n\n———\n${DENIAL_CORRECTION_MARKER}更正:你确实上传了${noun}。` +
     `当前模型不支持直接看图,本地 OCR 也未能从图中读出文字(常见于照片/截图/图表等非纯文字图,` +
     `或缺少对应语言的 OCR 字库),所以我没能识别其内容——但图片**已经收到**,并非「没有图片」。` +
     `可行方案:① 换用支持视觉的模型(运行 \`khy gateway model\` 选择);` +

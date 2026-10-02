@@ -294,10 +294,10 @@ function buildEnduranceReport(a) {
   const horizon = _fmtH(r.horizonHours);
   if (r.enduring) {
     lines.push(
-      `判定:✅ 可连续运行约 ${horizon}${Number.isFinite(r.horizonHours) ? '' : '(不受闲置退役限制)'} —— 满足「连续跑约 ${_fmtH(r.targetHours)}」。`
+      `判定:✓ 可连续运行约 ${horizon}${Number.isFinite(r.horizonHours) ? '' : '(不受闲置退役限制)'} —— 满足「连续跑约 ${_fmtH(r.targetHours)}」。`
     );
   } else {
-    lines.push(`判定:⚠️ 尚不足以连续跑约 ${_fmtH(r.targetHours)}:确定性中断视界仅 ${horizon}。`);
+    lines.push(`判定:⚠ 尚不足以连续跑约 ${_fmtH(r.targetHours)}:确定性中断视界仅 ${horizon}。`);
   }
   lines.push(`确定性中断视界:${horizon}`);
 
@@ -516,10 +516,10 @@ function buildSessionEnduranceReport(a) {
   lines.push('—— 交互式会话(无需目标)底气 ——');
   if (r.enduring) {
     lines.push(
-      `判定:✅ 纯交互会话默认可连续跑约 ${_fmtH(r.targetHours)}+ 不中断(无闲置退出/无累计轮数上限/无会话级 token 上限)。`
+      `判定:✓ 纯交互会话默认可连续跑约 ${_fmtH(r.targetHours)}+ 不中断(无闲置退出/无累计轮数上限/无会话级 token 上限)。`
     );
   } else {
-    lines.push('判定:⚠️ 存在会中断交互会话的配置(见下)。');
+    lines.push('判定:⚠ 存在会中断交互会话的配置(见下)。');
   }
   if (Array.isArray(r.warnings) && r.warnings.length) {
     lines.push('  —— 提示项(建议但非中断)——');
@@ -551,16 +551,16 @@ function buildEnduranceHeadline({ sessionAfter, goalAfter, scope = 'all' } = {})
   if ((scope === 'all' || scope === 'session') && sessionAfter) {
     lines.push(
       sessionAfter.enduring
-        ? '落盘后 · 交互式会话:✅ 默认可连续跑几天不中断(无闲置退出/无累计轮数上限)。'
-        : '落盘后 · 交互式会话:⚠️ 仍有中断配置(跑 khy goal endurance 查看)。'
+        ? '落盘后 · 交互式会话:✓ 默认可连续跑几天不中断(无闲置退出/无累计轮数上限)。'
+        : '落盘后 · 交互式会话:⚠ 仍有中断配置(跑 khy goal endurance 查看)。'
     );
   }
   if ((scope === 'all' || scope === 'goal') && goalAfter) {
     const horizon = _fmtH(goalAfter.horizonHours);
     lines.push(
       goalAfter.enduring
-        ? `落盘后 · 目标(/goal):✅ 可连续运行约 ${horizon}${Number.isFinite(goalAfter.horizonHours) ? '' : '(不受闲置退役限制)'}。`
-        : `落盘后 · 目标(/goal):⚠️ 确定性中断视界仅 ${horizon}(可能有 endurance env 之外的阻断项)。`
+        ? `落盘后 · 目标(/goal):✓ 可连续运行约 ${horizon}${Number.isFinite(goalAfter.horizonHours) ? '' : '(不受闲置退役限制)'}。`
+        : `落盘后 · 目标(/goal):⚠ 确定性中断视界仅 ${horizon}(可能有 endurance env 之外的阻断项)。`
     );
   }
   return lines;
@@ -663,11 +663,11 @@ function buildEndurancePersistReport({ before, after, plan, envPath, headline } 
     const horizon = _fmtH(after.horizonHours);
     if (after.enduring) {
       lines.push(
-        `落盘后 · 目标判定:✅ 可连续运行约 ${horizon}${Number.isFinite(after.horizonHours) ? '' : '(不受闲置退役限制)'} —— 满足「连续跑约 ${_fmtH(after.targetHours)}」。`
+        `落盘后 · 目标判定:✓ 可连续运行约 ${horizon}${Number.isFinite(after.horizonHours) ? '' : '(不受闲置退役限制)'} —— 满足「连续跑约 ${_fmtH(after.targetHours)}」。`
       );
     } else {
       lines.push(
-        `落盘后 · 目标判定:⚠️ 仍不足以连续跑约 ${_fmtH(after.targetHours)}:确定性中断视界 ${horizon}（可能有 endurance env 之外的阻断项,跑 khy goal endurance 查看）。`
+        `落盘后 · 目标判定:⚠ 仍不足以连续跑约 ${_fmtH(after.targetHours)}:确定性中断视界 ${horizon}（可能有 endurance env 之外的阻断项,跑 khy goal endurance 查看）。`
       );
     }
   }

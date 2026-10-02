@@ -175,7 +175,7 @@ function renderGuide(guide, opts = {}) {
 
   const lines = [];
   lines.push('');
-  lines.push(bold('🚀 模型网关 · 从这里开始'));
+  lines.push(bold('模型网关 · 从这里开始'));
   if (g.intro) {
     lines.push(dim('  ' + g.intro));
   }
@@ -241,7 +241,7 @@ function guideHintLine() {
   if (!isEnabled()) {
     return '';
   }
-  return '💡 新手不知怎么配?运行 `khy gateway guide` 看图配置。';
+  return '新手不知怎么配?运行 `khy gateway guide` 看图配置。';
 }
 
 module.exports = {

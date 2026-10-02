@@ -54,7 +54,7 @@ const DEFAULTS = Object.freeze({
 // 控制字符：除 \t(09) \n(0A) 外的 C0 控制符 + DEL(7F)
 const RE_CONTROL = new RegExp('[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F]', 'g');
 // 零宽字符 + BOM + word joiner + 软连字符
-const RE_ZERO_WIDTH = new RegExp('[\\u200B-\\u200D\\uFEFF\\u2060\\u00AD]', 'g');
+const RE_ZERO_WIDTH = new RegExp('[\\u200B-\\u200D\\uFEFF\\u2060\\u00AD]', 'g');  // khy-allow-no-emoji: 同上：输入清洗器的匹配字符类，不是展示标记
 // 乱码替换符 U+FFFD
 const RE_REPLACEMENT = new RegExp('\\uFFFD', 'g');
 // 各类异常空白（不含换行）→ 普通空格（含不间断空格、各类 em/en 空格、表意空格）

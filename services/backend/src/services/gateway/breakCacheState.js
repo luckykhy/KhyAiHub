@@ -3,7 +3,7 @@
 /**
  * breakCacheState.js — `/break-cache` 的薄壳:marker/flag/事件日志的文件读写,
  * 以及网关消费侧调用的 `consumeCacheBreakNonce`。所有纯逻辑(scope/nonce/聚合/措辞)
- * 委托纯叶子 `cli/breakCache.js`,本壳只做副作用 + 注入 now/rand。
+ * 委托纯叶子 `utils/breakCache.js`,本壳只做副作用 + 注入 now/rand。
  *
  * 文件落在 `getDataDir('break-cache')`(项目数据根下,跨进程可发现):
  *   - `next-request-no-cache`  一次性 marker(存在=下一次调用击穿后消费)
@@ -18,7 +18,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
-const leaf = require('../../cli/breakCache');
+const leaf = require('../../utils/breakCache');
 
 function _dir() {
   try {

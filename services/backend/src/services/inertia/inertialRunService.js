@@ -297,9 +297,12 @@ async function runInertialPlan(planPath, opts = {}) {
   // chat 构造（同 -p 模板：内层禁 NL 循环，外层 loop 主导，bin/khy.js:1860-1866）
   let chat = opts.chat;
   if (typeof chat !== 'function') {
-    try {
-      chat = require('../../cli/ai').chat;
-    } catch {
+    // Take the chat core from the inversion port (cli/ai self-registers there on
+    // load) instead of requiring cli/ai from this service: same function inside a
+    // CLI process, and a headless process reports a structured failure rather than
+    // dragging the whole TUI-coupled CLI graph in.
+    chat = require('../aiChatPort').getAiChat();
+    if (typeof chat !== 'function') {
       gateway && gateway.clearToolAccessGateway();
       return _rejectEnvelope('chat_unavailable');
     }

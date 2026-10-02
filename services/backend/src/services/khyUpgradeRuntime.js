@@ -412,7 +412,7 @@ function inputPurify(userMessage, opts = {}) {
   // intent-carrying words. Only strip pure decoration (emoji, repeated symbols)
   // and courtesy phrases that add no task information.
   const fillerPatterns = [
-    /[\u{1F300}-\u{1FAFF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}]/gu, // emoji
+    /[\u{1F300}-\u{1FAFF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}]/gu, // emoji  // khy-allow-no-emoji: 升级自检里剥 emoji 的替换正则，被剥对象是外部输出文本
     /[…~～]{2,}/g, // repeated decorative symbols
     /(请问一下|请教一下|麻烦你|麻烦帮我|帮我看下|帮我看一下|帮我查下|帮我查一下|麻烦看下)/gi,
     /(谢谢你|谢谢哈|辛苦了|拜托了|求你了|劳烦)/gi,

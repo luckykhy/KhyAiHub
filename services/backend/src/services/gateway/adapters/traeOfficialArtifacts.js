@@ -8,6 +8,7 @@
  * 导出 (函数):
  *   resolveTraeOfficialStoragePaths()
  *   resolveTraeOfficialDbPaths()
+ *   resolveTraePortableUserDataDirs()
  *   readTraeOfficialStorageSnapshots()
  *   readTraeOfficialDbSnapshots()
  *   extractTraeOfficialArtifactsFromStorage(data, sourcePath)
@@ -30,6 +31,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { execFileSync } = require('child_process');
 
 // ── 路径解析 ──────────────────────────────────────────
 
@@ -271,6 +273,174 @@ function resolveTraeOfficialDbPaths() {
     out.push(path.join(d, 'state-global.vscdb'));
   }
   return out;
+}
+
+// ── 绿色版安装发现 ──────────────────────────────────────
+// 绿色版用启动参数把 user data 重定向到程序目录内（Trae.exe --user-data-dir），
+// 那条线索只存在于 bin\trae.cmd 里；官方安装没有这个 .cmd。两边都不在
+// %APPDATA% 下时，khy-os 无从得知数据落在哪，只能自己找安装根。
+// 顺序 env → 注册表 → 固定盘浅扫，命中即停；全程不写死绝对路径（规则 1）。
+
+const PORTABLE_SCAN_DEPTH = 4;
+const PORTABLE_SCAN_BUDGET = 1200;
+const PORTABLE_USER_DATA_DIRNAME = 'UserData';
+const PORTABLE_INSTALL_DIRNAMES = new Set(['trae', 'trae cn']);
+
+// 扫盘跳过项：系统目录只会拖慢并带来权限噪声；
+// Program Files / ProgramData 下的真实安装由注册表层负责，绿色版不会装在那儿
+const PORTABLE_SCAN_SKIP = new Set([
+  '$recycle.bin',
+  'system volume information',
+  'windows',
+  'program files',
+  'program files (x86)',
+  'programdata',
+  'node_modules',
+]);
+
+let _portableUserDataDirs = null;
+
+function _fixedDriveRoots() {
+  if (process.platform !== 'win32') {
+    return [path.parse(process.cwd()).root];
+  }
+  const letters = new Set();
+  const systemDrive = String(process.env.SystemDrive || '').trim();
+  if (/^[A-Za-z]:$/.test(systemDrive)) {
+    letters.add(systemDrive[0].toUpperCase());
+  }
+  for (let i = 0; i < 26; i += 1) {
+    letters.add(String.fromCharCode(65 + i));
+  }
+  const roots = [];
+  for (const letter of letters) {
+    const root = `${letter}:\\`;
+    try {
+      if (fs.statSync(root).isDirectory()) {
+        roots.push(root);
+      }
+    } catch {
+      // 未挂载的盘符
+    }
+  }
+  return roots;
+}
+
+function _shallowFindPortableInstalls(root) {
+  const found = [];
+  const queue = [[root, 0]];
+  let visited = 0;
+  while (queue.length > 0) {
+    if (visited >= PORTABLE_SCAN_BUDGET) {
+      break;
+    }
+    const [dir, depth] = queue.shift();
+    visited += 1;
+    if (depth >= PORTABLE_SCAN_DEPTH) {
+      continue;
+    }
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      continue; // 无权限的目录
+    }
+    for (const entry of entries) {
+      if (!entry.isDirectory()) {
+        continue;
+      }
+      const lower = entry.name.toLowerCase();
+      if (PORTABLE_SCAN_SKIP.has(lower)) {
+        continue;
+      }
+      const full = path.join(dir, entry.name);
+      if (PORTABLE_INSTALL_DIRNAMES.has(lower)) {
+        found.push(full);
+        continue; // 不再往安装目录内部找
+      }
+      if (queue.length < PORTABLE_SCAN_BUDGET) {
+        queue.push([full, depth + 1]);
+      }
+    }
+  }
+  return found;
+}
+
+function _registryTraeInstallLocations() {
+  if (process.platform !== 'win32') {
+    return [];
+  }
+  const roots = [
+    'HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall',
+    'HKLM\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall',
+    'HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall',
+  ];
+  const out = [];
+  for (const root of roots) {
+    let text;
+    try {
+      text = execFileSync('reg.exe', ['query', root, '/s', '/v', 'InstallLocation'], {
+        encoding: 'utf8',
+        timeout: 5000,
+        windowsHide: true,
+        stdio: ['ignore', 'pipe', 'ignore'],
+      });
+    } catch {
+      continue; // 键不存在或 reg 不可用 → 交给下一层
+    }
+    // 这个键下挂着全机器的软件，不过滤会把别人的安装目录当成 Trae
+    let currentKey = '';
+    for (const line of String(text).split(/\r?\n/)) {
+      if (/^HKEY_/i.test(line)) {
+        currentKey = line.trim();
+        continue;
+      }
+      if (!/trae/i.test(currentKey)) {
+        continue;
+      }
+      const hit = /InstallLocation\s+REG_(?:EXPAND_)?SZ\s+(.+)$/i.exec(line);
+      if (hit && hit[1].trim()) {
+        out.push(hit[1].trim());
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * 绿色版 / 可搬移安装的 user data 目录。
+ * @returns {string[]} 已确认存在的目录；官方安装不在此列（走 resolveTraeOfficialStoragePaths）
+ */
+function resolveTraePortableUserDataDirs() {
+  if (_portableUserDataDirs) {
+    return _portableUserDataDirs;
+  }
+  // 短路看的是「有没有真的存在」，不是「有没有凑出候选字符串」——
+  // 按后者判会被注册表里无关软件的 InstallLocation 提前截断，扫盘层再也跑不到
+  const existing = (candidates) => candidates.filter((dir) => fs.existsSync(dir));
+
+  const envDir = String(process.env.TRAE_USER_DATA_DIR || '').trim();
+  let found = envDir ? existing([envDir]) : [];
+
+  if (found.length === 0) {
+    const fromRegistry = _registryTraeInstallLocations().map((loc) =>
+      path.join(loc, PORTABLE_USER_DATA_DIRNAME)
+    );
+    found = existing(fromRegistry);
+  }
+
+  if (found.length === 0) {
+    const fromScan = [];
+    for (const root of _fixedDriveRoots()) {
+      for (const installRoot of _shallowFindPortableInstalls(root)) {
+        fromScan.push(path.join(installRoot, PORTABLE_USER_DATA_DIRNAME));
+      }
+    }
+    found = existing(fromScan);
+  }
+
+  _portableUserDataDirs = found;
+  return _portableUserDataDirs;
 }
 
 // ── storage.json 读取 ────────────────────────────────
@@ -1079,6 +1249,7 @@ function _mergeArtifact(merged, incoming) {
 module.exports = {
   resolveTraeOfficialStoragePaths,
   resolveTraeOfficialDbPaths,
+  resolveTraePortableUserDataDirs,
   readTraeOfficialStorageSnapshots,
   readTraeOfficialDbSnapshots,
   extractTraeOfficialArtifactsFromStorage,

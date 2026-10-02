@@ -63,25 +63,25 @@ footer{text-align:center;padding:12px;color:var(--dim);font-size:12px;border-top
 
 <main>
   <section class="card" id="promptSection">
-    <h2><span class="emoji">📋</span>当前待处理的提示<span class="counter" id="promptCount" style="display:none">0</span></h2>
+    <h2><span class="emoji"></span>当前待处理的提示<span class="counter" id="promptCount" style="display:none">0</span></h2>
     <div class="prompt-box empty" id="promptText">等待终端发送新的提示...</div>
     <div class="actions">
-      <button id="copyBtn" disabled onclick="copyPrompt()">📋 一键复制提示</button>
+      <button id="copyBtn" disabled onclick="copyPrompt()">一键复制提示</button>
       <span class="feedback" id="copyFeedback">已复制!</span>
     </div>
     <p class="hint">复制后粘贴到任意 AI 网页 — ChatGPT · Claude.ai · Gemini · 通义千问 · 文心一言 · Kimi 等</p>
   </section>
 
   <section class="card">
-    <h2><span class="emoji">📝</span>粘贴 AI 回复</h2>
+    <h2><span class="emoji"></span>粘贴 AI 回复</h2>
     <textarea id="responseText" placeholder="将 AI 的回复粘贴到这里..." rows="10" disabled></textarea>
     <div class="actions">
-      <button class="submit" id="submitBtn" disabled onclick="submitResponse()">🚀 提交回复到终端</button>
+      <button class="submit" id="submitBtn" disabled onclick="submitResponse()">提交回复到终端</button>
     </div>
   </section>
 
   <section class="card">
-    <h2><span class="emoji">📜</span>交互历史</h2>
+    <h2><span class="emoji"></span>交互历史</h2>
     <div id="historyLog"><p class="empty">暂无记录</p></div>
   </section>
 </main>

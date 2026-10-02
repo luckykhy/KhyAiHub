@@ -423,7 +423,7 @@ async function _extractOneFile(refPath, env, ctx = {}) {
     if (kind === 'document' && /\.docx$/i.test(resolved)) {
       const tmpOut = path.join(os.tmpdir(), `khy-docx-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.txt`);
       try {
-        const convert = require('../cli/handlers/convert');
+        const convert = require('./documentConvertService');
         const r = await convert.runConvert({ input: resolved, to: 'txt', output: tmpOut });
         const produced = (r && r.output) || tmpOut;
         if (r && r.success && fs.existsSync(produced)) {
@@ -606,8 +606,8 @@ async function _collectFileCards(prompt, ctx, env) {
   let total = 0;
   try {
     const images = Array.isArray(ctx.images) ? ctx.images : [];
-    const fileLeaf = require('../cli/repl/inlineFileRefs');
-    const { extractAllInlineImageIntents } = require('../cli/repl/imageIntent');
+    const fileLeaf = require('../utils/text/inlineFileRefs');
+    const { extractAllInlineImageIntents } = require('../utils/text/imageIntent');
     const imagePaths = new Set();
     for (const img of images) {
       if (img && img.label) {

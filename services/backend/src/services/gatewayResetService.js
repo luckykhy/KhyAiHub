@@ -8,7 +8,7 @@
 
 const readline = require('readline');
 
-const { printWarn, printInfo, printSuccess } = require('../cli/formatters');
+const { printWarn, printInfo, printSuccess } = require('../utils/format/consoleNotice');
 
 const { shouldResetGateway, getFactoryDefaults } = require('./gatewayResetPolicy');
 

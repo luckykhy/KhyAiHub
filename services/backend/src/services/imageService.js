@@ -531,7 +531,7 @@ function readImageFromClipboardOrPath() {
  */
 function _imageSizeStr(sizeBytes, env = process.env) {
   try {
-    const { ccFormatEnabled, ccFormatFileSize } = require('../cli/ccFormat');
+    const { ccFormatEnabled, ccFormatFileSize } = require('../utils/format/ccFormat');
     if (ccFormatEnabled(env)) {
       const out = ccFormatFileSize(Number(sizeBytes));
       if (out) {
@@ -571,7 +571,7 @@ function printImagePreview(image) {
     let _chalk;
     const c = () => (_chalk ??= require('chalk').default || require('chalk'));
     console.log(
-      `  ${c().cyan('📷')} ${c().white(`[Image: ${image.format.toUpperCase()}, ${sizeStr}]`)}`
+      `  ${c().cyan('')} ${c().white(`[Image: ${image.format.toUpperCase()}, ${sizeStr}]`)}`
     );
   }
 }

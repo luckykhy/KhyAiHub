@@ -292,23 +292,53 @@ function pickAutoModel(taskType, candidates, opts = {}) {
  * value 用 {adapter:'auto', model:'auto'} 与既有 adapter 哨兵对齐;持久化会把它特判成
  * GATEWAY_PREFERRED_ADAPTER=auto + 清空 GATEWAY_PREFERRED_MODEL(见 isAutoSelection 消费点)。
  * @param {{previewModel?:string, previewAdapter?:string, chalk?:object}} [opts]
- * @returns {{name:string, value:{adapter:string, model:string}, disabled:boolean}}
+ * @returns {{name:string, primary:string, secondary:string, group:string, groupMeta:string,
+ *            value:{adapter:string, model:string}, disabled:boolean}}
  */
 function buildAutoChoice(opts = {}) {
+  // 选择器分层字段（[DESIGN-ARCH-167]）：主信息 = `★ Auto`，次信息 = **只放预览**。
+  // 这是 ModelPicker 的**第 5 个** choice 产出点 —— 另 4 个（apiAdapter 两路 + 兜底 +
+  // 外部智能体投影）都在 gatewayModelChoices 里供数，漏了这一个会让 Auto 行成为
+  // **唯一不参与分层**的行，并静默依赖渲染侧 `c.primary || c.name` 的回退。
+  // group 取 `'Auto'`：它不是某个上游供应商，是自己的类别；1 条 ⇒ 不画标题
+  // （MIN_GROUP_FOR_SECTION=2），与旧行为（回退 `value.adapter='auto'`）等价，
+  // 但不再静默依赖那条回退。
+  //
+  // §12-Q11：那 17 字说明（`自动选择最适合当前任务且可用的模型`）**不再进次信息**。
+  // 真入口 A/B 实测（.khyos/diag/model-picker-grouping/real-choices-ab.js，80×24 真帧）：
+  // 加上它之后全表只剩**这 1 行**被 `…` 截断，而切掉的正是最有信息量的预览。
+  // 于是「说明」让位给「预览」：行内只留 `★ Auto  (当前最优: X)`；无预览时退化成裸
+  // `★ Auto`（不是静默丢失 —— `name` 仍带完整说明，见下）。
+  //
+  // `name` **一字未改**（仍是「含标记的人面串」）。它不是渲染用的字段了（分层后由
+  // primary/secondary 决定上屏文本），但仍有两个既有消费者，改它会连带改两个别的面：
+  //   ① `cli/handlers/advisor.js` 拿 `c.name` 当候选 label 喂给顾问；
+  //   ② `ModelPicker.filterChoices` 拿 `c.name` 当搜索匹配文本（搜「自动」仍能命中 Auto）。
+  // 另外它还是本改动 A/B 量具的「改前形态」来源（只喂 name ⇒ 逐字回退旧渲染）。
+  const GROUP = 'Auto';
+  const HINT = '自动选择最适合当前任务且可用的模型';
   try {
     const preview = opts && typeof opts.previewModel === 'string' ? opts.previewModel.trim() : '';
     const c = opts && opts.chalk;
     const dim = c && typeof c.dim === 'function' ? c.dim : (s) => s;
     const cyan = c && typeof c.cyan === 'function' ? c.cyan : (s) => s;
-    const previewTag = preview ? ` ${dim(`(当前最优: ${preview})`)}` : '';
+    const previewText = preview ? dim(`(当前最优: ${preview})`) : '';
     return {
-      name: `${cyan('★ Auto')} ${dim('自动选择最适合当前任务且可用的模型')}${previewTag}`,
+      name: `${cyan('★ Auto')} ${dim(HINT)}${previewText ? ` ${previewText}` : ''}`,
+      primary: cyan('★ Auto'),
+      secondary: previewText,
+      group: GROUP,
+      groupMeta: '',
       value: { adapter: AUTO_SENTINEL, model: AUTO_SENTINEL },
       disabled: false,
     };
   } catch {
     return {
-      name: '★ Auto 自动选择最适合当前任务且可用的模型',
+      name: `★ Auto ${HINT}`,
+      primary: '★ Auto',
+      secondary: '',
+      group: GROUP,
+      groupMeta: '',
       value: { adapter: AUTO_SENTINEL, model: AUTO_SENTINEL },
       disabled: false,
     };

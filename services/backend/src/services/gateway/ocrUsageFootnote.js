@@ -68,7 +68,7 @@ function buildOcrUsageFootnote({ count, env } = {}) {
   }
   const noun = n === 1 ? '这张图片' : `这 ${n} 张图片`;
   return (
-    `\n\n———\n📄 ${OCR_USAGE_FOOTNOTE_MARKER}当前模型不支持直接看图,以上关于${noun}的内容` +
+    `\n\n———\n${OCR_USAGE_FOOTNOTE_MARKER}当前模型不支持直接看图,以上关于${noun}的内容` +
     `是通过本地 OCR 文字识别读取的(而非原生看图)。`
   );
 }

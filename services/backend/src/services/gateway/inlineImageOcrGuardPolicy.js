@@ -17,7 +17,7 @@
  * 绝不自己 shell 出去 OCR、绝不反复 Read/Bash 该路径，改用 khy 原生视觉/OCR，或如实告知
  * 看不到图、让用户上传/附图/换视觉模型。覆盖现在与未来所有新 chat 入口。
  *
- * 「消息是否含图片路径」复用既有叶子 cli/repl/imageIntent.extractInlineImageIntent
+ * 「消息是否含图片路径」复用既有叶子 utils/text/imageIntent.extractInlineImageIntent
  * （单一真源；仅匹配 png/jpg/jpeg/gif/webp，不重写正则、安全范围与 REPL 一致）。
  *
  * 纯叶子：零 IO、确定性、绝不抛。env 门控 KHY_INLINE_IMAGE_OCR_GUARD（默认开，仅显式
@@ -53,7 +53,7 @@ function messageHasImagePath(message) {
     return false;
   }
   try {
-    const { extractInlineImageIntent } = require('../../cli/repl/imageIntent');
+    const { extractInlineImageIntent } = require('../../utils/text/imageIntent');
     const intent = extractInlineImageIntent(text);
     return !!(intent && intent.filePath);
   } catch {

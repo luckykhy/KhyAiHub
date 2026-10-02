@@ -44,15 +44,15 @@ khy OS 是面向中文开发者的 AI 平台操作系统，内置默认应用 kh
 
 | 特性 | 说明 |
 |------|------|
-| 🤖 多模型 AI 网关 | Kiro / Cursor / Claude / Codex / VSCode / Ollama / 云 API |
-| 📊 实时数据 | AkShare + TuShare A 股实时行情、资金流、基本面 |
-| 🧪 专业回测 | 多策略对比、滑点模拟、佣金计算、最大回撤分析 |
-| 🧠 多智能体 | 基本面/技术面/新闻/风控/策略 5 角色协作分析 |
-| 🖼️ 图片分析 | 终端内粘贴图片，AI 视觉分析走势图 |
-| 📋 计划模式 | 复杂任务自动分解 → 用户审批 → 逐步执行 |
-| 🔧 Agentic 工具 | Search / Read / Bash 等工具实时展示 (Claude Code 风格) |
-| 🔌 IDE 反向代理 | khy --kiro/--cursor/--claude/--codex 一键切换 IDE 模型源 |
-| 🛡️ IP 匿名化 | 反向代理自动隐藏真实 IP，防止封禁 |
+| 多模型 AI 网关 | Kiro / Cursor / Claude / Codex / VSCode / Ollama / 云 API |
+| 实时数据 | AkShare + TuShare A 股实时行情、资金流、基本面 |
+| 专业回测 | 多策略对比、滑点模拟、佣金计算、最大回撤分析 |
+| 多智能体 | 基本面/技术面/新闻/风控/策略 5 角色协作分析 |
+| 图片分析 | 终端内粘贴图片，AI 视觉分析走势图 |
+| 计划模式 | 复杂任务自动分解 → 用户审批 → 逐步执行 |
+| Agentic 工具 | Search / Read / Bash 等工具实时展示 (Claude Code 风格) |
+| IDE 反向代理 | khy --kiro/--cursor/--claude/--codex 一键切换 IDE 模型源 |
+| IP 匿名化 | 反向代理自动隐藏真实 IP，防止封禁 |
 
 ## 快速上手 — 10 条必备命令
 

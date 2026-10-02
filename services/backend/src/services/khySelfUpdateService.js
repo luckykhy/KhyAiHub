@@ -228,7 +228,14 @@ async function checkUpdate(opts) {
 
 function _readInstalledVersion(execImpl, pkgName) {
   try {
-    const info = execImpl(`${_pipCmd()} show ${pkgName}`, { encoding: 'utf-8', timeout: 5000 });
+    // stdio 必须显式声明:execSync 未指定时会把子进程 stderr 直接转发到父进程,而这条
+    // pip show 跑在启动 +5s 的后台检查里 —— 那行 WARNING 会绕开 prefetch 的输出队列,
+    // 落在 TUI 输入框与状态栏下方(2026-09-29 截图实测)。
+    const info = execImpl(`${_pipCmd()} show ${pkgName}`, {
+      encoding: 'utf-8',
+      timeout: 5000,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
     const match = String(info).match(/Version:\s*([\d.]+)/);
     return match ? match[1] : '';
   } catch {

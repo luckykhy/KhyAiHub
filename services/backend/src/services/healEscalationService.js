@@ -247,7 +247,7 @@ function buildEscalationRecord(input = {}) {
 function formatEscalationAlert(record, filePath) {
   const r = record && typeof record === 'object' ? record : {};
   const lines = [];
-  lines.push('⚠️  自愈失败已升级到 L3（需人工处理）');
+  lines.push('⚠  自愈失败已升级到 L3（需人工处理）');
   lines.push(`    组件: ${r.component || 'unknown'}（${r.what || '自愈失败'}）`);
   const attempts = Array.isArray(r.failedAttempts) ? r.failedAttempts : [];
   if (attempts.length) {
