@@ -5683,7 +5683,7 @@ node_modules/   W7 未做故留根
 | `.zcode` | **留** | 活工具：21 件在飞（§18.5）；本节裁决即 ZCode 会话产出 | 登记 `tool-retained`，reviewBy **2026-12-31** |
 | `CLAUDE.md` | **留** | Claude Code 根读取位，与 `AGENTS.md` 同性质（生态加载位）；在飞收口后仍留 | 登记 `contract`，随 AGENTS.md 一体维护 |
 | `.opencode` | **留至 2026-11-15 复审** | 1023 件多为工具本体与 html 孪生；三目录「今日写入」实为 02:34 docs:build 批量再生（同秒写入，活性证据被污染），真实使用证据不足但也不足以下岗 | `tool-retained(pending-review)`；复审判据 = 复审日前 30 天内**非 html 孪生**写入；无 → 隔离（LAYOUT-003） |
-| `electron/` | **退**，排独立批 Q10 | R4 终裁：无 package.json、无调用点；git 干净（不在飞）；**28 份设计/规范文档提及** → 规则 7 `delete-documented-code` 是 error，**必须先订正文档** | 见 21.5 Q10；**禁止跳过程序直接删** |
+| `electron/` | **退**，排独立批 Q10 | R4 终裁「无 package.json、无调用点」**经 Q10 复审更正：判词不完整**——根 `package.json:19` 有活入口 `electron:dev` → `scripts/electron-dev.js` → `electron/main.js`（`entries/entries.json:104` 亦载，desktop-legacy 线）。除该入口外零运行时消费者（`.khy/feedback/q10-electron-retire-20261002/citation-audit.md`）；**28 份设计/规范文档提及、规范真源背书 2 份**（DESIGN-LAY-005 §1.4、DESIGN-ARCH-068——均在飞） | 存证已落（scrub-plan/rollback/citation-audit，同目录）；**中搓（下线入口）被 `package.json` 在飞卡住（N-3），订正两规范真源同样在飞** ⇒ 重搓与订正挂 Q0 后首批执行，三提交分步 |
 | `khy-Trajectory` | **留** | 自愈型本机态，已在 gitignore + LOCAL_STATE 台账；Trajectory 录制数据属用户数据非仓库杂物 | 不单独退役；随 Q8 数据家归堆 |
 
 ### 21.5 统一排期（与 §18.3 Q 阶梯合并后的全序）
