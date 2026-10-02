@@ -271,3 +271,7 @@ apps/khy-os-client-app/android/app/src/main/assets/shizuku/*.apk
 # <原名>.baiduyun.uploading.cfg 孪生是网盘客户端的上传进度元数据，
 # 未跟踪也未忽略导致根宽 61→76 漂移。只隔离不删除（LAYOUT-003）。
 *.baiduyun.uploading.cfg
+
+# --- 2026-10-02 本机智能体记忆态（自愈型，同 khy-Trajectory 先例）---
+.workbuddy/
+.workbuddy-ai/
