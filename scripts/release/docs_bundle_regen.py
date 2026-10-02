@@ -53,7 +53,7 @@ def _prune_dot_directories(bundled: Path) -> int:
     """在重生成前，从 bundle 内移除所有点目录（名字以 "." 开头的目录）。
 
     根因（本函数修复的第二类断链）：setuptools 的 `package_data` 收集在**打包阶段**
-    无条件丢弃一切点目录（`.khy-runtime/`、`.githooks/` 等）——这是 setuptools 固有
+    无条件丢弃一切点目录（`.khy-runtime/` 等）——这是 setuptools 固有
     行为，任何 glob/配置都改不了。但重生成此刻的 bundle 仍带着这些点目录里的 `.md`，
     生成器会照常给它们建同名 `.html`、侧栏卡片与首页引用；随后打包又把那些 `.html`
     连同点目录一起扔掉 → 侧栏/首页留下指向「不随包的点目录 html」的**活死链**
@@ -181,7 +181,7 @@ def regenerate_docs_site(bundled: Path, node_cmd: str = "node") -> bool:
         return False
 
     # 先剪掉注定不进 wheel 的点目录，使「重生成输入」= 「实际随包内容」，
-    # 避免生成器给 .khy-runtime/.githooks 等点目录文档建出随后被打包丢弃的断链卡片。
+    # 避免生成器给 .khy-runtime/ 等点目录文档建出随后被打包丢弃的断链卡片。
     pruned = _prune_dot_directories(bundled)
     if pruned:
         print(f"  [docs-site] 已剪除 {pruned} 个点目录（不随 wheel 发布，避免侧栏活死链）")

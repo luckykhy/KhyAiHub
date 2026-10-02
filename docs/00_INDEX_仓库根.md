@@ -21,7 +21,7 @@
 
 ## ② 机器契约（工具按根路径读取，**永不动**）— 27 项
 
-- **git 族（7）**：`.git/` `.gitignore` `.gitattributes` `.mailmap` `.git-blame-ignore-revs` `.githooks/`（`core.hooksPath` 指此）`.github/`
+- **git 族（7）**：`.git/` `.gitignore` `.gitattributes` `.mailmap` `.git-blame-ignore-revs` `works/build/githooks/`（`core.hooksPath` 指此）`.github/`
 - **包管理族（8）**：`package.json` `package-lock.json` `pnpm-lock.yaml` `pnpm-workspace.yaml` `.npmrc` `pyproject.toml` `MANIFEST.in` `.portable`
 - **部署/构建族（5）**：`Dockerfile` `docker-compose.yml` `fly.staging.toml` `.dockerignore` `.env.example`
 - **工具链杂项（3）**：`.editorconfig` `.clinerules` `.duplication-baseline.json` `.ai/`（khy metadata 种子文档，`khy metadata refresh` 维护）

@@ -917,7 +917,7 @@
       "paths": [
         "package.json",
         ".github/workflows/**",
-        ".githooks/**",
+        "works/build/githooks/**",
         "scripts/**"
       ],
       "exec": {

@@ -128,7 +128,7 @@ const MAPPING = {
   'TOOLING-005': {
     gate: 'pr',
     exec: { script: 'scripts/ci/check-wiring.js', args: [], findings: [] },
-    paths: ['package.json', '.github/workflows/**', '.githooks/**', 'scripts/**'],
+    paths: ['package.json', '.github/workflows/**', 'works/build/githooks/**', 'scripts/**'],
   },
   'TOOLING-006': {
     gate: 'pr',

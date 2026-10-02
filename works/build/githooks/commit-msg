@@ -1,5 +1,5 @@
 #!/bin/bash
-# .githooks/commit-msg
+# works/build/githooks/commit-msg
 #
 # Git commit-msg 钩子 —— 校验**本次**提交信息。
 #

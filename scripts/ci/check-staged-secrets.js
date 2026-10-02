@@ -4,7 +4,7 @@
 /**
  * check-staged-secrets.js — 暂存区敏感信息检查（读 hygiene-allowlist.json 豁免）
  *
- * 取代 .githooks/pre-commit 第 3 步原来的裸 `grep -iE`。原实现有两个问题：
+ * 取代 works/build/githooks/pre-commit 第 3 步原来的裸 `grep -iE`。原实现有两个问题：
  *
  *   1. **不读白名单**：仓内已有 scripts/release/hygiene-allowlist.json
  *      （由 scripts/lib/releaseHygieneGuard.js 的 matchExemption() 消费），
@@ -35,7 +35,7 @@ const REPO_ROOT = process.env.KHY_RULEGUARD_ROOT
 
 const ALLOWLIST_REL = 'scripts/release/hygiene-allowlist.json';
 
-// 提交期形态集合 —— 与原 .githooks/pre-commit 第 3 步行为兼容，仅补 `\b`。
+// 提交期形态集合 —— 与原 works/build/githooks/pre-commit 第 3 步行为兼容，仅补 `\b`。
 const COMMIT_PATTERNS = Object.freeze([
   ['provider-key', /\bsk-[a-z0-9]{16,}\b/i],
   ['aws-access-key', /\bAKIA[0-9A-Z]{16}\b/],

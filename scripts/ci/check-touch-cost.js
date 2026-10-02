@@ -84,7 +84,7 @@ function collect() {
   // 样本选「最重的执行器」：被引用点最多的那条
   const SAMPLE = 'check-repo-layout';
   const samplePaths = lines(
-    `git grep -l "${SAMPLE}" -- package.json .github .githooks scripts 'docs/**/*.md' '*.md'`
+    `git grep -l "${SAMPLE}" -- package.json .github works/build/githooks scripts 'docs/**/*.md' '*.md'`
   );
 
   const backlogRows = lines('git status --porcelain');

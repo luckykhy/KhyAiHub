@@ -73,7 +73,7 @@ const EXEMPT_NAMES = new Set([
   '.zcode', '.zcode-tmp', '.research-tmp', '.khy_orphan_sweep', 'tmp-cmp',
 ]);
 
-// 以 `.` 开头的顶层目录（工具配置：.ai/.claude/.cursor/.github/.githooks…）——
+// 以 `.` 开头的顶层目录（工具配置：.ai/.claude/.cursor/.github…）——
 // 它们按**工具约定**命名，不参与本仓的层级可发现性判定（改它们等于改工具契约）。
 function isDotDir(name) {
   const n = String(name || '');

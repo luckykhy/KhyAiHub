@@ -9,7 +9,7 @@ const path = require('path');
  * A checker is wired when some gate surface references it. Gate surfaces:
  *   S1  package.json scripts          (root + workspace package.json files)
  *   S2  .github/workflows/*.yml
- *   S3  .githooks/*
+ *   S3  works/build/githooks/*
  *   S4  stage tables                 (quality-gate / release-gate stage libs)
  *   S5  ruleguard manifest itself    (the derived binding layer)
  *
@@ -128,10 +128,10 @@ function surfaceTexts(repoRoot) {
   }
 
   // S3 — git hooks
-  const hookDir = path.join(repoRoot, '.githooks');
+  const hookDir = path.join(repoRoot, 'works', 'build', 'githooks');
   if (fs.existsSync(hookDir)) {
     for (const name of fs.readdirSync(hookDir)) {
-      const rel = path.join('.githooks', name).replace(/\\/g, '/');
+      const rel = path.join('works/build/githooks', name).replace(/\\/g, '/');
       const text = readText(repoRoot, rel);
       if (text) surfaces[rel] = text;
     }

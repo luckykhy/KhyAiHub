@@ -1,5 +1,5 @@
 #!/bin/bash
-# .githooks/pre-commit
+# works/build/githooks/pre-commit
 # 
 # Git pre-commit hook
 # 检查：
@@ -142,7 +142,7 @@ fi
 #     ⇒ 既会假阳性阻塞（上一条消息不合规 → 本条被拦），
 #       又从未校验真正要进历史的那条消息（AI 署名硬拦截等于 fail-open）。
 #
-#    校验已移至 `.githooks/commit-msg` —— 那里 git 会把本次消息文件路径作为 $1
+#    校验已移至 `works/build/githooks/commit-msg` —— 那里 git 会把本次消息文件路径作为 $1
 #    传入，是唯一正确的位置。判据真源仍是 `scripts/ci/check-commit-message.js`。
 #    ⚠ 不要在 pre-commit 里重新加回消息校验：位置错了，写得再对也是错的。
 

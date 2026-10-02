@@ -72,6 +72,7 @@ L5 内部的契约（目录形状、manifest、发现与激活、删除语义）
 | 目录 | 职责 |
 | --- | --- |
 | `scripts/` | 工程任务：CI 守卫、公共库、测试、文档站、发布、维护。**便携版 / 安装 / 诊断 / 基准 / ISO 已按 [DESIGN-TOOL-002] §1.6 迁为拓展**，见 `extensions/scripts/` |
+| `works/` | **工程产物区**（工程横切，2026-10-02 随 W10b 登记）：`works/build/` 收纳 git 钩子 `works/build/githooks/`（`core.hooksPath` 指此，`scripts/install-hooks.sh` 安装）。名称与终态由 `[DESIGN-LAY-008]` §18.3 封闭清单与 §20.2 终态目录表裁决；本层不引入依赖边，故与 `scripts/` 同属横切、不入 L 编号 |
 | `packaging/` | 打包清单与**板块切分**（见第二节） |
 | `docs/` | 全部文档（统一编号轴命名见第三节） |
 | `_source/` | 加密源码快照与恢复说明 |

@@ -362,7 +362,7 @@ function parseFilesArg(s) {
  * 而噪声会被整体忽略（比没有守卫更糟）。
  *
  * 门（ruleguard `--changed`）传入时的语义也正是「本次提交的内容」，
- * 与 `.githooks/pre-commit` 的 `git diff --cached` 一致 —— 三者对齐。
+ * 与 `works/build/githooks/pre-commit` 的 `git diff --cached` 一致 —— 三者对齐。
  * 需要看尚未暂存的改动时用 `--worktree`（明确、非常态）。
  */
 function collectStaged() {

@@ -116,6 +116,7 @@ const CROSSCUTTING = {
   // 埋进任何一层的实现目录都会让其余读取方绕路或触碰禁止边。实现（含
   // child_process）仍在 L2 `services/backend/src/services/entrypoints/`。
   // 规范 [DESIGN-ARCH-117]。
+  works: '工程产物区（build/ 下含 git 钩子 works/build/githooks；真源 [DESIGN-LAY-008] §18.3 封闭清单与 §19.3 W10b）',
   entries: '多端入口真源数据（端矩阵 entries.json + 人读地图 + 跨平台入口壳）',
   // 软著登记底档（真源 [DESIGN-IP-001] C-E4，2026-09-28 由人拍板改为入库；层级登记见
   // [DESIGN-LAY-005] 第 1.2 节）。放根的理由：它的读取方横跨 L0（kernel 手写层原创规模）、
@@ -298,7 +299,7 @@ function checkRootWhitelist(findings) {
 // pending-retire（已裁决退役待删除）。真源 [DESIGN-LAY-008] §21，终局档位 10。
 const ROOT_CATALOG = {
   '.ai': { category: 'contract', reason: '可维护性元数据再生件（khy metadata 产出）', reviewBy: '2026-12-31' },
-  '.githooks': { category: 'contract', reason: 'git 钩子（pre-commit 守卫链真身）', reviewBy: '2026-12-31' },
+  'works': { category: 'tool-retained', reason: '工程产物区：git 钩子（works/build/githooks）与构建/发布脚本', reviewBy: '2026-12-31' },
   '.github': { category: 'contract', reason: 'CI 工作流与模板', reviewBy: '2026-12-31' },
   '.cursor': { category: 'tool-retained', reason: '编辑器规则目录（裁决 D-4 保留）', reviewBy: '2026-12-31' },
   '.clinerules': { category: 'tool-retained', reason: 'Cline 规则目录（裁决 D-4 保留）', reviewBy: '2026-12-31' },
