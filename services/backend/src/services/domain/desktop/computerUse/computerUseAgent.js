@@ -299,7 +299,7 @@ const SYSTEM_PROMPT = `你是 khy-os Computer Use 代理，负责通过屏幕观
 - { "action": "doubleClick", "x": 500, "y": 300, "normalized": true }
 
 ### 输入类
-- { "action": "typePaste", "text": "中文/emoji/特殊字符 ✅" }   — 剪贴板粘贴输入（写剪贴板 + Ctrl/Cmd+V，对中文、emoji、特殊字符最可靠，**推荐**）
+- { "action": "typePaste", "text": "中文/emoji/特殊字符 ✓" }   — 剪贴板粘贴输入（写剪贴板 + Ctrl/Cmd+V，对中文、emoji、特殊字符最可靠，**推荐**）
 - { "action": "type", "text": "hello world" }   — 批量输入（快，可能绕过 IME/丢字符）
 - { "action": "typeKeystrokes", "text": "中文", "delayMs": 40 }   — 逐字输入（兼容 IME，较慢）
 - { "action": "key", "key": "enter" }   — 单键（enter / tab / esc / space...）
