@@ -113,6 +113,21 @@ AI 生成原型、**自行决定架构与算法**、按人的提示词反复修�
 > `[DESIGN-IP-001] 软件著作权就绪规范`。
 > 与 `B1`（先想再写）的关系：`B1` 管「动手前讲清」，`B6` 管「动手后仍要解释得清」。
 
+**B6 的日常落点（申报进行中，别把材料做退步）**：
+
+| 什么 | 在哪 |
+|---|---|
+| 三字段机器可读真源（守卫读这份） | `docs/10_规范/registry/COPYRIGHT.json` |
+| 定名依据 / 被淘汰候选 / 版本号论证 | `[MGMT-OTHER-006]` |
+| 人拍板的逐字原话 | `evidence/01_人类贡献/决策记录.md` **D-名2** |
+| 递交件与逐件状态 | `evidence/06_申报材料/递交核对表.md` |
+
+四条动作：**改界面标题/产品名/版本串** → 跑 `check-copyright-readiness.js` 看五处一致有没有退化、
+受影响截图重拍；**新增可展示功能** → 其命令输出可作证据时补进 `evidence/03_图片/`
+（真实数据、不摆拍、**不裁剪不修图**）；**增删模块** → 复核 60 页选材与说明书主要功能是否仍对得上
+（**名称里每个词都得在页内有代码**，选材的仓库侧镜像 = `registry/COPYRIGHT-MATERIALS.json`，两份一起改）；**代码进登记候选前** → `[DESIGN-IP-001]` 附录 A 九问逐条答得上。
+版本口径：**沿用仓库真实版本，只在人明示时才改**——所以 `--version` 画面天然与申请表一致，零修图。
+
 ---
 
 ## 三、验收门禁
@@ -126,6 +141,7 @@ node scripts/ci/check-change-safety.js --changed          # 三守卫之一
 node scripts/ci/check-agent-rules.js --changed            # 三守卫之二
 node scripts/ci/check-repo-layout.js                      # 三守卫之三：层级/根目录/索引/任务入口
 node scripts/ci/check-gov-rules.js                        # 治理总纲十板块 + 规则登记表
+node scripts/ci/check-copyright-readiness.js              # 软著就绪（改动触及界面标题/产品名/版本串/模块增删时必跑，0 error）
 npm run arch:god --workspace services/backend             # 改动文件不得新增超限
 khy doctor                                                # 系统健康总检
 ```
@@ -139,8 +155,8 @@ khy doctor                                                # 系统健康总检
 ## 四、项目概述
 
 **Khy OS** 是一个通过 PyPI（`pip install khy-os`）和 npm（`@khy-os/khy-os`）分发的 AI 平台
-操作系统。它启动一个可扩展的默认应用运行时；**khyquant**（量化交易终端）是运行在该基座之上的、
-内置的默认应用——而非项目本身。完整架构速查与关键入口点见 `AGENTS.md`。
+操作系统。它启动一个可扩展的应用运行时。**khyquant（量化交易终端）是独立项目**，连接 Khy OS
+使用，**不是** Khy OS 的内置部分（`software/khyquant/` 只是随平台分发/接入的载体）。完整架构速查与关键入口点见 `AGENTS.md`。
 
 ---
 
@@ -204,13 +220,13 @@ services/backend/src/cli/tui/
 ### 门控模式
 
 ```javascript
-// ✅ 正确
+// ✓ 正确
 if (process.env.KHY_CC_TUI === '1') {
   return <CcComponent />;
 }
 return <LegacyComponent />;
 
-// ❌ 错误
+// ✗ 错误
 const color = isCcMode ? '#00D4D4' : '#00BCD4'; // 禁止在组件内判断
 ```
 
@@ -248,7 +264,7 @@ B5 实测已具备机制通路（`contextCompressor.js:745` 任务锚点 + `:624
 更正为 `domain/project/`）*
 
 <!-- khy-metadata:pointer START — managed by `khy metadata link`; edits inside this block are overwritten -->
-## 🤖 Maintainability metadata — read `.ai/` first
+## Maintainability metadata — read `.ai/` first
 
 Before changing this project, read the machine-generated seed docs in `.ai/`
 (this repo is designed to stay maintainable even without AI):
