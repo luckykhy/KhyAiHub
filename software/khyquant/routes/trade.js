@@ -240,7 +240,7 @@ router.get('/positions', authMiddleware, async (req, res) => {
     // 🔥 合并演示持仓和真实持仓
     const allPositions = [...demoPositions, ...realPositions];
 
-    console.log(`✅ 返回持仓: ${demoPositions.length}个演示 + ${realPositions.length}个真实 = ${allPositions.length}个总计`);
+    console.log(`✓ 返回持仓: ${demoPositions.length}个演示 + ${realPositions.length}个真实 = ${allPositions.length}个总计`);
 
     res.json({
       success: true,
@@ -682,7 +682,7 @@ router.post('/', authMiddleware, async (req, res) => {
       strategyName: strategyName || null
     };
 
-    console.log('✅ 交易订单创建成功:', tradeData);
+    console.log('✓ 交易订单创建成功:', tradeData);
 
     res.status(201).json({
       success: true,
@@ -849,7 +849,7 @@ router.post('/:id/close', authMiddleware, async (req, res) => {
         profit: profit
       });
 
-      console.log('✅ 全仓平仓成功:', {
+      console.log('✓ 全仓平仓成功:', {
         id: trade.id,
         symbol: trade.symbol,
         quantity: trade.quantity,
@@ -905,7 +905,7 @@ router.post('/:id/close', authMiddleware, async (req, res) => {
         profit: partialProfit
       });
 
-      console.log('✅ 部分平仓成功:', {
+      console.log('✓ 部分平仓成功:', {
         id: trade.id,
         symbol: trade.symbol,
         closedQuantity: closeQuantity,
@@ -932,7 +932,7 @@ router.post('/:id/close', authMiddleware, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ 平仓失败:', error);
+    console.error('✗ 平仓失败:', error);
     res.status(500).json({
       success: false,
       message: '平仓失败',

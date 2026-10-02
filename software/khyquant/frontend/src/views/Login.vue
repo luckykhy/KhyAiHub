@@ -22,7 +22,7 @@
       <div class="login-main">
         <section class="left-panel">
           <div class="input-wrap">
-            <span class="input-icon">👤</span>
+            <span class="input-icon">◆</span>
             <input
               v-model="form.username"
               placeholder="用户名或邮箱"
@@ -32,7 +32,7 @@
           </div>
 
           <div class="input-wrap">
-            <span class="input-icon">🔒</span>
+            <span class="input-icon">◉</span>
             <input
               v-model="form.password"
               :type="showPwd ? 'text' : 'password'"
@@ -40,7 +40,7 @@
               autocomplete="current-password"
               @keyup.enter="handleLogin"
             />
-            <span class="eye-btn" @click="showPwd = !showPwd">{{ showPwd ? '🙈' : '👁️' }}</span>
+            <span class="eye-btn" @click="showPwd = !showPwd">{{ showPwd ? '' : '' }}</span>
           </div>
 
           <label class="remember-wrap">

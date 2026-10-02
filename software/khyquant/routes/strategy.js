@@ -234,14 +234,14 @@ router.post('/analyze', authMiddleware, async (req, res) => {
       });
     }
 
-    console.log('🔍 开始智能分析策略代码...');
+    console.log('开始智能分析策略代码...');
     console.log('代码长度:', code.length);
     console.log('策略名称:', name);
     
     // 使用智能适配器分析代码
     const result = intelligentAdapter.intelligentCreateStrategy(code, name, description);
     
-    console.log('✅ 智能分析完成');
+    console.log('✓ 智能分析完成');
     console.log('检测语言:', result.analysis.detectedLanguage.language);
     console.log('检测类型:', result.analysis.detectedType.type);
     console.log('置信度:', result.analysis.confidence);
@@ -252,7 +252,7 @@ router.post('/analyze', authMiddleware, async (req, res) => {
       message: '智能分析完成'
     });
   } catch (error) {
-    console.error('❌ 智能分析失败:', error);
+    console.error('✗ 智能分析失败:', error);
     res.status(500).json({
       success: false,
       message: '智能分析失败: ' + error.message
@@ -271,7 +271,7 @@ router.post('/analyze', authMiddleware, async (req, res) => {
  */
 router.get('/templates', async (req, res) => {
   try {
-    console.log('📋 获取策略模板列表');
+    console.log('获取策略模板列表');
     
     // 模拟策略模板数据
     const templates = [
@@ -537,7 +537,7 @@ LOWER:=MID-P*STD(CLOSE,N);
     ];
     
     // 🔥 调试：输出ID 4-6的params
-    console.log('🔍 模板ID 4-6的params:');
+    console.log('模板ID 4-6的params:');
     templates.filter(t => [4,5,6].includes(t.id)).forEach(t => {
       console.log(`  ID ${t.id}: params=`, JSON.stringify(t.params), ', parameters=', JSON.stringify(t.parameters));
     });
@@ -545,17 +545,17 @@ LOWER:=MID-P*STD(CLOSE,N);
     // 🔥 强制设置params（临时测试）
     templates.forEach(t => {
       if (t.id === 4 && (!t.params || Object.keys(t.params).length === 0)) {
-        console.log('⚠️ ID 4的params为空，强制设置');
+        console.log('⚠ ID 4的params为空，强制设置');
         t.params = { shortPeriod: 5, longPeriod: 20 };
         t.parameters = { shortPeriod: 5, longPeriod: 20 };
       }
       if (t.id === 5 && (!t.params || Object.keys(t.params).length === 0)) {
-        console.log('⚠️ ID 5的params为空，强制设置');
+        console.log('⚠ ID 5的params为空，强制设置');
         t.params = { N: 9, M1: 3, M2: 3, oversold: 20, overbought: 80 };
         t.parameters = { N: 9, M1: 3, M2: 3, oversold: 20, overbought: 80 };
       }
       if (t.id === 6 && (!t.params || Object.keys(t.params).length === 0)) {
-        console.log('⚠️ ID 6的params为空，强制设置');
+        console.log('⚠ ID 6的params为空，强制设置');
         t.params = { N: 20, P: 2 };
         t.parameters = { N: 20, P: 2 };
       }
@@ -568,7 +568,7 @@ LOWER:=MID-P*STD(CLOSE,N);
     });
     
   } catch (error) {
-    console.error('❌ 获取策略模板失败:', error);
+    console.error('✗ 获取策略模板失败:', error);
     res.status(500).json({
       success: false,
       message: '获取策略模板失败: ' + error.message
@@ -642,7 +642,7 @@ router.get('/presets', async (req, res) => {
       message: '策略参数预设获取成功'
     });
   } catch (error) {
-    console.error('❌ 获取策略参数预设失败:', error);
+    console.error('✗ 获取策略参数预设失败:', error);
     res.status(500).json({
       success: false,
       message: '获取策略参数预设失败: ' + error.message
@@ -722,8 +722,8 @@ router.post('/:strategyType/execute', authMiddleware, async (req, res) => {
     const { strategyType } = req.params;
     const { symbol = 'sh000300', startDate, endDate } = req.body;
 
-    console.log('🚀 执行策略类型:', strategyType, '标的:', symbol);
-    console.log('📝 strategyType类型:', typeof strategyType, '是否为数字:', /^\d+$/.test(strategyType));
+    console.log('执行策略类型:', strategyType, '标的:', symbol);
+    console.log('strategyType类型:', typeof strategyType, '是否为数字:', /^\d+$/.test(strategyType));
 
     // 🔥 首先定义策略模板（必须在使用前定义）
     const strategyTemplates = {
@@ -878,17 +878,17 @@ function strategy(data, params) {
 
     // 如果是数字ID，从数据库查询策略
     if (/^\d+$/.test(strategyType)) {
-      console.log('🔍 检测到数字ID，从数据库查询策略...');
+      console.log('检测到数字ID，从数据库查询策略...');
       const strategy = await Strategy.findByPk(strategyType);
       
       if (strategy && strategy.code) {
-        console.log('✅ 找到数据库策略:', strategy.name);
+        console.log('✓ 找到数据库策略:', strategy.name);
         strategyCode = strategy.code;
         strategyName = strategy.name;
         strategyParams = strategy.parameters || {};
         strategyType_actual = strategy.type || 'custom';
       } else {
-        console.warn('⚠️ 未找到ID为', strategyType, '的策略，使用默认模板');
+        console.warn('⚠ 未找到ID为', strategyType, '的策略，使用默认模板');
         // 使用默认模板
         const template = strategyTemplates['momentum-macd'];
         strategyCode = template.code;
@@ -898,7 +898,7 @@ function strategy(data, params) {
       }
     } else {
       // 使用策略模板
-      console.log('📋 使用策略模板:', strategyType);
+      console.log('使用策略模板:', strategyType);
       
       // 🔥 策略类型映射（处理简写和别名）
       const strategyTypeMap = {
@@ -913,7 +913,7 @@ function strategy(data, params) {
       const template = strategyTemplates[actualStrategyType] || strategyTemplates['momentum-macd'];
       
       if (!strategyTemplates[actualStrategyType]) {
-        console.warn(`⚠️ 策略类型 "${strategyType}" (映射为 "${actualStrategyType}") 不存在，使用默认的 momentum-macd`);
+        console.warn(`⚠ 策略类型 "${strategyType}" (映射为 "${actualStrategyType}") 不存在，使用默认的 momentum-macd`);
       }
       
       strategyCode = template.code;
@@ -922,7 +922,7 @@ function strategy(data, params) {
       strategyType_actual = template.type;
     }
     
-    console.log('✅ 策略选择完成:', {
+    console.log('✓ 策略选择完成:', {
       name: strategyName,
       type: strategyType_actual,
       hasCode: !!strategyCode,
@@ -932,7 +932,7 @@ function strategy(data, params) {
     // 生成模拟K线数据
     const klineData = mockDataService.generateMockKLineData(symbol, 60);
     
-    console.log('📊 生成K线数据:', klineData.length, '条');
+    console.log('生成K线数据:', klineData.length, '条');
     
     // 执行策略
     const result = await strategyEngine.executeStrategy(
@@ -952,8 +952,8 @@ function strategy(data, params) {
       auxiliaryData = result.auxiliaryData || {};
     }
 
-    console.log('✅ 策略执行完成，生成信号:', signals.length, '个');
-    console.log('📊 辅助数据:', Object.keys(auxiliaryData).length, '条');
+    console.log('✓ 策略执行完成，生成信号:', signals.length, '个');
+    console.log('辅助数据:', Object.keys(auxiliaryData).length, '条');
 
     res.json({
       success: true,
@@ -968,7 +968,7 @@ function strategy(data, params) {
       }
     });
   } catch (error) {
-    console.error('❌ 执行策略失败:', error);
+    console.error('✗ 执行策略失败:', error);
     console.error('错误详情:', {
       message: error.message,
       stack: error.stack,
@@ -1242,7 +1242,7 @@ router.post('/:id/execute', authMiddleware, async (req, res) => {
       }
     } else {
       // 字符串类型 - 使用内置策略模板
-      console.log('🔍 使用内置策略模板:', id);
+      console.log('使用内置策略模板:', id);
       
       // 策略模板定义
       const strategyTemplates = {
@@ -2277,7 +2277,7 @@ router.post('/monitor/start', authMiddleware, async (req, res) => {
       userId,
       onSignal: async (signalData) => {
         // 信号回调：自动下单
-        console.log('📊 收到策略信号，自动下单:', signalData);
+        console.log('收到策略信号，自动下单:', signalData);
         
         try {
           // 这里可以调用交易API自动下单

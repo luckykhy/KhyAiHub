@@ -197,7 +197,7 @@ router.get('/all-stocks', async (req, res) => {
   try {
     const { getAllStockCodesWithCache } = require('../services/adataStockListService');
     
-    console.log('📊 请求获取所有股票列表...');
+    console.log('请求获取所有股票列表...');
     const result = await getAllStockCodesWithCache();
     
     if (result.success) {
@@ -217,7 +217,7 @@ router.get('/all-stocks', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('❌ 获取股票列表失败:', error);
+    console.error('✗ 获取股票列表失败:', error);
     res.status(500).json({
       success: false,
       error: error.message,

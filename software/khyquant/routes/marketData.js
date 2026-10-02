@@ -138,7 +138,7 @@ router.get('/symbols', authMiddleware, async (req, res) => {
   try {
     const { type, limit = 100, useCache = 'true' } = req.query;
     
-    console.log(`📋 获取标的列表: limit=${limit}, type=${type}`);
+    console.log(`获取标的列表: limit=${limit}, type=${type}`);
     
     // 使用新的market控制器
     const marketController = require('../controllers/marketController');

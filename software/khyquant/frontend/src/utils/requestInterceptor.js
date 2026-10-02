@@ -28,7 +28,7 @@ export function setupRequestInterceptor() {
       return config;
     },
     (error) => {
-      console.error('❌ 请求配置错误:', error);
+      console.error('✗ 请求配置错误:', error);
       return Promise.reject(error);
     }
   );
@@ -41,11 +41,11 @@ export function setupRequestInterceptor() {
       return response;
     },
     (error) => {
-      console.error('❌ 请求失败:', error);
+      console.error('✗ 请求失败:', error);
 
       // 增加错误计数
       consecutiveErrors++;
-      console.warn(`⚠️ 连续错误次数: ${consecutiveErrors}/${MAX_CONSECUTIVE_ERRORS}`);
+      console.warn(`⚠ 连续错误次数: ${consecutiveErrors}/${MAX_CONSECUTIVE_ERRORS}`);
 
       // 判断错误类型
       const errorType = getErrorType(error);
@@ -56,7 +56,7 @@ export function setupRequestInterceptor() {
 
       // 如果连续错误次数过多,返回启动界面
       if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
-        console.error('❌ 连续请求失败次数过多,返回启动界面');
+        console.error('✗ 连续请求失败次数过多,返回启动界面');
         networkMonitor.returnToSplash('前后端连接失败,请检查服务是否正常运行');
       }
 
@@ -64,7 +64,7 @@ export function setupRequestInterceptor() {
     }
   );
 
-  if (import.meta.env.DEV) { console.log('✅ Axios拦截器已设置'); }
+  if (import.meta.env.DEV) { console.log('✓ Axios拦截器已设置'); }
 }
 
 /**
@@ -144,7 +144,7 @@ function showErrorMessage(message, errorType) {
  */
 export function resetErrorCount() {
   consecutiveErrors = 0;
-  if (import.meta.env.DEV) { console.log('✅ 错误计数已重置'); }
+  if (import.meta.env.DEV) { console.log('✓ 错误计数已重置'); }
 }
 
 export default {

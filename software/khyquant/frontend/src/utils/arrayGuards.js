@@ -12,7 +12,7 @@
  */
 export function ensureArray(value, fallback = [], variableName = 'unknown') {
   if (!Array.isArray(value)) {
-    console.error(`❌ [ArrayGuard] ${variableName} is not an array:`, {
+    console.error(`✗ [ArrayGuard] ${variableName} is not an array:`, {
       type: typeof value,
       value: value,
       stack: new Error().stack
@@ -35,7 +35,7 @@ export function createSafeArrayRef(refValue, variableName) {
     },
     set value(newValue) {
       if (!Array.isArray(newValue)) {
-        console.error(`❌ [ArrayGuard] Attempting to set ${variableName} to non-array:`, {
+        console.error(`✗ [ArrayGuard] Attempting to set ${variableName} to non-array:`, {
           type: typeof newValue,
           value: newValue
         })
@@ -63,13 +63,13 @@ export function validateApiArrayField(response, fieldPath, fallback = []) {
       if (value && typeof value === 'object' && field in value) {
         value = value[field]
       } else {
-        console.warn(`⚠️ [API Validation] Field path "${fieldPath}" not found in response`)
+        console.warn(`⚠ [API Validation] Field path "${fieldPath}" not found in response`)
         return fallback
       }
     }
     
     if (!Array.isArray(value)) {
-      console.error(`❌ [API Validation] Field "${fieldPath}" is not an array:`, {
+      console.error(`✗ [API Validation] Field "${fieldPath}" is not an array:`, {
         type: typeof value,
         value: value
       })
@@ -78,7 +78,7 @@ export function validateApiArrayField(response, fieldPath, fallback = []) {
     
     return value
   } catch (error) {
-    console.error(`❌ [API Validation] Error validating field "${fieldPath}":`, error)
+    console.error(`✗ [API Validation] Error validating field "${fieldPath}":`, error)
     return fallback
   }
 }
@@ -92,7 +92,7 @@ export function validateApiArrayField(response, fieldPath, fallback = []) {
 export function addArrayWatchGuard(refValue, variableName, watch) {
   watch(refValue, (newValue) => {
     if (!Array.isArray(newValue)) {
-      console.error(`❌❌❌ [Watch Guard] ${variableName} was set to non-array:`, {
+      console.error(`✗✗✗ [Watch Guard] ${variableName} was set to non-array:`, {
         type: typeof newValue,
         value: newValue,
         stack: new Error().stack

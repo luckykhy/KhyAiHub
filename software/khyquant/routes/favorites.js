@@ -11,14 +11,14 @@ router.get('/', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
     
-    console.log(`📂 获取用户 ${userId} 的自选标的列表`);
+    console.log(`获取用户 ${userId} 的自选标的列表`);
     
     const favorites = await UserFavorite.findAll({
       where: { user_id: userId },
       order: [['added_at', 'DESC']]
     });
     
-    console.log(`✅ 找到 ${favorites.length} 个自选标的`);
+    console.log(`✓ 找到 ${favorites.length} 个自选标的`);
     
     res.json({
       success: true,
@@ -55,7 +55,7 @@ router.post('/', authMiddleware, async (req, res) => {
       });
     }
     
-    console.log(`➕ 用户 ${userId} 添加自选标的: ${symbol} (${name})`);
+    console.log(`+ 用户 ${userId} 添加自选标的: ${symbol} (${name})`);
     
     // 使用upsert避免重复
     const [favorite, created] = await UserFavorite.findOrCreate({
@@ -69,7 +69,7 @@ router.post('/', authMiddleware, async (req, res) => {
       }
     });
     
-    console.log(created ? '✅ 添加成功' : 'ℹ️  已存在');
+    console.log(created ? '✓ 添加成功' : 'ℹ  已存在');
     
     res.json({
       success: true,
@@ -100,7 +100,7 @@ router.delete('/:symbol', authMiddleware, async (req, res) => {
     const userId = req.user.id;
     const { symbol } = req.params;
     
-    console.log(`➖ 用户 ${userId} 删除自选标的: ${symbol}`);
+    console.log(`- 用户 ${userId} 删除自选标的: ${symbol}`);
     
     const deleted = await UserFavorite.destroy({
       where: {
@@ -110,13 +110,13 @@ router.delete('/:symbol', authMiddleware, async (req, res) => {
     });
     
     if (deleted > 0) {
-      console.log('✅ 删除成功');
+      console.log('✓ 删除成功');
       res.json({
         success: true,
         message: '删除成功'
       });
     } else {
-      console.log('⚠️  未找到该自选标的');
+      console.log('⚠  未找到该自选标的');
       res.status(404).json({
         success: false,
         message: '未找到该自选标的'
@@ -150,7 +150,7 @@ router.post('/batch', authMiddleware, async (req, res) => {
     
     // 允许空数组(用于清空自选标的)
     if (favorites.length === 0) {
-      console.log(`📦 用户 ${userId} 清空自选标的`);
+      console.log(`用户 ${userId} 清空自选标的`);
       return res.json({
         success: true,
         message: '自选标的列表为空',
@@ -162,7 +162,7 @@ router.post('/batch', authMiddleware, async (req, res) => {
       });
     }
     
-    console.log(`📦 用户 ${userId} 批量添加 ${favorites.length} 个自选标的`);
+    console.log(`用户 ${userId} 批量添加 ${favorites.length} 个自选标的`);
     
     const results = await Promise.allSettled(
       favorites.map(item => 
@@ -182,7 +182,7 @@ router.post('/batch', authMiddleware, async (req, res) => {
     const successCount = results.filter(r => r.status === 'fulfilled').length;
     const failCount = results.filter(r => r.status === 'rejected').length;
     
-    console.log(`✅ 批量添加完成: 成功${successCount}个, 失败${failCount}个`);
+    console.log(`✓ 批量添加完成: 成功${successCount}个, 失败${failCount}个`);
     
     res.json({
       success: true,
@@ -211,13 +211,13 @@ router.delete('/', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
     
-    console.log(`🗑️  用户 ${userId} 清空所有自选标的`);
+    console.log(`用户 ${userId} 清空所有自选标的`);
     
     const deleted = await UserFavorite.destroy({
       where: { user_id: userId }
     });
     
-    console.log(`✅ 已删除 ${deleted} 个自选标的`);
+    console.log(`✓ 已删除 ${deleted} 个自选标的`);
     
     res.json({
       success: true,

@@ -41,7 +41,7 @@ router.get('/status', authMiddleware, (req, res) => {
  */
 router.post('/trigger', authMiddleware, adminMiddleware, async (req, res) => {
   try {
-    console.log(`🔄 管理员 ${req.user.username} 手动触发标的同步`);
+    console.log(`管理员 ${req.user.username} 手动触发标的同步`);
     
     // 异步执行同步,不阻塞响应
     instrumentSyncService.triggerSync().catch(error => {

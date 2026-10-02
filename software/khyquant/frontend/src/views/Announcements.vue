@@ -49,7 +49,7 @@
             @click="goToAdminPanel"
             class="admin-quick-btn"
           >
-            🔧 管理公告
+            管理公告
           </el-button>
         </div>
       </div>

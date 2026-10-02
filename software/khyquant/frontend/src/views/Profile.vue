@@ -118,7 +118,7 @@
               <!-- 生物识别绑定 -->
               <div class="bio-section">
                 <div class="bio-header">
-                  <span class="bio-title">🪪 生物识别登录</span>
+                  <span class="bio-title">生物识别登录</span>
                   <el-tag :type="bioBound ? 'success' : 'info'" size="small">
                     {{ bioBound ? '已绑定' : '未绑定' }}
                   </el-tag>
@@ -157,7 +157,7 @@
                   </template>
                 </div>
                 <p v-if="!webauthnSupported" class="bio-unsupported">
-                  ⚠️ 当前浏览器不支持 WebAuthn，请使用 Chrome / Edge
+                  ⚠ 当前浏览器不支持 WebAuthn，请使用 Chrome / Edge
                 </p>
               </div>
               

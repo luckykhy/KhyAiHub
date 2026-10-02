@@ -29,11 +29,11 @@ def check_model_features(model_path):
 def main():
     models_dir = './models'
     
-    print("🔍 检查模型特征数量")
+    print("检查模型特征数量")
     print("=" * 60)
     
     if not os.path.exists(models_dir):
-        print(f"❌ 模型目录不存在: {models_dir}")
+        print(f"✗ 模型目录不存在: {models_dir}")
         return
     
     # 检查所有 *_latest.joblib 文件
@@ -51,12 +51,12 @@ def main():
         
         if os.path.exists(model_path):
             n_features = check_model_features(model_path)
-            print(f"✅ {agent:25s} -> {n_features} 个特征")
+            print(f"✓ {agent:25s} -> {n_features} 个特征")
         else:
-            print(f"❌ {agent:25s} -> 文件不存在")
+            print(f"✗ {agent:25s} -> 文件不存在")
     
     print("\n" + "=" * 60)
-    print("📋 说明:")
+    print("说明:")
     print("   - 如果显示 49 个特征，需要重新训练")
     print("   - 如果显示 18 个特征，可以直接上传到服务器")
 

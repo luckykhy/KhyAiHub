@@ -118,11 +118,11 @@ export const getInstrumentInfo = (symbol, normalizeSymbolCodeFn = defaultNormali
 
   const info = INSTRUMENT_MAP[lookupSymbol]
   if (info) {
-    if (import.meta.env.DEV) { console.log(`✅ 找到标的信息: ${symbol} -> ${normalizedSymbol} -> ${lookupSymbol}, 上市日期: ${info.listingDate}`) }
+    if (import.meta.env.DEV) { console.log(`✓ 找到标的信息: ${symbol} -> ${normalizedSymbol} -> ${lookupSymbol}, 上市日期: ${info.listingDate}`) }
     return info
   }
 
-  console.warn(`⚠️ 未找到标的信息: ${symbol} (标准化: ${normalizedSymbol}, 查找: ${lookupSymbol}), 使用默认值`)
+  console.warn(`⚠ 未找到标的信息: ${symbol} (标准化: ${normalizedSymbol}, 查找: ${lookupSymbol}), 使用默认值`)
   return DEFAULT_INSTRUMENT_INFO
 }
 
@@ -152,11 +152,11 @@ export const generateMockKlineData = ({
   const finalSymbol = symbol || contract || '000001.SH'
 
   if (import.meta.env.DEV) { console.log('='.repeat(80)) }
-  if (import.meta.env.DEV) { console.log('🔥🔥🔥 generateMockKlineData 被调用！') }
-  if (import.meta.env.DEV) { console.log('🔥 当前时间:', new Date().toLocaleString()) }
-  if (import.meta.env.DEV) { console.log('🔥 selectedSymbol.value:', selectedSymbol) }
-  if (import.meta.env.DEV) { console.log('🔥 props.contract:', contract) }
-  if (import.meta.env.DEV) { console.log('🔥 最终使用的symbol:', finalSymbol) }
+  if (import.meta.env.DEV) { console.log('generateMockKlineData 被调用！') }
+  if (import.meta.env.DEV) { console.log('当前时间:', new Date().toLocaleString()) }
+  if (import.meta.env.DEV) { console.log('selectedSymbol.value:', selectedSymbol) }
+  if (import.meta.env.DEV) { console.log('props.contract:', contract) }
+  if (import.meta.env.DEV) { console.log('最终使用的symbol:', finalSymbol) }
   if (import.meta.env.DEV) { console.log('� selectedPeriod.value:', selectedPeriod) }
   if (import.meta.env.DEV) { console.log('='.repeat(80)) }
 
@@ -165,8 +165,8 @@ export const generateMockKlineData = ({
   const basePrice = instrumentInfo.basePrice
   const now = new Date()
 
-  if (import.meta.env.DEV) { console.log(`📊 生成K线数据: ${finalSymbol}`) }
-  if (import.meta.env.DEV) { console.log(`📅 上市时间: ${listingDate.toLocaleDateString()}, 基础价格: ${basePrice}`) }
+  if (import.meta.env.DEV) { console.log(`生成K线数据: ${finalSymbol}`) }
+  if (import.meta.env.DEV) { console.log(`上市时间: ${listingDate.toLocaleDateString()}, 基础价格: ${basePrice}`) }
 
   let seed = getSymbolSeedFn(finalSymbol)
   const seededRandom = () => {
@@ -178,7 +178,7 @@ export const generateMockKlineData = ({
   const normalizedSymbol = String(finalSymbol).toLowerCase()
   const isHS300 = finalSymbol.includes('000300') || finalSymbol.includes('sh000300') || normalizedSymbol.includes('000300')
 
-  if (import.meta.env.DEV) { console.log('🔍 检查是否为沪深300:') }
+  if (import.meta.env.DEV) { console.log('检查是否为沪深300:') }
   if (import.meta.env.DEV) { console.log(`   - symbol: "${finalSymbol}"`) }
   if (import.meta.env.DEV) { console.log(`   - symbol.includes('000300'): ${finalSymbol.includes('000300')}`) }
   if (import.meta.env.DEV) { console.log(`   - symbol.includes('sh000300'): ${finalSymbol.includes('sh000300')}`) }
@@ -187,11 +187,11 @@ export const generateMockKlineData = ({
   if (import.meta.env.DEV) { console.log(`   - selectedPeriod: ${selectedPeriod}`) }
 
   if (isHS300 && selectedPeriod === '1d') {
-    if (import.meta.env.DEV) { console.log('🔥🔥🔥 使用新的沪深300数据生成算法！') }
-    if (import.meta.env.DEV) { console.log('🔥 起始价格: 807.78') }
+    if (import.meta.env.DEV) { console.log('使用新的沪深300数据生成算法！') }
+    if (import.meta.env.DEV) { console.log('起始价格: 807.78') }
     currentPrice = 807.78
     const totalDays = Math.floor((now.getTime() - listingDate.getTime()) / (1000 * 60 * 60 * 24))
-    if (import.meta.env.DEV) { console.log('🔥 总天数:', totalDays) }
+    if (import.meta.env.DEV) { console.log('总天数:', totalDays) }
 
     const cycles = [
       { start: 0, end: 0.095, trend: 6.8, volatility: 0.025 },
@@ -288,9 +288,9 @@ export const generateMockKlineData = ({
   }
 
   if (data.length > 0) {
-    if (import.meta.env.DEV) { console.log(`✅ K线数据生成完成: ${data.length} 条, 时间范围: ${new Date(data[0].time * 1000).toLocaleDateString()} - ${new Date(data[data.length - 1].time * 1000).toLocaleDateString()}`) }
+    if (import.meta.env.DEV) { console.log(`✓ K线数据生成完成: ${data.length} 条, 时间范围: ${new Date(data[0].time * 1000).toLocaleDateString()} - ${new Date(data[data.length - 1].time * 1000).toLocaleDateString()}`) }
   } else {
-    if (import.meta.env.DEV) { console.log('⚠️ K线数据生成完成，但没有可用数据') }
+    if (import.meta.env.DEV) { console.log('⚠ K线数据生成完成，但没有可用数据') }
   }
 
   return data

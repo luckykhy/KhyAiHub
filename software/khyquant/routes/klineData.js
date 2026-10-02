@@ -140,7 +140,7 @@ router.post('/sync', authMiddleware, async (req, res) => {
     const normalizedDataType = normalizeDataType(dataType, period);
     const instrumentType = instrumentTypeOverride || detectInstrumentType(symbol);
     
-    console.log(`🔄 同步K线数据: ${symbol}, ${period}, dataType=${normalizedDataType}, instrumentType=${instrumentType}`);
+    console.log(`同步K线数据: ${symbol}, ${period}, dataType=${normalizedDataType}, instrumentType=${instrumentType}`);
     
     // 调用Python脚本获取历史数据
     const pythonScript = path.join(__dirname, '../services/adataService.py');
@@ -154,7 +154,7 @@ router.post('/sync', authMiddleware, async (req, res) => {
     try {
       python = spawn(pythonCmd, [pythonScript, ...args]);
     } catch (spawnError) {
-      console.error('❌ 无法启动Python进程:', spawnError.message);
+      console.error('✗ 无法启动Python进程:', spawnError.message);
       return res.status(500).json({
         success: false,
         message: 'Python不可用,无法同步K线数据',
@@ -195,7 +195,7 @@ router.post('/sync', authMiddleware, async (req, res) => {
 
     // 🔥 添加错误事件监听器
     python.on('error', (error) => {
-      console.error('❌ Python进程错误:', error.message);
+      console.error('✗ Python进程错误:', error.message);
       errorString += `Python进程错误: ${error.message}`;
       _clearIdle();
       if (!_responded) {

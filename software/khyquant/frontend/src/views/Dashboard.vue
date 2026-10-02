@@ -664,7 +664,7 @@ const loadDashboardData = async () => {
       const data = response.data.data;
       
       if (import.meta.env.DEV) {
-        console.log('📊 后端返回的数据:', {
+        console.log('后端返回的数据:', {
           stats: data.stats,
           strategiesCount: data.recentStrategies?.length,
           backtestsCount: data.recentBacktests?.length,
@@ -696,7 +696,7 @@ const loadDashboardData = async () => {
       }))
       
       if (import.meta.env.DEV) {
-        console.log('✅ 主页数据加载成功:', {
+        console.log('✓ 主页数据加载成功:', {
           strategies: recentStrategies.value.length,
           backtests: recentBacktests.value.length,
           stats: stats.value
@@ -808,7 +808,7 @@ onMounted(async () => {
   }
   
   // 🔥 步骤3: 自动加载自选标的的行情数据
-  if (import.meta.env.DEV) { console.log('📊 自动加载自选标的行情数据...') }
+  if (import.meta.env.DEV) { console.log('自动加载自选标的行情数据...') }
   await loadFavoriteQuotesData()
   
   // 🔥 步骤4: 切换到自选标的分类显示

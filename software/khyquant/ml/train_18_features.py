@@ -33,7 +33,7 @@ def generate_training_data(n_samples=10000):
     """
     生成训练数据（18个特征）
     """
-    print(f"📊 生成 {n_samples} 条训练数据...")
+    print(f"生成 {n_samples} 条训练数据...")
     
     np.random.seed(42)
     
@@ -78,7 +78,7 @@ def generate_training_data(n_samples=10000):
     # 规则：如果 ma5 > ma10 且 rsi > 50，则标签为1（看涨），否则为0（看跌）
     df['label'] = ((df['ma5'] > df['ma10']) & (df['rsi'] > 50)).astype(int)
     
-    print(f"✅ 数据生成完成")
+    print(f"✓ 数据生成完成")
     print(f"   特征数: {len(FEATURE_NAMES)}")
     print(f"   样本数: {len(df)}")
     print(f"   标签分布: {df['label'].value_counts().to_dict()}")
@@ -89,7 +89,7 @@ def train_models(X_train, y_train, X_test, y_test):
     """
     训练6个智能体模型
     """
-    print("\n🚀 开始训练6个智能体...")
+    print("\n开始训练6个智能体...")
     print("=" * 60)
     
     models_config = {
@@ -138,7 +138,7 @@ def train_models(X_train, y_train, X_test, y_test):
             recall = recall_score(y_test, y_pred, average='weighted', zero_division=0)
             f1 = f1_score(y_test, y_pred, average='weighted', zero_division=0)
             
-            print(f"✅ 训练完成")
+            print(f"✓ 训练完成")
             print(f"   准确率: {accuracy:.4f}")
             print(f"   精确率: {precision:.4f}")
             print(f"   召回率: {recall:.4f}")
@@ -155,7 +155,7 @@ def train_models(X_train, y_train, X_test, y_test):
             }
             
         except Exception as e:
-            print(f"❌ 训练失败: {str(e)}")
+            print(f"✗ 训练失败: {str(e)}")
             continue
     
     return trained_models
@@ -168,7 +168,7 @@ def save_models(models, save_dir='./models'):
     
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     
-    print(f"\n💾 保存模型到: {save_dir}")
+    print(f"\n保存模型到: {save_dir}")
     print("=" * 60)
     
     for agent_name, data in models.items():
@@ -182,7 +182,7 @@ def save_models(models, save_dir='./models'):
         latest_path = os.path.join(save_dir, f'{agent_name}_latest.joblib')
         joblib.dump(model, latest_path)
         
-        print(f"✅ {agent_name}")
+        print(f"✓ {agent_name}")
         print(f"   {latest_path}")
     
     # 保存训练信息
@@ -196,14 +196,14 @@ def save_models(models, save_dir='./models'):
     info_path = os.path.join(save_dir, f'training_info_{timestamp}.joblib')
     joblib.dump(training_info, info_path)
     
-    print(f"\n✅ 所有模型已保存！")
-    print(f"\n📋 训练信息:")
+    print(f"\n✓ 所有模型已保存！")
+    print(f"\n训练信息:")
     print(f"   时间戳: {timestamp}")
     print(f"   特征数: {len(FEATURE_NAMES)}")
     print(f"   模型数: {len(models)}")
 
 def main():
-    print("🤖 ML模型训练系统 (18特征版本)")
+    print("ML模型训练系统 (18特征版本)")
     print("=" * 60)
     
     # 1. 生成训练数据
@@ -218,7 +218,7 @@ def main():
         X, y, test_size=0.2, random_state=42
     )
     
-    print(f"\n📊 数据划分:")
+    print(f"\n数据划分:")
     print(f"   训练集: {X_train.shape}")
     print(f"   测试集: {X_test.shape}")
     
@@ -229,8 +229,8 @@ def main():
     save_models(models)
     
     print("\n" + "=" * 60)
-    print("🎉 训练完成！")
-    print("\n📝 下一步:")
+    print("训练完成！")
+    print("\n下一步:")
     print("   1. 检查 backend/ml/models/ 目录")
     print("   2. 上传模型到服务器:")
     # 部署主机走 env,未配置时回落到占位符(不写死真实生产拓扑)。

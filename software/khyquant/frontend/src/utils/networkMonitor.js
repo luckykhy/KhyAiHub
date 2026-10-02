@@ -18,11 +18,11 @@ class NetworkMonitor {
    */
   startMonitoring() {
     if (this.isMonitoring) {
-      if (import.meta.env.DEV) { console.log('⚠️ 网络监控已在运行'); }
+      if (import.meta.env.DEV) { console.log('⚠ 网络监控已在运行'); }
       return;
     }
 
-    if (import.meta.env.DEV) { console.log('🔍 启动网络监控...'); }
+    if (import.meta.env.DEV) { console.log('启动网络监控...'); }
     this.isMonitoring = true;
     this.failureCount = 0;
     this.lastSuccessTime = Date.now();
@@ -48,7 +48,7 @@ class NetworkMonitor {
       return;
     }
 
-    if (import.meta.env.DEV) { console.log('🛑 停止网络监控'); }
+    if (import.meta.env.DEV) { console.log('停止网络监控'); }
     this.isMonitoring = false;
 
     if (this.intervalId) {
@@ -65,7 +65,7 @@ class NetworkMonitor {
    */
   async checkConnection() {
     try {
-      if (import.meta.env.DEV) { console.log('🔍 检查后端连接状态...'); }
+      if (import.meta.env.DEV) { console.log('检查后端连接状态...'); }
       
       // 检查后端健康状态
       const controller = new AbortController();
@@ -83,17 +83,17 @@ class NetworkMonitor {
       clearTimeout(timeoutId);
 
       if (response.ok) {
-        if (import.meta.env.DEV) { console.log('✅ 后端连接正常'); }
+        if (import.meta.env.DEV) { console.log('✓ 后端连接正常'); }
         this.failureCount = 0;
         this.lastSuccessTime = Date.now();
         return true;
       } else {
-        console.warn(`⚠️ 后端返回异常状态码: ${response.status}`);
+        console.warn(`⚠ 后端返回异常状态码: ${response.status}`);
         this.handleConnectionFailure('后端服务返回错误状态');
         return false;
       }
     } catch (error) {
-      console.error('❌ 后端连接失败:', error.message);
+      console.error('✗ 后端连接失败:', error.message);
       this.handleConnectionFailure(error.message);
       return false;
     }
@@ -104,11 +104,11 @@ class NetworkMonitor {
    */
   handleConnectionFailure(reason) {
     this.failureCount++;
-    console.warn(`⚠️ 连接失败次数: ${this.failureCount}/${this.maxFailures}`);
-    console.warn(`⚠️ 失败原因: ${reason}`);
+    console.warn(`⚠ 连接失败次数: ${this.failureCount}/${this.maxFailures}`);
+    console.warn(`⚠ 失败原因: ${reason}`);
 
     if (this.failureCount >= this.maxFailures) {
-      console.error('❌ 连续失败次数过多,返回启动界面');
+      console.error('✗ 连续失败次数过多,返回启动界面');
       this.returnToSplash('网络连接失败,请检查后端服务是否正常运行');
     }
   }
@@ -117,7 +117,7 @@ class NetworkMonitor {
    * 处理在线事件
    */
   handleOnline() {
-    if (import.meta.env.DEV) { console.log('✅ 网络已恢复在线'); }
+    if (import.meta.env.DEV) { console.log('✓ 网络已恢复在线'); }
     this.failureCount = 0;
     this.checkConnection();
   }
@@ -126,7 +126,7 @@ class NetworkMonitor {
    * 处理离线事件
    */
   handleOffline() {
-    console.warn('⚠️ 网络已离线');
+    console.warn('⚠ 网络已离线');
     this.handleConnectionFailure('网络离线');
   }
 
@@ -134,7 +134,7 @@ class NetworkMonitor {
    * 返回启动界面
    */
   returnToSplash(message) {
-    if (import.meta.env.DEV) { console.log('🔄 准备返回启动界面...'); }
+    if (import.meta.env.DEV) { console.log('准备返回启动界面...'); }
     
     // 停止监控
     this.stopMonitoring();
@@ -154,11 +154,11 @@ class NetworkMonitor {
       if (window.location.protocol === 'file:' || window.location.hostname === 'localhost') {
         // 在Electron或本地开发环境中,返回启动界面
         const splashUrl = this.getSplashUrl();
-        if (import.meta.env.DEV) { console.log('🔄 返回启动界面:', splashUrl); }
+        if (import.meta.env.DEV) { console.log('返回启动界面:', splashUrl); }
         window.location.href = splashUrl;
       } else {
         // 在生产环境中,刷新页面
-        if (import.meta.env.DEV) { console.log('🔄 刷新页面重新连接'); }
+        if (import.meta.env.DEV) { console.log('刷新页面重新连接'); }
         window.location.reload();
       }
     }, 2000);
