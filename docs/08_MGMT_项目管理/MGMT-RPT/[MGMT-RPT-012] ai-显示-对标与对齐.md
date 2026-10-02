@@ -77,10 +77,10 @@ DeepSeek 的 LineBuffer 换行门控补充：代码围栏（` ``` `）内不在 
 
 ```
 流式中：
-  💭 思考中... (dim, 实时显示 thinking 文本)
+  思考中... (dim, 实时显示 thinking 文本)
 
 完成后：
-  💭 思考 (12s) — 已折叠，ctrl+o 查看
+  思考 (12s) — 已折叠，ctrl+o 查看
 ```
 
 LibreChat 用 `<think>` 标签解析；Claude Code 用 content type 区分。KHY 需在 SSE chunk 中检测 `<think>` 标签。

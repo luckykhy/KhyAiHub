@@ -3,7 +3,7 @@
 
 > 生成日期：2026-06-04 | CC 源码：Claude-Code-main（最新开源版本）| KHY：v0.1.98
 
-> ⚠️ **勘误（2026-07-08 核出，本文成文于 v0.1.98，其后 khy 已迭代，以下以当前源码为准）**：
+> ⚠ **勘误（2026-07-08 核出，本文成文于 v0.1.98，其后 khy 已迭代，以下以当前源码为准）**：
 > 1. **TUI 已切官方 `ink` 包**，经 CJS 桥接层 `src/cli/tui/inkRuntime.js` 加载；旧的**自研 Flux store /
 >    VirtualScreen 已移除**（下表「UI 框架」一行的 khy 侧描述已过期）。
 > 2. **queryEngine 的 V2 状态机已删除**（`queryEngine.js:14-21`）；当前是 legacy loop + 可选 agentic
@@ -167,7 +167,7 @@ const registry = new Map(); // name -> { execute, definition, profile }
 
 ## 5. TUI / 渲染系统
 
-> ⚠️ **本节已过期**：本节描述的 "KHY OS：自研 Flux Store + 双渲染器"（`tuiShell.js` / `store/replStore.js` / `components/*` 等）已于 2026-06-05 被官方 Ink 运行时（`backend/src/cli/tui/ink-components/`）取代，相关自研文件已删除。本节仅作历史架构对比保留，最新 TUI 实现请参阅 [../修复记录/tui-inquirer闪退修复-2026-06-05.m../../04_IMPL_实现/IMPL-RPT/[IMPL-RPT-003] tui-inquirer闪退修复-2026-06-05.md.md)。
+> ⚠ **本节已过期**：本节描述的 "KHY OS：自研 Flux Store + 双渲染器"（`tuiShell.js` / `store/replStore.js` / `components/*` 等）已于 2026-06-05 被官方 Ink 运行时（`backend/src/cli/tui/ink-components/`）取代，相关自研文件已删除。本节仅作历史架构对比保留，最新 TUI 实现请参阅 [../修复记录/tui-inquirer闪退修复-2026-06-05.m../../04_IMPL_实现/IMPL-RPT/[IMPL-RPT-003] tui-inquirer闪退修复-2026-06-05.md.md)。
 
 ### Claude Code：魔改 Ink（React）
 ```

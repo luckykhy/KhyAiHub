@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -29,7 +29,7 @@
 <p>&lt;!-- 文档分类: MGMT-RPT-019 | 阶段: 项目管理 | 原路径: docs/架构/架构对比-cc-vs-khy.md --&gt;</p>
 <h1 id="claude-code-vs-khy-os-架构深度对比">Claude Code vs KHY OS：架构深度对比<a class="anchor" href="#claude-code-vs-khy-os-架构深度对比" aria-label="锚点">#</a></h1>
 <blockquote><p>生成日期：2026-06-04 | CC 源码：Claude-Code-main（最新开源版本）| KHY：v0.1.98</p></blockquote>
-<blockquote><p>⚠️ <strong>勘误（2026-07-08 核出，本文成文于 v0.1.98，其后 khy 已迭代，以下以当前源码为准）</strong>：</p>
+<blockquote><p>⚠ <strong>勘误（2026-07-08 核出，本文成文于 v0.1.98，其后 khy 已迭代，以下以当前源码为准）</strong>：</p>
 <ol><li><strong>TUI 已切官方 <code>ink</code> 包</strong>，经 CJS 桥接层 <code>src/cli/tui/inkRuntime.js</code> 加载；旧的**自研 Flux store /</li></ol>
 <p>VirtualScreen 已移除**（下表「UI 框架」一行的 khy 侧描述已过期）。</p>
 <ol><li><strong>queryEngine 的 V2 状态机已删除</strong>（<code>queryEngine.js:14-21</code>）；当前是 legacy loop + 可选 agentic</li></ol>
@@ -121,7 +121,7 @@
 <ul><li>CC 工具<strong>端到端静态类型</strong>（input -&gt; output -&gt; progress）；KHY 使用运行时鸭子类型。</li><li>KHY 有<strong>工具 Profile</strong> — 不同 agent 看到不同工具子集（CC 对所有 agent 暴露全部工具）。</li><li>KHY 有<strong>延迟工具加载</strong>（<code>KHY_DEFER_TOOLS</code>）— 根据上下文动态揭示工具。</li><li>CC 的工具执行上下文（<code>ToolUseContext</code>）是类型化的包；KHY 传递松散的 options 对象。</li></ul>
 <hr>
 <h2 id="5-tui-渲染系统">5. TUI / 渲染系统<a class="anchor" href="#5-tui-渲染系统" aria-label="锚点">#</a></h2>
-<blockquote><p>⚠️ <strong>本节已过期</strong>：本节描述的 &quot;KHY OS：自研 Flux Store + 双渲染器&quot;（<code>tuiShell.js</code> / <code>store/replStore.js</code> / <code>components/*</code> 等）已于 2026-06-05 被官方 Ink 运行时（<code>backend/src/cli/tui/ink-components/</code>）取代，相关自研文件已删除。本节仅作历史架构对比保留，最新 TUI 实现请参阅 [../修复记录/tui-inquirer闪退修复-2026-06-05.m../../04_IMPL_实现/IMPL-RPT/[IMPL-RPT-003] tui-inquirer闪退修复-2026-06-05.md.md)。</p></blockquote>
+<blockquote><p>⚠ <strong>本节已过期</strong>：本节描述的 &quot;KHY OS：自研 Flux Store + 双渲染器&quot;（<code>tuiShell.js</code> / <code>store/replStore.js</code> / <code>components/*</code> 等）已于 2026-06-05 被官方 Ink 运行时（<code>backend/src/cli/tui/ink-components/</code>）取代，相关自研文件已删除。本节仅作历史架构对比保留，最新 TUI 实现请参阅 [../修复记录/tui-inquirer闪退修复-2026-06-05.m../../04_IMPL_实现/IMPL-RPT/[IMPL-RPT-003] tui-inquirer闪退修复-2026-06-05.md.md)。</p></blockquote>
 <h3 id="claude-code-魔改-ink-react">Claude Code：魔改 Ink（React）<a class="anchor" href="#claude-code-魔改-ink-react" aria-label="锚点">#</a></h3>
 <pre><code>ink.tsx (定制 Ink 运行时, 246K)
   -&gt; reconciler.ts (react-reconciler)

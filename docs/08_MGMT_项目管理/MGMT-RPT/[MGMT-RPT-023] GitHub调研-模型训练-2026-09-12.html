@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -68,18 +68,18 @@
 <ul><li>https://github.com/hiyouga/LlamaFactory — <code>src/llamafactory/train/callbacks.py</code>（LogCallback）、<code>eval/evaluator.py</code></li><li>https://github.com/unslothai/unsloth — <code>unsloth/dataprep/synthetic.py</code>（PipeCapture/SyntheticDataKit）</li><li>https://github.com/axolotl-ai-cloud/axolotl — <code>integrations/lm_eval/args.py</code>（lm_eval_post_train）、<code>utils/trainer.py</code>、<code>evaluate.py</code></li><li>https://github.com/argilla-io/distilabel — <code>steps/filtering/minhash.py</code>、<code>steps/deita.py</code></li><li>https://github.com/open-webui/open-webui — <code>backend/open_webui/utils/models.py</code></li></ul>
 <h2 id="落地记录">落地记录<a class="anchor" href="#落地记录" aria-label="锚点">#</a></h2>
 <h3 id="已实现条目">已实现条目<a class="anchor" href="#已实现条目" aria-label="锚点">#</a></h3>
-<p><strong>P0-1 JSON-lines 结构化训练日志（LlamaFactory LogCallback 模式）</strong> — ✅ 已实现</p>
+<p><strong>P0-1 JSON-lines 结构化训练日志（LlamaFactory LogCallback 模式）</strong> — ✓ 已实现</p>
 <ul><li><code>buildTrainLogHelper()</code>：生成内联到 Python 脚本的 <code>khy-trainlog/v1</code> 辅助块（<code>_khy_log_event</code> 写 <code>$KHY_TRAIN_LOG</code>，含 <code>log_header/epoch_start/log_step/epoch_end/done</code> 五类事件）</li><li><code>parseTrainLogProgress(raw)</code>：Node 侧 JSON-lines 解析器，容忍尾部被截断的行，输出 <code>pct/epoch/step/loss/evalLoss/lr/elapsedSec/remainingSec</code></li><li><code>trainLocal</code>：新增 2s 轮询 tail 读日志（<code>fs.openSync/readSync</code>，非阻塞 kill 语义——仅读文件，符合规则 3），<code>onProgress</code> 回调拿到 <code>step n/m · epoch x/y · loss=… · lr=…</code> 结构化进度；旧 regex % 逻辑保留为 fallback</li><li><code>generateTrainScript</code>：注入 <code>KhyTrainLogCallback</code>（Trainer callback，<code>on_log</code> 时发射 <code>log_step</code> 事件），<code>_khy_emit_header()</code> 在 <code>trainer.train()</code> 前发射，<code>_khy_done(trainer.state.global_step)</code> 在保存后发射</li></ul>
-<p><strong>P0-2 配方可复现 recipe.json 快照（LlamaFactory YAML / Axolotl DictDefault 模式）</strong> — ✅ 已实现</p>
+<p><strong>P0-2 配方可复现 recipe.json 快照（LlamaFactory YAML / Axolotl DictDefault 模式）</strong> — ✓ 已实现</p>
 <ul><li><code>buildRecipeSnapshot()</code>：捕获 <code>hyperparams（epochs/lr/batchSize/loraR/loraAlpha/seed/warmupRatio）</code> + <code>data（path/count/sha256 前 16 位指纹）</code> + <code>compute（platform/arch/cpus/totalRAM/cuda/mps/gpu）</code> + <code>environment（nodeVersion/python/torch/gitHash/gitDirty）</code>，schema 为 <code>khy-recipe/v1</code></li><li><code>registerModel</code>：<code>metadata.recipe</code> 自动分离并调用 <code>writeRecipeSnapshot</code> 落盘到模型目录（<code>recipe.json</code>），不进入 registry JSON（避免重复）</li><li><code>readRecipeSnapshot(outputDir)</code>：回读快照</li><li><code>trainLocal</code> 成功路径：组装快照 → <code>registerModel</code> 携带 <code>recipe</code> → 写盘</li></ul>
-<p><strong>P0-3 训后评测门 + 自动回滚（Axolotl <code>lm_eval_post_train</code> 模式）</strong> — ✅ 已实现</p>
+<p><strong>P0-3 训后评测门 + 自动回滚（Axolotl <code>lm_eval_post_train</code> 模式）</strong> — ✓ 已实现</p>
 <ul><li><code>EVAL_PROBES</code>：4 条确定性探针（算术、量化术语、Python 代码、年化波动率），用 <code>expectContains</code> 判定，阈值默认 0.7</li><li><code>evaluateModel(modelDir, modelName, opts)</code>：对本地 Ollama（端点取自 <code>constants/serviceDefaults.js</code> 的 <code>OLLAMA_HOST</code>，不硬编码端口）跑探针；Ollama 不可达时 <strong>fail-open</strong> 返回 <code>{ skipped: true, reason }</code>，绝不因评测门失败导致训练失败</li><li><code>autoRollbackOnEvalFailure(failedModelName, evalResult)</code>：未通过时把 active 版本数值回滚到上一个 <code>khy-&lt;version&gt;</code>（修掉字符串排序 bug——khy-1.10 排在 khy-1.9 前），并把 <code>evalResult/evalStatus/rolledBackTo</code> 写进 registry</li><li><code>trainLocal</code> 新增 <code>skipEvalGate</code> / <code>autoRollback</code> / <code>evalPassThreshold</code> 三个选项，默认开评测门 + 开自动回滚</li><li><code>routerDispatchOps.js</code> <code>train start</code>：训练成功后打印评测门结果（通过/未通过/跳过 + 分数 + 配方路径）</li></ul>
-<p><strong>P1 顺带修（train/val 切分 + pad 修复 + EarlyStopping）</strong> — ✅ 已实现（随 P0-1 的 <code>generateTrainScript</code> 注入）</p>
+<p><strong>P1 顺带修（train/val 切分 + pad 修复 + EarlyStopping）</strong> — ✓ 已实现（随 P0-1 的 <code>generateTrainScript</code> 注入）</p>
 <ul><li><code>tokenize</code>：<code>labels</code> 中 pad token 位置置 <code>-100</code>（此前 pad 也进 labels，loss 被稀释）</li><li><code>dataset.train_test_split(test_size=0.05, seed=42)</code>：≥20 条时切分，喂 <code>EarlyStoppingCallback(patience=2, metric=&quot;eval_loss&quot;)</code> 和 <code>load_best_model_at_end</code></li></ul>
 <h3 id="改动文件清单">改动文件清单<a class="anchor" href="#改动文件清单" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>文件</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>services/backend/src/services/modelTrainingService.js</code></td><td>改</td><td>+<code>buildTrainLogHelper</code>/<code>parseTrainLogProgress</code>/<code>buildRecipeSnapshot</code>/<code>writeRecipeSnapshot</code>/<code>readRecipeSnapshot</code>/<code>EVAL_PROBES</code>/<code>evaluateModel</code>/<code>autoRollbackOnEvalFailure</code>；改 <code>trainLocal</code>/<code>generateTrainScript</code>/<code>registerModel</code>/<code>setActiveModel</code>/<code>getNextVersion</code>；+<code>crypto</code> import</td></tr><tr><td><code>services/backend/src/cli/routerDispatchOps.js</code></td><td>改</td><td><code>train start</code> 成功路径打印评测门结果 + 配方路径</td></tr><tr><td><code>services/backend/src/services/__tests__/modelTrainingService.trainLog.test.js</code></td><td>新增</td><td>10 个 jest 用例覆盖日志解析、配方快照、评测门 fail-open、自动回滚</td></tr></tbody></table>
 <h3 id="检查结果">检查结果<a class="anchor" href="#检查结果" aria-label="锚点">#</a></h3>
-<ul><li><code>node -e &quot;require('./services/backend/src/services/modelTrainingService.js')&quot;</code>：✅ 加载成功，38 个导出</li><li><code>node scripts/ci/check-agent-rules.js services/backend/src/services/modelTrainingService.js services/backend/src/cli/routerDispatchOps.js</code>：✅ 通过，无违规</li><li><code>npx jest src/services/__tests__/modelTrainingService.trainLog.test.js</code>：✅ 10/10 通过</li><li>生成的 LoRA / full 微调 Python 脚本各用 <code>python -c &quot;import ast; ast.parse(...)&quot;</code> 校验语法：✅ 均通过</li></ul>
+<ul><li><code>node -e &quot;require('./services/backend/src/services/modelTrainingService.js')&quot;</code>：✓ 加载成功，38 个导出</li><li><code>node scripts/ci/check-agent-rules.js services/backend/src/services/modelTrainingService.js services/backend/src/cli/routerDispatchOps.js</code>：✓ 通过，无违规</li><li><code>npx jest src/services/__tests__/modelTrainingService.trainLog.test.js</code>：✓ 10/10 通过</li><li>生成的 LoRA / full 微调 Python 脚本各用 <code>python -c &quot;import ast; ast.parse(...)&quot;</code> 校验语法：✓ 均通过</li></ul>
 <h3 id="未实现项-标-待人工决策">未实现项（标「待人工决策」）<a class="anchor" href="#未实现项-标-待人工决策" aria-label="锚点">#</a></h3>
 <ul><li><strong>P1 MinHash 去重 + DEITA 质量分桶</strong>：需引入 <code>datasketch</code> 依赖 + 数据整备管线重构，影响面大，建议单独立项</li><li><strong>P2 多教师投票 / 拒采样蒸馏</strong>：<code>distill</code> 目前是单教师顺序生成，改造需先定题型配比协议，建议先跑 1-2 轮评测门积累基线后再做</li><li><strong>P2 模型发现 UI（Open WebUI 模式）</strong>：<code>registerWithOllama</code> 注册后前端不自知，需前端配合，建议与前端团队对齐后做</li></ul>
       </article>

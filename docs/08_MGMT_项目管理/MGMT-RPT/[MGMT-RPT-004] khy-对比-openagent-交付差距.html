@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -81,16 +81,16 @@ read errors → fix code → rebuild → write tests → run tests → fix → r
 <hr>
 <h2 id="3-ssm-项目失败全过程">3. SSM 项目失败全过程<a class="anchor" href="#3-ssm-项目失败全过程" aria-label="锚点">#</a></h2>
 <p>当用户要求 KHY 创建一个 SSM 项目时会发生什么：</p>
-<pre><code>Round 1:  scaffoldFiles → create directory structure          ✅ (~2s)
-Round 2:  writeFile × 5 → pom.xml files                      ✅ (~3s)
-Round 3:  writeFile × 20 → Java entity/mapper/service classes ✅ (~5s)
-Round 4:  shellCommand → mvn clean install                    ⚠️ (~45s, may timeout)
-Round 5:  AI reads truncated Maven error (50KB cap)           ⚠️ (incomplete context)
-Round 6:  editFile → fix first compilation error              ⚠️ (may hit wrong location)
-Round 7:  shellCommand → mvn clean install again              ⚠️ (~45s)
-Round 8:  More errors, more fixes needed                      ⚠️
-Round 9:  Still fixing...                                     ⚠️
-Round 10: HARD LIMIT REACHED — loop terminates                ❌</code></pre>
+<pre><code>Round 1:  scaffoldFiles → create directory structure          ✓ (~2s)
+Round 2:  writeFile × 5 → pom.xml files                      ✓ (~3s)
+Round 3:  writeFile × 20 → Java entity/mapper/service classes ✓ (~5s)
+Round 4:  shellCommand → mvn clean install                    ⚠ (~45s, may timeout)
+Round 5:  AI reads truncated Maven error (50KB cap)           ⚠ (incomplete context)
+Round 6:  editFile → fix first compilation error              ⚠ (may hit wrong location)
+Round 7:  shellCommand → mvn clean install again              ⚠ (~45s)
+Round 8:  More errors, more fixes needed                      ⚠
+Round 9:  Still fixing...                                     ⚠
+Round 10: HARD LIMIT REACHED — loop terminates                ✗</code></pre>
 <p><strong>结果</strong>：用户得到一个半成品、无法编译的项目。剩余工作：</p>
 <ul><li>10+ 个编译错误未修复</li><li>未编写测试</li><li>未配置 application.yml</li><li>无 MyBatis mapper XML 文件</li><li>构建从未成功</li></ul>
 <hr>
@@ -102,7 +102,7 @@ Round 10: HARD LIMIT REACHED — loop terminates                ❌</code></pre>
 <h3 id="p2-竞争力对齐-长期">P2 — 竞争力对齐（长期）<a class="anchor" href="#p2-竞争力对齐-长期" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>#</th><th>修复</th><th>文件</th><th>工作量</th></tr></thead><tbody><tr><td>8</td><td><strong>3 层 hook 组合</strong>——ToolGuard + Transform + Continuation，带配置开关</td><td>新增 <code>hookRegistry.js</code></td><td>大</td></tr><tr><td>9</td><td><strong>Comment Checker</strong>——拦截 Write/Edit 输出中的 AI 水货注释</td><td>新增 hook</td><td>中</td></tr><tr><td>10</td><td><strong>Team Mode</strong>——带邮箱协议的并行 agent</td><td><code>cliAgentRunner.js</code> 重构</td><td>大</td></tr><tr><td>11</td><td><strong>Boulder State</strong>——跨会话长任务的检查点/续跑</td><td>新增持久化层</td><td>大</td></tr></tbody></table>
 <h3 id="p0-完成后的预期成效">P0 完成后的预期成效<a class="anchor" href="#p0-完成后的预期成效" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>指标</th><th>之前</th><th>P0 之后</th></tr></thead><tbody><tr><td>SSM 项目完成度</td><td>❌ 在第 10 轮失败</td><td>✅ 20-30 轮内完成</td></tr><tr><td>墙钟预算</td><td>120s 硬性</td><td>600s+ 基于活跃度</td></tr><tr><td>AI 在「创建项目」时的行为</td><td>话痨，只建议不执行</td><td>强制工具使用，自主执行</td></tr><tr><td>Maven 错误可见性</td><td>在 50KB 处截断</td><td>完整错误被提取</td></tr></tbody></table>
+<table><thead><tr><th>指标</th><th>之前</th><th>P0 之后</th></tr></thead><tbody><tr><td>SSM 项目完成度</td><td>✗ 在第 10 轮失败</td><td>✓ 20-30 轮内完成</td></tr><tr><td>墙钟预算</td><td>120s 硬性</td><td>600s+ 基于活跃度</td></tr><tr><td>AI 在「创建项目」时的行为</td><td>话痨，只建议不执行</td><td>强制工具使用，自主执行</td></tr><tr><td>Maven 错误可见性</td><td>在 50KB 处截断</td><td>完整错误被提取</td></tr></tbody></table>
 <hr>
 <h2 id="5-对比矩阵">5. 对比矩阵<a class="anchor" href="#5-对比矩阵" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>能力</th><th>KHY OS</th><th>oh-my-openagent</th><th>Claude Code</th><th>Qwen Code</th></tr></thead><tbody><tr><td>最大循环迭代</td><td>10</td><td>无限</td><td>~200</td><td>~100</td></tr><tr><td>超时模型</td><td>硬性墙钟</td><td>基于活跃度的空闲</td><td>基于活跃度</td><td>硬性 + 空闲混合</td></tr><tr><td>编辑校验</td><td>字符串匹配</td><td>Hashline xxh32</td><td>唯一字符串匹配</td><td>AST 感知</td></tr><tr><td>错误恢复</td><td>手动重试</td><td>自动 hook</td><td>自动重试</td><td>自动重试</td></tr><tr><td>模式切换</td><td>无</td><td>IntentGate 关键词</td><td>Plan 模式切换</td><td>Task/chat 模式</td></tr><tr><td>并行 agent</td><td>串行</td><td>Team Mode 邮箱</td><td>后台 agent</td><td>串行</td></tr><tr><td>Hook 系统</td><td>无</td><td>5 层组合</td><td>前/后 hook</td><td>插件 hook</td></tr><tr><td>跨会话状态</td><td>无</td><td>Boulder State</td><td>任务持久化</td><td>会话恢复</td></tr></tbody></table>

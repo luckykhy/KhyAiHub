@@ -109,26 +109,26 @@ khy-os 模型训练板块现状：
 
 ### 已实现条目
 
-**P0-1 JSON-lines 结构化训练日志（LlamaFactory LogCallback 模式）** — ✅ 已实现
+**P0-1 JSON-lines 结构化训练日志（LlamaFactory LogCallback 模式）** — ✓ 已实现
 - `buildTrainLogHelper()`：生成内联到 Python 脚本的 `khy-trainlog/v1` 辅助块（`_khy_log_event` 写 `$KHY_TRAIN_LOG`，含 `log_header/epoch_start/log_step/epoch_end/done` 五类事件）
 - `parseTrainLogProgress(raw)`：Node 侧 JSON-lines 解析器，容忍尾部被截断的行，输出 `pct/epoch/step/loss/evalLoss/lr/elapsedSec/remainingSec`
 - `trainLocal`：新增 2s 轮询 tail 读日志（`fs.openSync/readSync`，非阻塞 kill 语义——仅读文件，符合规则 3），`onProgress` 回调拿到 `step n/m · epoch x/y · loss=… · lr=…` 结构化进度；旧 regex % 逻辑保留为 fallback
 - `generateTrainScript`：注入 `KhyTrainLogCallback`（Trainer callback，`on_log` 时发射 `log_step` 事件），`_khy_emit_header()` 在 `trainer.train()` 前发射，`_khy_done(trainer.state.global_step)` 在保存后发射
 
-**P0-2 配方可复现 recipe.json 快照（LlamaFactory YAML / Axolotl DictDefault 模式）** — ✅ 已实现
+**P0-2 配方可复现 recipe.json 快照（LlamaFactory YAML / Axolotl DictDefault 模式）** — ✓ 已实现
 - `buildRecipeSnapshot()`：捕获 `hyperparams（epochs/lr/batchSize/loraR/loraAlpha/seed/warmupRatio）` + `data（path/count/sha256 前 16 位指纹）` + `compute（platform/arch/cpus/totalRAM/cuda/mps/gpu）` + `environment（nodeVersion/python/torch/gitHash/gitDirty）`，schema 为 `khy-recipe/v1`
 - `registerModel`：`metadata.recipe` 自动分离并调用 `writeRecipeSnapshot` 落盘到模型目录（`recipe.json`），不进入 registry JSON（避免重复）
 - `readRecipeSnapshot(outputDir)`：回读快照
 - `trainLocal` 成功路径：组装快照 → `registerModel` 携带 `recipe` → 写盘
 
-**P0-3 训后评测门 + 自动回滚（Axolotl `lm_eval_post_train` 模式）** — ✅ 已实现
+**P0-3 训后评测门 + 自动回滚（Axolotl `lm_eval_post_train` 模式）** — ✓ 已实现
 - `EVAL_PROBES`：4 条确定性探针（算术、量化术语、Python 代码、年化波动率），用 `expectContains` 判定，阈值默认 0.7
 - `evaluateModel(modelDir, modelName, opts)`：对本地 Ollama（端点取自 `constants/serviceDefaults.js` 的 `OLLAMA_HOST`，不硬编码端口）跑探针；Ollama 不可达时 **fail-open** 返回 `{ skipped: true, reason }`，绝不因评测门失败导致训练失败
 - `autoRollbackOnEvalFailure(failedModelName, evalResult)`：未通过时把 active 版本数值回滚到上一个 `khy-<version>`（修掉字符串排序 bug——khy-1.10 排在 khy-1.9 前），并把 `evalResult/evalStatus/rolledBackTo` 写进 registry
 - `trainLocal` 新增 `skipEvalGate` / `autoRollback` / `evalPassThreshold` 三个选项，默认开评测门 + 开自动回滚
 - `routerDispatchOps.js` `train start`：训练成功后打印评测门结果（通过/未通过/跳过 + 分数 + 配方路径）
 
-**P1 顺带修（train/val 切分 + pad 修复 + EarlyStopping）** — ✅ 已实现（随 P0-1 的 `generateTrainScript` 注入）
+**P1 顺带修（train/val 切分 + pad 修复 + EarlyStopping）** — ✓ 已实现（随 P0-1 的 `generateTrainScript` 注入）
 - `tokenize`：`labels` 中 pad token 位置置 `-100`（此前 pad 也进 labels，loss 被稀释）
 - `dataset.train_test_split(test_size=0.05, seed=42)`：≥20 条时切分，喂 `EarlyStoppingCallback(patience=2, metric="eval_loss")` 和 `load_best_model_at_end`
 
@@ -142,10 +142,10 @@ khy-os 模型训练板块现状：
 
 ### 检查结果
 
-- `node -e "require('./services/backend/src/services/modelTrainingService.js')"`：✅ 加载成功，38 个导出
-- `node scripts/ci/check-agent-rules.js services/backend/src/services/modelTrainingService.js services/backend/src/cli/routerDispatchOps.js`：✅ 通过，无违规
-- `npx jest src/services/__tests__/modelTrainingService.trainLog.test.js`：✅ 10/10 通过
-- 生成的 LoRA / full 微调 Python 脚本各用 `python -c "import ast; ast.parse(...)"` 校验语法：✅ 均通过
+- `node -e "require('./services/backend/src/services/modelTrainingService.js')"`：✓ 加载成功，38 个导出
+- `node scripts/ci/check-agent-rules.js services/backend/src/services/modelTrainingService.js services/backend/src/cli/routerDispatchOps.js`：✓ 通过，无违规
+- `npx jest src/services/__tests__/modelTrainingService.trainLog.test.js`：✓ 10/10 通过
+- 生成的 LoRA / full 微调 Python 脚本各用 `python -c "import ast; ast.parse(...)"` 校验语法：✓ 均通过
 
 ### 未实现项（标「待人工决策」）
 

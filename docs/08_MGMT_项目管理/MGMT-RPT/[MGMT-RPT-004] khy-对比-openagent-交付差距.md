@@ -133,16 +133,16 @@ KHY 缺失的关键 hook：
 当用户要求 KHY 创建一个 SSM 项目时会发生什么：
 
 ```
-Round 1:  scaffoldFiles → create directory structure          ✅ (~2s)
-Round 2:  writeFile × 5 → pom.xml files                      ✅ (~3s)
-Round 3:  writeFile × 20 → Java entity/mapper/service classes ✅ (~5s)
-Round 4:  shellCommand → mvn clean install                    ⚠️ (~45s, may timeout)
-Round 5:  AI reads truncated Maven error (50KB cap)           ⚠️ (incomplete context)
-Round 6:  editFile → fix first compilation error              ⚠️ (may hit wrong location)
-Round 7:  shellCommand → mvn clean install again              ⚠️ (~45s)
-Round 8:  More errors, more fixes needed                      ⚠️
-Round 9:  Still fixing...                                     ⚠️
-Round 10: HARD LIMIT REACHED — loop terminates                ❌
+Round 1:  scaffoldFiles → create directory structure          ✓ (~2s)
+Round 2:  writeFile × 5 → pom.xml files                      ✓ (~3s)
+Round 3:  writeFile × 20 → Java entity/mapper/service classes ✓ (~5s)
+Round 4:  shellCommand → mvn clean install                    ⚠ (~45s, may timeout)
+Round 5:  AI reads truncated Maven error (50KB cap)           ⚠ (incomplete context)
+Round 6:  editFile → fix first compilation error              ⚠ (may hit wrong location)
+Round 7:  shellCommand → mvn clean install again              ⚠ (~45s)
+Round 8:  More errors, more fixes needed                      ⚠
+Round 9:  Still fixing...                                     ⚠
+Round 10: HARD LIMIT REACHED — loop terminates                ✗
 ```
 
 **结果**：用户得到一个半成品、无法编译的项目。剩余工作：
@@ -186,7 +186,7 @@ Round 10: HARD LIMIT REACHED — loop terminates                ❌
 
 | 指标 | 之前 | P0 之后 |
 |--------|--------|----------|
-| SSM 项目完成度 | ❌ 在第 10 轮失败 | ✅ 20-30 轮内完成 |
+| SSM 项目完成度 | ✗ 在第 10 轮失败 | ✓ 20-30 轮内完成 |
 | 墙钟预算 | 120s 硬性 | 600s+ 基于活跃度 |
 | AI 在「创建项目」时的行为 | 话痨，只建议不执行 | 强制工具使用，自主执行 |
 | Maven 错误可见性 | 在 50KB 处截断 | 完整错误被提取 |
