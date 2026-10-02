@@ -50,7 +50,7 @@ async function handleToolCheck(subCommand, args = [], options = {}) {
   }
 
   console.log(
-    chalk.bold('\n  🔎 khy 工具契约体检') +
+    chalk.bold('\n  khy 工具契约体检') +
       chalk.dim(
         `  (共 ${report.total} 个工具 · ${report.errors} error / ${report.warnings} warning)\n`
       )

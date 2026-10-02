@@ -88,7 +88,7 @@ async function handleToolList(subCommand, args = [], options = {}) {
   }
 
   console.log(
-    chalk.bold('\n  🧰 khy 工具清单') +
+    chalk.bold('\n  khy 工具清单') +
       chalk.dim(`  (共 ${catalog.total} 个工具，可 /toollist <关键字> 过滤)\n`)
   );
   if (catalog.total === 0) {

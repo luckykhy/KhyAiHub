@@ -121,7 +121,7 @@ async function _handleStatus() {
       a.accountId,
       a.userId || '-',
       a.token,
-      a.active ? '✅' : '',
+      a.active ? '✓' : '',
       a.createdAt || '-',
     ])
   );
@@ -135,7 +135,7 @@ async function _handleStatus() {
   const defaults = _defaults();
   const running = await _daemonRunning();
   if (!running) {
-    printWarn('⚠️ 守护进程未运行 —— 已绑定但收不到消息。启动:khy wx start。');
+    printWarn('⚠ 守护进程未运行 —— 已绑定但收不到消息。启动:khy wx start。');
   }
   let bad = 0;
   for (const a of list) {
@@ -157,7 +157,7 @@ async function _handleStatus() {
     const hb = _store().getHeartbeat(a.accountId);
     if (!hb) {
       printWarn(
-        `⚠️ 账号 ${a.accountId} 通道尚未打过心跳 —— 可能刚启动(约 1 分钟后再看),也可能通道没起来。查日志:.khy/logs/daemon.log`
+        `⚠ 账号 ${a.accountId} 通道尚未打过心跳 —— 可能刚启动(约 1 分钟后再看),也可能通道没起来。查日志:.khy/logs/daemon.log`
       );
       continue;
     }
@@ -175,7 +175,7 @@ async function _handleStatus() {
       bad += 1;
       continue;
     }
-    printSuccess(`✅ 账号 ${a.accountId} 正在长轮询收消息(心跳 ${ageSec} 秒前)。`);
+    printSuccess(`✓ 账号 ${a.accountId} 正在长轮询收消息(心跳 ${ageSec} 秒前)。`);
   }
   return bad ? 1 : 0;
 }
@@ -216,7 +216,7 @@ function _printQrArt(art) {
   // 列数拿不到(重定向到管道/文件)时按打得下处理 —— 那种场景本来也不是给人扫的。
   const term = Number(process.stdout.columns) || 0;
   if (term && cols > term) {
-    printWarn(`⚠️ 终端只有 ${term} 列,放不下这个 ${cols} 列的二维码 —— 打出来会折行、扫不动。`);
+    printWarn(`⚠ 终端只有 ${term} 列,放不下这个 ${cols} 列的二维码 —— 打出来会折行、扫不动。`);
     printInfo(`把窗口拉宽到 ${cols} 列以上再试,或直接用下面的链接。`);
     return false;
   }
@@ -259,9 +259,9 @@ function _formatBoundAt(iso) {
 function _loginSuccessLine(res) {
   const acc = (res && res.account) || {};
   if (res && res.isNew === false) {
-    return `✅ 该微信账号 ${acc.accountId} 此前已绑定（首次绑定于 ${_formatBoundAt(res.firstBoundAt)}）,本次为重新登录并已刷新凭据。`;
+    return `✓ 该微信账号 ${acc.accountId} 此前已绑定（首次绑定于 ${_formatBoundAt(res.firstBoundAt)}）,本次为重新登录并已刷新凭据。`;
   }
-  return `✅ 已绑定微信账号 ${acc.accountId}(token ${acc.preview})。`;
+  return `✓ 已绑定微信账号 ${acc.accountId}(token ${acc.preview})。`;
 }
 
 async function _handleLogin() {
@@ -315,7 +315,7 @@ async function _handleLogin() {
     if (r && r.ok === false) {
       throw new Error(r.error || '未知错误');
     }
-    printSuccess('✅ 守护进程已就绪。现在可以在微信里直接给它发消息了。');
+    printSuccess('✓ 守护进程已就绪。现在可以在微信里直接给它发消息了。');
   } catch (e) {
     printWarn(`守护进程${running ? '重启' : '启动'}失败:${(e && e.message) || e}`);
     printInfo(
@@ -345,7 +345,7 @@ async function _handleStart() {
     if (r && r.ok === false) {
       throw new Error(r.error || '未知错误');
     }
-    printSuccess(`✅ 守护进程已${running ? '重启' : '启动'},微信通道开始长轮询。`);
+    printSuccess(`✓ 守护进程已${running ? '重启' : '启动'},微信通道开始长轮询。`);
     return 0;
   } catch (e) {
     printErrorPanel({
@@ -368,7 +368,7 @@ async function _handleStop() {
   }
   try {
     await _daemon().daemonStop();
-    printSuccess('✅ 守护进程已停止,微信通道已停收。绑定仍然保留(解绑用 khy wx logout)。');
+    printSuccess('✓ 守护进程已停止,微信通道已停收。绑定仍然保留(解绑用 khy wx logout)。');
     return 0;
   } catch (e) {
     printErrorPanel({
@@ -394,7 +394,7 @@ function _handleLogout(args) {
     return 1;
   }
   printSuccess(
-    accountId ? `✅ 已解绑 ${res.accountId}。` : '✅ 已解绑全部微信账号并清除轮询游标。'
+    accountId ? `✓ 已解绑 ${res.accountId}。` : '✓ 已解绑全部微信账号并清除轮询游标。'
   );
   return 0;
 }
@@ -441,7 +441,7 @@ function _handleUse(args) {
     });
     return 1;
   }
-  printSuccess(`✅ 已把活动账号切换为 ${res.accountId}。`);
+  printSuccess(`✓ 已把活动账号切换为 ${res.accountId}。`);
   printInfo('切换只影响 CLI 主动外发的目标账号;各账号仍在各自轮询收消息,不受影响。');
   printInfo('若要让某些外发逻辑生效,重启守护进程:khy wx start。');
   return 0;
@@ -464,7 +464,7 @@ function _handleScope(args) {
     printInfo(`当前会话隔离策略:${current}`);
     printTable(
       ['策略', '含义', '当前'],
-      scopes.map((s) => [s, SCOPE_LABELS[s] || '-', s === current ? '✅' : ''])
+      scopes.map((s) => [s, SCOPE_LABELS[s] || '-', s === current ? '✓' : ''])
     );
     printInfo('设置:khy wx scope <策略>。修改后需重启守护进程(khy wx start)生效。');
     return 0;
@@ -485,7 +485,7 @@ function _handleScope(args) {
   try {
     const { _writeEnvPatch } = require('./config');
     const envPath = _writeEnvPatch({ KHY_ILINK_SESSION_SCOPE: normalized });
-    printSuccess(`✅ 已把会话隔离策略设为 ${normalized}(${SCOPE_LABELS[normalized] || ''})。`);
+    printSuccess(`✓ 已把会话隔离策略设为 ${normalized}(${SCOPE_LABELS[normalized] || ''})。`);
     printInfo(`已写入:${envPath}`);
     printInfo('新策略需重启守护进程生效:khy wx start。');
     return 0;
@@ -561,7 +561,7 @@ function _handleBind(args, options = {}) {
   }
   const boundAgent = res.binding && res.binding.agent ? res.binding.agent : '';
   printSuccess(
-    `✅ 已把账号 ${res.accountId} 绑定到工作空间 ${res.binding.workspace}${boundAgent ? `(Agent:${boundAgent})` : ''}。`
+    `✓ 已把账号 ${res.accountId} 绑定到工作空间 ${res.binding.workspace}${boundAgent ? `(Agent:${boundAgent})` : ''}。`
   );
   printInfo('绑定已即时生效:新收到的消息会按该工作空间/Agent 路由。');
   printInfo('若守护进程当前未运行,需先 khy wx start 才能开始收消息。');
@@ -601,7 +601,7 @@ function _handleUnbind(args) {
     });
     return 1;
   }
-  printSuccess(`✅ 已解除账号 ${res.accountId} 的路由绑定(未绑定则无变化)。`);
+  printSuccess(`✓ 已解除账号 ${res.accountId} 的路由绑定(未绑定则无变化)。`);
   printInfo('解绑已即时生效:新消息不再按该绑定路由。');
   printInfo('守护进程运行状态不变。');
   return 0;

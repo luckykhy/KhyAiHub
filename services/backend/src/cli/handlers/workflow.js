@@ -351,7 +351,7 @@ function _doValidate(d, args, options) {
     return true;
   }
   if (v.ok) {
-    printSuccess(`✅ 校验通过:${saved.name || slug}`);
+    printSuccess(`✓ 校验通过:${saved.name || slug}`);
     return true;
   }
   printError(`校验未通过(${v.errors.length} 项):`);
@@ -449,7 +449,7 @@ async function _doRun(d, args, options) {
     printWarn(`⏸ 已暂停(${(outcome.pause && outcome.pause.kind) || 'askUserQuestion'})。`);
     return true;
   }
-  printSuccess(`✅ 运行完成(${(outcome.log || []).length} 个节点）`);
+  printSuccess(`✓ 运行完成(${(outcome.log || []).length} 个节点）`);
   const keys = Object.keys(outcome.vars || {});
   if (keys.length) {
     printInfo('结果变量:');
@@ -482,7 +482,7 @@ function _doRemove(d, args, options) {
     process.stdout.write(JSON.stringify({ ok: true, slug, file }) + '\n');
     return true;
   }
-  printSuccess(`🗑 已删除:${slug}`);
+  printSuccess(`已删除:${slug}`);
   return true;
 }
 
@@ -521,7 +521,7 @@ async function _doRecord(d, args, options) {
     process.stdout.write(JSON.stringify({ ok: true, name, params: paramList }) + '\n');
     return true;
   }
-  printSuccess(`🎬 工作流录制已开始${name ? `「${name}」` : ''}`);
+  printSuccess(`工作流录制已开始${name ? `「${name}」` : ''}`);
   printInfo('执行桌面操作后输入 /workflow stop 结束录制');
   if (paramList.length) {
     console.log(`    参数化:${paramList.join(', ')}`);
@@ -719,7 +719,7 @@ async function _doPlayback(d, args, options) {
     printWarn(`⏸ 已暂停(${(outcome.pause && outcome.pause.kind) || 'askUserQuestion'})。`);
     return true;
   }
-  printSuccess(`✅ 回放完成(${(outcome.log || []).length} 个节点）`);
+  printSuccess(`✓ 回放完成(${(outcome.log || []).length} 个节点）`);
   const keys = Object.keys(outcome.vars || {});
   if (keys.length) {
     printInfo('结果变量:');

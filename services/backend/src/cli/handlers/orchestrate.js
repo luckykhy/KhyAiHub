@@ -119,7 +119,7 @@ function _renderSchedule(plan, analysis, fmt) {
     for (const w of analysis.waitFill) {
       const chores = w.canDo.map((c) => `${labelById[c.id] || c.label}(${c.duration})`).join('、');
       printInfo(
-        `  ⏳ 「${labelById[w.during] || w.label}」运行的间隙 [${w.window[0]}–${w.window[1]}]，可同时做：${chores}`
+        `  「${labelById[w.during] || w.label}」运行的间隙 [${w.window[0]}–${w.window[1]}]，可同时做：${chores}`
       );
     }
   } else if (analysis.stepCount > 1) {

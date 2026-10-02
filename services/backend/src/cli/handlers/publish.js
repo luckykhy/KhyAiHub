@@ -1262,7 +1262,7 @@ async function handleRestore(args = [], options = {}) {
     const _commit = String(result.header.gitCommit || '').slice(0, 12);
     if (_cq && _cq.status === 'incomplete') {
       // 落地数 < 清单数：把假绿降级为诚实告警（仍算还原成功，不 _markFailure）。
-      printWarn(`源码已还原到: ${result.dest}（⚠️ 文件数对账不完整）`);
+      printWarn(`源码已还原到: ${result.dest}（⚠ 文件数对账不完整）`);
       printWarn(
         `落地 ${_cq.actual} 个文件 · 快照清单 ${_cq.expected} 个 · 缺 ${_cq.missing} 个` +
           ` · commit ${_commit}`

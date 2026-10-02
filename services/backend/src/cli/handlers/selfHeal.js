@@ -50,7 +50,7 @@ async function handleSelfHeal(subCommand, args = [], options = {}) {
   const log = heal.getHealLog();
 
   if (options.status || subCommand === 'status') {
-    console.log(chalk.bold('\n  📊 运行时路径自愈 · bootstrap/moduleSelfHeal'));
+    console.log(chalk.bold('\n  运行时路径自愈 · bootstrap/moduleSelfHeal'));
     console.log('');
     console.log(`    开关: ${enabled ? chalk.green('允许') : chalk.yellow('已关闭')} —— ${_gateLine()}`);
     console.log(`    钩子: ${installed ? chalk.green('已安装（Module._resolveFilename 已接管）') : chalk.yellow('未安装')}`);
@@ -71,7 +71,7 @@ async function handleSelfHeal(subCommand, args = [], options = {}) {
   }
 
   if (options.test || subCommand === 'test') {
-    console.log(chalk.blue('  🧪 自检 bootstrap/moduleSelfHeal · 第 1/2 步：读取钩子状态'));
+    console.log(chalk.blue('  自检 bootstrap/moduleSelfHeal · 第 1/2 步：读取钩子状态'));
     console.log(`    开关 ${enabled ? '允许' : '已关闭'} · 钩子 ${installed ? '已安装' : '未安装'} · 记录 ${log.length} 条`);
     if (installed) {
       console.log(chalk.green('  ✓ 第 2/2 步：自愈钩子工作正常'));
@@ -88,7 +88,7 @@ async function handleSelfHeal(subCommand, args = [], options = {}) {
     return true;
   }
 
-  console.log(chalk.bold('\n  🔧 khy selfHeal — 运行时路径自愈'));
+  console.log(chalk.bold('\n  khy selfHeal — 运行时路径自愈'));
   console.log('');
   console.log('  用法:');
   console.log('    khy selfheal            显示本帮助');

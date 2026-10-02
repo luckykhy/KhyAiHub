@@ -98,7 +98,7 @@ async function handleMoa(input, deps) {
     console.log('');
   }
 
-  console.log(c.bold(`  ✅ 合成答案 (aggregator: ${result.aggregatorModel}):`));
+  console.log(c.bold(`  ✓ 合成答案 (aggregator: ${result.aggregatorModel}):`));
   console.log('');
   console.log(
     result.finalAnswer

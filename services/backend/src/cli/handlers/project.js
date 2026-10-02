@@ -69,7 +69,7 @@ async function handleProjectMap(args = [], options = {}) {
   }
 
   console.log('');
-  console.log(chalk.cyan.bold('  🗺️  项目地图'));
+  console.log(chalk.cyan.bold('  项目地图'));
   console.log("");
   console.log('');
   console.log(map);
@@ -134,7 +134,7 @@ async function handleProjectStructure(args = [], options = {}) {
   }
 
   console.log('');
-  console.log(chalk.cyan.bold('  🏗️  项目结构分析'));
+  console.log(chalk.cyan.bold('  项目结构分析'));
   console.log("");
   console.log('');
   console.log(map);
@@ -215,7 +215,7 @@ async function handleProjectScan(args = [], options = {}) {
   }
 
   console.log('');
-  console.log(chalk.cyan.bold(`  🔍 扫描结果: ${pattern}`));
+  console.log(chalk.cyan.bold(`  扫描结果: ${pattern}`));
   console.log(chalk.dim(`  共 ${files.length} 个文件`));
   console.log("");
   for (const file of files) {
@@ -234,7 +234,7 @@ async function handleProjectScan(args = [], options = {}) {
 
 function _printHelp() {
   console.log('');
-  console.log(chalk.cyan.bold('  📁 项目分析命令'));
+  console.log(chalk.cyan.bold('  项目分析命令'));
   console.log("");
   console.log('');
   console.log(`  ${chalk.green('project map [path]')}`);

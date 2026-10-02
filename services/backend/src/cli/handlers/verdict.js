@@ -29,11 +29,11 @@ const _markFailure = require('../../utils/markProcessFailure');
 function formatVerdict(verdict) {
   switch (String(verdict || '').toLowerCase()) {
     case 'correct':
-      return chalk.green('✅ 改动通过（correct）');
+      return chalk.green('✓ 改动通过（correct）');
     case 'incorrect':
-      return chalk.red('❌ 改动不对（incorrect）');
+      return chalk.red('✗ 改动不对（incorrect）');
     case 'uncertain':
-      return chalk.yellow('❓ 无法判断（uncertain）');
+      return chalk.yellow('? 无法判断（uncertain）');
     default:
       return chalk.gray('— 暂无判定');
   }

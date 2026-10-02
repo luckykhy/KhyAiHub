@@ -723,7 +723,7 @@ async function handleReview(options = {}) {
       }
     }
 
-    console.log(`  ${chalk.cyan('⚡')} 修复中...`);
+    console.log(`  ${chalk.cyan('')} 修复中...`);
     const fixResult = await runFixRound(ai, openIssues);
     previousFixed = fixResult.fixed;
 

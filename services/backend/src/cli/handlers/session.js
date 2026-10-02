@@ -372,7 +372,7 @@ function handleSessionList(options = {}) {
 
   console.log('');
   const scopeLabel = options.all ? '全部项目' : '当前项目';
-  console.log(chalk.bold(`  💬 历史会话 (${sessions.length}) · ${scopeLabel}`));
+  console.log(chalk.bold(`  历史会话 (${sessions.length}) · ${scopeLabel}`));
   console.log('');
   sessions.forEach((s, i) => {
     const num = chalk.dim(`  ${String(i + 1).padStart(2)}.`);
@@ -385,7 +385,7 @@ function handleSessionList(options = {}) {
     console.log(`${num} ${title}`);
     console.log(`      ${meta}`);
     if (options.all && s.cwd) {
-      console.log(`      ${chalk.dim('📁 ' + s.cwd)}`);
+      console.log(`      ${chalk.dim('' + s.cwd)}`);
     }
   });
   console.log('');
@@ -442,7 +442,7 @@ function handleSessionShow(args, options = {}) {
     ) + (session.model ? chalk.dim(` · ${session.model}`) : '')
   );
   if (session.cwd) {
-    console.log(chalk.dim(`  📁 ${session.cwd}`));
+    console.log(chalk.dim(`  ${session.cwd}`));
   }
   console.log('');
   if (recent.length === 0) {
@@ -638,7 +638,7 @@ function formatSessionMarkdown(data) {
   lines.push('', '', '');
   for (const m of messages) {
     const role =
-      m.role === 'user' ? '🧑 User' : m.role === 'assistant' ? '🤖 Assistant' : m.role || 'unknown';
+      m.role === 'user' ? 'User' : m.role === 'assistant' ? 'Assistant' : m.role || 'unknown';
     lines.push(`## ${role}`, '');
     lines.push(_mdContent(m.content));
     lines.push('');

@@ -80,7 +80,7 @@ async function handleReceipts(subCommand, args, options) {
     const limit = parseInt(options.limit, 10) || 20;
     const sessionId = options.session || null;
     const rows = svc.listReceipts({ sessionId, limit });
-    console.log(chalk.bold('\n  📑 执行回执\n'));
+    console.log(chalk.bold('\n  执行回执\n'));
     if (rows.length === 0) {
       // Rule 2.2: an empty table must say who fills it. Receipts are written by
       // the tool loop (startReceipt → appendToolCall → finalizeReceipt), never by
@@ -120,7 +120,7 @@ async function handleReceipts(subCommand, args, options) {
     }
 
     const icon = STATUS_ICON[r.status] || '•';
-    console.log(chalk.bold(`\n  📑 回执 ${chalk.cyan(r.id)}  ${icon} ${STATUS_LABEL_ZH[r.status] || r.status}\n`));
+    console.log(chalk.bold(`\n  回执 ${chalk.cyan(r.id)}  ${icon} ${STATUS_LABEL_ZH[r.status] || r.status}\n`));
     // 1. 执行目标
     console.log(chalk.bold('  执行目标'));
     console.log(`    ${r.goal || chalk.dim('(无)')}`);
@@ -141,7 +141,7 @@ async function handleReceipts(subCommand, args, options) {
             : c.status === 'denied'
               ? chalk.red('⊘')
               : chalk.red('✗');
-        const gate = c.stepType === 'human-gate' ? chalk.red(' 🔒人闸门') : '';
+        const gate = c.stepType === 'human-gate' ? chalk.red('人闸门') : '';
         console.log(
           `    ${ci} ${String(c.seq).padStart(2)}. ${chalk.cyan(c.tool)} ` +
             `${_riskTag(c.risk)} ${chalk.dim(`${c.elapsedMs}ms · ${PERMISSION_LABEL_ZH[c.permission] || c.permission}`)}${gate}`
@@ -195,7 +195,7 @@ async function handleReceipts(subCommand, args, options) {
       return true;
     }
     const hits = svc.searchReceipts(kw, { limit: parseInt(options.limit, 10) || 30 });
-    console.log(chalk.bold(`\n  🔍 搜索 "${kw}"\n`));
+    console.log(chalk.bold(`\n  搜索 "${kw}"\n`));
     if (hits.length === 0) {
       printInfo('无匹配回执');
     } else {
@@ -214,7 +214,7 @@ async function handleReceipts(subCommand, args, options) {
   if (cmd === 'orchestration' || cmd === 'orch') {
     const limit = parseInt(options.limit, 10) || 20;
     const rows = svc.listOrchestrationReceipts({ limit });
-    console.log(chalk.bold('\n  🧭 编排回执\n'));
+    console.log(chalk.bold('\n  编排回执\n'));
     if (rows.length === 0) {
       // Writer is saveOrchestrationReceipt, called only from AgentTool — so the
       // way out is a sub-agent run, not a command.

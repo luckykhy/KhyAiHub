@@ -489,7 +489,7 @@ async function handleUninstall(subCommand, args, options = {}) {
   }
 
   if (!jsonOut) {
-    console.log(chalk.bold('\n  🧹 khy 完整卸载 / 历史残留清理\n'));
+    console.log(chalk.bold('\n  khy 完整卸载 / 历史残留清理\n'));
     if (targets.length === 0) {
       printInfo('未发现任何 khy 数据家/运行时残留。');
     } else {

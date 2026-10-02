@@ -104,7 +104,7 @@ async function handleSkillList(options) {
   }
 
   console.log('');
-  console.log(chalk.bold('  📦 可用 Skills'));
+  console.log(chalk.bold('  可用 Skills'));
   console.log('');
 
   const sourceLabel = {
@@ -180,7 +180,7 @@ async function handleSkillSearch(keyword) {
   }
 
   console.log('');
-  console.log(chalk.bold(`  🔍 搜索结果: "${keyword}"`));
+  console.log(chalk.bold(`  搜索结果: "${keyword}"`));
   const headers = ['ID', '名称', '描述'];
   const rows = results.map((s) => [s.id, s.name || '-', chalk.dim(s.description || '')]);
   printTable(headers, rows);
@@ -250,7 +250,7 @@ async function handleSkillLearn(args, options) {
         }
 
         console.log('');
-        console.log(chalk.bold(`  📦 ${packageName} 可学习内容:`));
+        console.log(chalk.bold(`  ${packageName} 可学习内容:`));
         console.log('');
         for (const d of discoveries) {
           if (d.adaptable) {
@@ -368,21 +368,13 @@ async function handleSkillLearned() {
   }
 
   console.log('');
-  console.log(chalk.bold(`  🧠 已学习的 Skills (${skills.length})`));
+  console.log(chalk.bold(`  已学习的 Skills (${skills.length})`));
   console.log('');
 
-  const categoryIcons = {
-    indicator: '📈',
-    strategy: '🎯',
-    workflow: '⚡',
-    reference: '📚',
-  };
-
   for (const skill of skills) {
-    const icon = categoryIcons[skill.category] || '📦';
     const source = chalk.dim(`[${skill.source}]`);
     const date = skill.learnedAt ? chalk.dim(skill.learnedAt.slice(0, 10)) : '';
-    console.log(`  ${icon} ${chalk.white(skill.name)} ${source} ${date}`);
+    console.log(`  ${chalk.white(skill.name)} ${source} ${date}`);
     console.log(`     ${chalk.dim(skill.description || '')}`);
     console.log(`     ID: ${chalk.cyan(skill.id)}`);
   }
@@ -410,19 +402,19 @@ async function handleSkillJourney() {
   }
 
   console.log('');
-  console.log(chalk.bold('  🧩 学习轨迹 (Journey)'));
+  console.log(chalk.bold('  学习轨迹 (Journey)'));
   console.log('');
 
   const kindStyle = {
-    skill: { icon: '📚', color: chalk.cyan, label: '技能' },
-    memory: { icon: '🧠', color: chalk.magenta, label: '记忆' },
+    skill: { color: chalk.cyan, label: '技能' },
+    memory: { color: chalk.magenta, label: '记忆' },
   };
 
   for (const e of result.entries) {
-    const style = kindStyle[e.kind] || { icon: '📦', color: chalk.white, label: e.kind };
+    const style = kindStyle[e.kind] || { color: chalk.white, label: e.kind };
     const day = e.date ? chalk.dim(e.date.slice(0, 10)) : chalk.dim('——————');
     console.log(
-      `  ${day}  ${style.icon} ${style.color(`[${style.label}]`)} ${chalk.white(e.title)}`
+      `  ${day}  ${style.color(`[${style.label}]`)} ${chalk.white(e.title)}`
     );
     if (e.description) {
       console.log(`              ${chalk.dim(e.description)}`);
@@ -462,12 +454,11 @@ async function handleSkillSuggest() {
   }
 
   console.log('');
-  console.log(chalk.bold('  💡 学习建议'));
+  console.log(chalk.bold('  学习建议'));
   console.log('');
 
   for (const s of suggestions) {
-    const icon = s.type === 'workflow' ? '⚡' : s.type === 'package' ? '📦' : '🎯';
-    console.log(`  ${icon} ${chalk.white(s.name)}`);
+    console.log(`  ${chalk.white(s.name)}`);
     console.log(`     ${chalk.dim(s.reason)}`);
     console.log(`     ${chalk.cyan('→')} ${chalk.dim(s.action)}`);
     console.log('');
@@ -479,7 +470,7 @@ async function handleSkillStats() {
   const stats = learner.getLearningStats();
 
   console.log('');
-  console.log(chalk.bold('  📊 技能学习统计'));
+  console.log(chalk.bold('  技能学习统计'));
   console.log('');
   console.log(`  已学习技能:    ${chalk.bold(stats.totalSkills)}`);
   console.log(`  交互模式记录:  ${chalk.bold(stats.patternCount)}`);
@@ -516,7 +507,7 @@ async function handleSkillCurator(args, options) {
     const allSkills = await skillModule.discoverAllSkills();
     const status = curator.getCuratorStatus(allSkills);
     console.log('');
-    console.log(chalk.bold('  🌱 Skill Curator 状态'));
+    console.log(chalk.bold('  Skill Curator 状态'));
     console.log('');
     console.log(`  活跃:     ${chalk.green(status.active)}`);
     console.log(`  不活跃:   ${chalk.yellow(status.stale)}`);

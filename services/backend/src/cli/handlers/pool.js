@@ -141,7 +141,7 @@ async function handlePoolImport(provider, sourcePathArg) {
         type: 'list',
         name: 'picked',
         message: '选择要导入的登录账号来源:',
-        choices: [...IMPORTABLE_PROVIDERS, { name: '↩️  返回', value: null }],
+        choices: [...IMPORTABLE_PROVIDERS, { name: '↩  返回', value: null }],
       },
     ]);
     if (!picked) {

@@ -387,7 +387,7 @@ function formatToolHeartbeat(name, elapsedMs) {
     if (!el) {
       return '';
     }
-    return `  ⏳ ${_displayName(name)} 运行中 ${el}`;
+    return `  ${_displayName(name)} 运行中 ${el}`;
   } catch {
     return '';
   }
@@ -443,7 +443,7 @@ function formatAssistantText(text) {
 // 助手中间消息前缀:一个对话气泡图标,视觉上明确标记「这是 khy 对你说的话」
 // (视觉路由场景:文本模型先说明「我无法识别图片,正在调用视觉模型」),区别于
 // `│ ` 工具叙述前缀与工具行的图标缩进。
-const _MSG_PREFIX = '💬 ';
+const _MSG_PREFIX = '';
 const _MSG_MAX = 4000; // 单条中间消息展示上限(极长内容截断,避免刷屏)。
 
 /**

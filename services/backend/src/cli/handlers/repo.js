@@ -135,7 +135,7 @@ function handleStatus() {
   const s = _statusSummary();
   const last = _gitSoft(['log', '-1', '--pretty=%h｜%s']);
 
-  console.log(chalk.bold('\n  📂 当前项目状态\n'));
+  console.log(chalk.bold('\n  当前项目状态\n'));
   console.log(
     `  当前分支:   ${branch ? chalk.cyan(branch) : chalk.yellow('（游离状态，未在分支上）')}`
   );
@@ -252,7 +252,7 @@ function handleHistory(args = [], options = {}) {
     return true;
   }
 
-  console.log(chalk.bold('\n  🕑 最近保存的版本\n'));
+  console.log(chalk.bold('\n  最近保存的版本\n'));
   for (const line of res.out.split(/\r?\n/).filter(Boolean)) {
     const [hash, when, ...rest] = line.split('｜');
     console.log(
@@ -271,7 +271,7 @@ function _branchList() {
   }
   const res = _gitSoft(['branch']);
   const current = _currentBranch();
-  console.log(chalk.bold('\n  🌿 分支列表\n'));
+  console.log(chalk.bold('\n  分支列表\n'));
   if (!res.ok || !res.out) {
     console.log('    还没有任何分支记录。');
     console.log('');
@@ -368,7 +368,7 @@ function handleWorkspaceOverview() {
     return true;
   }
 
-  console.log(chalk.bold('\n  🗂  当前工作区\n'));
+  console.log(chalk.bold('\n  当前工作区\n'));
   console.log(`  位置:       ${chalk.cyan(ctx.root)}`);
 
   if (!ctx.isGitRepo) {
@@ -469,7 +469,7 @@ const _VERDICT_STYLE = {
   caution: (t) => chalk.yellow(t),
   block: (t) => chalk.red(t),
 };
-const _SEV_ICON = { critical: '⛔', high: '⚠️', medium: '•', low: '·' };
+const _SEV_ICON = { critical: '◉', high: '⚠', medium: '•', low: '·' };
 
 function handleAudit(args = [], options = {}) {
   if (!_requireRepo()) {
@@ -498,7 +498,7 @@ function handleAudit(args = [], options = {}) {
     message: options.m || options.message,
   });
 
-  console.log(chalk.bold('\n  🛡  仓库纪律与风险体检\n'));
+  console.log(chalk.bold('\n  仓库纪律与风险体检\n'));
   if (!report.enabled) {
     printInfo(report.summary);
     return true;
@@ -529,7 +529,7 @@ function handleAudit(args = [], options = {}) {
 
 function handleCharter() {
   const c = repoDiscipline.describeDisciplineCharter();
-  console.log(chalk.bold('\n  📜 仓库纪律宪章'));
+  console.log(chalk.bold('\n  仓库纪律宪章'));
   console.log(chalk.dim(`  门控 ${c.gate} · 当前${c.enabled ? '已启用' : '已关闭'}\n`));
   for (const r of c.rules) {
     const icon = _SEV_ICON[r.severity] || '•';

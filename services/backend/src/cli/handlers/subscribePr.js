@@ -125,7 +125,7 @@ async function handleSubscribePr(_subCommand, args = [], _options = {}) {
     if (added) {
       printInfo(leaf.buildSubscribeText(descriptor));
     } else {
-      printInfo(`🔔 subscribe-pr · ${descriptor.key} 已在订阅中(无变化)。`);
+      printInfo(`subscribe-pr · ${descriptor.key} 已在订阅中(无变化)。`);
     }
     return true;
   }

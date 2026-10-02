@@ -133,7 +133,7 @@ async function handlePr(subCommand, args = [], options = {}, deps = {}) {
   const opt = buildCreateOptions(args, options);
 
   if (!options.json) {
-    printInfo(chalk.cyan('🔀 正在创建 PR / MR …') + (opt.title ? '' : ' （AI 生成标题/正文）'));
+    printInfo(chalk.cyan('正在创建 PR / MR …') + (opt.title ? '' : ' （AI 生成标题/正文）'));
   }
 
   let result;
@@ -149,12 +149,12 @@ async function handlePr(subCommand, args = [], options = {}, deps = {}) {
   }
 
   if (result && result.success) {
-    printSuccess(`✅ 已创建：${result.title || '(无标题)'}`);
+    printSuccess(`✓ 已创建：${result.title || '(无标题)'}`);
     if (result.url) {
       printInfo(result.url);
     }
   } else {
-    printError(`❌ 创建失败：${(result && result.error) || '未知错误'}`);
+    printError(`✗ 创建失败：${(result && result.error) || '未知错误'}`);
   }
   return true;
 }
