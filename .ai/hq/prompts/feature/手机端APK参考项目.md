@@ -5,7 +5,7 @@
 占位符：（无）
 -->
 
-## 📋 提示词正文（复制下面代码块内的全部内容）
+## 提示词正文（复制下面代码块内的全部内容）
 
 ```text
 【角色】你是在为 khy-os 手机端 APK（T-013~T-015）做技术选型与实现的工程师，需要从成熟开源项目中精准「抄」核心模式，而不是从零发明。
@@ -13,7 +13,7 @@
 【任务】按本文件附录的《参考项目手册》逐项核对：每个参考项目抄什么、重点文件在哪、khy-os 自身可复用资产有哪些，然后产出选型结论并进入实现。
 
 【要求】
-1. 优先级以附录总表为准（⭐⭐⭐ 项目必读，⭐ 项目按需）。
+1. 优先级以附录总表为准（★★★ 项目必读，★ 项目按需）。
 2. 只抄模式与结构，不整包引入依赖；逐文件说明「参考了哪个项目的哪个文件」。
 3. 结论落入实现计划后再动手写代码。
 
@@ -38,13 +38,13 @@
 
 | 优先级 | 项目 | GitHub | 语言 | 抄什么 |
 |--------|------|--------|------|--------|
-| ⭐⭐⭐ | **Open WebUI** | open-webui/open-webui | Python + Svelte | PWA 配置、Tool Use 架构、移动端适配 |
-| ⭐⭐⭐ | **Lobe Chat** | lobehub/lobe-chat | Next.js + React | 移动端 UI 组件、PWA 打包、插件架构 |
-| ⭐⭐⭐ | **Dify** | langgenius/dify | Python + Vue | Agent 工作流引擎、Function Calling 流程 |
-| ⭐⭐ | **LibreChat** | danny-avila/LibreChat | Node + React | 多 LLM 后端适配、React Native 移动端（开发中） |
-| ⭐⭐ | **NextChat** | ChatGPTNextWeb/ChatGPT-Next-Web | Next.js | 极简对话 UI、PWA manifest、一键部署 |
-| ⭐ | **Jan** | janhq/jan | Electron + React | 本地 LLM 推理架构、模型管理 |
-| ⭐ | **Flowise** | FlowiseAI/Flowise | Node + Vue | 可视化 Agent 链构建、LangChain 集成 |
+| ★★★ | **Open WebUI** | open-webui/open-webui | Python + Svelte | PWA 配置、Tool Use 架构、移动端适配 |
+| ★★★ | **Lobe Chat** | lobehub/lobe-chat | Next.js + React | 移动端 UI 组件、PWA 打包、插件架构 |
+| ★★★ | **Dify** | langgenius/dify | Python + Vue | Agent 工作流引擎、Function Calling 流程 |
+| ★★ | **LibreChat** | danny-avila/LibreChat | Node + React | 多 LLM 后端适配、React Native 移动端（开发中） |
+| ★★ | **NextChat** | ChatGPTNextWeb/ChatGPT-Next-Web | Next.js | 极简对话 UI、PWA manifest、一键部署 |
+| ★ | **Jan** | janhq/jan | Electron + React | 本地 LLM 推理架构、模型管理 |
+| ★ | **Flowise** | FlowiseAI/Flowise | Node + Vue | 可视化 Agent 链构建、LangChain 集成 |
 
 ---
 
@@ -601,9 +601,9 @@ khy-os 已有 `apps/ai-frontend/`（Vue 3），其中的以下组件/逻辑可�
 
 | 方案 | 优点 | 缺点 | 结论 |
 |------|------|------|-------|
-| WebView 加载 khy-os Web UI | 零前端开发，直接用 | 性能差、离线不可用、APK 体积大 | ❌ 不推荐 |
-| Flutter 原生 + 调用 khy-os API | 性能好、离线可用、APK 小 | 需要开发 UI | ✅ **推荐** |
-| Capacitor 打包 PWA | 快速、复用 Web 代码 | 体验一般 | ⚠️ 备选 |
+| WebView 加载 khy-os Web UI | 零前端开发，直接用 | 性能差、离线不可用、APK 体积大 | ✗ 不推荐 |
+| Flutter 原生 + 调用 khy-os API | 性能好、离线可用、APK 小 | 需要开发 UI | ✓ **推荐** |
+| Capacitor 打包 PWA | 快速、复用 Web 代码 | 体验一般 | ⚠ 备选 |
 
 **最终决定：Flutter 原生**
 
@@ -612,7 +612,7 @@ khy-os 已有 `apps/ai-frontend/`（Vue 3），其中的以下组件/逻辑可�
 | 方式 | 复杂度 | 用户体验 | 推荐 |
 |------|--------|---------|------|
 | 手动输入 IP + Port | 低 | 差 | 备选 |
-| 扫描二维码（khy-os 终端显示） | 中 | 好 | ✅ **主推** |
+| 扫描二维码（khy-os 终端显示） | 中 | 好 | ✓ **主推** |
 | NFC 触碰配对 | 高 | 极好 | 第三版 |
 | 账号密码登录 | 中 | 中 | 备选 |
 
@@ -622,9 +622,9 @@ khy-os 已有 `apps/ai-frontend/`（Vue 3），其中的以下组件/逻辑可�
 
 | 方案 | 优点 | 缺点 | 结论 |
 |------|------|------|-------|
-| Ollama（需要 Termux） | 完整 LLM 生态 | 需要 Linux 环境，设置复杂 | ⚠️ 高级选项 |
-| llama.cpp（直接打包） | 纯原生，无需 Termux | APK 体积大（>100MB） | ❌ 太重 |
-| 仅在线模式（第一版） | 最简单 | 需要网络 | ✅ **第一版** |
+| Ollama（需要 Termux） | 完整 LLM 生态 | 需要 Linux 环境，设置复杂 | ⚠ 高级选项 |
+| llama.cpp（直接打包） | 纯原生，无需 Termux | APK 体积大（>100MB） | ✗ 太重 |
+| 仅在线模式（第一版） | 最简单 | 需要网络 | ✓ **第一版** |
 
 **最终决定：第一版仅在线，第二版加 Ollama/Termux 集成**
 
@@ -632,10 +632,10 @@ khy-os 已有 `apps/ai-frontend/`（Vue 3），其中的以下组件/逻辑可�
 
 | 方案 | 适合 | 结论 |
 |------|------|-------|
-| Riverpod | Flutter 推荐，编译安全 | ✅ **推荐** |
-| Bloc | 企业级，样板多 | ❌ 太重 |
-| Provider | 简单但不够强 | ⚠️ 小项目可用 |
-| GetX | 争议大 | ❌ 不推荐 |
+| Riverpod | Flutter 推荐，编译安全 | ✓ **推荐** |
+| Bloc | 企业级，样板多 | ✗ 太重 |
+| Provider | 简单但不够强 | ⚠ 小项目可用 |
+| GetX | 争议大 | ✗ 不推荐 |
 
 **最终决定：Riverpod**
 
