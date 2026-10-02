@@ -2557,6 +2557,42 @@
   "scripts/ci/check-weak-model-guard.js": [
     "State"
   ],
+  "services/backend/src/services/domain/build/compile/diagnostics.js": [
+    "Facade"
+  ],
+  "services/backend/src/services/domain/build/compile/registry.js": [
+    "Singleton"
+  ],
+  "services/backend/src/services/domain/build/forge/forgeClient.js": [
+    "Facade"
+  ],
+  "services/backend/src/services/domain/build/forge/forgeCore.js": [
+    "Facade"
+  ],
+  "services/backend/src/services/domain/build/repoMap/index.js": [
+    "Facade"
+  ],
+  "services/backend/src/services/domain/build/repoMap/repoMapRenderer.js": [
+    "Facade"
+  ],
+  "services/backend/src/services/domain/deploy/publish/bundleArtifacts.js": [
+    "Facade"
+  ],
+  "services/backend/src/services/domain/deploy/publish/bundleCommon.js": [
+    "Facade"
+  ],
+  "services/backend/src/services/domain/deploy/publish/dockerBundleBuilder.js": [
+    "Facade"
+  ],
+  "services/backend/src/services/domain/deploy/publish/projectState.js": [
+    "Singleton"
+  ],
+  "services/backend/src/services/domain/deploy/publish/publishUtils.js": [
+    "Facade"
+  ],
+  "services/backend/src/services/publish/index.js": [
+    "Facade"
+  ],
   "services/backend/src/services/domain/agents/agentsight/genaiEvents.js": [
     "Observer"
   ],

@@ -97,13 +97,13 @@ def check():
     bad = 0
     for name, key in keys.items():
         if name not in actual:
-            print(f'  ❌ {name}: Dart 里没有 _{name} 数组')
+            print(f'  ✗ {name}: Dart 里没有 _{name} 数组')
             bad += 1
         elif actual[name] != encode(key):
-            print(f'  ❌ {name}: Dart 数组与钥匙文件不一致（需重跑生成器）')
+            print(f'  ✗ {name}: Dart 数组与钥匙文件不一致（需重跑生成器）')
             bad += 1
         else:
-            print(f'  ✅ {name}: 一致')
+            print(f'  ✓ {name}: 一致')
     for name in actual:
         if name not in keys:
             print(f'  ⚠ {name}: 只存在于 Dart，钥匙文件没有 -> 重跑生成器会丢掉它')

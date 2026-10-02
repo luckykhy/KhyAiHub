@@ -958,11 +958,11 @@ def _find_bundled_vsix(backend_dir: Path) -> Path | None:
     else:
         bundled_root = backend_dir.parent.parent.parent  # 试试更深一级
     if (bundled_root / "extensions").exists():
-        search_roots.append(bundled_root / "extensions" / "khy-trae-bridge")
+        search_roots.append(bundled_root / "extensions" / "bridges" / "khy-trae-bridge")
 
     # 源码模式：项目根 extensions/（platform/khy_platform/ -> platform -> repo root）
     project_root = Path(__file__).parent.parent.parent
-    src_ext = project_root / "extensions" / "khy-trae-bridge"
+    src_ext = project_root / "extensions" / "bridges" / "khy-trae-bridge"
     if src_ext.exists():
         search_roots.append(src_ext)
 

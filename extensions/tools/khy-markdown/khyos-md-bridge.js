@@ -186,7 +186,7 @@ function createHandler(cfg) {
     || (fsImpl.existsSync(path.join(cfg.projectRoot, 'docs'))
         ? path.join(cfg.projectRoot, 'docs') : cfg.projectRoot);
   // 默认目录的展示标签:当前文件目录 → 「📁 <文件夹名>」;项目内嵌 → 「本项目 docs/」。
-  const defaultLabel = targetDir ? ('📁 ' + path.basename(targetDir)) : '本项目 docs/';
+  const defaultLabel = targetDir ? ('' + path.basename(targetDir)) : '本项目 docs/';
   // vendor/ 与 khyosMarkdown.html 同级；resolve 一次作为 confinement 的锚点。
   const vendorDir = path.resolve(cfg.vendorDir || path.join(path.dirname(cfg.htmlPath), VENDOR_DIR_NAME));
 
@@ -316,7 +316,7 @@ function createHandler(cfg) {
       // favicon：页面已内联 data: SVG，但旧标签/直访仍可能请求 /favicon.ico；
       // 曾经这里只「放行」却无处理器，落到末尾 404 → 控制台报错。现直接返回内联 SVG。
       return send(res, 200, 'image/svg+xml',
-        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>\ud83d\udcdd</text></svg>");
+        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90' fill='#5b8dd6'>✎</text></svg>");
     } else {
       return fail(res, 404, 'not found');
     }

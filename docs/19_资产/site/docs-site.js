@@ -117,7 +117,7 @@
     btn.className = "sound-toggle";
     function sync() {
       var on = Sound.isOn();
-      btn.textContent = on ? "🔊" : "🔇";
+      btn.textContent = on ? "♪" : "⊘";
       btn.setAttribute("aria-pressed", on ? "true" : "false");
       btn.setAttribute("aria-label", on ? "关闭音效" : "开启音效");
       btn.title = on ? "音效已开（点击静音）" : "音效已静音（点击开启）";
@@ -145,7 +145,7 @@
       var sbtn = document.querySelector(".topbar .sound-toggle");
       if (!sbtn) return;
       var on = Sound.isOn();
-      sbtn.textContent = on ? "🔊" : "🔇";
+      sbtn.textContent = on ? "♪" : "⊘";
       sbtn.setAttribute("aria-pressed", on ? "true" : "false");
       sbtn.setAttribute("aria-label", on ? "关闭音效" : "开启音效");
       sbtn.title = on ? "音效已开（点击静音）" : "音效已静音（点击开启）";
@@ -177,7 +177,7 @@
       try { document.body.classList.toggle("calm", on); } catch (e) {}
     }
     function sync() {
-      btn.textContent = enabled ? "🌙" : "☀️";
+      btn.textContent = enabled ? "●" : "○";
       btn.setAttribute("aria-pressed", enabled ? "true" : "false");
       btn.setAttribute("aria-label", enabled ? "退出静心模式" : "进入静心模式");
       btn.title = enabled
@@ -298,7 +298,7 @@
 
     var h = document.createElement("div");
     h.className = "gs-title";
-    h.textContent = "🚀 获取 & 启动 Khy-OS";
+    h.textContent = "❯ 获取 & 启动 Khy-OS";
     panel.appendChild(h);
 
     var s1 = document.createElement("div");
@@ -366,7 +366,7 @@
     var btn = document.createElement("button");
     btn.type = "button";
     btn.className = "sound-toggle getstarted-toggle";  // 复用胶囊观感
-    btn.textContent = "🚀";
+    btn.textContent = "❯";
     btn.setAttribute("aria-haspopup", "dialog");
     btn.setAttribute("aria-expanded", "false");
     btn.setAttribute("aria-label", "获取与启动 Khy-OS");
@@ -532,7 +532,7 @@
               b.disabled = true;
             });
             if (!correct) btn.classList.add("is-wrong");
-            reveal(correct ? "🎉 答对了！" : "再想想～正确答案已高亮。", correct);
+            reveal(correct ? "✓ 答对了！" : "再想想～正确答案已高亮。", correct);
           } else {
             btn.classList.toggle("is-picked");
             var picked = quiz.querySelectorAll(".quiz-choice.is-picked");
@@ -542,7 +542,7 @@
             });
             if (picked.length && allRight) {
               choices.forEach(function (b) { b.disabled = true; });
-              reveal("🎉 全部选对了！", true);
+              reveal("✓ 全部选对了！", true);
             }
           }
         });

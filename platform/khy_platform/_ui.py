@@ -59,22 +59,22 @@ def _colorize(text: str, fg: str | None = None, style: str | None = None) -> str
 # ── 状态标记（对标 _PF_MARK，新增彩色版）───────────────────────
 
 def ok(text: str = " OK ") -> str:
-    """✅ 绿色 [ OK ] 标记"""
+    """✓ 绿色 [ OK ] 标记"""
     return _colorize(f"[{text}]", fg="green", style="bold")
 
 
 def warn(text: str = "WARN") -> str:
-    """⚠️ 黄色 [WARN] 标记"""
+    """⚠ 黄色 [WARN] 标记"""
     return _colorize(f"[{text}]", fg="yellow", style="bold")
 
 
 def fail(text: str = "FAIL") -> str:
-    """❌ 红色 [FAIL] 标记"""
+    """✗ 红色 [FAIL] 标记"""
     return _colorize(f"[{text}]", fg="red", style="bold")
 
 
 def info(text: str = "INFO") -> str:
-    """ℹ️ 青色 [INFO] 标记"""
+    """ℹ 青色 [INFO] 标记"""
     return _colorize(f"[{text}]", fg="cyan")
 
 

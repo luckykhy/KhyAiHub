@@ -8,7 +8,7 @@
     "scripts/ci/check-license-tiers.js"
   ],
   "$status": "active",
-  "$updated": "2026-09-16",
+  "$updated": "2026-09-29",
 
   "ssot": {
     "doc": "docs/10_规范/其它规范/[DESIGN-SOURCING-001] 借鉴与实现统一规则.md",
@@ -136,6 +136,17 @@
       "regenerationCommand": "cp ~/.moon/include/moonbit-fundamental.h vendor/moonbit/include/moonbit-fundamental.h",
       "deletableAsWhole": true,
       "notes": "moonbit.h 在 -DMOONBIT_NATIVE_NO_SYS_HEADER 下唯一拉入的头"
+    },
+    {
+      "source": "Fokkyp/SoftwareCopyright-Skill@947d5963194bfda8ce57b8b454b486f13359dee4 (2026-09-24, SKILL.md v2.5, MIT)",
+      "localPath": "scripts/copyright/vendor/software-copyright-materials",
+      "relationship": "vendored",
+      "license": "MIT",
+      "versionPin": "947d5963194bfda8ce57b8b454b486f13359dee4",
+      "deletableAsWhole": true,
+      "approvedBy": "仓库维护者（用户）2026-09-29 经 AskUserQuestion 选定「vendored 原样入库」并批准落点；B-P3 裁决人与实现者非同一人",
+      "approvedAt": "2026-09-29",
+      "notes": "逐字入库、一行未改：26 个上游文件（SKILL.md + agents/ + references/ + scripts/ + tests/）取自上游 git blob 原始字节（LF，未经任何 smudge），逐文件 sha256 与 aggregate 记于 scripts/copyright/upstream-manifest.json，漂移由 check-copyright-readiness.js 的 copyright-vendored-skill 判 error（S1 降级 WARN）。上游 LICENSE 同路径留存于 scripts/copyright/LICENSE。未随包入库：生成demo/（433 KB 示例产物）、docs/screenshots/（1.3 MB README 配图）、.claude-plugin/plugin.json（单智能体专属打包清单，其版本已记入 manifest）、skills/ 符号链接（目标记为 skillsSymlinkTarget）。本仓口径覆盖层在 scripts/copyright/repo-contract.md（对冲上游「优先抽取前端代码」与本件登记客体的运行时链选材原则）。落点刻意用含 vendor 路径段的目录名，使 [DESIGN-IP-001] C-X3 的既有排除规则天然命中，不另建第二份排除清单。"
     }
   ],
 
@@ -145,14 +156,15 @@
   },
 
   "observedVendorDirs": {
-    "note": "以下为实测（2026-09-16，仓库根）。仅列实测存在的 vendor 目录，不推测其上游。",
+    "note": "以下为实测（2026-09-16，仓库根）。仅列实测存在的 vendor 目录，不推测其上游。末项为 2026-09-29 vendored 入库时新增（同批实测存在）。",
     "measuredAt": "2026-09-16",
     "dirs": [
       { "path": "kernel/vendor/moonbit", "state": "ledgered", "contents": ["PROVENANCE.md", "PROVENANCE.html", "include/", "moonbit_gen.c", "runtime.c"] },
       { "path": "services/backend/vendor/shared", "state": "unverified", "contents": ["config", "logs", "package.json", "src", "tests"] },
       { "path": "extensions/tools/khy-dsh-compat/vendor", "state": "empty" },
       { "path": "extensions/tools/khy-markdown/vendor", "state": "empty" },
-      { "path": "apps/ai-frontend/public/vendor", "state": "empty" }
+      { "path": "apps/ai-frontend/public/vendor", "state": "empty" },
+      { "path": "scripts/copyright/vendor", "state": "ledgered", "contents": ["software-copyright-materials/"] }
     ]
   },
 

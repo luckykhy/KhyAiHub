@@ -9,7 +9,7 @@
  *   node scripts/verify-install.js --json     # 机器可读输出（probes + verdict）
  *   node scripts/verify-install.js --gen-doc  # 重新生成 OPS-MAN-069 完整性清单
  *
- * 设计：判断逻辑全在纯叶子 scripts/lib/installIntegrity.js（零 IO、可离线全测）；
+ * 设计：判断逻辑全在纯叶子 services/backend/src/services/domain/backup/restore/installIntegrity.js（零 IO、可离线全测）；
  * 本文件只做两件事——(1) fail-soft 定位已装 bundle 根并 stat 每条关键路径，
  * (2) 呈现 / 落盘。任何探针失败都退化为「缺失」保守处理，绝不让自检本身崩。
  *
@@ -23,7 +23,7 @@ const path = require('path');
 const {
   assessInstallIntegrity,
   CRITICAL_BUNDLE_PATHS,
-} = require('../../../scripts/lib/installIntegrity');
+} = require('../../../services/backend/src/services/domain/backup/restore/installIntegrity');
 const { opsDocPath, opsDocRelPath } = require('../../../scripts/lib/docsPaths');
 
 const ROOT = path.resolve(__dirname, '..', '..', '..');
@@ -153,12 +153,12 @@ function runVerifyInstall(opts = {}) {
 
 /** 由 CRITICAL_BUNDLE_PATHS + 渠道常量确定性生成清单 markdown。纯函数，不做 IO。 */
 function buildDoc() {
-  const { _PATH_HINTS } = require('../../../scripts/lib/installIntegrity');
+  const { _PATH_HINTS } = require('../../../services/backend/src/services/domain/backup/restore/installIntegrity');
   const lines = [];
   lines.push('# [OPS-MAN-069] 已装副本完整性自检清单');
   lines.push('');
   lines.push('> 本文件由 `scripts/verify-install.js --gen-doc` 确定性生成，请勿手改；');
-  lines.push('> 关键路径改在 `scripts/lib/installIntegrity.js` 的 `CRITICAL_BUNDLE_PATHS`，再重新生成。');
+  lines.push('> 关键路径改在 `services/backend/src/services/domain/backup/restore/installIntegrity.js` 的 `CRITICAL_BUNDLE_PATHS`，再重新生成。');
   lines.push('');
   lines.push('## 这份清单是干什么的');
   lines.push('');

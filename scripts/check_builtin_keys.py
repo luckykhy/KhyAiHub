@@ -229,9 +229,9 @@ def main() -> int:
     src_hits = [f for f in findings if f['kind'] == 'source']
     if src_hits:
         for f in src_hits:
-            print(f'  ❌ [明文] {f["where"]}  <- {f["key"]}')
+            print(f'  ✗ [明文] {f["where"]}  <- {f["key"]}')
     else:
-        print('  ✅ 源树无明文密钥')
+        print('  ✓ 源树无明文密钥')
 
     if src_only:
         print('\n[APK] 已跳过（' + ('--changed' if args.changed else '--src-only') + '）')
@@ -243,14 +243,14 @@ def main() -> int:
             if entry.get('error'):
                 print(f'  ⚠ {entry["apk"]}: 读取失败 {entry["error"]}')
             elif entry['leaks']:
-                print(f'  ❌ {entry["apk"]} ({entry["bytes"]:,}B) 发现明文:')
+                print(f'  ✗ {entry["apk"]} ({entry["bytes"]:,}B) 发现明文:')
                 for leak in entry['leaks']:
                     print(f'      [{leak["key"]}] in {leak["entry"]}')
             else:
-                print(f'  ✅ {entry["apk"]} ({entry["bytes"]:,}B) 无明文密钥')
+                print(f'  ✓ {entry["apk"]} ({entry["bytes"]:,}B) 无明文密钥')
 
-    print('\n结论: ' + ('✅ 通过 —— 出厂客户端只有混淆密钥' if ok
-                      else f'❌ 失败 —— {len(findings)} 处明文'))
+    print('\n结论: ' + ('✓ 通过 —— 出厂客户端只有混淆密钥' if ok
+                      else f'✗ 失败 —— {len(findings)} 处明文'))
     return 0 if ok else 1
 
 

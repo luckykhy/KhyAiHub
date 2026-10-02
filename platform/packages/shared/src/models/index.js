@@ -38,6 +38,7 @@ const UserProviderModel = require('./UserProviderModel');
 const UserWorkflow = require('./UserWorkflow');
 const WorkflowRun = require('./WorkflowRun');
 const Conversation = require('./Conversation');
+const ConversationGroup = require('./ConversationGroup');
 const UserProject = require('./UserProject');
 const PromptTemplate = require('./PromptTemplate');
 const MarketplacePlugin = require('./MarketplacePlugin');
@@ -137,6 +138,12 @@ WorkflowRun.belongsTo(UserWorkflow, { foreignKey: 'workflow_id', as: 'workflow' 
 User.hasMany(Conversation, { foreignKey: 'user_id', as: 'conversations', constraints: false });
 Conversation.belongsTo(User, { foreignKey: 'user_id', as: 'user', constraints: false });
 
+// 对话分组（侧栏文件夹）：每用户命名分组，对话可经 Conversation.group_id 归入。
+// constraints:false —— 与 Conversation 同理（哨兵 0 单机场景）；隔离由
+// conversationStore 的 where:{userId} 保证。删除分组不删对话（store 先清 group_id）。
+User.hasMany(ConversationGroup, { foreignKey: 'user_id', as: 'conversationGroups', constraints: false });
+ConversationGroup.belongsTo(User, { foreignKey: 'user_id', as: 'user', constraints: false });
+
 // 编码项目工作区：每用户命名的多文件夹工作区（对齐 Hermes v0.18.0 桌面 coding projects）。
 // 对话可经 Conversation.project_id 归属某项目；侧栏按当前项目过滤。constraints:false —— 与
 // Conversation 同理，单机/可信网络旁路模式下 user_id 可能为哨兵 0（无对应 users 行），隔离
@@ -209,6 +216,7 @@ module.exports = {
   UserWorkflow,
   WorkflowRun,
   Conversation,
+  ConversationGroup,
   UserProject,
   PromptTemplate,
   MarketplacePlugin,

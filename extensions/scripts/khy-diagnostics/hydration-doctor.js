@@ -9,7 +9,7 @@
  *   node extensions/scripts/khy-diagnostics/hydration-doctor.js --json      # 机器可读输出（facts + verdict）
  *   node extensions/scripts/khy-diagnostics/hydration-doctor.js --gen-doc   # 重新生成 OPS-MAN-070 清单
  *
- * 设计：判断逻辑全在纯叶子 scripts/lib/hydrationHealth.js（零 IO、可离线全测）；
+ * 设计：判断逻辑全在纯叶子 services/backend/src/services/domain/backup/restore/hydrationHealth.js（零 IO、可离线全测）；
  * 本文件只做两件事——(1) fail-soft 探测本机 node_modules 真实状态，(2) 呈现 / 落盘。
  * 任何探针失败都退化为 null（未知），绝不让自检本身崩。
  *
@@ -25,7 +25,7 @@ const {
   _RULES,
   CRITICAL_PACKAGES,
   _PACKAGE_HINTS,
-} = require('../../../scripts/lib/hydrationHealth');
+} = require('../../../services/backend/src/services/domain/backup/restore/hydrationHealth');
 const { opsDocPath, opsDocRelPath } = require('../../../scripts/lib/docsPaths');
 
 const ROOT = path.resolve(__dirname, '..', '..', '..');
@@ -238,7 +238,7 @@ function buildDoc() {
   lines.push('# [OPS-MAN-070] 首启依赖 hydration 自检清单');
   lines.push('');
   lines.push('> 本文件由 `extensions/scripts/khy-diagnostics/hydration-doctor.js --gen-doc` 确定性生成，请勿手改；');
-  lines.push('> 规则改在 `scripts/lib/hydrationHealth.js` 的 `_RULES` / `CRITICAL_PACKAGES`，再重新生成。');
+  lines.push('> 规则改在 `services/backend/src/services/domain/backup/restore/hydrationHealth.js` 的 `_RULES` / `CRITICAL_PACKAGES`，再重新生成。');
   lines.push('');
   lines.push('## 这份清单是干什么的');
   lines.push('');

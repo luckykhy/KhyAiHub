@@ -348,7 +348,7 @@ pre code { color: inherit; background: none; padding: 0; }
 .quiz-choice.is-correct .quiz-key { background: var(--ok); color: #fff; }
 /* 答对小星光：一次性 sparkle，从选项右上角闪一下再消失（互动的「有回应」感，纯 CSS 零 DOM）。 */
 .quiz-choice.is-correct::after {
-  content: "✨"; position: absolute; top: -8px; right: -4px; font-size: 16px;
+  content: "◆"; position: absolute; top: -8px; right: -4px; font-size: 16px;
   pointer-events: none; animation: quizSparkle .7s ease-out forwards;
 }
 .quiz-choice.is-wrong { border-color: #dc2626; background: #fef2f2; animation: quizShake .3s ease; }

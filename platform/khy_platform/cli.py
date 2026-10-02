@@ -1086,17 +1086,19 @@ def _normalize_android_build_command(raw_args):
 
 def _find_iso_script(is_windows: bool) -> Path | None:
     """Locate ISO build helper script in source mode or pip bundled mode."""
-    # forest layout: platform/khy_platform/ -> platform -> repo root; scripts/ stays at root
+    # forest layout: platform/khy_platform/ -> platform -> repo root; ISO helpers
+    # moved to extensions/scripts/khy-alpine-iso in the 2026-08-19 extension import.
     project_root = Path(__file__).parent.parent.parent
     bundled_root = _find_bundled_root()
+    iso_dir = ("extensions", "scripts", "khy-alpine-iso")
     if is_windows:
-        candidates = [project_root / "scripts" / "alpine" / "build-iso-windows.ps1"]
+        candidates = [project_root.joinpath(*iso_dir, "build-iso-windows.ps1")]
         if bundled_root:
-            candidates.append(bundled_root / "scripts" / "alpine" / "build-iso-windows.ps1")
+            candidates.append(bundled_root.joinpath(*iso_dir, "build-iso-windows.ps1"))
     else:
-        candidates = [project_root / "scripts" / "alpine" / "build-iso-docker.sh"]
+        candidates = [project_root.joinpath(*iso_dir, "build-iso-docker.sh")]
         if bundled_root:
-            candidates.append(bundled_root / "scripts" / "alpine" / "build-iso-docker.sh")
+            candidates.append(bundled_root.joinpath(*iso_dir, "build-iso-docker.sh"))
     for p in candidates:
         if p.exists():
             return p
@@ -1109,7 +1111,7 @@ def _run_iso_build_cli(script_args):
     script = _find_iso_script(is_windows)
     if not script:
         print("Error: ISO build script not found in this installation.", file=sys.stderr)
-        print("  Please reinstall khy-os or use source tree with scripts/alpine.", file=sys.stderr)
+        print("  Please reinstall khy-os or use source tree with extensions/scripts/khy-alpine-iso.", file=sys.stderr)
         return 1
 
     if is_windows:

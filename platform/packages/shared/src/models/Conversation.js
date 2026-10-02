@@ -31,6 +31,18 @@ const Conversation = sequelize.define('Conversation', {
     field: 'project_id',
     comment: 'Optional owning coding project (UserProject.id); null = ungrouped, always visible',
   },
+  groupId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    field: 'group_id',
+    comment: 'Optional custom sidebar folder (ConversationGroup.id); null = not in a custom group',
+  },
+  sortOrder: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    field: 'sort_order',
+    comment: 'Manual sidebar position (smaller = higher); null = fall back to updatedAt sort',
+  },
   title: {
     type: DataTypes.STRING(200),
     defaultValue: '新对话',
@@ -59,6 +71,7 @@ const Conversation = sequelize.define('Conversation', {
   indexes: [
     { fields: ['user_id'] },
     { fields: ['project_id'] },
+    { fields: ['group_id'] },
   ],
 });
 

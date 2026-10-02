@@ -105,7 +105,7 @@ module.exports = require('./domain/extensions/extensions/quantApp').loadModule('
 function fixDeprecatedEncoding(options = {}) {
   const { apply = false } = options;
   
-  console.log(chalk.bold('\n🔧 废弃服务文件编码修复工具'));
+  console.log(chalk.bold('\n废弃服务文件编码修复工具'));
   console.log(chalk.dim(`  模式: ${apply ? '执行' : '预览'}`));
   console.log(chalk.dim(`  待处理文件: ${DEPRECATED_FILES.length} 个`));
   
@@ -129,13 +129,13 @@ function fixDeprecatedEncoding(options = {}) {
   }
   
   // 显示结果
-  console.log(chalk.bold('\n📊 修复汇总'));
+  console.log(chalk.bold('\n修复汇总'));
   console.log(chalk.dim(`  总文件数: ${DEPRECATED_FILES.length} 个`));
   console.log(chalk.dim(`  需要修复: ${modifiedCount} 个`));
   console.log(chalk.dim(`  无需修复: ${DEPRECATED_FILES.length - modifiedCount} 个`));
   
   if (modifiedCount > 0) {
-    console.log(chalk.bold('\n📝 变更详情'));
+    console.log(chalk.bold('\n变更详情'));
     
     for (const result of results.filter(r => r.modified)) {
       console.log(chalk.green(`\n  ✓ ${result.file}`));
@@ -147,9 +147,9 @@ function fixDeprecatedEncoding(options = {}) {
   }
   
   if (!apply) {
-    console.log(chalk.yellow('\n⚠️  这是预览模式，使用 --apply 参数执行实际修复'));
+    console.log(chalk.yellow('\n⚠  这是预览模式，使用 --apply 参数执行实际修复'));
   } else {
-    console.log(chalk.green('\n✅ 编码修复完成'));
+    console.log(chalk.green('\n✓ 编码修复完成'));
   }
 }
 
