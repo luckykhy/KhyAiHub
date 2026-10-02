@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -37,7 +37,7 @@
 <hr>
 <h2 id="一-先分层-7-个名字其实横跨-3-层-只有-1-层真正重叠">一、先分层：7 个名字其实横跨 3 层，只有 1 层真正重叠<a class="anchor" href="#一-先分层-7-个名字其实横跨-3-层-只有-1-层真正重叠" aria-label="锚点">#</a></h2>
 <p>按「它靠什么挣钱」分层，而不是按品牌或形态：</p>
-<table><thead><tr><th>层</th><th>玩家</th><th>靠什么挣钱</th><th>与 khy-os 的关系</th></tr></thead><tbody><tr><td><strong>L4 应用层·编码</strong></td><td><strong>Claude Code</strong>（Anthropic 自营）</td><td>模型订阅</td><td><strong>正面重叠</strong>（同为终端内编码 agent），但它是「模型厂商自营」——不可能帮你接别家的订阅</td></tr><tr><td></td><td><strong>Cursor</strong></td><td>编辑器订阅</td><td>形态锁在 IDE，非终端赛道</td></tr><tr><td></td><td><strong>Trae</strong>（字节）</td><td>IDE + SOLO 订阅</td><td>同上，中文市场直接竞争</td></tr><tr><td></td><td><strong>ZCode</strong>（智谱 Z.ai，ADE）</td><td>智谱模型 + 工具聚合</td><td>⚠ <strong>最危险的一个</strong>：它已把 Claude Code / Codex / Gemini 收进同一个桌面界面 ⇒ <strong>「多工具聚合」这半个差异已被国内厂商做掉</strong></td></tr><tr><td></td><td><strong>OpenCode</strong></td><td>开源 + 社区</td><td>形态与定位最近，但无网关层、无订阅套利</td></tr><tr><td><strong>L4 应用层·办公</strong></td><td><strong>WorkBuddy</strong>（腾讯）</td><td>云 + 办公套件</td><td>⚠ <strong>平台级对手</strong>：2026-09 已把 Agent 底座对外开放，并做办公套件化（文档/知识库/网盘/设计同体系）</td></tr><tr><td></td><td><strong>Abu-Cowork</strong>（阿布，Apache 2.0）</td><td>开源桌面助手</td><td>✅ <strong>不是对手，是资源</strong>——仓内已有把它生成成 khy 工具的完整案例（见 §四·3）</td></tr><tr><td><strong>L2 网关层</strong></td><td>（ZCode 部分进入 / WorkBuddy 部分进入）</td><td>—</td><td>khy-os 的 <strong>18 个 <code>*Adapter.js</code> + 4 层容错</strong>在这一层</td></tr><tr><td><strong>L1 运行时层</strong></td><td><strong>（空）</strong></td><td>—</td><td>khy-os 的 <strong>壳 → 漏斗 → 网关</strong>（<code>[INIT-PRD-003]</code> 口径）在这一层，<strong>当前无对手</strong></td></tr><tr><td><strong>L0 内核</strong></td><td>（空）</td><td>—</td><td>khy-os 的实验分支（<code>[INIT-PRD-003]</code> §4.1 已裁定不占核心席位）</td></tr></tbody></table>
+<table><thead><tr><th>层</th><th>玩家</th><th>靠什么挣钱</th><th>与 khy-os 的关系</th></tr></thead><tbody><tr><td><strong>L4 应用层·编码</strong></td><td><strong>Claude Code</strong>（Anthropic 自营）</td><td>模型订阅</td><td><strong>正面重叠</strong>（同为终端内编码 agent），但它是「模型厂商自营」——不可能帮你接别家的订阅</td></tr><tr><td></td><td><strong>Cursor</strong></td><td>编辑器订阅</td><td>形态锁在 IDE，非终端赛道</td></tr><tr><td></td><td><strong>Trae</strong>（字节）</td><td>IDE + SOLO 订阅</td><td>同上，中文市场直接竞争</td></tr><tr><td></td><td><strong>ZCode</strong>（智谱 Z.ai，ADE）</td><td>智谱模型 + 工具聚合</td><td>⚠ <strong>最危险的一个</strong>：它已把 Claude Code / Codex / Gemini 收进同一个桌面界面 ⇒ <strong>「多工具聚合」这半个差异已被国内厂商做掉</strong></td></tr><tr><td></td><td><strong>OpenCode</strong></td><td>开源 + 社区</td><td>形态与定位最近，但无网关层、无订阅套利</td></tr><tr><td><strong>L4 应用层·办公</strong></td><td><strong>WorkBuddy</strong>（腾讯）</td><td>云 + 办公套件</td><td>⚠ <strong>平台级对手</strong>：2026-09 已把 Agent 底座对外开放，并做办公套件化（文档/知识库/网盘/设计同体系）</td></tr><tr><td></td><td><strong>Abu-Cowork</strong>（阿布，Apache 2.0）</td><td>开源桌面助手</td><td>✓ <strong>不是对手，是资源</strong>——仓内已有把它生成成 khy 工具的完整案例（见 §四·3）</td></tr><tr><td><strong>L2 网关层</strong></td><td>（ZCode 部分进入 / WorkBuddy 部分进入）</td><td>—</td><td>khy-os 的 <strong>18 个 <code>*Adapter.js</code> + 4 层容错</strong>在这一层</td></tr><tr><td><strong>L1 运行时层</strong></td><td><strong>（空）</strong></td><td>—</td><td>khy-os 的 <strong>壳 → 漏斗 → 网关</strong>（<code>[INIT-PRD-003]</code> 口径）在这一层，<strong>当前无对手</strong></td></tr><tr><td><strong>L0 内核</strong></td><td>（空）</td><td>—</td><td>khy-os 的实验分支（<code>[INIT-PRD-003]</code> §4.1 已裁定不占核心席位）</td></tr></tbody></table>
 <p><strong>这张表是全文的支点</strong>：khy-os 同时出现在 <strong>L4 / L2 / L1</strong>。这是它最大的机会，也是它最大的病——<strong>用户只在 L4 认它，而它把约 67% 的产能投在 L1/L2</strong>（<code>[INIT-PRD-004]</code> §一 的任务面盘点）。</p>
 <hr>
 <h2 id="二-能力重叠矩阵-先看清哪一仗在打-哪一仗不在打">二、能力重叠矩阵：先看清哪一仗在打、哪一仗不在打<a class="anchor" href="#二-能力重叠矩阵-先看清哪一仗在打-哪一仗不在打" aria-label="锚点">#</a></h2>
