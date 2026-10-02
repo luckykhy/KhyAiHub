@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -46,7 +46,7 @@
 <hr>
 <h2 id="2-换行-windows-与-linux-差异">2. 换行：Windows 与 Linux 差异<a class="anchor" href="#2-换行-windows-与-linux-差异" aria-label="锚点">#</a></h2>
 <p>想在一条消息里换行（写多行 prompt）而不发送，有几种办法，<strong>可用性因终端而异</strong>：</p>
-<table><thead><tr><th>方式</th><th>Windows</th><th>Linux</th><th>说明</th></tr></thead><tbody><tr><td><code>\</code> + <code>Enter</code></td><td>✅ 通用</td><td>✅ 通用</td><td><strong>最稳妥的兜底</strong>：任何终端都work。行尾打一个反斜杠再回车。</td></tr><tr><td><code>Shift + Enter</code></td><td>⚠️ Windows Terminal 原生支持；VS Code / Cursor 内置终端需先跑 <code>/terminal-setup</code></td><td>⚠️ 多数现代终端支持，少数需配置</td><td>终端要把 Shift+Enter 作为独立序列上报才生效。</td></tr><tr><td><code>Alt + Enter</code></td><td>⚠️ 视终端</td><td>⚠️ 视终端</td><td>备选；不如 <code>\</code>+Enter 通用。</td></tr><tr><td><code>Ctrl + Enter</code></td><td>⚠️ 视终端</td><td>⚠️ 视终端</td><td>备选。</td></tr></tbody></table>
+<table><thead><tr><th>方式</th><th>Windows</th><th>Linux</th><th>说明</th></tr></thead><tbody><tr><td><code>\</code> + <code>Enter</code></td><td>✓ 通用</td><td>✓ 通用</td><td><strong>最稳妥的兜底</strong>：任何终端都work。行尾打一个反斜杠再回车。</td></tr><tr><td><code>Shift + Enter</code></td><td>⚠ Windows Terminal 原生支持；VS Code / Cursor 内置终端需先跑 <code>/terminal-setup</code></td><td>⚠ 多数现代终端支持，少数需配置</td><td>终端要把 Shift+Enter 作为独立序列上报才生效。</td></tr><tr><td><code>Alt + Enter</code></td><td>⚠ 视终端</td><td>⚠ 视终端</td><td>备选；不如 <code>\</code>+Enter 通用。</td></tr><tr><td><code>Ctrl + Enter</code></td><td>⚠ 视终端</td><td>⚠ 视终端</td><td>备选。</td></tr></tbody></table>
 <p><strong>建议</strong>：拿不准时统一用 <code>\</code> + <code>Enter</code>——它在所有系统、所有终端下都可靠。</p>
 <blockquote><p><strong>VS Code / Cursor 用户</strong>：如果 <code>Shift+Enter</code> 直接发送而不是换行，在 TUI 里跑一次 <code>/terminal-setup</code> 配置终端集成。</p></blockquote>
 <hr>
@@ -66,7 +66,7 @@
 <blockquote><p><strong>Alt 键的坑</strong>：<code>Alt + B/F/D</code> 要求终端把 <code>Alt</code> 当作 <code>Meta</code> 上报。<strong>Linux 终端默认可用</strong>；<strong>macOS 上</strong>多数终端需在设置里勾选「Use Option as Meta key」。Windows Terminal 一般可用。</p></blockquote>
 <hr>
 <h2 id="6-进阶键">6. 进阶键<a class="anchor" href="#6-进阶键" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>键</th><th>作用</th><th>khyos 现状</th></tr></thead><tbody><tr><td><code>Ctrl + O</code></td><td>展开 / 折叠过程组与工具输出</td><td>✅ 已对齐（语义与 CC 的「切换 transcript」略有不同，见 §9）</td></tr><tr><td><code>Ctrl + T</code></td><td>显示 / 隐藏任务清单面板（仅宽屏终端渲染，默认 ≥120 列，可由 <code>KHY_SIDEBAR_MIN_COLS</code> 调整；窄屏下按键会给出宽度提示）</td><td>✅ 已对齐</td></tr><tr><td><code>Ctrl + L</code></td><td>清屏（清除已提交的对话记录）</td><td>✅ 已对齐</td></tr><tr><td><code>Ctrl + G</code></td><td>CC：打开外部编辑器编辑当前输入</td><td>⚠️ khyos 暂无（诚实标注，见 §9）</td></tr><tr><td>消息排队</td><td>忙时继续键入，回合结束后按序发送</td><td>✅ 支持</td></tr></tbody></table>
+<table><thead><tr><th>键</th><th>作用</th><th>khyos 现状</th></tr></thead><tbody><tr><td><code>Ctrl + O</code></td><td>展开 / 折叠过程组与工具输出</td><td>✓ 已对齐（语义与 CC 的「切换 transcript」略有不同，见 §9）</td></tr><tr><td><code>Ctrl + T</code></td><td>显示 / 隐藏任务清单面板（仅宽屏终端渲染，默认 ≥120 列，可由 <code>KHY_SIDEBAR_MIN_COLS</code> 调整；窄屏下按键会给出宽度提示）</td><td>✓ 已对齐</td></tr><tr><td><code>Ctrl + L</code></td><td>清屏（清除已提交的对话记录）</td><td>✓ 已对齐</td></tr><tr><td><code>Ctrl + G</code></td><td>CC：打开外部编辑器编辑当前输入</td><td>⚠ khyos 暂无（诚实标注，见 §9）</td></tr><tr><td>消息排队</td><td>忙时继续键入，回合结束后按序发送</td><td>✓ 支持</td></tr></tbody></table>
 <hr>
 <h2 id="7-vim-模式">7. Vim 模式<a class="anchor" href="#7-vim-模式" aria-label="锚点">#</a></h2>
 <p>在 TUI 里跑 <code>/vim</code> 开启模态编辑：</p>

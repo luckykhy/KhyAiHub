@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -78,7 +78,7 @@
 <h3 id="安全铁律-不可违反-违反了会毁用户数据">安全铁律（不可违反 —— 违反了会毁用户数据）<a class="anchor" href="#安全铁律-不可违反-违反了会毁用户数据" aria-label="锚点">#</a></h3>
 <p>修复层 <code>envRepair.js</code> 顶部写着四条铁律，加任何修复都必须守住：</p>
 <ol><li><strong>只创建缺失的东西</strong>（<code>mkdir</code> 补一个缺失目录）。<strong>绝不删除、绝不覆盖、绝不截断</strong>用户已有的任何文件。</li><li><strong>可重复运行</strong>：跑第二遍必须是「什么都没做」（已经健康就返回 <code>null</code>）。</li><li><strong>失败不抛异常</strong>：修不了就返回 <code>{ ok: false }</code> 说明原因，不能让程序崩。</li><li><strong>遇到损坏不要删</strong>：如果路径存在但类型不对（比如本该是目录却是个文件），<strong>不要删它</strong>——那可能是用户的数据。返回 <code>ok:false</code> 交给人工处理。</li></ol>
-<blockquote><p>⚠️ <strong>要删东西？不要在这里做。</strong> 删除是破坏性操作，必须走 <code>磁盘清理</code> 命令的人工确认闸门（riskGate），一句自然语言绝不能绕过它。这块只做「补缺失」，不做「删多余」。</p></blockquote>
+<blockquote><p>⚠ <strong>要删东西？不要在这里做。</strong> 删除是破坏性操作，必须走 <code>磁盘清理</code> 命令的人工确认闸门（riskGate），一句自然语言绝不能绕过它。这块只做「补缺失」，不做「删多余」。</p></blockquote>
 <h3 id="照抄一个修复函数">照抄一个修复函数<a class="anchor" href="#照抄一个修复函数" aria-label="锚点">#</a></h3>
 <pre><code class="language-javascript"><span class="hljs-comment">/** 补一个缺失的示例目录 —— 照抄改路径即可。 */</span>
 <span class="hljs-keyword">function</span> <span class="hljs-title function_">_repairExampleDir</span>(<span class="hljs-params"></span>) {

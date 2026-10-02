@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -27,7 +27,7 @@
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#ops-man-069-已装副本完整性自检清单">[OPS-MAN-069] 已装副本完整性自检清单</a></li><li class="lvl-2"><a href="#这份清单是干什么的">这份清单是干什么的</a></li><li class="lvl-2"><a href="#为什么必须搬到你的机器上跑">为什么必须搬到你的机器上跑</a></li><li class="lvl-2"><a href="#它检查这些运行时关键文件-缺任一-khy-可能起不来">它检查这些运行时关键文件（缺任一 = khy 可能起不来）</a></li><li class="lvl-2"><a href="#结果怎么读">结果怎么读</a></li><li class="lvl-2"><a href="#与其它自检的分工">与其它自检的分工</a></li><li class="lvl-2"><a href="#红线-继承项目章程">红线（继承项目章程）</a></li></ul></nav>
       <article class="doc-body">
 <h1 id="ops-man-069-已装副本完整性自检清单">[OPS-MAN-069] 已装副本完整性自检清单<a class="anchor" href="#ops-man-069-已装副本完整性自检清单" aria-label="锚点">#</a></h1>
-<blockquote><p>本文件由 <code>scripts/verify-install.js --gen-doc</code> 确定性生成，请勿手改；<br>关键路径改在 <code>scripts/lib/installIntegrity.js</code> 的 <code>CRITICAL_BUNDLE_PATHS</code>，再重新生成。</p></blockquote>
+<blockquote><p>本文件由 <code>scripts/verify-install.js --gen-doc</code> 确定性生成，请勿手改；<br>关键路径改在 <code>services/backend/src/services/domain/backup/restore/installIntegrity.js</code> 的 <code>CRITICAL_BUNDLE_PATHS</code>，再重新生成。</p></blockquote>
 <h2 id="这份清单是干什么的">这份清单是干什么的<a class="anchor" href="#这份清单是干什么的" aria-label="锚点">#</a></h2>
 <p>前面几件送别礼检查「周遭」（环境、版本、依赖）；这一件检查<strong>装进来的东西本身</strong>：<br>你从 pip / npm 装好之后，运行时关键文件是不是齐的？下载有没有被截断？某个文件<br>有没有没被打进 bundle？在<strong>任意新机器上、离线</strong>跑一句就知道：</p>
 <pre><code class="language-bash">node scripts/verify-install.js      <span class="hljs-comment"># 或 npm run verify-install</span></code></pre>

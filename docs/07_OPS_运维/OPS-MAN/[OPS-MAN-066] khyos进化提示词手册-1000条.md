@@ -291,7 +291,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：面向小白概念文档 + 修仙学 AI 故事内容（作者向房屋风格 + 单人维护体检）。触发词命中时的第一反应。
   - 验证：`npm run docs:check-beginner`
 
-**62.** 如果「要新增/修改一章修仙故事：正文要有剧情 + mermaid 图 + 「## 📒 凡人笔记」小白解读段 + 「【上一章｜下一章｜回总目录】」导航块，并在 00_INDEX_修仙学AI-总目录.md 登记」，先读「面向小白概念文档 + 修仙学 AI 故事内容（作者向房屋风格 + 单人维护体检）」相关文件（见 scripts/docs/check_beginner_docs.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**62.** 如果「要新增/修改一章修仙故事：正文要有剧情 + mermaid 图 + 「## 凡人笔记」小白解读段 + 「【上一章｜下一章｜回总目录】」导航块，并在 00_INDEX_修仙学AI-总目录.md 登记」，先读「面向小白概念文档 + 修仙学 AI 故事内容（作者向房屋风格 + 单人维护体检）」相关文件（见 scripts/docs/check_beginner_docs.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：面向小白概念文档 + 修仙学 AI 故事内容（作者向房屋风格 + 单人维护体检）。触发词命中时的第一反应。
   - 验证：`npm run docs:check-beginner`
 
@@ -811,15 +811,15 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。触发词命中时的第一反应。
   - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
-**192.** 如果「multiple PARALLEL subtasks in the same wave each carry filesModified; mergeResults folds them into a de-duping Set so a file written by ≥2 concurrent agents silently collapses to one 修改文件 entry — a write-write race (last-write-wins, one agent's work lost) invisible in the report. detectFileConflicts/formatConflictWarning (orchestrator/mergeFileConflicts.js, gate KHY_MERGE_FILE_CONFLICT) surface a ⚠️ 并行写冲突 footer line naming the file + the conflicting subtasks (path trim but case-SENSITIVE to avoid A.js/a.js false positives; honest告知 only, does not arbitrate the race). This is the second orthogonal honesty dimension of the mergeResults render (092 = skip≠fail state honesty; this = parallel write-conflict honesty)」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 services/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**192.** 如果「multiple PARALLEL subtasks in the same wave each carry filesModified; mergeResults folds them into a de-duping Set so a file written by ≥2 concurrent agents silently collapses to one 修改文件 entry — a write-write race (last-write-wins, one agent's work lost) invisible in the report. detectFileConflicts/formatConflictWarning (orchestrator/mergeFileConflicts.js, gate KHY_MERGE_FILE_CONFLICT) surface a ⚠ 并行写冲突 footer line naming the file + the conflicting subtasks (path trim but case-SENSITIVE to avoid A.js/a.js false positives; honest告知 only, does not arbitrate the race). This is the second orthogonal honesty dimension of the mergeResults render (092 = skip≠fail state honesty; this = parallel write-conflict honesty)」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 services/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。触发词命中时的第一反应。
   - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
-**193.** 如果「a subtask returns success (producer uses success !== false, so ANY non-explicit-false counts) yet produced NOTHING — no body (text/output empty), no filesModified, no toolCalls. mergeResults folds this 'empty success' into successCount and renders it as 完成, indistinguishable from real work — the most insidious false-green on an offline unattended fan-out (report shows 完成 3/3 while one agent silently did nothing / was cut off / no-op'd). isEmptySuccess/formatEmptySuccessWarning (orchestrator/mergeEmptySuccess.js, gate KHY_MERGE_EMPTY_SUCCESS) render such a subtask as ⚠️ 完成（无产出） and add a footer count (successCount UNCHANGED — it truly did not fail; only a visible marker + count so people can re-check). This is the THIRD orthogonal honesty dimension of the mergeResults render (092 = skip≠fail state; 098 = parallel write-conflict; this = empty-success honesty)」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 services/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**193.** 如果「a subtask returns success (producer uses success !== false, so ANY non-explicit-false counts) yet produced NOTHING — no body (text/output empty), no filesModified, no toolCalls. mergeResults folds this 'empty success' into successCount and renders it as 完成, indistinguishable from real work — the most insidious false-green on an offline unattended fan-out (report shows 完成 3/3 while one agent silently did nothing / was cut off / no-op'd). isEmptySuccess/formatEmptySuccessWarning (orchestrator/mergeEmptySuccess.js, gate KHY_MERGE_EMPTY_SUCCESS) render such a subtask as ⚠ 完成（无产出） and add a footer count (successCount UNCHANGED — it truly did not fail; only a visible marker + count so people can re-check). This is the THIRD orthogonal honesty dimension of the mergeResults render (092 = skip≠fail state; 098 = parallel write-conflict; this = empty-success honesty)」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 services/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。触发词命中时的第一反应。
   - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
-**194.** 如果「every decompose subtask carries a `role` (implement/verify/explore/general via _inferRole) that drives model-selection (subAgentModelSelect) and tool-scoping (094 roleToolScope), but the FINAL user-facing report (mergeResults) folds the role away: header reads 子任务 N: preview and a failure renders 失败 with no signal WHICH KIND of work failed — a failed 验证 (results UNVALIDATED, serious) is indistinguishable from a failed 探索 (recoverable). formatRoleTag/formatRoleFailureSummary (orchestrator/mergeRoleAttribution.js, gate KHY_MERGE_ROLE_ATTRIBUTION) tag each header 子任务 N（验证）: … and add a footer ⚠️ 失败分布: 验证 1 项… line (bucket counts always sum to failCount, unknown roles → 通用 so a failure is never dropped; a failed verify appends a 结果未经校验 critical hint). This is the FOURTH orthogonal honesty dimension of the mergeResults render (092 = skip≠fail state; 098 = parallel write-conflict; 099 = empty-success; this = role-attribution honesty / which TYPE of work failed)」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 services/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**194.** 如果「every decompose subtask carries a `role` (implement/verify/explore/general via _inferRole) that drives model-selection (subAgentModelSelect) and tool-scoping (094 roleToolScope), but the FINAL user-facing report (mergeResults) folds the role away: header reads 子任务 N: preview and a failure renders 失败 with no signal WHICH KIND of work failed — a failed 验证 (results UNVALIDATED, serious) is indistinguishable from a failed 探索 (recoverable). formatRoleTag/formatRoleFailureSummary (orchestrator/mergeRoleAttribution.js, gate KHY_MERGE_ROLE_ATTRIBUTION) tag each header 子任务 N（验证）: … and add a footer ⚠ 失败分布: 验证 1 项… line (bucket counts always sum to failCount, unknown roles → 通用 so a failure is never dropped; a failed verify appends a 结果未经校验 critical hint). This is the FOURTH orthogonal honesty dimension of the mergeResults render (092 = skip≠fail state; 098 = parallel write-conflict; 099 = empty-success; this = role-attribution honesty / which TYPE of work failed)」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 services/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。触发词命中时的第一反应。
   - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
@@ -1354,8 +1354,8 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：把 claude/codex/opencode 做成装进 khy 数据家(~/.khy/tools)、开箱即用且可更新的便携 CLI(纯叶解析 package.json bin 字段→用当前 node 直接跑 JS 入口,绕开 Windows .cmd/.ps1 shim 与 PATH 依赖=根治 spawn ENOENT)。claude(@anthropic-ai/claude-code)与 codex(@openai/codex)npm 包发布的是带 node shebang 的 JS 入口,直接 spawn 裸名依赖系统 PATH→用户没全局装→恒 ENOENT。本子系统读已安装包 package.json 的 bin→定位真实 JS 入口→返回 {command:process.execPath,argsPrefix:[entryAbs]},跨平台一致不碰 PATH/.cmd;原生二进制入口(shebang 嗅探)回退直接执行。opencode 保留其既有专用解析器 opencodeBinResolver,泛化解析器对它返回 null;并为 opencode 补数据家候选让 khy tools install opencode 也能被解析。khy claude/codex 启动前若不可用→交互确认「是否现在安装便携版?[Y/n]」→点头即装、装完 detect(true) 复检直接继续本次启动。
   - 验证：`npm run test:one -- services/backend/tests/services/gateway/adapters/portableCli.test.js`
 
-**327.** 验证「写记忆/召回记忆时明确告知用户(记忆操作可见化纯叶)。khy 早已自动写记忆(_maybeAutoSaveMemory)与自动召回记忆(memory engine surface + [RELEVANT_MEMORY] 注入),但两条路径都静默执行——用户看不到「刚记住了什么」或「这轮召回了哪些记忆」。本子系统抽纯叶 memoryOpsNotice.js 把这两个已有动作渲染成用户可见的状态提示,经既有 onStatus 状态通道推出:写入成功→🧠 已写入<类型>记忆(已落盘/本会话):<name>,召回命名记忆→🧠 召回 N 条相关记忆:a、b、c 等 N 条。零 IO、绝不抛、门控 default-on。直接回应 /goal 需求「写记忆和回忆时明确告知用户」」：跑该命令，绿灯才算这块没坏。
-  - 说明：子系统：写记忆/召回记忆时明确告知用户(记忆操作可见化纯叶)。khy 早已自动写记忆(_maybeAutoSaveMemory)与自动召回记忆(memory engine surface + [RELEVANT_MEMORY] 注入),但两条路径都静默执行——用户看不到「刚记住了什么」或「这轮召回了哪些记忆」。本子系统抽纯叶 memoryOpsNotice.js 把这两个已有动作渲染成用户可见的状态提示,经既有 onStatus 状态通道推出:写入成功→🧠 已写入<类型>记忆(已落盘/本会话):<name>,召回命名记忆→🧠 召回 N 条相关记忆:a、b、c 等 N 条。零 IO、绝不抛、门控 default-on。直接回应 /goal 需求「写记忆和回忆时明确告知用户」。
+**327.** 验证「写记忆/召回记忆时明确告知用户(记忆操作可见化纯叶)。khy 早已自动写记忆(_maybeAutoSaveMemory)与自动召回记忆(memory engine surface + [RELEVANT_MEMORY] 注入),但两条路径都静默执行——用户看不到「刚记住了什么」或「这轮召回了哪些记忆」。本子系统抽纯叶 memoryOpsNotice.js 把这两个已有动作渲染成用户可见的状态提示,经既有 onStatus 状态通道推出:写入成功→已写入<类型>记忆(已落盘/本会话):<name>,召回命名记忆→召回 N 条相关记忆:a、b、c 等 N 条。零 IO、绝不抛、门控 default-on。直接回应 /goal 需求「写记忆和回忆时明确告知用户」」：跑该命令，绿灯才算这块没坏。
+  - 说明：子系统：写记忆/召回记忆时明确告知用户(记忆操作可见化纯叶)。khy 早已自动写记忆(_maybeAutoSaveMemory)与自动召回记忆(memory engine surface + [RELEVANT_MEMORY] 注入),但两条路径都静默执行——用户看不到「刚记住了什么」或「这轮召回了哪些记忆」。本子系统抽纯叶 memoryOpsNotice.js 把这两个已有动作渲染成用户可见的状态提示,经既有 onStatus 状态通道推出:写入成功→已写入<类型>记忆(已落盘/本会话):<name>,召回命名记忆→召回 N 条相关记忆:a、b、c 等 N 条。零 IO、绝不抛、门控 default-on。直接回应 /goal 需求「写记忆和回忆时明确告知用户」。
   - 验证：`npm run test:one -- services/backend/tests/services/memoryOpsNotice.test.js`
 
 **328.** 验证「Text-only-model Image OCR Fallback + Honest Confidence Caveat (when the running model is text-only/non-multimodal and NO vision model is reachable, khy must strip the raw image and inject locally-extracted OCR text as the answer basis; this area also closes the DEAD-FIELD gap where tesseract's per-word confidence/needsAiFallback was computed but dropped at every JS layer, so low-confidence OCR was injected as authoritative '请据此作答' with no warning — the sibling RecognizeImage tool path already honored needsAiFallback; the gateway did not)」：跑该命令，绿灯才算这块没坏。
@@ -1672,7 +1672,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **406.** 验证「交付门人类可读报告落盘 (deliveryGate markdown report — 把结构化 verdict 变成带逐条判定+改进建议的可打开报告)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：交付门人类可读报告落盘 (deliveryGate markdown report — 把结构化 verdict 变成带逐条判定+改进建议的可打开报告)。
-  - 验证：`node --check services/backend/src/services/flagRegistry.js`
+  - 验证：`node --check services/backend/src/utils/flagRegistry/index.js`
 
 **407.** 验证「会话快照损坏兜底修复 (sessionFileRepair — 损坏/截断的 .json 快照在还原时先结构修复/partial salvage 再返回，而不是整段丢给 checkpoint/null)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：会话快照损坏兜底修复 (sessionFileRepair — 损坏/截断的 .json 快照在还原时先结构修复/partial salvage 再返回，而不是整段丢给 checkpoint/null)。
@@ -1684,7 +1684,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **409.** 验证「会话快照损坏兜底修复 (sessionFileRepair — 损坏/截断的 .json 快照在还原时先结构修复/partial salvage 再返回，而不是整段丢给 checkpoint/null)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：会话快照损坏兜底修复 (sessionFileRepair — 损坏/截断的 .json 快照在还原时先结构修复/partial salvage 再返回，而不是整段丢给 checkpoint/null)。
-  - 验证：`node --check services/backend/src/services/flagRegistry.js`
+  - 验证：`node --check services/backend/src/utils/flagRegistry/index.js`
 
 **410.** 验证「任务模板执行手册注入 (taskTemplates — 用户消息命中常见任务关键词时，把该模板的分步执行手册作为 [Task Playbook] 附加进模型 loopInput，降低小模型推理负担)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：任务模板执行手册注入 (taskTemplates — 用户消息命中常见任务关键词时，把该模板的分步执行手册作为 [Task Playbook] 附加进模型 loopInput，降低小模型推理负担)。
@@ -1696,7 +1696,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **412.** 验证「任务模板执行手册注入 (taskTemplates — 用户消息命中常见任务关键词时，把该模板的分步执行手册作为 [Task Playbook] 附加进模型 loopInput，降低小模型推理负担)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：任务模板执行手册注入 (taskTemplates — 用户消息命中常见任务关键词时，把该模板的分步执行手册作为 [Task Playbook] 附加进模型 loopInput，降低小模型推理负担)。
-  - 验证：`node --check services/backend/src/services/flagRegistry.js`
+  - 验证：`node --check services/backend/src/utils/flagRegistry/index.js`
 
 **413.** 验证「指令注册表编译期收敛守卫 (directiveRegistryAudit — 把「DIRECTIVE_REGISTRY 指令 SSOT vs aiChatCore.js 实际 compose 的 key 集合」的一致性锁成 CI/提交期不变量，堵住协议漂移入口)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：指令注册表编译期收敛守卫 (directiveRegistryAudit — 把「DIRECTIVE_REGISTRY 指令 SSOT vs aiChatCore.js 实际 compose 的 key 集合」的一致性锁成 CI/提交期不变量，堵住协议漂移入口)。
@@ -2365,9 +2365,9 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：斜杠命令菜单单一真源(经典REPL⇄TUI)。读懂再动。
   - 验证：`node --check services/backend/src/cli/tui/hooks/useCompletions.js`
 
-**579.** 阅读「斜杠命令菜单单一真源(经典REPL⇄TUI)」的 services/backend/src/cli/tui/app.jsx，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**579.** 阅读「斜杠命令菜单单一真源(经典REPL⇄TUI)」的 services/backend/src/cli/tui/app.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：斜杠命令菜单单一真源(经典REPL⇄TUI)。读懂再动。
-  - 验证：`npm run check:maintainer:safety`
+  - 验证：`node --check services/backend/src/cli/tui/app.js`
 
 **580.** 阅读「斜杠命令菜单单一真源(经典REPL⇄TUI)」的 services/backend/tests/slashExtraCommands.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：斜杠命令菜单单一真源(经典REPL⇄TUI)。读懂再动。
@@ -2469,85 +2469,85 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：通配兜底守卫(裸模型盲落默认池打错端点的防护)。读懂再动。
   - 验证：`node --check services/backend/src/services/flagRegistry.js`
 
-**605.** 阅读「通配兜底守卫(裸模型盲落默认池打错端点的防护)」的 services/backend/tests/services/gateway/wildcardPoolGuard.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**605.** 阅读「通配兜底守卫(裸模型盲落默认池打错端点的防护)」的 services/backend/src/utils/flagRegistry/index.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+  - 说明：子系统：通配兜底守卫(裸模型盲落默认池打错端点的防护)。读懂再动。
+  - 验证：`node --check services/backend/src/utils/flagRegistry/index.js`
+
+**606.** 阅读「通配兜底守卫(裸模型盲落默认池打错端点的防护)」的 services/backend/tests/services/gateway/wildcardPoolGuard.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：通配兜底守卫(裸模型盲落默认池打错端点的防护)。读懂再动。
   - 验证：`node --check services/backend/tests/services/gateway/wildcardPoolGuard.test.js`
 
-**606.** 阅读「通配兜底守卫(裸模型盲落默认池打错端点的防护)」的 services/backend/tests/services/gateway/wildcardPoolGuard.wiring.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**607.** 阅读「通配兜底守卫(裸模型盲落默认池打错端点的防护)」的 services/backend/tests/services/gateway/wildcardPoolGuard.wiring.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：通配兜底守卫(裸模型盲落默认池打错端点的防护)。读懂再动。
   - 验证：`node --check services/backend/tests/services/gateway/wildcardPoolGuard.wiring.test.js`
 
-**607.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/src/services/domain/maintenance/uninstall/installLedger.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**608.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/src/services/domain/maintenance/uninstall/installLedger.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)。读懂再动。
   - 验证：`node --check services/backend/src/services/domain/maintenance/uninstall/installLedger.js`
 
-**608.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/src/services/domain/maintenance/uninstall/ledgerWriter.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**609.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/src/services/domain/maintenance/uninstall/ledgerWriter.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)。读懂再动。
   - 验证：`node --check services/backend/src/services/domain/maintenance/uninstall/ledgerWriter.js`
 
-**609.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/src/cli/handlers/uninstall.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**610.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/src/cli/handlers/uninstall.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)。读懂再动。
   - 验证：`node --check services/backend/src/cli/handlers/uninstall.js`
 
-**610.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/src/services/mdEditorRegister.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**611.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/src/services/mdEditorRegister.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)。读懂再动。
   - 验证：`node --check services/backend/src/services/mdEditorRegister.js`
 
-**611.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/src/services/runtimeProvisioner.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**612.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/src/services/runtimeProvisioner.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)。读懂再动。
   - 验证：`node --check services/backend/src/services/runtimeProvisioner.js`
 
-**612.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/src/services/flagRegistry.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**613.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/src/services/flagRegistry.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)。读懂再动。
   - 验证：`node --check services/backend/src/services/flagRegistry.js`
 
-**613.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/tests/services/installLedger.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**614.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/src/utils/flagRegistry/index.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+  - 说明：子系统：安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)。读懂再动。
+  - 验证：`node --check services/backend/src/utils/flagRegistry/index.js`
+
+**615.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/tests/services/installLedger.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)。读懂再动。
   - 验证：`node --check services/backend/tests/services/installLedger.test.js`
 
-**614.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/tests/services/uninstallLedgerWiring.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**616.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/tests/services/uninstallLedgerWiring.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)。读懂再动。
   - 验证：`node --check services/backend/tests/services/uninstallLedgerWiring.test.js`
 
-**615.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/tests/services/ledgerWriter.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**617.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/tests/services/ledgerWriter.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)。读懂再动。
   - 验证：`node --check services/backend/tests/services/ledgerWriter.test.js`
 
-**616.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/src/services/domain/desktop/deviceApps/nativeUninstallPolicy.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**618.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/src/services/domain/desktop/deviceApps/nativeUninstallPolicy.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)。读懂再动。
   - 验证：`node --check services/backend/src/services/domain/desktop/deviceApps/nativeUninstallPolicy.js`
 
-**617.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/src/services/domain/desktop/deviceApps/nativeUninstaller.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**619.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/src/services/domain/desktop/deviceApps/nativeUninstaller.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)。读懂再动。
   - 验证：`node --check services/backend/src/services/domain/desktop/deviceApps/nativeUninstaller.js`
 
-**618.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/src/services/domain/desktop/deviceApps/uninstallRoute.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**620.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/src/services/domain/desktop/deviceApps/uninstallRoute.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)。读懂再动。
   - 验证：`node --check services/backend/src/services/domain/desktop/deviceApps/uninstallRoute.js`
 
-**619.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/src/cli/handlers/device.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**621.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/src/cli/handlers/device.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)。读懂再动。
   - 验证：`node --check services/backend/src/cli/handlers/device.js`
 
-**620.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/src/tools/DeviceAppsTool/index.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**622.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/src/tools/DeviceAppsTool/index.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)。读懂再动。
   - 验证：`node --check services/backend/src/tools/DeviceAppsTool/index.js`
 
-**621.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/src/services/flagRegistry.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**623.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/src/services/flagRegistry.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)。读懂再动。
   - 验证：`node --check services/backend/src/services/flagRegistry.js`
 
-**622.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/tests/services/deviceApps/nativeUninstallPolicy.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**624.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/src/utils/flagRegistry/index.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)。读懂再动。
-  - 验证：`node --check services/backend/tests/services/deviceApps/nativeUninstallPolicy.test.js`
-
-**623.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/tests/services/deviceApps/nativeUninstaller.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
-  - 说明：子系统：卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)。读懂再动。
-  - 验证：`node --check services/backend/tests/services/deviceApps/nativeUninstaller.test.js`
-
-**624.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/tests/services/deviceApps/uninstallRoute.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
-  - 说明：子系统：卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)。读懂再动。
-  - 验证：`node --check services/backend/tests/services/deviceApps/uninstallRoute.test.js`
+  - 验证：`node --check services/backend/src/utils/flagRegistry/index.js`
 
 
 ## 五、进化配方（每个子系统都照做一遍）

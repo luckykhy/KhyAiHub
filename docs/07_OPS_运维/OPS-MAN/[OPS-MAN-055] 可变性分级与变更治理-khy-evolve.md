@@ -11,10 +11,10 @@
 
 | 标记 | 级别 | 含义 |
 | --- | --- | --- |
-| 🔒 | immutable | 绝不可改（红线） |
-| 🛡️ | guarded | 受守护，改动需满足额外义务 |
-| 🌱 | evolvable | 可自由演进 |
-| ❔ | unknown | 未分级 |
+| | immutable | 绝不可改（红线） |
+| | guarded | 受守护，改动需满足额外义务 |
+| | evolvable | 可自由演进 |
+| ? | unknown | 未分级 |
 
 ---
 

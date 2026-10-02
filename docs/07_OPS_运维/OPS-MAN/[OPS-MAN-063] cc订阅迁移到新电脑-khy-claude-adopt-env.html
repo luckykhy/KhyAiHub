@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -34,7 +34,7 @@
 <table><thead><tr><th>变量</th><th>含义</th><th>例子</th></tr></thead><tbody><tr><td><code>ANTHROPIC_BASE_URL</code></td><td>中转/网关端点</td><td><code>https://ai.mindflow.com.cn</code></td></tr><tr><td><code>ANTHROPIC_AUTH_TOKEN</code></td><td>中转的访问 token（<strong>机密</strong>）</td><td><code>sk-****</code>（Bearer）</td></tr><tr><td><code>ANTHROPIC_MODEL</code></td><td>默认模型（可选）</td><td><code>claude-opus-4-8</code></td></tr></tbody></table>
 <blockquote><p>官方直连的人用的是 <code>ANTHROPIC_API_KEY</code>（走 <code>x-api-key</code>）；中转/网关用的是<br><code>ANTHROPIC_AUTH_TOKEN</code>（走 <code>Authorization: Bearer</code>）。khy 会<strong>根据来源自动选对</strong>请求头。</p></blockquote>
 <p><strong>唯一需要搬到新电脑的东西 = 上面这几项。</strong> 迁移 = 把它们安全地复制到 B 电脑并让 khy 认得。</p>
-<blockquote><p>⚠️ 安全:<code>ANTHROPIC_AUTH_TOKEN</code> 是机密。<strong>只能通过私密渠道</strong>（scp/SSH、U 盘、密码管理器）<br>传输,<strong>绝不要</strong>发到聊天/邮件/公共仓库/截图。任何进入公开 PyPI 包的 token 都会被爬走盗用——<br>所以 khy <strong>不会</strong>把 token 打进发布包,凭据只留在你本机。</p></blockquote>
+<blockquote><p>⚠ 安全:<code>ANTHROPIC_AUTH_TOKEN</code> 是机密。<strong>只能通过私密渠道</strong>（scp/SSH、U 盘、密码管理器）<br>传输,<strong>绝不要</strong>发到聊天/邮件/公共仓库/截图。任何进入公开 PyPI 包的 token 都会被爬走盗用——<br>所以 khy <strong>不会</strong>把 token 打进发布包,凭据只留在你本机。</p></blockquote>
 <hr>
 <h2 id="二-a-电脑-把当前-cc-订阅固化成一个可迁移文件">二、A 电脑:把当前 CC 订阅固化成一个可迁移文件<a class="anchor" href="#二-a-电脑-把当前-cc-订阅固化成一个可迁移文件" aria-label="锚点">#</a></h2>
 <p>在 A 电脑（当前 shell 里已经有 CC 那套 env,也就是你平时能正常跑 <code>claude</code> 的环境）执行:</p>

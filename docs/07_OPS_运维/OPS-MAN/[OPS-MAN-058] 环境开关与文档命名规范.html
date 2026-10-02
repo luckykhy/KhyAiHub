@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -135,7 +135,7 @@
 <ul><li>真源：<code>services/backend/src/services/trajectoryGuide/config.js</code>。</li><li>默认：字符/超时/年龄有默认；<code>KHY_TRAJ_GUIDE_INJECT</code>/<code>KHY_TRAJ_AI_REPLAY</code> 等开关默认开。</li><li>成员：<code>KHY_TRAJ_AI_REPLAY</code>, <code>KHY_TRAJECTORY_MAX_AGE_D</code>, <code>KHY_TRAJ_GUIDE_CHARS</code>, <code>KHY_TRAJ_GUIDE_INJECT</code>, <code>KHY_TRAJ_MAP_AUTHOR_MIN_STRENGTH</code>, <code>KHY_TRAJ_REPAIR_MAX</code>, <code>KHY_TRAJ_REPAIR_MODEL</code>, <code>KHY_TRAJ_REPAIR_TIMEOUT_MS</code></li></ul>
 <h3 id="khy-replay">KHY_REPLAY_*<a class="anchor" href="#khy-replay" aria-label="锚点">#</a></h3>
 <p>轨迹回放引擎的内容捕获、指纹、L2 确认与步骤超时。</p>
-<ul><li>真源：<code>services/backend/src/services/trajectoryReplay/replayEngine.js</code>。</li><li>默认：超时有默认；<code>KHY_REPLAY_L2_CONFIRM</code>/<code>KHY_REPLAY_SHELL_ALLOW</code> 安全相关开关默认关。</li><li>成员：<code>KHY_REPLAY_CAPTURE_CONTENT</code>, <code>KHY_REPLAY_FINGERPRINT_TOOLS</code>, <code>KHY_REPLAY_L2_CONFIRM</code>, <code>KHY_REPLAY_PROBE_TIMEOUT_MS</code>, <code>KHY_REPLAY_SHELL_ALLOW</code>, <code>KHY_REPLAY_STEP_TIMEOUT_MS</code></li></ul>
+<ul><li>真源：<code>services/backend/src/services/domain/trajectory/trajectoryReplay/replayEngine.js</code>。</li><li>默认：超时有默认；<code>KHY_REPLAY_L2_CONFIRM</code>/<code>KHY_REPLAY_SHELL_ALLOW</code> 安全相关开关默认关。</li><li>成员：<code>KHY_REPLAY_CAPTURE_CONTENT</code>, <code>KHY_REPLAY_FINGERPRINT_TOOLS</code>, <code>KHY_REPLAY_L2_CONFIRM</code>, <code>KHY_REPLAY_PROBE_TIMEOUT_MS</code>, <code>KHY_REPLAY_SHELL_ALLOW</code>, <code>KHY_REPLAY_STEP_TIMEOUT_MS</code></li></ul>
 <h3 id="khy-shell">KHY_SHELL_*<a class="anchor" href="#khy-shell" aria-label="锚点">#</a></h3>
 <p>Shell 命令工具的默认/空闲超时、退出语义与转义上下文。</p>
 <ul><li>真源：<code>services/backend/src/tools/shellCommand.js</code>。</li><li>默认：超时有默认；<code>KHY_SHELL_IDLE_TIMEOUT_ENABLED</code>/<code>KHY_SHELL_TRANSPARENCY</code> 默认开。</li><li>成员：<code>KHY_SHELL_DEFAULT_TIMEOUT_MS</code>, <code>KHY_SHELL_ESCAPE_CTX_MAX</code>, <code>KHY_SHELL_EXIT_SEMANTICS</code>, <code>KHY_SHELL_IDLE_TIMEOUT_ENABLED</code>, <code>KHY_SHELL_IDLE_TIMEOUT_MS</code>, <code>KHY_SHELL_TIMEOUT_MS</code>, <code>KHY_SHELL_TRANSPARENCY</code></li></ul>

@@ -1,7 +1,7 @@
 <!-- 文档分类: OPS-MAN-054 | 阶段: 运维 | 原路径: docs/07_OPS_运维/OPS-MAN/[OPS-MAN-054] 变更裁决-khy-verdict.md -->
 # 变更裁决（`khy verdict`）
 
-> `khy verdict` 读取并渲染 KHY 对**自身源码最近一次变更**的「机器裁决」——这次改动是好（✅）、坏（❌）、存疑（❓）还是无关（—）。它还能把裁决以多种格式 `emit` 给其他 AI/工具一次性消费（含 Claude hook 格式）。本文讲清全部子命令与 `watch` 的真实形态。
+> `khy verdict` 读取并渲染 KHY 对**自身源码最近一次变更**的「机器裁决」——这次改动是好（✓）、坏（✗）、存疑（?）还是无关（—）。它还能把裁决以多种格式 `emit` 给其他 AI/工具一次性消费（含 Claude hook 格式）。本文讲清全部子命令与 `watch` 的真实形态。
 >
 > 实现：`services/backend/src/cli/handlers/verdict.js` + `services/backend/src/services/changeWatchService`，dispatch 在 `router.js:4642`。
 
@@ -13,9 +13,9 @@ KHY 监视自身源码变更并产出一个机器可读的裁决符号：
 
 | 符号 | 含义 |
 | --- | --- |
-| ✅ | 变更通过 |
-| ❌ | 变更有问题 |
-| ❓ | 存疑 / 需人看 |
+| ✓ | 变更通过 |
+| ✗ | 变更有问题 |
+| ? | 存疑 / 需人看 |
 | — | 无相关变更 |
 
 ---
@@ -28,7 +28,7 @@ KHY 监视自身源码变更并产出一个机器可读的裁决符号：
 | `khy verdict check` | 立即跑一次裁决（`checkOnce()`） |
 | `khy verdict --json` | 以 JSON 输出 |
 | `khy verdict emit [--format …] [--consumer <名>] [--peek]` | 把裁决导出给外部消费者 |
-| `khy verdict watch` | ⚠️ **仅信息提示**（见 §四） |
+| `khy verdict watch` | ⚠ **仅信息提示**（见 §四） |
 
 **`emit --format`**：`text` / `json` / `claude-hook`（生成可被 Claude Code hook 消费的格式）。`--consumer` 标注消费方，`--peek` 只看不消费。
 

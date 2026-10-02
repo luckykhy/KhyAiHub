@@ -228,7 +228,7 @@ ultrawork 高强度模式的适配器/模型偏好与强制工具选择。
 
 ### KHY_REPLAY_*
 轨迹回放引擎的内容捕获、指纹、L2 确认与步骤超时。
-- 真源：`services/backend/src/services/trajectoryReplay/replayEngine.js`。
+- 真源：`services/backend/src/services/domain/trajectory/trajectoryReplay/replayEngine.js`。
 - 默认：超时有默认；`KHY_REPLAY_L2_CONFIRM`/`KHY_REPLAY_SHELL_ALLOW` 安全相关开关默认关。
 - 成员：`KHY_REPLAY_CAPTURE_CONTENT`, `KHY_REPLAY_FINGERPRINT_TOOLS`, `KHY_REPLAY_L2_CONFIRM`, `KHY_REPLAY_PROBE_TIMEOUT_MS`, `KHY_REPLAY_SHELL_ALLOW`, `KHY_REPLAY_STEP_TIMEOUT_MS`
 

@@ -26,7 +26,7 @@ npm run maintainer:triage -- "slash command missing"
 
 **什么时候来这里（症状触发词）：**
 - 要新增/修改一篇概念文档：命名用「[CONCEPT-NN] 什么是X.md」，保持房屋风格（callout/quiz/flip + mermaid 图），并在 00_INDEX_概念入门-总览.md 的 mermaid 与表格里补上交叉链接
-- 要新增/修改一章修仙故事：正文要有剧情 + mermaid 图 + 「## 📒 凡人笔记」小白解读段 + 「【上一章｜下一章｜回总目录】」导航块，并在 00_INDEX_修仙学AI-总目录.md 登记
+- 要新增/修改一章修仙故事：正文要有剧情 + mermaid 图 + 「## 凡人笔记」小白解读段 + 「【上一章｜下一章｜回总目录】」导航块，并在 00_INDEX_修仙学AI-总目录.md 登记
 - 改完文档先跑 npm run docs:check-beginner 做单人维护体检，再跑 npm run docs:build 与 npm run docs:verify 生成并校验 HTML
 - 要扩展体检规则：看 scripts/docs/check_beginner_docs.js 顶部的 HOW-TO-EXTEND 注释（新增 SECTIONS 条目或 checkSection 规则）
 
@@ -644,7 +644,7 @@ npm run build --prefix apps/ai-frontend
 - `services/backend/src/cli/resumeHint.js`
 - `services/backend/src/cli/replSession.js`
 - `services/backend/src/cli/tui/hooks/useCompletions.js`
-- `services/backend/src/cli/tui/app.jsx`
+- `services/backend/src/cli/tui/app.js`
 - `services/backend/tests/slashExtraCommands.test.js`
 - `services/backend/tests/cli/resumeHint.test.js`
 - `services/backend/tests/cli/useCompletionsSlashExtras.test.js`
@@ -707,6 +707,7 @@ npm run build --prefix apps/ai-frontend
 - `services/backend/src/services/gateway/wildcardPoolGuard.js`
 - `services/backend/src/services/gateway/aiGateway.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/services/gateway/wildcardPoolGuard.test.js`
 - `services/backend/tests/services/gateway/wildcardPoolGuard.wiring.test.js`
 
@@ -725,8 +726,8 @@ npm run build --prefix apps/ai-frontend
 - `services/backend/src/services/mdEditorRegister.js`
 - `services/backend/src/services/runtimeProvisioner.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/services/installLedger.test.js`
-- `services/backend/tests/services/uninstallLedgerWiring.test.js`
 
 **参考文档：**
 - docs/07_OPS_运维/OPS-MAN/[OPS-MAN-069] 已装副本完整性自检清单.md
@@ -743,8 +744,8 @@ npm run build --prefix apps/ai-frontend
 - `services/backend/src/cli/handlers/device.js`
 - `services/backend/src/tools/DeviceAppsTool/index.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/services/deviceApps/nativeUninstallPolicy.test.js`
-- `services/backend/tests/services/deviceApps/nativeUninstaller.test.js`
 
 **参考文档：**
 - docs/07_OPS_运维/OPS-MAN/[OPS-MAN-071] 卸载第三方应用怎么保证卸干净-原生自带卸载器.md
@@ -931,9 +932,9 @@ npm run test:one -- scripts/tests/restoreConvergenceVerifier.test.js
 - the FINAL user-facing report must distinguish a dependency-SKIPPED subtask (依赖失败，已跳过) from one that genuinely ran and failed — mergeResults (taskDecomposer.js, gate KHY_MERGE_SKIP_DISTINCT) renders skips as a distinct 跳过（依赖失败） status and a separate 跳过 footer count instead of folding them into 失败 (fixes the last-mile consumer bridge for the 087 `skipped` flag)
 - the whole wave arc is a silent no-op on the DEFAULT OFFLINE path (pip/npm install, no LLM key) because the four DETERMINISTIC decompose strategies emit NO `dependencies` — only the opt-in LLM strategy 5 does, and decompose is called without callModel. The deterministic sequential-chain producer _splitSequentialChain (taskDecomposer.js, gate KHY_SEQ_CHAIN_DECOMPOSE) recognizes 先…再…/然后/首先…其次…最后/then/finally and emits `dependencies: [priorIndex]` so planWaves compiles a serial chain offline (the producer side of the arc)
 - the decompose `role` string (explore/verify/implement) drives model selection (subAgentModelSelect) but NOT tool scoping — a read-only explore/verify subtask still receives Write/Edit/NotebookEdit. roleToolScope(role) (orchestrator/roleToolScope.js, gate KHY_ROLE_TOOL_SCOPE) maps read-only roles (explore/verify/plan/research/audit/review) to a disallowedTools strip (Edit/Write/NotebookEdit, NOT Bash) and mergeRoleScopeInto unions it into a base denylist matching AgentTool.buildSubagentDenylist's shape (the missing tool-scoping consumer of role; consume seam = buildSubagentDenylist union point)
-- multiple PARALLEL subtasks in the same wave each carry filesModified; mergeResults folds them into a de-duping Set so a file written by ≥2 concurrent agents silently collapses to one 修改文件 entry — a write-write race (last-write-wins, one agent's work lost) invisible in the report. detectFileConflicts/formatConflictWarning (orchestrator/mergeFileConflicts.js, gate KHY_MERGE_FILE_CONFLICT) surface a ⚠️ 并行写冲突 footer line naming the file + the conflicting subtasks (path trim but case-SENSITIVE to avoid A.js/a.js false positives; honest告知 only, does not arbitrate the race). This is the second orthogonal honesty dimension of the mergeResults render (092 = skip≠fail state honesty; this = parallel write-conflict honesty)
-- a subtask returns success (producer uses success !== false, so ANY non-explicit-false counts) yet produced NOTHING — no body (text/output empty), no filesModified, no toolCalls. mergeResults folds this 'empty success' into successCount and renders it as 完成, indistinguishable from real work — the most insidious false-green on an offline unattended fan-out (report shows 完成 3/3 while one agent silently did nothing / was cut off / no-op'd). isEmptySuccess/formatEmptySuccessWarning (orchestrator/mergeEmptySuccess.js, gate KHY_MERGE_EMPTY_SUCCESS) render such a subtask as ⚠️ 完成（无产出） and add a footer count (successCount UNCHANGED — it truly did not fail; only a visible marker + count so people can re-check). This is the THIRD orthogonal honesty dimension of the mergeResults render (092 = skip≠fail state; 098 = parallel write-conflict; this = empty-success honesty)
-- every decompose subtask carries a `role` (implement/verify/explore/general via _inferRole) that drives model-selection (subAgentModelSelect) and tool-scoping (094 roleToolScope), but the FINAL user-facing report (mergeResults) folds the role away: header reads 子任务 N: preview and a failure renders 失败 with no signal WHICH KIND of work failed — a failed 验证 (results UNVALIDATED, serious) is indistinguishable from a failed 探索 (recoverable). formatRoleTag/formatRoleFailureSummary (orchestrator/mergeRoleAttribution.js, gate KHY_MERGE_ROLE_ATTRIBUTION) tag each header 子任务 N（验证）: … and add a footer ⚠️ 失败分布: 验证 1 项… line (bucket counts always sum to failCount, unknown roles → 通用 so a failure is never dropped; a failed verify appends a 结果未经校验 critical hint). This is the FOURTH orthogonal honesty dimension of the mergeResults render (092 = skip≠fail state; 098 = parallel write-conflict; 099 = empty-success; this = role-attribution honesty / which TYPE of work failed)
+- multiple PARALLEL subtasks in the same wave each carry filesModified; mergeResults folds them into a de-duping Set so a file written by ≥2 concurrent agents silently collapses to one 修改文件 entry — a write-write race (last-write-wins, one agent's work lost) invisible in the report. detectFileConflicts/formatConflictWarning (orchestrator/mergeFileConflicts.js, gate KHY_MERGE_FILE_CONFLICT) surface a ⚠ 并行写冲突 footer line naming the file + the conflicting subtasks (path trim but case-SENSITIVE to avoid A.js/a.js false positives; honest告知 only, does not arbitrate the race). This is the second orthogonal honesty dimension of the mergeResults render (092 = skip≠fail state honesty; this = parallel write-conflict honesty)
+- a subtask returns success (producer uses success !== false, so ANY non-explicit-false counts) yet produced NOTHING — no body (text/output empty), no filesModified, no toolCalls. mergeResults folds this 'empty success' into successCount and renders it as 完成, indistinguishable from real work — the most insidious false-green on an offline unattended fan-out (report shows 完成 3/3 while one agent silently did nothing / was cut off / no-op'd). isEmptySuccess/formatEmptySuccessWarning (orchestrator/mergeEmptySuccess.js, gate KHY_MERGE_EMPTY_SUCCESS) render such a subtask as ⚠ 完成（无产出） and add a footer count (successCount UNCHANGED — it truly did not fail; only a visible marker + count so people can re-check). This is the THIRD orthogonal honesty dimension of the mergeResults render (092 = skip≠fail state; 098 = parallel write-conflict; this = empty-success honesty)
+- every decompose subtask carries a `role` (implement/verify/explore/general via _inferRole) that drives model-selection (subAgentModelSelect) and tool-scoping (094 roleToolScope), but the FINAL user-facing report (mergeResults) folds the role away: header reads 子任务 N: preview and a failure renders 失败 with no signal WHICH KIND of work failed — a failed 验证 (results UNVALIDATED, serious) is indistinguishable from a failed 探索 (recoverable). formatRoleTag/formatRoleFailureSummary (orchestrator/mergeRoleAttribution.js, gate KHY_MERGE_ROLE_ATTRIBUTION) tag each header 子任务 N（验证）: … and add a footer ⚠ 失败分布: 验证 1 项… line (bucket counts always sum to failCount, unknown roles → 通用 so a failure is never dropped; a failed verify appends a 结果未经校验 critical hint). This is the FOURTH orthogonal honesty dimension of the mergeResults render (092 = skip≠fail state; 098 = parallel write-conflict; 099 = empty-success; this = role-attribution honesty / which TYPE of work failed)
 - OPS-094 built roleToolScope as a PURE LEAF with a documented consume seam but LEFT IT UNWIRED (zero production consumers = dead code) because god-file + blast-radius were then blocked. OPS-097 WIRES IT LIVE: AgentTool.buildSubagentDenylist gains a 4th `role` param and folds mergeRoleScopeInto(ownDeny, role) in before the spawn-tool∪ceiling logic; _runStandaloneAgent passes role at the call site. The net gap this closes: when built-in agents are unavailable (SDK mode → agentDef=null) a read-only explore/verify subtask's write-tool strip vanishes — the role now re-derives [Edit/Write/NotebookEdit] independent of agentDef; also closes the `verify`-not-in-toolFilter live gap. Wrapped in try/catch (leaf-load failure degrades to ownDeny, never breaks spawning); 4th param omitted/gate-off → byte-equivalent to the pre-wire 3-arg call. arch:god is a READ-ONLY gate (--god-report returns 0) so editing the god-file does not turn it red
 
 **先读这些文件：**
@@ -1329,7 +1330,7 @@ npm run test:one -- scripts/tests/restoreFieldAttribution.test.js
 ### Restore Completeness Reconciliation -- RUNTIME wiring (OPS-095 diagnosed that the snapshot header fileCount is a dead field -- khy restore only PRINTS it, never reconciles it against what tar actually wrote to disk -- and built a DEV-only checker scripts/restore-verify-complete.js, but never wired it into the runtime restore command; so real fresh-machine users still saw green 源码已完整还原 while files were silently missing after a tar that exited 0 on a full disk / MAX_PATH / skipped entry; THIS layer is the missing wiring: a bundled runtime pure leaf reconciles header.fileCount vs _collectRelFiles(dest).length right after extraction and makes handleRestore's banner honest, so no separate command is needed = wiring up capability that existed but was never connected)  `restore-completeness-check`
 
 **什么时候来这里（症状触发词）：**
-- khy restore now self-reconciles: after tar extraction it counts on-disk files (sourceHealService._collectRelFiles) and compares to the snapshot header fileCount; complete keeps the 源码已完整还原 banner, incomplete DOWNGRADES to a ⚠️ warning (落地 A · 清单 B · 缺 C) + troubleshooting hint, over-extracted warns of leftovers
+- khy restore now self-reconciles: after tar extraction it counts on-disk files (sourceHealService._collectRelFiles) and compares to the snapshot header fileCount; complete keeps the 源码已完整还原 banner, incomplete DOWNGRADES to a ⚠ warning (落地 A · 清单 B · 缺 C) + troubleshooting hint, over-extracted warns of leftovers
 - tiers (conservative-first): unverifiable (expected absent/non-positive OR actual absent/negative -> keep old banner, never over-claim) -> incomplete (actual < expected, the silent-loss false-green) -> over-extracted (actual > expected) -> complete (actual === expected, the ONLY status that keeps 完整还原); ok iff complete
 - reconciliation口径: expected = header.fileCount (git ls-tree -r via makeSourceSnapshot, same treeish git archive packs), actual = _collectRelFiles(dest).length (skips node_modules/.git/__pycache__/.pytest_cache) -> equal on a clean successful restore (OPS-095 LIVE-verified)
 - gate KHY_RESTORE_VERIFY_COMPLETENESS (default-on; env in {0,false,off,no} -> off = byte-identical old banner); DIAGNOSTIC OVERLAY ONLY -- reconciliation NEVER makes restore fail, worst case downgrades the success banner to a warning and still returns true
@@ -1702,7 +1703,7 @@ npm run test:one -- services/backend/tests/services/gateway/adapters/portableCli
 
 ---
 
-### 写记忆/召回记忆时明确告知用户(记忆操作可见化纯叶)。khy 早已自动写记忆(_maybeAutoSaveMemory)与自动召回记忆(memory engine surface + [RELEVANT_MEMORY] 注入),但两条路径都静默执行——用户看不到「刚记住了什么」或「这轮召回了哪些记忆」。本子系统抽纯叶 memoryOpsNotice.js 把这两个已有动作渲染成用户可见的状态提示,经既有 onStatus 状态通道推出:写入成功→🧠 已写入<类型>记忆(已落盘/本会话):<name>,召回命名记忆→🧠 召回 N 条相关记忆:a、b、c 等 N 条。零 IO、绝不抛、门控 default-on。直接回应 /goal 需求「写记忆和回忆时明确告知用户」  `memory-ops-notice`
+### 写记忆/召回记忆时明确告知用户(记忆操作可见化纯叶)。khy 早已自动写记忆(_maybeAutoSaveMemory)与自动召回记忆(memory engine surface + [RELEVANT_MEMORY] 注入),但两条路径都静默执行——用户看不到「刚记住了什么」或「这轮召回了哪些记忆」。本子系统抽纯叶 memoryOpsNotice.js 把这两个已有动作渲染成用户可见的状态提示,经既有 onStatus 状态通道推出:写入成功→已写入<类型>记忆(已落盘/本会话):<name>,召回命名记忆→召回 N 条相关记忆:a、b、c 等 N 条。零 IO、绝不抛、门控 default-on。直接回应 /goal 需求「写记忆和回忆时明确告知用户」  `memory-ops-notice`
 
 **什么时候来这里（症状触发词）：**
 - 用户报告 khy 自动写了记忆或召回了记忆却没有任何可见提示,想让「主动写/召回记忆」这件事对用户透明
@@ -1949,6 +1950,7 @@ node --check services/backend/src/tools/unpackTool.js
 - `services/backend/src/services/gateway/visionOcrFallback.js`
 - `services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/visionOcrFallback.test.js`
 - `services/backend/tests/gateway/visionDescribeFailFloorWiring.test.js`
 - `services/backend/tests/gateway/visionDescribeFailFloorRealImage.test.js`
@@ -1978,6 +1980,7 @@ node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js
 - `services/backend/src/services/gateway/visionOcrFallback.js`
 - `services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/gateway/visionStripImageFloorWiring.test.js`
 - `services/backend/tests/gateway/visionStripImageFloorRealImage.test.js`
 
@@ -2006,6 +2009,7 @@ node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js
 - `services/backend/src/services/gateway/visionOcrFallback.js`
 - `services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/gateway/visionRescueStripFloorWiring.test.js`
 - `services/backend/tests/gateway/visionRescueStripFloorRealImage.test.js`
 
@@ -2034,6 +2038,7 @@ node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js
 - `services/backend/src/services/gateway/ocrUsageNotice.js`
 - `services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/gateway/ocrUsageNotice.test.js`
 - `services/backend/tests/gateway/ocrUsageDisclosureWiring.test.js`
 - `services/backend/tests/gateway/ocrUsageDisclosureRealImage.test.js`
@@ -2063,6 +2068,7 @@ node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js
 - `services/backend/src/services/gateway/ocrUsageFootnote.js`
 - `services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/gateway/ocrUsageFootnote.test.js`
 - `services/backend/tests/gateway/ocrUsageFootnoteWiring.test.js`
 - `services/backend/tests/gateway/ocrUsageFootnoteRealImage.test.js`
@@ -2093,6 +2099,7 @@ node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js
 - `services/backend/src/services/gateway/visionDenialCorrection.js`
 - `services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/gateway/visionDenialCorrection.test.js`
 - `services/backend/tests/gateway/visionDenialCorrectionWiring.test.js`
 - `services/backend/tests/gateway/visionDenialCorrectionRealImage.test.js`
@@ -2123,6 +2130,7 @@ node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js
 - `services/backend/src/services/gateway/visionFailureSummary.js`
 - `services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/services/gateway/visionFailureSummary.test.js`
 - `services/backend/tests/gateway/visionFailureSummaryOcrSuppressWiring.test.js`
 - `services/backend/tests/gateway/visionFailureSummaryOcrSuppressRealImage.test.js`
@@ -2152,6 +2160,7 @@ node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js
 - `services/backend/src/services/gateway/visionOcrSuccessClosure.js`
 - `services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/services/gateway/visionOcrSuccessClosure.test.js`
 - `services/backend/tests/gateway/visionOcrSuccessClosureWiring.test.js`
 - `services/backend/tests/gateway/visionOcrSuccessClosureRealImage.test.js`
@@ -2181,6 +2190,7 @@ node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js
 - `services/backend/src/services/gateway/visionCascadeAttemptNotice.js`
 - `services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/services/gateway/visionCascadeAttemptNotice.test.js`
 - `services/backend/tests/gateway/visionCascadeAttemptNoticeWiring.test.js`
 - `services/backend/tests/gateway/visionCascadeAttemptNoticeRealImage.test.js`
@@ -2204,6 +2214,7 @@ node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js
 - `services/backend/src/services/gateway/visionModelDisplayName.js`
 - `services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/services/gateway/visionModelDisplayName.test.js`
 - `services/backend/tests/gateway/visionModelDisplayNameWiring.test.js`
 - `services/backend/tests/gateway/visionModelDisplayNameRealImage.test.js`
@@ -2245,6 +2256,7 @@ node --check services/backend/src/services/gateway/visionFailureSummary.js
 **先读这些文件：**
 - `services/backend/src/services/gateway/visionFailureSummary.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/gateway/visionFailureCauseDedup.test.js`
 
 **参考文档：**
@@ -2265,6 +2277,7 @@ node --check services/backend/src/services/gateway/visionFailureSummary.js
 - `services/backend/src/services/gateway/visionPoolFailStatus.js`
 - `services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/gateway/visionPoolFailStatusHumanize.test.js`
 
 **参考文档：**
@@ -2290,6 +2303,7 @@ node --check services/backend/src/services/gateway/visionPoolFailStatus.js
 - `services/backend/src/services/gateway/ocrRescueStatusNotice.js`
 - `services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/gateway/ocrRescueStatusNotice.test.js`
 - `services/backend/tests/gateway/ocrRescueStatusNoticeWiring.test.js`
 - `services/backend/tests/gateway/ocrRescueStatusNoticeRealImage.test.js`
@@ -2347,6 +2361,7 @@ node --check scripts/lib/duplicationGuard.js scripts/check-duplication.js
 - `services/backend/src/services/gateway/ocrRescueStatusNotice.js`
 - `services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/gateway/ocrRescueStatusPrep.test.js`
 - `services/backend/tests/gateway/ocrRescueStatusPrepWiring.test.js`
 - `services/backend/tests/gateway/ocrRescueStatusPrepRealImage.test.js`
@@ -2376,6 +2391,7 @@ node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js
 - `services/backend/src/services/gateway/ocrRescueStatusNotice.js`
 - `services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/gateway/ocrRescueStatusNotice.test.js`
 - `services/backend/tests/gateway/ocrRescuePrepClosureDedupWiring.test.js`
 - `services/backend/tests/gateway/ocrRescuePrepClosureDedupRealImage.test.js`
@@ -2403,6 +2419,7 @@ node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js
 **先读这些文件：**
 - `services/backend/src/services/gateway/visionExhaustionDiagnostic.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/services/visionExhaustionDiagnostic.test.js`
 - `services/backend/tests/gateway/visionNetworkExhaustionRealImage.test.js`
 
@@ -2481,6 +2498,7 @@ node --check services/backend/src/cli/cacheWarning.js
 - `services/backend/src/services/deliveryGateReporter.js`
 - `services/backend/src/services/agenticHarnessService.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/services/deliveryGateReporter.test.js`
 
 **参考文档：**
@@ -2491,7 +2509,7 @@ node --check services/backend/src/cli/cacheWarning.js
 ```bash
 node --test services/backend/tests/services/deliveryGateReporter.test.js
 node --check services/backend/src/services/agenticHarnessService.js
-node --check services/backend/src/services/flagRegistry.js
+node --check services/backend/src/utils/flagRegistry/index.js
 ```
 
 ---
@@ -2507,6 +2525,7 @@ node --check services/backend/src/services/flagRegistry.js
 - `services/backend/src/services/sessionFileRepair.js`
 - `services/backend/src/services/sessionPersistence.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/services/sessionFileRepairWiring.test.js`
 
 **参考文档：**
@@ -2517,7 +2536,7 @@ node --check services/backend/src/services/flagRegistry.js
 ```bash
 node --test services/backend/tests/services/sessionFileRepairWiring.test.js
 node --check services/backend/src/services/sessionPersistence.js
-node --check services/backend/src/services/flagRegistry.js
+node --check services/backend/src/utils/flagRegistry/index.js
 ```
 
 ---
@@ -2533,6 +2552,7 @@ node --check services/backend/src/services/flagRegistry.js
 - `services/backend/src/services/taskTemplates.js`
 - `services/backend/src/services/agenticHarnessService.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/services/taskTemplateHintWiring.test.js`
 
 **参考文档：**
@@ -2543,7 +2563,7 @@ node --check services/backend/src/services/flagRegistry.js
 ```bash
 node --test services/backend/tests/services/taskTemplateHintWiring.test.js
 node --check services/backend/src/services/agenticHarnessService.js
-node --check services/backend/src/services/flagRegistry.js
+node --check services/backend/src/utils/flagRegistry/index.js
 ```
 
 ---
@@ -2584,6 +2604,7 @@ node --check services/backend/src/services/directiveRegistryAudit.js
 - `services/backend/src/services/fetchExecuteGuard.js`
 - `services/backend/src/services/shellSafetyValidator.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/security/fetchExecuteGuardWiring.test.js`
 
 **参考文档：**
@@ -2636,6 +2657,7 @@ node --check services/backend/src/services/workspaceGitInit.js
 - `services/backend/src/services/gateway/localOllamaProbe.js`
 - `services/backend/src/services/gateway/modelCatalogGraph.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/gateway/localOllamaProbeCatalogWiring.test.js`
 
 **参考文档：**
@@ -2663,6 +2685,7 @@ node --check services/backend/src/services/gateway/modelCatalogGraph.js
 - `services/backend/src/services/falsePositiveFixGuard.js`
 - `services/backend/src/services/agenticHarnessService.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 - `services/backend/tests/services/characterizationFpfWiring.test.js`
 
 **参考文档：**
@@ -2714,6 +2737,7 @@ node --check services/backend/src/services/management/parityGuard.js
 - `services/backend/src/services/domain/system/syscallGateway/actionContractVerifier.js`
 - `services/backend/tests/actionContractVerifier.test.js`
 - `services/backend/src/services/flagRegistry.js`
+- `services/backend/src/utils/flagRegistry/index.js`
 
 **参考文档：**
 - docs/07_OPS_运维/OPS-MAN/[OPS-MAN-163] 动作契约核验器CI强制接线.md

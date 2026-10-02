@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -32,7 +32,7 @@
 <p>实现：<code>services/backend/src/services/securityGuardService.js</code>，dispatch 在 <code>router.js:3046</code>。</p></blockquote>
 <hr>
 <h2 id="一-入口与全部子命令">一、入口与全部子命令<a class="anchor" href="#一-入口与全部子命令" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>命令</th><th>作用</th></tr></thead><tbody><tr><td><code>khy security scan</code></td><td>一次性安全扫描（见下方检测项）</td></tr><tr><td><code>khy security monitor</code></td><td>周期性后台扫描（⚠️ 进程内计时器，见 §三诚实边界）</td></tr><tr><td><code>khy security integrity</code></td><td>完整性检查（KHY 自身文件是否被篡改）</td></tr><tr><td><code>khy security status</code></td><td>安全状态总览</td></tr><tr><td><code>khy security profile [模式]</code></td><td>查看 / 设置<strong>权限模式</strong>（= KHY 的操作授权级别）</td></tr><tr><td><code>khy security audit [--tool &lt;名&gt;] [--limit &lt;n&gt;]</code></td><td>审计工具调用记录</td></tr><tr><td><code>khy security permissions</code></td><td>查看当前权限配置</td></tr></tbody></table>
+<table><thead><tr><th>命令</th><th>作用</th></tr></thead><tbody><tr><td><code>khy security scan</code></td><td>一次性安全扫描（见下方检测项）</td></tr><tr><td><code>khy security monitor</code></td><td>周期性后台扫描（⚠ 进程内计时器，见 §三诚实边界）</td></tr><tr><td><code>khy security integrity</code></td><td>完整性检查（KHY 自身文件是否被篡改）</td></tr><tr><td><code>khy security status</code></td><td>安全状态总览</td></tr><tr><td><code>khy security profile [模式]</code></td><td>查看 / 设置<strong>权限模式</strong>（= KHY 的操作授权级别）</td></tr><tr><td><code>khy security audit [--tool &lt;名&gt;] [--limit &lt;n&gt;]</code></td><td>审计工具调用记录</td></tr><tr><td><code>khy security permissions</code></td><td>查看当前权限配置</td></tr></tbody></table>
 <p><strong><code>scan</code> 检测项</strong>：挖矿/木马进程、CPU 异常占用、可疑 crontab 项、已知矿池端口连接、<code>/tmp</code> 下可执行文件、SSH <code>authorized_keys</code> 异常。</p>
 <hr>
 <h2 id="二-权限模式-profile-重点">二、权限模式：<code>profile</code>（重点）<a class="anchor" href="#二-权限模式-profile-重点" aria-label="锚点">#</a></h2>
@@ -41,7 +41,7 @@
 <pre><code class="language-bash">khy security profile              <span class="hljs-comment"># 看当前模式</span>
 khy security profile strict       <span class="hljs-comment"># 切到最严格</span>
 khy security profile normal       <span class="hljs-comment"># 切回默认</span></code></pre>
-<blockquote><p>⚠️ <code>yolo</code> 会让 KHY 在不二次确认的情况下执行高风险动作（含 toolCalling 危险模式），仅在你完全清楚后果且环境隔离时使用。</p></blockquote>
+<blockquote><p>⚠ <code>yolo</code> 会让 KHY 在不二次确认的情况下执行高风险动作（含 toolCalling 危险模式），仅在你完全清楚后果且环境隔离时使用。</p></blockquote>
 <hr>
 <h2 id="三-诚实边界-monitor-的真实形态">三、诚实边界（<code>monitor</code> 的真实形态）<a class="anchor" href="#三-诚实边界-monitor-的真实形态" aria-label="锚点">#</a></h2>
 <ul><li><strong><code>khy security monitor</code> 不是脱离式守护进程</strong>：它在<strong>当前进程内</strong>用 <code>setInterval</code> 每约 <strong>10 分钟</strong>跑一次扫描（<code>securityGuardService.js:603-630</code>），并且调用了 <code>.unref()</code>——意味着它<strong>不会单独保活</strong>，当前进程退出它就停。要常驻请配合常驻入口（如 <code>khy daemon</code>）运行，不要以为关掉终端它还在跑。</li><li>扫描结果写入 <code>~/.khyquant/security.log</code>（<code>securityGuardService.js:16</code>）。</li><li><code>scan</code> / <code>integrity</code> 的检测是<strong>真实的 OS 探测</strong>，不是桩。</li></ul>

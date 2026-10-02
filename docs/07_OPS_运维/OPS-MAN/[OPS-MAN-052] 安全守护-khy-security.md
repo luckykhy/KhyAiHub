@@ -12,7 +12,7 @@
 | 命令 | 作用 |
 | --- | --- |
 | `khy security scan` | 一次性安全扫描（见下方检测项） |
-| `khy security monitor` | 周期性后台扫描（⚠️ 进程内计时器，见 §三诚实边界） |
+| `khy security monitor` | 周期性后台扫描（⚠ 进程内计时器，见 §三诚实边界） |
 | `khy security integrity` | 完整性检查（KHY 自身文件是否被篡改） |
 | `khy security status` | 安全状态总览 |
 | `khy security profile [模式]` | 查看 / 设置**权限模式**（= KHY 的操作授权级别） |
@@ -40,7 +40,7 @@ khy security profile strict       # 切到最严格
 khy security profile normal       # 切回默认
 ```
 
-> ⚠️ `yolo` 会让 KHY 在不二次确认的情况下执行高风险动作（含 toolCalling 危险模式），仅在你完全清楚后果且环境隔离时使用。
+> ⚠ `yolo` 会让 KHY 在不二次确认的情况下执行高风险动作（含 toolCalling 危险模式），仅在你完全清楚后果且环境隔离时使用。
 
 ---
 
