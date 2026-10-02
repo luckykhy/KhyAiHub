@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>collab — 协作机会识别、IDE 状态与「伪协作」检测（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>collab<span class="sep">›</span>collab — 协作机会识别、IDE 状态与「伪协作」检测（D2）</div>
+      <header class="hero reveal"><h1>collab — 协作机会识别、IDE 状态与「伪协作」检测（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#collab-协作机会识别-ide-状态与-伪协作-检测-d2">collab — 协作机会识别、IDE 状态与「伪协作」检测（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="collab-协作机会识别-ide-状态与-伪协作-检测-d2">collab — 协作机会识别、IDE 状态与「伪协作」检测（D2）<a class="anchor" href="#collab-协作机会识别-ide-状态与-伪协作-检测-d2" aria-label="锚点">#</a></h1>
+<p>子上下文：<code>ide</code> / <code>proactiveCollaboration</code> / <code>weipuxiezuo</code>。<br>本目录 11 个文件<strong>全部纯函数</strong>（目录内 grep 无 <code>fs</code> / <code>net</code> / <code>child_process</code>）。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong>跑 <code>/ide</code> 的人</strong>：<code>constants/commandSchema.js:249</code>（slash 侧 <code>:1330</code>，</li></ul>
+<p>派发 <code>cli/routerDispatchSlash.js:273</code>）→ <code>cli/handlers/ideStatus.js:20</code> 取<br>  <code>ide/idePlan.js</code>。</p>
+<ul><li><strong>要「维普改写」这个模型工具的调用方</strong>：<code>tools/WeipuRewriteTool/index.js:3</code></li></ul>
+<p>经壳 <code>services/weipuxiezuo/index.js</code> 取 <code>weipuxiezuo/</code>。</p>
+<ul><li><strong>让 AI 自己判断「这件事值不值得并行分派」</strong>：</li></ul>
+<p><code>services/tool/toolUseLoopCore.js:4381</code> 消费 <code>proactiveCollaboration</code><br>  （<code>proposeCollaboration</code> / <code>detectCollaborationOpportunity</code> / <code>planDelegation</code>）。<br>  注意：<strong>这条链没有 CLI 命令</strong>，它是委派边界（<code>PROCESS-004</code> / G1-G3 三闸门）<br>  在代码里的判定载体之一。</p>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p>三件事都不该由 IO 决定：<code>idePlan.js</code> 把「检测到哪些 IDE、该给哪条命令」做成<br>纯计划（<code>parseIdeArgs / summarizeDetections / buildListText / buildStatusText</code>，<br>env 从注入的 <code>env</code> 对象取，见 <code>:145-150</code>）；<code>proactiveCollaboration</code> 用<br><code>opportunityDetector</code> 的枚举/并列抽取来判断是否真有可分派目标<br>（<code>_distinctTargets</code>、<code>_extractEnumerated</code>），配 <code>constants.js</code> 的<br><code>LIMITS</code> / <code>ROLE_SIGNALS</code> / <code>PARALLEL_MARKERS</code>；<code>weipuxiezuo/</code> 是文本统计与规则表<br>（<code>textStats</code> 的段落/句长方差、<code>rules.js</code> 的高频词与口语黑名单、<code>scorer</code> 打分）。<br>纯函数化的直接收益：<strong>委派判据可被追问</strong>「你说这事能并行，依据是哪几个目标」。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/services/ide/idePlan.test.js                   <span class="hljs-comment"># 15 tests / 15 pass / 0 fail</span>
+node --<span class="hljs-built_in">test</span> tests/services/proactiveCollaboration/proactiveCollaboration.test.js
+                                                               <span class="hljs-comment"># 21 tests / 21 pass / 0 fail</span></code></pre>
+<p><code>tests/weipuxiezuo.test.js</code> 是 jest 形态，本机 jest 渠道不可用（见下）。</p>
+<h2 id="已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）<a class="anchor" href="#已知缺陷-登记-不在本单元擅自修" aria-label="锚点">#</a></h2>
+<p><code>ide/idePlan.js</code> 当前是 <code> M</code>（作者在做中改动）；上面那条 15 pass 的绿读数<br>测的正是这个脏文件，落地后必须复跑，本卡绿读数不可外推。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../services/backend/src/services/domain/catalog/toolCatalog/README.html"><div class="dir">← 上一篇</div><div class="ttl">toolCatalog — 工具目录、契约与审计规则</div></a><a class="next" href="../../../../../../services/backend/src/services/domain/config/ccSwitch/README.html"><div class="dir">下一篇 →</div><div class="ttl">ccSwitch — 供应商卡片切换与本地代理路由</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/collab/README.html";</script>
+<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

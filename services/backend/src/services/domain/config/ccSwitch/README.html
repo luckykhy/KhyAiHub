@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>ccSwitch — 供应商卡片切换与本地代理路由 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>config<span class="sep">›</span>ccSwitch<span class="sep">›</span>ccSwitch — 供应商卡片切换与本地代理路由</div>
+      <header class="hero reveal"><h1>ccSwitch — 供应商卡片切换与本地代理路由</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#ccswitch-供应商卡片切换与本地代理路由">ccSwitch — 供应商卡片切换与本地代理路由</a></li><li class="lvl-2"><a href="#各文件的职责-取自各文件头注释">各文件的职责（取自各文件头注释）</a></li><li class="lvl-2"><a href="#谁在用本单元-非测试外部消费者-4-个">谁在用本单元（非测试外部消费者 4 个）</a></li><li class="lvl-2"><a href="#出域边-如实登记-不写白名单把它合法化">出域边（如实登记，不写白名单把它合法化）</a></li><li class="lvl-2"><a href="#已知缺陷">已知缺陷</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="ccswitch-供应商卡片切换与本地代理路由">ccSwitch — 供应商卡片切换与本地代理路由<a class="anchor" href="#ccswitch-供应商卡片切换与本地代理路由" aria-label="锚点">#</a></h1>
+<p>D2 业务上下文里的一个功能单元：CC-Switch 式的「供应商卡片」注册表 + 活跃卡片到本地代理的路由 +<br>写入器（Codex / 应用配置）+ 连通性规格 + 用量与计价扫描。11 个源文件全部有同名同目录的共置测试<br>（<strong>206 例 / 0 fail</strong>，2026-09-29 本道显式路径复跑；<code>grep -c KNOWN-DEFECT</code> 实测 <strong>56</strong> 处钉住）。</p>
+<h2 id="各文件的职责-取自各文件头注释">各文件的职责（取自各文件头注释）<a class="anchor" href="#各文件的职责-取自各文件头注释" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>角色</th></tr></thead><tbody><tr><td><code>store.js</code></td><td>CC-Switch 风格的 provider-card 注册表（落盘真源）</td></tr><tr><td><code>routeResolver.js</code></td><td>活跃卡片 → 本地代理的路由</td></tr><tr><td><code>promptGuard.js</code></td><td>恢复时保护非受管的 prompt 文件（CC Switch #6810 语义）</td></tr><tr><td><code>apiHandlers.js</code> / <code>connectivity.js</code></td><td>HTTP 面处理与连通性规格消费</td></tr><tr><td><code>appWriters.js</code> / <code>codexWriter.js</code> / <code>proxyAccess.js</code></td><td>应用侧配置写入与代理接入</td></tr><tr><td><code>constants.js</code> / <code>opencodeGoQuota.js</code> / <code>usageScan.js</code></td><td>协议/别名常量、OpenCode Go 配额、用量与计价扫描</td></tr></tbody></table>
+<h2 id="谁在用本单元-非测试外部消费者-4-个">谁在用本单元（非测试外部消费者 4 个）<a class="anchor" href="#谁在用本单元-非测试外部消费者-4-个" aria-label="锚点">#</a></h2>
+<p><code>cli/handlers/ccSwitch.js</code>（CLI/TUI 主交互面）、<code>routes/ccSwitch.js</code>（HTTP 面）、<br><code>services/ccSwitch/index.js</code>（D1 历史路径再导出壳）、<code>services/crossAgentTasteLearner.js</code>。</p>
+<h2 id="出域边-如实登记-不写白名单把它合法化">出域边（如实登记，不写白名单把它合法化）<a class="anchor" href="#出域边-如实登记-不写白名单把它合法化" aria-label="锚点">#</a></h2>
+<ul><li><strong>D2 内 11 处</strong>、<strong>D3 共 9 处</strong>（<code>utils/</code> 与 <code>constants/</code>）—— 名义边界内合法。</li><li><strong>D1 共 6 处</strong>，逐条如下：<code>appWriters.js:355</code> → <code>services/gateway/adapters/codexAdapter.js</code>、</li></ul>
+<p><code>connectivity.js:15</code> → <code>services/gateway/providerConnectivitySpec.js</code>、<code>store.js:41</code> → <code>services/configGuard.js</code>、<br>  <code>store.js:44</code> → <code>services/apiKeyPool.js</code>、<code>usageScan.js:382</code> → <code>services/tokenUsageService.js</code>、<br>  <code>usageScan.js:449</code> → <code>services/tokenPricing.js</code>。<br>  D2 的名义 <code>mayDependOn</code> 只有 <code>[&quot;D2&quot;,&quot;D3&quot;]</code> ⇒ 这 6 条全是 <code>declared_not_enforced</code> 的 D2→D1，<br>  交 <code>archDebtScan</code> R1 / <code>cross-layer-require</code> 棘轮管辖；它们同时是 <code>[DESIGN-LAY-008]</code> §12.43 里<br>  Q2 的直接对象（本单元是本仓 D2→D1 出边最密集的一处）。</p>
+<h2 id="已知缺陷">已知缺陷<a class="anchor" href="#已知缺陷" aria-label="锚点">#</a></h2>
+<p>56 处 <code>KNOWN-DEFECT</code> 断言（含 §12.42 记过的 <code>routeResolver.js:34</code> <code>case PROTOCOLS.CODEX:</code> 实为<br><code>case undefined:</code>、<code>store</code> 的 null patch 降级、<code>getAgentMode</code> 非法值静默回落成 proxy 等）。<br>一律登记不修：每一条都改变对外可见的路由或配额读数，属行为变更。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../services/backend/src/services/domain/collab/README.html"><div class="dir">← 上一篇</div><div class="ttl">collab — 协作机会识别、IDE 状态与「伪协作」检测（D2）</div></a><a class="next" href="../../../../../../../services/backend/src/services/domain/config/config/README.html"><div class="dir">下一篇 →</div><div class="ttl">config — 自然语言配置意图解析与偏好归一（纯叶子族）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/config/ccSwitch/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

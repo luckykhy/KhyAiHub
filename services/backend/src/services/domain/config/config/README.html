@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>config — 自然语言配置意图解析与偏好归一（纯叶子族） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>config<span class="sep">›</span>config<span class="sep">›</span>config — 自然语言配置意图解析与偏好归一（纯叶子族）</div>
+      <header class="hero reveal"><h1>config — 自然语言配置意图解析与偏好归一（纯叶子族）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#config-自然语言配置意图解析与偏好归一-纯叶子族">config — 自然语言配置意图解析与偏好归一（纯叶子族）</a></li><li class="lvl-2"><a href="#各文件的职责-取自各文件头注释">各文件的职责（取自各文件头注释）</a></li><li class="lvl-2"><a href="#谁在用本单元-非测试外部消费者-8-个-去重">谁在用本单元（非测试外部消费者 8 个，去重）</a></li><li class="lvl-2"><a href="#出域边-如实登记-不写白名单">出域边（如实登记，不写白名单）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="config-自然语言配置意图解析与偏好归一-纯叶子族">config — 自然语言配置意图解析与偏好归一（纯叶子族）<a class="anchor" href="#config-自然语言配置意图解析与偏好归一-纯叶子族" aria-label="锚点">#</a></h1>
+<p>D2 业务上下文里的一个功能单元：9 个<strong>零 IO、确定性、fail-soft</strong> 的叶子，把自然语言意图收敛成<br>「改哪个开关 / 配哪个供应商 / 给外部软件配模型 / 是配置还是安装」这类结构化判定，供 CLI 与会话层消费。</p>
+<p>9 个源文件全部有同名同目录的共置测试（160 例 / 0 fail，2026-09-29 本道显式路径复跑；18 处 <code>KNOWN-DEFECT</code> 钉住实测行为）。</p>
+<h2 id="各文件的职责-取自各文件头注释">各文件的职责（取自各文件头注释）<a class="anchor" href="#各文件的职责-取自各文件头注释" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>角色</th></tr></thead><tbody><tr><td><code>langPreference.js</code></td><td>输出语言偏好「归一·描述·解析」的零 IO 单一真源</td></tr><tr><td><code>nlActionResolver.js</code></td><td>自然语言 → khyos「动作意图」解析</td></tr><tr><td><code>nlConfigResolver.js</code></td><td>自然语言 → khyos「能力开关」意图解析</td></tr><tr><td><code>nlExternalAppResolver.js</code></td><td>自然语言 → 「给外部软件配模型」</td></tr><tr><td><code>nlExternalAppImportResolver.js</code></td><td>自然语言 → 「反向使用外部软件」导入解析</td></tr><tr><td><code>nlInstallVsConfigGuard.js</code></td><td>「配置 khy vs 安装第三方工具」歧义护栏</td></tr><tr><td><code>philosophyDesignResolver.js</code></td><td>自然语言「哲学内容 → 软件设计落地」意图解析</td></tr><tr><td><code>sandboxToggleState.js</code></td><td><code>/sandbox-toggle</code> 的开关归一·状态解析·动作规划</td></tr></tbody></table>
+<h2 id="谁在用本单元-非测试外部消费者-8-个-去重">谁在用本单元（非测试外部消费者 8 个，去重）<a class="anchor" href="#谁在用本单元-非测试外部消费者-8-个-去重" aria-label="锚点">#</a></h2>
+<p>CLI 面 5 个：<code>cli/aiChatCore.js:1240/1265/1286/1348</code>（四处惰性 require，会话内配置意图路由）、<br><code>cli/handlers/capability.js:22</code>、<code>cli/handlers/config.js:121</code>、<code>cli/handlers/lang.js:16</code>、<code>cli/handlers/sandboxToggle.js:24</code>；<br>再导出壳 1 个：<code>services/config/index.js:4-8</code>；其余 2 个为路径命中（<code>services/localBrainProviderConfig.js</code>、<br><code>tools/configureCapability.js</code>），<strong>行号本轮未逐条核到</strong>，如实标注而不是补一个没测的数字。</p>
+<h2 id="出域边-如实登记-不写白名单">出域边（如实登记，不写白名单）<a class="anchor" href="#出域边-如实登记-不写白名单" aria-label="锚点">#</a></h2>
+<ul><li><strong>D3 共 12 处</strong>（<code>utils/</code> 与 <code>constants/</code>），名义边界内合法。</li><li><strong>D1 共 1 处</strong>：<code>nlExternalAppImportResolver.js:26</code> → <code>services/flagRegistry.js</code>（该文件本身是 D3 归位后留下的兼容壳，</li></ul>
+<p><code>module.exports = require('../utils/flagRegistry')</code> ⇒ 语义上是 D2→D3，路径上命中 D1）。<br>  这一条正是 <code>[DESIGN-LAY-008]</code> §12.43 里「建门前必须先定的判据」的活样本：纯路径前缀判定会把它误报成违令边。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../services/backend/src/services/domain/config/ccSwitch/README.html"><div class="dir">← 上一篇</div><div class="ttl">ccSwitch — 供应商卡片切换与本地代理路由</div></a><a class="next" href="../../../../../../../services/backend/src/services/domain/config/keybindings/README.html"><div class="dir">下一篇 →</div><div class="ttl">keybindings — 键位目录单一真源与 Ctrl+R 反向历史搜索（D2 功能单元）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/config/config/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>catalog — 命令、工具与能力的登记表（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>catalog<span class="sep">›</span>catalog — 命令、工具与能力的登记表（D2）</div>
+      <header class="hero reveal"><h1>catalog — 命令、工具与能力的登记表（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#catalog-命令-工具与能力的登记表-d2">catalog — 命令、工具与能力的登记表（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="catalog-命令-工具与能力的登记表-d2">catalog — 命令、工具与能力的登记表（D2）<a class="anchor" href="#catalog-命令-工具与能力的登记表-d2" aria-label="锚点">#</a></h1>
+<p>子上下文：<code>commandCatalog</code> / <code>toolCatalog</code> / <code>capabilityMatrix</code> / <code>toolUseLoop</code>。<br>这是「系统对外说自己会什么」的那份账，也是 <code>khy --help</code>、<code>/features</code>、<br><code>toollist</code>、<code>toolcheck</code> 与 Web 命令页的共同真源。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong>看能力清单的人</strong>：<code>cli/handlers/features.js</code>、<code>toollist.js</code>、<code>toolcheck.js</code>；</li></ul>
+<p>Web 侧 <code>routes/commands.js</code>；壳 <code>services/{commandCatalog,capabilityMatrix}/index.js</code>。</p>
+<ul><li><strong>要「工具契约」的工具回路</strong>：<code>catalog/toolCatalog/toolContract.js</code> 定契约，</li></ul>
+<p><code>catalog/toolUseLoop/abortCascade.js</code> 是本目录 <code>toolUseLoop/</code> 子上下文里<br>  被工具回路消费的文件之一（该子目录整体由<br>  <code>services/tool/toolUseLoop*</code> 使用）。</p>
+<ul><li><strong>能力矩阵的档位判定</strong>：<code>capabilityMatrix/descriptors.js:245</code> 把</li></ul>
+<p><code>quality/toolFunnelGuard</code> 的 <code>enforce</code> 挂成 invoke——登记表面向人，<br>  同一张表同时是机判入口。</p>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p>命令面是<strong>会被冻结的面</strong>：<code>[DESIGN-DELIV-002]</code> 的任务面棘轮（命令 245 / 别名 591 /<br>handler 155，只降不升）要求「有多少命令」这件事有一个可数、可 diff 的单一真源，<br>所以清单不能散在 router 的 switch 里——<code>commandCatalog</code> 把它收成数据，<br><code>toolCatalog</code> 用 <code>toolContract</code> 规定每个工具必须声明什么，<br><code>capabilityMatrix</code> 把「档位 + 描述符 + invoke」三件绑在一条记录上。<br><code>toolUseLoop/</code> 放在本目录是因为回合级判定（中止、级联、阶段）需要读同一份契约，<br>而不是因为它属于工具回路。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/allCommandsCatalog.test.js                     <span class="hljs-comment"># 11 tests / 11 pass / 0 fail</span></code></pre>
+<p>同族：<code>tests/diskAnalyzeCatalog.test.js</code>、<code>tests/upstreamStudyCatalog.test.js</code><br>（node:test，本卡未复跑），<code>tests/services/catalog/{toolCatalog,advisorPlan,<br>commandCatalog}.test.js</code> 亦存在（本卡未逐条复跑，形态未核）。</p>
+<h2 id="已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）<a class="anchor" href="#已知缺陷-登记-不在本单元擅自修" aria-label="锚点">#</a></h2>
+<p><code>khy --help</code> 的完整画面由 <code>cli/help*</code> 渲染，不由本目录直接输出；<br>两份「清单」的一致性目前靠 <code>tests/allCommandsCatalog.test.js</code> 与棘轮守卫<br>（<code>npm run check:delivery</code>）夹住，缺一侧即漂移。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../services/backend/src/services/domain/catalog/commandCatalog/README.html"><div class="dir">← 上一篇</div><div class="ttl">commandCatalog — khy 功能索引的分组目录（D2 功能单元）</div></a><a class="next" href="../../../../../../services/backend/src/services/domain/catalog/toolCatalog/README.html"><div class="dir">下一篇 →</div><div class="ttl">toolCatalog — 工具目录、契约与审计规则</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/catalog/README.html";</script>
+<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
