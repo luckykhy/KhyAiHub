@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>extensions — 拓展、钩子与插件贡献的装载层（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>extensions<span class="sep">›</span>extensions — 拓展、钩子与插件贡献的装载层（D2）</div>
+      <header class="hero reveal"><h1>extensions — 拓展、钩子与插件贡献的装载层（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#extensions-拓展-钩子与插件贡献的装载层-d2">extensions — 拓展、钩子与插件贡献的装载层（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="extensions-拓展-钩子与插件贡献的装载层-d2">extensions — 拓展、钩子与插件贡献的装载层（D2）<a class="anchor" href="#extensions-拓展-钩子与插件贡献的装载层-d2" aria-label="锚点">#</a></h1>
+<p>业务上下文：<code>/extension</code>、<code>/hooks</code> 与 <code>plugin</code> 子命令背后的一切——<br>发现拓展根、读清单、开关、把插件贡献的工具接进工具调用链、跑钩子。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong>装/卸拓展的人</strong>：<code>constants/commandSchema.js:2106</code> 声明 <code>/extension</code></li></ul>
+<p>（路由 <code>extension list</code>，子命令 <code>:371</code>），处理器 <code>cli/extensions/extensionManager.js:13</code>。</p>
+<ul><li><strong>配钩子的人</strong>：<code>/hooks</code>（<code>commandSchema.js:2002</code>）；</li></ul>
+<p>钩子系统经壳 <code>cli/hooks/hookSystem.js:14</code> 再导出本目录 <code>hooks/hookSystem.js</code>。</p>
+<ul><li><strong>让插件工具被模型调用的人</strong>：<code>services/tool/toolCalling.js:65</code> require</li></ul>
+<p><code>plugins/pluginContribResolver</code>，<code>:1599</code> require <code>plugins/pluginToolBridge</code>，<br>  在 <code>:1709-1711</code> 用 <code>ownsTool</code> / <code>activateContributedTool</code> 决定工具归属。</p>
+<ul><li><strong>加载 provider 模块的人</strong>：<code>plugin-loader/index.js:38</code> 取 <code>extensionRoots</code>；</li></ul>
+<p><code>services/gateway/adapters/claudeAdapter.js:2007</code> 亦消费本目录。</p>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p>拓展是<strong>会被整体搬动的目录</strong>，所以装载链分三层且各自可独立验证：<br><code>extensionManifest.js</code> 只管清单契约（<code>MANIFEST_CANONICAL / MANIFEST_NAMES / KINDS</code>），<br><code>extensionRoots.js</code> 只管发现与孤儿态（<code>discover / readState / isEnabled / findOrphanState</code>），<br><code>extensionManager.js</code> 才碰安装/卸载的 <code>fs</code> 与子进程。贡献面同理拆开：<br><code>pluginContribResolver</code> 回答「这个工具名归谁、懒加载谁的入口」，<br><code>pluginToolBridge</code> 回答「怎么调、返回什么」，<code>hookConfigSchema</code> 是纯校验<br>（<code>validateHooksConfig / normalizeHook</code>），<code>hookRunner</code> 才执行子进程并用<br><code>CMD_HOOK_ALLOWED_FIELDS</code> 白名单收输出字段。这样拆的代价是多两三个文件，<br>收益是「拓展搬家」「钩子输出越界」这两类事故各自只有一处真源。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/pluginToolBridge.test.js                    <span class="hljs-comment"># 7 tests / 7 pass / 0 fail</span></code></pre>
+<p><code>tests/hooksConfig.test.js</code> 是 jest 形态（正式入口 <code>npm test</code>；本卡未在此 shell 复跑，<br>便携 shell 无 npm/npx）。</p>
+<h2 id="已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）<a class="anchor" href="#已知缺陷-登记-不在本单元擅自修" aria-label="锚点">#</a></h2>
+<p>拓展契约的另一半（<code>khy.extension.json</code> 的合规与路径漂移）不在本单元判，<br>由 <code>check:layout</code> 的 <code>extension-contract</code> / <code>extension-id-hardcode</code> /<br><code>extension-path-drift</code> 三条尺管，当前均为 0。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../services/backend/src/services/domain/extensions/plugins/README.html"><div class="dir">← 上一篇</div><div class="ttl">plugins — 扩展插件贡献的解析 / 调用 / 桥接</div></a><a class="next" href="../../../../../../services/backend/src/services/domain/gateway-stuff/README.html"><div class="dir">下一篇 →</div><div class="ttl">gateway-stuff — 网关日志租界：噪声翻译与来源归因（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/extensions/README.html";</script>
+<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
