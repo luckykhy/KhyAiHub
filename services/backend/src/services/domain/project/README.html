@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>project — 工作流、蓝图、一致性体检与元计划（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>project<span class="sep">›</span>project — 工作流、蓝图、一致性体检与元计划（D2）</div>
+      <header class="hero reveal"><h1>project — 工作流、蓝图、一致性体检与元计划（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#project-工作流-蓝图-一致性体检与元计划-d2">project — 工作流、蓝图、一致性体检与元计划（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="project-工作流-蓝图-一致性体检与元计划-d2">project — 工作流、蓝图、一致性体检与元计划（D2）<a class="anchor" href="#project-工作流-蓝图-一致性体检与元计划-d2" aria-label="锚点">#</a></h1>
+<p>业务上下文：<code>workflow</code>、<code>issue</code> / <code>perf-issue</code>、<code>manage</code>，以及项目蓝图 /<br>一致性门禁 / 卫生体检 / 元计划约束这四族判定。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong>跑 <code>workflow</code> 的人</strong>：<code>constants/commandSchema.js:177</code> →</li></ul>
+<p><code>cli/handlers/workflow.js:59-61</code>；模型侧 <code>tools/WorkflowTool/index.js:84,96</code>、<br>  <code>tools/RPATool/index.js:159-343</code>；slash 查流 <code>cli/aiChatCore.js:2202</code><br>  （<code>flowRegistry.find</code>）。</p>
+<ul><li><strong>报 issue 的人</strong>：<code>commandSchema.js:222</code>（<code>issue</code>）与 <code>:220-221</code>（<code>perf-issue</code>）</li></ul>
+<p>→ <code>cli/handlers/issue.js:31</code>。</p>
+<ul><li><strong><code>manage</code></strong>：<code>cli/handlers/manage.js:21</code> → <code>services/management</code> → 本目录 <code>management/</code>。</li><li><strong>CI 与治理</strong>：<code>scripts/lib/workflowNodeParityGuard.js:270-271</code>、</li></ul>
+<p><code>scripts/ci/check-workflow-node-parity.js:50-51</code>（工作流节点与 CI 必须成对）；<br>  <code>tools/ProjectBlueprintTool/index.js:3</code>。</p>
+<ul><li><strong>约束格</strong>：<code>services/constraintLattice.js:237</code> 取 <code>metaplan/constraintStrategy</code>。</li></ul>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p>这一族的产物是「计划」和「门禁结论」，两者都必须<strong>能在没跑之前就被追问</strong>，<br>所以判定与执行分离：<code>metaplan/</code> 提供约束注入与不可逆签名<br>（<code>constraintStrategy</code> / <code>constraintInjection</code> / <code>irreversibleSignatures</code> /<br><code>constitutionalRedLines</code>）以及 <code>TrustCircuitBreaker</code>；<br><code>projectHygiene/</code> 的 <code>assessGodFile</code> / <code>findDuplicateModule</code> / <code>stackConflict</code><br>和 <code>thresholds</code>、<code>symbols</code> 全是纯判据（本仓 400 行上限与纳管台账就长在这里）；<br><code>projectCoherence/</code> 的 <code>analyzeProjectCoherence</code> + <code>evaluateCoherenceGate</code> +<br><code>evaluateClosure</code> / <code>evaluateKickoff</code> 决定「能不能收口」；<br><code>projectBlueprint/</code> 的 <code>plan / milestone / scaffold / verify</code> 出计划文本；<br><code>workflow/</code> 里 <code>retryPrimitives</code>、<code>healGuard</code>、<code>parityGuard</code>、<code>resourceContract</code><br>是纯叶子，<code>flowRegistry</code> / <code>flowStats</code> / <code>contractChecker</code> 才碰盘。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/services/issue/issueReport.test.js            <span class="hljs-comment"># 23 tests / 23 pass / 0 fail</span>
+node --<span class="hljs-built_in">test</span> tests/services/projectCoherence.test.js             <span class="hljs-comment"># 35 tests / 30 pass / 5 fail</span></code></pre>
+<p>第二条<strong>当前是红的</strong>，原样记录：5 条红用例为<br>「resolver: relative resolves against known set (+ index)」（断言里出现<br><code>'D:\\khyc_test_35432\\src\\b.js'</code> 这样的<strong>绝对临时根</strong>）、<br>「analyzer: unresolved local import → HIGH gap」、「resolved but missing named<br>export → MEDIUM gap」、「broken package.json main → HIGH gap」等。<br>红点集中在「往 <code>D:\khyc_test_*</code> 造临时工程再解析」这条路上；<br>本目录当前无 <code> M</code> 文件（干净），但被测侧 <code>projectCoherence/resolver.js</code> 与<br><code>coherenceAnalyzer.js</code> 是 IO 侧。这条断言里的盘符根来自测试的临时目录构造——<br>若它是字面量而非取自 <code>os.tmpdir()</code>，就与规则 1（零硬编码）相冲；<br><strong>未核实来源，登记待查</strong>，不在本卡擅自改。</p>
+<h2 id="已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）<a class="anchor" href="#已知缺陷-登记-不在本单元擅自修" aria-label="锚点">#</a></h2>
+<p><code>workflow/</code> 12 个文件的逐文件导出键未被本次调研逐个点名（经壳<br><code>services/workflow/index.js:4-10</code> 可枚举），补齐需独立改动集。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../services/backend/src/services/domain/project/metaplan/README.html"><div class="dir">← 上一篇</div><div class="ttl">metaplan — 元规划与动态约束注入（D2 功能单元）</div></a><a class="next" href="../../../../../../services/backend/src/services/domain/project/workflow/README.html"><div class="dir">下一篇 →</div><div class="ttl">domain/project/workflow — 确定性工作流引擎（图解释器 + 运行时自演化 + 队列 worker）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/project/README.html";</script>
+<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
