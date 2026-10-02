@@ -120,7 +120,12 @@ describe('traceProjection 字形确定性', () => {
     assert.equal(row.index, 3);
     assert.equal(row.glyph, '⟳');
     assert.equal(row.producer, 'codex');
-    assert.equal(row.label, '⟳ codex claims');
+    // label **不含**前导字形：handlers/trace.js:161/164 把 row.glyph 作为独立列再拼 row.label，
+    // label 自带字形的旧行为会渲染成 `⟳ ⟳ codex claims`（双勾）。单字形契约的真源是
+    // tests/cli/traceProjectionSingleGlyph.test.js；本行曾长期断言带字形的旧契约 → 恒红，
+    // 而同一套件 :101 的 inlineLabel（契约要求保留字形）是绿的，故可排除「字形整体丢失」。
+    assert.equal(row.label, 'codex claims');
+    assert.equal(`${row.glyph} ${row.label}`, '⟳ codex claims');
   });
 
   test('chainStatusLine 三态', () => {

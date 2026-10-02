@@ -52,6 +52,19 @@ describe('normalizeDesktopPath — 防呆 no-ops', () => {
     expect(normalizeDesktopPath(p, opts)).toBe(p);
   });
 
+  test('relocated desktop: stray same-named folder under home is redirected (IMPL-RPT-063 P10)', () => {
+    // 2026-09-23 real session: canonical desktop is D:\desktop (registry), a
+    // stray C:\Users\<u>\Desktop still exists. A basename-only "OS authority
+    // wins" check let ~/Desktop keep writing into the folder the user never
+    // sees. The check must compare the full resolved path.
+    const canon = path.sep === '\\' ? 'D:\\desktop' : '/mnt/data/desktop';
+    const o = { _home: HOME, _resolveDesktop: () => canon };
+    expect(normalizeDesktopPath(j(HOME, 'Desktop', 'a.png'), o)).toBe(j(canon, 'a.png'));
+    expect(normalizeDesktopPath(j(HOME, '桌面', 'a.png'), o)).toBe(j(canon, 'a.png'));
+    // but the canonical folder itself stays untouched
+    expect(normalizeDesktopPath(j(canon, 'a.png'), o)).toBe(j(canon, 'a.png'));
+  });
+
   test('alias NOT the first segment under home is left alone', () => {
     const p = j(HOME, 'projects', '桌面', 'x.txt');
     expect(normalizeDesktopPath(p, opts)).toBe(p);

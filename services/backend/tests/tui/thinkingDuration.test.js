@@ -74,43 +74,43 @@ test('humanizeThinkingMs: KHY_CC_FORMAT 关 → 逐字节回退 legacy 口径', 
 test('buildThinkingSummary: 门控开 + 真实时长 → 带时长', () => {
   assert.equal(
     buildThinkingSummary({ chars: 42, durationMs: 7000, env: {} }),
-    '💭 思考 7s · 42 字（Ctrl+O 展开）'
+    '思考 7s · 42 字（Ctrl+O 展开）'
   );
 });
 
 test('buildThinkingSummary: 门控开但无时长 → 旧文案(字节回退)', () => {
   assert.equal(
     buildThinkingSummary({ chars: 42, durationMs: 0, env: {} }),
-    '💭 思考 · 42 字（Ctrl+O 展开）'
+    '思考 · 42 字（Ctrl+O 展开）'
   );
   assert.equal(
     buildThinkingSummary({ chars: 42, env: {} }),
-    '💭 思考 · 42 字（Ctrl+O 展开）'
+    '思考 · 42 字（Ctrl+O 展开）'
   );
 });
 
 test('buildThinkingSummary: 门控关 → 旧文案(逐字节回退,即便有时长)', () => {
   assert.equal(
     buildThinkingSummary({ chars: 42, durationMs: 7000, env: { KHY_THINKING_DURATION: '0' } }),
-    '💭 思考 · 42 字（Ctrl+O 展开）'
+    '思考 · 42 字（Ctrl+O 展开）'
   );
 });
 
 test('buildThinkingSummary: 亚秒时长 → 不显时长(诚实)', () => {
   assert.equal(
     buildThinkingSummary({ chars: 10, durationMs: 200, env: {} }),
-    '💭 思考 · 10 字（Ctrl+O 展开）'
+    '思考 · 10 字（Ctrl+O 展开）'
   );
 });
 
 test('buildThinkingHeader: 门控开 + 时长 → 带时长(CC 空格口径)', () => {
-  assert.equal(buildThinkingHeader({ durationMs: 90000, env: {} }), '💭 思考 1m 30s');
+  assert.equal(buildThinkingHeader({ durationMs: 90000, env: {} }), '思考 1m 30s');
 });
 
-test('buildThinkingHeader: 门控关 / 无时长 → 裸 💭 思考', () => {
-  assert.equal(buildThinkingHeader({ durationMs: 7000, env: { KHY_THINKING_DURATION: 'off' } }), '💭 思考');
-  assert.equal(buildThinkingHeader({ env: {} }), '💭 思考');
-  assert.equal(buildThinkingHeader({}), '💭 思考');
+test('buildThinkingHeader: 门控关 / 无时长 → 裸 思考', () => {
+  assert.equal(buildThinkingHeader({ durationMs: 7000, env: { KHY_THINKING_DURATION: 'off' } }), '思考');
+  assert.equal(buildThinkingHeader({ env: {} }), '思考');
+  assert.equal(buildThinkingHeader({}), '思考');
 });
 
 test('绝不抛:畸形入参全部安全降级', () => {

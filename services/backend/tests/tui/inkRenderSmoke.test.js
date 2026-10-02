@@ -1246,7 +1246,7 @@ describeOrSkip('Ink TUI render smoke (src/cli/tui/ink-components)', () => {
       return frame;
     };
     const collapsed = await renderMsg(false);
-    expect(collapsed).toContain('💭 思考'); // fold marker
+    expect(collapsed).toContain('思考'); // fold marker
     expect(collapsed).toContain('字'); // char-count summary
     expect(collapsed).toContain('答复正文'); // answer still shown
     expect(collapsed).not.toContain('SECRET_THOUGHT'); // body hidden when folded
@@ -1282,16 +1282,16 @@ describeOrSkip('Ink TUI render smoke (src/cli/tui/ink-components)', () => {
       return frame;
     };
     const collapsed = await renderDur(false);
-    expect(collapsed).toContain('💭 思考 7s'); // real elapsed surfaced (folded)
+    expect(collapsed).toContain('思考 7s'); // real elapsed surfaced (folded)
     const open = await renderDur(true);
-    expect(open).toContain('💭 思考 7s'); // same duration in the expanded header
+    expect(open).toContain('思考 7s'); // same duration in the expanded header
 
     // Gate off → byte-fallback to the legacy duration-less line.
     const prev = process.env.KHY_THINKING_DURATION;
     process.env.KHY_THINKING_DURATION = '0';
     try {
       const off = await renderDur(false);
-      expect(off).toContain('💭 思考'); // marker still there
+      expect(off).toContain('思考'); // marker still there
       expect(off).not.toContain('7s'); // duration suppressed
     } finally {
       if (prev === undefined) delete process.env.KHY_THINKING_DURATION;

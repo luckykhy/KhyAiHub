@@ -69,7 +69,7 @@ test('topicBar: 主题里的 BEL 不能再开出第二条 OSC(实测曾是 OSC 5
   const bytes = paintTopicBar(evil);
   assert.strictEqual(oscCommands(bytes).length, 1, `只该有一条 OSC,实得:${JSON.stringify(bytes)}`);
   assert.ok(!/\x1b\]52;/.test(bytes), '不得出现 OSC 52 剪贴板写入');
-  assert.strictEqual(paintedTitle(bytes), '🍀 标题pwned');
+  assert.strictEqual(paintedTitle(bytes), '✱ 标题pwned');
 });
 
 test('topicBar: 主题里的 ST(ESC \\)同样不能提前终结 OSC 串', () => {
@@ -106,7 +106,7 @@ test('正常标题逐字节不变(清洗只砍控制字符,不动可读文本)',
   for (const topic of ['修复登录 bug', 'AST parser', '🍀 混合 emoji 标题', 'a/b? c=d']) {
     const bytes = paintTopicBar(topic);
     assert.strictEqual(oscCommands(bytes).length, 1);
-    assert.ok(bytes.endsWith(`\x1b]0;🍀 ${topic}\x07`), `标题被改写:${JSON.stringify(topic)}`);
+    assert.ok(bytes.endsWith(`\x1b]0;✱ ${topic}\x07`), `标题被改写:${JSON.stringify(topic)}`);
   }
 });
 
@@ -133,5 +133,5 @@ test('标题显示列宽不超过预算(CJK/emoji/ASCII 三类各扫一遍)', ()
 
 test('未超预算的 CJK 标题不被裁短(旧的按字符数判定会误伤)', () => {
   const topic = '中'.repeat(50); // 100 列,在预算内
-  assert.strictEqual(paintedTitle(paintTopicBar(topic)), `🍀 ${topic}`);
+  assert.strictEqual(paintedTitle(paintTopicBar(topic)), `✱ ${topic}`);
 });

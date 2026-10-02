@@ -21,7 +21,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 const path = require('node:path');
 
-const MOD = path.join(__dirname, '..', 'src', 'services', 'tokenless', 'toonCodec.js');
+const MOD = path.join(__dirname, '..', 'src', 'services', 'domain', 'account', 'tokenless', 'toonCodec.js');
 
 function load(gate) {
   delete require.cache[require.resolve(MOD)];

@@ -152,9 +152,9 @@ describeOrSkip('AgentTree ink render', () => {
   test('ToolLines falls back to the normal row before any child spawns (_agentTree empty)', async () => {
     const tools = [{ id: 'tool-A', name: 'agent', input: { prompt: 'X' }, _agentTree: [] }];
     const frame = await frameFor(ToolLines, { tools, expanded: false, live: true });
-    // Header display name goes through the CC-parity SSOT (toolHeaderDisplayName
-    // → renderTheme.getToolDisplayName), which maps agent → 'Agent'.
-    expect(frame).toContain('Agent(X)'); // the normal ◆ Agent(...) row
+    // 头行走行语法 SSOT([DESIGN-ARCH-155]):`动词 + 目标` = `派发 X`,
+    // 而非旧的 `Agent(X)` 形态(取不到动词才回退旧形态,此处动词表命中)。
+    expect(frame).toContain('派发 X'); // the normal ◆ 派发(...) row
     expect(frame).not.toContain('Running'); // no tree header yet
   });
 });

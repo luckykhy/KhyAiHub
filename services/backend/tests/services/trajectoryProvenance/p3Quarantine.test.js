@@ -96,8 +96,14 @@ describe('codexAdapter 结构守卫', () => {
   const src = fs.readFileSync(path.join(__dirname, '../../../src/services/gateway/adapters/codexAdapter.js'), 'utf-8');
 
   test('不再无条件 enableDangerousMode（旧漏洞模式已移除）', () => {
-    assert.equal(/if \(!wasDangerous\) toolCalling\.enableDangerousMode\(\);/.test(src), false,
-      '旧的无条件自动批准模式不应再出现');
+    // 形态无关：单行 `if (x) call();` 与花括号块 `if (x) { call(); }` 都要查得动。
+    // 只匹单行字面量的守卫会因排版变化而静默失效——2026-09-29 实测 codexAdapter.js:2245-2247
+    // 正是花括号形态，于是「旧模式不存在」这条恒真（因为新版也匹不上），安全守卫形同虚设。
+    const unguarded = /if \(!wasDangerous\)\s*\{?\s*toolCalling\.enableDangerousMode\(\)/;
+    assert.equal(unguarded.test(src), false, '旧的无条件自动批准模式不应再出现');
+    // 唯一性比"匹某个反面字面量"更强：整份 adapter 只允许存在一个调用点。
+    const calls = src.match(/toolCalling\.enableDangerousMode\(\)/g) || [];
+    assert.equal(calls.length, 1, `enableDangerousMode 调用点必须唯一，实测 ${calls.length} 处`);
   });
 
   test('引入隔离策略并按裁决隔离', () => {
@@ -107,6 +113,10 @@ describe('codexAdapter 结构守卫', () => {
   });
 
   test('开启 dangerous 受 willEnableDangerous 守卫（仅逃生口）', () => {
-    assert.match(src, /if \(willEnableDangerous\) toolCalling\.enableDangerousMode\(\);/);
+    assert.match(
+      src,
+      /if \(willEnableDangerous\)\s*\{?\s*toolCalling\.enableDangerousMode\(\);/,
+      '唯一的 enableDangerousMode 调用点必须受 willEnableDangerous 守卫'
+    );
   });
 });
