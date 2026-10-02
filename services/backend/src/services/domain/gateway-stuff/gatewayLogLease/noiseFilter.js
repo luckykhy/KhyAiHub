@@ -18,28 +18,15 @@
 /**
  * formatStatusMessage 的取用点。
  *
- * `cli/statusMessageFormatter` 是 34 行、零 require 的纯叶子(自述即 "pure leaf")，
- * 服务层直连它是反向分层(archDebtScan R1)。
+ * 2026-09-28 ([RESEARCH-018] §3.1 P2 破环):该纯叶子已下沉到共享底座
+ * `utils/format/statusMessageFormatter`，本文件因此**不再需要** cliLeafPort，也不再自举
+ * `cli/ai` —— 依赖方向严格向下，巨型 SCC 的 services→cli 反向边就此少一条。
  *
- * 两档回落(与 sessionForestService 同一范式):
- *   ① cliLeafPort 已注册 → 直接用端口里的函数。
- *   ② 未注册 → 自举 `cli/ai` 触发自注册，再取一次。
- * 本文件因此只有 **一行** cli 引用，语义是「拉起 CLI 让其自注册」而非「向 cli 要能力」。
- *
- * ⚠ 必须是**函数调用**而非模块级常量：RULES 表在模块加载期就构造，那时端口多半还没注册。
+ * ⚠ 仍保持**函数调用**而非模块级常量：RULES 表在模块加载期就构造。
  */
 function _formatStatusMessage(...args) {
-  const port = require('../../../cliLeafPort');
-  let fn = port.getFormatStatusMessage();
-  if (typeof fn !== 'function') {
-    // 唯一 cli 引用：不是取能力，是触发 cli/ai 自注册（见上）。
-    require('../../../../cli/ai');
-    fn = require('../../../cliLeafPort').getFormatStatusMessage();
-  }
-  if (typeof fn !== 'function') {
-    throw new Error('statusMessageFormatter 未注册到 cliLeafPort(cli/ai 不可用)');
-  }
-  return fn(...args);
+  return require('../../../../utils/format/statusMessageFormatter')
+    .formatStatusMessage(...args);
 }
 
 // 适配器名/内部标识词表（用于脱敏时整体抹除，避免内幕名泄漏）。
