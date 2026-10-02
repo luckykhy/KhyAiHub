@@ -278,8 +278,13 @@ function checkBypassSpawn(changedOnly) {
       // 常被同一行的 `spawn()` 字样带中，跳过注释行避免把注释误判为旁路 spawn。
       if (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*')) return;
       if (isSuppressed(lines, index)) return;
-      if (!SPAWN_CALL_RE.test(line)) return;
-      const lowered = line.toLowerCase();
+      // 正则字面量里的 `.exec(` / `.test(` 不是进程拉起：`/^claude-(opus|sonnet)/i.exec(raw)`
+      // 这类 slug 解析会在词位上命中 SPAWN_CALL_RE 的 `exec\b`，且同一行天然含 `claude`
+      // 字样，于是被判成「旁路拉起 claude CLI」——纯误报。把正则字面量从判据输入里剥掉，
+      // 只保留真实代码，才能让 `spawn('claude', …)` 这类真信号不被同构误报淹没。
+      const code = stripRegexLiterals(line);
+      if (!SPAWN_CALL_RE.test(code)) return;
+      const lowered = code.toLowerCase();
       const hit = EXTERNAL_CLI_IDS.find((id) => new RegExp(`['"\`]${id}['"\`]|(^|[^a-z])${id}([^a-z]|$)`).test(lowered));
       if (!hit) return;
       add(
@@ -301,6 +306,91 @@ function isSuppressed(lines, index) {
   for (const candidate of [current, prev]) {
     const m = /\/\/\s*khy-allow-PROCESS-004\s*:\s*(.*)$/.exec(candidate);
     if (m) return (m[1] || '').trim() !== '';
+  }
+  return false;
+}
+
+/**
+ * 把 JS 源码行里的正则字面量整体替换为空格，只留下真实代码。
+ *
+ * 为什么需要：SPAWN_CALL_RE 里的 `exec\b` 会命中 `/…/i.exec(raw)` 这种**正则方法调用**，
+ * 而 slug 解析行天然同时含 `claude` 字样（`/^claude-(opus|sonnet|haiku)-…/i.exec(raw)`），
+ * 于是被判成「旁路拉起 claude CLI」。剥掉正则字面量即可让判据只认真实代码。
+ *
+ * 判据是「词位 + 前一个非空白字符」：`(`, `,`, `=`, `:`, `[`, `!`, `&`, `|`, `?`, `{`, `;`,
+ * return 关键字等位置上的 `/` 才是正则起点；`a / b` 这类除法（前一字符是标识符/数字/`)`/`]`）
+ * 不当作正则，避免把一个真正的 `spawn(...)` 之后的代码整体吞掉。
+ * 不追求完整 JS 词法（斜杠歧义的完整解法需要真 parser），只求「本仓库源码行」上的稳定正确。
+ */
+function stripRegexLiterals(line) {
+  let out = '';
+  let i = 0;
+  const n = line.length;
+  while (i < n) {
+    const ch = line[i];
+    if (ch === '/' && i + 1 < n && line[i + 1] === '/') {
+      // 行注释：其后内容不参与判据
+      out += ' ';
+      i = n;
+      break;
+    }
+    if (ch === '/' && i + 1 < n && line[i + 1] === '*') {
+      const end = line.indexOf('*/', i + 2);
+      const stop = end === -1 ? n : end + 2;
+      out += ' '.repeat(stop - i);
+      i = stop;
+      continue;
+    }
+    if (ch === '/' && isRegexStart(out)) {
+      // 找未转义的收尾斜杠（跳过字符类内的斜杠）
+      let j = i + 1;
+      let inClass = false;
+      while (j < n) {
+        const c = line[j];
+        if (c === '\\') {
+          j += 2;
+          continue;
+        }
+        if (c === '[') inClass = true;
+        else if (c === ']') inClass = false;
+        else if (c === '/' && !inClass) break;
+        j += 1;
+      }
+      if (j >= n) {
+        // 没有收尾斜杠 ⇒ 不是正则，按普通字符处理
+        out += ch;
+        i += 1;
+        continue;
+      }
+      // 连同 flags 一起剥掉
+      let k = j + 1;
+      while (k < n && /[a-z]/i.test(line[k])) k += 1;
+      out += ' '.repeat(k - i);
+      i = k;
+      continue;
+    }
+    out += ch;
+    i += 1;
+  }
+  return out;
+}
+
+// 判断当前位置的 `/` 是否处于「正则起点」：看前一个有效字符。
+// 前一字符是这些之一 ⇒ 前一个 token 已经结束，`/` 只能开启正则。
+const REGEX_PREV_CHARS = new Set(['(', ',', '=', ':', '[', '!', '&', '|', '?', '+', '-', '*', '%', '<', '>', '^', '~', ';', '{', '}']);
+const REGEX_PREV_WORDS = new Set(['return', 'typeof', 'instanceof', 'in', 'of', 'new', 'delete', 'void', 'case', 'do', 'else', 'yield', 'await']);
+
+function isRegexStart(prefix) {
+  const text = String(prefix);
+  let k = text.length - 1;
+  while (k >= 0 && /\s/.test(text[k])) k -= 1;
+  if (k < 0) return true; // 行首
+  const prev = text[k];
+  if (REGEX_PREV_CHARS.has(prev)) return true;
+  if (/[A-Za-z_$]/.test(prev)) {
+    let w = k;
+    while (w >= 0 && /[A-Za-z0-9_$]/.test(text[w])) w -= 1;
+    return REGEX_PREV_WORDS.has(text.slice(w + 1, k + 1));
   }
   return false;
 }

@@ -112,7 +112,9 @@ const HIGH_RISK_PATH_RULES = [
 const WEAK_MODEL_BANNER_MARK = '[AI-弱模型';
 const WEAK_MODEL_BANNER_FILES = [
   'services/backend/src/services/toolCalling.js',
-  'services/backend/src/services/flagRegistry.js',
+  // flagRegistry 真身 2026-09-28 归位到 D3（services/flagRegistry.js 只剩一行兼容壳，
+  // 壳上无横幅，故这里必须列真身；指回壳会让 15 处 [AI-弱模型] 横幅检查两头落空）。
+  'services/backend/src/utils/flagRegistry/index.js',
   'services/backend/src/services/goalStopGate.js',
   'services/backend/src/services/toolUseLoop.js',
   'services/backend/src/services/weakModelGuidance.js',

@@ -187,7 +187,7 @@ function main() {
     console.log(`- [warn] ${msg} (id: touch-cost-high)`);
   }
   if (findings.length === 0) {
-    console.log('✅ 触点压缩目标已达成。');
+    console.log('✓ 触点压缩目标已达成。');
   }
 
   console.log(`\nSummary: ${findings.length} warning(s).`);

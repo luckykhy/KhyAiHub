@@ -65,6 +65,9 @@ function targets() {
   const dirs = [
     path.join(REPO_ROOT, 'services', 'backend', 'src', 'services', 'gateway'),
     path.join(REPO_ROOT, 'services', 'backend', 'src', 'services', 'promptTemplateCatalog.js'),
+    // flagRegistry 真身 2026-09-28 归位到 D3 共享底座；services/flagRegistry.js 只剩
+    // 一行兼容壳，仍留在下方作为路径存在性锚点，但被扫描的表体在这里。
+    path.join(REPO_ROOT, 'services', 'backend', 'src', 'utils', 'flagRegistry'),
     path.join(REPO_ROOT, 'services', 'backend', 'src', 'services', 'flagRegistry.js'),
   ];
   const out = [];

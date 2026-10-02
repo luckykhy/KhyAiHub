@@ -479,7 +479,7 @@ function render(findings, meta) {
   L.push('');
 
   if (!findings.length) {
-    L.push('✅ 构建/交付配置与锁文件均只使用官方源；运行时镜像均已被显式开关门控。');
+    L.push('✓ 构建/交付配置与锁文件均只使用官方源；运行时镜像均已被显式开关门控。');
     return L.join('\n');
   }
 

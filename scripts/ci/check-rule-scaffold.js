@@ -246,7 +246,7 @@ function main() {
   }
 
   if (findings.length === 0) {
-    console.log('✅ 全部规则的接线完整，且无 advisory 永不执行项。');
+    console.log('✓ 全部规则的接线完整，且无 advisory 永不执行项。');
   }
   console.log(`\nSummary: ${findings.length} warning(s).`);
   return 0; // gate=commit + severity=advisory ⇒ 恒 exit 0，不阻断

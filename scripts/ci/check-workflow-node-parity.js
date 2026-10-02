@@ -224,7 +224,7 @@ function runMatrix(real) {
     const ok = JSON.stringify(ids) === JSON.stringify(want);
     if (!ok) failed += 1;
     lines.push(
-      `${ok ? '✅' : '❌'} ${c.name.padEnd(20)} 期望 ${JSON.stringify(want)}｜实得 ${JSON.stringify(ids)}`
+      `${ok ? '✓' : '✗'} ${c.name.padEnd(20)} 期望 ${JSON.stringify(want)}｜实得 ${JSON.stringify(ids)}`
     );
     lines.push(`    ${c.why}`);
   }
@@ -235,7 +235,7 @@ function runMatrix(real) {
   const stageLive = s1.errors === 0 && s3.errors > 0;
   lines.push('');
   lines.push(
-    `${stageLive ? '✅' : '❌'} 升阶自检：同一输入 S1 error=${s1.errors} / S3 error=${s3.errors}（必须不同，否则 STAGE 是装饰）`
+    `${stageLive ? '✓' : '✗'} 升阶自检：同一输入 S1 error=${s1.errors} / S3 error=${s3.errors}（必须不同，否则 STAGE 是装饰）`
   );
   if (!stageLive) failed += 1;
 
@@ -259,7 +259,7 @@ function render(findings, meta, verbose) {
   L.push('');
 
   if (!findings.length) {
-    L.push('✅ 节点类型目录与执行器 handler 双向一致；未知类型 fail-closed；worker 已校验图。');
+    L.push('✓ 节点类型目录与执行器 handler 双向一致；未知类型 fail-closed；worker 已校验图。');
     return L.join('\n');
   }
 

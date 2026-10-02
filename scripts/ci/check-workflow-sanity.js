@@ -379,7 +379,7 @@ function main() {
 
   const files = listWorkflowFiles(changedOnly);
   if (files.length === 0) {
-    console.log('📋 Workflow 体检：无待检查文件。');
+    console.log('Workflow 体检：无待检查文件。');
     process.exit(0);
   }
 
@@ -410,12 +410,12 @@ function main() {
   const warnings = findings.filter((f) => f.level === 'warning');
 
   if (errors.length === 0 && warnings.length === 0) {
-    console.log(`✅ Workflow 体检通过（检查了 ${files.length} 个文件）。`);
+    console.log(`✓ Workflow 体检通过（检查了 ${files.length} 个文件）。`);
     process.exit(0);
   }
 
   for (const f of findings) {
-    const tag = f.level === 'error' ? '❌' : '⚠️ ';
+    const tag = f.level === 'error' ? '✗' : '⚠ ';
     const loc = f.line ? `${f.file}:${f.line}` : f.file;
     console.log(`${tag} ${loc}\n   ${f.msg}\n`);
   }

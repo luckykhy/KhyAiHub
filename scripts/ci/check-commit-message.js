@@ -37,7 +37,7 @@ const firstLine = msg.split('\n')[0];
 const PATTERN = /^(feat|fix|docs|style|refactor|perf|test|chore|ci|revert)(\([a-z0-9-]+\))?: .+/;
 
 if (!PATTERN.test(firstLine)) {
-  console.error('❌ Commit message 格式不正确');
+  console.error('✗ Commit message 格式不正确');
   console.error('');
   console.error('正确格式: <type>(<scope>): <中文描述>');
   console.error('');
@@ -63,13 +63,13 @@ if (!PATTERN.test(firstLine)) {
 // 检查描述长度
 const description = firstLine.replace(/^(feat|fix|docs|style|refactor|perf|test|chore|ci|revert)(\([a-z0-9-]+\))?: /, '');
 if (description.length > 72) {
-  console.error(`❌ 描述部分超过 72 字符（当前 ${description.length} 字符）`);
+  console.error(`✗ 描述部分超过 72 字符（当前 ${description.length} 字符）`);
   process.exit(1);
 }
 
 // 检查描述是否为空
 if (description.trim().length === 0) {
-  console.error('❌ 描述部分不能为空');
+  console.error('✗ 描述部分不能为空');
   process.exit(1);
 }
 
@@ -98,7 +98,7 @@ const AI_ATTRIBUTION_PATTERNS = [
   new RegExp(`co-authored-by:\\s*[^\\n<]*(?:${AI_NAMES})[^\\n]*<[^>]+>`, 'i'),
   // B) 徽章行 / 机器人署名
   new RegExp(`generated with\\s+\\[?(?:${AI_NAMES})`, 'i'),
-  /🤖\s*generated/i,
+  /🤖\s*generated/i,  // khy-allow-no-emoji: 匹配待清除的 AI 署名尾注，🤖 是匹配对象而非展示标记
 ];
 
 if (AI_ATTRIBUTION_PATTERNS.some((re) => re.test(msg))) {
@@ -106,7 +106,7 @@ if (AI_ATTRIBUTION_PATTERNS.some((re) => re.test(msg))) {
     .split('\n')
     .filter((l) => AI_ATTRIBUTION_PATTERNS.some((re) => re.test(l)))
     .map((l) => '    ' + l.trim());
-  console.error('❌ Commit message 含 AI 署名尾注（禁止把 AI 列为作者/共同作者）');
+  console.error('✗ Commit message 含 AI 署名尾注（禁止把 AI 列为作者/共同作者）');
   console.error('');
   console.error('检测到：');
   console.error(offenders.join('\n'));
@@ -123,4 +123,4 @@ if (AI_ATTRIBUTION_PATTERNS.some((re) => re.test(msg))) {
   process.exit(1);
 }
 
-console.log('✅ Commit message 格式正确');
+console.log('✓ Commit message 格式正确');

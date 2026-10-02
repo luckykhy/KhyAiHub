@@ -488,7 +488,7 @@ function checkPrecedence(file, text, registry) {
  *       出现 `npm run build`，而根 package.json 根本没有 build 脚本）。
  */
 const RE_ILLUSTRATIVE = /示例|样例|示意|举例|example|e\.g\.|输出映射|文案映射|演示/;
-const RE_CONTRAST = /[❌✅]/;
+const RE_CONTRAST = /[❌✅]/;  // khy-allow-no-emoji: 对照块判据的正则字符类，匹配的是文档里的展示符号，删一侧即失效
 
 /** 预计算每个行号是否落在「示意性代码块」内。 */
 function illustrativeLines(lines) {
@@ -942,7 +942,7 @@ const SCENARIOS = {
       {
         rel: 'services/backend/src/cli/tui/AGENTS.md',
         tier: 'compat',
-        text: '# TUI\n\n✅ 新增文件优先于修改现有文件\n',
+        text: '# TUI\n\n✅ 新增文件优先于修改现有文件\n',  // khy-allow-no-emoji: 喂给被检器的文档夹具，内容是待判定的展示文案，不是本仓界面
       },
     ],
   },
@@ -1015,12 +1015,12 @@ const SCENARIOS = {
     ],
   },
   'contrast-block': {
-    desc: '❌/✅ 对照块里的命令是展示文案 → 期望**无** finding（放行对照）',
+    desc: '❌/✅ 对照块里的命令是展示文案 → 期望**无** finding（放行对照）',  // khy-allow-no-emoji: 场景描述指向上述夹具里的展示符号对，改名会让用例名不副实
     files: [
       {
         rel: 'AGENTS.md',
         tier: 'compat',
-        text: '# X\n\n**红线**：必须显示动词 + 目标。\n\n```\n❌  运行 bash\n✅  执行 npm run build\n```\n',
+        text: '# X\n\n**红线**：必须显示动词 + 目标。\n\n```\n❌  运行 bash\n✅  执行 npm run build\n```\n',  // khy-allow-no-emoji: 喂给被检器的文档夹具，内容是待判定的展示文案，不是本仓界面
       },
     ],
   },

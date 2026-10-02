@@ -469,7 +469,10 @@ const PROMPTS_PATH_P0 = path.join(
   'constants',
   'prompts.js'
 );
-const FLAG_REGISTRY_PATH = path.join(ROOT, 'services', 'backend', 'src', 'services', 'flagRegistry.js');
+// 必须指向 **真身**（2026-09-28 第 17 批归位后在 D3 共享底座）：本检查既 require 它
+// （核验默认值）也 readFileSync 它（按文本核验门控是否登记）。services/flagRegistry.js
+// 现在是一行再导出壳——读壳会「登记缺失」假红（实测 PTX-103 曾因此误报 2 个 error）。
+const FLAG_REGISTRY_PATH = path.join(ROOT, 'services', 'backend', 'src', 'utils', 'flagRegistry', 'index.js');
 
 (function checkDescriptorSlots() {
   if (!promptsSource) {

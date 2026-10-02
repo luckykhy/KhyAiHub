@@ -91,7 +91,7 @@ function main() {
     if (fs.existsSync(LINT_DEBT_PATH)) {
       const prevDebt = JSON.parse(fs.readFileSync(LINT_DEBT_PATH, 'utf8'));
       if (prevDebt.total && debt.total > prevDebt.total) {
-        console.warn(`[LINT-DEBT] ⚠️  Debt INCREASED by ${debt.total - prevDebt.total} issues`);
+        console.warn(`[LINT-DEBT] ⚠  Debt INCREASED by ${debt.total - prevDebt.total} issues`);
         process.exitCode = 0; // Don't block, just warn
       }
     }

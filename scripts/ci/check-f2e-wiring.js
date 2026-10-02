@@ -240,27 +240,49 @@ function checkDesktop() {
   const warnings = [];
   const matched = [];
 
-  const RE_HANDLE = /ipcMain\.handle\(\s*(['"`])([^'"`]+)\1/;
+  // 握手面识别：任意接收者上的 .handle('ch'，不限定变量名。
+  // 早先只认 `ipcMain.handle(`，而注册点常把 IpcMain 作为注入参数传入
+  // （例：apps/khyos-desktop/src/main/keyManager/ipc.ts 的 `ipc.handle('keys:list', …)`），
+  // 参数名一旦不是字面 `ipcMain`，整批已注册通道就被误判成孤儿 —— 2026-10-01 实测
+  // 25 条假阳性即由此而来。判据应覆盖「是否注册」，而不是「用什么变量名注册」。
+  const RE_HANDLE = /(?:\b[A-Za-z_$][\w$]*)\.handle\(\s*(['"`])([^'"`]+)\1/;
+  // 动态注册：handle(<非字面量>) —— 静态判不出通道名，只用于把 error 降级为 warning。
+  const RE_HANDLE_DYNAMIC = /\.handle\(\s*(?!\s*['"`])[A-Za-z_$[]/;
   const RE_INVOKE = /\.invoke\(\s*(['"`])([^'"`]+)\1/;
   const RE_ENDPOINT = /https?:\/\/[^\s'"`)]+/g;
+
+  // 4c 需要跨 app 的并集，故在 app 循环外累积。
+  const allHandles = new Set();
+  const allInvoked = new Set();
 
   for (const app of apps) {
     if (!fs.existsSync(app.root)) continue;
     const files = listFiles(app.root, app.exts);
     const handles = new Set();
     const invokes = [];
+    let dynamicSites = [];
     for (const f of files) {
       fs.readFileSync(f, 'utf8').split(/\r?\n/).forEach((line, i) => {
         const h = line.match(RE_HANDLE);
         if (h) handles.add(h[2]);
+        else if (RE_HANDLE_DYNAMIC.test(line)) dynamicSites.push({ file: rel(f), line: i + 1 });
         const inv = line.match(RE_INVOKE);
         if (inv) invokes.push({ ch: inv[2], file: rel(f), line: i + 1 });
       });
     }
-    // 4a. every invoke must have a handle
+    for (const ch of handles) allHandles.add(ch);
+    for (const inv of invokes) allInvoked.add(inv.ch);
+    // 4a. every invoke must have a handle.
+    // 有字面量注册 ⇒ matched；无注册但存在动态注册点 ⇒ warning（静态判不出，
+    // 按 [DESIGN-ARCH-171] P5：识别面窄于语义面时只许降级，不得判 error）；
+    // 两者皆无 ⇒ error（真孤儿）。
     for (const inv of invokes) {
       if (handles.has(inv.ch)) matched.push(inv);
-      else gaps.push({ ...inv, app: app.label, kind: 'ipc-orphan-invoke', detail: '.invoke(' + inv.ch + ') has no ipcMain.handle(' + inv.ch + ')' });
+      else if (dynamicSites.length) {
+        warnings.push({ ...inv, app: app.label, kind: 'ipc-channel-unverified', detail: '.invoke(' + inv.ch + ') has no literal handle; dynamic registration exists at ' + dynamicSites[0].file + ':' + dynamicSites[0].line + ' — verify manually' });
+      } else {
+        gaps.push({ ...inv, app: app.label, kind: 'ipc-orphan-invoke', detail: '.invoke(' + inv.ch + ') has no handle(' + inv.ch + ')' });
+      }
     }
     // 4b. endpoint source: production domains / hardcoded host:port
     for (const f of files) {
@@ -290,7 +312,21 @@ function checkDesktop() {
       });
     }
   }
-  return { label: 'DESKTOP (IPC + endpoint source)', gaps, warnings, matched, total: matched.length + gaps.length };
+  // 4c. 悬空能力（advisory，不计 gap）：后端注册了 handle 但全仓无任何 invoke。
+  // 不判 error 也不判 warning —— 刻意保留而无入口是既有设计选择
+  // （先例：[DESIGN-ARCH-060] §四把 cli/pty.js 登记为「保留且刻意不接线」）。
+  // 打印只为让维护者看见「有什么能力还没入口」，处置权在人工。
+  // 2026-10-01 实测本仓命中 1 项：host:status（apps/khyos-desktop/src/main/index.ts:1027）。
+  const danglingHandles = [...allHandles].filter((ch) => !allInvoked.has(ch)).sort();
+
+  return {
+    label: 'DESKTOP (IPC + endpoint source)',
+    gaps,
+    warnings,
+    matched,
+    danglingHandles,
+    total: matched.length + gaps.length
+  };
 }
 
 // ── helpers ────────────────────────────────────────────────────────
@@ -391,6 +427,11 @@ function main() {
       }
     } else if (!d.warnings || d.warnings.length === 0) {
       console.log('  (clean)');
+    }
+    // advisory：不参与 anyGap，不影响退出码。让「后端有能力但无入口」可见。
+    if (d.danglingHandles && d.danglingHandles.length) {
+      console.log('  -- dangling handlers (advisory, 无前端入口；刻意保留则登记为设计选择): ' + d.danglingHandles.length);
+      for (const ch of d.danglingHandles) console.log('     · ' + ch);
     }
     console.log('');
   }

@@ -223,14 +223,14 @@ function main() {
   checkUnsafeJsonParse();
   
   if (findings.length === 0) {
-    console.log('✅ 安全扫描通过，未发现问题。\n');
+    console.log('✓ 安全扫描通过，未发现问题。\n');
     return;
   }
   
   const errors = findings.filter(f => f.severity === 'error');
   const warnings = findings.filter(f => f.severity === 'warning');
   
-  console.log(`❌ 发现 ${findings.length} 个安全问题：\n`);
+  console.log(`✗ 发现 ${findings.length} 个安全问题：\n`);
   
   if (errors.length > 0) {
     console.log(`  Errors (${errors.length}):`);

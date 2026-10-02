@@ -625,7 +625,7 @@ function main() {
   }
 
   if (!result.findings.length) {
-    if (verbose) process.stdout.write('  ✅ 客户满意：存证齐全，可以动手。\n');
+    if (verbose) process.stdout.write('  ✓ 客户满意：存证齐全，可以动手。\n');
   } else {
     for (const f of [...errors, ...warnings]) {
       process.stdout.write(`[${labelOf(f.severity)}] ${f.finding} ${f.file}:${f.line}\n`);

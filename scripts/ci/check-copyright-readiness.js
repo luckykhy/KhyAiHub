@@ -4,6 +4,8 @@
  *
  * 真源：docs/10_规范/其它规范/[DESIGN-IP-001] 软件著作权就绪规范.md
  *       （规则 PROCESS-010，登记于 docs/10_规范/registry/RULES-REGISTRY.json）
+ *       docs/10_规范/其它规范/[DESIGN-IP-002] 软著材料生成器与在仓契约.md
+ *       （同一规则 PROCESS-010 下的材料生成工具链契约；检查 7b 判它的在位性）
  *
  * 定位：把 DESIGN-IP-001 里**可机器判**的那部分做成门，让「以后生成的代码」
  * 不会悄悄破坏登记就绪度。规范里凡标 `人工` 的条目（C-M4 痕迹内容是否成立、
@@ -641,6 +643,141 @@ const PLACEHOLDER = /^(demo|test|main window|untitled|未命名|未标题|placeh
   }
 })();
 
+// ══════════════════════════════════════════════════════ 检查 7b · C-X3 / C-MAT1
+// vendored 软著材料生成器（[DESIGN-IP-002]）的完整性与本仓覆盖层在场性。
+//
+// 防的是两件具体的事：
+//   ① vendored 树被改动或整删 —— 上游口径（SKILL.md「优先抽取前端代码」+
+//      propose_code_selection.py 的 FRONTEND_EXTS 分层）就会失去对照物，
+//      而本仓 60 页选材真源是 COPYRIGHT-MATERIALS.json 的运行时链编排，两者相反。
+//   ② scripts/copyright/repo-contract.md 消失 —— vendored 文件按 B-M1 #5 不可改，
+//      覆盖只能写在外层；外层没了，上游默认口径就静默生效，把材料导向与本件
+//      登记客体无关的前端载体（C-MAT1/C-MAT3 破功）。
+// 这是「覆盖层本身」的守卫，不判 vendored 内容对错 —— 内容以 upstream-manifest.json 为准。
+const VENDOR_ROOT_REL = 'scripts/copyright/vendor/software-copyright-materials';
+const VENDOR_MANIFEST_REL = 'scripts/copyright/upstream-manifest.json';
+const VENDOR_LICENSE_REL = 'scripts/copyright/LICENSE';
+const CONTRACT_REL = 'scripts/copyright/repo-contract.md';
+const CONTRACT_SECTIONS = ['name-version', 'material-selection', 'third-party-boundary', 'output-location', 'gates', 'environment'];
+const CONTRACT_ANCHORS = [
+  ['name-version', 'COPYRIGHT.json'],
+  ['material-selection', 'COPYRIGHT-MATERIALS.json'],
+  ['third-party-boundary', 'C-X3'],
+];
+
+(function checkVendoredSkill() {
+  // 覆盖层缺失：本仓自身的留痕缺失，判 error（S1 仍降级为 WARN 不拦截）
+  const contract = read(CONTRACT_REL);
+  if (contract === null) {
+    add(
+      SEV_ERROR,
+      'copyright-overlay-missing',
+      CONTRACT_REL,
+      1,
+      'C-MAT1：vendored 材料生成器的本仓覆盖层缺失 —— 上游默认「优先抽取前端代码」将无人对冲，' +
+        `60 页选材会偏离 ${MATERIALS_REL} 的运行时链编排。修法：补 ${CONTRACT_REL}（小节见 [DESIGN-IP-002]）。`
+    );
+  } else {
+    const missing = CONTRACT_ANCHORS.filter(([, anchor]) => !contract.includes(anchor));
+    if (missing.length) {
+      add(
+        SEV_ERROR,
+        'copyright-overlay-conflict',
+        CONTRACT_REL,
+        1,
+        `C-MAT1：覆盖层存在但缺关键对冲口径（${missing.map(([k]) => k).join(' / ')}）—— ` +
+          '缺一项就等于那一项按上游口径走。明细：' +
+          missing.map(([k, a]) => `${k} 须引用 ${a}`).join(' ｜ ')
+      );
+    }
+  }
+
+  // vendored 树与钉子
+  const manRaw = read(VENDOR_MANIFEST_REL);
+  if (manRaw === null || contract === null) return;
+  let man = null;
+  try {
+    man = JSON.parse(manRaw);
+  } catch (e) {
+    add(SEV_ERROR, 'copyright-vendored-skill', VENDOR_MANIFEST_REL, 1, `upstream-manifest.json 不是合法 JSON：${e.message}`);
+    return;
+  }
+  const up = man.upstream || {};
+  if (!up.repo || !up.commit) {
+    add(
+      SEV_ERROR,
+      'copyright-vendored-skill',
+      VENDOR_MANIFEST_REL,
+      lineOf(manRaw, '"upstream"'),
+      'B-M1 #6：vendored 登记缺 upstream.repo / upstream.commit —— 无法复核上游，按 B-S4.1 视为许可证不可核实。'
+    );
+    return;
+  }
+  if (!fs.existsSync(VENDOR_LICENSE_REL) || !(read(VENDOR_LICENSE_REL) || '').includes('MIT')) {
+    add(
+      SEV_ERROR,
+      'copyright-vendored-skill',
+      VENDOR_LICENSE_REL,
+      1,
+      'B-M1 #4/#5：vendored 目录同路径的上游 LICENSE 缺失或非 MIT —— 逐字拷贝的前提不成立。'
+    );
+    return;
+  }
+  if (!fs.existsSync(path.join(REPO_ROOT, VENDOR_ROOT_REL))) {
+    add(
+      SEV_ERROR,
+      'copyright-vendored-skill',
+      VENDOR_ROOT_REL,
+      1,
+      `C-X3：vendored 树被删除（${VENDOR_ROOT_REL}）但清单仍在 —— 材料生成器不可用。` +
+        '回滚：按 upstream-manifest.json 的 commit 重新逐字取回，不要改写。'
+    );
+    return;
+  }
+
+  const files = Array.isArray(man.files) ? man.files : [];
+  const drift = [];
+  let ok = 0;
+  for (const f of files) {
+    const abs = path.join(REPO_ROOT, VENDOR_ROOT_REL, String(f.path || ''));
+    if (!f.path || !fs.existsSync(abs)) {
+      drift.push(`${f.path} ← 缺失`);
+      continue;
+    }
+    const buf = fs.readFileSync(abs);
+    const got = require('crypto').createHash('sha256').update(buf).digest('hex');
+    // 本仓 core.autocrlf=false 且 .gitattributes 未对这些扩展名设 eol，故磁盘字节即上游字节；
+    // 万一 smudge 介入，只比行尾差异不判漂移（内容真源是 git blob，不是本机换行符）。
+    if (got !== f.sha256) {
+      const normalized = buf.toString('utf8').replace(/\r\n/g, '\n');
+      const alt = require('crypto').createHash('sha256').update(Buffer.from(normalized, 'utf8')).digest('hex');
+      if (alt === f.sha256) ok++;
+      else drift.push(`${f.path} ← 内容漂移`);
+      continue;
+    }
+    ok++;
+  }
+  if (drift.length) {
+    add(
+      SEV_ERROR,
+      'copyright-vendored-skill',
+      VENDOR_ROOT_REL,
+      1,
+      `B-M1 #5：vendored 文件被改动或缺失（${drift.length}/${files.length}）。` +
+        '上游文件不得改；确需改口径就改 ' + CONTRACT_REL + '。明细：' + drift.slice(0, 6).join(' ｜ ')
+    );
+  } else if (files.length) {
+    findings.push({
+      severity: SEV_WARNING,
+      originalSeverity: SEV_WARNING,
+      finding: 'copyright-vendored-skill-ok',
+      file: VENDOR_MANIFEST_REL,
+      line: 1,
+      message: `C-X3：vendored 材料生成器完整 —— ${ok}/${files.length} 个上游文件与钉子 ${String(up.commit).slice(0, 7)} 逐字节一致，落在含 vendor 路径段的位置（排除规则天然命中）。`,
+    });
+  }
+})();
+
 // ══════════════════════════════════════════════════════ 检查 8 · 自我体检
 // 本守卫自身不得成为「死指针」
 (function checkSsotAlive() {
@@ -667,7 +804,7 @@ if (verbose) {
 }
 
 if (!findings.length) {
-  if (verbose) process.stdout.write('  ✅ 软著就绪：无 finding。\n');
+  if (verbose) process.stdout.write('  ✓ 软著就绪：无 finding。\n');
 } else {
   for (const f of [...errors, ...warnings]) {
     process.stdout.write(`[${labelOf(f.severity)}] ${f.finding} ${f.file}:${f.line || 1}\n`);
@@ -692,6 +829,7 @@ if (EXPLAIN && verbose) {
   process.stdout.write('  C-MAT2 名称与版本五处一致：申请材料 / 源程序页眉 / 说明书封面 / 界面标题 / README\n');
   process.stdout.write('  C-X2  产出可解释：.vue 样式块占比过半会挤掉有效代码行（抽取时剥离即可）\n');
   process.stdout.write('  C-E4  证据留痕：evidence/ 自留底档（AI 参与范围自述）\n');
+  process.stdout.write('  C-MAT1/C-X3  材料生成器就绪：scripts/copyright/ 的 vendored 树未被改动 + 本仓覆盖层在场且对冲上游「前端优先」\n');
   process.stdout.write('  机器判不了、故意不设守卫：C-M4 痕迹内容是否成立、C-X1 随机抽 3 处能解释 → 人工评审\n');
 }
 
