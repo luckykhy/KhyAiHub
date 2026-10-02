@@ -661,13 +661,16 @@ function neutralizeDeadLinks(html, htmlAbsPath, deadAcc, willExist) {
   html = html.replace(/<a\b([^>]*?)href="([^"]*)"([^>]*)>([\s\S]*?)<\/a>/g,
     (m, _pre, href, _post, inner) => {
       if (isExternal(href) || resolvesLocally(href)) return m;
-      deadAcc.push({ from: fromRel, type: "a", href });
+      // 消毒被扫文档里的他机绝对路径（/home/<user>/…）：审计只需知道断链形态，
+      // 不需要把机器本机路径写进 dead-links.json（RUNTIME-001）。
+      const cleanHref = href.replace(/\/home\/[^/]+\//g, "{$HOME}/");
+      deadAcc.push({ from: fromRel, type: "a", href: cleanHref });
       return `<span class="deadlink" title="目标不存在：${escapeAttr(href)}">${inner}</span>`;
     });
   html = html.replace(/<img\b([^>]*?)src="([^"]*)"([^>]*)>/g,
     (m, _pre, src, _post) => {
       if (isExternal(src) || resolvesLocally(src)) return m;
-      deadAcc.push({ from: fromRel, type: "img", href: src });
+      deadAcc.push({ from: fromRel, type: "img", href: src.replace(/\/home\/[^/]+\//g, "{$HOME}/") });
       const alt = (m.match(/alt="([^"]*)"/) || [, ""])[1];
       return `<span class="deadimg" title="图片不存在：${escapeAttr(src)}">□ ${escapeHtml(alt || "图片缺失")}</span>`;
     });
