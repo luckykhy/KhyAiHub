@@ -200,7 +200,7 @@ User → khy 命令 → Python cli.py → Node.js services/backend/bin/khy.js
 
 ## 贡献与维护
 
-- AI 助手与维护者指南（架构速查、工程规则、代码风格、评审清单）：[AGENTS.md](AGENTS.md)；同一份内容的人类指南见 [CONTRIBUTING.md](CONTRIBUTING.md)
+- AI 助手与维护者指南（架构速查、工程规则、代码风格、评审清单）：[AGENTS.md](AGENTS.md)；同一份内容的人类指南见 [CONTRIBUTING.md](.github/CONTRIBUTING.md)
 - 便携模式说明：[PORTABLE.md](docs/06_DEPLOY_部署/DEPLOY/[DEPLOY-0101] PORTABLE.md)
 - 工程红线（零硬编码、状态透明、活动超时、终端渲染）详见 AGENTS.md 的「工程规则」章节。
 

@@ -3,7 +3,7 @@
 本文件是协作规范的**单一真源**。GitHub 只识别仓库根目录、`.github/` 与 `docs/` 顶层的
 `CONTRIBUTING.md`，因此它放在根目录；`docs/08_MGMT_项目管理/CONTRIBUTING.md` 已改为指针页。
 
-开发者手册（架构、模块职责、AI 协作约定）见 [AGENTS.md](AGENTS.md)。
+开发者手册（架构、模块职责、AI 协作约定）见 [AGENTS.md](../AGENTS.md)。
 
 ---
 
@@ -18,7 +18,7 @@
 | `chore/<简述>` | 构建、依赖、CI | 无 |
 | `dev/<姓名>/<简述>` | 个人实验，不要求可合并 | 无 |
 
-`<area-id>` 取自 [`docs/14_维护者/registry/维护映射表.json`](docs/14_维护者/registry/维护映射表.json) 的 `areas[].id`，
+`<area-id>` 取自 [`docs/14_维护者/registry/维护映射表.json`](../docs/14_维护者/registry/维护映射表.json) 的 `areas[].id`，
 共 111 个区域。用它做前缀的好处是：分支名直接对应 CODEOWNERS 的归属单元。
 
 > **关于 `main` 与 `master`**：本仓库主干名为 `master`，但所有 workflow 的触发条件同时列出
@@ -114,7 +114,7 @@ node scripts/ci/check-dependency-size.js               # 报告态：包数 / �
 - Python：CI 中只有 `py_compile` 语法检查。**flake8 / black 并未配置**（仓库内不存在
   `.flake8`、`setup.cfg`、`tox.ini`，`pyproject.toml` 里也没有对应段落）。
 - Shell：**没有** shellcheck 配置。
-- 行尾由 [`.gitattributes`](.gitattributes) 强制（`.sh` → LF，`.bat` / `.ps1` → CRLF）。
+- 行尾由 [`.gitattributes`](../.gitattributes) 强制（`.sh` → LF，`.bat` / `.ps1` → CRLF）。
   在 Windows 上改脚本前请确认没有被编辑器改掉行尾。
 
 ---
@@ -136,8 +136,8 @@ node scripts/ci/check-dependency-size.js               # 报告态：包数 / �
 
 ## 6. 代码审查要求
 
-**归属**：由 [`.github/CODEOWNERS`](.github/CODEOWNERS) 决定，该文件是生成产物 ——
-真源是 `docs/14_维护者/registry/维护映射表.json`（区域与路径）+ [`.github/maintainers.json`](.github/maintainers.json)（区域 → GitHub 账号）。
+**归属**：由 [`.github/CODEOWNERS`](CODEOWNERS) 决定，该文件是生成产物 ——
+真源是 `docs/14_维护者/registry/维护映射表.json`（区域与路径）+ [`.github/maintainers.json`](maintainers.json)（区域 → GitHub 账号）。
 
 ```bash
 # 给某个区域分配维护者：编辑 .github/maintainers.json 的 areaOwners，然后
@@ -168,11 +168,11 @@ node scripts/maintenance/gen-codeowners.js --sync-roster
 把它设为必需等于让所有 PR 无法合并。
 `Frontend CI`（`AI frontend` / `KhyQuant frontend`）同样**不能**设为必需项：
 它带 `paths` 过滤器，在不改前端的 PR 上根本不会运行，也就永远不上报状态。
-详见 [`.github/rulesets/README.md`](.github/rulesets/README.md)。
+详见 [`.github/rulesets/README.md`](rulesets/README.md)。
 
 **体积与性能**：任何影响产物体积的改动，请在 PR 描述里附
 `node scripts/ci/check-frontend-size.js` 的前后对比。基线在
-[`scripts/ci/frontend-size-baseline.json`](scripts/ci/frontend-size-baseline.json)，
+[`scripts/ci/frontend-size-baseline.json`](../scripts/ci/frontend-size-baseline.json)，
 确认增长可接受后用 `--update` 更新基线，并在 PR 里说明理由。
 
 **贡献者分级**（约定，用于判断该找谁审查；GitHub 权限本身由仓库 Settings 决定）
@@ -185,26 +185,26 @@ node scripts/maintenance/gen-codeowners.js --sync-roster
 
 > 旧文档曾写「核心成员紧急修复可 self-merge」，**该条已废止**：分支保护规则的
 > `bypass_actors` 为空，且 `required_approving_review_count: 1`，任何人都无法自行合并。
-> 如果确实需要紧急通道，请按 [`.github/rulesets/README.md`](.github/rulesets/README.md)
+> 如果确实需要紧急通道，请按 [`.github/rulesets/README.md`](rulesets/README.md)
 > 显式添加 bypass 并在 PR 中说明，而不是靠口头约定。
 
 ---
 
 ## 7. 分支保护（ruleset-as-code）
 
-规则以 JSON 形式版本化在 [`.github/rulesets/`](.github/rulesets/)，不靠人在网页上点。
-应用方式见 [`.github/rulesets/README.md`](.github/rulesets/README.md)。
+规则以 JSON 形式版本化在 [`.github/rulesets/`](rulesets/)，不靠人在网页上点。
+应用方式见 [`.github/rulesets/README.md`](rulesets/README.md)。
 
 ---
 
 ## 8. 安全
 
-**不要用 Issue 报告安全问题。** 流程见 [SECURITY.md](SECURITY.md)。
+**不要用 Issue 报告安全问题。** 流程见 [SECURITY.md](../SECURITY.md)。
 
 日常开发中的硬性要求：
 
 - 任何凭据、私钥、`.env` 文件都不得进入版本库（PR 门禁会阻断）。
-- 依赖更新由 Dependabot 提出（见 [`.github/dependabot.yml`](.github/dependabot.yml)），
+- 依赖更新由 Dependabot 提出（见 [`.github/dependabot.yml`](dependabot.yml)），
   请阅读 changelog 后再合并，不要盲批。
 - 代码扫描由 `codeql-analysis.yml` 承担，结果在仓库 Security 页签。
 
@@ -226,14 +226,14 @@ scripts\sync\merge-contributions.bat <bundle1> <bundle2> ...  # 多人合入（�
 
 发布由维护者执行。流程文档：
 
-- [`docs/07_OPS_运维/OPS-MAN/[OPS-MAN-042] 发布手册-pip与npm-无AI照做.md`](docs/07_OPS_运维/) — 逐步照做的发布手册
-- [`docs/07_OPS_运维/OPS-MAN/[OPS-MAN-061] 发布门禁.md`](docs/07_OPS_运维/) — 发布前必须通过的检查
-- [`.github/workflows/dual-channel-release.yml`](.github/workflows/dual-channel-release.yml) — npm + PyPI 双通道自动化
+- [`docs/07_OPS_运维/OPS-MAN/[OPS-MAN-042] 发布手册-pip与npm-无AI照做.md`](../docs/07_OPS_运维/) — 逐步照做的发布手册
+- [`docs/07_OPS_运维/OPS-MAN/[OPS-MAN-061] 发布门禁.md`](../docs/07_OPS_运维/) — 发布前必须通过的检查
+- [`.github/workflows/dual-channel-release.yml`](workflows/dual-channel-release.yml) — npm + PyPI 双通道自动化
 
 贡献者只需注意一点：**改动版本号时多处必须同步**，以 `node scripts/ci/check-version-sync.js`
 的结论为准（仓库存在两套独立版本线：`khy-os` 与 `ai-backend`），PR 门禁会校验。
 
-变更日志写在根目录 [`CHANGELOG.md`](CHANGELOG.md)。发版时预置条目：
+变更日志写在根目录 [`CHANGELOG.md`](../CHANGELOG.md)。发版时预置条目：
 
 ```bash
 node scripts/release/changelog-new.js <version>
@@ -246,7 +246,7 @@ node scripts/release/changelog-new.js --check   # 校验顶部版本 == pyprojec
 
 ### 11.1 五种安装，各装各的
 
-**workspace 的安装入口是 pnpm**（见 [`pnpm-workspace.yaml`](pnpm-workspace.yaml)）。
+**workspace 的安装入口是 pnpm**（见 [`pnpm-workspace.yaml`](../pnpm-workspace.yaml)）。
 两个独立构建子项目（`muya-embed`、`mermaid-embed`）仍各自持有 `package-lock.json` 并用 npm 构建。
 
 同一份锁文件，四种场景装出来的东西差一个数量级。**加依赖之前先确定它属于哪一格**，
@@ -282,11 +282,11 @@ esbuild 打好的 6 份模块 bundle（`dist/modules/<模块>/bundle.mjs`，`--p
 
 最后一格是本仓库降体积的主力机制：**「能被 require 的东西必须有名字」，但有名字不等于要装。**
 `services/backend/package.json` 现有 16 个这样的可选 peer（`platform/packages/shared` 另有 1 个）。
-生效前提是 [`.npmrc`](.npmrc) 的 `auto-install-peers=false` —— 打开它这一格就退化成普通依赖，
+生效前提是 [`.npmrc`](../.npmrc) 的 `auto-install-peers=false` —— 打开它这一格就退化成普通依赖，
 17 个包连同它们的平台二进制矩阵会全部装进来。新增可选能力时照抄这个套路，并且在 require
 失败的分支里打印中文、可照做的安装提示 —— 参考
-[`services/backend/src/observability/otel.js`](services/backend/src/observability/otel.js)
-与 [`browser/engine.js`](services/backend/src/services/browser/engine.js)。
+[`services/backend/src/observability/otel.js`](../services/backend/src/observability/otel.js)
+与 [`browser/engine.js`](../services/backend/src/services/browser/engine.js)。
 
 `check-dependency-size.js` 会单独列出可选 peer 的数量与增删名单，但**不把它计入硬预算** ——
 它们零字节，拿来撑预算会把「声明了一个可选能力」误报成「依赖变重了」。
@@ -311,7 +311,7 @@ node scripts/ci/check-dependency-size.js --strict   # 超预算 exit 1
 node scripts/ci/check-dependency-size.js --update   # 确认代价可接受后重写基线
 ```
 
-基线：[`scripts/ci/dependency-size-baseline.json`](scripts/ci/dependency-size-baseline.json)。
+基线：[`scripts/ci/dependency-size-baseline.json`](../scripts/ci/dependency-size-baseline.json)。
 
 - **包数是硬预算**：从 `package-lock.json` 推导，任何机器同一份锁文件算出同一个数，
   多一个包就是超预算，不吃容差。
@@ -326,7 +326,7 @@ node scripts/ci/check-dependency-size.js --update   # 确认代价可接受后�
 合计 29.0 MB，但 `pnpm dedupe --check` exit 0 —— 一份都收敛不掉，它们全是不同依赖方的
 semver 区间真正要求的版本，不是可以合并的冗余。最大一项是 `@esbuild/win32-x64` 9.5 MB
 （0.21.5 + 0.25.12）：0.25.12 是根 devDep `esbuild`，给发布打包器
-[`packaging/build/esbuild-modules.js`](packaging/build/esbuild-modules.js) 用；0.21.5 是
+[`packaging/build/esbuild-modules.js`](../packaging/build/esbuild-modules.js) 用；0.21.5 是
 `vite@5` 自己钉的。要合并只能升 vite 大版本或用 override 把 vite 的 esbuild 跨 4 个 minor
 拽到 0.25 —— 两者都在动前端构建工具链，而收益是 9.5 MB 的**开发期**磁盘（发布产物不含
 node_modules，终端用户一个字节都不受影响）。**先跑 `pnpm dedupe --check`；它说没得收敛，
@@ -339,7 +339,7 @@ npm run clean          # 干跑：只列出将删除的目录与实测体积，�
 npm run clean:apply    # 真删
 ```
 
-只删[逐条登记](scripts/maintenance/clean.js)的构建与测试产物，每条都写明「是什么」和
+只删[逐条登记](../scripts/maintenance/clean.js)的构建与测试产物，每条都写明「是什么」和
 「怎么重建」。**源码、锁文件、node_modules、用户配置、凭据、`.khy/checkpoints`
 （跑出来的现场，不可再生）一律不碰**，登记表里出现这些路径脚本会直接 exit 2 拒绝运行。
 

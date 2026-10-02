@@ -4894,6 +4894,44 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 
 ### 16.6 施工执行状态（点头后逐批登记）
 
+> **2026-10-03 02:20 节（第 9 节）· 批次 = W2a 第一步（`CONTRIBUTING.md` 出根 → `.github/`）**
+> 本节是方案启动以来**第一个真正搬文件的每夜批**（前八节净搬家 −1，本节 −1：根项 56 → 55）。
+> 门控：W2a 的 11 个消费方宿主本节**全部现测为干净**（上节报的规模低估已按 §8 更正拆成三步，本步只做本体+代码消费方）。
+>
+> **等价证明（N-1，before/after 同一条命令）**：`node scripts/docs/verify_docs_site.js`
+> before = 源 md 1360 / html 1361 / 本地链接 **15240** 全可达 exit 0；
+> after = 源 md 1361 / html 1362 / 本地链接 **15270** 全可达 exit 0。
+> md +1 是 CONTRIBUTING 进入被扫描集（`.github/` 不在构建器 `SKIP_DIRS` 内），html +1 是它的新孪生，
+> 链接 +30 = 其内部 23 条相对链接改指后被重新计入。**断链数前后都是 0**——这正是上节担心的
+> 「23 条根相对链接会全断」的反证：改写后无一断链。
+>
+> **本提交内容**（9 件）：`git mv CONTRIBUTING.md .github/CONTRIBUTING.md`（保历史）+ 其 23 条相对链接
+> 机械改写（`.github/X`→`X` 同目录、其余根相对→`../X`）+ 新孪生 `.github/CONTRIBUTING.html` +
+> 消费方改指 6 件：`.github/CODEOWNERS`（属主规则路径）、`services/backend/src/cli/handlers/docs.js`
+> （`getContributingPath()` 的 `path.join` + 两处提示文案——这是唯一会让 `khy docs contributing`
+> 真断的功能性消费方）、`README.md`、`AGENTS.md`（含把「在仓库根目录」改成已查证的识别顺序）、
+> `scripts/ci/check-commit-message.js`、`scripts/ruleguard/backfill-fields.js`（两处文案）。
+>
+> **刻意不改的两处（记理由，不是漏做）**：① `check-repo-layout.js` 的 `ROOT_DOC_WHITELIST`
+> 保留 `'CONTRIBUTING.md'` 条目——它是**许可集**不是指针，GitHub 仍接受根位贡献指南，删了反而
+> 要让 `check-repo-layout.test.js:97` 与 `repoLayoutRootJunk.test.js:62` 两处测试跟着改，无功能收益；
+> ② `forgeCore.js:354` 的 `'CONTRIBUTING.md'` 是**分析用户项目**用的文件名清单（§19 的「文件名词」类），
+> 与本仓根位置无关，改了才是引入缺陷。
+>
+> **⚠ 孪生面混源披露（按 N-3 未并入本提交）**：构建器无单文件模式，全量跑同时改写了
+> `docs/19_资产/site/nav-data.js`、`dead-links.json`、`docs/index.html`、`.github/copilot-instructions.html`
+> 与路线图 `.html`——其中多数**在本节动手前就已被别车道改脏**（第 8 节台账已记该事实），
+> 我的内容与他们的在飞内容在同一文件内不可分离，故留脏不签，等其车道自行收口。
+> 后果：HEAD 上 `.github/CONTRIBUTING.md` 的孪生已同步，但站级导航数据（nav-data）里新页面的
+> 出现要等那次收口才入库；`verify_docs_site.js` 读磁盘，故本机判据不受影响。
+>
+> **W2 余量**：第二步 = 24 份文档 `.md` 的散文改指（含 `[RESEARCH-025]` 等）；
+> 第三步 = `SECURITY.md`——**仍按 N-1 挂起**，GitHub 官方 security policy 页正文未列可识别路径，
+> 无法证明 `.github/SECURITY.md` 仍被平台识别；`CHANGELOG.md`/`.env.example` 两件的消费方
+> 分别 16 / 29 个（多数是「泛指用户项目的 .env.example」，需第三层区分），未开工。
+>
+> 四判：见本提交说明（`check-repo-layout` / `check-roots-isomorphic` / `check-debt-ledger`）。
+
 > **2026-10-03 01:20 节（第 8 节）**：**Q0 已由人收口**——脏件 2895 → **24**、根项 78 → **56**
 > （可寻址 55）、百度在制件 20 → **0**，上节九个闸文件**全部转干净**。本节批次 = **Q-3 棘轮改判**。
 >

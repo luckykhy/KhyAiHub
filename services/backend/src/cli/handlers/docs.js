@@ -73,7 +73,7 @@ function getMaintainerMapPath() {
 }
 
 function getContributingPath() {
-  const filePath = path.join(getRepoRoot(), 'CONTRIBUTING.md');
+  const filePath = path.join(getRepoRoot(), '.github', 'CONTRIBUTING.md');
   try {
     return fs.existsSync(filePath) ? filePath : null;
   } catch {
@@ -607,7 +607,7 @@ async function handleDocsMaintainer() {
   if (contributingPath) {
     console.log(chalk.dim(`    ${contributingPath}`));
   } else {
-    console.log(chalk.dim('    CONTRIBUTING.md 未找到，请检查仓库完整性'));
+    console.log(chalk.dim('    .github/CONTRIBUTING.md 未找到，请检查仓库完整性'));
   }
   if (getMaintainerMapPath()) {
     console.log(chalk.dim(`    ${getMaintainerMapPath()}`));
@@ -663,7 +663,7 @@ async function handleDocsMaintainer() {
   }
 
   printInfo(
-    '推荐顺序: 先看 CONTRIBUTING.md，再按 docs/14_维护者/registry/维护映射表.json 选领域，再跑对应最小验证命令。'
+    '推荐顺序: 先看 .github/CONTRIBUTING.md，再按 docs/14_维护者/registry/维护映射表.json 选领域，再跑对应最小验证命令。'
   );
   console.log('');
 }

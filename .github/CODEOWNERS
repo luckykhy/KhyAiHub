@@ -93,7 +93,7 @@ services/backend/tests/publish.dbPreflight.test.js @workspace-publish-verify
 
 # Maintenance Safety and Rule Gates
 AGENTS.md @maintenance-safety
-CONTRIBUTING.md @maintenance-safety
+.github/CONTRIBUTING.md @maintenance-safety
 scripts/check-agent-rules.js @maintenance-safety
 scripts/check-change-safety.js @maintenance-safety
 scripts/install-git-hooks.js @maintenance-safety

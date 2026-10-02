@@ -381,7 +381,8 @@ G3 全 3 源的组内一致性。CI 门在发布之外强制同一不变式。
 
 ## 人工维护参考
 
-完整的中文开发者指南见 **[CONTRIBUTING.md](CONTRIBUTING.md)**（在仓库根目录——GitHub 只从根、`.github/`、`docs/` 顶层自动识别贡献指南），涵盖：
+完整的中文开发者指南见 **[CONTRIBUTING.md](.github/CONTRIBUTING.md)**（GitHub 按
+`.github/` → 仓库根 → `docs/` 的顺序识别贡献指南，本文件放在被优先识别的 `.github/`），涵盖：
 - 详细的目录结构说明
 - 数据流图
 - 调试技巧

@@ -212,7 +212,7 @@ const MANUAL = {
   'SOURCING-004': 'FEATURE-OWNERSHIP.json 登记表已就位，守卫 check:feature-ownership 尚未落地（[DESIGN-SOURCING-001] §6 B-G1/B-G2 分阶段建设项）。',
   'SOURCING-006': '"只追加不改写"需对比历史版本判断语义改写，静态守卫只能看单快照；评审兜底。',
   'PROCESS-001': '分支纪律属人机协作约定：机械上无法区分"用户授权的提交"与"擅自提交"，误判会阻断正常协作；由 khy 的确认对话框与审计轨迹兜底。',
-  'PROCESS-101': '贡献者规则提案权是流程权利，无可判定的机器信号；靠 CONTRIBUTING.md 与评审兜底。',
+  'PROCESS-101': '贡献者规则提案权是流程权利，无可判定的机器信号；靠 .github/CONTRIBUTING.md 与评审兜底。',
 };
 
 function resolveRegistryFile() {

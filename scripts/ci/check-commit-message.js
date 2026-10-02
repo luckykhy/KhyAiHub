@@ -56,7 +56,7 @@ if (!PATTERN.test(firstLine)) {
   console.error('示例:');
   console.error('  feat(gateway): 新增 DeepSeek 适配器');
   console.error('  fix(cli): 修复中文别名匹配失败');
-  console.error('  docs: 更新 CONTRIBUTING.md');
+  console.error('  docs: 更新 .github/CONTRIBUTING.md');
   process.exit(1);
 }
 
