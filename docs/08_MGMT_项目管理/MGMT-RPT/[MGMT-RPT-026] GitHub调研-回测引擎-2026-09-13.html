@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -71,16 +71,16 @@
 <ul><li>https://github.com/mementum/backtrader — <code>comminfo.py</code>、<code>brokers/bbroker.py</code>、<code>sizers.py</code>、<code>cerebro.py</code></li><li>https://github.com/freqtrade/freqtrade — <code>optimize/backtest_caching.py</code>（指纹）、<code>optimize/hyperopt/</code></li><li>https://github.com/microsoft/qlib — A股 T+1/涨跌停规则参照</li><li>https://github.com/QuantConnect/Lean — 基准对齐、WalkForward</li><li>https://github.com/polakowo/vectorbt — 向量化多参数（仅借设计，许可证 NOASSERTION）</li><li>https://github.com/nautechsystems/nautilus_trader — 确定性重放（思想参照）</li></ul>
 <h2 id="落地记录">落地记录<a class="anchor" href="#落地记录" aria-label="锚点">#</a></h2>
 <h3 id="已实现条目-3-条-p0">已实现条目（3 条 P0）<a class="anchor" href="#已实现条目-3-条-p0" aria-label="锚点">#</a></h3>
-<p><strong>P0-1 A股 T+1 结算锁定（qlib 规则，自实现）</strong> — ✅ 已实现</p>
+<p><strong>P0-1 A股 T+1 结算锁定（qlib 规则，自实现）</strong> — ✓ 已实现</p>
 <ul><li><code>software/khyquant/services/backtestEngine.js</code>：模拟循环新增 <code>lockedShares</code> 计数——bar i 买入的份额进 <code>lockedShares</code>，bar i+1 循环顶 <code>position += lockedShares</code> 解锁；卖出仅作用于已解锁的 <code>position</code>，当日买入不可当日卖出。<code>options.tPlus1</code> 默认 <code>true</code>（A股），可设 <code>false</code> 退回 T+0（非 A股标的）。</li><li>强制平仓分支把 <code>position + lockedShares</code> 一并了结，避免 T+1 锁定的余仓在数据末尾被遗漏。</li></ul>
-<p><strong>P0-2 交易成本模型：佣金 + 印花税 + 滑点（backtrader comminfo 分层设计）</strong> — ✅ 已实现</p>
+<p><strong>P0-2 交易成本模型：佣金 + 印花税 + 滑点（backtrader comminfo 分层设计）</strong> — ✓ 已实现</p>
 <ul><li><code>backtestEngine.js</code> 新增 <code>DEFAULT_COSTS</code>（commissionRate 0.0003 双边、stampDutyRate 0.001 仅卖出、slippage 0.001、tPlus1 true）作为本引擎成本单一真源，对齐 <code>strategyEngine.js:468/494</code> 既有的 0.0003/0.001 硬编码，两套引擎不再分叉。</li><li><code>resolveCosts(options)</code> 解析有效成本模型（数值可覆盖、未指定走默认）；买入按 <code>close*(1+slippage)</code> 成交、卖出按 <code>close*(1-slippage)</code>，trade 记录新增 <code>commission</code>/<code>stampDuty</code>/<code>slippageCost</code>/<code>totalCost</code> 字段。</li><li>结果对象新增顶层 <code>totalCommission</code>/<code>totalStampDuty</code>/<code>totalSlippageCost</code> 与 <code>execution</code> 元数据块（成本参数 + 费用合计），让使用者看清数字是在哪些假设下产生的。</li></ul>
-<p><strong>P0-3 结果指纹可复现（freqtrade backtest cache key）</strong> — ✅ 已实现</p>
+<p><strong>P0-3 结果指纹可复现（freqtrade backtest cache key）</strong> — ✓ 已实现</p>
 <ul><li><code>backtestEngine.js</code> 新增 <code>buildFingerprint({signalCode, params, symbol, startDate, endDate, costs})</code>：对确定性决定结果的要素做 SHA-1，取 16 位 hex。同输入恒同指纹，改策略代码/参数/区间/成本模型任一即变。</li><li><code>run()</code> 返回结果携带 <code>fingerprint</code> 字段；<code>routes/backtest.js</code> 把 <code>resultFingerprint</code> + <code>execution</code> 写进 <code>Backtest.parameters</code>（JSON 字段），<strong>不改 DB schema/migration</strong>（符合「不改 schema」红线）。</li></ul>
 <h3 id="改动文件清单">改动文件清单<a class="anchor" href="#改动文件清单" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>文件</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>software/khyquant/services/backtestEngine.js</code></td><td>改</td><td>T+1 结算（<code>lockedShares</code>）、成本模型（<code>DEFAULT_COSTS</code>/<code>resolveCosts</code>/滑点/印花税/费用字段）、结果指纹（<code>buildFingerprint</code>）、导出附 <code>buildFingerprint</code>/<code>resolveCosts</code>/<code>DEFAULT_COSTS</code></td></tr><tr><td><code>software/khyquant/routes/backtest.js</code></td><td>改</td><td>回测落库追加 <code>resultFingerprint</code> + <code>execution</code> 到 <code>parameters</code> JSON 字段</td></tr><tr><td><code>software/khyquant/tests/backtestEngine.test.js</code></td><td>新增</td><td>5 个 <code>node:test</code> 用例（成本默认/覆盖、指纹确定性+输入敏感、T+1 锁定、成本降资金）</td></tr></tbody></table>
 <h3 id="检查结果">检查结果<a class="anchor" href="#检查结果" aria-label="锚点">#</a></h3>
-<ul><li><code>require('./software/khyquant/services/backtestEngine.js')</code> + <code>require('./routes/backtest.js')</code>：✅ 加载成功</li><li><code>node --test software/khyquant/tests/backtestEngine.test.js</code>：✅ 5/5 通过</li><li><code>node scripts/ci/check-agent-rules.js backtestEngine.js routes/backtest.js backtestEngine.test.js</code>：✅ 3 文件零违规</li></ul>
+<ul><li><code>require('./software/khyquant/services/backtestEngine.js')</code> + <code>require('./routes/backtest.js')</code>：✓ 加载成功</li><li><code>node --test software/khyquant/tests/backtestEngine.test.js</code>：✓ 5/5 通过</li><li><code>node scripts/ci/check-agent-rules.js backtestEngine.js routes/backtest.js backtestEngine.test.js</code>：✓ 3 文件零违规</li></ul>
 <h3 id="未实现项-标-待人工决策-p1-p2">未实现项（标「待人工决策」，P1/P2）<a class="anchor" href="#未实现项-标-待人工决策-p1-p2" aria-label="锚点">#</a></h3>
 <ul><li><strong>P1 基准对齐 + 风险指标补齐（Sortino/Calmar/年化波动率/beta/alpha、vs HS300 或买入持有）</strong>：纯计算层，加在指标段，需先定基准数据源（HS300 指数 K线），留后续</li><li><strong>P1 参数网格 + walk-forward in/out-of-sample</strong>：<code>backtestEngine.run</code> 加 <code>paramsGrid</code> 选项即可（Node 单进程循环批量跑），但优化目标函数与过拟合防护（deflated Sharpe）需单独立项</li><li><strong>P1 涨跌停 ±10%/±20% 成交约束</strong>：依赖数据侧 <code>changePercent</code> 判定，<code>klineDataService</code> 已有该字段，引擎侧只需加「|changePercent| ≥ 阈值时该 bar 不可成交」判定</li><li><strong>P2 多资产组合回测</strong>：<code>routes/backtest.js:53</code> 只跑 <code>symbols[0]</code>，需重构 <code>backtestEngine.run</code> 支持多 symbol 组合结算，重构量大</li><li><strong><code>strategyEngine.js</code> 硬编码佣金/印花税收敛到 <code>DEFAULT_COSTS</code></strong>：本次只统一了主引擎，<code>strategyEngine.js:468/494</code> 的 0.0003/0.001 仍各自硬编码，留后续统一引用</li></ul>
       </article>

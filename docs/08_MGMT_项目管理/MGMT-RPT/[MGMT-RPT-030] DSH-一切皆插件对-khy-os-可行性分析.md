@@ -22,21 +22,21 @@ DSH = **DeepSeek Harness**，基于 **Cordis** 插件元框架。它的架构事
 
 | DSH 支柱 | khy-os 对应实现 | 成熟度 |
 |---|---|---|
-| 微内核 + 插件加载器 | `services/backend/src/plugin-loader/index.js`：6 个发现源（config / workspace / global npm / extension roots / plugin dir / env）、manifest 校验、惰性激活、版本门、命名空间预约、基于 `disposables` 的优雅 `shutdown()` | ✅ 已具备 |
-| `ctx` 服务仓库 | `plugin-loader/contextFactory.js`：每个插件拿到隔离的 `commands / tools / ai / storage / config / events / http / spawn / database / host` | ✅ 已具备 |
-| 可逆效应（卸载回滚） | 插件注册全部登记为 `disposables`，`shutdown()` / `activateNamespace` 撤销 | ✅ 已具备（时间可组合） |
-| 事件总线 | `ctx.events.on/emit`（简单 EventEmitter） | 🟡 有，但非类型化、无 `waterfall/parallel/serial` 分发 |
-| 能力接缝（扩展点） | `domain/catalog/capabilityMatrix/seams.js`：已命名 5 个 seam，composer 按 phase 排序；但注释承认"目前每个能力还硬编码在循环物理位置" | 🟡 命名阶段，尚未成为可替换服务 |
-| 拦截钩子 | `domain/extensions/hooks/`：`hookSystem / hookRunner / hookRegistry / hookContribSeams` | ✅ 已具备 |
-| 可替换实现（适配器） | AI 网关适配器、IM 适配器（飞书等）、模型适配器 | ✅ 已具备 |
-| 技能 / 工具 / MCP | skills 系统、MCP 生态注册表、`tools/index.js` 工具注册表 | ✅ 已具备 |
-| 权限闸门 | manifest `permissions: { network, spawn, database }`，在 `ctx` 强制 | ✅ 已具备（比 DSH 的"两旋钮"更细） |
-| 多源分发 + 市场 | extension roots + `extensionMarketplace.js` + `KHY_PLUGINS` 环境变量 + npm/global | 🟡 部分（缺 bundle/profile 分层 patch） |
-| 分层配置组合 | —— | ❌ 缺失（用 `flagRegistry` + `config.json`，无插件树 patch 模型） |
-| 依赖声明 + 依赖序激活 | —— | ❌ 缺失（插件拿到的是现成 `ctx`，不声明 `inject:['tools']`，加载器不等待依赖） |
-| UI 即插件 | —— | ❌ 缺失（`apps/ai-frontend`、`software/khyquant/frontend` 是单体 Vue 应用，非插件 bundle） |
-| Agent 循环即插件 | —— | ❌ 缺失（`toolUseLoopCore.js` 是硬编码特权主循环；能力正在 seam 化，但循环本身不可替换） |
-| 会话/存储即插件 | `sessionPersistence` 等是中心服务 | 🟡 可做插桩，目前仍偏中心 |
+| 微内核 + 插件加载器 | `services/backend/src/plugin-loader/index.js`：6 个发现源（config / workspace / global npm / extension roots / plugin dir / env）、manifest 校验、惰性激活、版本门、命名空间预约、基于 `disposables` 的优雅 `shutdown()` | ✓ 已具备 |
+| `ctx` 服务仓库 | `plugin-loader/contextFactory.js`：每个插件拿到隔离的 `commands / tools / ai / storage / config / events / http / spawn / database / host` | ✓ 已具备 |
+| 可逆效应（卸载回滚） | 插件注册全部登记为 `disposables`，`shutdown()` / `activateNamespace` 撤销 | ✓ 已具备（时间可组合） |
+| 事件总线 | `ctx.events.on/emit`（简单 EventEmitter） | ◐ 有，但非类型化、无 `waterfall/parallel/serial` 分发 |
+| 能力接缝（扩展点） | `domain/catalog/capabilityMatrix/seams.js`：已命名 5 个 seam，composer 按 phase 排序；但注释承认"目前每个能力还硬编码在循环物理位置" | ◐ 命名阶段，尚未成为可替换服务 |
+| 拦截钩子 | `domain/extensions/hooks/`：`hookSystem / hookRunner / hookRegistry / hookContribSeams` | ✓ 已具备 |
+| 可替换实现（适配器） | AI 网关适配器、IM 适配器（飞书等）、模型适配器 | ✓ 已具备 |
+| 技能 / 工具 / MCP | skills 系统、MCP 生态注册表、`tools/index.js` 工具注册表 | ✓ 已具备 |
+| 权限闸门 | manifest `permissions: { network, spawn, database }`，在 `ctx` 强制 | ✓ 已具备（比 DSH 的"两旋钮"更细） |
+| 多源分发 + 市场 | extension roots + `extensionMarketplace.js` + `KHY_PLUGINS` 环境变量 + npm/global | ◐ 部分（缺 bundle/profile 分层 patch） |
+| 分层配置组合 | —— | ✗ 缺失（用 `flagRegistry` + `config.json`，无插件树 patch 模型） |
+| 依赖声明 + 依赖序激活 | —— | ✗ 缺失（插件拿到的是现成 `ctx`，不声明 `inject:['tools']`，加载器不等待依赖） |
+| UI 即插件 | —— | ✗ 缺失（`apps/ai-frontend`、`software/khyquant/frontend` 是单体 Vue 应用，非插件 bundle） |
+| Agent 循环即插件 | —— | ✗ 缺失（`toolUseLoopCore.js` 是硬编码特权主循环；能力正在 seam 化，但循环本身不可替换） |
+| 会话/存储即插件 | `sessionPersistence` 等是中心服务 | ◐ 可做插桩，目前仍偏中心 |
 
 **覆盖率约 9/15 完全具备，3/15 部分，3/15 缺失。** 缺失的恰好是"一切"二字的核心。
 

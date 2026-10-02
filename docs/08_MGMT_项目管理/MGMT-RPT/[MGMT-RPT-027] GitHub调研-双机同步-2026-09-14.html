@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -66,18 +66,18 @@
 <ul><li>https://github.com/bcpierce00/unison — archive 增量、冲突预检、<code>-batch</code>/<code>-dry</code></li><li>https://github.com/syncthing/syncthing — 本地/全局索引、<code>/rest/db/status</code>、delta 传输</li><li>https://github.com/rclone/rclone — <code>--files-from</code> + mtime/校验和 delta、<code>--dry-run</code></li><li>https://github.com/git-town/git-town — workspace 统一 sync、<code>--dry-run</code> 命令打印</li><li>https://github.com/lindell/multi-gitter — 一命令 fan-out、逐仓失败隔离、聚合 status</li><li>https://github.com/jelmer/dulwich — 纯 Python git、<code>range_diff</code> 冲突预检</li></ul>
 <h2 id="落地记录">落地记录<a class="anchor" href="#落地记录" aria-label="锚点">#</a></h2>
 <h3 id="已实现条目-3-条-p0-1-条-p1-顺带">已实现条目（3 条 P0 + 1 条 P1 顺带）<a class="anchor" href="#已实现条目-3-条-p0-1-条-p1-顺带" aria-label="锚点">#</a></h3>
-<p><strong>P0-1 统一状态视图 <code>sync-status.js</code>（Syncthing /git-town / multi-gitter 模式）</strong> — ✅ 已实现</p>
+<p><strong>P0-1 统一状态视图 <code>sync-status.js</code>（Syncthing /git-town / multi-gitter 模式）</strong> — ✓ 已实现</p>
 <ul><li>新增 <code>scripts/sync/sync-status.js</code>（Node，纯读、零写操作）：聚合三套机制的状态为一张表——<ul><li>两仓 <code>ahead/behind/dirty</code>（<code>git rev-list --left-right --count</code> + <code>status --porcelain</code>），detached / 无上游时诚实报 0</li><li><code>.khy/sync/mirror-queue.json</code> 镜像补推队列欠账条数与逐条明细（复用 <code>mirrorSyncQueue.describeQueue</code>）</li><li><code>manifest.json</code> 一致性校验（见 P0-2）</li></ul></li><li>仓库根发现<strong>不写死绝对路径</strong>：<code>KHY_OS_DIR</code> / <code>KHY_OS_HQ_DIR</code> env 优先，回落到脚本所在仓库的相对位置；<code>.git</code> 不存在的仓库自动跳过（fail-soft，绝不崩）</li><li>输出人类可读表格 + <code>--json</code> 给 10 分钟计划任务 / CI；<code>--manifest-dir</code> 指向 bundle 目录校验清单</li><li>git 解析沿用 <code>mirror-sync.js</code> 的 <code>KHY_GIT</code> env 约定（零硬编码）</li></ul>
-<p><strong>P0-2 同步清单 manifest（Unison archive / Syncthing global index 模式）</strong> — ✅ 已实现</p>
+<p><strong>P0-2 同步清单 manifest（Unison archive / Syncthing global index 模式）</strong> — ✓ 已实现</p>
 <ul><li><code>export-sync.bat</code>：导出成功后写 <code>&lt;OUT_DIR&gt;\manifest.json</code>（<code>khy-sync-manifest/v1</code>：<code>headSha</code>、本次新增 commit 列表、<code>newCommitCount</code>、时间戳、bundle 文件名），并更新 <code>.last-sync-ref</code></li><li><code>import-sync.bat</code>：bundle 校验后、merge 前，若同目录有 <code>manifest.json</code>，用 <code>git cat-file -e</code> 逐条核对清单里的 commit 是否真实存在；缺失即列出具体 sha 并<strong>拒绝导入</strong>（状态真源漂移不能静默吞掉）</li><li><code>sync-status.js</code> 的 <code>checkManifest</code> 提供只读校验视角</li></ul>
-<p><strong>P0-3 增量 delta（rclone <code>--files-from</code> / Syncthing rescan 跳过 0 变更模式）</strong> — ✅ 已实现</p>
+<p><strong>P0-3 增量 delta（rclone <code>--files-from</code> / Syncthing rescan 跳过 0 变更模式）</strong> — ✓ 已实现</p>
 <ul><li><code>export-sync.bat</code>：记录 <code>.last-sync-ref</code>；下次导出先 <code>git rev-list --count last-sync-ref..BRANCH</code>，<strong>为 0 直接跳过 bundle</strong> 并提示「无新增，无需传输」；有新增才 <code>git bundle create</code>，导出成功后刷新基线</li><li>解决短板 #3（全量 bundle 无增量语义）</li></ul>
-<p><strong>P1-4 导入前冲突预检（顺带，低成本）</strong> — ✅ 已实现</p>
+<p><strong>P1-4 导入前冲突预检（顺带，低成本）</strong> — ✓ 已实现</p>
 <ul><li><code>import-sync.bat</code>：目标分支已存在时，merge 前打印本地 tip（<code>git rev-parse --short</code>），让操作者在冲突发生前看到「即将合入什么」；非交互场景不阻塞</li></ul>
 <h3 id="改动文件清单">改动文件清单<a class="anchor" href="#改动文件清单" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>文件</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>scripts/sync/sync-status.js</code></td><td>新增</td><td>统一只读状态视图（两仓 ahead/behind/dirty + 队列欠账 + manifest 校验），<code>--json</code>/<code>--manifest-dir</code>，仓库发现走 env 不写死路径</td></tr><tr><td><code>scripts/sync/export-sync.bat</code></td><td>改</td><td>P0-3 增量 delta（<code>.last-sync-ref</code> + <code>rev-list --count</code> 0 则跳过）+ P0-2 写 <code>manifest.json</code></td></tr><tr><td><code>scripts/sync/import-sync.bat</code></td><td>改</td><td>P0-2 manifest 完整性预检（<code>git cat-file -e</code> 逐条，缺失即拒绝）+ P1 本地 tip 预览</td></tr></tbody></table>
 <h3 id="检查结果">检查结果<a class="anchor" href="#检查结果" aria-label="锚点">#</a></h3>
-<ul><li><code>node -e &quot;require('./scripts/sync/sync-status.js')&quot;</code>：✅ 加载成功</li><li><code>node scripts/sync/sync-status.js</code>：✅ 正常输出（当前环境 khy-os 为 detached、无上游，诚实报 0/0/0；镜像队列空；manifest 未找到）</li><li><code>node scripts/sync/sync-status.js --json</code>：✅ 机器可读输出</li><li><code>.bat</code> 文件为 Windows 批处理，本环境无法直接执行验证；语法沿用原脚本既有模式（<code>setlocal enabledelayedexpansion</code> + <code>!VAR!</code> 延迟展开 + <code>for /f</code> + <code>^</code> 转义），与文件其余部分风格一致</li></ul>
+<ul><li><code>node -e &quot;require('./scripts/sync/sync-status.js')&quot;</code>：✓ 加载成功</li><li><code>node scripts/sync/sync-status.js</code>：✓ 正常输出（当前环境 khy-os 为 detached、无上游，诚实报 0/0/0；镜像队列空；manifest 未找到）</li><li><code>node scripts/sync/sync-status.js --json</code>：✓ 机器可读输出</li><li><code>.bat</code> 文件为 Windows 批处理，本环境无法直接执行验证；语法沿用原脚本既有模式（<code>setlocal enabledelayedexpansion</code> + <code>!VAR!</code> 延迟展开 + <code>for /f</code> + <code>^</code> 转义），与文件其余部分风格一致</li></ul>
 <h3 id="未实现项-标-待人工决策-p1-p2">未实现项（标「待人工决策」，P1/P2）<a class="anchor" href="#未实现项-标-待人工决策-p1-p2" aria-label="锚点">#</a></h3>
 <ul><li><strong>P1 逐仓 fail-soft + <code>--batch --dry</code> 调度器契约</strong>：10 分钟任务（autopull）与 mirror 看门狗尚未共享统一的「快进就自动拉、冲突就退 2 并落机器可读报告、绝不弹窗」契约，建议下一步给 <code>sync.py</code> 与 bundle 脚本加 <code>--batch</code>/<code>--dry</code> 统一 flag</li><li><strong>P2 per-repo merge 策略配置化（workspace.json）</strong>：hq 必须 ff-only、code 可 rebase，目前各脚本写死；建议落 <code>.khy/sync/workspace.json</code> 单一真源</li><li><strong><code>export-sync.sh</code> / <code>import-sync.sh</code>（POSIX 版）未同步改</strong>：本次只改了 <code>.bat</code>（Windows 便携机主用）；POSIX 版的 manifest/增量 delta 需另行移植，留后续</li><li><strong>manifest 的 commit 列表在 bundle 跨机传输后需连同 bundle 一起拷走</strong>：当前约定 manifest 与 bundle 同目录（<code>&lt;OUT_DIR&gt;\</code>），使用者需两个文件都传给对端——<code>import-sync.bat</code> 已校验「同目录无 manifest 则跳过校验」，不会误报</li></ul>
       </article>

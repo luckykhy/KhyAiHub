@@ -100,11 +100,11 @@ khy-os 版本治理板块现状（三脚本 + 一套绑定层）：
 
 ### 已实现条目（3 条 P0）
 
-**P0-1 版本 semver 合法性校验（semantic-release 模式）** — ✅ 已实现
+**P0-1 版本 semver 合法性校验（semantic-release 模式）** — ✓ 已实现
 - `scripts/ci/check-version-sync.js`：新增 `isSemver(v)`（严格 `X.Y[.Z]`，零运行时依赖）；组内字符串相等检查**之前**先校验九真源取到的值是否合法 semver，非合法值（`abc`/`v1.0`/`1.0..`/`bad-x.y`）直接失败并**逐文件点名** offending 值。
 - 实测：`1.2.0`=合法、`v1.2`/`abc`/`1.2..`=拒绝；合成 fixture 把 `pyproject.toml` 改成 `bad-x.y` 后 `exit 1` 并打印 `pyproject.toml: "bad-x.y"`。
 
-**P0-2 统一治理状态视图 `check-gov-status.js`（Changesets `status` / Renovate 记分卡）** — ✅ 已实现
+**P0-2 统一治理状态视图 `check-gov-status.js`（Changesets `status` / Renovate 记分卡）** — ✓ 已实现
 - 新增 `scripts/ci/check-gov-status.js`（纯读、零写、零子进程 fan-out）：一次性聚合
   1. **版本三轨道**（复用 `check-version-sync` 的 `runMain`/`isSemver`，quiet 模式不重复印刷）
   2. **规则覆盖率**（`ruleguard/lib/coverage.buildCoverage`：total/enforced 比率、byPriority、阻断红线、死指针、未挂载执行器）
@@ -113,7 +113,7 @@ khy-os 版本治理板块现状（三脚本 + 一套绑定层）：
 - 输出人类表格 + `--json`；退出码只在命中阻断红线（版本不匹配 / 非 semver / P0 未执行 / 死指针 / 接线缺口）时为 1，软指标（覆盖率、抑制数）只报不阻。
 - 供 10 分钟计划任务（autopull）或人工「仓库健康吗」一瞥使用。
 
-**P0-3 纯函数化 + fixture 根（OPA `opa test` 约定）** — ✅ 已实现
+**P0-3 纯函数化 + fixture 根（OPA `opa test` 约定）** — ✓ 已实现
 - `check-version-sync.js` 重构为纯函数 `runMain(repoRoot, opts)` + `makeReaders(repoRoot, opts)`：文件解析相对 `repoRoot` 而非 `process.cwd()`；新增 `KHY_VERSION_SYNC_ROOT` env 可指向合成树。
 - `runMain` 新增 `{ quiet }` 选项（聚合视图调用时静默逐组成功行，避免双重打印）。
 - 实测：`KHY_VERSION_SYNC_ROOT=<合成目录>` 指向全一致的九源 fixture → `exit 0`；改一处为 `bad-x.y` → `exit 1`。守卫逻辑可离线回归、不误伤。
@@ -127,11 +127,11 @@ khy-os 版本治理板块现状（三脚本 + 一套绑定层）：
 
 ### 检查结果
 
-- `node -e "require('./scripts/ci/check-version-sync.js')"` + `require('./scripts/ci/check-gov-status.js')`：✅ 均加载成功
-- `node scripts/ci/check-version-sync.js`（活仓库）：✅ 三轨道 1.1.15 / 1.6.5 / 0.1.0，全绿
-- `node scripts/ci/check-gov-status.js`（活仓库）：✅ 绿灯，覆盖率 34/44（77.3%），红线全过，接线齐全，无活跃抑制
-- 合成 fixture 回归：一致树 `exit 0`、非 semver 值 `exit 1` 并点名 ✅
-- `node scripts/ci/check-agent-rules.js`（两文件）：✅ 零违规
+- `node -e "require('./scripts/ci/check-version-sync.js')"` + `require('./scripts/ci/check-gov-status.js')`：✓ 均加载成功
+- `node scripts/ci/check-version-sync.js`（活仓库）：✓ 三轨道 1.1.15 / 1.6.5 / 0.1.0，全绿
+- `node scripts/ci/check-gov-status.js`（活仓库）：✓ 绿灯，覆盖率 34/44（77.3%），红线全过，接线齐全，无活跃抑制
+- 合成 fixture 回归：一致树 `exit 0`、非 semver 值 `exit 1` 并点名 ✓
+- `node scripts/ci/check-agent-rules.js`（两文件）：✓ 零违规
 
 ### 未实现项（标「待人工决策」，P1）
 

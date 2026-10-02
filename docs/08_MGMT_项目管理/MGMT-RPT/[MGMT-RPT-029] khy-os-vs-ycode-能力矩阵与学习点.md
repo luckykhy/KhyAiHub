@@ -26,22 +26,22 @@
 |---|---|---|---|
 | 定位 | AI 平台操作系统：智能体 CLI + 多后端网关 + 手写内核 | 单机 AI 编程助手（终端 + GUI） | — |
 | 分发/形态 | PyPI + npm 双渠道，Python 层 + Node 后端 + Vue 前端 + C 内核 | 单文件便携 exe（CLI + GUI） | — |
-| 技能系统 | ✅ 60+ 内置技能（TDD/plan/verify/remember/doubt…），SKILL.md/markdown+manifest，条件激活、工具白名单、分叉上下文 | ✅ SKILL.md：debugging/TDD/verification/planning/plugin-creator | `src/skills/`、`src/tools/SkillTool/`、`src/services/skillRegistry.js` |
-| 复杂任务计划编排 | ✅ 元规划：metaPlanSchema + executorRegistry + constraintStrategy + 防偷懒升级 + 信任熔断；依赖波调度 + 关键路径 | ✅ `plan_write`/`plan_retry`/`plan_update`/`ask_user` | `src/services/metaplan/`、`src/services/orchestrator/` |
-| 显式子代理/任务 | ✅ 大任务编排：largeTaskOrchestrator + worker 服务 + 运行时存储；Task* / TeamCreate 工具 | ✅ `run_subagent`：explore/implement/test/review/general | `src/services/tasks/`、`src/tools/TaskCreateTool/` 等 |
-| 长效记忆 | ✅ 向量记忆：vectorStore + vectorRecall + distiller + dreamPromote + 会话记忆 + 语义打分；`/remember` | ✅ "记住XXX"即写 + 主动保存偏好 | `src/services/memoryEngine/`、`src/skills/built-in/remember/` |
-| 代码定位 | ✅ GlobTool / GrepTool / FileReadTool / ListDirTool / LSPTool / RepoMap | ✅ `search_code`/`find_definition`/`glob_files` | `src/tools/GlobTool/`、`src/tools/GrepTool/` |
-| 网络工具 | ✅ WebSearchTool / WebFetchTool / WebBrowserTool(playwright) | ✅ `fetch_url`/`search_news`/`get_weather` + firecrawl | `src/tools/WebBrowserTool/` 等 |
-| 编辑安全 | ✅ FileEditTool / MultiEditTool / ApplyPatchTool + 写保护 | ✅ `edit_file` 局部替换，`write_file` 拒覆盖大文件 | `src/tools/FileEditTool/` 等 |
-| SSH/命令卫生 | ✅ PowerShell 感知命令串接（`;`/`if ($?)`，识别 5.1 无 `&&`），CMDs/环境变量路径 | ✅ PowerShell 规则（单引号不展开、用 `;` 不用 `&`、`$LASTEXITCODE`） | `src/constants/shellChainStyle.js` |
-| MCP 支持 | ✅ MCPTool / McpAuthTool / ListMcpResourcesTool + 自带 khyos-markdown、deepseek-eyes | ✅ `{server}__{tool}` 格式 + `/mcp` 配置器 | `src/tools/MCPTool/` 等 |
-| 质量门/CI 强制 | ✅ `scripts/ci/check-*.js`：版本同步、agent-rules 红线、布局、叶子契约、变更安全、发布门 | ⚠️ 仅技能模板行为约束，无机器扫描 | `scripts/ci/` |
-| 工程红线 | ✅ 4 条机器强制：零硬编码 / 状态透明 / 活动超时 / 终端渲染 | ⚠️ 行为约束（诚实/最小改动/先验证后宣布） | `scripts/ci/check-agent-rules.js` |
-| 审计/透明度 | ✅ auditLog 八字段审计 + 上下文压缩透明度 + 语言一致性追踪 | ⚠️ 工具执行留痕，无审计契约 | `src/services/auditLog.js` |
-| 业务垂直能力 | ✅ 量化交易 khyquant（回测引擎）+ 模型训练（LoRA/蒸馏/导出）+ Token 计量 | ✗ 通用编程 | `src/services/backtestEngine.js` 等 |
-| 手写内核 | ✅ `kernel/`（C/ASM/MoonBit，抢占调度/分页/COW fork/ELF+PE），QEMU 引导 | ✗ | `kernel/` |
-| 自身可维护性 | ✅ `.ai/MAP.md`/`CONTEXT.yaml`/`GUARDS.md` 元数据 + `khy metadata` 自保 | ✗ | `khy-os/.ai/` |
-| 中文交互 | ✅ 网关注入中文优先级协议 + 首段语言纠偏/恢复 | ✅ 用户中文时全中文 | `src/services/gateway/aiGateway.js` |
+| 技能系统 | ✓ 60+ 内置技能（TDD/plan/verify/remember/doubt…），SKILL.md/markdown+manifest，条件激活、工具白名单、分叉上下文 | ✓ SKILL.md：debugging/TDD/verification/planning/plugin-creator | `src/skills/`、`src/tools/SkillTool/`、`src/services/skillRegistry.js` |
+| 复杂任务计划编排 | ✓ 元规划：metaPlanSchema + executorRegistry + constraintStrategy + 防偷懒升级 + 信任熔断；依赖波调度 + 关键路径 | ✓ `plan_write`/`plan_retry`/`plan_update`/`ask_user` | `src/services/metaplan/`、`src/services/orchestrator/` |
+| 显式子代理/任务 | ✓ 大任务编排：largeTaskOrchestrator + worker 服务 + 运行时存储；Task* / TeamCreate 工具 | ✓ `run_subagent`：explore/implement/test/review/general | `src/services/tasks/`、`src/tools/TaskCreateTool/` 等 |
+| 长效记忆 | ✓ 向量记忆：vectorStore + vectorRecall + distiller + dreamPromote + 会话记忆 + 语义打分；`/remember` | ✓ "记住XXX"即写 + 主动保存偏好 | `src/services/memoryEngine/`、`src/skills/built-in/remember/` |
+| 代码定位 | ✓ GlobTool / GrepTool / FileReadTool / ListDirTool / LSPTool / RepoMap | ✓ `search_code`/`find_definition`/`glob_files` | `src/tools/GlobTool/`、`src/tools/GrepTool/` |
+| 网络工具 | ✓ WebSearchTool / WebFetchTool / WebBrowserTool(playwright) | ✓ `fetch_url`/`search_news`/`get_weather` + firecrawl | `src/tools/WebBrowserTool/` 等 |
+| 编辑安全 | ✓ FileEditTool / MultiEditTool / ApplyPatchTool + 写保护 | ✓ `edit_file` 局部替换，`write_file` 拒覆盖大文件 | `src/tools/FileEditTool/` 等 |
+| SSH/命令卫生 | ✓ PowerShell 感知命令串接（`;`/`if ($?)`，识别 5.1 无 `&&`），CMDs/环境变量路径 | ✓ PowerShell 规则（单引号不展开、用 `;` 不用 `&`、`$LASTEXITCODE`） | `src/constants/shellChainStyle.js` |
+| MCP 支持 | ✓ MCPTool / McpAuthTool / ListMcpResourcesTool + 自带 khyos-markdown、deepseek-eyes | ✓ `{server}__{tool}` 格式 + `/mcp` 配置器 | `src/tools/MCPTool/` 等 |
+| 质量门/CI 强制 | ✓ `scripts/ci/check-*.js`：版本同步、agent-rules 红线、布局、叶子契约、变更安全、发布门 | ⚠ 仅技能模板行为约束，无机器扫描 | `scripts/ci/` |
+| 工程红线 | ✓ 4 条机器强制：零硬编码 / 状态透明 / 活动超时 / 终端渲染 | ⚠ 行为约束（诚实/最小改动/先验证后宣布） | `scripts/ci/check-agent-rules.js` |
+| 审计/透明度 | ✓ auditLog 八字段审计 + 上下文压缩透明度 + 语言一致性追踪 | ⚠ 工具执行留痕，无审计契约 | `src/services/auditLog.js` |
+| 业务垂直能力 | ✓ 量化交易 khyquant（回测引擎）+ 模型训练（LoRA/蒸馏/导出）+ Token 计量 | ✗ 通用编程 | `src/services/backtestEngine.js` 等 |
+| 手写内核 | ✓ `kernel/`（C/ASM/MoonBit，抢占调度/分页/COW fork/ELF+PE），QEMU 引导 | ✗ | `kernel/` |
+| 自身可维护性 | ✓ `.ai/MAP.md`/`CONTEXT.yaml`/`GUARDS.md` 元数据 + `khy metadata` 自保 | ✗ | `khy-os/.ai/` |
+| 中文交互 | ✓ 网关注入中文优先级协议 + 首段语言纠偏/恢复 | ✓ 用户中文时全中文 | `src/services/gateway/aiGateway.js` |
 
 ---
 
@@ -100,12 +100,12 @@
 
 | # | 原学习点 | 对抗式证据（khy-os 现状） | 判定 |
 |---|---|---|---|
-| 1 | 每回合强制技能声明行 | `SkillTool` 含 BLOCKING REQUIREMENT：匹配即先 invoke、未读到不得回复；`using-agent-skills` 有决策树 | ❌ 行为约束更强（非口头声明） |
-| 2 | "1%相关也先读、不匹配即弃" | `paths`/`whenToUse` 全局匹配 + `allowed-tools` 运行时白名单机械约束，不靠自觉 | ❌ 机械更强 |
-| 3 | 不伪造思考 / 私有推理不入正文 | `cli/ai.js:393` 已实现"为非原生思考模型注入 CoT，原生思维者不伪造" | ❌ 已具备 |
-| 4 | 工具结果摘要纪律/根因优先 | `prompts.js:625`(禁止同路径工具重试>2-3次)、`:675`(诊断后换策略)、`:836`(汇总 log 不倾倒)、`:882`(不 dump 整文件)、`:732`(治根因) | ❌ 逐条已覆盖 |
-| 5 | 三机制区分写作 | `[DESIGN-TOOL-002] 拓展契约与核心边界规范` + `[DESIGN-ARCH-059] 能力即代码`(defineTool 一描述符扇出 CLI/agent/MCP) | ❌ 已有文档 |
-| 6 | 子代理"改法必重试、禁原样" | `orchestrator` `DEFAULT_STEP_MAX_RETRIES=1`；`largeTaskOrchestrator` `max_attempts`/`retry_policy`/`retry_delay` | ❌ 机器强制执行 |
+| 1 | 每回合强制技能声明行 | `SkillTool` 含 BLOCKING REQUIREMENT：匹配即先 invoke、未读到不得回复；`using-agent-skills` 有决策树 | ✗ 行为约束更强（非口头声明） |
+| 2 | "1%相关也先读、不匹配即弃" | `paths`/`whenToUse` 全局匹配 + `allowed-tools` 运行时白名单机械约束，不靠自觉 | ✗ 机械更强 |
+| 3 | 不伪造思考 / 私有推理不入正文 | `cli/ai.js:393` 已实现"为非原生思考模型注入 CoT，原生思维者不伪造" | ✗ 已具备 |
+| 4 | 工具结果摘要纪律/根因优先 | `prompts.js:625`(禁止同路径工具重试>2-3次)、`:675`(诊断后换策略)、`:836`(汇总 log 不倾倒)、`:882`(不 dump 整文件)、`:732`(治根因) | ✗ 逐条已覆盖 |
+| 5 | 三机制区分写作 | `[DESIGN-TOOL-002] 拓展契约与核心边界规范` + `[DESIGN-ARCH-059] 能力即代码`(defineTool 一描述符扇出 CLI/agent/MCP) | ✗ 已有文档 |
+| 6 | 子代理"改法必重试、禁原样" | `orchestrator` `DEFAULT_STEP_MAX_RETRIES=1`；`largeTaskOrchestrator` `max_attempts`/`retry_policy`/`retry_delay` | ✗ 机器强制执行 |
 
 **方法论沉淀**：Y-code 的办法几乎全是"系统提示词口头契约"（靠模型自觉）；khy-os 的等价物是
 "机器机械约束"（检查/白名单/重试预算/审计）。评估差距时，**先查机械等价物，再判断是否真缺**，

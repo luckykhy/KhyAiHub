@@ -118,16 +118,16 @@ khy-os 回测引擎板块现状：
 
 ### 已实现条目（3 条 P0）
 
-**P0-1 A股 T+1 结算锁定（qlib 规则，自实现）** — ✅ 已实现
+**P0-1 A股 T+1 结算锁定（qlib 规则，自实现）** — ✓ 已实现
 - `software/khyquant/services/backtestEngine.js`：模拟循环新增 `lockedShares` 计数——bar i 买入的份额进 `lockedShares`，bar i+1 循环顶 `position += lockedShares` 解锁；卖出仅作用于已解锁的 `position`，当日买入不可当日卖出。`options.tPlus1` 默认 `true`（A股），可设 `false` 退回 T+0（非 A股标的）。
 - 强制平仓分支把 `position + lockedShares` 一并了结，避免 T+1 锁定的余仓在数据末尾被遗漏。
 
-**P0-2 交易成本模型：佣金 + 印花税 + 滑点（backtrader comminfo 分层设计）** — ✅ 已实现
+**P0-2 交易成本模型：佣金 + 印花税 + 滑点（backtrader comminfo 分层设计）** — ✓ 已实现
 - `backtestEngine.js` 新增 `DEFAULT_COSTS`（commissionRate 0.0003 双边、stampDutyRate 0.001 仅卖出、slippage 0.001、tPlus1 true）作为本引擎成本单一真源，对齐 `strategyEngine.js:468/494` 既有的 0.0003/0.001 硬编码，两套引擎不再分叉。
 - `resolveCosts(options)` 解析有效成本模型（数值可覆盖、未指定走默认）；买入按 `close*(1+slippage)` 成交、卖出按 `close*(1-slippage)`，trade 记录新增 `commission`/`stampDuty`/`slippageCost`/`totalCost` 字段。
 - 结果对象新增顶层 `totalCommission`/`totalStampDuty`/`totalSlippageCost` 与 `execution` 元数据块（成本参数 + 费用合计），让使用者看清数字是在哪些假设下产生的。
 
-**P0-3 结果指纹可复现（freqtrade backtest cache key）** — ✅ 已实现
+**P0-3 结果指纹可复现（freqtrade backtest cache key）** — ✓ 已实现
 - `backtestEngine.js` 新增 `buildFingerprint({signalCode, params, symbol, startDate, endDate, costs})`：对确定性决定结果的要素做 SHA-1，取 16 位 hex。同输入恒同指纹，改策略代码/参数/区间/成本模型任一即变。
 - `run()` 返回结果携带 `fingerprint` 字段；`routes/backtest.js` 把 `resultFingerprint` + `execution` 写进 `Backtest.parameters`（JSON 字段），**不改 DB schema/migration**（符合「不改 schema」红线）。
 
@@ -141,9 +141,9 @@ khy-os 回测引擎板块现状：
 
 ### 检查结果
 
-- `require('./software/khyquant/services/backtestEngine.js')` + `require('./routes/backtest.js')`：✅ 加载成功
-- `node --test software/khyquant/tests/backtestEngine.test.js`：✅ 5/5 通过
-- `node scripts/ci/check-agent-rules.js backtestEngine.js routes/backtest.js backtestEngine.test.js`：✅ 3 文件零违规
+- `require('./software/khyquant/services/backtestEngine.js')` + `require('./routes/backtest.js')`：✓ 加载成功
+- `node --test software/khyquant/tests/backtestEngine.test.js`：✓ 5/5 通过
+- `node scripts/ci/check-agent-rules.js backtestEngine.js routes/backtest.js backtestEngine.test.js`：✓ 3 文件零违规
 
 ### 未实现项（标「待人工决策」，P1/P2）
 

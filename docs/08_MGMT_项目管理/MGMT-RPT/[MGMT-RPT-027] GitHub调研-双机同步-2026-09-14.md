@@ -105,7 +105,7 @@ khy-os 双机同步板块现状（三套并存机制）：
 
 ### 已实现条目（3 条 P0 + 1 条 P1 顺带）
 
-**P0-1 统一状态视图 `sync-status.js`（Syncthing /git-town / multi-gitter 模式）** — ✅ 已实现
+**P0-1 统一状态视图 `sync-status.js`（Syncthing /git-town / multi-gitter 模式）** — ✓ 已实现
 - 新增 `scripts/sync/sync-status.js`（Node，纯读、零写操作）：聚合三套机制的状态为一张表——
   - 两仓 `ahead/behind/dirty`（`git rev-list --left-right --count` + `status --porcelain`），detached / 无上游时诚实报 0
   - `.khy/sync/mirror-queue.json` 镜像补推队列欠账条数与逐条明细（复用 `mirrorSyncQueue.describeQueue`）
@@ -114,16 +114,16 @@ khy-os 双机同步板块现状（三套并存机制）：
 - 输出人类可读表格 + `--json` 给 10 分钟计划任务 / CI；`--manifest-dir` 指向 bundle 目录校验清单
 - git 解析沿用 `mirror-sync.js` 的 `KHY_GIT` env 约定（零硬编码）
 
-**P0-2 同步清单 manifest（Unison archive / Syncthing global index 模式）** — ✅ 已实现
+**P0-2 同步清单 manifest（Unison archive / Syncthing global index 模式）** — ✓ 已实现
 - `export-sync.bat`：导出成功后写 `<OUT_DIR>\manifest.json`（`khy-sync-manifest/v1`：`headSha`、本次新增 commit 列表、`newCommitCount`、时间戳、bundle 文件名），并更新 `.last-sync-ref`
 - `import-sync.bat`：bundle 校验后、merge 前，若同目录有 `manifest.json`，用 `git cat-file -e` 逐条核对清单里的 commit 是否真实存在；缺失即列出具体 sha 并**拒绝导入**（状态真源漂移不能静默吞掉）
 - `sync-status.js` 的 `checkManifest` 提供只读校验视角
 
-**P0-3 增量 delta（rclone `--files-from` / Syncthing rescan 跳过 0 变更模式）** — ✅ 已实现
+**P0-3 增量 delta（rclone `--files-from` / Syncthing rescan 跳过 0 变更模式）** — ✓ 已实现
 - `export-sync.bat`：记录 `.last-sync-ref`；下次导出先 `git rev-list --count last-sync-ref..BRANCH`，**为 0 直接跳过 bundle** 并提示「无新增，无需传输」；有新增才 `git bundle create`，导出成功后刷新基线
 - 解决短板 #3（全量 bundle 无增量语义）
 
-**P1-4 导入前冲突预检（顺带，低成本）** — ✅ 已实现
+**P1-4 导入前冲突预检（顺带，低成本）** — ✓ 已实现
 - `import-sync.bat`：目标分支已存在时，merge 前打印本地 tip（`git rev-parse --short`），让操作者在冲突发生前看到「即将合入什么」；非交互场景不阻塞
 
 ### 改动文件清单
@@ -136,9 +136,9 @@ khy-os 双机同步板块现状（三套并存机制）：
 
 ### 检查结果
 
-- `node -e "require('./scripts/sync/sync-status.js')"`：✅ 加载成功
-- `node scripts/sync/sync-status.js`：✅ 正常输出（当前环境 khy-os 为 detached、无上游，诚实报 0/0/0；镜像队列空；manifest 未找到）
-- `node scripts/sync/sync-status.js --json`：✅ 机器可读输出
+- `node -e "require('./scripts/sync/sync-status.js')"`：✓ 加载成功
+- `node scripts/sync/sync-status.js`：✓ 正常输出（当前环境 khy-os 为 detached、无上游，诚实报 0/0/0；镜像队列空；manifest 未找到）
+- `node scripts/sync/sync-status.js --json`：✓ 机器可读输出
 - `.bat` 文件为 Windows 批处理，本环境无法直接执行验证；语法沿用原脚本既有模式（`setlocal enabledelayedexpansion` + `!VAR!` 延迟展开 + `for /f` + `^` 转义），与文件其余部分风格一致
 
 ### 未实现项（标「待人工决策」，P1/P2）

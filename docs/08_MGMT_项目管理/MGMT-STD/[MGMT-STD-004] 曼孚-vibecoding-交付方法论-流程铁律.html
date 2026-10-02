@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -74,7 +74,7 @@
 <hr>
 <h2 id="7-关键脚本清单-只列职责-环境特定">7. 关键脚本清单（只列职责，环境特定）<a class="anchor" href="#7-关键脚本清单-只列职责-环境特定" aria-label="锚点">#</a></h2>
 <blockquote><p>这些脚本位于曼孚云电脑环境（驱动侧跑，<strong>严禁</strong>贴给作业 Claude）。具体路径随环境而定。</p></blockquote>
-<ul><li><strong>脚手架（scaffold）</strong>：开发前建一级骨架 + 写官方 8 字段 <code>metadata.json</code> + <code>.gitignore</code>；整理交付包时把本题真用到的 skill 拷进 <code>skills/</code>。</li><li><strong>结构校验（validate_package）</strong>：交付包结构 + 英文一致性预检。</li><li><strong>中文检测（check_chinese）</strong>：英文题交付物须为 0 命中。</li><li><strong>轨迹清洗（clean_original_sessions）</strong>：生成 <code>original_sessions/</code>（清洗后轨迹、检测子代理）。</li><li><strong>轨迹检查（trajectory_check）</strong>：<strong>只读</strong>，绝不写 / 改 / 删轨迹。</li><li><strong>质检闸门（run_quality）</strong>：上传前官方质检，自动跑 codex 出报告；六阶段（基础验证 → 静态质检 → 修复验收 → API 测试有效性 → UI 交互 → 最终验证）。<strong>只出报告、不自动提交</strong>；修复 + 用户确认后才提交。<ul><li>⚠️ <strong>安全警示</strong>：质检脚本内含<strong>硬编码凭据（GitLab / GitHub 令牌）</strong>，属敏感。<strong>严禁记录 / 外传 / 进交付包 / 写进任何文档</strong>。</li></ul></li></ul>
+<ul><li><strong>脚手架（scaffold）</strong>：开发前建一级骨架 + 写官方 8 字段 <code>metadata.json</code> + <code>.gitignore</code>；整理交付包时把本题真用到的 skill 拷进 <code>skills/</code>。</li><li><strong>结构校验（validate_package）</strong>：交付包结构 + 英文一致性预检。</li><li><strong>中文检测（check_chinese）</strong>：英文题交付物须为 0 命中。</li><li><strong>轨迹清洗（clean_original_sessions）</strong>：生成 <code>original_sessions/</code>（清洗后轨迹、检测子代理）。</li><li><strong>轨迹检查（trajectory_check）</strong>：<strong>只读</strong>，绝不写 / 改 / 删轨迹。</li><li><strong>质检闸门（run_quality）</strong>：上传前官方质检，自动跑 codex 出报告；六阶段（基础验证 → 静态质检 → 修复验收 → API 测试有效性 → UI 交互 → 最终验证）。<strong>只出报告、不自动提交</strong>；修复 + 用户确认后才提交。<ul><li>⚠ <strong>安全警示</strong>：质检脚本内含<strong>硬编码凭据（GitLab / GitHub 令牌）</strong>，属敏感。<strong>严禁记录 / 外传 / 进交付包 / 写进任何文档</strong>。</li></ul></li></ul>
 <hr>
 <h2 id="8-安全纪律-贯穿全程">8. 安全纪律（贯穿全程）<a class="anchor" href="#8-安全纪律-贯穿全程" aria-label="锚点">#</a></h2>
 <ol><li>GitLab PAT 等令牌<strong>只许</strong>出现在 <code>git remote</code> 的 URL 里（落在本机 <code>.git/config</code>），<strong>严禁</strong>写进任何被提交的文件 / 文档 / 交付包 / 聊天公开渠道。</li><li>含令牌的脚本、凭据文件<strong>必须</strong>在 <code>.gitignore</code> 内，<strong>严禁</strong>进交付包。</li><li>交付完成后<strong>必须</strong>轮换用过的 PAT。</li><li>本文件及任何 Khy-OS 文档<strong>严禁</strong>抄录上述任何真实令牌值。</li></ol>

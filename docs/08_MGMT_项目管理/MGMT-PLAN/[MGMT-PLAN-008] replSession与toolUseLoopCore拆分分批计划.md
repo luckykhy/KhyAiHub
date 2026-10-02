@@ -40,12 +40,12 @@ node services/backend/scripts/archDebtScan.js                     # R2b 必须�
 
 | 批次 | 提取单元（旧基线行号） | 规模 | 风险 | 依赖要点 |
 |------|------------------------|------|------|----------|
-| B1 ✅ | 启动视觉簇（852-900, 971-1326）→ `repl/startupHeader.js` | 385 | 低 | @closuredeps 已有；守卫 reset 已导出 |
-| B2 ✅(证伪) | @path 提及解析——**实地核查早已上游提取**为 cli/atMentionInject.js 单一真源；banner 间距≠内聚单元，本表行号均需按横幅重定位 | 0 | - | 教训：先盘点再规划 |
-| B2' ✅ | 权限栏簇提取 → `repl/permissionBar.js`（_getPermissionModeState + _autoCompactAt + _renderPermissionBar[死代码候选,零调用仅注释提及,原样保全] + _buildPermissionBarText；deps 仅 c/fmt，服务叶子内部重 require 并重定基路径） | -174 | 低 | 转写陷阱：逐字搬运时 truncatePlain 的 n≤1 分支一度写错（三元两侧混淆），靠人工比对原文抓回——**长函数逐字转写必须逐行 diff 原文** |
-| B3 ✅ | 剪贴板桥+中继两内联分派分支 → `repl/clipboardCommands.js`（144 行正文搬入，deps 含 print 三件套/fsmFire/setBusy/keepalive 注入；**clipboardRelayAdapter 属巨型 SCC 成员由核心 lazy require 注入**——IoC 铁律再次适用，aiRenderer 等叶子内部重 require） | -85 | 低 | 内联分支形态同 /study：正则匹配留核心、正文整体搬入；busy/FSM 经 setter 保所有权 |
-| B4 ✅ | `!` shell 逃逸 → `repl/shellEscape.js`（队列状态完全封装——闭包对外零引用，调用方仅触三函数；formatShellEscapeContext 宿主注入值传递；第二个横幅实为 27 行薄分派分支无需动） | -34 | 低 | 第三次证实：banner 间距≠真实规模（估 1400 实为 79）——**一切批次先实测定界** |
-| B5 ◐ | 瞬态原位状态（8812-9722） | ~900 | 中 | 首切片✅：`repl/deferredStatuses.js`（-16，**数组引用传递模式**——缓冲数组留调用方、push/splice 语义跨模块不变）。铺垫批✅：`_transientStatusActive` → `_tstatus.active` 对象化（10 处机械转换零残留，语义等价 jest 集合验证）。余量=_writeTransientStatus/_flushTransientStatus 对 → 现在可直接接收 `_tstatus` 对象提取（B5 二批解锁） |
+| B1 ✓ | 启动视觉簇（852-900, 971-1326）→ `repl/startupHeader.js` | 385 | 低 | @closuredeps 已有；守卫 reset 已导出 |
+| B2 ✓(证伪) | @path 提及解析——**实地核查早已上游提取**为 cli/atMentionInject.js 单一真源；banner 间距≠内聚单元，本表行号均需按横幅重定位 | 0 | - | 教训：先盘点再规划 |
+| B2' ✓ | 权限栏簇提取 → `repl/permissionBar.js`（_getPermissionModeState + _autoCompactAt + _renderPermissionBar[死代码候选,零调用仅注释提及,原样保全] + _buildPermissionBarText；deps 仅 c/fmt，服务叶子内部重 require 并重定基路径） | -174 | 低 | 转写陷阱：逐字搬运时 truncatePlain 的 n≤1 分支一度写错（三元两侧混淆），靠人工比对原文抓回——**长函数逐字转写必须逐行 diff 原文** |
+| B3 ✓ | 剪贴板桥+中继两内联分派分支 → `repl/clipboardCommands.js`（144 行正文搬入，deps 含 print 三件套/fsmFire/setBusy/keepalive 注入；**clipboardRelayAdapter 属巨型 SCC 成员由核心 lazy require 注入**——IoC 铁律再次适用，aiRenderer 等叶子内部重 require） | -85 | 低 | 内联分支形态同 /study：正则匹配留核心、正文整体搬入；busy/FSM 经 setter 保所有权 |
+| B4 ✓ | `!` shell 逃逸 → `repl/shellEscape.js`（队列状态完全封装——闭包对外零引用，调用方仅触三函数；formatShellEscapeContext 宿主注入值传递；第二个横幅实为 27 行薄分派分支无需动） | -34 | 低 | 第三次证实：banner 间距≠真实规模（估 1400 实为 79）——**一切批次先实测定界** |
+| B5 ◐ | 瞬态原位状态（8812-9722） | ~900 | 中 | 首切片✓：`repl/deferredStatuses.js`（-16，**数组引用传递模式**——缓冲数组留调用方、push/splice 语义跨模块不变）。铺垫批✓：`_transientStatusActive` → `_tstatus.active` 对象化（10 处机械转换零残留，语义等价 jest 集合验证）。余量=_writeTransientStatus/_flushTransientStatus 对 → 现在可直接接收 `_tstatus` 对象提取（B5 二批解锁） |
 | B6 | flag 处理器（6074-6765） | ~690 | 中 | 分派表化（现在是内联 else-if） |
 | B7 | /study + `#` 快速记忆分派分支（6765-6980） | ~900 | 中 | 需先把内联分支提为命名函数 |
 | B8 | slash/at 选择器状态机（1719-2738） | ~1000 | 高 | 状态变量多，先合并成 state 对象再搬 |
@@ -64,14 +64,14 @@ node services/backend/scripts/archDebtScan.js                     # R2b 必须�
 
 | 批次 | 提取单元 | 规模 | 风险 | 说明 |
 |------|----------|------|------|------|
-| C1 ✅ | SSOT 对齐：删除陈旧副本（policy-load 链 174 行 + assess 集群 177 行 + 本地 _parseToolCalls 及孤儿体），call sites 改走 `_toolCallParser`/`_capabilityAssess` SSOT（别名注入） | -646 | 中 | 见下方 C1 备忘 |
-| C1.5 ✅ | 死代码清扫：自然语言解析链 7 连环（_parseNaturalToolCalls → _mapNaturalActionToTool → _parseLooseKv/_cleanParams → _buildNaturalToolParams → _parseFunctionArgs → _coerceValue，互为唯一调用方全链死亡） | -300 | 低 | node --check 立即验证纪律生效，一次通过 |
-| C2 ✅ | runToolUseLoop 阶段地图（下方） | 0（清单） | 低 | 实测 1808-11082 = 9275 行（next-decl 定界，brace-scan 不可用） |
-| C3-P7 ✅ | 工具解析决策链提取 → `toolUseLoop/resolveToolCalls.js`（s20 信号语义 + 5 类面包屑，纯决策零状态变更，deps 袋 9 项） | -66 | 低 | **C3 决策簇样板**：call site `let toolCalls`（循环后段重赋值，勿用 const） |
-| C3-P1 ✅ | FSM/阶段观测接线提取 → `toolUseLoop/loopObservability.js`（shadow FSM + onPhase 链式挂接 + fork 包裹器；`_currentIteration` 闭包捕获改 `iterationRef` 对象——**变异捕获模式样板**，钩子 fire 时读 ref 不取快照） | -46 | 中 | 教训：同文本注释多处出现时 findIndex 会命中错误位置——切割脚本断言必须用唯一锚点 |
-| C3-P2 ✅ | harness/协议上下文提取 → `toolUseLoop/protocolContext.js`（tier profile + 原生工具能力探测 + 协议缝，返回袋解构保下游零改动） | -74 | 中 | **IoC 铁律新证**：提取模块静态 require gateway/adapter 模块会加入既有巨型 SCC（R3 拦「环缠新成员」）——提取模块必须零 require 纯叶子，lazy requires 留在核心原位经 deps 注入 |
+| C1 ✓ | SSOT 对齐：删除陈旧副本（policy-load 链 174 行 + assess 集群 177 行 + 本地 _parseToolCalls 及孤儿体），call sites 改走 `_toolCallParser`/`_capabilityAssess` SSOT（别名注入） | -646 | 中 | 见下方 C1 备忘 |
+| C1.5 ✓ | 死代码清扫：自然语言解析链 7 连环（_parseNaturalToolCalls → _mapNaturalActionToTool → _parseLooseKv/_cleanParams → _buildNaturalToolParams → _parseFunctionArgs → _coerceValue，互为唯一调用方全链死亡） | -300 | 低 | node --check 立即验证纪律生效，一次通过 |
+| C2 ✓ | runToolUseLoop 阶段地图（下方） | 0（清单） | 低 | 实测 1808-11082 = 9275 行（next-decl 定界，brace-scan 不可用） |
+| C3-P7 ✓ | 工具解析决策链提取 → `toolUseLoop/resolveToolCalls.js`（s20 信号语义 + 5 类面包屑，纯决策零状态变更，deps 袋 9 项） | -66 | 低 | **C3 决策簇样板**：call site `let toolCalls`（循环后段重赋值，勿用 const） |
+| C3-P1 ✓ | FSM/阶段观测接线提取 → `toolUseLoop/loopObservability.js`（shadow FSM + onPhase 链式挂接 + fork 包裹器；`_currentIteration` 闭包捕获改 `iterationRef` 对象——**变异捕获模式样板**，钩子 fire 时读 ref 不取快照） | -46 | 中 | 教训：同文本注释多处出现时 findIndex 会命中错误位置——切割脚本断言必须用唯一锚点 |
+| C3-P2 ✓ | harness/协议上下文提取 → `toolUseLoop/protocolContext.js`（tier profile + 原生工具能力探测 + 协议缝，返回袋解构保下游零改动） | -74 | 中 | **IoC 铁律新证**：提取模块静态 require gateway/adapter 模块会加入既有巨型 SCC（R3 拦「环缠新成员」）——提取模块必须零 require 纯叶子，lazy requires 留在核心原位经 deps 注入 |
 | C3+ | 按阶段拆 runToolUseLoop（同工厂模式） | ~9275 | 高 | 切缝=面包屑簇边界；先做 loopState 状态对象化 |
-| C3-P10 ✅ | 静默区（7359-9837=工具执行机械区）补 5 个里程碑面包屑：tool-exec-preflight/start/batching/sequential/done（含 iteration+计数，零内容泄漏） | +5 | 低 | `_loopBreadcrumb` 契约核实：KHY_LOOP_DEBUG 门控 + 写文件非 stdout + fail-soft——关 flag 零开销；静默区从 2478 行零观测变为 5 点可诊断，为后续切削供锚点 |
+| C3-P10 ✓ | 静默区（7359-9837=工具执行机械区）补 5 个里程碑面包屑：tool-exec-preflight/start/batching/sequential/done（含 iteration+计数，零内容泄漏） | +5 | 低 | `_loopBreadcrumb` 契约核实：KHY_LOOP_DEBUG 门控 + 写文件非 stdout + fail-soft——关 flag 零开销；静默区从 2478 行零观测变为 5 点可诊断，为后续切削供锚点 |
 
 **C2 · runToolUseLoop 阶段地图（面包屑聚类，行号为 2026-09-02 C1.5 后基线）**
 
