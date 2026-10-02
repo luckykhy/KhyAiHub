@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>trajectory — 录制、回放、双轨与 provenance 判定（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>trajectory<span class="sep">›</span>trajectory — 录制、回放、双轨与 provenance 判定（D2）</div>
+      <header class="hero reveal"><h1>trajectory — 录制、回放、双轨与 provenance 判定（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#trajectory-录制-回放-双轨与-provenance-判定-d2">trajectory — 录制、回放、双轨与 provenance 判定（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="trajectory-录制-回放-双轨与-provenance-判定-d2">trajectory — 录制、回放、双轨与 provenance 判定（D2）<a class="anchor" href="#trajectory-录制-回放-双轨与-provenance-判定-d2" aria-label="锚点">#</a></h1>
+<p>业务上下文：<code>/trace</code>（list/show/verify）、<code>/replay</code>（list/export/verify/run）、<br><code>/guide</code>（map/export/list）三个命令，以及工具回路里每回合的账本落盘。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong>要复盘一次会话的人</strong>：<code>cli/handlers/trace.js:24-25</code>、</li></ul>
+<p><code>cli/handlers/replay.js:29-33,252</code>、<code>cli/handlers/guide.js:21-26</code><br>  （命令声明 <code>constants/commandSchema.js:536,537,538</code>）。</p>
+<ul><li><strong>每回合自动记账的回路</strong>：<code>services/tool/toolUseLoopCore.js:7675,8586</code> 调</li></ul>
+<p><code>trajectoryReplay/replayLedger.recordToolTurn</code>。</p>
+<ul><li><strong>会话持久化与隔离</strong>：<code>services/sessionPersistence.js:502,539</code>、</li></ul>
+<p><code>services/gateway/adapters/codexAdapter.js:2221</code>（<code>quarantinePolicy</code>）。</p>
+<ul><li>壳：`services/{auditTrajectory,dualTrack,dualTrackForge,trajectoryGuide,</li></ul>
+<p>trajectoryProvenance}/index.js`。</p>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p>「回放」要可信，必须同时有四样彼此独立的东西：<strong>录制</strong><br>（<code>auditTrajectory/recorder</code> + <code>wire</code> + <code>diffCapture</code>，规则要求不压缩不裁剪）、<br><strong>账本</strong>（<code>replayLedger</code> 带 <code>LEDGER_VERSION</code> 与 <code>verifyLedger</code>）、<br><strong>可校验的产物</strong>（<code>artifactHash</code> 的 <code>hashCanonical</code> + <code>replayBundle</code> 的<br><code>BUNDLE_VERSION/verifyBundle</code> + <code>envFingerprint</code> 记录运行环境）、<br>以及<strong>断言与自评估</strong>（<code>dualTrack</code> 的 <code>PhysicalAssertionGate</code> /<br><code>DeterministicElevator</code> / <code>LogicalSelfAssessor</code>，<code>dualTrackForge</code> 的<br><code>SOURCE_TRACK</code> 与用户轨保护 <code>USER_TRACK_PROTECTED_NAMES</code>）。<br>判定侧刻意留纯：<code>replayEngine</code>（依赖注入）、<code>replayStepPolicy</code>、<code>tierRegistry</code>、<br><code>claimReconciler</code> / <code>provenanceClassifier</code>、<code>degradeStateMachine</code>、<br><code>lenientResponseParser</code>——「这条声明是谁产出的、能不能算证据」必须离线复算。<br>验收阶梯（<code>acceptance</code> 的 <code>TIER</code>/<code>tier1Grep</code>/<code>tier2Interact</code>/<code>tier3FullSuite</code>）<br>与 <code>channel</code> 的 <code>HARD_PATTERNS</code>/<code>scanForbidden</code>/<code>sanitizeEnv</code> 则把<br>「worker 侧不得越界」做成机制而非约定（规则 10 A2-4）。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/services/trajectoryReplay/p1Ledger.test.js     <span class="hljs-comment"># 9 tests / 9 pass / 0 fail</span>
+node --<span class="hljs-built_in">test</span> tests/services/dualTrack/dualTrack.test.js           <span class="hljs-comment"># 37 tests / 34 pass / 3 fail</span></code></pre>
+<p>第二条<strong>当前是红的</strong>，原样记录：3 条红用例为<br>「assemble 装载官方核心 + 仓库用户扩展轨样例」（断言 <code>loadedTypes.includes('say')</code>）、<br>「用户覆写生效」、「曾经未知的 speak_v2 现经扩展轨可执行」。<br>红的集中在<strong>样例装载</strong>这条路径（依赖仓库内样例文件的实际内容），<br>而本目录唯一脏文件是 <code>auditTrajectory/diffCapture.js</code>，与红点不同侧。<br>病因结论留给复跑者，本卡只登记读数与位置。</p>
+<h2 id="已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）<a class="anchor" href="#已知缺陷-登记-不在本单元擅自修" aria-label="锚点">#</a></h2>
+<p><code>dualTrack</code> 的 3 条红（见上）；52 个源文件零共置测试。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../services/backend/src/services/domain/trajectory/dualTrack/README.html"><div class="dir">← 上一篇</div><div class="ttl">dualTrack — 双轨热插拔运行时（D2 功能单元）</div></a><a class="next" href="../../../../../../services/backend/src/services/domain/trajectory/trajectoryProvenance/README.html"><div class="dir">下一篇 →</div><div class="ttl">trajectoryProvenance — 轨迹溯源与防篡改链（D2 业务上下文）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/trajectory/README.html";</script>
+<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

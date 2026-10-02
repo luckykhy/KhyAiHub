@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>trajectoryReplay — 轨迹录制与确定性回放（D2 业务上下文） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>trajectory<span class="sep">›</span>trajectoryReplay<span class="sep">›</span>trajectoryReplay — 轨迹录制与确定性回放（D2 业务上下文）</div>
+      <header class="hero reveal"><h1>trajectoryReplay — 轨迹录制与确定性回放（D2 业务上下文）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#trajectoryreplay-轨迹录制与确定性回放-d2-业务上下文">trajectoryReplay — 轨迹录制与确定性回放（D2 业务上下文）</a></li><li class="lvl-2"><a href="#逐成员">逐成员</a></li><li class="lvl-2"><a href="#扇入-谁在用">扇入（谁在用）</a></li><li class="lvl-2"><a href="#裁决契约-每条都由同目录测试钉住">裁决契约（每条都由同目录测试钉住）</a></li><li class="lvl-2"><a href="#门控-全部-env-可读-零硬编码">门控（全部 env 可读、零硬编码）</a></li><li class="lvl-2"><a href="#登记的偏差与缺陷-只登记-未自行动手">登记的偏差与缺陷（只登记，未自行动手）</a></li><li class="lvl-2"><a href="#已知边界">已知边界</a></li><li class="lvl-2"><a href="#测试怎么跑">测试怎么跑</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="trajectoryreplay-轨迹录制与确定性回放-d2-业务上下文">trajectoryReplay — 轨迹录制与确定性回放（D2 业务上下文）<a class="anchor" href="#trajectoryreplay-轨迹录制与确定性回放-d2-业务上下文" aria-label="锚点">#</a></h1>
+<blockquote><p>一句话定位：把一次会话的每个工具轮次<strong>完整</strong>记进账本（不截断 params），再在无 AI 的<br>前提下按录制顺序重放，用 sha256 作为<strong>唯一裁判</strong>判定产物是否复现。回放只能收紧，<br>不能伪造录制事实：哈希不符即 HALT，绝不静默&quot;尽力修复&quot;。<br>设计真源：<code>[DESIGN-ARCH-048]</code>（四阶段：账本 → 环境指纹 → 便携包 → 引擎）与<br><code>[DESIGN-ARCH-049]</code>（可选 AI 修复桥 A）。</p></blockquote>
+<h2 id="逐成员">逐成员<a class="anchor" href="#逐成员" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>行</th><th>导出</th><th>角色</th><th>出边</th><th>测试/例</th></tr></thead><tbody><tr><td><code>tierRegistry.js</code></td><td>120</td><td>7</td><td>三档分层唯一真源（FILE / SHELL / NETWORK_AI）</td><td><code>src/tools/_writeToolNames</code>（<strong>未映射域</strong>）</td><td>13</td></tr><tr><td><code>artifactHash.js</code></td><td>65</td><td>5</td><td>内容与产物哈希的统一封装（录制侧与校验侧算同一个摘要）</td><td><code>src/services/sourceSnapshotCrypto</code>（D1）</td><td>22</td></tr><tr><td><code>envFingerprint.js</code></td><td>156</td><td>6</td><td>环境指纹采集与比对（回放前的&quot;相对静态环境&quot;闸门）</td><td>仅内建模块</td><td>22</td></tr><tr><td><code>replayLedger.js</code></td><td>389</td><td>12</td><td>录制侧真源：JSONL 边车账本 + 内容库 + 延迟写队列</td><td><code>sessionPersistence</code>（D1）、<code>utils/dataHome</code>（D3）</td><td>19</td></tr><tr><td><code>replayBundle.js</code></td><td>278</td><td>8</td><td>自包含便携包（manifest + 账本原文 + blob + env + 可选链）</td><td><code>sessionPersistence</code>（D1）、<code>utils/dataHome</code>（D3）、<code>trajectoryProvenance/traceChain</code>（D2）</td><td>14</td></tr><tr><td><code>replayEngine.js</code></td><td>382</td><td>7</td><td>回放引擎：按档门控 + 六条防呆 + 分歧立即 HALT</td><td><code>toolCalling</code>（D1，惰性）</td><td>18</td></tr><tr><td><code>replayStepPolicy.js</code></td><td>88</td><td>6</td><td>步进策略纯叶子（超时 / SHELL 预批准 / 盖戳 / 应答器）</td><td><code>execApproval</code>（D1，惰性 ×2 站点）</td><td>13</td></tr><tr><td><code>replayArtifactGuards.js</code></td><td>96</td><td>2</td><td>前置守卫与后置校验纯叶子（防呆⑥与③）</td><td>仅 <code>fs</code> + 同目录 <code>./artifactHash</code></td><td>19</td></tr><tr><td><code>index.js</code></td><td>31</td><td>6</td><td>桶（再导出六个命名空间）</td><td>全部同目录</td><td>7</td></tr><tr><td><strong>合计</strong></td><td><strong>1605</strong></td><td><strong>59</strong></td><td>9 个源文件</td><td></td><td><strong>147 例 / 396 断言 / 0 skip</strong></td></tr></tbody></table>
+<p>两个 <code>_</code> 前缀的叶子（<code>replayArtifactGuards</code>、<code>replayStepPolicy</code>）是为把 <code>replayEngine.js</code><br>压进 400 行纳管上限而<strong>行为中性</strong>抽出的，引擎再 require 回来并重新绑定同名符号，<br>公开面逐字节不变；它们<strong>不经桶暴露</strong>（钉住于 <code>内部纯叶子 replayArtifactGuards/replayStepPolicy 不经桶暴露（当前表面如实钉住）</code>）。</p>
+<h2 id="扇入-谁在用">扇入（谁在用）<a class="anchor" href="#扇入-谁在用" aria-label="锚点">#</a></h2>
+<p>非测试消费者 <strong>6 个文件 / 11 个 require 站点</strong>（按「直接 require 本单元路径」计，含文件形态与目录形态）：</p>
+<table><thead><tr><th>消费者</th><th>域</th><th>用了什么</th></tr></thead><tbody><tr><td><code>src/cli/handlers/replay.js</code></td><td>D1</td><td><code>replayBundle</code> <code>replayEngine</code> <code>replayLedger</code> <code>tierRegistry</code></td></tr><tr><td><code>src/cli/handlers/guide.js</code></td><td>D1</td><td><code>replayBundle</code> <code>replayLedger</code></td></tr><tr><td><code>src/services/tool/toolUseLoopCore.js</code></td><td>D1（作者 in-flight）</td><td><code>replayLedger.recordToolTurn</code>（两个站点：录制热路径）</td></tr><tr><td><code>src/services/domain/trajectory/trajectoryGuide/mapAuthor.js</code></td><td>D2</td><td><code>artifactHash</code> <code>tierRegistry</code></td></tr><tr><td><code>src/services/domain/eval/guiEval/recordingCollector.js</code></td><td>D2</td><td><code>artifactHash</code>（惰性 + try/catch）</td></tr><tr><td><code>src/services/domain/eval/guiEval/checkpointVerifier.js</code></td><td>D2</td><td><code>artifactHash</code>（惰性 + try/catch）</td></tr></tbody></table>
+<p>实测：<strong>桶 <code>index.js</code> 在生产代码里零消费者</strong>——六个消费者全部直连成员文件。桶仍保留，<br>因为它是「本单元公开面」的机器可读清单（<code>barrel 恰导出 6 个子模块命名空间，不多不少</code>）。</p>
+<h2 id="裁决契约-每条都由同目录测试钉住">裁决契约（每条都由同目录测试钉住）<a class="anchor" href="#裁决契约-每条都由同目录测试钉住" aria-label="锚点">#</a></h2>
+<ol><li><strong>三档全覆盖且冻结</strong>：<code>classify</code> 只可能返回三档或 <code>UNKNOWN</code>，<code>effectiveTier</code> 把</li></ol>
+<p><code>UNKNOWN</code> 折叠成 <strong>SHELL</strong>（保守：要审批，绝不静默按 FILE 自动重放）——<br>   <code>effectiveTier 恒三档之一，任何输入都不跳出枚举（total 契约）</code>、<br>   <code>Read 不在 FILE 集（只读工具）：classify 判 UNKNOWN、effectiveTier 保守降 SHELL</code>。<br>   注意最后一条：<code>Read</code> 这类只读工具落在 <code>UNKNOWN</code>→SHELL，<strong>不在 FILE 集</strong>，<br>   档位表管的是&quot;变更文件的回合&quot;，不是&quot;读&quot;。</p>
+<ol><li><strong>FILE 集派生自单一真源</strong>：<code>tools/_writeToolNames</code> 的捕获白名单 ∪ {applypatch, scaffoldfiles}</li></ol>
+<p>——<code>FILE_TOOLS 非空且恰为捕获白名单加 applypatch 与 scaffoldfiles（派生自单一真源）</code>。<br>   捕获侧刻意跳过这两个多文件工具，但&quot;跑过它们的回合&quot;仍是改文件的回合，两轴正交。</p>
+<ol><li><strong>录制只存哈希，字节另存内容库</strong>：账本条目带 <code>paramsHash</code>/<code>writeDiff</code>/<code>artifacts[].sha256</code>，</li></ol>
+<p>after 字节按内容寻址落 <code>trajectory_replay/&lt;sessionId&gt;/content/&lt;sha256&gt;</code>，因此<strong>文件在导出前被删掉也还能复现</strong>——<br>   <code>内容库按 sha256 存 after 字节；delete（after 空）不新增 blob</code>。</p>
+<ol><li><strong>账本是 best-effort，绝不影响业务</strong>：<code>recordToolTurn</code> 全程 try/catch，缺 sessionId/name</li></ol>
+<p>返回结构化错误而不是抛——<code>recordToolTurn 缺 sessionId 或 name 返回结构化错误而非抛</code>。</p>
+<ol><li><strong>写盘默认延迟、读并轨</strong>：<code>record</code> 只入队，<code>read()</code> 把未刷条目与盘上内容合并，</li></ol>
+<p>所以&quot;记完立刻读&quot;永远自洽；<code>flush()</code> 之后队列清零——<br>   <code>异步默认模式：record 只入队，read 并轨未刷条目，flush() 后落盘且队列清零</code>。<br>   导出与进程退出走 <code>_drainSync()</code>（<code>drainSync 同步排空队列到磁盘（供导出与进程退出消费者）</code>），<br>   批量 32 行或 debounce 到期即刷（<code>replayLedger.js:54</code>、<code>replayLedger.js:68</code>）。</p>
+<ol><li><strong>seq 的两种语义</strong>：自动模式单调 0→1→…，<strong>显式传 seq 原样采用且不推进计数器</strong>——</li></ol>
+<p><code>seq 自动单调 0→1，显式 seq 原样采用且不推进计数器</code>。<code>verifyLedger</code> 因此把断号当坏条目。</p>
+<ol><li><strong>空包也是合法包</strong>：<code>exportBundle</code> 对从未录制的 sessionId 返回 <code>ok:true</code> 且 steps 为空</li></ol>
+<p>（<code>replayBundle.js:91-166</code>）——<code>exportBundle 对从未录制的会话产出空 steps 的合法空包（当前契约如实钉住，见头部注释）</code>。<br>   这是<strong>当前契约</strong>而非期望：调用方不能拿 <code>ok</code> 当&quot;确实录到过东西&quot;。</p>
+<ol><li><strong>便携包的篡改检测</strong>：账本哈希、blob 哈希、schema 三关逐条报错——</li></ol>
+<p><code>verifyBundle 对干净包 ok，blob 被篡改报哈希不符，blob 被删报缺失且无法复现路径</code>、<br>   <code>verifyBundle 检测 ledger.jsonl 被改：报账本被篡改</code>。</p>
+<ol><li><strong>环境门默认拒绝</strong>：<code>compare</code> 忽略 <code>capturedAt</code>，任何其它字段分歧即 <code>status:'env-mismatch'</code> 且<strong>零步执行</strong>，</li></ol>
+<p>只有 <code>opts.force</code> 才继续——<code>防呆⑤ 环境分歧默认拒绝：status=env-mismatch、diffs 列全、零步执行</code>。</p>
+<ol><li><strong>NETWORK_AI 永不重放</strong>：非确定性问题不假装复现——</li></ol>
+<p><code>防呆② NETWORK_AI 步永不重放：skipped 且理由为不可确定性复现</code>。</p>
+<ol><li><strong>SHELL 要审批</strong>：命中 <code>KHY_REPLAY_SHELL_ALLOW</code>/<code>opts.preApprovedShell</code> 模式，或 <code>opts.confirm</code></li></ol>
+<p>返回真值才执行；confirm 抛错算未批准——<code>防呆④ SHELL 未预批准跳过；confirm 返回假值或抛错都算未批准</code>。<br>    模式语义直接借用 <code>execApproval.matchCommandPattern</code>（精确命中、裸前缀不命中、星号通配命中：<br>    <code>SHELL 预批准命中后穿透审批门抵达前置守卫（理由变为产物状态而非未批准）</code>）。</p>
+<ol><li><strong>前置分歧即 HALT</strong>：改/删前比对 <code>beforeHash</code> 与盘上实际，不一致就停并回 <code>divergedAt</code>，</li></ol>
+<p>绝不覆盖未录制的数据——<code>防呆③/⑥ 前置分歧立即 HALT：status=diverged、divergedAt=seq、verify 携 expected/actual</code>、<br>    <code>delete 目标仍存在且 beforeHash 不符：halt 防误删未录制数据</code>。已在录制终态则判 <code>satisfied</code> 跳过。</p>
+<ol><li><strong>AI 修复桥不改裁判</strong>：<code>opts.repair</code> 缺席/返回 null/<code>attempted:false</code> 三态都回落纯确定性路径；</li></ol>
+<p>命中与否<strong>只由重跑 <code>_verifyArtifacts</code> 决定</strong>——<code>_maybeRepair 修复后哈希校验通过判 repaired——sha256 仍是唯一裁判</code>、<br>    <code>_maybeRepair 零回归门：无钩子/钩子返回 null/declined 三态都回落纯 048 路径（返回 null）</code>。</p>
+<ol><li><strong>每步恰好回调一次</strong>，回调抛错被吞不影响报告——<code>onStep 每步恰好回调一次，回调抛错被吞不影响报告</code>。</li></ol>
+<h2 id="门控-全部-env-可读-零硬编码">门控（全部 env 可读、零硬编码）<a class="anchor" href="#门控-全部-env-可读-零硬编码" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>变量</th><th>默认</th><th>语义</th><th>读处</th></tr></thead><tbody><tr><td><code>KHY_REPLAY_LEDGER_FLUSH_MS</code></td><td>150</td><td>账本延迟刷盘 debounce（<code>parseInt</code> 后 <code>Math.max(0,…)</code>）</td><td><code>replayLedger.js:50</code></td></tr><tr><td><code>KHY_REPLAY_LEDGER_SYNC</code></td><td>关</td><td>强制同步落盘；真值集合是 <code>1/on/true/yes</code></td><td><code>replayLedger.js:57</code></td></tr><tr><td><code>KHY_REPLAY_CAPTURE_CONTENT</code></td><td>开</td><td>内容库 blob 捕获；假值集合是 <code>0/off/false/no</code></td><td><code>replayLedger.js:153</code>、<code>replayBundle.js:36</code></td></tr><tr><td><code>KHY_REPLAY_STEP_TIMEOUT_MS</code></td><td>120000</td><td>单步活动式超时（opts 优先于 env，非正数回退默认）</td><td><code>replayStepPolicy.js:18</code></td></tr><tr><td><code>KHY_REPLAY_SHELL_ALLOW</code></td><td>空</td><td>SHELL 预批准模式，按换行/逗号切分</td><td><code>replayStepPolicy.js:26</code></td></tr><tr><td><code>KHY_REPLAY_L2_CONFIRM</code></td><td><code>YES</code></td><td>回放应答器供给的 L2 键入确认词（<strong>构造时</strong>读 env）</td><td><code>replayStepPolicy.js:76</code></td></tr><tr><td><code>KHY_REPLAY_FINGERPRINT_TOOLS</code></td><td><code>node</code></td><td>工具链探针列表，逗号或空白切分</td><td><code>envFingerprint.js:29</code></td></tr><tr><td><code>KHY_REPLAY_PROBE_TIMEOUT_MS</code></td><td>3000</td><td>单个探针超时（防挂死工具拖住 capture）</td><td><code>envFingerprint.js:38</code></td></tr></tbody></table>
+<p>同一单元里存在<strong>两套开关词汇</strong>：<code>_captureContentEnabled()</code>（假值集合 <code>0/off/false/no</code>，<br>在 <code>replayLedger.js:152</code> 与 <code>replayBundle.js:35</code> <strong>逐字重复两份</strong>）与<br><code>_ledgerSyncForced()</code>（真值集合 <code>1/on/true/yes</code>）。语义确实不同（一个是&quot;默认可关&quot;，<br>一个是&quot;默认关可开&quot;），所以不是同一个 bug，但词汇表重复且分叉——与第 27 批<br><code>_OFF</code>/<code>utils/isOffValue</code> 漂移同族，见下文「登记的偏差」。</p>
+<h2 id="登记的偏差与缺陷-只登记-未自行动手">登记的偏差与缺陷（只登记，未自行动手）<a class="anchor" href="#登记的偏差与缺陷-只登记-未自行动手" aria-label="锚点">#</a></h2>
+<ul><li><strong>B28-S5｜回放会替人键入 L2 确认词</strong>（安全相关，需人裁决）。<code>replayStepPolicy.js:75-78</code></li></ul>
+<p>的应答器恒返 <code>{behavior:'allow', typed:'YES'}</code>，而网关的 L2 门只比对确认串<br>  （<code>src/services/domain/system/syscallGateway/approvalRouter.js:147</code>）。实测把该应答器经 <code>makeControlPrompter</code> 接到<br>  <code>route()</code>：<code>delete/project</code> 判 L2 时裁决为 <code>user-allow</code>，<br>  reasons 为「用户键入确认串「YES」，放行本次 L2」——<strong>没有人键过任何东西</strong>。<br>  对照：同一条目若交互器返回空串（回车）则 <code>deny</code> + <code>confirm-mismatch</code>。<br>  影响面被三样东西限制住：只有引擎决定重放的步才走到这里（NETWORK_AI 提前 skip）、<br>  FILE 档只重放录制过的路径、前置守卫仍会因 <code>beforeHash</code> 分歧 HALT。<br>  但这与 <code>src/services/domain/system/syscallGateway/approvalRouter.js:12</code>「非交互环境一律 fail-closed 拒绝」和红线「L2 必须人键入」<br>  的表述直接冲突。改不改、把&quot;回放&quot;定义为人的授权载体还是定义为绕过，属人的裁决 → 任务 #17。</p>
+<ul><li><strong>B28-S6｜<code>_preconditionCheck</code> 非 total</strong>：<code>replayArtifactGuards.js:18-19</code> 读</li></ul>
+<p><code>step.artifacts</code> 时无 try/catch，传 null 直接 <code>TypeError</code>。引擎调用点恒传对象，<br>  流水线内不可达；已由 <code>对 null 入参抛 TypeError（实测非 total，如实钉住）</code> 钉住实测行为。</p>
+<ul><li><strong>B28-S7｜<code>hashCanonical</code> 名不符实</strong>：只做 <code>JSON.stringify</code> 原样序列化，<strong>不排序键</strong></li></ul>
+<p>（<code>replayLedger.js</code>/<code>artifactHash.js:52-62</code>），所以键序不同哈希不同<br>  （<code>hashCanonical 键序不同则哈希不同（非排序规范化，仅 JSON.stringify 原样）</code>）。<br>  录制侧与校验侧算的是同一个对象，因此不产生误判；但任何&quot;跨来源比 canonical 哈希&quot;的<br>  设想都不成立。</p>
+<ul><li><strong>B28-S8｜<code>compare</code> 把 <code>null</code> 与 <code>undefined</code> 判为分歧且两侧都显示 <code>null</code></strong></li></ul>
+<p>（<code>envFingerprint.js:127-128</code>）：<code>JSON.stringify(undefined)</code> 是 <code>undefined</code> 而非 <code>'null'</code>，<br>  于是不相等；而 diff 项两侧都被 <code>pa == null ? null : pa</code> 归一成 <code>null</code>，报出来的分歧<strong>读起来像没分歧</strong>。<br>  已由 <code>…其中 null vs undefined 也算分歧且两侧都显示 null（实测缺陷行为）</code> 钉住。</p>
+<ul><li><strong>B28-S9｜<code>sha256Hex</code> 是唯一不 fail-soft 的导出</strong>：<code>artifactHash.js:64</code> 原样透传上游函数，</li></ul>
+<p>对 null 抛 <code>TypeError</code>，与同文件四个包装函数口径不同（<code>sha256Hex 透传原函数对 null 抛 TypeError（不包 fail-soft，与四包装函数不同）</code>）。</p>
+<ul><li><strong>B28-S10｜两套 off 词汇 + 一份逐字重复</strong>（见上文门控表末段）：统一成</li></ul>
+<p><code>utils/isOffValue</code> 与否属人的决定 → 任务 #17。</p>
+<h2 id="已知边界">已知边界<a class="anchor" href="#已知边界" aria-label="锚点">#</a></h2>
+<ol><li><code>exportBundle</code> 会先 <code>replayLedger.drainSync()</code> 再拷贝账本原文，所以便携包不会漏掉队列里的条目；</li></ol>
+<p>但<strong>内容库是同步写、账本行是异步写</strong>（<code>replayLedger.js:177-179</code> 注释是这条不对称的登记处），<br>   极端情况下 blob 已在、行还没刷——由 <code>drainSync</code> 兜住，代价是多一次同步 I/O。</p>
+<ol><li><code>KHY_REPLAY_CAPTURE_CONTENT=off</code> 时包里的 <code>content/</code> 为空，<code>verifyBundle</code> 会对每个</li></ol>
+<p>FILE 步报「缺内容 blob」。<strong>这是设计内的诚实</strong>：没抓字节就说复现不了，不放行。</p>
+<ol><li><code>replayEngine</code> 经 <code>../../../toolCalling</code> 惰性 require 拿 <code>executeTool</code>（<code>replayEngine.js:46</code>）——</li></ol>
+<p>这是 D2→D1 的既有反向边，本单元不修（见清单 <code>_deviation_note</code>）。</p>
+<ol><li>环境门的 <code>cwd</code> 参与比对：同一份包在另一个工作目录重放即判 <code>env-mismatch</code>。</li></ol>
+<p>要跨目录复现，须显式给 <code>opts.force</code>。</p>
+<ol><li><code>_replayControlResponder</code> 在<strong>构造时</strong>读 <code>KHY_REPLAY_L2_CONFIRM</code>（<code>replayStepPolicy.js:76</code>），</li></ol>
+<p>之后再改 env 不影响已构造的应答器——测试注入必须在构造前设值。</p>
+<h2 id="测试怎么跑">测试怎么跑<a class="anchor" href="#测试怎么跑" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-comment"># 同目录共置测试（node:test 方言，147 例 / 0 skip / 全绿）</span>
+node --<span class="hljs-built_in">test</span> services/backend/src/services/domain/trajectory/trajectoryReplay/*.test.js</code></pre>
+<p><code>replayBundle.test.js</code> 会在文件头把 <code>KHY_PROJECT_DATA_HOME</code> 重定向到临时目录，并在<br><code>after()</code> 里 <code>rmSync</code>；单独跑别的文件不会碰真实数据根。</p>
+<p>单元外还有 <strong>11 份测试引用本单元</strong>（实测合计 <strong>75 例 / 0 fail</strong>）：6 份 node:test 方言<br>（<code>tests/services/trajectoryReplay/p{1,2,3,4}*.test.js</code>、<code>e2eReplay.test.js</code>、<br><code>tests/cli/handlers/replayHandler.test.js</code>）可直跑；5 份 jest 方言本环境无 jest，<br>需按 <code>khy.module.json</code> 的 <code>_outside_test_note</code> 记的口径复跑才能拿到真判据。<br>注意镜像树里那份同名的 <code>tests/services/domain/trajectory/trajectoryReplay/tierRegistry.test.js</code><br>是<strong>另一份</strong>（jest 方言 / 17 例），别与共置那份（node:test / 13 例）混为一谈。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../services/backend/src/services/domain/trajectory/trajectoryProvenance/README.html"><div class="dir">← 上一篇</div><div class="ttl">trajectoryProvenance — 轨迹溯源与防篡改链（D2 业务上下文）</div></a><a class="next" href="../../../../../../../services/backend/src/services/domain/workspace/README.html"><div class="dir">下一篇 →</div><div class="ttl">workspace — 检查点、恢复与工作区上下文摘要（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/trajectory/trajectoryReplay/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
