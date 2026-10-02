@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -31,7 +31,7 @@
 <p><strong>状态：已按本方案实施完成（2026-09-17 15:2x）。</strong> 实施记录见文末「七、实施记录」。</p></blockquote>
 <hr>
 <h2 id="零-实施摘要-先看这个">零、实施摘要（先看这个）<a class="anchor" href="#零-实施摘要-先看这个" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>Step</th><th>内容</th><th>落地文件</th><th>状态</th></tr></thead><tbody><tr><td>1</td><td>建立 <code>RouteFact</code> 单一真源</td><td>新增 <code>gateway/routeFact.js</code></td><td>✅ 完成</td></tr><tr><td>2</td><td>统一选路口径（选 <strong>A2</strong>）</td><td><code>aiGatewayModelMethods.js</code></td><td>✅ 完成</td></tr><tr><td>3</td><td>页脚实际优先 + 失败即刷新</td><td><code>App.js</code> / <code>useQueryBridge.js</code> / <code>footerStability.js</code> / <code>FooterBar.js</code></td><td>✅ 完成</td></tr><tr><td>4</td><td>失败当帧刷新页脚</td><td>同上（<code>turnFailureAt</code>）</td><td>✅ 完成</td></tr><tr><td>5</td><td>修配置现场</td><td><code>services/backend/.env</code></td><td>✅ 完成</td></tr><tr><td>6</td><td><strong>防第三次复发</strong>（原方案的「附带建议」已升级为必做）</td><td><code>baseSelfCheckService.js</code></td><td>✅ 完成</td></tr></tbody></table>
+<table><thead><tr><th>Step</th><th>内容</th><th>落地文件</th><th>状态</th></tr></thead><tbody><tr><td>1</td><td>建立 <code>RouteFact</code> 单一真源</td><td>新增 <code>gateway/routeFact.js</code></td><td>✓ 完成</td></tr><tr><td>2</td><td>统一选路口径（选 <strong>A2</strong>）</td><td><code>aiGatewayModelMethods.js</code></td><td>✓ 完成</td></tr><tr><td>3</td><td>页脚实际优先 + 失败即刷新</td><td><code>App.js</code> / <code>useQueryBridge.js</code> / <code>footerStability.js</code> / <code>FooterBar.js</code></td><td>✓ 完成</td></tr><tr><td>4</td><td>失败当帧刷新页脚</td><td>同上（<code>turnFailureAt</code>）</td><td>✓ 完成</td></tr><tr><td>5</td><td>修配置现场</td><td><code>services/backend/.env</code></td><td>✓ 完成</td></tr><tr><td>6</td><td><strong>防第三次复发</strong>（原方案的「附带建议」已升级为必做）</td><td><code>baseSelfCheckService.js</code></td><td>✓ 完成</td></tr></tbody></table>
 <p>测试：新增 2 个测试文件 + 扩充 2 个既有文件，<code>tests/gateway</code>（67 套 556 例）、<code>tests/tui</code>、<br><code>tests/cli/tui</code> 全绿；<code>check-leaf-contract</code> 与 <code>check-wiring</code> 守卫通过。改动 8 个源文件 + 4 个测试文件。</p>
 <hr>
 <h2 id="一-先把-不一致-拆成三个具体错位">一、先把「不一致」拆成三个具体错位<a class="anchor" href="#一-先把-不一致-拆成三个具体错位" aria-label="锚点">#</a></h2>
@@ -145,7 +145,7 @@ GATEWAY_PREFERRED_STRICT=true      # 保持</code></pre>
 <p>备份：<code>.env.bak-20260917-statusfix</code>。其余键（含 <code>RELAY_API_COMPATIBILITY</code>）经 diff 校验未变动。</p>
 <blockquote><p><strong>未改</strong>：<code>RELAY_API_ENDPOINT=https://api.codeium.com/windsurf/v1</code> 与<br><code>RELAY_API_KEY=quality-gate-windsurf-access-token-fixture</code> 仍是死配置（实测 404）。<br>因当前首选通道已切到 <code>api</code>，它不再影响正常调用；但若回退到 relay 仍会失败。<br>建议后续单独清理，本轮不动以免扩大改动面。</p></blockquote>
 <h3 id="7-6-验证">7.6 验证<a class="anchor" href="#7-6-验证" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>手段</th><th>结果</th></tr></thead><tbody><tr><td><code>routeFact.test.js</code>（新增 20 例）</td><td>✅ 20/20，含事故现场精确复现</td></tr><tr><td><code>footerStability.test.js</code>（扩充 8 例）</td><td>✅ 18/18</td></tr><tr><td><code>baseSelfCheck.preferredAdapter.test.js</code>（扩充 2 例）</td><td>✅ 4/4</td></tr><tr><td><code>tests/gateway</code> 全量</td><td>✅ 67 套 556 例</td></tr><tr><td><code>tests/tui</code> + <code>tests/cli/tui</code></td><td>✅ 26 套 307 例</td></tr><tr><td><code>check-leaf-contract</code>（routeFact）</td><td>✅ 通过</td></tr><tr><td><code>check-wiring</code></td><td>✅ 74 检查器全接线</td></tr></tbody></table>
+<table><thead><tr><th>手段</th><th>结果</th></tr></thead><tbody><tr><td><code>routeFact.test.js</code>（新增 20 例）</td><td>✓ 20/20，含事故现场精确复现</td></tr><tr><td><code>footerStability.test.js</code>（扩充 8 例）</td><td>✓ 18/18</td></tr><tr><td><code>baseSelfCheck.preferredAdapter.test.js</code>（扩充 2 例）</td><td>✓ 4/4</td></tr><tr><td><code>tests/gateway</code> 全量</td><td>✓ 67 套 556 例</td></tr><tr><td><code>tests/tui</code> + <code>tests/cli/tui</code></td><td>✓ 26 套 307 例</td></tr><tr><td><code>check-leaf-contract</code>（routeFact）</td><td>✓ 通过</td></tr><tr><td><code>check-wiring</code></td><td>✓ 74 检查器全接线</td></tr></tbody></table>
 <p><strong>端到端复现</strong>：注入事故原始输入后，<code>routeFact</code> 输出的 label 为 <code>✗ claude-3.5-sonnet (windsurf)</code>，<br>一致性检查自洽；切到 <code>auto</code> 或修好的配置后 label 为 <code>agnes-3.0-flash (api)</code>，<strong>无虚假告警</strong>。</p>
 <p>四场景验收（全部自洽）：</p>
 <table><thead><tr><th>场景</th><th>意图</th><th>实发</th><th>served</th><th>页脚标签</th></tr></thead><tbody><tr><td>修复前现场（钉 windsurf + strict，无凭据）</td><td>windsurf</td><td>windsurf</td><td>—</td><td><code>✗ claude-3.5-sonnet (windsurf)</code></td></tr><tr><td>修复后配置（钉 api/agnes）</td><td>api</td><td>api</td><td>api</td><td><code>agnes-3.0-flash (api)</code></td></tr><tr><td>auto 模式</td><td>auto</td><td>api</td><td>api</td><td><code>agnes-3.0-flash (api)</code>（无虚假告警）</td></tr><tr><td>钉 windsurf 但 strict=false（成功回退）</td><td>windsurf</td><td>api</td><td>api</td><td><code>windsurf → agnes-3.0-flash (api)</code></td></tr></tbody></table>

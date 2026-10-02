@@ -11,20 +11,20 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
     <div class="content">
       <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>04_IMPL_实现<span class="sep">›</span>IMPL-RPT<span class="sep">›</span>[DESIGN-ARCH-119] 逐 hunk 拆分提交 — 进度与阻塞</div>
       <header class="hero reveal"><h1>[DESIGN-ARCH-119] 逐 hunk 拆分提交 — 进度与阻塞</h1></header>
-      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-119-逐-hunk-拆分提交-进度与阻塞">[DESIGN-ARCH-119] 逐 hunk 拆分提交 — 进度与阻塞</a></li><li class="lvl-2"><a href="#一-已落地-5-个提交-每个都跑过该步测试">一、已落地（5 个提交，每个都跑过该步测试）</a></li><li class="lvl-3"><a href="#技术手法-行级精确重建">技术手法：行级精确重建</a></li><li class="lvl-3"><a href="#一处必要的测试调度">一处必要的测试调度</a></li><li class="lvl-2"><a href="#二-hunk-步骤-归属表-mousebuttons-js-31-个-u0-hunk">二、hunk → 步骤 归属表（`mouseButtons.js`，31 个 U0 hunk）</a></li><li class="lvl-2"><a href="#三-阻塞-检测到并发写盘-正在进行时">三、⛔ 阻塞：检测到并发写盘（正在进行时）</a></li><li class="lvl-2"><a href="#四-剩余待办">四、剩余待办</a></li><li class="lvl-2"><a href="#五-可回滚保障">五、可回滚保障</a></li></ul></nav>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-119-逐-hunk-拆分提交-进度与阻塞">[DESIGN-ARCH-119] 逐 hunk 拆分提交 — 进度与阻塞</a></li><li class="lvl-2"><a href="#一-已落地-5-个提交-每个都跑过该步测试">一、已落地（5 个提交，每个都跑过该步测试）</a></li><li class="lvl-3"><a href="#技术手法-行级精确重建">技术手法：行级精确重建</a></li><li class="lvl-3"><a href="#一处必要的测试调度">一处必要的测试调度</a></li><li class="lvl-2"><a href="#二-hunk-步骤-归属表-mousebuttons-js-31-个-u0-hunk">二、hunk → 步骤 归属表（`mouseButtons.js`，31 个 U0 hunk）</a></li><li class="lvl-2"><a href="#三-阻塞-检测到并发写盘-正在进行时">三、◉ 阻塞：检测到并发写盘（正在进行时）</a></li><li class="lvl-2"><a href="#四-剩余待办">四、剩余待办</a></li><li class="lvl-2"><a href="#五-可回滚保障">五、可回滚保障</a></li></ul></nav>
       <article class="doc-body">
 <h1 id="design-arch-119-逐-hunk-拆分提交-进度与阻塞">[DESIGN-ARCH-119] 逐 hunk 拆分提交 — 进度与阻塞<a class="anchor" href="#design-arch-119-逐-hunk-拆分提交-进度与阻塞" aria-label="锚点">#</a></h1>
 <p>生成时间：2026-09-18 12:40<br>基线：<code>1e35ee0a</code> → 现有 5 个提交</p>
@@ -46,7 +46,7 @@
 <table><thead><tr><th>步骤</th><th>hunk 编号</th></tr></thead><tbody><tr><td>步骤 1</td><td>1, 2, 19, 21, 22, 23(部分), 24, 25(部分), 26, 27, 28</td></tr><tr><td>2b-0</td><td>3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15(部分), 17, 18, 30, 31</td></tr><tr><td>2b-2</td><td>15(部分), 16, 20, 23(部分), 25(部分), 29</td></tr></tbody></table>
 <p>hunk 内部再切的三处：<code>#15</code>（<code>onWheel</code> 归 2b-0 / <code>onSelectEvent</code> 归 2b-2）、<br><code>#23</code>（<code>return false</code> 归步骤 1 / <code>fireSelect('down')</code> 归 2b-2）、<br><code>#25</code>（<code>const item</code> 归步骤 1 / <code>fireSelect('up')</code> 归 2b-2）。</p>
 <hr>
-<h2 id="三-阻塞-检测到并发写盘-正在进行时">三、⛔ 阻塞：检测到并发写盘（正在进行时）<a class="anchor" href="#三-阻塞-检测到并发写盘-正在进行时" aria-label="锚点">#</a></h2>
+<h2 id="三-阻塞-检测到并发写盘-正在进行时">三、◉ 阻塞：检测到并发写盘（正在进行时）<a class="anchor" href="#三-阻塞-检测到并发写盘-正在进行时" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>时刻</th><th>事件</th></tr></thead><tbody><tr><td>12:21</td><td>我写入 <code>mouseButtons.js</code>（S2B0 中间态）</td></tr><tr><td>12:26</td><td>新建 <code>services/backend/src/cli/tui/utils/selectGates.js</code></td></tr><tr><td>12:27</td><td>重写 <code>ink-components/App.js</code>，<strong>并转成 CRLF</strong></td></tr><tr><td>12:28</td><td>改 <code>ink-components/ccMessageProjection.js</code></td></tr><tr><td>12:38</td><td>往 <code>mouseButtons.js</code> 加 21 行</td></tr><tr><td>12:39</td><td>那 21 行又被撤回（文件回到与 HEAD 一致）</td></tr></tbody></table>
 <p>证据链：</p>
 <ul><li><code>.gitattributes</code> 不管 <code>.js</code>，<code>core.autocrlf=false</code>，HEAD 版 <code>App.js</code> 是 LF、</li></ul>

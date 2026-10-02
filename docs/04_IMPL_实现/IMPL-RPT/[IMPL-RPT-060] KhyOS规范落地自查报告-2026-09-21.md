@@ -195,9 +195,9 @@ console.log('redLines:', c.redLines.length, JSON.stringify(c.redLines))"
 
 | 指标 | 守卫实测 | `repo-layout-baseline.json` | `debt-ledger.json` | 一致？ |
 |------|---------|---------------------------|-------------------|--------|
-| `dangling-task` | **76** | `88` | `measured: 98` | ❌ 三个数互不相同 |
-| `cross-layer-require` | **18** | `39` | `measured: 37` | ❌ 三个数互不相同 |
-| `unresolved-require` | `0` | `0` | `measured: 0, status: "closed"` | ✅ 三者一致 |
+| `dangling-task` | **76** | `88` | `measured: 98` | ✗ 三个数互不相同 |
+| `cross-layer-require` | **18** | `39` | `measured: 37` | ✗ 三个数互不相同 |
+| `unresolved-require` | `0` | `0` | `measured: 0, status: "closed"` | ✓ 三者一致 |
 
 **为什么严重**
 

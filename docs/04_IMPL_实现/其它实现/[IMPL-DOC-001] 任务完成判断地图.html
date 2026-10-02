@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -112,7 +112,7 @@ all\s+tests?\s+pass(?:ed|ing)?|checks?\s+pass(?:ed|ing)?|build\s+(?:succeeded|pa
 lint\s+(?:pass(?:ed|ing)?|clean)|verified|\bpassed\b</code></pre>
 <p><strong>具体证据信号</strong> (<code>_EVIDENCE_RE</code>):</p>
 <pre><code>``` | ~~~ | 数字+passed/passing/通过 | 数字/数字 | exit code | tests: 数字 |
-ok 数字 | # pass/fail | ✓✔√✅❌✗× | PASS | FAIL | $ 命令 | npm test |
+ok 数字 | # pass/fail | ✓✔√✓✗✗× | PASS | FAIL | $ 命令 | npm test |
 node --test | pytest | jest | go test | cargo test</code></pre>
 <h3 id="3-4-验证行为门">3.4 验证行为门<a class="anchor" href="#3-4-验证行为门" aria-label="锚点">#</a></h3>
 <p><strong>验证命令签名</strong> (<code>_VERIFY_CMD_RE</code>):</p>
@@ -305,7 +305,7 @@ runToolUseLoop 进入循环
 <p>(计划外的在途改动一律不碰);<code>restoreAnchor</code> 读回 manifest 后<strong>再做一次越界检查</strong><br>   (防被篡改的 manifest 写到 cwd 之外),越界项记 <code>skipped</code>。<br>   ⚠ 口径变更(2026-09-26 第二轮):原为「只记<strong>本步</strong>目标文件」,按 Q5 的裁定改为<br>   「只记<strong>全计划</strong>目标文件」。「计划外不动」这条边界<strong>未变</strong>,变的只是<strong>计划内</strong>的覆盖范围。</p>
 <ol><li>锚点建立后文件被外部修改时如何避免覆盖?→ <strong>部分解决</strong>。sha256 验收能<strong>检测</strong>「已被改过」</li></ol>
 <p>(<code>mismatches</code> 非空),但还原<strong>不会因此停下</strong>——当前语义是「还原就是还原到那一步」。<br>   若将来要「检测到外部修改则拒绝还原」,属 S2+ 的强度问题。</p>
-<ol><li>✅ <strong>已裁定并落地(2026-09-26 第二轮):采用 (a) 累积式 manifest。</strong></li></ol>
+<ol><li>✓ <strong>已裁定并落地(2026-09-26 第二轮):采用 (a) 累积式 manifest。</strong></li></ol>
 <p>裁定前状态:「退回第 N 步完成态」<strong>做不到</strong>,只能做「把第 N 步碰过的文件恢复成第 N 步完成态」;<br>   已由多步用例<strong>实测钉死</strong>(当时写成 characterization 断言)。<br>   成因:每步 manifest <strong>只含该步自己的目标文件</strong>;第 2 步<strong>创建</strong>的 <code>b.md</code> 在第 1 步的锚点里<br>   <strong>没有任何记录</strong> ⇒ 退回第 1 步时<strong>无从知道它当时不存在</strong>,于是不会被删掉。<br>   <strong>落地形状</strong>:每步 manifest 覆盖<strong>全计划目标</strong>的当前状态(<code>plan.steps</code> 开工时已知 ⇒ 一次算全),<br>   于是 <code>restoreToStep(N)</code> 一次即正确——既写回「当时存在的」,也删掉「当时还不存在的」。<br>   配套(否则存储量是 O(步数 × 文件数)):blob 改为<strong>运行级内容寻址</strong> <code>blobs/&lt;sha256&gt;.bin</code>,<br>   同内容跨步只落一份(实测:3 步 × 3 目标只落 <strong>2 份</strong> blob,因为全程只有 2 种内容)。<br>   ⚠ 与 Q3 的边界<strong>不冲突</strong>:仍是「计划外不动」,只是「计划内」覆盖到全部目标。<br>   备选 (b)(保持按步隔离 + 改名 <code>restoreStepFiles(N)</code>)<strong>未被采用</strong>。</p>
 <ol><li>⚠ <strong>可达性:部分收口(2026-09-26 第二轮)。</strong></li></ol>
 <p>裁定前状态:三个导出(<code>restoreToStep</code> / <code>getLastAnchorRun</code> / <code>listStepAnchors</code>)在<br>   <code>services</code> <code>scripts</code> <code>apps</code> <code>software</code> 下<strong>零命中</strong>(除 <code>planModeService.js</code> 自身)<br>   ⇒ 锚点是<strong>只写</strong>的:数据在磁盘上,但用户/AI 都够不到。<br>   <strong>已落地的收口(只读面)</strong>:<code>planModeService.formatAnchorSummary()</code> 把「已保存几份 /<br>   哪几步 / 覆盖几个计划目标文件 / runId / 阶段」压成一行,挂在<strong>两条</strong>计划执行路径上——<br>   TUI(<code>App.js</code> 的 <code>executePlan</code>,<strong>默认路径</strong>)与 readline REPL(<code>replSession.js</code>)。<br>   无可报内容时返回 <code>null</code> ⇒ 调用方<strong>不打印</strong>(不往转录里塞噪声)。<br>   摘要<strong>只报事实、不承诺能力</strong>:S1 阶段没有任何入口能触发还原,所以文案里<strong>不写</strong><br>   「可退回第 N 步」——那是一句没有判据的声称。<br>   <strong>未落地的部分(仍是缺口)</strong>:<code>restoreToStep</code> <strong>仍然没有任何用户入口</strong>。用户看得见<br>   「存了哪些锚点」,但<strong>没有任何命令能触发还原</strong>。这是<strong>刻意的</strong>:棘轮禁止新增命令/别名/<br>   handler/规则(<code>check-delivery-baseline</code> 的 <code>delivery-surface-ratchet-breach</code> 量<br>   <code>routerCommands</code> / <code>aliasEntries</code> / <code>handlerFiles</code> / <code>ruleCount</code> 四项,只降不升)。<br>   后续可行落点(须先裁定,涉及 <code>RUNTIME-010</code> 工具授权):</p>

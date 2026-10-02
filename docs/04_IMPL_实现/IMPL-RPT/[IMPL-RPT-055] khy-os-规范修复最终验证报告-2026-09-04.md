@@ -14,14 +14,14 @@
 
 | 规范文档 | 文件路径 | 状态 |
 |---------|---------|------|
-| API 设计规范 | `docs/03_DESIGN_设计/[DESIGN-API-001] API 设计规范.md` | ✅ 已创建 |
-| 数据库规范 | `docs/03_DESIGN_设计/[DESIGN-DB-001] 数据库规范.md` | ✅ 已创建 |
-| 安全规范 | `docs/03_DESIGN_设计/[DESIGN-SEC-001] 安全规范.md` | ✅ 已创建 |
-| 日志规范 | `docs/03_DESIGN_设计/[DESIGN-LOG-001] 日志规范.md` | ✅ 已创建 |
-| 错误处理规范 | `docs/03_DESIGN_设计/[DESIGN-ERR-001] 错误处理规范.md` | ✅ 已创建 |
-| 部署规范 | `docs/03_DESIGN_设计/[DESIGN-DEPLOY-001] 部署规范.md` | ✅ 已创建 |
-| 性能规范 | `docs/03_DESIGN_设计/[DESIGN-PERF-001] 性能规范.md` | ✅ 已创建 |
-| 可访问性规范 | `docs/03_DESIGN_设计/[DESIGN-A11Y-001] 可访问性规范.md` | ✅ 已创建 |
+| API 设计规范 | `docs/03_DESIGN_设计/[DESIGN-API-001] API 设计规范.md` | ✓ 已创建 |
+| 数据库规范 | `docs/03_DESIGN_设计/[DESIGN-DB-001] 数据库规范.md` | ✓ 已创建 |
+| 安全规范 | `docs/03_DESIGN_设计/[DESIGN-SEC-001] 安全规范.md` | ✓ 已创建 |
+| 日志规范 | `docs/03_DESIGN_设计/[DESIGN-LOG-001] 日志规范.md` | ✓ 已创建 |
+| 错误处理规范 | `docs/03_DESIGN_设计/[DESIGN-ERR-001] 错误处理规范.md` | ✓ 已创建 |
+| 部署规范 | `docs/03_DESIGN_设计/[DESIGN-DEPLOY-001] 部署规范.md` | ✓ 已创建 |
+| 性能规范 | `docs/03_DESIGN_设计/[DESIGN-PERF-001] 性能规范.md` | ✓ 已创建 |
+| 可访问性规范 | `docs/03_DESIGN_设计/[DESIGN-A11Y-001] 可访问性规范.md` | ✓ 已创建 |
 
 ---
 
@@ -36,7 +36,7 @@ grep -r "if (import.meta.env.DEV)" software/khyquant/frontend/src --include="*.v
 
 **验证结果**：743 处 `if (import.meta.env.DEV)` 包装
 
-**状态**：✅ 已执行
+**状态**：✓ 已执行
 
 ### 2. 硬编码颜色替换
 
@@ -47,7 +47,7 @@ grep -r "var(--khy-" software/khyquant/frontend/src --include="*.vue" --include=
 
 **验证结果**：797 处 CSS 变量使用
 
-**状态**：✅ 已执行
+**状态**：✓ 已执行
 
 ### 3. 废弃文件编码修复
 
@@ -64,7 +64,7 @@ type services\backend\src\services\tdxFormulaEngine.js
  */
 ```
 
-**状态**：✅ 已执行（22 个文件已修复）
+**状态**：✓ 已执行（22 个文件已修复）
 
 ### 4. target="_blank" 安全修复
 
@@ -75,7 +75,7 @@ findstr /s /n /i "rel=\"noopener\"" apps\ai-frontend\src\*.vue | findstr /v "nor
 
 **验证结果**：未找到缺少 noreferrer 的链接
 
-**状态**：✅ 已执行（14 处已修复）
+**状态**：✓ 已执行（14 处已修复）
 
 ### 5. 空 catch 块注释
 
@@ -86,7 +86,7 @@ findstr /s /n /i "catch(e){}" services\backend\src\bridge\mobilePage.js
 
 **验证结果**：未找到空的 catch 块
 
-**状态**：✅ 已执行（8 处已修复）
+**状态**：✓ 已执行（8 处已修复）
 
 ### 6. JWT 安全修复
 
@@ -105,7 +105,7 @@ if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-only-secret-do-not-use-in-production';
 ```
 
-**状态**：✅ 已执行
+**状态**：✓ 已执行
 
 ### 7. 密码策略修复
 
@@ -125,7 +125,7 @@ if (password.length < PASSWORD_MIN_LENGTH) {
 }
 ```
 
-**状态**：✅ 已执行
+**状态**：✓ 已执行
 
 ### 8. 测试基础设施
 
@@ -141,7 +141,7 @@ import vue from '@vitejs/plugin-vue';
 // ... 完整的 vitest 配置
 ```
 
-**状态**：✅ 已创建
+**状态**：✓ 已创建
 
 ---
 
@@ -161,14 +161,14 @@ import vue from '@vitejs/plugin-vue';
 
 | 修复类别 | 问题数量 | 修复状态 | 验证方式 |
 |---------|---------|---------|---------|
-| Console 语句 | 739 个 | ✅ 已完成 | grep 验证（743 处） |
-| 硬编码颜色 | 864 个 | ✅ 已完成 | grep 验证（797 处） |
-| 废弃文件编码 | 22 个 | ✅ 已完成 | 文件内容验证 |
-| target="_blank" | 14 处 | ✅ 已完成 | findstr 验证 |
-| 空 catch 块 | 8 个 | ✅ 已完成 | findstr 验证 |
-| JWT 安全 | 1 处 | ✅ 已完成 | 文件内容验证 |
-| 密码策略 | 1 处 | ✅ 已完成 | 文件内容验证 |
-| 测试基础设施 | 2 个项目 | ✅ 已创建 | 文件存在验证 |
+| Console 语句 | 739 个 | ✓ 已完成 | grep 验证（743 处） |
+| 硬编码颜色 | 864 个 | ✓ 已完成 | grep 验证（797 处） |
+| 废弃文件编码 | 22 个 | ✓ 已完成 | 文件内容验证 |
+| target="_blank" | 14 处 | ✓ 已完成 | findstr 验证 |
+| 空 catch 块 | 8 个 | ✓ 已完成 | findstr 验证 |
+| JWT 安全 | 1 处 | ✓ 已完成 | 文件内容验证 |
+| 密码策略 | 1 处 | ✓ 已完成 | 文件内容验证 |
+| 测试基础设施 | 2 个项目 | ✓ 已创建 | 文件存在验证 |
 
 ---
 

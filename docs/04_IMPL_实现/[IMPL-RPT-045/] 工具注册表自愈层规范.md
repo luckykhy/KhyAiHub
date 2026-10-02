@@ -39,10 +39,10 @@
 #### E1: static-field-colon
 
 ```javascript
-// ❌ 错误
+// ✗ 错误
 static searchHint: 'fine-tuning model training';
 
-// ✅ 修复后
+// ✓ 修复后
 static searchHint = 'fine-tuning model training';
 ```
 
@@ -55,10 +55,10 @@ static searchHint = 'fine-tuning model training';
 #### E2: invalid-category
 
 ```javascript
-// ❌ 错误
+// ✗ 错误
 static category = 'protocol';  // 拼写错误
 
-// ✅ 修复后（模糊匹配）
+// ✓ 修复后（模糊匹配）
 static category = 'mcp';  // 或 fallback 到 'custom'
 ```
 
@@ -71,10 +71,10 @@ static category = 'mcp';  // 或 fallback 到 'custom'
 #### E3: invalid-risk
 
 ```javascript
-// ❌ 错误
+// ✗ 错误
 static risk = 'mdeium';  // 拼写错误
 
-// ✅ 修复后
+// ✓ 修复后
 static risk = 'medium';
 ```
 
@@ -87,10 +87,10 @@ static risk = 'medium';
 #### E4: invalid-enum
 
 ```javascript
-// ❌ 错误
+// ✗ 错误
 static interruptBehavior = 'cancle';  // 拼写错误
 
-// ✅ 修复后
+// ✓ 修复后
 static interruptBehavior = 'cancel';
 ```
 
@@ -103,10 +103,10 @@ static interruptBehavior = 'cancel';
 #### E5: type-mismatch
 
 ```javascript
-// ❌ 错误
+// ✗ 错误
 static shouldDefer = 'true';  // 字符串代替布尔
 
-// ✅ 修复后
+// ✓ 修复后
 static shouldDefer = true;
 ```
 
@@ -123,10 +123,10 @@ static shouldDefer = true;
 #### E6: invalid-array
 
 ```javascript
-// ❌ 错误
+// ✗ 错误
 static aliases = 'single-alias';  // 字符串代替数组
 
-// ✅ 修复后
+// ✓ 修复后
 static aliases = ['single-alias'];
 ```
 

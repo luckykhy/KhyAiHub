@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -164,7 +164,7 @@ _meta/SPLIT-PLAN.md                                 不存在
 <hr>
 <h2 id="七-落地记录-2026-09-23">七、落地记录（2026-09-23）<a class="anchor" href="#七-落地记录-2026-09-23" aria-label="锚点">#</a></h2>
 <p><strong>交付物</strong>（任务账本 = T-024，evidence = .khy/feedback/T-024-acceptance-gate/）：</p>
-<table><thead><tr><th>动作</th><th>落点</th><th>状态</th></tr></thead><tbody><tr><td>① 修 T-020/T-021 判据路径</td><td>PROGRESS.json（顺带修了 T-011/T-012/T-016 共 5 条失效路径引用）</td><td>✅</td></tr><tr><td>② 数据契约</td><td>PROGRESS.json schema 段 + review_done_rule 段；hqStore.validateTask 校验 evidence/baseline_metrics/scope_guard（出现即校验，存量不追溯）</td><td>✅</td></tr><tr><td>③ done 验收清算门</td><td>hqStore.reviewDoneBlockers（4 阻断项）+ hq.js _gateReviewToDone（拒绝时给可执行动作清单）+ khy hq accept 生成清算模板</td><td>✅</td></tr><tr><td>④ scope_guard 边界锁</td><td>todo→doing 硬前置 + khy hq scope 越界可见（不拦）+ task note --scope 逐条追加</td><td>✅</td></tr><tr><td>反向验证</td><td>services/backend/tests/cli/hqReviewGate.test.js：<strong>26/26 全绿（约 5s）</strong>；8 类坏数据必拒且状态不变、好数据放行落盘 done、未填模板过不了门</td><td>✅</td></tr></tbody></table>
+<table><thead><tr><th>动作</th><th>落点</th><th>状态</th></tr></thead><tbody><tr><td>① 修 T-020/T-021 判据路径</td><td>PROGRESS.json（顺带修了 T-011/T-012/T-016 共 5 条失效路径引用）</td><td>✓</td></tr><tr><td>② 数据契约</td><td>PROGRESS.json schema 段 + review_done_rule 段；hqStore.validateTask 校验 evidence/baseline_metrics/scope_guard（出现即校验，存量不追溯）</td><td>✓</td></tr><tr><td>③ done 验收清算门</td><td>hqStore.reviewDoneBlockers（4 阻断项）+ hq.js _gateReviewToDone（拒绝时给可执行动作清单）+ khy hq accept 生成清算模板</td><td>✓</td></tr><tr><td>④ scope_guard 边界锁</td><td>todo→doing 硬前置 + khy hq scope 越界可见（不拦）+ task note --scope 逐条追加</td><td>✓</td></tr><tr><td>反向验证</td><td>services/backend/tests/cli/hqReviewGate.test.js：<strong>26/26 全绿（约 5s）</strong>；8 类坏数据必拒且状态不变、好数据放行落盘 done、未填模板过不了门</td><td>✓</td></tr></tbody></table>
 <p><strong>过程中实测抓到并修掉的三个新坑</strong>（门反过来抓到实现自己的问题）：</p>
 <ol><li><code>splitAcceptance</code> 把括号内分号当分隔符 —— T-024 自己的 5 条判据被切成 7 条，门拒了一份实际完整的清算（已修 + 回归锁）；</li><li>spawnSync 管道版会被 khy.js 启动期后台辅助进程攥住写端导致不返回（实测一次 988s，远超 120s kill 超时 —— kill 只杀直接子进程），测试的 stdio 改落文件后全套 17min → 5s；</li><li><code>router.js:764</code> options 解析对重复 <code>--key</code> 是 last-wins，同一命令重复 <code>--scope</code> 只剩最后一条 —— 边界追加改为每条一次调用（<code>khy hq task note &lt;ID&gt; --scope &quot;…&quot;</code>）。</li></ol>
 <p><strong>新增测试注入点</strong>：<code>hqStore.feedbackDir()</code>（<code>KHY_FEEDBACK_DIR</code>，与 <code>KHY_HQ_DIR</code> 同一条「测试注入点必须真的生效」纪律）。</p>
@@ -172,13 +172,13 @@ _meta/SPLIT-PLAN.md                                 不存在
 <hr>
 <h2 id="七-落地记录-2026-09-23-2">七、落地记录（2026-09-23）<a class="anchor" href="#七-落地记录-2026-09-23-2" aria-label="锚点">#</a></h2>
 <p><strong>交付物</strong>（任务账本 = T-024，evidence = .khy/feedback/T-024-acceptance-gate/）：</p>
-<table><thead><tr><th>动作</th><th>落点</th><th>状态</th></tr></thead><tbody><tr><td>① 修 T-020/T-021 判据路径</td><td>PROGRESS.json（顺带修了 T-011/T-012/T-016 共 5 条失效路径引用）</td><td>✅</td></tr><tr><td>② 数据契约</td><td>PROGRESS.json schema 段 + review_done_rule 段；hqStore.validateTask 校验 evidence/baseline_metrics/scope_guard（出现即校验，存量不追溯）</td><td>✅</td></tr><tr><td>③ done 验收清算门</td><td>hqStore.reviewDoneBlockers（4 阻断项）+ hq.js _gateReviewToDone（拒绝时给可执行动作清单）+ khy hq accept 生成清算模板</td><td>✅</td></tr><tr><td>④ scope_guard 边界锁</td><td>todo→doing 硬前置 + khy hq scope 越界可见（不拦）+ task note --scope 逐条追加</td><td>✅</td></tr><tr><td>反向验证</td><td>services/backend/tests/cli/hqReviewGate.test.js：<strong>26/26 全绿（约 5s）</strong>；8 类坏数据必拒且状态不变、好数据放行落盘 done、未填模板过不了门</td><td>✅</td></tr></tbody></table>
+<table><thead><tr><th>动作</th><th>落点</th><th>状态</th></tr></thead><tbody><tr><td>① 修 T-020/T-021 判据路径</td><td>PROGRESS.json（顺带修了 T-011/T-012/T-016 共 5 条失效路径引用）</td><td>✓</td></tr><tr><td>② 数据契约</td><td>PROGRESS.json schema 段 + review_done_rule 段；hqStore.validateTask 校验 evidence/baseline_metrics/scope_guard（出现即校验，存量不追溯）</td><td>✓</td></tr><tr><td>③ done 验收清算门</td><td>hqStore.reviewDoneBlockers（4 阻断项）+ hq.js _gateReviewToDone（拒绝时给可执行动作清单）+ khy hq accept 生成清算模板</td><td>✓</td></tr><tr><td>④ scope_guard 边界锁</td><td>todo→doing 硬前置 + khy hq scope 越界可见（不拦）+ task note --scope 逐条追加</td><td>✓</td></tr><tr><td>反向验证</td><td>services/backend/tests/cli/hqReviewGate.test.js：<strong>26/26 全绿（约 5s）</strong>；8 类坏数据必拒且状态不变、好数据放行落盘 done、未填模板过不了门</td><td>✓</td></tr></tbody></table>
 <p><strong>过程中实测抓到并修掉的三个新坑</strong>（门反过来抓到实现自己的问题）：</p>
 <ol><li><code>splitAcceptance</code> 把括号内分号当分隔符 —— T-024 自己的 5 条判据被切成 7 条，门拒了一份实际完整的清算（已修 + 回归锁）；</li><li>spawnSync 管道版会被 khy.js 启动期后台辅助进程攥住写端导致不返回（实测一次 988s，远超 120s kill 超时 —— kill 只杀直接子进程），测试的 stdio 改落文件后全套 17min → 5s；</li><li><code>router.js:764</code> options 解析对重复 <code>--key</code> 是 last-wins，同一命令重复 <code>--scope</code> 只剩最后一条 —— 边界追加改为每条一次调用（<code>khy hq task note &lt;ID&gt; --scope &quot;…&quot;</code>）。</li></ol>
 <p><strong>新增测试注入点</strong>：<code>hqStore.feedbackDir()</code>（<code>KHY_FEEDBACK_DIR</code>，与 <code>KHY_HQ_DIR</code> 同一条「测试注入点必须真的生效」纪律）。</p>
 <p><strong>遗留</strong>：eslint 本机不可用（workspace 模块缺失，属既有环境问题，与本次改动无关；三文件 <code>node --check</code> 全过）。<br>T-024 停在 <strong>review</strong> —— done 拍板归人（这正是本机制的设计：机器可验证面闭环后，最后一格留给人的判断）。</p>
       </article>
-      <nav class="pager"><a class="prev" href="../../../docs/04_IMPL_实现/IMPL-RPT/[IMPL-RPT-061] OpenCode-Zen-免鉴权通道-核实的方案-2026-09-23.html"><div class="dir">← 上一篇</div><div class="ttl">[IMPL-RPT-061] OpenCode Zen 免鉴权通道 — 核实的方案</div></a><a class="next" href="../../../docs/04_IMPL_实现/IMPL-RPT/00_INDEX_IMPL-RPT-总目录.html"><div class="dir">下一篇 →</div><div class="ttl">IMPL-RPT</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../docs/04_IMPL_实现/IMPL-RPT/[IMPL-RPT-061] OpenCode-Zen-免鉴权通道-核实的方案-2026-09-23.html"><div class="dir">← 上一篇</div><div class="ttl">[IMPL-RPT-061] OpenCode Zen 免鉴权通道 — 核实的方案</div></a><a class="next" href="../../../docs/04_IMPL_实现/IMPL-RPT/[IMPL-RPT-063] 会话轨迹问题盘点与修复方案-2026-09-28.html"><div class="dir">下一篇 →</div><div class="ttl">会话轨迹问题盘点与修复方案</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>

@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -30,7 +30,7 @@
 <blockquote><p>本报告汇总了 khy-os 项目中不符合规范的代码及其修复情况。</p></blockquote>
 <hr>
 <h2 id="修复概述">修复概述<a class="anchor" href="#修复概述" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>修复类别</th><th>问题数量</th><th>修复状态</th><th>修复方式</th></tr></thead><tbody><tr><td>安全警告注释</td><td>4 处</td><td>✅ 已完成</td><td>手动添加</td></tr><tr><td>target=&quot;_blank&quot; 缺少 rel</td><td>14 处</td><td>✅ 已完成</td><td>手动修复</td></tr><tr><td>console 语句未保护</td><td>739 个</td><td>✅ 已完成</td><td>自动清理</td></tr><tr><td>硬编码颜色</td><td>864 个</td><td>✅ 已完成</td><td>自动替换</td></tr><tr><td>空 catch 块</td><td>8 个</td><td>✅ 已完成</td><td>手动添加注释</td></tr><tr><td>编码问题废弃注释</td><td>22 个</td><td>✅ 已完成</td><td>自动修复</td></tr><tr><td>测试基础设施</td><td>2 个项目</td><td>✅ 已完成</td><td>配置文件</td></tr></tbody></table>
+<table><thead><tr><th>修复类别</th><th>问题数量</th><th>修复状态</th><th>修复方式</th></tr></thead><tbody><tr><td>安全警告注释</td><td>4 处</td><td>✓ 已完成</td><td>手动添加</td></tr><tr><td>target=&quot;_blank&quot; 缺少 rel</td><td>14 处</td><td>✓ 已完成</td><td>手动修复</td></tr><tr><td>console 语句未保护</td><td>739 个</td><td>✓ 已完成</td><td>自动清理</td></tr><tr><td>硬编码颜色</td><td>864 个</td><td>✓ 已完成</td><td>自动替换</td></tr><tr><td>空 catch 块</td><td>8 个</td><td>✓ 已完成</td><td>手动添加注释</td></tr><tr><td>编码问题废弃注释</td><td>22 个</td><td>✓ 已完成</td><td>自动修复</td></tr><tr><td>测试基础设施</td><td>2 个项目</td><td>✓ 已完成</td><td>配置文件</td></tr></tbody></table>
 <hr>
 <h2 id="详细修复记录">详细修复记录<a class="anchor" href="#详细修复记录" aria-label="锚点">#</a></h2>
 <h3 id="1-安全警告注释">1. 安全警告注释<a class="anchor" href="#1-安全警告注释" aria-label="锚点">#</a></h3>
@@ -87,40 +87,40 @@
 策略: 包装在 DEV 检查中
 找到 322 个文件
 
-📊 清理汇总
+清理汇总
 处理文件: 322 个
 修改文件: 0 个
 总变更数: 0 个</code></pre>
-<p>✅ 验证通过：没有需要修改的文件</p>
+<p>✓ 验证通过：没有需要修改的文件</p>
 <h3 id="颜色修复验证">颜色修复验证<a class="anchor" href="#颜色修复验证" aria-label="锚点">#</a></h3>
 <pre><code>模式: 预览
 颜色映射: 93 个
 找到 331 个文件
 
-📊 修复汇总
+修复汇总
 处理文件: 331 个
 修改文件: 0 个
 总变更数: 0 个</code></pre>
-<p>✅ 验证通过：没有需要修改的文件</p>
+<p>✓ 验证通过：没有需要修改的文件</p>
 <h3 id="编码修复验证">编码修复验证<a class="anchor" href="#编码修复验证" aria-label="锚点">#</a></h3>
 <pre><code>模式: 预览
 待处理文件: 24 个
 
-📊 修复汇总
+修复汇总
 总文件数: 24 个
 需要修复: 0 个
 无需修复: 24 个</code></pre>
-<p>✅ 验证通过：没有需要修复的文件</p>
+<p>✓ 验证通过：没有需要修复的文件</p>
 <h3 id="target-blank-验证">target=&quot;_blank&quot; 验证<a class="anchor" href="#target-blank-验证" aria-label="锚点">#</a></h3>
 <pre><code class="language-bash"><span class="hljs-comment"># 搜索缺少 noreferrer 的 rel=&quot;noopener&quot;</span>
 findstr /s /n /i <span class="hljs-string">&quot;rel=\&quot;noopener\&quot;&quot;</span> apps\ai-frontend\src\*.vue | findstr /v <span class="hljs-string">&quot;noreferrer&quot;</span>
 <span class="hljs-comment"># 结果：未找到匹配项</span></code></pre>
-<p>✅ 验证通过：没有缺少 noreferrer 的链接</p>
+<p>✓ 验证通过：没有缺少 noreferrer 的链接</p>
 <h3 id="空-catch-块验证">空 catch 块验证<a class="anchor" href="#空-catch-块验证" aria-label="锚点">#</a></h3>
 <pre><code class="language-bash"><span class="hljs-comment"># 搜索空的 catch 块</span>
 findstr /s /n /i <span class="hljs-string">&quot;catch(e){}&quot;</span> services\backend\src\bridge\*.js
 <span class="hljs-comment"># 结果：未找到匹配项</span></code></pre>
-<p>✅ 验证通过：没有空的 catch 块</p>
+<p>✓ 验证通过：没有空的 catch 块</p>
 <hr>
 <h2 id="后续建议">后续建议<a class="anchor" href="#后续建议" aria-label="锚点">#</a></h2>
 <h3 id="1-持续集成检查">1. 持续集成检查<a class="anchor" href="#1-持续集成检查" aria-label="锚点">#</a></h3>
