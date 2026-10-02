@@ -43,7 +43,7 @@ HQ 一旦被放进 khy-os **内部**，这个推算就会指向 `khy-os/khy-os`�
 
 ## 二、五条硬约束（决定方案取舍）
 
-### C1 🔴 「路径自推算」是合并的**阻断性**约束
+### C1 ● 「路径自推算」是合并的**阻断性**约束
 
 `scripts/hq_common.py:26-29`：
 
@@ -58,11 +58,11 @@ def find_khyos():
 ```
 
 **现状**（实测有效）：`HQ_ROOT=D:\Portable\Projects\khy-os-hq` → `PORTABLE_ROOT=D:\Portable`
-→ 找到 `D:\Portable\khy-os` ✅
+→ 找到 `D:\Portable\khy-os` ✓
 
 **若把 HQ 放进 khy-os，例如 `khy-os/Projects/hq/`**：
 `PORTABLE_ROOT` 变成 `D:\Portable\khy-os\Projects` → 去探测
-`D:\Portable\khy-os\Projects\khy-os` → **不存在** ❌
+`D:\Portable\khy-os\Projects\khy-os` → **不存在** ✗
 
 **后果**：`sync.py` 只处理 HQ 自身、`next.py` 渲染的 `{{KHYOS_PATH}}` 变成
 「(未找到 khy-os 目录…)」、`khy-os-hq.bat` 报错。**7 个脚本全部要改**，
@@ -71,7 +71,7 @@ def find_khyos():
 **唯一可行修法**：把 `find_khyos()` 改为「先向上找含 `package.json` + `pyproject.toml` 的目录」，
 但这等于**重写 HQ 的路径地基**，且要重跑 `hq_check.py portability` 全量回归。
 
-### C2 🔴 `hq_check.py` 会把整个 khy-os 当成自己的源码来扫
+### C2 ● `hq_check.py` 会把整个 khy-os 当成自己的源码来扫
 
 `iter_files()` 只跳过 `{.git, node_modules, __pycache__, logs}`，**会递归进入同级目录树**。
 若 HQ 嵌套在 khy-os 内：
@@ -84,14 +84,14 @@ def find_khyos():
 > 这条比 C1 更致命：C1 让脚本「找不到 khy-os」，C2 让门禁「必然红」。
 > 两者叠加 = **双机流水线当场死亡**。
 
-### C3 🔴 文件命名正面冲突
+### C3 ● 文件命名正面冲突
 
 HQ 与 khy-os 的**根目录都有** `README.md`、`AGENTS.md`、`CLAUDE.md`（实测均存在）。
 若把 HQ 内容摊平或按原样嵌到可被扫描的位置，会与 khy-os 的
 `ROOT_DOC_WHITELIST`（`scripts/ci/check-repo-layout.js:124`）及其
 `DESIGN-LAY-005` §1.3 根目录白名单**直接冲突**。
 
-### C4 🟠 已有「嵌套仓库导致自动同步瘫痪」的**真实前科**
+### C4 ● 已有「嵌套仓库导致自动同步瘫痪」的**真实前科**
 
 `khy-os/.gitignore:172-180` 明文记录了完全相同的故障：
 
@@ -103,7 +103,7 @@ HQ 与 khy-os 的**根目录都有** `README.md`、`AGENTS.md`、`CLAUDE.md`（�
 
 **这段就是本次合并的预言**：嵌套仓库 → 工作树永远脏 → `--clean-only` 永不触发 → 流水线死锁。
 
-### C5 🟠 「AI 指令文件」预算与角色冲突
+### C5 ● 「AI 指令文件」预算与角色冲突
 
 依据已完成的 `DOCS-003`（真源 `docs/10_规范/[DESIGN-DOC-002]`）与实测：
 - khy-os 的 `AGENTS.md` 当前 **42,155 字节**，走 **compat 链路**（`constants/prompts.js`
@@ -123,10 +123,10 @@ HQ 与 khy-os 的**根目录都有** `README.md`、`AGENTS.md`、`CLAUDE.md`（�
 
 | 收益 | 实际强度 |
 |---|---|
-| 少一个仓库要 pull/push | ⚠️ **弱** —— autopull 计划任务已自动化，人工只需「收工清干净」 |
-| 提交时版本/任务状态原子一致 | ⚠️ **弱** —— 实际工作中两者天然分属不同节奏（HQ 状态更新频繁、khy-os 代码提交较少） |
-| 提示词/状态离代码更近 | ✅ **真收益** —— 冷启动时少一次「换目录」 |
-| 少一份 AGENTS/CLAUDE 维护 | ❌ **反向** —— 见 C5，合并后要处理角色冲突，不省反增 |
+| 少一个仓库要 pull/push | ⚠ **弱** —— autopull 计划任务已自动化，人工只需「收工清干净」 |
+| 提交时版本/任务状态原子一致 | ⚠ **弱** —— 实际工作中两者天然分属不同节奏（HQ 状态更新频繁、khy-os 代码提交较少） |
+| 提示词/状态离代码更近 | ✓ **真收益** —— 冷启动时少一次「换目录」 |
+| 少一份 AGENTS/CLAUDE 维护 | ✗ **反向** —— 见 C5，合并后要处理角色冲突，不省反增 |
 
 ### 合并必须支付的代价
 
@@ -155,17 +155,17 @@ HQ 与 khy-os 的**根目录都有** `README.md`、`AGENTS.md`、`CLAUDE.md`（�
 - **工作量**：大（C1+C2+C3+C4+C5 全要处理）
 - **风险**：**高** —— 触碰双机流水线地基，且 C2 会导致门禁长期红
 - **适用**：只有当"单人单机、彻底放弃双机协作"时才合理
-- **判定**：❌ **不推荐**
+- **判定**：✗ **不推荐**
 
 ### 方案 B：submodule 引入（保留 HQ 仓库，khy-os 里挂一个引用）
 
 `git submodule add <hq-url> .khyos-hq/`（或 `vendor/hq/`），HQ 仍是独立仓库。
 
 - **收益**：khy-os 检出即含 HQ 指针；版本对应关系被 git 记录
-- **风险**：🟠 **正中 C4 前科** —— 嵌套 `.git` 会让 khy-os 的 `git status` 长期显示
+- **风险**：● **正中 C4 前科** —— 嵌套 `.git` 会让 khy-os 的 `git status` 长期显示
   submodule 脏，**同样会卡死 autopull 的 `--clean-only`**
 - **额外成本**：khy-os 是全仓 `git add -A` 频繁的工作区，submodule 冲突面大
-- **判定**：⚠️ **可试，但必须先验证不触发 C4**（建议先只读共存观察 2 周）
+- **判定**：⚠ **可试，但必须先验证不触发 C4**（建议先只读共存观察 2 周）
 
 ### 方案 C：契约 + 指针（**推荐**）
 
@@ -186,7 +186,7 @@ HQ 与 khy-os 的**根目录都有** `README.md`、`AGENTS.md`、`CLAUDE.md`（�
 
 - **工作量**：小（1 篇规范 + 1 个守卫 + 2 处指针）
 - **风险**：低 —— 完全不触碰 HQ 的路径与同步地基
-- **判定**：✅ **推荐**
+- **判定**：✓ **推荐**
 
 ---
 

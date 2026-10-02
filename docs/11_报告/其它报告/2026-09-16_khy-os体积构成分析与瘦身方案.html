@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -86,7 +86,7 @@ git fsck --unreachable --no-progress | <span class="hljs-built_in">wc</span> -l
 
 git reflog expire --expire=now --all
 git gc --prune=now --aggressive</code></pre>
-<blockquote><p>⚠️ <code>--prune=now</code> 会<strong>永久删除</strong>不可达对象。执行前确认：无依赖 reflog 恢复近期的需求；<code>.git-backup-20260913/</code> 保持原状直到 <code>git gc</code> 验证通过（<code>git log</code>、<code>git fsck</code>、切分支均正常）——它此刻正是唯一的历史兜底。</p></blockquote>
+<blockquote><p>⚠ <code>--prune=now</code> 会<strong>永久删除</strong>不可达对象。执行前确认：无依赖 reflog 恢复近期的需求；<code>.git-backup-20260913/</code> 保持原状直到 <code>git gc</code> 验证通过（<code>git log</code>、<code>git fsck</code>、切分支均正常）——它此刻正是唯一的历史兜底。</p></blockquote>
 <p><strong>2.2 历史副本外迁 —— 720 MB</strong></p>
 <p>在 2.1 验证通过后，将 <code>.git-backup-20260913/</code> <strong>移出仓库</strong>（外部盘或对象存储归档），而非直接删除。</p>
 <p><strong>2.3 调研克隆清理 —— 280 MB</strong></p>
@@ -158,7 +158,7 @@ pnpm store prune</code></pre>
 <p>§7 第三档曾建议「在 <code>package.json</code> 里新增一个一键清理脚本（目标名 <code>clean:heavy</code>）」。该目标<strong>并不存在</strong>，<br><code>check:layout</code> 的 <code>dangling-task</code> 规则如实把它计为一条悬空引用（88 → 89）。<br>且该建议本身多余——仓库<strong>已有</strong> <code>npm run clean</code> / <code>clean:apply</code>（白名单 + <code>PROTECTED_SUBTREE</code> 保护，<br>见 <code>scripts/maintenance/clean.js</code>）且已覆盖 Flutter 目录。<strong>已在 §7 改为「把新增两类补进该脚本的 <code>TARGETS</code>」</strong>，不再新增脚本。</p>
 <blockquote><p><strong>教训（本条自身就是例证）</strong>：在 <code>docs/</code> 里推荐尚未存在的 <code>npm run</code> 目标，会被 <code>dangling-task</code> 门直接判为违规。<br>更要紧的是——<strong>连「引述这个错误」都会再次触发它</strong>：本节初稿为了举例而原样写出了那个 <code>npm run &lt;不存在目标&gt;</code> 字符串，<br>结果把已修好的计数又顶回 89。描述这类错误时必须脱掉 <code>npm run </code> 前缀。推荐脚本时要么同步建脚本，要么只引用已存在的目标。</p></blockquote>
 <h3 id="8-5-验收">8.5 验收<a class="anchor" href="#8-5-验收" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>门禁</th><th>结果</th></tr></thead><tbody><tr><td><code>docs:verify</code></td><td>✅ exit 0（981 md / 982 html，11,777 条本地链接全可达）</td></tr><tr><td><code>check:layout</code></td><td><code>docs-index-complete</code> 0、<code>unresolved-require</code> 0、<code>extension-id-hardcode</code> 0（均较初始基线改善）；<code>dangling-task</code> 89（含 §8.4 已定位的一条，改正后应回落）</td></tr><tr><td><code>node --check</code> × <code>services/backend/dist/{cli.cjs,khy.cjs,khy.mjs}</code></td><td>✅ 全部 exit 0</td></tr><tr><td><code>git fsck</code> / <code>git log</code></td><td>✅ 健康，HEAD <code>e12bfa3f</code> 未变</td></tr></tbody></table>
+<table><thead><tr><th>门禁</th><th>结果</th></tr></thead><tbody><tr><td><code>docs:verify</code></td><td>✓ exit 0（981 md / 982 html，11,777 条本地链接全可达）</td></tr><tr><td><code>check:layout</code></td><td><code>docs-index-complete</code> 0、<code>unresolved-require</code> 0、<code>extension-id-hardcode</code> 0（均较初始基线改善）；<code>dangling-task</code> 89（含 §8.4 已定位的一条，改正后应回落）</td></tr><tr><td><code>node --check</code> × <code>services/backend/dist/{cli.cjs,khy.cjs,khy.mjs}</code></td><td>✓ 全部 exit 0</td></tr><tr><td><code>git fsck</code> / <code>git log</code></td><td>✓ 健康，HEAD <code>e12bfa3f</code> 未变</td></tr></tbody></table>
 <hr>
 <h2 id="九-防复发-把官方命令补齐并堵住误删-2026-09-16-20-xx-追加">九、防复发：把官方命令补齐并堵住误删（2026-09-16 20:xx 追加）<a class="anchor" href="#九-防复发-把官方命令补齐并堵住误删-2026-09-16-20-xx-追加" aria-label="锚点">#</a></h2>
 <p>清理只是止血；这一节做的是<strong>让它不再长回来</strong>，并修补一处清理机制自身的缺陷。</p>
@@ -196,7 +196,7 @@ khy cleanup --json     机器可读（供脚本消费）</code></pre>
 <p><strong>只匹配 <code>.map</code>、不整目录清</strong>——因为 <code>services/backend/dist/cli.cjs</code> 是<strong>生产启动路径</strong>（见 <code>esbuild.config.js</code>），整目录清会当场弄坏 <code>khy</code> 命令。用探针文件实测确认 glob 生效后已移除探针。</p>
 <blockquote><p><strong>判断更正</strong>：APK 归档目录（<code>apps/*/release/</code>）<strong>不是自动膨胀源</strong>——<code>flutter build</code> 写的是 <code>build/</code>（已被覆盖），<code>release/</code> 只在有人主动归档时才增长。故未将其加入默认清理档，避免替维护者决定发布归档的去留。</p></blockquote>
 <h3 id="9-6-验收">9.6 验收<a class="anchor" href="#9-6-验收" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>检查</th><th>结果</th></tr></thead><tbody><tr><td><code>check:layout</code></td><td>✅ <strong>exit 0</strong>（本会话首次转绿；接手时 <code>dangling-task</code> 88 vs 基线 0，现 88 = 基线）</td></tr><tr><td><code>check:node-syntax</code></td><td>✅ exit 0，5,878 个 JS 文件</td></tr><tr><td><code>jest tests/cli/cleanHandler.test.js</code></td><td>✅ <strong>18/18</strong>（含「每项必须带非空重建命令」「executeClean 回收字节数与计划一致」）</td></tr><tr><td><code>jest tests/services/cleanupService*</code></td><td>✅ <strong>5 套件 30/30</strong></td></tr><tr><td><code>check:code-standards</code></td><td>归因后<strong>我的文件未引入新违规</strong>：<code>clean.js</code> 新增代码触发的嵌套超标（深度 5–6）已通过抽出 <code>_rmChildrenExcept</code> 压平；残余 4 处基线突破（<code>COMP-001-file/func/nest</code>、<code>COM-001</code>）均指向 <code>cleanupService.js</code> 的存量长函数（<code>getStorageReport</code> 99 行、<code>cleanTrajectories</code> 111 行等），与本轮改动无关</td></tr></tbody></table>
+<table><thead><tr><th>检查</th><th>结果</th></tr></thead><tbody><tr><td><code>check:layout</code></td><td>✓ <strong>exit 0</strong>（本会话首次转绿；接手时 <code>dangling-task</code> 88 vs 基线 0，现 88 = 基线）</td></tr><tr><td><code>check:node-syntax</code></td><td>✓ exit 0，5,878 个 JS 文件</td></tr><tr><td><code>jest tests/cli/cleanHandler.test.js</code></td><td>✓ <strong>18/18</strong>（含「每项必须带非空重建命令」「executeClean 回收字节数与计划一致」）</td></tr><tr><td><code>jest tests/services/cleanupService*</code></td><td>✓ <strong>5 套件 30/30</strong></td></tr><tr><td><code>check:code-standards</code></td><td>归因后<strong>我的文件未引入新违规</strong>：<code>clean.js</code> 新增代码触发的嵌套超标（深度 5–6）已通过抽出 <code>_rmChildrenExcept</code> 压平；残余 4 处基线突破（<code>COMP-001-file/func/nest</code>、<code>COM-001</code>）均指向 <code>cleanupService.js</code> 的存量长函数（<code>getStorageReport</code> 99 行、<code>cleanTrajectories</code> 111 行等），与本轮改动无关</td></tr></tbody></table>
 <p>命令实测：注册命令总数 69（含 <code>cleanup</code>）、别名 66（含 <code>数据保留</code>）、预览与 <code>--json</code> 均正确渲染真实策略数值。</p>
 <h3 id="9-7-仍待处理-需维护者决定-本轮未动">9.7 仍待处理（需维护者决定，本轮未动）<a class="anchor" href="#9-7-仍待处理-需维护者决定-本轮未动" aria-label="锚点">#</a></h3>
 <ol><li><strong><code>scripts/maintenance/organize.py</code> 零接线</strong> —— <code>check:wiring</code> 报 <code>TOOLING-005</code> 两条：该检查器未被任何脚本/workflow/hook/阶段表引用，且 <code>LAYOUT-004</code> 声明的执行器正是它（<code>gate=pr</code>）。<strong>这是「防膨胀」最关键的一环</strong>——每日巡检本就是设计好的存量杂物收敛机制，却因为没接线而从未在门里跑过。修法是给它补一个 npm 入口或加进阶段表。</li><li><strong>体积守卫</strong> —— 建议在 <code>docs/_规范/RULES-REGISTRY.json</code> 登记一条 <code>PROCESS</code> 域规则（如「工作区非跟踪体积 &gt; 2 GB 判 error」），并新增对应检查器接入 <code>scripts/ruleguard/</code>。本轮未做：登记表正被并发会话改动，不宜单边修改。</li><li><strong><code>git gc</code> 的周期性</strong> —— 本轮实测 <code>gc.auto</code> 未设置（走 Git 默认 6700），这正是 2,001 个松散对象 / 280 MB 能积累起来的原因；<code>maintenance.auto=false</code> 亦关闭。建议维护者执行 <code>git maintenance start</code> 注册后台维护（会在系统计划任务中留一条），本轮未做——它创建的是仓库外的系统级状态。</li></ol>

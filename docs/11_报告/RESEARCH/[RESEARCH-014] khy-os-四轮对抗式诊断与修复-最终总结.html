@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -30,7 +30,7 @@
 <blockquote><p><strong>分析范围</strong>：kernel/ + services/backend/src/ 全部 2478 个 JS 文件 + 50+ C 文件<br><strong>代码规模</strong>：686,329 行 JS + 11,205 行 C<br><strong>修复时间</strong>：2026-09-03<br><strong>修复策略</strong>：对抗式设计方案（激进重构 vs 渐进改良 → 对抗综合方案）</p></blockquote>
 <hr>
 <h2 id="核心数据对比">核心数据对比<a class="anchor" href="#核心数据对比" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>指标</th><th>修复前</th><th>修复后</th><th>变化</th></tr></thead><tbody><tr><td>JS 文件数</td><td>2478</td><td>2478（73 shim 标记废弃）</td><td>结构优化</td></tr><tr><td>代码总行数</td><td>686,329</td><td>~684,500</td><td>-1,829</td></tr><tr><td>安全漏洞</td><td>10 处 Critical/High</td><td>0</td><td>✅</td></tr><tr><td>密码学问题</td><td>55 处 Math.random</td><td>关键位置已修复</td><td>✅</td></tr><tr><td>重复实现</td><td>15+ 个独立实现</td><td>5 个统一工具</td><td>✅</td></tr><tr><td>空 catch 块</td><td>15 处无注释</td><td>15 处添加注释</td><td>✅</td></tr><tr><td>内核风险</td><td>hog_task 残留</td><td>已移除</td><td>✅</td></tr><tr><td>Bridge 暴露</td><td>0.0.0.0</td><td>127.0.0.1</td><td>✅</td></tr><tr><td>日志系统</td><td>1617 条 console.log</td><td>统一 logger</td><td>✅</td></tr><tr><td>错误消息</td><td>技术术语</td><td>用户友好包装</td><td>✅</td></tr></tbody></table>
+<table><thead><tr><th>指标</th><th>修复前</th><th>修复后</th><th>变化</th></tr></thead><tbody><tr><td>JS 文件数</td><td>2478</td><td>2478（73 shim 标记废弃）</td><td>结构优化</td></tr><tr><td>代码总行数</td><td>686,329</td><td>~684,500</td><td>-1,829</td></tr><tr><td>安全漏洞</td><td>10 处 Critical/High</td><td>0</td><td>✓</td></tr><tr><td>密码学问题</td><td>55 处 Math.random</td><td>关键位置已修复</td><td>✓</td></tr><tr><td>重复实现</td><td>15+ 个独立实现</td><td>5 个统一工具</td><td>✓</td></tr><tr><td>空 catch 块</td><td>15 处无注释</td><td>15 处添加注释</td><td>✓</td></tr><tr><td>内核风险</td><td>hog_task 残留</td><td>已移除</td><td>✓</td></tr><tr><td>Bridge 暴露</td><td>0.0.0.0</td><td>127.0.0.1</td><td>✓</td></tr><tr><td>日志系统</td><td>1617 条 console.log</td><td>统一 logger</td><td>✓</td></tr><tr><td>错误消息</td><td>技术术语</td><td>用户友好包装</td><td>✓</td></tr></tbody></table>
 <hr>
 <h2 id="四轮修复清单">四轮修复清单<a class="anchor" href="#四轮修复清单" aria-label="锚点">#</a></h2>
 <h3 id="第一轮-架构-工程-治理-12-个问题">第一轮：架构/工程/治理（12 个问题）<a class="anchor" href="#第一轮-架构-工程-治理-12-个问题" aria-label="锚点">#</a></h3>

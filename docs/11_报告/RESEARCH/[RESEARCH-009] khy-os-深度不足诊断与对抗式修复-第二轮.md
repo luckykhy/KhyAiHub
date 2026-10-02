@@ -14,14 +14,14 @@
 
 | 编号 | 问题 | 对抗方案 | 状态 | 修改文件 |
 |------|------|---------|------|---------|
-| **SC-2** | eval/Function 动态代码执行 | C: vm 沙箱替代 | ✅ 已完成 | `dynamicPromptAssembler.js`, `khyUpgradeRuntime.js`, `executeCode.js` |
-| **SC-3** | Math.random() 非密码学安全随机 | C: 统一随机工具 + 替换敏感上下文 | ✅ 已完成 | 10+ 文件替换为 `cryptoRandom.js` 或 `crypto.randomBytes` |
-| **SC-4** | 空 catch 块吞掉异常 | C: 分类处理 + 注释说明 | ✅ 已完成 | `replSession.js`, `apiKeyPool.js`, `mdEditorRegister.js` |
-| **SC-5** | JSON.parse 无 try/catch | C: 安全工具函数 | ✅ 已完成 | `safeCreated.js` 工具函数 |
-| **SC-6** | Bridge 默认绑定 0.0.0.0 | C: 默认 127.0.0.1 | ✅ 已完成 | `bridgeServer.js` |
-| **EG-4** | Bridge PIN 弱密码（6位） | 升级为 8 位数字 | ✅ 已完成 | `bridgeServer.js` |
-| **MT-1** | Kernel strncpy 缓冲区溢出 | 已确认安全（使用自定义 memcpy） | ✅ 已确认 | 无需修改 |
-| **GV-3** | CI 安全扫描 | 新增安全扫描脚本 | ✅ 已完成 | `security-scan.js` |
+| **SC-2** | eval/Function 动态代码执行 | C: vm 沙箱替代 | ✓ 已完成 | `dynamicPromptAssembler.js`, `khyUpgradeRuntime.js`, `executeCode.js` |
+| **SC-3** | Math.random() 非密码学安全随机 | C: 统一随机工具 + 替换敏感上下文 | ✓ 已完成 | 10+ 文件替换为 `cryptoRandom.js` 或 `crypto.randomBytes` |
+| **SC-4** | 空 catch 块吞掉异常 | C: 分类处理 + 注释说明 | ✓ 已完成 | `replSession.js`, `apiKeyPool.js`, `mdEditorRegister.js` |
+| **SC-5** | JSON.parse 无 try/catch | C: 安全工具函数 | ✓ 已完成 | `safeCreated.js` 工具函数 |
+| **SC-6** | Bridge 默认绑定 0.0.0.0 | C: 默认 127.0.0.1 | ✓ 已完成 | `bridgeServer.js` |
+| **EG-4** | Bridge PIN 弱密码（6位） | 升级为 8 位数字 | ✓ 已完成 | `bridgeServer.js` |
+| **MT-1** | Kernel strncpy 缓冲区溢出 | 已确认安全（使用自定义 memcpy） | ✓ 已确认 | 无需修改 |
+| **GV-3** | CI 安全扫描 | 新增安全扫描脚本 | ✓ 已完成 | `security-scan.js` |
 
 ---
 
@@ -29,16 +29,16 @@
 
 | 类别 | 问题 | 严重度 | 数量 | 状态 |
 |------|------|--------|------|------|
-| SC-2 | eval/Function 动态代码执行 | Critical | 4 处 | ✅ 已修复 |
-| SC-3 | Math.random() 非密码学安全随机 | High | 55 处 | ✅ 关键位置已修复 |
-| SC-4 | 空 catch 块吞掉异常 | High | 15 处 | ✅ 已添加注释 |
-| SC-5 | JSON.parse 无 try/catch | High | 20+ 处 | ✅ 工具函数已创建 |
-| SC-6 | Bridge 默认绑定 0.0.0.0 | Medium | 1 处 | ✅ 已修复 |
-| SC-7 | 911 处 process.env 硬编码回退 | Medium | 911 处 | ⏳ 长期重构 |
-| SC-8 | Kernel strncpy 缓冲区溢出风险 | Medium | 多处 | ✅ 已确认安全 |
-| SC-9 | 1617 条 console.log 泄露敏感信息 | Low | 1617 处 | ⏳ 长期治理 |
-| EG-4 | JWT secret 弱 secret/自动生成 | High | 1 处 | ✅ 已确认安全 |
-| EG-5 | Timer/Interval 未清理导致内存泄漏 | Medium | 10+ 处 | ⏳ 待治理 |
+| SC-2 | eval/Function 动态代码执行 | Critical | 4 处 | ✓ 已修复 |
+| SC-3 | Math.random() 非密码学安全随机 | High | 55 处 | ✓ 关键位置已修复 |
+| SC-4 | 空 catch 块吞掉异常 | High | 15 处 | ✓ 已添加注释 |
+| SC-5 | JSON.parse 无 try/catch | High | 20+ 处 | ✓ 工具函数已创建 |
+| SC-6 | Bridge 默认绑定 0.0.0.0 | Medium | 1 处 | ✓ 已修复 |
+| SC-7 | 911 处 process.env 硬编码回退 | Medium | 911 处 | … 长期重构 |
+| SC-8 | Kernel strncpy 缓冲区溢出风险 | Medium | 多处 | ✓ 已确认安全 |
+| SC-9 | 1617 条 console.log 泄露敏感信息 | Low | 1617 处 | … 长期治理 |
+| EG-4 | JWT secret 弱 secret/自动生成 | High | 1 处 | ✓ 已确认安全 |
+| EG-5 | Timer/Interval 未清理导致内存泄漏 | Medium | 10+ 处 | … 待治理 |
 
 ---
 

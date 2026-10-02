@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -30,7 +30,7 @@
 <blockquote><p><strong>文档定位</strong>：第三轮分析 — 代码冗余、死代码、巨石文件、shim 壳文件诊断与精简。<br><strong>分析范围</strong>：services/backend/src 全量 2478 个 JS 文件。<br><strong>分析方法</strong>：静态扫描 + 代码度量 + 依赖分析。<br><strong>生成时间</strong>：2026-09-03<br><strong>修复状态</strong>：进行中</p></blockquote>
 <hr>
 <h2 id="扫描结果摘要">扫描结果摘要<a class="anchor" href="#扫描结果摘要" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>指标</th><th>数值</th><th>健康阈值</th><th>状态</th></tr></thead><tbody><tr><td>JS 文件总数</td><td>2478</td><td>&lt;500</td><td>❌ 严重超标</td></tr><tr><td>代码总行数</td><td>686,329</td><td>&lt;100,000</td><td>❌ 严重超标</td></tr><tr><td>Shim 壳文件</td><td>73</td><td>0</td><td>❌ 全部可删</td></tr><tr><td>死代码文件(&lt;30行)</td><td>31</td><td>0</td><td>❌ 可删</td></tr><tr><td>巨石文件(&gt;2000行)</td><td>15</td><td>0</td><td>❌ 需拆分</td></tr><tr><td>最大文件</td><td>12,762 行</td><td>&lt;500</td><td>❌ 需拆分</td></tr><tr><td>单行 require</td><td>1,499</td><td>&lt;200</td><td>❌ 需清理</td></tr></tbody></table>
+<table><thead><tr><th>指标</th><th>数值</th><th>健康阈值</th><th>状态</th></tr></thead><tbody><tr><td>JS 文件总数</td><td>2478</td><td>&lt;500</td><td>✗ 严重超标</td></tr><tr><td>代码总行数</td><td>686,329</td><td>&lt;100,000</td><td>✗ 严重超标</td></tr><tr><td>Shim 壳文件</td><td>73</td><td>0</td><td>✗ 全部可删</td></tr><tr><td>死代码文件(&lt;30行)</td><td>31</td><td>0</td><td>✗ 可删</td></tr><tr><td>巨石文件(&gt;2000行)</td><td>15</td><td>0</td><td>✗ 需拆分</td></tr><tr><td>最大文件</td><td>12,762 行</td><td>&lt;500</td><td>✗ 需拆分</td></tr><tr><td>单行 require</td><td>1,499</td><td>&lt;200</td><td>✗ 需清理</td></tr></tbody></table>
 <hr>
 <h1 id="第一部分-不足诊断">第一部分：不足诊断<a class="anchor" href="#第一部分-不足诊断" aria-label="锚点">#</a></h1>
 <h2 id="一-shim-壳文件-73-个">一、Shim 壳文件（73 个）<a class="anchor" href="#一-shim-壳文件-73-个" aria-label="锚点">#</a></h2>
@@ -79,7 +79,7 @@
 <hr>
 <h1 id="第二部分-修复实施">第二部分：修复实施<a class="anchor" href="#第二部分-修复实施" aria-label="锚点">#</a></h1>
 <h2 id="优先级矩阵">优先级矩阵<a class="anchor" href="#优先级矩阵" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>编号</th><th>问题</th><th>方案</th><th>预计收益</th><th>状态</th></tr></thead><tbody><tr><td>RD-1</td><td>73 shim 壳文件</td><td>C: 标记废弃 + 渐进删除</td><td>减少 73 文件</td><td>✅ 25 已标记</td></tr><tr><td>RD-2</td><td>31 死代码文件</td><td>全部删除</td><td>减少 31 文件</td><td>待实施</td></tr><tr><td>RD-3</td><td>5 个重复实现</td><td>C: 统一工具 + 渐进替换</td><td>减少 30% 重复</td><td>待实施</td></tr><tr><td>RD-4</td><td>9 巨石文件</td><td>C: 提取公共模块</td><td>减少 50% 行数</td><td>待实施</td></tr><tr><td>RD-5</td><td>1499 单行 require</td><td>合并 + 延迟加载</td><td>减少 30% require</td><td>待实施</td></tr></tbody></table>
+<table><thead><tr><th>编号</th><th>问题</th><th>方案</th><th>预计收益</th><th>状态</th></tr></thead><tbody><tr><td>RD-1</td><td>73 shim 壳文件</td><td>C: 标记废弃 + 渐进删除</td><td>减少 73 文件</td><td>✓ 25 已标记</td></tr><tr><td>RD-2</td><td>31 死代码文件</td><td>全部删除</td><td>减少 31 文件</td><td>待实施</td></tr><tr><td>RD-3</td><td>5 个重复实现</td><td>C: 统一工具 + 渐进替换</td><td>减少 30% 重复</td><td>待实施</td></tr><tr><td>RD-4</td><td>9 巨石文件</td><td>C: 提取公共模块</td><td>减少 50% 行数</td><td>待实施</td></tr><tr><td>RD-5</td><td>1499 单行 require</td><td>合并 + 延迟加载</td><td>减少 30% require</td><td>待实施</td></tr></tbody></table>
 <hr>
 <h2 id="修复记录-2026-09-03">修复记录（2026-09-03）<a class="anchor" href="#修复记录-2026-09-03" aria-label="锚点">#</a></h2>
 <h3 id="已完成">已完成<a class="anchor" href="#已完成" aria-label="锚点">#</a></h3>
