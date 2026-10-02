@@ -129,7 +129,7 @@ function formatPrComments(data, env) {
       lines.push('');
       lines.push('讨论：');
       for (const c of comments) {
-        lines.push(`  💬 @${_who(c)}: ${_clip(c && c.body)}`);
+        lines.push(`  @${_who(c)}: ${_clip(c && c.body)}`);
       }
     }
 
@@ -140,7 +140,7 @@ function formatPrComments(data, env) {
         const st = REVIEW_STATE_LABELS[r.state] || r.state || '';
         const tag = st ? ` [${st}]` : '';
         const body = String((r && r.body) || '').trim();
-        lines.push(`  📝 @${_who(r)}${tag}${body ? `: ${_clip(body)}` : ''}`);
+        lines.push(`  @${_who(r)}${tag}${body ? `: ${_clip(body)}` : ''}`);
       }
     }
 
@@ -151,7 +151,7 @@ function formatPrComments(data, env) {
         const path = String((rc && rc.path) || '').trim();
         const ln = rc && (rc.line != null ? rc.line : rc.original_line);
         const loc = path ? ` ${path}${ln != null ? `:${ln}` : ''}` : '';
-        lines.push(`  📎 @${_who(rc)}${loc}: ${_clip(rc && rc.body)}`);
+        lines.push(`  @${_who(rc)}${loc}: ${_clip(rc && rc.body)}`);
       }
     }
 

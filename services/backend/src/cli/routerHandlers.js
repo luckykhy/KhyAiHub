@@ -227,7 +227,7 @@ function createRouterHandlers(deps) {
     }
 
     console.log('');
-    console.log(chalk.bold(`  📋 最近 ${recentLines.length} 条${kindLabel}日志:`));
+    console.log(chalk.bold(`  最近 ${recentLines.length} 条${kindLabel}日志:`));
     console.log("");
 
     const knownFixes = {
@@ -258,7 +258,7 @@ function createRouterHandlers(deps) {
 
     if (suggestedFixes.size > 0) {
       console.log('');
-      console.log(chalk.yellow.bold('  💡 建议修复措施:'));
+      console.log(chalk.yellow.bold('  建议修复措施:'));
       let fixIdx = 1;
       for (const fix of suggestedFixes) {
         console.log(

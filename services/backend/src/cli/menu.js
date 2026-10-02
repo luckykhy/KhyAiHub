@@ -19,12 +19,6 @@ const getSelectMenu = () => {
   }
   return _selectMenu;
 };
-const { isLegacyWinTerminal } = require('../tools/platformUtils');
-const _lw = isLegacyWinTerminal();
-
-// 旧版 Windows 终端无法渲染 emoji，降级为 ASCII 标记
-const _e = (emoji, ascii) => (_lw ? ascii : emoji);
-
 const sep = (label = '────────────') => ({
   name: label,
   value: `__sep_${Date.now()}_${Math.random()}`,
@@ -52,19 +46,19 @@ async function showMainMenu() {
     // cursor highlight (cyan) only applies to the text label.
     const choices = [
       catSep('平台核心', 'cyan'),
-      { name: `${chalk.cyan(_e('⚙️ ', '[S] '))}系统管理`, value: 'system', description: '服务/数据库/初始化', color: 'cyan' },
-      { name: `${chalk.cyan(_e('📦', '[A]'))} 应用管理`, value: 'app', description: '安装/启停/状态', color: 'cyan' },
-      { name: `${chalk.cyan(_e('🌐', '[G]'))} AI 网关 / 中转`, value: 'gateway', description: '模型路由/配置', color: 'cyan' },
-      { name: `${chalk.cyan(_e('🤖', '[I]'))} AI 助手设置`, value: 'ai', description: 'AI 配置与权限', color: 'cyan' },
-      { name: `${chalk.cyan(_e('🧠', '[T]'))} 模型训练 / 导出`, value: 'training', description: '训练/微调/导出', color: 'cyan' },
-      { name: `${chalk.cyan(_e('📚', '[D]'))} 教程文档`, value: 'docs', color: 'cyan' },
-      { name: `${chalk.cyan(_e('🔧', '[X]'))} 环境诊断`, value: 'doctor', color: 'cyan' },
+      { name: `${chalk.cyan('[S] ')}系统管理`, value: 'system', description: '服务/数据库/初始化', color: 'cyan' },
+      { name: `${chalk.cyan('[A]')} 应用管理`, value: 'app', description: '安装/启停/状态', color: 'cyan' },
+      { name: `${chalk.cyan('[G]')} AI 网关 / 中转`, value: 'gateway', description: '模型路由/配置', color: 'cyan' },
+      { name: `${chalk.cyan('[I]')} AI 助手设置`, value: 'ai', description: 'AI 配置与权限', color: 'cyan' },
+      { name: `${chalk.cyan('[T]')} 模型训练 / 导出`, value: 'training', description: '训练/微调/导出', color: 'cyan' },
+      { name: `${chalk.cyan('[D]')} 教程文档`, value: 'docs', color: 'cyan' },
+      { name: `${chalk.cyan('[X]')} 环境诊断`, value: 'doctor', color: 'cyan' },
       catSep('量化交易', 'red'),
-      { name: `${chalk.red(_e('📈', '[Q]'))} 实时行情查询`, value: 'quote', description: 'khyquant', color: 'red' },
-      { name: `${chalk.red(_e('📊', '[B]'))} 策略回测`, value: 'backtest', description: 'khyquant', color: 'red' },
-      { name: `${chalk.red(_e('💾', '[M]'))} 数据管理`, value: 'data', description: 'khyquant', color: 'red' },
+      { name: `${chalk.red('[Q]')} 实时行情查询`, value: 'quote', description: 'khyquant', color: 'red' },
+      { name: `${chalk.red('[B]')} 策略回测`, value: 'backtest', description: 'khyquant', color: 'red' },
+      { name: `${chalk.red('[M]')} 数据管理`, value: 'data', description: 'khyquant', color: 'red' },
       sep(),
-      { name: `${_e('↩️ ', '[R] ')}返回命令行`, value: 'back' },
+      { name: `${'[R] '}返回命令行`, value: 'back' },
     ];
     const result = await sm({ message: '请选择操作:', choices });
     return result || 'back';
@@ -78,19 +72,19 @@ async function showMainMenu() {
       message: '请选择操作:',
       choices: [
         catSep('平台核心', 'cyan'),
-        { name: `${chalk.cyan(_e('⚙️ ', '[S] '))}系统管理`, value: 'system', color: 'cyan' },
-        { name: `${chalk.cyan(_e('📦', '[A]'))} 应用管理`, value: 'app', color: 'cyan' },
-        { name: `${chalk.cyan(_e('🌐', '[G]'))} AI 网关 / 中转`, value: 'gateway', color: 'cyan' },
-        { name: `${chalk.cyan(_e('🤖', '[I]'))} AI 助手设置`, value: 'ai', color: 'cyan' },
-        { name: `${chalk.cyan(_e('🧠', '[T]'))} 模型训练 / 导出`, value: 'training', color: 'cyan' },
-        { name: `${chalk.cyan(_e('📚', '[D]'))} 教程文档`, value: 'docs', color: 'cyan' },
-        { name: `${chalk.cyan(_e('🔧', '[X]'))} 环境诊断`, value: 'doctor', color: 'cyan' },
+        { name: `${chalk.cyan('[S] ')}系统管理`, value: 'system', color: 'cyan' },
+        { name: `${chalk.cyan('[A]')} 应用管理`, value: 'app', color: 'cyan' },
+        { name: `${chalk.cyan('[G]')} AI 网关 / 中转`, value: 'gateway', color: 'cyan' },
+        { name: `${chalk.cyan('[I]')} AI 助手设置`, value: 'ai', color: 'cyan' },
+        { name: `${chalk.cyan('[T]')} 模型训练 / 导出`, value: 'training', color: 'cyan' },
+        { name: `${chalk.cyan('[D]')} 教程文档`, value: 'docs', color: 'cyan' },
+        { name: `${chalk.cyan('[X]')} 环境诊断`, value: 'doctor', color: 'cyan' },
         catSep('量化交易', 'red'),
-        { name: `${chalk.red(_e('📈', '[Q]'))} 实时行情查询`, value: 'quote', color: 'red' },
-        { name: `${chalk.red(_e('📊', '[B]'))} 策略回测`, value: 'backtest', color: 'red' },
-        { name: `${chalk.red(_e('💾', '[M]'))} 数据管理`, value: 'data', color: 'red' },
+        { name: `${chalk.red('[Q]')} 实时行情查询`, value: 'quote', color: 'red' },
+        { name: `${chalk.red('[B]')} 策略回测`, value: 'backtest', color: 'red' },
+        { name: `${chalk.red('[M]')} 数据管理`, value: 'data', color: 'red' },
         sep(),
-        { name: `${_e('↩️ ', '[R] ')}返回命令行`, value: 'back' },
+        { name: `${'[R] '}返回命令行`, value: 'back' },
       ],
     },
   ]);
@@ -180,7 +174,7 @@ async function showDataMenu() {
         { name: '查看品种列表', value: 'data-list' },
         { name: '清理缓存', value: 'cache-clear' },
         sep(),
-        { name: '↩️  返回主菜单', value: 'back' },
+        { name: '↩  返回主菜单', value: 'back' },
       ],
     },
   ]);
@@ -213,7 +207,7 @@ async function showSystemMenu() {
         { name: '填充示例数据', value: 'db-seed' },
         { name: '查看数据库状态', value: 'db-status' },
         sep(),
-        { name: '↩️  返回主菜单', value: 'back' },
+        { name: '↩  返回主菜单', value: 'back' },
       ],
     },
   ]);
@@ -232,7 +226,7 @@ async function showAppMenu() {
         { name: '启动应用', value: 'app-start' },
         { name: '停止应用', value: 'app-stop' },
         sep(),
-        { name: '↩️  返回主菜单', value: 'back' },
+        { name: '↩  返回主菜单', value: 'back' },
       ],
     },
   ]);
@@ -263,7 +257,7 @@ async function showAiMenu() {
         { name: '查看AI服务状态', value: 'ai-status' },
         { name: '配置API密钥', value: 'ai-config' },
         sep(),
-        { name: '↩️  返回主菜单', value: 'back' },
+        { name: '↩  返回主菜单', value: 'back' },
       ],
     },
   ]);
@@ -282,7 +276,7 @@ async function showGatewayMenu() {
         { name: '配置网关参数', value: 'gateway-config' },
         { name: '启动 Web 中转服务', value: 'gateway-relay' },
         sep(),
-        { name: '↩️  返回主菜单', value: 'back' },
+        { name: '↩  返回主菜单', value: 'back' },
       ],
     },
   ]);
@@ -401,16 +395,16 @@ async function showTrainingMenu() {
       name: 'action',
       message: '模型训练:',
       choices: [
-        { name: '📊 查看训练数据统计', value: 'train-stats' },
-        { name: '📦 导出训练数据集', value: 'train-export-data' },
-        { name: '🚀 开始训练', value: 'train-start' },
-        { name: '📤 导出模型', value: 'train-export-model' },
-        { name: '🤗 上传到 HuggingFace', value: 'train-hf-upload' },
-        { name: '☁️  上传到 GitHub/Gitee', value: 'train-git-upload' },
-        { name: '📋 查看已有模型', value: 'train-list' },
-        { name: '💻 查看计算资源', value: 'train-compute' },
+        { name: '查看训练数据统计', value: 'train-stats' },
+        { name: '导出训练数据集', value: 'train-export-data' },
+        { name: '开始训练', value: 'train-start' },
+        { name: '导出模型', value: 'train-export-model' },
+        { name: '上传到 HuggingFace', value: 'train-hf-upload' },
+        { name: '☁  上传到 GitHub/Gitee', value: 'train-git-upload' },
+        { name: '查看已有模型', value: 'train-list' },
+        { name: '查看计算资源', value: 'train-compute' },
         sep(),
-        { name: '↩️  返回主菜单', value: 'back' },
+        { name: '↩  返回主菜单', value: 'back' },
       ],
     },
   ]);
@@ -569,17 +563,17 @@ async function showDocsMenu() {
     {
       type: 'list',
       name: 'action',
-      message: '📚 教程文档:',
+      message: '教程文档:',
       choices: [
-        { name: '🚀 快速开始 (5分钟上手)', value: 'docs-quickstart' },
-        { name: '⚡ AI 快速通道 (免全仓扫描)', value: 'docs-ai-fastlane' },
-        { name: '📋 AI 快速通道一键复制', value: 'docs-ai-fastlane-copy' },
-        { name: '📖 Claude Code 使用教程', value: 'docs-claude' },
-        { name: '🤖 AI 网关使用指南', value: 'docs-gateway' },
-        { name: '📊 量化策略入门', value: 'docs-strategy' },
-        { name: '🔧 常见问题 FAQ', value: 'docs-faq' },
+        { name: '快速开始 (5分钟上手)', value: 'docs-quickstart' },
+        { name: 'AI 快速通道 (免全仓扫描)', value: 'docs-ai-fastlane' },
+        { name: 'AI 快速通道一键复制', value: 'docs-ai-fastlane-copy' },
+        { name: 'Claude Code 使用教程', value: 'docs-claude' },
+        { name: 'AI 网关使用指南', value: 'docs-gateway' },
+        { name: '量化策略入门', value: 'docs-strategy' },
+        { name: '常见问题 FAQ', value: 'docs-faq' },
         sep(),
-        { name: '↩️  返回主菜单', value: 'back' },
+        { name: '↩  返回主菜单', value: 'back' },
       ],
     },
   ]);

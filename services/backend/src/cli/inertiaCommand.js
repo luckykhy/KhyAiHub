@@ -41,6 +41,9 @@ async function handleInertiaCommand(args, io = {}) {
   }
 
   const { runInertialPlan } = require('../services/inertia/inertialRunService');
+  // The CLI supplies its own chat core: inertialRunService no longer reaches up
+  // into cli/ai for it (that reverse edge is gone), and this layer may load it.
+  const { chat } = require('./ai');
 
   // 与 -p 无头同款前置（bin/khy.js:1783）；认证状态由 chat 自身的失败信封如实暴露
   process.env.KHYQUANT_AI_MODE = 'true';
@@ -48,7 +51,7 @@ async function handleInertiaCommand(args, io = {}) {
   printInfo(`[惯性执行] 蹬一脚：${path.resolve(planFile)}`);
   let envelope;
   try {
-    envelope = await runInertialPlan(path.resolve(planFile), { out: process.stdout });
+    envelope = await runInertialPlan(path.resolve(planFile), { out: process.stdout, chat });
   } catch (e) {
     printError(`[惯性执行] 控制器异常退出：${(e && e.message) || e}`);
     process.exitCode = 2;

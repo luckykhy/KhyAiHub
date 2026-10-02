@@ -846,10 +846,51 @@ function parseInput(line) {
   // 命令此时可能仍是别名,先规范化;规范化只读,下方 alias 解析不受影响。
   let _guardSubs;
   let _guardSubsResolved = false;
+  // 短旗标声明表(hci-audit #44 裁决 A,见 cli/shortOptionSpec)的懒解析命令名。
+  let _shortCmd = null;
   for (let i = 0; i < rest.length; i++) {
     if (rest[i] === '--') {
       args.push(...rest.slice(i + 1));
       break;
+    }
+    // 单字母短旗标(`-n` / `-d 2`):此前原样落 args,51 处 `options.<单字母>` 读取
+    // 全部落空。布尔/取值由 shortOptionSpec 逐命令声明(未声明 → 布尔,保守默认);
+    // 门控 KHY_SHORT_OPTION_PARSE 默认开,关 → 原样落 args(逐字节回退历史行为)。
+    // 形如 `-5`(负数)、`-xy`(集群)不匹配 `/^-[A-Za-z]$/`,仍按位置参数处理。
+    if (
+      rest[i].length === 2 &&
+      rest[i].codePointAt(0) === 0x2d /* '-' */ &&
+      /[A-Za-z]/.test(rest[i].slice(1))
+    ) {
+      let _shortEnabled = false;
+      try {
+        _shortEnabled = require('./shortOptionSpec').isEnabled(process.env);
+      } catch {
+        _shortEnabled = false; // 叶子不可用 → 历史行为
+      }
+      if (!_shortEnabled) {
+        args.push(rest[i]);
+        continue;
+      }
+      const letter = rest[i].slice(1);
+      let kind = 'bool';
+      try {
+        if (_shortCmd === null) {
+          const aliasPre = aliases().resolveAlias(command);
+          _shortCmd = (aliasPre && aliasPre.command) || command;
+        }
+        kind = require('./shortOptionSpec').kindFor(_shortCmd, letter);
+      } catch {
+        kind = 'bool'; // fail-soft → 布尔(不吃后续位置参数)
+      }
+      const nextVal = kind === 'value' ? rest[i + 1] : undefined;
+      if (kind === 'value' && nextVal !== undefined && !nextVal.startsWith('-')) {
+        options[letter] = nextVal;
+        i++;
+      } else {
+        options[letter] = true;
+      }
+      continue;
     }
     if (rest[i].startsWith('--')) {
       const rawKey = rest[i].slice(2);
@@ -1354,7 +1395,7 @@ async function route(parsed, context = {}) {
           const result = await webSearch.search(webQuery);
           if (result.success) {
             console.log('');
-            console.log(chalk.bold.cyan('  🔍 搜索结果'));
+            console.log(chalk.bold.cyan('  搜索结果'));
             console.log("");
             for (const r of (result.results || []).slice(0, 10)) {
               console.log('');
@@ -1366,7 +1407,7 @@ async function route(parsed, context = {}) {
                 console.log(chalk.gray(`  ${r.snippet}`));
               }
               if (r.publishedDate) {
-                console.log(chalk.dim(`  📅 ${r.publishedDate}`));
+                console.log(chalk.dim(`  ${r.publishedDate}`));
               }
             }
             console.log('');
@@ -1850,7 +1891,7 @@ async function route(parsed, context = {}) {
           // Default: show profile summary
           const summary = userProfile.getProfileSummary();
           console.log('');
-          console.log(chalk.cyan.bold('  📊 用户画像'));
+          console.log(chalk.cyan.bold('  用户画像'));
           console.log("");
           console.log(`  会话次数: ${chalk.bold(summary.sessions)}`);
           console.log(`  命令总数: ${chalk.bold(summary.totalCommands)}`);
@@ -2020,7 +2061,7 @@ async function route(parsed, context = {}) {
           // Show status
           const config = cloud.loadCloudConfig();
           console.log('');
-          console.log(chalk.cyan.bold('  ☁️  云同步状态'));
+          console.log(chalk.cyan.bold('  ☁  云同步状态'));
           console.log("");
           if (config.username) {
             console.log(`  账号:     ${chalk.green(config.username)} ✓`);

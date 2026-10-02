@@ -115,7 +115,7 @@ function closeThinkingStream(streamState) {
       : 0;
     const timeStr = elapsed > 0 ? ` ${elapsed}s` : '';
     const charStr = thinkingLen > 100 ? ` · ${thinkingLen} 字符` : '';
-    console.log(c().dim(`  💭 思考完成${timeStr}${charStr}`));
+    console.log(c().dim(`  思考完成${timeStr}${charStr}`));
     console.log('');
   }
 }

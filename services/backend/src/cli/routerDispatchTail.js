@@ -61,7 +61,7 @@ async function dispatchTailCommand(command, _ctx) {
         if (predictions.length === 0) {
           printInfo('暂无预测数据，继续使用系统积累更多习惯');
         } else {
-          console.log(chalk.bold('\n  🔮 下一步预测'));
+          console.log(chalk.bold('\n  下一步预测'));
           for (const p of predictions) {
             const conf = Math.round(p.confidence * 100);
             console.log(`  ${chalk.cyan('→')} ${p.command} ${chalk.dim(`(${conf}% 置信度)`)}`);
@@ -73,7 +73,7 @@ async function dispatchTailCommand(command, _ctx) {
 
       // Default: show habit summary
       const summary = habitSvc.getHabitSummary();
-      console.log(chalk.bold('\n  📊 使用习惯概况\n'));
+      console.log(chalk.bold('\n  使用习惯概况\n'));
 
       // Time profile
       if (summary.timeProfile.peakHours.length > 0) {
@@ -86,7 +86,7 @@ async function dispatchTailCommand(command, _ctx) {
 
       // Model ranking
       if (summary.modelRanking.length > 0) {
-        console.log(chalk.bold('\n  🤖 模型使用排行'));
+        console.log(chalk.bold('\n  模型使用排行'));
         for (const m of summary.modelRanking) {
           console.log(`  ${chalk.white(m.model)} — ${m.count} 次, 质量 ${chalk.green(m.quality)}`);
         }
@@ -94,7 +94,7 @@ async function dispatchTailCommand(command, _ctx) {
 
       // IDE usage
       if (summary.ideUsage.length > 0) {
-        console.log(chalk.bold('\n  💻 IDE/适配器使用'));
+        console.log(chalk.bold('\n  IDE/适配器使用'));
         for (const ide of summary.ideUsage) {
           console.log(`  ${chalk.white(ide.ide)} — ${ide.count} 次`);
         }
@@ -102,7 +102,7 @@ async function dispatchTailCommand(command, _ctx) {
 
       // Top workflows
       if (summary.topWorkflows.length > 0) {
-        console.log(chalk.bold('\n  ⚡ 常用工作流'));
+        console.log(chalk.bold('\n  常用工作流'));
         for (const w of summary.topWorkflows) {
           console.log(`  ${chalk.dim(w.workflow)} — ${w.count} 次`);
         }
@@ -110,15 +110,15 @@ async function dispatchTailCommand(command, _ctx) {
 
       // Topic focus
       if (summary.topics.length > 0) {
-        console.log(chalk.bold('\n  📈 关注话题'));
-        const trendIcon = { rising: '🔺', stable: '➖', declining: '🔻' };
+        console.log(chalk.bold('\n  关注话题'));
+        const trendIcon = { rising: '↑', stable: '-', declining: '↓' };
         for (const t of summary.topics) {
           console.log(`  ${trendIcon[t.trend] || '·'} ${t.topic} — ${t.count} 次`);
         }
       }
 
       // Response preferences
-      console.log(chalk.bold('\n  🎯 回复偏好'));
+      console.log(chalk.bold('\n  回复偏好'));
       console.log(
         `  长度: ${summary.responseStyle.preferredLength}  细节: ${summary.responseStyle.detailLevel}`
       );
@@ -141,7 +141,7 @@ async function dispatchTailCommand(command, _ctx) {
           typeof cleanup.getLastCleanupReport === 'function'
             ? cleanup.getLastCleanupReport()
             : null;
-        console.log(chalk.bold('\n  🧹 存储空间使用\n'));
+        console.log(chalk.bold('\n  存储空间使用\n'));
         console.log(`  安全日志:       ${chalk.white(cleanup.humanSize(report.securityLog.size))}`);
         console.log(
           `  日志归档:       ${chalk.white(cleanup.humanSize(report.securityLogArchives.size))}`
@@ -236,7 +236,7 @@ async function dispatchTailCommand(command, _ctx) {
           healthInfo = null;
         }
 
-        console.log(chalk.bold('\n  🧠 Memory Health\n'));
+        console.log(chalk.bold('\n  Memory Health\n'));
         if (healthInfo) {
           console.log(`  Health Score: ${chalk.cyan(healthInfo.health?.score?.toFixed(2) || 'N/A')}`);
           console.log(`  Active: ${healthInfo.health?.active || 0}`);
@@ -269,10 +269,10 @@ async function dispatchTailCommand(command, _ctx) {
           // Fallback: use assistant.runDream for file-level consolidation
           const { runDream } = require('../assistant/autoDream');
           const gateway = require('../services/gateway/aiGateway');
-          console.log(chalk.dim(`\n  🌙 Running dream consolidation (${phase})...\n`));
+          console.log(chalk.dim(`\n  Running dream consolidation (${phase})...\n`));
           result = await runDream(gateway);
         } else {
-          console.log(chalk.dim(`\n  🌙 Running dream consolidation (${phase}${force ? ', forced' : ''})...\n`));
+          console.log(chalk.dim(`\n  Running dream consolidation (${phase}${force ? ', forced' : ''})...\n`));
           result = await triggerTool.handler({ phase, force });
         }
       } catch (e) {
@@ -305,7 +305,7 @@ async function dispatchTailCommand(command, _ctx) {
 
         if (sub === 'archived') {
           const archived = distiller.listArchived();
-          console.log(chalk.bold('\n  🗄  已归档记忆（可恢复）\n'));
+          console.log(chalk.bold('\n  已归档记忆（可恢复）\n'));
           if (!archived.length) {
             printInfo('归档为空');
           } else {
@@ -336,7 +336,7 @@ async function dispatchTailCommand(command, _ctx) {
         // Default: analyze. Apply only with an explicit --apply flag.
         const apply = options.apply === true || options.apply === 'true';
         const out = distiller.distill({ apply });
-        console.log(chalk.bold('\n  🧪 记忆蒸馏'));
+        console.log(chalk.bold('\n  记忆蒸馏'));
         console.log(chalk.dim('  忘记 = 归档（可恢复），绝不硬删除；不加 --apply 仅生成报告。\n'));
         console.log('  ' + distiller.formatPlan(out.plan).split('\n').join('\n  '));
         if (out.applied && out.result) {
@@ -362,7 +362,7 @@ async function dispatchTailCommand(command, _ctx) {
         const contract = require('../memdir/projectMemoryContract');
         const ensured = memdir.ensureProjectMemoryIndex(process.cwd());
         const info = memdir.getProjectMemorySummary(process.cwd());
-        console.log(chalk.bold('\n  🗂  项目记忆 (Project Memory)\n'));
+        console.log(chalk.bold('\n  项目记忆 (Project Memory)\n'));
         if (!contract.isEnabled(process.env)) {
           printInfo('项目记忆已关闭 (KHY_PROJECT_MEMORY=off) — 不创建任何文件。');
         } else if (ensured.created) {
@@ -403,7 +403,7 @@ async function dispatchTailCommand(command, _ctx) {
       const LEVEL_LABELS = { global: '全局', project: '项目', rules: '规则', directory: '目录' };
       const TYPE_LABELS = { claude: 'CLAUDE', agents: 'AGENTS' };
 
-      console.log(chalk.bold('\n  📋 协作指令文件\n'));
+      console.log(chalk.bold('\n  协作指令文件\n'));
       console.log(chalk.dim('  冲突优先级: khy > claude > agents\n'));
       if (summary.length === 0 && compatSummary.length === 0 && ecoSummary.length === 0) {
         printInfo('未找到任何指令文件');
@@ -752,7 +752,7 @@ async function dispatchTailCommand(command, _ctx) {
 
       const showSummary = () => {
         const s = policy.summarize();
-        console.log(chalk.bold('\n  🔐 细粒度权限策略\n'));
+        console.log(chalk.bold('\n  细粒度权限策略\n'));
         console.log(
           `    启用: ${s.enabled ? chalk.green('是') : chalk.red('否 (KHY_PERMISSION_POLICY=off)')}`
         );
@@ -1268,7 +1268,7 @@ async function dispatchTailCommand(command, _ctx) {
         printInfo('当前未登录');
       } else {
         console.log('');
-        console.log(chalk.cyan.bold('  👤 当前用户'));
+        console.log(chalk.cyan.bold('  当前用户'));
         console.log("");
         console.log(`  用户名:   ${chalk.bold(user.username)}`);
         if (user.email) {

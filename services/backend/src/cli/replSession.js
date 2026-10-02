@@ -724,12 +724,12 @@ async function startRepl(options = {}) {
     // 两段（ink 装载 / App 首帧）跑在 Ink 挂载**之前**，启动屏结构上显示不了 —— 历史观感
     // 就是「全黑 ~25s，然后一出场就冻在 67%」。这里用 pre-Ink 渲染器接上同一条实时
     // 百分比曲线，交棒给 Ink 时 close()。句柄恒非 null、方法永不抛。
-    const _bootWindow = require('./bootPhaseLine').openBootWindow('⏳ 加载渲染引擎', process.env);
+    const _bootWindow = require('./bootPhaseLine').openBootWindow('加载渲染引擎', process.env);
     try {
       const inkRuntime = require('./tui/inkRuntime');
       inkRuntime.registerJsx();
       await inkRuntime.loadInk();
-      _bootWindow.phase('⏳ 初始化界面');
+      _bootWindow.phase('初始化界面');
       // Auto-start the Windows clipboard image bridge for the TUI too. The
       // classic-mode copy lives further down startRepl (after the early return
       // below), so the TUI path never reached it — pasted screenshots stopped
@@ -3286,7 +3286,7 @@ async function startRepl(options = {}) {
             _origConsoleLog(c.dim(`  ${i + 1}. ${preview}${tail}`));
           });
           _origConsoleLog(
-            c.dim(`  ⏳ ${_queuedInputs.length} 条排队（↑ 取回最后一条，/i 优先，Ctrl+C 中断）`)
+            c.dim(`  ${_queuedInputs.length} 条排队（↑ 取回最后一条，/i 优先，Ctrl+C 中断）`)
           );
         }
       } else {
@@ -4241,7 +4241,7 @@ async function startRepl(options = {}) {
             }
             try {
               const errMsg = batchEmitErr?.message || String(batchEmitErr) || 'unknown error';
-              console.error(`\n  \u274C 输入处理失败: ${errMsg}\n`);
+              console.error(`\n  \u2717 输入处理失败: ${errMsg}\n`);
             } catch {
               /* truly fatal */
             }
@@ -6621,7 +6621,7 @@ async function startRepl(options = {}) {
         _urgentSteerPending = true; // 再置抢占信号，供工具循环 consumeUrgentSteer pull-clear
         const cancelled = _requestRelayCancel('Urgent steer — preempt current turn');
         const preview = _summarizeQueuedInputForDisplay(hint, 40);
-        console.log(c.hex('#FF8C42')(`  ⚡⟳ 紧急方向修正: "${preview}"`));
+        console.log(c.hex('#FF8C42')(`  ⟳ 紧急方向修正: "${preview}"`));
         console.log(
           c.dim(
             cancelled
@@ -7566,9 +7566,9 @@ async function startRepl(options = {}) {
         _queuedInputs.unshift(nextInput);
         const cancelled = _requestRelayCancel('Interrupted by /interrupt');
         if (cancelled) {
-          console.log(c.dim('  ⚡ 已发送中断信号，完成后优先处理新输入'));
+          console.log(c.dim('  已发送中断信号，完成后优先处理新输入'));
         } else {
-          console.log(c.dim('  ⚡ 已记录中断请求，将在当前步骤结束后优先处理新输入'));
+          console.log(c.dim('  已记录中断请求，将在当前步骤结束后优先处理新输入'));
         }
         showBusyInterjectPrompt();
         return;
@@ -7594,9 +7594,9 @@ async function startRepl(options = {}) {
         _queuedInputs.unshift(classified.text);
         const cancelled = _requestRelayCancel('Interrupted by auto-detected interrupt');
         if (cancelled) {
-          console.log(c.hex('#FF6B80')(`  ⚡ 已发送中断信号，完成后优先处理新输入`));
+          console.log(c.hex('#FF6B80')(`  已发送中断信号，完成后优先处理新输入`));
         } else {
-          console.log(c.hex('#FF6B80')(`  ⚡ 已记录中断请求，将在当前步骤结束后优先处理新输入`));
+          console.log(c.hex('#FF6B80')(`  已记录中断请求，将在当前步骤结束后优先处理新输入`));
         }
         showBusyInterjectPrompt();
         return;
@@ -8498,7 +8498,7 @@ async function startRepl(options = {}) {
             'active',
             '中转桥接',
             '',
-            msg.replace(/🔗\s*/g, '').replace(/中转桥接[：:]\s*/g, '')
+            msg.replace(/中转桥接[：:]\s*/g, '')
           );
           spinner.start('request');
           showBusyInterjectPrompt();
@@ -8640,7 +8640,7 @@ async function startRepl(options = {}) {
               if (_echoLines.length > 0) {
                 console.log(c.dim('\n  你的选择:'));
                 for (const _l of _echoLines) {
-                  console.log(_l.startsWith('  ❓') ? c.cyan(_l) : _l);
+                  console.log(_l.startsWith('  ?') ? c.cyan(_l) : _l);
                 }
                 console.log('');
               }
@@ -8940,7 +8940,7 @@ async function startRepl(options = {}) {
             const _thinkingMsg = formatStatusMessage('解析', '约束与执行计划', '思考中');
             _setStatusContext('thinking', _thinkingMsg);
             console.log('');
-            console.log(c.dim(`  💭 ${_thinkingMsg}`));
+            console.log(c.dim(`  ${_thinkingMsg}`));
           }
           streamThinkingChunk(chunk.text, streamState, c);
         } else if (chunk.type === 'assistant_preface') {
@@ -10026,7 +10026,7 @@ async function startRepl(options = {}) {
                     _roleSvc.getActiveRole() &&
                     _roleSvc.getActiveRole().title === _r.title;
                   // Always surface set/clear; a redundant re-set still prints once.
-                  console.log(c.hex('#9C7BE0')(`  🎭 ${_r.success ? _r.notice : _r.error}`));
+                  console.log(c.hex('#9C7BE0')(`  ${_r.success ? _r.notice : _r.error}`));
                   void _already;
                 }
               }
@@ -11743,7 +11743,7 @@ async function startRepl(options = {}) {
               },
               onKeyFinding: (finding) => {
                 // 关键节点主动汇报：把 loop 发来的 finding（测试结果 / 根因 / 突破 /
-                // 受阻）渲成一段可见说明。单一真源 cli/keyFindings.js，best-effort。
+                // 受阻）渲成一段可见说明。单一真源 utils/text/keyFindings.js，best-effort。
                 try {
                   if (!finding) {
                     return;
@@ -13150,7 +13150,7 @@ async function startRepl(options = {}) {
           _turnHadVisibleOutput = true;
         } catch {
           try {
-            console.log('\n  ❌ 抱歉，本轮未能完成请求处理。AI 通道可能未配置或加载异常。');
+            console.log('\n  ✗ 抱歉，本轮未能完成请求处理。AI 通道可能未配置或加载异常。');
             console.log('     建议: 运行 khy gateway status 查看通道状态\n');
             responseAlreadyRendered = true;
             _turnHadVisibleOutput = true;
@@ -13278,7 +13278,7 @@ async function startRepl(options = {}) {
       } catch {
         // printError itself failed — fallback to raw console.log
         try {
-          console.log(`\n  ❌ 执行出错: ${err?.message || String(err) || '未知错误'}\n`);
+          console.log(`\n  ✗ 执行出错: ${err?.message || String(err) || '未知错误'}\n`);
         } catch {
           /* truly fatal */
         }

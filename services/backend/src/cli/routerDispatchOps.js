@@ -217,7 +217,7 @@ async function dispatchOpsCommand(command, _ctx) {
         printSuccess('Token 用量统计已重置');
       } else if (_cuSub === 'today') {
         const today = tokenSvc.getTodayUsage();
-        console.log(chalk.bold('\n  📊 今日用量'));
+        console.log(chalk.bold('\n  今日用量'));
         console.log(
           chalk.dim(
             `  请求: ${today.requests} 次 · tokens: ${tokenSvc._fmtTokenCount(today.totalTokens, today.totalTokens.toLocaleString())}\n`
@@ -225,7 +225,7 @@ async function dispatchOpsCommand(command, _ctx) {
         );
       } else if (_cuSub === 'history') {
         const history = tokenSvc.getUsageHistory(14);
-        console.log(chalk.bold('\n  📊 近14天用量'));
+        console.log(chalk.bold('\n  近14天用量'));
         for (const day of history) {
           if (day.totalTokens === 0 && day.requests === 0) {
             continue;
@@ -267,7 +267,7 @@ async function dispatchOpsCommand(command, _ctx) {
         if (convos.length === 0) {
           printInfo('暂无保存的对话记录');
         } else {
-          console.log(chalk.bold('\n  💬 对话历史\n'));
+          console.log(chalk.bold('\n  对话历史\n'));
           convos.slice(0, 10).forEach((c, i) => {
             const date = c.timestamp ? new Date(c.timestamp).toLocaleString('zh-CN') : c.file;
             const sid = c.sessionId || String(c.file || '').replace(/\.json$/i, '');
@@ -450,7 +450,7 @@ async function dispatchOpsCommand(command, _ctx) {
         }
       };
 
-      console.log(chalk.bold('\n  🔄 khy OS 自动更新\n'));
+      console.log(chalk.bold('\n  khy OS 自动更新\n'));
       printInfo('检查最新版本...');
       // 提升到 try 外,供 catch 构造确定性诊断时引用。
       let proxyRetried = false;
@@ -819,7 +819,7 @@ async function dispatchOpsCommand(command, _ctx) {
       }
       const training = require('../services/modelTrainingService');
       const status = training.getComputeStatus();
-      console.log(chalk.bold('\n  🖥️  本地算力状态\n'));
+      console.log(chalk.bold('\n  本地算力状态\n'));
       console.log(chalk.dim('  平台: ') + chalk.white(`${status.platform} ${status.arch}`));
       console.log(chalk.dim('  CPU: ') + chalk.white(`${status.cpus} 核`));
       console.log(chalk.dim('  RAM: ') + chalk.white(`${status.freeRAM}GB / ${status.totalRAM}GB`));
@@ -875,7 +875,7 @@ async function dispatchOpsCommand(command, _ctx) {
         const stats = training.getDatasetStats();
         const models = training.listModels();
         const modelNames = Object.keys(models);
-        console.log(chalk.bold('\n  🧠 模型训练系统\n'));
+        console.log(chalk.bold('\n  模型训练系统\n'));
         console.log(chalk.dim('  训练数据: ') + chalk.white(`${stats.total} 条记录`));
         if (stats.byType && Object.keys(stats.byType).length > 0) {
           Object.entries(stats.byType).forEach(([type, count]) => {
@@ -915,7 +915,7 @@ async function dispatchOpsCommand(command, _ctx) {
         console.log('');
       } else if (_trSub === 'data') {
         const stats = training.getDatasetStats();
-        console.log(chalk.bold('\n  📊 训练数据统计\n'));
+        console.log(chalk.bold('\n  训练数据统计\n'));
         console.log(chalk.dim('  总记录数: ') + chalk.white(stats.total));
         Object.entries(stats.byType || {}).forEach(([type, count]) => {
           console.log(chalk.dim(`  ${type}: `) + chalk.white(count));
@@ -934,7 +934,7 @@ async function dispatchOpsCommand(command, _ctx) {
         if (modelNames.length === 0) {
           printInfo('暂无训练模型。使用 train start 开始训练');
         } else {
-          console.log(chalk.bold('\n  🧠 已训练模型 (khy-xxx)\n'));
+          console.log(chalk.bold('\n  已训练模型 (khy-xxx)\n'));
           modelNames.forEach((name) => {
             const m = models[name];
             console.log(chalk.cyan(`  ${name}`));
@@ -1207,7 +1207,7 @@ async function dispatchOpsCommand(command, _ctx) {
         const readline = require('readline');
         const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
         password = await new Promise((resolve) => {
-          rl.question(chalk.yellow('  🔐 管理密码: '), (ans) => {
+          rl.question(chalk.yellow('  管理密码: '), (ans) => {
             rl.close();
             resolve(ans.trim());
           });
@@ -1223,7 +1223,7 @@ async function dispatchOpsCommand(command, _ctx) {
       if (!subCommand || subCommand === 'stats') {
         const result = adminSvc.getAdminStats(password);
         if (result.success) {
-          console.log(chalk.bold('\n  🔧 管理面板\n'));
+          console.log(chalk.bold('\n  管理面板\n'));
           const s = result.stats;
           console.log(chalk.dim('  设备哈希: ') + chalk.white(s.usageData.deviceHash));
           console.log(chalk.dim('  交互总数: ') + chalk.white(s.usageData.interactionCount || 0));
@@ -1295,7 +1295,7 @@ async function dispatchOpsCommand(command, _ctx) {
         const { getLevelProgress } = require('../services/knowledgeTeachingService');
         const level = getLevelProgress();
 
-        console.log(chalk.bold('\n  🌱 成长档案\n'));
+        console.log(chalk.bold('\n  成长档案\n'));
         console.log(
           chalk.dim('  知识等级: ') +
             chalk.cyan(`${level.levelName} (${level.xp} XP)`) +
@@ -1351,7 +1351,7 @@ async function dispatchOpsCommand(command, _ctx) {
         if (snaps.length === 0) {
           printInfo('暂无快照。使用 growth snapshot 创建');
         } else {
-          console.log(chalk.bold('\n  📸 成长快照\n'));
+          console.log(chalk.bold('\n  成长快照\n'));
           snaps.forEach((s) => {
             console.log(
               chalk.dim('  ') +
@@ -1402,7 +1402,7 @@ async function dispatchOpsCommand(command, _ctx) {
         const templates = agentRunner.listAgentTemplates();
         // r216: toolProfile 值是内部枚举，渲染壳映射为中文，cliAgentRunner 契约不动(#106 先例)。
         const PROFILE_ZH = { full: '全量', coding: '编码', minimal: '极简', verification: '校验' };
-        console.log(chalk.bold('\n  🤖 代理角色模板\n'));
+        console.log(chalk.bold('\n  代理角色模板\n'));
         printTable(
           ['角色键', '名称', '工具档', '关键词数'],
           templates.map((t) => [
@@ -1510,7 +1510,7 @@ async function dispatchOpsCommand(command, _ctx) {
         if (prompts.length === 0) {
           printInfo('暂无保存的提示词。使用 prompt save "标题" "内容" 保存');
         } else {
-          console.log(chalk.bold('\n  📝 提示词库\n'));
+          console.log(chalk.bold('\n  提示词库\n'));
           prompts.forEach((p) => {
             const used = p.usedCount > 0 ? chalk.dim(` (使用 ${p.usedCount} 次)`) : '';
             console.log(
@@ -1593,7 +1593,7 @@ async function dispatchOpsCommand(command, _ctx) {
           }
         } else {
           const folders = promptLib.listFolders();
-          console.log(chalk.bold('\n  📂 提示词文件夹\n'));
+          console.log(chalk.bold('\n  提示词文件夹\n'));
           folders.forEach((f) => console.log(chalk.dim('  ') + chalk.cyan(f)));
           console.log('');
         }
@@ -1688,7 +1688,7 @@ async function dispatchOpsCommand(command, _ctx) {
         if (results.length === 0) {
           printInfo(`未找到与 "${query}" 相关的知识`);
         } else {
-          console.log(chalk.bold(`\n  📚 知识库搜索: "${query}" (${results.length} 条)\n`));
+          console.log(chalk.bold(`\n  知识库搜索: "${query}" (${results.length} 条)\n`));
           for (const r of results.slice(0, 10)) {
             const src =
               r.source === 'builtin'
@@ -1708,7 +1708,7 @@ async function dispatchOpsCommand(command, _ctx) {
 
       if (subCommand === 'stats') {
         const stats = kts.getKnowledgeStats();
-        console.log(chalk.bold('\n  📊 知识库统计\n'));
+        console.log(chalk.bold('\n  知识库统计\n'));
         console.log(`  内置知识:    ${chalk.bold(stats.builtinCount)} 条`);
         console.log(`  学习积累:    ${chalk.bold(stats.learnedCount)} 条`);
         console.log(`  总计:        ${chalk.bold(stats.totalCount)} 条`);
@@ -1814,7 +1814,7 @@ async function dispatchOpsCommand(command, _ctx) {
             printInfo('未配置知识库同步');
             printInfo('使用: knowledge sync config <repo> 配置');
           } else {
-            console.log(chalk.bold('\n  🔄 知识库同步状态\n'));
+            console.log(chalk.bold('\n  知识库同步状态\n'));
             console.log(`  平台:      ${config.platform}`);
             console.log(`  仓库:      ${config.repo}`);
             console.log(`  类型:      ${config.isPublic ? '公共贡献' : '私人备份'}`);
@@ -1828,7 +1828,7 @@ async function dispatchOpsCommand(command, _ctx) {
         }
 
         // Default sync help
-        console.log(chalk.bold('\n  🔄 知识库同步\n'));
+        console.log(chalk.bold('\n  知识库同步\n'));
         console.log(chalk.dim('  支持平台: GitHub, Gitee, GitLab\n'));
         console.log('  knowledge sync config <repo>  — 配置同步仓库');
         console.log('  knowledge sync push           — 推送知识到远端');
@@ -1842,7 +1842,7 @@ async function dispatchOpsCommand(command, _ctx) {
       // Default: show knowledge overview
       const progress = kts.getLevelProgress();
       const stats = kts.getKnowledgeStats();
-      console.log(chalk.bold('\n  📚 量化知识库\n'));
+      console.log(chalk.bold('\n  量化知识库\n'));
       console.log(`  等级:     ${chalk.bold(progress.levelName)} (XP: ${progress.xp})`);
       console.log(`  进度:     ${progress.progress}% → 下一级还需 ${progress.xpToNext} XP`);
       console.log(`  内置知识: ${stats.builtinCount} 条`);
@@ -1871,14 +1871,14 @@ async function dispatchOpsCommand(command, _ctx) {
       }
 
       if (subCommand === 'scan') {
-        console.log(chalk.bold('\n  🛡️ 安全扫描...\n'));
+        console.log(chalk.bold('\n 安全扫描...\n'));
         const result = secSvc.scanForThreats();
         if (result.clean) {
           printSuccess('扫描完成 — 未发现威胁');
         } else {
           printError(`发现 ${result.threats.length} 个威胁!`);
           for (const t of result.threats) {
-            const icon = t.severity === 'critical' ? '🔴' : t.severity === 'high' ? '🟠' : '🟡';
+            const icon = t.severity === 'critical' ? '●' : t.severity === 'high' ? '●' : '○';
             console.log(`  ${icon} [${t.severity}] ${t.detail}`);
             if (t.action) {
               console.log(chalk.dim(`     修复: ${t.action}`));
@@ -1886,7 +1886,7 @@ async function dispatchOpsCommand(command, _ctx) {
           }
         }
         if (result.recommendations.length > 0) {
-          console.log(chalk.bold('\n  📋 安全建议'));
+          console.log(chalk.bold('\n  安全建议'));
           for (const r of result.recommendations) {
             console.log(chalk.dim(`  • ${r.detail}`));
           }
@@ -1904,7 +1904,7 @@ async function dispatchOpsCommand(command, _ctx) {
 
       if (subCommand === 'integrity') {
         const result = secSvc.checkProcessIntegrity();
-        console.log(chalk.bold('\n  🔍 进程完整性检查\n'));
+        console.log(chalk.bold('\n  进程完整性检查\n'));
         console.log(`  当前 PID:     ${result.pid}`);
         console.log(`  子进程数:     ${result.childCount}`);
         console.log(`  可疑进程:     ${result.suspicious.length}`);
@@ -1922,7 +1922,7 @@ async function dispatchOpsCommand(command, _ctx) {
 
       if (subCommand === 'status') {
         const stats = secSvc.getSecurityStats();
-        console.log(chalk.bold('\n  🛡️ 安全状态\n'));
+        console.log(chalk.bold('\n 安全状态\n'));
         console.log(`  总拦截事件: ${stats.totalEvents}`);
         console.log(`  24h 内:     ${stats.last24h}`);
         if (stats.byType && Object.keys(stats.byType).length > 0) {
@@ -1971,7 +1971,7 @@ async function dispatchOpsCommand(command, _ctx) {
           }
         } else {
           const current = permStore.getProfile();
-          console.log(chalk.bold('\n  🔒 权限模式\n'));
+          console.log(chalk.bold('\n  权限模式\n'));
           for (const p of permStore.VALID_PROFILES) {
             const marker = p === current ? chalk.green(' ← 当前') : '';
             const desc = {
@@ -1995,7 +1995,7 @@ async function dispatchOpsCommand(command, _ctx) {
         const limit = parseInt(options.limit) || 20;
         const entries = auditLog.queryAuditLog({ tool: toolFilter, limit });
 
-        console.log(chalk.bold('\n  📋 工具执行审计日志\n'));
+        console.log(chalk.bold('\n  工具执行审计日志\n'));
         if (entries.length === 0) {
           printInfo('暂无审计记录');
         } else {
@@ -2022,7 +2022,7 @@ async function dispatchOpsCommand(command, _ctx) {
       if (subCommand === 'permissions') {
         const permStore = require('../services/permissionStore');
         const rules = permStore.getAllRules();
-        console.log(chalk.bold('\n  🔑 权限规则\n'));
+        console.log(chalk.bold('\n  权限规则\n'));
         console.log(`  当前模式: ${chalk.cyan(rules.profile)}`);
 
         const persistent = Object.entries(rules.persistent);
@@ -2059,7 +2059,7 @@ async function dispatchOpsCommand(command, _ctx) {
       }
 
       // Default: quick scan
-      console.log(chalk.bold('\n  🛡️ 安全防护\n'));
+      console.log(chalk.bold('\n 安全防护\n'));
       console.log('  security scan          — 完整安全扫描 (挖矿/木马/可疑进程)');
       console.log('  security monitor       — 启动后台监控 (每10分钟自动扫描)');
       console.log('  security integrity     — 进程完整性检查');
@@ -2157,7 +2157,7 @@ async function dispatchOpsCommand(command, _ctx) {
             : ui.STATUS_ICONS[report.severity === 'critical' ? 'error' : report.severity === 'degraded' ? 'warning' : 'ok'];
 
           console.log('');
-          console.log(chalk.bold('  🔁 自检结果'));
+          console.log(chalk.bold('  自检结果'));
           console.log('');
           printTable(
             ['指标', '值'],
@@ -2214,7 +2214,7 @@ async function dispatchOpsCommand(command, _ctx) {
             return true;
           }
           console.log('');
-          console.log(chalk.bold(`  🔁 最近 ${logs.length} 条自检记录`));
+          console.log(chalk.bold(`  最近 ${logs.length} 条自检记录`));
           console.log('');
           printTable(
             ['时间', '级别', '评分', '问题数', '修复数', '耗时'],
@@ -2244,7 +2244,7 @@ async function dispatchOpsCommand(command, _ctx) {
         const runColorFn = chalk[runIcon.color] || chalk.white;
 
         console.log('');
-        console.log(chalk.bold('  🔁 底座循环自检'));
+        console.log(chalk.bold('  底座循环自检'));
         console.log('');
         printTable(
           ['指标', '值'],
@@ -2294,7 +2294,7 @@ async function dispatchOpsCommand(command, _ctx) {
         // Unified telemetry dashboard
         const telemetry = require('../services/telemetryService');
         const dashboard = telemetry.createDashboardData();
-        console.log(chalk.bold('\n  📊 统一监控仪表盘\n'));
+        console.log(chalk.bold('\n  统一监控仪表盘\n'));
         console.log(`  运行时间:     ${dashboard.summary.uptime}`);
         console.log(
           `  工具调用:     ${dashboard.counters.tools} (${dashboard.summary.toolCallsPerMinute}/min)`
@@ -2320,7 +2320,7 @@ async function dispatchOpsCommand(command, _ctx) {
         try {
           const auditLog = require('../services/auditLog');
           const stats = auditLog.getAuditStats();
-          console.log(chalk.bold('\n  🔧 工具执行统计\n'));
+          console.log(chalk.bold('\n  工具执行统计\n'));
           console.log(
             `  总调用: ${stats.totalCalls} · 错误: ${stats.errorCount} · 拒绝: ${stats.deniedCount} · 平均延迟: ${stats.avgElapsed}ms`
           );
@@ -2527,7 +2527,7 @@ async function dispatchOpsCommand(command, _ctx) {
       }
       if (subCommand === 'list' || !subCommand) {
         const services = registry.list();
-        console.log(chalk.bold(`\n  📦 服务注册表 (${services.length} 个)\n`));
+        console.log(chalk.bold(`\n  服务注册表 (${services.length} 个)\n`));
         // Group by category
         const grouped = {};
         for (const svc of services) {
@@ -2554,7 +2554,7 @@ async function dispatchOpsCommand(command, _ctx) {
       } else if (subCommand === 'health') {
         printInfo(formatStatusMessage('检查', '服务健康', `共 ${registry.stats().total} 项`));
         const results = await registry.healthCheck();
-        console.log(chalk.bold('\n  🏥 服务健康检查\n'));
+        console.log(chalk.bold('\n  服务健康检查\n'));
         for (const r of results) {
           const icon =
             r.healthy === true
@@ -2584,7 +2584,7 @@ async function dispatchOpsCommand(command, _ctx) {
     case 'shell': {
       const showShellHelp = () => {
         console.log('');
-        console.log(chalk.cyan.bold('  🖥 Shell 命令'));
+        console.log(chalk.cyan.bold('  Shell 命令'));
         console.log('');
         console.log('  shell <command...>                          执行 shell 命令');
         console.log('  shell run <command...>                      显式 run 模式');

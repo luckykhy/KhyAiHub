@@ -843,10 +843,10 @@ async function dispatchSlashCommand(command, _ctx) {
       }
 
       const ROLE_LABEL = {
-        user: '🧑 User',
-        assistant: '🤖 Assistant',
-        system: '⚙️ System',
-        tool: '🔧 Tool',
+        user: 'User',
+        assistant: 'Assistant',
+        system: '⚙ System',
+        tool: 'Tool',
       };
       const lines = [
         `# KHY 会话分享`,
