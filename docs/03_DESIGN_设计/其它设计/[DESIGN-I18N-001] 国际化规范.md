@@ -17,10 +17,10 @@
 
 | 语言 | 代码 | 状态 |
 |------|------|------|
-| 简体中文 | zh-CN | ✅ 主要语言 |
-| 英语 | en-US | ✅ 支持 |
-| 繁体中文 | zh-TW | 🔄 计划中 |
-| 日语 | ja-JP | 📋 待开发 |
+| 简体中文 | zh-CN | ✓ 主要语言 |
+| 英语 | en-US | ✓ 支持 |
+| 繁体中文 | zh-TW | 计划中 |
+| 日语 | ja-JP | 待开发 |
 
 ---
 
@@ -302,7 +302,7 @@ error.serverError
 ### 6.1 CSS 逻辑属性
 
 ```css
-/* ✅ 正确：使用逻辑属性 */
+/* ✓ 正确：使用逻辑属性 */
 .margin-start {
   margin-inline-start: 1rem;
 }
@@ -315,7 +315,7 @@ error.serverError
   border-inline-start: 1px solid #ccc;
 }
 
-/* ❌ 错误：使用物理属性 */
+/* ✗ 错误：使用物理属性 */
 .margin-left {
   margin-left: 1rem;
 }

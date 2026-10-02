@@ -119,11 +119,11 @@ combined-2026-09-04.log
 
 | 数据类型 | 位置 | Gitignore | 备份 |
 |---------|------|-----------|------|
-| 用户配置 | `.khy/config.json` | ✅ | ✅ |
-| 数据库 | `.khy/sessions.db` | ✅ | ✅ |
-| 日志 | `.khy/logs/` | ✅ | ❌ |
-| 记忆 | `.khy/memory/` | ✅ | ✅ |
-| 模型 | `.khy/models/` | ✅ | ❌ |
+| 用户配置 | `.khy/config.json` | ✓ | ✓ |
+| 数据库 | `.khy/sessions.db` | ✓ | ✓ |
+| 日志 | `.khy/logs/` | ✓ | ✗ |
+| 记忆 | `.khy/memory/` | ✓ | ✓ |
+| 模型 | `.khy/models/` | ✓ | ✗ |
 
 ---
 

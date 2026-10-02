@@ -50,15 +50,15 @@
 
 | 字段 | 类型 | 必需 | 说明 |
 |------|------|------|------|
-| timestamp | string | ✅ | ISO 8601 格式时间戳 |
-| level | string | ✅ | 日志级别 |
-| message | string | ✅ | 日志消息 |
-| requestId | string | ❌ | 请求 ID |
-| userId | number | ❌ | 用户 ID |
-| module | string | ❌ | 模块名 |
-| action | string | ❌ | 操作名 |
-| duration | number | ❌ | 执行时长（ms） |
-| metadata | object | ❌ | 附加元数据 |
+| timestamp | string | ✓ | ISO 8601 格式时间戳 |
+| level | string | ✓ | 日志级别 |
+| message | string | ✓ | 日志消息 |
+| requestId | string | ✗ | 请求 ID |
+| userId | number | ✗ | 用户 ID |
+| module | string | ✗ | 模块名 |
+| action | string | ✗ | 操作名 |
+| duration | number | ✗ | 执行时长（ms） |
+| metadata | object | ✗ | 附加元数据 |
 
 ---
 

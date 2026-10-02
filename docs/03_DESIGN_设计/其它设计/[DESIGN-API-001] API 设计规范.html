@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -57,7 +57,7 @@ DELETE /api/v1/users/123/orders/456</code></pre>
 <p><strong>查询参数</strong>：</p>
 <ul><li>使用 camelCase：<code>pageSize</code>、<code>sortBy</code>、<code>filterBy</code></li><li>分页参数统一：<code>page</code>、<code>pageSize</code></li><li>排序参数统一：<code>sort</code>、<code>order</code></li></ul>
 <h3 id="2-3-http-方法">2.3 HTTP 方法<a class="anchor" href="#2-3-http-方法" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>方法</th><th>用途</th><th>幂等性</th><th>安全性</th></tr></thead><tbody><tr><td>GET</td><td>获取资源</td><td>✅</td><td>✅</td></tr><tr><td>POST</td><td>创建资源</td><td>❌</td><td>❌</td></tr><tr><td>PUT</td><td>更新资源（全量）</td><td>✅</td><td>❌</td></tr><tr><td>PATCH</td><td>更新资源（部分）</td><td>❌</td><td>❌</td></tr><tr><td>DELETE</td><td>删除资源</td><td>✅</td><td>❌</td></tr></tbody></table>
+<table><thead><tr><th>方法</th><th>用途</th><th>幂等性</th><th>安全性</th></tr></thead><tbody><tr><td>GET</td><td>获取资源</td><td>✓</td><td>✓</td></tr><tr><td>POST</td><td>创建资源</td><td>✗</td><td>✗</td></tr><tr><td>PUT</td><td>更新资源（全量）</td><td>✓</td><td>✗</td></tr><tr><td>PATCH</td><td>更新资源（部分）</td><td>✗</td><td>✗</td></tr><tr><td>DELETE</td><td>删除资源</td><td>✓</td><td>✗</td></tr></tbody></table>
 <hr>
 <h2 id="3-请求规范">3. 请求规范<a class="anchor" href="#3-请求规范" aria-label="锚点">#</a></h2>
 <h3 id="3-1-请求头">3.1 请求头<a class="anchor" href="#3-1-请求头" aria-label="锚点">#</a></h3>

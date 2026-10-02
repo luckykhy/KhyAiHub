@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -95,10 +95,10 @@ toolUseLoopCore 检测 retryable → 自动重试
 <p><strong>外部依赖抽象为可替换适配器,故障自动隔离+恢复。</strong></p>
 <h3 id="架构">架构<a class="anchor" href="#架构" aria-label="锚点">#</a></h3>
 <pre><code>Request → Gateway → Adapter Pool
-                     ├── Claude ──── 健康 ✅
+                     ├── Claude ──── 健康 ✓
                      ├── OpenAI ──── 冷却中 ⏸
-                     ├── Ollama ──── 断开 ❌
-                     └── Fallback ── 就绪 ✅</code></pre>
+                     ├── Ollama ──── 断开 ✗
+                     └── Fallback ── 就绪 ✓</code></pre>
 <h3 id="断路器状态机">断路器状态机<a class="anchor" href="#断路器状态机" aria-label="锚点">#</a></h3>
 <pre><code>CLOSED(正常) → 连续失败 5 次 → OPEN(断开)
                                       ↓
@@ -129,7 +129,7 @@ toolUseLoopCore 检测 retryable → 自动重试
   }
 }</code></pre>
 <h3 id="错误码表">错误码表<a class="anchor" href="#错误码表" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>码</th><th>含义</th><th>可重试</th></tr></thead><tbody><tr><td>E01</td><td>模型静默空响应</td><td>✅</td></tr><tr><td>E02</td><td>内容安全拦截</td><td>❌</td></tr><tr><td>E03</td><td>上下文溢出</td><td>❌</td></tr><tr><td>E04</td><td>工具执行崩溃</td><td>❌</td></tr><tr><td>E05</td><td>依赖缺失</td><td>✅</td></tr><tr><td>E06</td><td>网络/服务端</td><td>✅</td></tr><tr><td>E07</td><td>权限拦截</td><td>❌</td></tr><tr><td>E08</td><td>格式校验失败</td><td>✅</td></tr></tbody></table>
+<table><thead><tr><th>码</th><th>含义</th><th>可重试</th></tr></thead><tbody><tr><td>E01</td><td>模型静默空响应</td><td>✓</td></tr><tr><td>E02</td><td>内容安全拦截</td><td>✗</td></tr><tr><td>E03</td><td>上下文溢出</td><td>✗</td></tr><tr><td>E04</td><td>工具执行崩溃</td><td>✗</td></tr><tr><td>E05</td><td>依赖缺失</td><td>✓</td></tr><tr><td>E06</td><td>网络/服务端</td><td>✓</td></tr><tr><td>E07</td><td>权限拦截</td><td>✗</td></tr><tr><td>E08</td><td>格式校验失败</td><td>✓</td></tr></tbody></table>
 <hr>
 <h2 id="7-配置门控-字节回退">7. 配置门控 + 字节回退<a class="anchor" href="#7-配置门控-字节回退" aria-label="锚点">#</a></h2>
 <h3 id="一句话定义-7">一句话定义<a class="anchor" href="#一句话定义-7" aria-label="锚点">#</a></h3>

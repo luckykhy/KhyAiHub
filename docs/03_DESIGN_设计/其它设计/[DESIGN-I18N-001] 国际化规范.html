@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -33,7 +33,7 @@
 <h3 id="1-1-设计原则">1.1 设计原则<a class="anchor" href="#1-1-设计原则" aria-label="锚点">#</a></h3>
 <ol><li><strong>用户优先</strong>：根据用户偏好显示语言</li><li><strong>易于扩展</strong>：支持快速添加新语言</li><li><strong>一致性</strong>：所有语言使用相同的术语</li><li><strong>可维护性</strong>：翻译与代码分离</li></ol>
 <h3 id="1-2-支持的语言">1.2 支持的语言<a class="anchor" href="#1-2-支持的语言" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>语言</th><th>代码</th><th>状态</th></tr></thead><tbody><tr><td>简体中文</td><td>zh-CN</td><td>✅ 主要语言</td></tr><tr><td>英语</td><td>en-US</td><td>✅ 支持</td></tr><tr><td>繁体中文</td><td>zh-TW</td><td>🔄 计划中</td></tr><tr><td>日语</td><td>ja-JP</td><td>📋 待开发</td></tr></tbody></table>
+<table><thead><tr><th>语言</th><th>代码</th><th>状态</th></tr></thead><tbody><tr><td>简体中文</td><td>zh-CN</td><td>✓ 主要语言</td></tr><tr><td>英语</td><td>en-US</td><td>✓ 支持</td></tr><tr><td>繁体中文</td><td>zh-TW</td><td>计划中</td></tr><tr><td>日语</td><td>ja-JP</td><td>待开发</td></tr></tbody></table>
 <hr>
 <h2 id="2-字符编码">2. 字符编码<a class="anchor" href="#2-字符编码" aria-label="锚点">#</a></h2>
 <h3 id="2-1-编码标准">2.1 编码标准<a class="anchor" href="#2-1-编码标准" aria-label="锚点">#</a></h3>
@@ -236,7 +236,7 @@ error.serverError</code></pre>
 <hr>
 <h2 id="6-rtl-从右到左-语言支持">6. RTL（从右到左）语言支持<a class="anchor" href="#6-rtl-从右到左-语言支持" aria-label="锚点">#</a></h2>
 <h3 id="6-1-css-逻辑属性">6.1 CSS 逻辑属性<a class="anchor" href="#6-1-css-逻辑属性" aria-label="锚点">#</a></h3>
-<pre><code class="language-css"><span class="hljs-comment">/* ✅ 正确：使用逻辑属性 */</span>
+<pre><code class="language-css"><span class="hljs-comment">/* ✓ 正确：使用逻辑属性 */</span>
 <span class="hljs-selector-class">.margin-start</span> {
   <span class="hljs-attribute">margin-inline-start</span>: <span class="hljs-number">1rem</span>;
 }
@@ -249,7 +249,7 @@ error.serverError</code></pre>
   <span class="hljs-attribute">border-inline-start</span>: <span class="hljs-number">1px</span> solid <span class="hljs-number">#ccc</span>;
 }
 
-<span class="hljs-comment">/* ❌ 错误：使用物理属性 */</span>
+<span class="hljs-comment">/* ✗ 错误：使用物理属性 */</span>
 <span class="hljs-selector-class">.margin-left</span> {
   <span class="hljs-attribute">margin-left</span>: <span class="hljs-number">1rem</span>;
 }</code></pre>
