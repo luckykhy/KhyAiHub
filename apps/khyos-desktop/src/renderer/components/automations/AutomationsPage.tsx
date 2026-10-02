@@ -393,7 +393,7 @@ export function AutomationsPage() {
           {/* List / empty state — ZCode: automations.empty.* */}
           {items.length === 0 ? (
             <div className="bg-card border border-card-border rounded-xl p-12 text-center">
-              <span className="text-3xl mb-3 block">⏰</span>
+              <span className="text-3xl mb-3 block">◷</span>
               <p className="text-sm font-medium text-foreground/70 mb-1">{EMPTY.title}</p>
               <p className="text-xs text-foreground/40 mb-5">{EMPTY.description}</p>
               <button
