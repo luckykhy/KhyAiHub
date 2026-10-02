@@ -85,11 +85,12 @@
 |文件|核心职责(10字内)|在产|状态|
 | --- | --- | --- | --- |
 |[`CHANGELOG.md`](../../CHANGELOG.md)|版本变更记录|在产|在产|
-|[`CONTRIBUTING.md`](../../CONTRIBUTING.md)|中文开发者贡献指南|在产|在产|
+|[`CONTRIBUTING.md`](../../.github/CONTRIBUTING.md)|中文开发者贡献指南|在产|在产|
 |[`SECURITY.md`](../../SECURITY.md)|安全披露渠道|在产|在产|
 
 放在 `docs/08_MGMT_项目管理/` 下的同名副本会让 GitHub 侧失效、并制造双真源漂移，
-因此 2026-08-15 已删除本目录下的 `CHANGELOG.md` / `CONTRIBUTING.md` 副本，**根目录为唯一权威**。
+因此 2026-08-15 已删除本目录下的 `CHANGELOG.md` / `CONTRIBUTING.md` 副本；
+唯一权威是仓库级那一份——`CONTRIBUTING.md` 自 2026-10-03 起位于 `.github/`，`CHANGELOG.md` 仍在根。
 
 **已知缺口**（如实登记，未凭空补写）：[OPS-MAN-169] 把 `CLAUDE.md §1` 当作红线真源引用，
 但 `CLAUDE.md`、`khy.md`、`LICENSE` 三个文件在仓库中并不存在。红线原文需由项目所有者撰写，

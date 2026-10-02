@@ -1,7 +1,7 @@
 # 贡献指南（Contributing to Khy-OS）
 
 本文件是协作规范的**单一真源**。GitHub 只识别仓库根目录、`.github/` 与 `docs/` 顶层的
-`CONTRIBUTING.md`，因此它放在根目录；`docs/08_MGMT_项目管理/CONTRIBUTING.md` 已改为指针页。
+`CONTRIBUTING.md`，因此它放在被优先识别的 `.github/` 目录；`docs/08_MGMT_项目管理/CONTRIBUTING.md` 已改为指针页。
 
 开发者手册（架构、模块职责、AI 协作约定）见 [AGENTS.md](../AGENTS.md)。
 
