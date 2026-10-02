@@ -1,3 +1,11 @@
+/**
+ * [独立维护声明 | BUG-015 裁决 2026-09-28,IMPL-RPT-063]
+ * 本文件是 khyquant 侧的独立副本,与 services/backend 正本同名文件已分叉
+ * (本副本 64KB vs 正本 92KB),按独立项目口径单独维护,不再随 backend 补丁自动同步
+ * (khyquant 为独立项目、连接 Khy OS 使用,见 AGENTS.md 项目概览)。
+ * backend 侧 2026-09-23 的 BUG-014 修复(工具调用能力判定与提示词文案)未并入本副本;
+ * 若 khyquant 需要该能力,走独立评审后再移植,禁止盲套补丁——半修比不修更难诊断。
+ */
 const axios = require('axios');
 const http = require('http');
 const https = require('https');

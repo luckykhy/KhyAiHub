@@ -218,7 +218,7 @@ class ComprehensiveDataService {
 
         const klineDataService = require('./klineDataService');
 
-        console.log(`📊 Futures symbol detected: ${symbol}, delegating to klineDataService`);
+        console.log(`Futures symbol detected: ${symbol}, delegating to klineDataService`);
 
         const result = await klineDataService.getKlineData(symbol, period, startDate, endDate, null, {
 
@@ -254,11 +254,11 @@ class ComprehensiveDataService {
 
         }
 
-        console.log(`⚠️ klineDataService returned no data for futures ${symbol}, falling through`);
+        console.log(`⚠ klineDataService returned no data for futures ${symbol}, falling through`);
 
       } catch (err) {
 
-        console.error(`❌ Futures delegation failed for ${symbol}:`, err.message);
+        console.error(`✗ Futures delegation failed for ${symbol}:`, err.message);
 
       }
 
@@ -274,7 +274,7 @@ class ComprehensiveDataService {
 
     // 🔥 步骤1: 检查数据库缓存
 
-    console.log(`\n🔍 步骤1: 检查数据库缓存...`);
+    console.log(`\n步骤1: 检查数据库缓存...`);
 
     const latestCachedDate = await this.getLatestCachedDate(symbol, period);
 
@@ -300,7 +300,7 @@ class ComprehensiveDataService {
 
       
 
-      console.log(`✅ 找到缓存数据，最新日期: ${latestCachedDate}, 距今${daysGap}天`);
+      console.log(`✓ 找到缓存数据，最新日期: ${latestCachedDate}, 距今${daysGap}天`);
 
       
 
@@ -310,7 +310,7 @@ class ComprehensiveDataService {
         //  数据量不足时跳过缓存，走步骤2重新从数据源拉取完整历史
         const MIN_CACHE_COUNT = 100;
         if (!cachedKline || cachedKline.length < MIN_CACHE_COUNT) {
-          console.log(`⚠️ 缓存数据量不足 (${cachedKline?.length || 0} 条)，跳过缓存，重新拉取完整历史`);
+          console.log(`⚠ 缓存数据量不足 (${cachedKline?.length || 0} 条)，跳过缓存，重新拉取完整历史`);
           // result 保持 null，走步骤2
         } else {
 
@@ -318,7 +318,7 @@ class ComprehensiveDataService {
 
           const actualSource = cachedKline[0]?.dataSource || 'AKShare';
 
-          console.log(`📊 缓存数据源: ${actualSource}`);
+          console.log(`缓存数据源: ${actualSource}`);
 
           
 
@@ -360,7 +360,7 @@ class ComprehensiveDataService {
 
         // 缓存过期，需要增量更新
 
-        console.log(`🔄 缓存过期，尝试增量更新...`);
+        console.log(`缓存过期，尝试增量更新...`);
 
         
 
@@ -380,7 +380,7 @@ class ComprehensiveDataService {
 
         
 
-        console.log(`📡 获取增量数据: 从 ${incrementalStartDate} 到 ${today}`);
+        console.log(`获取增量数据: 从 ${incrementalStartDate} 到 ${today}`);
 
         
 
@@ -390,7 +390,7 @@ class ComprehensiveDataService {
 
         if (incrementalData && incrementalData.kline && incrementalData.kline.length > 0) {
 
-          console.log(`✅ 获取到 ${incrementalData.kline.length} 条增量数据`);
+          console.log(`✓ 获取到 ${incrementalData.kline.length} 条增量数据`);
 
           
 
@@ -420,15 +420,15 @@ class ComprehensiveDataService {
 
           if (isRealIncrementalData) {
 
-            console.log(`💾 保存增量数据到数据库...`);
+            console.log(`保存增量数据到数据库...`);
 
             await this.saveKlineToCache(symbol, period, incrementalData.kline, incrementalData.source);
 
-            console.log(`✅ 增量数据已缓存`);
+            console.log(`✓ 增量数据已缓存`);
 
           } else {
 
-            console.log(`⏭️ 跳过缓存：检测到模拟增量数据（source=${incrementalData.source}, dataQuality=${incrementalData.dataQuality}）`);
+            console.log(`⏭ 跳过缓存：检测到模拟增量数据（source=${incrementalData.source}, dataQuality=${incrementalData.dataQuality}）`);
 
           }
 
@@ -438,7 +438,7 @@ class ComprehensiveDataService {
 
           const actualSource = incrementalData.source || 'AKShare';
 
-          console.log(`📊 增量数据源: ${actualSource}`);
+          console.log(`增量数据源: ${actualSource}`);
 
           
 
@@ -480,7 +480,7 @@ class ComprehensiveDataService {
 
         } else {
 
-          console.warn(`⚠️ 无法获取增量数据，使用缓存数据`);
+          console.warn(`⚠ 无法获取增量数据，使用缓存数据`);
 
           
 
@@ -492,7 +492,7 @@ class ComprehensiveDataService {
 
             const actualSource = cachedKline[0]?.dataSource || 'AKShare';
 
-            console.log(`📊 缓存数据源（过期）: ${actualSource}`);
+            console.log(`缓存数据源（过期）: ${actualSource}`);
 
             
 
@@ -544,7 +544,7 @@ class ComprehensiveDataService {
 
     if (!result) {
 
-      console.log(`\n📡 步骤2: 从数据源获取完整数据...`);
+      console.log(`\n步骤2: 从数据源获取完整数据...`);
 
       
 
@@ -560,7 +560,7 @@ class ComprehensiveDataService {
 
         try {
 
-          console.log(`🔄 尝试数据源: ${stage.name} (source=${stage.source}, priority=${stage.priority || 'N/A'})`);
+          console.log(`尝试数据源: ${stage.name} (source=${stage.source}, priority=${stage.priority || 'N/A'})`);
 
           
 
@@ -588,7 +588,7 @@ class ComprehensiveDataService {
 
           if (data && data.kline && data.kline.length > 0) {
 
-            console.log(`✅ 数据源 ${stage.name} 成功返回 ${data.kline.length} 条数据`);
+            console.log(`✓ 数据源 ${stage.name} 成功返回 ${data.kline.length} 条数据`);
 
             console.log(`   source字段: ${data.source}`);
 
@@ -616,17 +616,17 @@ class ComprehensiveDataService {
 
             if (isRealData && data.kline.length >= 100) {
 
-              console.log(`💾 检测到完整真实数据（${data.kline.length}条，来源：${data.source}），保存到数据库缓存...`);
+              console.log(`检测到完整真实数据（${data.kline.length}条，来源：${data.source}），保存到数据库缓存...`);
 
               try {
 
                 await this.saveKlineToCache(symbol, period, data.kline, data.source);
 
-                console.log(`✅ 数据已缓存到数据库，下次可快速加载`);
+                console.log(`✓ 数据已缓存到数据库，下次可快速加载`);
 
               } catch (cacheError) {
 
-                console.warn(`⚠️ 缓存保存失败（不影响返回）:`, cacheError.message);
+                console.warn(`⚠ 缓存保存失败（不影响返回）:`, cacheError.message);
 
               }
 
@@ -634,11 +634,11 @@ class ComprehensiveDataService {
 
               if (!isRealData) {
 
-                console.log(`⏭️ 跳过缓存：检测到模拟数据（source=${data.source}, dataQuality=${data.dataQuality}）`);
+                console.log(`⏭ 跳过缓存：检测到模拟数据（source=${data.source}, dataQuality=${data.dataQuality}）`);
 
               } else {
 
-                console.log(`⏭️ 跳过缓存：数据量不足（${data.kline.length}条，需要至少100条）`);
+                console.log(`⏭ 跳过缓存：数据量不足（${data.kline.length}条，需要至少100条）`);
 
               }
 
@@ -664,20 +664,20 @@ class ComprehensiveDataService {
             if (stage.source !== 'mock') {
               this.lockedDataSource = { key: stage.source, ...this.dataSources[stage.source] };
               this.lockExpireTime = Date.now() + this.lockDuration;
-              console.log(`🔒 锁定成功数据源: ${stage.name} (${this.lockDuration / 1000}秒)`);
+              console.log(`锁定成功数据源: ${stage.name} (${this.lockDuration / 1000}秒)`);
             }
 
             break;
 
           } else {
 
-            console.warn(`⚠️ 数据源 ${stage.name} 返回空数据`);
+            console.warn(`⚠ 数据源 ${stage.name} 返回空数据`);
 
           }
 
         } catch (error) {
 
-          console.error(`❌ 数据源 ${stage.name} 失败: ${error.message}`);
+          console.error(`✗ 数据源 ${stage.name} 失败: ${error.message}`);
 
           console.error(`   错误堆栈:`, error.stack);
 
@@ -697,7 +697,7 @@ class ComprehensiveDataService {
 
     if (!result) {
 
-      console.log('\n⚠️ 所有API数据源都失败，尝试混合数据策略...');
+      console.log('\n⚠ 所有API数据源都失败，尝试混合数据策略...');
 
       
 
@@ -709,7 +709,7 @@ class ComprehensiveDataService {
 
       if (historicalData && historicalData.length > 0) {
 
-        console.log(`✅ 从数据库获取到 ${historicalData.length} 条历史数据`);
+        console.log(`✓ 从数据库获取到 ${historicalData.length} 条历史数据`);
 
         console.log(`   最早日期: ${historicalData[0].time}`);
 
@@ -749,7 +749,7 @@ class ComprehensiveDataService {
 
         if (daysGap > 1) {
 
-          console.log(`🔄 历史数据不完整，使用模拟数据补充最近${daysGap}天...`);
+          console.log(`历史数据不完整，使用模拟数据补充最近${daysGap}天...`);
 
           
 
@@ -773,7 +773,7 @@ class ComprehensiveDataService {
 
           if (simulatedData && simulatedData.length > 0) {
 
-            console.log(`✅ 生成 ${simulatedData.length} 条模拟数据用于补充`);
+            console.log(`✓ 生成 ${simulatedData.length} 条模拟数据用于补充`);
 
             finalKlineData = [...historicalData, ...simulatedData];
 
@@ -817,7 +817,7 @@ class ComprehensiveDataService {
 
         
 
-        console.log(`✅ 混合数据策略成功: ${dataComposition.historical}条真实 + ${dataComposition.simulated}条模拟`);
+        console.log(`✓ 混合数据策略成功: ${dataComposition.historical}条真实 + ${dataComposition.simulated}条模拟`);
 
         
 
@@ -829,13 +829,13 @@ class ComprehensiveDataService {
 
         if (mockSource && mockSource.enabled) {
 
-          console.log('⚠️ 数据库也没有历史数据，使用纯模拟数据');
+          console.log('⚠ 数据库也没有历史数据，使用纯模拟数据');
 
           result = await this.generateComprehensiveMockData(symbol, instrumentInfo, options);
 
         } else {
 
-          console.error('❌ 所有数据源都失败，且模拟数据源未启用');
+          console.error('✗ 所有数据源都失败，且模拟数据源未启用');
 
           throw lastError || new Error('所有数据源都失败，无法获取数据');
 
@@ -875,13 +875,13 @@ class ComprehensiveDataService {
 
         try {
 
-          console.log(`💾 保存K线数据到数据库缓存: ${symbol}, ${result.kline.length}条`);
+          console.log(`保存K线数据到数据库缓存: ${symbol}, ${result.kline.length}条`);
 
           await this.saveKlineToCache(symbol, period, result.kline, result.source);
 
         } catch (error) {
 
-          console.warn(`⚠️ 保存K线缓存失败: ${error.message}`);
+          console.warn(`⚠ 保存K线缓存失败: ${error.message}`);
 
           // 不影响主流程，继续返回数据
 
@@ -889,7 +889,7 @@ class ComprehensiveDataService {
 
       } else {
 
-        console.log(`⏭️ 跳过缓存：检测到模拟数据或混合数据（source=${result.source}, dataQuality=${result.dataQuality}, isHybrid=${result.isHybrid}）`);
+        console.log(`⏭ 跳过缓存：检测到模拟数据或混合数据（source=${result.source}, dataQuality=${result.dataQuality}, isHybrid=${result.isHybrid}）`);
 
       }
 
@@ -1483,7 +1483,7 @@ class ComprehensiveDataService {
 
       const remainingSeconds = Math.floor((this.lockExpireTime - now) / 1000)
 
-      console.log(`🔒 使用锁定的数据源: ${this.lockedDataSource.name} (剩余 ${remainingSeconds}秒)`)
+      console.log(`使用锁定的数据源: ${this.lockedDataSource.name} (剩余 ${remainingSeconds}秒)`)
 
       
 
@@ -1573,7 +1573,7 @@ class ComprehensiveDataService {
 
     if (enabledSources.length === 0) {
 
-      console.warn('⚠️ 没有启用的数据源，自动切换到增强模拟数据源');
+      console.warn('⚠ 没有启用的数据源，自动切换到增强模拟数据源');
 
       this.dataSources.mock.enabled = true;
 
@@ -1581,7 +1581,7 @@ class ComprehensiveDataService {
 
     } else {
 
-      console.log(`📊 当前启用的数据源 (${enabledSources.length}个):`, 
+      console.log(`当前启用的数据源 (${enabledSources.length}个):`, 
 
         enabledSources.map(([key, config]) => `${config.name}(priority=${config.priority})`).join(', ')
 
@@ -1592,7 +1592,7 @@ class ComprehensiveDataService {
 
 
     // 不提前锁定，等数据源成功后再锁定（避免锁定到失败的数据源）
-    console.log(`📊 按优先级尝试 ${enabledSources.length} 个数据源...`)
+    console.log(`按优先级尝试 ${enabledSources.length} 个数据源...`)
 
 
 
@@ -1638,7 +1638,7 @@ class ComprehensiveDataService {
 
   unlockDataSource() {
 
-    console.log('🔓 手动解锁数据源')
+    console.log('手动解锁数据源')
 
     this.lockedDataSource = null
 
@@ -1705,7 +1705,7 @@ class ComprehensiveDataService {
                     open: b.open, high: b.high, low: b.low, close: b.close,
                     volume: b.volume || 0, amount: b.amount || 0
                   }));
-                  console.log(`✅ Tick聚合成功: ${symbol} ${period}, ${kline.length}条`);
+                  console.log(`✓ Tick聚合成功: ${symbol} ${period}, ${kline.length}条`);
                   return {
                     symbol,
                     name: instrumentInfo.name || symbol,
@@ -1767,7 +1767,7 @@ class ComprehensiveDataService {
 
     try {
 
-      console.log(`📊 从iFinD获取数据: ${symbol}`);
+      console.log(`从iFinD获取数据: ${symbol}`);
 
       
 
@@ -1875,7 +1875,7 @@ class ComprehensiveDataService {
 
     } catch (error) {
 
-      console.warn(`⚠️ iFinD获取失败: ${error.message}`);
+      console.warn(`⚠ iFinD获取失败: ${error.message}`);
 
       throw error;
 
@@ -1895,7 +1895,7 @@ class ComprehensiveDataService {
 
     try {
 
-      console.log(`📊 从东方财富获取数据: ${symbol}`);
+      console.log(`从东方财富获取数据: ${symbol}`);
 
       
 
@@ -1929,7 +1929,7 @@ class ComprehensiveDataService {
 
     } catch (error) {
 
-      console.warn(`⚠️ 东方财富获取失败: ${error.message}`);
+      console.warn(`⚠ 东方财富获取失败: ${error.message}`);
 
       throw error;
 
@@ -1949,7 +1949,7 @@ class ComprehensiveDataService {
 
     try {
 
-      console.log(`📊 从新浪财经获取数据: ${symbol}`);
+      console.log(`从新浪财经获取数据: ${symbol}`);
 
       
 
@@ -1983,7 +1983,7 @@ class ComprehensiveDataService {
 
     } catch (error) {
 
-      console.warn(`⚠️ 新浪财经获取失败: ${error.message}`);
+      console.warn(`⚠ 新浪财经获取失败: ${error.message}`);
 
       throw error;
 
@@ -2003,7 +2003,7 @@ class ComprehensiveDataService {
 
     try {
 
-      console.log(`📊 从腾讯财经获取数据: ${symbol}`);
+      console.log(`从腾讯财经获取数据: ${symbol}`);
 
       
 
@@ -2037,7 +2037,7 @@ class ComprehensiveDataService {
 
     } catch (error) {
 
-      console.warn(`⚠️ 腾讯财经获取失败: ${error.message}`);
+      console.warn(`⚠ 腾讯财经获取失败: ${error.message}`);
 
       throw error;
 
@@ -2057,7 +2057,7 @@ class ComprehensiveDataService {
 
     try {
 
-      console.log(`📊 从网易财经获取数据: ${symbol}`);
+      console.log(`从网易财经获取数据: ${symbol}`);
 
       
 
@@ -2091,7 +2091,7 @@ class ComprehensiveDataService {
 
     } catch (error) {
 
-      console.warn(`⚠️ 网易财经获取失败: ${error.message}`);
+      console.warn(`⚠ 网易财经获取失败: ${error.message}`);
 
       throw error;
 
@@ -2111,7 +2111,7 @@ class ComprehensiveDataService {
 
     try {
 
-      console.log(`📊 从EFinance获取数据: ${symbol}`);
+      console.log(`从EFinance获取数据: ${symbol}`);
 
       
 
@@ -2201,7 +2201,7 @@ class ComprehensiveDataService {
 
     } catch (error) {
 
-      console.warn(`⚠️ EFinance获取失败: ${error.message}`);
+      console.warn(`⚠ EFinance获取失败: ${error.message}`);
 
       throw error;
 
@@ -2229,7 +2229,7 @@ class ComprehensiveDataService {
 
       try {
 
-        console.log(`📊 从AData获取数据 (尝试 ${attempt}/${maxRetries}): ${symbol}`);
+        console.log(`从AData获取数据 (尝试 ${attempt}/${maxRetries}): ${symbol}`);
 
         console.log(`   参数:`, { startDate: options.startDate, endDate: options.endDate, period: options.period });
 
@@ -2333,7 +2333,7 @@ class ComprehensiveDataService {
 
         
 
-        console.log(`✅ AData数据获取成功: ${klineData.length} 条数据`);
+        console.log(`✓ AData数据获取成功: ${klineData.length} 条数据`);
 
         
 
@@ -2361,7 +2361,7 @@ class ComprehensiveDataService {
 
         lastError = error;
 
-        console.error(`❌ AData获取失败 (尝试 ${attempt}/${maxRetries}): ${error.message}`);
+        console.error(`✗ AData获取失败 (尝试 ${attempt}/${maxRetries}): ${error.message}`);
 
         console.error(`   错误堆栈:`, error.stack);
 
@@ -2387,7 +2387,7 @@ class ComprehensiveDataService {
 
     // 所有重试都失败
 
-    console.error(`❌ AData所有重试都失败，最后错误:`, lastError.message);
+    console.error(`✗ AData所有重试都失败，最后错误:`, lastError.message);
 
     throw lastError;
 
@@ -2463,7 +2463,7 @@ class ComprehensiveDataService {
 
     try {
 
-      console.log(`📊 从Yahoo Finance获取数据: ${symbol}`);
+      console.log(`从Yahoo Finance获取数据: ${symbol}`);
 
       
 
@@ -2497,7 +2497,7 @@ class ComprehensiveDataService {
 
     } catch (error) {
 
-      console.warn(`⚠️ Yahoo Finance获取失败: ${error.message}`);
+      console.warn(`⚠ Yahoo Finance获取失败: ${error.message}`);
 
       throw error;
 
@@ -2749,7 +2749,7 @@ class ComprehensiveDataService {
 
       
 
-      console.log(`📅 数据范围: ${startDate} 至 ${endDate}`);
+      console.log(`数据范围: ${startDate} 至 ${endDate}`);
 
       
 
@@ -2799,7 +2799,7 @@ class ComprehensiveDataService {
 
       
 
-      console.log(`✅ AKShare数据获取成功，K线数量: ${result.kline.length}`);
+      console.log(`✓ AKShare数据获取成功，K线数量: ${result.kline.length}`);
 
       
 
@@ -2935,7 +2935,7 @@ class ComprehensiveDataService {
 
     try {
 
-      console.log(`📊 从KHYShare获取数据: ${symbol}`);
+      console.log(`从KHYShare获取数据: ${symbol}`);
 
       
 
@@ -3009,7 +3009,7 @@ class ComprehensiveDataService {
 
       
 
-      console.log(`✅ KHYShare数据获取成功，K线数量: ${result.kline.length}`);
+      console.log(`✓ KHYShare数据获取成功，K线数量: ${result.kline.length}`);
 
       
 
@@ -3029,7 +3029,7 @@ class ComprehensiveDataService {
 
     } catch (error) {
 
-      console.error(`❌ KHYShare数据获取失败: ${error.message}`);
+      console.error(`✗ KHYShare数据获取失败: ${error.message}`);
 
       throw new Error(`KHYShare数据获取失败: ${error.message}`);
 
@@ -3101,7 +3101,7 @@ class ComprehensiveDataService {
 
     
 
-    console.log(`🎯 生成增强模拟数据（完整智能混合策略）: ${symbol}, 周期: ${period}`);
+    console.log(`生成增强模拟数据（完整智能混合策略）: ${symbol}, 周期: ${period}`);
 
     console.log(`   策略: 实时API数据 > 数据库历史数据 > 模拟补充数据`);
 
@@ -3127,7 +3127,7 @@ class ComprehensiveDataService {
 
       // 🔥 步骤1: 尝试从真实数据源API获取数据
 
-      console.log(`\n📡 步骤1: 尝试从真实数据源API获取数据...`);
+      console.log(`\n步骤1: 尝试从真实数据源API获取数据...`);
 
       let apiData = null;
 
@@ -3167,7 +3167,7 @@ class ComprehensiveDataService {
 
             apiData = data.kline;
 
-            console.log(`   ✅ ${sourceConfig.name} API成功: ${apiData.length}条数据`);
+            console.log(`   ✓ ${sourceConfig.name} API成功: ${apiData.length}条数据`);
 
             console.log(`      日期范围: ${apiData[0].time} 到 ${apiData[apiData.length - 1].time}`);
 
@@ -3177,7 +3177,7 @@ class ComprehensiveDataService {
 
         } catch (error) {
 
-          console.log(`   ❌ ${sourceConfig.name} API失败: ${error.message}`);
+          console.log(`   ✗ ${sourceConfig.name} API失败: ${error.message}`);
 
         }
 
@@ -3187,7 +3187,7 @@ class ComprehensiveDataService {
 
       // 🔥 步骤2: 从数据库获取历史真实数据
 
-      console.log(`\n📊 步骤2: 从数据库获取历史真实数据...`);
+      console.log(`\n步骤2: 从数据库获取历史真实数据...`);
 
       const dbData = await this.getHistoricalKlineFromDB(symbol, period, startDate, endDate);
 
@@ -3195,13 +3195,13 @@ class ComprehensiveDataService {
 
       if (dbData && dbData.length > 0) {
 
-        console.log(`   ✅ 数据库历史数据: ${dbData.length}条`);
+        console.log(`   ✓ 数据库历史数据: ${dbData.length}条`);
 
         console.log(`      日期范围: ${dbData[0].time} 到 ${dbData[dbData.length - 1].time}`);
 
       } else {
 
-        console.log(`   ⚠️  数据库中没有历史数据`);
+        console.log(`   ⚠  数据库中没有历史数据`);
 
       }
 
@@ -3209,7 +3209,7 @@ class ComprehensiveDataService {
 
       // 🔥 步骤3: 智能合并API数据和数据库数据
 
-      console.log(`\n🔄 步骤3: 智能合并真实数据...`);
+      console.log(`\n步骤3: 智能合并真实数据...`);
 
       
 
@@ -3263,7 +3263,7 @@ class ComprehensiveDataService {
 
         
 
-        console.log(`   ✅ 合并完成: ${dataComposition.database}条数据库 + ${dataComposition.api}条API`);
+        console.log(`   ✓ 合并完成: ${dataComposition.database}条数据库 + ${dataComposition.api}条API`);
 
         
 
@@ -3303,7 +3303,7 @@ class ComprehensiveDataService {
 
       // 🔥 步骤4: 检查是否需要模拟数据补充
 
-      console.log(`\n🎲 步骤4: 检查是否需要模拟数据补充...`);
+      console.log(`\n步骤4: 检查是否需要模拟数据补充...`);
 
       
 
@@ -3333,7 +3333,7 @@ class ComprehensiveDataService {
 
         if (daysGap > 1) {
 
-          console.log(`   🔄 使用模拟数据补充最近${daysGap}天...`);
+          console.log(`   使用模拟数据补充最近${daysGap}天...`);
 
           
 
@@ -3355,7 +3355,7 @@ class ComprehensiveDataService {
 
           if (simulatedData && simulatedData.length > 0) {
 
-            console.log(`   ✅ 生成 ${simulatedData.length} 条模拟数据用于补充`);
+            console.log(`   ✓ 生成 ${simulatedData.length} 条模拟数据用于补充`);
 
             finalKlineData = [...allRealData, ...simulatedData];
 
@@ -3365,7 +3365,7 @@ class ComprehensiveDataService {
 
         } else {
 
-          console.log(`   ✅ 真实数据已是最新，无需补充`);
+          console.log(`   ✓ 真实数据已是最新，无需补充`);
 
         }
 
@@ -3377,7 +3377,7 @@ class ComprehensiveDataService {
 
         // 🔥 步骤5: 返回完整的混合数据
 
-        console.log(`\n✅ 完整智能混合策略成功:`);
+        console.log(`\n✓ 完整智能混合策略成功:`);
 
         console.log(`   API数据: ${dataComposition.api}条`);
 
@@ -3457,7 +3457,7 @@ class ComprehensiveDataService {
 
         // 🔥 步骤6: 没有任何真实数据，使用enhancedMockDataService
 
-        console.log(`\n⚠️  没有任何真实数据，使用增强模拟数据生成器`);
+        console.log(`\n⚠  没有任何真实数据，使用增强模拟数据生成器`);
 
 
 
@@ -3521,7 +3521,7 @@ class ComprehensiveDataService {
 
     } catch (error) {
 
-      console.warn(`⚠️ 增强模拟数据生成失败，使用基础模拟数据: ${error.message}`);
+      console.warn(`⚠ 增强模拟数据生成失败，使用基础模拟数据: ${error.message}`);
 
       
 
@@ -4713,7 +4713,7 @@ class ComprehensiveDataService {
 
     this.cache.clear();
 
-    console.log(`✅ 已清除 ${size} 个缓存项`);
+    console.log(`✓ 已清除 ${size} 个缓存项`);
 
     return { success: true, cleared: size };
 
@@ -4857,9 +4857,9 @@ class ComprehensiveDataService {
 
           result.message = result.isRealData 
 
-            ? `✅ 成功获取真实数据 ${data.kline.length} 条` 
+            ? `✓ 成功获取真实数据 ${data.kline.length} 条` 
 
-            : `✅ 模拟数据测试成功 ${data.kline.length} 条`;
+            : `✓ 模拟数据测试成功 ${data.kline.length} 条`;
 
           result.sampleData = data.kline.slice(0, 5);
 
@@ -4879,9 +4879,9 @@ class ComprehensiveDataService {
 
           result.message = result.isRealData 
 
-            ? `✅ 成功获取真实数据 ${data.data.length} 条` 
+            ? `✓ 成功获取真实数据 ${data.data.length} 条` 
 
-            : `✅ 模拟数据测试成功 ${data.data.length} 条`;
+            : `✓ 模拟数据测试成功 ${data.data.length} 条`;
 
           result.sampleData = data.data.slice(0, 5);
 
@@ -4897,7 +4897,7 @@ class ComprehensiveDataService {
 
           result.status = 'empty';
 
-          result.message = '❌ 数据源返回空数据';
+          result.message = '✗ 数据源返回空数据';
 
           console.log('数据源返回的数据结构:', JSON.stringify(data).substring(0, 200));
 
@@ -4913,7 +4913,7 @@ class ComprehensiveDataService {
 
         result.error = error.message;
 
-        result.message = `❌ 测试失败: ${error.message}`;
+        result.message = `✗ 测试失败: ${error.message}`;
 
       }
 
@@ -5053,7 +5053,7 @@ class ComprehensiveDataService {
 
       
 
-      console.log(`📊 尝试从数据库获取 ${symbol} 的历史数据...`);
+      console.log(`尝试从数据库获取 ${symbol} 的历史数据...`);
 
       
 
@@ -5093,7 +5093,7 @@ class ComprehensiveDataService {
 
         const daysOld = Math.floor((new Date() - new Date(latestData.trade_date)) / (1000 * 60 * 60 * 24));
 
-        console.log(`✅ 找到历史数据: ${latestData.name || symbol}, 日期=${latestData.trade_date}, ${daysOld}天前`);
+        console.log(`✓ 找到历史数据: ${latestData.name || symbol}, 日期=${latestData.trade_date}, ${daysOld}天前`);
 
         
 
@@ -5133,7 +5133,7 @@ class ComprehensiveDataService {
 
       
 
-      console.log(`⚠️  数据库中没有找到 ${symbol} 的历史数据`);
+      console.log(`⚠  数据库中没有找到 ${symbol} 的历史数据`);
 
       return null;
 
@@ -5141,7 +5141,7 @@ class ComprehensiveDataService {
 
     } catch (error) {
 
-      console.error(`❌ 从数据库获取历史数据失败:`, error.message);
+      console.error(`✗ 从数据库获取历史数据失败:`, error.message);
 
       return null;
 
@@ -5177,7 +5177,7 @@ class ComprehensiveDataService {
 
       
 
-      console.log(`📊 从数据库获取K线数据: ${symbol}, period=${period}`);
+      console.log(`从数据库获取K线数据: ${symbol}, period=${period}`);
 
       
 
@@ -5235,7 +5235,7 @@ class ComprehensiveDataService {
 
       if (klineData && klineData.length > 0) {
 
-        console.log(`✅ 从数据库获取到 ${klineData.length} 条K线数据`);
+        console.log(`✓ 从数据库获取到 ${klineData.length} 条K线数据`);
 
         
 
@@ -5265,7 +5265,7 @@ class ComprehensiveDataService {
 
       
 
-      console.log(`⚠️  数据库中没有找到 ${symbol} 的K线数据`);
+      console.log(`⚠  数据库中没有找到 ${symbol} 的K线数据`);
 
       return [];
 
@@ -5273,7 +5273,7 @@ class ComprehensiveDataService {
 
     } catch (error) {
 
-      console.error(`❌ 从数据库获取K线数据失败:`, error.message);
+      console.error(`✗ 从数据库获取K线数据失败:`, error.message);
 
       return [];
 
@@ -5305,7 +5305,7 @@ class ComprehensiveDataService {
 
     try {
 
-      console.log(`🎲 生成模拟K线数据: ${symbol}, 从 ${startDate.toISOString().split('T')[0]} 到 ${endDate.toISOString().split('T')[0]}`);
+      console.log(`生成模拟K线数据: ${symbol}, 从 ${startDate.toISOString().split('T')[0]} 到 ${endDate.toISOString().split('T')[0]}`);
 
       
 
@@ -5385,7 +5385,7 @@ class ComprehensiveDataService {
 
       
 
-      console.log(`✅ 生成了 ${klineData.length} 条模拟K线数据`);
+      console.log(`✓ 生成了 ${klineData.length} 条模拟K线数据`);
 
       return klineData;
 
@@ -5393,7 +5393,7 @@ class ComprehensiveDataService {
 
     } catch (error) {
 
-      console.error(`❌ 生成模拟K线数据失败:`, error.message);
+      console.error(`✗ 生成模拟K线数据失败:`, error.message);
 
       return [];
 
@@ -5525,7 +5525,7 @@ class ComprehensiveDataService {
 
             } catch (spawnError) {
 
-              console.error(`❌ 无法启动Python进程: ${spawnError.message}`);
+              console.error(`✗ 无法启动Python进程: ${spawnError.message}`);
 
               throw new Error('Python不可用,无法获取AKShare数据');
 
@@ -5546,7 +5546,7 @@ class ComprehensiveDataService {
 
             python.on('error', (error) => {
 
-              console.error(`❌ Python进程错误: ${error.message}`);
+              console.error(`✗ Python进程错误: ${error.message}`);
 
               stderr += `Python进程错误: ${error.message}`;
 
@@ -5658,7 +5658,7 @@ class ComprehensiveDataService {
 
             if (historicalData) {
 
-              console.log(`✅ AKShare: 使用数据库历史数据（${historicalData.daysOld}天前）`);
+              console.log(`✓ AKShare: 使用数据库历史数据（${historicalData.daysOld}天前）`);
 
               return historicalData;
 
@@ -5730,7 +5730,7 @@ class ComprehensiveDataService {
 
             } catch (spawnError) {
 
-              console.error(`❌ 无法启动Python进程: ${spawnError.message}`);
+              console.error(`✗ 无法启动Python进程: ${spawnError.message}`);
 
               throw new Error('Python不可用,无法获取EFinance数据');
 
@@ -5751,7 +5751,7 @@ class ComprehensiveDataService {
 
             python.on('error', (error) => {
 
-              console.error(`❌ Python进程错误: ${error.message}`);
+              console.error(`✗ Python进程错误: ${error.message}`);
 
               stderr += `Python进程错误: ${error.message}`;
 
@@ -5863,7 +5863,7 @@ class ComprehensiveDataService {
 
             if (historicalData) {
 
-              console.log(`✅ EFinance: 使用数据库历史数据（${historicalData.daysOld}天前）`);
+              console.log(`✓ EFinance: 使用数据库历史数据（${historicalData.daysOld}天前）`);
 
               return historicalData;
 
@@ -5935,7 +5935,7 @@ class ComprehensiveDataService {
 
             } catch (spawnError) {
 
-              console.error(`❌ 无法启动Python进程: ${spawnError.message}`);
+              console.error(`✗ 无法启动Python进程: ${spawnError.message}`);
 
               throw new Error('Python不可用,无法获取AData数据');
 
@@ -5958,7 +5958,7 @@ class ComprehensiveDataService {
 
             python.on('error', (error) => {
 
-              console.error(`❌ Python进程错误: ${error.message}`);
+              console.error(`✗ Python进程错误: ${error.message}`);
 
               stderr += `Python进程错误: ${error.message}`;
 
@@ -6070,7 +6070,7 @@ class ComprehensiveDataService {
 
             if (historicalData) {
 
-              console.log(`✅ AData: 使用数据库历史数据（${historicalData.daysOld}天前）`);
+              console.log(`✓ AData: 使用数据库历史数据（${historicalData.daysOld}天前）`);
 
               return historicalData;
 
@@ -6142,7 +6142,7 @@ class ComprehensiveDataService {
 
             } catch (spawnError) {
 
-              console.error(`❌ 无法启动Python进程: ${spawnError.message}`);
+              console.error(`✗ 无法启动Python进程: ${spawnError.message}`);
 
               throw new Error('Python不可用,无法获取iFinD数据');
 
@@ -6163,7 +6163,7 @@ class ComprehensiveDataService {
 
             python.on('error', (error) => {
 
-              console.error(`❌ Python进程错误: ${error.message}`);
+              console.error(`✗ Python进程错误: ${error.message}`);
 
               stderr += `Python进程错误: ${error.message}`;
 
@@ -6275,7 +6275,7 @@ class ComprehensiveDataService {
 
             if (historicalData) {
 
-              console.log(`✅ iFinD: 使用数据库历史数据（${historicalData.daysOld}天前）`);
+              console.log(`✓ iFinD: 使用数据库历史数据（${historicalData.daysOld}天前）`);
 
               return historicalData;
 
@@ -6369,7 +6369,7 @@ class ComprehensiveDataService {
 
             } catch (spawnError) {
 
-              console.error(`❌ 无法启动Python进程: ${spawnError.message}`);
+              console.error(`✗ 无法启动Python进程: ${spawnError.message}`);
 
               throw new Error('Python不可用,无法获取KHYShare数据');
 
@@ -6390,7 +6390,7 @@ class ComprehensiveDataService {
 
             python.on('error', (error) => {
 
-              console.error(`❌ Python进程错误: ${error.message}`);
+              console.error(`✗ Python进程错误: ${error.message}`);
 
               stderr += `Python进程错误: ${error.message}`;
 
@@ -6734,7 +6734,7 @@ class ComprehensiveDataService {
 
       
 
-      console.log(`💾 开始保存K线缓存: ${symbol}, period=${period}, 数据量=${klineData.length}`);
+      console.log(`开始保存K线缓存: ${symbol}, period=${period}, 数据量=${klineData.length}`);
 
       
 
@@ -6776,7 +6776,7 @@ class ComprehensiveDataService {
 
       
 
-      console.log(`✅ K线缓存保存成功: ${records.length}条记录`);
+      console.log(`✓ K线缓存保存成功: ${records.length}条记录`);
 
       
 
@@ -6784,7 +6784,7 @@ class ComprehensiveDataService {
 
     } catch (error) {
 
-      console.error(`❌ 保存K线缓存失败:`, error.message);
+      console.error(`✗ 保存K线缓存失败:`, error.message);
 
       throw error;
 
@@ -6820,7 +6820,7 @@ class ComprehensiveDataService {
 
       
 
-      console.log(`📊 从缓存获取K线数据: ${symbol}, period=${period}`);
+      console.log(`从缓存获取K线数据: ${symbol}, period=${period}`);
 
       
 
@@ -6878,7 +6878,7 @@ class ComprehensiveDataService {
 
       if (klineData && klineData.length > 0) {
 
-        console.log(`✅ 从缓存获取到 ${klineData.length} 条K线数据`);
+        console.log(`✓ 从缓存获取到 ${klineData.length} 条K线数据`);
 
         
 
@@ -6908,7 +6908,7 @@ class ComprehensiveDataService {
 
       
 
-      console.log(`⚠️  缓存中没有找到 ${symbol} 的K线数据`);
+      console.log(`⚠  缓存中没有找到 ${symbol} 的K线数据`);
 
       return [];
 
@@ -6916,7 +6916,7 @@ class ComprehensiveDataService {
 
     } catch (error) {
 
-      console.error(`❌ 从缓存获取K线数据失败:`, error.message);
+      console.error(`✗ 从缓存获取K线数据失败:`, error.message);
 
       return [];
 
@@ -6974,7 +6974,7 @@ class ComprehensiveDataService {
 
       if (latestRecord) {
 
-        console.log(`📅 最新缓存日期: ${symbol} = ${latestRecord.trade_date}`);
+        console.log(`最新缓存日期: ${symbol} = ${latestRecord.trade_date}`);
 
         return latestRecord.trade_date;
 
@@ -6982,7 +6982,7 @@ class ComprehensiveDataService {
 
       
 
-      console.log(`⚠️  没有找到 ${symbol} 的缓存数据`);
+      console.log(`⚠  没有找到 ${symbol} 的缓存数据`);
 
       return null;
 
@@ -6990,7 +6990,7 @@ class ComprehensiveDataService {
 
     } catch (error) {
 
-      console.error(`❌ 获取最新缓存日期失败:`, error.message);
+      console.error(`✗ 获取最新缓存日期失败:`, error.message);
 
       return null;
 
@@ -7034,7 +7034,7 @@ class ComprehensiveDataService {
 
       
 
-      console.log(`✅ 已清除 ${symbol} 的缓存数据，删除了 ${deletedCount} 条记录`);
+      console.log(`✓ 已清除 ${symbol} 的缓存数据，删除了 ${deletedCount} 条记录`);
 
       return true;
 
@@ -7042,7 +7042,7 @@ class ComprehensiveDataService {
 
     } catch (error) {
 
-      console.error(`❌ 清除缓存失败:`, error.message);
+      console.error(`✗ 清除缓存失败:`, error.message);
 
       return false;
 
@@ -7070,7 +7070,7 @@ class ComprehensiveDataService {
 
     try {
 
-      console.log(`🔄 获取增量数据: ${symbol}, 从 ${fromDate} 开始`);
+      console.log(`获取增量数据: ${symbol}, 从 ${fromDate} 开始`);
 
       
 
@@ -7098,7 +7098,7 @@ class ComprehensiveDataService {
 
         try {
 
-          console.log(`🔄 尝试数据源: ${stage.name}`);
+          console.log(`尝试数据源: ${stage.name}`);
 
           
 
@@ -7126,7 +7126,7 @@ class ComprehensiveDataService {
 
           if (data && data.kline && data.kline.length > 0) {
 
-            console.log(`✅ 获取到 ${data.kline.length} 条增量数据`);
+            console.log(`✓ 获取到 ${data.kline.length} 条增量数据`);
 
             return data;
 
@@ -7134,7 +7134,7 @@ class ComprehensiveDataService {
 
         } catch (error) {
 
-          console.warn(`⚠️ 数据源 ${stage.name} 失败: ${error.message}`);
+          console.warn(`⚠ 数据源 ${stage.name} 失败: ${error.message}`);
 
           continue;
 
@@ -7144,7 +7144,7 @@ class ComprehensiveDataService {
 
       
 
-      console.warn(`⚠️ 所有数据源都无法获取增量数据`);
+      console.warn(`⚠ 所有数据源都无法获取增量数据`);
 
       return null;
 
@@ -7152,7 +7152,7 @@ class ComprehensiveDataService {
 
     } catch (error) {
 
-      console.error(`❌ 获取增量数据失败:`, error.message);
+      console.error(`✗ 获取增量数据失败:`, error.message);
 
       return null;
 
@@ -7194,7 +7194,7 @@ class ComprehensiveDataService {
 
 
 
-    console.log(`✅ 数据源配置已更新: ${sourceKey} = ${enabled ? '启用' : '禁用'}`);
+    console.log(`✓ 数据源配置已更新: ${sourceKey} = ${enabled ? '启用' : '禁用'}`);
 
     
 
@@ -7208,7 +7208,7 @@ class ComprehensiveDataService {
 
     
 
-    console.log(`📊 当前启用的数据源:`, enabledSources || '无');
+    console.log(`当前启用的数据源:`, enabledSources || '无');
 
 
 

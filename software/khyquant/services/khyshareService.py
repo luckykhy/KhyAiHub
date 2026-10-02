@@ -21,17 +21,17 @@ class KHYShareService:
     def __init__(self):
         self.session = requests.Session()
         
-        # 🔥 禁用代理 - 解决代理连接卡住问题
+        # 禁用代理 - 解决代理连接卡住问题
         self.session.trust_env = False
         self.session.proxies = {
             'http': None,
             'https': None
         }
         
-        # 🔥 K线历史数据缓存
+        # K线历史数据缓存
         self.kline_cache = {}
         
-        # 🔥 反爬虫策略1: 随机User-Agent池(扩展到10个)
+        # 反爬虫策略1: 随机User-Agent池(扩展到10个)
         self.user_agents = [
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
@@ -45,17 +45,17 @@ class KHYShareService:
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/120.0.0.0'
         ]
         
-        # 🔥 反爬虫策略2: 请求频率控制(更保守)
+        # 反爬虫策略2: 请求频率控制(更保守)
         self.last_request_time = {}
         self.min_request_interval = 0.5  # 降低到0.5秒,更快但仍安全
         self.request_count = {}
         self.max_requests_per_minute = 30  # 提高到30次/分钟
         
-        # 🔥 反爬虫策略3: IP轮换标记
+        # 反爬虫策略3: IP轮换标记
         self.ip_blocked = {}
         self.block_expire_time = {}
         
-        # 🔥 反爬虫策略4: 请求头随机化
+        # 反爬虫策略4: 请求头随机化
         self.referers = [
             'https://www.baidu.com/',
             'https://www.google.com/',
@@ -116,7 +116,7 @@ class KHYShareService:
     
     def _check_rate_limit(self, source_key):
         """检查请求频率限制"""
-        # 🔥 临时禁用频率限制以解决卡住问题
+        # 临时禁用频率限制以解决卡住问题
         # TODO: 后续优化频率限制逻辑
         return True
     
@@ -131,12 +131,12 @@ class KHYShareService:
             raise Exception(f'{self.sources[source_key]["name"]}请求频率受限')
         
         self._rotate_user_agent()
-        time.sleep(random.uniform(0.01, 0.1))  # 🔥 减少延迟到0.01-0.1秒
+        time.sleep(random.uniform(0.01, 0.1))  # 减少延迟到0.01-0.1秒
         
-        max_retries = 3  # 🔥 增加重试次数到3次
+        max_retries = 3  # 增加重试次数到3次
         for attempt in range(max_retries):
             try:
-                response = self.session.get(url, timeout=15, **kwargs)  # 🔥 增加超时到15秒
+                response = self.session.get(url, timeout=15, **kwargs)  # 增加超时到15秒
                 
                 if response.status_code == 403 or response.status_code == 429:
                     self._mark_ip_blocked(source_key)
@@ -147,8 +147,8 @@ class KHYShareService:
                 
             except requests.exceptions.Timeout:
                 if attempt < max_retries - 1:
-                    wait_time = random.uniform(1, 3)  # 🔥 增加重试延迟到1-3秒
-                    sys.stderr.write(f'⚠️  请求超时，{wait_time:.1f}秒后重试 (第{attempt+1}次)...\n')
+                    wait_time = random.uniform(1, 3)  # 增加重试延迟到1-3秒
+                    sys.stderr.write(f'⚠  请求超时，{wait_time:.1f}秒后重试 (第{attempt+1}次)...\n')
                     sys.stderr.flush()
                     time.sleep(wait_time)
                     continue
@@ -156,8 +156,8 @@ class KHYShareService:
             
             except Exception as e:
                 if attempt < max_retries - 1:
-                    wait_time = random.uniform(1, 3)  # 🔥 增加重试延迟到1-3秒
-                    sys.stderr.write(f'⚠️  请求失败: {str(e)}, {wait_time:.1f}秒后重试 (第{attempt+1}次)...\n')
+                    wait_time = random.uniform(1, 3)  # 增加重试延迟到1-3秒
+                    sys.stderr.write(f'⚠  请求失败: {str(e)}, {wait_time:.1f}秒后重试 (第{attempt+1}次)...\n')
                     sys.stderr.flush()
                     time.sleep(wait_time)
                     continue
@@ -238,7 +238,7 @@ class KHYShareService:
                             'market': 'CN'
                         })
                 
-                sys.stderr.write(f'✅ 从东方财富获取到 {len(all_stocks)} 个标的\n')
+                sys.stderr.write(f'✓ 从东方财富获取到 {len(all_stocks)} 个标的\n')
                 sys.stderr.flush()
                 return {
                     'success': True,
@@ -307,7 +307,7 @@ class KHYShareService:
                             'market': 'CN'
                         })
                 
-                sys.stderr.write(f'✅ 从东方财富获取到 {len(all_indices)} 个指数\n')
+                sys.stderr.write(f'✓ 从东方财富获取到 {len(all_indices)} 个指数\n')
                 sys.stderr.flush()
                 return {
                     'success': True,
@@ -324,7 +324,7 @@ class KHYShareService:
     def get_all_instruments(self):
         """获取所有A股和指数"""
         try:
-            sys.stderr.write('\n🚀 开始获取完整的A股和指数列表...\n\n')
+            sys.stderr.write('\n开始获取完整的A股和指数列表...\n\n')
             sys.stderr.flush()
             
             all_instruments = []
@@ -354,7 +354,7 @@ class KHYShareService:
             stocks_count = len([i for i in unique_instruments if i['type'] == 'stock'])
             indices_count = len([i for i in unique_instruments if i['type'] == 'index'])
             
-            sys.stderr.write(f'\n✅ 获取完成!\n')
+            sys.stderr.write(f'\n✓ 获取完成!\n')
             sys.stderr.write(f'   股票: {stocks_count} 个\n')
             sys.stderr.write(f'   指数: {indices_count} 个\n')
             sys.stderr.write(f'   总计: {len(unique_instruments)} 个\n\n')
@@ -640,14 +640,14 @@ class KHYShareService:
             return '2010-01-01'
             
         except Exception as e:
-            sys.stderr.write(f'⚠️  获取上市日期失败: {str(e)}, 使用默认日期\n')
+            sys.stderr.write(f'⚠  获取上市日期失败: {str(e)}, 使用默认日期\n')
             sys.stderr.flush()
             return '2010-01-01'
     
     def get_kline_history_from_eastmoney(self, symbol, start_date=None, end_date=None, period='daily'):
         """从东方财富获取K线历史数据（优化版：分批获取+智能降级）"""
         try:
-            sys.stderr.write(f'\n🚀 开始获取K线历史数据: {symbol}\n')
+            sys.stderr.write(f'\n开始获取K线历史数据: {symbol}\n')
             sys.stderr.flush()
             
             # 1. 设置日期范围
@@ -655,7 +655,7 @@ class KHYShareService:
                 end_date = datetime.now().strftime('%Y-%m-%d')
             
             if not start_date:
-                # 🔥 优化：默认只获取最近100天
+                # 优化：默认只获取最近100天
                 start_date = (datetime.now() - timedelta(days=100)).strftime('%Y-%m-%d')
                 sys.stderr.write(f'   未指定开始日期，默认获取最近100天\n')
             else:
@@ -663,7 +663,7 @@ class KHYShareService:
             
             sys.stderr.flush()
             
-            # 2. 🔥 新增：检查日期范围，如果超过100天，分批获取
+            # 2. 新增：检查日期范围，如果超过100天，分批获取
             start_dt = datetime.strptime(start_date, '%Y-%m-%d')
             end_dt = datetime.strptime(end_date, '%Y-%m-%d')
             days_diff = (end_dt - start_dt).days
@@ -677,7 +677,7 @@ class KHYShareService:
             return self._get_kline_single_request(symbol, start_date, end_date, period)
             
         except Exception as e:
-            sys.stderr.write(f'❌ 获取K线历史数据失败: {str(e)}\n')
+            sys.stderr.write(f'✗ 获取K线历史数据失败: {str(e)}\n')
             sys.stderr.flush()
             return {
                 'success': False,
@@ -723,7 +723,7 @@ class KHYShareService:
             sys.stderr.write(f'   请求K线数据: {start_date} 到 {end_date}\n')
             sys.stderr.flush()
             
-            # 🔥 新增：带智能降级的请求
+            # 新增：带智能降级的请求
             try:
                 response = self._safe_request('eastmoney', url, params=params)
                 data = response.json()
@@ -734,9 +734,9 @@ class KHYShareService:
                     raise Exception('东方财富K线数据为空')
                     
             except Exception as e:
-                # 🔥 降级策略：如果失败，尝试获取更少的数据
-                sys.stderr.write(f'   ⚠️  完整数据获取失败: {str(e)}\n')
-                sys.stderr.write(f'   🔄 尝试降级：只获取最近50天数据\n')
+                # 降级策略：如果失败，尝试获取更少的数据
+                sys.stderr.write(f'   ⚠  完整数据获取失败: {str(e)}\n')
+                sys.stderr.write(f'   尝试降级：只获取最近50天数据\n')
                 sys.stderr.flush()
                 
                 # 重新计算日期范围（只获取最近50天）
@@ -782,15 +782,15 @@ class KHYShareService:
                     
                     if result.get('success') and result.get('kline'):
                         all_klines.extend(result['kline'])
-                        sys.stderr.write(f'   ✅ 批次{batch_num}成功: {len(result["kline"])}条\n')
+                        sys.stderr.write(f'   ✓ 批次{batch_num}成功: {len(result["kline"])}条\n')
                     else:
-                        sys.stderr.write(f'   ⚠️  批次{batch_num}失败，跳过\n')
+                        sys.stderr.write(f'   ⚠  批次{batch_num}失败，跳过\n')
                     
                     # 批次间延迟，避免频率限制
                     time.sleep(random.uniform(0.5, 1.5))
                     
                 except Exception as e:
-                    sys.stderr.write(f'   ❌ 批次{batch_num}错误: {str(e)}\n')
+                    sys.stderr.write(f'   ✗ 批次{batch_num}错误: {str(e)}\n')
                     # 继续下一批次
                 
                 sys.stderr.flush()
@@ -800,7 +800,7 @@ class KHYShareService:
             if len(all_klines) == 0:
                 raise Exception('所有批次均失败')
             
-            sys.stderr.write(f'✅ 分批获取完成，共 {len(all_klines)} 条K线数据\n')
+            sys.stderr.write(f'✓ 分批获取完成，共 {len(all_klines)} 条K线数据\n')
             sys.stderr.flush()
             
             return {
@@ -841,7 +841,7 @@ class KHYShareService:
                     'turnover': float(parts[10])
                 })
         
-        sys.stderr.write(f'✅ 成功获取 {len(parsed_klines)} 条K线数据\n')
+        sys.stderr.write(f'✓ 成功获取 {len(parsed_klines)} 条K线数据\n')
         if parsed_klines:
             sys.stderr.write(f'   日期范围: {parsed_klines[0]["time"]} 到 {parsed_klines[-1]["time"]}\n')
         sys.stderr.flush()

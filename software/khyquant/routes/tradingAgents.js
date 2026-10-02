@@ -236,7 +236,7 @@ router.post('/test-agent', authMiddleware, adminMiddleware, async (req, res) => 
       });
     }
 
-    console.log(`🤖 测试智能体: ${agentId} 分析 ${stockCode}`);
+    console.log(`测试智能体: ${agentId} 分析 ${stockCode}`);
 
     // 执行单个智能体分析
     const analysis = await tradingAgentsService.executeSingleAgent(agentId, stockCode);
@@ -275,7 +275,7 @@ router.post('/chat', authMiddleware, async (req, res) => {
       });
     }
 
-    console.log(`💬 聊天请求: ${message}`);
+    console.log(`聊天请求: ${message}`);
 
     // 智能分析用户问题并选择合适的智能体
     const analysisResult = await tradingAgentsService.processChatMessage(message, context);
@@ -711,7 +711,7 @@ router.post('/test-ml', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const { symbol = 'sh000300' } = req.body;
     
-    console.log(`🧪 测试ML模型: ${symbol}`);
+    console.log(`测试ML模型: ${symbol}`);
     
     // 检查模型是否存在
     const modelStatus = mlAgentService.checkModelsExist();
@@ -877,7 +877,7 @@ router.delete('/cache/:symbol', authMiddleware, async (req, res) => {
     const { symbol } = req.params;
     await cache.del('stock:data:' + symbol);
     await cache.clearByPrefix('ml:analysis:' + symbol);
-    console.log(`🗑️ 已清除缓存: ${symbol}`);
+    console.log(`已清除缓存: ${symbol}`);
     res.json({ success: true, message: `已清除 ${symbol} 的缓存` });
   } catch (error) {
     res.status(500).json({ success: false, message: '清除缓存失败', error: error.message });
@@ -893,7 +893,7 @@ router.delete('/cache', authMiddleware, adminMiddleware, async (req, res) => {
     await cache.clearByPrefix('stock:data:');
     await cache.clearByPrefix('ml:analysis:');
     await cache.del('ml:status');
-    console.log('🗑️ 已清除所有缓存');
+    console.log('已清除所有缓存');
     res.json({ success: true, message: '已清除所有缓存' });
   } catch (error) {
     res.status(500).json({ success: false, message: '清除缓存失败', error: error.message });
@@ -913,12 +913,12 @@ router.post('/ml-agents/config', authMiddleware, adminMiddleware, async (req, re
     if (config) {
       // 批量设置
       results = mlAgentService.setAgentsConfig(config);
-      console.log('📝 批量更新智能体配置:', config);
+      console.log('批量更新智能体配置:', config);
     } else if (agentName !== undefined && enabled !== undefined) {
       // 单个设置
       const success = mlAgentService.setAgentEnabled(agentName, enabled);
       results = { [agentName]: success };
-      console.log(`📝 ${enabled ? '启用' : '禁用'} 智能体: ${agentName}`);
+      console.log(`${enabled ? '启用' : '禁用'} 智能体: ${agentName}`);
     } else {
       return res.status(400).json({
         success: false,
@@ -986,7 +986,7 @@ router.post('/retrain', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const { days = 365, forceCollect = false, distillationRounds = 3, skipDistill = false } = req.body;
 
-    console.log(`🔄 Triggering model retraining: days=${days}, forceCollect=${forceCollect}`);
+    console.log(`Triggering model retraining: days=${days}, forceCollect=${forceCollect}`);
 
     const result = mlAgentService.retrain({ days, forceCollect, distillationRounds, skipDistill });
 

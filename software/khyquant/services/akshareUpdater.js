@@ -137,7 +137,7 @@ class AKShareUpdater {
     const startTime = Date.now();
     const fromVersion = this.currentVersion;
 
-    console.log(`🔄 Upgrading AKShare: ${fromVersion} → ${this.latestVersion}`);
+    console.log(`Upgrading AKShare: ${fromVersion} → ${this.latestVersion}`);
 
     try {
       // --break-system-packages needed for PEP 668 (externally-managed Python in containers)
@@ -160,8 +160,8 @@ class AKShareUpdater {
         this.updateHistory.push(record);
         this.currentVersion = newVersion;
         this.saveCheckRecord();
-        this.writeLog(`✅ Upgraded: ${record.fromVersion} → ${record.toVersion} (${record.duration})`);
-        console.log(`✅ AKShare upgraded: ${record.fromVersion} → ${record.toVersion}`);
+        this.writeLog(`✓ Upgraded: ${record.fromVersion} → ${record.toVersion} (${record.duration})`);
+        console.log(`✓ AKShare upgraded: ${record.fromVersion} → ${record.toVersion}`);
         return { success: true, ...record };
       } else {
         throw new Error(`Version mismatch after upgrade: expected ${this.latestVersion}, got ${newVersion}`);
@@ -177,8 +177,8 @@ class AKShareUpdater {
 
       this.updateHistory.push(record);
       this.saveCheckRecord();
-      this.writeLog(`❌ Upgrade failed: ${error.message}`);
-      console.error('❌ AKShare upgrade failed:', error.message);
+      this.writeLog(`✗ Upgrade failed: ${error.message}`);
+      console.error('✗ AKShare upgrade failed:', error.message);
       return { success: false, error: error.message };
     } finally {
       this.isUpdating = false;
@@ -199,11 +199,11 @@ class AKShareUpdater {
       }
     }
 
-    console.log('🔍 Checking AKShare version...');
+    console.log('Checking AKShare version...');
 
     const networkOk = await this.checkNetwork();
     if (!networkOk) {
-      console.log('⚠️ Network unavailable, skipping AKShare version check');
+      console.log('⚠ Network unavailable, skipping AKShare version check');
       return { skipped: true, reason: 'no_network' };
     }
 
@@ -211,7 +211,7 @@ class AKShareUpdater {
     this.latestVersion = await this.getLatestVersion();
     this.lastCheckTime = new Date().toISOString();
 
-    console.log(`📦 AKShare current: ${this.currentVersion}, PyPI latest: ${this.latestVersion}`);
+    console.log(`AKShare current: ${this.currentVersion}, PyPI latest: ${this.latestVersion}`);
 
     if (!this.currentVersion) {
       this.saveCheckRecord();
@@ -226,11 +226,11 @@ class AKShareUpdater {
     this.saveCheckRecord();
 
     if (this.isNewerVersion(this.latestVersion, this.currentVersion)) {
-      console.log(`🆕 New version ${this.latestVersion} available, upgrading...`);
+      console.log(`New version ${this.latestVersion} available, upgrading...`);
       return await this.performUpgrade();
     }
 
-    console.log(`✅ AKShare is up to date (${this.currentVersion})`);
+    console.log(`✓ AKShare is up to date (${this.currentVersion})`);
     return { upToDate: true, version: this.currentVersion };
   }
 
@@ -248,7 +248,7 @@ class AKShareUpdater {
   }
 
   startScheduler() {
-    console.log('⏰ AKShare auto-update scheduler started (checks every 24h)');
+    console.log('AKShare auto-update scheduler started (checks every 24h)');
 
     // Delay first check by 30s to not slow down startup
     setTimeout(() => {

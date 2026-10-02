@@ -47,7 +47,7 @@ router.post('/', authMiddleware, async (req, res) => {
       filledAt: new Date()
     });
 
-    console.log('✅ 交易记录已创建:', {
+    console.log('✓ 交易记录已创建:', {
       id: trade.id,
       symbol,
       side,
@@ -63,7 +63,7 @@ router.post('/', authMiddleware, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ 创建交易记录失败:', error);
+    console.error('✗ 创建交易记录失败:', error);
     res.status(500).json({
       success: false,
       message: '创建交易记录失败',
@@ -125,7 +125,7 @@ router.get('/', authMiddleware, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ 获取交易记录失败:', error);
+    console.error('✗ 获取交易记录失败:', error);
     res.status(500).json({
       success: false,
       message: '获取交易记录失败',
@@ -169,7 +169,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ 获取交易记录失败:', error);
+    console.error('✗ 获取交易记录失败:', error);
     res.status(500).json({
       success: false,
       message: '获取交易记录失败',
@@ -235,7 +235,7 @@ router.post('/:id/close', authMiddleware, async (req, res) => {
         closedQuantity: trade.quantity
       });
 
-      console.log('✅ 全仓平仓成功:', {
+      console.log('✓ 全仓平仓成功:', {
         id: trade.id,
         symbol: trade.symbol,
         quantity: trade.quantity
@@ -278,7 +278,7 @@ router.post('/:id/close', authMiddleware, async (req, res) => {
         relatedTradeId: trade.id // 关联原交易
       });
 
-      console.log('✅ 部分平仓成功:', {
+      console.log('✓ 部分平仓成功:', {
         id: trade.id,
         symbol: trade.symbol,
         closedQuantity: closeQuantity,
@@ -303,7 +303,7 @@ router.post('/:id/close', authMiddleware, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ 平仓失败:', error);
+    console.error('✗ 平仓失败:', error);
     res.status(500).json({
       success: false,
       message: '平仓失败',
@@ -343,7 +343,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ 删除交易记录失败:', error);
+    console.error('✗ 删除交易记录失败:', error);
     res.status(500).json({
       success: false,
       message: '删除交易记录失败',
@@ -401,7 +401,7 @@ router.get('/stats/summary', authMiddleware, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ 获取交易统计失败:', error);
+    console.error('✗ 获取交易统计失败:', error);
     res.status(500).json({
       success: false,
       message: '获取交易统计失败',

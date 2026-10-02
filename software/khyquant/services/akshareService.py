@@ -18,14 +18,14 @@ for key in ['HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy']:
     if key in os.environ:
         del os.environ[key]
 
-# 🔥 添加 akshare 源码路径（源码集成方式）
+# 添加 akshare 源码路径（源码集成方式）
 akshare_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../数据源/akshare-main'))
 sys.path.insert(0, akshare_path)
 
 try:
     import akshare as ak
-    print(f"✅ AKShare版本: {ak.__version__ if hasattr(ak, '__version__') else 'unknown'}", file=sys.stderr)
-    print(f"✅ AKShare路径: {akshare_path}", file=sys.stderr)
+    print(f"✓ AKShare版本: {ak.__version__ if hasattr(ak, '__version__') else 'unknown'}", file=sys.stderr)
+    print(f"✓ AKShare路径: {akshare_path}", file=sys.stderr)
 except ImportError as e:
     print(json.dumps({
         'success': False,
@@ -73,7 +73,7 @@ def get_batch_quotes(symbols, instrument_type='stock'):
         
         quotes = []
         
-        # 🔥 使用每日数据接口（实时接口被限制）
+        # 使用每日数据接口（实时接口被限制）
         try:
             for code in clean_codes:
                 try:
@@ -88,7 +88,7 @@ def get_batch_quotes(symbols, instrument_type='stock'):
                             # 其他指数默认为上海
                             market_code = f"sh{code}"
                         
-                        print(f"📊 获取指数数据: {market_code}", file=sys.stderr)
+                        print(f"获取指数数据: {market_code}", file=sys.stderr)
                         df = ak.stock_zh_index_daily(symbol=market_code)
                         
                         if not df.empty:
@@ -112,7 +112,7 @@ def get_batch_quotes(symbols, instrument_type='stock'):
                                 'volume': int(row['volume']) if 'volume' in row else 0,
                                 'change': round(change, 2),
                                 'changePercent': round(change_percent, 2),
-                                'time': str(row['date']),  # 🔥 转换为字符串
+                                'time': str(row['date']),  # 转换为字符串
                                 'type': 'index',
                                 'isPredefined': False,
                                 'dataSource': 'AKShare每日数据'
@@ -150,22 +150,22 @@ def get_batch_quotes(symbols, instrument_type='stock'):
                                 'volume': int(row['volume']),
                                 'change': round(change, 2),
                                 'changePercent': round(change_percent, 2),
-                                'time': str(row['date']),  # 🔥 转换为字符串
+                                'time': str(row['date']),  # 转换为字符串
                                 'type': 'stock',
                                 'isPredefined': False,
                                 'dataSource': 'AKShare每日数据'
                             })
                 except Exception as code_error:
-                    print(f"⚠️ 获取 {code} 失败: {str(code_error)}", file=sys.stderr)
+                    print(f"⚠ 获取 {code} 失败: {str(code_error)}", file=sys.stderr)
                     continue
         except Exception as api_error:
-            print(f"⚠️ API获取失败: {str(api_error)}, 使用预定义数据", file=sys.stderr)
-            # 🔥 使用预定义测试数据
+            print(f"⚠ API获取失败: {str(api_error)}, 使用预定义数据", file=sys.stderr)
+            # 使用预定义测试数据
             quotes = _get_predefined_quotes(clean_codes, instrument_type)
         
         if not quotes:
             # 如果真实API没有找到数据,使用预定义数据
-            print(f"⚠️ 未找到匹配的行情数据,使用预定义数据", file=sys.stderr)
+            print(f"⚠ 未找到匹配的行情数据,使用预定义数据", file=sys.stderr)
             quotes = _get_predefined_quotes(clean_codes, instrument_type)
         
         if not quotes:
@@ -247,8 +247,8 @@ def _get_predefined_quotes(codes, instrument_type='stock'):
                 'changePercent': change_percent,
                 'time': datetime.now().isoformat(),
                 'type': instrument_type,
-                'isPredefined': True,  # 🔥 标记为预定义数据
-                'dataSource': 'predefined'  # 🔥 数据来源标识
+                'isPredefined': True,  # 标记为预定义数据
+                'dataSource': 'predefined'  # 数据来源标识
             })
     
     return quotes
@@ -274,13 +274,13 @@ def get_kline(symbol, period='daily', start_date=None, end_date=None, instrument
         if clean_code.startswith('SH') or clean_code.startswith('SZ'):
             clean_code = clean_code[2:]
         
-        # 设置默认日期 - 🔥 限制为最近30天,避免数据量过大和超时
+        # 设置默认日期 - 限制为最近30天,避免数据量过大和超时
         if not end_date:
             end_date = datetime.now().strftime('%Y%m%d')
         if not start_date:
             start_date = (datetime.now() - timedelta(days=30)).strftime('%Y%m%d')
         
-        # 🔥 判断市场并添加前缀
+        # 判断市场并添加前缀
         # 对于指数，需要特殊处理
         if instrument_type == 'index':
             # 上海指数: 000001(上证), 000016(上证50), 000300(沪深300), 000905(中证500)等
@@ -299,9 +299,9 @@ def get_kline(symbol, period='daily', start_date=None, end_date=None, instrument
             else:
                 market_code = clean_code
         
-        print(f"📊 获取K线数据: {market_code}, 类型: {instrument_type}", file=sys.stderr)
+        print(f"获取K线数据: {market_code}, 类型: {instrument_type}", file=sys.stderr)
         
-        # 🔥 根据类型选择不同的接口
+        # 根据类型选择不同的接口
         if instrument_type == 'index':
             # 指数使用 stock_zh_index_daily
             df = ak.stock_zh_index_daily(symbol=market_code)
@@ -316,19 +316,19 @@ def get_kline(symbol, period='daily', start_date=None, end_date=None, instrument
                 'kline': []
             }
         
-        # 🔥 过滤日期范围
+        # 过滤日期范围
         df['date'] = pd.to_datetime(df['date'])
         start_dt = pd.to_datetime(start_date)
         end_dt = pd.to_datetime(end_date)
         df = df[(df['date'] >= start_dt) & (df['date'] <= end_dt)]
         
-        print(f"✅ 获取到 {len(df)} 条K线数据", file=sys.stderr)
+        print(f"✓ 获取到 {len(df)} 条K线数据", file=sys.stderr)
         
         # 转换为标准格式
         kline = []
         for _, row in df.iterrows():
             kline.append({
-                'date': row['date'].strftime('%Y-%m-%d'),  # 🔥 格式化日期
+                'date': row['date'].strftime('%Y-%m-%d'),  # 格式化日期
                 'time': row['date'].strftime('%Y-%m-%d'),
                 'open': float(row['open']),
                 'high': float(row['high']),
@@ -346,7 +346,7 @@ def get_kline(symbol, period='daily', start_date=None, end_date=None, instrument
         }
         
     except Exception as e:
-        print(f"❌ 获取K线失败: {str(e)}", file=sys.stderr)
+        print(f"✗ 获取K线失败: {str(e)}", file=sys.stderr)
         return {
             'success': False,
             'error': str(e),

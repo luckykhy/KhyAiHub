@@ -37,7 +37,7 @@ class IFindService:
         if self.token:
             self.headers['Authorization'] = f'Bearer {self.token}'
         
-        print(f"✅ iFinD服务初始化完成", file=sys.stderr)
+        print(f"✓ iFinD服务初始化完成", file=sys.stderr)
         print(f"   API地址: {self.base_url}", file=sys.stderr)
         print(f"   Token配置: {'已配置' if self.token else '未配置(使用预定义数据)'}", file=sys.stderr)
     
@@ -55,16 +55,16 @@ class IFindService:
             return response.json()
         
         except requests.exceptions.ConnectionError:
-            print(f"⚠️ iFinD API连接失败: {url}", file=sys.stderr)
+            print(f"⚠ iFinD API连接失败: {url}", file=sys.stderr)
             return None
         except requests.exceptions.Timeout:
-            print(f"⚠️ iFinD API请求超时: {url}", file=sys.stderr)
+            print(f"⚠ iFinD API请求超时: {url}", file=sys.stderr)
             return None
         except requests.exceptions.HTTPError as e:
-            print(f"⚠️ iFinD API HTTP错误: {e}", file=sys.stderr)
+            print(f"⚠ iFinD API HTTP错误: {e}", file=sys.stderr)
             return None
         except Exception as e:
-            print(f"⚠️ iFinD API请求失败: {str(e)}", file=sys.stderr)
+            print(f"⚠ iFinD API请求失败: {str(e)}", file=sys.stderr)
             return None
     
     def get_batch_quotes(self, symbols, instrument_type='stock'):
@@ -103,7 +103,7 @@ class IFindService:
             
             quotes = []
             
-            # 🔥 尝试从iFinD API获取真实数据
+            # 尝试从iFinD API获取真实数据
             if self.token:
                 try:
                     # 调用iFinD API
@@ -130,14 +130,14 @@ class IFindService:
                                 'type': instrument_type
                             })
                         
-                        print(f"✅ iFinD API获取成功: {len(quotes)}条数据", file=sys.stderr)
+                        print(f"✓ iFinD API获取成功: {len(quotes)}条数据", file=sys.stderr)
                 
                 except Exception as api_error:
-                    print(f"⚠️ iFinD API获取失败: {str(api_error)}", file=sys.stderr)
+                    print(f"⚠ iFinD API获取失败: {str(api_error)}", file=sys.stderr)
             
-            # 🔥 如果API失败或未配置,使用预定义数据
+            # 如果API失败或未配置,使用预定义数据
             if not quotes:
-                print(f"⚠️ 使用预定义数据", file=sys.stderr)
+                print(f"⚠ 使用预定义数据", file=sys.stderr)
                 quotes = self._get_predefined_quotes(clean_codes, instrument_type)
             
             if not quotes:
@@ -192,7 +192,7 @@ class IFindService:
             
             kline = []
             
-            # 🔥 尝试从iFinD API获取真实数据
+            # 尝试从iFinD API获取真实数据
             if self.token:
                 try:
                     api_data = self._make_request('/api/market/kline', {
@@ -215,14 +215,14 @@ class IFindService:
                                 'amount': float(item.get('amount', 0))
                             })
                         
-                        print(f"✅ iFinD API获取K线成功: {len(kline)}条", file=sys.stderr)
+                        print(f"✓ iFinD API获取K线成功: {len(kline)}条", file=sys.stderr)
                 
                 except Exception as api_error:
-                    print(f"⚠️ iFinD API获取K线失败: {str(api_error)}", file=sys.stderr)
+                    print(f"⚠ iFinD API获取K线失败: {str(api_error)}", file=sys.stderr)
             
-            # 🔥 如果API失败或未配置,使用预定义数据
+            # 如果API失败或未配置,使用预定义数据
             if not kline:
-                print(f"⚠️ 使用预定义K线数据", file=sys.stderr)
+                print(f"⚠ 使用预定义K线数据", file=sys.stderr)
                 kline = self._generate_predefined_kline(clean_code, start_date, end_date, period)
             
             return {

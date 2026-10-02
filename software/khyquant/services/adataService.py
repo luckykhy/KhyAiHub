@@ -103,13 +103,13 @@ def get_stock_kline(stock_code, k_type=1, start_date='2020-01-01'):
     try:
         from datetime import datetime, timedelta
         
-        # 🔥 标准化股票代码
+        # 标准化股票代码
         stock_code = normalize_symbol(stock_code)
         
-        # 🔥 转换日期格式
+        # 转换日期格式
         formatted_date = format_date(start_date)
         
-        # 🔥 如果开始日期太近（最近7天内），自动回退到30天前，避免非交易日问题
+        # 如果开始日期太近（最近7天内），自动回退到30天前，避免非交易日问题
         try:
             start_dt = datetime.strptime(formatted_date, '%Y-%m-%d')
             days_ago = (datetime.now() - start_dt).days
@@ -117,15 +117,15 @@ def get_stock_kline(stock_code, k_type=1, start_date='2020-01-01'):
             if days_ago < 7:
                 # 回退到30天前，确保有足够的交易数据
                 fallback_date = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
-                print(f"⚠️ 开始日期太近({formatted_date})，自动回退到 {fallback_date}", file=sys.stderr)
+                print(f"⚠ 开始日期太近({formatted_date})，自动回退到 {fallback_date}", file=sys.stderr)
                 formatted_date = fallback_date
         except:
             pass
         
-        print(f"📊 开始获取K线数据: {stock_code}, 日期: {formatted_date}, K线类型: {k_type}", file=sys.stderr)
+        print(f"开始获取K线数据: {stock_code}, 日期: {formatted_date}, K线类型: {k_type}", file=sys.stderr)
         
         # 判断是否为指数
-        # 🔥 修复: 精确判断指数代码
+        # 修复: 精确判断指数代码
         # 上海指数: 000001(上证指数), 000300(沪深300), 000016(上证50), 000905(中证500), 000852(中证1000)
         # 深圳指数: 399001(深证成指), 399006(创业板指), 399005(中小板指), 399300(沪深300)
         # 其他指数: 000116(信用100), 000131(上证高新)
@@ -141,14 +141,14 @@ def get_stock_kline(stock_code, k_type=1, start_date='2020-01-01'):
         # 注意: 000333(美的集团)等股票不应该被判断为指数
         is_index = stock_code in index_codes or stock_code.startswith('399')
         
-        print(f"🔍 标的类型判断: {'指数' if is_index else '股票'}", file=sys.stderr)
+        print(f"标的类型判断: {'指数' if is_index else '股票'}", file=sys.stderr)
         
         if is_index:
             # 使用指数接口
-            # 🔥 关键修复:
+            # 关键修复:
             # 1. 使用 index_code 参数(不是 stock_code)
             # 2. 使用 'YYYY-MM-DD' 日期格式
-            print(f"📈 调用指数接口: adata.stock.market.get_market_index(index_code={stock_code}, k_type={k_type}, start_date={formatted_date})", file=sys.stderr)
+            print(f"调用指数接口: adata.stock.market.get_market_index(index_code={stock_code}, k_type={k_type}, start_date={formatted_date})", file=sys.stderr)
             df = adata.stock.market.get_market_index(
                 index_code=stock_code,
                 k_type=k_type,
@@ -156,7 +156,7 @@ def get_stock_kline(stock_code, k_type=1, start_date='2020-01-01'):
             )
         else:
             # 使用股票接口
-            print(f"📈 调用股票接口: adata.stock.market.get_market(stock_code={stock_code}, k_type={k_type}, start_date={formatted_date})", file=sys.stderr)
+            print(f"调用股票接口: adata.stock.market.get_market(stock_code={stock_code}, k_type={k_type}, start_date={formatted_date})", file=sys.stderr)
             df = adata.stock.market.get_market(
                 stock_code=stock_code,
                 k_type=k_type,
@@ -164,7 +164,7 @@ def get_stock_kline(stock_code, k_type=1, start_date='2020-01-01'):
             )
         
         if df is None or df.empty:
-            print(f"⚠️ AData返回空数据", file=sys.stderr)
+            print(f"⚠ AData返回空数据", file=sys.stderr)
             return {
                 'success': False,
                 'error': '未获取到数据',
@@ -176,7 +176,7 @@ def get_stock_kline(stock_code, k_type=1, start_date='2020-01-01'):
                 }
             }
         
-        print(f"✅ AData返回 {len(df)} 条数据", file=sys.stderr)
+        print(f"✓ AData返回 {len(df)} 条数据", file=sys.stderr)
         
         # 转换为标准格式
         kline_data = []
@@ -190,7 +190,7 @@ def get_stock_kline(stock_code, k_type=1, start_date='2020-01-01'):
                 'volume': int(row['volume']) if 'volume' in row else 0
             })
         
-        print(f"✅ 成功转换 {len(kline_data)} 条K线数据", file=sys.stderr)
+        print(f"✓ 成功转换 {len(kline_data)} 条K线数据", file=sys.stderr)
         
         return {
             'success': True,
@@ -204,7 +204,7 @@ def get_stock_kline(stock_code, k_type=1, start_date='2020-01-01'):
         
     except Exception as e:
         import traceback
-        print(f"❌ 获取K线数据失败: {str(e)}", file=sys.stderr)
+        print(f"✗ 获取K线数据失败: {str(e)}", file=sys.stderr)
         print(f"   错误堆栈: {traceback.format_exc()}", file=sys.stderr)
         return {
             'success': False,
@@ -269,8 +269,8 @@ def _get_predefined_quotes(codes, instrument_type='stock'):
                 'change': round(change, 2),
                 'change_percent': change_percent,
                 'date': '2026-02-25',
-                'isPredefined': True,  # 🔥 标记为预定义数据
-                'dataSource': 'predefined',  # 🔥 数据来源标识
+                'isPredefined': True,  # 标记为预定义数据
+                'dataSource': 'predefined',  # 数据来源标识
                 'source': 'AData'
             })
     
@@ -288,12 +288,12 @@ def get_stock_realtime(stock_code):
         dict: 实时行情数据
     """
     try:
-        # 🔥 标准化股票代码
+        # 标准化股票代码
         stock_code = normalize_symbol(stock_code)
         
-        print(f"📊 开始获取实时行情: {stock_code}", file=sys.stderr)
+        print(f"开始获取实时行情: {stock_code}", file=sys.stderr)
         
-        # 🔥 判断是否为指数
+        # 判断是否为指数
         index_codes = {
             '000001', '000300', '000016', '000905', '000852',
             '399001', '399006', '399005', '399300',
@@ -301,14 +301,14 @@ def get_stock_realtime(stock_code):
         }
         is_index = stock_code in index_codes or stock_code.startswith('399')
         
-        print(f"🔍 标的类型: {'指数' if is_index else '股票'}", file=sys.stderr)
+        print(f"标的类型: {'指数' if is_index else '股票'}", file=sys.stderr)
         
         # 获取实时行情
-        # 🔥 注意: list_market_current 只支持股票，不支持指数
+        # 注意: list_market_current 只支持股票，不支持指数
         # 对于指数，我们需要使用 get_market_index 获取最新一条数据
         try:
             if is_index:
-                print(f"📈 指数使用 get_market_index 获取最新数据", file=sys.stderr)
+                print(f"指数使用 get_market_index 获取最新数据", file=sys.stderr)
                 from datetime import datetime, timedelta
                 # 获取最近30天的数据，然后取最新一条
                 start_date = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
@@ -341,7 +341,7 @@ def get_stock_realtime(stock_code):
                     }
                 }
             else:
-                print(f"📈 股票使用 list_market_current 获取实时行情", file=sys.stderr)
+                print(f"股票使用 list_market_current 获取实时行情", file=sys.stderr)
                 df = adata.stock.market.list_market_current(code_list=[stock_code])
                 
                 if df is None or df.empty:
@@ -362,8 +362,8 @@ def get_stock_realtime(stock_code):
                     }
                 }
         except Exception as api_error:
-            # 🔥 API失败时使用预定义数据
-            print(f"⚠️ API获取失败: {str(api_error)}, 使用预定义数据", file=sys.stderr)
+            # API失败时使用预定义数据
+            print(f"⚠ API获取失败: {str(api_error)}, 使用预定义数据", file=sys.stderr)
             instrument_type = 'index' if is_index else 'stock'
             predefined_quotes = _get_predefined_quotes([stock_code], instrument_type)
             
@@ -383,7 +383,7 @@ def get_stock_realtime(stock_code):
         
     except Exception as e:
         import traceback
-        print(f"❌ 获取实时行情失败: {str(e)}", file=sys.stderr)
+        print(f"✗ 获取实时行情失败: {str(e)}", file=sys.stderr)
         print(f"   错误堆栈: {traceback.format_exc()}", file=sys.stderr)
         return {
             'success': False,
@@ -480,7 +480,7 @@ def get_historical_kline(stock_code, period='daily', start_date=None, end_date=N
                 'changePercent': float((row['close'] - row['open']) / row['open'] * 100) if row['open'] != 0 else 0
             })
         
-        print(f"✅ 成功获取 {len(result)} 条历史数据")
+        print(f"✓ 成功获取 {len(result)} 条历史数据")
         return {
             'success': True,
             'data': result,
@@ -488,7 +488,7 @@ def get_historical_kline(stock_code, period='daily', start_date=None, end_date=N
         }
         
     except Exception as e:
-        print(f"❌ 获取历史K线数据失败: {str(e)}")
+        print(f"✗ 获取历史K线数据失败: {str(e)}")
         return {
             'success': False,
             'error': str(e),

@@ -27,7 +27,10 @@ class AKShareDataService {
     this.realtimeCacheTTL = 120_000;      // 2 min for realtime quotes
     this.klineCacheTTL = 3_600_000;       // 1 hour for kline / historical
     this.scriptTimeoutMs = parseInt(process.env.AKSHARE_SCRIPT_TIMEOUT_MS || '30000', 10);
-    this.pythonPath = require('../utils/pythonPath').findPython();
+    // 惰性 getter，不在构造期解析：findPython() 要 spawn 子进程（Windows 上单次
+    // python 冷启动实测 3.8–7.8s）。本服务在启动路径上被 require，构造期探测会
+    // 直接变成启动延迟。改成首次真正调用 python 时才付这个代价。
+    this._pythonPath = null;
     this.scriptsDir = path.join(__dirname, '../../akshare_scripts');
 
     // Request queue state
@@ -40,6 +43,18 @@ class AKShareDataService {
     this._cacheGCTimer.unref();
 
     this.ensureScriptsDirectory();
+  }
+
+  /** 惰性解析的解释器路径；首次读取时才 spawn 探测（见构造期注释）。 */
+  get pythonPath() {
+    if (!this._pythonPath) {
+      this._pythonPath = require('../utils/pythonPath').findPython();
+    }
+    return this._pythonPath;
+  }
+
+  set pythonPath(value) {
+    this._pythonPath = value;
   }
 
   // ── Request queue / rate limiter ────────────────────────────────────────

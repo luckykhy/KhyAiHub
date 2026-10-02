@@ -31,16 +31,16 @@ def safe_get_data(func, name, timeout=30):
             signal.alarm(0)  # 取消超时
         
         if df is not None and len(df) > 0:
-            print(f"✅ 获取{name}成功: {len(df)}条", file=sys.stderr)
+            print(f"✓ 获取{name}成功: {len(df)}条", file=sys.stderr)
             return df
         else:
-            print(f"⚠️ {name}为空", file=sys.stderr)
+            print(f"⚠ {name}为空", file=sys.stderr)
             return pd.DataFrame()
     except TimeoutError as e:
-        print(f"⏱️ {name}超时: {str(e)}", file=sys.stderr)
+        print(f" {name}超时: {str(e)}", file=sys.stderr)
         return pd.DataFrame()
     except Exception as e:
-        print(f"❌ 获取{name}失败: {str(e)}", file=sys.stderr)
+        print(f"✗ 获取{name}失败: {str(e)}", file=sys.stderr)
         return pd.DataFrame()
     finally:
         if hasattr(signal, 'SIGALRM'):
@@ -112,7 +112,7 @@ try:
         'bonds': len([i for i in all_instruments if i['type'] == 'bond'])
     }
     
-    print(f"\n📊 统计信息:", file=sys.stderr)
+    print(f"\n统计信息:", file=sys.stderr)
     print(f"  总计: {stats['total']}", file=sys.stderr)
     print(f"  指数: {stats['indices']}", file=sys.stderr)
     print(f"  股票: {stats['stocks']}", file=sys.stderr)

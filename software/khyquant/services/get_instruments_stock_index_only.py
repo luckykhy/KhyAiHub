@@ -19,7 +19,7 @@ try:
     try:
         indices_df = adata.stock.info.all_index_code()
         if indices_df is not None and len(indices_df) > 0:
-            print(f"✅ 获取指数成功: {len(indices_df)}条", file=sys.stderr)
+            print(f"✓ 获取指数成功: {len(indices_df)}条", file=sys.stderr)
             for _, row in indices_df.iterrows():
                 all_instruments.append({
                     'code': row.get('index_code', ''),
@@ -30,14 +30,14 @@ try:
                     'concept_code': row.get('concept_code', '')
                 })
     except Exception as e:
-        print(f"❌ 获取指数失败: {str(e)}", file=sys.stderr)
+        print(f"✗ 获取指数失败: {str(e)}", file=sys.stderr)
     
     # 2. 获取股票代码
     print("正在获取股票代码...", file=sys.stderr)
     try:
         stocks_df = adata.stock.info.all_code()
         if stocks_df is not None and len(stocks_df) > 0:
-            print(f"✅ 获取股票成功: {len(stocks_df)}条", file=sys.stderr)
+            print(f"✓ 获取股票成功: {len(stocks_df)}条", file=sys.stderr)
             for _, row in stocks_df.iterrows():
                 all_instruments.append({
                     'code': row.get('stock_code', ''),
@@ -48,7 +48,7 @@ try:
                     'list_date': row.get('list_date', None)
                 })
     except Exception as e:
-        print(f"❌ 获取股票失败: {str(e)}", file=sys.stderr)
+        print(f"✗ 获取股票失败: {str(e)}", file=sys.stderr)
     
     # 统计信息
     stats = {
@@ -59,7 +59,7 @@ try:
         'bonds': 0
     }
     
-    print(f"\n📊 统计信息:", file=sys.stderr)
+    print(f"\n统计信息:", file=sys.stderr)
     print(f"  总计: {stats['total']}", file=sys.stderr)
     print(f"  指数: {stats['indices']}", file=sys.stderr)
     print(f"  股票: {stats['stocks']}", file=sys.stderr)

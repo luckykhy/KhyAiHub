@@ -1,6 +1,11 @@
 'use strict';
 
 /**
+ * [独立维护声明 | BUG-015 裁决 2026-09-28,IMPL-RPT-063]
+ * 本文件是 khyquant 侧的独立副本,与 services/backend 正本已分叉,按独立项目口径
+ * 单独维护,不随 backend 补丁自动同步(见 AGENTS.md 项目概览)。backend 侧 BUG-014
+ * 修复未并入;需要时走独立评审后移植,禁止盲套补丁。
+ *
  * toolCapabilityStore.js — 「按模型实测出的工具调用能力」单一真源的持久缓存。
  *
  * 实测(toolCallingProbe + aiGateway.verifyToolCalling)产出的 'native'/'text' 裁决落在这里,

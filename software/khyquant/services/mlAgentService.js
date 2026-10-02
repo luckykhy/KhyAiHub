@@ -32,10 +32,10 @@ function _logError(agent, action, error, display) {
 class MLAgentService {
   constructor() {
     this.modelsPath = path.join(__dirname, '../../ml/models');
-    // 根据操作系统选择 Python 命令
-    // 动态探测 Python 路径，支持跨机器迁移
-    const { findPython } = require('../utils/pythonPath');
-    this.pythonPath = findPython();
+    // 惰性解析（见下方 get pythonPath）：findPython() 要 spawn 子进程，
+    // Windows 上单次 python 冷启动实测 3.8–7.8s；本服务在启动路径上被 require，
+    // 构造期探测会直接变成启动延迟。
+    this._pythonPath = null;
     this.requiredMlPythonPackages = ['joblib', 'numpy', 'pandas', 'sklearn', 'xgboost', 'lightgbm'];
     
     this.retrainJob = null;
@@ -86,7 +86,19 @@ class MLAgentService {
       }
     };
   }
-  
+
+  /** 惰性解析的解释器路径；首次读取时才 spawn 探测（见构造期注释）。 */
+  get pythonPath() {
+    if (!this._pythonPath) {
+      this._pythonPath = require('../utils/pythonPath').findPython();
+    }
+    return this._pythonPath;
+  }
+
+  set pythonPath(value) {
+    this._pythonPath = value;
+  }
+
   /**
    * Trigger model retraining as background process
    * @param {object} options - { days, forceCollect, distillationRounds }

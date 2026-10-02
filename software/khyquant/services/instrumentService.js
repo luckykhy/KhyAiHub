@@ -13,7 +13,7 @@ class InstrumentService {
    */
   async syncInstrumentsFromAData() {
     try {
-      console.log('🔄 开始从缓存同步标的列表...');
+      console.log('开始从缓存同步标的列表...');
 
       // 直接复用 instrumentSyncService 的缓存脚本，避免依赖 adata
       const { spawn } = require('child_process');
@@ -68,7 +68,7 @@ class InstrumentService {
         status: 'active'
       })).filter(i => i.symbol);
 
-      console.log(`📋 获取到 ${instruments.length} 个标的，开始写入数据库...`);
+      console.log(`获取到 ${instruments.length} 个标的，开始写入数据库...`);
 
       let successCount = 0, failCount = 0;
       const BATCH = 500;
@@ -83,10 +83,10 @@ class InstrumentService {
         }
       }
 
-      console.log(`✅ 标的同步完成: ${successCount} 个成功, ${failCount} 个失败`);
+      console.log(`✓ 标的同步完成: ${successCount} 个成功, ${failCount} 个失败`);
       return { successCount, failCount };
     } catch (error) {
-      console.error('❌ 同步标的列表失败:', error);
+      console.error('✗ 同步标的列表失败:', error);
       throw error;
     }
   }
@@ -104,7 +104,7 @@ class InstrumentService {
         // 如果已存在但name为空,且传入了name,则更新
         if (!existing.name && name) {
           await existing.update({ name });
-          console.log(`✅ 更新标的名称: ${symbol} -> ${name}`);
+          console.log(`✓ 更新标的名称: ${symbol} -> ${name}`);
         }
         return existing;
       }
@@ -119,11 +119,11 @@ class InstrumentService {
         status: 'active'
       });
       
-      console.log(`✅ 新增标的: ${symbol} ${name || ''}`);
+      console.log(`✓ 新增标的: ${symbol} ${name || ''}`);
       return instrument;
       
     } catch (error) {
-      console.error(`❌ 保存标的失败 ${symbol}:`, error);
+      console.error(`✗ 保存标的失败 ${symbol}:`, error);
       throw error;
     }
   }
@@ -134,7 +134,7 @@ class InstrumentService {
    */
   async batchSaveInstruments(instruments) {
     try {
-      console.log(`💾 批量保存 ${instruments.length} 个标的...`);
+      console.log(`批量保存 ${instruments.length} 个标的...`);
       
       let successCount = 0;
       let updateCount = 0;
@@ -151,7 +151,7 @@ class InstrumentService {
             if (!existing.name && inst.name) {
               await existing.update({ name: inst.name });
               updateCount++;
-              console.log(`  ✅ 更新: ${inst.symbol} -> ${inst.name}`);
+              console.log(`  ✓ 更新: ${inst.symbol} -> ${inst.name}`);
             } else {
               skipCount++;
             }
@@ -166,14 +166,14 @@ class InstrumentService {
               status: 'active'
             });
             successCount++;
-            console.log(`  ✅ 新增: ${inst.symbol} ${inst.name || ''}`);
+            console.log(`  ✓ 新增: ${inst.symbol} ${inst.name || ''}`);
           }
         } catch (error) {
-          console.error(`  ❌ 保存失败 ${inst.symbol}:`, error.message);
+          console.error(`  ✗ 保存失败 ${inst.symbol}:`, error.message);
         }
       }
       
-      console.log(`✅ 批量保存完成: 新增 ${successCount}, 更新 ${updateCount}, 跳过 ${skipCount}`);
+      console.log(`✓ 批量保存完成: 新增 ${successCount}, 更新 ${updateCount}, 跳过 ${skipCount}`);
       
       return {
         success: true,
@@ -184,7 +184,7 @@ class InstrumentService {
       };
       
     } catch (error) {
-      console.error('❌ 批量保存失败:', error);
+      console.error('✗ 批量保存失败:', error);
       throw error;
     }
   }
@@ -239,7 +239,7 @@ class InstrumentService {
       };
       
     } catch (error) {
-      console.error('❌ 获取标的列表失败:', error);
+      console.error('✗ 获取标的列表失败:', error);
       throw error;
     }
   }
@@ -254,7 +254,7 @@ class InstrumentService {
       });
       return instrument;
     } catch (error) {
-      console.error(`❌ 获取标的失败 ${symbol}:`, error);
+      console.error(`✗ 获取标的失败 ${symbol}:`, error);
       throw error;
     }
   }
@@ -274,7 +274,7 @@ class InstrumentService {
       
       return await this.getInstrumentBySymbol(symbol);
     } catch (error) {
-      console.error(`❌ 更新标的失败 ${symbol}:`, error);
+      console.error(`✗ 更新标的失败 ${symbol}:`, error);
       throw error;
     }
   }
@@ -294,7 +294,7 @@ class InstrumentService {
       
       return { success: true, message: '删除成功' };
     } catch (error) {
-      console.error(`❌ 删除标的失败 ${symbol}:`, error);
+      console.error(`✗ 删除标的失败 ${symbol}:`, error);
       throw error;
     }
   }
@@ -333,7 +333,7 @@ class InstrumentService {
         }, {})
       };
     } catch (error) {
-      console.error('❌ 获取统计信息失败:', error);
+      console.error('✗ 获取统计信息失败:', error);
       throw error;
     }
   }

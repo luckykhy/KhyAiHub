@@ -62,7 +62,7 @@ class InstrumentSyncService {
    */
   async syncInstruments() {
     if (this.isSyncing) {
-      console.log('⚠️  上一次同步还在进行中,跳过本次同步');
+      console.log('⚠  上一次同步还在进行中,跳过本次同步');
       return;
     }
 
@@ -70,7 +70,7 @@ class InstrumentSyncService {
       this.isSyncing = true;
       this.syncCount++;
       
-      console.log(`\n📊 [同步 #${this.syncCount}] 开始同步标的列表... (${new Date().toLocaleString()})`);
+      console.log(`\n[同步 #${this.syncCount}] 开始同步标的列表... (${new Date().toLocaleString()})`);
 
       // 🔥 发送同步开始通知
       this.broadcastSyncStatus({
@@ -84,7 +84,7 @@ class InstrumentSyncService {
       const instruments = await this.fetchInstrumentsFromAData();
       
       if (!instruments || instruments.length === 0) {
-        console.log('⚠️  未获取到标的数据,跳过本次同步');
+        console.log('⚠  未获取到标的数据,跳过本次同步');
         
         // 🔥 发送同步失败通知
         this.broadcastSyncStatus({
@@ -97,7 +97,7 @@ class InstrumentSyncService {
         return;
       }
 
-      console.log(`📋 获取到 ${instruments.length} 个标的`);
+      console.log(`获取到 ${instruments.length} 个标的`);
 
       // 2. 查询数据库中已存在的标的
       const existingSymbols = await Instrument.findAll({
@@ -118,7 +118,7 @@ class InstrumentSyncService {
         .filter(item => !existingSymbolsSet.has(item.symbol));
 
       if (newInstruments.length === 0) {
-        console.log('✅ 没有新标的需要保存');
+        console.log('✓ 没有新标的需要保存');
         this.lastSyncTime = new Date();
         
         // 🔥 发送同步完成通知(无新数据)
@@ -134,7 +134,7 @@ class InstrumentSyncService {
         return;
       }
 
-      console.log(`🆕 发现 ${newInstruments.length} 个新标的`);
+      console.log(`发现 ${newInstruments.length} 个新标的`);
 
       // 4. 批量保存新标的到数据库
       const savedCount = await this.saveNewInstruments(newInstruments);
@@ -142,8 +142,8 @@ class InstrumentSyncService {
       this.newInstrumentsCount += savedCount;
       this.lastSyncTime = new Date();
 
-      console.log(`✅ [同步 #${this.syncCount}] 同步完成: 保存了 ${savedCount} 个新标的`);
-      console.log(`📊 累计新增标的: ${this.newInstrumentsCount} 个`);
+      console.log(`✓ [同步 #${this.syncCount}] 同步完成: 保存了 ${savedCount} 个新标的`);
+      console.log(`累计新增标的: ${this.newInstrumentsCount} 个`);
 
       // 🔥 发送同步成功通知
       this.broadcastSyncStatus({
@@ -157,7 +157,7 @@ class InstrumentSyncService {
       });
 
     } catch (error) {
-      console.error('❌ 同步标的列表失败:', error);
+      console.error('✗ 同步标的列表失败:', error);
       
       // 🔥 发送同步错误通知
       this.broadcastSyncStatus({
@@ -186,7 +186,7 @@ class InstrumentSyncService {
         data: data
       });
       
-      console.log(`📡 已广播同步状态: ${data.type}`);
+      console.log(`已广播同步状态: ${data.type}`);
     } catch (error) {
       console.error('广播同步状态失败:', error);
     }
@@ -200,7 +200,7 @@ class InstrumentSyncService {
       // 🔥 优先使用缓存版本(速度快),如果失败再用网络版本
       const pythonScript = path.join(__dirname, 'get_all_instruments_from_cache.py');
       
-      console.log('🐍 调用Python脚本获取标的列表...');
+      console.log('调用Python脚本获取标的列表...');
       
       // 根据操作系统选择Python命令，动态探测避免 PATH 问题
       const { findPython } = require('../utils/pythonPath');
@@ -217,16 +217,16 @@ class InstrumentSyncService {
           }
         });
       } catch (spawnError) {
-        console.error('❌ 无法启动Python进程:', spawnError.message);
-        console.warn('⚠️ Python未安装或不可用,跳过标的同步');
+        console.error('✗ 无法启动Python进程:', spawnError.message);
+        console.warn('⚠ Python未安装或不可用,跳过标的同步');
         resolve([]); // 返回空数组,不阻塞系统启动
         return;
       }
       
       // 🔥 添加错误事件监听器,防止进程崩溃
       pythonProcess.on('error', (error) => {
-        console.error('❌ Python进程错误:', error.message);
-        console.warn('⚠️ Python不可用,跳过标的同步');
+        console.error('✗ Python进程错误:', error.message);
+        console.warn('⚠ Python不可用,跳过标的同步');
         resolve([]); // 返回空数组,不阻塞系统启动
       });
       
@@ -258,14 +258,14 @@ class InstrumentSyncService {
         _resetIdle();
         // 只记录错误,不打印所有stderr输出(避免日志过多)
         if (errorString.includes('Error') || errorString.includes('错误')) {
-          console.error('⚠️  Python stderr:', data.toString());
+          console.error('⚠  Python stderr:', data.toString());
         }
       });
 
       pythonProcess.on('close', (code) => {
         if (_idleTimer) clearTimeout(_idleTimer);
         if (code !== 0) {
-          console.error('❌ Python脚本执行失败:', errorString);
+          console.error('✗ Python脚本执行失败:', errorString);
           reject(new Error(`Python脚本退出码: ${code}`));
           return;
         }
@@ -274,14 +274,14 @@ class InstrumentSyncService {
           const result = JSON.parse(dataString);
 
           if (result.success && result.data) {
-            console.log(`✅ 成功获取 ${result.data.length} 个标的`);
+            console.log(`✓ 成功获取 ${result.data.length} 个标的`);
             resolve(result.data);
           } else {
-            console.error('❌ Python脚本返回失败:', result.message);
+            console.error('✗ Python脚本返回失败:', result.message);
             resolve([]);
           }
         } catch (error) {
-          console.error('❌ 解析Python脚本输出失败:', error);
+          console.error('✗ 解析Python脚本输出失败:', error);
           console.error('输出内容:', dataString.substring(0, 200)); // 只显示前200字符
           resolve([]);
         }
@@ -300,11 +300,11 @@ class InstrumentSyncService {
         validate: true
       });
 
-      console.log(`💾 成功保存 ${result.length} 个新标的到数据库`);
+      console.log(`成功保存 ${result.length} 个新标的到数据库`);
       
       // 显示部分新标的信息
       if (result.length > 0) {
-        console.log('📝 新标的示例:');
+        console.log('新标的示例:');
         result.slice(0, 5).forEach(item => {
           console.log(`  - ${item.symbol} ${item.name} (${item.type})`);
         });
@@ -315,7 +315,7 @@ class InstrumentSyncService {
 
       return result.length;
     } catch (error) {
-      console.error('❌ 保存标的到数据库失败:', error);
+      console.error('✗ 保存标的到数据库失败:', error);
       return 0;
     }
   }
@@ -341,7 +341,7 @@ class InstrumentSyncService {
    * 手动触发同步
    */
   async triggerSync() {
-    console.log('🔄 手动触发同步...');
+    console.log('手动触发同步...');
     await this.syncInstruments();
   }
 }

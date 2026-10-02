@@ -167,8 +167,8 @@ def get_batch_market_quotes(symbols, instrument_type='stock'):
         
         quotes = []
         
-        # 🔥 由于网络限制，直接使用预定义的测试数据
-        print(f"⚠️ 使用预定义测试数据（网络限制）", file=sys.stderr)
+        # 由于网络限制，直接使用预定义的测试数据
+        print(f"⚠ 使用预定义测试数据（网络限制）", file=sys.stderr)
         
         # 预定义的指数数据
         predefined_indices = {
@@ -214,8 +214,8 @@ def get_batch_market_quotes(symbols, instrument_type='stock'):
                             'changePercent': change_pct,
                             'time': datetime.now().isoformat(),
                             'type': 'index',
-                            'isPredefined': True,  # 🔥 标记为预定义数据
-                            'dataSource': 'predefined'  # 🔥 数据来源
+                            'isPredefined': True,  # 标记为预定义数据
+                            'dataSource': 'predefined'  # 数据来源
                         })
                 else:
                     # 使用预定义股票数据
@@ -237,8 +237,8 @@ def get_batch_market_quotes(symbols, instrument_type='stock'):
                             'changePercent': change_pct,
                             'time': datetime.now().isoformat(),
                             'type': 'stock',
-                            'isPredefined': True,  # 🔥 标记为预定义数据
-                            'dataSource': 'predefined'  # 🔥 数据来源
+                            'isPredefined': True,  # 标记为预定义数据
+                            'dataSource': 'predefined'  # 数据来源
                         })
             except Exception as e:
                 print(f"处理{code}失败: {str(e)}", file=sys.stderr)
@@ -258,7 +258,7 @@ def get_batch_market_quotes(symbols, instrument_type='stock'):
             'dataCount': len(quotes),
             'samples': quotes,  # 兼容旧接口
             'responseTime': 0,
-            'isPredefined': True,  # 🔥 整体标记为预定义数据
+            'isPredefined': True,  # 整体标记为预定义数据
             'note': '使用预定义测试数据（网络限制）'
         }
         
@@ -299,7 +299,7 @@ def main():
             symbols = sys.argv[2] if len(sys.argv) > 2 else ''
             instrument_type = sys.argv[3] if len(sys.argv) > 3 else 'stock'
             result = get_batch_market_quotes(symbols, instrument_type)
-            # 🔥 使用紧凑格式输出，减少JSON大小
+            # 使用紧凑格式输出，减少JSON大小
             print(json.dumps(result, ensure_ascii=False, separators=(',', ':')))
             
         elif command == 'test':

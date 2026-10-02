@@ -17,14 +17,14 @@ for key in ['HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy']:
     if key in os.environ:
         del os.environ[key]
 
-# 🔥 添加 efinance 源码路径（源码集成方式）
+# 添加 efinance 源码路径（源码集成方式）
 efinance_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../数据源/efinance-main'))
 sys.path.insert(0, efinance_path)
 
 try:
     import efinance as ef
-    print(f"✅ EFinance版本: {ef.__version__ if hasattr(ef, '__version__') else 'unknown'}", file=sys.stderr)
-    print(f"✅ EFinance路径: {efinance_path}", file=sys.stderr)
+    print(f"✓ EFinance版本: {ef.__version__ if hasattr(ef, '__version__') else 'unknown'}", file=sys.stderr)
+    print(f"✓ EFinance路径: {efinance_path}", file=sys.stderr)
 except ImportError as e:
     print(json.dumps({
         'success': False,
@@ -71,9 +71,9 @@ def get_batch_quotes(symbols, instrument_type='stock'):
                 clean_codes.append(symbol)
         
         quotes = []
-        is_predefined = False  # 🔥 标记是否使用预定义数据
+        is_predefined = False  # 标记是否使用预定义数据
         
-        # 🔥 尝试获取真实数据
+        # 尝试获取真实数据
         try:
             # EFinance需要先获取所有行情,然后筛选
             if instrument_type == 'index':
@@ -106,16 +106,16 @@ def get_batch_quotes(symbols, instrument_type='stock'):
                             'type': instrument_type
                         })
         except Exception as api_error:
-            print(f"⚠️ API获取失败: {str(api_error)}, 使用预定义数据", file=sys.stderr)
-            # 🔥 使用预定义测试数据
+            print(f"⚠ API获取失败: {str(api_error)}, 使用预定义数据", file=sys.stderr)
+            # 使用预定义测试数据
             quotes = _get_predefined_quotes(clean_codes, instrument_type)
-            is_predefined = True  # 🔥 标记为预定义数据
+            is_predefined = True  # 标记为预定义数据
         
         if not quotes:
             # 如果真实API没有找到数据,使用预定义数据
-            print(f"⚠️ 未找到匹配的行情数据,使用预定义数据", file=sys.stderr)
+            print(f"⚠ 未找到匹配的行情数据,使用预定义数据", file=sys.stderr)
             quotes = _get_predefined_quotes(clean_codes, instrument_type)
-            is_predefined = True  # 🔥 标记为预定义数据
+            is_predefined = True  # 标记为预定义数据
         
         if not quotes:
             return {
@@ -132,7 +132,7 @@ def get_batch_quotes(symbols, instrument_type='stock'):
             'samples': quotes,
             'responseTime': 0,
             'source': 'efinance',
-            'isPredefined': is_predefined  # 🔥 标记是否为预定义数据
+            'isPredefined': is_predefined  # 标记是否为预定义数据
         }
         
     except Exception as e:
@@ -197,8 +197,8 @@ def _get_predefined_quotes(codes, instrument_type='stock'):
                 'changePercent': change_percent,
                 'time': datetime.now().isoformat(),
                 'type': instrument_type,
-                'isPredefined': True,  # 🔥 标记为预定义数据
-                'dataSource': 'predefined'  # 🔥 数据来源标识
+                'isPredefined': True,  # 标记为预定义数据
+                'dataSource': 'predefined'  # 数据来源标识
             })
     
     return quotes
@@ -313,7 +313,7 @@ def get_kline(symbol, period='daily', start_date=None, end_date=None):
         }
         ef_period = period_map.get(period, '日')
         
-        # 🔥 标记是否使用预定义数据
+        # 标记是否使用预定义数据
         is_predefined = False
         kline = []
         
@@ -341,11 +341,11 @@ def get_kline(symbol, period='daily', start_date=None, end_date=None):
                         'amount': float(row['成交额']) if '成交额' in row else 0
                     })
         except Exception as api_error:
-            print(f"⚠️ API获取K线失败: {str(api_error)}, 使用预定义数据", file=sys.stderr)
+            print(f"⚠ API获取K线失败: {str(api_error)}, 使用预定义数据", file=sys.stderr)
         
         # 如果没有获取到真实数据，使用预定义数据
         if not kline:
-            print(f"⚠️ 未获取到K线数据，使用预定义数据", file=sys.stderr)
+            print(f"⚠ 未获取到K线数据，使用预定义数据", file=sys.stderr)
             kline = _get_predefined_kline(clean_code, start_date, end_date)
             is_predefined = True
         
@@ -362,7 +362,7 @@ def get_kline(symbol, period='daily', start_date=None, end_date=None):
             'kline': kline,
             'count': len(kline),
             'source': 'efinance',
-            'isPredefined': is_predefined  # 🔥 标记是否为预定义数据
+            'isPredefined': is_predefined  # 标记是否为预定义数据
         }
         
     except Exception as e:
