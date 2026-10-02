@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>cognitiveSnapshot — 上下文永续与认知压缩引擎 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>memory<span class="sep">›</span>cognitiveSnapshot<span class="sep">›</span>cognitiveSnapshot — 上下文永续与认知压缩引擎</div>
+      <header class="hero reveal"><h1>cognitiveSnapshot — 上下文永续与认知压缩引擎</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#cognitivesnapshot-上下文永续与认知压缩引擎">cognitiveSnapshot — 上下文永续与认知压缩引擎</a></li><li class="lvl-2"><a href="#各文件的职责-取自各文件头注释">各文件的职责（取自各文件头注释）</a></li><li class="lvl-2"><a href="#谁在用本单元-非测试外部消费者-去重-2-个">谁在用本单元（非测试外部消费者，去重 2 个）</a></li><li class="lvl-2"><a href="#出域边-如实登记-不写白名单把它合法化">出域边（如实登记，不写白名单把它合法化）</a></li><li class="lvl-2"><a href="#已知缺陷">已知缺陷</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="cognitivesnapshot-上下文永续与认知压缩引擎">cognitiveSnapshot — 上下文永续与认知压缩引擎<a class="anchor" href="#cognitivesnapshot-上下文永续与认知压缩引擎" aria-label="锚点">#</a></h1>
+<p>D2 业务上下文里的一个功能单元：<code>CognitiveContextEngine</code>，负责长会话的三级压缩、状态快照与溢出拦截。<br>6 个源文件，全部有同名同目录的共置测试（30 处 <code>KNOWN-DEFECT</code> 断言钉住实测行为）。</p>
+<h2 id="各文件的职责-取自各文件头注释">各文件的职责（取自各文件头注释）<a class="anchor" href="#各文件的职责-取自各文件头注释" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>角色</th></tr></thead><tbody><tr><td><code>index.js</code></td><td><code>CognitiveContextEngine</code> 门面：上下文永续与记忆压缩</td></tr><tr><td><code>compressionEngine.js</code></td><td>三级认知压缩引擎（§3.2）</td></tr><tr><td><code>offloadStore.js</code></td><td>L3 卸载离境的外部持久层（§3.2 L3 / §3.3 外部卸载指针集）</td></tr><tr><td><code>overflowInterceptor.js</code></td><td>断点续传网关 / 溢出拦截器（§3.4）</td></tr><tr><td><code>snapshotManager.js</code></td><td>状态快照与热插拔接力（§3.3）</td></tr><tr><td><code>workbench.js</code></td><td>工作台与冷热分层（§3.1，CPU 寄存器模式）</td></tr></tbody></table>
+<h2 id="谁在用本单元-非测试外部消费者-去重-2-个">谁在用本单元（非测试外部消费者，去重 2 个）<a class="anchor" href="#谁在用本单元-非测试外部消费者-去重-2-个" aria-label="锚点">#</a></h2>
+<ul><li><code>src/services/cognitiveSnapshot/index.js:4</code> —— D1 侧历史路径再导出壳。</li><li><code>src/services/tool/toolUseLoopHelpers.js:1386</code> —— 工具循环侧惰性 require，取 <code>CognitiveContextEngine</code>。</li></ul>
+<h2 id="出域边-如实登记-不写白名单把它合法化">出域边（如实登记，不写白名单把它合法化）<a class="anchor" href="#出域边-如实登记-不写白名单把它合法化" aria-label="锚点">#</a></h2>
+<ul><li><strong>D3 共 8 处</strong>（<code>utils/</code> 与 <code>constants/</code>，共享底座，名义边界内合法）。</li><li><strong>D1 共 3 处</strong>，全部指向同一个文件 <code>services/contextWasm.js</code>：<code>compressionEngine.js:42</code>、<code>index.js:55</code>、<code>workbench.js:34</code>。</li></ul>
+<p>D2 的名义 <code>mayDependOn</code> 只有 <code>[&quot;D2&quot;,&quot;D3&quot;]</code>，这 3 条属 <code>DOMAIN-DEPS.json</code> 的 <code>declared_not_enforced</code> D2→D1，<br>  交 <code>archDebtScan</code> R1 / <code>cross-layer-require</code> 棘轮与任务 #17 第 19 项（Q2）管辖 —— 逐条裁决面见 <code>[DESIGN-LAY-008]</code> §12.43。</p>
+<h2 id="已知缺陷">已知缺陷<a class="anchor" href="#已知缺陷" aria-label="锚点">#</a></h2>
+<p>30 处 <code>KNOWN-DEFECT</code> 以共置测试钉住（grep 实测：compressionEngine 4 / index 4 / offloadStore 4 /<br>overflowInterceptor 5 / snapshotManager 7 / workbench 6）。全部只登记不修：改任何一条都改变面向模型的上下文取舍结果，属行为变更。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../services/backend/src/services/domain/maintenance/uninstall/README.html"><div class="dir">← 上一篇</div><div class="ttl">uninstall — 卸载台账 / 计划 / 写入</div></a><a class="next" href="../../../../../../../services/backend/src/services/domain/memory/compact/README.html"><div class="dir">下一篇 →</div><div class="ttl">compact — 对话压缩的提示模板与编排器（D2 功能单元）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/memory/cognitiveSnapshot/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
