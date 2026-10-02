@@ -19,10 +19,10 @@ export function Toast({ message, type = 'info', duration = 3000, onClose }: Toas
   }, [duration, onClose])
 
   const typeConfig = {
-    info: { bg: 'bg-toast', border: 'border-border', icon: 'ℹ️' },
-    success: { bg: 'bg-success/10', border: 'border-success/30', icon: '✅' },
-    warning: { bg: 'bg-warning/10', border: 'border-warning/30', icon: '⚠️' },
-    error: { bg: 'bg-destructive/10', border: 'border-destructive/30', icon: '❌' },
+    info: { bg: 'bg-toast', border: 'border-border', icon: 'ⓘ' },
+    success: { bg: 'bg-success/10', border: 'border-success/30', icon: '✓' },
+    warning: { bg: 'bg-warning/10', border: 'border-warning/30', icon: '⚠' },
+    error: { bg: 'bg-destructive/10', border: 'border-destructive/30', icon: '✗' },
   }
 
   const config = typeConfig[type]

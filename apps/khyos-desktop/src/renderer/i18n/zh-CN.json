@@ -2818,7 +2818,7 @@
   "settings.dataBaseDirBrowse": "选择文件夹",
   "settings.dataBaseDirCopyFailed": "数据复制失败，路径未更改。",
   "settings.dataBaseDirCopying": "正在复制数据，请勿关闭应用…",
-  "settings.dataBaseDirDescription": "应用数据的根目录（默认为用户主目录），修改后会将现有数据复制到新位置。路径后缀 .zcode/v2 不可更改。",
+  "settings.dataBaseDirDescription": "应用数据的根目录（默认为用户主目录），修改后会将现有数据复制到新位置。路径后缀 .khy 不可更改。",
   "settings.dataBaseDirForbiddenInstallDir": "不能选择 KhyOS 安装目录作为数据存储路径。请选择安装目录之外的文件夹。",
   "settings.dataBaseDirPlaceholder": "默认：用户主目录",
   "settings.dataBaseDirRestartRequired": "数据已保存，重启应用后生效。",

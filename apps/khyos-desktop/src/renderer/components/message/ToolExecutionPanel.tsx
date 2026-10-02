@@ -7,11 +7,11 @@ function ToolExecutionItem({ execution }: { execution: ToolExecution }) {
   const [copied, setCopied] = useState(false)
 
   const statusConfig = {
-    pending: { color: 'text-foreground/50', bg: 'bg-foreground/20', label: '等待中', icon: '⏳' },
-    running: { color: 'text-warning', bg: 'bg-warning/20', label: '运行中', icon: '⚡' },
-    success: { color: 'text-success', bg: 'bg-success/20', label: '完成', icon: '✅' },
-    error: { color: 'text-destructive', bg: 'bg-destructive/20', label: '失败', icon: '❌' },
-    cancelled: { color: 'text-foreground/50', bg: 'bg-foreground/20', label: '已取消', icon: '🚫' },
+    pending: { color: 'text-foreground/50', bg: 'bg-foreground/20', label: '等待中', icon: '⋯' },
+    running: { color: 'text-warning', bg: 'bg-warning/20', label: '运行中', icon: '❯' },
+    success: { color: 'text-success', bg: 'bg-success/20', label: '完成', icon: '✓' },
+    error: { color: 'text-destructive', bg: 'bg-destructive/20', label: '失败', icon: '✗' },
+    cancelled: { color: 'text-foreground/50', bg: 'bg-foreground/20', label: '已取消', icon: '✕' },
   }
 
   const status = statusConfig[execution.status]

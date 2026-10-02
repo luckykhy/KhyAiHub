@@ -103,7 +103,7 @@ export function OpenFilePane({ onOpenFile }: OpenFilePaneProps) {
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
-            <span className="text-3xl mb-3">⚠️</span>
+            <span className="text-3xl mb-3">⚠</span>
             <span className="text-sm text-destructive leading-relaxed">{error}</span>
           </div>
         ) : filtered.length === 0 ? (

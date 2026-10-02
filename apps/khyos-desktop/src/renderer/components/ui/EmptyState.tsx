@@ -7,7 +7,7 @@ interface EmptyStateProps {
   action?: { label: string; onClick: () => void }
 }
 
-export function EmptyState({ icon = '📭', title, description, action }: EmptyStateProps) {
+export function EmptyState({ icon = '□', title, description, action }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center px-8 animate-fade-in">
       <span className="text-4xl mb-4">{icon}</span>

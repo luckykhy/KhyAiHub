@@ -83,7 +83,7 @@ export function SelectionChatPane() {
       <div className="flex-1 overflow-auto px-3 py-3">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-6 animate-fade-in">
-            <span className="text-3xl mb-3">💬</span>
+            <span className="text-3xl mb-3">✎</span>
             <p className="text-sm text-foreground/50">
               辅助对话与主会话共用同一网关；发送的内容不会进入主对话上下文。
             </p>

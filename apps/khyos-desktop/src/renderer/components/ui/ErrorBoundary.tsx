@@ -48,7 +48,7 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className={`flex flex-col items-center justify-center p-8 ${isSection ? 'rounded-xl border border-card-border bg-card m-4' : 'h-full'}`}>
           <div className="text-center max-w-md">
-            <span className="text-4xl block mb-4">⚠️</span>
+            <span className="text-4xl block mb-4">⚠</span>
             <h3 className="text-lg font-semibold text-foreground mb-2">
               {isSection ? '这块界面出了点问题' : '应用界面出了点问题'}
             </h3>
@@ -107,7 +107,7 @@ export function ErrorBanner({ error, onRetry, onDismiss }: { error: string; onRe
   return (
     <div className="mx-4 my-2 p-4 bg-destructive/10 border border-destructive/20 rounded-xl animate-slide-down">
       <div className="flex items-start gap-3">
-        <span className="text-lg">❌</span>
+        <span className="text-lg">✗</span>
         <div className="flex-1">
           <div className="text-sm font-medium text-destructive mb-1">发生错误</div>
           <div className="text-sm text-foreground/60">{error}</div>

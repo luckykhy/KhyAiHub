@@ -110,9 +110,9 @@ export function OnboardingDialog() {
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       <div className="relative w-full max-w-lg bg-popover border border-popover-border rounded-2xl shadow-2xl overflow-hidden animate-slide-down">
-        {/* 头部：欢迎使用 ZCode */}
+        {/* 头部：欢迎使用 KhyOS */}
         <div className="px-8 pt-8 pb-5">
-          <h2 className="text-2xl font-bold text-popover-foreground">欢迎使用 ZCode</h2>
+          <h2 className="text-2xl font-bold text-popover-foreground">欢迎使用 KhyOS</h2>
           <p className="text-sm text-foreground/50 mt-2 leading-relaxed">
             你的 AI 编码搭档。可以先从其他 Agent 迁移数据，也可以直接开始使用。
           </p>
@@ -170,13 +170,13 @@ export function OnboardingDialog() {
           )}
         </div>
 
-        {/* 底部：开始使用 ZCode */}
+        {/* 底部：开始使用 KhyOS */}
         <div className="px-8 py-5 border-t border-popover-border flex items-center justify-end">
           <button
             onClick={close}
             className="px-6 py-2.5 bg-brand text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
           >
-            开始使用 ZCode
+            开始使用 KhyOS
           </button>
         </div>
       </div>
