@@ -24,15 +24,16 @@
     <div class="content">
       <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>10_规范<span class="sep">›</span>DESIGN-LAY<span class="sep">›</span>[DESIGN-LAY-008] 附录A · 方案 P 全量文件去向表</div>
       <header class="hero reveal"><h1>[DESIGN-LAY-008] 附录A · 方案 P 全量文件去向表</h1></header>
-      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-lay-008-附录a-方案-p-全量文件去向表">[DESIGN-LAY-008] 附录A · 方案 P 全量文件去向表</a></li><li class="lvl-2"><a href="#a-目标树-每个文件一行">§A 目标树（每个文件一行）</a></li><li class="lvl-2"><a href="#b-退役清单-120-项-每行-现路径-处置">§B 退役清单（120 项；每行 = 现路径 → 处置）</a></li><li class="lvl-2"><a href="#c-unmapped-待议-0-项-p3-逐族清单点名时消化-禁止静默入-misc">§C UNMAPPED-待议（0 项；P3 逐族清单点名时消化，禁止静默入 misc）</a></li></ul></nav>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-lay-008-附录a-方案-p-全量文件去向表">[DESIGN-LAY-008] 附录A · 方案 P 全量文件去向表</a></li><li class="lvl-2"><a href="#a-目标树-每个文件一行">§A 目标树（每个文件一行）</a></li><li class="lvl-2"><a href="#b-退役清单-109-项-每行-现路径-处置">§B 退役清单（109 项；每行 = 现路径 → 处置）</a></li><li class="lvl-2"><a href="#c-unmapped-待议-3-项-p3-逐族清单点名时消化-禁止静默入-misc">§C UNMAPPED-待议（3 项；P3 逐族清单点名时消化，禁止静默入 misc）</a></li></ul></nav>
       <article class="doc-body">
 <p>&lt;!-- 文档分类: DESIGN-LAY 附录 | 生成器: .khyos/tmp/b54-tree.js | 构建产物不得手改 --&gt;</p>
 <h1 id="design-lay-008-附录a-方案-p-全量文件去向表">[DESIGN-LAY-008] 附录A · 方案 P 全量文件去向表<a class="anchor" href="#design-lay-008-附录a-方案-p-全量文件去向表" aria-label="锚点">#</a></h1>
-<blockquote><p>由 git ls-files 全量 10816 个跟踪文件逐行生成。迁移 10690 · 退役 120 · 孪生 html 随 md 再生 6（不单独决策） · UNMAPPED-待议 0。<br>树 = 目标形态（目录嵌套到每个文件）；壳与 D-4 退役项单列 §B；UNMAPPED 单列 §C（P3 逐族点名时消化）。<br>本机态目录（不在 git）：.khy/.khyos/.workbuddy/.workbuddy-ai/node_modules/khy-Trajectory → 见 §16.2 行。</p></blockquote>
+<blockquote><p>由 git ls-files 全量 11457 个跟踪文件逐行生成。迁移 11345 · 退役 109 · 孪生 html 随 md 再生 0（不单独决策） · UNMAPPED-待议 3。<br>树 = 目标形态（目录嵌套到每个文件）；壳与 D-4 退役项单列 §B；UNMAPPED 单列 §C（P3 逐族点名时消化）。<br>本机态目录（不在 git）：.khy/.khyos/.workbuddy/.workbuddy-ai/node_modules/khy-Trajectory → 见 §16.2 行。</p></blockquote>
 <h2 id="a-目标树-每个文件一行">§A 目标树（每个文件一行）<a class="anchor" href="#a-目标树-每个文件一行" aria-label="锚点">#</a></h2>
 <pre><code class="language-text">khy-os/
 ├── .github
 │  ├── CODEOWNERS
+│  ├── CONTRIBUTING.html
 │  ├── CONTRIBUTING.md
 │  ├── ISSUE_TEMPLATE
 │  │  ├── bug_report.yml
@@ -71,21 +72,31 @@
 ├── business
 │  ├── data
 │  │  ├── backup
+│  │  │  ├── README.html
+│  │  │  ├── README.md
 │  │  │  ├── backup
 │  │  │  │  ├── backupAssetPlan.js
+│  │  │  │  ├── backupAssetPlan.test.js
 │  │  │  │  ├── backupManifest.js
+│  │  │  │  ├── backupManifest.test.js
 │  │  │  │  ├── backupService.js
+│  │  │  │  ├── backupService.test.js
 │  │  │  │  ├── coldExportService.js
+│  │  │  │  ├── coldExportService.test.js
 │  │  │  │  ├── restoreService.js
-│  │  │  │  └── sqliteHotCopy.js
+│  │  │  │  ├── sqliteHotCopy.js
+│  │  │  │  └── sqliteHotCopy.test.js
 │  │  │  ├── diskAnalyze
 │  │  │  │  ├── index.js
-│  │  │  │  └── walker.js
+│  │  │  │  ├── index.test.js
+│  │  │  │  ├── walker.js
+│  │  │  │  └── walker.test.js
 │  │  │  ├── diskCleanup
 │  │  │  │  ├── executor.js
 │  │  │  │  ├── index.js
 │  │  │  │  ├── junkCatalog.js
 │  │  │  │  ├── planner.js
+│  │  │  │  ├── planner.test.js
 │  │  │  │  ├── protectedGuard.js
 │  │  │  │  └── scanner.js
 │  │  │  └── restore
@@ -93,33 +104,58 @@
 │  │  │     ├── hydrationHealth.js
 │  │  │     ├── installIntegrity.js
 │  │  │     ├── resolverPolicy.js
+│  │  │     ├── resolverPolicy.test.js
 │  │  │     ├── restoreConflictDetector.js
 │  │  │     ├── restoreConflictResolver.js
 │  │  │     ├── restoreConvergenceVerifier.js
 │  │  │     └── restoreReadiness.js
 │  │  ├── data
+│  │  │  ├── README.html
+│  │  │  ├── README.md
 │  │  │  ├── data
-│  │  │  │  └── DataLocation.js
+│  │  │  │  ├── DataLocation.js
+│  │  │  │  └── DataLocation.test.js
 │  │  │  ├── resources
 │  │  │  │  ├── archiveInstaller.js
+│  │  │  │  ├── archiveInstaller.test.js
 │  │  │  │  ├── manifestLoader.js
+│  │  │  │  ├── manifestLoader.test.js
 │  │  │  │  ├── resourceManager.js
+│  │  │  │  ├── resourceManager.test.js
 │  │  │  │  ├── resourceStore.js
-│  │  │  │  └── resourceTask.js
+│  │  │  │  ├── resourceStore.test.js
+│  │  │  │  ├── resourceTask.js
+│  │  │  │  └── resourceTask.test.js
 │  │  │  ├── reverseEngineer
+│  │  │  │  ├── README.html
+│  │  │  │  ├── README.md
 │  │  │  │  ├── artifactScanner.js
+│  │  │  │  ├── artifactScanner.test.js
 │  │  │  │  ├── asarArchive.js
+│  │  │  │  ├── asarArchive.test.js
 │  │  │  │  ├── formatRegistry.js
+│  │  │  │  ├── formatRegistry.test.js
 │  │  │  │  ├── genericExtractor.js
+│  │  │  │  ├── genericExtractor.test.js
 │  │  │  │  ├── index.js
+│  │  │  │  ├── index.test.js
+│  │  │  │  ├── khy.module.json
 │  │  │  │  ├── reconstructionPort.js
+│  │  │  │  ├── reconstructionPort.test.js
 │  │  │  │  ├── sourceRecoverer.js
+│  │  │  │  ├── sourceRecoverer.test.js
 │  │  │  │  ├── stringHarvester.js
+│  │  │  │  ├── stringHarvester.test.js
 │  │  │  │  ├── toolOrchestrator.js
-│  │  │  │  └── verificationLedger.js
+│  │  │  │  ├── toolOrchestrator.test.js
+│  │  │  │  ├── verificationLedger.js
+│  │  │  │  └── verificationLedger.test.js
 │  │  │  └── upstreamStudy
-│  │  │     └── index.js
+│  │  │     ├── index.js
+│  │  │     └── index.test.js
 │  │  ├── query
+│  │  │  ├── README.html
+│  │  │  ├── README.md
 │  │  │  ├── query
 │  │  │  │  ├── activeAssist.js
 │  │  │  │  ├── compactPipeline.js
@@ -130,6 +166,7 @@
 │  │  │  │  ├── maxTokensRecovery.js
 │  │  │  │  ├── responseDebounce.js
 │  │  │  │  ├── seamlessResume.js
+│  │  │  │  ├── seamlessResume.test.js
 │  │  │  │  ├── searchConvergence.js
 │  │  │  │  ├── shortStopContinuation.js
 │  │  │  │  ├── streamRepetitionGuard.js
@@ -149,10 +186,18 @@
 │  │  │     ├── searchSourceDiscovery.js
 │  │  │     └── unifiedSearch.js
 │  │  ├── structured
+│  │  │  ├── README.html
+│  │  │  ├── README.md
 │  │  │  ├── formatInspect
+│  │  │  │  ├── README.html
+│  │  │  │  ├── README.md
 │  │  │  │  ├── fileFormatData.js
+│  │  │  │  ├── fileFormatData.test.js
 │  │  │  │  ├── fileFormatDetector.js
-│  │  │  │  └── textAddress.js
+│  │  │  │  ├── fileFormatDetector.test.js
+│  │  │  │  ├── khy.module.json
+│  │  │  │  ├── textAddress.js
+│  │  │  │  └── textAddress.test.js
 │  │  │  ├── output
 │  │  │  │  ├── README.html
 │  │  │  │  ├── README.md
@@ -160,17 +205,31 @@
 │  │  │  │  ├── jsonSchemaValidate.test.js
 │  │  │  │  └── khy.module.json
 │  │  │  ├── structuredFurnace
+│  │  │  │  ├── README.html
+│  │  │  │  ├── README.md
 │  │  │  │  ├── anomalyHandler.js
+│  │  │  │  ├── anomalyHandler.test.js
 │  │  │  │  ├── chaosInterceptor.js
+│  │  │  │  ├── chaosInterceptor.test.js
 │  │  │  │  ├── dimensionReducer.js
+│  │  │  │  ├── dimensionReducer.test.js
 │  │  │  │  ├── entityRegistry.js
+│  │  │  │  ├── entityRegistry.test.js
 │  │  │  │  ├── entropyAssessor.js
+│  │  │  │  ├── entropyAssessor.test.js
 │  │  │  │  ├── forgeSchema.js
+│  │  │  │  ├── forgeSchema.test.js
 │  │  │  │  ├── index.js
+│  │  │  │  ├── index.test.js
 │  │  │  │  ├── intentWeaver.js
+│  │  │  │  ├── intentWeaver.test.js
+│  │  │  │  ├── khy.module.json
 │  │  │  │  ├── skeletonReconstructor.js
+│  │  │  │  ├── skeletonReconstructor.test.js
 │  │  │  │  ├── stateMachine.js
-│  │  │  │  └── taskGraph.js
+│  │  │  │  ├── stateMachine.test.js
+│  │  │  │  ├── taskGraph.js
+│  │  │  │  └── taskGraph.test.js
 │  │  │  ├── structuredResults
 │  │  │  │  ├── README.html
 │  │  │  │  ├── README.md
@@ -178,11 +237,20 @@
 │  │  │  │  ├── turnEnvelope.js
 │  │  │  │  └── turnEnvelope.test.js
 │  │  │  └── typeset
+│  │  │     ├── README.html
+│  │  │     ├── README.md
 │  │  │     ├── contentSchema.js
+│  │  │     ├── contentSchema.test.js
+│  │  │     ├── khy.module.json
 │  │  │     ├── markdownToAst.js
+│  │  │     ├── markdownToAst.test.js
 │  │  │     ├── styleTemplates.js
-│  │  │     └── textEmphasisPolicy.js
+│  │  │     ├── styleTemplates.test.js
+│  │  │     ├── textEmphasisPolicy.js
+│  │  │     └── textEmphasisPolicy.test.js
 │  │  └── trajectory
+│  │     ├── README.html
+│  │     ├── README.md
 │  │     ├── auditTrajectory
 │  │     │  ├── acceptance.js
 │  │     │  ├── channel.js
@@ -195,104 +263,184 @@
 │  │     │  ├── workerProcess.js
 │  │     │  └── workspaceGuard.js
 │  │     ├── dualTrack
+│  │     │  ├── README.html
+│  │     │  ├── README.md
 │  │     │  ├── actionRegistry.js
+│  │     │  ├── actionRegistry.test.js
 │  │     │  ├── core
-│  │     │  │  └── coreActions.js
+│  │     │  │  ├── README.html
+│  │     │  │  ├── README.md
+│  │     │  │  ├── coreActions.js
+│  │     │  │  ├── coreActions.test.js
+│  │     │  │  └── khy.module.json
 │  │     │  ├── degradeStateMachine.js
+│  │     │  ├── degradeStateMachine.test.js
 │  │     │  ├── extensionLoader.js
+│  │     │  ├── extensionLoader.test.js
 │  │     │  ├── extensionWriter.js
+│  │     │  ├── extensionWriter.test.js
 │  │     │  ├── index.js
+│  │     │  ├── index.test.js
+│  │     │  ├── khy.module.json
 │  │     │  ├── lenientResponseParser.js
+│  │     │  ├── lenientResponseParser.test.js
 │  │     │  ├── unknownActionView.js
-│  │     │  └── updateGuard.js
+│  │     │  ├── unknownActionView.test.js
+│  │     │  ├── updateGuard.js
+│  │     │  └── updateGuard.test.js
 │  │     ├── dualTrackForge
 │  │     │  ├── deterministicElevator.js
+│  │     │  ├── deterministicElevator.test.js
 │  │     │  ├── dualTrackMerger.js
 │  │     │  ├── index.js
 │  │     │  ├── logicalSelfAssessor.js
 │  │     │  ├── physicalAssertionGate.js
-│  │     │  └── physicalCodes.js
+│  │     │  ├── physicalCodes.js
+│  │     │  └── physicalCodes.test.js
 │  │     ├── trajectoryGuide
 │  │     │  ├── aiBridge.js
 │  │     │  ├── config.js
+│  │     │  ├── config.test.js
 │  │     │  ├── guideInjector.js
+│  │     │  ├── guideInjector.test.js
 │  │     │  ├── guideRetriever.js
+│  │     │  ├── guideRetriever.test.js
 │  │     │  ├── index.js
 │  │     │  ├── mapAuthor.js
 │  │     │  ├── mapExport.js
 │  │     │  └── mapStore.js
 │  │     ├── trajectoryProvenance
+│  │     │  ├── README.html
+│  │     │  ├── README.md
 │  │     │  ├── claimNegation.js
+│  │     │  ├── claimNegation.test.js
 │  │     │  ├── claimReconciler.js
+│  │     │  ├── claimReconciler.test.js
 │  │     │  ├── index.js
+│  │     │  ├── index.test.js
+│  │     │  ├── khy.module.json
 │  │     │  ├── khyTrace.js
+│  │     │  ├── khyTrace.test.js
 │  │     │  ├── provenanceClassifier.js
+│  │     │  ├── provenanceClassifier.test.js
 │  │     │  ├── quarantinePolicy.js
+│  │     │  ├── quarantinePolicy.test.js
 │  │     │  ├── traceChain.js
-│  │     │  └── traceProjection.js
+│  │     │  ├── traceChain.test.js
+│  │     │  ├── traceProjection.js
+│  │     │  └── traceProjection.test.js
 │  │     └── trajectoryReplay
+│  │        ├── README.html
+│  │        ├── README.md
 │  │        ├── artifactHash.js
+│  │        ├── artifactHash.test.js
 │  │        ├── envFingerprint.js
+│  │        ├── envFingerprint.test.js
 │  │        ├── index.js
+│  │        ├── index.test.js
+│  │        ├── khy.module.json
 │  │        ├── replayArtifactGuards.js
+│  │        ├── replayArtifactGuards.test.js
 │  │        ├── replayBundle.js
+│  │        ├── replayBundle.test.js
 │  │        ├── replayEngine.js
+│  │        ├── replayEngine.test.js
 │  │        ├── replayLedger.js
+│  │        ├── replayLedger.test.js
 │  │        ├── replayStepPolicy.js
-│  │        └── tierRegistry.js
+│  │        ├── replayStepPolicy.test.js
+│  │        ├── tierRegistry.js
+│  │        └── tierRegistry.test.js
 │  ├── dialogue
 │  │  ├── collab
+│  │  │  ├── README.html
+│  │  │  ├── README.md
 │  │  │  ├── ide
 │  │  │  │  └── idePlan.js
 │  │  │  ├── proactiveCollaboration
 │  │  │  │  ├── constants.js
 │  │  │  │  ├── delegationPlanner.js
+│  │  │  │  ├── delegationPlanner.test.js
 │  │  │  │  ├── index.js
 │  │  │  │  └── opportunityDetector.js
 │  │  │  └── weipuxiezuo
 │  │  │     ├── constraints.js
 │  │  │     ├── detector.js
+│  │  │     ├── detector.test.js
 │  │  │     ├── index.js
 │  │  │     ├── rules.js
+│  │  │     ├── rules.test.js
 │  │  │     ├── scorer.js
-│  │  │     └── textStats.js
+│  │  │     ├── textStats.js
+│  │  │     └── textStats.test.js
 │  │  ├── messaging
+│  │  │  ├── README.html
+│  │  │  ├── README.md
 │  │  │  ├── channels
 │  │  │  │  ├── _baseChannel.js
+│  │  │  │  ├── _baseChannel.test.js
 │  │  │  │  ├── dingtalkChannel.js
+│  │  │  │  ├── dingtalkChannel.test.js
 │  │  │  │  ├── feishuChannel.js
+│  │  │  │  ├── feishuChannel.test.js
 │  │  │  │  ├── ilinkChannel.js
 │  │  │  │  ├── ilinkDispatchDiagnostics.js
 │  │  │  │  ├── ilinkDispatcher.js
 │  │  │  │  ├── ilinkExecutionLock.js
+│  │  │  │  ├── ilinkExecutionLock.test.js
 │  │  │  │  ├── ilinkFileDelivery.js
 │  │  │  │  ├── ilinkWorkspaceRouting.js
 │  │  │  │  ├── imAdapterChannel.js
 │  │  │  │  ├── messageRouter.js
 │  │  │  │  ├── slackChannel.js
-│  │  │  │  └── wecomChannel.js
+│  │  │  │  ├── wecomChannel.js
+│  │  │  │  └── wecomChannel.test.js
 │  │  │  ├── mcp
+│  │  │  │  ├── README.html
+│  │  │  │  ├── README.md
 │  │  │  │  ├── autoConnect.js
+│  │  │  │  ├── autoConnect.test.js
 │  │  │  │  ├── ccMcpBridge.js
+│  │  │  │  ├── ccMcpBridge.test.js
 │  │  │  │  ├── index.js
+│  │  │  │  ├── index.test.js
+│  │  │  │  ├── khy.module.json
 │  │  │  │  ├── mcpAddSpec.js
+│  │  │  │  ├── mcpAddSpec.test.js
 │  │  │  │  ├── mcpConfigStore.js
+│  │  │  │  ├── mcpConfigStore.test.js
 │  │  │  │  ├── mcpDisclosurePlan.js
+│  │  │  │  ├── mcpDisclosurePlan.test.js
 │  │  │  │  ├── mcpEcosystemRegistry.js
+│  │  │  │  ├── mcpEcosystemRegistry.test.js
 │  │  │  │  ├── mcpGovernance.js
+│  │  │  │  ├── mcpGovernance.test.js
 │  │  │  │  ├── mcpHttpServer.js
+│  │  │  │  ├── mcpHttpServer.test.js
 │  │  │  │  ├── mcpServeToolPolicy.js
+│  │  │  │  ├── mcpServeToolPolicy.test.js
 │  │  │  │  ├── mcpServer.js
+│  │  │  │  ├── mcpServer.test.js
 │  │  │  │  ├── mcpServerPresets.js
+│  │  │  │  ├── mcpServerPresets.test.js
 │  │  │  │  ├── mcpServerProtocol.js
+│  │  │  │  ├── mcpServerProtocol.test.js
 │  │  │  │  ├── mcpServerStatus.js
+│  │  │  │  ├── mcpServerStatus.test.js
 │  │  │  │  ├── mcpStdioServer.js
+│  │  │  │  ├── mcpStdioServer.test.js
 │  │  │  │  ├── oauthTokenStore.js
+│  │  │  │  ├── oauthTokenStore.test.js
 │  │  │  │  ├── ocMcpBridge.js
+│  │  │  │  ├── ocMcpBridge.test.js
 │  │  │  │  ├── oeMcpBridge.js
+│  │  │  │  ├── oeMcpBridge.test.js
 │  │  │  │  ├── pythonCommandResolver.js
+│  │  │  │  ├── pythonCommandResolver.test.js
 │  │  │  │  ├── toolPool.js
-│  │  │  │  └── types.js
+│  │  │  │  ├── toolPool.test.js
+│  │  │  │  ├── types.js
+│  │  │  │  └── types.test.js
 │  │  │  └── messaging
 │  │  │     ├── ilinkAccountStore.js
 │  │  │     ├── ilinkApi.js
@@ -304,19 +452,28 @@
 │  │  │     ├── ilinkMedia.js
 │  │  │     ├── ilinkMessageCodec.js
 │  │  │     ├── ilinkProtocol.js
+│  │  │     ├── ilinkProtocol.test.js
 │  │  │     ├── ilinkSendPolicy.js
 │  │  │     ├── ilinkSessionState.js
 │  │  │     ├── ilinkStorePaths.js
+│  │  │     ├── ilinkStorePaths.test.js
 │  │  │     ├── msgChannelCore.js
 │  │  │     ├── msgConfigStore.js
 │  │  │     ├── msgInboundCore.js
 │  │  │     ├── msgReplyBridge.js
 │  │  │     └── msgSender.js
 │  │  ├── onboarding
+│  │  │  ├── README.html
+│  │  │  ├── README.md
+│  │  │  ├── khy.module.json
 │  │  │  └── onboarding
 │  │  │     ├── onboardingPlan.js
-│  │  │     └── safetyNotice.js
+│  │  │     ├── onboardingPlan.test.js
+│  │  │     ├── safetyNotice.js
+│  │  │     └── safetyNotice.test.js
 │  │  └── session
+│  │     ├── README.html
+│  │     ├── README.md
 │  │     ├── chatStateIsolation
 │  │     │  ├── README.html
 │  │     │  ├── README.md
@@ -327,6 +484,7 @@
 │  │     │  ├── contextBreakdown.js
 │  │     │  ├── contextSuggestions.js
 │  │     │  ├── ctxWindowStats.js
+│  │     │  ├── ctxWindowStats.test.js
 │  │     │  ├── messageBreakdown.js
 │  │     │  └── webContextStats.js
 │  │     ├── contextScope
@@ -335,15 +493,23 @@
 │  │     │  ├── index.js
 │  │     │  ├── scopeRanker.js
 │  │     │  ├── searchPlanBuilder.js
+│  │     │  ├── searchPlanBuilder.test.js
 │  │     │  └── taskSignalExtractor.js
 │  │     ├── conversation
+│  │     │  ├── README.html
+│  │     │  ├── README.md
 │  │     │  ├── btwNote.js
-│  │     │  └── btwNoteQueue.js
+│  │     │  ├── btwNote.test.js
+│  │     │  ├── btwNoteQueue.js
+│  │     │  ├── btwNoteQueue.test.js
+│  │     │  └── khy.module.json
 │  │     └── session
 │  │        ├── sessionForestService.js
 │  │        └── sessionForkPlan.js
 │  ├── guard
 │  │  ├── maintenance
+│  │  │  ├── README.html
+│  │  │  ├── README.md
 │  │  │  ├── auditFixLoop
 │  │  │  │  ├── auditParser.js
 │  │  │  │  ├── index.js
@@ -355,19 +521,33 @@
 │  │  │  │  ├── claimMainPlan.js
 │  │  │  │  └── claimMainStore.js
 │  │  │  ├── evoEngine
+│  │  │  │  ├── README.html
+│  │  │  │  ├── README.md
 │  │  │  │  ├── evoLedger.js
+│  │  │  │  ├── evoLedger.test.js
 │  │  │  │  ├── evoLevels.js
+│  │  │  │  ├── evoLevels.test.js
 │  │  │  │  ├── evoRequirement.js
+│  │  │  │  ├── evoRequirement.test.js
 │  │  │  │  ├── evoTrustBreaker.js
+│  │  │  │  ├── evoTrustBreaker.test.js
 │  │  │  │  ├── frictionBridge.js
+│  │  │  │  ├── frictionBridge.test.js
 │  │  │  │  ├── hostPatcher.js
+│  │  │  │  ├── hostPatcher.test.js
 │  │  │  │  ├── index.js
+│  │  │  │  ├── index.test.js
+│  │  │  │  ├── khy.module.json
 │  │  │  │  ├── organogenesisSandbox.js
-│  │  │  │  └── painPointScanner.js
+│  │  │  │  ├── organogenesisSandbox.test.js
+│  │  │  │  ├── painPointScanner.js
+│  │  │  │  └── painPointScanner.test.js
 │  │  │  ├── orphanSweep
-│  │  │  │  └── orphanSweep.js
+│  │  │  │  ├── orphanSweep.js
+│  │  │  │  └── orphanSweep.test.js
 │  │  │  ├── selfHeal
 │  │  │  │  ├── deadLoopDetector.js
+│  │  │  │  ├── deadLoopDetector.test.js
 │  │  │  │  ├── diagnosisDictionary.js
 │  │  │  │  ├── errorDiagnostician.js
 │  │  │  │  ├── fallbackTree.js
@@ -376,8 +556,13 @@
 │  │  │  │  ├── microLoopExecutor.js
 │  │  │  │  └── types.d.ts
 │  │  │  ├── selfRepair
+│  │  │  │  ├── README.html
+│  │  │  │  ├── README.md
+│  │  │  │  ├── khy.module.json
 │  │  │  │  ├── primitives.js
-│  │  │  │  └── transactionRunner.js
+│  │  │  │  ├── primitives.test.js
+│  │  │  │  ├── transactionRunner.js
+│  │  │  │  └── transactionRunner.test.js
 │  │  │  ├── selfSustainingInfra
 │  │  │  │  ├── autoTestScaffolder.js
 │  │  │  │  ├── contractDocGenerator.js
@@ -395,9 +580,12 @@
 │  │  │     ├── uninstallPlan.js
 │  │  │     └── uninstallPlan.test.js
 │  │  ├── security
+│  │  │  ├── README.html
+│  │  │  ├── README.md
 │  │  │  ├── adversarial
 │  │  │  │  ├── attackVectors.js
 │  │  │  │  ├── forgeryBuilders.js
+│  │  │  │  ├── forgeryBuilders.test.js
 │  │  │  │  ├── hardeningLoop.js
 │  │  │  │  ├── index.js
 │  │  │  │  ├── stressHarness.js
@@ -406,15 +594,25 @@
 │  │  │  │  ├── conflictQuencher.js
 │  │  │  │  ├── dataSovereigntyGateway.js
 │  │  │  │  ├── ghostValueAnnotator.js
+│  │  │  │  ├── ghostValueAnnotator.test.js
 │  │  │  │  ├── index.js
 │  │  │  │  └── sovereigntyTiers.js
 │  │  │  ├── failsafe
+│  │  │  │  ├── README.html
+│  │  │  │  ├── README.md
 │  │  │  │  ├── classifier.js
+│  │  │  │  ├── classifier.test.js
 │  │  │  │  ├── classifierSignals.js
+│  │  │  │  ├── classifierSignals.test.js
 │  │  │  │  ├── errorCodes.js
+│  │  │  │  ├── errorCodes.test.js
 │  │  │  │  ├── index.js
+│  │  │  │  ├── index.test.js
+│  │  │  │  ├── khy.module.json
 │  │  │  │  ├── safeResponse.js
+│  │  │  │  ├── safeResponse.test.js
 │  │  │  │  ├── streamInjector.js
+│  │  │  │  ├── streamInjector.test.js
 │  │  │  │  └── types.d.ts
 │  │  │  ├── marshal
 │  │  │  │  ├── README.html
@@ -424,8 +622,11 @@
 │  │  │  │  └── khy.module.json
 │  │  │  ├── permissionPolicy
 │  │  │  │  ├── config.js
+│  │  │  │  ├── config.test.js
 │  │  │  │  ├── index.js
-│  │  │  │  └── matchers.js
+│  │  │  │  ├── index.test.js
+│  │  │  │  ├── matchers.js
+│  │  │  │  └── matchers.test.js
 │  │  │  ├── redpass
 │  │  │  │  ├── redpassCheckpoint.js
 │  │  │  │  ├── redpassEngine.js
@@ -433,14 +634,25 @@
 │  │  │  │  ├── redpassStrategyScorer.js
 │  │  │  │  └── redpassSynonyms.js
 │  │  │  ├── resilience
+│  │  │  │  ├── README.html
+│  │  │  │  ├── README.md
 │  │  │  │  ├── budgetAdapters.js
+│  │  │  │  ├── budgetAdapters.test.js
 │  │  │  │  ├── budgetExecutor.js
+│  │  │  │  ├── budgetExecutor.test.js
 │  │  │  │  ├── deadLoopDetector.js
+│  │  │  │  ├── deadLoopDetector.test.js
 │  │  │  │  ├── errorSignature.js
+│  │  │  │  ├── errorSignature.test.js
 │  │  │  │  ├── fallbackTree.js
+│  │  │  │  ├── fallbackTree.test.js
 │  │  │  │  ├── index.js
+│  │  │  │  ├── index.test.js
 │  │  │  │  ├── intentTrees.js
-│  │  │  │  └── salvage.js
+│  │  │  │  ├── intentTrees.test.js
+│  │  │  │  ├── khy.module.json
+│  │  │  │  ├── salvage.js
+│  │  │  │  └── salvage.test.js
 │  │  │  └── security
 │  │  │     ├── codeScanner
 │  │  │     │  ├── README.html
@@ -455,35 +667,63 @@
 │  │  │        ├── index.test.js
 │  │  │        └── khy.module.json
 │  │  ├── system
+│  │  │  ├── README.html
+│  │  │  ├── README.md
 │  │  │  ├── syscallGateway
+│  │  │  │  ├── README.html
+│  │  │  │  ├── README.md
 │  │  │  │  ├── actionContractVerifier.js
+│  │  │  │  ├── actionContractVerifier.test.js
 │  │  │  │  ├── approvalRouter.js
+│  │  │  │  ├── approvalRouter.test.js
 │  │  │  │  ├── breachBreaker.js
+│  │  │  │  ├── breachBreaker.test.js
 │  │  │  │  ├── denialGuidance.js
+│  │  │  │  ├── denialGuidance.test.js
 │  │  │  │  ├── index.js
+│  │  │  │  ├── index.test.js
 │  │  │  │  ├── intentSchema.js
+│  │  │  │  ├── intentSchema.test.js
+│  │  │  │  ├── khy.module.json
 │  │  │  │  ├── permissionCache.js
+│  │  │  │  ├── permissionCache.test.js
 │  │  │  │  ├── preExecutionExplainer.js
+│  │  │  │  ├── preExecutionExplainer.test.js
 │  │  │  │  ├── redLine.js
-│  │  │  │  └── resourceClassifier.js
+│  │  │  │  ├── redLine.test.js
+│  │  │  │  ├── resourceClassifier.js
+│  │  │  │  └── resourceClassifier.test.js
 │  │  │  └── wasm-sandbox
 │  │  │     ├── index.js
+│  │  │     ├── index.test.js
 │  │  │     ├── ipcCodec.js
+│  │  │     ├── ipcCodec.test.js
 │  │  │     ├── khySysHost.js
 │  │  │     ├── loopbackTransport.js
+│  │  │     ├── loopbackTransport.test.js
 │  │  │     ├── m1Constants.js
-│  │  │     └── moonbitHostBridge.js
+│  │  │     ├── m1Constants.test.js
+│  │  │     ├── moonbitHostBridge.js
+│  │  │     └── moonbitHostBridge.test.js
 │  │  └── workspace
+│  │     ├── README.html
+│  │     ├── README.md
 │  │     └── workspace
 │  │        ├── checkpointObjectStore.js
+│  │        ├── checkpointObjectStore.test.js
 │  │        ├── checkpointService.js
-│  │        └── workspaceContext.js
+│  │        ├── checkpointService.test.js
+│  │        ├── workspaceContext.js
+│  │        └── workspaceContext.test.js
 │  ├── intelligence
 │  │  ├── agents
+│  │  │  ├── README.html
+│  │  │  ├── README.md
 │  │  │  ├── advisor
 │  │  │  │  └── advisorPlan.js
 │  │  │  ├── agentAssets
 │  │  │  │  ├── _adapterBase.js
+│  │  │  │  ├── _adapterBase.test.js
 │  │  │  │  ├── adapters
 │  │  │  │  │  ├── README.html
 │  │  │  │  │  ├── README.md
@@ -501,30 +741,55 @@
 │  │  │  │  │  ├── opencode.js
 │  │  │  │  │  └── opencode.test.js
 │  │  │  │  ├── assetModel.js
+│  │  │  │  ├── assetModel.test.js
 │  │  │  │  ├── registry.js
+│  │  │  │  ├── registry.test.js
 │  │  │  │  ├── sync.js
 │  │  │  │  └── sync.test.js
 │  │  │  ├── agentFs
-│  │  │  │  └── agentFsService.js
+│  │  │  │  ├── agentFsService.js
+│  │  │  │  └── agentFsService.test.js
 │  │  │  ├── agents
-│  │  │  │  └── delegationPromptPolicy.js
+│  │  │  │  ├── README.html
+│  │  │  │  ├── README.md
+│  │  │  │  ├── delegationPromptPolicy.js
+│  │  │  │  ├── delegationPromptPolicy.test.js
+│  │  │  │  └── khy.module.json
 │  │  │  ├── agentsight
-│  │  │  │  └── genaiEvents.js
+│  │  │  │  ├── genaiEvents.js
+│  │  │  │  └── genaiEvents.test.js
 │  │  │  ├── assistant
 │  │  │  │  └── proactiveTogglePlan.js
 │  │  │  └── autonomy
-│  │  │     └── autonomyInspectPlan.js
+│  │  │     ├── autonomyInspectPlan.js
+│  │  │     └── autonomyInspectPlan.test.js
 │  │  ├── memory
+│  │  │  ├── README.html
+│  │  │  ├── README.md
 │  │  │  ├── cognitiveSnapshot
+│  │  │  │  ├── README.html
+│  │  │  │  ├── README.md
 │  │  │  │  ├── compressionEngine.js
+│  │  │  │  ├── compressionEngine.test.js
 │  │  │  │  ├── index.js
+│  │  │  │  ├── index.test.js
+│  │  │  │  ├── khy.module.json
 │  │  │  │  ├── offloadStore.js
+│  │  │  │  ├── offloadStore.test.js
 │  │  │  │  ├── overflowInterceptor.js
+│  │  │  │  ├── overflowInterceptor.test.js
 │  │  │  │  ├── snapshotManager.js
-│  │  │  │  └── workbench.js
+│  │  │  │  ├── snapshotManager.test.js
+│  │  │  │  ├── workbench.js
+│  │  │  │  └── workbench.test.js
 │  │  │  ├── compact
+│  │  │  │  ├── README.html
+│  │  │  │  ├── README.md
 │  │  │  │  ├── index.js
-│  │  │  │  └── prompt.js
+│  │  │  │  ├── index.test.js
+│  │  │  │  ├── khy.module.json
+│  │  │  │  ├── prompt.js
+│  │  │  │  └── prompt.test.js
 │  │  │  └── memoryEngine
 │  │  │     ├── distiller.js
 │  │  │     ├── dreamPromote.js
@@ -538,6 +803,8 @@
 │  │  │     ├── vectorRecall.js
 │  │  │     └── vectorStore.js
 │  │  ├── skills
+│  │  │  ├── README.html
+│  │  │  ├── README.md
 │  │  │  └── skills
 │  │  │     ├── journeyTimeline.js
 │  │  │     ├── skillSourceDistiller.js
@@ -545,13 +812,16 @@
 │  │  │     ├── skillThreatScanner.js
 │  │  │     └── verifierScaffoldPlan.js
 │  │  └── state
+│  │     ├── README.html
+│  │     ├── README.md
 │  │     ├── envSymbiosis
 │  │     │  ├── compatibilityQuencher.js
 │  │     │  ├── envFingerprintScanner.js
 │  │     │  ├── index.js
 │  │     │  ├── nativeAffinityRouter.js
 │  │     │  ├── platformIds.js
-│  │     │  └── specialtyBreaker.js
+│  │     │  ├── specialtyBreaker.js
+│  │     │  └── specialtyBreaker.test.js
 │  │     ├── intentArbiter
 │  │     │  ├── index.js
 │  │     │  ├── intentCalibration.js
@@ -576,64 +846,125 @@
 │  │     └── stateMachine
 │  │        ├── agentLifecycle.js
 │  │        ├── debugLog.js
+│  │        ├── debugLog.test.js
 │  │        ├── fsm.js
 │  │        ├── replPhases.js
 │  │        ├── startupPhases.js
+│  │        ├── startupPhases.test.js
 │  │        ├── toolLoopPhases.js
 │  │        └── turnPhaseTracker.js
 │  ├── platform
 │  │  ├── account
+│  │  │  ├── README.html
+│  │  │  ├── README.md
 │  │  │  ├── accountPool
+│  │  │  │  ├── README.html
+│  │  │  │  ├── README.md
 │  │  │  │  ├── candidateDetect.js
+│  │  │  │  ├── candidateDetect.test.js
 │  │  │  │  ├── credentialHelpers.js
+│  │  │  │  ├── credentialHelpers.test.js
+│  │  │  │  ├── khy.module.json
 │  │  │  │  ├── poolImporter.js
+│  │  │  │  ├── poolImporter.test.js
 │  │  │  │  ├── poolScheduler.js
-│  │  │  │  └── poolSync.js
+│  │  │  │  ├── poolScheduler.test.js
+│  │  │  │  ├── poolSync.js
+│  │  │  │  └── poolSync.test.js
 │  │  │  └── tokenless
 │  │  │     ├── commandRewriter.js
+│  │  │     ├── commandRewriter.test.js
 │  │  │     ├── index.js
+│  │  │     ├── index.test.js
 │  │  │     ├── responseCompressor.js
+│  │  │     ├── responseCompressor.test.js
 │  │  │     ├── schemaCompressor.js
 │  │  │     ├── toonCodec.js
+│  │  │     ├── toonCodec.test.js
 │  │  │     ├── toonDecode.js
-│  │  │     └── toonEncode.js
+│  │  │     ├── toonDecode.test.js
+│  │  │     ├── toonEncode.js
+│  │  │     └── toonEncode.test.js
 │  │  ├── config
+│  │  │  ├── README.html
+│  │  │  ├── README.md
 │  │  │  ├── ccSwitch
+│  │  │  │  ├── README.html
+│  │  │  │  ├── README.md
 │  │  │  │  ├── apiHandlers.js
+│  │  │  │  ├── apiHandlers.test.js
 │  │  │  │  ├── appWriters.js
+│  │  │  │  ├── appWriters.test.js
 │  │  │  │  ├── codexWriter.js
+│  │  │  │  ├── codexWriter.test.js
 │  │  │  │  ├── connectivity.js
+│  │  │  │  ├── connectivity.test.js
 │  │  │  │  ├── constants.js
+│  │  │  │  ├── constants.test.js
+│  │  │  │  ├── khy.module.json
 │  │  │  │  ├── opencodeGoQuota.js
+│  │  │  │  ├── opencodeGoQuota.test.js
 │  │  │  │  ├── promptGuard.js
+│  │  │  │  ├── promptGuard.test.js
 │  │  │  │  ├── proxyAccess.js
+│  │  │  │  ├── proxyAccess.test.js
 │  │  │  │  ├── routeResolver.js
+│  │  │  │  ├── routeResolver.test.js
 │  │  │  │  ├── store.js
-│  │  │  │  └── usageScan.js
+│  │  │  │  ├── store.test.js
+│  │  │  │  ├── usageScan.js
+│  │  │  │  └── usageScan.test.js
 │  │  │  ├── config
+│  │  │  │  ├── README.html
+│  │  │  │  ├── README.md
+│  │  │  │  ├── khy.module.json
 │  │  │  │  ├── langPreference.js
+│  │  │  │  ├── langPreference.test.js
 │  │  │  │  ├── nlActionResolver.js
+│  │  │  │  ├── nlActionResolver.test.js
 │  │  │  │  ├── nlConfigResolver.js
+│  │  │  │  ├── nlConfigResolver.test.js
 │  │  │  │  ├── nlExternalAppImportResolver.js
+│  │  │  │  ├── nlExternalAppImportResolver.test.js
 │  │  │  │  ├── nlExternalAppResolver.js
+│  │  │  │  ├── nlExternalAppResolver.test.js
 │  │  │  │  ├── nlInstallVsConfigGuard.js
+│  │  │  │  ├── nlInstallVsConfigGuard.test.js
 │  │  │  │  ├── nlProviderResolver.js
+│  │  │  │  ├── nlProviderResolver.test.js
 │  │  │  │  ├── philosophyDesignResolver.js
-│  │  │  │  └── sandboxToggleState.js
-│  │  │  └── keybindings
-│  │  │     ├── historyReverseSearch.js
-│  │  │     └── keybindingCatalog.js
+│  │  │  │  ├── philosophyDesignResolver.test.js
+│  │  │  │  ├── sandboxToggleState.js
+│  │  │  │  └── sandboxToggleState.test.js
+│  │  │  ├── keybindings
+│  │  │  │  ├── README.html
+│  │  │  │  ├── README.md
+│  │  │  │  ├── historyReverseSearch.js
+│  │  │  │  ├── historyReverseSearch.test.js
+│  │  │  │  ├── keybindingCatalog.js
+│  │  │  │  ├── keybindingCatalog.test.js
+│  │  │  │  └── khy.module.json
+│  │  │  └── khy.module.json
 │  │  ├── cpa
+│  │  │  ├── README.html
+│  │  │  ├── README.md
 │  │  │  ├── cpaKeyPool.js
 │  │  │  ├── cpaProtocolConverter.js
 │  │  │  └── cpaService.js
 │  │  ├── deploy
+│  │  │  ├── README.html
+│  │  │  ├── README.md
 │  │  │  ├── deploy
 │  │  │  │  ├── deployLedger.js
+│  │  │  │  ├── deployLedger.test.js
 │  │  │  │  ├── index.js
+│  │  │  │  ├── index.test.js
 │  │  │  │  ├── projectDetector.js
+│  │  │  │  ├── projectDetector.test.js
 │  │  │  │  ├── runners.js
-│  │  │  │  └── syncEngine.js
+│  │  │  │  ├── runners.test.js
+│  │  │  │  ├── syncEngine.js
+│  │  │  │  └── syncEngine.test.js
 │  │  │  ├── publish
 │  │  │  │  ├── bundleArtifacts.js
 │  │  │  │  ├── bundleCommon.js
@@ -644,8 +975,11 @@
 │  │  │     ├── subscribePrPlan.js
 │  │  │     └── subscribePrStore.js
 │  │  ├── desktop
+│  │  │  ├── README.html
+│  │  │  ├── README.md
 │  │  │  ├── browser
 │  │  │  │  ├── _evalTimeout.js
+│  │  │  │  ├── _evalTimeout.test.js
 │  │  │  │  ├── ariaSnapshot.js
 │  │  │  │  ├── engine.js
 │  │  │  │  ├── scrollPlan.js
@@ -670,6 +1004,7 @@
 │  │  │  │  │  └── win-uia-tree.ps1
 │  │  │  │  ├── uiInspector.js
 │  │  │  │  ├── voiceBridge.js
+│  │  │  │  ├── voiceBridge.test.js
 │  │  │  │  ├── windowController.js
 │  │  │  │  └── workflowRecorder.js
 │  │  │  ├── deviceApps
@@ -679,62 +1014,117 @@
 │  │  │  │  ├── deviceAppsPolicy.js
 │  │  │  │  ├── nativeUninstallPolicy.js
 │  │  │  │  ├── nativeUninstaller.js
-│  │  │  │  └── uninstallRoute.js
+│  │  │  │  ├── uninstallRoute.js
+│  │  │  │  └── uninstallRoute.test.js
 │  │  │  └── terminal
-│  │  │     └── terminalSetupPlan.js
+│  │  │     ├── terminalSetupPlan.js
+│  │  │     └── terminalSetupPlan.test.js
 │  │  └── network
+│  │     ├── README.html
+│  │     ├── README.md
 │  │     ├── dependency
+│  │     │  ├── README.html
+│  │     │  ├── README.md
 │  │     │  ├── healingLoop.js
+│  │     │  ├── healingLoop.test.js
 │  │     │  ├── index.js
+│  │     │  ├── index.test.js
 │  │     │  ├── installLocation.js
+│  │     │  ├── installLocation.test.js
 │  │     │  ├── installRunner.js
+│  │     │  ├── installRunner.test.js
+│  │     │  ├── khy.module.json
 │  │     │  ├── registry.js
+│  │     │  ├── registry.test.js
 │  │     │  ├── resolver.js
-│  │     │  └── toolchainVersions.js
+│  │     │  ├── resolver.test.js
+│  │     │  ├── toolchainVersions.js
+│  │     │  └── toolchainVersions.test.js
 │  │     ├── externalApps
+│  │     │  ├── README.html
+│  │     │  ├── README.md
 │  │     │  ├── _shared.js
+│  │     │  ├── _shared.test.js
 │  │     │  ├── appModelImporter.js
+│  │     │  ├── appModelImporter.test.js
 │  │     │  ├── claudeCodeAdapter.js
+│  │     │  ├── claudeCodeAdapter.test.js
 │  │     │  ├── commandCodeAdapter.js
+│  │     │  ├── commandCodeAdapter.test.js
 │  │     │  ├── cozeAdapter.js
+│  │     │  ├── cozeAdapter.test.js
 │  │     │  ├── deepseekTuiAdapter.js
+│  │     │  ├── deepseekTuiAdapter.test.js
 │  │     │  ├── geminiCliAdapter.js
+│  │     │  ├── geminiCliAdapter.test.js
+│  │     │  ├── khy.module.json
 │  │     │  ├── openclawAdapter.js
+│  │     │  ├── openclawAdapter.test.js
 │  │     │  ├── opencodeAdapter.js
+│  │     │  ├── opencodeAdapter.test.js
 │  │     │  ├── reasonixAdapter.js
+│  │     │  ├── reasonixAdapter.test.js
 │  │     │  ├── tomlLite.js
+│  │     │  ├── tomlLite.test.js
 │  │     │  ├── tomlLiteFormat.js
+│  │     │  ├── tomlLiteFormat.test.js
 │  │     │  ├── traeAppAdapter.js
+│  │     │  ├── traeAppAdapter.test.js
 │  │     │  ├── ycodeAdapter.js
-│  │     │  └── zcodeAdapter.js
+│  │     │  ├── ycodeAdapter.test.js
+│  │     │  ├── zcodeAdapter.js
+│  │     │  └── zcodeAdapter.test.js
 │  │     ├── proxy
 │  │     │  ├── proxyCoreConfigGen.js
+│  │     │  ├── proxyCoreConfigGen.test.js
 │  │     │  ├── proxyCoreInstaller.js
 │  │     │  ├── proxyCoreInstaller.test.js
 │  │     │  └── proxyCoreManager.js
 │  │     ├── remote
+│  │     │  ├── README.html
+│  │     │  ├── README.md
 │  │     │  ├── deployOrchestrator.js
+│  │     │  ├── deployOrchestrator.test.js
 │  │     │  ├── index.js
+│  │     │  ├── index.test.js
+│  │     │  ├── khy.module.json
 │  │     │  ├── remoteApprovalBridge.js
+│  │     │  ├── remoteApprovalBridge.test.js
 │  │     │  ├── remoteExecService.js
+│  │     │  ├── remoteExecService.test.js
 │  │     │  ├── remoteExecStreamStore.js
+│  │     │  ├── remoteExecStreamStore.test.js
 │  │     │  ├── remoteFileTransferService.js
+│  │     │  ├── remoteFileTransferService.test.js
 │  │     │  ├── remoteStatePersistence.js
+│  │     │  ├── remoteStatePersistence.test.js
 │  │     │  ├── remoteStateSyncService.js
+│  │     │  ├── remoteStateSyncService.test.js
 │  │     │  ├── remoteWorkspaceResolver.js
+│  │     │  ├── remoteWorkspaceResolver.test.js
 │  │     │  ├── sshConfigService.js
+│  │     │  ├── sshConfigService.test.js
 │  │     │  ├── sshConnectionManager.js
-│  │     │  └── sshCredentialGuard.js
+│  │     │  ├── sshConnectionManager.test.js
+│  │     │  ├── sshCredentialGuard.js
+│  │     │  └── sshCredentialGuard.test.js
 │  │     ├── remotedev
 │  │     │  ├── remoteDevService.js
+│  │     │  ├── remoteDevService.test.js
 │  │     │  ├── remoteDevSessionStore.js
-│  │     │  └── remoteDevState.js
+│  │     │  ├── remoteDevSessionStore.test.js
+│  │     │  ├── remoteDevState.js
+│  │     │  └── remoteDevState.test.js
 │  │     └── updateAdapters
 │  │        ├── packageAdapter.js
+│  │        ├── packageAdapter.test.js
 │  │        ├── portableAdapter.js
-│  │        └── windowsSwapScript.js
+│  │        ├── portableAdapter.test.js
+│  │        ├── windowsSwapScript.js
+│  │        └── windowsSwapScript.test.js
 │  ├── project
 │  │  ├── build
+│  │  │  ├── README.md
 │  │  │  ├── compile
 │  │  │  │  ├── diagnostics.js
 │  │  │  │  └── registry.js
@@ -745,30 +1135,52 @@
 │  │  │     ├── index.js
 │  │  │     └── repoMapRenderer.js
 │  │  ├── docs
+│  │  │  ├── README.html
+│  │  │  ├── README.md
 │  │  │  ├── changelog
-│  │  │  │  └── changelogParse.js
+│  │  │  │  ├── changelogParse.js
+│  │  │  │  └── changelogParse.test.js
 │  │  │  └── docsFreshness
+│  │  │     ├── README.html
+│  │  │     ├── README.md
 │  │  │     ├── docMarkerSync.js
+│  │  │     ├── docMarkerSync.test.js
 │  │  │     ├── docPathIndex.js
+│  │  │     ├── docPathIndex.test.js
 │  │  │     ├── docProductPlan.js
+│  │  │     ├── docProductPlan.test.js
 │  │  │     ├── docSuggestDraft.js
-│  │  │     └── docsFreshnessRunner.js
+│  │  │     ├── docSuggestDraft.test.js
+│  │  │     ├── docsFreshnessRunner.js
+│  │  │     ├── docsFreshnessRunner.test.js
+│  │  │     └── khy.module.json
 │  │  ├── eval
+│  │  │  ├── README.html
+│  │  │  ├── README.md
 │  │  │  ├── guiEval
 │  │  │  │  ├── checkpointVerifier.js
 │  │  │  │  ├── index.js
 │  │  │  │  ├── pricingEngine.js
+│  │  │  │  ├── pricingEngine.test.js
 │  │  │  │  ├── recordingCollector.js
 │  │  │  │  ├── reviewService.js
+│  │  │  │  ├── reviewService.test.js
 │  │  │  │  ├── runEngine.js
 │  │  │  │  ├── scoringEngine.js
+│  │  │  │  ├── scoringEngine.test.js
 │  │  │  │  └── taskStore.js
 │  │  │  └── webFrontendEval
 │  │  │     ├── index.js
+│  │  │     ├── index.test.js
 │  │  │     ├── qcEngine.js
+│  │  │     ├── qcEngine.test.js
 │  │  │     ├── taskStore.js
-│  │  │     └── trajectoryPackager.js
+│  │  │     ├── taskStore.test.js
+│  │  │     ├── trajectoryPackager.js
+│  │  │     └── trajectoryPackager.test.js
 │  │  ├── project
+│  │  │  ├── README.html
+│  │  │  ├── README.md
 │  │  │  ├── issue
 │  │  │  │  ├── README.html
 │  │  │  │  ├── README.md
@@ -779,33 +1191,53 @@
 │  │  │  │  ├── index.js
 │  │  │  │  ├── managementRegistry.js
 │  │  │  │  ├── parityGuard.js
+│  │  │  │  ├── parityGuard.test.js
 │  │  │  │  ├── resourceContract.js
+│  │  │  │  ├── resourceContract.test.js
 │  │  │  │  └── resources
 │  │  │  │     ├── apiKeys.resource.js
+│  │  │  │     ├── apiKeys.resource.test.js
 │  │  │  │     ├── cron.resource.js
+│  │  │  │     ├── cron.resource.test.js
 │  │  │  │     ├── customProviders.resource.js
 │  │  │  │     ├── dependencies.resource.js
+│  │  │  │     ├── dependencies.resource.test.js
 │  │  │  │     ├── modelConfig.resource.js
 │  │  │  │     ├── modelOverrides.resource.js
 │  │  │  │     └── users.resource.js
 │  │  │  ├── metaplan
+│  │  │  │  ├── README.html
+│  │  │  │  ├── README.md
 │  │  │  │  ├── codeInterceptors.js
+│  │  │  │  ├── codeInterceptors.test.js
 │  │  │  │  ├── constitutionalRedLines.js
+│  │  │  │  ├── constitutionalRedLines.test.js
 │  │  │  │  ├── constraintInjection.js
+│  │  │  │  ├── constraintInjection.test.js
 │  │  │  │  ├── constraintStrategy.js
+│  │  │  │  ├── constraintStrategy.test.js
 │  │  │  │  ├── executorRegistry.js
+│  │  │  │  ├── executorRegistry.test.js
 │  │  │  │  ├── index.js
+│  │  │  │  ├── index.test.js
 │  │  │  │  ├── irreversibleSignatures.js
+│  │  │  │  ├── irreversibleSignatures.test.js
+│  │  │  │  ├── khy.module.json
 │  │  │  │  ├── metaPlanSchema.js
-│  │  │  │  └── trustCircuitBreaker.js
+│  │  │  │  ├── metaPlanSchema.test.js
+│  │  │  │  ├── trustCircuitBreaker.js
+│  │  │  │  └── trustCircuitBreaker.test.js
 │  │  │  ├── projectBlueprint
 │  │  │  │  ├── catalog.js
+│  │  │  │  ├── catalog.test.js
 │  │  │  │  ├── index.js
 │  │  │  │  ├── milestonePlanner.js
+│  │  │  │  ├── milestonePlanner.test.js
 │  │  │  │  └── stackConflict.js
 │  │  │  ├── projectCoherence
 │  │  │  │  ├── coherenceAnalyzer.js
 │  │  │  │  ├── coherenceGate.js
+│  │  │  │  ├── coherenceGate.test.js
 │  │  │  │  ├── deliverableClosure.js
 │  │  │  │  ├── importGraph.js
 │  │  │  │  ├── index.js
@@ -813,22 +1245,40 @@
 │  │  │  ├── projectHygiene
 │  │  │  │  ├── duplicateModule.js
 │  │  │  │  ├── godFile.js
+│  │  │  │  ├── godFile.test.js
 │  │  │  │  ├── index.js
 │  │  │  │  ├── symbols.js
-│  │  │  │  └── thresholds.js
+│  │  │  │  ├── thresholds.js
+│  │  │  │  └── thresholds.test.js
 │  │  │  └── workflow
+│  │  │     ├── README.html
+│  │  │     ├── README.md
 │  │  │     ├── contractChecker.js
+│  │  │     ├── contractChecker.test.js
 │  │  │     ├── expandTemplate.js
+│  │  │     ├── expandTemplate.test.js
 │  │  │     ├── flowRegistry.js
+│  │  │     ├── flowRegistry.test.js
 │  │  │     ├── flowStats.js
+│  │  │     ├── flowStats.test.js
 │  │  │     ├── graphPatch.js
+│  │  │     ├── graphPatch.test.js
 │  │  │     ├── healGuard.js
+│  │  │     ├── healGuard.test.js
 │  │  │     ├── jsonExtract.js
+│  │  │     ├── jsonExtract.test.js
+│  │  │     ├── khy.module.json
 │  │  │     ├── retryPrimitives.js
+│  │  │     ├── retryPrimitives.test.js
 │  │  │     ├── workflowCliCore.js
+│  │  │     ├── workflowCliCore.test.js
 │  │  │     ├── workflowExecutor.js
-│  │  │     └── workflowRunWorker.js
+│  │  │     ├── workflowExecutor.test.js
+│  │  │     ├── workflowRunWorker.js
+│  │  │     └── workflowRunWorker.test.js
 │  │  └── quality
+│  │     ├── README.html
+│  │     ├── README.md
 │  │     ├── artifact
 │  │     │  ├── README.html
 │  │     │  ├── README.md
@@ -838,6 +1288,7 @@
 │  │     ├── metaConstraint
 │  │     │  ├── capabilityProbe.js
 │  │     │  ├── constraintMatrix.js
+│  │     │  ├── constraintMatrix.test.js
 │  │     │  ├── index.js
 │  │     │  ├── riskClassifier.js
 │  │     │  └── toolFunnelGuard.js
@@ -849,48 +1300,91 @@
 │  │        └── perfReport.test.js
 │  └── tooling
 │     ├── catalog
+│     │  ├── README.html
+│     │  ├── README.md
 │     │  ├── capabilityMatrix
+│     │  │  ├── README.html
+│     │  │  ├── README.md
 │     │  │  ├── composer.js
+│     │  │  ├── composer.test.js
 │     │  │  ├── descriptors.js
+│     │  │  ├── descriptors.test.js
 │     │  │  ├── index.js
+│     │  │  ├── index.test.js
+│     │  │  ├── khy.module.json
 │     │  │  ├── predicates.js
+│     │  │  ├── predicates.test.js
 │     │  │  ├── route.js
+│     │  │  ├── route.test.js
 │     │  │  ├── routePresets.js
-│     │  │  └── seams.js
+│     │  │  ├── routePresets.test.js
+│     │  │  ├── seams.js
+│     │  │  └── seams.test.js
 │     │  ├── commandCatalog
-│     │  │  └── commandCatalog.js
+│     │  │  ├── README.html
+│     │  │  ├── README.md
+│     │  │  ├── commandCatalog.js
+│     │  │  ├── commandCatalog.test.js
+│     │  │  └── khy.module.json
 │     │  ├── toolCatalog
+│     │  │  ├── README.html
+│     │  │  ├── README.md
 │     │  │  ├── auditRules.js
+│     │  │  ├── auditRules.test.js
+│     │  │  ├── khy.module.json
 │     │  │  ├── toolCatalog.js
-│     │  │  └── toolContract.js
+│     │  │  ├── toolCatalog.test.js
+│     │  │  ├── toolContract.js
+│     │  │  └── toolContract.test.js
 │     │  └── toolUseLoop
 │     │     ├── abortCascade.js
+│     │     ├── abortCascade.test.js
 │     │     ├── budgets.js
+│     │     ├── budgets.test.js
 │     │     ├── checkpointThrottle.js
+│     │     ├── checkpointThrottle.test.js
 │     │     ├── dedupLoopState.js
+│     │     ├── dedupLoopState.test.js
 │     │     ├── intentGuards.js
+│     │     ├── intentGuards.test.js
 │     │     ├── iterationJournal.js
+│     │     ├── iterationJournal.test.js
 │     │     ├── iterationSummary.js
+│     │     ├── iterationSummary.test.js
 │     │     ├── loopDetector.js
+│     │     ├── loopDetector.test.js
 │     │     ├── loopGuardState.js
+│     │     ├── loopGuardState.test.js
 │     │     ├── loopObservability.js
+│     │     ├── loopObservability.test.js
 │     │     ├── monitorState.js
+│     │     ├── monitorState.test.js
 │     │     ├── protocolContext.js
-│     │     └── resolveToolCalls.js
+│     │     ├── protocolContext.test.js
+│     │     ├── resolveToolCalls.js
+│     │     └── resolveToolCalls.test.js
 │     ├── extensions
+│     │  ├── README.html
+│     │  ├── README.md
 │     │  ├── extensions
 │     │  │  ├── extensionManager.js
 │     │  │  ├── extensionManifest.js
 │     │  │  ├── extensionRoots.js
 │     │  │  ├── markdownWorkbench.js
 │     │  │  ├── providerModule.js
+│     │  │  ├── providerModule.test.js
 │     │  │  └── quantApp.js
 │     │  ├── hooks
 │     │  │  ├── hookConfigSchema.js
+│     │  │  ├── hookConfigSchema.test.js
 │     │  │  ├── hookContribSeams.js
+│     │  │  ├── hookContribSeams.test.js
 │     │  │  ├── hookRegistry.js
+│     │  │  ├── hookRegistry.test.js
 │     │  │  ├── hookRunner.js
-│     │  │  └── hookSystem.js
+│     │  │  ├── hookRunner.test.js
+│     │  │  ├── hookSystem.js
+│     │  │  └── hookSystem.test.js
 │     │  └── plugins
 │     │     ├── README.html
 │     │     ├── README.md
@@ -902,11 +1396,14 @@
 │     │     ├── pluginToolBridge.js
 │     │     └── pluginToolBridge.test.js
 │     └── gateway-stuff
+│        ├── README.html
+│        ├── README.md
 │        └── gatewayLogLease
 │           ├── context.js
 │           ├── devLog.js
 │           ├── index.js
 │           ├── logLease.js
+│           ├── logLease.test.js
 │           ├── noiseFilter.js
 │           └── sandbox.js
 ├── delivery
@@ -1732,6 +2229,7 @@
 │  │        │  │  └── utils
 │  │        │  │     ├── openWorkspace.ts
 │  │        │  │     ├── settingsMigration.ts
+│  │        │  │     ├── stripSystemInjects.ts
 │  │        │  │     ├── useKeyboard.ts
 │  │        │  │     └── useModelCatalog.ts
 │  │        │  ├── scheduler
@@ -1747,7 +2245,8 @@
 │  │        │  ├── keyManagerContract.test.cjs
 │  │        │  ├── keyStore.test.mjs
 │  │        │  ├── keymapContract.test.mjs
-│  │        │  └── pacedProgress.test.mjs
+│  │        │  ├── pacedProgress.test.mjs
+│  │        │  └── wiringRuntime.test.mjs
 │  │        ├── tsconfig.json
 │  │        ├── tsconfig.node.json
 │  │        ├── tsconfig.tsbuildinfo
@@ -2339,6 +2838,7 @@
 │     │     │     ├── chatAttachments.wiring.test.js
 │     │     │     ├── chatInputPaste.wiring.test.js
 │     │     │     ├── components
+│     │     │     │  ├── ChatConvRow.vue
 │     │     │     │  ├── ChatInputBar.vue
 │     │     │     │  ├── ChatPartsRenderer.vue
 │     │     │     │  └── MessageAttachment.vue
@@ -2892,6 +3392,7 @@
 │  │     │  │  │  │  ├── BankTransfer.js
 │  │     │  │  │  │  ├── ChannelApi.js
 │  │     │  │  │  │  ├── Conversation.js
+│  │     │  │  │  │  ├── ConversationGroup.js
 │  │     │  │  │  │  ├── Feedback.js
 │  │     │  │  │  │  ├── GuiEvalRun.js
 │  │     │  │  │  │  ├── GuiEvalTask.js
@@ -3077,6 +3578,8 @@
 │  │  │  │  └── rules
 │  │  │  │     └── khy-maintainability.mdc
 │  │  │  ├── .env.example
+│  │  │  ├── .env.tmp.1790646792872
+│  │  │  ├── .env.tmp.1790646792923
 │  │  │  ├── .eslintrc.json
 │  │  │  ├── .github
 │  │  │  │  ├── copilot-instructions.html
@@ -3243,6 +3746,7 @@
 │  │  │  │  ├── aiGateway.stability.regressions.test.js
 │  │  │  │  ├── aiGateway.stability.test.js
 │  │  │  │  ├── aiManageDaemonControlApi.test.js
+│  │  │  │  ├── aiManageDaemonEarlyReadiness.test.js
 │  │  │  │  ├── aiManageDaemonFrontendReuse.test.js
 │  │  │  │  ├── aiManageDaemonGc.test.js
 │  │  │  │  ├── aiManageDaemonLogEncoding.test.js
@@ -3310,6 +3814,8 @@
 │  │  │  │  │  ├── __tests__
 │  │  │  │  │  │  └── chalkCompat.test.js
 │  │  │  │  │  ├── ensureProxyCoreEnv.test.js
+│  │  │  │  │  ├── instrumentSyncOffBootChain.test.js
+│  │  │  │  │  ├── prefetchRuntimeFootprint.test.js
 │  │  │  │  │  ├── startupFailureExplain.test.js
 │  │  │  │  │  └── windowsSpawnHardening.test.js
 │  │  │  │  ├── bridge
@@ -3331,6 +3837,7 @@
 │  │  │  │  ├── cacheGougingPenalty.test.js
 │  │  │  │  ├── cachePrefixRegressionGuard.test.js
 │  │  │  │  ├── cacheUsageNormalizer.test.js
+│  │  │  │  ├── canonicalState.permissionMode.test.js
 │  │  │  │  ├── capabilityRegistry.test.js
 │  │  │  │  ├── ccAgentBridge.test.js
 │  │  │  │  ├── ccMcpBridge.test.js
@@ -3374,6 +3881,7 @@
 │  │  │  │  │  ├── autonomyExitCode.test.js
 │  │  │  │  │  ├── backtest-list-empty-state.test.js
 │  │  │  │  │  ├── backupAliasRouting.test.js
+│  │  │  │  │  ├── backupDryRunShortFlag.test.js
 │  │  │  │  │  ├── backupFmtBytes.test.js
 │  │  │  │  │  ├── betaFallbackNotice.test.js
 │  │  │  │  │  ├── blockquoteStyleSsot.test.js
@@ -3496,6 +4004,7 @@
 │  │  │  │  │  │  ├── gatewayConfigEditorLeaf.test.js
 │  │  │  │  │  │  ├── gatewayKeyHealthChinese.test.js
 │  │  │  │  │  │  ├── gatewayManageDaemonLeaf.test.js
+│  │  │  │  │  │  ├── gatewayManageWaitPhase.test.js
 │  │  │  │  │  │  ├── gatewayModelChoicesLeaf.test.js
 │  │  │  │  │  │  ├── gatewayProviderKeyPoolLeaf.test.js
 │  │  │  │  │  │  ├── gatewayRuntimeProbesLeaf.test.js
@@ -3693,6 +4202,7 @@
 │  │  │  │  │  ├── shellEscapeContext.test.js
 │  │  │  │  │  ├── shellOutputJson.test.js
 │  │  │  │  │  ├── shellScreenZhRc.test.js
+│  │  │  │  │  ├── shortOptionParse.test.js
 │  │  │  │  │  ├── slashExtraCommands.test.js
 │  │  │  │  │  ├── slashMenuFilter.test.js
 │  │  │  │  │  ├── slashRankIndexMemo.test.js
@@ -3777,6 +4287,7 @@
 │  │  │  │  │  │  ├── ccSelectionWiring.test.js
 │  │  │  │  │  │  ├── ccStatusBar.test.js
 │  │  │  │  │  │  ├── ccTheme.test.js
+│  │  │  │  │  │  ├── ccThemeBg.test.js
 │  │  │  │  │  │  ├── chatChords.test.js
 │  │  │  │  │  │  ├── chatChordsHelpSync.test.js
 │  │  │  │  │  │  ├── chromeBudget.test.js
@@ -3786,6 +4297,7 @@
 │  │  │  │  │  │  ├── effectiveDims.test.js
 │  │  │  │  │  │  ├── foldModel.test.js
 │  │  │  │  │  │  ├── footerStability.test.js
+│  │  │  │  │  │  ├── footerWidthBudget.test.js
 │  │  │  │  │  │  ├── frameBudget.test.js
 │  │  │  │  │  │  ├── historyBrowseDecision.test.js
 │  │  │  │  │  │  ├── ink-components
@@ -3837,9 +4349,11 @@
 │  │  │  │  │  │  ├── startupAnchor.test.js
 │  │  │  │  │  │  ├── startupBeatsWiring.test.js
 │  │  │  │  │  │  ├── taskPanelLines.test.js
+│  │  │  │  │  │  ├── taskSurface.test.js
 │  │  │  │  │  │  ├── thinkingMarquee.test.js
 │  │  │  │  │  │  ├── transcriptLines.test.js
 │  │  │  │  │  │  ├── tuiConfig.test.js
+│  │  │  │  │  │  ├── uiBridgeRefs.test.js
 │  │  │  │  │  │  ├── uiDesignContract.test.js
 │  │  │  │  │  │  ├── updateWiring.test.js
 │  │  │  │  │  │  ├── useCompletions.refRootRegression.test.js
@@ -4548,6 +5062,7 @@
 │  │  │  │  │  └── ssrfIpv4MappedHex.test.js
 │  │  │  │  ├── selfRepairTransaction.test.js
 │  │  │  │  ├── selfRepairTransactionRunner.test.js
+│  │  │  │  ├── semanticProjection.test.js
 │  │  │  │  ├── sensitiveHomeCaseFold.test.js
 │  │  │  │  ├── servicePortFallback.test.js
 │  │  │  │  ├── services
@@ -4719,6 +5234,7 @@
 │  │  │  │  │  ├── claudeAdapter.controlResponse.test.js
 │  │  │  │  │  ├── claudeCompatToolAliases.test.js
 │  │  │  │  │  ├── cleanupService.auditRotation.test.js
+│  │  │  │  │  ├── cleanupService.quarantineTrim.test.js
 │  │  │  │  │  ├── cleanupService.runtimeLogs.test.js
 │  │  │  │  │  ├── cleanupService.tempCleanup.test.js
 │  │  │  │  │  ├── cleanupService.test.js
@@ -5408,6 +5924,7 @@
 │  │  │  │  │  ├── sessionMemory.test.js
 │  │  │  │  │  ├── sessionPersistFast.test.js
 │  │  │  │  │  ├── sessionPersistence.rename.test.js
+│  │  │  │  │  ├── sessionPersistence.sidecar.test.js
 │  │  │  │  │  ├── sessionPersistence.title.test.js
 │  │  │  │  │  ├── sessionPersistence.turnArtifacts.test.js
 │  │  │  │  │  ├── sessionRecapCjk.test.js
@@ -5475,6 +5992,7 @@
 │  │  │  │  │  ├── todoStateStorePaths.test.js
 │  │  │  │  │  ├── todoStorePath.test.js
 │  │  │  │  │  ├── tokenBudget.test.js
+│  │  │  │  │  ├── tokenBudgetNudge.test.js
 │  │  │  │  │  ├── tokenCountReportSsot.test.js
 │  │  │  │  │  ├── tokenPricing.test.js
 │  │  │  │  │  ├── tokenUsageService.test.js
@@ -5686,6 +6204,7 @@
 │  │  │  │  ├── toolCallEqualsKvGuard.test.js
 │  │  │  │  ├── toolCallEqualsKvSplit.test.js
 │  │  │  │  ├── toolCallNudges.test.js
+│  │  │  │  ├── toolCallTally.test.js
 │  │  │  │  ├── toolCalling.abortSignalWiring.test.js
 │  │  │  │  ├── toolCalling.autonomousL1RedLine.test.js
 │  │  │  │  ├── toolCalling.builtinSchemaValidation.test.js
@@ -5758,7 +6277,9 @@
 │  │  │  │  │  ├── AgentTool.controlRequest.test.js
 │  │  │  │  │  ├── AgentTool.fmtElapsed.test.js
 │  │  │  │  │  ├── AgentTool.recursionGuard.test.js
+│  │  │  │  │  ├── AgentTool.subagentCommonFloor.test.js
 │  │  │  │  │  ├── AgentTool.subagentScope.test.js
+│  │  │  │  │  ├── AgentTool.toolSurfaceDeclaration.test.js
 │  │  │  │  │  ├── ApplyPatchTool
 │  │  │  │  │  │  └── index.test.js
 │  │  │  │  │  ├── ArtifactTool
@@ -5932,6 +6453,7 @@
 │  │  │  │  │  ├── taskListPanel.test.js
 │  │  │  │  │  ├── thinkingDuration.test.js
 │  │  │  │  │  ├── toolIdPairing.test.js
+│  │  │  │  │  ├── toolLinesAgentTreeNotice.test.js
 │  │  │  │  │  ├── toolLinesColumnAlignment.test.js
 │  │  │  │  │  ├── toolLinesErrorFaithful.test.js
 │  │  │  │  │  ├── toolLinesWordDiff.test.js
@@ -6098,6 +6620,7 @@
 │  │  │  │  ├── webSearchService.queueRetry.test.js
 │  │  │  │  ├── weipuxiezuo.test.js
 │  │  │  │  ├── withTimeout.test.js
+│  │  │  │  ├── workerAgent.commonFloor.test.js
 │  │  │  │  ├── workerAgent.depthLimits.test.js
 │  │  │  │  ├── workflowCliCore.test.js
 │  │  │  │  ├── workflowCliHandler.test.js
@@ -6590,6 +7113,7 @@
 │  │  │  ├── menu.js
 │  │  │  ├── mermaid.js
 │  │  │  ├── messagePredicates.js
+│  │  │  ├── modelChoiceGrouping.js
 │  │  │  ├── modelTextNormalizer.js
 │  │  │  ├── naturalLanguageAliasGuard.js
 │  │  │  ├── nearVerb.js
@@ -6679,6 +7203,7 @@
 │  │  │  ├── sessionTopology.js
 │  │  │  ├── shellEscapeContext.js
 │  │  │  ├── shellOutputJson.js
+│  │  │  ├── shortOptionSpec.js
 │  │  │  ├── slashExtraCommands.js
 │  │  │  ├── softWrap.js
 │  │  │  ├── spinner.js
@@ -6753,6 +7278,7 @@
 │  │  │  │  ├── foldModel.js
 │  │  │  │  ├── footerMemory.js
 │  │  │  │  ├── footerStability.js
+│  │  │  │  ├── footerWidthBudget.js
 │  │  │  │  ├── frameBudget.js
 │  │  │  │  ├── frameDivergence.js
 │  │  │  │  ├── framePlan.js
@@ -6848,6 +7374,7 @@
 │  │  │  │  │  ├── taskLinesMemo.js
 │  │  │  │  │  ├── taskPanelHeader.js
 │  │  │  │  │  ├── taskPanelLines.js
+│  │  │  │  │  ├── taskSurface.js
 │  │  │  │  │  ├── toolDiffRowsMemo.js
 │  │  │  │  │  ├── toolEntryRows.js
 │  │  │  │  │  ├── toolHeaderSummaryMemo.js
@@ -6886,6 +7413,7 @@
 │  │  │  │  ├── staticItemsMemo.js
 │  │  │  │  ├── theme
 │  │  │  │  │  ├── ccTheme.js
+│  │  │  │  │  ├── ccThemeBg.js
 │  │  │  │  │  └── themeRegistry.js
 │  │  │  │  ├── thinkingMarquee.js
 │  │  │  │  ├── timelineAppendMerge.js
@@ -6895,6 +7423,7 @@
 │  │  │  │  ├── tuiErrorAdapter.js
 │  │  │  │  ├── uiAdapter.js
 │  │  │  │  ├── uiBridge.js
+│  │  │  │  ├── uiStdinFallbacks.js
 │  │  │  │  ├── userMessageStyle.js
 │  │  │  │  ├── utils
 │  │  │  │  │  ├── Cursor.js
@@ -7376,18 +7905,15 @@
 │  │  │  ├── agentContext.js
 │  │  │  ├── agentDevLog.js
 │  │  │  ├── agentFeedbackService.js
-│  │  │  ├── agentFs
-│  │  │  │  └── index.js
 │  │  │  ├── agentLauncherRegistry.js
 │  │  │  ├── agentStatsService.js
 │  │  │  ├── agenticHarnessService.js
-│  │  │  ├── agents
-│  │  │  │  └── index.js
 │  │  │  ├── agnesImageModel.js
 │  │  │  ├── agnesProvisioner.js
 │  │  │  ├── aiChatPort.js
 │  │  │  ├── aiConversationPort.js
 │  │  │  ├── aiFrontendLocator.js
+│  │  │  ├── aiLocalState.js
 │  │  │  ├── aiManageDaemonLifecycle.js
 │  │  │  ├── aiManagementChatHttp.js
 │  │  │  ├── aiManagementConversationsPrompts.js
@@ -7476,7 +8002,6 @@
 │  │  │  ├── cliAnythingService.js
 │  │  │  ├── cliAuthService.js
 │  │  │  ├── cliErrorDescriptor.js
-│  │  │  ├── cliLeafPort.js
 │  │  │  ├── cliToolSelfHeal.js
 │  │  │  ├── cloudSync.js
 │  │  │  ├── codeChangeStats.js
@@ -7493,14 +8018,10 @@
 │  │  │  ├── commitmentTrack.js
 │  │  │  ├── commitmentTracker.js
 │  │  │  ├── compactionUiPort.js
-│  │  │  ├── compile
-│  │  │  │  └── index.js
 │  │  │  ├── completionContract.js
 │  │  │  ├── completionPushPolicy.js
 │  │  │  ├── comprehensiveDataService.js
 │  │  │  ├── compression
-│  │  │  │  └── index.js
-│  │  │  ├── computerUse
 │  │  │  │  └── index.js
 │  │  │  ├── concurrencyLimiter.js
 │  │  │  ├── concurrencySlots.js
@@ -7558,8 +8079,6 @@
 │  │  │  ├── daemonEntry.js
 │  │  │  ├── daemonManager.js
 │  │  │  ├── daemonSpawnLocation.js
-│  │  │  ├── data
-│  │  │  │  └── index.js
 │  │  │  ├── dataCuration.js
 │  │  │  ├── dbHealthService.js
 │  │  │  ├── dedupeCache.js
@@ -7585,6 +8104,7 @@
 │  │  │  ├── docHelper.py
 │  │  │  ├── docInspect.py
 │  │  │  ├── docTypeset.py
+│  │  │  ├── documentConvertService.js
 │  │  │  ├── documentSnippetService.js
 │  │  │  ├── doomLoopGuard.js
 │  │  │  ├── dynamicFreeModelService.js
@@ -7721,7 +8241,10 @@
 │  │  │  │  ├── agentModelProjection.js
 │  │  │  │  ├── aiGateway.js
 │  │  │  │  ├── aiGatewayCooldownMethods.js
+│  │  │  │  ├── aiGatewayGenerateMethod.README.html
+│  │  │  │  ├── aiGatewayGenerateMethod.README.md
 │  │  │  │  ├── aiGatewayGenerateMethod.js
+│  │  │  │  ├── aiGatewayGenerateMethod.test.js
 │  │  │  │  ├── aiGatewayModelMethods.js
 │  │  │  │  ├── aiGatewayRoutingMethods.js
 │  │  │  │  ├── appLaunchInterceptor.js
@@ -7879,8 +8402,6 @@
 │  │  │  ├── groundTruth.js
 │  │  │  ├── growthService.js
 │  │  │  ├── guardApproval.js
-│  │  │  ├── guiEval
-│  │  │  │  └── index.js
 │  │  │  ├── hardwareProfileService.js
 │  │  │  ├── healAuditService.js
 │  │  │  ├── healEscalationService.js
@@ -7919,8 +8440,6 @@
 │  │  │  ├── intentHeuristics.js
 │  │  │  ├── interactiveMenuPort.js
 │  │  │  ├── interruptionMarker.js
-│  │  │  ├── issue
-│  │  │  │  └── index.js
 │  │  │  ├── jsDataSources.js
 │  │  │  ├── keyHealthProbe.js
 │  │  │  ├── keyUpdateFlow.js
@@ -8037,8 +8556,6 @@
 │  │  │  │  └── index.js
 │  │  │  ├── payloadProvisioner.js
 │  │  │  ├── perRequestAdaptationPipeline.js
-│  │  │  ├── perf
-│  │  │  │  └── index.js
 │  │  │  ├── performanceSampler.js
 │  │  │  ├── permissionBroker.js
 │  │  │  ├── permissionFallback.js
@@ -8108,14 +8625,13 @@
 │  │  │  ├── realtimeDataService.js
 │  │  │  ├── receiptService.js
 │  │  │  ├── recentTurnsSplit.js
-│  │  │  ├── redpass
-│  │  │  │  └── index.js
 │  │  │  ├── referenceDisambiguation.js
 │  │  │  ├── referencesService.js
 │  │  │  ├── repeatedPromptRounds.js
 │  │  │  ├── replyDedup.js
 │  │  │  ├── replyGuard.js
 │  │  │  ├── repoDisciplineRisk.js
+│  │  │  ├── reportKhyError.js
 │  │  │  ├── repositories
 │  │  │  │  └── index.js
 │  │  │  ├── requirementArtifact.js
@@ -8123,8 +8639,6 @@
 │  │  │  ├── rerank
 │  │  │  │  └── index.js
 │  │  │  ├── resourceGuard.js
-│  │  │  ├── resources
-│  │  │  │  └── index.js
 │  │  │  ├── responses
 │  │  │  │  └── index.js
 │  │  │  ├── restoreAgentService.js
@@ -8170,6 +8684,7 @@
 │  │  │  ├── selfOptimizer.js
 │  │  │  ├── selfProfile.js
 │  │  │  ├── selfRepairTransaction.js
+│  │  │  ├── semanticProjection.js
 │  │  │  ├── sensitiveHomeCaseFold.js
 │  │  │  ├── sequentialQueue.js
 │  │  │  ├── serviceLifecyclePolicy.js
@@ -8214,8 +8729,6 @@
 │  │  │  ├── strategyEngine.js
 │  │  │  ├── strategyRecommender.js
 │  │  │  ├── streamUsageOptions.js
-│  │  │  ├── structuredResults
-│  │  │  │  └── index.js
 │  │  │  ├── sttProviders
 │  │  │  │  └── index.js
 │  │  │  ├── subAgentModelSelect.js
@@ -8243,8 +8756,6 @@
 │  │  │  ├── tdxFormulaEngine.js
 │  │  │  ├── teachingService.js
 │  │  │  ├── telemetryService.js
-│  │  │  ├── terminal
-│  │  │  │  └── index.js
 │  │  │  ├── terminalLaunchCommand.js
 │  │  │  ├── testWritingPolicy.js
 │  │  │  ├── textHeuristics.js
@@ -8254,6 +8765,7 @@
 │  │  │  ├── todoStateStorePaths.js
 │  │  │  ├── todoStorePath.js
 │  │  │  ├── tokenBudget.js
+│  │  │  ├── tokenBudgetNudge.js
 │  │  │  ├── tokenPricing.js
 │  │  │  ├── tokenUsageService.js
 │  │  │  ├── tool
@@ -8269,6 +8781,7 @@
 │  │  │  │  │  ├── repeatStreak.js
 │  │  │  │  │  ├── salvage.js
 │  │  │  │  │  ├── steering.js
+│  │  │  │  │  ├── toolCallTally.js
 │  │  │  │  │  ├── toolNames.js
 │  │  │  │  │  ├── toolOutput.js
 │  │  │  │  │  ├── toolSets.js
@@ -8344,8 +8857,6 @@
 │  │  │  ├── traceAuditService.js
 │  │  │  ├── tradingAgentsService.js
 │  │  │  ├── trainingDataService.js
-│  │  │  ├── trajectoryReplay
-│  │  │  │  └── index.js
 │  │  │  ├── trajectoryStatsStore.js
 │  │  │  ├── transcriptRepair.js
 │  │  │  ├── transparencyService.js
@@ -8360,8 +8871,6 @@
 │  │  │  ├── unknownExploration.js
 │  │  │  ├── unknownProblemHandler.js
 │  │  │  ├── unsupportedGuide.js
-│  │  │  ├── updateAdapters
-│  │  │  │  └── index.js
 │  │  │  ├── updateChannelRouter.js
 │  │  │  ├── updateCoordinator.js
 │  │  │  ├── updateIndexProtocol.js
@@ -8396,6 +8905,7 @@
 │  │  │  ├── webFetchDecode.js
 │  │  │  ├── webSearchService.js
 │  │  │  ├── webToolsService.js
+│  │  │  ├── whatever.js
 │  │  │  ├── winAppPaths.js
 │  │  │  ├── windowsClipboardImg2FileService.js
 │  │  │  ├── workspaceGitInit.js
@@ -9030,9 +9540,17 @@
 │  ├── pnpm-lock.yaml
 │  ├── pnpm-workspace.yaml
 │  └── substrate
+│     ├── ansiSanitizer
+│     │  ├── README.html
+│     │  ├── README.md
+│     │  ├── index.js
+│     │  ├── index.test.js
+│     │  └── khy.module.json
 │     ├── apiResponse.js
 │     ├── atomicWriteJson.js
 │     ├── backendRuntime.js
+│     ├── betaFallbackNotice.js
+│     ├── breakCache.js
 │     ├── clampInt.js
 │     ├── classifyKhyError.js
 │     ├── cleanText.js
@@ -9072,11 +9590,15 @@
 │     │  ├── systemPromptSections.js
 │     │  ├── toolIcons.js
 │     │  └── wasmDefaults.js
+│     ├── crossBranchSynthesis.js
 │     ├── cryptoRandom.js
 │     ├── dailyScheduler.js
 │     ├── dataHome.js
 │     ├── dedupeText.js
 │     ├── deepClone.js
+│     ├── diff
+│     │  ├── envGates.js
+│     │  └── structuredHunks.js
 │     ├── docHelperEnabled.js
 │     ├── ensureDirSync.js
 │     ├── envFlagByName.js
@@ -9094,6 +9616,20 @@
 │     ├── fileEncoding.js
 │     ├── finiteNumber.js
 │     ├── firstGroup.js
+│     ├── flagRegistry
+│     │  ├── README.html
+│     │  ├── README.md
+│     │  ├── index.js
+│     │  ├── index.test.js
+│     │  └── khy.module.json
+│     ├── format
+│     │  ├── ccFormat.js
+│     │  ├── ccModelName.js
+│     │  ├── consoleError.js
+│     │  ├── consoleNotice.js
+│     │  ├── fullWidthInput.js
+│     │  ├── statusMessageFormatter.js
+│     │  └── tableStyle.js
 │     ├── formatBytes.js
 │     ├── gateOn.js
 │     ├── gitSoftExec.js
@@ -9154,6 +9690,8 @@
 │     ├── retry.js
 │     ├── safeJsonParse.js
 │     ├── safeStatSync.js
+│     ├── sessionSlots.js
+│     ├── sessionTopology.js
 │     ├── simpleTokenEstimate.js
 │     ├── sleep.js
 │     ├── slugifyToken.js
@@ -9164,9 +9702,28 @@
 │     ├── stripCodeSpans.js
 │     ├── styleMatchers.js
 │     ├── systemEncoding.js
+│     ├── text
+│     │  ├── README.html
+│     │  ├── README.md
+│     │  ├── displayWidthMemo.js
+│     │  ├── displayWidthMemo.test.js
+│     │  ├── imageIntent.js
+│     │  ├── imageIntent.test.js
+│     │  ├── inlineFileRefs.js
+│     │  ├── inlineFileRefs.test.js
+│     │  ├── keyFindings.js
+│     │  ├── keyFindings.test.js
+│     │  ├── khy.module.json
+│     │  ├── permissionReply.js
+│     │  ├── permissionReply.test.js
+│     │  ├── resultGuard.js
+│     │  ├── resultGuard.test.js
+│     │  ├── width.js
+│     │  └── width.test.js
 │     ├── toLowerCaseSafe.js
 │     ├── toNonNegInt.js
 │     ├── toStr.js
+│     ├── toolCallNoise.js
 │     ├── toolNameVariants.js
 │     ├── toolResultSanitizer.js
 │     ├── trimIfString.js
@@ -9243,6 +9800,7 @@
    │  │  ├── check-model-list-truth.js
    │  │  ├── check-moonbit-layout.js
    │  │  ├── check-native-registry.js
+   │  │  ├── check-no-emoji.js
    │  │  ├── check-node-syntax.js
    │  │  ├── check-notify-webhook.js
    │  │  ├── check-ops-health.js
@@ -9268,6 +9826,7 @@
    │  │  ├── check-tool-contract.js
    │  │  ├── check-touch-cost.js
    │  │  ├── check-traffic-log.js
+   │  │  ├── check-tui-cadence.js
    │  │  ├── check-tui-gates.js
    │  │  ├── check-unbypassable-gate.js
    │  │  ├── check-upload-safety.js
@@ -9313,6 +9872,51 @@
    │  │  ├── validate-protocol-contracts.js
    │  │  ├── validate-reliability.js
    │  │  └── wiring-exemptions.json
+   │  ├── copyright
+   │  │  ├── LICENSE
+   │  │  ├── repo-contract.html
+   │  │  ├── repo-contract.md
+   │  │  ├── upstream-manifest.json
+   │  │  └── vendor
+   │  │     └── software-copyright-materials
+   │  │        ├── SKILL.html
+   │  │        ├── SKILL.md
+   │  │        ├── agents
+   │  │        │  └── openai.yaml
+   │  │        ├── references
+   │  │        │  ├── application_fields.html
+   │  │        │  ├── application_fields.md
+   │  │        │  ├── business_understanding_rules.html
+   │  │        │  ├── business_understanding_rules.md
+   │  │        │  ├── code_selection_rules.html
+   │  │        │  ├── code_selection_rules.md
+   │  │        │  ├── copyright_material_rules.html
+   │  │        │  ├── copyright_material_rules.md
+   │  │        │  ├── manual_structure.html
+   │  │        │  ├── manual_structure.md
+   │  │        │  ├── officecli_backend.html
+   │  │        │  ├── officecli_backend.md
+   │  │        │  ├── playwright_cli_screenshots.html
+   │  │        │  └── playwright_cli_screenshots.md
+   │  │        ├── scripts
+   │  │        │  ├── analyze_project.py
+   │  │        │  ├── build_docx_from_md.py
+   │  │        │  ├── capture_screenshots.py
+   │  │        │  ├── check_environment.py
+   │  │        │  ├── check_playwright_cli.py
+   │  │        │  ├── common.py
+   │  │        │  ├── confirm_stage.py
+   │  │        │  ├── extract_code_material.py
+   │  │        │  ├── generate_application_info.py
+   │  │        │  ├── generate_business_context.py
+   │  │        │  ├── generate_manual_draft.py
+   │  │        │  ├── officecli_backend.py
+   │  │        │  └── propose_code_selection.py
+   │  │        └── tests
+   │  │           ├── test_code_layout.py
+   │  │           ├── test_officecli_builder.py
+   │  │           ├── test_source_discovery.py
+   │  │           └── test_workflow_integrity.py
    │  ├── docs
    │  │  ├── auto-fix-doc-index.js
    │  │  ├── build_docs_site.js
@@ -9335,8 +9939,8 @@
    │  │  │  └── package.json
    │  │  ├── rules-scaffold.js
    │  │  └── verify_docs_site.js
-   │  ├── electron-dev.js
    │  ├── evidence
+   │  │  ├── build-git-record.js
    │  │  ├── build-index.js
    │  │  ├── capture-runtime.js
    │  │  ├── collect-contribution.js
@@ -9350,10 +9954,6 @@
    │  │  └── fix-var-declarations.js
    │  ├── frontend-tokens.baseline.json
    │  ├── gen_keys.py
-   │  ├── githooks
-   │  │  ├──  (W10)commit-msg
-   │  │  ├──  (W10)post-commit
-   │  │  └──  (W10)pre-commit
    │  ├── hooks
    │  │  └── agentFeedbackHint.js
    │  ├── install
@@ -9374,6 +9974,7 @@
    │  │  ├── docsPaths.js
    │  │  ├── duplicationGuard.js
    │  │  ├── ext-run.js
+   │  │  ├── fanInTiering.js
    │  │  ├── flagRegistryGuard.js
    │  │  ├── hydrationHealth.js
    │  │  ├── installIntegrity.js
@@ -9406,6 +10007,7 @@
    │  │  ├── toolContractGuard.js
    │  │  ├── toolDescriptionGuard.js
    │  │  ├── touchCostProbe.js
+   │  │  ├── tuiCadenceGuard.js
    │  │  └── workflowNodeParityGuard.js
    │  ├── maintenance
    │  │  ├── clean-temp.js
@@ -9435,6 +10037,9 @@
    │  │  ├── merge-coverage.js
    │  │  ├── provider-contract.js
    │  │  └── workflow-regression.js
+   │  ├── quarantine
+   │  │  ├── README.html
+   │  │  └── README.md
    │  ├── release
    │  │  ├── README-runtime-placement.html
    │  │  ├── README-runtime-placement.md
@@ -9545,24 +10150,27 @@
    │     ├── check-agent-rules.test.js
    │     ├── check-change-safety.test.js
    │     ├── check-commit-timing.test.js
+   │     ├── check-delegation-boundary.test.js
    │     ├── check-delivery-baseline.test.js
    │     ├── check-duplication.test.js
    │     ├── check-golden-path.test.js
    │     ├── check-gov-rules.test.js
    │     ├── check-model-hardcoding.test.js
    │     ├── check-native-registry.test.js
+   │     ├── check-no-emoji.test.js
    │     ├── check-pattern-coverage.test.js
    │     ├── check-release-triggers.test.js
    │     ├── check-repo-layout.test.js
    │     ├── check-rules-registry.test.js
+   │     ├── check-tui-cadence.test.js
    │     ├── check-weak-model-guard.test.js
    │     ├── coverage-gate.test.js
    │     ├── cryptoSuiteCompat.test.js
+   │     ├── d4D5RepointContract.test.js
    │     ├── duplicationGuard.test.js
-   │     ├── electron
-   │     │  └── main.singleInstance.test.js
    │     ├── ext-run.test.js
    │     ├── externalRules.test.js
+   │     ├── fanInTiering.test.js
    │     ├── flag-registry.test.js
    │     ├── gen-evolution-prompts.test.js
    │     ├── genCodeowners.test.js
@@ -9581,6 +10189,7 @@
    │     ├── portableHostIsolation.test.js
    │     ├── print-maintainer-map.test.js
    │     ├── provider-contract.test.js
+   │     ├── q1-criteria.test.js
    │     ├── quality-gate.test.js
    │     ├── release-gate.test.js
    │     ├── releaseHygiene.test.js
@@ -9698,6 +10307,7 @@
    │  │     ├── miniapp-webview-singleton.html
    │  │     └── miniapp-webview-singleton.md
    │  ├── docs
+   │  │  ├── .mailmap
    │  │  ├── 00_INDEX_仓库根.html
    │  │  ├── 00_INDEX_仓库根.md
    │  │  ├── 00_INDEX_文档索引.html
@@ -10124,7 +10734,23 @@
    │  │  │  │  ├── [DESIGN-ARCH-163] 图文混合输入识别增强方案.html
    │  │  │  │  ├── [DESIGN-ARCH-163] 图文混合输入识别增强方案.md
    │  │  │  │  ├── [DESIGN-ARCH-164] 用户需求理解管线-意图裁决澄清问询与需求固化方案.html
-   │  │  │  │  └── [DESIGN-ARCH-164] 用户需求理解管线-意图裁决澄清问询与需求固化方案.md
+   │  │  │  │  ├── [DESIGN-ARCH-164] 用户需求理解管线-意图裁决澄清问询与需求固化方案.md
+   │  │  │  │  ├── [DESIGN-ARCH-165] TUI 工具卡片渲染规格与两端分工方案.html
+   │  │  │  │  ├── [DESIGN-ARCH-165] TUI 工具卡片渲染规格与两端分工方案.md
+   │  │  │  │  ├── [DESIGN-ARCH-166] 静默失效与真源漂移四例收敛方案.html
+   │  │  │  │  ├── [DESIGN-ARCH-166] 静默失效与真源漂移四例收敛方案.md
+   │  │  │  │  ├── [DESIGN-ARCH-167] 模型选择列表分组与信息分层方案.html
+   │  │  │  │  ├── [DESIGN-ARCH-167] 模型选择列表分组与信息分层方案.md
+   │  │  │  │  ├── [DESIGN-ARCH-168] 开机零自启与按需懒加载方案.html
+   │  │  │  │  ├── [DESIGN-ARCH-168] 开机零自启与按需懒加载方案.md
+   │  │  │  │  ├── [DESIGN-ARCH-169] khychat启动假阴性-就绪信号后置与守护僵尸化方案.html
+   │  │  │  │  ├── [DESIGN-ARCH-169] khychat启动假阴性-就绪信号后置与守护僵尸化方案.md
+   │  │  │  │  ├── [DESIGN-ARCH-170] 桌面端X报错功能接线与指路真实性方案.html
+   │  │  │  │  ├── [DESIGN-ARCH-170] 桌面端X报错功能接线与指路真实性方案.md
+   │  │  │  │  ├── [DESIGN-ARCH-171] 未接入后端判定与接线守卫真实性方案.html
+   │  │  │  │  ├── [DESIGN-ARCH-171] 未接入后端判定与接线守卫真实性方案.md
+   │  │  │  │  ├── [DESIGN-ARCH-176] TUI 与桌面端统一方案：底色分层 · 稳定渲染 · 共享语义.html
+   │  │  │  │  └── [DESIGN-ARCH-176] TUI 与桌面端统一方案：底色分层 · 稳定渲染 · 共享语义.md
    │  │  │  ├── DESIGN-CPA
    │  │  │  │  ├── 00_INDEX_DESIGN-CPA-总目录.html
    │  │  │  │  ├── 00_INDEX_DESIGN-CPA-总目录.md
@@ -10188,7 +10814,11 @@
    │  │  │  │  ├── [DESIGN-PERF-002] khy-cli-交互流畅度修复方案-v1.html
    │  │  │  │  ├── [DESIGN-PERF-002] khy-cli-交互流畅度修复方案-v1.md
    │  │  │  │  ├── [DESIGN-PERF-003] TUI 启动阻塞治理方案.html
-   │  │  │  │  └── [DESIGN-PERF-003] TUI 启动阻塞治理方案.md
+   │  │  │  │  ├── [DESIGN-PERF-003] TUI 启动阻塞治理方案.md
+   │  │  │  │  ├── [DESIGN-PERF-004] TUI 动画节拍治理方案.html
+   │  │  │  │  ├── [DESIGN-PERF-004] TUI 动画节拍治理方案.md
+   │  │  │  │  ├── [DESIGN-PERF-005] khy-chat-启动慢与报错链治理方案.html
+   │  │  │  │  └── [DESIGN-PERF-005] khy-chat-启动慢与报错链治理方案.md
    │  │  │  ├── DESIGN-RES
    │  │  │  │  ├── 00_INDEX_DESIGN-RES-总目录.html
    │  │  │  │  ├── 00_INDEX_DESIGN-RES-总目录.md
@@ -10390,7 +11020,9 @@
    │  │  │  │  ├── [IMPL-RPT-061] OpenCode-Zen-免鉴权通道-核实的方案-2026-09-23.html
    │  │  │  │  ├── [IMPL-RPT-061] OpenCode-Zen-免鉴权通道-核实的方案-2026-09-23.md
    │  │  │  │  ├── [IMPL-RPT-062] 长任务偏离与完成判据缺失-取证与方案提案-2026-09-23.html
-   │  │  │  │  └── [IMPL-RPT-062] 长任务偏离与完成判据缺失-取证与方案提案-2026-09-23.md
+   │  │  │  │  ├── [IMPL-RPT-062] 长任务偏离与完成判据缺失-取证与方案提案-2026-09-23.md
+   │  │  │  │  ├── [IMPL-RPT-063] 会话轨迹问题盘点与修复方案-2026-09-28.html
+   │  │  │  │  └── [IMPL-RPT-063] 会话轨迹问题盘点与修复方案-2026-09-28.md
    │  │  │  ├── [IMPL-RPT-045
    │  │  │  │  ├── ] 工具注册表自愈层规范.html
    │  │  │  │  └── ] 工具注册表自愈层规范.md
@@ -11106,6 +11738,7 @@
    │  │  │     ├── [STORY-章节-119] 第05章 金丹·驭器术.md
    │  │  │     ├── [STORY-章节-120] 第06章 金丹·周天循环.html
    │  │  │     └── [STORY-章节-120] 第06章 金丹·周天循环.md
+   │  │  ├── 09_STORY_修仙学AI.zip
    │  │  ├── 10_规范
    │  │  │  ├── 00_INDEX_规范-总目录.html
    │  │  │  ├── 00_INDEX_规范-总目录.md
@@ -11185,7 +11818,9 @@
    │  │  │  │  ├── [DESIGN-LAY-007] 三态目录立体分层方案.html
    │  │  │  │  ├── [DESIGN-LAY-007] 三态目录立体分层方案.md
    │  │  │  │  ├── [DESIGN-LAY-008] 目录层级重设计执行路线图.html
-   │  │  │  │  └── [DESIGN-LAY-008] 目录层级重设计执行路线图.md
+   │  │  │  │  ├── [DESIGN-LAY-008] 目录层级重设计执行路线图.md
+   │  │  │  │  ├── [DESIGN-LAY-008] 附录A 方案P全量文件去向表.html
+   │  │  │  │  └── [DESIGN-LAY-008] 附录A 方案P全量文件去向表.md
    │  │  │  ├── DESIGN-MEM
    │  │  │  │  ├── 00_INDEX_DESIGN-MEM-总目录.html
    │  │  │  │  ├── 00_INDEX_DESIGN-MEM-总目录.md
@@ -11292,6 +11927,8 @@
    │  │  │  │  ├── [DESIGN-I18N-001] 国际化规范.md
    │  │  │  │  ├── [DESIGN-IP-001] 软件著作权就绪规范.html
    │  │  │  │  ├── [DESIGN-IP-001] 软件著作权就绪规范.md
+   │  │  │  │  ├── [DESIGN-IP-002] 软著材料生成器与在仓契约.html
+   │  │  │  │  ├── [DESIGN-IP-002] 软著材料生成器与在仓契约.md
    │  │  │  │  ├── [DESIGN-IR-001] 事件响应规范.html
    │  │  │  │  ├── [DESIGN-IR-001] 事件响应规范.md
    │  │  │  │  ├── [DESIGN-LOG-001] 日志规范.html
@@ -11509,6 +12146,8 @@
    │  │  │     ├── [RUNTIME-009] 删除先报部位（搓澡）.md
    │  │  │     ├── [RUNTIME-010] 工具授权须明确授予（默认拒绝）.html
    │  │  │     ├── [RUNTIME-010] 工具授权须明确授予（默认拒绝）.md
+   │  │  │     ├── [RUNTIME-011] TUI 动画节拍三方一致.html
+   │  │  │     ├── [RUNTIME-011] TUI 动画节拍三方一致.md
    │  │  │     ├── [SEC-001] 安全规范（安全头 输入验证 注入防护 日志脱敏）.html
    │  │  │     ├── [SEC-001] 安全规范（安全头 输入验证 注入防护 日志脱敏）.md
    │  │  │     ├── [SECURITY-001] 密钥防泄露.html
@@ -11599,8 +12238,18 @@
    │  │  │  │  ├── [RESEARCH-017] 防止越改越差-方案-2026-09-17.md
    │  │  │  │  ├── [RESEARCH-018] 5-3-1架构符合性调研与迁移设计-2026-09-28.html
    │  │  │  │  ├── [RESEARCH-018] 5-3-1架构符合性调研与迁移设计-2026-09-28.md
+   │  │  │  │  ├── [RESEARCH-019] Claude Code源码架构深度解析与khy-os逐章对照学习指南-2026-09-29.html
+   │  │  │  │  ├── [RESEARCH-019] Claude Code源码架构深度解析与khy-os逐章对照学习指南-2026-09-29.md
+   │  │  │  │  ├── [RESEARCH-020] 差距一Token预算正向语义Nudge实施计划-2026-09-29.html
+   │  │  │  │  ├── [RESEARCH-020] 差距一Token预算正向语义Nudge实施计划-2026-09-29.md
    │  │  │  │  ├── [RESEARCH-021] 5-3-1符合性复测与方案R收官-2026-09-30.html
-   │  │  │  │  └── [RESEARCH-021] 5-3-1符合性复测与方案R收官-2026-09-30.md
+   │  │  │  │  ├── [RESEARCH-021] 5-3-1符合性复测与方案R收官-2026-09-30.md
+   │  │  │  │  ├── [RESEARCH-022] 5-3-1树形图设计-现状树与目标树-2026-10-02.html
+   │  │  │  │  ├── [RESEARCH-022] 5-3-1树形图设计-现状树与目标树-2026-10-02.md
+   │  │  │  │  ├── [RESEARCH-024] Q0积压分类与分组提交建议-2026-10-02.html
+   │  │  │  │  ├── [RESEARCH-024] Q0积压分类与分组提交建议-2026-10-02.md
+   │  │  │  │  ├── [RESEARCH-025] 交接执行收尾-2026-10-02.html
+   │  │  │  │  └── [RESEARCH-025] 交接执行收尾-2026-10-02.md
    │  │  │  ├── metrics
    │  │  │  │  ├── 00_INDEX_metrics-总目录.html
    │  │  │  │  ├── 00_INDEX_metrics-总目录.md
@@ -11680,10 +12329,12 @@
    │  │  ├── 14_维护者
    │  │  │  ├── 00_INDEX_维护者-分类索引.html
    │  │  │  ├── 00_INDEX_维护者-分类索引.md
-   │  │  │  └── registry
-   │  │  │     ├── 00_INDEX_registry-总目录.html
-   │  │  │     ├── 00_INDEX_registry-总目录.md
-   │  │  │     └── 维护映射表.json
+   │  │  │  ├── registry
+   │  │  │  │  ├── 00_INDEX_registry-总目录.html
+   │  │  │  │  ├── 00_INDEX_registry-总目录.md
+   │  │  │  │  └── 维护映射表.json
+   │  │  │  ├── taste.html
+   │  │  │  └── taste.md
    │  │  ├── 15_维护记录
    │  │  │  ├── 00_INDEX_维护记录-分类索引.html
    │  │  │  ├── 00_INDEX_维护记录-分类索引.md
@@ -11880,6 +12531,8 @@
    │  │  ├── 05_索引与对账
    │  │  │  ├── 对账表.html
    │  │  │  ├── 对账表.md
+   │  │  │  ├── 提交记录与证据链.html
+   │  │  │  ├── 提交记录与证据链.md
    │  │  │  └── 证据总清单.json
    │  │  ├── 06_申报材料
    │  │  │  ├── README.html
@@ -11888,7 +12541,6 @@
    │  │  │  └── 递交核对表.md
    │  │  ├── README.html
    │  │  └── README.md
-   │  ├── mailmap
    │  ├── root-gitignore.txt
    │  └── software-misc
    │     └── akshare_scripts
@@ -11919,7 +12571,7 @@
    └── verify
       ├── DEBT.html
       └── DEBT.md</code></pre>
-<h2 id="b-退役清单-120-项-每行-现路径-处置">§B 退役清单（120 项；每行 = 现路径 → 处置）<a class="anchor" href="#b-退役清单-120-项-每行-现路径-处置" aria-label="锚点">#</a></h2>
+<h2 id="b-退役清单-109-项-每行-现路径-处置">§B 退役清单（109 项；每行 = 现路径 → 处置）<a class="anchor" href="#b-退役清单-109-项-每行-现路径-处置" aria-label="锚点">#</a></h2>
 <pre><code class="language-text">.clinerules  →  [退役-D4] .clinerules（圈留则不动）
 .cursor/rules/khy-maintainability.mdc  →  [退役-D4] .cursor/（圈留则不动）
 .opencode/README.html  →  [退役-D4] .opencode/（圈留则不动）
@@ -11927,17 +12579,6 @@
 .opencode/config.json  →  [退役-D4] .opencode/（圈留则不动）
 .zcode/plans/plan-sess_ee2d7822-39ad-4bb9-92f9-57196682e483.md  →  [退役-D4] .zcode/（圈留则不动）
 CLAUDE.md  →  [退役-D4] 并入 AGENTS.md（圈留则留根）
-electron/main.js  →  [退役-待裁] electron/（§12.58 证据；圈留则 delivery/desktop/）
-electron/preload.js  →  [退役-待裁] electron/（§12.58 证据；圈留则 delivery/desktop/）
-electron/services/aiGatewayService.js  →  [退役-待裁] electron/（§12.58 证据；圈留则 delivery/desktop/）
-electron/services/authService.js  →  [退役-待裁] electron/（§12.58 证据；圈留则 delivery/desktop/）
-electron/services/backendService.js  →  [退役-待裁] electron/（§12.58 证据；圈留则 delivery/desktop/）
-electron/services/connectionServer.js  →  [退役-待裁] electron/（§12.58 证据；圈留则 delivery/desktop/）
-electron/services/fileService.js  →  [退役-待裁] electron/（§12.58 证据；圈留则 delivery/desktop/）
-electron/services/messageService.js  →  [退役-待裁] electron/（§12.58 证据；圈留则 delivery/desktop/）
-electron/services/sessionService.js  →  [退役-待裁] electron/（§12.58 证据；圈留则 delivery/desktop/）
-electron/services/syncService.js  →  [退役-待裁] electron/（§12.58 证据；圈留则 delivery/desktop/）
-electron/services/terminalService.js  →  [退役-待裁] electron/（§12.58 证据；圈留则 delivery/desktop/）
 package-lock.json  →  [退役-W生态] npm 双栈退役（先改 dependabot/frontend-ci 等 4 消费方）
 services/backend/src/services/accountPool/index.js  →  [退役-P2收尾] 壳 services/backend/src/services/accountPool/index.js（消费者重指后删，逐壳一提交）
 services/backend/src/services/adversarial/index.js  →  [退役-P2收尾] 壳 services/backend/src/services/adversarial/index.js（消费者重指后删，逐壳一提交）
@@ -12040,8 +12681,10 @@ services/backend/src/services/webFrontendEval/index.js  →  [退役-P2收尾] �
 services/backend/src/services/weipuxiezuo/index.js  →  [退役-P2收尾] 壳 services/backend/src/services/weipuxiezuo/index.js（消费者重指后删，逐壳一提交）
 services/backend/src/services/workflow/index.js  →  [退役-P2收尾] 壳 services/backend/src/services/workflow/index.js（消费者重指后删，逐壳一提交）
 services/backend/src/services/workspace/index.js  →  [退役-P2收尾] 壳 services/backend/src/services/workspace/index.js（消费者重指后删，逐壳一提交）</code></pre>
-<h2 id="c-unmapped-待议-0-项-p3-逐族清单点名时消化-禁止静默入-misc">§C UNMAPPED-待议（0 项；P3 逐族清单点名时消化，禁止静默入 misc）<a class="anchor" href="#c-unmapped-待议-0-项-p3-逐族清单点名时消化-禁止静默入-misc" aria-label="锚点">#</a></h2>
-<pre><code class="language-text"></code></pre>
+<h2 id="c-unmapped-待议-3-项-p3-逐族清单点名时消化-禁止静默入-misc">§C UNMAPPED-待议（3 项；P3 逐族清单点名时消化，禁止静默入 misc）<a class="anchor" href="#c-unmapped-待议-3-项-p3-逐族清单点名时消化-禁止静默入-misc" aria-label="锚点">#</a></h2>
+<pre><code class="language-text">works/build/githooks/commit-msg  →  UNMAPPED-待议: works/build/githooks/commit-msg
+works/build/githooks/post-commit  →  UNMAPPED-待议: works/build/githooks/post-commit
+works/build/githooks/pre-commit  →  UNMAPPED-待议: works/build/githooks/pre-commit</code></pre>
       </article>
       <nav class="pager"><a class="prev" href="../../../docs/10_规范/DESIGN-LAY/[DESIGN-LAY-007] 三态目录立体分层方案.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-LAY-007] 三态目录立体分层方案</div></a><a class="next" href="../../../docs/10_规范/DESIGN-LAY/[DESIGN-LAY-008] 目录层级重设计执行路线图.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-LAY-008] 目录层级重设计执行路线图</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
