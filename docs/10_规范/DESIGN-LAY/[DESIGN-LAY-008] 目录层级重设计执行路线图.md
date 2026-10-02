@@ -5419,6 +5419,124 @@ AGENTS.md       智能体根读取位（Qoder 原生面）
 3. **`taste.md` 收编位置**：`works/record/` 入仓 / 并入智能体记忆库 / 原地不动（则 `.commandcode` 必留）。
 
 
+## §19 方案 Q′（功能无损版）：把「不破功能」变成验收条件而非意愿（2026-10-02，待点头）
+
+> 用户 2026-10-02：「**在不破坏功能的情况下**按照你的建议设计方案」「继续完善方案」。
+> 本节把 §18 方案 Q 重写成一份**每步都带无损证明**的施工设计。核心手法：
+> 「不破功能」不写成态度，写成一条硬规则——**给不出可跑的 before/after 等价命令的批次，不做**。
+
+### 19.0 三条硬规则（本设计的公理）
+
+| # | 规则 | 为什么是它 |
+|---|---|---|
+| N-1 | **等价证明先于动作**：每批开工前先写好该批的 before 侧命令与输出，改完跑 after 侧比对；比对不通过或命令写不出来 → 该批不做 | 搬家最贵的不是移动，是「证明移动前后功能一样」；而 before 侧**只能趁未搬时抓** |
+| N-2 | **新判据一律 S1 观察者起**（恒 exit 0、只记录），样本 ≥200 才升 S2（规则 8 四阶段，PP-1 禁直进 S3） | §18 的 Q-1/Q-2 都是拦截型判据；第一晚就把别车道的在飞件判成 error，等于用治理名义制造冲突 |
+| N-3 | **在飞宿主不改、未跟踪件不走 git**：改宿主文件 = 夹带他车道成果；未跟踪件 `git revert`/`checkout` 天然无效 | 今夜实测：`$null` 与 `.commandcode` 都属未跟踪，「每件单独可 revert」这个前提对它们不成立 |
+
+### 19.1 可动性实测（**更正我上一轮的说法：Q1 也被门控**）
+
+我 06:5x 节说「Q1 不依赖积压、是今夜唯一能立刻推进的一步」——**错**。逐件核宿主：
+
+| 工程 | 需改的宿主 | 状态 |
+|---|---|---|
+| Q-1 根项逐名登记 | `scripts/ci/check-repo-layout.js` | ⛔ **在飞** |
+| Q-2 dangling 检查 | `scripts/ci/check-rules-registry.js` | ✅ 干净 |
+| Q-2 / Q-1 的**机制登记** | `docs/10_规范/registry/FEATURE-OWNERSHIP.json`（rollout.mechanisms[]）、`RULES-REGISTRY.json` | ⛔ **两件都在飞**（前者近 30 分钟被写过） |
+| Q-3 棘轮拆行 | `scripts/ci/debt-ledger.json` | ✅ 干净 |
+
+⇒ **Q-1/Q-2 全部延后到 Q0 之后**：新机制不登记就是「无档机制」，`check-rollout-stage` 与
+`rules:coverage` 会报漂移，而登记要写的两张表正在被别车道改。**没有一条合法路径能绕开这一点。**
+
+### 19.2 本机自证能力实测（决定哪些批次的「无损」能由本道自己证明）
+
+| 工具 | 实测 | 后果 |
+|---|---|---|
+| `docker` | **command not found** | W5（Docker 族）与 P3（`services/backend` 解体，19 条 COPY 重指）的等价证明**本机跑不了**，只能在 CI（`docker.yml`）里跑；而本道不 push ⇒ 该证明必须由**人触发一次 CI** 才算数 |
+| `python -m build` | **可用**（`import build` OK） | W4 的 sdist/wheel **内容清单等价证明本机可跑** —— 这条更正了我自己记忆里的旧断言（原记「本机缺 build/twine」，实为只缺 twine，而 twine 只管上传不管构建） |
+| `twine` | 缺 | 不影响本设计（上传属发布链，本道不碰） |
+| `check-version-sync` | exit 0，9 真源全过 | W4 的 before 侧已落档（见 19.4） |
+
+**批次分档结论**：
+- **本道可自证、可做**：W10b、W2、W4、P1/P2（抽包 + 壳 + require 冒烟）。
+- **本道不可自证、必须人或 CI 佐证**：W5、P3、W7。这三批**不进每夜自动施工队列**，
+  改为「人在有构建环境的机器上做一次，或授权本道改完由人跑一次 CI」。
+  这是「不破功能」这条约束直接推出来的结论，不是保守借口。
+
+### 19.3 逐批等价性设计（失效模式 / 探针 / 判据 / 回滚）
+
+| 批 | 最可能的功能破坏方式 | before 侧探针（已可跑） | after 侧判据 | 回滚 |
+|---|---|---|---|---|
+| **W10b** `.githooks`→`works/build/githooks/` | **`core.hooksPath` 是 per-machine git 配置**（实测当前值 `.githooks`）。搬家后未重跑 `install-hooks.sh` 的机器上**全部守卫静默失效**，而提交照样成功——最坏的一类失守 | `git config core.hooksPath`；`grep -c KHY_MANAGED_HOOK .githooks/*`（实测只有 `post-commit` 有标记，`pre-commit`/`commit-msg` 第 2 行是**自述路径注释**，本身就是绊线）；`rules:apply -- .githooks/pre-commit` → TOOLING-005 | ① 同批改 `install-hooks.sh` 并**本机立即执行一次**，`git config core.hooksPath` 新值 == 新目录；② 钩子文件第 2 行自述路径与实际一致（改注释）；③ 造一次故意违规（含糊状态文本）提交，**必须被 pre-commit 拦下**才算活；④ `metadata-non-git-rc.test.js` 仍过；⑤ 同批改 `RULES-REGISTRY.json` 的 `.githooks/**` glob | 单提交 `git revert`；配置侧 `git config core.hooksPath .githooks` |
+| **W2** `CONTRIBUTING`/`SECURITY`→`.github/`、`CHANGELOG`/`.env.example`→`works/record/` | GitHub 是否仍认 `.github/CONTRIBUTING.md`（本仓 `AGENTS.md`「人工维护参考」节已写明：GitHub 从**根、`.github/`、`docs/` 顶层**三处识别贡献指南 → 有仓内依据，非我臆测）；`CHANGELOG` 是 PROCESS-005 的 bump 锚，改指漏一处则发布链断 | `rules:apply` 四路径规则集（已落档）；`changelog-new.js --check` 现值 | ① `changelog-new --check` 与 `check-release-triggers` 均 exit 0；② 同批改 `check-repo-layout.js` 的根文档白名单（该文件在飞 → 等 Q0）；③ `docs:verify` 断链 0 | 每文件一提交，逐件 revert |
+| **W5** Docker 族→`works/ship/` | **构建上下文语义变化**：`.dockerignore` 就近件优先于上下文根件（§16.6 新事实 E 已查证官方原文）；compose 的 `context`/`dockerfile` 是相对路径 | `docker compose config` 归一化输出（**本机无 docker，只能在 CI 跑**） | ① `docker compose config` 前后 diff 仅允许出现在 `context`/`dockerfile` 两行；② `.dockerignore` 按 §17 裁决**暂留根**（避免就近优先级变化）；③ CI `docker.yml` 构建通过 + 镜像内 `khy --version` 冒烟 | 单提交 revert（本体与改指同批，revert 即整体回退） |
+| **W4** `pyproject`/`MANIFEST`→`delivery/channel/pip/` | R3 版本锚 9 真源之一指错 → 发布链静默用旧版本；`MANIFEST.in` 是 `render_manifest.py` **自动生成件**（文件头已写明），手改会被下次生成覆盖 | `check-version-sync`（已落档，exit 0）；`python -m build` 产物清单 | ① `check-version-sync` exit 0；② **`python -m build` 出 sdist+wheel，`tar -tzf` / `unzip -l` 排序后与 before 清单逐行 diff = 0**（本机可做，这是 W4 的核心证明）；③ `MANIFEST.in` 只改生成器不改产物；④ 同批改 4 条 `RULES-REGISTRY` 声明（PROCESS-002/005/010/014） | 单提交 revert；构建产物不入库无残留 |
+| **P1/P2** 抽包 + 整域平移 | 3000+ 相对 require 断链；98 个再导出壳的下游消费者 | 关键模块 `require` 冒烟清单（**须先逐件确认无副作用**——本仓有探针副作用前科：router dispatch / mutating 动词 / env patch，故不在本节盲跑） | ① 旧路径 `require` 经壳仍解析；② `node:test` + jest 全套前后计数与失败集合**逐名相同**（不是只看失败数，见既有记忆）；③ `check:layout` 的 `domain-direction` 不升 | 每族一提交 |
+| **P3** `services/backend` 解体 | `node_modules` 归属、jest 配置根、Dockerfile 19 条 COPY | — | **本道不可自证**（无 docker）→ 交 CI + 人 | 分族提交 |
+| **W7** 工作区根下沉 | 298 脚本 + hooks + CI + autopull + nightly 全链 | — | 三链各跑通一次 | **默认不做**（见 19.5） |
+| **W9** 数据家归堆 | `dataHome` 读路径改错 → 对话记录/凭据/记忆「看起来丢了」（数据未跟踪，git 救不回） | `khy status` / `khy doctor` / `khy hq verify` 现值 | 先改代码、跑三命令实测通过，**再**物理移动；失败只反向 `git mv` 自己搬过的路径 | 逐目录一提交 |
+
+### 19.4 Phase 0：现在就能做、零在飞冲突、零功能风险
+
+只写 `.khyos/tmp/`（gitignore 目录，不入库、不碰任何在飞件），把 N-1 要求的 before 侧固化下来。已抓：
+
+```text
+.khyos/tmp/q-baseline/01-root-hooks.txt      core.hooksPath 现值 + 钩子标记 + 根项逐名清单
+.khyos/tmp/q-baseline/02-rules-apply.txt     16 个根路径的规则集（Dockerfile 2 条 / fly.staging.toml 0 条 …）
+.khyos/tmp/q-baseline/03-version-sync.txt    check-version-sync exit 0 + 9 真源读数
+```
+
+待补（各批开工前抓，不阻塞）：`python -m build` 产物清单（W4）、`docker compose config`（W5，CI 侧）、
+require 冒烟清单（P1/P2，先做副作用甄别）。
+
+**Phase 0 的意义**：它是今夜唯一**不被积压门控**又能推进方案的动作。没有它，Q0 一到、
+每节都要在「已经搬了、无法再抓 before」的处境里补证明——那正是「改了三处、病没好、
+顺手重构一遍」的成因（规则 5）。
+
+### 19.5 修订后的施工序（含明确的「不做清单」）
+
+| 阶段 | 内容 | 前置 | 根变化 |
+|---|---|---|---|
+| **P0** | 基线快照（已开抓） | 无 | 0 |
+| **P1** | 等 Q0：`check-repo-layout.js` + 两张登记表收口后，落 Q-1/Q-2/Q-3（**S1 起**） | Q0 | 0（但从此不反弹） |
+| **P2** | W10b（含 19.3 的 ①–⑤ 全套证明） | Q0 | −1 |
+| **P3** | W2 → W4（W4 用本机 `python -m build` 自证） | Q0 | −5~−6 |
+| **P4** | W5 / P3：**交 CI 佐证后再做**，不进自动队列 | 人授权跑一次 CI | −3~−4 |
+| **P5** | P1/P2 抽包与整域平移 | 10-27 窗 + #7 收口 | → 15 |
+| **不做** | **W7**（收益 −5 视觉项，代价是全链脚本面回归；且它不属于功能层）、**W9**（≥22 提交，挪到 P5 之后）、`.cursor`/`.clinerules`（用户圈留）、`taste.md`（**复制入仓，不移动原件**——移动会打断 CommandCode 自己的记忆读取） | — | — |
+
+⇒ 按本设计走完，根停在 **15**（架构口径 4 域 + 每层 ≤7 全绿；地板 11 项逐名封闭）。
+要到 10 才需要 W7，而 W7 的无损证明只能由人或 CI 给——**我不替它签字，也不假装签了**。
+
+### 19.6 N-3 的新证据：每节全量再生 html 孪生是一台blast-radius 机器（07:0x 实测）
+
+任务书要求每节跑 `node scripts/docs/build_docs_site.js`。实测其影响面：
+
+| 读数 | 值 |
+|---|---|
+| 脏 html 孪生件 | **1235** |
+| 其中源 `.md` 也脏（随源变化，正常） | 493 |
+| **源干净但孪生脏 → HEAD 里的孪生本就陈旧** | **742** |
+
+即仓库当前有 **742 个已跟踪孪生件与构建器不同步**，全部躺在作者积压里未提交。
+本节构建**没有新增**它们（脏件数 2895→2897，只多我自己那两份），但每次全量跑会把这 742 件的
+mtime 全部重刷——在共享工作树里，这让「谁改了孪生件」变得不可追溯，也让任何牵动 `nav-data.js`
+或索引页的搬家批次**必然撞破 20 文件/提交闸**。
+
+⇒ 对方案的两条修订（都属 N-3，不改功能）：
+1. **Q0 之前，每节不再全量跑构建器**；只再生本批实际改动的那一份孪生。构建器目前
+   **没有单文件模式**（`process.argv` 只认 `--quiet`，实测于本节），故记一条待办：
+   给 `build_docs_site.js` 加 `--only <路径>`（纯加法、不改默认行为）。
+2. 742 件陈旧孪生**不由本道提交**——它们是别车道未提交成果的派生物，签进去就是夹带；
+   只在 §16.6 记数，等 Q0 由作者一次收口。
+
+
+
+### 19.7 待你点头两条（点完我从 P0 剩余项与 P2 起）
+1. **认不认「给不出等价证明就不做」这条硬规则**：它会让 W5/P3/W7 变慢（要等 CI 或你授权），
+   但它是本设计里唯一真正防「改完看起来全绿、实际功能变了」的东西。
+2. **`.dockerignore` 与 `taste.md` 两个小裁决**：前者按 §17 裁决②暂留根（推荐，避免就近优先级变化）；
+   后者按 §19.5「复制不移动」（推荐，CommandCode 继续能读）。
+
 ## 关联
 
 - 本篇 §17 = 圈留 Cline/Cursor 后重绘的终态树与可达阶梯；§15/§16 的「终局 7」已被 §17.4 作废。§18 = 方案 Q（两口径达标），待点头。
