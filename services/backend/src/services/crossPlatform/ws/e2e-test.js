@@ -54,7 +54,7 @@ function deepEqual(a, b) {
 }
 
 // ── Run tests ───────────────────────────────────────────────────────
-console.log('\n🧪 Cross-Platform Sync Unit/E2E Tests\n');
+console.log('\nCross-Platform Sync Unit/E2E Tests\n');
 
 // ── Test 1: Protocol Constants ──
 console.log('Test 1: Protocol constants');
