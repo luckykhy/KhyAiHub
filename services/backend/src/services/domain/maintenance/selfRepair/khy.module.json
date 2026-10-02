@@ -1,0 +1,41 @@
+{
+  "name": "selfRepair",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "名义边界按 D2 声明。实测本单元没有任何 D3 边（不 require utils/constants），只吃 child_process/fs/path 内建。",
+  "_deviation_note": "登记而非白名单：两个成员都伸进 D1（src/services 顶层）——primitives.js → ../../../evolutionSafety；transactionRunner.js → ../../../evolutionPolicy、../../../evolutionSafety、../../../selfRepairTransaction，以及回滚未净时的 ../../../healEscalationService（惰性 require，在 try 内）。另 primitives.js 从仓库根 ../../../../../../../scripts/lib/{leafContractGuard,modelHardcodingGuard} 深伸进 D5 工程档案区（缺失时 best-effort 置 null 跳过）。D2→D1 与 D2→D5 都不在名义边界内，交由 archDebtScan R1/R3 与 domain-direction 的既有棘轮管辖，本清单如实登记，不写白名单把它合法化。",
+  "fanIn": 3,
+  "fanInEvidence": [
+    "services/backend/src/services/changeWatchService.js",
+    "services/backend/src/services/selfRepair/index.js",
+    "services/backend/src/services/tool/toolUseLoopCore.js"
+  ],
+  "_fanIn_note": "非测试消费者 3 个：changeWatchService（每回合开始跑校验）、D1 再导出壳 services/selfRepair/index.js、toolUseLoopCore（fix 派发处）。evolutionPolicy.js / evolutionSafety.js / selfRepairTransaction.js 的文本命中经核为注释，不构成 require 边。注：toolUseLoopCore.js 是作者 in-flight 文件，本单元只读其引用关系、未作任何改动。",
+  "behaviourTestsOutsideUnit": [
+    "services/backend/tests/selfRepairTransactionRunner.test.js",
+    "services/backend/tests/evolutionPolicy.test.js"
+  ],
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-29",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "晋级三判据齐：单元级 README.md、整数 fanIn、两个源文件各有同名同目录测试（20 例全绿）。单元早于 entry-buffer 守卫。",
+  "contract": {
+    "purity": "primitives.js 是本子系统唯一副作用集中处（git 快照/回滚、node --check、守卫 require、受影响测试）；transactionRunner.js 是纯编排，IO 原语全经参数注入，可零真 IO 单测。",
+    "ioOwner": "primitives.create() 返回的 snapshot/restore/validateFiles。编排器自己不碰 git、不碰 fs。",
+    "injectionPoints": [
+      "create({ projectDir }) — 项目根可注入（默认 KHYQUANT_CWD/cwd）",
+      "runRepairTransaction({ runFix, snapshot, restore, validateFiles, onEvent, env }) — 四个原语与事件回调、env 全可注入"
+    ],
+    "gates": "KHY_SELF_REPAIR_TRANSACTION（默认开；off 时逐字节回退为直接跑 runFix，不产生 transaction 注记）；KHY_SELF_REPAIR_RUN_SYNTAX / _RUN_GUARDS / _RUN_TESTS / _MAX_FILES / KHY_EVOLUTION_SAFETY_ENFORCE / KHY_EVOLUTION_OVERRIDE 由纯叶子 selfRepairTransaction 计划化后驱动",
+    "worktree_safety": "快照用 `git stash create`（产悬挂 commit，不动工作树），回滚只对改动集 `git checkout <ref> -- <file>`、快照里不存在的新建文件才 fs.rm —— 绝不 stash push/save，绝不裸 `git checkout --`，保留会话内其余无关改动。",
+    "fail_soft": "任一原语抛错都吞掉并回退到未包装的 fixResult（保留修复、不回滚）——校验机器故障不得丢弃一个可能正确的修复；回滚未净则写 .khy/heal_escalation.json 交人（L3），回滚成功不升级。"
+  },
+  "tests": [
+    "primitives.test.js",
+    "transactionRunner.test.js"
+  ],
+  "_test_dialect_note": "两份共置测试为 node:test 方言。validateFiles 的用例只在 .khyos/tmp 下造临时文件，绝不对真工作树触发 snapshot/stash。"
+}
