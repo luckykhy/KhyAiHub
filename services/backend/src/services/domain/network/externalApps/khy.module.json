@@ -1,0 +1,90 @@
+{
+  "name": "externalApps",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "实测出边（15 个源文件全数清点，非抽样；require 说明符 path.resolve 后判定落点）：**D3 仅 3 条** —— appModelImporter.js:56 取 utils/trimLowerCase、tomlLiteFormat.js:15 取 utils/isPlainObject、traeAppAdapter.js:36 取 utils/dataHome。**同目录 14 条**（各 adapter 与 appModelImporter 取 ./_shared，_shared 不取任何 adapter）。**零第三方出边**（只用 fs/path/os 与自家叶子）。⚠ **4 条 D2→D1 反向出边**，逐条实名：(1) appModelImporter.js:41 惰性 require ../../../flagRegistry（门控 KHY_EXTERNAL_APP_IMPORT 的判定权交给 D1）；(2) appModelImporter.js:79 惰性 require ../../../customProviderRegistrar（注册通道的默认实现）；(3) _shared.js:146 惰性 require ../../../gateway/providerPresets；(4) _shared.js:166 惰性 require ../../../apiKeyPool —— **这条最重**：它把 khy 已存的厂商密钥读出来，交给调用方写进外部软件的配置文件（resolveApiKey 返回 {key,source:'pool'}）。四条全部「惰性 + try/catch 回落」，因此**不炸**，但方向是 D2 依赖 D1，超出 D2 的名义边界 [D2,D3]。按 DOMAIN-DEPS 的 declared_not_enforced 口径，本清单**不上调** mayDependOn 去把它做实（那是自抬边界），只在此登记为偏差；升档前必须先解耦（把 flagRegistry 与密钥池按 D3 名义另立真源，或把这三处改为调用方注入）。反向依赖的历史与 d3-purity 读数见 [DESIGN-LAY-008] §12.2z 与债务台账。",
+  "fanIn": 11,
+  "fanInEvidence": [
+    "services/backend/src/cli/handlers/provider.js",
+    "services/backend/src/cli/repl/configTomlOverlay.js",
+    "services/backend/src/services/domain/agents/agentAssets/_adapterBase.js",
+    "services/backend/src/services/domain/config/ccSwitch/appWriters.js",
+    "services/backend/src/services/externalApps/index.js",
+    "services/backend/src/services/gateway/adapters/commandCodeAdapter.js",
+    "services/backend/src/services/gateway/adapters/opencodeAdapter.js",
+    "services/backend/src/services/gateway/adapters/opencodeBinResolver.js",
+    "services/backend/src/services/gateway/agentModelProjection.js",
+    "services/backend/src/services/localBrainProviderConfig.js",
+    "services/backend/src/tools/ImportExternalAppModels/index.js"
+  ],
+  "_fanIn_note": "非测试消费者 **11 个文件 / 35 个 require 站点**（判据：require 说明符解析后落进本单元目录，排除 *.test.js）：handlers/provider.js:32 取 _shared；repl/configTomlOverlay.js:30 取 tomlLite；同域兄弟两处 —— agents/agentAssets/_adapterBase.js:24 取 _shared、config/ccSwitch/appWriters.js:42-52 **一次取 11 家适配器**（ccSwitch 写外部 app 的正门）；D1 shim services/externalApps/index.js:4-16 以 13 个成员形态整包再导出；gateway/adapters/commandCodeAdapter.js:141/:159 取 _shared；gateway/adapters/opencodeAdapter.js:49 与 opencodeBinResolver.js:123 取同名 opencodeAdapter（**注意 D1 有个同名文件**，按目录判不按名字判）；gateway/agentModelProjection.js:180/:210 取 claudeCode+opencode；localBrainProviderConfig.js:49 取 appModelImporter；tools/ImportExternalAppModels/index.js:30 取 appModelImporter。域构成：9 个 D1 + 2 个 D2，全部允许方向。**另有 2 类看不见的使用者**：(a) 5 份单元外测试（见 behaviourTestsOutsideUnit）；(b) tools/ConfigureExternalApp/index.js:25-30 **经 D1 shim 目录**取 6 个适配器文件——而 shim 目录里只有 index.js，6 个路径全部指空，见 B30-S3。scripts/ci/check-delegation-boundary.js:57 以字符串引用本目录（仪器引用，非 require，不计扇入）。",
+  "tests": [
+    "services/backend/src/services/domain/network/externalApps/_shared.test.js",
+    "services/backend/src/services/domain/network/externalApps/appModelImporter.test.js",
+    "services/backend/src/services/domain/network/externalApps/claudeCodeAdapter.test.js",
+    "services/backend/src/services/domain/network/externalApps/commandCodeAdapter.test.js",
+    "services/backend/src/services/domain/network/externalApps/cozeAdapter.test.js",
+    "services/backend/src/services/domain/network/externalApps/deepseekTuiAdapter.test.js",
+    "services/backend/src/services/domain/network/externalApps/geminiCliAdapter.test.js",
+    "services/backend/src/services/domain/network/externalApps/openclawAdapter.test.js",
+    "services/backend/src/services/domain/network/externalApps/opencodeAdapter.test.js",
+    "services/backend/src/services/domain/network/externalApps/reasonixAdapter.test.js",
+    "services/backend/src/services/domain/network/externalApps/tomlLite.test.js",
+    "services/backend/src/services/domain/network/externalApps/tomlLiteFormat.test.js",
+    "services/backend/src/services/domain/network/externalApps/traeAppAdapter.test.js",
+    "services/backend/src/services/domain/network/externalApps/ycodeAdapter.test.js",
+    "services/backend/src/services/domain/network/externalApps/zcodeAdapter.test.js"
+  ],
+  "_tests_note": "15 个源文件 / 3866 行 / 15 份共置测试，逐文件实测（node --test 显式列路径，**不给目录**——本环境给目录会报 Cannot find module，那是仪器错配不是缺陷）：_shared 23、appModelImporter 25、claudeCode 14、commandCode 13、coze 11、deepseekTui 10、geminiCli 11、openclaw 10、opencode 16、reasonix 11、tomlLite 15、tomlLiteFormat 12、traeApp 12、ycode 11、zcode 11 → 合计 **205 例 / 542 断言 / 0 fail / 0 skip**（2026-09-29 复跑读数）。每份测试都先把 KHY_DATA_HOME / KHY_PROJECT_DATA_HOME 钉到 fs.mkdtempSync 的临时目录**再 require**，写路径一律打在临时目录，复跑读数不变、且**不改任何跟踪文件**（跑完 git status -- services/Tools 为空，已核）。",
+  "behaviourTestsOutsideUnit": [
+    "services/backend/tests/services/externalApps/adapters.test.js",
+    "services/backend/tests/services/externalApps/appModelImporter.test.js",
+    "services/backend/tests/services/externalApps/externalApps.test.js",
+    "services/backend/tests/services/externalApps/index.test.js",
+    "services/backend/tests/services/externalApps/opencodeConfigHeal.test.js",
+    "services/backend/tests/services/externalApps/tomlLite.test.js",
+    "services/backend/tests/tools/configureExternalAppRepair.test.js"
+  ],
+  "_outside_test_note": "单元外 7 份（本批只清点与判方言，未修改任何一份）：**3 份是 jest 方言**（externalApps.test.js、index.test.js、tests/services/externalApps/tomlLite.test.js —— 用 describe/it 且不在 node:test 里取 describe），在本环境 `node --test` 直接 `ReferenceError: describe is not defined`，而 jest 未安装 → **这三份此处无法复跑**，报「红」是仪器错配，绝不据此判缺陷（[RESEARCH-018] §4 C-4 只要求同名同目录共置，与这批历史命名无关）。**4 份 node:test 方言可跑**：opencodeConfigHeal 6/6 绿；adapters 23 例 4 失败；appModelImporter 11 例 5 失败；configureExternalAppRepair 5 例 2 失败。appModelImporter 那 5 例的成因**已复现并定位**：它把 HOME/XDG_CONFIG_HOME 注入 env 期望隔离，但适配器候选顺序把便携根放在 XDG 之前（B30-S1/S2），于是读到仓库内 services/Tools/opencode/config/opencode.json 的 3 个 provider 而不是临时目录的 0 个 —— 实测把这条 env 打进 configPath 得到 D:/Portable/khy-os/services/Tools/opencode/config/opencode.json，usable 返回 [opencode,deepseek,openai]，断言「2 !== 1」「3 !== 0」「mask 期望 sk-...-999 实得 ****」全部由此而来。**副作用告警（本批实测踩到并已复原）**：跑这份跟踪测试会**改写跟踪文件** services/Tools/opencode/config/opencode.json（git diff 21 插入/4 删除，写入的是测试假密钥 sk-secret-abcdef-999），本批已备份到 .khyos/tmp/opencode-config.mytestrun-2026-09-29.json 并把工作区内容复原为 HEAD 版本、git status 该路径已空。adapters 与 configureExternalAppRepair 的 6 例失败**成因未定**（本批没有结论，不做推测），登记为待查。",
+  "lifecycle": {
+    "stage": "staged",
+    "since": "2026-09-29",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "**为什么是 staged 而不是 stable**：晋级三判据形式上齐（单元 README.md ✓、整数 fanIn=11 且逐文件实名 ✓、15 个源文件全部同名同目录测试 ✓），但有 4 条 D2→D1 反向出边与 4 条用户可见/凭据级实测缺陷未闭合（B30-S1/S3/S5/S6）。stable 是一张「已签字的合格证」，此刻签它就是把 promotion-incomplete 防的那个假证自己签出去。解耦反向依赖 + 人拍板修 S1/S3 之后再升 stable。单元内 15 份源文件与 7 份单元外测试**均未被本批修改**（本批只新增 15 份共置测试 + README + 本清单，git status 全为 ??）。",
+  "contract": {
+    "surface": "11 家外部 AI 软件适配器共用同一个六件套导出：configPath / list / get / add / remove / usable（实测逐文件 Object.keys 清点）。扩展位：opencodeAdapter 另有 repair + _healProviderModels + _healDoc（配置自愈），commandCodeAdapter 另有 configFilePath + API_WIRE，traeAppAdapter 另有 APP，ycodeAdapter 另有 configDir + envKeyNameForId，zcodeAdapter 另有 GATE_SLOTS + KINDS + kindForProtocol。消费侧唯一入口是 appModelImporter 的 {isEnabled, discover, discoverAll, importApp, importAll, unimport, APPS, _poolKey}，它**只探测 usable**（typeof adapter.usable === 'function'），其余方法名各家自便。叶子工具 _shared 提供 13 个 helper（expandHome/readIfExists/atomicWrite/parseDotenv/upsertDotenv/removeDotenvKey/envKeyName/presetFor/resolveApiKey/resolveEndpoint/resolveModel/maskKey），tomlLite={parse,stringify}、tomlLiteFormat={stringify}。",
+    "configDialects": "五种互不兼容的落盘形状，这就是本单元存在的全部理由：JSON 嵌套 provider（opencode/openclaw/coze/reasonix）、dotenv 风格 .env（commandCode、gateway 侧）、settings.json 的 env 块（claudeCode/geminiCli，键名由 envKeyName 生成 shell 风格 <PROVIDER>_API_KEY/<PROVIDER>_BASE_URL）、TOML（tomlLite/tomlLiteFormat 自研，无第三方依赖）、profile store JSON（traeApp 的 {activeId, profiles:[...]}）。写一律经 _shared.atomicWrite(:44-52 同目录 tmp + rename)，因为对方软件随时在读同一份文件。",
+    "envIsolationPromise": "所有公开函数签名都收 env（默认 process.env），这是本单元对测试与对沙箱的承诺：注入 env 就能把读写点整份搬走。expandHome(_shared.js:19-21) 用 env.HOME || os.homedir()，XDG 同理。**实测两处破口**：traeAppAdapter._readStore(:47) 无 env 形参、内部 configPath() 不传参（B30-S5）；opencodeAdapter.configPath(:127-172) 的便携根候选由 __dirname 爬 5 级算出、不看 env，且排在 XDG 之前（B30-S1/S2）。其余 13 个源文件按此承诺可全沙箱化，15 份共置测试即是证据。",
+    "secretHandling": "密钥只在进程内流动：_shared.maskKey 负责一切对外展示；appModelImporter 的返回值只带 keyMasked，真 key 只进 registrar.registerCustomProvider 的 keyInput 字段（实测共置测试断言 205 例里 JSON.stringify(res) 不含明文）。读侧回退链是「NL 显式给的 > 外部 app 已存的 > khy 池」（_shared.resolveApiKey），第三档就是那条 D2→D1 出边：把 khy 的池内密钥写进外部软件配置。**方向性后果**：删除一个 provider 时若误删共享密钥，受害者是别的 provider（见 B30-S6/S7 的实测反例）。",
+    "gates": "KHY_EXTERNAL_APP_IMPORT（读侧门，默认开，appModelImporter.isEnabled:39-53：flagRegistry 优先、本地 CANON {0,false,off,no} 回退）、KHY_OPENCODE_CONFIG_HEAL（opencode 自愈，默认开）、KHY_EXTERNAL_APP_ACTIONS（在 D1 工具层，不在本单元）、各家路径覆盖位 TRAE_SWITCH_STORE_PATH / GEMINI_CONFIG_DIR / OPENCODE_CONFIG / OPENCODE_CONFIG_DIR。零硬编码端点（RUNTIME-001 无命中）；门读取失败一律回落默认。⚠ 同一套假值词汇在本单元是**第 4 份副本**（appModelImporter.js:25 _FALSY），且本地副本在 flagRegistry 可解析时永不执行（B30-S10）。",
+    "injectionPoints": [
+      "importApp(opts, env, deps) — deps.registrar 注入假 registrar，测试据此断言 poolKey/endpoint/defaultModel/extraModels/ensureInit 而不碰全局池（appModelImporter.js:156）",
+      "adapter.add/remove/list/get/usable(…, env) — 13 个源文件兑现；traeApp 与 opencode 的便携根两处不兑现（B30-S5/S1）",
+      "_shared.atomicWrite(file, content) — 落点由调用方给定，全部共置测试打在 mkdtemp 临时目录",
+      "appModelImporter.isEnabled(env) / _isHealEnabled(env) — 整包 env 可替换，测两态不必改 process.env"
+    ],
+    "knownBoundaries": [
+      "本单元写的是**别人家的配置文件**（opencode/Claude Code/Gemini CLI/Trae/Coze），文件格式由对方定，khy 不能约束；因此 add/remove 的全部风险都在「写坏对方配置」，repair/heal 这条自愈线就是为此而生 —— 自愈只改内存视图（_load），落盘只发生在 repair 显式调用时。",
+      "D1 有与单元成员**同名**的文件（services/backend/src/services/gateway/adapters/opencodeAdapter.js vs 本单元的 opencodeAdapter.js），判依赖必须按解析后的目录判，按名字判会把 D1 那个消费者误当成本单元的成员。",
+      "D1 shim services/backend/src/services/externalApps/ 只放了 index.js 一个文件；任何按「目录里该有 13 个成员」写的引用都会指空（实测已踩，见 B30-S3）。删除或补齐这个 shim 属人的裁决。",
+      "opencode 的便携根是 __dirname 爬根算术（:_portableConfigPath 无 env 参与），改目录层级就要改它 —— 这类算错**不抛错，只会静默读错配置文件**，与拓展契约守卫 extension-path-drift 同一失效形态，但那条守卫只管 extensions/，本目录不在其扫描范围。",
+      "usable() 只看配置不看连通性：配好即「可用」，密钥失效也报可用。真实可用性由网关侧探测，不归本单元。"
+    ],
+    "registered_defects": [
+      "B30-S1（**静默读错配置文件，用户可见，需人裁决**）opencodeAdapter.js:127-134 的 _portableConfigPath() 用 `path.resolve(__dirname,'..','..','..','..','..')` 再拼 '../Tools/opencode/config/opencode.json'，实测解析结果是 **D:/Portable/khy-os/services/Tools/opencode/config/opencode.json**（仓库内部），而注释第 3 条宣称的便携布局是 **D:/Portable/Tools/opencode/config/opencode.json**（该文件真实存在，30078 字节，provider 是 zhipu/opencode-go/openrouter/stepfun/sense-nova/commandcode/agnes/opencode）。**少爬两级**，且因为仓库内那个路径也真实存在（1098 字节，provider 是 opencode/deepseek/openai），候选顺序又把便携根排在 XDG 之前(:160-166)，于是用户的真实 opencode 配置被一个仓库内文件**永久遮蔽**：configPath(env) 实测返回仓库内路径、usable() 实测返回那 3 个 provider。失效形态与拓展守卫 extension-path-drift 描述完全一致（「后者不抛错，只会静默算错根」），但那条守卫只扫 extensions/，本目录不在口径内，所以没有任何门变红。修法（爬几级 / 是否该把便携配置签进仓库 / 候选顺序是否改为 env 优先）属人的裁决 → 任务 #17。",
+      "B30-S2（**跟踪文件被测试改写，本批实测踩到并已复原**）由 B30-S1 直接导致：services/backend/tests/services/externalApps/appModelImporter.test.js:53-120 用 env={HOME:临时,XDG_CONFIG_HOME:临时} 播种再断言，但适配器实际读写的是仓库内 services/Tools/opencode/config/opencode.json —— 实测跑一次该套件后 `git status --porcelain` 出现 `M services/Tools/opencode/config/opencode.json`，`git diff --numstat` 为 21 插入 / 4 删除，写入内容是测试假密钥 sk-secret-abcdef-999 与 deepseek-v4-flash/gpt-4o。**任何人在本机跑这份测试都会污染工作区**，且 HEAD 版本本身已含上一轮跑出来的 provider（opencode/deepseek），说明这条污染不是新事。本批处置：把当前内容备份到 .khyos/tmp/opencode-config.mytestrun-2026-09-29.json，再以 `git show HEAD:<path>` 复原工作区内容，复原后该路径 git status 为空、provider 回到 [opencode,deepseek]（**没有用 git checkout，也没有动索引**）。**更正一处推断**：HEAD 版本内容（opencode 带占位 apiKey 值 sk-real 与 apihub.agnes-ai.com 端点、deepseek 无 key 且模型是 deepseek-chat）与测试夹具形状不同，因此它是**被 d41755e 一次性提交进仓库的便携布局配置**，不是上一轮跑测试留下的污染——本批没有证据说这条污染「不是新事」。真正的问题是两件：**一份机器本地的工具配置被签进了仓库**（含 apiKey 字段位），而 B30-S1 的错根恰好把它当成了便携根。新增的 15 份共置测试不受影响：它们把 OPENCODE_CONFIG 等显式钉在临时目录，实测跑完该路径仍为空。",
+      "B30-S3（**整只工具死掉且报错自相矛盾，用户可见，需人裁决**）services/backend/src/tools/ConfigureExternalApp/index.js:24-31 的 _ADAPTERS 把 6 个 app id 全映射到 `../../services/externalApps/<x>Adapter`，而实测该目录**只有 index.js**（ls 与 fs.existsSync 三处均为 false）——那 6 个文件不存在。:48-56 的 _adapterFor 用 `try { return require(mod) } catch { return null }` 把它吞成 null，:157 于是报「不支持的外部软件: opencode（支持 opencode/openclaw/reasonix/deepseek-tui/coze/claude-code）」，**在同一条消息里既说支持又列出该 app 为受支持**。端到端实测（.khyos/tmp/cea-repro.js）：6 个 app 全部 success=false、错误逐字相同；同一批 app 经 D2 单元直取 reasonixAdapter 则 usable 正常、appModelImporter.discover('reasonix') 返回 success=true。**仪器为什么没抓到**：`require(mod)` 的说明符是变量，静态扫描看不见，故 `unresolved-require` 实测读数仍是 0 —— 该缺陷正好落在这条棘轮的盲区里（与 appModelImporter.js:44 的同形 `require(mod)` 一起，说明「变数 require + 字面量映射表」是本仓 unresolved-require 的系统性盲区）。修法是补齐 6 个 D1 壳还是把映射表直接指向 D2 路径（后者会新增 D1→D2 引用，方向合法但要动 D1 文件），属人的裁决 → 任务 #17。",
+      "B30-S4（**注入的假值被静默升级为真实写通道**）appModelImporter.js:177 `const registrar = deps.registrar || _defaultRegistrar();`。实测四态（临时数据根，provider 过滤成不存在的 id 以保证不落地）：registrar=null / undefined / false 三种**假值注入全部 success=true**（即加载了真实 customProviderRegistrar），只有 registrar={} 这种「真值但不合形」才被 :178-186 的守卫拦下报「customProviderRegistrar 不可用」。也就是说 fail-closed 检查恰好**漏掉最想拦的那一侧**：调用方想用 `registrar:null` 表达「别写我的全局池」，得到的是「照写」。本单元 15 份共置测试只用 `{registrar:{}}` 这一种形状（唯一会失败闭合的形状），故这条路径**测试覆盖不到、绿灯看不见** —— 与 [RESEARCH-018] 反复强调的「绿灯可能空转」同型。",
+      "B30-S5（env 注入承诺破口之二）traeAppAdapter.js:47 声明 `function _readStore()` **无 env 形参**，内部 :49 调 `configPath()` 也不传参（回落 process.env），而 4 个调用点 :100/:117/:161/:240 全都写着 `_readStore(env)` —— 参数被静默丢弃。实测：设 process.env.TRAE_SWITCH_STORE_PATH=REAL 且调用 list({TRAE_SWITCH_STORE_PATH: FAKE})，返回 profile 名单 = [REAL]。读侧已经指错，写侧更糟：:205 与 :258 两处 `fs.writeFileSync(file,…)` 的 file 就来自这个被忽略 env 的解析结果 → **注入沙箱 env 的 add/remove 会写真用户的 profile store**。本单元其余 13 个源文件都兑现 env 承诺，唯此一家不兑现，改法（给 _readStore 补形参并透传）很小但属源码改动 → 登记不动。",
+      "B30-S6（**删掉别人的凭据，安全方向，需人裁决**）geminiCliAdapter.js:180-185 的共享密钥守卫：`Object.keys(doc.env).some((k) => { if (k === 'GEMINI_API_KEY' || k === 'GOOGLE_GENAI_API_KEY') { return false; } return false; })` —— **两个分支都 return false**，stillUsed 恒为 false，于是 :186 的 `if (!stillUsed)` 恒真。实测端到端：临时 settings.json 里 alpha/beta 两个 provider 共用 GEMINI_API_KEY，调 remove({target:'alpha',confirmed:true,removeKeys:true}) 返回 keyRemoved=true，结果 **GEMINI_API_KEY 被删除**而 beta 仍在配置里 —— :179 的注释「仅当没有其它 provider 使用 GEMINI_API_KEY 时才删除共享凭据键」与代码行为完全相反。用户在删一个无关 provider 后，Gemini CLI 自身的全局凭据消失。",
+      "B30-S7（**该删的没删、不该删的删了**）同函数 :154 算出 `keyName = S.envKeyName(id)`（即 ALPHA_API_KEY），但它**只用在 :156 的存在性判断**，此后全文再无 `delete doc.env[keyName]`。实测删除后落盘键集合：ALPHA_BASE_URL 消失、**ALPHA_API_KEY 仍在**、GEMINI_API_KEY 消失（见 B30-S6）。也就是说 remove 留下的正是被删 provider 自己的密钥（含明文 API key），清掉的却是共享密钥 —— 与 :168 预览消息「将…删除 provider「alpha」的 BASE_URL 与 API_KEY」逐字相反。参照实现就在同目录：claudeCodeAdapter.js:169-172 先 delete urlName、再在 removeKeys 时 `delete doc.env[keyName]`，且从不碰任何全局键。gemini 是这 11 家里唯一两处都反着做的。",
+      "B30-S8（别名清理是死代码）geminiCliAdapter.js:173-176 `delete doc.env[urlName];` 之后立刻 `if (doc.env[urlName] === doc.env.GOOGLE_GENAI_API_URL) delete doc.env.GOOGLE_GENAI_API_URL;` —— 读的是**刚被删掉的键**，恒为 undefined，只有当别名键本身也不存在时比较才成立（那时 delete 是 no-op）。实测：ALPHA_BASE_URL 与 GOOGLE_GENAI_API_URL 同值 https://same-endpoint，remove 之后 GOOGLE_GENAI_API_URL **仍在**落盘内容里。意图（同值别名一并清除）从未生效过一次。",
+      "B30-S9（方向偏差，仪器不判）4 条 D2→D1 出边（见 _mayDependOn_note 逐条行号），其中 _shared.js:166 → apiKeyPool 是「业务上下文伸手拿凭据池」，flagRegistry/customProviderRegistrar/providerPresets 三条把门控判定权、注册通道与厂商真源都交给 D1。DOMAIN-DEPS 把 D2→D1 记为 declared_not_enforced，故 `domain-direction` 守卫实测读数里**不含这 4 条**（现值 46 全是 d3-purity 与 no-reach-into-archive 两族）—— 这不是它们不存在，是口径没量。登记在此以免下一个人把「守卫 0」读成「方向干净」。",
+      "B30-S10（死代码副本）appModelImporter.js:25 的本地 `_FALSY = new Set(['0','false','off','no'])` 与 :47-52 的回退分支，只在 `require('../../../flagRegistry')` 抛错时才执行；实测该 require **可解析**（文件存在、单元测试可直调），故此副本在本构建上永不生效。同一套假值词汇全仓至少 4 份副本（本单元 1 份 + trajectoryProvenance 单元 3 份，见 B29-S17），收敛到单一真源属人的裁决 → 任务 #17。",
+      "B30-S11（测试方言错配，不是缺陷但会让人误判）单元外 7 份测试里 3 份是 jest 方言（externalApps.test.js / index.test.js / tests/services/externalApps/tomlLite.test.js），在本环境用 `node --test` 跑必报 `ReferenceError: describe is not defined`，而 jest **未安装** → 这三份此处不可复跑。若有人以「node --test 全目录」的读数当结论，会得到 3 个假红（本批实测正是如此，已逐文件核对方言后才下判）。另 4 份 node:test 方言中 adapters.test.js 的 4 例与 configureExternalAppRepair.test.js 的 2 例失败**成因未定**，本批未下结论、不猜测。"
+    ],
+    "instrument_notes": "本单元同时暴露两条仪器口径问题，都已在 [DESIGN-LAY-008] §12.26 记录：(1) `unresolved-require` 基线为 0，但「变数 require + 字面量映射」的断链（B30-S3 的 6 处）在其口径外；(2) `extension-path-drift` 只扫 extensions/，__dirname 爬根算错根的同类缺陷在 D2 内无人管（B30-S1）。两者都不是「靠加守卫解决」的免费午餐——第一条需要解析对象字面量里的字符串，第二条要扩扫描域，均属新机制，按规则 8 得起 S1 观察档，且需人裁决（任务 #17/#18）。"
+  }
+}
