@@ -11,20 +11,20 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
     <div class="content">
       <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>04_IMPL_实现<span class="sep">›</span>IMPL-RPT<span class="sep">›</span>前后端对接与交互重构日志（夜间无人值守）</div>
       <header class="hero reveal"><h1>前后端对接与交互重构日志（夜间无人值守）</h1></header>
-      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#前后端对接与交互重构日志-夜间无人值守">前后端对接与交互重构日志（夜间无人值守）</a></li><li class="lvl-2"><a href="#一-扫描结论-空壳分布">一、扫描结论（空壳分布）</a></li><li class="lvl-2"><a href="#二-已打通的空壳-按凭据强弱排序">二、已打通的空壳（按凭据强弱排序）</a></li><li class="lvl-3"><a href="#1-订单详情-livetradingcenter-vue-310-已对接">1. 订单详情 · `LiveTradingCenter.vue:310` ✅ 已对接</a></li><li class="lvl-3"><a href="#2-交易记录导出-professionaltradehistory-vue-584-已对接">2. 交易记录导出 · `ProfessionalTradeHistory.vue:584` ✅ 已对接</a></li><li class="lvl-3"><a href="#3-回放单步后退-datareplay-vue-532-后端缺失-标注待审">3. 回放单步后退 · `DataReplay.vue:532` ⚠️ 后端缺失，标注待审</a></li><li class="lvl-2"><a href="#三-已确认无需改动-容错型-mock-非空壳">三、已确认无需改动（容错型 mock，非空壳）</a></li><li class="lvl-2"><a href="#四-留给你的-todo">四、留给你的 TODO</a></li><li class="lvl-2"><a href="#五-验证与提交">五、验证与提交</a></li></ul></nav>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#前后端对接与交互重构日志-夜间无人值守">前后端对接与交互重构日志（夜间无人值守）</a></li><li class="lvl-2"><a href="#一-扫描结论-空壳分布">一、扫描结论（空壳分布）</a></li><li class="lvl-2"><a href="#二-已打通的空壳-按凭据强弱排序">二、已打通的空壳（按凭据强弱排序）</a></li><li class="lvl-3"><a href="#1-订单详情-livetradingcenter-vue-310-已对接">1. 订单详情 · `LiveTradingCenter.vue:310` ✓ 已对接</a></li><li class="lvl-3"><a href="#2-交易记录导出-professionaltradehistory-vue-584-已对接">2. 交易记录导出 · `ProfessionalTradeHistory.vue:584` ✓ 已对接</a></li><li class="lvl-3"><a href="#3-回放单步后退-datareplay-vue-532-后端缺失-标注待审">3. 回放单步后退 · `DataReplay.vue:532` ⚠ 后端缺失，标注待审</a></li><li class="lvl-2"><a href="#三-已确认无需改动-容错型-mock-非空壳">三、已确认无需改动（容错型 mock，非空壳）</a></li><li class="lvl-2"><a href="#四-留给你的-todo">四、留给你的 TODO</a></li><li class="lvl-2"><a href="#五-验证与提交">五、验证与提交</a></li></ul></nav>
       <article class="doc-body">
 <h1 id="前后端对接与交互重构日志-夜间无人值守">前后端对接与交互重构日志（夜间无人值守）<a class="anchor" href="#前后端对接与交互重构日志-夜间无人值守" aria-label="锚点">#</a></h1>
 <blockquote><p>任务：有凭据地补全前端空壳，实现极简透明、零污染的交互。<br>范围：扫描全前端（apps/ai-frontend、software/khyquant/frontend、TUI、Python CLI），<br>仅对「已存在后端逻辑、且直接响应用户意图或含 &gt;1.5s 网络往返」的空壳补显示。<br>约束：只调用后端、不增删后端核心逻辑；每打通一个即独立提交。</p></blockquote>
@@ -34,15 +34,15 @@
 <p>前端→后端通道：khyquant 经 <code>axios</code>（<code>utils/connectionMode.js</code> 的 <code>getApiBaseUrl()</code> 感知<br>local/cloud/lan）+ WebSocket；<code>request</code> 拦截器直接返回响应体（<code>response.success</code> 可用）。</p>
 <hr>
 <h2 id="二-已打通的空壳-按凭据强弱排序">二、已打通的空壳（按凭据强弱排序）<a class="anchor" href="#二-已打通的空壳-按凭据强弱排序" aria-label="锚点">#</a></h2>
-<h3 id="1-订单详情-livetradingcenter-vue-310-已对接">1. 订单详情 · <code>LiveTradingCenter.vue:310</code> ✅ 已对接<a class="anchor" href="#1-订单详情-livetradingcenter-vue-310-已对接" aria-label="锚点">#</a></h3>
+<h3 id="1-订单详情-livetradingcenter-vue-310-已对接">1. 订单详情 · <code>LiveTradingCenter.vue:310</code> ✓ 已对接<a class="anchor" href="#1-订单详情-livetradingcenter-vue-310-已对接" aria-label="锚点">#</a></h3>
 <ul><li><strong>修改前</strong>：<code>viewOrderDetail = (order) =&gt; ElMessage.info('订单详情功能开发中...')</code>（纯空壳）。</li><li><strong>修改后</strong>：绑定<strong>已存在</strong>的 <code>tradeAPI.getOrderDetail(order.id)</code> → 后端 <code>GET /trading/order/:id</code></li></ul>
 <p>（<code>software/khyquant/routes/trade.js:702</code>，真实存在）。</p>
 <ul><li><strong>有凭据的 UI 显示及凭据</strong>：<ul><li>单行 <code>ElLoading</code>「检索订单详情 {symbol}…」——<strong>凭据：直接响应用户「查看详情」点击意图 + 含网络往返（可能 &gt;1.5s）</strong>。等待过程单行呈现、完成即自动消失，零残留。</li><li>成功仅渲染<strong>关键字段摘要</strong>（合约/方向/状态/委托价/数量/已成交/策略/下单时间，状态走 <code>getStatusText</code> 转人话），<strong>原始字段折叠进 <code>&lt;details&gt;</code></strong> 降噪。</li><li>失败走精准报错闭环：<code>查看订单详情失败 · 订单 {symbol}：{人话原因}。请稍后重试或刷新列表</code>（404→「订单不存在或已被清理」），<strong>不抛 stacktrace</strong>。HTML 值统一转义防注入。</li></ul></li><li><strong>提交</strong>：<code>feat: 对接订单详情空壳，实现单行Loading+折叠式透明反馈</code></li></ul>
-<h3 id="2-交易记录导出-professionaltradehistory-vue-584-已对接">2. 交易记录导出 · <code>ProfessionalTradeHistory.vue:584</code> ✅ 已对接<a class="anchor" href="#2-交易记录导出-professionaltradehistory-vue-584-已对接" aria-label="锚点">#</a></h3>
+<h3 id="2-交易记录导出-professionaltradehistory-vue-584-已对接">2. 交易记录导出 · <code>ProfessionalTradeHistory.vue:584</code> ✓ 已对接<a class="anchor" href="#2-交易记录导出-professionaltradehistory-vue-584-已对接" aria-label="锚点">#</a></h3>
 <ul><li><strong>修改前</strong>：<code>exportTrades() { ElMessage.info('导出功能开发中...') }</code>（纯空壳）。</li><li><strong>修改后</strong>：基于<strong>已就绪</strong>的 <code>filteredTrades</code>（来自 <code>tradeAPI.getTrades()</code>）本地组装</li></ul>
 <p>UTF-8(BOM) CSV 并触发浏览器下载（文件名带时间戳）。</p>
 <ul><li><strong>有凭据的 UI 显示及凭据</strong>：<ul><li><strong>未加 Loading 控件</strong>——<strong>凭据：纯客户端组装 &lt;1.5s</strong>，按凭据原则不为快操作加状态位；</li><li>完成仅一行结果摘要 <code>✔ 已导出 N 笔交易记录</code>，隐藏过程；</li><li>空结果：<code>导出交易记录：当前筛选结果为空，请调整筛选条件后再试</code>；</li><li>异常走精准报错闭环：<code>导出交易记录失败：{原因}。请改用 Chrome/Edge 或检查下载权限</code>。</li><li>导出列与表格展示一致且转人话（买/卖、方式标签、状态文本、盈亏）。</li></ul></li><li><strong>提交</strong>：<code>feat: 对接交易记录导出空壳，实现客户端CSV真导出</code></li></ul>
-<h3 id="3-回放单步后退-datareplay-vue-532-后端缺失-标注待审">3. 回放单步后退 · <code>DataReplay.vue:532</code> ⚠️ 后端缺失，标注待审<a class="anchor" href="#3-回放单步后退-datareplay-vue-532-后端缺失-标注待审" aria-label="锚点">#</a></h3>
+<h3 id="3-回放单步后退-datareplay-vue-532-后端缺失-标注待审">3. 回放单步后退 · <code>DataReplay.vue:532</code> ⚠ 后端缺失，标注待审<a class="anchor" href="#3-回放单步后退-datareplay-vue-532-后端缺失-标注待审" aria-label="锚点">#</a></h3>
 <ul><li><strong>修改前</strong>：<code>stepBack = () =&gt; ElMessage.info('暂不支持后退，请重新开始回放')</code>。</li><li><strong>判定</strong>：后端回放仅有 <code>GET /:sessionId/next</code>（<code>routes/replay.js:84</code>），<strong>无 <code>/prev</code></strong>。</li></ul>
 <p>按「不增删后端核心逻辑」约束，<strong>不擅自补后端</strong>。</p>
 <ul><li><strong>修改后</strong>：加 <code>// TODO: [Integration-Unresolved] 需人工审查</code> 标注（指明需人工评估为回放引擎</li></ul>

@@ -172,8 +172,8 @@ const shouldEscalate = ceiling > effectiveMax;
 
 | currentMax | 动态上限 | 行为 |
 |-----------|---------|------|
-| 8192 | 65536 | 升级到 65536 ✅ |
-| 16384 | 65536 | 升级到 65536 ✅ |
+| 8192 | 65536 | 升级到 65536 ✓ |
+| 16384 | 65536 | 升级到 65536 ✓ |
 | 65536 | 65536 | 不升级（已到顶，正确）|
 | 8192 | 8192 | 不升级（无提升空间，正确）|
 | 8192 | 无元数据 | 升级到静态 64000 |
@@ -194,10 +194,10 @@ const shouldEscalate = ceiling > effectiveMax;
 
 | 输入 | 修复前 | 修复后 |
 |------|--------|--------|
-| 对比A和B的优缺点 | small | normal ✅ |
-| 多目标查询（和…分别…顺便…看看）| small | normal ✅ |
-| 纯闲聊 / 简单状态查询 / 简短指令 | small | small（不污染）✅ |
-| 编码任务 | normal | normal ✅ |
+| 对比A和B的优缺点 | small | normal ✓ |
+| 多目标查询（和…分别…顺便…看看）| small | normal ✓ |
+| 纯闲聊 / 简单状态查询 / 简短指令 | small | small（不污染）✓ |
+| 编码任务 | normal | normal ✓ |
 
 新增测试 `tests/services/taskScaleDecomposeThreshold.test.js`（jest，8 用例）。
 
@@ -291,10 +291,10 @@ const shouldEscalate = ceiling > effectiveMax;
 
 | 场景 | 修复前 | 修复后 |
 |------|--------|--------|
-| bash 查 8 个不同路径 | 误判停滞中断 | 正常放行 ✅ |
-| 同一命令重复 8 次 | 拦截 | 拦截（genericRepeat）✅ |
-| read_file 读 9 个不同文件 | 误判 | 正常放行 ✅ |
-| 同文件读 5 次 | 拦截 | 拦截 ✅ |
+| bash 查 8 个不同路径 | 误判停滞中断 | 正常放行 ✓ |
+| 同一命令重复 8 次 | 拦截 | 拦截（genericRepeat）✓ |
+| read_file 读 9 个不同文件 | 误判 | 正常放行 ✓ |
+| 同文件读 5 次 | 拦截 | 拦截 ✓ |
 
 **测试孤儿修复**：`tests/services/toolLoopDetector.test.js` 原用 `jest.mock` + `descFn`，既不被 jest 通道识别（`JEST_REGISTER_RE` 不匹配 `descFn(`），也无 `node:test` 标记——**两个通道都不跑**（死测试）。重写为 node:test 风格（去 jest.mock，用真实 contextWasm），现于 `test:node` 通道运行 18 用例，含 3 个新增 Detector 8 用例锁定修复。
 
@@ -335,8 +335,8 @@ return `\x1b[${target};1H`;
 
 | 错误类型 | 修复前 | 修复后 |
 |----------|--------|--------|
-| server_error (502/503/504) | 不重试 → 永久中断 | 有界重试（非冷却时）✅ |
-| retry_budget_exceeded | 不重试 → 永久中断 | 有界重试 ✅ |
+| server_error (502/503/504) | 不重试 → 永久中断 | 有界重试（非冷却时）✓ |
+| retry_budget_exceeded | 不重试 → 永久中断 | 有界重试 ✓ |
 | network / timeout | 重试 | 重试（不变）|
 | auth / permission / refusal | 不重试 | 不重试（不变，安全红线）|
 

@@ -56,7 +56,7 @@
 
 - **TUI（ink）侧早已有回显**：`useQueryBridge.js` 的 `buildDecisionRecord()` 在 AskUserQuestion 结算后
   产出 `{ role:'qa', qa:[{question,choice}] }` 记录（注释原文「so the question + chosen answer stays
-  visible in scrollback after the overlay clears」），由 `Transcript.js` 渲染成 `❓ 问题` / `→ 所选`。
+  visible in scrollback after the overlay clears」），由 `Transcript.js` 渲染成 `? 问题` / `→ 所选`。
 - **经典 REPL 侧缺席**：`repl.js` 的 AskUserQuestion 分支用 `renderer.askInlineQuestion()` 收答案，
   但其 `cleanup()`（`aiRenderer.js`）在选中后 `moveCursor + clearScreenDown` **把整段菜单（含问题）
   擦除且不留任何字**，收完直接 `return {behavior:'allow'}`——**从不打印回显**。→ 选完即消失。
@@ -69,7 +69,7 @@
 经典 REPL 侧**补一条持久回显**，对齐 TUI 语义：
 
 - 新纯叶子 `cli/qaEchoLines.js`（零 IO、门控 `KHY_QA_ECHO` 默认开）：`buildQaEchoLines(answers, env) → string[]`，
-  每题两行 `  ❓ {question}` / `     → {choice}`；门控关 / 空 answers / 坏输入 → `[]`（逐字节回退「选完即消失」）。
+  每题两行 `  ? {question}` / `     → {choice}`；门控关 / 空 answers / 坏输入 → `[]`（逐字节回退「选完即消失」）。
   叶子返**明文**行，着色留调用方（同 `envInfoLines` / `themePanelLines` 惯例）。
 - `repl.js` 在 `askInlineQuestion` 擦除**之后**打印该回显块（落进滚动历史，不再被清），fail-soft `try/catch`
   绝不影响 `behavior:'allow'`。

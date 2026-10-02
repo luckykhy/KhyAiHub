@@ -36,21 +36,21 @@ pioneered.
 
 ## Implementation Progress
 
-### Phase 1: Core Architecture ✅ DONE
+### Phase 1: Core Architecture ✓ DONE
 
 | # | Feature | Status | Files |
 |---|---------|--------|-------|
-| 1 | **Source text compression** | ✅ Done | `services/backend/src/utils/sourceTextCompressor.js` |
-| 2 | **Tool result compression** | ✅ Done | `services/backend/src/services/toolResultCompressor.js` |
-| 3 | **Long-term memory (KAIROS)** | ✅ Done | `services/backend/src/services/memoryKairos.js` |
-| 4 | **Stable + Dynamic prompt assembly** | ✅ Done | `services/backend/src/services/promptAssemblyService.js` |
-| 5 | **FileReadTool integrate compress** | ✅ Done | `tools/FileReadTool/index.js` (+compress param) |
-| 6 | **Runtime export integration** | ✅ Done | `services/backend/src/services/khyUpgradeRuntime.js` |
-| 7 | **Wire toolResultCompressor into contextRouter** | ✅ Done | `preCompressToolResults()` added before truncation in `contextRouter.js` + `_toolResultNormalizer.js` |
-| 8 | **Wire memoryKairos into aiChatCore** | ✅ Done | Daily log + memory tag extraction appended after each turn (fire-and-forget) |
-| 9 | **Wire sourceTextCompressor into more tools** | ✅ Done | Added to `_toolResultNormalizer.js` `mapToolResultToModelBlock()` — covers ALL tools globally |
-| 10 | **Wiring toolResultCompressor into additional tools** | ✅ Done | Applied in `_toolResultNormalizer.js` + `contextRouter.js` pre-send pipeline |
-| 11 | **Wire memoryKairos into existing memory section** | ✅ Done | Appended to system prompt via `buildMemorySystemSection()` in `promptAssemblyService.js` |
+| 1 | **Source text compression** | ✓ Done | `services/backend/src/utils/sourceTextCompressor.js` |
+| 2 | **Tool result compression** | ✓ Done | `services/backend/src/services/toolResultCompressor.js` |
+| 3 | **Long-term memory (KAIROS)** | ✓ Done | `services/backend/src/services/memoryKairos.js` |
+| 4 | **Stable + Dynamic prompt assembly** | ✓ Done | `services/backend/src/services/promptAssemblyService.js` |
+| 5 | **FileReadTool integrate compress** | ✓ Done | `tools/FileReadTool/index.js` (+compress param) |
+| 6 | **Runtime export integration** | ✓ Done | `services/backend/src/services/khyUpgradeRuntime.js` |
+| 7 | **Wire toolResultCompressor into contextRouter** | ✓ Done | `preCompressToolResults()` added before truncation in `contextRouter.js` + `_toolResultNormalizer.js` |
+| 8 | **Wire memoryKairos into aiChatCore** | ✓ Done | Daily log + memory tag extraction appended after each turn (fire-and-forget) |
+| 9 | **Wire sourceTextCompressor into more tools** | ✓ Done | Added to `_toolResultNormalizer.js` `mapToolResultToModelBlock()` — covers ALL tools globally |
+| 10 | **Wiring toolResultCompressor into additional tools** | ✓ Done | Applied in `_toolResultNormalizer.js` + `contextRouter.js` pre-send pipeline |
+| 11 | **Wire memoryKairos into existing memory section** | ✓ Done | Appended to system prompt via `buildMemorySystemSection()` in `promptAssemblyService.js` |
 
 ### Phase 2: Remaining (not yet implemented)
 

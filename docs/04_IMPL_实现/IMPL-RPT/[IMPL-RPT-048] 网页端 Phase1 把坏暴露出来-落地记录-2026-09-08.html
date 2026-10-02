@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -190,7 +190,7 @@
 <p>两栈 API 只有 5/15 方法重合（<code>listTasks</code>/<code>getTask</code>/<code>createTask</code>/<code>updateTask</code>/<code>deleteTask</code>）；GUI 栈有 <code>executeTask</code>/<code>evaluateRun</code>/<code>submitReview</code>/<code>leaderboard</code>，Web 栈有 <code>reference/levels</code>/<code>reference/categories</code>/<code>createRun</code>/<code>assemblePackage</code>/<code>completeRun</code>/<code>rejectRun</code>/<code>submitSelfCheck</code>。这是两个产品（GUI 轨迹评测 vs 2D/3D 网页标注），不是同一产品的两份拷贝。</p>
 <p><strong>第二个阻塞是权限门槛</strong>。<code>isAdminPath()</code> 由 <code>ADMIN_NAV_PATHS</code>（取自 <code>NAV</code> 里 <code>requiredRole &gt;= ROLE.ADMIN</code> 的组）+ <code>EXTRA_ADMIN_PATHS</code> 派生，<strong>不是</strong>由路径字符串前缀判定。把 <code>/gui-eval/*</code> 搬进 <code>/admin/eval/*</code> 必然连带把 ROLE.USER 提升为 ROLE.ADMIN。这正是文档 §6.2 自己标注的「语义变更而非改名」。三个条件（相似度、领域、权限）全部不支持按文档写法推进，故暂缓而非硬做。</p>
 <h3 id="11-6-p5-出口标准-实测-2-3-已满足">11.6 P5 出口标准：实测 2/3 已满足<a class="anchor" href="#11-6-p5-出口标准-实测-2-3-已满足" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>出口标准</th><th>实测</th></tr></thead><tbody><tr><td>无零消费者组件</td><td>✅ <code>src/components/**</code> 19 个组件，<strong>0 个</strong>零消费者（按文件名匹配导入语句统计；<code>unplugin-vue-components</code> 只挂了 <code>ElementPlusResolver</code>，不存在本地组件自动导入的假阳性）</td></tr><tr><td><code>resolveWsUrl</code> 全树 1 处定义</td><td>✅ 仅 <code>src/utils/ws.js:17</code> 一处定义，<code>useFileSync.js:48</code> 只是 re-export。文档写的「5 处」是过期数据</td></tr><tr><td>无 ≥2500 行的 view</td><td>❌ <code>AIChat.vue</code> 4668L、<code>AIGateway.vue</code> 3969L</td></tr></tbody></table>
+<table><thead><tr><th>出口标准</th><th>实测</th></tr></thead><tbody><tr><td>无零消费者组件</td><td>✓ <code>src/components/**</code> 19 个组件，<strong>0 个</strong>零消费者（按文件名匹配导入语句统计；<code>unplugin-vue-components</code> 只挂了 <code>ElementPlusResolver</code>，不存在本地组件自动导入的假阳性）</td></tr><tr><td><code>resolveWsUrl</code> 全树 1 处定义</td><td>✓ 仅 <code>src/utils/ws.js:17</code> 一处定义，<code>useFileSync.js:48</code> 只是 re-export。文档写的「5 处」是过期数据</td></tr><tr><td>无 ≥2500 行的 view</td><td>✗ <code>AIChat.vue</code> 4668L、<code>AIGateway.vue</code> 3969L</td></tr></tbody></table>
 <h3 id="11-7-p5-2-部分完成-监控块抽出">11.7 P5.2 部分完成：监控块抽出<a class="anchor" href="#11-7-p5-2-部分完成-监控块抽出" aria-label="锚点">#</a></h3>
 <p>抽出 <code>src/views/gateway/GatewayMonitorPanel.vue</code>（244L），包含「适配器状态」与「调用监控」两张卡：</p>
 <ul><li><code>AIGateway.vue</code> 4128 → 3969 行（-159）。</li><li>监控卡原先在 DOM 里被模型管理/密钥池/路由三块夹在中间（第一张在 474 行、第二张在 1356 行），靠 <code>v-show</code> 分别显隐。抽出后放在原第一张卡的位置，<strong>各 tab 的可见顺序不变</strong>：监控 tab 仍是「适配器状态 → 调用监控」，模型管理与路由 tab 的 DOM 顺序不受影响。</li><li>适配器列表改由父组件直接传 <code>gw.status?.adapters || []</code>，删掉 <code>adapterList</code> computed 这层间接。</li><li><code>useAIMonitor</code> 实例移进子组件并自管生命周期：<code>onMounted</code> 拉初始数据、<code>onActivated</code> 在 keep-alive 后刷新、<code>onDeactivated</code>/<code>onUnmounted</code> 关闭 EventSource。原来那段「cached view 隐藏时关掉 SSE」的清理责任因此跟着流转到真正持有流的地方。</li><li>父组件删掉 <code>toggleMonitorStream</code>、<code>monitor.fetchStats/fetchTraces</code> 两处调用、<code>onDeactivated</code> 整段、<code>useAIMonitor</code> 导入、以及 <code>.adapter-name-cell</code> 与 <code>.monitor-*</code> 全部 scoped CSS。</li><li><code>v-loading</code> 由 <code>ElementPlusResolver</code> 在组件内解析，无需父级介入。</li></ul>

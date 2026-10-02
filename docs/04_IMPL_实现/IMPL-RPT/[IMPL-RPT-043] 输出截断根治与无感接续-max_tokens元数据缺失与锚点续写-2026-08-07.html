@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -96,7 +96,7 @@
 <span class="hljs-keyword">const</span> shouldEscalate = ceiling &gt; effectiveMax;</code></pre>
 <p>调用侧 <code>toolUseLoopCore.js:3747</code> 同步放宽，删除重复的 <code>&lt;= CAPPED_DEFAULT_MAX_TOKENS</code> 闸门。</p>
 <p><strong>验证矩阵</strong>（修复后）：</p>
-<table><thead><tr><th>currentMax</th><th>动态上限</th><th>行为</th></tr></thead><tbody><tr><td>8192</td><td>65536</td><td>升级到 65536 ✅</td></tr><tr><td>16384</td><td>65536</td><td>升级到 65536 ✅</td></tr><tr><td>65536</td><td>65536</td><td>不升级（已到顶，正确）</td></tr><tr><td>8192</td><td>8192</td><td>不升级（无提升空间，正确）</td></tr><tr><td>8192</td><td>无元数据</td><td>升级到静态 64000</td></tr></tbody></table>
+<table><thead><tr><th>currentMax</th><th>动态上限</th><th>行为</th></tr></thead><tbody><tr><td>8192</td><td>65536</td><td>升级到 65536 ✓</td></tr><tr><td>16384</td><td>65536</td><td>升级到 65536 ✓</td></tr><tr><td>65536</td><td>65536</td><td>不升级（已到顶，正确）</td></tr><tr><td>8192</td><td>8192</td><td>不升级（无提升空间，正确）</td></tr><tr><td>8192</td><td>无元数据</td><td>升级到静态 64000</td></tr></tbody></table>
 <p>升级目标 <code>nextMax</code> 由 <code>ceiling = min(dynOut || 64000, contextWindow-可用空间)</code> 钳位，<strong>永不超服务端合法上限或上下文窗口</strong>，无超限风险。相关测试新增 4 用例锁定（<code>tests/maxTokensRecovery.test.js</code>，共 33 用例全过）。</p>
 <h2 id="八-三项落地改进-调低拆解阈值-长回复自动拆段-通道失败诊断">八、三项落地改进（调低拆解阈值 + 长回复自动拆段 + 通道失败诊断）<a class="anchor" href="#八-三项落地改进-调低拆解阈值-长回复自动拆段-通道失败诊断" aria-label="锚点">#</a></h2>
 <p>延续&quot;让截断尽量不发生&quot;的方向，落实三项可交付改进。全部 fail-soft，门控可回退，逐字节兼容旧行为。</p>
@@ -104,7 +104,7 @@
 <p><strong>缺口</strong>：中复杂度任务（比较/多对象/复合查询）被 small 兜底（Rule 4/5）吞掉，跳过计划拆解注入——&quot;对比 A 和 B 的优缺点&quot;&quot;查 A 和 B 的天气顺便看看 C&quot;这类需要多步检索的请求被当成简单问答。</p>
 <p><strong>修复</strong>：新增 <code>_COMPARE_MULTI_OBJECT</code> 信号（比较/多对象/复合意图正则），Rule 4/5 命中该信号时排除 small → 进入 normal 走拆解。</p>
 <p><strong>验证矩阵</strong>：</p>
-<table><thead><tr><th>输入</th><th>修复前</th><th>修复后</th></tr></thead><tbody><tr><td>对比A和B的优缺点</td><td>small</td><td>normal ✅</td></tr><tr><td>多目标查询（和…分别…顺便…看看）</td><td>small</td><td>normal ✅</td></tr><tr><td>纯闲聊 / 简单状态查询 / 简短指令</td><td>small</td><td>small（不污染）✅</td></tr><tr><td>编码任务</td><td>normal</td><td>normal ✅</td></tr></tbody></table>
+<table><thead><tr><th>输入</th><th>修复前</th><th>修复后</th></tr></thead><tbody><tr><td>对比A和B的优缺点</td><td>small</td><td>normal ✓</td></tr><tr><td>多目标查询（和…分别…顺便…看看）</td><td>small</td><td>normal ✓</td></tr><tr><td>纯闲聊 / 简单状态查询 / 简短指令</td><td>small</td><td>small（不污染）✓</td></tr><tr><td>编码任务</td><td>normal</td><td>normal ✓</td></tr></tbody></table>
 <p>新增测试 <code>tests/services/taskScaleDecomposeThreshold.test.js</code>（jest，8 用例）。</p>
 <h3 id="8-2-长回复自动拆段-services-taskcomplexity-js">8.2 长回复自动拆段（<code>services/taskComplexity.js</code>）<a class="anchor" href="#8-2-长回复自动拆段-services-taskcomplexity-js" aria-label="锚点">#</a></h3>
 <p><strong>缺口</strong>：复杂任务即使拆解了执行计划，最终交付仍可能试图一轮输出超长内容，撞输出上限截断。</p>
@@ -137,7 +137,7 @@
 <p><strong>修复</strong>（<code>toolLoopDetector.js</code>）：</p>
 <ul><li>新增 <code>_lastCallHash</code> 状态，streak 累加条件改为「工具名 + 参数指纹（<code>hashCall(toolName, params)</code>）都相同」</li><li>参数变化即重置 streak——真正循环是「相同调用原样重复」，扫描不同目标是正常进展</li></ul>
 <p><strong>验证矩阵</strong>：</p>
-<table><thead><tr><th>场景</th><th>修复前</th><th>修复后</th></tr></thead><tbody><tr><td>bash 查 8 个不同路径</td><td>误判停滞中断</td><td>正常放行 ✅</td></tr><tr><td>同一命令重复 8 次</td><td>拦截</td><td>拦截（genericRepeat）✅</td></tr><tr><td>read_file 读 9 个不同文件</td><td>误判</td><td>正常放行 ✅</td></tr><tr><td>同文件读 5 次</td><td>拦截</td><td>拦截 ✅</td></tr></tbody></table>
+<table><thead><tr><th>场景</th><th>修复前</th><th>修复后</th></tr></thead><tbody><tr><td>bash 查 8 个不同路径</td><td>误判停滞中断</td><td>正常放行 ✓</td></tr><tr><td>同一命令重复 8 次</td><td>拦截</td><td>拦截（genericRepeat）✓</td></tr><tr><td>read_file 读 9 个不同文件</td><td>误判</td><td>正常放行 ✓</td></tr><tr><td>同文件读 5 次</td><td>拦截</td><td>拦截 ✓</td></tr></tbody></table>
 <p><strong>测试孤儿修复</strong>：<code>tests/services/toolLoopDetector.test.js</code> 原用 <code>jest.mock</code> + <code>descFn</code>，既不被 jest 通道识别（<code>JEST_REGISTER_RE</code> 不匹配 <code>descFn(</code>），也无 <code>node:test</code> 标记——<strong>两个通道都不跑</strong>（死测试）。重写为 node:test 风格（去 jest.mock，用真实 contextWasm），现于 <code>test:node</code> 通道运行 18 用例，含 3 个新增 Detector 8 用例锁定修复。</p>
 <h3 id="8-8-启动空白修复-startupanchor-光标定位">8.8 启动空白修复（startupAnchor 光标定位）<a class="anchor" href="#8-8-启动空白修复-startupanchor-光标定位" aria-label="锚点">#</a></h3>
 <p><strong>现象</strong>：khy OS 启动时，「登录成功」信息（TUI 前的普通输出）与 WelcomeBanner 版本号之间有<strong>大量空白行</strong>——滚动回看时尤其明显。</p>
@@ -156,7 +156,7 @@
 || t === <span class="hljs-string">&#x27;retry_budget_exceeded&#x27;</span>  <span class="hljs-comment">// 网关抖动预算耗尽 ≠ 通道永久失败,延迟后可再试</span></code></pre>
 <p><strong>安全性</strong>：<code>_isCooldownFailure</code>（先于瞬态判断）会挡住 cooldown 缓存错误——只有<strong>真 server_error</strong>（非冷却）才触发工具循环重试，不会无脑撞同一堵墙。瞬态预算 <code>transientRecoveryMax</code> 有界（small≤3 / normal≤4 / large≤6），跨层重试不会失控。</p>
 <p><strong>验证矩阵</strong>：</p>
-<table><thead><tr><th>错误类型</th><th>修复前</th><th>修复后</th></tr></thead><tbody><tr><td>server_error (502/503/504)</td><td>不重试 → 永久中断</td><td>有界重试（非冷却时）✅</td></tr><tr><td>retry_budget_exceeded</td><td>不重试 → 永久中断</td><td>有界重试 ✅</td></tr><tr><td>network / timeout</td><td>重试</td><td>重试（不变）</td></tr><tr><td>auth / permission / refusal</td><td>不重试</td><td>不重试（不变，安全红线）</td></tr></tbody></table>
+<table><thead><tr><th>错误类型</th><th>修复前</th><th>修复后</th></tr></thead><tbody><tr><td>server_error (502/503/504)</td><td>不重试 → 永久中断</td><td>有界重试（非冷却时）✓</td></tr><tr><td>retry_budget_exceeded</td><td>不重试 → 永久中断</td><td>有界重试 ✓</td></tr><tr><td>network / timeout</td><td>重试</td><td>重试（不变）</td></tr><tr><td>auth / permission / refusal</td><td>不重试</td><td>不重试（不变，安全红线）</td></tr></tbody></table>
 <p>新增测试 <code>tests/services/toolUseLoopTransientErrorTypes.test.js</code>（node:test，5 用例）；<code>_isTransientLoopErrorType</code> 导出供测试。相关回归：toolUseLoopTransientBudget 5 + serverErrorFastFail 3 + toolUseLoop 系列 27（jest）+ replyGuard 全过；规则检查 0 errors。</p>
       </article>
       <nav class="pager"><a class="prev" href="../../../docs/04_IMPL_实现/IMPL-RPT/[IMPL-RPT-042] 交互过程与输出结构化-持久化与机器可读输出-2026-07-27.html"><div class="dir">← 上一篇</div><div class="ttl">[IMPL-RPT-042] 交互过程与输出结构化：持久化字段与机器可读输出</div></a><a class="next" href="../../../docs/04_IMPL_实现/IMPL-RPT/[IMPL-RPT-044] khyos 账号体系收口实施记录-ARCH-074-2026-09-02.html"><div class="dir">下一篇 →</div><div class="ttl">[IMPL-RPT-044] khyos 账号体系收口实施记录 — ARCH-074 落地</div></a></nav>

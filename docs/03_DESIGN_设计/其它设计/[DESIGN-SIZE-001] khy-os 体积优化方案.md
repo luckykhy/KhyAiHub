@@ -13,17 +13,17 @@
 
 | 来源 | 大小 | 是否进 git | 可操作 |
 |------|------|-----------|--------|
-| `.git/objects` | 326 MB | ✅ | `git gc` 可压缩 |
-| node_modules（根 + workspace） | ~370 MB | ❌ gitignore | 可删重装 / 瘦依赖 |
-| `apps/khy-mobile/` 构建产物 | 217 MB（其中 build/ 118 MB） | ❌ | 可删，随时重建 |
-| `apps/ai-frontend/` | 105 MB（其中 .ignored/ 75 MB） | ❌ | 可清理 |
-| `khy-Trajectory/` 运行时数据 | 81 MB | ❌ | 可删，运行时重建 |
-| `.khy/` 运行时数据 | 81 MB | ❌ | 可删，运行时重建 |
+| `.git/objects` | 326 MB | ✓ | `git gc` 可压缩 |
+| node_modules（根 + workspace） | ~370 MB | ✗ gitignore | 可删重装 / 瘦依赖 |
+| `apps/khy-mobile/` 构建产物 | 217 MB（其中 build/ 118 MB） | ✗ | 可删，随时重建 |
+| `apps/ai-frontend/` | 105 MB（其中 .ignored/ 75 MB） | ✗ | 可清理 |
+| `khy-Trajectory/` 运行时数据 | 81 MB | ✗ | 可删，运行时重建 |
+| `.khy/` 运行时数据 | 81 MB | ✗ | 可删，运行时重建 |
 | `services/` | 51 MB | 混合 | 部分可清理 |
 | `docs/` | 28 MB | 混合 | 部分可精简 |
-| `packaging/npm/bundle.mjs` | 17 MB | ❌ | 可删，发布时重建 |
+| `packaging/npm/bundle.mjs` | 17 MB | ✗ | 可删，发布时重建 |
 | `extensions/tools/khy-markdown/` | 13 MB | 混合 | 可优化 |
-| 源码本身（.js/.vue/.md/.py） | ~50 MB | ✅ | 不可压缩 |
+| 源码本身（.js/.vue/.md/.py） | ~50 MB | ✓ | 不可压缩 |
 
 **总计**: ~1,250 MB 开发盘占。git 跟踪源码仅 ~50 MB。
 

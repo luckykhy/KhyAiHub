@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -47,9 +47,9 @@
 <hr>
 <h2 id="五-自测结果">五、自测结果<a class="anchor" href="#五-自测结果" aria-label="锚点">#</a></h2>
 <h3 id="验收标准逐条">验收标准逐条<a class="anchor" href="#验收标准逐条" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>#</th><th>标准</th><th>结果</th></tr></thead><tbody><tr><td>1</td><td>网页端「渠道 API」页可 CRUD 端点 URL 与 API Key</td><td>✅ 8 端点 + 编辑器表单全字段</td></tr><tr><td>2</td><td>Key 列表脱敏（<code>sk-****abcd</code>），眼睛图标切换</td><td>✅ <code>toView()</code> 恒脱敏；<code>revealed</code> map 内存切换</td></tr><tr><td>3</td><td>内置文档区：环境变量名 / 配置文件路径 / 示例代码块</td><td>✅ 7 个 Agent，shell/json/yaml/toml 分语言块</td></tr><tr><td>4</td><td>路由 <code>/admin/channel-apis</code> 可访问 + 左侧导航入口</td><td>✅ <code>ADMIN_MENU</code> 已加入口</td></tr><tr><td>5</td><td>SQLite <code>channel_apis</code> 表 + REST API</td><td>✅ <code>sequelize.sync()</code> 建表</td></tr><tr><td>6</td><td>一键复制配置命令 / 环境变量</td><td>✅ 列表「复制配置」+ 编辑器逐块复制</td></tr><tr><td>7</td><td>Key 加密存储，reveal 写审计日志</td><td>✅ AES-256-GCM + JSONL 审计（明文不落审计）</td></tr><tr><td>8</td><td><code>npm run check:layout</code> + eslint <code>--max-warnings 0</code></td><td>⚠️ 见下「基线说明」</td></tr></tbody></table>
+<table><thead><tr><th>#</th><th>标准</th><th>结果</th></tr></thead><tbody><tr><td>1</td><td>网页端「渠道 API」页可 CRUD 端点 URL 与 API Key</td><td>✓ 8 端点 + 编辑器表单全字段</td></tr><tr><td>2</td><td>Key 列表脱敏（<code>sk-****abcd</code>），眼睛图标切换</td><td>✓ <code>toView()</code> 恒脱敏；<code>revealed</code> map 内存切换</td></tr><tr><td>3</td><td>内置文档区：环境变量名 / 配置文件路径 / 示例代码块</td><td>✓ 7 个 Agent，shell/json/yaml/toml 分语言块</td></tr><tr><td>4</td><td>路由 <code>/admin/channel-apis</code> 可访问 + 左侧导航入口</td><td>✓ <code>ADMIN_MENU</code> 已加入口</td></tr><tr><td>5</td><td>SQLite <code>channel_apis</code> 表 + REST API</td><td>✓ <code>sequelize.sync()</code> 建表</td></tr><tr><td>6</td><td>一键复制配置命令 / 环境变量</td><td>✓ 列表「复制配置」+ 编辑器逐块复制</td></tr><tr><td>7</td><td>Key 加密存储，reveal 写审计日志</td><td>✓ AES-256-GCM + JSONL 审计（明文不落审计）</td></tr><tr><td>8</td><td><code>npm run check:layout</code> + eslint <code>--max-warnings 0</code></td><td>⚠ 见下「基线说明」</td></tr></tbody></table>
 <h3 id="验证命令实测">验证命令实测<a class="anchor" href="#验证命令实测" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>命令</th><th>结果</th></tr></thead><tbody><tr><td><code>npx eslint --max-warnings 0 &lt;本次新增/修改的后端 3 文件&gt;</code></td><td>✅ 0 problems</td></tr><tr><td><code>npx eslint --max-warnings 0 &lt;本次新增的前端 3 文件&gt;</code></td><td>✅ 0 problems</td></tr><tr><td><code>npx jest tests/channelApiService.test.js</code></td><td>✅ 8/8 passed</td></tr><tr><td><code>node scripts/ci/check-agent-rules.js &lt;本次 12 个文件&gt;</code></td><td>✅ no violations found</td></tr><tr><td><code>npm run check:layout</code></td><td>❌ 5 项 error，<strong>全部预存</strong></td></tr><tr><td><code>khy doctor</code></td><td>环境依赖缺失（Node/npm 不在系统 PATH），未执行</td></tr></tbody></table>
+<table><thead><tr><th>命令</th><th>结果</th></tr></thead><tbody><tr><td><code>npx eslint --max-warnings 0 &lt;本次新增/修改的后端 3 文件&gt;</code></td><td>✓ 0 problems</td></tr><tr><td><code>npx eslint --max-warnings 0 &lt;本次新增的前端 3 文件&gt;</code></td><td>✓ 0 problems</td></tr><tr><td><code>npx jest tests/channelApiService.test.js</code></td><td>✓ 8/8 passed</td></tr><tr><td><code>node scripts/ci/check-agent-rules.js &lt;本次 12 个文件&gt;</code></td><td>✓ no violations found</td></tr><tr><td><code>npm run check:layout</code></td><td>✗ 5 项 error，<strong>全部预存</strong></td></tr><tr><td><code>khy doctor</code></td><td>环境依赖缺失（Node/npm 不在系统 PATH），未执行</td></tr></tbody></table>
 <h3 id="基线说明-第-8-项为何非绿">基线说明（第 8 项为何非绿）<a class="anchor" href="#基线说明-第-8-项为何非绿" aria-label="锚点">#</a></h3>
 <p>以下失败在本次改动之前即已存在，且均不涉及本次新增/修改的文件；遵循「不做超出范围的事」未顺手修：</p>
 <ul><li><strong><code>check:layout</code> 的 5 项 error</strong>：根目录白名单外的 <code>tmp_files.txt</code>；<code>docs/design/</code> 与 <code>docs/15_维护记录/</code> 缺 <code>00_INDEX_*</code>；44 份阶段文档未入主索引；<code>dist-electron</code> / <code>electron</code> / <code>tests</code> 三个顶层目录未登记层级清单；<code>extensions/scripts/khy-alpine-iso</code> 不合规 <code>provides</code> 契约。</li><li><strong>后端 <code>npx eslint src/ --max-warnings 0</code></strong>：输出约 500KB，21 errors + 100 warnings，全部落在 <code>src/adapters/im/*</code>、<code>src/agents/built-in/*</code> 等未触碰文件（<code>eqeqeq</code>、<code>no-unused-vars</code>、<code>no-empty</code>、<code>import/order</code>）。</li><li><strong>前端 <code>npx eslint src/ --max-warnings 0</code></strong>：1 error + 4 warnings，分布在 <code>src/api/notify.js</code>、<code>src/composables/useConfigSync.js</code>（含唯一 error：<code>'getAll' is not defined</code>）、<code>src/main.js</code>、<code>src/services/crossPlatform/shared/crossLauncher.js</code>——4 个文件本次均未触碰。</li><li><strong>一处口径问题</strong>：<code>npx eslint src/</code> 默认只扫 <code>.js</code>/<code>.cjs</code>/<code>.mjs</code>，<strong>静默跳过 <code>.vue</code></strong>（实测 <code>npx eslint src/views/Layout.vue</code> 单独执行报 17 个 <code>vue/attributes-order</code>，而 <code>npx eslint src/</code> 对 Layout.vue 零命中）。因此第 8 项按字面执行在本仓库当前配置下无法变绿，且它此前从未真正覆盖过 <code>.vue</code> 文件。</li></ul>

@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -31,7 +31,7 @@
 <hr>
 <h2 id="一-现状诊断">一、现状诊断<a class="anchor" href="#一-现状诊断" aria-label="锚点">#</a></h2>
 <h3 id="1-1-体积构成-开发机全量">1.1 体积构成（开发机全量）<a class="anchor" href="#1-1-体积构成-开发机全量" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>来源</th><th>大小</th><th>是否进 git</th><th>可操作</th></tr></thead><tbody><tr><td><code>.git/objects</code></td><td>326 MB</td><td>✅</td><td><code>git gc</code> 可压缩</td></tr><tr><td>node_modules（根 + workspace）</td><td>~370 MB</td><td>❌ gitignore</td><td>可删重装 / 瘦依赖</td></tr><tr><td><code>apps/khy-mobile/</code> 构建产物</td><td>217 MB（其中 build/ 118 MB）</td><td>❌</td><td>可删，随时重建</td></tr><tr><td><code>apps/ai-frontend/</code></td><td>105 MB（其中 .ignored/ 75 MB）</td><td>❌</td><td>可清理</td></tr><tr><td><code>khy-Trajectory/</code> 运行时数据</td><td>81 MB</td><td>❌</td><td>可删，运行时重建</td></tr><tr><td><code>.khy/</code> 运行时数据</td><td>81 MB</td><td>❌</td><td>可删，运行时重建</td></tr><tr><td><code>services/</code></td><td>51 MB</td><td>混合</td><td>部分可清理</td></tr><tr><td><code>docs/</code></td><td>28 MB</td><td>混合</td><td>部分可精简</td></tr><tr><td><code>packaging/npm/bundle.mjs</code></td><td>17 MB</td><td>❌</td><td>可删，发布时重建</td></tr><tr><td><code>extensions/tools/khy-markdown/</code></td><td>13 MB</td><td>混合</td><td>可优化</td></tr><tr><td>源码本身（.js/.vue/.md/.py）</td><td>~50 MB</td><td>✅</td><td>不可压缩</td></tr></tbody></table>
+<table><thead><tr><th>来源</th><th>大小</th><th>是否进 git</th><th>可操作</th></tr></thead><tbody><tr><td><code>.git/objects</code></td><td>326 MB</td><td>✓</td><td><code>git gc</code> 可压缩</td></tr><tr><td>node_modules（根 + workspace）</td><td>~370 MB</td><td>✗ gitignore</td><td>可删重装 / 瘦依赖</td></tr><tr><td><code>apps/khy-mobile/</code> 构建产物</td><td>217 MB（其中 build/ 118 MB）</td><td>✗</td><td>可删，随时重建</td></tr><tr><td><code>apps/ai-frontend/</code></td><td>105 MB（其中 .ignored/ 75 MB）</td><td>✗</td><td>可清理</td></tr><tr><td><code>khy-Trajectory/</code> 运行时数据</td><td>81 MB</td><td>✗</td><td>可删，运行时重建</td></tr><tr><td><code>.khy/</code> 运行时数据</td><td>81 MB</td><td>✗</td><td>可删，运行时重建</td></tr><tr><td><code>services/</code></td><td>51 MB</td><td>混合</td><td>部分可清理</td></tr><tr><td><code>docs/</code></td><td>28 MB</td><td>混合</td><td>部分可精简</td></tr><tr><td><code>packaging/npm/bundle.mjs</code></td><td>17 MB</td><td>✗</td><td>可删，发布时重建</td></tr><tr><td><code>extensions/tools/khy-markdown/</code></td><td>13 MB</td><td>混合</td><td>可优化</td></tr><tr><td>源码本身（.js/.vue/.md/.py）</td><td>~50 MB</td><td>✓</td><td>不可压缩</td></tr></tbody></table>
 <p><strong>总计</strong>: ~1,250 MB 开发盘占。git 跟踪源码仅 ~50 MB。</p>
 <h3 id="1-2-分发体积-用户实际下载">1.2 分发体积（用户实际下载）<a class="anchor" href="#1-2-分发体积-用户实际下载" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>产物</th><th>大小</th><th>说明</th></tr></thead><tbody><tr><td><code>khy</code> bundle (--prod)</td><td><strong>13.12 MB</strong></td><td>完整平台（6 模块之一，已 externalize express/pg/sequelize/ws 等）</td></tr><tr><td><code>khy-gateway</code> bundle</td><td><strong>10.67 MB</strong></td><td>网关（仅 bundled 业务逻辑）</td></tr><tr><td><code>khy-tools</code> bundle</td><td><strong>11.90 MB</strong></td><td>开发者工具</td></tr><tr><td><code>khy-server</code> bundle</td><td><strong>11.62 MB</strong></td><td>Web 管理后台</td></tr><tr><td>gzip 后全平台</td><td>~3.2 MB</td><td>实际网络传输（~75% 压缩率）</td></tr><tr><td>node_modules（运行时）</td><td>~80 MB</td><td>npm install 拉入的外部依赖（开发盘占，不进 bundle）</td></tr></tbody></table>

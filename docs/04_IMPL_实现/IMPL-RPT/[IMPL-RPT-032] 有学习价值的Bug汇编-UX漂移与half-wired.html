@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -60,14 +60,14 @@
 <h3 id="根因-跑通完整代码路径才看清">根因（跑通完整代码路径才看清）<a class="anchor" href="#根因-跑通完整代码路径才看清" aria-label="锚点">#</a></h3>
 <p>这是一处典型的 <strong>TUI-vs-经典 REPL 漂移</strong>：</p>
 <ul><li><strong>TUI（ink）侧早已有回显</strong>：<code>useQueryBridge.js</code> 的 <code>buildDecisionRecord()</code> 在 AskUserQuestion 结算后</li></ul>
-<p>产出 <code>{ role:'qa', qa:[{question,choice}] }</code> 记录（注释原文「so the question + chosen answer stays<br>  visible in scrollback after the overlay clears」），由 <code>Transcript.js</code> 渲染成 <code>❓ 问题</code> / <code>→ 所选</code>。</p>
+<p>产出 <code>{ role:'qa', qa:[{question,choice}] }</code> 记录（注释原文「so the question + chosen answer stays<br>  visible in scrollback after the overlay clears」），由 <code>Transcript.js</code> 渲染成 <code>? 问题</code> / <code>→ 所选</code>。</p>
 <ul><li><strong>经典 REPL 侧缺席</strong>：<code>repl.js</code> 的 AskUserQuestion 分支用 <code>renderer.askInlineQuestion()</code> 收答案，</li></ul>
 <p>但其 <code>cleanup()</code>（<code>aiRenderer.js</code>）在选中后 <code>moveCursor + clearScreenDown</code> <strong>把整段菜单（含问题）<br>  擦除且不留任何字</strong>，收完直接 <code>return {behavior:'allow'}</code>——<strong>从不打印回显</strong>。→ 选完即消失。</p>
 <p><strong>关键洞察</strong>：问「为什么消失」不能只看 REPL 分支，要<strong>对照 TUI 有没有同款能力</strong>。一旦发现「TUI 有 / 经典 REPL 无」，<br>根因就从「消失了」精确到「经典 REPL 侧从未接回显，且 cleanup 会擦掉菜单不留字」。</p>
 <h3 id="方案">方案<a class="anchor" href="#方案" aria-label="锚点">#</a></h3>
 <p>经典 REPL 侧<strong>补一条持久回显</strong>，对齐 TUI 语义：</p>
 <ul><li>新纯叶子 <code>cli/qaEchoLines.js</code>（零 IO、门控 <code>KHY_QA_ECHO</code> 默认开）：<code>buildQaEchoLines(answers, env) → string[]</code>，</li></ul>
-<p>每题两行 <code>  ❓ {question}</code> / <code>     → {choice}</code>；门控关 / 空 answers / 坏输入 → <code>[]</code>（逐字节回退「选完即消失」）。<br>  叶子返<strong>明文</strong>行，着色留调用方（同 <code>envInfoLines</code> / <code>themePanelLines</code> 惯例）。</p>
+<p>每题两行 <code>  ? {question}</code> / <code>     → {choice}</code>；门控关 / 空 answers / 坏输入 → <code>[]</code>（逐字节回退「选完即消失」）。<br>  叶子返<strong>明文</strong>行，着色留调用方（同 <code>envInfoLines</code> / <code>themePanelLines</code> 惯例）。</p>
 <ul><li><code>repl.js</code> 在 <code>askInlineQuestion</code> 擦除<strong>之后</strong>打印该回显块（落进滚动历史，不再被清），fail-soft <code>try/catch</code></li></ul>
 <p>绝不影响 <code>behavior:'allow'</code>。</p>
 <p><strong>刻意不动</strong>：TUI 侧（已工作，改了反而造新漂移）；<code>cleanup</code> 擦除逻辑（擦交互菜单是对的，持久回显是擦除后<strong>另打印</strong>，两者正交）。</p>

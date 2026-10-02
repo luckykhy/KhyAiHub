@@ -112,11 +112,11 @@ khy-os 在 **TUI 层面**（CC 模式）已经高度对齐 Claude Code，权限�
 
 | 功能 | 描述 | khy-os 可借鉴度 |
 |------|------|-----------------|
-| 父子 Agent 工具树 | 可视化多智能体层级 | ⭐⭐⭐ 高 — 增强多代理透明度 |
-| 缓存命中率面板 | "71% hit · 14.4K input" | ⭐⭐⭐ 高 — 用户关心效率 |
-| 任务时间预估 | "2m"/"9h"/"1d" | ⭐⭐ 中 — 需要准确预估模型 |
-| Mermaid 预览 | 终端原生图表 | ⭐⭐ 中 — 已有 WorkflowEditor |
-| 远程机器人控制 | 微信/飞书/Telegram | ⭐ 低 — 已有类似能力 |
+| 父子 Agent 工具树 | 可视化多智能体层级 | ★★★ 高 — 增强多代理透明度 |
+| 缓存命中率面板 | "71% hit · 14.4K input" | ★★★ 高 — 用户关心效率 |
+| 任务时间预估 | "2m"/"9h"/"1d" | ★★ 中 — 需要准确预估模型 |
+| Mermaid 预览 | 终端原生图表 | ★★ 中 — 已有 WorkflowEditor |
+| 远程机器人控制 | 微信/飞书/Telegram | ★ 低 — 已有类似能力 |
 
 ### 1.3 Web 端管理台类
 
@@ -145,15 +145,15 @@ khy-os 在 **TUI 层面**（CC 模式）已经高度对齐 Claude Code，权限�
 
 | 维度 | Claude Code | OpenCode | ZCode | khy-os | 差距 |
 |------|-------------|----------|-------|--------|------|
-| 风险分级 | 3 级（低/中/高） | 2 级 | 4 级模式 | L1/L2 两级 | ✅ 已对齐 |
-| 默认选项 | 安全优先 | 安全优先 | yolo 默认 | 可配（允许/拒绝优先） | ✅ 更灵活 |
-| 会话免审 | ✅ | ✅ | ✅ 模式内 | ✅ + 可逆门控 | ✅ 超越 |
-| 计划模式 | ✅ Plan Mode | ❌ | ✅ plan 模式 | ✅ 计划模式 | ✅ 已对齐 |
-| 类型确认 | ✅ 高危需输入 YES | ❌ | ❌ | ✅ requireTyped | ✅ 超越 |
-| 模式切换 | 无 | 无 | Shift+Tab 循环 | 快捷键+命令 | ⚠️ 可借鉴 |
-| 视觉区分 | 黄色/红色边框 | 简单文字 | 模式指示器 | 颜色+边框+图标 | ✅ 已对齐 |
-| 权限记忆 | 文件级 .claude/settings | 无 | 无 | 会话级 | ⚠️ 需补文件级 |
-| Agent 层级可视化 | ❌ | ❌ | ✅ 父子工具树 | ❌ | ⚠️ 需补充 |
+| 风险分级 | 3 级（低/中/高） | 2 级 | 4 级模式 | L1/L2 两级 | ✓ 已对齐 |
+| 默认选项 | 安全优先 | 安全优先 | yolo 默认 | 可配（允许/拒绝优先） | ✓ 更灵活 |
+| 会话免审 | ✓ | ✓ | ✓ 模式内 | ✓ + 可逆门控 | ✓ 超越 |
+| 计划模式 | ✓ Plan Mode | ✗ | ✓ plan 模式 | ✓ 计划模式 | ✓ 已对齐 |
+| 类型确认 | ✓ 高危需输入 YES | ✗ | ✗ | ✓ requireTyped | ✓ 超越 |
+| 模式切换 | 无 | 无 | Shift+Tab 循环 | 快捷键+命令 | ⚠ 可借鉴 |
+| 视觉区分 | 黄色/红色边框 | 简单文字 | 模式指示器 | 颜色+边框+图标 | ✓ 已对齐 |
+| 权限记忆 | 文件级 .claude/settings | 无 | 无 | 会话级 | ⚠ 需补文件级 |
+| Agent 层级可视化 | ✗ | ✗ | ✓ 父子工具树 | ✗ | ⚠ 需补充 |
 
 **差距总结**：
 1. khy-os 权限系统在**精细度**上已超越所有竞品（L1/L2 + 类型确认 + 可逆门控）
@@ -165,12 +165,12 @@ khy-os 在 **TUI 层面**（CC 模式）已经高度对齐 Claude Code，权限�
 
 | 维度 | Claude Code | khy-os CC | khy-os Web AIChat | 差距 |
 |------|-------------|-----------|-------------------|------|
-| 流式文本 | 逐字 | 逐字 | 逐字 | ✅ |
-| 工具卡片 | 🔧 + 青色粗体 | 🔧 + 青色粗体 | 简单文本 | ⚠️ Web 端需改进 |
-| 思考折叠 | ▸/▾ | ▸/▾ | ❌ | ⚠️ Web 端缺失 |
-| 进度指示 | spinner + 文本 | spinner + 文本 | 简单 loading | ⚠️ Web 端偏简陋 |
-| 结果边框 | ┌─ / └─ | ┌─ / └─ | ❌ | ⚠️ Web 端缺失 |
-| 并行工具 | 聚合显示 | 聚合显示 | 逐条显示 | ⚠️ Web 端需聚合 |
+| 流式文本 | 逐字 | 逐字 | 逐字 | ✓ |
+| 工具卡片 | + 青色粗体 | + 青色粗体 | 简单文本 | ⚠ Web 端需改进 |
+| 思考折叠 | ▸/▾ | ▸/▾ | ✗ | ⚠ Web 端缺失 |
+| 进度指示 | spinner + 文本 | spinner + 文本 | 简单 loading | ⚠ Web 端偏简陋 |
+| 结果边框 | ┌─ / └─ | ┌─ / └─ | ✗ | ⚠ Web 端缺失 |
+| 并行工具 | 聚合显示 | 聚合显示 | 逐条显示 | ⚠ Web 端需聚合 |
 
 **差距**：Web 端 AIChat 的工具调用展示远落后于 CC TUI 模式，需要将 CC 模式的卡片式展示迁移到 Web 端。
 
@@ -178,23 +178,23 @@ khy-os 在 **TUI 层面**（CC 模式）已经高度对齐 Claude Code，权限�
 
 | 维度 | Claude Code | khy-os CC | khy-os Web | 差距 |
 |------|-------------|-----------|------------|------|
-| 历史列表 | ✅ | ✅ | ✅ | ✅ |
-| 会话搜索 | Ctrl+R | Ctrl+R | ❌ | ⚠️ Web 端缺失 |
-| 会话分叉 | ❌ | ✅ RewindPicker | ❌ | ✅ CC 端超越 |
-| 会话导出 | ✅ MD/HTML/JSON | ❌ | ❌ | ⚠️ 需补充 |
-| 会话撤销 | /undo | ✅ | ❌ | ⚠️ Web 端缺失 |
-| 检查点 | ✅ | ✅ | ❌ | ⚠️ Web 端缺失 |
-| 压缩 | /compact | ✅ | ✅ | ✅ |
+| 历史列表 | ✓ | ✓ | ✓ | ✓ |
+| 会话搜索 | Ctrl+R | Ctrl+R | ✗ | ⚠ Web 端缺失 |
+| 会话分叉 | ✗ | ✓ RewindPicker | ✗ | ✓ CC 端超越 |
+| 会话导出 | ✓ MD/HTML/JSON | ✗ | ✗ | ⚠ 需补充 |
+| 会话撤销 | /undo | ✓ | ✗ | ⚠ Web 端缺失 |
+| 检查点 | ✓ | ✓ | ✗ | ⚠ Web 端缺失 |
+| 压缩 | /compact | ✓ | ✓ | ✓ |
 
 ### 2.4 错误处理与恢复
 
 | 维度 | Claude Code | khy-os | 差距 |
 |------|-------------|--------|------|
-| 错误信息 | 问题+修复建议 | 问题+修复建议 | ✅ 已对齐规则 2.2 |
-| 重试建议 | ✅ | ✅ | ✅ |
-| 降级执行 | ✅ | ✅ | ✅ |
-| 错误分类 | 限流/认证/超时/网络 | 同 | ✅ |
-| 操作选项 | 重试/跳过/编辑 | 重试/跳过 | ⚠️ 需补编辑 |
+| 错误信息 | 问题+修复建议 | 问题+修复建议 | ✓ 已对齐规则 2.2 |
+| 重试建议 | ✓ | ✓ | ✓ |
+| 降级执行 | ✓ | ✓ | ✓ |
+| 错误分类 | 限流/认证/超时/网络 | 同 | ✓ |
+| 操作选项 | 重试/跳过/编辑 | 重试/跳过 | ⚠ 需补编辑 |
 
 ---
 
@@ -215,11 +215,11 @@ khy-os 在 **TUI 层面**（CC 模式）已经高度对齐 Claude Code，权限�
 
 | 维度 | Claude Code | New API | khy-os | 差距 |
 |------|-------------|---------|--------|------|
-| 字体 | 系统等宽 | Inter + mono | Public Sans + JetBrains Mono | ✅ 已对齐 |
-| 行高 | 紧凑 | 适中 | Element Plus 默认 | ⚠️ 偏大 |
-| 间距 | 8px 网格 | 4px 网格 | Element Plus 默认 | ⚠️ 不够精细 |
-| 圆角 | 0-2px | 6-8px | 12px | ⚠️ 偏圆润 |
-| 阴影 | 无 | 微妙 | 明显 | ⚠️ 过重 |
+| 字体 | 系统等宽 | Inter + mono | Public Sans + JetBrains Mono | ✓ 已对齐 |
+| 行高 | 紧凑 | 适中 | Element Plus 默认 | ⚠ 偏大 |
+| 间距 | 8px 网格 | 4px 网格 | Element Plus 默认 | ⚠ 不够精细 |
+| 圆角 | 0-2px | 6-8px | 12px | ⚠ 偏圆润 |
+| 阴影 | 无 | 微妙 | 明显 | ⚠ 过重 |
 
 ### 3.3 信息密度
 
@@ -240,37 +240,37 @@ khy-os 在 **TUI 层面**（CC 模式）已经高度对齐 Claude Code，权限�
 
 | 功能 | Claude Code | khy-os | 状态 |
 |------|-------------|--------|------|
-| 流式对话 | ✅ | ✅ | ✅ 已对齐 |
-| 工具卡片 | ✅ | ✅ | ✅ 已对齐 |
-| 思考折叠 | ✅ | ✅ | ✅ 已对齐 |
-| 权限提示 | ✅ | ✅ | ✅ 已对齐 |
-| 计划模式 | ✅ | ✅ | ✅ 已对齐 |
-| 命令面板 | ✅ | ✅ | ✅ 已对齐 |
-| 历史搜索 | ✅ | ✅ | ✅ 已对齐 |
-| 任务列表 | ✅ | ✅ | ✅ 已对齐 |
-| MCP 状态 | ✅ | ✅ | ✅ 已对齐 |
-| 会话分叉 | ❌ | ✅ | ✅ 超越 |
-| 语音输入 | ❌ | ✅ | ✅ 超越 |
-| 中文界面 | ❌ | ✅ | ✅ 超越 |
-| 三栏布局 | ❌ | ✅ | ✅ 超越 |
-| 右栏看板 | ❌ | ✅ | ✅ 超越 |
+| 流式对话 | ✓ | ✓ | ✓ 已对齐 |
+| 工具卡片 | ✓ | ✓ | ✓ 已对齐 |
+| 思考折叠 | ✓ | ✓ | ✓ 已对齐 |
+| 权限提示 | ✓ | ✓ | ✓ 已对齐 |
+| 计划模式 | ✓ | ✓ | ✓ 已对齐 |
+| 命令面板 | ✓ | ✓ | ✓ 已对齐 |
+| 历史搜索 | ✓ | ✓ | ✓ 已对齐 |
+| 任务列表 | ✓ | ✓ | ✓ 已对齐 |
+| MCP 状态 | ✓ | ✓ | ✓ 已对齐 |
+| 会话分叉 | ✗ | ✓ | ✓ 超越 |
+| 语音输入 | ✗ | ✓ | ✓ 超越 |
+| 中文界面 | ✗ | ✓ | ✓ 超越 |
+| 三栏布局 | ✗ | ✓ | ✓ 超越 |
+| 右栏看板 | ✗ | ✓ | ✓ 超越 |
 
 ### 4.2 Web 端 AI 对话
 
 | 功能 | ChatGPT | Claude Web | khy-os Web | 差距 |
 |------|---------|------------|------------|------|
-| 流式输出 | ✅ | ✅ | ✅ | ✅ |
-| 代码高亮 | ✅ | ✅ | ✅ | ✅ |
-| 工具可视化 | ✅ | ✅ | ⚠️ 简陋 | **P0** |
-| 思考折叠 | ✅ | ✅ | ❌ | **P0** |
-| 会话搜索 | ✅ | ✅ | ❌ | **P1** |
-| 会话导出 | ✅ | ✅ | ❌ | **P1** |
-| 会话分叉 | ✅ | ✅ | ❌ | **P1** |
-| 内联编辑 | ✅ | ✅ | ❌ | **P1** |
-| 附件/图片 | ✅ | ✅ | ✅ | ✅ |
-| 语音输入 | ✅ | ✅ | ❌ | **P2** |
-| 暗色主题 | ✅ | ✅ | ✅ | ✅ |
-| 响应式 | ✅ | ✅ | ✅ | ✅ |
+| 流式输出 | ✓ | ✓ | ✓ | ✓ |
+| 代码高亮 | ✓ | ✓ | ✓ | ✓ |
+| 工具可视化 | ✓ | ✓ | ⚠ 简陋 | **P0** |
+| 思考折叠 | ✓ | ✓ | ✗ | **P0** |
+| 会话搜索 | ✓ | ✓ | ✗ | **P1** |
+| 会话导出 | ✓ | ✓ | ✗ | **P1** |
+| 会话分叉 | ✓ | ✓ | ✗ | **P1** |
+| 内联编辑 | ✓ | ✓ | ✗ | **P1** |
+| 附件/图片 | ✓ | ✓ | ✓ | ✓ |
+| 语音输入 | ✓ | ✓ | ✗ | **P2** |
+| 暗色主题 | ✓ | ✓ | ✓ | ✓ |
+| 响应式 | ✓ | ✓ | ✓ | ✓ |
 
 ---
 
@@ -280,7 +280,7 @@ khy-os 在 **TUI 层面**（CC 模式）已经高度对齐 Claude Code，权限�
 
 | # | 改进项 | 当前状态 | 目标状态 | 工作量 | 灵感来源 |
 |---|--------|----------|----------|--------|----------|
-| 1.1 | 工具调用卡片化 | 简单文本 | CC 风格卡片（🔧+青色+边框） | 3d | Claude Code |
+| 1.1 | 工具调用卡片化 | 简单文本 | CC 风格卡片（+青色+边框） | 3d | Claude Code |
 | 1.2 | 思考折叠块 | 无 | ▸/▾ 折叠，默认折叠 | 2d | Claude Code |
 | 1.3 | 流式输出优化 | 逐字 | 批量渲染+防抖 | 1d | Claude Code |
 | 1.4 | 进度指示增强 | 简单 loading | 动作+目标+进度（规则 2） | 2d | 规则 2 |
@@ -361,26 +361,26 @@ khy-os 在 **TUI 层面**（CC 模式）已经高度对齐 Claude Code，权限�
 
 | ZCode 特性 | khy-os 状态 | 对齐度 |
 |------------|-------------|--------|
-| 4 级模式系统 | ✅ 6 profile → 4 级映射 | 100% |
-| 父子 Agent 工具树 | ✅ AgentTree 已集成 | 100% |
-| 缓存命中率面板 | ✅ 状态栏显示 | 100% |
-| 任务时间预估 | ✅ ccTaskEstimate | 100% |
-| 内联 diff | ✅ CC 模式已实现 | 100% |
-| Mermaid 预览 | ⚠️ WorkflowEditor 有，TUI 无 | 50% |
-| 低饱和度配色 | ✅ 已优化至 ZCode 级别 | 100% |
-| 远程机器人 | ✅ 已有跨平台能力 | 100% |
+| 4 级模式系统 | ✓ 6 profile → 4 级映射 | 100% |
+| 父子 Agent 工具树 | ✓ AgentTree 已集成 | 100% |
+| 缓存命中率面板 | ✓ 状态栏显示 | 100% |
+| 任务时间预估 | ✓ ccTaskEstimate | 100% |
+| 内联 diff | ✓ CC 模式已实现 | 100% |
+| Mermaid 预览 | ⚠ WorkflowEditor 有，TUI 无 | 50% |
+| 低饱和度配色 | ✓ 已优化至 ZCode 级别 | 100% |
+| 远程机器人 | ✓ 已有跨平台能力 | 100% |
 
 #### B) 与 Y-code（ZCode 灵感来源）对齐
 
 | Y-code 特性 | khy-os 状态 | 对齐度 |
 |------------|-------------|--------|
-| Stable/Dynamic Prompt | ✅ 已对齐（promptAssemblyService.js） | 100% |
-| ToolSpec 元数据权限 | ✅ L1/L2 + wildcard 规则 | 100% |
-| 源码压缩 | ✅ 已对齐（sourceTextCompressor.js） | 100% |
-| 长期记忆 | ✅ 已对齐（memoryKairos.js） | 100% |
-| 会话撤销 | ✅ CC 端 + Web 端 | 100% |
-| 会话导出 | ✅ MD/HTML/JSON | 100% |
-| Git Worktree | ❌ 未实现 | 0% |
+| Stable/Dynamic Prompt | ✓ 已对齐（promptAssemblyService.js） | 100% |
+| ToolSpec 元数据权限 | ✓ L1/L2 + wildcard 规则 | 100% |
+| 源码压缩 | ✓ 已对齐（sourceTextCompressor.js） | 100% |
+| 长期记忆 | ✓ 已对齐（memoryKairos.js） | 100% |
+| 会话撤销 | ✓ CC 端 + Web 端 | 100% |
+| 会话导出 | ✓ MD/HTML/JSON | 100% |
+| Git Worktree | ✗ 未实现 | 0% |
 
 ### 6.3 对齐路线
 
@@ -456,13 +456,13 @@ khy-os 在 **TUI 层面**（CC 模式）已经高度对齐 Claude Code，权限�
 
 | 模式 | 描述 | khy-os 可借鉴 |
 |------|------|---------------|
-| **Vim 模式** | 完整 NORMAL/INSERT/VISUAL + text objects | ⭐⭐⭐ 高效编辑 |
-| **Shell 模式** | `!` 前缀直接执行命令 | ⭐⭐ 快捷操作 |
-| **转录视图** | Ctrl+O 查看时间戳+模型+可展开工具调用 | ⭐⭐⭐ 调试利器 |
-| **任务列表** | Ctrl+T 多步骤清单，跨压缩持久化 | ⭐⭐⭐ 任务透明度 |
-| **Rewind 菜单** | 双 Esc 恢复对话到之前状态 | ⭐⭐ 已有类似功能 |
-| **侧问叠加** | `/btw` 提问不加入历史 | ⭐ 独特交互 |
-| **语音输入** | 按住/点击 Space | ⭐ 已有 |
+| **Vim 模式** | 完整 NORMAL/INSERT/VISUAL + text objects | ★★★ 高效编辑 |
+| **Shell 模式** | `!` 前缀直接执行命令 | ★★ 快捷操作 |
+| **转录视图** | Ctrl+O 查看时间戳+模型+可展开工具调用 | ★★★ 调试利器 |
+| **任务列表** | Ctrl+T 多步骤清单，跨压缩持久化 | ★★★ 任务透明度 |
+| **Rewind 菜单** | 双 Esc 恢复对话到之前状态 | ★★ 已有类似功能 |
+| **侧问叠加** | `/btw` 提问不加入历史 | ★ 独特交互 |
+| **语音输入** | 按住/点击 Space | ★ 已有 |
 
 ### 8.3 OpenCode 最佳实践（最值得借鉴）
 
@@ -492,24 +492,24 @@ khy-os 在 **TUI 层面**（CC 模式）已经高度对齐 Claude Code，权限�
 
 | 亮点 | 描述 | khy-os 可借鉴 |
 |------|------|---------------|
-| **10+ 预设主题** | Catppuccin/Dracula/Flexoki/Gruvbox 等 | ⭐⭐⭐ 主题商店 |
-| **自适应颜色** | lipgloss.AdaptiveColor 自动暗/亮 | ⭐⭐⭐ 已有但可增强 |
-| **完整 diff 配色** | added/removed/context/hunk 独立颜色 | ⭐⭐ 终端 diff |
-| **Markdown 渲染** | 标题/链接/代码/引用各有颜色 | ⭐⭐ Web 端可借鉴 |
-| **状态栏分段** | help/token/status/LSP/model | ⭐⭐ 信息密度 |
+| **10+ 预设主题** | Catppuccin/Dracula/Flexoki/Gruvbox 等 | ★★★ 主题商店 |
+| **自适应颜色** | lipgloss.AdaptiveColor 自动暗/亮 | ★★★ 已有但可增强 |
+| **完整 diff 配色** | added/removed/context/hunk 独立颜色 | ★★ 终端 diff |
+| **Markdown 渲染** | 标题/链接/代码/引用各有颜色 | ★★ Web 端可借鉴 |
+| **状态栏分段** | help/token/status/LSP/model | ★★ 信息密度 |
 
 ### 8.4 应采纳的 8 大交互模式
 
 | # | 模式 | 来源 | khy-os 当前 | 工作量 |
 |---|------|------|-------------|--------|
 | 1 | **工具特定权限预览** | OpenCode | 简单文本 | 5d |
-| 2 | **Vim 模式** | Claude Code | ❌ | 10d |
-| 3 | **转录视图 Ctrl+O** | Claude Code | ❌ | 5d |
-| 4 | **任务列表 Ctrl+T** | Claude Code | ✅ 已有 | ✅ |
-| 5 | **外部编辑器 Ctrl+E** | 两者 | ❌ | 2d |
-| 6 | **自动压缩 95%** | OpenCode | ✅ 已有 | ✅ |
+| 2 | **Vim 模式** | Claude Code | ✗ | 10d |
+| 3 | **转录视图 Ctrl+O** | Claude Code | ✗ | 5d |
+| 4 | **任务列表 Ctrl+T** | Claude Code | ✓ 已有 | ✓ |
+| 5 | **外部编辑器 Ctrl+E** | 两者 | ✗ | 2d |
+| 6 | **自动压缩 95%** | OpenCode | ✓ 已有 | ✓ |
 | 7 | **状态栏+LSP 诊断** | OpenCode | 部分 | 3d |
-| 8 | **主题实时切换** | OpenCode | ⚠️ CSS 切换 | 3d |
+| 8 | **主题实时切换** | OpenCode | ⚠ CSS 切换 | 3d |
 
 ---
 
@@ -521,12 +521,12 @@ khy-os 在 **TUI 层面**（CC 模式）已经高度对齐 Claude Code，权限�
 
 | 产品 | 模式数 | 持久化 | Wildcard | 信任对话框 | 评论字段 | 撤销 |
 |------|--------|--------|----------|------------|----------|------|
-| **Claude Code** | 5 级 | 文件级 ✅ | ✅ | ✅ | ✅ Tab | ✅ Esc+Esc |
-| **OpenCode** | 2 级 | 无 | ❌ | ❌ | ❌ | ❌ |
-| **Cline** | 2 阶段 | Checkpoint | ❌ | ❌ | ❌ | ✅ |
-| **Copilot CLI** | 多模式 | 无 | ❌ | ❌ | ❌ | ❌ |
-| **ZCode** | 4 级 | 模式内 | ❌ | ❌ | ❌ | ❌ |
-| **khy-os** | L1/L2 | 会话级 | ❌ | ❌ | ❌ | ✅ RewindPicker |
+| **Claude Code** | 5 级 | 文件级 ✓ | ✓ | ✓ | ✓ Tab | ✓ Esc+Esc |
+| **OpenCode** | 2 级 | 无 | ✗ | ✗ | ✗ | ✗ |
+| **Cline** | 2 阶段 | Checkpoint | ✗ | ✗ | ✗ | ✓ |
+| **Copilot CLI** | 多模式 | 无 | ✗ | ✗ | ✗ | ✗ |
+| **ZCode** | 4 级 | 模式内 | ✗ | ✗ | ✗ | ✗ |
+| **khy-os** | L1/L2 | 会话级 | ✗ | ✗ | ✗ | ✓ RewindPicker |
 
 ### 8.2 khy-os 权限系统进化建议
 
@@ -548,14 +548,14 @@ khy-os 在 **TUI 层面**（CC 模式）已经高度对齐 Claude Code，权限�
 
 | 趋势 | 描述 | khy-os 状态 | 优先级 |
 |------|------|-------------|--------|
-| **Parts-based 消息模型** | 每条消息 = 类型化部分数组（text/tool-call/artifact） | ❌ 纯文本 | **P0** |
-| **Generative UI** | Agent 渲染结构化 Vue 组件 | ❌ | **P0** |
-| **Live Workflow** | 实时观看 Agent 执行检查清单 | ❌ | **P1** |
-| **多模型对话** | 同时与多个模型交互比较 | ❌ | **P1** |
-| **消息队列** | AI 回复时仍可输入下一条 | ❌ | **P1** |
-| **持久记忆** | 跨对话上下文传递 | ✅ memoryKairos | ✅ |
-| **分层配置** | managed > user > project > local | ⚠️ 部分 | **P1** |
-| **使用分析** | Token 消耗、成本追踪 | ⚠️ 基础 | **P2** |
+| **Parts-based 消息模型** | 每条消息 = 类型化部分数组（text/tool-call/artifact） | ✗ 纯文本 | **P0** |
+| **Generative UI** | Agent 渲染结构化 Vue 组件 | ✗ | **P0** |
+| **Live Workflow** | 实时观看 Agent 执行检查清单 | ✗ | **P1** |
+| **多模型对话** | 同时与多个模型交互比较 | ✗ | **P1** |
+| **消息队列** | AI 回复时仍可输入下一条 | ✗ | **P1** |
+| **持久记忆** | 跨对话上下文传递 | ✓ memoryKairos | ✓ |
+| **分层配置** | managed > user > project > local | ⚠ 部分 | **P1** |
+| **使用分析** | Token 消耗、成本追踪 | ⚠ 基础 | **P2** |
 
 ### 9.2 关键参考项目
 
@@ -613,24 +613,24 @@ khy-os 在 **TUI 层面**（CC 模式）已经高度对齐 Claude Code，权限�
 
 | # | 功能 | 文件 | 状态 |
 |---|------|------|------|
-| 1 | **TUI 权限模式指示器** | `services/backend/src/cli/tui/ink-components/CcStatusLine.js` | ✅ 完成 |
-| 2 | **6→4 级简单模式映射** | `CcStatusLine.js`（PROFILE_TO_SIMPLE_MODE） | ✅ 完成 |
-| 3 | **TUI 缓存命中率显示** | `CcStatusLine.js`（cacheHitRate 属性） | ✅ 完成 |
-| 4 | **CcApp 权限状态集成** | `services/backend/src/cli/tui\ink-components\CcApp.js` | ✅ 完成 |
-| 5 | **Web AIChat 思考折叠块** | `apps/ai-frontend\src\views\AIChat.vue` | ✅ 完成 |
-| 6 | **Web AIChat 缓存命中率** | `AIChat.vue`（ctx-usage-cache） | ✅ 完成 |
-| 7 | **Web AIChat 会话导出** | `AIChat.vue`（MD/HTML/JSON 导出） | ✅ 完成 |
-| 8 | **配色饱和度优化** | `newapi-theme.css` + `ccTheme.js` | ✅ 完成 |
-| 9 | **KHY_PERMISSION_PATTERN_RULES 默认启用** | `flagRegistry.js` | ✅ 完成 |
-| 10 | **文件级 wildcard 规则默认持久化** | `permissionStore.js` | ✅ 完成 |
-| 11 | **Parts-based 消息模型** | `AIChat.vue` + `ChatPartsRenderer.vue` | ✅ 完成 |
-| 12 | **Generative UI 基础** | `ChatPartsRenderer.vue` | ✅ 完成 |
-| 13 | **父子 Agent 工具树（CcApp 集成）** | `CcApp.js` + `AgentTree.js` | ✅ 完成 |
-| 14 | **转录视图 Ctrl+O** | `CcTranscriptView.js` + `CcApp.js` | ✅ 完成 |
-| 15 | **快捷键冲突解决** | `CcApp.js`（Ctrl+O→转录, Ctrl+T→工具树） | ✅ 完成 |
-| 16 | **外部编辑器 Ctrl+E** | `CcApp.js`（openExternalEditor） | ✅ 完成 |
-| 17 | **Vim 模式** | `CcPromptInput.js` + `CcStatusLine.js` + `CcApp.js` | ✅ 完成 |
-| 18 | **任务时间预估** | `ccTaskEstimate.js` + `CcStatusLine.js` + `CcApp.js` | ✅ 完成 |
+| 1 | **TUI 权限模式指示器** | `services/backend/src/cli/tui/ink-components/CcStatusLine.js` | ✓ 完成 |
+| 2 | **6→4 级简单模式映射** | `CcStatusLine.js`（PROFILE_TO_SIMPLE_MODE） | ✓ 完成 |
+| 3 | **TUI 缓存命中率显示** | `CcStatusLine.js`（cacheHitRate 属性） | ✓ 完成 |
+| 4 | **CcApp 权限状态集成** | `services/backend/src/cli/tui\ink-components\CcApp.js` | ✓ 完成 |
+| 5 | **Web AIChat 思考折叠块** | `apps/ai-frontend\src\views\AIChat.vue` | ✓ 完成 |
+| 6 | **Web AIChat 缓存命中率** | `AIChat.vue`（ctx-usage-cache） | ✓ 完成 |
+| 7 | **Web AIChat 会话导出** | `AIChat.vue`（MD/HTML/JSON 导出） | ✓ 完成 |
+| 8 | **配色饱和度优化** | `newapi-theme.css` + `ccTheme.js` | ✓ 完成 |
+| 9 | **KHY_PERMISSION_PATTERN_RULES 默认启用** | `flagRegistry.js` | ✓ 完成 |
+| 10 | **文件级 wildcard 规则默认持久化** | `permissionStore.js` | ✓ 完成 |
+| 11 | **Parts-based 消息模型** | `AIChat.vue` + `ChatPartsRenderer.vue` | ✓ 完成 |
+| 12 | **Generative UI 基础** | `ChatPartsRenderer.vue` | ✓ 完成 |
+| 13 | **父子 Agent 工具树（CcApp 集成）** | `CcApp.js` + `AgentTree.js` | ✓ 完成 |
+| 14 | **转录视图 Ctrl+O** | `CcTranscriptView.js` + `CcApp.js` | ✓ 完成 |
+| 15 | **快捷键冲突解决** | `CcApp.js`（Ctrl+O→转录, Ctrl+T→工具树） | ✓ 完成 |
+| 16 | **外部编辑器 Ctrl+E** | `CcApp.js`（openExternalEditor） | ✓ 完成 |
+| 17 | **Vim 模式** | `CcPromptInput.js` + `CcStatusLine.js` + `CcApp.js` | ✓ 完成 |
+| 18 | **任务时间预估** | `ccTaskEstimate.js` + `CcStatusLine.js` + `CcApp.js` | ✓ 完成 |
 
 ### 12.2 实施细节
 
@@ -641,7 +641,7 @@ khy-os 在 **TUI 层面**（CC 模式）已经高度对齐 Claude Code，权限�
   - `strict`/`normal` → `build`（需确认）
   - `acceptEdits` → `edit`（自动编辑）
   - `auto`/`yolo` → `yolo`（完全自动）
-- 状态栏显示：图标 + 标签（如 `◈ plan`、`◉ build`、`⚡ yolo`）
+- 状态栏显示：图标 + 标签（如 `◈ plan`、`◉ build`、`✱ yolo`）
 - 颜色编码：plan=蓝、build=黄、edit=青、yolo=红
 - 窄终端（< 60 列）仍保留模式指示器
 

@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -39,56 +39,56 @@
 <table><thead><tr><th>错误类</th><th>名称</th><th>根因</th><th>检测点</th><th>自愈策略</th></tr></thead><tbody><tr><td><strong>E1</strong></td><td>static-field-colon</td><td>JS 类字段用 <code>:</code> 不用 <code>=</code></td><td><code>SyntaxError</code> at load time</td><td>文件级 regex 修复 + require 重试</td></tr><tr><td><strong>E2</strong></td><td>invalid-category</td><td>分类不在 CATEGORIES 中</td><td><code>defineTool()</code> 入口</td><td>Levenshtein fuzzy-match → 最近有效分类</td></tr><tr><td><strong>E3</strong></td><td>invalid-risk</td><td>风险级不在 RISK_LEVELS 中</td><td><code>defineTool()</code> 入口</td><td>Levenshtein fuzzy-match → 最近有效风险级</td></tr><tr><td><strong>E4</strong></td><td>invalid-enum</td><td>枚举值不在 VALID_INTERRUPT_BEHAVIORS 中</td><td><code>defineTool()</code> 入口</td><td>Levenshtein fuzzy-match → 最近有效枚举值</td></tr><tr><td><strong>E5</strong></td><td>type-mismatch</td><td>字符串/数字/布尔类型不匹配</td><td><code>defineTool()</code> 入口</td><td>字面量强制类型转换</td></tr><tr><td><strong>E6</strong></td><td>invalid-array</td><td>单字符串代替数组</td><td><code>defineTool()</code> 入口</td><td>单字符串包装为数组</td></tr></tbody></table>
 <h3 id="错误类详细说明">错误类详细说明<a class="anchor" href="#错误类详细说明" aria-label="锚点">#</a></h3>
 <h4 id="e1-static-field-colon">E1: static-field-colon<a class="anchor" href="#e1-static-field-colon" aria-label="锚点">#</a></h4>
-<pre><code class="language-javascript"><span class="hljs-comment">// ❌ 错误</span>
+<pre><code class="language-javascript"><span class="hljs-comment">// ✗ 错误</span>
 <span class="hljs-keyword">static</span> <span class="hljs-attr">searchHint</span>: <span class="hljs-string">&#x27;fine-tuning model training&#x27;</span>;
 
-<span class="hljs-comment">// ✅ 修复后</span>
+<span class="hljs-comment">// ✓ 修复后</span>
 <span class="hljs-keyword">static</span> searchHint = <span class="hljs-string">&#x27;fine-tuning model training&#x27;</span>;</code></pre>
 <p><strong>检测</strong>: <code>require()</code> 抛出 <code>SyntaxError: Unexpected strict mode reserved word</code></p>
 <p><strong>修复</strong>: <code>_toolSyntaxHealer.js</code> 的 <code>healFile()</code> 读取文件 → regex 替换 → 写回 → 清除 require 缓存 → 重试</p>
 <hr>
 <h4 id="e2-invalid-category">E2: invalid-category<a class="anchor" href="#e2-invalid-category" aria-label="锚点">#</a></h4>
-<pre><code class="language-javascript"><span class="hljs-comment">// ❌ 错误</span>
+<pre><code class="language-javascript"><span class="hljs-comment">// ✗ 错误</span>
 <span class="hljs-keyword">static</span> category = <span class="hljs-string">&#x27;protocol&#x27;</span>;  <span class="hljs-comment">// 拼写错误</span>
 
-<span class="hljs-comment">// ✅ 修复后（模糊匹配）</span>
+<span class="hljs-comment">// ✓ 修复后（模糊匹配）</span>
 <span class="hljs-keyword">static</span> category = <span class="hljs-string">&#x27;mcp&#x27;</span>;  <span class="hljs-comment">// 或 fallback 到 &#x27;custom&#x27;</span></code></pre>
 <p><strong>检测</strong>: <code>category</code> 不在 <code>VALID_CATEGORIES</code> 数组中</p>
 <p><strong>修复</strong>: Levenshtein 距离 ≤ 2 或前缀匹配 → 最近有效值；否则 fallback 到 <code>'custom'</code></p>
 <hr>
 <h4 id="e3-invalid-risk">E3: invalid-risk<a class="anchor" href="#e3-invalid-risk" aria-label="锚点">#</a></h4>
-<pre><code class="language-javascript"><span class="hljs-comment">// ❌ 错误</span>
+<pre><code class="language-javascript"><span class="hljs-comment">// ✗ 错误</span>
 <span class="hljs-keyword">static</span> risk = <span class="hljs-string">&#x27;mdeium&#x27;</span>;  <span class="hljs-comment">// 拼写错误</span>
 
-<span class="hljs-comment">// ✅ 修复后</span>
+<span class="hljs-comment">// ✓ 修复后</span>
 <span class="hljs-keyword">static</span> risk = <span class="hljs-string">&#x27;medium&#x27;</span>;</code></pre>
 <p><strong>检测</strong>: <code>risk</code> 不在 <code>VALID_RISK_LEVELS</code> 数组中</p>
 <p><strong>修复</strong>: Levenshtein fuzzy-match → 最近有效风险级；否则 fallback 到 <code>'medium'</code></p>
 <hr>
 <h4 id="e4-invalid-enum">E4: invalid-enum<a class="anchor" href="#e4-invalid-enum" aria-label="锚点">#</a></h4>
-<pre><code class="language-javascript"><span class="hljs-comment">// ❌ 错误</span>
+<pre><code class="language-javascript"><span class="hljs-comment">// ✗ 错误</span>
 <span class="hljs-keyword">static</span> interruptBehavior = <span class="hljs-string">&#x27;cancle&#x27;</span>;  <span class="hljs-comment">// 拼写错误</span>
 
-<span class="hljs-comment">// ✅ 修复后</span>
+<span class="hljs-comment">// ✓ 修复后</span>
 <span class="hljs-keyword">static</span> interruptBehavior = <span class="hljs-string">&#x27;cancel&#x27;</span>;</code></pre>
 <p><strong>检测</strong>: 枚举值不在 <code>VALID_INTERRUPT_BEHAVIORS</code> 数组中</p>
 <p><strong>修复</strong>: Levenshtein fuzzy-match → 最近有效枚举值；否则 fallback 到 <code>'cancel'</code></p>
 <hr>
 <h4 id="e5-type-mismatch">E5: type-mismatch<a class="anchor" href="#e5-type-mismatch" aria-label="锚点">#</a></h4>
-<pre><code class="language-javascript"><span class="hljs-comment">// ❌ 错误</span>
+<pre><code class="language-javascript"><span class="hljs-comment">// ✗ 错误</span>
 <span class="hljs-keyword">static</span> shouldDefer = <span class="hljs-string">&#x27;true&#x27;</span>;  <span class="hljs-comment">// 字符串代替布尔</span>
 
-<span class="hljs-comment">// ✅ 修复后</span>
+<span class="hljs-comment">// ✓ 修复后</span>
 <span class="hljs-keyword">static</span> shouldDefer = <span class="hljs-literal">true</span>;</code></pre>
 <p><strong>检测</strong>: 值的类型与目标类型不匹配（如 <code>typeof val === 'string'</code> 但期望 <code>'boolean'</code>）</p>
 <p><strong>修复</strong>:</p>
 <ul><li><code>'true'/'1'/'yes'/'on'</code> → <code>true</code></li><li><code>'false'/'0'/'no'/'off'</code> → <code>false</code></li><li><code>'42'</code> → <code>42</code>（字符串→数字）</li><li><code>true</code> → <code>'true'</code>（布尔→字符串）</li></ul>
 <hr>
 <h4 id="e6-invalid-array">E6: invalid-array<a class="anchor" href="#e6-invalid-array" aria-label="锚点">#</a></h4>
-<pre><code class="language-javascript"><span class="hljs-comment">// ❌ 错误</span>
+<pre><code class="language-javascript"><span class="hljs-comment">// ✗ 错误</span>
 <span class="hljs-keyword">static</span> aliases = <span class="hljs-string">&#x27;single-alias&#x27;</span>;  <span class="hljs-comment">// 字符串代替数组</span>
 
-<span class="hljs-comment">// ✅ 修复后</span>
+<span class="hljs-comment">// ✓ 修复后</span>
 <span class="hljs-keyword">static</span> aliases = [<span class="hljs-string">&#x27;single-alias&#x27;</span>];</code></pre>
 <p><strong>检测</strong>: 期望数组但收到字符串</p>
 <p><strong>修复</strong>: 单字符串包装为 <code>[str]</code></p>
