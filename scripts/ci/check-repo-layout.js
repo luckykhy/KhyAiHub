@@ -126,7 +126,6 @@ const CROSSCUTTING = {
   // 根级例外目录（真源 [DESIGN-LAY-005] 第 1.4 节）：不属 L0-L6，也不属
   // scripts/packaging/docs 这类工程横切，是历史遗留的根级实体，登记在册以免
   // 每次都被 layer-registry 判违规。
-  electron: '根级 Electron 桌面壳（根 package.json 的 electron:dev 入口）',
   tests: '根级测试债务登记（DEBT.md，内容属文档性质，待迁 docs/05_TEST_测试/）',
   // 只收**交付物**；过程态工具（探针/扫描脚本/未接线原型）落 .khyos/，判据真源
   // [DESIGN-LAY-002] §3.1（2026-09-29 分流，此前两类混住，见该节表格）。
@@ -153,8 +152,11 @@ const ROOT_DOC_WHITELIST = new Set([
   'khy.md',
 ]);
 const README_VARIANT_RE = /^README(?:\.[A-Za-z-]+)?\.md$/;
-// 只有 .md / .txt 属「说明性文件」范畴；其余扩展名（.json/.toml/.bat/.sh…）不在本规则内。
-const ROOT_DOC_EXT_RE = /\.(?:md|txt)$/i;
+// 「说明性文件」的扩展名口径（Q1′/Q-1 补洞）：原来只认 `.md`/`.txt`，一个根级
+// `SPEC.rst` / `指南.markdown` / `NOTES.adoc` 会两头漏（规则 1 不看它，根级封闭清单
+// 又把它当 contract/localdata 之外的散件）。`.html` **刻意不在列**——根级 html 是
+// [LAY-5] 强制的 md 孪生形态，不是待收容的散文档。
+const ROOT_DOC_EXT_RE = /\.(?:md|mdown|markdown|mdx|rst|adoc|txt)$/i;
 
 // ── 规则 1b：根目录垃圾签名（CP-1 补充）──────────────────────────────────────
 // 规则 1 只扫 `.md`/`.txt` 且只扫**文件**，因此下面这些现场真实落地的残留
@@ -308,7 +310,6 @@ const ROOT_CATALOG = {
   '.khy': { category: 'localdata', reason: '运行时数据目录（.gitignore）', reviewBy: '2026-12-31' },
   '.khyos': { category: 'localdata', reason: 'OS 本机态/巡检暂存（.gitignore）', reviewBy: '2026-12-31' },
   'khy-Trajectory': { category: 'tool-retained', reason: '轨迹子系统留档（裁决保留）', reviewBy: '2026-12-31' },
-  'electron': { category: 'pending-retire', reason: '根级 Electron 桌面壳，Q10 已裁决退役', reviewBy: '2026-10-31' },
   'Dockerfile': { category: 'contract', reason: '镜像构建入口', reviewBy: '2026-12-31' },
   'docker-compose.yml': { category: 'contract', reason: '一键部署编排', reviewBy: '2026-12-31' },
   'fly.staging.toml': { category: 'contract', reason: 'fly.io 预发部署配置', reviewBy: '2026-12-31' },
@@ -1225,7 +1226,11 @@ function checkCrossLayerRequires(findings, counts) {
     // require() 只可能出现在 JS 里；.json 清单（如 khy.module.json 的 `_test_dialect_note`
     // 等散文注记）里提到 `require('../../x')` 只是文字说明，git grep 会连它一起抓，
     // 再按清单自身目录解析 `../` 必然算出双写路径的假悬空。排除非可执行 JSON。
-    if (file.endsWith('.json')) continue;
+    // 同理排除散文文档：模块 README 常**引用**别的源文件里那行 require（照抄 ../ 级数），
+    // 但按 README 自己的目录解析必然算错一级——README.html 是它的 LAY-5 孪生，同一类。
+    // 判据始终是「可执行文件里的 require 指向不存在路径 = 必崩」，散文不会执行，不在此列。
+    if (file.endsWith('.json') || file.endsWith('.md') || file.endsWith('.markdown')
+      || file.endsWith('.html')) continue;
     // 这条规则约束可发布的运行时模块图。测试可直接加载相邻 workspace 的
     // fixture / implementation 做契约验证，不会形成产品运行时依赖边。
     if (isTestFixture(file)) continue;

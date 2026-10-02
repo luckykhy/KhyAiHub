@@ -104,6 +104,30 @@ describe('check-repo-layout: 规则命中', () => {
     assert.doesNotMatch(stdout, /root-whitelist/);
   });
 
+  test('root-whitelist: .rst/.markdown/.adoc 等文档扩展名同样入口径（Q1′ 补洞回归）', () => {
+    const root = makeFixture((dir) => {
+      writeFile(dir, 'SPEC.rst', 'rst 说明\n');
+      writeFile(dir, '指南.markdown', '# md 变体\n');
+      writeFile(dir, 'NOTES.adoc', 'asciidoc\n');
+    });
+    const { status, stdout } = runGuard(root);
+    assert.equal(status, 1, stdout);
+    assert.match(stdout, /root-whitelist/);
+    assert.match(stdout, /SPEC\.rst/);
+    assert.match(stdout, /指南\.markdown/);
+    assert.match(stdout, /NOTES\.adoc/);
+  });
+
+  test('root-whitelist: 根级 .html 是 md 孪生形态，不按散文档报（刻意排除）', () => {
+    const root = makeFixture((dir) => {
+      writeFile(dir, 'README.md', '# 首页\n');
+      writeFile(dir, 'README.html', '<p>首页</p>\n');
+    });
+    const { status, stdout } = runGuard(root);
+    assert.equal(status, 0, stdout);
+    assert.doesNotMatch(stdout, /root-whitelist/);
+  });
+
   test('root-whitelist: 非说明性扩展名（.json/.toml）不在本规则范围内', () => {
     const root = makeFixture((dir) => {
       writeFile(dir, 'pyproject.toml', '[project]\n');
@@ -214,6 +238,27 @@ describe('check-repo-layout: 任务入口与跨层引用', () => {
     assert.equal(status, 0, stdout);
     assert.match(stdout, /"cross-layer-require":0/);
     assert.match(stdout, /"unresolved-require":0/);
+  });
+
+  test('unresolved-require: 散文文档里的 require 引用不计，同路径可执行文件仍计', () => {
+    const root = makeFixture((dir) => {
+      writeFile(dir, 'services/backend/package.json', '{"name":"backend"}\n');
+      writeFile(dir, 'services/backend/src/services/sessionPersistence.js', 'module.exports = {};\n');
+      // README 位于 domain/session/，照抄的是子目录 session/sessionForestService.js 里
+      // 那行三级 ../ 的 require；按 README 自身目录解析必然算到 src/sessionPersistence
+      // （不存在）——散文不会执行，这条判据管的是可执行文件的必崩路径。
+      writeFile(dir, 'services/backend/src/services/domain/session/README.md',
+        "壳转发 `require('../../../sessionPersistence')`。\n");
+      writeFile(dir, 'services/backend/src/services/domain/session/README.html',
+        "<p>壳转发 <code>require('../../../sessionPersistence')</code>。</p>\n");
+      // 同样这行写在可执行文件里 = 真悬空，必须仍然报出来。
+      writeFile(dir, 'services/backend/src/services/domain/session/broken.js',
+        "module.exports = require('../../../sessionPersistence');\n");
+    });
+    const { stdout } = runGuard(root, ['--list=unresolved-require']);
+    assert.match(stdout, /"unresolved-require":1/, stdout);
+    assert.match(stdout, /domain\/session\/broken\.js/, stdout);
+    assert.doesNotMatch(stdout, /README\.(md|html):\d+/, stdout);
   });
 
   test('cross-layer-require: 纯 re-export 壳文件按兼容别名豁免', () => {
