@@ -42,7 +42,7 @@ enforcement: "scripts/ci/check-agent-rules.js"
 
 ## 反例
 
-❌ `const start = Date.now(); if (Date.now() - start > 120_000) kill()` → ✅ 每次产出事件重置 `lastActivity`，仅在空闲超限时触发
+✗ `const start = Date.now(); if (Date.now() - start > 120_000) kill()` → ✓ 每次产出事件重置 `lastActivity`，仅在空闲超限时触发
 
 ## 校验方式
 

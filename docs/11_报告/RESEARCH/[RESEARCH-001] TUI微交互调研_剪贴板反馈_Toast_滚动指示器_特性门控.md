@@ -100,7 +100,7 @@ fmt.Fprintf(w, "%s First copy your one-time code: %s\n", ...)
 
 ### 1.3 对 CC 模式 TUI copy 规格的设计含义
 
-- 措辞建议沿用你方 `ccFormatters.js` 的**三级 N 计数**（lines/KB/chars），这是比 CC 的纯 chars 更细的既有基线，且已存在。若要向 CC 对齐，至少保证**多字节/emoji 按 code point 计数**（CC 专门修过过计数 bug，CHANGELOG:3577）——你方 `chars = text.length` 在 emoji 上会**复现同类 bug**（`"😀".length === 2`），建议改用 `Array.from(text).length` 或 `[...text].length`。
+- 措辞建议沿用你方 `ccFormatters.js` 的**三级 N 计数**（lines/KB/chars），这是比 CC 的纯 chars 更细的既有基线，且已存在。若要向 CC 对齐，至少保证**多字节/emoji 按 code point 计数**（CC 专门修过过计数 bug，CHANGELOG:3577）——你方 `chars = text.length` 在 emoji 上会**复现同类 bug**（`"".length === 2`），建议改用 `Array.from(text).length` 或 `[...text].length`。
 - 呈现：常规会话选区复制 → 瞬态 toast（success/info）；错误/全屏态 → 行内常驻（照抄 opencode error-component 双轨）。
 
 ---

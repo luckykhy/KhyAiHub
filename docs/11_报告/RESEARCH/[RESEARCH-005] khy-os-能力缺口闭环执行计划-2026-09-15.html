@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -31,7 +31,7 @@
 <blockquote><p>针对四项尚未闭环的能力缺口与待办事项，给出完整解决方案与执行安排。每项均明确 <strong>范围 / 交付标准 / 依赖关系</strong>。<br>编制日期：2026-09-15。门禁基线：conformance <strong>79/79</strong> ✓、debt-ledger <strong>0 error/0 warning</strong> ✓、S3+S4 冒烟 <strong>12/12</strong> ✓。</p></blockquote>
 <hr>
 <h2 id="0-总览">0. 总览<a class="anchor" href="#0-总览" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>缺口</th><th>状态</th><th>范围</th><th>交付标准（可验证）</th><th>关键依赖</th></tr></thead><tbody><tr><td><strong>S3</strong> A2A 服务端任务面</td><td>✅ 已实现并验证</td><td>标准 A2A REST 绑定：<code>message/send</code>、<code>tasks/get</code>、<code>tasks/cancel</code></td><td><code>check-protocol-conformance</code> 新增 3 项 S3 探针全绿；冒烟覆盖 store/methods/routes</td><td>既有 <code>a2a/index.js</code> 客户端、<code>wellKnown</code> 发现端点；<code>taskStateSpec</code> 状态机</td></tr><tr><td><strong>S4</strong> MCP 升级至 2025-03-26</td><td>✅ 已实现并验证</td><td>两个 required 特性：SSE 流响应、<code>Last-Event-ID</code> 断线续传</td><td><code>SUPPORTED_PROTOCOL_VERSIONS</code> 含 <code>2025-03-26</code> 且 required 全绿；纯函数单测通过</td><td><code>mcpServerProtocol.js</code> 声明机制；<code>mcpHttpServer.js</code> 传输层</td></tr><tr><td><strong>债务台账清偿</strong></td><td>🟡 排期已定，待执行</td><td>9 条 open 债务的逐条清偿（按阶段 A→D）</td><td>每条 <code>measured → target</code> 且 <code>target&lt;measured</code>；逾期必须 <code>slipped</code> 留痕</td><td><code>check-debt-ledger.js</code> 棘轮守卫；各门禁脚本源码（覆盖完整性）</td></tr><tr><td><strong>官方套件 release 接入</strong></td><td>🟡 编排器+脚本已存在，本次补 workflow</td><td><code>@modelcontextprotocol/conformance</code> + <code>a2a-tck</code> 在发版流水线中<strong>实际安装</strong>并以 <code>--required</code> 强制</td><td>发版即产出 <code>.khy/conformance-report.json</code> 并上传产物；缺失即门禁红</td><td><code>conformance-runner.mjs</code>（已存在）+ <code>conform:*</code> npm 脚本（已存在）+ 本计划新增 <code>conformance.yml</code></td></tr></tbody></table>
+<table><thead><tr><th>缺口</th><th>状态</th><th>范围</th><th>交付标准（可验证）</th><th>关键依赖</th></tr></thead><tbody><tr><td><strong>S3</strong> A2A 服务端任务面</td><td>✓ 已实现并验证</td><td>标准 A2A REST 绑定：<code>message/send</code>、<code>tasks/get</code>、<code>tasks/cancel</code></td><td><code>check-protocol-conformance</code> 新增 3 项 S3 探针全绿；冒烟覆盖 store/methods/routes</td><td>既有 <code>a2a/index.js</code> 客户端、<code>wellKnown</code> 发现端点；<code>taskStateSpec</code> 状态机</td></tr><tr><td><strong>S4</strong> MCP 升级至 2025-03-26</td><td>✓ 已实现并验证</td><td>两个 required 特性：SSE 流响应、<code>Last-Event-ID</code> 断线续传</td><td><code>SUPPORTED_PROTOCOL_VERSIONS</code> 含 <code>2025-03-26</code> 且 required 全绿；纯函数单测通过</td><td><code>mcpServerProtocol.js</code> 声明机制；<code>mcpHttpServer.js</code> 传输层</td></tr><tr><td><strong>债务台账清偿</strong></td><td>◐ 排期已定，待执行</td><td>9 条 open 债务的逐条清偿（按阶段 A→D）</td><td>每条 <code>measured → target</code> 且 <code>target&lt;measured</code>；逾期必须 <code>slipped</code> 留痕</td><td><code>check-debt-ledger.js</code> 棘轮守卫；各门禁脚本源码（覆盖完整性）</td></tr><tr><td><strong>官方套件 release 接入</strong></td><td>◐ 编排器+脚本已存在，本次补 workflow</td><td><code>@modelcontextprotocol/conformance</code> + <code>a2a-tck</code> 在发版流水线中<strong>实际安装</strong>并以 <code>--required</code> 强制</td><td>发版即产出 <code>.khy/conformance-report.json</code> 并上传产物；缺失即门禁红</td><td><code>conformance-runner.mjs</code>（已存在）+ <code>conform:*</code> npm 脚本（已存在）+ 本计划新增 <code>conformance.yml</code></td></tr></tbody></table>
 <hr>
 <h2 id="1-s3-a2a-服务端任务面-能力补齐">1. S3 — A2A 服务端任务面（能力补齐）<a class="anchor" href="#1-s3-a2a-服务端任务面-能力补齐" aria-label="锚点">#</a></h2>
 <h3 id="1-1-范围-已交付">1.1 范围（已交付）<a class="anchor" href="#1-1-范围-已交付" aria-label="锚点">#</a></h3>
@@ -89,7 +89,7 @@
 <p>以下为本计划周期内的新增/改动，尚在工作树、<strong>未提交</strong>（含 <code>conformance-runner.mjs</code>、<code>conform:*</code> 脚本、<code>conformance.yml</code>、S3/S4 全部文件、债务台账 <code>plan</code> 更新）。建议随本次能力缺口闭环 PR 一并提交，并附 <code>conformance-report.json</code> 本地 SKIPPED 证据。</p>
 <hr>
 <h2 id="6-执行清单-checklist">6. 执行清单（Checklist）<a class="anchor" href="#6-执行清单-checklist" aria-label="锚点">#</a></h2>
-<ul><li>[x] <strong>S3</strong> A2A 服务端任务面：store/methods/routes + 3 探针 + 冒烟 ✅</li><li>[x] <strong>S4</strong> MCP 2025-03-26：版本声明 + SSE + 断线续传 + 2 探针 ✅</li><li>[x] <strong>债务台账排期</strong>：9 条 open 标注阶段 A–D，guard 0 error ✅</li><li>[x] <strong>官方套件 workflow</strong>：<code>.github/workflows/conformance.yml</code> 创建（安装 + <code>--required</code> + 产物上传）✅</li><li>[ ] 提交上述工作树改动（含 <code>conformance.yml</code> 与 <code>conformance-runner.mjs</code>/<code>conform:*</code>）</li><li>[ ] §5.1 naming 2 错误清理（独立项）</li><li>[ ] §5.2 S3 executor 接入（独立里程碑）</li><li>[ ] §5.3 CI 后端启动前置确认</li></ul>
+<ul><li>[x] <strong>S3</strong> A2A 服务端任务面：store/methods/routes + 3 探针 + 冒烟 ✓</li><li>[x] <strong>S4</strong> MCP 2025-03-26：版本声明 + SSE + 断线续传 + 2 探针 ✓</li><li>[x] <strong>债务台账排期</strong>：9 条 open 标注阶段 A–D，guard 0 error ✓</li><li>[x] <strong>官方套件 workflow</strong>：<code>.github/workflows/conformance.yml</code> 创建（安装 + <code>--required</code> + 产物上传）✓</li><li>[ ] 提交上述工作树改动（含 <code>conformance.yml</code> 与 <code>conformance-runner.mjs</code>/<code>conform:*</code>）</li><li>[ ] §5.1 naming 2 错误清理（独立项）</li><li>[ ] §5.2 S3 executor 接入（独立里程碑）</li><li>[ ] §5.3 CI 后端启动前置确认</li></ul>
       </article>
       <nav class="pager"><a class="prev" href="../../../docs/11_报告/RESEARCH/[RESEARCH-004] khy-os-协议与工程规范分步改进计划-2026-09-15.html"><div class="dir">← 上一篇</div><div class="ttl">khy-os 协议与工程规范分步改进计划</div></a><a class="next" href="../../../docs/11_报告/RESEARCH/[RESEARCH-006] khy-os-规则合规检查报告-2026-09-15.html"><div class="dir">下一篇 →</div><div class="ttl">khy-os 规则合规检查报告</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>

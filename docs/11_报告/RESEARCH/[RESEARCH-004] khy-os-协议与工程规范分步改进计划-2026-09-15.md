@@ -46,10 +46,10 @@
 
 | 维度 | 评级 | 最关键差距 | 根因 |
 |------|------|-----------|------|
-| 工具 MCP 化 | 🟡 B | 协议版本停在 `2024-11-05`（缺 SSE 流式与断线续传）；无 OAuth 授权服务器发现 | 缺「声明→实测」闭环，故修复慢、无法声明新修订 |
-| A2A 适配 | 🔴 D | **无服务端任务处理面**（能被发现、不能被调用）；两套「A2A」混淆 | 从未明确过「私有方言 vs 标准协议」的边界 |
-| 文档完整性 | 🟡 B− | 无 MCP 协议规范、无 A2A 标准规范、无 OpenAPI、无 ADR | 文档「数量驱动」而非「协议驱动」 |
-| 代码标准 | 🟡 C+ | **基线失效**（允许 12000 个超长函数 / 5000 处 console）；`check:layout` 整片红且 baseline=0 | 「只降不升」策略在无清偿计划时退化为「永不修」 |
+| 工具 MCP 化 | ◐ B | 协议版本停在 `2024-11-05`（缺 SSE 流式与断线续传）；无 OAuth 授权服务器发现 | 缺「声明→实测」闭环，故修复慢、无法声明新修订 |
+| A2A 适配 | ● D | **无服务端任务处理面**（能被发现、不能被调用）；两套「A2A」混淆 | 从未明确过「私有方言 vs 标准协议」的边界 |
+| 文档完整性 | ◐ B− | 无 MCP 协议规范、无 A2A 标准规范、无 OpenAPI、无 ADR | 文档「数量驱动」而非「协议驱动」 |
+| 代码标准 | ◐ C+ | **基线失效**（允许 12000 个超长函数 / 5000 处 console）；`check:layout` 整片红且 baseline=0 | 「只降不升」策略在无清偿计划时退化为「永不修」 |
 
 ### 2.2 补齐维度（用户未提及）
 
@@ -80,12 +80,12 @@ A2A 不可被调用 ───────► 服务端任务面 + TaskStore（P3
 
 | 阶段 | 目标 | 内容 | 状态 |
 |------|------|------|------|
-| **S0 建立可验证基线** | 让「合规」可被机器判定 | 一致性矩阵、诚实常量、协议契约 schema、单测 | ✅ **完成** |
-| **S1 划清协议边界** | 消除两个「A2A」带来的认知与对接风险 | A2A 发布端点、状态映射、`tasks/cancel`、两份规范文档 | ✅ **完成** |
-| **S2 清偿治理债** | 让已有的门真的能挡住东西 | 基线清偿、恒红守卫、静默降级扫描器 | 🟡 **机制已建**（债务台账 + 基线重置为实测值 + `check:debt-ledger` 接入 `check:structure`），存量清偿待排期 |
-| **S3 补 A2A 服务端** | 从「可被发现」到「可被调用」 | `message/send` / `tasks/get` / `tasks/cancel` handler + TaskStore | ⬜ 待排期 |
-| **S4 协议版本推进** | 支持 `2025-03-26` 与 A2A 流式 | MCP SSE 响应体 + `Last-Event-ID`；A2A `message/stream` | ⬜ 待排期 |
-| **S5 外部验证** | 把「自证」升级为「他证」 | 接入 `mcp inspector`/`conformance`、`a2a-tck`/`a2a-inspector` | 🟡 **接入规范与编排器已建**（`[DESIGN-QUAL-002]` + `conformance-runner.mjs`），工具安装与 release 门禁待排期 |
+| **S0 建立可验证基线** | 让「合规」可被机器判定 | 一致性矩阵、诚实常量、协议契约 schema、单测 | ✓ **完成** |
+| **S1 划清协议边界** | 消除两个「A2A」带来的认知与对接风险 | A2A 发布端点、状态映射、`tasks/cancel`、两份规范文档 | ✓ **完成** |
+| **S2 清偿治理债** | 让已有的门真的能挡住东西 | 基线清偿、恒红守卫、静默降级扫描器 | ◐ **机制已建**（债务台账 + 基线重置为实测值 + `check:debt-ledger` 接入 `check:structure`），存量清偿待排期 |
+| **S3 补 A2A 服务端** | 从「可被发现」到「可被调用」 | `message/send` / `tasks/get` / `tasks/cancel` handler + TaskStore | □ 待排期 |
+| **S4 协议版本推进** | 支持 `2025-03-26` 与 A2A 流式 | MCP SSE 响应体 + `Last-Event-ID`；A2A `message/stream` | □ 待排期 |
+| **S5 外部验证** | 把「自证」升级为「他证」 | 接入 `mcp inspector`/`conformance`、`a2a-tck`/`a2a-inspector` | ◐ **接入规范与编排器已建**（`[DESIGN-QUAL-002]` + `conformance-runner.mjs`），工具安装与 release 门禁待排期 |
 
 ---
 
@@ -207,7 +207,7 @@ A2A 不可被调用 ───────► 服务端任务面 + TaskStore（P3
 
 ### S5 —— 外部验证（把「自证」升级为「他证」）
 
-1. **MCP**：接入 `modelcontextprotocol/inspector`（10.6k⭐）做交互式验证；
+1. **MCP**：接入 `modelcontextprotocol/inspector`（10.6k★）做交互式验证；
    评估 `modelcontextprotocol/conformance` 套件纳入 CI 的可行性。
 2. **A2A**：接入 `a2aproject/a2a-tck` 与 `a2a-inspector`。
 3. 把 TCK 报告作为发布门的一部分（`gate:release`）。
@@ -354,12 +354,12 @@ A2A 不可被调用 ───────► 服务端任务面 + TaskStore（P3
 
 | 阶段 | 验收标准 | 状态 |
 |------|----------|------|
-| S0 | `check:protocol-conformance` 全绿并接入 `check:structure`；MCP 与 A2A 契约 schema 存在且有反面断言 | ✅ |
-| S1 | `/.well-known/agent-card.json` 可访问且通过 schema；TaskState 映射完备；`tasks/cancel` 可用；两份规范文档落档 | ✅ |
-| S2 | `check:layout` exit 0 且 baseline 全 0；`code-standards` 基线季度下调；静默降级扫描器接入 `check:changed` | 🟡 债务台账 + 基线重置 + `check:debt-ledger` 已建并接入 `check:structure`；存量清偿待排期 |
-| S3 | 端到端：`message/send` → `tasks/get` → `tasks/cancel` 三方法互通且通过契约 schema | ⬜ |
-| S4 | `SUPPORTED_PROTOCOL_VERSIONS` 含 `2025-03-26` 且官方 inspector 可连；A2A 流式事件可被 `curl -N` 观测 | ⬜ |
-| S5 | CI 产出 MCP / A2A 官方 TCK 报告；自建 vs 复用 SDK 的 ADR 落档 | 🟡 `[DESIGN-QUAL-002]` + `conformance-runner.mjs` 已建；工具安装与 release 门禁待排期 |
+| S0 | `check:protocol-conformance` 全绿并接入 `check:structure`；MCP 与 A2A 契约 schema 存在且有反面断言 | ✓ |
+| S1 | `/.well-known/agent-card.json` 可访问且通过 schema；TaskState 映射完备；`tasks/cancel` 可用；两份规范文档落档 | ✓ |
+| S2 | `check:layout` exit 0 且 baseline 全 0；`code-standards` 基线季度下调；静默降级扫描器接入 `check:changed` | ◐ 债务台账 + 基线重置 + `check:debt-ledger` 已建并接入 `check:structure`；存量清偿待排期 |
+| S3 | 端到端：`message/send` → `tasks/get` → `tasks/cancel` 三方法互通且通过契约 schema | □ |
+| S4 | `SUPPORTED_PROTOCOL_VERSIONS` 含 `2025-03-26` 且官方 inspector 可连；A2A 流式事件可被 `curl -N` 观测 | □ |
+| S5 | CI 产出 MCP / A2A 官方 TCK 报告；自建 vs 复用 SDK 的 ADR 落档 | ◐ `[DESIGN-QUAL-002]` + `conformance-runner.mjs` 已建；工具安装与 release 门禁待排期 |
 
 ---
 

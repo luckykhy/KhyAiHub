@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -47,7 +47,7 @@
 <p>三篇均满足硬性门槛 <code>flip≥1 · quiz=1 · callout≥1 · mermaid≥1 · popover≥1</code>。</p></blockquote>
 <hr>
 <h2 id="三-全站健康度-验证门实测输出">三、全站健康度（验证门实测输出）<a class="anchor" href="#三-全站健康度-验证门实测输出" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>验证门</th><th>命令</th><th>结果</th></tr></thead><tbody><tr><td>互动件防呆</td><td><code>npm run docs:lint</code></td><td>✅ 扫描 427 md · error 0 · warning 0</td></tr><tr><td>md↔html 配对 + 链接可达</td><td><code>docs:verify</code>（verify_docs_site）</td><td>✅ 658 md → 659 html · 8331 链接全部可达</td></tr><tr><td>面向小白体检</td><td><code>docs:verify</code>（check_beginner_docs）</td><td>✅ 无孤儿页 · 编号连续 · 故事均有凡人笔记 · 正文均有底部导航</td></tr><tr><td>widget 单元测试</td><td><code>node --test build_docs_site.test.js</code></td><td>✅ 13/13 pass</td></tr></tbody></table>
+<table><thead><tr><th>验证门</th><th>命令</th><th>结果</th></tr></thead><tbody><tr><td>互动件防呆</td><td><code>npm run docs:lint</code></td><td>✓ 扫描 427 md · error 0 · warning 0</td></tr><tr><td>md↔html 配对 + 链接可达</td><td><code>docs:verify</code>（verify_docs_site）</td><td>✓ 658 md → 659 html · 8331 链接全部可达</td></tr><tr><td>面向小白体检</td><td><code>docs:verify</code>（check_beginner_docs）</td><td>✓ 无孤儿页 · 编号连续 · 故事均有凡人笔记 · 正文均有底部导航</td></tr><tr><td>widget 单元测试</td><td><code>node --test build_docs_site.test.js</code></td><td>✓ 13/13 pass</td></tr></tbody></table>
 <blockquote><p>对比上一轮基线（655 md / 656 html / 8273 链接）：本轮 md 计数上抬至 658（+3 新概念篇），链接总数增至 8331，<strong>零死链、零孤儿页</strong>——是健康增长，不是回归。</p></blockquote>
 <hr>
 <h2 id="四-还剩什么没做-诚实的待办清单">四、还剩什么没做（诚实的待办清单）<a class="anchor" href="#四-还剩什么没做-诚实的待办清单" aria-label="锚点">#</a></h2>
@@ -60,7 +60,7 @@
 <hr>
 <h2 id="五-一句话总结">五、一句话总结<a class="anchor" href="#五-一句话总结" aria-label="锚点">#</a></h2>
 <p>这一轮把「面向小白文档站」又往前推了一步：<strong>多了一种时间轴互动件、补齐了 5 篇翻卡、新增 3 篇&quot;动手接入+避坑&quot;实战概念篇</strong>，全站 32 篇概念文档的五类核心互动件已<strong>全覆盖</strong>，验证门全绿、零死链、零孤儿页。剩余的 Token 计费篇、Eval 篇与故事番外，已如实列入下一批，未做任何静默截断。</p>
-<p>👉 回 [概念../../02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.md-总览.md) · 或直接读 [㉙ 什么是 AP../../02_CONCEPTS_概念入门/CONCEPT/[CONCEPT-29] 什么是API与SDK.mdPI与SDK.md) 开始新一批内容。</p>
+<p>→ 回 [概念../../02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.md-总览.md) · 或直接读 [㉙ 什么是 AP../../02_CONCEPTS_概念入门/CONCEPT/[CONCEPT-29] 什么是API与SDK.mdPI与SDK.md) 开始新一批内容。</p>
       </article>
       <nav class="pager"><a class="prev" href="../../../docs/11_报告/RESEARCH/[RESEARCH-001] TUI微交互调研_剪贴板反馈_Toast_滚动指示器_特性门控.html"><div class="dir">← 上一篇</div><div class="ttl">TUI 微交互调研报告：剪贴板反馈 / Toast / 滚动指示器 / 特性门控</div></a><a class="next" href="../../../docs/11_报告/RESEARCH/[RESEARCH-003] khy-os-协议与工程规范深度调研报告-2026-09-15.html"><div class="dir">下一篇 →</div><div class="ttl">khy-os 协议与工程规范深度调研报告</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>

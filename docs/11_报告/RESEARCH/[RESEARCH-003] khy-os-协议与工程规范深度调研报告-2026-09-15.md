@@ -26,16 +26,16 @@
 
 | 维度 | 评级 | 一句话判断 |
 |------|------|-----------|
-| **工具 MCP 化改造** | 🟡 **B** — 工具面优秀，协议面有硬缺口 | 工具注册/权限门控/名称归一化达到或超过主流实现；但协议版本停在 `2024-11-05`，且能力声明长期错误 |
-| **A2A 协议适配** | 🔴 **D** — 「名义适配」 | 存在两套互不相通的「A2A」，其中被大量引用的那套与标准协议**毫无关系**；标准侧的出站客户端曾 100% 静默失败 |
-| **文档完整性** | 🟡 **B−** — 覆盖面极广，但存在真伪混装 | 70 份规范文档覆盖 40+ 主题；但没有 MCP 协议规范、没有 A2A 标准规范、没有 OpenAPI、没有 ADR，且 `[DESIGN-A2A-001]` 把私有方言写成了标准协议 |
-| **代码标准合规** | 🟡 **C+** — 体系齐全，基线已失效 | NAM/COM/COMP 三类规则都有守卫；但基线被抬到「允许 12000 个超长函数、5000 处 console」，实际已失去约束力 |
+| **工具 MCP 化改造** | ◐ **B** — 工具面优秀，协议面有硬缺口 | 工具注册/权限门控/名称归一化达到或超过主流实现；但协议版本停在 `2024-11-05`，且能力声明长期错误 |
+| **A2A 协议适配** | ● **D** — 「名义适配」 | 存在两套互不相通的「A2A」，其中被大量引用的那套与标准协议**毫无关系**；标准侧的出站客户端曾 100% 静默失败 |
+| **文档完整性** | ◐ **B−** — 覆盖面极广，但存在真伪混装 | 70 份规范文档覆盖 40+ 主题；但没有 MCP 协议规范、没有 A2A 标准规范、没有 OpenAPI、没有 ADR，且 `[DESIGN-A2A-001]` 把私有方言写成了标准协议 |
+| **代码标准合规** | ◐ **C+** — 体系齐全，基线已失效 | NAM/COM/COMP 三类规则都有守卫；但基线被抬到「允许 12000 个超长函数、5000 处 console」，实际已失去约束力 |
 
 ### 主动识别的补充维度（用户未提及）
 
 调研过程中发现 6 个**未被提及但同等关键**的维度，均已纳入改进计划：
 
-1. **一致性验证能力缺失**（最重要）—— MCP 官方有 `inspector`(10.6k⭐) 与
+1. **一致性验证能力缺失**（最重要）—— MCP 官方有 `inspector`(10.6k★) 与
    `conformance`，A2A 官方有 `a2a-inspector` 与 `a2a-tck`。khy-os **没有接入任何
    一个**，意味着「合规」这一判断从未被外部工具验证过。本次新增的
    `check-protocol-conformance.js` 是**自建**的内部替代，仍需外部 TCK 交叉验证。
@@ -82,10 +82,10 @@
 
 | 修订 | 引入的关键能力 | khy-os 状态 |
 |------|----------------|-------------|
-| `2024-11-05` | stdio + HTTP+SSE 双通道；JSON-RPC 2.0 信封 | ✅ 完整实现 |
-| `2025-03-26` | **Streamable HTTP** 单端点；`Mcp-Session-Id`；`MCP-Protocol-Version` 头 | 🟡 部分（JSON 回包路径 + 头校验 + 会话校验已做；**SSE 流式响应体与 `Last-Event-ID` 断线续传未做**） |
-| `2025-06-18` | **OAuth 资源服务器**语义 + RFC 9728 受保护资源元数据；`outputSchema` / `structuredContent`；`elicitation`；**移除 JSON-RPC 批处理**；工具注解 | 🟡 部分（`outputSchema`/`structuredContent`/注解/`WWW-Authenticate` 已做；OAuth 授权服务器发现、`elicitation` 未做） |
-| `2025-11-25` | **无效 `Origin` 必须回 `403`**（PR #1439）；OIDC Discovery；工具图标；增量 scope 授权；**JSON Schema 2020-12** 为默认方言；`tasks`（实验性持久请求） | 🟡 仅 `Origin → 403` 已做 |
+| `2024-11-05` | stdio + HTTP+SSE 双通道；JSON-RPC 2.0 信封 | ✓ 完整实现 |
+| `2025-03-26` | **Streamable HTTP** 单端点；`Mcp-Session-Id`；`MCP-Protocol-Version` 头 | ◐ 部分（JSON 回包路径 + 头校验 + 会话校验已做；**SSE 流式响应体与 `Last-Event-ID` 断线续传未做**） |
+| `2025-06-18` | **OAuth 资源服务器**语义 + RFC 9728 受保护资源元数据；`outputSchema` / `structuredContent`；`elicitation`；**移除 JSON-RPC 批处理**；工具注解 | ◐ 部分（`outputSchema`/`structuredContent`/注解/`WWW-Authenticate` 已做；OAuth 授权服务器发现、`elicitation` 未做） |
+| `2025-11-25` | **无效 `Origin` 必须回 `403`**（PR #1439）；OIDC Discovery；工具图标；增量 scope 授权；**JSON Schema 2020-12** 为默认方言；`tasks`（实验性持久请求） | ◐ 仅 `Origin → 403` 已做 |
 
 > **关键判据**：khy-os **只声明** `2024-11-05`，且这一声明由一致性矩阵推导、被守卫
 > 实测。这是**正确的工程选择** —— 规范要求客户端拿到不认识的版本后自行断开，
@@ -95,14 +95,14 @@
 
 | 要求 | 内容 | khy-os 状态（本次整改前 → 后） |
 |------|------|-------------------------------|
-| 发现 | `GET /.well-known/agent-card.json`，**无需鉴权** | ❌ 无服务端端点 → ✅ 已发布 |
-| AgentCard 必填 | `protocolVersion` / `name` / `description` / `url` / `version` / `capabilities` / `defaultInputModes` / `defaultOutputModes` / `skills` | ❌ 缺 4 项、含非法字段 → ✅ 契约强制 |
-| 鉴权声明 | `securitySchemes` + `security`（OpenAPI 风格） | ❌ 用了不存在的 `authentication.schemes` → ✅ 已修 |
-| 方法集 | `message/send`、`message/stream`、`tasks/get`、`tasks/cancel`、`tasks/resubscribe`、`tasks/pushNotificationConfig/*` | ❌ 仅 3 个出站方法，且 `createTask` 打私有端点 → ✅ 补齐 `tasks/cancel`，`createTask` 委托 `message/send` |
-| TaskState | 9 值封闭枚举，4 个终态 | ❌ 三套私有状态机直接透出 → ✅ 显式映射 + 守卫锁死 |
-| `Part` | `kind` 判别联合（text / file / data） | ❌ 缺 `kind`，非合法 Part → ✅ 已修 + 反面断言 |
-| 传输 | JSON-RPC 2.0 over HTTP + **SSE**（**非** WebSocket） | ❌ 私有方言文档写的是 WebSocket/gRPC → ✅ 边界已划清 |
-| 能力诚实 | `streaming: true` ⇒ 必须真有 `message/stream` | ❌ 空声明 → ✅ 改为 `false` + 守卫实测 |
+| 发现 | `GET /.well-known/agent-card.json`，**无需鉴权** | ✗ 无服务端端点 → ✓ 已发布 |
+| AgentCard 必填 | `protocolVersion` / `name` / `description` / `url` / `version` / `capabilities` / `defaultInputModes` / `defaultOutputModes` / `skills` | ✗ 缺 4 项、含非法字段 → ✓ 契约强制 |
+| 鉴权声明 | `securitySchemes` + `security`（OpenAPI 风格） | ✗ 用了不存在的 `authentication.schemes` → ✓ 已修 |
+| 方法集 | `message/send`、`message/stream`、`tasks/get`、`tasks/cancel`、`tasks/resubscribe`、`tasks/pushNotificationConfig/*` | ✗ 仅 3 个出站方法，且 `createTask` 打私有端点 → ✓ 补齐 `tasks/cancel`，`createTask` 委托 `message/send` |
+| TaskState | 9 值封闭枚举，4 个终态 | ✗ 三套私有状态机直接透出 → ✓ 显式映射 + 守卫锁死 |
+| `Part` | `kind` 判别联合（text / file / data） | ✗ 缺 `kind`，非合法 Part → ✓ 已修 + 反面断言 |
+| 传输 | JSON-RPC 2.0 over HTTP + **SSE**（**非** WebSocket） | ✗ 私有方言文档写的是 WebSocket/gRPC → ✓ 边界已划清 |
+| 能力诚实 | `streaming: true` ⇒ 必须真有 `message/stream` | ✗ 空声明 → ✓ 改为 `false` + 守卫实测 |
 
 ### 2.3 明星开源项目对标
 
@@ -123,7 +123,7 @@
 `microsoft/playwright-mcp` 32.3k、`github/github-mcp-server` 29.7k、
 `jlowin/fastmcp` 25.1k、`oraios/serena` 24.0k。
 
-> **可复用的教训**：`fastmcp`（25.1k⭐）证明「用装饰器声明工具 + 自动生成 schema」
+> **可复用的教训**：`fastmcp`（25.1k★）证明「用装饰器声明工具 + 自动生成 schema」
 > 是主流 DX；khy-os 用 `BaseTool` 类 + `toFunctionDef()` 是等价设计，方向一致。
 
 **A2A 生态（官方）**
@@ -261,13 +261,13 @@
 
 | 阶段 | 内容 | 状态 |
 |------|------|------|
-| **P1 划清边界 + 命名纪律** | 发布面、契约、映射、`cancel`、`Part.kind`、命名守卫 | ✅ 本次完成（含 `check-protocol-naming` 守卫与 `[DESIGN-NAM-002]`） |
-| **P2 私有方言改名** | `a2a*` → `acp*`（牵动 14 处注册、router、facade、测试） | ⬜ **需决策**（命名纪律已由守卫兜底，改名非紧急） |
-| **P3 服务端任务面** | `message/send` / `tasks/get` / `tasks/cancel` 的服务端 handler + TaskStore | ⬜ **最大缺口** |
-| P4 SSE 流式 | `message/stream` + 事件类型，然后打开 `capabilities.streaming` | ⬜ |
-| **P5 官方一致性套件** | 接入 `a2a-tck` / `a2a-inspector` / MCP `conformance` / `inspector` | 🟡 接入规范 `[DESIGN-QUAL-002]` + 编排器 `conformance-runner.mjs` 已建（工具未装则降级 SKIPPED），release 门禁待排期 |
-| P5 推送 | `tasks/pushNotificationConfig/*` | ⬜ |
-| P6 外部验证 | 接入 `a2a-tck` / `a2a-inspector` | ⬜ |
+| **P1 划清边界 + 命名纪律** | 发布面、契约、映射、`cancel`、`Part.kind`、命名守卫 | ✓ 本次完成（含 `check-protocol-naming` 守卫与 `[DESIGN-NAM-002]`） |
+| **P2 私有方言改名** | `a2a*` → `acp*`（牵动 14 处注册、router、facade、测试） | □ **需决策**（命名纪律已由守卫兜底，改名非紧急） |
+| **P3 服务端任务面** | `message/send` / `tasks/get` / `tasks/cancel` 的服务端 handler + TaskStore | □ **最大缺口** |
+| P4 SSE 流式 | `message/stream` + 事件类型，然后打开 `capabilities.streaming` | □ |
+| **P5 官方一致性套件** | 接入 `a2a-tck` / `a2a-inspector` / MCP `conformance` / `inspector` | ◐ 接入规范 `[DESIGN-QUAL-002]` + 编排器 `conformance-runner.mjs` 已建（工具未装则降级 SKIPPED），release 门禁待排期 |
+| P5 推送 | `tasks/pushNotificationConfig/*` | □ |
+| P6 外部验证 | 接入 `a2a-tck` / `a2a-inspector` | □ |
 
 > **P3 是真正的能力缺口**：khy 现在能被外部**发现**，但被**调用**时没有服务端任务
 > 处理面。这是「真做 A2A」与「名义适配」之间最大的一步。
@@ -343,7 +343,7 @@
 本次调研最有价值的发现之一：**同类问题在仓库内同时存在正确与错误两个版本。**
 这说明问题不在能力，而在**治理执行**。
 
-| 维度 | ✅ 做对了 | ❌ 做错了 |
+| 维度 | ✓ 做对了 | ✗ 做错了 |
 |------|-----------|-----------|
 | MCP 能力声明 | server 端诚实只声明 `tools` | client 端虚报 `tools/resources/prompts`（服务端字段） |
 | A2A 能力声明 | — | 卡片声明 `streaming: true` 但零实现 |
@@ -377,8 +377,8 @@
 
 | 协议 | 官方验证工具 | khy-os 是否接入 |
 |------|--------------|-----------------|
-| MCP | `inspector`（10.6k⭐）、`conformance` | ❌ 否 |
-| A2A | `a2a-inspector`、`a2a-tck`（技术一致性套件） | ❌ 否 |
+| MCP | `inspector`（10.6k★）、`conformance` | ✗ 否 |
+| A2A | `a2a-inspector`、`a2a-tck`（技术一致性套件） | ✗ 否 |
 
 此前项目从未用**外部**工具验证过任何合规结论 —— 所有「合规」判断都来自自审。
 本次新增的守卫是**自建内部替代**（纯函数级实测），覆盖面远不及官方 TCK
@@ -420,8 +420,8 @@ CORS `origin` 字面量 `'*'`、`sendError(res, 5xx, err.message)`。
 
 ### 7.6 许可证、生态位与重造轮子风险
 
-- A2A 官方 SDK（`a2a-js`，Apache-2.0，564⭐）与 MCP 官方 `typescript-sdk`
-  （13.1k⭐）均为 Node 生态成熟实现。khy-os 选择自建协议层（`mcpServerProtocol.js`
+- A2A 官方 SDK（`a2a-js`，Apache-2.0，564★）与 MCP 官方 `typescript-sdk`
+  （13.1k★）均为 Node 生态成熟实现。khy-os 选择自建协议层（`mcpServerProtocol.js`
   自带 `SUPPORTED_PROTOCOL_VERSIONS`、自建 `A2AClient`）—— 这在**可控性**与
   **零依赖纪律**上说得通，但代价是：每次协议修订都要自己跟，且没有官方一致性
   测试背书。

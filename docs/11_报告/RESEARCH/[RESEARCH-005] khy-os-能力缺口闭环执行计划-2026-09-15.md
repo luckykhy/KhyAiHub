@@ -11,10 +11,10 @@
 
 | 缺口 | 状态 | 范围 | 交付标准（可验证） | 关键依赖 |
 |---|---|---|---|---|
-| **S3** A2A 服务端任务面 | ✅ 已实现并验证 | 标准 A2A REST 绑定：`message/send`、`tasks/get`、`tasks/cancel` | `check-protocol-conformance` 新增 3 项 S3 探针全绿；冒烟覆盖 store/methods/routes | 既有 `a2a/index.js` 客户端、`wellKnown` 发现端点；`taskStateSpec` 状态机 |
-| **S4** MCP 升级至 2025-03-26 | ✅ 已实现并验证 | 两个 required 特性：SSE 流响应、`Last-Event-ID` 断线续传 | `SUPPORTED_PROTOCOL_VERSIONS` 含 `2025-03-26` 且 required 全绿；纯函数单测通过 | `mcpServerProtocol.js` 声明机制；`mcpHttpServer.js` 传输层 |
-| **债务台账清偿** | 🟡 排期已定，待执行 | 9 条 open 债务的逐条清偿（按阶段 A→D） | 每条 `measured → target` 且 `target<measured`；逾期必须 `slipped` 留痕 | `check-debt-ledger.js` 棘轮守卫；各门禁脚本源码（覆盖完整性） |
-| **官方套件 release 接入** | 🟡 编排器+脚本已存在，本次补 workflow | `@modelcontextprotocol/conformance` + `a2a-tck` 在发版流水线中**实际安装**并以 `--required` 强制 | 发版即产出 `.khy/conformance-report.json` 并上传产物；缺失即门禁红 | `conformance-runner.mjs`（已存在）+ `conform:*` npm 脚本（已存在）+ 本计划新增 `conformance.yml` |
+| **S3** A2A 服务端任务面 | ✓ 已实现并验证 | 标准 A2A REST 绑定：`message/send`、`tasks/get`、`tasks/cancel` | `check-protocol-conformance` 新增 3 项 S3 探针全绿；冒烟覆盖 store/methods/routes | 既有 `a2a/index.js` 客户端、`wellKnown` 发现端点；`taskStateSpec` 状态机 |
+| **S4** MCP 升级至 2025-03-26 | ✓ 已实现并验证 | 两个 required 特性：SSE 流响应、`Last-Event-ID` 断线续传 | `SUPPORTED_PROTOCOL_VERSIONS` 含 `2025-03-26` 且 required 全绿；纯函数单测通过 | `mcpServerProtocol.js` 声明机制；`mcpHttpServer.js` 传输层 |
+| **债务台账清偿** | ◐ 排期已定，待执行 | 9 条 open 债务的逐条清偿（按阶段 A→D） | 每条 `measured → target` 且 `target<measured`；逾期必须 `slipped` 留痕 | `check-debt-ledger.js` 棘轮守卫；各门禁脚本源码（覆盖完整性） |
+| **官方套件 release 接入** | ◐ 编排器+脚本已存在，本次补 workflow | `@modelcontextprotocol/conformance` + `a2a-tck` 在发版流水线中**实际安装**并以 `--required` 强制 | 发版即产出 `.khy/conformance-report.json` 并上传产物；缺失即门禁红 | `conformance-runner.mjs`（已存在）+ `conform:*` npm 脚本（已存在）+ 本计划新增 `conformance.yml` |
 
 ---
 
@@ -163,10 +163,10 @@
 
 ## 6. 执行清单（Checklist）
 
-- [x] **S3** A2A 服务端任务面：store/methods/routes + 3 探针 + 冒烟 ✅
-- [x] **S4** MCP 2025-03-26：版本声明 + SSE + 断线续传 + 2 探针 ✅
-- [x] **债务台账排期**：9 条 open 标注阶段 A–D，guard 0 error ✅
-- [x] **官方套件 workflow**：`.github/workflows/conformance.yml` 创建（安装 + `--required` + 产物上传）✅
+- [x] **S3** A2A 服务端任务面：store/methods/routes + 3 探针 + 冒烟 ✓
+- [x] **S4** MCP 2025-03-26：版本声明 + SSE + 断线续传 + 2 探针 ✓
+- [x] **债务台账排期**：9 条 open 标注阶段 A–D，guard 0 error ✓
+- [x] **官方套件 workflow**：`.github/workflows/conformance.yml` 创建（安装 + `--required` + 产物上传）✓
 - [ ] 提交上述工作树改动（含 `conformance.yml` 与 `conformance-runner.mjs`/`conform:*`）
 - [ ] §5.1 naming 2 错误清理（独立项）
 - [ ] §5.2 S3 executor 接入（独立里程碑）
