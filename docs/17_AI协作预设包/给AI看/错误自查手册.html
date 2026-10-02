@@ -4,30 +4,30 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: 错误自查手册.md -->
-<title>🐞 错误自查手册 · 发给 AI，让它逐条对照 · Khy-OS 文档</title>
+<title>错误自查手册 · 发给 AI，让它逐条对照 · Khy-OS 文档</title>
 <link rel="stylesheet" href="../../../docs/19_资产/site/hljs-github-dark.min.css">
 <link rel="stylesheet" href="../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>17_AI协作预设包<span class="sep">›</span>给AI看<span class="sep">›</span>🐞 错误自查手册 · 发给 AI，让它逐条对照</div>
-      <header class="hero reveal"><h1>🐞 错误自查手册 · 发给 AI，让它逐条对照</h1></header>
-      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#错误自查手册-发给-ai-让它逐条对照">🐞 错误自查手册 · 发给 AI，让它逐条对照</a></li><li class="lvl-2"><a href="#0-改代码前先过这张自查清单">§0 改代码前先过这张自查清单</a></li><li class="lvl-2"><a href="#p-类-ai-做事流程错误-你最容易犯">P 类 · AI 做事流程错误（你最容易犯）</a></li><li class="lvl-2"><a href="#w-类-小模型-弱模型专属失败-完整设计见-docs-03-design-设计-design-arch-013-弱模型兼容-md">W 类 · 小模型/弱模型专属失败（完整设计见 docs/03_DESIGN_设计/[DESIGN-ARCH-013] 弱模型兼容.md）</a></li><li class="lvl-2"><a href="#b-类-真实代码缺陷原型-写新代码时对照做边界审查">B 类 · 真实代码缺陷原型（写新代码时对照做边界审查）</a></li><li class="lvl-2"><a href="#g-类-ai-网关-模型适配错误">G 类 · AI 网关 / 模型适配错误</a></li><li class="lvl-2"><a href="#e-类-环境-打包-发布-守卫错误">E 类 · 环境 / 打包 / 发布 / 守卫错误</a></li><li class="lvl-2"><a href="#你报错-卡住时先做这三件事-别乱改">你报错/卡住时先做这三件事（别乱改）</a></li></ul></nav>
+      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>17_AI协作预设包<span class="sep">›</span>给AI看<span class="sep">›</span>错误自查手册 · 发给 AI，让它逐条对照</div>
+      <header class="hero reveal"><h1>错误自查手册 · 发给 AI，让它逐条对照</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#错误自查手册-发给-ai-让它逐条对照">错误自查手册 · 发给 AI，让它逐条对照</a></li><li class="lvl-2"><a href="#0-改代码前先过这张自查清单">§0 改代码前先过这张自查清单</a></li><li class="lvl-2"><a href="#p-类-ai-做事流程错误-你最容易犯">P 类 · AI 做事流程错误（你最容易犯）</a></li><li class="lvl-2"><a href="#w-类-小模型-弱模型专属失败-完整设计见-docs-03-design-设计-design-arch-013-弱模型兼容-md">W 类 · 小模型/弱模型专属失败（完整设计见 docs/03_DESIGN_设计/[DESIGN-ARCH-013] 弱模型兼容.md）</a></li><li class="lvl-2"><a href="#b-类-真实代码缺陷原型-写新代码时对照做边界审查">B 类 · 真实代码缺陷原型（写新代码时对照做边界审查）</a></li><li class="lvl-2"><a href="#g-类-ai-网关-模型适配错误">G 类 · AI 网关 / 模型适配错误</a></li><li class="lvl-2"><a href="#e-类-环境-打包-发布-守卫错误">E 类 · 环境 / 打包 / 发布 / 守卫错误</a></li><li class="lvl-2"><a href="#你报错-卡住时先做这三件事-别乱改">你报错/卡住时先做这三件事（别乱改）</a></li></ul></nav>
       <article class="doc-body">
 <p>&lt;!-- 受众: AI(直接投喂) | 用途: 排错/自查时发给 AI，让它逐条对照修 --&gt;<br>&lt;!-- 这些是发给 AI 读的内容。人类查错索引在 ../给人看/排错速查-给人.md 。 --&gt;</p>
-<h1 id="错误自查手册-发给-ai-让它逐条对照">🐞 错误自查手册 · 发给 AI，让它逐条对照<a class="anchor" href="#错误自查手册-发给-ai-让它逐条对照" aria-label="锚点">#</a></h1>
+<h1 id="错误自查手册-发给-ai-让它逐条对照">错误自查手册 · 发给 AI，让它逐条对照<a class="anchor" href="#错误自查手册-发给-ai-让它逐条对照" aria-label="锚点">#</a></h1>
 <blockquote><p>本文件整篇都可直接发给 AI。发给它时说一句：<strong>「对照本手册逐条自审你刚才的改动，命中哪条就修哪条」</strong>，<br>或出错时把最像的那条发给它。每条格式：症状 → 根因 → 定位 → 修复 → 预防。<br>分五类：P(AI流程) / W(小模型专属) / B(代码缺陷原型) / G(网关适配) / E(环境打包)。</p></blockquote>
 <hr>
 <h2 id="0-改代码前先过这张自查清单">§0 改代码前先过这张自查清单<a class="anchor" href="#0-改代码前先过这张自查清单" aria-label="锚点">#</a></h2>
@@ -99,7 +99,7 @@
 2) 在本手册里找最像的一条，按&quot;根因→修复&quot;做。
 3) 还不行就把完整报错、改了哪些文件、跑了什么命令原样告诉我，别臆测硬改。</code></pre>
       </article>
-      <nav class="pager"><a class="prev" href="../../../docs/17_AI协作预设包/给人看/总说明-一页速览.html"><div class="dir">← 上一篇</div><div class="ttl">⚡ 一页速览（给你自己 · 先看这一篇）</div></a><a class="next" href="../../../docs/17_AI协作预设包/给AI看/功能提示词-03-外部Agent资产管理.html"><div class="dir">下一篇 →</div><div class="ttl">功能提示词 03 — 外部 Agent 资产管理层</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../docs/17_AI协作预设包/给人看/总说明-一页速览.html"><div class="dir">← 上一篇</div><div class="ttl">✱ 一页速览（给你自己 · 先看这一篇）</div></a><a class="next" href="../../../docs/17_AI协作预设包/给AI看/功能提示词-03-外部Agent资产管理.html"><div class="dir">下一篇 →</div><div class="ttl">功能提示词 03 — 外部 Agent 资产管理层</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>

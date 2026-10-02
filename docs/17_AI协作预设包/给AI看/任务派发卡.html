@@ -4,30 +4,30 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: 任务派发卡.md -->
-<title>🎫 任务派发卡 · 发给 AI 当需求 · Khy-OS 文档</title>
+<title>任务派发卡 · 发给 AI 当需求 · Khy-OS 文档</title>
 <link rel="stylesheet" href="../../../docs/19_资产/site/hljs-github-dark.min.css">
 <link rel="stylesheet" href="../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>17_AI协作预设包<span class="sep">›</span>给AI看<span class="sep">›</span>🎫 任务派发卡 · 发给 AI 当需求</div>
-      <header class="hero reveal"><h1>🎫 任务派发卡 · 发给 AI 当需求</h1></header>
-      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#任务派发卡-发给-ai-当需求">🎫 任务派发卡 · 发给 AI 当需求</a></li><li class="lvl-2"><a href="#派发头-每次派活先发这段">派发头（每次派活先发这段）</a></li><li class="lvl-2"><a href="#卡-接手先跑的命脉自检-每个新-ai-第一件事">卡 · 接手先跑的命脉自检（每个新 AI 第一件事）</a></li><li class="lvl-2"><a href="#卡-t1-边界-安全审查一个未覆盖的输入路径">卡 T1 · 边界/安全审查一个未覆盖的输入路径</a></li><li class="lvl-2"><a href="#卡-t2-拆一个上帝组件">卡 T2 · 拆一个上帝组件</a></li><li class="lvl-2"><a href="#卡-t3-补一个模型-provider-适配缺口">卡 T3 · 补一个模型/provider 适配缺口</a></li><li class="lvl-2"><a href="#卡-t4-补一个弱模型兼容缺口">卡 T4 · 补一个弱模型兼容缺口</a></li><li class="lvl-2"><a href="#卡-t5-给一个已有功能补-诚实出口">卡 T5 · 给一个已有功能补&quot;诚实出口&quot;</a></li><li class="lvl-2"><a href="#卡-t6-插件按需激活-dsh-风格-只在被调用时才注册生效">卡 T6 · 插件按需激活（dsh 风格：只在被调用时才注册生效）</a></li><li class="lvl-2"><a href="#中期方向卡-项目稳了再派-范围略大">中期方向卡（项目稳了再派，范围略大）</a></li><li class="lvl-2"><a href="#卡-m1-联网搜索-网页读取鲁棒性">卡 M1 · 联网搜索/网页读取鲁棒性</a></li><li class="lvl-2"><a href="#卡-m2-mcp-生态-server-client-双向">卡 M2 · MCP 生态（server/client 双向）</a></li><li class="lvl-2"><a href="#卡-m3-视觉-多模态路由完善">卡 M3 · 视觉/多模态路由完善</a></li><li class="lvl-2"><a href="#卡-m4-cli-tui-与-claude-code-键位-体验对齐">卡 M4 · CLI/TUI 与 Claude Code 键位/体验对齐</a></li><li class="lvl-2"><a href="#卡-m5-内置模型开箱可用体验">卡 M5 · 内置模型开箱可用体验</a></li><li class="lvl-2"><a href="#远期方向-别让弱模型直接动手-先写-design-arch-0nn-设计文档想清接线点">远期方向（别让弱模型直接动手，先写 [DESIGN-ARCH-0NN] 设计文档想清接线点）</a></li><li class="lvl-2"><a href="#每次收尾都要更新的两件事-提醒-ai">每次收尾都要更新的两件事（提醒 AI）</a></li></ul></nav>
+      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>17_AI协作预设包<span class="sep">›</span>给AI看<span class="sep">›</span>任务派发卡 · 发给 AI 当需求</div>
+      <header class="hero reveal"><h1>任务派发卡 · 发给 AI 当需求</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#任务派发卡-发给-ai-当需求">任务派发卡 · 发给 AI 当需求</a></li><li class="lvl-2"><a href="#派发头-每次派活先发这段">派发头（每次派活先发这段）</a></li><li class="lvl-2"><a href="#卡-接手先跑的命脉自检-每个新-ai-第一件事">卡 · 接手先跑的命脉自检（每个新 AI 第一件事）</a></li><li class="lvl-2"><a href="#卡-t1-边界-安全审查一个未覆盖的输入路径">卡 T1 · 边界/安全审查一个未覆盖的输入路径</a></li><li class="lvl-2"><a href="#卡-t2-拆一个上帝组件">卡 T2 · 拆一个上帝组件</a></li><li class="lvl-2"><a href="#卡-t3-补一个模型-provider-适配缺口">卡 T3 · 补一个模型/provider 适配缺口</a></li><li class="lvl-2"><a href="#卡-t4-补一个弱模型兼容缺口">卡 T4 · 补一个弱模型兼容缺口</a></li><li class="lvl-2"><a href="#卡-t5-给一个已有功能补-诚实出口">卡 T5 · 给一个已有功能补&quot;诚实出口&quot;</a></li><li class="lvl-2"><a href="#卡-t6-插件按需激活-dsh-风格-只在被调用时才注册生效">卡 T6 · 插件按需激活（dsh 风格：只在被调用时才注册生效）</a></li><li class="lvl-2"><a href="#中期方向卡-项目稳了再派-范围略大">中期方向卡（项目稳了再派，范围略大）</a></li><li class="lvl-2"><a href="#卡-m1-联网搜索-网页读取鲁棒性">卡 M1 · 联网搜索/网页读取鲁棒性</a></li><li class="lvl-2"><a href="#卡-m2-mcp-生态-server-client-双向">卡 M2 · MCP 生态（server/client 双向）</a></li><li class="lvl-2"><a href="#卡-m3-视觉-多模态路由完善">卡 M3 · 视觉/多模态路由完善</a></li><li class="lvl-2"><a href="#卡-m4-cli-tui-与-claude-code-键位-体验对齐">卡 M4 · CLI/TUI 与 Claude Code 键位/体验对齐</a></li><li class="lvl-2"><a href="#卡-m5-内置模型开箱可用体验">卡 M5 · 内置模型开箱可用体验</a></li><li class="lvl-2"><a href="#远期方向-别让弱模型直接动手-先写-design-arch-0nn-设计文档想清接线点">远期方向（别让弱模型直接动手，先写 [DESIGN-ARCH-0NN] 设计文档想清接线点）</a></li><li class="lvl-2"><a href="#每次收尾都要更新的两件事-提醒-ai">每次收尾都要更新的两件事（提醒 AI）</a></li></ul></nav>
       <article class="doc-body">
 <p>&lt;!-- 受众: AI(直接投喂) | 用途: 想派活时，把某张卡整段发给 AI 当需求 --&gt;<br>&lt;!-- 这些是发给 AI 读的任务卡。人类的选活决策树在 ../给人看/发展路径-决策与选活.md 。 --&gt;</p>
-<h1 id="任务派发卡-发给-ai-当需求">🎫 任务派发卡 · 发给 AI 当需求<a class="anchor" href="#任务派发卡-发给-ai-当需求" aria-label="锚点">#</a></h1>
+<h1 id="任务派发卡-发给-ai-当需求">任务派发卡 · 发给 AI 当需求<a class="anchor" href="#任务派发卡-发给-ai-当需求" aria-label="锚点">#</a></h1>
 <blockquote><p>每张卡都是<strong>一段可直接发给 AI 的需求</strong>。选一张，连同下面的「派发头」一起发给 AI。<br>所有卡都遵守 <code>协作铁律.md</code>：叶子 + 默认开门控 + 逐字节回退 + 守卫绿。</p></blockquote>
 <hr>
 <h2 id="派发头-每次派活先发这段">派发头（每次派活先发这段）<a class="anchor" href="#派发头-每次派活先发这段" aria-label="锚点">#</a></h2>
@@ -118,7 +118,7 @@
 <pre><code>1) 重要治理写一行到 .ai/GOVERNANCE-LEDGER.md（接线点/开关/默认/E2E 证据）。
 2) 新文档回写对应目录 00_INDEX 和 docs/00_INDEX_文档索引.md。</code></pre>
       </article>
-      <nav class="pager"><a class="prev" href="../../../docs/17_AI协作预设包/给AI看/功能提示词-03-外部Agent资产管理.html"><div class="dir">← 上一篇</div><div class="ttl">功能提示词 03 — 外部 Agent 资产管理层</div></a><a class="next" href="../../../docs/17_AI协作预设包/给AI看/项目情况说明-开场白.html"><div class="dir">下一篇 →</div><div class="ttl">📨 项目情况说明 · 发给 AI 的开场白</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../docs/17_AI协作预设包/给AI看/功能提示词-03-外部Agent资产管理.html"><div class="dir">← 上一篇</div><div class="ttl">功能提示词 03 — 外部 Agent 资产管理层</div></a><a class="next" href="../../../docs/17_AI协作预设包/给AI看/项目情况说明-开场白.html"><div class="dir">下一篇 →</div><div class="ttl">项目情况说明 · 发给 AI 的开场白</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
