@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>system — 系统调用网关与 wasm 沙箱宿主（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>system<span class="sep">›</span>system — 系统调用网关与 wasm 沙箱宿主（D2）</div>
+      <header class="hero reveal"><h1>system — 系统调用网关与 wasm 沙箱宿主（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#system-系统调用网关与-wasm-沙箱宿主-d2">system — 系统调用网关与 wasm 沙箱宿主（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="system-系统调用网关与-wasm-沙箱宿主-d2">system — 系统调用网关与 wasm 沙箱宿主（D2）<a class="anchor" href="#system-系统调用网关与-wasm-沙箱宿主-d2" aria-label="锚点">#</a></h1>
+<p>业务上下文：每一次工具权限检查都经过的<strong>执行前闸门</strong>（意图校验、资源分级、<br>红线判定、审批路由、拒绝引导），以及 wasm 应用作为「外部计算单元」的宿主与 IPC。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong>每次工具调用</strong>：<code>services/tool/toolCallingPermissions.js:647</code> 取</li></ul>
+<p><code>syscallGateway/intentSchema</code> 的 <code>buildIntent</code>，<code>:655</code> 取<br>  <code>preExecutionExplainer.explain</code>——这是本目录唯一的生产入口（无 slash 命令）。</p>
+<ul><li><strong>跑 wasm 应用的人</strong>：<code>services/wasmAppService.js:30</code> require <code>./wasm-sandbox</code>。</li><li>壳：<code>services/syscallGateway/index.js:4-5</code>、<code>services/wasm-sandbox/index.js:4</code>。</li></ul>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p>网关是<strong>策略 + 状态机 + 通道</strong>三件事，混写必然出现「改了提示词就以为改了权限」：<br><code>resourceClassifier</code>（<code>classify / isExemptible / LEVELS</code>）与 <code>redLine</code><br>（<code>isRedLine / DESTRUCTIVE_SUMMARY</code>）是纯判级；<code>intentSchema.detectBypassMarkers</code><br>专防「换个说法绕过」；<code>approvalRouter</code> 决定 L2 确认与拒绝成因（<code>DENY_CAUSES</code>）、<br><code>permissionCache</code> 只在显式授予后缓存会话许可、<code>breachBreaker</code> 管越界熔断；<br><code>actionContractVerifier</code> 用公理表（<code>AXIOMS</code> + <code>evaluatePredicate</code>）验证<br>「这个动作声明与它的实际效果是否自洽」；<code>denialGuidance</code> 负责规则 2.2 的<br>「问题 + 识别码 + 修复建议」文案；<code>preExecutionExplainer</code> 在执行前把动作讲清楚。<br>wasm 侧同理分层：<code>m1Constants</code> 是纯常量与位运算、<code>ipcCodec</code> 是纯帧编解码、<br><code>moonbitHostBridge</code>/<code>khySysHost</code> 是宿主、只有 <code>loopbackTransport.js</code> 碰盘。<br>本目录 16 个文件里只有 1 个碰 <code>fs</code>、0 个开网络——这是刻意的，<br>判据必须可在单测里逐条断言（见下）。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/actionContractVerifier.test.js               <span class="hljs-comment"># 22 tests / 22 pass / 0 fail</span></code></pre>
+<p>该文件 <code>:20</code> <strong>直接 require 本目录的域内路径</strong>（不经壳），因此这条命令同时是<br>「域内真源可被独立引用」的证明。同族：<br><code>tests/services/syscallGateway.scenarios.test.js</code>、<code>tests/services/denialGuidance.test.js</code>、<br><code>tests/wasmSandbox.loopbackTransport.test.js</code>。</p>
+<h2 id="已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）<a class="anchor" href="#已知缺陷-登记-不在本单元擅自修" aria-label="锚点">#</a></h2>
+<p><code>intentSchema.js</code> 会读 <code>os.homedir()</code>——纯判级文件里混了一次宿主调用，<br>虽不碰盘但让「同输入同输出」的断言需要固定环境；未修，因为改它会动<br><code>toolCallingPermissions.js:647</code> 的入参契约，属规则 5 的独立改动集。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../services/backend/src/services/domain/structured/typeset/README.html"><div class="dir">← 上一篇</div><div class="ttl">typeset — 文档排版语义层（内容与样式分离的「内容」半边）</div></a><a class="next" href="../../../../../../services/backend/src/services/domain/system/syscallGateway/README.html"><div class="dir">下一篇 →</div><div class="ttl">syscallGateway — 系统调用审批网关</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/system/README.html";</script>
+<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>state — 意图裁决、编排与阶段状态机（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>state<span class="sep">›</span>state — 意图裁决、编排与阶段状态机（D2）</div>
+      <header class="hero reveal"><h1>state — 意图裁决、编排与阶段状态机（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#state-意图裁决-编排与阶段状态机-d2">state — 意图裁决、编排与阶段状态机（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="state-意图裁决-编排与阶段状态机-d2">state — 意图裁决、编排与阶段状态机（D2）<a class="anchor" href="#state-意图裁决-编排与阶段状态机-d2" aria-label="锚点">#</a></h1>
+<p>业务上下文：<code>/orchestrate</code>（多角色编排的 run/status/pause/resume/replay/cancel）、<br><code>/autonomy</code>，以及 REPL、工具循环、回合相位这三处<strong>阶段判定</strong>的真源。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong>跑编排的人</strong>：<code>constants/commandSchema.js:151</code> 声明 <code>/orchestrate</code></li></ul>
+<p>（别名 <code>/orch</code>，子命令 <code>:812-813</code>）→ <code>cli/handlers/orchestrate.js:168</code> 取<br>  <code>orchestrator/orchestrationService</code>。</p>
+<ul><li><strong>切自治档的人</strong>：<code>commandSchema.js:1108</code> 的 <code>/autonomy</code> → <code>cli/handlers/autonomy.js:35</code>。</li><li><strong>要「角色能拿哪些工具」的判定</strong>：<code>tools/AgentTool/index.js:22</code> require</li></ul>
+<p><code>orchestrator/roleToolScope</code>；治理守卫 <code>scripts/ci/check-agent-authz.js:238</code><br>  直接以该文件为判据目标（规则 10 A2-2/A2-4 的执行面）。</p>
+<ul><li><strong>回合/工具/启动相位</strong>：<code>cli/replSession.js:1206</code>（replPhases）、</li></ul>
+<p><code>services/tool/toolUseLoopCore.js:196</code>（toolLoopPhases）、<br>  <code>cli/tui/hooks/useQueryBridge.js:529</code>；<code>services/taskDecomposer.js:423,457,517</code><br>  消费合并结果的三个纯叶子。</p>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p>四个子上下文各管一件<strong>不能被含糊</strong>的事：<br><code>intentArbiter/</code> 决定一句话属于哪个意图带（<code>intentLexicon</code> 的权重表 +<br><code>intentCalibration</code> 的词面相似 + <code>tieredResponseRouter</code> 的分档响应 +<br><code>misjudgmentQuencher</code> 的误判灭火）；<code>orchestrator/</code> 决定计划与合并<br>（<code>orchestrationPlan</code> 纯构建、<code>dependencyWaveScheduler</code> 分波、<br><code>merge*</code> 三个纯叶子负责「空成功/文件冲突/角色归因」的如实标注）；<br><code>stateMachine/</code> 是通用 FSM（<code>FiniteStateMachine</code> 与 <code>NoopFsm</code> 两档，<br>门控关时退化成 Noop 而不改调用点）；<code>envSymbiosis/</code> 管平台亲和与熔断。<br>判据全部是纯表 + 纯函数，为的是「为什么这一句被判成 X」能一步回答，<br>也为了让 <code>roleToolScope</code> 这类权限判定可以被 CI 直接引用而不是靠描述。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/services/intentArbiter/intentArbiter.test.js      <span class="hljs-comment"># 32 tests / 32 pass / 0 fail</span>
+node --<span class="hljs-built_in">test</span> tests/services/orchestrator/mergeFileConflicts.test.js  <span class="hljs-comment"># 18 tests / 18 pass / 0 fail</span></code></pre>
+<h2 id="已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）<a class="anchor" href="#已知缺陷-登记-不在本单元擅自修" aria-label="锚点">#</a></h2>
+<p>四个文件在做中改动（<code> M</code>）：<code>intentArbiter/intentPreprocess.js</code>、<br><code>orchestrator/mergeEmptySuccess.js</code>、<code>orchestrator/mergeFileConflicts.js</code>、<br><code>orchestrator/mergeRoleAttribution.js</code>。上面第二条命令此刻仍全绿，<br>但它测的正是这三个脏文件之一——作者落地后必须复跑同一命令，本卡的绿读数不可外推。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../services/backend/src/services/domain/skills/README.html"><div class="dir">← 上一篇</div><div class="ttl">skills — 技能蒸馏、威胁扫描与验收脚手架（D2）</div></a><a class="next" href="../../../../../../services/backend/src/services/domain/structured/formatInspect/README.html"><div class="dir">下一篇 →</div><div class="ttl">formatInspect — 文件格式判定与文本精确定位（D2 功能单元）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/state/README.html";</script>
+<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>typeset — 文档排版语义层（内容与样式分离的「内容」半边） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>structured<span class="sep">›</span>typeset<span class="sep">›</span>typeset — 文档排版语义层（内容与样式分离的「内容」半边）</div>
+      <header class="hero reveal"><h1>typeset — 文档排版语义层（内容与样式分离的「内容」半边）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#typeset-文档排版语义层-内容与样式分离的-内容-半边">typeset — 文档排版语义层（内容与样式分离的「内容」半边）</a></li><li class="lvl-2"><a href="#各文件的职责-取自各文件头注释-未做二次概括">各文件的职责（取自各文件头注释，未做二次概括）</a></li><li class="lvl-2"><a href="#谁在用本单元">谁在用本单元</a></li><li class="lvl-2"><a href="#出域边-实测">出域边（实测）</a></li><li class="lvl-2"><a href="#本批实测钉住的九条结构缺陷-一律登记不修">本批实测钉住的九条结构缺陷（一律登记不修）</a></li><li class="lvl-2"><a href="#生命周期">生命周期</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="typeset-文档排版语义层-内容与样式分离的-内容-半边">typeset — 文档排版语义层（内容与样式分离的「内容」半边）<a class="anchor" href="#typeset-文档排版语义层-内容与样式分离的-内容-半边" aria-label="锚点">#</a></h1>
+<p>D2 业务上下文里的一个功能单元：把「模型可以写的东西」与「文档长什么样」彻底切开。<br>模型只交语义结构（标题 / 段落 / 列表 / 表格 / 引用 / 代码 / 分页 / 图 / 条目），<br>字号、字体、页边距、分页策略一律由 <code>src/templates/docstyles/*.json</code> 的样式模板<br>与渲染器 <code>docTypeset.py</code> 决定。本单元是这条分界的<strong>机器可判入口</strong>。</p>
+<p>4 个源文件，全部有同名同目录的共置测试（<code>node --test</code>，91 例 / 0 fail，2026-09-29 实测）。</p>
+<h2 id="各文件的职责-取自各文件头注释-未做二次概括">各文件的职责（取自各文件头注释，未做二次概括）<a class="anchor" href="#各文件的职责-取自各文件头注释-未做二次概括" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>角色</th></tr></thead><tbody><tr><td><code>contentSchema.js</code></td><td>语义 AST 的封闭块型集 + <code>validateDocument()</code>：结构校验<strong>与</strong>「夹带排版码即拒」的防呆</td></tr><tr><td><code>markdownToAst.js</code></td><td>确定性的 Markdown → 语义 AST 解析器，无模型参与、不认任何表现层写法</td></tr><tr><td><code>styleTemplates.js</code></td><td>样式模板的加载与解析（内置名 / 绝对路径 / 内联对象），<code>overrides</code> 深合并到基线之上</td></tr><tr><td><code>textEmphasisPolicy.js</code></td><td>「什么该加粗、标题第几档、是否字面双宽放大」的唯一判定真源，纯叶子</td></tr></tbody></table>
+<p>分页只有一条路：显式哨兵行 <code>[[newpage]]</code> 或 <code>&lt;&lt;&lt;pagebreak&gt;&gt;&gt;</code>。空行、换页符、<code>---</code><br>都不产生分页（<code>---</code> 是水平线，直接丢弃）——这条是头注释写明的防呆设计，测试已钉住。</p>
+<h2 id="谁在用本单元">谁在用本单元<a class="anchor" href="#谁在用本单元" aria-label="锚点">#</a></h2>
+<p><strong>直接 require 本单元路径的文件只有 1 个</strong>（绞杀者模式留下的再导出壳）：</p>
+<ul><li><code>src/services/typeset/index.js:34-37</code> —— 注释首行自称 <code>Auto-generated shim - re-export</code>，</li></ul>
+<p>按文件基名摊平再导出，保住拆分前的历史调用形状。</p>
+<p>壳的下游消费者 2 个（它们 require 的是壳，不是本单元）：</p>
+<ul><li><code>src/cli/markdownRenderer.js:59</code> —— 取 <code>textEmphasisPolicy</code>，且写了 <code>{...}</code> 兜底对象，</li></ul>
+<p>单元不可用时终端渲染照常（fail-soft）。</p>
+<ul><li><code>src/tools/renderDocument.js:33-35</code> —— 取 <code>validateDocument</code> / <code>markdownToAst</code> /</li></ul>
+<p><code>resolveTemplate</code> + <code>listTemplates</code>，是文档排版工具的执行入口。</p>
+<h2 id="出域边-实测">出域边（实测）<a class="anchor" href="#出域边-实测" aria-label="锚点">#</a></h2>
+<p><strong>0 条跨域 require</strong>。<code>styleTemplates.js:22-23</code> 只 require Node 内置 <code>fs</code> / <code>path</code>，<br>其余三个文件零 require。本单元按 <code>DOMAIN-DEPS.json</code> 的 D2 名义边界申报<br><code>mayDependOn: [&quot;D2&quot;,&quot;D3&quot;]</code>，实际连 D3 都没碰——它是 D2 里少数的纯叶子单元。</p>
+<blockquote><p>⚠ <code>src/tools/renderDocument.js</code> 所在的 <code>services/backend/src/tools/**</code> 在<br><code>DOMAIN-DEPS.json</code> 里没有域根映射（同 §12.31 的「未映射 7」）。这条不属于本单元的<br>出域边，但影响「谁依赖我」的口径，登记备查。</p></blockquote>
+<h2 id="本批实测钉住的九条结构缺陷-一律登记不修">本批实测钉住的九条结构缺陷（一律登记不修）<a class="anchor" href="#本批实测钉住的九条结构缺陷-一律登记不修" aria-label="锚点">#</a></h2>
+<p>改任何一条都是行为变更，需甲/乙裁决；已用 <code>KNOWN-DEFECT</code> 断言把现状钉死。</p>
+<ol><li><strong><code>resolveTemplate(null)</code> 交出模块级缓存对象本体</strong>（<code>styleTemplates.js:133-136</code> 的</li></ol>
+<p><code>source === 'builtin:default' ? base : ...</code> 直接返回 <code>builtins.default</code>）。调用方<br>   「临时改一下页边距」会永久污染本进程后续所有解析；<code>gbt7714</code> / <code>ieee</code> 因走深合并拷贝而不受影响。</p>
+<ol><li><strong><code>builtins[spec]</code> 是裸下标取值，无 <code>hasOwnProperty</code> 守卫</strong>：<code>resolveTemplate('constructor')</code></li></ol>
+<p>交出一个<strong>函数</strong>当模板，<code>'__proto__'</code> 静默退回 default 内容 —— 用户把模板名拼错成这些词时<br>   绕过了「未知模板名」报错。与 <code>toolchainVersions.supportedVersions('constructor')</code> 同族。</p>
+<ol><li><strong><code>overrides</code> 的子对象按引用进结果</strong>（<code>_deepMerge</code> 对 base 里不存在的键直接 <code>out[k] = over[k]</code>），</li></ol>
+<p>调用方随后改写 overrides 会穿透进已解析的模板。</p>
+<ol><li><strong>只有表头的 Markdown 表格被凭空补出一行空数据</strong>（<code>markdownToAst.js:188</code> 的</li></ol>
+<p><code>rows.length ? rows : [header.map(() =&gt; '')]</code>）：源文本里没有数据行，且这份伪造行<br>   让 <code>contentSchema</code> 的「table.rows 必须非空」判据永远拦不到空表。</p>
+<ol><li><strong><code>| - | - |</code> 形态的表格分隔行整表静默退化成段落</strong>（<code>_isTableSep</code> 要求 <code>-{2,}</code>）：</li></ol>
+<p>不报错、不警告，用户的表格内容变成一串带竖线的正文。</p>
+<ol><li><strong><code>textEmphasisPolicy</code> 对级别的类型门与同单元的 <code>contentSchema</code> 相反</strong>：</li></ol>
+<p><code>contentSchema</code> 用 <code>Number.isInteger</code> 严格拒收 <code>'2'</code>，<code>headingDescriptor</code> / <code>bigHeadingPrefix</code><br>   用 <code>Number.isFinite</code>（对字符串恒 false）把 <code>'3'</code> 当 H1；且 <code>bigHeadingPrefix</code> 的<br>   <code>lvl &lt;= 2</code> 没有下界，<code>0</code> / <code>-1</code> / <code>NaN</code> / 对象一律发出 DEC 双宽控制序列。</p>
+<ol><li><strong>防呆扫描不扫 <code>meta</code></strong>：<code>title</code> 与所有块文本都过 <code>scanFormatCodes</code>，<code>meta.author</code> /</li></ol>
+<p><code>meta.abstract</code> / <code>meta.keywords</code> 一行都不扫 —— 同一个 <code>\textbf{}</code> 放进 <code>title</code> 被拒，<br>   放进 <code>meta.abstract</code> 长驱直入渲染层。</p>
+<ol><li><strong>空集合的判据在各块型之间不一致</strong>：<code>paragraph.runs: []</code> 放行，而 <code>list.items</code> /</li></ol>
+<p><code>table.rows</code> / <code>reference.entries</code> 都要求非空；<code>figure</code> 两个字段皆可缺仍 valid（空图块）。</p>
+<ol><li><strong>封闭集只封块型、不封字段</strong>：<code>{type:'paragraph',text:'x',fontSize:99}</code> 与</li></ol>
+<p><code>runs:[{text:'a',underline:true}]</code> 都判 valid —— 伪装成语义结构的排版主张可以穿过校验器，<br>   而头注释写的是「AST 刻意小而封闭」。</p>
+<h2 id="生命周期">生命周期<a class="anchor" href="#生命周期" aria-label="锚点">#</a></h2>
+<p><code>khy.module.json</code> 记 <strong><code>stage: staged</code></strong>，不是 stable：形式三判据齐（本 README + 整数 fanIn + 四源文件全有同名测试），<br>但下面九条缺陷里有两类是用户可见的行为缺陷（缓存本体交出、原型链名被当内置模板）。<br>按第 30/31 批同一口径，带着下面九条里的头两类签 stable 等于自签假合格证。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend &amp;&amp; node --<span class="hljs-built_in">test</span> \
+  src/services/domain/structured/typeset/contentSchema.test.js \
+  src/services/domain/structured/typeset/markdownToAst.test.js \
+  src/services/domain/structured/typeset/styleTemplates.test.js \
+  src/services/domain/structured/typeset/textEmphasisPolicy.test.js</code></pre>
+<p>单元级自洽判据（测试里已断言）：<code>markdownToAst(全块型样例)</code> 的产物必须被<br><code>contentSchema.validateDocument()</code> 判 valid —— 解析器与校验器对同一 AST 不许各说各话。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../services/backend/src/services/domain/structured/structuredResults/README.html"><div class="dir">← 上一篇</div><div class="ttl">turnEnvelope</div></a><a class="next" href="../../../../../../../services/backend/src/services/domain/system/README.html"><div class="dir">下一篇 →</div><div class="ttl">system — 系统调用网关与 wasm 沙箱宿主（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/structured/typeset/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

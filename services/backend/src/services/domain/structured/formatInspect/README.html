@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>formatInspect — 文件格式判定与文本精确定位（D2 功能单元） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>structured<span class="sep">›</span>formatInspect<span class="sep">›</span>formatInspect — 文件格式判定与文本精确定位（D2 功能单元）</div>
+      <header class="hero reveal"><h1>formatInspect — 文件格式判定与文本精确定位（D2 功能单元）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#formatinspect-文件格式判定与文本精确定位-d2-功能单元">formatInspect — 文件格式判定与文本精确定位（D2 功能单元）</a></li><li class="lvl-2"><a href="#逐成员">逐成员</a></li><li class="lvl-2"><a href="#消费者-实测-fan-in-6-均非测试文件">消费者（实测 fan-in = 6，均非测试文件）</a></li><li class="lvl-2"><a href="#契约-每条都对应命名测试">契约（每条都对应命名测试）</a></li><li class="lvl-2"><a href="#已知限制-如实记下-不当缺陷修">已知限制（如实记下，不当缺陷修）</a></li><li class="lvl-2"><a href="#怎么跑">怎么跑</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="formatinspect-文件格式判定与文本精确定位-d2-功能单元">formatInspect — 文件格式判定与文本精确定位（D2 功能单元）<a class="anchor" href="#formatinspect-文件格式判定与文本精确定位-d2-功能单元" aria-label="锚点">#</a></h1>
+<p>一句话：把「这是不是什么格式的文件」与「替换文中第 N 段第 M 句里第 K 次出现的那个词」两件事<br>收敛成零依赖的判定层——前者由扩展名画像 + 魔数 + 二进制启发式三路合议（内容优先于扩展名），<br>后者由偏移保真的段落/句子切分 + 从后往前的区间替换保证「除目标处外原文逐字不变」。</p>
+<p>清单：<code>khy.module.json</code>（<code>domain</code> / <code>mayDependOn</code> / <code>fanIn</code> / <code>lifecycle.stage</code> 四字段被<br><code>npm run check:layout</code> 的 entry-buffer 规则读取，其余给人看）。</p>
+<h2 id="逐成员">逐成员<a class="anchor" href="#逐成员" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>角色</th><th>require</th><th>同名测试</th></tr></thead><tbody><tr><td><code>fileFormatData.js</code></td><td>纯字面量叶子：<code>EXT_FORMAT</code>（扩展名→格式画像，单一真源）、<code>SKIP_DIRS</code>（工程扫描跳过表）、<code>UNKNOWN</code>（兜底画像）</td><td>无</td><td><code>fileFormatData.test.js</code></td></tr><tr><td><code>fileFormatDetector.js</code></td><td>判定面 <code>fromExtension</code> / <code>detectByMagic</code> / <code>looksBinary</code> / <code>detectBuffer</code>（全为纯函数）+ 唯一 IO 面 <code>detectFile</code> / <code>inspectProject</code> / <code>_readHeadTail</code></td><td><code>fs</code>、<code>path</code>（内建）、<code>./fileFormatData</code></td><td><code>fileFormatDetector.test.js</code></td></tr><tr><td><code>textAddress.js</code></td><td>零依赖纯函数：<code>splitParagraphs</code> / <code>splitSentences</code>（偏移保真切分）、<code>replaceAtLocation</code>（按段落/句子/第 K 次出现精确替换）、<code>locateWord</code>（只定位不替换）</td><td>无</td><td><code>textAddress.test.js</code></td></tr></tbody></table>
+<h2 id="消费者-实测-fan-in-6-均非测试文件">消费者（实测 fan-in = 6，均非测试文件）<a class="anchor" href="#消费者-实测-fan-in-6-均非测试文件" aria-label="锚点">#</a></h2>
+<p><code>services/formatInspect/index.js</code>（D1 再导出壳）、<code>tools/FileReadTool/index.js</code>、<br><code>tools/inspectDocument.js</code>、<code>tools/readBinaryGuard.js</code>、<code>tools/readFile.js</code>、<br><code>tools/replaceAtLocation.js</code>。方向合法：D1 依赖 D2，本单元不反向伸入 D1/D3。</p>
+<h2 id="契约-每条都对应命名测试">契约（每条都对应命名测试）<a class="anchor" href="#契约-每条都对应命名测试" aria-label="锚点">#</a></h2>
+<ol><li><strong>扩展名画像归一</strong>：带点/不带点、大小写混写都解析到同一画像；未知或空一律落 <code>UNKNOWN</code>。</li></ol>
+<p>→ <code>fromExtension: dotted and dotless spellings agree, case is ignored</code>、<br>   <code>fromExtension: unknown and empty spellings fall back to the UNKNOWN profile</code></p>
+<ol><li><strong>画像发出的是副本</strong>：调用方改写返回值不得污染 <code>EXT_FORMAT</code> 这张单一真源表。</li></ol>
+<p>→ <code>fromExtension hands out copies — a caller mutation cannot poison the table</code></p>
+<ol><li><strong>内容优先于扩展名</strong>：<code>.txt</code> 里装 PDF 时报 <code>pdf</code> 且 <code>confidence='magic'</code>；</li></ol>
+<p>扩展名与内容一致时不得误报冲突。<br>   → <code>detectBuffer: content wins over the extension, with confidence=magic</code></p>
+<ol><li><strong>二进制判定的边界</strong>：窗口内出现一个 NUL 即为二进制；<code>\t \n \r \f</code> 之外的控制字节占比 &gt;0.3 才算二进制；</li></ol>
+<p>空 Buffer/null 一律「非二进制」。截断的魔数前缀不算命中。<br>   → <code>looksBinary: NUL anywhere in the window is decisive; clean text is not binary</code>、<br>   <code>detectByMagic: a prefix shorter than the signature must not match</code></p>
+<ol><li><strong>切分是偏移保真的</strong>：每个段落/句子给出在原（或整篇）字符串里的 <code>[start,end)</code>，</li></ol>
+<p>且 <code>slice(start,end) === text</code>；空行分段，CJK 句末标点归入本句，西文 <code>. ! ? ;</code> 只有后接空白/结尾才是界。<br>   → <code>splitParagraphs: blank line is the separator, offsets are faithful</code>、<br>   <code>splitSentences: CJK terminators stay inside their sentence</code>、<br>   <code>splitSentences: only whitespace-final punctuation splits, so 3.14 stays whole</code></p>
+<ol><li><strong>精确定位替换</strong>：默认只替换第 1 次出现，<code>occurrence</code> 越界/非正整数一律拒绝并回报范围内实际次数，</li></ol>
+<p><code>occurrence:'all'</code> 只在作用范围内全替，替换串长度不同也不得移动其后文本；<br>   段/句不存在时报错并附「共几段/几句」。<br>   → <code>replaceAtLocation: occurrence is 1-based, defaults to 1, and rejects bad k</code>、<br>   <code>replaceAtLocation: &quot;all&quot; replaces within scope only, leaving the rest verbatim</code>、<br>   <code>replaceAtLocation: paragraph/sentence addressing reports what was available</code></p>
+<ol><li><strong>原型键不可达</strong>（本仓单元默认检查项）：<code>fromExtension</code> 先把入参归一成带点形式再查表，</li></ol>
+<p><code>'constructor'</code>/<code>'__proto__'</code> 只会被查成不存在的 <code>.constructor</code>/<code>.__proto__</code>，一律落 <code>UNKNOWN</code>，<br>   因此裸表查找在本单元没有可达的继承键泄漏。<br>   → <code>prototype keys cannot reach the bare table lookup (keys are dot-normalised)</code></p>
+<h2 id="已知限制-如实记下-不当缺陷修">已知限制（如实记下，不当缺陷修）<a class="anchor" href="#已知限制-如实记下-不当缺陷修" aria-label="锚点">#</a></h2>
+<ul><li><code>splitSentences</code> 无法区分句末点号与缩写点号：<code>e.g. </code> 这类「点后接空格」的缩写<strong>会</strong>被当句界</li></ul>
+<p>（JSDoc 里「避免 3.14 / e.g.」只对 <code>3.14</code> 成立）。要真正区分需要词典或更大启发式，属功能改动，不在本单元范围内。</p>
+<ul><li><code>EXT_FORMAT</code> / <code>SKIP_DIRS</code> / <code>UNKNOWN</code> 均为可变对象（浅层字面量，未 <code>Object.freeze</code>）。</li></ul>
+<p>跨模块引用同一性是钉住的（<code>the detector re-exports the data leaf by reference</code>），<br>  但「不可变」本身没有守卫——深度冻结会波及现有调用方的解构写法，另案处理。</p>
+<ul><li><code>detectFile</code> / <code>inspectProject</code> 触盘且依赖真实目录结构，本单元只锁纯判定面；</li></ul>
+<p>端到端行为由仓级 <code>services/backend/tests/formatInspect.test.js</code> 覆盖（已登记在清单的 <code>behaviourTestsOutsideUnit</code>）。</p>
+<h2 id="怎么跑">怎么跑<a class="anchor" href="#怎么跑" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-comment"># 三份共置测试（Windows 下 node --test 必须给显式文件名，不能只给目录）</span>
+node --<span class="hljs-built_in">test</span> services/backend/src/services/domain/structured/formatInspect/textAddress.test.js \
+  services/backend/src/services/domain/structured/formatInspect/fileFormatData.test.js \
+  services/backend/src/services/domain/structured/formatInspect/fileFormatDetector.test.js
+<span class="hljs-comment"># 层级守卫：本单元应从两个缺件清单里彻底消失</span>
+node scripts/ci/check-repo-layout.js --list=functional-unit | grep -c formatInspect
+node scripts/ci/check-repo-layout.js --list=entry-buffer | grep -c <span class="hljs-string">&quot;domain/structured/formatInspect&quot;</span></code></pre>
+<p>净算术与第 21/22/23 批同一口径：一份清单覆盖 3 个源文件 = <code>entry-buffer</code> −3；<br>一份同名同目录测试 = <code>functional-unit</code> −1。新增 <code>README.md</code> 后须跑<br><code>node scripts/docs/build_docs_site.js</code> 生成同名 <code>.html</code> 孪生，否则 <code>docs:verify</code> 会报缺件。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../services/backend/src/services/domain/state/README.html"><div class="dir">← 上一篇</div><div class="ttl">state — 意图裁决、编排与阶段状态机（D2）</div></a><a class="next" href="../../../../../../../services/backend/src/services/domain/structured/output/README.html"><div class="dir">下一篇 →</div><div class="ttl">jsonSchemaValidate</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/structured/formatInspect/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
