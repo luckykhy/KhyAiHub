@@ -52,7 +52,7 @@ export function ElicitationPanel({ questions, onSubmit, onDismiss }: Elicitation
     <div className="mx-4 my-3 rounded-xl border border-border bg-interaction-ask-surface overflow-hidden animate-slide-down">
       {/* 头部 */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
-        <span className="text-sm">❓</span>
+        <span className="text-sm">?</span>
         <span className="text-sm font-medium text-interaction-ask-foreground">需要确认</span>
         <span className="text-xs text-foreground/30 ml-auto">
           {currentIndex + 1} / {questions.length}
