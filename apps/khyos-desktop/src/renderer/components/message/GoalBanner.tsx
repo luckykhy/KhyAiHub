@@ -27,7 +27,7 @@ export function GoalBanner({ goal, status = 'idle', onSetGoal, onCancel }: GoalB
   return (
     <div className={`mx-4 mt-3 rounded-xl border border-border overflow-hidden animate-slide-down`}>
       <div className={`flex items-center gap-3 px-4 py-3 ${config.bg}`}>
-        <span className="text-sm">🎯</span>
+        <span className="text-sm">◎</span>
         <div className="flex-1">
           {editing ? (
             <div className="flex items-center gap-2">
