@@ -23,12 +23,25 @@
  *
  * 仍延后（[MGMT-RPT-020] 痛点诊断报告，225KB 巨石，单列后续 PR）：
  *   aiManagementServer → cli/ai
+ *   ilinkDispatcher → cli/ai（走 aiChatPort 的会话控制，注册点在 cli/ai.js）
  *
- * 仍延后（共享内核债 [DESIGN-ARCH-057]）：以下 cli/ 叶子被 cli 与 services 双方消费
- *   （ccFormat 31 个 cli 消费者、formatters 126 个、ccModelName 5 个 …），是事实上的
- *   "共享内核"错置在 cli/。正解是引入中立的 shared/ 内核层再整体归位（跨多文件的大改，
- *   单列后续 PR）；在此之前显式登记为已知债，使守卫恢复绿灯以继续拦截"新增"反向边。
- *   逐条见下方 ALLOWED_REVERSE_EDGES 的"共享内核债"段。
+ * 已切断（共享内核叶子归位 D3 + 原路径留再导出壳，[RESEARCH-018] §3.1 P2 批次表）：
+ *   deliveryFormatter → cli/toolCallNoise        （toolCallNoise 归位，12.2p）
+ *   gatewayResetService → cli/formatters         （consoleNotice 三打印器归位，12.2r）
+ *   imageService / tokenUsageService → cli/ccFormat、tokenUsageService → cli/ccModelName
+ *                                                （ccFormat / ccModelName 归位，12.2o/p）
+ *   toolCallingPermissions → cli/permissionReply （permissionReply 零 require 纯叶，批 18）
+ *   tool/toolUseLoopCore + toolUseLoopHelpers → cli/keyFindings、cli/resultGuard
+ *                                                （两纯叶归位 utils/text/，批 18）
+ *   sessionForestService → cli/ai                （森林三叶子归位，批 16）
+ *   —— 其余仍以反向边形态存在的，逐条登记在 ALLOWED_REVERSE_EDGES。
+ *
+ * 采集器口径（2026-09-28 修正，此前本守卫长期红灯 = 完全失效）：
+ *   - 注释不计为边：'../cli/x' 出现在 doc 注释里不是现役 require
+ *     （sessionForestService.js:32、markdownWorkbench.js:6 两例即历史注释）；
+ *   - 正则锚定 `cli/` 目录段：旧写法 (\.\.\/cli[^'"]*) 会把 '../clients/terminalClient'
+ *     从第 3 个字符起误读成 '../cli'（crossPlatform/ws/e2e-test.js 一例）；
+ *   - 被 require 的路径按源码深度原样登记（'../../cli/x' ≠ '../cli/x'）。
  */
 
 const { test } = require('node:test');
@@ -39,44 +52,40 @@ const path = require('path');
 const SERVICES_DIR = path.join(__dirname, '..', 'src', 'services');
 
 // 显式登记：当前允许存在的 service→cli 反向边。键=相对 src/services 的文件，值=被 require 的 cli 路径片段。
+// 路径深度按源码原样写（'../../cli/x' 与 '../cli/x' 是不同字符串，本表与采集器逐字比对）。
 const ALLOWED_REVERSE_EDGES = [
   { from: 'aiManagementServer.js', to: '../cli/ai' },
+  { from: 'domain/messaging/channels/ilinkDispatcher.js', to: '../../../../cli/ai' },
+  { from: 'gateway/aiGatewayGenerateMethod.js', to: '../../cli/handlers/mcp' },
+  { from: 'tool/toolUseLoopCore.js', to: '../../cli/toolPrefaceVoice' },
 
   // ── 共享内核债 [DESIGN-ARCH-057] ──────────────────────────────────────────
   // 以下 cli/ 叶子被 cli 与 services 双方消费（纯格式化/域工具，无 IO），是错置在
-  // cli/ 的"共享内核"。正解=引入 shared/ 层整体归位（大改，后续 PR）；在此之前显式
-  // 登记为已知债，恢复守卫绿灯以继续拦截"新增"反向边。切断后须同步删除对应条目。
-  // 聊天代理平面从 aiManagementServer 抽为叶子 aiManagementChatHttp.js,require site 随迁(债性质不变)。
-  { from: 'aiManagementChatHttp.js', to: '../cli/repl/imageIntent' },
+  // cli/ 的"共享内核"。切断方式=整文件归位 D3 + 原路径留再导出壳（壳不被扫描器跟随，
+  // 所以只有消费者改指真身时边才会少）。逐条见 [RESEARCH-018] §3.1 P2 批次表。
   { from: 'aiManagementChatHttp.js', to: '../cli/toolResultSummary' },
-  { from: 'aiUploadStore.js', to: '../cli/ccFormat' },
-  { from: 'aiUploadStore.js', to: '../cli/handlers/convert' },
-  { from: 'archiveManifestPolicy.js', to: '../cli/ccFormat' },
-  { from: 'deliveryFormatter.js', to: '../cli/toolCallNoise' },
-  { from: 'gatewayResetService.js', to: '../cli/formatters' },
-  { from: 'imageService.js', to: '../cli/ccFormat' },
-  { from: 'multimodalInputService.js', to: '../cli/ccFormat' },
-  { from: 'resumeAdvisor.js', to: '../cli/ccFormat' },
-  { from: 'tokenUsageService.js', to: '../cli/ccFormat' },
-  { from: 'tokenUsageService.js', to: '../cli/ccModelName' },
-  // 权限子系统从 toolCalling 抽为叶子 toolCallingPermissions.js,permissionReply require 随迁(债性质不变)。
-  { from: 'toolCallingPermissions.js', to: '../cli/permissionReply' },
-  { from: 'toolUseLoop.js', to: '../cli/keyFindings' },
-  { from: 'toolUseLoop.js', to: '../cli/resultGuard' },
-  { from: 'toolUseLoop.js', to: '../cli/toolPrefaceVoice' },
+  { from: 'healEscalationService.js', to: '../cli/handlers/publish' },
 ];
+
+const REVERSE_EDGE_RE = /require\(\s*['"]((?:\.\.\/)+cli\/[^'"]*)['"]\s*\)/g;
+
+function stripComments(src) {
+  // 只去块注释与整行 // 注释：不截「行尾之后的内容」，否则 'https://' 这类串会把
+  // 同一行里真正现役的 require 吞掉（那就是 fail-open）。
+  return src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[ \t]*\/\/.*$/gm, '');
+}
 
 function collectReverseEdges() {
   const edges = [];
-  const re = /require\(\s*['"](\.\.\/cli[^'"]*)['"]\s*\)/g;
   const walk = (dir) => {
     for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
       const p = path.join(dir, ent.name);
       if (ent.isDirectory()) { walk(p); continue; }
       if (!ent.name.endsWith('.js')) continue;
-      const src = fs.readFileSync(p, 'utf8');
+      const src = stripComments(fs.readFileSync(p, 'utf8'));
       let m;
-      while ((m = re.exec(src))) {
+      REVERSE_EDGE_RE.lastIndex = 0;
+      while ((m = REVERSE_EDGE_RE.exec(src))) {
         edges.push({ from: path.relative(SERVICES_DIR, p).split(path.sep).join('/'), to: m[1] });
       }
     }

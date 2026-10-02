@@ -34,7 +34,7 @@
  * 各消费方保留同名本地 `const _localName = require('stripAnsi.js')` → 调用点逐字节不变。
  */
 
-const { stripAnsiSequences } = require('../cli/ansiSanitizer');
+const { stripAnsiSequences } = require('./ansiSanitizer');
 
 function stripAnsi(str) {
   // 保持「裸参」契约:非字符串照旧抛 TypeError(原 body 为 `str.replace(...)`,

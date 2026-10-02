@@ -146,7 +146,7 @@ function noticeLine(cwd, opts = {}) {
   const color = typeof opts.color === 'function' ? opts.color : (t) => t;
   const c = _norm(cwd) || String(cwd || '');
   return color(
-    `📁 已将当前目录初始化为 Git 仓库：${c}（方便提交 / 回滚 / 管理）。如不需要：KHY_AUTO_GIT_INIT=off`,
+    `已将当前目录初始化为 Git 仓库：${c}（方便提交 / 回滚 / 管理）。如不需要：KHY_AUTO_GIT_INIT=off`,
     'init'
   );
 }

@@ -18,7 +18,7 @@
 function resolveNumericFlag(name, env, fallback, lo, hi) {
   const e = env || (typeof process !== 'undefined' ? process.env : {});
   try {
-    const flagRegistry = require('../services/flagRegistry');
+    const flagRegistry = require('./flagRegistry');
     const v = flagRegistry.resolveNumeric(name, e);
     if (Number.isFinite(v) && v > 0) {
       return v;

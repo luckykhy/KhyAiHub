@@ -126,7 +126,7 @@ async function main() {
     startBackend();
 
   } catch (error) {
-    console.error('❌ 错误:', error.message);
+    console.error('✗ 错误:', error.message);
     console.log('\n尝试直接启动后端...\n');
     startBackend();
   }

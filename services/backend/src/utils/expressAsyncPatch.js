@@ -11,6 +11,26 @@ function wrapHandler(handler) {
     return handler;
   }
 
+  // Express recognizes an error handler purely by arity (fn.length === 4).
+  // Wrapping everything in the 3-arg function below demoted the 4-arg
+  // errorHandler to a normal middleware: Express then ran it on the happy path
+  // with shifted arguments (its `req` received the response object) and it
+  // crashed reading req.headers['x-request-id'], turning every route on that
+  // router into a 500. Keep the arity so error handlers stay on the error chain.
+  if (handler.length >= 4) {
+    return function wrappedErrorHandler(err, req, res, next) {
+      try {
+        const result = handler(err, req, res, next);
+        if (result && typeof result.then === 'function') {
+          result.catch(next);
+        }
+        return result;
+      } catch (error) {
+        return next(error);
+      }
+    };
+  }
+
   return function wrappedHandler(req, res, next) {
     try {
       const result = handler(req, res, next);

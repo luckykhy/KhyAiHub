@@ -329,18 +329,37 @@ class AgentTool extends BaseTool {
    * its role/type, carries the same scope rule; the rule lives in constraints.js
    * (injected, never copy-pasted). Pure for testing.
    *
+   * Also injects SUBAGENT_COMMON_FLOOR (evidence honesty / granted tool surface
+   * / closing report) unless the role prompt already embeds EXECUTION_DISCIPLINE
+   * or HARD_PROHIBITIONS — the built-in agent defs compose those in themselves,
+   * and a second copy is prompt noise. This is the only place a roleless spawn
+   * (default path, or a schema-documented role with no built-in def) picks the
+   * discipline up. Gated by KHY_SUBAGENT_COMMON_FLOOR (default on; 0/false/off/
+   * no → byte-identical to the scope-only composition).
+   *
    * @param {string} rolePrompt - the agent definition's / role's own system prompt
+   * @param {object} [env] - injectable env (defaults to process.env), pure for tests
+   * @param {string[]|null} [deniedTools] - the mechanism's denylist output
+   *   (buildSubagentDenylist); non-empty → a withheld-tools notice is appended
+   *   after the composed prompt (view of the mechanism, never a second source)
    * @returns {string}
    */
-  static buildSubagentSystemPrompt(rolePrompt) {
+  static buildSubagentSystemPrompt(rolePrompt, env = process.env, deniedTools = null) {
     let scope = '';
+    let role = typeof rolePrompt === 'string' ? rolePrompt : '';
+    let notice = '';
     try {
-      ({ SUBAGENT_EXECUTION_SCOPE: scope } = require('../../agents/constraints'));
+      const c = require('../../agents/constraints');
+      scope = c.SUBAGENT_EXECUTION_SCOPE || '';
+      // Floor application (gate + idempotence) lives in constraints.js — the
+      // coordinator worker path applies the same policy via the same function.
+      role = c.applyCommonFloor(role, env);
+      notice = c.buildToolSurfaceNotice ? c.buildToolSurfaceNotice(deniedTools, env) : '';
     } catch {
       /* constraints not available — fall back to role prompt alone */
     }
-    const role = typeof rolePrompt === 'string' ? rolePrompt : '';
-    return scope ? `${scope}\n\n${role}` : role;
+    const base = scope ? `${scope}\n\n${role}` : role;
+    return notice ? `${base}\n\n${notice}` : base;
   }
 
   /** Nesting depth of the parent (0 when spawned from the top-level agent). */
@@ -895,6 +914,11 @@ Tips:
     // leaf executor.
     const childDepth = AgentTool.parentDepthOf(parentContext) + 1;
 
+    // Withheld-tools view: computed ONCE and fed to BOTH the AgentContext
+    // (mechanism, below) and the system prompt seam (declaration) so the two
+    // can never drift apart.
+    const deniedTools = AgentTool.buildSubagentDenylist(agentDef, childDepth, undefined, role);
+
     // Create per-agent AgentContext for isolated state
     let agentCtx = null;
     try {
@@ -916,7 +940,7 @@ Tips:
         // definition's own denylist in. See buildSubagentDenylist. The role is
         // passed so a read-only role (verify/explore/…) also sheds the write
         // tools even when agentDef carries no denylist (OPS-MAN-094).
-        disallowedTools: AgentTool.buildSubagentDenylist(agentDef, childDepth, undefined, role),
+        disallowedTools: deniedTools,
       };
       agentCtx = parentCtx ? parentCtx.fork(ctxOpts) : new AgentContext(ctxOpts);
     } catch {
@@ -966,8 +990,8 @@ Tips:
           /* fail-soft: no parent summary */
         }
         const agentPrompt = _parentSummaryBlock
-          ? `[Agent Task — Type: ${subagentType}]\n${AgentTool.buildSubagentSystemPrompt(rolePrompt)}\n\n${_parentSummaryBlock}\n\nTask:\n${prompt}`
-          : `[Agent Task — Type: ${subagentType}]\n${AgentTool.buildSubagentSystemPrompt(rolePrompt)}\n\nTask:\n${prompt}`;
+          ? `[Agent Task — Type: ${subagentType}]\n${AgentTool.buildSubagentSystemPrompt(rolePrompt, process.env, deniedTools)}\n\n${_parentSummaryBlock}\n\nTask:\n${prompt}`
+          : `[Agent Task — Type: ${subagentType}]\n${AgentTool.buildSubagentSystemPrompt(rolePrompt, process.env, deniedTools)}\n\nTask:\n${prompt}`;
         const toolLog = [];
 
         // Activity-aware idle tracking (AGENTS.md rule 3): every observable sign

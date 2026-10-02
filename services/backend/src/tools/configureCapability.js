@@ -183,7 +183,7 @@ module.exports = defineTool({
       const label = cap ? cap.summary : envKey;
       const actWord =
         intent.kind === 'raw' ? `已设为 ${newValue}` : intent.action === 'on' ? '已开启' : '已关闭';
-      return `✅ ${label} ${actWord}(${envKey}=${newValue})。已即时生效并持久化到 ${writtenPath}。`;
+      return `✓ ${label} ${actWord}(${envKey}=${newValue})。已即时生效并持久化到 ${writtenPath}。`;
     } catch (e) {
       // Structured failure (gate KHY_CONFIGURE_STRUCTURED_ERROR): return a
       // `{success:false, error:{code,message,hint,...}}` shape so the tool loop

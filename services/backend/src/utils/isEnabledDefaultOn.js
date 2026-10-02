@@ -17,8 +17,8 @@
  * 契约:非纯(读 process.env·require flagRegistry 服务)·不 mutate 入参·绝不抛。
  *   各消费方保留同名本地(`_isEnabled` / `_isEnabledDefaultOn`):
  *   `const _isEnabled = require('../utils/isEnabledDefaultOn')` → 调用点逐字节不变。
- *   utils/ 与 services/ 同为 src/ 直属子目录→`../services/flagRegistry` 解析到原处
- *   `./flagRegistry` 同一模块。
+ *   归位批 17 前它是 `../services/flagRegistry`（解析到 services/flagRegistry 同一模块）；
+ *   现真身已迁入 D3 同目录 `./flagRegistry`，解析目标与语义一致。
  */
 
 const OFF_VALUES = ['0', 'false', 'off', 'no'];
@@ -26,7 +26,7 @@ const OFF_VALUES = ['0', 'false', 'off', 'no'];
 function _isEnabledDefaultOn(name, env) {
   const e = env || (typeof process !== 'undefined' ? process.env : {});
   try {
-    const flagRegistry = require('../services/flagRegistry');
+    const flagRegistry = require('./flagRegistry');
     return flagRegistry.isFlagEnabled(name, e);
   } catch {
     const raw = e && e[name];

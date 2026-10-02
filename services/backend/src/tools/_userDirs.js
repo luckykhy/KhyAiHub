@@ -299,10 +299,14 @@ function normalizeDesktopPath(absPath, opts = {}) {
   }
 
   // OS authority wins: if the alias the user used already IS the canonical
-  // desktop folder name, this is a genuine target — never rewrite it.
-  const aliasBase = _aliasKey(segments[0]);
-  const canonicalBase = _aliasKey(path.basename(canonical));
-  if (aliasBase === canonicalBase) {
+  // desktop folder, this is a genuine target — never rewrite it. The comparison
+  // must be on the FULL resolved path, not the folder basename: on machines
+  // whose canonical desktop is relocated (e.g. D:\desktop while a stray
+  // C:\Users\<u>\Desktop still exists — the 2026-09-23 "generated image
+  // disappeared" session), a basename-only check would let ~/Desktop keep
+  // writing into the stray folder the user never sees.
+  const aliasPath = path.resolve(home, segments[0]);
+  if (_norm(aliasPath) === _norm(canonical)) {
     return absPath;
   }
 

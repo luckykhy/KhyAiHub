@@ -271,7 +271,7 @@ function buildWeakModelAdvisory(input = {}) {
       // 弱档改红线:该编辑已发生(本闸事后顾问,不硬拦),强提醒交强模型复核。
       return {
         verdict: v,
-        humanLine: `⚠️ 弱模型改动红线文件:${rel}\n   ${tierTxt}直接改了「${v.risk}」级文件——建议交强模型复核这次改动是否安全。`,
+        humanLine: `⚠ 弱模型改动红线文件:${rel}\n   ${tierTxt}直接改了「${v.risk}」级文件——建议交强模型复核这次改动是否安全。`,
         aiNote:
           `[WEAK-MODEL-EDIT-GUARD] 你(${tierTxt})刚改动了红线文件 ${rel}(风险级:${v.risk})。` +
           `红线文件(密钥/发布·CI/版本三源/权限核心/.git)一旦改错会无声破坏仓库可发布性,` +
@@ -281,7 +281,7 @@ function buildWeakModelAdvisory(input = {}) {
     // requireConfirm:true(弱档改敏感核心,或档未知碰红线/敏感)。
     return {
       verdict: v,
-      humanLine: `ℹ️ 敏感文件改动待确认:${rel}\n   ${tierTxt}改了「${v.risk}」级文件——请过目确认这次改动无误。`,
+      humanLine: `ℹ 敏感文件改动待确认:${rel}\n   ${tierTxt}改了「${v.risk}」级文件——请过目确认这次改动无误。`,
       aiNote:
         `[WEAK-MODEL-EDIT-GUARD] 你(${tierTxt})改动了敏感核心文件 ${rel}(风险级:${v.risk})。` +
         `这类 god-file 级核心改坏影响面大,请复核本次改动并在提交前请人确认。`,

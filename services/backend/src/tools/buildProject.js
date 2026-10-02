@@ -97,8 +97,8 @@ function _detectProject(cwd) {
 }
 
 // ─── Output Parsers ────────────────────────────────────────────────────────
-// Diagnostic parsing lives in the shared services/compile/diagnostics.js single
-// source of truth (consumed by both build_project and compile_file).
+// Diagnostic parsing lives in the shared services/domain/build/compile/diagnostics.js
+// single source of truth (consumed by both build_project and compile_file).
 
 // ─── Tool Definition ───────────────────────────────────────────────────────
 

@@ -136,7 +136,7 @@ const FALLBACK_IDENTITY = Object.freeze({ name: 'Khy OS', email: 'khy@localhost'
 function noIdentityNoticeLine(opts = {}) {
   const color = typeof opts.color === 'function' ? opts.color : (t) => t;
   return color(
-    '📝 已建 .gitignore,但未配置 git 身份(user.name/email),已跳过首次提交。' +
+    '已建 .gitignore,但未配置 git 身份(user.name/email),已跳过首次提交。' +
       '配置后可用 `khy repo save "首次提交"` 保存首个版本。',
     'init'
   );
@@ -150,7 +150,7 @@ function fallbackCommitNoticeLine(identityLabel, opts = {}) {
   const color = typeof opts.color === 'function' ? opts.color : (t) => t;
   const who = identityLabel ? `(${identityLabel})` : '';
   return color(
-    `📦 已把当前目录全部文件纳入 git 管理并创建首个提交,主线 \`${DEFAULT_BRANCH}\` 就绪,可直接提交/建分支。` +
+    `已把当前目录全部文件纳入 git 管理并创建首个提交,主线 \`${DEFAULT_BRANCH}\` 就绪,可直接提交/建分支。` +
       `未检测到 git 身份,已为本仓库配置本地身份 ${who}(仅作用于此目录,不影响全局)。`,
     'init'
   );

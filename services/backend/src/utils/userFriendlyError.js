@@ -127,7 +127,7 @@ function wrapError(err, context = '') {
 function formatError(wrapped) {
   if (!wrapped) return '';
 
-  const lines = [`❌ ${wrapped.message}`];
+  const lines = [`✗ ${wrapped.message}`];
   if (wrapped.code && wrapped.code !== 'UNKNOWN') {
     // Stable machine-readable identifier so users can quote the exact error
     // class in bug reports (the ERROR_CODES table exists for this purpose).
@@ -137,7 +137,7 @@ function formatError(wrapped) {
     lines.push(`   位置: ${wrapped.context}`);
   }
 
-  lines.push(`   💡 ${wrapped.suggestion}`);
+  lines.push(`   ${wrapped.suggestion}`);
 
   if (wrapped.original && wrapped.original !== wrapped.message) {
     lines.push(`   详情: ${wrapped.original}`);

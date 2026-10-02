@@ -125,6 +125,44 @@ test('buildAutoChoice: shape + sentinel value + preview label', () => {
   assert.equal(bad.value.adapter, 'auto');
 });
 
+/**
+ * [DESIGN-ARCH-167] Auto 是 ModelPicker 的**第 5 个** choice 产出点。前 4 个（apiAdapter
+ * 配置路/池路、默认模型兜底、外部智能体投影）都供了 `group`/`primary`/`secondary`/`groupMeta`，
+ * 漏掉这一个会让 Auto 行成为唯一「不参与分层」的行，并静默依赖渲染侧 `c.primary || c.name` 回退。
+ * 真数据实测（.khyos/diag/model-picker-grouping/real-choices-ab.js）：漏供时
+ * `字段未定义计数 = {group:1, primary:1, secondary:1, groupMeta:1}`，那 1 条就是 Auto。
+ *
+ * §12-Q11：次信息**只留预览**，17 字说明让位。80×24 真帧里加上说明后全表只剩这 1 行被 `…`
+ * 截断，且切掉的正是最有信息量的预览 —— 这是「说明」与「预览」在同一行里的宽度零和。
+ */
+test('buildAutoChoice: 分层字段齐备；次信息只留预览(§12-Q11)；name 一字未改', () => {
+  const bare = leaf.buildAutoChoice();
+  assert.equal(bare.group, 'Auto');
+  assert.equal(bare.groupMeta, '');
+  assert.equal(bare.primary, '★ Auto');
+  // §12-Q11：17 字说明**不进次信息**（正是它把预览挤出 80 列）
+  assert.equal(bare.secondary, '');
+  assert.ok(!bare.secondary.includes('自动选择最适合当前任务且可用的模型'));
+  // 但 `name` 逐字未改 ⇒ 两个既有消费者不受影响：
+  //   ① advisor.js 拿 c.name 当候选 label；② ModelPicker.filterChoices 拿它当搜索匹配文本。
+  // 同时它也是本改动 A/B 量具的「改前形态」（只喂 name ⇒ 逐字回退旧渲染），所以钉到字节。
+  assert.equal(bare.name, '★ Auto 自动选择最适合当前任务且可用的模型');
+
+  const withPreview = leaf.buildAutoChoice({ previewModel: 'glm-4.6' });
+  assert.equal(withPreview.primary, '★ Auto');
+  assert.equal(withPreview.secondary, '(当前最优: glm-4.6)');
+  assert.equal(withPreview.name, '★ Auto 自动选择最适合当前任务且可用的模型 (当前最优: glm-4.6)');
+  // 行内上屏文本 = primary + 次信息（两段之间的分隔由渲染器补，`secondary` 不带前导空格）
+  assert.equal(`${withPreview.primary}  ${withPreview.secondary}`, '★ Auto  (当前最优: glm-4.6)');
+
+  // fail-soft 分支也必须齐备，否则「chalk 一抛就退回不分层」= 静默降级
+  const bad = leaf.buildAutoChoice({ chalk: { dim() { throw new Error('boom'); } }, previewModel: 'm' });
+  assert.equal(bad.group, 'Auto');
+  assert.equal(bad.primary, '★ Auto');
+  assert.equal(bad.secondary, '');
+  assert.equal(bad.name, '★ Auto 自动选择最适合当前任务且可用的模型');
+});
+
 test('AUTO_SENTINEL + describe are stable exports', () => {
   assert.equal(leaf.AUTO_SENTINEL, 'auto');
   const d = leaf.describeAutoModelSelect();

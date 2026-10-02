@@ -145,7 +145,7 @@ function collectCandidates() {
 // (仅显式 0/false/off/no 时才 verbose),绝不抛,绝不影响解析结果。
 function _pythonPathQuiet() {
   try {
-    const flagRegistry = require('../services/flagRegistry');
+    const flagRegistry = require('./flagRegistry');
     return flagRegistry.isFlagEnabled('KHY_PYTHON_PATH_QUIET', process.env);
   } catch {
     const raw = String(

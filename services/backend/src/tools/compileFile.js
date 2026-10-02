@@ -2,8 +2,8 @@
  * Tool: compile_file — compile / type-check a SINGLE source file or snippet in a
  * supported language, returning structured diagnostics (and, when persisted, the
  * artifact path). Per-language toolchain knowledge lives in the shared
- * services/compile/registry single source of truth; diagnostics parsing in
- * services/compile/diagnostics. Missing toolchains route through the dependency
+ * services/domain/build/compile/registry single source of truth; diagnostics parsing in
+ * services/domain/build/compile/diagnostics. Missing toolchains route through the dependency
  * self-heal loop (declare-and-retry), never a printed hint.
  */
 'use strict';

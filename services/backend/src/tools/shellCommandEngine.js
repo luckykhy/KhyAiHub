@@ -116,13 +116,13 @@ function _detectCommitInjection(command) {
   if (!parsed) return null;
   const { message, trailing } = parsed;
   if (/\$\(/.test(message) || /`[^`]+`/.test(message)) {
-    return '🛑 Git commit 消息包含命令替换 ($(...) 或 `...`)，已阻止执行以防止注入攻击。请移除 commit message 中的命令替换语法。';
+    return 'Git commit 消息包含命令替换 ($(...) 或 `...`)，已阻止执行以防止注入攻击。请移除 commit message 中的命令替换语法。';
   }
   if (trailing && /[;&|]/.test(trailing.trim())) {
     const afterQuote = trailing.trim();
     if (/^(&&|\|\||;)\s*git\s/.test(afterQuote)) return null;
     if (/^(&&|\|\||;)\s*(echo|printf|true|:)\b/.test(afterQuote)) return null;
-    return '🛑 Git commit -m 引号关闭后包含 shell 元字符，已阻止执行以防止命令注入。请确保 commit message 正确闭合且后续命令安全。';
+    return 'Git commit -m 引号关闭后包含 shell 元字符，已阻止执行以防止命令注入。请确保 commit message 正确闭合且后续命令安全。';
   }
   return null;
 }

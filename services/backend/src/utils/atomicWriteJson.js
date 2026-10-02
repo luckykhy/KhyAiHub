@@ -37,7 +37,7 @@
  * `atomicWriteJson` 自身即是「序列化 + atomicWriteText」的组合。
  *
  * 门控 KHY_ATOMIC_FSYNC(默认开,仅显式 0/false/off/no 关):关闭 → 跳过 fsync,
- * 仍保留 tmp+rename 的原子替换。已登记进 services/flagRegistry.js。
+ * 仍保留 tmp+rename 的原子替换。已登记进 utils/flagRegistry/（原 services/flagRegistry.js）。
  *
  * 契约:确定性 fail-soft;**绝不抛**——目录不可建、磁盘满、权限不足、循环引用/BigInt
  * 令 JSON.stringify 抛,一律返回 false 并尽力清掉临时文件;不 mutate 入参;不缓存。
@@ -47,7 +47,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-// CANON 4 词关闭方言(与全仓 71 个文件一致;见 services/flagRegistry.js OFF_WORDS.CANON)。
+// CANON 4 词关闭方言(与全仓 71 个文件一致;见 utils/flagRegistry/ OFF_WORDS.CANON)。
 const _OFF = ['0', 'false', 'off', 'no'];
 
 /**
