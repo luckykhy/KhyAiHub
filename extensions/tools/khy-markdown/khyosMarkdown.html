@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>khyosMarkdown · 内嵌 MD 工作台</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>◆</text></svg>" />
 <!--
   khyosMarkdown.html — 零外部依赖的单文件 Markdown 工作台。
 
@@ -756,35 +756,35 @@
     <button data-view="source" title="仅源码" data-tip="源码模式：纯 Markdown 源文本编辑">源码</button>
   </div>
   <button id="btnSidebar" title="切换文档树" aria-label="切换文档树侧边栏" data-tip="显示/隐藏文件目录树">☰ 目录</button>
-  <button id="btnSave" title="保存 Ctrl+S" aria-label="保存文件" data-tip="保存当前文档 (Ctrl+S)">💾 保存</button>
-  <button id="btnNew" title="新建文档 Ctrl+N" aria-label="新建文档" data-tip="新建空白文档 (Ctrl+N)">📄 新建</button>
+  <button id="btnSave" title="保存 Ctrl+S" aria-label="保存文件" data-tip="保存当前文档 (Ctrl+S)">保存</button>
+  <button id="btnNew" title="新建文档 Ctrl+N" aria-label="新建文档" data-tip="新建空白文档 (Ctrl+N)">新建</button>
   <span class="open-group">
-    <button id="btnOpen" title="打开本地 .md 文件" aria-label="打开文件" data-tip="从本地选择 .md 文件打开">📂 打开</button>
+    <button id="btnOpen" title="打开本地 .md 文件" aria-label="打开文件" data-tip="从本地选择 .md 文件打开">打开</button>
     <button class="open-dropdown-btn" id="btnRecentToggle" title="最近打开" aria-label="最近打开文件" data-tip="最近打开的文件">▾</button>
     <div class="recent-dropdown" id="recentDropdown"></div>
   </span>
   <span class="open-group" style="position:relative">
-    <button id="btnExport" title="导出" aria-label="导出文档" data-tip="导出为 HTML/PDF/富文本">📤 导出</button>
+    <button id="btnExport" title="导出" aria-label="导出文档" data-tip="导出为 HTML/PDF/富文本">导出</button>
     <div class="export-dropdown" id="exportDropdown">
-      <div class="exp-item" id="expHTML">📄 导出为 HTML</div>
-      <div class="exp-item" id="expPDF">🖨 导出为 PDF (打印)</div>
-      <div class="exp-item" id="expRich">📋 复制为富文本</div>
+      <div class="exp-item" id="expHTML">导出为 HTML</div>
+      <div class="exp-item" id="expPDF">导出为 PDF (打印)</div>
+      <div class="exp-item" id="expRich">复制为富文本</div>
     </div>
   </span>
   <button id="btnFullscreen" title="全屏 (F11)" aria-label="全屏模式" data-tip="进入全屏专注模式 (F11)">⛶</button>
-  <button id="btnAI" title="AI 助手 (Ctrl+Shift+A)" aria-label="AI 辅助写作" data-tip="打开 AI 辅助写作面板" onclick="toggleAI()">🤖</button>
+  <button id="btnAI" title="AI 助手 (Ctrl+Shift+A)" aria-label="AI 辅助写作" data-tip="打开 AI 辅助写作面板" onclick="toggleAI()">❯ AI</button>
   <span class="spacer"></span>
   <span class="path path-editable" id="curPath" title=""></span><span class="dirty-marker" id="dirtyMark"></span>
   <span class="open-group" style="position:relative" id="themeGroup">
-    <button id="btnTheme" title="切换主题" aria-label="切换主题">🌓</button>
+    <button id="btnTheme" title="切换主题" aria-label="切换主题">◐</button>
     <div class="theme-picker" id="themePicker">
       <h4>主题色</h4>
       <div class="tp-row" id="themeSwatches"></div>
       <h4>明暗模式</h4>
       <div class="tp-mode">
-        <button data-mode="light">☀️ 明亮</button>
-        <button data-mode="dark">🌙 暗黑</button>
-        <button data-mode="auto">🖥 跟随系统</button>
+        <button data-mode="light">☀ 明亮</button>
+        <button data-mode="dark">暗黑</button>
+        <button data-mode="auto">跟随系统</button>
       </div>
     </div>
   </span>
@@ -806,16 +806,16 @@
   <button onclick="applyFmt('ol')" title="有序列表" data-tip="插入有序列表 (1. )">1.</button>
   <button onclick="applyFmt('task')" title="任务列表" data-tip="插入待办任务 (- [ ] )">☐</button>
   <span class="sep"></span>
-  <button onclick="applyFmt('link')" title="插入链接 (Ctrl+K)" data-tip="插入超链接 (Ctrl+K)">🔗</button>
+  <button onclick="applyFmt('link')" title="插入链接 (Ctrl+K)" data-tip="插入超链接 (Ctrl+K)">→</button>
   <span class="tb-group">
-    <button id="btnImgPanel" title="插入图片" data-tip="插入图片（URL/本地/粘贴）">🖼</button>
+    <button id="btnImgPanel" title="插入图片" data-tip="插入图片（URL/本地/粘贴）">□</button>
     <div class="popup-panel img-panel" id="imgPanel">
       <h4>插入图片</h4>
       <label>图片 URL</label>
       <input type="url" id="imgUrlInput" placeholder="https://example.com/img.png" />
       <div class="panel-actions"><button class="btn-primary" id="imgUrlInsert">插入 URL</button></div>
       <div class="or-divider">── 或 ──</div>
-      <label class="file-btn" id="imgFileLabel">📁 选择本地图片文件
+      <label class="file-btn" id="imgFileLabel">选择本地图片文件
         <input type="file" id="imgFilePick" accept="image/*" style="display:none" />
       </label>
       <div style="margin-top:6px;font-size:11px;color:var(--muted)">也可直接粘贴(Ctrl+V)或拖拽图片到编辑区</div>
@@ -844,7 +844,7 @@
     </div>
   </span>
   <span class="tb-group">
-    <button id="btnInsertMenu" title="更多插入项" data-tip="更多：代码块/公式/折叠">➕</button>
+    <button id="btnInsertMenu" title="更多插入项" data-tip="更多：代码块/公式/折叠">+</button>
     <div class="insert-dropdown" id="insertDropdown"></div>
   </span>
   <span class="sep"></span>
@@ -853,19 +853,19 @@
     <option value="1.2">大</option><option value="1.5">超大</option>
   </select>
   <input type="color" id="fmtColor" value="#ff0000" title="文字颜色" />
-  <button onclick="applyFmt('color')" title="应用颜色" data-tip="为文本设置颜色">🎨</button>
+  <button onclick="applyFmt('color')" title="应用颜色" data-tip="为文本设置颜色">◉</button>
   <button class="overflow-btn" id="fmtOverflow" title="更多工具">⋯</button>
 </div>
 
 <div class="main">
   <aside id="sidebar" class="hidden">
     <div class="sidebar-tabs">
-      <button class="active" data-tab="files">📁 目录</button>
-      <button data-tab="outline">📑 大纲</button>
+      <button class="active" data-tab="files">目录</button>
+      <button data-tab="outline">大纲</button>
     </div>
     <div class="sidebar-panel active" id="filesPanel">
       <div class="tree-title" id="treeTitle">文档</div>
-      <input id="treeSearch" class="tree-search" type="search" placeholder="🔍 搜索 Markdown…" autocomplete="off" spellcheck="false" aria-label="搜索文档" />
+      <input id="treeSearch" class="tree-search" type="search" placeholder="⌕ 搜索 Markdown…" autocomplete="off" spellcheck="false" aria-label="搜索文档" />
       <div id="tree"></div>
     </div>
     <div class="sidebar-panel" id="outlinePanel"></div>
@@ -901,15 +901,15 @@
 
 <div id="aiPanel" class="ai-panel hidden">
   <div class="ai-panel-header">
-    <span>🤖 AI 助手</span>
+    <span>AI 助手</span>
     <button onclick="toggleAI()" title="关闭" style="border:none;background:none;color:var(--fg);cursor:pointer;font-size:16px">✕</button>
   </div>
   <div class="ai-panel-body">
     <div class="ai-actions">
-      <button onclick="aiAction('continue')" data-tip="AI 续写选中内容">✍️ 续写</button>
-      <button onclick="aiAction('rewrite')" data-tip="AI 改写使其更流畅">📝 改写</button>
-      <button onclick="aiAction('translate')" data-tip="中英互译">🌐 翻译</button>
-      <button onclick="aiAction('summarize')" data-tip="生成摘要">📋 总结</button>
+      <button onclick="aiAction('continue')" data-tip="AI 续写选中内容">✍ 续写</button>
+      <button onclick="aiAction('rewrite')" data-tip="AI 改写使其更流畅">改写</button>
+      <button onclick="aiAction('translate')" data-tip="中英互译">翻译</button>
+      <button onclick="aiAction('summarize')" data-tip="生成摘要">总结</button>
     </div>
     <div class="ai-freeform">
       <input type="text" id="aiPromptInput" placeholder="自定义指令，如：改为更正式的语气…" onkeydown="if(event.key==='Enter')aiAction('freeform')" />
@@ -917,9 +917,9 @@
     </div>
     <div id="aiResult" class="ai-result"></div>
     <div class="ai-result-actions hidden" id="aiResultActions">
-      <button onclick="aiInsert()">✅ 插入</button>
-      <button onclick="aiReplace()">🔄 替换选中</button>
-      <button onclick="aiCopy()">📋 复制</button>
+      <button onclick="aiInsert()">✓ 插入</button>
+      <button onclick="aiReplace()">替换选中</button>
+      <button onclick="aiCopy()">复制</button>
     </div>
   </div>
 </div>
@@ -959,8 +959,8 @@
 <!-- 快捷键帮助面板 -->
 <div class="shortcuts-overlay" id="shortcutsOverlay">
   <div class="shortcuts-card">
-    <h3>⌨️ 快捷键速查</h3>
-    <div class="sc-group"><h4>📝 编辑</h4>
+    <h3>⌨ 快捷键速查</h3>
+    <div class="sc-group"><h4>编辑</h4>
       <div class="sc-row"><span class="sc-key">Ctrl+B</span><span class="sc-desc">加粗</span></div>
       <div class="sc-row"><span class="sc-key">Ctrl+I</span><span class="sc-desc">斜体</span></div>
       <div class="sc-row"><span class="sc-key">Ctrl+K</span><span class="sc-desc">插入链接</span></div>
@@ -968,24 +968,24 @@
       <div class="sc-row"><span class="sc-key">Ctrl+Z / Ctrl+Y</span><span class="sc-desc">撤销 / 重做</span></div>
       <div class="sc-row"><span class="sc-key">Ctrl+D</span><span class="sc-desc">选中当前单词</span></div>
     </div>
-    <div class="sc-group"><h4>📂 文件</h4>
+    <div class="sc-group"><h4>文件</h4>
       <div class="sc-row"><span class="sc-key">Ctrl+N</span><span class="sc-desc">新建文档</span></div>
       <div class="sc-row"><span class="sc-key">Ctrl+S</span><span class="sc-desc">保存</span></div>
       <div class="sc-row"><span class="sc-key">Ctrl+P</span><span class="sc-desc">快速打开文件</span></div>
     </div>
-    <div class="sc-group"><h4>🔍 查找</h4>
+    <div class="sc-group"><h4>⌕ 查找</h4>
       <div class="sc-row"><span class="sc-key">Ctrl+F</span><span class="sc-desc">查找</span></div>
       <div class="sc-row"><span class="sc-key">Ctrl+H</span><span class="sc-desc">查找替换</span></div>
       <div class="sc-row"><span class="sc-key">Ctrl+G</span><span class="sc-desc">跳转到行</span></div>
     </div>
-    <div class="sc-group"><h4>✏️ 行操作</h4>
+    <div class="sc-group"><h4>✏ 行操作</h4>
       <div class="sc-row"><span class="sc-key">Alt+↑/↓</span><span class="sc-desc">移动当前行</span></div>
       <div class="sc-row"><span class="sc-key">Ctrl+L</span><span class="sc-desc">选中当前行</span></div>
       <div class="sc-row"><span class="sc-key">Ctrl+Shift+K</span><span class="sc-desc">删除当前行</span></div>
       <div class="sc-row"><span class="sc-key">Ctrl+Enter</span><span class="sc-desc">下方插入空行</span></div>
       <div class="sc-row"><span class="sc-key">Ctrl+Shift+Enter</span><span class="sc-desc">上方插入空行</span></div>
     </div>
-    <div class="sc-group"><h4>🖥 视图</h4>
+    <div class="sc-group"><h4>视图</h4>
       <div class="sc-row"><span class="sc-key">Ctrl+Shift+P</span><span class="sc-desc">命令面板</span></div>
       <div class="sc-row"><span class="sc-key">Ctrl+Shift+Z</span><span class="sc-desc">禅模式</span></div>
       <div class="sc-row"><span class="sc-key">Ctrl+Shift+D</span><span class="sc-desc">文件对比</span></div>
@@ -1018,7 +1018,7 @@
 <!-- Diff 面板 -->
 <div class="diff-overlay" id="diffOverlay">
   <div class="diff-panel">
-    <div class="diff-panel-header"><span>📊 文件对比 (当前 vs 磁盘)</span><button onclick="closeDiff()" style="border:none;background:none;color:var(--fg);cursor:pointer;font-size:16px">✕</button></div>
+    <div class="diff-panel-header"><span>文件对比 (当前 vs 磁盘)</span><button onclick="closeDiff()" style="border:none;background:none;color:var(--fg);cursor:pointer;font-size:16px">✕</button></div>
     <div class="diff-panel-body" id="diffBody"></div>
     <div class="diff-panel-footer">
       <div class="diff-stats" id="diffStats"></div>
@@ -1246,7 +1246,7 @@ function renderTree(filter) {
     if (term) { if (isDir) return; if (!(name.toLowerCase().includes(term) || fp.toLowerCase().includes(term))) return; }
     const el = document.createElement(isDir ? "div" : "a");
     el.style.paddingLeft = (8 + (!term && f.depth ? f.depth : 0) * 14) + "px";
-    el.textContent = (isDir ? "📁 " : "") + name; el.title = f.path;
+    el.textContent = (isDir ? "" : "") + name; el.title = f.path;
     if (isDir) {
       el.className = "tree-dir"; const wrap = document.createElement('div'); wrap.className = 'tree-dir-wrap';
       wrap.style.paddingLeft = (8 + (!term && f.depth ? f.depth : 0) * 14) + 'px'; el.style.paddingLeft = '0';
@@ -1262,7 +1262,7 @@ function renderTree(filter) {
   });
   if (term && shown === 0) { const e = document.createElement("div"); e.className = "tree-empty"; e.textContent = "无匹配文档"; tree.appendChild(e); }
   if (!term && shown === 0 && _treeFiles.length === 0) {
-    tree.innerHTML = '<div class="sidebar-empty-state"><div class="empty-icon">📂</div><p>暂无文件</p><p>拖入 .md 文件或点击「打开」按钮</p></div>';
+    tree.innerHTML = '<div class="sidebar-empty-state"><div class="empty-icon"></div><p>暂无文件</p><p>拖入 .md 文件或点击「打开」按钮</p></div>';
   }
   highlightTree(currentPath);
 }
@@ -1311,7 +1311,7 @@ async function aiAction(action) {
   const prompt = action === 'freeform' ? ($('aiPromptInput').value || '') : '';
   const lang = /[\u4e00-\u9fa5]/.test(text) ? 'zh' : 'en';
   const resultEl = $('aiResult');
-  resultEl.textContent = '🤖 AI 正在思考…';
+  resultEl.textContent = 'AI 正在思考…';
   $('aiResultActions').classList.add('hidden');
   try {
     const r = await fetch(api('/api/ai'), { method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1323,11 +1323,11 @@ async function aiAction(action) {
       $('aiResultActions').classList.remove('hidden');
       setStatus('AI 完成', 'ok');
     } else {
-      resultEl.textContent = '❌ ' + (data.error || '未知错误');
+      resultEl.textContent = '✗ ' + (data.error || '未知错误');
       setStatus('AI: ' + (data.error || '未知错误'), 'err');
     }
   } catch (e) {
-    resultEl.textContent = '❌ 连接失败: ' + e.message;
+    resultEl.textContent = '✗ 连接失败: ' + e.message;
     setStatus('AI 连接失败', 'err');
   }
 }
@@ -1540,12 +1540,12 @@ $('tableInsertBtn').onclick = () => { insertTable(_tblRows, _tblCols); closeAllP
  * 3.8) Mermaid 模板面板 + CDN 加载 + 预览渲染
  * ===================================================================== */
 const mermaidTemplates = {
-  flowchart: { icon: '📨', label: '流程图', code: '```mermaid\nflowchart TD\n    A[开始] --> B{判断}\n    B -->|是| C[执行]\n    B -->|否| D[结束]\n    C --> D\n```' },
-  sequence: { icon: '↔️', label: '时序图', code: '```mermaid\nsequenceDiagram\n    participant A as 用户\n    participant B as 系统\n    A->>B: 请求\n    B-->>A: 响应\n```' },
-  gantt: { icon: '📅', label: '甘特图', code: '```mermaid\ngantt\n    title 项目进度\n    dateFormat YYYY-MM-DD\n    section 阶段一\n    任务1: 2026-01-01, 30d\n    任务2: 2026-02-01, 20d\n```' },
-  classDiagram: { icon: '🏛️', label: '类图', code: '```mermaid\nclassDiagram\n    class Animal {\n        +String name\n        +eat()\n    }\n    class Dog {\n        +bark()\n    }\n    Animal <|-- Dog\n```' },
-  stateDiagram: { icon: '🔄', label: '状态图', code: '```mermaid\nstateDiagram-v2\n    [*] --> 待处理\n    待处理 --> 进行中: 开始\n    进行中 --> 已完成: 完成\n    进行中 --> 待处理: 退回\n    已完成 --> [*]\n```' },
-  pie: { icon: '🫧', label: '饼图', code: '```mermaid\npie title 分布\n    "类别A": 40\n    "类别B": 30\n    "类别C": 20\n    "类别D": 10\n```' }
+  flowchart: { icon: '', label: '流程图', code: '```mermaid\nflowchart TD\n    A[开始] --> B{判断}\n    B -->|是| C[执行]\n    B -->|否| D[结束]\n    C --> D\n```' },
+  sequence: { icon: '↔', label: '时序图', code: '```mermaid\nsequenceDiagram\n    participant A as 用户\n    participant B as 系统\n    A->>B: 请求\n    B-->>A: 响应\n```' },
+  gantt: { icon: '', label: '甘特图', code: '```mermaid\ngantt\n    title 项目进度\n    dateFormat YYYY-MM-DD\n    section 阶段一\n    任务1: 2026-01-01, 30d\n    任务2: 2026-02-01, 20d\n```' },
+  classDiagram: { icon: '', label: '类图', code: '```mermaid\nclassDiagram\n    class Animal {\n        +String name\n        +eat()\n    }\n    class Dog {\n        +bark()\n    }\n    Animal <|-- Dog\n```' },
+  stateDiagram: { icon: '', label: '状态图', code: '```mermaid\nstateDiagram-v2\n    [*] --> 待处理\n    待处理 --> 进行中: 开始\n    进行中 --> 已完成: 完成\n    进行中 --> 待处理: 退回\n    已完成 --> [*]\n```' },
+  pie: { icon: '', label: '饼图', code: '```mermaid\npie title 分布\n    "类别A": 40\n    "类别B": 30\n    "类别C": 20\n    "类别D": 10\n```' }
 };
 (function initMermaidPanel() {
   const list = $('mermaidTmplList'); if (!list) return;
@@ -1610,17 +1610,17 @@ async function renderMermaidBlocks() {
  * ===================================================================== */
 const insertMenuItems = [
   { label: '── 分割线', action: () => insertFmt('\n---\n', '', '') },
-  { label: '💻 代码块', action: insertCodeBlock },
-  { label: '🧮 数学公式', action: () => insertFmt('\n$$\n', '\n$$\n', 'E = mc^2') },
-  { label: '📌 脚注', action: () => insertFmt('[^', ']', '1') },
+  { label: '代码块', action: insertCodeBlock },
+  { label: '数学公式', action: () => insertFmt('\n$$\n', '\n$$\n', 'E = mc^2') },
+  { label: '脚注', action: () => insertFmt('[^', ']', '1') },
   { sep: true },
-  { label: '📦 折叠块', action: () => insertFmt('\n<details>\n<summary>', '</summary>\n\n内容\n\n</details>\n', '点击展开') },
-  { label: '💡 提示 (NOTE)', action: () => insertFmt('\n> [!NOTE]\n> ', '\n', '说明内容') },
-  { label: '✅ 提示 (TIP)', action: () => insertFmt('\n> [!TIP]\n> ', '\n', '小技巧') },
-  { label: '⚠️ 警告 (WARNING)', action: () => insertFmt('\n> [!WARNING]\n> ', '\n', '注意事项') },
+  { label: '折叠块', action: () => insertFmt('\n<details>\n<summary>', '</summary>\n\n内容\n\n</details>\n', '点击展开') },
+  { label: '提示 (NOTE)', action: () => insertFmt('\n> [!NOTE]\n> ', '\n', '说明内容') },
+  { label: '✓ 提示 (TIP)', action: () => insertFmt('\n> [!TIP]\n> ', '\n', '小技巧') },
+  { label: '⚠ 警告 (WARNING)', action: () => insertFmt('\n> [!WARNING]\n> ', '\n', '注意事项') },
   { sep: true },
-  { label: '🏷️ 徽章 Badge', action: () => insertFmt('![badge](https://img.shields.io/badge/', ')', 'label-message-blue') },
-  { label: '📚 目录标记', action: () => insertFmt('\n[TOC]\n', '', '') },
+  { label: '徽章 Badge', action: () => insertFmt('![badge](https://img.shields.io/badge/', ')', 'label-message-blue') },
+  { label: '目录标记', action: () => insertFmt('\n[TOC]\n', '', '') },
 ];
 function insertCodeBlock() {
   const lang = prompt('输入语言 (js/python/bash/json/html/css/sql 或其他)：', 'js') || '';
@@ -2152,11 +2152,11 @@ function friendlyError(msg) {
 function showOnboarding() {
   if (localStorage.getItem('khymd_onboarded')) return;
   const steps = [
-    { title: '👋 欢迎使用 khyosMarkdown！', body: '<p>这是一个<span class="ob-highlight">零依赖</span>的 Markdown 编辑器。</p><p>支持分屏编辑、实时预览、流程图、表格、图片粘贴等丰富功能。</p><p>让我们快速了解核心操作……</p>', target: null },
-    { title: '🛠️ 格式工具栏', body: '<p>这里是格式工具栏，支持：</p><p>• 标题、<b>加粗</b>、<i>斜体</i>、代码</p><p>• 列表、表格、流程图、链接、图片</p><p>鼠标悬停在按钮上查看详细提示。</p>', target: 'fmtToolbar' },
-    { title: '🔄 视图模式', body: '<p>三种查看模式可切换：</p><p>• <b>预览</b> — 渲染后的文档阅读</p><p>• <b>分屏</b> — 左编辑右预览，实时同步</p><p>• <b>源码</b> — 纯 Markdown 文本编辑</p>', target: 'viewSeg' },
-    { title: '📁 文件侧边栏', body: '<p>左侧可浏览文件目录：</p><p>• 点击文件名打开文档</p><p>• 「+」新建文件</p><p>• 搜索框快速过滤</p><p>• 切换「大纲」查看标题结构</p>', target: 'sidebar' },
-    { title: '⌨️ 常用快捷键', body: '<p><kbd>Ctrl+S</kbd> 保存    <kbd>Ctrl+N</kbd> 新建</p><p><kbd>Ctrl+B</kbd> 加粗    <kbd>Ctrl+I</kbd> 斜体</p><p><kbd>Ctrl+P</kbd> 快速打开    <kbd>Ctrl+F</kbd> 查找</p><p><kbd>Alt+↑/↓</kbd> 移动行    <kbd>F11</kbd> 全屏</p><p style="margin-top:8px;color:var(--muted);font-size:12px">按 <kbd>Ctrl+/</kbd> 随时查看完整快捷键列表</p>', target: null },
+    { title: '欢迎使用 khyosMarkdown！', body: '<p>这是一个<span class="ob-highlight">零依赖</span>的 Markdown 编辑器。</p><p>支持分屏编辑、实时预览、流程图、表格、图片粘贴等丰富功能。</p><p>让我们快速了解核心操作……</p>', target: null },
+    { title: '格式工具栏', body: '<p>这里是格式工具栏，支持：</p><p>• 标题、<b>加粗</b>、<i>斜体</i>、代码</p><p>• 列表、表格、流程图、链接、图片</p><p>鼠标悬停在按钮上查看详细提示。</p>', target: 'fmtToolbar' },
+    { title: '视图模式', body: '<p>三种查看模式可切换：</p><p>• <b>预览</b> — 渲染后的文档阅读</p><p>• <b>分屏</b> — 左编辑右预览，实时同步</p><p>• <b>源码</b> — 纯 Markdown 文本编辑</p>', target: 'viewSeg' },
+    { title: '文件侧边栏', body: '<p>左侧可浏览文件目录：</p><p>• 点击文件名打开文档</p><p>• 「+」新建文件</p><p>• 搜索框快速过滤</p><p>• 切换「大纲」查看标题结构</p>', target: 'sidebar' },
+    { title: '⌨ 常用快捷键', body: '<p><kbd>Ctrl+S</kbd> 保存    <kbd>Ctrl+N</kbd> 新建</p><p><kbd>Ctrl+B</kbd> 加粗    <kbd>Ctrl+I</kbd> 斜体</p><p><kbd>Ctrl+P</kbd> 快速打开    <kbd>Ctrl+F</kbd> 查找</p><p><kbd>Alt+↑/↓</kbd> 移动行    <kbd>F11</kbd> 全屏</p><p style="margin-top:8px;color:var(--muted);font-size:12px">按 <kbd>Ctrl+/</kbd> 随时查看完整快捷键列表</p>', target: null },
   ];
   let step = 0;
   let overlay = null, card = null, spotlight = null;
@@ -2185,7 +2185,7 @@ function showOnboarding() {
     card.innerHTML = '<h3>' + s.title + '</h3>' + s.body + dots +
       '<div class="onboarding-actions">' +
       '<button class="ob-skip" onclick="this.closest(\'.onboarding-overlay\').remove();document.querySelector(\'.onboarding-spotlight\')&&document.querySelector(\'.onboarding-spotlight\').remove();localStorage.setItem(\'khymd_onboarded\',\'1\')">\u8df3\u8fc7\u5f15\u5bfc</button>' +
-      '<button class="ob-next">' + (isLast ? '✅ 开始使用' : '下一步 →') + '</button></div>';
+      '<button class="ob-next">' + (isLast ? '✓ 开始使用' : '下一步 →') + '</button></div>';
     card.querySelector('.ob-next').onclick = () => {
       if (isLast) { finishOnboarding(); } else { step++; renderStep(); }
     };
@@ -2213,10 +2213,10 @@ function showOnboarding() {
  * ===================================================================== */
 function setMode(m) {
   const el = $('stMode'); if (!el) return;
-  let dot = '🟢', label = m;
-  if (_lastView === 'preview') { dot = '🔵'; label = '预览模式'; }
-  else if (_lastView === 'split') { dot = '🟢'; label = '分屏编辑'; }
-  else if (_lastView === 'source') { dot = '🟠'; label = '源码模式'; }
+  let dot = '○', label = m;
+  if (_lastView === 'preview') { dot = '○'; label = '预览模式'; }
+  else if (_lastView === 'split') { dot = '○'; label = '分屏编辑'; }
+  else if (_lastView === 'source') { dot = '●'; label = '源码模式'; }
   el.innerHTML = '<span class="mode-badge"><span class="mode-dot" style="background:' +
     (_lastView === 'preview' ? 'var(--accent)' : _lastView === 'source' ? '#f0883e' : 'var(--ok)') +
     '"></span>' + label + '</span>';
@@ -2565,7 +2565,7 @@ function updateGoalDisplay() {
   // Celebration
   if (pct >= 100 && !goalEl.dataset.celebrated) {
     goalEl.dataset.celebrated = '1';
-    setStatus('🎉 恭喜！已达成字数目标！', 'ok');
+    setStatus('恭喜！已达成字数目标！', 'ok');
   } else if (pct < 100) { goalEl.dataset.celebrated = ''; }
 }
 
@@ -2645,12 +2645,12 @@ const SLASH_COMMANDS = [
   { key: '/todo', label: '待办事项', icon: '☐', insert: '- [ ] ' },
   { key: '/code', label: '代码块', icon: '</>', insert: '```\n\n```', cursor: -4 },
   { key: '/table', label: '表格 (3×3)', icon: '⊞', insert: '| 列1 | 列2 | 列3 |\n| --- | --- | --- |\n|  |  |  |\n' },
-  { key: '/img', label: '图片', icon: '🖼', insert: '![alt](url)' },
-  { key: '/link', label: '链接', icon: '🔗', insert: '[text](url)' },
+  { key: '/img', label: '图片', icon: '', insert: '![alt](url)' },
+  { key: '/link', label: '链接', icon: '', insert: '[text](url)' },
   { key: '/quote', label: '引用', icon: '❝', insert: '> ' },
   { key: '/hr', label: '分割线', icon: '─', insert: '\n---\n' },
-  { key: '/date', label: '当前日期', icon: '📅', insert: () => new Date().toISOString().slice(0, 10) },
-  { key: '/time', label: '当前时间', icon: '⏰', insert: () => new Date().toTimeString().slice(0, 5) },
+  { key: '/date', label: '当前日期', icon: '', insert: () => new Date().toISOString().slice(0, 10) },
+  { key: '/time', label: '当前时间', icon: '', insert: () => new Date().toTimeString().slice(0, 5) },
   { key: '/mermaid', label: '流程图', icon: '◈', insert: '```mermaid\nflowchart TD\n    A[开始] --> B[结束]\n```\n' },
   { key: '/math', label: '数学公式', icon: 'Σ', insert: '$$\nE = mc^2\n$$\n' },
   { key: '/detail', label: '折叠块', icon: '▶', insert: '<details>\n<summary>点击展开</summary>\n\n内容\n\n</details>\n' },
@@ -2828,7 +2828,7 @@ function renderDiffPanel(diff) {
     if (d.type === 'add') adds++;
     if (d.type === 'del') dels++;
   });
-  if (!adds && !dels) html = '<div style="padding:24px;text-align:center;color:var(--muted)">✅ 无修改，当前内容与磁盘一致</div>';
+  if (!adds && !dels) html = '<div style="padding:24px;text-align:center;color:var(--muted)">✓ 无修改，当前内容与磁盘一致</div>';
   body.innerHTML = html;
   $('diffStats').innerHTML = '<span class="add-count">+' + adds + ' 新增</span><span class="del-count">-' + dels + ' 删除</span>';
 }
@@ -2907,17 +2907,17 @@ document.addEventListener('click', (e) => { if (!e.target.closest('.wikilink-pop
  * 25) Emoji 选择器 (: 触发)
  * ===================================================================== */
 const EMOJI_DATA = {
-  'smile': '😊', 'heart': '❤️', 'fire': '🔥', 'star': '⭐', 'check': '✅', 'cross': '❌',
-  'warning': '⚠️', 'info': 'ℹ️', 'rocket': '🚀', 'bug': '🐛', 'light': '💡', 'pin': '📌',
-  'book': '📖', 'link': '🔗', 'clock': '⏰', 'target': '🎯', 'thumbsup': '👍', 'wave': '👋',
-  'think': '🤔', 'celebrate': '🎉', 'sparkles': '✨', 'tada': '🎉', 'eyes': '👀',
-  'muscle': '💪', 'pray': '🙏', 'party': '🥳', 'cool': '😎', 'cry': '😢',
-  'angry': '😡', 'love': '😍', 'sad': '😞', 'surprised': '😮', 'laugh': '😂',
-  'clap': '👏', 'bomb': '💣', 'gem': '💎', 'key': '🔑', 'lock': '🔒',
-  'earth': '🌍', 'sun': '☀️', 'moon': '🌙', 'rain': '🌧️', 'cloud': '☁️',
-  'coffee': '☕', 'beer': '🍺', 'cake': '🎂', 'gift': '🎁', 'trophy': '🏆',
-  'megaphone': '📣', 'bell': '🔔', 'hammer': '🔨', 'wrench': '🔧', 'gear': '⚙️',
-  'folder': '📁', 'file': '📄', 'chart': '📊', 'mail': '📧', 'phone': '📱',
+  'smile': '', 'heart': '', 'fire': '', 'star': '★', 'check': '✓', 'cross': '✗',
+  'warning': '⚠', 'info': 'ℹ', 'rocket': '', 'bug': '', 'light': '', 'pin': '',
+  'book': '', 'link': '', 'clock': '', 'target': '◎', 'thumbsup': '', 'wave': '',
+  'think': '', 'celebrate': '', 'sparkles': '✱', 'tada': '', 'eyes': '',
+  'muscle': '', 'pray': '', 'party': '', 'cool': '', 'cry': '',
+  'angry': '', 'love': '', 'sad': '', 'surprised': '', 'laugh': '',
+  'clap': '', 'bomb': '', 'gem': '', 'key': '', 'lock': '',
+  'earth': '', 'sun': '☀', 'moon': '', 'rain': '', 'cloud': '☁',
+  'coffee': '', 'beer': '', 'cake': '', 'gift': '', 'trophy': '',
+  'megaphone': '', 'bell': '', 'hammer': '', 'wrench': '', 'gear': '⚙',
+  'folder': '', 'file': '', 'chart': '', 'mail': '', 'phone': '',
 };
 
 let _emojiStartPos = -1;
@@ -2994,11 +2994,11 @@ document.addEventListener('click', (e) => { if (!e.target.closest('.emoji-popup'
       document.querySelector('.pane.preview').classList.remove('hidden');
       out.innerHTML = '<div class="welcome-card"><h2>\ud83d\udcdd 开始使用</h2>' +
         '<div class="quick-actions">' +
-        '<button onclick="newDoc()">📄 新建文档</button>' +
-        '<button onclick="$(\x27filePick\x27).click()">📂 打开文件</button>' +
-        '<button onclick="openQuickSearch()">🔍 搜索文件</button>' +
+        '<button onclick="newDoc()">新建文档</button>' +
+        '<button onclick="$(\x27filePick\x27).click()">打开文件</button>' +
+        '<button onclick="openQuickSearch()">⌕ 搜索文件</button>' +
         '</div>' +
-        '<div class="tips"><h4>💡 小技巧</h4><ul>' +
+        '<div class="tips"><h4>小技巧</h4><ul>' +
         '<li>• 拖拽 <code>.md</code> 文件到窗口直接打开</li>' +
         '<li>• 粘贴图片自动保存并插入</li>' +
         '<li>• 输入 <code>```mermaid</code> 创建流程图</li>' +
@@ -3016,7 +3016,7 @@ document.addEventListener('click', (e) => { if (!e.target.closest('.emoji-popup'
     setMode("file://（降级：选择/拖拽/粘贴）"); loadText("", "");
     setStatus("提示：经 khyos-md-bridge 打开可消除 file:// 读取限制并支持右键传参", "");
     out.innerHTML = '<div class="empty"><p>当前为 <code>file://</code> 降级模式。</p>' +
-      '<p>请点击 <b>📂 打开</b> 选择文件，或将 <code>.md</code> 拖入窗口。</p>' +
+      '<p>请点击 <b>打开</b> 选择文件，或将 <code>.md</code> 拖入窗口。</p>' +
       '<p>右键「使用 khyosMarkdown 打开」走桥接器，体验最佳。</p></div>';
   }
   // Show onboarding for first-time users (delayed to let UI settle)
