@@ -268,7 +268,7 @@ function _messageLines(msg, ctx, keyBase) {
         (ln, i) => (i === 0 ? '❯ ' : '  ') + ln
       );
       if (Number(msg.imageCount) > 0) {
-        lines.push('  📎×' + Number(msg.imageCount));
+        lines.push('  ×' + Number(msg.imageCount));
       }
       return plain(lines);
     }

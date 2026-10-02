@@ -112,7 +112,22 @@ function TranscriptView({ lines, scroll = 0, showAll = false, rows }) {
   );
 }
 
-module.exports = TranscriptView;
+// Re-render narrowing: 与 ToolLines / ProcessGroup / Spinner 同族的 memo 导出契约
+// （tests/cli/tui/ink-components/componentMemoExports.test.js 锁着三条：门控开→memo、
+// 门控关→普通函数、静态属性保留）。
+//
+// 动机：本组件渲染整份会话记录，是 App 里最重的展示组件之一；而 App 的 nowTick 心跳
+// （1000ms，顶层 state，App.js:1220）会整树重渲，把 props 全不变的帧也重跑一遍。
+// 本组件 props 全是原始值/稳定引用（lines / scroll / showAll / rows），浅比较天然有效。
+// 门控复用既有 KHY_TUI_COMPONENT_MEMO（DEFAULT ON）—— 不新增门控。
+function _componentMemoOff(env) {
+  const v = String((env && env.KHY_TUI_COMPONENT_MEMO) || '')
+    .trim()
+    .toLowerCase();
+  return v === '0' || v === 'false' || v === 'off' || v === 'no';
+}
+
+module.exports = _componentMemoOff(process.env) ? TranscriptView : React.memo(TranscriptView);
 module.exports.bodyHeight = bodyHeight;
 module.exports.CHROME_ROWS = CHROME_ROWS;
 module.exports.MIN_BODY_ROWS = MIN_BODY_ROWS;

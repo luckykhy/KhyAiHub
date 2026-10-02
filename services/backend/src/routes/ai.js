@@ -162,7 +162,7 @@ async function handleImageGeneration(message) {
   // Check that at least one backend is configured
   if (!imageGenService.isAnyBackendConfigured()) {
     return {
-      answer: `🎨 图像生成暂不可用：未检测到任何图像生成后端。\n\n${imageGenService.backendHelpText()}`,
+      answer: `图像生成暂不可用：未检测到任何图像生成后端。\n\n${imageGenService.backendHelpText()}`,
       model: '小K图像生成',
       timestamp: Date.now(),
     };
@@ -183,7 +183,7 @@ async function handleImageGeneration(message) {
     }));
 
     return {
-      answer: `🎨 已为您生成 ${imageEntries.length} 张图像（${result.backend} / ${result.model || '默认'}，${result.size}）`,
+      answer: `已为您生成 ${imageEntries.length} 张图像（${result.backend} / ${result.model || '默认'}，${result.size}）`,
       model: `图像生成:${result.backend}`,
       timestamp: Date.now(),
       images: imageEntries,
@@ -192,13 +192,13 @@ async function handleImageGeneration(message) {
     };
   } catch (err) {
     const code = err.code || 'GENERATION_FAILED';
-    let userMsg = `🎨 图像生成失败：${err.message || '未知错误'}`;
+    let userMsg = `图像生成失败：${err.message || '未知错误'}`;
     if (code === 'NO_BACKEND') {
-      userMsg = `🎨 图像生成暂不可用：\n${imageGenService.backendHelpText()}`;
+      userMsg = `图像生成暂不可用：\n${imageGenService.backendHelpText()}`;
     } else if (code === 'EDIT_UNSUPPORTED') {
-      userMsg = `🎨 当前后端不支持图改图。请使用 Agnes 或 StepFun 后端。`;
+      userMsg = `当前后端不支持图改图。请使用 Agnes 或 StepFun 后端。`;
     } else if (code === 'NO_USABLE_KEY') {
-      userMsg = `🎨 图像生成 API 密钥已耗尽，请稍后再试。`;
+      userMsg = `图像生成 API 密钥已耗尽，请稍后再试。`;
     }
     return {
       answer: userMsg,
@@ -245,10 +245,10 @@ router.post('/chat', authMiddleware, async (req, res) => {
     const q = safeQuestion.toLowerCase();
     if (q.includes('你好') || q.includes('您好') || q.includes('hello') || q.includes('hi')) {
       const greetings = [
-        '你好!欢迎使用小K 👋\n\n我是您的智能AI助手,擅长量化交易分析,也能帮您:\n• 解答各类知识问题\n• 编程与技术咨询\n• 数据分析与计算\n• 股票行情与策略分析\n\n有什么可以帮您的?',
-        '您好!很高兴为您服务 😊\n\n我是小K,一个全能AI助手。量化分析是我的特长,同时也能帮您解答编程、知识、生活等各类问题。\n\n请告诉我您需要什么帮助!',
-        '嗨!我是小K智能助手 🤖\n\n擅长:\n✓ 量化交易与技术分析\n✓ 编程开发与问题排查\n✓ 知识解答与信息搜索\n✓ 数据计算与分析\n\n有什么想问的?',
-        '你好呀!小K在线为您服务 ✨\n\n作为您的AI助手,我可以:\n• 分析股票行情与策略\n• 回答技术与编程问题\n• 提供知识咨询\n• 执行计算与数据处理\n\n有什么需要帮忙的吗?',
+        '你好!欢迎使用小K\n\n我是您的智能AI助手,擅长量化交易分析,也能帮您:\n• 解答各类知识问题\n• 编程与技术咨询\n• 数据分析与计算\n• 股票行情与策略分析\n\n有什么可以帮您的?',
+        '您好!很高兴为您服务\n\n我是小K,一个全能AI助手。量化分析是我的特长,同时也能帮您解答编程、知识、生活等各类问题。\n\n请告诉我您需要什么帮助!',
+        '嗨!我是小K智能助手\n\n擅长:\n✓ 量化交易与技术分析\n✓ 编程开发与问题排查\n✓ 知识解答与信息搜索\n✓ 数据计算与分析\n\n有什么想问的?',
+        '你好呀!小K在线为您服务\n\n作为您的AI助手,我可以:\n• 分析股票行情与策略\n• 回答技术与编程问题\n• 提供知识咨询\n• 执行计算与数据处理\n\n有什么需要帮忙的吗?',
       ];
       const greeting = greetings[Math.floor(Math.random() * greetings.length)];
       // Record greeting interactions for training data
@@ -804,12 +804,12 @@ async function callCloudAI(stockCode, analysisContext, question, tokens, clientL
   for (const provider of providers) {
     if (provider.check()) {
       try {
-        console.log(`🤖 尝试使用 ${provider.name}...`);
+        console.log(`尝试使用 ${provider.name}...`);
         const answer = await provider.call();
-        console.log(`✅ ${provider.name} 调用成功`);
+        console.log(`✓ ${provider.name} 调用成功`);
         return answer;
       } catch (error) {
-        console.warn(`❌ ${provider.name} 调用失败:`, error.message);
+        console.warn(`✗ ${provider.name} 调用失败:`, error.message);
         continue;
       }
     }
@@ -824,38 +824,38 @@ function generatePredefinedAnswer(question, analysis) {
 
   // 关于推荐的问题
   if (q.includes('推荐') || q.includes('建议') || q.includes('买') || q.includes('卖')) {
-    return `📊 根据分析结果:\n\n建议: ${analysis.recommendation}\n置信度: ${analysis.confidence}%\n\n${analysis.summary}\n\n⚠️ 投资有风险,建议结合自身情况谨慎决策。`;
+    return `根据分析结果:\n\n建议: ${analysis.recommendation}\n置信度: ${analysis.confidence}%\n\n${analysis.summary}\n\n⚠ 投资有风险,建议结合自身情况谨慎决策。`;
   }
 
   // 关于风险的问题
   if (q.includes('风险') || q.includes('危险') || q.includes('安全')) {
     const riskAgent = analysis.agentResults?.find((a) => a.agentId === 'risk');
     if (riskAgent) {
-      return `⚠️ 风险评估:\n\n${riskAgent.analysis}\n\n建议:\n• 设置止损位\n• 控制仓位\n• 分散投资`;
+      return `⚠ 风险评估:\n\n${riskAgent.analysis}\n\n建议:\n• 设置止损位\n• 控制仓位\n• 分散投资`;
     }
-    return `⚠️ 风险提示:\n\n当前置信度: ${analysis.confidence}%\n\n建议:\n• 谨慎操作,注意风险控制\n• 不要满仓操作\n• 设置合理的止损位`;
+    return `⚠ 风险提示:\n\n当前置信度: ${analysis.confidence}%\n\n建议:\n• 谨慎操作,注意风险控制\n• 不要满仓操作\n• 设置合理的止损位`;
   }
 
   // 关于技术面的问题
   if (q.includes('技术') || q.includes('指标') || q.includes('趋势')) {
     const marketAgent = analysis.agentResults?.find((a) => a.agentId === 'market');
     if (marketAgent) {
-      return `📈 技术分析:\n\n${marketAgent.analysis}\n\n建议查看完整的技术指标报告了解更多详情。`;
+      return `技术分析:\n\n${marketAgent.analysis}\n\n建议查看完整的技术指标报告了解更多详情。`;
     }
-    return `📈 技术分析:\n\n请查看市场分析师提供的详细技术分析报告,包含MACD、KDJ、RSI等多项指标。`;
+    return `技术分析:\n\n请查看市场分析师提供的详细技术分析报告,包含MACD、KDJ、RSI等多项指标。`;
   }
 
   // 关于基本面的问题
   if (q.includes('基本面') || q.includes('财务') || q.includes('估值')) {
     const fundAgent = analysis.agentResults?.find((a) => a.agentId === 'fundamentals');
     if (fundAgent) {
-      return `💼 基本面分析:\n\n${fundAgent.analysis}\n\n建议关注公司财报和行业动态。`;
+      return `基本面分析:\n\n${fundAgent.analysis}\n\n建议关注公司财报和行业动态。`;
     }
-    return `💼 基本面分析:\n\n请查看基本面分析师提供的详细财务分析报告,包含PE、PB、ROE等估值指标。`;
+    return `基本面分析:\n\n请查看基本面分析师提供的详细财务分析报告,包含PE、PB、ROE等估值指标。`;
   }
 
   // 默认回答
-  return `关于 ${analysis.stockCode} 的分析:\n\n${analysis.summary}\n\n当前建议: ${analysis.recommendation}\n置信度: ${analysis.confidence}%\n\n💡 提示: 查看完整分析报告可了解更多详情。`;
+  return `关于 ${analysis.stockCode} 的分析:\n\n${analysis.summary}\n\n当前建议: ${analysis.recommendation}\n置信度: ${analysis.confidence}%\n\n提示: 查看完整分析报告可了解更多详情。`;
 }
 
 // ── Persona (C2) ──

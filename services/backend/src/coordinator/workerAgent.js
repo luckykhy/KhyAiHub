@@ -10,6 +10,16 @@ const crypto = require('crypto');
 
 const { startWatchdog } = require('../services/resourceGuard');
 
+// Common-floor application lives in constraints.js — the single home for the
+// floor text AND its gate/idempotence policy. The coordinator worker path is
+// the second injection seam alongside AgentTool.buildSubagentSystemPrompt.
+let _applyCommonFloor = null;
+try {
+  _applyCommonFloor = require('../agents/constraints').applyCommonFloor;
+} catch {
+  /* constraints not available — workers keep their bare role prompt */
+}
+
 // ── Structured Output Contract (G4) ──────────────────────────────
 // Sub-agents must return results in this format so the parent agent
 // can reliably parse findings for the next step.
@@ -39,6 +49,30 @@ function parseAgentOutput(raw) {
     sections[key.toLowerCase()] = m ? m[1].trim() : '';
   }
   return sections;
+}
+
+/**
+ * Compose a worker's full prompt: the role system prompt (common floor
+ * applied — gate/idempotence policy lives in constraints.applyCommonFloor),
+ * the task, and the structured output contract. Pure; exported for tests.
+ * @param {string} roleSystemPrompt - the role's own system prompt
+ * @param {string} task - the worker's task description
+ * @param {string} [outputContract] - defaults to OUTPUT_CONTRACT
+ * @param {object} [env] - injectable env (defaults to process.env), pure for tests
+ * @returns {string}
+ */
+function buildWorkerPrompt(
+  roleSystemPrompt,
+  task,
+  outputContract = OUTPUT_CONTRACT,
+  env = process.env
+) {
+  const base = _applyCommonFloor
+    ? _applyCommonFloor(roleSystemPrompt, env)
+    : typeof roleSystemPrompt === 'string'
+      ? roleSystemPrompt
+      : '';
+  return `${base}\n\nTask:\n${task}\n${outputContract}`;
 }
 
 // ── Spawn Limits (zero-hardcoding: configurable via env or opts) ──
@@ -416,7 +450,7 @@ async function _executeWorker(worker, opts = {}) {
     ).trim();
 
     // Build the worker prompt with structured output contract
-    const prompt = `${role.systemPrompt}\n\nTask:\n${worker.task}\n${OUTPUT_CONTRACT}`;
+    const prompt = buildWorkerPrompt(role.systemPrompt, worker.task);
 
     // Use a simple AI chat call with the role's tool profile
     let aiModule;
@@ -1063,6 +1097,7 @@ module.exports = {
   startZombieDetector,
   stopZombieDetector,
   parseAgentOutput,
+  buildWorkerPrompt,
   OUTPUT_CONTRACT,
   WORKER_DEFAULTS,
   ZOMBIE_THRESHOLD_MS,

@@ -254,7 +254,7 @@ function cardRows(input, toolName, opts) {
 
 /** 卡片标题（不含等级徽标；等级由 badgeOf 拼在标题后）。 */
 function cardTitle(input) {
-  return levelOf(input) === 'L2' ? '⛔ 高危操作需要授权' : '⚠ 需要授权';
+  return levelOf(input) === 'L2' ? '◉ 高危操作需要授权' : '⚠ 需要授权';
 }
 
 /** 标题尾注：等级徽标 + 工具名，两者都贴右（工具名一定是最后一段）。 */
@@ -268,7 +268,7 @@ function cardTitleTail(input, toolName) {
 function recordHead(input, toolName) {
   const tool = String(toolName == null ? '' : toolName).trim() || '工具';
   const badge = levelBadge(input && input.level);
-  return `${levelOf(input) === 'L2' ? '⛔' : '⚠'} 需要授权 · ${tool}${badge ? ` · ${badge}` : ''}`;
+  return `${levelOf(input) === 'L2' ? '◉' : '⚠'} 需要授权 · ${tool}${badge ? ` · ${badge}` : ''}`;
 }
 
 /** 一行 `标签 + 值`（标签列定宽）。 */

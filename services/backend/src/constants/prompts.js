@@ -16,7 +16,7 @@ const path = require('path');
 const zlib = require('zlib');
 
 const selfProfile = require('../services/selfProfile');
-const { isFlagEnabled } = require('../services/flagRegistry');
+const { isFlagEnabled } = require('../utils/flagRegistry');
 
 const { CYBER_RISK_INSTRUCTION } = require('./cyberRiskInstruction');
 const { PRIMARY: MODEL_PRIMARY } = require('./models');
@@ -1956,7 +1956,7 @@ function getGitStatusSection(cwd) {
     // KHY_PROMPT_GIT_STATUS_MIN (default-on): 最小化 gitStatus 段——只保留 branch +
     // 一句话 dirty 摘要,砍掉完整文件状态清单与 recent commits 列表(这些 git 命令能
     // 瞬时拿回,放进 prompt 浪费)。关 → 逐字节回退今日完整清单。
-    const { isFlagEnabled } = require('../services/flagRegistry');
+    const { isFlagEnabled } = require('../utils/flagRegistry');
     const minimalGitStatus = isFlagEnabled('KHY_PROMPT_GIT_STATUS_MIN', process.env);
 
     if (minimalGitStatus) {
@@ -2024,7 +2024,7 @@ function getGitStatusSection(cwd) {
     // (index.lock held, network FS stall) can never block the event loop here.
     try {
       const { execSync } = require('child_process');
-      const { isFlagEnabled } = require('../services/flagRegistry');
+      const { isFlagEnabled } = require('../utils/flagRegistry');
       const minimalGitStatus = isFlagEnabled('KHY_PROMPT_GIT_STATUS_MIN', process.env);
 
       const branch = execSync('git branch --show-current', { cwd, stdio: 'pipe', timeout: 5000 })
@@ -2487,7 +2487,7 @@ function _codingProfile() {
   // 逐字节回退(不注入该段)。文案确定性、无随机;缺失/异常一律 fail-soft 保持原 profile。
   try {
     const wmg = require('../services/weakModelGuidance');
-    const fr = require('../services/flagRegistry');
+    const fr = require('../utils/flagRegistry');
     if (fr.isFlagEnabled('KHY_WEAK_MODEL_PROFILE_INJECT', process.env)) {
       profile += '\n\n' + wmg.buildWeakModelDirective();
       const exemplars = wmg.buildWeakModelExemplars(process.env);

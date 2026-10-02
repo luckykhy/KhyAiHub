@@ -7,16 +7,28 @@
  * truth for the render/timer cadence defaults so no consumer hard-codes them.
  *
  * Background: profiling showed the busy-state TUI stacks THREE periodic
- * timers — the 80ms Spinner braille rotation, the 1s elapsed heartbeat
- * (App.js nowTick) and the 180ms topicBar working-dot animation — each of
- * which forces an ink re-render. Relaxing cadences cuts idle-busy CPU with
- * no functional change (the animations just tick slower):
- *   - spinnerFrameMs: 80 → 160 (12.5fps → ~6fps; braille rotation stays
- *     visibly smooth at 6fps while halving spinner-driven renders)
- *   - topicBarAnimMs: 180 → 320 (working-dot pulse; still clearly animated)
- * The heartbeat did NOT survive that relaxation: 1000 → 2000 was reverted on
- * 2026-09-24 because the 2s granularity is a **correctness** cost, not a
- * cosmetic one — the elapsed readout skips seconds (see heartbeatMs).
+ * timers — the Spinner braille rotation, the 1s elapsed heartbeat
+ * (App.js nowTick) and the topicBar working-dot animation — each of which
+ * forces a repaint. Cadences were once relaxed to cut idle-busy CPU:
+ *   - spinnerFrameMs: 80 → 160 (12.5fps → ~6fps)
+ *   - topicBarAnimMs: 180 → 320
+ *
+ * **2026-09-29 partial reversion ([DESIGN-PERF-004] §6 A0/Q-1).**
+ *   - topicBarAnimMs: **reverted to 180ms.** It had no row in tui/AGENTS.md
+ *     §3.3, so nothing pinned it; 180 is the original hard-coded value in
+ *     runtime/topicBar.js, which still carries it as its fallback. The spec
+ *     table now lists it.
+ *   - spinnerFrameMs: **still 160ms — deliberately NOT reverted.** 160 is not
+ *     an incidental relaxation: five normative docs adjudicate it
+ *     ([DESIGN-ARCH-079] §12.6.1, [101] §1.1 + §8 冲突 1, [102] §6.4,
+ *     [115] §2.2), and [101] §8 names the 80ms as the *stale* third source.
+ *     [DESIGN-ARCH-134] additionally warns that an 80ms spinner on a
+ *     saturated frame means a near-full-screen rewrite every tick. Going
+ *     back to 80 requires moving those docs first — not a silent default
+ *     change. Convergence target stays 160 ([115] §2.2, deferred P1/D10).
+ * The heartbeat never took part in that relaxation: 1000 → 2000 was tried and
+ * reverted on 2026-09-24 because the 2s granularity is a **correctness** cost,
+ * not a cosmetic one — the elapsed readout skips seconds (see heartbeatMs).
  *
  * Env overrides (KHY_SPINNER_FRAME_MS / KHY_HEARTBEAT_MS /
  * KHY_TOPIC_BAR_ANIM_MS) accept any finite positive number; garbage
@@ -31,6 +43,9 @@
  * Umbrella switch: KHY_TUI_LOW_POWER === '1' relaxes the cadence defaults
  * further (320 / 2000 / 640) for battery / remote-shell scenarios. A per-knob
  * env var, when explicitly set to a valid value, always wins over the umbrella.
+ * The umbrella's own values did NOT move in the 2026-09-29 reversion: that
+ * tier's contract is "explicitly accept slower animation to save power", so
+ * re-tightening it would break the one thing it promises.
  */
 
 /**
@@ -54,8 +69,12 @@ function _lowPower(env) {
 
 /**
  * Spinner braille frame interval. Default 160ms (was a hard-coded 80ms in
- * Spinner.js — 12.5fps; 160ms halves spinner-driven re-renders while keeping
+ * Spinner.js — 12.5fps; 160ms halves spinner-driven repaints while keeping
  * the rotation visibly smooth). LOW_POWER umbrella → 320ms.
+ *
+ * ⚠ 160 is **adjudicated**, not incidental: [DESIGN-ARCH-101] §8 冲突 1 rules
+ * "以 perfTunables 的 160ms 为准" and marks the 80ms as the stale source. Read
+ * the header Background before changing this default.
  * @param {NodeJS.ProcessEnv} [env]
  * @returns {number}
  */
@@ -121,14 +140,19 @@ function heartbeatAlignDelayMs(now, turnStartedAt, cadenceMs) {
 }
 
 /**
- * topicBar working-dot animation interval. Default 320ms (was a hard-coded
- * 180ms _ANIM_MS in runtime/topicBar.js; the pulse remains clearly animated
- * at 320ms with ~44% fewer ticks). LOW_POWER umbrella → 640ms.
+ * topicBar working-dot animation interval. Default 180ms — the original
+ * hard-coded _ANIM_MS in runtime/topicBar.js, which still carries it as its
+ * fallback. Restored from 320ms on 2026-09-29 (see the header Background).
+ * LOW_POWER umbrella → 640ms.
+ *
+ * Unlike spinnerFrameMs, this knob had **no row** in tui/AGENTS.md §3.3, so
+ * nothing pinned it and it drifted to 320ms unnoticed. The spec table now
+ * carries it; do not relax it again without a spec entry.
  * @param {NodeJS.ProcessEnv} [env]
  * @returns {number}
  */
 function topicBarAnimMs(env = process.env) {
-  const def = _lowPower(env) ? 640 : 320;
+  const def = _lowPower(env) ? 640 : 180;
   return _pos(env && env.KHY_TOPIC_BAR_ANIM_MS, def);
 }
 
@@ -151,6 +175,38 @@ const INK_THROTTLE_MS = 34;
  */
 function frameBudgetMs(env = process.env) {
   return _pos(env && env.KHY_TUI_FRAME_BUDGET_MS, 16);
+}
+
+/**
+ * 任务清单「扫盘结果」的新鲜度窗口(ms)。默认 250ms。
+ *
+ * 背景(2026-09-29 实测,补 taskLinesMemo 未竟的那一半):
+ * `_readMergedTaskLines()`(`ink-components/appHostHelpers.js:32`)在 App **渲染体**里被调
+ * (`App.js:6313`),它先跑 `taskStore.snapshot()` —— 该调用**同步** statSync + readdirSync
+ * 扫会话快照目录与大任务库(profile 调用链:`snapshot`→`list`→`_isStoreStale`→`_statMtimeMs`
+ * →`statSync`;并列支 `getCurrentSessionId`→`listPersistedSessions`→`_collectSnapshotFiles`
+ * →`readdirSync`)。`taskLinesMemo` 只记忆 `mergeTaskLines` 的**字符串解析**(便宜的那半),
+ * `snapshot()` 的**扫盘**仍每帧跑 —— 其注释自陈「留 snapshot 构建给未来的 store 版本号信号」,
+ * 本值即补上这一层。
+ *
+ * 实测收益:把 `snapshot()` 打桩成常量,单帧省 **45%(110.18→60.90ms,≈49ms/帧)**;
+ * App 一次重渲 62ms(dev)/52ms(prod),而帧预算是 16ms(见 frameBudgetMs)。本窗口把扫盘
+ * 摊销到 49ms/250ms ≈ **0.2ms/帧**。
+ *
+ * 语义:**这是数据新鲜度窗口,不是动画节拍**。窗口内的渲染复用上次扫盘结果 ⇒ 任务面板
+ * 最多滞后本值才反映变化;250ms 远低于人对面板刷新的感知阈值。
+ * LOW_POWER 放宽到 1000ms(电池/远程场景**显式接受**面板更迟钝)。
+ *
+ * 门控:总开关**复用 `KHY_TASK_LINES_MEMO`**(布尔,默认开;关 → 逐帧真扫,逐字节回退今日)。
+ * ⚠ **刻意不提供独立 env override**:本方案 §7 R4 要求「净新增 `KHY_*` 门控 = 0」
+ * (check-tui-gates 已超标,见其 `MAX_GATES` 注释)。档位差异由既有的 `KHY_TUI_LOW_POWER`
+ * 承担 —— 两个门控都是既有的,故本函数**净新增 token = 0**。有单测锁定这一约束。
+ *
+ * @param {NodeJS.ProcessEnv} [env]
+ * @returns {number}
+ */
+function taskSnapshotTtlMs(env = process.env) {
+  return _lowPower(env) ? 1000 : 250;
 }
 
 /**
@@ -181,5 +237,6 @@ module.exports = {
   topicBarAnimMs,
   suspendSettleMs,
   frameBudgetMs,
+  taskSnapshotTtlMs,
   INK_THROTTLE_MS,
 };

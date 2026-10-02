@@ -40,7 +40,7 @@ function isEnabled(env = process.env) {
 }
 
 // 静态(空闲)时的「太阳」前缀 —— 与 topicBar 历史逐字节一致(`✱ ${topic}`)。
-const STATIC_GLYPH = '🍀';
+const STATIC_GLYPH = '✱';
 const STATIC_PREFIX = `${STATIC_GLYPH} `;
 
 // 工作动画:一个小点在固定宽度的轨道上「左→右→左」弹跳。

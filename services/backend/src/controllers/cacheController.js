@@ -62,7 +62,7 @@ class CacheController {
         });
       }
 
-      console.log(`💾 开始缓存标的数据: ${symbol} ${name || ''}`);
+      console.log(`开始缓存标的数据: ${symbol} ${name || ''}`);
 
       const result = {
         symbol,
@@ -83,13 +83,13 @@ class CacheController {
           success: true,
           data: instrument,
         };
-        console.log(`✅ 标的信息已保存: ${symbol}`);
+        console.log(`✓ 标的信息已保存: ${symbol}`);
       } catch (error) {
         result.instrument = {
           success: false,
           error: error.message,
         };
-        console.error(`❌ 保存标的信息失败: ${error.message}`);
+        console.error(`✗ 保存标的信息失败: ${error.message}`);
       }
 
       // 2. 获取并保存K线数据
@@ -99,7 +99,7 @@ class CacheController {
 
         try {
           console.log(
-            `📊 获取 ${symbol} 的 ${period} K线数据 (dataType=${normalizedDataType}, instrumentType=${resolvedInstrumentType})...`
+            `获取 ${symbol} 的 ${period} K线数据 (dataType=${normalizedDataType}, instrumentType=${resolvedInstrumentType})...`
           );
 
           // 从数据源获取K线数据
@@ -110,7 +110,7 @@ class CacheController {
             instrumentType: resolvedInstrumentType,
           });
 
-          console.log(`🔍 getComprehensiveData返回:`, {
+          console.log(`getComprehensiveData返回:`, {
             hasData: !!klineData,
             hasKline: !!(klineData && klineData.kline),
             klineLength: klineData?.kline?.length || 0,
@@ -138,21 +138,21 @@ class CacheController {
               message: `保存了 ${saveResult.count} 条${period}数据`,
             };
 
-            console.log(`✅ ${period} K线数据已保存: ${saveResult.count} 条`);
+            console.log(`✓ ${period} K线数据已保存: ${saveResult.count} 条`);
           } else {
             result.klineData[period] = {
               success: false,
               count: 0,
               message: '未获取到K线数据',
             };
-            console.warn(`⚠️ 未获取到 ${period} K线数据`);
+            console.warn(`⚠ 未获取到 ${period} K线数据`);
           }
         } catch (error) {
           result.klineData[period] = {
             success: false,
             error: error.message,
           };
-          console.error(`❌ 保存 ${period} K线数据失败: ${error.message}`);
+          console.error(`✗ 保存 ${period} K线数据失败: ${error.message}`);
         }
       }
 
@@ -171,7 +171,7 @@ class CacheController {
         message: `数据缓存${allSuccess ? '成功' : '部分成功'}: 共保存 ${totalSaved} 条K线数据`,
       });
     } catch (error) {
-      console.error('❌ 缓存数据失败:', error);
+      console.error('✗ 缓存数据失败:', error);
       res.status(500).json({
         success: false,
         error: error.message,
@@ -195,7 +195,7 @@ class CacheController {
         });
       }
 
-      console.log(`💾 批量缓存 ${instruments.length} 个标的数据...`);
+      console.log(`批量缓存 ${instruments.length} 个标的数据...`);
 
       const results = [];
       let successCount = 0;
@@ -243,7 +243,7 @@ class CacheController {
             success: true,
           });
 
-          console.log(`✅ ${inst.symbol} 缓存成功`);
+          console.log(`✓ ${inst.symbol} 缓存成功`);
         } catch (error) {
           failCount++;
           results.push({
@@ -251,7 +251,7 @@ class CacheController {
             success: false,
             error: error.message,
           });
-          console.error(`❌ ${inst.symbol} 缓存失败:`, error.message);
+          console.error(`✗ ${inst.symbol} 缓存失败:`, error.message);
         }
       }
 
@@ -266,7 +266,7 @@ class CacheController {
         message: `批量缓存完成: 成功 ${successCount}, 失败 ${failCount}`,
       });
     } catch (error) {
-      console.error('❌ 批量缓存失败:', error);
+      console.error('✗ 批量缓存失败:', error);
       res.status(500).json({
         success: false,
         error: error.message,
@@ -313,7 +313,7 @@ class CacheController {
         message: `获取缓存数据成功: ${kline.length} 条`,
       });
     } catch (error) {
-      console.error('❌ 获取缓存数据失败:', error);
+      console.error('✗ 获取缓存数据失败:', error);
       res.status(500).json({
         success: false,
         error: error.message,
@@ -339,7 +339,7 @@ class CacheController {
         message: '获取统计信息成功',
       });
     } catch (error) {
-      console.error('❌ 获取统计信息失败:', error);
+      console.error('✗ 获取统计信息失败:', error);
       res.status(500).json({
         success: false,
         error: error.message,

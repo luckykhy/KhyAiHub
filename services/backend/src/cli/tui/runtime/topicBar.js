@@ -55,7 +55,7 @@ let _state = {
 // setInterval handle for the bouncing-dot animation (null when idle/off).
 let _animTimer = null;
 // Animation cadence (ms). Routed through the perfTunables leaf (single
-// source: default 320ms, env KHY_TOPIC_BAR_ANIM_MS / KHY_TUI_LOW_POWER
+// source: default 180ms, env KHY_TOPIC_BAR_ANIM_MS / KHY_TUI_LOW_POWER
 // override) — the dot still reads as a smooth left-right motion without
 // flooding the terminal with title writes. Fail-soft: leaf unavailable →
 // legacy hard-coded 180ms.
@@ -120,7 +120,7 @@ function _paint() {
   const t = _clamp(_state.title);
   // Leaf decides the left glyph: static ✱ when idle/off, bouncing dot when working.
   // Any leaf failure falls back to the historical `✱ ` prefix (byte-identical).
-  let prefix = '🍀 ';
+  let prefix = '✱ ';
   try {
     prefix = _workingIndicator.titlePrefix(
       { working: _state.working, tick: _state.tick },

@@ -3,7 +3,7 @@
 /**
  * tui/uiBridge.js — Bridge between unified protocol and native TUI components.
  *
- * Instead of using the simplified stdin-based fallbacks in uiAdapter.js,
+ * Instead of using the simplified stdin-based fallbacks in uiStdinFallbacks.js,
  * this module provides functions that integrate with the existing
  * PermissionsPrompt, ModelPicker, and FormFlow components.
  *
@@ -30,7 +30,7 @@ function showConfirmNative(response) {
   return new Promise((resolve) => {
     if (!_appRefs || !_appRefs.setPermissionRequest) {
       // Fallback to simple stdin
-      const { showConfirm } = require('./uiAdapter');
+      const { showConfirm } = require('./uiStdinFallbacks');
       return showConfirm(response).then(resolve);
     }
 
@@ -54,7 +54,7 @@ function showListNative(response) {
   return new Promise((resolve) => {
     if (!_appRefs || !_appRefs.setModelPicker) {
       // Fallback to simple stdin
-      const { showList } = require('./uiAdapter');
+      const { showList } = require('./uiStdinFallbacks');
       return showList(response).then(resolve);
     }
 
@@ -82,7 +82,7 @@ function showFormNative(response) {
   return new Promise((resolve) => {
     if (!_appRefs || !_appRefs.setFormFlow) {
       // Fallback to simple stdin
-      const { showForm } = require('./uiAdapter');
+      const { showForm } = require('./uiStdinFallbacks');
       return showForm(response).then(resolve);
     }
 

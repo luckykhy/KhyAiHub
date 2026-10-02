@@ -254,6 +254,29 @@ function clipCell(text, width, marker = '…') {
   return dropped ? acc + marker : acc;
 }
 
+/**
+ * Pad (or clip) `text` to EXACTLY `width` display columns.
+ *
+ * This exists so a right-aligned column can be built without a second width
+ * meter: it clips with `clipCell` and pads with the same `visWidth` ruler, so
+ * `visWidth(padCell(s, w)) === w` holds for every `w >= 1`. Re-deriving the
+ * width here would let the clip point and the alignment column drift apart
+ * independently — the two would look right in isolation and misalign together.
+ *
+ * @param {string} text
+ * @param {number} width - exact columns the result occupies
+ * @returns {string}
+ */
+function padCell(text, width) {
+  const cap = Math.floor(Number(width));
+  if (!Number.isFinite(cap) || cap <= 0) {
+    return '';
+  }
+  const clipped = clipCell(text, cap);
+  const w = visWidth(clipped);
+  return w >= cap ? clipped : clipped + ' '.repeat(cap - w);
+}
+
 // Box(borderStyle:'round', paddingX:1) — what the picker chrome eats from the
 // terminal width: 2 border + 2 padding columns.
 const PICKER_BOX_CHROME_COLS = 4;
@@ -342,6 +365,7 @@ module.exports = {
   visualRows,
   visualRowsUnwrapped,
   clipCell,
+  padCell,
   fitBorder,
   visWidth,
   pickerRowBudget,

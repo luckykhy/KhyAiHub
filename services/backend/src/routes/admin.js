@@ -928,7 +928,7 @@ router.get('/akshare/status', authenticateToken, requireAdmin, async (req, res) 
 // 手动触发 AKShare 版本检查与更新 —— 管理员在后台手动点击"检查更新"时调用
 router.post('/akshare/check', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    console.log('🔧 Admin triggered AKShare version check');
+    console.log('Admin triggered AKShare version check');
     const result = await akshareUpdater.checkAndUpdate(true);
     apiResponse.success(res, result);
   } catch (error) {

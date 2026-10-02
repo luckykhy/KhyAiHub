@@ -16,6 +16,14 @@ const React = require('react');
 const _simpleTokenEstimate = require('../../../utils/simpleTokenEstimate');
 const inkRuntime = require('../inkRuntime');
 // Canonical chars/4 token-estimate atom (zero-dep utils leaf; char fallback only).
+// perfTunables 是本仓计时/性能旋钮的 SSOT（取值路径同 Spinner.js:21 / App.js:1877）。
+// fail-soft：取不到就置 null，由 _taskTtlMs() 回落默认值 —— 渲染体绝不因读配置而抛。
+let _tunables = null;
+try {
+  _tunables = require('../perfTunables');
+} catch {
+  _tunables = null;
+}
 
 // Single-slot memo of the mergeTaskLines parse (pure fn of snap+planTasks) so the
 // checklist isn't re-split/re-deduped every render (incl. every keystroke) when the
@@ -27,6 +35,38 @@ try {
 } catch {
   _taskLinesMemo = null;
 }
+
+// ── 扫盘结果的单槽 TTL 缓存（承 taskLinesMemo 未竟的那一半）────────────────────
+//
+// taskLinesMemo 只记忆 `mergeTaskLines` 的**字符串解析**；`taskStore.snapshot()` 的
+// **扫盘**仍每 render 跑一遍（其注释自陈「留 snapshot 构建给未来的 store 版本号信号」）。
+// 实测那层扫盘占一帧 **45%**（≈49ms/帧；profile 链：snapshot→list→_isStoreStale→statSync，
+// 并列支 getCurrentSessionId→listPersistedSessions→_collectSnapshotFiles→readdirSync）。
+//
+// ⚠ 本刀唯一的实现要害：缓存必须掐在**调用 snapshot() 之前**。若放在其后，snapshot()
+// 内部的 _isStoreStale→_statMtimeMs→statSync 照跑，缓存形同虚设。
+//
+// 语义：窗口内复用上次 lines ⇒ 任务面板最多滞后 taskSnapshotTtlMs() 才反映变化（默认 250ms，
+// 见 perfTunables）。总开关复用 KHY_TASK_LINES_MEMO（关 → 逐帧真扫，逐字节回退今日）。
+// fail-soft 方向：memo 叶子不可用 ⇒ 缓存**不启用**（回退今日行为，而非启用未验证的新行为）。
+let _taskLinesTtl = null; // { at, planOn, lines }
+
+/** TTL（ms）；perfTunables 不可用时回落其默认值 250 —— 渲染体绝不因读配置而抛。 */
+function _taskTtlMs(env) {
+  try {
+    return _tunables && typeof _tunables.taskSnapshotTtlMs === 'function'
+      ? _tunables.taskSnapshotTtlMs(env)
+      : 250;
+  } catch {
+    return 250;
+  }
+}
+
+/** 测试辅助：清空 TTL 单槽（避免跨用例串味）。生产不调用。 */
+function _resetTaskLinesTtl() {
+  _taskLinesTtl = null;
+}
+
 // taskPanelLines.mergeTaskLines is the single source for the merged checklist
 // lines; lazily required & fault-isolated (the task stores are auxiliary).
 function _readMergedTaskLines() {
@@ -34,18 +74,35 @@ function _readMergedTaskLines() {
     if (process.env.KHY_TASK_PANEL === '0') {
       return [];
     }
+    const _planOn = process.env.KHY_PLAN_TASK_PANEL !== '0';
+    // 门控与 taskLinesMemo 同源（KHY_TASK_LINES_MEMO），不另立真源。
+    const _ttlOn = _taskLinesMemo ? _taskLinesMemo.isEnabled(process.env) : false;
+    const _now = Date.now();
+    // TTL 短路 —— 必须在 snapshot() 之前（见上）。
+    if (
+      _ttlOn &&
+      _taskLinesTtl &&
+      _taskLinesTtl.planOn === _planOn &&
+      _now - _taskLinesTtl.at < _taskTtlMs(process.env)
+    ) {
+      return _taskLinesTtl.lines;
+    }
     const taskStore = require('../../../tools/_taskStore');
     const snap = typeof taskStore.snapshot === 'function' ? taskStore.snapshot() : '';
     let planTasks = null;
-    if (process.env.KHY_PLAN_TASK_PANEL !== '0') {
+    if (_planOn) {
       const panelState = require('../../../services/taskPanelState');
       planTasks = typeof panelState.getTasks === 'function' ? panelState.getTasks() : null;
     }
     const { mergeTaskLines } = require('./taskPanelLines');
     const _compute = () => mergeTaskLines(snap, planTasks);
-    return _taskLinesMemo
+    const lines = _taskLinesMemo
       ? _taskLinesMemo.memoMergeTaskLines(snap, planTasks, _compute, process.env)
       : _compute();
+    if (_ttlOn) {
+      _taskLinesTtl = { at: _now, planOn: _planOn, lines };
+    }
+    return lines;
   } catch {
     return [];
   }
@@ -418,7 +475,7 @@ function _queuePanelLines(items) {
   if (list.length > MAX_SHOWN) {
     rows.push(`  …还有 ${list.length - MAX_SHOWN} 条`);
   }
-  rows.push(`  ⏳ ${list.length} 条排队（↑ 取回最后一条，Esc 取回并清空；再按 Esc 打断）`);
+  rows.push(`  ${list.length} 条排队（↑ 取回最后一条，Esc 取回并清空；再按 Esc 打断）`);
   return rows;
 }
 
@@ -448,6 +505,7 @@ function _liveClampBoundaryDecision(prevTurnKey, nextTurnKey, extraReserve) {
 
 module.exports = {
   _readMergedTaskLines,
+  _resetTaskLinesTtl,
   PERMISSION_MODES,
   applyPermissionMode,
   _normToolName,

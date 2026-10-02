@@ -312,7 +312,7 @@ function MessageBlock({ msg, expanded }) {
             )
           )
         ),
-        msg.imageCount > 0 ? h(Text, { color: 'blue' }, `📎×${msg.imageCount}`) : null
+        msg.imageCount > 0 ? h(Text, { color: 'blue' }, `  ×${msg.imageCount}`) : null
       );
     }
     // Legacy transparent echo — byte-identical when gated off. Same display cap
@@ -326,7 +326,7 @@ function MessageBlock({ msg, expanded }) {
         { bold: true },
         collapseLongUserMessage(String(msg.content == null ? '' : msg.content), process.env)
       ),
-      msg.imageCount > 0 ? h(Text, { color: 'blue' }, `  📎×${msg.imageCount}`) : null
+      msg.imageCount > 0 ? h(Text, { color: 'blue' }, `  ×${msg.imageCount}`) : null
     );
   }
 
@@ -566,7 +566,7 @@ function MessageBlock({ msg, expanded }) {
     }
     const rows = [];
     (Array.isArray(msg.qa) ? msg.qa : []).forEach((item, i) => {
-      rows.push(h(Text, { key: `q${i}`, color: 'cyan' }, '❓ ' + String(item.question || '')));
+      rows.push(h(Text, { key: `q${i}`, color: 'cyan' }, '? ' + String(item.question || '')));
       rows.push(h(Text, { key: `a${i}` }, '   → ' + String(item.choice || '')));
     });
     if (rows.length === 0) {

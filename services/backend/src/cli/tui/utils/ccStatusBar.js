@@ -43,7 +43,7 @@ const SIMPLE_MODE_DISPLAY = Object.freeze({
   plan: { label: 'plan', icon: '◈', color: CC_COLORS.info },
   build: { label: 'build', icon: '◉', color: CC_COLORS.warning },
   edit: { label: 'edit', icon: '◉', color: CC_COLORS.toolName },
-  yolo: { label: 'yolo', icon: '⚡', color: CC_COLORS.error },
+  yolo: { label: 'yolo', icon: '◆', color: CC_COLORS.error },
 });
 
 function getSimpleModeDisplay(profile) {
@@ -117,7 +117,7 @@ function buildStatusSegments(o) {
   if (Number.isFinite(cache) && cache > 0) {
     all.push({
       key: 'cache',
-      text: `⚡ ${Math.round(cache)}%`,
+      text: `${Math.round(cache)}%`,
       color: cache >= 70 ? CC_COLORS.success : cache >= 40 ? CC_COLORS.warning : CC_COLORS.error,
     });
   }

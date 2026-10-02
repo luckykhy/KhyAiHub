@@ -59,7 +59,7 @@ router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
     // 实时广播新公告通知
     try {
       const broadcastCount = notificationService.broadcastAnnouncement(fullAnnouncement);
-      console.log(`📢 新公告已广播给 ${broadcastCount} 个用户: "${title}"`);
+      console.log(`新公告已广播给 ${broadcastCount} 个用户: "${title}"`);
     } catch (broadcastError) {
       console.error('广播公告通知失败:', broadcastError);
     }

@@ -78,7 +78,7 @@ function WelcomeBanner({
       ? h(
           Box,
           null,
-          h(Text, { color: 'magenta' }, '🔗 协作 '),
+          h(Text, { color: 'magenta' }, '协作 '),
           h(Text, { color: 'green' }, _bridge.url || ''),
           _bridge.pin ? h(Text, { dimColor: true }, '  PIN ') : null,
           _bridge.pin ? h(Text, { color: 'cyan', bold: true }, _bridge.pin) : null,

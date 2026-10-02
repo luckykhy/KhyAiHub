@@ -20,7 +20,7 @@ function isWordChar(ch) {
 
 // Grapheme-aware caret stepping (code-point granularity). Offsets are UTF-16
 // code units, but a single Backspace / arrow / Delete over an astral character
-// (emoji 😀, 𝕏, CJK ext-B 𠀀 — all surrogate pairs) must move/delete the WHOLE
+// (emoji, 𝕏, CJK ext-B 𠀀 — all surrogate pairs) must move/delete the WHOLE
 // pair. Stepping ±1 code unit tears the pair, leaving a lone surrogate that
 // UTF-8-encodes to U+FFFD (efbfbd) — i.e. silent 乱码 in the user's own typed
 // text before it ever reaches the model. Mirrors the sibling VimCursor's
