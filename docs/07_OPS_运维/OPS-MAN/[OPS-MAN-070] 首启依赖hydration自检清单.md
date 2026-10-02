@@ -1,7 +1,7 @@
 # [OPS-MAN-070] 首启依赖 hydration 自检清单
 
 > 本文件由 `extensions/scripts/khy-diagnostics/hydration-doctor.js --gen-doc` 确定性生成，请勿手改；
-> 规则改在 `scripts/lib/hydrationHealth.js` 的 `_RULES` / `CRITICAL_PACKAGES`，再重新生成。
+> 规则改在 `services/backend/src/services/domain/backup/restore/hydrationHealth.js` 的 `_RULES` / `CRITICAL_PACKAGES`，再重新生成。
 
 ## 这份清单是干什么的
 

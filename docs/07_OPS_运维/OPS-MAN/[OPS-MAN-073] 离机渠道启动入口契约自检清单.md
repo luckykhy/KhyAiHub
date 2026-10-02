@@ -54,7 +54,7 @@ npm 背书。本契约是**发布之前**、**逐渠道**的更强不变量，�
 | `apps/ai-frontend/src/main.js` | 前端 SPA 入口，缺则管理页白屏 |
 | `software/khyquant/frontend/src/main.js` | khyquant 前端入口 |
 
-> ⚠️ **深挖修正（渠道非对称）**：本清单初版只列前 2 条。深挖发现 pip 的
+> ⚠ **深挖修正（渠道非对称）**：本清单初版只列前 2 条。深挖发现 pip 的
 > `REQUIRED_WHEEL_PATHS` / `REQUIRED_SDIST_PATHS` 早已三处钉死全部 6 条运行时关键
 > 文件，而 npm 的 `packaging/npm/scripts/audit-purity.js` 的 `REQUIRED_PATHS` **只钉了
 > 前 2 条**——一个丢了 `ai-backend/src/middleware/auth.js` 的 npm tarball 能通过 npm
@@ -64,7 +64,7 @@ npm 背书。本契约是**发布之前**、**逐渠道**的更强不变量，�
 
 ## 两道防线
 
-> ⚠️ **深挖修正（substring false-GREEN 边界锚定）**：一致性断言的匹配逻辑起初是裸
+> ⚠ **深挖修正（substring false-GREEN 边界锚定）**：一致性断言的匹配逻辑起初是裸
 > 子串 `text.includes(prefix+path)`。在 sdist 的**空前缀**下这能被 FALSE-GREEN 欺骗——
 > 一个启动地板路径哪怕只作为**更长路径的子串**（`.../server.js.template`）或**注释
 > 文本**出现，也会被误判「已钉死」，守卫于是对一个真没钉死该文件的清单**放行**（最危险

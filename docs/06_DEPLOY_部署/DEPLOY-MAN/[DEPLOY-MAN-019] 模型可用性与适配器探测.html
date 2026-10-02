@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -50,7 +50,7 @@
 <h2 id="二-适配器优先级与探测条件">二、适配器优先级与探测条件<a class="anchor" href="#二-适配器优先级与探测条件" aria-label="锚点">#</a></h2>
 <p><code>aiGateway.js</code> 构造函数里的完整清单，按 <code>priority</code> 升序（数字小者优先被自动选中）：</p>
 <table><thead><tr><th>priority</th><th>key</th><th>分组</th><th><code>detect()</code> 找什么</th></tr></thead><tbody><tr><td>0</td><td><code>kiro</code></td><td>云端结构化</td><td>Kiro 凭据</td></tr><tr><td>1</td><td><code>cursor</code></td><td>云端结构化</td><td>Cursor token 文件（或账号池里的 pool token）</td></tr><tr><td>2</td><td><code>trae</code></td><td>云端结构化</td><td>Trae 凭据 / <code>TRAE_API_KEY</code></td></tr><tr><td>3</td><td><code>claude</code></td><td>云端结构化</td><td><code>claude</code> 命令存在（PATH 或便携版 <code>~/.khy/tools</code>）</td></tr><tr><td>4</td><td><code>codex</code></td><td>云端结构化</td><td>Codex 凭据</td></tr><tr><td>5</td><td><code>api</code></td><td>云端结构化</td><td>MultiFreeService 有可用 provider，或 <code>apiKeyPool</code> 里有可用 key</td></tr><tr><td>7</td><td><code>vscode</code></td><td>IDE 桥接</td><td>VS Code + Copilot</td></tr><tr><td>8</td><td><code>warp</code></td><td>IDE 桥接</td><td>Warp 凭据</td></tr><tr><td>9</td><td><code>cursor2api</code></td><td>IDE 桥接</td><td>Cursor token（走 API 化通道）</td></tr><tr><td>10</td><td><code>relay_api</code></td><td>IDE 桥接</td><td>中继 API 配置</td></tr><tr><td>11</td><td><code>ollama</code></td><td>本地模型</td><td><code>GET /api/tags</code> 探活（默认 <code>http://localhost:11434</code>）</td></tr><tr><td>12</td><td><code>localLLM</code></td><td>本地模型</td><td>LocalLLM 服务在跑</td></tr><tr><td>13</td><td><code>cli</code></td><td>辅助通道</td><td>通用 CLI 工具</td></tr><tr><td>14</td><td><code>relay</code></td><td>辅助通道</td><td>Web 中继</td></tr><tr><td>15</td><td><code>clipboard</code></td><td>辅助通道</td><td>剪贴板中继</td></tr><tr><td>16</td><td><code>opencode</code></td><td>定向指挥</td><td>opencode 二进制（<strong>刻意置于低位</strong>，不抢占自动回退）</td></tr><tr><td>17</td><td><code>openclaw</code></td><td>定向指挥</td><td>门控 <code>KHY_OPENCLAW</code> <strong>默认关</strong>，关闭时 <code>detect()</code> 恒为 false</td></tr></tbody></table>
-<blockquote><p>⚠️ <strong>priority 6 空缺</strong>（表中从 5 直接跳到 7）：该位原属 <code>windsurf</code> 适配器，它已随其 IDE<br>被 Cognition 退役更名 Devin Desktop 而下线（2026-09-23）。空位<strong>刻意保留不重排</strong> ——<br>priority 是代码里的字面量，重排会让历史日志/文档中的通道序号失去可比性。<br>退役存证：<code>.khy/feedback/windsurf-module-purge-20260923/</code>。</p></blockquote>
+<blockquote><p>⚠ <strong>priority 6 空缺</strong>（表中从 5 直接跳到 7）：该位原属 <code>windsurf</code> 适配器，它已随其 IDE<br>被 Cognition 退役更名 Devin Desktop 而下线（2026-09-23）。空位<strong>刻意保留不重排</strong> ——<br>priority 是代码里的字面量，重排会让历史日志/文档中的通道序号失去可比性。<br>退役存证：<code>.khy/feedback/windsurf-module-purge-20260923/</code>。</p></blockquote>
 <blockquote><p>分组注释在代码里写得很清楚：云端结构化适配器有原生 <code>tool_use</code>，最可靠；IDE 桥接依赖 IDE 进程，<br>次可靠；本地模型 function calling 弱或缺失，所以排在最后。<code>opencode</code> / <code>openclaw</code> 有自己的<br>provider/model 配置，属「定向指挥」类，<strong>不应成为通用聊天的默认回退</strong>，因此排在自动优先级最末；<br>显式 <code>preferredAdapter: 'opencode'</code> 走定向路由，不受此顺序影响。</p></blockquote>
 <p><strong>只要有任意一个适配器 available，<code>/model</code> 就有内容。</strong> 不需要凑齐多个。</p>
 <hr>

@@ -38,7 +38,7 @@
 | 8 | `warp` | Warp | Warp 凭据 |
 | 9 | `cursor2api` | Cursor（API 化通道） | 同 `cursor`，走 API 化路径 |
 
-> ⚠️ priority 6（原 `windsurf`）已空缺：该适配器随其 IDE 被 Cognition 退役更名 Devin Desktop
+> ⚠ priority 6（原 `windsurf`）已空缺：该适配器随其 IDE 被 Cognition 退役更名 Devin Desktop
 > 而下线（2026-09-23）。存证 `.khy/feedback/windsurf-module-purge-20260923/`。
 
 **只要有一个 available，`/model` 就有内容。** 不必凑齐。

@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -38,7 +38,7 @@
 <h2 id="一-支持的桥接通道">一、支持的桥接通道<a class="anchor" href="#一-支持的桥接通道" aria-label="锚点">#</a></h2>
 <p><code>[DEPLOY-MAN-019]</code> 第二节的 17 个适配器里，靠<strong>探测本机 IDE 凭据</strong>工作的是这八个<br>（<code>GATEWAY_&lt;KEY&gt;_ENABLED=false</code> 这组 kill switch 覆盖的正是它们）：</p>
 <table><thead><tr><th>priority</th><th>key</th><th>对应 IDE / 服务</th><th><code>detect()</code> 实际检查什么</th></tr></thead><tbody><tr><td>0</td><td><code>kiro</code></td><td>Kiro</td><td>Kiro 凭据</td></tr><tr><td>1</td><td><code>cursor</code></td><td>Cursor</td><td>Cursor 本地 token（<code>storage.json</code> / <code>state.vscdb</code>），或账号池 pool token</td></tr><tr><td>2</td><td><code>trae</code></td><td>Trae</td><td>Trae 凭据 / <code>TRAE_API_KEY</code></td></tr><tr><td>3</td><td><code>claude</code></td><td>Claude Code</td><td><code>claude</code> 命令存在（PATH，或便携版 <code>~/.khy/tools</code> 下的 claude）</td></tr><tr><td>4</td><td><code>codex</code></td><td>Codex</td><td>Codex 凭据</td></tr><tr><td>7</td><td><code>vscode</code></td><td>VS Code + Copilot</td><td>Copilot token 形状校验通过</td></tr><tr><td>8</td><td><code>warp</code></td><td>Warp</td><td>Warp 凭据</td></tr><tr><td>9</td><td><code>cursor2api</code></td><td>Cursor（API 化通道）</td><td>同 <code>cursor</code>，走 API 化路径</td></tr></tbody></table>
-<blockquote><p>⚠️ priority 6（原 <code>windsurf</code>）已空缺：该适配器随其 IDE 被 Cognition 退役更名 Devin Desktop<br>而下线（2026-09-23）。存证 <code>.khy/feedback/windsurf-module-purge-20260923/</code>。</p></blockquote>
+<blockquote><p>⚠ priority 6（原 <code>windsurf</code>）已空缺：该适配器随其 IDE 被 Cognition 退役更名 Devin Desktop<br>而下线（2026-09-23）。存证 <code>.khy/feedback/windsurf-module-purge-20260923/</code>。</p></blockquote>
 <p><strong>只要有一个 available，<code>/model</code> 就有内容。</strong> 不必凑齐。</p>
 <hr>
 <h2 id="二-claude-code-桥接-探测最简单的一条">二、Claude Code 桥接（探测最简单的一条）<a class="anchor" href="#二-claude-code-桥接-探测最简单的一条" aria-label="锚点">#</a></h2>

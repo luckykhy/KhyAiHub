@@ -66,7 +66,7 @@
 | 16 | `opencode` | 定向指挥 | opencode 二进制（**刻意置于低位**，不抢占自动回退） |
 | 17 | `openclaw` | 定向指挥 | 门控 `KHY_OPENCLAW` **默认关**，关闭时 `detect()` 恒为 false |
 
-> ⚠️ **priority 6 空缺**（表中从 5 直接跳到 7）：该位原属 `windsurf` 适配器，它已随其 IDE
+> ⚠ **priority 6 空缺**（表中从 5 直接跳到 7）：该位原属 `windsurf` 适配器，它已随其 IDE
 > 被 Cognition 退役更名 Devin Desktop 而下线（2026-09-23）。空位**刻意保留不重排** ——
 > priority 是代码里的字面量，重排会让历史日志/文档中的通道序号失去可比性。
 > 退役存证：`.khy/feedback/windsurf-module-purge-20260923/`。

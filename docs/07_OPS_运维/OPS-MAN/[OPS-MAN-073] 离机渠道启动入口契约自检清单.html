@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -50,9 +50,9 @@
 <p>| <code>services/ai-backend/src/middleware/auth.js</code> | 缺它曾让 bundled 安装的每条 proxy/user-gateway 路由 500 |</p>
 <p>| <code>apps/ai-frontend/src/main.js</code> | 前端 SPA 入口，缺则管理页白屏 |</p>
 <p>| <code>software/khyquant/frontend/src/main.js</code> | khyquant 前端入口 |</p>
-<blockquote><p>⚠️ <strong>深挖修正（渠道非对称）</strong>：本清单初版只列前 2 条。深挖发现 pip 的<br><code>REQUIRED_WHEEL_PATHS</code> / <code>REQUIRED_SDIST_PATHS</code> 早已三处钉死全部 6 条运行时关键<br>文件，而 npm 的 <code>packaging/npm/scripts/audit-purity.js</code> 的 <code>REQUIRED_PATHS</code> <strong>只钉了<br>前 2 条</strong>——一个丢了 <code>ai-backend/src/middleware/auth.js</code> 的 npm tarball 能通过 npm<br>自己的 purity 审计并发布，却在别人机器上让每条 proxy/user-gateway 路由 500（该文件<br>曾真实掉出打包一次）。已把全部 6 条补进 <code>LAUNCH_CRITICAL_BUNDLE_PATHS</code>（本契约的<br>SSOT）与 npm <code>REQUIRED_PATHS</code>，三份清单现逐条一致。</p></blockquote>
+<blockquote><p>⚠ <strong>深挖修正（渠道非对称）</strong>：本清单初版只列前 2 条。深挖发现 pip 的<br><code>REQUIRED_WHEEL_PATHS</code> / <code>REQUIRED_SDIST_PATHS</code> 早已三处钉死全部 6 条运行时关键<br>文件，而 npm 的 <code>packaging/npm/scripts/audit-purity.js</code> 的 <code>REQUIRED_PATHS</code> <strong>只钉了<br>前 2 条</strong>——一个丢了 <code>ai-backend/src/middleware/auth.js</code> 的 npm tarball 能通过 npm<br>自己的 purity 审计并发布，却在别人机器上让每条 proxy/user-gateway 路由 500（该文件<br>曾真实掉出打包一次）。已把全部 6 条补进 <code>LAUNCH_CRITICAL_BUNDLE_PATHS</code>（本契约的<br>SSOT）与 npm <code>REQUIRED_PATHS</code>，三份清单现逐条一致。</p></blockquote>
 <h2 id="两道防线">两道防线<a class="anchor" href="#两道防线" aria-label="锚点">#</a></h2>
-<blockquote><p>⚠️ <strong>深挖修正（substring false-GREEN 边界锚定）</strong>：一致性断言的匹配逻辑起初是裸<br>子串 <code>text.includes(prefix+path)</code>。在 sdist 的<strong>空前缀</strong>下这能被 FALSE-GREEN 欺骗——<br>一个启动地板路径哪怕只作为<strong>更长路径的子串</strong>（<code>.../server.js.template</code>）或<strong>注释<br>文本</strong>出现，也会被误判「已钉死」，守卫于是对一个真没钉死该文件的清单<strong>放行</strong>（最危险<br>的失败：说安全其实不安全）。已改为锚定收尾引号：<code>&lt;prefix&gt;&lt;path&gt;</code> 紧后必须是 <code>&quot;</code> 或 <code>'</code>，<br>只有作为<strong>完整带引号条目</strong>出现才算数（<code>_pinnedAsQuotedEntry</code>）。三份清单的 required-path<br>都是带引号字面量，故真实清单不受影响；伪命中（子串/注释）不再放行。</p></blockquote>
+<blockquote><p>⚠ <strong>深挖修正（substring false-GREEN 边界锚定）</strong>：一致性断言的匹配逻辑起初是裸<br>子串 <code>text.includes(prefix+path)</code>。在 sdist 的<strong>空前缀</strong>下这能被 FALSE-GREEN 欺骗——<br>一个启动地板路径哪怕只作为<strong>更长路径的子串</strong>（<code>.../server.js.template</code>）或<strong>注释<br>文本</strong>出现，也会被误判「已钉死」，守卫于是对一个真没钉死该文件的清单<strong>放行</strong>（最危险<br>的失败：说安全其实不安全）。已改为锚定收尾引号：<code>&lt;prefix&gt;&lt;path&gt;</code> 紧后必须是 <code>&quot;</code> 或 <code>'</code>，<br>只有作为<strong>完整带引号条目</strong>出现才算数（<code>_pinnedAsQuotedEntry</code>）。三份清单的 required-path<br>都是带引号字面量，故真实清单不受影响；伪命中（子串/注释）不再放行。</p></blockquote>
 <ol><li><strong>构建自由的一致性断言</strong>（<code>must</code> + pre-commit）：</li></ol>
 <p><code>scripts/tests/bundleLaunchContract.test.js</code> 解析磁盘上三份权威清单，断言三渠道都<br>   钉死了启动地板。无需构建、不联网、纯读盘。任一渠道漏钉即变红并点名。已并入<br>   <code>npm run test:maintainer:safety</code>（发布门 <code>maintainer-safety</code> 为 <code>must</code> 阶段，<br>   pre-commit 亦跑）。</p>
 <ol><li><strong>真实产物审计</strong>：<code>scripts/release/audit_pip_artifacts.py</code> 现在会对真实</li></ol>

@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -39,7 +39,7 @@
 <p>失败 → 原因：包的启动脚本缺失（半装中断/安全软件误删）；解决方法：<code>pip install --force-reinstall khy-os</code>（npm 重装 <code>@khy-os/khy-os</code>）。</p>
 <ol><li><strong>服务入口 <code>server.js</code></strong> — 后端服务入口；同上不完整。</li><li><strong>依赖水合 <code>node_modules</code></strong> — 存在 <strong>且非空</strong>。判定与 pip 启动器自身的水合 SSOT</li></ol>
 <p>完全一致（<code>platform/khy_platform/cli.py:1820</code>：<code>node_modules.is_dir() and<br>   any(node_modules.iterdir())</code>——<strong>内容无关</strong>，只看目录非空）。<br>   失败 → 原因：首启依赖水合未完成（缺失或空壳）；解决方法：项目根跑 <code>khy</code>（触发水合）或 <code>npm install</code>。</p>
-<blockquote><p>⚠️ <strong>深挖修正（SSOT 对齐）</strong>：早期实现用名单探针（<code>express</code> / <code>.package-lock.json</code> /<br><code>.bin</code>）判定「已水合」。但 khy 用<strong>提升式（hoisted / workspace）</strong> node_modules——<br>真实依赖装在<strong>仓库根</strong> <code>node_modules</code>，<code>services/backend/node_modules</code> 只留少量<br>提升残留（如 <code>ansi-regex</code> / <code>@khy</code>），既无 <code>express</code> 也无 <code>.package-lock.json</code>。<br>启动器认它已水合（非空即可），名单探针却会误报「空壳」→ 把健康机器的用户支去白跑<br><code>npm install</code>。现改为注入 <code>readdir</code> 做「非空目录」判定，与启动器逐字一致；名单探针<br>仅作无法注入 <code>readdir</code> 时的降级兜底。</p></blockquote>
+<blockquote><p>⚠ <strong>深挖修正（SSOT 对齐）</strong>：早期实现用名单探针（<code>express</code> / <code>.package-lock.json</code> /<br><code>.bin</code>）判定「已水合」。但 khy 用<strong>提升式（hoisted / workspace）</strong> node_modules——<br>真实依赖装在<strong>仓库根</strong> <code>node_modules</code>，<code>services/backend/node_modules</code> 只留少量<br>提升残留（如 <code>ansi-regex</code> / <code>@khy</code>），既无 <code>express</code> 也无 <code>.package-lock.json</code>。<br>启动器认它已水合（非空即可），名单探针却会误报「空壳」→ 把健康机器的用户支去白跑<br><code>npm install</code>。现改为注入 <code>readdir</code> 做「非空目录」判定，与启动器逐字一致；名单探针<br>仅作无法注入 <code>readdir</code> 时的降级兜底。</p></blockquote>
 <ol><li><strong>khy 命令可达</strong> — <code>khy</code> 是否在 PATH。<strong>与托盘左右键无反应同一根因</strong>（开机自启/detached 启动继承的 PATH 常不含 pip Scripts 目录）。</li></ol>
 <p>不在 PATH → <strong>warn（非 error）</strong>，因为 <code>python -m khy_platform &lt;命令&gt;</code> 是保底可用入口；解决方法即用它，或把 Scripts/bin 加进 PATH。</p>
 <h2 id="分层与-ssot">分层与 SSOT<a class="anchor" href="#分层与-ssot" aria-label="锚点">#</a></h2>

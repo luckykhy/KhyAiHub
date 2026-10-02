@@ -62,7 +62,7 @@ npm whoami           # 确认登录成功
 脚本：`scripts/release/publish-dual.sh`。**审计门控**——两个渠道审计全绿之前不上传任何东西；任一审计失败立即中止。
 
 ```bash
-cd /home/kodehu03/Khy-OS
+cd {$HOME}/Khy-OS
 
 # 正式双发（会先打印发布计划并要求确认）
 bash scripts/release/publish-dual.sh 0.1.95
@@ -113,7 +113,7 @@ bash scripts/release/publish-dual.sh 0.1.95 --push
 ### 5.2 发布 pip（`khy-os`）
 
 ```bash
-cd /home/kodehu03/Khy-OS
+cd {$HOME}/Khy-OS
 
 # (1) 隔离构建 + 纯净/完整双审计
 bash scripts/release/build-and-audit-pip-purity.sh
@@ -128,7 +128,7 @@ python3 -m twine upload dist/*
 ### 5.3 发布 npm（`@khy-os/khy-os`）
 
 ```bash
-cd /home/kodehu03/Khy-OS/packaging/npm
+cd {$REPO_ROOT}/packaging/npm
 
 # (1) 纯净 + 完整审计（内部 npm pack 触发 prepack 组装工作坊）+ 单测
 npm run audit:purity
@@ -139,7 +139,7 @@ npm publish --access public
 #   先彩排：npm publish --dry-run
 ```
 
-> ⚠️ `prepack`（`assemble.js`）在**维护端**需要 Python（它复用 pip bundle，缺失时会 `python setup.py build_py` 建一次）。终端用户安装时是纯 Node。
+> ⚠ `prepack`（`assemble.js`）在**维护端**需要 Python（它复用 pip bundle，缺失时会 `python setup.py build_py` 建一次）。终端用户安装时是纯 Node。
 
 ---
 

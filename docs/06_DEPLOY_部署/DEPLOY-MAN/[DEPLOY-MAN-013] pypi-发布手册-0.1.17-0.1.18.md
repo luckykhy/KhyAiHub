@@ -1,7 +1,7 @@
 <!-- 文档分类: DEPLOY-MAN-013 | 阶段: 部署 | 原路径: docs/指南/pypi-发布手册-0.1.17-0.1.18.md -->
 # PyPI 发布手册（0.1.17 补丁 + 0.1.18 多平台）
 
-> ⚠️ **已归档 / 被取代**：本手册针对 0.1.17–0.1.18 的发布流程，已被最新的发布说明取代。当前发布流程请参阅 [发布说明-0.1.27.md]([DEPLOY-MAN-014] 发布说明-0.1.27.md)。本文仅作历史记录保留。
+> ⚠ **已归档 / 被取代**：本手册针对 0.1.17–0.1.18 的发布流程，已被最新的发布说明取代。当前发布流程请参阅 [发布说明-0.1.27.md]([DEPLOY-MAN-014] 发布说明-0.1.27.md)。本文仅作历史记录保留。
 
 ## 1. 范围
 
@@ -58,7 +58,7 @@
 
 ```bash
 TWINE_USERNAME=__token__ TWINE_PASSWORD='pypi-<NEW_TOKEN>' \
-python3 -m twine upload /home/kodehu03/Downloads/khy_os-0.1.17-py3-none-win_amd64.whl
+python3 -m twine upload {$HOME}/Downloads/khy_os-0.1.17-py3-none-win_amd64.whl
 ```
 
 ### 4.3 校验

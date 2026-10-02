@@ -22,8 +22,8 @@
 
 | 你想要的 | 用哪条路 |
 |----------|----------|
-| **只要把当前版本的源码放上 GitHub**(绝大多数情况) | ✅ 本文档:`pip install` → `khy restore` → push |
-| **要完整 git 提交历史** | ❌ pip 包做不到(无 `.git`)。改用 `git bundle` 摆渡,见本文 §5 |
+| **只要把当前版本的源码放上 GitHub**(绝大多数情况) | ✓ 本文档:`pip install` → `khy restore` → push |
+| **要完整 git 提交历史** | ✗ pip 包做不到(无 `.git`)。改用 `git bundle` 摆渡,见本文 §5 |
 
 ---
 
@@ -32,7 +32,7 @@
 确认包里**真的带了源码快照**——否则外网机还原不出来。
 
 ```bash
-cd /home/kodehu03/Khy-OS
+cd {$HOME}/Khy-OS
 
 # 正常发布(任选)
 python -m build && twine check dist/* && twine upload dist/*

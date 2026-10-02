@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -27,7 +27,7 @@
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#deploy-man-018-khyos-android-构建避坑指南">[DEPLOY-MAN-018] khyos Android 构建避坑指南</a></li><li class="lvl-2"><a href="#0-一分钟上手">0. 一分钟上手</a></li><li class="lvl-2"><a href="#1-选型纠偏-为什么是-capacitor-不是-beeware-briefcase">1. 选型纠偏：为什么是 Capacitor，不是 BeeWare/Briefcase</a></li><li class="lvl-3"><a href="#1-1-推论-没有-python-c-扩展交叉编译-这回事">1.1 推论：没有「Python C 扩展交叉编译」这回事</a></li><li class="lvl-2"><a href="#2-命令做了什么-确定性串行步骤">2. 命令做了什么（确定性串行步骤）</a></li><li class="lvl-3"><a href="#2-1-版本锁单一真源">2.1 版本锁单一真源</a></li><li class="lvl-2"><a href="#3-唯一需手动-安装-jdk-17">3. 唯一需手动：安装 JDK 17+</a></li><li class="lvl-2"><a href="#4-跨平台-国内网络踩坑对照表">4. 跨平台 / 国内网络踩坑对照表</a></li><li class="lvl-2"><a href="#5-防呆红线-实现纪律">5. 防呆红线（实现纪律）</a></li><li class="lvl-2"><a href="#6-参数速查">6. 参数速查</a></li><li class="lvl-2"><a href="#7-相关文件">7. 相关文件</a></li></ul></nav>
       <article class="doc-body">
 <h1 id="deploy-man-018-khyos-android-构建避坑指南">[DEPLOY-MAN-018] khyos Android 构建避坑指南<a class="anchor" href="#deploy-man-018-khyos-android-构建避坑指南" aria-label="锚点">#</a></h1>
-<blockquote><p>⚠️ <strong>2026-09-17 起本指南覆盖范围变更</strong>：随身 App 的默认构建入口已改为<br>Flutter 工程 <code>apps/khy-os-client-app/</code>，走 <code>npm run android:release</code><br>（<code>scripts/release/build-android.ps1</code>，产签名 APK+AAB）。本指南描述的<br>Capacitor + <code>khy build android</code> 路线<strong>不再针对仓库自带的应用</strong>，仅适用于<br>用 <code>KHY_ANDROID_PROJECT=&lt;外部 Capacitor 工程&gt;</code> 显式指定的外部工程——<br>仓库里的 <code>apps/khy-mobile</code> Capacitor 壳已隔离（0 源码、源码已丢失，<br>见 <code>[DESIGN-ARCH-120]</code>）。下方正文保留为 Capacitor 路线的避坑参考。</p></blockquote>
+<blockquote><p>⚠ <strong>2026-09-17 起本指南覆盖范围变更</strong>：随身 App 的默认构建入口已改为<br>Flutter 工程 <code>apps/khy-os-client-app/</code>，走 <code>npm run android:release</code><br>（<code>scripts/release/build-android.ps1</code>，产签名 APK+AAB）。本指南描述的<br>Capacitor + <code>khy build android</code> 路线<strong>不再针对仓库自带的应用</strong>，仅适用于<br>用 <code>KHY_ANDROID_PROJECT=&lt;外部 Capacitor 工程&gt;</code> 显式指定的外部工程——<br>仓库里的 <code>apps/khy-mobile</code> Capacitor 壳已隔离（0 源码、源码已丢失，<br>见 <code>[DESIGN-ARCH-120]</code>）。下方正文保留为 Capacitor 路线的避坑参考。</p></blockquote>
 <blockquote><p>目标：pip 装好 khyos 后，在 <strong>Windows / Linux</strong> 上一条命令出 Android APK，<br>除自行装 JDK 外<strong>零手动配置</strong>。本指南给出正确的技术路线、用法、以及踩坑对照表。</p></blockquote>
 <hr>
 <h2 id="0-一分钟上手">0. 一分钟上手<a class="anchor" href="#0-一分钟上手" aria-label="锚点">#</a></h2>
@@ -40,7 +40,7 @@ khy build android -o dist/apk <span class="hljs-comment"># 指定输出目录</s
 <hr>
 <h2 id="1-选型纠偏-为什么是-capacitor-不是-beeware-briefcase">1. 选型纠偏：为什么是 Capacitor，不是 BeeWare/Briefcase<a class="anchor" href="#1-选型纠偏-为什么是-capacitor-不是-beeware-briefcase" aria-label="锚点">#</a></h2>
 <p>很多人（包括初版需求）会想当然地用 <strong>BeeWare/Briefcase</strong> 把「Python 应用」打成 APK。<br><strong>对 khyos 这是错的</strong>，会产出一个跑不起来的废包。原因是 khyos 的真实架构：</p>
-<table><thead><tr><th>层</th><th>实际技术</th><th>能否进 BeeWare 的 APK</th></tr></thead><tbody><tr><td>核心后端</td><td><strong>Node.js</strong>（Express AI 网关）</td><td>❌ Briefcase 只打包纯 Python</td></tr><tr><td>用户界面</td><td><strong>Vue3 + Vite</strong> Web 前端</td><td>❌ 非 Python，Briefcase 不识别</td></tr><tr><td>pip 包 <code>khy_platform</code></td><td>薄启动器（仅 <code>requests</code>+<code>cffi</code>）</td><td>不是 App 主体，只是 launcher</td></tr></tbody></table>
+<table><thead><tr><th>层</th><th>实际技术</th><th>能否进 BeeWare 的 APK</th></tr></thead><tbody><tr><td>核心后端</td><td><strong>Node.js</strong>（Express AI 网关）</td><td>✗ Briefcase 只打包纯 Python</td></tr><tr><td>用户界面</td><td><strong>Vue3 + Vite</strong> Web 前端</td><td>✗ 非 Python，Briefcase 不识别</td></tr><tr><td>pip 包 <code>khy_platform</code></td><td>薄启动器（仅 <code>requests</code>+<code>cffi</code>）</td><td>不是 App 主体，只是 launcher</td></tr></tbody></table>
 <p>结论：khyos 的核心<strong>不是纯 Python</strong>，Briefcase 无从下手。正确的桥接是<br><strong>Capacitor</strong>——用原生 WebView 装载已构建的 Vue 前端，前端通过网络（本地/局域网/云端）<br>连接后端网关。随身 App 的 Capacitor 工程在 <strong><code>apps/khy-mobile/</code></strong>（L3 层，<br><code>android/</code> 子目录已 <code>cap add</code> 完成，含 <code>gradlew</code>、<code>variables.gradle</code>、<code>local.properties</code>）。<br><code>khy build android</code> 做的就是把它的构建流程<strong>自动化、跨平台化、零配置化</strong>。</p>
 <blockquote><p>早期版本曾把 <code>software/khyquant/frontend/android</code> 当作构建目标——那是 khyquant<br>应用自己的前端，不是随身 App。编排器现在只认 <code>apps/khy-mobile</code>，也可用<br><code>KHY_ANDROID_PROJECT</code> 显式覆盖。</p></blockquote>
 <h3 id="1-1-推论-没有-python-c-扩展交叉编译-这回事">1.1 推论：没有「Python C 扩展交叉编译」这回事<a class="anchor" href="#1-1-推论-没有-python-c-扩展交叉编译-这回事" aria-label="锚点">#</a></h3>

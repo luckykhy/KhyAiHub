@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -28,7 +28,7 @@
       <article class="doc-body">
 <p>&lt;!-- 文档分类: DEPLOY-MAN-013 | 阶段: 部署 | 原路径: docs/指南/pypi-发布手册-0.1.17-0.1.18.md --&gt;</p>
 <h1 id="pypi-发布手册-0-1-17-补丁-0-1-18-多平台">PyPI 发布手册（0.1.17 补丁 + 0.1.18 多平台）<a class="anchor" href="#pypi-发布手册-0-1-17-补丁-0-1-18-多平台" aria-label="锚点">#</a></h1>
-<blockquote><p>⚠️ <strong>已归档 / 被取代</strong>：本手册针对 0.1.17–0.1.18 的发布流程，已被最新的发布说明取代。当前发布流程请参阅 [发布说明-0.1.27.md]([DEPLOY-MAN-014] 发布说明-0.1.27.md)。本文仅作历史记录保留。</p></blockquote>
+<blockquote><p>⚠ <strong>已归档 / 被取代</strong>：本手册针对 0.1.17–0.1.18 的发布流程，已被最新的发布说明取代。当前发布流程请参阅 [发布说明-0.1.27.md]([DEPLOY-MAN-014] 发布说明-0.1.27.md)。本文仅作历史记录保留。</p></blockquote>
 <h2 id="1-范围">1. 范围<a class="anchor" href="#1-范围" aria-label="锚点">#</a></h2>
 <p>本文档记录：</p>
 <ol><li>为什么 <code>0.1.17</code> 起初只是部分支持跨平台。</li><li>如何通过上传缺失的 Windows wheel 来为 <code>0.1.17</code> 打补丁。</li><li>如何正确发布 <code>0.1.18</code>，使 <code>pip</code> 能按平台自动选择构件。</li></ol>
@@ -50,7 +50,7 @@
 <p>如果任何 token 曾在聊天/日志/终端截图中暴露，请立即吊销并创建新的 PyPI token。</p>
 <h3 id="4-2-上传命令-非交互式">4.2 上传命令（非交互式）<a class="anchor" href="#4-2-上传命令-非交互式" aria-label="锚点">#</a></h3>
 <pre><code class="language-bash">TWINE_USERNAME=__token__ TWINE_PASSWORD=<span class="hljs-string">&#x27;pypi-&lt;NEW_TOKEN&gt;&#x27;</span> \
-python3 -m twine upload /home/kodehu03/Downloads/khy_os-0.1.17-py3-none-win_amd64.whl</code></pre>
+python3 -m twine upload {$HOME}/Downloads/khy_os-0.1.17-py3-none-win_amd64.whl</code></pre>
 <h3 id="4-3-校验">4.3 校验<a class="anchor" href="#4-3-校验" aria-label="锚点">#</a></h3>
 <pre><code class="language-bash">python3 - &lt;&lt;<span class="hljs-string">&#x27;PY&#x27;</span>
 import json, urllib.request

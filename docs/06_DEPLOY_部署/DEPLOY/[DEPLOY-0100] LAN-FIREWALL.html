@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -68,7 +68,7 @@ AI_MGMT_HOST=0.0.0.0 node server.js
 <h2 id="3-macos-防火墙-系统设置-pfctl">3. macOS 防火墙（系统设置 / <code>pfctl</code>）<a class="anchor" href="#3-macos-防火墙-系统设置-pfctl" aria-label="锚点">#</a></h2>
 <p>macOS 默认开启「应用级防火墙」（系统设置 → 网络 → 防火墙）。<code>pfctl</code> 是底层包过滤，<br>桌面端用「系统设置」更直观。</p>
 <h3 id="3-1-桌面-gui-推荐">3.1 桌面 GUI（推荐）<a class="anchor" href="#3-1-桌面-gui-推荐" aria-label="锚点">#</a></h3>
-<ol><li>系统设置 → 网络 → 防火墙 → 点 🔒 解锁 → 选项…</li><li>「自动允许内置软件接受传入连接」已开启 → <strong>无需再放行</strong> node 二进制。</li><li>若防火墙开启但 node 仍被拦截，在「允许下列应用接受传入连接」里把 node 添加进去。</li></ol>
+<ol><li>系统设置 → 网络 → 防火墙 → 点 解锁 → 选项…</li><li>「自动允许内置软件接受传入连接」已开启 → <strong>无需再放行</strong> node 二进制。</li><li>若防火墙开启但 node 仍被拦截，在「允许下列应用接受传入连接」里把 node 添加进去。</li></ol>
 <h3 id="3-2-命令行-pfctl-需要-root">3.2 命令行（<code>pfctl</code>，需要 root）<a class="anchor" href="#3-2-命令行-pfctl-需要-root" aria-label="锚点">#</a></h3>
 <p>macOS 自带 <code>socketfilterfw</code> / <code>pfctl</code> 两个 CLI：</p>
 <pre><code class="language-bash"><span class="hljs-comment"># 临时放行 9090/TCP（重启失效）</span>

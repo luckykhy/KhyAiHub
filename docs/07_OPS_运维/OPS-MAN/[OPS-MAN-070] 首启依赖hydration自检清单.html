@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -27,7 +27,7 @@
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#ops-man-070-首启依赖-hydration-自检清单">[OPS-MAN-070] 首启依赖 hydration 自检清单</a></li><li class="lvl-2"><a href="#这份清单是干什么的">这份清单是干什么的</a></li><li class="lvl-2"><a href="#与其他自检的分工-三层各管一段">与其他自检的分工（三层各管一段）</a></li><li class="lvl-2"><a href="#最阴险的一种-裂脑-splitbrain">最阴险的一种：裂脑（splitbrain）</a></li><li class="lvl-3"><a href="#它的近亲-空心包-hollow">它的近亲：空心包（hollow）</a></li><li class="lvl-2"><a href="#关键运行时依赖-缺任一则后端塌陷">关键运行时依赖（缺任一则后端塌陷）</a></li><li class="lvl-2"><a href="#自检会检查这些项">自检会检查这些项</a></li><li class="lvl-2"><a href="#人工修复步骤-照着做">人工修复步骤（照着做）</a></li><li class="lvl-2"><a href="#红线-继承项目章程">红线（继承项目章程）</a></li></ul></nav>
       <article class="doc-body">
 <h1 id="ops-man-070-首启依赖-hydration-自检清单">[OPS-MAN-070] 首启依赖 hydration 自检清单<a class="anchor" href="#ops-man-070-首启依赖-hydration-自检清单" aria-label="锚点">#</a></h1>
-<blockquote><p>本文件由 <code>extensions/scripts/khy-diagnostics/hydration-doctor.js --gen-doc</code> 确定性生成，请勿手改；<br>规则改在 <code>scripts/lib/hydrationHealth.js</code> 的 <code>_RULES</code> / <code>CRITICAL_PACKAGES</code>，再重新生成。</p></blockquote>
+<blockquote><p>本文件由 <code>extensions/scripts/khy-diagnostics/hydration-doctor.js --gen-doc</code> 确定性生成，请勿手改；<br>规则改在 <code>services/backend/src/services/domain/backup/restore/hydrationHealth.js</code> 的 <code>_RULES</code> / <code>CRITICAL_PACKAGES</code>，再重新生成。</p></blockquote>
 <h2 id="这份清单是干什么的">这份清单是干什么的<a class="anchor" href="#这份清单是干什么的" aria-label="锚点">#</a></h2>
 <p>khyos 两条离机渠道的包都<strong>不打包 <code>node_modules</code></strong>——后端 44 个依赖在<br><strong>首次运行时联网</strong> <code>npm install</code> 补齐（Node 运行时也是首启自动下便携版）。<br>这一步是新机还原<strong>最脆弱</strong>的一环：断网、registry 不通、半截下载、<br>workspace 软链断裂，都会让「装好了包却起不来」。本 doctor 专查这一步。</p>
 <pre><code class="language-bash">npm run doctor:hydration             <span class="hljs-comment"># 或直跑 node extensions/scripts/khy-diagnostics/hydration-doctor.js</span></code></pre>

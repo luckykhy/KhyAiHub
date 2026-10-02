@@ -1,6 +1,6 @@
 # [DEPLOY-MAN-018] khyos Android 构建避坑指南
 
-> ⚠️ **2026-09-17 起本指南覆盖范围变更**：随身 App 的默认构建入口已改为
+> ⚠ **2026-09-17 起本指南覆盖范围变更**：随身 App 的默认构建入口已改为
 > Flutter 工程 `apps/khy-os-client-app/`，走 `npm run android:release`
 > （`scripts/release/build-android.ps1`，产签名 APK+AAB）。本指南描述的
 > Capacitor + `khy build android` 路线**不再针对仓库自带的应用**，仅适用于
@@ -34,8 +34,8 @@ khy build android -o dist/apk # 指定输出目录
 
 | 层 | 实际技术 | 能否进 BeeWare 的 APK |
 |---|---|---|
-| 核心后端 | **Node.js**（Express AI 网关） | ❌ Briefcase 只打包纯 Python |
-| 用户界面 | **Vue3 + Vite** Web 前端 | ❌ 非 Python，Briefcase 不识别 |
+| 核心后端 | **Node.js**（Express AI 网关） | ✗ Briefcase 只打包纯 Python |
+| 用户界面 | **Vue3 + Vite** Web 前端 | ✗ 非 Python，Briefcase 不识别 |
 | pip 包 `khy_platform` | 薄启动器（仅 `requests`+`cffi`） | 不是 App 主体，只是 launcher |
 
 结论：khyos 的核心**不是纯 Python**，Briefcase 无从下手。正确的桥接是
