@@ -242,7 +242,7 @@ const DESCRIPTORS = Object.freeze([
     risk: 0,
     isReversible: true,
     subagentSuppressed: false,
-    invoke: { module: './metaConstraint/toolFunnelGuard', export: 'enforce' },
+    invoke: { module: './domain/quality/metaConstraint/toolFunnelGuard', export: 'enforce' },
     designDoc: 'DESIGN-ARCH-003',
   },
   {
@@ -259,7 +259,7 @@ const DESCRIPTORS = Object.freeze([
     risk: 0,
     isReversible: true,
     subagentSuppressed: false,
-    invoke: { module: './evoEngine/frictionBridge', export: 'observeFailure' },
+    invoke: { module: './domain/maintenance/evoEngine/frictionBridge', export: 'observeFailure' },
     designDoc: 'DESIGN-ARCH-055',
   },
   {
@@ -276,7 +276,7 @@ const DESCRIPTORS = Object.freeze([
     risk: 2,
     isReversible: false,
     subagentSuppressed: false,
-    invoke: { module: './dependency/healingLoop', export: null },
+    invoke: { module: './domain/network/dependency/healingLoop', export: null },
     designDoc: 'DESIGN-ARCH-048',
   },
 
@@ -380,9 +380,19 @@ const DESCRIPTORS = Object.freeze([
     risk: 0,
     isReversible: true,
     subagentSuppressed: false,
-    invoke: { module: './search/unifiedSearch', export: null },
+    invoke: { module: './domain/query/search/unifiedSearch', export: null },
     designDoc: 'DESIGN-ARCH-CROSS-SRC',
   },
 ]);
+
+// Object.freeze() on the array alone leaves every descriptor (and its flag/requires/
+// invoke objects) writable, and index.js hands those same references to every caller —
+// one consumer mutating a cost or a flag would corrupt the catalog process-wide.
+for (const d of DESCRIPTORS) {
+  Object.freeze(d.flag);
+  Object.freeze(d.requires);
+  Object.freeze(d.invoke);
+  Object.freeze(d);
+}
 
 module.exports = { DESCRIPTORS, PRE };
