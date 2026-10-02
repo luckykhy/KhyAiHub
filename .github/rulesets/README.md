@@ -82,13 +82,13 @@ GitHub 会记录「本来会被拦」但不真的拦。观察几天后改回 `"a
 
 | 检查 | 是否必需 | 原因 |
 | --- | --- | --- |
-| `Contract checks` | ✅ | 确定性检查，实测全绿 |
-| `Python syntax` | ✅ | 纯语法，只查变更文件，零误伤 |
-| `Lint ratchet` | ✅ | 只对**新增**文件零容忍，存量文件仅报告 |
-| `Test baseline (non-blocking)` | ❌ | 现存 9 个已知失败用例，设为必需等于所有 PR 无法合并 |
-| `Verify CODEOWNERS` | ❌ | **带 `paths:` 过滤器**。路径过滤的 workflow 在不相关的 PR 上根本不会运行，也就永远不上报状态 —— 一旦设为必需，这类 PR 会永久停在等待状态。这是分支保护最常见的自锁方式。 |
-| `AI frontend` / `KhyQuant frontend` | ❌ | 同上，`frontend-ci.yml` 带 `paths:` 过滤器。此外 KhyQuant 的 lint 步骤当前必失败（缺 `eslint-plugin-vue` 依赖），已标为报告态。 |
-| CodeQL | ❌ | 矩阵作业的 check 名随语言变化（`Analyze (javascript)` 之类），钉死名字容易在改矩阵时静默失效；先观察实际上报名，确认后再加 |
+| `Contract checks` | ✓ | 确定性检查，实测全绿 |
+| `Python syntax` | ✓ | 纯语法，只查变更文件，零误伤 |
+| `Lint ratchet` | ✓ | 只对**新增**文件零容忍，存量文件仅报告 |
+| `Test baseline (non-blocking)` | ✗ | 现存 9 个已知失败用例，设为必需等于所有 PR 无法合并 |
+| `Verify CODEOWNERS` | ✗ | **带 `paths:` 过滤器**。路径过滤的 workflow 在不相关的 PR 上根本不会运行，也就永远不上报状态 —— 一旦设为必需，这类 PR 会永久停在等待状态。这是分支保护最常见的自锁方式。 |
+| `AI frontend` / `KhyQuant frontend` | ✗ | 同上，`frontend-ci.yml` 带 `paths:` 过滤器。此外 KhyQuant 的 lint 步骤当前必失败（缺 `eslint-plugin-vue` 依赖），已标为报告态。 |
+| CodeQL | ✗ | 矩阵作业的 check 名随语言变化（`Analyze (javascript)` 之类），钉死名字容易在改矩阵时静默失效；先观察实际上报名，确认后再加 |
 
 check 的名字就是 workflow 里 job 的 `name:` 字段。改了 job 名字，规则必须同步改 ——
 否则规则会静默地不再生效（GitHub 不会因为找不到 check 而报错，只会一直等）。
