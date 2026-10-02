@@ -38,7 +38,7 @@
 
 ## ⑤ 横切层（跨板块服务，真源 [DESIGN-LAY-005] 第二节）— 9 项
 
-`scripts/` `packaging/` `docs/`（本索引在此）`evidence/` `entries/`（产物单一根，Lay-4；pip 族已迁入 `entries/pip`）`deploy/` `electron/` `patches/` `tests/`
+`scripts/` `packaging/` `docs/`（本索引在此）`evidence/` `entries/`（产物单一根，Lay-4；pip 族已迁入 `entries/pip`）`deploy/` `patches/` `tests/`
 ——方案 R-R4 的收纳候选，硬引用面实测见 [DESIGN-LAY-008] §12.54（scripts 584 / tests 403 / packaging 64…），逐族 sub-batch；`scripts/` `tests/` 依 §13 裁定**留根**。
 
 ## ⑥ 本机态（gitignored 或工具私有，不在版本库契约内）— 6 项

@@ -101,7 +101,7 @@
       "ports": [],
       "notes": [
         "electron-vite 的三个进程（main / preload / renderer）由 electron.vite.config.ts 统一定义，端矩阵不重复声明。",
-        "根 package.json 的 electron:dev 指向 scripts/electron-dev.js，那是**另一条线**（见 desktop-legacy）。"
+        "根 package.json 的 electron:dev 与 scripts/electron-dev.js 已于 2026-10-02 Q10 退役删除（electron/ 目录同步移除），desktop-legacy 线终止；桌面端唯一产物线为 apps/khyos-desktop/。"
       ]
     },
     {
