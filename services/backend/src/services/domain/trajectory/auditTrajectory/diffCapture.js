@@ -160,17 +160,13 @@ function unifiedDiff(oldText, newText, label = '', opts = {}) {
   let added = 0;
   let removed = 0;
   try {
-    // computeStructuredDiffHunks 是纯变换(无 IO、无 TUI)，但作者在 cli/diffRenderer 里，
-    // 服务层直连它是反向分层(archDebtScan R1) —— 见 cliLeafPort 的说明。
-    // 两档回落：① cliLeafPort 已注册 → 直接用；② 未注册 → 自举 cli/ai 触发自注册。
-    // 本文件因此只有 **一行** cli 引用，语义是「拉起 CLI 让其自注册」。
-    const port = require('../../../cliLeafPort');
-    let fn = port.getComputeStructuredDiffHunks();
-    if (typeof fn !== 'function') {
-      require('../../../../cli/ai'); // 唯一 cli 引用：触发自注册，不是取能力
-      fn = require('../../../cliLeafPort').getComputeStructuredDiffHunks();
-    }
-    const r = fn(a, b, { context: Number.isInteger(opts.context) ? opts.context : 3 });
+    // computeStructuredDiffHunks 是纯变换(无 IO、无 TUI)，真源已归位 D3
+    // (`utils/diff/structuredHunks`，P2 第 11 批)，服务层直连它不再构成反向分层，
+    // 本文件因此不再需要 cliLeafPort，也不再自举 cli/ai。
+    const { computeStructuredDiffHunks } = require('../../../../utils/diff/structuredHunks');
+    const r = computeStructuredDiffHunks(a, b, {
+      context: Number.isInteger(opts.context) ? opts.context : 3,
+    });
     hunks = r.hunks;
     added = r.added;
     removed = r.removed;

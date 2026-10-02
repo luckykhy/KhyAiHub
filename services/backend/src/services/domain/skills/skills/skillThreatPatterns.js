@@ -31,7 +31,7 @@ const _SEVERITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
 const _INVISIBLE_CHARS = [
   '​', // zero-width space
   '‌', // zero-width non-joiner
-  '‍', // zero-width joiner
+  '', // zero-width joiner
   '⁠', // word joiner
   '﻿', // BOM / zero-width no-break space
 ];

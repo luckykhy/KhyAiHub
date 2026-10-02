@@ -10,11 +10,12 @@
  * 复用既有、绝不另起炉灶:
  *   - 读:sessionPersistence.listPersistedSessions / loadSessionMeta(轻量,不重建消息链)
  *   - 写槽:sessionPersistence.updateSessionMetadata(就地改快照,镜像 renameSession)
- *   - 算法:sessionTopology(buildForest / renderForestTree / buildHereLine,纯叶子)
- *   - 当前会话 id:ai.getLiveSessionId,退最近一条持久会话(对齐 handlers/fork._resolveSource)
+ *   - 算法:utils/sessionTopology(buildForest / renderForestTree / buildHereLine,零 IO 纯叶子,共享底座 D3)
+ *   - 当前会话 id:cli 经 port 注册的 getLiveSessionId,退最近一条持久会话(对齐 handlers/fork._resolveSource)
  *
- * 依赖方向:上述 cli 资产一律经 sessionForestPort 这个 IoC seam 取(不再 require cli/)。
- * 端口未注册(cli 从未加载)时,各路径按各自的 fail-soft 退化——与改造前语义一致。
+ * 依赖方向:三个纯算法叶子向下 require D3;唯一仍向上的 live 会话 id 经 sessionForestPort
+ * 这个 IoC seam 取(本文件不再 require cli/)。端口未注册(cli 从未加载)时 live id 落回
+ * 持久会话,其余路径照常工作——与改造前语义一致。
  *
  * 门控:KHY_SESSION_TOPOLOGY(森林索引)默认开;关 → buildForest flat(平铺退化)。
  */
@@ -24,44 +25,40 @@ function _persistence() {
 }
 
 /**
- * 取 CLI 会话森林面(topology / slots / synthesis / session)。
- * 两档回落:sessionForestPort 已注册 → 用;未注册 → 自举 cli/ai 触发自注册 → 再取一次。
+ * 取 CLI 侧注册的会话面(唯一仍由 cli 提供的是 live 会话 id)。未注册 → null,调用方退化。
  *
- * `require('./cli/ai')` 是全文件**唯一**的 cli 引用,且语义是「拉起 CLI 让其自注册」,
- * 不是「取实现」——取实现一律经 port。CLI 在本进程不可用时返回 null,
- * 调用方各自退化(门控关 / 平铺 / 跳过),绝不让森林服务把 CLI 图拖进非 CLI 进程。
+ * 12.2s 起:森林三叶子(sessionTopology / sessionSlots / crossBranchSynthesis)是**零 IO 纯叶子**,
+ * 已归位共享底座 D3(`src/utils/`),本服务向下 require 即可——因此删掉了这里唯一的一行
+ * `require('../../../../cli/ai')` 自举。那行 bootstrap 既是本文件唯一的 services→cli 反向边,
+ * 也正是它自己注释所禁止的事:「把 CLI 图拖进非 CLI 进程」。
+ * 实测等价性(cli/ai 加载后 `getLiveSessionId()` 在无 CLI 会话的进程里返回 null,
+ * getCurrentSessionId 本就落回「最近一条持久会话」),见 [RESEARCH-018] 路线图 §12.2s。
  *
- * @returns {object|null} sessionForestPort 单例;两档都失败返回 null。
+ * @returns {object|null} sessionForestPort 单例;cli 从未加载则 null。
  */
 function _forestPort() {
   const port = require('../../../sessionForestPort');
-  if (port.getTopology() || port.getSlots() || port.getSynthesis()) {
-    return port;
-  }
-  try {
-    require('../../../../cli/ai');
-  } catch {
-    /* CLI 不可用:端口保持空,调用方退化 */
-  }
-  return port.getTopology() || port.getSlots() || port.getSynthesis() ? port : null;
+  return port.getTopology() || port.getSlots() || port.getSynthesis() || port.getGetLiveSessionId()
+    ? port
+    : null;
 }
 
-/** Forest topology builder;cli 不可用时 null(调用方走 flat 退化)。 */
+/** Forest topology builder (D3 leaf; port 若已被 cli 注册则优先用它,两者同一对象)。 */
 function _topology() {
   const port = _forestPort();
-  return port ? port.getTopology() : null;
+  return (port && port.getTopology()) || require('../../../../utils/sessionTopology');
 }
 
-/** Slot store;cli 不可用时 null。 */
+/** Slot store (D3 leaf). */
 function _slots() {
   const port = _forestPort();
-  return port ? port.getSlots() : null;
+  return (port && port.getSlots()) || require('../../../../utils/sessionSlots');
 }
 
-/** Cross-branch synthesis planner;cli 不可用时 null。 */
+/** Cross-branch synthesis planner (D3 leaf). */
 function _synthesis() {
   const port = _forestPort();
-  return port ? port.getSynthesis() : null;
+  return (port && port.getSynthesis()) || require('../../../../utils/crossBranchSynthesis');
 }
 
 /** 当前 live 会话 id;无 live → 当前项目作用域最近一条持久会话。对齐 handlers/fork._resolveSource。 */

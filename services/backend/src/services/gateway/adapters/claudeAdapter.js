@@ -168,6 +168,35 @@ function _buildAnthropicAuthHeaders(apiKey, scheme) {
   return { 'x-api-key': key };
 }
 
+/**
+ * Resolve the direct-mode upstream base URL, with a self-call guard.
+ *
+ * `ANTHROPIC_BASE_URL` is user-level env, so the gateway process may inherit a
+ * value pointing at THIS gateway itself (e.g. http://127.0.0.1:9100). Directing
+ * the adapter's upstream there loops every request back into the proxy until a
+ * timeout. When the configured endpoint equals the local proxy's own address
+ * (proxy_server_runtime.json / PROXY_PORT), drop it and fall back to the
+ * default upstream. Pure-ish: never throws.
+ * @param {string|null} endpoint  pool endpoint or env base URL (may be empty)
+ * @returns {string} base URL without trailing slash or /vN suffix
+ */
+function _resolveDirectBaseUrl(endpoint) {
+  let base = String(endpoint || '').trim();
+  if (base) {
+    try {
+      const local = require('../../../utils/proxyBaseUrl').resolveAnthropicBaseUrl();
+      if (local && base.replace(/\/+$/, '').toLowerCase() === String(local).replace(/\/+$/, '').toLowerCase()) {
+        base = '';
+      }
+    } catch {
+      /* keep base — guard is best-effort */
+    }
+  }
+  return base
+    ? base.replace(/\/+$/, '').replace(/\/v\d+$/, '')
+    : 'https://api.anthropic.com';
+}
+
 function resolveConnectionMode() {
   if (_CLAUDE_MODE_RAW === 'direct') {
     return 'direct';
@@ -794,9 +823,7 @@ async function detectAsync(forceRefresh = false) {
       return cliOk;
     }
 
-    const baseUrl = (endpoint || 'https://api.anthropic.com')
-      .replace(/\/+$/, '')
-      .replace(/\/v\d+$/, '');
+    const baseUrl = _resolveDirectBaseUrl(endpoint);
 
     // A GET /v1/messages returns 405 (method not allowed) when the host is reachable.
     // Any HTTP response means the endpoint is alive.
@@ -2280,7 +2307,7 @@ async function callAnthropicStream(
       // same `{type:'notice'}` chunk for its tool-strip). Best-effort, gated by
       // KHY_BETA_FALLBACK_NOTICE inside the leaf — the retry above already ran.
       try {
-        const { buildBetaFallbackNotice } = require('../../../cli/betaFallbackNotice');
+        const { buildBetaFallbackNotice } = require('../../../utils/betaFallbackNotice');
         const notice = buildBetaFallbackNotice(retried.strippedBetas);
         if (notice) {
           emit?.({ type: 'notice', text: notice });
@@ -2446,9 +2473,8 @@ async function runClaudeDirect(prompt, options = {}) {
   const authScheme = _resolveAnthropicAuthScheme(credSource, process.env);
 
   // Strip trailing /v1, /v1/, etc. — callAnthropicStream appends /v1/messages itself.
-  const baseUrl = (poolEndpoint || process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com')
-    .replace(/\/+$/, '')
-    .replace(/\/v\d+$/, '');
+  // _resolveDirectBaseUrl also drops a self-referential ANTHROPIC_BASE_URL.
+  const baseUrl = _resolveDirectBaseUrl(poolEndpoint || process.env.ANTHROPIC_BASE_URL);
   const model = options.model || process.env.ANTHROPIC_MODEL || MODELS.sonnet;
   const onChunk = typeof options.onChunk === 'function' ? options.onChunk : () => {};
   const emit = (chunk) => {
@@ -2560,8 +2586,8 @@ async function runClaudeDirect(prompt, options = {}) {
   emit({
     type: 'status',
     text: useDirectFastPath
-      ? `⚡ 直连 Anthropic API（快速路径）：model=${model}`
-      : `⚡ 直连 Anthropic API：model=${model}, tools=${tools.length}`,
+      ? `直连 Anthropic API（快速路径）：model=${model}`
+      : `直连 Anthropic API：model=${model}, tools=${tools.length}`,
   });
 
   const startMs = Date.now();
@@ -2591,7 +2617,7 @@ async function runClaudeDirect(prompt, options = {}) {
     } else {
       body.thinking = { type: 'disabled' };
     }
-    emit({ type: 'status', text: `⚡ Claude Direct Passthrough → ${baseUrl}` });
+    emit({ type: 'status', text: `Claude Direct Passthrough → ${baseUrl}` });
     const result = await callAnthropicStream(
       apiKey,
       baseUrl,

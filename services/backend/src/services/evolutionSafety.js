@@ -332,13 +332,13 @@ function buildSafetyReport(assessment) {
   if (Array.isArray(a.blockers) && a.blockers.length) {
     lines.push('[SYSTEM:进化安全] 阻断(改动未经行为验证 / 出现回归,应回滚或修正):');
     for (const b of a.blockers.slice(0, 6)) {
-      lines.push(`  ⛔ ${b}`);
+      lines.push(`  ◉ ${b}`);
     }
   }
   if (Array.isArray(a.unverified) && a.unverified.length && !a.enforce) {
     lines.push('[SYSTEM:进化安全] 未验证(行为改动缺可运行测试,请补测试以闭合安全网):');
     for (const u of a.unverified.slice(0, 6)) {
-      lines.push(`  ⚠️ ${u}`);
+      lines.push(`  ⚠ ${u}`);
     }
   }
   return lines.join('\n');

@@ -34,7 +34,7 @@ const {
   setEnabled,
   loadExtension,
   EXTENSIONS_DIR,
-} = require('../cli/extensions/extensionManager');
+} = require('./domain/extensions/extensions/extensionManager');
 
 // ── Registry Config ──
 

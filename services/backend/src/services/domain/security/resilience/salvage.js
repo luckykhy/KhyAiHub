@@ -77,8 +77,10 @@ class SalvageProtector {
     if (texts.length > 0) {
       return texts.reduce((a, b) => (b.length > a.length ? b : a));
     }
-    // 非文本（数组/对象）：返回首个非空，避免丢信息。
-    return items[0];
+    // 非文本（数组/对象）：返回首个非空，避免丢信息。纯空白串已被 texts 一轮排除在
+    // 「非空」之外，这里必须同样排除它，否则兜底面会拿到一个渲染成空白的「残料」。
+    const firstMeaningful = items.find((x) => typeof x !== 'string' || x.trim() !== '');
+    return firstMeaningful === undefined ? '' : firstMeaningful;
   }
 
   /** 依据最后一类失败 + 熔断原因，给出可执行的下一步建议。 */

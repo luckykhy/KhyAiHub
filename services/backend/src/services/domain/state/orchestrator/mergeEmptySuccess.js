@@ -81,7 +81,7 @@ function formatEmptySuccessWarning(count) {
   if (!Number.isFinite(n) || n < 1) {
     return '';
   }
-  return `⚠️ 完成但无产出: ${n} 项（可能空响应/被截断/no-op，请复查）`;
+  return `⚠ 完成但无产出: ${n} 项（可能空响应/被截断/no-op，请复查）`;
 }
 
 module.exports = { isEmptySuccess, formatEmptySuccessWarning };

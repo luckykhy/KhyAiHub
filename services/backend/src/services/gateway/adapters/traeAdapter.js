@@ -59,6 +59,7 @@ const {
   verifyTraeOfficialSession,
   resolveTraeOfficialStoragePaths,
   resolveTraeOfficialDbPaths,
+  resolveTraePortableUserDataDirs,
   decodeTraeOfficialAuthBlob,
   resolveNativeHostByRegion,
   writeBridgeAuthToken,
@@ -335,9 +336,19 @@ function modelDisplayName(id) {
   return normalized;
 }
 
+// 绿色版用 --user-data-dir 把数据重定向到程序目录内，布局与 %APPDATA%\<App> 一致。
+// 惰性求值：解析要扫盘，放模块顶层会拖慢每一次 CLI 启动。
+function _traePortableStoragePaths() {
+  const out = [];
+  for (const dir of resolveTraePortableUserDataDirs()) {
+    out.push(path.join(dir, 'User', 'globalStorage', 'storage.json'));
+  }
+  return out;
+}
+
 function readTraeStorageSnapshots() {
   const snapshots = [];
-  for (const p of TRAE_STORAGE_PATHS) {
+  for (const p of [...TRAE_STORAGE_PATHS, ..._traePortableStoragePaths()]) {
     try {
       if (!fs.existsSync(p)) {
         continue;
@@ -364,6 +375,10 @@ function detectInstallation() {
   }
   for (const p of resolveTraeOfficialDbPaths()) {
     dirsToCheck.add(path.dirname(p));
+  }
+  // 绿色版的 UserData 目录本身就是安装痕迹，不在其下找 storage.json
+  for (const dir of resolveTraePortableUserDataDirs()) {
+    dirsToCheck.add(dir);
   }
   for (const dir of dirsToCheck) {
     try {

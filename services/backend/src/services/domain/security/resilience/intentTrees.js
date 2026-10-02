@@ -34,12 +34,20 @@ function _textSalvage(result) {
   if (typeof cand === 'string' && cand.trim()) {
     return cand.trim().slice(0, 4000);
   }
-  // 搜索类：结果常是 results[] —— 拼标题 + 链接当线索残料。
   const list = result.results || (result.data && result.data.results);
-  if (Array.isArray(list) && list.length > 0) {
-    return list
+  // 搜索类：结果常是 results[] —— 拼标题 + 链接当线索残料。null/undefined 条目会先在
+  // r.title 上抛 TypeError（本函数契约是「绝不抛错」），字符串条目走 r.link 会命中
+  // String.prototype.link 这个原生函数、把函数源码拼进残料并丢掉真值——故对象取字段、
+  // 字符串原样用，其余丢弃。
+  const rows = Array.isArray(list)
+    ? list.filter((r) => r && (typeof r === 'object' || typeof r === 'string'))
+    : [];
+  if (rows.length > 0) {
+    return rows
       .slice(0, 5)
-      .map((r, i) => `${i + 1}. ${r.title || r.name || ''} ${r.url || r.link || ''}`.trim())
+      .map((r, i) => (typeof r === 'string'
+        ? `${i + 1}. ${r}`
+        : `${i + 1}. ${r.title || r.name || ''} ${r.url || r.link || ''}`.trim()))
       .join('\n')
       .slice(0, 4000);
   }
@@ -80,7 +88,13 @@ const INTENT_TREE_BUILDERS = Object.freeze({
 
 /** 按意图名取一棵新构造的降级树；未知意图返回 null。 */
 function getIntentTree(intent) {
-  const fn = INTENT_TREE_BUILDERS[String(intent || '').trim()];
+  const key = String(intent || '').trim();
+  // 只认自有键：否则 'constructor'/'valueOf' 这类原型成员会被当成「已注册的构造器」
+  // 调用，返回一棵假树或直接抛错，违背本函数的「未知意图返回 null」。
+  if (!Object.prototype.hasOwnProperty.call(INTENT_TREE_BUILDERS, key)) {
+    return null;
+  }
+  const fn = INTENT_TREE_BUILDERS[key];
   return typeof fn === 'function' ? fn() : null;
 }
 

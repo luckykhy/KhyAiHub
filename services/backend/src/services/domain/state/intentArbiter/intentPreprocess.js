@@ -21,30 +21,18 @@
 /**
  * 取 fullWidthInput 的两个折叠函数。
  *
- * 分层说明:本叶子是 L2 services，`cli/fullWidthInput` 是 L2 cli 侧的**纯函数叶子**
- * (60 行、零 require、无 IO)。服务层直接 require 它是反向分层(archDebtScan R1) ——
- * 那个文件真正的家在服务层，只是当年第一个消费者是 TUI 选择菜单，才落在 cli/ 下。
- *
- * 两档回落(与 sessionForestService 同一范式):
- *   ① cliLeafPort 已注册 → 直接用端口里的函数(依赖方向已由 cli 自注册反转)。
- *   ② 未注册 → 自举 `cli/ai` 触发自注册，再取一次。
- * 本文件因此只有 **一行** cli 引用，且语义是「拉起 CLI 让其自注册」而非「向 cli 要能力」。
+ * 分层说明:该叶子(60 行、零 require、无 IO)的真家是服务层以下，当年只因第一个消费者是
+ * TUI 选择菜单才落在 cli/ 下。2026-09-28 ([RESEARCH-018] §3.1 P2 破环) 已下沉到共享底座
+ * `utils/format/fullWidthInput`，本文件因此**不再需要** cliLeafPort，也不再自举 `cli/ai`
+ * —— 依赖方向严格向下，services→cli 反向边就此少一条。
  * 两条路拿到的是同一份实现，行为逐字节不变。
  */
 function _fw() {
-  const port = require('../../../cliLeafPort');
-  let space = port.getNormalizeFullWidthSpace();
-  let digits = port.getNormalizeFullWidthDigits();
-  if (typeof space !== 'function' || typeof digits !== 'function') {
-    // 唯一 cli 引用：不是取能力，是触发 cli/ai 自注册（见上）。
-    require('../../../../cli/ai');
-    space = require('../../../cliLeafPort').getNormalizeFullWidthSpace();
-    digits = require('../../../cliLeafPort').getNormalizeFullWidthDigits();
-  }
-  if (typeof space !== 'function' || typeof digits !== 'function') {
-    throw new Error('fullWidthInput 未注册到 cliLeafPort(cli/ai 不可用)');
-  }
-  return { normalizeFullWidthSpace: space, normalizeFullWidthDigits: digits };
+  const leaf = require('../../../../utils/format/fullWidthInput');
+  return {
+    normalizeFullWidthSpace: leaf.normalizeFullWidthSpace,
+    normalizeFullWidthDigits: leaf.normalizeFullWidthDigits,
+  };
 }
 
 const FALSY = new Set(['0', 'false', 'off', 'no']);

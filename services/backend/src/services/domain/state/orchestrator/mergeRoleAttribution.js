@@ -142,7 +142,7 @@ function formatRoleFailureSummary(failedRoles) {
   }
 
   const hint = verifyFailed ? '（验证失败=结果未经校验，请复查）' : '';
-  return `⚠️ 失败分布: ${parts.join('、')}${hint}`;
+  return `⚠ 失败分布: ${parts.join('、')}${hint}`;
 }
 
 module.exports = {

@@ -724,6 +724,9 @@ async function listModels() {
         provider: 'api',
         description: `Cloud provider: ${p.name}`,
         isDefault: mid === p.model,
+        // 供应商名此前只拼进 name，`/model` 列表无从按供应商分组（[DESIGN-ARCH-167] P1）。
+        // 复用既有结构化字段 upstreamProvider（_formatUpstreamTag 已消费），不新增同义字段。
+        upstreamProvider: p.name,
       });
     }
   }
@@ -842,6 +845,7 @@ async function listModels() {
           provider: 'api',
           description: `Pool provider: ${pp.name}`,
           isDefault: mid === (defaultModelMap[pp.poolKey] || ''),
+          upstreamProvider: pp.name,
           ...(ctxW > 0 ? { contextWindow: ctxW } : {}),
           ...(maxOut > 0 ? { maxOutputTokens: maxOut } : {}),
         });

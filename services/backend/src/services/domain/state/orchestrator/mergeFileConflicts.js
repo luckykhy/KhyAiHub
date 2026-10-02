@@ -134,7 +134,7 @@ function formatConflictWarning(conflicts) {
     const labels = Array.isArray(c && c.labels) ? c.labels.join(', ') : '';
     return `${c && c.file}（${labels}）`;
   });
-  return `⚠️ 并行写冲突（${conflicts.length} 个文件被多个子任务同时修改，可能互相覆盖）: ${parts.join('; ')}`;
+  return `⚠ 并行写冲突（${conflicts.length} 个文件被多个子任务同时修改，可能互相覆盖）: ${parts.join('; ')}`;
 }
 
 module.exports = { detectFileConflicts, formatConflictWarning };

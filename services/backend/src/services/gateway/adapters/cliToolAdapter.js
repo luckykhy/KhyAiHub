@@ -349,6 +349,51 @@ function _spawnTarget(cmd, args) {
 }
 
 /**
+ * Child env for CLI tool spawns. Claude Code inherits the shell env verbatim, so
+ * a stale user-level ANTHROPIC_BASE_URL (e.g. a port now owned by another local
+ * server) or a placeholder ANTHROPIC_API_KEY (e.g. `sk-proxy-via-khy`) makes
+ * every delegated turn die with the proxy's 401 ("use Authorization: Bearer
+ * <khy-...>"). Inject the live proxy base URL (proxy_server_runtime.json) and
+ * the current primary auth token (PROXY_AUTH_TOKEN env wins, then
+ * proxy_server_auth.json — same precedence the proxy's auth middleware uses),
+ * so the child always presents a valid khy token. Fail-soft: on any resolution
+ * error the inherited env passes through unchanged.
+ */
+function _cliToolChildEnv(tool) {
+  const env = { ...process.env };
+  if (!tool || tool.cmd !== 'claude') {
+    return env;
+  }
+  try {
+    const base = require('../../../utils/proxyBaseUrl').resolveAnthropicBaseUrl();
+    if (base) {
+      env.ANTHROPIC_BASE_URL = base;
+    }
+  } catch {
+    /* keep inherited base URL */
+  }
+  try {
+    let token = String(process.env.PROXY_AUTH_TOKEN || '').trim();
+    if (!token) {
+      const { getDataHome } = require('../../../utils/dataHome');
+      const authFile = path.join(getDataHome(), 'proxy_server_auth.json');
+      const cfg = JSON.parse(fs.readFileSync(authFile, 'utf-8'));
+      token = String((cfg && cfg.authToken) || '').trim();
+    }
+    if (token) {
+      env.ANTHROPIC_AUTH_TOKEN = token;
+      // A leftover placeholder x-api-key would still be sent alongside the
+      // Bearer token; drop it so the valid token is the only credential.
+      delete env.ANTHROPIC_API_KEY;
+      delete env.CLAUDE_API_KEY;
+    }
+  } catch {
+    /* keep inherited credentials */
+  }
+  return env;
+}
+
+/**
  * Whether a tool's optional env gate is open. Tools without a `gate` are always
  * eligible (unchanged behavior for claude/codex/aider); gated tools (opencode)
  * are skipped entirely — not probed, not offered — when their gate reads off.
@@ -447,7 +492,7 @@ function invokeStreamingTool(tool, prompt, onChunk, options = {}) {
     const _st = _spawnTarget(_effectiveCmd(tool), args);
     const child = spawn(_st.cmd, _st.args, {
       stdio: ['pipe', 'pipe', 'pipe'],
-      env: process.env,
+      env: _cliToolChildEnv(tool),
     });
     const idleTimeoutMs = resolveToolIdleTimeoutMs(tool, options);
 
@@ -1146,7 +1191,7 @@ function invokeToolAsync(tool, prompt, options = {}) {
       // useStdin=false 时把 stdin 置为 'ignore'(子进程立即读到 EOF);useStdin=true 的
       // codex/claude 仍保持 pipe 以便写入提示词。
       stdio: [tool.useStdin ? 'pipe' : 'ignore', 'pipe', 'pipe'],
-      env: process.env,
+      env: _cliToolChildEnv(tool),
     });
     const idleTimeoutMs = resolveToolIdleTimeoutMs(tool, options);
 

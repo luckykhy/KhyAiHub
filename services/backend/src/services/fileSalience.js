@@ -410,7 +410,7 @@ function _fmtBytes(n, env) {
   // 字节→人类可读单一真源:门控 KHY_CC_FORMAT 开 → 走 CC formatFileSize(与 archiveManifestPolicy
   // 及所有展示面统一);关 / 不可用 → 逐字节回退本地旧口径。ccFormat 亦为纯叶子,相对 require 合规。
   try {
-    const { ccFormatEnabled, ccFormatFileSize } = require('../cli/ccFormat');
+    const { ccFormatEnabled, ccFormatFileSize } = require('../utils/format/ccFormat');
     if (ccFormatEnabled(env)) {
       const out = ccFormatFileSize(Number(n || 0) || 0);
       if (out) {
@@ -449,7 +449,7 @@ function renderSalienceBlock(summary, opts = {}) {
     const lines = [];
 
     if (Array.isArray(summary.pinned) && summary.pinned.length) {
-      lines.push('📌 关键文件(按内在重要性):');
+      lines.push('关键文件(按内在重要性):');
       for (const c of summary.pinned) {
         const sz = c.size > 0 ? ` (${_fmtBytes(c.size, env)})` : '';
         lines.push(`- ${c.path}${sz}`);
@@ -459,16 +459,16 @@ function renderSalienceBlock(summary, opts = {}) {
     if (Array.isArray(summary.byDir) && summary.byDir.length > 1) {
       const parts = summary.byDir.map((g) => `${g.key} ${g.count}`);
       lines.push('');
-      lines.push(`📂 目录分布:${parts.join('、')}`);
+      lines.push(`目录分布:${parts.join('、')}`);
     }
     if (Array.isArray(summary.byExt) && summary.byExt.length > 1) {
       const parts = summary.byExt.map((g) => `${g.key} ${g.count}`);
-      lines.push(`🗂 类型分布:${parts.join('、')}`);
+      lines.push(`类型分布:${parts.join('、')}`);
     }
 
     if (Array.isArray(summary.largest) && summary.largest.length) {
       lines.push('');
-      lines.push('⬆ 最大文件:');
+      lines.push('↑ 最大文件:');
       for (const e of summary.largest) {
         lines.push(`- ${e.path} (${_fmtBytes(e.size, env)})`);
       }
@@ -482,7 +482,7 @@ function renderSalienceBlock(summary, opts = {}) {
       summary.dirHotspots.some((d) => d.totalSize > 0)
     ) {
       lines.push('');
-      lines.push('📁 目录体积热点(按占用):');
+      lines.push('目录体积热点(按占用):');
       for (const d of summary.dirHotspots) {
         const sz = d.totalSize > 0 ? _fmtBytes(d.totalSize, env) : '—';
         lines.push(`- ${d.dir}/ — ${d.count} 个文件, ${sz}`);

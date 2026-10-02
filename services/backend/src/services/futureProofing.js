@@ -381,7 +381,7 @@ function freshnessHintLine(env) {
   if (!isEnabled(env)) {
     return '';
   }
-  return '💡 想知道 khyos 是否还跟得上时代？运行 `khy maintain freshness` 做一次与时俱进体检。';
+  return '想知道 khyos 是否还跟得上时代？运行 `khy maintain freshness` 做一次与时俱进体检。';
 }
 
 /** 模型退役启动提示是否启用（独立子门控 KHY_MODEL_DEPRECATION_NOTICE，默认开）。 */
