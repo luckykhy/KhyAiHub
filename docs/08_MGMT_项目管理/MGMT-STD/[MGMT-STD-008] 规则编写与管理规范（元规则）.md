@@ -284,16 +284,16 @@ draft → active → deprecated → archived
 
 | 步骤 | 内容 | 状态 |
 |------|------|------|
-| 1 | 盘点 → `RULES-INVENTORY.md` | 🟡 已完成于本轮审查的核对过程；未落独立文件（盘点结论并入 RULES-REGISTRY.json 的 `ssot` 与 `[DESIGN-GOV-001]` §0 审计矩阵） |
-| 2 | 分类映射，分配 `<DOMAIN>-<NNN>` + `formerly` | ✅ 全族映射完毕，见 `RULES-REGISTRY.json` |
-| 3 | 三元性质标注 + 补 `grants`/`benefit` | ✅ 登记表每条均含三元字段 |
-| 4 | 去重 / 合并 | ✅ 已消除 3 处重叠（见下方「已裁决」）；状态透明父子结构改为 `RUNTIME-002` 一族 |
-| 5 | 补字段 | ✅ 优先级 / 触发 / 例外 / 版本 / owner / 三元字段齐备 |
-| 6 | 冲突预检 → `RULES-CONFLICTS.json` | 🟡 冲突已在人工评审中消解并记录于 §2.4；`RULES-CONFLICTS.json` 未建（当前零未裁决冲突，建空文件无信息量） |
-| 7 | 建登记表 + 章程改「指针 + 摘要」 | ✅ 登记表已建；`AGENTS.md` 工程规则正文保留并标注 ID，`OPS-MAN-169` 定位为索引层 |
-| 8 | 机械守卫 | ✅ `check-gov-rules.js` 校验字段齐全 / ID 唯一 / 枚举合法 / 三元标签 / 权力-约束配对 / 同域同名重叠（GOV-TOOL-006）；`check-rules-registry.js` 校验登记表与真源标记行双向可达（GOV-TOOL-007）、规则卡与登记表逐字节一致（GOV-TOOL-008） |
-| 9 | 分批上线 | ✅ 单批完成（全十个域），`node scripts/ci/check-gov-rules.js` 全绿 |
-| 10 | 逐条规则卡（§1 形态） | ✅ `docs/10_规范/规则卡/` 每族规则一张卡 + `00_INDEX_规则卡总目录.md`，由 `npm run docs:rules-cards` 从登记表渲染，卡片为构建产物、禁手改（裁决 X-006） |
+| 1 | 盘点 → `RULES-INVENTORY.md` | ◐ 已完成于本轮审查的核对过程；未落独立文件（盘点结论并入 RULES-REGISTRY.json 的 `ssot` 与 `[DESIGN-GOV-001]` §0 审计矩阵） |
+| 2 | 分类映射，分配 `<DOMAIN>-<NNN>` + `formerly` | ✓ 全族映射完毕，见 `RULES-REGISTRY.json` |
+| 3 | 三元性质标注 + 补 `grants`/`benefit` | ✓ 登记表每条均含三元字段 |
+| 4 | 去重 / 合并 | ✓ 已消除 3 处重叠（见下方「已裁决」）；状态透明父子结构改为 `RUNTIME-002` 一族 |
+| 5 | 补字段 | ✓ 优先级 / 触发 / 例外 / 版本 / owner / 三元字段齐备 |
+| 6 | 冲突预检 → `RULES-CONFLICTS.json` | ◐ 冲突已在人工评审中消解并记录于 §2.4；`RULES-CONFLICTS.json` 未建（当前零未裁决冲突，建空文件无信息量） |
+| 7 | 建登记表 + 章程改「指针 + 摘要」 | ✓ 登记表已建；`AGENTS.md` 工程规则正文保留并标注 ID，`OPS-MAN-169` 定位为索引层 |
+| 8 | 机械守卫 | ✓ `check-gov-rules.js` 校验字段齐全 / ID 唯一 / 枚举合法 / 三元标签 / 权力-约束配对 / 同域同名重叠（GOV-TOOL-006）；`check-rules-registry.js` 校验登记表与真源标记行双向可达（GOV-TOOL-007）、规则卡与登记表逐字节一致（GOV-TOOL-008） |
+| 9 | 分批上线 | ✓ 单批完成（全十个域），`node scripts/ci/check-gov-rules.js` 全绿 |
+| 10 | 逐条规则卡（§1 形态） | ✓ `docs/10_规范/规则卡/` 每族规则一张卡 + `00_INDEX_规则卡总目录.md`，由 `npm run docs:rules-cards` 从登记表渲染，卡片为构建产物、禁手改（裁决 X-006） |
 
 ### 5.1 已裁决的重叠与冲突（追加记录，不改写历史表述）
 
@@ -339,7 +339,7 @@ owner: backend-team
 
 **提供福利**：不必记忆各环境端口/域名；切换部署目标只改 env，不改代码，降低联调与自托管成本。
 
-**反例**：❌ `fetch('http://localhost:3000/api')` → ✅ 从 `VITE_BACKEND_HOST` / `VITE_BACKEND_PORT` 读取。
+**反例**：✗ `fetch('http://localhost:3000/api')` → ✓ 从 `VITE_BACKEND_HOST` / `VITE_BACKEND_PORT` 读取。
 
 **校验方式**：`node scripts/ci/check-agent-rules.js --changed`；`grep -rn 'localhost:[0-9]' --include='*.js' --include='*.vue' --include='*.ts'`。
 
@@ -376,7 +376,7 @@ owner: governance-team
 
 **提供福利**：把「能不能提、怎么提」变成一条明确路径（模板 + 查重），消除提案前的犹豫与反复确认成本。
 
-**反例**：❌ 在 issue 里口头讨论「要不要加条规则」却不落卡 → ✅ 直接 `npm run rules:scaffold PROCESS` 起草草案提 PR。
+**反例**：✗ 在 issue 里口头讨论「要不要加条规则」却不落卡 → ✓ 直接 `npm run rules:scaffold PROCESS` 起草草案提 PR。
 
 **校验方式**：`node scripts/ci/check-gov-rules.js`（字段齐全 + 查重）；PR 评审。
 
@@ -407,10 +407,10 @@ owner: governance-team
 - **授予权力**：任何维护者可按本规范起草并提案新规则（见 PROCESS-101）。
 - **提供福利**：模板 `rules:scaffold` + 守卫自动过审，使遵循本规范的成本低于违反成本。
 - **合规记录（发布后已兑现，2026-09-15）**：
-  - ✅ 同名 `.html` 孪生件已生成（`npm run docs:build` 产物，不手改）。
-  - ✅ 两处索引已登记：`docs/08_MGMT_项目管理/00_INDEX_项目管理-分类索引.md` 与 `docs/00_INDEX_文档索引.md`。
-  - ✅ 已登记进 `docs/10_规范/registry/RULES-REGISTRY.json`，`status: active`，由 `check-gov-rules.js`（GOV-TOOL-006）校验字段完整性、ID 唯一性与权力-约束配对。
-  - ✅ 元规则自查已落实：本文档头部即 §1.2 规则卡 frontmatter，14 个字段齐备；`status` 全文统一为 `active`（v1.0.0 曾出现正文 `draft` 与 §8 `active` 并存，v1.1.0 已消除）。
+  - ✓ 同名 `.html` 孪生件已生成（`npm run docs:build` 产物，不手改）。
+  - ✓ 两处索引已登记：`docs/08_MGMT_项目管理/00_INDEX_项目管理-分类索引.md` 与 `docs/00_INDEX_文档索引.md`。
+  - ✓ 已登记进 `docs/10_规范/registry/RULES-REGISTRY.json`，`status: active`，由 `check-gov-rules.js`（GOV-TOOL-006）校验字段完整性、ID 唯一性与权力-约束配对。
+  - ✓ 元规则自查已落实：本文档头部即 §1.2 规则卡 frontmatter，14 个字段齐备；`status` 全文统一为 `active`（v1.0.0 曾出现正文 `draft` 与 §8 `active` 并存，v1.1.0 已消除）。
 - **登记字段名对齐**：登记表与本文统一使用 `formerly`（曾用标识）；登记表曾使用 `formerId`，v1.1.0 已改齐。
 
 ### 8.1 元规则自身的边界（防止元规则任意性）

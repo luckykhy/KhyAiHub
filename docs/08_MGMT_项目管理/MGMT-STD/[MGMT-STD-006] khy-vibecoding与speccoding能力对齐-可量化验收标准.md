@@ -67,7 +67,7 @@
                 └───────────────────────┬─────────────────────┘
                                         │ PASS(阈值 ≥70%)
                                         ▼
-                        ✅ 确认对齐(Confirmed Parity)
+                        ✓ 确认对齐(Confirmed Parity)
 ```
 
 **为什么必须三闸**:
@@ -268,13 +268,13 @@ Total: 15.0/16 (93.8%)  Threshold: 70.0%  →  PASS
 | **结构就绪(Structurally Ready)** | GateA == PASS,Gate B/C 未跑或未达阈 | 「khy *具备* vibe/spec-coding 机制,**尚未实证**对齐」 |
 | **实证达标但模型依赖(Verified but Model-Dependent)** | GateA==PASS 且 Gate B 全达阈,但 GateC != PASS | 「khy 在基准上达标,但**依赖大模型智能**,小模型未保证」 |
 | **框架就绪但未实证(Framework Ready but Unverified)** | GateA==PASS 且 GateC==PASS,但 Gate B 未达阈 | 「khy 框架具备确定性,但**未在真实任务实证**」 |
-| **确认对齐(Confirmed Parity)** | 上式成立且基准冻结、可复现、经评审 | 「khy 可像 cc 一样做 vibe/spec-coding,**且小模型可靠**」✅ |
+| **确认对齐(Confirmed Parity)** | 上式成立且基准冻结、可复现、经评审 | 「khy 可像 cc 一样做 vibe/spec-coding,**且小模型可靠**」✓ |
 
-> **当前状态(2026-07-02)= ✅ 确认对齐，包括小模型实证验证 (Confirmed Parity with Small Model Validation)**:  
-> - Gate A: ✅ PASS (27/27, 100%)  
-> - Gate B: ✅ PASS (10/10 任务 with Opus; GB1=100%, GB2=100%, GB3=100%, GB4=100%, GB5=0)
-> - Gate C: ✅ PASS (15/16, 93.8%) - 任务模板机制完备且**实证有效**
-> - 小模型验证: ✅ **PASS (3/3 代表性任务 with Haiku, 100% 完成率)**
+> **当前状态(2026-07-02)= ✓ 确认对齐，包括小模型实证验证 (Confirmed Parity with Small Model Validation)**:  
+> - Gate A: ✓ PASS (27/27, 100%)  
+> - Gate B: ✓ PASS (10/10 任务 with Opus; GB1=100%, GB2=100%, GB3=100%, GB4=100%, GB5=0)
+> - Gate C: ✓ PASS (15/16, 93.8%) - 任务模板机制完备且**实证有效**
+> - 小模型验证: ✓ **PASS (3/3 代表性任务 with Haiku, 100% 完成率)**
 >
 > **三闸模型全部通过，包括小模型实证验证**。
 >

@@ -11,20 +11,20 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
     <div class="content">
       <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>09_STORY_修仙学AI<span class="sep">›</span>STORY-合体<span class="sep">›</span>第 11 章 · 合体：开卷问道</div>
       <header class="hero reveal"><h1>第 11 章 · 合体：开卷问道</h1></header>
-      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#第-11-章-合体-开卷问道">第 11 章 · 合体：开卷问道</a></li><li class="lvl-2"><a href="#凡人笔记">📒 凡人笔记</a></li><li class="lvl-2"><a href="#读完自测">📝 读完自测</a></li></ul></nav>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#第-11-章-合体-开卷问道">第 11 章 · 合体：开卷问道</a></li><li class="lvl-2"><a href="#凡人笔记">凡人笔记</a></li><li class="lvl-2"><a href="#读完自测">读完自测</a></li></ul></nav>
       <article class="doc-body">
 <h1 id="第-11-章-合体-开卷问道">第 11 章 · 合体：开卷问道<a class="anchor" href="#第-11-章-合体-开卷问道" aria-label="锚点">#</a></h1>
 <blockquote><p>闭卷者，凭一张嘴；开卷者，凭满架书。<br>一张嘴会编，满架书能证——故求真者，先翻书，后开口。</p></blockquote>
@@ -69,10 +69,10 @@
 <p>玄机子指尖在案上一点,灯焰化开,映出一幅流转的光图。孔浩原凝神看去——</p>
 <pre class="mermaid">sequenceDiagram
     autonumber
-    participant 我 as 🙋 问道之人
-    participant 咒 as 📜 言灵咒·组咒台
-    participant 阁 as 🌌 星穹藏经阁
-    participant 炉 as 🔥 万言炉
+    participant 我 as 问道之人
+    participant 咒 as 言灵咒·组咒台
+    participant 阁 as 星穹藏经阁
+    participant 炉 as 万言炉
 
     Note over 阁: ①离线备书(平日功课)&lt;br/&gt;把典籍切成小段·逐段化星穹坐标·入藏经阁
     我-&gt;&gt;咒: ②临阵问道:「北疆大疫从何而起?」
@@ -166,19 +166,19 @@
 <p>苏挽晴笑了:&quot;正想与你说这个。你可听过……<strong>万法归一</strong>?&quot;</p>
 <p>夜色四合,金霞将尽。而属于他们的下一程,才刚刚开始。</p>
 <hr>
-<h2 id="凡人笔记">📒 凡人笔记<a class="anchor" href="#凡人笔记" aria-label="锚点">#</a></h2>
+<h2 id="凡人笔记">凡人笔记<a class="anchor" href="#凡人笔记" aria-label="锚点">#</a></h2>
 <p>这一章,孔浩原终于把两年所学&quot;合&quot;成了一件事——先翻书,后开口。把仙侠黑话翻回人话:</p>
 <table><thead><tr><th>仙法说法</th><th>真实 AI 术语</th><th>一句话人话</th></tr></thead><tbody><tr><td>开卷问道</td><td><strong>RAG（检索增强生成）</strong></td><td>答题前先检索真资料，据料作答，别凭一张嘴硬编</td></tr><tr><td>闭卷硬答、生幻象</td><td>纯 LLM 生成 / 幻觉</td><td>不给外部资料，模型不懂也会一本正经地编</td></tr><tr><td>离线备书：切段·化坐标·入藏经阁</td><td>文档切块 → Embedding → 存入向量库</td><td>平日先把知识库建好（呼应第9、10章）</td></tr><tr><td>问题化坐标·一念检索 top-k</td><td>Query 向量化 → 相似度检索 top-k</td><td>把问题也变成坐标，捞回最相干的几段</td></tr><tr><td>真典段拼进言灵咒</td><td>检索结果拼进 Prompt 上下文</td><td>把查到的资料塞进提问里一起给模型（呼应第3章）</td></tr><tr><td>据卷而答·标明出处</td><td>Grounded answer + 引用溯源</td><td>答案有依据、可回溯，能翻回原文核对</td></tr><tr><td>书架混进伪典</td><td>知识库被污染 / 脏数据</td><td>检索得再准，取回脏料也白搭（呼应第10章掺假典）</td></tr><tr><td>取错段、文不对题</td><td>检索精度差 / 召回不相关</td><td>取回的资料跑题，模型照样答偏</td></tr><tr><td>塞太多杂料成噪音</td><td>Context 冗余 / 稀释有效信息</td><td>塞太多半相干内容反成干扰，还挤占上下文窗口（呼应第4章）</td></tr><tr><td>开卷 vs 驭器术</td><td>RAG vs 工具调用</td><td>一个&quot;喂来现成真资料&quot;，一个&quot;让它亲自去取/去做&quot;，都为补外部真据、压幻觉（呼应第5章）</td></tr></tbody></table>
-<blockquote><p>📖 想把这一诀彻底吃透 → [⑪ 什么是 RAG（检索增强生成）](../../02_CONCEPTS_概念入门/CONCEPT/[CONCEPT-11] 什么是RAG-检索增强生成.md)</p>
+<blockquote><p>想把这一诀彻底吃透 → [⑪ 什么是 RAG（检索增强生成）](../../02_CONCEPTS_概念入门/CONCEPT/[CONCEPT-11] 什么是RAG-检索增强生成.md)</p>
 <p><strong>一句话总纲</strong>：RAG = 先检索、后生成。给模型喂来路分明、可溯源的真资料，让它&quot;据卷而答&quot;——这样它就不必靠一张嘴硬编，幻觉自然被真凭实据压住。但成败全看<strong>书架干不干净、取得准不准、别塞太多杂料</strong>。求真，是苦功，不是口号。</p></blockquote>
 <hr>
-<h2 id="读完自测">📝 读完自测<a class="anchor" href="#读完自测" aria-label="锚点">#</a></h2>
+<h2 id="读完自测">读完自测<a class="anchor" href="#读完自测" aria-label="锚点">#</a></h2>
 <p>就着上面这张&quot;凡人笔记&quot;，考一考自己——&quot;先翻书、后开口&quot;这门 RAG，你走通了吗？</p>
-<div class="quiz reveal" data-multi="1"><div class="quiz-q">🧠 关于&quot;开卷问道（RAG · 检索增强生成）&quot;，下面哪些说法是对的？（多选）</div><ul class="quiz-opts"><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="1"><span class="quiz-key">A</span><span class="quiz-text">RAG = 先检索、后生成：答题前先检索真资料，据料作答，别凭一张嘴硬编</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="1"><span class="quiz-key">B</span><span class="quiz-text">平日要先&quot;离线备书&quot;：把知识库切段 → 化成向量（Embedding）→ 存进藏经阁（向量库）</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="1"><span class="quiz-key">C</span><span class="quiz-text">查到的真典段，要拼进&quot;言灵咒&quot;（Prompt 上下文）一起给模型，答案还要标明出处</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="0"><span class="quiz-key">D</span><span class="quiz-text">RAG 是通过改模型的权重，把新知识&quot;焊&quot;进模型脑子里</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="0"><span class="quiz-key">E</span><span class="quiz-text">检索时塞进去的资料越多越好，多多益善</span></button></li></ul><div class="quiz-feedback" aria-live="polite"></div><div class="quiz-explain" hidden>💬 对。这正是为了压住&quot;闭卷硬答&quot;——不给外部资料，模型不懂也会一本正经地编（幻觉）。<br>对。呼应第 9、10 章：先把知识库建好，答题时才能&quot;问题化坐标 → 一念检索 top-k&quot;捞回最相干的几段。<br>对。检索结果拼进 Prompt（呼应第 3 章），据卷而答、可溯源，能翻回原文核对。<br>错。RAG <strong>不动模型</strong>，只在回答时把相关资料喂进上下文——这正是它和&quot;微调&quot;最大的分工（微调改本事/风格，RAG 给新事实）。<br>错。塞太多半相干的杂料反成噪音（Context 冗余），还挤占上下文窗口（呼应第 4 章）；成败全看书架干不干净、取得准不准、别塞太多杂料。</div></div>
+<div class="quiz reveal" data-multi="1"><div class="quiz-q">❯ 关于&quot;开卷问道（RAG · 检索增强生成）&quot;，下面哪些说法是对的？（多选）</div><ul class="quiz-opts"><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="1"><span class="quiz-key">A</span><span class="quiz-text">RAG = 先检索、后生成：答题前先检索真资料，据料作答，别凭一张嘴硬编</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="1"><span class="quiz-key">B</span><span class="quiz-text">平日要先&quot;离线备书&quot;：把知识库切段 → 化成向量（Embedding）→ 存进藏经阁（向量库）</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="1"><span class="quiz-key">C</span><span class="quiz-text">查到的真典段，要拼进&quot;言灵咒&quot;（Prompt 上下文）一起给模型，答案还要标明出处</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="0"><span class="quiz-key">D</span><span class="quiz-text">RAG 是通过改模型的权重，把新知识&quot;焊&quot;进模型脑子里</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="0"><span class="quiz-key">E</span><span class="quiz-text">检索时塞进去的资料越多越好，多多益善</span></button></li></ul><div class="quiz-feedback" aria-live="polite"></div><div class="quiz-explain" hidden>▸ 对。这正是为了压住&quot;闭卷硬答&quot;——不给外部资料，模型不懂也会一本正经地编（幻觉）。<br>对。呼应第 9、10 章：先把知识库建好，答题时才能&quot;问题化坐标 → 一念检索 top-k&quot;捞回最相干的几段。<br>对。检索结果拼进 Prompt（呼应第 3 章），据卷而答、可溯源，能翻回原文核对。<br>错。RAG <strong>不动模型</strong>，只在回答时把相关资料喂进上下文——这正是它和&quot;微调&quot;最大的分工（微调改本事/风格，RAG 给新事实）。<br>错。塞太多半相干的杂料反成噪音（Context 冗余），还挤占上下文窗口（呼应第 4 章）；成败全看书架干不干净、取得准不准、别塞太多杂料。</div></div>
 <p>再用一张翻卡，把&quot;开卷问道&quot;和第 5 章&quot;驭器术&quot;这对常被搞混的求真手段分清：</p>
-<div class="flip reveal" tabindex="0" role="button" aria-label="点击翻转卡片"><div class="flip-inner"><div class="flip-face flip-front">🤔 &quot;开卷问道（RAG）&quot;和&quot;驭器术（工具调用）&quot;都为了补外部真据、压住幻觉——它俩到底差在哪？（点一下翻到背面）<div class="flip-hint">👆 点我翻面看答案</div></div><div class="flip-face flip-back">✅ 一个&quot;<strong>喂来现成真资料</strong>&quot;，一个&quot;<strong>让它亲自去取/去做</strong>&quot;。RAG 是你事先把知识库备好，答题时检索出相关段落<strong>塞进 Prompt</strong> 给模型读——资料是现成的、被动喂进来的。工具调用（驭器术）则是模型<strong>自己决定去调一个工具</strong>（查数据库、算一笔、发个请求），亲手把真凭据取回来或把事办掉。一句话：<strong>RAG 喂资料，工具调用去动手；都为求真，路子不同。</strong></div></div></div>
+<div class="flip reveal" tabindex="0" role="button" aria-label="点击翻转卡片"><div class="flip-inner"><div class="flip-face flip-front">&quot;开卷问道（RAG）&quot;和&quot;驭器术（工具调用）&quot;都为了补外部真据、压住幻觉——它俩到底差在哪？（点一下翻到背面）<div class="flip-hint">▸ 点我翻面看答案</div></div><div class="flip-face flip-back">✓ 一个&quot;<strong>喂来现成真资料</strong>&quot;，一个&quot;<strong>让它亲自去取/去做</strong>&quot;。RAG 是你事先把知识库备好，答题时检索出相关段落<strong>塞进 Prompt</strong> 给模型读——资料是现成的、被动喂进来的。工具调用（驭器术）则是模型<strong>自己决定去调一个工具</strong>（查数据库、算一笔、发个请求），亲手把真凭据取回来或把事办掉。一句话：<strong>RAG 喂资料，工具调用去动手；都为求真，路子不同。</strong></div></div></div>
 <hr>
-<p>【[⬅ 上一章 · 第10章 炼虚·藏经阁](../STORY-炼虚/[STORY-章节-124] 第10章 炼虚·藏经阁.md)｜[下一章 · 第12章 大乘·万法归一 ➡](../STORY-大乘/[STORY-章节-126] 第12章 大乘·万法归一.md)｜<a href="../00_INDEX_修仙学AI-总目录.html">🏠 回总目录</a>】</p>
+<p>【[⬅ 上一章 · 第10章 炼虚·藏经阁](../STORY-炼虚/[STORY-章节-124] 第10章 炼虚·藏经阁.md)｜[下一章 · 第12章 大乘·万法归一 →](../STORY-大乘/[STORY-章节-126] 第12章 大乘·万法归一.md)｜<a href="../00_INDEX_修仙学AI-总目录.html">回总目录</a>】</p>
       </article>
       <nav class="pager"><a class="prev" href="../../../docs/09_STORY_修仙学AI/STORY-番外/00_INDEX_STORY-番外-总目录.html"><div class="dir">← 上一篇</div><div class="ttl">STORY-番外</div></a><a class="next" href="../../../docs/09_STORY_修仙学AI/STORY-合体/00_INDEX_STORY-合体-总目录.html"><div class="dir">下一篇 →</div><div class="ttl">STORY-合体</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>

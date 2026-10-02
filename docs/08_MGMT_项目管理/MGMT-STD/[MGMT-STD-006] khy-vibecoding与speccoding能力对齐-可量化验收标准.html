@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -64,7 +64,7 @@
                 └───────────────────────┬─────────────────────┘
                                         │ PASS(阈值 ≥70%)
                                         ▼
-                        ✅ 确认对齐(Confirmed Parity)</code></pre>
+                        ✓ 确认对齐(Confirmed Parity)</code></pre>
 <p><strong>为什么必须三闸</strong>:</p>
 <ul><li>只过 Gate A(有机制)→ 可能「有工具但用不好」「有 plan mode 但计划质量差」。<strong>具备机制 ≠ 已证明能力</strong>。</li><li>只看 Gate B(某几个任务成功)→ 可能是偶然 / 挑过的样本,不可复现、无结构保证;更重要的是,<strong>可能依赖大模型智能,小模型失效</strong>。</li><li>只加 Gate C(有模板)→ 模板可能太粗糙 / 不可执行,<strong>没在真实任务验证</strong>。</li><li><strong>Gate A 是 Gate B/C 的前置</strong>:结构没就绪就跑 golden-task,失败也无法定位是「缺机制」还是「机制没用好」。故先 A 后 B/C。</li><li><strong>Gate C 保证框架能力</strong>:即使换成小模型(Haiku),通过任务模板的逐步操作指引,框架本身提供足够确定性,让任务完成变成「机械操作」而非「智能推理」。这是 khy 成为「严格执行器」的必要条件。</li></ul>
 <hr>
@@ -137,9 +137,9 @@ Total: 15.0/16 (93.8%)  Threshold: 70.0%  →  PASS</code></pre>
                             ∧ GB1≥70% ∧ GB2≥85% ∧ GB3≥90% ∧ GB4≥90% ∧ GB5==0
                             ∧ GateC == PASS</code></pre>
 <p><strong>五级判定</strong>(对外结论只能用这五个词之一):</p>
-<table><thead><tr><th>等级</th><th>条件</th><th>可对外表述</th></tr></thead><tbody><tr><td><strong>未就绪(Not Ready)</strong></td><td>GateA == FAIL</td><td>「khy 尚缺机制,不能对齐」</td></tr><tr><td><strong>结构就绪(Structurally Ready)</strong></td><td>GateA == PASS,Gate B/C 未跑或未达阈</td><td>「khy <em>具备</em> vibe/spec-coding 机制,<strong>尚未实证</strong>对齐」</td></tr><tr><td><strong>实证达标但模型依赖(Verified but Model-Dependent)</strong></td><td>GateA==PASS 且 Gate B 全达阈,但 GateC != PASS</td><td>「khy 在基准上达标,但<strong>依赖大模型智能</strong>,小模型未保证」</td></tr><tr><td><strong>框架就绪但未实证(Framework Ready but Unverified)</strong></td><td>GateA==PASS 且 GateC==PASS,但 Gate B 未达阈</td><td>「khy 框架具备确定性,但<strong>未在真实任务实证</strong>」</td></tr><tr><td><strong>确认对齐(Confirmed Parity)</strong></td><td>上式成立且基准冻结、可复现、经评审</td><td>「khy 可像 cc 一样做 vibe/spec-coding,<strong>且小模型可靠</strong>」✅</td></tr></tbody></table>
-<blockquote><p><strong>当前状态(2026-07-02)= ✅ 确认对齐，包括小模型实证验证 (Confirmed Parity with Small Model Validation)</strong>:</p>
-<ul><li>Gate A: ✅ PASS (27/27, 100%)  </li><li>Gate B: ✅ PASS (10/10 任务 with Opus; GB1=100%, GB2=100%, GB3=100%, GB4=100%, GB5=0)</li><li>Gate C: ✅ PASS (15/16, 93.8%) - 任务模板机制完备且<strong>实证有效</strong></li><li>小模型验证: ✅ <strong>PASS (3/3 代表性任务 with Haiku, 100% 完成率)</strong></li></ul>
+<table><thead><tr><th>等级</th><th>条件</th><th>可对外表述</th></tr></thead><tbody><tr><td><strong>未就绪(Not Ready)</strong></td><td>GateA == FAIL</td><td>「khy 尚缺机制,不能对齐」</td></tr><tr><td><strong>结构就绪(Structurally Ready)</strong></td><td>GateA == PASS,Gate B/C 未跑或未达阈</td><td>「khy <em>具备</em> vibe/spec-coding 机制,<strong>尚未实证</strong>对齐」</td></tr><tr><td><strong>实证达标但模型依赖(Verified but Model-Dependent)</strong></td><td>GateA==PASS 且 Gate B 全达阈,但 GateC != PASS</td><td>「khy 在基准上达标,但<strong>依赖大模型智能</strong>,小模型未保证」</td></tr><tr><td><strong>框架就绪但未实证(Framework Ready but Unverified)</strong></td><td>GateA==PASS 且 GateC==PASS,但 Gate B 未达阈</td><td>「khy 框架具备确定性,但<strong>未在真实任务实证</strong>」</td></tr><tr><td><strong>确认对齐(Confirmed Parity)</strong></td><td>上式成立且基准冻结、可复现、经评审</td><td>「khy 可像 cc 一样做 vibe/spec-coding,<strong>且小模型可靠</strong>」✓</td></tr></tbody></table>
+<blockquote><p><strong>当前状态(2026-07-02)= ✓ 确认对齐，包括小模型实证验证 (Confirmed Parity with Small Model Validation)</strong>:</p>
+<ul><li>Gate A: ✓ PASS (27/27, 100%)  </li><li>Gate B: ✓ PASS (10/10 任务 with Opus; GB1=100%, GB2=100%, GB3=100%, GB4=100%, GB5=0)</li><li>Gate C: ✓ PASS (15/16, 93.8%) - 任务模板机制完备且<strong>实证有效</strong></li><li>小模型验证: ✓ <strong>PASS (3/3 代表性任务 with Haiku, 100% 完成率)</strong></li></ul>
 <p><strong>三闸模型全部通过，包括小模型实证验证</strong>。</p>
 <p><strong>Opus 基线</strong> (10 个完整黄金任务): GB1-GB5 五项指标全部达标，khy 在 Opus 模型下已确认对齐 Claude Code 的 vibe-coding 和 spec-coding 能力。</p>
 <p><strong>Haiku 验证</strong> (3 个代表性任务 VB-1/VB-3/SP-1): 达到 100% 完成率，所有 GB1-GB5 指标与 Opus 基线对齐，验证了 Gate C 任务模板机制能够有效降低对模型智能的依赖，<strong>保证即使小模型也能完成任务</strong>。详见 <code>gate-b-results/haiku-validation/HAIKU-VALIDATION-REPORT.md</code>。</p></blockquote>
