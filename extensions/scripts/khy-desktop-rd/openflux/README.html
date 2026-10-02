@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -30,7 +30,7 @@
 <blockquote><p>调研日期: 2026-08-31<br>仓库: <a href="https://github.com/EDEAI/OpenFlux" target="_blank" rel="noopener">https://github.com/EDEAI/OpenFlux</a><br>官方站点: <a href="https://openflux.io" target="_blank" rel="noopener">https://openflux.io</a><br>License: MIT<br>Stars: 225 · Forks: 42 · 118 commits（截至调研日）<br>中文文档: <code>README_zh.md</code></p></blockquote>
 <h2 id="一-为什么列为第一位">一、为什么列为第一位<a class="anchor" href="#一-为什么列为第一位" aria-label="锚点">#</a></h2>
 <p>OpenFlux 的技术栈与 khy-os 当前形态<strong>高度对称</strong>，几乎可以直接做 1:1 的工程映射：</p>
-<table><thead><tr><th>层级</th><th>OpenFlux</th><th>khy-os</th><th>复用度</th></tr></thead><tbody><tr><td>桌面壳</td><td><strong>Tauri v2</strong>（Rust）</td><td>❌ 无</td><td>需新建</td></tr><tr><td>前端</td><td>TypeScript + Vite + 原生 HTML</td><td>Vue 3 + Element Plus + Vite</td><td>风格相近</td></tr><tr><td>AI 网关 / 后端</td><td><strong>Gateway Sidecar</strong>（Node.js + Express + ws）</td><td><code>services/backend/server.js</code> + <code>services/ai-backend/</code></td><td><strong>结构对称</strong></td></tr><tr><td>配置</td><td><code>openflux.yaml</code></td><td><code>~/.khyquant/config.json</code></td><td>改写即可</td></tr><tr><td>多 LLM</td><td>OpenAI / Anthropic / DeepSeek / Moonshot / Zhipu / Ollama</td><td>同样的多供应商</td><td>复用</td></tr><tr><td>MCP 协议</td><td>内建</td><td>内建</td><td>复用</td></tr><tr><td>多 Agent</td><td>通用 / 编码 / 自动化</td><td>已有元帅/代理路由</td><td>概念复用</td></tr><tr><td>桌面能力</td><td>鼠标键盘模拟、Office 插件、Sherpa-ONNX</td><td>xterm + 剪贴板图片粘贴</td><td>增量补</td></tr></tbody></table>
+<table><thead><tr><th>层级</th><th>OpenFlux</th><th>khy-os</th><th>复用度</th></tr></thead><tbody><tr><td>桌面壳</td><td><strong>Tauri v2</strong>（Rust）</td><td>✗ 无</td><td>需新建</td></tr><tr><td>前端</td><td>TypeScript + Vite + 原生 HTML</td><td>Vue 3 + Element Plus + Vite</td><td>风格相近</td></tr><tr><td>AI 网关 / 后端</td><td><strong>Gateway Sidecar</strong>（Node.js + Express + ws）</td><td><code>services/backend/server.js</code> + <code>services/ai-backend/</code></td><td><strong>结构对称</strong></td></tr><tr><td>配置</td><td><code>openflux.yaml</code></td><td><code>~/.khyquant/config.json</code></td><td>改写即可</td></tr><tr><td>多 LLM</td><td>OpenAI / Anthropic / DeepSeek / Moonshot / Zhipu / Ollama</td><td>同样的多供应商</td><td>复用</td></tr><tr><td>MCP 协议</td><td>内建</td><td>内建</td><td>复用</td></tr><tr><td>多 Agent</td><td>通用 / 编码 / 自动化</td><td>已有元帅/代理路由</td><td>概念复用</td></tr><tr><td>桌面能力</td><td>鼠标键盘模拟、Office 插件、Sherpa-ONNX</td><td>xterm + 剪贴板图片粘贴</td><td>增量补</td></tr></tbody></table>
 <h2 id="二-架构">二、架构<a class="anchor" href="#二-架构" aria-label="锚点">#</a></h2>
 <pre><code>┌─────────────────────────────┐
 │ Tauri v2 Shell │ ← Rust 进程管理 + 原生 API
@@ -178,7 +178,7 @@ setup::<span class="hljs-title function_ invoke__">apply_loopback_exemption</spa
 <pre><code class="language-json"><span class="hljs-attr">&quot;tauri:build&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;tauri build --bundles nsis &amp;&amp; powershell -c \&quot;New-Item -ItemType Directory -Force output | Out-Null; Copy-Item &#x27;C:\\cargo-target\\openflux-rust\\release\\bundle\\nsis\\*.exe&#x27; output\\ -Force; Write-Host &#x27;Installer copied to output\\&#x27;\&quot;&quot;</span></code></pre>
 <blockquote><p>khy-os 的桌面端可以参考这条路径：从绝对 cargo-target 拷贝安装包到项目内 <code>apps/desktop/release/</code>（避免用户去 cargo cache 找）。</p></blockquote>
 <h2 id="四-feature-列表-可直接对照-khy-os">四、Feature 列表（可直接对照 khy-os）<a class="anchor" href="#四-feature-列表-可直接对照-khy-os" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>OpenFlux</th><th>khy-os 现状</th><th>复用路径</th></tr></thead><tbody><tr><td>多 LLM 接入（10+ 供应商）</td><td>✅ <code>services/backend/src/services/gateway/aiGateway.js</code></td><td>0 改动</td></tr><tr><td>多 Agent 路由</td><td>✅ 元帅/将军体系</td><td>0 改动</td></tr><tr><td>长记忆（SQLite + sqlite-vec）</td><td>✅ <code>khy-Trajectory/</code></td><td>增量补</td></tr><tr><td>MCP 协议</td><td>✅ 内建</td><td>0 改动</td></tr><tr><td>浏览器自动化（Playwright）</td><td>✅ 部分（远程 SSH）</td><td>增量补</td></tr><tr><td>语音识别（Sherpa-ONNX）</td><td>❌</td><td>待选</td></tr><tr><td>桌面控制（鼠标键盘）</td><td>❌（DESIGN-ARCH-056 留有接口）</td><td>增量补</td></tr><tr><td>定时任务</td><td>✅ khy-quant 部分</td><td>增量补</td></tr><tr><td>Office 插件</td><td>❌</td><td>远期</td></tr><tr><td>远程接入（Lark/DingTalk）</td><td>❌</td><td>远期</td></tr></tbody></table>
+<table><thead><tr><th>OpenFlux</th><th>khy-os 现状</th><th>复用路径</th></tr></thead><tbody><tr><td>多 LLM 接入（10+ 供应商）</td><td>✓ <code>services/backend/src/services/gateway/aiGateway.js</code></td><td>0 改动</td></tr><tr><td>多 Agent 路由</td><td>✓ 元帅/将军体系</td><td>0 改动</td></tr><tr><td>长记忆（SQLite + sqlite-vec）</td><td>✓ <code>khy-Trajectory/</code></td><td>增量补</td></tr><tr><td>MCP 协议</td><td>✓ 内建</td><td>0 改动</td></tr><tr><td>浏览器自动化（Playwright）</td><td>✓ 部分（远程 SSH）</td><td>增量补</td></tr><tr><td>语音识别（Sherpa-ONNX）</td><td>✗</td><td>待选</td></tr><tr><td>桌面控制（鼠标键盘）</td><td>✗（DESIGN-ARCH-056 留有接口）</td><td>增量补</td></tr><tr><td>定时任务</td><td>✓ khy-quant 部分</td><td>增量补</td></tr><tr><td>Office 插件</td><td>✗</td><td>远期</td></tr><tr><td>远程接入（Lark/DingTalk）</td><td>✗</td><td>远期</td></tr></tbody></table>
 <h2 id="五-给-khy-os-的具体参考">五、给 khy-os 的具体参考<a class="anchor" href="#五-给-khy-os-的具体参考" aria-label="锚点">#</a></h2>
 <h3 id="5-1-直接可抄">5.1 直接可抄<a class="anchor" href="#5-1-直接可抄" aria-label="锚点">#</a></h3>
 <ul><li><strong><code>tauri-plugin-single-instance</code></strong>：第二实例启动时聚焦已有窗口（khy-os 已是 <code>bin/khy.js</code> 的现成模式）</li><li><strong><code>setup::apply_loopback_exemption()</code></strong>：Windows WebView2 直连 ws 的坑（必抄）</li><li><strong><code>decorations: false</code> + 自绘标题栏</strong>：ZCode 风格的关键</li><li><strong>bundling <code>node.exe</code> + <code>gateway-bundle.tar.gz</code></strong>：让用户不装 Node</li><li><strong>CORS / 端口白名单</strong>：借鉴 khy-os <code>server.js:264-277</code></li></ul>
