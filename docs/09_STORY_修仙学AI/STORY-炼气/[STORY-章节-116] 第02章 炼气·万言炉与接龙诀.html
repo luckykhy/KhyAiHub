@@ -11,20 +11,20 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
     <div class="content">
       <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>09_STORY_修仙学AI<span class="sep">›</span>STORY-炼气<span class="sep">›</span>第 02 章 · 炼气：万言炉与接龙诀</div>
       <header class="hero reveal"><h1>第 02 章 · 炼气：万言炉与接龙诀</h1></header>
-      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#第-02-章-炼气-万言炉与接龙诀">第 02 章 · 炼气：万言炉与接龙诀</a></li><li class="lvl-2"><a href="#凡人笔记">📒 凡人笔记</a></li><li class="lvl-2"><a href="#读完自测">📝 读完自测</a></li></ul></nav>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#第-02-章-炼气-万言炉与接龙诀">第 02 章 · 炼气：万言炉与接龙诀</a></li><li class="lvl-2"><a href="#凡人笔记">凡人笔记</a></li><li class="lvl-2"><a href="#读完自测">读完自测</a></li></ul></nav>
       <article class="doc-body">
 <h1 id="第-02-章-炼气-万言炉与接龙诀">第 02 章 · 炼气：万言炉与接龙诀<a class="anchor" href="#第-02-章-炼气-万言炉与接龙诀" aria-label="锚点">#</a></h1>
 <blockquote><p>炉不识真，只识&quot;像真&quot;。<br>一字接一字，续得天花乱坠——可那花，未必开在人间。</p></blockquote>
@@ -66,11 +66,11 @@
 <p>孔浩原怔怔看着那尊炉。他忽然觉得，眼前这庞然大物，既神奇，又有些……可怕。</p>
 <hr>
 <pre class="mermaid">flowchart LR
-    A[&quot;🖊️ 你投入的半句话&lt;br/&gt;『从前有座』&quot;] --&gt; B{&quot;⚖️ 万言炉的秤&lt;br/&gt;下一个字最可能是谁？&quot;}
-    B --&gt;|&quot;最像那么回事&quot;| C[&quot;📤 吐出一个字：山&quot;]
-    C --&gt; D[&quot;🔁 把新字接回去&lt;br/&gt;『从前有座山』&quot;]
+    A[&quot;你投入的半句话&lt;br/&gt;『从前有座』&quot;] --&gt; B{&quot;⚖ 万言炉的秤&lt;br/&gt;下一个字最可能是谁？&quot;}
+    B --&gt;|&quot;最像那么回事&quot;| C[&quot;吐出一个字：山&quot;]
+    C --&gt; D[&quot;把新字接回去&lt;br/&gt;『从前有座山』&quot;]
     D --&gt; B
-    B -.-&gt;|&quot;读遍千万篇文章&lt;br/&gt;练出的『语感』&quot;| E[&quot;🌊 天地灵机&lt;br/&gt;海量文本&quot;]
+    B -.-&gt;|&quot;读遍千万篇文章&lt;br/&gt;练出的『语感』&quot;| E[&quot;天地灵机&lt;br/&gt;海量文本&quot;]
     E -.-&gt; B
     style A fill:#e3f2fd
     style B fill:#fff3e0
@@ -159,16 +159,16 @@
 <p>而孔浩原知道，他的算道，才刚刚，从这一句誓言开始。</p>
 <p>窗外，东方既白。灵机之河在晨光里无声流淌，像它流淌了千万年那样，映着真，也映着假，等着有人来，把这两样，一点一点分开。</p>
 <hr>
-<h2 id="凡人笔记">📒 凡人笔记<a class="anchor" href="#凡人笔记" aria-label="锚点">#</a></h2>
+<h2 id="凡人笔记">凡人笔记<a class="anchor" href="#凡人笔记" aria-label="锚点">#</a></h2>
 <p>小说读到这儿，把&quot;仙法&quot;翻译回人话——它们其实都是 <strong>LLM（大语言模型）</strong> 的真面目：</p>
 <table><thead><tr><th>仙法说法</th><th>真实术语</th><th>一句话解释</th></tr></thead><tbody><tr><td>万言炉</td><td>大语言模型（LLM）</td><td>读遍海量文本、能&quot;续写&quot;任何话的模型，本章的主角</td></tr><tr><td>接龙诀 / 一个字接一个字</td><td>自回归生成（next-token prediction）</td><td>LLM 的核心：不是&quot;想好再说&quot;，而是不停预测&quot;下一个词最可能是谁&quot;</td></tr><tr><td>那杆&quot;掂量的秤&quot;</td><td>概率分布</td><td>对每个可能的下一个字打分，挑最像那么回事的吐出来</td></tr><tr><td>&quot;读过千万篇文章&quot;</td><td>预训练（在海量语料上训练）</td><td>模型的&quot;语感&quot;从哪来——读得多，接得顺</td></tr><tr><td>炉子胡诌出不存在的丹方</td><td>幻觉（Hallucination）</td><td>模型会一本正经地编造根本不存在的事实，且毫无自觉</td></tr><tr><td>&quot;只保证像真，不保证是真&quot;</td><td>LLM 的根本局限</td><td>它优化的是&quot;流畅像样&quot;，不是&quot;事实正确&quot;——这是求真的起点</td></tr><tr><td>同一问题两次答得不同</td><td>温度 / 采样随机性（temperature）</td><td>生成带随机性，同一个问题每次结果可能略有出入</td></tr><tr><td>幻魔道 / 墨渊</td><td>（主题伏笔）滥用生成式 AI 造假</td><td>全书主线：求&quot;真、可溯源、能自省&quot; vs 用以假乱真的幻象惑世</td></tr></tbody></table>
-<blockquote><p>📖 想把本章的&quot;仙法&quot;学成真本事，配套概念文档在这里：<br><strong>[⑥ 什么是 LLM](../../02_CONCEPTS_概念入门/CONCEPT/[CONCEPT-06] 什么是LLM-大语言模型.md)</strong></p></blockquote>
+<blockquote><p>想把本章的&quot;仙法&quot;学成真本事，配套概念文档在这里：<br><strong>[⑥ 什么是 LLM](../../02_CONCEPTS_概念入门/CONCEPT/[CONCEPT-06] 什么是LLM-大语言模型.md)</strong></p></blockquote>
 <hr>
-<h2 id="读完自测">📝 读完自测<a class="anchor" href="#读完自测" aria-label="锚点">#</a></h2>
+<h2 id="读完自测">读完自测<a class="anchor" href="#读完自测" aria-label="锚点">#</a></h2>
 <p>就着上面这张&quot;凡人笔记&quot;，考一考自己——万言炉的脾气，你摸清了吗？</p>
-<div class="quiz reveal" data-multi="1"><div class="quiz-q">🧠 关于&quot;万言炉（LLM）&quot;和它的&quot;接龙诀&quot;，下面哪些说法是对的？（多选）</div><ul class="quiz-opts"><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="1"><span class="quiz-key">A</span><span class="quiz-text">&quot;接龙诀 / 一个字接一个字&quot;对应的真实术语是自回归生成——不停预测&quot;下一个词最可能是谁&quot;</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="1"><span class="quiz-key">B</span><span class="quiz-text">炉子会胡诌出根本不存在的丹方，对应的是&quot;幻觉&quot;——它一本正经编造，还毫无自觉</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="0"><span class="quiz-key">C</span><span class="quiz-text">万言炉&quot;只保证像真&quot;，所以它说出口的每一条事实都一定准确</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="1"><span class="quiz-key">D</span><span class="quiz-text">同一个问题两次答得不一样，是因为生成带随机性（温度 / 采样）</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="0"><span class="quiz-key">E</span><span class="quiz-text">万言炉的&quot;语感&quot;是天生就有的，不需要读任何东西</span></button></li></ul><div class="quiz-feedback" aria-live="polite"></div><div class="quiz-explain" hidden>💬 对。LLM 不是&quot;想好整段再说&quot;，而是一个字一个字地接龙，这是它的核心机制。<br>对。幻觉是本章埋下的关键脾气：说得像真，未必是真。<br>错。恰恰相反——它优化的是&quot;流畅像样&quot;，不是&quot;事实正确&quot;，这正是求真的起点。<br>对。采样随机性让同一问题每次结果可能略有出入。<br>错。它的语感来自预训练——读遍海量文本，读得多才接得顺。</div></div>
+<div class="quiz reveal" data-multi="1"><div class="quiz-q">❯ 关于&quot;万言炉（LLM）&quot;和它的&quot;接龙诀&quot;，下面哪些说法是对的？（多选）</div><ul class="quiz-opts"><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="1"><span class="quiz-key">A</span><span class="quiz-text">&quot;接龙诀 / 一个字接一个字&quot;对应的真实术语是自回归生成——不停预测&quot;下一个词最可能是谁&quot;</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="1"><span class="quiz-key">B</span><span class="quiz-text">炉子会胡诌出根本不存在的丹方，对应的是&quot;幻觉&quot;——它一本正经编造，还毫无自觉</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="0"><span class="quiz-key">C</span><span class="quiz-text">万言炉&quot;只保证像真&quot;，所以它说出口的每一条事实都一定准确</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="1"><span class="quiz-key">D</span><span class="quiz-text">同一个问题两次答得不一样，是因为生成带随机性（温度 / 采样）</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="0"><span class="quiz-key">E</span><span class="quiz-text">万言炉的&quot;语感&quot;是天生就有的，不需要读任何东西</span></button></li></ul><div class="quiz-feedback" aria-live="polite"></div><div class="quiz-explain" hidden>▸ 对。LLM 不是&quot;想好整段再说&quot;，而是一个字一个字地接龙，这是它的核心机制。<br>对。幻觉是本章埋下的关键脾气：说得像真，未必是真。<br>错。恰恰相反——它优化的是&quot;流畅像样&quot;，不是&quot;事实正确&quot;，这正是求真的起点。<br>对。采样随机性让同一问题每次结果可能略有出入。<br>错。它的语感来自预训练——读遍海量文本，读得多才接得顺。</div></div>
 <p>再用一张翻卡，把本章最要命的一句道理记死：</p>
-<div class="flip reveal" tabindex="0" role="button" aria-label="点击翻转卡片"><div class="flip-inner"><div class="flip-face flip-front">🤔 万言炉说得那么顺、那么像真，为什么算修还要反复叮嘱&quot;求真，莫求似&quot;？（点一下翻到背面）<div class="flip-hint">👆 点我翻面看答案</div></div><div class="flip-face flip-back">✅ 因为 LLM 优化的目标是&quot;接得流畅、像那么回事&quot;，<strong>不是&quot;说的是真的&quot;</strong>。它能一本正经地编出不存在的丹方（幻觉）且毫无自觉。所以&quot;像真 ≠ 是真&quot;是全书主线的起点——后文的工具调用、检索（RAG）、工具循环，都是为了把&quot;像真&quot;一步步逼向&quot;是真&quot;。</div></div></div>
+<div class="flip reveal" tabindex="0" role="button" aria-label="点击翻转卡片"><div class="flip-inner"><div class="flip-face flip-front">万言炉说得那么顺、那么像真，为什么算修还要反复叮嘱&quot;求真，莫求似&quot;？（点一下翻到背面）<div class="flip-hint">▸ 点我翻面看答案</div></div><div class="flip-face flip-back">✓ 因为 LLM 优化的目标是&quot;接得流畅、像那么回事&quot;，<strong>不是&quot;说的是真的&quot;</strong>。它能一本正经地编出不存在的丹方（幻觉）且毫无自觉。所以&quot;像真 ≠ 是真&quot;是全书主线的起点——后文的工具调用、检索（RAG）、工具循环，都是为了把&quot;像真&quot;一步步逼向&quot;是真&quot;。</div></div></div>
 <hr>
 <p>【[上一章]([STORY-章节-115] 第01章 炼气·凡尘初闻道.md) ｜ [下一章](../STORY-筑基/[STORY-章节-117] 第03章 筑基·言灵咒.md) ｜ <a href="../00_INDEX_修仙学AI-总目录.html">回总目录</a>】</p>
       </article>
