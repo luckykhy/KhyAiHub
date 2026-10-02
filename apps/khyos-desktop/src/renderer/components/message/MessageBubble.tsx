@@ -122,11 +122,11 @@ function TrajectoryTimeline({ steps }: { steps: TrajectoryStep[] }) {
   const [selectedStep, setSelectedStep] = useState<number | null>(null)
 
   const typeConfig = {
-    user: { color: 'var(--color-trajectory-user)', label: '用户', icon: '👤' },
-    assistant: { color: 'var(--color-trajectory-assistant)', label: '助手', icon: '🤖' },
-    reasoning: { color: 'var(--color-trajectory-reasoning)', label: '思考', icon: '💭' },
-    'tool-call': { color: 'var(--color-trajectory-tool-call)', label: '工具调用', icon: '🔧' },
-    'tool-result': { color: 'var(--color-trajectory-tool-result)', label: '工具结果', icon: '📋' },
+    user: { color: 'var(--color-trajectory-user)', label: '用户', icon: '●' },
+    assistant: { color: 'var(--color-trajectory-assistant)', label: '助手', icon: '❯' },
+    reasoning: { color: 'var(--color-trajectory-reasoning)', label: '思考', icon: '✧' },
+    'tool-call': { color: 'var(--color-trajectory-tool-call)', label: '工具调用', icon: '✱' },
+    'tool-result': { color: 'var(--color-trajectory-tool-result)', label: '工具结果', icon: '☰' },
   }
 
   return (
@@ -200,10 +200,10 @@ function ToolCallCard({ tool }: { tool: ToolCall }) {
   const [expanded, setExpanded] = useState(false)
 
   const statusConfig = {
-    pending: { color: 'text-foreground/50', bg: 'bg-foreground/20', label: '等待中', icon: '⏳' },
-    running: { color: 'text-warning', bg: 'bg-warning/20', label: '运行中', icon: '⚡' },
-    success: { color: 'text-success', bg: 'bg-success/20', label: '完成', icon: '✅' },
-    error: { color: 'text-destructive', bg: 'bg-destructive/20', label: '失败', icon: '❌' },
+    pending: { color: 'text-foreground/50', bg: 'bg-foreground/20', label: '等待中', icon: '⋯' },
+    running: { color: 'text-warning', bg: 'bg-warning/20', label: '运行中', icon: '❯' },
+    success: { color: 'text-success', bg: 'bg-success/20', label: '完成', icon: '✓' },
+    error: { color: 'text-destructive', bg: 'bg-destructive/20', label: '失败', icon: '✗' },
   }
 
   const status = statusConfig[tool.status]
