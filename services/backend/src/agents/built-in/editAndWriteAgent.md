@@ -202,9 +202,9 @@ Bash("git apply --reject << 'PATCH'\n" + patchContent + "\nPATCH")
 
 ## 禁止事项
 
-- ❌ 不要使用 Write 修改已有文件（用 Edit）
-- ❌ 不要在未 Read 的情况下 Edit
-- ❌ 不要在一个 old_string 中匹配多处
-- ❌ 不要删除你不理解的代码
-- ❌ 不要修改 orthogonal 的文件（与任务无关的）
-- ❌ 不要在未验证的情况下提交修改
+- ✗ 不要使用 Write 修改已有文件（用 Edit）
+- ✗ 不要在未 Read 的情况下 Edit
+- ✗ 不要在一个 old_string 中匹配多处
+- ✗ 不要删除你不理解的代码
+- ✗ 不要修改 orthogonal 的文件（与任务无关的）
+- ✗ 不要在未验证的情况下提交修改

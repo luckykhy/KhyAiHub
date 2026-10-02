@@ -71,14 +71,14 @@ permissionMode: dontAsk       # 可选
 
 ## 禁止事项
 
-- ❌ ...
+- ✗ ...
 ```
 
 **优势**：
 - 创建后自动被发现（`builtin: true` frontmatter 触发自动加载）
 - 不需要修改任何 JS 文件
 
-#### ⚠️ `tools` 与 `disallowedTools` 的授权语义（必读）
+#### ⚠ `tools` 与 `disallowedTools` 的授权语义（必读）
 
 本仓库遵循 **默认拒绝** 原则（`[DESIGN-AGENT-002]` / 规则 `RUNTIME-010`）：
 **没有被显式授予的工具，不得可获得**。
@@ -133,7 +133,7 @@ disallowedTools: [Agent, ExitPlanMode, Edit, Write, NotebookEdit, Bash, shellCom
 ### 第四步：验证
 
 创建完成后：
-1. 使用 Bash 运行 `node -e "const { getAgentDefinitions } = require('./src/agents'); getAgentDefinitions(process.cwd()).then(r => { const a = r.allAgents.find(x => x.agentType === '<name>'); console.log(a ? '✅ Found: ' + a.agentType + ' [' + a.source + ']' : '❌ Not found'); })"` 验证 agent 已被识别
+1. 使用 Bash 运行 `node -e "const { getAgentDefinitions } = require('./src/agents'); getAgentDefinitions(process.cwd()).then(r => { const a = r.allAgents.find(x => x.agentType === '<name>'); console.log(a ? '✓ Found: ' + a.agentType + ' [' + a.source + ']' : '✗ Not found'); })"` 验证 agent 已被识别
 2. 如果使用 JS 方式，还需要确认 `builtInAgents.js` 中的 require 和注册代码正确
 
 ## 重要约束
@@ -175,9 +175,9 @@ khy agents list
 
 ## 禁止事项
 
-- ❌ 不要创建与已有 agent 同名的 agent（会冲突）
-- ❌ 不要在 system prompt 中暴露硬编码的 API key、密码等敏感信息
-- ❌ 不要声明不必要的工具权限（最小权限原则）
-- ❌ 不要创建功能模糊、用途不清晰的 agent
-- ❌ 创建 JS agent 后不要忘记在 `builtInAgents.js` 中注册
-- ❌ 不要在 system prompt 中要求 AI 编写代码来创建其他 agent——直接指导 AI 使用 Agent tool 即可
+- ✗ 不要创建与已有 agent 同名的 agent（会冲突）
+- ✗ 不要在 system prompt 中暴露硬编码的 API key、密码等敏感信息
+- ✗ 不要声明不必要的工具权限（最小权限原则）
+- ✗ 不要创建功能模糊、用途不清晰的 agent
+- ✗ 创建 JS agent 后不要忘记在 `builtInAgents.js` 中注册
+- ✗ 不要在 system prompt 中要求 AI 编写代码来创建其他 agent——直接指导 AI 使用 Agent tool 即可

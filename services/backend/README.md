@@ -90,7 +90,7 @@ node bin/khy.js memory project
 ### 错误处理
 
 ```javascript
-// ✅ 正确
+// ✓ 正确
 try {
   await someAsyncOperation();
 } catch (error) {
@@ -98,7 +98,7 @@ try {
   throw error;
 }
 
-// ❌ 错误
+// ✗ 错误
 try {
   await someAsyncOperation();
 } catch (error) {
@@ -111,10 +111,10 @@ try {
 遵循"动作 + 目标 + 进度"规范：
 
 ```javascript
-// ✅ 正确
+// ✓ 正确
 console.log('连接 PostgreSQL (127.0.0.1:5432)，第 2/3 次重试...');
 
-// ❌ 错误
+// ✗ 错误
 console.log('正在连接数据库...');
 ```
 
@@ -123,7 +123,7 @@ console.log('正在连接数据库...');
 使用活动超时，而非固定超时：
 
 ```javascript
-// ✅ 正确
+// ✓ 正确
 let lastActivity = Date.now();
 const IDLE_LIMIT = 120_000;
 
@@ -133,7 +133,7 @@ if (Date.now() - lastActivity > IDLE_LIMIT) {
   // 超时处理
 }
 
-// ❌ 错误
+// ✗ 错误
 const start = Date.now();
 if (Date.now() - start > 120_000) {
   // 硬超时

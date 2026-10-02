@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -76,10 +76,10 @@ maxTurns: 10                  # 可选
 
 <span class="hljs-section">## 禁止事项</span>
 
-<span class="hljs-bullet">-</span> ❌ ...</code></pre>
+<span class="hljs-bullet">-</span> ✗ ...</code></pre>
 <p><strong>优势</strong>：</p>
 <ul><li>创建后自动被发现（<code>builtin: true</code> frontmatter 触发自动加载）</li><li>不需要修改任何 JS 文件</li></ul>
-<h4 id="tools-与-disallowedtools-的授权语义-必读">⚠️ <code>tools</code> 与 <code>disallowedTools</code> 的授权语义（必读）<a class="anchor" href="#tools-与-disallowedtools-的授权语义-必读" aria-label="锚点">#</a></h4>
+<h4 id="tools-与-disallowedtools-的授权语义-必读">⚠ <code>tools</code> 与 <code>disallowedTools</code> 的授权语义（必读）<a class="anchor" href="#tools-与-disallowedtools-的授权语义-必读" aria-label="锚点">#</a></h4>
 <p>本仓库遵循 <strong>默认拒绝</strong> 原则（<code>[DESIGN-AGENT-002]</code> / 规则 <code>RUNTIME-010</code>）：<br><strong>没有被显式授予的工具，不得可获得</strong>。</p>
 <table><thead><tr><th>字段</th><th>语义</th><th>建议</th></tr></thead><tbody><tr><td><code>tools</code></td><td><strong>白名单</strong>：只有列出的工具可用</td><td><strong>强烈建议必填</strong>——这是唯一能表达「上界」的字段</td></tr><tr><td><code>disallowedTools</code></td><td><strong>黑名单</strong>：列出的工具被剥夺</td><td>只做<strong>额外</strong>收紧，<strong>不可</strong>作为唯一声明</td></tr></tbody></table>
 <p><strong>为什么不能只写 <code>disallowedTools</code></strong>：黑名单只能做减法，无法规定上界。<br>只写黑名单意味着「除这几样之外，其余全部可用」——将来新加的任何工具都会被<br><strong>静默授予</strong>给这个 agent。这正是本仓库曾经踩过的坑：多个只读 agent 在提示词里<br>反复声明「NEVER use Bash for rm/mv/git add...」，却因为黑名单没列 <code>Bash</code><br>而<strong>实际持有</strong>该工具，声明与能力不一致。</p>
@@ -101,7 +101,7 @@ maxTurns: 10                  # 可选
 <p>使用 Write 工具创建文件。</p>
 <h3 id="第四步-验证">第四步：验证<a class="anchor" href="#第四步-验证" aria-label="锚点">#</a></h3>
 <p>创建完成后：</p>
-<ol><li>使用 Bash 运行 <code>node -e &quot;const { getAgentDefinitions } = require('./src/agents'); getAgentDefinitions(process.cwd()).then(r =&gt; { const a = r.allAgents.find(x =&gt; x.agentType === '&lt;name&gt;'); console.log(a ? '✅ Found: ' + a.agentType + ' [' + a.source + ']' : '❌ Not found'); })&quot;</code> 验证 agent 已被识别</li><li>如果使用 JS 方式，还需要确认 <code>builtInAgents.js</code> 中的 require 和注册代码正确</li></ol>
+<ol><li>使用 Bash 运行 <code>node -e &quot;const { getAgentDefinitions } = require('./src/agents'); getAgentDefinitions(process.cwd()).then(r =&gt; { const a = r.allAgents.find(x =&gt; x.agentType === '&lt;name&gt;'); console.log(a ? '✓ Found: ' + a.agentType + ' [' + a.source + ']' : '✗ Not found'); })&quot;</code> 验证 agent 已被识别</li><li>如果使用 JS 方式，还需要确认 <code>builtInAgents.js</code> 中的 require 和注册代码正确</li></ol>
 <h2 id="重要约束">重要约束<a class="anchor" href="#重要约束" aria-label="锚点">#</a></h2>
 <ul><li><strong>agentType 命名</strong>：使用 kebab-case，如 <code>my-agent</code>，不要与已有 agent 重名</li><li><strong>description 必须精确</strong>：这是 agent 被调用的触发条件，写清楚什么时候应该使用这个 agent</li><li><strong>tools 要精准</strong>：只声明这个 agent 真正需要的工具，不要给 <code>*</code>（所有工具）除非必要</li><li><strong>system prompt 要具体</strong>：写清楚 agent 的职责、工作流程、注意事项和禁止事项</li><li><strong>model 选择原则</strong>：<ul><li><code>haiku</code>：快速响应、简单任务、不需要深度推理</li><li><code>sonnet</code>：平衡速度和深度，大多数 agent 的首选</li><li><code>opus</code>：复杂推理、多步规划、深度分析</li></ul></li><li><strong>跨系统交互</strong>：如果 agent 需要创建其他 agent，必须在 <code>tools</code> 中声明 <code>Agent</code>；如果需要使用 skill，声明 <code>Skill</code>；如果需要调用 MCP 工具，声明 <code>MCP</code>（或具体 MCP 工具名）</li><li><strong>深度限制</strong>：通过 Agent tool 创建的子 agent 最大深度为 2 层，system prompt 中应提醒 AI 不要过度嵌套</li></ul>
 <h2 id="跨系统交互能力">跨系统交互能力<a class="anchor" href="#跨系统交互能力" aria-label="锚点">#</a></h2>
@@ -114,7 +114,7 @@ maxTurns: 10                  # 可选
 <pre><code>khy agents list</code></pre>
 <p>或者在代码中查看 <code>services/backend/src/agents/built-in/</code> 目录下的现有文件作为参考模板。</p>
 <h2 id="禁止事项">禁止事项<a class="anchor" href="#禁止事项" aria-label="锚点">#</a></h2>
-<ul><li>❌ 不要创建与已有 agent 同名的 agent（会冲突）</li><li>❌ 不要在 system prompt 中暴露硬编码的 API key、密码等敏感信息</li><li>❌ 不要声明不必要的工具权限（最小权限原则）</li><li>❌ 不要创建功能模糊、用途不清晰的 agent</li><li>❌ 创建 JS agent 后不要忘记在 <code>builtInAgents.js</code> 中注册</li><li>❌ 不要在 system prompt 中要求 AI 编写代码来创建其他 agent——直接指导 AI 使用 Agent tool 即可</li></ul>
+<ul><li>✗ 不要创建与已有 agent 同名的 agent（会冲突）</li><li>✗ 不要在 system prompt 中暴露硬编码的 API key、密码等敏感信息</li><li>✗ 不要声明不必要的工具权限（最小权限原则）</li><li>✗ 不要创建功能模糊、用途不清晰的 agent</li><li>✗ 创建 JS agent 后不要忘记在 <code>builtInAgents.js</code> 中注册</li><li>✗ 不要在 system prompt 中要求 AI 编写代码来创建其他 agent——直接指导 AI 使用 Agent tool 即可</li></ul>
       </article>
       <nav class="pager"><a class="prev" href="../../../../../services/backend/README.html"><div class="dir">← 上一篇</div><div class="ttl">Khy Backend</div></a><a class="next" href="../../../../../services/backend/src/agents/built-in/coordinator.html"><div class="dir">下一篇 →</div><div class="ttl">Coordinator</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>

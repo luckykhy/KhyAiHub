@@ -17,116 +17,116 @@
 ### 0.1 零破坏原则
 
 ```
-❌ 禁止修改 Legacy 模式（KHY_CC_TUI 未设置）下的任何代码路径
-❌ 禁止删除或重命名现有组件/函数（除非显式标记为废弃）
-❌ 禁止改变现有 public API 的签名或行为
-❌ 禁止引入新的全局副作用
+✗ 禁止修改 Legacy 模式（KHY_CC_TUI 未设置）下的任何代码路径
+✗ 禁止删除或重命名现有组件/函数（除非显式标记为废弃）
+✗ 禁止改变现有 public API 的签名或行为
+✗ 禁止引入新的全局副作用
 
-✅ 所有 CC 模式代码必须通过 KHY_CC_TUI=1 门控
-✅ 门控关闭时，行为必须与修改前逐字节相同
-✅ 新增文件优先于修改现有文件
+✓ 所有 CC 模式代码必须通过 KHY_CC_TUI=1 门控
+✓ 门控关闭时，行为必须与修改前逐字节相同
+✓ 新增文件优先于修改现有文件
 ```
 
 ### 0.2 渲染安全
 
 ```
-❌ 禁止使用 \x1B[n;mr（DECSTBM 滚动区）—— 会杀死滚动历史
-❌ 禁止在 resize 时使用 \x1B[2J（全屏清除）—— 会擦除滚动历史
-❌ 禁止同步阻塞事件循环超过 16ms
-❌ 禁止在渲染路径中执行 IO 操作（文件读写、网络请求）
-❌ 禁止在组件 render 函数中创建新对象/数组（破坏 memo）
+✗ 禁止使用 \x1B[n;mr（DECSTBM 滚动区）—— 会杀死滚动历史
+✗ 禁止在 resize 时使用 \x1B[2J（全屏清除）—— 会擦除滚动历史
+✗ 禁止同步阻塞事件循环超过 16ms
+✗ 禁止在渲染路径中执行 IO 操作（文件读写、网络请求）
+✗ 禁止在组件 render 函数中创建新对象/数组（破坏 memo）
 
-✅ 使用 \x1B[0J（ED0）清除光标到末尾
-✅ 使用保存/恢复光标 + 绝对定位进行局部更新
-✅ IO 操作必须异步化（Promise / setTimeout）
-✅ render 函数中使用 useMemo / useCallback 稳定引用
+✓ 使用 \x1B[0J（ED0）清除光标到末尾
+✓ 使用保存/恢复光标 + 绝对定位进行局部更新
+✓ IO 操作必须异步化（Promise / setTimeout）
+✓ render 函数中使用 useMemo / useCallback 稳定引用
 ```
 
 ### 0.3 性能底线
 
 ```
-❌ 禁止冷启动超过 100ms
-❌ 禁止单次渲染超过 16ms（60fps 底线）
-❌ 禁止内存泄漏（未清理的定时器、事件监听）
-❌ 禁止无防抖的 resize 处理
-❌ 禁止无虚拟化的大列表渲染（> 100 条消息）
+✗ 禁止冷启动超过 100ms
+✗ 禁止单次渲染超过 16ms（60fps 底线）
+✗ 禁止内存泄漏（未清理的定时器、事件监听）
+✗ 禁止无防抖的 resize 处理
+✗ 禁止无虚拟化的大列表渲染（> 100 条消息）
 
-✅ 启动时间 < 100ms（冷启动），< 50ms（热启动）
-✅ 单次渲染 < 16ms
-✅ 组件卸载时清理所有定时器和监听器
-✅ resize 防抖 50ms
-✅ 消息列表虚拟化（仅渲染可见区域）
+✓ 启动时间 < 100ms（冷启动），< 50ms（热启动）
+✓ 单次渲染 < 16ms
+✓ 组件卸载时清理所有定时器和监听器
+✓ resize 防抖 50ms
+✓ 消息列表虚拟化（仅渲染可见区域）
 ```
 
 ### 0.4 品牌与合规
 
 ```
-❌ 禁止在 CC 模式 UI 中出现 "Claude Code" 或 "Claude" 品牌文本
-❌ 禁止在 CC 模式 UI 中出现 Anthropic 版权信息
-❌ 禁止修改 platform/khy_platform/__init__.py 中的 __version__
+✗ 禁止在 CC 模式 UI 中出现 "Claude Code" 或 "Claude" 品牌文本
+✗ 禁止在 CC 模式 UI 中出现 Anthropic 版权信息
+✗ 禁止修改 platform/khy_platform/__init__.py 中的 __version__
 
-✅ 品牌文本使用 "Khy"（定义在 ccBrand.js）
-✅ 版本信息从 package.json 动态读取
-✅ 品牌替换通过 ccBrand.js 集中管理
+✓ 品牌文本使用 "Khy"（定义在 ccBrand.js）
+✓ 版本信息从 package.json 动态读取
+✓ 品牌替换通过 ccBrand.js 集中管理
 ```
 
 ### 0.5 opencode 自动读取
 
 ```
-❌ 禁止阻塞 TUI 渲染等待 opencode 配置加载
-❌ 禁止覆盖 khy 已有的 MCP 服务器配置
-❌ 禁止因 opencode 配置错误导致启动失败
+✗ 禁止阻塞 TUI 渲染等待 opencode 配置加载
+✗ 禁止覆盖 khy 已有的 MCP 服务器配置
+✗ 禁止因 opencode 配置错误导致启动失败
 
-✅ 异步探测 opencode 配置（后台执行）
-✅ 低优先级合并（不覆盖已有配置）
-✅ fail-soft（配置错误时跳过，不影响启动）
-✅ 通过 KHY_MCP_ECODE_AUTO_LOAD=0 可禁用
+✓ 异步探测 opencode 配置（后台执行）
+✓ 低优先级合并（不覆盖已有配置）
+✓ fail-soft（配置错误时跳过，不影响启动）
+✓ 通过 KHY_MCP_ECODE_AUTO_LOAD=0 可禁用
 ```
 
 ### 0.6 输入框约束
 
 ```
-❌ 禁止在 CC 模式下使用边框包裹输入框
-❌ 禁止光标闪烁间隔超过 530ms
-❌ 禁止输入延迟超过 16ms
-❌ 禁止覆盖模式下无视觉区分
+✗ 禁止在 CC 模式下使用边框包裹输入框
+✗ 禁止光标闪烁间隔超过 530ms
+✗ 禁止输入延迟超过 16ms
+✗ 禁止覆盖模式下无视觉区分
 
-✅ 无边框设计（对齐 Claude Code）
-✅ 光标样式随模式变化（INSERT/NORMAL/SHELL/VOICE）
-✅ 多行输入支持（Shift+Enter）
-✅ 高度窗口化（超过 maxRows 时显示省略标记）
-✅ 占位符使用灰色 #6B7280
+✓ 无边框设计（对齐 Claude Code）
+✓ 光标样式随模式变化（INSERT/NORMAL/SHELL/VOICE）
+✓ 多行输入支持（Shift+Enter）
+✓ 高度窗口化（超过 maxRows 时显示省略标记）
+✓ 占位符使用灰色 #6B7280
 ```
 
 ### 0.7 表格与折叠约束
 
 ```
-❌ 禁止边框嵌套深度 > 1 层
-❌ 禁止状态信号 > 2 个/状态
-❌ 禁止始终显示的标记（如每行都有 ▸）
-❌ 禁止颜色超过 4 种
+✗ 禁止边框嵌套深度 > 1 层
+✗ 禁止状态信号 > 2 个/状态
+✗ 禁止始终显示的标记（如每行都有 ▸）
+✗ 禁止颜色超过 4 种
 
-✅ 表头粗体 + 下划线分隔
-✅ 列对齐：文本左、数字右、状态中
-✅ 截断用 …，悬停/选中显示完整
-✅ 折叠：▸ 折叠 / ▾ 展开
-✅ 空状态显示友好提示 + 操作建议
-✅ 响应式：窄终端隐藏次要列
+✓ 表头粗体 + 下划线分隔
+✓ 列对齐：文本左、数字右、状态中
+✓ 截断用 …，悬停/选中显示完整
+✓ 折叠：▸ 折叠 / ▾ 展开
+✓ 空状态显示友好提示 + 操作建议
+✓ 响应式：窄终端隐藏次要列
 ```
 
 ### 0.8 注意力与选择约束
 
 ```
-❌ 禁止焦点指示器模糊或缺失
-❌ 禁止选中项与未选中项无区分
-❌ 禁止模态对话框焦点逃逸
-❌ 禁止危险操作默认聚焦
+✗ 禁止焦点指示器模糊或缺失
+✗ 禁止选中项与未选中项无区分
+✗ 禁止模态对话框焦点逃逸
+✗ 禁止危险操作默认聚焦
 
-✅ 焦点：边框颜色变化（最强信号）
-✅ 选中：反显背景 + ▸ 前缀
-✅ 模态：焦点陷阱，Tab 不跳出
-✅ 权限：默认安全选项，危险操作红色
-✅ 鼠标：增强键盘，修饰键绕过（见下）
+✓ 焦点：边框颜色变化（最强信号）
+✓ 选中：反显背景 + ▸ 前缀
+✓ 模态：焦点陷阱，Tab 不跳出
+✓ 权限：默认安全选项，危险操作红色
+✓ 鼠标：增强键盘，修饰键绕过（见下）
 ```
 
 **「修饰键绕过」不能只写 Shift** —— 各终端的「我要终端原生选择」约定键不一致，
@@ -148,17 +148,17 @@
 ### 0.9 子视图与滚动约束
 
 ```
-❌ 禁止子视图影响主对话滚动
-❌ 禁止视图切换丢失位置状态
-❌ 禁止复制操作影响选择状态
-❌ 禁止历史搜索干扰当前输入
-❌ 禁止用「滚动偏移 = 0」表示「初始状态」(见下)
+✗ 禁止子视图影响主对话滚动
+✗ 禁止视图切换丢失位置状态
+✗ 禁止复制操作影响选择状态
+✗ 禁止历史搜索干扰当前输入
+✗ 禁止用「滚动偏移 = 0」表示「初始状态」(见下)
 
-✅ 视图栈：Esc 返回上一层
-✅ 滚动独立：浏览/选择/复制模式分离
-✅ 复制：OSC 52 + 系统命令 fallback
-✅ 历史：持久化到磁盘，支持搜索
-✅ Resume：完成后显示摘要，Enter 继续
+✓ 视图栈：Esc 返回上一层
+✓ 滚动独立：浏览/选择/复制模式分离
+✓ 复制：OSC 52 + 系统命令 fallback
+✓ 历史：持久化到磁盘，支持搜索
+✓ Resume：完成后显示摘要，Enter 继续
 ```
 
 #### 0.9.1 视口偏移的贴底哨兵（`null` = 跟随最新内容）
@@ -193,10 +193,10 @@ ink 的 fullscreen 判定是 `lastOutputHeight >= stdout.rows`
 `lastOutputHeight` 就一直是 ≥ rows，此后**每一帧**都清屏。
 
 ```
-❌ 禁止让 live 区（含所有 chrome 兄弟节点）合计高度 ≥ rows
-❌ 禁止新增固定高度的兄弟节点却不登记进 chrome 账本
-✅ 高度一律走 chromeBudget.liveBudget(rows, shares)，shares 逐项列出
-✅ 排障先开 KHY_TUI_DIAG_H=1 打印账本，再和实测帧行数对照
+✗ 禁止让 live 区（含所有 chrome 兄弟节点）合计高度 ≥ rows
+✗ 禁止新增固定高度的兄弟节点却不登记进 chrome 账本
+✓ 高度一律走 chromeBudget.liveBudget(rows, shares)，shares 逐项列出
+✓ 排障先开 KHY_TUI_DIAG_H=1 打印账本，再和实测帧行数对照
 ```
 
 **容易漏计的 chrome（按实测，不是按注释）**：
@@ -226,10 +226,10 @@ ink 的 fullscreen 判定是 `lastOutputHeight >= stdout.rows`
 `arrowRouting` 绑成 `history:previous/next` —— 用户看到的「滚轮回溯历史记录」其实是键位串扰。
 
 ```
-❌ 禁止在备用缓冲区下把滚轮交给 onNative（= 交还终端）
-✅ 滚轮优先走 dispatcher 的 onWheel(dir)，驱动应用内视口
-✅ onWheel 缺失时才回退 onNative（逐字节保留旧行为）
-✅ onWheel 抛异常必须被吞掉，且**不得**顺带触发 onNative
+✗ 禁止在备用缓冲区下把滚轮交给 onNative（= 交还终端）
+✓ 滚轮优先走 dispatcher 的 onWheel(dir)，驱动应用内视口
+✓ onWheel 缺失时才回退 onNative（逐字节保留旧行为）
+✓ onWheel 抛异常必须被吞掉，且**不得**顺带触发 onNative
 ```
 
 门控与判定见 `mouseButtons.js`：`wheelDirection(button)`（`button & ~28` 剥掉
@@ -250,10 +250,10 @@ DECSET 的三个追踪模式是**同一能力的不同档位，互斥**，只能
 `1006` 是 SGR 坐标编码，与追踪模式**正交**，永远都要带。
 
 ```
-❌ 禁止叠加写 1000h 与 1002h（终端按哪一档解释变得不确定）
-✅ enableBytes({ select: true }) 写 1002h 时**不写** 1000h（替换语义）
-✅ 1003 只在 hover=true 时追加，与 select 正交
-✅ 重新接管追踪（enterNativePassthrough 的超时回调）必须与初始开启**同档** ——
+✗ 禁止叠加写 1000h 与 1002h（终端按哪一档解释变得不确定）
+✓ enableBytes({ select: true }) 写 1002h 时**不写** 1000h（替换语义）
+✓ 1003 只在 hover=true 时追加，与 select 正交
+✓ 重新接管追踪（enterNativePassthrough 的超时回调）必须与初始开启**同档** ——
    漏了 select 会退回 1000，拖动位移从此不再上报，表现为
    「滚一下滚轮之后拖选就失灵了」这类间歇性故障
 ```
@@ -321,8 +321,8 @@ DECSET 的三个追踪模式是**同一能力的不同档位，互斥**，只能
 
 ```
 ① 必须走仓库自己的 inkRuntime，不要自己 import('ink')
-   ❌ const ink = await import('ink')                 // 拿到的是"另一份"引用
-   ✅ const ir = require('../inkRuntime'); await ir.loadInk(); const ink = ir.get();
+   ✗ const ink = await import('ink')                 // 拿到的是"另一份"引用
+   ✓ const ir = require('../inkRuntime'); await ir.loadInk(); const ink = ir.get();
 
    原因：Viewport.js:57 是 `inkRuntime.get()`，get() 在单例未灌值时**抛错**
    （inkRuntime.js:103-107）。真机上 startInkApp() 会 await loadInk()，所以线上没这
@@ -331,8 +331,8 @@ DECSET 的三个追踪模式是**同一能力的不同档位，互斥**，只能
    并被归因到 Viewport 的某一行上。
 
 ② 必须在 require 任何 ink/chalk 相关模块**之前**设 FORCE_COLOR
-   ❌ 在 render() 前才设 —— chalk 早已在模块求值时读完 process.env
-   ✅ 放在探针文件最顶部：process.env.FORCE_COLOR = process.env.FORCE_COLOR || '3';
+   ✗ 在 render() 前才设 —— chalk 早已在模块求值时读完 process.env
+   ✓ 放在探针文件最顶部：process.env.FORCE_COLOR = process.env.FORCE_COLOR || '3';
 
    原因：ink 的 `inverse` 是 `chalk.inverse`（ink/build/components/Text.js:40-41），
    chalk 的 level 来自 supports-color，**非 TTY stdout 下 level = 0**，
@@ -341,8 +341,8 @@ DECSET 的三个追踪模式是**同一能力的不同档位，互斥**，只能
    早就判完了。真机是真 TTY，level ≥ 1，不受影响。
 
 ③ 被测代码读的**每一个环境量**，探针都得如实改
-   ❌ 只把假 stdout 交给 ink 的渲染流（`setRenderStdout(fake)` / `render(…, { stdout: fake })`）
-   ✅ 同时改 App 真正读的那个量：Object.defineProperty(process.stdout, 'rows', { value: n, configurable: true })
+   ✗ 只把假 stdout 交给 ink 的渲染流（`setRenderStdout(fake)` / `render(…, { stdout: fake })`）
+   ✓ 同时改 App 真正读的那个量：Object.defineProperty(process.stdout, 'rows', { value: n, configurable: true })
 
    原因：本 TUI 的终端尺寸不是从渲染流拿的 —— App.js `_resRows` ←
    `sidebarLayout.stickyDim(process.stdout.rows, …)`、列宽 ← `_stickyCols(process.env)`。
@@ -367,10 +367,10 @@ DECSET 的三个追踪模式是**同一能力的不同档位，互斥**，只能
 TUI 存活期间，**任何绕过 ink 注入 stdout 的写入都会在帧下方留下擦不掉的残行**。
 
 ```javascript
-// ❌ 直接写真实 stdio：字节落屏，但 ink 的 lastOutputHeight 账本不知道
+// ✗ 直接写真实 stdio：字节落屏，但 ink 的 lastOutputHeight 账本不知道
 console._stdout.write('...')        // winston Console transport 就是这么写的
 process.stdout.write('...')         // 同理
-// ✅ 要么走 ink 的树（<Text>/<Box>），要么在会话期把它静音（consoleMute.js）
+// ✓ 要么走 ink 的树（<Text>/<Box>），要么在会话期把它静音（consoleMute.js）
 ```
 
 机制（2026-09-21 BUG-13 实测，`T/differential.md`）：`app.js` 把渲染流换成了
@@ -433,34 +433,34 @@ process.stdout.write('...')         // 同理
 ### 0.10 微交互与反馈约束
 
 ```
-❌ 禁止复制操作无反馈
-❌ 禁止滚动无边界指示
-❌ 禁止错误消息无修复建议
-❌ 禁止瞬态消息永久显示
+✗ 禁止复制操作无反馈
+✗ 禁止滚动无边界指示
+✗ 禁止错误消息无修复建议
+✗ 禁止瞬态消息永久显示
 
-✅ 复制：显示字符/字节数（copied N chars）
-✅ 滚动：显示上下方内容指示（⋯ N above/below）
-✅ Toast：3-5 秒自动消失
-✅ Token：80% 黄色 / 95% 红色警告
-✅ 工具超时：显示超时 + 重试建议
-✅ 双击退出：首次提示，二次退出
+✓ 复制：显示字符/字节数（copied N chars）
+✓ 滚动：显示上下方内容指示（⋯ N above/below）
+✓ Toast：3-5 秒自动消失
+✓ Token：80% 黄色 / 95% 红色警告
+✓ 工具超时：显示超时 + 重试建议
+✓ 双击退出：首次提示，二次退出
 ```
 
 ### 0.11 快捷键与执行偏差约束
 
 ```
-❌ 禁止破坏性操作无撤销
-❌ 禁止模型跑偏无检测
-❌ 禁止快捷键冲突无提示
-❌ 禁止偏差无恢复建议
+✗ 禁止破坏性操作无撤销
+✗ 禁止模型跑偏无检测
+✗ 禁止快捷键冲突无提示
+✗ 禁止偏差无恢复建议
 
-✅ 快捷键：集中注册，上下文感知
-✅ Redo：r 重新生成，R 编辑后重做
-✅ Fork：f 创建新分支
-✅ Undo：z 撤销，Z 重做
-✅ 偏差检测：循环检测 + 超时检测
-✅ 检查点：失败后自动回滚
-✅ 用户引导：可注入指导纠正模型
+✓ 快捷键：集中注册，上下文感知
+✓ Redo：r 重新生成，R 编辑后重做
+✓ Fork：f 创建新分支
+✓ Undo：z 撤销，Z 重做
+✓ 偏差检测：循环检测 + 超时检测
+✓ 检查点：失败后自动回滚
+✓ 用户引导：可注入指导纠正模型
 ```
 
 ---
@@ -520,7 +520,7 @@ const isCcMode = process.env.KHY_CC_TUI === '1';
 ### 1.3 门控实现模式
 
 ```javascript
-// ✅ 正确：条件渲染
+// ✓ 正确：条件渲染
 function FooterBar() {
   if (isCcMode) {
     return <CcStatusLine />;
@@ -528,13 +528,13 @@ function FooterBar() {
   return <LegacyFooterBar />;
 }
 
-// ✅ 正确：提前返回
+// ✓ 正确：提前返回
 function StatusLine() {
   if (!isCcMode) return <LegacyStatusLine />;
   // CC 模式逻辑...
 }
 
-// ❌ 错误：在组件内部判断
+// ✗ 错误：在组件内部判断
 function Message({ text }) {
   const color = isCcMode ? '#00D4D4' : '#00BCD4'; // 禁止！
   return <Text color={color}>{text}</Text>;
@@ -561,14 +561,14 @@ function Message({ text }) {
 ### 2.2 颜色规则
 
 ```javascript
-// ✅ 正确：从主题导入
+// ✓ 正确：从主题导入
 const { CC_COLORS } = require('../theme/ccTheme');
 <Text color={CC_COLORS.toolName}>Read</Text>
 
-// ❌ 错误：硬编码颜色
+// ✗ 错误：硬编码颜色
 <Text color="#00D4D4">Read</Text> // 禁止！
 
-// ✅ 正确：使用 ANSI 缓存
+// ✓ 正确：使用 ANSI 缓存
 const ansi = CC_COLORS.ansi;
 process.stdout.write(`${ansi.toolBold}Read${ansi.reset}`);
 ```
@@ -587,21 +587,21 @@ process.stdout.write(`${ansi.toolBold}Read${ansi.reset}`);
 ### 2.4 Resize 处理
 
 ```javascript
-// ✅ 正确：使用 ResizeHandler
+// ✓ 正确：使用 ResizeHandler
 const handler = new ResizeHandler({ debounceMs: 50 });
 handler.on('resize', ({ cols, rows }) => {
   setDimensions({ cols, rows });
 });
 handler.start();
 
-// ✅ 正确：组件卸载时清理
+// ✓ 正确：组件卸载时清理
 useEffect(() => {
   const handler = new ResizeHandler();
   handler.start();
   return () => handler.stop();
 }, []);
 
-// ❌ 错误：直接监听 stdout resize
+// ✗ 错误：直接监听 stdout resize
 process.stdout.on('resize', () => { ... }); // 禁止！
 ```
 
@@ -615,30 +615,30 @@ process.stdout.on('resize', () => { ... }); // 禁止！
 // 唯一合法的计时器常量来源
 const { TIMING } = require('../utils/ccTimers');
 
-// ✅ 正确
+// ✓ 正确
 setInterval(updateStatusBar, TIMING.statusBar.interval);
 
-// ❌ 错误：硬编码计时器
+// ✗ 错误：硬编码计时器
 setInterval(updateStatusBar, 1000); // 禁止！
 ```
 
 ### 3.2 计时器清理
 
 ```javascript
-// ✅ 正确：useEffect 返回清理函数
+// ✓ 正确：useEffect 返回清理函数
 useEffect(() => {
   const timer = setInterval(fn, TIMING.statusBar.interval);
   return () => clearInterval(timer);
 }, []);
 
-// ✅ 正确：组件卸载时清理
+// ✓ 正确：组件卸载时清理
 useEffect(() => {
   const handler = new ResizeHandler();
   handler.start();
   return () => handler.stop();
 }, []);
 
-// ❌ 错误：不清理定时器
+// ✗ 错误：不清理定时器
 useEffect(() => {
   setInterval(fn, 1000);
 }, []); // 禁止！
@@ -649,10 +649,15 @@ useEffect(() => {
 | 计时器 | 间隔 | 优先级 | 说明 |
 |--------|------|--------|------|
 | 流式批量 | 16ms | 高 | 60fps，不可丢帧 |
-| Spinner | 80ms | 中 | 12.5fps，终端足够 |
+| Spinner | 80ms | 中 | 12.5fps，终端足够。⚠ 本格 80ms 是**待收敛的陈旧值**：实现真源 `perfTunables.spinnerFrameMs()` 为 **160ms**，[DESIGN-ARCH-101] §8 冲突 1 已裁定「以 160ms 为准」；收敛属 P1（D10，[DESIGN-ARCH-115] §2.2），未落地前此处不改 |
+| topicBar | 180ms | 中 | 5.6fps，标题栏工作点左右摆动。实现真源 `perfTunables.topicBarAnimMs()`（2026-09-29 自 320ms 回正；此前本表缺此行使它无规范可依、被随手放宽） |
 | 状态栏 | 1000ms | 低 | 1fps，不阻塞渲染 |
 | MCP 轮询 | 5000ms | 低 | 0.2fps，后台运行 |
 | Resize 防抖 | 50ms | 中 | 避免频繁重绘 |
+
+> 本表的**实现真源**是 `perfTunables.js`（`spinnerFrameMs` / `topicBarAnimMs` /
+> `heartbeatMs`…）。组件里的同值字面量（`Spinner.js` 的 `FRAME_MS`、`topicBar.js` 的
+> `_ANIM_MS`）只是 leaf 不可用时的兜底，**不是第二真源**。
 
 ---
 
@@ -682,10 +687,10 @@ useEffect(() => {
 ### 4.2 延迟加载规则
 
 ```javascript
-// ✅ 正确：非关键模块延迟加载
+// ✓ 正确：非关键模块延迟加载
 const CcHelpMenu = React.lazy(() => import('./CcHelpMenu'));
 
-// ✅ 正确：条件加载
+// ✓ 正确：条件加载
 function showHelp() {
   if (!helpModule) {
     helpModule = require('./CcHelpMenu');
@@ -693,7 +698,7 @@ function showHelp() {
   return helpModule;
 }
 
-// ❌ 错误：启动时加载所有模块
+// ✗ 错误：启动时加载所有模块
 const CcHelpMenu = require('./CcHelpMenu'); // 禁止！
 const CcSidebarPanel = require('./CcSidebarPanel'); // 禁止！
 ```
@@ -757,10 +762,10 @@ tui/
 ### 5.3 禁止事项
 
 ```
-❌ 禁止在 tui/ 目录外创建 CC 模式相关文件
-❌ 禁止在 tui/ 目录内创建非 CC 模式的无关文件
-❌ 禁止修改 Legacy 组件的内部实现
-❌ 禁止在 CC 组件中直接引用 Legacy 组件
+✗ 禁止在 tui/ 目录外创建 CC 模式相关文件
+✗ 禁止在 tui/ 目录内创建非 CC 模式的无关文件
+✗ 禁止修改 Legacy 组件的内部实现
+✗ 禁止在 CC 组件中直接引用 Legacy 组件
 ```
 
 ---
@@ -770,19 +775,19 @@ tui/
 ### 6.1 通用规则
 
 ```javascript
-// ✅ 正确：2 空格缩进、单引号、分号
+// ✓ 正确：2 空格缩进、单引号、分号
 const x = 1;
 const y = 'hello';
 
-// ✅ 正确：camelCase 命名
+// ✓ 正确：camelCase 命名
 const isCcMode = true;
 function formatModelName() {}
 
-// ✅ 正确：英文注释
+// ✓ 正确：英文注释
 // Detect terminal color support
 const supportsColor = process.env.COLORTERM === 'truecolor';
 
-// ✅ 正确：面向用户的中文字符串
+// ✓ 正确：面向用户的中文字符串
 const message = '正在连接数据库...'; // 用户可见
 const label = 'model'; // 内部标识，英文
 ```
@@ -790,18 +795,18 @@ const label = 'model'; // 内部标识，英文
 ### 6.2 组件规则
 
 ```javascript
-// ✅ 正确：函数组件 + React.memo
+// ✓ 正确：函数组件 + React.memo
 function CcStatusLine({ model, context, cost }) {
   return <Text>{model}</Text>;
 }
 module.exports = { CcStatusLine: React.memo(CcStatusLine) };
 
-// ✅ 正确：props 解构
+// ✓ 正确：props 解构
 function CcToolCard({ name, params, status, result }) {
   // ...
 }
 
-// ❌ 错误：类组件
+// ✗ 错误：类组件
 class CcStatusLine extends React.Component { // 禁止！
   render() { return <Text />; }
 }
@@ -810,7 +815,7 @@ class CcStatusLine extends React.Component { // 禁止！
 ### 6.3 错误处理
 
 ```javascript
-// ✅ 正确：try/catch + fail-soft
+// ✓ 正确：try/catch + fail-soft
 async function loadMcpServers() {
   try {
     return await getMcpServers();
@@ -819,7 +824,7 @@ async function loadMcpServers() {
   }
 }
 
-// ✅ 正确：错误边界
+// ✓ 正确：错误边界
 function ErrorBoundary({ children }) {
   const [error, setError] = useState(null);
   if (error) {
@@ -828,7 +833,7 @@ function ErrorBoundary({ children }) {
   return children;
 }
 
-// ❌ 错误：抛出异常
+// ✗ 错误：抛出异常
 function loadConfig() {
   if (!config) throw new Error('Config not found'); // 禁止！
 }
@@ -853,13 +858,13 @@ function loadConfig() {
 ### 7.2 性能测试
 
 ```javascript
-// ✅ 正确：测量渲染时间
+// ✓ 正确：测量渲染时间
 const start = performance.now();
 render(<App />);
 const duration = performance.now() - start;
 assert(duration < 100, `启动时间 ${duration}ms 超过 100ms 底线`);
 
-// ✅ 正确：测量内存使用
+// ✓ 正确：测量内存使用
 const before = process.memoryUsage().heapUsed;
 // ... 执行操作
 const after = process.memoryUsage().heapUsed;
@@ -875,7 +880,7 @@ assert(delta < 50 * 1024 * 1024, `内存增长 ${delta} 超过 50MB 底线`);
 
 - [ ] `KHY_CC_TUI=1 khy` 启动后显示 Khy 品牌 Logo
 - [ ] 用户消息无背景框，纯文本显示
-- [ ] 工具调用使用 🔧 + 粗体青色
+- [ ] 工具调用使用 + 粗体青色
 - [ ] 状态栏单行，格式正确
 - [ ] 冷启动 < 100ms
 - [ ] Resize 无残影
