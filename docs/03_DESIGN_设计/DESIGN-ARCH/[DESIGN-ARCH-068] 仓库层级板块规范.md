@@ -21,7 +21,7 @@
 | **L1** | `platform/` | Python 启动器（探测环境、拉起 Node）+ 共享包 + 交付编排 | `platform/khy_platform/cli.py` | Python / JS |
 | **L2** | `services/` | Node 运行时，**全部业务逻辑**：CLI、AI 网关、各类 service、Web API | `services/backend/bin/khy.js` | Node.js |
 | **L3** | `apps/` | 平台**自带**的管理前端（AI 平台 UI） | `apps/ai-frontend/` | Vue 3 + Vite |
-| **L4** | `software/` | 跑在平台**之上**的内置默认应用（khyquant 量化终端） | `software/khyquant/` | Python + Vue |
+| **L4** | `software/` | 跑在平台**之上**的独立项目载体（khyquant 量化终端：独立项目，连接平台使用） | `software/khyquant/` | Python + Vue |
 | **L5** | `extensions/` | **内置拓展，随主包分发**。布局两层 `extensions/<分类>/<id>/`，六个分类名与契约见 `[DESIGN-ARCH-069]` §2.3 | `extensions/tools/khy-markdown/`、`extensions/bridges/khy-trae-bridge/` | Node.js |
 | **L6** | `tools/` | 独立开发者工具，**不参与运行时** | `tools/deepseek-eyes/` | Node.js |
 
@@ -30,7 +30,7 @@
 `apps/` 与 `software/` 字面上是近义词，语义上不是：
 
 - **`apps/` = 平台的一部分**。`ai-frontend` 是 Khy-OS 自己的管理界面，没有它平台不完整。随主包分发。
-- **`software/` = 跑在平台上的应用**。khyquant 是**内置默认应用，而非项目本身**（见 `README.md` / `AGENTS.md` 同一表述）。它可以被替换、被卸载，平台照样成立。
+- **`software/` = 跑在平台上的应用**。khyquant 是**独立项目**（人 2026-09-28 明示），它**连接** Khy-OS 使用；本目录只是它**随平台分发/接入的载体**，打包事实不改变其独立项目与独立著作权主体的定位（见 `README.md` / `AGENTS.md` 同一表述）。它可以被替换、被卸载，平台照样成立。
 
 **判据**：问「删掉它，Khy-OS 还是 Khy-OS 吗？」——是 → `software/`；不是 → `apps/`。
 
@@ -72,7 +72,7 @@ L5 内部的契约（目录形状、manifest、发现与激活、删除语义）
 
 | 目录 | 性质 | 说明 |
 | --- | --- | --- |
-| `electron/` | 根级 Electron 桌面壳 | `main.js` / `preload.js` / `services/`。入口是根 `package.json` 的 `electron:dev`（`node scripts/electron-dev.js`），依赖（`electron` 32.3.3 / `electron-builder`）也声明在根级。刻意未并入 `apps/`：它在根级独立构建与打包，且与 `apps/khyos-desktop/` 是两条并行产物线 |
+| `electron/` | ~~根级 Electron 桌面壳~~ **已退役（Q10，2026-10-02）** | 退役裁决见 [DESIGN-LAY-008] §21.4（R4 判词经复审更正：曾有 `electron:dev` 活入口，中搓下线后重搓删除）。桌面端唯一产物线为 `apps/khyos-desktop/`。存证：`.khy/feedback/q10-electron-retire-20261002/` |
 | `tests/` | 测试债务登记 | 目前只含 `DEBT.md`（已知失败用例登记，真源见其内「最后更新」日期）。内容属文档性质，**待迁 `docs/05_TEST_测试/`**；迁移完成前按根级例外登记，避免 `layer-registry` 每次报警 |
 
 **新增例外目录的门槛**：必须在 §1.4 表格补一行说明「为什么不能归入 L0-L6 或 §1.2 横切」，

@@ -39,7 +39,7 @@
 | **L1** | `platform/` | Python 启动器（探测环境、拉起 Node）+ 共享包 + 交付编排 | `platform/khy_platform/cli.py` | Python / JS |
 | **L2** | `services/` | Node 运行时，**全部业务逻辑**：CLI、AI 网关、各类 service、Web API | `services/backend/bin/khy.js` | Node.js |
 | **L3** | `apps/` | 平台**自带**的管理前端（AI 平台 UI） | `apps/ai-frontend/` | Vue 3 + Vite |
-| **L4** | `software/` | 跑在平台**之上**的内置默认应用（khyquant 量化终端） | `software/khyquant/` | Python + Vue |
+| **L4** | `software/` | 跑在平台**之上**的独立项目接入载体（khyquant 量化终端：独立项目，连接平台使用） | `software/khyquant/` | Python + Vue |
 | **L5** | `extensions/` | **内置拓展，随主包分发**。布局两层 `extensions/<分类>/<id>/`，六个分类名与契约见 `[DESIGN-TOOL-002]` §2.3 | `extensions/tools/khy-markdown/`、`extensions/bridges/khy-trae-bridge/` | Node.js |
 | **L6** | `tools/` | 独立开发者工具，**不参与运行时** | `tools/deepseek-eyes/` | Node.js |
 
@@ -48,7 +48,7 @@
 `apps/` 与 `software/` 字面上是近义词，语义上不是：
 
 - **`apps/` = 平台的一部分**。`ai-frontend` 是 Khy-OS 自己的管理界面，没有它平台不完整。随主包分发。
-- **`software/` = 跑在平台上的应用**。khyquant 是**内置默认应用，而非项目本身**（见 `README.md` / `AGENTS.md` 同一表述）。它可以被替换、被卸载，平台照样成立。
+- **`software/` = 跑在平台上的应用**。khyquant 是**独立项目**（人 2026-09-28 明示），它**连接** Khy-OS 使用；本目录只是它**随平台分发/接入的载体**，打包事实不改变其独立项目与独立著作权主体的定位（见 `README.md` / `AGENTS.md` 同一表述）。它可以被替换、被卸载，平台照样成立。
 
 **判据**：问「删掉它，Khy-OS 还是 Khy-OS 吗？」——是 → `software/`；不是 → `apps/`。
 
@@ -115,9 +115,9 @@ Python 侧就要读 L2 的实现目录——两种都会让部分读取方绕路
 
 | 目录 | 性质 | 说明 |
 | --- | --- | --- |
-| `electron/` | 根级 Electron 桌面壳 | `main.js` / `preload.js` / `services/`。入口是根 `package.json` 的 `electron:dev`（`node scripts/electron-dev.js`），依赖（`electron` 32.3.3 / `electron-builder`）也声明在根级。刻意未并入 `apps/`：它在根级独立构建与打包，且与 `apps/khyos-desktop/` 是两条并行产物线 |
+| `electron/` | ~~根级 Electron 桌面壳~~ **已退役（Q10，2026-10-02）** | 退役裁决见 [DESIGN-LAY-008] §21.4（R4 判词经复审更正：曾有 `electron:dev` 活入口，中搓下线后重搓删除）。桌面端唯一产物线为 `apps/khyos-desktop/`。存证：`.khy/feedback/q10-electron-retire-20261002/` |
 | `tests/` | 测试债务登记 | 目前只含 `DEBT.md`（已知失败用例登记，真源见其内「最后更新」日期）。内容属文档性质，**待迁 `docs/05_TEST_测试/`**；迁移完成前按根级例外登记，避免 `layer-registry` 每次报警 |
-| `_产物/` | 工作产物暂存区 | AI 会话产出的报告与交付物的落点：诊断报告（`Docs/`、`khy-docs/`）、能力差距矩阵（`*.xlsx`）、方案（`*.docx`）、启动脚本（`khy-start.bat`）与轨迹符号链接（`khy-Trajectory`）。含**非文档资产**（表格 / 脚本 / 符号链接），不满足 `docs/` 的纯文档定位；产出即冻结、不再维护 |
+| `_产物/` | 工作产物暂存区 | AI 会话产出的**交付物**落点：诊断报告（`Docs/`、`khy-docs/`）、能力差距矩阵（`*.xlsx`）、方案（`*.docx`）、启动脚本（`khy-start.bat`）与轨迹符号链接（`khy-Trajectory`）。含**非文档资产**（表格 / 脚本 / 符号链接），不满足 `docs/` 的纯文档定位；产出即冻结、不再维护。⚠ **探针 / 扫描脚本 / 未接线原型等「过程态工具」不落此处** —— 判据与落点真源见 `[DESIGN-LAY-002]` §3.1 |
 | `deploy/` | 部署配置与试验 | `deploy/free-test/`：免服务器部署试验（`.github/` 工作流 + `supabase/` 配置 + `apps/` + `deploy-free-test.ps1`）。性质是**配置**而非源码，不能归入 L0–L6；与 §1.2 的 `packaging/`（打包清单与板块切分）职责不同，故不并入 |
 | `patches/` | 第三方依赖补丁 | `node-pty@1.0.0.patch`——npm 依赖的本地补丁，按包管理器 `patches/` 目录约定存放。不参与运行时，也不属构建脚本；当前 `package.json` 未声明引用（属手工留存补丁），故不并入 `scripts/` |
 
@@ -271,6 +271,41 @@ docs/
 
 ---
 
+## 四b、域轴（D1–D5）—— 与层级正交的第二根切分轴
+
+> 判据真源：`docs/10_规范/registry/DOMAIN-DEPS.json`（机器可读，守卫从中派生扫描范围，
+> 本脚本不硬编码路径清单）。设计依据：5-3-1 §3「5 个顶级域按生命周期或变更频率划分
+> （非技术类型）」，推导与实测见 `[RESEARCH-018]` §2.1/§2.3/§4 C-7。
+
+层级轴回答「这东西在哪一层跑」，域轴回答「它的生命周期归谁」。两者**正交**：
+D1–D5 是 L0–L6 的**聚合**，不是另起炉灶，因此本轴**不移动任何文件**，只给既有目录挂
+名义标签并声明允许的依赖方向（`[RESEARCH-018]` §3.1 P1 的口径：「先只加声明与守卫」）。
+
+| 域 | 名称 | 生命周期判据 | 落点（登记表 roots） |
+| --- | --- | --- | --- |
+| D1 | 运行时内核 | 平台作为操作系统跑起来 | `kernel` `platform` `services/backend/bin` `src/cli` `src/routes` `src/services` |
+| D2 | 业务上下文 | 一块可独立演进的业务 | `services/backend/src/services/domain` |
+| D3 | 共享底座 | 被 ≥30 处依赖的复用设施 | `src/utils` `src/constants` |
+| D4 | 交付与接入 | 面向最终用户的产物与接入面 | `apps` `software` `extensions` `tools` `electron` `entries` `packaging` |
+| D5 | 工程与档案 | 只在开发/记录期被触达 | `scripts` `docs` `.github` `deploy` `patches` |
+
+**执行面只放开两条无人管辖的禁止边**（规则 `domain-direction`，warning + 基线）：
+
+1. `d3-purity`：D3 不得 require D1/D2/D4/D5 —— 共享底座只被依赖，不反向知道业务。
+2. `no-reach-into-archive`：D1–D4 任何运行时代码不得 require 进 D5。
+
+**刻意不判的边，及归谁**：`D2 → D1` 与 `archDebtScan` R1（`src/services/** → src/cli/**`）
+是同一批边，两处判定就是两份真源（`[MGMT-STD-008]` §2.2「重叠即违规」），归 R1 的基线棘轮管；
+环归 R3；板块级跨 workspace require 归本文第二节的 `cross-layer-require`。
+`D4 → D1/D2 只能走公开接口` 已声明但**暂不判定**——它需要先存在「公开接口」的载体
+（`khy.module.json`，`[RESEARCH-018]` §2.3），契约未落地时守卫无判据。
+
+**建档实测（2026-09-28）**：58 处 = `d3-purity` 46 + `no-reach-into-archive` 12。
+46 处里 `constants/prompts.js` 一个文件占 33 处（它在函数体里惰性 require 二十余个服务），
+是本轴最集中的一处倒挂。
+
+---
+
 ## 五、任务入口命名规约
 
 根 `package.json` 是**唯一**的任务 surface。命名格式：
@@ -314,7 +349,7 @@ docs/
           不属于（规范/报告/模板/传承/维护/模式/预设包）→ docs/NN_中文/（NN 为 10–19，跨阶段资产）
           两段同为 NN_中文/，只由编号区分：≤09 即阶段，≥10 即跨阶段
           说明性文件一律不得留在根目录（白名单除外）
-          ⚠️ `_` 前缀写法已于 2026-09-16 废止，见 §3.1 单轴裁定
+          ⚠ `_` 前缀写法已于 2026-09-16 废止，见 §3.1 单轴裁定
 
 2. 是工程任务脚本吗？
    └ 是 → scripts/<域>/，并在根 package.json 登记 <域>:<动作> 入口
@@ -340,11 +375,12 @@ npm run check:layout -- --update-baseline                # 修完一批后下调
 node --test scripts/tests/check-repo-layout.test.js
 ```
 
-`scripts/ci/check-repo-layout.js` 的八条规则：
+`scripts/ci/check-repo-layout.js` 的十条规则：
 
 | id | 规则 | 级别 |
 | --- | --- | --- |
 | `root-whitelist` | 根目录说明性 `.md`/`.txt` 须在 `[MGMT-STD-001]` §1.3 白名单内 | error |
+| `root-junk` | 根目录不得出现临时制品/编辑器残留（`*.bak`、`nul`、`$*` 等） | error |
 | `docs-index-first` | 每个 `docs/` 分类目录须有排序首位的 `00_INDEX_*`（CP-4/CP-5） | error |
 | `layer-registry` | 顶层目录须登记在本文第一节的 L0–L6 或横切层清单里 | error |
 | `dangling-task` | 被跟踪文件里的 `npm run <目标>` 须能解析到已定义脚本 | warning + 基线 |
@@ -352,12 +388,15 @@ node --test scripts/tests/check-repo-layout.test.js
 | `unresolved-require` | 深层相对 `require` 指向磁盘上不存在的路径 | warning + 基线 |
 | `docs-index-complete` | 阶段目录里的文档须出现在主索引 `docs/00_INDEX_文档索引.md`（CP-3） | warning + 基线 |
 | `extension-contract` | `extensions/` 下每个目录须有合规 `khy.extension.json`（真源 `[DESIGN-TOOL-002]` §3） | warning + 基线 |
+| `extension-id-hardcode` | 核代码里硬编码拓展 id（`[DESIGN-TOOL-002]` §1.3 第四条） | warning + 基线（基线 0） |
+| `extension-path-drift` | `extensions/` 内相对 require 与 `__dirname` 爬根算术指向不存在位置 | warning + 基线（基线 0） |
+| `domain-direction` | 跨域禁止边：`d3-purity` 与 `no-reach-into-archive`（本文四b，判据 `DOMAIN-DEPS.json`） | warning + 基线 |
 
 `docs-index-first` 只管「每个目录有没有就近索引」，管不到「主入口漏没漏链」——后者是 `docs-index-complete`。
 该规则对 `02_CONCEPTS_概念入门/` 与 `09_STORY_修仙学AI/` **豁免**：这两个小白向目录的可达性由
 `scripts/docs/check_beginner_docs.js`（禁孤儿页/禁死链/禁死胡同）保证，比主索引点名更强；主索引只链其目录入口。
 
-五条 warning 规则用 `scripts/ci/repo-layout-baseline.json` 记录已知违规数，**只降不升**（与仓库既有的 `frontend-size-baseline.json`、duplication 基线同一套路）。超过基线即自动升为 error。
+八条 warning 规则用 `scripts/ci/repo-layout-baseline.json` 记录已知违规数，**只降不升**（与仓库既有的 `frontend-size-baseline.json`、duplication 基线同一套路）。超过基线即自动升为 error。
 
 本守卫**刻意全仓扫描**，不接受 `--changed`：层级是仓库的全局属性，只看改动集会漏掉「别人搬走了索引文件」这类破坏。
 
@@ -391,7 +430,7 @@ git grep -I -o -h --untracked -E 'npm run [a-zA-Z0-9:_-]+' | sort -u
 node scripts/ci/check-repo-layout.js --promote=root-whitelist,docs-index-first,layer-registry
 ```
 
-三条 error 级规则阻断合并；五条 warning 级规则由基线棘轮把关（超基线自动升 error）。因为守卫不接受 `--changed`，该步骤**不需要** `GIT_BASE_REF` 环境变量，与相邻的 `check-change-safety` / `check-agent-rules` 步骤不同。维护归属登记在 `docs/14_维护者/registry/维护映射表.json` 的 `repo-layout` area（`verify` 字段即上面两条命令）。
+四条 error 级规则阻断合并（`root-junk` 本身就是 error，另三条由上面的 `--promote` 点名）；八条 warning 级规则由基线棘轮把关（超基线自动升 error）。因为守卫不接受 `--changed`，该步骤**不需要** `GIT_BASE_REF` 环境变量，与相邻的 `check-change-safety` / `check-agent-rules` 步骤不同。维护归属登记在 `docs/14_维护者/registry/维护映射表.json` 的 `repo-layout` area（`verify` 字段即上面两条命令）。
 
 守卫的可移植性约定：`--promote=<id>` 精确挑选要阻断的规则，`--strict-warnings` 全部升级，`--list=<id>` 打全量清单，拼错 id 以**退出码 2** 失败（不静默放过）——与 `check-change-safety.js` 同一套参数语义。测试通过 `KHY_REPO_LAYOUT_ROOT` 指向临时 fixture 仓库，不依赖本仓库当时的真实违规数。
 
