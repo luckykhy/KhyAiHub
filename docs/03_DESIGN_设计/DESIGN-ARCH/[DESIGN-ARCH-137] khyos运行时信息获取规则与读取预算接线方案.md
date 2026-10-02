@@ -227,7 +227,7 @@ limit = min(显式参数 ?? ∞, 动态预算 ?? ∞, per-tool 静态值 ?? DEFA
 
 ## 6. 反模式（这条路别走）
 
-| ❌ 别做 | 为什么 |
+| ✗ 别做 | 为什么 |
 |---|---|
 | **把读取计划注入 system prompt** | 它每任务一变 → 摧毁 prompt 缓存。`systemPromptSections.js:68` 的 `DANGEROUS_uncachedSystemPromptSection` 正是为此存在的；正确落点是 user 轮 |
 | **用 PreCompact 钩子直接往对话里注入** | `PreCompact` 的 `additionalContext` **无消费者**（§1.3）；能从钩子进对话的**只有 `PrePrompt`** |
@@ -265,7 +265,7 @@ node scripts/ci/check-read-discipline.js
 1. **逐字节等价回滚**：契约 C 改动后，per-tool **未声明** `maxResultSizeChars` 的工具，其截断行为与改动前 `deepStrictEqual`；
 2. **缺失即降级**：契约 D 的生产端不返回 `additionalContext` 时，`contextCompressor` 的摘要提示词与改动前**逐字节相同**。
 
-> ⚠️ 新增用例一律用 `require('node:test')`——CI 跑 `test:node = node --test tests/**/*.test.js`，**落地即绿**是硬要求；用 jest 全局写在 `node --test` 下会 `jest is not defined` 落地即红（`[DESIGN-ARCH-135]` §4.1/§10.7 已实测）。
+> ⚠ 新增用例一律用 `require('node:test')`——CI 跑 `test:node = node --test tests/**/*.test.js`，**落地即绿**是硬要求；用 jest 全局写在 `node --test` 下会 `jest is not defined` 落地即红（`[DESIGN-ARCH-135]` §4.1/§10.7 已实测）。
 
 ### 7.2 集成层（人工，一次性）
 
@@ -286,7 +286,7 @@ npm run check:rules          # 登记表 ↔ 真源双向可达 + 规则卡一�
 npm run rules:gate -- --mode pr
 ```
 
-> ⚠️ `docs:build` 是**手动**的（`.githooks/*` 与 `.github/workflows/*` 均未接线），`docs:verify` 也未进 CI ⇒ 新文档的 `.html` 孪生必须本机跑完，否则遗漏不会被自动发现。
+> ⚠ `docs:build` 是**手动**的（`.githooks/*` 与 `.github/workflows/*` 均未接线），`docs:verify` 也未进 CI ⇒ 新文档的 `.html` 孪生必须本机跑完，否则遗漏不会被自动发现。
 
 ---
 

@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -100,7 +100,7 @@ _dynamicResultLimit = <span class="hljs-title class_">Math</span>.<span class="h
 <table><thead><tr><th>不做</th><th>原因</th></tr></thead><tbody><tr><td><strong>不新建规则 ID</strong></td><td>见 §2 归属决策：会产生两份同义真源</td></tr><tr><td><strong>不新增 env 门</strong></td><td><code>scripts/ci/check-tui-gates.js</code> 的 <code>MAX_GATES = 220</code> 是<strong>只降不升</strong>棘轮；<code>utils/selectGates.js:18</code> 明写「只有当开关对应一种真实的用户可见权衡时才值得加门」。回滚能力用「可选参数缺省 = 旧行为」实现</td></tr><tr><td><strong>不改 <code>PROCESS-007</code> 的 <code>ssot</code></strong>（仍为 <code>CLAUDE.md</code>）</td><td>只在 B4/B5 正文补「运行时同样适用」一句，保持单一语义真源</td></tr><tr><td><strong>S1 不阻断</strong></td><td><code>PROCESS-008</code> PP-3 是红线：S1/S2 必须旁路记录</td></tr><tr><td><strong>不重复处理「压缩不接续」/压缩阈值</strong></td><td><code>[DESIGN-ARCH-135]</code> 一二期已落地（§1.6）</td></tr><tr><td><strong>不引入向量检索 / embedding</strong></td><td>词法打分 + <code>.ai/</code> 符号倒排已足够定位；引入 embedding 是另一个量级的成本与依赖</td></tr><tr><td><strong>不引入固定时长 kill</strong></td><td>与 <code>RUNTIME-003</code> 冲突；读取预算用累计上限表达，不用墙钟</td></tr><tr><td><strong>不试图拦截模型的每一次 Read</strong></td><td>工具层硬拦截属 S3 门禁档，须先有 S1/S2 的样本；一期只做「让读取计划可见 + 让预算真的生效」</td></tr></tbody></table>
 <hr>
 <h2 id="6-反模式-这条路别走">6. 反模式（这条路别走）<a class="anchor" href="#6-反模式-这条路别走" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>❌ 别做</th><th>为什么</th></tr></thead><tbody><tr><td><strong>把读取计划注入 system prompt</strong></td><td>它每任务一变 → 摧毁 prompt 缓存。<code>systemPromptSections.js:68</code> 的 <code>DANGEROUS_uncachedSystemPromptSection</code> 正是为此存在的；正确落点是 user 轮</td></tr><tr><td><strong>用 PreCompact 钩子直接往对话里注入</strong></td><td><code>PreCompact</code> 的 <code>additionalContext</code> <strong>无消费者</strong>（§1.3）；能从钩子进对话的<strong>只有 <code>PrePrompt</code></strong></td></tr><tr><td><strong>靠「嘱咐模型保留四类」实现 B5</strong></td><td>与 B5 失效同因：文本约束零机制强制。要<strong>钉住</strong>（<code>&lt;original_task&gt;</code> 范式），不要<strong>嘱咐</strong></td></tr><tr><td><strong>把 <code>maxBytes = 256KB</code> 原样接上</strong></td><td>87K token ≈ 200K 窗口 43%，等于没省。接线时必须一并下调</td></tr><tr><td><strong>在 <code>.khy/hooks.json</code> 里配 <code>PreCompact</code></strong></td><td>该目录 gitignore，不随产品发布；必须是 <code>hookSystem.init()</code> 的代码级 hook</td></tr><tr><td><strong>为「让回滚可测」新增 env 门</strong></td><td>撞门预算棘轮。用可选参数缺省（<code>undefined</code> → 旧行为）+ 逐字节等价断言</td></tr><tr><td><strong><code>process.exitCode = 0</code> 之后没有单点短路</strong></td><td>S1 的正确形态是「判定全跑、finding 全打印、<strong>单点</strong>决定退出码」；分散短路会漏掉 finding</td></tr></tbody></table>
+<table><thead><tr><th>✗ 别做</th><th>为什么</th></tr></thead><tbody><tr><td><strong>把读取计划注入 system prompt</strong></td><td>它每任务一变 → 摧毁 prompt 缓存。<code>systemPromptSections.js:68</code> 的 <code>DANGEROUS_uncachedSystemPromptSection</code> 正是为此存在的；正确落点是 user 轮</td></tr><tr><td><strong>用 PreCompact 钩子直接往对话里注入</strong></td><td><code>PreCompact</code> 的 <code>additionalContext</code> <strong>无消费者</strong>（§1.3）；能从钩子进对话的<strong>只有 <code>PrePrompt</code></strong></td></tr><tr><td><strong>靠「嘱咐模型保留四类」实现 B5</strong></td><td>与 B5 失效同因：文本约束零机制强制。要<strong>钉住</strong>（<code>&lt;original_task&gt;</code> 范式），不要<strong>嘱咐</strong></td></tr><tr><td><strong>把 <code>maxBytes = 256KB</code> 原样接上</strong></td><td>87K token ≈ 200K 窗口 43%，等于没省。接线时必须一并下调</td></tr><tr><td><strong>在 <code>.khy/hooks.json</code> 里配 <code>PreCompact</code></strong></td><td>该目录 gitignore，不随产品发布；必须是 <code>hookSystem.init()</code> 的代码级 hook</td></tr><tr><td><strong>为「让回滚可测」新增 env 门</strong></td><td>撞门预算棘轮。用可选参数缺省（<code>undefined</code> → 旧行为）+ 逐字节等价断言</td></tr><tr><td><strong><code>process.exitCode = 0</code> 之后没有单点短路</strong></td><td>S1 的正确形态是「判定全跑、finding 全打印、<strong>单点</strong>决定退出码」；分散短路会漏掉 finding</td></tr></tbody></table>
 <hr>
 <h2 id="7-验收方式-可复现命令-关联门禁">7. 验收方式（可复现命令 + 关联门禁）<a class="anchor" href="#7-验收方式-可复现命令-关联门禁" aria-label="锚点">#</a></h2>
 <h3 id="7-1-单元层-每期各自的用例">7.1 单元层（每期各自的用例）<a class="anchor" href="#7-1-单元层-每期各自的用例" aria-label="锚点">#</a></h3>
@@ -120,7 +120,7 @@ node --<span class="hljs-built_in">test</span> services/backend/tests/services/c
 node scripts/ci/check-read-discipline.js</code></pre>
 <p><strong>必须钉住的两条语义</strong>（照 <code>[DESIGN-ARCH-135]</code> 的方法论）：</p>
 <ol><li><strong>逐字节等价回滚</strong>：契约 C 改动后，per-tool <strong>未声明</strong> <code>maxResultSizeChars</code> 的工具，其截断行为与改动前 <code>deepStrictEqual</code>；</li><li><strong>缺失即降级</strong>：契约 D 的生产端不返回 <code>additionalContext</code> 时，<code>contextCompressor</code> 的摘要提示词与改动前<strong>逐字节相同</strong>。</li></ol>
-<blockquote><p>⚠️ 新增用例一律用 <code>require('node:test')</code>——CI 跑 <code>test:node = node --test tests/**/*.test.js</code>，<strong>落地即绿</strong>是硬要求；用 jest 全局写在 <code>node --test</code> 下会 <code>jest is not defined</code> 落地即红（<code>[DESIGN-ARCH-135]</code> §4.1/§10.7 已实测）。</p></blockquote>
+<blockquote><p>⚠ 新增用例一律用 <code>require('node:test')</code>——CI 跑 <code>test:node = node --test tests/**/*.test.js</code>，<strong>落地即绿</strong>是硬要求；用 jest 全局写在 <code>node --test</code> 下会 <code>jest is not defined</code> 落地即红（<code>[DESIGN-ARCH-135]</code> §4.1/§10.7 已实测）。</p></blockquote>
 <h3 id="7-2-集成层-人工-一次性">7.2 集成层（人工，一次性）<a class="anchor" href="#7-2-集成层-人工-一次性" aria-label="锚点">#</a></h3>
 <ol><li>开 TUI，给一个会触发多轮工具调用的任务；</li><li>用 <code>KHY_CONTEXT_PREEMPTIVE_RATIO=0.1</code> + <code>KHY_CONTEXT_HARD_FLOOR=0</code> 让压缩提前触发（<code>contextRouter.js:51-64</code> 已支持）；</li><li>断言：<strong>首轮</strong>的对话上下文中含读取计划块，且带 <code>stopReason</code>；</li><li>断言：压缩结果行出现后，<strong>下一轮</strong>的上下文里四类区块仍在，且<strong>不是摘要转述</strong>（含原始路径/堆栈原文）；</li><li>断言：把同一任务的文件读取次数与改动前对比，<strong>累计读取字符数下降</strong>（这是本方案唯一的量化收益判据）。</li></ol>
 <h3 id="7-3-关联门禁">7.3 关联门禁<a class="anchor" href="#7-3-关联门禁" aria-label="锚点">#</a></h3>
@@ -130,7 +130,7 @@ npm run check:wiring         <span class="hljs-comment"># 新执行器必须被�
 npm run rules:coverage       <span class="hljs-comment"># 覆盖率红线（P0 无执行器 / 死指针）</span>
 npm run check:rules          <span class="hljs-comment"># 登记表 ↔ 真源双向可达 + 规则卡一致</span>
 npm run rules:gate -- --mode <span class="hljs-built_in">pr</span></code></pre>
-<blockquote><p>⚠️ <code>docs:build</code> 是<strong>手动</strong>的（<code>.githooks/*</code> 与 <code>.github/workflows/*</code> 均未接线），<code>docs:verify</code> 也未进 CI ⇒ 新文档的 <code>.html</code> 孪生必须本机跑完，否则遗漏不会被自动发现。</p></blockquote>
+<blockquote><p>⚠ <code>docs:build</code> 是<strong>手动</strong>的（<code>.githooks/*</code> 与 <code>.github/workflows/*</code> 均未接线），<code>docs:verify</code> 也未进 CI ⇒ 新文档的 <code>.html</code> 孪生必须本机跑完，否则遗漏不会被自动发现。</p></blockquote>
 <hr>
 <h2 id="8-待核实项">8. 待核实项<a class="anchor" href="#8-待核实项" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>#</th><th>项</th><th>影响</th><th>优先级</th></tr></thead><tbody><tr><td>1</td><td><code>scopePlan</code> 该由谁持有给注入器——<code>buildContextPacket</code> 的返回值在 TUI 直调路径上是否可达（TUI 绕过 harness，见 <code>[DESIGN-ARCH-135]</code> §0）</td><td>决定契约 A 二期是走 harness 还是需在 TUI 侧另取</td><td><strong>高</strong></td></tr><tr><td>2</td><td><code>parseExecutionPlan</code> 在压缩发生时是否已有当前步骤进度（<code>onPlanProgress</code> 的时点）</td><td>决定「未完成步骤」这一类的可用性</td><td>中</td></tr><tr><td>3</td><td>ruleguard 台账 <code>.khy/ruleguard/violations.jsonl</code> 的「本次」边界如何切（按任务 ID 还是按会话）</td><td>决定第四类的语义精确度</td><td>中</td></tr><tr><td>4</td><td>下调后的 <code>maxBytes</code> 取值（按窗口比例派生 vs 固定值）</td><td>影响 R3 的实际收益</td><td>中</td></tr></tbody></table>

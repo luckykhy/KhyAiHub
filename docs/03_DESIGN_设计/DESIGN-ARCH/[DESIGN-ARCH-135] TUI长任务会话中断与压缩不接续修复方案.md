@@ -143,7 +143,7 @@ while (loopResult?.maxIterationsReached && continuationRound < maxContinuationRo
 | 6 | 落点与现有实现对比 | 落点见 §3；**不新建并行实现**：续跑复用 `agenticHarnessService` 的既有语义，压缩回写复用 `aiConversationOps` 既有写回入口，完成度判定复用既有 delivery gate 与 `<execution_plan>` 步骤 |
 | 7 | 验收方式 | 见 §7 |
 
-> ❌ 不要为了「看起来合规」硬借一个上游。`agenticHarnessService` 的 Ralph 语义来自 DeepSeek-TUI 对齐（`contextCompressor.js:1236` 注释，路径 **B7**），那是**既成事实**，不是本次新借。
+> ✗ 不要为了「看起来合规」硬借一个上游。`agenticHarnessService` 的 Ralph 语义来自 DeepSeek-TUI 对齐（`contextCompressor.js:1236` 注释，路径 **B7**），那是**既成事实**，不是本次新借。
 
 ---
 
@@ -216,7 +216,7 @@ TUI 的 `result` 构造补上 `loopResult` 的终态字段，并至少做两件�
 
 正确顺序：**先接线 → 再落断言**。用例一律用 `require('node:test')` 写，前置条件不满足时显式 skip。
 
-> ⚠️ 致死陷阱：不要在 `services/backend/tests/tui/` 下用 jest 全局（裸 `describe`/`test`）。该目录属 jest 套件（`test:tui`），但 `tests/**/*.test.js` 的 glob 会把它一并扫走，在 `node --test` 下 `describe` 未定义 → 落地即红。既有受害者：`tests/tui/liveFrameGeometry.test.js`。
+> ⚠ 致死陷阱：不要在 `services/backend/tests/tui/` 下用 jest 全局（裸 `describe`/`test`）。该目录属 jest 套件（`test:tui`），但 `tests/**/*.test.js` 的 glob 会把它一并扫走，在 `node --test` 下 `describe` 未定义 → 落地即红。既有受害者：`tests/tui/liveFrameGeometry.test.js`。
 
 ---
 
@@ -234,7 +234,7 @@ TUI 的 `result` 构造补上 `loopResult` 的终态字段，并至少做两件�
 
 ## 6. 反模式（这条路别走）
 
-| ❌ 别做 | 为什么 |
+| ✗ 别做 | 为什么 |
 |---|---|
 | **用「把 `conversationMessages` 直接赋给 `_chatState.messages`」实现回写** | 会把 TUI 的**显示历史**与模型的**工作历史**合并成一个真源。二者语义不同（显示历史需要保留用户看到的完整原文），合并后用户会看到界面历史被摘要顶掉，且丢证据 |
 | **为「让功能变正确」新增 `KHY_AUTO_CONTINUE` 之类 env 门** | `scripts/ci/check-tui-gates.js:32` 的 `MAX_GATES = 220` 是**只降不升**的棘轮；且 `utils/selectGates.js:18` 明写「只有当开关对应一种真实的用户可见权衡时才值得加门」。回滚能力用**可选参数**（`undefined` → 老行为）即可，既不加门、又保住 B-P1 豁免 |
@@ -276,7 +276,7 @@ npm run check:tui-gates          # 比改动前后 counts 零漂移，不要求�
 npm run check:changed
 ```
 
-> ⚠️ `check-leaf-contract` **不带参数**会报 `No target files found`（要 `--changed` 或显式路径），别误判成 PASS。
+> ⚠ `check-leaf-contract` **不带参数**会报 `No target files found`（要 `--changed` 或显式路径），别误判成 PASS。
 
 ---
 

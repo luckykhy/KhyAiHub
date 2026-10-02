@@ -112,11 +112,11 @@ backend   services/backend/src/cli/ai.js:635  chat()                  ← 会干
 
 | 前端资产 | 实现完整度 | 挂载 | 数据源 | 结论 |
 |---------|-----------|------|--------|------|
-| `ToolExecutionPanel.tsx` | 完整（状态/耗时/输入/结果/错误/折叠） | ✅ `App.tsx:371` | ❌ `startToolExecution` 零调用 ⇒ `:63` 恒 `return null` | 永不显形 |
-| `ElicitationPanel.tsx` | 完整（多题导航/选项/自定义回答） | ❌ 零 import | ❌ 无 | 死代码 |
-| `permissionSlice.ts` | 完整（5 级 mode / toolOverrides / pendingConfirmations / resolve） | ✅ `state/store.ts:4` | ❌ 无 dispatch 方 | 恒初始态 |
-| `diffFiles` | ❌ 硬编码 `[]` | ✅ `App.tsx:400-402` 有渲染分支 | ❌ 恒空 | 永不渲染 |
-| `ModeSelector.tsx` | 完整 | ✅ `Composer.tsx:861` | ✅ | **已通** |
+| `ToolExecutionPanel.tsx` | 完整（状态/耗时/输入/结果/错误/折叠） | ✓ `App.tsx:371` | ✗ `startToolExecution` 零调用 ⇒ `:63` 恒 `return null` | 永不显形 |
+| `ElicitationPanel.tsx` | 完整（多题导航/选项/自定义回答） | ✗ 零 import | ✗ 无 | 死代码 |
+| `permissionSlice.ts` | 完整（5 级 mode / toolOverrides / pendingConfirmations / resolve） | ✓ `state/store.ts:4` | ✗ 无 dispatch 方 | 恒初始态 |
+| `diffFiles` | ✗ 硬编码 `[]` | ✓ `App.tsx:400-402` 有渲染分支 | ✗ 恒空 | 永不渲染 |
+| `ModeSelector.tsx` | 完整 | ✓ `Composer.tsx:861` | ✓ | **已通** |
 
 ---
 
@@ -161,7 +161,7 @@ B-P2 七字段只管**借鉴外部项目**（第 1 字段即「项目名 + 版�
 
 ### 3.1 契约
 
-> **⚠️ 本节已按实施结论订正（2026-09-23）**。初稿写的是「host 改调 `ai.chat(message, opts)`」，
+> **⚠ 本节已按实施结论订正（2026-09-23）**。初稿写的是「host 改调 `ai.chat(message, opts)`」，
 > **这是错的**。实施时实测确认：`cli/ai.js` 导出的 `chat` 是**内层 LLM 调用**——
 > `aiChatCore.js:3422-3425` 的注释把它写死了：
 > *"When model returns only tool_use blocks with no text, synthesize a response so **the toolUseLoop
@@ -297,30 +297,30 @@ runToolUseLoop(userMessage: string, options: {
 
 ## 6. 反模式（这条路别走）
 
-### ❌ 1. 在 host 里自己写一个工具循环
+### ✗ 1. 在 host 里自己写一个工具循环
 
 **为什么不行**：`toolUseLoopCore.js` 有 10157 行，内含截断恢复、nudge、验证、去重、批次划分、权限闸门、成本累计。自写一份必然漂移——`queryEngine.js:9-16` 的注释就是本仓为**同一类错误**付过的学费（"former V2 state machine … drifted from it … so the loop's behavior can no longer diverge between the two engines"）。
 **正确做法**：复用 `ai.chat`，让 host 只做"适配器"。
 
-### ❌ 2. 走 HTTP/SSE 到本地 `aiManagementServer`
+### ✗ 2. 走 HTTP/SSE 到本地 `aiManagementServer`
 
 **为什么不行**：这是**看起来更省事、实际更差**的一条路。SSE 单向 ⇒ `onControlRequest` 只能返回 `undefined` ⇒ 工具循环判 **fail-closed deny**（`aiManagementChatHttp.js:227-230`）⇒ 桌面端会**白白退化成网页端的降级形态**，放弃掉 Electron IPC 双向这唯一的优势。
 **正确做法**：CH-2 进程内直调（`host/index.ts:2-3` 已经写明了这个通道选择依据）。
 
-### ❌ 3. 新增 `KHY_DESKTOP_AGENT` 之类的 env 开关
+### ✗ 3. 新增 `KHY_DESKTOP_AGENT` 之类的 env 开关
 
 **为什么不行**：`scripts/ci/check-tui-gates.js:32` 有 `MAX_GATES = 220`，注释写明 **only moves DOWN**。且按 `[DESIGN-SOURCING-001]` B-P1，「让功能变正确」不构成用户可见权衡——那类回滚能力用**可选参数**（`undefined` → 老行为）即可，既不加 env、又不撞棘轮，**还保住豁免判定**（加了 env 会把本次从"豁免"变成"非豁免"）。
 
-### ❌ 4. 给 `ToolExecutionPanel` 塞 mock 数据让它"看起来在工作"
+### ✗ 4. 给 `ToolExecutionPanel` 塞 mock 数据让它"看起来在工作"
 
 **为什么不行**：`App.tsx:50-51` 的注释明确记录 mock 已移除（`P3-4`）。塞回 mock 会让"面板显形"与"agent 真在干活"不可区分——用户会以为自己能干活了。
 **正确做法**：数据源恒空就是恒空，直到 P0 真接通。
 
-### ❌ 5. 重写 `chunkToText` 的所有调用方
+### ✗ 5. 重写 `chunkToText` 的所有调用方
 
 **为什么不行**：`chunkToText`（`App.tsx:35-44`）的 `status` 分支有既有语义（`*text*\n\n` 斜体状态行，`:33-34` 注释说明"网关回退等瞬态状态用斜体行展示，最终结果替换之"）。**扩展**它的分支是安全的，**替换**它会丢掉这个既有行为。
 
-### ❌ 6. 只改 host 就宣布完成
+### ✗ 6. 只改 host 就宣布完成
 
 **为什么不行**：host 换了入口但 renderer 的 `chunkToText` 仍在丢弃 `tool_use` ⇒ 用户看到的**仍然只是一条文字回复**（甚至可能是空的——模型纯用工具回答时没有正文，这正是网页端修复前"empty bubble"的现象）。**三层必须一起改，缺一层等于没改。**
 

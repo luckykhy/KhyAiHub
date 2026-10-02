@@ -181,11 +181,11 @@ if (retryPass && retryPass.result) {
 
 `_diagnosticRank(env)`：`cause !== null` 记 1 分，`cause === null` 记 0 分；同分时按码的具体性（`CHANNEL_ABSENT_PINNED` > `NONE`）。**放纯叶子**（可在 `cliFailureEnvelope.js` 内导出，零 IO、确定性、绝不抛），**不塞进 `aiChatCore`** —— 那里测不到。
 
-> ⚠️ `buildCliFailureEnvelope` 在 `aiChatCore:3284` 才被 require（失败分支内）。第 2 期需把 require 提到重试判定处，或复用 `_env0`。落地时按 §8 待核实项核。
+> ⚠ `buildCliFailureEnvelope` 在 `aiChatCore:3284` 才被 require（失败分支内）。第 2 期需把 require 提到重试判定处，或复用 `_env0`。落地时按 §8 待核实项核。
 
 ### 3.3 第 3 期 — 根因：钉选残留不再静默
 
-> ⚠️ **实施期就地订正（2026-09-23）**：本节初稿写的是「**新增**一段钉选健康检查」。
+> ⚠ **实施期就地订正（2026-09-23）**：本节初稿写的是「**新增**一段钉选健康检查」。
 > 实测该检测**早已存在两处** —— `baseSelfCheckService.js:517-545`（判 `error`，明说「所有 AI 调用将硬失败」，并带 autoRepair 改写 env）与
 > `handlers/gateway.js:542-584` 的 `_resolvePreferredAdapterIssue` + `gatewayStatusView.js:492-500`（已渲染）。
 > 按「不新建并行真源」的纪律，第 3 期改为 **补强既有告警**：把 `STRICT` 这个**放大器**披露出来
@@ -202,7 +202,7 @@ if (retryPass && retryPass.result) {
    处置：khy provider use <key>  或  把 GATEWAY_PREFERRED_ADAPTER 设为 auto
 ```
 
-> ⚠️ **不新增 env 开关** —— `check-tui-gates.js:32` 的 `MAX_GATES = 220` 是**只降不升**的棘轮。本项并入既有 `khy gateway status` 输出即可，零新门。
+> ⚠ **不新增 env 开关** —— `check-tui-gates.js:32` 的 `MAX_GATES = 220` 是**只降不升**的棘轮。本项并入既有 `khy gateway status` 输出即可，零新门。
 
 ---
 
@@ -229,7 +229,7 @@ if (retryPass && retryPass.result) {
 
 ## 6. 反模式（这条路别走）
 
-| ❌ | 为什么 |
+| ✗ | 为什么 |
 |---|---|
 | 继续用 `keys.size === 0`「保守取真」当 `pinned: true` | **把「未知」伪装成「已知」**，这就是本 bug 的成因本身。「零尝试」与「试了被拦」，是**两个不同的事实** |
 | 只把 `.env` 改回 `auto` / `false` 就收工 | 已复发 **5** 次，文件里 4 段注释就是尸体。**改值不解决「下次还能改回去」** |
@@ -261,7 +261,7 @@ if (retryPass && retryPass.result) {
 **为什么必须 `node:test`**：
 - `jest.config.js:25-40` 按 `require('node:test')` 标记**自动发现并加入 `testPathIgnorePatterns`** ⇒ jest 套件不会重复跑、不会因两套 runner 冲突而红
 - `package.json:59` `test:node = node --test tests/**/*.test.js` ⇒ 该文件**进 CI** ⇒ **落地即须绿**
-- ⚠️ **不要往既有的 `cliFailureEnvelope.test.js` 里加** —— 它是 jest 风格（HEAD 即如此），在 `node --test` 下报 `describe is not defined`（§8）
+- ⚠ **不要往既有的 `cliFailureEnvelope.test.js` 里加** —— 它是 jest 风格（HEAD 即如此），在 `node --test` 下报 `describe is not defined`（§8）
 
 ### 7.2 反向复现（人工，一条操作）
 
@@ -355,7 +355,7 @@ npm run check:changed
 - **不给第 3 期加行为级测试** —— `_resolvePreferredAdapterIssue` **未导出**（经 `setGatewayStatusViewDeps` 以 DI 注入 `gatewayStatusView`；实测 `exports 命中 = false`），其宿主 `gateway.js` 顶层携带大量 DI 装配。为不扩大导出面（牵动 API 契约门），退化为**源码级守卫**，并在此如实登记该限制。
 - **`check:file-ratchet` 未在本地跑** —— 需 `GIT_BASE_REF`，本地 3 分钟未完成（既有已知限制）。新增代码零 `console` / 零 `debugger` / 零 `TODO`，函数与嵌套均在 `maxFuncLines 300` / `maxNesting 6` 之内。
 
-### 9.5 ★ 实施中发现的下一个真问题（✅ 已于同日第二轮落地，见 §9.6）
+### 9.5 ★ 实施中发现的下一个真问题（✓ 已于同日第二轮落地，见 §9.6）
 
 **告警已经报出，用户还是踩了坑。**
 

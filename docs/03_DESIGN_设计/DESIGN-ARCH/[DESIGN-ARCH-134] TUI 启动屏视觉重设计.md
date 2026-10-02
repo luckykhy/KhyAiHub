@@ -47,10 +47,10 @@
 
 | 文件 | 本次动作 | 是否正被他人改 |
 | --- | --- | --- |
-| `cli/tui/ink-components/BootScreen.js` | **重写渲染** | ✅ 干净（不在 git porcelain 里） |
-| `cli/tui/ink-components/WelcomeBanner.js` | 改 require 共享资产 | ✅ 干净 |
-| `cli/tui/ink-components/ProgressBar.js` | **只 import，不改** | ⚠️ **在 porcelain 里**（` M`） |
-| `cli/tui/ink-components/App.js` | **加 1 行 props 下发** | ⚠️ **在 porcelain 里**（` M`），且是 6800 行巨石 |
+| `cli/tui/ink-components/BootScreen.js` | **重写渲染** | ✓ 干净（不在 git porcelain 里） |
+| `cli/tui/ink-components/WelcomeBanner.js` | 改 require 共享资产 | ✓ 干净 |
+| `cli/tui/ink-components/ProgressBar.js` | **只 import，不改** | ⚠ **在 porcelain 里**（` M`） |
+| `cli/tui/ink-components/App.js` | **加 1 行 props 下发** | ⚠ **在 porcelain 里**（` M`），且是 6800 行巨石 |
 
 > 本次实测 porcelain = **539 条**，其中 `services/backend/src/cli/tui/**` 约 40 个文件被他人修改。**投放顺序建议**：先落 `logoArt.js` + `bootLayout.js` + BootScreen/WelcomeBanner（互不冲突），`App.js` 那一行**等 `chore/tui-ux-nightly` 收工后再打**。
 
@@ -115,7 +115,7 @@ Box  flexDirection=column  alignItems=center  paddingX=2  paddingY=1     ← 唯
 
 ink 把根节点宽度硬设为终端列数（`node_modules/ink/build/ink.js:242`）；竖排容器的子 Box 默认 `alignItems: stretch` 撑满该宽度。所以只要在 BootScreen 根 Box 上加 `alignItems: 'center'`，**水平居中即成立，不需要任何尺寸 props**。这与 `CcLogo.js:24` 已在用的手法同源。
 
-> ⚠️ **硬规则（否则左边不齐）**：`alignItems:'center'` 是**逐个子元素**居中。若把六拍行直接作为根 Box 的子元素，**每行会各自居中**，六个 label 的左边缘就会参差。必须把「品牌块」「节拍块」各自包进一个 `alignItems:'flex-start'` 的内层 column Box，**只让内层 Box 这一层居中**。
+> ⚠ **硬规则（否则左边不齐）**：`alignItems:'center'` 是**逐个子元素**居中。若把六拍行直接作为根 Box 的子元素，**每行会各自居中**，六个 label 的左边缘就会参差。必须把「品牌块」「节拍块」各自包进一个 `alignItems:'flex-start'` 的内层 column Box，**只让内层 Box 这一层居中**。
 
 ### 3.3 进度行 —— 复用 `ProgressBar`，不写第二个进度条
 
@@ -226,28 +226,28 @@ frameH = 13 + brandRows + tailRows          （tail ∈ {0,1}：阻断/降级汇
 
 ## 6. 反模式（这条路别走）
 
-1. ❌ **用 `height: rows-1 + justifyContent:'center'` 做垂直居中**。
+1. ✗ **用 `height: rows-1 + justifyContent:'center'` 做垂直居中**。
    帧高被推到 `rows-1` 后，每 80ms 一次 spinner 重绘 = 近乎整屏重写；而 ink 在 `outputHeight >= stdout.rows` 时进 fullscreen 分支，下一帧走 `clearTerminal + fullStaticOutput + output`（`node_modules/ink/build/ink.js:320` 判定、`:322-327` 执行）⇒ 每帧清屏 + 全量重印。**这是 H1 的原始病灶，不要用视觉理由把它请回来。**
 
-2. ❌ **真垂直居中（一次性 CUP 定位）**。
+2. ✗ **真垂直居中（一次性 CUP 定位）**。
    ink 擦帧是相对位移（`eraseLines(lastOutputHeight)`），所以主 UI 会从**居中块顶部**开始 ⇒ **整个会话被下移半屏**，输入框停在屏幕中部 —— 这正是 `cli/tui/startupAnchor.js:7-13` 记录的「**下面留下了大量的空白**」那条用户抱怨。为了 1.5 秒的启动动画，把稳态布局永久改坏。
 
-3. ❌ **把六拍行直接挂在带 `alignItems:'center'` 的根 Box 下**。
+3. ✗ **把六拍行直接挂在带 `alignItems:'center'` 的根 Box 下**。
    逐子元素居中 ⇒ 六行 label 左边缘参差。必须包一层 `alignItems:'flex-start'` 的内层 column Box。
 
-4. ❌ **新增 `KHY_BOOT_*` 开关做回滚**。
+4. ✗ **新增 `KHY_BOOT_*` 开关做回滚**。
    撞 `check-tui-gates` 的门预算棘轮（实测 226 > 220 已 FAIL，且注释写明只降不升），且会把一个纯视觉改动从「可选参数缺省」拉进「新增配置键」。回滚用 `rows` 缺省语义 + `git revert`，不用开关。
 
-5. ❌ **引入 figlet / ASCII 字库生成大字标**。
+5. ✗ **引入 figlet / ASCII 字库生成大字标**。
    新依赖 + 宽度不可控（H6）+ 会把 `logoArt.js` 从「纯叶子搬像素」变成「运行时拼字形」，收益为负。
 
-6. ❌ **把 `(50%)` 解读成时间进度**。
+6. ✗ **把 `(50%)` 解读成时间进度**。
    六拍耗时极不均衡（`gateway` 是唯一带降级看门狗的拍，`App.js:46-48`），等权百分比只对「拍数」成立。**不得**在界面上出现「预计剩余 Xs」「已完成 50%」这类措辞；要说就说「3/6 拍」。
 
-7. ❌ **为了「看起来统一」把 `CcLogo` 的 `✳ Khy` 也换成四叶草**。
+7. ✗ **为了「看起来统一」把 `CcLogo` 的 `✳ Khy` 也换成四叶草**。
    `✳` 是 `[DESIGN-ARCH-081]` 品牌替换规范下的 CC 面资产，且 CC 模式定性未作出（`ccMode.js:9-19` 明写「预览态，需产品判断」）。跨模式品牌收敛不是本次的粒度。
 
-8. ❌ **在 `tests/tui/` 下用 jest 全局写新用例**。
+8. ✗ **在 `tests/tui/` 下用 jest 全局写新用例**。
    CI 的 `test:node` 是 `node --test tests/**/*.test.js`（`services/backend/package.json:59`），会把该目录一并扫走 ⇒ 引用未定义的 `describe`/`test` ⇒ 落地即红。`tests/tui/liveFrameGeometry.test.js` 就是这么红的（见 §1.2）。新用例一律用 `node:test` 写，并显式条件 skip。
 
 ---
@@ -276,7 +276,7 @@ frameH = 13 + brandRows + tailRows          （tail ∈ {0,1}：阻断/降级汇
 
 命令：`NODE_OPTIONS=--experimental-vm-modules npm run --workspace backend test:tui -- tests/tui/bootFrame.test.js`
 
-> ⚠️ **限制（如实登记）**：该断言依赖 `--experimental-vm-modules`，而 CI 的 `test:node` 不带此 flag。所以文件必须用 `node:test` 写并**在前置条件不满足时显式 skip**——CI 上它只保证「不红」，真断言只在本地生效。这与 ink TUI 套件整体的现状一致（§1.2 末行）。
+> ⚠ **限制（如实登记）**：该断言依赖 `--experimental-vm-modules`，而 CI 的 `test:node` 不带此 flag。所以文件必须用 `node:test` 写并**在前置条件不满足时显式 skip**——CI 上它只保证「不红」，真断言只在本地生效。这与 ink TUI 套件整体的现状一致（§1.2 末行）。
 
 ### 7.3 人工目视
 

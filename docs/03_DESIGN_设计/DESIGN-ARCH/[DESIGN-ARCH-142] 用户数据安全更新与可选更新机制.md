@@ -103,9 +103,9 @@
 
 | 需求 | 现状 | 补全 |
 |------|------|------|
-| 跳过当前版本 | ✅ 已有（`skip`，:814） | 不动 |
-| 本次稍后 | ✅ 已有（staged 保留，`khy update apply` 随时可装） | 不动 |
-| 永不自动检查 | ⚠️ 只有 `KHY_SELF_UPDATE` 环境变量（:31-33） | 新增 `khy update off/on`：把 `autoCheck: false` 写进既有 state 文件（updateCoordinator.js:48 `getStateFile`），prefetch.js:298 检查前先读它。**不加新 env**（见 §6 反模式 4） |
+| 跳过当前版本 | ✓ 已有（`skip`，:814） | 不动 |
+| 本次稍后 | ✓ 已有（staged 保留，`khy update apply` 随时可装） | 不动 |
+| 永不自动检查 | ⚠ 只有 `KHY_SELF_UPDATE` 环境变量（:31-33） | 新增 `khy update off/on`：把 `autoCheck: false` 写进既有 state 文件（updateCoordinator.js:48 `getStateFile`），prefetch.js:298 检查前先读它。**不加新 env**（见 §6 反模式 4） |
 
 ---
 
@@ -138,7 +138,7 @@
 
 ## 6. 反模式（这条路别走）
 
-| ❌ 别做 | 为什么 |
+| ✗ 别做 | 为什么 |
 |--------|--------|
 | 回滚时先装旧程序、后（或根本不）恢复数据 | 旧程序读到已被新迁移改过的数据 + 偏新的版本号 → 跳过补迁移，半迁移态永久化。**顺序必须：先复数据快照，再回滚程序**——因为恢复快照后版本文件也回到旧值，旧程序才能正确地重新走迁移 |
 | 快照整个 `~/.khy` 目录 | 体量不可控（缓存/会话历史），拖慢 apply 数秒到数分钟，且违反数据家红线精神。只快照 `touches` 声明的文件 |

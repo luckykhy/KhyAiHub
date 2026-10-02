@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -40,7 +40,7 @@
 <h3 id="1-2-门禁与测试基线-实测-不得凭印象">1.2 门禁与测试基线（实测，不得凭印象）<a class="anchor" href="#1-2-门禁与测试基线-实测-不得凭印象" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>对象</th><th>实测值</th><th>说明</th></tr></thead><tbody><tr><td><code>tests/cli/startupBeats.test.js</code></td><td><code># tests 17 / pass 17 / fail 0</code></td><td>本设计必须保持全绿</td></tr><tr><td><code>tests/cli/tui/startupBeatsWiring.test.js</code></td><td><code># tests 8 / pass 8 / fail 0</code></td><td>同上</td></tr><tr><td><code>tests/tui/liveFrameGeometry.test.js</code></td><td><code># tests 1 / pass 0 / fail 1</code></td><td><strong>改动前就已红</strong>（他人未提交的新文件 <code>??</code>，用 jest 全局 <code>describe/test</code> 写在 <code>tests/tui/</code> 下，被 <code>test:node</code> 的 glob 扫到）</td></tr><tr><td><code>npm run check:tui-gates</code></td><td><code>FAIL — 226 unique KHY_* tokens (limit 220)</code></td><td><strong>改动前就已红</strong>；<code>scripts/ci/check-tui-gates.js:32</code> <code>MAX_GATES = 220</code>，注释写明「only moves DOWN」</td></tr><tr><td>CI 测试选择范围</td><td><code>services/backend/package.json:59</code> <code>test:node = node --test tests/**/*.test.js</code>，被 <code>.github/workflows/pr-gate.yml</code> 调用</td><td>⇒ <strong>新增测试必须落地即绿</strong>，本设计不采纳「先落一条红探针」</td></tr><tr><td>ink 真帧套件</td><td><code>services/backend/scripts/run-ink-tui-tests.js</code> 存在（<code>test:tui</code> = jest <code>tests/tui</code>）；其 <code>:15</code> 声称「Used by …the CI 'Ink TUI' job」，但 <code>.github/workflows/</code> 内<strong>不存在该 job</strong></td><td>ink TUI 套件当前<strong>零 CI 覆盖</strong>；见 §8</td></tr></tbody></table>
 <h3 id="1-3-与并行会话的冲突面-动工前必看">1.3 与并行会话的冲突面（动工前必看）<a class="anchor" href="#1-3-与并行会话的冲突面-动工前必看" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>文件</th><th>本次动作</th><th>是否正被他人改</th></tr></thead><tbody><tr><td><code>cli/tui/ink-components/BootScreen.js</code></td><td><strong>重写渲染</strong></td><td>✅ 干净（不在 git porcelain 里）</td></tr><tr><td><code>cli/tui/ink-components/WelcomeBanner.js</code></td><td>改 require 共享资产</td><td>✅ 干净</td></tr><tr><td><code>cli/tui/ink-components/ProgressBar.js</code></td><td><strong>只 import，不改</strong></td><td>⚠️ <strong>在 porcelain 里</strong>（<code> M</code>）</td></tr><tr><td><code>cli/tui/ink-components/App.js</code></td><td><strong>加 1 行 props 下发</strong></td><td>⚠️ <strong>在 porcelain 里</strong>（<code> M</code>），且是 6800 行巨石</td></tr></tbody></table>
+<table><thead><tr><th>文件</th><th>本次动作</th><th>是否正被他人改</th></tr></thead><tbody><tr><td><code>cli/tui/ink-components/BootScreen.js</code></td><td><strong>重写渲染</strong></td><td>✓ 干净（不在 git porcelain 里）</td></tr><tr><td><code>cli/tui/ink-components/WelcomeBanner.js</code></td><td>改 require 共享资产</td><td>✓ 干净</td></tr><tr><td><code>cli/tui/ink-components/ProgressBar.js</code></td><td><strong>只 import，不改</strong></td><td>⚠ <strong>在 porcelain 里</strong>（<code> M</code>）</td></tr><tr><td><code>cli/tui/ink-components/App.js</code></td><td><strong>加 1 行 props 下发</strong></td><td>⚠ <strong>在 porcelain 里</strong>（<code> M</code>），且是 6800 行巨石</td></tr></tbody></table>
 <blockquote><p>本次实测 porcelain = <strong>539 条</strong>，其中 <code>services/backend/src/cli/tui/**</code> 约 40 个文件被他人修改。<strong>投放顺序建议</strong>：先落 <code>logoArt.js</code> + <code>bootLayout.js</code> + BootScreen/WelcomeBanner（互不冲突），<code>App.js</code> 那一行<strong>等 <code>chore/tui-ux-nightly</code> 收工后再打</strong>。</p></blockquote>
 <hr>
 <h2 id="2-借鉴提案">2. 借鉴提案<a class="anchor" href="#2-借鉴提案" aria-label="锚点">#</a></h2>
@@ -70,7 +70,7 @@
  └ Text ''</code></pre>
 <h3 id="3-2-居中机制-零新机制-零-props">3.2 居中机制 —— <strong>零新机制、零 props</strong><a class="anchor" href="#3-2-居中机制-零新机制-零-props" aria-label="锚点">#</a></h3>
 <p>ink 把根节点宽度硬设为终端列数（<code>node_modules/ink/build/ink.js:242</code>）；竖排容器的子 Box 默认 <code>alignItems: stretch</code> 撑满该宽度。所以只要在 BootScreen 根 Box 上加 <code>alignItems: 'center'</code>，<strong>水平居中即成立，不需要任何尺寸 props</strong>。这与 <code>CcLogo.js:24</code> 已在用的手法同源。</p>
-<blockquote><p>⚠️ <strong>硬规则（否则左边不齐）</strong>：<code>alignItems:'center'</code> 是<strong>逐个子元素</strong>居中。若把六拍行直接作为根 Box 的子元素，<strong>每行会各自居中</strong>，六个 label 的左边缘就会参差。必须把「品牌块」「节拍块」各自包进一个 <code>alignItems:'flex-start'</code> 的内层 column Box，<strong>只让内层 Box 这一层居中</strong>。</p></blockquote>
+<blockquote><p>⚠ <strong>硬规则（否则左边不齐）</strong>：<code>alignItems:'center'</code> 是<strong>逐个子元素</strong>居中。若把六拍行直接作为根 Box 的子元素，<strong>每行会各自居中</strong>，六个 label 的左边缘就会参差。必须把「品牌块」「节拍块」各自包进一个 <code>alignItems:'flex-start'</code> 的内层 column Box，<strong>只让内层 Box 这一层居中</strong>。</p></blockquote>
 <h3 id="3-3-进度行-复用-progressbar-不写第二个进度条">3.3 进度行 —— 复用 <code>ProgressBar</code>，不写第二个进度条<a class="anchor" href="#3-3-进度行-复用-progressbar-不写第二个进度条" aria-label="锚点">#</a></h3>
 <pre><code>h(ProgressBar, { kind: 'count', current: done, total: total, label: '启动中 · ' + elapsed })</code></pre>
 <ul><li>渲染为 <code>◆ ████████████░░░░░░░░ 3/6 启动中 · 1.2s (50%)</code>（<code>ProgressBar.js:145-158</code>，<code>BAR_WIDTH = 20</code> 在 <code>:43</code>）。</li><li><code>done</code> / <code>total</code> / <code>elapsedMs</code> 全部取自 <code>beats.progress()</code>（<code>startupBeats.js:190-197</code>），<strong>零新增状态</strong>。</li><li>耗时格式化复用 <code>cli/bootPhaseLine.js:64-72</code> 的 <code>_elapsedMsToStr</code>（<code>320ms</code> / <code>3.2s</code> / <code>1m 04s</code>）——<strong>同一份人读时长口径，不再写第二个</strong>。</li><li><code>(50%)</code> 保留：它说的是<strong>六拍里完成了三拍</strong>，是真实值。<strong>不得</strong>把它改写成「时间进度」或在文案里出现「预计剩余」——见 §6 反模式 6。</li></ul>
@@ -101,21 +101,21 @@ frameH = 13 + brandRows + tailRows          （tail ∈ {0,1}：阻断/降级汇
 <table><thead><tr><th>边界</th><th>说明</th></tr></thead><tbody><tr><td><strong>不改节拍语义</strong></td><td>六拍数量、完成信号、<code>isReady()</code> 判据、失败二分全部不动。本次只读 <code>beats</code> 的状态与 <code>progress()</code>。</td></tr><tr><td><strong>不加任何 env / 配置键</strong></td><td>见 §3.7。</td></tr><tr><td><strong>不新增品牌素材</strong></td><td>四叶草是 <code>WelcomeBanner.js:32-56</code> 的<strong>原像素</strong>搬家，不重画、不调色。tagline 复用 <code>BRAND.tagline</code>。</td></tr><tr><td><strong>不写假进度</strong></td><td>只有 <code>beats.progress()</code> 的真实值上屏。不出现「正在加载资源 78%」这类无来源的百分比。</td></tr><tr><td><strong>小终端仍是既有状况</strong></td><td><code>rows &lt; 15</code> 时 J 档（14 行）仍可能触 H1。但<strong>现状是 17 行</strong>，所以这是<strong>净改善</strong>，不是新引入。</td></tr><tr><td><strong>CC 模式的品牌串不动</strong></td><td><code>CcLogo</code> 的 <code>✳ Khy</code> 保持原样；本次只统一 TUI 默认主路径（启动屏 + 欢迎横幅）。</td></tr><tr><td><strong>不代改 <code>[DESIGN-ARCH-115]</code></strong></td><td>§2.6 的 S4 措辞修订需维护者确认后单独动作。</td></tr><tr><td><strong>CI 只保证「不红」</strong></td><td>真字节几何断言需要 <code>--experimental-vm-modules</code>，CI 不带该 flag ⇒ 相关用例会 skip（见 §7 限制）。</td></tr></tbody></table>
 <hr>
 <h2 id="6-反模式-这条路别走">6. 反模式（这条路别走）<a class="anchor" href="#6-反模式-这条路别走" aria-label="锚点">#</a></h2>
-<ol><li>❌ <strong>用 <code>height: rows-1 + justifyContent:'center'</code> 做垂直居中</strong>。</li></ol>
+<ol><li>✗ <strong>用 <code>height: rows-1 + justifyContent:'center'</code> 做垂直居中</strong>。</li></ol>
 <p>帧高被推到 <code>rows-1</code> 后，每 80ms 一次 spinner 重绘 = 近乎整屏重写；而 ink 在 <code>outputHeight &gt;= stdout.rows</code> 时进 fullscreen 分支，下一帧走 <code>clearTerminal + fullStaticOutput + output</code>（<code>node_modules/ink/build/ink.js:320</code> 判定、<code>:322-327</code> 执行）⇒ 每帧清屏 + 全量重印。<strong>这是 H1 的原始病灶，不要用视觉理由把它请回来。</strong></p>
-<ol><li>❌ <strong>真垂直居中（一次性 CUP 定位）</strong>。</li></ol>
+<ol><li>✗ <strong>真垂直居中（一次性 CUP 定位）</strong>。</li></ol>
 <p>ink 擦帧是相对位移（<code>eraseLines(lastOutputHeight)</code>），所以主 UI 会从<strong>居中块顶部</strong>开始 ⇒ <strong>整个会话被下移半屏</strong>，输入框停在屏幕中部 —— 这正是 <code>cli/tui/startupAnchor.js:7-13</code> 记录的「<strong>下面留下了大量的空白</strong>」那条用户抱怨。为了 1.5 秒的启动动画，把稳态布局永久改坏。</p>
-<ol><li>❌ <strong>把六拍行直接挂在带 <code>alignItems:'center'</code> 的根 Box 下</strong>。</li></ol>
+<ol><li>✗ <strong>把六拍行直接挂在带 <code>alignItems:'center'</code> 的根 Box 下</strong>。</li></ol>
 <p>逐子元素居中 ⇒ 六行 label 左边缘参差。必须包一层 <code>alignItems:'flex-start'</code> 的内层 column Box。</p>
-<ol><li>❌ <strong>新增 <code>KHY_BOOT_*</code> 开关做回滚</strong>。</li></ol>
+<ol><li>✗ <strong>新增 <code>KHY_BOOT_*</code> 开关做回滚</strong>。</li></ol>
 <p>撞 <code>check-tui-gates</code> 的门预算棘轮（实测 226 &gt; 220 已 FAIL，且注释写明只降不升），且会把一个纯视觉改动从「可选参数缺省」拉进「新增配置键」。回滚用 <code>rows</code> 缺省语义 + <code>git revert</code>，不用开关。</p>
-<ol><li>❌ <strong>引入 figlet / ASCII 字库生成大字标</strong>。</li></ol>
+<ol><li>✗ <strong>引入 figlet / ASCII 字库生成大字标</strong>。</li></ol>
 <p>新依赖 + 宽度不可控（H6）+ 会把 <code>logoArt.js</code> 从「纯叶子搬像素」变成「运行时拼字形」，收益为负。</p>
-<ol><li>❌ <strong>把 <code>(50%)</code> 解读成时间进度</strong>。</li></ol>
+<ol><li>✗ <strong>把 <code>(50%)</code> 解读成时间进度</strong>。</li></ol>
 <p>六拍耗时极不均衡（<code>gateway</code> 是唯一带降级看门狗的拍，<code>App.js:46-48</code>），等权百分比只对「拍数」成立。<strong>不得</strong>在界面上出现「预计剩余 Xs」「已完成 50%」这类措辞；要说就说「3/6 拍」。</p>
-<ol><li>❌ <strong>为了「看起来统一」把 <code>CcLogo</code> 的 <code>✳ Khy</code> 也换成四叶草</strong>。</li></ol>
+<ol><li>✗ <strong>为了「看起来统一」把 <code>CcLogo</code> 的 <code>✳ Khy</code> 也换成四叶草</strong>。</li></ol>
 <p><code>✳</code> 是 <code>[DESIGN-ARCH-081]</code> 品牌替换规范下的 CC 面资产，且 CC 模式定性未作出（<code>ccMode.js:9-19</code> 明写「预览态，需产品判断」）。跨模式品牌收敛不是本次的粒度。</p>
-<ol><li>❌ <strong>在 <code>tests/tui/</code> 下用 jest 全局写新用例</strong>。</li></ol>
+<ol><li>✗ <strong>在 <code>tests/tui/</code> 下用 jest 全局写新用例</strong>。</li></ol>
 <p>CI 的 <code>test:node</code> 是 <code>node --test tests/**/*.test.js</code>（<code>services/backend/package.json:59</code>），会把该目录一并扫走 ⇒ 引用未定义的 <code>describe</code>/<code>test</code> ⇒ 落地即红。<code>tests/tui/liveFrameGeometry.test.js</code> 就是这么红的（见 §1.2）。新用例一律用 <code>node:test</code> 写，并显式条件 skip。</p>
 <hr>
 <h2 id="7-验收方式">7. 验收方式<a class="anchor" href="#7-验收方式" aria-label="锚点">#</a></h2>
@@ -125,7 +125,7 @@ frameH = 13 + brandRows + tailRows          （tail ∈ {0,1}：阻断/降级汇
 <p>用既有的最小 VT 屏幕模型 <code>services/backend/tests/tui/vtScreen.js</code>（与 BUG-91 真帧守卫同源），把 BootScreen 在假 TTY 上渲染出的字节流喂进去，断言：</p>
 <ol><li>帧首行的前导空白 ≈ <code>floor((cols − blockCols) / 2)</code>（容差 ±1）——<strong>居中的唯一可信判据</strong>；</li><li>帧高 ≤ <code>rows − 1</code>；</li><li>全启动期零 <code>ESC[2J</code> / <code>ESC[3J</code>（H2）；</li><li>六拍行数<strong>恒定 6</strong>（S1），不随推进变化。</li></ol>
 <p>命令：<code>NODE_OPTIONS=--experimental-vm-modules npm run --workspace backend test:tui -- tests/tui/bootFrame.test.js</code></p>
-<blockquote><p>⚠️ <strong>限制（如实登记）</strong>：该断言依赖 <code>--experimental-vm-modules</code>，而 CI 的 <code>test:node</code> 不带此 flag。所以文件必须用 <code>node:test</code> 写并<strong>在前置条件不满足时显式 skip</strong>——CI 上它只保证「不红」，真断言只在本地生效。这与 ink TUI 套件整体的现状一致（§1.2 末行）。</p></blockquote>
+<blockquote><p>⚠ <strong>限制（如实登记）</strong>：该断言依赖 <code>--experimental-vm-modules</code>，而 CI 的 <code>test:node</code> 不带此 flag。所以文件必须用 <code>node:test</code> 写并<strong>在前置条件不满足时显式 skip</strong>——CI 上它只保证「不红」，真断言只在本地生效。这与 ink TUI 套件整体的现状一致（§1.2 末行）。</p></blockquote>
 <h3 id="7-3-人工目视">7.3 人工目视<a class="anchor" href="#7-3-人工目视" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>尺寸</th><th>期望</th></tr></thead><tbody><tr><td>80×30</td><td>F 档：四叶草 + <code>khy OS</code> + tagline + 进度条 + 六拍，<strong>整块水平居中</strong></td></tr><tr><td>80×24</td><td>G 档：去 tagline（四叶草仍在）</td></tr><tr><td>80×20</td><td>H 档：去四叶草，只留 <code>khy OS</code> + tagline</td></tr><tr><td>80×12</td><td>J 档：无品牌块，只剩进度 + 六拍；<strong>无闪烁、无整屏重绘</strong></td></tr><tr><td>拖动改宽</td><td><code>alignItems:'center'</code> 逐帧跟随，宽窄都不折行</td></tr></tbody></table>
 <hr>

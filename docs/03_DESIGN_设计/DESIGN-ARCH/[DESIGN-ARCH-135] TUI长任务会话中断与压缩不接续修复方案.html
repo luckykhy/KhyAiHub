@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -90,7 +90,7 @@
 <table><thead><tr><th>能力域</th><th>注册位置</th><th>状态</th></tr></thead><tbody><tr><td>tool-use loop</td><td><code>capabilityMatrix/descriptors.js</code>、<code>services/tool/toolUseLoopCore.js</code></td><td>canonical 存在</td></tr><tr><td>上下文压缩</td><td><code>services/contextCompressor.js</code>（<code>context-compress</code> 审计工具名已注册）</td><td>canonical 存在</td></tr><tr><td>外层 Ralph 续跑</td><td><code>capabilityMatrix/seams.js:54</code> <code>[SEAMS.OUTER_RALPH]: 'agenticHarnessService.js'</code></td><td>canonical 存在</td></tr></tbody></table>
 <p>⇒ <strong>本方案不引入任何外部项目代码/二进制/资源，无借鉴关系</strong>，故 B-P2 七字段据实填「不适用」：</p>
 <table><thead><tr><th>#</th><th>字段</th><th>填写</th></tr></thead><tbody><tr><td>1</td><td>借鉴对象</td><td>不适用 —— 无外部借鉴，修复本仓自研缺陷</td></tr><tr><td>2</td><td>借鉴内容</td><td>不适用（同上）</td></tr><tr><td>3</td><td>解决的问题</td><td>TUI 长任务静默中断 + 压缩成果跨轮丢失（见 §0/§1）</td></tr><tr><td>4</td><td>许可证与代码性质</td><td>不适用 —— 不含任何第三方代码</td></tr><tr><td>5</td><td>借鉴方式</td><td>不适用</td></tr><tr><td>6</td><td>落点与现有实现对比</td><td>落点见 §3；<strong>不新建并行实现</strong>：续跑复用 <code>agenticHarnessService</code> 的既有语义，压缩回写复用 <code>aiConversationOps</code> 既有写回入口，完成度判定复用既有 delivery gate 与 <code>&lt;execution_plan&gt;</code> 步骤</td></tr><tr><td>7</td><td>验收方式</td><td>见 §7</td></tr></tbody></table>
-<blockquote><p>❌ 不要为了「看起来合规」硬借一个上游。<code>agenticHarnessService</code> 的 Ralph 语义来自 DeepSeek-TUI 对齐（<code>contextCompressor.js:1236</code> 注释，路径 <strong>B7</strong>），那是<strong>既成事实</strong>，不是本次新借。</p></blockquote>
+<blockquote><p>✗ 不要为了「看起来合规」硬借一个上游。<code>agenticHarnessService</code> 的 Ralph 语义来自 DeepSeek-TUI 对齐（<code>contextCompressor.js:1236</code> 注释，路径 <strong>B7</strong>），那是<strong>既成事实</strong>，不是本次新借。</p></blockquote>
 <hr>
 <h2 id="3-目标形态-组件级契约">3. 目标形态（组件级契约）<a class="anchor" href="#3-目标形态-组件级契约" aria-label="锚点">#</a></h2>
 <h3 id="契约-a-压缩结果必须回写会话真源">契约 A —— 压缩结果必须回写会话真源<a class="anchor" href="#契约-a-压缩结果必须回写会话真源" aria-label="锚点">#</a></h3>
@@ -122,13 +122,13 @@
 <p>⇒ <strong><code>services/backend/tests/</code> 下任何新 <code>*.test.js</code> 都会被 CI 扫到，必须「落地即绿」</strong>。</p>
 <p>因此<strong>不采用</strong>「先落一条故意红的探针钉住缺陷」的做法 —— 那会让流水线在修复完成前一直红。</p>
 <p>正确顺序：<strong>先接线 → 再落断言</strong>。用例一律用 <code>require('node:test')</code> 写，前置条件不满足时显式 skip。</p>
-<blockquote><p>⚠️ 致死陷阱：不要在 <code>services/backend/tests/tui/</code> 下用 jest 全局（裸 <code>describe</code>/<code>test</code>）。该目录属 jest 套件（<code>test:tui</code>），但 <code>tests/**/*.test.js</code> 的 glob 会把它一并扫走，在 <code>node --test</code> 下 <code>describe</code> 未定义 → 落地即红。既有受害者：<code>tests/tui/liveFrameGeometry.test.js</code>。</p></blockquote>
+<blockquote><p>⚠ 致死陷阱：不要在 <code>services/backend/tests/tui/</code> 下用 jest 全局（裸 <code>describe</code>/<code>test</code>）。该目录属 jest 套件（<code>test:tui</code>），但 <code>tests/**/*.test.js</code> 的 glob 会把它一并扫走，在 <code>node --test</code> 下 <code>describe</code> 未定义 → 落地即红。既有受害者：<code>tests/tui/liveFrameGeometry.test.js</code>。</p></blockquote>
 <hr>
 <h2 id="5-诚实边界-刻意不纳入-逐条给原因">5. 诚实边界（刻意不纳入 —— 逐条给原因）<a class="anchor" href="#5-诚实边界-刻意不纳入-逐条给原因" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>不做</th><th>原因</th></tr></thead><tbody><tr><td><strong>无限续跑</strong></td><td>与 <code>RUNTIME-003</code> 冲突，且会把「任务卡死」变成「烧钱卡死」。有界是硬约束</td></tr><tr><td><strong>把 Ralph Loop 整个搬进 <code>useQueryBridge</code></strong></td><td>该文件已 ~3000 行，逻辑进去就测不到（藏在 <code>useCallback</code> 里）。正确做法是把循环体抽成可测的纯函数，两边共用</td></tr><tr><td><strong>压缩后自动 re-plan（重新生成执行计划）</strong></td><td>计划已由 <code>&lt;execution_plan&gt;</code> 承载，重生成会丢掉已完成的步骤进度，退化为「从头再来」</td></tr><tr><td><strong>删除被压缩的原始消息</strong></td><td>压缩是<strong>视图切换</strong>不是<strong>数据销毁</strong>。归档区保留原文，出问题可回溯</td></tr><tr><td><strong>新增 env 门做开关</strong></td><td>详见 §6 —— 撞门预算棘轮</td></tr></tbody></table>
 <hr>
 <h2 id="6-反模式-这条路别走">6. 反模式（这条路别走）<a class="anchor" href="#6-反模式-这条路别走" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>❌ 别做</th><th>为什么</th></tr></thead><tbody><tr><td><strong>用「把 <code>conversationMessages</code> 直接赋给 <code>_chatState.messages</code>」实现回写</strong></td><td>会把 TUI 的<strong>显示历史</strong>与模型的<strong>工作历史</strong>合并成一个真源。二者语义不同（显示历史需要保留用户看到的完整原文），合并后用户会看到界面历史被摘要顶掉，且丢证据</td></tr><tr><td><strong>为「让功能变正确」新增 <code>KHY_AUTO_CONTINUE</code> 之类 env 门</strong></td><td><code>scripts/ci/check-tui-gates.js:32</code> 的 <code>MAX_GATES = 220</code> 是<strong>只降不升</strong>的棘轮；且 <code>utils/selectGates.js:18</code> 明写「只有当开关对应一种真实的用户可见权衡时才值得加门」。回滚能力用<strong>可选参数</strong>（<code>undefined</code> → 老行为）即可，既不加门、又保住 B-P1 豁免</td></tr><tr><td><strong>在 <code>useQueryBridge</code> 里就地写续跑 <code>while</code> 循环</strong></td><td>见 §5。逻辑进叶子/纯函数，App 层只负责取数据传进去（<code>[DESIGN-ARCH-132]</code> §6 同款纪律）</td></tr><tr><td><strong>只补 UI 文案（「达到上限」）就算修好了</strong></td><td>文案只解决「可见性」（二期），不解决「压缩不接续」（一期）。二者都要做，但<strong>一期才是长任务能不能活下去的关键</strong></td></tr></tbody></table>
+<table><thead><tr><th>✗ 别做</th><th>为什么</th></tr></thead><tbody><tr><td><strong>用「把 <code>conversationMessages</code> 直接赋给 <code>_chatState.messages</code>」实现回写</strong></td><td>会把 TUI 的<strong>显示历史</strong>与模型的<strong>工作历史</strong>合并成一个真源。二者语义不同（显示历史需要保留用户看到的完整原文），合并后用户会看到界面历史被摘要顶掉，且丢证据</td></tr><tr><td><strong>为「让功能变正确」新增 <code>KHY_AUTO_CONTINUE</code> 之类 env 门</strong></td><td><code>scripts/ci/check-tui-gates.js:32</code> 的 <code>MAX_GATES = 220</code> 是<strong>只降不升</strong>的棘轮；且 <code>utils/selectGates.js:18</code> 明写「只有当开关对应一种真实的用户可见权衡时才值得加门」。回滚能力用<strong>可选参数</strong>（<code>undefined</code> → 老行为）即可，既不加门、又保住 B-P1 豁免</td></tr><tr><td><strong>在 <code>useQueryBridge</code> 里就地写续跑 <code>while</code> 循环</strong></td><td>见 §5。逻辑进叶子/纯函数，App 层只负责取数据传进去（<code>[DESIGN-ARCH-132]</code> §6 同款纪律）</td></tr><tr><td><strong>只补 UI 文案（「达到上限」）就算修好了</strong></td><td>文案只解决「可见性」（二期），不解决「压缩不接续」（一期）。二者都要做，但<strong>一期才是长任务能不能活下去的关键</strong></td></tr></tbody></table>
 <hr>
 <h2 id="7-验收方式-可复现命令-关联门禁">7. 验收方式（可复现命令 + 关联门禁）<a class="anchor" href="#7-验收方式-可复现命令-关联门禁" aria-label="锚点">#</a></h2>
 <h3 id="7-1-单元层">7.1 单元层<a class="anchor" href="#7-1-单元层" aria-label="锚点">#</a></h3>
@@ -145,7 +145,7 @@
 <pre><code class="language-bash">npm run check:leaf-contract -- services/backend/src/cli/aiConversationOps.js
 npm run check:tui-gates          <span class="hljs-comment"># 比改动前后 counts 零漂移，不要求全绿</span>
 npm run check:changed</code></pre>
-<blockquote><p>⚠️ <code>check-leaf-contract</code> <strong>不带参数</strong>会报 <code>No target files found</code>（要 <code>--changed</code> 或显式路径），别误判成 PASS。</p></blockquote>
+<blockquote><p>⚠ <code>check-leaf-contract</code> <strong>不带参数</strong>会报 <code>No target files found</code>（要 <code>--changed</code> 或显式路径），别误判成 PASS。</p></blockquote>
 <hr>
 <h2 id="8-待核实项">8. 待核实项<a class="anchor" href="#8-待核实项" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>#</th><th>项</th><th>影响</th><th>优先级</th></tr></thead><tbody><tr><td>1</td><td><del><code>_ccCtxWindow</code> 在 TUI 路径下到底是 window 还是 budget？</del></td><td><strong>已核实：是 window。三方不一致成立</strong></td><td>已闭环，见 §10.6</td></tr><tr><td>2</td><td><code>queryEngine</code> 是否也被 TUI 间接使用？</td><td>若是，则 TUI 有一半路径其实走了 harness，一/二期的必要性排序要调整</td><td>中</td></tr><tr><td>3</td><td><code>MAX_HISTORY</code> 的具体值与截断策略</td><td>决定回写时归档区怎么切</td><td>低（一期落地时顺带查）</td></tr></tbody></table>

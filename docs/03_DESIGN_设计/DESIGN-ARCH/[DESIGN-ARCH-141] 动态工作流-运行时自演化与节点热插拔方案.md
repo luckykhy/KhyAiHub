@@ -51,10 +51,10 @@ $ node _产物/workflow-dynamic-probe.js --scenario=all --verbose
   结构: graph 引用 4 处，主循环前 4 处，循环内 0 处
 
 [6] divergence — 反例（守卫必须报出人造差异）
-  反例: 注入目录类型 'expand' ⇒ 守卫报出 workflow-node-missing-handler ✅（目录 12 型 / 执行器 11 型）
+  反例: 注入目录类型 'expand' ⇒ 守卫报出 workflow-node-missing-handler ✓（目录 12 型 / 执行器 11 型）
         ⚠ 该探针名已于 2026-09-24 改为 zzInjectedProbeType —— `expand` 被真实声明后，
           原探针与真实条目重复，触发守卫的「重复抽取」自校验（详见 §12.9）
-  放行对照: 未注入的原始输入 ⇒ 0 条 missing ✅（证明不是无脑拦）
+  放行对照: 未注入的原始输入 ⇒ 0 条 missing ✓（证明不是无脑拦）
 
 [ERROR] workflow-unknown-node-silent-success 含未知节点类型的图跑出 status=completed 且节点 x status=skipped（fail-open，应 fail-closed） workflowExecutor.js:518
 [ERROR] workflow-worker-unvalidated worker 直接把 graphJson 交给 runGraph，未校验节点类型（上游校验兜不住这一路） workflowRunWorker.js:204
@@ -80,8 +80,8 @@ Summary: 3 error(s), 0 warning(s).
 
 | 位置 | 写的 | 实际 | 处置 |
 |---|---|---|---|
-| `WorkflowRun.js:97`（**三份副本**：`platform/packages/shared/src/models/`、`services/backend/vendor/shared/src/models/`、`software/khyquant/models/`） | `pending_json` = `{ nodeId, question, options, answerVar, cursor, vars }` | 写入侧只有 `workflowRunWorker.js:276/288`，存的是执行器 `runGraph` 返回的 `pause`，共**两种带判别符的形状**：① 提问停车 `{ nodeId, question, options, answerVar, loopState }`（无 `kind`）；② quantum 让出 `{ kind: "quantum", nodeId, loopState }` | ✅ 已订正（2026-09-24，三份副本同步；`cursor`/`vars` 在**写入侧 0 处**出现） |
-| 全仓 | `_meta.healedFrom` | ~~**只写不读**~~ **已订正**（2026-09-24）：save 侧经 `healGuard.checkHealClaim` 判「根因节点须存在于上一版图中 + 自愈链深度 ≤ 5」，run 侧出三态裁决 | ✅ **已变成真判据**（§12.10） |
+| `WorkflowRun.js:97`（**三份副本**：`platform/packages/shared/src/models/`、`services/backend/vendor/shared/src/models/`、`software/khyquant/models/`） | `pending_json` = `{ nodeId, question, options, answerVar, cursor, vars }` | 写入侧只有 `workflowRunWorker.js:276/288`，存的是执行器 `runGraph` 返回的 `pause`，共**两种带判别符的形状**：① 提问停车 `{ nodeId, question, options, answerVar, loopState }`（无 `kind`）；② quantum 让出 `{ kind: "quantum", nodeId, loopState }` | ✓ 已订正（2026-09-24，三份副本同步；`cursor`/`vars` 在**写入侧 0 处**出现） |
+| 全仓 | `_meta.healedFrom` | ~~**只写不读**~~ **已订正**（2026-09-24）：save 侧经 `healGuard.checkHealClaim` 判「根因节点须存在于上一版图中 + 自愈链深度 ≤ 5」，run 侧出三态裁决 | ✓ **已变成真判据**（§12.10） |
 
 > `healedFrom` 属于「字段存在、写入函数存在、**生产调用点/消费点 0 处**」这一类隐蔽空头支票。**一条永远为真的铁律比没有更坏** —— 它会让人以为这里有守卫。
 
@@ -95,10 +95,10 @@ Summary: 3 error(s), 0 warning(s).
 
 | 初稿想写 | 真源实况 | 处置 |
 |---|---|---|
-| `priority` | ❌ **不存在**（全表 12 字段：`id` / `user_id` / `workflow_id` / `status` / `graph_json` / `vars_json` / `log_json` / `error` / `pending_json` / `resume_json` / `started_at` / `finished_at` + `createdAt`/`updatedAt`） | **登记为「需要扩真源」**，划入 D3 边界，不在步 1/2 假装它存在 |
-| `updatedAt`（排序键） | ✅ 存在（`timestamps: true`，且 `claimNext` 的 `order` 已消费） | 直接复用 |
-| 索引 | ✅ `user_id` / `workflow_id` / `status` | 加 `priority` 需**同步加复合索引** `[status, priority, updated_at]`，否则排序退化为全表扫 |
-| 状态枚举 | ✅ `queued \| running \| awaiting_input \| succeeded \| failed`（`:47`） | ⚠ 注意**无 `paused`**：quantum 让出时写回的是 `queued`（`workflowRunWorker.js:227`） |
+| `priority` | ✗ **不存在**（全表 12 字段：`id` / `user_id` / `workflow_id` / `status` / `graph_json` / `vars_json` / `log_json` / `error` / `pending_json` / `resume_json` / `started_at` / `finished_at` + `createdAt`/`updatedAt`） | **登记为「需要扩真源」**，划入 D3 边界，不在步 1/2 假装它存在 |
+| `updatedAt`（排序键） | ✓ 存在（`timestamps: true`，且 `claimNext` 的 `order` 已消费） | 直接复用 |
+| 索引 | ✓ `user_id` / `workflow_id` / `status` | 加 `priority` 需**同步加复合索引** `[status, priority, updated_at]`，否则排序退化为全表扫 |
+| 状态枚举 | ✓ `queued \| running \| awaiting_input \| succeeded \| failed`（`:47`） | ⚠ 注意**无 `paused`**：quantum 让出时写回的是 `queued`（`workflowRunWorker.js:227`） |
 
 ### 2.2 canonical 图（真源 `nodeCatalog.js` + `flowRegistry.js`）
 
@@ -106,9 +106,9 @@ Summary: 3 error(s), 0 warning(s).
 |---|---|---|
 | 节点形状 | `{ id, type, name?, data }` | 沿用 |
 | 边形状 | `{ from, fromPort, to, toPort }`，端口词汇 `input` / `default` / `branch-true` / `branch-false` / `loop-body` / `loop-done` | 沿用；**新节点类型的端口必须先在 `nodeCatalog` 声明**（`portsFor()` 是校验真源） |
-| 图哈希 | ✅ `flowRegistry.computeGraphHash():62`（`stableStringify` 键排序 + sha256） | **零新实现**，D1 审计直接复用 |
-| 图形状闸 | ✅ `flowRegistry.checkGraphShape():116`（非空 / 唯一 start / 至少一个 end） | 复用为图改写的前置闸 |
-| 版本 | ✅ `_meta.version` / `_meta.previousVersion`（`:263-284`） | 复用 |
+| 图哈希 | ✓ `flowRegistry.computeGraphHash():62`（`stableStringify` 键排序 + sha256） | **零新实现**，D1 审计直接复用 |
+| 图形状闸 | ✓ `flowRegistry.checkGraphShape():116`（非空 / 唯一 start / 至少一个 end） | 复用为图改写的前置闸 |
+| 版本 | ✓ `_meta.version` / `_meta.previousVersion`（`:263-284`） | 复用 |
 
 > ⚠ **命名纪律**：契约层一律沿用真源的 **`snake_case`（DB 列）/ camelCase（JS 对象）原样**，不做转换层 —— 转换层就是第二套字段名。
 
@@ -237,15 +237,15 @@ khy hq next  →  按 type 选模板  →  生成一张图  →  入队 workflow
 
 | # | 铁律 | 判据（可自动判） | 现状 |
 |---|---|---|---|
-| F1 | 目录声明的每个节点类型，执行器必须有 handler | parity 对账（§9 `--scenario=parity`） | ✅ 已可判（探针就绪） |
-| F2 | 未知节点类型必须 **fail-closed**，不得静默 skip | 未知类型图必须抛错 | ✅ 已修（步 3，`default:` → `throw`） |
-| F3 | worker 路径必须校验图 | worker 源含 `getNodeType(` / `assertGraph` | ✅ 已修（步 3，`assertGraphNodeTypes`） |
-| F4 | 图改写必须过 `checkGraphShape` + 端口校验，且**事务性** | 改写前后哈希 + 校验返回码 | ✅ **已实现**（§12.12）：`beforeHash` **可被独立重算**；被拒补丁不落审计且图逐字段不变 |
-| F5 | 图改写必须落 `graphRevisions`，同 revision 序列可重放 | 双跑对比终态 vars 逐字符相等 | ✅ **已实现**（§12.12）：审计随 `log_json` 落盘；双跑哈希序列 + 终态 vars 逐字符相等，含**有牙对照**；⚠ 审计**形状**分歧登记为 §10-Q9 |
-| F6 | 自愈版本必须 `contract` 全绿才算 healed | 契约断言全绿 | ✅ **已实现**（§12.10）：契约未全绿 ⇒ `healRejected`；未声明 `contract` ⇒ `healUnverified`（**不得算 verified**） |
+| F1 | 目录声明的每个节点类型，执行器必须有 handler | parity 对账（§9 `--scenario=parity`） | ✓ 已可判（探针就绪） |
+| F2 | 未知节点类型必须 **fail-closed**，不得静默 skip | 未知类型图必须抛错 | ✓ 已修（步 3，`default:` → `throw`） |
+| F3 | worker 路径必须校验图 | worker 源含 `getNodeType(` / `assertGraph` | ✓ 已修（步 3，`assertGraphNodeTypes`） |
+| F4 | 图改写必须过 `checkGraphShape` + 端口校验，且**事务性** | 改写前后哈希 + 校验返回码 | ✓ **已实现**（§12.12）：`beforeHash` **可被独立重算**；被拒补丁不落审计且图逐字段不变 |
+| F5 | 图改写必须落 `graphRevisions`，同 revision 序列可重放 | 双跑对比终态 vars 逐字符相等 | ✓ **已实现**（§12.12）：审计随 `log_json` 落盘；双跑哈希序列 + 终态 vars 逐字符相等，含**有牙对照**；⚠ 审计**形状**分歧登记为 §10-Q9 |
+| F6 | 自愈版本必须 `contract` 全绿才算 healed | 契约断言全绿 | ✓ **已实现**（§12.10）：契约未全绿 ⇒ `healRejected`；未声明 `contract` ⇒ `healUnverified`（**不得算 verified**） |
 | F7 | `priority` 不得静态写死（必须含老化项） | 反例场景：低优 run 最大等待上界有限 | 待实现（D3） |
-| F8 | 并发度默认 1（零行为变化） | 默认配置下 tick 行为快照与 HEAD 一致 | ✅ 当前即 1 |
-| F9 | **图改写不得引入代码执行**（`graphPatch` 只收数据） | 源码断言：图改写路径无 `new Function` / `eval` | ✅ **已实现**（§12.12）：复用 `stripComments` 的源码断言 + **非平凡闸** + 载荷哨兵对照；⚠ 判定面由 `graphPatch` 的**直接依赖派生**并**自校验**（漏登记即测试变红） |
+| F8 | 并发度默认 1（零行为变化） | 默认配置下 tick 行为快照与 HEAD 一致 | ✓ 当前即 1 |
+| F9 | **图改写不得引入代码执行**（`graphPatch` 只收数据） | 源码断言：图改写路径无 `new Function` / `eval` | ✓ **已实现**（§12.12）：复用 `stripComments` 的源码断言 + **非平凡闸** + 载荷哨兵对照；⚠ 判定面由 `graphPatch` 的**直接依赖派生**并**自校验**（漏登记即测试变红） |
 
 ---
 
@@ -312,10 +312,10 @@ node --test services/backend/tests/workflowExecutor.failClosed.test.js   # 行�
 
 | 场景 | 输入 | 预期 | 实测 |
 |---|---|---|---|
-| 应放行 | 原始仓库 | 0 条 missing | ✅ 0 条 |
-| 应拦 | 注入目录类型 `expand` | 报 `workflow-node-missing-handler` | ✅ 报出（12 vs 11） |
-| 应拦 | 图含未知类型节点 | 不得 `completed` | ✅ 实测 `completed`（**当前 fail-open，正是 F2 要修的**） |
-| 应拦 | 运行期注入节点 | 不得被执行 | ✅ 未执行（证明 G3） |
+| 应放行 | 原始仓库 | 0 条 missing | ✓ 0 条 |
+| 应拦 | 注入目录类型 `expand` | 报 `workflow-node-missing-handler` | ✓ 报出（12 vs 11） |
+| 应拦 | 图含未知类型节点 | 不得 `completed` | ✓ 实测 `completed`（**当前 fail-open，正是 F2 要修的**） |
+| 应拦 | 运行期注入节点 | 不得被执行 | ✓ 未执行（证明 G3） |
 
 > ⚠ 探针位于 `_产物/`（`.gitignore:214` 的 `/_产物/`）⇒ **新克隆的检出里没有它**。它是步 1 的临时证据，步 2 才迁入 `scripts/lib/` 纳入版本控制。
 
@@ -427,7 +427,7 @@ D3（动态调度）与 D5（打通 hq）**未实现**（**D1 运行时自演化
 | `npm run check:rules` | 通过（途中一度红，见下） |
 | `npm run check:gov-rules` / `check:rollout-stage` | 全绿 |
 | `npm run rules:coverage` | 93 条 / 已执行 81（87.1%），无 P0 红线 |
-| `npm run docs:verify` | `✅ 全部通过：每个 md 都有 html，所有本地链接可达，资源齐全。` |
+| `npm run docs:verify` | `✓ 全部通过：每个 md 都有 html，所有本地链接可达，资源齐全。` |
 
 **⚠ 验收途中撞到的一处外部红牌（非本方案引入，已处置）**：
 `check:rules` 曾报 `TOOLING-008`「2 份产物与登记表不一致」—— `[DOCS-003]` 与 `[PROCESS-004]`
@@ -548,8 +548,8 @@ flow，得先加 `primitives.loadFlow`，那是下一步。）
 
 | 场景 | 期望 | 实测 |
 |---|---|---|
-| 有 `disconnect`（addNode + disconnect + connect ×2） | 新节点 `mid` 被执行 | `seen = ['outer', 'inner']`，`vars.inner = 'chat:inner'` ✅ |
-| **无** `disconnect`（同补丁去掉那一行） | 新节点被既有第一条边遮蔽 | `seen = ['outer']`，`vars.inner = undefined` ✅ |
+| 有 `disconnect`（addNode + disconnect + connect ×2） | 新节点 `mid` 被执行 | `seen = ['outer', 'inner']`，`vars.inner = 'chat:inner'` ✓ |
+| **无** `disconnect`（同补丁去掉那一行） | 新节点被既有第一条边遮蔽 | `seen = ['outer']`，`vars.inner = undefined` ✓ |
 
 **没有后者，前者就是恒真断言** —— 因为「补丁被接受」与「节点真的跑了」是两件事，这正是 G3 的形态。
 

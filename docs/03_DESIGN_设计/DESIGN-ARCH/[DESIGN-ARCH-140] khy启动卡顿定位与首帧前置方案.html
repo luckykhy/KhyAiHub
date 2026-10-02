@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -78,13 +78,13 @@ setx KHY_KERNEL_AUTOBUILD <span class="hljs-number">0</span>
 <span class="hljs-built_in">Remove-Item</span> <span class="hljs-literal">-LiteralPath</span> <span class="hljs-string">&quot;D:\Portable\.git&quot;</span> <span class="hljs-literal">-Recurse</span> <span class="hljs-literal">-Force</span>   <span class="hljs-comment"># ← 危险，先确认里面没有你自己的提交</span>
 <span class="hljs-comment">#    或者只关掉这个行为</span>
 setx KHY_AUTO_GIT_INIT off</code></pre>
-<blockquote><p>⚠️ 第 3 步删除 <code>.git</code> 前先确认：那里面是否已经有你自己的提交（<code>git -C D:\Portable log --oneline</code>）。若是 <code>khy</code> 今天 2.67s 时自动建的，删掉无损失。</p></blockquote>
+<blockquote><p>⚠ 第 3 步删除 <code>.git</code> 前先确认：那里面是否已经有你自己的提交（<code>git -C D:\Portable log --oneline</code>）。若是 <code>khy</code> 今天 2.67s 时自动建的，删掉无损失。</p></blockquote>
 <hr>
 <h2 id="5-诚实边界">5. 诚实边界<a class="anchor" href="#5-诚实边界" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>边界</th><th>说明</th></tr></thead><tbody><tr><td><strong>26 秒 vs 5.8 秒的差距不能全归因于 git</strong></td><td>无 git 对照跑里，git 检测失败只是其中一项；<code>replSession</code> 的其余预热（任务清理/checklist/源码自愈/onboarding/skill sync）同样在链尾且无独立计时。P0 落地后它们会各自变成一拍，那时才有分项数据</td></tr><tr><td><strong>便携盘冷读未建模</strong></td><td>本机 <code>D:\Portable</code> 是便携盘；本提案的所有实测都在<strong>暖缓存</strong>下完成。用户报「卡住」的那次很可能是冷启动，耗时可能是本表的 2-5 倍。这只能靠 P0（先给动画）缓解，不能靠优化消除</td></tr><tr><td><strong><code>reg.exe</code> 出现在链上</strong></td><td>沙箱把 <code>reg.exe</code> 拦了（安全策略），两次 PTY 跑都在收尾阶段被拦。它属于哪个环节、耗时多少，本提案给不出数（待核实 3）</td></tr><tr><td><strong>没有实测用户那次卡死的完整时长</strong></td><td>截图只有「登录 shelltest」一行，与实测的静默窗口一致，但无法反推那次到底等了多久</td></tr><tr><td><strong>不新增 env</strong></td><td>所有开关用可选参数与既有 <code>KHY_*</code>（<code>KHY_BOOT_SCREEN</code>/<code>KHY_AUTO_GIT_INIT</code>/<code>KHY_KERNEL_AUTOBUILD</code> 已存在）；<code>check:tui-gates</code> 实测 226 &gt; 上限 220，禁止净增</td></tr></tbody></table>
 <hr>
 <h2 id="6-反模式-这条路别走">6. 反模式（这条路别走）<a class="anchor" href="#6-反模式-这条路别走" aria-label="锚点">#</a></h2>
-<ol><li>❌ <strong>用 spinner/进度条把 5.8 秒「装」得没那么久</strong>。<code>bootPhaseLine</code> 已经是瞬时行，它的问题不是不好看，而是<strong>会被任何输出擦掉</strong>（<code>bootPhaseLine.js:108-178</code> 的让位机制）—— 用户看到的正是「擦掉之后的长静默」。治本是把首帧提前，不是美化等待。</li><li>❌ <strong>为了动画提前而把 BootScreen 做成独立 React 根 / alt-screen</strong>。违反 <code>[DESIGN-ARCH-102]</code> P1（Gemini CLI 上线 alt-mode 一周内回滚的前车之鉴）与 P8「一条路径胜过两条」—— P0 的挂载提前复用<strong>同一个</strong> App 树与节拍真源，不开第三条根路径。</li><li>❌ <strong>把 <code>setup()</code> 当优化重点</strong>。<code>khy.js:1957-1960</code> 的注释说它 5s，实测 9ms —— 注释驱动优化会浪费一轮。优化前先跑 <code>STARTUP_PROFILE=1</code> 看真数。</li><li>❌ <strong>给 gateway 加重试次数/超时上限来「修」8 秒</strong>。它是<strong>看门狗</strong>（降级而非完成，<code>[DESIGN-ARCH-115]</code> 规则 3：超时只用于降级）；正确做法是缩短降级阈值 + 后台重试，绝不能让它变成「等满 8 秒才算就绪」。</li><li>❌ <strong>在 git 检测里加更多候选路径</strong>。E3 的病根是<strong>逐路径串行 spawn</strong>，加候选只会更慢；正确方向是「一次定案 + 缓存 + 失败早退」。</li><li>❌ <strong>用 <code>-n</code> 之类的新 env 开关做本次回滚</strong>。门预算棘轮 226/220 已 FAIL；回滚靠 <code>KHY_BOOT_SCREEN=0</code>（已存在）与 git revert。</li></ol>
+<ol><li>✗ <strong>用 spinner/进度条把 5.8 秒「装」得没那么久</strong>。<code>bootPhaseLine</code> 已经是瞬时行，它的问题不是不好看，而是<strong>会被任何输出擦掉</strong>（<code>bootPhaseLine.js:108-178</code> 的让位机制）—— 用户看到的正是「擦掉之后的长静默」。治本是把首帧提前，不是美化等待。</li><li>✗ <strong>为了动画提前而把 BootScreen 做成独立 React 根 / alt-screen</strong>。违反 <code>[DESIGN-ARCH-102]</code> P1（Gemini CLI 上线 alt-mode 一周内回滚的前车之鉴）与 P8「一条路径胜过两条」—— P0 的挂载提前复用<strong>同一个</strong> App 树与节拍真源，不开第三条根路径。</li><li>✗ <strong>把 <code>setup()</code> 当优化重点</strong>。<code>khy.js:1957-1960</code> 的注释说它 5s，实测 9ms —— 注释驱动优化会浪费一轮。优化前先跑 <code>STARTUP_PROFILE=1</code> 看真数。</li><li>✗ <strong>给 gateway 加重试次数/超时上限来「修」8 秒</strong>。它是<strong>看门狗</strong>（降级而非完成，<code>[DESIGN-ARCH-115]</code> 规则 3：超时只用于降级）；正确做法是缩短降级阈值 + 后台重试，绝不能让它变成「等满 8 秒才算就绪」。</li><li>✗ <strong>在 git 检测里加更多候选路径</strong>。E3 的病根是<strong>逐路径串行 spawn</strong>，加候选只会更慢；正确方向是「一次定案 + 缓存 + 失败早退」。</li><li>✗ <strong>用 <code>-n</code> 之类的新 env 开关做本次回滚</strong>。门预算棘轮 226/220 已 FAIL；回滚靠 <code>KHY_BOOT_SCREEN=0</code>（已存在）与 git revert。</li></ol>
 <hr>
 <h2 id="7-验收-可机器验证">7. 验收（可机器验证）<a class="anchor" href="#7-验收-可机器验证" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>#</th><th>判据</th><th>怎么测</th></tr></thead><tbody><tr><td>1</td><td>回车 → BootScreen 首帧字节 <strong>≤ 1.5s</strong>（有 git、暖缓存）</td><td>node-pty 时间戳探针（本提案的 <code>pty_probe.js</code> 手法）</td></tr><tr><td>2</td><td>动画期每一拍都有真实工作，无时长驱动空壳拍</td><td>扩 <code>startupBeatsWiring.test.js</code>：禁止 <code>setTimeout(*, N)</code> 触发 <code>beats.done</code></td></tr><tr><td>3</td><td>gateway 降级后恢复<strong>不重印横幅</strong>、不抖动</td><td>H2 门（零 <code>ESC[2J</code>）+ P2 判据（A 区字节计数不变）</td></tr><tr><td>4</td><td>git 缺失时启动时间与有 git 时差值 <strong>≤ 1s</strong></td><td>两次 PTY 对照</td></tr><tr><td>5</td><td>零新增 <code>KHY_*</code></td><td><code>node scripts/ci/check-tui-gates.js</code> 计数仍为 226</td></tr><tr><td>6</td><td>既有启动套件零回归</td><td><code>node --test services/backend/tests/cli/startupBeats.test.js tests/cli/tui/startupBeatsWiring.test.js</code> = 17 + 8 全绿</td></tr></tbody></table>
