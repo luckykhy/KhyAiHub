@@ -4986,7 +4986,7 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 |---|---|---|
 | W1 `.git-blame-ignore-revs` 退役 | ✅ `608eb6bb` | 根 61→60 |
 | W10a `.mailmap`→`docs/.mailmap` + `mailmap.file` config（install-hooks.sh 落盘 per-machine） | ✅ 本批 | 根 60→59（本道净贡献） |
-| **D-4 工具位退役批**（`.claude`/`.cursor`/`.opencode`/`.zcode`/`.commandcode`/`.clinerules` + `CLAUDE.md` 并入） | 部分 ✅ 1/7 | `.claude` 已下线 → 根 79→78（架构可见 58→57）。其余 6 部位：2 个 ⛔ 规则 7 `delete-documented-code`（运行时真加载 + 背书文档在飞）、3 个 ⛔ 在飞（`.opencode` 1 / `.zcode` 21 / `CLAUDE.md` 1）、1 个 ⏸ 待人确认（`.commandcode` 未跟踪活配置，git 无法 revert）。存证 `.khy/feedback/d4-retire-20261002/` |
+| **D-4 工具位退役批**（`.claude`/`.cursor`/`.opencode`/`.zcode`/`.commandcode`/`.clinerules` + `CLAUDE.md` 并入） | 部分 ✅ 1/7 | `.claude` 已下线 → 根 79→78（架构可见 58→57）。其余 6 部位：`.cursor`/`.clinerules` 由用户 06:3x **裁决圈留**（继续支持 Cline/Cursor 生态，见 §17.2，不再是待办）；`.opencode` 1 件在飞、`.zcode` 21 件在飞、`CLAUDE.md` 本体在飞；`.commandcode` 待用户据 §17.1 取证决定。存证 `.khy/feedback/d4-retire-20261002/` |
 | W2 余量（CONTRIBUTING/SECURITY/CHANGELOG/.env.example） | ⛔ 门控（第 2 节收窄，见新事实 D） | `CONTRIBUTING.md`/`SECURITY.md` 半批的**真闸收窄为一条**：`check-repo-layout.js:143–149` 的根文档白名单数组（含 `CHANGELOG.md`/`CONTRIBUTING.md`/`SECURITY.md`）在飞——`check-commit-message.js:59` 只是报错文案、非路径消费，`CODEOWNERS:96` 干净可随批改。`SECURITY.md` 仍有 8 个在飞消费方（含落点真源 `DATA-LOCATIONS.json`）；`CHANGELOG.md` **本体即 ` M`** 且消费方含 `AGENTS.md`、`.ai/hq/ROADMAP.md`；`.env.example` 消费方 12+ 在飞（`.ai/**`、`pip_packaging_rules.py`、`handlers/publish.js`、`RULES-REGISTRY.json`） |
 | W3 `.gitattributes`/`.editorconfig` 分域 | ⛔ 前置未备 | 五域目录尚未创建（§16.2 的「五域各一份」依赖 P1–P5）；且根位 `.gitattributes` 一旦拆散，**仍留在根的全部跟踪文件将失去行尾/合并规则覆盖**——只能与域目录创建同批做，不可单独提前 |
 | W4 pyproject/MANIFEST→`delivery/channel/pip/` | ⛔ 门控 | 本体 `pyproject.toml` 为 ` M`（R3 版本锚 9 真源之一，本体在飞即不可动）；且 `delivery/` 尚不存在。**第 4 节精化**：真编辑面远大于「改指三处」——77 个路径消费方（63 干净 / 14 在飞），须拆 ≥4 提交，见新事实 H |
@@ -5222,8 +5222,86 @@ Qoder 定时任务 `每夜 5-3-1 目录整理（方案 P 施工节）`（id `937
 第三方工具位未经点名不删、百度 cfg 在制品不碰、无未门控批次则记账收口不硬造工作。
 晨审看 §16.6 的逐节台账与 root census 曲线（当前 59 → 终局 D-4 档 7）。
 
+## §17 531 结构树 · 重绘版（2026-10-02 用户圈留 Cline/Cursor 后，待点头）
+
+> 用户 2026-10-02 06:3x 两条指令：①「**需要继续支持 Cline / Cursor 两个生态的指令文件**」；
+> ②「`.commandcode` 还用不用取决于它是做什么的」→ 已取证，见 17.1；③「重新绘制一个 531 结构树，
+> 我点头后继续」。本节即该图。**未获点头前零施工。**
+> 守恒输入：`.khyos/tmp/tree-531.js` 对当前根 78 项逐名分类，**未分类 = 0**（脚本输出为准）。
+
+### 17.1 `.commandcode` 是什么（回答你的②）
+
+它是 **CommandCode 这个 CLI 智能体的项目目录**（与 `.claude/` 同性质），里面只有两样东西：
+
+| 文件 | 时间 | 实质 |
+|---|---|---|
+| `settings.json`（874 B） | 08-28 | 权限白名单，全部是 `apps/khy-mobile` 的 android/dist 构建探测命令——即当初做手机端 APK 时攒的授权 |
+| `taste/taste.md`（**44 KB**）+ `.bak`(43.9 KB) + `workflow/` + html 孪生 | 09-13 | **不是配置，是一份「你的工作偏好画像」**：逐条记着「每个入口必须可单独调用，隐藏状态依赖算 bug」「工程红线不得重新推导」「破坏性操作先归档再清、dry-run 为默认」「脚本零外部依赖、路径不得硬编码仓库根」「借鉴外部项目先读 README 再提方案」「规范总纲与分册是成对交付物」……每条带置信度 |
+
+关键事实：**整个目录未被 git 跟踪**（`.gitignore` 命中），所以它只存在于这台机器，
+删掉**没有任何 git 恢复路径**，而 `git revert` 对它天然无效。⇒ 我的建议不是「删/不删」，而是：
+**先把 `taste.md` 收编进仓库**（它是有价值的人类偏好记录，位置建议 `works/record/` 或我的记忆库），
+**再决定目录去留**。这一步需要你点头选收编位置，本道不擅自搬。
+
+### 17.2 裁决记录（人 2026-10-02 明示，AI 不代裁）
+
+- `.clinerules`、`.cursor/rules/*` → **圈留**（继续支持 Cline / Cursor 生态指令文件）。
+  这两件本就是 `instructionFileService.discoverEcosystemInstructionFiles()` 的加载对象，
+  且 `[DESIGN-DOC-002]` / 规则卡 `[DOCS-003]` 有背书——**圈留与运行时事实一致，无需改文档**。
+- `.claude/` → 已于 06:0x 节下线（空目录、0 跟踪件、无 worktree 挂载）。
+- 本条裁决的连带后果见 17.4：**§15 的「终局 7」作废**。
+
+### 17.3 重绘的终态树（第二层轴沿用 §15.2 / §16.1，未变；变的是根宽口径）
+
+```text
+khy-os/                                    ← 终态可见根 = 10（本档，圈留 2 工具位）
+├── runtime/                    D1（第二层 5 项 ≤7 ✓）
+│   ├── substrate/  boot/  node/  ai-backend/  bin/
+│   └── .portable
+├── business/                   D2（第二层 7 上下文族 ≤7 ✓，第三层 31 单元整族平移）
+│   ├── dialogue/ intelligence/ tooling/ data/ project/ platform/ guard/
+├── delivery/                   D4（第二层 6 项 ≤7 ✓）
+│   ├── web/ desktop/ mobile/ extension/ artifact/ channel/
+├── works/                      D5（第二层 7 项 ≤7 ✓）
+│   ├── build/ verify/ record/ ship/ quarantine/ data/ archive/
+│   │        ↑ .ai→record/ai/ 与 .khy/.khyos/.workbuddy*→data/ 的落点（W9）
+├── .github/                    平台契约（不可动）
+├── .gitignore                  契约（若走 .git/info/exclude 可再 −1，代价：多机断同步）
+├── README.md  AGENTS.md        人读面 / 智能体根读取位
+├── .npmrc  package.json  pnpm-lock.yaml  pnpm-workspace.yaml  node_modules/
+│                               ↑ 这 5 项只有在 W7（工作区根下沉 runtime/）做完后才出根；
+│                                 W7 未做 → 根 = 15；W7 做完 → 根 = 10
+├── .cursor/                    圈留（用户 2026-10-02）
+└── .clinerules                 圈留（用户 2026-10-02，根级文件非目录）
+```
+
+### 17.4 可达读数阶梯（这是本次重绘真正要给你的东西）
+
+| 档 | 前置条件 | 资源管理器可见根数 |
+|---|---|---|
+| 现状（今夜 06:3x） | — | **57**（78 项 − `.git` − 20 个网盘在制件 − 已退役的 `.claude`） |
+| W 批全做完，**不做** W7 | 2895 件积压收口 | **15** |
+| W 批全做完 + W7 工作区根下沉 | 上一条 + 一个独占冻结窗 | **10** ← **圈留 Cline/Cursor 下的现实终局** |
+| 同上 + 待裁 6 项全出根 + 零工具位 | 需你逐个点名退役（`.opencode`/`.zcode`/`.commandcode`/`CLAUDE.md`/`electron`/`khy-Trajectory`） | **8** |
+| 同上 + `.gitignore` 走 exclude | 接受多机断同步风险 | **7** |
+
+**结论必须直说**：你 17.2 那条圈留，把可达终局从 §15 承诺的 **7 抬到 10**。
+原因不在架构、在算术——`4 个域目录 + 4 项不可动契约（.github/README/AGENTS/.gitignore）= 8`
+已经是零工具位的地板（§14.5「不可解证明」就是这个），圈留 2 件即 +2。
+**5-3-1 的 §1「每层 ≤7」在架构层仍然字面成立**（四域第二层分别 5/7/6/7，见上图），
+不再成立的是「根 ≤7」这个视觉目标——它现在依赖的不再是施工，而是你用不用那些工具。
+
+### 17.5 待你点头的四条（点完我才动）
+
+1. **终局档选哪一档**：10（圈留优先）/ 8（退役待裁项）/ 7（连 `.gitignore` 也下沉）。
+2. **`taste.md` 收编位置**：`works/record/` 入仓？还是并入我的记忆库？还是原地不动（则 `.commandcode` 必须留）。
+3. **W7 是否排期**：不做 W7，根最多到 15；做才有 10。它是全案最重的一刀（298 脚本 + hooks + CI + autopull + nightly 全链 `pnpm -C runtime`），需独占冻结窗。
+4. **`.opencode` / `.zcode` / `CLAUDE.md` / `electron` / `khy-Trajectory`** 各自留或退——其中 `.zcode` 有 21 件在飞、`CLAUDE.md` 本体在飞，点名后也要等收口。
+
+
 ## 关联
 
+- 本篇 §17 = 用户圈留 Cline/Cursor 后重绘的终态树与可达阶梯；§15/§16 的「终局 7」已被 §17.4 作废，读时以 §17 为准。
 - 设计真源：`[DESIGN-LAY-005]`（层）、`[DESIGN-LAY-006]`（可发现性）、`[DESIGN-LAY-007]`（三态 × 五轴，**本篇的上位**）、`[DESIGN-LAY-003]`（回收通道）、`[DESIGN-LAY-004]`（产物单一根）
 - 代码级迁移路线与判据：`[RESEARCH-018] 5-3-1架构符合性调研与迁移设计`（§12 台账的对象）；五域边界与依赖方向真源：`docs/10_规范/registry/DOMAIN-DEPS.json`
 - 入口矩阵：`[DESIGN-ARCH-117]`；落地阶段约束：`[DESIGN-PROCESS-002]`（S1–S4，规则 8）
