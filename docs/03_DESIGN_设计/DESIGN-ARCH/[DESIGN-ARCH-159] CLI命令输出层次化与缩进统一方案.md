@@ -196,7 +196,7 @@ omitEmpty(rows, predicate)                     // → rows | []
 
 ## 6. 反模式（这条路别走）
 
-| ❌ 别做 | 为什么 |
+| ✗ 别做 | 为什么 |
 |---|---|
 | 造「输出 DSL / 模板引擎」 | 五原语覆盖全部实测病灶；YAGNI——病灶清单里没有一个需要嵌套模板才表达得了 |
 | 让 `outputBlock.js` 自己 `console.log` | 纯叶子才可测（check-leaf-contract 拦截）；打印权在调用方意味着快照测试可以纯字符串断言 |

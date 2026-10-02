@@ -154,7 +154,7 @@ khy ai "Hello" --adapter=newapi
 
 | Phase | 内容 | 前置 | 交付判据 |
 |-------|------|------|---------|
-| **P1 CPA 核心模块** | `cpaService` + `cpaWriter` + `cpaAdapter` + `APPS.CPA` 注册 + 3 组测试 | provider-hub 已完成（✅ 2026-09-11） | 单测全绿；`khy cpa status` 可用；cpa 适配器在 aiGateway 可出局 |
+| **P1 CPA 核心模块** | `cpaService` + `cpaWriter` + `cpaAdapter` + `APPS.CPA` 注册 + 3 组测试 | provider-hub 已完成（✓ 2026-09-11） | 单测全绿；`khy cpa status` 可用；cpa 适配器在 aiGateway 可出局 |
 | **P2 New API 核心模块** | `newApiService` + `newApiWriter` + `newApiAdapter` + `newApiSync` + `APPS.NEWAPI` 注册 + 4 组测试 | P1（复用运行时文件范式） | 单测全绿；`khy newapi token/sync` 可用；客户对账 4 象限通过 |
 | **P3 Agent 注册与配置分发** | `agentLauncherRegistry` 目标集 × newapi/cpa 端点分发（env 注入走 `gatewayEnvFile`；工具写入复用 appWriters）+ provider-hub 工具矩阵扩 2 | P2 | 至少 claude-code/opencode/zcode 三个 agent 端点指向 New API 卡；漂移可检测 |
 | **P4 集成层与路由** | aiGateway 18/19 插入 + CLI 命令簇 + 别名 + keySelector fill-first 声明 + 端到端验收脚本 | P3 | `khy ai "test" --adapter=newapi` 走通治理路径（New API 有扣费记录）；守卫全绿 |

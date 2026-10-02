@@ -39,7 +39,7 @@
 | Z1 | 结果量另起一行：头行 `✓ 读取(x.js) (0.2s)`、第二行 `⎿ 已读取 x.js（340 行）` | `tui/ink-components/ToolLines.js:1173-1191`（头行）、`:1324-1330`（`⎿` 行） | 常见路径 2 行/工具，垂直空间翻倍；「多大」不在头行 |
 | Z2 | 经典 REPL 的工具进度/完成标签是**英文字面量**（`Reading file` / `Ran command` / `Explored`） | `cli/repl/displayFormatters.js:133-237`，消费点 `cli/replSession.js:9369,9440,11746,11924` | 中文界面里冒出英文短语，与仓库「面向用户字符串用中文」策略冲突，也与 TUI 中文动词不同源 |
 | Z3 | 桌面卡片只有状态词、没有动作句：`● {原始工具名}` + `运行中/完成/失败`，`ToolExecution` 丢弃 `elapsed` | `renderer/components/message/MessageBubble.tsx:199-236`；`renderer/state/toolExecutionSlice.ts`；`host/index.ts:430-441` | 违反 `RUNTIME-002`（状态须含动作+目标+进度）：用户不知道**对什么**动手、**多大**、**多久** |
-| Z4 | 桌面状态字形用 emoji（`⏳⚡✅❌`） | `MessageBubble.tsx:203-206` | 宽度不定、跨平台字形不同、纯文本粘贴不成句——阻断「一行跨端同形」 |
+| Z4 | 桌面状态字形用 emoji（`…✱✓✗`） | `MessageBubble.tsx:203-206` | 宽度不定、跨平台字形不同、纯文本粘贴不成句——阻断「一行跨端同形」 |
 | Z5 | 网页端工具名是原始 id（`grep`/`read`），不是中文动词；进度行是 `工具 2/3 · 1 进行中 · 1 失败` 这类计数句 | `apps/ai-frontend/src/views/AIChat.vue`（step 行）、`views/aiChatEventUtils.js:249-272` | 同一调用在 TUI 说「搜索」、在网页说「grep」，用户每次重新学 |
 | Z6 | 网页端结果量在 240 字处**硬截断**（非折叠） | `services/aiManagementChatHttp.js:211` | 信息被砍掉而非收进详情；超长结果永远看不全 |
 | Z7 | 仓内已有**四张**互不引用的工具名/动词表 | `renderTheme.js:211-238`（显示名）、`repl/statusLiveActivity.js`（中文动词）、`tui/ink-components/ProcessGroup.js`（动作类别）、`tui/utils/ccToolFormat.js`（参数摘要） | 任何新端都要第五次抄表，漂移源 |

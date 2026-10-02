@@ -158,7 +158,7 @@ _feedContextWindowCacheFromFreeCatalog(rows)
 
 ## 6. 反模式（这条路别走）
 
-| ❌ 别做 | 为什么 |
+| ✗ 别做 | 为什么 |
 |---|---|
 | 前端自己再拉一份 models.dev | `dynamicFreeModelService` 与网关**已经**各拉一次同一批上游（Z2 正是双管道的产物）；Web 端必须消费后端缓存（`handleAiContextStats` 已如此），再造第三条管道 = 债复发 |
 | 全目录批量灌入 `_contextWindowCache` | 跨池同名模型（如 `deepseek-v4-flash` 在 zen 与官方池同 id 不同窗）会互相覆盖；只按「本轮 rows 的 bareId 精确反查」才能保证 key 语义正确 |

@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -75,7 +75,7 @@
 <ul><li><code>customerRegistry</code> 数据结构（只读对账，不为其加 New API 字段——映射存 <code>newApiSync</code> 自己的 <code>dataHome/newapi_sync.json</code> 台账）</li><li><code>providerPresets.js</code>（本地网关不入公共预设目录）</li><li>CPA / New API 上游项目本体（仅 config/REST 集成，<strong>不 fork 其代码</strong>——AGPL 边界）</li></ul>
 <hr>
 <h2 id="4-实施顺序">4. 实施顺序<a class="anchor" href="#4-实施顺序" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>Phase</th><th>内容</th><th>前置</th><th>交付判据</th></tr></thead><tbody><tr><td><strong>P1 CPA 核心模块</strong></td><td><code>cpaService</code> + <code>cpaWriter</code> + <code>cpaAdapter</code> + <code>APPS.CPA</code> 注册 + 3 组测试</td><td>provider-hub 已完成（✅ 2026-09-11）</td><td>单测全绿；<code>khy cpa status</code> 可用；cpa 适配器在 aiGateway 可出局</td></tr><tr><td><strong>P2 New API 核心模块</strong></td><td><code>newApiService</code> + <code>newApiWriter</code> + <code>newApiAdapter</code> + <code>newApiSync</code> + <code>APPS.NEWAPI</code> 注册 + 4 组测试</td><td>P1（复用运行时文件范式）</td><td>单测全绿；<code>khy newapi token/sync</code> 可用；客户对账 4 象限通过</td></tr><tr><td><strong>P3 Agent 注册与配置分发</strong></td><td><code>agentLauncherRegistry</code> 目标集 × newapi/cpa 端点分发（env 注入走 <code>gatewayEnvFile</code>；工具写入复用 appWriters）+ provider-hub 工具矩阵扩 2</td><td>P2</td><td>至少 claude-code/opencode/zcode 三个 agent 端点指向 New API 卡；漂移可检测</td></tr><tr><td><strong>P4 集成层与路由</strong></td><td>aiGateway 18/19 插入 + CLI 命令簇 + 别名 + keySelector fill-first 声明 + 端到端验收脚本</td><td>P3</td><td><code>khy ai &quot;test&quot; --adapter=newapi</code> 走通治理路径（New API 有扣费记录）；守卫全绿</td></tr></tbody></table>
+<table><thead><tr><th>Phase</th><th>内容</th><th>前置</th><th>交付判据</th></tr></thead><tbody><tr><td><strong>P1 CPA 核心模块</strong></td><td><code>cpaService</code> + <code>cpaWriter</code> + <code>cpaAdapter</code> + <code>APPS.CPA</code> 注册 + 3 组测试</td><td>provider-hub 已完成（✓ 2026-09-11）</td><td>单测全绿；<code>khy cpa status</code> 可用；cpa 适配器在 aiGateway 可出局</td></tr><tr><td><strong>P2 New API 核心模块</strong></td><td><code>newApiService</code> + <code>newApiWriter</code> + <code>newApiAdapter</code> + <code>newApiSync</code> + <code>APPS.NEWAPI</code> 注册 + 4 组测试</td><td>P1（复用运行时文件范式）</td><td>单测全绿；<code>khy newapi token/sync</code> 可用；客户对账 4 象限通过</td></tr><tr><td><strong>P3 Agent 注册与配置分发</strong></td><td><code>agentLauncherRegistry</code> 目标集 × newapi/cpa 端点分发（env 注入走 <code>gatewayEnvFile</code>；工具写入复用 appWriters）+ provider-hub 工具矩阵扩 2</td><td>P2</td><td>至少 claude-code/opencode/zcode 三个 agent 端点指向 New API 卡；漂移可检测</td></tr><tr><td><strong>P4 集成层与路由</strong></td><td>aiGateway 18/19 插入 + CLI 命令簇 + 别名 + keySelector fill-first 声明 + 端到端验收脚本</td><td>P3</td><td><code>khy ai &quot;test&quot; --adapter=newapi</code> 走通治理路径（New API 有扣费记录）；守卫全绿</td></tr></tbody></table>
 <p>依赖关系：<code>P1 ∥ P2</code>（模块互不依赖，可并行；P2 的 newApiSync 依赖 customerRegistry 既有能力）；<code>P3</code> 需 P1+P2；<code>P4</code> 需全部。</p>
 <hr>
 <h2 id="5-验收标准">5. 验收标准<a class="anchor" href="#5-验收标准" aria-label="锚点">#</a></h2>

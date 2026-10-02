@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -39,7 +39,7 @@
 <ol><li><strong>现在的替代做法是什么？</strong> —— 用户手工把指南 §2.2.1 的模板（图片说明 + 内容转录 +</li></ol>
 <p>补充上下文）复制粘贴进输入框。这证明自动化必要性：指南第七章 Checklist 的 10 项<br>   全靠人肉执行。（source: 指南「策略二：结构化描述——这是最关键的策略」）</p>
 <ol><li><strong>成功长什么样？</strong> —— 命令 + 期望输出，见 §7 验收判据 A1–A5。核心一条：</li></ol>
-<p>发一张报错截图且不带任何文字，助手消息前自动出现「📇 图片说明书（OCR 转录 + 场景判定 +<br>   待确认项）」，且 OCR 转录文本可被用户直接编辑修正后再发送。</p>
+<p>发一张报错截图且不带任何文字，助手消息前自动出现「图片说明书（OCR 转录 + 场景判定 +<br>   待确认项）」，且 OCR 转录文本可被用户直接编辑修正后再发送。</p>
 <ol><li><strong>不做会怎样？</strong> —— 指南 §1.1 的五类失准场景（颜色偏差 / OCR 错字 / 堆栈截断 /</li></ol>
 <p>箭头方向搞反 / 手写批注漏识）继续由用户独自承担；重复发图得到重复错误<br>   （指南误区四），会话一续聊图片上下文即丢失。</p>
 <h2 id="2-现状盘点-证据链-均为已核实-file-line">2. 现状盘点（证据链，均为已核实 file:line）<a class="anchor" href="#2-现状盘点-证据链-均为已核实-file-line" aria-label="锚点">#</a></h2>
@@ -150,7 +150,7 @@
 <p><strong>D8.3 跨通道等值验收（机器可判）</strong>：同一贴图 + 同一文本分别从 TUI / 网页 / 桌面发送，<br>断言模型收到的【附件对照】表与卡结构逐字段一致（编号、来源形态、溢出诚实行）；<br>单测层面可在 node:test 用三通道 payload 构造 → 同一 <code>buildContextCard</code> 输出比对。</p>
 <p>验收判据：网页粘贴截图 + 打「这图里报错怎么修」→ chip 出现、发送后卡与 TUI 同形；<br><code>localStorage['khy.webPasteAttachment']='0'</code> → 行为与修复前逐字节一致（粘贴即忽略）。</p>
 <h3 id="d9-网页面已实施-2026-09-27-tui-桌面维持现状降级-附件在输入区与输出区的渲染与回显契约">D9（网页面已实施 2026-09-27；TUI/桌面维持现状降级）附件在输入区与输出区的渲染与回显契约<a class="anchor" href="#d9-网页面已实施-2026-09-27-tui-桌面维持现状降级-附件在输入区与输出区的渲染与回显契约" aria-label="锚点">#</a></h3>
-<p>D8 钉的是「怎么进来」；D9 钉「进来之后用户看得见什么」。现状实测（2026-09-27，<br>只读勘察）：网页输入区是图标+名字+大小 chip（AIChat.vue:634-658），<strong>无任何缩略图</strong>；<br>发送后气泡里 chip 是 <code>&lt;a target=_blank href=/api/ai/upload/:id&gt;</code>（:564-580）；TUI 发送后<br>只有计数角标 <code>📎×N</code>（Transcript.js:315 / transcriptLines.js:270-271）；说明书只注入<br>网关 prompt、任何界面都不回显（aiGatewayGenerateMethod.js:923-927）。</p>
+<p>D8 钉的是「怎么进来」；D9 钉「进来之后用户看得见什么」。现状实测（2026-09-27，<br>只读勘察）：网页输入区是图标+名字+大小 chip（AIChat.vue:634-658），<strong>无任何缩略图</strong>；<br>发送后气泡里 chip 是 <code>&lt;a target=_blank href=/api/ai/upload/:id&gt;</code>（:564-580）；TUI 发送后<br>只有计数角标 <code>×N</code>（Transcript.js:315 / transcriptLines.js:270-271）；说明书只注入<br>网关 prompt、任何界面都不回显（aiGatewayGenerateMethod.js:923-927）。</p>
 <p><strong>四条原则</strong>：</p>
 <ul><li><strong>P1 单一真源</strong>：渲染只由上传返回的 descriptor <code>{id,name,kind,mimeType,size,url,extracted,transcript}</code></li></ul>
 <p>（<code>aiUploadStore.toDescriptor</code>）驱动。四通道不许私养第二套附件形状。</p>
@@ -161,7 +161,7 @@
 <ul><li><strong>P4 媒体必须走认证 blob 通道</strong>：<code>GET /api/ai/upload/:id</code> 只认</li></ul>
 <p><code>Authorization: Bearer</code>/<code>X-API-Key</code> 头（aiManagementServer.js:1240-1241），<br>  裸 <code>&lt;img src&gt;</code> 与浏览器导航<strong>必然 401</strong>。缩略图与下载一律<br>  <code>authedFetch → blob → URL.createObjectURL</code>（组件卸载 revoke）。<br>  ⚠ 推论：现有气泡 chip 的 <code>&lt;a target=_blank&gt;</code> 今日疑似点开即 401 JSON——<br>  <strong>属候选缺陷，实施第一步按规则 5 先对活后端复现，再处</strong>（修法二选一：<br>  点击改走 blob 下载，或后端给该 GET 路由接受短时 query token；倾向前者，零新凭据面）。</p>
 <p><strong>输入区（发送前）分型渲染</strong>：</p>
-<table><thead><tr><th>kind</th><th>网页/手机</th><th>TUI/桌面（终端无像素，如实降级）</th></tr></thead><tbody><tr><td>image</td><td>44–72px 缩略图 chip（本地 <code>File</code> → objectURL，零上传依赖）+ × 角标；点按放大</td><td>维持既有 <code>📎 已附加 N 张图片</code>（ChatColumn.js:182）</td></tr><tr><td>document/text/code</td><td>图标+名+大小 + 状态徽标：<code>已提取正文</code>（descriptor.extracted）/ 失败徽标</td><td>路径文本本身即回显（多路模式现状）</td></tr><tr><td>archive/audio/video</td><td>图标+名+大小 + <code>已转写</code>（descriptor.transcript）等徽标</td><td>同上</td></tr><tr><td>上传态</td><td>spinner chip 保留；<strong>失败留痕</strong>：红 chip + 重试/移除（现状失败只 toast 即散，chip 无痕——gap）</td><td>—</td></tr></tbody></table>
+<table><thead><tr><th>kind</th><th>网页/手机</th><th>TUI/桌面（终端无像素，如实降级）</th></tr></thead><tbody><tr><td>image</td><td>44–72px 缩略图 chip（本地 <code>File</code> → objectURL，零上传依赖）+ × 角标；点按放大</td><td>维持既有 <code>已附加 N 张图片</code>（ChatColumn.js:182）</td></tr><tr><td>document/text/code</td><td>图标+名+大小 + 状态徽标：<code>已提取正文</code>（descriptor.extracted）/ 失败徽标</td><td>路径文本本身即回显（多路模式现状）</td></tr><tr><td>archive/audio/video</td><td>图标+名+大小 + <code>已转写</code>（descriptor.transcript）等徽标</td><td>同上</td></tr><tr><td>上传态</td><td>spinner chip 保留；<strong>失败留痕</strong>：红 chip + 重试/移除（现状失败只 toast 即散，chip 无痕——gap）</td><td>—</td></tr></tbody></table>
 <p><strong>输出区（发送后回显）</strong>：</p>
 <ul><li>用户气泡：image → 认证 blob 缩略图行（点按放大）；其余 kind → 与输入区同款 chip</li></ul>
 <p>的快照版。资源 404/410（后端 GC 过期）→ 灰置「附件已不可用」徽标，<strong>不许静默消失</strong>。</p>
@@ -185,7 +185,7 @@
 <ul><li><strong>「模型看到了什么」折叠件按建议默认不做</strong>（说明书不随消息存储，新持久面需单独批准）。</li><li><strong>测试</strong>：<code>utils/attachmentView.test.js</code>（8 用例）+ <code>views/chatAttachments.wiring.test.js</code></li></ul>
 <p>（19 用例，源码级锁 blob 通道、禁裸 <code>:src=&quot;att.url&quot;</code>、门控、revoke/快照净化、<br>  失败留痕双分支）；全量 vitest 589/590（唯一红为 HEAD 既有 W8 棘轮，违规文件均在<br>  <code>src/components/**</code>，与本改动集无关）；vite build 通过；<code>check-agent-rules.js</code><br>  显式路径全绿。</p>
 <ul><li><strong>如实备注</strong>：真实浏览器粘贴→缩略图→刷新回显的手测未在本环境执行（需登录态 UI），</li></ul>
-<p>待用户或 browser-use 验证；TUI/桌面通道按分型表维持既有 <code>📎</code> 计数降级，未改动。</p>
+<p>待用户或 browser-use 验证；TUI/桌面通道按分型表维持既有 `` 计数降级，未改动。</p>
 <h3 id="d4-已实施-2026-09-27-视觉能力登记求真">D4（已实施 2026-09-27）视觉能力登记求真<a class="anchor" href="#d4-已实施-2026-09-27-视觉能力登记求真" aria-label="锚点">#</a></h3>
 <ul><li><code>adapterVisionCapability.js</code> 判定序改为：env 显式覆盖（优先级不变）→ CLI 实例自报 →</li></ul>
 <p><strong>既有探针实测灌入</strong>（<code>visionCapabilityStore.getAdapterVerdict</code> 扫<br>  <code>.khyos/vision_capability.json</code> 未过期条目，adapter 级聚合）→ 内置名单回退。<br>  实测 <code>supported</code> 自动放行；实测 <code>unsupported</code> 可否决内置名单（上游真拒图时剥 OCR<br>  才是真话）；无记录/过 TTL/store 读失败 → 逐字节回退旧判定。</p>

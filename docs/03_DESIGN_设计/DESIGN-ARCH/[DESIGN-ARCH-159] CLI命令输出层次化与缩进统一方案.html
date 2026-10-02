@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -99,7 +99,7 @@
 <table><thead><tr><th>不做什么</th><th>原因</th></tr></thead><tbody><tr><td>不动 TUI ink 渲染族</td><td><code>[DESIGN-ARCH-122]</code>/<code>[152]</code>/<code>[155]</code> 已管辖；TUI 有自己的帧管线契约（156）。混做=回归面不可控</td></tr><tr><td>不重建输出卫生/Markdown 语义渲染</td><td><code>[DESIGN-ARCH-128]</code> 已建（ansiSanitizer/markdownRenderer），本提案只消费</td></tr><tr><td>不强迁全部 90+ handler</td><td>一次大扫除的回归面不可控；期3 渐进 + 守卫防<strong>新增</strong>债务即可</td></tr><tr><td>不做表格型数据的层级化</td><td>表格就是表格（modules 的 cli-table3 是正确用法）</td></tr><tr><td>不加新 env 门</td><td>风格开关复用既有 <code>KHY_TABLE_BORDERS</code>（tableStyle 单一真源）；<code>check-tui-gates.js</code> MAX_GATES=220 只降不升，且「让功能变正确」不构成加门权衡</td></tr><tr><td>不修 <code>hqStore.test.js</code> jest 存量红与 <code>hqReviewGate.test.js</code> 挂起</td><td>与渲染无关的存量债务（2026-09-26 实测：前者 <code>describe is not defined</code> 型 1 fail，后者 240s 超时）；应另立条目，不在本提案混做</td></tr><tr><td>不给 <code>printBanner</code>/启动屏动刀</td><td>已由 <code>[DESIGN-ARCH-134]</code>（启动屏视觉）与 chromeBudget 体系管辖</td></tr></tbody></table>
 <hr>
 <h2 id="6-反模式-这条路别走">6. 反模式（这条路别走）<a class="anchor" href="#6-反模式-这条路别走" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>❌ 别做</th><th>为什么</th></tr></thead><tbody><tr><td>造「输出 DSL / 模板引擎」</td><td>五原语覆盖全部实测病灶；YAGNI——病灶清单里没有一个需要嵌套模板才表达得了</td></tr><tr><td>让 <code>outputBlock.js</code> 自己 <code>console.log</code></td><td>纯叶子才可测（check-leaf-contract 拦截）；打印权在调用方意味着快照测试可以纯字符串断言</td></tr><tr><td>继续在 handler 里 <code>padEnd</code> 中文标签</td><td>code unit ≠ 显示宽度，「看起来对齐」在中文标签上<strong>永远</strong>是错觉（P3 病根；必须走 <code>padToWidth</code>）</td></tr><tr><td>为「统一」把表格命令也改成缩进树</td><td>表格数据的正确形态是表格；层级原语只服务「分组-条目-详情」型数据</td></tr><tr><td>把 markdownRenderer 搬进 handler 修 P7</td><td>insights 的数据是<strong>我们自己的结构化数据</strong>，绕道 markdown 序列化再渲染是两次多余变换；块原语直接组装。只有「真自由文本」才归 markdownRenderer</td></tr><tr><td>一次 PR 迁移几十个命令</td><td>回归面爆炸 + 归因不可能（本仓并行会话常态）；必须小步分批，每批带 before/after 快照</td></tr><tr><td>新增 <code>KHY_OUTPUT_*</code> env 做风格开关</td><td>撞门预算棘轮；且 tableStyle 已是风格单一真源，再开一个门=第二个真源</td></tr></tbody></table>
+<table><thead><tr><th>✗ 别做</th><th>为什么</th></tr></thead><tbody><tr><td>造「输出 DSL / 模板引擎」</td><td>五原语覆盖全部实测病灶；YAGNI——病灶清单里没有一个需要嵌套模板才表达得了</td></tr><tr><td>让 <code>outputBlock.js</code> 自己 <code>console.log</code></td><td>纯叶子才可测（check-leaf-contract 拦截）；打印权在调用方意味着快照测试可以纯字符串断言</td></tr><tr><td>继续在 handler 里 <code>padEnd</code> 中文标签</td><td>code unit ≠ 显示宽度，「看起来对齐」在中文标签上<strong>永远</strong>是错觉（P3 病根；必须走 <code>padToWidth</code>）</td></tr><tr><td>为「统一」把表格命令也改成缩进树</td><td>表格数据的正确形态是表格；层级原语只服务「分组-条目-详情」型数据</td></tr><tr><td>把 markdownRenderer 搬进 handler 修 P7</td><td>insights 的数据是<strong>我们自己的结构化数据</strong>，绕道 markdown 序列化再渲染是两次多余变换；块原语直接组装。只有「真自由文本」才归 markdownRenderer</td></tr><tr><td>一次 PR 迁移几十个命令</td><td>回归面爆炸 + 归因不可能（本仓并行会话常态）；必须小步分批，每批带 before/after 快照</td></tr><tr><td>新增 <code>KHY_OUTPUT_*</code> env 做风格开关</td><td>撞门预算棘轮；且 tableStyle 已是风格单一真源，再开一个门=第二个真源</td></tr></tbody></table>
 <hr>
 <h2 id="7-验收方式-可复现命令-实测基线">7. 验收方式（可复现命令 + 实测基线）<a class="anchor" href="#7-验收方式-可复现命令-实测基线" aria-label="锚点">#</a></h2>
 <h3 id="7-1-期1">7.1 期1<a class="anchor" href="#7-1-期1" aria-label="锚点">#</a></h3>

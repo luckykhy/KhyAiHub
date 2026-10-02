@@ -11,20 +11,20 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
     <div class="content">
       <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>[DESIGN-ARCH-161] 任务执行时延与质量优化方案（对标 ZCode 主循环）</div>
       <header class="hero reveal"><h1>[DESIGN-ARCH-161] 任务执行时延与质量优化方案（对标 ZCode 主循环）</h1></header>
-      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-161-任务执行时延与质量优化方案-对标-zcode-主循环">[DESIGN-ARCH-161] 任务执行时延与质量优化方案（对标 ZCode 主循环）</a></li><li class="lvl-2"><a href="#0-一句话结论">0. 一句话结论</a></li><li class="lvl-3"><a href="#zcode-对照锚点-镜像源码-只读引用">ZCode 对照锚点（镜像源码，只读引用）</a></li><li class="lvl-2"><a href="#1-根因分析">1. 根因分析</a></li><li class="lvl-2"><a href="#2-优化方案分档">2. 优化方案分档</a></li><li class="lvl-3"><a href="#p0-1-prompt-caching-提案-未实施">P0-1 · Prompt caching（提案，未实施）</a></li><li class="lvl-3"><a href="#p0-2-回放账本异步批量写盘-已实施-见-5-1">P0-2 · 回放账本异步批量写盘（✅ 已实施，见 §5.1）</a></li><li class="lvl-3"><a href="#p0-3-网关探活并行化-预取预算收紧-已实施-见-5-2">P0-3 · 网关探活并行化 + 预取预算收紧（✅ 已实施，见 §5.2）</a></li><li class="lvl-3"><a href="#p1-调度与失败路径-提案">P1 · 调度与失败路径（提案）</a></li><li class="lvl-3"><a href="#p2-上下文管线-提案-与-7-收口后合流">P2 · 上下文管线（提案，与 #7 收口后合流）</a></li><li class="lvl-3"><a href="#p3-质量面-提案-按规则-6-先答需求五问">P3 · 质量面（提案，按规则 6 先答需求五问）</a></li><li class="lvl-2"><a href="#3-非目标与边界">3. 非目标与边界</a></li><li class="lvl-2"><a href="#4-验证手段">4. 验证手段</a></li><li class="lvl-2"><a href="#5-实施记录">5. 实施记录</a></li><li class="lvl-3"><a href="#5-1-p0-2-回放账本-2026-09-26">5.1 P0-2 回放账本（2026-09-26）</a></li><li class="lvl-3"><a href="#5-2-p0-3-探活与预取-2026-09-26">5.2 P0-3 探活与预取（2026-09-26）</a></li><li class="lvl-3"><a href="#5-3-p1-1-并发上限与分区-2026-09-26-部分">5.3 P1-1 并发上限与分区（2026-09-26，部分）</a></li><li class="lvl-3"><a href="#5-4-p3-工具结果中段信号抢救-2026-09-26">5.4 P3 工具结果中段信号抢救（2026-09-26）</a></li><li class="lvl-3"><a href="#5-5-p3-q1-模型能力维度-2026-09-26-部分">5.5 P3-Q1 模型能力维度（2026-09-26，部分）</a></li><li class="lvl-3"><a href="#5-6-受阻项登记">5.6 受阻项登记</a></li></ul></nav>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-161-任务执行时延与质量优化方案-对标-zcode-主循环">[DESIGN-ARCH-161] 任务执行时延与质量优化方案（对标 ZCode 主循环）</a></li><li class="lvl-2"><a href="#0-一句话结论">0. 一句话结论</a></li><li class="lvl-3"><a href="#zcode-对照锚点-镜像源码-只读引用">ZCode 对照锚点（镜像源码，只读引用）</a></li><li class="lvl-2"><a href="#1-根因分析">1. 根因分析</a></li><li class="lvl-2"><a href="#2-优化方案分档">2. 优化方案分档</a></li><li class="lvl-3"><a href="#p0-1-prompt-caching-提案-未实施">P0-1 · Prompt caching（提案，未实施）</a></li><li class="lvl-3"><a href="#p0-2-回放账本异步批量写盘-已实施-见-5-1">P0-2 · 回放账本异步批量写盘（✓ 已实施，见 §5.1）</a></li><li class="lvl-3"><a href="#p0-3-网关探活并行化-预取预算收紧-已实施-见-5-2">P0-3 · 网关探活并行化 + 预取预算收紧（✓ 已实施，见 §5.2）</a></li><li class="lvl-3"><a href="#p1-调度与失败路径-提案">P1 · 调度与失败路径（提案）</a></li><li class="lvl-3"><a href="#p2-上下文管线-提案-与-7-收口后合流">P2 · 上下文管线（提案，与 #7 收口后合流）</a></li><li class="lvl-3"><a href="#p3-质量面-提案-按规则-6-先答需求五问">P3 · 质量面（提案，按规则 6 先答需求五问）</a></li><li class="lvl-2"><a href="#3-非目标与边界">3. 非目标与边界</a></li><li class="lvl-2"><a href="#4-验证手段">4. 验证手段</a></li><li class="lvl-2"><a href="#5-实施记录">5. 实施记录</a></li><li class="lvl-3"><a href="#5-1-p0-2-回放账本-2026-09-26">5.1 P0-2 回放账本（2026-09-26）</a></li><li class="lvl-3"><a href="#5-2-p0-3-探活与预取-2026-09-26">5.2 P0-3 探活与预取（2026-09-26）</a></li><li class="lvl-3"><a href="#5-3-p1-1-并发上限与分区-2026-09-26-部分">5.3 P1-1 并发上限与分区（2026-09-26，部分）</a></li><li class="lvl-3"><a href="#5-4-p3-工具结果中段信号抢救-2026-09-26">5.4 P3 工具结果中段信号抢救（2026-09-26）</a></li><li class="lvl-3"><a href="#5-5-p3-q1-模型能力维度-2026-09-26-部分">5.5 P3-Q1 模型能力维度（2026-09-26，部分）</a></li><li class="lvl-3"><a href="#5-6-受阻项登记">5.6 受阻项登记</a></li></ul></nav>
       <article class="doc-body">
 <h1 id="design-arch-161-任务执行时延与质量优化方案-对标-zcode-主循环">[DESIGN-ARCH-161] 任务执行时延与质量优化方案（对标 ZCode 主循环）<a class="anchor" href="#design-arch-161-任务执行时延与质量优化方案-对标-zcode-主循环" aria-label="锚点">#</a></h1>
 <!-- RULES-REGISTRY: RUNTIME-003, PROCESS-008 -->
@@ -41,9 +41,9 @@
 <h2 id="2-优化方案分档">2. 优化方案分档<a class="anchor" href="#2-优化方案分档" aria-label="锚点">#</a></h2>
 <h3 id="p0-1-prompt-caching-提案-未实施">P0-1 · Prompt caching（提案，未实施）<a class="anchor" href="#p0-1-prompt-caching-提案-未实施" aria-label="锚点">#</a></h3>
 <p>把系统提示拆「静态前缀（工具说明、风格规范等）+ 每轮动态尾巴（任务板、MCP 状态、注入指令）」，<br><code>getSystemPrompt</code> 增加分段返回；<code>aiGateway</code> 各适配器按供应商透传缓存语义（Anthropic<br><code>cache_control: ephemeral</code> 打在前缀块；OpenAI 兼容通道天然前缀缓存——只需保证前缀字节稳定）。<br>历史侧按 ZCode 体例在投影层统一打缓存点。<strong>前置</strong>：需先给适配器层加分段 system 能力矩阵，<br>属跨文件改动，且与 #7 重构线相邻，等其收口。</p>
-<h3 id="p0-2-回放账本异步批量写盘-已实施-见-5-1">P0-2 · 回放账本异步批量写盘（✅ 已实施，见 §5.1）<a class="anchor" href="#p0-2-回放账本异步批量写盘-已实施-见-5-1" aria-label="锚点">#</a></h3>
+<h3 id="p0-2-回放账本异步批量写盘-已实施-见-5-1">P0-2 · 回放账本异步批量写盘（✓ 已实施，见 §5.1）<a class="anchor" href="#p0-2-回放账本异步批量写盘-已实施-见-5-1" aria-label="锚点">#</a></h3>
 <p><code>replayLedger.recordToolTurn</code> 的 <code>mkdirSync</code>/<code>appendFileSync</code>（每回合热点）改为<strong>每路径<br>内存行队列 + 去抖异步 flush</strong>；<code>read()</code> 合并未刷队列保证「写后可见」一致性；进程 <code>exit</code><br>兜底同步 drain，<code>exportBundle</code> 入口显式 <code>drainSync()</code>；内容库 blob 写（仅 write-diff 触发、<br>导出语义假设落盘即在）<strong>刻意保持同步</strong>。<code>KHY_REPLAY_LEDGER_SYNC=1</code> 退回同步原行为。</p>
-<h3 id="p0-3-网关探活并行化-预取预算收紧-已实施-见-5-2">P0-3 · 网关探活并行化 + 预取预算收紧（✅ 已实施，见 §5.2）<a class="anchor" href="#p0-3-网关探活并行化-预取预算收紧-已实施-见-5-2" aria-label="锚点">#</a></h3>
+<h3 id="p0-3-网关探活并行化-预取预算收紧-已实施-见-5-2">P0-3 · 网关探活并行化 + 预取预算收紧（✓ 已实施，见 §5.2）<a class="anchor" href="#p0-3-网关探活并行化-预取预算收紧-已实施-见-5-2" aria-label="锚点">#</a></h3>
 <p><code>_preflightGatewayAvailability</code> 的 auto-pick 分支由 <code>for</code> 串行改为并行发射<br>（每探针自带 <code>adapterProbeTimeoutMs</code> 上限）+ 总预算 race；<strong>结果仍按原列表顺序取第一个<br>全绿者</strong>，保持「有序偏好」语义不变。首回合代码库预取默认预算 2000ms → 1200ms。</p>
 <h3 id="p1-调度与失败路径-提案">P1 · 调度与失败路径（提案）<a class="anchor" href="#p1-调度与失败路径-提案" aria-label="锚点">#</a></h3>
 <ol><li><strong>并行退化范围收窄</strong>：<code>toolExecutionEngine.js:143-172</code> 注册表不可用时整批转串行 →</li></ol>

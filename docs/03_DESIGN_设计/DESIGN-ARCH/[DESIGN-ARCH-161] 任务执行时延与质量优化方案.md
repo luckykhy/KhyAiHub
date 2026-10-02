@@ -59,14 +59,14 @@
 历史侧按 ZCode 体例在投影层统一打缓存点。**前置**：需先给适配器层加分段 system 能力矩阵，
 属跨文件改动，且与 #7 重构线相邻，等其收口。
 
-### P0-2 · 回放账本异步批量写盘（✅ 已实施，见 §5.1）
+### P0-2 · 回放账本异步批量写盘（✓ 已实施，见 §5.1）
 
 `replayLedger.recordToolTurn` 的 `mkdirSync`/`appendFileSync`（每回合热点）改为**每路径
 内存行队列 + 去抖异步 flush**；`read()` 合并未刷队列保证「写后可见」一致性；进程 `exit`
 兜底同步 drain，`exportBundle` 入口显式 `drainSync()`；内容库 blob 写（仅 write-diff 触发、
 导出语义假设落盘即在）**刻意保持同步**。`KHY_REPLAY_LEDGER_SYNC=1` 退回同步原行为。
 
-### P0-3 · 网关探活并行化 + 预取预算收紧（✅ 已实施，见 §5.2）
+### P0-3 · 网关探活并行化 + 预取预算收紧（✓ 已实施，见 §5.2）
 
 `_preflightGatewayAvailability` 的 auto-pick 分支由 `for` 串行改为并行发射
 （每探针自带 `adapterProbeTimeoutMs` 上限）+ 总预算 race；**结果仍按原列表顺序取第一个

@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -113,7 +113,7 @@
 <h2 id="5-诚实边界-刻意不纳入-逐条给原因">5. 诚实边界（刻意不纳入，逐条给原因）<a class="anchor" href="#5-诚实边界-刻意不纳入-逐条给原因" aria-label="锚点">#</a></h2>
 <ol><li><strong>不做嵌套惯性</strong>（loop 内再 kick loop）：AgentTool 有嵌套先例（AgentTool/index.js:1258），但授权面交错（内层 deny 谁兜底、预算谁记账）未论证清楚前不碰。</li><li><strong>不做写操作无人值守自动放行</strong>：§3.8.3，治理决策非技术限制。</li><li><strong>不做跨机检查点同步</strong>：boulder 在本机 dataHome；跨机只共享 <code>.ai/hq</code> 条目状态。惯性跑是本机态，强行同步会打破 [DESIGN-LAY-004] 分层。</li><li><strong>不改 toolUseLoopCore</strong>：10k 行内核的 maxIterationsReached / onControlRequest / dedup 语义照旧消费；改内核 = 回滚能力归零。</li><li><strong>不预设「更省 token」结论</strong>：动量衰减理论上省，但 S2 样本说话，本提案只承诺「停机原因可控可解释」。</li><li><strong>不承诺替代 Ralph Loop / GoalTool</strong>：会话内软目标（GoalTool）与任务级硬协议（惯性单）并存，S2 后再评估桥接（Goal 达成即生成惯性单）。</li></ol>
 <h2 id="6-反模式-这条路别走">6. 反模式（这条路别走）<a class="anchor" href="#6-反模式-这条路别走" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>❌ 别做</th><th>为什么</th></tr></thead><tbody><tr><td>在系统提示词里写「请自主持续推进直到完成」就当惯性执行</td><td>那是软目标（GoalTool 已在做）：无机械停机、无审计、无预算——正是 P1 病灶的另一种写法</td></tr><tr><td>惯性单允许放宽预算默认上界</td><td>无人值守下授权面必须只能收紧；可放宽 = 白名单形同虚设</td></tr><tr><td>歧义时让模型「选最可能的」继续</td><td>自动猜 = 把治理决策下放给采样温度；歧义停的唯一出口是把具名选项交还发起方</td></tr><tr><td>用 env 开关做惯性总闸</td><td>撞 MAX_GATES=220 棘轮（只降不升）；且这不是用户可见权衡而是部署策略——走惯性单字段</td></tr><tr><td>复用 isSimilarMessage 做惯性恢复判定</td><td>消息相似度 = 换说法即失效（P4 病灶本身）；恢复主键必须是 runId+planHash，相似度只作 fallback 提示</td></tr><tr><td>续跑丢弃 inheritedDedupKeys</td><td>已执行调用重跑 = 重复副作用（Ralph Loop :589-592 已踩平，别回头）</td></tr><tr><td>停机原因写成自由文本</td><td>status 查询、守卫、信封判据全都吃不到机读原因；具名七类 + 账本 seq 是底线（RUNTIME-002）</td></tr><tr><td>为「观测好看」把 ledger 全量塞进信封</td><td>信封是契约不是数据库；全量在 ledger，信封只带 digest + disclosures</td></tr></tbody></table>
+<table><thead><tr><th>✗ 别做</th><th>为什么</th></tr></thead><tbody><tr><td>在系统提示词里写「请自主持续推进直到完成」就当惯性执行</td><td>那是软目标（GoalTool 已在做）：无机械停机、无审计、无预算——正是 P1 病灶的另一种写法</td></tr><tr><td>惯性单允许放宽预算默认上界</td><td>无人值守下授权面必须只能收紧；可放宽 = 白名单形同虚设</td></tr><tr><td>歧义时让模型「选最可能的」继续</td><td>自动猜 = 把治理决策下放给采样温度；歧义停的唯一出口是把具名选项交还发起方</td></tr><tr><td>用 env 开关做惯性总闸</td><td>撞 MAX_GATES=220 棘轮（只降不升）；且这不是用户可见权衡而是部署策略——走惯性单字段</td></tr><tr><td>复用 isSimilarMessage 做惯性恢复判定</td><td>消息相似度 = 换说法即失效（P4 病灶本身）；恢复主键必须是 runId+planHash，相似度只作 fallback 提示</td></tr><tr><td>续跑丢弃 inheritedDedupKeys</td><td>已执行调用重跑 = 重复副作用（Ralph Loop :589-592 已踩平，别回头）</td></tr><tr><td>停机原因写成自由文本</td><td>status 查询、守卫、信封判据全都吃不到机读原因；具名七类 + 账本 seq 是底线（RUNTIME-002）</td></tr><tr><td>为「观测好看」把 ledger 全量塞进信封</td><td>信封是契约不是数据库；全量在 ledger，信封只带 digest + disclosures</td></tr></tbody></table>
 <h2 id="7-验收方式">7. 验收方式<a class="anchor" href="#7-验收方式" aria-label="锚点">#</a></h2>
 <p>S1（全部可复现）：</p>
 <pre><code class="language-bash">node --<span class="hljs-built_in">test</span> services/backend/tests/inertia/momentum.test.js      <span class="hljs-comment"># 衰减/恢复/七类停机全分支</span>

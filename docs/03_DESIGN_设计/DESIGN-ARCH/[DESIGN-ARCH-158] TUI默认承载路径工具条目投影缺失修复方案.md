@@ -62,10 +62,10 @@ App.js:215  _inlineTranscriptEnabled()   除 0/false/off/no 外**默认开**（:
 
 | 消费者 | 位置 | 吃 `{type:'tool'}`（真源形状） | 吃 `{type:'tools'}`（分组后） | 结论 |
 |---|---|---|---|---|
-| **投影器**（默认承载） | `transcriptLines.js:212` | ❌ **静默跳过** | ✅ | **P0 缺陷** |
-| committed ink 路径 | `Transcript.js:367` | 先 `groupTimeline` 归一 | ✅ | 正确 |
-| live 流式区 | `StreamingBlock.js:283` | 先 `groupConsecutiveTools` 归一 | ✅ | 正确 |
-| 折叠判定 | `useQueryBridge.js:240` / `:285` | ❌ | ✅ | **P2 缺陷** |
+| **投影器**（默认承载） | `transcriptLines.js:212` | ✗ **静默跳过** | ✓ | **P0 缺陷** |
+| committed ink 路径 | `Transcript.js:367` | 先 `groupTimeline` 归一 | ✓ | 正确 |
+| live 流式区 | `StreamingBlock.js:283` | 先 `groupConsecutiveTools` 归一 | ✓ | 正确 |
+| 折叠判定 | `useQueryBridge.js:240` / `:285` | ✗ | ✓ | **P2 缺陷** |
 | 归并器（真源） | `ProcessGroup.js:328`（`:335` 认 `'tool'`） | 它就是归一器 | 产出 | 正确 |
 
 ⇒ **投影器是唯一「直接吃原始 timeline」的消费者**——因为它是纯叶子，不能 require ink 组件树
@@ -175,8 +175,8 @@ function _timelineLines(timeline, ctx) {
 
 | # | 反例 | 预期 | 当前实测 |
 |---|---|---|---|
-| **R1** | 真源形状 `[{text},{tool},{tool}]` | 出 2 条工具行 | ❌ **0 条**（探针 FAIL） |
-| **R2** | 分组形状 `[{text},{tools:[…]}]` | 仍出工具行（**回归对照**） | ✅ 2 条 |
+| **R1** | 真源形状 `[{text},{tool},{tool}]` | 出 2 条工具行 | ✗ **0 条**（探针 FAIL） |
+| **R2** | 分组形状 `[{text},{tools:[…]}]` | 仍出工具行（**回归对照**） | ✓ 2 条 |
 | **R3** | 同一份数据，两种形状**输出逐字节相等** | 必须相等 | 待补 —— **这正是 P0 的目标断言** |
 | **R4** | 未知类型 `{type:'weird'}` | 不崩、不改变既有行数 | 待补（钉住「静默跳过是有意的」） |
 | **R5** | 工具与文本交错 | 与 `<Static>` 路径同序 | 待补 |

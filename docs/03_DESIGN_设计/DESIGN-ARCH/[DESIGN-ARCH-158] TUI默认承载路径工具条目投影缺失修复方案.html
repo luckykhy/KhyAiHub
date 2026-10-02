@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -50,7 +50,7 @@
 <ul><li><strong>默认路径没有卡片，只有文本行。</strong> 所以本方案的目标不是「把卡片搬过来」，而是先保证</li></ul>
 <p><strong>工具行至少存在</strong>（P0），形态问题另按 §7-4 裁决。</p>
 <h3 id="1-2-真源形状-vs-消费面">1.2 真源形状 vs 消费面<a class="anchor" href="#1-2-真源形状-vs-消费面" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>消费者</th><th>位置</th><th>吃 <code>{type:'tool'}</code>（真源形状）</th><th>吃 <code>{type:'tools'}</code>（分组后）</th><th>结论</th></tr></thead><tbody><tr><td><strong>投影器</strong>（默认承载）</td><td><code>transcriptLines.js:212</code></td><td>❌ <strong>静默跳过</strong></td><td>✅</td><td><strong>P0 缺陷</strong></td></tr><tr><td>committed ink 路径</td><td><code>Transcript.js:367</code></td><td>先 <code>groupTimeline</code> 归一</td><td>✅</td><td>正确</td></tr><tr><td>live 流式区</td><td><code>StreamingBlock.js:283</code></td><td>先 <code>groupConsecutiveTools</code> 归一</td><td>✅</td><td>正确</td></tr><tr><td>折叠判定</td><td><code>useQueryBridge.js:240</code> / <code>:285</code></td><td>❌</td><td>✅</td><td><strong>P2 缺陷</strong></td></tr><tr><td>归并器（真源）</td><td><code>ProcessGroup.js:328</code>（<code>:335</code> 认 <code>'tool'</code>）</td><td>它就是归一器</td><td>产出</td><td>正确</td></tr></tbody></table>
+<table><thead><tr><th>消费者</th><th>位置</th><th>吃 <code>{type:'tool'}</code>（真源形状）</th><th>吃 <code>{type:'tools'}</code>（分组后）</th><th>结论</th></tr></thead><tbody><tr><td><strong>投影器</strong>（默认承载）</td><td><code>transcriptLines.js:212</code></td><td>✗ <strong>静默跳过</strong></td><td>✓</td><td><strong>P0 缺陷</strong></td></tr><tr><td>committed ink 路径</td><td><code>Transcript.js:367</code></td><td>先 <code>groupTimeline</code> 归一</td><td>✓</td><td>正确</td></tr><tr><td>live 流式区</td><td><code>StreamingBlock.js:283</code></td><td>先 <code>groupConsecutiveTools</code> 归一</td><td>✓</td><td>正确</td></tr><tr><td>折叠判定</td><td><code>useQueryBridge.js:240</code> / <code>:285</code></td><td>✗</td><td>✓</td><td><strong>P2 缺陷</strong></td></tr><tr><td>归并器（真源）</td><td><code>ProcessGroup.js:328</code>（<code>:335</code> 认 <code>'tool'</code>）</td><td>它就是归一器</td><td>产出</td><td>正确</td></tr></tbody></table>
 <p>⇒ <strong>投影器是唯一「直接吃原始 timeline」的消费者</strong>——因为它是纯叶子，不能 require ink 组件树<br>（现依赖面只有 <code>wrapCell</code> + <code>permissionNotice</code>，见文件头契约）。这不是它写错的理由，但解释了<br>为什么它成了唯一的漏网者。</p>
 <h3 id="1-3-为什么单测全绿-判定面与真源不同形">1.3 为什么单测全绿（判定面与真源不同形）<a class="anchor" href="#1-3-为什么单测全绿-判定面与真源不同形" aria-label="锚点">#</a></h3>
 <p><code>tests/cli/tui/transcriptLines.test.js:57</code> 喂的是 <code>{ type: 'tools', tools: [...] }</code>——<br><strong>分组后的形状，真实 timeline 从不产生它</strong>。测试与真源<strong>不同形</strong> ⇒ 恒绿。</p>
@@ -104,7 +104,7 @@
 <p>⚠ <strong>不新增任何 <code>KHY_*</code> 门控</strong>：<code>check-tui-gates</code> 的唯一 token 数<strong>现查 232 / 上限 227</strong>（HEAD 上即已超限，非本次引入）。<br>⚠ 新增 1 个 <code>.js</code> 文件本身<strong>不增加</strong> token 计数（先例：178 → 179 文件，token 数不变）。</p>
 <hr>
 <h2 id="5-验证与反例清单">5. 验证与反例清单<a class="anchor" href="#5-验证与反例清单" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>#</th><th>反例</th><th>预期</th><th>当前实测</th></tr></thead><tbody><tr><td><strong>R1</strong></td><td>真源形状 <code>[{text},{tool},{tool}]</code></td><td>出 2 条工具行</td><td>❌ <strong>0 条</strong>（探针 FAIL）</td></tr><tr><td><strong>R2</strong></td><td>分组形状 <code>[{text},{tools:[…]}]</code></td><td>仍出工具行（<strong>回归对照</strong>）</td><td>✅ 2 条</td></tr><tr><td><strong>R3</strong></td><td>同一份数据，两种形状<strong>输出逐字节相等</strong></td><td>必须相等</td><td>待补 —— <strong>这正是 P0 的目标断言</strong></td></tr><tr><td><strong>R4</strong></td><td>未知类型 <code>{type:'weird'}</code></td><td>不崩、不改变既有行数</td><td>待补（钉住「静默跳过是有意的」）</td></tr><tr><td><strong>R5</strong></td><td>工具与文本交错</td><td>与 <code>&lt;Static&gt;</code> 路径同序</td><td>待补</td></tr><tr><td><strong>R6</strong></td><td>折叠判定：仅含工具的回合</td><td><code>selectLastFoldableMessage</code> 非 null</td><td>待补（P2 判据）</td></tr></tbody></table>
+<table><thead><tr><th>#</th><th>反例</th><th>预期</th><th>当前实测</th></tr></thead><tbody><tr><td><strong>R1</strong></td><td>真源形状 <code>[{text},{tool},{tool}]</code></td><td>出 2 条工具行</td><td>✗ <strong>0 条</strong>（探针 FAIL）</td></tr><tr><td><strong>R2</strong></td><td>分组形状 <code>[{text},{tools:[…]}]</code></td><td>仍出工具行（<strong>回归对照</strong>）</td><td>✓ 2 条</td></tr><tr><td><strong>R3</strong></td><td>同一份数据，两种形状<strong>输出逐字节相等</strong></td><td>必须相等</td><td>待补 —— <strong>这正是 P0 的目标断言</strong></td></tr><tr><td><strong>R4</strong></td><td>未知类型 <code>{type:'weird'}</code></td><td>不崩、不改变既有行数</td><td>待补（钉住「静默跳过是有意的」）</td></tr><tr><td><strong>R5</strong></td><td>工具与文本交错</td><td>与 <code>&lt;Static&gt;</code> 路径同序</td><td>待补</td></tr><tr><td><strong>R6</strong></td><td>折叠判定：仅含工具的回合</td><td><code>selectLastFoldableMessage</code> 非 null</td><td>待补（P2 判据）</td></tr></tbody></table>
 <p>⚠ <strong>R3 必须与 R1 同时存在</strong>：只测 R1（「会出」）不测 R2/R3（「分组形状别退化」），<br>等于给了一条<strong>可以靠删掉 <code>'tools'</code> 分支来通过</strong>的单向断言。</p>
 <hr>
 <h2 id="6-防呆铁律">6. 防呆铁律<a class="anchor" href="#6-防呆铁律" aria-label="锚点">#</a></h2>

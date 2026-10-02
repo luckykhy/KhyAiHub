@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -39,7 +39,7 @@
 <ol><li><strong>现在的替代做法是什么？</strong> —— 五个意图件各自独立注入（现状即替代做法），</li></ol>
 <p>已实测出问题：同一轮可能同时命中「澄清卡指令」与「消歧指令」，模型收到两份<br>   互相竞争的问询指引；且没有任何机制保证模型答完澄清后需求被<strong>记住</strong>——<br>   多轮之后跑偏只能靠用户重申。（source: 内部盘点纪要 §1「各检测件各自独立注入，<br>   缺一个聚合前置层」）</p>
 <ol><li><strong>成功长什么样？</strong> —— 命令 + 期望输出，见 §7 验收判据 A1–A6。核心一条：</li></ol>
-<p>在 REPL 输入「优化一下代码」后，收到的是一张可左右切换的选项卡问询<br>   （优化什么文件 / 什么指标），答完后 REPL 内出现<br>   <code>📋 需求已确认 → .khy/requirements/20260927-xxxx.md（可编辑）</code>，<br>   长任务执行中每阶段日志引用该制品，收尾输出「交付 vs 需求」对账。</p>
+<p>在 REPL 输入「优化一下代码」后，收到的是一张可左右切换的选项卡问询<br>   （优化什么文件 / 什么指标），答完后 REPL 内出现<br>   <code>需求已确认 → .khy/requirements/20260927-xxxx.md（可编辑）</code>，<br>   长任务执行中每阶段日志引用该制品，收尾输出「交付 vs 需求」对账。</p>
 <ol><li><strong>不做会怎样？</strong> —— 五件各自为政的竞争指令继续随机打架；模糊需求继续</li></ol>
 <p>「猜错方向白跑一轮」；长任务跑到一半偏航只能整轮作废；Web 端用户面对<br>   只读的「权限确认」文本永远无法回应，只能切回终端。</p>
 <h2 id="2-调研结论-外部铁律-本仓对应缺口">2. 调研结论（外部铁律 → 本仓对应缺口）<a class="anchor" href="#2-调研结论-外部铁律-本仓对应缺口" aria-label="锚点">#</a></h2>
@@ -79,7 +79,7 @@
                         ┌─────────────────────┼─────────────────────┐
                         ▼                     ▼                     ▼
                   执行中回灌              收尾对账                 用户可编辑
-              （每阶段状态引用 id）    （交付 vs 需求 逐条 ✓/✗/⏳）  （改后下轮生效）</code></pre>
+              （每阶段状态引用 id）    （交付 vs 需求 逐条 ✓/✗/…）  （改后下轮生效）</code></pre>
 <h3 id="4-1-裁决语义-互斥排序-首个命中即停">4.1 裁决语义（互斥排序，首个命中即停）<a class="anchor" href="#4-1-裁决语义-互斥排序-首个命中即停" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>route</th><th>触发条件（按序判定）</th><th>动作</th></tr></thead><tbody><tr><td>短路</td><td>① 纯问候（既有 <code>isGreeting</code>，快路径不变）</td><td>走既有问候管线，聚合器不注入任何指令</td></tr><tr><td>clarify</td><td>④ 指代歧义且引用对象唯一性 &lt; 阈值 → <strong>消歧优先</strong>（答不出引用就谈不上需求）；否则 ③ <code>clarity.clear === false</code></td><td>注入 <code>referenceDisambiguation</code> 指令<strong>或</strong> <code>clarificationCards</code> 指令（二选一，当前散装会双注入）</td></tr><tr><td>plan</td><td>② scale ∈ {normal, large} 且 ⑤ 缺验收口径 且 ③ 已清晰</td><td>注入「先复述需求 → 列执行计划 → 列验收标准 → 询问是否按此执行」的系统指令（一次性，不阻塞）</td></tr><tr><td>proceed</td><td>其余</td><td>零注入</td></tr></tbody></table>
 <ul><li>⑤ <code>acceptance</code> 判定是<strong>新增的确定性启发式</strong>（不调模型）：消息中无「文件/模块/命令/</li></ul>
@@ -102,7 +102,7 @@
 <span class="hljs-section">## 收尾对账（执行完成后由系统追加）</span>
 
 <span class="hljs-bullet">-</span> R1 ✓（khy --version 实测 412ms）
-<span class="hljs-bullet">-</span> R2 ⏳ 未观测到验证动作</code></pre>
+<span class="hljs-bullet">-</span> R2 … 未观测到验证动作</code></pre>
 <ul><li>制品是<strong>用户可编辑的普通 markdown</strong>（对齐 Claude Code Ctrl+G 改计划 [1]），</li></ul>
 <p>落 <code>.khy/requirements/</code>（gitignore 内本机态；如需多机共享再议 <code>.ai/</code>，本期不做）。</p>
 <ul><li><code>source</code> 判据<strong>复用</strong> <code>check-agent-feedback.js</code> 的同一语义（原话引用或澄清答案），</li></ul>
@@ -112,8 +112,8 @@
 <h3 id="4-3-执行中回灌与收尾对账">4.3 执行中回灌与收尾对账<a class="anchor" href="#4-3-执行中回灌与收尾对账" aria-label="锚点">#</a></h3>
 <ul><li><strong>回灌</strong>：制品 id 注入会话系统上下文一行</li></ul>
 <p><code>当前需求单: .khy/requirements/20260927-a1b2.md（执行中每阶段引用，收尾对账）</code>；<br>  每阶段状态广播（规则 2.6 步骤 n/m）天然携带任务目标，改写为引用制品条目号<br>  （<code>步骤 2/5: R1 — 解析 AST（340/1200）</code>），实现「固化物反复可见」（L5）。</p>
-<ul><li><strong>对账</strong>：任务收尾时系统在制品尾部追加「收尾对账」段：每条 R 逐个 ✓/✗/⏳</li></ul>
-<p>（✓ 有验收证据；⏳ 未观测到验证动作）。这是 OpenHands GoalController 按迭代审计 [16]<br>  的收尾化简版，S1 只记录不阻断。</p>
+<ul><li><strong>对账</strong>：任务收尾时系统在制品尾部追加「收尾对账」段：每条 R 逐个 ✓/✗/…</li></ul>
+<p>（✓ 有验收证据；… 未观测到验证动作）。这是 OpenHands GoalController 按迭代审计 [16]<br>  的收尾化简版，S1 只记录不阻断。</p>
 <ul><li><strong>编辑生效</strong>：用户手改制品后，下一轮对话重新读取（每轮一次 <code>fs.readFile</code>，</li></ul>
 <p>fail-soft 读失败按无制品处理）。</p>
 <h2 id="5-模块设计-新增-2-个纯叶子-1-个薄-ui-组件">5. 模块设计（新增 2 个纯叶子 + 1 个薄 UI 组件）<a class="anchor" href="#5-模块设计-新增-2-个纯叶子-1-个薄-ui-组件" aria-label="锚点">#</a></h2>
@@ -128,7 +128,7 @@
 <ul><li><strong>失败语义</strong>：聚合器任何一路判据抛错 → 该路按「未命中」处理并 <code>console.warn</code></li></ul>
 <p>具体原因（动作+目标+进度，规则 2）；制品读写失败 → 会话照常进行、状态行提示<br>  <code>需求单写入失败（.khy/requirements/ 权限），本轮不固化</code>（规则 2.2：问题+原因+建议）。</p>
 <h2 id="7-验收判据-a1-a6-命令-期望输出">7. 验收判据（A1–A6，命令 + 期望输出）<a class="anchor" href="#7-验收判据-a1-a6-命令-期望输出" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>#</th><th>命令</th><th>期望</th></tr></thead><tbody><tr><td>A1</td><td>REPL 输入「优化一下代码」（<code>KHY_REQUIREMENT_INTAKE=on</code>）</td><td>收到 AskUserQuestion 选项卡（≥2 题，含「可讨论/自由输入」自动项）；且本轮<strong>只有一份</strong>问询指令（/intent 调试快照可见 directives 计数 = 1）</td></tr><tr><td>A2</td><td>同上答完澄清</td><td>REPL 出现 <code>📋 需求已确认 → .khy/requirements/&lt;id&gt;.md（可编辑）</code>；制品含 ≥1 条带 source 的需求条目与验收口径</td></tr><tr><td>A3</td><td>编辑制品 R1 验收值后继续对话</td><td>下一轮系统上下文回灌行反映编辑后的值（状态行可见）</td></tr><tr><td>A4</td><td>长任务执行中</td><td>每阶段状态广播引用 R 编号；收尾输出对账段（✓/✗/⏳）</td></tr><tr><td>A5</td><td><code>KHY_REQUIREMENT_INTAKE=</code>（默认关）</td><td>行为与现状完全一致（散装注入保留原样），零回归</td></tr><tr><td>A6</td><td><code>apps/ai-frontend</code> Web 端收到 <code>control_request(AskUserQuestion)</code></td><td>出现可交互选项卡（可点选、可自由输入），答案回传后流继续；不再只是只读文本</td></tr></tbody></table>
+<table><thead><tr><th>#</th><th>命令</th><th>期望</th></tr></thead><tbody><tr><td>A1</td><td>REPL 输入「优化一下代码」（<code>KHY_REQUIREMENT_INTAKE=on</code>）</td><td>收到 AskUserQuestion 选项卡（≥2 题，含「可讨论/自由输入」自动项）；且本轮<strong>只有一份</strong>问询指令（/intent 调试快照可见 directives 计数 = 1）</td></tr><tr><td>A2</td><td>同上答完澄清</td><td>REPL 出现 <code>需求已确认 → .khy/requirements/&lt;id&gt;.md（可编辑）</code>；制品含 ≥1 条带 source 的需求条目与验收口径</td></tr><tr><td>A3</td><td>编辑制品 R1 验收值后继续对话</td><td>下一轮系统上下文回灌行反映编辑后的值（状态行可见）</td></tr><tr><td>A4</td><td>长任务执行中</td><td>每阶段状态广播引用 R 编号；收尾输出对账段（✓/✗/…）</td></tr><tr><td>A5</td><td><code>KHY_REQUIREMENT_INTAKE=</code>（默认关）</td><td>行为与现状完全一致（散装注入保留原样），零回归</td></tr><tr><td>A6</td><td><code>apps/ai-frontend</code> Web 端收到 <code>control_request(AskUserQuestion)</code></td><td>出现可交互选项卡（可点选、可自由输入），答案回传后流继续；不再只是只读文本</td></tr></tbody></table>
 <h2 id="8-落地阶段-process-008-s1-起步-毕业看样本">8. 落地阶段（PROCESS-008：S1 起步，毕业看样本）<a class="anchor" href="#8-落地阶段-process-008-s1-起步-毕业看样本" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>阶段</th><th>内容</th><th>门槛</th></tr></thead><tbody><tr><td>S1 观察者（<strong>已实现 2026-09-27</strong>）</td><td><code>requirementIntakeService.aggregate</code> 只算裁决并记录（<code>requirements/observations.jsonl</code> + onStatus 播报），<strong>不改变注入行为</strong>（S2 收口逻辑已写好，由 <code>getStage()!=='S1'</code> 短路）；制品组装/回灌/对账已开（<code>KHY_REQUIREMENT_ARTIFACT</code> 独立门控，写文件不阻断会话）；Web ClarifyCard 已上（control_request 升级为交互卡，答复走既有发送通道）</td><td>样本 ≥200 轮，无解释不了的误判样本</td></tr><tr><td>S2 顾问</td><td><code>getStage()</code> 改 <code>'S2'</code> → aiChatCore 按聚合裁决替换散装注入（互斥排序生效）；plan 路由注入计划指令</td><td>提示 ≥50 条后误报 &lt;10%</td></tr><tr><td>S3 门禁</td><td>plan 路由升级为「未确认需求单不进入执行轮」（可豁免）</td><td>≥20 次真实拦截且豁免率 &lt;20%</td></tr></tbody></table>
 <ul><li>实现落点：<code>services/backend/src/services/requirementIntakeService.js</code>（聚合纯函数 +</li></ul>
@@ -148,7 +148,7 @@
 <p>内部盘点（2026-09-27，file:line 已核）：</p>
 <ul><li>五步管线：<code>services/backend/src/cli/aiChatCore.js:446-500,851-872,1034-1043</code></li><li>澄清卡：<code>services/backend/src/services/clarificationCards.js</code></li><li>消歧：<code>services/backend/src/services/referenceDisambiguation.js:130</code></li><li>规模：<code>services/backend/src/services/taskScale.js</code></li><li>TUI 问询：<code>services/backend/src/cli/tui/ink-components/QuestionPrompt.js</code>、<code>questionCardModel.js</code></li><li>Web 缺口：<code>apps/ai-frontend/src/views/aiChatEventUtils.js:33,293-295</code></li><li>五问判据：<code>scripts/ci/check-agent-feedback.js:212-223</code></li></ul>
       </article>
-      <nav class="pager"><a class="prev" href="../../../docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-163] 图文混合输入识别增强方案.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-163] 图文混合输入识别增强方案</div></a><a class="next" href="../../../docs/03_DESIGN_设计/DESIGN-ARCH/00_INDEX_DESIGN-ARCH-总目录.html"><div class="dir">下一篇 →</div><div class="ttl">DESIGN-ARCH</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-163] 图文混合输入识别增强方案.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-163] 图文混合输入识别增强方案</div></a><a class="next" href="../../../docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-165] TUI 工具卡片渲染规格与两端分工方案.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-165] TUI 工具卡片渲染规格与两端分工方案</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>

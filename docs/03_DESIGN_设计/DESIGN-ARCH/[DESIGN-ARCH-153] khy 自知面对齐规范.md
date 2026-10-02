@@ -64,14 +64,14 @@ toolProfile.js:23-85       coding.tools = [...37 个白名单...]   ← 无 'Khy
 
 | 分面（能力） | `/self`（人类面） | `KhySelf`（agent 面） |
 |---|---|---|
-| identity（名称/版本/定位/性格） | ✅ 默认输出含 | ❌ |
-| capabilities（10 个能力域） | ✅ `capabilities` | ❌ |
-| boundaries（5 条边界） | ✅ `boundaries` | ❌ |
-| runtime（平台/Node/Python/cwd/通道/推理/学习模式） | ✅ `runtime` | ❌ |
-| location（安装根/自身源码/dataHome/installKind） | ⚠️ 仅混在默认输出里 | ✅ `location` |
-| commands（命令目录，可搜索） | ❌（要去 `/features`） | ✅ `commands` |
-| self_audit | ❌ | ✅ `self_audit` |
-| self_audit_verify | ❌ | ✅ `self_audit_verify` |
+| identity（名称/版本/定位/性格） | ✓ 默认输出含 | ✗ |
+| capabilities（10 个能力域） | ✓ `capabilities` | ✗ |
+| boundaries（5 条边界） | ✓ `boundaries` | ✗ |
+| runtime（平台/Node/Python/cwd/通道/推理/学习模式） | ✓ `runtime` | ✗ |
+| location（安装根/自身源码/dataHome/installKind） | ⚠ 仅混在默认输出里 | ✓ `location` |
+| commands（命令目录，可搜索） | ✗（要去 `/features`） | ✓ `commands` |
+| self_audit | ✗ | ✓ `self_audit` |
+| self_audit_verify | ✗ | ✓ `self_audit_verify` |
 
 **并集 8 个分面，交集 1 个。** 后果具体：
 - agent 回答不了「你有哪些能力域 / 你的边界是什么」——只能靠系统提示里那段**截断**的块；`boundaries` 只在提示里以一行一条出现，`capabilities` 的 10 个域在提示里**根本没注入**。
