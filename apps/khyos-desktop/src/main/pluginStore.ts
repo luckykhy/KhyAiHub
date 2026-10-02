@@ -90,7 +90,7 @@ function builtinSeeds(): Plugin[] {
     },
   })
   return [
-    mk('zcode-anthropic', 'zcode-anthropic', '1.0.4', 'ZCode 官方插件，提供基础能力与默认配置。', {
+    mk('khyos-anthropic', 'khyos-anthropic', '1.0.4', 'KhyOS 官方插件，提供基础能力与默认配置。', {
       commands: 14,
       agents: 1,
     }),
