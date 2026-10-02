@@ -5712,6 +5712,51 @@ node_modules/   W7 未做故留根
 | Q10 三提交 | 每提交独立 revert；文档订正与物理删除分离，回滚不纠缠 |
 | 本节裁决 | 用户可整体否决：删除本节 + 还原 §17.5 指针即回「待点头」态 |
 
+## §22 文件夹收敛施工设计——24 → 9 → 8 → 7（2026-10-02，§12.60 闸门待用户明示）
+
+> 背景：Q0–Q10/Q1′ 收官后根目录视觉 54（24 目录 + 30 文件），用户问「为什么文件夹还没变到 5-7」。
+> 答案：所有减目录的批次（W9/P1–P5/W7）都在 §12.60 的 10-27 闸门之后，此前各车道依法守闸。
+> 本节是**一旦闸门开启（用户明示推翻 §12.60 或等 10-27）即可逐批施工的施工单**，
+> 是文件夹收敛方案的真源；§17.3/§20.3 的终态树与守恒表继续有效，本节补「逐目录去向 + 阶梯读数 + 依赖序」。
+
+### 22.0 起点账（2026-10-02 实测 24 目录）
+
+| 类 | 目录 | 可否物理移动 | 去向批 |
+|---|---|---|---|
+| 再生残留 | khy_os.egg-info | 可（已清，pip 构建再生） | 已做 −1 |
+| 本机态数据家 | .khy .khyos .ai .workbuddy .workbuddy-ai | 可，但需 dataHome 访问器改指 + 存量安装数据迁移 | W9′ |
+| 七层板块 | kernel platform services apps software extensions | 可（import 路径 ~279 条 + 9 守卫白名单 + CI） | P1–P5 |
+| 工程横切 | packaging patches scripts deploy tests | 可 | P3/P4 随域归堆 |
+| 档案 | docs evidence | docs 留（GitHub 识别位）或随 P5 归 works/archive；evidence 软著链 80 处引用随迁 | P5 |
+| 产物根 | entries | 不动（LAYOUT-005） | — |
+| 工具位（根读取位） | .cursor .zcode .opencode | **不可移**（工具只认根）；退役需用户点名 | 待裁 |
+| 平台契约 | .github node_modules | .github 不动；node_modules 仅 W7 可下沉 | W7 |
+
+### 22.1 阶梯读数（对照 §20.3 守恒表，目录口径）
+
+| 步 | 内容 | 目录数 |
+|---|---|---|---|
+| 起点已清 egg-info | | **24** |
+| W10b 收尾（L2 进行中） | .githooks → works/build/githooks | 24 |
+| W2 | CHANGELOG/.env.example → works/record；CONTRIBUTING/SECURITY → .github | 24（文件侧 −4） |
+| W5 | Dockerfile/.dockerignore/docker-compose.yml → works/ship（CI 等价证明） | 24 |
+| W6 | 五启动器 → runtime/bin/（khy.sh 引用面 200+，逐个重指+测试） | 24 |
+| **W9′** | 五本机态目录 → works/data/（dataHome.js 改指 + 迁移脚本 + 便携版兼容） | **19** |
+| **P1–P5** | 七层板块 + 工程横切 → 四域（runtime/business/delivery/works） | **9** |
+| W7 | 工作区根下沉（node_modules → runtime/；298 脚本面） | **8** |
+| 退役 .opencode | 2026-11-15 复审提前或用户点名 | **7** |
+
+**「5-7 个文件夹」的数学**：9 = 圈留全部工具位的地板（四域 + .github + 三工具位 + node_modules）；
+7 = W7 + 退役 .opencode；6 = 再退役 .zcode（与圈留裁决冲突）；5 = 再退役 .cursor（同）。
+**低于 8 的每一档都要退役一个你圈留/待裁的工具位**——那是产品决策不是施工。
+
+### 22.2 施工序与闸门
+
+1. **闸门前置**：§12.60（B 档最早 10-27）须由用户明示推翻方可启动 W9′/P1–P5/W7；未推翻前各车道只做 W2/W5/W6 文件级批。
+2. 每批照 §19.3 等价性设计抓 before/after；P3 的 docker 证明只能 CI 跑。
+3. W9′ 的存量安装数据迁移脚本与便携版兼容是新产品行为面——须单独设计与回归（非纯移动）。
+4. P1–P5 须发布冻结窗（不推 tag）；完成前新旧路径由再导出壳共存（绞杀者）。
+
 ## 关联
 
 - 本篇 §17 = 圈留 Cline/Cursor 后重绘的终态树与可达阶梯；§15/§16 的「终局 7」已被 §17.4 作废。§18 = 方案 Q（两口径达标），待点头。**§21 = 四条裁决与统一排期（方案唯一真源，2026-10-02 已裁）。**
