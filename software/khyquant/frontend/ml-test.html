@@ -315,12 +315,12 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>🤖 ML智能体模型测试</h1>
+      <h1>◆ ML智能体模型测试</h1>
       <p>测试训练好的机器学习模型进行股票分析</p>
     </div>
 
     <div class="status-card">
-      <h2>📊 模型状态</h2>
+      <h2>模型状态</h2>
       <div id="modelStatus">
         <div class="loading">
           <div class="spinner"></div>
@@ -330,7 +330,7 @@
     </div>
 
     <div class="test-section">
-      <h2>🧪 测试分析</h2>
+      <h2>测试分析</h2>
       <div class="quick-stocks">
         <span style="color: #666; font-size: 14px;">快速选择:</span>
         <div class="stock-tag" onclick="selectStock('sh000300')">沪深300</div>
@@ -384,7 +384,7 @@
 
           for (const [key, exists] of Object.entries(modelStatus)) {
             const className = exists ? 'trained' : 'untrained';
-            const status = exists ? '✅ 已训练' : '❌ 未训练';
+            const status = exists ? '✓ 已训练' : '✗ 未训练';
             html += `
               <div class="model-item ${className}">
                 <div class="model-name">${modelNames[key] || key}</div>
@@ -398,7 +398,7 @@
           if (trainedModels === 0) {
             html += `
               <div class="error" style="margin-top: 15px;">
-                ⚠️ 未找到训练好的模型！请先运行训练脚本: .\\一键训练智能体.bat
+                ⚠ 未找到训练好的模型！请先运行训练脚本: .\\一键训练智能体.bat
               </div>
             `;
           }
@@ -408,7 +408,7 @@
       } catch (error) {
         document.getElementById('modelStatus').innerHTML = `
           <div class="error">
-            ❌ 无法连接到后端服务，请确保后端已启动！<br>
+            ✗ 无法连接到后端服务，请确保后端已启动！<br>
             错误: ${error.message}
           </div>
         `;
@@ -465,7 +465,7 @@
         document.getElementById('resultContainer').innerHTML = `
           <div class="result-card">
             <div class="error">
-              ❌ 分析失败: ${error.message}
+              ✗ 分析失败: ${error.message}
             </div>
           </div>
         `;
@@ -488,7 +488,7 @@
           <div class="result-header">
             <div class="result-title">
               ${data.stockCode} 分析报告
-              ${isMLPowered ? '<span style="color: #28a745; font-size: 14px; margin-left: 10px;">🤖 ML驱动</span>' : ''}
+              ${isMLPowered ? '<span style="color: #28a745; font-size: 14px; margin-left: 10px;">ML驱动</span>' : ''}
             </div>
             <div class="recommendation ${recommendationClass}">
               ${data.recommendation}
@@ -510,7 +510,7 @@
             ${data.summary}
           </div>
 
-          <h3 style="margin-bottom: 15px; color: #333;">🤖 智能体分析详情</h3>
+          <h3 style="margin-bottom: 15px; color: #333;">智能体分析详情</h3>
           <div class="agents-grid">
       `;
 
