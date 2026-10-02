@@ -1,7 +1,7 @@
 <!-- 文档分类: IMPL-RPT-007 | 阶段: 实现 | 原路径: docs/修复记录/v0.1.84-修复说明.md -->
 # v0.1.84 缺陷修复
 
-> ⚠️ **已归档 / 被取代**：本文档涉及的自研 TUI 运行时（`liteRepl.js`、`keypressParser.js`、`tuiShell.js` 等）已于 2026-06-05 全面迁移至官方 Ink 运行时（`backend/src/cli/tui/ink-components/`）。本文仅作历史修复记录保留，最新 TUI 行为请参阅 [tui-inquirer闪退修复-2026-06-05.md]([IMPL-RPT-003] tui-inquirer闪退修复-2026-06-05.md)。
+> ⚠ **已归档 / 被取代**：本文档涉及的自研 TUI 运行时（`liteRepl.js`、`keypressParser.js`、`tuiShell.js` 等）已于 2026-06-05 全面迁移至官方 Ink 运行时（`backend/src/cli/tui/ink-components/`）。本文仅作历史修复记录保留，最新 TUI 行为请参阅 [tui-inquirer闪退修复-2026-06-05.md]([IMPL-RPT-003] tui-inquirer闪退修复-2026-06-05.md)。
 
 发布日期：2026-06-02
 

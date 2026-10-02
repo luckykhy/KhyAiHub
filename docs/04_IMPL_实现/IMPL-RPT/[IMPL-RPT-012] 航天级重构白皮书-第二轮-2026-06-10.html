@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -38,7 +38,7 @@
 <table><thead><tr><th>文件</th><th>域</th><th>裁决依据</th></tr></thead><tbody><tr><td><code>persist.c</code></td><td>执行臂</td><td><code>disk_leaf</code> 前缀比较在 NUL 处安全；<code>build_path</code> 有界；变更委托给已加 crit 的 diskfs</td></tr><tr><td><code>pmm.c</code></td><td>核心舱</td><td>所有位图/refcount 访问 <code>page &lt; ACTUAL_MAX_PAGES</code> 有界；Multiboot2 遍历加边界+迭代上限+前进保证；全部调用方 IF=0 或 boot，无并发竞态</td></tr><tr><td><code>vmm.c</code></td><td>核心舱</td><td>COW 共享 refcount 增减与错误路径平衡；<code>vmm_cow_break</code> 按 refcount 复制/原地回收；<code>vmm_check_user_range</code> 拒回绕/内核半区 + 逐页 USER 检查；全部 IF=0</td></tr><tr><td><code>syscall.c</code></td><td>执行臂</td><td><code>read_user_str</code> 逐页校验；<code>uok</code> 方向正确；<code>sys_exec</code> argv 双重有界（PROCESS_MAX_ARGS + 逐指针 uok）；<code>sys_mmap</code> 零信任门（size 上限 + 用户窗口 + flag 净化）；fd 无符号回绕捕获</td></tr><tr><td><code>elf.c</code></td><td>执行臂</td><td>每个 header 字段（e_phoff/e_phnum/e_phentsize/p_offset/p_filesz/p_memsz/p_vaddr）均有溢出安全比较 + 用户窗口约束；memcpy 源/目的双向有界；阻断二进制内嵌提权映射</td></tr></tbody></table>
 <hr>
 <h2 id="二-遗留风险清单">二、遗留风险清单<a class="anchor" href="#二-遗留风险清单" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>等级</th><th>项</th><th>描述</th><th>建议</th></tr></thead><tbody><tr><td>🟡 中</td><td>出站网络隔离</td><td>执行臂的出站网络仍依赖应用层防护，无 OS 级沙箱强制</td><td>需内核态网络命名空间/能力门（OS 沙箱），跨本引擎范围</td></tr><tr><td>🟡 中</td><td>ELF 段资源占用</td><td>恶意 ELF 可在用户窗口内申请接近窗口上限的内存（有界、非无限，耗尽时优雅失败），但无 per-process 内存配额</td><td>引入 per-process RSS 配额，将&quot;有界但偏大&quot;收紧为&quot;按策略配额&quot;</td></tr><tr><td>🟢 低</td><td>未审核文件</td><td><code>pe.c</code>/<code>ramfs.c</code>/<code>vfs_service.c</code>/<code>net_service.c</code>/<code>ata.c</code>/<code>framebuffer.c</code>/<code>wm.c</code>/<code>idt.c</code>/<code>gdt.c</code> 本轮未逐一复审（多为显示台最低优先域或第一轮已审）</td><td>下一轮可将 <code>pe.c</code>（PE 加载器，与 elf.c 同类不可信解析面）列为首选</td></tr><tr><td>🟢 低</td><td>单核假设</td><td>全部互斥基于&quot;中断屏蔽 = 单核互斥&quot;。一旦引入 SMP，须替换为带超时的自旋锁/MCS 锁</td><td>SMP 化时统一替换互斥原语</td></tr></tbody></table>
+<table><thead><tr><th>等级</th><th>项</th><th>描述</th><th>建议</th></tr></thead><tbody><tr><td>◐ 中</td><td>出站网络隔离</td><td>执行臂的出站网络仍依赖应用层防护，无 OS 级沙箱强制</td><td>需内核态网络命名空间/能力门（OS 沙箱），跨本引擎范围</td></tr><tr><td>◐ 中</td><td>ELF 段资源占用</td><td>恶意 ELF 可在用户窗口内申请接近窗口上限的内存（有界、非无限，耗尽时优雅失败），但无 per-process 内存配额</td><td>引入 per-process RSS 配额，将&quot;有界但偏大&quot;收紧为&quot;按策略配额&quot;</td></tr><tr><td>○ 低</td><td>未审核文件</td><td><code>pe.c</code>/<code>ramfs.c</code>/<code>vfs_service.c</code>/<code>net_service.c</code>/<code>ata.c</code>/<code>framebuffer.c</code>/<code>wm.c</code>/<code>idt.c</code>/<code>gdt.c</code> 本轮未逐一复审（多为显示台最低优先域或第一轮已审）</td><td>下一轮可将 <code>pe.c</code>（PE 加载器，与 elf.c 同类不可信解析面）列为首选</td></tr><tr><td>○ 低</td><td>单核假设</td><td>全部互斥基于&quot;中断屏蔽 = 单核互斥&quot;。一旦引入 SMP，须替换为带超时的自旋锁/MCS 锁</td><td>SMP 化时统一替换互斥原语</td></tr></tbody></table>
 <p><strong>本轮无&quot;需人工介入&quot;项</strong>（无缺陷经 2 次修复仍失败）。</p>
 <hr>
 <h2 id="三-系统现状评估">三、系统现状评估<a class="anchor" href="#三-系统现状评估" aria-label="锚点">#</a></h2>

@@ -55,19 +55,19 @@ KHY OS 的 AI 管理系统有 **两条独立的 daemon 启动路径**，它们�
 路径 A (ai-manage-daemon.js):
   start aiManagementServer(9090)
     → 实际绑定 9091（因为 9090 被占）
-    → 写 ~/.khy/ai_manage_runtime.json  { apiPort: 9091 }  ✅
-    → 传 VITE_AI_PROXY_TARGET=http://127.0.0.1:9091 给 Vite 子进程  ✅
+    → 写 ~/.khy/ai_manage_runtime.json  { apiPort: 9091 }  ✓
+    → 传 VITE_AI_PROXY_TARGET=http://127.0.0.1:9091 给 Vite 子进程  ✓
 
 路径 B (daemonEntry.js):
   start aiManagementServer(9090)
     → 实际绑定 9091
-    → 只写 daemon.pid（无端口信息）  ❌
-    → 不传 VITE_AI_PROXY_TARGET  ❌
+    → 只写 daemon.pid（无端口信息）  ✗
+    → 不传 VITE_AI_PROXY_TARGET  ✗
 
 独立启动 Vite：
   读 VITE_AI_PROXY_TARGET → 空
   读 VITE_AI_API_BASE_URL → 空
-  回退到硬编码 9090  ❌ ← 实际服务在 9091
+  回退到硬编码 9090  ✗ ← 实际服务在 9091
 ```
 
 ---

@@ -1,7 +1,7 @@
 <!-- 文档分类: IMPL-RPT-008 | 阶段: 实现 | 原路径: docs/修复记录/修复-桥接状态刷屏.md -->
 # Bugfix: Claude 中转桥接状态刷屏
 
-> ⚠️ **已归档 / 被取代**：本修复落在自研 REPL 运行时 `liteRepl.js` 上，该文件已于 2026-06-05 随 TUI 迁移官方 Ink 运行时（`backend/src/cli/tui/ink-components/`）一并删除。本文仅作历史修复记录保留，最新 TUI 行为请参阅 [tui-inquirer闪退修复-2026-06-05.md]([IMPL-RPT-003] tui-inquirer闪退修复-2026-06-05.md)。
+> ⚠ **已归档 / 被取代**：本修复落在自研 REPL 运行时 `liteRepl.js` 上，该文件已于 2026-06-05 随 TUI 迁移官方 Ink 运行时（`backend/src/cli/tui/ink-components/`）一并删除。本文仅作历史修复记录保留，最新 TUI 行为请参阅 [tui-inquirer闪退修复-2026-06-05.md]([IMPL-RPT-003] tui-inquirer闪退修复-2026-06-05.md)。
 
 **日期**: 2026-06-03
 **影响范围**: 交互式 REPL (`khy` 命令)
@@ -13,7 +13,7 @@
 
 ## 根因
 
-`claudeAdapter.js` 在启动 Claude CLI 子进程时发射了一个 `onChunk({ type: 'status', text: '🔗 中转桥接：...' })` 状态块。虽然该状态只发射一次，但在交互式 REPL 中触发了 **spinner / keepalive / prompt 重绘** 的连锁反应：
+`claudeAdapter.js` 在启动 Claude CLI 子进程时发射了一个 `onChunk({ type: 'status', text: '中转桥接：...' })` 状态块。虽然该状态只发射一次，但在交互式 REPL 中触发了 **spinner / keepalive / prompt 重绘** 的连锁反应：
 
 ```
 claudeAdapter 发射 status chunk (1次)
@@ -58,7 +58,7 @@ spinner.start('request') 被某处重新调用
 try {
   onChunk({
     type: 'status',
-    text: '🔗 中转桥接：通过 Claude CLI 子进程启动...',
+    text: '中转桥接：通过 Claude CLI 子进程启动...',
   });
 } catch { /* best effort */ }
 

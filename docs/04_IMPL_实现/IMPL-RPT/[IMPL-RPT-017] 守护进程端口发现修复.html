@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -55,19 +55,19 @@
 <pre><code>路径 A (ai-manage-daemon.js):
   start aiManagementServer(9090)
     → 实际绑定 9091（因为 9090 被占）
-    → 写 ~/.khy/ai_manage_runtime.json  { apiPort: 9091 }  ✅
-    → 传 VITE_AI_PROXY_TARGET=http://127.0.0.1:9091 给 Vite 子进程  ✅
+    → 写 ~/.khy/ai_manage_runtime.json  { apiPort: 9091 }  ✓
+    → 传 VITE_AI_PROXY_TARGET=http://127.0.0.1:9091 给 Vite 子进程  ✓
 
 路径 B (daemonEntry.js):
   start aiManagementServer(9090)
     → 实际绑定 9091
-    → 只写 daemon.pid（无端口信息）  ❌
-    → 不传 VITE_AI_PROXY_TARGET  ❌
+    → 只写 daemon.pid（无端口信息）  ✗
+    → 不传 VITE_AI_PROXY_TARGET  ✗
 
 独立启动 Vite：
   读 VITE_AI_PROXY_TARGET → 空
   读 VITE_AI_API_BASE_URL → 空
-  回退到硬编码 9090  ❌ ← 实际服务在 9091</code></pre>
+  回退到硬编码 9090  ✗ ← 实际服务在 9091</code></pre>
 <hr>
 <h2 id="3-修复后的架构-统一-runtime-文件发现">3. 修复后的架构（统一 runtime 文件发现）<a class="anchor" href="#3-修复后的架构-统一-runtime-文件发现" aria-label="锚点">#</a></h2>
 <h3 id="3-1-核心原则">3.1 核心原则<a class="anchor" href="#3-1-核心原则" aria-label="锚点">#</a></h3>

@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -28,7 +28,7 @@
       <article class="doc-body">
 <p>&lt;!-- 文档分类: IMPL-RPT-019 | 阶段: 实现 | 原路径: docs/指南/终端提示符泄漏与交付空行修复-2026-05-31.md --&gt;</p>
 <h1 id="终端提示符泄漏与交付空行修复报告">终端提示符泄漏与交付空行修复报告<a class="anchor" href="#终端提示符泄漏与交付空行修复报告" aria-label="锚点">#</a></h1>
-<blockquote><p>⚠️ <strong>部分已过期</strong>：本报告中针对 <code>backend/src/cli/liteRepl.js</code> 的修复随该文件于 2026-06-05 迁移官方 Ink 运行时（<code>backend/src/cli/tui/ink-components/</code>）一并失效；<code>repl.js</code> 相关部分仍有效。本文仅作历史修复记录保留，最新 TUI 行为请参阅 [tui-inquirer闪退修复-2026-06-05.md]([IMPL-RPT-003] tui-inquirer闪退修复-2026-06-05.md)。</p></blockquote>
+<blockquote><p>⚠ <strong>部分已过期</strong>：本报告中针对 <code>backend/src/cli/liteRepl.js</code> 的修复随该文件于 2026-06-05 迁移官方 Ink 运行时（<code>backend/src/cli/tui/ink-components/</code>）一并失效；<code>repl.js</code> 相关部分仍有效。本文仅作历史修复记录保留，最新 TUI 行为请参阅 [tui-inquirer闪退修复-2026-06-05.md]([IMPL-RPT-003] tui-inquirer闪退修复-2026-06-05.md)。</p></blockquote>
 <blockquote><p>日期: 2026-05-31<br>涉及文件: <code>backend/src/cli/repl.js</code> · <code>backend/src/cli/liteRepl.js</code> · <code>backend/tests/cli/repl.busyPromptRendering.test.js</code> · <code>backend/tests/cli/repl.deliverySpacing.test.js</code><br>状态: 已实施，定向测试通过，真实 PTY 验证通过</p></blockquote>
 <hr>
 <h2 id="一-问题背景">一、问题背景<a class="anchor" href="#一-问题背景" aria-label="锚点">#</a></h2>

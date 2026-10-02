@@ -3,7 +3,7 @@
 
 **日期**：2026-06-10
 **域**：执行臂（Agent 网关 / 工具执行器 — 零信任域）
-**级别**：🔴 需人工介入 → ✅ 已解决
+**级别**：● 需人工介入 → ✓ 已解决
 **文件**：`services/backend/src/tools/executeCode.js`
 
 ---
@@ -24,7 +24,7 @@ globalThis.constructor.constructor("return process")()  // → [object process]
 根因：vm 上下文的**全局对象本身不可避免是宿主对象**，`globalThis.constructor` 即宿主
 `Object`，`.constructor` 即宿主 `Function`，于是重新桥回宿主域。Node 官方文档原文：
 *"the vm module is not a security mechanism. Do not use it to run untrusted code."*
-进程内 vm **无法**密封此逃逸，遂标记 🔴 需人工介入。
+进程内 vm **无法**密封此逃逸，遂标记 ● 需人工介入。
 
 ## 二、修复方案：把代码移出本进程的 V8 域
 
@@ -77,5 +77,5 @@ Node Permission Model **尚不拦截出站网络**。逃逸代码仍可开 socke
 
 ## 五、白皮书残留项更新
 
-原 🔴 需人工介入条目（executeCode opt-in vm 逃逸）**降级为 ✅ 已解决**。
+原 ● 需人工介入条目（executeCode opt-in vm 逃逸）**降级为 ✓ 已解决**。
 处置从「已默认禁用兜底」升级为「默认禁用 + 进程级权限沙箱真隔离，逃逸即无能力」。

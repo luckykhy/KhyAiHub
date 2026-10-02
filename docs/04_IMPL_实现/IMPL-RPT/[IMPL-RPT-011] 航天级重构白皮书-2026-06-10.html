@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -38,7 +38,7 @@
 <p><strong>回归</strong>：工具层 167/167；守卫+工具+安全+验证器 <strong>241/241 跨 24 套件全绿</strong>，零回归。</p>
 <hr>
 <h2 id="二-遗留风险清单">二、遗留风险清单<a class="anchor" href="#二-遗留风险清单" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>级别</th><th>项</th><th>说明</th><th>处置</th></tr></thead><tbody><tr><td>🟠</td><td>executeCode 出站网络</td><td>Node Permission Model 不闸断 outbound network</td><td>爆炸半径有界（无能力子进程无 fs/密钥可达），需 OS 级出站沙箱才能完全闭环</td></tr><tr><td>🟡</td><td>命令 denylist 混淆绕过</td><td><code>securityGuardService</code> 正则黑名单可经混淆（<code>rm -r${IFS}-f</code> 等）绕过</td><td>模式过滤的固有局限，非离散缺陷；权威防线是审批层 + 防御纵深</td></tr><tr><td>⚪</td><td>媒体工具读路径不封闭</td><td><code>imageOcr.imagePath</code> / <code>pdfToWord.inputPath</code> 刻意保留不封</td><td>合法消费 /tmp 临时件，按 ext 受限，非裸密钥字节原语，低危</td></tr><tr><td>⚪</td><td>imageDetect 读封闭已撤回</td><td>循环 12 加读封闭致 os.tmpdir 夹具回归 7 例 → 立即撤回</td><td>纯读工具无写汇聚点，撤回正确</td></tr><tr><td>⚙</td><td>运维知情开关</td><td><code>KHY_ALLOW_SENSITIVE_HOME_WRITE=1</code> / <code>KHY_ENABLE_EXECUTE_CODE=1</code> 重开对应向量</td><td>设计内的知情决策，非缺陷</td></tr><tr><td>未扫</td><td>显示台（TUI/GUI）</td><td>按安全域律最低优先，仅核心稳定后才扫；3 连洁净已先触发停机</td><td>渲染非执行，无致命类汇聚点，存活假定充分</td></tr></tbody></table>
+<table><thead><tr><th>级别</th><th>项</th><th>说明</th><th>处置</th></tr></thead><tbody><tr><td>●</td><td>executeCode 出站网络</td><td>Node Permission Model 不闸断 outbound network</td><td>爆炸半径有界（无能力子进程无 fs/密钥可达），需 OS 级出站沙箱才能完全闭环</td></tr><tr><td>◐</td><td>命令 denylist 混淆绕过</td><td><code>securityGuardService</code> 正则黑名单可经混淆（<code>rm -r${IFS}-f</code> 等）绕过</td><td>模式过滤的固有局限，非离散缺陷；权威防线是审批层 + 防御纵深</td></tr><tr><td>○</td><td>媒体工具读路径不封闭</td><td><code>imageOcr.imagePath</code> / <code>pdfToWord.inputPath</code> 刻意保留不封</td><td>合法消费 /tmp 临时件，按 ext 受限，非裸密钥字节原语，低危</td></tr><tr><td>○</td><td>imageDetect 读封闭已撤回</td><td>循环 12 加读封闭致 os.tmpdir 夹具回归 7 例 → 立即撤回</td><td>纯读工具无写汇聚点，撤回正确</td></tr><tr><td>⚙</td><td>运维知情开关</td><td><code>KHY_ALLOW_SENSITIVE_HOME_WRITE=1</code> / <code>KHY_ENABLE_EXECUTE_CODE=1</code> 重开对应向量</td><td>设计内的知情决策，非缺陷</td></tr><tr><td>未扫</td><td>显示台（TUI/GUI）</td><td>按安全域律最低优先，仅核心稳定后才扫；3 连洁净已先触发停机</td><td>渲染非执行，无致命类汇聚点，存活假定充分</td></tr></tbody></table>
 <hr>
 <h2 id="三-系统现状评估-极端条件存活概率">三、系统现状评估（极端条件存活概率）<a class="anchor" href="#三-系统现状评估-极端条件存活概率" aria-label="锚点">#</a></h2>
 <ul><li><strong>核心舱（内核）</strong>：6 关键文件全加固，溢出/越界/死锁/refcount 防线在位。极值风暴下 <strong>存活：高</strong>。</li><li><strong>执行臂（网关/工具执行器）</strong>：所有写汇聚点已封；任意写提权（含 home 持久化向量）在<strong>工具层 + 守卫层双闭环</strong>；代码执行隔离至无能力子进程；SSRF int32 闭环；资源枯竭有界（heap/buffer/ulimit/unref timer/出栈栈）。残留仅子进程出站网络 + 命令 denylist 混淆绕过，均有界/防御纵深。存活：<strong>由突击前的中 → 现高</strong>。</li><li><strong>显示台（TUI/GUI）</strong>：未扫（最低优先 + 提前触发停机）。渲染非执行，存活假定充分。</li></ul>
