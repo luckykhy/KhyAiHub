@@ -136,7 +136,7 @@ export function TitleBar({
       })
     } },
     { kind: 'separator' },
-    { kind: 'action', label: '关于 KhyOS', run: () => toast('KhyOS Desktop — ZCode 1:1 复刻（开发构建）') },
+    { kind: 'action', label: '关于 KhyOS', run: () => toast('KhyOS Desktop（开发构建）') },
     { kind: 'action', label: '检查更新', run: () => toast('当前为开发构建：自动更新通道未配置，跳过检查') },
     { kind: 'action', label: '进程监视器', run: () => setProcessOpen(true) },
     { kind: 'separator' },
