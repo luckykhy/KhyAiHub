@@ -11,20 +11,20 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
     <div class="content">
       <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>01_INIT_立项<span class="sep">›</span>INIT-PRD<span class="sep">›</span>[INIT-PRD-003] KhyOS 的核心 —— 定位口径单一真源</div>
       <header class="hero reveal"><h1>[INIT-PRD-003] KhyOS 的核心 —— 定位口径单一真源</h1></header>
-      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#init-prd-003-khyos-的核心-定位口径单一真源">[INIT-PRD-003] KhyOS 的核心 —— 定位口径单一真源</a></li><li class="lvl-2"><a href="#〇-一句话">〇、一句话</a></li><li class="lvl-2"><a href="#一-核心-一词必须先一词一解">一、「核心」一词必须先一词一解</a></li><li class="lvl-2"><a href="#二-核心清单-以-b-为准-标注-a-子集">二、核心清单（以 B 为准，标注 A 子集）</a></li><li class="lvl-3"><a href="#运行核-a-删掉即无法启动或无法完成一次工具调用">运行核（= A，删掉即无法启动或无法完成一次工具调用）</a></li><li class="lvl-3"><a href="#主张核-b-a-删掉系统仍能跑-但产品主张塌一角">主张核（= B \ A，删掉系统仍能跑，但产品主张塌一角）</a></li><li class="lvl-3"><a href="#为什么是这七个-而不是五个或三个">为什么是这七个，而不是五个或三个</a></li><li class="lvl-2"><a href="#三-非核心的裁决-明确排除-附理由">三、非核心的裁决（明确排除，附理由）</a></li><li class="lvl-2"><a href="#四-口径冲突登记-本轮实测发现-需人工确认">四、口径冲突登记（本轮实测发现，需人工确认）</a></li><li class="lvl-3"><a href="#4-1-内核-readme-与-097-正面冲突">4.1 内核：README 与 097 正面冲突 ⚠️</a></li><li class="lvl-3"><a href="#4-2-核心-的多套口径并存">4.2 「核心」的多套口径并存</a></li><li class="lvl-3"><a href="#4-3-文档编号冲突-5-处-docs-index-complete-之外的债">4.3 文档编号冲突（5 处，`docs-index-complete` 之外的债）</a></li><li class="lvl-2"><a href="#五-与既有文档的关系-避免本文自己制造漂移">五、与既有文档的关系（避免本文自己制造漂移）</a></li><li class="lvl-2"><a href="#附录-复现命令">附录 · 复现命令</a></li><li class="lvl-2"><a href="#变更记录">变更记录</a></li></ul></nav>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#init-prd-003-khyos-的核心-定位口径单一真源">[INIT-PRD-003] KhyOS 的核心 —— 定位口径单一真源</a></li><li class="lvl-2"><a href="#〇-一句话">〇、一句话</a></li><li class="lvl-2"><a href="#一-核心-一词必须先一词一解">一、「核心」一词必须先一词一解</a></li><li class="lvl-2"><a href="#二-核心清单-以-b-为准-标注-a-子集">二、核心清单（以 B 为准，标注 A 子集）</a></li><li class="lvl-3"><a href="#运行核-a-删掉即无法启动或无法完成一次工具调用">运行核（= A，删掉即无法启动或无法完成一次工具调用）</a></li><li class="lvl-3"><a href="#主张核-b-a-删掉系统仍能跑-但产品主张塌一角">主张核（= B \ A，删掉系统仍能跑，但产品主张塌一角）</a></li><li class="lvl-3"><a href="#为什么是这七个-而不是五个或三个">为什么是这七个，而不是五个或三个</a></li><li class="lvl-2"><a href="#三-非核心的裁决-明确排除-附理由">三、非核心的裁决（明确排除，附理由）</a></li><li class="lvl-2"><a href="#四-口径冲突登记-本轮实测发现-需人工确认">四、口径冲突登记（本轮实测发现，需人工确认）</a></li><li class="lvl-3"><a href="#4-1-内核-readme-与-097-正面冲突">4.1 内核：README 与 097 正面冲突 ⚠</a></li><li class="lvl-3"><a href="#4-2-核心-的多套口径并存">4.2 「核心」的多套口径并存</a></li><li class="lvl-3"><a href="#4-3-文档编号冲突-5-处-docs-index-complete-之外的债">4.3 文档编号冲突（5 处，`docs-index-complete` 之外的债）</a></li><li class="lvl-2"><a href="#五-与既有文档的关系-避免本文自己制造漂移">五、与既有文档的关系（避免本文自己制造漂移）</a></li><li class="lvl-2"><a href="#附录-复现命令">附录 · 复现命令</a></li><li class="lvl-2"><a href="#变更记录">变更记录</a></li></ul></nav>
       <article class="doc-body">
 <p>&lt;!-- 文档分类: INIT-PRD-003 | 阶段: 立项 | 原路径: 新建 --&gt;</p>
 <h1 id="init-prd-003-khyos-的核心-定位口径单一真源">[INIT-PRD-003] KhyOS 的核心 —— 定位口径单一真源<a class="anchor" href="#init-prd-003-khyos-的核心-定位口径单一真源" aria-label="锚点">#</a></h1>
@@ -59,7 +59,7 @@
 <hr>
 <h2 id="四-口径冲突登记-本轮实测发现-需人工确认">四、口径冲突登记（本轮实测发现，需人工确认）<a class="anchor" href="#四-口径冲突登记-本轮实测发现-需人工确认" aria-label="锚点">#</a></h2>
 <blockquote><p>这些是「核心不清」的具体病灶。本文给出裁决，但<strong>涉及 README 等对外材料的改写属独立一轮工作</strong>，本文只登记、不擅自改。</p></blockquote>
-<h3 id="4-1-内核-readme-与-097-正面冲突">4.1 内核：README 与 097 正面冲突 ⚠️<a class="anchor" href="#4-1-内核-readme-与-097-正面冲突" aria-label="锚点">#</a></h3>
+<h3 id="4-1-内核-readme-与-097-正面冲突">4.1 内核：README 与 097 正面冲突 ⚠<a class="anchor" href="#4-1-内核-readme-与-097-正面冲突" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>出处</th><th>表述</th></tr></thead><tbody><tr><td><code>README.md</code> 项目简介</td><td>三大件之一：「<strong>手写 OS 内核</strong>（<code>kernel/</code>，C 语言）：抢占式调度、按需分页、写时复制 <code>fork</code>……<strong>可在 QEMU 下引导运行</strong>」</td></tr><tr><td><code>[INIT-PRD-002]</code> 架构栈</td><td>五层栈的<strong>最底层</strong>：「KHY Kernel — x86_../03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-097] KhyOS 核心边界定稿-一词一解.mdKhyOS%20核心边界定稿-一词一解.md) §定位裁决</td></tr></tbody></table>
 <p><strong>本文裁决</strong>：以 097 为准——<strong>内核不是核心</strong>。实测支持这个裁决：当前工作树上 <code>kernel/</code> 无任何构建产物，「可在 QEMU 下引导运行」<strong>无法从工作树复现</strong>（需先 <code>make</code> 构建）。</p>
 <p><strong>待办（不属本文）</strong>：<code>README.md</code> 把内核列为「三大件」之一，与本文及 097 冲突。要么改 README 的措辞（降级为「实验分支」），要么在 README 里显式标注「需先构建」。<strong>建议后者</strong>——内核是项目叙事资产，直接删掉会损失「单人手写 OS」的差异化，但必须把「实验」二字显性化。</p>
