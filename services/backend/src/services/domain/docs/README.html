@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>docs — 文档新鲜度与发布说明的判定层（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>docs<span class="sep">›</span>docs — 文档新鲜度与发布说明的判定层（D2）</div>
+      <header class="hero reveal"><h1>docs — 文档新鲜度与发布说明的判定层（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#docs-文档新鲜度与发布说明的判定层-d2">docs — 文档新鲜度与发布说明的判定层（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="docs-文档新鲜度与发布说明的判定层-d2">docs — 文档新鲜度与发布说明的判定层（D2）<a class="anchor" href="#docs-文档新鲜度与发布说明的判定层-d2" aria-label="锚点">#</a></h1>
+<p>业务上下文：<code>/docs</code> 的「哪些文档可能过期了」与 <code>/release-notes</code> 的<br>「从 CHANGELOG 生成发布说明」——两件事的<strong>判定</strong>都在这里，IO 只留一个 runner。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong>跑 <code>/docs</code> 的人</strong>：<code>constants/commandSchema.js:2087</code> 声明命令，</li></ul>
+<p>子路由 <code>docs maintainer</code>（<code>:1670</code>）与 <code>docs check</code>（<code>:1677</code>）；<br>  处理器 <code>cli/handlers/docs.js:694</code> 取 <code>docsFreshness/docsFreshnessRunner.js</code>、<br>  <code>:774</code> 取 <code>docsFreshness/docSuggestDraft.js</code>。</p>
+<ul><li><strong>要发布说明的人</strong>：<code>cli/handlers/releaseNotes.js:23</code> require 纯叶子</li></ul>
+<p><code>changelog/changelogParse.js</code> 的 <code>parseChangelog / selectReleaseNotes</code><br>  （命令声明 <code>commandSchema.js:213</code>，路由 <code>:1027</code>）。</p>
+<ul><li>壳 <code>services/docsFreshness/index.js:4-8</code> 只做再导出。</li></ul>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p>「文档过期」这个判断必须<strong>可解释</strong>：<code>docPathIndex.js</code> 把源码路径抽进倒排<br>（<code>extractSourcePaths / buildDocPathIndex / matchStaleSuspects</code>），<br><code>docMarkerSync.js</code> 管受管区块的值映射，<code>docProductPlan.js</code> 决定哪些文档产品该重建，<br><code>changelogParse.js</code> 把 Markdown 切成版本/亮点结构。这四件都是<strong>确定性纯函数</strong>，<br>所以「为什么这份文档被判为可疑」能原样打印给人看。唯一的 IO 侧是<br><code>docsFreshnessRunner.js</code>（<code>fs</code> + <code>child_process.execFileSync</code> + <code>utils/gitSoftExec</code>），<br>它只负责取改动集与落盘，不参与判定。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/services/changelog/changelogParse.test.js   <span class="hljs-comment"># 17 tests / 17 pass / 0 fail</span></code></pre>
+<p>同族还有 <code>tests/services/{docPathIndex,docMarkerSync,docProductPlan,docsFreshnessRunner}.test.js</code><br>（node:test 形态）与 <code>tests/services/docSuggestDraft.test.js</code>（jest 形态，正式入口 <code>npm test</code>；<br>本卡未在此 shell 复跑 jest 那条，便携 shell 无 npm/npx）。</p>
+<h2 id="已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）<a class="anchor" href="#已知缺陷-登记-不在本单元擅自修" aria-label="锚点">#</a></h2>
+<p>本目录<strong>零</strong>测试共置（<code>check:layout</code> 的 <code>test-colocated</code> 判据逐文件点名）：<br>所有测试都在 <code>services/backend/tests/</code> 下。补齐属 <code>[RESEARCH-018]</code> §4 C-4 的<br>存量活，与 README 半（本文件）共用同一把尺。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../services/backend/src/services/domain/docs/docsFreshness/README.html"><div class="dir">← 上一篇</div><div class="ttl">docsFreshness — 文档新鲜度自检（D2 功能单元）</div></a><a class="next" href="../../../../../../services/backend/src/services/domain/eval/README.html"><div class="dir">下一篇 →</div><div class="ttl">eval — GUI 评测与 Web 前端评测（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/docs/README.html";</script>
+<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
