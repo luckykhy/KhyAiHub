@@ -1,4 +1,4 @@
-<!-- khy-metadata:auto khy-metadata/4 fingerprint=d2a8095ef4f28929 -->
+<!-- khy-metadata:auto khy-metadata/4 fingerprint=21cc00ae8a8db283 -->
 <!-- 机器生成，可被 `khy metadata refresh` 覆盖。删除此标记行即人工接管。项目特有红线请写在「项目特有红线」小节，刷新不会动那一节以外的人工补写——但为安全起见，接管整文件时请删除本标记。 -->
 # GUARDS — khy-os 红线与维护指南 (khy 自动生成种子文档)
 

@@ -3,7 +3,7 @@
 generated:
   mode: auto                # auto = 机器自有，可被 refresh 覆盖；改为 manual 则人工接管
   tool: "khy-metadata/4"
-  fingerprint: d2a8095ef4f28929
+  fingerprint: 21cc00ae8a8db283
 project: "khy-os"
 stack: [node, monorepo, python, docker, "docker-compose"]
 entry_points:
@@ -47,14 +47,14 @@ config_files:
   - "apps/khyos-desktop/vite.config.js"
   - "apps/khyos-desktop/vite.host.config.ts"
   - "apps/khyos-desktop/vite.scheduler.config.ts"
+  - "apps/provider-hub/electron.vite.config.1790238272970.mjs"
+  - "apps/provider-hub/electron.vite.config.1790238291707.mjs"
+  - "apps/provider-hub/electron.vite.config.1790238642419.mjs"
   - "apps/provider-hub/electron.vite.config.ts"
   - "scripts/ci/file-ratchet.config.json"
   - "scripts/quality-gate/c8.config.json"
   - services/backend/.env
   - "services/backend/.env.bak-20260914-codexpin"
-  - "services/backend/.env.bak-20260917-statusfix"
-  - "services/backend/.env.bak-cleanup"
-  - services/backend/.env.example
 symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
   khy.sh:
     lang: shell
@@ -62,96 +62,6 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
   "portable-setup.sh":
     lang: shell
     decls: []
-  "_产物/append-141-acceptance.js":
-    lang: javascript
-    decls: []
-  "_产物/append-memory-22-5.js":
-    lang: javascript
-    decls: []
-  "_产物/append-memory-mem-and-log.js":
-    lang: javascript
-    decls:
-      - { kind: const, name: bytes }
-  "_产物/board-lane-map.js":
-    lang: javascript
-    decls:
-      - { kind: fn, name: deriveRuntimeId }
-      - { kind: fn, name: joinPrefix }
-      - { kind: fn, name: readStoreSource }
-      - { kind: fn, name: extractStringArray }
-      - { kind: fn, name: extractSet }
-      - { kind: fn, name: extractTransitions }
-      - { kind: fn, name: extractLauncherCommands }
-      - { kind: fn, name: extractTaskFields }
-      - { kind: fn, name: extractPayloadKeys }
-      - { kind: fn, name: countWorktreeBindCallSites }
-      - { kind: fn, name: buildSwimlanes }
-      - { kind: const, name: agent }
-      - { kind: fn, name: swimlaneForSource }
-      - { kind: fn, name: assess }
-      - { kind: const, name: add }
-      - { kind: const, name: outs }
-      - { kind: fn, name: padW }
-      - { kind: fn, name: main }
-      - { kind: const, name: scenario }
-      - { kind: const, name: tryRead }
-  "_产物/classify-collateral-141.js":
-    lang: javascript
-    decls:
-      - { kind: fn, name: git }
-  "_产物/touch-cost-probe.js":
-    lang: javascript
-    decls:
-      - { kind: fn, name: argOf }
-      - { kind: fn, name: sh }
-      - { kind: fn, name: countLines }
-  "_产物/tui-startup-probe-e2e.js":
-    lang: javascript
-    decls:
-      - { kind: fn, name: finish }
-  "_产物/tui-startup-probe-profile.js":
-    lang: javascript
-    decls:
-      - { kind: const, name: relPath }
-      - { kind: const, name: describe }
-      - { kind: const, name: bucketOf }
-      - { kind: const, name: url }
-      - { kind: const, name: w }
-  "_产物/tui-startup-probe-render.js":
-    lang: javascript
-    decls:
-      - { kind: const, name: elapsed }
-      - { kind: const, name: stamp }
-      - { kind: const, name: log }
-  "_产物/tui-startup-probe-require.js":
-    lang: javascript
-    decls:
-      - { kind: const, name: ms }
-      - { kind: const, name: rel }
-      - { kind: const, name: isRepo }
-      - { kind: const, name: sum }
-  "_产物/update-doc-141.js":
-    lang: javascript
-    decls: []
-  "backups/replayEngine.pre-trajectory-flip.js":
-    lang: javascript
-    decls:
-      - { kind: fn, name: _stepTimeoutMs }
-      - { kind: fn, name: _shellAllowList }
-      - { kind: const, name: fromEnv }
-      - { kind: fn, name: _shellPreApproved }
-      - { kind: fn, name: _approveParams }
-      - { kind: fn, name: _replayControlResponder }
-      - { kind: fn, name: _executeWithTimeout }
-      - { kind: fn, name: _preconditionCheck }
-      - { kind: fn, name: _verifyArtifacts }
-      - { kind: fn, name: _maybeRepair }
-      - { kind: fn, name: _applyRepaired }
-      - { kind: fn, name: _applyRepairHalt }
-      - { kind: fn, name: _resolveBundle }
-      - { kind: fn, name: replay }
-      - { kind: const, name: steps }
-      - { kind: const, name: emit }
   electron/main.js:
     lang: javascript
     decls:
@@ -194,6 +104,8 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
   scripts/gen_keys.py:
     lang: python
     decls:
+      - { kind: def, name: keys_file }
+      - { kind: def, name: load_keys }
       - { kind: def, name: encode }
       - { kind: def, name: decode }
       - { kind: def, name: dart_arrays }
@@ -215,11 +127,24 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
       - { kind: fn, name: portOf }
       - { kind: fn, name: isTargetReachable }
       - { kind: const, name: done }
-      - { kind: fn, name: readApiPortFromRuntime }
+      - { kind: fn, name: readApiPortCandidates }
       - { kind: fn, name: readPointerDataHomes }
       - { kind: const, name: resolvePortable }
+      - { kind: fn, name: resolveDataHomes }
       - { kind: fn, name: resolveBackendTarget }
       - { kind: fn, name: resolveWebBackendTarget }
+  "apps/ai-frontend/frontendRuntime.mjs":
+    lang: javascript
+    decls:
+      - { kind: fn, name: validPort }
+      - { kind: fn, name: canBindPort }
+      - { kind: fn, name: resolveServePort }
+      - { kind: fn, name: primaryDataHome }
+      - { kind: fn, name: publishFrontendRuntime }
+      - { kind: fn, name: clearFrontendRuntime }
+      - { kind: fn, name: khyFrontendIdentityPlugin }
+      - { kind: const, name: identity }
+      - { kind: const, name: attach }
   "apps/ai-frontend/vite.config.js":
     lang: javascript
     decls: []
@@ -292,6 +217,12 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
   "apps/khyos-desktop/electron.vite.config.ts":
     lang: typescript
     decls: []
+  "apps/khyos-desktop/vite.config.js":
+    lang: javascript
+    decls: []
+  "apps/khyos-desktop/vite.host.config.ts":
+    lang: typescript
+    decls: []
   electron/services/aiGatewayService.js:
     lang: javascript
     decls:
@@ -352,10 +283,11 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
   "kernel/bridge/khy-brain-gateway.js":
     lang: javascript
     decls:
+      - { kind: fn, name: dataHomeCandidates }
+      - { kind: const, name: push }
       - { kind: fn, name: readAuthTokenFile }
       - { kind: fn, name: defaultGatewayUrl }
       - { kind: const, name: host }
-      - { kind: const, name: port }
       - { kind: fn, name: postJson }
       - { kind: fn, name: assistantText }
       - { kind: fn, name: firstLine }
@@ -419,6 +351,18 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
       - { kind: fn, name: agentask_init }
       - { kind: fn, name: agentask_on_response }
       - { kind: fn, name: agentask_tick }
+  kernel/src/agentask.h:
+    lang: c
+    decls:
+      - { kind: struct, name: agentframe }
+  kernel/src/agentbus.c:
+    lang: c
+    decls:
+      - { kind: fn, name: agentbus_send_frame }
+      - { kind: fn, name: dispatch_frame }
+      - { kind: fn, name: agentbus_rx_byte }
+      - { kind: fn, name: agentbus_init }
+      - { kind: fn, name: agentbus_task }
   packaging/installer/build_installer.js:
     lang: javascript
     decls:
@@ -593,6 +537,65 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
       - { kind: def, name: _run_repair }
       - { kind: def, name: _build_parser }
       - { kind: def, name: run_bundle_cli }
+  platform/khy_platform/cli.py:
+    lang: python
+    decls:
+      - { kind: def, name: _orphan_sweep_hint_enabled }
+      - { kind: def, name: _broken_install_guidance }
+      - { kind: def, name: _sweep_corrupt_orphans }
+      - { kind: def, name: _orphan_sweep_enabled }
+      - { kind: def, name: _orphan_sweep_marker_current }
+      - { kind: def, name: _sweep_bundled_orphans_deep }
+      - { kind: def, name: _normalize_dist_name }
+      - { kind: def, name: _sweep_stale_self_distinfo }
+      - { kind: def, name: _site_packages_roots }
+      - { kind: def, name: _add }
+      - { kind: def, name: _self_install_cleanup }
+      - { kind: def, name: _bundled_payload_candidates }
+      - { kind: def, name: _find_bundled_root }
+      - { kind: def, name: run_install_cleanup }
+      - { kind: def, name: _source_checkout_backend }
+      - { kind: def, name: _is_standalone_bundle_install }
+      - { kind: def, name: get_bundle_dir }
+      - { kind: def, name: _subprocess_kwargs }
+      - { kind: def, name: _background_subprocess_kwargs }
+      - { kind: def, name: _build_backend_process_env }
+      - { kind: def, name: _node_check_cache_file }
+      - { kind: def, name: _node_check_cache_enabled }
+      - { kind: def, name: _node_binary_signature }
+      - { kind: def, name: _load_cached_node_check }
+      - { kind: def, name: _save_cached_node_check }
+      - { kind: def, name: _cached_node_command }
+      - { kind: def, name: check_node }
+      - { kind: def, name: _ensure_node_via_provisioner }
+      - { kind: class, name: _DownloadProgress }
+      - { kind: def, name: __init__ }
+  platform/khy_platform/cn_mirror.py:
+    lang: python
+    decls:
+      - { kind: def, name: cn_mirror_enabled }
+      - { kind: def, name: npm_registry }
+      - { kind: def, name: node_dist_root }
+  platform/khy_platform/devenv.py:
+    lang: python
+    decls:
+      - { kind: def, name: get_install_path }
+      - { kind: def, name: get_install_root }
+      - { kind: def, name: constraints_file }
+      - { kind: def, name: _python_module_present }
+      - { kind: def, name: ensure_python_dev_deps }
+      - { kind: def, name: _print_python_recovery }
+      - { kind: def, name: detect_toolchains }
+      - { kind: def, name: _resolve_backend_dir }
+      - { kind: def, name: _find_provisioned_node_bin }
+      - { kind: def, name: ensure_node_runtime }
+      - { kind: def, name: heal_bundled_source }
+      - { kind: def, name: ensure_md_registration }
+      - { kind: def, name: ensure_tray_autostart }
+      - { kind: def, name: run_postinstall }
+      - { kind: def, name: ensure_dev_environment }
+      - { kind: def, name: _subprocess_kwargs }
+      - { kind: def, name: _main }
   "scripts/admin/_check-credentials.js":
     lang: javascript
     decls: []
@@ -609,6 +612,16 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
       - { kind: fn, name: query }
       - { kind: fn, name: main }
       - { kind: fn, name: loginReq }
+  "scripts/admin/_insert-user.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: main }
+  "scripts/admin/_insert-user.py":
+    lang: python
+    decls: []
+  "scripts/admin/_reset-users.py":
+    lang: python
+    decls: []
   "services/ai-backend/server.js":
     lang: javascript
     decls:
@@ -621,6 +634,17 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
     lang: java
     decls:
       - { kind: class, name: TmpKoh }
+  services/backend/_chk_app2.js:
+    lang: javascript
+    decls: []
+  services/backend/_chk_bridge.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: walk }
+  services/backend/_probe_tools.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: walk }
   "services/backend/check-env.js":
     lang: javascript
     decls: []
@@ -776,6 +800,9 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
       - { kind: fn, name: ping }
       - { kind: fn, name: initTocSpy }
       - { kind: fn, name: ready }
+  "docs/19_资产/site/nav-data.js":
+    lang: javascript
+    decls: []
   "extensions/bridges/khy-trae-bridge/extension.js":
     lang: javascript
     decls:
@@ -876,6 +903,25 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
       - { kind: fn, name: buildVideoCorpus }
       - { kind: fn, name: buildVideoMimeCorpus }
       - { kind: const, name: M }
+  "extensions/scripts/khy-diagnostics/hydration-doctor.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: _tryExec }
+      - { kind: fn, name: _existsSafe }
+      - { kind: fn, name: _probePackage }
+      - { kind: fn, name: _resolveBackendDir }
+      - { kind: fn, name: _probePortableNode }
+      - { kind: fn, name: probeHydrationFacts }
+      - { kind: fn, name: _fmtItem }
+      - { kind: fn, name: runHydrationDoctor }
+      - { kind: fn, name: buildDoc }
+      - { kind: const, name: hint }
+      - { kind: fn, name: writeDoc }
+  "extensions/scripts/khy-diagnostics/inspect-ccswitch.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: resolveDbPath }
+      - { kind: fn, name: loadSqlite }
   "packaging/modules/entries/khy-ai-entry.js":
     lang: javascript
     decls:
@@ -925,39 +971,29 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
       - { kind: fn, name: call }
       - { kind: fn, name: callDirect }
       - { kind: fn, name: callViaExec }
-  software/khyquant/config/database.js:
+  packaging/npm/scripts/assemble.js:
     lang: javascript
     decls: []
-  software/khyquant/config/referencePrices.js:
+  "packaging/npm/scripts/audit-purity.js":
     lang: javascript
     decls:
-      - { kind: fn, name: getMarketDataService }
-      - { kind: fn, name: getKlineDataService }
-      - { kind: fn, name: getReferencePrice }
-  software/khyquant/constants/models.js:
-    lang: javascript
-    decls: []
-  software/khyquant/controllers/comprehensiveDataController.js:
+      - { kind: fn, name: parseArgs }
+      - { kind: const, name: distDir }
+      - { kind: const, name: platformFilter }
+      - { kind: const, name: packageRoot }
+      - { kind: fn, name: log }
+      - { kind: fn, name: fail }
+      - { kind: fn, name: fnmatch }
+      - { kind: fn, name: isForbiddenFile }
+      - { kind: fn, name: checkDir }
+      - { kind: fn, name: assertNoResourceStore }
+      - { kind: fn, name: walk }
+      - { kind: fn, name: auditPlatform }
+      - { kind: fn, name: walk }
+      - { kind: fn, name: auditPackage }
+      - { kind: fn, name: walk }
+      - { kind: fn, name: main }
+  "packaging/npm/scripts/postinstall-compress.js":
     lang: javascript
     decls:
-      - { kind: class, name: ComprehensiveDataController }
-      - { kind: const, name: day }
-      - { kind: const, name: change }
-      - { kind: const, name: change }
-  software/khyquant/controllers/instrumentController.js:
-    lang: javascript
-    decls:
-      - { kind: class, name: InstrumentController }
-  software/khyquant/controllers/marketController.js:
-    lang: javascript
-    decls:
-      - { kind: class, name: MarketController }
-      - { kind: const, name: changePercent }
-      - { kind: const, name: changePercent }
-      - { kind: const, name: changePercent }
-  software/khyquant/frontend/capacitor.config.ts:
-    lang: typescript
-    decls: []
-  software/khyquant/frontend/eslint.config.js:
-    lang: javascript
-    decls: []
+      - { kind: fn, name: spawnDetached }
