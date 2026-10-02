@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>selfRepair — 自修复事务的编排器与 IO 原语（D2 功能单元） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>maintenance<span class="sep">›</span>selfRepair<span class="sep">›</span>selfRepair — 自修复事务的编排器与 IO 原语（D2 功能单元）</div>
+      <header class="hero reveal"><h1>selfRepair — 自修复事务的编排器与 IO 原语（D2 功能单元）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#selfrepair-自修复事务的编排器与-io-原语-d2-功能单元">selfRepair — 自修复事务的编排器与 IO 原语（D2 功能单元）</a></li><li class="lvl-2"><a href="#逐成员">逐成员</a></li><li class="lvl-2"><a href="#消费者-实测-fan-in-3-均非测试文件">消费者（实测 fan-in = 3，均非测试文件）</a></li><li class="lvl-2"><a href="#契约-每条都对应命名测试">契约（每条都对应命名测试）</a></li><li class="lvl-2"><a href="#已知偏差-登记-不合法化">已知偏差（登记，不合法化）</a></li><li class="lvl-2"><a href="#怎么跑">怎么跑</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="selfrepair-自修复事务的编排器与-io-原语-d2-功能单元">selfRepair — 自修复事务的编排器与 IO 原语（D2 功能单元）<a class="anchor" href="#selfrepair-自修复事务的编排器与-io-原语-d2-功能单元" aria-label="锚点">#</a></h1>
+<p>一句话：把「让 fix agent 改代码」这件事包成一次<strong>可校验、可回滚、失败不丢修复</strong>的事务。<br><code>transactionRunner.js</code> 只做编排（plan → snapshot → runFix → classify → validate → decide → keep|rollback），<br>所有副作用集中在 <code>primitives.js</code> 这一个工厂里，因此编排器可以用 stub 原语做零真 IO 的单测。<br>判定（去留、改动集归一、门控计划）全部委托纯叶子 <code>services/selfRepairTransaction.js</code>（D1，另属它自己的单元）。</p>
+<p>清单：<code>khy.module.json</code>（<code>domain</code> / <code>mayDependOn</code> / <code>fanIn</code> / <code>lifecycle.stage</code> 四字段被<br><code>npm run check:layout</code> 的 entry-buffer 规则读取；本单元的 D2→D1、D2→D5 边按偏差登记，不写白名单）。</p>
+<h2 id="逐成员">逐成员<a class="anchor" href="#逐成员" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>角色</th><th>require</th><th>同名测试</th></tr></thead><tbody><tr><td><code>primitives.js</code></td><td>唯一副作用面：<code>snapshot</code>（<code>git stash create</code>）、<code>restore</code>（只还原改动集）、<code>validateFiles</code>（<code>node --check</code> 异步探针 + JSON 解析 + 机器守卫 + 受影响测试与覆盖率）</td><td><code>child_process</code>、<code>fs</code>、<code>path</code>（内建）、<code>../../../evolutionSafety</code>（D1）、仓库根 <code>scripts/lib/*</code> 两枚守卫（D5，缺失则 null 跳过）</td><td><code>primitives.test.js</code></td></tr><tr><td><code>transactionRunner.js</code></td><td>纯编排 + 依赖注入：事件流、fail-soft、回滚未净时升级交人</td><td><code>../../../evolutionPolicy</code>、<code>../../../evolutionSafety</code>、<code>../../../selfRepairTransaction</code>（均 D1），回滚未净时惰性 <code>../../../healEscalationService</code></td><td><code>transactionRunner.test.js</code></td></tr></tbody></table>
+<h2 id="消费者-实测-fan-in-3-均非测试文件">消费者（实测 fan-in = 3，均非测试文件）<a class="anchor" href="#消费者-实测-fan-in-3-均非测试文件" aria-label="锚点">#</a></h2>
+<p><code>services/changeWatchService.js</code>（每回合开始跑校验）、<code>services/selfRepair/index.js</code>（D1 再导出壳）、<br><code>services/tool/toolUseLoopCore.js</code>（fix 派发处，作者 in-flight 文件，本单元只读其引用关系）。</p>
+<h2 id="契约-每条都对应命名测试">契约（每条都对应命名测试）<a class="anchor" href="#契约-每条都对应命名测试" aria-label="锚点">#</a></h2>
+<ol><li><strong>快照不动工作树</strong>：用 <code>git stash create</code> 产悬挂 commit；干净树回退到 <code>HEAD</code>；非 git 环境返回 <code>null</code></li></ol>
+<p>（无回滚能力，事务仍校验并透明告警）。绝不 <code>stash push/save</code>。<br>   → <code>the IO surface is confined to this factory (worktree safety)</code></p>
+<ol><li><strong>回滚只作用于改动集</strong>：改动集内先试 <code>git checkout &lt;ref&gt; -- &lt;file&gt;</code>，快照里不存在者视为 fix 新建 → <code>fs.rm</code>；</li></ol>
+<p>会话内其余无关改动一律保留。无 git 快照句柄时 <code>restore</code> 直接返回 <code>false</code>，不做任何事。<br>   → <code>restore() refuses to act without a git snapshot handle</code></p>
+<ol><li><strong>语法闸的三条豁免</strong>：<code>.json</code> 走 <code>JSON.parse</code>；<code>.ts/.tsx/.jsx</code> 不送 <code>node --check</code></li></ol>
+<p>（node 按扩展名选 loader，对内容合法的 <code>.jsx</code> 也抛 <code>ERR_UNKNOWN_FILE_EXTENSION</code>，还会把 node 内部栈行号<br>   当成源文件行号上报）；<strong>不存在的路径直接跳过</strong>——rename/delete 后旧路径留在清单里，<br>   否则每次改名都会让整轮校验误报「改动不对」。<br>   → <code>validateFiles: malformed JSON is judged by parse, not by node --check</code>、<br>   <code>validateFiles: extension-less-to-node-check types are skipped, not misreported</code>、<br>   <code>validateFiles: a vanished path (rename/delete) is skipped rather than reported</code></p>
+<ol><li><strong>探针不阻塞事件循环</strong>：<code>node --check</code> 用 <code>execFile</code> 异步形态（同步版实测约 300ms/文件 × 70 文件 ≈ 22s，</li></ol>
+<p>正是「提交后 spinner 卡死约 30s」的根因，因为 <code>changeWatchService.checkOnce()</code> 每回合都跑）。<br>   → <code>primitives.js</code> 的 <code>_nodeCheckAsync</code>；返回形态与 <code>spawnSync</code> 逐字段一致，调用方处理不变。</p>
+<ol><li><strong>门控关 = 逐字节回退</strong>：<code>KHY_SELF_REPAIR_TRANSACTION=off</code> 时直接返回 <code>runFix()</code> 的<strong>同一对象</strong>，</li></ol>
+<p>不取快照、不附 <code>transaction</code> 注记、不发事件。<br>   → <code>gate off: byte-identical passthrough — no snapshot, no transaction wrapper</code></p>
+<ol><li><strong>事件梯与决策形状</strong>：门控开时依次 <code>repair_snapshot_start/done → repair_validate_start/done</code>，</li></ol>
+<p>校验不过且有快照才 <code>repair_rollback_start/done</code>；<code>decision.keep</code> 为真时 <code>rolledBack</code> 恒为 <code>null</code>。<br>   → <code>gate on, clean validation: keep, no rollback, and the documented event ladder</code>、<br>   <code>gate on, failing validation with a snapshot: restore is called and its answer reported</code></p>
+<ol><li><strong>fail-soft「绝不比今天差」</strong>：快照抛错 → <code>snapshotMissing</code> 为真但流程继续；校验原语抛错 →</li></ol>
+<p>返回未经包装的 <code>fixResult</code>（<strong>保留可能正确的修复，不回滚</strong>）；<code>onEvent</code> 监听器抛错不得影响事务；<br>   非对象 fix 结果归一化为空壳而不是把垃圾展开。<br>   → <code>a throwing snapshot degrades to &quot;no rollback capability&quot;, not to failure</code>、<br>   <code>machinery failure is fail-soft: the fix result survives, nothing rejects</code>、<br>   <code>a hostile onEvent listener cannot break the transaction</code>、<code>a non-object fix result is normalised instead of spreading garbage</code></p>
+<ol><li><strong>回滚未净交人（L3）</strong>：<code>restore</code> 返回 <code>false</code> 意味着工作树可能残留半截改动——写 <code>.khy/heal_escalation.json</code></li></ol>
+<p>并终端告警；回滚成功是护栏正常生效，不打扰用户。升级链自身抛错也被吞掉，绝不反噬事务。<br>   → <code>a failing restore still completes and never rethrows</code></p>
+<h2 id="已知偏差-登记-不合法化">已知偏差（登记，不合法化）<a class="anchor" href="#已知偏差-登记-不合法化" aria-label="锚点">#</a></h2>
+<ul><li><strong>D2→D1</strong>：两成员共伸进 <code>evolutionPolicy</code>、<code>evolutionSafety</code>、<code>selfRepairTransaction</code>，</li></ul>
+<p>回滚未净时还伸进 <code>healEscalationService</code>。</p>
+<ul><li><strong>D2→D5</strong>：<code>primitives.js</code> 从仓库根 <code>scripts/lib/{leafContractGuard,modelHardcodingGuard}</code> 深相对 require；</li></ul>
+<p>缺失（纯 pip 环境无完整仓库）时 best-effort 置 <code>null</code> 跳过。<br>  两条都由 <code>archDebtScan</code> R1/R3 与 <code>domain-direction</code> 既有棘轮管辖，本单元只如实记录。</p>
+<h2 id="怎么跑">怎么跑<a class="anchor" href="#怎么跑" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">node --<span class="hljs-built_in">test</span> services/backend/src/services/domain/maintenance/selfRepair/primitives.test.js \
+  services/backend/src/services/domain/maintenance/selfRepair/transactionRunner.test.js
+node scripts/ci/check-repo-layout.js --list=functional-unit | grep -c <span class="hljs-string">&quot;selfRepair&quot;</span>   <span class="hljs-comment"># 期望 0</span></code></pre>
+<p>新增 <code>README.md</code> 后须跑 <code>node scripts/docs/build_docs_site.js</code> 生成同名 <code>.html</code> 孪生。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../services/backend/src/services/domain/maintenance/README.html"><div class="dir">← 上一篇</div><div class="ttl">maintenance — 自修、认领、进化与卸载的机制层（D2）</div></a><a class="next" href="../../../../../../../services/backend/src/services/domain/maintenance/uninstall/README.html"><div class="dir">下一篇 →</div><div class="ttl">uninstall — 卸载台账 / 计划 / 写入</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/maintenance/selfRepair/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
