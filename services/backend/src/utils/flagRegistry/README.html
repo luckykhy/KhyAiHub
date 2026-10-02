@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>flagRegistry — D3 共享底座 / KHY 门控的声明式中央注册表 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>utils<span class="sep">›</span>flagRegistry<span class="sep">›</span>flagRegistry — D3 共享底座 / KHY 门控的声明式中央注册表</div>
+      <header class="hero reveal"><h1>flagRegistry — D3 共享底座 / KHY 门控的声明式中央注册表</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#flagregistry-d3-共享底座-khy-门控的声明式中央注册表">flagRegistry — D3 共享底座 / KHY_* 门控的声明式中央注册表</a></li><li class="lvl-2"><a href="#为什么住在-d3-而不是-services">为什么住在 D3（而不是 services/）</a></li><li class="lvl-2"><a href="#契约">契约</a></li><li class="lvl-2"><a href="#测试">测试</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="flagregistry-d3-共享底座-khy-门控的声明式中央注册表">flagRegistry — D3 共享底座 / KHY_* 门控的声明式中央注册表<a class="anchor" href="#flagregistry-d3-共享底座-khy-门控的声明式中央注册表" aria-label="锚点">#</a></h1>
+<p>一句话：把散在全仓 ~1500 个 <code>KHY_*</code> env 门控的<strong>解析方言</strong>与<strong>父→子优先级</strong>收成一份声明式真源，<br>调用方只问「这个 flag 现在开不开」，不再各自手写私有 <code>_off</code>。</p>
+<h2 id="为什么住在-d3-而不是-services">为什么住在 D3（而不是 services/）<a class="anchor" href="#为什么住在-d3-而不是-services" aria-label="锚点">#</a></h2>
+<p><code>DOMAIN-DEPS.json</code> 对 D3 的 evidence 是「fan-in&gt;30 的枢纽绝大多数落在 <code>utils/</code> 与 <code>constants/</code>」。<br>本单元 fan-in 实测 <strong>223</strong> 个非测试源文件（清单见 <code>khy.module.json</code> 的 <code>_fanIn_note</code>），<br>且真身<strong>零 require、零 IO、确定性、绝不抛</strong>——它自述就是「纯叶子」。<br>此前它住在 <code>services/</code>（D1），于是 8 个同为 D3 的消费者（<code>utils/gateOn</code>、<code>utils/isEnabledDefaultOn</code>、<br><code>utils/resolveNumericFlag</code>、<code>utils/pythonPath</code>、<code>constants/prompts</code> ×4）不得不向下伸回 D1 取它，<br>构成 <code>check:layout</code> 的 d3-purity 违规。归位后这些边变成 D3 内部边（允许）。</p>
+<ul><li>旧路径 <code>services/backend/src/services/flagRegistry.js</code> 保留为<strong>一行再导出壳</strong>，223 个消费者不改。</li><li>迁移批次与前后读数：<code>[DESIGN-LAY-008]</code> §12.7（P2 第 17 批，2026-09-28）。</li></ul>
+<h2 id="契约">契约<a class="anchor" href="#契约" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>导出</th><th>语义</th><th>失败模式</th></tr></thead><tbody><tr><td><code>isRegistryEnabled(env)</code></td><td>自门控 <code>KHY_FLAG_REGISTRY</code>，缺省开</td><td>只认 4 词显式关闭</td></tr><tr><td><code>isFlagEnabled(name, env, _seen)</code></td><td>按登记模式解析；<strong>父关 → 子必关</strong>（集中施加，不逐站点重刻）</td><td>未登记的 name 保守放行 <code>true</code></td></tr><tr><td><code>resolveNumeric(name, env)</code></td><td><code>numeric</code> 模式取数，带 min/max clamp</td><td>坏值 → 登记表 default</td></tr><tr><td><code>listFlags()</code></td><td>返回副本（不改内部表）</td><td>—</td></tr><tr><td><code>FLAGS</code> / <code>OFF_WORDS</code> / <code>VALID_MODES</code> / <code>VALID_OFF_NAMES</code></td><td>声明表面向守卫与测试开放</td><td>—</td></tr></tbody></table>
+<p><strong>刻意不做的两件事</strong>（改动前务必读）：</p>
+<ol><li><strong>不统一关闭词方言</strong>：<code>CANON</code>(4 词) / <code>EXTENDED</code>(6 词) / <code>MINIMAL</code>(3 词) 是各 flag 的历史事实，</li></ol>
+<p>注册表<strong>记录</strong>分歧而不是抹除；抹平等于给某些 flag 悄悄加/减关闭词 = 静默行为变更。</p>
+<ol><li><strong>不迁移全部站点</strong>：<code>FLAGS</code> 是<strong>种子集</strong>（已确证的父子链 + outlier）。</li></ol>
+<p>结构不变量由 <code>npm run check:flag-registry</code>（<code>scripts/lib/flagRegistryGuard.js</code>，查活表不查文本）把守。</p>
+<h2 id="测试">测试<a class="anchor" href="#测试" aria-label="锚点">#</a></h2>
+<ul><li>行为契约 40 例：<code>services/backend/tests/services/flagRegistry.test.js</code>（jest 方言）</li><li>层契约 4 例（本目录）：<code>node --test services/backend/src/utils/flagRegistry/index.test.js</code></li></ul>
+<p>锁壳/真身同一模块、壳不含逻辑、D3→D1 反向边棘轮（上限 35）、父子链在真实表上生效。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../services/backend/src/utils/ansiSanitizer/README.html"><div class="dir">← 上一篇</div><div class="ttl">ansiSanitizer — 剥离 ANSI/CSI/OSC/裸 ESC 控制序列的单一真源</div></a><a class="next" href="../../../../../services/backend/src/utils/text/README.html"><div class="dir">下一篇 →</div><div class="ttl">utils/text/ — 文本宽度 / 引用扫描 / 收尾判定纯叶子（D3 共享底座）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../";window.__KHY_CUR__="services/backend/src/utils/flagRegistry/README.html";</script>
+<script src="../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

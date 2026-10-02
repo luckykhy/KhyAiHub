@@ -84,7 +84,7 @@ in the gaps between meetings, never mid-call.
 
 ## MVP Scope
 IN: read the user's free/busy calendar; send ONE gentle nudge in the first
-gap after a 90-min busy block; a single "drank it 💧" tap to log.
+gap after a 90-min busy block; a single "drank it" tap to log.
 OUT: no hardware, no accounts, no streaks, no social features, no charts.
 The whole MVP exists only to test the timing assumption.
 

@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -77,7 +77,7 @@ context: inline|fork                  # 可选，默认 inline
 
 ## 禁止事项
 
-- ❌ ...</span></code></pre>
+- ✗ ...</span></code></pre>
 <p><strong>支持的 frontmatter 字段</strong>：</p>
 <table><thead><tr><th>字段</th><th>说明</th><th>默认值</th></tr></thead><tbody><tr><td><code>builtin</code></td><td>必须为 <code>true</code> 才能被自动发现</td><td>—</td></tr><tr><td><code>name</code></td><td>skill 唯一标识</td><td>—</td></tr><tr><td><code>description</code></td><td>人类可读描述</td><td>—</td></tr><tr><td><code>trigger</code></td><td>触发命令（<code>/</code> 前缀自动补全）</td><td><code>/&lt;name&gt;</code></td></tr><tr><td><code>user_invocable</code></td><td>用户能否直接调用</td><td><code>true</code></td></tr><tr><td><code>category</code></td><td>分类</td><td><code>others</code></td></tr><tr><td><code>tags</code></td><td>搜索标签</td><td><code>[]</code></td></tr><tr><td><code>platforms</code></td><td>目标平台</td><td><code>[]</code></td></tr><tr><td><code>paths</code></td><td>条件激活 glob 模式</td><td><code>null</code>（始终激活）</td></tr><tr><td><code>when_to_use</code></td><td>AI 调用时机提示</td><td><code>&quot;&quot;</code></td></tr><tr><td><code>allowed-tools</code></td><td>工具白名单</td><td><code>null</code>（不限制）</td></tr><tr><td><code>model</code></td><td>模型覆盖</td><td><code>null</code>（继承）</td></tr><tr><td><code>context</code></td><td>执行上下文</td><td><code>inline</code></td></tr><tr><td><code>disable-model-invocation</code></td><td>禁止模型调用</td><td><code>false</code></td></tr></tbody></table>
 <p><strong>优势</strong>：</p>
@@ -122,7 +122,7 @@ context: inline|fork                  # 可选，默认 inline
 <h3 id="第四步-验证">第四步：验证<a class="anchor" href="#第四步-验证" aria-label="锚点">#</a></h3>
 <p>创建完成后：</p>
 <ol><li>使用 Bash 运行验证命令确认 skill 已被识别：</li></ol>
-<pre><code class="language-bash">   node -e <span class="hljs-string">&quot;const { discoverAllSkills } = require(&#x27;./src/skills&#x27;); const skills = discoverAllSkills(process.cwd()); console.log(skills.has(&#x27;&lt;name&gt;&#x27;) ? &#x27;✅ Found: &#x27; + skills.get(&#x27;&lt;name&gt;&#x27;).name : &#x27;❌ Not found&#x27;);&quot;</span></code></pre>
+<pre><code class="language-bash">   node -e <span class="hljs-string">&quot;const { discoverAllSkills } = require(&#x27;./src/skills&#x27;); const skills = discoverAllSkills(process.cwd()); console.log(skills.has(&#x27;&lt;name&gt;&#x27;) ? &#x27;✓ Found: &#x27; + skills.get(&#x27;&lt;name&gt;&#x27;).name : &#x27;✗ Not found&#x27;);&quot;</span></code></pre>
 <ol><li>如果使用方式 A（单文件），验证 frontmatter 中有 <code>builtin: true</code></li><li>如果使用方式 B（目录），验证 <code>manifest.json</code> 格式正确</li></ol>
 <h2 id="跨系统交互能力">跨系统交互能力<a class="anchor" href="#跨系统交互能力" aria-label="锚点">#</a></h2>
 <p>创建新 skill 时，应清楚它<strong>天然具备以下跨系统能力</strong>（因为 skill 在主对话中执行，AI 拥有完整工具池）：</p>
@@ -138,7 +138,7 @@ context: inline|fork                  # 可选，默认 inline
 <h2 id="与目录-skill-的优先级关系">与目录 skill 的优先级关系<a class="anchor" href="#与目录-skill-的优先级关系" aria-label="锚点">#</a></h2>
 <ul><li><strong>目录 skill 优先于单文件 skill</strong>：如果 <code>&lt;name&gt;/</code> 目录存在且有 <code>manifest.json</code>，目录 skill 会被优先使用</li><li>单文件 <code>.md</code> skill 仅在目录 skill 不存在时才生效</li><li>这意味着可以先用单文件快速迭代，成熟后再迁移到目录格式（如果需要 handler）</li></ul>
 <h2 id="禁止事项">禁止事项<a class="anchor" href="#禁止事项" aria-label="锚点">#</a></h2>
-<ul><li>❌ 不要创建与已有 skill 同名的 skill（会冲突）</li><li>❌ 不要在 frontmatter/prompt 中暴露硬编码的 API key、密码等敏感信息</li><li>❌ 不要声明不必要的工具权限（最小权限原则）</li><li>❌ 不要创建用途不清晰的 skill</li><li>❌ 单文件 skill 中不要包含 handler.js 逻辑（单文件只支持 prompt 注入）</li><li>❌ 不要在 skill prompt 中要求 AI 自己编写代码来调用其他 skill/agent——直接指导 AI 使用 Skill tool / Agent tool 即可</li></ul>
+<ul><li>✗ 不要创建与已有 skill 同名的 skill（会冲突）</li><li>✗ 不要在 frontmatter/prompt 中暴露硬编码的 API key、密码等敏感信息</li><li>✗ 不要声明不必要的工具权限（最小权限原则）</li><li>✗ 不要创建用途不清晰的 skill</li><li>✗ 单文件 skill 中不要包含 handler.js 逻辑（单文件只支持 prompt 注入）</li><li>✗ 不要在 skill prompt 中要求 AI 自己编写代码来调用其他 skill/agent——直接指导 AI 使用 Skill tool / Agent tool 即可</li></ul>
       </article>
       <nav class="pager"><a class="prev" href="../../../../../services/backend/src/skills/built-in/simplify/prompt.html"><div class="dir">← 上一篇</div><div class="ttl">Code Simplification Skill</div></a><a class="next" href="../../../../../services/backend/src/skills/built-in/skillify/prompt.html"><div class="dir">下一篇 →</div><div class="ttl">Skillify — Conversation to Skill Converter</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>

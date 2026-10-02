@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>utils/text/ — 文本宽度 / 引用扫描 / 收尾判定纯叶子（D3 共享底座） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>utils<span class="sep">›</span>text<span class="sep">›</span>utils/text/ — 文本宽度 / 引用扫描 / 收尾判定纯叶子（D3 共享底座）</div>
+      <header class="hero reveal"><h1>utils/text/ — 文本宽度 / 引用扫描 / 收尾判定纯叶子（D3 共享底座）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#utils-text-文本宽度-引用扫描-收尾判定纯叶子-d3-共享底座">`utils/text/` — 文本宽度 / 引用扫描 / 收尾判定纯叶子（D3 共享底座）</a></li><li class="lvl-2"><a href="#为什么这一族住在-d3-而不是-cli">为什么这一族住在 D3 而不是 `cli/`</a></li><li class="lvl-2"><a href="#契约-逐条有测试锁">契约（逐条有测试锁）</a></li><li class="lvl-2"><a href="#测试">测试</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="utils-text-文本宽度-引用扫描-收尾判定纯叶子-d3-共享底座"><code>utils/text/</code> — 文本宽度 / 引用扫描 / 收尾判定纯叶子（D3 共享底座）<a class="anchor" href="#utils-text-文本宽度-引用扫描-收尾判定纯叶子-d3-共享底座" aria-label="锚点">#</a></h1>
+<blockquote><p>生命周期记录见同目录 <code>khy.module.json</code>（domain <code>D3</code>、fan-in 18、stage <code>stable</code>）。<br>判据真源：<code>[RESEARCH-018]</code> §2.3「功能单元」与 §4 C-5「入口缓冲」；层级真源 <code>[DESIGN-LAY-005]</code>。</p></blockquote>
+<h2 id="为什么这一族住在-d3-而不是-cli">为什么这一族住在 D3 而不是 <code>cli/</code><a class="anchor" href="#为什么这一族住在-d3-而不是-cli" aria-label="锚点">#</a></h2>
+<p>本目录的 7 个成员里，有 6 个原本是 <code>cli/</code> 下的文件，按 <code>[RESEARCH-018]</code> §3.1 P1/P2 归位过来。<br>归位的判据不是「它被 CLI 用」，而是<strong>它本身没有任何运行时依赖，却被多个域用</strong>：</p>
+<table><thead><tr><th>成员</th><th>require（仓内）</th><th>消费者面</th></tr></thead><tbody><tr><td><code>displayWidthMemo.js</code></td><td>零</td><td><code>cli/displayWidthMemo.js</code>（壳）、<code>width.js</code></td></tr><tr><td><code>inlineFileRefs.js</code></td><td>零</td><td><code>cli/repl/inlineFileRefs.js</code>（壳）、<code>services/imageContextCardService.js</code>、<code>imageIntent.js</code></td></tr><tr><td><code>permissionReply.js</code></td><td>零</td><td><code>cli/permissionReply.js</code>（壳）、<code>services/tool/toolCallingPermissions.js</code></td></tr><tr><td><code>resultGuard.js</code></td><td>零</td><td><code>cli/resultGuard.js</code>（壳）、<code>services/tool/toolUseLoopCore.js</code></td></tr><tr><td><code>width.js</code></td><td><code>./displayWidthMemo</code> + npm <code>strip-ansi</code>/<code>string-width</code></td><td><code>cli/formatters.js</code>、<code>services/aiMonitor.js</code>、<code>utils/format/*</code></td></tr><tr><td><code>imageIntent.js</code></td><td><code>./inlineFileRefs</code></td><td><code>cli/repl/imageIntent.js</code>（壳）、<code>services/gateway/inlineImageOcrGuardPolicy.js</code> 等 3 处服务</td></tr><tr><td><code>keyFindings.js</code></td><td><code>../normalizeToolName</code>（D3 叶子）</td><td><code>cli/keyFindings.js</code>（壳）、<code>cli/replSession.js</code>、<code>cli/tui/hooks/useQueryBridge.js</code>、<code>toolUseLoop*</code></td></tr></tbody></table>
+<p><code>cli/</code> 里的旧路径全部留下<strong>一行再导出壳</strong>，223 个消费者的 require 串一个字没改（同一模块对象已实测）。<br>留在 D1 的后果是：<code>services/tool/*</code> 与 <code>utils/format/*</code> 这些同为 D3/D2 的消费者要向下伸回运行时取一个纯字符串算法——<br>那正是 <code>d3-purity</code> 亮红的形态。搬真身、不改编排，边就消失了。</p>
+<h2 id="契约-逐条有测试锁">契约（逐条有测试锁）<a class="anchor" href="#契约-逐条有测试锁" aria-label="锚点">#</a></h2>
+<ol><li><strong>纯</strong>：零 IO、确定性、绝不抛。垃圾入参（<code>null</code> / 数字 / 超长串）返回回退值而不是异常。</li><li><strong>门控一律 env、缺省为开、关闭即逐字节回退历史</strong>。<code>OFF</code> 取值集是 <code>0/false/off/no</code>（<code>permissionReply</code>、</li></ol>
+<p><code>resultGuard</code> 用 <code>FALSY</code> 集），这样关掉开关的机器与归位前的代码路径输出完全一致——这是归位不改变行为的<strong>可验证形式</strong>。</p>
+<ol><li><strong>宽度算法由调用方注入</strong>：<code>displayWidthMemo.getDisplayWidth(str, computeFn, env)</code> 自己不认得终端，</li></ol>
+<p><code>width.js</code> 把 <code>_computeDisplayWidth</code> 作为 <code>computeFn</code> 传进去。缓存因此与任何具体宽度实现无关（LRU，<code>MAX_ENTRIES</code> 2048，<br>   超过 <code>MAX_KEY_LEN</code> 4096 的串不入缓存，只缓存有限数值）。</p>
+<ol><li><strong>结论判据由调用方注入</strong>：<code>resultGuard.assessClosure</code> 只吃 <code>hasDeliveredConclusion</code> 这个<strong>已算好的布尔</strong>，</li></ol>
+<p>绝不在此重新推导结论（<code>[DESIGN-ARCH-163]</code> 的单一真源约束）。</p>
+<ol><li><strong>图片与文档两个扩展名集合刻意不相交</strong>：<code>inlineFileRefs.FILE_EXT_SET</code> 不含 <code>png/jpg/jpeg/gif/webp</code>，</li></ol>
+<p>图片原子归 <code>imageIntent</code>；调用方按「先图后文」合并即无歧义。</p>
+<ol><li><strong>权限答复：否定优先 → allow-always → allow → 不认识返回 <code>null</code></strong>（<code>null</code> 让 call-site 保持 default-deny，</li></ol>
+<p>不认识绝不算同意）。</p>
+<h2 id="测试">测试<a class="anchor" href="#测试" aria-label="锚点">#</a></h2>
+<ul><li>共置 7 份 <code>*.test.js</code> 是<strong>单元契约</strong>测试（<code>node --test</code>）：导出面、零 require 纯度锁、门控语义、永不抛、上面 6 条契约。</li><li><code>services/backend/tests/cli/{displayWidthMemo,keyFindings,permissionReply,resultGuard}.test.js</code> 是归位前的<strong>行为回归</strong>测试，</li></ul>
+<p>判据不同，不与共置契约测试互相替代；合并需一次 <code>git mv</code>（未闭合，见 <code>scripts/quarantine/README.md</code>）。</p>
+<p>跑法（本仓无 root jest bin，见 <code>[DESIGN-LAY-008]</code> §12.2 工具链注）：<br><code>node --test services/backend/src/utils/text/</code></p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../services/backend/src/utils/flagRegistry/README.html"><div class="dir">← 上一篇</div><div class="ttl">flagRegistry — D3 共享底座 / KHY 门控的声明式中央注册表</div></a><a class="next" href="../../../../../services/backend/wasm-indicators/AGENTS.html"><div class="dir">下一篇 →</div><div class="ttl">Project Agents.md Guide</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../";window.__KHY_CUR__="services/backend/src/utils/text/README.html";</script>
+<script src="../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

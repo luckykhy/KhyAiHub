@@ -80,7 +80,7 @@ context: inline|fork                  # 可选，默认 inline
 
 ## 禁止事项
 
-- ❌ ...
+- ✗ ...
 ```
 
 **支持的 frontmatter 字段**：
@@ -168,7 +168,7 @@ module.exports = {
 创建完成后：
 1. 使用 Bash 运行验证命令确认 skill 已被识别：
    ```bash
-   node -e "const { discoverAllSkills } = require('./src/skills'); const skills = discoverAllSkills(process.cwd()); console.log(skills.has('<name>') ? '✅ Found: ' + skills.get('<name>').name : '❌ Not found');"
+   node -e "const { discoverAllSkills } = require('./src/skills'); const skills = discoverAllSkills(process.cwd()); console.log(skills.has('<name>') ? '✓ Found: ' + skills.get('<name>').name : '✗ Not found');"
    ```
 2. 如果使用方式 A（单文件），验证 frontmatter 中有 `builtin: true`
 3. 如果使用方式 B（目录），验证 `manifest.json` 格式正确
@@ -218,9 +218,9 @@ khy skills list
 
 ## 禁止事项
 
-- ❌ 不要创建与已有 skill 同名的 skill（会冲突）
-- ❌ 不要在 frontmatter/prompt 中暴露硬编码的 API key、密码等敏感信息
-- ❌ 不要声明不必要的工具权限（最小权限原则）
-- ❌ 不要创建用途不清晰的 skill
-- ❌ 单文件 skill 中不要包含 handler.js 逻辑（单文件只支持 prompt 注入）
-- ❌ 不要在 skill prompt 中要求 AI 自己编写代码来调用其他 skill/agent——直接指导 AI 使用 Skill tool / Agent tool 即可
+- ✗ 不要创建与已有 skill 同名的 skill（会冲突）
+- ✗ 不要在 frontmatter/prompt 中暴露硬编码的 API key、密码等敏感信息
+- ✗ 不要声明不必要的工具权限（最小权限原则）
+- ✗ 不要创建用途不清晰的 skill
+- ✗ 单文件 skill 中不要包含 handler.js 逻辑（单文件只支持 prompt 注入）
+- ✗ 不要在 skill prompt 中要求 AI 自己编写代码来调用其他 skill/agent——直接指导 AI 使用 Skill tool / Agent tool 即可
