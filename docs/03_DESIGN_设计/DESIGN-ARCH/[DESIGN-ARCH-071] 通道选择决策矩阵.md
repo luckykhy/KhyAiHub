@@ -14,7 +14,7 @@
 | CH-2 服务层直调 | 同进程函数调用 | `require('.../src/services/<模块>')`（`AGENTS.md` 关键入口点表为索引） | 调用方与 backend 同一 Node 进程 |
 | CH-3 CLI | `khy <命令>` | `src/cli/router.js`（大 switch）+ `aliases.js`（中文/拼音别名） | 本机可运行 khy（Python 启动器 → `bin/khy.js`） |
 | CH-4 Web API | HTTP/WS/SSE → `src/routes/` | `server.js`（Express + WS 同端口）+ `constants/serviceDefaults.js`（端口真源）；运行时发现：数据目录 `ai_manage_runtime.json` 的 `apiPort` | server 在跑，或可被 CH-3 拉起（`khy server start`） |
-| CH-5 看屏幕 | 截图与视觉观察 | `services/desktopControl/`（`screenCapture.js` + `safetyGate.js`）、`services/computerUse/`、L6 `tools/deepseek-eyes`（截图→VL 模型→文字） | `KHY_DESKTOP_CONTROL` 总闸开启 + safetyGate 审批放行 |
+| CH-5 看屏幕 | 截图与视觉观察 | `services/domain/desktop/desktopControl/`（`screenCapture.js` + `safetyGate.js`）、`services/domain/desktop/computerUse/`、L6 `tools/deepseek-eyes`（截图→VL 模型→文字） | `KHY_DESKTOP_CONTROL` 总闸开启 + safetyGate 审批放行 |
 
 ---
 
