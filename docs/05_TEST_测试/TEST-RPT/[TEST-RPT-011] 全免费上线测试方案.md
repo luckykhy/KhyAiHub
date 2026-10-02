@@ -14,10 +14,10 @@ khy-os 是 **Express + WebSocket + Sequelize(SQLite/Postgres)** 的重后端。
 
   | 子模块 | 免费落点 | 说明 |
   |---|---|---|
-  | 静态前端 | GitHub Pages | ✅ 真免费 |
-  | API + DB | **Supabase Free**（Postgres 512MB + Edge Functions 500K 次/月） | ✅ 真免费 |
-  | AI 流式（SSE） | **Supabase Edge Functions**（Deno，HTTP 流式） | ✅ 真免费 |
-  | 长连接 WS（跨设备同步等） | ❌ 免费层跑不了 | 测试期**关掉**或用 Supabase Realtime 替代 |
+  | 静态前端 | GitHub Pages | ✓ 真免费 |
+  | API + DB | **Supabase Free**（Postgres 512MB + Edge Functions 500K 次/月） | ✓ 真免费 |
+  | AI 流式（SSE） | **Supabase Edge Functions**（Deno，HTTP 流式） | ✓ 真免费 |
+  | 长连接 WS（跨设备同步等） | ✗ 免费层跑不了 | 测试期**关掉**或用 Supabase Realtime 替代 |
 
 **最省心的测试方案 = GitHub Pages（前端）+ Supabase Free（Postgres 数据库 + Edge Functions API + Realtime 替代 WS）。**
 SQLite 文件直接换 Supabase Postgres，无需迁数据（测试期空白库 + 种子即可）。
@@ -44,12 +44,12 @@ SQLite 文件直接换 Supabase Postgres，无需迁数据（测试期空白库 
 
 | 组件 | 能否搬去 Supabase Edge Function | 改法 |
 |---|---|---|
-| 前端静态 | ✅ 直接 | 构建 → 推 GitHub Pages |
-| 核心 REST API（auth/user/settings/strategy/backtest） | ⚠️ 要重写 Deno handler | Express 路由 → Deno `Deno.serve` |
-| AI 流式（LLM） | ✅ 适合 Edge Function | fetch 上游 LLM + `ReadableStream` 回传 SSE |
-| WebSocket 跨设备同步 | ❌ 免费层不行 | 用 Supabase Realtime + 频道订阅替代 |
-| better-sqlite3 文件库 | ❌ Deno 没 SQLite | 切 Supabase Postgres（RLS） |
-| 大文件/ZIP（期货逐笔） | ⚠️ Edge Function 256MB 上限 | 放 Supabase Storage（免费 1GB） |
+| 前端静态 | ✓ 直接 | 构建 → 推 GitHub Pages |
+| 核心 REST API（auth/user/settings/strategy/backtest） | ⚠ 要重写 Deno handler | Express 路由 → Deno `Deno.serve` |
+| AI 流式（LLM） | ✓ 适合 Edge Function | fetch 上游 LLM + `ReadableStream` 回传 SSE |
+| WebSocket 跨设备同步 | ✗ 免费层不行 | 用 Supabase Realtime + 频道订阅替代 |
+| better-sqlite3 文件库 | ✗ Deno 没 SQLite | 切 Supabase Postgres（RLS） |
+| 大文件/ZIP（期货逐笔） | ⚠ Edge Function 256MB 上限 | 放 Supabase Storage（免费 1GB） |
 
 ---
 
@@ -327,11 +327,11 @@ khy-os 用 `ws`（`wss.clients`）做跨设备同步 + 行情推送。**免费�
 
 | 资源 | Supabase Free 额度 | 100 并发测试 |
 |---|---|---|
-| Postgres 512MB | ✅ 够（测试期空白库） | 够 |
-| Edge Functions 500K 次/月 | ✅ 够 | 够（100 人 × 几次 API ≈ 几千次/天） |
-| Edge Functions 时长 50K 秒/月 | ⚠️ 注意 LLM 长调用 | LLM 流式每次 ~30-120s，500K/月 够 ~1-3 万次 |
-| 并发 WS | ❌ 免费无 | 测试期关 ws，用 SSE/轮询 |
-| 带宽 | 100GB/月 | ✅ 够 |
+| Postgres 512MB | ✓ 够（测试期空白库） | 够 |
+| Edge Functions 500K 次/月 | ✓ 够 | 够（100 人 × 几次 API ≈ 几千次/天） |
+| Edge Functions 时长 50K 秒/月 | ⚠ 注意 LLM 长调用 | LLM 流式每次 ~30-120s，500K/月 够 ~1-3 万次 |
+| 并发 WS | ✗ 免费无 | 测试期关 ws，用 SSE/轮询 |
+| 带宽 | 100GB/月 | ✓ 够 |
 
 **100 人并发测试期够用**，瓶颈只在 LLM 上游（OpenRouter/DeepSeek 自带限流，不占 Supabase 额度）。
 

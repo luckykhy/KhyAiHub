@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -35,11 +35,11 @@
 <h2 id="0-一句话原理-一个必须先知道的限制">0. 一句话原理 + 一个必须先知道的限制<a class="anchor" href="#0-一句话原理-一个必须先知道的限制" aria-label="锚点">#</a></h2>
 <p><strong>原理</strong>:每次 pip 构建时,<code>makeSourceSnapshot.js</code> 会跑 <code>git archive HEAD</code>,把当时<strong>所有被跟踪<br>的源文件</strong>(原始目录布局)加密成 <code>_source/snapshot.json</code> 一起打进包。<code>khy restore</code> 免密解密还原。</p>
 <p><strong>限制(务必先读)</strong>:快照是 <code>git archive</code>,即<strong>发布那一刻的源码树,不含 <code>.git</code>、没有提交历史</strong>。<br>所以这条 PyPI 链路推到 GitHub 的是一个<strong>单次快照提交</strong>,不是原始的逐条 commit 历史。<br>快照头里记录了原始 commit SHA(还原时会打印 <code>commit xxxxxxxx</code>),可写进提交信息留痕。</p>
-<table><thead><tr><th>你想要的</th><th>用哪条路</th></tr></thead><tbody><tr><td><strong>只要把当前版本的源码放上 GitHub</strong>(绝大多数情况)</td><td>✅ 本文档:<code>pip install</code> → <code>khy restore</code> → push</td></tr><tr><td><strong>要完整 git 提交历史</strong></td><td>❌ pip 包做不到(无 <code>.git</code>)。改用 <code>git bundle</code> 摆渡,见本文 §5</td></tr></tbody></table>
+<table><thead><tr><th>你想要的</th><th>用哪条路</th></tr></thead><tbody><tr><td><strong>只要把当前版本的源码放上 GitHub</strong>(绝大多数情况)</td><td>✓ 本文档:<code>pip install</code> → <code>khy restore</code> → push</td></tr><tr><td><strong>要完整 git 提交历史</strong></td><td>✗ pip 包做不到(无 <code>.git</code>)。改用 <code>git bundle</code> 摆渡,见本文 §5</td></tr></tbody></table>
 <hr>
 <h2 id="1-内网机-正常-pip-发布-你已会-只确认一点">1. 内网机:正常 pip 发布(你已会,只确认一点)<a class="anchor" href="#1-内网机-正常-pip-发布-你已会-只确认一点" aria-label="锚点">#</a></h2>
 <p>确认包里<strong>真的带了源码快照</strong>——否则外网机还原不出来。</p>
-<pre><code class="language-bash"><span class="hljs-built_in">cd</span> /home/kodehu03/Khy-OS
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> {$HOME}/Khy-OS
 
 <span class="hljs-comment"># 正常发布(任选)</span>
 python -m build &amp;&amp; twine check dist/* &amp;&amp; twine upload dist/*

@@ -17,7 +17,7 @@
    ```
    › add a /healthz route to the backend and a test for it, then run it
    ```
-   让真实的 TUI 展现出来：折叠的 `💭 思考`、`▸ 读取 · 编辑 · 执行命令`
+   让真实的 TUI 展现出来：折叠的 `思考`、`▸ 读取 · 编辑 · 执行命令`
    进程组一路 `✓✓✓`、实时的 `⠹ 生成中… · Ns · ~tok` spinner，以及最后
    一个通过的测试。**不要**做不自然的加速——真实感才是重点。
 
@@ -46,7 +46,7 @@
 ## 接进 README
 
 一旦 `assets/demo.gif` 就位，把 `README.md` 里的占位块
-（那段「📽️ Demo recording」备注）替换为：
+（那段「Demo recording」备注）替换为：
 
 ```markdown
 <p align="center"><img src="assets/demo.gif" alt="khy in action" width="800"></p>

@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -59,7 +59,7 @@
 <hr>
 <h2 id="4-档位判据的抽样验证">4. 档位判据的抽样验证<a class="anchor" href="#4-档位判据的抽样验证" aria-label="锚点">#</a></h2>
 <p>判据本身必须机械可判，否则 <code>[DESIGN-DOC-003]</code> §1.4 的必答清单无法自动化。抽样 20 个真实目录，验证<br>「目录内是否存在构建清单」这一判据是否产生合理分档：</p>
-<table><thead><tr><th>目录</th><th>构建清单</th><th>档位</th><th>是否合理</th></tr></thead><tbody><tr><td><code>services/backend</code></td><td><code>package.json</code></td><td>T1</td><td>✅ 可独立 <code>npm start</code></td></tr><tr><td><code>services/backend/src/contracts/a2a</code></td><td>无</td><td>T2</td><td>✅ 单元内部契约</td></tr><tr><td><code>services/backend/wasm-indicators</code></td><td>无</td><td>T2</td><td>✅ 上层单元的子目录</td></tr><tr><td><code>kernel</code></td><td><code>Makefile</code></td><td>T1</td><td>✅ 可独立构建并 QEMU 引导</td></tr><tr><td><code>tools/deepseek-eyes</code></td><td><code>pyproject.toml</code></td><td>T1</td><td>✅ 独立 MCP 服务</td></tr><tr><td><code>scripts</code>、<code>scripts/frontend</code>、<code>scripts/release/publish</code></td><td>无</td><td>T2</td><td>✅ 工程脚本目录</td></tr><tr><td><code>platform/delivery</code></td><td>无</td><td>T2</td><td>✅ 只是<strong>下限低</strong>，其 README 已远超 T2 要求（A3 允许）</td></tr><tr><td><code>packaging/modules</code></td><td>无</td><td>T2</td><td>✅ 清单目录</td></tr><tr><td><code>extensions/tools/khy-markdown</code></td><td><code>package.json</code></td><td>T1</td><td>✅ 含独立安装与 CLI</td></tr><tr><td><code>extensions/scripts/khy-desktop-rd</code></td><td>无</td><td>T2</td><td>✅ 调研档案</td></tr><tr><td><code>.github/rulesets</code>、<code>.opencode</code></td><td>无</td><td>T2</td><td>✅ 配置目录</td></tr></tbody></table>
+<table><thead><tr><th>目录</th><th>构建清单</th><th>档位</th><th>是否合理</th></tr></thead><tbody><tr><td><code>services/backend</code></td><td><code>package.json</code></td><td>T1</td><td>✓ 可独立 <code>npm start</code></td></tr><tr><td><code>services/backend/src/contracts/a2a</code></td><td>无</td><td>T2</td><td>✓ 单元内部契约</td></tr><tr><td><code>services/backend/wasm-indicators</code></td><td>无</td><td>T2</td><td>✓ 上层单元的子目录</td></tr><tr><td><code>kernel</code></td><td><code>Makefile</code></td><td>T1</td><td>✓ 可独立构建并 QEMU 引导</td></tr><tr><td><code>tools/deepseek-eyes</code></td><td><code>pyproject.toml</code></td><td>T1</td><td>✓ 独立 MCP 服务</td></tr><tr><td><code>scripts</code>、<code>scripts/frontend</code>、<code>scripts/release/publish</code></td><td>无</td><td>T2</td><td>✓ 工程脚本目录</td></tr><tr><td><code>platform/delivery</code></td><td>无</td><td>T2</td><td>✓ 只是<strong>下限低</strong>，其 README 已远超 T2 要求（A3 允许）</td></tr><tr><td><code>packaging/modules</code></td><td>无</td><td>T2</td><td>✓ 清单目录</td></tr><tr><td><code>extensions/tools/khy-markdown</code></td><td><code>package.json</code></td><td>T1</td><td>✓ 含独立安装与 CLI</td></tr><tr><td><code>extensions/scripts/khy-desktop-rd</code></td><td>无</td><td>T2</td><td>✓ 调研档案</td></tr><tr><td><code>.github/rulesets</code>、<code>.opencode</code></td><td>无</td><td>T2</td><td>✓ 配置目录</td></tr></tbody></table>
 <p><strong>为什么不用「目录深度」或「手工登记档位」</strong>：深度无法区分<br><code>services/backend</code>（T1）与 <code>services/backend/src/contracts/a2a</code>（T2）；<br>手工登记档位会引入第二真源，直接违反 A1。</p>
 <hr>
 <h2 id="5-人工评审清单与复现方式">5. 人工评审清单与复现方式<a class="anchor" href="#5-人工评审清单与复现方式" aria-label="锚点">#</a></h2>
@@ -78,7 +78,7 @@ node -e <span class="hljs-string">&quot;console.log(Object.keys(require(&#x27;./
 grep -n <span class="hljs-string">&#x27;&quot;node&quot;&#x27;</span> services/backend/package.json                    <span class="hljs-comment"># engines.node 真值</span>
 grep -n <span class="hljs-string">&quot;VERSION_GROUPS&quot;</span> -A 30 scripts/ci/check-version-sync.js   <span class="hljs-comment"># 三轨道 9 源</span></code></pre>
 <h3 id="5-3-场景矩阵-供-6-执行器落地时作回归基准">5.3 场景矩阵（供 §6 执行器落地时作回归基准）<a class="anchor" href="#5-3-场景矩阵-供-6-执行器落地时作回归基准" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>场景</th><th>期望</th></tr></thead><tbody><tr><td>正文写 <code>http://localhost:8090</code></td><td>违规（禁项·端口）</td></tr><tr><td>正文写 <code>AI_FRONTEND_PORT</code>（变量名）</td><td><strong>放行</strong>（指针标识）</td></tr><tr><td>徽章 <code>pypi/v/khy-os</code></td><td><strong>放行</strong>（实时取值）</td></tr><tr><td>手写 <code>v1.1.15</code> 徽章</td><td>违规（手写数字）</td></tr><tr><td><code>❌ ... :3000 / ✅ ... 由 PORT 决定</code></td><td><strong>放行</strong>（对照块语境）</td></tr><tr><td>写 <code>npm run dev</code>（根无此脚本）</td><td>违规（命令不可达）</td></tr><tr><td>写 <code>npm run test:backend</code>（根存在）</td><td><strong>放行</strong></td></tr><tr><td><code>apps/khy-mobile/README.html</code>（无 <code>.md</code>）</td><td>违规（无源孪生）</td></tr><tr><td>首屏只有徽章墙</td><td>违规（首屏）</td></tr><tr><td>T1 README 缺「怎么测」</td><td>违规（档位节不齐备）</td></tr><tr><td>正文写「待办：后续补上」</td><td>违规（台账）</td></tr><tr><td><code>README-联调.md</code></td><td>违规（命名）</td></tr><tr><td>T2 README 写 200 行模块说明</td><td><strong>放行</strong>（下限非上限）</td></tr></tbody></table>
+<table><thead><tr><th>场景</th><th>期望</th></tr></thead><tbody><tr><td>正文写 <code>http://localhost:8090</code></td><td>违规（禁项·端口）</td></tr><tr><td>正文写 <code>AI_FRONTEND_PORT</code>（变量名）</td><td><strong>放行</strong>（指针标识）</td></tr><tr><td>徽章 <code>pypi/v/khy-os</code></td><td><strong>放行</strong>（实时取值）</td></tr><tr><td>手写 <code>v1.1.15</code> 徽章</td><td>违规（手写数字）</td></tr><tr><td><code>✗ ... :3000 / ✓ ... 由 PORT 决定</code></td><td><strong>放行</strong>（对照块语境）</td></tr><tr><td>写 <code>npm run dev</code>（根无此脚本）</td><td>违规（命令不可达）</td></tr><tr><td>写 <code>npm run test:backend</code>（根存在）</td><td><strong>放行</strong></td></tr><tr><td><code>apps/khy-mobile/README.html</code>（无 <code>.md</code>）</td><td>违规（无源孪生）</td></tr><tr><td>首屏只有徽章墙</td><td>违规（首屏）</td></tr><tr><td>T1 README 缺「怎么测」</td><td>违规（档位节不齐备）</td></tr><tr><td>正文写「待办：后续补上」</td><td>违规（台账）</td></tr><tr><td><code>README-联调.md</code></td><td>违规（命名）</td></tr><tr><td>T2 README 写 200 行模块说明</td><td><strong>放行</strong>（下限非上限）</td></tr></tbody></table>
 <hr>
 <h2 id="6-执行器接线设计-未落地">6. 执行器接线设计（未落地）<a class="anchor" href="#6-执行器接线设计-未落地" aria-label="锚点">#</a></h2>
 <p>拟新增 <code>scripts/ci/check-readme.js</code>。<strong>必须复用而非重写</strong>的部分：</p>

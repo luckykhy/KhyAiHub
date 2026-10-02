@@ -105,17 +105,17 @@
 
 | 目录 | 构建清单 | 档位 | 是否合理 |
 |---|---|---|---|
-| `services/backend` | `package.json` | T1 | ✅ 可独立 `npm start` |
-| `services/backend/src/contracts/a2a` | 无 | T2 | ✅ 单元内部契约 |
-| `services/backend/wasm-indicators` | 无 | T2 | ✅ 上层单元的子目录 |
-| `kernel` | `Makefile` | T1 | ✅ 可独立构建并 QEMU 引导 |
-| `tools/deepseek-eyes` | `pyproject.toml` | T1 | ✅ 独立 MCP 服务 |
-| `scripts`、`scripts/frontend`、`scripts/release/publish` | 无 | T2 | ✅ 工程脚本目录 |
-| `platform/delivery` | 无 | T2 | ✅ 只是**下限低**，其 README 已远超 T2 要求（A3 允许） |
-| `packaging/modules` | 无 | T2 | ✅ 清单目录 |
-| `extensions/tools/khy-markdown` | `package.json` | T1 | ✅ 含独立安装与 CLI |
-| `extensions/scripts/khy-desktop-rd` | 无 | T2 | ✅ 调研档案 |
-| `.github/rulesets`、`.opencode` | 无 | T2 | ✅ 配置目录 |
+| `services/backend` | `package.json` | T1 | ✓ 可独立 `npm start` |
+| `services/backend/src/contracts/a2a` | 无 | T2 | ✓ 单元内部契约 |
+| `services/backend/wasm-indicators` | 无 | T2 | ✓ 上层单元的子目录 |
+| `kernel` | `Makefile` | T1 | ✓ 可独立构建并 QEMU 引导 |
+| `tools/deepseek-eyes` | `pyproject.toml` | T1 | ✓ 独立 MCP 服务 |
+| `scripts`、`scripts/frontend`、`scripts/release/publish` | 无 | T2 | ✓ 工程脚本目录 |
+| `platform/delivery` | 无 | T2 | ✓ 只是**下限低**，其 README 已远超 T2 要求（A3 允许） |
+| `packaging/modules` | 无 | T2 | ✓ 清单目录 |
+| `extensions/tools/khy-markdown` | `package.json` | T1 | ✓ 含独立安装与 CLI |
+| `extensions/scripts/khy-desktop-rd` | 无 | T2 | ✓ 调研档案 |
+| `.github/rulesets`、`.opencode` | 无 | T2 | ✓ 配置目录 |
 
 **为什么不用「目录深度」或「手工登记档位」**：深度无法区分
 `services/backend`（T1）与 `services/backend/src/contracts/a2a`（T2）；
@@ -162,7 +162,7 @@ grep -n "VERSION_GROUPS" -A 30 scripts/ci/check-version-sync.js   # 三轨道 9 
 | 正文写 `AI_FRONTEND_PORT`（变量名） | **放行**（指针标识） |
 | 徽章 `pypi/v/khy-os` | **放行**（实时取值） |
 | 手写 `v1.1.15` 徽章 | 违规（手写数字） |
-| `❌ ... :3000 / ✅ ... 由 PORT 决定` | **放行**（对照块语境） |
+| `✗ ... :3000 / ✓ ... 由 PORT 决定` | **放行**（对照块语境） |
 | 写 `npm run dev`（根无此脚本） | 违规（命令不可达） |
 | 写 `npm run test:backend`（根存在） | **放行** |
 | `apps/khy-mobile/README.html`（无 `.md`） | 违规（无源孪生） |

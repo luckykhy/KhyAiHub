@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -43,7 +43,7 @@
 <p>→ 真 babel 校验：<code>async function f(){ await (</code> 被打回（<code>allowed:false</code>），<br>  <code>async function f(){ await g(); return 1; }</code> 通过。</p>
 <p><strong>同一目标、不同风险判定 → 截然不同的执行策略与挂锁，得证。</strong></p>
 <h2 id="5-防呆与诉求逐条验证">5. 防呆与诉求逐条验证<a class="anchor" href="#5-防呆与诉求逐条验证" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>项</th><th>用例</th><th>结果</th></tr></thead><tbody><tr><td>防呆①（先规划后执行）</td><td>无元规划 JSON → 拒绝；缺票据 → validateExecution 拒绝并要求快照</td><td>✅</td></tr><tr><td>防呆②（执行器须自注册表）</td><td><code>ghost_writer_9000</code> → 拒绝</td><td>✅</td></tr><tr><td>防呆③（连续 2 次 Soft 翻车锁会话）</td><td>两次 Soft 失败后任意新类型被升 <code>Code_Hard</code></td><td>✅</td></tr><tr><td>防呆④（红线不可覆盖）</td><td>选 <code>Prompt_Soft</code> 但 <code>rm app.sqlite</code> → 强制 <code>System_Block</code></td><td>✅</td></tr><tr><td>拒绝偷懒</td><td><code>risk_dissent:&quot;ok&quot;</code> 的 Soft → 升 <code>Code_Hard</code></td><td>✅</td></tr><tr><td>极致省资源</td><td>Soft <code>ranValidation:false</code>，零拦截器开销</td><td>✅</td></tr><tr><td>闭环自愈</td><td>Soft 翻车 → 同类型下一次自动升 <code>Code_Hard</code></td><td>✅</td></tr></tbody></table>
+<table><thead><tr><th>项</th><th>用例</th><th>结果</th></tr></thead><tbody><tr><td>防呆①（先规划后执行）</td><td>无元规划 JSON → 拒绝；缺票据 → validateExecution 拒绝并要求快照</td><td>✓</td></tr><tr><td>防呆②（执行器须自注册表）</td><td><code>ghost_writer_9000</code> → 拒绝</td><td>✓</td></tr><tr><td>防呆③（连续 2 次 Soft 翻车锁会话）</td><td>两次 Soft 失败后任意新类型被升 <code>Code_Hard</code></td><td>✓</td></tr><tr><td>防呆④（红线不可覆盖）</td><td>选 <code>Prompt_Soft</code> 但 <code>rm app.sqlite</code> → 强制 <code>System_Block</code></td><td>✓</td></tr><tr><td>拒绝偷懒</td><td><code>risk_dissent:&quot;ok&quot;</code> 的 Soft → 升 <code>Code_Hard</code></td><td>✓</td></tr><tr><td>极致省资源</td><td>Soft <code>ranValidation:false</code>，零拦截器开销</td><td>✓</td></tr><tr><td>闭环自愈</td><td>Soft 翻车 → 同类型下一次自动升 <code>Code_Hard</code></td><td>✓</td></tr></tbody></table>
 <h2 id="6-结论">6. 结论<a class="anchor" href="#6-结论" aria-label="锚点">#</a></h2>
 <p>31/31 全绿。子系统满足全部核心诉求与五条防呆红线，且零侵入既有模块、无回归面。</p>
       </article>

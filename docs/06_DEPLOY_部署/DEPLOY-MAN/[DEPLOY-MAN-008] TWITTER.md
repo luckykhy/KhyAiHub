@@ -13,7 +13,7 @@ I built an AI-native OS. Mostly by myself.
 A hand-written kernel + a Claude-Code-class terminal agent + a gateway over 17 AI
 backends — in one `pip install`.
 
-Here's what that actually means 🧵
+Here's what that actually means
 [attach assets/demo.gif]
 
 **2/**
@@ -60,7 +60,7 @@ Why build all of it instead of one piece?
 To see if one person + AI could credibly go kernel-to-agent — and to have a
 machine where the whole stack, down to the syscall, is AI-native.
 
-⭐ Repo + demo: <link>
+★ Repo + demo: <link>
 RTs help more than you'd think.
 ```
 ```

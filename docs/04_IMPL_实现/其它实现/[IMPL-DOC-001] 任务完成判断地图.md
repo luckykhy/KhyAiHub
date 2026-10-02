@@ -151,7 +151,7 @@ lint\s+(?:pass(?:ed|ing)?|clean)|verified|\bpassed\b
 **具体证据信号** (`_EVIDENCE_RE`):
 ```
 ``` | ~~~ | 数字+passed/passing/通过 | 数字/数字 | exit code | tests: 数字 |
-ok 数字 | # pass/fail | ✓✔√✅❌✗× | PASS | FAIL | $ 命令 | npm test |
+ok 数字 | # pass/fail | ✓✔√✓✗✗× | PASS | FAIL | $ 命令 | npm test |
 node --test | pytest | jest | go test | cargo test
 ```
 
@@ -598,7 +598,7 @@ taskClosure.decideClosure({
 4. 锚点建立后文件被外部修改时如何避免覆盖?→ **部分解决**。sha256 验收能**检测**「已被改过」
    (`mismatches` 非空),但还原**不会因此停下**——当前语义是「还原就是还原到那一步」。
    若将来要「检测到外部修改则拒绝还原」,属 S2+ 的强度问题。
-5. ✅ **已裁定并落地(2026-09-26 第二轮):采用 (a) 累积式 manifest。**
+5. ✓ **已裁定并落地(2026-09-26 第二轮):采用 (a) 累积式 manifest。**
    裁定前状态:「退回第 N 步完成态」**做不到**,只能做「把第 N 步碰过的文件恢复成第 N 步完成态」;
    已由多步用例**实测钉死**(当时写成 characterization 断言)。
    成因:每步 manifest **只含该步自己的目标文件**;第 2 步**创建**的 `b.md` 在第 1 步的锚点里

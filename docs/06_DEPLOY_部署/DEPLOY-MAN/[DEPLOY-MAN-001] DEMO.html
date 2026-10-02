@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -35,7 +35,7 @@
 <p>让版本号打印出来。快速切镜。</p>
 <ol><li><strong>（6–26s）智能体做点真事。</strong> 启动 <code>khy</code>，敲一个真实任务：</li></ol>
 <pre><code>   › add a /healthz route to the backend and a test for it, then run it</code></pre>
-<p>让真实的 TUI 展现出来：折叠的 <code>💭 思考</code>、<code>▸ 读取 · 编辑 · 执行命令</code><br>   进程组一路 <code>✓✓✓</code>、实时的 <code>⠹ 生成中… · Ns · ~tok</code> spinner，以及最后<br>   一个通过的测试。<strong>不要</strong>做不自然的加速——真实感才是重点。</p>
+<p>让真实的 TUI 展现出来：折叠的 <code>思考</code>、<code>▸ 读取 · 编辑 · 执行命令</code><br>   进程组一路 <code>✓✓✓</code>、实时的 <code>⠹ 生成中… · Ns · ~tok</code> spinner，以及最后<br>   一个通过的测试。<strong>不要</strong>做不自然的加速——真实感才是重点。</p>
 <ol><li><strong>（26–40s）内核是真的。</strong> 切到：</li></ol>
 <pre><code class="language-bash">   khy iso build --output dist/khy-os.iso
    qemu-system-x86_64 -cdrom dist/khy-os.iso</code></pre>
@@ -49,7 +49,7 @@
 <ul><li>QEMU 启动部分，录制窗口画面（例如 <code>peek</code>、<code>ffmpeg</code> 或 OBS），</li></ul>
 <p>再与 asciinema GIF 拼接。</p>
 <h2 id="接进-readme">接进 README<a class="anchor" href="#接进-readme" aria-label="锚点">#</a></h2>
-<p>一旦 <code>assets/demo.gif</code> 就位，把 <code>README.md</code> 里的占位块<br>（那段「📽️ Demo recording」备注）替换为：</p>
+<p>一旦 <code>assets/demo.gif</code> 就位，把 <code>README.md</code> 里的占位块<br>（那段「Demo recording」备注）替换为：</p>
 <pre><code class="language-markdown"><span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">p</span> <span class="hljs-attr">align</span>=<span class="hljs-string">&quot;center&quot;</span>&gt;</span></span><span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">src</span>=<span class="hljs-string">&quot;assets/demo.gif&quot;</span> <span class="hljs-attr">alt</span>=<span class="hljs-string">&quot;khy in action&quot;</span> <span class="hljs-attr">width</span>=<span class="hljs-string">&quot;800&quot;</span>&gt;</span></span><span class="language-xml"><span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span></span></code></pre>
 <p>把文件控制在 ~5 MB 以内，好让它在 GitHub 上瞬间加载——必要时裁剪或降低<br>帧率。一段要 8 秒才加载出来的演示，等于没人看的演示。</p>
       </article>
