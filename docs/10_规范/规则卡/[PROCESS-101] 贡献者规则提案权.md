@@ -41,7 +41,7 @@ owner: governance-team
 
 ## 反例
 
-❌ 在 issue 里口头讨论「要不要加条规则」却不落卡 → ✅ 直接 `npm run rules:scaffold PROCESS` 起草草案提 PR
+✗ 在 issue 里口头讨论「要不要加条规则」却不落卡 → ✓ 直接 `npm run rules:scaffold PROCESS` 起草草案提 PR
 
 ## 校验方式
 

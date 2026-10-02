@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -235,13 +235,13 @@ router.<span class="hljs-title function_">post</span>(<span class="hljs-string">
 <h3 id="9-1-禁止事项">9.1 禁止事项<a class="anchor" href="#9-1-禁止事项" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>禁止</th><th>原因</th></tr></thead><tbody><tr><td>上传 <code>.exe</code>, <code>.bat</code>, <code>.sh</code>, <code>.dll</code> 等可执行文件</td><td>防止恶意代码执行</td></tr><tr><td>使用原始文件名存储</td><td>防止路径遍历和覆盖</td></tr><tr><td>上传目录设置为可执行</td><td>防止上传后执行</td></tr><tr><td>信任客户端 MIME 类型</td><td>防止类型伪装</td></tr><tr><td>返回服务器绝对路径</td><td>防止信息泄露</td></tr></tbody></table>
 <h3 id="9-2-路径安全">9.2 路径安全<a class="anchor" href="#9-2-路径安全" aria-label="锚点">#</a></h3>
-<pre><code class="language-javascript"><span class="hljs-comment">// ✅ 正确：验证 ID 格式</span>
+<pre><code class="language-javascript"><span class="hljs-comment">// ✓ 正确：验证 ID 格式</span>
 <span class="hljs-keyword">function</span> <span class="hljs-title function_">getUpload</span>(<span class="hljs-params">id</span>) {
   <span class="hljs-keyword">if</span> (!<span class="hljs-title function_">validateId</span>(id)) <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">&#x27;Invalid upload ID&#x27;</span>);
   <span class="hljs-keyword">return</span> fs.<span class="hljs-title function_">readFileSync</span>(path.<span class="hljs-title function_">join</span>(<span class="hljs-title function_">uploadDir</span>(), <span class="hljs-string">`<span class="hljs-subst">${id}</span>.json`</span>));
 }
 
-<span class="hljs-comment">// ❌ 错误：直接使用用户输入</span>
+<span class="hljs-comment">// ✗ 错误：直接使用用户输入</span>
 <span class="hljs-keyword">function</span> <span class="hljs-title function_">getUploadBad</span>(<span class="hljs-params">id</span>) {
   <span class="hljs-keyword">return</span> fs.<span class="hljs-title function_">readFileSync</span>(path.<span class="hljs-title function_">join</span>(<span class="hljs-title function_">uploadDir</span>(), id)); <span class="hljs-comment">// 路径遍历风险</span>
 }</code></pre>

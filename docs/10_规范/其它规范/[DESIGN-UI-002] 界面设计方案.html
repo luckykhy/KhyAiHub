@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -144,7 +144,7 @@
 <p>这与管理员的实际工作流一致：<strong>看盘 → 调渠道 → 管账号 → 查审计 → 跑评测 → 改配置</strong>。</p>
 <h3 id="2-3-侧栏分组标题的样式-已就位-仅需启用">2.3 侧栏分组标题的样式（已就位，仅需启用）<a class="anchor" href="#2-3-侧栏分组标题的样式-已就位-仅需启用" aria-label="锚点">#</a></h3>
 <p><code>newapi-theme.css:779</code> 已定义 <code>.aside-group-title</code>，带 <code>padding</code> 与<br><code>el-menu-item-group</code> 的 <code>#title</code> 插槽已被 <code>AppShell.vue:23-25</code> 使用。<br><strong>唯一动作</strong>：把 <code>nav/index.js</code> 的分组数从 2 提到 10（4 用户 + 6 管理）。<br>渲染侧零改动。</p>
-<blockquote><p>⚠️ <strong>验收要点</strong>：分组变多后，侧栏总高度增加。<br>当前 <code>el-scrollbar</code> 包裹菜单（<code>AppShell.vue:12</code>），可滚动，不会溢出。<br>但需实测<strong>折叠态（64px）下分组标题</strong>是否被正确隐藏 ——<br><code>AppShell.vue:23</code> 有 <code>v-if=&quot;!collapsed&quot;</code> 守护，逻辑正确，需浏览器实测确认留白。</p></blockquote>
+<blockquote><p>⚠ <strong>验收要点</strong>：分组变多后，侧栏总高度增加。<br>当前 <code>el-scrollbar</code> 包裹菜单（<code>AppShell.vue:12</code>），可滚动，不会溢出。<br>但需实测<strong>折叠态（64px）下分组标题</strong>是否被正确隐藏 ——<br><code>AppShell.vue:23</code> 有 <code>v-if=&quot;!collapsed&quot;</code> 守护，逻辑正确，需浏览器实测确认留白。</p></blockquote>
 <hr>
 <h2 id="3-页面级布局规范-page-layout">3. 页面级布局规范（Page Layout）<a class="anchor" href="#3-页面级布局规范-page-layout" aria-label="锚点">#</a></h2>
 <h3 id="3-1-三点式骨架-固化-禁止发明第四种">3.1 三点式骨架（固化，禁止发明第四种）<a class="anchor" href="#3-1-三点式骨架-固化-禁止发明第四种" aria-label="锚点">#</a></h3>

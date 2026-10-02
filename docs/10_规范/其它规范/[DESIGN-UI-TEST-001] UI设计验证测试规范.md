@@ -65,46 +65,46 @@
 
 | # | 不变量 | 来源 | 验证方式 | 测试文件 |
 |---|--------|------|----------|----------|
-| T1 | REGION 枚举 25 个 ID 冻结（9 顶层 + 6 大区 + 10 小区） | ARCH-016 §7.2-7.4 | 契约测试 | `regionLayout.test.js` ✅ |
-| T2 | 三层结构：大区值是小区值的前缀 | ARCH-016 §7.1 | 契约测试 | `regionLayout.test.js` ✅ |
-| T3 | OWNING_OVERLAYS 6 个 key 全声明，hideChrome 为 boolean | ARCH-016 §7.5 | 契约测试 | `regionLayout.test.js` ✅ |
-| T4 | TOP_LEVEL_ORDER 自顶向下顺序 = REGION 顶层顺序 | ARCH-016 §7.2 | 契约测试 | `regionLayout.test.js` ✅ |
-| T5 | PromptFrame 宽度 = `cols - 1`（留 1 列 slack） | ARCH-079 §2.2 | 合规测试 | `uiDesignContract.test.js` 🆕 |
-| T6 | PromptFrame 最小高度 = 4 rows，最大高度 = `vrows - 10` | ARCH-079 §2.2 | 合规测试 | `uiDesignContract.test.js` 🆕 |
-| T7 | FooterBar 高度 = 2 rows（Legacy）/ 1 row（三栏） | ARCH-079 §2.6 | 合规测试 | `uiDesignContract.test.js` 🆕 |
-| T8 | 看板宽度 clamp(24, 36)，默认 ratio 0.16 | ARCH-079 §3.2 | 纯叶子测试 | `sidebarLayout.test.js` ✅ |
-| T9 | 看板最小激活列宽 = 120 cols | ARCH-079 §3.1 | 纯叶子测试 | `sidebarLayout.test.js` ✅ |
-| T10 | 响应式分类：超窄 <80 / 窄屏 80-119 / 标准 120-159 / 宽屏 ≥160 | ARCH-079 §8.1 | 合规测试 | `uiDesignContract.test.js` 🆕 |
-| T11 | effectiveCols 永不抛（缺失/损坏降级） | effectiveCols.js | 纯叶子测试 | `effectiveCols.test.js` ✅ |
-| T12 | sidebarTopAnchorRows 永不抛（WelcomeBanner 缺失 → 0） | ARCH-016 §7.6 | 契约测试 | `regionLayout.test.js` ✅ |
-| T13 | CC 模式品牌文本不含 "Claude Code" / "Claude" | tui/AGENTS.md §0.4 | 合规测试 | `uiDesignContract.test.js` 🆕 |
-| T14 | TUI 禁止 DECSTBM 滚动区（`\x1B[...r`）除非备用缓冲区 | AGENTS.md 规则 4 | 合规测试 | `check-agent-rules.js` ✅ |
+| T1 | REGION 枚举 25 个 ID 冻结（9 顶层 + 6 大区 + 10 小区） | ARCH-016 §7.2-7.4 | 契约测试 | `regionLayout.test.js` ✓ |
+| T2 | 三层结构：大区值是小区值的前缀 | ARCH-016 §7.1 | 契约测试 | `regionLayout.test.js` ✓ |
+| T3 | OWNING_OVERLAYS 6 个 key 全声明，hideChrome 为 boolean | ARCH-016 §7.5 | 契约测试 | `regionLayout.test.js` ✓ |
+| T4 | TOP_LEVEL_ORDER 自顶向下顺序 = REGION 顶层顺序 | ARCH-016 §7.2 | 契约测试 | `regionLayout.test.js` ✓ |
+| T5 | PromptFrame 宽度 = `cols - 1`（留 1 列 slack） | ARCH-079 §2.2 | 合规测试 | `uiDesignContract.test.js` |
+| T6 | PromptFrame 最小高度 = 4 rows，最大高度 = `vrows - 10` | ARCH-079 §2.2 | 合规测试 | `uiDesignContract.test.js` |
+| T7 | FooterBar 高度 = 2 rows（Legacy）/ 1 row（三栏） | ARCH-079 §2.6 | 合规测试 | `uiDesignContract.test.js` |
+| T8 | 看板宽度 clamp(24, 36)，默认 ratio 0.16 | ARCH-079 §3.2 | 纯叶子测试 | `sidebarLayout.test.js` ✓ |
+| T9 | 看板最小激活列宽 = 120 cols | ARCH-079 §3.1 | 纯叶子测试 | `sidebarLayout.test.js` ✓ |
+| T10 | 响应式分类：超窄 <80 / 窄屏 80-119 / 标准 120-159 / 宽屏 ≥160 | ARCH-079 §8.1 | 合规测试 | `uiDesignContract.test.js` |
+| T11 | effectiveCols 永不抛（缺失/损坏降级） | effectiveCols.js | 纯叶子测试 | `effectiveCols.test.js` ✓ |
+| T12 | sidebarTopAnchorRows 永不抛（WelcomeBanner 缺失 → 0） | ARCH-016 §7.6 | 契约测试 | `regionLayout.test.js` ✓ |
+| T13 | CC 模式品牌文本不含 "Claude Code" / "Claude" | tui/AGENTS.md §0.4 | 合规测试 | `uiDesignContract.test.js` |
+| T14 | TUI 禁止 DECSTBM 滚动区（`\x1B[...r`）除非备用缓冲区 | AGENTS.md 规则 4 | 合规测试 | `check-agent-rules.js` ✓ |
 
 ### 2.2 Web 前端不变量（来自 `[DESIGN-FE-001]` + `[DESIGN-A11Y-001]`）
 
 | # | 不变量 | 来源 | 验证方式 | 测试文件 |
 |---|--------|------|----------|----------|
-| W1 | 所有 `--khy-*` token 在 `:root` 和 `html.dark` 成对定义 | FE-001 §3.1 | 合规测试 | `themeParity.test.js` 🆕 |
-| W2 | `--khy-white` 必须有定义（已知缺口 G1） | FE-001 §12 G1 | 合规测试 | `themeParity.test.js` 🆕 |
-| W3 | `.vue`/`.css` 中不得出现字面量 hex 颜色（真源文件除外） | FE-001 §3.2 | 合规测试 | `designTokenCompliance.test.js` 🆕 |
-| W4 | 样式必须使用 `var(--khy-*)`，禁止内联 hex | FE-001 §5.3 | 合规测试 | `designTokenCompliance.test.js` 🆕 |
-| W5 | Khy* 组件必须有 `<script setup>` + scoped 样式 | FE-001 §5.3 | 契约测试 | `componentContract.wiring.test.js` 🆕 |
-| W6 | Khy* 组件 props 带 validator | FE-001 §5.3 | 契约测试 | `componentContract.wiring.test.js` 🆕 |
-| W7 | 新页面必须登记 `src/nav/index.js` | FE-001 §4 | Wiring test | `nav.wiring.test.js` ✅ |
-| W8 | 交互元素键盘可达，focus 态可见 | A11Y §4 | 手动 + 自动化 | `a11yContract.test.js` 🆕 |
-| W9 | 状态变化区有 `aria-live`，加载区有 `aria-busy` | A11Y §3.1/§7.1 | 合规测试 | `a11yContract.test.js` 🆕 |
-| W10 | 尊重 `prefers-reduced-motion` | A11Y §5.3 | 合规测试 | `a11yContract.test.js` 🆕 |
+| W1 | 所有 `--khy-*` token 在 `:root` 和 `html.dark` 成对定义 | FE-001 §3.1 | 合规测试 | `themeParity.test.js` |
+| W2 | `--khy-white` 必须有定义（已知缺口 G1） | FE-001 §12 G1 | 合规测试 | `themeParity.test.js` |
+| W3 | `.vue`/`.css` 中不得出现字面量 hex 颜色（真源文件除外） | FE-001 §3.2 | 合规测试 | `designTokenCompliance.test.js` |
+| W4 | 样式必须使用 `var(--khy-*)`，禁止内联 hex | FE-001 §5.3 | 合规测试 | `designTokenCompliance.test.js` |
+| W5 | Khy* 组件必须有 `<script setup>` + scoped 样式 | FE-001 §5.3 | 契约测试 | `componentContract.wiring.test.js` |
+| W6 | Khy* 组件 props 带 validator | FE-001 §5.3 | 契约测试 | `componentContract.wiring.test.js` |
+| W7 | 新页面必须登记 `src/nav/index.js` | FE-001 §4 | Wiring test | `nav.wiring.test.js` ✓ |
+| W8 | 交互元素键盘可达，focus 态可见 | A11Y §4 | 手动 + 自动化 | `a11yContract.test.js` |
+| W9 | 状态变化区有 `aria-live`，加载区有 `aria-busy` | A11Y §3.1/§7.1 | 合规测试 | `a11yContract.test.js` |
+| W10 | 尊重 `prefers-reduced-motion` | A11Y §5.3 | 合规测试 | `a11yContract.test.js` |
 | W11 | 文本对比度满足 WCAG AA（正文 ≥4.5:1） | A11Y §5.1 | 手动 | 回归清单 |
-| W12 | 前端体积只降不升 | FE-001 §9 | CI 门禁 | `check:frontend-size` ✅ |
+| W12 | 前端体积只降不升 | FE-001 §9 | CI 门禁 | `check:frontend-size` ✓ |
 
 ### 2.3 khyquant 前端不变量（来自 `[DESIGN-FE-001]` §3.3）
 
 | # | 不变量 | 来源 | 验证方式 | 测试文件 |
 |---|--------|------|----------|----------|
-| K1 | khyquant 新代码使用 `--khy-*` 命名 | FE-001 §3.3 | 合规测试 | `mobileUiCompliance.test.js` 🆕 |
-| K2 | khyquant 不新增平行令牌命名（`--primary-color` 等） | FE-001 §3.3 | 合规测试 | `mobileUiCompliance.test.js` 🆕 |
-| K3 | 移动端触控目标 ≥44px | FE-001 §8 | 合规测试 | `mobileUiCompliance.test.js` 🆕 |
-| K4 | 移动端输入框字号 ≥16px（防 iOS 自动缩放） | FE-001 §8 | 合规测试 | `mobileUiCompliance.test.js` 🆕 |
+| K1 | khyquant 新代码使用 `--khy-*` 命名 | FE-001 §3.3 | 合规测试 | `mobileUiCompliance.test.js` |
+| K2 | khyquant 不新增平行令牌命名（`--primary-color` 等） | FE-001 §3.3 | 合规测试 | `mobileUiCompliance.test.js` |
+| K3 | 移动端触控目标 ≥44px | FE-001 §8 | 合规测试 | `mobileUiCompliance.test.js` |
+| K4 | 移动端输入框字号 ≥16px（防 iOS 自动缩放） | FE-001 §8 | 合规测试 | `mobileUiCompliance.test.js` |
 
 ### 2.4 移动端不变量（手机 / Capacitor / PWA）
 
@@ -112,14 +112,14 @@
 
 | # | 不变量 | 来源 | 验证方式 | 测试文件 |
 |---|--------|------|----------|----------|
-| M1 | 触控目标 ≥44px（`min-height: 44px; min-width: 44px`） | FE-001 §8 + mobile.css | 合规测试 | `mobileUiCompliance.test.js` 🆕 |
-| M2 | 移动端输入框字号 ≥16px（防 iOS 自动缩放） | FE-001 §8 | 合规测试 | `mobileUiCompliance.test.js` 🆕 |
-| M3 | 响应式断点存在（768px 手机 / 1024px 平板 / 480px 小屏） | FE-001 §8 + responsive.css | 合规测试 | `mobileUiCompliance.test.js` 🆕 |
-| M4 | PWA manifest 含必需字段（name/short_name/theme_color/display/icons） | vite.config.js PWA 配置 | 合规测试 | `mobileUiCompliance.test.js` 🆕 |
-| M5 | Capacitor 配置含 appId / appName / webDir | `capacitor.config.ts` | 契约测试 | `mobileUiCompliance.test.js` 🆕 |
-| M6 | Mobile* 组件族存在（MobileLayout / MobileNav / MobileToast 等） | FE-001 §5.2 | 契约测试 | `mobileUiCompliance.test.js` 🆕 |
-| M7 | PWA 更新提示组件（PwaUpdatePrompt）与离线指示器（OfflineIndicator）存在 | FE-001 §8 | 契约测试 | `mobileUiCompliance.test.js` 🆕 |
-| M8 | 移动端滚动行为使用 `-webkit-overflow-scrolling: touch` | mobile-scroll.css | 合规测试 | `mobileUiCompliance.test.js` 🆕 |
+| M1 | 触控目标 ≥44px（`min-height: 44px; min-width: 44px`） | FE-001 §8 + mobile.css | 合规测试 | `mobileUiCompliance.test.js` |
+| M2 | 移动端输入框字号 ≥16px（防 iOS 自动缩放） | FE-001 §8 | 合规测试 | `mobileUiCompliance.test.js` |
+| M3 | 响应式断点存在（768px 手机 / 1024px 平板 / 480px 小屏） | FE-001 §8 + responsive.css | 合规测试 | `mobileUiCompliance.test.js` |
+| M4 | PWA manifest 含必需字段（name/short_name/theme_color/display/icons） | vite.config.js PWA 配置 | 合规测试 | `mobileUiCompliance.test.js` |
+| M5 | Capacitor 配置含 appId / appName / webDir | `capacitor.config.ts` | 契约测试 | `mobileUiCompliance.test.js` |
+| M6 | Mobile* 组件族存在（MobileLayout / MobileNav / MobileToast 等） | FE-001 §5.2 | 契约测试 | `mobileUiCompliance.test.js` |
+| M7 | PWA 更新提示组件（PwaUpdatePrompt）与离线指示器（OfflineIndicator）存在 | FE-001 §8 | 契约测试 | `mobileUiCompliance.test.js` |
+| M8 | 移动端滚动行为使用 `-webkit-overflow-scrolling: touch` | mobile-scroll.css | 合规测试 | `mobileUiCompliance.test.js` |
 
 ### 2.5 桌面端不变量（Electron / khyos-desktop）
 
@@ -128,16 +128,16 @@
 
 | # | 不变量 | 来源 | 验证方式 | 测试文件 |
 |---|--------|------|----------|----------|
-| D1 | BrowserWindow 尺寸：khyos-desktop 1216×808（min 800×600）；旧壳 1280×800（min 900×600） | main/index.ts + electron/main.js | 契约测试 | `desktopUiContract.test.js` 🆕 |
-| D2 | khyos-desktop 无框窗口（`frame: false`）；旧壳有框 | main/index.ts:28 + electron/main.js:18 | 契约测试 | `desktopUiContract.test.js` 🆕 |
-| D3 | 安全配置：`contextIsolation: true` + `nodeIntegration: false` | Electron 安全最佳实践 | 合规测试 | `desktopUiContract.test.js` 🆕 |
-| D4 | Preload 通过 `contextBridge.exposeInMainWorld('__KHYOS__', api)` 暴露 API | preload/index.ts:39 | 契约测试 | `desktopUiContract.test.js` 🆕 |
-| D5 | Preload 必需方法集：窗口控制 + 设置 + 主题 + 文件 + AI + 会话 + 平台/版本 | preload/index.ts | 契约测试 | `desktopUiContract.test.js` 🆕 |
-| D6 | IPC 通道命名约定：`namespace:action`（如 `window:minimize`、`ai:send`） | main/index.ts | 合规测试 | `desktopUiContract.test.js` 🆕 |
-| D7 | 菜单含四组（文件/视图/窗口/帮助） | menu.ts | 契约测试 | `desktopUiContract.test.js` 🆕 |
-| D8 | TitleBar 含窗口控制按钮（最小化/最大化/关闭） | layout/TitleBar.tsx | 契约测试 | `desktopUiContract.test.js` 🆕 |
-| D9 | 品牌文本不含 "ZCode" / "Zhipu" / "智谱"（仅结构复刻，不复用品牌） | khyos-desktop/CLAUDE.md 品牌规则 | 合规测试 | `desktopUiContract.test.js` 🆕 |
-| D10 | 源码不得硬编码 `localhost:3000` / `localhost:9222` 等端点字面量 | AGENTS.md 规则 1 | 合规测试 | `desktopUiContract.test.js` 🆕 |
+| D1 | BrowserWindow 尺寸：khyos-desktop 1216×808（min 800×600）；旧壳 1280×800（min 900×600） | main/index.ts + electron/main.js | 契约测试 | `desktopUiContract.test.js` |
+| D2 | khyos-desktop 无框窗口（`frame: false`）；旧壳有框 | main/index.ts:28 + electron/main.js:18 | 契约测试 | `desktopUiContract.test.js` |
+| D3 | 安全配置：`contextIsolation: true` + `nodeIntegration: false` | Electron 安全最佳实践 | 合规测试 | `desktopUiContract.test.js` |
+| D4 | Preload 通过 `contextBridge.exposeInMainWorld('__KHYOS__', api)` 暴露 API | preload/index.ts:39 | 契约测试 | `desktopUiContract.test.js` |
+| D5 | Preload 必需方法集：窗口控制 + 设置 + 主题 + 文件 + AI + 会话 + 平台/版本 | preload/index.ts | 契约测试 | `desktopUiContract.test.js` |
+| D6 | IPC 通道命名约定：`namespace:action`（如 `window:minimize`、`ai:send`） | main/index.ts | 合规测试 | `desktopUiContract.test.js` |
+| D7 | 菜单含四组（文件/视图/窗口/帮助） | menu.ts | 契约测试 | `desktopUiContract.test.js` |
+| D8 | TitleBar 含窗口控制按钮（最小化/最大化/关闭） | layout/TitleBar.tsx | 契约测试 | `desktopUiContract.test.js` |
+| D9 | 品牌文本不含 "ZCode" / "Zhipu" / "智谱"（仅结构复刻，不复用品牌） | khyos-desktop/CLAUDE.md 品牌规则 | 合规测试 | `desktopUiContract.test.js` |
+| D10 | 源码不得硬编码 `localhost:3000` / `localhost:9222` 等端点字面量 | AGENTS.md 规则 1 | 合规测试 | `desktopUiContract.test.js` |
 
 ---
 
@@ -147,17 +147,17 @@
 
 ```
 services/backend/tests/cli/tui/
-├── regionLayout.test.js              # T1-T4, T12 — REGION SSOT 契约 ✅
-├── sidebarLayout.test.js             # T8-T9 — 看板宽度/激活阈值 ✅
-├── effectiveCols.test.js            # T11 — 有效列宽降级 ✅
-├── uiDesignContract.test.js          # T5-T7, T10, T13 — 尺寸/响应式/品牌合规 🆕
-├── footerStability.test.js           # Footer 行数稳定 ✅
-├── promptPlaceholder.test.js         # PromptFrame 占位符 ✅
-├── railLayout.test.js                # Rail 几何/绘制 ✅
-├── sidebarPanel.test.js              # 看板面板渲染 ✅
-├── sidebarRailRuntime.test.js        # Rail 运行时 ✅
-├── liveRegionBudget.test.js          # Live 区高度预算 ✅
-├── inkRenderSmoke.test.js (在 tests/tui/)  # L3 渲染冒烟 ✅
+├── regionLayout.test.js              # T1-T4, T12 — REGION SSOT 契约 ✓
+├── sidebarLayout.test.js             # T8-T9 — 看板宽度/激活阈值 ✓
+├── effectiveCols.test.js            # T11 — 有效列宽降级 ✓
+├── uiDesignContract.test.js          # T5-T7, T10, T13 — 尺寸/响应式/品牌合规
+├── footerStability.test.js           # Footer 行数稳定 ✓
+├── promptPlaceholder.test.js         # PromptFrame 占位符 ✓
+├── railLayout.test.js                # Rail 几何/绘制 ✓
+├── sidebarPanel.test.js              # 看板面板渲染 ✓
+├── sidebarRailRuntime.test.js        # Rail 运行时 ✓
+├── liveRegionBudget.test.js          # Live 区高度预算 ✓
+├── inkRenderSmoke.test.js (在 tests/tui/)  # L3 渲染冒烟 ✓
 └── ...
 ```
 
@@ -166,18 +166,18 @@ services/backend/tests/cli/tui/
 ```
 apps/ai-frontend/src/
 ├── __tests__/
-│   ├── designTokenCompliance.test.js  # W3-W4 — 颜色/令牌合规 🆕
-│   ├── themeParity.test.js            # W1-W2 — 双主题成对定义 🆕
-│   ├── a11yContract.test.js           # W8-W10 — 可访问性合规 🆕
-│   └── vitest.sanity.test.js          # 环境健全性 ✅
+│   ├── designTokenCompliance.test.js  # W3-W4 — 颜色/令牌合规
+│   ├── themeParity.test.js            # W1-W2 — 双主题成对定义
+│   ├── a11yContract.test.js           # W8-W10 — 可访问性合规
+│   └── vitest.sanity.test.js          # 环境健全性 ✓
 ├── components/
-│   ├── KhyIcon.test.js                # W5-W6 — 组件契约（示例）✅
+│   ├── KhyIcon.test.js                # W5-W6 — 组件契约（示例）✓
 │   └── __tests__/
-│       └── componentContract.wiring.test.js  # W5-W6 — 所有 Khy* 组件契约 🆕
+│       └── componentContract.wiring.test.js  # W5-W6 — 所有 Khy* 组件契约
 ├── compos/
-│   └── *.wiring.test.js               # W7 — wiring tests ✅
+│   └── *.wiring.test.js               # W7 — wiring tests ✓
 └── router/
-    └── nav.wiring.test.js             # W7 — 导航数据 wiring ✅
+    └── nav.wiring.test.js             # W7 — 导航数据 wiring ✓
 ```
 
 ### 3.3 移动端测试（khyquant 前端）
@@ -185,9 +185,9 @@ apps/ai-frontend/src/
 ```
 software/khyquant/frontend/src/
 ├── __tests__/
-│   ├── mobileUiCompliance.test.js     # M1-M8 — 移动端 UI 合规 + 契约 🆕
-│   └── example.test.js                 # placeholder（待替换）✅
-├── vitest.config.js                    # vitest 配置（jsdom, 80% 阈值）✅
+│   ├── mobileUiCompliance.test.js     # M1-M8 — 移动端 UI 合规 + 契约
+│   └── example.test.js                 # placeholder（待替换）✓
+├── vitest.config.js                    # vitest 配置（jsdom, 80% 阈值）✓
 └── components/
     ├── MobileLayout.vue
     ├── MobileNav.vue
@@ -200,10 +200,10 @@ software/khyquant/frontend/src/
 ```
 apps/khyos-desktop/
 ├── tests/
-│   └── desktopUiContract.test.js       # D1-D10 — 桌面端 UI 契约 + 合规 🆕
+│   └── desktopUiContract.test.js       # D1-D10 — 桌面端 UI 契约 + 合规
 ├── scripts/ci/
-│   ├── brand-replace.cjs              # 品牌替换校验 ✅
-│   └── check-api-drift.mjs            # preload API 漂移守卫 ✅
+│   ├── brand-replace.cjs              # 品牌替换校验 ✓
+│   └── check-api-drift.mjs            # preload API 漂移守卫 ✓
 └── src/
     ├── main/index.ts                   # 主进程
     ├── preload/index.ts                # preload
@@ -409,10 +409,10 @@ npm run check:frontend-size
 | G1 | 无视觉回归/截图测试基础设施 | 无法自动检测视觉漂移 | 评估引入 Playwright 截图对比（当前用渲染冒烟 + 契约测试替代） | P2 |
 | G2 | ai-frontend 无 vitest 配置（用默认值） | 无 jsdom 环境，DOM 依赖测试无法运行 | 新增 `vitest.config.js` 配置 jsdom（仅对需要 DOM 的测试） | P2 |
 | G3 | Topbar.js 组件无测试 | 覆盖缺口 | 补 `topbar.test.js` 契约测试 | P2 |
-| G4 | khyquant 前端仅有 placeholder 测试 | 移动端 UI 无守护 | ✅ 已补 `mobileUiCompliance.test.js`（M1-M8） | 已收敛 |
+| G4 | khyquant 前端仅有 placeholder 测试 | 移动端 UI 无守护 | ✓ 已补 `mobileUiCompliance.test.js`（M1-M8） | 已收敛 |
 | G5 | 无自动化对比度检查 | WCAG AA 靠手动 | 评估 axe-core 集成（当前用 `a11yContract.test.js` 检查 ARIA 结构） | P3 |
 | G6 | 组件库（FE-002）尚未落地 | W5-W6 的全面验证依赖组件库存在 | 组件库落地后扩展 `componentContract.wiring.test.js` | P3 |
-| G7 | 桌面端无测试 | khyos-desktop UI 无守护 | ✅ 已补 `desktopUiContract.test.js`（D1-D10） | 已收敛 |
+| G7 | 桌面端无测试 | khyos-desktop UI 无守护 | ✓ 已补 `desktopUiContract.test.js`（D1-D10） | 已收敛 |
 | G8 | 两个 Capacitor appId 冲突（`com.khy.quant.mobile` vs `com.khyos.companion`） | 可能导致应用商店冲突 | 统一为一个 appId 或明确两个独立应用 | P2 |
 | G9 | khyos-desktop 所有 IPC handler 为 stub | 桌面端功能不可用 | 按 ARCH-078 P1-P4 计划逐步落地 | P1 |
 

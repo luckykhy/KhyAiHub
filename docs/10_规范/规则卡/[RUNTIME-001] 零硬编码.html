@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -40,7 +40,7 @@
 <h2 id="提供福利">提供福利<a class="anchor" href="#提供福利" aria-label="锚点">#</a></h2>
 <p>不必猜测端口/域名；切换部署目标只改 env 不改代码，降低联调与自托管部署成本。</p>
 <h2 id="反例">反例<a class="anchor" href="#反例" aria-label="锚点">#</a></h2>
-<p>❌ 业务代码里写死后端端点 <code>fetch(&quot;http://&lt;host&gt;:&lt;port&gt;/api&quot;)</code> → ✅ 从 <code>VITE_BACKEND_HOST</code> / <code>VITE_BACKEND_PORT</code> 读取</p>
+<p>✗ 业务代码里写死后端端点 <code>fetch(&quot;http://&lt;host&gt;:&lt;port&gt;/api&quot;)</code> → ✓ 从 <code>VITE_BACKEND_HOST</code> / <code>VITE_BACKEND_PORT</code> 读取</p>
 <h2 id="校验方式">校验方式<a class="anchor" href="#校验方式" aria-label="锚点">#</a></h2>
 <p><code>node scripts/ci/check-agent-rules.js --changed</code>；<code>grep -rn &quot;localhost:[0-9]&quot; --include=&quot;*.js&quot; --include=&quot;*.vue&quot; --include=&quot;*.ts&quot;</code></p>
 <h2 id="例外">例外<a class="anchor" href="#例外" aria-label="锚点">#</a></h2>

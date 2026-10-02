@@ -341,13 +341,13 @@ async function cleanupExpiredUploads() {
 ### 9.2 路径安全
 
 ```javascript
-// ✅ 正确：验证 ID 格式
+// ✓ 正确：验证 ID 格式
 function getUpload(id) {
   if (!validateId(id)) throw new Error('Invalid upload ID');
   return fs.readFileSync(path.join(uploadDir(), `${id}.json`));
 }
 
-// ❌ 错误：直接使用用户输入
+// ✗ 错误：直接使用用户输入
 function getUploadBad(id) {
   return fs.readFileSync(path.join(uploadDir(), id)); // 路径遍历风险
 }

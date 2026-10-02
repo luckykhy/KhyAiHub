@@ -42,7 +42,7 @@ enforcement: "scripts/ci/check-agent-rules.js"
 
 ## 反例
 
-❌ 业务代码里写死后端端点 `fetch("http://<host>:<port>/api")` → ✅ 从 `VITE_BACKEND_HOST` / `VITE_BACKEND_PORT` 读取
+✗ 业务代码里写死后端端点 `fetch("http://<host>:<port>/api")` → ✓ 从 `VITE_BACKEND_HOST` / `VITE_BACKEND_PORT` 读取
 
 ## 校验方式
 

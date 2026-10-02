@@ -42,7 +42,7 @@ enforcement: "scripts/ci/check-agent-rules.js"
 
 ## 反例
 
-❌ `正在工作…` / `Loading…` → ✅ `解析 AST (已处理 340/1200 节点)…`
+✗ `正在工作…` / `Loading…` → ✓ `解析 AST (已处理 340/1200 节点)…`
 
 ## 校验方式
 
