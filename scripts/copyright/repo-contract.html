@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: repo-contract.md -->
+<title>本仓口径覆盖（khy-os repo contract） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>scripts<span class="sep">›</span>copyright<span class="sep">›</span>本仓口径覆盖（khy-os repo contract）</div>
+      <header class="hero reveal"><h1>本仓口径覆盖（khy-os repo contract）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#本仓口径覆盖-khy-os-repo-contract">本仓口径覆盖（khy-os repo contract）</a></li><li class="lvl-2"><a href="#1-名称与版本的真源">1. 名称与版本的真源</a></li><li class="lvl-2"><a href="#2-60-页选材的真源-覆盖上游-优先抽取前端代码">2. 60 页选材的真源（覆盖上游「优先抽取前端代码」）</a></li><li class="lvl-2"><a href="#3-第三方与生成物边界">3. 第三方与生成物边界</a></li><li class="lvl-2"><a href="#4-输出落点">4. 输出落点</a></li><li class="lvl-2"><a href="#5-门禁对齐">5. 门禁对齐</a></li><li class="lvl-2"><a href="#6-环境前置">6. 环境前置</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="本仓口径覆盖-khy-os-repo-contract">本仓口径覆盖（khy-os repo contract）<a class="anchor" href="#本仓口径覆盖-khy-os-repo-contract" aria-label="锚点">#</a></h1>
+<p>上游 <code>vendor/software-copyright-materials/</code> 逐字入库、<strong>一行未改</strong>（见<br><code>upstream-manifest.json</code>，<code>[DESIGN-SOURCING-001]</code> B-M1 #5）。本文件是本仓对它的<strong>唯一</strong><br>覆盖层：两者冲突时以本文件为准，语义真源是 <code>[DESIGN-IP-002]</code>。<br>守卫 <code>scripts/ci/check-copyright-readiness.js</code> 会检查本文件的存在与关键小节，<br>缺失即报 <code>copyright-overlay-missing</code> —— 因为一旦本文件消失，上游默认口径会静默生效。</p>
+<h2 id="1-名称与版本的真源">1. 名称与版本的真源<a class="anchor" href="#1-名称与版本的真源" aria-label="锚点">#</a></h2>
+<p>上游要求正式资料的软件全称/版本号取自 <code>草稿/申请表信息.md</code>。在本仓：</p>
+<ul><li>唯一真源 = <code>docs/10_规范/registry/COPYRIGHT.json</code>（登记全称 / 登记版本 / 工程版本）；</li><li><code>草稿/申请表信息.md</code> 只能<strong>抄</strong>这份登记，不得自造，也不得用 <code>package.json</code> 之外的推测值；</li><li>页眉、文件名、正文标题一律使用该登记的「软件全称 + 登记版本」，</li></ul>
+<p>与 <code>--version</code> / <code>khy about</code> 画面的<strong>工程版本</strong>双口径关系见 <code>[DESIGN-IP-001]</code> C-MAT2。</p>
+<h2 id="2-60-页选材的真源-覆盖上游-优先抽取前端代码">2. 60 页选材的真源（覆盖上游「优先抽取前端代码」）<a class="anchor" href="#2-60-页选材的真源-覆盖上游-优先抽取前端代码" aria-label="锚点">#</a></h2>
+<p>上游 SKILL.md 写「优先抽取前端代码：入口、路由、页面、核心组件」，<br><code>scripts/propose_code_selection.py</code> 亦按 <code>FRONTEND_EXTS</code> 给候选打 <code>selection_tier=frontend</code>。<br><strong>在本仓这只用于排序候选，不得用于决定选材结论。</strong> 结论的唯一真源是<br><code>docs/10_规范/registry/COPYRIGHT-MATERIALS.json</code>：</p>
+<ul><li>前 30 页 = 启动链（Python 层入口 → 环境检测 → Node 供给）；</li><li>后 30 页 = 手写内核（引导 → 中断 → 调度 → 内存 → 进程）；</li><li>编制原则是「按运行时调用顺序串成一条链，不东摘西摘」，不是「审核员易读的前端优先」；</li><li><code>草稿/代码文件选择.json</code> 必须由这份登记派生，<code>model_reason</code> 逐条引用登记条目；</li><li>每页 ≥50 行的口径、行数换算与「剥注释口径」以该登记的 <code>页数要求</code> 段为准，</li></ul>
+<p>不用上游 <code>propose_code_selection.py</code> 的默认估算替代。</p>
+<p>原因：登记客体是「Khy OS 平台底座」，全称里每个词都得在页内有代码（C-MAT1/C-MAT3）；<br><code>apps/ai-frontend</code> 与 <code>software/khyquant/frontend</code> 属于其它界面载体，khyquant 更是独立项目<br>（另案申报），按上游前端优先会把材料导向与本件无关的载体。</p>
+<h2 id="3-第三方与生成物边界">3. 第三方与生成物边界<a class="anchor" href="#3-第三方与生成物边界" aria-label="锚点">#</a></h2>
+<p><code>vendor/</code>、<code>*_gen.*</code>、<code>*_blob.h</code>、字体数据表、<code>dist/</code>、<code>out/</code>、<code>unpacked/</code>、<code>node_modules/</code><br>不得进登记材料（C-X3）。本 vendored 目录刻意落在含 <code>vendor</code> 路径段的位置，<br>使既有排除规则<strong>天然命中</strong>，无需第二份排除清单。</p>
+<h2 id="4-输出落点">4. 输出落点<a class="anchor" href="#4-输出落点" aria-label="锚点">#</a></h2>
+<p>上游固定输出目录为当前工作目录下的 <code>软件著作权申请资料/</code>。在本仓：</p>
+<ul><li>草稿与中间产物：<code>软件著作权申请资料/</code>（仓库根，gitignore，属本机态）；</li><li>正式 Word/TXT：收进 <code>evidence/06_申报材料/</code> 的对应件，不另起第二份材料树；</li><li>上游 <code>生成demo/</code> 与本仓无关，未随 vendored 入库。</li></ul>
+<h2 id="5-门禁对齐">5. 门禁对齐<a class="anchor" href="#5-门禁对齐" aria-label="锚点">#</a></h2>
+<p>上游 7 个 <code>STOP_FOR_USER</code> 门禁（environment / project / business / application-fields /<br>code-selection / screenshot-method / markdown）在本仓<strong>一个都不放宽</strong>，并且：</p>
+<ul><li><code>business</code> 与 <code>code-selection</code> 两个门禁的确认对象是本文件 §1–§2 的两份登记；</li><li><code>screenshot-method</code> 选出的截图必须落入 <code>evidence/03_图片/</code> 的四类口径（C-MAT1）；</li><li>任何门禁不得用「用户未选择则默认继续」绕过（上游原文同款红线）。</li></ul>
+<h2 id="6-环境前置">6. 环境前置<a class="anchor" href="#6-环境前置" aria-label="锚点">#</a></h2>
+<ul><li>Python 3.10+（本仓实测 3.11.9：<code>D:\Portable\Python\python.exe</code>）；</li><li>DOCX 后端 OfficeCLI 固定验证版本 <code>1.0.151</code>，运行时 <code>OFFICECLI_SKIP_UPDATE=1</code>；</li></ul>
+<p>缺失或版本不符时必须停下问人（上游 environment 门禁），不得静默安装、<br>  不得回退到 python-docx/Pandoc/.NET；</p>
+<ul><li>无 OfficeCLI 时只生成 Markdown/TXT，不得伪报 DOCX 成功。</li></ul>
+      </article>
+      <nav class="pager"><span></span><a class="next" href="../../scripts/copyright/vendor/software-copyright-materials/references/application_fields.html"><div class="dir">下一篇 →</div><div class="ttl">申请表信息字段</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__="scripts/copyright/repo-contract.html";</script>
+<script src="../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: playwright_cli_screenshots.md -->
+<title>Playwright CLI 截图 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../docs/index.html">首页</a><span class="sep">›</span>scripts<span class="sep">›</span>copyright<span class="sep">›</span>vendor<span class="sep">›</span>software-copyright-materials<span class="sep">›</span>references<span class="sep">›</span>Playwright CLI 截图</div>
+      <header class="hero reveal"><h1>Playwright CLI 截图</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#playwright-cli-截图">Playwright CLI 截图</a></li><li class="lvl-2"><a href="#固定版本与安装门禁">固定版本与安装门禁</a></li><li class="lvl-2"><a href="#截图前准备">截图前准备</a></li><li class="lvl-2"><a href="#基本命令">基本命令</a></li><li class="lvl-2"><a href="#截图质量与命名">截图质量与命名</a></li><li class="lvl-2"><a href="#生成截图清单">生成截图清单</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="playwright-cli-截图">Playwright CLI 截图<a class="anchor" href="#playwright-cli-截图" aria-label="锚点">#</a></h1>
+<p>本流程只负责 Web 项目的自动浏览器操作和截图落盘。截图必须成为本地图片文件，才能由 <code>capture_screenshots.py</code> 生成清单并交给 OfficeCLI 插入操作手册。</p>
+<h2 id="固定版本与安装门禁">固定版本与安装门禁<a class="anchor" href="#固定版本与安装门禁" aria-label="锚点">#</a></h2>
+<ul><li>固定验证版本：<code>@playwright/cli@0.1.20</code>。</li><li>要求 Node.js 18 或更高版本。</li><li>官方仓库：https://github.com/microsoft/playwright-cli</li><li>先运行本 skill 的 <code>scripts/check_playwright_cli.py</code>，同时检查系统 PATH 和当前 npm 的全局可执行目录，并实际执行 <code>--version</code>。不得仅凭 <code>package.json</code> 或安装清单推断可用。</li><li>命令缺失或版本不等于 <code>0.1.20</code> 时必须停止并询问用户是否安装或切换固定版本，不得静默安装或升级。</li><li>用户同意后可执行 <code>npm install -g @playwright/cli@0.1.20</code>。该 CLI 是外部工具，不复制到本 skill，也不写入被分析项目的 <code>package.json</code>。</li><li>优先使用本机已安装的 Chrome：<code>--browser=chrome</code>。只有 Chrome 不可用且用户同意时，才按 Playwright 提示安装浏览器运行时。</li></ul>
+<p>检查命令：</p>
+<pre><code class="language-bash">&lt;PYTHON&gt; <span class="hljs-string">&quot;&lt;SKILL_DIR&gt;/scripts/check_playwright_cli.py&quot;</span> \
+  --out 软件著作权申请资料/截图工具检查.json</code></pre>
+<p>检查成功后必须读取 JSON 的 <code>executable</code>，后续所有命令都调用这个绝对路径，不要重新假设裸命令 <code>playwright-cli</code> 一定在 PATH。解析顺序是：系统 PATH，然后是 <code>npm prefix -g</code> 对应平台的标准全局可执行目录。这个规则与具体 Node 安装器或版本管理器无关，不修改系统 PATH，也不把工具复制进项目。</p>
+<p>安装后立即重新运行检查，无需重启 Codex。只要全局 npm 目录中的命令能实际返回固定版本，就继续截图；仍不可用时报告检查 JSON 中的实际错误，让用户选择修复环境或改为自行截图。</p>
+<h2 id="截图前准备">截图前准备<a class="anchor" href="#截图前准备" aria-label="锚点">#</a></h2>
+<ol><li>从已确认的 <code>草稿/业务理解.json</code> 的 <code>manual_modules</code>、项目路由和操作手册草稿中确定截图页面、顺序与需要呈现的交互状态。不要猜测不存在的路由或功能。</li><li>根据项目已有脚本启动开发或预览服务，读取实际监听地址。长时间运行的服务必须放入受管理的后台会话或隐藏后台进程，保存 stdout/stderr；不得用前台阻塞命令等待 Vite、Next.js 等开发服务器退出。最多等待 60 秒出现就绪地址，进程提前退出则读取错误日志并停止。不要固定假设端口，也不要为截图改写业务代码。</li><li>创建 <code>软件著作权申请资料/截图原始/</code>。旧截图可能属于上一次运行；覆盖或清理前先确认它们是否仍被当前截图清单引用，不得误删用户文件。</li><li>为当前项目使用稳定且唯一的会话名，例如 <code>softcopyright-&lt;项目短名&gt;</code>。同一次截图任务始终复用该会话。</li><li>根据软件实际布局选择一个固定视口，并在整组截图中保持一致。普通 Web 后台可使用 <code>1440×900</code>；面向 1080p 大屏设计的项目使用 <code>1920×1080</code>。</li></ol>
+<h2 id="基本命令">基本命令<a class="anchor" href="#基本命令" aria-label="锚点">#</a></h2>
+<p>下面的 <code>&lt;PLAYWRIGHT_CLI&gt;</code> 必须替换为 <code>截图工具检查.json</code> 的 <code>executable</code> 绝对路径；其他尖括号也必须替换为真实值。路径包含空格时必须加引号。</p>
+<pre><code class="language-bash">&lt;PLAYWRIGHT_CLI&gt; -s=&lt;会话名&gt; open &lt;页面URL&gt; --browser=chrome
+&lt;PLAYWRIGHT_CLI&gt; -s=&lt;会话名&gt; resize &lt;宽度&gt; &lt;高度&gt;
+&lt;PLAYWRIGHT_CLI&gt; -s=&lt;会话名&gt; snapshot
+&lt;PLAYWRIGHT_CLI&gt; -s=&lt;会话名&gt; goto &lt;页面URL&gt;
+&lt;PLAYWRIGHT_CLI&gt; -s=&lt;会话名&gt; screenshot --filename=<span class="hljs-string">&quot;&lt;绝对路径或工作区相对路径&gt;/01-首页.png&quot;</span></code></pre>
+<p><code>open</code> 默认使用无头浏览器。只有用户需要观察或接管过程时才加 <code>--headed</code>；是否显示窗口不影响截图必须写入本地文件的要求。</p>
+<p>需要呈现交互状态时，先用 <code>snapshot</code> 获取当前页面引用，再通过 <code>click</code>、<code>fill</code>、<code>select</code>、<code>hover</code>、<code>press</code> 等命令完成真实操作。每次页面或状态变化后重新取得快照，不复用过期引用。例如：</p>
+<pre><code class="language-bash">&lt;PLAYWRIGHT_CLI&gt; -s=&lt;会话名&gt; snapshot
+&lt;PLAYWRIGHT_CLI&gt; -s=&lt;会话名&gt; click &lt;元素引用&gt;
+&lt;PLAYWRIGHT_CLI&gt; -s=&lt;会话名&gt; screenshot --filename=<span class="hljs-string">&quot;&lt;输出目录&gt;/02-操作结果.png&quot;</span></code></pre>
+<h2 id="截图质量与命名">截图质量与命名<a class="anchor" href="#截图质量与命名" aria-label="锚点">#</a></h2>
+<ul><li>按操作手册模块顺序使用数字前缀：<code>01-首页.png</code>、<code>02-查询结果.png</code>、<code>03-设置页面.png</code>。</li><li>默认截取实际视口，不生成纵向过长、缩小后无法阅读的整页长图。确需展示页面下方内容时，滚动或操作到目标区域后单独截图。</li><li>截图前确认页面已完成加载，关键文字、图表和操作结果可见，不保留加载动画、调试面板、浏览器权限提示或与手册无关的通知。</li><li>对弹窗、下拉菜单、悬浮提示等瞬时状态，先触发状态并重新确认页面，再立即截图。</li><li>不通过修改 DOM、伪造接口响应或注入展示数据来制造项目不存在的功能。测试数据或项目自带演示数据可以正常展示，但不得把伪造状态写入手册。</li><li>每次截图命令后检查目标文件确实存在、扩展名受支持且文件大小大于 0。仅在对话中看到图片不算成功。</li></ul>
+<h2 id="生成截图清单">生成截图清单<a class="anchor" href="#生成截图清单" aria-label="锚点">#</a></h2>
+<p>所有自动截图完成后运行：</p>
+<pre><code class="language-bash">&lt;PYTHON&gt; <span class="hljs-string">&quot;&lt;SKILL_DIR&gt;/scripts/capture_screenshots.py&quot;</span> \
+  --input-dir 软件著作权申请资料/截图原始 \
+  --out-dir 软件著作权申请资料/截图 \
+  --method playwright-cli</code></pre>
+<p>检查 <code>截图/截图清单.json</code>：</p>
+<ul><li><code>status</code> 必须为 <code>ok</code>。</li><li><code>method</code> 必须为 <code>playwright-cli</code>。</li><li>顺序必须与操作手册截图预留位一致。</li><li>每个 <code>path</code> 必须指向存在且非空的本地图片。</li></ul>
+<p>完成后关闭当前会话：</p>
+<pre><code class="language-bash">&lt;PLAYWRIGHT_CLI&gt; -s=&lt;会话名&gt; close</code></pre>
+<p>如果自动截图过程中无法启动项目、无法打开页面、浏览器不可用或图片不能落盘，停止并报告具体错误。用户可以修复后重试、改为自行截图，或明确选择暂时跳过截图并保留预留位。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../scripts/copyright/vendor/software-copyright-materials/references/officecli_backend.html"><div class="dir">← 上一篇</div><div class="ttl">OfficeCLI DOCX 后端</div></a><a class="next" href="../../../../../scripts/copyright/vendor/software-copyright-materials/SKILL.html"><div class="dir">下一篇 →</div><div class="ttl">软著申请资料生成</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../";window.__KHY_CUR__="scripts/copyright/vendor/software-copyright-materials/references/playwright_cli_screenshots.html";</script>
+<script src="../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: business_understanding_rules.md -->
+<title>业务理解规则 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../docs/index.html">首页</a><span class="sep">›</span>scripts<span class="sep">›</span>copyright<span class="sep">›</span>vendor<span class="sep">›</span>software-copyright-materials<span class="sep">›</span>references<span class="sep">›</span>业务理解规则</div>
+      <header class="hero reveal"><h1>业务理解规则</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#业务理解规则">业务理解规则</a></li><li class="lvl-2"><a href="#证据收集">证据收集</a></li><li class="lvl-2"><a href="#输出业务理解草稿">输出业务理解草稿</a></li><li class="lvl-2"><a href="#外部调研">外部调研</a></li><li class="lvl-2"><a href="#生成材料约束">生成材料约束</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="业务理解规则">业务理解规则<a class="anchor" href="#业务理解规则" aria-label="锚点">#</a></h1>
+<p>申请表信息和操作手册不能只根据代码结构泛泛生成，必须先理解软件业务。</p>
+<h2 id="证据收集">证据收集<a class="anchor" href="#证据收集" aria-label="锚点">#</a></h2>
+<p>先用脚本收集证据，输出 <code>草稿/业务理解证据.md/json</code> 和 <code>草稿/业务理解模型稿模板.json</code>。证据通常包括：</p>
+<ul><li><code>README.md</code></li><li><code>docs/*PRD*.md</code></li><li><code>docs/*BRD*.md</code></li><li><code>docs/*ARCHITECTURE*.md</code></li><li>产品说明、需求文档、设计文档</li><li>前端页面标题、按钮文案、路由、核心组件名</li><li>后端 API 路由和模型名称</li></ul>
+<p>这些只是候选证据，不代表最终行业、功能和手册结构。</p>
+<h2 id="输出业务理解草稿">输出业务理解草稿<a class="anchor" href="#输出业务理解草稿" aria-label="锚点">#</a></h2>
+<p>模型必须阅读证据和必要源码，自行判断应该抽取哪些业务信息，再生成业务理解模型稿 JSON。不得用关键字表或固定模板决定行业、功能和结构。</p>
+<p>模型稿经脚本校验后生成 <code>草稿/业务理解.md</code> 和 <code>草稿/业务理解.json</code>，至少包含：</p>
+<ul><li>产品定位</li><li>面向领域 / 行业</li><li>目标用户</li><li>用户痛点和核心价值</li><li>主要业务功能</li><li>典型操作流程</li><li>操作手册结构建议</li><li>操作手册页面/流程模块，必须说明每个真实页面或核心流程的使用场景、进入位置、用户可见元素、用户动作、输入/状态规则、结果反馈和截图预留</li><li>申请表建议口径</li><li>证据来源</li><li>待用户确认项</li></ul>
+<p>申请表直接复用的 <code>application_purpose</code>、<code>industry</code>、<code>main_functions</code>、<code>technical_characteristics</code> 必须在业务理解阶段满足申请表限制：开发目的和行业各不超过 50 字，主要功能为 500~1300 个非空白字符，技术特点描述不超过 100 字。校验不通过时回到模型稿补写，不能用脚本生成的空泛段落掩盖缺失内容。</p>
+<h2 id="外部调研">外部调研<a class="anchor" href="#外部调研" aria-label="锚点">#</a></h2>
+<p>如果项目材料不足、业务类型较新，或用户明确希望参考竞品，可联网搜索相近产品和行业资料。</p>
+<p>外部调研只用于帮助理解行业表达，不能编造项目不存在的功能。需要把调研结论写入业务理解草稿，并区分“项目证据”和“行业参考”。</p>
+<h2 id="生成材料约束">生成材料约束<a class="anchor" href="#生成材料约束" aria-label="锚点">#</a></h2>
+<ul><li><code>申请表信息.md/txt</code> 的开发目的、行业、主要功能、技术特点必须优先来自业务理解。</li><li><code>操作手册.md/docx</code> 的说明、功能特点、系统要求、核心页面/流程、常见问题、术语表和章节结构必须优先来自模型确认后的业务理解。</li><li>操作手册不应只生成抽象“功能列表”。模型应把路由、页面、按钮、输入框、列表、弹窗、状态提示、额度或权限规则等用户可见证据整理到 <code>manual_modules</code>，供脚本按通用操作手册骨架排版。最终成稿应是段落化用户手册，不是“进入方式/页面内容/操作步骤/结果反馈”的字段列表。</li><li>如果缺少 <code>manual_modules</code>、<code>system_requirements</code>、<code>faq</code> 或 <code>glossary</code>，应回到业务理解阶段补充真实内容；脚本不得用分类模板兜底生成。</li><li>如果业务理解仍不充分，先提示用户补充产品说明，而不是直接生成泛泛描述。</li></ul>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../scripts/copyright/vendor/software-copyright-materials/references/application_fields.html"><div class="dir">← 上一篇</div><div class="ttl">申请表信息字段</div></a><a class="next" href="../../../../../scripts/copyright/vendor/software-copyright-materials/references/code_selection_rules.html"><div class="dir">下一篇 →</div><div class="ttl">代码抽取规则</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../";window.__KHY_CUR__="scripts/copyright/vendor/software-copyright-materials/references/business_understanding_rules.html";</script>
+<script src="../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
