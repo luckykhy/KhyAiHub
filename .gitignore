@@ -246,7 +246,7 @@ entries/*
 
 # --- 调试与临时产物（2026-09-20 加入）---
 # 起因：一次历史暂存区里混进了 19 个 _tmp_dbg*.js 与 *.tmp-* 文件，
-# 而 .githooks/pre-commit 的临时文件正则是 ^tmp-|\.tmp$，抓不到这些形态，
+# 而 works/build/githooks/pre-commit 的临时文件正则是 ^tmp-|\.tmp$，抓不到这些形态，
 # 于是它们能一路通过 pre-commit 进入提交。此处按「形态」兜住。
 _tmp_dbg*
 *.tmp-*
@@ -275,3 +275,9 @@ apps/khy-os-client-app/android/app/src/main/assets/shizuku/*.apk
 # --- 2026-10-02 本机智能体记忆态（自愈型，同 khy-Trajectory 先例）---
 .workbuddy/
 .workbuddy-ai/
+
+# --- 2026-10-02 ZCode 会话本地工件（自愈型本机态；.zcode/plans/plan-sess_ee2d7822*.md 为
+# 已跟踪的历史 plan，按前判不整目录忽略，只按未跟踪工件模式隔离）---
+.zcode/plans/plan-sess_*.md
+.zcode/plans/plan-sess_*.html
+.zcode/instability-report-*
