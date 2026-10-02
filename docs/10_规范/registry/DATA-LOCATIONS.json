@@ -94,6 +94,12 @@
         "moved": false,
         "reason": "setuptools 构建元数据，由 pip 构建再生"
       }
+    ],
+    "localStatePatterns": [
+      {
+        "pattern": "*.baiduyun.uploading.cfg",
+        "reason": "百度网盘客户端上传状态（自愈型本机态，同 khy-Trajectory）：每台装网盘的机器各自产生，gitignore 已隔离；不计预算但报告单列，不得静默隐藏（2026-10-02，[RESEARCH-022] §0）"
+      }
     ]
   },
   "formats": {
@@ -224,6 +230,15 @@
       "2026-09-18-b10"
     ],
     "note": "2026-09-18 复核：回收站根已存在且被 git 跟踪，缺口是 .khy 侧未接入"
+  },
+  "fanInTiers": {
+    "_source": "[RESEARCH-018] §4 C-6 的热/温/冷分档阈值。参数真源在此：测量叶子 scripts/lib/fanInTiering.js 只读不立，渲染方 scripts/ci/check-data-layout.js 同批产出分档表。",
+    "proxy": "读数口径是静态 fan-in（多少个源文件 require 了它）。理论 §2 的分类依据本是变更频率，本仓 git 对象库损坏（C-10 FAIL：hash-path mismatch）致频率不可得，故以静态代理替代并在输出里显式标注。",
+    "hot": 30,
+    "warm": 10,
+    "cool": 3,
+    "scope": "域根并集取自 DOMAIN-DEPS.json 的 domains.*.roots（剔 D5 冷档归档面），与旧快照 .khyos/tmp/fanin-depth-census.json 的 3528 源文件口径对齐",
+    "note": "阈值沿用 2026-09-29 首版快照（hot 18 / warm 78 / cool 684 / cold 2748）；常驻化后每次复跑可对比，防读数腐烂。"
   },
   "rollout": {
     "mechanism": "check-data-layout",

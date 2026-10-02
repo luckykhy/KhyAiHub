@@ -164,7 +164,9 @@ tmp_test.txt
 #   publish/ —— scripts/release/build-payload-assets.js 的默认输出目录（--out 不给时），
 #   一跑就是 38 MB 的 Release 资产（加密源码快照 + muya 产物）。此前**未被忽略**，
 #   任何一次 `git add -A` 都会把它整包提交进来。
-publish/
+#   钉住仓库根（前导 /）：裸模式会连任意层级的同名**源码**目录一起吞掉
+#   （曾误吞 services/backend/src/services/{publish,domain/deploy/publish}，见 buildRootGuard SOURCE_DIR_ALLOWLIST）。
+/publish/
 _dbg_*
 _repl_*
 _smoke_*
@@ -264,3 +266,8 @@ _tmp_dbg*
 
 # 三方发布件（Shizuku release apk）体积大且可官方下载，不入库；构建前手工放入或脚本下载。
 apps/khy-os-client-app/android/app/src/main/assets/shizuku/*.apk
+
+# --- 2026-10-02 百度网盘客户端上传状态残留（自愈型本机态，同 khy-Trajectory）---
+# <原名>.baiduyun.uploading.cfg 孪生是网盘客户端的上传进度元数据，
+# 未跟踪也未忽略导致根宽 61→76 漂移。只隔离不删除（LAYOUT-003）。
+*.baiduyun.uploading.cfg

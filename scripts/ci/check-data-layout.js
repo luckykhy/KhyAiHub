@@ -26,6 +26,19 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const TIER_PREFIX = /^T\d+-[a-z]+$/;
 const INDEX_FILE = '00_INDEX_data.md';
 
+// [RESEARCH-018] §4 C-6：热/温/冷分档表必须与本体检同批产出（真仪器在 scripts/lib/fanInTiering.js）。
+// --no-tiers 供需要快档的调用方跳过（全量扫描 ~30s）。
+function measureTiers() {
+  if (args.includes('--no-tiers')) return null;
+  process.stdout.write('布局体检：测量热/温/冷 fan-in 分档（判据 C-6，逐个核心域源文件）…\n');
+  try {
+    return require('../lib/fanInTiering').measureFanInTiers({ repoRoot: REPO_ROOT, topN: 8 });
+  } catch (e) {
+    process.stdout.write(`布局体检：fan-in 分档未产出 —— ${e.message}\n`);
+    return { error: e.message };
+  }
+}
+
 const args = process.argv.slice(2);
 const opts = {
   json: args.includes('--json'),
@@ -205,19 +218,25 @@ function scanRepoRoot(reg) {
   const entries = directEntries(REPO_ROOT) || [];
   const protectedSet = new Set(reg.protected.toolContractRootFiles);
   const installSet = new Set((reg.topLevel.installArtifacts || []).map((a) => a.name));
+  // 自愈型本机态按模式豁免（如 *.baiduyun.uploading.cfg）：每台机器各自产生、
+  // gitignore 已隔离，不是仓库内容；不计预算但报告单列，不得静默隐藏。
+  const localPats = (reg.topLevel.localStatePatterns || []).map((p) => String(p.pattern || ''));
+  const isLocalState = (n) => localPats.some((p) => p.startsWith('*') && n.endsWith(p.slice(1)));
   const dirs = entries.filter((n) => {
     if (!n.startsWith('.') && fs.statSync(path.join(REPO_ROOT, n)).isDirectory()) return true;
     return false;
   });
   const files = entries.filter((n) => !dirs.includes(n));
   const installArtifacts = [...installSet].filter((d) => entries.includes(d));
-  const addressable = entries.filter((n) => !installSet.has(n));
+  const localStateResidue = entries.filter((n) => !installSet.has(n) && isLocalState(n));
+  const addressable = entries.filter((n) => !installSet.has(n) && !isLocalState(n));
   const strays = files.filter((f) => !protectedSet.has(f) && !f.startsWith('.') && !installSet.has(f));
   return {
     directTotal: entries.length,
     addressableTotal: addressable.length,
     maxAddressable: (reg.topLevel || {}).maxAddressable || (reg.budgets.find((b) => b.dir === '.') || {}).max,
     installArtifacts,
+    localStateResidue,
     dirs: dirs.length,
     files: files.length,
     unprotectedRootFiles: strays,
@@ -286,6 +305,7 @@ function buildReport() {
     repoRoot: scanRepoRoot(reg),
     dataRoots: scans,
     bypass: { files: bypass.hits.length, scanned: bypass.visited },
+    tiers: measureTiers(),
     findingCount: findings.length,
     findings,
   };
@@ -334,7 +354,8 @@ function main() {
     const rr = rep.repoRoot;
     process.stdout.write(
       `仓库顶层：可寻址 ${rr.addressableTotal} 项（预算 ${rr.maxAddressable}），另有目录 ${rr.dirs} / 文件 ${rr.files}；` +
-        `安装产物（已登记·不搬·不计预算）：${rr.installArtifacts.length ? rr.installArtifacts.join(', ') : '无'}\n`
+        `安装产物（已登记·不搬·不计预算）：${rr.installArtifacts.length ? rr.installArtifacts.join(', ') : '无'}；` +
+        `本机态残留（已登记·不搬·不计预算）：${rr.localStateResidue.length ? `${rr.localStateResidue.length} 项（${rr.localStateResidue[0]} 等）` : '无'}\n`
     );
     for (const s of rep.dataRoots) {
       const unreg = s.findings.filter((f) => f.code === 'L-1/unregistered').length;
@@ -346,6 +367,24 @@ function main() {
           (s.depths ? `，深度区间 ${s.depths.min}–${s.depths.max}` : '') +
           '\n'
       );
+    }
+    const t = rep.tiers;
+    if (t && !t.error) {
+      const f = t.fanInTiers;
+      process.stdout.write(
+        `fan-in 分档（静态代理：多少个源文件 require 了它；变更频率不可得——git 对象库损坏，见 C-10）：` +
+          `热 ${f.hot} / 温 ${f.warm} / 凉 ${f.cool} / 冷 ${f.cold}` +
+          `（阈值 ≥${t.thresholds.hot} / ≥${t.thresholds.warm} / ≥${t.thresholds.cool}，` +
+          `核心域源文件 ${t.scope.sourceFiles} 个，fan-in 为 0 者 ${t.zeroFanIn} 个）\n`
+      );
+      process.stdout.write(
+        `  最热 ${t.topFanIn.slice(0, 5).map((x) => `${x.file}(${x.fanIn})`).join('、')}\n`
+      );
+      process.stdout.write(
+        `  路径深度 >6 段：${t.depthOver6} 个（C-2 存量）；非字面量 require 站点 ${t.dynamicRequires.sites} 处——盲区，不计入 fan-in\n`
+      );
+    } else if (t) {
+      process.stdout.write(`fan-in 分档缺席：${t.error}\n`);
     }
     process.stdout.write(`绕表直拼：${rep.bypass.files} 个文件（已扫 ${rep.bypass.files ? rep.bypass.scanned : rep.bypass.scanned} 个源文件）\n`);
     process.stdout.write(`合计 ${rep.findingCount} 条待归位项。\n`);
