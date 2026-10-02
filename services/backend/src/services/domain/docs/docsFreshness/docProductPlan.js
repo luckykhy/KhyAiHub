@@ -50,8 +50,9 @@ function _stripExt(rel) {
  *
  * @param {string} changedMdRel               变更过的 .md(仓库相对)。
  * @param {string[]} committedProductRels      已 committed 的 .html/.pdf 路径清单(仓库相对)。
- * @returns {{regen:Array<{md:string,products:string[],mode:'--html-only'|null}>, skip:Array<{md:string,reason:string}>}}
- *   regen[].mode:只有 .html → '--html-only';含 .pdf → null(全量,md-to-pdf 默认出 html+pdf)。
+ * @returns {{regen:Array<{md:string,products:string[],mode:'--html-only'|'--pdf-only'|null}>, skip:Array<{md:string,reason:string}>}}
+ *   regen[].mode:只有 .html → '--html-only';只有 .pdf → '--pdf-only'(否则全量跑会新建
+ *   一个从未提交过的 .html);两者都在 → null(全量,md-to-pdf 默认出 html+pdf)。
  */
 function planDocProducts(changedMdRel, committedProductRels) {
   const regen = [];
@@ -84,8 +85,10 @@ function planDocProducts(changedMdRel, committedProductRels) {
     if (hasPdf) {
       products.push(pdf);
     }
-    // 只 committed .html(无 pdf)→ --html-only,避免无谓依赖 Chrome。
-    const mode = hasPdf ? null : '--html-only';
+    // 旗标由已提交的产物集合决定：只有 .html → --html-only（免拉 Chrome）；
+    // 只有 .pdf → --pdf-only——否则无旗标的全量跑会顺手产出一个从未提交过的 .html，
+    // 违背本单元「绝不新建产物」的底线（也违反 LAY-004 产物须登记）；两者都在 → 全量。
+    const mode = hasHtml && hasPdf ? null : (hasPdf ? '--pdf-only' : '--html-only');
     regen.push({ md, products: products.sort(), mode });
     return { regen, skip };
   } catch {
