@@ -76,13 +76,17 @@ const ENTRIES = [
   {
     id: 'taskPanel',
     owner: 'ink-components/TaskListPanel.js',
-    // round border (top+bottom) 2 + header 1 + entries + optional tail-cut notice.
-    evidence: 'measured:App.js:6382-6384',
+    // header 1 + entries + optional tail-cut notice. 边框已于 2026-10-02 移除
+    // （DESIGN-ARCH-176 §3.1「去线条、用底色分层」），故 round border 那 2 行不再计入。
+    // 同一改动也必须落在 App.js 的 `taskH` —— **两处是并行真源，漏改其一会让
+    // reserve 虚高 ⇒ StreamingBlock 每帧被压矮 ⇒ 长输出时「莫名少行」。**
+    // 同类处置先例：本文件 2026-09-24 移除 spinner 边框时同样把该块 3 → 1。
+    evidence: 'measured:App.js:6501 (taskH)',
     layout: [LEGACY, PREVIEW],
     kind: PAINT,
     rows: (ctx) => {
       const lines = positive(ctx.taskLineCount);
-      return lines > 0 ? 3 + lines + (positive(ctx.taskHiddenNotice) > 0 ? 1 : 0) : 0;
+      return lines > 0 ? 1 + lines + (positive(ctx.taskHiddenNotice) > 0 ? 1 : 0) : 0;
     },
   },
   {

@@ -10,11 +10,23 @@
  *    只在 transcript 滚动、不进常驻面板——本合并把它接回输入框上方的面板)。
  * 面板挂在 App 的 live 区,靠现有 `nowTick` 1s heartbeat 自然重渲染。
  *
+ * 视觉语言（2026-10-02 起，DESIGN-ARCH-176 §3.1「去线条、用底色分层」）：
+ *  - **零线条**：无 round 外框、无 `— 标签 —` 分隔线。分组靠**中性底色块**表达。
+ *  - **底色分层**：头行/分组 = 中性底色；进行中/错误 = 状态底色（无色与 unknown
+ *    档自动退化为「不设底色」，见 ccThemeBg.js 的双维降级契约）。
+ *  - **双重编码**：颜色失效时靠行首 `→ ✓ ✗ ○` 字形；`✗` 与 `○` 小字号易混，
+ *    故 error 在无底色时由 taskSurface 追加 `!` 冗余标记。
+ *  - 底色**不改字符数**（Ink 用空格逐行填充）⇒ 进度变化不触发 reflow ⇒ 零残影。
+ *
  * 设计约束:
- *  - fault isolation:任何异常(store 未就绪/抛错)一律 try/catch 吞掉返 null,
- *    清单是辅助显示,绝不能拖垮整个 TUI。
+ *  - fault isolation:任何异常(store 未就绪/抛错/终端能力探测失败)一律 try/catch 吞掉,
+ *    退回「无底色」安全档,清单是辅助显示,绝不能拖垮整个 TUI。
  *  - 空清单返 null(不占屏)。
  *  - 纯展示,无副作用,无订阅泄漏。
+ *
+ * 高度账本（改动本文件渲染时**必须**同步 App.js:6501 与 chromeRegistry.js 的
+ * taskPanel 块 —— 三者是同一公式的两份实现 + 一处消费方）：
+ *  头行(1) + 条目(N) + 尾切提示(0/1) = **1 + N + (hidden?1:0)**。
  *
  * 逃生阀 `KHY_TASK_PANEL`(默认 on,整个面板);`KHY_PLAN_TASK_PANEL`(默认 on,
  * 仅计划进度合并,关则字节回退为只读 _taskStore)。
@@ -28,12 +40,66 @@ const inkRuntime = require('../inkRuntime');
 const { taskLineStyle } = require('./taskLineStyle');
 // 刀28:头行按状态计数(total/完成/进行中/待办[/错误],对齐 CC TaskListV2 isStandalone 头行)。
 const { buildTaskPanelHeader } = require('./taskPanelHeader');
+// 2026-10-02(DESIGN-ARCH-176 §3.3):底色 token 层。**本组件是 App 层**,故在此解析
+// 终端能力并把 tokens 算好传下去 —— 叶子(ccThemeBg/taskSurface)自己不读 env、不探测终端。
+const ccThemeBg = require('../theme/ccThemeBg');
+// 2026-10-02(§3.1):状态 → 底色 + 冗余标记。与 taskLineStyle(前景) 是通道分工。
+const { surfaceForLine, surfaceForGroup } = require('./taskSurface');
 const {
   mergeTaskLines,
   summarizeHiddenTaskLines,
   taskPriorityCapEnabled,
   splitTaskLinesBySource,
 } = require('./taskPanelLines');
+
+/**
+ * 算本帧要用的底色 token。**故障隔离**：任何异常都退回「无底色」这一安全档
+ * （面板是辅助显示，绝不能拖垮 TUI）。
+ *
+ * token 来源链：App 可显式传 `props.surfaceTokens`（测试/Storybook 可注入），
+ * 否则按当前进程实测能力现算。`backgroundMode` 走 resolveBackgroundMode 的
+ * **诚实判定**（判不出就是 unknown，不猜 dark —— 见 ccThemeBg.js §3.4.1）。
+ */
+function _surfaceTokens(props) {
+  try {
+    if (props && props.surfaceTokens && typeof props.surfaceTokens === 'object') {
+      return props.surfaceTokens;
+    }
+    let depth = 24;
+    try {
+      const caps = require('../runtime/terminalCapabilities');
+      if (caps && typeof caps.detectCapabilities === 'function' && caps.detectCapabilities().colorDepth) {
+        depth = caps.detectCapabilities().colorDepth;
+      }
+    } catch {
+      /* 能力探测不可用 → 保留 24（真彩色最常见） */
+    }
+    const mode = ccThemeBg.resolveBackgroundMode({
+      colorfgbg: process.env.COLORFGBG,
+      termProgram: process.env.TERM_PROGRAM,
+    });
+    return ccThemeBg.backgroundTokens({ colorDepth: depth, backgroundMode: mode });
+  } catch {
+    return null; // → surfaceForLine / surfaceForGroup 一律返 null ⇒ 不设 backgroundColor
+  }
+}
+
+/**
+ * 单行 → 行节点。底色与前景两个通道合并：
+ *   - 前景：taskLineStyle（既有 SSOT，不动）
+ *   - 背景：taskSurface（新增）
+ * 底色取不到时（无色/unknown 档）把 taskSurface 的冗余标记**追加**到行尾
+ * —— 行首图标已由 taskPanelLines 写入，这里只补「✗ 与 ○ 易混」所需的 `!`。
+ */
+function _taskRow(h, Text, line, key, tokens, env) {
+  const surf = surfaceForLine(line, tokens);
+  const text = surf.mark ? `${line} ${surf.mark}` : line;
+  return h(
+    Text,
+    { key, backgroundColor: surf.backgroundColor || undefined, ...taskLineStyle(line, env) },
+    text
+  );
+}
 
 function TaskListPanel(props = {}) {
   // Two render modes:
@@ -99,24 +165,42 @@ function TaskListPanel(props = {}) {
   // (持久化 large-task store)拆成带标签的两段,不再当成一种任务混显示。分组只在展示层进行,
   // header/hidden 仍消费未分组的扁平 `lines`(计数不变)。门控关 / 仅单一来源 → splitTaskLinesBySource
   // 返 null → 逐字节回退今日扁平渲染(键 `task-${i}` 与 taskLineStyle 完全一致)。
+  //
+  // 2026-10-02(DESIGN-ARCH-176 §3.1「去线条、用底色分层」):
+  // 分组标签从 `— 标签 —`(两侧横线 = 线条滥用)改为**中性底色块**。
+  // 底色块高度仍是 1 行 ⇒ 帧高不变(账本 P2 已把边框的 2 行摘掉,此处不新增行)。
   const groups = splitTaskLinesBySource(lines, process.env);
+  const surfaceTokens = _surfaceTokens(props);
   const body = [];
   if (groups) {
     let gi = 0;
     for (const g of groups) {
-      body.push(h(Text, { key: `task-group-${g.key}`, dimColor: true }, `— ${g.label} —`));
+      body.push(
+        h(
+          Box,
+          { key: `task-group-${g.key}`, backgroundColor: surfaceForGroup(surfaceTokens) || undefined },
+          h(Text, { dimColor: true }, g.label)
+        )
+      );
       for (const line of g.lines) {
-        body.push(h(Text, { key: `task-${gi}`, ...taskLineStyle(line, process.env) }, line));
+        body.push(_taskRow(h, Text, line, `task-${gi}`, surfaceTokens, process.env));
         gi += 1;
       }
     }
   } else {
-    lines.forEach((line, i) =>
-      body.push(h(Text, { key: `task-${i}`, ...taskLineStyle(line, process.env) }, line))
-    );
+    lines.forEach((line, i) => {
+      body.push(_taskRow(h, Text, line, `task-${i}`, surfaceTokens, process.env));
+    });
   }
 
-  const children = [h(Text, { key: 'task-title', dimColor: true }, header), ...body];
+  const children = [
+    h(
+      Box,
+      { key: 'task-title', backgroundColor: surfaceForGroup(surfaceTokens, 'head') || undefined },
+      h(Text, { dimColor: true }, header)
+    ),
+    ...body,
+  ];
   if (hidden > 0) {
     // 尾切提示:与 StreamingBlock「实时仅显示末尾」同款诚实告知,完整清单在本轮历史可回看。
     // 刀19:隐藏项按状态分解(对齐 CC TaskListV2.hiddenSummary)。分解来自被丢弃行的行首
@@ -149,9 +233,19 @@ function TaskListPanel(props = {}) {
   // No marginTop: the panel sits directly above the prompt and its height is
   // fed into liveRegionBudget's ledger as line counts only — an extra margin
   // row would be unaccounted for and squeeze the prompt.
+  //
+  // 2026-10-02(DESIGN-ARCH-176 §3.1「去线条、用底色分层」)：**移除 round 外框**。
+  // 理由三条：
+  //  ① 线条滥用 —— 面板边界改由头行/分组行的**底色块边界**表达，零线条。
+  //  ② 底色不改字符数(Ink `render-background.js:19` 用空格逐行填充)⇒ 不触发 reflow，
+  //     而边框是 2 个**独立字符行**，改动会推动整树重排。
+  //  ③ 账本已同步摘掉这 2 行：`App.js:6501` 的 `taskH` 与 `chromeRegistry.js` 的
+  //     `taskPanel` 块**两处并行真源**同时 3 → 1。改框不改账本 ⇒ reserve 虚高
+  //     ⇒ StreamingBlock 每帧被压矮 ⇒ 长输出时「莫名少行」。
+  // paddingX 保留 1：底色块自身不带内边距，靠它让底色与文字之间留出呼吸位。
   return h(
     Box,
-    { flexDirection: 'column', borderStyle: 'round', borderColor: 'gray', paddingX: 1 },
+    { flexDirection: 'column', paddingX: 1 },
     ...children
   );
 }

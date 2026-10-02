@@ -6496,9 +6496,12 @@ function App({ options = {} }) {
     }
     // FooterBar 高度:1 行状态栏
     const footerH = 1;
-    // TaskPanel 高度:round 边框(2) + 头行(1) + 条目 + 尾切提示(0/1)。无清单 → 0(不占屏)。
+    // TaskPanel 高度:头行(1) + 条目 + 尾切提示(0/1)。无清单 → 0(不占屏)。
+    // 2026-10-02 移除 round 边框(DESIGN-ARCH-176 §3.1「去线条、用底色分层」)⇒ 2 行不再计入。
+    // ⚠ 这里与 `chromeRegistry.js` 的 `taskPanel` 块是**同一公式的两份实现**(并行真源),
+    //   两处必须同改;漏改其一会让 reserve 虚高 ⇒ StreamingBlock 每帧被压矮。
     const taskLines = Array.isArray(_taskProps.lines) ? _taskProps.lines.length : 0;
-    const taskH = taskLines > 0 ? 3 + taskLines + (_taskProps.hidden > 0 ? 1 : 0) : 0;
+    const taskH = taskLines > 0 ? 1 + taskLines + (_taskProps.hidden > 0 ? 1 : 0) : 0;
     // 忙态 spinner 块:两套布局都是 **1 行**。
     // · PreviewLayout:`Box{paddingX:2,paddingY:1}` 包一行 Spinner → 1+1+1 = 3;(历史形态)
     // · legacy:该处 Box 曾写 `borderBottom: true` + `borderStyle:'single'`,而 ink 的边框
