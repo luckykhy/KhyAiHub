@@ -279,7 +279,7 @@ function _formatBytes(n, env = process.env) {
   // (与 health/storage/multimodal/aiUploadStore 等所有展示面统一);关 → 逐字节回退本地旧口径。
   // ccFormat 亦为纯叶子,叶子→叶子相对 require 合规。
   try {
-    const { ccFormatEnabled, ccFormatFileSize } = require('../cli/ccFormat');
+    const { ccFormatEnabled, ccFormatFileSize } = require('../utils/format/ccFormat');
     if (ccFormatEnabled(env)) {
       const out = ccFormatFileSize(Number(n || 0) || 0);
       if (out) {

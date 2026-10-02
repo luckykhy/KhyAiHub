@@ -253,11 +253,10 @@ function truncate(str, maxLen) {
   if (str.length <= maxLen) {
     return str;
   }
-  // Width-aware truncation (CJK = 2 columns). Lazy require keeps the service
-  // layer free of a load-time dependency on the CLI layer; on failure fall
-  // back to the legacy byte-level slice.
+  // Width-aware truncation (CJK = 2 columns) from the shared substrate; on failure
+  // fall back to the legacy byte-level slice.
   try {
-    const { truncateToWidth } = require('../cli/formatters');
+    const { truncateToWidth } = require('../utils/text/width');
     return `${truncateToWidth(str, maxLen)}(已截断，共 ${str.length} 字符)`;
   } catch {
     return str.slice(0, maxLen) + '...';

@@ -154,6 +154,83 @@ async function handleDeleteAiConversation(req, res, id) {
   }
 }
 
+// ── Conversation groups (sidebar folders) + manual reorder ───────────────────
+// Backs /api/ai/conversation-groups and /api/ai/conversations/reorder. The
+// store does all ownership enforcement and fail-soft column backfill; these
+// handlers only resolve the user, parse the body, and forward.
+
+async function handleListConversationGroups(req, res) {
+  const userId = await resolveAuthUserId(req, res);
+  if (userId === null) {
+    return;
+  }
+  try {
+    const data = await getConversationStore().listGroups(userId);
+    sendJson(res, 200, { success: true, data });
+  } catch (err) {
+    sendError(res, err.statusCode || 500, err.message || 'Failed to list conversation groups');
+  }
+}
+
+async function handleCreateConversationGroup(req, res) {
+  const userId = await resolveAuthUserId(req, res);
+  if (userId === null) {
+    return;
+  }
+  try {
+    const body = await parseBody(req);
+    const data = await getConversationStore().createGroup(userId, body || {});
+    sendJson(res, 200, { success: true, data });
+  } catch (err) {
+    sendError(res, err.statusCode || 500, err.message || 'Failed to create conversation group');
+  }
+}
+
+async function handleUpdateConversationGroup(req, res, id) {
+  const userId = await resolveAuthUserId(req, res);
+  if (userId === null) {
+    return;
+  }
+  try {
+    const body = await parseBody(req);
+    const data = await getConversationStore().updateGroup(userId, id, body || {});
+    sendJson(res, 200, { success: true, data });
+  } catch (err) {
+    sendError(res, err.statusCode || 500, err.message || 'Failed to update conversation group');
+  }
+}
+
+async function handleDeleteConversationGroup(req, res, id) {
+  const userId = await resolveAuthUserId(req, res);
+  if (userId === null) {
+    return;
+  }
+  try {
+    const data = await getConversationStore().removeGroup(userId, id);
+    sendJson(res, 200, { success: true, data });
+  } catch (err) {
+    sendError(res, err.statusCode || 500, err.message || 'Failed to delete conversation group');
+  }
+}
+
+// Persist a manual drag-reorder. body: { items: [{ id, sortOrder }, ...] }.
+// Also accepts moving a conversation into / out of a group in the same call
+// by forwarding groupId on each item — the store ignores unknown fields.
+async function handleReorderConversations(req, res) {
+  const userId = await resolveAuthUserId(req, res);
+  if (userId === null) {
+    return;
+  }
+  try {
+    const body = await parseBody(req);
+    const items = Array.isArray(body && body.items) ? body.items : body;
+    const data = await getConversationStore().reorder(userId, items);
+    sendJson(res, 200, { success: true, data });
+  } catch (err) {
+    sendError(res, err.statusCode || 500, err.message || 'Failed to reorder conversations');
+  }
+}
+
 // ── Context-usage stats for the web chat (AIChat.vue indicator) ─────────────
 // Stateless compute: the client POSTs its live transcript; we reuse the CC
 // context-visualization backend leaves (webContextStats → messageBreakdown +
@@ -467,6 +544,12 @@ module.exports = {
   handleUpdateAiConversation,
   handleDeleteAiConversation,
   handleAiContextStats,
+  // Conversation groups (sidebar folders) + manual reorder
+  handleListConversationGroups,
+  handleCreateConversationGroup,
+  handleUpdateConversationGroup,
+  handleDeleteConversationGroup,
+  handleReorderConversations,
   // Prompt library
   handleListBuiltinPrompts,
   handleListPrompts,

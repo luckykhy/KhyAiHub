@@ -399,12 +399,12 @@ function _statusLight({ recentOperations, activeTasks, remoteSnapshot }) {
   const riskyStates = new Set(['failed', 'dead_letter', 'cancelled']);
   const hasFailure = recentOperations.some((item) => riskyStates.has(item.state_to));
   if (hasFailure) {
-    return '🔴';
+    return '●';
   }
   if (activeTasks.length > 0 || Number(remoteSnapshot.summary?.pending_approval_count || 0) > 0) {
-    return '🟡';
+    return '○';
   }
-  return '🟢';
+  return '○';
 }
 
 function _buildMobileSnapshot({
@@ -464,28 +464,28 @@ function _buildMobileSnapshot({
       },
       {
         card_id: 'tasks',
-        light: activeTasks.length > 0 ? '🟡' : '🟢',
+        light: activeTasks.length > 0 ? '○' : '○',
         title: 'Active Large Tasks',
         metric: `${activeTasks.length}`,
         subtitle: `Queue depth ${Number(metrics.queue_depth || 0)}`,
       },
       {
         card_id: 'approvals',
-        light: Number(remoteSnapshot.summary?.pending_approval_count || 0) > 0 ? '🟡' : '🟢',
+        light: Number(remoteSnapshot.summary?.pending_approval_count || 0) > 0 ? '○' : '○',
         title: 'Pending Approvals',
         metric: `${Number(remoteSnapshot.summary?.pending_approval_count || 0)}`,
         subtitle: `Remote sessions ${Number(remoteSnapshot.summary?.active_session_count || 0)}`,
       },
       {
         card_id: 'todos',
-        light: Number(todoSnapshot.pending_total || 0) > 0 ? '🟡' : '🟢',
+        light: Number(todoSnapshot.pending_total || 0) > 0 ? '○' : '○',
         title: 'Pending Todos',
         metric: `${Number(todoSnapshot.pending_total || 0)}`,
         subtitle: todoSnapshot.source ? `Source ${todoSnapshot.source}` : 'Source unavailable',
       },
       {
         card_id: 'retention_policy',
-        light: retentionChanges.length > 0 ? '🟡' : '🟢',
+        light: retentionChanges.length > 0 ? '○' : '○',
         title: 'Retention Policy Changes',
         metric: `${retentionChanges.length}`,
         subtitle: `Window ${windowMinutes}m`,

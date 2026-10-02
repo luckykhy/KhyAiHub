@@ -95,7 +95,7 @@ function _resolveChatAttachments(body, baseMessage) {
   // falls through as text, exactly like repl.js:5020.
   if (_isWebInlineImagePathEnabled() && message) {
     try {
-      const { extractInlineImageIntent } = require('../cli/repl/imageIntent');
+      const { extractInlineImageIntent } = require('../utils/text/imageIntent');
       const intent = extractInlineImageIntent(message);
       if (intent && intent.filePath) {
         const img = require('./imageService').readImageFromFile(intent.filePath);

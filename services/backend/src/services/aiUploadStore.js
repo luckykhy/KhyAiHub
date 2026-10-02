@@ -275,7 +275,7 @@ function _applyExtractedText(manifest, text, engine) {
 async function _extractDocxText(manifest, deps = {}) {
   const outPath = path.join(uploadDir(), `${manifest.id}.extracted.txt`);
   try {
-    const convert = deps.convert || require('../cli/handlers/convert');
+    const convert = deps.convert || require('./documentConvertService');
     const r = await convert.runConvert({ input: manifest.storedPath, to: 'txt', output: outPath });
     if (r && r.success) {
       const produced = r.output || outPath;
@@ -433,7 +433,7 @@ function humanSize(bytes, env = process.env) {
   // 字节→人类可读单一真源:门控 KHY_CC_FORMAT 开 → 走 CC `formatFileSize` 同口径
   // (与 health/storage/multimodal/archive 等所有展示面统一);关 → 逐字节回退本地旧口径。
   try {
-    const { ccFormatEnabled, ccFormatFileSize } = require('../cli/ccFormat');
+    const { ccFormatEnabled, ccFormatFileSize } = require('../utils/format/ccFormat');
     if (ccFormatEnabled(env)) {
       const out = ccFormatFileSize(Number(bytes) || 0);
       if (out) {

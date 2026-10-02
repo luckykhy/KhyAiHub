@@ -185,7 +185,7 @@ function buildVerdictFeedback(verdict, opts = {}) {
       `[SYSTEM: 你刚才对 khy 源码的改动${where}没有通过机器校验,这次改动**不对**。` +
       `问题如下,请第一人称向用户说明并先修复再继续,不要沉默跳过:\n${reasons}\n` +
       `修复后改动会被重新校验。]`;
-    let display = `❌ **khy 改动校验未通过**${where ? ' ' + where : ''} —— 这次改动不对,需先修复:\n${reasons}`;
+    let display = `✗ **khy 改动校验未通过**${where ? ' ' + where : ''} —— 这次改动不对,需先修复:\n${reasons}`;
     if (v.warnings && v.warnings.length) {
       display += `\n另有 ${v.warnings.length} 条非阻断告警。`;
     }
@@ -198,11 +198,11 @@ function buildVerdictFeedback(verdict, opts = {}) {
     let directive =
       `[SYSTEM: 你刚才对 khy 源码的改动${where}已通过机器校验${scope},这次改动**没有发现阻断性问题**。` +
       `可以继续,但仍以测试与人工审查为准。`;
-    let display = `✅ **khy 改动已通过校验**${scope}${where ? ' ' + where : ''} —— 未发现阻断性问题。`;
+    let display = `✓ **khy 改动已通过校验**${scope}${where ? ' ' + where : ''} —— 未发现阻断性问题。`;
     if (v.warnings && v.warnings.length) {
       const w = _bullets(v.warnings);
       directive += `另有非阻断告警,建议留意:\n${w}`;
-      display += `\n⚠️ 非阻断告警 ${v.warnings.length} 条:\n${w}`;
+      display += `\n⚠ 非阻断告警 ${v.warnings.length} 条:\n${w}`;
     }
     directive += ']';
     return { directive, display };
@@ -216,7 +216,7 @@ function buildVerdictFeedback(verdict, opts = {}) {
   const directive =
     `[SYSTEM: 我注意到 khy 被改动了${where},但${why},暂时**无法判断对错**。` +
     `请勿据此认定改动一定正确;如有疑虑请人工确认或重跑校验。]`;
-  const display = `❓ **khy 改动:无法判断**${where ? ' ' + where : ''} —— ${why}。`;
+  const display = `? **khy 改动:无法判断**${where ? ' ' + where : ''} —— ${why}。`;
   return { directive, display };
 }
 

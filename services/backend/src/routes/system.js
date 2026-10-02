@@ -73,9 +73,9 @@ router.get('/network-info', (req, res) => {
     if (candidateIps.length > 0) {
       candidateIps.sort((a, b) => a.priority - b.priority);
       lanIp = candidateIps[0].ip;
-      console.log('✅ 选择局域网IP:', lanIp, '来自网卡:', candidateIps[0].name);
+      console.log('✓ 选择局域网IP:', lanIp, '来自网卡:', candidateIps[0].name);
       console.log(
-        '📋 所有候选IP:',
+        '所有候选IP:',
         candidateIps.map((c) => `${c.ip} (${c.name}, 优先级${c.priority})`).join(', ')
       );
     }

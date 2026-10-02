@@ -17,11 +17,12 @@
  */
 'use strict';
 
-const { Conversation } = require('@khy/shared/models');
+const { Conversation, ConversationGroup } = require('@khy/shared/models');
 
 // Keep per-user history bounded so a long-lived account never grows without limit.
 const MAX_PER_USER = 200;
 const TITLE_MAX = 24;
+const GROUP_NAME_MAX = 100;
 
 // ── Table bootstrap (idempotent, model-scoped) ──────────────────────────────
 
@@ -29,12 +30,46 @@ let tableReady = null;
 async function ensureTable() {
   if (!tableReady) {
     // Model-level sync: creates only ai_conversations if missing; no-op otherwise.
-    tableReady = Conversation.sync().catch((err) => {
-      tableReady = null; // allow retry on transient failure
+    tableReady = Conversation.sync()
+      .then(() => ensureConversationColumns())
+      .catch((err) => {
+        tableReady = null; // allow retry on transient failure
+        throw err;
+      });
+  }
+  return tableReady;
+}
+
+// Older databases predate group_id / sort_order (sequelize.sync only creates
+// missing TABLES, never missing COLUMNS). Purely additive: add nullable columns
+// when absent, never alter or drop. Fail-soft: a failure degrades to pre-column
+// behaviour (groups disabled) rather than breaking the chat history routes.
+async function ensureConversationColumns() {
+  const qi = Conversation.sequelize.getQueryInterface();
+  const schema = await qi.describeTable('ai_conversations');
+  const addColumnIfMissing = async (column, definition) => {
+    if (schema[column]) {
+      return;
+    }
+    try {
+      await qi.addColumn('ai_conversations', column, definition);
+    } catch {
+      /* already added by a racing worker, or migration unsupported → degrade */
+    }
+  };
+  await addColumnIfMissing('group_id', { type: 'INTEGER', allowNull: true });
+  await addColumnIfMissing('sort_order', { type: 'INTEGER', allowNull: true });
+}
+
+let groupsTableReady = null;
+async function ensureGroupsTable() {
+  if (!groupsTableReady) {
+    groupsTableReady = ConversationGroup.sync().catch((err) => {
+      groupsTableReady = null; // allow retry on transient failure
       throw err;
     });
   }
-  return tableReady;
+  return groupsTableReady;
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -55,6 +90,18 @@ function normProjectId(value) {
   }
   const n = Number(value);
   return Number.isInteger(n) && n > 0 ? n : null;
+}
+
+// Same contract as normProjectId, applied to custom-group ids.
+const normGroupId = normProjectId;
+
+// Manual sidebar position: an integer, or null (= fall back to updatedAt sort).
+function normSortOrder(value) {
+  if (value == null || value === '') {
+    return null;
+  }
+  const n = Number(value);
+  return Number.isInteger(n) ? n : null;
 }
 
 // Extract a plain-text snippet from a message's content. Web messages carry
@@ -104,6 +151,8 @@ function toSummary(row) {
     id: row.id,
     title: row.title || '新对话',
     projectId: row.projectId ?? null,
+    groupId: row.groupId ?? null,
+    sortOrder: row.sortOrder ?? null,
     createdAt: row.createdAt || null,
     updatedAt: row.updatedAt || null,
     messageCount: messages.length,
@@ -117,9 +166,22 @@ function toFull(row) {
     id: row.id,
     title: row.title || '新对话',
     projectId: row.projectId ?? null,
+    groupId: row.groupId ?? null,
+    sortOrder: row.sortOrder ?? null,
     createdAt: row.createdAt || null,
     updatedAt: row.updatedAt || null,
     messages: row.messages || [],
+  };
+}
+
+// Lightweight group projection for the sidebar folder list.
+function groupToSummary(row) {
+  return {
+    id: row.id,
+    name: row.name || '新建分组',
+    sortOrder: row.sortOrder ?? null,
+    createdAt: row.createdAt || null,
+    updatedAt: row.updatedAt || null,
   };
 }
 
@@ -163,6 +225,8 @@ async function create(userId, body = {}) {
     userId,
     title: title.slice(0, 200),
     projectId: normProjectId(body.projectId),
+    groupId: normGroupId(body.groupId),
+    sortOrder: normSortOrder(body.sortOrder),
     messages,
   });
   await pruneOld(userId);
@@ -183,6 +247,12 @@ async function update(userId, id, body = {}) {
   if (body.projectId !== undefined) {
     patch.projectId = normProjectId(body.projectId);
   }
+  if (body.groupId !== undefined) {
+    patch.groupId = normGroupId(body.groupId);
+  }
+  if (body.sortOrder !== undefined) {
+    patch.sortOrder = normSortOrder(body.sortOrder);
+  }
   if (body.title != null) {
     patch.title = String(body.title).trim().slice(0, 200) || '新对话';
   } else if (body.messages != null && (!row.title || row.title === '新对话')) {
@@ -201,6 +271,84 @@ async function remove(userId, id) {
     throw httpError(404, 'Conversation not found');
   }
   return { deleted: true, id: Number(id) };
+}
+
+// ── Conversation groups (sidebar folders) ───────────────────────────────────
+
+// List the user's custom groups. Frontend re-sorts (sortOrder asc, then id).
+async function listGroups(userId) {
+  await ensureGroupsTable();
+  const rows = await ConversationGroup.findAll({
+    where: { userId },
+    order: [
+      ['sortOrder', 'ASC'],
+      ['id', 'ASC'],
+    ],
+  });
+  return rows.map(groupToSummary);
+}
+
+async function createGroup(userId, body = {}) {
+  await ensureGroupsTable();
+  const name = String(body.name || '').trim().slice(0, GROUP_NAME_MAX) || '新建分组';
+  const row = await ConversationGroup.create({
+    userId,
+    name,
+    sortOrder: normSortOrder(body.sortOrder),
+  });
+  return groupToSummary(row);
+}
+
+async function updateGroup(userId, id, body = {}) {
+  await ensureGroupsTable();
+  const row = await ConversationGroup.findOne({ where: { userId, id } });
+  if (!row) {
+    throw httpError(404, 'Conversation group not found');
+  }
+  const patch = {};
+  if (body.name != null) {
+    patch.name = String(body.name).trim().slice(0, GROUP_NAME_MAX) || '新建分组';
+  }
+  if (body.sortOrder !== undefined) {
+    patch.sortOrder = normSortOrder(body.sortOrder);
+  }
+  await row.update(patch);
+  return groupToSummary(row);
+}
+
+// Delete a group WITHOUT deleting its conversations: clear the dangling
+// group_id references first, so chats resurface as ungrouped, never vanish.
+async function removeGroup(userId, id) {
+  await ensureGroupsTable();
+  const deleted = await ConversationGroup.destroy({ where: { userId, id } });
+  if (!deleted) {
+    throw httpError(404, 'Conversation group not found');
+  }
+  await Conversation.update({ groupId: null }, { where: { userId, groupId: Number(id) } });
+  return { deleted: true, id: Number(id) };
+}
+
+// Persist a manual drag-reorder: [{ id, sortOrder }, ...]. Only the calling
+// user's own rows are touched (ownership enforced by the where clause); unknown
+// ids are silently skipped so a stale client cannot 404 the whole batch.
+async function reorder(userId, items) {
+  await ensureTable();
+  if (!Array.isArray(items)) {
+    throw httpError(400, 'items must be an array of { id, sortOrder }');
+  }
+  let updated = 0;
+  for (const item of items) {
+    const id = normProjectId(item && item.id);
+    if (id == null) {
+      continue;
+    }
+    const rows = await Conversation.update(
+      { sortOrder: normSortOrder(item.sortOrder) },
+      { where: { userId, id } }
+    );
+    updated += rows[0] || 0;
+  }
+  return { updated };
 }
 
 // Drop the oldest rows beyond the per-user cap so history stays bounded.
@@ -230,9 +378,15 @@ module.exports = {
   create,
   update,
   remove,
+  listGroups,
+  createGroup,
+  updateGroup,
+  removeGroup,
+  reorder,
   // exported for reuse / tests
   deriveTitle,
   ensureTable,
+  ensureGroupsTable,
   httpError,
   MAX_PER_USER,
 };

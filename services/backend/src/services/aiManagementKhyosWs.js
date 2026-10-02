@@ -675,7 +675,9 @@ function handleKhyosMcpGet(session, msg) {
     });
   }
   try {
-    const mcp = require('../cli/handlers/mcp');
+    // MCP connection state is owned by the messaging service; the CLI handler only
+    // renders it (and never exported getState). Read the owner directly.
+    const mcp = require('./domain/messaging/mcp');
     const mcpState = mcp.getState();
     const servers = (mcpState.clients || []).map((c) => ({
       name: c.name,

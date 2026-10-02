@@ -2152,6 +2152,11 @@ const {
   handleUpdateAiConversation,
   handleDeleteAiConversation,
   handleAiContextStats,
+  handleListConversationGroups,
+  handleCreateConversationGroup,
+  handleUpdateConversationGroup,
+  handleDeleteConversationGroup,
+  handleReorderConversations,
   handleListBuiltinPrompts,
   handleListPrompts,
   handleCreatePrompt,
@@ -2460,6 +2465,19 @@ async function routeRequest(req, res, pathname, searchParams) {
   if (method === 'POST' && pathname === '/api/ai/conversations') {
     return handleCreateAiConversation(req, res);
   }
+  // Manual drag-reorder of the sidebar list. Matched before the parameterized
+  // /:id route below so "reorder" is never swallowed as a conversation id.
+  if (method === 'POST' && pathname === '/api/ai/conversations/reorder') {
+    return handleReorderConversations(req, res);
+  }
+  // Custom sidebar folders ("分组"). Conversation groups are a sibling
+  // resource to conversations; matched before /:id for the same reason.
+  if (method === 'GET' && pathname === '/api/ai/conversation-groups') {
+    return handleListConversationGroups(req, res);
+  }
+  if (method === 'POST' && pathname === '/api/ai/conversation-groups') {
+    return handleCreateConversationGroup(req, res);
+  }
   // Per-user coding projects (named multi-folder workspaces; Hermes-aligned).
   if (method === 'GET' && pathname === '/api/ai/projects') {
     return handleListProjects(req, res, {
@@ -2553,6 +2571,17 @@ async function routeRequest(req, res, pathname, searchParams) {
     }
     if (method === 'DELETE') {
       return handleDeleteAiConversation(req, res, match[1]);
+    }
+  }
+
+  // Conversation group CRUD by id (sidebar folders).
+  match = pathname.match(/^\/api\/ai\/conversation-groups\/(.+)$/);
+  if (match) {
+    if (method === 'PUT') {
+      return handleUpdateConversationGroup(req, res, match[1]);
+    }
+    if (method === 'DELETE') {
+      return handleDeleteConversationGroup(req, res, match[1]);
     }
   }
 
@@ -3536,27 +3565,66 @@ async function _deferredInit() {
   // Previously only the CLI tool-loop called ensureMcpConnected; the web chat
   // server (port 9090) never did, so mcp.callTool silently failed on every
   // image-without-vision-model request.
+  //
+  // [DESIGN-ARCH-169] P2: this block is fire-and-forget after listen (the
+  // resolve() in tryListen does NOT await it), but an unbounded await here kept
+  // "[MCP] 连接 deepseek-eyes..." pending 150s+ with no terminal line and held
+  // the one-shot latch forever. The manager-side 30s/server timeouts bound each
+  // server, not the aggregate — the race below is the only whole-wall bound.
+  // 45s covers any sane server count; on timeout the round is abandoned (page
+  // availability is unaffected — this never blocks listen).
   try {
     const mcpAutoConnect = require('./domain/messaging/mcp/autoConnect');
     if (mcpAutoConnect.autoConnectEnabled(process.env)) {
-      // UX: MCP 连接进度反馈(每台服务器 + 百分比)
-      const mcpResult = await mcpAutoConnect.ensureMcpConnected({
-        onProgress: (event) => {
-          const pct = (event.done / event.total) * 100;
-          if (event.type === 'connecting') {
-            console.log(`[MCP] [${event.done}/${event.total} ${pct.toFixed(1).padStart(5)}%] 连接 ${event.name}...`);
-          } else if (event.type === 'connected') {
-            console.log(`[MCP] [${event.done}/${event.total} ${pct.toFixed(1).padStart(5)}%] ✓ ${event.name}`);
-          } else if (event.type === 'failed') {
-            console.warn(`[MCP] [${event.done}/${event.total} ${pct.toFixed(1).padStart(5)}%] ✗ ${event.name}: ${event.error}`);
-          }
-        },
-      });
-      if (mcpResult && mcpResult.connected && mcpResult.connected.length) {
-        console.log(`[MCP] auto-connected: ${mcpResult.connected.join(', ')}`);
-      }
-      if (mcpResult && mcpResult.failed && mcpResult.failed.length) {
-        console.warn('[MCP] auto-connect failed:', JSON.stringify(mcpResult.failed));
+      // UX: MCP 连接进度反馈(每台服务器 + 百分比)，带时间戳（P3 同款包装）。
+      const _hms = () => {
+        const d = new Date();
+        const p = (n) => String(n).padStart(2, '0');
+        return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+      };
+      const MCP_AUTO_CONNECT_WALL_MS = 45_000;
+      const connectPromise = Promise.resolve().then(() =>
+        mcpAutoConnect.ensureMcpConnected({
+          onProgress: (event) => {
+            const pct = (event.done / event.total) * 100;
+            if (event.type === 'connecting') {
+              console.log(`[${_hms()}] [MCP] [${event.done}/${event.total} ${pct.toFixed(1).padStart(5)}%] 连接 ${event.name}...`);
+            } else if (event.type === 'connected') {
+              console.log(`[${_hms()}] [MCP] [${event.done}/${event.total} ${pct.toFixed(1).padStart(5)}%] ✓ ${event.name}`);
+            } else if (event.type === 'failed') {
+              // 降级而非错误：措辞真源在 autoConnect.formatConnectFailure
+              // （可选工具连不上不影响页面/对话；✗ 会被读成「启动出错」）。
+              console.warn(`[${_hms()}] [MCP] ${mcpAutoConnect.formatConnectFailure(event, event)}`);
+            }
+          },
+        })
+      );
+      // A late rejection after the race resolved on the timeout branch must
+      // never surface as an unhandledRejection.
+      connectPromise.catch(() => {});
+      let wallTimer = null;
+      const mcpResult = await Promise.race([
+        connectPromise,
+        new Promise((resolve) => {
+          wallTimer = setTimeout(() => resolve(null), MCP_AUTO_CONNECT_WALL_MS);
+        }),
+      ]);
+      if (wallTimer) clearTimeout(wallTimer);
+      if (mcpResult === null) {
+        console.warn(
+          `[${_hms()}] [MCP] auto-connect 整段超时(${Math.round(MCP_AUTO_CONNECT_WALL_MS / 1000)}s)，已放弃本轮（不影响页面可用）`
+        );
+      } else {
+        if (mcpResult && mcpResult.connected && mcpResult.connected.length) {
+          console.log(`[${_hms()}] [MCP] auto-connected: ${mcpResult.connected.join(', ')}`);
+        }
+        if (mcpResult && mcpResult.failed && mcpResult.failed.length) {
+          // 同上：这是可选工具的降级，不是启动失败。措辞真源见 autoConnect。
+          console.warn(
+            `[${_hms()}] [MCP] ${mcpAutoConnect.formatConnectFailureSummary(mcpResult.failed)}`,
+            JSON.stringify(mcpResult.failed)
+          );
+        }
       }
     }
   } catch {

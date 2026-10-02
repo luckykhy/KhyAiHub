@@ -645,7 +645,7 @@ async function compress(messages, opts) {
 
   // Hook: PreCompact — notify before compression starts
   try {
-    const hookSys = require('../cli/hooks/hookSystem');
+    const hookSys = require('./domain/extensions/hooks/hookSystem');
     const preHr = await hookSys.trigger('PreCompact', {
       messageCount: messages.length,
       totalTokens,
@@ -944,7 +944,7 @@ async function compress(messages, opts) {
 
   // Hook: PostCompact — notify after compression completes
   try {
-    const hookSys = require('../cli/hooks/hookSystem');
+    const hookSys = require('./domain/extensions/hooks/hookSystem');
     await hookSys.trigger('PostCompact', {
       freedTokens,
       splitIndex,

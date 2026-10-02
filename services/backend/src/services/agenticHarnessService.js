@@ -1986,7 +1986,7 @@ function _depositReproTest(cwd, deposit, env = process.env, targetDir = null) {
  * 当时红的失败用例:
 ${failuresBlock}
  *
- * ⚠️ 这是占位回归骨架,不自行 spawn 外部命令(避免在 CI/沙箱误触发)。请维护者把上面的
+ * ⚠ 这是占位回归骨架,不自行 spawn 外部命令(避免在 CI/沙箱误触发)。请维护者把上面的
  *    复现命令转写成针对性的内联断言后,删除本 marker。命令现应通过(绿)。
  */
 

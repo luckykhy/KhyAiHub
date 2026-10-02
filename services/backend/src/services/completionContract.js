@@ -31,7 +31,7 @@ const _MD_HEADING_RE = /^\s{0,3}#{1,6}\s+/;
 
 // 「测试类」标准的证据信号(自包含,不跨文件耦合,保叶子独立)。
 const _TEST_EVIDENCE_RE =
-  /(测试[^。\n]{0,20}?(?:通过|全绿)|全部通过|全绿|单测[^。\n]{0,10}?(?:通过|全绿)|\d+\s*(?:passed|passing|通过)|\d+\s*\/\s*\d+|[✓✔✅]|\bPASS\b|node\s+--test|npm\s+(?:run\s+)?test|\bjest\b|\bpytest\b|go\s+test|cargo\s+test)/i;
+  /(测试[^。\n]{0,20}?(?:通过|全绿)|全部通过|全绿|单测[^。\n]{0,10}?(?:通过|全绿)|\d+\s*(?:passed|passing|通过)|\d+\s*\/\s*\d+|[✓✔✅]|\bPASS\b|node\s+--test|npm\s+(?:run\s+)?test|\bjest\b|\bpytest\b|go\s+test|cargo\s+test)/i;  // khy-allow-no-emoji: 完成判据匹配器：✅ 在字符类里是「测试全绿」的识别证据，删一侧即误判
 
 // 「检查类」标准:按标准文本里出现的具体检查名,派生对应的证据信号。
 const _CHECK_TOKENS = [

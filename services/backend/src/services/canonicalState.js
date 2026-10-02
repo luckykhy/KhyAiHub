@@ -49,7 +49,7 @@ const MAX_CRITICAL_REFS = 8;
  * @returns {CanonicalState}
  */
 function buildSnapshot(ctx) {
-  const { messages = [], toolCallLog = [], model, workspace, workingSet = [], notes } = ctx;
+  const { messages = [], toolCallLog = [], model, workspace, workingSet = [], notes, permissionMode } = ctx;
 
   // 1. Goal: extract from last user message
   const lastUser = [...messages].reverse().find((m) => m.role === 'user');
@@ -65,6 +65,15 @@ function buildSnapshot(ctx) {
     workspace: workspace || process.cwd(),
     notes: notes || '',
   };
+  // The permission mode is in-memory and deliberately non-persistent to the
+  // durable profile (toolCallingPermissions persist:false); the snapshot is the
+  // carry-forward vehicle. ctx wins, the singleton getter is the fallback, and
+  // a missing key beats a guessed default — legacy snapshots keep rendering
+  // byte-identical without it.
+  const _mode = permissionMode || _currentPermissionMode();
+  if (_mode) {
+    constraints.permissionMode = _mode;
+  }
 
   // 3. Confirmed facts: last N successful tool results
   const facts = toolCallLog
@@ -164,6 +173,9 @@ function formatAsPrompt(state) {
     parts.push(
       `## Constraints\nModel: ${state.constraints.model}\nWorkspace: ${state.constraints.workspace}`
     );
+    if (state.constraints.permissionMode) {
+      parts.push(`Permission mode: ${state.constraints.permissionMode}`);
+    }
     if (state.constraints.notes) {
       parts.push(`Notes: ${state.constraints.notes}`);
     }
@@ -193,6 +205,18 @@ function formatAsPrompt(state) {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────
+
+// Fail-soft resolve of the active permission mode (toolCallingPermissions
+// singleton). Returns '' when the module is unavailable — the caller then
+// omits the key instead of guessing a default.
+function _currentPermissionMode() {
+  try {
+    const { getPermissionMode } = require('./tool/toolCallingPermissions');
+    return getPermissionMode() || '';
+  } catch {
+    return '';
+  }
+}
 
 function _summarizeResult(result) {
   if (!result) {

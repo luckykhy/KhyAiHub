@@ -20,7 +20,7 @@ const freeLLMService = new MultiFreeService();
  */
 router.get('/test', async (req, res) => {
   try {
-    console.log('🧪 开始测试免费LLM连接...');
+    console.log('开始测试免费LLM连接...');
 
     const testResult = await freeLLMService.testConnection();
 
@@ -71,7 +71,7 @@ router.post('/analyze', async (req, res) => {
       return apiResponse.fail(res, 'INVALID_ARGUMENT', '股票代码不能为空', { status: 400 });
     }
 
-    console.log(`📊 开始分析股票: ${stockCode}, 智能体: ${agentId}`);
+    console.log(`开始分析股票: ${stockCode}, 智能体: ${agentId}`);
 
     const analysisPrompt =
       prompt ||
@@ -110,7 +110,7 @@ router.post('/generate', async (req, res) => {
       return apiResponse.fail(res, 'INVALID_ARGUMENT', '提示词不能为空', { status: 400 });
     }
 
-    console.log('🤖 开始生成文本响应...');
+    console.log('开始生成文本响应...');
 
     const result = await freeLLMService.generateResponse(prompt);
 

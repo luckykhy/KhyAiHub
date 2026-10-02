@@ -578,7 +578,7 @@ function _extractStyle(text) {
   return {
     length: text.length,
     sentenceCount: (text.match(/[。！？.!?]/g) || []).length,
-    hasEmoji: /[\u{1F300}-\u{1FAFF}]/u.test(text),
+    hasEmoji: /[\u{1F300}-\u{1FAFF}]/u.test(text),  // khy-allow-no-emoji: 判词特征：检测外部消息里是否含 emoji，是分类输入用的匹配器
     formality: text.includes('您') ? 'formal' : 'casual',
     hasBulletPoints: /[-•·]/.test(text),
     hasNumbers: /\d/.test(text),

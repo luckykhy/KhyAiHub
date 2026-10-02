@@ -152,9 +152,52 @@ function safeLs(dir) {
   }
 }
 
+/**
+ * 从文件尾部读回至多 maxBytes —— 绝不整文件加载。
+ *
+ * 为什么必须这样:readFileSync(filePath, 'utf-8') 对超过 Node 单字符串上限
+ * (0x1fffffe8 ≈ 512 MB)的文件必抛 ERR_STRING_TOO_LONG。实测
+ * .khy/training/interaction_quarantine.jsonl 547.8 MB、单行均值 761 KB ⇒ 旧实现的
+ * 「整文件读 + 切行」必抛,而 catch 把它吞成 {trimmed:false},于是该文件永远不被裁
+ * (声明 20 MB 上限却实占 547.8 MB)。尾部读的代价是有界的:最多 maxBytes。
+ *
+ * @returns {{ text: string, truncated: boolean }} truncated=true 表示窗口首行被切断
+ */
+function _readTailText(filePath, maxBytes) {
+  const size = safeSize(filePath);
+  if (size === 0) {
+    return { text: '', truncated: false };
+  }
+  const start = Math.max(0, size - maxBytes);
+  let fd;
+  try {
+    fd = fs.openSync(filePath, 'r');
+    const buf = Buffer.allocUnsafe(size - start);
+    const read = fs.readSync(fd, buf, 0, buf.length, start);
+    return { text: buf.subarray(0, read).toString('utf-8'), truncated: start > 0 };
+  } finally {
+    if (fd !== undefined) {
+      try {
+        fs.closeSync(fd);
+      } catch {
+        /* skip */
+      }
+    }
+  }
+}
+
 // Thin delegate to the canonical formatter (utils/humanBytes)
 function humanSize(bytes) {
   return require('../utils/humanBytes').humanBytes(bytes);
+}
+
+// 裁剪摘要。按行裁的报告行数;按字节裁的报告体积 —— 超限文件单行可达 761 KB,
+// 这时「保留了多少行」不是使用者关心的量,「释放了多少」才是。
+function _trimmedAction(label, r) {
+  if (typeof r.before === 'number' && typeof r.after === 'number') {
+    return `${label} trimmed: ${r.before} → ${r.after} lines`;
+  }
+  return `${label} trimmed: kept last ${r.after} lines (${humanSize(r.freedBytes || 0)} freed)`;
 }
 
 function atomicWriteText(filePath, content) {
@@ -391,16 +434,23 @@ function trimTrainingData(maxLines = TRAINING_MAX_LINES) {
     }
   }
 
-  // Over size cap — aggressive trim
+  // Over size cap — keep the tail by bytes. Never whole-file readFileSync: over the
+  // Node string ceiling it throws ERR_STRING_TOO_LONG and the catch turned that into
+  // a permanent {trimmed:false} (see _readTailText).
   try {
-    const content = fs.readFileSync(filePath, 'utf-8');
-    const lines = content.split('\n').filter(Boolean);
-    const half = Math.min(maxLines, Math.floor(lines.length / 2));
-    const kept = lines.slice(-half);
-    atomicWriteText(filePath, kept.join('\n') + '\n');
+    const { text, truncated } = _readTailText(filePath, TRAINING_MAX_BYTES);
+    const lines = text.split('\n');
+    if (truncated) {
+      lines.shift(); // 窗口首行被切断,丢弃而不是当半条记录留着
+    }
+    let kept = lines.filter(Boolean);
+    // 字节窗口内再按行上限收一次,保住「两个上限都成立」的原有语义。
+    if (kept.length > maxLines) {
+      kept = kept.slice(-Math.min(maxLines, Math.floor(kept.length / 2)));
+    }
+    atomicWriteText(filePath, kept.length ? kept.join('\n') + '\n' : '');
     return {
       trimmed: true,
-      before: lines.length,
       after: kept.length,
       freedBytes: size - safeSize(filePath),
     };
@@ -884,6 +934,7 @@ function trimQuarantine() {
     path.join(_khyHome(), 'training', 'interaction_quarantine.jsonl'),
     path.join(_baseDir(), 'training', 'interaction_quarantine.jsonl'),
   ];
+  let lastError = null;
   for (const filePath of candidates) {
     const size = safeSize(filePath);
     if (size === 0) {
@@ -903,26 +954,34 @@ function trimQuarantine() {
           after: kept.length,
           freedBytes: size - safeSize(filePath),
         };
-      } catch {
+      } catch (err) {
+        lastError = err.message;
         continue;
       }
     }
-    // Over size cap
+    // 超字节上限:按字节保留尾部。行上限在这里没有约束力 —— 实测该文件单行均值
+    // 761 KB,QUARANTINE_MAX_LINES=5000 合 3.6 GB,真正起作用的只有 20 MB 字节上限。
+    // 绝不整文件 readFileSync:该文件常态远超 Node 单字符串上限,整读必抛
+    // (ERR_STRING_TOO_LONG),而旧实现的 catch 把它吞成 {trimmed:false} ⇒ 永不裁。
     try {
-      const lines = fs.readFileSync(filePath, 'utf-8').split(/\r?\n/).filter(Boolean);
-      const kept = lines.slice(-Math.floor(QUARANTINE_MAX_LINES / 2));
-      atomicWriteText(filePath, kept.join('\n') + '\n');
+      const { text, truncated } = _readTailText(filePath, QUARANTINE_MAX_BYTES);
+      const lines = text.split(/\r?\n/);
+      if (truncated) {
+        lines.shift(); // 窗口首行被切断,丢弃而不是当半条记录留着
+      }
+      const kept = lines.filter(Boolean);
+      atomicWriteText(filePath, kept.length ? kept.join('\n') + '\n' : '');
       return {
         trimmed: true,
-        before: lines.length,
         after: kept.length,
         freedBytes: size - safeSize(filePath),
       };
-    } catch {
+    } catch (err) {
+      lastError = err.message;
       continue;
     }
   }
-  return { trimmed: false };
+  return lastError ? { trimmed: false, error: lastError } : { trimmed: false };
 }
 
 // ── Daily memory log pruning ───────────────────────────────────────────
@@ -1829,9 +1888,7 @@ function runCleanup(options = {}) {
     results.summary.actions.push(`Removed ${results.snapshots.removed} old snapshots`);
   }
   if (results.trainingData.trimmed) {
-    results.summary.actions.push(
-      `Training data trimmed: ${results.trainingData.before} → ${results.trainingData.after} lines`
-    );
+    results.summary.actions.push(_trimmedAction('Training data', results.trainingData));
   }
   if (results.telemetry.removed > 0) {
     results.summary.actions.push(`Removed ${results.telemetry.removed} old telemetry exports`);
@@ -1867,9 +1924,7 @@ function runCleanup(options = {}) {
     freedBytes += results.telemetryAudit.originalSize || 0;
   }
   if (results.quarantine.trimmed) {
-    results.summary.actions.push(
-      `Quarantine trimmed: ${results.quarantine.before} → ${results.quarantine.after} lines`
-    );
+    results.summary.actions.push(_trimmedAction('Quarantine', results.quarantine));
     freedBytes += results.quarantine.freedBytes || 0;
   }
   if (results.dailyLogs.removed > 0) {

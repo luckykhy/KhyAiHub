@@ -83,7 +83,7 @@ function buildCompletionPushMessage(info = {}) {
   const ok = info.ok !== false; // 缺省按成功
   const took = humanizeElapsed(info.elapsedMs);
   const what = _oneLine(info.label || 'khy 任务', 60);
-  const title = ok ? `✅ ${what}已完成` : `⚠️ ${what}失败`;
+  const title = ok ? `✓ ${what}已完成` : `⚠ ${what}失败`;
   const parts = [];
   parts.push(ok ? `耗时 ${took},可以回到终端查看结果了。` : `耗时 ${took} 后失败,回终端看看吧。`);
   const sum = _oneLine(info.summary, 140);

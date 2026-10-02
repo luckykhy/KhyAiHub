@@ -429,8 +429,41 @@ async function login(username, password, timeoutMs) {
     (a) => a.username === username && a.password === password
   );
   if (builtinMatch) {
-    _saveSession(username, null, builtinMatch.role);
-    return { success: true, username, role: builtinMatch.role, source: 'builtin' };
+    // A builtin account IS a real row in the shared database (the default-admin
+    // is seeded there), so prefer a server login: the server token is exactly
+    // what lets `khy chat` bridge the management page's auto-login. When the
+    // server answers we promote the session to a server session; when it is
+    // unreachable (first boot / offline / server down) we fall back to the
+    // original offline builtin session. Identity + role always come from the
+    // builtin table, never the network, so this can only ever add a token.
+    let serverToken = null;
+    let serverData = null;
+    try {
+      const r = await _serverRequest(
+        'POST',
+        '/api/auth/login',
+        { username, password },
+        timeoutMs || 4000
+      );
+      if (r && r.success && r.data) {
+        serverToken = String(r.data.token || '').trim() || null;
+        serverData = r.data;
+      }
+    } catch {
+      /* server unavailable → offline builtin fallback below */
+    }
+    const role = (serverData && serverData.user && serverData.user.role) || builtinMatch.role;
+    _saveSession(username, serverToken, role, {
+      refreshToken: (serverData && serverData.refreshToken) || '',
+      serverTokenExpiresAt: (serverData && serverData.expiresAt) || '',
+      serverRefreshExpiresAt: (serverData && serverData.refreshExpiresAt) || '',
+    });
+    return {
+      success: true,
+      username,
+      role,
+      source: serverToken ? 'server' : 'builtin',
+    };
   }
 
   // Try server login first (accounts shared with frontend)
