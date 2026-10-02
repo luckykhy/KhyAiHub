@@ -102,6 +102,18 @@ const _BIN_TO_MANAGER = Object.freeze({
   choco: 'choco',
 });
 
+/**
+ * 自有键判定（B27-F1）：三张声明式表的取值只认自身键。
+ * `TABLE[key] || fallback` 对表内真实键逐字节等价，但 key 是调用方数据
+ * （formatKey / opts.platform），落到 constructor / valueOf / toString 等
+ * Object.prototype 继承键时 `||` 看到的是继承值（真值），兜底不触发，
+ * 随后 `for (const x of <函数>)` 直接抛 TypeError —— 破本文件「任何畸形输入一律
+ * 安全返回，绝不抛裸异常」的铁律。
+ */
+function _own(table, key) {
+  return Object.prototype.hasOwnProperty.call(table, key) ? table[key] : undefined;
+}
+
 /** 缺省 has()：真实 which/where 探测（返回布尔）。 */
 function _defaultHas(bin) {
   try {
@@ -110,7 +122,6 @@ function _defaultHas(bin) {
     return false;
   }
 }
-
 /** 缺省平台：'windows' | 'macos' | 'wsl' | 'linux'。 */
 function _defaultPlatform() {
   try {
@@ -145,7 +156,7 @@ function detectGenericFormat(filePath) {
  * @returns {{bin:string, kind:string}|null} kind ∈ {'7z','bsdtar','unar','unrar'}；均不可用返 null
  */
 function pickExtractor(formatKey, opts = {}) {
-  const spec = GENERIC_FORMATS[formatKey];
+  const spec = _own(GENERIC_FORMATS, formatKey);
   if (!spec) {
     return null;
   }
@@ -190,7 +201,7 @@ function _kindOf(bin) {
 function detectPackageManager(opts = {}) {
   const platform = opts.platform || _defaultPlatform();
   const has = typeof opts.has === 'function' ? opts.has : _defaultHas;
-  const order = _PM_ORDER[platform] || _PM_ORDER.linux;
+  const order = _own(_PM_ORDER, platform) || _PM_ORDER.linux;
   for (const bin of order) {
     try {
       if (has(bin)) {
@@ -212,14 +223,16 @@ function detectPackageManager(opts = {}) {
  *   options 列出各平台可选命令供用户自行判断。
  */
 function buildInstallCommand(formatKey, opts = {}) {
-  const spec = GENERIC_FORMATS[formatKey];
+  const spec = _own(GENERIC_FORMATS, formatKey);
   const pkgKey = spec ? spec.pkg : '7z';
-  const perManager = PKG_INSTALL[pkgKey] || PKG_INSTALL['7z'];
+  const perManager = _own(PKG_INSTALL, pkgKey) || PKG_INSTALL['7z'];
   const manager = detectPackageManager(opts);
 
   let command = null;
-  if (manager && perManager[manager] && PM_CMD[manager]) {
-    command = PM_CMD[manager](perManager[manager]);
+  const pkgName = _own(perManager, manager);
+  const buildCmd = _own(PM_CMD, manager);
+  if (manager && pkgName && buildCmd) {
+    command = buildCmd(pkgName);
   }
 
   // 无论是否探到，都给出全平台候选，便于跨机指路。
