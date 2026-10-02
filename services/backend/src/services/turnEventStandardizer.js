@@ -334,8 +334,9 @@ class TurnEventRenderer {
     }
     const name = String(payload.name || payload.toolName || 'tool');
     const result = payload.result || {};
-    const ok =
-      typeof payload.ok === 'boolean' ? payload.ok : !String(result.content || '').startsWith('🚨');
+    // Formerly fell back to `!content.startsWith('🚨')`; no producer of that prefix exists
+    // anywhere in the tree, so the heuristic could only ever report success.
+    const ok = typeof payload.ok === 'boolean' ? payload.ok : true;
     const sanitized = toolResultSanitizer.fullSanitize(String(result.content || ''));
 
     if (ok) {

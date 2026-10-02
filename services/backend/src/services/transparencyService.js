@@ -72,7 +72,7 @@ function formatTurnCost(usage) {
   // Cache hit indicator
   if (usage.cacheReadTokens > 0) {
     const cached = fmtK(usage.cacheReadTokens);
-    parts.push(chalk.green(`⚡ ${cached} 已缓存`));
+    parts.push(chalk.green(`${cached} 已缓存`));
   }
 
   // Cost
@@ -157,7 +157,7 @@ function formatPermissionTier(classification) {
     safe: chalk.green('安全'),
     moderate: chalk.blue('中等'),
     dangerous: chalk.yellow('⚠ 危险'),
-    critical: chalk.red('⛔ 严重'),
+    critical: chalk.red('◉ 严重'),
     unknown: chalk.dim('未知'),
   };
 

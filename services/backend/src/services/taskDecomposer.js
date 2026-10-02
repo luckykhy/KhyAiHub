@@ -462,7 +462,7 @@ function mergeResults(subtasks, aggregated) {
 
     const status = success
       ? emptySuccess
-        ? '⚠️ 完成（无产出）'
+        ? '⚠ 完成（无产出）'
         : '完成'
       : `失败: ${result.error || '未知错误'}`;
     const body = result.text || result.output || '(无输出)';

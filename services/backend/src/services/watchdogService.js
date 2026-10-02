@@ -12,9 +12,13 @@
  * - Exponential backoff: 5s → 10s → 20s → max 60s
  * - Stops after 5 consecutive restart failures
  * - Writes healAudit for each restart attempt
+ *
+ * Dependency direction: the watchdog does not require daemonManager (that pair
+ * used to be a cycle of its own). The starter hands it the daemon control plane
+ * via `start({ daemon })`; unbound, it honestly reports "cannot observe" instead
+ * of guessing.
  */
 
-const daemonManager = require('./daemonManager');
 const { writeHealAudit } = require('../utils/healAudit');
 const healAuditService = require('./healAuditService');
 
@@ -35,6 +39,9 @@ let _consecutiveRestartFailures = 0;
 let _lastRestartAt = 0;
 let _currentBackoffMs = INITIAL_BACKOFF_MS;
 let _abandonedAt = null;
+// Daemon control plane handed in by the starter: { daemonStatus, daemonRestart }.
+// null ⇒ this process never bound a daemon to watch (see _checkHealth's null claim).
+let _daemon = null;
 
 /**
  * Normalize interval to safe bounds.
@@ -49,11 +56,15 @@ function _normalizeInterval(intervalMs) {
 
 /**
  * Check daemon health via status call.
- * @returns {Promise<boolean>}
+ * @returns {Promise<boolean|null>} true healthy / false unhealthy / null = no
+ *   daemon bound, which is neither claim — the caller must not restart on it.
  */
 async function _checkHealth() {
+  if (!_daemon) {
+    return null;
+  }
   try {
-    const status = await daemonManager.daemonStatus();
+    const status = await _daemon.daemonStatus();
     return status.running === true;
   } catch {
     return false;
@@ -64,6 +75,11 @@ async function _checkHealth() {
  * Attempt to restart the daemon with exponential backoff.
  */
 async function _attemptRestart() {
+  // Nothing to revive without a bound daemon; callers reach this only on a
+  // false (unhealthy) reading, never on the null (unbound) one.
+  if (!_daemon) {
+    return false;
+  }
   // Check if we've exceeded max attempts
   if (_consecutiveRestartFailures >= MAX_RESTART_ATTEMPTS) {
     if (!_abandonedAt) {
@@ -140,7 +156,7 @@ async function _attemptRestart() {
     });
 
     // Attempt restart
-    const result = daemonManager.daemonRestart();
+    const result = _daemon.daemonRestart();
 
     // Success - reset failure counters and backoff
     _consecutiveFailures = 0;
@@ -221,6 +237,11 @@ async function _tick() {
 
   const healthy = await _checkHealth();
 
+  // Unbound (nobody handed us a daemon): make no claim, touch no counter.
+  if (healthy === null) {
+    return;
+  }
+
   if (healthy) {
     // Reset failure counter on successful heartbeat
     _consecutiveFailures = 0;
@@ -239,9 +260,16 @@ async function _tick() {
  * Start the watchdog service.
  * @param {object} [opts]
  * @param {number} [opts.intervalMs] - Heartbeat interval
+ * @param {{daemonStatus: Function, daemonRestart: Function}} [opts.daemon]
+ *   Daemon control plane to observe and revive (daemonManager passes itself).
  * @returns {object}
  */
 function start(opts = {}) {
+  const d = opts.daemon;
+  if (d && typeof d.daemonStatus === 'function' && typeof d.daemonRestart === 'function') {
+    _daemon = d;
+  }
+
   if (_enabled && _timer) {
     return { changed: false, ...status() };
   }
@@ -313,6 +341,9 @@ async function triggerRecovery() {
   }
 
   const healthy = await _checkHealth();
+  if (healthy === null) {
+    return false;
+  }
   if (!healthy) {
     _consecutiveFailures = HEARTBEAT_FAILURE_THRESHOLD; // Force threshold
     return await _attemptRestart();

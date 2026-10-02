@@ -195,7 +195,7 @@ function _pendingWork(isBusy) {
     }
   }
   try {
-    const map = require('../cli/aiLocalState').activeGatewayRequests;
+    const map = require('./aiLocalState').activeGatewayRequests;
     if (map && typeof map.size === 'number' && map.size > 0) {
       const now = Date.now();
       for (const [id, info] of map) {

@@ -134,7 +134,7 @@ function _pruneStaleScopedTodos(paths, fsImpl, env) {
 function _noticeLine(removed, color) {
   const paint = typeof color === 'function' ? color : (t) => t;
   return paint(
-    `🧹 已清空上一会话遗留的临时任务清单(${removed} 个 legacy todo 文件);本会话从空白清单开始。`,
+    `已清空上一会话遗留的临时任务清单(${removed} 个 legacy todo 文件);本会话从空白清单开始。`,
     'notice'
   );
 }

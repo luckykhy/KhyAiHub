@@ -20,7 +20,7 @@
 
 // Marker that opens the trailing warning block. Head-truncation anchors on it
 // so a cap never eats the warning itself.
-const SUBAGENT_WARNING_MARKER = '\n\n⚠️ 子代理执行期有工具报错';
+const SUBAGENT_WARNING_MARKER = '\n\n⚠ 子代理执行期有工具报错';
 
 const _DEFAULTS = {
   // at most how many tool-error items are expanded in the footer

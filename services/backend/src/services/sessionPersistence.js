@@ -138,9 +138,19 @@ function _locateSessionFile(sessionId, ext) {
 /**
  * Recursively collect *.json snapshot files from the sessions store,
  * across project buckets and the flat legacy root.
- * Excludes the .project.json bucket markers.
+ * Non-session sidecars that live beside snapshots are excluded: bucket markers
+ * (.project.json), resume checkpoints (.checkpoint.json) and the provenance hash
+ * chain (<session>.trace-chain.json, DESIGN-ARCH-047 P2). A chain is a JSON *array*,
+ * so reading one as a session meta yields a phantom row whose sessionId is undefined,
+ * which crashed `khy trace list` and polluted every list consumer.
  * @returns {string[]} absolute file paths
  */
+const _SIDECAR_SUFFIXES = ['.checkpoint.json', '.trace-chain.json'];
+
+function _isSessionSidecar(name) {
+  return name === '.project.json' || _SIDECAR_SUFFIXES.some((s) => name.endsWith(s));
+}
+
 function _collectSnapshotFiles() {
   const root = _sessionsDir();
   const out = [];
@@ -160,15 +170,11 @@ function _collectSnapshotFiles() {
         continue;
       }
       for (const f of sub) {
-        if (f.endsWith('.json') && !f.endsWith('.checkpoint.json') && f !== '.project.json') {
+        if (f.endsWith('.json') && !_isSessionSidecar(f)) {
           out.push(path.join(full, f));
         }
       }
-    } else if (
-      ent.name.endsWith('.json') &&
-      !ent.name.endsWith('.checkpoint.json') &&
-      ent.name !== '.project.json'
-    ) {
+    } else if (ent.name.endsWith('.json') && !_isSessionSidecar(ent.name)) {
       out.push(full);
     }
   }

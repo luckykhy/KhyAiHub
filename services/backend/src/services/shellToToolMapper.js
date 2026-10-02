@@ -185,7 +185,7 @@ function hasCommandSubstitution(command) {
  * @param {string} cmd - Single shell command
  * @returns {{ tool: string, risk: string, isReadOnly: boolean, isDestructive: boolean, command: string }}
  */
-function mapSingleCommand(cmd) {
+function mapSingleCommand(cmd, _carrierDepth = 0) {
   const base = getBaseCommand(cmd);
   if (!base) {
     return {
@@ -198,6 +198,27 @@ function mapSingleCommand(cmd) {
   }
 
   const lower = base.toLowerCase();
+
+  // cmd.exe carrier: `cmd /c <rest>` / `cmd /k <rest>` hand <rest> to the
+  // cmd.exe parser as one string, so the mapper's first-token word lists never
+  // see the inner command — `cmd /c del C:\secret.txt` rated unknown-medium
+  // while bare `del` rates high (gap logged by the 2026-09-17 risk-gate round).
+  // Penetrate the carrier through the compound-aware entry and take the
+  // strictest segment, but NEVER below the unknown-default medium: the carrier
+  // is an untrusted context, so a benign inner (`cmd /c dir`) must not loosen
+  // today's rating, and a bare `cmd /c` keeps it too (no inner = no guess).
+  if (_carrierDepth < CMD_CARRIER_MAX_DEPTH && (lower === 'cmd' || lower.endsWith('cmd.exe'))) {
+    const inner = _mapCmdCarrier(cmd, _carrierDepth);
+    if (inner) {
+      return {
+        tool: 'shell_command',
+        risk: inner.risk,
+        isReadOnly: false,
+        isDestructive: inner.destructive,
+        command: cmd,
+      };
+    }
+  }
 
   // Git — subcommand-aware
   if (lower === 'git') {
@@ -299,6 +320,64 @@ function mapSingleCommand(cmd) {
     isDestructive: false,
     command: cmd,
   };
+}
+
+// Recursion guard for the cmd.exe carrier branch: each level consumes the cmd
+// token so the string shrinks every time, but a pathological input should hit
+// a wall regardless. Reaching the cap degrades to the unknown-medium default.
+const CMD_CARRIER_MAX_DEPTH = 3;
+
+/**
+ * Classify the inner command of a cmd.exe /c /k carrier.
+ *
+ * The inner string goes through the compound-aware entry
+ * (mapCommandToVirtualTools) so pipes/;/&&/redirects/substitution inside the
+ * payload keep their semantics. cmd.exe additionally separates with a SINGLE
+ * `&`, which that splitter does not know — split on any & run here. Over-splitting
+ * a quoted filename can only make the rating stricter, never looser.
+ *
+ * @param {string} cmd - the full carrier segment
+ * @param {number} depth - current carrier recursion depth
+ * @returns {{ risk: string, destructive: boolean } | null} null when there is
+ *   no inner command to classify (caller keeps the unknown-medium default)
+ */
+function _mapCmdCarrier(cmd, depth) {
+  const tokens = cmd.trim().split(/\s+/);
+  const idx = tokens.findIndex((t) => /^\/(c|k)$/i.test(t));
+  if (idx < 0 || idx === tokens.length - 1) {
+    return null;
+  }
+  let inner = tokens.slice(idx + 1).join(' ');
+  // One level of cmd.exe surrounding-quote stripping; nested quoting is a
+  // deeper proposal (deferred by the 2026-09-17 round on purpose).
+  if (inner.length >= 2 && inner.startsWith('"') && inner.endsWith('"')) {
+    inner = inner.slice(1, -1);
+  }
+  if (!inner.trim()) {
+    return null;
+  }
+  const pieces = inner.split(/\s*&+\s*/).filter((p) => p.trim());
+  let risk = null;
+  let destructive = false;
+  for (const piece of pieces) {
+    try {
+      const mapped = mapCommandToVirtualTools(piece);
+      if (!mapped) {
+        continue;
+      }
+      risk = risk === null ? mapped.overallRisk : maxRisk(risk, mapped.overallRisk);
+      destructive = destructive || mapped.overallDestructive;
+    } catch {
+      /* a piece the compound entry cannot parse — fall back to this piece's own base */
+      const fallback = mapSingleCommand(piece, depth + 1);
+      risk = risk === null ? fallback.risk : maxRisk(risk, fallback.risk);
+      destructive = destructive || fallback.isDestructive;
+    }
+  }
+  if (risk === null) {
+    return null;
+  }
+  return { risk: maxRisk(risk, 'medium'), destructive };
 }
 
 /**

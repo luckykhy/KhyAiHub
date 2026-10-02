@@ -32,7 +32,7 @@ const { analyzeCommand } = require('../shellSafetyValidator');
 // Canonical chars/4 estimate atom (utils leaf; byte-identical to Math.ceil(n / 4)).
 let _keyFindings = null;
 try {
-  _keyFindings = require('../../cli/keyFindings');
+  _keyFindings = require('../../utils/text/keyFindings');
 } catch {
   _keyFindings = null;
 }
@@ -638,7 +638,7 @@ function _buildDeliverySummary(toolCallLog) {
     sections.push('|------|------|------|');
     const display = allFileChanges.slice(0, 10);
     for (const f of display) {
-      const status = f.ok ? '' : ' ❌';
+      const status = f.ok ? '' : ' ✗';
       sections.push(`| \`${_basename(f.path)}\` | ${f.op} | ${f.diff}${status} |`);
     }
     if (allFileChanges.length > 10) {
@@ -652,7 +652,7 @@ function _buildDeliverySummary(toolCallLog) {
     sections.push(`**执行命令 (${cmdOps.length})**`);
     const display = cmdOps.slice(0, 5);
     for (const c of display) {
-      sections.push(`  \`$ ${c.cmd}\`${c.success ? '' : ' ❌'}`);
+      sections.push(`  \`$ ${c.cmd}\`${c.success ? '' : ' ✗'}`);
     }
     if (cmdOps.length > 5) {
       sections.push(`  ...+${cmdOps.length - 5} more`);
@@ -2819,7 +2819,7 @@ function _injectPlanningPrompt(message, opts = {}) {
 
 /**
  * 关键节点主动汇报：把"命中里程碑用 <finding> 标记吐出"的指令作为 user-message
- * 前言注入（与 _injectPlanningPrompt 同约定）。单一真源在 cli/keyFindings.js；
+ * 前言注入（与 _injectPlanningPrompt 同约定）。单一真源在 utils/text/keyFindings.js；
  * 模块缺失或开关关闭时返回原文（fail-soft / no-op）。
  * @param {string} message
  * @param {object} [env=process.env]

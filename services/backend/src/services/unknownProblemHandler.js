@@ -38,13 +38,13 @@ const ENV_FLAG = 'KHY_UNKNOWN_PROBLEM_HANDLER';
 
 /** Canonical structure heads — the SINGLE source the prompt and detectors share. */
 const MARKERS = Object.freeze({
-  INFO_UNKNOWN: '🔍 **未知点识别**',
-  INFO_CONFIRM: '❓ **确认信息**',
-  PROPOSE: '🧭 **方案对比**',
-  EXEC_STEP: '⚙️ **执行步骤', // followed by ` [x/y]**`
-  EXEC_CHECK: '✅ **校验点**',
-  DEVIATION: '⚠️ **偏离预警**',
-  TRUNCATION: '⚠️ **生成中断预警**：正在重试当前步骤',
+  INFO_UNKNOWN: '**未知点识别**',
+  INFO_CONFIRM: '? **确认信息**',
+  PROPOSE: '**方案对比**',
+  EXEC_STEP: '⚙ **执行步骤', // followed by ` [x/y]**`
+  EXEC_CHECK: '✓ **校验点**',
+  DEVIATION: '⚠ **偏离预警**',
+  TRUNCATION: '⚠ **生成中断预警**：正在重试当前步骤',
 });
 
 /**
@@ -165,7 +165,7 @@ function buildStateMachineSection() {
     '| 方案 A | … | … | … |',
     '| 方案 B | … | … | … |',
     '',
-    '👉 请选择（A / B）；若你不选，我将自动采用置信度更高的方案并说明理由。',
+    '请选择（A / B）；若你不选，我将自动采用置信度更高的方案并说明理由。',
     '',
     '### 执行期 —— 每个子步必须成对输出：',
     `${MARKERS.EXEC_STEP} [x/y]**：<本子步在做什么>`,
@@ -175,7 +175,7 @@ function buildStateMachineSection() {
     '',
     '### 偏离回退 —— 执行失败时（不使用 [FALLBACK]）：',
     `${MARKERS.DEVIATION}：<失败的校验点与客观原因>，退回重新分析。`,
-    '随后强制做上下文净化：✅保留（已确认事实）/ ❌弃用（失效假设）/ 🔁新方向，并回到方案提议；禁止原地重试同一失败子步。',
+    '随后强制做上下文净化：✓保留（已确认事实）/ ✗弃用（失效假设）/新方向，并回到方案提议；禁止原地重试同一失败子步。',
     '',
     '## 防御铁律',
     '- **防跳步**：缺关键信息时严禁跳过信息请求结构直接给方案或执行；用户未选方案严禁输出执行步骤；一条回复只呈现一个阶段的结构。',

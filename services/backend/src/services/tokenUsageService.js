@@ -356,7 +356,7 @@ function getUsageHistory(days = 30) {
  */
 function _fmtTokenCount(n, legacy, env = process.env) {
   try {
-    const { ccFormatEnabled, ccFormatTokens } = require('../cli/ccFormat');
+    const { ccFormatEnabled, ccFormatTokens } = require('../utils/format/ccFormat');
     if (ccFormatEnabled(env)) {
       const out = ccFormatTokens(Number(n));
       if (out) return out;
@@ -375,7 +375,7 @@ function formatInlineSummary(currentTokens) {
   const quota = getRemainingQuota();
   const fmtNum = (n) => _fmtTokenCount(n, n.toLocaleString('en-US'));
 
-  let line = `  \u{1F4CA} 本次: ${fmtNum(currentTokens)} tokens`;
+  let line = `  本次: ${fmtNum(currentTokens)} tokens`;
   line += ` \u00B7 会话累计: ${fmtNum(session)}`;
 
   if (quota.limit !== -1) {
@@ -406,7 +406,7 @@ function formatUsageReport() {
   const r = chalk.red;
 
   let out = '';
-  out += chalk.bold('  📊 AI Token 用量统计\n\n');
+  out += chalk.bold('  AI Token 用量统计\n\n');
 
   // Session
   out += w('  本次会话:\n');
@@ -527,7 +527,7 @@ function formatCostReport() {
   // (this /cost panel's historical format). ccFormat.js's header already lists
   // "router /cost hardcoded toFixed(4)" as a convergence target; this wires the
   // one call-site that was left stranded.
-  const { ccFormatCostOr } = require('../cli/ccFormat');
+  const { ccFormatCostOr } = require('../utils/format/ccFormat');
   const fmtCNY = (n) => `\u00A5${ccFormatCostOr(n, n.toFixed(4), process.env)}`;
   const fmtUSD = (n) => `$${ccFormatCostOr(n, n.toFixed(4), process.env)}`;
   const d = chalk.dim;
@@ -538,7 +538,7 @@ function formatCostReport() {
   const b = chalk.bold;
 
   let out = '\n';
-  out += b('  \u{1F4B0} Token 用量 & 费用\n\n');
+  out += b('  Token 用量 & 费用\n\n');
 
   // Session cost (primary)
   out += w('  \u250C\u2500 本次会话\n');
@@ -580,7 +580,7 @@ function formatCostReport() {
   try {
     const cbm = require('./costByModel');
     if (cbm.costByModelEnabled(process.env) && Array.isArray(session.records) && session.records.length) {
-      const { formatModelLabel } = require('../cli/ccModelName');
+      const { formatModelLabel } = require('../utils/format/ccModelName');
       const rows = cbm.aggregateSessionUsageByModel(session.records, (m) => formatModelLabel(m, process.env));
       if (rows.length) {
         out += w('  \u250c\u2500 \u6309\u6a21\u578b\u7528\u91cf\uff08\u672c\u6b21\u4f1a\u8bdd\uff09\n');

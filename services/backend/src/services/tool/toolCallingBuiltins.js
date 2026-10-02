@@ -348,7 +348,7 @@ const BUILTIN_TOOLS = [
         lines.push('=== 本地模型文件 ===');
         for (const m of all.localModels) {
           const tag = m.imported ? '[已导入]' : '[未导入]';
-          lines.push(`  ${tag} ${m.name}  ${m.sizeStr}  ${m.format}  📂 ${m.path}`);
+          lines.push(`  ${tag} ${m.name}  ${m.sizeStr}  ${m.format}  ${m.path}`);
         }
       } else {
         lines.push('=== 本地模型文件 === (未发现)');

@@ -145,7 +145,7 @@ const _toolPrefaceVoice = _tryOr(() => require('../../cli/toolPrefaceVoice'), nu
 // silent until the end: deterministic test results + model-emitted <finding>
 // blocks (root_cause/breakthrough/blocked). Pure leaf, fail-soft: a missing
 // module degrades to no reporting.
-const _keyFindings = _tryOr(() => require('../../cli/keyFindings'), null);
+const _keyFindings = _tryOr(() => require('../../utils/text/keyFindings'), null);
 
 // degenerateShellEcho — drop no-op "echo of prose" shell dispatches before they
 // run (a bare `echo "<sentence>"` with no operator only reprints the model's own
@@ -156,7 +156,7 @@ const _degenerateShellEcho = _tryOr(() => require('../degenerateShellEcho'), nul
 // ── 结果守卫（result guard）──────────────────────────────────────────────────
 // 杜绝「执行了工具但只给了承诺式前言、未交付结论、也无收尾」就静默返回。纯叶子、
 // fail-soft：模块缺失 → null → call-site 回退历史行为（>= 40 代理 / 无收尾）。
-const _resultGuard = _tryOr(() => require('../../cli/resultGuard'), null);
+const _resultGuard = _tryOr(() => require('../../utils/text/resultGuard'), null);
 
 // ── 断线惯性完成 + 无感衔接（goal 2026-06-25）────────────────────────────────
 // 流式层瞬断且已有进度时以 PARTIAL(interrupted:true + 已下达 toolUseBlocks)返回,
@@ -3813,7 +3813,7 @@ async function runToolUseLoop(userMessage, options = {}) {
         // 重试用尽 / 又同样退化 → 优雅抢救（不是错误）：保留干净前缀 + 透明提示。
         const _trimmed = String(_cleanPrefix || '').trimEnd();
         aiResult.reply = _trimmed
-          ? `${_trimmed}\n\n[⚠️ 后续输出出现异常重复，已自动截断。可让我“继续”或换个说法重试。]`
+          ? `${_trimmed}\n\n[⚠ 后续输出出现异常重复，已自动截断。可让我“继续”或换个说法重试。]`
           : '抱歉，刚才的回复出现了异常重复。请再说一次或换个说法，我重新作答。';
         lastResult = aiResult;
         _truncationAccumulator = '';
@@ -3960,7 +3960,7 @@ async function runToolUseLoop(userMessage, options = {}) {
             try {
               const _uph = require('../unknownProblemHandler');
               if (_uph.isEnabled() && _uph.isExecutionStep(_truncationAccumulator)) {
-                currentMessage = `${currentMessage}\n\n[System] 续写时请以 “${_uph.MARKERS.TRUNCATION}” 开头，主动重试当前被截断的执行步骤，并补全其 ✅ 校验点。`;
+                currentMessage = `${currentMessage}\n\n[System] 续写时请以 “${_uph.MARKERS.TRUNCATION}” 开头，主动重试当前被截断的执行步骤，并补全其 ✓ 校验点。`;
               }
             } catch {
               /* fail-open */
@@ -4446,7 +4446,7 @@ async function runToolUseLoop(userMessage, options = {}) {
                 { success: true },
                 iteration,
                 0,
-                '检测到信息请求结构（🔍 未知点识别），暂停执行、交还用户确认'
+                '检测到信息请求结构（未知点识别），暂停执行、交还用户确认'
               );
             }
             toolCalls = [];
@@ -5688,7 +5688,9 @@ async function runToolUseLoop(userMessage, options = {}) {
         // 触发条件——本轮有失败的工具调用、模型本轮未再调工具、回复又短且未承认失败。
         // 推一次系统消息，要求它要么换方法重试、要么明确告知用户失败原因+已尝试的方法。
         if (_harnessProfile.nudges && !concludeNow && !_failureRecoveryNudgeUsed) {
-          const _failedCalls = toolCallLog.filter((t) => t.success === false && t.denied !== true);
+          // 同 P7 口径:经 toolCallTally 认失败(result.success === false 也算),
+          // 旧式只看 entry.success 漏掉绝大多数落点 → 失败恢复 nudge 永不触发。
+          const _failedCalls = require('./loop/toolCallTally').tallyToolCallLog(toolCallLog).failed;
           if (_failedCalls.length > 0) {
             const _replyClean = strippedReply.replace(/\s/g, '');
             const _acknowledgesFailure =
@@ -6006,14 +6008,17 @@ async function runToolUseLoop(userMessage, options = {}) {
           }
         }
         if (placeholder && totalToolCalls > 0) {
-          const succeeded = toolCallLog.filter((t) => t.success === true);
-          const failed = toolCallLog.filter((t) => t.success === false);
-          const denied = toolCallLog.filter((t) => t.denied === true);
+          // 计数收敛到纯叶子 toolCallTally(单一口径,IMPL-RPT-063 / P7):旧代码只认
+          // entry.success 布尔,而本文件 18 个 toolCallLog 落点里 16 个不写该字段
+          // (只写 result.success) → 真实会话出现「已执行 4 次工具调用(0 成功, 0 失败)」
+          // 的失真小结。口径详见 loop/toolCallTally.js 头注;各桶互斥、合计恒等于总数。
+          const _tally = require('./loop/toolCallTally').tallyToolCallLog(toolCallLog);
+          const { succeeded, failed, denied, skipped } = _tally;
           const parts = [];
 
           // 执行摘要
           parts.push(
-            `\n\n**任务未完成** — 已执行 ${totalToolCalls} 次工具调用（${succeeded.length} 成功, ${failed.length} 失败${denied.length ? `, ${denied.length} 被拒绝` : ''}）`
+            `\n\n**任务未完成** — 已执行 ${totalToolCalls} 次工具调用（${succeeded.length} 成功, ${failed.length} 失败${denied.length ? `, ${denied.length} 被拒绝` : ''}${skipped.length ? `, ${skipped.length} 跳过/拦截` : ''}）`
           );
 
           // 具体失败原因 —— 真因多在 t.result.data.outputTail(如 build_project

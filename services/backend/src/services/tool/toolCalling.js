@@ -1990,7 +1990,7 @@ async function executeTool(toolName, params = {}, traceContext = {}) {
         /* execApproval optional */
       }
       if (!alreadyHooked) {
-        const hookSystem = require('../../cli/hooks/hookSystem');
+        const hookSystem = require('../domain/extensions/hooks/hookSystem');
         if (typeof hookSystem.isInitialized === 'function' && hookSystem.isInitialized()) {
           const hr = await hookSystem.trigger('PreToolUse', {
             toolName: permissionKey,

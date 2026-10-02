@@ -57,7 +57,7 @@ function _getHookSystem() {
   }
 
   try {
-    const hs = require('../../../cli/hooks/hookSystem');
+    const hs = require('../../domain/extensions/hooks/hookSystem');
     // Auto-initialize if not yet done (registers built-in guards)
     if (typeof hs.isInitialized === 'function' && !hs.isInitialized()) {
       hs.init(process.env.KHYQUANT_CWD || process.cwd());

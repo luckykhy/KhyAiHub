@@ -20,7 +20,7 @@ const policy = require('./taskCleanupPolicy');
 function _noticeLine(removed, days, color) {
   const paint = typeof color === 'function' ? color : (t) => t;
   return paint(
-    `🧹 已清理 ${removed} 条陈旧任务(超过 ${days} 天未更新)。用 /tasks 查看当前清单。`,
+    `已清理 ${removed} 条陈旧任务(超过 ${days} 天未更新)。用 /tasks 查看当前清单。`,
     'notice'
   );
 }
