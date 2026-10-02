@@ -109,7 +109,7 @@ node --test scripts/tests/maintainerMapDocCoverage.test.js # 映射表覆盖每�
 | `DEPLOY` | `06_DEPLOY_部署/` | 部署 / 发布手册 |
 | `OPS` | `07_OPS_运维/` | 运维与使用手册（本文所在） |
 | `MGMT` | `08_MGMT_项目管理/` | 项目管理 / 标准 |
-| `STORY` | `09_STORY_修仙学AI/` | 面向小白的修仙叙事（须含 `## 📒 凡人笔记`） |
+| `STORY` | `09_STORY_修仙学AI/` | 面向小白的修仙叙事（须含 `## 凡人笔记`） |
 
 ### 2.3 类型码
 
@@ -132,7 +132,7 @@ node --test scripts/tests/maintainerMapDocCoverage.test.js # 映射表覆盖每�
 
 1. **`.md` 必有同名 `.html`**：由 `npm run docs:build` 生成，`scripts/docs/verify_docs_site.js` 硬门校验（缺 HTML 报错、非零退出）。**不手写 HTML**。
 2. **同步两处索引**：① 所在目录的 `00_INDEX_<中文>-分类索引.md`「文件清单」表；② 主入口 `docs/00_INDEX_文档索引.md` 对应分区列表 + 顶部计数。
-3. **概念 / 故事目录额外守规**：`docs/02_CONCEPTS_概念入门/` 与 `docs/09_STORY_修仙学AI/` 受 `scripts/docs/check_beginner_docs.js`（`npm run docs:check-beginner`）约束——禁孤儿页、禁死链、禁无导航死胡同页；`CONCEPT` 前缀须**连号不跳**；故事文档须含 `## 📒 凡人笔记`。
+3. **概念 / 故事目录额外守规**：`docs/02_CONCEPTS_概念入门/` 与 `docs/09_STORY_修仙学AI/` 受 `scripts/docs/check_beginner_docs.js`（`npm run docs:check-beginner`）约束——禁孤儿页、禁死链、禁无导航死胡同页；`CONCEPT` 前缀须**连号不跳**；故事文档须含 `## 凡人笔记`。
 
 ### 2.6 跨阶段目录 —— 编号段 10–19
 
@@ -144,7 +144,7 @@ node --test scripts/tests/maintainerMapDocCoverage.test.js # 映射表覆盖每�
 - `19_资产/`——文档站 CSS/JS/nav-data（构建产物，非文档）。
 - `.ai/`（仓库根，非 `docs/`）——机器生成的种子文档（`MAP.md`、`CONTEXT.yaml`、`GUARDS.md`、`SKELETON.auto.md`），由 `khy metadata refresh` + pre-commit 钩子确定性维护，**不手改**。
 
-> ⚠️ **2026-09-16 变更**：此前跨阶段目录用 `_` 前缀（`_规范/`、`_报告/`…），与代码树内 `_`（包内私有/草稿）撞义，且 `_` 的排序位置不确定。已统一收敛为编号轴，**不再使用 `_` 前缀**。旧路径已全仓改写（含代码、CI 配置与 `.html` 孪生件）；再遇到 `docs/_xxx` 写法即是漏网，直接改成对应 `NN_中文/`。
+> ⚠ **2026-09-16 变更**：此前跨阶段目录用 `_` 前缀（`_规范/`、`_报告/`…），与代码树内 `_`（包内私有/草稿）撞义，且 `_` 的排序位置不确定。已统一收敛为编号轴，**不再使用 `_` 前缀**。旧路径已全仓改写（含代码、CI 配置与 `.html` 孪生件）；再遇到 `docs/_xxx` 写法即是漏网，直接改成对应 `NN_中文/`。
 
 ### 2.7 校验/构建命令速查
 

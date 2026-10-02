@@ -122,7 +122,7 @@ ld.lld: error: build/agentask.o: unknown file type   （所有 C object 同症�
   只差编译器二进制）：`ld -T linker.ld` 把**全部** object（含此前 Windows 首炸的 `agentask.o`）链成
   有效 `ELF 64-bit LSB executable x86-64`。
 
-**✅ 真实 Windows 机端到端验证（0.1.135）**：用户日志实证
+**✓ 真实 Windows 机端到端验证（0.1.135）**：用户日志实证
 `clang.exe … --target=x86_64-elf … -c vendor/moonbit/runtime.c` →
 `ld.lld.exe -T linker.ld -o build/khy-os.bin <全部 object>`（`unknown file type` 消失）→
 xorriso 产 ISO → Limine 安装 → `✓ 内核 ISO 构建完成 khy-os-kernel.iso`。

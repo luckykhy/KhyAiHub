@@ -188,7 +188,7 @@ git commit -m "chore(docs): 重新生成 html 孪生以对齐 docs-site 生成�
 git status --porcelain -- '*.html' > h1.txt   # 1170 行
 node scripts/docs/build_docs_site.js          # 重跑一次
 git status --porcelain -- '*.html' > h2.txt   # 1170 行
-diff h1.txt h2.txt                            # ✅ 无差异 → 幂等成立
+diff h1.txt h2.txt                            # ✓ 无差异 → 幂等成立
 ```
 
 > 命令用 `node scripts/docs/build_docs_site.js` 而非 `npm run docs:build`：后者前缀了
@@ -199,7 +199,7 @@ diff h1.txt h2.txt                            # ✅ 无差异 → 幂等成立
 
 - `npm run docs:verify` 通过：`源 Markdown 1045 · 生成 HTML 1046 · 校验本地链接 12462 · 全部通过`（时点快照，随文档增删同步增长）。
 - 140 个被删 html 经 `git ls-tree -r HEAD` 交叉验证 **100% 可从 HEAD 恢复**（140/140 命中），无不可逆损失；且逐一核对**对应 `.md` 源文 0/140 仍存在** ⇒ 属**正确回收**而非误删。
-  > ⚠️ 验证方法本身有个坑：`git status --porcelain` 对含**中文/方括号**的路径会加双引号，
+  > ⚠ 验证方法本身有个坑：`git status --porcelain` 对含**中文/方括号**的路径会加双引号，
   > 直接按列切分会假报「84 个不可恢复」。必须先 `sed 's/^"//; s/"$//'` 去引号再做**整串精确匹配**
   > （正是 M6 所警告的路径截断陷阱 —— 这次是它咬了自己的验证）。
 - 生成器确定性成立，**无需修改 `build_docs_site.js`** —— 初稿担心的「生成器非确定性」经实测不存在。
@@ -214,16 +214,16 @@ diff h1.txt h2.txt                            # ✅ 无差异 → 幂等成立
 # 6. 工作树收敛提示（advisory，不阻断）
 #    背景：本钩子前 5 步只看 git diff --cached，看不到未跟踪残留；
 #    历史上因此出现「提交成功但工作树仍脏」的静默累积。
-echo "🧹 工作树残留检查（提示性）..."
+echo "工作树残留检查（提示性）..."
 RESIDUE=$(git status --porcelain --untracked-files=normal \
   | grep -vE '^ M |^ D |^A  |^MM ' || true)
 if [ -n "$RESIDUE" ]; then
   COUNT=$(echo "$RESIDUE" | wc -l)
-  echo "  ⚠️  工作树仍有 $COUNT 项未跟踪/未提交残留（前 10 项）："
+  echo "  ⚠  工作树仍有 $COUNT 项未跟踪/未提交残留（前 10 项）："
   echo "$RESIDUE" | head -10
   echo "  查看详情：npm run git:status:report   # 见 M6"
 else
-  echo "  ✅ 工作树干净"
+  echo "  ✓ 工作树干净"
 fi
 ```
 
@@ -341,10 +341,10 @@ npm run docs:verify            # 校验孪生完整
 
 ### 禁止事项
 
-- ❌ `git add -A` / `git add .` 盲加（历史上曾把 38 MB 的 `publish/` 整包提交）
-- ❌ `git checkout .` / `git clean -fd` 图省事清树
-- ❌ 手改 `.html` 孪生（`DESIGN-DOCS-004` 明令禁止，改了会被 `docs:build` 覆盖）
-- ❌ 用 `--no-verify` 跳过 pre-commit
+- ✗ `git add -A` / `git add .` 盲加（历史上曾把 38 MB 的 `publish/` 整包提交）
+- ✗ `git checkout .` / `git clean -fd` 图省事清树
+- ✗ 手改 `.html` 孪生（`DESIGN-DOCS-004` 明令禁止，改了会被 `docs:build` 覆盖）
+- ✗ 用 `--no-verify` 跳过 pre-commit
 
 ### 提交后（每次）
 
@@ -414,7 +414,7 @@ git check-ignore -v .khy/ .khyos/ NIGHTSHIFT.md .zcode/ .ai/hq/
 |---|---|---|
 | 1 | 落点选择 | 选中 `docs/07_OPS_运维/`（该目录收容运维与使用手册，含 [OPS-MAN-040] Git 入门·main-HEAD-分支-工作树，主题最贴近）。**未另建 `docs/_方案/` 等 `_` 前缀新目录**——`_` 前缀在代码树内表示 PRV 私有，且新建顶层目录须走 [DESIGN-LAY-005] 登记，否则 `check-repo-layout.js` 判 `layer-registry` error |
 | 2 | 编号命名 | 取该目录最大编号 +1（现有最大 `[OPS-MAN-205]`）→ `[OPS-MAN-206] 工作树清洁方案.md`，符合 `NN_` 分类 + `[编号] 标题` 形态 |
-| 3 | 就近索引登记 | 在该目录 `00_INDEX_运维-分类索引.md` 文件清单表补一行（第 208 行）+ 一条 `📌 2026-09-18 新增` 说明 |
+| 3 | 就近索引登记 | 在该目录 `00_INDEX_运维-分类索引.md` 文件清单表补一行（第 208 行）+ 一条 `2026-09-18 新增` 说明 |
 | 4 | 主索引登记 | 在 `docs/00_INDEX_文档索引.md` 补链接（**这一步最容易漏**，`docs-index-complete` 检查会报 error） |
 | 5 | 生成孪生 | `npm run docs:build` → `npm run docs:verify` 全通过；`.md` 与 `.html` **两个孪生文件均已生成**且成对 |
 
@@ -440,11 +440,11 @@ node scripts/ci/check-repo-layout.js --promote=docs-index-first,layer-registry
 - `tmp-cmp` — 根目录临时/事故残留（`root-junk`），须删除或收容进 `.khy/tmp`。
 - `tmp-cmp` — 同时触发 `layer-registry`（顶层目录未登记）。
 
-> ⚠️ **`tmp-cmp` 的机理（实测澄清，易误判）**：该目录**当前是空目录**，且 `.gitignore:215` 已有 `tmp-cmp/` 规则（`git check-ignore` 命中）。它之所以**仍**被判两级 error，是因为 `check-repo-layout.js` 的 `checkLayerRegistry` / `checkRootJunk` 走的是 `fs.readdirSync` **而不是 git**——**忽略规则对它们完全无效**，空目录也照样命中。
+> ⚠ **`tmp-cmp` 的机理（实测澄清，易误判）**：该目录**当前是空目录**，且 `.gitignore:215` 已有 `tmp-cmp/` 规则（`git check-ignore` 命中）。它之所以**仍**被判两级 error，是因为 `check-repo-layout.js` 的 `checkLayerRegistry` / `checkRootJunk` 走的是 `fs.readdirSync` **而不是 git**——**忽略规则对它们完全无效**，空目录也照样命中。
 >
 > 推论（对整改方式有决定性影响）：**光加 `.gitignore` 治不了 `tmp-cmp`，必须真正删掉该目录**（空目录可直接 `rmdir`，无内容损失）。这与 `_方案/` 那类「有内容、需迁移」的处置不同。
 
-> ⚠️ **冲突提示（须先人工裁定，裁定前不得动任一副本）**：本方案 M1 初稿提议把根级 `NIGHTSHIFT.md`/`NIGHTSHIFT.html` 加入 `.gitignore`，但布局守则判定它属「根目录白名单外的说明性文件」，须收容进 `docs/` 对应子目录。
+> ⚠ **冲突提示（须先人工裁定，裁定前不得动任一副本）**：本方案 M1 初稿提议把根级 `NIGHTSHIFT.md`/`NIGHTSHIFT.html` 加入 `.gitignore`，但布局守则判定它属「根目录白名单外的说明性文件」，须收容进 `docs/` 对应子目录。
 >
 > 实测（2026-09-18 复核）：
 >

@@ -17,7 +17,7 @@ khy gateway
 
 然后选择：
 ```
-⚡ 快速配置API厂商 (输入Key即可)
+✱ 快速配置API厂商 (输入Key即可)
 ```
 
 ### 方法2：手动配置（高级用户）
@@ -86,7 +86,7 @@ khy gateway
 
 ```
 ╔══════════════════════════════════════════════════════════════╗
-║           ⚡ 快速配置API厂商                                ║
+║           ✱ 快速配置API厂商                                ║
 ╚══════════════════════════════════════════════════════════════╝
 
   只需输入API Key，即可自动配置：
@@ -119,11 +119,11 @@ khy gateway
 
 系统会自动配置：
 
-- ✅ `{PROVIDER}_API_KEY` - API密钥
-- ✅ `{PROVIDER}_API_ENDPOINT` - API端点
-- ✅ `GATEWAY_API_POOL_SERVICE_MAP` - API池映射
-- ✅ `GATEWAY_API_POOL_DEFAULT_MODEL_MAP` - 默认模型
-- ✅ `PROXY_MODEL_ROUTE_MAP` - 模型路由规则
+- ✓ `{PROVIDER}_API_KEY` - API密钥
+- ✓ `{PROVIDER}_API_ENDPOINT` - API端点
+- ✓ `GATEWAY_API_POOL_SERVICE_MAP` - API池映射
+- ✓ `GATEWAY_API_POOL_DEFAULT_MODEL_MAP` - 默认模型
+- ✓ `PROXY_MODEL_ROUTE_MAP` - 模型路由规则
 
 ## 使用模型
 

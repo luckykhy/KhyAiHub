@@ -30,12 +30,12 @@
 | COM-001 | LOW | 4,592 | 4,592 | console.* 使用（应使用 logger） |
 | DLQ-001 | LOW | 92 | 92 | 重试缺少最大次数/指数退避 |
 | FE-004 | LOW | 51 | 51 | 前端 CSS 设计 token |
-| OPS-002 | MEDIUM | 5 | 0 | HTTP 服务器缺少 SIGTERM 处理 ✅ |
-| OPS-003 | MEDIUM | 19 | 0 | 缺少 /ready 健康端点 ✅ |
-| AUTH-002 | MEDIUM | 4 | 0 | 会话缺少过期配置 ✅ (假阳性) |
-| API-002 | LOW | 1 | 0 | 已弃用 API 缺少标记 ✅ (假阳性) |
-| NOTIFY-001 | LOW | 2 | 0 | Webhook 缺少最大重试次数 ✅ |
-| UPLOAD-001 | MEDIUM | 1 | 0 | 上传处理缺少限制 ✅ |
+| OPS-002 | MEDIUM | 5 | 0 | HTTP 服务器缺少 SIGTERM 处理 ✓ |
+| OPS-003 | MEDIUM | 19 | 0 | 缺少 /ready 健康端点 ✓ |
+| AUTH-002 | MEDIUM | 4 | 0 | 会话缺少过期配置 ✓ (假阳性) |
+| API-002 | LOW | 1 | 0 | 已弃用 API 缺少标记 ✓ (假阳性) |
+| NOTIFY-001 | LOW | 2 | 0 | Webhook 缺少最大重试次数 ✓ |
+| UPLOAD-001 | MEDIUM | 1 | 0 | 上传处理缺少限制 ✓ |
 | GW-002 | MEDIUM | 27 | 27 | AI 网关缺少降级链 |
 | A11Y-001 | LOW | 15 | 15 | 前端无障碍访问 |
 | PROMPT-001 | LOW | 42 | 42 | Prompt 缺少版本标记 |
@@ -49,13 +49,13 @@
 
 | 任务 | 规则 | 修改文件 | 状态 |
 |------|------|----------|------|
-| OPS-002 SIGTERM handler | OPS-002 | bridgeServer.js, aiManagementServer.js, mcpHttpServer.js, webRelayAdapter.js, proxyServer.js, traffic-stream.js | ✅ |
-| OPS-002 drain + DB close | OPS-002 | daemonEntry.js | ✅ |
-| OPS-003 /ready endpoint | OPS-003 | aiManagementServer.js, daemonEntry.js | ✅ |
-| AUTH-002 false positive | AUTH-002 | check-auth-session.js | ✅ |
-| API-002 false positive | API-002 | check-api-contracts.js | ✅ |
-| NOTIFY-001 webhook maxRetries | NOTIFY-001 | aiManagementGatewayAdmin.js, aiManagementServer.js | ✅ |
-| UPLOAD-001 virus scan hook | UPLOAD-001 | aiManagementServer.js | ✅ |
+| OPS-002 SIGTERM handler | OPS-002 | bridgeServer.js, aiManagementServer.js, mcpHttpServer.js, webRelayAdapter.js, proxyServer.js, traffic-stream.js | ✓ |
+| OPS-002 drain + DB close | OPS-002 | daemonEntry.js | ✓ |
+| OPS-003 /ready endpoint | OPS-003 | aiManagementServer.js, daemonEntry.js | ✓ |
+| AUTH-002 false positive | AUTH-002 | check-auth-session.js | ✓ |
+| API-002 false positive | API-002 | check-api-contracts.js | ✓ |
+| NOTIFY-001 webhook maxRetries | NOTIFY-001 | aiManagementGatewayAdmin.js, aiManagementServer.js | ✓ |
+| UPLOAD-001 virus scan hook | UPLOAD-001 | aiManagementServer.js | ✓ |
 
 ### 修改文件清单
 
@@ -78,16 +78,16 @@
 
 ## 清理路线图
 
-### Phase 1: 高优先级 ✅ 完成
+### Phase 1: 高优先级 ✓ 完成
 
 | 规则 | 发现数 | 清理策略 | 状态 |
 |------|--------|----------|------|
-| OPS-002 | 5 MEDIUM | 在 aiManagementServer.js, daemonEntry.js 等添加 SIGTERM handler | ✅ 完成 |
-| OPS-003 | 19 MEDIUM | 在 aiManagementServer.js, daemonEntry.js 添加 /ready 端点 | ✅ 完成 |
-| AUTH-002 | 4 MEDIUM | 修复检测逻辑假阳性 | ✅ 完成 |
-| API-002 | 1 LOW | 修复检测逻辑假阳性 | ✅ 完成 |
-| NOTIFY-001 | 2 LOW | 在 aiManagementGatewayAdmin.js, aiManagementServer.js 添加 webhook maxRetries | ✅ 完成 |
-| UPLOAD-001 | 1 MEDIUM | 在 aiManagementServer.js 添加 virus scan hook | ✅ 完成 |
+| OPS-002 | 5 MEDIUM | 在 aiManagementServer.js, daemonEntry.js 等添加 SIGTERM handler | ✓ 完成 |
+| OPS-003 | 19 MEDIUM | 在 aiManagementServer.js, daemonEntry.js 添加 /ready 端点 | ✓ 完成 |
+| AUTH-002 | 4 MEDIUM | 修复检测逻辑假阳性 | ✓ 完成 |
+| API-002 | 1 LOW | 修复检测逻辑假阳性 | ✓ 完成 |
+| NOTIFY-001 | 2 LOW | 在 aiManagementGatewayAdmin.js, aiManagementServer.js 添加 webhook maxRetries | ✓ 完成 |
+| UPLOAD-001 | 1 MEDIUM | 在 aiManagementServer.js 添加 virus scan hook | ✓ 完成 |
 
 ### Phase 2: 中优先级（建议 2-4 周）
 

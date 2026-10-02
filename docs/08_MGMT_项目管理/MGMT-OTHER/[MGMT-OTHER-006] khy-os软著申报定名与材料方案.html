@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -31,6 +31,7 @@
 <h2 id="一-定名-现行口径">一、定名（现行口径）<a class="anchor" href="#一-定名-现行口径" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>申请表字段</th><th>填法</th></tr></thead><tbody><tr><td>软件全称</td><td>基于执行轨迹记录与链路校验技术的AI助手平台</td></tr><tr><td>软件简称</td><td><strong>留空</strong>（任何精简都会引入全称之外的字；不得填「无」）</td></tr><tr><td>版本号</td><td><strong><code>V1.2.0</code></strong>（沿用仓库当前真实版本；<strong>仅在明示要求时才修改</strong>）</td></tr><tr><td>软件作品说明</td><td>原创软件</td></tr><tr><td>开发方式</td><td>单独开发</td></tr><tr><td>权利取得方式</td><td>原始取得</td></tr><tr><td>权利范围</td><td>全部权利</td></tr><tr><td>发表状态</td><td>已发表（PyPI + npm 公开分发），首次发表日期填首个 wheel 的上传日</td></tr></tbody></table>
 <p>全称 22 字，落在「基于〔技术手段〕的〔作用对象〕〔后缀〕」这一已验证句式内。<br>全称栏<strong>不写版本号</strong>；证书连排显示为《基于执行轨迹记录与链路校验技术的AI助手平台》V1.2.0，<br>媒体报道的「名称V1.0」同样是两栏连排的产物，不是名称本身含版本号。</p>
+<p><strong>本件客体 = 平台底座本身</strong>（<code>kernel/</code> <code>platform/</code> <code>services/</code> <code>apps/</code> <code>extensions/</code> 与 CLI/网关/轨迹链路校验子系统）。<br><strong>khyquant 不在此件内</strong>：它是<strong>独立项目</strong>（人 2026-09-28 明示），只是<strong>连接</strong> Khy OS 使用，<br>本仓 <code>software/khyquant/</code> 与 <code>khy-quant</code> 模块是它随平台分发/接入的载体（打包事实，不是著作权归属）。<br>因此本件的名称、界面标题与 60 页选材<strong>均不要求覆盖 khyquant</strong>；<br><code>software/khyquant/frontend/**</code> 里残留的产品名也不构成本件的名称一致性障碍（见 §九 与 <code>递交核对表.md</code> §三）。</p>
 <h3 id="名称里每个词的代码载体">名称里每个词的代码载体<a class="anchor" href="#名称里每个词的代码载体" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>名称片段</th><th>载体</th><th>说明</th></tr></thead><tbody><tr><td>执行轨迹记录</td><td><code>services/sessionPersistence.js</code>（持久化会话）、<code>services/auditTrajectory/index.js</code>（外部质检通道）、<code>.khy/trajectory_replay/</code></td><td>逐会话落盘，非一次性日志</td></tr><tr><td>链路校验技术</td><td><code>services/sessionPersistence.js:625</code> <code>verifyTraceChain(sessionId)</code></td><td>返回 <code>ok</code> / <code>length</code> / <code>brokenAt</code> / <code>available</code>，是<strong>算出来的</strong>，不是配置项</td></tr><tr><td>链路校验（溯源侧）</td><td><code>services/domain/trajectory/trajectoryProvenance/</code>（8 文件 1176 行：<code>traceChain.js</code>、<code>claimReconciler.js</code>、<code>claimNegation.js</code>、<code>quarantinePolicy.js</code>、<code>khyTrace.js</code> 等）</td><td>信任级与断言核对，独立子系统</td></tr><tr><td>AI 助手</td><td><code>bin/khy.js</code> + <code>cli/repl.js</code>（对话入口）、<code>services/gateway/aiGateway.js</code></td><td>面向用户的助手形态</td></tr><tr><td>呈现面</td><td><code>cli/handlers/trace.js:110</code> <code>traceList()</code>、<code>:125</code> 渲染 <code>完整(n)</code> / <code>断链@#k</code> / <code>无链</code></td><td>截图出处</td></tr></tbody></table>
 <h2 id="二-定名口径-三条-后续改名按这三条判">二、定名口径（三条，后续改名按这三条判）<a class="anchor" href="#二-定名口径-三条-后续改名按这三条判" aria-label="锚点">#</a></h2>
@@ -72,7 +73,7 @@
 <table><thead><tr><th>位置</th><th>字面量</th><th>实际语义</th></tr></thead><tbody><tr><td><code>src/bootstrap/migrations.js:81</code> <code>:92</code></td><td><code>'1.1.0'</code> <code>'1.2.0'</code></td><td>数据库迁移序号（<code>:92</code> 与应用版本同号纯属巧合，仍不得据此改动）</td></tr><tr><td><code>src/cli/onboarding.js:75</code></td><td><code>'2.0.0'</code></td><td>onboarding 记录结构版本</td></tr><tr><td><code>src/routes/freeLLM.js:54</code></td><td><code>'2.0.0-free'</code></td><td>接口协议版本标识</td></tr><tr><td><code>src/services/mdEditorRegister.js:31</code></td><td><code>SENTINEL_VERSION = '2.0.0'</code></td><td>注册哨兵值</td></tr></tbody></table>
 <h2 id="五-截图清单-已实测的命令">五、截图清单（已实测的命令）<a class="anchor" href="#五-截图清单-已实测的命令" aria-label="锚点">#</a></h2>
 <p>2026-09-28 用 <code>node bin/khy.js &lt;cmd&gt;</code> 实跑，结论如下：</p>
-<table><thead><tr><th>命令</th><th>实测输出</th><th>能否作为材料</th></tr></thead><tbody><tr><td><code>khy trajectory list</code></td><td>轨迹会话列表：会话ID·时间·在做什么·模型·条数·链「<code>完整(54)</code>」，<strong>含真实数据</strong></td><td>✅ 主证据，一张图覆盖「记录」与「校验」两个词</td></tr><tr><td><code>khy gateway status</code></td><td>并行探测 7/17 通道，表含适配器/类型/状态/连通/协议</td><td>✅ 可作辅助图（证明助手接的是真实模型服务）</td></tr><tr><td><code>khy status</code></td><td>仅 4 行（Provider / Context / Requests）</td><td>⚠ 太薄，只配当辅助</td></tr><tr><td><code>khy history</code></td><td><code>暂无保存的对话记录</code></td><td>❌ <strong>禁用</strong>——空表截图等于没有证据</td></tr></tbody></table>
+<table><thead><tr><th>命令</th><th>实测输出</th><th>能否作为材料</th></tr></thead><tbody><tr><td><code>khy trajectory list</code></td><td>轨迹会话列表：会话ID·时间·在做什么·模型·条数·链「<code>完整(54)</code>」，<strong>含真实数据</strong></td><td>✓ 主证据，一张图覆盖「记录」与「校验」两个词</td></tr><tr><td><code>khy gateway status</code></td><td>并行探测 7/17 通道，表含适配器/类型/状态/连通/协议</td><td>✓ 可作辅助图（证明助手接的是真实模型服务）</td></tr><tr><td><code>khy status</code></td><td>仅 4 行（Provider / Context / Requests）</td><td>⚠ 太薄，只配当辅助</td></tr><tr><td><code>khy history</code></td><td><code>暂无保存的对话记录</code></td><td>✗ <strong>禁用</strong>——空表截图等于没有证据</td></tr></tbody></table>
 <p>纪律：每张图必须有真实数据且<strong>不得有 PS、明显剪切痕迹</strong>（005 §5.2）。<br>若需要「对话记录」类画面，先跑一次真实对话让其落盘再截，<strong>不得手工造 JSON 凑数据</strong>。</p>
 <h2 id="六-鉴别材料与说明书">六、鉴别材料与说明书<a class="anchor" href="#六-鉴别材料与说明书" aria-label="锚点">#</a></h2>
 <ul><li><strong>源程序</strong>：超 3000 行取前 30 页 + 后 30 页，每页 50 行，末页须为完整模块结尾；</li></ul>
@@ -93,11 +94,11 @@
 <p>登记完成后产品按 <code>PROCESS-005</code> 正常迭代与 bump，<strong>不影响这张证效力</strong>。<br>因版本号变更通道只能增减「V」（005 §九），<code>1.3.0</code> / <code>2.0.0</code> 一律<strong>另案新报</strong>，不走变更。</p>
 <p>补报触发条件（不要为报而报）：有实质性新功能，且该功能未被已提交的源程序覆盖。</p>
 <h2 id="九-待办-khyquant-第二件">九、待办：khyquant 第二件<a class="anchor" href="#九-待办-khyquant-第二件" aria-label="锚点">#</a></h2>
-<p>量化交易终端作为独立客体另行申报，名称<strong>未定稿</strong>。版本号与 G1 同轨，沿用届时真实版本。<br>候选（须先按第二节的三条口径验证演示成本）：</p>
+<p>量化交易终端是<strong>独立项目</strong>（人 2026-09-28 明示：它只是连接 Khy OS 使用，不是 Khy OS 的内置组成），<br>因此它作为<strong>独立客体、独立著作权主体</strong>另行申报，与本件互不覆盖。名称<strong>未定稿</strong>。版本号与 G1 同轨，沿用届时真实版本。<br>候选（须先按第二节的三条口径验证演示成本）：</p>
 <ul><li><code>基于策略回测引擎的量化交易终端管理软件</code></li><li><code>Khy量化策略回测与交易终端管理软件</code></li></ul>
 <p>对照样本：<code>固收量化数据仓库系统V2.0</code>（东方证券）、<code>顶点自营极速柜台系统V1.0</code>（顶点软件）、<br><code>东方财富选股语言函数化转换软件V1.0</code>。金融类申报另需确认是否触发资质要求（005 §二与 §5.4）。</p>
 <h2 id="变更记录">变更记录<a class="anchor" href="#变更记录" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>日期</th><th>变更</th></tr></thead><tbody><tr><td>2026-09-28</td><td>首版定名「基于多供应商大模型的智能体任务编排与统一调度平台」；版本号曾论证为 V1.0.0</td></tr><tr><td>2026-09-28</td><td>依已登记样本更正三处流传说法（版本号普遍带 / 可写操作系统 / AI 类长名为主）</td></tr><tr><td>2026-09-28</td><td>改为「基于多模型适配技术…」句式，随后因「任务编排」演示成本高、适配软件感弱而弃</td></tr><tr><td>2026-09-28</td><td><strong>现行</strong>：<code>基于执行轨迹记录与链路校验技术的AI助手平台</code>；版本号<strong>沿用 V1.2.0</strong>，仅在明示时修改</td></tr><tr><td>2026-09-28</td><td>递交件独立到 <code>evidence/06_申报材料/</code>；发现仓外 2026-09-20 的 60 页选材不含新名称载体（§六 ⚠），字段真源 <code>registration.json</code> 仍是旧名旧版</td></tr></tbody></table>
+<table><thead><tr><th>日期</th><th>变更</th></tr></thead><tbody><tr><td>2026-09-28</td><td>首版定名「基于多供应商大模型的智能体任务编排与统一调度平台」；版本号曾论证为 V1.0.0</td></tr><tr><td>2026-09-28</td><td>依已登记样本更正三处流传说法（版本号普遍带 / 可写操作系统 / AI 类长名为主）</td></tr><tr><td>2026-09-28</td><td>改为「基于多模型适配技术…」句式，随后因「任务编排」演示成本高、适配软件感弱而弃</td></tr><tr><td>2026-09-28</td><td><strong>现行</strong>：<code>基于执行轨迹记录与链路校验技术的AI助手平台</code>；版本号<strong>沿用 V1.2.0</strong>，仅在明示时修改</td></tr><tr><td>2026-09-28</td><td>递交件独立到 <code>evidence/06_申报材料/</code>；发现仓外 2026-09-20 的 60 页选材不含新名称载体（§六 ⚠），字段真源 <code>registration.json</code> 仍是旧名旧版</td></tr><tr><td>2026-09-28</td><td><strong>客体边界订正</strong>：人明示 khyquant 是<strong>独立项目</strong>、只连接 Khy OS 使用（不是「内置默认应用」）。§一 增「本件客体 = 平台底座」段、§九 改为独立主体另案申报；<code>software/khyquant/frontend/</code> 的 3 处界面标题随之移出本件的不一致清单（<code>check:copyright</code> 由 10 处降为 9 处：另含 <code>pyproject.toml</code> 已补登记全称 1 处、Chromium 许可页误报 1 处，本件待改 5 处标题）</td></tr></tbody></table>
 <h2 id="附-来源">附：来源<a class="anchor" href="#附-来源" aria-label="锚点">#</a></h2>
 <ul><li>中亦科技《基于 Coze 智能体的 AI 助手软件》（搜狐）—— https://www.sohu.com/a/1075003318_115377</li><li>彩讯股份大模型相关软件著作权登记（网易财经）—— https://c.m.163.com/news/a/JV88VADB051984TV.html?spss=expand</li><li>并行科技《并行大模型网关平台》（证券之星）—— https://stock.stockstar.com/RB2026090300002053.shtml</li><li>中创股份《中创企业智能体管理开发平台》（证券之星）—— https://wap.stockstar.com/detail/RB2026062500001567</li><li>久远银海《民政业务AI助手软件》（东方财富）—— https://caifuhao.eastmoney.com/news/20260801022335767224280</li><li>海光信息《verilog real 电源信号自动命令行配置程序软件》（搜狐）—— https://m.sohu.com/a/1074032593_115377</li><li>东方证券《固收量化数据仓库系统》（证券之星）—— https://stock.stockstar.com/RB2026041900000569.shtml</li><li>顶点软件《顶点自营极速柜台系统》（东方财富）—— https://caifuhao.eastmoney.com/news/20260820024835184415190</li><li>首都在线《GpuGeek大模型服务平台》（网易）—— https://www.163.com/dy/article/L1P0EE20051984TV.html</li><li>恒生电子新增软件著作权（新浪财经）—— https://cj.sina.com.cn/articles/view/1850649324/6e4eaaec02001u3zo</li><li>版本号格式与发表状态字段：阿里云·软著申请材料填写限制</li></ul>
 <p>—— https://help.aliyun.com/zh/copyright-and-patent-service/software-copyright-registration/getting-started/limits-on-information-filling</p>

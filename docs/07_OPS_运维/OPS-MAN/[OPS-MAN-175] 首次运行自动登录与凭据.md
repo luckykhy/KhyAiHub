@@ -61,7 +61,7 @@ node -e "console.log(require('./services/backend/src/services/credentialGenerato
 
 CLI 在登录提示里也会打印这个路径。
 
-> ⚠️ 这个文件里是**明文密码**。它属于机器本地凭据，不要复制到别的机器、不要进版本库（`.khy/` 已在 `.gitignore` 内）、不要贴进 issue 或聊天记录。换机器时的正确做法是让新机器自己生成一份（第四节）。
+> ⚠ 这个文件里是**明文密码**。它属于机器本地凭据，不要复制到别的机器、不要进版本库（`.khy/` 已在 `.gitignore` 内）、不要贴进 issue 或聊天记录。换机器时的正确做法是让新机器自己生成一份（第四节）。
 
 ---
 

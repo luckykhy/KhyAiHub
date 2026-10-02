@@ -29,7 +29,7 @@ khy backup prune              # 按保留策略清理
 
 中文直达（`cli/aliases.js`）：`khy 备份` / `数据备份`、`备份列表`、`备份状态`、`备份检查` / `校验备份`、`恢复数据` / `数据恢复` / `还原数据`、`清理备份` / `备份清理`。
 
-**⚠️ `khy restore` 不是数据恢复。** 顶层 `khy restore` / `khy restore-source`（中文 `还原` / `完整还原` / `还原项目`）恢复的是**加密源码包**，归 `cli/handlers/publish.js`，早于本子系统存在。数据恢复只有一条路：`khy backup restore`。这个命名不是偏好，是既有命令占位的结果。
+**⚠ `khy restore` 不是数据恢复。** 顶层 `khy restore` / `khy restore-source`（中文 `还原` / `完整还原` / `还原项目`）恢复的是**加密源码包**，归 `cli/handlers/publish.js`，早于本子系统存在。数据恢复只有一条路：`khy backup restore`。这个命名不是偏好，是既有命令占位的结果。
 
 ---
 

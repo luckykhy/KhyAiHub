@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -115,11 +115,11 @@ git commit -m <span class="hljs-string">&quot;chore(docs): 重新生成 html 孪
 <pre><code class="language-bash">git status --porcelain -- <span class="hljs-string">&#x27;*.html&#x27;</span> &gt; h1.txt   <span class="hljs-comment"># 1170 行</span>
 node scripts/docs/build_docs_site.js          <span class="hljs-comment"># 重跑一次</span>
 git status --porcelain -- <span class="hljs-string">&#x27;*.html&#x27;</span> &gt; h2.txt   <span class="hljs-comment"># 1170 行</span>
-diff h1.txt h2.txt                            <span class="hljs-comment"># ✅ 无差异 → 幂等成立</span></code></pre>
+diff h1.txt h2.txt                            <span class="hljs-comment"># ✓ 无差异 → 幂等成立</span></code></pre>
 <blockquote><p>命令用 <code>node scripts/docs/build_docs_site.js</code> 而非 <code>npm run docs:build</code>：后者前缀了<br><code>ensure-mermaid.mjs</code>，会<strong>先联网</strong>拉取渲染依赖。验证<strong>生成器本身</strong>的确定性时不需要它，<br>直跑可离线、可复现（此即「判据必须回到被验证对象本身」的落实）。</p></blockquote>
 <p><strong>其余实测确认</strong>：</p>
 <ul><li><code>npm run docs:verify</code> 通过：<code>源 Markdown 1045 · 生成 HTML 1046 · 校验本地链接 12462 · 全部通过</code>（时点快照，随文档增删同步增长）。</li><li>140 个被删 html 经 <code>git ls-tree -r HEAD</code> 交叉验证 <strong>100% 可从 HEAD 恢复</strong>（140/140 命中），无不可逆损失；且逐一核对<strong>对应 <code>.md</code> 源文 0/140 仍存在</strong> ⇒ 属<strong>正确回收</strong>而非误删。</li></ul>
-<blockquote><p>⚠️ 验证方法本身有个坑：<code>git status --porcelain</code> 对含<strong>中文/方括号</strong>的路径会加双引号，<br>直接按列切分会假报「84 个不可恢复」。必须先 <code>sed 's/^&quot;//; s/&quot;$//'</code> 去引号再做<strong>整串精确匹配</strong><br>（正是 M6 所警告的路径截断陷阱 —— 这次是它咬了自己的验证）。</p></blockquote>
+<blockquote><p>⚠ 验证方法本身有个坑：<code>git status --porcelain</code> 对含<strong>中文/方括号</strong>的路径会加双引号，<br>直接按列切分会假报「84 个不可恢复」。必须先 <code>sed 's/^&quot;//; s/&quot;$//'</code> 去引号再做<strong>整串精确匹配</strong><br>（正是 M6 所警告的路径截断陷阱 —— 这次是它咬了自己的验证）。</p></blockquote>
 <ul><li>生成器确定性成立，<strong>无需修改 <code>build_docs_site.js</code></strong> —— 初稿担心的「生成器非确定性」经实测不存在。</li></ul>
 <p><strong>M1 × M3 交互（新发现，两措施不可各自独立评估）</strong>：新生成的 473 个孪生里，<strong>46 个落在运行时目录</strong>（<code>.ai/hq/prompts/**</code> 29 个、<code>.workbuddy-ai/memory/**</code> 7 个、其余分散）——它们正是 <strong>M1 要忽略的路径</strong>。若不先落 M1，生成器会持续把这些机器本地文件编译成 html 并计入 <code>??</code>，使 M3 的「收敛」永不稳定。故<strong>实施顺序 M1 必须早于 M3</strong>（与第六节顺序图一致，此处补明机理）。</p>
 <h3 id="m4-补-pre-commit-的-工作树收敛-检查-解决根因-4">M4 · 补 pre-commit 的「工作树收敛」检查（解决根因 4）<a class="anchor" href="#m4-补-pre-commit-的-工作树收敛-检查-解决根因-4" aria-label="锚点">#</a></h3>
@@ -127,16 +127,16 @@ diff h1.txt h2.txt                            <span class="hljs-comment"># ✅ �
 <pre><code class="language-bash"><span class="hljs-comment"># 6. 工作树收敛提示（advisory，不阻断）</span>
 <span class="hljs-comment">#    背景：本钩子前 5 步只看 git diff --cached，看不到未跟踪残留；</span>
 <span class="hljs-comment">#    历史上因此出现「提交成功但工作树仍脏」的静默累积。</span>
-<span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;🧹 工作树残留检查（提示性）...&quot;</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;工作树残留检查（提示性）...&quot;</span>
 RESIDUE=$(git status --porcelain --untracked-files=normal \
   | grep -vE <span class="hljs-string">&#x27;^ M |^ D |^A  |^MM &#x27;</span> || <span class="hljs-literal">true</span>)
 <span class="hljs-keyword">if</span> [ -n <span class="hljs-string">&quot;<span class="hljs-variable">$RESIDUE</span>&quot;</span> ]; <span class="hljs-keyword">then</span>
   COUNT=$(<span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;<span class="hljs-variable">$RESIDUE</span>&quot;</span> | <span class="hljs-built_in">wc</span> -l)
-  <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;  ⚠️  工作树仍有 <span class="hljs-variable">$COUNT</span> 项未跟踪/未提交残留（前 10 项）：&quot;</span>
+  <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;  ⚠  工作树仍有 <span class="hljs-variable">$COUNT</span> 项未跟踪/未提交残留（前 10 项）：&quot;</span>
   <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;<span class="hljs-variable">$RESIDUE</span>&quot;</span> | <span class="hljs-built_in">head</span> -10
   <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;  查看详情：npm run git:status:report   # 见 M6&quot;</span>
 <span class="hljs-keyword">else</span>
-  <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;  ✅ 工作树干净&quot;</span>
+  <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;  ✓ 工作树干净&quot;</span>
 <span class="hljs-keyword">fi</span></code></pre>
 <p><strong>为什么是 advisory 而非硬门</strong>：<code>services/backend</code> 有 1400+ 文件在途，硬门会立刻挡住所有提交，反而逼人用 <code>--no-verify</code>，让整套守卫失效。</p>
 <h3 id="m5-定位并修掉-裸-markdown-输出-脚本-防根因-3-复发">M5 · 定位并修掉「裸 Markdown 输出」脚本（防根因 3 复发）<a class="anchor" href="#m5-定位并修掉-裸-markdown-输出-脚本-防根因-3-复发" aria-label="锚点">#</a></h3>
@@ -189,7 +189,7 @@ npm run docs:build             <span class="hljs-comment"># 改了任何 .md 后
 npm run docs:verify            <span class="hljs-comment"># 校验孪生完整</span></code></pre>
 <p><strong>铁律</strong>：改了 <code>.md</code> 必须同提交更新的 <code>.html</code> 孪生，否则 <code>LAY-5</code> 红灯。</p>
 <h3 id="禁止事项">禁止事项<a class="anchor" href="#禁止事项" aria-label="锚点">#</a></h3>
-<ul><li>❌ <code>git add -A</code> / <code>git add .</code> 盲加（历史上曾把 38 MB 的 <code>publish/</code> 整包提交）</li><li>❌ <code>git checkout .</code> / <code>git clean -fd</code> 图省事清树</li><li>❌ 手改 <code>.html</code> 孪生（<code>DESIGN-DOCS-004</code> 明令禁止，改了会被 <code>docs:build</code> 覆盖）</li><li>❌ 用 <code>--no-verify</code> 跳过 pre-commit</li></ul>
+<ul><li>✗ <code>git add -A</code> / <code>git add .</code> 盲加（历史上曾把 38 MB 的 <code>publish/</code> 整包提交）</li><li>✗ <code>git checkout .</code> / <code>git clean -fd</code> 图省事清树</li><li>✗ 手改 <code>.html</code> 孪生（<code>DESIGN-DOCS-004</code> 明令禁止，改了会被 <code>docs:build</code> 覆盖）</li><li>✗ 用 <code>--no-verify</code> 跳过 pre-commit</li></ul>
 <h3 id="提交后-每次">提交后（每次）<a class="anchor" href="#提交后-每次" aria-label="锚点">#</a></h3>
 <p>确认 <code>git status</code> 收敛。若仍有 L1 残留属正常（在途工作未完成）；若出现<strong>新增的 L2/L3/L4</strong>，说明防复发设施失效，按 <code>RULES-REGISTRY.json</code> 的 <code>LAYOUT-006</code> 排查。</p>
 <h3 id="每日巡检">每日巡检<a class="anchor" href="#每日巡检" aria-label="锚点">#</a></h3>
@@ -224,7 +224,7 @@ git check-ignore -v .khy/ .khyos/ NIGHTSHIFT.md .zcode/ .ai/hq/</code></pre>
 <hr>
 <h2 id="附录-b-本方案文档自身的落位与执行记录">附录 B：本方案文档自身的落位与执行记录<a class="anchor" href="#附录-b-本方案文档自身的落位与执行记录" aria-label="锚点">#</a></h2>
 <p>本方案在撰写过程中<strong>已按仓库既有规范完成自身落位</strong>，可作为「新文档该怎么放」的完整<strong>活样例</strong>：</p>
-<table><thead><tr><th>步骤</th><th>动作</th><th>结果</th></tr></thead><tbody><tr><td>1</td><td>落点选择</td><td>选中 <code>docs/07_OPS_运维/</code>（该目录收容运维与使用手册，含 [OPS-MAN-040] Git 入门·main-HEAD-分支-工作树，主题最贴近）。<strong>未另建 <code>docs/_方案/</code> 等 <code>_</code> 前缀新目录</strong>——<code>_</code> 前缀在代码树内表示 PRV 私有，且新建顶层目录须走 [DESIGN-LAY-005] 登记，否则 <code>check-repo-layout.js</code> 判 <code>layer-registry</code> error</td></tr><tr><td>2</td><td>编号命名</td><td>取该目录最大编号 +1（现有最大 <code>[OPS-MAN-205]</code>）→ <code>[OPS-MAN-206] 工作树清洁方案.md</code>，符合 <code>NN_</code> 分类 + <code>[编号] 标题</code> 形态</td></tr><tr><td>3</td><td>就近索引登记</td><td>在该目录 <code>00_INDEX_运维-分类索引.md</code> 文件清单表补一行（第 208 行）+ 一条 <code>📌 2026-09-18 新增</code> 说明</td></tr><tr><td>4</td><td>主索引登记</td><td>在 <code>docs/00_INDEX_文档索引.md</code> 补链接（<strong>这一步最容易漏</strong>，<code>docs-index-complete</code> 检查会报 error）</td></tr><tr><td>5</td><td>生成孪生</td><td><code>npm run docs:build</code> → <code>npm run docs:verify</code> 全通过；<code>.md</code> 与 <code>.html</code> <strong>两个孪生文件均已生成</strong>且成对</td></tr></tbody></table>
+<table><thead><tr><th>步骤</th><th>动作</th><th>结果</th></tr></thead><tbody><tr><td>1</td><td>落点选择</td><td>选中 <code>docs/07_OPS_运维/</code>（该目录收容运维与使用手册，含 [OPS-MAN-040] Git 入门·main-HEAD-分支-工作树，主题最贴近）。<strong>未另建 <code>docs/_方案/</code> 等 <code>_</code> 前缀新目录</strong>——<code>_</code> 前缀在代码树内表示 PRV 私有，且新建顶层目录须走 [DESIGN-LAY-005] 登记，否则 <code>check-repo-layout.js</code> 判 <code>layer-registry</code> error</td></tr><tr><td>2</td><td>编号命名</td><td>取该目录最大编号 +1（现有最大 <code>[OPS-MAN-205]</code>）→ <code>[OPS-MAN-206] 工作树清洁方案.md</code>，符合 <code>NN_</code> 分类 + <code>[编号] 标题</code> 形态</td></tr><tr><td>3</td><td>就近索引登记</td><td>在该目录 <code>00_INDEX_运维-分类索引.md</code> 文件清单表补一行（第 208 行）+ 一条 <code>2026-09-18 新增</code> 说明</td></tr><tr><td>4</td><td>主索引登记</td><td>在 <code>docs/00_INDEX_文档索引.md</code> 补链接（<strong>这一步最容易漏</strong>，<code>docs-index-complete</code> 检查会报 error）</td></tr><tr><td>5</td><td>生成孪生</td><td><code>npm run docs:build</code> → <code>npm run docs:verify</code> 全通过；<code>.md</code> 与 <code>.html</code> <strong>两个孪生文件均已生成</strong>且成对</td></tr></tbody></table>
 <p><strong>落位守卫验证（实测，非自述）</strong>：</p>
 <pre><code class="language-bash">node scripts/ci/check-repo-layout.js --promote=docs-index-first,layer-registry</code></pre>
 <p>结果：<strong>本文件（<code>[OPS-MAN-206] 工作树清洁方案.md</code>）未被报任何 <code>layer-registry</code> 或 <code>docs-index-complete</code> 错误</strong>。逐项核对：</p>
@@ -232,9 +232,9 @@ git check-ignore -v .khy/ .khyos/ NIGHTSHIFT.md .zcode/ .ai/hq/</code></pre>
 <p>即需求中「补后该项由 2 降至 1，剩余 1 项为既有无关文档」<strong>已实测确认成立</strong>：本文件登记前后差 1，残留的 1 项确为 08 阶段的既有文档，与本方案无关。</p>
 <p><strong>顺带发现（供 [LAYOUT-004] 巡检参考）</strong>：同一次运行中，守卫另报了 3 类<strong>既有</strong>根目录违规（非本方案引入）：</p>
 <ul><li><code>NIGHTSHIFT.md</code> — 根目录白名单外的说明性文件（<code>root-whitelist</code>），须收容进 <code>docs/15_维护记录/</code>（<strong>不是</strong>忽略，见下方冲突提示）。</li><li><code>tmp-cmp</code> — 根目录临时/事故残留（<code>root-junk</code>），须删除或收容进 <code>.khy/tmp</code>。</li><li><code>tmp-cmp</code> — 同时触发 <code>layer-registry</code>（顶层目录未登记）。</li></ul>
-<blockquote><p>⚠️ <strong><code>tmp-cmp</code> 的机理（实测澄清，易误判）</strong>：该目录<strong>当前是空目录</strong>，且 <code>.gitignore:215</code> 已有 <code>tmp-cmp/</code> 规则（<code>git check-ignore</code> 命中）。它之所以<strong>仍</strong>被判两级 error，是因为 <code>check-repo-layout.js</code> 的 <code>checkLayerRegistry</code> / <code>checkRootJunk</code> 走的是 <code>fs.readdirSync</code> <strong>而不是 git</strong>——<strong>忽略规则对它们完全无效</strong>，空目录也照样命中。</p>
+<blockquote><p>⚠ <strong><code>tmp-cmp</code> 的机理（实测澄清，易误判）</strong>：该目录<strong>当前是空目录</strong>，且 <code>.gitignore:215</code> 已有 <code>tmp-cmp/</code> 规则（<code>git check-ignore</code> 命中）。它之所以<strong>仍</strong>被判两级 error，是因为 <code>check-repo-layout.js</code> 的 <code>checkLayerRegistry</code> / <code>checkRootJunk</code> 走的是 <code>fs.readdirSync</code> <strong>而不是 git</strong>——<strong>忽略规则对它们完全无效</strong>，空目录也照样命中。</p>
 <p>推论（对整改方式有决定性影响）：<strong>光加 <code>.gitignore</code> 治不了 <code>tmp-cmp</code>，必须真正删掉该目录</strong>（空目录可直接 <code>rmdir</code>，无内容损失）。这与 <code>_方案/</code> 那类「有内容、需迁移」的处置不同。</p></blockquote>
-<blockquote><p>⚠️ <strong>冲突提示（须先人工裁定，裁定前不得动任一副本）</strong>：本方案 M1 初稿提议把根级 <code>NIGHTSHIFT.md</code>/<code>NIGHTSHIFT.html</code> 加入 <code>.gitignore</code>，但布局守则判定它属「根目录白名单外的说明性文件」，须收容进 <code>docs/</code> 对应子目录。</p>
+<blockquote><p>⚠ <strong>冲突提示（须先人工裁定，裁定前不得动任一副本）</strong>：本方案 M1 初稿提议把根级 <code>NIGHTSHIFT.md</code>/<code>NIGHTSHIFT.html</code> 加入 <code>.gitignore</code>，但布局守则判定它属「根目录白名单外的说明性文件」，须收容进 <code>docs/</code> 对应子目录。</p>
 <p>实测（2026-09-18 复核）：</p>
 <table><thead><tr><th>事实</th><th>实测值</th></tr></thead><tbody><tr><td>根级 <code>NIGHTSHIFT.md</code></td><td>存在，<strong>169</strong> 行</td></tr><tr><td><code>docs/15_维护记录/其它维护记录/NIGHTSHIFT.md</code></td><td>存在，<strong>174</strong> 行</td></tr><tr><td>两份内容</td><td><strong>不同</strong>（<code>diff</code> 确认）</td></tr><tr><td>两份 git 跟踪状态</td><td><strong>均未跟踪</strong>（<code>git ls-files</code> 对四个路径均为空）</td></tr></tbody></table>
 <p>⇒ <strong>「真源在哪」本身无定论</strong>。因此该文件<strong>不应按 M1 简单忽略</strong>，也<strong>不得在裁定前移动或删除任一副本</strong>（删除可能摧毁唯一副本 —— 这正是本方案第三节「绝不一把梭」原则要防的事）。</p>

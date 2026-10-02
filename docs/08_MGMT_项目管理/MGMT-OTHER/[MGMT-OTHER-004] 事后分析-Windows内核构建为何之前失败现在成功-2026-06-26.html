@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -72,7 +72,7 @@ make: *** [Makefile:116: build/moonbit_runtime.o] Error 1</code></pre>
 <p>开发机没有 llvm-mingw clang,无法直接复跑 Windows 构建,所以用两手代理实证：</p>
 <ul><li><code>make --eval</code> 验证 <code>EXTRA_CFLAGS</code> 确实流进 <code>CFLAGS</code> / <code>MOONBIT_CFLAGS</code>；</li><li>本机 gcc + <code>MOONBIT_PREBUILT=1</code> 跑<strong>完整全量内核构建</strong> <code>make build/khy-os.bin</code> exit 0。</li></ul>
 <p>这与 clang <code>--target=x86_64-elf</code> <strong>同构</strong>（同 ELF object / 同 <code>_WIN32</code> 未定义 / 同 freestanding，<br>  只差编译器二进制）：<code>ld -T linker.ld</code> 把<strong>全部</strong> object（含此前 Windows 首炸的 <code>agentask.o</code>）链成<br>  有效 <code>ELF 64-bit LSB executable x86-64</code>。</p>
-<p><strong>✅ 真实 Windows 机端到端验证（0.1.135）</strong>：用户日志实证<br><code>clang.exe … --target=x86_64-elf … -c vendor/moonbit/runtime.c</code> →<br><code>ld.lld.exe -T linker.ld -o build/khy-os.bin &lt;全部 object&gt;</code>（<code>unknown file type</code> 消失）→<br>xorriso 产 ISO → Limine 安装 → <code>✓ 内核 ISO 构建完成 khy-os-kernel.iso</code>。</p>
+<p><strong>✓ 真实 Windows 机端到端验证（0.1.135）</strong>：用户日志实证<br><code>clang.exe … --target=x86_64-elf … -c vendor/moonbit/runtime.c</code> →<br><code>ld.lld.exe -T linker.ld -o build/khy-os.bin &lt;全部 object&gt;</code>（<code>unknown file type</code> 消失）→<br>xorriso 产 ISO → Limine 安装 → <code>✓ 内核 ISO 构建完成 khy-os-kernel.iso</code>。</p>
 <table><thead><tr><th>版本</th><th>修了什么</th><th>结果</th></tr></thead><tbody><tr><td>0.1.133</td><td>轮一：第一处 windows.h 守卫</td><td>暴露轮二</td></tr><tr><td>0.1.134</td><td>轮二：console-CP 设码块守卫</td><td>暴露轮三</td></tr><tr><td><strong>0.1.135</strong></td><td>轮三：<strong>COFF→ELF（<code>--target=x86_64-elf</code>）一招治本</strong></td><td><strong>构建通过（实机验证）</strong></td></tr></tbody></table>
 <hr>
 <h2 id="3-运行期-qemu-img-not-found-待-0-1-136">3. 运行期：<code>qemu-img not found</code>（待 0.1.136）<a class="anchor" href="#3-运行期-qemu-img-not-found-待-0-1-136" aria-label="锚点">#</a></h2>
