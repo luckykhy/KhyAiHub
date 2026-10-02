@@ -1,5 +1,5 @@
 <!-- 受众: 人+AI | 用途: skill 集合总说明——怎么安装、有哪些、何时用哪个 -->
-# 🧩 Khy 指导 Skill 集合 · 总说明
+# Khy 指导 Skill 集合 · 总说明
 
 > **这是什么**：一套可安装进 khy 的 skill，专门用来**指导比强模型更弱的模型正确、安全地使用 Khy-OS**。
 > 你平时主要用小模型——把这些 skill 装上，小模型在需要时激活对应 skill，就能拿到本项目的
@@ -9,7 +9,7 @@
 
 ---
 
-## 🧑 给人看 · 怎么安装到 khy
+## 给人看 · 怎么安装到 khy
 
 每个 skill 是一个目录（含 `manifest.json` + `prompt.md`），khy 原生格式，装上后会有 `/` 斜杠命令。
 
@@ -41,7 +41,7 @@ node services/backend/bin/khy.js skill list        # 应能看到 khy-onboarding
 
 ---
 
-## 🤖 给 AI 看 · 这套 skill 是什么、何时激活哪个
+## 给 AI 看 · 这套 skill 是什么、何时激活哪个
 
 你是在 Khy-OS 里工作的模型。遇到下面的处境，**主动激活对应 skill** 获取该场景的正确做法：
 

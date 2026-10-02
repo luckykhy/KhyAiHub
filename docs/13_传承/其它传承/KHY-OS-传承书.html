@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -39,7 +39,7 @@ node services/backend/bin/khy.js maintain             <span class="hljs-comment"
 node services/backend/bin/khy.js health               <span class="hljs-comment"># 顶层自助诊断</span></code></pre>
 <p>不会敲命令？<strong>完全不用敲命令</strong>：双击 <code>maintenance/</code> 里名字排最前的<br><code>维护-0-从这里开始</code>（macOS <code>.command</code> / Windows <code>windows\*.bat</code> / Linux <code>linux/*.sh</code>），<br>它会列出全部维护项让你<strong>按编号选</strong>。最常用的几个直达双击入口：</p>
 <table><thead><tr><th>想干什么</th><th>双击这个</th></tr></thead><tbody><tr><td>看现在健不健康</td><td><code>维护-一键健康体检</code></td></tr><tr><td>更新到最新</td><td><code>维护-更新项目到最新</code></td></tr><tr><td>升级前先备份</td><td><code>维护-备份关键数据配置</code></td></tr><tr><td>升级坏了要回滚</td><td><code>维护-回滚到最近稳定版本</code></td></tr><tr><td>依赖坏了重装</td><td><code>维护-一键重装依赖</code></td></tr><tr><td>求助前导出诊断</td><td><code>维护-导出诊断日志</code></td></tr><tr><td>换机器/版本对不上</td><td><code>维护-工具链基线漂移检查</code></td></tr><tr><td>更新/发布/回滚后快速验命脉</td><td><code>维护-快速烟雾测试更新发布回滚后</code></td></tr></tbody></table>
-<blockquote><p>🆘 <strong>慌乱中只想止血</strong>？翻同目录的 <strong><code>紧急恢复卡片.md</code></strong>——一页纸，<br>每种「坏了」都给「先双击、敲不动再复制命令」两条路，命令都不经过 <code>khy</code> 简写（最抗坏）。</p></blockquote>
+<blockquote><p><strong>慌乱中只想止血</strong>？翻同目录的 <strong><code>紧急恢复卡片.md</code></strong>——一页纸，<br>每种「坏了」都给「先双击、敲不动再复制命令」两条路，命令都不经过 <code>khy</code> 简写（最抗坏）。</p></blockquote>
 <hr>
 <h2 id="1-你必须会的几件事-无-ai-生存操作">1. 你必须会的几件事（无 AI 生存操作）<a class="anchor" href="#1-你必须会的几件事-无-ai-生存操作" aria-label="锚点">#</a></h2>
 <p>下面这些操作覆盖了维护一个 pip 项目的全部最小闭环：<strong>安装、体检、更新、换模型、<br>发布</strong>（操作一～五），以及出事时的<strong>备份、回滚、导出诊断、重装依赖</strong>（操作六～八）。<br>每件事都给了<strong>确切命令</strong>和<strong>双击入口</strong>，照抄/双击即可。出错时先看第 4 节「红灯怎么办」。</p>

@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -129,9 +129,9 @@ scripts/ci 别名总数 = 67
 <h3 id="2-1-登记表的硬性结构要求-实测">2.1 登记表的硬性结构要求（实测）<a class="anchor" href="#2-1-登记表的硬性结构要求-实测" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>校验器</th><th>规则 ID</th><th>要求</th></tr></thead><tbody><tr><td><code>check-gov-rules.js</code></td><td>GOV-TOOL-006</td><td>必填字段：<code>id, name, domain, nature, scope, priority, status, trigger, constraint, grants, benefit, version, ssot, owner</code>（+ <code>exception/formerly/gate/paths</code>）；ID 全局唯一；<code>domain</code> 限十大域；<code>priority</code> ∈ P0–P3；<code>status</code> ∈ draft/active/deprecated/archived；<code>nature</code> 须命中「约束/权力/福利」；<strong>权力必有约束边界配对</strong></td></tr><tr><td><code>check-rules-registry.js</code></td><td>TOOLING-007</td><td>① 登记表 → 真源：<code>ssot</code> 文件内必须有 <code>&lt;!-- RULES-REGISTRY: &lt;ID&gt; --&gt;</code> 标记行；② 真源 → 登记表：标记行里不得出现未登记的 ID；③ <code>ssot</code> 与 <code>enforcement</code> 指向的文件必须存在</td></tr><tr><td><code>check-rules-registry.js</code></td><td>TOOLING-008</td><td>规则卡 <code>docs/10_规范/规则卡/[&lt;ID&gt;] &lt;name&gt;.md</code> 必须由 <code>node scripts/docs/gen-rules-cards.js</code> 生成，且与登记表<strong>逐字节一致</strong></td></tr><tr><td><code>check-wiring.js</code></td><td>TOOLING-005</td><td>执行器须被门面引用（在 1.3 修好后，须是 <strong>CI 侧</strong>门面）</td></tr></tbody></table>
 <h3 id="2-2-改动内容-5-处-必须原子提交">2.2 改动内容（5 处，必须原子提交）<a class="anchor" href="#2-2-改动内容-5-处-必须原子提交" aria-label="锚点">#</a></h3>
-<blockquote><p><strong>⚠️ 方案修正（初版写错了）</strong>：初版建议<strong>新建</strong> <code>scripts/ci/check-repo-size.js</code>。实测后否掉了 —— <code>scripts/ci/check-dependency-size.js</code> <strong>已经存在且已经实现了同一套设计</strong>，新建等于造第二份会漂移的口径，正是本仓 <code>RUNTIME-001</code> 与反重复检查要防的事。</p>
+<blockquote><p><strong>⚠ 方案修正（初版写错了）</strong>：初版建议<strong>新建</strong> <code>scripts/ci/check-repo-size.js</code>。实测后否掉了 —— <code>scripts/ci/check-dependency-size.js</code> <strong>已经存在且已经实现了同一套设计</strong>，新建等于造第二份会漂移的口径，正是本仓 <code>RUNTIME-001</code> 与反重复检查要防的事。</p>
 <p>既有检查器实测（<code>node scripts/ci/check-dependency-size.js --strict --no-bytes</code> → <strong>exit 0</strong>）：</p>
-<table><thead><tr><th>它已有的能力</th><th>实测</th></tr></thead><tbody><tr><td><code>--strict</code>（超预算 exit 1）/ <code>--update</code>（重写基线）</td><td>✅ 就是棘轮语义</td></tr><tr><td>基线文件 <code>scripts/ci/dependency-size-baseline.json</code></td><td>✅ 已存在（5.6 KB，人可读、进版本库）</td></tr><tr><td>三条预算线：dev / prod / <strong>bundle</strong>（发布产物）</td><td>✅ 已实现</td></tr><tr><td>「包数=硬预算，字节=容差报告」的确定性口径</td><td>✅ 已在文件头给出完整论证（且理由比初版更准：npm 提升顺序、<code>@esbuild/*</code> 按平台挑包、CRLF 都会让字节跨机漂移）</td></tr></tbody></table>
+<table><thead><tr><th>它已有的能力</th><th>实测</th></tr></thead><tbody><tr><td><code>--strict</code>（超预算 exit 1）/ <code>--update</code>（重写基线）</td><td>✓ 就是棘轮语义</td></tr><tr><td>基线文件 <code>scripts/ci/dependency-size-baseline.json</code></td><td>✓ 已存在（5.6 KB，人可读、进版本库）</td></tr><tr><td>三条预算线：dev / prod / <strong>bundle</strong>（发布产物）</td><td>✓ 已实现</td></tr><tr><td>「包数=硬预算，字节=容差报告」的确定性口径</td><td>✓ 已在文件头给出完整论证（且理由比初版更准：npm 提升顺序、<code>@esbuild/*</code> 按平台挑包、CRLF 都会让字节跨机漂移）</td></tr></tbody></table>
 <p><strong>它缺的只有两件事：① 没有接线；② 没有任何规则登记它。</strong> 所以问题 2 的正确解法是「<strong>接线 + 登记</strong>」，不是新建。</p></blockquote>
 <p><strong>① 接线既有检查器（唯一真正缺的东西）</strong></p>
 <pre><code>package.json          &quot;check:dep-size&quot;: &quot;node scripts/ci/check-dependency-size.js --strict&quot;
@@ -191,7 +191,7 @@ package.json            &quot;check:dep-size&quot;: &quot;… check-dependency-s
 <hr>
 <h2 id="三-问题-3-git-对象库维护周期化">三、问题 3：git 对象库维护周期化<a class="anchor" href="#三-问题-3-git-对象库维护周期化" aria-label="锚点">#</a></h2>
 <h3 id="3-1-现状-全部实测-只读">3.1 现状（全部实测，只读）<a class="anchor" href="#3-1-现状-全部实测-只读" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>配置</th><th>值</th><th>来源</th><th>影响</th></tr></thead><tbody><tr><td><code>gc.auto</code></td><td><strong>未设置</strong> → 默认 <strong>6700</strong></td><td>—</td><td>实测曾有 2,001 个松散对象，<strong>远低于 6700，自动 gc 永不触发</strong> ← 这正是 280 MB 能积累起来的原因</td></tr><tr><td><code>gc.autoPackLimit</code></td><td>未设置 → 默认 50</td><td>—</td><td>—</td></tr><tr><td><code>maintenance.auto</code></td><td><strong><code>false</code></strong></td><td><strong><code>file:.git/config</code></strong></td><td>⚠️ <strong>仓库里被显式关掉了</strong> —— 意味着 <code>git maintenance run --auto</code> 会<strong>空跑</strong></td></tr><tr><td><code>maintenance.repo</code></td><td>未设置</td><td>—</td><td>—</td></tr><tr><td><code>core.fsmonitor</code></td><td><code>true</code></td><td><code>file:.git/config</code></td><td>正常（fsmonitor 守护进程本就常驻，非故障）</td></tr><tr><td><code>pack.compression</code></td><td><code>6</code></td><td><code>file:.git/config</code></td><td>✅ 已正确，<strong>未来 gc 不会重新膨胀</strong></td></tr></tbody></table>
+<table><thead><tr><th>配置</th><th>值</th><th>来源</th><th>影响</th></tr></thead><tbody><tr><td><code>gc.auto</code></td><td><strong>未设置</strong> → 默认 <strong>6700</strong></td><td>—</td><td>实测曾有 2,001 个松散对象，<strong>远低于 6700，自动 gc 永不触发</strong> ← 这正是 280 MB 能积累起来的原因</td></tr><tr><td><code>gc.autoPackLimit</code></td><td>未设置 → 默认 50</td><td>—</td><td>—</td></tr><tr><td><code>maintenance.auto</code></td><td><strong><code>false</code></strong></td><td><strong><code>file:.git/config</code></strong></td><td>⚠ <strong>仓库里被显式关掉了</strong> —— 意味着 <code>git maintenance run --auto</code> 会<strong>空跑</strong></td></tr><tr><td><code>maintenance.repo</code></td><td>未设置</td><td>—</td><td>—</td></tr><tr><td><code>core.fsmonitor</code></td><td><code>true</code></td><td><code>file:.git/config</code></td><td>正常（fsmonitor 守护进程本就常驻，非故障）</td></tr><tr><td><code>pack.compression</code></td><td><code>6</code></td><td><code>file:.git/config</code></td><td>✓ 已正确，<strong>未来 gc 不会重新膨胀</strong></td></tr></tbody></table>
 <p><strong>关键更正</strong>：仅「启用 <code>git maintenance</code>」不足以解决问题。<code>maintenance.auto=false</code> 是一个<strong>隐性阻碍</strong>——它会让 <code>git maintenance run --auto</code>（含计划任务触发的自动任务）直接 no-op。所以要么把它改回 <code>true</code>，要么改用 <code>gc.auto</code> 路线。</p>
 <h3 id="3-2-分档方案">3.2 分档方案<a class="anchor" href="#3-2-分档方案" aria-label="锚点">#</a></h3>
 <h4 id="tier-1-零系统痕迹-只改仓库内-git-config">Tier 1 —— 零系统痕迹（只改仓库内 <code>.git/config</code>）<a class="anchor" href="#tier-1-零系统痕迹-只改仓库内-git-config" aria-label="锚点">#</a></h4>

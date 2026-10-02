@@ -27,11 +27,11 @@ Khy-OS = 自研 x86_64 C 内核 + Node.js AI 后端 + host 桥(agent⇄OS) + Pyt
 
 ## 三、绝不能做的红线（先记住）
 
-- ❌ 不绕过 `executeTool` 另开工具执行旁路（会绕过权限门控与审批）。
-- ❌ 不为同一概念建第二份"真源"（约束格/能力向量/错误分类/破坏性动作模式库各有唯一权威实现，见 `.ai/GUARDS-AI.md §2`）。
-- ❌ 单文件不超 **2500 行**。
-- ❌ 没接到三真实入口（`executeTool` / `toolUseLoop.js` / `aiManagementServer.js`）之一，就不许声称"已落地/已接入"——隔离单测全绿 ≠ 在产。
-- ❌ 不用 `--no-verify` 跳过守卫。
+- ✗ 不绕过 `executeTool` 另开工具执行旁路（会绕过权限门控与审批）。
+- ✗ 不为同一概念建第二份"真源"（约束格/能力向量/错误分类/破坏性动作模式库各有唯一权威实现，见 `.ai/GUARDS-AI.md §2`）。
+- ✗ 单文件不超 **2500 行**。
+- ✗ 没接到三真实入口（`executeTool` / `toolUseLoop.js` / `aiManagementServer.js`）之一，就不许声称"已落地/已接入"——隔离单测全绿 ≠ 在产。
+- ✗ 不用 `--no-verify` 跳过守卫。
 
 ## 四、改代码只有一种正确姿势
 

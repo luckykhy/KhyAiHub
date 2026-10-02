@@ -34,12 +34,12 @@
 
 ### 1.3 关键发现
 
-**✅ 做得好的地方：**
+**✓ 做得好的地方：**
 - `.gitignore` 已正确排除 `build/`、`node_modules/`、`dist/`、`dist-electron/`、`tmp-*`、`classes*.dex`
 - 追踪文件数（8,593）控制合理
 - Git 仓库本身（0.7GB）在健康范围
 
-**⚠️ 需要解决的问题：**
+**⚠ 需要解决的问题：**
 1. **工作目录膨胀**：构建产物（3.19GB）+ 缓存（325MB + 1.64GB）+ 构建输出（0.97GB）= **6.13 GB** 占用磁盘但非源码
 2. **临时文件堆积**：252 个 `tmp-*` 文件（16MB）虽然被忽略但仍占磁盘
 3. **Flutter 应用（khy-os-client-app）**占工作目录 57%，是最大体积来源
@@ -70,10 +70,10 @@
 
 | 工具 | 语言 | 速度 | 安全性 | 推荐度 | 适用场景 |
 |------|------|------|--------|--------|----------|
-| **[git-filter-repo](https://github.com/newren/git-filter-repo)** | Python | ⚡ 10万提交: 2分钟 | ✅ 原子操作+备份 | ⭐⭐⭐⭐⭐ | **默认首选**，Git 官方推荐 |
-| **[BFG Repo-Cleaner](https://github.com/rtyley/bfg-repo-cleaner)** | Java | ⚡ 10万提交: 5分钟 | ⚠️ 无自动备份 | ⭐⭐⭐⭐ | 紧急清理大文件，无需 Python |
-| **[git repo-clean (Gitee)](https://gitee.com/oschina/git-repo-clean)** | Go | ⚡ 快 | ✅ 交互式安全 | ⭐⭐⭐⭐ | **Gitee 平台专用**，中文友好 |
-| ~~git filter-branch~~ | Shell | 🐌 10万提交: 60分钟 | ❌ 易残留备份 | ❌ 已废弃 | 避免使用 |
+| **[git-filter-repo](https://github.com/newren/git-filter-repo)** | Python | ✱ 10万提交: 2分钟 | ✓ 原子操作+备份 | ★★★★★ | **默认首选**，Git 官方推荐 |
+| **[BFG Repo-Cleaner](https://github.com/rtyley/bfg-repo-cleaner)** | Java | ✱ 10万提交: 5分钟 | ⚠ 无自动备份 | ★★★★ | 紧急清理大文件，无需 Python |
+| **[git repo-clean (Gitee)](https://gitee.com/oschina/git-repo-clean)** | Go | ✱ 快 | ✓ 交互式安全 | ★★★★ | **Gitee 平台专用**，中文友好 |
+| ~~git filter-branch~~ | Shell | 10万提交: 60分钟 | ✗ 易残留备份 | ✗ 已废弃 | 避免使用 |
 
 > 来源：CSDN 多篇 2026 年文章、Gitee 帮助中心、知乎实战复盘
 
@@ -81,18 +81,18 @@
 
 | 工具 | 用途 | 推荐度 |
 |------|------|--------|
-| **[github/git-sizer](https://github.com/github/git-sizer)** | 计算 Git 仓库各项体积指标，标记潜在问题 | ⭐⭐⭐⭐⭐ |
-| **[git-repo-doctor](https://github.com/LaughingisLaughing/git-repo-doctor)** | 只读诊断，输出清理计划（安全） | ⭐⭐⭐⭐ |
-| **[reposizer](https://www.npmjs.com/package/reposizer)** | 不克隆即可分析远程仓库大小 | ⭐⭐⭐ |
-| **git count-objects -vH** | 内置命令，快速查看存储摘要 | ⭐⭐⭐⭐⭐ |
+| **[github/git-sizer](https://github.com/github/git-sizer)** | 计算 Git 仓库各项体积指标，标记潜在问题 | ★★★★★ |
+| **[git-repo-doctor](https://github.com/LaughingisLaughing/git-repo-doctor)** | 只读诊断，输出清理计划（安全） | ★★★★ |
+| **[reposizer](https://www.npmjs.com/package/reposizer)** | 不克隆即可分析远程仓库大小 | ★★★ |
+| **git count-objects -vH** | 内置命令，快速查看存储摘要 | ★★★★★ |
 
 #### 预防工具
 
 | 工具 | 用途 | 推荐度 |
 |------|------|--------|
-| **[pre-commit](https://pre-commit.com/) + check-added-large-files** | 提交前自动检测大文件 | ⭐⭐⭐⭐⭐ |
-| **Git LFS** | 大文件存储，仓库只留指针 | ⭐⭐⭐⭐ |
-| **Husky (Node.js)** | Git hooks 管理 | ⭐⭐⭐⭐ |
+| **[pre-commit](https://pre-commit.com/) + check-added-large-files** | 提交前自动检测大文件 | ★★★★★ |
+| **Git LFS** | 大文件存储，仓库只留指针 | ★★★★ |
+| **Husky (Node.js)** | Git hooks 管理 | ★★★★ |
 
 ### 2.3 大厂实战案例
 
@@ -450,7 +450,7 @@ jobs:
           SIZE=$(git ls-files | xargs wc -c | tail -1 | awk '{print $1}')
           echo "Tracked files size: $SIZE bytes"
           if [ "$SIZE" -gt 524288000 ]; then  # 500MB
-            echo "⚠️ Warning: Repository tracked files exceed 500MB"
+            echo "⚠ Warning: Repository tracked files exceed 500MB"
           fi
       - name: Check for large files in commit
         uses: actionsdesk/lfs-warning@v2.0
@@ -587,12 +587,12 @@ Month 2+:
 
 | 清理项 | 大小 | 影响开发？ | 影响构建？ | 恢复方式 |
 |--------|------|----------|----------|---------|
-| 删 Flutter `build/` | **3,050 MB** | ❌ 不影响 | ❌ 不影响（重建 ~5min） | `flutter build` |
-| 删 Flutter `.dart_tool/` | **325 MB** | ❌ 不影响 | ❌ 不影响 | `flutter pub get` |
-| 删 `dist/` + `dist-electron/` | **970 MB** | ❌ 不影响 | ❌ 不影响 | `pnpm run build` |
-| 删 `electron@32.3.3` + `app-builder-bin` | **473 MB** | ❌ 不影响 | ⚠️ 不能打包 Electron | `pnpm install` |
-| 删 APK 历史版本 | **270 MB** | ❌ 不影响 | ❌ 不影响 | 保留最新版 |
-| 删 tmp-*/coverage/缓存 | **~50 MB** | ❌ 不影响 | ❌ 不影响 | 自动重建 |
+| 删 Flutter `build/` | **3,050 MB** | ✗ 不影响 | ✗ 不影响（重建 ~5min） | `flutter build` |
+| 删 Flutter `.dart_tool/` | **325 MB** | ✗ 不影响 | ✗ 不影响 | `flutter pub get` |
+| 删 `dist/` + `dist-electron/` | **970 MB** | ✗ 不影响 | ✗ 不影响 | `pnpm run build` |
+| 删 `electron@32.3.3` + `app-builder-bin` | **473 MB** | ✗ 不影响 | ⚠ 不能打包 Electron | `pnpm install` |
+| 删 APK 历史版本 | **270 MB** | ✗ 不影响 | ✗ 不影响 | 保留最新版 |
+| 删 tmp-*/coverage/缓存 | **~50 MB** | ✗ 不影响 | ✗ 不影响 | 自动重建 |
 | **合计** | **~5.1 GB** | | | |
 | **优化后工作目录** | **~2.9 GB** | | | |
 
@@ -695,7 +695,7 @@ git repack -a -d --depth=250 --window=250
 
 #### 方案 A：git-filter-repo 清理（推荐）
 
-> ⚠️ **重要**：`git filter-repo` 每次运行都是**全量重写历史**，多次调用是**错误的**——
+> ⚠ **重要**：`git filter-repo` 每次运行都是**全量重写历史**，多次调用是**错误的**——
 > 第二次调用基于第一次已重写的历史，会导致不可预期的结果。
 > **必须将所有过滤规则合并为一次调用。**
 
@@ -808,24 +808,24 @@ ls -t *.apk | tail -n +2 | xargs rm -f
 
 | 子目录 | 大小 | 是什么 | 开发要吗 | 怎么重建 |
 |--------|------|--------|---------|---------|
-| `intermediates/merged_native_libs/` | **1,815 MB** | 4 种 CPU 架构的 .so 合并文件 | ❌ | `flutter build` 自动 |
-| `intermediates/stripped_native_libs/` | 181 MB | 裁剪后的 .so | ❌ | 同上 |
-| `intermediates/intermediary_bundle/` | 134 MB | JS bundle 中间产物 | ❌ | 同上 |
-| `intermediates/flutter/` | 105 MB | Flutter 编译缓存 | ❌ | 同上 |
-| `intermediates/assets/` | 83 MB | 合并的 assets | ❌ | 同上 |
-| `intermediates/native_symbol_tables/` | 69 MB | 原生调试符号 | ❌ | 同上 |
-| `intermediates/module_bundle/` | 58 MB | JS module bundle | ❌ | 同上 |
-| `intermediates/compressed_assets/` | 28 MB | 压缩后的 assets | ❌ | 同上 |
-| `intermediates/merged_jni_libs/` | 25 MB | JNI 库 | ❌ | 同上 |
-| `intermediates/dex/` | 10 MB | 编译后的 DEX | ❌ | 同上 |
-| `intermediates/其他` | ~30 MB | Gradle 杂项缓存 | ❌ | 同上 |
-| `outputs/flutter-apk/` | 213 MB | APK 输出（debug 156MB + release 57MB） | ❌ | `flutter build apk` |
-| `outputs/apk/` | 213 MB | **完全重复**的 APK（与 flutter-apk 相同） | ❌ | 同上 |
-| `outputs/bundle/` | 54 MB | AAB 输出 | ❌ | `flutter build appbundle` |
-| `outputs/native-debug-symbols/` | 26 MB | 原生调试符号 | ❌ | 同上 |
-| `outputs/mapping/` | 9 MB | R8/ProGuard 映射 | ❌ | 同上 |
-| `test_cache/` | 97 MB | 测试构建缓存 | ❌ | `flutter test` |
-| `generated/` | 25 MB | 代码生成输出 | ❌ | `flutter pub run build_runner build` |
+| `intermediates/merged_native_libs/` | **1,815 MB** | 4 种 CPU 架构的 .so 合并文件 | ✗ | `flutter build` 自动 |
+| `intermediates/stripped_native_libs/` | 181 MB | 裁剪后的 .so | ✗ | 同上 |
+| `intermediates/intermediary_bundle/` | 134 MB | JS bundle 中间产物 | ✗ | 同上 |
+| `intermediates/flutter/` | 105 MB | Flutter 编译缓存 | ✗ | 同上 |
+| `intermediates/assets/` | 83 MB | 合并的 assets | ✗ | 同上 |
+| `intermediates/native_symbol_tables/` | 69 MB | 原生调试符号 | ✗ | 同上 |
+| `intermediates/module_bundle/` | 58 MB | JS module bundle | ✗ | 同上 |
+| `intermediates/compressed_assets/` | 28 MB | 压缩后的 assets | ✗ | 同上 |
+| `intermediates/merged_jni_libs/` | 25 MB | JNI 库 | ✗ | 同上 |
+| `intermediates/dex/` | 10 MB | 编译后的 DEX | ✗ | 同上 |
+| `intermediates/其他` | ~30 MB | Gradle 杂项缓存 | ✗ | 同上 |
+| `outputs/flutter-apk/` | 213 MB | APK 输出（debug 156MB + release 57MB） | ✗ | `flutter build apk` |
+| `outputs/apk/` | 213 MB | **完全重复**的 APK（与 flutter-apk 相同） | ✗ | 同上 |
+| `outputs/bundle/` | 54 MB | AAB 输出 | ✗ | `flutter build appbundle` |
+| `outputs/native-debug-symbols/` | 26 MB | 原生调试符号 | ✗ | 同上 |
+| `outputs/mapping/` | 9 MB | R8/ProGuard 映射 | ✗ | 同上 |
+| `test_cache/` | 97 MB | 测试构建缓存 | ✗ | `flutter test` |
+| `generated/` | 25 MB | 代码生成输出 | ✗ | `flutter pub run build_runner build` |
 
 > **结论：build/ 全部 3,050 MB 是 Gradle/Flutter 缓存。删了之后 `flutter run` / `flutter build` 会自动从源码重建，只是第一次慢 ~5 分钟。日常开发完全不需要它。**
 
@@ -833,9 +833,9 @@ ls -t *.apk | tail -n +2 | xargs rm -f
 
 | 子目录 | 大小 | 是什么 | 开发要吗 | 怎么重建 |
 |--------|------|--------|---------|---------|
-| `flutter_build/` | 250 MB | build_runner 缓存 | ❌ | `flutter pub get` |
-| `hooks_runner/` | 75 MB | hooks 缓存 | ❌ | 同上 |
-| `package_config.json` | 29 KB | 包解析配置 | ❌ | `flutter pub get` |
+| `flutter_build/` | 250 MB | build_runner 缓存 | ✗ | `flutter pub get` |
+| `hooks_runner/` | 75 MB | hooks 缓存 | ✗ | 同上 |
+| `package_config.json` | 29 KB | 包解析配置 | ✗ | `flutter pub get` |
 
 > **结论：.dart_tool/ 全部 325 MB 是工具链缓存。删了之后 `flutter pub get` 会重建。**
 
@@ -874,16 +874,16 @@ flutter build apk        # 重建 build/（release 模式）
 
 | 包 | 大小 | 开发需要？ | 可删条件 |
 |----|------|----------|---------|
-| `electron@44.2.0` | 369 MB | ✅ 跑桌面端 dev 模式要用 | 如果不跑桌面端可删 |
-| `electron@32.3.3` | 266 MB | ❌ 仅 `electron-builder` 打包用 | **不打包可删** |
-| `app-builder-bin` | 207 MB | ❌ 仅 `electron-builder` 打包用 | **不打包可删** |
-| `node-pty` | 65 MB | ✅ 终端功能要用 | 不可删 |
-| `element-plus` | 41 MB | ✅ 前端 UI 框架 | 不可删 |
-| `lucide-react × 2` | 66 MB | ✅ React 图标库 | pnpm 会去重 |
-| `typescript × 2` | 46 MB | ✅ 类型检查 | pnpm 会去重 |
-| `@esbuild/win32-x64 × 2` | 20 MB | ✅ 前端构建 | pnpm 会去重 |
-| `better-sqlite3` | 10 MB | ✅ SQLite 数据库 | 不可删 |
-| `prettier` | 9 MB | ⚠️ 格式化工具 | 不用 prettier 可删 |
+| `electron@44.2.0` | 369 MB | ✓ 跑桌面端 dev 模式要用 | 如果不跑桌面端可删 |
+| `electron@32.3.3` | 266 MB | ✗ 仅 `electron-builder` 打包用 | **不打包可删** |
+| `app-builder-bin` | 207 MB | ✗ 仅 `electron-builder` 打包用 | **不打包可删** |
+| `node-pty` | 65 MB | ✓ 终端功能要用 | 不可删 |
+| `element-plus` | 41 MB | ✓ 前端 UI 框架 | 不可删 |
+| `lucide-react × 2` | 66 MB | ✓ React 图标库 | pnpm 会去重 |
+| `typescript × 2` | 46 MB | ✓ 类型检查 | pnpm 会去重 |
+| `@esbuild/win32-x64 × 2` | 20 MB | ✓ 前端构建 | pnpm 会去重 |
+| `better-sqlite3` | 10 MB | ✓ SQLite 数据库 | 不可删 |
+| `prettier` | 9 MB | ⚠ 格式化工具 | 不用 prettier 可删 |
 
 #### 6.6.3 按开发场景的裁剪方案
 
@@ -925,7 +925,7 @@ rm -rf node_modules/.pnpm/app-builder-bin*
 
 ### 6.7 .gitignore 增强（防复发）
 
-> ⚠️ **注意**：以下规则针对仓库根目录，不会影响 `node_modules/`（已被全局忽略）
+> ⚠ **注意**：以下规则针对仓库根目录，不会影响 `node_modules/`（已被全局忽略）
 > 和 `build/`、`dist/` 等已忽略的目录中的子文件。
 
 ```gitignore
@@ -949,14 +949,14 @@ apps/khy-mobile/android/app/src/main/assets/*.tar.gz
 ```
 
 > **审核要点**：
-> - ❌ **不要全局禁止 `*.bin`** — Flutter 的 `kernel_blob.bin`（66MB）是合法运行时文件
-> - ❌ **不要全局禁止 `*.so`** — `lib/x86_64/libflutter.so` 等是合法依赖
-> - ❌ **不要全局禁止 `*.zip`** — node_modules 中可能有合法的 .zip 依赖
-> - ✅ 用**路径前缀**精确匹配已知的历史大文件位置
+> - ✗ **不要全局禁止 `*.bin`** — Flutter 的 `kernel_blob.bin`（66MB）是合法运行时文件
+> - ✗ **不要全局禁止 `*.so`** — `lib/x86_64/libflutter.so` 等是合法依赖
+> - ✗ **不要全局禁止 `*.zip`** — node_modules 中可能有合法的 .zip 依赖
+> - ✓ 用**路径前缀**精确匹配已知的历史大文件位置
 
 ### 6.8 pre-commit 大文件防护
 
-> ⚠️ **审核要点**：pre-commit-hooks 中没有 `forbidden-files` 这个 hook ID。
+> ⚠ **审核要点**：pre-commit-hooks 中没有 `forbidden-files` 这个 hook ID。
 > 需要自定义一个本地脚本来实现禁止特定文件类型的功能。
 
 ```yaml
@@ -975,7 +975,7 @@ repos:
     hooks:
       - id: forbid-binary-files
         name: "禁止提交二进制文件"
-        entry: bash -c 'for f in "$@"; do case "$f" in *.exe|*.dll|*.so|*.bundle) echo "❌ 禁止提交二进制文件: $f"; exit 1;; esac; done'
+        entry: bash -c 'for f in "$@"; do case "$f" in *.exe|*.dll|*.so|*.bundle) echo "✗ 禁止提交二进制文件: $f"; exit 1;; esac; done'
         language: system
         types: [text, binary]
         args: []
@@ -998,12 +998,12 @@ repos:
 
 | 优化项 | 当前 | 优化后 | 节省 | 影响开发/构建 |
 |--------|------|--------|------|-------------|
-| Flutter build/ | 3,050 MB | 0 | **3,050 MB** | ❌ 不影响（`flutter build` 重建） |
-| Flutter .dart_tool/ | 325 MB | 0 | **325 MB** | ❌ 不影响（`flutter pub get` 重建） |
-| dist/ + dist-electron/ | 970 MB | 0 | **970 MB** | ❌ 不影响（`pnpm run build` 重建） |
-| Electron 打包专用包 | 473 MB | 0 | **473 MB** | ⚠️ 不能打包（`pnpm install` 补回） |
-| APK 历史版本 | 300 MB | 30 MB | **270 MB** | ❌ 不影响（保留最新版） |
-| node_modules 裁剪（后端+前端） | 1,640 MB | 700 MB | **940 MB** | ❌ 不影响（按需 install） |
+| Flutter build/ | 3,050 MB | 0 | **3,050 MB** | ✗ 不影响（`flutter build` 重建） |
+| Flutter .dart_tool/ | 325 MB | 0 | **325 MB** | ✗ 不影响（`flutter pub get` 重建） |
+| dist/ + dist-electron/ | 970 MB | 0 | **970 MB** | ✗ 不影响（`pnpm run build` 重建） |
+| Electron 打包专用包 | 473 MB | 0 | **473 MB** | ⚠ 不能打包（`pnpm install` 补回） |
+| APK 历史版本 | 300 MB | 30 MB | **270 MB** | ✗ 不影响（保留最新版） |
+| node_modules 裁剪（后端+前端） | 1,640 MB | 700 MB | **940 MB** | ✗ 不影响（按需 install） |
 | **工作目录总计** | 7.99 GB | ~2.0 GB | **~6.0 GB** | |
 
 > **关键区分**：
