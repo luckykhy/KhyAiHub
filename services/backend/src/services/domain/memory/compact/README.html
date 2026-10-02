@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>compact — 对话压缩的提示模板与编排器（D2 功能单元） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>memory<span class="sep">›</span>compact<span class="sep">›</span>compact — 对话压缩的提示模板与编排器（D2 功能单元）</div>
+      <header class="hero reveal"><h1>compact — 对话压缩的提示模板与编排器（D2 功能单元）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#compact-对话压缩的提示模板与编排器-d2-功能单元">compact — 对话压缩的提示模板与编排器（D2 功能单元）</a></li><li class="lvl-2"><a href="#逐成员">逐成员</a></li><li class="lvl-2"><a href="#消费者-实测-fan-in-1">消费者（实测 fan-in = 1）</a></li><li class="lvl-2"><a href="#契约-每条都对应命名测试">契约（每条都对应命名测试）</a></li><li class="lvl-2"><a href="#已知边界-现状契约-由测试钉住-不是-已修-声明">已知边界（现状契约，由测试钉住，**不是**「已修」声明）</a></li><li class="lvl-2"><a href="#测试怎么跑">测试怎么跑</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="compact-对话压缩的提示模板与编排器-d2-功能单元">compact — 对话压缩的提示模板与编排器（D2 功能单元）<a class="anchor" href="#compact-对话压缩的提示模板与编排器-d2-功能单元" aria-label="锚点">#</a></h1>
+<p>一句话：把「上下文窗口快满了」这件事变成一次<strong>可编排、可测、不 call 模型</strong>的纯计算——<br><code>prompt.js</code> 出模板与字符串整形，<code>index.js</code> 决定切在哪、留多少、要不要压。<br>模型调用与 transcript 落盘归调用方（<code>index.js</code> 头注释原话：<em>The orchestrator does NOT call the AI itself</em>）。</p>
+<p>清单：<code>khy.module.json</code>（<code>domain</code> / <code>mayDependOn</code> / <code>fanIn</code> / <code>lifecycle.stage</code> 四字段被<br><code>npm run check:layout</code> 的 entry-buffer 规则读取；本单元的 D2→D1 边按偏差登记，不写白名单）。</p>
+<h2 id="逐成员">逐成员<a class="anchor" href="#逐成员" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>角色</th><th>require</th><th>同名测试</th></tr></thead><tbody><tr><td><code>prompt.js</code></td><td>纯模板/纯字符串叶子：no-tools 首尾包裹、全量与增量两套 9 段式模板、锚定式（增量更新）模板、<code>&lt;analysis&gt;</code> 草稿剥离与 <code>&lt;summary&gt;</code> 解包、续会话用户消息拼装</td><td>零 require（连 path 都不吃）</td><td><code>prompt.test.js</code></td></tr><tr><td><code>index.js</code></td><td>编排与算术：全量切分（保留最近 N 条逐字）、增量窗口切分、应用压缩结果、变体选路、是否需要压缩的 token 预算判定</td><td><code>./prompt</code>（单元内 D2）、<code>../../../../utils/simpleTokenEstimate</code>（D3）、<code>../../../contextProfile</code>（<strong>D1</strong>，try 内惰性 require，缺失回退未钳制 reserve）</td><td><code>index.test.js</code></td></tr></tbody></table>
+<h2 id="消费者-实测-fan-in-1">消费者（实测 fan-in = 1）<a class="anchor" href="#消费者-实测-fan-in-1" aria-label="锚点">#</a></h2>
+<p><code>services/backend/src/services/compact/index.js</code> —— D1 再导出壳。</p>
+<p><strong>如实记录一件不太好听的实测事实</strong>：那个壳在 <code>src/</code> 下<strong>零消费者</strong>，本单元<strong>不在活的 /compact 通路上</strong>。<br>运行时压缩走 <code>services/contextCompressor.js</code> 与 <code>domain/query/query/{compactionStages,compactPipeline}.js</code>；<br><code>src/cli/compactInstructions.js:30</code> 还明文写着「不改道去 <code>services/compact/*</code> 那套 <code>getCompactPrompt</code> 通路」。<br>本单元目前的真实读者只有两份测试（<code>tests/promptLearningRules.test.js</code> 与 jest 方言的<br><code>tests/services/compactShouldCompactReserve.test.js</code>）。<br>去留属规则 7「删除先报部位」与人的裁决范围：<strong>本单元本次只补测试与建档，不做任何删除或改名动作。</strong></p>
+<h2 id="契约-每条都对应命名测试">契约（每条都对应命名测试）<a class="anchor" href="#契约-每条都对应命名测试" aria-label="锚点">#</a></h2>
+<ol><li><strong>两条 floor 各管一件事</strong>：全量压缩要 <code>messages.length &gt;= MIN_MESSAGES_FOR_COMPACTION</code>（=20），</li></ol>
+<p>增量压缩要 <code>length &gt;= windowSize + 5</code>；不满足者返回 <code>prompt: null</code> + <code>metadata.skipped: true</code>，<br>   并把<strong>全部</strong>消息原样交回（<code>toPreserve</code>/<code>remainingMessages</code>），绝不静默丢消息。<br>   → <code>exposes the documented compaction constants</code>、<br>   <code>sessionMemoryCompact skips under the floor and keeps everything</code>、<br>   <code>sessionMemoryCompact at exactly the floor compacts</code>、<br>   <code>microCompact skips while shorter than window + 5</code>、<code>sessionMemoryCompact tolerates a null message list</code></p>
+<ol><li><strong>切分无损且可复原</strong>：<code>toSummarize.concat(toPreserve)</code> 与入参逐元素全等；切点 = <code>length - preserveRecent</code>，</li></ol>
+<p>默认留 10 条、可注入覆盖；过度保留（<code>preserveRecent &gt;= length</code>）时前段为空、全文逐字保留；<br>   增量窗默认 10 条。<br>   → <code>sessionMemoryCompact splits at length - preserveRecent</code>、<br>   <code>sessionMemoryCompact honours a custom preserveRecent</code>、<br>   <code>sessionMemoryCompact over-preserving keeps the whole transcript verbatim</code>、<br>   <code>microCompact summarizes only the oldest window</code>、<code>microCompact defaults its window to 10</code></p>
+<ol><li><strong>压缩结果是「一条 user 消息 + 原文尾部」</strong>：<code>applyCompaction</code> 产出的 <code>out[0]</code> 是</li></ol>
+<p><code>role:'user'</code> + <code>_meta.type:'compaction_summary'</code>，尾部逐字保留；<strong>没有</strong>保留尾巴时<br>   绝不写「Recent messages are preserved verbatim.」这句假承诺；transcriptPath 与 suppressFollowUp<br>   由编排器透传给模板。<br>   → <code>applyCompaction puts a user summary message first, then the preserved tail</code>、<br>   <code>applyCompaction with no preserved messages does not claim verbatim tail</code>、<br>   <code>applyCompaction threads transcriptPath and suppressFollowUp through</code></p>
+<ol><li><strong>变体选路</strong>：<code>getCompactionPrompt(messages, 'partial')</code> 走增量模板，缺省走全量模板；</li></ol>
+<p>该函数<strong>不</strong>把消息体嵌进 prompt（模板只教格式，transcript 由会话上下文自带）。<br>   → <code>getCompactionPrompt picks the variant</code></p>
+<ol><li><strong>token 预算用 SSOT 原子</strong>：逐条消息 <code>simpleTokenEstimate(content)</code>（chars/4 上取整），</li></ol>
+<p>非字符串 <code>content</code> 走 <code>JSON.stringify</code> 分支——即仓内已知的「<code>.content</code> 可能是字符串也可能是 block-array」<br>   形状在此<strong>不抛</strong>；空 messages/null → <code>{needed:false, urgency:'none', estimatedTokens:0}</code>；<br>   缺 <code>content</code> 的消息按空串的 JSON 字面量 <code>'&quot;&quot;'</code> 计 1 token（轻度过计，不误伤判定）。<br>   → <code>shouldCompact is silent on an empty transcript</code>、<br>   <code>shouldCompact estimates string content at ceil(chars/4) per message</code>、<br>   <code>shouldCompact survives the block-array content shape</code>、<br>   <code>shouldCompact counts a content-less message as the empty JSON literal</code></p>
+<ol><li><strong>reserve 必须被钳制</strong>（本单元唯一的跨层依赖，也是它存在的理由）：默认 4096 的输出预留</li></ol>
+<p>经 <code>contextProfile.deriveReserveTokens</code> 压到窗口的 30%（8k 窗口 → 2400），<br>   否则固定预留吃掉半个上下文、压缩在错误时点触发；大窗口不受影响。<br>   阈值：usage ≥ 0.9 → <code>'now'</code>，≥ 0.7 → <code>'soon'</code>，其余 <code>'none'</code>。<br>   → <code>shouldCompact escalates urgency at 0.7 and 0.9 of the available budget</code></p>
+<ol><li><strong>no-tools 包裹是首尾双向的</strong>：三套模板（全量 / 增量 / 锚定）都以 <code>NO_TOOLS_PREAMBLE</code> 开头、</li></ol>
+<p>以 <code>NO_TOOLS_TRAILER</code> 结尾——放在最前是因为模型会先看到它再看到缓存的工具定义。<br>   两套对话模板共用 Claude Code 的 9 段式契约，只在「摘要范围」上分岔（全量 vs「earlier 已保留」）。<br>   → <code>both variants are wrapped by the no-tools preamble and trailer</code>、<br>   <code>the two variants differ in scope wording and share the 9-section contract</code></p>
+<ol><li><strong>空白附加指令等于没有附加指令</strong>：<code>customInstructions</code> 经 <code>.trim()</code> 判空，</li></ol>
+<p><code>''</code>/<code>'   '</code>/<code>'\n'</code>/undefined 都<strong>不</strong>注入 <code>Additional Instructions:</code> 空块。<br>   → <code>customInstructions are appended verbatim only when non-blank</code>、<br>   <code>anchored prompt joins context lines and honours customInstructions</code></p>
+<ol><li><strong><code>&lt;analysis&gt;</code> 是草稿纸，不进上下文</strong>：<code>formatCompactSummary</code> 先剥 analysis、再把</li></ol>
+<p><code>&lt;summary&gt;</code> 解包成 <code>Summary:\n&lt;trim 后的正文&gt;</code>，并把连续空行收敛成一段；无标签的原样回复<br>   只做 trim 不报错；标签前后的模型散文保留。<br>   → <code>formatCompactSummary drops the analysis scratchpad and unwraps the summary</code>、<br>   <code>formatCompactSummary passes an untagged model reply through, trimmed</code>、<br>   <code>formatCompactSummary keeps model prose around the tags</code></p>
+<ol><li><strong>续会话用户消息的三个从句各自独立门控</strong>：抬头恒定，transcriptPath / recentPreserved /</li></ol>
+<p>suppressFollowUp 只在真值为真时追加，任一 falsy（<code>''</code>/null/0/false）都不改变文本。<br>    → <code>getCompactUserMessage builds the continuation header with the formatted body</code>、<br>    <code>getCompactUserMessage optional clauses are each independently gated</code>、<br>    <code>getCompactUserMessage falsy options omit their clause</code></p>
+<ol><li><strong>锚定式压缩是「更新」不是「重写」</strong>：有 <code>previousSummary</code> 时把上文包进 <code>&lt;previous-summary&gt;</code> 并要求</li></ol>
+<p>「保留仍成立的、删掉陈旧的、并入新事实」；没有则明示新建。上下文行按 <code>\n</code> join 追加，空数组不追加该段。<br>    → <code>anchored prompt starts fresh when there is no previous summary</code>、<br>    <code>anchored prompt echoes the previous summary inside its tag pair</code>、<br>    <code>anchored prompt joins context lines and honours customInstructions</code></p>
+<h2 id="已知边界-现状契约-由测试钉住-不是-已修-声明">已知边界（现状契约，由测试钉住，<strong>不是</strong>「已修」声明）<a class="anchor" href="#已知边界-现状契约-由测试钉住-不是-已修-声明" aria-label="锚点">#</a></h2>
+<ul><li><code>formatCompactSummary</code> 对非字符串入参抛 <code>TypeError</code>——契约要求调用方先取到模型文本，本层不做 block-array 解包。</li></ul>
+<p>→ <code>formatCompactSummary requires a string (no content-block coercion here)</code></p>
+<ul><li><code>getAnchoredCompactPrompt</code> 的 <code>context</code> 默认值只对「键缺失/undefined」生效，显式 <code>null</code> 会命中 <code>.length</code> 而抛。</li></ul>
+<p>→ <code>anchored prompt defaults context only for an absent key</code></p>
+<ul><li>标签重写用的是<strong>非全局</strong>正则：模型若吐出第二对 <code>&lt;analysis&gt;</code>/<code>&lt;summary&gt;</code>，后一对会以原始标签残留在摘要里。</li></ul>
+<p>→ <code>formatCompactSummary only rewrites the first tag pair of each kind</code><br>  这是现状，未在此改动集里放宽（放宽会改变输出字节，属另一件事）。</p>
+<ul><li><code>index.js</code> 的 <code>ESTIMATED_TOKENS_PER_MESSAGE</code> 是未被引用也未导出的死常量；</li></ul>
+<p><code>prompt.js</code> 的 <code>getAnchoredCompactPrompt</code> 在单元内无人调用。二者都留待规则 7 的部位清单与人的裁决，<br>  本单元不做静默清理。</p>
+<h2 id="测试怎么跑">测试怎么跑<a class="anchor" href="#测试怎么跑" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> src/services/domain/memory/compact/index.test.js \
+            src/services/domain/memory/compact/prompt.test.js</code></pre>
+<p>共 34 例、0 skip、零真 IO、不 call 模型、不碰工作树。<br>另有仓级 <code>tests/services/compactShouldCompactReserve.test.js</code> 是 <strong>jest 方言</strong>（<code>describe</code>/<code>expect</code>），<br>本便携环境未安装 jest（<code>node_modules/.bin/jest</code> 是悬空 shim），用 <code>node --test</code> 跑它会 ReferenceError；<br>其 reserve 钳制断言已由上面 <code>index.test.js</code> 以同一算术复现，所以「本环境跑不了那份」不构成本单元的覆盖缺口。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../services/backend/src/services/domain/memory/cognitiveSnapshot/README.html"><div class="dir">← 上一篇</div><div class="ttl">cognitiveSnapshot — 上下文永续与认知压缩引擎</div></a><a class="next" href="../../../../../../../services/backend/src/services/domain/memory/README.html"><div class="dir">下一篇 →</div><div class="ttl">memory — 记忆引擎、上下文压缩与认知快照（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/memory/compact/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
