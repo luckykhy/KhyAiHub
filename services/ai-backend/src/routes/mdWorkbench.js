@@ -129,7 +129,7 @@ function listHandler(req, res) {
     };
     walk(baseDir, 0);
 
-    const label = dirParam ? path.basename(baseDir) : '📁 ' + path.basename(baseDir);
+    const label = dirParam ? path.basename(baseDir) : '' + path.basename(baseDir);
     return res.json({
       success: true,
       data: {

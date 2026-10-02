@@ -257,7 +257,7 @@ function formatInlineSummary(currentTokens) {
   const quota = getRemainingQuota();
   const fmtNum = (n) => n.toLocaleString('en-US');
 
-  let line = `  \u{1F4CA} 本次: ${fmtNum(currentTokens)} tokens`;
+  let line = `  本次: ${fmtNum(currentTokens)} tokens`;
   line += ` \u00B7 会话累计: ${fmtNum(session)}`;
 
   if (quota.limit !== -1) {
@@ -288,7 +288,7 @@ function formatUsageReport() {
   const r = chalk.red;
 
   let out = '';
-  out += chalk.bold('  📊 AI Token 用量统计\n\n');
+  out += chalk.bold('  AI Token 用量统计\n\n');
 
   // Session
   out += w('  本次会话:\n');
@@ -391,7 +391,7 @@ function formatCostReport() {
   const b = chalk.bold;
 
   let out = '\n';
-  out += b('  \u{1F4B0} Token 用量 & 费用\n\n');
+  out += b('  Token 用量 & 费用\n\n');
 
   // Session cost (primary)
   out += w('  \u250C\u2500 本次会话\n');

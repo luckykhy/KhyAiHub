@@ -588,7 +588,7 @@ function formatToolCall(toolName, params) {
   const riskColor = chalk[risk.color] || chalk.yellow;
 
   let display = '';
-  display += chalk.bold(`  🔧 工具调用: ${toolName}\n`);
+  display += chalk.bold(`  工具调用: ${toolName}\n`);
   display += `  ${riskColor(`[${risk.label}]`)} ${tool?.description || ''}\n`;
 
   if (params && Object.keys(params).length > 0) {
@@ -632,7 +632,7 @@ async function requestPermission(toolName, params) {
 
   // Show reasoning if available
   if (params._reasoning) {
-    console.log(chalk.dim('  💭 AI 思考:'));
+    console.log(chalk.dim('  AI 思考:'));
     console.log(chalk.dim(`     ${params._reasoning}`));
     console.log('');
   }

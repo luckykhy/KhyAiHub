@@ -39,12 +39,12 @@ class SmartAIService {
     try {
       // 优先使用在线AI
       if (tokens && this.hasValidToken(tokens)) {
-        console.log('📡 使用在线AI模式');
+        console.log('使用在线AI模式');
         return await this.useOnlineAI(question, analysisContext, tokens, conversationHistory);
       }
 
       // 降级到智能规则引擎
-      console.log('🤖 使用智能规则引擎');
+      console.log('使用智能规则引擎');
       return this.useSmartRules(question, analysisContext);
     } catch (error) {
       console.error('AI服务错误:', error);
@@ -134,7 +134,7 @@ class SmartAIService {
   useFallback(question, analysisContext) {
     return {
       success: true,
-      answer: `感谢您的提问。基于对 ${analysisContext.stockCode} 的分析，我们的建议是"${analysisContext.recommendation}"，置信度为 ${analysisContext.confidence}%。\n\n${analysisContext.summary}\n\n如需了解更多详情，请查看各智能体的详细分析报告。\n\n💡 提示：配置AI Token可获得更智能的对话体验。`,
+      answer: `感谢您的提问。基于对 ${analysisContext.stockCode} 的分析，我们的建议是"${analysisContext.recommendation}"，置信度为 ${analysisContext.confidence}%。\n\n${analysisContext.summary}\n\n如需了解更多详情，请查看各智能体的详细分析报告。\n\n提示：配置AI Token可获得更智能的对话体验。`,
       model: '基础模式',
       provider: '本地',
       mode: 'fallback',
@@ -175,9 +175,9 @@ class SmartAIService {
     const fundAgent = agentResults.find((a) => a.agentId === 'fundamentals');
     const riskAgent = agentResults.find((a) => a.agentId === 'risk');
 
-    let answer = `📊 关于 ${stockCode} 的投资建议：\n\n`;
-    answer += `🎯 综合建议：${recommendation}（置信度 ${confidence}%）\n\n`;
-    answer += `📈 分析依据：\n`;
+    let answer = `关于 ${stockCode} 的投资建议：\n\n`;
+    answer += `综合建议：${recommendation}（置信度 ${confidence}%）\n\n`;
+    answer += `分析依据：\n`;
 
     if (marketAgent) {
       answer += `• 技术面：${marketAgent.analysis.substring(0, 50)}...\n`;
@@ -189,7 +189,7 @@ class SmartAIService {
       answer += `• 风险评估：${riskAgent.analysis.substring(0, 50)}...\n`;
     }
 
-    answer += `\n💡 操作建议：\n`;
+    answer += `\n操作建议：\n`;
     if (recommendation.includes('买入')) {
       answer += `• 建议分批建仓，不要一次性买入\n`;
       answer += `• 控制仓位在30-50%\n`;
@@ -204,7 +204,7 @@ class SmartAIService {
       answer += `• 及时止盈，落袋为安\n`;
     }
 
-    answer += `\n⚠️ 风险提示：投资有风险，决策需谨慎。以上建议仅供参考，不构成投资建议。`;
+    answer += `\n⚠ 风险提示：投资有风险，决策需谨慎。以上建议仅供参考，不构成投资建议。`;
 
     return answer;
   }
@@ -218,10 +218,10 @@ class SmartAIService {
     const riskAgent = agentResults.find((a) => a.agentId === 'risk');
     const marketAgent = agentResults.find((a) => a.agentId === 'market');
 
-    let answer = `⚠️ ${stockCode} 风险评估：\n\n`;
+    let answer = `⚠ ${stockCode} 风险评估：\n\n`;
 
     if (riskAgent) {
-      answer += `🔍 风险分析师评估：\n${riskAgent.analysis}\n\n`;
+      answer += `风险分析师评估：\n${riskAgent.analysis}\n\n`;
       if (riskAgent.keyFindings && riskAgent.keyFindings.length > 0) {
         answer += `关键风险点：\n`;
         riskAgent.keyFindings.forEach((finding) => {
@@ -239,13 +239,13 @@ class SmartAIService {
       riskLevel = '较高';
     }
 
-    answer += `📊 综合风险等级：${riskLevel}\n\n`;
-    answer += `💡 风险控制建议：\n`;
+    answer += `综合风险等级：${riskLevel}\n\n`;
+    answer += `风险控制建议：\n`;
     answer += `• 设置止损位：建议在 -8% 到 -10%\n`;
     answer += `• 仓位控制：不超过总资金的 ${confidence >= 70 ? '50%' : '30%'}\n`;
     answer += `• 分散投资：不要把所有资金投入单一标的\n`;
     answer += `• 定期复盘：每周检查一次持仓情况\n\n`;
-    answer += `⚠️ 记住：任何投资都存在风险，请根据自身风险承受能力做出决策。`;
+    answer += `⚠ 记住：任何投资都存在风险，请根据自身风险承受能力做出决策。`;
 
     return answer;
   }
@@ -258,7 +258,7 @@ class SmartAIService {
 
     const marketAgent = agentResults.find((a) => a.agentId === 'market');
 
-    let answer = `📈 ${stockCode} 技术分析：\n\n`;
+    let answer = `${stockCode} 技术分析：\n\n`;
 
     if (marketAgent) {
       answer += `${marketAgent.analysis}\n\n`;
@@ -273,12 +273,12 @@ class SmartAIService {
       answer += `技术分析师未参与本次分析。建议重新分析时选择"市场分析师"智能体。\n\n`;
     }
 
-    answer += `💡 技术面解读：\n`;
+    answer += `技术面解读：\n`;
     answer += `• 趋势判断：观察K线形态和均线系统\n`;
     answer += `• 支撑阻力：关注关键价格位\n`;
     answer += `• 成交量：量价配合情况\n`;
     answer += `• 技术指标：MACD、RSI、KDJ等信号\n\n`;
-    answer += `📊 建议：技术分析需结合基本面和市场情绪综合判断。`;
+    answer += `建议：技术分析需结合基本面和市场情绪综合判断。`;
 
     return answer;
   }
@@ -291,7 +291,7 @@ class SmartAIService {
 
     const fundAgent = agentResults.find((a) => a.agentId === 'fundamentals');
 
-    let answer = `📊 ${stockCode} 基本面分析：\n\n`;
+    let answer = `${stockCode} 基本面分析：\n\n`;
 
     if (fundAgent) {
       answer += `${fundAgent.analysis}\n\n`;
@@ -306,12 +306,12 @@ class SmartAIService {
       answer += `基本面分析师未参与本次分析。建议重新分析时选择"基本面分析师"智能体。\n\n`;
     }
 
-    answer += `💡 基本面关注点：\n`;
+    answer += `基本面关注点：\n`;
     answer += `• 财务健康：资产负债率、现金流\n`;
     answer += `• 盈利能力：ROE、净利润增长率\n`;
     answer += `• 估值水平：市盈率、市净率\n`;
     answer += `• 行业地位：市场份额、竞争优势\n\n`;
-    answer += `📈 建议：基本面分析适合中长期投资决策。`;
+    answer += `建议：基本面分析适合中长期投资决策。`;
 
     return answer;
   }
@@ -322,34 +322,34 @@ class SmartAIService {
   generateStrategyAnswer(analysis) {
     const { stockCode, recommendation, confidence } = analysis;
 
-    let answer = `🎯 ${stockCode} 操作策略：\n\n`;
+    let answer = `${stockCode} 操作策略：\n\n`;
 
     if (recommendation.includes('买入')) {
-      answer += `📈 建仓策略：\n`;
+      answer += `建仓策略：\n`;
       answer += `• 分批买入：分3-4次建仓，降低成本\n`;
       answer += `• 仓位控制：首次建仓20-30%，根据走势加仓\n`;
       answer += `• 买入时机：回调到支撑位附近\n`;
       answer += `• 止损设置：跌破支撑位-8%止损\n\n`;
     } else if (recommendation.includes('持有')) {
-      answer += `🔄 持仓策略：\n`;
+      answer += `持仓策略：\n`;
       answer += `• 继续持有，观察市场变化\n`;
       answer += `• 设置移动止盈：保护已有利润\n`;
       answer += `• 关注关键位：突破阻力位可加仓\n`;
       answer += `• 跌破支撑位考虑减仓\n\n`;
     } else if (recommendation.includes('卖出')) {
-      answer += `📉 减仓策略：\n`;
+      answer += `减仓策略：\n`;
       answer += `• 分批卖出：避免一次性清仓\n`;
       answer += `• 保留观察仓：留10-20%观察后续\n`;
       answer += `• 止盈位：达到目标价位及时止盈\n`;
       answer += `• 反弹卖出：等待反弹到阻力位\n\n`;
     }
 
-    answer += `💡 通用策略原则：\n`;
+    answer += `通用策略原则：\n`;
     answer += `• 严格执行止损，保护本金\n`;
     answer += `• 不要追涨杀跌，保持理性\n`;
     answer += `• 定期复盘，总结经验\n`;
     answer += `• 控制情绪，避免冲动交易\n\n`;
-    answer += `⚠️ 策略需根据实际情况灵活调整，不可机械执行。`;
+    answer += `⚠ 策略需根据实际情况灵活调整，不可机械执行。`;
 
     return answer;
   }
@@ -360,19 +360,19 @@ class SmartAIService {
   generateTimingAnswer(analysis) {
     const { stockCode, recommendation, confidence } = analysis;
 
-    let answer = `⏰ ${stockCode} 时机判断：\n\n`;
+    let answer = `${stockCode} 时机判断：\n\n`;
     answer += `当前建议：${recommendation}（置信度 ${confidence}%）\n\n`;
 
     if (recommendation.includes('买入')) {
       if (confidence >= 75) {
-        answer += `✅ 时机评估：较好的买入时机\n\n`;
+        answer += `✓ 时机评估：较好的买入时机\n\n`;
         answer += `理由：\n`;
         answer += `• 多个智能体给出积极信号\n`;
         answer += `• 技术面和基本面配合良好\n`;
         answer += `• 风险可控，上涨概率较大\n\n`;
         answer += `建议：可以考虑分批建仓\n`;
       } else {
-        answer += `⚠️ 时机评估：可以买入，但需谨慎\n\n`;
+        answer += `⚠ 时机评估：可以买入，但需谨慎\n\n`;
         answer += `理由：\n`;
         answer += `• 存在一定不确定性\n`;
         answer += `• 建议等待更明确的信号\n`;
@@ -380,14 +380,14 @@ class SmartAIService {
         answer += `建议：控制仓位，观察后续走势\n`;
       }
     } else if (recommendation.includes('持有')) {
-      answer += `🔄 时机评估：暂时观望为宜\n\n`;
+      answer += `时机评估：暂时观望为宜\n\n`;
       answer += `理由：\n`;
       answer += `• 当前没有明确的买卖信号\n`;
       answer += `• 市场处于震荡或调整阶段\n`;
       answer += `• 等待更好的时机\n\n`;
       answer += `建议：持有观望，关注关键位突破\n`;
     } else {
-      answer += `⚠️ 时机评估：建议考虑减仓\n\n`;
+      answer += `⚠ 时机评估：建议考虑减仓\n\n`;
       answer += `理由：\n`;
       answer += `• 风险信号增加\n`;
       answer += `• 上涨动能减弱\n`;
@@ -395,7 +395,7 @@ class SmartAIService {
       answer += `建议：分批减仓，保护利润\n`;
     }
 
-    answer += `\n💡 时机把握要点：\n`;
+    answer += `\n时机把握要点：\n`;
     answer += `• 不要试图抓住最低点和最高点\n`;
     answer += `• 关注趋势，顺势而为\n`;
     answer += `• 耐心等待，不要急于操作\n`;
@@ -409,7 +409,7 @@ class SmartAIService {
   generateComparisonAnswer(analysis) {
     const { stockCode, agentResults } = analysis;
 
-    let answer = `📊 ${stockCode} 对比分析：\n\n`;
+    let answer = `${stockCode} 对比分析：\n\n`;
     answer += `当前我只分析了 ${stockCode} 这一只标的。如需对比分析，请：\n\n`;
     answer += `1. 分别分析多只股票\n`;
     answer += `2. 对比各项指标：\n`;
@@ -417,12 +417,12 @@ class SmartAIService {
     answer += `   • 基本面评分\n`;
     answer += `   • 风险等级\n`;
     answer += `   • 投资建议\n\n`;
-    answer += `💡 对比维度建议：\n`;
+    answer += `对比维度建议：\n`;
     answer += `• 同行业对比：选择同行业龙头股\n`;
     answer += `• 估值对比：市盈率、市净率\n`;
     answer += `• 成长性对比：营收和利润增长率\n`;
     answer += `• 风险对比：波动率、beta系数\n\n`;
-    answer += `📈 您可以重新分析其他股票，然后进行对比。`;
+    answer += `您可以重新分析其他股票，然后进行对比。`;
 
     return answer;
   }
@@ -435,7 +435,7 @@ class SmartAIService {
 
     let answer = `关于 ${stockCode} 的分析：\n\n`;
     answer += `${summary}\n\n`;
-    answer += `📊 投资建议：${recommendation}（置信度 ${confidence}%）\n\n`;
+    answer += `投资建议：${recommendation}（置信度 ${confidence}%）\n\n`;
 
     if (agentResults && agentResults.length > 0) {
       answer += `参与分析的智能体：\n`;
@@ -445,7 +445,7 @@ class SmartAIService {
       answer += `\n`;
     }
 
-    answer += `💡 您可以询问：\n`;
+    answer += `您可以询问：\n`;
     answer += `• "这只股票风险大吗？"\n`;
     answer += `• "技术指标怎么样？"\n`;
     answer += `• "现在适合买入吗？"\n`;

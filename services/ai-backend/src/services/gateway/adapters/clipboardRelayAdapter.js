@@ -182,7 +182,7 @@ async function generate(prompt, options = {}) {
   console.log(chalk.cyan('  ┌─────────────────────────────────────────────────┐'));
   console.log(
     chalk.cyan('  │') +
-      chalk.bold.white(` 📋 剪贴板 AI 中继 — ${serviceInfo.name}`) +
+      chalk.bold.white(` 剪贴板 AI 中继 — ${serviceInfo.name}`) +
       chalk.cyan(' '.repeat(Math.max(0, 48 - 22 - serviceInfo.name.length)) + '│')
   );
   console.log(chalk.cyan('  ├─────────────────────────────────────────────────┤'));
