@@ -64,6 +64,7 @@ const listIds = new Set(
 const ALL_FINDING_IDS = new Set([
   'root-whitelist',
   'root-junk',
+  'root-uncatalogued',
   'docs-index-first',
   'layer-registry',
   'dangling-task',
@@ -129,7 +130,8 @@ const CROSSCUTTING = {
   tests: '根级测试债务登记（DEBT.md，内容属文档性质，待迁 docs/05_TEST_测试/）',
   // 只收**交付物**；过程态工具（探针/扫描脚本/未接线原型）落 .khyos/，判据真源
   // [DESIGN-LAY-002] §3.1（2026-09-29 分流，此前两类混住，见该节表格）。
-  '_产物': '根级工作产物暂存区（交付物：诊断报告/能力矩阵/方案文档，含非文档资产）',
+  // 注：原 `'_产物'` 死指针已随该根目录溶解（2026-09-27）移除——保留会让守卫在
+  // 有人重建 `_产物/` 时静默放行（Q1′/Q-1 顺带修）。
   deploy: '根级部署配置与试验（deploy/free-test/）',
   patches: '根级第三方依赖补丁（npm 依赖的本地 patch）',
 };
@@ -279,6 +281,96 @@ function checkRootWhitelist(findings) {
     severity: 'error',
     message: `根目录有 ${offenders.length} 个白名单外的说明性文件（[MGMT-STD-001] 第 1.1/1.2 条，CP-1）。`,
     detail: `须收容进 docs/ 对应子目录：${offenders.join(', ')}`,
+    full: offenders,
+  });
+}
+
+// ── 规则 1c：根级实体封闭清单（Q1′/Q-1，[DESIGN-LAY-008] §19）──────────────────
+// checkRootWhitelist 只吃 `.md/.txt`，checkLayerRegistry 只吃**目录**——两者之间
+// 有洞：一个不属于任何层、又不是说明文档的根级条目（散落的 .bat/.toml/工具目录/
+// 本机态目录）会两头都不报。本清单把**每一个根级实体**显式登记其归属（category）、
+// 为何留在根（reason）、复审期限（reviewBy），未登记者判 `root-uncatalogued`
+// （**S1 观察者档：只记录，warning，不阻断**，[DESIGN-PROCESS-002]）。
+// 分类枚举：domain（层级/横切，由 LAYERS/CROSSCUTTING 兜）、contract（CI/构建/打包/
+// 入口/配置契约）、tool-retained（按裁决保留的工具目录）、localdata（本机态/git）、
+// pending-retire（已裁决退役待删除）。真源 [DESIGN-LAY-008] §21，终局档位 10。
+const ROOT_CATALOG = {
+  '.ai': { category: 'contract', reason: '可维护性元数据再生件（khy metadata 产出）', reviewBy: '2026-12-31' },
+  '.githooks': { category: 'contract', reason: 'git 钩子（pre-commit 守卫链真身）', reviewBy: '2026-12-31' },
+  '.github': { category: 'contract', reason: 'CI 工作流与模板', reviewBy: '2026-12-31' },
+  '.cursor': { category: 'tool-retained', reason: '编辑器规则目录（裁决 D-4 保留）', reviewBy: '2026-12-31' },
+  '.clinerules': { category: 'tool-retained', reason: 'Cline 规则目录（裁决 D-4 保留）', reviewBy: '2026-12-31' },
+  '.opencode': { category: 'tool-retained', reason: 'OpenCode 配置（裁决留至复审）', reviewBy: '2026-11-15' },
+  '.zcode': { category: 'tool-retained', reason: 'ZCode 对照留档（裁决保留）', reviewBy: '2026-12-31' },
+  '.workbuddy': { category: 'tool-retained', reason: '第三方工具目录', reviewBy: '2026-12-31' },
+  '.workbuddy-ai': { category: 'tool-retained', reason: '第三方工具目录', reviewBy: '2026-12-31' },
+  '.portable': { category: 'localdata', reason: '便携版标记（本机态）', reviewBy: '2026-12-31' },
+  '.khy': { category: 'localdata', reason: '运行时数据目录（.gitignore）', reviewBy: '2026-12-31' },
+  '.khyos': { category: 'localdata', reason: 'OS 本机态/巡检暂存（.gitignore）', reviewBy: '2026-12-31' },
+  'khy-Trajectory': { category: 'tool-retained', reason: '轨迹子系统留档（裁决保留）', reviewBy: '2026-12-31' },
+  'electron': { category: 'pending-retire', reason: '根级 Electron 桌面壳，Q10 已裁决退役', reviewBy: '2026-10-31' },
+  'Dockerfile': { category: 'contract', reason: '镜像构建入口', reviewBy: '2026-12-31' },
+  'docker-compose.yml': { category: 'contract', reason: '一键部署编排', reviewBy: '2026-12-31' },
+  'fly.staging.toml': { category: 'contract', reason: 'fly.io 预发部署配置', reviewBy: '2026-12-31' },
+  'MANIFEST.in': { category: 'contract', reason: 'pip 打包清单件', reviewBy: '2026-12-31' },
+  'package.json': { category: 'contract', reason: 'npm 清单 + scripts 入口（版本轨道 G1）', reviewBy: '2026-12-31' },
+  'package-lock.json': { category: 'contract', reason: 'npm 锁文件', reviewBy: '2026-12-31' },
+  'pnpm-lock.yaml': { category: 'contract', reason: 'pnpm 锁文件', reviewBy: '2026-12-31' },
+  'pnpm-workspace.yaml': { category: 'contract', reason: 'pnpm 工作区清单', reviewBy: '2026-12-31' },
+  'pyproject.toml': { category: 'contract', reason: 'Python 打包真源（版本轨道 G1）', reviewBy: '2026-12-31' },
+  'khy.bat': { category: 'contract', reason: 'Windows CLI 入口壳', reviewBy: '2026-12-31' },
+  'khy.sh': { category: 'contract', reason: 'POSIX CLI 入口壳', reviewBy: '2026-12-31' },
+  'khy-cli.bat': { category: 'contract', reason: 'Windows CLI 备用入口壳', reviewBy: '2026-12-31' },
+  'install-khy.ps1': { category: 'contract', reason: 'PowerShell 安装脚本', reviewBy: '2026-12-31' },
+  'portable-setup.bat': { category: 'contract', reason: '便携版初始化（Win）', reviewBy: '2026-12-31' },
+  'portable-setup.sh': { category: 'contract', reason: '便携版初始化（POSIX）', reviewBy: '2026-12-31' },
+  '.dockerignore': { category: 'contract', reason: '镜像构建忽略（由 BUILD-OUTPUTS 派生）', reviewBy: '2026-12-31' },
+  '.editorconfig': { category: 'contract', reason: '编辑器统一格式约定', reviewBy: '2026-12-31' },
+  '.env.example': { category: 'contract', reason: '环境变量模板（零硬编码默认值）', reviewBy: '2026-12-31' },
+  '.gitattributes': { category: 'contract', reason: 'git 属性（换行/语言判定）', reviewBy: '2026-12-31' },
+  '.gitignore': { category: 'contract', reason: '忽略清单（由 BUILD-OUTPUTS 派生）', reviewBy: '2026-12-31' },
+  '.npmrc': { category: 'contract', reason: 'npm 源配置（原生源，见 PROCESS-013）', reviewBy: '2026-12-31' },
+  'CLAUDE.md': { category: 'contract', reason: 'AI 指令文件（裁决保留，与 AGENTS.md 同源）', reviewBy: '2026-12-31' },
+};
+const ROOT_ALWAYS_OK = new Set(['.git', 'node_modules']);
+
+/**
+ * 根级实体是否已登记（Q1′/Q-1）。绝不抛。
+ * @param {Array<{name:string}>} entries
+ * @returns {string[]} 未登记的根级条目名（排序）
+ */
+function findUncataloguedRootEntries(entries) {
+  try {
+    const catalogued = new Set([
+      ...Object.keys(LAYERS),
+      ...Object.keys(CROSSCUTTING),
+      ...GENERATED_TOP_LEVEL_DIRS,
+      ...ROOT_DOC_WHITELIST,
+      ...Object.keys(ROOT_CATALOG),
+      ...ROOT_ALWAYS_OK,
+    ]);
+    return (Array.isArray(entries) ? entries : [])
+      .filter(e => e && typeof e.name === 'string' && e.name)
+      .filter(e => !catalogued.has(e.name))
+      .filter(e => !README_VARIANT_RE.test(e.name))
+      .map(e => e.name)
+      .sort();
+  } catch {
+    return [];
+  }
+}
+
+function checkRootCatalogued(findings) {
+  const offenders = findUncataloguedRootEntries(
+    fs.readdirSync(repoRoot, { withFileTypes: true }).map(e => ({ name: e.name }))
+  );
+  if (offenders.length === 0) return;
+  findings.push({
+    id: 'root-uncatalogued',
+    severity: 'warning',
+    message: `根上有 ${offenders.length} 个实体未在封闭清单登记（Q1′/Q-1，[DESIGN-LAY-008] §19）。`,
+    detail:
+      `为每个根项补 ROOT_CATALOG 条目（category/reason/reviewBy）或归入既有层：${offenders.join(', ')}`,
     full: offenders,
   });
 }
@@ -1688,6 +1780,7 @@ function main() {
   checkDocsIndexFirst(findings);
   checkDocsIndexComplete(findings, counts);
   checkLayerRegistry(findings);
+  checkRootCatalogued(findings);
   checkDanglingTasks(findings, counts);
   checkCrossLayerRequires(findings, counts);
   checkExtensionContract(findings, counts);
@@ -1779,4 +1872,6 @@ module.exports = {
   checkRootJunk,
   ROOT_JUNK_FILE_RES,
   ROOT_JUNK_DIR_RES,
+  findUncataloguedRootEntries,
+  ROOT_CATALOG,
 };

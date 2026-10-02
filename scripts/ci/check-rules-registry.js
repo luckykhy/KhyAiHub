@@ -74,6 +74,23 @@ function targetPath(target) {
   return match ? match[1] : null;
 }
 
+/** Q1′/Q-2（[DESIGN-LAY-008] §19）：规则 `paths` glob 的首段路径若磁盘上不存在，
+ *  该 glob 恒不命中——规则作用域悄悄悬空（如指向已溶解的 `_产物/`）。与 check-change-safety
+ *  的 dangling-maintainer-paths 同一病灶、不同登记表。**S1 观察者档：由调用方打印，不计入
+ *  阻断 findings**。纯函数，接收已解析 rules 数组，返回 {id, glob, seg}。绝不抛。 */
+function findDanglingRegistryPaths(rules, existsFn) {
+  const ex = existsFn || exists;
+  const out = [];
+  for (const rule of Array.isArray(rules) ? rules : []) {
+    const id = typeof rule.id === 'string' ? rule.id : '';
+    for (const glob of Array.isArray(rule.paths) ? rule.paths : []) {
+      const seg = String(glob || '').split('/')[0].replace(/[*?[\]{}!].*$/, '').replace(/\/+$/, '');
+      if (seg && !ex(seg)) out.push({ id, glob, seg });
+    }
+  }
+  return out;
+}
+
 /** 提取一个文件里所有 RULES-REGISTRY 标记行声明的规则 ID。 */
 function markerIds(text) {
   const ids = new Set();
@@ -265,7 +282,17 @@ function main() {
 
   checkRuleCards();
   checkOrphanCards(new Set(loaded.rules.map((rule) => rule.id)));
+
+  // Q1′/Q-2 观察者：paths glob 首段悬空只记录，不阻断（S1）。
+  const dangling = findDanglingRegistryPaths(loaded.rules);
+  if (dangling.length > 0) {
+    const uniq = [...new Set(dangling.map(d => d.seg))];
+    console.log(`[观察者 S1] registry-path-dangling：${dangling.length} 条规则 paths 首段悬空（${uniq.slice(0, 8).join(', ')}${uniq.length > 8 ? ' …' : ''}）。`);
+  }
   return printSummary();
 }
 
-process.exitCode = main();
+// 只在作为 CLI 直接运行时才执行 main()——被测试 require 时不得触发副作用。
+if (require.main === module) process.exitCode = main();
+
+module.exports = { findDanglingRegistryPaths };
