@@ -57,7 +57,7 @@ const KEYBINDING_CATALOG = Object.freeze([
       { keys: 'Ctrl + Y', desc: '复制上一条 AI 回复到剪贴板(仅 CC 模式;默认 TUI 里 Ctrl+Y 是「粘回删除内容」,见编辑组)' },
       { keys: 'Ctrl + V', desc: '粘贴/暂存剪贴板图片到下一回合(Windows 为 Alt + V;此处 Ctrl+V 会被终端自用为文本粘贴)' },
       { keys: 'Alt + M', desc: '语音输入：触发 Win+H 听写，识别文字落入输入框(仅 Windows)' },
-      { keys: 'Shift + Tab', desc: '切换权限模式(在 /permissions 的全部档位间循环)' },
+      { keys: 'Shift + Tab', desc: '切换权限模式(在 TUI 的权限档位间循环;细粒度规则请用 /permissions)' },
       { keys: 'Esc', desc: '取消计划评审 / 中断当前回合 / 连按两次清空输入或回溯' },
       { keys: '?', desc: '在空输入框显示/隐藏键盘快捷键浮层' },
     ]),
