@@ -21,10 +21,10 @@ import {
 type Tab = 'providers' | 'endpoints' | 'agents' | 'health'
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: 'providers', label: 'Provider 与密钥', icon: '🔑' },
-  { id: 'endpoints', label: '端点预设', icon: '🌐' },
-  { id: 'agents', label: 'Agent 应用', icon: '🤖' },
-  { id: 'health', label: '健康与审计', icon: '📊' }
+  { id: 'providers', label: 'Provider 与密钥', icon: '◆' },
+  { id: 'endpoints', label: '端点预设', icon: '◉' },
+  { id: 'agents', label: 'Agent 应用', icon: '❯' },
+  { id: 'health', label: '健康与审计', icon: '▤' }
 ]
 
 const P1_APPS: { id: string; label: string }[] = [
@@ -61,7 +61,7 @@ export function KeyManagerPage({
     <div className={`flex flex-col bg-panel text-foreground ${standalone ? 'h-full' : 'min-h-0'}`}>
       {standalone && (
         <div className="flex items-center justify-between px-4 h-11 border-b border-border flex-shrink-0">
-          <div className="text-sm font-semibold">🔐 KhyOS 密钥与端点管理</div>
+          <div className="text-sm font-semibold">◆ KhyOS 密钥与端点管理</div>
           <button
             onClick={() => api.closeWindow()}
             className="text-foreground/60 hover:text-foreground text-lg leading-none px-2"
