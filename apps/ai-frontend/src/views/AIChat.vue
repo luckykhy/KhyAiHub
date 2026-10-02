@@ -31,44 +31,122 @@
           :value="p.id"
         />
       </el-select>
-      <div class="chat-sidebar-label">最近对话</div>
-      <div v-loading="listLoading" class="chat-conv-list">
-        <div
-          v-for="c in conversations"
-          :key="c.id"
-          :class="['chat-conv-item', { active: c.id === activeId }]"
-          role="button"
-          :tabindex="0"
-          :aria-label="`打开对话 ${c.title}`"
-          @click="selectConversation(c.id)"
-          @keydown.enter.prevent="selectConversation(c.id)"
-          @keydown.space.prevent="selectConversation(c.id)"
+      <div class="chat-sidebar-label">
+        <span>最近对话</span>
+        <button
+          type="button"
+          class="chat-new-group-btn"
+          title="新建分组"
+          aria-label="新建分组"
+          @click="newGroup"
         >
-          <div class="chat-conv-main">
-            <div class="chat-conv-title" :title="c.title">{{ c.title }}</div>
-            <div class="chat-conv-time">{{ relativeTime(c.updatedAt) }}</div>
+          <el-icon><Plus /></el-icon>
+        </button>
+      </div>
+      <div
+        v-loading="listLoading"
+        class="chat-conv-list"
+        :class="{ 'is-dragging': dragState.active }"
+      >
+        <template v-for="folder in folderedView" :key="`${folder.type}:${folder.id}`">
+          <!-- Top-level folder: a project (or "未归属项目"). Always collapsible. -->
+          <div
+            class="chat-folder-head"
+            role="button"
+            :tabindex="0"
+            :aria-label="`折叠 ${folder.name}`"
+            @click="toggleFolder(folder.type, folder.id)"
+            @keydown.enter.prevent="toggleFolder(folder.type, folder.id)"
+            @keydown.space.prevent="toggleFolder(folder.type, folder.id)"
+          >
+            <el-icon class="chat-folder-caret">
+              <CaretBottom v-if="!isFolderCollapsed(folder.type, folder.id)" />
+              <CaretRight v-else />
+            </el-icon>
+            <span class="chat-folder-icon">
+              <FolderOpened v-if="folder.type === 'project'" />
+              <Folder v-else />
+            </span>
+            <span class="chat-folder-name" :title="folder.name">{{ folder.name }}</span>
+            <span class="chat-folder-count">{{
+              folder.subGroups.reduce((n, sg) => n + sg.items.length, 0) + folder.items.length
+            }}</span>
           </div>
-          <div class="chat-conv-ops">
-            <button
-              type="button"
-              class="chat-conv-op-btn"
-              title="重命名"
-              :aria-label="`重命名对话 ${c.title}`"
-              @click.stop="renameConversation(c)"
-            >
-              <el-icon><EditPen /></el-icon>
-            </button>
-            <button
-              type="button"
-              class="chat-conv-op-btn chat-conv-op-btn-danger"
-              title="删除"
-              :aria-label="`删除对话 ${c.title}`"
-              @click.stop="deleteConversation(c)"
-            >
-              <el-icon><Delete /></el-icon>
-            </button>
+
+          <div
+            v-show="!isFolderCollapsed(folder.type, folder.id)"
+            class="chat-folder-body"
+          >
+            <!-- Custom sub-groups inside this project. -->
+            <template v-for="sg in folder.subGroups" :key="`g:${sg.id}`">
+              <div
+                class="chat-subfolder-head"
+                role="button"
+                :tabindex="0"
+                :aria-label="`折叠分组 ${sg.name}`"
+                @click="toggleFolder('subgroup', sg.id)"
+                @keydown.enter.prevent="toggleFolder('subgroup', sg.id)"
+                @keydown.space.prevent="toggleFolder('subgroup', sg.id)"
+              >
+                <el-icon class="chat-folder-caret">
+                  <CaretBottom v-if="!isFolderCollapsed('subgroup', sg.id)" />
+                  <CaretRight v-else />
+                </el-icon>
+                <span class="chat-folder-icon"><Folder /></span>
+                <span class="chat-subfolder-name" :title="sg.name">{{ sg.name }}</span>
+                <span class="chat-folder-count">{{ sg.items.length }}</span>
+                <el-dropdown
+                  trigger="click"
+                  @command="(cmd) => (cmd === 'rename' ? renameConversationGroup(sg.groupRef) : deleteConversationGroup(sg.groupRef))"
+                >
+                  <button type="button" class="chat-folder-menu" @click.stop title="分组操作">
+                    <el-icon><MoreFilled /></el-icon>
+                  </button>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item command="rename">重命名分组</el-dropdown-item>
+                      <el-dropdown-item command="delete" divided>删除分组</el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
+              </div>
+              <div v-show="!isFolderCollapsed('subgroup', sg.id)" class="chat-subfolder-body">
+                <ChatConvRow
+                  v-for="c in sg.items"
+                  :key="c.id"
+                  :conv="c"
+                  :active="c.id === activeId"
+                  :dragging="dragState.active && dragState.id === c.id"
+                  :drag-active="dragState.active"
+                  :groups="groups"
+                  :relative-time="relativeTime"
+                  @select="selectConversation"
+                  @rename="renameConversation"
+                  @delete="deleteConversation"
+                  @move="(gid) => handleMoveToGroup(c.id, gid)"
+                  @pressstart="(e) => onItemPointerDown(e, c)"
+                />
+              </div>
+            </template>
+
+            <!-- Loose conversations (no custom group) directly under the project. -->
+            <ChatConvRow
+              v-for="c in folder.items"
+              :key="c.id"
+              :conv="c"
+              :active="c.id === activeId"
+              :dragging="dragState.active && dragState.id === c.id"
+              :drag-active="dragState.active"
+              :groups="groups"
+              :relative-time="relativeTime"
+              @select="selectConversation"
+              @rename="renameConversation"
+              @delete="deleteConversation"
+              @move="(gid) => handleMoveToGroup(c.id, gid)"
+              @pressstart="(e) => onItemPointerDown(e, c)"
+            />
           </div>
-        </div>
+        </template>
         <div v-if="!conversations.length && !listLoading" class="chat-conv-empty">暂无历史对话</div>
       </div>
     </aside>
@@ -253,7 +331,7 @@
                         : 'is-low',
                   ]"
                 >
-                  ⚡ {{ Math.round(contextStats.cacheHitRate) }}%
+                  {{ Math.round(contextStats.cacheHitRate) }}%
                 </span>
               </div>
               <ul
@@ -851,6 +929,7 @@
 import {
   computed,
   ref,
+  reactive,
   shallowRef,
   nextTick,
   onMounted,
@@ -882,12 +961,20 @@ import {
   Collection,
   Download,
   CircleClose,
+  CaretBottom,
+  CaretRight,
+  FolderOpened,
+  MoreFilled,
 } from '@element-plus/icons-vue';
 import request from '@/api/request';
 import { resolveWsUrl } from '@/utils/ws';
 import { authedFetch } from '@/api/authedFetch';
 import { useUserStore } from '@/stores/user';
 import ChatPartsRenderer from './components/ChatPartsRenderer.vue';
+// A single conversation row in the sidebar folder tree. Extracted so the
+// two-level tree (sub-group items + loose items) can render it in two places
+// without duplicating the row markup + ops dropdowns.
+import ChatConvRow from './components/ChatConvRow.vue';
 // 输入栏子组件：把输入文本的 ref 内聚到子组件，打字时只重渲染子组件，
 // 不再触发本组件消息列表的 patch。同步引入（输入区需首屏立即可用）。
 import ChatInputBar from './components/ChatInputBar.vue';
@@ -1003,13 +1090,21 @@ let _wsHeartbeatFailures = 0;
 // ── Conversation history sidebar (backend-persisted, per-user) ──────────────
 const {
   conversations,
+  groups,
   activeId,
   listLoading,
   fetchList,
+  fetchGroups,
+  fetchAll,
   openConversation,
   createConversation,
   updateConversation,
   removeConversation,
+  createGroup,
+  renameGroup,
+  deleteGroup,
+  moveToGroup,
+  reorder,
   relativeTime,
 } = useChatConversations();
 const sidebarCollapsed = ref(false);
@@ -1281,7 +1376,7 @@ async function onProjectChange(id) {
   setActiveProject(id);
   newConversation();
   try {
-    await fetchList(activeProjectId.value);
+    await fetchAll(activeProjectId.value);
     if (conversations.value.length) {
       messages.value = markRaw(
         (await openConversation(conversations.value[0].id)).map((m) => markRaw(m))
@@ -1327,7 +1422,7 @@ async function renameConversation(c) {
 
 async function deleteConversation(c) {
   try {
-    await ElMessageBox.confirm(`删除对话「${c.title}」？此操作不可恢复。`, '删除确认', {
+    await ElMessageBox.confirm(`删除对话「${c.title}」？此操作不恢复。`, '删除确认', {
       type: 'warning',
       confirmButtonText: '删除',
       cancelButtonText: '取消',
@@ -1338,6 +1433,322 @@ async function deleteConversation(c) {
     showSuccess('已删除');
   } catch (err) {
     if (err !== 'cancel') showError('删除失败');
+  }
+}
+
+// ── Foldered sidebar: project folders → custom sub-groups + drag reorder ──────
+// Two-level tree. The project is the ONLY top-level folder dimension; custom
+// groups ("分组") are sub-folders nested inside the project their conversations
+// belong to. Long-press drag reorders conversations across the whole visible
+// flat sequence (a single linear sortOrder the backend already sorts by).
+//
+// Top-level entry shape:
+//   { type:'project'|'ungrouped', id, name, icon, projectRef,
+//     subGroups: [{ type:'group', id, name, groupRef, items }],
+//     items: [<loose conversations, no groupId>] }
+// A custom group appears as a sub-folder only inside the project of the
+// conversations filed under it — so an empty group (no members) is not shown
+// until the user files a conversation into it via "移入分组".
+
+const collapsedFolders = ref(new Set());
+
+function folderKey(type, id) {
+  return `${type}:${id}`;
+}
+function isFolderCollapsed(type, id) {
+  return collapsedFolders.value.has(folderKey(type, id));
+}
+function toggleFolder(type, id) {
+  const key = folderKey(type, id);
+  const next = new Set(collapsedFolders.value);
+  if (next.has(key)) next.delete(key);
+  else next.add(key);
+  collapsedFolders.value = next;
+}
+
+// Build the two-level foldered structure used by the sidebar.
+const folderedView = computed(() => {
+  const list = conversations.value;
+  // Stable sort helper: manual sortOrder first (nulls last), then updatedAt desc.
+  const byDisplay = (a, b) => {
+    const sa = a.sortOrder == null ? Number.MAX_SAFE_INTEGER : a.sortOrder;
+    const sb = b.sortOrder == null ? Number.MAX_SAFE_INTEGER : b.sortOrder;
+    if (sa !== sb) return sa - sb;
+    const ta = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+    const tb = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+    if (ta !== tb) return tb - ta;
+    return (b.id || 0) - (a.id || 0);
+  };
+
+  const groupMap = new Map(groups.value.map((g) => [g.id, g]));
+
+  // Partition a set of conversations (within one project) into sub-groups +
+  // loose items. A conversation whose groupId has no matching group row (e.g.
+  // the group was deleted but the reference lingered) falls back to loose.
+  function buildSubFolders(convs) {
+    const sorted = convs.slice().sort(byDisplay);
+    const loose = [];
+    const byGroup = new Map();
+    for (const c of sorted) {
+      if (c.groupId != null && groupMap.has(c.groupId)) {
+        const arr = byGroup.get(c.groupId) || [];
+        arr.push(c);
+        byGroup.set(c.groupId, arr);
+      } else {
+        loose.push(c);
+      }
+    }
+    const subGroups = [...byGroup.entries()].map(([gid, items]) => ({
+      type: 'group',
+      id: gid,
+      name: groupMap.get(gid).name || '新建分组',
+      groupRef: groupMap.get(gid),
+      items,
+    }));
+    subGroups.sort((a, b) => {
+      const sa = a.groupRef.sortOrder == null ? Number.MAX_SAFE_INTEGER : a.groupRef.sortOrder;
+      const sb = b.groupRef.sortOrder == null ? Number.MAX_SAFE_INTEGER : b.groupRef.sortOrder;
+      return sa - sb || (a.id || 0) - (b.id || 0);
+    });
+    return { subGroups, items: loose };
+  }
+
+  // Bucket conversations by projectId.
+  const byProject = new Map();
+  const unprojected = [];
+  for (const c of list) {
+    if (c.projectId != null) {
+      const arr = byProject.get(c.projectId) || [];
+      arr.push(c);
+      byProject.set(c.projectId, arr);
+    } else {
+      unprojected.push(c);
+    }
+  }
+
+  // Top-level project folders in projectList order.
+  const folders = projectList.value
+    .filter((p) => byProject.has(p.id))
+    .map((p) => ({
+      type: 'project',
+      id: p.id,
+      name: p.name || '未命名项目',
+      icon: p.icon,
+      projectRef: p,
+      ...buildSubFolders(byProject.get(p.id)),
+    }));
+
+  // Conversations whose project no longer exists in projectList (deleted
+  // project) — surface under a synthetic folder so they aren't orphaned.
+  for (const [pid, convs] of byProject) {
+    if (!projectList.value.some((p) => p.id === pid)) {
+      folders.push({
+        type: 'project',
+        id: pid,
+        name: `项目 #${pid}`,
+        icon: '',
+        projectRef: null,
+        ...buildSubFolders(convs),
+      });
+    }
+  }
+
+  // 未归属项目 bucket: conversations with no projectId.
+  if (unprojected.length) {
+    folders.push({
+      type: 'ungrouped',
+      id: 0,
+      name: '未归属项目',
+      icon: '',
+      projectRef: null,
+      ...buildSubFolders(unprojected),
+    });
+  }
+  return folders;
+});
+
+// Flat ordered list of conversations as currently displayed (for drag math).
+// Render order must match this: within each top-level folder, sub-group items
+// first (in sub-group order), then loose items.
+const flatOrder = computed(() =>
+  folderedView.value.flatMap((f) => [
+    ...f.subGroups.flatMap((sg) => sg.items),
+    ...f.items,
+  ])
+);
+
+// ── Long-press drag reorder ───────────────────────────────────────────────────
+// A pointer held >350ms on an item enters drag mode; moving the pointer up/down
+// reorders the item within the visible flat list; releasing persists the new
+// order. No scroll region / no ANSI — pure DOM reordering via the reactive list.
+const dragState = reactive({
+  active: false,
+  id: null,
+  startY: 0,
+  overIndex: -1,
+  moved: false,
+});
+const DRAG_HOLD_MS = 350;
+
+function onItemPointerDown(e, conv) {
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  // Ignore presses that start on an action button so rename/delete still work.
+  if (e.target.closest('.chat-conv-op-btn') || e.target.closest('.chat-conv-move')) return;
+  const id = conv.id;
+  const startY = e.clientY;
+
+  // Cleanup helper bound to this interaction's listeners.
+  let moveListener = null;
+  let upListener = null;
+  const detach = () => {
+    if (moveListener) window.removeEventListener('pointermove', moveListener);
+    if (upListener) window.removeEventListener('pointerup', upListener);
+    moveListener = upListener = null;
+  };
+
+  const timer = setTimeout(() => {
+    // Hold confirmed → enter drag mode. Switch listeners to drag handlers.
+    detach();
+    dragState.active = true;
+    dragState.id = id;
+    dragState.startY = startY;
+    dragState.overIndex = flatOrder.value.findIndex((c) => c.id === id);
+    dragState.moved = false;
+    moveListener = (ev) => {
+      const delta = ev.clientY - dragState.startY;
+      if (Math.abs(delta) > 4 && !dragState.moved) {
+        dragState.moved = true;
+        // A real drag happened → swallow the click that follows pointerup so
+        // the row's @click doesn't switch conversations.
+        suppressNextClick();
+      }
+      const items = Array.from(document.querySelectorAll('.chat-conv-item[data-draggable]'));
+      let targetIndex = items.length;
+      for (let i = 0; i < items.length; i++) {
+        const rect = items[i].getBoundingClientRect();
+        if (ev.clientY < rect.top + rect.height / 2) {
+          targetIndex = i;
+          break;
+        }
+      }
+      // Live reorder: splice the dragged item to the target slot in the flat
+      // sequence, then re-stamp sortOrder = flat index. folderedView sorts by
+      // sortOrder, so the list visibly reshuffles as the pointer moves — this
+      // is what makes the drag perceptible (drop-only reorder felt broken).
+      const flat = flatOrder.value.slice();
+      const fromIdx = flat.findIndex((c) => c.id === id);
+      if (fromIdx !== -1) {
+        let toIdx = targetIndex;
+        if (toIdx > fromIdx) toIdx -= 1; // account for removal shift
+        if (toIdx !== fromIdx && toIdx >= 0 && toIdx <= flat.length) {
+          const [moved] = flat.splice(fromIdx, 1);
+          flat.splice(toIdx, 0, moved);
+          flat.forEach((c, i) => {
+            c.sortOrder = i;
+          });
+        }
+      }
+      dragState.overIndex = targetIndex;
+    };
+    upListener = () => finishDrag();
+    window.addEventListener('pointermove', moveListener);
+    window.addEventListener('pointerup', upListener);
+  }, DRAG_HOLD_MS);
+
+  // Before the hold fires, cancel on a real pointerup or a sizable move so a
+  // tap / swipe never accidentally enters drag mode.
+  moveListener = (ev) => {
+    if (!dragState.active && Math.abs(ev.clientY - startY) > 8) detach();
+  };
+  upListener = () => {
+    detach();
+    clearTimeout(timer);
+  };
+  window.addEventListener('pointermove', moveListener);
+  window.addEventListener('pointerup', upListener);
+
+  function finishDrag() {
+    detach();
+    const moved = dragState.moved;
+    dragState.active = false;
+    dragState.id = null;
+    if (!moved) return; // hold without movement → nothing to persist
+    // Persist the current live order as the canonical sortOrder.
+    const items = flatOrder.value.map((c, i) => ({ id: c.id, sortOrder: i }));
+    reorder(items).catch(async (err) => {
+      showError(`调整顺序失败：${err?.message || '未知错误'}`);
+      await fetchList(activeProjectId.value);
+    });
+  }
+}
+
+// One-shot click suppressor: prevents the click that follows a drag pointerup
+// from reaching a row's @click (= switching conversations). Captured at window
+// so it runs before the row's bubble-phase listener.
+let _clickSuppressor = null;
+function suppressNextClick() {
+  if (_clickSuppressor) window.removeEventListener('click', _clickSuppressor, true);
+  _clickSuppressor = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    window.removeEventListener('click', _clickSuppressor, true);
+    _clickSuppressor = null;
+  };
+  window.addEventListener('click', _clickSuppressor, true);
+}
+
+// ── Custom group CRUD ─────────────────────────────────────────────────────────
+async function newGroup() {
+  try {
+    const { value } = await ElMessageBox.prompt('新建分组', '分组名称', {
+      inputValue: '',
+      inputPlaceholder: '例如：常用对话、待整理…',
+      confirmButtonText: '创建',
+      cancelButtonText: '取消',
+      inputValidator: (v) => (v && v.trim() ? true : '名称不能为空'),
+    });
+    await createGroup(value.trim());
+    showSuccess('已创建分组，用「移入分组」把对话归入后即作为子文件夹显示');
+  } catch (err) {
+    if (err !== 'cancel') showError(`创建分组失败：${err?.message || '未知错误'}`);
+  }
+}
+
+async function renameConversationGroup(g) {
+  try {
+    const { value } = await ElMessageBox.prompt('重命名分组', '修改名称', {
+      inputValue: g.name,
+      confirmButtonText: '保存',
+      cancelButtonText: '取消',
+      inputValidator: (v) => (v && v.trim() ? true : '名称不能为空'),
+    });
+    await renameGroup(g.id, value.trim());
+    showSuccess('已重命名');
+  } catch (err) {
+    if (err !== 'cancel') showError(`重命名分组失败：${err?.message || '未知错误'}`);
+  }
+}
+
+async function deleteConversationGroup(g) {
+  try {
+    await ElMessageBox.confirm(`删除分组「${g.name}」？组内对话保留，移入「未分组」。`, '删除确认', {
+      type: 'warning',
+      confirmButtonText: '删除',
+      cancelButtonText: '取消',
+    });
+    await deleteGroup(g.id);
+    showSuccess('已删除分组');
+  } catch (err) {
+    if (err !== 'cancel') showError(`删除分组失败：${err?.message || '未知错误'}`);
+  }
+}
+
+// Move a conversation into a custom group (or out, when groupId is null).
+async function handleMoveToGroup(convId, groupId) {
+  try {
+    await moveToGroup(convId, groupId);
+  } catch (err) {
+    showError(`移动失败：${err?.message || '未知错误'}`);
   }
 }
 
@@ -3550,7 +3961,8 @@ onMounted(async () => {
     // Load the project list for the sidebar selector (best-effort — the chat
     // works without it), then fetch history scoped to the active project.
     listProjects().catch(() => {});
-    await fetchList(activeProjectId.value);
+    await fetchAll(activeProjectId.value);
+    fetchGroups().catch(() => {});
     if (conversations.value.length) {
       messages.value = markRaw(
         (await openConversation(conversations.value[0].id)).map((m) => markRaw(m))
@@ -3661,10 +4073,33 @@ onBeforeUnmount(() => {
 }
 
 .chat-sidebar-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 12px;
   font-weight: 600;
   color: var(--khy-text-muted, var(--el-text-color-secondary));
   padding: 2px 2px 0;
+}
+.chat-sidebar-label span {
+  flex: 1;
+}
+.chat-new-group-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--khy-text-muted, var(--el-text-color-secondary));
+  cursor: pointer;
+}
+.chat-new-group-btn:hover {
+  background: var(--el-fill-color-light);
+  color: var(--el-color-primary);
 }
 
 .chat-conv-list {
@@ -3796,6 +4231,126 @@ onBeforeUnmount(() => {
   text-align: center;
   padding: 24px 0;
   color: var(--khy-text-muted, var(--el-text-color-secondary));
+}
+
+/* ── Foldered sidebar ── */
+.chat-folder-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  margin-top: 4px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--khy-text-secondary, var(--el-text-color-primary));
+  cursor: pointer;
+  user-select: none;
+}
+.chat-folder-head:hover {
+  background: var(--el-fill-color-light);
+}
+.chat-folder-caret {
+  font-size: 10px;
+  color: var(--khy-text-muted, var(--el-text-color-secondary));
+}
+.chat-folder-icon {
+  display: inline-flex;
+  color: var(--el-color-primary);
+}
+.chat-folder-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chat-folder-count {
+  font-size: 11px;
+  color: var(--khy-text-muted, var(--el-text-color-secondary));
+  background: var(--el-fill-color);
+  border-radius: 8px;
+  padding: 0 6px;
+  line-height: 16px;
+}
+.chat-folder-menu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--khy-text-muted, var(--el-text-color-secondary));
+  cursor: pointer;
+  opacity: 0;
+}
+.chat-folder-head:hover .chat-folder-menu {
+  opacity: 1;
+}
+.chat-folder-menu:hover {
+  background: var(--el-fill-color-dark);
+  color: var(--el-color-primary);
+}
+.chat-folder-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 14px;
+}
+
+/* Sub-folder (custom group inside a project). */
+.chat-subfolder-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--khy-text-secondary, var(--el-text-color-primary));
+  cursor: pointer;
+  user-select: none;
+}
+.chat-subfolder-head:hover {
+  background: var(--el-fill-color-light);
+}
+.chat-subfolder-head:hover .chat-folder-menu {
+  opacity: 1;
+}
+.chat-subfolder-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chat-subfolder-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 14px;
+}
+
+/* Long-press drag: lift the dragged item, dim it, add a drop cue. */
+.chat-conv-item.dragging {
+  opacity: 0.45;
+  transform: scale(0.98);
+  cursor: grabbing;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+.chat-conv-item[data-draggable='1'] {
+  cursor: grabbing;
+}
+/* While dragging, suppress text selection across the whole list so the hold +
+   move doesn't start a selection drag that fights the reorder. */
+.chat-conv-list.is-dragging,
+.chat-conv-list.is-dragging .chat-conv-item {
+  user-select: none;
+  -webkit-user-select: none;
+}
+.chat-conv-move {
+  color: var(--el-color-primary);
 }
 
 .chat-main {

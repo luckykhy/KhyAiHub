@@ -93,7 +93,7 @@
           <el-input
             v-model="form.icon"
             maxlength="32"
-            placeholder="可选 emoji，如 🚀"
+            placeholder="可选 emoji，如"
             style="width: 160px"
           />
           <el-color-picker v-model="form.color" class="proj-color-picker" />

@@ -19,7 +19,7 @@
       @click="$emit('toggle-location')"
       circle
     >
-      <span aria-hidden="true">📍</span>
+      <span aria-hidden="true">⌖</span>
     </el-button>
     <el-button
       class="chat-voice-input-btn"

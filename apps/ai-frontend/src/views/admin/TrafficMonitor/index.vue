@@ -39,9 +39,9 @@
         >
           {{ captureEnabled ? '⏸ 暂停捕获' : '▶ 启用捕获' }}
         </button>
-        <button class="btn btn-secondary" @click="refreshData">🔄 刷新</button>
-        <button class="btn btn-secondary" @click="clearData">🗑 清空</button>
-        <button class="btn btn-secondary" @click="exportHAR">📥 导出 HAR</button>
+        <button class="btn btn-secondary" @click="refreshData">刷新</button>
+        <button class="btn btn-secondary" @click="clearData">清空</button>
+        <button class="btn btn-secondary" @click="exportHAR">导出 HAR</button>
       </div>
       <div class="toolbar-right">
         <select v-model="filterProvider" class="filter-select">

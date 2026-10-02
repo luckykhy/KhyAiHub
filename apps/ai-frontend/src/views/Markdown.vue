@@ -66,7 +66,7 @@
               :title="f.path"
               @click="f.type === 'dir' ? null : openServerFile(f)"
             >
-              {{ f.type === 'dir' ? '📁 ' : '' }}{{ f.name }}
+              {{ f.type === 'dir' ? '' : '' }}{{ f.name }}
             </li>
             <li v-if="!serverLoading && !serverFiles.length" class="md-files-empty">
               （无 Markdown 文件）
