@@ -48,8 +48,8 @@ test('parseArgs defaults to a current-platform runtime release', () => {
   assert.equal(options.kind, 'runtime');
   assert.equal(options.platform, 'win32');
   assert.equal(options.arch, 'x64');
-  assert.equal(options.out, path.join(ROOT, 'dist', 'releases'));
-  assert.equal(options.artifactOut, path.join(ROOT, 'dist', 'portable'));
+  assert.equal(options.out, path.join(ROOT, 'entries', 'portable', 'releases'));
+  assert.equal(options.artifactOut, path.join(ROOT, 'entries', 'portable'));
   assert.equal(options.skipBuild, false);
   assert.equal(options.keepArtifact, false);
 });
