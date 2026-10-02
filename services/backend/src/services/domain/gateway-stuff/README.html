@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>gateway-stuff — 网关日志租界：噪声翻译与来源归因（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>gateway-stuff<span class="sep">›</span>gateway-stuff — 网关日志租界：噪声翻译与来源归因（D2）</div>
+      <header class="hero reveal"><h1>gateway-stuff — 网关日志租界：噪声翻译与来源归因（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#gateway-stuff-网关日志租界-噪声翻译与来源归因-d2">gateway-stuff — 网关日志租界：噪声翻译与来源归因（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="gateway-stuff-网关日志租界-噪声翻译与来源归因-d2">gateway-stuff — 网关日志租界：噪声翻译与来源归因（D2）<a class="anchor" href="#gateway-stuff-网关日志租界-噪声翻译与来源归因-d2" aria-label="锚点">#</a></h1>
+<p>业务上下文：AI 管理服务器启动时装上的<strong>进程级日志治理</strong>——把底层库/适配器的<br>英文与噪声日志翻译成面向用户的中文状态，并把每条输出归因到「哪个适配器、<br>哪种调用模式」，同时守住后台任务不污染前台。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong>管理服务器进程本身</strong>：<code>services/aiManagementServer.js:3528</code> 的</li></ul>
+<p><code>require('./gatewayLogLease').install()</code>——这是全仓<strong>唯一</strong>生产调用点。</p>
+<ul><li><strong>状态可见性契约的消费方</strong>：<code>cli/handlers/trace.js:14</code> 只在注释里引用其契约</li></ul>
+<p>（不 require）；壳 <code>services/gatewayLogLease/index.js:4</code> 再导出本目录。</p>
+<ul><li><strong>测试</strong>：<code>tests/services/gatewayLogLease/gatewayLogLease.test.js:19-23</code>、</li></ul>
+<p><code>wiring.test.js:24</code>。</p>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p>「日志治理」这件事天然三份职责，混在一起会互相掩盖：<br><code>logLease.js</code> 只做<strong>租界决策</strong>（<code>decide</code> / <code>CHANNELS</code>，纯函数）；<br><code>noiseFilter.js</code> 只做<strong>翻译与净化</strong>（<code>translate</code> / <code>sanitize</code> / <code>sanitizeForStatus</code>，<br>规则表 <code>RULES</code> + <code>ADAPTER_TOKENS</code>，纯函数）；<br><code>context.js</code>（<code>async_hooks</code>）与 <code>sandbox.js</code> 负责<strong>归因与拦截</strong><br>（<code>runWith</code> / <code>current</code> / <code>isStatusQuery</code> / <code>isSandbox</code> / <code>runForAdapter</code> /<br><code>guardBackground</code>），<code>devLog.js</code> 是唯一碰 <code>fs</code> 的环形缓冲。<br>拆开的收益是：一条中文状态文案错在哪、某个适配器为何没被归因，各自只有一处可查。<br>没有 slash 命令是<strong>有意的</strong>——它不是功能入口，是进程护栏。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/services/gatewayLogLease/gatewayLogLease.test.js</code></pre>
+<p><strong>当前实测（2026-09-28，原样记录）</strong>：22 tests / <strong>16 pass / 6 fail</strong> / 0 skipped。<br>本卡采集到的前 4 条红用例名均为「原始日志 → 面向用户中文状态」的翻译断言<br>（「Token 刷新失败 → 模型服务正在切换」「本地依赖不完整 → 正在尝试其他方式获取」<br>「API 400 → 当前模型响应异常，正在自动修复」「requires puppeteer → 正在降级到轻量模式」），<br>其余 2 条未采集；<code>gatewayLogLease/noiseFilter.js</code> 正是翻译表所在文件，此刻是 <code> M</code><br>（作者在做中的改动）。本卡<strong>不下病因结论</strong>，只登记「红点落在脏文件所辖的翻译侧」<br>这一观察。<br><code>wiring.test.js</code> 是 jest 形态（正式入口 <code>npm test</code>，本 shell 无 npm/npx 未复跑）。</p>
+<h2 id="已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）<a class="anchor" href="#已知缺陷-登记-不在本单元擅自修" aria-label="锚点">#</a></h2>
+<ol><li>上面那 6 条红：需要作者 <code>noiseFilter.js</code> 改动落地后复跑同一命令复核。</li><li>本目录零测试共置（<code>test-colocated</code> 逐文件点名，6 个源文件全中）。</li></ol>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../services/backend/src/services/domain/extensions/README.html"><div class="dir">← 上一篇</div><div class="ttl">extensions — 拓展、钩子与插件贡献的装载层（D2）</div></a><a class="next" href="../../../../../../services/backend/src/services/domain/maintenance/evoEngine/README.html"><div class="dir">下一篇 →</div><div class="ttl">domain/maintenance/evoEngine — 自举创世引擎（需求内源发生 → 沙箱验证 → 受控热载）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/gateway-stuff/README.html";</script>
+<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
