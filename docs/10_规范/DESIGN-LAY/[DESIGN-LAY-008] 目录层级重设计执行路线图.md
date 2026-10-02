@@ -4894,6 +4894,41 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 
 ### 16.6 施工执行状态（点头后逐批登记）
 
+> **2026-10-03 01:20 节（第 8 节）**：**Q0 已由人收口**——脏件 2895 → **24**、根项 78 → **56**
+> （可寻址 55）、百度在制件 20 → **0**，上节九个闸文件**全部转干净**。本节批次 = **Q-3 棘轮改判**。
+>
+> **落地情况与本节实际动作**：
+> - **Q-1 / Q-2 已被别车道落地**（本节实测确认，非引用旧快照）：`check-repo-layout.js:344`
+>   `findUncataloguedRootEntries` → finding `root-uncatalogued`（severity=warning，S1 档）；
+>   `check-rules-registry.js:287` `findDanglingRegistryPaths`（S1 观察者，注释自陈「不计入」）。
+>   两者均已在 `FEATURE-OWNERSHIP.json` 登记 ⇒ §18.2 的 Q-1/Q-2 视为已交付，本节不重复实现。
+> - **Q-3 已执行**：`debt-ledger.json` 的 `layout.root-top-level` target **20 → 15**，
+>   note 补口径说明；measured 55 与本机逐项实测一致（排除 `.git` 与网盘件）。
+> - **⚠ 报一处口径冲突待人定谳**：§21.1 裁「地板棘轮 target = 10」，但那条数字属**目录口径**
+>   （§20.2/§22.1：终态 9~10 个目录），而 `root-top-level` 这条指标量的是**全项**可寻址根宽
+>   （终值 15 做 W7 / 21 放弃 W7，见 §20.3）。照字面把本条设成 10，会造出一根**永远红着的假目标**。
+>   本节按全项口径取 15 并留痕；若你认为该另立「目录数」指标，那是新增判据，需你点头。
+>
+> **W2 规模更正（本节实测，供下节排期用）**：§22.1 把 W2 记成「文件侧 −4」，**低估了改指面**：
+> ① `CONTRIBUTING.md` 内有 **23 条根相对链接**（`AGENTS.md`、`CHANGELOG.md`、`.github/CODEOWNERS`、
+> `docs/…`、`scripts/…`），移进 `.github/` 后全部要改写为 `../` 形式，漏一条即断链；
+> ② 根级 `.md` 已于 2026-09-28 裁决**停用 html 孪生**（`verify_docs_site.js:45`），但子目录未停——
+> 移入 `.github/` 会**新增一个受跟踪的孪生件义务**（`.github/*.html` 确实在跟踪集内）；
+> ③ 另有 24 份文档 `.md` 的散文引用待订正。合计 >30 文件，**不是 30 分钟能带等价证明收口的批**，
+> 须拆「本体+代码消费方」/「文档订正」/「孪生件义务」三步。
+> ④ **SECURITY 半批按 N-1 延后**：我 fetch 了 GitHub 官方「Adding a security policy」页，
+> 正文**未列可识别路径**（只说新建 `SECURITY.md`），无法证明 `.github/SECURITY.md` 仍被平台识别；
+> 而 CONTRIBUTING 半批**已查证**：官方社区健康文件页明列顺序为 `.github` 文件夹 → 仓库根 → `docs`
+> 文件夹，`.github/CONTRIBUTING.md` 属被优先识别的位置。故可动的是 CONTRIBUTING，不是 SECURITY。
+>
+> 四判：`check-repo-layout` exit 0 / 0 error；`check-roots-isomorphic` 读数 **19**（前七节均为 20，
+> 本节首见下降）——**归因已逐条核对**：消失的那条正是 `D4: electron → delivery/`，即 Q10 electron
+> 退役（`b30d1be4`）的累积效果；与 W10b 无关（`.githooks` 从来不是 `DOMAIN-DEPS` 的 root，不在此表口径内）。
+> `check-debt-ledger` **0 error / 0 warning**（target 15 < measured 55，棘轮判据成立）；
+> 本批只动台账与债务条目，不触发布链，R5 四件套未跑。
+> **孪生件留脏未提交**：本节动手前 `.html` 孪生已被别车道改脏（`.md` 干净、`.html` 脏），
+> 构建器无法产出「只含本节改动」的孪生面，故按 N-3 不并入本提交、原地留脏待 Q0 侧收口。
+
 > **2026-10-02 08:4x 节（第 8 节·门控扫描 + 两项「不做」决定，零文件移动）**：
 > 门控扫描现做读数（禁引上节快照）：脏件 **2905**（上节 2895，+10 ⇒ 作者车道仍在推进，Q0 未收口）；
 > 关键闸文件**逐件仍 ` M` 在飞**——`.gitignore`/`AGENTS.md`/`CHANGELOG.md`/`DATA-LOCATIONS.json`/
