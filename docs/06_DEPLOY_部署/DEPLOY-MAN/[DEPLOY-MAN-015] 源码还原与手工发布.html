@@ -57,7 +57,7 @@ npm <span class="hljs-built_in">whoami</span>           <span class="hljs-commen
 <hr>
 <h2 id="4-一键双渠道发布-推荐">4. 一键双渠道发布（推荐）<a class="anchor" href="#4-一键双渠道发布-推荐" aria-label="锚点">#</a></h2>
 <p>脚本：<code>scripts/release/publish-dual.sh</code>。<strong>审计门控</strong>——两个渠道审计全绿之前不上传任何东西；任一审计失败立即中止。</p>
-<pre><code class="language-bash"><span class="hljs-built_in">cd</span> {$HOME}/Khy-OS
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> {<span class="hljs-variable">$HOME</span>}/Khy-OS
 
 <span class="hljs-comment"># 正式双发（会先打印发布计划并要求确认）</span>
 bash scripts/release/publish-dual.sh 0.1.95
@@ -80,7 +80,7 @@ bash scripts/release/publish-dual.sh 0.1.95 --push</code></pre>
 <h3 id="5-1-改版本号">5.1 改版本号<a class="anchor" href="#5-1-改版本号" aria-label="锚点">#</a></h3>
 <p>把 §2 的三个文件里的版本号改成新版本（例如 <code>0.1.95</code>）。</p>
 <h3 id="5-2-发布-pip-khy-os">5.2 发布 pip（<code>khy-os</code>）<a class="anchor" href="#5-2-发布-pip-khy-os" aria-label="锚点">#</a></h3>
-<pre><code class="language-bash"><span class="hljs-built_in">cd</span> {$HOME}/Khy-OS
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> {<span class="hljs-variable">$HOME</span>}/Khy-OS
 
 <span class="hljs-comment"># (1) 隔离构建 + 纯净/完整双审计</span>
 bash scripts/release/build-and-audit-pip-purity.sh
