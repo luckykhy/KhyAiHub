@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -31,7 +31,7 @@
 <p><strong>本文件所在目录 <code>.ai/hq/</code> 是任务/Bug 状态真源</strong>（2026-09-17 由指挥部 khy-os-hq<br>吸收而来）。操作命令是 <code>khy hq …</code>（<code>status</code> / <code>next</code> / <code>verify</code> / <code>bug</code> / <code>task</code>），<br>背景见 <code>docs/03_DESIGN_设计/[DESIGN-ARCH-118] HQ 能力吸收与多机协作规范.md</code>。<br><strong>不要手改本目录下的 JSON</strong> —— 走 <code>khy hq</code> 命令，状态机与校验都在命令里。</p></blockquote>
 <hr>
 <h2 id="一-项目定位">一、项目定位<a class="anchor" href="#一-项目定位" aria-label="锚点">#</a></h2>
-<p><strong>Khy-OS</strong> = AI 平台操作系统，PyPI（<code>pip install khy-os</code>）+ npm（<code>@khy-os/khy-os</code>）双渠道分发。<br><strong>khyquant</strong>（量化交易终端，<code>software/khyquant/</code>）是运行在基座上的内置默认应用，不是项目本身。</p>
+<p><strong>Khy-OS</strong> = AI 平台操作系统，PyPI（<code>pip install khy-os</code>）+ npm（<code>@khy-os/khy-os</code>）双渠道分发。<br><strong>khyquant</strong>（量化交易终端，<code>software/khyquant/</code>）是<strong>独立项目</strong>（人 2026-09-28 明示），<br>它连接 Khy-OS 使用；本仓目录与 <code>khy-quant</code> 打包模块只是它随平台分发/接入的载体，不改变其独立定位。</p>
 <h2 id="二-分层结构">二、分层结构<a class="anchor" href="#二-分层结构" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>层</th><th>路径</th><th>职责</th></tr></thead><tbody><tr><td>L0 kernel</td><td><code>kernel/</code></td><td>手写 C 内核：抢占调度、按需分页、COW fork、信号、管道、ELF+PE 双格式加载器，QEMU 可引导</td></tr><tr><td>L1 platform</td><td><code>platform/khy_platform/</code></td><td>Python 轻量启动器，检测环境拉起 Node.js</td></tr><tr><td>L2 services</td><td><code>services/backend/src/</code></td><td>全部业务逻辑（CLI、AI 网关、服务、Web API）</td></tr><tr><td>L3 apps</td><td><code>apps/ai-frontend/</code></td><td>AI 平台管理 UI（Vue 3 + Vite）</td></tr><tr><td>L4 software</td><td><code>software/khyquant/</code></td><td>内置量化交易终端（含独立前端）</td></tr></tbody></table>
 <p>调用链：<code>User → khy 命令 → Python cli.py → Node.js services/backend/bin/khy.js</code><br>分派到 CLI Layer (<code>src/cli/</code>) / Service Layer (<code>src/services/</code>) / Web API (<code>src/routes/</code>)。</p>
@@ -111,7 +111,7 @@ git add -A &amp;&amp; git commit -m <span class="hljs-string">&quot;...&quot;</s
 <ol><li>信息只在第三方 GUI 画面 / 需视觉验证？→ <strong>看屏幕</strong>（CH-5：<code>desktopControl</code> 总闸 <code>KHY_DESKTOP_CONTROL</code> + safetyGate 审批，最后手段）</li><li>要改变系统状态？→ <strong>禁止直写状态文件</strong>，走服务直调/CLI/Web API 正门（校验、审计、FSM 在门内）</li><li>只读 + schema 稳定 + 文件即真相？→ <strong>直接读状态文件</strong>（CH-1，仅只读豁免；数据目录由 <code>src/utils/dataHome.js</code> 解析）</li><li>与 backend 同一 Node 进程？→ <strong>服务层直调</strong>（CH-2，require 服务模块，fail-soft <code>{ok,error}</code> 契约）</li><li>否则按调用方分流：人/脚本/CI/跨语言 → <strong>CLI</strong>（CH-3）；前端/远程/并发/流式 → <strong>Web API</strong>（CH-4，端点经 <code>serviceDefaults.js</code>/env/<code>ai_manage_runtime.json</code> 运行时发现，不可达降级 CLI）</li></ol>
 <p>原则：<strong>结构化优先、只读才直读、写必走正门、视觉只兜底。</strong></p>
       </article>
-      <nav class="pager"><a class="prev" href="../../.ai/GUARDS.html"><div class="dir">← 上一篇</div><div class="ttl">GUARDS — khy-os 红线与维护指南 (khy 自动生成种子文档)</div></a><a class="next" href="../../.ai/hq/prompts/bugfix/01-修复指定Bug.html"><div class="dir">下一篇 →</div><div class="ttl">📋 提示词正文（复制下面代码块内的全部内容）</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../.ai/GUARDS.html"><div class="dir">← 上一篇</div><div class="ttl">GUARDS — khy-os 红线与维护指南 (khy 自动生成种子文档)</div></a><a class="next" href="../../.ai/hq/prompts/bugfix/01-修复指定Bug.html"><div class="dir">下一篇 →</div><div class="ttl">提示词正文（复制下面代码块内的全部内容）</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>

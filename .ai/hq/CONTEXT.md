@@ -14,7 +14,8 @@
 ## 一、项目定位
 
 **Khy-OS** = AI 平台操作系统，PyPI（`pip install khy-os`）+ npm（`@khy-os/khy-os`）双渠道分发。
-**khyquant**（量化交易终端，`software/khyquant/`）是运行在基座上的内置默认应用，不是项目本身。
+**khyquant**（量化交易终端，`software/khyquant/`）是**独立项目**（人 2026-09-28 明示），
+它连接 Khy-OS 使用；本仓目录与 `khy-quant` 打包模块只是它随平台分发/接入的载体，不改变其独立定位。
 
 ## 二、分层结构
 

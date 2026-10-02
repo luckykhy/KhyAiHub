@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -33,7 +33,7 @@
 <h3 id="当前命名-统一使用">当前命名（统一使用）<a class="anchor" href="#当前命名-统一使用" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>变量名</th><th>类型</th><th>用途</th></tr></thead><tbody><tr><td><code>webviewId</code></td><td><code>string</code></td><td>当前 webview 的唯一标识，如 <code>&quot;instance-a::miniapp-trade&quot;</code></td></tr><tr><td><code>webviewInstance</code></td><td>`BrowserView \</td><td>null`</td></tr></tbody></table>
 <h3 id="废弃命名-不再使用">废弃命名（不再使用）<a class="anchor" href="#废弃命名-不再使用" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>废弃名</th><th>替代为</th><th>状态</th></tr></thead><tbody><tr><td><code>miniappWebviewId</code></td><td><code>webviewId</code></td><td>❌ 已废弃</td></tr><tr><td><code>miniappWebview</code></td><td><code>webviewInstance</code></td><td>❌ 已废弃</td></tr><tr><td><code>activeWebview</code></td><td><code>webviewInstance</code></td><td>❌ 已废弃</td></tr><tr><td><code>miniAppWebview</code></td><td><code>webviewInstance</code></td><td>❌ 已废弃</td></tr></tbody></table>
+<table><thead><tr><th>废弃名</th><th>替代为</th><th>状态</th></tr></thead><tbody><tr><td><code>miniappWebviewId</code></td><td><code>webviewId</code></td><td>✗ 已废弃</td></tr><tr><td><code>miniappWebview</code></td><td><code>webviewInstance</code></td><td>✗ 已废弃</td></tr><tr><td><code>activeWebview</code></td><td><code>webviewInstance</code></td><td>✗ 已废弃</td></tr><tr><td><code>miniAppWebview</code></td><td><code>webviewInstance</code></td><td>✗ 已废弃</td></tr></tbody></table>
 <hr>
 <h2 id="2-单例管理器接口">2. 单例管理器接口<a class="anchor" href="#2-单例管理器接口" aria-label="锚点">#</a></h2>
 <pre><code class="language-js"><span class="hljs-comment">// webviewSingleton.js</span>
@@ -177,7 +177,7 @@ instance-a::miniapp-analysis</code></pre>
 <ul><li>[ ] <code>acquire()</code> — 复用前检查现有实例</li><li>[ ] <code>release()</code> — 销毁前检查实例有效性</li><li>[ ] <code>prepareExecution()</code> — 执行前检查 window 和 webview</li></ul>
 <hr>
 <h2 id="7-实施状态">7. 实施状态<a class="anchor" href="#7-实施状态" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>任务</th><th>状态</th><th>位置</th></tr></thead><tbody><tr><td>命名规范文档</td><td>✅ 完成</td><td><code>.ai/MINIAPP_WEBVIEW_SINGLETON.md</code></td></tr><tr><td>CanvasProfile hook 实现</td><td>⏳ 待实现</td><td><code>khyos-tauri/src/core/core.js</code></td></tr><tr><td>多实例 ID 命名空间</td><td>⏳ 待实现</td><td><code>khyos-tauri/src/core/webviewSingleton.js</code></td></tr><tr><td>CanvasStateManager 适配</td><td>⏳ 待实现</td><td><code>khyos-tauri/src/core/canvasStateManager.js</code></td></tr></tbody></table>
+<table><thead><tr><th>任务</th><th>状态</th><th>位置</th></tr></thead><tbody><tr><td>命名规范文档</td><td>✓ 完成</td><td><code>.ai/MINIAPP_WEBVIEW_SINGLETON.md</code></td></tr><tr><td>CanvasProfile hook 实现</td><td>… 待实现</td><td><code>khyos-tauri/src/core/core.js</code></td></tr><tr><td>多实例 ID 命名空间</td><td>… 待实现</td><td><code>khyos-tauri/src/core/webviewSingleton.js</code></td></tr><tr><td>CanvasStateManager 适配</td><td>… 待实现</td><td><code>khyos-tauri/src/core/canvasStateManager.js</code></td></tr></tbody></table>
       </article>
       <nav class="pager"><a class="prev" href="../.ai/MAP.html"><div class="dir">← 上一篇</div><div class="ttl">MAP — khy-os 骨架与导航</div></a><a class="next" href="../.ai/plans/miniapp-webview-singleton.html"><div class="dir">下一篇 →</div><div class="ttl">小程序 WebView 单例 &amp; Canvas 检测 Hook 实施计划</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>

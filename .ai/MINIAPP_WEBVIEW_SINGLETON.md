@@ -19,10 +19,10 @@
 
 | 废弃名 | 替代为 | 状态 |
 |--------|--------|------|
-| `miniappWebviewId` | `webviewId` | ❌ 已废弃 |
-| `miniappWebview` | `webviewInstance` | ❌ 已废弃 |
-| `activeWebview` | `webviewInstance` | ❌ 已废弃 |
-| `miniAppWebview` | `webviewInstance` | ❌ 已废弃 |
+| `miniappWebviewId` | `webviewId` | ✗ 已废弃 |
+| `miniappWebview` | `webviewInstance` | ✗ 已废弃 |
+| `activeWebview` | `webviewInstance` | ✗ 已废弃 |
+| `miniAppWebview` | `webviewInstance` | ✗ 已废弃 |
 
 ---
 
@@ -222,7 +222,7 @@ async function execute(task, window) {
 
 | 任务 | 状态 | 位置 |
 |------|------|------|
-| 命名规范文档 | ✅ 完成 | `.ai/MINIAPP_WEBVIEW_SINGLETON.md` |
-| CanvasProfile hook 实现 | ⏳ 待实现 | `khyos-tauri/src/core/core.js` |
-| 多实例 ID 命名空间 | ⏳ 待实现 | `khyos-tauri/src/core/webviewSingleton.js` |
-| CanvasStateManager 适配 | ⏳ 待实现 | `khyos-tauri/src/core/canvasStateManager.js` |
+| 命名规范文档 | ✓ 完成 | `.ai/MINIAPP_WEBVIEW_SINGLETON.md` |
+| CanvasProfile hook 实现 | … 待实现 | `khyos-tauri/src/core/core.js` |
+| 多实例 ID 命名空间 | … 待实现 | `khyos-tauri/src/core/webviewSingleton.js` |
+| CanvasStateManager 适配 | … 待实现 | `khyos-tauri/src/core/canvasStateManager.js` |

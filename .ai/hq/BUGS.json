@@ -18,7 +18,7 @@
     ]
   },
   "next_id": 18,
-  "last_updated": "2026-09-24",
+  "last_updated": "2026-09-28",
   "bugs": [
     {
       "id": "BUG-001",
@@ -117,21 +117,20 @@
       "title": "网关路由串 api:sensenova:deepseek-v4-flash 出现『供应商(SenseNova/阶跃星辰)与模型(deepseek)』不一致，疑似 provider 绑定或身份披露矛盾",
       "severity": "P1",
       "domain": "gateway",
-      "status": "open",
+      "status": "closed",
       "symptom": "khy-os 对『当前模型/供应商』的披露与路由串 api:sensenova:deepseek-v4-flash 出现矛盾：供应渠道写成 SenseNova(阶跃星辰)，但模型标识是 deepseek-v4-flash（DeepSeek 系）。需确认 deepseek-v4-flash 是否被错误绑定到 SenseNova 渠道，或其归属/provider 元数据与网关实际路由不一致。",
       "repro": "执行 khy gateway status（或查看网关日志 model 字段）核对 provider 与 model；当前路由串形如 api:sensenova:deepseek-v4-flash。重点排查该模型在 provider 注册表/适配器里的归属：是被正确聚合到 SenseNova 渠道，还是被误配到错误供应商，导致『供应商名 vs 模型』自相矛盾。",
       "suspect_area": "services/backend/src/services/gateway/（provider 注册表/providerPresets.js/适配器 poolKey↔displayName 归属）+ cli/ai.js 的模型信息表 + tools/ConfigureModelProvider 的 builtin 提供商列表：deepseek-v4-flash 属哪个渠道、displayName/供应商名是否与模型实际归属一致。",
       "root_cause": "",
-      "fix_summary": "",
+      "fix_summary": "裁决(人授权 AI 代答,2026-09-28):维持现状。deepseek-v4-flash 为 SenseNova Token Plan 转售模型(customProviderRegistrar.js:311 / apiAdapter.js:70 / aiGateway.js:1275 同口径),供应商与模型族不一致是转售安排本身,非绑定错误;modelSubstitutionNotice(实际响应模型状态透明披露)作为长期缓解层。若后续需要原生 DeepSeek 通道,另开任务配独立 provider(需 API key)。",
       "created": "2026-08-24",
-      "updated": "2026-09-20",
+      "updated": "2026-09-28",
       "notes": [
         "2026-08-24: 根因已定位：请求 api:sensenova:deepseek-v4-flash 在商汤感言 channel 返回 404（多次→冷却→All adapters failed）→ 网关静默回退到 relay 的 step-3.7-flash（步科星辰）响应；该模型自述把『请求身份(sensenova/deepseek)』与『自身品牌(阶跃)』混为一体，故出现『SenseNova（阶跃星辰）』。已推送缓解：khy-os 4af15f8e 在网关成功路径新增『实际响应模型≠所选模型』的状态透明披露（gateway/modelSubstitutionNotice.js + aiGatewayGenerateMethod.js 一行受保护 emitStatus）。彻底修复仍待运行时侧：为 deepseek-v4-flash 选商汤真正可执行模型、或配独立 DeepSeek provider、并处理 BUG-005 的 127.0.0.1:7890 代理。",
-        "2026-09-20: 2026-09-20 租约释放后状态归位：本机（QiQiaoBan）08-24 的排查占用已过期释放；缓解措施（modelSubstitutionNotice 状态透明披露）已在树上，彻底修复（deepseek-v4-flash 供应商归属）转 open 待重新开工。"
-      ],
-      "claimed_by": "QiQiaoBan",
-      "claimed_at": "2026-09-24T15:04:01",
-      "lease_expires": "2026-09-24T17:04:01"
+        "2026-09-20: 2026-09-20 租约释放后状态归位：本机（QiQiaoBan）08-24 的排查占用已过期释放；缓解措施（modelSubstitutionNotice 状态透明披露）已在树上，彻底修复（deepseek-v4-flash 供应商归属）转 open 待重新开工。",
+        "2026-09-28 (IMPL-RPT-063 阶段 0 复验): 根因定性完成——这不是绑定错误。customProviderRegistrar.js:311 明示 SenseNova Token Plan 可用模型就是 flash-lite 与「转售的 deepseek-v4-flash」(apiAdapter.js:70 / aiGateway.js:1275 同口径映射),即该模型真实运行在 SenseNova 渠道上,「供应商(SenseNova)×模型族(DeepSeek)」的不一致是转售安排本身;modelSubstitutionNotice(实际响应模型≠所选模型的状态透明披露)已在树上充当缓解层。剩余三项处置均需人拍板:(a) 维持现状(披露已到位,推荐);(b) 配独立 DeepSeek provider(需用户提供 DeepSeek API key);(c) 把 deepseek-v4-flash 从可选列表摘除。租约已过期,无在作者。",
+        "2026-09-28: 按维持现状裁决关单(披露层已在树上,复验见 modelSubstitutionNotice 回归)。"
+      ]
     },
     {
       "id": "BUG-007",
@@ -192,15 +191,17 @@
       "title": "TUI 统一协议原生覆盖层静默降级：ink App.js uiBridge 接线引用从未定义的 setPermissionRequest，setAppRefs 每次挂载必抛错被吞，_appRefs 恒 null，showConfirmNative/showListNative 永远走 stdin 简化回退而非 PermissionsPrompt/ModelPicker 原生组件",
       "severity": "P2",
       "domain": "cli",
-      "status": "open",
+      "status": "pending_verify",
       "symptom": "",
       "repro": "",
       "suspect_area": "",
-      "root_cause": "",
-      "fix_summary": "",
+      "root_cause": "App.js 挂载 effect 的 bridge.setAppRefs({...}) 载荷引用了文件中从未声明的标识符 setPermissionRequest（组件里只有 setModelPicker/setFormFlow 两个 useState setter），每次挂载必抛 ReferenceError，被 try/catch 吞掉 → setAppRefs 从未执行 → _appRefs 恒 null → hasAppRefs() 恒 false → confirm/list/form 全部静默降级到 stdin 简化回退，原生覆盖层整体不可达。",
+      "fix_summary": "载荷移除幻影键，仅传真实存在的 setModelPicker/setFormFlow（接线首次成功，list/form 按设计意图走原生覆盖层）；confirm 未接：原生 PermissionsPrompt 消费统一协议 request 形状（tool_name/input），与 uiBridge 的 {toolName,action,risk} 不同构，形状迁移单独立项；uiBridge.showConfirmNative 自身的 setPermissionRequest 守卫会显式回退 stdin，确认行为不变。新增 tests/cli/tui/uiBridgeRefs.test.js：防幻影键静态守卫 + 接线/回退行为守卫（2/2 绿）。证据：.khy/feedback/bug010-uibridge-refs/ 与 .khy/feedback/repair-plan-20260928/probe-bug010-uibridge.js。",
       "created": "2026-09-20",
-      "updated": "2026-09-20",
-      "notes": []
+      "updated": "2026-09-28",
+      "notes": [
+        "2026-09-28: 修复落地（IMPL-RPT-063 阶段 2）；复现探针实证 payload 引用未声明标识符；全量 tests/cli/tui 1164 例仅 5 个与改动无关的存量失败（改动前基线相同）。"
+      ]
     },
     {
       "id": "BUG-011",
@@ -222,15 +223,17 @@
       "title": "TUI 底部状态行宽度预算溢出：windsurf 停用回退等长警告使状态行超过终端列数，闭合括号被挤到下一行形成残影字符（实测 ~125 列窗口两次复现；最大化/半屏重绘正常）——statusPanel/footerLayout 未把网关警告纳入宽度预算或截断",
       "severity": "P2",
       "domain": "cli",
-      "status": "open",
+      "status": "pending_verify",
       "symptom": "",
       "repro": "",
       "suspect_area": "",
-      "root_cause": "",
-      "fix_summary": "",
+      "root_cause": "FooterBar(ink) 的网关警告段（⟲ 通道已停用回退…）是 height:1 单行页脚里唯一可变长的段，无任何宽度预算；代码注释声称「截断保护」但从未实现。~125 列窗口下长警告把行尾挤出终端列数，闭合括号折行留残影。classic 侧 footerLayout.js 有 displayWidth 预算，ink 侧 FooterBar 没有。",
+      "fix_summary": "新增纯叶子 src/cli/tui/footerWidthBudget.js（判定收敛：full → 按预算截断带省略号 → ⟲<通道名> 短标 → 整段让位），FooterBar 改为段表渲染（左右各段纯文本先收集、按 formatters.displayWidth 实测宽），App 经 effectiveCols 口径把列宽经 cols prop 传入（遵守「叶子不自读 process.stdout.columns」契约，effectiveCols.test.js 19/19 绿）；cols 未传（PreviewLayout 等旁路）逐字节回退旧行为。新增 tests/cli/tui/footerWidthBudget.test.js 6/6 绿。",
       "created": "2026-09-20",
-      "updated": "2026-09-20",
-      "notes": []
+      "updated": "2026-09-28",
+      "notes": [
+        "2026-09-28: 修复落地（IMPL-RPT-063 阶段 2）；落点 FooterBar.js 段表化 + 纯叶子预算；修复过程中发现并纠正叶子相对路径笔误（../../formatters → ../formatters），该错误曾使预算静默回退 .length 口径。"
+      ]
     },
     {
       "id": "BUG-013",
@@ -272,16 +275,17 @@
       "title": "khyquant 侧 services 副本与 backend 正本已分叉：multiFreeService/modelToolingCapability/toolCapabilityStore 三文件仍是旧判定与旧提示文案，且无 capabilityModelKey，套用 backend 的 BUG-014 修复只能拿到半份",
       "severity": "P2",
       "domain": "gateway",
-      "status": "open",
+      "status": "closed",
       "symptom": "",
       "repro": "",
       "suspect_area": "",
       "root_cause": "",
-      "fix_summary": "",
+      "fix_summary": "裁决(人授权 AI 代答,2026-09-28):声明 khyquant 侧独立维护。三份分叉文件(multiFreeService.js / gateway/modelToolingCapability.js / gateway/toolCapabilityStore.js)文件头已加独立维护声明;不收敛到 backend 正本(收敛需处理 64KB vs 92KB 差异与缺失叶子依赖,风险大于收益,且 khyquant 为独立项目、独立版本轨道)。backend 侧 BUG-014 能力修复如 khyquant 需要,走独立评审后移植。",
       "created": "2026-09-23",
-      "updated": "2026-09-23",
+      "updated": "2026-09-28",
       "notes": [
-        "2026-09-23: 发现于 BUG-014 施工(见 .khy/feedback/toolcall-capability-falseneg-20260923/adjacent-findings.md A3)。事实:(1) software/khyquant/services/multiFreeService.js 被 llmService.js require,是活代码;(2) 三文件与 backend 正本体积已分叉(64782/91982、7217/9188、5757/8875 字节);(3) 该副本无 capabilityModelKey.js,故 P0 的「键规范化」在那边会退化成只认裸名;(4) 仍含旧文案「模型 X 不支持工具调用…请切换到支持 function calling 的模型」。需决定:收敛到 backend 实现(需处理已分叉的 64KB vs 92KB 差异与缺失的叶子依赖),还是明确声明 khyquant 侧独立维护。不建议盲目套用补丁——半修比不修更难诊断。"
+        "2026-09-23: 发现于 BUG-014 施工(见 .khy/feedback/toolcall-capability-falseneg-20260923/adjacent-findings.md A3)。事实:(1) software/khyquant/services/multiFreeService.js 被 llmService.js require,是活代码;(2) 三文件与 backend 正本体积已分叉(64782/91982、7217/9188、5757/8875 字节);(3) 该副本无 capabilityModelKey.js,故 P0 的「键规范化」在那边会退化成只认裸名;(4) 仍含旧文案「模型 X 不支持工具调用…请切换到支持 function calling 的模型」。需决定:收敛到 backend 实现(需处理已分叉的 64KB vs 92KB 差异与缺失的叶子依赖),还是明确声明 khyquant 侧独立维护。不建议盲目套用补丁——半修比不修更难诊断。",
+        "2026-09-28: 按独立维护裁决关单,文件头声明已落地(software/khyquant/services/** 三处)。"
       ]
     },
     {
