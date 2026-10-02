@@ -174,7 +174,7 @@ function _isBulletLine(line = '') {
   if (!text) {
     return false;
   }
-  return /^([-*•●◦▪◾]|(\d+[\.\)]|[一二三四五六七八九十]+[、）)]))\s+/.test(text);
+  return /^([-*•●◦▪]|(\d+[\.\)]|[一二三四五六七八九十]+[、）)]))\s+/.test(text);
 }
 
 function _hasMetricSignal(line = '') {

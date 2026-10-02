@@ -26,7 +26,7 @@ function _generateMarkdownReport(result, includeRemediation) {
   const lines = [];
 
   // 标题和总体判定
-  const verdictEmoji = result.verdict === 'pass' ? '✅' : result.verdict === 'warn' ? '⚠️' : '❌';
+  const verdictEmoji = result.verdict === 'pass' ? '✓' : result.verdict === 'warn' ? '⚠' : '✗';
   lines.push(`# DeliveryGate Report ${verdictEmoji}`);
   lines.push('');
   lines.push(`**Verdict**: ${result.verdict.toUpperCase()}`);
@@ -57,7 +57,7 @@ function _generateMarkdownReport(result, includeRemediation) {
 
   // 必需项缺失(阻塞性问题)
   if (result.missing && result.missing.length > 0) {
-    lines.push('## ❌ Required Missing (BLOCKING)');
+    lines.push('## ✗ Required Missing (BLOCKING)');
     lines.push('');
     result.missing.forEach((item, idx) => {
       lines.push(`### ${idx + 1}. ${item.label}`);
@@ -75,7 +75,7 @@ function _generateMarkdownReport(result, includeRemediation) {
 
   // 可选项警告
   if (result.warnings && result.warnings.length > 0) {
-    lines.push('## ⚠️ Optional Warnings (RECOMMENDED)');
+    lines.push('## ⚠ Optional Warnings (RECOMMENDED)');
     lines.push('');
     result.warnings.forEach((item, idx) => {
       lines.push(`### ${idx + 1}. ${item.label}`);
@@ -88,7 +88,7 @@ function _generateMarkdownReport(result, includeRemediation) {
   // 通过的检查
   const passed = result.results.filter((r) => r.status === 'pass');
   if (passed.length > 0) {
-    lines.push('## ✅ Passed Checks');
+    lines.push('## ✓ Passed Checks');
     lines.push('');
     passed.forEach((item, idx) => {
       lines.push(`${idx + 1}. **${item.label}** ${item.detail ? `— ${item.detail}` : ''}`);
@@ -98,7 +98,7 @@ function _generateMarkdownReport(result, includeRemediation) {
 
   // 改进建议(基于失败项)
   if (includeRemediation && (result.missing.length > 0 || result.warnings.length > 0)) {
-    lines.push('## 🔧 Remediation Suggestions');
+    lines.push('## Remediation Suggestions');
     lines.push('');
     lines.push(_generateRemediationSuggestions(result));
   }
