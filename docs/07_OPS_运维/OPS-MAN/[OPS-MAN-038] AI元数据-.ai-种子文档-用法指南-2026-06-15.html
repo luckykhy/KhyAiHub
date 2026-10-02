@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -74,7 +74,7 @@
 <h2 id="6-让其它-ai-工具默认读到-ai">6. 让其它 AI 工具默认读到 <code>.ai/</code><a class="anchor" href="#6-让其它-ai-工具默认读到-ai" aria-label="锚点">#</a></h2>
 <p><code>metadataPointers.linkAgentPointers</code> 会向 5 个约定入口文件<strong>幂等注入</strong>一段指针块，<br>把 Claude Code / Codex / Copilot / Cursor / Cline 等都引导到 <code>.ai/</code>：</p>
 <ul><li><code>AGENTS.md</code>、<code>CLAUDE.md</code>、<code>.github/copilot-instructions.md</code>、<code>.cursor/rules/*.mdc</code>、<code>.clinerules</code></li></ul>
-<blockquote><p>⚠️ 2026-09-23：原第 6 个入口 <code>.windsurfrules</code> 已随 Windsurf IDE 被 Cognition 退役更名<br>Devin Desktop 而下线（<code>POINTER_TARGETS</code> 中该目标已删），存证<br><code>.khy/feedback/windsurf-adapter-retire-20260923/</code>。</p></blockquote>
+<blockquote><p>⚠ 2026-09-23：原第 6 个入口 <code>.windsurfrules</code> 已随 Windsurf IDE 被 Cognition 退役更名<br>Devin Desktop 而下线（<code>POINTER_TARGETS</code> 中该目标已删），存证<br><code>.khy/feedback/windsurf-adapter-retire-20260923/</code>。</p></blockquote>
 <p>幂等意味着：已链接则返回空、不会每次提交都产生噪音。手动触发：<code>khy metadata link</code>。</p>
 <hr>
 <h2 id="7-cli-速查-khy-metadata-别名-meta-maintain">7. CLI 速查（<code>khy metadata</code>，别名 <code>meta</code> / <code>maintain</code>）<a class="anchor" href="#7-cli-速查-khy-metadata-别名-meta-maintain" aria-label="锚点">#</a></h2>

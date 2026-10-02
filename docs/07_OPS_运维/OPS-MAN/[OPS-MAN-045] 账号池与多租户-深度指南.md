@@ -13,7 +13,7 @@ KHY 网关的来源账号分两大类，账号池命令 `khy pool` 管理的是*
 
 | 类别 | 例子 | 怎么进池 | 本文是否覆盖 |
 | --- | --- | --- | --- |
-| **登录态账号池** | Kiro、Cursor、Trae、Warp | `khy pool import <provider>` 复用其本地登录态 | ✅ 本文主题 |
+| **登录态账号池** | Kiro、Cursor、Trae、Warp | `khy pool import <provider>` 复用其本地登录态 | ✓ 本文主题 |
 | API-key 账号 | DeepSeek、Qwen、GLM、OpenAI、Agnes 等 | `khy gateway config` 填 API Key | 见 [OPS-MAN-032] 网关自定义 provider 配置 |
 
 > 同一个命令 `khy pool` 也能 `add <provider> [token]` 手动塞一个登录 token 进池（`source: manual`），但绝大多数人用 `import` 即可。
@@ -57,7 +57,7 @@ KHY 网关的来源账号分两大类，账号池命令 `khy pool` 管理的是*
 
 > 即 antigravity / nirvana 与 trae 共用同一条逻辑通道，导入后在 `trae` 名下统一管理。
 >
-> ⚠️ 原表首行的 `windsurf` 已移除：Windsurf 适配器随其 IDE 被 Cognition 退役更名 Devin Desktop
+> ⚠ 原表首行的 `windsurf` 已移除：Windsurf 适配器随其 IDE 被 Cognition 退役更名 Devin Desktop
 > 而下线（2026-09-23），其候选探测（`KNOWN_NIRVANA_PROVIDER_SET`）与登录态导入路径同批删除。
 > 传 `windsurf` 现在会被判为未知 provider。存证 `.khy/feedback/windsurf-module-purge-20260923/`。
 

@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -69,7 +69,7 @@
 <h2 id="4-换页-只用确定性-api-别插空行">4. 换页：只用确定性 API，别插空行<a class="anchor" href="#4-换页-只用确定性-api-别插空行" aria-label="锚点">#</a></h2>
 <p>换页<strong>只</strong>认这三种来源，其余一律不换页：</p>
 <ol><li>Markdown 单独一行 <code>[[newpage]]</code>（或 <code>&lt;&lt;&lt;pagebreak&gt;&gt;&gt;</code>）；</li><li>AST 里的 <code>{ &quot;type&quot;: &quot;pagebreak&quot; }</code> 块；</li><li>模板策略：<code>gbt7714</code> 默认<strong>每个一级标题前自动换页</strong>。</li></ol>
-<blockquote><p>⚠️ 多打几个空行<strong>不会</strong>换页，<code>---</code> 水平线也<strong>不会</strong>换页——这是刻意设计，避免&quot;靠空白<br>占位&quot;的不确定排版。</p></blockquote>
+<blockquote><p>⚠ 多打几个空行<strong>不会</strong>换页，<code>---</code> 水平线也<strong>不会</strong>换页——这是刻意设计，避免&quot;靠空白<br>占位&quot;的不确定排版。</p></blockquote>
 <hr>
 <h2 id="5-自定义格式-两种方式">5. 自定义格式：两种方式<a class="anchor" href="#5-自定义格式-两种方式" aria-label="锚点">#</a></h2>
 <h3 id="5-1-临时微调-overrides">5.1 临时微调：<code>overrides</code><a class="anchor" href="#5-1-临时微调-overrides" aria-label="锚点">#</a></h3>

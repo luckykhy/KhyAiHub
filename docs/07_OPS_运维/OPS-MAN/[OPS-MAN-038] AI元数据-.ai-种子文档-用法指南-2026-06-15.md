@@ -104,7 +104,7 @@
 
 - `AGENTS.md`、`CLAUDE.md`、`.github/copilot-instructions.md`、`.cursor/rules/*.mdc`、`.clinerules`
 
-> ⚠️ 2026-09-23：原第 6 个入口 `.windsurfrules` 已随 Windsurf IDE 被 Cognition 退役更名
+> ⚠ 2026-09-23：原第 6 个入口 `.windsurfrules` 已随 Windsurf IDE 被 Cognition 退役更名
 > Devin Desktop 而下线（`POINTER_TARGETS` 中该目标已删），存证
 > `.khy/feedback/windsurf-adapter-retire-20260923/`。
 

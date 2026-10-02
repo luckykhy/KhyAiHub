@@ -7,7 +7,7 @@
 > 这里负责给你**正确的顺序与最短路径**，不重复它们。
 > 全文命令均以仓库实测为准（root `package.json` / `services/backend/package.json` scripts、`scripts/`、CLI 路由），非杜撰。
 >
-> 📖 **美观阅读版**：本文另有同目录同名的 **`.html`** / **`.pdf`**，以及与 [OPS-MAN-043] 的**合订本**；
+> **美观阅读版**：本文另有同目录同名的 **`.html`** / **`.pdf`**，以及与 [OPS-MAN-043] 的**合订本**；
 > 由 `npm run docs:pdf:onboarding` 生成（实现见下方 D6「把文档导出为美观 HTML/PDF」）。
 
 ---
@@ -57,8 +57,8 @@ khy doctor                          # 5) 改启动/路由/网络/打包前先体
 > `.ai/` 三件套（MAP→CONTEXT→GUARDS）是为"低算力/无记忆"读者设计的，人也最该先读。
 > `SKELETON.auto.md` 是机器派生层，由 `khy metadata refresh` 维护，别手改。
 
-✅ **你学会了**：khy 不是黑箱——源码可字节还原，且自带"去哪找代码"的地图。
-➡️ **深入读**：[OPS-MAN-038] AI元数据-.ai-种子文档-用法指南、[OPS-MAN-037] pip安装后-完整还原与全功能开启指南。
+✓ **你学会了**：khy 不是黑箱——源码可字节还原，且自带"去哪找代码"的地图。
+→ **深入读**：[OPS-MAN-038] AI元数据-.ai-种子文档-用法指南、[OPS-MAN-037] pip安装后-完整还原与全功能开启指南。
 
 ---
 
@@ -72,8 +72,8 @@ khy doctor                          # 5) 改启动/路由/网络/打包前先体
 | 装 Node 依赖 | `npm --prefix services/backend install` | 后端是业务代码主体（Node ≥ 20）。 |
 | 装可选本地守闸 | `npm run hooks:install` | 安装仓库管理的 `pre-commit` 钩子（来自 `.githooks/`），提交前自动跑门禁。 |
 
-✅ **你学会了**：khy 的开发循环是"改 canonical → 即生效"，`bundled/` 副本只在发布时由构建重建。
-➡️ **深入读**：[OPS-MAN-013] khy-os-开发者指南 §2-§4（环境要求、初始化、开发启动方式）、[OPS-MAN-028] 环境要求。
+✓ **你学会了**：khy 的开发循环是"改 canonical → 即生效"，`bundled/` 副本只在发布时由构建重建。
+→ **深入读**：[OPS-MAN-013] khy-os-开发者指南 §2-§4（环境要求、初始化、开发启动方式）、[OPS-MAN-028] 环境要求。
 
 ---
 
@@ -98,8 +98,8 @@ platform/khy_platform/cli.py        # pip 壳：查 Node≥20 → 定位 bin/khy
 | 改动安全门禁 | `node scripts/check-agent-rules.js --changed` | 按改动文件检查是否触红线。 |
 | 启动前体检 | `khy doctor` | 改启动/路由/网络/打包前先跑。 |
 
-✅ **你学会了**：khy 的执行主链很短（5 跳），且有"维护映射"替你定位入口——不靠猜。
-➡️ **深入读**：`CONTRIBUTING.md` 的 "Core Runtime Chain" 与 "Maintainer Map"、[OPS-MAN-013] §7 质量检查与测试。
+✓ **你学会了**：khy 的执行主链很短（5 跳），且有"维护映射"替你定位入口——不靠猜。
+→ **深入读**：`CONTRIBUTING.md` 的 "Core Runtime Chain" 与 "Maintainer Map"、[OPS-MAN-013] §7 质量检查与测试。
 
 ---
 
@@ -123,8 +123,8 @@ npm run test:maintainer:cli-routing
 node -e "require('./services/backend/src/cli/router')"
 ```
 
-✅ **你学会了**：khy 的命令是"schema→alias→handler→router"四件套，且每个维护区都有**专属最小测试**。
-➡️ **深入读**：[OPS-MAN-013] §5 CLI 命令开发规范（4 步）、`CONTRIBUTING.md` "Add or fix a CLI command"。
+✓ **你学会了**：khy 的命令是"schema→alias→handler→router"四件套，且每个维护区都有**专属最小测试**。
+→ **深入读**：[OPS-MAN-013] §5 CLI 命令开发规范（4 步）、`CONTRIBUTING.md` "Add or fix a CLI command"。
 
 ---
 
@@ -141,8 +141,8 @@ node -e "require('./services/backend/src/cli/router')"
 
 > 适配器路径均在 `services/backend/src/services/gateway/`；模型→适配器的路由在 `modelRouter.js`，级联+熔断在 `aiGateway.js`。
 
-✅ **你学会了**：扩展点是有边界的——网关、工具、两套前端、生态应用各有入口与专属测试，不要"反射式两边都改"。
-➡️ **深入读**：[OPS-MAN-013] §6 AI 适配器开发规范、[OPS-MAN-012] 应用接入指南、[OPS-MAN-007] cli-万能接入-集成指南、[OPS-MAN-032] 网关-自定义provider配置。
+✓ **你学会了**：扩展点是有边界的——网关、工具、两套前端、生态应用各有入口与专属测试，不要"反射式两边都改"。
+→ **深入读**：[OPS-MAN-013] §6 AI 适配器开发规范、[OPS-MAN-012] 应用接入指南、[OPS-MAN-007] cli-万能接入-集成指南、[OPS-MAN-032] 网关-自定义provider配置。
 
 ---
 
@@ -159,8 +159,8 @@ khy 底下是一台**手写 x86_64 C 内核**。到这一级你开始改/构建�
 **读内核从这里起**：引导 `kernel/boot/boot.asm` `_start` → C 入口 `kernel/src/main.c:124 kernel_main`；
 `.ai/MAP.md` 的"启动初始化流程"列出了 `kmain` 内 25 步真实调用顺序与模块依赖图。
 
-✅ **你学会了**：khy 是从引导扇区往上自建的真内核，构建/运行/读码都有确定入口。
-➡️ **深入读**：`.ai/MAP.md`（启动流程+模块依赖图）、[OPS-MAN-036] khyos跨平台构建-Windows支持方案、`kernel/Makefile`。
+✓ **你学会了**：khy 是从引导扇区往上自建的真内核，构建/运行/读码都有确定入口。
+→ **深入读**：`.ai/MAP.md`（启动流程+模块依赖图）、[OPS-MAN-036] khyos跨平台构建-Windows支持方案、`kernel/Makefile`。
 
 ---
 
@@ -194,8 +194,8 @@ Noto Sans/Serif CJK 字体（中文不变豆腐块）。转换器是 `scripts/do
 > 缺 chrome 时会给出真实指引（装 `google-chrome` 或设 `KHY_DOCS_CHROME`，或加 `--html-only`），**不**静默失败。
 > 生成物是**派生件**：随时可由源 markdown 重建，markdown 才是单一真源。
 
-✅ **你学会了**：khy 的"精通"= 一文件一职责的架构纪律 + 元数据/红线/审计 + 机械化双渠道发布。
-➡️ **深入读**：[OPS-MAN-042] 发布手册-pip与npm-无AI照做、[OPS-MAN-022] pip-安装布局参考、[OPS-MAN-040] Git入门、`CONTRIBUTING.md` Guardrails / Handoff Format。
+✓ **你学会了**：khy 的"精通"= 一文件一职责的架构纪律 + 元数据/红线/审计 + 机械化双渠道发布。
+→ **深入读**：[OPS-MAN-042] 发布手册-pip与npm-无AI照做、[OPS-MAN-022] pip-安装布局参考、[OPS-MAN-040] Git入门、`CONTRIBUTING.md` Guardrails / Handoff Format。
 
 ---
 

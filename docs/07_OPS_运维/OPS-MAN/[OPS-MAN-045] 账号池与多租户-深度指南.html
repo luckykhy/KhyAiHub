@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -33,7 +33,7 @@
 <hr>
 <h2 id="一-两类-池-先分清">一、两类「池」先分清<a class="anchor" href="#一-两类-池-先分清" aria-label="锚点">#</a></h2>
 <p>KHY 网关的来源账号分两大类，账号池命令 <code>khy pool</code> 管理的是<strong>第一类</strong>：</p>
-<table><thead><tr><th>类别</th><th>例子</th><th>怎么进池</th><th>本文是否覆盖</th></tr></thead><tbody><tr><td><strong>登录态账号池</strong></td><td>Kiro、Cursor、Trae、Warp</td><td><code>khy pool import &lt;provider&gt;</code> 复用其本地登录态</td><td>✅ 本文主题</td></tr><tr><td>API-key 账号</td><td>DeepSeek、Qwen、GLM、OpenAI、Agnes 等</td><td><code>khy gateway config</code> 填 API Key</td><td>见 [OPS-MAN-032] 网关自定义 provider 配置</td></tr></tbody></table>
+<table><thead><tr><th>类别</th><th>例子</th><th>怎么进池</th><th>本文是否覆盖</th></tr></thead><tbody><tr><td><strong>登录态账号池</strong></td><td>Kiro、Cursor、Trae、Warp</td><td><code>khy pool import &lt;provider&gt;</code> 复用其本地登录态</td><td>✓ 本文主题</td></tr><tr><td>API-key 账号</td><td>DeepSeek、Qwen、GLM、OpenAI、Agnes 等</td><td><code>khy gateway config</code> 填 API Key</td><td>见 [OPS-MAN-032] 网关自定义 provider 配置</td></tr></tbody></table>
 <blockquote><p>同一个命令 <code>khy pool</code> 也能 <code>add &lt;provider&gt; [token]</code> 手动塞一个登录 token 进池（<code>source: manual</code>），但绝大多数人用 <code>import</code> 即可。</p></blockquote>
 <hr>
 <h2 id="二-khy-pool-全命令速查">二、<code>khy pool</code> 全命令速查<a class="anchor" href="#二-khy-pool-全命令速查" aria-label="锚点">#</a></h2>
@@ -45,7 +45,7 @@
 <p><code>import</code> / <code>add</code> 支持的提供商（<code>pool.js:23</code>）：</p>
 <table><thead><tr><th>你输入的 provider</th><th>实际归并到</th><th>说明</th></tr></thead><tbody><tr><td><code>kiro</code></td><td>kiro</td><td>Kiro（AWS CodeWhisperer）登录态</td></tr><tr><td><code>cursor</code></td><td>cursor</td><td>Cursor 登录态</td></tr><tr><td><code>trae</code></td><td>trae</td><td>Trae 登录态</td></tr><tr><td><code>warp</code></td><td>warp</td><td>Warp 登录态</td></tr><tr><td><code>antigravity</code>（别名 <code>ag</code>）</td><td><strong>trae</strong></td><td>归并到 trae（<code>pool.js:30-33</code>）</td></tr><tr><td><code>nirvana</code>（别名 <code>nir</code>/<code>nrv</code>）</td><td><strong>trae</strong></td><td>归并到 trae</td></tr></tbody></table>
 <blockquote><p>即 antigravity / nirvana 与 trae 共用同一条逻辑通道，导入后在 <code>trae</code> 名下统一管理。</p>
-<p>⚠️ 原表首行的 <code>windsurf</code> 已移除：Windsurf 适配器随其 IDE 被 Cognition 退役更名 Devin Desktop<br>而下线（2026-09-23），其候选探测（<code>KNOWN_NIRVANA_PROVIDER_SET</code>）与登录态导入路径同批删除。<br>传 <code>windsurf</code> 现在会被判为未知 provider。存证 <code>.khy/feedback/windsurf-module-purge-20260923/</code>。</p></blockquote>
+<p>⚠ 原表首行的 <code>windsurf</code> 已移除：Windsurf 适配器随其 IDE 被 Cognition 退役更名 Devin Desktop<br>而下线（2026-09-23），其候选探测（<code>KNOWN_NIRVANA_PROVIDER_SET</code>）与登录态导入路径同批删除。<br>传 <code>windsurf</code> 现在会被判为未知 provider。存证 <code>.khy/feedback/windsurf-module-purge-20260923/</code>。</p></blockquote>
 <p>示例：</p>
 <pre><code class="language-bash"><span class="hljs-comment"># 从本地 Kiro 登录态导入（交互选择账号）</span>
 khy pool import kiro

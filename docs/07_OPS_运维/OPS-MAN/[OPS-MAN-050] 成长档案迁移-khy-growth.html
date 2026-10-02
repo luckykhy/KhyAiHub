@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -33,10 +33,10 @@
 <hr>
 <h2 id="一-它是什么">一、它是什么<a class="anchor" href="#一-它是什么" aria-label="锚点">#</a></h2>
 <p>KHY 会随你的使用累积一份成长档案（XP/等级/完成的主题）。<code>khy growth</code> 让你查看、备份、迁移、重置这份档案。它与知识库（[<code>khy knowledge</code>](（见 OPS-MAN-051）)）<strong>共享</strong>同一份成长数据（XP/level 联动）。</p>
-<blockquote><p>⚠️ <strong>存储路径硬编码</strong>：成长数据固定存放在 <code>~/.khyquant/growth/</code>（含 <code>snapshots/</code>），<strong>不读</strong> <code>$KHY_DATA_HOME</code>。在多数据目录环境里迁移时要按这个真实路径找文件。</p></blockquote>
+<blockquote><p>⚠ <strong>存储路径硬编码</strong>：成长数据固定存放在 <code>~/.khyquant/growth/</code>（含 <code>snapshots/</code>），<strong>不读</strong> <code>$KHY_DATA_HOME</code>。在多数据目录环境里迁移时要按这个真实路径找文件。</p></blockquote>
 <hr>
 <h2 id="二-入口与全部子命令">二、入口与全部子命令<a class="anchor" href="#二-入口与全部子命令" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>命令</th><th>作用</th><th>危险性</th></tr></thead><tbody><tr><td><code>khy growth</code></td><td>（无参）打印成长摘要</td><td>只读</td></tr><tr><td><code>khy growth export [--path &lt;文件&gt;]</code></td><td>导出档案为归档文件</td><td>只读</td></tr><tr><td><code>khy growth import &lt;文件&gt;</code></td><td>导入并<strong>合并</strong>到当前档案</td><td>合并（见下）</td></tr><tr><td><code>khy growth snapshot</code></td><td>打一个本地快照</td><td>追加</td></tr><tr><td><code>khy growth snapshots</code></td><td>列出已有快照</td><td>只读</td></tr><tr><td><code>khy growth restore &lt;快照&gt;</code></td><td>用快照<strong>覆盖</strong>当前档案</td><td>⚠️ 覆盖</td></tr><tr><td><code>khy growth reset</code></td><td>清空档案（<strong>不可逆</strong>，需输入 <code>YES</code>）</td><td>⛔ 不可逆</td></tr></tbody></table>
+<table><thead><tr><th>命令</th><th>作用</th><th>危险性</th></tr></thead><tbody><tr><td><code>khy growth</code></td><td>（无参）打印成长摘要</td><td>只读</td></tr><tr><td><code>khy growth export [--path &lt;文件&gt;]</code></td><td>导出档案为归档文件</td><td>只读</td></tr><tr><td><code>khy growth import &lt;文件&gt;</code></td><td>导入并<strong>合并</strong>到当前档案</td><td>合并（见下）</td></tr><tr><td><code>khy growth snapshot</code></td><td>打一个本地快照</td><td>追加</td></tr><tr><td><code>khy growth snapshots</code></td><td>列出已有快照</td><td>只读</td></tr><tr><td><code>khy growth restore &lt;快照&gt;</code></td><td>用快照<strong>覆盖</strong>当前档案</td><td>⚠ 覆盖</td></tr><tr><td><code>khy growth reset</code></td><td>清空档案（<strong>不可逆</strong>，需输入 <code>YES</code>）</td><td>◉ 不可逆</td></tr></tbody></table>
 <p><strong><code>import</code> 的合并语义</strong>（不是覆盖，是取优）：</p>
 <ul><li>XP：取<strong>较大</strong>值；</li><li>等级：<strong>高等级胜</strong>；</li><li>已完成主题（completedTopics）：取<strong>并集</strong>。</li></ul>
 <p>所以从多台机器分别 import 不会互相覆盖进度，而是汇总到最优。</p>
@@ -55,9 +55,9 @@ khy growth                              <span class="hljs-comment"># 确认进�
 <p>本地备份 / 回滚：</p>
 <pre><code class="language-bash">khy growth snapshot                 <span class="hljs-comment"># 改动前打快照</span>
 khy growth snapshots                <span class="hljs-comment"># 看有哪些快照</span>
-khy growth restore &lt;快照名&gt;          <span class="hljs-comment"># ⚠️ 覆盖当前档案</span></code></pre>
+khy growth restore &lt;快照名&gt;          <span class="hljs-comment"># ⚠ 覆盖当前档案</span></code></pre>
 <p>危险操作：</p>
-<pre><code class="language-bash">khy growth reset                    <span class="hljs-comment"># ⛔ 不可逆，会要求输入 YES 二次确认</span></code></pre>
+<pre><code class="language-bash">khy growth reset                    <span class="hljs-comment"># ◉ 不可逆，会要求输入 YES 二次确认</span></code></pre>
 <hr>
 <h2 id="四-存储">四、存储<a class="anchor" href="#四-存储" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>路径</th><th>内容</th></tr></thead><tbody><tr><td><code>~/.khyquant/growth/</code></td><td>成长档案根目录（硬编码，不认 <code>$KHY_DATA_HOME</code>）</td></tr><tr><td><code>~/.khyquant/growth/snapshots/</code></td><td>本地快照</td></tr><tr><td><code>~/.khyquant/growth/knowledge.json</code></td><td>与 <code>khy knowledge</code> 共享的 XP/level 数据</td></tr></tbody></table>

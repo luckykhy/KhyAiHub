@@ -11,7 +11,7 @@
 
 KHY 会随你的使用累积一份成长档案（XP/等级/完成的主题）。`khy growth` 让你查看、备份、迁移、重置这份档案。它与知识库（[`khy knowledge`](（见 OPS-MAN-051）)）**共享**同一份成长数据（XP/level 联动）。
 
-> ⚠️ **存储路径硬编码**：成长数据固定存放在 `~/.khyquant/growth/`（含 `snapshots/`），**不读** `$KHY_DATA_HOME`。在多数据目录环境里迁移时要按这个真实路径找文件。
+> ⚠ **存储路径硬编码**：成长数据固定存放在 `~/.khyquant/growth/`（含 `snapshots/`），**不读** `$KHY_DATA_HOME`。在多数据目录环境里迁移时要按这个真实路径找文件。
 
 ---
 
@@ -24,8 +24,8 @@ KHY 会随你的使用累积一份成长档案（XP/等级/完成的主题）。
 | `khy growth import <文件>` | 导入并**合并**到当前档案 | 合并（见下） |
 | `khy growth snapshot` | 打一个本地快照 | 追加 |
 | `khy growth snapshots` | 列出已有快照 | 只读 |
-| `khy growth restore <快照>` | 用快照**覆盖**当前档案 | ⚠️ 覆盖 |
-| `khy growth reset` | 清空档案（**不可逆**，需输入 `YES`） | ⛔ 不可逆 |
+| `khy growth restore <快照>` | 用快照**覆盖**当前档案 | ⚠ 覆盖 |
+| `khy growth reset` | 清空档案（**不可逆**，需输入 `YES`） | ◉ 不可逆 |
 
 **`import` 的合并语义**（不是覆盖，是取优）：
 
@@ -58,13 +58,13 @@ khy growth                              # 确认进度已合并
 ```bash
 khy growth snapshot                 # 改动前打快照
 khy growth snapshots                # 看有哪些快照
-khy growth restore <快照名>          # ⚠️ 覆盖当前档案
+khy growth restore <快照名>          # ⚠ 覆盖当前档案
 ```
 
 危险操作：
 
 ```bash
-khy growth reset                    # ⛔ 不可逆，会要求输入 YES 二次确认
+khy growth reset                    # ◉ 不可逆，会要求输入 YES 二次确认
 ```
 
 ---

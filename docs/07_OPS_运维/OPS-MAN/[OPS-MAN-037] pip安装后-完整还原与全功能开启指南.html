@@ -11,27 +11,27 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
     <div class="content">
       <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>07_OPS_运维<span class="sep">›</span>OPS-MAN<span class="sep">›</span>[OPS-MAN-037] pip 安装后：完整还原项目 · 开启全部功能</div>
       <header class="hero reveal"><h1>[OPS-MAN-037] pip 安装后：完整还原项目 · 开启全部功能</h1></header>
-      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#ops-man-037-pip-安装后-完整还原项目-开启全部功能">[OPS-MAN-037] pip 安装后：完整还原项目 · 开启全部功能</a></li><li class="lvl-2"><a href="#0-先理解一件事-pip-只装了-启动器">0. 先理解一件事：pip 只装了「启动器」</a></li><li class="lvl-2"><a href="#1-一句话速通-先跑这三条">1. 一句话速通（先跑这三条）</a></li><li class="lvl-2"><a href="#2-第一层还原-运行时依赖-必须">2. 第一层还原：运行时依赖（必须）</a></li><li class="lvl-2"><a href="#3-首次启动-自动初始化">3. 首次启动：自动初始化</a></li><li class="lvl-2"><a href="#4-第二层还原-模型来源-让-ai-能用">4. 第二层还原：模型来源（让 AI 能用）</a></li><li class="lvl-2"><a href="#5-第三层还原-自研内核-iso-khy-os-能跑">5. 第三层还原：自研内核 ISO（`khy os` 能跑）</a></li><li class="lvl-3"><a href="#5-1-为什么会报-no-khy-os-iso-available">5.1 为什么会报 “No KHY OS ISO available”</a></li><li class="lvl-3"><a href="#5-2-一键还原-khy-os-build-推荐-全平台">5.2 一键还原：`khy os build`（推荐,全平台）</a></li><li class="lvl-3"><a href="#5-3-windows-路线-a-wsl2-跑未改动的-makefile">5.3 Windows 路线 A：WSL2（跑未改动的 Makefile）</a></li><li class="lvl-3"><a href="#5-4-windows-路线-b-docker-desktop-无-wsl-也能用">5.4 Windows 路线 B：Docker Desktop（无 WSL 也能用）</a></li><li class="lvl-3"><a href="#5-5-linux-macos-wsl2-内装工具链-一次">5.5 Linux / macOS / WSL2 内装工具链（一次）</a></li><li class="lvl-3"><a href="#5-6-已有现成-iso-直接指过去-最快">5.6 已有现成 ISO：直接指过去（最快）</a></li><li class="lvl-3"><a href="#5-7-环境开关一览">5.7 环境开关一览</a></li><li class="lvl-2"><a href="#6-两条-os-路径别混淆">6. ⚠️ 两条 OS 路径别混淆</a></li><li class="lvl-2"><a href="#7-开启各项功能-还原后逐个点亮">7. 开启各项功能（还原后逐个点亮）</a></li><li class="lvl-3"><a href="#7-1-ai-对话-管理页-web">7.1 AI 对话 / 管理页（Web）</a></li><li class="lvl-3"><a href="#7-2-手机访问-同局域网">7.2 手机访问（同局域网）</a></li><li class="lvl-3"><a href="#7-3-集成-claude-code-可选">7.3 集成 Claude Code（可选）</a></li><li class="lvl-3"><a href="#7-4-一次性-ai-输出-学习模式-工作流等">7.4 一次性 AI 输出 / 学习模式 / 工作流等</a></li><li class="lvl-2"><a href="#8-全功能开启自检清单">8. 全功能开启自检清单</a></li><li class="lvl-2"><a href="#9-排障速查">9. 排障速查</a></li><li class="lvl-2"><a href="#10-命令总览">10. 命令总览</a></li></ul></nav>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#ops-man-037-pip-安装后-完整还原项目-开启全部功能">[OPS-MAN-037] pip 安装后：完整还原项目 · 开启全部功能</a></li><li class="lvl-2"><a href="#0-先理解一件事-pip-只装了-启动器">0. 先理解一件事：pip 只装了「启动器」</a></li><li class="lvl-2"><a href="#1-一句话速通-先跑这三条">1. 一句话速通（先跑这三条）</a></li><li class="lvl-2"><a href="#2-第一层还原-运行时依赖-必须">2. 第一层还原：运行时依赖（必须）</a></li><li class="lvl-2"><a href="#3-首次启动-自动初始化">3. 首次启动：自动初始化</a></li><li class="lvl-2"><a href="#4-第二层还原-模型来源-让-ai-能用">4. 第二层还原：模型来源（让 AI 能用）</a></li><li class="lvl-2"><a href="#5-第三层还原-自研内核-iso-khy-os-能跑">5. 第三层还原：自研内核 ISO（`khy os` 能跑）</a></li><li class="lvl-3"><a href="#5-1-为什么会报-no-khy-os-iso-available">5.1 为什么会报 “No KHY OS ISO available”</a></li><li class="lvl-3"><a href="#5-2-一键还原-khy-os-build-推荐-全平台">5.2 一键还原：`khy os build`（推荐,全平台）</a></li><li class="lvl-3"><a href="#5-3-windows-路线-a-wsl2-跑未改动的-makefile">5.3 Windows 路线 A：WSL2（跑未改动的 Makefile）</a></li><li class="lvl-3"><a href="#5-4-windows-路线-b-docker-desktop-无-wsl-也能用">5.4 Windows 路线 B：Docker Desktop（无 WSL 也能用）</a></li><li class="lvl-3"><a href="#5-5-linux-macos-wsl2-内装工具链-一次">5.5 Linux / macOS / WSL2 内装工具链（一次）</a></li><li class="lvl-3"><a href="#5-6-已有现成-iso-直接指过去-最快">5.6 已有现成 ISO：直接指过去（最快）</a></li><li class="lvl-3"><a href="#5-7-环境开关一览">5.7 环境开关一览</a></li><li class="lvl-2"><a href="#6-两条-os-路径别混淆">6. ⚠ 两条 OS 路径别混淆</a></li><li class="lvl-2"><a href="#7-开启各项功能-还原后逐个点亮">7. 开启各项功能（还原后逐个点亮）</a></li><li class="lvl-3"><a href="#7-1-ai-对话-管理页-web">7.1 AI 对话 / 管理页（Web）</a></li><li class="lvl-3"><a href="#7-2-手机访问-同局域网">7.2 手机访问（同局域网）</a></li><li class="lvl-3"><a href="#7-3-集成-claude-code-可选">7.3 集成 Claude Code（可选）</a></li><li class="lvl-3"><a href="#7-4-一次性-ai-输出-学习模式-工作流等">7.4 一次性 AI 输出 / 学习模式 / 工作流等</a></li><li class="lvl-2"><a href="#8-全功能开启自检清单">8. 全功能开启自检清单</a></li><li class="lvl-2"><a href="#9-排障速查">9. 排障速查</a></li><li class="lvl-2"><a href="#10-命令总览">10. 命令总览</a></li></ul></nav>
       <article class="doc-body">
 <p>&lt;!-- 文档分类: OPS-MAN-037 | 阶段: 运维 | 主题: pip 安装后完整还原与全功能开启 --&gt;</p>
 <h1 id="ops-man-037-pip-安装后-完整还原项目-开启全部功能">[OPS-MAN-037] pip 安装后：完整还原项目 · 开启全部功能<a class="anchor" href="#ops-man-037-pip-安装后-完整还原项目-开启全部功能" aria-label="锚点">#</a></h1>
 <blockquote><p><strong>隶属</strong>：本文属 <strong>还原子系统</strong>（23 篇，5 组；其中 18 篇由 <code>scripts/restore/*.js --gen-doc</code> 生成），总纲与 scope 裁决见 <code>[OPS-MAN-207] 还原子系统总纲</code>。</p></blockquote>
 <blockquote><p>适用对象：通过 <code>pip install khy-os</code> 安装的用户（Windows / macOS / Linux）。</p>
 <p>本指南把「pip 装完之后要做哪些事、有哪些方法把完整项目还原、最终能用上项目的全部能力」<br>一条线讲清楚。与 [OPS-MAN-023] 互补：023 是功能清单速查，本文是<strong>端到端的还原与启用流程</strong>，<br>并已纳入 Windows 内核构建的最新行为（见 [OPS-MAN-036]）。</p></blockquote>
-<blockquote><p>📦 <strong>pip 安装后，先读哪篇？</strong></p>
+<blockquote><p><strong>pip 安装后，先读哪篇？</strong></p>
 <table><thead><tr><th>你的目的</th><th>看这篇</th></tr></thead><tbody><tr><td>第一次装完，想最快跑起来</td><td>[OPS-MAN-027] 快速开始</td></tr><tr><td>想按成长阶梯一步步进阶</td><td>[OPS-MAN-043] 从 0 到高手</td></tr><tr><td>想知道装完到底能干什么</td><td>[OPS-MAN-023] 完整功能清单</td></tr><tr><td>想按需开启某个具体功能</td><td>[OPS-MAN-024] 按需配置体验</td></tr><tr><td>安装与运行的软硬件门槛</td><td>[OPS-MAN-028] 环境要求</td></tr><tr><td><strong>本文</strong></td><td>还原源码树 / 自研内核 ISO 全功能</td></tr></tbody></table></blockquote>
 <hr>
 <h2 id="0-先理解一件事-pip-只装了-启动器">0. 先理解一件事：pip 只装了「启动器」<a class="anchor" href="#0-先理解一件事-pip-只装了-启动器" aria-label="锚点">#</a></h2>
@@ -56,7 +56,7 @@ khy               <span class="hljs-comment"># 首次启动：自动装依赖 / 
 <hr>
 <h2 id="2-第一层还原-运行时依赖-必须">2. 第一层还原：运行时依赖（必须）<a class="anchor" href="#2-第一层还原-运行时依赖-必须" aria-label="锚点">#</a></h2>
 <p>KHY OS 运行时分四层,<code>khy preflight</code> 会一次性体检:</p>
-<blockquote><p>📌 这张四层依赖表与 [OPS-MAN-023] §1 <strong>同源</strong>——若两处措辞有出入，以 [OPS-MAN-023] 为准。</p></blockquote>
+<blockquote><p>这张四层依赖表与 [OPS-MAN-023] §1 <strong>同源</strong>——若两处措辞有出入，以 [OPS-MAN-023] 为准。</p></blockquote>
 <table><thead><tr><th>层</th><th>检查项</th><th>缺失后果</th><th>修复</th></tr></thead><tbody><tr><td>1</td><td><code>khy</code> 在 PATH 上</td><td>shell 报 <code>'khy' 不是命令</code></td><td>按 preflight 打印的 PATH 追加命令；兜底 <code>python -m khy_platform &lt;cmd&gt;</code></td></tr><tr><td>2</td><td>Node.js ≥ 20</td><td>后端无法启动</td><td>Windows：<code>winget install OpenJS.NodeJS.LTS</code>；macOS：<code>brew install node</code>；Linux：发行版包管理器</td></tr><tr><td>3</td><td><code>backend/node_modules</code></td><td>首次启动失败</td><td>跑一次 <code>khy</code>（自动 <code>npm install</code>），或手动 <code>cd &lt;backend&gt; &amp;&amp; npm install</code></td></tr><tr><td>4</td><td>全局 <code>claude</code> CLI（可选）</td><td><code>khy claude</code> 不可用</td><td><code>npm install -g @anthropic-ai/claude-code</code></td></tr></tbody></table>
 <p><strong>确认真实位置</strong>（Windows 的 <code>where khy</code> 只看得到垫片,看不到 bundled 本体）：</p>
 <pre><code class="language-bash">khy <span class="hljs-built_in">where</span>     <span class="hljs-comment"># 打印 version / mode / bundle root / backend dir / dependencies 状态</span></code></pre>
@@ -129,7 +129,7 @@ khy os</code></pre>
 <table><thead><tr><th>变量</th><th>默认</th><th>作用</th></tr></thead><tbody><tr><td><code>KHY_KERNEL_BUILD_BACKEND</code></td><td><code>auto</code></td><td><code>wsl</code>/<code>docker</code>/<code>native</code> 强制后端</td></tr><tr><td><code>KHY_FORCE_KERNEL_BUILD</code></td><td>未设</td><td><code>=1</code> Windows 走宿主原生（=<code>backend=native</code>）</td></tr><tr><td><code>KHY_KERNEL_BUILD_IMAGE</code></td><td>未设</td><td>Docker 预构镜像名,跳过本地构镜像</td></tr><tr><td><code>KHY_KERNEL_ISO</code></td><td>未设</td><td>直接指向现成 ISO（最高优先）</td></tr><tr><td><code>KHY_KERNEL_SRC_DIR</code></td><td>bundle</td><td>覆盖内核源码目录</td></tr><tr><td><code>KHY_CC</code>/<code>KHY_NASM</code>/<code>KHY_LD</code>/<code>KHY_GRUB_MKRESCUE</code>/<code>KHY_GCC_INCLUDE</code></td><td>未设</td><td>转发为 <code>make VAR=val</code> 覆盖工具链</td></tr></tbody></table>
 <blockquote><p>运行内核需 QEMU（与构建分开）：<code>khy os doctor</code> 体检；Windows QEMU: https://qemu.weilnetz.de/w64/ 。</p></blockquote>
 <hr>
-<h2 id="6-两条-os-路径别混淆">6. ⚠️ 两条 OS 路径别混淆<a class="anchor" href="#6-两条-os-路径别混淆" aria-label="锚点">#</a></h2>
+<h2 id="6-两条-os-路径别混淆">6. ⚠ 两条 OS 路径别混淆<a class="anchor" href="#6-两条-os-路径别混淆" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>命令</th><th>产物</th><th>构建方式</th><th>适合</th></tr></thead><tbody><tr><td><strong><code>khy os</code> / <code>khyos</code></strong></td><td><code>khy-os-kernel.iso</code>（<strong>自研 C 内核</strong>）</td><td><code>make -C kernel iso</code> / <code>khy os build</code></td><td>体验自研内核</td></tr><tr><td><strong><code>khy iso build</code></strong></td><td><code>dist/khy-os.iso</code>（<strong>Alpine 发行版</strong>）</td><td>Docker（<code>Dockerfile.iso-builder</code>,FROM alpine）</td><td>跑「真实 OS」</td></tr></tbody></table>
 <p>两者是不同产物,互不替代。想要「真实 OS」用后者:</p>
 <pre><code class="language-powershell">khy iso build <span class="hljs-literal">--output</span> dist\khy<span class="hljs-literal">-os</span>.iso     <span class="hljs-comment"># 需 Docker Desktop,会先自愈工具链</span>

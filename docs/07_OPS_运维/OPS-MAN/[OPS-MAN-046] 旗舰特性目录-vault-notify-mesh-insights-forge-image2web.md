@@ -3,21 +3,21 @@
 
 > KHY 内置了一批「代码里早就有、文档里却找不到」的实用命令。本文把它们逐个讲清楚：是什么、入口命令、典型用法、当前状态。所有命令都可直接照抄。
 >
-> 状态图例：✅ 可用（已实现）｜🚧 开发中（占位桩，暂不可用）。
+> 状态图例：✓ 可用（已实现）｜开发中（占位桩，暂不可用）。
 
 | 命令 | 一句话 | 状态 |
 | --- | --- | --- |
-| `khy vault` | 本地密钥保险库，密钥永不进模型上下文 | ✅ |
-| `khy notify` | 把长任务完成/阻塞点推送到手机或桌面 | ✅ |
-| `khy mesh` | 同机多实例互相发现与跨进程消息 | ✅ |
-| `khy insights` | 会话洞见：轮次/工具/话题/耗时复盘 | ✅ |
-| `khy forge` | 跨 GitHub/Gitee/GitLab 搜索与克隆仓库 | ✅ |
-| `khy image2web` | 截图 → 可运行 HTML 网页 | ✅ |
-| `khy voice` | 语音控制 | 🚧 |
+| `khy vault` | 本地密钥保险库，密钥永不进模型上下文 | ✓ |
+| `khy notify` | 把长任务完成/阻塞点推送到手机或桌面 | ✓ |
+| `khy mesh` | 同机多实例互相发现与跨进程消息 | ✓ |
+| `khy insights` | 会话洞见：轮次/工具/话题/耗时复盘 | ✓ |
+| `khy forge` | 跨 GitHub/Gitee/GitLab 搜索与克隆仓库 | ✓ |
+| `khy image2web` | 截图 → 可运行 HTML 网页 | ✓ |
+| `khy voice` | 语音控制 | |
 
 ---
 
-## 一、`vault` — 本地密钥保险库 ✅
+## 一、`vault` — 本地密钥保险库 ✓
 
 把 API Key、令牌等敏感值存在本地保险库（`~/.khyos/vault`，文件权限 0600）。在提示词、HTTP 配置里用占位符 `{{vault:NAME}}` 引用，真实值在**服务端注入**，**永远不进入模型上下文**。
 
@@ -39,7 +39,7 @@ Authorization: Bearer {{vault:MY_TOKEN}}
 
 ---
 
-## 二、`notify` — 终端外推送 ✅
+## 二、`notify` — 终端外推送 ✓
 
 配置一个推送目标，让 KHY 在**长任务完成 / 遇到阻塞点**时，把消息推到你的手机或桌面。配置存 `~/.khyos/push.json`（0600）。KHY 自身不带推送后端，你提供目标即可。
 
@@ -62,7 +62,7 @@ khy notify test
 
 ---
 
-## 三、`mesh` — 同机多实例协作 ✅
+## 三、`mesh` — 同机多实例协作 ✓
 
 让同一台机器上的多个 KHY 实例互相发现、挂接、收发消息（注册表在 `~/.khyos/peers/`，存活性用进程探测）。适合一个窗口跑长任务、另一个窗口给它发指令。
 
@@ -78,7 +78,7 @@ khy mesh on | off                    # 启用/停用
 
 ---
 
-## 四、`insights` — 会话洞见 ✅
+## 四、`insights` — 会话洞见 ✓
 
 对一次会话做复盘：对话轮次、最常用的工具、话题关键词、耗时。读取已持久化的会话记录。
 
@@ -91,7 +91,7 @@ khy insights on | off       # 启用/停用
 
 ---
 
-## 五、`forge` — 跨平台仓库搜索与拉取 ✅
+## 五、`forge` — 跨平台仓库搜索与拉取 ✓
 
 跨 **GitHub / Gitee / GitLab** 搜索、勘察、克隆、更新仓库。令牌从环境变量读取（`GITHUB_TOKEN` / `GITEE_TOKEN` / `GITLAB_TOKEN`），从不回显。
 
@@ -117,7 +117,7 @@ khy forge clone owner/some-repo --depth 1
 
 ---
 
-## 六、`image2web` — 截图变可运行网页 ✅
+## 六、`image2web` — 截图变可运行网页 ✓
 
 把一张网页截图（文件或剪贴板）交给 AI 网关，**还原成单文件可运行的 HTML**。若 AI 只返回片段，会自动包成完整 `<!doctype html>` 文档。
 
@@ -140,7 +140,7 @@ khy image2web paste 还原成响应式网页 --out clipboard-page.html
 
 ---
 
-## 七、`voice` — 语音控制 🚧
+## 七、`voice` — 语音控制
 
 ```bash
 khy voice
