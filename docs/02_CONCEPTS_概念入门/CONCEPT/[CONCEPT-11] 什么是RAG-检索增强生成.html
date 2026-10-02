@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -34,7 +34,7 @@
 <p>如果你只想记住一句话，就记这句：</p>
 <blockquote><p><strong>RAG = 让大模型从&quot;闭卷考试&quot;变成&quot;开卷考试&quot;——先翻书，再答题。</strong></p></blockquote>
 <p>这一句话是整篇文档的骨架。后面所有的比喻、图、误区，都是在反复讲透这一句话。</p>
-<aside class="callout callout-ask reveal"><div class="callout-mascot" aria-hidden="true">🐥</div><div class="callout-body"><div class="callout-title">🙋 小白发问</div><p>RAG 三个字母听着唬人，其实就是给爱面子、爱瞎编的大模型配一本 <span class="popover" tabindex="0"><span class="popover-anchor">参考书</span><span class="popover-tip" role="tooltip">资料库——回答前先去里面翻出相关的几段，照着答，还能标出处</span></span>。它把&quot;闭卷凭记忆硬答&quot;变成&quot;开卷翻书再答&quot;。你不用懂任何数学，只要记住&quot;先查后答&quot;四个字，这篇就抓住了七成～ 🐥</p></div></aside>
+<aside class="callout callout-ask reveal"><div class="callout-mascot" aria-hidden="true">❯</div><div class="callout-body"><div class="callout-title">❯ 小白发问</div><p>RAG 三个字母听着唬人，其实就是给爱面子、爱瞎编的大模型配一本 <span class="popover" tabindex="0"><span class="popover-anchor">参考书</span><span class="popover-tip" role="tooltip">资料库——回答前先去里面翻出相关的几段，照着答，还能标出处</span></span>。它把&quot;闭卷凭记忆硬答&quot;变成&quot;开卷翻书再答&quot;。你不用懂任何数学，只要记住&quot;先查后答&quot;四个字，这篇就抓住了七成～</p></div></aside>
 <hr>
 <h2 id="二-为什么需要-rag-把痛点讲透">二、为什么需要 RAG？（把痛点讲透）<a class="anchor" href="#二-为什么需要-rag-把痛点讲透" aria-label="锚点">#</a></h2>
 <p>大模型很聪明，但它有三个&quot;天生的毛病&quot;。RAG 不是让模型变聪明，而是<strong>给它配一个可靠的资料库，把这三个毛病一次治好</strong>。</p>
@@ -47,10 +47,10 @@
 <p><strong>RAG 一招治三病：</strong></p>
 <table><thead><tr><th>痛点</th><th>光靠模型</th><th>加上 RAG</th></tr></thead><tbody><tr><td><strong>① 幻觉</strong></td><td>没把握也硬编</td><td>答案有资料撑腰，还能附<strong>出处</strong>，可溯源</td></tr><tr><td><strong>② 知识过时/不懂私料</strong></td><td>停在训练时刻</td><td>资料库<strong>随时更新</strong>，私有文档也能查</td></tr><tr><td><strong>③ 装不下全部文档</strong></td><td>塞不进上下文窗口</td><td>每次<strong>只取最相关的几段</strong>，省地方又抓重点</td></tr></tbody></table>
 <pre class="mermaid">flowchart LR
-  Q[&quot;❓ 用户提问&quot;] --&gt; R[&quot;🔎 先去资料库检索&lt;br/&gt;相关的几段&quot;]
-  R --&gt; P[&quot;📋 把资料塞进提示词&quot;]
-  P --&gt; LLM[&quot;🧠 大模型基于资料作答&quot;]
-  LLM --&gt; A[&quot;✅ 有据可查的答案&lt;br/&gt;（还能附出处）&quot;]</pre>
+  Q[&quot;? 用户提问&quot;] --&gt; R[&quot;先去资料库检索&lt;br/&gt;相关的几段&quot;]
+  R --&gt; P[&quot;把资料塞进提示词&quot;]
+  P --&gt; LLM[&quot;大模型基于资料作答&quot;]
+  LLM --&gt; A[&quot;✓ 有据可查的答案&lt;br/&gt;（还能附出处）&quot;]</pre>
 <hr>
 <h2 id="三-核心比喻-闭卷考试-vs-开卷考试">三、核心比喻：闭卷考试 vs 开卷考试<a class="anchor" href="#三-核心比喻-闭卷考试-vs-开卷考试" aria-label="锚点">#</a></h2>
 <p>这是全篇最重要的一张画面，请务必在脑子里建立它。</p>
@@ -65,16 +65,16 @@
 <p>平时（用户还没来问）就把资料准备好、变成可以&quot;按意思检索&quot;的形态：</p>
 <ol><li><strong>切块（chunk）</strong>：把每份文档切成一小段一小段。因为整本书太大，检索和塞进提示词都不方便，切成&quot;一节一节&quot;才好取用。</li><li><strong>变坐标（[⑨ embedding]([CONCEPT-09] 什么是Embedding-向量.md)）</strong>：把每一块文字丢进 embedding 模型，变成一串数字（向量 / 坐标）。</li><li><strong>入库（[⑩ 向量数据库]([CONCEPT-10] 什么是向量数据库.md)）</strong>：把这些坐标连同原文一起，存进向量数据库，等着以后被查。</li></ol>
 <pre class="mermaid">flowchart LR
-  DOC[&quot;📚 你的文档&lt;br/&gt;（制度/手册/代码…）&quot;] --&gt; CHUNK[&quot;✂️ 切成小块&lt;br/&gt;chunk&quot;]
-  CHUNK --&gt; EMB[&quot;🧮 每块变成坐标&lt;br/&gt;embedding&quot;]
-  EMB --&gt; VDB[&quot;🗄️ 存进向量数据库&lt;br/&gt;（坐标 + 原文）&quot;]</pre>
+  DOC[&quot;你的文档&lt;br/&gt;（制度/手册/代码…）&quot;] --&gt; CHUNK[&quot;✂ 切成小块&lt;br/&gt;chunk&quot;]
+  CHUNK --&gt; EMB[&quot;每块变成坐标&lt;br/&gt;embedding&quot;]
+  EMB --&gt; VDB[&quot;存进向量数据库&lt;br/&gt;（坐标 + 原文）&quot;]</pre>
 <h3 id="阶段二-在线问答-考场里现翻书">阶段二：在线问答（考场里现翻书）<a class="anchor" href="#阶段二-在线问答-考场里现翻书" aria-label="锚点">#</a></h3>
 <p>用户真的来提问了，才发生下面这一串——注意，这就是一次完整的 RAG：</p>
 <pre class="mermaid">sequenceDiagram
-  participant User as 🙋 用户
-  participant RAG as 🔎 检索器
-  participant VDB as 🗄️ 向量数据库
-  participant LLM as 🧠 大模型
+  participant User as 用户
+  participant RAG as 检索器
+  participant VDB as 向量数据库
+  participant LLM as 大模型
   User-&gt;&gt;RAG: 我们公司报销上限是多少？
   Note over RAG: ① 把问题也变成坐标（同一个 embedding 模型）
   RAG-&gt;&gt;VDB: ② 拿这个坐标去找最近的几段（top-k）
@@ -86,10 +86,10 @@
 <table><thead><tr><th>步骤</th><th>发生了什么</th><th>生活比喻</th></tr></thead><tbody><tr><td><strong>① 问题变坐标</strong></td><td>用<strong>同一台</strong>翻译机（embedding 模型）把问题也变成向量</td><td>用同一把尺子量，才能比</td></tr><tr><td><strong>② 检索 top-k</strong></td><td>拿问题坐标，去库里找<strong>离得最近的 k 段</strong>（k 通常是 3~8）</td><td>翻到最相关的那几页</td></tr><tr><td><strong>③ 取回原文</strong></td><td>把这几段的原文捞出来（可能还带着&quot;来自哪份文档&quot;）</td><td>把书签夹好的几页抽出来</td></tr><tr><td><strong>④ 拼提示词</strong></td><td>把&quot;问题 + 这几段资料&quot;组装成一段话喂给模型</td><td>把书摊在桌上、指着问</td></tr><tr><td><strong>⑤ 模型作答</strong></td><td>模型<strong>基于这些资料</strong>生成答案，而不是凭记忆</td><td>照着书答题</td></tr><tr><td><strong>⑥ 附出处</strong></td><td>好的 RAG 会告诉你答案来自哪段资料，可核对</td><td>标注&quot;见第 3.2 节&quot;</td></tr></tbody></table>
 <h3 id="最关键的一点-模型没变-只是-喂了它资料">最关键的一点：模型没变，只是&quot;喂了它资料&quot;<a class="anchor" href="#最关键的一点-模型没变-只是-喂了它资料" aria-label="锚点">#</a></h3>
 <p>整个过程中，<strong>大模型一个字都没被重新训练</strong>。它还是那个模型，只不过这一次，你在提问时<strong>顺手把参考资料一起递给了它</strong>。这是 RAG 最容易被误解、也最需要记牢的地方（下面误区 1 会专门讲）。</p>
-<aside class="callout callout-star reveal"><div class="callout-mascot" aria-hidden="true">🦊</div><div class="callout-body"><div class="callout-title">⭐ 划重点</div><p>RAG 的魔法不在模型，而在&quot;<strong>喂什么给模型</strong>&quot;。同一个模型，不给资料就闭卷瞎编，给了对的资料就开卷精准。RAG 干的活，全在&quot;<strong>检索出对的那几段、塞进提示词</strong>&quot;这一下。</p></div></aside>
-<div class="flip reveal" tabindex="0" role="button" aria-label="点击翻转卡片"><div class="flip-inner"><div class="flip-face flip-front">RAG 和&quot;重新训练模型&quot;到底差在哪？（点一下翻到背面）<div class="flip-hint">👆 点我翻面看答案</div></div><div class="flip-face flip-back"><strong>训练</strong>是改大脑（改模型参数，慢、贵、需要 GPU）；<strong>RAG</strong>是发资料（模型一个字没动，只是提问时多塞了几段参考资料）。所以给 RAG 换知识，只要往库里加文档就行，秒级生效——这就是它比&quot;重新训练&quot;香太多的原因。</div></div></div>
+<aside class="callout callout-star reveal"><div class="callout-mascot" aria-hidden="true">★</div><div class="callout-body"><div class="callout-title">★ 划重点</div><p>RAG 的魔法不在模型，而在&quot;<strong>喂什么给模型</strong>&quot;。同一个模型，不给资料就闭卷瞎编，给了对的资料就开卷精准。RAG 干的活，全在&quot;<strong>检索出对的那几段、塞进提示词</strong>&quot;这一下。</p></div></aside>
+<div class="flip reveal" tabindex="0" role="button" aria-label="点击翻转卡片"><div class="flip-inner"><div class="flip-face flip-front">RAG 和&quot;重新训练模型&quot;到底差在哪？（点一下翻到背面）<div class="flip-hint">▸ 点我翻面看答案</div></div><div class="flip-face flip-back"><strong>训练</strong>是改大脑（改模型参数，慢、贵、需要 GPU）；<strong>RAG</strong>是发资料（模型一个字没动，只是提问时多塞了几段参考资料）。所以给 RAG 换知识，只要往库里加文档就行，秒级生效——这就是它比&quot;重新训练&quot;香太多的原因。</div></div></div>
 <p>把上面这套&quot;检索→塞资料→照着答&quot;的流程演成一幕小短剧——同一个模型、同一个问题，看给不给它资料，结果差多远：</p>
-<div class="scene"><div class="scene-title">开卷考试现场：同一个模型，给不给资料两个样</div><div class="scene-panel scene-left reveal"><span class="scene-avatar" aria-hidden="true">🧑</span><div class="scene-bubble"><b class="scene-who">你</b>我们公司报销上限是多少？</div></div><div class="scene-caption reveal">场景一：闭卷。不给任何资料，让它凭记忆答。</div><div class="scene-panel scene-right reveal"><span class="scene-avatar" aria-hidden="true">🤖</span><div class="scene-bubble"><b class="scene-who">模型（闭卷）</b>呃……一般公司大概是 500 元吧？（它根本没见过你公司的制度，只能顺口编一个）</div></div><div class="scene-panel scene-left reveal"><span class="scene-avatar" aria-hidden="true">😰</span><div class="scene-bubble"><b class="scene-who">旁白</b>通顺、自信——但纯属瞎猜，你要真信了就踩坑了。</div></div><div class="scene-caption reveal">场景二：开卷。先让检索器去资料库里翻。</div><div class="scene-panel scene-right reveal"><span class="scene-avatar" aria-hidden="true">🔎</span><div class="scene-bubble"><b class="scene-who">检索器</b>把问题变成坐标，去库里找最近的几段……翻到了《差旅制度》3.2 节。</div></div><div class="scene-panel scene-left reveal"><span class="scene-avatar" aria-hidden="true">🔎</span><div class="scene-bubble"><b class="scene-who">检索器</b>把「问题 + 这段原文」拼成提示词，递给模型：请只根据下面这段资料回答。</div></div><div class="scene-panel scene-right reveal"><span class="scene-avatar" aria-hidden="true">🤖</span><div class="scene-bubble"><b class="scene-who">模型（开卷）</b>根据《差旅制度》3.2 节：单次报销上限 2000 元。<span class="popover" tabindex="0"><span class="popover-anchor">（出处：制度 3.2 节）</span><span class="popover-tip" role="tooltip">好的 RAG 会告诉你答案来自哪段资料，可核对——这是&quot;有据可查&quot;和&quot;凭空瞎编&quot;的分水岭</span></span></div></div><div class="scene-caption reveal">模型一个字都没重新训练，变的只是&quot;这次多塞了对的资料给它&quot;——这就是 RAG 的全部魔法。</div></div>
+<div class="scene"><div class="scene-title">开卷考试现场：同一个模型，给不给资料两个样</div><div class="scene-panel scene-left reveal"><span class="scene-avatar" aria-hidden="true">你</span><div class="scene-bubble">我们公司报销上限是多少？</div></div><div class="scene-caption reveal">场景一：闭卷。不给任何资料，让它凭记忆答。</div><div class="scene-panel scene-right reveal"><span class="scene-avatar" aria-hidden="true">模型（闭卷）</span><div class="scene-bubble">呃……一般公司大概是 500 元吧？（它根本没见过你公司的制度，只能顺口编一个）</div></div><div class="scene-panel scene-left reveal"><span class="scene-avatar" aria-hidden="true">旁白</span><div class="scene-bubble">通顺、自信——但纯属瞎猜，你要真信了就踩坑了。</div></div><div class="scene-caption reveal">场景二：开卷。先让检索器去资料库里翻。</div><div class="scene-panel scene-right reveal"><span class="scene-avatar" aria-hidden="true">检索器</span><div class="scene-bubble">把问题变成坐标，去库里找最近的几段……翻到了《差旅制度》3.2 节。</div></div><div class="scene-panel scene-left reveal"><span class="scene-avatar" aria-hidden="true">检索器</span><div class="scene-bubble">把「问题 + 这段原文」拼成提示词，递给模型：请只根据下面这段资料回答。</div></div><div class="scene-panel scene-right reveal"><span class="scene-avatar" aria-hidden="true">模型（开卷）</span><div class="scene-bubble">根据《差旅制度》3.2 节：单次报销上限 2000 元。<span class="popover" tabindex="0"><span class="popover-anchor">（出处：制度 3.2 节）</span><span class="popover-tip" role="tooltip">好的 RAG 会告诉你答案来自哪段资料，可核对——这是&quot;有据可查&quot;和&quot;凭空瞎编&quot;的分水岭</span></span></div></div><div class="scene-caption reveal">模型一个字都没重新训练，变的只是&quot;这次多塞了对的资料给它&quot;——这就是 RAG 的全部魔法。</div></div>
 <hr>
 <h2 id="五-rag-不是万能-它也会答错">五、RAG 不是万能：它也会答错<a class="anchor" href="#五-rag-不是万能-它也会答错" aria-label="锚点">#</a></h2>
 <p>RAG 让答案&quot;有据可查&quot;，但<strong>&quot;据&quot;错了、&quot;据&quot;没查到，答案照样会错</strong>。别把 RAG 当成&quot;永不出错&quot;的魔法。它最常见的两种翻车：</p>
@@ -99,15 +99,15 @@
 <h2 id="六-常见误区-新手最容易踩的坑">六、常见误区（新手最容易踩的坑）<a class="anchor" href="#六-常见误区-新手最容易踩的坑" aria-label="锚点">#</a></h2>
 <p>这一节请务必逐条读完。这些误解会让你对整个&quot;先查后答&quot;的理解跑偏。</p>
 <h3 id="误区-1-以为-rag-是-重新训练模型">误区 1：以为 RAG 是&quot;重新训练模型&quot;<a class="anchor" href="#误区-1-以为-rag-是-重新训练模型" aria-label="锚点">#</a></h3>
-<ul><li>❌ <strong>错误理解</strong>：用 RAG 就是拿我的文档去&quot;再训练&quot;一遍模型，让它记住这些资料。</li><li>✅ <strong>正确理解</strong>：<strong>模型一个字都没动！</strong> RAG 只是在<strong>提问的时候</strong>把相关资料一起喂进去。改变的是&quot;这次给它看了什么参考资料&quot;，不是模型本身。换资料库、加新文档，随时生效，<strong>根本不用碰模型</strong>——这也正是 RAG 便宜、灵活的原因。</li></ul>
+<ul><li>✗ <strong>错误理解</strong>：用 RAG 就是拿我的文档去&quot;再训练&quot;一遍模型，让它记住这些资料。</li><li>✓ <strong>正确理解</strong>：<strong>模型一个字都没动！</strong> RAG 只是在<strong>提问的时候</strong>把相关资料一起喂进去。改变的是&quot;这次给它看了什么参考资料&quot;，不是模型本身。换资料库、加新文档，随时生效，<strong>根本不用碰模型</strong>——这也正是 RAG 便宜、灵活的原因。</li></ul>
 <h3 id="误区-2-以为有了-rag-就-绝不幻觉">误区 2：以为有了 RAG 就&quot;绝不幻觉&quot;<a class="anchor" href="#误区-2-以为有了-rag-就-绝不幻觉" aria-label="锚点">#</a></h3>
-<ul><li>❌ <strong>错误理解</strong>：接上资料库，模型就再也不会瞎编了。</li><li>✅ <strong>正确理解</strong>：RAG 能<strong>大幅减少</strong>幻觉，但不能<strong>根除</strong>。如果检索没捞到对的资料，或者模型没老实照资料答（跑偏去用了自己的记忆），照样会编。RAG 是&quot;给它一本参考书&quot;，不是&quot;给它上了封口令&quot;。</li></ul>
+<ul><li>✗ <strong>错误理解</strong>：接上资料库，模型就再也不会瞎编了。</li><li>✓ <strong>正确理解</strong>：RAG 能<strong>大幅减少</strong>幻觉，但不能<strong>根除</strong>。如果检索没捞到对的资料，或者模型没老实照资料答（跑偏去用了自己的记忆），照样会编。RAG 是&quot;给它一本参考书&quot;，不是&quot;给它上了封口令&quot;。</li></ul>
 <h3 id="误区-3-以为塞越多资料越好">误区 3：以为塞越多资料越好<a class="anchor" href="#误区-3-以为塞越多资料越好" aria-label="锚点">#</a></h3>
-<ul><li>❌ <strong>错误理解</strong>：多多益善，把能找到的资料全塞进提示词，答得肯定更全。</li><li>✅ <strong>正确理解</strong>：<strong>塞太多反而更差。</strong> 一是无关资料会变成<strong>噪音</strong>，把真正有用的那段淹没，模型抓不住重点；二是资料越多越占 [⑧ 上下文窗口]([CONCEPT-08] 什么是Context与Token-上下文与令牌.md)，又贵又慢。所以只取&quot;最相关的几段（top-k）&quot;，<strong>宁精勿滥</strong>。</li></ul>
+<ul><li>✗ <strong>错误理解</strong>：多多益善，把能找到的资料全塞进提示词，答得肯定更全。</li><li>✓ <strong>正确理解</strong>：<strong>塞太多反而更差。</strong> 一是无关资料会变成<strong>噪音</strong>，把真正有用的那段淹没，模型抓不住重点；二是资料越多越占 [⑧ 上下文窗口]([CONCEPT-08] 什么是Context与Token-上下文与令牌.md)，又贵又慢。所以只取&quot;最相关的几段（top-k）&quot;，<strong>宁精勿滥</strong>。</li></ul>
 <h3 id="误区-4-以为-rag-就是-搜索引擎">误区 4：以为 RAG 就是&quot;搜索引擎&quot;<a class="anchor" href="#误区-4-以为-rag-就是-搜索引擎" aria-label="锚点">#</a></h3>
-<ul><li>❌ <strong>错误理解</strong>：RAG 不就是搜一下、把结果丢给我看嘛，跟百度谷歌一个意思。</li><li>✅ <strong>正确理解</strong>：搜索引擎<strong>把资料丢给你，你自己读</strong>；RAG 是<strong>把资料丢给模型，模型消化后用人话直接回答你</strong>。RAG = 检索 <strong>+ 让模型基于检索结果生成答案</strong>，多了&quot;消化再作答&quot;这关键一步。搜索给你一堆链接，RAG 给你一个（有出处的）答案。</li></ul>
+<ul><li>✗ <strong>错误理解</strong>：RAG 不就是搜一下、把结果丢给我看嘛，跟百度谷歌一个意思。</li><li>✓ <strong>正确理解</strong>：搜索引擎<strong>把资料丢给你，你自己读</strong>；RAG 是<strong>把资料丢给模型，模型消化后用人话直接回答你</strong>。RAG = 检索 <strong>+ 让模型基于检索结果生成答案</strong>，多了&quot;消化再作答&quot;这关键一步。搜索给你一堆链接，RAG 给你一个（有出处的）答案。</li></ul>
 <h3 id="误区-5-以为不用向量库-随便搜搜也一样">误区 5：以为不用向量库、随便搜搜也一样<a class="anchor" href="#误区-5-以为不用向量库-随便搜搜也一样" aria-label="锚点">#</a></h3>
-<ul><li>❌ <strong>错误理解</strong>：检索嘛，用关键词搜一下不就行了，何必搞什么向量数据库。</li><li>✅ <strong>正确理解</strong>：关键词检索<strong>也算&quot;检索&quot;</strong>（广义的 RAG 里检索方式可以有多种），但它只认<strong>字面</strong>——你搜&quot;退货&quot;，文档写&quot;退款&quot;就漏了。要按<strong>意思</strong>检索（&quot;番茄&quot;能配到&quot;西红柿&quot;），才需要 [⑨ embedding]([CONCEPT-09] 什么是Embedding-向量.md) + [⑩ 向量数据库]([CONCEPT-10] 什么是向量数据库.md)。<strong>语义检索靠向量</strong>，这正是 RAG 常和向量库绑在一起的原因。</li></ul>
+<ul><li>✗ <strong>错误理解</strong>：检索嘛，用关键词搜一下不就行了，何必搞什么向量数据库。</li><li>✓ <strong>正确理解</strong>：关键词检索<strong>也算&quot;检索&quot;</strong>（广义的 RAG 里检索方式可以有多种），但它只认<strong>字面</strong>——你搜&quot;退货&quot;，文档写&quot;退款&quot;就漏了。要按<strong>意思</strong>检索（&quot;番茄&quot;能配到&quot;西红柿&quot;），才需要 [⑨ embedding]([CONCEPT-09] 什么是Embedding-向量.md) + [⑩ 向量数据库]([CONCEPT-10] 什么是向量数据库.md)。<strong>语义检索靠向量</strong>，这正是 RAG 常和向量库绑在一起的原因。</li></ul>
 <hr>
 <h2 id="七-动手小实验-思想实验">七、动手小实验 / 思想实验<a class="anchor" href="#七-动手小实验-思想实验" aria-label="锚点">#</a></h2>
 <p>理论看再多，不如在脑子里把这一趟走一遍。下面的实验不用写代码，只用想。</p>
@@ -116,25 +116,25 @@
 <p><strong>闭卷（纯模型）会怎样？</strong> 模型不可能知道你们公司的内部制度（这是它训练时看不到的私有信息）。它要么老实说&quot;我不知道&quot;，要么——更常见——<strong>编一个听起来很合理的数</strong>，比如&quot;一般是 1000 元&quot;。你要是信了，就踩坑了。</p>
 <p><strong>开卷（RAG）会怎样？</strong></p>
 <pre class="mermaid">flowchart TD
-  Q[&quot;❓ 公司报销上限是多少？&quot;] --&gt; E[&quot;🧮 问题变坐标&quot;]
-  E --&gt; S[&quot;🔎 去向量库检索&quot;]
-  S --&gt; HIT[&quot;📄 命中《差旅报销制度》3.2 节：&lt;br/&gt;'单次餐饮报销上限 2000 元'&quot;]
-  HIT --&gt; P[&quot;📋 把这段塞进提示词&quot;]
-  P --&gt; ANS[&quot;🧠 模型作答：&lt;br/&gt;根据制度 3.2 节，上限 2000 元&lt;br/&gt;（出处已附）&quot;]</pre>
+  Q[&quot;? 公司报销上限是多少？&quot;] --&gt; E[&quot;问题变坐标&quot;]
+  E --&gt; S[&quot;去向量库检索&quot;]
+  S --&gt; HIT[&quot;命中《差旅报销制度》3.2 节：&lt;br/&gt;'单次餐饮报销上限 2000 元'&quot;]
+  HIT --&gt; P[&quot;把这段塞进提示词&quot;]
+  P --&gt; ANS[&quot;模型作答：&lt;br/&gt;根据制度 3.2 节，上限 2000 元&lt;br/&gt;（出处已附）&quot;]</pre>
 <p>同一个问题，<strong>闭卷靠猜、开卷靠查</strong>。差别不在模型聪不聪明，而在<strong>有没有先把对的资料递到它面前</strong>。</p>
 <h3 id="实验-b-当一次-切块-的裁判">实验 B：当一次&quot;切块&quot;的裁判<a class="anchor" href="#实验-b-当一次-切块-的裁判" aria-label="锚点">#</a></h3>
 <p>想象你要把这段话放进资料库：</p>
 <blockquote><p>&quot;差旅报销：餐饮单次上限 2000 元；交通凭票实报；住宿一线城市每晚上限 600 元。&quot;</p></blockquote>
 <p>如果切块切得太碎，把&quot;住宿一线城市每晚上限&quot;和&quot;600 元&quot;切到了两块里，检索&quot;住宿能报多少&quot;时可能只捞到前半句——模型看着&quot;住宿一线城市每晚上限&quot;却没有数字，就抓瞎了。<strong>体会一下：切块是门手艺，切得好检索才准。</strong> 这就是第五节说的&quot;RAG 的上限取决于检索质量&quot;。</p>
-<div class="quiz reveal" data-multi="0"><div class="quiz-q">🧠 RAG 和&quot;重新训练模型&quot;最本质的区别是什么？</div><ul class="quiz-opts"><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="0"><span class="quiz-key">A</span><span class="quiz-text">RAG 也要改模型的参数，只是改得少</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="1"><span class="quiz-key">B</span><span class="quiz-text">RAG 完全不改模型，只是在提问时把检索到的资料一起喂进去</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="0"><span class="quiz-key">C</span><span class="quiz-text">RAG 是把模型换成一个更大的</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="0"><span class="quiz-key">D</span><span class="quiz-text">RAG 就是关键词搜索，和模型无关</span></button></li></ul><div class="quiz-feedback" aria-live="polite"></div><div class="quiz-explain" hidden>💬 记住&quot;开卷考试&quot;比喻：考生（模型）没变，只是这次允许他翻书（检索资料）。换本书、加几页，随时生效，根本不用把考生&quot;回炉重造&quot;。</div></div>
+<div class="quiz reveal" data-multi="0"><div class="quiz-q">❯ RAG 和&quot;重新训练模型&quot;最本质的区别是什么？</div><ul class="quiz-opts"><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="0"><span class="quiz-key">A</span><span class="quiz-text">RAG 也要改模型的参数，只是改得少</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="1"><span class="quiz-key">B</span><span class="quiz-text">RAG 完全不改模型，只是在提问时把检索到的资料一起喂进去</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="0"><span class="quiz-key">C</span><span class="quiz-text">RAG 是把模型换成一个更大的</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="0"><span class="quiz-key">D</span><span class="quiz-text">RAG 就是关键词搜索，和模型无关</span></button></li></ul><div class="quiz-feedback" aria-live="polite"></div><div class="quiz-explain" hidden>▸ 记住&quot;开卷考试&quot;比喻：考生（模型）没变，只是这次允许他翻书（检索资料）。换本书、加几页，随时生效，根本不用把考生&quot;回炉重造&quot;。</div></div>
 <hr>
 <h2 id="八-和其它概念的关系">八、和其它概念的关系<a class="anchor" href="#八-和其它概念的关系" aria-label="锚点">#</a></h2>
 <p>RAG 不是凭空冒出来的，它<strong>站在前面好几块砖的肩膀上</strong>，也和&quot;工具调用&quot;是一对好搭档。</p>
 <pre class="mermaid">flowchart TB
-  EMB[&quot;📍 Embedding&lt;br/&gt;把资料/问题变坐标&quot;]
-  VDB[&quot;🗄️ 向量数据库&lt;br/&gt;海量坐标里秒找最近&quot;]
-  RAG[&quot;🔎 RAG&lt;br/&gt;先检索、再让模型作答&quot;]
-  AGENT[&quot;🤖 Agent&lt;br/&gt;会自己做事的智能体&quot;]
+  EMB[&quot;◆ Embedding&lt;br/&gt;把资料/问题变坐标&quot;]
+  VDB[&quot;向量数据库&lt;br/&gt;海量坐标里秒找最近&quot;]
+  RAG[&quot;RAG&lt;br/&gt;先检索、再让模型作答&quot;]
+  AGENT[&quot;Agent&lt;br/&gt;会自己做事的智能体&quot;]
   EMB -- &quot;提供'按意思找'的能力&quot; --&gt; VDB
   VDB -- &quot;为它提供检索地基&quot; --&gt; RAG
   RAG -- &quot;给它补'外部记忆'&quot; --&gt; AGENT</pre>
@@ -149,11 +149,11 @@
 <p>在一个 AI 编程助手里，&quot;先查后答&quot;是个反复出现的需求，比如：</p>
 <ul><li><strong>资料/文档问答</strong>：你问&quot;这个项目的某某约定是什么&quot;，与其让模型凭记忆猜，不如<strong>先检索到相关的文档片段，再让它照着答</strong>——这就是 RAG 的典型形态。</li><li><strong>记忆召回</strong>：把过去的经验、笔记按&quot;意思&quot;存好（靠 [⑨ Embedding]([CONCEPT-09] 什么是Embedding-向量.md) + [⑩ 向量数据库]([CONCEPT-10] 什么是向量数据库.md)），遇到相似的新任务时，<strong>把最相关的几条捞回来喂给模型</strong>参考，而不是让它从零硬想。这本质上也是一次&quot;检索增强&quot;。</li></ul>
 <p>这些场景的共同点，都是那句话：<strong>先检索出相关的那几段，再让模型基于它作答。</strong> 所以你只要在文档或系统里看到&quot;资料问答&quot;&quot;相关经验召回&quot;&quot;按相似度检索后再回答&quot;这类字眼，就可以在心里默念一句：<strong>&quot;哦，这是 RAG 的路子。&quot;</strong></p>
-<blockquote><p>⚠️ 这里只讲&quot;概念级&quot;的关系——<strong>&quot;要照资料答，就先检索再喂给模型&quot;</strong>。至于 Khy-OS 具体在哪些模块、用什么检索方式、怎么落地，属于设计与实现层面，你可以在 <a href="../../03_DESIGN_设计"><code>docs/03_DESIGN_设计</code></a> 目录里进一步了解。本文不涉及、也不编造具体的函数名或文件名。</p></blockquote>
+<blockquote><p>⚠ 这里只讲&quot;概念级&quot;的关系——<strong>&quot;要照资料答，就先检索再喂给模型&quot;</strong>。至于 Khy-OS 具体在哪些模块、用什么检索方式、怎么落地，属于设计与实现层面，你可以在 <a href="../../03_DESIGN_设计"><code>docs/03_DESIGN_设计</code></a> 目录里进一步了解。本文不涉及、也不编造具体的函数名或文件名。</p></blockquote>
 <hr>
 <h2 id="十-小结-下一步">十、小结 + 下一步<a class="anchor" href="#十-小结-下一步" aria-label="锚点">#</a></h2>
 <ul><li><strong>RAG（检索增强生成）= 回答前先去资料库检索相关资料，塞进提示词，再让模型基于资料作答。</strong> 一句话：<strong>从闭卷变开卷，先翻书再答题。</strong></li><li>它一招治三病：<strong>减少幻觉</strong>（答案有据、可溯源）、<strong>知识随时更新</strong>（改资料库不用碰模型）、<strong>绕开上下文窗口</strong>（每次只取最相关的几段）。</li><li>两个阶段：<strong>离线建库</strong>（文档 → 切块 → embedding → 存进向量库）+ <strong>在线问答</strong>（问题 → 变坐标 → 检索 top-k → 拼进提示词 → 作答 → 附出处）。</li><li><strong>模型没变，变的只是&quot;喂了它什么资料&quot;</strong>——这是 RAG 最核心、最容易被误解的一点。</li><li>它<strong>不是万能</strong>：检索不到、切块差，照样答错；RAG 的上限取决于检索质量。</li><li>五大误区：它<strong>不是重新训练</strong>、有它也<strong>不能保证零幻觉</strong>、资料<strong>不是越多越好</strong>、它<strong>不等于搜索引擎</strong>（多了&quot;让模型消化再作答&quot;）、<strong>语义检索靠向量</strong>。</li><li>它站在 <strong>Embedding + 向量数据库</strong> 的肩上，和 <strong>工具调用</strong>是&quot;喂资料 vs 让它取&quot;的两条路，还给 <strong>Agent</strong> 补了一份外部记忆。</li></ul>
-<p>👉 [⑫ 什么是机器学习（Machine Learning）]([CONCEPT-12] 什么是机器学习-MachineLearning.md)</p>
+<p>→ [⑫ 什么是机器学习（Machine Learning）]([CONCEPT-12] 什么是机器学习-MachineLearning.md)</p>
       </article>
       <nav class="pager"><a class="prev" href="../../../docs/02_CONCEPTS_概念入门/CONCEPT/[CONCEPT-10] 什么是向量数据库.html"><div class="dir">← 上一篇</div><div class="ttl">⑩ 什么是向量数据库（Vector Database）</div></a><a class="next" href="../../../docs/02_CONCEPTS_概念入门/CONCEPT/[CONCEPT-12] 什么是机器学习-MachineLearning.html"><div class="dir">下一篇 →</div><div class="ttl">⑫ 什么是机器学习（Machine Learning）</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
