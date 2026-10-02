@@ -1806,7 +1806,7 @@ async function chat(userMessage, opts = {}) {
           if (d.file_previews?.length > 0) {
             for (const fp of d.file_previews) {
               if (fp.preview && !fp.preview.startsWith('[')) {
-                parts.push(`📄 ${fp.path} (${fp.lines || '?'} lines)\n${fp.preview}`);
+                parts.push(`${fp.path} (${fp.lines || '?'} lines)\n${fp.preview}`);
               }
             }
           }
@@ -2647,7 +2647,7 @@ async function chat(userMessage, opts = {}) {
           (kind === '故事'
             ? '2. 故事内容必须与软件工程相关（程序员生活、项目开发、技术决策、团队协作等），有情节有结尾\n'
             : '') +
-          `${kind === '故事' ? '3' : '2'}. ${kind}结束后空一行，用"💡"开头附一条与${kind}内容直接相关的软件工程知识点：\n` +
+          `${kind === '故事' ? '3' : '2'}. ${kind}结束后空一行，用"知识点："开头附一条与${kind}内容直接相关的软件工程知识点：\n` +
           `   - 知识点必须从${kind}中出现的具体技术概念、工具、行为或术语延伸\n` +
           '   - 例如：笑话提到"debug"→讲调试技巧；提到"递归"→讲递归与迭代取舍；提到"git"→讲版本控制实践\n' +
           '   - 优先选择实用、具体的软件工程知识（设计模式、算法、架构原则、工具链、最佳实践等）\n' +
@@ -3537,7 +3537,7 @@ async function chat(userMessage, opts = {}) {
           if (failureDetails && !/真实失败原因/.test(msg)) {
             msg = `${msg}\n\n${failureDetails}`;
           }
-          // 推广清单(🆓 免费方案 / 💰 付费订阅 / ⚡ 快速配置)只在既有通道确实无法
+          // 推广清单(免费方案 / 付费订阅 / 快速配置)只在既有通道确实无法
           // 给出任何可执行建议时才保留 —— 否则它是每次失败的装饰噪声,不是诊断。
           const _keepPromo = !!_env0.showPromoPanel;
           if (!_keepPromo && rawFailureText) {
@@ -3546,9 +3546,9 @@ async function chat(userMessage, opts = {}) {
               .filter((line) => {
                 const t = line.trim();
                 return (
-                  !/^🆓\s*免费方案/.test(t) &&
-                  !/^💰\s*付费订阅/.test(t) &&
-                  !/^⚡\s*快速配置/.test(t) &&
+                  !/^免费方案/.test(t) &&
+                  !/^付费订阅/.test(t) &&
+                  !/^快速配置/.test(t) &&
                   !/^\s*•\s*(Kiro|Trae|Ollama|Claude|OpenAI|Cursor|智谱AI|通义千问)/.test(t) &&
                   !/^\s*•\s*(ai config|\/proxy|khy gateway relay)/.test(t)
                 );
@@ -3594,7 +3594,7 @@ async function chat(userMessage, opts = {}) {
       /* fail-soft:信封不可用 → 落到下方旧路径,逐字节回退 */
     }
 
-    let errorMsg = '⚠️ 本次请求未能完成，AI 服务没有返回回答。';
+    let errorMsg = '⚠ 本次请求未能完成，AI 服务没有返回回答。';
     if (rawFailureText) {
       errorMsg = `${errorMsg}\n\n失败信息: ${rawFailureText}`;
     }
@@ -4344,7 +4344,7 @@ async function chat(userMessage, opts = {}) {
                 : _lastToolAction === 'web_search' || _lastToolAction === 'websearch'
                   ? '若为网络搜索失败：可稍后重试，或换一个查询词'
                   : '可检查参数后让我重试，或换一种实现方式';
-          reply += `\n\n⚠️ 工具 ${call.action} 连续失败 ${consecutiveErrors} 次，已停止工具循环（避免无效循环）。\n> 建议：${_toolFixHint}`;
+          reply += `\n\n⚠ 工具 ${call.action} 连续失败 ${consecutiveErrors} 次，已停止工具循环（避免无效循环）。\n> 建议：${_toolFixHint}`;
           break;
         }
       }
@@ -4997,7 +4997,7 @@ async function chat(userMessage, opts = {}) {
       if (_finalized.ok) {
         onStatus({
           phase: 'summary',
-          message: `📋 需求已固化（${_finalized.itemCount} 条，收尾对账）→ ${_finalized.relPath}`,
+          message: `需求已固化（${_finalized.itemCount} 条，收尾对账）→ ${_finalized.relPath}`,
           elapsed: Date.now() - startTime,
         });
       }

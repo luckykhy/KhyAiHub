@@ -198,6 +198,19 @@ function deferredPrefetch(options = {}) {
         } catch {
           /* 同上 */
         }
+        // training 与训练隔离区同样只在完整模式的 runCleanup 里被裁,轻量入口从不碰它们。
+        // 实测 .khy/training 550 MB,其中 interaction_quarantine.jsonl 547.8 MB(超自身上限
+        // 20 MB 的 27 倍),占 .khy 总体积 56%。这是同一条缺口的第二批(2026-09-29)。
+        try {
+          cleanup.trimTrainingData();
+        } catch {
+          /* 裁剪失败不影响自检 */
+        }
+        try {
+          cleanup.trimQuarantine();
+        } catch {
+          /* 同上 */
+        }
         emitFootprintNotice(cleanup);
       } catch {
         /* non-critical */

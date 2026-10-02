@@ -765,16 +765,3 @@ try {
 } catch {
   /* port unavailable — queryEngine conversation-state ops degrade to no-op */
 }
-try {
-  // Pure-leaf utilities authored inside cli/ (full-width folding, status-message
-  // formatting, diff hunking). Service-layer callers — intentPreprocess,
-  // noiseFilter, diffCapture — would otherwise reach up into cli/ for functions
-  // that carry no CLI coupling at all (archDebtScan R1 reverse-layering edges).
-  require('../services/cliLeafPort').registerCliLeaves({
-    fullWidthInput: require('./fullWidthInput'),
-    statusMessageFormatter: require('./statusMessageFormatter'),
-    diffRenderer: require('./diffRenderer'),
-  });
-} catch {
-  /* port unavailable — callers fall back to their own lazy cli/ require */
-}

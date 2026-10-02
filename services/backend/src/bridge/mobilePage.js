@@ -357,7 +357,7 @@ body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);
 <!-- ── Login Screen ── -->
 <div class="login-screen" id="loginScreen">
   <div class="login-card">
-    <span class="logo">\uD83D\uDD10</span>
+    <span class="logo">❯</span>
     <h2>KHY Remote</h2>
     <div class="subtitle">\u8FDC\u7A0B\u63A7\u5236\u53F0</div>
 
@@ -419,7 +419,7 @@ body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);
 
 <div class="transcript" id="transcript">
   <div class="empty-hint" id="emptyHint">
-    <span class="icon" id="emptyIcon">\uD83D\uDCF1</span>
+    <span class="icon" id="emptyIcon">❯</span>
     <span id="emptyText">\u5728\u4E0B\u65B9\u8F93\u5165\u6846\u53D1\u9001\u547D\u4EE4<br>AI \u7684\u56DE\u590D\u4F1A\u5B9E\u65F6\u663E\u793A\u5728\u8FD9\u91CC</span>
     <span class="kb-hint"><br><br><code>Enter</code> \u53D1\u9001 &nbsp; <code>Shift+Enter</code> \u6362\u884C</span>
   </div>
@@ -857,10 +857,10 @@ body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);
         if(data && data.success && Array.isArray(data.attachments)){
           data.attachments.forEach(function(a){ if(a) pendingAttachments.push(a); });
         } else {
-          addStatusMsg('⚠️ ' + esc((data && data.error) || '上传失败'));
+          addStatusMsg('⚠ ' + esc((data && data.error) || '上传失败'));
         }
       })
-      .catch(function(){ addStatusMsg('⚠️ 上传失败，请重试'); })  /* 上传失败，请重试 */
+      .catch(function(){ addStatusMsg('⚠ 上传失败，请重试'); })  /* 上传失败，请重试 */
       .then(function(){ attachBtn.disabled = !authenticated; renderAttachBar(false); });
   }
 
@@ -1010,7 +1010,7 @@ body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);
     if(decision === 'allow'){
       el.innerHTML = '<div class="status-msg" style="color:var(--accent2)">\u2714 \u5DF2\u5141\u8BB8</div>';
     } else {
-      el.innerHTML = '<div class="status-msg" style="color:var(--red)">\u2716 \u5DF2\u62D2\u7EDD</div>';
+      el.innerHTML = '<div class="status-msg" style="color:var(--red)">\u2715 \u5DF2\u62D2\u7EDD</div>';
     }
   }
 
@@ -1030,7 +1030,7 @@ body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);
     };
     div.querySelector('.btn-deny').onclick = function(){
       wsSend({type:'deny', requestId: requestId});
-      div.innerHTML = '<div class="status-msg" style="color:var(--red)">\u2716 \u5DF2\u62D2\u7EDD</div>';
+      div.innerHTML = '<div class="status-msg" style="color:var(--red)">\u2715 \u5DF2\u62D2\u7EDD</div>';
     };
     transcript.appendChild(div);
     scrollBottom();
@@ -1201,7 +1201,7 @@ body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);
     var text = $('emptyText');
     if(icon && text){
       if(isDesktop){
-        icon.textContent = '\uD83D\uDCBB';
+        icon.textContent = '❯';
         text.innerHTML = '\u5728\u4E0B\u65B9\u8F93\u5165\u6846\u53D1\u9001\u547D\u4EE4<br>AI \u7684\u56DE\u590D\u4F1A\u5B9E\u65F6\u540C\u6B65\u5230\u8FD9\u91CC';
       }
     }

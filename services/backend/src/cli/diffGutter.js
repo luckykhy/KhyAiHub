@@ -93,27 +93,11 @@ function formatDiffGutterNum(num, width) {
 //   del → 左=old 右=空    add → 左=空 右=new    ctx → 左=old 右=new
 // 门控关 → rows 不携带 numNew、渲染保持单列,逐字节回退。
 
-const DUAL_FALSY = new Set(['0', 'false', 'off', 'no']);
-
-/** 双列(旧|新)行号 gutter 开关。KHY_DIFF_DUAL_GUTTER 默认开。 */
-function dualGutterEnabled(env = process.env) {
-  const flag = String((env && env.KHY_DIFF_DUAL_GUTTER) || '')
-    .trim()
-    .toLowerCase();
-  return !DUAL_FALSY.has(flag);
-}
-
-/**
- * 结构化 diff 体首行的文件路径头开关(KHY_DIFF_PATH_HEADER,默认开)。
- * DSH note(2026-07-27)在「卡片标题已含路径」的 TUI 里去掉重复路径头;经典 ANSI
- * 路径没有标题,相反**必须**自报路径 —— 同一「不重复、不缺席」原则按呈现面各取一侧。
- */
-function diffPathHeaderEnabled(env = process.env) {
-  const flag = String((env && env.KHY_DIFF_PATH_HEADER) || '')
-    .trim()
-    .toLowerCase();
-  return !DUAL_FALSY.has(flag);
-}
+// The two default-on env gates moved to D3 (`utils/diff/envGates`) because the
+// pure hunk engine reads `dualGutterEnabled` itself and must not require up into
+// `cli/`. Bodies are unchanged; re-exported here so every existing call site and
+// `tests/cli/diffGutter.test.js` keep this import path.
+const { dualGutterEnabled, diffPathHeaderEnabled } = require('../utils/diff/envGates');
 
 /**
  * Dual-gutter cell strings for one diff row: [oldColumn, newColumn], each

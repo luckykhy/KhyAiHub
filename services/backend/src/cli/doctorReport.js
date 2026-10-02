@@ -91,7 +91,7 @@ function buildActionLines(checks, { width = 80 } = {}) {
   const lines = [];
   lines.push('');
   const head =
-    `  ${chalk.red.bold('✋ 需要处理 ' + pending.length + ' 项')}` +
+    `  ${chalk.red.bold('需要处理 ' + pending.length + ' 项')}` +
     (failCount > 0 ? chalk.dim(`（其中 ${failCount} 项影响核心功能）`) : chalk.dim('（均为可选功能）'));
   lines.push(head);
   for (const item of pending) {

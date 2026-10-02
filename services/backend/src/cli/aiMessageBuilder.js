@@ -776,7 +776,7 @@ async function _gatewayGenerate(
             if (typeof opts.onStatus === 'function') {
               opts.onStatus({
                 phase: 'request',
-                message: `🎨 正在通过 ${_selectedImageModel} 生成图像… ${pct}%`,
+                message: `正在通过 ${_selectedImageModel} 生成图像… ${pct}%`,
               });
             }
           }
@@ -796,20 +796,20 @@ async function _gatewayGenerate(
 
         const imageList = (imgResult.images || [])
           .map((img, i) => {
-            const pathLine = imagePaths[i] ? `\n  📁 保存位置: ${imagePaths[i]}` : '';
+            const pathLine = imagePaths[i] ? `\n  保存位置: ${imagePaths[i]}` : '';
             return `${i + 1}. [图像 ${imgResult.backend}/${imgResult.model || _selectedImageModel} ${imgResult.size || ''}]${pathLine}`;
           })
           .join('\n');
         const khyImgDir = _getKhyOutputDir('images').primary;
         const savedNote =
-          imagePaths.length > 0 ? `\n💡 图片已自动打开，也可在 ${khyImgDir} 查看。` : '';
+          imagePaths.length > 0 ? `\n图片已自动打开，也可在 ${khyImgDir} 查看。` : '';
         const intro = String(userMessage || '')
           .trim()
           .slice(0, 60);
         const reply =
           imagePaths.length > 0
             ? `根据您的描述「${intro}」已生成 ${imagePaths.length} 张图像：\n${imageList}${savedNote}`
-            : `🎨 已为您生成 ${imagePaths.length || imgResult.images.length} 张图像：\n${imageList}${savedNote}`;
+            : `已为您生成 ${imagePaths.length || imgResult.images.length} 张图像：\n${imageList}${savedNote}`;
         if (typeof opts.onChunk === 'function') {
           opts.onChunk({ type: 'text', text: reply });
         }

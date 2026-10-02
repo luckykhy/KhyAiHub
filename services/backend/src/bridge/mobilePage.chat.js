@@ -37,7 +37,7 @@ const buildChatSection = () => {
   return `
 <!-- ── PR: merge-khychat-into-bridge — chat mode interaction ── -->
 <style>
-/* 控制台模式: 显示"🤖 AI 对话"入口链接 → ?mode=chat 整页. */
+/* 控制台模式: 显示"AI 对话"入口链接 → ?mode=chat 整页. */
 .khy-chat-link{
   display:none;
   color:var(--accent);text-decoration:none;
@@ -51,7 +51,7 @@ body:not(.khy-chat-mode) .khy-chat-link{display:inline-block}
 /* Chat 模式视觉: 简化 header, 隐藏协作控制台元素. */
 body.khy-chat-mode .header h1{font-size:14px}
 body.khy-chat-mode .header h1::before{
-  content:"🤖 AI 对话";
+  content:"AI 对话";
   display:inline-block;margin-right:8px;
 }
 body.khy-chat-mode .header h1 > *{display:none}
@@ -60,7 +60,7 @@ body.khy-chat-mode .khy-chat-link{display:none !important}
 
 /* Chat 模式登录卡: 改 logo/标题/副标题; 默认聚焦 PIN 表单;
    隐藏 "用户名/密码" tab (khy chat 是手机/局域网场景, PIN 就够). */
-body.khy-chat-mode .login-card .logo::before{content:"🤖";font-size:36px;display:block}
+body.khy-chat-mode .login-card .logo::before{content:"";font-size:36px;display:block}
 body.khy-chat-mode .login-card .logo{font-size:0;line-height:1}
 body.khy-chat-mode .login-card h2{font-size:0;line-height:1.2}
 body.khy-chat-mode .login-card h2::before{
@@ -92,7 +92,7 @@ body.khy-chat-mode .khy-pin-help{display:block}
 .khy-pin-help code{background:rgba(255,255,255,.06);padding:1px 6px;border-radius:4px;
   font-size:11px;color:var(--text)}
 
-/* (4) Chat 模式空态文案 — 取代控制台默认的"📱 在下方..."提示. */
+/* (4) Chat 模式空态文案 — 取代控制台默认的"在下方..."提示. */
 body.khy-chat-mode .empty-hint{text-align:left;padding:24px}
 body.khy-chat-mode .empty-hint #emptyIcon{display:none}
 body.khy-chat-mode .empty-hint #emptyText{
@@ -177,7 +177,7 @@ body:not(.khy-chat-mode) .khy-chat-bar{opacity:0;pointer-events:none}
     const chat = params.get('mode') === 'chat';
     window.__khyChatMode = chat;
 
-    // 控制台模式: 仅显出"🤖 AI 对话"入口链接; 其余脚本不执行.
+    // 控制台模式: 仅显出"AI 对话"入口链接; 其余脚本不执行.
     const chatLink = document.getElementById('khyChatLink');
     if (chatLink && !chat) { chatLink.style.display = ''; }
     if (!chat) { return; }

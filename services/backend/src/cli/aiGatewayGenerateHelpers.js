@@ -279,7 +279,7 @@ function _buildStepDriverPrompt(planSteps, currentStep = 0) {
         .trim()
         .slice(0, 80);
       const err = s.lastError ? ` — ${String(s.lastError).slice(0, 60)}` : '';
-      lines.push(`  ⛔ 步骤 ${s.id}: ${desc || '(无描述)'}${err}`);
+      lines.push(`  ◉ 步骤 ${s.id}: ${desc || '(无描述)'}${err}`);
       lines.push(`     操作：先用 read_file 等工具检查实际状态,分析失败根因,修改步骤描述后重试。`);
     }
   }
@@ -354,7 +354,7 @@ function _buildResumePlanPrompt(savedSteps) {
       const desc = String(s.description || '')
         .trim()
         .slice(0, 80);
-      lines.push(`  ⛔ 步骤 ${s.id}: ${desc || '(无描述)'}`);
+      lines.push(`  ◉ 步骤 ${s.id}: ${desc || '(无描述)'}`);
       lines.push(
         `     原因: ${String(s.lastError || '')
           .replace(/\s+/g, ' ')
@@ -539,7 +539,7 @@ function _annotateTruncation(reply, stopReason = '', continuations = 0) {
     notice = require('../services/query').maxTokensRecovery.buildTruncationNotice(continuations);
   } catch {
     notice =
-      '\n\n[⚠️ 输出已达长度上限被截断。可调大 KHY 网关 maxTokens（本地模型对应 num_predict），或说「继续」补全剩余内容。]';
+      '\n\n[⚠ 输出已达长度上限被截断。可调大 KHY 网关 maxTokens（本地模型对应 num_predict），或说「继续」补全剩余内容。]';
   }
   // 追加真实 stopReason 码值(finish_reason=length / max_tokens …)。用户诉求「截断要能
   // 看到原因和错误码」:只写「被截断」无法判断是哪条上限触发、也无法直接搜索或上报。
@@ -655,7 +655,7 @@ function _buildToolMentionNotice(reply, collectedToolResults) {
       return '';
     }
     const lines = [
-      '> ⚠️ 诚实性校验：上文把下列工具写成了已完成动作，但本轮工具调用记录里没有它们的调用 ——',
+      '> ⚠ 诚实性校验：上文把下列工具写成了已完成动作，但本轮工具调用记录里没有它们的调用 ——',
     ];
     for (const c of contradictions.slice(0, 3)) {
       lines.push(`> - 「${c.claim}」（缺少 ${c.expectedTool} 的调用记录）`);

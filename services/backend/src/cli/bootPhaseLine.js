@@ -51,8 +51,14 @@ const METHODS = ['log', 'info', 'warn', 'error'];
 const CLEAR_LINE = '\r\x1b[K';
 
 // 实时百分比模式下的刷新间隔。1000ms 是「已等待 Xs」时钟的节拍,对百分比太粗 ——
-// 用户要的是「进度在动」,所以有百分比源时改用 250ms 重画(仍是同一行的 \r 覆写,零闪烁)。
-const PERCENT_TICK_MS = 250;
+// 用户要的是「进度在动」,所以有百分比源时用更细的节拍重画(仍是同一行的 \r 覆写,零闪烁)。
+//
+// 250 → 120ms 的理由:百分比曲线的时间常数是 PERCENT_CREEP_MS=12000(见 startupBeats),
+// 250ms 意味着曲线每走 1/48 个时间常数才画一次 —— 观感上是「一跳一跳」而不是「在爬」。
+// 120ms 让每个 tick 的位移落在曲线可分辨的尺度内(约 8fps),且仍是 20 列的整行覆写,
+// 写字节量级不变。不取更快:本条跑在 **Ink 装载窗口**内,主线程随时可能被 ink 的
+// 动态 import 抢占(见 [DESIGN-PERF-003] 实测),更高频率只会被合并、拿不到收益。
+const PERCENT_TICK_MS = 120;
 
 // 百分比条宽。与 ink 侧 ProgressBar 的 BAR_WIDTH 同值同字形,让 pre-Ink 行与启动屏
 // 视觉连续。这里不复用 ProgressBar 是因为它是 ink 组件(需要 react + inkRuntime),

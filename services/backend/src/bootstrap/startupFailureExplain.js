@@ -12,7 +12,7 @@
  * cli.py:2305 已为「bin/khy.js 文件缺失」示范了「真实原因 + 解决方法」的好样子，但它
  * 只管**文件不在**的情形，且 Unix 上 os.execvpe 之后 Python 归因不可达。本文件补上更常见
  * 的**依赖不齐**情形：文件在、进程起来、深层 require 才崩。归因逻辑仓内早已具备
- * （scripts/lib/hydrationHealth.js 的 _RULES），但它只在 doctor CLI 跑，从不在崩溃路径。
+ * （services/backend/src/services/domain/backup/restore/hydrationHealth.js 的 _RULES），但它只在 doctor CLI 跑，从不在崩溃路径。
  * 本文件把「崩溃现场的 err」→「一句真实原因 + 照抄即用的修法」，交给 _emitFatal 追加。
  *
  * 2026-09-21 补第三种形态「**空心包**（hollow）**：ESM import 命中的路径里**目录在、
