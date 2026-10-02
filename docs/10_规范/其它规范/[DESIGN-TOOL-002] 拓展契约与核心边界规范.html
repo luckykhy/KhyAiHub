@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -73,8 +73,8 @@
 <p><code>scripts/release</code> 与 <code>scripts/docs</code> 留核的理由不同：它们是<strong>构建期</strong>的，不参与运行时，<br>按 §6 的最后一条分支本来就不该是拓展。</p>
 <h3 id="1-7-现存功能的归类">1.7 现存功能的归类<a class="anchor" href="#1-7-现存功能的归类" aria-label="锚点">#</a></h3>
 <p>以下是<strong>目标态</strong>。除已标注者外均为<strong>待迁移</strong>，不是既成事实——迁移按第七节的棘轮逐个进行。</p>
-<table><thead><tr><th>目标拓展 id</th><th>现位置</th><th>状态</th></tr></thead><tbody><tr><td><code>khy-markdown</code></td><td><code>extensions/tools/khy-markdown/</code>（原 <code>tools/khyos-markdown/</code>）</td><td><strong>✅ 已迁移</strong>（第一个试点）</td></tr><tr><td><code>khy-notebook</code></td><td><code>extensions/tools/khy-notebook/</code>（原 <code>…/src/tools/NotebookEditTool/</code>）</td><td><strong>✅ 已迁移</strong>（第一个迁出核的<strong>内置工具</strong>）</td></tr><tr><td><code>khy-trae-bridge</code></td><td><code>extensions/bridges/khy-trae-bridge/</code></td><td>已在位，<code>kind: ide-bridge</code></td></tr><tr><td><code>khy-quant</code></td><td><code>software/khyquant/</code></td><td><strong>Phase 0 已断边</strong>（见 §3.4 第三种形态）；Phase 1 搬目录待做</td></tr><tr><td><code>khy-eyes</code></td><td><code>tools/deepseek-eyes/</code></td><td>待迁移</td></tr><tr><td>5 个 scripts 拓展</td><td><code>scripts/{portable,alpine,install,qoder-bridge,diagnostics,…}</code></td><td>待迁移，清单见 §1.6</td></tr><tr><td><code>khy-protocol-*</code></td><td><code>gateway/protocolConverter/*</code></td><td>待迁移</td></tr><tr><td><code>khy-mcp-presets</code></td><td>mcp 预设 + 生态注册表</td><td>待迁移</td></tr><tr><td>约 15–25 个能力域拓展</td><td><code>services/backend/src/tools/*</code></td><td>待迁移，粒度见 §1.4</td></tr><tr><td><code>khy-web-admin</code></td><td><code>services/backend/src/{routes,models,controllers}</code></td><td>待迁移（体量最大，最后做）</td></tr><tr><td><code>khy-ai-frontend</code></td><td><code>apps/ai-frontend/</code></td><td>待迁移</td></tr></tbody></table>
-<blockquote><p><code>khy-quant</code> 的迁移<strong>不改变</strong> <code>[DESIGN-LAY-005]</code> 对 <code>software/</code> 的定义：khyquant 现在就是「内置默认应用而非项目本身」，做成拓展是把这句话落到机器上，不是新的定位。</p></blockquote>
+<table><thead><tr><th>目标拓展 id</th><th>现位置</th><th>状态</th></tr></thead><tbody><tr><td><code>khy-markdown</code></td><td><code>extensions/tools/khy-markdown/</code>（原 <code>tools/khyos-markdown/</code>）</td><td><strong>✓ 已迁移</strong>（第一个试点）</td></tr><tr><td><code>khy-notebook</code></td><td><code>extensions/tools/khy-notebook/</code>（原 <code>…/src/tools/NotebookEditTool/</code>）</td><td><strong>✓ 已迁移</strong>（第一个迁出核的<strong>内置工具</strong>）</td></tr><tr><td><code>khy-trae-bridge</code></td><td><code>extensions/bridges/khy-trae-bridge/</code></td><td>已在位，<code>kind: ide-bridge</code></td></tr><tr><td><code>khy-quant</code></td><td><code>software/khyquant/</code></td><td><strong>Phase 0 已断边</strong>（见 §3.4 第三种形态）；Phase 1 搬目录待做</td></tr><tr><td><code>khy-eyes</code></td><td><code>tools/deepseek-eyes/</code></td><td>待迁移</td></tr><tr><td>5 个 scripts 拓展</td><td><code>scripts/{portable,alpine,install,qoder-bridge,diagnostics,…}</code></td><td>待迁移，清单见 §1.6</td></tr><tr><td><code>khy-protocol-*</code></td><td><code>gateway/protocolConverter/*</code></td><td>待迁移</td></tr><tr><td><code>khy-mcp-presets</code></td><td>mcp 预设 + 生态注册表</td><td>待迁移</td></tr><tr><td>约 15–25 个能力域拓展</td><td><code>services/backend/src/tools/*</code></td><td>待迁移，粒度见 §1.4</td></tr><tr><td><code>khy-web-admin</code></td><td><code>services/backend/src/{routes,models,controllers}</code></td><td>待迁移（体量最大，最后做）</td></tr><tr><td><code>khy-ai-frontend</code></td><td><code>apps/ai-frontend/</code></td><td>待迁移</td></tr></tbody></table>
+<blockquote><p><code>khy-quant</code> 的迁移<strong>不改变</strong> <code>[DESIGN-LAY-005]</code> 对 <code>software/</code> 的定义：khyquant 是<strong>独立项目</strong>，做成拓展只是把「它连接平台使用、不是平台的组成部分」这句话落到机器上，不是新的定位。</p></blockquote>
 <blockquote><p><strong><code>khy-quant</code> 分两步做，原因见 §3.4 第三种形态。</strong> Phase 0（断边）已完成：57 个壳改走服务名、<code>server.js</code> 改 fail-soft 挂载，实测移开 <code>software/khyquant</code> 后服务器仍能启动并汇报「已跳过 21/21 条量化应用路由」——改前是加载期 <code>MODULE_NOT_FOUND</code>，整机不可用。Phase 1（搬目录）剩下的是纯 <code>git mv</code> + 加一份声明 <code>provides: [&quot;quant-app&quot;]</code> 的 manifest + 删掉解析器里的迁移期兜底，<strong>核一行都不用改</strong>；另有约 40 处非文档引用（CI workflow / <code>MANIFEST.in</code> / 便携构建脚本 / workspace 声明 / 版本轨道 3）要跟着改，那是 Phase 1 的主要工作量。</p>
 <p>Phase 0 顺带暴露两个<strong>死壳</strong>：<code>src/routes/marketData.js</code> 与 <code>src/routes/news.js</code> 有壳、被 <code>server.js</code> require（前者）或压根没引用（后者），但都没有对应的 <code>app.use</code>。<code>/api/news</code> 实际走的是 <code>createAiProxy()</code>，与量化应用无关。清理它们会改变模块副作用的执行时机，故不并入「纯重构」的 Phase 0，留给 Phase 1。</p></blockquote>
 <p><strong><code>khy-notebook</code> 是本契约第一个可被引用的完整先例</strong>：它证明了一个已经在核里、已经暴露给模型、<br>已经被约 20 处策略表点名的内置工具，可以在<strong>行为逐字节不变</strong>的前提下迁出去。迁移中实测出的两个<br>缺口（§5.1 命名、§5.2 广告）都已补上并有守卫。后续 tool 类迁移照它抄。</p>

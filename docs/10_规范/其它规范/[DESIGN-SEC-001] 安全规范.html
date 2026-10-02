@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -343,7 +343,7 @@
   };
 };</code></pre>
 <h3 id="5-2-sql-注入防护">5.2 SQL 注入防护<a class="anchor" href="#5-2-sql-注入防护" aria-label="锚点">#</a></h3>
-<pre><code class="language-javascript"><span class="hljs-comment">// ✅ 正确：使用参数化查询</span>
+<pre><code class="language-javascript"><span class="hljs-comment">// ✓ 正确：使用参数化查询</span>
 <span class="hljs-keyword">const</span> <span class="hljs-title function_">getUserById</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params">id</span>) =&gt; {
   <span class="hljs-keyword">return</span> sequelize.<span class="hljs-title function_">query</span>(
     <span class="hljs-string">&#x27;SELECT * FROM users WHERE id = :id&#x27;</span>,
@@ -354,7 +354,7 @@
   );
 };
 
-<span class="hljs-comment">// ❌ 错误：字符串拼接</span>
+<span class="hljs-comment">// ✗ 错误：字符串拼接</span>
 <span class="hljs-keyword">const</span> <span class="hljs-title function_">getUserById</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params">id</span>) =&gt; {
   <span class="hljs-keyword">return</span> sequelize.<span class="hljs-title function_">query</span>(<span class="hljs-string">`SELECT * FROM users WHERE id = <span class="hljs-subst">${id}</span>`</span>);
 };</code></pre>

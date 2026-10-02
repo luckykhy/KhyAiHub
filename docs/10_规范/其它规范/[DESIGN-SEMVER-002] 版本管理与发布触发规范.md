@@ -69,10 +69,10 @@
 **命名**：严格 SemVer **`X.Y.Z`**，**三位数字，禁止前导 `v`、禁止预发布后缀、禁止构建元数据**。
 
 ```
-✅ 1.1.15   1.2.0   2.0.0
-❌ v1.1.15  （tag 才带 v，版本号字段不带）
-❌ 1.1      （必须三位；isSemver 虽容两位，但发布轨道按三位收口）
-❌ 1.1.15-rc.1 / 1.1.15+build.7   （本仓发布轨道不支持）
+✓ 1.1.15   1.2.0   2.0.0
+✗ v1.1.15  （tag 才带 v，版本号字段不带）
+✗ 1.1      （必须三位；isSemver 虽容两位，但发布轨道按三位收口）
+✗ 1.1.15-rc.1 / 1.1.15+build.7   （本仓发布轨道不支持）
 ```
 
 > 该约定**与守卫同源**：`scripts/ci/check-version-sync.js` 的 `isSemver()` 拒绝 `abc` /
@@ -249,11 +249,11 @@ npm run docs:rules-cards                  # 由登记表渲染规则卡（禁止
 
 | 步 | 交付件 | 实测 |
 |---|---|---|
-| 1 标记 | 本文件（含 `<!-- RULES-REGISTRY: PROCESS-005 -->`） | ✅ 双向可达（TOOLING-007 通过） |
-| 2 登记表 | `docs/10_规范/registry/RULES-REGISTRY.json` 新增 `PROCESS-005` | ✅ `meta.ruleCount` 71 → **72**，与 `rules.length` 一致 |
-| 2 守卫 | `scripts/ci/check-release-triggers.js`（零外部依赖，手写 YAML 结构扫描） | ✅ 全仓 0 error / 0 warning |
-| 2 别名 | `package.json` 新增 `check:release-triggers` | ✅ `check-wiring` 通过（74 个检查器全接线） |
-| 3 门 | `.github/workflows/pr-gate.yml` 新增 `Check release triggers` | ✅ 不再报「零接线」 |
+| 1 标记 | 本文件（含 `<!-- RULES-REGISTRY: PROCESS-005 -->`） | ✓ 双向可达（TOOLING-007 通过） |
+| 2 登记表 | `docs/10_规范/registry/RULES-REGISTRY.json` 新增 `PROCESS-005` | ✓ `meta.ruleCount` 71 → **72**，与 `rules.length` 一致 |
+| 2 守卫 | `scripts/ci/check-release-triggers.js`（零外部依赖，手写 YAML 结构扫描） | ✓ 全仓 0 error / 0 warning |
+| 2 别名 | `package.json` 新增 `check:release-triggers` | ✓ `check-wiring` 通过（74 个检查器全接线） |
+| 3 门 | `.github/workflows/pr-gate.yml` 新增 `Check release triggers` | ✓ 不再报「零接线」 |
 
 **守卫的 14 个反例场景**（`--scenario=<名>`，7 拦 / 7 放行，全部实测）：
 

@@ -404,7 +404,7 @@ const validate = (schema) => {
 ### 5.2 SQL 注入防护
 
 ```javascript
-// ✅ 正确：使用参数化查询
+// ✓ 正确：使用参数化查询
 const getUserById = async (id) => {
   return sequelize.query(
     'SELECT * FROM users WHERE id = :id',
@@ -415,7 +415,7 @@ const getUserById = async (id) => {
   );
 };
 
-// ❌ 错误：字符串拼接
+// ✗ 错误：字符串拼接
 const getUserById = async (id) => {
   return sequelize.query(`SELECT * FROM users WHERE id = ${id}`);
 };

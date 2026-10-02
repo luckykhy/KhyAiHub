@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -120,10 +120,10 @@ Do not invent parameters.</code></pre>
 <h3 id="3-2-参数类型">3.2 参数类型<a class="anchor" href="#3-2-参数类型" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>类型</th><th>说明</th><th>示例</th></tr></thead><tbody><tr><td>上下文数据</td><td>用户/环境信息</td><td><code>userName</code>、<code>currentStrategy</code></td></tr><tr><td>工具描述</td><td>可用工具列表</td><td><code>tools</code>、<code>capabilities</code></td></tr><tr><td>约束</td><td>行为限制</td><td><code>constraints</code>、<code>rules</code></td></tr><tr><td>输出格式</td><td>响应要求</td><td><code>language</code>、<code>format</code></td></tr></tbody></table>
 <h3 id="3-3-禁止硬编码">3.3 禁止硬编码<a class="anchor" href="#3-3-禁止硬编码" aria-label="锚点">#</a></h3>
-<pre><code class="language-markdown">&lt;!-- ❌ 错误 --&gt;
+<pre><code class="language-markdown">&lt;!-- ✗ 错误 --&gt;
 You are helping user zhangsan with strategy ABC-123.
 
-&lt;!-- ✅ 正确 --&gt;
+&lt;!-- ✓ 正确 --&gt;
 You are helping user {{userName}} with strategy {{strategyName}}.</code></pre>
 <hr>
 <h2 id="4-prompt-版本管理">4. Prompt 版本管理<a class="anchor" href="#4-prompt-版本管理" aria-label="锚点">#</a></h2>

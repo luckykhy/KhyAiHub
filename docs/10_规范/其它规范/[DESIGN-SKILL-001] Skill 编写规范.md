@@ -54,7 +54,7 @@
 
 **反例 → 正例**
 
-| ❌ 反例 | 问题 | ✅ 正例 |
+| ✗ 反例 | 问题 | ✓ 正例 |
 | --- | --- | --- |
 | `"Helps with skills."` | 空泛词、无触发信号、无 When | `"创作和修改 khy Skill：写 manifest.json、组织 prompt.md、配 allowed-tools。Use when 用户要新建/改一个 skill。Not for 插件系统契约（见 ARCH-116）。"` |
 | `"A comprehensive guide to ..."` | What 段冗长，触发短语被推到 200 字符外 | `"<触发词>。..."` |
@@ -70,7 +70,7 @@ khyos 有**两套**互不相通的写法，混用会**静默失效**：
 | **Skill 的 `allowed-tools`** | `Bash(npm run test:*)` —— 前缀 + `:*` | `toolCalling.js:212` `_checkActiveSkillPolicy` |
 | **权限的 `patternRules`** | `{ toolName:"Bash", pattern:"npm run *" }` —— glob | `permissionStore.js` `_patternRules` |
 
-> ⚠️ **另有一条实测陷阱**：Skill 的 `allowed-tools` 闸门**仅对 handler 技能生效**——
+> ⚠ **另有一条实测陷阱**：Skill 的 `allowed-tools` 闸门**仅对 handler 技能生效**——
 > 激活点在 `if (skill.handlerPath && fs.existsSync(skill.handlerPath))` 块内。
 > 实测本仓 **0/43** 技能有 handler，故**现阶段该字段配了也不会被强制**。
 > 这不是「不用配」，而是「配了是给未来留契约」——按 SK-6 仍必须配。
@@ -112,7 +112,7 @@ charBudget = clamp(1% × contextWindowTokens × 4, 500, 8000)     constants/prom
 2. 总和 ≤ 预算 → 直接返回
 3. 超预算 → 按 `availableForDescs / 技能数` **统一压缩每个 description**（`:293`）
 
-> 📌 **2026-09-18 实测**：43 技能 / 5120 预算下，`maxDescLen` 被压到 **62** 字符。
+> **2026-09-18 实测**：43 技能 / 5120 预算下，`maxDescLen` 被压到 **62** 字符。
 > 而**触发短语必须在前 60 字符内**（SK-1）——两者几乎相等**不是巧合**，
 > 正是因为预算压缩到 62，触发信号一旦不在前 60 就**必被截掉**，技能从此检索不到。
 >
@@ -138,7 +138,7 @@ charBudget = clamp(1% × contextWindowTokens × 4, 500, 8000)     constants/prom
 | SK-5 / SK-6 / SK-7 | 无自动守卫，评审 checklist | 待工具化 |
 | SK-9 | 无自动守卫 | 待工具化 |
 
-> ⚠️ **`check-skill-triggers.js` 属概率性检查（触发命中靠语义判断），
+> ⚠ **`check-skill-triggers.js` 属概率性检查（触发命中靠语义判断），
 > 建议不进三守卫，只做独立脚本**——否则会给门禁带来不稳定的红。
 
 ---

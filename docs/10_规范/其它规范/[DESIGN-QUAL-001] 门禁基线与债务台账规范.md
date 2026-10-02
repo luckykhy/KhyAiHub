@@ -77,8 +77,8 @@
 | `cross-layer-require` | **37** | P2 — 违反分层依赖方向 | 第二批：改为 workspace 包名引用 |
 | `dangling-task` | **89** | P2 — **文档漂移**（实测这些 `npm run` 目标只出现在文档里，从未定义） | 第三批：逐条三分（改名对齐 / 实现 / 删除引用） |
 | `extension-id-hardcode` | **1** | P2 | 随手修 |
-| `docs-index-complete` | **0** | — | ✅ 本次已归零 |
-| `extension-contract` / `extension-path-drift` | **0** | — | ✅ 已归零 |
+| `docs-index-complete` | **0** | — | ✓ 本次已归零 |
+| `extension-contract` / `extension-path-drift` | **0** | — | ✓ 已归零 |
 
 **`unresolved-require` 的 21 处分组**（实测清单）：
 
@@ -100,7 +100,7 @@
 | `functionLines`（>50 行函数数） | 10800 | **2145** | **高估 5.0×** | 改为 2145；存量冻结 + 增量归零 |
 | `nestingDepth`（嵌套 >4） | 10800 | **8707** | 高估 1.24× | **先修计量**（见下）再定目标 |
 | `consoleLog`（非测试文件 `console.*`） | 4592 | **4584** | 基本准确 | 改为 4584；分批改结构化 logger，目标 0 |
-| `namingViolations` | 4 | **4** | ✅ 准确 | 直接修掉 4 处 → 归零 |
+| `namingViolations` | 4 | **4** | ✓ 准确 | 直接修掉 4 处 → 归零 |
 
 **`functionLines === nestingDepth === 10800` 是决定性证据**：两个独立指标的
 `current` 与 `max` **四个数字完全相同**，而实测分别为 2145 与 8707。

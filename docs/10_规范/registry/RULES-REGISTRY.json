@@ -297,7 +297,6 @@
         ".khyos/**",
         "services/backend/src/utils/dataHome.js",
         "services/backend/src/**",
-        "electron/**",
         "scripts/**",
         "docs/10_规范/registry/DATA-LOCATIONS.json"
       ],

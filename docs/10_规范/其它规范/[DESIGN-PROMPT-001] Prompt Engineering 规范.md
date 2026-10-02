@@ -132,10 +132,10 @@ Do not invent parameters.
 ### 3.3 禁止硬编码
 
 ```markdown
-<!-- ❌ 错误 -->
+<!-- ✗ 错误 -->
 You are helping user zhangsan with strategy ABC-123.
 
-<!-- ✅ 正确 -->
+<!-- ✓ 正确 -->
 You are helping user {{userName}} with strategy {{strategyName}}.
 ```
 

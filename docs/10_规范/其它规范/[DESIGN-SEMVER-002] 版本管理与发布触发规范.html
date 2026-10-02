@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -50,10 +50,10 @@
 <p><strong>一次提交只做一步</strong>：bump 与功能改动<strong>不放进同一个 commit</strong>。<br>依据 <code>SOURCING-006</code> 的落地纪律「标记 → 迁移 → 收口，一次提交只做一步」，<br>使 <code>git revert</code> 能单独回滚版本号而不牵连业务代码。</p>
 <h3 id="2-2-r-2-版本号命名与递增规范">2.2 R-2 版本号命名与递增规范<a class="anchor" href="#2-2-r-2-版本号命名与递增规范" aria-label="锚点">#</a></h3>
 <p><strong>命名</strong>：严格 SemVer <strong><code>X.Y.Z</code></strong>，<strong>三位数字，禁止前导 <code>v</code>、禁止预发布后缀、禁止构建元数据</strong>。</p>
-<pre><code>✅ 1.1.15   1.2.0   2.0.0
-❌ v1.1.15  （tag 才带 v，版本号字段不带）
-❌ 1.1      （必须三位；isSemver 虽容两位，但发布轨道按三位收口）
-❌ 1.1.15-rc.1 / 1.1.15+build.7   （本仓发布轨道不支持）</code></pre>
+<pre><code>✓ 1.1.15   1.2.0   2.0.0
+✗ v1.1.15  （tag 才带 v，版本号字段不带）
+✗ 1.1      （必须三位；isSemver 虽容两位，但发布轨道按三位收口）
+✗ 1.1.15-rc.1 / 1.1.15+build.7   （本仓发布轨道不支持）</code></pre>
 <blockquote><p>该约定<strong>与守卫同源</strong>：<code>scripts/ci/check-version-sync.js</code> 的 <code>isSemver()</code> 拒绝 <code>abc</code> /<br><code>v1.0</code> / <code>1.0..</code>。规则不得比守卫更宽（否则守卫绿而规则红），也不得更窄到拦下守卫放行的合法值。</p></blockquote>
 <p><strong>递增</strong>（<code>MAJOR.MINOR.PATCH</code>，逐位独立，不得跳位）：</p>
 <table><thead><tr><th>位</th><th>何时 +1</th><th>归零规则</th></tr></thead><tbody><tr><td><strong>MAJOR</strong></td><td>对外契约破坏性变更（CLI 命令移除/改名、API 响应结构变更、数据格式不兼容）</td><td>MINOR、PATCH 归零</td></tr><tr><td><strong>MINOR</strong></td><td>向后兼容的功能新增</td><td>PATCH 归零</td></tr><tr><td><strong>PATCH</strong></td><td>向后兼容的缺陷修复</td><td>—</td></tr></tbody></table>
@@ -121,7 +121,7 @@ npm run docs:rules-cards                  <span class="hljs-comment"># 由登记
 <p>按 <code>SOURCING-006</code>「一次提交只做一步」纪律<strong>另起一次提交</strong>，不在本次混合交付。</p>
 <h4 id="执行实录-第-2-3-步-2026-09-17">执行实录 · 第 2/3 步（2026-09-17）<a class="anchor" href="#执行实录-第-2-3-步-2026-09-17" aria-label="锚点">#</a></h4>
 <p>三步接线已全部完成，实测结果如下：</p>
-<table><thead><tr><th>步</th><th>交付件</th><th>实测</th></tr></thead><tbody><tr><td>1 标记</td><td>本文件（含 <code>&lt;!-- RULES-REGISTRY: PROCESS-005 --&gt;</code>）</td><td>✅ 双向可达（TOOLING-007 通过）</td></tr><tr><td>2 登记表</td><td><code>docs/10_规范/registry/RULES-REGISTRY.json</code> 新增 <code>PROCESS-005</code></td><td>✅ <code>meta.ruleCount</code> 71 → <strong>72</strong>，与 <code>rules.length</code> 一致</td></tr><tr><td>2 守卫</td><td><code>scripts/ci/check-release-triggers.js</code>（零外部依赖，手写 YAML 结构扫描）</td><td>✅ 全仓 0 error / 0 warning</td></tr><tr><td>2 别名</td><td><code>package.json</code> 新增 <code>check:release-triggers</code></td><td>✅ <code>check-wiring</code> 通过（74 个检查器全接线）</td></tr><tr><td>3 门</td><td><code>.github/workflows/pr-gate.yml</code> 新增 <code>Check release triggers</code></td><td>✅ 不再报「零接线」</td></tr></tbody></table>
+<table><thead><tr><th>步</th><th>交付件</th><th>实测</th></tr></thead><tbody><tr><td>1 标记</td><td>本文件（含 <code>&lt;!-- RULES-REGISTRY: PROCESS-005 --&gt;</code>）</td><td>✓ 双向可达（TOOLING-007 通过）</td></tr><tr><td>2 登记表</td><td><code>docs/10_规范/registry/RULES-REGISTRY.json</code> 新增 <code>PROCESS-005</code></td><td>✓ <code>meta.ruleCount</code> 71 → <strong>72</strong>，与 <code>rules.length</code> 一致</td></tr><tr><td>2 守卫</td><td><code>scripts/ci/check-release-triggers.js</code>（零外部依赖，手写 YAML 结构扫描）</td><td>✓ 全仓 0 error / 0 warning</td></tr><tr><td>2 别名</td><td><code>package.json</code> 新增 <code>check:release-triggers</code></td><td>✓ <code>check-wiring</code> 通过（74 个检查器全接线）</td></tr><tr><td>3 门</td><td><code>.github/workflows/pr-gate.yml</code> 新增 <code>Check release triggers</code></td><td>✓ 不再报「零接线」</td></tr></tbody></table>
 <p><strong>守卫的 14 个反例场景</strong>（<code>--scenario=&lt;名&gt;</code>，7 拦 / 7 放行，全部实测）：</p>
 <table><thead><tr><th>场景</th><th>期望</th><th>场景</th><th>期望</th></tr></thead><tbody><tr><td><code>trigger-missing</code></td><td>1 error</td><td><code>trigger-present</code></td><td>放行（<code>tags: [v*]</code> 通配）</td></tr><tr><td><code>mirror-branch-drift</code></td><td>1 error</td><td><code>trigger-dispatch-only</code></td><td>放行（仅 workflow_dispatch）</td></tr><tr><td><code>hard-condition-exempt</code></td><td>1 error</td><td><code>mirror-branch-ok</code></td><td>放行（main + master）</td></tr><tr><td><code>hard-condition-step-deleted</code></td><td>1 error</td><td><code>mirror-branch-dispatch-ok</code></td><td>放行</td></tr><tr><td><code>hard-condition-exempt-empty</code></td><td>1 error + 1 warning</td><td><code>hard-condition-ok</code></td><td>放行</td></tr><tr><td><code>concurrency-true</code></td><td>1 error</td><td><code>hard-condition-exempt-ok</code></td><td>放行（<strong>有理由</strong>的豁免）</td></tr><tr><td><code>concurrency-missing</code></td><td>1 error</td><td><code>concurrency-ok</code></td><td>放行（组名任意）</td></tr></tbody></table>
 <p><strong>单测</strong>：<code>scripts/tests/check-release-triggers.test.js</code>，28 个用例全绿。<br>除场景断言外，另含<strong>真 workflow 定点变异</strong>用例（对真 <code>.yml</code> 做一处替换后调纯函数），<br>用于挡住「场景全绿但真文件判错」的偏差。</p>
