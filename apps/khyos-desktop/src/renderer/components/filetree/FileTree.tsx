@@ -158,7 +158,7 @@ export function FileTree({ onOpenFile, rootPath }: FileTreeProps) {
           <div className="px-3 py-6 text-sm text-foreground/50">{loadingText(rootName)}</div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
-            <span className="text-3xl mb-3">⚠️</span>
+            <span className="text-3xl mb-3">⚠</span>
             <span className="text-sm text-destructive leading-relaxed">{error}</span>
           </div>
         ) : items.length === 0 ? (
@@ -225,7 +225,7 @@ function TreeRow({
           <span className="w-4 flex-shrink-0" />
         )}
         <span className="text-xs flex-shrink-0" aria-hidden="true">
-          {isDir ? (expanded ? '📂' : '📁') : fileIcon(item.name)}
+          {isDir ? (expanded ? '▾' : '▸') : fileIcon(item.name)}
         </span>
         <span className="truncate text-sm text-foreground/90">{item.name}</span>
       </button>
@@ -256,12 +256,12 @@ function TreeRow({
 
 // Glyph icons by extension (placeholder set — swap for real assets later)
 const FILE_ICONS: Record<string, string> = {
-  ts: '🔷', tsx: '🔷', js: '🟨', jsx: '🟨', mjs: '🟨', cjs: '🟨',
-  vue: '🟢', json: '📋', md: '📝', css: '🎨', html: '🌐',
-  py: '🐍', bat: '⚙️', ps1: '⚙️', sh: '⚙️', yml: '⚙️', yaml: '⚙️', toml: '⚙️',
+  ts: '◆', tsx: '◆', js: '◇', jsx: '◇', mjs: '◇', cjs: '◇',
+  vue: '○', json: '☰', md: '✲', css: '◫', html: '◉',
+  py: '●', bat: '✱', ps1: '✱', sh: '✱', yml: '✱', yaml: '✱', toml: '✱',
 }
 
 function fileIcon(name: string): string {
   const ext = name.split('.').pop()?.toLowerCase() ?? ''
-  return FILE_ICONS[ext] ?? '📄'
+  return FILE_ICONS[ext] ?? '▤'
 }
