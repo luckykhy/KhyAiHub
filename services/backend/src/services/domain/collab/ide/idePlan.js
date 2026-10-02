@@ -69,7 +69,7 @@ function summarizeDetections(detections) {
 function buildListText(detections) {
   const { all, availableCount } = summarizeDetections(detections);
   const lines = [];
-  lines.push('🖥  ide · 本机已探测 IDE');
+  lines.push('ide · 本机已探测 IDE');
   if (all.length === 0) {
     lines.push(
       '  未探测到任何已知 IDE(可经 GATEWAY_EXTRA_IDES + <NAME>_INSTALL_PATH 提示额外 IDE)。'
@@ -91,7 +91,7 @@ function buildStatusText(input) {
   const { available, availableCount } = summarizeDetections(src.detections);
   const bridge = src.bridge && typeof src.bridge === 'object' ? src.bridge : { running: false };
   const lines = [];
-  lines.push('🖥  ide · 本机 IDE 集成状态');
+  lines.push('ide · 本机 IDE 集成状态');
 
   // ① IDE 探测
   if (availableCount === 0) {
