@@ -13,7 +13,7 @@ OpenFlux 的技术栈与 khy-os 当前形态**高度对称**，几乎可以直�
 
 | 层级 | OpenFlux | khy-os | 复用度 |
 |------|----------|--------|--------|
-| 桌面壳 | **Tauri v2**（Rust） | ❌ 无 | 需新建 |
+| 桌面壳 | **Tauri v2**（Rust） | ✗ 无 | 需新建 |
 | 前端 | TypeScript + Vite + 原生 HTML | Vue 3 + Element Plus + Vite | 风格相近 |
 | AI 网关 / 后端 | **Gateway Sidecar**（Node.js + Express + ws） | `services/backend/server.js` + `services/ai-backend/` | **结构对称** |
 | 配置 | `openflux.yaml` | `~/.khyquant/config.json` | 改写即可 |
@@ -216,16 +216,16 @@ rcgen = { version = "0.13", default-features = false, features = ["pem", "ring"]
 
 | OpenFlux | khy-os 现状 | 复用路径 |
 |----------|-------------|----------|
-| 多 LLM 接入（10+ 供应商） | ✅ `services/backend/src/services/gateway/aiGateway.js` | 0 改动 |
-| 多 Agent 路由 | ✅ 元帅/将军体系 | 0 改动 |
-| 长记忆（SQLite + sqlite-vec） | ✅ `khy-Trajectory/` | 增量补 |
-| MCP 协议 | ✅ 内建 | 0 改动 |
-| 浏览器自动化（Playwright） | ✅ 部分（远程 SSH） | 增量补 |
-| 语音识别（Sherpa-ONNX） | ❌ | 待选 |
-| 桌面控制（鼠标键盘） | ❌（DESIGN-ARCH-056 留有接口） | 增量补 |
-| 定时任务 | ✅ khy-quant 部分 | 增量补 |
-| Office 插件 | ❌ | 远期 |
-| 远程接入（Lark/DingTalk） | ❌ | 远期 |
+| 多 LLM 接入（10+ 供应商） | ✓ `services/backend/src/services/gateway/aiGateway.js` | 0 改动 |
+| 多 Agent 路由 | ✓ 元帅/将军体系 | 0 改动 |
+| 长记忆（SQLite + sqlite-vec） | ✓ `khy-Trajectory/` | 增量补 |
+| MCP 协议 | ✓ 内建 | 0 改动 |
+| 浏览器自动化（Playwright） | ✓ 部分（远程 SSH） | 增量补 |
+| 语音识别（Sherpa-ONNX） | ✗ | 待选 |
+| 桌面控制（鼠标键盘） | ✗（DESIGN-ARCH-056 留有接口） | 增量补 |
+| 定时任务 | ✓ khy-quant 部分 | 增量补 |
+| Office 插件 | ✗ | 远期 |
+| 远程接入（Lark/DingTalk） | ✗ | 远期 |
 
 ## 五、给 khy-os 的具体参考
 
