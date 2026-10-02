@@ -54,7 +54,14 @@ const CATEGORY_META = {
 };
 
 function _categoryMeta(cat) {
-  return CATEGORY_META[cat] || CATEGORY_META.other;
+  // 自有键判定：`CATEGORY_META[cat] || other` 对本表 8 个类别逐字节等价，但 cat 取自
+  // 命令注册表的 category 字段（数据），落到 'constructor'/'valueOf'/'toString' 等
+  // Object.prototype 继承键时会拿到继承值而不是兜底「其他」——分组头标签与排序位就都成了
+  // undefined。与本文件别名折叠处（hasOwnProperty 判定 aliasByCmd）保持同一种写法。
+  if (Object.prototype.hasOwnProperty.call(CATEGORY_META, cat)) {
+    return CATEGORY_META[cat];
+  }
+  return CATEGORY_META.other;
 }
 
 /** 稳定字符串化(去两端空白;非字符串 → '')。 */
