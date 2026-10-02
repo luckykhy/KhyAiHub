@@ -29,7 +29,7 @@ function getEncryptionKey() {
     // 在生产部署中应始终设置 FIELD_ENCRYPTION_KEY 环境变量。
     try {
       if (!process.env.FIELD_ENCRYPTION_KEY && !process.env.JWT_SECRET) {
-        process.stderr.write('[fieldCrypto] ⚠️ 未配置 FIELD_ENCRYPTION_KEY — 敏感字段将以明文存储！\n');
+        process.stderr.write('[fieldCrypto] ⚠ 未配置 FIELD_ENCRYPTION_KEY — 敏感字段将以明文存储！\n');
       }
     } catch (_) {}
     return null;
@@ -38,7 +38,7 @@ function getEncryptionKey() {
     // 回退到 JWT_SECRET 作为加密密钥：密钥复用风险。
     // 建议设置独立的 FIELD_ENCRYPTION_KEY 环境变量。
     try {
-      process.stderr.write('[fieldCrypto] ⚠️ 使用 JWT_SECRET 作为字段加密密钥（降级）— 建议设置独立的 FIELD_ENCRYPTION_KEY\n');
+      process.stderr.write('[fieldCrypto] ⚠ 使用 JWT_SECRET 作为字段加密密钥（降级）— 建议设置独立的 FIELD_ENCRYPTION_KEY\n');
     } catch (_) {}
   }
   return crypto.createHash('sha256').update(hex).digest();

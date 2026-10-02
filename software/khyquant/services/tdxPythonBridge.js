@@ -36,7 +36,7 @@ class TdxPythonBridge {
           stdio: ['pipe', 'pipe', 'pipe']
         });
       } catch (spawnError) {
-        console.error('❌ 无法启动Python进程:', spawnError.message);
+        console.error('✗ 无法启动Python进程:', spawnError.message);
         reject(new Error(`Python不可用: ${spawnError.message}`));
         return;
       }
@@ -66,7 +66,7 @@ class TdxPythonBridge {
         if (_settled) return;
         _settled = true;
         _clearIdle();
-        console.error('❌ Python进程错误:', error.message);
+        console.error('✗ Python进程错误:', error.message);
         reject(new Error(`Python进程错误: ${error.message}`));
       });
 
@@ -128,7 +128,7 @@ class TdxPythonBridge {
       try {
         python = spawn(pythonCmd, ['--version']);
       } catch (spawnError) {
-        console.error('❌ 无法启动Python进程:', spawnError.message);
+        console.error('✗ 无法启动Python进程:', spawnError.message);
         resolve({
           available: false,
           error: spawnError.message
@@ -140,7 +140,7 @@ class TdxPythonBridge {
       
       // 🔥 添加错误事件监听器
       python.on('error', (error) => {
-        console.error('❌ Python进程错误:', error.message);
+        console.error('✗ Python进程错误:', error.message);
         resolve({
           available: false,
           error: error.message

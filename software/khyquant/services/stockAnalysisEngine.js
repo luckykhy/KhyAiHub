@@ -351,10 +351,10 @@ class StockAnalysisEngine {
   // 获取随机问候语
   getRandomGreeting() {
     const greetings = [
-      '你好!欢迎使用小K 👋\n\n我是您的智能AI助手,擅长量化交易分析,也能帮您:\n• 解答各类知识问题\n• 编程与技术咨询\n• 数据分析与计算\n• 股票行情与策略分析\n\n有什么可以帮您的?',
-      '您好!很高兴为您服务 😊\n\n我是小K,一个全能AI助手。量化分析是我的特长,同时也能帮您解答编程、知识、生活等各类问题。\n\n请告诉我您需要什么帮助!',
-      '嗨!我是小K智能助手 🤖\n\n擅长:\n✓ 量化交易与技术分析\n✓ 编程开发与问题排查\n✓ 知识解答与信息搜索\n✓ 数据计算与分析\n\n有什么想问的?',
-      '你好呀!小K在线为您服务 ✨\n\n作为您的AI助手,我可以:\n• 分析股票行情与策略\n• 回答技术与编程问题\n• 提供知识咨询\n• 执行计算与数据处理\n\n有什么需要帮忙的吗?'
+      '你好!欢迎使用小K\n\n我是您的智能AI助手,擅长量化交易分析,也能帮您:\n• 解答各类知识问题\n• 编程与技术咨询\n• 数据分析与计算\n• 股票行情与策略分析\n\n有什么可以帮您的?',
+      '您好!很高兴为您服务\n\n我是小K,一个全能AI助手。量化分析是我的特长,同时也能帮您解答编程、知识、生活等各类问题。\n\n请告诉我您需要什么帮助!',
+      '嗨!我是小K智能助手\n\n擅长:\n✓ 量化交易与技术分析\n✓ 编程开发与问题排查\n✓ 知识解答与信息搜索\n✓ 数据计算与分析\n\n有什么想问的?',
+      '你好呀!小K在线为您服务\n\n作为您的AI助手,我可以:\n• 分析股票行情与策略\n• 回答技术与编程问题\n• 提供知识咨询\n• 执行计算与数据处理\n\n有什么需要帮忙的吗?'
     ];
     return greetings[Math.floor(Math.random() * greetings.length)];
   }
@@ -362,9 +362,9 @@ class StockAnalysisEngine {
   // 获取随机自我介绍
   getRandomIntroduction() {
     const intros = [
-      '我是小K 🤖 您的智能AI助手!\n\n核心能力:\n📊 量化交易分析 - 精准解读各类指标\n💻 编程技术支持 - 代码问题不在话下\n🔍 知识搜索引擎 - 快速获取信息\n🧮 数据分析计算 - 高效处理数据\n\n有什么可以帮您的?',
-      '叫我小K就好 😊\n\n我是一个全能AI助手,擅长:\n• 量化交易与市场分析\n• 编程开发与技术问答\n• 知识科普与信息检索\n• 数学计算与数据处理\n\n随时为您提供帮助!',
-      '我是小K智能助手 ✨\n\n使命: 做您的全能AI伙伴\n特长: 量化分析 + 通用问答\n目标: 帮您高效解决各类问题\n\n无论是股票分析还是编程问题,随时可以问我!'
+      '我是小K 您的智能AI助手!\n\n核心能力:\n量化交易分析 - 精准解读各类指标\n编程技术支持 - 代码问题不在话下\n知识搜索引擎 - 快速获取信息\n数据分析计算 - 高效处理数据\n\n有什么可以帮您的?',
+      '叫我小K就好\n\n我是一个全能AI助手,擅长:\n• 量化交易与市场分析\n• 编程开发与技术问答\n• 知识科普与信息检索\n• 数学计算与数据处理\n\n随时为您提供帮助!',
+      '我是小K智能助手\n\n使命: 做您的全能AI伙伴\n特长: 量化分析 + 通用问答\n目标: 帮您高效解决各类问题\n\n无论是股票分析还是编程问题,随时可以问我!'
     ];
     return intros[Math.floor(Math.random() * intros.length)];
   }
@@ -476,7 +476,7 @@ class StockAnalysisEngine {
       ? '信号一致性较好，但仍需执行止损纪律。'
       : '当前信号分歧较大，建议轻仓并等待确认。';
 
-    return `📊 ${stockCode.toUpperCase()} 全面分析结果
+    return `${stockCode.toUpperCase()} 全面分析结果
 
 【价格趋势】
 • 最新价: ${price > 0 ? price.toFixed(2) : 'N/A'} 元
@@ -563,7 +563,7 @@ ${riskNote}
     const amount = data.amount || data.turnover || 0;
     
     const trend = change > 0 ? '上涨' : change < 0 ? '下跌' : '平盘';
-    const emoji = change > 0 ? '📈' : change < 0 ? '📉' : '➡️';
+    const emoji = change > 0 ? '' : change < 0 ? '' : '→';
     
     // 根据涨跌幅生成不同风格的评论
     let comments = [];
@@ -591,9 +591,9 @@ ${riskNote}
     
     return `${emoji} **${stockCode} 实时行情**\n\n` +
            `${comment}\n\n` +
-           `💰 当前价: **${priceStr}** (${trend} ${changePercent.toFixed(2)}%)\n` +
-           `📊 今开: ${openStr} | 最高: ${highStr} | 最低: ${lowStr}\n` +
-           `📈 成交量: ${volumeStr} | 成交额: ${amountStr}`;
+           `当前价: **${priceStr}** (${trend} ${changePercent.toFixed(2)}%)\n` +
+           `今开: ${openStr} | 最高: ${highStr} | 最低: ${lowStr}\n` +
+           `成交量: ${volumeStr} | 成交额: ${amountStr}`;
   }
 
   // 智能生成推荐建议
@@ -606,7 +606,7 @@ ${riskNote}
     const intro = intros[Math.floor(Math.random() * intros.length)]
       .replace('{stock}', context.stockCode || '该股');
     
-    let advice = `💡 **投资建议分析**\n\n${intro}:\n\n`;
+    let advice = `**投资建议分析**\n\n${intro}:\n\n`;
     
     // 根据建议类型生成不同的论述
     if (rec.includes('买入')) {
@@ -622,13 +622,13 @@ ${riskNote}
         '建议小仓位试探,逐步加仓'
       ];
       
-      advice += `✅ **看多理由**:\n`;
+      advice += `✓ **看多理由**:\n`;
       reasons.forEach((reason, i) => {
         advice += `${i + 1}. ${reason}\n`;
       });
       
-      advice += `\n📋 **操作建议**: ${actions[Math.floor(Math.random() * actions.length)]}\n`;
-      advice += `📊 **置信度**: ${conf}% ${conf > 80 ? '(较高)' : conf > 60 ? '(中等)' : '(偏低)'}`;
+      advice += `\n**操作建议**: ${actions[Math.floor(Math.random() * actions.length)]}\n`;
+      advice += `**置信度**: ${conf}% ${conf > 80 ? '(较高)' : conf > 60 ? '(中等)' : '(偏低)'}`;
       
     } else if (rec.includes('卖出')) {
       const reasons = [
@@ -643,13 +643,13 @@ ${riskNote}
         '逐步降低仓位,保持灵活'
       ];
       
-      advice += `⚠️ **看空理由**:\n`;
+      advice += `⚠ **看空理由**:\n`;
       reasons.forEach((reason, i) => {
         advice += `${i + 1}. ${reason}\n`;
       });
       
-      advice += `\n📋 **操作建议**: ${actions[Math.floor(Math.random() * actions.length)]}\n`;
-      advice += `📊 **置信度**: ${conf}% ${conf > 80 ? '(较高)' : conf > 60 ? '(中等)' : '(偏低)'}`;
+      advice += `\n**操作建议**: ${actions[Math.floor(Math.random() * actions.length)]}\n`;
+      advice += `**置信度**: ${conf}% ${conf > 80 ? '(较高)' : conf > 60 ? '(中等)' : '(偏低)'}`;
       
     } else {
       const reasons = [
@@ -664,13 +664,13 @@ ${riskNote}
         '等待趋势明朗后再决策'
       ];
       
-      advice += `➡️ **中性观点**:\n`;
+      advice += `→ **中性观点**:\n`;
       reasons.forEach((reason, i) => {
         advice += `${i + 1}. ${reason}\n`;
       });
       
-      advice += `\n📋 **操作建议**: ${actions[Math.floor(Math.random() * actions.length)]}\n`;
-      advice += `📊 **置信度**: ${conf}% ${conf > 80 ? '(较高)' : conf > 60 ? '(中等)' : '(偏低)'}`;
+      advice += `\n**操作建议**: ${actions[Math.floor(Math.random() * actions.length)]}\n`;
+      advice += `**置信度**: ${conf}% ${conf > 80 ? '(较高)' : conf > 60 ? '(中等)' : '(偏低)'}`;
     }
     
     return advice;
@@ -685,22 +685,22 @@ ${riskNote}
     
     // 根据置信度选择风险提示
     if (conf < 60) {
-      risks.push('⚠️ 当前分析置信度较低,建议谨慎决策');
+      risks.push('⚠ 当前分析置信度较低,建议谨慎决策');
     }
     
     // 根据建议类型选择风险提示
     if (rec.includes('买入')) {
-      risks.push('💡 建议设置止损位,控制单笔亏损在5%以内');
+      risks.push('建议设置止损位,控制单笔亏损在5%以内');
     } else if (rec.includes('卖出')) {
-      risks.push('💡 卖出后保持关注,如有反转信号可考虑重新介入');
+      risks.push('卖出后保持关注,如有反转信号可考虑重新介入');
     }
     
     // 通用风险提示
     const generalRisks = [
-      '📌 投资有风险,建议结合自身情况谨慎决策',
-      '📌 市场瞬息万变,请保持理性,避免情绪化操作',
-      '📌 建议分散投资,不要将资金集中在单一标的',
-      '📌 关注宏观经济和政策变化,及时调整策略'
+      '投资有风险,建议结合自身情况谨慎决策',
+      '市场瞬息万变,请保持理性,避免情绪化操作',
+      '建议分散投资,不要将资金集中在单一标的',
+      '关注宏观经济和政策变化,及时调整策略'
     ];
     
     risks.push(generalRisks[Math.floor(Math.random() * generalRisks.length)]);
@@ -714,7 +714,7 @@ ${riskNote}
       return '智能体团队分析中...';
     }
     
-    let insights = `🤖 **${agentResults.length}个智能体分析结果**:\n\n`;
+    let insights = `**${agentResults.length}个智能体分析结果**:\n\n`;
     
     // 显示所有选中的智能体的关键发现
     agentResults.forEach((agent, index) => {
@@ -734,7 +734,7 @@ ${riskNote}
       insights += '\n';
     });
     
-    insights += '\n💡 查看完整报告可了解每个智能体的详细分析';
+    insights += '\n查看完整报告可了解每个智能体的详细分析';
     
     return insights;
   }
@@ -742,7 +742,7 @@ ${riskNote}
   // 格式化实时数据
   formatRealtimeData(data, stockCode) {
     const trend = data.change > 0 ? '上涨' : data.change < 0 ? '下跌' : '平盘';
-    const emoji = data.change > 0 ? '📈' : data.change < 0 ? '📉' : '➡️';
+    const emoji = data.change > 0 ? '' : data.change < 0 ? '' : '→';
     const changePercent = Math.abs(parseFloat(data.changePercent));
     
     // 根据涨跌幅生成不同的评论
@@ -756,9 +756,9 @@ ${riskNote}
     }
     
     return `${emoji} ${stockCode} 实时行情 (${comment})\n\n` +
-           `💰 当前价: ${data.price}元 (${trend} ${changePercent}%)\n` +
-           `📊 今开: ${data.open}元 | 最高: ${data.high}元 | 最低: ${data.low}元\n` +
-           `📈 成交量: ${(data.volume / 10000).toFixed(2)}万手 | 成交额: ${(data.amount / 100000000).toFixed(2)}亿`;
+           `当前价: ${data.price}元 (${trend} ${changePercent}%)\n` +
+           `今开: ${data.open}元 | 最高: ${data.high}元 | 最低: ${data.low}元\n` +
+           `成交量: ${(data.volume / 10000).toFixed(2)}万手 | 成交额: ${(data.amount / 100000000).toFixed(2)}亿`;
   }
 
   // 生成推荐建议(多样化)
@@ -766,7 +766,7 @@ ${riskNote}
     const rec = context.recommendation || '持有';
     const conf = context.confidence || 70;
     
-    let advice = `💡 投资建议: ${rec}\n📈 置信度: ${conf}%\n\n`;
+    let advice = `投资建议: ${rec}\n置信度: ${conf}%\n\n`;
     
     if (rec.includes('买入')) {
       const reasons = [
@@ -774,7 +774,7 @@ ${riskNote}
         ['当前位置具有投资价值', '估值处于合理区间', '性价比较高', '安全边际充足'],
         ['建议分批建仓,控制仓位在30%以内', '可逐步建仓,分散风险', '建议小仓位试探,逐步加仓', '分3-5次买入,降低成本']
       ];
-      advice += `✅ 看多理由:\n`;
+      advice += `✓ 看多理由:\n`;
       reasons.forEach((group, i) => {
         const selected = group[Math.floor(Math.random() * group.length)];
         advice += `${i + 1}. ${selected}\n`;
@@ -785,7 +785,7 @@ ${riskNote}
         ['建议及时止盈或止损', '锁定利润为上策', '控制回撤风险', '保护已有收益'],
         ['可分批减仓,保留部分底仓', '逐步降低仓位', '分批退出,保持灵活', '先减后观,伺机而动']
       ];
-      advice += `⚠️ 看空理由:\n`;
+      advice += `⚠ 看空理由:\n`;
       reasons.forEach((group, i) => {
         const selected = group[Math.floor(Math.random() * group.length)];
         advice += `${i + 1}. ${selected}\n`;
@@ -796,7 +796,7 @@ ${riskNote}
         ['建议耐心等待明确信号', '观望为主,不急操作', '等待趋势明朗', '保持关注即可'],
         ['可适当关注,暂不操作', '持币观望,保持耐心', '等待更好时机', '暂时按兵不动']
       ];
-      advice += `➡️ 中性观点:\n`;
+      advice += `→ 中性观点:\n`;
       reasons.forEach((group, i) => {
         const selected = group[Math.floor(Math.random() * group.length)];
         advice += `${i + 1}. ${selected}\n`;
@@ -828,7 +828,7 @@ ${riskNote}
 
   // 智能生成成交量分析
   generateIntelligentVolumeAnalysis(realtimeData, context, history) {
-    let analysis = '📊 成交量分析:\n\n';
+    let analysis = '成交量分析:\n\n';
     
     if (realtimeData && realtimeData.volume) {
       const volume = realtimeData.volume;
@@ -856,22 +856,22 @@ ${riskNote}
       
       analysis += `当前成交量: ${volumeInYi}亿手\n`;
       analysis += `成交金额: ${amountInYi}亿元\n\n`;
-      analysis += `📈 量能状态: ${volumeLevel}\n`;
-      analysis += `💡 分析: ${volumeComment}\n\n`;
+      analysis += `量能状态: ${volumeLevel}\n`;
+      analysis += `分析: ${volumeComment}\n\n`;
       
       // 量价关系分析
       const changePercent = parseFloat(realtimeData.changePercent || 0);
       if (changePercent > 0 && volume > 100000000) {
-        analysis += `✅ 量价配合: 价涨量增，多头力量强劲\n`;
+        analysis += `✓ 量价配合: 价涨量增，多头力量强劲\n`;
         analysis += `建议: 可关注短期上涨机会`;
       } else if (changePercent > 0 && volume < 100000000) {
-        analysis += `⚠️ 量价背离: 价涨量缩，上涨动能不足\n`;
+        analysis += `⚠ 量价背离: 价涨量缩，上涨动能不足\n`;
         analysis += `建议: 谨慎追高，注意回调风险`;
       } else if (changePercent < 0 && volume > 100000000) {
-        analysis += `⚠️ 量价配合: 价跌量增，空头力量强劲\n`;
+        analysis += `⚠ 量价配合: 价跌量增，空头力量强劲\n`;
         analysis += `建议: 暂时观望，等待企稳信号`;
       } else {
-        analysis += `➡️ 量价关系: 缩量震荡，方向不明\n`;
+        analysis += `→ 量价关系: 缩量震荡，方向不明\n`;
         analysis += `建议: 保持耐心，等待放量突破`;
       }
     } else {
@@ -884,10 +884,10 @@ ${riskNote}
   // 智能生成操作建议
   generateIntelligentOperationAdvice(context, realtimeData, history) {
     const rec = context.recommendation || '持有';
-    let advice = '💡 操作建议:\n\n';
+    let advice = '操作建议:\n\n';
     
     if (rec.includes('买入')) {
-      advice += `📈 **建议操作**: 分批建仓\n\n`;
+      advice += `**建议操作**: 分批建仓\n\n`;
       advice += `**具体方案**:\n`;
       advice += `1. 首次建仓: 20-30%仓位试探\n`;
       advice += `2. 加仓时机: 回调至支撑位附近\n`;
@@ -898,7 +898,7 @@ ${riskNote}
       advice += `• 严格执行止损纪律\n`;
       advice += `• 关注市场整体环境`;
     } else if (rec.includes('卖出')) {
-      advice += `📉 **建议操作**: 逐步减仓\n\n`;
+      advice += `**建议操作**: 逐步减仓\n\n`;
       advice += `**具体方案**:\n`;
       advice += `1. 首次减仓: 减持30-50%\n`;
       advice += `2. 继续减仓: 反弹至压力位\n`;
@@ -909,7 +909,7 @@ ${riskNote}
       advice += `• 保留部分底仓应对反转\n`;
       advice += `• 关注技术面变化`;
     } else {
-      advice += `➡️ **建议操作**: 观望等待\n\n`;
+      advice += `→ **建议操作**: 观望等待\n\n`;
       advice += `**具体方案**:\n`;
       advice += `1. 持仓不动: 保持现有仓位\n`;
       advice += `2. 关注信号: 等待明确突破\n`;
@@ -936,7 +936,7 @@ ${riskNote}
 
   // Generate technical analysis (simulated — no live indicator computation)
   generateTechnicalAnalysis(context, realtimeData) {
-    let analysis = '📈 技术分析 (模拟参考，非实盘计算):\n\n';
+    let analysis = '技术分析 (模拟参考，非实盘计算):\n\n';
 
     const indicators = ['MACD', 'KDJ', 'RSI'];
     const kb = this.knowledgeBase.indicators;
@@ -950,7 +950,7 @@ ${riskNote}
       analysis += `• ${ind}: ${selected}\n`;
     });
 
-    analysis += '\n⚠️ 以上为模拟数据，仅供参考，不构成投资建议。';
+    analysis += '\n⚠ 以上为模拟数据，仅供参考，不构成投资建议。';
     return analysis;
   }
 
@@ -962,7 +962,7 @@ ${riskNote}
       ['行业地位稳固', '具有一定竞争优势', '市场份额逐步扩大']
     ];
     
-    let analysis = '💼 基本面分析:\n\n';
+    let analysis = '基本面分析:\n\n';
     aspects.forEach((group, i) => {
       const selected = group[Math.floor(Math.random() * group.length)];
       analysis += `• ${selected}\n`;
@@ -975,7 +975,7 @@ ${riskNote}
   // 生成风险分析
   generateRiskAnalysis(context) {
     const conf = context.confidence || 70;
-    let analysis = '⚠️ 风险评估:\n\n';
+    let analysis = '⚠ 风险评估:\n\n';
     
     if (conf > 80) {
       analysis += '• 风险等级: 较低\n• 建议仓位: 可适当加仓至50%\n';
@@ -1000,7 +1000,7 @@ ${riskNote}
 
   // 生成价格分析
   generatePriceAnalysis(realtimeData, context) {
-    let analysis = '💰 价格分析:\n\n';
+    let analysis = '价格分析:\n\n';
     
     if (realtimeData) {
       const change = parseFloat(realtimeData.changePercent);
@@ -1025,7 +1025,7 @@ ${riskNote}
   // 生成时机分析
   generateTimingAnalysis(context, realtimeData) {
     const rec = context.recommendation || '持有';
-    let analysis = '⏰ 时机分析:\n\n';
+    let analysis = '时机分析:\n\n';
     
     if (rec.includes('买入')) {
       const strategies = [
@@ -1061,15 +1061,15 @@ ${riskNote}
     
     if (realtimeData) {
       const trend = realtimeData.change > 0 ? '上涨' : realtimeData.change < 0 ? '下跌' : '震荡';
-      return `📋 综合分析:\n\n` +
+      return `综合分析:\n\n` +
              `当前走势: ${trend}中\n` +
              `${summary}\n\n` +
-             `💡 投资建议: ${rec} (置信度${conf}%)\n\n` +
+             `投资建议: ${rec} (置信度${conf}%)\n\n` +
              `建议结合完整的技术指标和基本面分析做出决策。`;
     } else {
-      return `📋 综合分析 (基于历史数据):\n\n` +
+      return `综合分析 (基于历史数据):\n\n` +
              `${summary}\n\n` +
-             `💡 投资建议: ${rec} (置信度${conf}%)\n\n` +
+             `投资建议: ${rec} (置信度${conf}%)\n\n` +
              `提示: 联网后可获取实时行情数据,分析更准确!`;
     }
   }
@@ -1087,7 +1087,7 @@ ${riskNote}
   // 获取随机风险提示
   getRandomRisk() {
     const risks = this.knowledgeBase.risks;
-    return '⚠️ ' + risks[Math.floor(Math.random() * risks.length)];
+    return '⚠ ' + risks[Math.floor(Math.random() * risks.length)];
   }
 
   // 计算置信度

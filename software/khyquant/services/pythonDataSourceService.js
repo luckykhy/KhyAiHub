@@ -8,15 +8,31 @@ const path = require('path');
 
 class PythonDataSourceService {
   constructor() {
-    // 根据操作系统选择Python命令
-    // Windows: 优先使用py (Python Launcher), 其次python
-    // Linux: python3
-    this.pythonPath = require('../utils/pythonPath').findPython();
+    // ⚠ pythonPath 是**惰性 getter**，不在构造期解析。
+    // 理由：findPython() 会 spawn 子进程（`where python` + `python -c pass`），
+    // 在 Windows 上单次 python 冷启动实测 3.8–7.8s（Defender 扫描）。
+    // 本模块被 instrumentService 顶层 require，而 instrumentService 又被
+    // server.js 的后台初始化 eager 拉到 —— 于是「解析 python 路径」这件
+    // 与启动无关的事，白白占用了启动窗口数秒到数十秒。
+    // 改成 getter 后：只有真正要执行 python 脚本时才付这个代价。
+    this._pythonPath = null;
     this.adataScriptPath = path.join(__dirname, 'adataService.py');
     this.efinanceScriptPath = path.join(__dirname, 'efinanceService.py');
     this.akshareScriptPath = path.join(__dirname, 'akshareService.py');
     this.ifindScriptPath = path.join(__dirname, 'ifindService.py');
     this.khyshareScriptPath = path.join(__dirname, 'khyshareService.py');
+  }
+
+  /** 惰性解析的解释器路径；首次读取时才 spawn 探测。 */
+  get pythonPath() {
+    if (!this._pythonPath) {
+      this._pythonPath = require('../utils/pythonPath').findPython();
+    }
+    return this._pythonPath;
+  }
+
+  set pythonPath(value) {
+    this._pythonPath = value;
   }
 
   /**
@@ -44,7 +60,7 @@ class PythonDataSourceService {
           maxBuffer: 10 * 1024 * 1024 // 🔥 增加缓冲区到10MB，支持大量历史数据
         });
       } catch (spawnError) {
-        console.error('❌ 无法启动Python进程:', spawnError.message);
+        console.error('✗ 无法启动Python进程:', spawnError.message);
         reject(new Error(`Python不可用: ${spawnError.message}`));
         return;
       }
@@ -56,7 +72,7 @@ class PythonDataSourceService {
         if (_idleTimer) clearTimeout(_idleTimer);
         _idleTimer = setTimeout(() => {
           if (childProcess && !childProcess.killed) {
-            console.error('❌ Python进程空闲超时，强制终止');
+            console.error('✗ Python进程空闲超时，强制终止');
             safeKill(childProcess);
             reject(new Error(`Python进程空闲超时（${IDLE_MS / 1000}s 内无输出）`));
           }
@@ -66,7 +82,7 @@ class PythonDataSourceService {
 
       // 🔥 添加错误事件监听器,防止进程崩溃
       childProcess.on('error', (error) => {
-        console.error('❌ Python进程错误:', error.message);
+        console.error('✗ Python进程错误:', error.message);
         reject(new Error(`Python进程错误: ${error.message}`));
       });
 
@@ -139,7 +155,7 @@ class PythonDataSourceService {
             return;
           }
           
-          console.log(`📊 解析JSON，长度: ${jsonStr.length} 字符`);
+          console.log(`解析JSON，长度: ${jsonStr.length} 字符`);
           const result = JSON.parse(jsonStr);
           resolve(result);
         } catch (error) {
@@ -165,7 +181,7 @@ class PythonDataSourceService {
     } = options;
 
     try {
-      console.log(`📊 AData获取K线: ${symbol}`);
+      console.log(`AData获取K线: ${symbol}`);
       const args = ['kline', symbol, kType.toString(), startDate];
       // 不传递end_date参数
 
@@ -177,7 +193,7 @@ class PythonDataSourceService {
 
       return result.data;
     } catch (error) {
-      console.warn(`⚠️ AData获取失败: ${error.message}`);
+      console.warn(`⚠ AData获取失败: ${error.message}`);
       throw error;
     }
   }
@@ -193,7 +209,7 @@ class PythonDataSourceService {
     } = options;
 
     try {
-      console.log(`📊 EFinance获取K线: ${symbol}`);
+      console.log(`EFinance获取K线: ${symbol}`);
       const args = ['kline', symbol, klt.toString(), startDate];
       if (endDate) args.push(endDate);
 
@@ -205,7 +221,7 @@ class PythonDataSourceService {
 
       return result.data;
     } catch (error) {
-      console.warn(`⚠️ EFinance获取失败: ${error.message}`);
+      console.warn(`⚠ EFinance获取失败: ${error.message}`);
       throw error;
     }
   }
@@ -215,7 +231,7 @@ class PythonDataSourceService {
    */
   async getRealtimeFromAData(symbol) {
     try {
-      console.log(`📊 AData获取实时行情: ${symbol}`);
+      console.log(`AData获取实时行情: ${symbol}`);
       const result = await this.executePythonScript(this.adataScriptPath, ['realtime', symbol]);
       
       if (!result.success) {
@@ -224,7 +240,7 @@ class PythonDataSourceService {
 
       return result.data;
     } catch (error) {
-      console.warn(`⚠️ AData获取实时行情失败: ${error.message}`);
+      console.warn(`⚠ AData获取实时行情失败: ${error.message}`);
       throw error;
     }
   }
@@ -235,7 +251,7 @@ class PythonDataSourceService {
   async getRealtimeFromEFinance(symbols) {
     try {
       const symbolList = Array.isArray(symbols) ? symbols : [symbols];
-      console.log(`📊 EFinance获取实时行情: ${symbolList.join(',')}`);
+      console.log(`EFinance获取实时行情: ${symbolList.join(',')}`);
       
       const result = await this.executePythonScript(this.efinanceScriptPath, ['realtime', ...symbolList]);
       
@@ -245,7 +261,7 @@ class PythonDataSourceService {
 
       return result.data;
     } catch (error) {
-      console.warn(`⚠️ EFinance获取实时行情失败: ${error.message}`);
+      console.warn(`⚠ EFinance获取实时行情失败: ${error.message}`);
       throw error;
     }
   }
@@ -264,7 +280,7 @@ class PythonDataSourceService {
     } = options;
 
     try {
-      console.log(`📊 AKShare获取K线: ${symbol}, 类型: ${instrumentType}`);
+      console.log(`AKShare获取K线: ${symbol}, 类型: ${instrumentType}`);
       console.log(`   日期范围: ${startDate || '无'} 至 ${endDate || '无'}`);
       console.log(`   count限制: ${count || '无'}`);
       
@@ -294,10 +310,10 @@ class PythonDataSourceService {
         throw new Error(result.error || 'AKShare获取失败');
       }
 
-      console.log(`✅ AKShare获取成功: ${result.count || result.kline?.length || 0} 条数据`);
+      console.log(`✓ AKShare获取成功: ${result.count || result.kline?.length || 0} 条数据`);
       return result;
     } catch (error) {
-      console.warn(`⚠️ AKShare获取失败: ${error.message}`);
+      console.warn(`⚠ AKShare获取失败: ${error.message}`);
       throw error;
     }
   }
@@ -307,7 +323,7 @@ class PythonDataSourceService {
    */
   async getRealtimeFromAKShare(symbol) {
     try {
-      console.log(`📊 AKShare获取实时行情: ${symbol}`);
+      console.log(`AKShare获取实时行情: ${symbol}`);
       const result = await this.executePythonScript(this.akshareScriptPath, ['realtime', symbol]);
       
       if (!result.success) {
@@ -316,7 +332,7 @@ class PythonDataSourceService {
 
       return result.data;
     } catch (error) {
-      console.warn(`⚠️ AKShare获取实时行情失败: ${error.message}`);
+      console.warn(`⚠ AKShare获取实时行情失败: ${error.message}`);
       throw error;
     }
   }
@@ -394,10 +410,10 @@ class PythonDataSourceService {
         throw new Error(result.error || '获取股票代码失败');
       }
 
-      console.log(`✅ 获取到 ${result.count} 个股票代码`);
+      console.log(`✓ 获取到 ${result.count} 个股票代码`);
       return { success: true, data: result.data, count: result.count };
     } catch (error) {
-      console.error('❌ 获取股票代码失败:', error.message);
+      console.error('✗ 获取股票代码失败:', error.message);
       return { success: false, error: error.message, data: [] };
     }
   }
@@ -419,10 +435,10 @@ class PythonDataSourceService {
         throw new Error(result.error || 'iFinD获取K线失败');
       }
 
-      console.log(`✅ iFinD获取K线成功: ${result.count} 条数据`);
+      console.log(`✓ iFinD获取K线成功: ${result.count} 条数据`);
       return result;
     } catch (error) {
-      console.error('❌ iFinD获取K线失败:', error.message);
+      console.error('✗ iFinD获取K线失败:', error.message);
       throw error;
     }
   }
@@ -439,10 +455,10 @@ class PythonDataSourceService {
         throw new Error(result.error || 'iFinD获取行情失败');
       }
 
-      console.log(`✅ iFinD获取行情成功: ${result.count} 条数据`);
+      console.log(`✓ iFinD获取行情成功: ${result.count} 条数据`);
       return result;
     } catch (error) {
-      console.error('❌ iFinD获取行情失败:', error.message);
+      console.error('✗ iFinD获取行情失败:', error.message);
       throw error;
     }
   }
@@ -455,7 +471,7 @@ class PythonDataSourceService {
       const result = await this.executePythonScript(this.ifindScriptPath, ['test']);
       return result;
     } catch (error) {
-      console.error('❌ iFinD连接测试失败:', error.message);
+      console.error('✗ iFinD连接测试失败:', error.message);
       return { success: false, error: error.message };
     }
   }
@@ -472,10 +488,10 @@ class PythonDataSourceService {
         throw new Error(result.error || '获取指数代码失败');
       }
 
-      console.log(`✅ 获取到 ${result.count} 个指数代码`);
+      console.log(`✓ 获取到 ${result.count} 个指数代码`);
       return { success: true, data: result.data, count: result.count };
     } catch (error) {
-      console.error('❌ 获取指数代码失败:', error.message);
+      console.error('✗ 获取指数代码失败:', error.message);
       return { success: false, error: error.message, data: [] };
     }
   }
@@ -493,10 +509,10 @@ class PythonDataSourceService {
         throw new Error(result.error || '获取标的列表失败');
       }
 
-      console.log(`✅ 获取到 ${result.stats.total} 个标的 (指数:${result.stats.indices}, 股票:${result.stats.stocks}, ETF:${result.stats.etfs}, 可转债:${result.stats.bonds})`);
+      console.log(`✓ 获取到 ${result.stats.total} 个标的 (指数:${result.stats.indices}, 股票:${result.stats.stocks}, ETF:${result.stats.etfs}, 可转债:${result.stats.bonds})`);
       return { success: true, data: result.data, stats: result.stats };
     } catch (error) {
-      console.error('❌ 获取标的列表失败:', error.message);
+      console.error('✗ 获取标的列表失败:', error.message);
       return { success: false, error: error.message, data: [], stats: {} };
     }
   }
@@ -514,10 +530,10 @@ class PythonDataSourceService {
         throw new Error(result.error || '获取标的列表失败');
       }
 
-      console.log(`✅ 获取到 ${result.stats.total} 个标的 (指数:${result.stats.indices}, 股票:${result.stats.stocks})`);
+      console.log(`✓ 获取到 ${result.stats.total} 个标的 (指数:${result.stats.indices}, 股票:${result.stats.stocks})`);
       return { success: true, data: result.data, stats: result.stats };
     } catch (error) {
-      console.error('❌ 获取标的列表失败:', error.message);
+      console.error('✗ 获取标的列表失败:', error.message);
       return { success: false, error: error.message, data: [], stats: {} };
     }
   }
@@ -529,7 +545,7 @@ class PythonDataSourceService {
     try {
       const { period = 'daily', startDate = null, endDate = null, useHistory = false } = options;
       
-      console.log(`📊 调用KHYShare服务: ${symbol}, period=${period}, useHistory=${useHistory}`);
+      console.log(`调用KHYShare服务: ${symbol}, period=${period}, useHistory=${useHistory}`);
       
       // 🔥 如果需要历史数据，调用kline_history命令
       if (useHistory || startDate) {
@@ -544,7 +560,7 @@ class PythonDataSourceService {
           throw new Error(result.error || 'KHYShare获取历史数据失败');
         }
 
-        console.log(`✅ KHYShare获取历史数据成功: ${result.name}, K线数量=${result.count}`);
+        console.log(`✓ KHYShare获取历史数据成功: ${result.name}, K线数量=${result.count}`);
         
         return {
           success: true,
@@ -577,7 +593,7 @@ class PythonDataSourceService {
         volume: result.volume || 0
       }];
 
-      console.log(`✅ KHYShare获取数据成功: ${result.name}, 价格=${result.price}`);
+      console.log(`✓ KHYShare获取数据成功: ${result.name}, 价格=${result.price}`);
       
       return {
         success: true,
@@ -588,7 +604,7 @@ class PythonDataSourceService {
         count: 1
       };
     } catch (error) {
-      console.error('❌ KHYShare获取数据失败:', error.message);
+      console.error('✗ KHYShare获取数据失败:', error.message);
       throw error;
     }
   }
@@ -601,7 +617,7 @@ class PythonDataSourceService {
       const result = await this.executePythonScript(this.khyshareScriptPath, ['test']);
       return result;
     } catch (error) {
-      console.error('❌ KHYShare连接测试失败:', error.message);
+      console.error('✗ KHYShare连接测试失败:', error.message);
       return { success: false, error: error.message };
     }
   }
@@ -617,13 +633,42 @@ class PythonDataSourceService {
         throw new Error(result.error || '获取标的列表失败');
       }
 
-      console.log(`✅ KHYShare获取到 ${result.count} 个标的 (股票:${result.stocks}, 指数:${result.indices})`);
+      console.log(`✓ KHYShare获取到 ${result.count} 个标的 (股票:${result.stocks}, 指数:${result.indices})`);
       return result;
     } catch (error) {
-      console.error('❌ KHYShare获取标的列表失败:', error.message);
+      console.error('✗ KHYShare获取标的列表失败:', error.message);
       return { success: false, error: error.message, data: [], count: 0 };
     }
   }
 }
 
-module.exports = new PythonDataSourceService();
+// ⚠ 惰性单例：不再在模块加载期 `new`。
+// 旧写法 `module.exports = new PythonDataSourceService()` 让「require 这个文件」
+// 就等于「解析 python 路径 + 建 5 个脚本常量」——前者要 spawn 子进程。
+// 本模块处在 server.js 启动路径上（instrumentService → 本文件），因此那个
+// 构造期开销会直接变成启动延迟。改为 Proxy 惰性构造：读取属性时才建实例，
+// 行为对调用方完全兼容（`svc.executePythonScript(...)` 照常可用）。
+let _instance = null;
+function _getInstance() {
+  if (!_instance) _instance = new PythonDataSourceService();
+  return _instance;
+}
+
+module.exports = new Proxy(
+  {},
+  {
+    get(_t, prop) {
+      const inst = _getInstance();
+      const v = inst[prop];
+      return typeof v === 'function' ? v.bind(inst) : v;
+    },
+    set(_t, prop, value) {
+      _getInstance()[prop] = value;
+      return true;
+    },
+    has(_t, prop) {
+      return prop in _getInstance();
+    },
+  }
+);
+module.exports.PythonDataSourceService = PythonDataSourceService;

@@ -134,7 +134,7 @@ function _detectCommitInjection(command) {
 
   // 检查 commit message 内的命令替换
   if (/\$\(/.test(message) || /`[^`]+`/.test(message)) {
-    return '🛑 Git commit 消息包含命令替换 ($(...) 或 `...`)，已阻止执行以防止注入攻击。请移除 commit message 中的命令替换语法。';
+    return 'Git commit 消息包含命令替换 ($(...) 或 `...`)，已阻止执行以防止注入攻击。请移除 commit message 中的命令替换语法。';
   }
 
   // 检查 -m 引号关闭后是否有 shell 元字符（; && || | 等拼接额外命令）
@@ -146,7 +146,7 @@ function _detectCommitInjection(command) {
     if (/^(&&|\|\||;)\s*git\s/.test(afterQuote)) return null;
     // 如果是 && echo / && printf 等无害命令，放行
     if (/^(&&|\|\||;)\s*(echo|printf|true|:)\b/.test(afterQuote)) return null;
-    return '🛑 Git commit -m 引号关闭后包含 shell 元字符，已阻止执行以防止命令注入。请确保 commit message 正确闭合且后续命令安全。';
+    return 'Git commit -m 引号关闭后包含 shell 元字符，已阻止执行以防止命令注入。请确保 commit message 正确闭合且后续命令安全。';
   }
 
   return null;

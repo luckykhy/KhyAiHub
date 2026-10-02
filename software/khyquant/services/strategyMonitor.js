@@ -61,7 +61,7 @@ class StrategyMonitor extends EventEmitter {
 
     this.activeStrategies.set(monitorKey, monitor);
 
-    console.log(`✅ 策略监控已启动: ${monitorKey}`);
+    console.log(`✓ 策略监控已启动: ${monitorKey}`);
     console.log(`   策略ID: ${strategyId}`);
     console.log(`   标的: ${symbol}`);
     console.log(`   数量: ${quantity}`);
@@ -86,7 +86,7 @@ class StrategyMonitor extends EventEmitter {
       this.activeStrategies.delete(monitorKey);
       this.lastSignals.delete(monitorKey);
       
-      console.log(`🛑 策略监控已停止: ${monitorKey}`);
+      console.log(`策略监控已停止: ${monitorKey}`);
       
       // 触发停止事件
       this.emit('monitorStopped', { monitorKey });
@@ -126,7 +126,7 @@ class StrategyMonitor extends EventEmitter {
       // 获取市场数据
       const cachedData = this.marketDataCache.get(monitor.symbol);
       if (!cachedData || !cachedData.data || cachedData.data.length === 0) {
-        console.log(`⚠️ 暂无市场数据: ${monitor.symbol}`);
+        console.log(`⚠ 暂无市场数据: ${monitor.symbol}`);
         return;
       }
 
@@ -174,7 +174,7 @@ class StrategyMonitor extends EventEmitter {
       const shouldExecute = this.shouldExecuteSignal(monitor, latestSignal);
       
       if (shouldExecute) {
-        console.log(`📊 策略信号: ${monitorKey}`);
+        console.log(`策略信号: ${monitorKey}`);
         console.log(`   类型: ${latestSignal.type}`);
         console.log(`   价格: ${latestSignal.price}`);
         console.log(`   原因: ${latestSignal.reason}`);
@@ -209,7 +209,7 @@ class StrategyMonitor extends EventEmitter {
       }
 
     } catch (error) {
-      console.error(`❌ 策略检查失败: ${monitorKey}`, error);
+      console.error(`✗ 策略检查失败: ${monitorKey}`, error);
       this.emit('error', { monitorKey, error });
     }
   }
@@ -310,7 +310,7 @@ class StrategyMonitor extends EventEmitter {
     
     keysToStop.forEach(key => this.stopMonitoring(key));
     
-    console.log(`🛑 已停止用户 ${userId} 的 ${keysToStop.length} 个策略监控`);
+    console.log(`已停止用户 ${userId} 的 ${keysToStop.length} 个策略监控`);
   }
 }
 

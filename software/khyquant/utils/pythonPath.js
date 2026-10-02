@@ -52,8 +52,30 @@ function getContainerPythonCandidates() {
   ];
 }
 
+/**
+ * Probe "can this interpreter actually run?" by spawning it once.
+ *
+ * ⚠ This is a **process creation**, and on Windows it is the single most expensive
+ * thing in the whole resolver: measured 3.8–7.8s for `python -c "pass"` on a
+ * Defender-scanned machine (vs ~0.3s warm). The caller must therefore treat it as
+ * a **last resort**, never a per-candidate check — see findPython()'s split.
+ *
+ * `KHY_PYTHON_TRUST_PATH`（默认开）让「绝对路径 + 文件存在」直接采信，跳过这次
+ * spawn。它能让启动路径上的 python 探测从秒级降到毫秒级。关闭（=0）则恢复
+ * 逐候选实测，用于「路径存在但解释器坏了」的疑难排查。
+ */
+function _trustPathWithoutProbe() {
+  const v = process.env.KHY_PYTHON_TRUST_PATH;
+  return !(v === '0' || v === 'false' || v === 'off' || v === 'no');
+}
+
 function canRunPython(executable) {
   if (!executable) return false;
+  if (_trustPathWithoutProbe() && isAbsoluteOrExplicitPath(executable) && fs.existsSync(executable)) {
+    // 绝对路径 + 文件确实存在 → 采信，不 spawn。解释器坏掉会在首次真实调用时
+    // 以子进程错误的形式暴露（比在启动路径上阻塞 4s 更划算）。
+    return true;
+  }
   try {
     execSync(`"${executable}" -c "import sys; sys.exit(0)"`, { stdio: 'pipe' });
     return true;

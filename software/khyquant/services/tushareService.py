@@ -24,7 +24,7 @@ if os.path.isdir(tushare_path):
 
 try:
     import tushare as ts
-    print(f"✅ TuShare版本: {ts.__version__ if hasattr(ts, '__version__') else 'unknown'}", file=sys.stderr)
+    print(f"✓ TuShare版本: {ts.__version__ if hasattr(ts, '__version__') else 'unknown'}", file=sys.stderr)
 except ImportError as e:
     # Import failure is fail-soft: emit a non-success JSON so the upstream fallback chain can degrade
     print(json.dumps({
@@ -51,13 +51,13 @@ def _get_pro_api():
     """
     token = _get_token()
     if not token:
-        print("⚠️ 未配置 TUSHARE_TOKEN，跳过 TuShare 数据源", file=sys.stderr)
+        print("⚠ 未配置 TUSHARE_TOKEN，跳过 TuShare 数据源", file=sys.stderr)
         return None
     try:
         ts.set_token(token)
         return ts.pro_api()
     except Exception as init_error:
-        print(f"⚠️ TuShare 初始化失败: {str(init_error)}", file=sys.stderr)
+        print(f"⚠ TuShare 初始化失败: {str(init_error)}", file=sys.stderr)
         return None
 
 
@@ -104,7 +104,7 @@ def _fetch_daily(pro, ts_code, instrument_type, start_date, end_date):
             return pro.index_daily(ts_code=ts_code, start_date=start_date, end_date=end_date)
         return pro.daily(ts_code=ts_code, start_date=start_date, end_date=end_date)
     except Exception as api_error:
-        print(f"⚠️ 获取 {ts_code} 失败: {str(api_error)}", file=sys.stderr)
+        print(f"⚠ 获取 {ts_code} 失败: {str(api_error)}", file=sys.stderr)
         return None
 
 
@@ -173,7 +173,7 @@ def get_batch_quotes(symbols, instrument_type='stock'):
                     'dataSource': 'TuShare每日数据'
                 })
             except Exception as code_error:
-                print(f"⚠️ 处理 {symbol} 失败: {str(code_error)}", file=sys.stderr)
+                print(f"⚠ 处理 {symbol} 失败: {str(code_error)}", file=sys.stderr)
                 continue
 
         if not quotes:
@@ -232,7 +232,7 @@ def get_kline(symbol, period='daily', start_date=None, end_date=None, instrument
             start_date = (datetime.now() - timedelta(days=30)).strftime('%Y%m%d')
 
         ts_code = _to_ts_code(symbol, instrument_type)
-        print(f"📊 获取K线数据: {ts_code}, 类型: {instrument_type}", file=sys.stderr)
+        print(f"获取K线数据: {ts_code}, 类型: {instrument_type}", file=sys.stderr)
 
         df = _fetch_daily(pro, ts_code, instrument_type, start_date, end_date)
         if df is None or df.empty:
@@ -261,7 +261,7 @@ def get_kline(symbol, period='daily', start_date=None, end_date=None, instrument
                 'amount': float(row['amount']) if 'amount' in row else 0
             })
 
-        print(f"✅ 获取到 {len(kline)} 条K线数据", file=sys.stderr)
+        print(f"✓ 获取到 {len(kline)} 条K线数据", file=sys.stderr)
 
         return {
             'success': True,
@@ -271,7 +271,7 @@ def get_kline(symbol, period='daily', start_date=None, end_date=None, instrument
         }
 
     except Exception as e:
-        print(f"❌ 获取K线失败: {str(e)}", file=sys.stderr)
+        print(f"✗ 获取K线失败: {str(e)}", file=sys.stderr)
         return {
             'success': False,
             'error': str(e),

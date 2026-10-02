@@ -22,11 +22,11 @@ class TdxInterpreter {
       commission = 0.0003
     } = options;
 
-    if (this.debug) console.log('🚀 开始执行通达信策略...');
+    if (this.debug) console.log('开始执行通达信策略...');
     
     // 预处理代码
     const statements = this.parseCode(code);
-    if (this.debug) console.log(`📝 解析到 ${statements.length} 条语句`);
+    if (this.debug) console.log(`解析到 ${statements.length} 条语句`);
     
     // 逐K线计算
     const signals = [];
@@ -83,7 +83,7 @@ class TdxInterpreter {
       }
     }
     
-    if (this.debug) console.log(`✅ 找到 ${signals.length} 个信号`);
+    if (this.debug) console.log(`✓ 找到 ${signals.length} 个信号`);
     
     // 执行回测
     const results = this.runBacktest(signals, klineData, initialCapital, commission);

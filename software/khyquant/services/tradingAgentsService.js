@@ -1783,7 +1783,7 @@ class RiskManager {
   }
 
   generateAdvice(decision, riskLevel) {
-    const riskWarning = riskLevel === '高风险' ? '⚠️ 高风险操作，请谨慎！' : '';
+    const riskWarning = riskLevel === '高风险' ? '⚠ 高风险操作，请谨慎！' : '';
     return `${decision.reasoning} ${riskWarning}`;
   }
 }

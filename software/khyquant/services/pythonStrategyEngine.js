@@ -349,7 +349,7 @@ if __name__ == "__main__":
           stdio: ['pipe', 'pipe', 'pipe']
         });
       } catch (spawnError) {
-        console.error('❌ 无法启动Python进程:', spawnError.message);
+        console.error('✗ 无法启动Python进程:', spawnError.message);
         reject(new Error(`Python不可用: ${spawnError.message}`));
         return;
       }
@@ -379,7 +379,7 @@ if __name__ == "__main__":
         if (_settled) return;
         _settled = true;
         _clearIdle();
-        console.error('❌ Python进程错误:', error.message);
+        console.error('✗ Python进程错误:', error.message);
         reject(new Error(`Python进程错误: ${error.message}`));
       });
 

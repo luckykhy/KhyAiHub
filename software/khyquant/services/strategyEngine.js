@@ -344,7 +344,7 @@ class StrategyEngine {
       validatedSignals.auxiliaryLines = auxiliaryLines;
     }
 
-    console.log('🔍 信号验证完成:');
+    console.log('信号验证完成:');
     console.log(`   原始信号数: ${signals.length}`);
     console.log(`   有效交易信号数: ${validatedSignals.length}`);
     
@@ -353,7 +353,7 @@ class StrategyEngine {
     console.log(`   包含时间字段的信号: ${signalsWithTime.length}/${validatedSignals.length}`);
     
     if (validatedSignals.length > 0 && signalsWithTime.length === 0) {
-      console.warn('⚠️ 警告：所有信号都缺少时间字段，前端可能无法正确显示');
+      console.warn('⚠ 警告：所有信号都缺少时间字段，前端可能无法正确显示');
     }
 
     return validatedSignals;
