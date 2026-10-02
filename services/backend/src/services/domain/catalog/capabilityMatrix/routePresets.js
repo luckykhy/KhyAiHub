@@ -51,6 +51,16 @@ const PRESETS = Object.freeze([
   },
 ]);
 
+// Object.freeze() on the array alone leaves every entry (and its inner arrays)
+// writable, and index.js hands those same object references to callers — one
+// consumer mutating `capabilities` would corrupt the process-wide catalog.
+for (const preset of PRESETS) {
+  Object.freeze(preset.capabilities);
+  Object.freeze(preset.whenModes);
+  Object.freeze(preset.requires);
+  Object.freeze(preset);
+}
+
 /**
  * Pick the first preset whose `whenModes` intersects the active modes.
  * Returns null when no preset matches (auto-inference falls back to the full
