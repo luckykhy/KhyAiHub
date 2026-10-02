@@ -6,17 +6,17 @@
 
 ## 规范总览
 
-### 📋 核心规范
+### 核心规范
 
 | 规范 | 文档 | 状态 | 说明 |
 |------|------|------|------|
-| **项目规范化总纲** | `[DESIGN-ARCH-072]` | ✅ 完成 | 项目规范化体系总览 |
-| **MCP 协议** | 多份文档 | ✅ 成熟 | 工具集成协议 |
-| **A2A 协议** | `[DESIGN-A2A-001]` | 🟡 设计完成 | 智能体通信协议 |
-| **记忆规范** | `[DESIGN-MEM-001~005]` | ✅ 完成 | 记忆系统规范 |
-| **通信协议** | `[DESIGN-COMM-001]` | ✅ 完成 | 服务间通信规范 |
-| **代码规范** | `[DESIGN-ARCH-015]` | ✅ 强制 | 代码风格规范 |
-| **文档规范** | `[MGMT-STD-001]` | ✅ 强制 | 文档管理规范 |
+| **项目规范化总纲** | `[DESIGN-ARCH-072]` | ✓ 完成 | 项目规范化体系总览 |
+| **MCP 协议** | 多份文档 | ✓ 成熟 | 工具集成协议 |
+| **A2A 协议** | `[DESIGN-A2A-001]` | ◐ 设计完成 | 智能体通信协议 |
+| **记忆规范** | `[DESIGN-MEM-001~005]` | ✓ 完成 | 记忆系统规范 |
+| **通信协议** | `[DESIGN-COMM-001]` | ✓ 完成 | 服务间通信规范 |
+| **代码规范** | `[DESIGN-ARCH-015]` | ✓ 强制 | 代码风格规范 |
+| **文档规范** | `[MGMT-STD-001]` | ✓ 强制 | 文档管理规范 |
 
 ---
 
@@ -65,7 +65,7 @@ khy mcp test <name>
 
 ## 协议速查
 
-> ⚠️ **本节 2026-09-15 更正。** 原「A2A 协议速查」把 khy-os 的**私有进程内 ACP 方言**
+> ⚠ **本节 2026-09-15 更正。** 原「A2A 协议速查」把 khy-os 的**私有进程内 ACP 方言**
 > 写成了标准 A2A，且方法族（`a2a.discovery.*` / `a2a.capability.*` / `a2a.task.*` /
 > `a2a.status.*`）**在实现中零存在** —— 属设计草案遗留，从未落地。
 > 术语区分见 `[DESIGN-NAM-002]`。
@@ -230,7 +230,7 @@ data: {"key": "value"}
 ### JavaScript/TypeScript
 
 ```javascript
-// ✅ 正确
+// ✓ 正确
 const userName = 'john';
 const MAX_RETRIES = 3;
 
@@ -238,7 +238,7 @@ function getUserById(userId) {
   // ...
 }
 
-// ❌ 错误
+// ✗ 错误
 const user_name = 'john';  // 应该用 camelCase
 const max_retries = 3;     // 应该用 camelCase
 ```
@@ -246,14 +246,14 @@ const max_retries = 3;     // 应该用 camelCase
 ### Python
 
 ```python
-# ✅ 正确
+# ✓ 正确
 user_name = 'john'
 max_retries = 3
 
 def get_user_by_id(user_id):
     # ...
 
-# ❌ 错误
+# ✗ 错误
 userName = 'john'  # 应该用 snake_case
 maxRetries = 3     # 应该用 snake_case
 ```
@@ -261,12 +261,12 @@ maxRetries = 3     # 应该用 snake_case
 ### 文件命名
 
 ```
-# ✅ 正确
+# ✓ 正确
 user-service.js
 user_service.py
 UserProfile.tsx
 
-# ❌ 错误
+# ✗ 错误
 UserService.js      # 应该用 kebab-case
 user-service.py     # 应该用 snake_case
 userprofile.tsx     # 应该用 PascalCase

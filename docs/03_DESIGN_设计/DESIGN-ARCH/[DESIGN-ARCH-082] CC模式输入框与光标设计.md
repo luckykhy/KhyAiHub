@@ -35,7 +35,7 @@
 
 ! npm run build                                  ← Shell 模式（! 前缀）
 
-🎤 Listening...                                  ← Voice 模式
+Listening...                                  ← Voice 模式
 ```
 
 ### 1.2 关键差异：khy-os vs Claude Code
@@ -46,7 +46,7 @@
 | **提示符** | `> ` | `> `（对齐 CC） | 统一为 `> ` |
 | **多行** | Shift+Enter | Shift+Enter（保留） | 保留现有实现 |
 | **Shell 模式** | 无 | `!` 前缀 | 保留 khy 特色 |
-| **Voice 模式** | 无 | `🎤` 前缀 | 保留 khy 特色 |
+| **Voice 模式** | 无 | `` 前缀 | 保留 khy 特色 |
 | **Vim 模式** | 无 | NORMAL/INSERT 指示 | 保留 khy 特色 |
 | **占位符** | 灰色文字 | 灰色文字（对齐 CC） | 统一风格 |
 
@@ -176,7 +176,7 @@ useEffect(() => {
 
 [SHELL] ! npm run build                ← Shell 模式
 
-[VOICE] 🎤 Listening...                ← Voice 模式
+[VOICE] Listening...                ← Voice 模式
 ```
 
 ### 3.2 模式切换
@@ -368,7 +368,7 @@ function CcPromptInput(props) {
 | Vim INSERT | 绿色竖线光标 `│` |
 | Vim NORMAL | 绿色方块光标 `█`，常亮 |
 | Shell 模式 | `!` 前缀 + 黄色光标 |
-| Voice 模式 | `🎤` 前缀 + 红色闪烁光标 |
+| Voice 模式 | `` 前缀 + 红色闪烁光标 |
 | 输入中 | 光标跟随输入位置，无跳跃 |
 | 长输入 | 高度窗口化，显示省略标记 |
 | 粘贴多行 | 自动分割，保留换行 |

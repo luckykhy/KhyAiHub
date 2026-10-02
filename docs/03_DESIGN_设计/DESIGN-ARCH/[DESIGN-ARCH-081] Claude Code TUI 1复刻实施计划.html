@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -413,7 +413,7 @@
     .<span class="hljs-title function_">replace</span>(<span class="hljs-regexp">/claude-code/g</span>, <span class="hljs-string">&#x27;khy&#x27;</span>);
 }</code></pre>
 <h3 id="1-3-需要替换品牌的位置">1.3 需要替换品牌的位置<a class="anchor" href="#1-3-需要替换品牌的位置" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>文件</th><th>当前文本</th><th>替换后</th></tr></thead><tbody><tr><td><code>WelcomeBanner.js</code></td><td><code>🍀 khy-os</code> + 功能列表</td><td><code>✳ Khy</code> + 动画星号</td></tr><tr><td><code>CcLogo.js</code> (新建)</td><td><code>✳ Claude Code</code></td><td><code>✳ Khy</code></td></tr><tr><td><code>PromptFrame.js</code></td><td><code>Type your message...</code></td><td><code>Send a message...</code></td></tr><tr><td><code>FooterBar.js</code></td><td>版本信息</td><td><code>Khy vX.Y.Z</code></td></tr><tr><td><code>ModelPicker.js</code></td><td>模型列表标题</td><td><code>Select Model</code></td></tr><tr><td><code>CcStatusLine.js</code> (新建)</td><td>模型名显示</td><td>见 OpenAI 格式化</td></tr></tbody></table>
+<table><thead><tr><th>文件</th><th>当前文本</th><th>替换后</th></tr></thead><tbody><tr><td><code>WelcomeBanner.js</code></td><td><code>khy-os</code> + 功能列表</td><td><code>✳ Khy</code> + 动画星号</td></tr><tr><td><code>CcLogo.js</code> (新建)</td><td><code>✳ Claude Code</code></td><td><code>✳ Khy</code></td></tr><tr><td><code>PromptFrame.js</code></td><td><code>Type your message...</code></td><td><code>Send a message...</code></td></tr><tr><td><code>FooterBar.js</code></td><td>版本信息</td><td><code>Khy vX.Y.Z</code></td></tr><tr><td><code>ModelPicker.js</code></td><td>模型列表标题</td><td><code>Select Model</code></td></tr><tr><td><code>CcStatusLine.js</code> (新建)</td><td>模型名显示</td><td>见 OpenAI 格式化</td></tr></tbody></table>
 <h3 id="1-4-不替换的内容">1.4 不替换的内容<a class="anchor" href="#1-4-不替换的内容" aria-label="锚点">#</a></h3>
 <p>以下内容<strong>不属于品牌</strong>，属于 UX 交互模式，保留原文：</p>
 <table><thead><tr><th>内容</th><th>原因</th></tr></thead><tbody><tr><td><code>Do you want to proceed?</code></td><td>CC 标准权限提示文本</td></tr><tr><td><code>Yes, proceed</code> / <code>No, reject</code></td><td>标准选项文本</td></tr><tr><td><code>Esc to cancel · Tab to amend</code></td><td>标准操作提示</td></tr><tr><td><code>Always allow</code></td><td>权限选项</td></tr><tr><td><code>Context 45%</code></td><td>状态栏格式</td></tr><tr><td><code>Reading…</code> / <code>Running…</code></td><td>工具进度文本</td></tr></tbody></table>
@@ -421,7 +421,7 @@
 <h2 id="2-openai-协议支持规范">2. OpenAI 协议支持规范<a class="anchor" href="#2-openai-协议支持规范" aria-label="锚点">#</a></h2>
 <h3 id="2-1-现状">2.1 现状<a class="anchor" href="#2-1-现状" aria-label="锚点">#</a></h3>
 <p>khy-os AI 网关已<strong>完整支持 OpenAI 协议</strong>：</p>
-<table><thead><tr><th>能力</th><th>状态</th><th>说明</th></tr></thead><tbody><tr><td>API Wire 协议</td><td>✅</td><td><code>apiAdapter.js</code> 实现完整 OpenAI Messages API</td></tr><tr><td>模型自动路由</td><td>✅</td><td><code>gpt-*</code>, <code>o1-*</code>, <code>o3-*</code>, <code>o4-*</code> 自动路由到 OpenAI 适配器</td></tr><tr><td>API Key 配置</td><td>✅</td><td><code>OPENAI_API_KEY</code> env / <code>khy gateway config</code> 交互式</td></tr><tr><td>自定义端点</td><td>✅</td><td><code>OPENAI_API_ENDPOINT</code> 支持自托管/镜像</td></tr><tr><td>动态模型发现</td><td>✅</td><td><code>/v1/models</code> 自动探测可用模型</td></tr><tr><td>SSE 流式传输</td><td>✅</td><td><code>_openaiSseStream.js</code> 完整实现</td></tr><tr><td>Tool/Function Calling</td><td>✅</td><td>OpenAI function call 格式完整支持</td></tr><tr><td>Key 轮换 + 故障转移</td><td>✅</td><td><code>apiKeyPool</code> 多 key 自动切换</td></tr><tr><td>Vision 多模态</td><td>✅</td><td>图片输入自动路由到视觉模型</td></tr></tbody></table>
+<table><thead><tr><th>能力</th><th>状态</th><th>说明</th></tr></thead><tbody><tr><td>API Wire 协议</td><td>✓</td><td><code>apiAdapter.js</code> 实现完整 OpenAI Messages API</td></tr><tr><td>模型自动路由</td><td>✓</td><td><code>gpt-*</code>, <code>o1-*</code>, <code>o3-*</code>, <code>o4-*</code> 自动路由到 OpenAI 适配器</td></tr><tr><td>API Key 配置</td><td>✓</td><td><code>OPENAI_API_KEY</code> env / <code>khy gateway config</code> 交互式</td></tr><tr><td>自定义端点</td><td>✓</td><td><code>OPENAI_API_ENDPOINT</code> 支持自托管/镜像</td></tr><tr><td>动态模型发现</td><td>✓</td><td><code>/v1/models</code> 自动探测可用模型</td></tr><tr><td>SSE 流式传输</td><td>✓</td><td><code>_openaiSseStream.js</code> 完整实现</td></tr><tr><td>Tool/Function Calling</td><td>✓</td><td>OpenAI function call 格式完整支持</td></tr><tr><td>Key 轮换 + 故障转移</td><td>✓</td><td><code>apiKeyPool</code> 多 key 自动切换</td></tr><tr><td>Vision 多模态</td><td>✓</td><td>图片输入自动路由到视觉模型</td></tr></tbody></table>
 <h3 id="2-2-模型名格式化-cc-模式状态栏">2.2 模型名格式化（CC 模式状态栏）<a class="anchor" href="#2-2-模型名格式化-cc-模式状态栏" aria-label="锚点">#</a></h3>
 <p>CC 模式状态栏需要友好显示 OpenAI 模型名：</p>
 <table><thead><tr><th>模型 ID</th><th>状态栏显示</th><th>规则</th></tr></thead><tbody><tr><td><code>gpt-4o</code></td><td><code>GPT-4o</code></td><td><code>gpt-</code> → <code>GPT-</code> + 版本号</td></tr><tr><td><code>gpt-4o-mini</code></td><td><code>GPT-4o mini</code></td><td>最后一词小写</td></tr><tr><td><code>gpt-4-turbo</code></td><td><code>GPT-4 Turbo</code></td><td><code>turbo</code> → <code>Turbo</code></td></tr><tr><td><code>gpt-3.5-turbo</code></td><td><code>GPT-3.5 Turbo</code></td><td>同上</td></tr><tr><td><code>o1-preview</code></td><td><code>o1 Preview</code></td><td><code>o1-</code> → <code>o1 </code></td></tr><tr><td><code>o1-mini</code></td><td><code>o1 mini</code></td><td>小写</td></tr><tr><td><code>o3-mini</code></td><td><code>o3 mini</code></td><td>小写</td></tr><tr><td><code>claude-opus-4-6</code></td><td><code>Opus 4.6</code></td><td>原有 Claude 格式化保留</td></tr><tr><td><code>claude-sonnet-4</code></td><td><code>Sonnet 4</code></td><td>同上</td></tr><tr><td><code>claude-haiku-4-5</code></td><td><code>Haiku 4.5</code></td><td>同上</td></tr></tbody></table>
@@ -609,9 +609,9 @@
 <hr>
 <h2 id="4-差距分析-current-khy-os-vs-claude-code">4. 差距分析（Current khy-os vs Claude Code）<a class="anchor" href="#4-差距分析-current-khy-os-vs-claude-code" aria-label="锚点">#</a></h2>
 <h3 id="3-1-视觉差异矩阵">3.1 视觉差异矩阵<a class="anchor" href="#3-1-视觉差异矩阵" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>维度</th><th>当前 khy-os</th><th>Claude Code 目标</th><th>差距等级</th></tr></thead><tbody><tr><td><strong>配色方案</strong></td><td>青色accent + 奶油色用户框 + 多色状态栏</td><td>橙色品牌色 + 暖色终端背景 + 极简状态栏</td><td>🔴 高</td></tr><tr><td><strong>用户消息</strong></td><td>奶油色背景框 + <code>❯ </code> 标记</td><td>无背景框，纯文本，无标记</td><td>🔴 高</td></tr><tr><td><strong>助手消息</strong></td><td>时间线渲染 + 过程组折叠</td><td><code>●</code> 前缀 + StreamingMarkdown</td><td>🔴 高</td></tr><tr><td><strong>工具调用</strong></td><td><code>◆/✓/✗</code> + 过程组语义标题</td><td><code>◆/✓/✗</code> + 工具名 + 参数摘要</td><td>🟡 中</td></tr><tr><td><strong>状态栏</strong></td><td>2行（权限+徽章，模型+上下文+内存）</td><td>1行（模型│上下文│会话│周│费用）</td><td>🔴 高</td></tr><tr><td><strong>权限提示</strong></td><td>内联选择列表</td><td>&quot;Do you want to proceed?&quot; + Select 组件</td><td>🟡 中</td></tr><tr><td><strong>补全菜单</strong></td><td>圆角边框下拉</td><td>全屏模糊搜索 FuzzyPicker</td><td>🟡 中</td></tr><tr><td><strong>Spinner</strong></td><td>盲文帧 <code>⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏</code></td><td>终端原生 Spinner + AgentProgressLine</td><td>🟢 低</td></tr><tr><td><strong>Diff 渲染</strong></td><td>统一 diff + 行号</td><td>统一 diff + 行号 + 可折叠</td><td>🟢 低</td></tr><tr><td><strong>Logo/Header</strong></td><td>3色像素艺术苜蓿</td><td>LogoV2 + AnimatedAsterisk + AnimatedClawd</td><td>🟡 中</td></tr><tr><td><strong>输入框</strong></td><td>边框 + 多行 + 光标</td><td>ShimmeredInput + ModeIndicator + VoiceIndicator</td><td>🟡 中</td></tr><tr><td><strong>欢迎横幅</strong></td><td>像素艺术 + 功能列表</td><td>Logo + StatusNotices</td><td>🟡 中</td></tr></tbody></table>
+<table><thead><tr><th>维度</th><th>当前 khy-os</th><th>Claude Code 目标</th><th>差距等级</th></tr></thead><tbody><tr><td><strong>配色方案</strong></td><td>青色accent + 奶油色用户框 + 多色状态栏</td><td>橙色品牌色 + 暖色终端背景 + 极简状态栏</td><td>● 高</td></tr><tr><td><strong>用户消息</strong></td><td>奶油色背景框 + <code>❯ </code> 标记</td><td>无背景框，纯文本，无标记</td><td>● 高</td></tr><tr><td><strong>助手消息</strong></td><td>时间线渲染 + 过程组折叠</td><td><code>●</code> 前缀 + StreamingMarkdown</td><td>● 高</td></tr><tr><td><strong>工具调用</strong></td><td><code>◆/✓/✗</code> + 过程组语义标题</td><td><code>◆/✓/✗</code> + 工具名 + 参数摘要</td><td>◐ 中</td></tr><tr><td><strong>状态栏</strong></td><td>2行（权限+徽章，模型+上下文+内存）</td><td>1行（模型│上下文│会话│周│费用）</td><td>● 高</td></tr><tr><td><strong>权限提示</strong></td><td>内联选择列表</td><td>&quot;Do you want to proceed?&quot; + Select 组件</td><td>◐ 中</td></tr><tr><td><strong>补全菜单</strong></td><td>圆角边框下拉</td><td>全屏模糊搜索 FuzzyPicker</td><td>◐ 中</td></tr><tr><td><strong>Spinner</strong></td><td>盲文帧 <code>⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏</code></td><td>终端原生 Spinner + AgentProgressLine</td><td>○ 低</td></tr><tr><td><strong>Diff 渲染</strong></td><td>统一 diff + 行号</td><td>统一 diff + 行号 + 可折叠</td><td>○ 低</td></tr><tr><td><strong>Logo/Header</strong></td><td>3色像素艺术苜蓿</td><td>LogoV2 + AnimatedAsterisk + AnimatedClawd</td><td>◐ 中</td></tr><tr><td><strong>输入框</strong></td><td>边框 + 多行 + 光标</td><td>ShimmeredInput + ModeIndicator + VoiceIndicator</td><td>◐ 中</td></tr><tr><td><strong>欢迎横幅</strong></td><td>像素艺术 + 功能列表</td><td>Logo + StatusNotices</td><td>◐ 中</td></tr></tbody></table>
 <h3 id="3-2-交互差异矩阵">3.2 交互差异矩阵<a class="anchor" href="#3-2-交互差异矩阵" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>交互</th><th>当前 khy-os</th><th>Claude Code 目标</th><th>差距等级</th></tr></thead><tbody><tr><td><strong>Ctrl+O</strong></td><td>展开/折叠思考</td><td>切换 transcript 模式（完整历史视图）</td><td>🟡 中</td></tr><tr><td><strong>Ctrl+R</strong></td><td>历史搜索覆盖层</td><td>历史搜索（reverse-i-search 风格）</td><td>🟢 低</td></tr><tr><td><strong>Ctrl+C</strong></td><td>取消/退出</td><td>取消当前操作 / 双击退出</td><td>🟢 低</td></tr><tr><td><strong>Tab</strong></td><td>补全切换</td><td>权限提示中切换反馈输入模式</td><td>🟡 中</td></tr><tr><td><strong>↑/↓</strong></td><td>历史导航</td><td>历史导航 + 列表导航</td><td>🟢 低</td></tr><tr><td><strong>Enter</strong></td><td>提交</td><td>提交 / 确认选择</td><td>🟢 低</td></tr><tr><td><strong>Esc</strong></td><td>关闭覆盖层</td><td>取消当前操作 / 关闭覆盖层</td><td>🟢 低</td></tr></tbody></table>
+<table><thead><tr><th>交互</th><th>当前 khy-os</th><th>Claude Code 目标</th><th>差距等级</th></tr></thead><tbody><tr><td><strong>Ctrl+O</strong></td><td>展开/折叠思考</td><td>切换 transcript 模式（完整历史视图）</td><td>◐ 中</td></tr><tr><td><strong>Ctrl+R</strong></td><td>历史搜索覆盖层</td><td>历史搜索（reverse-i-search 风格）</td><td>○ 低</td></tr><tr><td><strong>Ctrl+C</strong></td><td>取消/退出</td><td>取消当前操作 / 双击退出</td><td>○ 低</td></tr><tr><td><strong>Tab</strong></td><td>补全切换</td><td>权限提示中切换反馈输入模式</td><td>◐ 中</td></tr><tr><td><strong>↑/↓</strong></td><td>历史导航</td><td>历史导航 + 列表导航</td><td>○ 低</td></tr><tr><td><strong>Enter</strong></td><td>提交</td><td>提交 / 确认选择</td><td>○ 低</td></tr><tr><td><strong>Esc</strong></td><td>关闭覆盖层</td><td>取消当前操作 / 关闭覆盖层</td><td>○ 低</td></tr></tbody></table>
 <h3 id="3-3-架构差异">3.3 架构差异<a class="anchor" href="#3-3-架构差异" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>方面</th><th>当前 khy-os</th><th>Claude Code</th><th>处理策略</th></tr></thead><tbody><tr><td><strong>状态管理</strong></td><td>React hooks + useQueryBridge (4181行)</td><td>AppState Context + Zustand</td><td>保留 khy 实现，仅改 UI 层</td></tr><tr><td><strong>消息流</strong></td><td>时间线交织（文本↔工具）</td><td>消息列表 + 流式占位符</td><td>保留 khy 实现，仅改渲染</td></tr><tr><td><strong>工具执行</strong></td><td>过程组合并 + 语义标签</td><td>独立工具卡片 + 展开/折叠</td><td>CC 模式下禁用过程组合并</td></tr><tr><td><strong>滚动</strong></td><td>4层防阶梯 + Static/Live 分区</td><td>VirtualMessageList 虚拟滚动</td><td>保留 khy 实现，仅改样式</td></tr></tbody></table>
 <hr>
@@ -643,23 +643,23 @@ khy</code></pre>
 <h3 id="5-1-1-右侧看板-right-sidebar-panel">5.1.1 右侧看板（Right Sidebar Panel）<a class="anchor" href="#5-1-1-右侧看板-right-sidebar-panel" aria-label="锚点">#</a></h3>
 <p>CC 模式下当终端宽度 ≥ 120 列时，自动启用<strong>右侧看板</strong>（类似 opencode 的侧栏），显示上下文信息：</p>
 <pre><code>┌─────────────────────────────────────────────┬──────────┐
-│ ✳ Khy                                       │ 📋 Context│
+│ ✳ Khy                                       │ Context│
 ├─────────────────────────────────────────────┼──────────┤
 │                                             │          │
-│ ● 分析结果文本...                            │ 📁 Files  │
+│ ● 分析结果文本...                            │ Files  │
 │                                             │ ├─src/   │
 │ ◆ Read(src/index.js)                        │ │ ├─index │
 │    ⎿ 1 │ import React from 'react'          │ │ └─utils │
 │    ⎿ 2 │ ...                                │ ├─pkg/   │
 │                                             │ └─tests/ │
 │ 请帮我分析这个文件                            │          │
-│                                             │ 🔧 Tools  │
+│                                             │ Tools  │
 │                                             │ ├─Read ✓ │
 │                                             │ ├─Write  │
 │                                             │ ├─Bash   │
 │                                             │ └─Grep   │
 │                                             │          │
-│                                             │ 📊 Stats  │
+│                                             │ Stats  │
 │                                             │ ├─Tokens  │
 │                                             │ │ 24k/128k│
 │                                             │ ├─Cost    │
@@ -671,10 +671,10 @@ khy</code></pre>
 <h3 id="5-1-2-右侧看板设计规范">5.1.2 右侧看板设计规范<a class="anchor" href="#5-1-2-右侧看板设计规范" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>元素</th><th>规范</th></tr></thead><tbody><tr><td><strong>触发条件</strong></td><td>终端宽度 ≥ 120 列时自动显示</td></tr><tr><td><strong>宽度</strong></td><td>固定 30 列（可通过 <code>KHY_CC_SIDEBAR_WIDTH</code> 调整）</td></tr><tr><td><strong>分割线</strong></td><td>紫蓝色 <code>#5769F7</code> 垂直线</td></tr><tr><td><strong>背景</strong></td><td>深色终端背景（与主区一致）</td></tr><tr><td><strong>内容区</strong></td><td>多个可折叠面板（Context、Files、Tools、Stats）</td></tr><tr><td><strong>标签页</strong></td><td>图标 + 文字标题，当前面板高亮</td></tr><tr><td><strong>折叠/展开</strong></td><td>点击面板标题或按 <code>Ctrl+B</code> 切换</td></tr></tbody></table>
 <h3 id="5-1-3-右侧看板面板内容">5.1.3 右侧看板面板内容<a class="anchor" href="#5-1-3-右侧看板面板内容" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>面板</th><th>图标</th><th>内容</th></tr></thead><tbody><tr><td><strong>Context</strong></td><td>📋</td><td>当前对话上下文摘要、最近文件、引用</td></tr><tr><td><strong>Files</strong></td><td>📁</td><td>当前工作目录文件树（可浏览）</td></tr><tr><td><strong>Tools</strong></td><td>🔧</td><td>可用工具列表及状态</td></tr><tr><td><strong>Stats</strong></td><td>📊</td><td>Token 使用量、费用、MCP 连接数</td></tr><tr><td><strong>MCP</strong></td><td>🔌</td><td>MCP 服务器列表及连接状态</td></tr><tr><td><strong>Plan</strong></td><td>📝</td><td>当前目标/计划进度（如有）</td></tr></tbody></table>
+<table><thead><tr><th>面板</th><th>图标</th><th>内容</th></tr></thead><tbody><tr><td><strong>Context</strong></td><td></td><td>当前对话上下文摘要、最近文件、引用</td></tr><tr><td><strong>Files</strong></td><td></td><td>当前工作目录文件树（可浏览）</td></tr><tr><td><strong>Tools</strong></td><td></td><td>可用工具列表及状态</td></tr><tr><td><strong>Stats</strong></td><td></td><td>Token 使用量、费用、MCP 连接数</td></tr><tr><td><strong>MCP</strong></td><td></td><td>MCP 服务器列表及连接状态</td></tr><tr><td><strong>Plan</strong></td><td></td><td>当前目标/计划进度（如有）</td></tr></tbody></table>
 <h3 id="5-1-4-右侧看板标签页导航">5.1.4 右侧看板标签页导航<a class="anchor" href="#5-1-4-右侧看板标签页导航" aria-label="锚点">#</a></h3>
 <pre><code>┌──────────────────────────┐
-│ 📋 │ 📁 │ 🔧 │ 📊 │ 🔌 │  ← 图标标签页
+│ │ │ │ │ │  ← 图标标签页
 ├──────────────────────────┤
 │                          │
 │   当前选中面板的内容       │
@@ -707,7 +707,7 @@ khy</code></pre>
   <span class="hljs-attr">successLight</span>: <span class="hljs-string">&#x27;#228B22&#x27;</span>,   <span class="hljs-comment">// 深绿色 — 亮色终端</span>
   <span class="hljs-attr">error</span>: <span class="hljs-string">&#x27;#F87171&#x27;</span>,          <span class="hljs-comment">// 亮红色 — 错误/失败 ✗</span>
   <span class="hljs-attr">errorLight</span>: <span class="hljs-string">&#x27;#DC3545&#x27;</span>,     <span class="hljs-comment">// 深红色 — 亮色终端</span>
-  <span class="hljs-attr">warning</span>: <span class="hljs-string">&#x27;#FBBF24&#x27;</span>,        <span class="hljs-comment">// 亮黄色 — 警告/进行中 ⏳</span>
+  <span class="hljs-attr">warning</span>: <span class="hljs-string">&#x27;#FBBF24&#x27;</span>,        <span class="hljs-comment">// 亮黄色 — 警告/进行中 …</span>
   <span class="hljs-attr">warningLight</span>: <span class="hljs-string">&#x27;#E6A817&#x27;</span>,   <span class="hljs-comment">// 深黄色 — 亮色终端</span>
   <span class="hljs-attr">info</span>: <span class="hljs-string">&#x27;#58A6FF&#x27;</span>,           <span class="hljs-comment">// 蓝色 — 信息/链接</span>
   
@@ -781,7 +781,7 @@ KHY_CC_TUI=1 khy
 │                                                                │
 │  &gt; 读取 CLAUDE.md 的内容                                        │  ← 用户消息（无背景框）
 │                                                                │
-│  🔧 Read                                          ← 粗体+青色  │  ← 工具调用
+│  Read                                          ← 粗体+青色  │  ← 工具调用
 │    file_path: &quot;D:\\Portable\\CLAUDE.md&quot;                        │
 │                                                                │
 │  ┌─ Read 结果 ──────────────────────────────────────────────┐  │  ← 工具结果块
@@ -866,7 +866,7 @@ KHY_CC_TUI=1 khy
   ✓ Edit(src/index.js)
      ⎿ [diff]</code></pre>
 <p><strong>目标 (CC 模式)</strong>：</p>
-<pre><code>🔧 Read                                          ← 粗体 + 青色 #00D4D4
+<pre><code>Read                                          ← 粗体 + 青色 #00D4D4
   file_path: &quot;D:\\Portable\\CLAUDE.md&quot;           ← 缩进 2 空格
 
 ┌─ Read 结果 ──────────────────────────────────────────────────┐
@@ -874,9 +874,9 @@ KHY_CC_TUI=1 khy
 │ ...（文件内容）                                               │
 └──────────────────────────────────────────────────────────────┘
 
-🔧 Bash
+Bash
   command: &quot;find src/ -type f -name '*.ts' | head -20&quot;
-  ⏳ 执行中...                                                ← spinner 动画
+  … 执行中...                                                ← spinner 动画
 
 ┌─ Bash 结果 ──────────────────────────────────────────────────┐
 │ src/index.ts                                                  │
@@ -885,12 +885,12 @@ KHY_CC_TUI=1 khy
 
   找到了 3 个 TypeScript 文件。让我读取...                       ← 继续输出</code></pre>
 <p><strong>工具调用状态指示</strong>：</p>
-<pre><code>🔧 Read               ← 调用时（青色，粗体）
-  ⏳ 执行中...         ← 执行中（黄色 spinner）
+<pre><code>Read               ← 调用时（青色，粗体）
+  … 执行中...         ← 执行中（黄色 spinner）
   ✓ 完成              ← 成功（绿色勾号）
   ✗ 失败              ← 失败（红色叉号）</code></pre>
 <h3 id="7-6-关键变更">7.6 关键变更<a class="anchor" href="#7-6-关键变更" aria-label="锚点">#</a></h3>
-<ol><li><strong>禁用过程组合并</strong>：CC 模式下每个工具调用独立渲染，不合并为「过程组」</li><li><strong>移除语义标签</strong>：不再显示「读取 · server.js · 3 个步骤」这种中文语义标题</li><li><strong>工具名样式</strong>：<code>🔧</code> emoji + 工具名，<strong>粗体 + 青色 <code>#00D4D4</code></strong></li><li><strong>参数展示</strong>：缩进 2 空格，JSON 格式展示</li><li><strong>结果块样式</strong>：使用 <code>┌─</code> / <code>└─</code> 边框包裹，灰色背景</li><li><strong>状态指示器</strong>：执行中=黄色 <code>⏳</code>，完成=绿色 <code>✓</code>，失败=红色 <code>✗</code></li><li><strong>思考折叠块</strong>：使用 <code>▸</code> 折叠箭头，可展开/折叠</li></ol>
+<ol><li><strong>禁用过程组合并</strong>：CC 模式下每个工具调用独立渲染，不合并为「过程组」</li><li><strong>移除语义标签</strong>：不再显示「读取 · server.js · 3 个步骤」这种中文语义标题</li><li><strong>工具名样式</strong>：`<code> emoji + 工具名，**粗体 + 青色 </code>#00D4D4`**</li><li><strong>参数展示</strong>：缩进 2 空格，JSON 格式展示</li><li><strong>结果块样式</strong>：使用 <code>┌─</code> / <code>└─</code> 边框包裹，灰色背景</li><li><strong>状态指示器</strong>：执行中=黄色 <code>…</code>，完成=绿色 <code>✓</code>，失败=红色 <code>✗</code></li><li><strong>思考折叠块</strong>：使用 <code>▸</code> 折叠箭头，可展开/折叠</li></ol>
 <h3 id="7-7-实施文件">7.7 实施文件<a class="anchor" href="#7-7-实施文件" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>文件</th><th>变更</th></tr></thead><tbody><tr><td><code>tui/ink-components/MessageBlock.js</code></td><td>CC 模式下用户消息无背景框</td></tr><tr><td><code>tui/ink-components/CcAssistantMessage.js</code></td><td><strong>新建</strong> — CC 风格助手消息（● 前缀）</td></tr><tr><td><code>tui/ink-components/CcToolCard.js</code></td><td><strong>新建</strong> — CC 风格工具卡片（独立，无过程组）</td></tr><tr><td><code>tui/ink-components/StreamingBlock.js</code></td><td>CC 模式下使用 ● 前缀 + marginTop=1</td></tr><tr><td><code>tui/ink-components/ToolLines.js</code></td><td>CC 模式下禁用过程组合并</td></tr><tr><td><code>tui/utils/ccToolFormat.js</code></td><td><strong>新建</strong> — 工具参数摘要格式化</td></tr></tbody></table>
 <h3 id="7-8-验证方法">7.8 验证方法<a class="anchor" href="#7-8-验证方法" aria-label="锚点">#</a></h3>
@@ -1060,7 +1060,7 @@ KHY_CC_TUI=1 khy
 <pre><code>⠋ 加载中...     ← 盲文帧 + 橙色（颜色变化，帧序列不变）</code></pre>
 <h3 id="10-3-logo-动画">10.3 Logo 动画<a class="anchor" href="#10-3-logo-动画" aria-label="锚点">#</a></h3>
 <p><strong>当前 (khy-os Legacy)</strong>：</p>
-<pre><code>🍀 khy-os     ← 静态像素艺术苜蓿</code></pre>
+<pre><code>khy-os     ← 静态像素艺术苜蓿</code></pre>
 <p><strong>目标 (CC 模式)</strong>：</p>
 <pre><code>✳ Khy          ← 动画星号 + Khy 品牌名</code></pre>
 <h3 id="10-4-工具进度">10.4 工具进度<a class="anchor" href="#10-4-工具进度" aria-label="锚点">#</a></h3>
@@ -1130,7 +1130,7 @@ KHY_CC_TUI=1 KHY_CC_TOOL_STYLE=0 khy  <span class="hljs-comment"># 保留过程�
 <h3 id="14-3-openai-协议支持">14.3 OpenAI 协议支持<a class="anchor" href="#14-3-openai-协议支持" aria-label="锚点">#</a></h3>
 <ul><li>[ ] 状态栏模型名：<code>gpt-4o</code> → <code>GPT-4o</code></li><li>[ ] 状态栏模型名：<code>gpt-4o-mini</code> → <code>GPT-4o mini</code></li><li>[ ] 状态栏模型名：<code>o1-preview</code> → <code>o1 Preview</code></li><li>[ ] 状态栏模型名：<code>o1-mini</code> → <code>o1 mini</code></li><li>[ ] 状态栏模型名：<code>o3-mini</code> → <code>o3 mini</code></li><li>[ ] 上下文窗口：OpenAI 模型使用正确的 token 上限</li><li>[ ] 费用计算：OpenAI 模型使用正确的 USD 定价</li><li>[ ] 模型选择器：OpenAI 模型显示友好名称</li><li>[ ] API Key 配置：<code>OPENAI_API_KEY</code> / <code>khy gateway config</code> 可用</li><li>[ ] 自定义端点：<code>OPENAI_API_ENDPOINT</code> 支持自托管</li></ul>
 <h3 id="14-4-右侧看板-最大化模式">14.4 右侧看板（最大化模式）<a class="anchor" href="#14-4-右侧看板-最大化模式" aria-label="锚点">#</a></h3>
-<ul><li>[ ] 终端宽度 ≥ 120 列时自动显示右侧看板</li><li>[ ] 看板宽度：30 列（可通过 <code>KHY_CC_SIDEBAR_WIDTH</code> 调整）</li><li>[ ] 分割线：紫蓝色 <code>#5769F7</code> 垂直线</li><li>[ ] 5 个面板：📋 Context / 📁 Files / 🔧 Tools / 📊 Stats / 🔌 MCP</li><li>[ ] 标签页导航：图标 + 高亮当前面板</li><li>[ ] <code>Ctrl+B</code> 切换看板显示/隐藏</li><li>[ ] <code>←→</code> 切换面板</li><li>[ ] Stats 面板：Token 进度条 + 费用 + MCP 连接数</li><li>[ ] Files 面板：当前目录文件树</li><li>[ ] MCP 面板：服务器连接状态列表</li></ul>
+<ul><li>[ ] 终端宽度 ≥ 120 列时自动显示右侧看板</li><li>[ ] 看板宽度：30 列（可通过 <code>KHY_CC_SIDEBAR_WIDTH</code> 调整）</li><li>[ ] 分割线：紫蓝色 <code>#5769F7</code> 垂直线</li><li>[ ] 5 个面板：Context / Files / Tools / Stats / MCP</li><li>[ ] 标签页导航：图标 + 高亮当前面板</li><li>[ ] <code>Ctrl+B</code> 切换看板显示/隐藏</li><li>[ ] <code>←→</code> 切换面板</li><li>[ ] Stats 面板：Token 进度条 + 费用 + MCP 连接数</li><li>[ ] Files 面板：当前目录文件树</li><li>[ ] MCP 面板：服务器连接状态列表</li></ul>
 <h3 id="14-5-帮助菜单覆盖层">14.5 帮助菜单覆盖层<a class="anchor" href="#14-5-帮助菜单覆盖层" aria-label="锚点">#</a></h3>
 <ul><li>[ ] <code>?</code> 键打开帮助菜单覆盖层</li><li>[ ] 标签页导航：Help / General / Commands / Custom commands</li><li>[ ] 当前标签高亮（橙色下划线）</li><li>[ ] 快捷键网格：2-3 列布局</li><li>[ ] 底部状态栏：版本 + MCP 状态 + 操作提示</li><li>[ ] <code>Esc</code> / <code>q</code> / <code>?</code> 关闭菜单</li><li>[ ] <code>←→</code> 切换标签页</li><li>[ ] 分割线颜色：紫蓝色 <code>#5769F7</code></li></ul>
 <h3 id="14-6-交互对齐">14.6 交互对齐<a class="anchor" href="#14-6-交互对齐" aria-label="锚点">#</a></h3>
@@ -1898,7 +1898,7 @@ KHY_CC_TUI=1 /model gpt-4o khy</code></pre>
  * 
  * 布局：
  *   ┌──────────────────────────┐
- *   │ 📋 │ 📁 │ 🔧 │ 📊 │ 🔌 │  ← 图标标签页
+ *   │ │ │ │ │ │  ← 图标标签页
  *   ├──────────────────────────┤
  *   │                          │
  *   │   当前选中面板的内容      │
@@ -1907,11 +1907,11 @@ KHY_CC_TUI=1 /model gpt-4o khy</code></pre>
  */</span>
 
 <span class="hljs-keyword">const</span> <span class="hljs-variable constant_">PANELS</span> = [
-  { <span class="hljs-attr">id</span>: <span class="hljs-string">&#x27;context&#x27;</span>, <span class="hljs-attr">icon</span>: <span class="hljs-string">&#x27;📋&#x27;</span>, <span class="hljs-attr">label</span>: <span class="hljs-string">&#x27;Context&#x27;</span>, <span class="hljs-title class_">Component</span>: <span class="hljs-title class_">CcSidebarContext</span> },
-  { <span class="hljs-attr">id</span>: <span class="hljs-string">&#x27;files&#x27;</span>, <span class="hljs-attr">icon</span>: <span class="hljs-string">&#x27;📁&#x27;</span>, <span class="hljs-attr">label</span>: <span class="hljs-string">&#x27;Files&#x27;</span>, <span class="hljs-title class_">Component</span>: <span class="hljs-title class_">CcSidebarFiles</span> },
-  { <span class="hljs-attr">id</span>: <span class="hljs-string">&#x27;tools&#x27;</span>, <span class="hljs-attr">icon</span>: <span class="hljs-string">&#x27;🔧&#x27;</span>, <span class="hljs-attr">label</span>: <span class="hljs-string">&#x27;Tools&#x27;</span>, <span class="hljs-title class_">Component</span>: <span class="hljs-title class_">CcSidebarTools</span> },
-  { <span class="hljs-attr">id</span>: <span class="hljs-string">&#x27;stats&#x27;</span>, <span class="hljs-attr">icon</span>: <span class="hljs-string">&#x27;📊&#x27;</span>, <span class="hljs-attr">label</span>: <span class="hljs-string">&#x27;Stats&#x27;</span>, <span class="hljs-title class_">Component</span>: <span class="hljs-title class_">CcSidebarStats</span> },
-  { <span class="hljs-attr">id</span>: <span class="hljs-string">&#x27;mcp&#x27;</span>, <span class="hljs-attr">icon</span>: <span class="hljs-string">&#x27;🔌&#x27;</span>, <span class="hljs-attr">label</span>: <span class="hljs-string">&#x27;MCP&#x27;</span>, <span class="hljs-title class_">Component</span>: <span class="hljs-title class_">CcSidebarMcp</span> },
+  { <span class="hljs-attr">id</span>: <span class="hljs-string">&#x27;context&#x27;</span>, <span class="hljs-attr">icon</span>: <span class="hljs-string">&#x27;&#x27;</span>, <span class="hljs-attr">label</span>: <span class="hljs-string">&#x27;Context&#x27;</span>, <span class="hljs-title class_">Component</span>: <span class="hljs-title class_">CcSidebarContext</span> },
+  { <span class="hljs-attr">id</span>: <span class="hljs-string">&#x27;files&#x27;</span>, <span class="hljs-attr">icon</span>: <span class="hljs-string">&#x27;&#x27;</span>, <span class="hljs-attr">label</span>: <span class="hljs-string">&#x27;Files&#x27;</span>, <span class="hljs-title class_">Component</span>: <span class="hljs-title class_">CcSidebarFiles</span> },
+  { <span class="hljs-attr">id</span>: <span class="hljs-string">&#x27;tools&#x27;</span>, <span class="hljs-attr">icon</span>: <span class="hljs-string">&#x27;&#x27;</span>, <span class="hljs-attr">label</span>: <span class="hljs-string">&#x27;Tools&#x27;</span>, <span class="hljs-title class_">Component</span>: <span class="hljs-title class_">CcSidebarTools</span> },
+  { <span class="hljs-attr">id</span>: <span class="hljs-string">&#x27;stats&#x27;</span>, <span class="hljs-attr">icon</span>: <span class="hljs-string">&#x27;&#x27;</span>, <span class="hljs-attr">label</span>: <span class="hljs-string">&#x27;Stats&#x27;</span>, <span class="hljs-title class_">Component</span>: <span class="hljs-title class_">CcSidebarStats</span> },
+  { <span class="hljs-attr">id</span>: <span class="hljs-string">&#x27;mcp&#x27;</span>, <span class="hljs-attr">icon</span>: <span class="hljs-string">&#x27;&#x27;</span>, <span class="hljs-attr">label</span>: <span class="hljs-string">&#x27;MCP&#x27;</span>, <span class="hljs-title class_">Component</span>: <span class="hljs-title class_">CcSidebarMcp</span> },
 ];
 
 <span class="hljs-keyword">function</span> <span class="hljs-title function_">CcSidebarPanel</span>(<span class="hljs-params">{ width = <span class="hljs-number">30</span>, onClose }</span>) {

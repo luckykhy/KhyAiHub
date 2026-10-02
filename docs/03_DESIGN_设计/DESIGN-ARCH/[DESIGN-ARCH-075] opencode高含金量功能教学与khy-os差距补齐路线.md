@@ -18,18 +18,18 @@
 
 | # | 功能 | 一句话价值 | khy-os 对应实现(真源) | 差距 |
 |---|---|---|---|---|
-| 1 | **References 跨目录引用** | 把工作区外的文档库/共享库/其他仓库以 `@alias` 注入上下文 | **未发现对应实现** | 🔴 真差距 |
-| 2 | **LSP 自动诊断反馈循环** | 自动拉起语言服务器,把诊断喂回 agent 循环 | `tools/LSPTool/index.js`(手动查询式) | 🟡 部分 |
-| 3 | **Permissions auto 模式 + 目录边界** | 全局 `--auto` 自动批准 + `external_directory` 边界 | `permissionStore.js`(normal/acceptEdits/auto/yolo)、`approvalLedger.js` | 🟡 部分 |
-| 4 | **Agent 体系(主/子代理、Plan 模式)** | 专业化代理 + 只读计划模式 | `agents/built-in/`(17 个)、`subAgentOrchestrator.js`、`EnterPlanMode/ExitPlanMode` | ✅ 已覆盖 |
-| 5 | **Skills 按需加载** | SKILL.md 定义可复用行为,on-demand 加载 | `SkillTool`、`skillRegistry`、`DiscoverSkillsTool`、`ccSkillBridge` | ✅ 已覆盖 |
-| 6 | **MCP(本地+远程+OAuth)** | 外接工具生态,含 Streamable HTTP 与 OAuth | `services/mcp/` 全套 + `McpAuthTool` + governance | ✅ 已覆盖 |
-| 7 | **Commands 自定义斜杠命令** | `/命令` + `$ARGUMENTS`/`!shell`/`@file` 模板 | `commands/ccCommandBridge.js`、`repl/ccUserCommands.js` | ✅ 已覆盖 |
-| 8 | **Custom Tools** | 用户自建工具,与内置工具并列 | `CreateToolTool` + 约定式工具发现(`tools/index.js`) | ✅ 已覆盖 |
-| 9 | **上下文压缩** | 长会话自动摘要续跑 | `services/contextCompressor.js`(智能切点) | ✅ 已覆盖 |
-| 10 | **/undo /redo 可逆** | 撤销/重做消息与文件改动 | `handlers/rollback.js`(`rewind`/`undo`) | ✅ 已覆盖 |
-| 11 | **Rules 分层指令(AGENTS.md)** | 项目/全局/CC 兼容分层规则 | `services/instructionFileService.js`、`metadataPointers.js` | ✅ 已覆盖(本地) |
-| 12 | **会话分享(/share)** | 生成可分享链接 | `/share` 仅导出本地 markdown | ⚪ 产品决策差异 |
+| 1 | **References 跨目录引用** | 把工作区外的文档库/共享库/其他仓库以 `@alias` 注入上下文 | **未发现对应实现** | ● 真差距 |
+| 2 | **LSP 自动诊断反馈循环** | 自动拉起语言服务器,把诊断喂回 agent 循环 | `tools/LSPTool/index.js`(手动查询式) | ◐ 部分 |
+| 3 | **Permissions auto 模式 + 目录边界** | 全局 `--auto` 自动批准 + `external_directory` 边界 | `permissionStore.js`(normal/acceptEdits/auto/yolo)、`approvalLedger.js` | ◐ 部分 |
+| 4 | **Agent 体系(主/子代理、Plan 模式)** | 专业化代理 + 只读计划模式 | `agents/built-in/`(17 个)、`subAgentOrchestrator.js`、`EnterPlanMode/ExitPlanMode` | ✓ 已覆盖 |
+| 5 | **Skills 按需加载** | SKILL.md 定义可复用行为,on-demand 加载 | `SkillTool`、`skillRegistry`、`DiscoverSkillsTool`、`ccSkillBridge` | ✓ 已覆盖 |
+| 6 | **MCP(本地+远程+OAuth)** | 外接工具生态,含 Streamable HTTP 与 OAuth | `services/mcp/` 全套 + `McpAuthTool` + governance | ✓ 已覆盖 |
+| 7 | **Commands 自定义斜杠命令** | `/命令` + `$ARGUMENTS`/`!shell`/`@file` 模板 | `commands/ccCommandBridge.js`、`repl/ccUserCommands.js` | ✓ 已覆盖 |
+| 8 | **Custom Tools** | 用户自建工具,与内置工具并列 | `CreateToolTool` + 约定式工具发现(`tools/index.js`) | ✓ 已覆盖 |
+| 9 | **上下文压缩** | 长会话自动摘要续跑 | `services/contextCompressor.js`(智能切点) | ✓ 已覆盖 |
+| 10 | **/undo /redo 可逆** | 撤销/重做消息与文件改动 | `handlers/rollback.js`(`rewind`/`undo`) | ✓ 已覆盖 |
+| 11 | **Rules 分层指令(AGENTS.md)** | 项目/全局/CC 兼容分层规则 | `services/instructionFileService.js`、`metadataPointers.js` | ✓ 已覆盖(本地) |
+| 12 | **会话分享(/share)** | 生成可分享链接 | `/share` 仅导出本地 markdown | ○ 产品决策差异 |
 
 > 结论:khy-os 已覆盖 opencode 约 80% 核心能力。**值得教学并补齐的是第 1、2、3 项**;其余为「已覆盖,可作教学对照」。
 
@@ -37,7 +37,7 @@
 
 ## 1. 差距详解
 
-### 1.1 🔴 References 跨目录引用(opencode 独有,khy-os 缺失)
+### 1.1 ● References 跨目录引用(opencode 独有,khy-os 缺失)
 
 **opencode 是什么**:在 `opencode.json` 里用 `references` 声明工作区外的本地目录(`path`)或 Git 仓库(`repository`),
 带 `description` 注入 agent 系统上下文、`hidden` 控制 `@` 补全可见性。使用方式:
@@ -57,7 +57,7 @@
 
 **验收**:配置两条引用(本地目录 + Git 仓库)后,`@alias` 可补全并注入内容;agent 上下文可见描述;越权写被 permission gate 拦截。
 
-### 1.2 🟡 LSP 自动诊断反馈循环(opencode 为自动,khy-os 为手动)
+### 1.2 ◐ LSP 自动诊断反馈循环(opencode 为自动,khy-os 为手动)
 
 **opencode 是什么**:按文件扩展名自动发现并拉起语言服务器(typescript/pyright/eslint/vue/rust 等 30+),
 把 `diagnostics` 作为反馈喂给 agent,自动修错。`lsp` 配置项控制启用/禁用/自定义 server + `initialization` 选项。
@@ -75,7 +75,7 @@
 
 **验收**:开启后,改动一个含类型错误的 TS 文件,agent 循环内自动收到该文件 diagnostics 并可据此修复。
 
-### 1.3 🟡 Permissions auto 模式 + 外部目录边界
+### 1.3 ◐ Permissions auto 模式 + 外部目录边界
 
 **opencode 是什么**:
 - `opencode --auto` 或运行时切换「auto-approve」:未显式 deny 的请求自动批准;`deny` 仍强制生效。

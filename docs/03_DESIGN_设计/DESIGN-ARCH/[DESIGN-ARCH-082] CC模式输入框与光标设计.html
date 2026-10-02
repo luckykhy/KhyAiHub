@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -45,9 +45,9 @@
 
 ! npm run build                                  ← Shell 模式（! 前缀）
 
-🎤 Listening...                                  ← Voice 模式</code></pre>
+Listening...                                  ← Voice 模式</code></pre>
 <h3 id="1-2-关键差异-khy-os-vs-claude-code">1.2 关键差异：khy-os vs Claude Code<a class="anchor" href="#1-2-关键差异-khy-os-vs-claude-code" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>特性</th><th>Claude Code</th><th>Khy CC 模式</th><th>处理方式</th></tr></thead><tbody><tr><td><strong>边框</strong></td><td>无边框</td><td>无边框（对齐 CC）</td><td>去除现有边框</td></tr><tr><td><strong>提示符</strong></td><td><code>&gt; </code></td><td><code>&gt; </code>（对齐 CC）</td><td>统一为 <code>&gt; </code></td></tr><tr><td><strong>多行</strong></td><td>Shift+Enter</td><td>Shift+Enter（保留）</td><td>保留现有实现</td></tr><tr><td><strong>Shell 模式</strong></td><td>无</td><td><code>!</code> 前缀</td><td>保留 khy 特色</td></tr><tr><td><strong>Voice 模式</strong></td><td>无</td><td><code>🎤</code> 前缀</td><td>保留 khy 特色</td></tr><tr><td><strong>Vim 模式</strong></td><td>无</td><td>NORMAL/INSERT 指示</td><td>保留 khy 特色</td></tr><tr><td><strong>占位符</strong></td><td>灰色文字</td><td>灰色文字（对齐 CC）</td><td>统一风格</td></tr></tbody></table>
+<table><thead><tr><th>特性</th><th>Claude Code</th><th>Khy CC 模式</th><th>处理方式</th></tr></thead><tbody><tr><td><strong>边框</strong></td><td>无边框</td><td>无边框（对齐 CC）</td><td>去除现有边框</td></tr><tr><td><strong>提示符</strong></td><td><code>&gt; </code></td><td><code>&gt; </code>（对齐 CC）</td><td>统一为 <code>&gt; </code></td></tr><tr><td><strong>多行</strong></td><td>Shift+Enter</td><td>Shift+Enter（保留）</td><td>保留现有实现</td></tr><tr><td><strong>Shell 模式</strong></td><td>无</td><td><code>!</code> 前缀</td><td>保留 khy 特色</td></tr><tr><td><strong>Voice 模式</strong></td><td>无</td><td>`` 前缀</td><td>保留 khy 特色</td></tr><tr><td><strong>Vim 模式</strong></td><td>无</td><td>NORMAL/INSERT 指示</td><td>保留 khy 特色</td></tr><tr><td><strong>占位符</strong></td><td>灰色文字</td><td>灰色文字（对齐 CC）</td><td>统一风格</td></tr></tbody></table>
 <h3 id="1-3-布局规范">1.3 布局规范<a class="anchor" href="#1-3-布局规范" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>属性</th><th>值</th><th>说明</th></tr></thead><tbody><tr><td><strong>最小高度</strong></td><td>1 行</td><td>绝对值</td></tr><tr><td><strong>最大高度</strong></td><td><code>min(10, rows * 0.3)</code></td><td>相对终端高度</td></tr><tr><td><strong>宽度</strong></td><td><code>cols</code>（全宽）</td><td>无边框，占满可用宽度</td></tr><tr><td><strong>提示符宽度</strong></td><td>2 字符</td><td><code>&gt; </code> 或 <code>  </code>（续行）</td></tr><tr><td><strong>内边距</strong></td><td>0</td><td>无额外内边距</td></tr><tr><td><strong>边框</strong></td><td>无</td><td>对齐 CC 极简风格</td></tr></tbody></table>
 <hr>
@@ -136,7 +136,7 @@
 
 [SHELL] ! npm run build                ← Shell 模式
 
-[VOICE] 🎤 Listening...                ← Voice 模式</code></pre>
+[VOICE] Listening...                ← Voice 模式</code></pre>
 <h3 id="3-2-模式切换">3.2 模式切换<a class="anchor" href="#3-2-模式切换" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>快捷键</th><th>从</th><th>到</th><th>说明</th></tr></thead><tbody><tr><td><code>i</code></td><td>NORMAL</td><td>INSERT</td><td>Vim 标准</td></tr><tr><td><code>Esc</code></td><td>INSERT</td><td>NORMAL</td><td>Vim 标准</td></tr><tr><td><code>v</code></td><td>任意</td><td>VOICE</td><td>语音输入（Win+H）</td></tr><tr><td><code>!</code> + 输入</td><td>任意</td><td>Shell</td><td>命令执行</td></tr><tr><td><code>Enter</code></td><td>Shell</td><td>默认</td><td>执行后返回</td></tr></tbody></table>
 <h3 id="3-3-模式状态机">3.3 模式状态机<a class="anchor" href="#3-3-模式状态机" aria-label="锚点">#</a></h3>
@@ -251,7 +251,7 @@ interface <span class="hljs-title class_">CcPromptInputProps</span> {
 <table><thead><tr><th>约束</th><th>值</th><th>说明</th></tr></thead><tbody><tr><td><strong>输入延迟</strong></td><td>&lt; 16ms</td><td>按键到屏幕响应</td></tr><tr><td><strong>光标跟随</strong></td><td>无跳跃</td><td>光标位置与输入偏移同步</td></tr><tr><td><strong>多行渲染</strong></td><td>O(可见行)</td><td>仅渲染可见区域</td></tr><tr><td><strong>内存</strong></td><td>O(输入长度)</td><td>不缓存历史帧</td></tr></tbody></table>
 <hr>
 <h2 id="8-验收标准">8. 验收标准<a class="anchor" href="#8-验收标准" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>场景</th><th>预期</th></tr></thead><tbody><tr><td>空输入</td><td>显示灰色占位符 <code>Send a message...</code></td></tr><tr><td>单行输入</td><td>显示 <code>&gt; </code> 前缀 + 内容</td></tr><tr><td>多行输入</td><td>续行显示 <code>  </code> 前缀，对齐</td></tr><tr><td>Vim INSERT</td><td>绿色竖线光标 <code>│</code></td></tr><tr><td>Vim NORMAL</td><td>绿色方块光标 <code>█</code>，常亮</td></tr><tr><td>Shell 模式</td><td><code>!</code> 前缀 + 黄色光标</td></tr><tr><td>Voice 模式</td><td><code>🎤</code> 前缀 + 红色闪烁光标</td></tr><tr><td>输入中</td><td>光标跟随输入位置，无跳跃</td></tr><tr><td>长输入</td><td>高度窗口化，显示省略标记</td></tr><tr><td>粘贴多行</td><td>自动分割，保留换行</td></tr></tbody></table>
+<table><thead><tr><th>场景</th><th>预期</th></tr></thead><tbody><tr><td>空输入</td><td>显示灰色占位符 <code>Send a message...</code></td></tr><tr><td>单行输入</td><td>显示 <code>&gt; </code> 前缀 + 内容</td></tr><tr><td>多行输入</td><td>续行显示 <code>  </code> 前缀，对齐</td></tr><tr><td>Vim INSERT</td><td>绿色竖线光标 <code>│</code></td></tr><tr><td>Vim NORMAL</td><td>绿色方块光标 <code>█</code>，常亮</td></tr><tr><td>Shell 模式</td><td><code>!</code> 前缀 + 黄色光标</td></tr><tr><td>Voice 模式</td><td>`` 前缀 + 红色闪烁光标</td></tr><tr><td>输入中</td><td>光标跟随输入位置，无跳跃</td></tr><tr><td>长输入</td><td>高度窗口化，显示省略标记</td></tr><tr><td>粘贴多行</td><td>自动分割，保留换行</td></tr></tbody></table>
 <hr>
 <blockquote><p><strong>文档状态</strong>：Draft — 待实施<br><strong>创建日期</strong>：2026-09-09<br><strong>依赖</strong>：[DESIGN-ARCH-081] 主设计规范</p></blockquote>
       </article>

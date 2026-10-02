@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -37,10 +37,10 @@
 <h3 id="1-1-注意力信号强度排序">1.1 注意力信号强度排序<a class="anchor" href="#1-1-注意力信号强度排序" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>强度</th><th>信号</th><th>使用场景</th></tr></thead><tbody><tr><td><strong>1（最强）</strong></td><td>边框颜色变化</td><td>焦点面板切换</td></tr><tr><td><strong>2</strong></td><td>反显（reverse video）</td><td>当前选中行</td></tr><tr><td><strong>3</strong></td><td>粗体 + 强调色</td><td>标题、重要信息</td></tr><tr><td><strong>4</strong></td><td>符号前缀 <code>▸</code> <code>●</code> <code>◆</code></td><td>状态指示</td></tr><tr><td><strong>5</strong></td><td>颜色（绿/红/黄）</td><td>状态语义</td></tr><tr><td><strong>6（最弱）</strong></td><td>缩进 + 竖线 <code>│</code></td><td>层级关系</td></tr></tbody></table>
 <h3 id="1-2-组合使用规则">1.2 组合使用规则<a class="anchor" href="#1-2-组合使用规则" aria-label="锚点">#</a></h3>
-<pre><code>❌ 禁止：同时使用 4+ 个信号表示同一状态
-✅ 正确：边框颜色(1) + 反显(2) = 焦点面板
-✅ 正确：符号(4) + 颜色(5) = 状态指示
-✅ 正确：粗体(3) + 颜色(5) = 重要信息</code></pre>
+<pre><code>✗ 禁止：同时使用 4+ 个信号表示同一状态
+✓ 正确：边框颜色(1) + 反显(2) = 焦点面板
+✓ 正确：符号(4) + 颜色(5) = 状态指示
+✓ 正确：粗体(3) + 颜色(5) = 重要信息</code></pre>
 <hr>
 <h2 id="2-焦点管理">2. 焦点管理<a class="anchor" href="#2-焦点管理" aria-label="锚点">#</a></h2>
 <h3 id="2-1-焦点指示器">2.1 焦点指示器<a class="anchor" href="#2-1-焦点指示器" aria-label="锚点">#</a></h3>
@@ -153,7 +153,7 @@
 <h4 id="4-1-1-错误横幅">4.1.1 错误横幅<a class="anchor" href="#4-1-1-错误横幅" aria-label="锚点">#</a></h4>
 <pre><code>╔═ 错误 ════════════════════════════════════════════════╗
 ║                                                        ║
-║  ❌ 工具执行失败                                        ║
+║  ✗ 工具执行失败                                        ║
 ║                                                        ║
 ║  [Read 错误] 文件不存在：D:\Portable\nonexistent.txt    ║
 ║                                                        ║
@@ -164,7 +164,7 @@
 ║  Esc to dismiss                                         ║
 ╚════════════════════════════════════════════════════════╝</code></pre>
 <p><strong>设计规范</strong>：</p>
-<table><thead><tr><th>类型</th><th>边框颜色</th><th>图标</th><th>背景</th></tr></thead><tbody><tr><td><strong>错误</strong></td><td>红色 <code>#F87171</code></td><td><code>❌</code></td><td>深红 <code>#3D0F0F</code></td></tr><tr><td><strong>警告</strong></td><td>黄色 <code>#FBBF24</code></td><td><code>⚠️</code></td><td>深黄 <code>#3D300F</code></td></tr><tr><td><strong>信息</strong></td><td>蓝色 <code>#58A6FF</code></td><td><code>ℹ️</code></td><td>深蓝 <code>#0F1A3D</code></td></tr><tr><td><strong>成功</strong></td><td>绿色 <code>#4ADE80</code></td><td><code>✅</code></td><td>深绿 <code>#0F3D1A</code></td></tr></tbody></table>
+<table><thead><tr><th>类型</th><th>边框颜色</th><th>图标</th><th>背景</th></tr></thead><tbody><tr><td><strong>错误</strong></td><td>红色 <code>#F87171</code></td><td><code>✗</code></td><td>深红 <code>#3D0F0F</code></td></tr><tr><td><strong>警告</strong></td><td>黄色 <code>#FBBF24</code></td><td><code>⚠</code></td><td>深黄 <code>#3D300F</code></td></tr><tr><td><strong>信息</strong></td><td>蓝色 <code>#58A6FF</code></td><td><code>ℹ</code></td><td>深蓝 <code>#0F1A3D</code></td></tr><tr><td><strong>成功</strong></td><td>绿色 <code>#4ADE80</code></td><td><code>✓</code></td><td>深绿 <code>#0F3D1A</code></td></tr></tbody></table>
 <h3 id="4-2-加载状态">4.2 加载状态<a class="anchor" href="#4-2-加载状态" aria-label="锚点">#</a></h3>
 <h4 id="4-2-1-spinner-消息">4.2.1 Spinner + 消息<a class="anchor" href="#4-2-1-spinner-消息" aria-label="锚点">#</a></h4>
 <pre><code>⠋ AI is thinking...                                  ← 旋转 spinner + 消息</code></pre>
@@ -177,7 +177,7 @@
 <hr>
 <h2 id="5-鼠标支持">5. 鼠标支持<a class="anchor" href="#5-鼠标支持" aria-label="锚点">#</a></h2>
 <h3 id="5-1-支持的操作">5.1 支持的操作<a class="anchor" href="#5-1-支持的操作" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>操作</th><th>支持</th><th>说明</th></tr></thead><tbody><tr><td><strong>点击面板聚焦</strong></td><td>✅</td><td>增强，非必需</td></tr><tr><td><strong>点击标签切换</strong></td><td>✅</td><td>增强，非必需</td></tr><tr><td><strong>滚动列表</strong></td><td>✅</td><td>滚轮支持</td></tr><tr><td><strong>点击按钮</strong></td><td>✅</td><td>表单按钮</td></tr><tr><td><strong>拖拽调整</strong></td><td>❌</td><td>复杂度高，暂不支持</td></tr></tbody></table>
+<table><thead><tr><th>操作</th><th>支持</th><th>说明</th></tr></thead><tbody><tr><td><strong>点击面板聚焦</strong></td><td>✓</td><td>增强，非必需</td></tr><tr><td><strong>点击标签切换</strong></td><td>✓</td><td>增强，非必需</td></tr><tr><td><strong>滚动列表</strong></td><td>✓</td><td>滚轮支持</td></tr><tr><td><strong>点击按钮</strong></td><td>✓</td><td>表单按钮</td></tr><tr><td><strong>拖拽调整</strong></td><td>✗</td><td>复杂度高，暂不支持</td></tr></tbody></table>
 <h3 id="5-2-鼠标协议">5.2 鼠标协议<a class="anchor" href="#5-2-鼠标协议" aria-label="锚点">#</a></h3>
 <pre><code class="language-javascript"><span class="hljs-comment">// 启用鼠标支持</span>
 process.<span class="hljs-property">stdout</span>.<span class="hljs-title function_">write</span>(<span class="hljs-string">&#x27;\x1B[?1000h&#x27;</span>);  <span class="hljs-comment">// 启用鼠标跟踪</span>

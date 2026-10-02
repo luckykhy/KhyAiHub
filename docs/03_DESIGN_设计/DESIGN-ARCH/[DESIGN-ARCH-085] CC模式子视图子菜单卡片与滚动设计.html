@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -166,7 +166,7 @@
 <hr>
 <h2 id="3-卡片设计">3. 卡片设计<a class="anchor" href="#3-卡片设计" aria-label="锚点">#</a></h2>
 <h3 id="3-1-工具调用卡片">3.1 工具调用卡片<a class="anchor" href="#3-1-工具调用卡片" aria-label="锚点">#</a></h3>
-<pre><code>┌─ 🔧 Read ──────────────────────────────────────────────┐
+<pre><code>┌─ Read ──────────────────────────────────────────────┐
 │ file_path: src/index.ts                                │
 │                                                        │
 │ ▸ 5 lines                                              │
@@ -174,7 +174,7 @@
 │ Status: ✓ done                                         │
 └────────────────────────────────────────────────────────┘
 
-┌─ 🔧 Read ──────────────────────────────────────────────┐
+┌─ Read ──────────────────────────────────────────────┐
 │ file_path: src/index.ts                                │
 │                                                        │
 │ ▾ 结果:                                                │
@@ -187,7 +187,7 @@
 │ Status: ✓ done                                         │
 └────────────────────────────────────────────────────────┘</code></pre>
 <h3 id="3-2-信息卡片">3.2 信息卡片<a class="anchor" href="#3-2-信息卡片" aria-label="锚点">#</a></h3>
-<pre><code>┌─ 📊 Session Stats ─────────────────────────────────────┐
+<pre><code>┌─ Session Stats ─────────────────────────────────────┐
 │                                                        │
 │  Tokens:  12,456 / 200,000 (6%)                        │
 │  Cost:    $0.42                                        │
@@ -256,11 +256,11 @@
 | Ctrl+C         | 中断操作           | —                      |
 | Ctrl+Shift+C   | 复制到剪贴板       | copied                 |</code></pre>
 <h5 id="③-差距-重要-三个键在代码中不存在">③ 差距（重要：<strong>三个键在代码中不存在</strong>）<a class="anchor" href="#③-差距-重要-三个键在代码中不存在" aria-label="锚点">#</a></h5>
-<pre><code>❌ `c`             → 全仓无此绑定
-❌ `C`             → 全仓无此绑定
-❌ `Ctrl+Shift+C`  → 全仓无此绑定（且终端普遍不上报带 Shift 的 Ctrl 组合，
+<pre><code>✗ `c`             → 全仓无此绑定
+✗ `C`             → 全仓无此绑定
+✗ `Ctrl+Shift+C`  → 全仓无此绑定（且终端普遍不上报带 Shift 的 Ctrl 组合，
                       ink 的 key 对象也拿不到可靠判据 —— 草案这条在终端层就不成立）
-✅ `Ctrl+Y`        → 实现采用的键（草案未提）</code></pre>
+✓ `Ctrl+Y`        → 实现采用的键（草案未提）</code></pre>
 <p>⇒ <strong>草案的键位表不可作为实施依据</strong>。若要让「复制选中内容」成立，</p>
 <p>真正缺的是 §4.2.4 说的<strong>消息区选择消费者</strong>（见 <code>[DESIGN-ARCH-124]</code>），</p>
 <p>不是补三个键绑定。</p>
@@ -307,7 +307,7 @@
 <p>这正是 <code>[DESIGN-ARCH-124]</code> 要补的那个洞。</p>
 <h4 id="4-2-4-消息区复制-唯一的结构性缺口">4.2.4 消息区复制：唯一的结构性缺口<a class="anchor" href="#4-2-4-消息区复制-唯一的结构性缺口" aria-label="锚点">#</a></h4>
 <p><strong>CC 模式下，鼠标拖选复制不可用的根因</strong>（<code>[DESIGN-ARCH-124]</code> §1 逐层实证）：</p>
-<table><thead><tr><th>层</th><th>状态</th></tr></thead><tbody><tr><td>进程级鼠标层（<code>tui/app.js</code> 开 1002）</td><td>✅ 已在收 SGR 事件</td></tr><tr><td>事件分发（<code>mouseButtons.js</code> 的 <code>onSelectEvent</code>）</td><td>✅ 通道完整</td></tr><tr><td>选区算法（<code>selection.js</code>）</td><td>✅ 纯叶子，27/27 绿</td></tr><tr><td>反色渲染（<code>Viewport.js</code> 的 <code>selection</code> prop）</td><td>✅ 通用，未传时逐字节不变</td></tr><tr><td>剪贴板出口（<code>ccClipboard.js</code>）</td><td>✅ 本节 4.2.2 已实测可用</td></tr><tr><td><strong>消费者（<code>CcApp.js</code>）</strong></td><td>❌ <strong>零命中</strong></td></tr></tbody></table>
+<table><thead><tr><th>层</th><th>状态</th></tr></thead><tbody><tr><td>进程级鼠标层（<code>tui/app.js</code> 开 1002）</td><td>✓ 已在收 SGR 事件</td></tr><tr><td>事件分发（<code>mouseButtons.js</code> 的 <code>onSelectEvent</code>）</td><td>✓ 通道完整</td></tr><tr><td>选区算法（<code>selection.js</code>）</td><td>✓ 纯叶子，27/27 绿</td></tr><tr><td>反色渲染（<code>Viewport.js</code> 的 <code>selection</code> prop）</td><td>✓ 通用，未传时逐字节不变</td></tr><tr><td>剪贴板出口（<code>ccClipboard.js</code>）</td><td>✓ 本节 4.2.2 已实测可用</td></tr><tr><td><strong>消费者（<code>CcApp.js</code>）</strong></td><td>✗ <strong>零命中</strong></td></tr></tbody></table>
 <p>⇒ 前 5 层全部就绪且实测通过，<strong>断点只在最后一层</strong>：CC 消息区没有消费鼠标事件、把</p>
 <p>消息树投影成 <code>lines[]</code> 的组件。补齐方案见 <strong><code>[DESIGN-ARCH-124]</code> §2 方案 A</strong></p>
 <p>（投影成 <code>lines[]</code> 喂给现成的 <code>Viewport</code>，复用 legacy 已验证的路径；<strong>Legacy 路径一行不改</strong>）。</p>
@@ -494,7 +494,7 @@
 <h3 id="7-1-已成-可用现状验收">7.1 已成（可用现状验收）<a class="anchor" href="#7-1-已成-可用现状验收" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>场景</th><th>预期</th><th>验收方式</th></tr></thead><tbody><tr><td>Agent 列表</td><td>显示所有 Agent 状态，数字键跳转</td><td>人工</td></tr><tr><td>Agent 详情</td><td>分屏显示详情和日志</td><td>人工</td></tr><tr><td>命令面板</td><td><code>Ctrl+P</code> 打开，实时过滤</td><td>人工</td></tr><tr><td>子菜单</td><td>嵌套导航，<code>Esc</code> 返回</td><td>人工</td></tr><tr><td>工具卡片</td><td>可折叠，状态清晰</td><td>人工</td></tr><tr><td>信息卡片</td><td>数据对齐，易读</td><td>人工</td></tr><tr><td>转录滚动</td><td>覆盖层内 <code>↑/↓</code> 单条、<code>PgUp/PgDn</code> 半页、<code>g/G</code> 跳顶底</td><td><code>tests/cli/tui/scrollActions.test.js</code> + 人工</td></tr><tr><td>主区滚动</td><td>鼠标滚轮滚动，边界钳制正确</td><td>人工</td></tr><tr><td>复制（最近回复）</td><td><code>Ctrl+Y</code> 复制最近的助手回复；成功/失败<strong>均有回执</strong>，绝不假装成功</td><td>人工</td></tr><tr><td>复制（输入框）</td><td>vim VISUAL 下 <code>y</code> yank 并双写系统剪贴板（有 Toast）；<code>d</code>/<code>x</code> 删除选中</td><td>人工</td></tr><tr><td>剪贴板通道</td><td>native 先行；非 TTY 时 OSC 52 兜底；tmux 下 DCS 穿透</td><td><code>tests/cli/tui/ccClipboard*.test.js</code></td></tr><tr><td>历史</td><td><code>Ctrl+R</code> 搜索输入历史</td><td>人工</td></tr><tr><td>Resume</td><td>完成后显示摘要，<code>Enter</code> 继续</td><td>人工</td></tr></tbody></table>
 <h3 id="7-2-未成-当前不满足-勿据此判缺陷">7.2 未成（<strong>当前不满足，勿据此判缺陷</strong>）<a class="anchor" href="#7-2-未成-当前不满足-勿据此判缺陷" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>场景</th><th>现状</th><th>阻塞项</th></tr></thead><tbody><tr><td><strong>消息区拖选复制</strong></td><td>❌ 完全不可用（CC 无选择消费者）</td><td><code>[DESIGN-ARCH-124]</code> §2 方案 A</td></tr><tr><td><strong>复制选中内容（<code>c</code>/<code>C</code>/<code>Ctrl+Shift+C</code>）</strong></td><td>❌ 三键均无绑定，且 <code>Ctrl+Shift+C</code> 在终端层不可靠</td><td>同上；建议<strong>废弃草案键位</strong>，改由拖选承担</td></tr><tr><td><strong>主区键盘翻页</strong></td><td>❌ 仅覆盖层有 <code>PgUp/PgDn</code>；主区只有滚轮</td><td>待定（是否值得补，见 §4.1.1 ③）</td></tr><tr><td><strong>滚动/选择/复制三模式机</strong></td><td>❌ 未实现</td><td>见 §4.1.1 ③ —— <strong>建议正式废弃</strong></td></tr></tbody></table>
+<table><thead><tr><th>场景</th><th>现状</th><th>阻塞项</th></tr></thead><tbody><tr><td><strong>消息区拖选复制</strong></td><td>✗ 完全不可用（CC 无选择消费者）</td><td><code>[DESIGN-ARCH-124]</code> §2 方案 A</td></tr><tr><td><strong>复制选中内容（<code>c</code>/<code>C</code>/<code>Ctrl+Shift+C</code>）</strong></td><td>✗ 三键均无绑定，且 <code>Ctrl+Shift+C</code> 在终端层不可靠</td><td>同上；建议<strong>废弃草案键位</strong>，改由拖选承担</td></tr><tr><td><strong>主区键盘翻页</strong></td><td>✗ 仅覆盖层有 <code>PgUp/PgDn</code>；主区只有滚轮</td><td>待定（是否值得补，见 §4.1.1 ③）</td></tr><tr><td><strong>滚动/选择/复制三模式机</strong></td><td>✗ 未实现</td><td>见 §4.1.1 ③ —— <strong>建议正式废弃</strong></td></tr></tbody></table>
 <hr>
 <blockquote><p><strong>文档状态</strong>：<strong>Implemented（§4 已按实现校正，2026-09-18）</strong> —— 非 Draft。</p>
 <p>子视图/子菜单/卡片/滚动主体已在 CC 模式落地；<strong>复制部分存在结构性缺口</strong>（消息区无选择消费者），</p>

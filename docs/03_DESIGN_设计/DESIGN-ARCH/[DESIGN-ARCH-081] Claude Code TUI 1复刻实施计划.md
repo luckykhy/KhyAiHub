@@ -600,7 +600,7 @@ export function replaceBrand(text) {
 
 | 文件 | 当前文本 | 替换后 |
 |------|----------|--------|
-| `WelcomeBanner.js` | `🍀 khy-os` + 功能列表 | `✳ Khy` + 动画星号 |
+| `WelcomeBanner.js` | `khy-os` + 功能列表 | `✳ Khy` + 动画星号 |
 | `CcLogo.js` (新建) | `✳ Claude Code` | `✳ Khy` |
 | `PromptFrame.js` | `Type your message...` | `Send a message...` |
 | `FooterBar.js` | 版本信息 | `Khy vX.Y.Z` |
@@ -630,15 +630,15 @@ khy-os AI 网关已**完整支持 OpenAI 协议**：
 
 | 能力 | 状态 | 说明 |
 |------|------|------|
-| API Wire 协议 | ✅ | `apiAdapter.js` 实现完整 OpenAI Messages API |
-| 模型自动路由 | ✅ | `gpt-*`, `o1-*`, `o3-*`, `o4-*` 自动路由到 OpenAI 适配器 |
-| API Key 配置 | ✅ | `OPENAI_API_KEY` env / `khy gateway config` 交互式 |
-| 自定义端点 | ✅ | `OPENAI_API_ENDPOINT` 支持自托管/镜像 |
-| 动态模型发现 | ✅ | `/v1/models` 自动探测可用模型 |
-| SSE 流式传输 | ✅ | `_openaiSseStream.js` 完整实现 |
-| Tool/Function Calling | ✅ | OpenAI function call 格式完整支持 |
-| Key 轮换 + 故障转移 | ✅ | `apiKeyPool` 多 key 自动切换 |
-| Vision 多模态 | ✅ | 图片输入自动路由到视觉模型 |
+| API Wire 协议 | ✓ | `apiAdapter.js` 实现完整 OpenAI Messages API |
+| 模型自动路由 | ✓ | `gpt-*`, `o1-*`, `o3-*`, `o4-*` 自动路由到 OpenAI 适配器 |
+| API Key 配置 | ✓ | `OPENAI_API_KEY` env / `khy gateway config` 交互式 |
+| 自定义端点 | ✓ | `OPENAI_API_ENDPOINT` 支持自托管/镜像 |
+| 动态模型发现 | ✓ | `/v1/models` 自动探测可用模型 |
+| SSE 流式传输 | ✓ | `_openaiSseStream.js` 完整实现 |
+| Tool/Function Calling | ✓ | OpenAI function call 格式完整支持 |
+| Key 轮换 + 故障转移 | ✓ | `apiKeyPool` 多 key 自动切换 |
+| Vision 多模态 | ✓ | 图片输入自动路由到视觉模型 |
 
 ### 2.2 模型名格式化（CC 模式状态栏）
 
@@ -914,30 +914,30 @@ CC 模式 TUI 只需对接 `mcpServerStatus.js` 的 `resolveMcpServerState()` �
 
 | 维度 | 当前 khy-os | Claude Code 目标 | 差距等级 |
 |------|-------------|-----------------|----------|
-| **配色方案** | 青色accent + 奶油色用户框 + 多色状态栏 | 橙色品牌色 + 暖色终端背景 + 极简状态栏 | 🔴 高 |
-| **用户消息** | 奶油色背景框 + `❯ ` 标记 | 无背景框，纯文本，无标记 | 🔴 高 |
-| **助手消息** | 时间线渲染 + 过程组折叠 | `●` 前缀 + StreamingMarkdown | 🔴 高 |
-| **工具调用** | `◆/✓/✗` + 过程组语义标题 | `◆/✓/✗` + 工具名 + 参数摘要 | 🟡 中 |
-| **状态栏** | 2行（权限+徽章，模型+上下文+内存） | 1行（模型│上下文│会话│周│费用） | 🔴 高 |
-| **权限提示** | 内联选择列表 | "Do you want to proceed?" + Select 组件 | 🟡 中 |
-| **补全菜单** | 圆角边框下拉 | 全屏模糊搜索 FuzzyPicker | 🟡 中 |
-| **Spinner** | 盲文帧 `⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏` | 终端原生 Spinner + AgentProgressLine | 🟢 低 |
-| **Diff 渲染** | 统一 diff + 行号 | 统一 diff + 行号 + 可折叠 | 🟢 低 |
-| **Logo/Header** | 3色像素艺术苜蓿 | LogoV2 + AnimatedAsterisk + AnimatedClawd | 🟡 中 |
-| **输入框** | 边框 + 多行 + 光标 | ShimmeredInput + ModeIndicator + VoiceIndicator | 🟡 中 |
-| **欢迎横幅** | 像素艺术 + 功能列表 | Logo + StatusNotices | 🟡 中 |
+| **配色方案** | 青色accent + 奶油色用户框 + 多色状态栏 | 橙色品牌色 + 暖色终端背景 + 极简状态栏 | ● 高 |
+| **用户消息** | 奶油色背景框 + `❯ ` 标记 | 无背景框，纯文本，无标记 | ● 高 |
+| **助手消息** | 时间线渲染 + 过程组折叠 | `●` 前缀 + StreamingMarkdown | ● 高 |
+| **工具调用** | `◆/✓/✗` + 过程组语义标题 | `◆/✓/✗` + 工具名 + 参数摘要 | ◐ 中 |
+| **状态栏** | 2行（权限+徽章，模型+上下文+内存） | 1行（模型│上下文│会话│周│费用） | ● 高 |
+| **权限提示** | 内联选择列表 | "Do you want to proceed?" + Select 组件 | ◐ 中 |
+| **补全菜单** | 圆角边框下拉 | 全屏模糊搜索 FuzzyPicker | ◐ 中 |
+| **Spinner** | 盲文帧 `⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏` | 终端原生 Spinner + AgentProgressLine | ○ 低 |
+| **Diff 渲染** | 统一 diff + 行号 | 统一 diff + 行号 + 可折叠 | ○ 低 |
+| **Logo/Header** | 3色像素艺术苜蓿 | LogoV2 + AnimatedAsterisk + AnimatedClawd | ◐ 中 |
+| **输入框** | 边框 + 多行 + 光标 | ShimmeredInput + ModeIndicator + VoiceIndicator | ◐ 中 |
+| **欢迎横幅** | 像素艺术 + 功能列表 | Logo + StatusNotices | ◐ 中 |
 
 ### 3.2 交互差异矩阵
 
 | 交互 | 当前 khy-os | Claude Code 目标 | 差距等级 |
 |------|-------------|-----------------|----------|
-| **Ctrl+O** | 展开/折叠思考 | 切换 transcript 模式（完整历史视图） | 🟡 中 |
-| **Ctrl+R** | 历史搜索覆盖层 | 历史搜索（reverse-i-search 风格） | 🟢 低 |
-| **Ctrl+C** | 取消/退出 | 取消当前操作 / 双击退出 | 🟢 低 |
-| **Tab** | 补全切换 | 权限提示中切换反馈输入模式 | 🟡 中 |
-| **↑/↓** | 历史导航 | 历史导航 + 列表导航 | 🟢 低 |
-| **Enter** | 提交 | 提交 / 确认选择 | 🟢 低 |
-| **Esc** | 关闭覆盖层 | 取消当前操作 / 关闭覆盖层 | 🟢 低 |
+| **Ctrl+O** | 展开/折叠思考 | 切换 transcript 模式（完整历史视图） | ◐ 中 |
+| **Ctrl+R** | 历史搜索覆盖层 | 历史搜索（reverse-i-search 风格） | ○ 低 |
+| **Ctrl+C** | 取消/退出 | 取消当前操作 / 双击退出 | ○ 低 |
+| **Tab** | 补全切换 | 权限提示中切换反馈输入模式 | ◐ 中 |
+| **↑/↓** | 历史导航 | 历史导航 + 列表导航 | ○ 低 |
+| **Enter** | 提交 | 提交 / 确认选择 | ○ 低 |
+| **Esc** | 关闭覆盖层 | 取消当前操作 / 关闭覆盖层 | ○ 低 |
 
 ### 3.3 架构差异
 
@@ -1005,23 +1005,23 @@ CC 模式下当终端宽度 ≥ 120 列时，自动启用**右侧看板**（类�
 
 ```
 ┌─────────────────────────────────────────────┬──────────┐
-│ ✳ Khy                                       │ 📋 Context│
+│ ✳ Khy                                       │ Context│
 ├─────────────────────────────────────────────┼──────────┤
 │                                             │          │
-│ ● 分析结果文本...                            │ 📁 Files  │
+│ ● 分析结果文本...                            │ Files  │
 │                                             │ ├─src/   │
 │ ◆ Read(src/index.js)                        │ │ ├─index │
 │    ⎿ 1 │ import React from 'react'          │ │ └─utils │
 │    ⎿ 2 │ ...                                │ ├─pkg/   │
 │                                             │ └─tests/ │
 │ 请帮我分析这个文件                            │          │
-│                                             │ 🔧 Tools  │
+│                                             │ Tools  │
 │                                             │ ├─Read ✓ │
 │                                             │ ├─Write  │
 │                                             │ ├─Bash   │
 │                                             │ └─Grep   │
 │                                             │          │
-│                                             │ 📊 Stats  │
+│                                             │ Stats  │
 │                                             │ ├─Tokens  │
 │                                             │ │ 24k/128k│
 │                                             │ ├─Cost    │
@@ -1048,18 +1048,18 @@ CC 模式下当终端宽度 ≥ 120 列时，自动启用**右侧看板**（类�
 
 | 面板 | 图标 | 内容 |
 |------|------|------|
-| **Context** | 📋 | 当前对话上下文摘要、最近文件、引用 |
-| **Files** | 📁 | 当前工作目录文件树（可浏览） |
-| **Tools** | 🔧 | 可用工具列表及状态 |
-| **Stats** | 📊 | Token 使用量、费用、MCP 连接数 |
-| **MCP** | 🔌 | MCP 服务器列表及连接状态 |
-| **Plan** | 📝 | 当前目标/计划进度（如有） |
+| **Context** | | 当前对话上下文摘要、最近文件、引用 |
+| **Files** | | 当前工作目录文件树（可浏览） |
+| **Tools** | | 可用工具列表及状态 |
+| **Stats** | | Token 使用量、费用、MCP 连接数 |
+| **MCP** | | MCP 服务器列表及连接状态 |
+| **Plan** | | 当前目标/计划进度（如有） |
 
 ### 5.1.4 右侧看板标签页导航
 
 ```
 ┌──────────────────────────┐
-│ 📋 │ 📁 │ 🔧 │ 📊 │ 🔌 │  ← 图标标签页
+│ │ │ │ │ │  ← 图标标签页
 ├──────────────────────────┤
 │                          │
 │   当前选中面板的内容       │
@@ -1115,7 +1115,7 @@ export const CC_COLORS = {
   successLight: '#228B22',   // 深绿色 — 亮色终端
   error: '#F87171',          // 亮红色 — 错误/失败 ✗
   errorLight: '#DC3545',     // 深红色 — 亮色终端
-  warning: '#FBBF24',        // 亮黄色 — 警告/进行中 ⏳
+  warning: '#FBBF24',        // 亮黄色 — 警告/进行中 …
   warningLight: '#E6A817',   // 深黄色 — 亮色终端
   info: '#58A6FF',           // 蓝色 — 信息/链接
   
@@ -1227,7 +1227,7 @@ KHY_CC_TUI=1 khy
 │                                                                │
 │  > 读取 CLAUDE.md 的内容                                        │  ← 用户消息（无背景框）
 │                                                                │
-│  🔧 Read                                          ← 粗体+青色  │  ← 工具调用
+│  Read                                          ← 粗体+青色  │  ← 工具调用
 │    file_path: "D:\\Portable\\CLAUDE.md"                        │
 │                                                                │
 │  ┌─ Read 结果 ──────────────────────────────────────────────┐  │  ← 工具结果块
@@ -1375,7 +1375,7 @@ KHY_CC_TUI=1 khy
 
 **目标 (CC 模式)**：
 ```
-🔧 Read                                          ← 粗体 + 青色 #00D4D4
+Read                                          ← 粗体 + 青色 #00D4D4
   file_path: "D:\\Portable\\CLAUDE.md"           ← 缩进 2 空格
 
 ┌─ Read 结果 ──────────────────────────────────────────────────┐
@@ -1383,9 +1383,9 @@ KHY_CC_TUI=1 khy
 │ ...（文件内容）                                               │
 └──────────────────────────────────────────────────────────────┘
 
-🔧 Bash
+Bash
   command: "find src/ -type f -name '*.ts' | head -20"
-  ⏳ 执行中...                                                ← spinner 动画
+  … 执行中...                                                ← spinner 动画
 
 ┌─ Bash 结果 ──────────────────────────────────────────────────┐
 │ src/index.ts                                                  │
@@ -1397,8 +1397,8 @@ KHY_CC_TUI=1 khy
 
 **工具调用状态指示**：
 ```
-🔧 Read               ← 调用时（青色，粗体）
-  ⏳ 执行中...         ← 执行中（黄色 spinner）
+Read               ← 调用时（青色，粗体）
+  … 执行中...         ← 执行中（黄色 spinner）
   ✓ 完成              ← 成功（绿色勾号）
   ✗ 失败              ← 失败（红色叉号）
 ```
@@ -1407,10 +1407,10 @@ KHY_CC_TUI=1 khy
 
 1. **禁用过程组合并**：CC 模式下每个工具调用独立渲染，不合并为「过程组」
 2. **移除语义标签**：不再显示「读取 · server.js · 3 个步骤」这种中文语义标题
-3. **工具名样式**：`🔧` emoji + 工具名，**粗体 + 青色 `#00D4D4`**
+3. **工具名样式**：`` emoji + 工具名，**粗体 + 青色 `#00D4D4`**
 4. **参数展示**：缩进 2 空格，JSON 格式展示
 5. **结果块样式**：使用 `┌─` / `└─` 边框包裹，灰色背景
-6. **状态指示器**：执行中=黄色 `⏳`，完成=绿色 `✓`，失败=红色 `✗`
+6. **状态指示器**：执行中=黄色 `…`，完成=绿色 `✓`，失败=红色 `✗`
 7. **思考折叠块**：使用 `▸` 折叠箭头，可展开/折叠
 
 ### 7.7 实施文件
@@ -1719,7 +1719,7 @@ KHY_CC_TUI=1 khy
 
 **当前 (khy-os Legacy)**：
 ```
-🍀 khy-os     ← 静态像素艺术苜蓿
+khy-os     ← 静态像素艺术苜蓿
 ```
 
 **目标 (CC 模式)**：
@@ -1953,7 +1953,7 @@ KHY_CC_TUI=1 KHY_CC_TOOL_STYLE=0 khy  # 保留过程组
 - [ ] 终端宽度 ≥ 120 列时自动显示右侧看板
 - [ ] 看板宽度：30 列（可通过 `KHY_CC_SIDEBAR_WIDTH` 调整）
 - [ ] 分割线：紫蓝色 `#5769F7` 垂直线
-- [ ] 5 个面板：📋 Context / 📁 Files / 🔧 Tools / 📊 Stats / 🔌 MCP
+- [ ] 5 个面板：Context / Files / Tools / Stats / MCP
 - [ ] 标签页导航：图标 + 高亮当前面板
 - [ ] `Ctrl+B` 切换看板显示/隐藏
 - [ ] `←→` 切换面板
@@ -2832,7 +2832,7 @@ const { CcSidebarMcp } = require('./CcSidebarMcp');
  * 
  * 布局：
  *   ┌──────────────────────────┐
- *   │ 📋 │ 📁 │ 🔧 │ 📊 │ 🔌 │  ← 图标标签页
+ *   │ │ │ │ │ │  ← 图标标签页
  *   ├──────────────────────────┤
  *   │                          │
  *   │   当前选中面板的内容      │
@@ -2841,11 +2841,11 @@ const { CcSidebarMcp } = require('./CcSidebarMcp');
  */
 
 const PANELS = [
-  { id: 'context', icon: '📋', label: 'Context', Component: CcSidebarContext },
-  { id: 'files', icon: '📁', label: 'Files', Component: CcSidebarFiles },
-  { id: 'tools', icon: '🔧', label: 'Tools', Component: CcSidebarTools },
-  { id: 'stats', icon: '📊', label: 'Stats', Component: CcSidebarStats },
-  { id: 'mcp', icon: '🔌', label: 'MCP', Component: CcSidebarMcp },
+  { id: 'context', icon: '', label: 'Context', Component: CcSidebarContext },
+  { id: 'files', icon: '', label: 'Files', Component: CcSidebarFiles },
+  { id: 'tools', icon: '', label: 'Tools', Component: CcSidebarTools },
+  { id: 'stats', icon: '', label: 'Stats', Component: CcSidebarStats },
+  { id: 'mcp', icon: '', label: 'MCP', Component: CcSidebarMcp },
 ];
 
 function CcSidebarPanel({ width = 30, onClose }) {

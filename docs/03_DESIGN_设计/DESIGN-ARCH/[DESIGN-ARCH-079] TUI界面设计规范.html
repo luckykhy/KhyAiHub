@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -28,7 +28,7 @@
       <article class="doc-body">
 <h1 id="design-arch-079-khy-os-tui-界面设计规范">[DESIGN-ARCH-079] khy-os TUI 界面设计规范<a class="anchor" href="#design-arch-079-khy-os-tui-界面设计规范" aria-label="锚点">#</a></h1>
 <blockquote><p><strong>隶属</strong>：本文属 <strong>TUI 设计族</strong>（20 编号 / 21 文件），总纲与 scope 裁决见 <code>[DESIGN-ARCH-122] TUI 设计族总纲</code>；规则冲突一律以 <code>[DESIGN-ARCH-102] Khy TUI 统一规则手册</code> 为准。</p></blockquote>
-<blockquote><h2 id="本文档的-唯一权威规范-身份已被-design-arch-102-khy-tui-统一规则手册取代">⚠️ 本文档的「唯一权威规范」身份已被 [DESIGN-ARCH-102] Khy TUI 统一规则手册取代<a class="anchor" href="#本文档的-唯一权威规范-身份已被-design-arch-102-khy-tui-统一规则手册取代" aria-label="锚点">#</a></h2>
+<blockquote><h2 id="本文档的-唯一权威规范-身份已被-design-arch-102-khy-tui-统一规则手册取代">⚠ 本文档的「唯一权威规范」身份已被 [DESIGN-ARCH-102] Khy TUI 统一规则手册取代<a class="anchor" href="#本文档的-唯一权威规范-身份已被-design-arch-102-khy-tui-统一规则手册取代" aria-label="锚点">#</a></h2>
 <p><strong>自 2026-09-15 起，本文不再担任 TUI 规则的唯一权威规范。</strong> 规则条款已并入 <code>[DESIGN-ARCH-102]</code>：布局与尺寸 → §4；组件 → §5；配色 → §6.1；键盘 → §6.1；响应式 → §4.4。<strong>规则冲突一律以 102 为准。</strong></p>
 <p>本文保留作为<strong>组件尺寸历史详表、配色证据与早期设计决策记录</strong>（含 §11 边框与剪贴板的 OpenCode 对比调研、§12 组件逐项详规、§13 十三条设计决策记录）。</p>
 <p><strong>三处已被 102 修正的内容（勿再引用旧值）</strong>：</p>
@@ -254,7 +254,7 @@ height = rows - 1  (跳过 pending-wrap 行)</code></pre>
 <p>OpenCode 的精妙之处：<strong>边框视觉可见，但复制时不会被选中</strong>。</p>
 <h3 id="11-2-三层边框体系">11.2 三层边框体系<a class="anchor" href="#11-2-三层边框体系" aria-label="锚点">#</a></h3>
 <p>khy-os 实现三层边框策略，由 <code>KHY_TABLE_BORDERS</code> 和 <code>KHY_SIDEBAR_BORDER</code> 分别控制：</p>
-<table><thead><tr><th>层级</th><th>模式</th><th>边框字符</th><th>复制行为</th><th>适用场景</th></tr></thead><tbody><tr><td><strong>L0: 无框</strong></td><td><code>minimal</code> (默认)</td><td>无（纯空白对齐）</td><td>✅ 不复制</td><td>CLI 表格、错误面板</td></tr><tr><td><strong>L1: 单侧栏</strong></td><td><code>minimal</code> + gutter</td><td><code>│</code>（仅左侧）</td><td>⚠️ 可复制</td><td>错误面板左竖条</td></tr><tr><td><strong>L2: 全框</strong></td><td><code>full</code></td><td><code>╭─╮│╰─╯</code>（完整框）</td><td>❌ 会复制</td><td>传统表格、覆盖层</td></tr></tbody></table>
+<table><thead><tr><th>层级</th><th>模式</th><th>边框字符</th><th>复制行为</th><th>适用场景</th></tr></thead><tbody><tr><td><strong>L0: 无框</strong></td><td><code>minimal</code> (默认)</td><td>无（纯空白对齐）</td><td>✓ 不复制</td><td>CLI 表格、错误面板</td></tr><tr><td><strong>L1: 单侧栏</strong></td><td><code>minimal</code> + gutter</td><td><code>│</code>（仅左侧）</td><td>⚠ 可复制</td><td>错误面板左竖条</td></tr><tr><td><strong>L2: 全框</strong></td><td><code>full</code></td><td><code>╭─╮│╰─╯</code>（完整框）</td><td>✗ 会复制</td><td>传统表格、覆盖层</td></tr></tbody></table>
 <h3 id="11-3-实现机制">11.3 实现机制<a class="anchor" href="#11-3-实现机制" aria-label="锚点">#</a></h3>
 <h4 id="l0-无框模式-tablestyle-js">L0: 无框模式（<code>tableStyle.js</code>）<a class="anchor" href="#l0-无框模式-tablestyle-js" aria-label="锚点">#</a></h4>
 <pre><code class="language-javascript"><span class="hljs-comment">// cli/tableStyle.js — 所有边框字符置空</span>
@@ -340,7 +340,7 @@ wrap-ansi(text, width, { hard: true }) → &quot;word1 word2\nword3 word4&quot;
 <p>opencode 使用 TypeScript + Bun + SolidJS + @opentui/core，<strong>正确处理软换行</strong>：</p>
 <ul><li>复制的文本不包含硬换行符</li><li>长行在复制时保持为单行</li><li>终端原生软换行 + 应用层不插入 <code>\n</code></li></ul>
 <h4 id="11-8-4-各框架的边框处理对比">11.8.4 各框架的边框处理对比<a class="anchor" href="#11-8-4-各框架的边框处理对比" aria-label="锚点">#</a></h4>
-<table><thead><tr><th>框架</th><th>边框实现</th><th>复制行为</th><th>软换行支持</th></tr></thead><tbody><tr><td><strong>Ink</strong></td><td><code>borderStyle: 'round'</code> 字符框</td><td>会复制</td><td>❌ 硬换行</td></tr><tr><td><strong>Bubbletea</strong></td><td><code>lipgloss.Border()</code> 字符框</td><td>会复制</td><td>✅ 软换行</td></tr><tr><td><strong>tview</strong></td><td><code>screen.SetContent()</code> 直接写屏</td><td>取决于终端</td><td>✅ 软换行</td></tr><tr><td><strong>opentui</strong></td><td>像素级覆盖层</td><td>不复制</td><td>✅ 软换行</td></tr><tr><td><strong>Ghostty</strong></td><td>独立 canvas 覆盖层</td><td>不复制</td><td>✅ 软换行</td></tr></tbody></table>
+<table><thead><tr><th>框架</th><th>边框实现</th><th>复制行为</th><th>软换行支持</th></tr></thead><tbody><tr><td><strong>Ink</strong></td><td><code>borderStyle: 'round'</code> 字符框</td><td>会复制</td><td>✗ 硬换行</td></tr><tr><td><strong>Bubbletea</strong></td><td><code>lipgloss.Border()</code> 字符框</td><td>会复制</td><td>✓ 软换行</td></tr><tr><td><strong>tview</strong></td><td><code>screen.SetContent()</code> 直接写屏</td><td>取决于终端</td><td>✓ 软换行</td></tr><tr><td><strong>opentui</strong></td><td>像素级覆盖层</td><td>不复制</td><td>✓ 软换行</td></tr><tr><td><strong>Ghostty</strong></td><td>独立 canvas 覆盖层</td><td>不复制</td><td>✓ 软换行</td></tr></tbody></table>
 <h4 id="11-8-5-关键洞察">11.8.5 关键洞察<a class="anchor" href="#11-8-5-关键洞察" aria-label="锚点">#</a></h4>
 <ol><li><strong>tview 的做法</strong>：直接操作 <code>tcell.Screen</code>，边框是屏幕网格上的独立字符。复制行为由终端决定，应用无法控制。</li><li><strong>Ghostty 的做法</strong>：用独立 canvas 层绘制高亮/覆盖物，不占用字符单元格。这是<strong>像素级</strong>方案，不适用于纯文本 TUI。</li><li><strong>Bubbletea 的软换行</strong>：Bubbletea 本身不硬换行，让终端处理软换行。复制时终端会合并软换行的行。</li><li><strong>opencode 的关键差异</strong>：opencode 的渲染器不插入硬换行符，让终端原生处理换行。这是<strong>应用层</strong>的改变，不是终端层的。</li></ol>
 <h3 id="11-9-推荐改进路径-基于-github-调研">11.9 推荐改进路径（基于 GitHub 调研）<a class="anchor" href="#11-9-推荐改进路径-基于-github-调研" aria-label="锚点">#</a></h3>
@@ -488,7 +488,7 @@ wrap-ansi(text, width, { hard: true }) → &quot;word1 word2\nword3 word4&quot;
 <h4 id="12-6-1-动画">12.6.1 动画<a class="anchor" href="#12-6-1-动画" aria-label="锚点">#</a></h4>
 <table><thead><tr><th>属性</th><th>值</th></tr></thead><tbody><tr><td>字符集</td><td><code>⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏</code> (Braille 旋转)</td></tr><tr><td>帧间隔</td><td><code>perfTunables.spinnerFrameMs()</code> (默认 80ms)</td></tr><tr><td>减弱运动</td><td>静态 <code>●</code></td></tr></tbody></table>
 <h4 id="12-6-2-状态显示">12.6.2 状态显示<a class="anchor" href="#12-6-2-状态显示" aria-label="锚点">#</a></h4>
-<table><thead><tr><th>状态</th><th>显示</th></tr></thead><tbody><tr><td>正常</td><td><code>{glyph} {label/detail}</code></td></tr><tr><td>停滞 (&gt; 600ms)</td><td><code>⏳ 等待中 · {等待原因}</code></td></tr><tr><td>停滞颜色</td><td>黄色/灰色交替呼吸效果</td></tr></tbody></table>
+<table><thead><tr><th>状态</th><th>显示</th></tr></thead><tbody><tr><td>正常</td><td><code>{glyph} {label/detail}</code></td></tr><tr><td>停滞 (&gt; 600ms)</td><td><code>… 等待中 · {等待原因}</code></td></tr><tr><td>停滞颜色</td><td>黄色/灰色交替呼吸效果</td></tr></tbody></table>
 <h4 id="12-6-3-进度元数据">12.6.3 进度元数据<a class="anchor" href="#12-6-3-进度元数据" aria-label="锚点">#</a></h4>
 <ul><li>经过时间 + token 计数</li><li>30 秒阈值（CC 对齐）：短时间内隐藏</li><li>CC 格式：<code>5m</code>（非 <code>300s</code>），<code>~1.2k tok</code>（非 <code>~1234 tok</code>）</li></ul>
 <h4 id="12-6-4-与-opencode-差异">12.6.4 与 OpenCode 差异<a class="anchor" href="#12-6-4-与-opencode-差异" aria-label="锚点">#</a></h4>
