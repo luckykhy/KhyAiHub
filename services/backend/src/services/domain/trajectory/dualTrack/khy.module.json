@@ -1,0 +1,50 @@
+{
+  "_note": "功能单元清单（[RESEARCH-018] §2.3 模板第 3 件 / 5-3-1 §3）。执行器 scripts/ci/check-repo-layout.js 的 entry-buffer 规则读本文件的 domain / mayDependOn / fanIn / lifecycle.stage 四个字段，其余字段是给人读的。字段真源与判据枚举见 docs/10_规范/registry/DOMAIN-DEPS.json 的 _entry_buffer 块。",
+  "name": "dualTrack",
+  "domain": "D2",
+  "mayDependOn": ["D2"],
+  "_mayDependOn_note": "实测本单元 9 个源文件（含 core/coreActions.js）的全部 require 边只落在两类：① 单元内互引（index.js → ./actionRegistry ./core/coreActions ./degradeStateMachine ./extensionLoader ./extensionWriter ./lenientResponseParser ./updateGuard；degradeStateMachine.js → ./unknownActionView；extensionWriter.js 与 updateGuard.js → ./actionRegistry / ./extensionLoader；extensionLoader.js → ./actionRegistry）；② node 内建（path / fs），不构成域边。没有一条 require 伸向 D3（src/utils、src/constants），故名义 [D2, D3] 只声明实际用到的 D2，不用 D3 兜底凑数。",
+  "_deviation_note": "无跨层偏差：本单元源码内没有任何 require 伸进 D1（src/services、src/cli）或 D4/D5，故无需向 cross-layer-require 棘轮登记偏差。唯一的仓外关联是它的消费者方向 —— D1 的兼容别名壳 services/backend/src/services/dualTrack/index.js 以 `module.exports = require('../domain/trajectory/dualTrack')` 再导出本单元，这是 D1→D2 的下行边（D1.mayDependOn 含 D2，合法），不构成本单元的出边，也不计入本清单的 mayDependOn。",
+  "fanIn": 1,
+  "fanInEvidence": [
+    "services/backend/src/services/dualTrack/index.js"
+  ],
+  "_fanIn_note": "1 个仓内消费者（实测 2026-09-28）：`git grep` 全仓扫 require 说明符、按 Node 解析规则归一到本单元 9 个成员后去重计数，不含 *.test.js、不含单元内互引。唯一命中是 D1 再导出壳 services/backend/src/services/dualTrack/index.js（require('../domain/trajectory/dualTrack')），按 [DESIGN-LAY-008] 第 0 步约定纯 re-export 壳仍算真实入口，故如实计入。其余文本提及（如 security/adversarial/*、data/reverseEngineer/* 注释里的 'dualTrackForge'）指向的是兄弟单元 trajectory/dualTrackForge/，不是本单元，且均为注释非 require，不计入。本单元当前是「机制已就位、尚未被业务广泛接线」的基座，fanIn=1 是真实读数而非漏测。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-28",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null,
+    "_stage_note": "stable 的依据是三条晋级判据此刻都在盘上（DOMAIN-DEPS.json._entry_buffer.promotionCriteria）：单元级 README.md、整数 fanIn 声明（=1）、9 个源文件各有同名同目录测试。provenance 如实写明它是机制建立后补记的存量：本单元是 DESIGN-ARCH-033「双轨热插拔运行时」早已落进 D2/trajectory/dualTrack/ 的既有代码，早于入口缓冲守卫，缓冲区从未被经过，enteredVia: null。",
+    "_promotion_evidence": "9 份共置测试 = actionRegistry / degradeStateMachine / unknownActionView / lenientResponseParser / extensionLoader / extensionWriter / updateGuard / index 各 1 份 + core/coreActions.test.js，实测 `node --test` 106/106 通过（2026-09-28）。"
+  },
+  "contract": {
+    "purity": "本单元无 IO 的纯逻辑叶子：coreActions / unknownActionView / degradeStateMachine / lenientResponseParser / actionRegistry —— 全为确定性函数或纯内存状态机，env 完全不参与。有副作用的三件（extensionLoader / extensionWriter / updateGuard 的 apply 段）与门面 index.js 一律走副作用注入：fs / requireImpl / pathImpl / logger 全部构造期或调用期注入，测试用桩替换，绝不真读盘。",
+    "ioOwner": "唯一的磁盘写入面是 extensionWriter.writeUserExtension（fs.mkdirSync + fs.writeFileSync）与 updateGuard.applyOfficialUpdate（同），且都受沙箱/授权双闸约束；index.js 门面自身不直接碰 fs，一律委派给上述注入点。无网络、无子进程。",
+    "injectionPoints": [
+      "new DualTrackRuntime({coreRoot, userTrackRoot, coreActions, logger, fs, requireImpl, pathImpl})：整门面 DI，每会话构造（index.js）",
+      "loadUserTrack({userTrackRoot, registry, fs, requireImpl, pathImpl, logger})：轨装载全副作用注入（extensionLoader.js）",
+      "writeUserExtension({userTrackRoot, relPath, content, authorized, fs, pathImpl})：写入经授权闸 + 沙箱闸（extensionWriter.js）",
+      "planOfficialUpdate / applyOfficialUpdate / detectBreakingChange：路径判定用注入的 pathImpl，施工写盘用注入的 fs（updateGuard.js）"
+    ],
+    "gates": [
+      "授权闸（AuthorizationRequiredError, code=AUTHORIZATION_REQUIRED）：authorized !== true 一律拒绝模型 DIY 写入，在任何 fs 调用之前",
+      "沙箱闸（CorePollutionError, code=CORE_POLLUTION）：路径经 assertWithinUserTrack / isWithin 解析后必须落在允许轨内，越界即抛，绝不允许污染官方核心源（红线5）",
+      "核心密封：ActionRegistry.seal() 后任何 registerCore 抛 CorePollutionError；用户覆写只写影子层 _overrides，永不触碰 _core",
+      "更新 fail-closed：planOfficialUpdate 任一文件越界或命中受保护用户轨 → 整包 safe=false；applyOfficialUpdate 见 safe!==true 直接拒绝施工（红线4）",
+      "降级状态机恒全定义：decideFlow 对任意 (resolution, action) 返回 PROCEED 或 MANUAL_CONFIRM，永不 undefined/抛错（红线3）"
+    ],
+    "neverSilentlyDrops": "红线2 贯穿三处：lenientResponseParser 把未知顶层字段与未知动作键全部捕获（unknownFields / _unknownKeys）并产 warning；unknownActionView 对任意输入返回 renderable:true 占位符；degradeStateMachine 把未知动作显式降级为人工确认并交还控制权，绝不自主执行、绝不静默丢弃。"
+  },
+  "tests": [
+    "actionRegistry.test.js",
+    "degradeStateMachine.test.js",
+    "unknownActionView.test.js",
+    "lenientResponseParser.test.js",
+    "extensionLoader.test.js",
+    "extensionWriter.test.js",
+    "updateGuard.test.js",
+    "index.test.js",
+    "core/coreActions.test.js"
+  ]
+}
