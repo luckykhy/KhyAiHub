@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -71,7 +71,7 @@ requestPermission（既有管线，识别 EXEC_APPROVED 免二次打断）
 <p><strong>核心不变量</strong>：模型无法伪造 <code>EXEC_APPROVED</code>（Symbol 不可经 JSON 参数构造）。网关是唯一能盖戳的主体，<br>因此成为单一裁决权威；同时网关<strong>只能追加拒绝</strong>——allow 时仍交还既有管线，deny 时直接短路，绝不弱化<br>既有 critical 红线 / permissionStore / 守卫等保护。</p>
 <hr>
 <h2 id="4-三级审批矩阵">4. 三级审批矩阵<a class="anchor" href="#4-三级审批矩阵" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>级别</th><th>语义</th><th>触发条件</th><th>处置</th><th>可免审？</th></tr></thead><tbody><tr><td><strong>L0 绿灯</strong></td><td>低风险读取</td><td>项目/家目录内只读、取系统时间、列非敏感目录</td><td><strong>自动放行 + 记日志</strong></td><td>本就无需</td></tr><tr><td><strong>L1 黄灯</strong></td><td>有限写入 / 网络</td><td>项目/家目录内写、网络出站、起本地非破坏性子进程、读系统级路径</td><td><strong>问一次</strong>（仅此次 / 本会话同类免审 / 拒绝）</td><td>✅ 会话内</td></tr><tr><td><strong>L2 红灯</strong></td><td>毁灭性 / 不可逆 / 系统级</td><td>删除、杀非 khyos 进程、改宿主环境变量、全局装包、监听端口、执行任意代码、写系统级路径</td><td><strong>强制挂起，必须键入 <code>YES</code></strong></td><td>❌ 永不</td></tr></tbody></table>
+<table><thead><tr><th>级别</th><th>语义</th><th>触发条件</th><th>处置</th><th>可免审？</th></tr></thead><tbody><tr><td><strong>L0 绿灯</strong></td><td>低风险读取</td><td>项目/家目录内只读、取系统时间、列非敏感目录</td><td><strong>自动放行 + 记日志</strong></td><td>本就无需</td></tr><tr><td><strong>L1 黄灯</strong></td><td>有限写入 / 网络</td><td>项目/家目录内写、网络出站、起本地非破坏性子进程、读系统级路径</td><td><strong>问一次</strong>（仅此次 / 本会话同类免审 / 拒绝）</td><td>✓ 会话内</td></tr><tr><td><strong>L2 红灯</strong></td><td>毁灭性 / 不可逆 / 系统级</td><td>删除、杀非 khyos 进程、改宿主环境变量、全局装包、监听端口、执行任意代码、写系统级路径</td><td><strong>强制挂起，必须键入 <code>YES</code></strong></td><td>✗ 永不</td></tr></tbody></table>
 <blockquote><p>L2 的「不可免审」是分级层的硬不变量：<code>isExemptible(L2) === false</code>，被 <code>permissionCache</code>（清单 / 会话免审）<br>与 <code>approvalRouter</code>（路由）双重保证——红灯无快捷键。</p></blockquote>
 <hr>
 <h2 id="5-工作流预审批-权限申请清单">5. 工作流预审批（《权限申请清单》）<a class="anchor" href="#5-工作流预审批-权限申请清单" aria-label="锚点">#</a></h2>
@@ -99,7 +99,7 @@ requestPermission（既有管线，识别 EXEC_APPROVED 免二次打断）
 <blockquote><p>该契约<strong>不要求修改 TUI 即可安全运行</strong>：未实现键入确认的宿主下，L2 恒拒绝（安全方向）。后续可在 Ink<br>PermissionsPrompt 增加 L2 键入确认输入框，回传 <code>{ typed }</code> 即接通——属安全网关层的渐进增强，不触业务热区。</p></blockquote>
 <hr>
 <h2 id="8-三场景验证">8. 三场景验证<a class="anchor" href="#8-三场景验证" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>场景</th><th>级别</th><th>预期</th><th>测试</th></tr></thead><tbody><tr><td>尝试删除文件 <code>rm important.txt</code></td><td>L2</td><td>仅严格键入 <code>YES</code> 放行；回车/空/小写一律拒；非交互 fail-closed</td><td>✅</td></tr><tr><td>尝试全局安装 <code>npm i -g http-server</code></td><td>L2</td><td>强制挂起；交互异常 → fail-closed 拒绝</td><td>✅</td></tr><tr><td>正常写入 <code>&lt;project&gt;/src/note.txt</code></td><td>L1</td><td>问一次；会话免审后第二次同类不再询问；跨会话重新询问</td><td>✅</td></tr></tbody></table>
+<table><thead><tr><th>场景</th><th>级别</th><th>预期</th><th>测试</th></tr></thead><tbody><tr><td>尝试删除文件 <code>rm important.txt</code></td><td>L2</td><td>仅严格键入 <code>YES</code> 放行；回车/空/小写一律拒；非交互 fail-closed</td><td>✓</td></tr><tr><td>尝试全局安装 <code>npm i -g http-server</code></td><td>L2</td><td>强制挂起；交互异常 → fail-closed 拒绝</td><td>✓</td></tr><tr><td>正常写入 <code>&lt;project&gt;/src/note.txt</code></td><td>L1</td><td>问一次；会话免审后第二次同类不再询问；跨会话重新询问</td><td>✓</td></tr></tbody></table>
 <p>附加防呆回归：旁路注入熔断、反复硬闯熔断+清场、清单拒收 L2、L2 永不命中清单、控制通道适配。<br><strong>全 27 测试离线确定性通过（零网络 / 零真实文件系统 / 全同步桩）。</strong></p>
 <hr>
 <h2 id="10-风险词汇统一与-5-3-映射">10. 风险词汇统一与 5→3 映射<a class="anchor" href="#10-风险词汇统一与-5-3-映射" aria-label="锚点">#</a></h2>

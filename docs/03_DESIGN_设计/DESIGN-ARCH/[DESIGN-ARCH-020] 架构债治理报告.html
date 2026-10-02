@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -49,7 +49,7 @@
 <p>Tarjan SCC 初检出 <strong>3 个强连通分量</strong>（P1 轮已消解 2 个，<strong>现存 1 个</strong>）：</p>
 <ul><li><strong>1 个巨型 SCC（~130 节点）</strong>：cli 全层 + 多数 services + 全部 gateway 适配器纠缠成一团。</li></ul>
 <p>根因是 R1 的惰性反向 require 把 cli↔services 焊死成一个环。<strong>这是 R1 的系统级显影</strong>，<br>  须先解 R1 才能瓦解，本轮不动。</p>
-<ul><li><del><strong>2 个干净二元环</strong></del> → <strong>✅ P1 轮已消解（2026-06-12）</strong>：<ul><li><code>services/sessionPersistence.js</code> ⇄ <code>services/sessionSearchIndex.js</code></li></ul></li></ul>
+<ul><li><del><strong>2 个干净二元环</strong></del> → <strong>✓ P1 轮已消解（2026-06-12）</strong>：<ul><li><code>services/sessionPersistence.js</code> ⇄ <code>services/sessionSearchIndex.js</code></li></ul></li></ul>
 <p>→ 引入零依赖端口 <code>services/sessionSourcePort.js</code>（IoC）：持久化层自注册为会话源，<br>    搜索索引 <code>reindexAll</code> 经端口取源,不再反向 require 持久化。</p>
 <ul><li><code>services/worktreeManager.js</code> ⇄ <code>tools/_taskStore.js</code></li></ul>
 <p>→ 纯函数 <code>validateName</code> 抽到零依赖叶子 <code>utils/worktreeName.js</code>，双方同向依赖它。</p>
@@ -75,7 +75,7 @@
 <p><strong>结论</strong>：必须从 R1 入手做<strong>方向修复</strong>（把被双方共享的叶子模块下沉到中立层），<br>逐步瓦解巨型环，而非在巨石文件内做局部最优。局部重构巨石文件若不先解耦，<br>只会在环内搬运复杂度、引入新隐患。</p>
 <hr>
 <h2 id="3-修复优先级-影响范围-修复成本-业务价值">3. 修复优先级（影响范围 × 修复成本 × 业务价值）<a class="anchor" href="#3-修复优先级-影响范围-修复成本-业务价值" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>优先级</th><th>项</th><th>影响范围</th><th>修复成本</th><th>风险</th><th>决策</th></tr></thead><tbody><tr><td><strong>P0</strong></td><td>工具集成：静态分析门禁</td><td>全局（防新增债）</td><td>低（新增工具）</td><td>无（只读）</td><td><strong>本轮已做</strong></td></tr><tr><td><strong>P0</strong></td><td>R1 叶子下沉示范（<code>commandSchema</code>）</td><td>5 文件</td><td>低（纯数据叶子）</td><td>极低</td><td><strong>本轮已做</strong></td></tr><tr><td>P1</td><td>R3 二元环消解（sessionPersistence/worktreeManager）</td><td>2×2 文件</td><td>中</td><td>中</td><td><strong>✅ 已做（2026-06-12，R3 3→1）</strong></td></tr><tr><td><del>P1</del></td><td><del>R1 共享 UI/渲染叶子下沉（hudRenderer/permissionDialog）</del></td><td>—</td><td>—</td><td>—</td><td><strong>重判：经审视非纯叶子，改为 P2 反转</strong>（见 §5.2 发现）</td></tr><tr><td>P2</td><td>R4 <code>toolUseLoop</code> 完成抽取（删本地副本，统一走助手模块）</td><td>业务热区</td><td>高</td><td><strong>高</strong></td><td>路线图（需专项＋全回归）</td></tr><tr><td>P2</td><td>R2 巨石文件分解（<code>repl.js</code>/<code>ai.js</code> 按职责拆 helper）</td><td>高扇入</td><td>高</td><td><strong>高</strong></td><td>路线图（先解 R1/R3 再拆）</td></tr><tr><td>P3</td><td>R5 删 <code>@deprecated</code> shim、收敛 dataHome、补 <code>routes/ai.js</code> SSE 断连</td><td>局部</td><td>低-中</td><td>低</td><td>单独 PR</td></tr></tbody></table>
+<table><thead><tr><th>优先级</th><th>项</th><th>影响范围</th><th>修复成本</th><th>风险</th><th>决策</th></tr></thead><tbody><tr><td><strong>P0</strong></td><td>工具集成：静态分析门禁</td><td>全局（防新增债）</td><td>低（新增工具）</td><td>无（只读）</td><td><strong>本轮已做</strong></td></tr><tr><td><strong>P0</strong></td><td>R1 叶子下沉示范（<code>commandSchema</code>）</td><td>5 文件</td><td>低（纯数据叶子）</td><td>极低</td><td><strong>本轮已做</strong></td></tr><tr><td>P1</td><td>R3 二元环消解（sessionPersistence/worktreeManager）</td><td>2×2 文件</td><td>中</td><td>中</td><td><strong>✓ 已做（2026-06-12，R3 3→1）</strong></td></tr><tr><td><del>P1</del></td><td><del>R1 共享 UI/渲染叶子下沉（hudRenderer/permissionDialog）</del></td><td>—</td><td>—</td><td>—</td><td><strong>重判：经审视非纯叶子，改为 P2 反转</strong>（见 §5.2 发现）</td></tr><tr><td>P2</td><td>R4 <code>toolUseLoop</code> 完成抽取（删本地副本，统一走助手模块）</td><td>业务热区</td><td>高</td><td><strong>高</strong></td><td>路线图（需专项＋全回归）</td></tr><tr><td>P2</td><td>R2 巨石文件分解（<code>repl.js</code>/<code>ai.js</code> 按职责拆 helper）</td><td>高扇入</td><td>高</td><td><strong>高</strong></td><td>路线图（先解 R1/R3 再拆）</td></tr><tr><td>P3</td><td>R5 删 <code>@deprecated</code> shim、收敛 dataHome、补 <code>routes/ai.js</code> SSE 断连</td><td>局部</td><td>低-中</td><td>低</td><td>单独 PR</td></tr></tbody></table>
 <p><strong>防呆遵循</strong>：P2/P3 涉及业务热区（<code>runToolUseLoop</code>、<code>chat()</code>）的项<strong>本轮不动</strong>，<br>只列入路线图并要求「专项 + 全回归」，严守「不碰核心业务算法」。</p>
 <hr>
 <h2 id="4-工具集成-已交付-自研架构债静态分析器">4. 工具集成（已交付）：自研架构债静态分析器<a class="anchor" href="#4-工具集成-已交付-自研架构债静态分析器" aria-label="锚点">#</a></h2>
@@ -127,9 +127,9 @@ npm run <span class="hljs-built_in">arch</span>:debt:baseline   <span class="hlj
 <hr>
 <h2 id="6-修复验证-防呆-修复后必测">6. 修复验证（防呆：修复后必测）<a class="anchor" href="#6-修复验证-防呆-修复后必测" aria-label="锚点">#</a></h2>
 <h3 id="p0-轮-commandschema-下沉">P0 轮（commandSchema 下沉）<a class="anchor" href="#p0-轮-commandschema-下沉" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>验证</th><th>结果</th></tr></thead><tbody><tr><td>5 个引用方 + 迁移模块加载</td><td>✅ 全通过</td></tr><tr><td>命令元数据解析（路由/斜杠/子命令）</td><td>✅ 124 / 84 / 55，与修复前一致</td></tr><tr><td>无残留旧路径引用</td><td>✅ grep 清零</td></tr><tr><td><code>archDebtScan</code> R1 计数</td><td>✅ 30 → 28</td></tr><tr><td>分析器测试套件</td><td>✅ 13/13</td></tr><tr><td>真实基线 CI 门禁</td><td>✅ 退出码 0（无超基线新增）</td></tr></tbody></table>
+<table><thead><tr><th>验证</th><th>结果</th></tr></thead><tbody><tr><td>5 个引用方 + 迁移模块加载</td><td>✓ 全通过</td></tr><tr><td>命令元数据解析（路由/斜杠/子命令）</td><td>✓ 124 / 84 / 55，与修复前一致</td></tr><tr><td>无残留旧路径引用</td><td>✓ grep 清零</td></tr><tr><td><code>archDebtScan</code> R1 计数</td><td>✓ 30 → 28</td></tr><tr><td>分析器测试套件</td><td>✓ 13/13</td></tr><tr><td>真实基线 CI 门禁</td><td>✓ 退出码 0（无超基线新增）</td></tr></tbody></table>
 <h3 id="p1-轮-二元环消解-2026-06-12">P1 轮（二元环消解，2026-06-12）<a class="anchor" href="#p1-轮-二元环消解-2026-06-12" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>验证</th><th>结果</th></tr></thead><tbody><tr><td><code>archDebtScan</code> R3 环数</td><td>✅ 3 → 1（仅余巨型 SCC）</td></tr><tr><td><code>archDebtScan</code> R1 计数</td><td>✅ 保持 28（未增，无安全叶子可降）</td></tr><tr><td>worktree:<code>bindWorktree</code> 经 relocated <code>validateName</code> 合法/穿越/空名三路</td><td>✅ 行为一致</td></tr><tr><td>worktree jest 套件</td><td>✅ exit 0</td></tr><tr><td>session 端到端 reindexAll（端口 + <code>opts.source</code> 注入两路）</td><td>✅ 重建+搜索命中</td></tr><tr><td>session 相关 jest 套件（searchIndex/handler/rag）</td><td>✅ 3/3 exit 0</td></tr><tr><td>持久化自注册链路（加载后端口拿到源 === 导出）</td><td>✅</td></tr><tr><td>分析器自测 + 基线门禁（刷新后）</td><td>✅ 13/13，gate exit 0</td></tr></tbody></table>
+<table><thead><tr><th>验证</th><th>结果</th></tr></thead><tbody><tr><td><code>archDebtScan</code> R3 环数</td><td>✓ 3 → 1（仅余巨型 SCC）</td></tr><tr><td><code>archDebtScan</code> R1 计数</td><td>✓ 保持 28（未增，无安全叶子可降）</td></tr><tr><td>worktree:<code>bindWorktree</code> 经 relocated <code>validateName</code> 合法/穿越/空名三路</td><td>✓ 行为一致</td></tr><tr><td>worktree jest 套件</td><td>✓ exit 0</td></tr><tr><td>session 端到端 reindexAll（端口 + <code>opts.source</code> 注入两路）</td><td>✓ 重建+搜索命中</td></tr><tr><td>session 相关 jest 套件（searchIndex/handler/rag）</td><td>✓ 3/3 exit 0</td></tr><tr><td>持久化自注册链路（加载后端口拿到源 === 导出）</td><td>✓</td></tr><tr><td>分析器自测 + 基线门禁（刷新后）</td><td>✓ 13/13，gate exit 0</td></tr></tbody></table>
 <hr>
 <h2 id="7-治理路线图-增量-可持续">7. 治理路线图（增量、可持续）<a class="anchor" href="#7-治理路线图-增量-可持续" aria-label="锚点">#</a></h2>
 <ol><li><strong>第一轮 P0（已完成）</strong>：静态分析门禁 + 基线 + <code>commandSchema</code> 示范下沉（R1 30→28）。</li><li><strong>第二轮 P1（已完成，2026-06-12）</strong>：消解 2 个二元环（R3 3→1，端口注册 + 纯函数下沉），</li></ol>

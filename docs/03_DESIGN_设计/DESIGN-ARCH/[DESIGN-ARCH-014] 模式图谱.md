@@ -3,6 +3,12 @@
 
 > 自动生成，请勿手动编辑。源: `docs/16_设计模式/registry/模式注册表.json`
 
+**引用层已过期，按历史快照读。** 实测 2026-09-28：全篇 162 条文件路径中 **42 条在磁盘上不存在**
+（含 `backend/src/services/agentsight/discover.js` —— 该文件从未存在，它是 `[MGMT-PLAN-006]` 的**规划**落点）。
+且头部自称的「自动生成」目前**没有对应生成器**：`scripts/` 下无任何脚本写这份 md，
+`generate-pattern-registry.js` 只写注册表 JSON。注册表侧的一致性由
+`node scripts/ci/check-pattern-coverage.js` 守（`pattern-ghost`），**本 md 的引用不在任何守卫覆盖内**。
+
 ## 项目级模式 — Facade（外观模式）
 
 Khy-OS 对外暴露单一入口（`khy` CLI / Web UI / REST API），将内核、AI 网关、量化引擎、插件、前端 UI 等异构子系统封装在统一外观之后。

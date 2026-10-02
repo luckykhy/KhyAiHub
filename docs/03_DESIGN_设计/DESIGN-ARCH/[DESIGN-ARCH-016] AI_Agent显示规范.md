@@ -38,13 +38,13 @@
 
 | 字段 | 类型 | 必填 | 说明 |
 |---|---|:--:|---|
-| `ts` | string(ISO8601) | ✅ | 事件时间戳 |
-| `trace_id` | string(32hex) | ✅ | 单次 Agent 运行的全局关联 id，贯穿所有 step |
+| `ts` | string(ISO8601) | ✓ | 事件时间戳 |
+| `trace_id` | string(32hex) | ✓ | 单次 Agent 运行的全局关联 id，贯穿所有 step |
 | `span_id` | string(16hex) | ◐ | 子步骤 id（并行工具/子 agent 时用） |
-| `app` | string | ✅ | 产生方，如 `khyos` / `khyquant` |
-| `agent` | string | ✅ | agent 角色名，如 `technical` / `general-purpose` |
-| `step` | number | ✅ | 步骤序号，从 1 递增 |
-| `phase` | string | ✅ | `start` / `llm` / `tool` / `result` / `error` / `end` |
+| `app` | string | ✓ | 产生方，如 `khyos` / `khyquant` |
+| `agent` | string | ✓ | agent 角色名，如 `technical` / `general-purpose` |
+| `step` | number | ✓ | 步骤序号，从 1 递增 |
+| `phase` | string | ✓ | `start` / `llm` / `tool` / `result` / `error` / `end` |
 | `thought` | string | ◐ | 思考**摘要**（见 §1.4 截断），**严禁**全量 |
 | `action` | string | ◐ | 当前动作，如 `llm.analyze` / `tool.getStockData` |
 | `tokens` | object | ◐ | `{in, out, total}`，无则省略 |

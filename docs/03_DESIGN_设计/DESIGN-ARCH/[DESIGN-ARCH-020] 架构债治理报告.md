@@ -53,7 +53,7 @@ Tarjan SCC 初检出 **3 个强连通分量**（P1 轮已消解 2 个，**现存
 - **1 个巨型 SCC（~130 节点）**：cli 全层 + 多数 services + 全部 gateway 适配器纠缠成一团。
   根因是 R1 的惰性反向 require 把 cli↔services 焊死成一个环。**这是 R1 的系统级显影**，
   须先解 R1 才能瓦解，本轮不动。
-- ~~**2 个干净二元环**~~ → **✅ P1 轮已消解（2026-06-12）**：
+- ~~**2 个干净二元环**~~ → **✓ P1 轮已消解（2026-06-12）**：
   - `services/sessionPersistence.js` ⇄ `services/sessionSearchIndex.js`
     → 引入零依赖端口 `services/sessionSourcePort.js`（IoC）：持久化层自注册为会话源，
     搜索索引 `reindexAll` 经端口取源,不再反向 require 持久化。
@@ -106,7 +106,7 @@ R1 服务层反向依赖 cli ──(惰性 require 规避崩溃)──► R3 巨
 |---|---|---|---|---|---|
 | **P0** | 工具集成：静态分析门禁 | 全局（防新增债） | 低（新增工具） | 无（只读） | **本轮已做** |
 | **P0** | R1 叶子下沉示范（`commandSchema`） | 5 文件 | 低（纯数据叶子） | 极低 | **本轮已做** |
-| P1 | R3 二元环消解（sessionPersistence/worktreeManager） | 2×2 文件 | 中 | 中 | **✅ 已做（2026-06-12，R3 3→1）** |
+| P1 | R3 二元环消解（sessionPersistence/worktreeManager） | 2×2 文件 | 中 | 中 | **✓ 已做（2026-06-12，R3 3→1）** |
 | ~~P1~~ | ~~R1 共享 UI/渲染叶子下沉（hudRenderer/permissionDialog）~~ | — | — | — | **重判：经审视非纯叶子，改为 P2 反转**（见 §5.2 发现） |
 | P2 | R4 `toolUseLoop` 完成抽取（删本地副本，统一走助手模块） | 业务热区 | 高 | **高** | 路线图（需专项＋全回归） |
 | P2 | R2 巨石文件分解（`repl.js`/`ai.js` 按职责拆 helper） | 高扇入 | 高 | **高** | 路线图（先解 R1/R3 再拆） |
@@ -213,24 +213,24 @@ npm run arch:debt:baseline   # 重铸基线（承认现状，确定性无时间�
 ### P0 轮（commandSchema 下沉）
 | 验证 | 结果 |
 |---|---|
-| 5 个引用方 + 迁移模块加载 | ✅ 全通过 |
-| 命令元数据解析（路由/斜杠/子命令） | ✅ 124 / 84 / 55，与修复前一致 |
-| 无残留旧路径引用 | ✅ grep 清零 |
-| `archDebtScan` R1 计数 | ✅ 30 → 28 |
-| 分析器测试套件 | ✅ 13/13 |
-| 真实基线 CI 门禁 | ✅ 退出码 0（无超基线新增） |
+| 5 个引用方 + 迁移模块加载 | ✓ 全通过 |
+| 命令元数据解析（路由/斜杠/子命令） | ✓ 124 / 84 / 55，与修复前一致 |
+| 无残留旧路径引用 | ✓ grep 清零 |
+| `archDebtScan` R1 计数 | ✓ 30 → 28 |
+| 分析器测试套件 | ✓ 13/13 |
+| 真实基线 CI 门禁 | ✓ 退出码 0（无超基线新增） |
 
 ### P1 轮（二元环消解，2026-06-12）
 | 验证 | 结果 |
 |---|---|
-| `archDebtScan` R3 环数 | ✅ 3 → 1（仅余巨型 SCC） |
-| `archDebtScan` R1 计数 | ✅ 保持 28（未增，无安全叶子可降） |
-| worktree:`bindWorktree` 经 relocated `validateName` 合法/穿越/空名三路 | ✅ 行为一致 |
-| worktree jest 套件 | ✅ exit 0 |
-| session 端到端 reindexAll（端口 + `opts.source` 注入两路） | ✅ 重建+搜索命中 |
-| session 相关 jest 套件（searchIndex/handler/rag） | ✅ 3/3 exit 0 |
-| 持久化自注册链路（加载后端口拿到源 === 导出） | ✅ |
-| 分析器自测 + 基线门禁（刷新后） | ✅ 13/13，gate exit 0 |
+| `archDebtScan` R3 环数 | ✓ 3 → 1（仅余巨型 SCC） |
+| `archDebtScan` R1 计数 | ✓ 保持 28（未增，无安全叶子可降） |
+| worktree:`bindWorktree` 经 relocated `validateName` 合法/穿越/空名三路 | ✓ 行为一致 |
+| worktree jest 套件 | ✓ exit 0 |
+| session 端到端 reindexAll（端口 + `opts.source` 注入两路） | ✓ 重建+搜索命中 |
+| session 相关 jest 套件（searchIndex/handler/rag） | ✓ 3/3 exit 0 |
+| 持久化自注册链路（加载后端口拿到源 === 导出） | ✓ |
+| 分析器自测 + 基线门禁（刷新后） | ✓ 13/13，gate exit 0 |
 
 ---
 

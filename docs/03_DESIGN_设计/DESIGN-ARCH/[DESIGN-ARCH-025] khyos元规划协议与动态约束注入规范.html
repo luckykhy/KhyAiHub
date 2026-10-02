@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -61,7 +61,7 @@
 <hr>
 <h2 id="3-动态约束注入引擎-3-按需配发锁具">3. 动态约束注入引擎（§3 按需配发锁具）<a class="anchor" href="#3-动态约束注入引擎-3-按需配发锁具" aria-label="锚点">#</a></h2>
 <p><code>constraintInjection.resolveInjection(plan)</code> 把策略翻译为「挂什么锁」，<strong>不提前加锁</strong>：</p>
-<table><thead><tr><th>策略</th><th>mountInterceptors</th><th>requireSnapshot</th><th>requireConfirmation</th><th>promptHint</th><th>语义</th></tr></thead><tbody><tr><td><code>Prompt_Soft</code></td><td>❌</td><td>❌</td><td>❌</td><td>一句格式提示</td><td>跳过 AST/沙箱，极速、最省 Token</td></tr><tr><td><code>Code_Hard</code></td><td>✅</td><td>❌</td><td>❌</td><td>—</td><td>挂载执行器代码拦截器，校验不过坚决打回</td></tr><tr><td><code>System_Block</code></td><td>✅</td><td>✅</td><td>✅</td><td>—</td><td>系统级挂起，须先备份快照 + 确认才放行；并仍挂代码校验（双保险）</td></tr></tbody></table>
+<table><thead><tr><th>策略</th><th>mountInterceptors</th><th>requireSnapshot</th><th>requireConfirmation</th><th>promptHint</th><th>语义</th></tr></thead><tbody><tr><td><code>Prompt_Soft</code></td><td>✗</td><td>✗</td><td>✗</td><td>一句格式提示</td><td>跳过 AST/沙箱，极速、最省 Token</td></tr><tr><td><code>Code_Hard</code></td><td>✓</td><td>✗</td><td>✗</td><td>—</td><td>挂载执行器代码拦截器，校验不过坚决打回</td></tr><tr><td><code>System_Block</code></td><td>✓</td><td>✓</td><td>✓</td><td>—</td><td>系统级挂起，须先备份快照 + 确认才放行；并仍挂代码校验（双保险）</td></tr></tbody></table>
 <p><code>runHardValidation(plan, content, ctx)</code> 对 <code>Code_Hard/System_Block</code> 真正跑拦截器；<code>Prompt_Soft</code> 直接放行<br>（<code>ranValidation:false</code>）——这正是「低风险绝不被重算力拖慢」。</p>
 <h3 id="3-1-真实代码拦截器-codeinterceptors-js-非桩">3.1 真实代码拦截器（<code>codeInterceptors.js</code>，非桩）<a class="anchor" href="#3-1-真实代码拦截器-codeinterceptors-js-非桩" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>校验器 key</th><th>实现</th><th>适用</th></tr></thead><tbody><tr><td><code>babel</code></td><td><code>@babel/parser</code>（项目已装），失败回退内置 <code>vm</code> 编译探测</td><td>JS/TS/JSX</td></tr><tr><td><code>python_ast</code></td><td><code>spawnSync python3 -c &quot;import sys,ast; ast.parse(sys.stdin.read())&quot;</code></td><td>Python</td></tr><tr><td><code>vm_or_native</code></td><td>JS 走 <code>vm</code>、Python 走 ast、其它语言退化为括号/引号配平探测</td><td>跨语言</td></tr><tr><td><code>null</code></td><td>不校验（裸执行器，风险自担）</td><td>注释/文案</td></tr></tbody></table>
@@ -69,7 +69,7 @@
 <hr>
 <h2 id="4-混合语言执行器注册表-4-武器库">4. 混合语言执行器注册表（§4 武器库）<a class="anchor" href="#4-混合语言执行器注册表-4-武器库" aria-label="锚点">#</a></h2>
 <p><code>executorRegistry.EXECUTORS</code>（闭集，单一真源）：</p>
-<table><thead><tr><th>id</th><th>语言边界</th><th>astSafetyNet</th><th>validator</th><th>适用</th></tr></thead><tbody><tr><td><code>js_babel_writer</code></td><td>js/ts/jsx/tsx</td><td>✅</td><td><code>babel</code></td><td>重构核心逻辑</td></tr><tr><td><code>py_ast_replacer</code></td><td>python</td><td>✅</td><td><code>python_ast</code></td><td>Python，保障缩进/语法</td></tr><tr><td><code>generic_syntax_writer</code></td><td>任意</td><td>✅</td><td><code>vm_or_native</code></td><td>跨语言，能力依赖语言</td></tr><tr><td><code>raw_string_injector</code></td><td>任意</td><td>❌</td><td><code>null</code></td><td>仅正则/字符串替换，无 AST，极快但风险自担（改注释/文案）</td></tr></tbody></table>
+<table><thead><tr><th>id</th><th>语言边界</th><th>astSafetyNet</th><th>validator</th><th>适用</th></tr></thead><tbody><tr><td><code>js_babel_writer</code></td><td>js/ts/jsx/tsx</td><td>✓</td><td><code>babel</code></td><td>重构核心逻辑</td></tr><tr><td><code>py_ast_replacer</code></td><td>python</td><td>✓</td><td><code>python_ast</code></td><td>Python，保障缩进/语法</td></tr><tr><td><code>generic_syntax_writer</code></td><td>任意</td><td>✓</td><td><code>vm_or_native</code></td><td>跨语言，能力依赖语言</td></tr><tr><td><code>raw_string_injector</code></td><td>任意</td><td>✗</td><td><code>null</code></td><td>仅正则/字符串替换，无 AST，极快但风险自担（改注释/文案）</td></tr></tbody></table>
 <p><code>describeForModel()</code> 从注册表生成元规划 Prompt 里的菜单——<strong>模型可选项 == 注册表</strong>，杜绝凭空捏造（防呆②）。</p>
 <hr>
 <h2 id="5-信任熔断与宪法红线-5-防线兜底">5. 信任熔断与宪法红线（§5 防线兜底）<a class="anchor" href="#5-信任熔断与宪法红线-5-防线兜底" aria-label="锚点">#</a></h2>

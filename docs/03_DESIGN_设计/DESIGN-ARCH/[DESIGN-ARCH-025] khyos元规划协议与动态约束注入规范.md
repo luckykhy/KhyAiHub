@@ -89,9 +89,9 @@ Prompt_Soft  ⊏  Code_Hard  ⊏  System_Block
 
 | 策略 | mountInterceptors | requireSnapshot | requireConfirmation | promptHint | 语义 |
 |------|------------------|-----------------|---------------------|-----------|------|
-| `Prompt_Soft`  | ❌ | ❌ | ❌ | 一句格式提示 | 跳过 AST/沙箱，极速、最省 Token |
-| `Code_Hard`    | ✅ | ❌ | ❌ | — | 挂载执行器代码拦截器，校验不过坚决打回 |
-| `System_Block` | ✅ | ✅ | ✅ | — | 系统级挂起，须先备份快照 + 确认才放行；并仍挂代码校验（双保险） |
+| `Prompt_Soft`  | ✗ | ✗ | ✗ | 一句格式提示 | 跳过 AST/沙箱，极速、最省 Token |
+| `Code_Hard`    | ✓ | ✗ | ✗ | — | 挂载执行器代码拦截器，校验不过坚决打回 |
+| `System_Block` | ✓ | ✓ | ✓ | — | 系统级挂起，须先备份快照 + 确认才放行；并仍挂代码校验（双保险） |
 
 `runHardValidation(plan, content, ctx)` 对 `Code_Hard/System_Block` 真正跑拦截器；`Prompt_Soft` 直接放行
 （`ranValidation:false`）——这正是「低风险绝不被重算力拖慢」。
@@ -116,10 +116,10 @@ Prompt_Soft  ⊏  Code_Hard  ⊏  System_Block
 
 | id | 语言边界 | astSafetyNet | validator | 适用 |
 |----|---------|-------------|-----------|------|
-| `js_babel_writer`      | js/ts/jsx/tsx | ✅ | `babel`        | 重构核心逻辑 |
-| `py_ast_replacer`      | python        | ✅ | `python_ast`   | Python，保障缩进/语法 |
-| `generic_syntax_writer`| 任意          | ✅ | `vm_or_native` | 跨语言，能力依赖语言 |
-| `raw_string_injector`  | 任意          | ❌ | `null`         | 仅正则/字符串替换，无 AST，极快但风险自担（改注释/文案）|
+| `js_babel_writer`      | js/ts/jsx/tsx | ✓ | `babel`        | 重构核心逻辑 |
+| `py_ast_replacer`      | python        | ✓ | `python_ast`   | Python，保障缩进/语法 |
+| `generic_syntax_writer`| 任意          | ✓ | `vm_or_native` | 跨语言，能力依赖语言 |
+| `raw_string_injector`  | 任意          | ✗ | `null`         | 仅正则/字符串替换，无 AST，极快但风险自担（改注释/文案）|
 
 `describeForModel()` 从注册表生成元规划 Prompt 里的菜单——**模型可选项 == 注册表**，杜绝凭空捏造（防呆②）。
 

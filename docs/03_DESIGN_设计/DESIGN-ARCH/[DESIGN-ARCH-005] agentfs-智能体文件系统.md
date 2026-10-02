@@ -93,7 +93,7 @@ Receipts 是**外部资产**：不落在 agent 目录，而是 `receiptService` 
 
 ## 代码位置
 
-- 服务：`services/backend/src/services/agentFs/agentFsService.js`
+- 服务：`services/backend/src/services/domain/agents/agentFs/agentFsService.js`
 - CLI handler：`services/backend/src/cli/handlers/companion.js`
 - 接线：`router.js`（`case 'companion'`）、`commandSchema.js`、`aliases.js`
 - 系统提示词：`src/constants/prompts.js`（`getCompanionSection` + `companion` 段）

@@ -109,7 +109,7 @@
 |[DESIGN-ARCH-119] TUI原生文本选择与复制可用性修复.md|拖选复制失效的三条独立根因（press 被无条件吞 / Shift 修饰位被丢弃 / 备屏绕过未知终端保护）；v2 三层方案：判据收窄（已完成）→ 应用内自绘选择（跳出鼠标通道互斥，对齐 claude-code 松手即复制）→ 门控与登记收口；含 13 条反例矩阵与三层落地清单|在产|在产|
 |[DESIGN-ARCH-119] TUI文本选择与复制-验收标准.md|ARCH-119 第二层（应用内自绘选择）的可执行验收标准：`S-xx`/`V-xx`/`A-xx`/`X-xx`/`N-xx` 五组用例的三段式（输入→期望输出→通过条件），面向小模型直接据以实现；含自验结果（模型层 27/27 实跑绿、全 TUI 771/771 无回归、5 条反例均能检出错误实现）|在产|在产|
 |[DESIGN-ARCH-120] khy-移动端合并方案.md|收口 ARCH-117 遗留幽灵端：`apps/khy-mobile` 0 个 git 跟踪文件、源码已丢失，故不存在源码级合并，改为三段收编（契约收编 / 引用收口 / 目录隔离）；唯一真实差距是扫码，用 `mobile_scanner` 补齐并修掉 `Uri.splitQueryString` 误用；含能力对等矩阵、解析器四条不变量、跨语言契约测试、三条不可回退不变量；目录隔离明确不执行并列出爆炸半径|在产|在产|
-|[DESIGN-ARCH-121] khyos-CC-Harness借鉴清单.md|黄佳《Claude Code 实战：Harness 工程之道》全书机制→借鉴决策 36 条（✅17/🔄10/🔁8/❌1）；P0/P1 落地详析 12 条（K-01~K-12）；载体改造（YAML→JSON 双文件）、不采纳 4 条理由、三轮施工序、整合总图 3 不变量|在产|在产|
+|[DESIGN-ARCH-121] khyos-CC-Harness借鉴清单.md|黄佳《Claude Code 实战：Harness 工程之道》全书机制→借鉴决策 36 条（✓17/10/8/✗1）；P0/P1 落地详析 12 条（K-01~K-12）；载体改造（YAML→JSON 双文件）、不采纳 4 条理由、三轮施工序、整合总图 3 不变量|在产|在产|
 |[DESIGN-ARCH-122] TUI 设计族总纲.md|TUI 设计族唯一导航入口与 scope 裁决真源（20 编号 / 21 文件，5 组；含 119 同号双文件）；规则冲突以 `[DESIGN-ARCH-102]` 为准|在产|
 |[DESIGN-ARCH-123] K-01~K-12 施工盘点清单.md|施工前只读盘点：4 处复核订正（K-12 落点应为 `_patternRules` 而非 `rules`、pattern rules 的 `default:true` 对 opt-in 模式无效、内置 agent 实为 26 个非 5 个、`loadAgents.js` 的 YAML frontmatter 与 §2.5 冲突）；逐条落点/巨石/改动量/门禁风险表；5 件待裁决事项；前置检查命令与 `.khy/` 回滚路径|在产|在产|
 |[DESIGN-ARCH-124] CC 模式剪贴板复制能力补齐提案.md|CC 模式（`KHY_CC_TUI=1`）下剪贴板底层通道（`utils/ccClipboard.writeClipboard`）与选区算法叶子（`selection.js`）补齐提案（**提案待评审、尚未编码**）；上游依赖 `[DESIGN-ARCH-119]`/`[DESIGN-ARCH-111]`；含盲区实证（6 层逐层定位，断点为 `CcApp.js` 零消费者）、方案 A/B 对比、7 项移植清单、键盘语义待决项、附录 A 编号冲突收口说明|在产|在产|

@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -29,6 +29,7 @@
 <p>&lt;!-- 文档分类: DESIGN-ARCH-014 | 阶段: 设计 | 原路径: docs/16_设计模式/模式图谱.md --&gt;</p>
 <h1 id="gof-23-设计模式全量映射">GoF 23 设计模式全量映射<a class="anchor" href="#gof-23-设计模式全量映射" aria-label="锚点">#</a></h1>
 <blockquote><p>自动生成，请勿手动编辑。源: <code>docs/16_设计模式/registry/模式注册表.json</code></p></blockquote>
+<p><strong>引用层已过期，按历史快照读。</strong> 实测 2026-09-28：全篇 162 条文件路径中 <strong>42 条在磁盘上不存在</strong><br>（含 <code>backend/src/services/agentsight/discover.js</code> —— 该文件从未存在，它是 <code>[MGMT-PLAN-006]</code> 的<strong>规划</strong>落点）。<br>且头部自称的「自动生成」目前<strong>没有对应生成器</strong>：<code>scripts/</code> 下无任何脚本写这份 md，<br><code>generate-pattern-registry.js</code> 只写注册表 JSON。注册表侧的一致性由<br><code>node scripts/ci/check-pattern-coverage.js</code> 守（<code>pattern-ghost</code>），<strong>本 md 的引用不在任何守卫覆盖内</strong>。</p>
 <h2 id="项目级模式-facade-外观模式">项目级模式 — Facade（外观模式）<a class="anchor" href="#项目级模式-facade-外观模式" aria-label="锚点">#</a></h2>
 <p>Khy-OS 对外暴露单一入口（<code>khy</code> CLI / Web UI / REST API），将内核、AI 网关、量化引擎、插件、前端 UI 等异构子系统封装在统一外观之后。</p>
 <h2 id="文件级统计概览">文件级统计概览<a class="anchor" href="#文件级统计概览" aria-label="锚点">#</a></h2>

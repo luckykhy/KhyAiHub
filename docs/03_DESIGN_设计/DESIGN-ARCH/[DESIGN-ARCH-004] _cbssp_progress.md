@@ -7,7 +7,7 @@
 
 ---
 
-## 阶段 B —— 验收包做启发 h(s)（§4.B）✅ 已完成
+## 阶段 B —— 验收包做启发 h(s)（§4.B）✓ 已完成
 
 - 新增 `services/backend/src/services/heuristic.js`：
   `h(s) = costPerCriterion × 未满足必需验收项数`（`hAdmissible`，可采纳下估）
@@ -20,7 +20,7 @@
 - 测试 `tests/services/heuristic.test.js`：**16 例全绿**——可采纳性（h≤真实剩余）、
   单调性（满足一项 h 严格下降）、goal 条件（h=0 ⟺ 全部满足）、停滞检测。
 
-## 阶段 A —— 可逆性分层 LRTA*（§4.A）✅ 已完成
+## 阶段 A —— 可逆性分层 LRTA*（§4.A）✓ 已完成
 
 **A1 价值回填**
 - 新增 `services/backend/src/services/lrtaBackfill.js`：
@@ -59,9 +59,9 @@ verificationGate+postHookStop+queryEngine.toolLoopParity 共 **56 例全绿**。
 
 ---
 
-## 阶段 C —— 调度统一（§4.C）✅ 已完成
+## 阶段 C —— 调度统一（§4.C）✓ 已完成
 
-**C-1 适配器路由 UCB1 ✅ 已完成**
+**C-1 适配器路由 UCB1 ✓ 已完成**
 - 新增 `services/backend/src/services/gateway/ucbRouter.js`：UCB1 老虎机
   `a* = argmax[μ̂_a + c·√(2 ln N / n_a) − cooldownDamp_a]`。臂回报
   `r = success ? speed(latency) : 0 ∈ [0,1]`（`speed = refLatency/max(latency,refLatency)`，
@@ -80,7 +80,7 @@ verificationGate+postHookStop+queryEngine.toolLoopParity 共 **56 例全绿**。
   （3 臂 Bernoulli，LCG 确定性，R(T)/T 随 T 增大严格下降 + 最优臂占比>70% + 远低于线性界）。
   回归 `aiGateway.stability.regressions`+`apiPoolStrategy`+`failoverOrderStore` **45 例全绿**。
 
-**C-4 统一断路器三态机 ✅ 已完成**
+**C-4 统一断路器三态机 ✓ 已完成**
 - `circuitBreaker.js` 新增唯一真源纯函数 `computeBackoffMs({baseMs,attempt,multiplier,maxMs,maxSteps})`
   = `min(maxMs, baseMs·m^clamp(attempt,0,maxSteps))`，并让断路器自身 `_onFailure`
   半开重开也走它（不再内联 `current*multiplier`）。
@@ -94,7 +94,7 @@ verificationGate+postHookStop+queryEngine.toolLoopParity 共 **56 例全绿**。
   回归 `circuitBreaker.management`+`stability.regressions`+`apiPoolStrategy` 等 **66 例全绿**。
   既存失败 `aiGateway.retryBudget`（2 例）已证 committed HEAD 同样复现 → 工作区 pre-existing。
 
-**C-2 账号池真均衡 ✅ 已完成**
+**C-2 账号池真均衡 ✓ 已完成**
 - 新增 `services/backend/src/services/accountSelector.js`：纯函数 LRU/P2C 选择器。
   `loadKey(account)` = 使用近度（`last_used_at` ms，null→0/`created_at` 兜底；越小越闲越优）。
   `selectLru` 取最闲账号（id 平局确定性）；`selectPowerOfTwo(accounts, rng)` 抽两个取较闲
@@ -112,7 +112,7 @@ verificationGate+postHookStop+queryEngine.toolLoopParity 共 **56 例全绿**。
   实盘 SQL smoke：getActiveAccount→active / banActiveAccount 1→2 切换 / 12× acquire+release
   全程无错。回归 selector+ucb+breaker+kiro/windsurf 适配器+stability **60 例全绿**。
 
-**C-3 工作流 quantum 抢占 ✅ 已完成**
+**C-3 工作流 quantum 抢占 ✓ 已完成**
 - `workflowExecutor.js` 单游标解释器加 `options.quantum`（>0 启用）：每执行 quantum 个
   节点即让出，返回 `{status:'paused', pause:{kind:'quantum', nodeId:<下一节点>, loopState}}`。
   让出点在游标推进**之后**、指向**下一个待执行节点**（恢复时正常执行，不像 answer-resume
@@ -133,7 +133,7 @@ verificationGate+postHookStop+queryEngine.toolLoopParity 共 **56 例全绿**。
 
 **Phase C 全部完成**（C-1 UCB1 路由 / C-2 账号池真均衡 / C-3 工作流 quantum 抢占 / C-4 统一断路器）。
 
-## 阶段 D —— 约束格形式化（§4.D）✅ 已完成
+## 阶段 D —— 约束格形式化（§4.D）✓ 已完成
 
 - 新增 `services/backend/src/services/constraintLattice.js`：把六维 guards 形式化为
   三元偏序格 **⊥(BOTTOM 红线) ⊏ SOFT(可审批) ⊏ ⊤(TOP 可行)**（`RANK` 即序，
