@@ -1,0 +1,68 @@
+{
+  "name": "reverseEngineer",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "实测出边（10 个源文件全数清点，非抽样）：D3 两条 —— reconstructionPort 的 `../../../../utils/withTimeout`、toolOrchestrator 的 `../../../../utils/javaEncoding`；第三方一条 —— sourceRecoverer 惰性 require `node-stream-zip`（package.json dependencies 声明 ^1.15.0，本机从仓库根 node_modules 解析成功，zip 主路径因此是真跑而非空转）。其余成员（formatRegistry / stringHarvester / asarArchive / verificationLedger）只用内建模块，零本地出边。artifactScanner 只 require 同单元的 ./formatRegistry（数据与代码分离）。",
+  "_deviation_note": "登记而非白名单，三笔：(1) reconstructionPort 顶层 require `../../../gateway/safeJsonParse` —— 那是 src/services/gateway/，属 D1（src/services 顶层），不在 D2 的名义边界内。它是模型输出解析的既有共享件，缺失即无法解析 brain 的 JSON；D2→D1 在 DOMAIN-DEPS 里是 declared_not_enforced，交由 archDebtScan R1 与 cross-layer-require 棘轮管辖，本清单如实登记，不写白名单把它合法化。(2) genericExtractor 与 toolOrchestrator require `src/tools/platformUtils`（可执行文件探活 / 平台识别），而 `src/tools/**` **不属于 DOMAIN-DEPS.json 的任何域根**——既不是 D1 也不是 D4，因此这条边在方向判定上是「未映射」，既不能说合规也不能说违规；域归属缺口的裁决见任务 #17。(3) 唯一的 D1 入边是再导出壳 src/services/reverseEngineer/index.js（module.exports 直接转发本单元），工具层 src/tools/reverseEngineer.js 走的是这个壳而非 D2 路径。",
+  "fanIn": 2,
+  "fanInEvidence": [
+    "services/backend/src/services/reverseEngineer/index.js",
+    "services/backend/src/tools/unpackTool.js"
+  ],
+  "_fanIn_note": "非测试消费者 2 个（按「直接 require 本单元路径」计）：D1 再导出壳 services/reverseEngineer/index.js、unpackTool.js（直连 genericExtractor.js 与 asarArchive.js 两个成员）。最终消费面 src/tools/reverseEngineer.js 经壳消费，故不计入本单元的直连 fan-in（记为 2 跳）。计数排除 *.test.js。注：src/utils/withTimeout.js 在全文 grep 里也命中本单元名，但命中的是文档注释（说明谁在用它），不是 require——已逐行核实，未计入。",
+  "behaviourTestsOutsideUnit": [
+    "services/backend/tests/services/reverseEngineer/reverseEngineer.test.js",
+    "services/backend/tests/services/reverseEngineer/asarArchive.test.js",
+    "services/backend/tests/tools/unpackGeneric.test.js"
+  ],
+  "_outside_test_note": "三份方言不同，结论按**实测**而非按方言名推断。reverseEngineer.test.js 是 node:test，本环境可跑，45 例全绿。另两份是 jest 方言：asarArchive.test.js 在 `node --test` 下加载期 `ReferenceError: describe is not defined`，unpackGeneric.test.js 是 `ReferenceError: beforeAll is not defined`（都发生在任何被测代码运行之前）——本便携环境未安装 jest，`node_modules/.bin/jest` 是悬空 shim。两份都用一次性方言垫片复跑核实过真实断言结果：asarArchive 6 例全过、unpackGeneric 7 过 1 skip（skip 那条要求本机真有 7z，本机没有，是如实 skip 不是假绿）。「跑不了」不等于「红」，但也不许反过来把「跑不了」当作「不用看」——错误文本必须读。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-29",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "晋级三判据齐：单元级 README.md、整数 fanIn、10 个源文件**全部**有同名同目录测试（164 例、0 skip、全绿）。诚实交代覆盖的不均匀：zip 还原主路径用手搓 store-ZIP 夹具真跑（含 CRC32 与落盘往返），外部反编译器编排与 genericExtractor 的真实抽取驱动在本机只验形状与 fail-closed（没装 objdump/binutils 之外的工具链与 7z/bsdtar/unar），装齐后这两条路径才获得端到端覆盖——这是环境事实，不是单元缺陷，故不降档但如实登记。",
+  "contract": {
+    "pipeline": "六层确定性优先流水线（DESIGN-ARCH-054）：① artifactScanner 只读分诊 → ② stringHarvester 字符串与工具链指纹 → ③ sourceRecoverer 源码/字节码取回 → ④ toolOrchestrator 外部反编译器探活与驱动 → ⑤ reconstructionPort 证据→结构化重建 → ⑥ verificationLedger 与 khy 构建清单比对出保真度。门面 index.js 负责串联、授权门与逐层降级。",
+    "neverExecute": "防呆①：全链路只读字节，绝不 spawn 被分析制品。分诊层只 fs.openSync(..., 'r') 读头部 512 字节（tar 的 magic 在偏移 257，故窗口不能更短）加头部/尾部标记窗口；哈希流式计算避免大文件全量入内存。",
+    "honestAbsence": "防呆②：工具不存在就如实上报（available:false + 逐平台安装来源），绝不伪造反编译输出。PyInstaller CArchive 与 Node SEA 不重写解析器，而是 deferred 并点名外部工具；不可还原档位（native/bytecode）不硬凑源码。",
+    "noSandboxEscape": "防呆④：解包条目名逐条过 _isSafeEntry（绝对路径 / 上跳 / 盘符 / 非串拒）与 _isWithinDest（目标目录本身算命中，近似前缀不算）。默认 listOnly 只编目，只有显式给 outDir 才落盘。条目数与解压总量走 env 上限。",
+    "argvInjection": "防呆⑤：外部工具一律 execFile（无 shell）+ 固定 argv + 活动式超时 + maxBuffer，制品路径永远是独立 argv 元素而非拼进命令行；PLANS 的 27 条 argv 逐条以带 shell 元字符与空格的恶意路径实测钉死。_which 探活结果跨家族缓存。",
+    "authzGate": "防呆⑥ 只在门面：产物同目录能定位 .khy-build-manifest.json，或调用方显式 authorized:true，才放行还原/反编译/深度重建；否则只做只读分诊与字符串归纳，并在 warnings 里写清怎么授权。子层是纯函数与被工具层直接复用的叶子，不重复设门。",
+    "evidenceVsInference": "防呆①第二义（不伪造）：证据区与推断区物理分隔。buildEvidencePack 对每路证据设硬裁剪上限（url 15 / path 20 / version 15 / sample 30 / member 80 / 反汇编样本 6000 字符）；reconstruct 只收模型 JSON 的已登记键，confidence 钳 [0,1]，数组各有上限；brain 缺席/超时/抛错/散文/非对象六种失效全部收敛为 source:'evidence-only' 且不抹掉确定性语言结论。",
+    "fidelityRuler": "verificationLedger：fidelity = 50 分产物哈希一致 + 50 分源码覆盖率；verified 要求哈希一致且覆盖 >=0.95，partial 要求覆盖 >=0.6 或哈希一致；无清单不阻断，退化为 no-baseline 且 fidelity null。缺失与多余按 basename 归一比较，只有 kind=source 的还原成员算 extra。",
+    "failSoft": "任何一层失败都不拖垮整条链：不存在 / 是目录 / 0 字节 / 乱码 / 头畸形 / brain 挂死，一律降级为部分报告并保留已得事实；scanFile 与 scanFileSync 逐字节同结果；_run 永不 reject。",
+    "injectionPoints": [
+      "ReverseEngineer({brain, brainTimeoutMs}) — 模型自省函数注入，缺省即纯确定性",
+      "toolOrchestrator 经 platformUtils.searchExecutable 探活（测试在 require 前替换该函数：模块在加载时解构，事后打补丁无效）",
+      "genericExtractor 的 detectPackageManager/pickExtractor 接受 {platform, has} 注入探针，纯逻辑可测不触系统",
+      "sourceRecoverer.recover(path, scan, {outDir}) — 默认只编目，落盘须显式给目录",
+      "verificationLedger.buildManifest/writeManifest/loadManifest/findManifestFor — 清单读写全可指定路径"
+    ],
+    "gates": "KHY_RE_STRING_WINDOW（字符串窗口，默认 8 MiB）、KHY_RE_MAX_BYTES（解包总量，默认 64 MiB）、KHY_RE_MAX_ENTRIES（条目上限，默认 20000）、KHY_RE_TOOL_TIMEOUT_MS（工具活动式超时，默认 20000）、KHY_RE_TOOL_MAX_BUFFER（工具输出上限，默认 512 KiB）、KHY_RE_BRAIN_TIMEOUT_MS（模型超时，默认 30000）。全部 parseInt(process.env.X, 10) || 默认值，零硬编码端点。消费侧的 KHY_UNPACK_GENERIC 门在 src/tools/unpackTool.js，不在本单元。",
+    "knownBoundaries": [
+      "同一族继承键失效（本会话 D2 第 5 次命中，B27-F1 已修 genericExtractor）仍有三处**潜在**点未改，实测流水线内不可达：reconstructionPort 的 FAMILY_LANG[pack.family]（scanner 家族全集 = FORMATS ∪ EMBEDDED_MARKERS 的 13 个 + 未命中默认 'unknown' = 14 个，均非原型键；直接调用可得到 language/toolchain 皆 undefined 而 confidence 仍 0.4 的伪报告）；toolOrchestrator 的 PLANS[family] || []（家族名命中原型键时 .map 抛 TypeError）；artifactScanner 的 _RANK（方向安全：命不中即判「不更强」，只会少升级不会误升级）。三处均有测试钉住实测行为，改动会踩线。收敛与否属人的裁决，见任务 #17。",
+      "大端 ELF 的 e_machine 仍按小端读，架构名会错（endian 字段是对的）；fat/universal Mach-O 的位宽退化为 32。只影响 arch 展示，不影响档位与还原。",
+      "node-stream-zip 在打开阶段就拒绝穿越条目，因此 _recoverZip 里的逐条 skipped 护栏对 zip 永远走不到：一个恶意条目让整包 fail-closed，而非跳过它继续还原其余成员。",
+      "fidelity 与 verdict 不是同一把尺：清单未登记产物哈希时 artifactHashMatch 为 null、分数退化为纯覆盖半分制，判级却仍走「覆盖 >=0.6 或哈希一致」那道门，于是 50 分覆盖判 mismatch 而 60 分判 partial。算术如实钉住，不做静默对齐。",
+      "harvest() 对非 Buffer 入参返回的对象与正常路径键集合不同（classified 五键空形状在，samples/total 缺席），调用方不可假设同形。",
+      "toolOrchestrator._run 把「工具不存在」归因成 exit ENOENT 文案，语义上是启动失败而非退出码；不影响降级，读证据时要知道。",
+      "formatRegistry 的 cafebabe 是刻意登记的撞号（java-class 与 macho 都声明它），由 artifactScanner 按第 6-7 字节语义改判；_disambiguateCafebabe 的边界以实测 44/45/200/201 为准，不按注释设想。"
+    ],
+    "fixed_in_this_unit": "B27-F1（genericExtractor.js）：三张表都以 TABLE[key] || 兜底 取值而 key 来自外部数据（平台名 / 扩展名 / 管理器名），落到 constructor/valueOf/toString 等 Object.prototype 继承键时取到继承值而非兜底，后续字段访问随即抛错；改为自有键判定 _own()，对表内所有合法键逐字节等价。B27-F2（stringHarvester.js）：secret 分类器的前导词边界曾套在整个交替外面，而 PEM 的 -----BEGIN 只出现在串首或非词字符之后（那里没有词边界），PEM 支从未命中过；同时字符类用 + 至少吃一个字符，连无算法名的 PKCS#8 私钥头也漏。词边界逐支下沉、量词放宽为星号，两处各钉一根测试线，并确认公钥/证书未被顺手捞进「秘密」。"
+  },
+  "tests": [
+    "artifactScanner.test.js",
+    "asarArchive.test.js",
+    "formatRegistry.test.js",
+    "genericExtractor.test.js",
+    "index.test.js",
+    "reconstructionPort.test.js",
+    "sourceRecoverer.test.js",
+    "stringHarvester.test.js",
+    "toolOrchestrator.test.js",
+    "verificationLedger.test.js"
+  ],
+  "_test_dialect_note": "10 份全部 node:test 方言、同目录同名、共置；合计 164 例 / 0 skip / 全绿（逐文件 27/13/11/14/20/19/18/13/16/13）。零依赖被逆向的外部工具链：探活函数在 require 前替换，外部反编译只走 probe/降级分支。README.md 的每条契约引用都过了引用探针，并与 node --test 自己报告的 164 个标题逐一比对（TAP 会把反斜杠转义成双反斜杠、把井号转义成反斜杠井号，比对前已还原），零虚构引用。"
+}
