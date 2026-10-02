@@ -6,11 +6,11 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS = [
-  { id: 'tasks', icon: '📋', label: '任务' },
-  { id: 'files', icon: '📁', label: '文件' },
-  { id: 'git', icon: '🔀', label: 'Git' },
-  { id: 'terminal', icon: '💻', label: '终端' },
-  { id: 'browser', icon: '🌐', label: '浏览器' },
+  { id: 'tasks', icon: '☰', label: '任务' },
+  { id: 'files', icon: '▸', label: '文件' },
+  { id: 'git', icon: '⑂', label: 'Git' },
+  { id: 'terminal', icon: '◆', label: '终端' },
+  { id: 'browser', icon: '◉', label: '浏览器' },
 ]
 
 export function Sidebar({ activePanel, onPanelChange }: SidebarProps) {
@@ -49,7 +49,7 @@ export function Sidebar({ activePanel, onPanelChange }: SidebarProps) {
           className="relative w-10 h-10 rounded-lg flex items-center justify-center text-sm text-foreground/70 hover:bg-surface-hover hover:text-foreground transition-all duration-150"
           aria-label="通知"
         >
-          <span className="text-base">🔔</span>
+          <span className="text-base">●</span>
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full" />
         </button>
         <button
@@ -58,7 +58,7 @@ export function Sidebar({ activePanel, onPanelChange }: SidebarProps) {
           className="relative w-10 h-10 rounded-lg flex items-center justify-center text-sm text-foreground/70 hover:bg-surface-hover hover:text-foreground transition-all duration-150"
           aria-label="设置"
         >
-          <span className="text-base">⚙️</span>
+          <span className="text-base">✱</span>
         </button>
       </div>
     </div>
