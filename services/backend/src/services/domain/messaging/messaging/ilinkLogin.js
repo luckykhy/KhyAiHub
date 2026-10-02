@@ -266,12 +266,12 @@ async function login(opts = {}) {
         }
         if (status === 'expired') {
           expired = true;
-          onStatus(attempt < MAX_QR_REFRESH ? '⏳ 二维码已过期,正在换一张…' : '⏳ 二维码已过期。');
+          onStatus(attempt < MAX_QR_REFRESH ? '二维码已过期,正在换一张…' : '二维码已过期。');
           break;
         }
         if (status === 'scaned' && !scanedNotified) {
           scanedNotified = true;
-          onStatus('📱 已扫码,请在手机上确认。');
+          onStatus('已扫码,请在手机上确认。');
         }
         if (status && status !== 'wait' && status !== 'scaned') {
           // 已知的失败类状态(未灰度/版本过低/被拒/取消)——把服务端原话透出,不自己编。

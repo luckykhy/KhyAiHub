@@ -122,7 +122,7 @@ function formatProgressEntry(e) {
     const sentinel = `<!-- @progress v=1 ts=${_enc(iso)} topic=${_enc(topic)} covered=${_enc(covered)} next=${_enc(next)} -->`;
     const lines = [
       sentinel,
-      `### 📌 ${_clip(topic)} · ${_humanDate(iso)}`,
+      `### ${_clip(topic)} · ${_humanDate(iso)}`,
       `- 已覆盖:${_clip(covered) || '(未填)'}`,
       `- 下一步:${_clip(next) || '(未填)'}`,
       '',

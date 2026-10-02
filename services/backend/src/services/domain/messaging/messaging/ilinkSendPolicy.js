@@ -177,7 +177,7 @@ function sendBackoffMs(attempt, baseMs) {
 function formatPermissionPrompt(info, maxValueLen = 200) {
   const i = info || {};
   const tool = String(i.toolName || '未知工具');
-  const lines = [`🔐 需要你授权执行:${tool}`];
+  const lines = [`需要你授权执行:${tool}`];
 
   const risk = i.riskInfo && (i.riskInfo.level || i.riskInfo.risk);
   if (risk) {
@@ -223,7 +223,7 @@ function formatPermissionPrompt(info, maxValueLen = 200) {
   const reasoning = i.reasoning ? String(i.reasoning) : '';
   if (reasoning) {
     lines.push(
-      `💭 ${reasoning.length > maxValueLen ? `${reasoning.slice(0, maxValueLen)}…` : reasoning}`
+      `${reasoning.length > maxValueLen ? `${reasoning.slice(0, maxValueLen)}…` : reasoning}`
     );
   }
 

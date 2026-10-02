@@ -44,7 +44,7 @@ const FAMILY = Object.freeze({
 const SEVERITY = Object.freeze({ LOW: 'low', MEDIUM: 'medium', HIGH: 'high', EXTREME: 'extreme' });
 
 // ── 退化输入原料（确定性构造，避免随机以保证可复现） ──────────────────────────
-const SURROGATE_SOUP = '😀🧨'.repeat(64) + '\uD83D'; // 末尾留一个孤立高代理（半个 emoji）
+const SURROGATE_SOUP = ''.repeat(64) + '\uD83D'; // 末尾留一个孤立高代理（半个 emoji）
 const DEEP_NEST = (() => {
   let s = '';
   for (let i = 0; i < 200; i++) {

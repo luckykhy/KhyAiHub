@@ -147,7 +147,7 @@ function decideFixPlan(input) {
 function buildCiStatusText(ciResult, target) {
   const ci = ciResult && typeof ciResult === 'object' ? ciResult : {};
   const lines = [];
-  lines.push('🔧 autofix-pr · CI 状态');
+  lines.push('autofix-pr · CI 状态');
   if (target) {
     lines.push(`  目标线索: ${target}(本地修复当前分支工作树;khy 不远程操作他人 PR)`);
   }
@@ -189,7 +189,7 @@ function buildOutcomeText(afResult) {
   const r = afResult && typeof afResult === 'object' ? afResult : {};
   const outcome = String(r.outcome || '');
   const lines = [];
-  lines.push('🔧 autofix-pr · 本地修复结果');
+  lines.push('autofix-pr · 本地修复结果');
   if (outcome === 'clean') {
     lines.push(
       '  审计未发现需修复的严重/高优先级问题(CI 失败可能由环境/外部因素导致,请查看 CI 日志)。'

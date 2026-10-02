@@ -451,7 +451,7 @@ function formatContradictionFooter(results) {
     return '';
   }
 
-  let footer = '\n\n⚡ 矛盾检测:';
+  let footer = '\n\n矛盾检测:';
   const parts = [];
   if (c.numerical.length > 0) {
     parts.push(`${c.numerical.length} 处数值矛盾`);
@@ -483,9 +483,9 @@ function formatContradictionFooter(results) {
 
   // 综合严重度
   if (c.overallSeverity >= 0.7) {
-    footer += '\n  ⚠️ 高度矛盾:建议深入核查原始来源';
+    footer += '\n  ⚠ 高度矛盾:建议深入核查原始来源';
   } else if (c.overallSeverity >= 0.4) {
-    footer += '\n  ⚡ 中度矛盾:注意甄别不同来源立场';
+    footer += '\n  中度矛盾:注意甄别不同来源立场';
   }
 
   return footer;

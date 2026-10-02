@@ -673,7 +673,7 @@ function formatQualityFooter(results) {
   if (parts.length === 0) {
     return '';
   }
-  return `\n\n📊 质量概览: ${parts.join('、')}。`;
+  return `\n\n质量概览: ${parts.join('、')}。`;
 }
 
 module.exports = {

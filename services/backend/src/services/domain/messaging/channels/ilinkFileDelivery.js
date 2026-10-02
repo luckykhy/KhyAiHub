@@ -66,7 +66,7 @@ async function deliverFiles(deps = {}) {
           const sizeMb = (st.size / (1024 * 1024)).toFixed(1);
           await say(
             msg,
-            `📎 文件「${fileName}」太大(${sizeMb}MB,超过上限 ${limitMb}MB),暂不能直接发送。` +
+            `文件「${fileName}」太大(${sizeMb}MB,超过上限 ${limitMb}MB),暂不能直接发送。` +
               `你可以到这个路径自取:${filePath}`
           );
           continue;
@@ -81,12 +81,12 @@ async function deliverFiles(deps = {}) {
         if (!sendRes || sendRes.ok === false) {
           const reason = (sendRes && sendRes.error) || '未知原因';
           log.warn(`ilink: 文件发送失败(${fileName}):${reason}`);
-          await say(msg, `📎 文件「${fileName}」发送失败。你可以到这个路径自取:${filePath}`);
+          await say(msg, `文件「${fileName}」发送失败。你可以到这个路径自取:${filePath}`);
         }
       } catch (err) {
         const reason = (err && err.message) || String(err);
         log.warn(`ilink: 文件投递出错(${fileName}):${reason}`);
-        await say(msg, `📎 文件「${fileName}」发送出错。你可以到这个路径自取:${filePath}`).catch(
+        await say(msg, `文件「${fileName}」发送出错。你可以到这个路径自取:${filePath}`).catch(
           () => {}
         );
       }

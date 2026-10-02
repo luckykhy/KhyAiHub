@@ -197,7 +197,7 @@ function buildContinuationPrompt(partialText) {
 function buildTruncationNotice(continuations = 0) {
   const n = Number.isFinite(continuations) && continuations > 0 ? continuations : 0;
   const detail = n > 0 ? `（已尝试续写 ${n} 段仍未完整）` : '';
-  return `\n\n[⚠️ 输出已达长度上限被截断${detail}。可提高 maxTokens 或让我“继续”以补全剩余内容。]`;
+  return `\n\n[⚠ 输出已达长度上限被截断${detail}。可提高 maxTokens 或让我“继续”以补全剩余内容。]`;
 }
 
 /**

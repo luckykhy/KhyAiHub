@@ -472,7 +472,7 @@ function formatClaimFooter(results) {
   }
   const v = first._claimVerification;
 
-  let footer = '\n\n📋 声明核验:';
+  let footer = '\n\n声明核验:';
   const parts = [];
   if (v.verifiedClaims > 0) {
     parts.push(`${v.verifiedClaims} 条多源佐证声明`);
@@ -501,7 +501,7 @@ function formatClaimFooter(results) {
 
   // 展示冲突
   if (v.conflicts && v.conflicts.length > 0) {
-    footer += '\n  ⚠️ 冲突:';
+    footer += '\n  ⚠ 冲突:';
     for (const c of v.conflicts) {
       footer += `\n    ${c.key}: ${c.values.join(' vs ')}`;
     }

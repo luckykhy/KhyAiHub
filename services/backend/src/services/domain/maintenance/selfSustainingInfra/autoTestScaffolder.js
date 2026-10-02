@@ -28,7 +28,7 @@ const BOUNDARY_HEURISTICS = [
   },
   {
     test: /(str|text|name|msg|message|title|path|url|key|id|word)/i,
-    cases: ["''", "'   '", "'a'", "'\\u{1F600}'"],
+    cases: ["''", "'   '", "'a'", "'\\u{1F600}'"],  // khy-allow-no-emoji: 自动生成的测试用例数据：U+1F600 是刻意喂进解析器的对抗输入
   },
   { test: /(list|arr|items|rows|set|coll|args)/i, cases: ['[]', '[null]', '[1,2,3]'] },
   {
@@ -305,7 +305,7 @@ function generateCoverageReport(sourceFile) {
     console.log(`已补全:       ${coverage.completed}`);
     console.log(`待补全:       ${coverage.placeholder}`);
     console.log(`覆盖率:       ${coverage.coverage}%`);
-    console.log(`状态:         ${coverage.coverage >= 50 ? '✅ PASS' : '⚠️  WARNING (< 50%)'}`);
+    console.log(`状态:         ${coverage.coverage >= 50 ? '✓ PASS' : '⚠  WARNING (< 50%)'}`);
     console.log(`--------------------------------\n`);
     return coverage;
   } catch (err) {

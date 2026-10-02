@@ -141,7 +141,7 @@ function buildClaimText(decision, selfPid) {
   const d = decision && typeof decision === 'object' ? decision : {};
   const self = _intOrNull(selfPid);
   const lines = [];
-  lines.push('👑 claim-main · 主角色认领');
+  lines.push('claim-main · 主角色认领');
   switch (d.result) {
     case CLAIM_RESULT.CLAIMED_FREE:
       lines.push(`  ✓ 已认领主角色(此前无人持有)。本进程 pid=${self == null ? '?' : self}`);
@@ -174,7 +174,7 @@ function buildStatusText(input) {
   const ptr = src.pointer && typeof src.pointer === 'object' ? src.pointer : null;
   const self = _intOrNull(src.selfPid);
   const lines = [];
-  lines.push('👑 claim-main · 当前主角色');
+  lines.push('claim-main · 当前主角色');
   if (!ptr || _intOrNull(ptr.pid) == null) {
     lines.push('  当前无实例持有主角色(可用 /claim-main 认领)。');
     lines.push(`  本进程 pid=${self == null ? '?' : self}`);
@@ -203,12 +203,12 @@ function buildReleaseText(decision) {
   const d = decision && typeof decision === 'object' ? decision : {};
   switch (d.reason) {
     case 'self':
-      return '👑 claim-main · 已释放本进程持有的主角色。';
+      return 'claim-main · 已释放本进程持有的主角色。';
     case 'not_self':
-      return `👑 claim-main · 当前主角色由 pid=${d.holderPid} 持有,非本进程 —— 拒绝替他人释放(请在该实例上操作,或用 /claim-main 覆盖式认领)。`;
+      return `claim-main · 当前主角色由 pid=${d.holderPid} 持有,非本进程 —— 拒绝替他人释放(请在该实例上操作,或用 /claim-main 覆盖式认领)。`;
     case 'none':
     default:
-      return '👑 claim-main · 当前无实例持有主角色,无需释放。';
+      return 'claim-main · 当前无实例持有主角色,无需释放。';
   }
 }
 

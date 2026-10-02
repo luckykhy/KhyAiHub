@@ -93,9 +93,22 @@ function isStepAvailable(step) {
 /**
  * 不可用步骤的诚实说明。当前所有已知步骤均有真实 SSOT 可委托,故此文本只作为
  * 未来新增步骤的防御性兜底(绝不伪造能力)。
+ * step 显式 String 化:模板字符串对 Symbol 会隐式转换抛 TypeError,与本文件
+ * 「绝不抛」的契约冲突(contract 测试用 Symbol 探到的,2026-09-28)。
  */
 function buildUnavailableText(step) {
-  return `  ${step} —— 该引导步骤在 khy 暂不可用。`;
+  return `  ${String(step == null ? '' : step)} —— 该引导步骤在 khy 暂不可用。`;
+}
+
+/**
+ * Number() 对 Symbol / BigInt 抛 TypeError,与本叶「绝不抛」的契约冲突
+ * (contract 测试用 Symbol 探到的,2026-09-28)。其余形状保持原生 Number() 语义:
+ * 数字串照常解析,对象/数组/undefined 一律 NaN,由调用方的 Number.isFinite 分支兜住。
+ */
+function _num(v) {
+  const t = typeof v;
+  if (t === 'symbol' || t === 'bigint') return NaN;
+  return Number(v);
 }
 
 /**
@@ -116,7 +129,7 @@ function buildTrustStatusText(snapshot) {
   const gate =
     s.gateEnabled === true ? '开' : s.gateEnabled === false ? '关(不弹窗,一律视为已信任)' : '未知';
   const reasonSuffix = s.reason && reasonText[s.reason] ? `（${reasonText[s.reason]}）` : '';
-  const n = Number(s.persistedCount);
+  const n = _num(s.persistedCount);
   const lines = [];
   lines.push('  文件夹信任(folder trust)—— 快速安全检查:');
   lines.push(`  当前目录: ${s.cwd ? String(s.cwd) : '未知'}`);
@@ -149,7 +162,7 @@ function buildStatusText(snapshot) {
     lines.push(`  Getting-Started 待展示: ${yn(s.gettingStartedPending)}`);
   }
   if (s.mcpServerCount !== undefined) {
-    const n = Number(s.mcpServerCount);
+    const n = _num(s.mcpServerCount);
     lines.push(`  MCP 工具服务: ${Number.isFinite(n) ? `${n} 个已配置` : '未知'}`);
   }
   lines.push('');

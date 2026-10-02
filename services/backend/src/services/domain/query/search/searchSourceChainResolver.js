@@ -425,7 +425,7 @@ function formatProvenanceFooter(results) {
   }
   const s = first._provenanceSummary;
 
-  let footer = '\n\n🔗 溯源分析:';
+  let footer = '\n\n溯源分析:';
   const parts = [];
   if (s.primaryCount > 0) {
     parts.push(`${s.primaryCount} 条一手来源`);

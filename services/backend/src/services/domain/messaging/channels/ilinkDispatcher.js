@@ -579,16 +579,16 @@ class IlinkDispatcher {
     //    (否则用户会看到 agent 认真回答「y」是什么意思)。
     if (this._graceUntil && Date.now() < this._graceUntil && core.parsePermissionReply(msg.text)) {
       this._graceUntil = 0;
-      await this._say(msg, '⏰ 上一个授权请求已超时(已自动拒绝)。请重新发一次你的指令。');
+      await this._say(msg, '上一个授权请求已超时(已自动拒绝)。请重新发一次你的指令。');
       return;
     }
 
     // ③ 空文本(纯图片/语音等)在阶段 4 之前先如实告知,不静默丢。
     if (!msg.text) {
       if (msg.unsupported && msg.unsupported.length) {
-        await this._say(msg, `📎 暂不支持${msg.unsupported.join('、')}消息,请改用文字。`);
+        await this._say(msg, `暂不支持${msg.unsupported.join('、')}消息,请改用文字。`);
       } else if (msg.images && msg.images.length) {
-        await this._say(msg, '🖼 收到图片,但图片理解尚未接通(即将支持)。请先用文字描述。');
+        await this._say(msg, '收到图片,但图片理解尚未接通(即将支持)。请先用文字描述。');
       }
       return;
     }
@@ -612,12 +612,12 @@ class IlinkDispatcher {
     // ⑤ 排队(串行)。队列有上限,避免有人连发几十条把内存和 token 都撑爆。
 
     if (this._queue.length >= 10) {
-      await this._say(msg, '⏳ 排队的消息太多了,这条先丢掉。等我把前面的处理完再发。');
+      await this._say(msg, '排队的消息太多了,这条先丢掉。等我把前面的处理完再发。');
       return;
     }
     this._queue.push(msg);
     if (this._queue.length > 1 || this._running) {
-      await this._say(msg, `⏳ 正在处理前一条,你这条排在第 ${this._queue.length} 位。`);
+      await this._say(msg, `正在处理前一条,你这条排在第 ${this._queue.length} 位。`);
     }
     await this._drain();
   }
@@ -632,7 +632,7 @@ class IlinkDispatcher {
       const out = await this._slashResult(msg, cmd);
       await this._say(msg, out);
     } catch (err) {
-      await this._say(msg, `⚠️ /${cmd.cmd} 执行出错:${(err && err.message) || err}`);
+      await this._say(msg, `⚠ /${cmd.cmd} 执行出错:${(err && err.message) || err}`);
     }
   }
 
@@ -662,7 +662,7 @@ class IlinkDispatcher {
         return this._describeConnection();
 
       case 'ping':
-        return '🏓 在。';
+        return '在。';
 
       case 'status':
         return this._describeRoute(true);
@@ -680,9 +680,9 @@ class IlinkDispatcher {
         try {
           _resolveSessionControl('getClearHistory')();
           this._queue.length = 0;
-          return '🧹 已清空对话历史(排队中的消息也一并丢弃)。';
+          return '已清空对话历史(排队中的消息也一并丢弃)。';
         } catch (e) {
-          return `⚠️ 清空失败:${(e && e.message) || e}`;
+          return `⚠ 清空失败:${(e && e.message) || e}`;
         }
 
       case 'queue':
@@ -754,7 +754,7 @@ class IlinkDispatcher {
           await this._runQuery(msg);
         } catch (err) {
           log.warn(`ilink dispatcher 处理失败:${(err && err.message) || err}`);
-          await this._say(msg, `⚠️ 处理出错了:${(err && err.message) || '未知错误'}`);
+          await this._say(msg, `⚠ 处理出错了:${(err && err.message) || '未知错误'}`);
         }
       }
     } finally {
@@ -772,7 +772,7 @@ class IlinkDispatcher {
       }
       await this._say(
         msg,
-        '⚠️ AI 内核未就绪,暂时无法回答。请确认守护进程已启动:khy daemon start。'
+        '⚠ AI 内核未就绪,暂时无法回答。请确认守护进程已启动:khy daemon start。'
       );
       return;
     }
@@ -1150,7 +1150,7 @@ class IlinkDispatcher {
         this._graceUntil = Date.now() + defaults.ILINK_PERMISSION_GRACE_MS;
         this._say(
           msg,
-          `⏰ 等待授权超过 ${Math.round(defaults.ILINK_PERMISSION_TIMEOUT_MS / 1000)} 秒,已自动拒绝。`
+          `等待授权超过 ${Math.round(defaults.ILINK_PERMISSION_TIMEOUT_MS / 1000)} 秒,已自动拒绝。`
         ).catch(() => {});
         finish('deny');
       }, defaults.ILINK_PERMISSION_TIMEOUT_MS);
@@ -1161,7 +1161,7 @@ class IlinkDispatcher {
       this._pendingPermission = {
         resolve: (verdict) => {
           // 给个回执,否则用户不知道那句 y 到底收到没有。
-          this._say(msg, verdict === 'allow' ? '✅ 已授权,继续执行。' : '🚫 已拒绝。').catch(
+          this._say(msg, verdict === 'allow' ? '✓ 已授权,继续执行。' : '已拒绝。').catch(
             () => {}
           );
           finish(verdict);
@@ -1292,13 +1292,13 @@ class IlinkDispatcher {
       qr = { ok: false, error: (e && e.message) || String(e) };
     }
     if (!qr || !qr.ok) {
-      await this._say(msg, `⚠️ 申请绑定二维码失败:${(qr && qr.error) || '未知原因'}`);
+      await this._say(msg, `⚠ 申请绑定二维码失败:${(qr && qr.error) || '未知原因'}`);
       return;
     }
 
     // 安全提示（必须）:转发二维码 = 授权对方使用你的 khy 实例。
     const safety = [
-      '⚠️ 安全提示:这张二维码等同于你的 khy 授权入口。',
+      '⚠ 安全提示:这张二维码等同于你的 khy 授权入口。',
       '谁扫码绑定,谁就能用你的 khy 实例——可访问你的文件系统与工具。',
       '请只转发给你完全信任的人;二维码有时效,过期需重新申请。',
     ].join('\n');

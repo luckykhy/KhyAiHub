@@ -91,9 +91,11 @@ function executorIds() {
   return EXECUTORS.map((e) => e.id);
 }
 
-/** Look up an executor by id, or null. */
+/** Look up an executor by id, or null. Ownership goes through isRegistered() so
+ *  that a prototype key ('constructor', '__proto__', …) cannot resolve to an
+ *  inherited member — the two functions must not disagree about "registered". */
 function getExecutor(id) {
-  return _BY_ID[String(id || '').trim()] || null;
+  return isRegistered(id) ? _BY_ID[String(id || '').trim()] : null;
 }
 
 /** True iff `id` is a registered executor. */

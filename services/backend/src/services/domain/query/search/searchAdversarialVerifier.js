@@ -470,7 +470,7 @@ function formatVerificationFooter(results) {
 
   const globalSignals = [];
   if (bubbleRisk === 'high') {
-    globalSignals.push('⚠️ 信息茧房风险高:结果来源过度集中');
+    globalSignals.push('⚠ 信息茧房风险高:结果来源过度集中');
   } else if (bubbleRisk === 'medium') {
     globalSignals.push('信息茧房风险中等:建议拓展搜索词');
   }
@@ -481,7 +481,7 @@ function formatVerificationFooter(results) {
     globalSignals.push('跨引擎共识度低');
   }
 
-  let footer = '\n\n🔍 对抗式核验:';
+  let footer = '\n\n对抗式核验:';
   if (parts.length > 0) {
     footer += `\n  置信度分布 — ${parts.join('、')}`;
   }

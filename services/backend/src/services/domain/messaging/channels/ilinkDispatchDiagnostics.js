@@ -30,7 +30,7 @@
  * @returns {string}
  */
 function describeConnection(state = {}) {
-  const lines = ['🔗 连接健康'];
+  const lines = ['连接健康'];
   const ch = state.channel;
   const s = ch && typeof ch.toJSON === 'function' ? ch.toJSON() : {};
 
@@ -39,7 +39,7 @@ function describeConnection(state = {}) {
     lines.push(`账号:${s.accountId}`);
   }
   if (s.sessionExpired) {
-    lines.push('⚠️ 会话已过期 —— 需要在电脑上重新扫码:khy wx login');
+    lines.push('⚠ 会话已过期 —— 需要在电脑上重新扫码:khy wx login');
   }
   if (Number(s.failures) > 0) {
     lines.push(`连续轮询失败:${s.failures} 次(正在退避重试)`);
@@ -113,7 +113,7 @@ function describeRoute(state = {}, full) {
   }
   if (proven) {
     const ago = Math.round((Date.now() - proven.at) / 1000);
-    lines.push(`✅ 最近成功答话的通道:${proven.key}(${ago} 秒前)— 这条是可证的`);
+    lines.push(`✓ 最近成功答话的通道:${proven.key}(${ago} 秒前)— 这条是可证的`);
   } else {
     lines.push('尚无「已成功答话」的记录(本进程还没答过,或刚重启)。');
   }
@@ -137,7 +137,7 @@ function describeRoute(state = {}, full) {
   const cfgModel = process.env.GATEWAY_PREFERRED_MODEL || '(未设)';
   lines.push(`配置首选:${cfgAdapter} / ${cfgModel}(只是配置,不代表在用)`);
   if (proven && cfgAdapter !== '(未设)' && cfgAdapter !== 'auto' && proven.key !== cfgAdapter) {
-    lines.push(`⚠️ 首选通道 ${cfgAdapter} 没在服务,已回落到 ${proven.key}。`);
+    lines.push(`⚠ 首选通道 ${cfgAdapter} 没在服务,已回落到 ${proven.key}。`);
   }
   lines.push('');
   lines.push('注:模型自称的身份来自上下文里的配置值,回落时会报错。以上面「已证实」那行为准。');

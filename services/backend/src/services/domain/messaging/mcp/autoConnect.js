@@ -43,6 +43,43 @@ function autoConnectEnabled(env = process.env) {
   return String((env && env.KHY_MCP_AUTOCONNECT) || '').toLowerCase() !== 'false';
 }
 
+/**
+ * 连接失败/未连接的**用户可见文案**（纯函数，零 IO —— 便于单测锁定措辞）。
+ *
+ * 为什么需要它：MCP server 是**可选工具**（如 deepseek-eyes 提供图像识别），
+ * 连不上不影响页面可用、不影响对话 —— 它是 fire-and-forget 的增强项。
+ * 但历史上失败行走的是 `✗`（红色叉），用户把它读成「khy 启动出错」，
+ * 于是「启动慢」的抱怨里混进了一个其实无害的噪声。
+ *
+ * 措辞纪律：必须同时给出（a）未连接的事实（b）「可选、不影响使用」的定性。
+ * 少了 (b)，用户仍然会以为是故障；少了 (a)，排障时又找不到线索。
+ *
+ * @param {{name: string, error: string}} failure
+ * @param {{done: number, total: number}} [progress]
+ * @returns {string}
+ */
+function formatConnectFailure(failure, progress) {
+  const name = (failure && failure.name) || 'unknown';
+  const error = (failure && failure.error) || 'unknown error';
+  const prefix =
+    progress && Number.isFinite(progress.done) && Number.isFinite(progress.total)
+      ? `[${progress.done}/${progress.total} ${((progress.done / progress.total) * 100)
+          .toFixed(1)
+          .padStart(5)}%] `
+      : '';
+  return `${prefix}! ${name} 未连接（可选工具，不影响使用）: ${error}`;
+}
+
+/**
+ * 整轮汇总文案：N 个可选工具未连接。
+ * @param {Array} failures
+ * @returns {string}
+ */
+function formatConnectFailureSummary(failures) {
+  const n = Array.isArray(failures) ? failures.length : 0;
+  return `${n} 个可选工具未连接（不影响页面与对话，需要时可在设置里重连）:`;
+}
+
 // Process-level one-shot latch (default). Tests inject their own `state` to stay
 // isolated, so no reset hook is needed.
 const _processState = { started: false };
@@ -101,4 +138,9 @@ async function ensureMcpConnected({
   }
 }
 
-module.exports = { ensureMcpConnected, autoConnectEnabled };
+module.exports = {
+  ensureMcpConnected,
+  autoConnectEnabled,
+  formatConnectFailure,
+  formatConnectFailureSummary,
+};
