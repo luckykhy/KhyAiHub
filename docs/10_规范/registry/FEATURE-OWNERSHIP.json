@@ -1,7 +1,7 @@
 {
  "$schemaNote": "能力域 → 唯一实现位置登记表。schema 单一真源：docs/10_规范/其它规范/[DESIGN-SOURCING-001] 借鉴与实现统一规则.md §4 B-U1。守卫脚本 check:feature-ownership 尚未落地（B-G1/B-G2 分阶段建设项），本文件当前由人工评审使用。",
  "version": 2,
- "updated": "2026-09-27",
+ "updated": "2026-09-28",
  "status": "seeded",
  "capabilities": [
   {
@@ -129,7 +129,7 @@
    ],
    "forbidden": [],
    "status": "active",
-   "notes": "登记 2026-09-17（ycode 借用第 3 轮落地）。本轮修的是 Windows/PowerShell 盲区，落两处：shellToToolMapper.js 的 DESTRUCTIVE_COMMANDS 从 7 个 POSIX 词扩到 12 个（+del/erase/rd/remove-item/remove-itemproperty），使 cmd.exe 与 PowerShell cmdlet 删除从「未知命令默认 medium、isDestructive=false」升到 high+isDestructive=true；shellSafetyValidator.js 的 INTERPRETER_EVAL_SPECS 新增 PowerShell 家族（powershell/pwsh/powershell_ise，-command 与 -encodedcommand），并给 detectInlineEval 增加加法式字段 opaque——-EncodedCommand 携带 base64，解包层读不到内容，只有 -EncodedCommand 一个 flag 判 critical，其余所有内联执行 flag 保持 warning 不动。critical 的理由是「内容不可检视」这个不同性质，不是把同一族调严：可见的 -Command 载荷本来就是明文，Layer 1 已解包继续分析，所以仍留 warning。forbidden 留空是有意的：本仓无本能力的并行实现；最近的两个邻居刻意不列——tools/powershell.js 是工具清单层的 risk 声明（声明式元数据，不是分类器），services/actionAttribution.js 是归属标注层（只打标签不阻断），二者与门禁层是设计上的分工而非重复，列入 forbidden 会让正当改动被判 ERROR。残留缺口（本轮不做，留评审）：cmd.exe 的 /c /k 未纳入 COMMAND_CARRIERS，故 `cmd /c del x` 仍只被解包层当作普通 cmd 参数、判 medium，`erase`/`rd` 已覆盖但 `cmd /c` 前缀的载荷不递归分析；纳入需处理 CMD 引号转义语义，属独立提案。另：上游单一 _INLINE_EXEC_FLAGS 集合未采纳，本仓按解释器分族的 spec 表更精确（-m/-p 跨族语义不同，python -m 是模块调用不是任意代码执行），强行合并按上游形态会引入误判。",
+   "notes": "登记 2026-09-17（ycode 借用第 3 轮落地）。本轮修的是 Windows/PowerShell 盲区，落两处：shellToToolMapper.js 的 DESTRUCTIVE_COMMANDS 从 7 个 POSIX 词扩到 12 个（+del/erase/rd/remove-item/remove-itemproperty），使 cmd.exe 与 PowerShell cmdlet 删除从「未知命令默认 medium、isDestructive=false」升到 high+isDestructive=true；shellSafetyValidator.js 的 INTERPRETER_EVAL_SPECS 新增 PowerShell 家族（powershell/pwsh/powershell_ise，-command 与 -encodedcommand），并给 detectInlineEval 增加加法式字段 opaque——-EncodedCommand 携带 base64，解包层读不到内容，只有 -EncodedCommand 一个 flag 判 critical，其余所有内联执行 flag 保持 warning 不动。critical 的理由是「内容不可检视」这个不同性质，不是把同一族调严：可见的 -Command 载荷本来就是明文，Layer 1 已解包继续分析，所以仍留 warning。forbidden 留空是有意的：本仓无本能力的并行实现；最近的两个邻居刻意不列——tools/powershell.js 是工具清单层的 risk 声明（声明式元数据，不是分类器），services/actionAttribution.js 是归属标注层（只打标签不阻断），二者与门禁层是设计上的分工而非重复，列入 forbidden 会让正当改动被判 ERROR。残留缺口（本轮不做，留评审）：cmd.exe 的 /c /k 未纳入 COMMAND_CARRIERS，故 `cmd /c del x` 仍只被解包层当作普通 cmd 参数、判 medium，`erase`/`rd` 已覆盖但 `cmd /c` 前缀的载荷不递归分析；纳入需处理 CMD 引号转义语义，属独立提案。另：上游单一 _INLINE_EXEC_FLAGS 集合未采纳，本仓按解释器分族的 spec 表更精确（-m/-p 跨族语义不同，python -m 是模块调用不是任意代码执行），强行合并按上游形态会引入误判。2026-10-02 残差闭合（khy-Trajectory/ycode-borrowing/2026-10-02-cmdcarrier-计划.md）：上述 `cmd /c del x` 判 medium 的评级缺口已在 mapper 侧闭合——mapSingleCommand 首词命中 cmd/cmd.exe 且后续为 /c|/k 时，内层剩余串经复合入口 mapCommandToVirtualTools 取最严段（cmd 单 & 分隔符由该分支内切分，& 连接的破坏段不隐藏），返回 risk=maxRisk(unknown 默认 medium, 内层最严)、isDestructive=内层任一段破坏——单调只升不降（cmd /c dir 良性内层保持 medium 字节稳定；裸 cmd /c 无内层不猜、保持 medium）；嵌套引号/caret 转义深水仍留独立提案（0917 预告原文）。递归深度守卫 CMD_CARRIER_MAX_DEPTH=3。测试 commandRiskClassifier.windows.test.js 追加 cmd 载体 describe 7 条（先红 4/30 后绿 30/30；3 条实现前绿为回归锁），广谱风险门 182/182（shellCommand.idleTimeout 一次并行负载抖动，单跑+复跑双绿归因 flake）。validator 侧 COMMAND_CARRIERS 不动：其 raw 正则扫描不涉 mapper 词表（del/erase/rd 是 0917 轮 mapper 决策记录的家），给单载体加词表会造成两侧表漂移。",
    "rolloutStage": "S3",
    "rolloutNote": "命令风险分级是既有的拦截型机制，早于 PROCESS-006 成文，按 PP-1 的「存量豁免」不予追溯；其 pattern 规则早已在生产门禁中生效（见 [DESIGN-PROCESS-002] §3 双层防线）。"
   },
@@ -154,6 +154,29 @@
    "forbidden": [],
    "status": "active",
    "notes": "登记 2026-09-18（第一梯队提案 1，见 .khy/feedback/2026-09-18-tier1-minimax-code/proposal-b-p2.md）。诚实边界：静态 key 轨道的 TTL 是宿主侧消费纪律而非供应商吊销（providers.js 注释明写），OAuth 轨道才是真过期。接入委派链（claudeDelegation/cliAgentRunner 改走租约）刻意留待后续提案，本域先落地被调用侧。"
+  },
+  {
+   "domain": "software-copyright-materials",
+   "summary": "软著申请资料生成器（分析项目 → 业务理解 → 60 页代码材料 → 操作手册 → 申请表 → OfficeCLI 出 Word/TXT），vendored 原样入库 + 本仓覆盖层对冲口径",
+   "canonical": "scripts/copyright/vendor/software-copyright-materials/SKILL.md",
+   "ownedLayers": [],
+   "pattern": "vendor + repo-contract overlay",
+   "method": "vendored",
+   "source": "Fokkyp/SoftwareCopyright-Skill@947d5963194bfda8ce57b8b454b486f13359dee4 (2026-09-24, SKILL.md v2.5 / plugin 2.2.0, MIT) — 整包保留 26 个上游文件（SKILL.md + agents/ + references/ + scripts/ + tests/）逐字不改；镜像 luckykhy/SoftwareCopyright-Skill 在同一 commit、无本地分叉。借的是全套材料生成工作流与 7 个 STOP_FOR_USER 人工门禁，不借其「优先抽取前端代码」选材口径（由 scripts/copyright/repo-contract.md 覆盖）",
+   "aliases": [
+    "软著材料生成",
+    "软著申请资料",
+    "software-copyright-materials",
+    "代码材料 60 页",
+    "操作手册生成",
+    "申请表信息生成"
+   ],
+   "forbidden": [
+    "软件著作权申请资料/**",
+    "scripts/copyright/vendor/**"
+   ],
+   "status": "active",
+   "notes": "登记 2026-09-29（B-P2 提案与 B-P3 维护者批准见 evidence/01_人类贡献/决策记录.md D-软著skill）。落点从 L6 tools/ 改到 scripts/copyright/ 的原因是实测：.gitignore:184 把 tools/deepseek-eyes/ 整目录忽略、git ls-files tools 为 0 跟踪文件 —— 埋在那里的约束在新克隆机器上不存在，违反多机自举与 [DESIGN-DELIV-001] D3；scripts/ 是 [DESIGN-LAY-005] §1.2 的工程横切层，与既有 scripts/evidence/（C-E4 采集器）同族。刻意不参与运行时、随主包不分发，故 ownedLayers 留空（vendored 须落在 ownedLayers 之外，B-M1 #3）。上游文件只读：任何改动由 check-copyright-readiness.js 的 copyright-vendored-skill 按 upstream-manifest.json 的逐文件 sha256 判 error（S1 降级 WARN 不拦截）。forbidden 两项是防「再造一份并行实现」：根目录同名输出树只作本机草稿区，第二份 vendored 副本属重复搬运。"
   },
   {
    "domain": "mcp-disclosure",
@@ -199,7 +222,7 @@
    ],
    "forbidden": [],
    "status": "active",
-   "notes": "登记 2026-09-23（ycode 借用第 4 轮落地，khy-Trajectory/ycode-borrowing/2026-09-23-子代理结果尾块与部分打捞-台账.md）。纯叶子 subAgentResultFooter.js 实现两个借鉴点：withToolErrorFooter（无工具报错时字节级不变，有报错时追加 ⚠️ 尾块，>5 条折叠为「另有 N 个未展开」，单条 >200 字符截断，并携带可选的回合级中止原因行）与 truncateHeadPreserveTail（超限截断时保留含尾块的尾部、省略号内写真实省略字符数）；salvagePartial 供超时/catch 路径打捞中止前正文。薄接线在 AgentTool/index.js _runStandaloneAgent 的 onToolResult/_chainedOnChunk/成功/catch 四处，全部由开关 KHY_SUBAGENT_RESULT_FOOTER 门控（默认开；0/false/off/no 关闭时字节级回退既有行为），体量上限 KHY_SUBAGENT_RESULT_MAX_CHARS 默认 20000 可 env 覆盖。刻意取舍：① 不采纳上游 Python SubagentManager 整条链路（khy-os 已有 toolUseLoop+KHY_AGENT_IDLE_WATCHDOG，只取结果处理语义）；② 体量上限只在「追加了尾块」时才施加，不做上游式无条件 cap——无报错的干净结果不因引入本机制而被截断。既有邻居不列 forbidden：ccOutputTruncate/maxTokensRecovery 是上下文压缩/续写语义、interruptionMarker 是用户中断渲染语义，与本域「结果诚实呈现」分工不同。测试 services/backend/tests/subAgentResultFooter.test.js 12 条全绿（先红后绿，MODULE_NOT_FOUND 记录在案）。"
+   "notes": "登记 2026-09-23（ycode 借用第 4 轮落地，khy-Trajectory/ycode-borrowing/2026-09-23-子代理结果尾块与部分打捞-台账.md）。纯叶子 subAgentResultFooter.js 实现两个借鉴点：withToolErrorFooter（无工具报错时字节级不变，有报错时追加 ⚠ 尾块，>5 条折叠为「另有 N 个未展开」，单条 >200 字符截断，并携带可选的回合级中止原因行）与 truncateHeadPreserveTail（超限截断时保留含尾块的尾部、省略号内写真实省略字符数）；salvagePartial 供超时/catch 路径打捞中止前正文。薄接线在 AgentTool/index.js _runStandaloneAgent 的 onToolResult/_chainedOnChunk/成功/catch 四处，全部由开关 KHY_SUBAGENT_RESULT_FOOTER 门控（默认开；0/false/off/no 关闭时字节级回退既有行为），体量上限 KHY_SUBAGENT_RESULT_MAX_CHARS 默认 20000 可 env 覆盖。刻意取舍：① 不采纳上游 Python SubagentManager 整条链路（khy-os 已有 toolUseLoop+KHY_AGENT_IDLE_WATCHDOG，只取结果处理语义）；② 体量上限只在「追加了尾块」时才施加，不做上游式无条件 cap——无报错的干净结果不因引入本机制而被截断。既有邻居不列 forbidden：ccOutputTruncate/maxTokensRecovery 是上下文压缩/续写语义、interruptionMarker 是用户中断渲染语义，与本域「结果诚实呈现」分工不同。测试 services/backend/tests/subAgentResultFooter.test.js 12 条全绿（先红后绿，MODULE_NOT_FOUND 记录在案）。"
   },
   {
    "domain": "tui-approval-cards",
@@ -223,6 +246,50 @@
    "forbidden": [],
    "status": "active",
    "notes": "结构真源:docs/10_规范/其它规范/[DESIGN-SOURCING-001] B-P2 提案见 .khy/feedback/permission-notice-20260923/borrowing-proposal.md。卡里说什么 vs 输出区说什么的单一真源是 permissionNotice.js;两张卡共用 cardLayout.js 的排版语法。上游仅作只读参考(仓库外 D:/Portable/_scratch/upstream-refs),按 B-S3 不入库。"
+  },
+  {
+   "domain": "subagent-common-floor",
+   "summary": "子代理公共约束地板：无内建定义的裸派生路径（默认 general-purpose 或 schema 文档化但无内建的 role）在唯一注入缝补上证据诚实/工具面/收尾自含三维纪律，幂等防与既有块双份",
+   "canonical": "services/backend/src/agents/constraints.js",
+   "ownedLayers": [
+    "L2"
+   ],
+   "pattern": "Facade",
+   "method": "idea",
+   "source": "xingyao-y-code@a656e76 (v1.3.3 band, 2026-09-23) — 其结论：每个子代理进入回合前携带与角色无关的公共约束块（身份/证据/工具面/安全）。khy-os 只取证据/工具面/收尾三维（身份已由 SUBAGENT_EXECUTION_SCOPE 单点承载，安全已在 HARD_PROHIBITIONS）；块文字逐字自写，未粘贴上游任何源码片段；khy-os 根目录无 LICENSE，按 B-S4.1 method 上限为 idea/reference，本条按 idea 档。",
+   "aliases": [
+    "SUBAGENT_COMMON_FLOOR",
+    "buildSubagentSystemPrompt",
+    "KHY_SUBAGENT_COMMON_FLOOR",
+    "子代理公共约束块",
+    "子代理约束地板",
+    "subagent constraint block"
+   ],
+   "forbidden": [],
+   "status": "active",
+   "notes": "登记 2026-10-02（ycode 借用第 5 轮落地，khy-Trajectory/ycode-borrowing/2026-10-02-计划.md + 同日台账）。注入缝 AgentTool.buildSubagentSystemPrompt 是唯一改动点；幂等判据 = role prompt 已含 EXECUTION_DISCIPLINE 或 HARD_PROHIBITIONS 整块时不注入（内建 agent 定义自行拼接这两块，双份=噪音）。门控 KHY_SUBAGENT_COMMON_FLOOR 默认开，0/false/off/no 逐字节回退 scope-only 组合。刻意不借：上游工具面白名单数据面——本仓工具面裁剪已机制化（buildSubagentDenylist + _toolNamesAtDepth 深度天花板），散文再列名单=第二真源。已知边界：coordinator/workerAgent.spawnWorker 编排路径（line 419 拼 role.systemPrompt）不过本缝，裸路径暂不受保护，属下一轮候选。与 subagent-result-footer 互补：本域管「进去之前」，该域管「出来之后」。2026-10-02 当日第三轮补全（khy-Trajectory/ycode-borrowing/2026-10-02-workerfloor-计划.md）：上述 worker 裸路径已接线——地板应用逻辑（门控+幂等）收拢为本 canonical 的新导出纯函数 applyCommonFloor(prompt, env)（唯一策略家，防第二份漂移），AgentTool seam 重构为调用它（行为逐字节不变，第一轮 9 条 jest 断言为回归锁），coordinator/workerAgent 新增纯函数 buildWorkerPrompt 并在 :419 接线（DEFAULT_AGENT_ROLES persona 均无约束块，floor 整块注入；与 OUTPUT_CONTRACT 的结构化收尾互补不重复）。刻意不扩：worker 不注 SUBAGENT_EXECUTION_SCOPE（其嵌套/父对话语义属子代理生命周期，worker 深度/并发守卫自管），留独立判断。测试 tests/workerAgent.commonFloor.test.js 8 条（先红 8/8 后绿 8/8；TypeError=符号未存在），workerAgent 消费方回归 5 套件 47 测试全绿。2026-10-02 当日第四轮补全（khy-Trajectory/ycode-borrowing/2026-10-02-toolsurface-计划.md）：上游白名单半边的本仓形态落地——新增导出纯函数 buildToolSurfaceNotice(deniedTools, env)（声明文字唯一家，同门 KHY_SUBAGENT_COMMON_FLOOR，去重保序、>20 项折叠「另有 N 项未展开」），声明的是 buildSubagentDenylist 机制输出的**被扣留**工具（视图即机制，非第二真源；上游借白名单形态、本仓取声明职能换数据源）；seam buildSubagentSystemPrompt 增第三参 deniedTools（缺省 null → 既有两参调用字节级不变），_runStandaloneAgent 内 denylist 提升为变量 deniedTools 供 AgentContext（机制）与 seam（声明）共用同一份输出，防漂移。活触发：深度天花板（≥2 层全 spawn 工具入扣留清单）与只读角色（explore/verify/audit 剥离写工具）每次派生即触发。测试 tests/tools/AgentTool.toolSurfaceDeclaration.test.js 8 条（先红 6/8 后绿 8/8；2 条实现前绿为回归锁），一/三轮 jest 21/21、node:test 8/8 零回归。"
+  },
+  {
+   "domain": "canonical-state-snapshot",
+   "summary": "会话 canonical 快照（6 维）的构建/持久化/恢复渲染：崩溃恢复与 replan 携带前一回合状态，权限档位随快照走",
+   "canonical": "services/backend/src/services/canonicalState.js",
+   "ownedLayers": [
+    "L2"
+   ],
+   "pattern": "Memento",
+   "method": "idea",
+   "source": "xingyao-y-code@9ce8ecc (v1.3.2 band, 2026-09-22) — 其结论：会话级权限档位属于会话上下文，须随会话状态持久化与恢复。khy-os 只取「档位入快照」半边（信息模型）；「随子代理/并行线程传播」半边经核实为反向优势（本仓档位是模块级单例 toolCallingPermissions._permissionMode，天然共享，无需显式传播）。未粘贴上游任何源码片段；khy-os 根目录无 LICENSE，按 B-S4.1 method 上限为 idea/reference，本条按 idea 档。",
+   "aliases": [
+    "canonicalState",
+    "buildSnapshot",
+    "formatAsPrompt",
+    "会话快照",
+    "canonical 快照",
+    "权限档位入快照"
+   ],
+   "forbidden": [],
+   "status": "active",
+   "notes": "登记 2026-10-02（ycode 借用第 5 轮·当日第二轮落地，khy-Trajectory/ycode-borrowing/2026-10-02-权限档位快照-计划.md + 同日台账）。buildSnapshot 的 constraints 维新增 permissionMode：ctx 显式传入优先，否则 fail-soft lazy 调 toolCallingPermissions.getPermissionMode()（模块级单例真源），不可用时不设键（不猜 default）；formatAsPrompt 仅当字段存在时渲染 Permission mode 行——旧快照缺字段字节级不变。消费路径（既有生产读路径）：toolUseLoopCore.js:9991 replan 构建注入、:1762 崩溃恢复注入。刻意取舍：① 恢复不自动套用档位（persist:false 的防覆盖设计 + 崩溃后自动升档是安全面风险），快照记录仅作上下文呈现；② 不加门控开关（未门控恢复提示词内的一行加法，无自动行为变更面），评审若要求对齐 Z6 门控惯例再补；③ 未碰 toolCallingPermissions.js（他人在改 M 件）。测试 services/backend/tests/canonicalState.permissionMode.test.js 5 条（先红 3/5 后绿 5/5；2 条实现前绿为回归锁）。"
   }
  ],
  "rollout": {
@@ -694,6 +761,118 @@
      "constant": "KHY_CALIBRATE_HINT_STAGE",
      "note": "S1 铁律：KHY_CALIBRATE_HINT_STAGE<'S3' 时 effectiveMode() 把 on/inject 档一律收敛为 log——即使 env 写 on 也不注入。升 S3 = 人工裁决翻转该常量并同步本条目 stage/previousStage。"
     }
+   },
+   {
+    "id": "domain-direction-guard",
+    "name": "五域依赖方向守卫（D1–D5 名义边界，[RESEARCH-018] §3.1 P1）",
+    "ssot": "docs/10_规范/registry/DOMAIN-DEPS.json",
+    "rules": [],
+    "_rules_note": "刻意留空：本规则挂在既有门 check:layout（LAYOUT-001）的执行器里，而 LAYOUT-001 是 P1/pr 档、其派生强度为 blocking —— 那是它其余 error 级发现（root-whitelist 等）应有的强度。若把 LAYOUT-001 写进本条 rules，守卫会按 PP-3 判「S1 机制却在阻断」，而真实的 domain-direction 恰恰只记不拦（warning + 基线棘轮，未进 --promote 名单）。与 no-emoji-guard 同一登记手法。",
+    "executor": "scripts/ci/check-repo-layout.js",
+    "stage": "S1",
+    "stageSince": "2026-09-28",
+    "samples": {
+     "observed": 58,
+     "target": 200,
+     "note": "2026-09-28 建档：domain-direction 规则首次全仓实测 58 处（d3-purity 46 + no-reach-into-archive 12），写入 scripts/ci/repo-layout-baseline.json 的 counts['domain-direction']。S1 语义 = 只记录 + 棘轮：默认 warning，不因存量违规阻断；只有**超出基线**（即新增违规）才升 error。毕业看样本量而非时间（PP-2）：S2 需 ≥50 次真实提示且误报 <10%（判据是解析后的 require 目标是否真属跨域——注释、动态 spec、拓展内自引用均已在排除逻辑内，需人复核首批提示）；S3 需 ≥20 次真实拦截且豁免率 <20%。"
+    },
+    "rollback": "纯配置回滚，PP-4 合规：把 id 从 scripts/ci/check-repo-layout.js 的 BASELINE_IDS/ALL_FINDING_IDS 摘掉即整体停用；或删 DOMAIN-DEPS.json 的 enforced[] 条目收敛判据范围（守卫无判据时按「不 fail-open」亮 error，故停用走前一种）；基线只降不升，上调基线需人工显式改 json 并留原因。",
+    "stageAuthority": "scripts/ci/check-repo-layout.js：本机制没有独立 STAGE 常量，阶段语义由三处代码事实共同决定 —— ①finding.severity='warning'；②id 在 BASELINE_IDS 内（只降不升的棘轮）；③未列入 CI 的 --promote 名单。三者任一改变即升档，故不登记 executorStage.constant（登记表里的 stage 是这三处事实的镜像说明，不是第二真源）。",
+    "blockedBy": []
+   },
+   {
+    "id": "functional-unit-guard",
+    "name": "功能单元缺件守卫（D2 测试共置 + 单元 README，[RESEARCH-018] §4 C-4）",
+    "ssot": "判据与范围：docs/11_报告/RESEARCH/[RESEARCH-018] 5-3-1架构符合性调研与迁移设计-2026-09-28.md §2.3（功能单元模板）/§4 C-4；扫描范围取 docs/10_规范/registry/DOMAIN-DEPS.json 的 domains.D2.roots，守卫内不另列目录清单",
+    "rules": [],
+    "_rules_note": "刻意留空，与 domain-direction-guard 同一登记手法：规则挂在既有门 check:layout（LAYOUT-001，P1/pr 档、派生强度 blocking）的执行器里，那是该门其余 error 级发现应有的强度；把 LAYOUT-001 写进本条 rules 会被 PP-3 误判为「S1 机制却在阻断」，而本机制只记不拦（warning + 基线棘轮，未进 --promote 名单）。",
+    "executor": "scripts/ci/check-repo-layout.js",
+    "stage": "S1",
+    "stageSince": "2026-09-28",
+    "samples": {
+     "observed": 653,
+     "target": 200,
+     "note": "2026-09-28 建档：首次全仓实测 653 = test-colocated 622 + readme-missing 31（D2 内 31 个上下文目录、622 个源文件、共置测试 0 份、单元 README 0 份），写入 scripts/ci/repo-layout-baseline.json 的 counts['functional-unit']。S1 语义 = 只记录 + 棘轮：默认 warning、存量不阻断，只有**超出基线**（新增无测试的源文件）才升 error。毕业看样本量而非时间（PP-2）：S2 需 ≥50 次真实提示且误报 <10%，而本机制的误报风险不在扫描器而在**口径**——「同名同目录」刻意不认 tests/ 下的既有同名测试（§2.3 原话「与源同目录」），也不判 README 内容是否空洞、测试是否有效（存在性判据），这两条须人复核后才谈升档；S3 需 ≥20 次真实拦截且豁免率 <20%。"
+    },
+    "rollback": "纯配置回滚，PP-4 合规：把 functional-unit 从 scripts/ci/check-repo-layout.js 的 BASELINE_IDS/ALL_FINDING_IDS 摘掉即整体停用（不动 DOMAIN-DEPS.json，那里 D2 声明还服务于 domain-direction）；或删 DOMAIN-DEPS.json 的 domains.D2 让规则回到「无从判起」的静默档。基线只降不升，上调需人工显式改 json 并留原因。",
+    "stageAuthority": "scripts/ci/check-repo-layout.js：同 domain-direction-guard，无独立 STAGE 常量，阶段语义由 ①finding.severity='warning' ②id 在 BASELINE_IDS 内 ③不在 CI 的 --promote 名单 三处代码事实共同决定，任一改变即升档；故不登记 executorStage.constant。",
+    "blockedBy": []
+   },
+   {
+    "id": "entry-buffer-guard",
+    "name": "源码入口缓冲守卫（核心域源文件须带生命周期记录 + 晋级判据，[RESEARCH-018] §4 C-5 / §3 P5）",
+    "ssot": "判据：docs/11_报告/RESEARCH/[RESEARCH-018] 5-3-1架构符合性调研与迁移设计-2026-09-28.md §4 C-5（核心域内新文件必须带 lifecycle: staged→stable 记录）与 §3 P5（晋级判据 = 有测试 + 有 README + fan-in 声明）；扫描范围、缓冲区路径、manifest 文件名与 stage 枚举全部取 docs/10_规范/registry/DOMAIN-DEPS.json 的 _entry_buffer 块，守卫内不另列目录清单，也不新建第二份登记表",
+    "rules": [],
+    "_rules_note": "刻意留空，与 functional-unit-guard 同一登记手法：规则挂在既有门 check:layout（LAYOUT-001，P1/pr 档、派生强度 blocking）的执行器里；把 LAYOUT-001 写进本条 rules 会被 PP-3 误判为「S1 机制却在阻断」，而本机制对开发者的代码只记不拦（warning + 基线棘轮，未进 --promote 名单）。唯一的例外是 entry-buffer 的「无扫描源」error：它拦的是**登记表自身的接线错误**（声明了 _entry_buffer，但 coreDomains 在本表里落不到任何存在的 roots），此时规则静默等于「机制看起来在跑、实际一个文件都没看」——同一红线是规则 10 A2-7「权限判定失败禁止静默降级为放行」。它不判任何产品改动，故不构成 PP-3 意义上的 S1 阻断。",
+    "executor": "scripts/ci/check-repo-layout.js",
+    "stage": "S1",
+    "stageSince": "2026-09-28",
+    "samples": {
+     "observed": 2667,
+     "target": 200,
+     "note": "2026-09-28 建档：首次全仓实测核心域（_entry_buffer.coreDomains = D1/D2/D3 的 roots，去重后）共 2669 个源文件，其中 2 个已有可用记录（services/backend/src/services/domain/onboarding/onboarding/{onboardingPlan,safetyNotice}.js，本批次首例补齐），其余 2667 个 manifest-missing，写入 scripts/ci/repo-layout-baseline.json 的 counts['entry-buffer']。S1 语义 = 只记录 + 棘轮：默认 warning，只有**超出基线**才升 error。毕业看样本量而非时间（PP-2），但本机制的口径风险比 functional-unit 更硬：计数单位是**源文件数**，删文件也会让计数下降——那种下降不是晋级，S2 前必须逐单元复核降幅来源，否则棘轮会把「拆除」误记为「改善」。缓冲区「不可被运行时代码 require」这一性质不在本机制内新造判据，由 DOMAIN-DEPS.json 已强制的 no-reach-into-archive 边免费保证（缓冲区的第二层轴向按 §2.2 就是生命周期阶段，故落在 scripts/ 下）。晋级动作（git mv 出缓冲区）在第 0 步 .git 重建闭合前不可执行。"
+    },
+    "rollback": "纯配置回滚，PP-4 合规：把 entry-buffer 从 scripts/ci/check-repo-layout.js 的 BASELINE_IDS/ALL_FINDING_IDS 摘掉即整体停用；或删 DOMAIN-DEPS.json 的 _entry_buffer 块——守卫对「未采纳本机制的仓库」刻意静默，删块即逐字节回到今日行为。本批次新增的文件面（scripts/quarantine/README.md、onboarding 单元的 khy.module.json 与 README.md、两份共置测试）都是纯新增，删除即撤回，不动任何既有文件；唯一被改动的既有逻辑是 onboardingPlan.js 里两处 Symbol/BigInt 加固（那是契约测试查出的真实缺陷修复，不属本机制）。基线只降不升，上调需人工显式改 json 并留原因。",
+    "stageAuthority": "scripts/ci/check-repo-layout.js：同 functional-unit-guard，无独立 STAGE 常量，阶段语义由 ①finding.severity='warning' ②id 在 BASELINE_IDS 内 ③不在 CI 的 --promote 名单 三处代码事实共同决定，任一改变即升档；故不登记 executorStage.constant。",
+    "blockedBy": []
+   },
+   {
+    "id": "no-emoji-guard",
+    "name": "终端与生成物面无彩色 emoji / 首字头像守卫（用户裁决 2026-09-28）",
+    "ssot": "无独立设计文档：裁决原话「除了生成物用户明确说明需要 emojo 外不得使用 emojo 和首字做头像或标记」与三条口径（只禁彩色 emoji / 含 khyquant 全仓 / 加守卫 S1 观察者档）记录在执行器源码头部注释里，本条目是它的登记镜像",
+    "rules": [],
+    "executor": "scripts/ci/check-no-emoji.js",
+    "stage": "S1",
+    "stageSince": "2026-09-28",
+    "stageAuthority": "scripts/ci/check-no-emoji.js 的 STAGE 常量",
+    "previousStage": "",
+    "executorStage": {
+     "file": "scripts/ci/check-no-emoji.js",
+     "constant": "STAGE",
+     "note": "阶段权威在执行器源码里（STAGE='S1'）。S1 时 severityFor() 把三条判据一律压成 warning 且 main() 恒 exit 0，只记录不拦截（PP-3）。升 S3 后 colored-emoji / escaped-emoji 才派生 error 参与放行，initial-as-avatar 因是启发式恒为 warning。升阶是人的决定，守卫不代劳。"
+    },
+    "samples": {
+     "observed": 16488,
+     "target": 200,
+     "note": "2026-09-28 建档：运行面首次全仓实测 529 条（colored 451 / escaped 19 / initial 59）。逐族复核后收敛为 376（剔 vendor/out/unpacked 再生件 108 条与裸 [0] 数组下标 56 条假阳性）→ 清理与抑制后 **0 条**。\n同日按裁决 4 把判定面扩到文档站（`.md` 真源 + `.html` 孪生 + registry JSON + scripts/docs 生成器，排除 evidence/ 与 entries/），扩面实测 15,838 条：其中 6,157 行属于 `.md` 源、11 行属于登记 JSON、41 行属于 `scripts/docs/*.js` 生成器（每页 3 处 chrome 即由此注入），余量为 `.html` 孪生。处置 = 生成器 chrome 手工映射单色词表 + 图标位断言式替换（7 处，防按钮渲染成空白）+ md 由驱动脚本消费 `--json` 逐行改写 + 重建 1,278 页 → **0 条**（`docs:verify` 全绿，94 张规则卡与登记表逐字节一致）。\n同日第三次按裁决 5 扩面（用户实拍：文档站顶栏按钮仍是彩色）：清理由**守卫的发现**驱动，所以扩展名白名单漏一类「会画字」的文件 = 画面上的 emoji 永远清不掉。实测三处盲区 —— `.tsx/.jsx`（`apps/khyos-desktop` 整个 React 渲染层，图标写在 `icon:` 字段里）、`.css`（`content:` 是渲染文本）、`docs/19_资产/site/*.{js,css}`（每页都引用的浏览器资产，主题/朗读按钮字形在此）；扩面实测 121 条（109 行 / 24 文件）→ 逐码位映射单色词表后 **0 条**（`apps/khyos-desktop` 78 项契约测试与文档站校验全绿）。随包压缩的 `*.min.js|css`（mermaid/hljs）与 `vendor/` 同档排除。\n529 + 15,838 + 121 = 16,488 条全部有解释，无「解释不了的样本」；但 S1→S2 仍需跨运行的真实回归样本（改代码重新引入 emoji 被报出）才成立，故本条只记观察量，不据此升档（PP-2/PP-6 由人裁决）。",
+     "hints": {
+      "observed": 0,
+      "target": 50,
+      "note": "S2 的提示样本从升 S2 后开始计数。"
+     }
+    },
+    "rollback": "纯新增只读度量器，PP-4 合规：删 scripts/ci/check-no-emoji.js + package.json 的 check:no-emoji 脚本 + 本登记条目即整体停用，不依赖未提交代码。已清掉的 emoji 与已加的行内 khy-allow-no-emoji 抑制注释属另一改动集，可单独 git revert。",
+    "blockedBy": []
+   },
+   {
+    "id": "tui-cadence-guard",
+    "name": "TUI 动画节拍三方一致守卫（规范表 / perfTunables 默认值 / 组件兜底值）",
+    "ssot": "docs/03_DESIGN_设计/DESIGN-PERF/[DESIGN-PERF-004] TUI 动画节拍治理方案.md",
+    "rules": [
+     "RUNTIME-011"
+    ],
+    "executor": "scripts/ci/check-tui-cadence.js",
+    "stage": "S1",
+    "stageSince": "2026-09-29",
+    "stageAuthority": "scripts/ci/check-tui-cadence.js 的 STAGE 常量",
+    "previousStage": "",
+    "executorStage": {
+     "file": "scripts/ci/check-tui-cadence.js",
+     "constant": "STAGE",
+     "note": "阶段权威在执行器源码里（STAGE='S1'）。S1 恒 exit 0、只记录不阻断（PP-3）：九条判据全部输出 finding，但 severityFor() 按 CRITERIA 表在 S1 只派生 warning / info。升 S3 后 R1/R2 违规（cadence-drift / fallback-drift / binding-orphan / spec-unreadable / fallback-unreadable）与 R3 正向缺口（unbound-spec）派生 error 参与放行；cadence-drift-known / fallback-drift-known（已裁决保留）与 unbound-impl（R3 反向缺口未立判据）恒为 info，不随升阶变化。升阶只改这一个常量，不需改接线。"
+    },
+    "samples": {
+     "observed": 0,
+     "target": 200,
+     "note": "2026-09-29 落地（接线自原型 .khyos/diag/tui-cadence-guard.js，原型已按落点纪律留在 gitignore 桶内）。样本 0，按 PP-1 处于 S1 观察期。落地时已完成 7 场景反例矩阵（含 aligned 应放行对照）与真实仓库 baseline 0 error / 0 warning / 7 info —— 但那是「机制有效性」验证，不是「真实回归样本」，按 PP-2 毕业判据仍须积累 ≥200 条跨运行样本。",
+     "hints": {
+      "observed": 0,
+      "target": 50,
+      "note": "S2 的提示样本从升 S2 后开始计数。"
+     }
+    },
+    "rollback": "把 RULES-REGISTRY.json 里 RUNTIME-011 的 exec 摘掉（回到 gate=manual 人工评审），或改 check-tui-cadence.js 的 STAGE 常量回 S1（纯配置，PP-4 合规，不依赖未提交代码）。本守卫是纯只读度量器：删 scripts/ci/check-tui-cadence.js + scripts/lib/tuiCadenceGuard.js + scripts/tests/check-tui-cadence.test.js + package.json 的 check:tui-cadence 别名 + 本登记条目即整体停用。⚠ 前提：ssot 文档 [DESIGN-PERF-004] 必须与本条目**同批提交**（登记时它仍是 ?? 未跟踪状态），否则新克隆的检出会因 TOOLING-007 双向可达失败而变红。",
+    "blockedBy": []
    }
   ]
  }

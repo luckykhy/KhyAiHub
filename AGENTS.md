@@ -26,6 +26,7 @@
 | 版本同步 | 真源 | = 红线 R3 / `PROCESS-002`，与 `CLAUDE.md` §一 同义，守卫为 `check-version-sync.js` |
 | 版本触发（bump / 推送 / 自动触发） | 指针 | 真源 `[DESIGN-SEMVER-002]`，规则 `PROCESS-005` |
 | 代码风格 / 安全须知 | 指针 | 与 `CLAUDE.md` §五 同义摘要 |
+| 手搓风格约定 | 真源（约定，非强制规则） | 无守卫；人工评审兜底；不占规则 ID |
 | **工程规则 1–4** | **真源（语义）** | = `RUNTIME-001`~`RUNTIME-004`，守卫 `scripts/ci/check-agent-rules.js` |
 | **工程规则 5–7** | **真源（语义）** | = `RUNTIME-007`~`RUNTIME-009`（三模态反馈契约），守卫 `scripts/ci/check-agent-feedback.js`，阶段 S1 |
 | **工程规则 11** | 指针+摘要 | = `PROCESS-013`，语义真源 `[DESIGN-DEP-001]` §10 与 `[DESIGN-DEPLOY-001]` §3.3；守卫 `scripts/ci/check-native-registry.js`，阶段 S1 |
@@ -43,7 +44,7 @@
 | 规则 6 新增先提问 | `RUNTIME-008` | RUNTIME | P2 | 缺需求五问 / 缺 source 判 warning；S1 只记录 |
 | 规则 7 删除先报部位 | `RUNTIME-009` | RUNTIME | P1 | 缺 `rollback.txt`、删有文档背书的代码判 error；**S1 阶段降级 WARN 不拦截** |
 | 规则 8 新机制落地阶段可校验 | `PROCESS-008` | PROCESS | P1 | 阶段非法 / 直进 S3 / 样本不足 / 跨阶 / S1S2 却阻断 / 代码登记漂移判 error；**S1 阶段只记录不阻断** |
-| 规则 9 软件著作权就绪 | `PROCESS-010` | PROCESS | P1 | 无执行器（`gate=manual`）；靠人工评审兜底，判据真源 `[DESIGN-IP-001]` |
+| 规则 9 软件著作权就绪 | `PROCESS-010` | PROCESS | P1 | 执行器 `scripts/ci/check-copyright-readiness.js`（`gate=pr`、`severity=advisory`，只提示不阻断）；名称/版本一致性与可解释性仍需人工评审兜底，判据真源 `[DESIGN-IP-001]`，材料生成工具链与在仓契约真源 `[DESIGN-IP-002]` |
 | 规则 10 工具授权须明确授予 | `RUNTIME-010` | RUNTIME | P1 | 未声明≠全权 / 只读角色不得持有写通道（含 `Bash`）/ 授权解析禁 fail-open / 声明面收窄须有执行面强制；**S1 阶段只记录不阻断** |
 | 规则 11 依赖来源原生 | `PROCESS-013` | PROCESS | P1 | 构建/交付配置命中镜像主机或 `*_MIRROR` 注入开关判 **error**；锁文件 `resolved` 非官方 host 判 **error**；运行时镜像未显式门控判 warning；**S1 阶段降级 WARN 不拦截** |
 | 规则 12 可交付性基线 | `PROCESS-014` | PROCESS | P1 | D1–D10 记分板 + 任务面棘轮（命令/别名/handler/规则数只降不升）+ 渠道 CI 完备性；阈值真源 `[DESIGN-DELIV-002]` §4；**S1 阶段降级 WARN 不拦截** |
@@ -72,14 +73,40 @@
 
 ---
 
+## 手搓风格约定（让代码读起来像人写的）
+
+AI 生成的代码最容易露馅的不是语法，而是**过度工整**：每个函数都配同等规格的注释、
+每层调用都加防御性校验、为「将来可能需要」提前抽象。本节是约定，不是强制规则（无守卫）。
+
+写代码与注释时：
+
+- 注释只写**为什么**（约束、事故、不能这么改的原因、工单号），不写**是什么**。
+  `// 获取用户列表` 挂在 `getUsers()` 上是禁止的。
+- 不给正常代码写多段式 docstring、不写末尾总结性注释、不写 emoji（含 `✅ TODO`）。
+- 只在**系统边界**（用户输入、外部 API、进程/网络）做校验；内部可信路径不套 try/catch。
+- 当前只有一个实现，就不要建策略类 / 注册表 / feature flag / 兼容 shim。
+- 命名沿用本仓黑话（`真源`、`闸门`、`finding`、`ruleguard`、`hq`、`khy`），
+  不用 `handleData` / `processItems` / `utils` / `manager` 这类通用名。
+- 风格跟随**所改文件的局部约定**（缩进、引号、注释密度、命名），局部一致优先于全局最优。
+- 允许不均匀：核心路径精雕，临时方案如实标注限制与原因，而不是伪装成完备设计。
+- 交付前对本次 diff 做一轮减法：删掉上述 AI 痕迹，**行为保持不变**。
+  （Qoder 侧有 `/deslop` skill 承担同一件事；没有它时人工过一遍即可。）
+
+> 放置位置有硬性原因：运行时读取指令文件时有 **8000 字符/文件静默截断**
+> （`services/backend/src/services/instructionFileService.js` 的 `MAX_FILE_CHARS`，
+> 守卫 `scripts/ci/check-agent-docs.js` 规则 `DOCS-003`）。本文件截断点在本节之后，
+> 而「代码风格」节（全文后半）已在截断之外——**任何要求 AI 真的读到的约定都必须放在截断点之前**。
+
+---
+
 ## 项目概览
 
-**Khy OS** 是一个通过 PyPI（`pip install khy-os`）和 npm（`@khy-os/khy-os`）分发的 AI 平台操作系统。它启动一个可扩展的默认应用运行时；**khyquant**（量化交易终端）是运行在该基座之上的、内置的默认应用——而非项目本身。
+**Khy OS** 是一个通过 PyPI（`pip install khy-os`）和 npm（`@khy-os/khy-os`）分发的 AI 平台操作系统。它启动一个可扩展的应用运行时。**khyquant（量化交易终端）是独立项目**（人 2026-09-28 明示），它**连接** Khy OS 使用，不是 Khy OS 的内置组成部分；本仓 `software/khyquant/` 与 `khy-quant` 打包模块是它**随平台分发/接入的载体**（打包事实，不改变其独立项目与独立著作权主体的定位）。
 
 - **Python 层**（`platform/khy_platform/`）：轻量启动器，负责拉起 Node.js
 - **Node.js 后端**（`services/backend/`）：所有业务逻辑（CLI、AI 网关、各类服务）
 - **Vue.js 前端**：`apps/ai-frontend/`（AI 平台 UI）与
-  `software/khyquant/frontend/`（内置的 khyquant 交易 UI）
+  `software/khyquant/frontend/`（独立项目 khyquant 的交易 UI，随平台分发）
 
 ---
 
@@ -112,11 +139,11 @@
    （`claimed_by` / `claimed_at` / `lease_expires`，默认 120 分钟）协调，
    租约未到期的任务他人不可抢占 —— 不再需要跨仓库协调。
 
-> ⚠️ **`main` 的实际上游是 `khy-mirror/main`（不是 `origin/main`）**。
+> ⚠ **`main` 的实际上游是 `khy-mirror/main`（不是 `origin/main`）**。
 > 任何同步脚本或文档都应用 `git rev-parse --abbrev-ref @{upstream}` **动态取上游**，
 > 不要硬编码远端名。详见 `[DESIGN-ARCH-118]` §3.6 与 `[DESIGN-SEMVER-002]`。
 >
-> ⚠️ **`.ai/hq/` 必须入仓**：`.khy/` / `.khyos/` / `.khyquant/` 都被 gitignore（本机态），
+> ⚠ **`.ai/hq/` 必须入仓**：`.khy/` / `.khyos/` / `.khyquant/` 都被 gitignore（本机态），
 > 所以任务/Bug 状态**只能**放 `.ai/`，放别处会导致多机不同步。
 > 该目录受规则 `MEMORY-003` 管辖，守卫 `scripts/ci/check-memory-schema.js`。
 
@@ -463,14 +490,14 @@ G3 全 3 源的组内一致性。CI 门在发布之外强制同一不变式。
 每条状态消息都必须包含**动作 + 目标 + 进度**：
 
 ```
-❌  正在连接数据库...
-✅  连接 PostgreSQL (127.0.0.1:5432)，第 2/3 次重试...
+✗  正在连接数据库...
+✓  连接 PostgreSQL (127.0.0.1:5432)，第 2/3 次重试...
 
-❌  任务处理中...
-✅  正在解析 AST (已处理 340/1200 节点)...
+✗  任务处理中...
+✓  正在解析 AST (已处理 340/1200 节点)...
 
-❌  AI thinking...
-✅  Claude Adapter 处理中（12s）...
+✗  AI thinking...
+✓  Claude Adapter 处理中（12s）...
 ```
 
 **执行强度**：自动检查（`check-agent-rules.js`）仅覆盖以下 6 个 token——
@@ -512,14 +539,14 @@ G3 全 3 源的组内一致性。CI 门在发布之外强制同一不变式。
 **红线**：状态消息不得包含用户已知的上下文、过度修饰语或重复信息。
 
 ```
-❌  正在初始化 AI 对话管线，请稍候...
-✅  步骤 1/5: 初始化对话管线
+✗  正在初始化 AI 对话管线，请稍候...
+✓  步骤 1/5: 初始化对话管线
 
-❌  识别到纯问候，已启用极速回复模式（步骤 2/5 跳过，将直接回复）
-✅  纯问候：跳过步骤 2-5，直接回复
+✗  识别到纯问候，已启用极速回复模式（步骤 2/5 跳过，将直接回复）
+✓  纯问候：跳过步骤 2-5，直接回复
 
-❌  数学解题：识别到数学题(algebra)，含图片，已注入分步骤+自检+确定性代入复核协议
-✅  数学题(algebra)：分步骤求解+自检
+✗  数学解题：识别到数学题(algebra)，含图片，已注入分步骤+自检+确定性代入复核协议
+✓  数学题(algebra)：分步骤求解+自检
 ```
 
 **原则**：
@@ -533,16 +560,16 @@ G3 全 3 源的组内一致性。CI 门在发布之外强制同一不变式。
 **红线**：错误消息不得空洞泛指，必须说明**什么问题 + 怎么解决**。
 
 ```
-❌  AI 请求失败
-❌  请重试或检查连接
-❌  发生错误
-✅  限流 (429)：请求过多，稍后重试或运行 khy gateway config 切换通道
+✗  AI 请求失败
+✗  请重试或检查连接
+✗  发生错误
+✓  限流 (429)：请求过多，稍后重试或运行 khy gateway config 切换通道
 
-❌  AI 未返回有效回复 — 请重试或检查连接
-✅  模型无输出：可能端点错误/模型名无效/额度不足，运行 khy gateway status 检查
+✗  AI 未返回有效回复 — 请重试或检查连接
+✓  模型无输出：可能端点错误/模型名无效/额度不足，运行 khy gateway status 检查
 
-❌  认证失败
-✅  API key 无效或过期 (401)：请运行 khy gateway config 更新密钥
+✗  认证失败
+✓  API key 无效或过期 (401)：请运行 khy gateway config 更新密钥
 ```
 
 **错误消息模板**：
@@ -576,15 +603,15 @@ G3 全 3 源的组内一致性。CI 门在发布之外强制同一不变式。
 **红线**：工具执行时不得只显示工具名，必须显示**动词 + 具体目标**。
 
 ```
-❌  运行 read
-❌  执行中...
-✅  读取 src/index.js
+✗  运行 read
+✗  执行中...
+✓  读取 src/index.js
 
-❌  运行 bash
-✅  执行 npm run build
+✗  运行 bash
+✓  执行 npm run build
 
-❌  运行 grep
-✅  搜索 function main
+✗  运行 grep
+✓  搜索 function main
 ```
 
 **动词映射**：
@@ -607,10 +634,10 @@ G3 全 3 源的组内一致性。CI 门在发布之外强制同一不变式。
 **红线**：AI 思考时不得只显示"思考中"，必须显示**正在分析什么**。
 
 ```
-❌  思考中...
-❌  正在分析...
-✅  分析: 需要先看看出错的日志文件，然后定位问题所在
-✅  分析: 比较两种方案的优缺点
+✗  思考中...
+✗  正在分析...
+✓  分析: 需要先看看出错的日志文件，然后定位问题所在
+✓  分析: 比较两种方案的优缺点
 ```
 
 **实现**：从 `thinkingTail`（模型思考流的最后部分）提取最后一句话作为分析内容。
@@ -621,11 +648,11 @@ G3 全 3 源的组内一致性。CI 门在发布之外强制同一不变式。
 **红线**：等待中不得只显示"等待响应"，必须显示**在等什么**。
 
 ```
-❌  ⏳ 等待响应...
-✅  ⏳ 等待中 · 读取 src/index.js
+✗  … 等待响应...
+✓  … 等待中 · 读取 src/index.js
 
-❌  ⏳ 请稍候...
-✅  ⏳ 等待中 · 执行 npm run build (已 30s)
+✗  … 请稍候...
+✓  … 等待中 · 执行 npm run build (已 30s)
 ```
 
 **实现**：从 `detail` 或 `label` 获取当前活动目标，加上等待指示器和耗时。
@@ -635,11 +662,11 @@ G3 全 3 源的组内一致性。CI 门在发布之外强制同一不变式。
 **红线**：多步骤流程不得只显示"初始化中"，必须显示**当前步骤/总步骤**。
 
 ```
-❌  正在初始化...
-✅  步骤 1/5: 初始化 AI 对话管线
+✗  正在初始化...
+✓  步骤 1/5: 初始化 AI 对话管线
 
-❌  正在处理...
-✅  步骤 3/5: RAG 检索 — 正在召回知识库
+✗  正在处理...
+✓  步骤 3/5: RAG 检索 — 正在召回知识库
 ```
 
 **初始化管线标准步骤**：
@@ -663,7 +690,7 @@ G3 全 3 源的组内一致性。CI 门在发布之外强制同一不变式。
 **要求的模式 —— 空闲/滑动超时**：
 
 ```javascript
-// ✅ Correct: reset timer on every productive event
+// ✓ Correct: reset timer on every productive event
 let lastActivity = Date.now();
 const IDLE_LIMIT = 120_000;
 
@@ -675,7 +702,7 @@ if (Date.now() - lastActivity > IDLE_LIMIT) { /* timeout */ }
 ```
 
 ```javascript
-// ❌ Wrong: hard wall clock timeout on a task loop
+// ✗ Wrong: hard wall clock timeout on a task loop
 const start = Date.now();
 if (Date.now() - start > 120_000) { /* kills active work */ }
 ```
@@ -730,7 +757,7 @@ if (Date.now() - start > 120_000) { /* kills active work */ }
 **要求的模式 —— 保存/恢复光标 + 绝对定位**：
 
 ```javascript
-// ✅ Correct: render at bottom row without affecting scrollback
+// ✓ Correct: render at bottom row without affecting scrollback
 process.stdout.write(
   `\x1B7`                              // save cursor
   + `\x1B[${process.stdout.rows};1H`   // move to last row
@@ -741,7 +768,7 @@ process.stdout.write(
 ```
 
 ```javascript
-// ❌ Wrong: scroll region traps all output, kills scrollback
+// ✗ Wrong: scroll region traps all output, kills scrollback
 process.stdout.write(`\x1B[1;${rows - 1}r`);
 ```
 
@@ -910,11 +937,48 @@ ANSI 滚动区转义（DECSTBM），以及**无退出路径的明显死循环**
 | C-M3 | 提交信息不带 AI 作者署名 | 禁 `Co-Authored-By: <AI>`、`Generated with <AI>` |
 | C-X2 | 结果要人能接住 | 进登记材料候选的代码人能解释；判据是可解释性，不是生成方式 |
 | C-X3 | 第三方代码不进登记材料 | `vendor/`、`*_gen.*`、`*_blob.h`、`dist/`、`out/`、`unpacked/` |
+| C-TOOL | 材料只用仓内工具链生成 | 软著申请资料一律经 `scripts/copyright/`（vendored `SoftwareCopyright-Skill@947d596` + `repo-contract.md` 本仓口径）产出；**不得自带另一套生成器，也不得改 `scripts/copyright/vendor/` 内的上游文件**——口径要改就改 `repo-contract.md`。真源 `[DESIGN-IP-002]` |
 
 **三个自问**（提交前必须都能答上）：这次改动**谁要的**？**为什么这么做**？**怎么验证的**？
 
 > 借鉴边界（借鉴什么 / 怎么借鉴 / 同一功能由谁实现）**不在本节**，见 `[DESIGN-SOURCING-001]`。
 > 本规则只额外规定一条：第三方代码不得作为登记材料的源程序。
+
+**申报口径（指针，值以机器可读真源为准）**：登记客体 = **Khy OS 平台底座**（AI 网关 + 终端 +
+轨迹子系统）。**khyquant 不在此件内**——它是**独立项目**，只是连接 Khy OS 使用（人 2026-09-28 明示），
+另案申报，本仓 `software/khyquant/` 只是它随平台分发/接入的载体；因此 khyquant 的前端标题
+**不算本件的名称一致性障碍**。三字段（全称/简称/版本号）真源 =
+`docs/10_规范/registry/COPYRIGHT.json`；定名依据 `[MGMT-OTHER-006]`；人的原话
+`evidence/01_人类贡献/决策记录.md` **D-名2**；递交件 `evidence/06_申报材料/`。
+版本口径是**沿用仓库真实版本、只在人明示时才改**——正因如此 `--version` / `khy about`
+的画面天然与申请表一致，**不需要任何修图**（截图带 PS/剪切痕迹是高频补正点）。
+
+**每次改动为「可递交」负责的四个动作**：
+
+| 触发 | 动作 | 判据 |
+|---|---|---|
+| 改了界面标题 / 产品名 / 版本串 | 跑 `npm run check:copyright`，五处一致不许退化；受影响截图重拍 | C-MAT2 / C-MAT3 |
+| 新增可展示功能 | 其命令输出可作证据时，补进 `evidence/03_图片/` 清单：真实数据、不摆拍、不裁剪 | C-MAT1 |
+| 增删模块 | 复核 60 页选材与说明书主要功能是否仍对得上——**名称里每个词都得在页内有代码**；选材的仓库侧镜像是 `docs/10_规范/registry/COPYRIGHT-MATERIALS.json`（改选材两份一起改，守卫会核验候选文件真实存在且不落排除目录） | C-MAT1 |
+| 代码进登记候选前 | `[DESIGN-IP-001]` 附录 A 九问逐条答得上 | C-E / C-X |
+| 要出申请材料（代码 60 页 / 操作手册 / 申请表） | **只用仓内工具链**：读 `scripts/copyright/vendor/software-copyright-materials/SKILL.md` 做工作流，再读 `scripts/copyright/repo-contract.md` 定本仓口径（冲突以后者为准），7 个 `STOP_FOR_USER` 门禁一个不放宽 | C-TOOL |
+
+**材料生成工具链已在仓内**（`[DESIGN-IP-002]`，同属 `PROCESS-010`）：上游
+`Fokkyp/SoftwareCopyright-Skill@947d596`（MIT）以 **vendored 逐字入库**到
+`scripts/copyright/vendor/software-copyright-materials/`，**上游文件一行不许改**
+（`npm run check:copyright` 按 `upstream-manifest.json` 的逐文件 sha256 判漂移）；
+本仓口径写在 `scripts/copyright/repo-contract.md`，其中最要紧的一条是
+**作废上游默认的「优先抽取前端代码」**——60 页选材真源是
+`docs/10_规范/registry/COPYRIGHT-MATERIALS.json` 的运行时链编排（前 30 页=启动链、
+后 30 页=手写内核），与本件登记客体逐词对得上。
+约束的载体是**本节**（读 AGENTS.md 的 Claude Code / Codex / Cursor / Kiro / ZCode 一律照办），
+不是把 skill 装进某个智能体的插件目录。
+
+**当前未闭合的两项**（阻塞递交，须人拍板，AI 不代改）：见
+`evidence/06_申报材料/递交核对表.md` §三第 4 项（界面标题与登记全称不一致）与
+§五（既有 60 页选材不含现名称载体的任何一行）。
+> 范围提醒：`software/khyquant/frontend/` 的标题**不算本件的不一致**——khyquant 是独立项目、
+> 另案申报（见上文申报口径），改名拍板时不要把它算进来。
 
 ---
 
@@ -1009,7 +1073,7 @@ ANSI 滚动区转义（DECSTBM），以及**无退出路径的明显死循环**
 | D10 | 边界文档含「不支持清单」 | PASS（`[DESIGN-DELIV-002]` §3） |
 
 **产品任务面（`[DESIGN-DELIV-002]` §1）**：T0 核心任务循环（唯一 P0）/ T1 让 T0 可行的四族
-（通道 / 上下文 / 工具 / 诚实收尾）/ T2 khyquant 垂直应用 / T3 三个交付渠道。
+（通道 / 上下文 / 工具 / 诚实收尾）/ T2 独立项目 khyquant 接入的垂直应用 / T3 三个交付渠道。
 约 75 个维护者命令（`publish` `repo` `forge` `pr` `evolve` `metadata` `heal` …）是**非目标**。
 
 **三只棘轮**：命令 245 / 别名 591 / handler 155 · 规则 94（新增一条先退役一条）· 逐命令手册不再手写。
@@ -1035,11 +1099,16 @@ ANSI 滚动区转义（DECSTBM），以及**无退出路径的明显死循环**
 - [ ] **状态清晰**：`grep -rn '处理中\|Loading\|Connecting\.\.\.' --include='*.js' --include='*.vue'` → 所有匹配都包含「动作+目标+进度」
 - [ ] **超时审计**：每个用于任务截止的 `setTimeout` / `Promise.race` 都有配套的活动重置机制
 - [ ] **滚动区审计**：`grep -rn '\\x1B\[.*r' --include='*.js'` 在全屏备用缓冲区上下文之外返回零个滚动区转义序列
-- [ ] **软著就绪（`PROCESS-010`，人工判据）**：三问能答上（谁要的 / 为什么 / 怎么验证的）；提交信息无 AI 作者署名；进入登记材料候选的代码人能解释；无第三方代码混入登记材料候选
+- [ ] **软著就绪（`PROCESS-010`）**：跑 `node scripts/ci/check-copyright-readiness.js` 须 **0 error**；
+      三问能答上（谁要的 / 为什么 / 怎么验证的）；提交信息无 AI 作者署名；进入登记材料候选的代码人能解释；
+      无第三方代码混入登记材料候选；**改了界面标题 / 产品名 / 版本串 / 增删模块时**，
+      看五处一致是否退化、60 页选材与说明书主要功能是否仍对得上（规则 9 的四动作表）；
+      **改动触及 `scripts/copyright/` 时**看 `copyright-vendored-skill*` / `copyright-overlay-*` 是否翻红
+      （上游 vendored 文件不许改，口径要改只改 `repo-contract.md`，`[DESIGN-IP-002]` C-TOOL）
 - [ ] **可交付性基线（`PROCESS-014`）**：跑 `npm run check:delivery` —— 新增 CLI 命令 / 别名 / 规则前先看棘轮（只降不升）；改了发布链 / 构建脚本 / 边界文档时看 D2–D10 是否退化
 
 <!-- khy-metadata:pointer START — managed by `khy metadata link`; edits inside this block are overwritten -->
-## 🤖 Maintainability metadata — read `.ai/` first
+## Maintainability metadata — read `.ai/` first
 
 Before changing this project, read the machine-generated seed docs in `.ai/`
 (this repo is designed to stay maintainable even without AI):

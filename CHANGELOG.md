@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **为什么**：剥离门只存在于 relay/api 两条路径，而教学门按 `(adapter, model)` 判；能力档案却只有一个模型名维度。一条通道的负面结论替另一条通道做决定，是 BUG-014 的形态之一。
 
 - **TUI spinner 文案与实际状态脱节**（`cli/tui/ink-components/App.js`、`Spinner.js`、`appHostHelpers.js`）
-  - **改了什么**：spinner 的三个数（`stalled` / `elapsedSec` / `tokens`）改走**单一真源** `_spinnerProgress`（纯函数，早已存在且被测试锁着），不再在渲染体里手算；`_spinnerProgress` 补出 `stalledSec`，等待行按规则 2.5 渲染成 `⏳ 等待中 · <目标>（已 Ns）`；`buildSpinnerMeta` 支持跳过重复时长；等待行组装抽成纯函数 `Spinner.buildStallLine` 以便无条件单测。
+  - **改了什么**：spinner 的三个数（`stalled` / `elapsedSec` / `tokens`）改走**单一真源** `_spinnerProgress`（纯函数，早已存在且被测试锁着），不再在渲染体里手算；`_spinnerProgress` 补出 `stalledSec`，等待行按规则 2.5 渲染成 `… 等待中 · <目标>（已 Ns）`；`buildSpinnerMeta` 支持跳过重复时长；等待行组装抽成纯函数 `Spinner.buildStallLine` 以便无条件单测。
   - **为什么**：手写副本与 SSOT 漂出三处单位/来源错误——① 毫秒差与字面量 `3` 比较（应为 `3000ms`）⇒ 活跃中几乎恒显「等待中」；② 把 `Date.now()` 当秒数传给 spinner ⇒ meta 渲染出「 · 20719231d」；③ `tokens` 取 `query.tokenEstimate`，而该字段在 TUI 查询层**没有生产者** ⇒ 恒为 0，「~N tok」永不显示。文案要按实际数据渲染，前提是这三个数得真是实际数据。
 
 ### Added

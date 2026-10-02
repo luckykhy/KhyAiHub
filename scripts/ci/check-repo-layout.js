@@ -18,6 +18,9 @@
  *   - 根目录封闭白名单          → docs/08_MGMT_项目管理/MGMT-STD/[MGMT-STD-001] 项目文档结构与索引铁律规范.md 第 1.3 条
  *   - docs/ 索引首位铁律        → 同上 第 2.1/2.2 条与 CP-5
  *   - 任务入口命名与「每个入口须有脚本」→ [DESIGN-LAY-005] 第五节
+ *   - 五域依赖方向 (domain-direction)   → docs/10_规范/registry/DOMAIN-DEPS.json（判据真源 [RESEARCH-018] §4 C-7）
+ *   - 功能单元缺件 (functional-unit)     → 同上 §4 C-4 与 §2.3 模板，扫描范围取该表的 D2 roots
+ *   - 源码入口缓冲 (entry-buffer)        → 同上 §4 C-5 与 §3 P5，范围/缓冲区/manifest 名取该表的 _entry_buffer 块
  *
  * HOW-TO-EXTEND（给维护者/小模型）：
  *   新增一条规则 = ①写一个 checkXxx(findings) 函数；②把 finding id 加进 ALL_FINDING_IDS；
@@ -70,6 +73,9 @@ const ALL_FINDING_IDS = new Set([
   'extension-contract',
   'extension-id-hardcode',
   'extension-path-drift',
+  'domain-direction',
+  'functional-unit',
+  'entry-buffer',
 ]);
 
 // 这几条是「已知违规存量 + 只降不升」型：超过基线才升为 error。
@@ -81,6 +87,9 @@ const BASELINE_IDS = new Set([
   'extension-contract',
   'extension-id-hardcode',
   'extension-path-drift',
+  'domain-direction',
+  'functional-unit',
+  'entry-buffer',
 ]);
 
 // ── 层级清单（真源 [DESIGN-LAY-005] 第一节）────────────────────────────────
@@ -118,7 +127,9 @@ const CROSSCUTTING = {
   // 每次都被 layer-registry 判违规。
   electron: '根级 Electron 桌面壳（根 package.json 的 electron:dev 入口）',
   tests: '根级测试债务登记（DEBT.md，内容属文档性质，待迁 docs/05_TEST_测试/）',
-  '_产物': '根级工作产物暂存区（诊断报告/能力矩阵/方案文档，含非文档资产）',
+  // 只收**交付物**；过程态工具（探针/扫描脚本/未接线原型）落 .khyos/，判据真源
+  // [DESIGN-LAY-002] §3.1（2026-09-29 分流，此前两类混住，见该节表格）。
+  '_产物': '根级工作产物暂存区（交付物：诊断报告/能力矩阵/方案文档，含非文档资产）',
   deploy: '根级部署配置与试验（deploy/free-test/）',
   patches: '根级第三方依赖补丁（npm 依赖的本地 patch）',
 };
@@ -1179,6 +1190,479 @@ function checkCrossLayerRequires(findings, counts) {
   }
 }
 
+// ── 规则 11：五域（D1–D5）依赖方向 ───────────────────────────────────────
+// 判据真源：docs/10_规范/registry/DOMAIN-DEPS.json（域划分与禁止边都在那里，本函数
+// 不硬编码任何路径清单 —— 改登记表即改守卫）。设计依据：5-3-1 §5「单向依赖」，
+// 落地口径见 [RESEARCH-018] §2.1/§2.3 与 §4 C-7。
+// 为什么只管两条边（D3 纯净性、任何域 →D5）：D2→D1 与 archDebtScan R1
+// （src/services/** → src/cli/**）是同一批边，两处判定就是两份真源
+// （[MGMT-STD-008] §2.2「重叠即违规」）；那条归 R1 的基线棘轮管。
+const DOMAIN_DEPS_PATH = path.join(repoRoot, 'docs', '10_规范', 'registry', 'DOMAIN-DEPS.json');
+
+function loadDomainDeclaration() {
+  try {
+    return JSON.parse(fs.readFileSync(DOMAIN_DEPS_PATH, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+// 登记表里的 roots 拍平成 (prefix, domain) 表；同一文件命中多个前缀时取**最长前缀**，
+// 于是 services/backend/src/services/domain 归 D2 而不是它的父集 services。
+function buildDomainPrefixes(decl) {
+  const out = [];
+  for (const [id, def] of Object.entries(decl.domains || {})) {
+    for (const root of def.roots || []) {
+      const prefix = toPosix(String(root)).replace(/\/+$/, '');
+      if (prefix) out.push({ prefix, domain: id });
+    }
+  }
+  return out;
+}
+
+function domainOf(rel, prefixes) {
+  let best = null;
+  for (const p of prefixes) {
+    if (rel === p.prefix || rel.startsWith(`${p.prefix}/`)) {
+      if (!best || p.prefix.length > best.prefix.length) best = p;
+    }
+  }
+  return best ? best.domain : null;
+}
+
+function checkDomainDirection(findings, counts) {
+  counts['domain-direction'] = 0;
+  const decl = loadDomainDeclaration();
+  if (!decl) {
+    // 只在「本仓确实有规范登记表目录」时把缺失判成 error：测试用临时 fixture 指向
+    // 一个最小仓库（scripts/tests/check-repo-layout.test.js），那里根本没有规范区，
+    // 报 error 会让所有既有 fixture 用例误红。
+    const hasRegistryDir = fs.existsSync(path.join(repoRoot, 'docs', '10_规范', 'registry'));
+    if (!hasRegistryDir) return;
+    // 声明缺失时守卫没有判据 —— 这不是「全绿」，必须亮红，否则域边界会无声消失。
+    findings.push({
+      id: 'domain-direction',
+      severity: 'error',
+      message: '五域依赖声明缺失：docs/10_规范/registry/DOMAIN-DEPS.json 读不到或不是合法 JSON。',
+      detail: 'domain-direction 规则的全部判据来自该登记表（真源 [RESEARCH-018] §2.1/§4 C-7）。',
+    });
+    return;
+  }
+
+  const prefixes = buildDomainPrefixes(decl);
+  const enforced = (decl.enforced || []).map(rule => ({
+    id: rule.id,
+    clause: rule.clause || '',
+    from: new Set(rule.from || []),
+    forbid: new Set(rule.forbidTargets || []),
+  }));
+  if (prefixes.length === 0 || enforced.length === 0) {
+    findings.push({
+      id: 'domain-direction',
+      severity: 'error',
+      message: '五域依赖声明为空（domains[].roots 或 enforced[] 缺项），规则无法判定。',
+      detail: `已解析 domains=${Object.keys(decl.domains || {}).length} enforced=${enforced.length}`,
+    });
+    return;
+  }
+
+  // 扫描源 = 所有被 enforced.from 点名的域的 roots（D5 作为源不受限：工程脚本读
+  // 运行时代码是它的职责，见登记表的 _asymmetry）。
+  const fromDomains = new Set(enforced.flatMap(r => [...r.from]));
+  const sourceRoots = [...new Set(
+    prefixes.filter(p => fromDomains.has(p.domain)).map(p => p.prefix)
+  )].filter(root => fs.existsSync(path.join(repoRoot, root)));
+  if (sourceRoots.length === 0) {
+    counts['domain-direction'] = 0;
+    findings.push({
+      id: 'domain-direction',
+      severity: 'error',
+      message: 'domain-direction 无扫描源：DOMAIN-DEPS.json 点名的域 roots 在磁盘上一个都不存在。',
+      detail: `enforced.from=${[...fromDomains].join('/')}`,
+    });
+    return;
+  }
+
+  // 不复用 git()：它在任何异常时返回空串，对本规则等于「扫不到 = 全绿」的 fail-open
+  // （规则 10 A2-7：判定失败禁止静默降级为放行）。这里要区分「没有违规」与「没扫成」。
+  let out;
+  try {
+    out = cp.execFileSync('git', ['grep', '-n', '-I', '-E', "require\\(['\"]\\.", '--', ...sourceRoots], {
+      cwd: repoRoot,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      encoding: 'utf8',
+      maxBuffer: 256 * 1024 * 1024,
+    });
+  } catch (err) {
+    // git grep 的「零命中」是 exit 1 且无输出，那不是故障；其余（含 buffer 超限）必须报出来。
+    if (err.status === 1 && !err.stdout) out = '';
+    else {
+      counts['domain-direction'] = 0;
+      findings.push({
+        id: 'domain-direction',
+        severity: 'error',
+        message: `domain-direction 扫描未成功（git grep 失败：${String(err.message).split('\n')[0]}）—— 本规则不 fail-open。`,
+        detail: `扫描源：${sourceRoots.join(', ')}`,
+      });
+      return;
+    }
+  }
+
+  const violations = [];
+  const byRule = {};
+  for (const line of out.split('\n')) {
+    if (!line.trim() || line.includes('node_modules/')) continue;
+    const firstColon = line.indexOf(':');
+    const secondColon = line.indexOf(':', firstColon + 1);
+    if (firstColon < 0 || secondColon < 0) continue;
+    const file = toPosix(line.slice(0, firstColon));
+    if (!/\.[cm]?js$/.test(file)) continue;
+    if (isTestFixture(file)) continue;
+    const lineNo = line.slice(firstColon + 1, secondColon);
+    const body = line.slice(secondColon + 1);
+
+    const specMatch = body.match(/require\(\s*(['"])(\.[^'"]*)\1/);
+    if (!specMatch) continue;
+    if (looksLikeComment(body, specMatch.index)) continue;
+
+    const srcDomain = domainOf(file, prefixes);
+    if (!srcDomain) continue;
+
+    const rawTarget = toPosix(path.posix.normalize(path.posix.join(path.posix.dirname(file), specMatch[2])));
+    const target = rawTarget.replace(/\.[cm]?js$|\.json$/, '');
+    const dstDomain = domainOf(target, prefixes);
+    if (!dstDomain) continue;
+
+    const rule = enforced.find(r => r.from.has(srcDomain) && r.forbid.has(dstDomain));
+    if (!rule) continue;
+    byRule[rule.id] = (byRule[rule.id] || 0) + 1;
+    violations.push(`${file}:${lineNo} ${srcDomain}→${dstDomain} → ${target}`);
+  }
+
+  counts['domain-direction'] = violations.length;
+  if (violations.length === 0) return;
+
+  const breakdown = Object.entries(byRule)
+    .map(([id, n]) => `${id} ${n} 处`)
+    .join('，');
+  findings.push({
+    id: 'domain-direction',
+    severity: 'warning',
+    message: `${violations.length} 处跨域禁止边（${breakdown}；判据 DOMAIN-DEPS.json，真源 [RESEARCH-018] §4 C-7）。`,
+    detail: '共享底座 D3（utils/ + constants/）不得反向 require 运行时/业务/交付面；'
+      + `任何运行时代码不得伸进工程档案区 D5。首例：${violations.slice(0, 4).join(' | ')}`,
+    full: violations,
+  });
+}
+
+// ── functional-unit：功能单元缺件（[RESEARCH-018] §4 C-4）────────────────────
+// 判据两半的**范围**都取自 DOMAIN-DEPS.json 的 D2 roots，功能单元 = root 的直接子目录
+// （§2.3 模板里 `D2/trajectory/` 那一整个业务上下文）。守卫里刻意不再另列一份目录清单，
+// 否则「什么算 D2」会长出两份真源（[MGMT-STD-008] §2.2）。
+//
+// 这条是**存在性**判据，不是质量判据：它只问「同名测试在不在同一个目录、单元目录里有
+// 没有 README」，不问测试是否有效、README 是否空洞。§5 结论 2 写明共置率「不是目录问题，
+// 搬目录治不了」，所以本规则的作用是把缺口变成一根只降不升的读数，供 P3 逐上下文补件时
+// 计量，而不是替代人判断内容。
+const FUNCTIONAL_UNIT_SUBRULES = {
+  'test-colocated': '5-3-1 §3 功能单元含测试 / [RESEARCH-018] §2.3「*.test.js 与源同目录」',
+  'readme-missing': '5-3-1 §3 功能单元含文档 / [RESEARCH-018] §2.3 README.md（谁要 / 为什么 / 怎么验）',
+};
+
+const SOURCE_UNIT_EXT_RE = /\.(?:[cm]?js)$/;
+const COLOCATED_TEST_EXTS = ['.test.js', '.test.cjs', '.test.mjs'];
+
+function listUnitSourceFiles(absDir, relDir, acc) {
+  let entries;
+  try {
+    entries = fs.readdirSync(absDir, { withFileTypes: true });
+  } catch {
+    return acc;
+  }
+  for (const entry of entries) {
+    const abs = path.join(absDir, entry.name);
+    const rel = `${relDir}/${entry.name}`;
+    if (entry.isDirectory()) {
+      if (!entry.name.startsWith('.') && entry.name !== 'node_modules') {
+        listUnitSourceFiles(abs, rel, acc);
+      }
+      continue;
+    }
+    if (!entry.isFile() || !SOURCE_UNIT_EXT_RE.test(entry.name)) continue;
+    if (COLOCATED_TEST_EXTS.some(ext => entry.name.endsWith(ext))) continue;
+    acc.push({ abs, rel, base: entry.name.replace(SOURCE_UNIT_EXT_RE, '') });
+  }
+  return acc;
+}
+
+// 磁盘扫描会把 gitignore 掉的**构建产物**当成核心域源文件。实测事故：
+// platform/khy_platform/bundled/runtime/khy/bundle.mjs（17.7 MB，.gitignore:137 命中）
+// 单独把 entry-buffer 从基线 2667 顶到 2668 并升级为 error —— 而 C-5 判据管的是
+// 「新**代码**禁直写核心域」，产物不是代码，补 manifest 既无意义也不该做。
+// 一次 `git check-ignore --stdin` 批量剔除；git 不可用（迷你 fixture 仓）时**不剔**，
+// 宁可保留原读数，也不给规则开出静默放行的口子。
+function dropGitIgnoredSources(files) {
+  if (!files.length) return files;
+  let out;
+  try {
+    out = cp.execFileSync('git', ['check-ignore', '--stdin', '-z'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      input: files.map((f) => toPosix(f.rel)).join('\0'),
+      maxBuffer: 64 * 1024 * 1024,
+      stdio: ['pipe', 'pipe', 'ignore'],
+    });
+  } catch {
+    return files;
+  }
+  const ignored = new Set(String(out).split('\0').filter(Boolean));
+  if (ignored.size === 0) return files;
+  return files.filter((f) => !ignored.has(toPosix(f.rel)));
+}
+
+function checkFunctionalUnit(findings, counts) {
+  counts['functional-unit'] = 0;
+  // 与 domain-direction 共用声明文件：读不到时那边已经亮红，这里不重复报，
+  // 免得一份坏 JSON 变成两条 finding 互相掩盖真实原因。
+  const decl = loadDomainDeclaration();
+  if (!decl) return;
+  // 登记表里没声明 D2 = 这个仓库还没有「业务上下文」这一域，规则无从判起（测试用的
+  // 迷你登记表正是这种仓库）。声明了 D2 但 roots 落空则相反 —— 那是判据目标消失了，
+  // 按「判定失败禁止静默降级为放行」（规则 10 A2-7）亮 error。
+  if (!decl.domains || !decl.domains.D2) return;
+  const roots = (decl.domains.D2.roots || []).filter(Boolean);
+  const present = roots.filter(root => {
+    try {
+      return fs.statSync(path.join(repoRoot, root)).isDirectory();
+    } catch {
+      return false;
+    }
+  });
+  if (roots.length === 0 || present.length === 0) {
+    findings.push({
+      id: 'functional-unit',
+      severity: 'error',
+      message: 'functional-unit 无扫描源：DOMAIN-DEPS.json 声明了 D2，但它的 roots 在磁盘上一个都不存在。',
+      detail: `roots=${JSON.stringify(roots)}（真源 [RESEARCH-018] §4 C-4）。本规则不 fail-open。`,
+    });
+    return;
+  }
+
+  const violations = [];
+  const byRule = {};
+  const bump = (ruleId) => { byRule[ruleId] = (byRule[ruleId] || 0) + 1; };
+  let unitTotal = 0;
+  let contextTotal = 0;
+
+  for (const root of present) {
+    const rootAbs = path.join(repoRoot, root);
+    // 判据 ①README：功能单元 = root 的直接子目录（§2.3 模板的 D2/<上下文>/ 那一层）。
+    for (const context of listSubdirs(rootAbs)) {
+      contextTotal += 1;
+      if (fs.existsSync(path.join(rootAbs, context, 'README.md'))) continue;
+      bump('readme-missing');
+      violations.push(`${root}/${context}/ 缺 README.md（${FUNCTIONAL_UNIT_SUBRULES['readme-missing']}）`);
+    }
+    // 判据 ②共置测试：D2 内每个源文件（含裸挂在 root 上的，它只是没有归属单元，
+    // 测试共置仍要求）。
+    for (const src of dropGitIgnoredSources(listUnitSourceFiles(rootAbs, root, []))) {
+      unitTotal += 1;
+      const hit = COLOCATED_TEST_EXTS.some(ext => fs.existsSync(path.join(path.dirname(src.abs), src.base + ext)));
+      if (hit) continue;
+      bump('test-colocated');
+      violations.push(`${src.rel} 缺 ${src.base}.test.js（${FUNCTIONAL_UNIT_SUBRULES['test-colocated']}）`);
+    }
+  }
+  violations.sort();
+
+  counts['functional-unit'] = violations.length;
+  if (violations.length === 0) return;
+
+  const breakdown = Object.entries(byRule)
+    .map(([id, n]) => `${id} ${n} 处`)
+    .join('，');
+  findings.push({
+    id: 'functional-unit',
+    severity: 'warning',
+    message: `${violations.length} 处功能单元缺件（${breakdown}；判据 [RESEARCH-018] §4 C-4，范围取 DOMAIN-DEPS.json 的 D2 roots）。`,
+    detail: `D2 实测 ${contextTotal} 个功能单元目录、${unitTotal} 个源文件。两半都是纯新增可降项：`
+      + '补一份单元级 README 降一处，补一个同名同目录测试降一处。'
+      + `首例：${violations.slice(0, 3).join(' | ')}`,
+    full: violations,
+  });
+}
+
+// ── 规则：源码入口缓冲（entry-buffer）───────────────────────────────────────
+// 判据真源 [RESEARCH-018] §4 C-5「核心域内新文件必须带 lifecycle: staged→stable 记录」
+// 与 §3 P5 行「新代码必须先落 D5/quarantine/<日期>/ 再晋级，晋级判据 = 有测试 + 有 README
+// + fan-in 声明」。适用范围（核心域）、缓冲区位置、manifest 文件名与阶段取值都取自
+// DOMAIN-DEPS.json 的 _entry_buffer 块 —— 不在这里硬编码目录清单（同一张表已是域清单真源）。
+const ENTRY_BUFFER_SUBRULES = {
+  'manifest-missing': '5-3-1 §4「新代码禁直写核心域」/ [RESEARCH-018] §4 C-5「核心域内新文件必须带 lifecycle: staged→stable 记录」',
+  'manifest-invalid': '同上 C-5：记录存在但不可用（JSON 非法 / domain 不在五域表 / lifecycle.stage 取值非法）',
+  'manifest-overstates-edge': '5-3-1 §5 依赖方向 / [RESEARCH-018] §2.3「khy.module.json 声明允许依赖的域」—— 单元自述的依赖面不得宽于本表名义边界',
+  'promotion-incomplete': '[RESEARCH-018] §3 P5 晋级判据 = 有测试 + 有 README + fan-in 声明',
+  'buffer-missing': '5-3-1 §4 入口缓冲：缓冲区目录本身不存在，「先入缓冲再晋级」这条路径就无从谈起',
+};
+
+// 从文件所在目录向上走到它所属 declared root（含 root 本身），取第一份 manifest。
+// 一个单元 = 一层目录，§2.3 模板里 khy.module.json 住在单元目录而不是逐文件挂。
+function findGoverningManifest(startDir, stopDir, manifestName) {
+  let dir = path.resolve(startDir);
+  const stop = path.resolve(stopDir);
+  for (;;) {
+    const candidate = path.join(dir, manifestName);
+    if (fs.existsSync(candidate)) return { abs: candidate, dir };
+    if (dir === stop || !dir.startsWith(`${stop}${path.sep}`)) return null;
+    dir = path.dirname(dir);
+  }
+}
+
+function checkEntryBuffer(findings, counts) {
+  counts['entry-buffer'] = 0;
+  // 与 domain-direction / functional-unit 共用声明文件：读不到时那边已经亮红，
+  // 这里不重复报，免得一份坏 JSON 变成两条 finding 互相掩盖真实原因。
+  const decl = loadDomainDeclaration();
+  if (!decl) return;
+  const eb = decl._entry_buffer;
+  // 本仓还没采纳入口缓冲机制（测试用的迷你登记表正是这种仓库）→ 整条规则静默。
+  if (!eb) return;
+  const manifestName = eb.manifestName || 'khy.module.json';
+  const stages = eb.stages || ['staged', 'stable'];
+  const coreIds = (eb.coreDomains || []).filter(Boolean);
+  const domains = decl.domains || {};
+
+  const rootsOf = [];
+  let declaredRoots = 0;
+  for (const id of coreIds) {
+    for (const root of ((domains[id] && domains[id].roots) || []).filter(Boolean)) {
+      declaredRoots += 1;
+      try {
+        if (fs.statSync(path.join(repoRoot, root)).isDirectory()) {
+          rootsOf.push({ id, root: toPosix(root).replace(/\/+$/, '') });
+        }
+      } catch { /* 磁盘上不存在 = 未落地的 root，不参与扫描 */ }
+    }
+  }
+  // 声明了核心域却一个扫描源都没有：判据目标消失，按规则 10 A2-7 不 fail-open。
+  if (coreIds.length === 0 || declaredRoots === 0 || rootsOf.length === 0) {
+    findings.push({
+      id: 'entry-buffer',
+      severity: 'error',
+      message: 'entry-buffer 无扫描源：DOMAIN-DEPS.json 声明了 _entry_buffer，但它的 coreDomains 在本表里找不到任何落地 roots。',
+      detail: `coreDomains=${JSON.stringify(coreIds)}（真源 [RESEARCH-018] §4 C-5）。本规则不 fail-open。`,
+    });
+    return;
+  }
+
+  const violations = [];
+  const byRule = {};
+  const bump = (ruleId) => { byRule[ruleId] = (byRule[ruleId] || 0) + 1; };
+
+  if (eb.bufferRoot && !fs.existsSync(path.join(repoRoot, eb.bufferRoot))) {
+    bump('buffer-missing');
+    violations.push(`${eb.bufferRoot}/ 缓冲区目录不存在（${ENTRY_BUFFER_SUBRULES['buffer-missing']}）`);
+  }
+
+  // D2 的 root 嵌在 D1 的 root 里（domain/ 在 services/ 之下），同一物理文件只记一次。
+  const files = new Map();
+  for (const { root } of rootsOf) {
+    for (const src of dropGitIgnoredSources(listUnitSourceFiles(path.join(repoRoot, root), root, []))) {
+      if (!files.has(src.rel)) files.set(src.rel, { ...src, root });
+    }
+  }
+
+  const manifestCache = new Map();
+  const loadManifest = (abs) => {
+    if (manifestCache.has(abs)) return manifestCache.get(abs);
+    let parsed = null;
+    let error = null;
+    try {
+      parsed = JSON.parse(fs.readFileSync(abs, 'utf8'));
+    } catch (err) {
+      error = err.message;
+    }
+    const hit = { parsed, error };
+    manifestCache.set(abs, hit);
+    return hit;
+  };
+  // README / fan-in 是**单元级**判据，一个 manifest 只报一次；共置测试是文件级判据。
+  const unitLevelReported = new Set();
+  let recorded = 0;
+
+  const sorted = [...files.values()].sort((a, b) => (a.rel < b.rel ? -1 : a.rel > b.rel ? 1 : 0));
+  for (const src of sorted) {
+    const rootEntry = rootsOf.find(r => r.root === src.root);
+    const gov = findGoverningManifest(path.dirname(src.abs), path.join(repoRoot, rootEntry.root), manifestName);
+    const short = `${src.rel}`;
+    if (!gov) {
+      bump('manifest-missing');
+      violations.push(`${short} 无生命周期记录：从所在目录到 ${src.root} 边界内找不到 ${manifestName}（${ENTRY_BUFFER_SUBRULES['manifest-missing']}）`);
+      continue;
+    }
+    const { parsed, error } = loadManifest(gov.abs);
+    const relManifest = toPosix(path.relative(repoRoot, gov.abs));
+    if (error) {
+      bump('manifest-invalid');
+      violations.push(`${short} 的记录 ${relManifest} 不是合法 JSON：${error}（${ENTRY_BUFFER_SUBRULES['manifest-invalid']}）`);
+      continue;
+    }
+    const stage = parsed && parsed.lifecycle ? parsed.lifecycle.stage : null;
+    const domainId = parsed ? parsed.domain : null;
+    if (!stages.includes(stage)) {
+      bump('manifest-invalid');
+      violations.push(`${short} 的记录 ${relManifest} 缺 lifecycle.stage 或取值不在 ${JSON.stringify(stages)}（实测 ${JSON.stringify(stage)}）（${ENTRY_BUFFER_SUBRULES['manifest-invalid']}）`);
+      continue;
+    }
+    if (!domains[domainId]) {
+      bump('manifest-invalid');
+      violations.push(`${short} 的记录 ${relManifest} 声明 domain=${JSON.stringify(domainId)}，五域表里没有这一域（${ENTRY_BUFFER_SUBRULES['manifest-invalid']}）`);
+      continue;
+    }
+    recorded += 1;
+
+    const nominal = (domains[domainId].mayDependOn || []);
+    const declared = Array.isArray(parsed.mayDependOn) ? parsed.mayDependOn : null;
+    if (declared) {
+      const overstates = declared.filter(id => !nominal.includes(id));
+      if (overstates.length > 0) {
+        bump('manifest-overstates-edge');
+        violations.push(`${relManifest} 声明 mayDependOn 含 ${JSON.stringify(overstates)}，超出 ${domainId} 名义边界 ${JSON.stringify(nominal)}（${ENTRY_BUFFER_SUBRULES['manifest-overstates-edge']}）`);
+      }
+    }
+
+    // 晋级判据对两个阶段都判：staged 是「还没达标」，stable 是「声称已晋级却判据不齐」——
+    // 后者更该亮，因为它是一张已经被人签过字的假合格证。
+    const unitKey = gov.abs;
+    const unitMissing = [];
+    if (!fs.existsSync(path.join(gov.dir, 'README.md'))) unitMissing.push('缺单元级 README.md');
+    if (!Number.isInteger(parsed.fanIn)) unitMissing.push(`fan-in 未声明（fanIn=${JSON.stringify(parsed.fanIn)}，须为整数）`);
+    if (unitMissing.length > 0 && !unitLevelReported.has(unitKey)) {
+      unitLevelReported.add(unitKey);
+      bump('promotion-incomplete');
+      violations.push(`${relManifest}（stage=${stage}）：${unitMissing.join('、')}（${ENTRY_BUFFER_SUBRULES['promotion-incomplete']}）`);
+    }
+    const hasTest = COLOCATED_TEST_EXTS.some(ext => fs.existsSync(path.join(path.dirname(src.abs), src.base + ext)));
+    if (!hasTest) {
+      bump('promotion-incomplete');
+      violations.push(`${short}（stage=${stage}）缺同名同目录测试 ${src.base}.test.js（${ENTRY_BUFFER_SUBRULES['promotion-incomplete']}）`);
+    }
+  }
+
+  counts['entry-buffer'] = violations.length;
+  if (violations.length === 0) return;
+  const breakdown = Object.entries(byRule).map(([id, n]) => `${id} ${n} 处`).join('，');
+  findings.push({
+    id: 'entry-buffer',
+    severity: 'warning',
+    message: `${violations.length} 处入口缓冲缺件（${breakdown}；判据 [RESEARCH-018] §4 C-5，范围取 DOMAIN-DEPS.json 的 _entry_buffer.coreDomains）。`,
+    detail: `核心域实测 ${files.size} 个源文件，其中 ${recorded} 个已有可用记录。降法只有两种：`
+      + '给单元补一份 khy.module.json（覆盖其下所有文件，一次降多处），或让 staged 单元补齐晋级判据。'
+      + `首例：${violations.slice(0, 3).join(' | ')}`,
+    full: violations,
+  });
+}
+
 // ── 基线 ────────────────────────────────────────────────────────────────
 function loadBaseline() {
   try {
@@ -1209,6 +1693,9 @@ function main() {
   checkExtensionContract(findings, counts);
   checkExtensionIdHardcode(findings, counts);
   checkExtensionPathDrift(findings, counts);
+  checkDomainDirection(findings, counts);
+  checkFunctionalUnit(findings, counts);
+  checkEntryBuffer(findings, counts);
 
   if (updateBaseline) {
     // 保留 baseline json 里 `_` 前缀的说明字段（_note/_source/_meaning），
