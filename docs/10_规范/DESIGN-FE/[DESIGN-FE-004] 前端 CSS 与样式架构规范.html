@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -57,7 +57,7 @@
 <table><thead><tr><th>分类</th><th>前缀</th><th>示例</th></tr></thead><tbody><tr><td>表面</td><td><code>--khy-bg-*</code></td><td><code>--khy-bg-main</code>、<code>--khy-bg-elevated</code></td></tr><tr><td>文本</td><td><code>--khy-text-*</code></td><td><code>--khy-text-main</code>、<code>--khy-text-muted</code></td></tr><tr><td>线条</td><td><code>--khy-border-*</code></td><td><code>--khy-border</code>、<code>--khy-border-light</code></td></tr><tr><td>品牌</td><td><code>--khy-primary-*</code></td><td><code>--khy-primary</code>、<code>--khy-primary-strong</code></td></tr><tr><td>状态</td><td><code>--khy-{status}</code></td><td><code>--khy-success</code>、<code>--khy-warning</code>、<code>--khy-danger</code></td></tr><tr><td>几何</td><td><code>--khy-radius-*</code></td><td><code>--khy-radius</code>、<code>--khy-radius-sm</code></td></tr><tr><td>阴影</td><td><code>--khy-shadow-*</code></td><td><code>--khy-shadow</code>、<code>--khy-shadow-lift</code></td></tr><tr><td>字体</td><td><code>--khy-font-*</code></td><td><code>--khy-font</code>、<code>--khy-font-mono</code></td></tr></tbody></table>
 <h3 id="3-2-双主题强制">3.2 双主题强制<a class="anchor" href="#3-2-双主题强制" aria-label="锚点">#</a></h3>
 <p><strong>任何颜色/阴影 token 必须同时定义浅色和深色</strong>：</p>
-<pre><code class="language-css"><span class="hljs-comment">/* ✅ 正确 — 双主题 */</span>
+<pre><code class="language-css"><span class="hljs-comment">/* ✓ 正确 — 双主题 */</span>
 <span class="hljs-selector-pseudo">:root</span> {
   <span class="hljs-attr">--khy-bg-main</span>: <span class="hljs-number">#f4f7fc</span>;
   <span class="hljs-attr">--khy-text-main</span>: <span class="hljs-number">#1f2937</span>;
@@ -67,7 +67,7 @@
   <span class="hljs-attr">--khy-text-main</span>: <span class="hljs-number">#e2e8f0</span>;
 }
 
-<span class="hljs-comment">/* ❌ 错误 — 仅浅色 */</span>
+<span class="hljs-comment">/* ✗ 错误 — 仅浅色 */</span>
 <span class="hljs-selector-pseudo">:root</span> {
   <span class="hljs-attr">--khy-bg-white</span>: <span class="hljs-number">#ffffff</span>;  <span class="hljs-comment">/* 暗色下静默失效 */</span>
 }</code></pre>
@@ -97,12 +97,12 @@
 <h3 id="4-2-作用域前缀">4.2 作用域前缀<a class="anchor" href="#4-2-作用域前缀" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>前缀</th><th>用途</th><th>示例</th></tr></thead><tbody><tr><td><code>khy-</code></td><td>khy-os 全局组件</td><td><code>.khy-page-header</code></td></tr><tr><td><code>c-</code></td><td>业务组件</td><td><code>.c-agent-dashboard</code></td></tr><tr><td><code>l-</code></td><td>布局</td><td><code>.l-page-layout</code></td></tr><tr><td><code>u-</code></td><td>工具类</td><td><code>.u-sr-only</code>、<code>.u-mt-16</code></td></tr><tr><td><code>t-</code></td><td>主题覆盖（临时）</td><td><code>.t-legacy-dark</code></td></tr></tbody></table>
 <h3 id="4-3-类名风格">4.3 类名风格<a class="anchor" href="#4-3-类名风格" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>类型</th><th>风格</th><th>示例</th></tr></thead><tbody><tr><td>复合词</td><td>kebab-case</td><td><code>.agent-dashboard</code></td></tr><tr><td>数字</td><td>避免纯数字</td><td><code>.col-3</code> ✅、<code>.col3</code> ❌</td></tr><tr><td>布尔</td><td><code>is-</code> / <code>has-</code></td><td><code>.is-active</code>、<code>.has-error</code></td></tr></tbody></table>
+<table><thead><tr><th>类型</th><th>风格</th><th>示例</th></tr></thead><tbody><tr><td>复合词</td><td>kebab-case</td><td><code>.agent-dashboard</code></td></tr><tr><td>数字</td><td>避免纯数字</td><td><code>.col-3</code> ✓、<code>.col3</code> ✗</td></tr><tr><td>布尔</td><td><code>is-</code> / <code>has-</code></td><td><code>.is-active</code>、<code>.has-error</code></td></tr></tbody></table>
 <hr>
 <h2 id="5-样式来源优先级">5. 样式来源优先级<a class="anchor" href="#5-样式来源优先级" aria-label="锚点">#</a></h2>
 <p>优先级从高到低（低层可被高层覆盖）：</p>
 <pre><code class="language-css"><span class="hljs-comment">/* 1. Inline style（最差，禁止） */</span>
-&lt;<span class="hljs-selector-tag">div</span> style=&quot;<span class="hljs-attribute">color</span>: red<span class="hljs-string">&quot;&gt;  /* ❌ 禁止 */
+&lt;<span class="hljs-selector-tag">div</span> style=&quot;<span class="hljs-attribute">color</span>: red<span class="hljs-string">&quot;&gt;  /* ✗ 禁止 */
 
 /* 2. 组件 scoped style */
 &lt;style scoped&gt;

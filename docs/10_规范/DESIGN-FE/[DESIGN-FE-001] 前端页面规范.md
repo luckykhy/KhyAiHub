@@ -231,12 +231,12 @@ AGENTS.md 规则 2 全部适用于网页端。网页端特有的落地形式：
 | 区块加载 | 骨架屏，两色用 `--khy-skeleton-base/highlight`， shimmer 动画 ≤1.5s 周期 |
 | 首次启动等待后端 | khyquant 的 `FirstLaunchLoader.vue` 模式：明确显示「正在启动后端服务（第 n 次探测）」而非裸 spinner |
 
-任何加载态文案必须满足**动作 + 目标 + 进度**：`加载渠道列表（第 2 次重试）…` ✅，`加载中…` ❌。
+任何加载态文案必须满足**动作 + 目标 + 进度**：`加载渠道列表（第 2 次重试）…` ✓，`加载中…` ✗。
 
 ### 7.2 空态与错误态
 
 - 空态统一 `KhyEmpty`：标题说「没有什么」，描述说「如何有」，操作插槽给入口按钮。
-- 区块错误统一 `LoadErrorBanner`：遵循错误模板 **`{问题}：{原因}，{修复建议}`**——`加载渠道失败：后端未响应（连接超时），请确认 ai-backend 已启动后重试` ✅，`加载失败` ❌。
+- 区块错误统一 `LoadErrorBanner`：遵循错误模板 **`{问题}：{原因}，{修复建议}`**——`加载渠道失败：后端未响应（连接超时），请确认 ai-backend 已启动后重试` ✓，`加载失败` ✗。
 - toast 走 `notify.js` 集中出口，禁止在组件里直接 `ElMessage.error('出错了')`。
 
 ### 7.3 长任务
@@ -296,14 +296,14 @@ AI 对话等流式场景的超时必须是**空闲/滑动超时**（收到分块
 
 | # | 缺口 | 实测证据 | 收敛方向 |
 |---|------|----------|----------|
-| G1 | ~~`--khy-white` 被引用 24 次但 0 处定义~~ | ✅ 已在 `:root` 补 `--khy-white: #ffffff` | 已收敛 |
-| G2 | ~~khyquant 全端 0 个 `--khy-*` 定义，却有多处 `var(--khy-primary/success/gray-*)` 悬空引用~~ | ✅ 已在 `theme.css :root` 补 22 个 `--khy-*` 基础定义（含双主题灰阶），全部悬空引用已消除 | 已收敛 |
-| G3 | ~~khyquant 平行令牌命名（`--primary-color` 等）与 `--khy-*` 双轨并存~~ | ✅ `--primary-color: var(--khy-primary)` 等映射已在 `theme.css` 单文件收敛，新代码只用 `--khy-*` | 已收敛 |
-| G4 | ~~`frontend:fix-colors` 的 COLOR_MAP 目标含 `--khy-gray-*`，该灰阶在任何端都未定义~~ | ✅ 已在 `:root` + `html.dark` 补 `--khy-gray-50` 至 `--khy-gray-900` | 已收敛 |
-| G5 | 间距/字号无 token，文档曾虚构 `--khy-space-*` | ✅ 已评估：ai-frontend 无间距令牌（px 硬编码），khyquant 有 `--spacing-*`/`--radius-*` 但非 `--khy-*` 前缀。引入 `--khy-space-*` 需全量重构数千处 px 值，属未来重大重构 | 已评估·延后 |
-| G6 | FE-002/FE-003（1.0）描述的 `KhyButton/KhyInput/KhyCard` 不存在于代码 | ✅ 已评估：当前方案为 Element Plus 原组件直用 + 6 个真实 Khy* 组件（KhyIcon 等），组件库封装属未来工作 | 已评估·延后 |
-| G7 | ~~ai-frontend 26 个文件含硬编码 hex 颜色~~ | ✅ 已批量替换 260 处，26→0 文件（含灰阶/终端/metric/markdown 全量令牌化） | 已收敛 |
-| G8 | ~~views/ + components/ 共 32 个文件 389 处直接 ElMessage 调用未走集中出口~~ | ✅ 已全量迁移到 `notify.js`（showSuccess/showError/showWarning/showInfo），0 处剩余直接调用 | 已收敛 |
+| G1 | ~~`--khy-white` 被引用 24 次但 0 处定义~~ | ✓ 已在 `:root` 补 `--khy-white: #ffffff` | 已收敛 |
+| G2 | ~~khyquant 全端 0 个 `--khy-*` 定义，却有多处 `var(--khy-primary/success/gray-*)` 悬空引用~~ | ✓ 已在 `theme.css :root` 补 22 个 `--khy-*` 基础定义（含双主题灰阶），全部悬空引用已消除 | 已收敛 |
+| G3 | ~~khyquant 平行令牌命名（`--primary-color` 等）与 `--khy-*` 双轨并存~~ | ✓ `--primary-color: var(--khy-primary)` 等映射已在 `theme.css` 单文件收敛，新代码只用 `--khy-*` | 已收敛 |
+| G4 | ~~`frontend:fix-colors` 的 COLOR_MAP 目标含 `--khy-gray-*`，该灰阶在任何端都未定义~~ | ✓ 已在 `:root` + `html.dark` 补 `--khy-gray-50` 至 `--khy-gray-900` | 已收敛 |
+| G5 | 间距/字号无 token，文档曾虚构 `--khy-space-*` | ✓ 已评估：ai-frontend 无间距令牌（px 硬编码），khyquant 有 `--spacing-*`/`--radius-*` 但非 `--khy-*` 前缀。引入 `--khy-space-*` 需全量重构数千处 px 值，属未来重大重构 | 已评估·延后 |
+| G6 | FE-002/FE-003（1.0）描述的 `KhyButton/KhyInput/KhyCard` 不存在于代码 | ✓ 已评估：当前方案为 Element Plus 原组件直用 + 6 个真实 Khy* 组件（KhyIcon 等），组件库封装属未来工作 | 已评估·延后 |
+| G7 | ~~ai-frontend 26 个文件含硬编码 hex 颜色~~ | ✓ 已批量替换 260 处，26→0 文件（含灰阶/终端/metric/markdown 全量令牌化） | 已收敛 |
+| G8 | ~~views/ + components/ 共 32 个文件 389 处直接 ElMessage 调用未走集中出口~~ | ✓ 已全量迁移到 `notify.js`（showSuccess/showError/showWarning/showInfo），0 处剩余直接调用 | 已收敛 |
 
 ---
 

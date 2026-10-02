@@ -72,7 +72,7 @@
 **任何颜色/阴影 token 必须同时定义浅色和深色**：
 
 ```css
-/* ✅ 正确 — 双主题 */
+/* ✓ 正确 — 双主题 */
 :root {
   --khy-bg-main: #f4f7fc;
   --khy-text-main: #1f2937;
@@ -82,7 +82,7 @@ html.dark {
   --khy-text-main: #e2e8f0;
 }
 
-/* ❌ 错误 — 仅浅色 */
+/* ✗ 错误 — 仅浅色 */
 :root {
   --khy-bg-white: #ffffff;  /* 暗色下静默失效 */
 }
@@ -139,7 +139,7 @@ html.dark {
 | 类型 | 风格 | 示例 |
 |------|------|------|
 | 复合词 | kebab-case | `.agent-dashboard` |
-| 数字 | 避免纯数字 | `.col-3` ✅、`.col3` ❌ |
+| 数字 | 避免纯数字 | `.col-3` ✓、`.col3` ✗ |
 | 布尔 | `is-` / `has-` | `.is-active`、`.has-error` |
 
 ---
@@ -150,7 +150,7 @@ html.dark {
 
 ```css
 /* 1. Inline style（最差，禁止） */
-<div style="color: red">  /* ❌ 禁止 */
+<div style="color: red">  /* ✗ 禁止 */
 
 /* 2. 组件 scoped style */
 <style scoped>

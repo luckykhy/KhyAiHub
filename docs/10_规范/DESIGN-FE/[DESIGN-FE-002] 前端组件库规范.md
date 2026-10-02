@@ -3,7 +3,7 @@
 > **定位**：前端组件库规范的**唯一入口与 scope 裁决真源**。
 > **结论**：① 组件库的目录/命名/分类看 §1；② 开发、API、测试、文档发布、质保五类细则各拆子篇（下表）；③ 本族整体是**目标态**——组件库落地前一切以 `[DESIGN-FE-001]` 为准。
 >
-> ⚠️ **状态标注（2026-09-09）——目标态，非现状**：本文描述的 `KhyButton`/`KhyInput`/`KhyCard` 等独立组件库在当前代码中**不存在**。实测现状（[DESIGN-FE-001] §5）：基座是 Element Plus（不重新封装），共享组件仅 `KhyPageHeader`/`KhyEmpty`/`KhyIcon`/`LoadErrorBanner`/`GlobalProgressBar`/`KhyFloatBall` 六个，跨前端共享逻辑走 `@khy/ui-shared`（纯 JS 原语，无 UI 组件）。**在组件库真正落地前，一切以 [DESIGN-FE-001] 为准**；本文仅在那时才转为生效规范。
+> ⚠ **状态标注（2026-09-09）——目标态，非现状**：本文描述的 `KhyButton`/`KhyInput`/`KhyCard` 等独立组件库在当前代码中**不存在**。实测现状（[DESIGN-FE-001] §5）：基座是 Element Plus（不重新封装），共享组件仅 `KhyPageHeader`/`KhyEmpty`/`KhyIcon`/`LoadErrorBanner`/`GlobalProgressBar`/`KhyFloatBall` 六个，跨前端共享逻辑走 `@khy/ui-shared`（纯 JS 原语，无 UI 组件）。**在组件库真正落地前，一切以 [DESIGN-FE-001] 为准**；本文仅在那时才转为生效规范。
 >
 > **拆分说明（2026-09-18，B7）**：原文 1,490 行，按 `[DESIGN-DOC-001]` §12 （规范骨架 ≤150 行，超出的细则拆子篇）拆为主篇 + 7 个子篇。原文已按 HK-3 复制留痕至 `.khyos/housekeeping/2026-09-17-doc-plan/10_规范/`，未删除。
 

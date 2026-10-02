@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -118,9 +118,9 @@ html.dark    → 深色主题：同一组 token 整体重指
 <p>AGENTS.md 规则 2 全部适用于网页端。网页端特有的落地形式：</p>
 <h3 id="7-1-加载态三档">7.1 加载态三档<a class="anchor" href="#7-1-加载态三档" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>场景</th><th>做法</th></tr></thead><tbody><tr><td>全局导航/请求进行中</td><td><code>GlobalProgressBar</code>（自动，由 axios 拦截器计数，无需手动调用）</td></tr><tr><td>区块加载</td><td>骨架屏，两色用 <code>--khy-skeleton-base/highlight</code>， shimmer 动画 ≤1.5s 周期</td></tr><tr><td>首次启动等待后端</td><td>khyquant 的 <code>FirstLaunchLoader.vue</code> 模式：明确显示「正在启动后端服务（第 n 次探测）」而非裸 spinner</td></tr></tbody></table>
-<p>任何加载态文案必须满足<strong>动作 + 目标 + 进度</strong>：<code>加载渠道列表（第 2 次重试）…</code> ✅，<code>加载中…</code> ❌。</p>
+<p>任何加载态文案必须满足<strong>动作 + 目标 + 进度</strong>：<code>加载渠道列表（第 2 次重试）…</code> ✓，<code>加载中…</code> ✗。</p>
 <h3 id="7-2-空态与错误态">7.2 空态与错误态<a class="anchor" href="#7-2-空态与错误态" aria-label="锚点">#</a></h3>
-<ul><li>空态统一 <code>KhyEmpty</code>：标题说「没有什么」，描述说「如何有」，操作插槽给入口按钮。</li><li>区块错误统一 <code>LoadErrorBanner</code>：遵循错误模板 <strong><code>{问题}：{原因}，{修复建议}</code></strong>——<code>加载渠道失败：后端未响应（连接超时），请确认 ai-backend 已启动后重试</code> ✅，<code>加载失败</code> ❌。</li><li>toast 走 <code>notify.js</code> 集中出口，禁止在组件里直接 <code>ElMessage.error('出错了')</code>。</li></ul>
+<ul><li>空态统一 <code>KhyEmpty</code>：标题说「没有什么」，描述说「如何有」，操作插槽给入口按钮。</li><li>区块错误统一 <code>LoadErrorBanner</code>：遵循错误模板 <strong><code>{问题}：{原因}，{修复建议}</code></strong>——<code>加载渠道失败：后端未响应（连接超时），请确认 ai-backend 已启动后重试</code> ✓，<code>加载失败</code> ✗。</li><li>toast 走 <code>notify.js</code> 集中出口，禁止在组件里直接 <code>ElMessage.error('出错了')</code>。</li></ul>
 <h3 id="7-3-长任务">7.3 长任务<a class="anchor" href="#7-3-长任务" aria-label="锚点">#</a></h3>
 <p>AI 对话等流式场景的超时必须是<strong>空闲/滑动超时</strong>（收到分块即重置），配置走 <code>VITE_AI_WS_IDLE_TIMEOUT_MS</code> 等 env（见 <code>.env.example</code> 的 WS 段）；禁止固定时长硬杀活跃连接。</p>
 <hr>
@@ -140,7 +140,7 @@ html.dark    → 深色主题：同一组 token 整体重指
 <hr>
 <h2 id="12-已知缺口登记表-只降不升">12. 已知缺口登记表（只降不升）<a class="anchor" href="#12-已知缺口登记表-只降不升" aria-label="锚点">#</a></h2>
 <blockquote><p>这是规范与现状之间的差异清单，性质同仓库其他 baseline：新增缺口视同违规，收敛一条划掉一条。</p></blockquote>
-<table><thead><tr><th>#</th><th>缺口</th><th>实测证据</th><th>收敛方向</th></tr></thead><tbody><tr><td>G1</td><td><del><code>--khy-white</code> 被引用 24 次但 0 处定义</del></td><td>✅ 已在 <code>:root</code> 补 <code>--khy-white: #ffffff</code></td><td>已收敛</td></tr><tr><td>G2</td><td><del>khyquant 全端 0 个 <code>--khy-*</code> 定义，却有多处 <code>var(--khy-primary/success/gray-*)</code> 悬空引用</del></td><td>✅ 已在 <code>theme.css :root</code> 补 22 个 <code>--khy-*</code> 基础定义（含双主题灰阶），全部悬空引用已消除</td><td>已收敛</td></tr><tr><td>G3</td><td><del>khyquant 平行令牌命名（<code>--primary-color</code> 等）与 <code>--khy-*</code> 双轨并存</del></td><td>✅ <code>--primary-color: var(--khy-primary)</code> 等映射已在 <code>theme.css</code> 单文件收敛，新代码只用 <code>--khy-*</code></td><td>已收敛</td></tr><tr><td>G4</td><td><del><code>frontend:fix-colors</code> 的 COLOR_MAP 目标含 <code>--khy-gray-*</code>，该灰阶在任何端都未定义</del></td><td>✅ 已在 <code>:root</code> + <code>html.dark</code> 补 <code>--khy-gray-50</code> 至 <code>--khy-gray-900</code></td><td>已收敛</td></tr><tr><td>G5</td><td>间距/字号无 token，文档曾虚构 <code>--khy-space-*</code></td><td>✅ 已评估：ai-frontend 无间距令牌（px 硬编码），khyquant 有 <code>--spacing-*</code>/<code>--radius-*</code> 但非 <code>--khy-*</code> 前缀。引入 <code>--khy-space-*</code> 需全量重构数千处 px 值，属未来重大重构</td><td>已评估·延后</td></tr><tr><td>G6</td><td>FE-002/FE-003（1.0）描述的 <code>KhyButton/KhyInput/KhyCard</code> 不存在于代码</td><td>✅ 已评估：当前方案为 Element Plus 原组件直用 + 6 个真实 Khy* 组件（KhyIcon 等），组件库封装属未来工作</td><td>已评估·延后</td></tr><tr><td>G7</td><td><del>ai-frontend 26 个文件含硬编码 hex 颜色</del></td><td>✅ 已批量替换 260 处，26→0 文件（含灰阶/终端/metric/markdown 全量令牌化）</td><td>已收敛</td></tr><tr><td>G8</td><td><del>views/ + components/ 共 32 个文件 389 处直接 ElMessage 调用未走集中出口</del></td><td>✅ 已全量迁移到 <code>notify.js</code>（showSuccess/showError/showWarning/showInfo），0 处剩余直接调用</td><td>已收敛</td></tr></tbody></table>
+<table><thead><tr><th>#</th><th>缺口</th><th>实测证据</th><th>收敛方向</th></tr></thead><tbody><tr><td>G1</td><td><del><code>--khy-white</code> 被引用 24 次但 0 处定义</del></td><td>✓ 已在 <code>:root</code> 补 <code>--khy-white: #ffffff</code></td><td>已收敛</td></tr><tr><td>G2</td><td><del>khyquant 全端 0 个 <code>--khy-*</code> 定义，却有多处 <code>var(--khy-primary/success/gray-*)</code> 悬空引用</del></td><td>✓ 已在 <code>theme.css :root</code> 补 22 个 <code>--khy-*</code> 基础定义（含双主题灰阶），全部悬空引用已消除</td><td>已收敛</td></tr><tr><td>G3</td><td><del>khyquant 平行令牌命名（<code>--primary-color</code> 等）与 <code>--khy-*</code> 双轨并存</del></td><td>✓ <code>--primary-color: var(--khy-primary)</code> 等映射已在 <code>theme.css</code> 单文件收敛，新代码只用 <code>--khy-*</code></td><td>已收敛</td></tr><tr><td>G4</td><td><del><code>frontend:fix-colors</code> 的 COLOR_MAP 目标含 <code>--khy-gray-*</code>，该灰阶在任何端都未定义</del></td><td>✓ 已在 <code>:root</code> + <code>html.dark</code> 补 <code>--khy-gray-50</code> 至 <code>--khy-gray-900</code></td><td>已收敛</td></tr><tr><td>G5</td><td>间距/字号无 token，文档曾虚构 <code>--khy-space-*</code></td><td>✓ 已评估：ai-frontend 无间距令牌（px 硬编码），khyquant 有 <code>--spacing-*</code>/<code>--radius-*</code> 但非 <code>--khy-*</code> 前缀。引入 <code>--khy-space-*</code> 需全量重构数千处 px 值，属未来重大重构</td><td>已评估·延后</td></tr><tr><td>G6</td><td>FE-002/FE-003（1.0）描述的 <code>KhyButton/KhyInput/KhyCard</code> 不存在于代码</td><td>✓ 已评估：当前方案为 Element Plus 原组件直用 + 6 个真实 Khy* 组件（KhyIcon 等），组件库封装属未来工作</td><td>已评估·延后</td></tr><tr><td>G7</td><td><del>ai-frontend 26 个文件含硬编码 hex 颜色</del></td><td>✓ 已批量替换 260 处，26→0 文件（含灰阶/终端/metric/markdown 全量令牌化）</td><td>已收敛</td></tr><tr><td>G8</td><td><del>views/ + components/ 共 32 个文件 389 处直接 ElMessage 调用未走集中出口</del></td><td>✓ 已全量迁移到 <code>notify.js</code>（showSuccess/showError/showWarning/showInfo），0 处剩余直接调用</td><td>已收敛</td></tr></tbody></table>
 <hr>
 <h2 id="13-pr-验收清单-网页端改动逐项过">13. PR 验收清单（网页端改动逐项过）<a class="anchor" href="#13-pr-验收清单-网页端改动逐项过" aria-label="锚点">#</a></h2>
 <ul><li>[ ] 无端点硬编码：新代码没有字面量 host:port，端点走 env / 运行时 JSON / <code>serviceDefaults.js</code></li><li>[ ] 无颜色硬编码：样式全部 <code>var(--khy-*)</code>，<code>frontend:fix-colors</code> 预览零新增</li><li>[ ] 新增 token 双主题成对定义（<code>:root</code> + <code>html.dark</code>）</li><li>[ ] 加载/空/错误三态齐备：骨架屏或进度条、<code>KhyEmpty</code>、<code>LoadErrorBanner</code>（或 <code>silent</code> 降级）</li><li>[ ] 面向用户文案满足「动作+目标+进度」与「问题：原因，修复建议」</li><li>[ ] 新页面已登记 <code>src/nav/index.js</code>，管理页落在 <code>/admin/*</code>，并补 wiring test</li><li>[ ] 基础交互用 Element Plus 原组件，未新造 <code>Khy*</code> 封装基础控件</li><li>[ ] 双主题自查通过；移动端（如涉及）触控目标与输入字号达标</li><li>[ ] <code>lint</code> / <code>test:frontend</code> / <code>check:frontend-size</code> / <code>check-agent-rules --changed</code> 全绿</li></ul>

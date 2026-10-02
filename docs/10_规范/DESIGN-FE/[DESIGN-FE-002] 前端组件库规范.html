@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -28,7 +28,7 @@
       <article class="doc-body">
 <h1 id="design-fe-002-前端组件库规范">[DESIGN-FE-002] 前端组件库规范<a class="anchor" href="#design-fe-002-前端组件库规范" aria-label="锚点">#</a></h1>
 <blockquote><p><strong>定位</strong>：前端组件库规范的<strong>唯一入口与 scope 裁决真源</strong>。<br><strong>结论</strong>：① 组件库的目录/命名/分类看 §1；② 开发、API、测试、文档发布、质保五类细则各拆子篇（下表）；③ 本族整体是<strong>目标态</strong>——组件库落地前一切以 <code>[DESIGN-FE-001]</code> 为准。</p>
-<p>⚠️ <strong>状态标注（2026-09-09）——目标态，非现状</strong>：本文描述的 <code>KhyButton</code>/<code>KhyInput</code>/<code>KhyCard</code> 等独立组件库在当前代码中<strong>不存在</strong>。实测现状（[DESIGN-FE-001] §5）：基座是 Element Plus（不重新封装），共享组件仅 <code>KhyPageHeader</code>/<code>KhyEmpty</code>/<code>KhyIcon</code>/<code>LoadErrorBanner</code>/<code>GlobalProgressBar</code>/<code>KhyFloatBall</code> 六个，跨前端共享逻辑走 <code>@khy/ui-shared</code>（纯 JS 原语，无 UI 组件）。<strong>在组件库真正落地前，一切以 [DESIGN-FE-001] 为准</strong>；本文仅在那时才转为生效规范。</p>
+<p>⚠ <strong>状态标注（2026-09-09）——目标态，非现状</strong>：本文描述的 <code>KhyButton</code>/<code>KhyInput</code>/<code>KhyCard</code> 等独立组件库在当前代码中<strong>不存在</strong>。实测现状（[DESIGN-FE-001] §5）：基座是 Element Plus（不重新封装），共享组件仅 <code>KhyPageHeader</code>/<code>KhyEmpty</code>/<code>KhyIcon</code>/<code>LoadErrorBanner</code>/<code>GlobalProgressBar</code>/<code>KhyFloatBall</code> 六个，跨前端共享逻辑走 <code>@khy/ui-shared</code>（纯 JS 原语，无 UI 组件）。<strong>在组件库真正落地前，一切以 [DESIGN-FE-001] 为准</strong>；本文仅在那时才转为生效规范。</p>
 <p><strong>拆分说明（2026-09-18，B7）</strong>：原文 1,490 行，按 <code>[DESIGN-DOC-001]</code> §12 （规范骨架 ≤150 行，超出的细则拆子篇）拆为主篇 + 7 个子篇。原文已按 HK-3 复制留痕至 <code>.khyos/housekeeping/2026-09-17-doc-plan/10_规范/</code>，未删除。</p></blockquote>
 <hr>
 <h2 id="0-子篇索引-细则入口">0. 子篇索引（细则入口）<a class="anchor" href="#0-子篇索引-细则入口" aria-label="锚点">#</a></h2>

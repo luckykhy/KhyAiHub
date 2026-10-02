@@ -115,7 +115,7 @@ describe('KhyButton', () => {
     it('renders icon slot', () => {
       const wrapper = mount(KhyButton, {
         slots: {
-          icon: '<span class="icon">🔍</span>'
+          icon: '<span class="icon">⌕</span>'
         }
       });
       
