@@ -395,10 +395,10 @@ interface MentionItem {
 // .khy/sessions）、技能/命令来自 agentItemStore（agent:list），在 Composer 内
 // 按需拉取。拉不到就显示空态提示，不拿假数据充数（P3-1/P3-4 同类问题）。
 const MENTION_META: Record<string, { label: string; icon: string }> = {
-  '@': { label: '添加上下文', icon: '📎' },
-  '#': { label: '插入会话', icon: '💬' },
-  '$': { label: '选择技能', icon: '⚡' },
-  '/': { label: '选择能力', icon: '🔧' },
+  '@': { label: '添加上下文', icon: '·' },
+  '#': { label: '插入会话', icon: '✎' },
+  '$': { label: '选择技能', icon: '❯' },
+  '/': { label: '选择能力', icon: '✱' },
 }
 
 // 提及空态：问题 + 原因 + 补救入口（规则 2.2 错误/空态模板）。四类数据各有各的
@@ -884,7 +884,7 @@ export function Composer({
         <div className="mb-2 flex flex-wrap gap-2">
           {attachments.map((file, i) => (
             <div key={i} className="flex items-center gap-2 bg-card border border-card-border rounded-lg px-3 py-2 text-sm">
-              <span>📎</span>
+              <span>+</span>
               <span className="text-foreground">{file}</span>
               <button
                 onClick={() => setAttachments(prev => prev.filter((_, idx) => idx !== i))}
