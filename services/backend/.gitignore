@@ -15,7 +15,10 @@ yarn-error.log*
 pnpm-debug.log*
 .pnpm-store/
 dist/
-build/
+# 钉住包根：裸 build/ 会吞 src/services/domain/build/（源码，见 buildRootGuard SOURCE_DIR_ALLOWLIST）
+/build/
+# 反选根级裸 build/：domain/build 是源码域(compile/forge/repoMap)，不是产物
+!src/services/domain/build/
 coverage/
 .next/
 .nuxt/

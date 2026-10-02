@@ -20,7 +20,7 @@ import akshare as ak
 def get_stock_kline(symbol, period='daily', start_date=None, end_date=None, instrument_type='stock'):
     """获取K线数据"""
     try:
-        print(f"📊 获取K线: symbol={symbol}, type={instrument_type}, period={period}", file=sys.stderr)
+        print(f"获取K线: symbol={symbol}, type={instrument_type}, period={period}", file=sys.stderr)
         print(f"   日期: {start_date} 至 {end_date}", file=sys.stderr)
         
         # 根据类型选择接口
@@ -110,7 +110,7 @@ def get_stock_kline(symbol, period='daily', start_date=None, end_date=None, inst
         }
         
     except Exception as e:
-        print(f"❌ 错误: {e}", file=sys.stderr)
+        print(f"✗ 错误: {e}", file=sys.stderr)
         import traceback
         traceback.print_exc(file=sys.stderr)
         return {"success": False, "error": str(e)}

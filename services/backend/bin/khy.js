@@ -762,7 +762,7 @@ async function ensureAuthenticated() {
     }
     // Fallback: manual registration
     console.log('');
-    console.log(chalk.cyan.bold('  🎉 欢迎使用 KHY 平台操作系统终端!'));
+    console.log(chalk.cyan.bold('  欢迎使用 KHY 平台操作系统终端!'));
     console.log(chalk.dim('  首次使用需要注册一个账号 (与网页端通用)\n'));
 
     const answers = await inquirer.prompt([
@@ -902,7 +902,7 @@ async function ensureAuthenticated() {
       _credFileHint = require('../src/services/credentialGenerator').getDefaultAdminCredentialsPath();
     } catch { _credFileHint = ''; }
     console.log('');
-    console.log(chalk.cyan('  🔐 请登录 KHY 平台'));
+    console.log(chalk.cyan('  请登录 KHY 平台'));
     console.log(chalk.dim('  会话已过期，请重新登录'));
     if (_credFileHint) {
       console.log(chalk.dim(`  提示: 默认管理员凭据见 ${_credFileHint}\n`));
@@ -1411,7 +1411,7 @@ async function main() {
     try {
       process.once('exit', () => _bootPhaseLine.end());
     } catch { /* 注册不上不影响启动 */ }
-    _bootPhaseWrite('⌛ khy 正在启动');
+    _bootPhaseWrite('khy 正在启动');
   }
 
   // ── 启动节拍真源：在**真实工作完成点**上报，而不是让界面猜 ──────────────
@@ -1475,7 +1475,7 @@ async function main() {
   // Lazy require: the bootstrap/init module is pulled into the require graph
   // here, past the quick paths, so --version/--help never load it. For real
   // commands this runs before any other init, exactly as the eager require did.
-  if (_bootPhaseWrite) _bootPhaseWrite('⏳ 加载环境配置', 1, 5);
+  if (_bootPhaseWrite) _bootPhaseWrite('加载环境配置', 1, 5);
   _quietConsoleLogsForCli(args);
   if (!_initPromise) {
     const { init: _bootstrapInit } = require('../src/bootstrap/init');
@@ -1568,7 +1568,7 @@ async function main() {
     if (process.env.KHY_INTENT_LOOP_MAX_CAP === undefined) process.env.KHY_INTENT_LOOP_MAX_CAP = '16';
   }
 
-  if (_bootPhaseWrite) _bootPhaseWrite('🔄 准备运行环境', 2, 5);
+  if (_bootPhaseWrite) _bootPhaseWrite('准备运行环境', 2, 5);
 
   // ── 参数标准化：用户常把 -version 写成单横线，自动补齐为 --version ────
   // (args already normalized at top of main() for fast-path checks)
@@ -2031,13 +2031,13 @@ async function main() {
       // 认证 + setup(同步 require redis/sequelize/database/aiGateway,暖机 ≈5s,
       // 冷启动数十秒),此前用户盯着 2/5 一行长达整个窗口。拆成 3/5、4/5,
       // 每个重步骤前有「动作+目标」的当前阶段,同步加载期间该行驻留可见。
-      if (_bootPhaseWrite) _bootPhaseWrite('⏳ 检查登录状态', 3, 5);
+      if (_bootPhaseWrite) _bootPhaseWrite('检查登录状态', 3, 5);
       // 强制认证后再进入 REPL
       const authOk = await ensureAuthenticated();
       if (!authOk) { printError('认证失败，无法使用终端。'); process.exit(1); }
       _markBeat('auth');
       // khy 主入口仅做轻量平台初始化，避免触发上层默认应用启动链路
-      if (_bootPhaseWrite) _bootPhaseWrite('⏳ 加载服务 (数据库/网关/会话)', 4, 5);
+      if (_bootPhaseWrite) _bootPhaseWrite('加载服务 (数据库/网关/会话)', 4, 5);
       try {
         const { setup } = require('../src/bootstrap/setup');
         await setup({ mode: 'khy', silent: true });
@@ -2063,7 +2063,7 @@ async function main() {
       printError('当前环境不支持交互登录。请使用 --print/-p 进行非交互调用。');
       process.exit(1);
     }
-    if (_bootPhaseWrite) _bootPhaseWrite('⏳ 检查登录状态', 3, 5);
+    if (_bootPhaseWrite) _bootPhaseWrite('检查登录状态', 3, 5);
     const authenticated = await ensureAuthenticated();
     if (!authenticated) {
       printError('认证失败，无法使用终端。如需重置请删除 ~/.khyquant/credentials.json');
@@ -2074,7 +2074,7 @@ async function main() {
     // ── 启动自检：SQLite 驱动子进程探针（防 better-sqlite3 段错误静默死亡）──
     // 仅本无参交互完整启动分支接入（--help 等其他分支零影响）；探针预算约 1.2s，
     // 超时/探针自身异常一律放行（checked=false），绝不阻断正常启动。
-    if (_bootPhaseWrite) _bootPhaseWrite('⏳ 启动自检 (SQLite 驱动)', 4, 5);
+    if (_bootPhaseWrite) _bootPhaseWrite('启动自检 (SQLite 驱动)', 4, 5);
     try {
       const { runStartupSqliteProbe } = require('../src/bootstrap/startupSqliteProbe');
       const probe = runStartupSqliteProbe();
@@ -2088,7 +2088,7 @@ async function main() {
     } catch { /* 探针容错：自身异常不得阻断启动 */ }
 
     // 完整模式的会话级初始化（数据库预检查 + 数据迁移）
-    if (_bootPhaseWrite) _bootPhaseWrite('⏳ 加载服务 (数据库/网关/会话)', 5, 5);
+    if (_bootPhaseWrite) _bootPhaseWrite('加载服务 (数据库/网关/会话)', 5, 5);
     try {
       const { setup } = require('../src/bootstrap/setup');
       await setup({ mode: 'khyquant' });

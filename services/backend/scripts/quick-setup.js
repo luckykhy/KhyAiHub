@@ -7,7 +7,7 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 async function quickSetup() {
-  console.log('🔧 Khy-OS Quick Setup - Creating Default Admin');
+  console.log('Khy-OS Quick Setup - Creating Default Admin');
   console.log('');
 
   try {
@@ -36,7 +36,7 @@ async function quickSetup() {
 
     process.exit(0);
   } catch (error) {
-    console.error('❌ 设置失败:', error.message);
+    console.error('✗ 设置失败:', error.message);
     process.exit(1);
   }
 }

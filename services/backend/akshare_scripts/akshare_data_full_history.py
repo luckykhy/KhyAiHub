@@ -46,7 +46,7 @@ def get_stock_realtime(symbol):
 def get_stock_kline(symbol, period='daily', start_date=None, end_date=None, count=None, instrument_type='stock'):
     """获取K线数据 - 支持股票和指数，支持完整历史数据"""
     try:
-        print(f"📊 获取K线数据: symbol={symbol}, type={instrument_type}, period={period}", file=sys.stderr)
+        print(f"获取K线数据: symbol={symbol}, type={instrument_type}, period={period}", file=sys.stderr)
         print(f"   日期范围: {start_date} 至 {end_date}, count={count}", file=sys.stderr)
         
         # 根据标的类型选择不同的接口
@@ -104,7 +104,7 @@ def get_stock_kline(symbol, period='daily', start_date=None, end_date=None, coun
                 df = df[df['日期'] >= start_dt]
                 print(f"   应用开始日期过滤: {start_date}, 剩余 {len(df)} 条", file=sys.stderr)
             except Exception as e:
-                print(f"   ⚠️ 开始日期解析失败: {e}", file=sys.stderr)
+                print(f"   ⚠ 开始日期解析失败: {e}", file=sys.stderr)
         
         if end_date:
             try:
@@ -112,7 +112,7 @@ def get_stock_kline(symbol, period='daily', start_date=None, end_date=None, coun
                 df = df[df['日期'] <= end_dt]
                 print(f"   应用结束日期过滤: {end_date}, 剩余 {len(df)} 条", file=sys.stderr)
             except Exception as e:
-                print(f"   ⚠️ 结束日期解析失败: {e}", file=sys.stderr)
+                print(f"   ⚠ 结束日期解析失败: {e}", file=sys.stderr)
         
         # 如果指定了count，取最后count条
         if count and count > 0:
@@ -142,7 +142,7 @@ def get_stock_kline(symbol, period='daily', start_date=None, end_date=None, coun
         }
         
     except Exception as e:
-        print(f"❌ 获取K线数据失败: {e}", file=sys.stderr)
+        print(f"✗ 获取K线数据失败: {e}", file=sys.stderr)
         import traceback
         traceback.print_exc(file=sys.stderr)
         return {"success": False, "error": str(e)}

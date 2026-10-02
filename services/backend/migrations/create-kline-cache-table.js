@@ -92,12 +92,12 @@ async function up(queryInterface) {
     name: 'idx_kline_source'
   });
 
-  console.log('✅ K线缓存表创建成功');
+  console.log('✓ K线缓存表创建成功');
 }
 
 async function down(queryInterface) {
   await queryInterface.dropTable('kline_cache');
-  console.log('✅ K线缓存表已删除');
+  console.log('✓ K线缓存表已删除');
 }
 
 module.exports = { up, down };

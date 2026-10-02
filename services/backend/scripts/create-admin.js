@@ -50,7 +50,7 @@ async function createDefaultAdmin() {
     );
 
     if (adminResult.rows.length > 0) {
-      console.log(`✅ 已生成初始管理员 ${creds.username}，ID: ${adminResult.rows[0].id}`);
+      console.log(`✓ 已生成初始管理员 ${creds.username}，ID: ${adminResult.rows[0].id}`);
       if (creds.fromEnv) {
         console.log('   密码来自环境变量，未写入凭据文件\n');
       } else {
@@ -59,7 +59,7 @@ async function createDefaultAdmin() {
         );
       }
     } else {
-      console.log(`ℹ️ 管理员账号已存在（用户名: ${creds.username}），未修改密码与任何字段`);
+      console.log(`ℹ 管理员账号已存在（用户名: ${creds.username}），未修改密码与任何字段`);
       console.log(`   如需查看初始密码，请打开 ${credGen.getDefaultAdminCredentialsPath()}\n`);
     }
 
@@ -67,7 +67,7 @@ async function createDefaultAdmin() {
     console.log('  完成');
     console.log('========================================\n');
   } catch (error) {
-    console.error('❌ 创建管理员失败:', error.message);
+    console.error('✗ 创建管理员失败:', error.message);
     throw error;
   } finally {
     client.release();
@@ -79,11 +79,11 @@ async function createDefaultAdmin() {
 if (require.main === module) {
   createDefaultAdmin()
     .then(() => {
-      console.log('✅ 默认管理员创建成功！');
+      console.log('✓ 默认管理员创建成功！');
       process.exit(0);
     })
     .catch((error) => {
-      console.error('❌ 错误:', error);
+      console.error('✗ 错误:', error);
       process.exit(1);
     });
 }

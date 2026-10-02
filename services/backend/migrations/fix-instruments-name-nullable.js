@@ -8,7 +8,7 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    console.log('🔧 开始修改 instruments 表的 name 字段...');
+    console.log('开始修改 instruments 表的 name 字段...');
     
     try {
       // 修改 name 字段，允许为 NULL
@@ -18,15 +18,15 @@ module.exports = {
         comment: '标的名称（可选）'
       });
       
-      console.log('✅ name 字段已修改为允许 NULL');
+      console.log('✓ name 字段已修改为允许 NULL');
     } catch (error) {
-      console.error('❌ 修改失败:', error.message);
+      console.error('✗ 修改失败:', error.message);
       throw error;
     }
   },
 
   down: async (queryInterface, Sequelize) => {
-    console.log('🔧 回滚 instruments 表的 name 字段...');
+    console.log('回滚 instruments 表的 name 字段...');
     
     try {
       // 回滚：将 name 字段改回不允许 NULL
@@ -36,9 +36,9 @@ module.exports = {
         comment: '标的名称'
       });
       
-      console.log('✅ name 字段已回滚为不允许 NULL');
+      console.log('✓ name 字段已回滚为不允许 NULL');
     } catch (error) {
-      console.error('❌ 回滚失败:', error.message);
+      console.error('✗ 回滚失败:', error.message);
       throw error;
     }
   }

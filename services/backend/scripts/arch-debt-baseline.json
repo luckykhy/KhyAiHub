@@ -9,87 +9,9 @@
       "rule": "R1-layering"
     },
     {
-      "file": "src/services/aiManagementChatHttp.js",
-      "line": 98,
-      "target": "../cli/repl/imageIntent",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/aiManagementKhyosWs.js",
-      "line": 635,
-      "target": "../cli/handlers/mcp",
-      "rule": "R1-layering"
-    },
-    {
       "file": "src/services/aiManagementServer.js",
       "line": 144,
       "target": "../cli/ai",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/aiMonitor.js",
-      "line": 260,
-      "target": "../cli/formatters",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/aiUploadStore.js",
-      "line": 278,
-      "target": "../cli/handlers/convert",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/aiUploadStore.js",
-      "line": 436,
-      "target": "../cli/ccFormat",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/archiveManifestPolicy.js",
-      "line": 282,
-      "target": "../cli/ccFormat",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/compile/index.js",
-      "line": 5,
-      "target": "../../cli/commands/registry.js",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/contextCompressor.js",
-      "line": 623,
-      "target": "../cli/hooks/hookSystem",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/contextCompressor.js",
-      "line": 916,
-      "target": "../cli/hooks/hookSystem",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/crashRecovery.js",
-      "line": 544,
-      "target": "../cli/reportKhyError",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/deliveryFormatter.js",
-      "line": 205,
-      "target": "../cli/toolCallNoise",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/deploy/index.js",
-      "line": 4,
-      "target": "../../cli/handlers/deploy",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/domain/gateway-stuff/gatewayLogLease/noiseFilter.js",
-      "line": 36,
-      "target": "../../../../cli/ai",
       "rule": "R1-layering"
     },
     {
@@ -99,63 +21,9 @@
       "rule": "R1-layering"
     },
     {
-      "file": "src/services/domain/session/session/sessionForestService.js",
-      "line": 42,
-      "target": "../../../../cli/ai",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/domain/state/intentArbiter/intentPreprocess.js",
-      "line": 40,
-      "target": "../../../../cli/ai",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/domain/trajectory/auditTrajectory/diffCapture.js",
-      "line": 170,
-      "target": "../../../../cli/ai",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/extensionMarketplace.js",
-      "line": 37,
-      "target": "../cli/extensions/extensionManager",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/fileSalience.js",
-      "line": 413,
-      "target": "../cli/ccFormat",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/gateway/adapters/claudeAdapter.js",
-      "line": 2283,
-      "target": "../../../cli/betaFallbackNotice",
-      "rule": "R1-layering"
-    },
-    {
       "file": "src/services/gateway/aiGatewayGenerateMethod.js",
       "line": 561,
       "target": "../../cli/handlers/mcp",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/gateway/breakCacheState.js",
-      "line": 21,
-      "target": "../../cli/breakCache",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/gateway/inlineImageOcrGuardPolicy.js",
-      "line": 56,
-      "target": "../../cli/repl/imageIntent",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/gatewayResetService.js",
-      "line": 11,
-      "target": "../cli/formatters",
       "rule": "R1-layering"
     },
     {
@@ -165,99 +33,9 @@
       "rule": "R1-layering"
     },
     {
-      "file": "src/services/imageService.js",
-      "line": 461,
-      "target": "../cli/ccFormat",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/multimodalInputService.js",
-      "line": 235,
-      "target": "../cli/ccFormat",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/planModeService.js",
-      "line": 1412,
-      "target": "../cli/taskPanelState",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/planModeService.js",
-      "line": 1778,
-      "target": "../cli/taskPanelState",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/resumeAdvisor.js",
-      "line": 126,
-      "target": "../cli/ccFormat",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/selfHeal/index.js",
-      "line": 4,
-      "target": "../../cli/handlers/selfHeal",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/tokenUsageService.js",
-      "line": 406,
-      "target": "../cli/ccFormat",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/tokenUsageService.js",
-      "line": 565,
-      "target": "../cli/ccFormat",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/tokenUsageService.js",
-      "line": 631,
-      "target": "../cli/ccModelName",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/tool/loop/diagnostics.js",
-      "line": 60,
-      "target": "../../../cli/hooks/hookSystem",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/tool/toolCalling.js",
-      "line": 1993,
-      "target": "../../cli/hooks/hookSystem",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/tool/toolCallingPermissions.js",
-      "line": 864,
-      "target": "../../cli/permissionReply",
-      "rule": "R1-layering"
-    },
-    {
       "file": "src/services/tool/toolUseLoopCore.js",
       "line": 132,
       "target": "../../cli/toolPrefaceVoice",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/tool/toolUseLoopCore.js",
-      "line": 139,
-      "target": "../../cli/keyFindings",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/tool/toolUseLoopCore.js",
-      "line": 150,
-      "target": "../../cli/resultGuard",
-      "rule": "R1-layering"
-    },
-    {
-      "file": "src/services/tool/toolUseLoopHelpers.js",
-      "line": 35,
-      "target": "../../cli/keyFindings",
       "rule": "R1-layering"
     }
   ],
@@ -632,29 +410,8 @@
     },
     {
       "members": [
-        "src/cli/reportKhyError.js",
-        "src/services/crashRecovery.js"
-      ],
-      "rule": "R3-cycle"
-    },
-    {
-      "members": [
-        "src/cli/tui/uiAdapter.js",
-        "src/cli/tui/uiBridge.js"
-      ],
-      "rule": "R3-cycle"
-    },
-    {
-      "members": [
         "src/memdir/memdir.js",
         "src/memdir/paths.js"
-      ],
-      "rule": "R3-cycle"
-    },
-    {
-      "members": [
-        "src/services/daemonManager.js",
-        "src/services/watchdogService.js"
       ],
       "rule": "R3-cycle"
     },

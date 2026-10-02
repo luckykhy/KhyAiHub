@@ -11,7 +11,7 @@ import sys
 akshare_path = os.path.join(os.path.dirname(__file__), '..', '..', '数据源', 'akshare-main')
 if os.path.exists(akshare_path):
     sys.path.insert(0, akshare_path)
-    print(f"✅ 使用AKShare源码: {akshare_path}", file=sys.stderr)
+    print(f"✓ 使用AKShare源码: {akshare_path}", file=sys.stderr)
 
 import json
 import pandas as pd
@@ -29,7 +29,7 @@ import akshare as ak
 def get_stock_kline(symbol, period='daily', start_date=None, end_date=None, instrument_type='stock'):
     """获取K线数据 - 简化版本，参考成功的示例"""
     try:
-        print(f"📊 获取K线: symbol={symbol}, type={instrument_type}, period={period}", file=sys.stderr)
+        print(f"获取K线: symbol={symbol}, type={instrument_type}, period={period}", file=sys.stderr)
         print(f"   日期: {start_date} 至 {end_date}", file=sys.stderr)
         
         # 根据类型选择接口
@@ -126,7 +126,7 @@ def get_stock_kline(symbol, period='daily', start_date=None, end_date=None, inst
         }
         
     except Exception as e:
-        print(f"❌ 错误: {e}", file=sys.stderr)
+        print(f"✗ 错误: {e}", file=sys.stderr)
         import traceback
         traceback.print_exc(file=sys.stderr)
         return {"success": False, "error": str(e)}

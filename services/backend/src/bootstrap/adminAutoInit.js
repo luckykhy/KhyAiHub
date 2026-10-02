@@ -52,7 +52,7 @@ async function ensureDefaultAdmin() {
     const existing = await User.findOne({ where: { username } });
     if (existing) {
       // Never touch an existing account (password/fields stay untouched).
-      console.log(`ℹ️ 默认管理员已存在（用户名: ${username}），跳过自动初始化，未修改任何字段`);
+      console.log(`ℹ 默认管理员已存在（用户名: ${username}），跳过自动初始化，未修改任何字段`);
       return { created: false, skipped: true, reason: 'exists' };
     }
 
@@ -71,18 +71,18 @@ async function ensureDefaultAdmin() {
 
     // Never print the plaintext password — only where it was saved.
     if (creds.fromEnv) {
-      console.log(`✅ 已生成初始管理员 ${creds.username}，密码来自环境变量，未写入凭据文件`);
+      console.log(`✓ 已生成初始管理员 ${creds.username}，密码来自环境变量，未写入凭据文件`);
     } else if (creds.filePath) {
-      console.log(`✅ 已生成初始管理员 ${creds.username}，密码已保存至 ${creds.filePath}`);
+      console.log(`✓ 已生成初始管理员 ${creds.username}，密码已保存至 ${creds.filePath}`);
     } else {
       console.log(
-        `⚠️ 已生成初始管理员 ${creds.username}，但凭据文件写入失败，请通过 KHY_ADMIN_PASSWORD 重置密码`
+        `⚠ 已生成初始管理员 ${creds.username}，但凭据文件写入失败，请通过 KHY_ADMIN_PASSWORD 重置密码`
       );
     }
     return { created: true, skipped: false };
   } catch (err) {
     const msg = err && err.message ? err.message : String(err || 'unknown');
-    console.error(`❌ 默认管理员自动初始化失败（目标: users 表，用户名: ${username}）: ${msg}`);
+    console.error(`✗ 默认管理员自动初始化失败（目标: users 表，用户名: ${username}）: ${msg}`);
     try {
       const logger = require('../utils/logger');
       logger.warn('Default admin auto-init failed', { username, error: msg });

@@ -492,7 +492,7 @@ function main() {
     console.log(`  ${String(n).padStart(3)}  ${BUCKET_LABELS[bucket]}`);
   }
   if (counts.UNCLASSIFIED)
-    console.log(`  ${String(counts.UNCLASSIFIED).padStart(3)}  ❌ 未分类(真·未处理缺口)`);
+    console.log(`  ${String(counts.UNCLASSIFIED).padStart(3)}  ✗ 未分类(真·未处理缺口)`);
   console.log(line);
 
   // 只详列非 present 的分类项(即所有「按名缺失」的 CC 命令 + 其证据)。
@@ -504,11 +504,11 @@ function main() {
   }
   console.log(line);
   if (result.selfConsistent) {
-    console.log('✅ 审计自洽:每个 CC 命令要么在 khy 存在,要么落入带源码证据的排除桶。');
+    console.log('✓ 审计自洽:每个 CC 命令要么在 khy 存在,要么落入带源码证据的排除桶。');
     console.log('   无未分类(unhandled)缺口。');
   } else {
     console.log(
-      `❌ 出现 ${unclassified.length} 个未分类 CC 命令(需补齐或补证据): ${unclassified.join(', ')}`
+      `✗ 出现 ${unclassified.length} 个未分类 CC 命令(需补齐或补证据): ${unclassified.join(', ')}`
     );
   }
   console.log(line);

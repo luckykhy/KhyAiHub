@@ -30,7 +30,7 @@ async function migrate() {
       ALTER TABLE trades 
       ADD COLUMN IF NOT EXISTS is_closed BOOLEAN DEFAULT FALSE
     `);
-    console.log('   ✅ is_closed 字段添加成功\n');
+    console.log('   ✓ is_closed 字段添加成功\n');
 
     // 添加 closed_at 字段
     console.log('2. 添加 closed_at 字段...');
@@ -38,7 +38,7 @@ async function migrate() {
       ALTER TABLE trades 
       ADD COLUMN IF NOT EXISTS closed_at TIMESTAMP
     `);
-    console.log('   ✅ closed_at 字段添加成功\n');
+    console.log('   ✓ closed_at 字段添加成功\n');
 
     // 添加 closed_quantity 字段
     console.log('3. 添加 closed_quantity 字段...');
@@ -46,7 +46,7 @@ async function migrate() {
       ALTER TABLE trades 
       ADD COLUMN IF NOT EXISTS closed_quantity DECIMAL(15, 4)
     `);
-    console.log('   ✅ closed_quantity 字段添加成功\n');
+    console.log('   ✓ closed_quantity 字段添加成功\n');
 
     // 添加 related_trade_id 字段
     console.log('4. 添加 related_trade_id 字段...');
@@ -54,7 +54,7 @@ async function migrate() {
       ALTER TABLE trades 
       ADD COLUMN IF NOT EXISTS related_trade_id INTEGER
     `);
-    console.log('   ✅ related_trade_id 字段添加成功\n');
+    console.log('   ✓ related_trade_id 字段添加成功\n');
 
     // 添加 profit 字段
     console.log('5. 添加 profit 字段...');
@@ -62,7 +62,7 @@ async function migrate() {
       ALTER TABLE trades 
       ADD COLUMN IF NOT EXISTS profit DECIMAL(15, 2)
     `);
-    console.log('   ✅ profit 字段添加成功\n');
+    console.log('   ✓ profit 字段添加成功\n');
 
     // 创建索引
     console.log('6. 创建索引...');
@@ -74,13 +74,13 @@ async function migrate() {
       CREATE INDEX IF NOT EXISTS idx_trades_related_trade_id 
       ON trades(related_trade_id)
     `);
-    console.log('   ✅ 索引创建成功\n');
+    console.log('   ✓ 索引创建成功\n');
 
     // 提交事务
     await client.query('COMMIT');
 
     console.log('========================================');
-    console.log('✅ 数据库迁移执行成功！');
+    console.log('✓ 数据库迁移执行成功！');
     console.log('========================================');
     console.log('\n所有平仓相关字段已添加到 trades 表');
     console.log('现在可以重启后端服务使用平仓功能了\n');
@@ -90,7 +90,7 @@ async function migrate() {
     await client.query('ROLLBACK');
     
     console.error('\n========================================');
-    console.error('❌ 数据库迁移执行失败！');
+    console.error('✗ 数据库迁移执行失败！');
     console.error('========================================');
     console.error('错误信息:', error.message);
     console.error('\n请检查：');

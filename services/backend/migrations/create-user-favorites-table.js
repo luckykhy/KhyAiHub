@@ -29,9 +29,9 @@ async function createUserFavoritesTable() {
   try {
     // 测试连接
     await sequelize.authenticate();
-    console.log('✅ 数据库连接成功');
+    console.log('✓ 数据库连接成功');
 
-    console.log('\n🔧 开始创建 user_favorites 表...\n');
+    console.log('\n开始创建 user_favorites 表...\n');
 
     // 检查表是否已存在
     const [results] = await sequelize.query(`
@@ -42,7 +42,7 @@ async function createUserFavoritesTable() {
     `);
 
     if (results[0].exists) {
-      console.log('ℹ️  user_favorites 表已存在，跳过创建');
+      console.log('ℹ  user_favorites 表已存在，跳过创建');
       await sequelize.close();
       return;
     }
@@ -59,27 +59,27 @@ async function createUserFavoritesTable() {
         UNIQUE(user_id, symbol)
       );
     `);
-    console.log('✅ user_favorites 表创建成功');
+    console.log('✓ user_favorites 表创建成功');
 
     // 创建索引
     await sequelize.query(`
       CREATE INDEX IF NOT EXISTS idx_user_favorites_user_id ON user_favorites(user_id);
     `);
-    console.log('✅ user_id 索引创建成功');
+    console.log('✓ user_id 索引创建成功');
 
     await sequelize.query(`
       CREATE INDEX IF NOT EXISTS idx_user_favorites_symbol ON user_favorites(symbol);
     `);
-    console.log('✅ symbol 索引创建成功');
+    console.log('✓ symbol 索引创建成功');
 
     // 显示结果
     const [countResult] = await sequelize.query('SELECT COUNT(*) AS count FROM user_favorites');
-    console.log(`\n✅ user_favorites 表创建完成！当前记录数: ${countResult[0].count}`);
+    console.log(`\n✓ user_favorites 表创建完成！当前记录数: ${countResult[0].count}`);
 
     await sequelize.close();
-    console.log('\n🎉 数据库迁移执行成功！');
+    console.log('\n数据库迁移执行成功！');
   } catch (error) {
-    console.error('❌ 数据库迁移失败:', error);
+    console.error('✗ 数据库迁移失败:', error);
     await sequelize.close();
     process.exit(1);
   }

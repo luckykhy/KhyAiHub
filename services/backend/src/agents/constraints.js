@@ -107,9 +107,116 @@ const SUBAGENT_EXECUTION_SCOPE = `=== SUB-AGENT EXECUTION SCOPE (you are an exec
 - You MAY split only YOUR assigned chunk into concrete steps. If one step is genuinely independent and worth parallelizing, you may delegate it to a further sub-agent — but stay within the nesting limit; if spawning is refused because the depth ceiling is reached, complete that step directly instead.
 - Keep your reasoning local and minimal: enough to carry out the assigned work, not a fresh strategic analysis of the overall goal.`;
 
+/**
+ * Sub-agent common floor — the reporting discipline every spawned sub-agent
+ * keeps, regardless of role.
+ *
+ * The scope block above says WHAT a sub-agent is (executor, isolated context);
+ * it does not say how its report must behave. The evidence/closing discipline
+ * lives in EXECUTION_DISCIPLINE and HARD_PROHIBITIONS, but those only reach a
+ * sub-agent when an agent DEFINITION embeds them (the built-in defs compose
+ * their own prompts). A spawned agent with no matching definition — the default
+ * roleless call path, or a schema-documented role with no built-in (reviewer,
+ * coder, codex, …) — enters its loop with a one-line role hint and no floor at
+ * all. The seam in AgentTool.buildSubagentSystemPrompt injects this block
+ * exactly there, and skips it when the role prompt already carries the two
+ * canonical blocks, so no sentence is ever said twice.
+ *
+ * Deliberately NOT here: an enumerated tool list. The sub-agent's real tool
+ * surface is computed per spawn (buildSubagentDenylist + the depth ceiling);
+ * a second copy in prose would be a parallel source of truth. The floor states
+ * the behaviour instead: never invent or fake a tool call.
+ *
+ * Injected (never copy-pasted) via AgentTool.buildSubagentSystemPrompt;
+ * gated by KHY_SUBAGENT_COMMON_FLOOR (default on) at the seam.
+ */
+const SUBAGENT_COMMON_FLOOR = `=== SUB-AGENT COMMON FLOOR (reporting discipline you keep whatever your role) ===
+- Report only what you verified. A result is backed by a check you actually ran (a read, a search, a command) — anything else is stated as unverified, never as fact.
+- Failures stay failures. If a step errored, was skipped, or was never attempted, say so in plain words; do not describe a fix you did not make or a check you did not run.
+- Use only the tools you were actually given. Never name or "call" a tool that is not in your surface; if a call is refused or missing, do the work another way or report the refusal — never pretend it succeeded.
+- Close with a self-contained final reply: what was done, what was verified, what remains. The parent sees only this text, not your steps.`;
+
+// Gate for the floor. Default-on; 0/false/off/no → applyCommonFloor passes the
+// prompt through untouched. Reads only the supplied env object (pure, same
+// idiom as subAgentResultFooter.isEnabled).
+function _floorEnabled(env) {
+  const e = env || {};
+  const raw = e.KHY_SUBAGENT_COMMON_FLOOR == null ? '' : e.KHY_SUBAGENT_COMMON_FLOOR;
+  const v = String(raw).trim().toLowerCase();
+  return !(v === '0' || v === 'false' || v === 'off' || v === 'no');
+}
+
+/**
+ * Apply the common floor to a spawned agent's prompt — the ONE place the
+ * gate + idempotence policy lives. Both injection seams call this:
+ * AgentTool.buildSubagentSystemPrompt (standalone sub-agents) and the
+ * coordinator worker path (workerAgent.buildWorkerPrompt); a second copy of
+ * the policy would drift exactly the way the mode↔profile vocabularies did.
+ *
+ * @param {string} prompt - the agent's own role/system prompt
+ * @param {object} [env] - injectable env (defaults to process.env), pure for tests
+ * @returns {string} the prompt with the floor prepended, or untouched when
+ *   already carrying the canonical blocks / the floor itself, gated off, or
+ *   not a string
+ */
+function applyCommonFloor(prompt, env = process.env) {
+  const text = typeof prompt === 'string' ? prompt : '';
+  // An empty prompt has nothing to floor — prepending would only leave a
+  // dangling separator behind.
+  if (!text || !SUBAGENT_COMMON_FLOOR || !_floorEnabled(env)) {
+    return text;
+  }
+  // Idempotent both ways: the built-in agent defs compose EXECUTION_DISCIPLINE
+  // / HARD_PROHIBITIONS into their own prompts (a second copy is noise), and a
+  // prompt that already carries the floor must not gain another.
+  if (
+    text.includes(SUBAGENT_COMMON_FLOOR) ||
+    text.includes(EXECUTION_DISCIPLINE) ||
+    text.includes(HARD_PROHIBITIONS)
+  ) {
+    return text;
+  }
+  return `${SUBAGENT_COMMON_FLOOR}\n\n${text}`;
+}
+
+// Cap for the withheld-tools notice — an anomalous huge denylist must not
+// balloon the prompt; the tail folds into a count (same idiom as
+// subAgentResultFooter's warning block).
+const _TOOL_SURFACE_NOTICE_MAX = 20;
+
+/**
+ * Build the withheld-tools notice for a spawned agent's system prompt — the
+ * VIEW of the mechanism's output (AgentTool.buildSubagentDenylist result), so
+ * the model learns which tools were withheld instead of discovering it through
+ * a refused call. Text lives here next to the floor line it concretises
+ * ("use only the tools you were actually given"). Same gate as the floor
+ * family (KHY_SUBAGENT_COMMON_FLOOR): off → '' and the whole family falls back
+ * byte-identically.
+ * @param {string[]|null} [deniedTools] - the mechanism's denylist output
+ * @param {object} [env] - injectable env (defaults to process.env), pure for tests
+ * @returns {string} '' when there is nothing to declare, the gate is off, or
+ *   the input is not a non-empty array
+ */
+function buildToolSurfaceNotice(deniedTools, env = process.env) {
+  if (!Array.isArray(deniedTools) || deniedTools.length === 0 || !_floorEnabled(env)) {
+    return '';
+  }
+  const names = Array.from(new Set(deniedTools.filter((n) => typeof n === 'string' && n)));
+  if (names.length === 0) {
+    return '';
+  }
+  const shown = names.slice(0, _TOOL_SURFACE_NOTICE_MAX);
+  const tail =
+    names.length > shown.length ? `（另有 ${names.length - shown.length} 项未展开）` : '';
+  return `Tools NOT available to you (a refused call means the tool was withheld, not that it failed — do the work another way or report it): ${shown.join(', ')}${tail}`;
+}
+
 module.exports = {
   EXECUTION_DISCIPLINE,
   HARD_PROHIBITIONS,
   readOnlyProhibitions,
   SUBAGENT_EXECUTION_SCOPE,
+  SUBAGENT_COMMON_FLOOR,
+  applyCommonFloor,
+  buildToolSurfaceNotice,
 };

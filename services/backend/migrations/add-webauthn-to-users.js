@@ -28,7 +28,7 @@ async function up() {
     defaultValue: 0
   }).catch(() => console.log('webauthn_counter 已存在，跳过'));
 
-  console.log('✅ WebAuthn 字段迁移完成');
+  console.log('✓ WebAuthn 字段迁移完成');
 }
 
 up()

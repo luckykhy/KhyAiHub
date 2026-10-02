@@ -956,7 +956,7 @@ function formatReport(result, neu) {
   const newCount =
     neu.layering.length + neu.godFiles.length + neu.godGrowth.length + neu.cycles.length;
   if (newCount > 0) {
-    L.push(`⚠️  超出基线的【新增】架构债: ${newCount} 项 — CI 门禁失败`);
+    L.push(`⚠  超出基线的【新增】架构债: ${newCount} 项 — CI 门禁失败`);
     for (const v of neu.layering) L.push(`  + [R1] ${v.file}:${v.line} → ${v.target}`);
     for (const g of neu.godFiles) L.push(`  + [R2] ${g.file} (${g.loc} 行)`);
     for (const g of neu.godGrowth)
@@ -965,7 +965,7 @@ function formatReport(result, neu) {
       );
     for (const c of neu.cycles) L.push(`  + [R3] ${c.members.join(' ⇄ ')}`);
   } else {
-    L.push('✅ 无超出基线的新增架构债。');
+    L.push('✓ 无超出基线的新增架构债。');
   }
   return L.join('\n');
 }
@@ -986,7 +986,7 @@ function formatDriftReport(items) {
       `    本地调用行: ${it.callLines.join(', ')}${it.callCount > it.callLines.length ? ' …' : ''}`
     );
   }
-  if (!items.length) L.push('✅ 未发现 re-export 与本地副本分叉。');
+  if (!items.length) L.push('✓ 未发现 re-export 与本地副本分叉。');
   return L.join('\n');
 }
 
@@ -1033,7 +1033,7 @@ function formatGodReport(items, threshold = GOD_FILE_LOC) {
   L.push(`超限文件: ${items.length} 个`);
   L.push('');
   if (!items.length) {
-    L.push('✅ 没有上帝组件——所有源文件都在上限内。');
+    L.push('✓ 没有上帝组件——所有源文件都在上限内。');
     return L.join('\n');
   }
   L.push('排名  行数 / 超出   建议拆成   现成拆分缝（顶层fn · class · 导出 · 分节横幅）');
@@ -1061,7 +1061,7 @@ function formatStaleBaselineReport(items) {
   L.push(`悬空条目: ${items.length} 条`);
   L.push('');
   if (!items.length) {
-    L.push('✅ 基线全部指向现存文件——棘轮语义可信。');
+    L.push('✓ 基线全部指向现存文件——棘轮语义可信。');
     return L.join('\n');
   }
   for (const it of items) {
@@ -1187,7 +1187,7 @@ function formatChangedReport({ errors, warnings, exempt, scanned, undetermined }
   } else if (warnings.length) {
     L.push(`⚠ ${warnings.length} 个改动文件超过 ${CHANGED_FILE_WARN_LOC} 行（warning 级；--strict-warnings 时阻断）。`);
   } else {
-    L.push('✅ 改动文件体积全部达标。');
+    L.push('✓ 改动文件体积全部达标。');
   }
   return L.join('\n');
 }

@@ -53,14 +53,39 @@ let workflowRunWorker = null;
 try {
   ({ workflowRunWorker } = require('../src/services/workflow'));
 } catch (err) {
-  // eslint-disable-next-line no-console
-  console.log(
+  _log(
     `[ai-manage-daemon] workflow 模块加载失败，已降级为无 worker 模式（API/前端照常启动）: ${err && err.message ? err.message : String(err)}`
   );
 }
 const { getDataHome, getLegacyDataHome, isPortableDeployment } = require('../src/utils/dataHome');
 // 复用优先的前端发现：认到已在运行的 KHY 前端就接上，不再起第二个（见该模块头部契约）。
 const { discoverKhyFrontend, describePortOwner } = require('../src/services/aiFrontendLocator');
+
+// [DESIGN-ARCH-169] P3: every daemon log line carries a wall-clock stamp — the
+// multi-run timeline in ai_manage_daemon.log used to be unreconstructible (病灶 5).
+// All daemon output funnels through these three wrappers; message bodies keep the
+// `[ai-manage-daemon]` prefix for grep compatibility. Function declarations hoist,
+// so the module-load failure path above can already use them.
+function _stamp() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, '0');
+  return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+
+function _log(msg, ...rest) {
+  // eslint-disable-next-line no-console
+  console.log(`[${_stamp()}] ${msg}`, ...rest);
+}
+
+function _logWarn(msg, ...rest) {
+  // eslint-disable-next-line no-console
+  console.warn(`[${_stamp()}] ${msg}`, ...rest);
+}
+
+function _logError(msg, ...rest) {
+  // eslint-disable-next-line no-console
+  console.error(`[${_stamp()}] ${msg}`, ...rest);
+}
 
 const KHY_DIR = getDataHome();
 const RUNTIME_FILE = path.join(KHY_DIR, 'ai_manage_runtime.json');
@@ -85,7 +110,11 @@ const DEFAULT_WEB_BACKEND_PORT = require('../src/constants/serviceDefaults').BAC
 const DEFAULT_IDLE_MS = 10 * 60_000;
 const DEFAULT_SESSION_TTL_MS = 35_000;
 const DEFAULT_STARTUP_GRACE_MS = 10 * 60_000;
-const DEFAULT_FRONTEND_WAIT_MS = 30_000;
+// 前端端口等待预算。[快速启动] web 后端与 vite 现已**并行**冷启（见 main 的
+// provisionWebBackend/resolveFrontend 重叠），首次启动时 vite 的 predev + 依赖预打包会和
+// server.js 的 require 树抢 CPU/IO，端口绑定可能慢于串行时代。waitPortOpen 一到就返回
+// （快时无成本），故把上限从 30s 放宽到 90s，避免并行争用把 vite 误判失败退回静态站。
+const DEFAULT_FRONTEND_WAIT_MS = 90_000;
 const GC_TICK_MS = 5000;
 
 let controlServer = null;
@@ -119,6 +148,17 @@ let seenAnySession = false;
 let lastRequestAt = 0;
 let gcTimer = null;
 let shuttingDown = false;
+
+// [DESIGN-ARCH-169] P1a: startup phase state. Single in-process source of truth —
+// broadcast to consumers via writeRuntime() (file) and buildStatusPayload() (/status).
+// The CLI reads it to show stage progress instead of a silent 180s black box.
+const PHASE_STARTING = 'starting';
+const PHASE_READY = 'ready';
+const DEFAULT_STARTUP_WATCHDOG_MS = 300_000;
+let startupPhase = PHASE_STARTING;
+let phaseDetail = '';
+let phaseSince = Date.now();
+let startupWatchdogTimer = null;
 
 // Liveness probes: zero-arg functions returning truthy when the daemon is doing
 // work that must NOT be reaped as idle (e.g. the workflow worker is mid-run).
@@ -176,9 +216,100 @@ function _resetForTests() {
     clearInterval(gcTimer);
     gcTimer = null;
   }
+  stopStartupWatchdog();
+  startupPhase = PHASE_STARTING;
+  phaseDetail = '';
+  phaseSince = Date.now();
+  if (controlServer) {
+    try {
+      controlServer.close();
+    } catch {
+      /* best effort */
+    }
+    controlServer = null;
+    controlPort = 0;
+  }
   startupAt = Date.now();
   lastActiveAt = Date.now();
   lastRequestAt = 0;
+}
+
+// [DESIGN-ARCH-169] P1a: phase transition + independent startup watchdog.
+// Why independent: the GC self-termination loop only starts at the very END of
+// the serial startup chain — a daemon wedged before that point would live
+// forever, squatting on 9090/3000 and poisoning every subsequent `khy chat` run.
+// The watchdog is armed before the chain and covers exactly that window
+// (default 300s > the ~206s worst-case serial chain, §1.3 对账).
+function _setStartupPhase(phase, detail) {
+  if (phase !== startupPhase || detail !== phaseDetail) {
+    phaseSince = Date.now();
+  }
+  startupPhase = phase;
+  phaseDetail = detail || '';
+  writeRuntime();
+}
+
+function getStartupPhaseState() {
+  return { phase: startupPhase, phaseDetail, phaseSince };
+}
+
+function _resolveStartupWatchdogMs() {
+  const n = parseInt(process.env.AI_MANAGE_STARTUP_WATCHDOG_MS || '', 10);
+  return Number.isFinite(n) && n > 0 ? n : DEFAULT_STARTUP_WATCHDOG_MS;
+}
+
+// Pure decision core (unit seam, 提案 §7 断言 2/3): does the startup watchdog
+// fire for this phase/elapsed? Returns the shutdown reason key or null.
+function _evalStartupWatchdog(_nowMs, phase, elapsedMs, watchdogMs) {
+  if (phase === PHASE_READY) return null;
+  return elapsedMs >= watchdogMs ? 'startup-watchdog' : null;
+}
+
+function startStartupWatchdog({ watchdogMs = _resolveStartupWatchdogMs() } = {}) {
+  if (startupWatchdogTimer) return;
+  const armedAt = Date.now();
+  const tickMs = Math.max(50, Math.min(5000, Math.floor(watchdogMs / 4)));
+  startupWatchdogTimer = setInterval(() => {
+    if (shuttingDown) return;
+    if (startupPhase === PHASE_READY) {
+      // Startup completed — the watchdog retires; the GC loop owns the daemon now.
+      clearInterval(startupWatchdogTimer);
+      startupWatchdogTimer = null;
+      return;
+    }
+    const reason = _evalStartupWatchdog(
+      Date.now(),
+      startupPhase,
+      Date.now() - armedAt,
+      watchdogMs
+    );
+    if (reason) {
+      clearInterval(startupWatchdogTimer);
+      startupWatchdogTimer = null;
+      _log(
+        `[ai-manage-daemon] 启动看门狗触发: ${watchdogMs}ms 内未进入 ready 阶段（最后状态 ${phaseDetail || startupPhase}），自杀释放端口`
+      );
+      shutdown(reason).catch(() => process.exit(1));
+    }
+  }, tickMs);
+  startupWatchdogTimer.unref();
+}
+
+function stopStartupWatchdog() {
+  if (startupWatchdogTimer) {
+    clearInterval(startupWatchdogTimer);
+    startupWatchdogTimer = null;
+  }
+}
+
+// The t≈0 sequence main() runs before the serial chain. Exported so tests can
+// prove "runtime file exists with phase='starting' within 1s" (§7 断言 1)
+// without spawning the real management stack.
+async function beginStartupPhase() {
+  createControlServer();
+  await listenControlServer();
+  startStartupWatchdog();
+  _setStartupPhase(PHASE_STARTING, 'web-backend');
 }
 
 // Bootstrap auth pushed by the CLI (`khy chat` → POST /auth/bootstrap) and
@@ -236,6 +367,12 @@ function writeRuntime(extra = {}) {
     sessions: sessions.size,
     startupAt,
     updatedAt: Date.now(),
+    // [DESIGN-ARCH-169] P1a: phase rides with EVERY write (GC tick included) so
+    // consumers never see a runtime file without it — one in-process source, no
+    // per-callsite bookkeeping (§6 反模式: phase 只活一个真源).
+    phase: startupPhase,
+    phaseDetail,
+    phaseSince,
     ...extra,
   };
   const json = JSON.stringify(payload, null, 2);
@@ -442,7 +579,7 @@ function _pipeConsoleToUtf8Log(stream, outStream) {
   });
 }
 
-async function startFrontendProcess({ host, basePort, frontendDir, apiPort: backendPort }) {
+async function startFrontendProcess({ host, basePort, frontendDir, apiPort: backendPort, webBackendPort }) {
   const pkgPath = path.join(frontendDir, 'package.json');
   if (!fs.existsSync(pkgPath)) {
     return { ok: false, reason: `未找到 package.json: ${pkgPath}` };
@@ -493,6 +630,14 @@ async function startFrontendProcess({ host, basePort, frontendDir, apiPort: back
         // Browser should call same-origin "/api" to avoid CORS when host is not localhost.
         // Vite dev server proxies these paths to the management backend target.
         VITE_AI_PROXY_TARGET: `http://127.0.0.1:${backendPort}`,
+        // [快速启动] 并行化：显式把 web 后端目标钉成守护进程为其**严格选定**的端口
+        // (见 provisionWebBackend 的 PORT_AUTO_RETRY=1)。backendDiscovery 第 1 优先级即
+        // 命中 VITE_API_TARGET、不再读 backend_runtime.json 也不再探测，于是 vite 无需
+        // 等 web 后端 listen 就能启动——/api 与 daemon 命名空间各自钉到确定端口，
+        // 页面早期打来的 /api 请求在 server.js 就绪前短暂失败后即自愈(启动期页面本就在加载)。
+        ...(webBackendPort
+          ? { VITE_API_TARGET: `http://127.0.0.1:${webBackendPort}` }
+          : {}),
         BROWSER: 'none',
       },
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -538,11 +683,24 @@ const WEB_BACKEND_WAIT_MS = 120_000;
 // 单次探测给 3s 余量，总时长 45s 不变 —— 超时也只是回退，绝不硬杀正在推进的工作。
 const WEB_BACKEND_HEALTH_TIMEOUT_MS = 3000;
 
+// 探**存活探针** /healthz，而不是 /api/health。
+//
+// 为什么换：/api/health 是**就绪（readiness）**语义 —— 它内部 await
+// sequelize.authenticate()，DB 未就绪时返 503；而 server.js 的后台初始化
+// （DB 连接/迁移/种子/AKShare 标的同步）又串在 listen 之后。于是「server.js
+// 已能接连接」与「/api/health 返 200」之间隔了几十秒，本函数一直在等后者，
+// 把这段后台初始化时间变成了 daemon 串行链上的**纯等待**（实测 92s）。
+//
+// /healthz 只回答「这个进程还能不能接连接」（server.js:683），永远 200、不查
+// 任何后端依赖 —— 它才是「web 后端可用」的正确判据。业务就绪由 /api/ready
+// 单独反映，不在这里阻塞启动链。
+const WEB_BACKEND_PROBE_PATH = '/healthz';
+
 function probeWebBackendHealth(port, timeoutMs = WEB_BACKEND_HEALTH_TIMEOUT_MS) {
   return new Promise((resolve) => {
     let req;
     try {
-      req = http.get(`http://127.0.0.1:${port}/api/health`, { timeout: timeoutMs }, (res) => {
+      req = http.get(`http://127.0.0.1:${port}${WEB_BACKEND_PROBE_PATH}`, { timeout: timeoutMs }, (res) => {
         const chunks = [];
         res.on('data', (c) => chunks.push(c));
         res.on('end', () => resolve(res.statusCode >= 200 && res.statusCode < 500));
@@ -571,25 +729,32 @@ async function waitWebBackendHealthy(port, timeoutMs = WEB_BACKEND_WAIT_MS) {
 }
 
 /**
- * 确保管理台依赖的 web 后端可用：健康就复用，不在就启动（端口被占则漂移）。
+ * 保障管理台依赖的 web 后端可用：健康就复用，不在就启动（端口被占则漂移）。
  * 只回收自己拉起的进程（managed=true）；复用的实例归它的原启动方所有。
+ *
+ * [快速启动] 返回 `{ port, managed, child, ready }`：`port`/`child` 在**决定端口并
+ * spawn 之后立即**给出（复用探测 + canBindPort 都是毫秒级），`ready` 是 web 后端健康
+ * 等待的 Promise。调用方据此可让 vite 与 server.js 并行启动——不必等 `ready`。
+ * spawn 时钉 `PORT_AUTO_RETRY=1`：让 server.js 严格绑定我们选定的端口、绝不自动顺延，
+ * 于是「我们告诉 vite 的端口」== 「server.js 实际监听的端口」，显式 VITE_API_TARGET
+ * 才不会有漂移错钉（否则 server.js 顺延后 vite 加载期已冻结 /api 目标，无法自愈）。
  */
-async function ensureWebBackend({ requestedPort }) {
+async function provisionWebBackend({ requestedPort }) {
   const backendRoot = path.resolve(__dirname, '..');
   const serverScript = path.join(backendRoot, 'server.js');
   if (!fs.existsSync(serverScript)) {
-    console.log(
+    _log(
       '[ai-manage-daemon] 未找到 web 后端 (server.js)：管理台的用户/渠道/跨平台同步接口将不可用'
     );
-    return { port: 0, managed: false };
+    return { port: 0, managed: false, child: null, ready: Promise.resolve(false) };
   }
 
   // 先问基准端口：健康的 web 后端直接复用（可能是 REPL / 手动 npm start 起的）。
   if (await probeWebBackendHealth(requestedPort)) {
-    console.log(
+    _log(
       `[ai-manage-daemon] Web 后端已在运行: http://127.0.0.1:${requestedPort} —— 复用现有实例，未新起进程`
     );
-    return { port: requestedPort, managed: false };
+    return { port: requestedPort, managed: false, child: null, ready: Promise.resolve(true) };
   }
 
   // 基准端口被别的进程占着（不健康但绑不上）→ 漂移；空闲 → 用基准端口。
@@ -603,14 +768,14 @@ async function ensureWebBackend({ requestedPort }) {
     }
     const drifted = await findAvailablePort('127.0.0.1', requestedPort + 1);
     if (!drifted) {
-      console.log(
+      _log(
         owner
           ? `[ai-manage-daemon] ${owner}，且其后无空闲端口：Web 后端未启动，用户/渠道/跨平台同步接口暂不可用`
           : `[ai-manage-daemon] 端口 ${requestedPort} 起无空闲端口：Web 后端未启动，用户/渠道/跨平台同步接口暂不可用`
       );
-      return { port: 0, managed: false };
+      return { port: 0, managed: false, child: null, ready: Promise.resolve(false) };
     }
-    console.log(
+    _log(
       owner
         ? `[ai-manage-daemon] ${owner}：Web 后端改用端口 ${drifted} 启动`
         : `[ai-manage-daemon] 端口 ${requestedPort} 被未知进程占用：Web 后端改用端口 ${drifted} 启动`
@@ -618,7 +783,7 @@ async function ensureWebBackend({ requestedPort }) {
     port = drifted;
   }
 
-  console.log(`[ai-manage-daemon] 启动 Web 后端 (server.js)：端口 ${port}，等待 /api/health 就绪…`);
+  _log(`[ai-manage-daemon] 启动 Web 后端 (server.js)：端口 ${port}，等待 /healthz 就绪…`);
   ensureDir(LOG_DIR);
   const logFile = path.join(LOG_DIR, 'web_backend.log');
   const logStream = fs.createWriteStream(logFile, { flags: 'a' });
@@ -629,6 +794,9 @@ async function ensureWebBackend({ requestedPort }) {
       env: {
         ...process.env,
         PORT: String(port),
+        // 严格单绑：守护进程已确认该端口空闲并把它钉给 vite，禁止 server.js 顺延，
+        // 否则 vite 加载期冻结的 /api 目标会指不到实际监听端口（跨平台同步等批量失败）。
+        PORT_AUTO_RETRY: '1',
         // 管理会话自己负责 web 后端的生命周期（本会话空闲回收 / manage stop 回收）。
         // 若不加这个开关，server.js 会在「60 秒无前端客户端」时自作主张退出，把
         // 打开中的管理页重新打回 /api 500 —— 两个空闲回收器互相打架。
@@ -639,8 +807,8 @@ async function ensureWebBackend({ requestedPort }) {
     });
   } catch (err) {
     logStream.destroy();
-    console.log(`[ai-manage-daemon] Web 后端启动失败 (端口 ${port}): ${describeSystemError(err)}`);
-    return { port: 0, managed: false };
+    _log(`[ai-manage-daemon] Web 后端启动失败 (端口 ${port}): ${describeSystemError(err)}`);
+    return { port: 0, managed: false, child: null, ready: Promise.resolve(false) };
   }
   _pipeConsoleToUtf8Log(child.stdout, logStream);
   _pipeConsoleToUtf8Log(child.stderr, logStream);
@@ -648,20 +816,24 @@ async function ensureWebBackend({ requestedPort }) {
     /* 经由下面的健康等待暴露为超时/回退，不让它变成 uncaughtException */
   });
 
-  const ready = await waitWebBackendHealthy(port);
-  if (!ready) {
-    if (child.pid) await terminatePid(child.pid);
-    console.log(
-      `[ai-manage-daemon] Web 后端启动超时 (${Math.round(WEB_BACKEND_WAIT_MS / 1000)}s)，已停止本次进程；` +
-        '管理台回退由守护进程单独服务（跨平台同步暂不可用），详见 web_backend.log'
+  // 健康等待不阻塞调用方——交给 main 与前端启动并行，flip ready 前再 await。
+  const ready = (async () => {
+    const ok = await waitWebBackendHealthy(port);
+    if (!ok) {
+      if (child.pid) await terminatePid(child.pid);
+      _log(
+        `[ai-manage-daemon] Web 后端启动超时 (${Math.round(WEB_BACKEND_WAIT_MS / 1000)}s)，已停止本次进程；` +
+          '管理台回退由守护进程单独服务（跨平台同步暂不可用），详见 web_backend.log'
+      );
+      return false;
+    }
+    _log(
+      `[ai-manage-daemon] Web 后端已就绪: http://127.0.0.1:${port} (auth/api-keys/用户管理 + /ws/cross-platform)`
     );
-    return { port: 0, managed: false };
-  }
+    return true;
+  })();
 
-  console.log(
-    `[ai-manage-daemon] Web 后端已就绪: http://127.0.0.1:${port} (auth/api-keys/用户管理 + /ws/cross-platform)`
-  );
-  return { port, managed: true, child };
+  return { port, managed: true, child, ready };
 }
 
 async function resolveFrontend({
@@ -671,6 +843,7 @@ async function resolveFrontend({
   noFrontend,
   frontendDir,
   apiPort: backendPort,
+  webBackendPort,
 }) {
   if (noFrontend) {
     return { available: false, managed: false, port: requestedPort, reason: 'disabled' };
@@ -701,7 +874,7 @@ async function resolveFrontend({
     } catch {
       owner = '';
     }
-    console.log(
+    _log(
       owner
         ? `[ai-manage-daemon] 基准端口 ${owner}，前端将改用下一个空闲端口（可用 --frontend-port 指定别的基准）`
         : `[ai-manage-daemon] 基准端口 ${requestedPort} 被未知进程占用，前端将改用下一个空闲端口（可用 --frontend-port 指定别的基准）`
@@ -715,6 +888,7 @@ async function resolveFrontend({
       basePort: requestedPort,
       frontendDir,
       apiPort: backendPort,
+      webBackendPort,
     });
     if (started.ok) {
       return {
@@ -762,6 +936,11 @@ function buildStatusPayload() {
       startupAt,
       lastActiveAt,
       lastRequestAt,
+      // [DESIGN-ARCH-169] P1a: same in-process source the runtime file publishes
+      // — no second store, no drift (§6 反模式).
+      phase: startupPhase,
+      phaseDetail,
+      phaseSince,
     },
   };
 }
@@ -823,8 +1002,7 @@ async function shutdown(reason = 'unknown') {
 
   clearRuntime();
 
-  // eslint-disable-next-line no-console
-  console.log(`[ai-manage-daemon] shutdown: ${reason}`);
+  _log(`[ai-manage-daemon] shutdown: ${reason}`);
   process.exit(0);
 }
 
@@ -850,12 +1028,31 @@ function startGcLoop({ idleMs, sessionTtlMs, startupGraceMs, tickMs = GC_TICK_MS
     const inactiveMs = now - Math.max(lastActiveAt, lastRequestAt);
     if (inactiveMs >= limit) {
       const reason = seenAnySession ? 'idle' : 'startup-timeout';
-      // Diagnostic context for restart analysis: which watchdog fired
-      // (idle vs startup grace), how long we were inactive vs the threshold,
-      // and whether any session was ever seen during this daemon lifetime.
-      // eslint-disable-next-line no-console
-      console.log(
-        `[ai-manage-daemon] 正在关闭守护进程: 原因=${reason} 无活动=${inactiveMs}ms 阈值=${limit}ms 曾见会话=${seenAnySession}`
+      // Diagnostic context for restart analysis: which reaper fired (idle vs
+      // startup grace), how long we were inactive vs the threshold, and whether
+      // any session was ever opened during this daemon lifetime.
+      // [DESIGN-ARCH-169] P3: the parenthetical states what the key actually
+      // means ("startup-timeout" was a misnomer for "startup grace with zero
+      // sessions"); the machine reason key stays untouched — log greps and the
+      // jest-era tests match on it.
+      //
+      // 措辞纪律：用户是在 `khy chat` 的失败尾巴里读到这一行的，最容易被
+      // 「startup-timeout / 启动」误读成**启动失败**。实际上这只与「有没有人
+      // 打开过页面」有关 —— 启动早已成功。所以人类可读段必须点明：
+      //   · 已 ready ⇒ 明确写「启动已成功」
+      //   · 未 ready ⇒ 才可能是真的启动问题（但那由独立看门狗负责，见 :259）
+      const _phaseNote =
+        startupPhase === PHASE_READY
+          ? `启动早已成功（phase=ready），此处仅因 ${Math.round(
+              startupGraceMs / 1000
+            )}s 内没有任何会话接入而回收空闲进程`
+          : `启动宽限 ${Math.round(startupGraceMs / 1000)}s 内无任何会话接入（phase=${
+              phaseDetail || startupPhase
+            }）`;
+      _log(
+        `[ai-manage-daemon] 正在关闭守护进程: 原因=${reason}（${
+          seenAnySession ? `空闲 ${Math.round(idleMs / 1000)}s 内无活动` : _phaseNote
+        }） 无活动=${inactiveMs}ms 阈值=${limit}ms 曾见会话=${seenAnySession}`
       );
       shutdown(reason).catch(() => process.exit(1));
     }
@@ -981,17 +1178,32 @@ async function main() {
   const frontendDistDir = parseStringArg(argv, '--frontend-dist-dir', '');
   frontendHost = parseStringArg(argv, '--frontend-host', '127.0.0.1');
 
-  // 先保障 web 后端、再起前端：vite 配置加载时会做后端发现（backend_runtime.json），
-  // 顺序反了就会把 /api 钉在守护进程上（跨平台同步不可用）。
+  // [DESIGN-ARCH-169] P1a: control plane + runtime file exist from t≈0. Binding
+  // on port 0 here has no side effects (the old late bind at the end of main()
+  // is retired); the CLI can poll real stage progress instead of staring at a
+  // silent terminal, and a daemon wedged mid-chain is now visible AND bounded
+  // by the startup watchdog.
+  await beginStartupPhase();
+
+  // [快速启动] 并行化：web 后端(严格绑端口)与守护 API 并发拉起。顺序约束仍在——vite
+  // 需要的是 web 后端的**端口号**(provision 毫秒级即得)，而非其**就绪状态**；健康等待
+  // 交给 webBackendProvision.ready，在下方 vite 启动之后才 await，使 server.js 冷启与
+  // vite 冷启重叠，而非串行叠加。
+  let webBackendProvision = {
+    port: 0,
+    managed: false,
+    child: null,
+    ready: Promise.resolve(false),
+  };
   if (noWebBackend) {
-    console.log('[ai-manage-daemon] 已按 --no-web-backend 跳过 web 后端保障');
+    _log('[ai-manage-daemon] 已按 --no-web-backend 跳过 web 后端保障');
   } else {
-    const webBackend = await ensureWebBackend({
+    webBackendProvision = await provisionWebBackend({
       requestedPort: DEFAULT_WEB_BACKEND_PORT,
     });
-    webBackendPort = webBackend.port;
-    webBackendManaged = !!webBackend.managed;
-    webBackendProc = webBackend.child || null;
+    webBackendPort = webBackendProvision.port;
+    webBackendManaged = !!webBackendProvision.managed;
+    webBackendProc = webBackendProvision.child || null;
     if (webBackendProc) {
       webBackendProc.on('exit', () => {
         webBackendProc = null;
@@ -1002,9 +1214,15 @@ async function main() {
     }
   }
 
+  // [DESIGN-ARCH-169] P1a: stage labels advance as the serial chain progresses —
+  // each one lands in the runtime file + /status so the CLI can print progress.
+  _setStartupPhase(PHASE_STARTING, 'api');
+
   apiPort = await aiManagementServer.start(requestedApiPort, {
     onRequest: noteRequestActivity,
   });
+
+  _setStartupPhase(PHASE_STARTING, 'frontend');
 
   // Claim/execute queued workflow runs in this serving process (see require note).
   // Skipped entirely when the workflow module failed to load (fail-soft above).
@@ -1013,8 +1231,7 @@ async function main() {
       workflowRunWorker.start();
     } catch (err) {
       // A worker failure must never prevent the management stack from serving.
-      // eslint-disable-next-line no-console
-      console.error(
+      _logError(
         '[ai-manage-daemon] workflow worker start failed:',
         err && err.message ? err.message : String(err)
       );
@@ -1039,6 +1256,9 @@ async function main() {
     noFrontend,
     frontendDir,
     apiPort,
+    // vite 与 server.js 并行：把已严格选定的 web 端口显式钉给 vite（>0 才钉；无 web
+    // 后端时留空，backendDiscovery 回退到守护进程，行为同旧「纯 API」模式）。
+    webBackendPort: webBackendPort > 0 ? webBackendPort : undefined,
   });
 
   // 回退：dev server 不可用时，用 API 端口托管预构建 dist/。
@@ -1065,7 +1285,7 @@ async function main() {
   }
   frontendUrl = `http://${frontendHost}:${frontendPort}`;
   if (frontend.reason === 'reused' || frontend.reason === 'reused-runtime') {
-    console.log(
+    _log(
       `[ai-manage-daemon] 复用已在运行的 KHY 前端（${frontendUrl}，来源 ${frontend.reason}）——未新起前端进程`
     );
   }
@@ -1080,8 +1300,21 @@ async function main() {
     });
   }
 
-  createControlServer();
-  await listenControlServer();
+  // [快速启动] vite 已启动，此刻才收敛 web 后端健康等待——server.js 冷启与 vite 冷启
+  // 已在上面并行发生。健康失败则把 web 端口归零（本次进程已由 provisionWebBackend 的
+  // ready 分支停掉），管理台回退为守护进程单独服务。
+  if (!noWebBackend) {
+    const webOk = await webBackendProvision.ready;
+    if (!webOk && webBackendManaged) {
+      webBackendPort = 0;
+    }
+  }
+
+  // [DESIGN-ARCH-169] P1a: the control plane was bound at main() entry (the old
+  // late bind here is retired). Flip to ready BEFORE the canonical runtime write
+  // so the file lands with phase='ready' in one write — the CLI sees "ready" the
+  // moment the stack is actually up.
+  _setStartupPhase(PHASE_READY, 'ready');
   startupAt = Date.now();
   lastActiveAt = Date.now();
 
@@ -1093,6 +1326,9 @@ async function main() {
     frontendReason: frontend.reason || '',
   });
 
+  // Explicit watchdog retire (its tick also self-retires on phase==='ready');
+  // the GC loop owns liveness from here on.
+  stopStartupWatchdog();
   startGcLoop({ idleMs, sessionTtlMs, startupGraceMs });
 }
 
@@ -1140,15 +1376,13 @@ function isSurvivableProcessError(err) {
 
 function handleUncaughtException(err) {
   if (isSurvivableProcessError(err)) {
-    // eslint-disable-next-line no-console
-    console.warn(
+    _logWarn(
       '[ai-manage-daemon] uncaughtException transient, continuing:',
       describeSystemError(err)
     );
     return;
   }
-  // eslint-disable-next-line no-console
-  console.error(
+  _logError(
     '[ai-manage-daemon] uncaughtException fatal/unknown: closing AI management session:',
     describeSystemError(err)
   );
@@ -1157,15 +1391,13 @@ function handleUncaughtException(err) {
 
 function handleUnhandledRejection(err) {
   if (isSurvivableProcessError(err)) {
-    // eslint-disable-next-line no-console
-    console.warn(
+    _logWarn(
       '[ai-manage-daemon] unhandledRejection transient, continuing:',
       describeSystemError(err)
     );
     return;
   }
-  // eslint-disable-next-line no-console
-  console.error(
+  _logError(
     '[ai-manage-daemon] unhandledRejection fatal/unknown: closing AI management session:',
     describeSystemError(err)
   );
@@ -1202,8 +1434,7 @@ if (require.main === module) {
   installProcessHandlers();
 
   main().catch((err) => {
-    // eslint-disable-next-line no-console
-    console.error(
+    _logError(
       '[ai-manage-daemon] start failed: 启动 AI 管理守护进程失败:',
       describeSystemError(err)
     );
@@ -1239,4 +1470,11 @@ module.exports = {
   // Console transcode helpers (exported so tests can drive the real UTF-8 path)
   _decodeConsoleLine,
   _pipeConsoleToUtf8Log,
+  // [DESIGN-ARCH-169] P1a test seams: early readiness + phase + watchdog decision
+  beginStartupPhase,
+  _setStartupPhase,
+  getStartupPhaseState,
+  startStartupWatchdog,
+  stopStartupWatchdog,
+  _evalStartupWatchdog,
 };

@@ -49,7 +49,7 @@ require('dotenv').config({ path: canonicalEnvPath });
 // Mounted on `process` so diagnostics can read it from anywhere.
 let _serverStartupFsm = null;
 try {
-  _serverStartupFsm = require('./src/services/stateMachine/startupPhases').createStartupFsm({
+  _serverStartupFsm = require('./src/services/domain/state/stateMachine/startupPhases.js').createStartupFsm({
     name: 'server-startup',
   });
 } catch {
@@ -62,7 +62,7 @@ try {
 }
 // Optional stderr transition logger (KHY_STATE_DEBUG=1 only); fail-soft.
 try {
-  require('./src/services/stateMachine/debugLog').attachDebugLog(
+  require('./src/services/domain/state/stateMachine/debugLog.js').attachDebugLog(
     _serverStartupFsm,
     'server-startup'
   );
@@ -130,7 +130,7 @@ if (process.env.NODE_ENV === 'production') {
   console.log = (...args) => {
     // Still let through startup banner messages (they contain health check URLs, port info)
     // L1: 加 u flag 以正确匹配 emoji（星标/占位符等码点）
-    if (args.length > 0 && typeof args[0] === 'string' && args[0].match(/^[\s]*[⚡🚀⚠✗✓☐]/u)) {
+    if (args.length > 0 && typeof args[0] === 'string' && args[0].match(/^[\s]*[⚡🚀⚠✗✓☐]/u)) {  // khy-allow-no-emoji: 剥离日志前缀标记的正则字符类：匹配的是外部文本，删一侧即失去清洗
       _origLog(...args);
       return;
     }
@@ -395,7 +395,12 @@ try {
 
 app.use((req, res, next) => {
   // Only set JSON content-type for API routes, not static files
-  if (req.path.startsWith('/api') || req.path === '/health' || req.path === '/healthz') {
+  if (
+    req.path.startsWith('/api') ||
+    req.path === '/health' ||
+    req.path === '/healthz' ||
+    req.path === '/api/ready'
+  ) {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
   }
 
@@ -684,6 +689,23 @@ app.get('/healthz', (req, res) => {
   res.status(200).json({ status: 'alive' });
 });
 
+// ─── 业务就绪端点（readiness）─────────────────────────────────────────
+// 与 /healthz 是一对：healthz = 进程活着（永远 200，用于探活/启动等待），
+// ready   = 后台初始化（DB/迁移/种子/标的同步）已走完（用于对外宣告可承载业务）。
+//
+// 存在的理由：/api/health 历史上同时承担了这两个角色 —— 它 await
+// sequelize.authenticate()，于是「进程能接连接」与「health 返 200」之间
+// 隔了整个后台初始化窗口（实测 92s）。把两者拆开后，等待启动的一方可以看
+// healthz（秒级），需要确认业务可用的一方看 ready（诚实反映真实进度）。
+app.get('/api/ready', (req, res) => {
+  res.status(_bootBusinessReady ? 200 : 503).json({
+    status: _bootBusinessReady ? 'ready' : 'initializing',
+    dbConnected: _bootDbConnected,
+    completedAt: _bootCompletedAt || null,
+    uptime: process.uptime(),
+  });
+});
+
 const healthHandler = async (req, res) => {
   // Check if request is authenticated for detailed diagnostics
   let isAuthed = false;
@@ -779,6 +801,33 @@ if (metrics.enabled) {
 // ═══════════════════════════════════════════════════════════════════════
 let _bootDbConnected = false;
 let _bootActivePort = null;
+// 业务就绪标志：后台初始化（DB/迁移/种子/标的同步）全部走完才置真。
+// 由 /api/ready 消费 —— 与 /healthz（进程存活）区分开，见 :672 的语义分离注释。
+let _bootBusinessReady = false;
+let _bootCompletedAt = 0;
+
+/**
+ * 启动链已放行后补跑一次标的同步（fire-and-forget）。
+ *
+ * 为什么单独成函数而不是内联：它**不属于启动链**。调用点有两个语义
+ * （「初始化走完了」与「顺手把标的同步也跑一下」），混在一起会让人以为
+ * 前者依赖后者 —— 而实测后者要 4.3s 且产出与源码常量等价（见调用点注释）。
+ *
+ * best-effort：失败只记日志，绝不影响进程。重复调用由 latch 挡住。
+ */
+let _deferredInstrumentSyncStarted = false;
+function _runDeferredInstrumentSync() {
+  if (_deferredInstrumentSyncStarted) return;
+  _deferredInstrumentSyncStarted = true;
+  setImmediate(async () => {
+    try {
+      const result = await require('./src/services/instrumentService').syncInstrumentsFromAData();
+      console.log('标的同步: ' + result.successCount + ' 成功, ' + result.failCount + ' 失败');
+    } catch (e) {
+      console.error('标的同步失败:', e.message);
+    }
+  });
+}
 
 // 启动HTTP服务器 — 最先执行，确保客户端可立即连接
 (async () => {
@@ -796,7 +845,7 @@ let _bootActivePort = null;
         if (n.family === 'IPv4' && !n.internal) _ips.push(n.address);
       });
     });
-    console.log('\n🚀 服务器已就绪，后台初始化中...');
+    console.log('\n服务器已就绪，后台初始化中...');
     console.log(`   http://localhost:${_bootActivePort}`);
     if (_ips[0]) console.log(`   http://${_ips[0]}:${_bootActivePort}`);
     console.log(`   ws://localhost:${_bootActivePort}`);
@@ -1141,7 +1190,7 @@ let _bootActivePort = null;
             }
 
             console.log(
-              '\n⚡ 后台初始化完成 (' + ((Date.now() - bootStart) / 1000).toFixed(1) + 's)'
+              '\n后台初始化完成 (' + ((Date.now() - bootStart) / 1000).toFixed(1) + 's)'
             );
           })(),
           (async () => {
@@ -1170,17 +1219,10 @@ let _bootActivePort = null;
               logger.warn('init:mlAgentDeps failed', { error: e.message });
             }
           })(),
-          (async () => {
-            try {
-              const result =
-                await require('./src/services/instrumentService').syncInstrumentsFromAData();
-              console.log(
-                '标的同步: ' + result.successCount + ' 成功, ' + result.failCount + ' 失败'
-              );
-            } catch (e) {
-              console.error('标的同步失败:', e.message);
-            }
-          })(),
+          // 标的同步**故意留在这里的空位**：它原先在这份 allSettled 数组里，
+          // 现已移到 _bootBusinessReady 之后 fire-and-forget（见
+          // _runDeferredInstrumentSync 的注释与调用点）。此处不再放任何分支 ——
+          // 一张空 async 包装只会让人以为同步仍在启动链上。
         ]);
       } else {
         // Even without DB, start non-critical services
@@ -1209,6 +1251,15 @@ let _bootActivePort = null;
     } catch (e) {
       console.warn('后台初始化异常:', e.message);
     }
+    // 无论后台初始化成功还是异常，「这一轮初始化已经走完」都是事实 ——
+    // /api/ready 据此由 initializing 转 ready，不再让调用方无限等下去。
+    _bootBusinessReady = true;
+    _bootCompletedAt = Date.now();
+
+    // 标的同步：启动链已放行，这里补跑一次（fire-and-forget，不阻塞任何东西）。
+    // 放在 ready 置位**之后**是刻意的 —— 「可服务」不依赖「标的已同步完」
+    // （同步是 upsert + CSV 缓存，缺它只是标的列表可能略旧，不是不可用）。
+    _runDeferredInstrumentSync();
   } catch (error) {
     console.error('✗ 服务器启动失败:', error);
     process.exit(1);
@@ -1649,7 +1700,7 @@ startWsProtocolHeartbeat();
 async function autoStartPostgreSQL() {
   return new Promise((resolve) => {
     try {
-      console.log('🔍 检查 PostgreSQL 服务状态...');
+      console.log('检查 PostgreSQL 服务状态...');
 
       // Discover PostgreSQL installation paths dynamically
       // Supports: env override, Windows "Program Files" scan across drives, PATH lookup
@@ -1678,7 +1729,7 @@ async function autoStartPostgreSQL() {
       }
 
       if (!pgPath) {
-        console.log('⚠️ PostgreSQL 未安装或未找到，跳过自动启动');
+        console.log('⚠ PostgreSQL 未安装或未找到，跳过自动启动');
 
         resolve();
 
@@ -1705,7 +1756,7 @@ async function autoStartPostgreSQL() {
 
           resolve();
         } else {
-          console.log('🚀 正在启动 PostgreSQL 服务...');
+          console.log('正在启动 PostgreSQL 服务...');
 
           // 启动 PostgreSQL
 
@@ -1729,7 +1780,7 @@ async function autoStartPostgreSQL() {
 
               setTimeout(() => resolve(), 3000);
             } else {
-              console.log('⚠️ PostgreSQL 服务启动失败，但继续运行');
+              console.log('⚠ PostgreSQL 服务启动失败，但继续运行');
 
               resolve();
             }
@@ -1749,7 +1800,7 @@ async function autoStartPostgreSQL() {
 
           setTimeout(() => {
             if (!startResolved) {
-              console.log('⏰ PostgreSQL 启动超时，但继续运行');
+              console.log('PostgreSQL 启动超时，但继续运行');
 
               startResolved = true;
 
@@ -1773,7 +1824,7 @@ async function autoStartPostgreSQL() {
 
       setTimeout(() => {
         if (!checkResolved) {
-          console.log('⏰ PostgreSQL 状态检查超时，尝试直接启动');
+          console.log('PostgreSQL 状态检查超时，尝试直接启动');
 
           checkResolved = true;
 
