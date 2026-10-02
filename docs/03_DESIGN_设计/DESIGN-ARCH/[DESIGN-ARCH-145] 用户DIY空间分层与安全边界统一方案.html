@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -74,7 +74,7 @@
 <ol><li><strong>进程级沙箱/隔离</strong>：Node 单进程 CLI 架构下，worker 隔离会让插件的同步上下文（chalk、终端 TTY）全部失效，改造成本等于重写插件协议；DSH「同进程挂载无隔离」被 [143] 判为风险进主进程的教训是<strong>不接入外部生态</strong>，而不是给本机用户代码套笼子——本机用户的威胁模型是「误写」而非「恶意」，披露+审计恰好覆盖。</li><li><strong>键位重映射</strong>：沿用 <code>keybindings.js:10-13</code> 的既有裁决——键位硬编码在 Ink 输入处理器里，没有重映射通路就只做目录展示，不造假引擎。</li><li><strong>DIY 市场</strong>：<code>extensionMarketplace</code> 已覆盖「装别人的作品」；「晒自己的作品」等真实需求出现前不预建（<code>RUNTIME-008</code> 新增先提问）。</li><li><strong>TUI 桌面端的可视化 DIY 编辑器</strong>：<code>apps/khyos-desktop</code> 的设置面改造是独立能力域，且其 CSS 变量令牌体系（<code>theme/globals.css</code>）与 CLI 主题是两套真源——合并属于另一个提案的裁决，本文不越界。</li><li><strong>权限硬拦截</strong>：S1 阶段只披露不阻断（§3.2）；「未声明 = 拒绝加载」会一夜废掉所有存量插件，违背「零 breaking」分期原则。</li></ol>
 <hr>
 <h2 id="6-反模式-这条路别走">6. 反模式（这条路别走）<a class="anchor" href="#6-反模式-这条路别走" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>❌ 别做</th><th>为什么</th></tr></thead><tbody><tr><td>用 <code>vm</code> 模块造「沙箱」并宣称安全</td><td>Node 文档明示 vm 非安全机制；逃逸手段成熟。语法预检（现状）是它唯一的诚实用法</td></tr><tr><td>为 DIY 新增 <code>KHY_DIY_*</code> env 门</td><td>撞 <code>check-tui-gates.js:32</code> 的 MAX_GATES=220 棘轮（只降不升）；权限披露走 manifest 字段 + 静态抽取，不需要 env；「让功能变正确」不构成开门的用户可见权衡</td></tr><tr><td>新建第二套插件/拓展注册机制</td><td><code>extensionRoots.js:4-10</code> 的注释就是血泪史：三套互不认识的机制刚收敛为一，「装在哪、叫什么、谁能看见」只能有一个答案</td></tr><tr><td>把九个落点重排成一个大而全的「DIY 平台」命令族</td><td>越权改既有命令语义会破坏 [143]/[144] 的前提；<code>khy diy</code> 只做<strong>发现与直达</strong>，执行仍回各自的 canonical 命令</td></tr><tr><td>披露面用用户声明的 permissions 而不静态核验</td><td>自觉声明不可信；「声明不符」必须以实测为准（<code>RUNTIME-010</code> 未声明 ≠ 全权的同一逻辑）</td></tr><tr><td>机器回写用户手写的插件文件（G3 修复）</td><td>插件是用户作品，回写毁格式；状态走独立 state 文件（extensionRoots 先例）</td></tr></tbody></table>
+<table><thead><tr><th>✗ 别做</th><th>为什么</th></tr></thead><tbody><tr><td>用 <code>vm</code> 模块造「沙箱」并宣称安全</td><td>Node 文档明示 vm 非安全机制；逃逸手段成熟。语法预检（现状）是它唯一的诚实用法</td></tr><tr><td>为 DIY 新增 <code>KHY_DIY_*</code> env 门</td><td>撞 <code>check-tui-gates.js:32</code> 的 MAX_GATES=220 棘轮（只降不升）；权限披露走 manifest 字段 + 静态抽取，不需要 env；「让功能变正确」不构成开门的用户可见权衡</td></tr><tr><td>新建第二套插件/拓展注册机制</td><td><code>extensionRoots.js:4-10</code> 的注释就是血泪史：三套互不认识的机制刚收敛为一，「装在哪、叫什么、谁能看见」只能有一个答案</td></tr><tr><td>把九个落点重排成一个大而全的「DIY 平台」命令族</td><td>越权改既有命令语义会破坏 [143]/[144] 的前提；<code>khy diy</code> 只做<strong>发现与直达</strong>，执行仍回各自的 canonical 命令</td></tr><tr><td>披露面用用户声明的 permissions 而不静态核验</td><td>自觉声明不可信；「声明不符」必须以实测为准（<code>RUNTIME-010</code> 未声明 ≠ 全权的同一逻辑）</td></tr><tr><td>机器回写用户手写的插件文件（G3 修复）</td><td>插件是用户作品，回写毁格式；状态走独立 state 文件（extensionRoots 先例）</td></tr></tbody></table>
 <hr>
 <h2 id="7-验收方式-可复现命令-关联门禁">7. 验收方式（可复现命令 + 关联门禁）<a class="anchor" href="#7-验收方式-可复现命令-关联门禁" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>期</th><th>验收</th><th>命令</th></tr></thead><tbody><tr><td>P1</td><td><code>khy diy list</code> 输出四层九落点，每项含路径/入口/回滚；<code>check:changed</code> 绿</td><td><code>node services/backend/bin/khy.js diy list</code></td></tr><tr><td>P2</td><td>新增 <code>node:test</code> 用例（<code>tests/diy/</code>，<code>require('node:test')</code> 写法，落地即绿——CI 全量扫 <code>tests/**/*.test.js</code>）：① toggle 后重启语义（state 落盘生效）；② reload 后文件名 ≠ name 的插件缓存确实被清；③ 静态抽取对含 <code>require('fs')</code> 的样例报出 fs；④ 审计文件出现对应行</td><td><code>node --test services/backend/tests/diy/*.test.js</code></td></tr><tr><td>P3</td><td><code>themes/</code> 目录多主题被 <code>skin list</code> 列出且可切换；目录缺席时与今日行为逐字节相同（strictEqual 钉住）</td><td><code>node --test services/backend/tests/diy/themeMultiFile.test.js</code></td></tr><tr><td>全程</td><td>门禁不新增红</td><td><code>npm run check:changed</code>、<code>npm run check:wiring</code>、<code>node scripts/ci/check-leaf-contract.js services/backend/src/cli/diyCatalog.js</code></td></tr></tbody></table>

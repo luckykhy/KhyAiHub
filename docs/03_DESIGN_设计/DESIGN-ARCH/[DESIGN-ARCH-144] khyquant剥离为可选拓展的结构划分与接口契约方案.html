@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -90,7 +90,7 @@ khy-os-khyquant/（未来独立仓库形态）
 <ol><li><strong><code>~/.khyquant/</code> 数据目录不改名</strong>——它是 ai-frontend / provider-hub / khyos-desktop 三端共同消费的用户数据契约（AGENTS.md:255-266 定死），改名 = 大爆炸，「应用剥离」与「数据目录语义」是两件事。</li><li><strong><code>khyquant.top</code> 域名、<code>KHYQUANT_PORTABLE_ROOT</code> env 不改</strong>——品牌与便携布局语义，与功能依赖无关；<code>apps/khyos-desktop/package.json:100</code> 是更新通道地址，动它会断自动更新。</li><li><strong>bootstrap mode 字符串 <code>'khyquant'</code>（<code>state.js:16</code>）与 <code>.khy_quant_bootstrapped</code> 标记文件不改名</strong>——运行时模式名与安装标记，历史命名不构成依赖；改名要动 setup/prefetch/startupFailureExplain 至少 4 个文件的文案与逻辑，收益为零。</li><li><strong>不拆独立 git 仓库</strong>——74 个 CI 检查器与自治治理体系对 <code>extensions/apps/khy-quant</code> 同样生效；拆仓即失去门禁保护，与「不越改越差」的目标相反。Phase 3 只交预案。</li><li><strong>隔离区 37 个死代码前端文件不复活不删除</strong>——随 <code>.khyos/deadcode-quarantine/05-khyquant-frontend/</code> 原样留在本机态，由死代码治理流程另行裁决。</li><li><strong>前端 <code>@khy/ui-shared</code> 三真源问题不在本提案修</strong>（CLAUDE.md:35）——那是独立的结构债，搬迁后路径更新即可，不趁机重构。</li></ol>
 <hr>
 <h2 id="6-反模式-这条路别走">6. 反模式（这条路别走）<a class="anchor" href="#6-反模式-这条路别走" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>❌ 别做</th><th>为什么</th></tr></thead><tbody><tr><td>直接 <code>git mv</code> 而不落 manifest</td><td><code>findProvider('quant-app')</code> 落空 + L4 兜底指空 → quant-app 整档静默「未安装」，22 条路由全 404，行为<strong>无声</strong>劣化——正是 [DESIGN-ARCH-078] §10.3 记录过的 L4_DIR 指空事故的重演</td></tr><tr><td>保留 L4 兜底「以防万一」</td><td>兜底写的是磁盘路径不是服务名，留着它 = <code>software/khyquant</code> 这个位置事实在核里永生，<code>quantApp.js:19-21</code> 自己都说「Phase 1 搬完目录即可删掉这一支」</td></tr><tr><td>把 <code>mountOptional</code> 改回硬挂载「为了启动期显式报错」</td><td>推翻 [DESIGN-TOOL-002] §4.1「删目录即卸载」承诺；<code>quantAppServerMount.test.js</code> 6 例直接红，其中含静态防复发断言（量化路由不许绕过 mountOptional）</td></tr><tr><td>在 Phase 1 顺手删 25 个 shim</td><td>shim 有零散第三方 require 方（cli/handlers、aiChatCore 等面广），未全仓核实消费者前删除 = 把「可选」做成「启动崩」；必须先跑消费者扫描（Phase 4 前置）</td></tr><tr><td>让 entry 继续反向 require backend「先跑起来再说」</td><td>反向依赖每 +1 处，独立剥离难度 +1；契约 D 的宿主注入方向 khy-markdown <code>_note</code> 里已经写明，不要再造第三种接法</td></tr><tr><td>改 <code>~/.khyquant</code> / 品牌域名 / bootstrap mode 字符串</td><td>见 §5 第 1-3 条</td></tr></tbody></table>
+<table><thead><tr><th>✗ 别做</th><th>为什么</th></tr></thead><tbody><tr><td>直接 <code>git mv</code> 而不落 manifest</td><td><code>findProvider('quant-app')</code> 落空 + L4 兜底指空 → quant-app 整档静默「未安装」，22 条路由全 404，行为<strong>无声</strong>劣化——正是 [DESIGN-ARCH-078] §10.3 记录过的 L4_DIR 指空事故的重演</td></tr><tr><td>保留 L4 兜底「以防万一」</td><td>兜底写的是磁盘路径不是服务名，留着它 = <code>software/khyquant</code> 这个位置事实在核里永生，<code>quantApp.js:19-21</code> 自己都说「Phase 1 搬完目录即可删掉这一支」</td></tr><tr><td>把 <code>mountOptional</code> 改回硬挂载「为了启动期显式报错」</td><td>推翻 [DESIGN-TOOL-002] §4.1「删目录即卸载」承诺；<code>quantAppServerMount.test.js</code> 6 例直接红，其中含静态防复发断言（量化路由不许绕过 mountOptional）</td></tr><tr><td>在 Phase 1 顺手删 25 个 shim</td><td>shim 有零散第三方 require 方（cli/handlers、aiChatCore 等面广），未全仓核实消费者前删除 = 把「可选」做成「启动崩」；必须先跑消费者扫描（Phase 4 前置）</td></tr><tr><td>让 entry 继续反向 require backend「先跑起来再说」</td><td>反向依赖每 +1 处，独立剥离难度 +1；契约 D 的宿主注入方向 khy-markdown <code>_note</code> 里已经写明，不要再造第三种接法</td></tr><tr><td>改 <code>~/.khyquant</code> / 品牌域名 / bootstrap mode 字符串</td><td>见 §5 第 1-3 条</td></tr></tbody></table>
 <hr>
 <h2 id="7-验收方式">7. 验收方式<a class="anchor" href="#7-验收方式" aria-label="锚点">#</a></h2>
 <pre><code class="language-bash"><span class="hljs-comment"># 基线与回归（Phase 1 后必须全绿，基线数字以实际跑出为准，不许估）</span>

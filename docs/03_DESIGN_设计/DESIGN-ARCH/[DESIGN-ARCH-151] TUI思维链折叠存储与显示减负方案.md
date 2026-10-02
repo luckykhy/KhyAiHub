@@ -11,13 +11,13 @@
 
 ## 0. 一句话结论
 
-**折叠与存储机制已经存在、且默认就是折叠的**——思维链全文既显示不全屏刷，也没有丢：它以「💭 思考 · N 字」一行折叠显示、以全文存进会话 JSONL 的 `_timeline` 字段。截图里「乱七八糟全量平铺」的根因不在「没做折叠」，而在下表三条路径之一：
+**折叠与存储机制已经存在、且默认就是折叠的**——思维链全文既显示不全屏刷，也没有丢：它以「思考 · N 字」一行折叠显示、以全文存进会话 JSONL 的 `_timeline` 字段。截图里「乱七八糟全量平铺」的根因不在「没做折叠」，而在下表三条路径之一：
 
 | # | 病灶 | 证据 | 本提案处置 |
 |---|---|---|---|
 | A1 | 全局 showAll（Ctrl+E）处于展开态，thinking 全文平铺 | `App.js:5009-5012`、`transcriptLines.js:205-207` | P1：操作引导，零代码 |
 | A2 | 跑的是旧构建 / 旧会话回放，折叠行为未生效 | — | P1：构建新鲜判定 |
-| A3 | **推理文本被 adapter 并进了 `text` 段**（非 thinking chunk），渲染层对 text 全量 renderMarkdown，无任何折叠 | `transcriptLines.js:190-197`（text 分支无折叠）；截图内容带完整 markdown 结构（标题/加粗/分层），形态是正文而非 💭 行 | P3：治本点在 adapter 层归位，不在渲染层猜 |
+| A3 | **推理文本被 adapter 并进了 `text` 段**（非 thinking chunk），渲染层对 text 全量 renderMarkdown，无任何折叠 | `transcriptLines.js:190-197`（text 分支无折叠）；截图内容带完整 markdown 结构（标题/加粗/分层），形态是正文而非 行 | P3：治本点在 adapter 层归位，不在渲染层猜 |
 | G1 | 折叠行**不显示真实思考耗时**：`durationMs` 已存进 timeline 却没人消费 | 存：`queryBridgeTimeline.js:522-537`；弃：`transcriptLines.js:209` 只显字数 | P2：一行显示层改动 |
 
 ## 1. 现状实证（file:line 可复核）
@@ -26,8 +26,8 @@
 
 | 环节 | 行为 | 证据 |
 |---|---|---|
-| committed thinking（已定格消息） | `showAll=false` → 一行 `💭 思考 · N 字`；`showAll=true` → `💭 思考` + 全文 | `services/backend/src/cli/tui/transcriptLines.js:198-211` |
-| 流式 thinking（正在生成） | 单行预览 `💭 <首行>`（换行压空格、按显示宽截首段） | `services/backend/src/cli/tui/ink-components/App.js:5957-5963` |
+| committed thinking（已定格消息） | `showAll=false` → 一行 `思考 · N 字`；`showAll=true` → `思考` + 全文 | `services/backend/src/cli/tui/transcriptLines.js:198-211` |
+| 流式 thinking（正在生成） | 单行预览 `<首行>`（换行压空格、按显示宽截首段） | `services/backend/src/cli/tui/ink-components/App.js:5957-5963` |
 | 全局展开开关 | Ctrl+E = CC `transcript:toggleShowAll`，复用全局 `expanded` state，退出浮层后 live 区同口径 | `App.js:5009-5012`、`App.js:5161`、`App.js:940` |
 | 过程组（工具）折叠 | Ctrl+O 展开，`▸/▾` caret | `services/backend/src/cli/tui/ink-components/ProcessGroup.js:443-456` |
 | 统一折叠模型 | `foldModel.js`（DESIGN-ARCH-103）：kind 含 `'thinking'`，行高签名含 expanded 态 | `services/backend/src/cli/tui/foldModel.js:22-33`；消费方 `ToolLines.js:1474-1476`、`RightPanel.js:13` |
@@ -50,7 +50,7 @@ thinking chunk (useQueryBridge.js:1993 tlAppendThinking)
 
 ### 1.3 病灶判定方法（给使用者的一次性操作）
 
-1. 在 TUI 里按 **Ctrl+E**：若那批文字收进 `💭` 行 → 属 A1，纯开关状态问题。
+1. 在 TUI 里按 **Ctrl+E**：若那批文字收进 `` 行 → 属 A1，纯开关状态问题。
 2. 若无变化：查会话 JSONL 里 `_timeline` 的段型分布——`type:'thinking'` 存在 → 显示层问题；推理文字全在 `type:'text'` → 属 A3（adapter 把 reasoning 并进了正文通道）。
 
 ## 2. 借鉴提案（B-P2 逐字段）
@@ -70,13 +70,13 @@ thinking chunk (useQueryBridge.js:1993 tlAppendThinking)
 折叠态（P2 后，committed 区）：
 
 ```
-💭 思考 12s · 1,842 字          ← durationMs 来自 tlStampThinkingDuration，非编造
+思考 12s · 1,842 字          ← durationMs 来自 tlStampThinkingDuration，非编造
 ```
 
 展开态（Ctrl+E，与现状一致）：
 
 ```
-💭 思考 12s
+思考 12s
 <全文逐行，wrapCell 按 cols 折行>
 ```
 
@@ -87,7 +87,7 @@ text 通道（A3 判定为真时）：adapter 层把 reasoning 流归位到 thin
 | 期 | 内容 | 落点 | 回滚 |
 |---|---|---|---|
 | P1 | 零代码：引导 Ctrl+E；构建新鲜判定（用本次新增标识符 grep `out/` 判构建旧新） | 无 | — |
-| P2 | 折叠行消费 `durationMs`：`💭 思考 · N 字` → `💭 思考 {ccFormatDuration(durationMs)} · N 字`（时长格式走 `ccFormat.js` SSOT，同 `queryBridgeTimeline.js:471-484` 已有先例）；durationMs 缺失时逐字节回退现文案 | `transcriptLines.js:208-211` 一处 | 单点撤回即旧行为 |
+| P2 | 折叠行消费 `durationMs`：`思考 · N 字` → `思考 {ccFormatDuration(durationMs)} · N 字`（时长格式走 `ccFormat.js` SSOT，同 `queryBridgeTimeline.js:471-484` 已有先例）；durationMs 缺失时逐字节回退现文案 | `transcriptLines.js:208-211` 一处 | 单点撤回即旧行为 |
 | P3 | 仅当 §1.3 判定属 A3：在 gateway/adapter 层把 reasoning 流归位 thinking chunk（指认级条目，需先定位具体 adapter 再单独出实施记录） | adapter 层（待定位） | adapter 单点 |
 | P4 | 折叠行**逐条点击展开**（2026-09-26 用户裁决，推翻 §5 原边界）：投影多产出第三条**平行数组** `folds`（行下标 → `{kind:'thinking', key}`，非锚点行为 `null`），`Viewport` 收 `lineClickAt(rowIdx)` 给命中行各挂一个 `onClick`（闭包携带行下标，**不做屏幕行换算**），App 侧 `expandedThinking: Set<key>` 只存 key 不存内容。门复用既有 `KHY_CARD_CLICK`（`cardClickEnabled`），**不新增 env 门** | `transcriptLines.js`（`folds`）、`Viewport.js`（`lineClickAt`）、`PreviewLayout.js`（转发）、`App.js`（状态 + 命中闭包） | 不传 `lineClickAt` → Viewport 走原单 `<Text>` 分支，逐字节回退 P2 形态 |
 | P5 | **流式期**思维链单行「从左到右」滑动预览（用户裁决：仅流式期滚动，轮次落定即静态）：`thinkingMarquee.tailWindow(text, cols-8)` 取可视尾部窗口，chunk 驱动、**零新增 setInterval**（`query.streaming` 本就是行 memo 的依赖，不产生额外重渲染）；被裁掉头补 `⋯ ` 标记 | `src/cli/tui/thinkingMarquee.js`（新纯叶子）、`App.js` 流式预览段 | 删该调用回到「恒显首段」旧行为 |
@@ -103,7 +103,7 @@ text 通道（A3 判定为真时）：adapter 层把 reasoning 流归位到 thin
 
 ## 6. 反模式（这条路别走）
 
-| ❌ 别做 | 为什么 |
+| ✗ 别做 | 为什么 |
 |---|---|
 | 在渲染层用正则/关键词猜「text 段里哪部分是思维链」 | 推理与正文在 text 通道里**信息论上不可分**；猜错 = 把正文答案折掉，比「显示乱」严重一个量级。归位责任在产生数据的那一层（adapter），不在消费数据的渲染层 |
 | 为思维链新建独立存储文件/表 | `_timeline` in JSONL 已是单一真源（§1.2），第二存储 = 本仓明令禁止的并行真源 |
@@ -134,8 +134,8 @@ CI 关联：`test:node` 全量 glob 扫 `tests/**`（`deploy-staging.yml:97-104`
 > 与投影级验证。`node scripts/run-ink-tui-tests.js` 现有 5 个红套件（ccOverlayFit / inkRenderSmoke
 > / agentTreeRender / helpMenuSize / toolLinesWriteDiff，16 例）经核**与本案无关**：其失败文案
 > （`执行命令` → `读取 + 编辑 server.js · 2 步`、write-diff 新增 `numNew` 字段、HelpMenu 帧高）
-> 全部来自并行的中文 chrome 本地化与 [DESIGN-ARCH-155] 组行语法改造：其余 4 个套件对 `💭` **零引用**，
-> `inkRenderSmoke` 的两个 thinking 用例（折叠/Ctrl+O、真实时长 `💭 思考 7s`）**为绿**，红在其
+> 全部来自并行的中文 chrome 本地化与 [DESIGN-ARCH-155] 组行语法改造：其余 4 个套件对 `` **零引用**，
+> `inkRenderSmoke` 的两个 thinking 用例（折叠/Ctrl+O、真实时长 `思考 7s`）**为绿**，红在其
 > ProcessGroup / ToolLines 文案断言。
 
 ## 8. 待核实项

@@ -132,7 +132,7 @@ P2/P3 共享「消息挂载到 streaming 消息」的取值方式，可并行。
 
 ## 6. 反模式（这条路别走）
 
-| ❌ 别做 | 为什么 |
+| ✗ 别做 | 为什么 |
 |---|---|
 | 在 MessageBubble 里给 system 消息做「折叠显示」而不是不显示 | 需求是不泄露；折叠 = 仍可达，一键展开就全泄 |
 | 在 renderer 里重写一套 callId 配对逻辑 | host 已 FIFO 配对（registerToolCall/settleToolCall），renderer 按名匹配会张冠李戴（App.tsx:354 注释已记录此教训） |

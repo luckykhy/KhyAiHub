@@ -479,20 +479,20 @@ h(PermissionsPrompt, { request, onResolve, cols: _overlayCols })   // ← 没有
 
 | # | 主张 | 探针 | 结论 |
 |---|---|---|---|
-| 1 | 卡片行节点**无鼠标 prop** ⇒ 不在命中区 | `card-click-probe.cjs` A1/A2/B1 | ✅ 实测 FAIL＝缺陷成立 |
-| 2 | 给行挂 prop ⇒ 该行**可命中**且回调是**那一行** | 同上 B2/B3 | ✅ 实测 PASS（`rowClicks=[1]`） |
-| 3 | 整卡挂一个 handler ⇒ **无法区分选项** | 同上 B4 | ✅ 实测 PASS |
-| 4 | 点同一行 ⇒ 触发 onClick 且**被吞** | `verify-safety-probe.cjs` P1a-c | ✅ 实测 PASS（**真 dispatcher**） |
-| 5 | 跨行拖选且 `consumed=true` ⇒ **不触发** onClick | 同上 P2a-c | ✅ 实测 PASS ← **安全性核心** |
-| 6 | 上述「不触发」是 `consumed` 的功劳（非恒真） | 同上 P2-rev | ✅ 实测 PASS（**反向对照**） |
-| 7 | 按下（含空白处）**无条件上报** `down` | 同上 P3a/b | ✅ 实测 PASS ← 拖选起点不被吞 |
-| 8 | `orderOptions` **重排**选项 | 直接执行 `permissionOptionOrder.js` | ✅ 实测：`[deny,allow,allowAlways] → [allow,allowAlways,deny]` |
-| 9 | 误用原始下标 ⇒ **授权语义反转** | 同上 | ✅ 实测：想点「允许本次」实际触发「拒绝」 |
-| 10 | 两挂载点**都不给** `PermissionsPrompt` 传 `rows` | 实读 `App.js` L6631-6641 / L6916-6926 | ✅ 实测确认 |
-| 11 | App 第 0 段（L4699）鼠标 `return` **早于** L4805 让键 | 源码控制流定位（脚本计行） | ✅ 实测：**相隔 106 行** ⇒ 断言 A 成立 |
-| 12 | **两处改造点锚点唯一** + 替换后 `node --check` 通过 + 回退逐字节相等 | `prototype-applicability.cjs` C1-C6 | ✅ 实测 **8/8 PASS**（**可实施性**） |
-| 13 | 既有鼠标测试**基线全绿**（改动前） | `node --test` × 5 文件 | ✅ 实测 **60/60 pass**（8+12+9+19+12） |
-| 14 | 守卫位置＝`reviewing`(L246) 之后、`typing`(L273) 之前 | 脚本逐行定位 | ✅ 实测：守卫 **L261-270**，`typing` 内插字面量在 **L310** |
+| 1 | 卡片行节点**无鼠标 prop** ⇒ 不在命中区 | `card-click-probe.cjs` A1/A2/B1 | ✓ 实测 FAIL＝缺陷成立 |
+| 2 | 给行挂 prop ⇒ 该行**可命中**且回调是**那一行** | 同上 B2/B3 | ✓ 实测 PASS（`rowClicks=[1]`） |
+| 3 | 整卡挂一个 handler ⇒ **无法区分选项** | 同上 B4 | ✓ 实测 PASS |
+| 4 | 点同一行 ⇒ 触发 onClick 且**被吞** | `verify-safety-probe.cjs` P1a-c | ✓ 实测 PASS（**真 dispatcher**） |
+| 5 | 跨行拖选且 `consumed=true` ⇒ **不触发** onClick | 同上 P2a-c | ✓ 实测 PASS ← **安全性核心** |
+| 6 | 上述「不触发」是 `consumed` 的功劳（非恒真） | 同上 P2-rev | ✓ 实测 PASS（**反向对照**） |
+| 7 | 按下（含空白处）**无条件上报** `down` | 同上 P3a/b | ✓ 实测 PASS ← 拖选起点不被吞 |
+| 8 | `orderOptions` **重排**选项 | 直接执行 `permissionOptionOrder.js` | ✓ 实测：`[deny,allow,allowAlways] → [allow,allowAlways,deny]` |
+| 9 | 误用原始下标 ⇒ **授权语义反转** | 同上 | ✓ 实测：想点「允许本次」实际触发「拒绝」 |
+| 10 | 两挂载点**都不给** `PermissionsPrompt` 传 `rows` | 实读 `App.js` L6631-6641 / L6916-6926 | ✓ 实测确认 |
+| 11 | App 第 0 段（L4699）鼠标 `return` **早于** L4805 让键 | 源码控制流定位（脚本计行） | ✓ 实测：**相隔 106 行** ⇒ 断言 A 成立 |
+| 12 | **两处改造点锚点唯一** + 替换后 `node --check` 通过 + 回退逐字节相等 | `prototype-applicability.cjs` C1-C6 | ✓ 实测 **8/8 PASS**（**可实施性**） |
+| 13 | 既有鼠标测试**基线全绿**（改动前） | `node --test` × 5 文件 | ✓ 实测 **60/60 pass**（8+12+9+19+12） |
+| 14 | 守卫位置＝`reviewing`(L246) 之后、`typing`(L273) 之前 | 脚本逐行定位 | ✓ 实测：守卫 **L261-270**，`typing` 内插字面量在 **L310** |
 | 15 | **全 TUI 测试基线**（1017 例） | `node --test "tests/cli/tui/*.test.js"` | ⚠ 实测 **1013 pass / 4 fail**，**4 个失败全部来自并发会话在途文件**（见下注） |
 
 > **⚠ 关于 #15 的 4 个失败（归属已查清，与本方案无关）**：
@@ -528,7 +528,7 @@ h(PermissionsPrompt, { request, onResolve, cols: _overlayCols })   // ← 没有
 
 | # | 主张 | 为何尚未证 | 补测方式 |
 |---|---|---|---|
-| A | ~~「卡片 `useInput` 收不到鼠标序列」~~ | ✅ **已升级为实测 #11**（控制流相隔 106 行） | — |
+| A | ~~「卡片 `useInput` 收不到鼠标序列」~~ | ✓ **已升级为实测 #11**（控制流相隔 106 行） | — |
 | B | 「改后键盘路径零回归」 | 需改后跑既有 TUI 测试套 | `node --test tests/cli/tui/*.test.js`（基线已取，见 #13） |
 | C | 「门控关时逐字节回退」 | 需改后跑逐字节对照 | `FORCE_COLOR=3` + 在 ink 加载前注入 |
 | D | 「`BUG-57` 降档不影响点击下标」 | 需窄屏实测 | 40 列终端点选项，对照宽屏 |
@@ -539,8 +539,8 @@ h(PermissionsPrompt, { request, onResolve, cols: _overlayCols })   // ← 没有
 > ⚠ 本节记录的是**设计阶段的边界**，读到时请注意：生产代码随后已在 §12 落地。
 > 保留本节是为了让「方案」与「实施」两个阶段的边界可追溯（哪条是当时的主张、哪条后来被证伪）。
 
-- ✅ 当时仅新增**设计文档 + `.html` 孪生件 + 索引登记 + 三份探针存证**；
-- ❌ 当时**未改生产代码**、**未新增 `cardClick.js`** —— 均已在 §12 完成。
+- ✓ 当时仅新增**设计文档 + `.html` 孪生件 + 索引登记 + 三份探针存证**；
+- ✗ 当时**未改生产代码**、**未新增 `cardClick.js`** —— 均已在 §12 完成。
 
 ---
 
@@ -550,11 +550,11 @@ h(PermissionsPrompt, { request, onResolve, cols: _overlayCols })   // ← 没有
 
 | 文件 | 改动 | 状态 |
 |---|---|---|
-| `ink-components/cardClick.js` | **新增**：门控 `cardClickEnabled` + 命中 `normalizeRowIndex` + 展开 `toggleExpandedRow` / `expandable` / `expandLine` | ✅ |
-| `ink-components/QuestionPrompt.js` | ① `rowNodes` 挂点击；② 鼠标守卫「一增一删」前移到 `reviewing` 之前；③ 新增 `expandedRows` 展开态 + `rowSpecs.fullDesc` | ✅ |
-| `ink-components/PermissionsPrompt.js` | ① 两个渲染分支（紧凑 / 旧形态）挂点击；② **L2 改两段式**（`twoStep`/`moveOnly`）；③ 页脚文案同步 | ✅ |
-| `tests/tui/cardClick.test.js` | **新增**：17 例（门控口径 / 下标收束 / 展开态 / 反向对照） | ✅ 17/17 |
-| `App.js` | 挂载点核对 | ✅ 无需改（与设计期实测一致） |
+| `ink-components/cardClick.js` | **新增**：门控 `cardClickEnabled` + 命中 `normalizeRowIndex` + 展开 `toggleExpandedRow` / `expandable` / `expandLine` | ✓ |
+| `ink-components/QuestionPrompt.js` | ① `rowNodes` 挂点击；② 鼠标守卫「一增一删」前移到 `reviewing` 之前；③ 新增 `expandedRows` 展开态 + `rowSpecs.fullDesc` | ✓ |
+| `ink-components/PermissionsPrompt.js` | ① 两个渲染分支（紧凑 / 旧形态）挂点击；② **L2 改两段式**（`twoStep`/`moveOnly`）；③ 页脚文案同步 | ✓ |
+| `tests/tui/cardClick.test.js` | **新增**：17 例（门控口径 / 下标收束 / 展开态 / 反向对照） | ✓ 17/17 |
+| `App.js` | 挂载点核对 | ✓ 无需改（与设计期实测一致） |
 
 ### 12.2 ⚠⚠ **地基被证伪：`<Text onClick>` 根本不生效**（本节最重要）
 
@@ -563,8 +563,8 @@ h(PermissionsPrompt, { request, onResolve, cols: _overlayCols })   // ← 没有
 
 | 组件 | 未知 props 处理 | `onClick` 落点 | `collectLayout` 能否命中 |
 |---|---|---|---|
-| `<Box>` | `({...style})` **透传** | `node.style.onClick` | ✅ **能** |
-| `<Text>` | **固定 props 白名单**，不展开 rest | 被 React **静默丢弃** | ❌ **不能** |
+| `<Box>` | `({...style})` **透传** | `node.style.onClick` | ✓ **能** |
+| `<Text>` | **固定 props 白名单**，不展开 rest | 被 React **静默丢弃** | ✗ **不能** |
 
 ink 6.8.0 的 `Text.js` 只声明 `color/backgroundColor/dimColor/bold/italic/underline/strikethrough/inverse/wrap/aria-*`；
 而 `Box.js` 用 `...style` 收集其余 props 并整体塞进 `style` 对象。`collectLayout` 读的正是
@@ -588,9 +588,9 @@ ink 6.8.0 的 `Text.js` 只声明 `color/backgroundColor/dimColor/bold/italic/un
 
 | 被测 | 门控 | 可点节点 | 命中屏幕行 | 结论 |
 |---|---|---|---|---|
-| `QuestionPrompt`（3 选项） | 开 | **5**（3 真实 + 可讨论 + Other） | `[2,3,4,5,6]` | ✅ 逐行不重叠 |
-| `PermissionsPrompt` L1（3 选项） | 开 | **3** | `[6,7,8]` | ✅ 逐行不重叠 |
-| `QuestionPrompt`（反向对照） | **关** | **0** | `[]` | ✅ 门控真的生效 |
+| `QuestionPrompt`（3 选项） | 开 | **5**（3 真实 + 可讨论 + Other） | `[2,3,4,5,6]` | ✓ 逐行不重叠 |
+| `PermissionsPrompt` L1（3 选项） | 开 | **3** | `[6,7,8]` | ✓ 逐行不重叠 |
+| `QuestionPrompt`（反向对照） | **关** | **0** | `[]` | ✓ 门控真的生效 |
 
 **8/8 PASS**（存证 `probe-real-cards-hittest.txt`）。反向对照是硬要求：缺了它，
 一个「无条件挂 `onClick`」的实现也会全绿 —— 那就等于门控不存在。
@@ -614,9 +614,9 @@ ink 6.8.0 的 `Text.js` 只声明 `color/backgroundColor/dimColor/bold/italic/un
 
 | 文案 | 显示宽 | `splitFooter(t, 56)` | 结果 |
 |---|---|---|---|
-| 旧（改前） | 63 | **折 2 行**：末行 `默认「确认执行」· Esc 取消` | ✅ `Esc 取消` 完整 |
-| 实施初版（**过短**） | 55 | **不折**（55 ≤ 56），单行 | ❌ 渲染时被卡宽裁成 `… Esc …` |
-| 实施修正版（5 段结构） | 73 | **恒折 2 行**（46–56 各档实测均如此） | ✅ `Esc 取消` 完整 |
+| 旧（改前） | 63 | **折 2 行**：末行 `默认「确认执行」· Esc 取消` | ✓ `Esc 取消` 完整 |
+| 实施初版（**过短**） | 55 | **不折**（55 ≤ 56），单行 | ✗ 渲染时被卡宽裁成 `… Esc …` |
+| 实施修正版（5 段结构） | 73 | **恒折 2 行**（46–56 各档实测均如此） | ✓ `Esc 取消` 完整 |
 
 **教训**：**「短」不等于「安全」**。折行阈值是个**上限**，短过阈值会掉到「单行 + 被裁」这一更差的形态。
 改这类文案前必须先量 `visWidth` **与** `splitFooter(t, avail)` 的最坏情形，不能靠直觉。
@@ -646,11 +646,11 @@ ink 6.8.0 的 `Text.js` 只声明 `color/backgroundColor/dimColor/bold/italic/un
 
 | 项 | 结果 |
 |---|---|
-| `cardClick.test.js`（新增 17 例） | ✅ **17/17 pass**（`node --test` 族；`jest.config.js` 按 `require('node:test')` 标记自动忽略，无需手工登记） |
-| 端到端命中探针（真渲染 + 真 `collectLayout`） | ✅ **8/8 pass**（含门控关反向对照） |
-| 机制探针（Box vs Text） | ✅ **5/5 pass**（含 `attributes.onClick` 不入命中区的反向对照） |
-| 守卫前移探针（typing 态吞掉鼠标序列） | ✅ **3/3 pass**（含「普通字符 Z 必须被插入」的反向对照） |
-| 两段式行为探针（L2 选中→Enter / L1 直选） | ✅ **9/9 pass** |
+| `cardClick.test.js`（新增 17 例） | ✓ **17/17 pass**（`node --test` 族；`jest.config.js` 按 `require('node:test')` 标记自动忽略，无需手工登记） |
+| 端到端命中探针（真渲染 + 真 `collectLayout`） | ✓ **8/8 pass**（含门控关反向对照） |
+| 机制探针（Box vs Text） | ✓ **5/5 pass**（含 `attributes.onClick` 不入命中区的反向对照） |
+| 守卫前移探针（typing 态吞掉鼠标序列） | ✓ **3/3 pass**（含「普通字符 Z 必须被插入」的反向对照） |
+| 两段式行为探针（L2 选中→Enter / L1 直选） | ✓ **9/9 pass** |
 | `tests/tui` 全量（**含并发会话在途改动**） | 47 suites / 711 pass；2 suites / 5 fail —— **失败全部属并发会话**（见下） |
 
 **本次改动直接相关 suite 的实测（均绿）**：

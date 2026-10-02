@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -59,7 +59,7 @@ toolProfile.js:23-85       coding.tools = [...37 个白名单...]   ← 无 'Khy
         ⇒ 模型被指挥去调一个它清单里没有的工具</code></pre>
 <p><code>GATEWAY_CLAUDE_MODE</code> 默认 <code>auto</code>（<code>claudeAdapter.js:73</code>）＝<strong>有 API key 就走直连</strong>。也就是说：<strong>装了 key 的机器上，这条矛盾默认成立</strong>。这是一个「声明面与执行面不一致」的典型形态，与 <code>RUNTIME-010</code> A2-4「声明面收窄必须有执行面强制与之对应」是同一族问题，只是方向相反——这里是<strong>声明面在承诺、执行面在否认</strong>。</p>
 <h3 id="1-3-d3-两个面的镜像清单">1.3 D3 —— 两个面的镜像清单<a class="anchor" href="#1-3-d3-两个面的镜像清单" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>分面（能力）</th><th><code>/self</code>（人类面）</th><th><code>KhySelf</code>（agent 面）</th></tr></thead><tbody><tr><td>identity（名称/版本/定位/性格）</td><td>✅ 默认输出含</td><td>❌</td></tr><tr><td>capabilities（10 个能力域）</td><td>✅ <code>capabilities</code></td><td>❌</td></tr><tr><td>boundaries（5 条边界）</td><td>✅ <code>boundaries</code></td><td>❌</td></tr><tr><td>runtime（平台/Node/Python/cwd/通道/推理/学习模式）</td><td>✅ <code>runtime</code></td><td>❌</td></tr><tr><td>location（安装根/自身源码/dataHome/installKind）</td><td>⚠️ 仅混在默认输出里</td><td>✅ <code>location</code></td></tr><tr><td>commands（命令目录，可搜索）</td><td>❌（要去 <code>/features</code>）</td><td>✅ <code>commands</code></td></tr><tr><td>self_audit</td><td>❌</td><td>✅ <code>self_audit</code></td></tr><tr><td>self_audit_verify</td><td>❌</td><td>✅ <code>self_audit_verify</code></td></tr></tbody></table>
+<table><thead><tr><th>分面（能力）</th><th><code>/self</code>（人类面）</th><th><code>KhySelf</code>（agent 面）</th></tr></thead><tbody><tr><td>identity（名称/版本/定位/性格）</td><td>✓ 默认输出含</td><td>✗</td></tr><tr><td>capabilities（10 个能力域）</td><td>✓ <code>capabilities</code></td><td>✗</td></tr><tr><td>boundaries（5 条边界）</td><td>✓ <code>boundaries</code></td><td>✗</td></tr><tr><td>runtime（平台/Node/Python/cwd/通道/推理/学习模式）</td><td>✓ <code>runtime</code></td><td>✗</td></tr><tr><td>location（安装根/自身源码/dataHome/installKind）</td><td>⚠ 仅混在默认输出里</td><td>✓ <code>location</code></td></tr><tr><td>commands（命令目录，可搜索）</td><td>✗（要去 <code>/features</code>）</td><td>✓ <code>commands</code></td></tr><tr><td>self_audit</td><td>✗</td><td>✓ <code>self_audit</code></td></tr><tr><td>self_audit_verify</td><td>✗</td><td>✓ <code>self_audit_verify</code></td></tr></tbody></table>
 <p><strong>并集 8 个分面，交集 1 个。</strong> 后果具体：</p>
 <ul><li>agent 回答不了「你有哪些能力域 / 你的边界是什么」——只能靠系统提示里那段<strong>截断</strong>的块；<code>boundaries</code> 只在提示里以一行一条出现，<code>capabilities</code> 的 10 个域在提示里<strong>根本没注入</strong>。</li><li>人类敲 <code>/self</code> 看不到自审报告与逐项核验，要看只能重新问 agent。</li></ul>
 <h3 id="1-4-d5-一个从未加载的工具">1.4 D5 —— 一个从未加载的工具<a class="anchor" href="#1-4-d5-一个从未加载的工具" aria-label="锚点">#</a></h3>

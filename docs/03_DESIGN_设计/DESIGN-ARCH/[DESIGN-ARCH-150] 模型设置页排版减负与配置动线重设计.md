@@ -44,10 +44,10 @@
 
 | 层 | 证据 | 状态 |
 |---|---|---|
-| main IPC | `main/keyManager/ipc.ts:58` `keys:update`、`:119` `cards:update` | ✅ 已实现 |
-| preload | `preload/index.ts:173` `keysUpdate`、`:193` `cardsUpdate` | ✅ 已暴露 |
-| renderer api | `renderer/keyManager/api.ts:94`、`:126` | ✅ 类型齐全 |
-| UI 消费方 | `KeyManagerPage.tsx` 全文（814 行） | ❌ **零调用** |
+| main IPC | `main/keyManager/ipc.ts:58` `keys:update`、`:119` `cards:update` | ✓ 已实现 |
+| preload | `preload/index.ts:173` `keysUpdate`、`:193` `cardsUpdate` | ✓ 已暴露 |
+| renderer api | `renderer/keyManager/api.ts:94`、`:126` | ✓ 类型齐全 |
+| UI 消费方 | `KeyManagerPage.tsx` 全文（814 行） | ✗ **零调用** |
 
 ⇒ 补编辑是**纯前端接线**，不需要新 IPC、不需要动 D6 契约测试的通道清单。
 
@@ -125,7 +125,7 @@ P1 与 P2 无耦合，可并行；P3 依赖 P2 的表单组件形状（跳转预
 
 ## 6. 反模式（这条路别走）
 
-| ❌ 别做 | 为什么 |
+| ✗ 别做 | 为什么 |
 |---|---|
 | 给表单输入框继续加 `min-w` 或缩字号硬塞进 272px | 病灶是**容器算术**，不是字号；272px 里塞两个 200px+ 输入框在数学上不可能 |
 | 新造 `keys:patch`/`cards:modify` 之类的第二个 update IPC | canonical 已三层齐全（§1.2），再建一个违反「一处真源」（`main/index.ts:85-89` 注释精神），且要同步改 D6 契约测试两侧 |
@@ -160,7 +160,7 @@ P1 与 P2 无耦合，可并行；P3 依赖 P2 的表单组件形状（跳转预
 
 | 项 | 状态 |
 |---|---|
-| tsc 基线数 | ✅ 已实测：20 条（2026-09-24，全部位于 `src/host/index.ts`，与本提案无交集） |
+| tsc 基线数 | ✓ 已实测：20 条（2026-09-24，全部位于 `src/host/index.ts`，与本提案无交集） |
 | `desktopUiContract.test.cjs` 当前是否绿 | ⚠ 实施前先跑一次记录基线，若本身红则与本提案切割 |
 | registry 无 keyManager 能力域条目 | 已核实 `docs/10_规范/registry/` 无匹配（Grep 2026-09-24），不影响本提案（非借鉴类）；若后续登记能力域，落点由 memory/registry 维护者定 |
 

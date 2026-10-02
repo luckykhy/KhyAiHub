@@ -166,7 +166,7 @@ khy-os-khyquant/（未来独立仓库形态）
 
 ## 6. 反模式（这条路别走）
 
-| ❌ 别做 | 为什么 |
+| ✗ 别做 | 为什么 |
 |---|---|
 | 直接 `git mv` 而不落 manifest | `findProvider('quant-app')` 落空 + L4 兜底指空 → quant-app 整档静默「未安装」，22 条路由全 404，行为**无声**劣化——正是 [DESIGN-ARCH-078] §10.3 记录过的 L4_DIR 指空事故的重演 |
 | 保留 L4 兜底「以防万一」 | 兜底写的是磁盘路径不是服务名，留着它 = `software/khyquant` 这个位置事实在核里永生，`quantApp.js:19-21` 自己都说「Phase 1 搬完目录即可删掉这一支」 |

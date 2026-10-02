@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -44,7 +44,7 @@
 = 密钥列表/表单实际可用               ≈ 272px</code></pre>
 <p>添加表单第一行 <code>min-w-[180px] + min-w-[220px]</code> = 400px &gt; 272px ⇒ <strong>必然溢出</strong>，与截图右缘截断一致。</p>
 <h3 id="1-2-编辑能力-三层齐全-零消费-本仓惯发病-参照-skill-8-1-命令面板先例">1.2 编辑能力「三层齐全、零消费」（本仓惯发病，参照 SKILL §8.1 命令面板先例）<a class="anchor" href="#1-2-编辑能力-三层齐全-零消费-本仓惯发病-参照-skill-8-1-命令面板先例" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>层</th><th>证据</th><th>状态</th></tr></thead><tbody><tr><td>main IPC</td><td><code>main/keyManager/ipc.ts:58</code> <code>keys:update</code>、<code>:119</code> <code>cards:update</code></td><td>✅ 已实现</td></tr><tr><td>preload</td><td><code>preload/index.ts:173</code> <code>keysUpdate</code>、<code>:193</code> <code>cardsUpdate</code></td><td>✅ 已暴露</td></tr><tr><td>renderer api</td><td><code>renderer/keyManager/api.ts:94</code>、<code>:126</code></td><td>✅ 类型齐全</td></tr><tr><td>UI 消费方</td><td><code>KeyManagerPage.tsx</code> 全文（814 行）</td><td>❌ <strong>零调用</strong></td></tr></tbody></table>
+<table><thead><tr><th>层</th><th>证据</th><th>状态</th></tr></thead><tbody><tr><td>main IPC</td><td><code>main/keyManager/ipc.ts:58</code> <code>keys:update</code>、<code>:119</code> <code>cards:update</code></td><td>✓ 已实现</td></tr><tr><td>preload</td><td><code>preload/index.ts:173</code> <code>keysUpdate</code>、<code>:193</code> <code>cardsUpdate</code></td><td>✓ 已暴露</td></tr><tr><td>renderer api</td><td><code>renderer/keyManager/api.ts:94</code>、<code>:126</code></td><td>✓ 类型齐全</td></tr><tr><td>UI 消费方</td><td><code>KeyManagerPage.tsx</code> 全文（814 行）</td><td>✗ <strong>零调用</strong></td></tr></tbody></table>
 <p>⇒ 补编辑是<strong>纯前端接线</strong>，不需要新 IPC、不需要动 D6 契约测试的通道清单。</p>
 <h3 id="1-3-独立窗口通道已存在但与嵌入态互不相助">1.3 独立窗口通道已存在但与嵌入态互不相助<a class="anchor" href="#1-3-独立窗口通道已存在但与嵌入态互不相助" aria-label="锚点">#</a></h3>
 <p><code>main/keyManagerWindow.ts:16-19</code>：独立窗口 1080×720（min 880×560），同宽下不挤。设置页嵌入态<strong>没有</strong>「在独立窗口打开」的入口，独立窗口也没有反向提示。本提案不动窗口拓扑（见 §5），只做嵌入态自愈。</p>
@@ -71,7 +71,7 @@
 <table><thead><tr><th>不做</th><th>原因</th></tr></thead><tbody><tr><td>嵌入态改成「跳独立窗口」</td><td>独立窗口已存在（<code>--key-manager</code>/菜单入口），但用户在设置页的语境是就地配置；把人踢去另一个窗口是换地方挤，不是减负</td></tr><tr><td>拖拽排序 provider/密钥</td><td>池内已有 priority 字段但 UI 从未暴露排序意图；先解决有/无编辑，排序等真实需求出现再做</td></tr><tr><td>key 编辑后回显明文</td><td>reveal 是一次性操作（60s 冷却 + 审计，<code>KeyManagerPage.tsx:201</code> 自述），编辑表单回显明文会绕过该安全模型</td></tr><tr><td>把本页文案迁入 i18n</td><td>全页硬编码中文是既有现状，迁移属另一条目；本提案只保证<strong>新增文案</strong>不造重复键</td></tr><tr><td>动 T2 预设目录机制</td><td><code>builtin-fallback</code> 与 backend 真源的分支（<code>:449</code>）与排版无关，不碰</td></tr></tbody></table>
 <hr>
 <h2 id="6-反模式-这条路别走">6. 反模式（这条路别走）<a class="anchor" href="#6-反模式-这条路别走" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>❌ 别做</th><th>为什么</th></tr></thead><tbody><tr><td>给表单输入框继续加 <code>min-w</code> 或缩字号硬塞进 272px</td><td>病灶是<strong>容器算术</strong>，不是字号；272px 里塞两个 200px+ 输入框在数学上不可能</td></tr><tr><td>新造 <code>keys:patch</code>/<code>cards:modify</code> 之类的第二个 update IPC</td><td>canonical 已三层齐全（§1.2），再建一个违反「一处真源」（<code>main/index.ts:85-89</code> 注释精神），且要同步改 D6 契约测试两侧</td></tr><tr><td>把编辑做成独立路由页（<code>#/key-manager/edit/...</code>）</td><td>standalone 窗口 hash 路由要动 <code>App.tsx:461</code> 分支，弹窗/抽屉成本更低且不碰路由</td></tr><tr><td>为「好看」删掉 env 叠加层展示（<code>:238-249</code>）</td><td>env 条目是真实数据（filter set 才渲染），删掉会让「这把 key 来自环境变量」失去可见性</td></tr><tr><td>用固定像素给 segmented tabs 定宽</td><td>provider id 长度不定（<code>agnes</code> vs <code>ballian-tokenplan</code>），用内容自适应 + truncate</td></tr></tbody></table>
+<table><thead><tr><th>✗ 别做</th><th>为什么</th></tr></thead><tbody><tr><td>给表单输入框继续加 <code>min-w</code> 或缩字号硬塞进 272px</td><td>病灶是<strong>容器算术</strong>，不是字号；272px 里塞两个 200px+ 输入框在数学上不可能</td></tr><tr><td>新造 <code>keys:patch</code>/<code>cards:modify</code> 之类的第二个 update IPC</td><td>canonical 已三层齐全（§1.2），再建一个违反「一处真源」（<code>main/index.ts:85-89</code> 注释精神），且要同步改 D6 契约测试两侧</td></tr><tr><td>把编辑做成独立路由页（<code>#/key-manager/edit/...</code>）</td><td>standalone 窗口 hash 路由要动 <code>App.tsx:461</code> 分支，弹窗/抽屉成本更低且不碰路由</td></tr><tr><td>为「好看」删掉 env 叠加层展示（<code>:238-249</code>）</td><td>env 条目是真实数据（filter set 才渲染），删掉会让「这把 key 来自环境变量」失去可见性</td></tr><tr><td>用固定像素给 segmented tabs 定宽</td><td>provider id 长度不定（<code>agnes</code> vs <code>ballian-tokenplan</code>），用内容自适应 + truncate</td></tr></tbody></table>
 <hr>
 <h2 id="7-验收方式">7. 验收方式<a class="anchor" href="#7-验收方式" aria-label="锚点">#</a></h2>
 <pre><code class="language-bash"><span class="hljs-comment"># 类型：改前基线 20 条错误（2026-09-24 实测，全在 src/host/index.ts），改后必须恰为 20、零新增</span>
@@ -86,7 +86,7 @@
 <ol><li>设置 → 模型设置：四个 tab 横排可见，无左侧双导航；页面无横向滚动条。</li><li>添加表单：四输入框全部完整可见、无截断。</li><li>对任一密钥点「编辑」改 label → 保存 → 列表即时更新，重启应用后仍为新值（走 keys:update 真持久化）。</li><li>仅有密钥、无卡片时，T1 顶部出现「创建卡片 →」状态条，点击能到达 T2。</li></ol>
 <hr>
 <h2 id="8-待核实项">8. 待核实项<a class="anchor" href="#8-待核实项" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>项</th><th>状态</th></tr></thead><tbody><tr><td>tsc 基线数</td><td>✅ 已实测：20 条（2026-09-24，全部位于 <code>src/host/index.ts</code>，与本提案无交集）</td></tr><tr><td><code>desktopUiContract.test.cjs</code> 当前是否绿</td><td>⚠ 实施前先跑一次记录基线，若本身红则与本提案切割</td></tr><tr><td>registry 无 keyManager 能力域条目</td><td>已核实 <code>docs/10_规范/registry/</code> 无匹配（Grep 2026-09-24），不影响本提案（非借鉴类）；若后续登记能力域，落点由 memory/registry 维护者定</td></tr></tbody></table>
+<table><thead><tr><th>项</th><th>状态</th></tr></thead><tbody><tr><td>tsc 基线数</td><td>✓ 已实测：20 条（2026-09-24，全部位于 <code>src/host/index.ts</code>，与本提案无交集）</td></tr><tr><td><code>desktopUiContract.test.cjs</code> 当前是否绿</td><td>⚠ 实施前先跑一次记录基线，若本身红则与本提案切割</td></tr><tr><td>registry 无 keyManager 能力域条目</td><td>已核实 <code>docs/10_规范/registry/</code> 无匹配（Grep 2026-09-24），不影响本提案（非借鉴类）；若后续登记能力域，落点由 memory/registry 维护者定</td></tr></tbody></table>
 <hr>
 <h2 id="9-变更日志">9. 变更日志<a class="anchor" href="#9-变更日志" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>日期</th><th>变更</th></tr></thead><tbody><tr><td>2026-09-24</td><td>初版提案（含截图病灶、宽度算术、编辑能力零消费实证、三分期设计）</td></tr><tr><td>2026-09-24</td><td>P1-P3 全量实施并验收通过，新增 §10 实施记录</td></tr></tbody></table>

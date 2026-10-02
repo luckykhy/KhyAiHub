@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -59,7 +59,7 @@
 <h2 id="5-诚实边界-刻意不纳入">5. 诚实边界（刻意不纳入）<a class="anchor" href="#5-诚实边界-刻意不纳入" aria-label="锚点">#</a></h2>
 <ul><li><strong>不动 markdownRenderer 的着色</strong> —— 屏幕上要颜色，那是显示层职责；病只在「复制产出没剥」。</li><li><strong>不动 <code>ccClipboard.js</code></strong> —— 统一出口是搬运工；把剥离塞进去会连带污染 CC 锚点路径提取的<strong>原文</strong>（原文不该被二次加工），且混淆「提取」与「写出」两层职责。</li><li><strong>不动 <code>_fp</code> 指纹逻辑</strong> —— 指纹在按下帧与松手帧之间自洽比较，剥不剥 ANSI 两帧一致即可；改它要重写 R-01~R-16 全套断言，收益为零。</li><li><strong>不处理跨软换行多 <code>\n</code></strong> —— <code>selection.js</code> 头部已登记的已知偏差，独立议题。</li><li><strong>不碰 [DESIGN-ARCH-132] 的 D-02/D-04 两条红</strong> —— 基线实测 56 条中 54 绿 2 红（§7），那两条是锚点漂移的既有病灶，本案验收<strong>只要求不新增失败</strong>，不替别的提案收账。</li></ul>
 <h2 id="6-反模式-这条路别走">6. 反模式（这条路别走）<a class="anchor" href="#6-反模式-这条路别走" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>❌ 别做</th><th>为什么</th></tr></thead><tbody><tr><td>在 <code>writeClipboard</code> 统一出口里全局剥 ANSI</td><td>把「提取层」的债记到「写出层」头上；CC 原文路径会被连带加工，违反 P1-1 单一真源的职责边界</td></tr><tr><td>内联手写 <code>/\x1b\[[0-9;]*m/g</code> 正则</td><td><code>stripAnsi.js:12-19</code> 实测该式漏剥 5/6 种序列形式；仓里已有全量覆盖的 <code>ansiSanitizer</code>，再造一把轮子就是把 2026-09-22 修过的坑再挖开</td></tr><tr><td>列换算改成「先 stripAnsi 整行、再按净文本算下标」</td><td>产出的下标对不上 <strong>raw 行</strong>，而 <code>Viewport.sliceLineForSelection</code> 高亮切片吃的是 raw 行 ⇒ 反色错得更远。正解是「跳过序列但保留 raw 下标」</td></tr><tr><td>为回滚新开 <code>KHY_CLIP_PLAIN</code> 之类的 env 门</td><td>撞门预算棘轮（<code>check-tui-gates.js:32</code> MAX_GATES 只降不升）；「让功能变正确」不构成用户可见权衡；且会把纯叶子拖进「读 env」的违约区</td></tr><tr><td>把 D-02/D-04 顺手修了</td><td>两套病灶一套测试，混修后回归无法归因（[DESIGN-ARCH-132] 的账）</td></tr></tbody></table>
+<table><thead><tr><th>✗ 别做</th><th>为什么</th></tr></thead><tbody><tr><td>在 <code>writeClipboard</code> 统一出口里全局剥 ANSI</td><td>把「提取层」的债记到「写出层」头上；CC 原文路径会被连带加工，违反 P1-1 单一真源的职责边界</td></tr><tr><td>内联手写 <code>/\x1b\[[0-9;]*m/g</code> 正则</td><td><code>stripAnsi.js:12-19</code> 实测该式漏剥 5/6 种序列形式；仓里已有全量覆盖的 <code>ansiSanitizer</code>，再造一把轮子就是把 2026-09-22 修过的坑再挖开</td></tr><tr><td>列换算改成「先 stripAnsi 整行、再按净文本算下标」</td><td>产出的下标对不上 <strong>raw 行</strong>，而 <code>Viewport.sliceLineForSelection</code> 高亮切片吃的是 raw 行 ⇒ 反色错得更远。正解是「跳过序列但保留 raw 下标」</td></tr><tr><td>为回滚新开 <code>KHY_CLIP_PLAIN</code> 之类的 env 门</td><td>撞门预算棘轮（<code>check-tui-gates.js:32</code> MAX_GATES 只降不升）；「让功能变正确」不构成用户可见权衡；且会把纯叶子拖进「读 env」的违约区</td></tr><tr><td>把 D-02/D-04 顺手修了</td><td>两套病灶一套测试，混修后回归无法归因（[DESIGN-ARCH-132] 的账）</td></tr></tbody></table>
 <h2 id="7-验收方式-可复现命令-关联门禁">7. 验收方式（可复现命令 + 关联门禁）<a class="anchor" href="#7-验收方式-可复现命令-关联门禁" aria-label="锚点">#</a></h2>
 <p><strong>基线（2026-09-24 实测，验收尺子）</strong>：</p>
 <pre><code>node --test services/backend/tests/cli/tui/selection{,DisplayCol,AnchorDrift,Relocate}.test.js
