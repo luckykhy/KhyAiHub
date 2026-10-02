@@ -30,7 +30,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
       <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-brand/5 to-background p-12">
         <div className="max-w-md text-center">
           <div className="w-20 h-20 rounded-3xl bg-brand/10 flex items-center justify-center text-5xl mx-auto mb-6">
-            🤖
+            ❯
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-3">Welcome to KhyOS</h1>
           <p className="text-base text-foreground/60 leading-relaxed">
@@ -38,10 +38,10 @@ export function LoginPage({ onLogin }: LoginPageProps) {
           </p>
           <div className="mt-8 grid grid-cols-2 gap-3 text-left">
             {[
-              { icon: '💻', label: '智能编码', desc: 'AI 辅助编写代码' },
-              { icon: '🔧', label: '自动调试', desc: '定位并修复 bug' },
-              { icon: '📝', label: '文档生成', desc: '自动生成项目文档' },
-              { icon: '🔄', label: '重构优化', desc: '优化代码结构' },
+              { icon: '◆', label: '智能编码', desc: 'AI 辅助编写代码' },
+              { icon: '✱', label: '自动调试', desc: '定位并修复 bug' },
+              { icon: '▸', label: '文档生成', desc: '自动生成项目文档' },
+              { icon: '↻', label: '重构优化', desc: '优化代码结构' },
             ].map(item => (
               <div key={item.label} className="p-3 rounded-xl bg-card border border-card-border">
                 <span className="text-xl">{item.icon}</span>
@@ -137,7 +137,7 @@ export function WelcomePage({ onContinue }: { onContinue: () => void }) {
     <div className="h-full flex flex-col items-center justify-center bg-background p-8">
       <div className="max-w-lg text-center animate-fade-in">
         <div className="w-16 h-16 rounded-2xl bg-brand/10 flex items-center justify-center text-3xl mx-auto mb-6">
-          🤖
+          ❯
         </div>
         <h1 className="text-2xl font-bold text-foreground mb-2">{greeting}</h1>
         <p className="text-base text-foreground/50 mb-8">
@@ -146,10 +146,10 @@ export function WelcomePage({ onContinue }: { onContinue: () => void }) {
 
         <div className="grid grid-cols-2 gap-3 mb-8">
           {[
-            { icon: '💻', label: '编写代码', desc: '实现新功能', prompt: '帮我写一个排序算法' },
-            { icon: '🐛', label: '调试问题', desc: '定位并修复 bug', prompt: '帮我调试这段代码' },
-            { icon: '📝', label: '重构代码', desc: '优化代码结构', prompt: '帮我重构这个模块' },
-            { icon: '📖', label: '生成文档', desc: '编写项目文档', prompt: '帮我生成 API 文档' },
+            { icon: '◆', label: '编写代码', desc: '实现新功能', prompt: '帮我写一个排序算法' },
+            { icon: '✳', label: '调试问题', desc: '定位并修复 bug', prompt: '帮我调试这段代码' },
+            { icon: '▸', label: '重构代码', desc: '优化代码结构', prompt: '帮我重构这个模块' },
+            { icon: '✲', label: '生成文档', desc: '编写项目文档', prompt: '帮我生成 API 文档' },
           ].map(item => (
             <button
               key={item.label}
