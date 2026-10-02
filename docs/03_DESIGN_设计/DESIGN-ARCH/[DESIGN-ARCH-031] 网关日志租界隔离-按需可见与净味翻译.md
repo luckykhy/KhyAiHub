@@ -42,11 +42,11 @@ warp / localllm / ollama / api / relay …）。它们的内部维护动作—�
 
 | 触发场景 | 可见? | 去向 | 示例 |
 | --- | --- | --- | --- |
-| 当前任务**未使用**该适配器 | ❌ 绝对不可见 | L1（开发日志）/ DROP | 用 DeepSeek 时 Kiro Token 刷新失败 → 主流无输出 |
-| 当前任务**正在使用**该适配器 | ✅ 可见（净味后） | L0 用户流（友好句）/ 纯噪音→DROP | 用 Kiro 时 API 报错 → 「当前模型响应异常，正在自动修复…」 |
-| 用户**查网关状态** | ✅ 全量可见 | L0（脱敏摘要，保留适配器名） | `/gateways` → 显示 `kiro: Token 过期` |
-| **静默沙箱**（init/Token 刷新） | ❌ 不可见 | BUFFER（上下文缓冲，可回放） | Token 刷新内部输出 → 全部进 buffer，主流寂静 |
-| 进程崩溃 / 全局异常 | ⚠️ 仅结构化摘要 | L1（debug.log / 内存环） | UnhandledRejection（适配器可归因）→ 写 L1 |
+| 当前任务**未使用**该适配器 | ✗ 绝对不可见 | L1（开发日志）/ DROP | 用 DeepSeek 时 Kiro Token 刷新失败 → 主流无输出 |
+| 当前任务**正在使用**该适配器 | ✓ 可见（净味后） | L0 用户流（友好句）/ 纯噪音→DROP | 用 Kiro 时 API 报错 → 「当前模型响应异常，正在自动修复…」 |
+| 用户**查网关状态** | ✓ 全量可见 | L0（脱敏摘要，保留适配器名） | `/gateways` → 显示 `kiro: Token 过期` |
+| **静默沙箱**（init/Token 刷新） | ✗ 不可见 | BUFFER（上下文缓冲，可回放） | Token 刷新内部输出 → 全部进 buffer，主流寂静 |
+| 进程崩溃 / 全局异常 | ⚠ 仅结构化摘要 | L1（debug.log / 内存环） | UnhandledRejection（适配器可归因）→ 写 L1 |
 
 通道（channel）取值：`L0`=用户流（净味后）· `L1`=开发日志 · `BUFFER`=沙箱缓冲 · `DROP`=/dev/null。
 

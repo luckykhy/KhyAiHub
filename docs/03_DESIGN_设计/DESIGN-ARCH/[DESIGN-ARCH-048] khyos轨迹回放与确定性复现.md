@@ -9,13 +9,15 @@
 - [DESIGN-ARCH-022] 多实例跨进程文件锁（回放经 executeTool 漏斗，文件锁全程保留）
 
 实现位置：
-- `services/backend/src/services/trajectoryReplay/`（新核子系统，6 纯模块 + barrel）
+- `services/backend/src/services/domain/trajectory/trajectoryReplay/`（新核子系统，8 纯模块 + barrel）
   - `replayLedger.js`——回放账本读写（sidecar `*.replay-ledger.jsonl`，镜像 traceChain 原子/路径）+ 会话级内容仓（内容寻址）
   - `tierRegistry.js`——回放分档单一真源（`TIER{FILE,SHELL,NETWORK_AI}` frozen；`normalize`/`classify`/`effectiveTier`，未知→SHELL 最保守）
   - `artifactHash.js`——`sha256Hex` 薄封装 + params/result 规范哈希（全 fail-soft）
   - `envFingerprint.js`——环境指纹 `capture`/`compare`（os/node/cwd/toolchain/manifestHash，缺项→null）
   - `replayBundle.js`——自包含回放包 `exportBundle`/`readBundle`/`verifyBundle`（manifest + ledger + env + 内容仓 + 可选链）
   - `replayEngine.js`——分档重放引擎 `replay(bundle,opts)`（环境闸 → 分档 → 前置防呆 → 漏斗重放 → 产物校验 → 分歧即停）
+  - `replayArtifactGuards.js`——步前/步后产物状态防呆（防呆⑥ precondition / 防呆③ verify），自 `replayEngine.js` 行为中性抽出；只依赖 fs + `./artifactHash`，不回指引擎（无环）
+  - `replayStepPolicy.js`——逐步回放策略取值（`DEFAULT_STEP_TIMEOUT_MS`、超时/批准模式），同为压到 400 行纳管上限的行为中性抽出；惰性 require execApproval 符号/模式助手
   - `index.js`——barrel
 - `services/backend/src/services/toolUseLoop.js`——并行批与顺序两处 `_finalizeWriteDiff` 后各加 best-effort `recordToolTurn`（result 后执行，绝不改 result/模型可见内容）
 - `services/backend/src/services/toolCalling.js`——`_runDepHealing` 加一行 `if (traceContext?.replay) return null;`（回放旁路依赖自愈这一非确定性副作用；normal run 无此标志，零回归）

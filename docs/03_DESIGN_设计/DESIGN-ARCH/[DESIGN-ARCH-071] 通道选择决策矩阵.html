@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -30,7 +30,7 @@
 <blockquote><p><strong>定位</strong>：任何操作者（AI 助手、agent 工具循环、REPL、人类、外部脚本）要对 khy-os 做「一次读取或一次操作」时，在五条通道之间做选择的<strong>单一真源</strong>。<br><strong>适用边界</strong>：只裁决「用哪条通道完成这次操作」，不新增运行时业务逻辑，不替代 <code>[DESIGN-LAY-005]</code>（代码层级与依赖方向）、<code>[DESIGN-GOV-001]</code>（治理板块）、<code>[DESIGN-ARCH-056]</code>（桌面操控实现）；冲突时以各单一真源为准。<br><strong>首屏速查</strong>：<code>AGENTS.md</code> 架构速查的「通道选择判定」节是本矩阵的压缩版，二者必须同步修改。</p></blockquote>
 <hr>
 <h2 id="0-五通道定义与真源">0. 五通道定义与真源<a class="anchor" href="#0-五通道定义与真源" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>通道</th><th>名称</th><th>入口 / 真源</th><th>前置条件</th></tr></thead><tbody><tr><td>CH-1 直接读状态</td><td>只读数据文件</td><td>数据目录（<code>src/utils/dataHome.js</code> 解析：env → <code>.khy/.location.json</code> → established-wins → 兜底；legacy <code>~/.khyquant</code>）</td><td>schema 已知且稳定；<strong>仅限只读</strong></td></tr><tr><td>CH-2 服务层直调</td><td>同进程函数调用</td><td><code>require('.../src/services/&lt;模块&gt;')</code>（<code>AGENTS.md</code> 关键入口点表为索引）</td><td>调用方与 backend 同一 Node 进程</td></tr><tr><td>CH-3 CLI</td><td><code>khy &lt;命令&gt;</code></td><td><code>src/cli/router.js</code>（大 switch）+ <code>aliases.js</code>（中文/拼音别名）</td><td>本机可运行 khy（Python 启动器 → <code>bin/khy.js</code>）</td></tr><tr><td>CH-4 Web API</td><td>HTTP/WS/SSE → <code>src/routes/</code></td><td><code>server.js</code>（Express + WS 同端口）+ <code>constants/serviceDefaults.js</code>（端口真源）；运行时发现：数据目录 <code>ai_manage_runtime.json</code> 的 <code>apiPort</code></td><td>server 在跑，或可被 CH-3 拉起（<code>khy server start</code>）</td></tr><tr><td>CH-5 看屏幕</td><td>截图与视觉观察</td><td><code>services/desktopControl/</code>（<code>screenCapture.js</code> + <code>safetyGate.js</code>）、<code>services/computerUse/</code>、L6 <code>tools/deepseek-eyes</code>（截图→VL 模型→文字）</td><td><code>KHY_DESKTOP_CONTROL</code> 总闸开启 + safetyGate 审批放行</td></tr></tbody></table>
+<table><thead><tr><th>通道</th><th>名称</th><th>入口 / 真源</th><th>前置条件</th></tr></thead><tbody><tr><td>CH-1 直接读状态</td><td>只读数据文件</td><td>数据目录（<code>src/utils/dataHome.js</code> 解析：env → <code>.khy/.location.json</code> → established-wins → 兜底；legacy <code>~/.khyquant</code>）</td><td>schema 已知且稳定；<strong>仅限只读</strong></td></tr><tr><td>CH-2 服务层直调</td><td>同进程函数调用</td><td><code>require('.../src/services/&lt;模块&gt;')</code>（<code>AGENTS.md</code> 关键入口点表为索引）</td><td>调用方与 backend 同一 Node 进程</td></tr><tr><td>CH-3 CLI</td><td><code>khy &lt;命令&gt;</code></td><td><code>src/cli/router.js</code>（大 switch）+ <code>aliases.js</code>（中文/拼音别名）</td><td>本机可运行 khy（Python 启动器 → <code>bin/khy.js</code>）</td></tr><tr><td>CH-4 Web API</td><td>HTTP/WS/SSE → <code>src/routes/</code></td><td><code>server.js</code>（Express + WS 同端口）+ <code>constants/serviceDefaults.js</code>（端口真源）；运行时发现：数据目录 <code>ai_manage_runtime.json</code> 的 <code>apiPort</code></td><td>server 在跑，或可被 CH-3 拉起（<code>khy server start</code>）</td></tr><tr><td>CH-5 看屏幕</td><td>截图与视觉观察</td><td><code>services/domain/desktop/desktopControl/</code>（<code>screenCapture.js</code> + <code>safetyGate.js</code>）、<code>services/domain/desktop/computerUse/</code>、L6 <code>tools/deepseek-eyes</code>（截图→VL 模型→文字）</td><td><code>KHY_DESKTOP_CONTROL</code> 总闸开启 + safetyGate 审批放行</td></tr></tbody></table>
 <hr>
 <h2 id="1-判定顺序-五问-自上而下首个命中即停">1. 判定顺序（五问，自上而下首个命中即停）<a class="anchor" href="#1-判定顺序-五问-自上而下首个命中即停" aria-label="锚点">#</a></h2>
 <pre><code class="language-text">Q0 目标信息是否只存在于第三方 GUI 画面，或需要人工视觉验证渲染效果？

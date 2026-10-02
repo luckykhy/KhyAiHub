@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -36,7 +36,7 @@
 <hr>
 <h2 id="1-威胁模型-经外部-agent-中转的轨迹投毒">1. 威胁模型：经外部 agent 中转的轨迹投毒<a class="anchor" href="#1-威胁模型-经外部-agent-中转的轨迹投毒" aria-label="锚点">#</a></h2>
 <p>KhyOS 可把请求<strong>经任意外部 agent 中转</strong>（codex / claude-code / 任意中转 provider）。外部 agent 回传的内容会流进<br>KHY 自己的对话轨迹。现状是「半防御」的信任边界（已对代码核实）：</p>
-<table><thead><tr><th>面</th><th>现状</th><th>风险</th></tr></thead><tbody><tr><td>工具<strong>结果</strong></td><td>已被不信任——KHY 一律丢弃外部结果、本地重跑</td><td>✅ 保留</td></tr><tr><td>工具<strong>调用请求</strong></td><td>照单全收并直接驱动本地执行</td><td><strong>调用注入</strong></td></tr><tr><td>助手<strong>正文 + thinking</strong></td><td>原样存轨迹、原样渲染，无溯源、无核对</td><td><strong>夹带伪造</strong>（正文写「我已删库 / 测试全过」却从未发生）</td></tr><tr><td>codex-direct 执行</td><td>执行前强开全局 dangerous mode 自动批准</td><td><strong>无人值守执行</strong></td></tr><tr><td>JSONL transcript</td><td>无溯源标记、无防篡改</td><td>本地验证过的 turn 与外部「声称」的 turn 人机皆不可分</td></tr></tbody></table>
+<table><thead><tr><th>面</th><th>现状</th><th>风险</th></tr></thead><tbody><tr><td>工具<strong>结果</strong></td><td>已被不信任——KHY 一律丢弃外部结果、本地重跑</td><td>✓ 保留</td></tr><tr><td>工具<strong>调用请求</strong></td><td>照单全收并直接驱动本地执行</td><td><strong>调用注入</strong></td></tr><tr><td>助手<strong>正文 + thinking</strong></td><td>原样存轨迹、原样渲染，无溯源、无核对</td><td><strong>夹带伪造</strong>（正文写「我已删库 / 测试全过」却从未发生）</td></tr><tr><td>codex-direct 执行</td><td>执行前强开全局 dangerous mode 自动批准</td><td><strong>无人值守执行</strong></td></tr><tr><td>JSONL transcript</td><td>无溯源标记、无防篡改</td><td>本地验证过的 turn 与外部「声称」的 turn 人机皆不可分</td></tr></tbody></table>
 <p><strong>目标产出</strong>：一套轨迹溯源标准——每条轨迹条目带 <code>_khyTrace</code> 信封（谁产的 / 可信级别 / 是否本地验证），<br>防篡改哈希链，主动隔离注入调用，确定性正文矛盾核对；同一份结构化记录，机器读 JSONL，人读确定性标签视图 +<br><code>khy trace</code> 命令。</p>
 <hr>
 <h2 id="2-khytrace-信封-schema-khytrace-js-单一真源">2. <code>_khyTrace</code> 信封 schema（<code>khyTrace.js</code> 单一真源）<a class="anchor" href="#2-khytrace-信封-schema-khytrace-js-单一真源" aria-label="锚点">#</a></h2>

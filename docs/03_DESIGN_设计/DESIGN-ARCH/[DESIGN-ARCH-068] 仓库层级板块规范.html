@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -35,10 +35,10 @@
 <hr>
 <h2 id="一-层级表-l0-l6">一、层级表（L0–L6）<a class="anchor" href="#一-层级表-l0-l6" aria-label="锚点">#</a></h2>
 <p>顶层七个板块目录。<strong>目录名刻意不改</strong>（<code>services/backend</code> 被 832 个文件引用，其中 429 个在 <code>docs/</code> 下，改名收益不抵 churn）；层级由本表 + 守卫强制，不由目录名的字面顺序表达。</p>
-<table><thead><tr><th>层</th><th>目录</th><th>一句话职责</th><th>代表入口</th><th>语言</th></tr></thead><tbody><tr><td><strong>L0</strong></td><td><code>kernel/</code></td><td>手写 OS 内核：抢占式调度、按需分页、COW <code>fork</code>、POSIX 信号、ELF+PE 双加载器，QEMU 下引导</td><td><code>kernel/src/</code>、<code>kernel/boot/</code></td><td>C / ASM / MoonBit</td></tr><tr><td><strong>L1</strong></td><td><code>platform/</code></td><td>Python 启动器（探测环境、拉起 Node）+ 共享包 + 交付编排</td><td><code>platform/khy_platform/cli.py</code></td><td>Python / JS</td></tr><tr><td><strong>L2</strong></td><td><code>services/</code></td><td>Node 运行时，<strong>全部业务逻辑</strong>：CLI、AI 网关、各类 service、Web API</td><td><code>services/backend/bin/khy.js</code></td><td>Node.js</td></tr><tr><td><strong>L3</strong></td><td><code>apps/</code></td><td>平台<strong>自带</strong>的管理前端（AI 平台 UI）</td><td><code>apps/ai-frontend/</code></td><td>Vue 3 + Vite</td></tr><tr><td><strong>L4</strong></td><td><code>software/</code></td><td>跑在平台<strong>之上</strong>的内置默认应用（khyquant 量化终端）</td><td><code>software/khyquant/</code></td><td>Python + Vue</td></tr><tr><td><strong>L5</strong></td><td><code>extensions/</code></td><td><strong>内置拓展，随主包分发</strong>。布局两层 <code>extensions/&lt;分类&gt;/&lt;id&gt;/</code>，六个分类名与契约见 <code>[DESIGN-ARCH-069]</code> §2.3</td><td><code>extensions/tools/khy-markdown/</code>、<code>extensions/bridges/khy-trae-bridge/</code></td><td>Node.js</td></tr><tr><td><strong>L6</strong></td><td><code>tools/</code></td><td>独立开发者工具，<strong>不参与运行时</strong></td><td><code>tools/deepseek-eyes/</code></td><td>Node.js</td></tr></tbody></table>
+<table><thead><tr><th>层</th><th>目录</th><th>一句话职责</th><th>代表入口</th><th>语言</th></tr></thead><tbody><tr><td><strong>L0</strong></td><td><code>kernel/</code></td><td>手写 OS 内核：抢占式调度、按需分页、COW <code>fork</code>、POSIX 信号、ELF+PE 双加载器，QEMU 下引导</td><td><code>kernel/src/</code>、<code>kernel/boot/</code></td><td>C / ASM / MoonBit</td></tr><tr><td><strong>L1</strong></td><td><code>platform/</code></td><td>Python 启动器（探测环境、拉起 Node）+ 共享包 + 交付编排</td><td><code>platform/khy_platform/cli.py</code></td><td>Python / JS</td></tr><tr><td><strong>L2</strong></td><td><code>services/</code></td><td>Node 运行时，<strong>全部业务逻辑</strong>：CLI、AI 网关、各类 service、Web API</td><td><code>services/backend/bin/khy.js</code></td><td>Node.js</td></tr><tr><td><strong>L3</strong></td><td><code>apps/</code></td><td>平台<strong>自带</strong>的管理前端（AI 平台 UI）</td><td><code>apps/ai-frontend/</code></td><td>Vue 3 + Vite</td></tr><tr><td><strong>L4</strong></td><td><code>software/</code></td><td>跑在平台<strong>之上</strong>的独立项目载体（khyquant 量化终端：独立项目，连接平台使用）</td><td><code>software/khyquant/</code></td><td>Python + Vue</td></tr><tr><td><strong>L5</strong></td><td><code>extensions/</code></td><td><strong>内置拓展，随主包分发</strong>。布局两层 <code>extensions/&lt;分类&gt;/&lt;id&gt;/</code>，六个分类名与契约见 <code>[DESIGN-ARCH-069]</code> §2.3</td><td><code>extensions/tools/khy-markdown/</code>、<code>extensions/bridges/khy-trae-bridge/</code></td><td>Node.js</td></tr><tr><td><strong>L6</strong></td><td><code>tools/</code></td><td>独立开发者工具，<strong>不参与运行时</strong></td><td><code>tools/deepseek-eyes/</code></td><td>Node.js</td></tr></tbody></table>
 <h3 id="1-1-l3-与-l4-的分界-最容易混的一条">1.1 L3 与 L4 的分界（最容易混的一条）<a class="anchor" href="#1-1-l3-与-l4-的分界-最容易混的一条" aria-label="锚点">#</a></h3>
 <p><code>apps/</code> 与 <code>software/</code> 字面上是近义词，语义上不是：</p>
-<ul><li><strong><code>apps/</code> = 平台的一部分</strong>。<code>ai-frontend</code> 是 Khy-OS 自己的管理界面，没有它平台不完整。随主包分发。</li><li><strong><code>software/</code> = 跑在平台上的应用</strong>。khyquant 是<strong>内置默认应用，而非项目本身</strong>（见 <code>README.md</code> / <code>AGENTS.md</code> 同一表述）。它可以被替换、被卸载，平台照样成立。</li></ul>
+<ul><li><strong><code>apps/</code> = 平台的一部分</strong>。<code>ai-frontend</code> 是 Khy-OS 自己的管理界面，没有它平台不完整。随主包分发。</li><li><strong><code>software/</code> = 跑在平台上的应用</strong>。khyquant 是<strong>独立项目</strong>（人 2026-09-28 明示），它<strong>连接</strong> Khy-OS 使用；本目录只是它<strong>随平台分发/接入的载体</strong>，打包事实不改变其独立项目与独立著作权主体的定位（见 <code>README.md</code> / <code>AGENTS.md</code> 同一表述）。它可以被替换、被卸载，平台照样成立。</li></ul>
 <p><strong>判据</strong>：问「删掉它，Khy-OS 还是 Khy-OS 吗？」——是 → <code>software/</code>；不是 → <code>apps/</code>。</p>
 <h3 id="1-1b-l5-与-l6-的分界">1.1b L5 与 L6 的分界<a class="anchor" href="#1-1b-l5-与-l6-的分界" aria-label="锚点">#</a></h3>
 <p><code>extensions/</code> 与 <code>tools/</code> 都装「不是核的东西」，分界只有一条：<strong>参与运行时吗</strong>。</p>
@@ -53,7 +53,7 @@
 <p><code>dist-electron/</code> 是 Electron 便携版打包输出（<code>KhyOS-Desktop/</code> + <code>启动KhyOS.bat</code>），由 <code>electron-builder</code> 生成，2026-09-08 补登记。</p>
 <h3 id="1-4-根级例外目录-登记在册-不新增层级">1.4 根级例外目录（登记在册，不新增层级）<a class="anchor" href="#1-4-根级例外目录-登记在册-不新增层级" aria-label="锚点">#</a></h3>
 <p>有两个顶层目录既不属于 L0-L6，也不属于 §1.2 的横切层，但它们是历史遗留的根级实体，<br>不是误放的临时产物。守卫通过 <code>CROSSCUTTING</code> 登记它们，使 <code>layer-registry</code> 能区分<br>「已登记的例外」与「真新增的未登记目录」—— 后者仍会报错。</p>
-<table><thead><tr><th>目录</th><th>性质</th><th>说明</th></tr></thead><tbody><tr><td><code>electron/</code></td><td>根级 Electron 桌面壳</td><td><code>main.js</code> / <code>preload.js</code> / <code>services/</code>。入口是根 <code>package.json</code> 的 <code>electron:dev</code>（<code>node scripts/electron-dev.js</code>），依赖（<code>electron</code> 32.3.3 / <code>electron-builder</code>）也声明在根级。刻意未并入 <code>apps/</code>：它在根级独立构建与打包，且与 <code>apps/khyos-desktop/</code> 是两条并行产物线</td></tr><tr><td><code>tests/</code></td><td>测试债务登记</td><td>目前只含 <code>DEBT.md</code>（已知失败用例登记，真源见其内「最后更新」日期）。内容属文档性质，<strong>待迁 <code>docs/05_TEST_测试/</code></strong>；迁移完成前按根级例外登记，避免 <code>layer-registry</code> 每次报警</td></tr></tbody></table>
+<table><thead><tr><th>目录</th><th>性质</th><th>说明</th></tr></thead><tbody><tr><td><code>electron/</code></td><td><del>根级 Electron 桌面壳</del> <strong>已退役（Q10，2026-10-02）</strong></td><td>退役裁决见 [DESIGN-LAY-008] §21.4（R4 判词经复审更正：曾有 <code>electron:dev</code> 活入口，中搓下线后重搓删除）。桌面端唯一产物线为 <code>apps/khyos-desktop/</code>。存证：<code>.khy/feedback/q10-electron-retire-20261002/</code></td></tr><tr><td><code>tests/</code></td><td>测试债务登记</td><td>目前只含 <code>DEBT.md</code>（已知失败用例登记，真源见其内「最后更新」日期）。内容属文档性质，<strong>待迁 <code>docs/05_TEST_测试/</code></strong>；迁移完成前按根级例外登记，避免 <code>layer-registry</code> 每次报警</td></tr></tbody></table>
 <p><strong>新增例外目录的门槛</strong>：必须在 §1.4 表格补一行说明「为什么不能归入 L0-L6 或 §1.2 横切」，<br>再同步补 <code>scripts/ci/check-repo-layout.js</code> 的 <code>CROSSCUTTING</code>。只改脚本不改本文即视为违规。</p>
 <hr>
 <h2 id="二-依赖方向-允许边白名单">二、依赖方向（允许边白名单）<a class="anchor" href="#二-依赖方向-允许边白名单" aria-label="锚点">#</a></h2>

@@ -24,7 +24,7 @@
 | 第5章 Agent 即操作系统 | 从工具进化为 OS 的愿景 | `kernel/`(MoonBit 微内核)+ 后台任务 + `daemon*` + `bridge/` + 多 Agent 编排 | [DESIGN-ARCH-007/008] 微内核与系统边界、[DESIGN-ARCH-001] 移动智能体协议 |
 | 附录 术语表 | 术语对照 | 见本文 §6 khy 术语对照 | — |
 
-> ⚠️ **本文顺带纠正**若干在旧对比文档([MGMT-RPT-019])里已过期的说法(书写于更早,khy 已迭代):
+> ⚠ **本文顺带纠正**若干在旧对比文档([MGMT-RPT-019])里已过期的说法(书写于更早,khy 已迭代):
 > ① queryEngine 的 **V2 状态机已删除**,现为 legacy loop + 可选 harness 双路;
 > ② 全仓只有 **一个** `KHY_DEFER_TOOLS` defer 门,不存在复数 defer 门族;
 > ③ TUI 已切**官方 `ink` 包**(经 `inkRuntime.js` CJS 桥接),旧自研 Flux/VirtualScreen 已移除;

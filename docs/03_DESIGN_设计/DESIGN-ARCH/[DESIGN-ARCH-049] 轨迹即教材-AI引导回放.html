@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -35,7 +35,7 @@
 <p>绝不自动批准超录制策略的 SHELL/L2）</p>
 <ul><li><code>marshal/capabilityVector</code>（强/弱模型分级单一真源；marshal 引擎已归档，叶子 capabilityVector 仍在产）</li><li><code>selfHeal/microLoopExecutor</code>（<code>MAX_LOOP=1</code> 一次修复上限范式，本规范补桥镜像之）</li></ul>
 <p>实现位置：</p>
-<ul><li><code>services/backend/src/services/trajectoryGuide/</code>（新子系统，8 模块 + barrel；旋钮全 env、缺省安全）<ul><li><code>config.js</code>——env 旋钮单一真源（命名默认，全 off/保守）</li><li><code>aiBridge.js</code>——<strong>唯一触模型模块</strong>（在引擎外）：repair 钩子工厂，per-seq 计数强制 <code>MAX=repairMax()</code></li><li><code>mapAuthor.js</code>——蒸馏轨迹为地图模板（强模型闸；确定性 qualityScore；产 map.json + SKILL.md 两格式）</li><li><code>mapStore.js</code>——地图持久化（<code>getProjectDataDir('trajectoryGuide','maps')</code>，原子写，纯 FS）</li><li><code>mapExport.js</code>——地图导出进技能生态（委托 <code>skillPackageService.importSkill</code>，md|folder）</li><li><code>guideRetriever.js</code>——为新任务检索相关地图（复用 <code>learningRetrieval.buildContext</code> + <code>extraPaths</code>，质量分混合）</li><li><code>guideInjector.js</code>——弱模型限定的「推荐路径」系统提示词块（纯函数、可每轮安全调用）</li><li><code>index.js</code>——barrel</li></ul></li><li><code>services/backend/src/services/trajectoryReplay/replayEngine.js</code>——纯增量补丁：新增私有 <code>_maybeRepair</code> +</li></ul>
+<ul><li><code>services/backend/src/services/trajectoryGuide/</code>（新子系统，8 模块 + barrel；旋钮全 env、缺省安全）<ul><li><code>config.js</code>——env 旋钮单一真源（命名默认，全 off/保守）</li><li><code>aiBridge.js</code>——<strong>唯一触模型模块</strong>（在引擎外）：repair 钩子工厂，per-seq 计数强制 <code>MAX=repairMax()</code></li><li><code>mapAuthor.js</code>——蒸馏轨迹为地图模板（强模型闸；确定性 qualityScore；产 map.json + SKILL.md 两格式）</li><li><code>mapStore.js</code>——地图持久化（<code>getProjectDataDir('trajectoryGuide','maps')</code>，原子写，纯 FS）</li><li><code>mapExport.js</code>——地图导出进技能生态（委托 <code>skillPackageService.importSkill</code>，md|folder）</li><li><code>guideRetriever.js</code>——为新任务检索相关地图（复用 <code>learningRetrieval.buildContext</code> + <code>extraPaths</code>，质量分混合）</li><li><code>guideInjector.js</code>——弱模型限定的「推荐路径」系统提示词块（纯函数、可每轮安全调用）</li><li><code>index.js</code>——barrel</li></ul></li><li><code>services/backend/src/services/domain/trajectory/trajectoryReplay/replayEngine.js</code>——纯增量补丁：新增私有 <code>_maybeRepair</code> +</li></ul>
 <p>5 处 seam 守卫分支 + <code>summary.repaired</code> 字段（<strong>无任何模型 import</strong>；缺省 <code>opts.repair</code> 缺席 = 字节级 048 原引擎）</p>
 <ul><li><code>services/backend/src/cli/ai.js</code>——<code>makeSystemPrompt</code> 之后追加 <code>trajectoryGuideBlock</code>（异步预算、同步追加；缓存零污染）</li><li><code>services/backend/src/cli/handlers/replay.js</code>——<code>run</code> 加 <code>--ai</code> flag，仅 env/<code>--ai</code> 开时构造 <code>opts.repair</code></li><li><code>services/backend/src/cli/handlers/guide.js</code>（新）+ <code>router.js</code> + <code>constants/commandSchema.js</code> + <code>cli/aliases.js</code>——<code>khy guide</code> 命令接线</li></ul>
 <p>验收测试（node:test；共 36 例 + 048 零回归 38 例）：</p>

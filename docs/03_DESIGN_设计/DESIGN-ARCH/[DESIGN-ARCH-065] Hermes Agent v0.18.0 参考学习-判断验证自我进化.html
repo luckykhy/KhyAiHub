@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -81,7 +81,7 @@
 <h3 id="4-1-设计">4.1 设计<a class="anchor" href="#4-1-设计" aria-label="锚点">#</a></h3>
 <p>在 <code>goalStopGate.evaluateGoalStop</code> 的 <code>satisfied</code> 分支<strong>插入一道证据校验</strong>（不改既有判定语义，只加拦截）：<br>当达成判定<strong>建立在一个「验证声称」之上</strong>（如「已验证通过」「全部测试通过」「all tests passed」）却<br><strong>看不到任何具体证据</strong>时，把 <code>clear/satisfied</code> <strong>降级为 <code>redrive</code></strong>，注入一条要求出具证据的指令。</p>
 <ul><li>纯叶子实现（Khy-OS 侧锚点，均在 <code>services/backend/src/services/goalStopGate.js</code>）：<ul><li><code>_VERIFICATION_CLAIM_RE</code>：识别「验证/测试/检查成功」的声称。</li><li><code>_EVIDENCE_RE</code> + <code>hasConcreteEvidence(reply)</code>：识别真实产物——代码块 ```<code> </code>`<code> </code>```、测试通过数</li></ul></li></ul>
-<p>（<code>12 passed</code>/<code>8 通过</code>）、比值（<code>9/9</code>）、退出码（<code>exit code 0</code>/<code>退出码 0</code>）、TAP/node:test 行<br>    （<code>ok 1</code>/<code># pass 8</code>）、对勾叉号（✓✔✅❌）、jest <code>PASS</code>/<code>FAIL</code>、shell 提示符（<code>$ …</code>）、测试框架<br>    调用（<code>npm test</code>/<code>node --test</code>/<code>pytest</code>/<code>jest</code>）。</p>
+<p>（<code>12 passed</code>/<code>8 通过</code>）、比值（<code>9/9</code>）、退出码（<code>exit code 0</code>/<code>退出码 0</code>）、TAP/node:test 行<br>    （<code>ok 1</code>/<code># pass 8</code>）、对勾叉号（✓✔✓✗）、jest <code>PASS</code>/<code>FAIL</code>、shell 提示符（<code>$ …</code>）、测试框架<br>    调用（<code>npm test</code>/<code>node --test</code>/<code>pytest</code>/<code>jest</code>）。</p>
 <ul><li><code>claimsVerificationWithoutEvidence(reply)</code>：<strong>声称验证 ∧ 无证据</strong> → true。</li><li><code>buildEvidenceRedriveMessage(goal)</code>：要求<strong>实际运行</strong>验证并<strong>原样粘贴</strong>输出后再收尾。</li><li><code>isEvidenceGateEnabled(env)</code>：门 <code>KHY_GOAL_EVIDENCE_GATE</code>，父 <code>KHY_GOAL_STOP_GATE</code>。</li></ul>
 <h3 id="4-2-判定流-evaluategoalstop-内">4.2 判定流（evaluateGoalStop 内）<a class="anchor" href="#4-2-判定流-evaluategoalstop-内" aria-label="锚点">#</a></h3>
 <pre><code>satisfied?

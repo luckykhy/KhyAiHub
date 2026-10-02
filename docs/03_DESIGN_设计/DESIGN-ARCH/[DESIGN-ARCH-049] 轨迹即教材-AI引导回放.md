@@ -23,7 +23,7 @@
   - `guideRetriever.js`——为新任务检索相关地图（复用 `learningRetrieval.buildContext` + `extraPaths`，质量分混合）
   - `guideInjector.js`——弱模型限定的「推荐路径」系统提示词块（纯函数、可每轮安全调用）
   - `index.js`——barrel
-- `services/backend/src/services/trajectoryReplay/replayEngine.js`——纯增量补丁：新增私有 `_maybeRepair` +
+- `services/backend/src/services/domain/trajectory/trajectoryReplay/replayEngine.js`——纯增量补丁：新增私有 `_maybeRepair` +
   5 处 seam 守卫分支 + `summary.repaired` 字段（**无任何模型 import**；缺省 `opts.repair` 缺席 = 字节级 048 原引擎）
 - `services/backend/src/cli/ai.js`——`makeSystemPrompt` 之后追加 `trajectoryGuideBlock`（异步预算、同步追加；缓存零污染）
 - `services/backend/src/cli/handlers/replay.js`——`run` 加 `--ai` flag，仅 env/`--ai` 开时构造 `opts.repair`

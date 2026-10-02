@@ -92,7 +92,7 @@ khy maintain <gen|refresh|check|show|link|hook>   # 仍分流到 .ai/ 元数据 
 另有留守调用方）**保留在宿主**，由唯一调用点 `handleWindsurfModelConfigs` 在传入编码器前完成，与原内联
 `dedupeModels(models)` 语义**逐字节等价**。
 
-> ⚠️ **2026-09-23 更新**：Windsurf 适配器已随其 IDE 被 Cognition 退役更名 Devin Desktop 而下线，
+> ⚠ **2026-09-23 更新**：Windsurf 适配器已随其 IDE 被 Cognition 退役更名 Devin Desktop 而下线，
 > `gateway/windsurfProtobuf.js` 及其特征化测试同批物理删除
 > （存证 `.khy/feedback/windsurf-adapter-retire-20260923/`）。本节保留为当时的降债记录。
 
@@ -450,7 +450,7 @@ agentFsService 侧 `require('../receiptService')` 字面**彻底消失**，2 节
 - `services/backend/tests/services/samplingPolicy.test.js` — 5 例 node:test（lockTopP 恒 0.85·creative 0.3/非 0.1·isCreativeRequest 中英命中与空安全·runtime 经叶子 re-export 行为逐字不变·叶子源码含注释无 require 调用语法）
 - `services/backend/src/services/khyUpgradeRuntime.js` — 采样三函数改 `require('./samplingPolicy')` 并保留 `lockTemperature`/`lockTopP` 导出（导出面逐字不变）
 - `services/backend/src/services/gateway/adapters/{ollamaAdapter,localLLMAdapter}.js` — 采样锁借用从 `khyUpgradeRuntime` 改指零依赖叶子 `samplingPolicy`（双双脱离 SCC）
-- `services/backend/src/services/agentFs/agentFsService.js` — `describeAssets(id, opts)` 回执计数改注入 `opts.countReceipts`（不再 `require('../receiptService')`），整条 2 节点独立环消解（§6.9）
+- `services/backend/src/services/domain/agents/agentFs/agentFsService.js` — `describeAssets(id, opts)` 回执计数改注入 `opts.countReceipts`（不再 `require('../receiptService')`），整条 2 节点独立环消解（§6.9）
 - `services/backend/src/cli/handlers/companion.js` — `assets` 视图注入 receiptService 计数器给 `describeAssets`（依赖方向反转，调用方本就持 receiptService）
 - `services/backend/tests/services/agentFsDescribeAssets.test.js` — 4 例 node:test（注入计数器原样透出·无注入器→0·注入器抛错→0·**源码级断言** agentFsService 不得再 require receiptService）
 - `services/backend/src/services/textHeuristics.js` — **新**：文本启发式零依赖叶子（`estimateTokens`/`isGreeting` 纯函数 + `GREETING_EXACT` 单一真源，从 khyUpgradeRuntime 整簇下沉，切断 `inputSanitizer→khyUpgradeRuntime` 边，巨型 SCC 32→31，§6.10）

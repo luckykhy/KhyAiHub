@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -70,7 +70,7 @@
 <hr>
 <h2 id="四-接线审计基线-2026-06-30-核出">四、接线审计基线(2026-06-30 核出)<a class="anchor" href="#四-接线审计基线-2026-06-30-核出" aria-label="锚点">#</a></h2>
 <p>用 node(非 grep)对全功能面做一致性审计,结论:</p>
-<table><thead><tr><th>审计项</th><th>方法</th><th>结论</th></tr></thead><tbody><tr><td>命令名→switch case</td><td>195 名(含别名)vs 203 case 双向差集</td><td>✅ 每个命令名都有 case,无半登记</td></tr><tr><td>未匹配 case</td><td>6 个</td><td>✅ 全有解(3 别名堆叠 + 3 CLI 专用)</td></tr><tr><td>孤儿叶子</td><td>fs 扫 165 叶子的全仓 require 引用(29226 文件穷尽)</td><td>✅ <strong>0 个事故性孤儿</strong>(<code>cli/pty.js</code> 已对账为保留能力)</td></tr><tr><td>死门控</td><td>GUARDS 声明门控 vs 代码读取</td><td>✅ 0 个(候选均假阳性:setup.py/computed read)</td></tr></tbody></table>
+<table><thead><tr><th>审计项</th><th>方法</th><th>结论</th></tr></thead><tbody><tr><td>命令名→switch case</td><td>195 名(含别名)vs 203 case 双向差集</td><td>✓ 每个命令名都有 case,无半登记</td></tr><tr><td>未匹配 case</td><td>6 个</td><td>✓ 全有解(3 别名堆叠 + 3 CLI 专用)</td></tr><tr><td>孤儿叶子</td><td>fs 扫 165 叶子的全仓 require 引用(29226 文件穷尽)</td><td>✓ <strong>0 个事故性孤儿</strong>(<code>cli/pty.js</code> 已对账为保留能力)</td></tr><tr><td>死门控</td><td>GUARDS 声明门控 vs 代码读取</td><td>✓ 0 个(候选均假阳性:setup.py/computed read)</td></tr></tbody></table>
 <h3 id="已对账缺口-cli-pty-js-刻意保留-不接线">已对账缺口:<code>cli/pty.js</code>(刻意保留,不接线)<a class="anchor" href="#已对账缺口-cli-pty-js-刻意保留-不接线" aria-label="锚点">#</a></h3>
 <p>完整实现了 <code>/bash</code> 全 PTY 交互 shell(支持 sudo/vim/top,node-pty 不可用时降级 child_process),导出<br><code>launchPtyShell</code>/<code>isPtyAvailable</code>——经 29226 文件穷尽核查<strong>零引用</strong>,schema/router/case 三处皆无 <code>bash</code><br>命令,连 <code>[DESIGN-ARCH-053]</code> 里的 <code>pty</code> 也只是输出折叠 scope 的<strong>工具名字符串</strong>而非本模块。</p>
 <p><strong>处置(已落 GUARDS 红线三)</strong>:<strong>保留且刻意不接线</strong>。</p>

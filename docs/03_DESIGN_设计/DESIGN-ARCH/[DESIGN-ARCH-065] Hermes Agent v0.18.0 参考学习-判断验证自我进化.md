@@ -107,7 +107,7 @@ chat-completions 调用，扇出到「参考模型」，再让 aggregator 作为
   - `_VERIFICATION_CLAIM_RE`：识别「验证/测试/检查成功」的声称。
   - `_EVIDENCE_RE` + `hasConcreteEvidence(reply)`：识别真实产物——代码块 ```` ``` ````、测试通过数
     （`12 passed`/`8 通过`）、比值（`9/9`）、退出码（`exit code 0`/`退出码 0`）、TAP/node:test 行
-    （`ok 1`/`# pass 8`）、对勾叉号（✓✔✅❌）、jest `PASS`/`FAIL`、shell 提示符（`$ …`）、测试框架
+    （`ok 1`/`# pass 8`）、对勾叉号（✓✔✓✗）、jest `PASS`/`FAIL`、shell 提示符（`$ …`）、测试框架
     调用（`npm test`/`node --test`/`pytest`/`jest`）。
   - `claimsVerificationWithoutEvidence(reply)`：**声称验证 ∧ 无证据** → true。
   - `buildEvidenceRedriveMessage(goal)`：要求**实际运行**验证并**原样粘贴**输出后再收尾。

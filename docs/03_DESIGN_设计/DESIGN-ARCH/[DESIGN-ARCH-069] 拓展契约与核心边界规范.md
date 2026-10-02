@@ -136,8 +136,8 @@ khy 是复合项目，长期缺一条「核在哪儿结束」的线，后果是�
 
 | 目标拓展 id | 现位置 | 状态 |
 | --- | --- | --- |
-| `khy-markdown` | `extensions/tools/khy-markdown/`（原 `tools/khyos-markdown/`） | **✅ 已迁移**（第一个试点） |
-| `khy-notebook` | `extensions/tools/khy-notebook/`（原 `…/src/tools/NotebookEditTool/`） | **✅ 已迁移**（第一个迁出核的**内置工具**） |
+| `khy-markdown` | `extensions/tools/khy-markdown/`（原 `tools/khyos-markdown/`） | **✓ 已迁移**（第一个试点） |
+| `khy-notebook` | `extensions/tools/khy-notebook/`（原 `…/src/tools/NotebookEditTool/`） | **✓ 已迁移**（第一个迁出核的**内置工具**） |
 | `khy-trae-bridge` | `extensions/bridges/khy-trae-bridge/` | 已在位，`kind: ide-bridge` |
 | `khy-quant` | `software/khyquant/` | **Phase 0 已断边**（见 §3.4 第三种形态）；Phase 1 搬目录待做 |
 | `khy-eyes` | `tools/deepseek-eyes/` | 待迁移 |
@@ -148,7 +148,7 @@ khy 是复合项目，长期缺一条「核在哪儿结束」的线，后果是�
 | `khy-web-admin` | `services/backend/src/{routes,models,controllers}` | 待迁移（体量最大，最后做） |
 | `khy-ai-frontend` | `apps/ai-frontend/` | 待迁移 |
 
-> `khy-quant` 的迁移**不改变** `[DESIGN-ARCH-068]` 对 `software/` 的定义：khyquant 现在就是「内置默认应用而非项目本身」，做成拓展是把这句话落到机器上，不是新的定位。
+> `khy-quant` 的迁移**不改变** `[DESIGN-ARCH-068]` 对 `software/` 的定义：khyquant 是**独立项目**，做成拓展只是把「它连接平台使用、不是平台的组成部分」这句话落到机器上，不是新的定位。
 
 > **`khy-quant` 分两步做，原因见 §3.4 第三种形态。** Phase 0（断边）已完成：57 个壳改走服务名、`server.js` 改 fail-soft 挂载，实测移开 `software/khyquant` 后服务器仍能启动并汇报「已跳过 21/21 条量化应用路由」——改前是加载期 `MODULE_NOT_FOUND`，整机不可用。Phase 1（搬目录）剩下的是纯 `git mv` + 加一份声明 `provides: ["quant-app"]` 的 manifest + 删掉解析器里的迁移期兜底，**核一行都不用改**；另有约 40 处非文档引用（CI workflow / `MANIFEST.in` / 便携构建脚本 / workspace 声明 / 版本轨道 3）要跟着改，那是 Phase 1 的主要工作量。
 >
