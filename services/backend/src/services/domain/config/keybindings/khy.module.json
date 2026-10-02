@@ -1,0 +1,46 @@
+{
+  "name": "keybindings",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "实测边：historyReverseSearch.js 零 require（纯搜索叶子，isEnabled 的 env 由入参注入，默认形参是 process.env）；keybindingCatalog.js → ../../../../utils/isOffValue（D3，off 值判定单一真源）。无 D1 边，故无需登记偏差。",
+  "fanIn": 6,
+  "fanInEvidence": [
+    "services/backend/src/cli/handlers/keybindings.js",
+    "services/backend/src/cli/tui/ink-components/HelpMenu.js",
+    "services/backend/src/cli/tui/ink-components/App.js",
+    "services/backend/src/cli/tui/ink-components/HistorySearchOverlay.js",
+    "services/backend/src/cli/tui/chatChords.js",
+    "services/backend/src/services/keybindings/index.js"
+  ],
+  "_fanIn_note": "非测试消费者 6 个（去重）。utils/flagRegistry/index.js 与 utils/isOffValue.js 也在文本里提到本单元，但实测只是注释（旗册登记与收敛来源说明），不构成 require 边，未计入。",
+  "behaviourTestsOutsideUnit": [
+    "services/backend/tests/services/keybindings/keybindingCatalog.test.js",
+    "services/backend/tests/services/historyReverseSearch.test.js",
+    "services/backend/tests/cli/tui/chatChordsHelpSync.test.js",
+    "services/backend/tests/tui/helpMenuSize.test.js"
+  ],
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-29",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "晋级三判据齐：单元级 README.md、整数 fanIn、两个源文件各有同名同目录测试。单元早于 entry-buffer 守卫。",
+  "contract": {
+    "purity": "两个成员都是零 IO 确定性叶子：keybindingCatalog 不触盘不读 env（env 经 isEnabled(env) 注入），historyReverseSearch 只做子串匹配与游标推进，渲染与 IO 归薄壳（App.js / HistorySearchOverlay.js / handlers/keybindings.js / HelpMenu.js）。",
+    "ioOwner": "本单元无 IO 面。",
+    "injectionPoints": [
+      "selectCatalog(opts) / formatCatalog(groups) — 目录与筛选条件全经入参",
+      "isEnabled(env) — 门控值注入（catalog 用 KHY_KEYBINDINGS，搜索叶子用 KHY_HISTORY_REVERSE_SEARCH）",
+      "search(history, query, {from}) / nextMatch(history, state) — 历史数组与游标由调用方给定"
+    ],
+    "gates": "KHY_KEYBINDINGS（default-on，off 值 ∈ ''/0/false/off/no，委托 utils/isOffValue）；KHY_HISTORY_REVERSE_SEARCH（default-on，off 值 ∈ 0/false/off/no，注意空串在本叶子算「开」而 catalog 侧算「关」——两侧 off 集不完全一致，已各自钉住）",
+    "byte_identity": "formatCatalog 的键列右对齐到本组最长键宽 +2 空格、组间恰好一个空行、不含任何 ANSI 颜色（着色归薄壳）；search 的 matches 天然按新→旧排序，nextMatch 到最旧一条停住不回绕（bash reverse-i-search 语义）。",
+    "honest_boundary": "键位目录刻意只对齐 Claude Code 可兑现的一半：没有「配置文件 → 解析 → 喂处理器」的重映射通路，因此不提供跑不通的重映射引擎；条目文案把终端送达能力写进数据（Ctrl+J 实测可用；Shift/Ctrl/Alt+Enter 标注终端前提），新增键位除处理器外须在真终端做字节捕获复核（BUG-35 教训）。"
+  },
+  "tests": [
+    "keybindingCatalog.test.js",
+    "historyReverseSearch.test.js"
+  ],
+  "_test_dialect_note": "两份共置测试为 node:test 方言（node --test <显式文件名>）。ESSENTIAL_SHORTCUTS 实测 18 条，而源码注释写「只列最常用的 15 条」——属文档漂移，测试已按实测 18 钉住并在注释里登记，改码或改注释时二者必须同步。"
+}
