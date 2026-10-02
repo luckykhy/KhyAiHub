@@ -96,7 +96,7 @@ function buildStatusText(snapshot) {
   const s = snapshot && typeof snapshot === 'object' ? snapshot : {};
   const active = s.proactive === true;
   const lines = [];
-  lines.push('🌀 Proactive idle-tick 模式');
+  lines.push('Proactive idle-tick 模式');
   lines.push(`  当前: ${active ? '已开启 ✓' : '已关闭'}`);
   if (typeof s.assistantMode === 'boolean') {
     lines.push(`  助手模式: ${s.assistantMode ? '激活' : '未激活'}`);
