@@ -51,7 +51,7 @@ make run-disk     # 挂载一块持久化的 16MB ATA 磁盘（首次自动创�
 ### 方式三：真机（U 盘）
 
 ```bash
-# ⚠️ 会清空目标设备，请务必确认 /dev/sdX 是你的 U 盘
+# ⚠ 会清空目标设备，请务必确认 /dev/sdX 是你的 U 盘
 sudo dd if=build/khy-os-kernel.iso of=/dev/sdX bs=4M status=progress && sync
 ```
 
