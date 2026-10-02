@@ -541,7 +541,7 @@ function install(opts = {}) {
 function _reportAndLog(label, err, logger) {
   try {
     // 延迟 require：避免 install() 被错误地调用时产生循环依赖。
-    const { reportKhyError } = require('../cli/reportKhyError');
+    const { reportKhyError } = require('./reportKhyError');
     reportKhyError(err, { action: label, target: '进程级', progress: '未捕获' });
   } catch (renderErr) {
     // 兜底：reportKhyError 自己崩了也要打印原 err，绝不丢错。
