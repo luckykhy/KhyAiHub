@@ -42,11 +42,11 @@ interface SidePaneProps {
 // (icons are the placeholder glyphs; ZCode draws real icons — swap when assets
 // land). 打开文件 is the sidePane.openFile quickPick (opens the file picker).
 const TAB_TILES: { kind: PaneTabKind; label: string; icon: string; description: string }[] = [
-  { kind: 'selectionChat', label: '辅助对话', icon: '💬', description: '独立于主会话的小型问答' },
-  { kind: 'review', label: '审查', icon: '🔍', description: '当前工作区的 Git 改动' },
-  { kind: 'terminal', label: '终端', icon: '💻', description: '在面板中运行命令' },
-  { kind: 'browser', label: '浏览器', icon: '🌐', description: '在面板中打开网页' },
-  { kind: 'openFile', label: '打开文件', icon: '📄', description: '从当前 workspace 中选择文件并在侧边面板打开。' },
+  { kind: 'selectionChat', label: '辅助对话', icon: '✎', description: '独立于主会话的小型问答' },
+  { kind: 'review', label: '审查', icon: '⌕', description: '当前工作区的 Git 改动' },
+  { kind: 'terminal', label: '终端', icon: '◆', description: '在面板中运行命令' },
+  { kind: 'browser', label: '浏览器', icon: '◉', description: '在面板中打开网页' },
+  { kind: 'openFile', label: '打开文件', icon: '▤', description: '从当前 workspace 中选择文件并在侧边面板打开。' },
 ]
 
 function TabBody({
