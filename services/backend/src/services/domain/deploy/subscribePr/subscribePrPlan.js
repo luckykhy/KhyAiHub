@@ -145,7 +145,7 @@ function buildNotification(subscription, decision) {
   const s = subscription && typeof subscription === 'object' ? subscription : {};
   const d = decision && typeof decision === 'object' ? decision : {};
   const ok = d.classification === 'pass';
-  const title = `CI ${ok ? '✅ 通过' : '❌ 失败'} — ${s.key || s.raw || 'PR'}`;
+  const title = `CI ${ok ? '✓ 通过' : '✗ 失败'} — ${s.key || s.raw || 'PR'}`;
   const body = `订阅 ${s.key || s.raw || ''} 的 CI 状态变为「${d.classification}」。`;
   return { title, body };
 }
@@ -154,7 +154,7 @@ function buildNotification(subscription, decision) {
 function buildSubscribeText(subscription) {
   const s = subscription && typeof subscription === 'object' ? subscription : {};
   return [
-    `🔔 subscribe-pr · 已订阅 ${s.key || s.raw}`,
+    `subscribe-pr · 已订阅 ${s.key || s.raw}`,
     '  说明: khy 无常驻后台轮询 —— 用 `/subscribe-pr check` 显式拉取 CI 状态;变为终态(成功/失败)时经既有推送通道通知。',
     '  (推送目标沿用 `khy notify set <provider> <target>` 配置;未配则 check 时如实提示。)',
   ].join('\n');
@@ -192,7 +192,7 @@ function buildUnsubscribeText(ref, removed) {
 function buildCheckText(outcomes, opts) {
   const list = Array.isArray(outcomes) ? outcomes : [];
   const o = opts && typeof opts === 'object' ? opts : {};
-  const lines = ['🔔 subscribe-pr · CI 轮询结果'];
+  const lines = ['subscribe-pr · CI 轮询结果'];
   if (list.length === 0) {
     lines.push('  暂无订阅可检查(先订阅一个 PR/分支)。');
     return lines.join('\n');
