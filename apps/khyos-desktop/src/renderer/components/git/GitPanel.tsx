@@ -171,7 +171,7 @@ export function GitPanel() {
 
         {state.phase === 'gitUnavailable' && (
           <EmptyState
-            icon="🔧"
+            icon="✱"
             title="当前环境没有可用的 Git"
             description="请先安装 Git，或确认当前运行环境里可以执行 git 命令。"
           />
@@ -179,7 +179,7 @@ export function GitPanel() {
 
         {state.phase === 'notRepository' && (
           <EmptyState
-            icon="📁"
+            icon="▸"
             title="当前 workspace 不在 Git 仓库中"
             description="打开一个 Git 仓库目录后，这里会展示当前 workspace 作用域内的改动。"
           />
@@ -187,7 +187,7 @@ export function GitPanel() {
 
         {state.phase === 'error' && (
           <EmptyState
-            icon="⚠️"
+            icon="⚠"
             title="无法加载 Git 改动"
             description={`Git 返回错误：${state.message}`}
           />
@@ -195,7 +195,7 @@ export function GitPanel() {
 
         {state.phase === 'empty' && (
           <EmptyState
-            icon="✅"
+            icon="✓"
             title="当前来源下没有可展示的改动"
             description="可以切换其它来源，或等当前 workspace 产生新的 Git 改动后再查看。"
           />
