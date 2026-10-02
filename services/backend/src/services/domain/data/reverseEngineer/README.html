@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>reverseEngineer — 制品逆向与自验流水线（D2 功能单元） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>data<span class="sep">›</span>reverseEngineer<span class="sep">›</span>reverseEngineer — 制品逆向与自验流水线（D2 功能单元）</div>
+      <header class="hero reveal"><h1>reverseEngineer — 制品逆向与自验流水线（D2 功能单元）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#reverseengineer-制品逆向与自验流水线-d2-功能单元">reverseEngineer — 制品逆向与自验流水线（D2 功能单元）</a></li><li class="lvl-2"><a href="#逐成员">逐成员</a></li><li class="lvl-2"><a href="#消费者-实测-fan-in-2-按单元路径直连计">消费者（实测 fan-in = 2，按单元路径直连计）</a></li><li class="lvl-2"><a href="#六层契约-每条都对应命名测试">六层契约（每条都对应命名测试）</a></li><li class="lvl-2"><a href="#配置-全部-env-门控-零硬编码">配置（全部 env 门控，零硬编码）</a></li><li class="lvl-2"><a href="#本单元修掉的缺陷-批次-27">本单元修掉的缺陷（批次 27）</a></li><li class="lvl-2"><a href="#已知边界-现状-未-由本单元改动">已知边界（现状，**未**由本单元改动）</a></li><li class="lvl-2"><a href="#测试怎么跑">测试怎么跑</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="reverseengineer-制品逆向与自验流水线-d2-功能单元">reverseEngineer — 制品逆向与自验流水线（D2 功能单元）<a class="anchor" href="#reverseengineer-制品逆向与自验流水线-d2-功能单元" aria-label="锚点">#</a></h1>
+<p>一句话：把一个编译产物（exe / jar / wheel / asar / 脚本）交给它，得到「它是什么 + 用什么写的 +<br>能取回多少源码 + 与 khy 构建清单差在哪」的结构化报告——<strong>全程只读字节，绝不执行制品</strong>。<br>这是 DESIGN-ARCH-054 的落地载体，也是「khy 生成的软件由 khy 自己验证」这条诉求的唯一实现处。</p>
+<p>本单元的属性是<strong>确定性优先、模型增益</strong>：前五层零模型零猜测，只采集事实；第六层才允许模型介入，<br>且模型产出永远落在 <code>inference</code> 区并带 <code>confidence</code>，与 <code>evidence</code> 区物理分隔。</p>
+<p>清单：<code>khy.module.json</code>（<code>domain</code> / <code>mayDependOn</code> / <code>fanIn</code> / <code>lifecycle.stage</code> 四字段被<br><code>npm run check:layout</code> 的 entry-buffer 规则读取；本单元的 D2→D1 边按偏差登记，不写白名单）。</p>
+<h2 id="逐成员">逐成员<a class="anchor" href="#逐成员" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>角色</th><th>出边（域）</th><th>同名测试</th><th>用例</th></tr></thead><tbody><tr><td><code>formatRegistry.js</code></td><td>签名/家族/可还原档位/嵌入标记的<strong>声明式单一真源</strong>（17 格式 + 6 标记，冻结导出）</td><td>无（纯数据）</td><td><code>formatRegistry.test.js</code></td><td>11</td></tr><tr><td><code>artifactScanner.js</code></td><td>① 只读分诊：格式、架构、大小、SHA-256、嵌入标记，标记可升级档位</td><td><code>./formatRegistry</code>（同单元）</td><td><code>artifactScanner.test.js</code></td><td>27</td></tr><tr><td><code>stringHarvester.js</code></td><td>② 字符串证据：ASCII + UTF-16LE 捞取，5 类语义分类 + 10 条工具链指纹</td><td>无（纯 Buffer）</td><td><code>stringHarvester.test.js</code></td><td>13</td></tr><tr><td><code>sourceRecoverer.js</code></td><td>③ 自包含产物 → 源码/字节码清单（SOURCE 档主路径；默认只编目不落盘）</td><td><code>node-stream-zip</code>（第三方，惰性）</td><td><code>sourceRecoverer.test.js</code></td><td>18</td></tr><tr><td><code>toolOrchestrator.js</code></td><td>④ 原生/字节码 → 探活并驱动外部反编译器（10 家族计划表）</td><td><code>src/tools/platformUtils</code>（未入域）、<code>utils/javaEncoding</code>（D3）</td><td><code>toolOrchestrator.test.js</code></td><td>16</td></tr><tr><td><code>reconstructionPort.js</code></td><td>⑤ 证据包 → 结构化重建（brain 注入式；无模型退化为证据报告）</td><td><code>services/gateway/safeJsonParse</code>（<strong>D1</strong>）、<code>utils/withTimeout</code>（D3）</td><td><code>reconstructionPort.test.js</code></td><td>19</td></tr><tr><td><code>verificationLedger.js</code></td><td>⑥ 与 khy 构建清单比对 → 保真度评分与差异点名</td><td>无（crypto/fs/path）</td><td><code>verificationLedger.test.js</code></td><td>13</td></tr><tr><td><code>asarArchive.js</code></td><td>asar 容器头解析（pickle 头尺寸 + JSON 树展平），供工具层直接复用</td><td>无</td><td><code>asarArchive.test.js</code></td><td>13</td></tr><tr><td><code>genericExtractor.js</code></td><td>未知归档格式的通用抽取兜底 + 逐平台安装命令生成（11 扩展名）</td><td><code>src/tools/platformUtils</code>（未入域，注入式探测）</td><td><code>genericExtractor.test.js</code></td><td>14</td></tr><tr><td><code>index.js</code></td><td>门面：串起 ①→⑥ 的 <code>analyze()</code>，含授权门与降级</td><td>上述六个子模块</td><td><code>index.test.js</code></td><td>20</td></tr></tbody></table>
+<p>合计 10 个源文件 / 2652 行，10 份同名同目录测试 / <strong>164 例全绿、0 skip</strong>（逐文件计数见下「测试怎么跑」）。</p>
+<h2 id="消费者-实测-fan-in-2-按单元路径直连计">消费者（实测 fan-in = 2，按单元路径直连计）<a class="anchor" href="#消费者-实测-fan-in-2-按单元路径直连计" aria-label="锚点">#</a></h2>
+<ul><li><code>src/services/reverseEngineer/index.js</code> —— D1 <strong>再导出壳</strong>（<code>module.exports = require('../domain/data/reverseEngineer')</code>）。</li></ul>
+<p>真正的工具入口 <code>src/tools/reverseEngineer.js:74</code> require 的是这个壳，因此主消费链是两跳。</p>
+<ul><li><code>src/tools/unpackTool.js</code> —— 直连本单元的两个成员：<code>:7</code> 的 <code>genericExtractor.js</code>、<code>:272</code> 的 <code>asarArchive.js</code>。</li></ul>
+<p>注：<code>src/tools/**</code> 在 <code>DOMAIN-DEPS.json</code> 里<strong>不属于任何域根</strong>（既非 D1 也非 D4），所以「unpackTool 直连 D2」<br>这条边在方向判定上是<strong>未映射</strong>而非合法/非法——已作为口径问题上报（见 <code>khy.module.json</code> 的 <code>_fanIn_note</code>），<br>本单元不自裁。</p>
+<h2 id="六层契约-每条都对应命名测试">六层契约（每条都对应命名测试）<a class="anchor" href="#六层契约-每条都对应命名测试" aria-label="锚点">#</a></h2>
+<ol><li><strong>只读是硬约束，不是约定</strong>：分诊层只 <code>fs.openSync(..., 'r')</code> 读头部 512 字节 + 头/尾窗口，</li></ol>
+<p>从不 <code>spawn</code> 被分析对象。签名窗口之所以是 512，是因为最深的 POSIX tar magic 落在偏移 257；<br>   窗口之外的 magic 一律不算命中，宁缺毋滥。<br>   → <code>HEADER_BYTES=512 是有意为之：最深签名 tar 的 magic 在 257</code>、<br>   <code>签名窗口外的 magic 不算命中（前 512 字节之外即未知）</code></p>
+<ol><li><strong>事实照收，判定留白</strong>：文件不存在、是目录、0 字节、乱码，都返回完整的中性事实对象</li></ol>
+<p>（<code>exists=false</code> / <code>unknown</code> 档），绝不抛也不编造格式。<code>scanFile</code> 与 <code>scanFileSync</code> 逐字节同结果。<br>   → <code>不存在的产物：exists=false 且各字段为中性值，扩展名仍按小写记录</code>、<br>   <code>0 字节文件：exists=true，sha256 为空串哈希，格式 unknown 且不抛</code>、<br>   <code>scanFile 与 scanFileSync 对同一文件给出逐字节相同的结果</code></p>
+<ol><li><strong>撞号要消歧，架构只按头字段粗提</strong>：<code>cafebabe</code> 同时是 Java class 与 macOS fat Mach-O 的 magic，</li></ol>
+<p>靠第 6–7 字节的语义分野改判；边界按实测钉死（44/45/200/201）。ELF/PE/Mach-O 的位宽与架构只读<br>   确定性头部字段，头部畸形即降级为空对象。<br>   → <code>cafebabe 归 format 遍历里靠前的 macho，再由后续字节改判</code>、<br>   <code>_disambiguateCafebabe 实测边界（以实测为准，不按注释设想）</code>、<br>   <code>PE 的 e_lfanew 越界或 PE\0\0 签名不符：架构降级为空对象</code></p>
+<ol><li><strong>嵌入标记是「升级器」且有硬闸</strong>：标记可以把档位从 native 升到 bytecode/source（如裸 ELF 里</li></ol>
+<p>发现 PyInstaller cookie），但<strong>只在更强时</strong>生效，且 <code>appliesTo</code> 是硬闸——BSJB 出现在 ELF 里<br>   不会触发 dotnet 标记。工具候选按顺序去重合并。<br>   → <code>PE + BSJB → dotnet 标记：家族换掉、档位升到 bytecode、工具合并、标签追加</code>、<br>   <code>标记的 appliesTo 是硬闸：BSJB 出现在 ELF 里不触发 dotnet 标记</code>、<br>   <code>标记档位不更强时只记事实不降级：go-binary 命中 ELF 仍留 native/elf</code></p>
+<ol><li><strong>解包永不逃逸沙箱</strong>：条目名逐条过 <code>_isSafeEntry</code>（绝对路径 / 上跳 / 盘符 / 非串一律拒）与</li></ol>
+<p><code>_isWithinDest</code>（边界本身算命中，近似前缀不算）。默认 <code>listOnly</code> 只编目，<strong>只有显式给 <code>outDir</code><br>   才落盘</strong>。条目数与解压总量都有 env 上限，超限整包拒绝或如实标 <code>truncated</code>，绝不返回半份清单冒充完整。<br>   → <code>_isWithinDest 只认目标目录之内，边界本身算命中，逃逸与近似前缀不算</code>、<br>   <code>给 outDir 才抽取：逐成员落盘并保留目录结构，成员带 extractedTo</code>、<br>   <code>条目数上限走 env：超限整包拒绝且不返回半份清单</code></p>
+<ol><li><strong>外部工具：不存在就说不存在</strong>（防呆②）。<code>probe</code> 逐条如实上报 <code>available/path</code>；<code>orchestrate</code></li></ol>
+<p>默认 <code>run:false</code> 只探活不开火；一条候选都没有时 <code>degraded=true</code> 并在 <code>hint</code> 里列出全部安装来源。<br>   真开火走 <code>execFile</code> + 固定 argv + 超时 + <code>maxBuffer</code>（防呆⑤），制品路径永远是<strong>独立 argv 元素</strong>。<br>   → <code>无可用工具：attempted=false、degraded=true，hint 列出全部候选及其安装来源</code>、<br>   <code>run:false（默认）只探活不开火：hint=probe-only 且 degraded=false</code>、<br>   <code>防呆⑤实测：带 shell 元字符与空格的制品路径始终是独立 argv 元素，绝不拼接</code></p>
+<ol><li><strong>证据与推断物理分隔</strong>（防呆① 的第二义：不伪造）。<code>buildEvidencePack</code> 对每一路证据设硬裁剪上限</li></ol>
+<p>（url 15 / path 20 / version 15 / sample 30 / member 80 / 反汇编样本 6000 字符）；<code>reconstruct</code><br>   只把模型 JSON 里<strong>已登记的键</strong>收进 <code>inference</code> 区，未知键丢弃，<code>confidence</code> 钳到 [0,1]，数组各有上限。<br>   → <code>buildEvidencePack 的裁剪上限：15/20/15/30/80（输入必须真的超上限才算测到）</code>、<br>   <code>reconstruct 把 brain 的 JSON 收进推断区，未知键一律丢弃</code></p>
+<ol><li><strong>没有模型也照跑</strong>（防呆③）。brain 缺席 / 超时 / 抛错 / 返回散文 / 返回非对象——六种失效形态</li></ol>
+<p>全部收敛为 <code>_deterministicReport</code>（<code>source:'evidence-only'</code>），并在 <code>caveats[0]</code> 说明原因；<br>   确定性语言结论<strong>不因退化而抹掉</strong>。<br>   → <code>模型失效的六种形态全部收敛为证据报告，绝不抛出</code>、<br>   <code>证据报告的语言结论在退化路径上仍保留（不因失败而抹掉确定性事实）</code></p>
+<ol><li><strong>保真度是一把可复算的尺</strong>：<code>fidelity = 50×哈希一致 + 50×源码覆盖率</code>；判级 <code>verified</code> 要求哈希一致</li></ol>
+<p><strong>且</strong>覆盖 ≥0.95，<code>partial</code> 要求覆盖 ≥0.6 或哈希一致。无清单不阻断——退化为 <code>no-baseline</code> 且<br>   <code>fidelity:null</code>，如实说「没法判定」。缺失与多余按 basename 归一比较，大小写与目录差异都算命中。<br>   → <code>verify 的算术：哈希一致占 50 分，覆盖占 50 分；无哈希基线时只按覆盖给分</code>、<br>   <code>verify 把 scan 缺 sha256 判成「不一致」而不是「无法判定」</code>、<br>   <code>verify 的清单比较按 basename 归一：大小写与目录差异都算命中</code></p>
+<ol><li><strong>授权门（防呆⑥）在门面，不在子层</strong>：产物同目录能定位到 <code>.khy-build-manifest.json</code>，<strong>或</strong>调用方</li></ol>
+<p>显式 <code>authorized:true</code>，才放行还原/反编译/深度重建；否则只做只读分诊 + 字符串归纳，并在 <code>warnings</code><br>    里把「怎么授权」写清楚。子模块单独调用不设门（它们是纯函数与被工具层使用的叶子）。<br>    → <code>未授权：只给只读分诊结论，还原/编排/清单核对一律不开</code>、<br>    <code>同目录存在 khy 构建清单即视为自验：无需 authorized 也能开深度能力</code></p>
+<ol><li><strong>任何一层失败都不许拖垮整条链</strong>：<code>analyze</code> 对「产物不存在 / 是目录 / brain 挂死」全部降级为</li></ol>
+<p>部分报告并保留已得事实。<br>    → <code>产物不存在：ok=false，判级 no-artifact，且给出明确警示而非静默空报告</code>、<br>    <code>brain 超时：门面不挂死，回退到证据报告并说明原因</code></p>
+<h2 id="配置-全部-env-门控-零硬编码">配置（全部 env 门控，零硬编码）<a class="anchor" href="#配置-全部-env-门控-零硬编码" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>变量</th><th>默认</th><th>作用</th></tr></thead><tbody><tr><td><code>KHY_RE_STRING_WINDOW</code></td><td>8 MiB</td><td>字符串收割只读头部这么多字节</td></tr><tr><td><code>KHY_RE_MAX_BYTES</code></td><td>64 MiB</td><td>解包总量上限，超限标 <code>truncated</code></td></tr><tr><td><code>KHY_RE_MAX_ENTRIES</code></td><td>20000</td><td>归档条目上限，超限整包拒绝</td></tr><tr><td><code>KHY_RE_TOOL_TIMEOUT_MS</code></td><td>20000</td><td>单个外部工具的<strong>活动式</strong>超时</td></tr><tr><td><code>KHY_RE_TOOL_MAX_BUFFER</code></td><td>512 KiB</td><td>外部工具输出上限，超限如实标 <code>truncated</code></td></tr><tr><td><code>KHY_RE_BRAIN_TIMEOUT_MS</code></td><td>30000</td><td>模型重建超时（<code>withTimeout</code> 竞速，不 kill 进程）</td></tr></tbody></table>
+<h2 id="本单元修掉的缺陷-批次-27">本单元修掉的缺陷（批次 27）<a class="anchor" href="#本单元修掉的缺陷-批次-27" aria-label="锚点">#</a></h2>
+<ul><li><strong>B27-F1（<code>genericExtractor.js</code>）</strong>：三张表都以 <code>TABLE[key] || 兜底</code> 取值，而 <code>key</code> 来自<strong>外部数据</strong></li></ul>
+<p>（平台名、格式扩展名、管理器名）。当它是 <code>constructor</code> / <code>valueOf</code> / <code>toString</code> 这类<br>  <code>Object.prototype</code> 继承键时，取到的是继承值而不是兜底，后续 <code>perManager[manager]</code> 之类的字段访问<br>  随即抛错。改法是自有键判定 <code>_own()</code>，对表内所有合法键<strong>逐字节等价</strong>。<br>  这是本会话在 D2 里第 <strong>5</strong> 次命中同一族失效模式（前四次见 <code>catalog/commandCatalog/README.md</code>）。<br>  → <code>B27-F1 回归：继承键不再写穿兜底，pickExtractor 安全返回 null 而不是抛</code>、<br>  <code>B27-F1 回归：detectPackageManager 对畸形 platform 走 linux 兜底，绝不抛</code></p>
+<ul><li><strong>B27-F2（<code>stringHarvester.js</code>）</strong>：<code>secret</code> 分类器的前导 <code>\b</code> 曾套在整个交替外面，而</li></ul>
+<p><code>-----BEGIN</code> 只出现在串首或非词字符之后——那里没有词边界，PEM 支<strong>从未命中过</strong>；同时<br>  <code>[A-Z ]+</code> 至少吃一个字符，连无算法名的 PKCS#8（<code>-----BEGIN PRIVATE KEY-----</code>）也漏。<br>  词边界逐支下沉、量词放宽为 <code>*</code>。两处改动各钉一根测试线（RSA 形钉 <code>\b</code>，PKCS#8 形钉量词），<br>  并确认公钥/证书不被顺手捞进「秘密」，指控面没有扩大。<br>  → <code>B27-F2 回归：PEM 支不再被整组前导 \b 挡死，且无算法名的 PKCS#8 也命中</code></p>
+<h2 id="已知边界-现状-未-由本单元改动">已知边界（现状，<strong>未</strong>由本单元改动）<a class="anchor" href="#已知边界-现状-未-由本单元改动" aria-label="锚点">#</a></h2>
+<p>同一族继承键失效在本单元还有三处<strong>潜在</strong>命中点，实测均<strong>流水线内不可达</strong>（上游给出的是封闭集合），<br>但函数都已导出、可直接调用，故如实钉住并登记，不自作主张改写：</p>
+<ul><li><code>reconstructionPort._inferLanguageDeterministic</code> 的 <code>FAMILY_LANG[pack.family]</code>：scanner 可能给出的</li></ul>
+<p>家族全集 = FORMATS ∪ EMBEDDED_MARKERS 共 13 个，再加签名未命中时的默认 <code>'unknown'</code> = 14 个，均非原型键；<br>  直接传 <code>'constructor'</code> 会得到一份 <code>language/toolchain</code> 皆 undefined 而 <code>confidence</code> 仍 0.4 的<strong>伪报告</strong>。<br>  → <code>家族表是普通对象字面量：非封闭家族名会命中原型链（已知边界，如实钉住）</code></p>
+<ul><li><code>toolOrchestrator.orchestrate</code> 的 <code>PLANS[family] || []</code>：未知家族返回空表不抛，但家族名命中原型键时</li></ul>
+<p><code>.map</code> 直接抛 TypeError。<br>  → <code>probe 对未知家族返回空表（不抛），家族名命中原型键才暴露已知边界</code></p>
+<ul><li><code>artifactScanner._RANK</code> 的同款取值（<code>_isStrongerRecoverability</code> 方向安全：命不中即判「不更强」，</li></ul>
+<p>只会少升级不会误升级）。<br>  → <code>_isStrongerRecoverability 按 source&gt;bytecode&gt;native&gt;archive&gt;unknown，同档不算更强</code></p>
+<p>其余边界是<strong>设计取舍或上游行为</strong>，非缺陷：</p>
+<ul><li>大端 ELF 的 <code>e_machine</code> 仍按小端读，架构名会错（<code>endian</code> 字段是对的）；fat/universal Mach-O 的</li></ul>
+<p>位宽退化为 32。两者都只影响 <code>arch</code> 展示，不影响档位与还原。<br>  → <code>ELF 大端：endian 认对但 e_machine 仍按小端读（已登记的已知边界）</code>、<br>  <code>fat/universal Mach-O（cafebabe + 小 nfat_arch）判成 macho，位宽按头退化为 32</code></p>
+<ul><li><code>node-stream-zip</code> 在<strong>打开阶段</strong>就拒绝穿越条目，因此 <code>_recoverZip</code> 里的逐条 <code>skipped++</code> 护栏对 zip</li></ul>
+<p>永远走不到：一个恶意条目会让<strong>整包</strong>还原失败（fail-closed），而不是跳过它继续还原其余成员。<br>  → <code>上游 node-stream-zip 先拒穿越条目：整包 fail-closed，逐条 skip 分支对 zip 不可达</code></p>
+<ul><li><code>fidelity</code> 与 <code>verdict</code> 不是同一把尺：清单没登记产物哈希时 <code>artifactHashMatch=null</code>，分数退化为</li></ul>
+<p>纯覆盖（半分制），判级却仍走「覆盖 ≥0.6 或哈希一致」那道门——于是 50 分覆盖判 <code>mismatch</code> 而 60 分判<br>  <code>partial</code>。算术如实钉住，不做静默对齐。<br>  → <code>verify 的算术：哈希一致占 50 分，覆盖占 50 分；无哈希基线时只按覆盖给分</code></p>
+<ul><li><code>genericExtractor</code> 的两个真实抽取驱动（<code>extractWith</code> / <code>listWith</code>）在单测里只验<strong>形状与 fail-closed</strong>，</li></ul>
+<p>没有真跑子进程——本机没装 7z/bsdtar/unar。装齐之后这两条路径才有端到端覆盖。<br>  → <code>extractWith 对没有 argv 构造的驱动如实返回，不启动任何子进程</code></p>
+<ul><li><code>harvest()</code> 对非 Buffer 入参返回的 <code>classified</code> 是<strong>空形状</strong>（五个键都在但值为空），与正常路径同形；</li></ul>
+<p>但 <code>samples/total</code> 等字段缺席。调用方不要假设两条路径对象键集合相同。<br>  → <code>harvest 对非 Buffer 入参降级为空对象，且 classified 是空形状（与正常路径不同）</code></p>
+<ul><li><code>_run</code> 把「工具不存在」归因成 <code>exit ENOENT</code> 文案，语义上那是启动失败而非退出码——不影响降级，</li></ul>
+<p>但读证据时要知道。→ <code>_run 永不 reject：成功取 stdout，缺失工具归因到 reason</code></p>
+<h2 id="测试怎么跑">测试怎么跑<a class="anchor" href="#测试怎么跑" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend/src/services/domain/data/reverseEngineer
+node --<span class="hljs-built_in">test</span> *.test.js</code></pre>
+<p>164 例、0 skip。其中 <code>sourceRecoverer.test.js</code> 自带一个手搓 store-ZIP 夹具（含 <code>zlib.crc32</code>），<br>不依赖外部 zip 工具；<code>toolOrchestrator.test.js</code> 在 require 前替换 <code>platformUtils.searchExecutable</code><br>（该模块在加载时解构了这个函数，事后打补丁无效），因此本机有没有反编译器都能跑。</p>
+<p>单元外还有三份消费本单元的测试，方言不同，<strong>必须分开看</strong>：</p>
+<ul><li><code>tests/services/reverseEngineer/reverseEngineer.test.js</code> —— node:test，45 例全绿。</li><li><code>tests/services/reverseEngineer/asarArchive.test.js</code> —— jest 方言，本便携环境未装 jest</li></ul>
+<p>（<code>node_modules/.bin/jest</code> 是悬空 shim），<code>node --test</code> 会在加载期 <code>ReferenceError: describe is not defined</code>。</p>
+<ul><li><code>tests/tools/unpackGeneric.test.js</code> —— 同上 jest 方言，加载期 <code>ReferenceError: beforeAll is not defined</code>。</li></ul>
+<p>后两份已用一次性方言垫片复跑核实：asarArchive <strong>6 例全过</strong>，unpackGeneric <strong>7 过 1 skip</strong><br>（skip 的那条要求本机真有 <code>7z</code>，本机器没有——如实 skip，不是假绿）。「跑不了」不等于「红」；<br>这两条结论是<strong>实测</strong>得出，不是按方言名推断的。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../services/backend/src/services/domain/data/README.html"><div class="dir">← 上一篇</div><div class="ttl">data — 数据落点、资源安装、逆向工程与上游研读（D2）</div></a><a class="next" href="../../../../../../../services/backend/src/services/domain/deploy/README.html"><div class="dir">下一篇 →</div><div class="ttl">deploy — 部署、发布打包与 PR 订阅（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/data/reverseEngineer/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

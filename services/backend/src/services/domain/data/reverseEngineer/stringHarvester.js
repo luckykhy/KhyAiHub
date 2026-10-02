@@ -78,7 +78,10 @@ const CLASSIFIERS = [
   { kind: 'email', re: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/ },
   {
     kind: 'secret',
-    re: /\b(?:sk-[A-Za-z0-9]{16,}|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{20,}|-----BEGIN [A-Z ]+PRIVATE KEY-----)/,
+    // B27-F2：前导 \b 曾套在整组外面，使 PEM 交替永不命中——'-----BEGIN' 只出现在串首或
+    // 非词字符之后，那里没有词边界；同时 `[A-Z ]+` 至少吃一个字符，连 PKCS#8 的
+    // '-----BEGIN PRIVATE KEY-----' 也匹配不到。词边界逐支下沉，PEM 支不需要它。
+    re: /(?:\bsk-[A-Za-z0-9]{16,}|\bAKIA[0-9A-Z]{16}|\bghp_[A-Za-z0-9]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----)/,
   },
 ];
 
