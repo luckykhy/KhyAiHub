@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>desktop — 屏幕操作、浏览器与设备应用的执行面（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>desktop<span class="sep">›</span>desktop — 屏幕操作、浏览器与设备应用的执行面（D2）</div>
+      <header class="hero reveal"><h1>desktop — 屏幕操作、浏览器与设备应用的执行面（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#desktop-屏幕操作-浏览器与设备应用的执行面-d2">desktop — 屏幕操作、浏览器与设备应用的执行面（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="desktop-屏幕操作-浏览器与设备应用的执行面-d2">desktop — 屏幕操作、浏览器与设备应用的执行面（D2）<a class="anchor" href="#desktop-屏幕操作-浏览器与设备应用的执行面-d2" aria-label="锚点">#</a></h1>
+<p>业务上下文：<code>/device</code>、<code>/terminal-setup</code> 与两个智能体工具<br>（<code>DesktopControlTool</code> / <code>ComputerUseTool</code>）背后的一切：看屏幕、读无障碍树、<br>点/填/滚、以及设备应用管理。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong>让 AI 操作本机界面的人</strong>：<code>tools/ComputerUseTool/index.js:15</code> 直接 require</li></ul>
+<p><code>domain/desktop/computerUse/computerUseAgent</code>，<code>:118</code> 经 shim 取 <code>DesktopController</code>；<br>  <code>tools/DesktopControlTool/index.js:380</code> 同源。</p>
+<ul><li><strong>跑 <code>/device</code> 的人</strong>：<code>constants/commandSchema.js:102</code> → <code>cli/handlers/device.js:27</code>；</li></ul>
+<p><code>/terminal-setup</code> 在 <code>commandSchema.js:215</code>（路由 <code>:1034</code>）。</p>
+<ul><li><strong>用内置浏览器工具的人</strong>：<code>services/browser/index.js:7</code> 是 re-export 壳，</li></ul>
+<p>真身在本目录 <code>browser/</code>。</p>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p>这条线唯一的安全承重是<strong>「总闸 + 审批」</strong>：<code>desktopControl/safetyGate.js</code> 提供<br><code>authorize / classifyOp / riskOf / OP_RISK / DEFAULT_BUDGET</code>，把每个操作分成风险档并<br>计量预算，<code>index.js</code> 的 <code>create()</code> 把闸门装在控制器前面。因此凡是要碰真实输入<br>（<code>inputController</code>、<code>windowController</code>、<code>screenCapture</code>）的文件都归 IO 侧，<br>而<strong>判定逻辑</strong>（<code>elementModel</code> 的角色归一与点击目标解析、<code>browser/scrollPlan</code> 的<br>滚动规划、<code>browser/ariaSnapshot</code>、<code>deviceApps/uninstallRoute</code> 的卸载路由决策）<br>全部做成纯函数——风险判定必须能在不开屏幕、不动鼠标的前提下逐条断言，<br>否则「物理 Escape 立刻停手」这类边界无法测试。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/services/browser/scrollPlan.test.js        <span class="hljs-comment"># 31 tests / 31 pass / 0 fail</span></code></pre>
+<p>第二条渠道是 <code>npm test</code>（jest，<code>tests/webBrowserTool.test.js</code>）——<strong>本卡的复跑口径</strong>：<br>上面那条 <code>node --test</code> 是本次实际执行过的；jest 那条只指出正式入口，<br>便携 shell 无 npm/npx，未在此复跑，不作为验收依据。</p>
+<h2 id="已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）<a class="anchor" href="#已知缺陷-登记-不在本单元擅自修" aria-label="锚点">#</a></h2>
+<p><code>computerUse/computerUseAgent.js</code> 与 <code>desktopControl/safetyGate.js</code> 当前是 <code> M</code><br>（作者在做中的改动），本 README 不复述其内部行为细节；改动集落地后需复核本卡。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../services/backend/src/services/domain/deploy/README.html"><div class="dir">← 上一篇</div><div class="ttl">deploy — 部署、发布打包与 PR 订阅（D2）</div></a><a class="next" href="../../../../../../services/backend/src/services/domain/docs/docsFreshness/README.html"><div class="dir">下一篇 →</div><div class="ttl">docsFreshness — 文档新鲜度自检（D2 功能单元）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/desktop/README.html";</script>
+<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
