@@ -39,7 +39,7 @@
 <hr>
 <h2 id="1-内网机-正常-pip-发布-你已会-只确认一点">1. 内网机:正常 pip 发布(你已会,只确认一点)<a class="anchor" href="#1-内网机-正常-pip-发布-你已会-只确认一点" aria-label="锚点">#</a></h2>
 <p>确认包里<strong>真的带了源码快照</strong>——否则外网机还原不出来。</p>
-<pre><code class="language-bash"><span class="hljs-built_in">cd</span> {$HOME}/Khy-OS
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> {<span class="hljs-variable">$HOME</span>}/Khy-OS
 
 <span class="hljs-comment"># 正常发布(任选)</span>
 python -m build &amp;&amp; twine check dist/* &amp;&amp; twine upload dist/*
