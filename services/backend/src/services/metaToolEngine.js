@@ -557,7 +557,7 @@ async function forgeTool(spec, deps = {}) {
   return {
     status: 'created',
     toolName: def.name,
-    message: `🛠️ 已为你新建工具「${def.name}」：${def.description}。已通过安全扫描与沙箱测试，现在可直接使用。`,
+    message: `已为你新建工具「${def.name}」：${def.description}。已通过安全扫描与沙箱测试，现在可直接使用。`,
   };
 }
 

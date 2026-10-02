@@ -61,7 +61,7 @@ function _enabledKeys() {
 function _pointerBody() {
   return [
     `${BLOCK_START} — managed by \`khy metadata link\`; edits inside this block are overwritten -->`,
-    '## 🤖 Maintainability metadata — read `.ai/` first',
+    '## Maintainability metadata — read `.ai/` first',
     '',
     'Before changing this project, read the machine-generated seed docs in `.ai/`',
     '(this repo is designed to stay maintainable even without AI):',

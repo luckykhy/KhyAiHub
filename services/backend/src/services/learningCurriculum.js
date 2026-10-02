@@ -552,7 +552,7 @@ function getNudge() {
 
   // 1. 连续学习表扬 (streak >= 3)
   if (p.streak && p.streak.count >= 3) {
-    lines.push(T.xp(`🔥 连续学习 ${p.streak.count} 天！`));
+    lines.push(T.xp(`连续学习 ${p.streak.count} 天！`));
   }
 
   // 2. 距上次学习超过 3 天
@@ -564,7 +564,7 @@ function getNudge() {
         ? `第 ${p.lastVisit.layerId} 层 · ${lastTopic.title}`
         : `第 ${p.lastVisit.layerId} 层`;
       lines.push(
-        T.hint(`📌 上次学到 ${where} (${daysSince} 天前)，输入 `) +
+        T.hint(`上次学到 ${where} (${daysSince} 天前)，输入 `) +
           T.nav('learn next') +
           T.hint(' 继续')
       );
@@ -574,16 +574,16 @@ function getNudge() {
   // 3. 有浏览未完成的知识点
   if (viewed.length > 0 && viewed.length <= 3) {
     const names = viewed.map((t) => chalk.white(t.title)).join(T.hint('、'));
-    lines.push(T.hint(`💡 ${names} 已浏览但未标记完成，完成后可获 XP`));
+    lines.push(T.hint(`${names} 已浏览但未标记完成，完成后可获 XP`));
   } else if (viewed.length > 3) {
-    lines.push(T.hint(`💡 本层有 ${viewed.length} 个知识点已浏览未完成`));
+    lines.push(T.hint(`本层有 ${viewed.length} 个知识点已浏览未完成`));
   }
 
   // 4. 当前层即将学完 (>=70%)
   if (total > 0 && done > 0 && done < total) {
     const pct = Math.round((done / total) * 100);
     if (pct >= 70) {
-      lines.push(T.partial(`⚡ 第 ${layer.id} 层已完成 ${pct}%，还差 ${total - done} 个知识点！`));
+      lines.push(T.partial(`第 ${layer.id} 层已完成 ${pct}%，还差 ${total - done} 个知识点！`));
     }
   }
 
@@ -595,7 +595,7 @@ function getNudge() {
       : 0;
     if (nextDone === 0 && nextLayer) {
       lines.push(
-        T.done(`🎉 第 ${layer.id} 层已全部完成！`) +
+        T.done(`第 ${layer.id} 层已全部完成！`) +
           T.hint(' 下一站: ') +
           T.nav(`learn ${nextLayer.id}`)
       );
@@ -1554,7 +1554,7 @@ function formatRoadmap(progress) {
   const badge = rank.isMaster
     ? T.xp(`★ ${rank.name}${aliasOf(rank)} ★`)
     : T.xp(`${rank.name}${aliasOf(rank)}`);
-  const streakTag = rank.streak >= 2 ? `   ${T.partial(`🔥 ${rank.streak} 天`)}` : '';
+  const streakTag = rank.streak >= 2 ? `   ${T.partial(`${rank.streak} 天`)}` : '';
   lines.push(
     `  ${T.hint('当前境界:')} ${badge}   ${T.hint('已通关')} ${T.layerNum(`${completed}/${totalLayers}`)} ${T.hint('层')}   ${T.hint('经验')} ${T.xp(`${rank.totalXP} XP`)}${streakTag}`
   );
@@ -1580,10 +1580,10 @@ function formatRoadmap(progress) {
 
   // 下一步鼓励
   if (rank.isMaster) {
-    lines.push(`  ${T.done('🎉 渡劫飞升！你已通关全部课程，成为 KHY-OS 大师。')}`);
+    lines.push(`  ${T.done('渡劫飞升！你已通关全部课程，成为 KHY-OS 大师。')}`);
   } else {
     lines.push(
-      `  ${T.partial(`⚡ 距「${rank.next}」还差 ${rank.layersToNext} 层（当前境界内进度 ${rank.inRankPct}%）`)}`
+      `  ${T.partial(`距「${rank.next}」还差 ${rank.layersToNext} 层（当前境界内进度 ${rank.inRankPct}%）`)}`
     );
     lines.push(
       `  ${T.hint('用 ')}${T.nav('learn next')}${T.hint(' 继续修行，每通关一层即可突破境界。')}`
@@ -1803,7 +1803,7 @@ function formatBugCaseList() {
   const progress = _loadProgress();
   const inner = _inner();
   const symptomW = Math.max(20, inner - 5);
-  const severityIcon = { critical: '🔴', high: '🟠', medium: '🟡' };
+  const severityIcon = { critical: '●', high: '●', medium: '○' };
   const severityColor = { critical: chalk.red, high: chalk.hex('#FF8C00'), medium: chalk.yellow };
   const lines = [];
   lines.push('');

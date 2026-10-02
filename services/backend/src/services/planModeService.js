@@ -718,7 +718,7 @@ function stepTypeTag(stepType) {
   let _chalk;
   const c = () => (_chalk ??= require('chalk').default || require('chalk'));
   if (stepType === 'human-gate') {
-    return c().red('🔒人闸门 ');
+    return c().red('人闸门 ');
   }
   if (stepType === 'hardened') {
     return c().dim('[固化] ');
@@ -770,7 +770,7 @@ function _confirmHumanGate(step, rl, renderer) {
     return Promise.resolve(true);
   }
   console.log('');
-  console.log(c().red(`  🔒 人闸门 — 第 ${step.id} 步需确认: `) + c().white(step.description));
+  console.log(c().red(`  人闸门 — 第 ${step.id} 步需确认: `) + c().white(step.description));
   return new Promise((resolve) => {
     rl.question(c().dim('  执行此步？(Enter/y 确认 · n 跳过) > '), (answer) => {
       const t = String(answer || '')
@@ -987,7 +987,7 @@ async function presentForApproval(plan, renderer, rl) {
 
   if (plan.steps.some((s) => s.stepType === 'human-gate')) {
     console.log('');
-    console.log(c().red('  🔒 人闸门步骤将在执行前暂停，需你逐一确认'));
+    console.log(c().red('  人闸门步骤将在执行前暂停，需你逐一确认'));
   }
 
   console.log('');
@@ -1497,7 +1497,7 @@ async function executePlanSteps(plan, opts) {
 
   // 确保任务面板清理
   try {
-    require('../cli/taskPanelState').clearTasks();
+    require('./taskPanelState').clearTasks();
   } catch {
     /* ignore */
   }
@@ -1867,7 +1867,7 @@ async function _executePlanContinuous(plan, opts) {
   _currentPlan = null;
 
   try {
-    require('../cli/taskPanelState').clearTasks();
+    require('./taskPanelState').clearTasks();
   } catch {
     /* ignore */
   }

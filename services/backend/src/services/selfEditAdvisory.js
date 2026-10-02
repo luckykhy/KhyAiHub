@@ -215,7 +215,7 @@ function buildSelfEditAdvisory(p = {}, env = process.env) {
     const guardsAvailable = !!(p && p.guardsAvailable);
 
     // ── 人面(终端可见,紧凑多行)────────────────────────────────────
-    const hLines = [`🔧 khy 自维护 · 已改动 ${rel}`];
+    const hLines = [`khy 自维护 · 已改动 ${rel}`];
     if (outOfSync) {
       hLines.push(`  ├ ⚠ 需同步 ${mirrors.length} 处 bundle 镜像:${mirrors.join('  ')}`);
     } else {

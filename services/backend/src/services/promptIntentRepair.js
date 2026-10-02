@@ -36,7 +36,7 @@ const REPEAT_OK_CHARS = new Set(Array.from('哈呵嘿嘻啦哇喔噢唉嗯哦嗷
 
 // 结构性乱码:这些字符在正常提示词里几乎不可能出现,命中即为「强信号」(零假阳性)。
 const REPLACEMENT_CHAR_RE = /\uFFFD/; // U+FFFD 替换符(编码损坏)
-const ZERO_WIDTH_RE = /[\u200B-\u200D\u2060\uFEFF]/; // 零宽字符
+const ZERO_WIDTH_RE = /[\u200B-\u200D\u2060\uFEFF]/; // 零宽字符  // khy-allow-no-emoji: 零宽字符匹配正则，作用于待修复的外部 prompt 文本
 // C0/C1 控制字符与 DEL,但放行常见排版用的 TAB/LF/CR(U+0009/000A/000D)。
 const CONTROL_CHAR_RE = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/;
 // 同一非空白字符连续出现 3 次及以上(用于「字符异常重复」的弱信号探测)。

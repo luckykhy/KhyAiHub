@@ -188,14 +188,14 @@ function assessRestorePreflight(header, opts) {
       return _verdict(
         STATUS_ALIEN_FORMAT,
         fields,
-        `⚠️ 快照 format='${format}' 不是 khy 源码快照（应为 '${supportedFormat}'）：仍将尝试还原，若失败请核对来源。`
+        `⚠ 快照 format='${format}' 不是 khy 源码快照（应为 '${supportedFormat}'）：仍将尝试还原，若失败请核对来源。`
       );
     }
     if (_isFiniteNum(formatVersion) && formatVersion > maxV) {
       return _verdict(
         STATUS_TOO_NEW_FORMAT,
         fields,
-        `⚠️ 快照 formatVersion=${formatVersion} 高于本机 khy 能理解的最新版本（${maxV}）：仍将尝试还原，` +
+        `⚠ 快照 formatVersion=${formatVersion} 高于本机 khy 能理解的最新版本（${maxV}）：仍将尝试还原，` +
           '若结果异常请升级 khy 后重试。'
       );
     }
@@ -203,7 +203,7 @@ function assessRestorePreflight(header, opts) {
       return _verdict(
         STATUS_TOO_OLD_FORMAT,
         fields,
-        `⚠️ 快照 formatVersion=${formatVersion} 早于本机 khy 能理解的最早版本（${minV}）：仍将尝试还原，` +
+        `⚠ 快照 formatVersion=${formatVersion} 早于本机 khy 能理解的最早版本（${minV}）：仍将尝试还原，` +
           '若结果异常请核对快照来源。'
       );
     }

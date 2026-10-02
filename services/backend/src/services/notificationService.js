@@ -99,7 +99,7 @@ class NotificationService {
       });
     });
 
-    console.log(`📢 公告通知已广播: "${announcement.title}", 发送给 ${sentCount} 个连接`);
+    console.log(`公告通知已广播: "${announcement.title}", 发送给 ${sentCount} 个连接`);
     return sentCount;
   }
 
@@ -153,7 +153,7 @@ class NotificationService {
       }
     });
 
-    console.log(`📢 管理员通知已发送给 ${sentCount} 个管理员连接`);
+    console.log(`管理员通知已发送给 ${sentCount} 个管理员连接`);
     return sentCount;
   }
 
@@ -235,7 +235,7 @@ class NotificationService {
       }
     });
 
-    console.log(`📢 系统通知已广播: "${message}", 发送给 ${sentCount} 个连接`);
+    console.log(`系统通知已广播: "${message}", 发送给 ${sentCount} 个连接`);
     return sentCount;
   }
 
@@ -277,7 +277,7 @@ class NotificationService {
       }
     });
 
-    console.log(`📡 消息已广播给 ${sentCount} 个连接`);
+    console.log(`消息已广播给 ${sentCount} 个连接`);
     return sentCount;
   }
 }

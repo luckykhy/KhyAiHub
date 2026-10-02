@@ -134,7 +134,7 @@ function formatStaleNote(assessment) {
   const age = Number.isFinite(assessment.ageDays) ? Math.round(assessment.ageDays) : null;
   const horizon = Math.round(assessment.horizonDays);
   const agePart = age != null ? `约 ${age} 天前更新` : '更新时间不明';
-  return `> ⏳ 该记忆可能已过期(${agePart},超过 ${horizon} 天视界)——采用前请核实其仍然成立。`;
+  return `> 该记忆可能已过期(${agePart},超过 ${horizon} 天视界)——采用前请核实其仍然成立。`;
 }
 
 module.exports = {

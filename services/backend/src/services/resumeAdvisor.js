@@ -123,7 +123,7 @@ const _AGE_UNIT_ZH = {
  */
 function _ageLabel(ageMinutes, env, ageMs) {
   try {
-    const { ccFormatEnabled, ccRelativeAgeParts } = require('../cli/ccFormat');
+    const { ccFormatEnabled, ccRelativeAgeParts } = require('../utils/format/ccFormat');
     if (ccFormatEnabled(env) && ageMs != null && Number.isFinite(ageMs)) {
       const parts = ccRelativeAgeParts(ageMs);
       if (parts) {

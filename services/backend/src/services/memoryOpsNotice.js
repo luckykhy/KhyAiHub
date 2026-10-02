@@ -123,7 +123,7 @@ function formatWriteNotice(result) {
     const action = String(result.action == null ? '' : result.action);
     // 已存在 / 去重命中:诚实标注未新写入。
     if (action === 'skip' || action === 'skip-duplicate') {
-      return `🧠 记忆已存在（未重复写入）：${typeLabel}·${name}`;
+      return `记忆已存在（未重复写入）：${typeLabel}·${name}`;
     }
     // supersede([DESIGN-MEM-008] §4 第 7 项,承接 [DESIGN-MEM-007] MR-R4①):
     // 同名记忆被**原地替换** —— 必须说清是「更新既有」而非「又写了一条」,否则用户
@@ -134,11 +134,11 @@ function formatWriteNotice(result) {
     // ⚠ 前置:memoryEngine.addStructuredMemory 必须把 decideUpdate 的 action 透传出来,
     //   否则这里永远拿不到 'supersede'(该透传已于 2026-09-27 补齐)。
     if (action === 'supersede') {
-      return `🧠 已更新既有${typeLabel}记忆（原记录已被替换）：${name}`;
+      return `已更新既有${typeLabel}记忆（原记录已被替换）：${name}`;
     }
     // 落地位置:短期会话记忆(session 结束即忘) vs 落盘。
     const where = result.ephemeral === true ? '本会话' : '已落盘';
-    return `🧠 已写入${typeLabel}记忆（${where}）：${name}`;
+    return `已写入${typeLabel}记忆（${where}）：${name}`;
   } catch {
     return '';
   }
@@ -220,7 +220,7 @@ function formatRecallNotice(filenames, ctx) {
     // 整行与旧版逐字节相等(V4 回退)。
     const intent = deriveIntentClause(ctx);
     const clause = intent ? `（${intent}）` : '';
-    return `🧠 召回 ${names.length} 条相关记忆${clause}：${shown.join('、')}${tail}`;
+    return `召回 ${names.length} 条相关记忆${clause}：${shown.join('、')}${tail}`;
   } catch {
     return '';
   }

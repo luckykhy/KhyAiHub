@@ -1680,7 +1680,7 @@ function formatSelfAwarenessProfile(profile) {
   const kb = profile.knowledgeBase || {};
 
   const lines = [];
-  lines.push('🧭 学习模式自知画像');
+  lines.push('学习模式自知画像');
   lines.push(`生成时间: ${profile.generatedAt || 'unknown'}`);
   lines.push(`学习模式: ${profile.studyMode ? 'ON' : 'OFF'}`);
   lines.push(

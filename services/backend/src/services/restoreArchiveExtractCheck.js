@@ -152,7 +152,7 @@ function assessArchiveExtractCompat(header, opts) {
         STATUS_UNKNOWN_LAYOUT,
         plaintextFormat,
         layout,
-        `⚠️ 快照可解压，但目录布局形制陌生（layout='${layout}'，本机认识 ` +
+        `⚠ 快照可解压，但目录布局形制陌生（layout='${layout}'，本机认识 ` +
           `[${supportedLayouts.join(', ')}]）：仍将解包，但请勿当作「目录布局原样」，还原后自行核对结构。`
       );
     }

@@ -751,7 +751,7 @@ function formatSection(ctx) {
   const lines = [];
   lines.push('');
   lines.push(
-    `  ${cyan('📚 相关代码与文档')} ${dim(ctx.usedVector ? '(混合检索·词法+向量)' : '(词法检索)')}`
+    `  ${cyan('相关代码与文档')} ${dim(ctx.usedVector ? '(混合检索·词法+向量)' : '(词法检索)')}`
   );
   for (const c of ctx.chunks) {
     lines.push(`    ${dim('•')} ${cyan(c.source)}`);

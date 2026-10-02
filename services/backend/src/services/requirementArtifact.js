@@ -211,10 +211,10 @@ function readLatestArtifact(sessionId) {
 }
 
 /**
- * 收尾对账：在制品尾部「收尾对账」段下追加逐条 ✓/✗/⏳ 记录（S1 只记录不阻断）。
- * 对账数据源是轮末工具日志的确定性统计（无模型参与），条目对不上号就标 ⏳。
+ * 收尾对账：在制品尾部「收尾对账」段下追加逐条 ✓/✗/○ 记录（S1 只记录不阻断）。
+ * 对账数据源是轮末工具日志的确定性统计（无模型参与），条目对不上号就标 ○。
  * @param {string} artifactId
- * @param {Array<{itemId:string, mark:'✓'|'✗'|'⏳', note:string}>} entries
+ * @param {Array<{itemId:string, mark:'✓'|'✗'|'○', note:string}>} entries
  * @returns {{ok:boolean, error?:string}}
  */
 function appendReconciliation(artifactId, entries) {
@@ -410,7 +410,7 @@ function buildContextLine(latest) {
 }
 
 /**
- * 轮末对账（S1 只记录,规则 2 诚实上报:不判 ✓/✗,只记证据统计,条目一律 ⏳）。
+ * 轮末对账（S1 只记录,规则 2 诚实上报:不判 ✓/✗,只记证据统计,条目一律 ○）。
  * 同一制品只对账一次（文件内 <!-- reconciled --> 印戳幂等）。
  * @param {object} chatState
  * @param {{toolActivity?:number}} stats  本轮工具动作计数（自然循环 + 循环日志）
@@ -442,18 +442,18 @@ function reconcileTurn(chatState, stats = {}) {
       `### ${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())} 轮末`
     );
     lines.push(
-      `- 本轮检出工具动作 ${toolActivity} 次；S1 未做逐条验证比对，以下条目状态一律 ⏳ 待人工核销`
+      `- 本轮检出工具动作 ${toolActivity} 次；S1 未做逐条验证比对，以下条目状态一律 待人工核销`
     );
     const ids = read.body.match(/^- (R\d+)\./gm) || [];
     for (const raw of ids) {
-      lines.push(`- ${raw.replace(/^- /, '').replace(/\.\s*$/, '')} ⏳`);
+      lines.push(`- ${raw.replace(/^- /, '').replace(/\.\s*$/, '')} ○`);
     }
     const appended = appendReconciliation(id, [
       { itemId: lines[0], mark: '', note: '' },
       { itemId: lines[1], mark: '', note: '' },
       ...ids.map((raw) => ({
         itemId: raw.replace(/^- /, '').replace(/\.\s*$/, ''),
-        mark: '⏳',
+        mark: '○',
         note: '',
       })),
     ]);

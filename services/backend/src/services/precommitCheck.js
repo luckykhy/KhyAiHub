@@ -155,11 +155,11 @@ function runPrecommitCheck(opts = {}) {
 
     // ── 呈现(只提示不阻断)────────────────────────────────────────────────────
     if (report.verdict === 'block') {
-      log('\n⛔ 提交前自检:发现须立即注意的严重风险(如密钥/敏感内容)', 'block');
+      log('\n◉ 提交前自检:发现须立即注意的严重风险(如密钥/敏感内容)', 'block');
     } else {
-      log('\n⚠️  提交前自检:发现纪律/风险提示', 'caution');
+      log('\n⚠  提交前自检:发现纪律/风险提示', 'caution');
     }
-    const icon = { critical: '⛔', high: '⚠️', medium: '•', low: '·' };
+    const icon = { critical: '◉', high: '⚠', medium: '•', low: '·' };
     for (const f of report.findings) {
       const where = f.path ? ` [${f.path}${f.line ? `:${f.line}` : ''}]` : '';
       log(`   ${icon[f.severity] || '•'} ${f.message}${where}`, report.verdict);
@@ -192,7 +192,7 @@ function runPrecommitCheck(opts = {}) {
         'block'
       );
     } else if (report.verdict === 'block') {
-      log('   ⚠️ 已放行(仅提示不阻断)。如需硬阻断:设 KHY_COMMIT_PRECHECK_BLOCK=on。', 'info');
+      log('   ⚠ 已放行(仅提示不阻断)。如需硬阻断:设 KHY_COMMIT_PRECHECK_BLOCK=on。', 'info');
     }
 
     return { ran: true, verdict: report.verdict, shouldBlock, report, enqueued };

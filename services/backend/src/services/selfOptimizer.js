@@ -210,7 +210,6 @@ function rollbackConfig(filename) {
  * @returns {{ success: boolean, branch?: string, error?: string }}
  */
 function proposeCodeChange(filePath, newContent, description) {
-  // Block changes to khy OS protected source
   if (isProtectedPath(filePath)) {
     return {
       success: false,
@@ -218,63 +217,62 @@ function proposeCodeChange(filePath, newContent, description) {
     };
   }
 
-  const { execSync } = require('child_process');
+  // execFileSync, never execSync: `description` and `filePath` arrive from the
+  // model's tool arguments, and a shell would interpolate them as code.
+  const { execFileSync } = require('child_process');
   const cwd = process.env.KHYQUANT_CWD || process.cwd();
 
   try {
-    // Check if in a git repo
-    execSync('git rev-parse --is-inside-work-tree', { cwd, timeout: 3000, stdio: 'pipe' });
+    execFileSync('git', ['rev-parse', '--is-inside-work-tree'], { cwd, timeout: 3000, stdio: 'pipe' });
   } catch {
     return { success: false, error: 'Not a git repository — cannot propose code changes safely' };
   }
 
   const branchName = `ai-optimize/${Date.now()}`;
   try {
-    // Get current branch
-    const currentBranch = execSync('git rev-parse --abbrev-ref HEAD', {
+    const currentBranch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
       cwd,
       timeout: 3000,
       encoding: 'utf-8',
     }).trim();
 
-    // Stash any uncommitted changes
     const hasChanges =
-      execSync('git status --porcelain', {
+      execFileSync('git', ['status', '--porcelain'], {
         cwd,
         timeout: 3000,
         encoding: 'utf-8',
       }).trim().length > 0;
 
     if (hasChanges) {
-      execSync('git stash push -m "auto-stash before AI optimization"', {
+      // Stashes the caller's ENTIRE worktree, not just filePath. If anything below
+      // throws before the pop at the end of this block, the catch does not restore
+      // it — the user's work stays in `git stash list`.
+      execFileSync('git', ['stash', 'push', '-m', 'auto-stash before AI optimization'], {
         cwd,
         timeout: 5000,
         stdio: 'pipe',
       });
     }
 
-    // Create optimization branch
-    execSync(`git checkout -b ${branchName}`, { cwd, timeout: 3000, stdio: 'pipe' });
+    execFileSync('git', ['checkout', '-b', branchName], { cwd, timeout: 3000, stdio: 'pipe' });
 
-    // Apply change
     fs.writeFileSync(filePath, newContent, 'utf-8');
 
-    // Commit
     const relPath = path.relative(cwd, filePath);
-    execSync(`git add "${relPath}"`, { cwd, timeout: 3000, stdio: 'pipe' });
-    execSync(`git commit -m "ai-optimize: ${description.slice(0, 60)}"`, {
+    execFileSync('git', ['add', '--', relPath], { cwd, timeout: 3000, stdio: 'pipe' });
+    execFileSync('git', ['commit', '-m', `ai-optimize: ${description.slice(0, 60)}`], {
       cwd,
       timeout: 5000,
       stdio: 'pipe',
     });
 
-    // Return to original branch
-    execSync(`git checkout ${currentBranch}`, { cwd, timeout: 3000, stdio: 'pipe' });
+    execFileSync('git', ['checkout', currentBranch], { cwd, timeout: 3000, stdio: 'pipe' });
 
-    // Restore stash if we stashed
     if (hasChanges) {
+      // Best-effort: a conflict here (e.g. the commit touched the same file) leaves
+      // the stash unapplied and is deliberately not surfaced in the result.
       try {
-        execSync('git stash pop', { cwd, timeout: 5000, stdio: 'pipe' });
+        execFileSync('git', ['stash', 'pop'], { cwd, timeout: 5000, stdio: 'pipe' });
       } catch {}
     }
 
@@ -288,16 +286,15 @@ function proposeCodeChange(filePath, newContent, description) {
       instruction: `git merge ${branchName}`,
     };
   } catch (e) {
-    // Try to recover to original state
     try {
-      const currentBranch = execSync('git rev-parse --abbrev-ref HEAD', {
+      const currentBranch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
         cwd,
         timeout: 3000,
         encoding: 'utf-8',
       }).trim();
       if (currentBranch === branchName) {
-        execSync('git checkout -', { cwd, timeout: 3000, stdio: 'pipe' });
-        execSync(`git branch -D ${branchName}`, { cwd, timeout: 3000, stdio: 'pipe' });
+        execFileSync('git', ['checkout', '-'], { cwd, timeout: 3000, stdio: 'pipe' });
+        execFileSync('git', ['branch', '-D', branchName], { cwd, timeout: 3000, stdio: 'pipe' });
       }
     } catch {
       /* give up */
