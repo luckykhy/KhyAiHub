@@ -3,7 +3,7 @@
 generated:
   mode: auto                # auto = 机器自有，可被 refresh 覆盖；改为 manual 则人工接管
   tool: "khy-metadata/4"
-  fingerprint: 21cc00ae8a8db283
+  fingerprint: c023ac5a8ee7a946
 project: "khy-os"
 stack: [node, monorepo, python, docker, "docker-compose"]
 entry_points:
@@ -62,19 +62,6 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
   "portable-setup.sh":
     lang: shell
     decls: []
-  electron/main.js:
-    lang: javascript
-    decls:
-      - { kind: fn, name: createWindow }
-      - { kind: fn, name: getMainWindow }
-      - { kind: fn, name: registerIpcHandlers }
-  electron/preload.js:
-    lang: javascript
-    decls:
-      - { kind: const, name: handler }
-      - { kind: const, name: handler }
-      - { kind: const, name: handler }
-      - { kind: const, name: handler }
   entries/launch.js:
     lang: javascript
     decls:
@@ -94,9 +81,6 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
       - { kind: def, name: find_apks }
       - { kind: def, name: scan_blob }
       - { kind: def, name: main }
-  "scripts/electron-dev.js":
-    lang: javascript
-    decls: []
   scripts/findIgnored.js:
     lang: javascript
     decls:
@@ -223,49 +207,9 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
   "apps/khyos-desktop/vite.host.config.ts":
     lang: typescript
     decls: []
-  electron/services/aiGatewayService.js:
-    lang: javascript
-    decls:
-      - { kind: fn, name: getApiConfig }
-      - { kind: fn, name: httpRequest }
-  electron/services/authService.js:
-    lang: javascript
-    decls:
-      - { kind: fn, name: ensureConfigDir }
-      - { kind: fn, name: readConfig }
-      - { kind: fn, name: writeConfig }
-  electron/services/backendService.js:
-    lang: javascript
-    decls:
-      - { kind: fn, name: findBackendEntry }
-  electron/services/connectionServer.js:
-    lang: javascript
-    decls:
-      - { kind: fn, name: getServerUrl }
-  electron/services/fileService.js:
-    lang: javascript
-    decls:
-      - { kind: fn, name: buildTree }
-  electron/services/messageService.js:
-    lang: javascript
+  "apps/khyos-desktop/vite.scheduler.config.ts":
+    lang: typescript
     decls: []
-  electron/services/sessionService.js:
-    lang: javascript
-    decls:
-      - { kind: fn, name: ensureDir }
-      - { kind: fn, name: sessionFile }
-      - { kind: fn, name: loadSession }
-      - { kind: fn, name: saveSession }
-      - { kind: fn, name: listSessionFiles }
-  electron/services/syncService.js:
-    lang: javascript
-    decls:
-      - { kind: fn, name: sendToRenderer }
-  electron/services/terminalService.js:
-    lang: javascript
-    decls:
-      - { kind: fn, name: getShell }
-      - { kind: fn, name: sendToRenderer }
   kernel/bridge/index.js:
     lang: javascript
     decls: []
@@ -363,6 +307,18 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
       - { kind: fn, name: agentbus_rx_byte }
       - { kind: fn, name: agentbus_init }
       - { kind: fn, name: agentbus_task }
+  kernel/src/agentbus.h:
+    lang: c
+    decls:
+      - { kind: struct, name: agentframe }
+  kernel/src/agentconf.c:
+    lang: c
+    decls:
+      - { kind: fn, name: key_ok }
+      - { kind: fn, name: val_ok }
+      - { kind: fn, name: disk_ready }
+      - { kind: fn, name: agentconf_set }
+      - { kind: fn, name: agentconf_get }
   packaging/installer/build_installer.js:
     lang: javascript
     decls:
@@ -596,6 +552,27 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
       - { kind: def, name: ensure_dev_environment }
       - { kind: def, name: _subprocess_kwargs }
       - { kind: def, name: _main }
+  platform/khy_platform/docs_site.py:
+    lang: python
+    decls:
+      - { kind: def, name: maybe_run_docs_build }
+      - { kind: def, name: _candidate_site_roots }
+      - { kind: def, name: _resolve_generator }
+      - { kind: def, name: _resolve_node }
+      - { kind: def, name: _print_node_missing_hint }
+      - { kind: def, name: run_docs_build_cli }
+  platform/khy_platform/fs_compress.py:
+    lang: python
+    decls:
+      - { kind: def, name: _gate_enabled }
+      - { kind: def, name: _stamp_candidates }
+      - { kind: def, name: _already_compressed }
+      - { kind: def, name: _mark_done }
+      - { kind: def, name: _windows_fs_name }
+      - { kind: def, name: _linux_mount_for }
+      - { kind: def, name: _run }
+      - { kind: def, name: compress_tree_sync }
+      - { kind: def, name: schedule_install_compression }
   "scripts/admin/_check-credentials.js":
     lang: javascript
     decls: []
@@ -622,6 +599,37 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
   "scripts/admin/_reset-users.py":
     lang: python
     decls: []
+  "scripts/backend/fix-deprecated-encoding.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: processFile }
+      - { kind: fn, name: fixDeprecatedEncoding }
+  "scripts/ci/annotate-patterns.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: hasPatternTag }
+      - { kind: fn, name: addPatternToJS }
+      - { kind: fn, name: addPatternToPython }
+      - { kind: fn, name: addPatternToVue }
+      - { kind: fn, name: addPatternToC }
+      - { kind: fn, name: addPatternToASM }
+      - { kind: fn, name: addPatternToShell }
+      - { kind: fn, name: addPatternToCSS }
+      - { kind: fn, name: addPatternToMoonBit }
+  "scripts/ci/check-agent-authz.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: add }
+      - { kind: fn, name: readText }
+      - { kind: fn, name: readJson }
+      - { kind: fn, name: checkA2_2_readOnlyProfileHasNoShell }
+      - { kind: fn, name: checkA2_2_readOnlyAgentsDenyShell }
+      - { kind: fn, name: checkA2_3_noFailOpen }
+      - { kind: fn, name: checkA2_1_undeclaredIsNotAllTools }
+      - { kind: fn, name: checkA2_4_executionBoundaryEnforcesScope }
+      - { kind: fn, name: checkA2_5_singleRoleSet }
+      - { kind: fn, name: checkA2_7_noSilentDegradation }
+      - { kind: fn, name: main }
   "services/ai-backend/server.js":
     lang: javascript
     decls:
@@ -683,6 +691,13 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
     lang: python
     decls:
       - { kind: def, name: od }
+  services/backend/proxy.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: sj }
+      - { kind: fn, name: se }
+      - { kind: fn, name: ct }
+      - { kind: fn, name: at2o }
   software/akshare_scripts/akshare_data.py:
     lang: python
     decls:
@@ -922,6 +937,39 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
     decls:
       - { kind: fn, name: resolveDbPath }
       - { kind: fn, name: loadSqlite }
+  "extensions/scripts/khy-diagnostics/model-type-providers.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: _env }
+      - { kind: fn, name: _hasEnv }
+      - { kind: fn, name: _officialHosts }
+      - { kind: fn, name: _defaultEmbedBase }
+      - { kind: fn, name: _gatherTypeFacts }
+      - { kind: const, name: videoBackend }
+      - { kind: fn, name: buildPlan }
+      - { kind: fn, name: _channelLabel }
+      - { kind: fn, name: _statusGlyph }
+      - { kind: fn, name: printHuman }
+      - { kind: const, name: label }
+      - { kind: fn, name: buildDoc }
+      - { kind: fn, name: writeDoc }
+      - { kind: fn, name: main }
+  "extensions/scripts/khy-diagnostics/storage-baseline.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: treeStats }
+      - { kind: fn, name: safeSize }
+      - { kind: fn, name: safeLs }
+      - { kind: fn, name: resolveDataHome }
+      - { kind: fn, name: resolveLogRoot }
+      - { kind: fn, name: probeLogs }
+      - { kind: fn, name: probeCheckpoints }
+      - { kind: fn, name: probeDependencies }
+      - { kind: fn, name: countNested }
+      - { kind: fn, name: probeBuildOutputs }
+      - { kind: fn, name: probeLockfiles }
+      - { kind: fn, name: collect }
+      - { kind: fn, name: main }
   "packaging/modules/entries/khy-ai-entry.js":
     lang: javascript
     decls:
@@ -997,3 +1045,7 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
     lang: javascript
     decls:
       - { kind: fn, name: spawnDetached }
+  "packaging/npm/test/manifest-contract.test.js":
+    lang: javascript
+    decls:
+      - { kind: const, name: declared }

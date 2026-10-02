@@ -1,4 +1,4 @@
-<!-- khy-metadata:auto khy-metadata/4 fingerprint=21cc00ae8a8db283 -->
+<!-- khy-metadata:auto khy-metadata/4 fingerprint=c023ac5a8ee7a946 -->
 <!-- 本文件由 khy 机械生成，可被 `khy metadata refresh` 安全覆盖。删除上面这行标记即视为人工接管，刷新将不再覆盖本文件。 -->
 # MAP — khy-os 骨架与导航
 
@@ -41,8 +41,6 @@
   - `docs/10_规范/`
   - `docs/11_报告/`
   - `docs/12_模板/`
-- `electron/`
-  - `electron/services/` — 服务/业务逻辑
 - `entries/`
   - `entries/executables/`
   - `entries/pip/`
@@ -108,12 +106,9 @@
 > 导航 teaser（按详略档位裁剪，`KHY_META_DETAIL=brief|standard|full`）。完整逐文件逐符号清单见 `CONTEXT.yaml`。
 - `khy.sh` (shell): _无导出符号_
 - `portable-setup.sh` (shell): _无导出符号_
-- `electron/main.js` (javascript): createWindow, getMainWindow, registerIpcHandlers
-- `electron/preload.js` (javascript): handler, handler, handler, handler
 - `entries/launch.js` (javascript): fail, printUsage, translate, main
 - `kernel/tools_gen_blob.sh` (shell): _无导出符号_
 - `scripts/check_builtin_keys.py` (python): decode_arrays, iter_source_files, changed_paths, find_apks, scan_blob, main
-- `scripts/electron-dev.js` (javascript): _无导出符号_
 - `scripts/findIgnored.js` (javascript): findStandaloneTestFiles
 - `scripts/gen_keys.py` (python): keys_file, load_keys, encode, decode, dart_arrays, render, check
 - `scripts/install-hooks.sh` (shell): _无导出符号_
@@ -132,15 +127,7 @@
 - `apps/khyos-desktop/electron.vite.config.ts` (typescript): _无导出符号_
 - `apps/khyos-desktop/vite.config.js` (javascript): _无导出符号_
 - `apps/khyos-desktop/vite.host.config.ts` (typescript): _无导出符号_
-- `electron/services/aiGatewayService.js` (javascript): getApiConfig, httpRequest
-- `electron/services/authService.js` (javascript): ensureConfigDir, readConfig, writeConfig
-- `electron/services/backendService.js` (javascript): findBackendEntry
-- `electron/services/connectionServer.js` (javascript): getServerUrl
-- `electron/services/fileService.js` (javascript): buildTree
-- `electron/services/messageService.js` (javascript): _无导出符号_
-- `electron/services/sessionService.js` (javascript): ensureDir, sessionFile, loadSession, saveSession, listSessionFiles
-- `electron/services/syncService.js` (javascript): sendToRenderer
-- `electron/services/terminalService.js` (javascript): getShell, sendToRenderer
+- `apps/khyos-desktop/vite.scheduler.config.ts` (typescript): _无导出符号_
 - `kernel/bridge/index.js` (javascript): _无导出符号_
 - `kernel/bridge/khy-agent-run.js` (javascript): log, main, shutdown
 - `kernel/bridge/khy-agent.js` (javascript): defaultBrain, KhyAgent
@@ -153,6 +140,17 @@
 - `kernel/src/agentask.c` (c): waiter, ask_crit_enter, ask_crit_leave, agentask_init, agentask_on_response, agentask_tick
 - `kernel/src/agentask.h` (c): agentframe
 - `kernel/src/agentbus.c` (c): agentbus_send_frame, dispatch_frame, agentbus_rx_byte, agentbus_init, agentbus_task
+- `kernel/src/agentbus.h` (c): agentframe
+- `kernel/src/agentconf.c` (c): key_ok, val_ok, disk_ready, agentconf_set, agentconf_get
 - `packaging/installer/build_installer.js` (javascript): getVersion, findKhyExecutable, buildPayload, zipSize, checkNsis, compileNsi, main, size
+- `platform/delivery/deliveryController.js` (javascript): DeliveryController
+- `platform/delivery/demo.js` (javascript): main
+- `platform/khy_platform/__init__.py` (python): _detect_version
+- `platform/khy_platform/__main__.py` (python): _无导出符号_
+- `platform/khy_platform/_bootstrap.py` (python): _configure_npm_registry, _subprocess_kwargs, _run_npm_streaming, _watchdog, _write_marker, _path_exists_safe, _has_llama_pkg, _has_cw_sdk, _node_env, _check_version_upgrade, …(+20)
+- `platform/khy_platform/_ui.py` (python): _colorize, ok, warn, fail, info, dim, Spinner, __init__, __enter__, __exit__, …(+14)
+- `platform/khy_platform/android_build.py` (python): _step, _info, _fail, _action_required, _subprocess_kwargs, _run, _repo_root, _parse_android_table, _lock, _parse_args, …(+20)
+- `platform/khy_platform/app_protocol.py` (python): _home_root, base_home, app_home, base_data_dir, ensure_home, AppManifest, data_home, from_dict, to_dict, EcoContext, …(+11)
+- `platform/khy_platform/autostart.py` (python): autostart_enabled_by_env, _resolve_launch_command, _windows_startup_path, _mac_launch_agent_path, _linux_autostart_path, _artifact_path, _windows_contents, _mac_contents, _linux_contents, _artifact_contents, …(+3)
 - …其余 72 个文件的符号见 `CONTEXT.yaml`（完整逐文件清单）。
 

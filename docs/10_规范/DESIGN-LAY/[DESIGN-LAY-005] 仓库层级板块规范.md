@@ -286,7 +286,7 @@ D1–D5 是 L0–L6 的**聚合**，不是另起炉灶，因此本轴**不移动
 | D1 | 运行时内核 | 平台作为操作系统跑起来 | `kernel` `platform` `services/backend/bin` `src/cli` `src/routes` `src/services` |
 | D2 | 业务上下文 | 一块可独立演进的业务 | `services/backend/src/services/domain` |
 | D3 | 共享底座 | 被 ≥30 处依赖的复用设施 | `src/utils` `src/constants` |
-| D4 | 交付与接入 | 面向最终用户的产物与接入面 | `apps` `software` `extensions` `tools` `electron` `entries` `packaging` |
+| D4 | 交付与接入 | 面向最终用户的产物与接入面 | `apps` `software` `extensions` `tools` `entries` `packaging` |
 | D5 | 工程与档案 | 只在开发/记录期被触达 | `scripts` `docs` `.github` `deploy` `patches` |
 
 **执行面只放开两条无人管辖的禁止边**（规则 `domain-direction`，warning + 基线）：
