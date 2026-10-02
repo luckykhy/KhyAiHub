@@ -157,7 +157,10 @@ function daemonStart(opts = {}) {
   if (enableWatchdog) {
     try {
       const watchdog = require('./watchdogService');
-      watchdog.start();
+      // The watchdog observes and revives *this* daemon; it is handed the
+      // control plane instead of requiring this module back (that reverse
+      // edge was an SCC of its own — archDebtScan R3).
+      watchdog.start({ daemon: { daemonStatus, daemonRestart } });
     } catch {
       /* watchdog is optional - don't fail daemon start if unavailable */
     }
