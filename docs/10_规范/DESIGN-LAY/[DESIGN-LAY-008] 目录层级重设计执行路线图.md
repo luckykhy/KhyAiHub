@@ -4894,6 +4894,37 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 
 ### 16.6 施工执行状态（点头后逐批登记）
 
+> **2026-10-02 06:0x 节（第 6 节·D-4 档首批，用户点名「走规则 7 程序逐个下线，一件一提交、每件可单独 revert」）**：
+> **实际净产出 根 −1**（`.claude/` 出根，78 项；资源管理器可见 57）。这是 D-4 档今夜唯一能兑现的一件。
+> 存证在 `.khy/feedback/d4-retire-20261002/`：`scrub-plan.md`（七部位逐件证据）+ `rollback.cmd`（可执行回滚）。
+>
+> **⚠ 更正我 05:20 节给用户的承诺「选 D-4 下一节就能 −6~−7」——错，实测只有 −1。** 错因两条，
+> 都是动手取证才暴露的（当时只看了「跟踪件数 + 在飞数」这两把尺）：
+> 1. **没查运行时是否消费**：`.cursor/rules/khy-maintainability.mdc` 与根级 `.clinerules` 不是死配置，
+>    它们是 `services/backend/src/services/instructionFileService.js` 的
+>    `discoverEcosystemInstructionFiles()` 的**加载对象**（生态指令文件，见 `[DESIGN-DOC-002]` 第 44 行
+>    的管辖表）。删它们会**改变产品行为**（用 Cline/Cursor 打开本仓的人少一份指令文件），不是清理杂物。
+> 2. **没查文档背书**：规则 7 明写「被删代码若在 `docs/` 设计文档中有背书，判
+>    `delete-documented-code`（error，拒绝放行）——须先『救活』或订正文档」。这两件在
+>    `[DESIGN-DOC-002]`（第 5/6/44/93/344 行多处点名）与规则卡 `[DOCS-003]` 里都有背书，
+>    而**这两份背书文档本体此刻都在飞（` M`）** → 双重锁死：既不能删件，也不能先改文档来放行。
+>
+> **七部位逐件结论**（详表见存证）：`.claude` ✅ 已下线（0 跟踪件、目录空、
+> `git worktree list` 三个 worktree 均不挂它下面，回滚 = `mkdir -p .claude/worktrees`）；
+> `.commandcode` ⏸ 未跟踪的**活工具配置**（`settings.json` + `taste/`，~1MB），
+> git revert 对它无效，「单独可 revert」这个前提不成立，且删了不改他人克隆的根宽——等用户明确
+> 「这台机器不用 CommandCode」；`.cursor` ⛔ `.clinerules` ⛔（上述双重锁死）；
+> `.opencode` ⛔ 1 件在飞；`.zcode` ⛔ **21 件在飞**（与 `apps/khyos-desktop/zcode-analysis/**`
+> 的 ZCode 对齐工作同源，正在用）；`CLAUDE.md` ⛔ 本体在飞，且「并入 AGENTS.md」是内容合并不是搬家。
+>
+> **新事实 K（10-02 第 6 节·修正「无人写入」的口径）**：本节点名检查近 30 分钟 mtime，
+> 发现 **3 个文件正在被写**——`docs/10_规范/registry/FEATURE-OWNERSHIP.json`、
+> `services/backend/src/agents/constraints.js`、`services/backend/src/tools/AgentTool/index.js`。
+> ⇒ 前几节「并非活跃进程正在写入」这句要收窄为：**那批 2895 件积压**的 mtime 确实停在 09-28/29
+> （闸文件本体逐件核过），但**另有车道此刻正在写别的文件**。含义有两层：① 门控扫描必须每节现做，
+> 不能引用上一节的快照；② `FEATURE-OWNERSHIP.json` 是 rollout 阶段登记表，它正在被写意味着
+> 任何触登记表的批次今夜都是活闸。
+
 > **2026-10-02 05:20 节（第 5 节·今夜最后一节）**：**仍无未门控批次**，零文件移动。
 > 脏件 2895、四道关键闸、百度件 20、根项 80、架构根宽 59 与前四节逐项相同——
 > **今夜五节全部撞在同一批作者积压上，搬家净产出 0**。为让这份数据对明天有用，
@@ -4955,6 +4986,7 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 |---|---|---|
 | W1 `.git-blame-ignore-revs` 退役 | ✅ `608eb6bb` | 根 61→60 |
 | W10a `.mailmap`→`docs/.mailmap` + `mailmap.file` config（install-hooks.sh 落盘 per-machine） | ✅ 本批 | 根 60→59（本道净贡献） |
+| **D-4 工具位退役批**（`.claude`/`.cursor`/`.opencode`/`.zcode`/`.commandcode`/`.clinerules` + `CLAUDE.md` 并入） | 部分 ✅ 1/7 | `.claude` 已下线 → 根 79→78（架构可见 58→57）。其余 6 部位：2 个 ⛔ 规则 7 `delete-documented-code`（运行时真加载 + 背书文档在飞）、3 个 ⛔ 在飞（`.opencode` 1 / `.zcode` 21 / `CLAUDE.md` 1）、1 个 ⏸ 待人确认（`.commandcode` 未跟踪活配置，git 无法 revert）。存证 `.khy/feedback/d4-retire-20261002/` |
 | W2 余量（CONTRIBUTING/SECURITY/CHANGELOG/.env.example） | ⛔ 门控（第 2 节收窄，见新事实 D） | `CONTRIBUTING.md`/`SECURITY.md` 半批的**真闸收窄为一条**：`check-repo-layout.js:143–149` 的根文档白名单数组（含 `CHANGELOG.md`/`CONTRIBUTING.md`/`SECURITY.md`）在飞——`check-commit-message.js:59` 只是报错文案、非路径消费，`CODEOWNERS:96` 干净可随批改。`SECURITY.md` 仍有 8 个在飞消费方（含落点真源 `DATA-LOCATIONS.json`）；`CHANGELOG.md` **本体即 ` M`** 且消费方含 `AGENTS.md`、`.ai/hq/ROADMAP.md`；`.env.example` 消费方 12+ 在飞（`.ai/**`、`pip_packaging_rules.py`、`handlers/publish.js`、`RULES-REGISTRY.json`） |
 | W3 `.gitattributes`/`.editorconfig` 分域 | ⛔ 前置未备 | 五域目录尚未创建（§16.2 的「五域各一份」依赖 P1–P5）；且根位 `.gitattributes` 一旦拆散，**仍留在根的全部跟踪文件将失去行尾/合并规则覆盖**——只能与域目录创建同批做，不可单独提前 |
 | W4 pyproject/MANIFEST→`delivery/channel/pip/` | ⛔ 门控 | 本体 `pyproject.toml` 为 ` M`（R3 版本锚 9 真源之一，本体在飞即不可动）；且 `delivery/` 尚不存在。**第 4 节精化**：真编辑面远大于「改指三处」——77 个路径消费方（63 干净 / 14 在飞），须拆 ≥4 提交，见新事实 H |
