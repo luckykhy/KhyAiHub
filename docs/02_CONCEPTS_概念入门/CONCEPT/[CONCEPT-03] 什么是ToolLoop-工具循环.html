@@ -11,20 +11,20 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
     <div class="content">
       <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>02_CONCEPTS_概念入门<span class="sep">›</span>CONCEPT<span class="sep">›</span>③ 什么是 Tool Loop（工具循环）</div>
       <header class="hero reveal"><h1>③ 什么是 Tool Loop（工具循环）</h1></header>
-      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#③-什么是-tool-loop-工具循环">③ 什么是 Tool Loop（工具循环）</a></li><li class="lvl-2"><a href="#一-一句话定义">一、一句话定义</a></li><li class="lvl-2"><a href="#二-为什么需要循环">二、为什么需要循环？</a></li><li class="lvl-3"><a href="#比喻一-炒菜时不停-尝味调整">比喻一：炒菜时不停&quot;尝味调整&quot;</a></li><li class="lvl-3"><a href="#比喻二-走迷宫时试错">比喻二：走迷宫时试错</a></li><li class="lvl-3"><a href="#比喻三-医生-诊断-检查-再诊断">比喻三：医生&quot;诊断—检查—再诊断&quot;</a></li><li class="lvl-3"><a href="#比喻四-修-bug-回到我们的老本行">比喻四：修 bug（回到我们的老本行）</a></li><li class="lvl-2"><a href="#三-循环的一圈-到底发生了什么">三、循环的一圈，到底发生了什么？</a></li><li class="lvl-3"><a href="#把一轮再放慢-逐格拆给你看">把一轮再放慢，逐格拆给你看</a></li><li class="lvl-2"><a href="#四-循环必须有-刹车-否则会转不停-新手最好奇的一章">四、循环必须有&quot;刹车&quot;，否则会转不停（新手最好奇的一章）</a></li><li class="lvl-3"><a href="#刹车一-目标达成-正常停车">刹车一：目标达成（正常停车）</a></li><li class="lvl-3"><a href="#刹车二-步数上限-安全护栏">刹车二：步数上限（安全护栏）</a></li><li class="lvl-3"><a href="#刹车三-出错识别-急刹车">刹车三：出错识别（急刹车）</a></li><li class="lvl-3"><a href="#三种刹车放在一张图里">三种刹车放在一张图里</a></li><li class="lvl-2"><a href="#五-一个具体的循环走一遍">五、一个具体的循环走一遍</a></li><li class="lvl-2"><a href="#六-动手小实验-在脑子里跑一遍多轮循环">六、动手小实验：在脑子里跑一遍多轮循环</a></li><li class="lvl-2"><a href="#七-常见误区">七、常见误区（❌ / ✅）</a></li><li class="lvl-2"><a href="#八-和其它概念的关系">八、和其它概念的关系</a></li><li class="lvl-2"><a href="#九-和-khy-os-的关系">九、和 Khy-OS 的关系</a></li><li class="lvl-2"><a href="#十-循环全景图-把这一篇收进一张图">十、循环全景图（把这一篇收进一张图）</a></li><li class="lvl-2"><a href="#十一-小结-下一步">十一、小结 + 下一步</a></li></ul></nav>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#③-什么是-tool-loop-工具循环">③ 什么是 Tool Loop（工具循环）</a></li><li class="lvl-2"><a href="#一-一句话定义">一、一句话定义</a></li><li class="lvl-2"><a href="#二-为什么需要循环">二、为什么需要循环？</a></li><li class="lvl-3"><a href="#比喻一-炒菜时不停-尝味调整">比喻一：炒菜时不停&quot;尝味调整&quot;</a></li><li class="lvl-3"><a href="#比喻二-走迷宫时试错">比喻二：走迷宫时试错</a></li><li class="lvl-3"><a href="#比喻三-医生-诊断-检查-再诊断">比喻三：医生&quot;诊断—检查—再诊断&quot;</a></li><li class="lvl-3"><a href="#比喻四-修-bug-回到我们的老本行">比喻四：修 bug（回到我们的老本行）</a></li><li class="lvl-2"><a href="#三-循环的一圈-到底发生了什么">三、循环的一圈，到底发生了什么？</a></li><li class="lvl-3"><a href="#把一轮再放慢-逐格拆给你看">把一轮再放慢，逐格拆给你看</a></li><li class="lvl-2"><a href="#四-循环必须有-刹车-否则会转不停-新手最好奇的一章">四、循环必须有&quot;刹车&quot;，否则会转不停（新手最好奇的一章）</a></li><li class="lvl-3"><a href="#刹车一-目标达成-正常停车">刹车一：目标达成（正常停车）</a></li><li class="lvl-3"><a href="#刹车二-步数上限-安全护栏">刹车二：步数上限（安全护栏）</a></li><li class="lvl-3"><a href="#刹车三-出错识别-急刹车">刹车三：出错识别（急刹车）</a></li><li class="lvl-3"><a href="#三种刹车放在一张图里">三种刹车放在一张图里</a></li><li class="lvl-2"><a href="#五-一个具体的循环走一遍">五、一个具体的循环走一遍</a></li><li class="lvl-2"><a href="#六-动手小实验-在脑子里跑一遍多轮循环">六、动手小实验：在脑子里跑一遍多轮循环</a></li><li class="lvl-2"><a href="#七-常见误区">七、常见误区（✗ / ✓）</a></li><li class="lvl-2"><a href="#八-和其它概念的关系">八、和其它概念的关系</a></li><li class="lvl-2"><a href="#九-和-khy-os-的关系">九、和 Khy-OS 的关系</a></li><li class="lvl-2"><a href="#十-循环全景图-把这一篇收进一张图">十、循环全景图（把这一篇收进一张图）</a></li><li class="lvl-2"><a href="#十一-小结-下一步">十一、小结 + 下一步</a></li></ul></nav>
       <article class="doc-body">
 <h1 id="③-什么是-tool-loop-工具循环">③ 什么是 Tool Loop（工具循环）<a class="anchor" href="#③-什么是-tool-loop-工具循环" aria-label="锚点">#</a></h1>
 <blockquote><p>建议先读 [② 什么是 Tool Calling]([CONCEPT-02] 什么是ToolCalling-工具调用.md)。这一篇讲：怎么把&quot;很多次工具调用&quot;自动接力成一件完整的活。往后可以接着读 [⑤ 什么是 Skill]([CONCEPT-05] 什么是Skill-技能.md)，它给循环准备&quot;剧本&quot;。</p></blockquote>
@@ -35,8 +35,8 @@
 <p>打个最直白的比方：</p>
 <ul><li>[工具调用]([CONCEPT-02] 什么是ToolCalling-工具调用.md)是<strong>迈一步</strong>；</li><li>工具循环是<strong>一步接一步走到目的地</strong>。</li></ul>
 <p>一步谁都会迈，难的是&quot;走到哪、看清楚路况、再决定下一步往哪迈&quot;——工具循环干的就是这件事。</p>
-<aside class="callout callout-note reveal"><div class="callout-mascot" aria-hidden="true">🐧</div><div class="callout-body"><div class="callout-title">📌 小笔记</div><p>把三个概念连起来记：<span class="popover" tabindex="0"><span class="popover-anchor">Agent</span><span class="popover-tip" role="tooltip">会拿主意的数字员工</span></span> 是&quot;人&quot;，<span class="popover" tabindex="0"><span class="popover-anchor">工具调用</span><span class="popover-tip" role="tooltip">迈出一步的动作</span></span> 是&quot;迈一步&quot;，<strong>工具循环</strong>是&quot;一步接一步走到终点&quot;。少了循环，Agent 就只会走第一步然后停下。</p></div></aside>
-<div class="flip reveal" tabindex="0" role="button" aria-label="点击翻转卡片"><div class="flip-inner"><div class="flip-face flip-front">🤔 如果 AI 每一步都不看结果、埋头往下做，会发生什么？<div class="flip-hint">👆 点我翻面看答案</div></div><div class="flip-face flip-back">😵 它会像蒙着眼走迷宫：撞了墙也不知道，把错误一路带到底。<strong>&quot;看结果再决定下一步&quot;</strong> 正是工具循环最值钱的地方——它让 AI 能发现错、然后拐弯。</div></div></div>
+<aside class="callout callout-note reveal"><div class="callout-mascot" aria-hidden="true">◆</div><div class="callout-body"><div class="callout-title">◆ 小笔记</div><p>把三个概念连起来记：<span class="popover" tabindex="0"><span class="popover-anchor">Agent</span><span class="popover-tip" role="tooltip">会拿主意的数字员工</span></span> 是&quot;人&quot;，<span class="popover" tabindex="0"><span class="popover-anchor">工具调用</span><span class="popover-tip" role="tooltip">迈出一步的动作</span></span> 是&quot;迈一步&quot;，<strong>工具循环</strong>是&quot;一步接一步走到终点&quot;。少了循环，Agent 就只会走第一步然后停下。</p></div></aside>
+<div class="flip reveal" tabindex="0" role="button" aria-label="点击翻转卡片"><div class="flip-inner"><div class="flip-face flip-front">如果 AI 每一步都不看结果、埋头往下做，会发生什么？<div class="flip-hint">▸ 点我翻面看答案</div></div><div class="flip-face flip-back">它会像蒙着眼走迷宫：撞了墙也不知道，把错误一路带到底。<strong>&quot;看结果再决定下一步&quot;</strong> 正是工具循环最值钱的地方——它让 AI 能发现错、然后拐弯。</div></div></div>
 <hr>
 <h2 id="二-为什么需要循环">二、为什么需要循环？<a class="anchor" href="#二-为什么需要循环" aria-label="锚点">#</a></h2>
 <p>因为真实任务<strong>做完一步之后，下一步取决于这一步的结果</strong>，事先没法全想好。</p>
@@ -72,9 +72,9 @@
 <p>把一圈拆成四拍（记住这个节奏就懂了）：</p>
 <table><thead><tr><th>拍子</th><th>名字</th><th>在干嘛</th><th>生活比喻</th></tr></thead><tbody><tr><td>第 1 拍</td><td><strong>想（Reason）</strong></td><td>大模型根据目标和已知信息，决定下一步做什么</td><td>厨子想&quot;该尝味了&quot;</td></tr><tr><td>第 2 拍</td><td><strong>做（Act）</strong></td><td>发起一次[工具调用]([CONCEPT-02] 什么是ToolCalling-工具调用.md)（读文件 / 改代码 / 跑命令…）</td><td>舀一勺尝</td></tr><tr><td>第 3 拍</td><td><strong>看（Observe）</strong></td><td>拿到工具返回的结果</td><td>尝出&quot;偏淡&quot;</td></tr><tr><td>第 4 拍</td><td><strong>判（Decide）</strong></td><td>结果满足目标了吗？满足 → 结束；不满足 → 回到第 1 拍</td><td>&quot;还差点盐，再来&quot;</td></tr></tbody></table>
 <pre class="mermaid">flowchart LR
-  Reason[&quot;🧠 想&lt;br/&gt;下一步做什么&quot;] --&gt; Act[&quot;🛠️ 做&lt;br/&gt;调用工具&quot;]
-  Act --&gt; Observe[&quot;👀 看&lt;br/&gt;工具结果&quot;]
-  Observe --&gt; Decide{&quot;✅ 判&lt;br/&gt;完成了吗?&quot;}
+  Reason[&quot;想&lt;br/&gt;下一步做什么&quot;] --&gt; Act[&quot;做&lt;br/&gt;调用工具&quot;]
+  Act --&gt; Observe[&quot;看&lt;br/&gt;工具结果&quot;]
+  Observe --&gt; Decide{&quot;✓ 判&lt;br/&gt;完成了吗?&quot;}
   Decide -- 否 --&gt; Reason
   Decide -- 是 --&gt; End([回报])</pre>
 <p>这个&quot;想—做—看—判&quot;的循环，在业界常被叫做 <strong>ReAct</strong>（Reason + Act，推理与行动交替）。你不用记这个词，记住&quot;转圈直到完成&quot;就够了。</p>
@@ -99,15 +99,15 @@
 <h3 id="三种刹车放在一张图里">三种刹车放在一张图里<a class="anchor" href="#三种刹车放在一张图里" aria-label="锚点">#</a></h3>
 <pre class="mermaid">flowchart TB
   L[进入循环] --&gt; W{超过最大轮数?}
-  W -- 是 --&gt; STOP[🛑 停下并如实报告卡点]
+  W -- 是 --&gt; STOP[停下并如实报告卡点]
   W -- 否 --&gt; ERR{遇到致命错误?}
   ERR -- 是 --&gt; STOP
   ERR -- 否 --&gt; DO[想→做→看]
   DO --&gt; OK{验证通过?&lt;br/&gt;目标达成?}
-  OK -- 是 --&gt; FIN[✅ 完成回报]
+  OK -- 是 --&gt; FIN[✓ 完成回报]
   OK -- 否 --&gt; L</pre>
 <blockquote><p>Khy-OS 的项目纪律把这件事写死了：<strong>每步都要带一个&quot;验证命令&quot;，跑过验证才算这步完成；轮数有上限；到顶还没绿，就如实报告卡在哪——绝不假报成功。</strong> 这套纪律就是给工具循环装的三副刹车。</p></blockquote>
-<div class="quiz reveal" data-multi="1"><div class="quiz-q">🧠 工具循环为什么必须有&quot;刹车&quot;？（多选，全选对才算过）</div><ul class="quiz-opts"><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="1"><span class="quiz-key">A</span><span class="quiz-text">防止任务卡住时无限循环、烧钱烧时间</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="1"><span class="quiz-key">B</span><span class="quiz-text">遇到致命错误时该立刻停下报告，而不是越改越糟</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="1"><span class="quiz-key">C</span><span class="quiz-text">达成目标后要能正常停车、回报结果</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="0"><span class="quiz-key">D</span><span class="quiz-text">因为大模型每次只能想一步，没别的办法</span></button></li></ul><div class="quiz-feedback" aria-live="polite"></div><div class="quiz-explain" hidden>💬 三副刹车分别对应：步数上限（防死循环）、出错识别（急刹车）、目标达成（正常停车）。第四个是错的——模型能连续推理很多步，&quot;刹车&quot;是为了安全和收敛，不是能力限制。</div></div>
+<div class="quiz reveal" data-multi="1"><div class="quiz-q">❯ 工具循环为什么必须有&quot;刹车&quot;？（多选，全选对才算过）</div><ul class="quiz-opts"><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="1"><span class="quiz-key">A</span><span class="quiz-text">防止任务卡住时无限循环、烧钱烧时间</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="1"><span class="quiz-key">B</span><span class="quiz-text">遇到致命错误时该立刻停下报告，而不是越改越糟</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="1"><span class="quiz-key">C</span><span class="quiz-text">达成目标后要能正常停车、回报结果</span></button></li><li class="quiz-opt"><button type="button" class="quiz-choice" data-correct="0"><span class="quiz-key">D</span><span class="quiz-text">因为大模型每次只能想一步，没别的办法</span></button></li></ul><div class="quiz-feedback" aria-live="polite"></div><div class="quiz-explain" hidden>▸ 三副刹车分别对应：步数上限（防死循环）、出错识别（急刹车）、目标达成（正常停车）。第四个是错的——模型能连续推理很多步，&quot;刹车&quot;是为了安全和收敛，不是能力限制。</div></div>
 <hr>
 <h2 id="五-一个具体的循环走一遍">五、一个具体的循环走一遍<a class="anchor" href="#五-一个具体的循环走一遍" aria-label="锚点">#</a></h2>
 <p>任务：&quot;给项目加一个 <code>hello</code> 命令&quot;。看它怎么一圈圈推进：</p>
@@ -115,38 +115,38 @@
 <p>三圈，一件完整的活就做完了，而且<strong>最后一圈是自我验证</strong>。</p>
 <p>请特别注意第 3 圈：循环不是&quot;改完就走&quot;，而是<strong>改完还要自己检查一遍</strong>才敢说&quot;做完了&quot;。这就是刹车一（目标达成）在起作用——没跑过验证，它不会宣布胜利。</p>
 <p>把上面这三圈演成一幕小短剧，你就能&quot;看见&quot;循环一圈圈转的画面了——留意它每转一圈，都会<strong>回头看结果、再决定要不要继续</strong>：</p>
-<div class="scene"><div class="scene-title">工具循环转三圈：给项目加个 hello 命令</div><div class="scene-panel scene-left reveal"><span class="scene-avatar" aria-hidden="true">🙋</span><div class="scene-bubble"><b class="scene-who">你</b>给项目加一个 hello 命令。</div></div><div class="scene-panel scene-right reveal"><span class="scene-avatar" aria-hidden="true">🤖</span><div class="scene-bubble"><b class="scene-who">Agent</b>第 1 圈——我还不知道命令怎么注册的，先读一下 <code>cli.js</code>。</div></div><div class="scene-caption reveal">👀 看结果：哦，原来命令是这样一条条注册进去的。还没加，继续转。</div><div class="scene-panel scene-left reveal"><span class="scene-avatar" aria-hidden="true">🤖</span><div class="scene-bubble"><b class="scene-who">Agent</b>第 2 圈——照着葫芦画瓢，把 hello 写进去。改好了。</div></div><div class="scene-caption reveal">👀 看结果：改是改了，可我还没验证有没有写坏，不能停，继续转。</div><div class="scene-panel scene-right reveal"><span class="scene-avatar" aria-hidden="true">🤖</span><div class="scene-bubble"><b class="scene-who">Agent</b>第 3 圈——跑一下 <code>node --check</code> 和测试自检。</div></div><div class="scene-caption reveal">👀 看结果：全绿 ✅。目标达成——这一圈是&quot;回去验证&quot;，可以踩刹车了。</div><div class="scene-panel scene-left reveal"><span class="scene-avatar" aria-hidden="true">🤖</span><div class="scene-bubble"><b class="scene-who">Agent</b>搞定！三圈下来：先看清、再动手、最后自检，一件完整的活就成了。</div></div></div>
+<div class="scene"><div class="scene-title">工具循环转三圈：给项目加个 hello 命令</div><div class="scene-panel scene-left reveal"><span class="scene-avatar" aria-hidden="true">你</span><div class="scene-bubble">给项目加一个 hello 命令。</div></div><div class="scene-panel scene-right reveal"><span class="scene-avatar" aria-hidden="true">Agent</span><div class="scene-bubble">第 1 圈——我还不知道命令怎么注册的，先读一下 <code>cli.js</code>。</div></div><div class="scene-caption reveal">看结果：哦，原来命令是这样一条条注册进去的。还没加，继续转。</div><div class="scene-panel scene-left reveal"><span class="scene-avatar" aria-hidden="true">Agent</span><div class="scene-bubble">第 2 圈——照着葫芦画瓢，把 hello 写进去。改好了。</div></div><div class="scene-caption reveal">看结果：改是改了，可我还没验证有没有写坏，不能停，继续转。</div><div class="scene-panel scene-right reveal"><span class="scene-avatar" aria-hidden="true">Agent</span><div class="scene-bubble">第 3 圈——跑一下 <code>node --check</code> 和测试自检。</div></div><div class="scene-caption reveal">看结果：全绿 ✓。目标达成——这一圈是&quot;回去验证&quot;，可以踩刹车了。</div><div class="scene-panel scene-left reveal"><span class="scene-avatar" aria-hidden="true">Agent</span><div class="scene-bubble">搞定！三圈下来：先看清、再动手、最后自检，一件完整的活就成了。</div></div></div>
 <p>看懂这幕戏，你会发现循环的形状特别规整：<strong>第一圈几乎总是&quot;先看清现状&quot;，最后一圈几乎总是&quot;回去验证&quot;，中间才是真正动手</strong>。下一节的思想实验，就带你自己当一回&quot;循环引擎&quot;，把这个节奏念出来。</p>
 <hr>
 <h2 id="六-动手小实验-在脑子里跑一遍多轮循环">六、动手小实验：在脑子里跑一遍多轮循环<a class="anchor" href="#六-动手小实验-在脑子里跑一遍多轮循环" aria-label="锚点">#</a></h2>
 <p>工具循环光看不练很难有体感。下面给你一个<strong>思想实验</strong>：不用电脑，就在脑子里当一回&quot;循环引擎&quot;，把每一轮的四拍念出来。</p>
 <p><strong>任务</strong>：检查并修正 <code>README.md</code> 里的错别字。</p>
 <p>试着自己先想一遍，再对照下面的&quot;标准跑法&quot;：</p>
-<ul><li><strong>第 1 轮</strong><ul><li>🧠 想：我还没看过 README，得先读它。</li><li>🛠️ 做：<code>readFile(&quot;README.md&quot;)</code></li><li>👀 看：拿到全文，扫到一处&quot;安转&quot;应该是&quot;安装&quot;。</li><li>✅ 判：发现了错字，但还没改。目标未达成 → 下一轮。</li></ul></li><li><strong>第 2 轮</strong><ul><li>🧠 想：把&quot;安转&quot;改成&quot;安装&quot;。</li><li>🛠️ 做：<code>editFile</code> 把那处改掉。</li><li>👀 看：返回&quot;修改成功&quot;。</li><li>✅ 判：改是改了，但我没确认还有没有别的错字，也没确认真的改对了 → 下一轮。</li></ul></li><li><strong>第 3 轮</strong><ul><li>🧠 想：重新读一遍确认。</li><li>🛠️ 做：再 <code>readFile(&quot;README.md&quot;)</code></li><li>👀 看：全文再扫一遍，&quot;安装&quot;对了，没有其它错字了。</li><li>✅ 判：目标达成（README 无错别字且已验证）→ <strong>收尾回报</strong>。</li></ul></li></ul>
+<ul><li><strong>第 1 轮</strong><ul><li>想：我还没看过 README，得先读它。</li><li>做：<code>readFile(&quot;README.md&quot;)</code></li><li>看：拿到全文，扫到一处&quot;安转&quot;应该是&quot;安装&quot;。</li><li>✓ 判：发现了错字，但还没改。目标未达成 → 下一轮。</li></ul></li><li><strong>第 2 轮</strong><ul><li>想：把&quot;安转&quot;改成&quot;安装&quot;。</li><li>做：<code>editFile</code> 把那处改掉。</li><li>看：返回&quot;修改成功&quot;。</li><li>✓ 判：改是改了，但我没确认还有没有别的错字，也没确认真的改对了 → 下一轮。</li></ul></li><li><strong>第 3 轮</strong><ul><li>想：重新读一遍确认。</li><li>做：再 <code>readFile(&quot;README.md&quot;)</code></li><li>看：全文再扫一遍，&quot;安装&quot;对了，没有其它错字了。</li><li>✓ 判：目标达成（README 无错别字且已验证）→ <strong>收尾回报</strong>。</li></ul></li></ul>
 <p>三轮结束。发现规律了吗？</p>
 <ol><li><strong>第一轮几乎总是&quot;先看清楚&quot;</strong>——不了解现状就动手是蒙。</li><li><strong>最后一轮几乎总是&quot;回去验证&quot;</strong>——不验证就说&quot;改好了&quot;是吹。</li><li>中间才是&quot;真正干活&quot;。</li></ol>
 <p>把这个节奏记住，你就理解了绝大多数工具循环的形状。</p>
 <hr>
-<h2 id="七-常见误区">七、常见误区（❌ / ✅）<a class="anchor" href="#七-常见误区" aria-label="锚点">#</a></h2>
+<h2 id="七-常见误区">七、常见误区（✗ / ✓）<a class="anchor" href="#七-常见误区" aria-label="锚点">#</a></h2>
 <p>新手对工具循环最容易踩这几个坑，逐条纠正：</p>
-<ul><li>❌ <strong>以为&quot;循环 = 死循环，会永远转下去&quot;。</strong></li></ul>
-<p>✅ 循环一定有刹车（目标达成 / 步数上限 / 出错），它是<strong>会停的</strong>转圈，不是停不下来的旋转木马。</p>
-<ul><li>❌ <strong>以为&quot;每转一圈都要问用户一次&quot;。</strong></li></ul>
-<p>✅ 恰恰相反，循环的价值就是<strong>自己接力、不用一步步烦你</strong>。它只在真正需要（卡住了、或涉及不可逆的危险操作）时才停下来问你。</p>
-<ul><li>❌ <strong>以为&quot;工具循环 = 多线程 / 一次并行干很多事&quot;。</strong></li></ul>
-<p>✅ 工具循环本质是<strong>一步接一步的串行接力</strong>（因为下一步依赖上一步的结果）。它可能在某一拍里同时发几个互不依赖的调用，但整体节奏是&quot;转圈&quot;，不是&quot;多开&quot;。多线程讲的是&quot;同时&quot;，循环讲的是&quot;接力&quot;，两码事。</p>
-<ul><li>❌ <strong>以为&quot;循环里每一步都是在写代码&quot;。</strong></li></ul>
-<p>✅ 大多数步骤其实是<strong>读和看</strong>（读文件、跑测试看输出、搜索代码）。真正&quot;动手改&quot;的步骤往往只占一小部分。循环的智慧主要花在&quot;看清楚再决定&quot;上。</p>
-<ul><li>❌ <strong>以为&quot;循环转完 = 任务一定成功了&quot;。</strong></li></ul>
-<p>✅ 循环停下有三种原因，只有&quot;目标达成&quot;那种才是成功。撞了步数上限或致命错误而停，是<strong>如实报告失败</strong>——这也是循环该有的行为，不是 bug。</p>
+<ul><li>✗ <strong>以为&quot;循环 = 死循环，会永远转下去&quot;。</strong></li></ul>
+<p>✓ 循环一定有刹车（目标达成 / 步数上限 / 出错），它是<strong>会停的</strong>转圈，不是停不下来的旋转木马。</p>
+<ul><li>✗ <strong>以为&quot;每转一圈都要问用户一次&quot;。</strong></li></ul>
+<p>✓ 恰恰相反，循环的价值就是<strong>自己接力、不用一步步烦你</strong>。它只在真正需要（卡住了、或涉及不可逆的危险操作）时才停下来问你。</p>
+<ul><li>✗ <strong>以为&quot;工具循环 = 多线程 / 一次并行干很多事&quot;。</strong></li></ul>
+<p>✓ 工具循环本质是<strong>一步接一步的串行接力</strong>（因为下一步依赖上一步的结果）。它可能在某一拍里同时发几个互不依赖的调用，但整体节奏是&quot;转圈&quot;，不是&quot;多开&quot;。多线程讲的是&quot;同时&quot;，循环讲的是&quot;接力&quot;，两码事。</p>
+<ul><li>✗ <strong>以为&quot;循环里每一步都是在写代码&quot;。</strong></li></ul>
+<p>✓ 大多数步骤其实是<strong>读和看</strong>（读文件、跑测试看输出、搜索代码）。真正&quot;动手改&quot;的步骤往往只占一小部分。循环的智慧主要花在&quot;看清楚再决定&quot;上。</p>
+<ul><li>✗ <strong>以为&quot;循环转完 = 任务一定成功了&quot;。</strong></li></ul>
+<p>✓ 循环停下有三种原因，只有&quot;目标达成&quot;那种才是成功。撞了步数上限或致命错误而停，是<strong>如实报告失败</strong>——这也是循环该有的行为，不是 bug。</p>
 <hr>
 <h2 id="八-和其它概念的关系">八、和其它概念的关系<a class="anchor" href="#八-和其它概念的关系" aria-label="锚点">#</a></h2>
 <p>工具循环不是孤立的，它把前后几个概念串成一条链：</p>
 <pre class="mermaid">flowchart LR
-  Agent[&quot;🤖 Agent&lt;br/&gt;会自己干活的 AI&quot;] --&gt; Loop[&quot;🔁 Tool Loop&lt;br/&gt;一圈圈转&quot;]
-  Loop -- &quot;每一圈发起一次&quot; --&gt; Call[&quot;🛠️ Tool Calling&lt;br/&gt;迈一步&quot;]
-  Skill[&quot;📜 Skill&lt;br/&gt;预写的剧本&quot;] -. &quot;指导怎么转&quot; .-&gt; Loop
-  Loop --&gt; Done([&quot;🎯 任务完成&quot;])</pre>
+  Agent[&quot;Agent&lt;br/&gt;会自己干活的 AI&quot;] --&gt; Loop[&quot;Tool Loop&lt;br/&gt;一圈圈转&quot;]
+  Loop -- &quot;每一圈发起一次&quot; --&gt; Call[&quot;Tool Calling&lt;br/&gt;迈一步&quot;]
+  Skill[&quot;Skill&lt;br/&gt;预写的剧本&quot;] -. &quot;指导怎么转&quot; .-&gt; Loop
+  Loop --&gt; Done([&quot;◎ 任务完成&quot;])</pre>
 <ul><li><strong>对上：[① Agent]([CONCEPT-01] 什么是Agent-智能体.md)</strong>——Agent 是&quot;会自己干活的 AI&quot;，工具循环就是它体内那台<strong>发动机</strong>。没有循环，Agent 就只会走一步。</li><li><strong>对内：[② Tool Calling]([CONCEPT-02] 什么是ToolCalling-工具调用.md)</strong>——循环转的每一圈，第 2 拍&quot;做&quot;就是<strong>一次工具调用</strong>。工具调用是&quot;一步&quot;，循环是&quot;把很多步接起来&quot;。</li><li><strong>对旁：[⑤ Skill]([CONCEPT-05] 什么是Skill-技能.md)</strong>——如果说循环是&quot;临场发挥地走迷宫&quot;，那 <strong>Skill 就是一张走过这类迷宫的老手留下的剧本</strong>。有了 Skill，循环不用每次都从零试错，可以照着&quot;做这类任务通常先干啥、再干啥、怎么验证&quot;来转，少走弯路、更稳。<strong>Skill 给循环剧本，循环照剧本转。</strong></li></ul>
 <p>一句话串起来：<strong>Agent 靠工具循环干活，循环每圈发起一次工具调用，Skill 给循环提供剧本。</strong></p>
 <hr>
@@ -158,10 +158,10 @@
 <hr>
 <h2 id="十-循环全景图-把这一篇收进一张图">十、循环全景图（把这一篇收进一张图）<a class="anchor" href="#十-循环全景图-把这一篇收进一张图" aria-label="锚点">#</a></h2>
 <pre class="mermaid">sequenceDiagram
-  participant User as 🙋 用户
-  participant Loop as 🔁 循环引擎
-  participant LLM as 🧠 大模型
-  participant Runner as ⚙️ 执行层
+  participant User as 用户
+  participant Loop as 循环引擎
+  participant LLM as 大模型
+  participant Runner as ⚙ 执行层
   User-&gt;&gt;Loop: 目标：修好登录报错
   loop 一圈圈转，直到刹车
     Loop-&gt;&gt;LLM: 现在的情况 + 目标，下一步做什么?
@@ -181,7 +181,7 @@
 <h2 id="十一-小结-下一步">十一、小结 + 下一步<a class="anchor" href="#十一-小结-下一步" aria-label="锚点">#</a></h2>
 <ul><li>工具循环 = &quot;想→做→看→判&quot;反复转，直到目标完成。</li><li>它让 Agent 能走完多步任务，而不是只走一步。</li><li>一轮的关键是最后那个岔路口：<strong>达成就收尾，没达成就带着新信息进下一轮</strong>。</li><li>必须有三副刹车：<strong>目标达成、步数上限、出错识别</strong>——所以它不是死循环。</li><li>大多数步骤其实是&quot;读和看&quot;，最后一圈往往是&quot;自我验证&quot;。</li><li>Agent 靠它干活，每圈发起一次[工具调用]([CONCEPT-02] 什么是ToolCalling-工具调用.md)，[Skill]([CONCEPT-05] 什么是Skill-技能.md) 给它剧本。</li></ul>
 <p>到这里，Agent 已经能自己转圈干活了。但它的工具是<strong>从哪来的</strong>、能不能<strong>方便地加新工具</strong>？这就要讲标准接口 <strong>MCP</strong>。</p>
-<p>👉 [④ 什么是 MCP（模型上下文协议）]([CONCEPT-04] 什么是MCP-模型上下文协议.md)</p>
+<p>→ [④ 什么是 MCP（模型上下文协议）]([CONCEPT-04] 什么是MCP-模型上下文协议.md)</p>
       </article>
       <nav class="pager"><a class="prev" href="../../../docs/02_CONCEPTS_概念入门/CONCEPT/[CONCEPT-02] 什么是ToolCalling-工具调用.html"><div class="dir">← 上一篇</div><div class="ttl">② 什么是 Tool Calling（工具调用）</div></a><a class="next" href="../../../docs/02_CONCEPTS_概念入门/CONCEPT/[CONCEPT-04] 什么是MCP-模型上下文协议.html"><div class="dir">下一篇 →</div><div class="ttl">④ 什么是 MCP（模型上下文协议）</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
