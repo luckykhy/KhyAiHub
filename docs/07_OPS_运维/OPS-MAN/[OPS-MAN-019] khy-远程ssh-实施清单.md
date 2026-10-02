@@ -1,7 +1,7 @@
 <!-- 文档分类: OPS-MAN-019 | 阶段: 运维 | 原路径: docs/指南/khy-远程ssh-实施清单.md -->
 # KHY 远程 SSH 上线实施清单（Phase 0.7）
 
-> ⚠️ **状态：未交付 / CLI 当前不可用。** 本文是实施清单与设计蓝图，**不是**成品操作手册。
+> ⚠ **状态：未交付 / CLI 当前不可用。** 本文是实施清单与设计蓝图，**不是**成品操作手册。
 > 文中 `khy remote …` 子命令在当前发行版尚未接通：CLI handler（`services/backend/src/cli/handlers/remote.js`）引用的 `remote.sshConfig` / `connectionManager` / `execService` 与服务层实际导出名 `sshConfigService` / `sshConnectionManager` / `remoteExecService`（`services/backend/src/services/remote/index.js`）不匹配，且 router 未向 handler 转发 host / 命令参数，因此每个子命令都会抛错。服务层已存在真实的 SSH 执行引擎，但尚未对接 CLI。
 > 请勿据此预期可直接运行的功能；本文用于指导后续实现。
 

@@ -5,7 +5,7 @@
 >
 > pip 只装好「Python 启动器」这一层。KHY OS 的核心是 Node.js 后端 + Vue 管理前端 + 多语言工作坊（C 内核 / MoonBit / WASM），完整功能需要再满足几层运行时依赖。本清单按「先验证 → 再配置 → 后使用」的顺序，把所有要做的事一次列清。
 
-> 📦 **pip 安装后，先读哪篇？**
+> **pip 安装后，先读哪篇？**
 >
 > | 你的目的 | 看这篇 |
 > | --- | --- |
@@ -175,7 +175,7 @@ download is pinned in the manifest. Build it locally with `make -C kernel iso`
 4. 清单 khyos-manifest.json 里 pin 的 url + sha256       ← 当前为空，不可用
 ```
 
-### 6.3 ⚠️ 两条 OS 路径别混淆
+### 6.3 ⚠ 两条 OS 路径别混淆
 
 | 命令 | 产物 | 构建方式 | 适合 |
 |---|---|---|---|

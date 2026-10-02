@@ -11,26 +11,26 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
     <div class="content">
       <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>07_OPS_运维<span class="sep">›</span>OPS-MAN<span class="sep">›</span>pip 安装后：开启完整功能清单</div>
       <header class="hero reveal"><h1>pip 安装后：开启完整功能清单</h1></header>
-      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#pip-安装后-开启完整功能清单">pip 安装后：开启完整功能清单</a></li><li class="lvl-2"><a href="#0-一句话速通">0. 一句话速通</a></li><li class="lvl-2"><a href="#1-前提依赖-必须">1. 前提依赖（必须）</a></li><li class="lvl-2"><a href="#2-确认真实安装位置-khy-where">2. 确认真实安装位置：`khy where`</a></li><li class="lvl-2"><a href="#3-首次启动-自动初始化">3. 首次启动：自动初始化</a></li><li class="lvl-2"><a href="#4-配置模型-provider-密钥">4. 配置模型 / Provider / 密钥</a></li><li class="lvl-2"><a href="#5-打开-ai-对话-管理页-web">5. 打开 AI 对话 / 管理页（Web）</a></li><li class="lvl-2"><a href="#6-启动-khy-os-内核">6. 启动 KHY OS 内核</a></li><li class="lvl-3"><a href="#6-1-为什么会报-no-khy-os-iso-available">6.1 为什么会报 “No KHY OS ISO available”</a></li><li class="lvl-3"><a href="#6-2-iso-解析顺序-自研-c-内核">6.2 ISO 解析顺序（自研 C 内核）</a></li><li class="lvl-3"><a href="#6-3-两条-os-路径别混淆">6.3 ⚠️ 两条 OS 路径别混淆</a></li><li class="lvl-3"><a href="#6-4-还原自研内核-按省事排序">6.4 还原自研内核（按省事排序）</a></li><li class="lvl-2"><a href="#7-手机访问-同局域网">7. 手机访问（同局域网）</a></li><li class="lvl-2"><a href="#8-集成-claude-code-可选">8. 集成 Claude Code（可选）</a></li><li class="lvl-2"><a href="#9-排障速查">9. 排障速查</a></li><li class="lvl-2"><a href="#10-命令总览-常用">10. 命令总览（常用）</a></li><li class="lvl-2"><a href="#11-半实现-桩命令现状-诚实清单">11. 半实现 / 桩命令现状（诚实清单）</a></li></ul></nav>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#pip-安装后-开启完整功能清单">pip 安装后：开启完整功能清单</a></li><li class="lvl-2"><a href="#0-一句话速通">0. 一句话速通</a></li><li class="lvl-2"><a href="#1-前提依赖-必须">1. 前提依赖（必须）</a></li><li class="lvl-2"><a href="#2-确认真实安装位置-khy-where">2. 确认真实安装位置：`khy where`</a></li><li class="lvl-2"><a href="#3-首次启动-自动初始化">3. 首次启动：自动初始化</a></li><li class="lvl-2"><a href="#4-配置模型-provider-密钥">4. 配置模型 / Provider / 密钥</a></li><li class="lvl-2"><a href="#5-打开-ai-对话-管理页-web">5. 打开 AI 对话 / 管理页（Web）</a></li><li class="lvl-2"><a href="#6-启动-khy-os-内核">6. 启动 KHY OS 内核</a></li><li class="lvl-3"><a href="#6-1-为什么会报-no-khy-os-iso-available">6.1 为什么会报 “No KHY OS ISO available”</a></li><li class="lvl-3"><a href="#6-2-iso-解析顺序-自研-c-内核">6.2 ISO 解析顺序（自研 C 内核）</a></li><li class="lvl-3"><a href="#6-3-两条-os-路径别混淆">6.3 ⚠ 两条 OS 路径别混淆</a></li><li class="lvl-3"><a href="#6-4-还原自研内核-按省事排序">6.4 还原自研内核（按省事排序）</a></li><li class="lvl-2"><a href="#7-手机访问-同局域网">7. 手机访问（同局域网）</a></li><li class="lvl-2"><a href="#8-集成-claude-code-可选">8. 集成 Claude Code（可选）</a></li><li class="lvl-2"><a href="#9-排障速查">9. 排障速查</a></li><li class="lvl-2"><a href="#10-命令总览-常用">10. 命令总览（常用）</a></li><li class="lvl-2"><a href="#11-半实现-桩命令现状-诚实清单">11. 半实现 / 桩命令现状（诚实清单）</a></li></ul></nav>
       <article class="doc-body">
 <p>&lt;!-- 文档分类: OPS-MAN-023 | 阶段: 运维 | 原路径: docs/指南/pip安装后-完整功能清单.md --&gt;</p>
 <h1 id="pip-安装后-开启完整功能清单">pip 安装后：开启完整功能清单<a class="anchor" href="#pip-安装后-开启完整功能清单" aria-label="锚点">#</a></h1>
 <blockquote><p>适用对象：通过 <code>pip install khy-os</code> 安装的用户（Windows / macOS / Linux）。</p>
 <p>pip 只装好「Python 启动器」这一层。KHY OS 的核心是 Node.js 后端 + Vue 管理前端 + 多语言工作坊（C 内核 / MoonBit / WASM），完整功能需要再满足几层运行时依赖。本清单按「先验证 → 再配置 → 后使用」的顺序，把所有要做的事一次列清。</p></blockquote>
-<blockquote><p>📦 <strong>pip 安装后，先读哪篇？</strong></p>
+<blockquote><p><strong>pip 安装后，先读哪篇？</strong></p>
 <table><thead><tr><th>你的目的</th><th>看这篇</th></tr></thead><tbody><tr><td>第一次装完，想最快跑起来</td><td>[OPS-MAN-027] 快速开始</td></tr><tr><td>想按成长阶梯一步步进阶</td><td>[OPS-MAN-043] 从 0 到高手</td></tr><tr><td><strong>本文</strong></td><td>装完到底能干什么（功能清单速查）</td></tr><tr><td>想按需开启某个具体功能</td><td>[OPS-MAN-024] 按需配置体验</td></tr><tr><td>安装与运行的软硬件门槛</td><td>[OPS-MAN-028] 环境要求</td></tr><tr><td>还原源码树 / 自研内核全功能</td><td>[OPS-MAN-037] 完整还原与全功能开启</td></tr></tbody></table></blockquote>
 <hr>
 <h2 id="0-一句话速通">0. 一句话速通<a class="anchor" href="#0-一句话速通" aria-label="锚点">#</a></h2>
@@ -108,7 +108,7 @@ download is pinned in the manifest. Build it locally with `make -C kernel iso`
 2. kernel/build/khy-os-kernel.iso（make 产物）          ← 自动发现
 3. ~/.khyquant/khyos/ 缓存（曾经下载/拷入过）
 4. 清单 khyos-manifest.json 里 pin 的 url + sha256       ← 当前为空，不可用</code></pre>
-<h3 id="6-3-两条-os-路径别混淆">6.3 ⚠️ 两条 OS 路径别混淆<a class="anchor" href="#6-3-两条-os-路径别混淆" aria-label="锚点">#</a></h3>
+<h3 id="6-3-两条-os-路径别混淆">6.3 ⚠ 两条 OS 路径别混淆<a class="anchor" href="#6-3-两条-os-路径别混淆" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>命令</th><th>产物</th><th>构建方式</th><th>适合</th></tr></thead><tbody><tr><td><strong><code>khyos</code> / <code>khy os</code></strong>（本节报错的这个）</td><td><code>khy-os-kernel.iso</code>（自研 C 内核）</td><td><code>make -C kernel iso</code></td><td>体验自研内核</td></tr><tr><td><strong><code>khy iso build</code></strong></td><td><code>dist/khy-os.iso</code>（<strong>Alpine</strong> 发行版 ISO）</td><td>Docker（<code>Dockerfile.iso-builder</code>，FROM alpine）</td><td>跑「真实 OS」</td></tr></tbody></table>
 <p><code>khy iso build</code> 产出的 <code>khy-os.iso</code> <strong>不是</strong> <code>khyos</code> 要找的 <code>khy-os-kernel.iso</code>，两者互不替代。</p>
 <h3 id="6-4-还原自研内核-按省事排序">6.4 还原自研内核（按省事排序）<a class="anchor" href="#6-4-还原自研内核-按省事排序" aria-label="锚点">#</a></h3>

@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -29,7 +29,7 @@
 <p>&lt;!-- 文档分类: OPS-MAN-024 | 阶段: 运维 | 原路径: docs/指南/pip安装后-按需配置体验.md --&gt;</p>
 <h1 id="pip-安装后-按需配置体验">pip 安装后 — 按需配置体验<a class="anchor" href="#pip-安装后-按需配置体验" aria-label="锚点">#</a></h1>
 <blockquote><p>装完 <code>khy-os</code> 之后，<strong>你不需要把所有功能都配一遍</strong>。本指南按「你想要什么体验」来组织：找到你的场景，照着那一节配，其余跳过即可——这就是「按需所取」。</p></blockquote>
-<blockquote><p>📦 <strong>pip 安装后，先读哪篇？</strong></p>
+<blockquote><p><strong>pip 安装后，先读哪篇？</strong></p>
 <table><thead><tr><th>你的目的</th><th>看这篇</th></tr></thead><tbody><tr><td>第一次装完，想最快跑起来</td><td>[快速开始]([OPS-MAN-027] 快速开始.md)</td></tr><tr><td>想按成长阶梯一步步进阶</td><td>[OPS-MAN-043] 从 0 到高手</td></tr><tr><td>想知道装完到底能干什么</td><td>[完整功能清单]([OPS-MAN-023] pip安装后-完整功能清单.md)</td></tr><tr><td><strong>本文</strong></td><td>按场景的渐进式配置（每节自包含，可单独取用）</td></tr><tr><td>安装与运行的软硬件门槛</td><td>[OPS-MAN-028] 环境要求</td></tr><tr><td>还原源码树 / 自研内核全功能</td><td>[OPS-MAN-037] 完整还原与全功能开启</td></tr></tbody></table></blockquote>
 <hr>
 <h2 id="三步心法">三步心法<a class="anchor" href="#三步心法" aria-label="锚点">#</a></h2>
@@ -132,7 +132,7 @@ learn check      <span class="hljs-comment"># 校验课程文件引用完整性<
 <span class="hljs-comment"># 模式3：开启向量重排，提高 RAG 召回（端点可达才生效，不可达自动降级到词法）</span>
 <span class="hljs-built_in">export</span> KHY_LEARN_EMBED_URL=<span class="hljs-string">&quot;http://localhost:11434/api/embeddings&quot;</span>   <span class="hljs-comment"># ollama 风格</span>
 <span class="hljs-built_in">export</span> KHY_LEARN_EMBED_MODEL=<span class="hljs-string">&quot;nomic-embed-text&quot;</span></code></pre>
-<p>进入 <code>/learn</code> 时顶部会打一行<strong>诚实的模式横幅</strong>（如「📡 模式3 · 有网络有模型 · 检索 N 段」），告诉你当前实际处于哪种模式。其余可调项（<code>KHY_LEARN_RAG</code> 总开关、<code>KHY_LEARN_TOPK</code> 片段数等）默认即合理，按需微调。</p>
+<p>进入 <code>/learn</code> 时顶部会打一行<strong>诚实的模式横幅</strong>（如「模式3 · 有网络有模型 · 检索 N 段」），告诉你当前实际处于哪种模式。其余可调项（<code>KHY_LEARN_RAG</code> 总开关、<code>KHY_LEARN_TOPK</code> 片段数等）默认即合理，按需微调。</p>
 <blockquote><p>向量端点也可不单独配——若你已配好 KHY 网关，模式3 会自动复用网关的 <code>/v1/embeddings</code>。</p></blockquote>
 <hr>
 <h3 id="h-手机-局域网访问">H：手机 / 局域网访问<a class="anchor" href="#h-手机-局域网访问" aria-label="锚点">#</a></h3>

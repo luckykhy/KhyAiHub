@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -28,7 +28,7 @@
       <article class="doc-body">
 <p>&lt;!-- 文档分类: OPS-MAN-019 | 阶段: 运维 | 原路径: docs/指南/khy-远程ssh-实施清单.md --&gt;</p>
 <h1 id="khy-远程-ssh-上线实施清单-phase-0-7">KHY 远程 SSH 上线实施清单（Phase 0.7）<a class="anchor" href="#khy-远程-ssh-上线实施清单-phase-0-7" aria-label="锚点">#</a></h1>
-<blockquote><p>⚠️ <strong>状态：未交付 / CLI 当前不可用。</strong> 本文是实施清单与设计蓝图，<strong>不是</strong>成品操作手册。<br>文中 <code>khy remote …</code> 子命令在当前发行版尚未接通：CLI handler（<code>services/backend/src/cli/handlers/remote.js</code>）引用的 <code>remote.sshConfig</code> / <code>connectionManager</code> / <code>execService</code> 与服务层实际导出名 <code>sshConfigService</code> / <code>sshConnectionManager</code> / <code>remoteExecService</code>（<code>services/backend/src/services/remote/index.js</code>）不匹配，且 router 未向 handler 转发 host / 命令参数，因此每个子命令都会抛错。服务层已存在真实的 SSH 执行引擎，但尚未对接 CLI。<br>请勿据此预期可直接运行的功能；本文用于指导后续实现。</p></blockquote>
+<blockquote><p>⚠ <strong>状态：未交付 / CLI 当前不可用。</strong> 本文是实施清单与设计蓝图，<strong>不是</strong>成品操作手册。<br>文中 <code>khy remote …</code> 子命令在当前发行版尚未接通：CLI handler（<code>services/backend/src/cli/handlers/remote.js</code>）引用的 <code>remote.sshConfig</code> / <code>connectionManager</code> / <code>execService</code> 与服务层实际导出名 <code>sshConfigService</code> / <code>sshConnectionManager</code> / <code>remoteExecService</code>（<code>services/backend/src/services/remote/index.js</code>）不匹配，且 router 未向 handler 转发 host / 命令参数，因此每个子命令都会抛错。服务层已存在真实的 SSH 执行引擎，但尚未对接 CLI。<br>请勿据此预期可直接运行的功能；本文用于指导后续实现。</p></blockquote>
 <p>本清单将远程 SSH 愿景转化为可直接落地的任务，并适配当前 KHY-OS 架构。</p>
 <h2 id="0-范围">0. 范围<a class="anchor" href="#0-范围" aria-label="锚点">#</a></h2>
 <p>目标：</p>

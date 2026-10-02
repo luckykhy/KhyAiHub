@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -28,7 +28,7 @@
       <article class="doc-body">
 <p>&lt;!-- 文档分类: OPS-MAN-031 | 阶段: 运维 | 原路径: docs/指南/终端-tui-有框输入区重构方案-2026-05-31.md --&gt;</p>
 <h1 id="终端-tui-有框输入区重构方案">终端 TUI 有框输入区重构方案<a class="anchor" href="#终端-tui-有框输入区重构方案" aria-label="锚点">#</a></h1>
-<blockquote><p>⚠️ <strong>已归档 / 被取代</strong>：本方案设计的自研 TUI 运行时（<code>runtime/alternateScreen.js</code> / <code>runtime/terminalInput.js</code> / <code>runtime/screenRenderer.js</code> / <code>store/replStore.js</code> 等）未按此方案实施；2026-06-05 起 TUI 已直接迁移至官方 Ink 运行时（<code>backend/src/cli/tui/ink-components/</code>），上述自研模块均已删除。本文仅作历史方案保留，最新 TUI 实现请参阅 [tui-inquirer闪退修复-2026-06-05.md](../../04_IMPL_实现/IMPL-RPT/[IMPL-RPT-003] tui-inquirer闪退修复-2026-06-05.md)。</p></blockquote>
+<blockquote><p>⚠ <strong>已归档 / 被取代</strong>：本方案设计的自研 TUI 运行时（<code>runtime/alternateScreen.js</code> / <code>runtime/terminalInput.js</code> / <code>runtime/screenRenderer.js</code> / <code>store/replStore.js</code> 等）未按此方案实施；2026-06-05 起 TUI 已直接迁移至官方 Ink 运行时（<code>backend/src/cli/tui/ink-components/</code>），上述自研模块均已删除。本文仅作历史方案保留，最新 TUI 实现请参阅 [tui-inquirer闪退修复-2026-06-05.md](../../04_IMPL_实现/IMPL-RPT/[IMPL-RPT-003] tui-inquirer闪退修复-2026-06-05.md)。</p></blockquote>
 <blockquote><p>日期: 2026-05-31<br>状态: 方案已确认，待实施<br>目标范围: <code>backend/src/cli/repl.js</code> 所代表的 full REPL 交互层<br>关联背景: <code>docs/04_IMPL_实现/[IMPL-RPT-021] 网关超时与帧修复.md</code> · <code>docs/04_IMPL_实现/[IMPL-RPT-019] 终端提示符泄漏与交付空行修复-2026-05-31.md</code></p></blockquote>
 <hr>
 <h2 id="一-问题定义">一、问题定义<a class="anchor" href="#一-问题定义" aria-label="锚点">#</a></h2>
