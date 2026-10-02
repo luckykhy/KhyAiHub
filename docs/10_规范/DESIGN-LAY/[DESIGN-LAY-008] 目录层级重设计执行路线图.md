@@ -4894,6 +4894,38 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 
 ### 16.6 施工执行状态（点头后逐批登记）
 
+> **2026-10-03 05:20 节（第 12 节）**：**本节无未门控批次，零文件移动**（根项 55 / 可寻址 54 不变）。
+> 但有一个值得单记的变化：**门控的性质换了**——「别车道在飞件」这一类闸今夜首次归零
+> （W2 三个余量的消费方实测**零在飞**），挡住施工的是另外三类，且都不是等一等就能自己开的。
+>
+> | 批 | 今夜实测的门控类型 | 具体证据 |
+> |---|---|---|
+> | W2 `.env.example`→`works/record/` | **内容成本**（不是门控文件） | 消费方零在飞；但 `cp .env.example .env` 这条**用户可直接复制的指令**存在于 **10 个文件**（`README.md` + 8 份 DEPLOY/OPS/DESIGN 文档 + 模板自身）。搬家后照抄即失败 |
+> | W2 `CHANGELOG.md`→`works/record/` | 内容成本 + 发布链 | 路径级消费 16 件（`changelog-new.js`/`check-release-triggers.js`/`releaseNotes.js` 10 处/`changelogParse.js` + 6 个测试），且它是 PROCESS-005 的 bump 锚 → 判据④ 要跑 R5 四件套 |
+> | W2 `SECURITY.md`→`.github/` | **N-1 无证明** | 官方 security policy 页正文未列可识别路径，无法证明 `.github/SECURITY.md` 仍被识别（第 9 节已挂起，今夜复核未变） |
+> | W4 / W6 | **目标域目录未建** | `runtime/` `business/` `delivery/` 实测均不存在；W4 要 `delivery/channel/pip/`、W6 要 `runtime/bin/`。§22.2 把 W6 列为闸前允许批，但它落点不存在——**§22.1 与 §22.2 的这条矛盾仍等人裁** |
+> | W5 / W9 / P1–P5 | 闸门 + CI | §12.60 的 10-27 窗；W5 的 `docker compose config` 证明本机无 docker 只能 CI |
+>
+> **`.env.example` 的具体建议（待你裁，本道不动）**：它与 `.dockerignore` 是同一族——
+> 位置本身就是用户契约的一部分（`cp X .env` 的 X 在根，是 docker compose 工作流的默认形状）。
+> §16.2 当年记的是「6 消费点全自家脚本」，今夜实测证伪：真代码消费只有 3 处
+> （`check-env-example.mjs:22`、`setup.js:28`、`check-repo-layout.js:331` 的 ROOT_CATALOG 条目；
+> `publish.js:1467` 是生成包内模板不是读本仓件，`atPicker.js:47`/`toolOutputRender.js:205` 是
+> basename 规则不受位置影响，`copyright/vendor/common.py` 是 vendored 上游件不许改），
+> **代价全在 10 处用户指令上**。⇒ 建议照 `.dockerignore` 的先例**改判留根**（`contract` 类），
+> W2 因此只剩 `SECURITY`（挂起）与 `CHANGELOG`（需 R5 四件套）两件。
+> 顺带说明为什么不能「拆两批做掉」：文档先行会指向不存在的路径，搬家先行会让 10 条指令失效，
+> **两种顺序都留下断链窗口**，唯一无损解是单原子批（≥16 文件，逼近 20 文件闸）——
+> 这条约束本身就是「该不该搬」的论据，请一并裁。
+>
+> **上节报的账已被收掉（记验证方式）**：第 8 节我报 `ROOT_CATALOG` 留着 `'_产物'` 死指针。
+> 今夜复测：27 条目录项中**指向不存在实体 0 条**，`scripts/tests/q1-criteria.test.js` **4 pass / 0 fail**；
+> 且 `check-repo-layout.js:133-134` 的注释写的正是我报的那个理由（保留会在有人重建 `_产物/` 时
+> 静默放行）。修复落在 Q1′/Q-1 那批。
+>
+> 四判：`check-repo-layout` exit 0 / 0 error；`check-roots-isomorphic` 19（持平，单调成立）；
+> `check-debt-ledger` exit 0；本批零施工，判据④ 不适用。根可寻址 54 与上节一致（无人搬文件）。
+
 > **2026-10-03 04:20 节（第 11 节）· 批次 = W2 第二步（真死链修复）+ 两处自我更正**
 > 根项 55 / 可寻址 54 不变（本批不搬文件，只修引用）。
 >
