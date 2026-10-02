@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -35,7 +35,7 @@
 &lt;body&gt;
 
 &lt;footer&gt;</code></pre>
-<table><thead><tr><th>部分</th><th>必选</th><th>说明</th></tr></thead><tbody><tr><td><code>type</code></td><td>✅</td><td>变更类型</td></tr><tr><td><code>scope</code></td><td>❌</td><td>变更范围</td></tr><tr><td><code>subject</code></td><td>✅</td><td>变更简述</td></tr><tr><td><code>body</code></td><td>❌</td><td>变更详情</td></tr><tr><td><code>footer</code></td><td>❌</td><td>Issue 引用 + 破坏性变更</td></tr></tbody></table>
+<table><thead><tr><th>部分</th><th>必选</th><th>说明</th></tr></thead><tbody><tr><td><code>type</code></td><td>✓</td><td>变更类型</td></tr><tr><td><code>scope</code></td><td>✗</td><td>变更范围</td></tr><tr><td><code>subject</code></td><td>✓</td><td>变更简述</td></tr><tr><td><code>body</code></td><td>✗</td><td>变更详情</td></tr><tr><td><code>footer</code></td><td>✗</td><td>Issue 引用 + 破坏性变更</td></tr></tbody></table>
 <hr>
 <h2 id="2-type-完整枚举">2. Type 完整枚举<a class="anchor" href="#2-type-完整枚举" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>type</th><th>说明</th><th>使用场景</th></tr></thead><tbody><tr><td><code>feat</code></td><td>新功能</td><td>新增功能、新增端点、新组件</td></tr><tr><td><code>fix</code></td><td>修复 bug</td><td>修复错误、修复异常行为</td></tr><tr><td><code>docs</code></td><td>文档变更</td><td>README、规范、注释（非代码）</td></tr><tr><td><code>refactor</code></td><td>重构</td><td>代码结构变更，无功能变化</td></tr><tr><td><code>perf</code></td><td>性能优化</td><td>性能提升、内存优化</td></tr><tr><td><code>test</code></td><td>测试</td><td>新增/修改测试用例</td></tr><tr><td><code>build</code></td><td>构建系统</td><td>webpack、vite、esbuild 配置</td></tr><tr><td><code>ci</code></td><td>CI 配置</td><td>GitHub Actions、脚本变更</td></tr><tr><td><code>chore</code></td><td>维护任务</td><td>依赖更新、工具变更</td></tr><tr><td><code>style</code></td><td>代码格式</td><td>不影响代码逻辑的格式变更（prettier）</td></tr><tr><td><code>revert</code></td><td>回滚</td><td>撤销之前的 commit</td></tr></tbody></table>
@@ -53,7 +53,7 @@ docs(AGENTS.md): clarify port self-healing mechanism</code></pre>
 <hr>
 <h2 id="4-subject-规则">4. Subject 规则<a class="anchor" href="#4-subject-规则" aria-label="锚点">#</a></h2>
 <h3 id="4-1-格式要求">4.1 格式要求<a class="anchor" href="#4-1-格式要求" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>规则</th><th>说明</th><th>示例</th></tr></thead><tbody><tr><td><strong>≤ 50 字符</strong></td><td>第一行（标题行）不超过 50 字符</td><td><code>feat(auth): add refresh token</code> ✅</td></tr><tr><td><strong>祈使句</strong></td><td>用动词原形开头</td><td><code>add</code> 而非 <code>added</code> / <code>adds</code></td></tr><tr><td><strong>首字母小写</strong></td><td>不句首大写</td><td><code>add</code> 而非 <code>Add</code></td></tr><tr><td><strong>不以句号结尾</strong></td><td>标题不加句号</td><td><code>add feature</code> ✅</td></tr><tr><td><strong>不换行</strong></td><td>subject 不换行</td><td>—</td></tr></tbody></table>
+<table><thead><tr><th>规则</th><th>说明</th><th>示例</th></tr></thead><tbody><tr><td><strong>≤ 50 字符</strong></td><td>第一行（标题行）不超过 50 字符</td><td><code>feat(auth): add refresh token</code> ✓</td></tr><tr><td><strong>祈使句</strong></td><td>用动词原形开头</td><td><code>add</code> 而非 <code>added</code> / <code>adds</code></td></tr><tr><td><strong>首字母小写</strong></td><td>不句首大写</td><td><code>add</code> 而非 <code>Add</code></td></tr><tr><td><strong>不以句号结尾</strong></td><td>标题不加句号</td><td><code>add feature</code> ✓</td></tr><tr><td><strong>不换行</strong></td><td>subject 不换行</td><td>—</td></tr></tbody></table>
 <h3 id="4-2-动词选择">4.2 动词选择<a class="anchor" href="#4-2-动词选择" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>场景</th><th>推荐动词</th></tr></thead><tbody><tr><td>新增</td><td><code>add</code>、<code>implement</code>、<code>introduce</code></td></tr><tr><td>修复</td><td><code>fix</code>、<code>patch</code>、<code>resolve</code></td></tr><tr><td>删除</td><td><code>remove</code>、<code>drop</code>、<code>delete</code></td></tr><tr><td>修改</td><td><code>update</code>、<code>change</code>、<code>modify</code></td></tr><tr><td>优化</td><td><code>optimize</code>、<code>improve</code>、<code>refactor</code></td></tr><tr><td>替换</td><td><code>replace</code>、<code>migrate</code>、<code>rename</code></td></tr><tr><td>支持</td><td><code>support</code>、<code>handle</code>、<code>allow</code></td></tr></tbody></table>
 <hr>

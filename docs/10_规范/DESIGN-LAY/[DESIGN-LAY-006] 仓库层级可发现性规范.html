@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -58,7 +58,7 @@
 <ol><li><strong>文件与目录同名并存</strong>：<code>a2a/</code> 目录 + <code>a2aFacade.js</code> + <code>a2aRegistry.js</code> + <code>a2aMessageRouter.js</code>；<code>session/</code> 目录 + <code>sessionFileRepair.js</code> + <code>sessionChecklistResetService.js</code>。<strong>家族已经存在，只是没有收拢</strong>——这不是「发明新结构」，是「把已有结构做实」。</li><li><strong>拆分的判据是现成的</strong>：文件名前缀就是目录名。<strong>零命名决策</strong>，因此也零主观争议。</li></ol>
 <h3 id="1-3-代价模型-为什么必须-整族一次移动">1.3 代价模型：为什么必须「整族一次移动」<a class="anchor" href="#1-3-代价模型-为什么必须-整族一次移动" aria-label="锚点">#</a></h3>
 <p>实测 <code>tool*</code> 家族 33 个文件的真实代价（<code>node docs/10_规范/DESIGN-LAY/[DESIGN-LAY-006] move-cost.js --dir=services/backend/src/services --prefix=tool</code>）：</p>
-<table><thead><tr><th>边类型</th><th>处数</th><th>留下 re-export 壳后</th><th>说明</th></tr></thead><tbody><tr><td><strong>入边</strong>（别人 <code>require</code> 它）</td><td><strong>374</strong></td><td><strong>0 改动</strong></td><td>壳兜住；实测 <code>module.exports = require('…')</code> 被布局守卫判为「纯 re-export 壳」而豁免（<code>check-repo-layout.js:847</code>）</td></tr><tr><td><strong>出边</strong>（它自己 <code>require</code> 别人）</td><td><strong>98</strong></td><td><strong>98 改动</strong></td><td><strong>壳救不了</strong>：文件深度变了，<code>../</code> 级数必须逐条改</td></tr><tr><td><strong>同前缀 <code>./</code> 边</strong></td><td><strong>386</strong></td><td><strong>见 §1.3.1</strong></td><td>⚠️ <strong>不等于「兄弟边」</strong> —— 实测只有 76 条指向真兄弟</td></tr></tbody></table>
+<table><thead><tr><th>边类型</th><th>处数</th><th>留下 re-export 壳后</th><th>说明</th></tr></thead><tbody><tr><td><strong>入边</strong>（别人 <code>require</code> 它）</td><td><strong>374</strong></td><td><strong>0 改动</strong></td><td>壳兜住；实测 <code>module.exports = require('…')</code> 被布局守卫判为「纯 re-export 壳」而豁免（<code>check-repo-layout.js:847</code>）</td></tr><tr><td><strong>出边</strong>（它自己 <code>require</code> 别人）</td><td><strong>98</strong></td><td><strong>98 改动</strong></td><td><strong>壳救不了</strong>：文件深度变了，<code>../</code> 级数必须逐条改</td></tr><tr><td><strong>同前缀 <code>./</code> 边</strong></td><td><strong>386</strong></td><td><strong>见 §1.3.1</strong></td><td>⚠ <strong>不等于「兄弟边」</strong> —— 实测只有 76 条指向真兄弟</td></tr></tbody></table>
 <blockquote><p><strong>实测教训（必须记住）</strong>：本文写作过程中做过一次「移一个文件 + 留壳」的实验，预期「零改动」，结果<strong>当场 <code>MODULE_NOT_FOUND</code></strong>：<br><code>toolCallCorrection.js</code> 被移入子目录后，它自己的 <code>require('../utils/toStr')</code> 解析到了不存在的路径。<strong>壳只护入边，不护出边。</strong> 这解释了 <code>[DESIGN-LAY-005]</code> §2.1 那 24 处「指向不存在路径的深层 require」是怎么来的——正是历史上搬迁时漏改出边。</p>
 <p>结论：<strong>逐文件迁移是负收益</strong>；<strong>整族一次迁移显著压低 <code>./</code> 边成本</strong>，但仍须逐条核对（见 §1.3.1）。</p></blockquote>
 <h3 id="1-3-1-两处代价模型缺陷-2026-09-18-实测订正">1.3.1 ⚠ 两处代价模型缺陷（2026-09-18 实测订正）<a class="anchor" href="#1-3-1-两处代价模型缺陷-2026-09-18-实测订正" aria-label="锚点">#</a></h3>
@@ -131,7 +131,7 @@ services/backend/src/services/toolSpec.js            →  services/backend/src/s
    node docs/10_规范/DESIGN-LAY/[DESIGN-LAY-006] move-cost.js --dir=&lt;父目录&gt; --prefix=&lt;F&gt;     # 打印入边/出边/同前缀边
    - 记下「出边须改」数 **+ 同前缀 `./` 边中目标落在父目录/目录 index 的条数**
      = 本批的实际工作量（写进批次表）
-   - ⚠️ 不要用「`./` 边总数」当工作量 —— 见 §1.3.1 缺陷 ①，其中真兄弟只占约 1/5
+   - ⚠ 不要用「`./` 边总数」当工作量 —— 见 §1.3.1 缺陷 ①，其中真兄弟只占约 1/5
    - 若（出边 + 父目录 `./` 边）&gt; 文件数 × 5，先按 §4.1 降级为「只建索引」
 
 2. 一次移动（整族，一个 commit）
@@ -142,7 +142,7 @@ services/backend/src/services/toolSpec.js            →  services/backend/src/s
      · 能在**新目录内**解析        → 保留（真兄弟，同批移动路径关系不变）
      · 否则能在**父目录内**解析    → 升一级（`./x` → `../x`；`../y` → `../../y`）
      · 两者皆否                    → **真断，必须人工核**（多半是历史遗留的指空边）
-   - ⚠️ 判据是**解析目标落在哪**，不是前缀长什么样（§1.3.1）
+   - ⚠ 判据是**解析目标落在哪**，不是前缀长什么样（§1.3.1）
 
 4. 留壳（护入边 —— 374 → 0 的关键）
    - 在**原路径**重建同名文件，内容恰好一行：
@@ -158,7 +158,7 @@ services/backend/src/services/toolSpec.js            →  services/backend/src/s
 <p>若 <code>move-cost.js</code> 报（出边 + 父目录 <code>./</code> 边）&gt; 文件数 × 5（家族与父目录耦合过深），<br><strong>不要把须改的边当成可一次改完的量</strong>：</p>
 <ol><li>先只做 §3.2 的索引编组（文档）/ 或在父目录落一份 <code>00_INDEX_&lt;域&gt;.md</code> 清单（代码），把「找得到」这个近期目标达成；</li><li>把该家族写进 §8 基线台账，标注「待拆 + 须改边数」；</li><li>边的收敛是独立的、可增量做的工作，不与本规范的引入绑死。</li></ol>
 <h3 id="4-2-壳的清理条件">4.2 壳的清理条件<a class="anchor" href="#4-2-壳的清理条件" aria-label="锚点">#</a></h3>
-<p>壳是<strong>有寿命的</strong>，不是永久垫层。⚠️ 因为壳<strong>计入可发现性预算</strong>（§1.3.1 缺陷 ②），<br><strong>壳清理是「迁移收益兑现」的前置条件</strong>，不是可选收尾：</p>
+<p>壳是<strong>有寿命的</strong>，不是永久垫层。⚠ 因为壳<strong>计入可发现性预算</strong>（§1.3.1 缺陷 ②），<br><strong>壳清理是「迁移收益兑现」的前置条件</strong>，不是可选收尾：</p>
 <table><thead><tr><th>条件</th><th>动作</th></tr></thead><tbody><tr><td>该壳的入边已全部改为新路径</td><td><strong>删除壳</strong>（此时父目录才真正 <code>−1</code>）</td></tr><tr><td>壳存在超过<strong>一个大版本</strong>且入边数下降为 0</td><td>强制删除（由 §8 台账跟踪）</td></tr><tr><td>壳里被写进任何逻辑</td><td>立即回退 —— 已违反纯 re-export 契约，布局守卫会判违规</td></tr></tbody></table>
 <blockquote><p><strong>批次的「收益」栏必须写两个数</strong>：<code>迁移后读数</code>（含壳，= 父目录 +1）与<br><code>壳清理后读数</code>（= 父目录 −N+1）。只写后者是<strong>虚假收益</strong>。</p></blockquote>
 <hr>
@@ -181,12 +181,12 @@ services/backend/src/services/toolSpec.js            →  services/backend/src/s
 <ul><li>[x] 落真源 <code>docs/10_规范/DESIGN-LAY/[DESIGN-LAY-006] 仓库层级可发现性规范.md</code></li><li>[x] 叶子 <code>scripts/lib/discoverabilityGuard.js</code>（纯叶子：零 IO / 确定性 / 绝不抛）</li><li>[x] CLI <code>scripts/ci/check-discoverability.js</code>（默认 <strong>advisory 恒 exit 0</strong>）</li><li>[x] 反例矩阵 <code>scripts/ci/discoverability-demo.js</code>（14 场景，含 9 条「应放行」）</li><li>[x] 登记 <code>RULES-REGISTRY.json</code> 的 <code>LAYOUT-006</code></li><li>[x] 真源标记行 <code>&lt;!-- RULES-REGISTRY: LAYOUT-006 --&gt;</code></li><li>[x] <code>package.json</code> 别名 <code>check:discoverability</code>（否则 <code>check-wiring</code> 判 error）</li><li>[x] 基线 <code>scripts/ci/discoverability-baseline.json</code>：<code>{flat-overflow: 40, no-grouping: 3}</code></li></ul>
 <h3 id="步骤-2-迁移-分批-每批一个-commit">步骤 2 —— 迁移（分批，每批一个 commit）<a class="anchor" href="#步骤-2-迁移-分批-每批一个-commit" aria-label="锚点">#</a></h3>
 <p>按 §4 整族迁移。<strong>建议顺序（按收益/代价比）</strong>：</p>
-<table><thead><tr><th>批</th><th>目标</th><th>文件数</th><th>须改边（实测/预估）</th><th>收益（迁移后 → 壳清理后）</th></tr></thead><tbody><tr><td><strong>2.1 ✅ 已完成</strong></td><td><code>services/backend/src/services</code> 的 <code>tool*</code> → <code>tool/</code></td><td>33</td><td><strong>407 = 98 出边 + 309 <code>./</code> 边</strong>（初版误估 98）</td><td>808 → <strong>809</strong>（含壳） → <strong>776</strong>（清壳后）</td></tr><tr><td>2.2</td><td><code>docs/07_OPS_运维</code> 建真编组索引</td><td>0（只改索引）</td><td>0</td><td>消除 1 条 <code>no-grouping</code></td></tr><tr><td>2.3</td><td><code>docs/03_DESIGN_设计</code>、<code>docs/10_规范</code> 建真编组索引</td><td>0</td><td>0</td><td>消除 2 条 <code>no-grouping</code></td></tr><tr><td>2.4</td><td><code>services/backend/tests/**</code> 镜像源码的族划分</td><td>~200</td><td>待测</td><td>745 / 638 两处</td></tr><tr><td>2.5</td><td>其余 <code>services/backend/**</code> 热点</td><td>—</td><td>待测</td><td>—</td></tr></tbody></table>
-<blockquote><p>⚠️ <strong>收益栏必须写两个数</strong>（见 §4.2）：含壳的「迁移后读数」与「壳清理后读数」。<br>2.1 批的实测证明：<strong>只写后者是虚假收益</strong> —— 迁移本身让父目录 <strong>+1</strong>。</p></blockquote>
+<table><thead><tr><th>批</th><th>目标</th><th>文件数</th><th>须改边（实测/预估）</th><th>收益（迁移后 → 壳清理后）</th></tr></thead><tbody><tr><td><strong>2.1 ✓ 已完成</strong></td><td><code>services/backend/src/services</code> 的 <code>tool*</code> → <code>tool/</code></td><td>33</td><td><strong>407 = 98 出边 + 309 <code>./</code> 边</strong>（初版误估 98）</td><td>808 → <strong>809</strong>（含壳） → <strong>776</strong>（清壳后）</td></tr><tr><td>2.2</td><td><code>docs/07_OPS_运维</code> 建真编组索引</td><td>0（只改索引）</td><td>0</td><td>消除 1 条 <code>no-grouping</code></td></tr><tr><td>2.3</td><td><code>docs/03_DESIGN_设计</code>、<code>docs/10_规范</code> 建真编组索引</td><td>0</td><td>0</td><td>消除 2 条 <code>no-grouping</code></td></tr><tr><td>2.4</td><td><code>services/backend/tests/**</code> 镜像源码的族划分</td><td>~200</td><td>待测</td><td>745 / 638 两处</td></tr><tr><td>2.5</td><td>其余 <code>services/backend/**</code> 热点</td><td>—</td><td>待测</td><td>—</td></tr></tbody></table>
+<blockquote><p>⚠ <strong>收益栏必须写两个数</strong>（见 §4.2）：含壳的「迁移后读数」与「壳清理后读数」。<br>2.1 批的实测证明：<strong>只写后者是虚假收益</strong> —— 迁移本身让父目录 <strong>+1</strong>。</p></blockquote>
 <p><strong>每批完成后必须</strong>：</p>
 <ol><li>跑 <code>npm run check:layout</code>，确认 <code>unresolved-require</code> <strong>未上升</strong>（这是整族迁移没漏改出边的唯一客观证据）；</li><li>跑 <code>npm run check:discoverability</code>，确认该目录降档；</li><li><code>npm run check:discoverability -- --update-baseline</code> 下调基线（<strong>只降不升</strong>）。</li></ol>
 <h3 id="步骤-3-收口">步骤 3 —— 收口<a class="anchor" href="#步骤-3-收口" aria-label="锚点">#</a></h3>
-<blockquote><p>⚠️ <strong>前置条件（2026-09-18 实测增设）</strong>：<strong>在存量 <code>flat-overflow</code> 清零 / 大多数家族完成<br>「迁移 + 清壳」之前，不得把 <code>flat-overflow</code> 升 error。</strong> 理由见 §1.3.1 缺陷 ②：<br>迁移本身让父目录 <strong>+1</strong>，此时升 error 会把「照 §4 做完标准动作」的目录判红，<br>与 §6「强度必须与『有可行解』同步」的公理直接冲突。</p></blockquote>
+<blockquote><p>⚠ <strong>前置条件（2026-09-18 实测增设）</strong>：<strong>在存量 <code>flat-overflow</code> 清零 / 大多数家族完成<br>「迁移 + 清壳」之前，不得把 <code>flat-overflow</code> 升 error。</strong> 理由见 §1.3.1 缺陷 ②：<br>迁移本身让父目录 <strong>+1</strong>，此时升 error 会把「照 §4 做完标准动作」的目录判红，<br>与 §6「强度必须与『有可行解』同步」的公理直接冲突。</p></blockquote>
 <ul><li>[x] <strong>修正代价模型</strong>（§1.3.1 / §4 / §4.2 / §8）：<code>./</code> 边按目标解析判定、壳计入预算、</li></ul>
 <p>收益栏双数（本步为 2026-09-18 实测订正，属「修判据」而非「改仓库去满足错误判据」）</p>
 <ul><li>[ ] <code>flat-overflow</code> 升 error（<code>gate: pr</code>）—— <strong>待存量家族完成「迁移 + 清壳」后</strong></li><li>[x] <code>no-grouping</code> 升 error（<code>gate: pr</code>）—— 文档索引编组无「+1 副作用」，可先行收紧</li><li>[ ] 基线台账清零或固定在一个<strong>只降</strong>的小数字</li><li>[ ] 新增 CI 作业 <code>discoverability-roundtrip</code></li><li>[ ] 回写 <code>[DESIGN-LAY-005]</code> §1.2 横切层表（把本节作为层内判据的关联文档）</li><li>[ ] 清理 §4.2 到期的 re-export 壳（<strong>这是收益兑现的前置条件，不是可选收尾</strong>）</li></ul>
@@ -212,7 +212,7 @@ npm run check:discoverability -- --top=20           <span class="hljs-comment">#
 node scripts/ci/discoverability-demo.js --all            <span class="hljs-comment"># 反例矩阵</span>
 node docs/10_规范/DESIGN-LAY/[DESIGN-LAY-006] move-cost.js --<span class="hljs-built_in">dir</span>=&lt;父目录&gt; --prefix=&lt;族&gt; <span class="hljs-comment"># 迁移前算代价</span></code></pre>
 <h3 id="9-1-反例矩阵-14-场景-实测">9.1 反例矩阵（14 场景，实测）<a class="anchor" href="#9-1-反例矩阵-14-场景-实测" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>场景</th><th>输入</th><th>期望</th><th>实测</th></tr></thead><tbody><tr><td><code>clean</code></td><td>组织良好的 docs 目录</td><td>0 发现</td><td>✅ 0/0</td></tr><tr><td><code>clean-code-dir</code></td><td>35 文件的代码目录</td><td>0 发现</td><td>✅ 0/0</td></tr><tr><td><code>flat-overflow-boundary-ok</code></td><td>恰好 40 条目</td><td>0 发现（<strong>边界应放行</strong>）</td><td>✅ 0/0</td></tr><tr><td><code>flat-overflow-boundary-over</code></td><td>41 条目</td><td>1 error</td><td>✅ 1/0</td></tr><tr><td><code>exempt-vendor</code></td><td>vendor/node_modules/dist</td><td>0 发现</td><td>✅ 0/0</td></tr><tr><td><code>exempt-dotdir</code></td><td><code>.zcode</code>/<code>.cache</code>/<code>.github</code></td><td>0 发现</td><td>✅ 0/0</td></tr><tr><td><code>index-grouped-ok</code></td><td>6 组 × 20 条的真编组索引</td><td>0 发现</td><td>✅ 0/0</td></tr><tr><td><code>robust-nonarray</code></td><td><code>null</code> 输入</td><td>不抛</td><td>✅ 0/0</td></tr><tr><td><code>flat-overflow</code></td><td>809 条目</td><td>1 error</td><td>✅ 1/0</td></tr><tr><td><code>docs-budget-stricter</code></td><td>docs 里 35 条目</td><td>1 error（文档档更严）</td><td>✅ 1/0</td></tr><tr><td><code>no-grouping</code></td><td>184 条单块索引</td><td>1 warning</td><td>✅ 0/1</td></tr><tr><td><code>empty-index</code></td><td>空索引</td><td>1 error</td><td>✅ 1/0</td></tr><tr><td><code>robust-badentry</code></td><td><code>[null, 42, '', …]</code></td><td>不抛且正确计数</td><td>✅ 1/0</td></tr></tbody></table>
+<table><thead><tr><th>场景</th><th>输入</th><th>期望</th><th>实测</th></tr></thead><tbody><tr><td><code>clean</code></td><td>组织良好的 docs 目录</td><td>0 发现</td><td>✓ 0/0</td></tr><tr><td><code>clean-code-dir</code></td><td>35 文件的代码目录</td><td>0 发现</td><td>✓ 0/0</td></tr><tr><td><code>flat-overflow-boundary-ok</code></td><td>恰好 40 条目</td><td>0 发现（<strong>边界应放行</strong>）</td><td>✓ 0/0</td></tr><tr><td><code>flat-overflow-boundary-over</code></td><td>41 条目</td><td>1 error</td><td>✓ 1/0</td></tr><tr><td><code>exempt-vendor</code></td><td>vendor/node_modules/dist</td><td>0 发现</td><td>✓ 0/0</td></tr><tr><td><code>exempt-dotdir</code></td><td><code>.zcode</code>/<code>.cache</code>/<code>.github</code></td><td>0 发现</td><td>✓ 0/0</td></tr><tr><td><code>index-grouped-ok</code></td><td>6 组 × 20 条的真编组索引</td><td>0 发现</td><td>✓ 0/0</td></tr><tr><td><code>robust-nonarray</code></td><td><code>null</code> 输入</td><td>不抛</td><td>✓ 0/0</td></tr><tr><td><code>flat-overflow</code></td><td>809 条目</td><td>1 error</td><td>✓ 1/0</td></tr><tr><td><code>docs-budget-stricter</code></td><td>docs 里 35 条目</td><td>1 error（文档档更严）</td><td>✓ 1/0</td></tr><tr><td><code>no-grouping</code></td><td>184 条单块索引</td><td>1 warning</td><td>✓ 0/1</td></tr><tr><td><code>empty-index</code></td><td>空索引</td><td>1 error</td><td>✓ 1/0</td></tr><tr><td><code>robust-badentry</code></td><td><code>[null, 42, '', …]</code></td><td>不抛且正确计数</td><td>✓ 1/0</td></tr></tbody></table>
 <p><strong>9 条「应放行」场景全部 0 发现</strong> —— 证明守卫不是无脑拦。</p>
 <hr>
 <h2 id="10-复现方式">10. 复现方式<a class="anchor" href="#10-复现方式" aria-label="锚点">#</a></h2>

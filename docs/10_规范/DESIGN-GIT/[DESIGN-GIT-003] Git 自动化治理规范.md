@@ -63,12 +63,12 @@
 **中文 + 动词前置 + 一句话说完**：
 
 ```bash
-# ✅ 正确
+# ✓ 正确
 feat(gateway): 新增 Ollama 本地模型适配器
 fix(cli): 修复中文拼音别名冲突导致命令路由错误
 docs: 补充 AGENTS.md 工程规则说明
 
-# ❌ 错误
+# ✗ 错误
 fix: bug 修复                    # 无具体描述
 update code                      # 无 type
 feat: 添加了一些新功能            # 冗余修饰
@@ -117,12 +117,12 @@ Co-authored-by: Claude Opus 4 <noreply@anthropic.com>
 - ticket-id 可选（有 Issue 时必填）
 
 ```bash
-# ✅ 正确
+# ✓ 正确
 feat/123-add-deepseek-adapter
 fix/456-alias-conflict
 docs/update-contributing
 
-# ❌ 错误
+# ✗ 错误
 Feature/Add_DeepSeek_Adapter    # 大写+下划线
 fix-123                          # 缺少 type
 feat/                            # 缺少描述
@@ -212,7 +212,7 @@ tmp-*
 
 # 1. 检查是否有 tmp-* 文件
 if git diff --cached --name-only | grep -q "^tmp-"; then
-  echo "❌ 错误：检测到 tmp-* 临时文件，请先清理"
+  echo "✗ 错误：检测到 tmp-* 临时文件，请先清理"
   exit 1
 fi
 
@@ -227,7 +227,7 @@ LARGE_FILES=$(git diff --cached --name-only | while read f; do
 done)
 
 if [ -n "$LARGE_FILES" ]; then
-  echo "❌ 错误：检测到大文件（>10MB）："
+  echo "✗ 错误：检测到大文件（>10MB）："
   echo "$LARGE_FILES"
   echo "请使用 Git LFS 或移至外部存储"
   exit 1
@@ -241,7 +241,7 @@ COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
 PATTERN="^(feat|fix|docs|style|refactor|perf|test|chore|ci|revert)(\([a-z]+\))?: .+"
 
 if ! echo "$COMMIT_MSG" | head -1 | grep -qE "$PATTERN"; then
-  echo "❌ 错误：Commit message 格式不正确"
+  echo "✗ 错误：Commit message 格式不正确"
   echo "正确格式：<type>(<scope>): <中文描述>"
   echo "示例：feat(gateway): 新增 DeepSeek 适配器"
   exit 1
@@ -274,7 +274,7 @@ const firstLine = msg.split('\n')[0];
 const PATTERN = /^(feat|fix|docs|style|refactor|perf|test|chore|ci|revert)(\([a-z]+\))?: .+/;
 
 if (!PATTERN.test(firstLine)) {
-  console.error('❌ Commit message 格式不正确');
+  console.error('✗ Commit message 格式不正确');
   console.error('正确格式: <type>(<scope>): <中文描述>');
   console.error('示例: feat(gateway): 新增 DeepSeek 适配器');
   process.exit(1);
@@ -283,11 +283,11 @@ if (!PATTERN.test(firstLine)) {
 // 检查描述长度
 const description = firstLine.replace(/^(feat|fix|docs|style|refactor|perf|test|chore|ci|revert)(\([a-z]+\))?: /, '');
 if (description.length > 72) {
-  console.error('❌ 描述部分超过 72 字符');
+  console.error('✗ 描述部分超过 72 字符');
   process.exit(1);
 }
 
-console.log('✅ Commit message 格式正确');
+console.log('✓ Commit message 格式正确');
 ```
 
 ### 5.3 临时文件清理脚本
@@ -316,7 +316,7 @@ const TEMP_PATTERNS = [
   '.nyc_output/',
 ];
 
-console.log('🔍 扫描临时文件...\n');
+console.log('⌕ 扫描临时文件...\n');
 
 let totalSize = 0;
 let fileCount = 0;
@@ -336,9 +336,9 @@ TEMP_PATTERNS.forEach(pattern => {
             
             if (APPLY) {
               fs.rmSync(fullPath, { recursive: true, force: true });
-              console.log(`  🗑️  删除: ${file}`);
+              console.log(`  删除: ${file}`);
             } else {
-              console.log(`  📄 ${file} (${(stat.size / 1024).toFixed(1)} KB)`);
+              console.log(`  ${file} (${(stat.size / 1024).toFixed(1)} KB)`);
             }
           } catch (e) {
             // 文件可能已被删除
@@ -351,12 +351,12 @@ TEMP_PATTERNS.forEach(pattern => {
   }
 });
 
-console.log(`\n📊 统计: ${fileCount} 个文件, ${(totalSize / 1024 / 1024).toFixed(2)} MB`);
+console.log(`\n统计: ${fileCount} 个文件, ${(totalSize / 1024 / 1024).toFixed(2)} MB`);
 
 if (!APPLY) {
-  console.log('\n💡 运行 `node clean-temp.js --apply` 执行清理');
+  console.log('\n运行 `node clean-temp.js --apply` 执行清理');
 } else {
-  console.log('\n✅ 清理完成');
+  console.log('\n✓ 清理完成');
 }
 ```
 

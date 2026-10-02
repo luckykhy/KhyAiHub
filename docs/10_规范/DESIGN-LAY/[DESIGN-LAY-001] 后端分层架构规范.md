@@ -239,12 +239,12 @@ services/
 // Service 函数签名统一：async，第一个参数是 userId（如有认证）
 // 返回值统一为 { data } 或 throw KhyError
 
-// ✅ 正确
+// ✓ 正确
 async function listStrategies(userId, filters = {}) { }
 async function createStrategy(userId, params) { }
 async function deleteStrategy(userId, strategyId) { }
 
-// ❌ 错误 — 缺少 userId 上下文
+// ✗ 错误 — 缺少 userId 上下文
 async function listStrategies(filters) { }  // 无法确定归属
 ```
 
@@ -435,12 +435,12 @@ module.exports = { handleDaemon };
 
 | 从 → 到 | Routes | Middleware | Services | Models | Utils | Config |
 |---------|--------|-----------|----------|--------|-------|--------|
-| Routes | — | ✅ | ✅ | ❌ | ✅ | ❌ |
-| Middleware | — | — | ✅ | ❌ | ✅ | ❌ |
-| Services | — | — | — | ✅ | ✅ | ✅ |
-| Models | — | — | ❌ | — | ✅ | ❌ |
-| Utils | — | — | ❌ | ❌ | — | ❌ |
-| Config | — | — | ❌ | ❌ | ❌ | — |
+| Routes | — | ✓ | ✓ | ✗ | ✓ | ✗ |
+| Middleware | — | — | ✓ | ✗ | ✓ | ✗ |
+| Services | — | — | — | ✓ | ✓ | ✓ |
+| Models | — | — | ✗ | — | ✓ | ✗ |
+| Utils | — | — | ✗ | ✗ | — | ✗ |
+| Config | — | — | ✗ | ✗ | ✗ | — |
 
 ---
 

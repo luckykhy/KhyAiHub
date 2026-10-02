@@ -168,7 +168,7 @@
 - **G-2 运行残留出根**：`nul`（Windows 重定向误建的空文件）入 `.state/`；`khy_os.egg-info/` 与 `node_modules/` 属安装产物，纳入 `[DESIGN-LAY-004]` 的 `BUILD-OUTPUTS.json` 登记并由 `entries/<producer>/` 承接，而非长期占顶层目录位。
 - **G-3 探针出文档目录**：`docs/10_规范/DESIGN-LAY/` 内 5 个 `.js`（`layout-probe.js`、`family-probe.js`、`move-cost.js`、`build-root-demo.js`、`discoverability` 原型）迁 `scripts/ci/`，按 LAY-006 §4 留 re-export 壳后清壳（实测：壳计入预算，迁移 + 留壳 = 父目录 +1，见 LAY-006 §1.3.1）。
 - **顶层文件按 A 轴分组**：根 28 文件中，打包清单（`pyproject.toml`、`MANIFEST.in`、`.npmrc`、`.dockerignore`、`.gitignore`、`.gitattributes`、`.editorconfig`、`.portable`）与入口（`khy.sh`、`khy.bat`、`khy-cli.bat`、`install-khy.ps1`）与智能体规则（`AGENTS.md`、`CLAUDE.md`、`CONTRIBUTING.md`、`SECURITY.md`、`CHANGELOG.md`、`README.md`、`.clinerules`）分三族；**工具按名读取的文件不许动**（`package.json`、`pyproject.toml`、`AGENTS.md`、`CLAUDE.md`、`.gitignore`、`Dockerfile`、`docker-compose.yml`、`fly.staging.toml`、`.env*`）——这是 LAY-006 §6.1「改它们等于改工具契约」的直接适用。它们的立体感靠 `00_INDEX` 提供，不靠搬家。
-  > ⚠️ 2026-09-23：智能体规则族原列 `.windsurfrules`，该文件已随 Windsurf IDE 退役删除
+  > ⚠ 2026-09-23：智能体规则族原列 `.windsurfrules`，该文件已随 Windsurf IDE 退役删除
   > （生成器 `services/backend/src/services/metadataPointers.js` 的 `POINTER_TARGETS` 已无 windsurf
   > 目标，该文件属无人重写的孤儿）。存证 `.khy/feedback/windsurf-module-purge-20260923/`。
 

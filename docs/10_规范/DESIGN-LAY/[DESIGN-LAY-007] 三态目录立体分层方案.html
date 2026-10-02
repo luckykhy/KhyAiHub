@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -86,7 +86,7 @@
 <h3 id="4-1-代码态-只清混居-不动板块归属">4.1 代码态：只清混居，不动板块归属<a class="anchor" href="#4-1-代码态-只清混居-不动板块归属" aria-label="锚点">#</a></h3>
 <p>顶层 7 个板块（L0–L6）由 LAY-005 定死，本篇<strong>一律不碰</strong>。本篇只做三件减法：</p>
 <ul><li><strong>G-2 运行残留出根</strong>：<code>nul</code>（Windows 重定向误建的空文件）入 <code>.state/</code>；<code>khy_os.egg-info/</code> 与 <code>node_modules/</code> 属安装产物，纳入 <code>[DESIGN-LAY-004]</code> 的 <code>BUILD-OUTPUTS.json</code> 登记并由 <code>entries/&lt;producer&gt;/</code> 承接，而非长期占顶层目录位。</li><li><strong>G-3 探针出文档目录</strong>：<code>docs/10_规范/DESIGN-LAY/</code> 内 5 个 <code>.js</code>（<code>layout-probe.js</code>、<code>family-probe.js</code>、<code>move-cost.js</code>、<code>build-root-demo.js</code>、<code>discoverability</code> 原型）迁 <code>scripts/ci/</code>，按 LAY-006 §4 留 re-export 壳后清壳（实测：壳计入预算，迁移 + 留壳 = 父目录 +1，见 LAY-006 §1.3.1）。</li><li><strong>顶层文件按 A 轴分组</strong>：根 28 文件中，打包清单（<code>pyproject.toml</code>、<code>MANIFEST.in</code>、<code>.npmrc</code>、<code>.dockerignore</code>、<code>.gitignore</code>、<code>.gitattributes</code>、<code>.editorconfig</code>、<code>.portable</code>）与入口（<code>khy.sh</code>、<code>khy.bat</code>、<code>khy-cli.bat</code>、<code>install-khy.ps1</code>）与智能体规则（<code>AGENTS.md</code>、<code>CLAUDE.md</code>、<code>CONTRIBUTING.md</code>、<code>SECURITY.md</code>、<code>CHANGELOG.md</code>、<code>README.md</code>、<code>.clinerules</code>）分三族；<strong>工具按名读取的文件不许动</strong>（<code>package.json</code>、<code>pyproject.toml</code>、<code>AGENTS.md</code>、<code>CLAUDE.md</code>、<code>.gitignore</code>、<code>Dockerfile</code>、<code>docker-compose.yml</code>、<code>fly.staging.toml</code>、<code>.env*</code>）——这是 LAY-006 §6.1「改它们等于改工具契约」的直接适用。它们的立体感靠 <code>00_INDEX</code> 提供，不靠搬家。</li></ul>
-<blockquote><p>⚠️ 2026-09-23：智能体规则族原列 <code>.windsurfrules</code>，该文件已随 Windsurf IDE 退役删除<br>（生成器 <code>services/backend/src/services/metadataPointers.js</code> 的 <code>POINTER_TARGETS</code> 已无 windsurf<br>目标，该文件属无人重写的孤儿）。存证 <code>.khy/feedback/windsurf-module-purge-20260923/</code>。</p></blockquote>
+<blockquote><p>⚠ 2026-09-23：智能体规则族原列 <code>.windsurfrules</code>，该文件已随 Windsurf IDE 退役删除<br>（生成器 <code>services/backend/src/services/metadataPointers.js</code> 的 <code>POINTER_TARGETS</code> 已无 windsurf<br>目标，该文件属无人重写的孤儿）。存证 <code>.khy/feedback/windsurf-module-purge-20260923/</code>。</p></blockquote>
 <h3 id="4-2-文档态-加一层-分区目录-改一个字都不用">4.2 文档态：加一层「分区目录」，改一个字都不用<a class="anchor" href="#4-2-文档态-加一层-分区目录-改一个字都不用" aria-label="锚点">#</a></h3>
 <p><code>docs/NN_NAME/</code> 预算 50（现 12 分区，最大 500）。做法：在 176 个<strong>有 ≥2 篇同主题存量</strong>的前缀家族上建 <code>&lt;分区&gt;/&lt;主题&gt;/</code> 目录，整族一次移动，<strong>文件名与编号零改动</strong>。<code>00_INDEX_*</code> 继续作为<strong>文件</strong>存在，只是内容变为指向子目录。</p>
 <h3 id="4-3-数据态-见-2">4.3 数据态：见 §2。<a class="anchor" href="#4-3-数据态-见-2" aria-label="锚点">#</a></h3>
@@ -121,7 +121,7 @@
 <p><strong>未变的量</strong>：裁决不放宽任何红线。§6 的 12 条不变量全部保持，其中 Q2 的「不搬」是<strong>尊重</strong> §6.3 工具契约红线（npm 按名解析）而非新增豁免；Q3 的分档是<strong>落实</strong> <code>[OPS-MAN-176]</code> 既有的 home-user/home-app 二档，不是另造一套。</p>
 <blockquote><p>本节原有两条口径提醒一并保留：仓库顶层直接条目按执行器口径为 <strong>71</strong>（含点文件），<code>ls</code> 口径为 45——预算判定一律以执行器输出为准，不手工数。</p></blockquote>
       </article>
-      <nav class="pager"><a class="prev" href="../../../docs/10_规范/DESIGN-LAY/[DESIGN-LAY-006] 仓库层级可发现性规范.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-LAY-006] 仓库层级可发现性规范</div></a><a class="next" href="../../../docs/10_规范/DESIGN-LAY/00_INDEX_DESIGN-LAY-总目录.html"><div class="dir">下一篇 →</div><div class="ttl">DESIGN-LAY</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../docs/10_规范/DESIGN-LAY/[DESIGN-LAY-006] 仓库层级可发现性规范.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-LAY-006] 仓库层级可发现性规范</div></a><a class="next" href="../../../docs/10_规范/DESIGN-LAY/[DESIGN-LAY-008] 附录A 方案P全量文件去向表.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-LAY-008] 附录A · 方案 P 全量文件去向表</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>

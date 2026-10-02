@@ -17,11 +17,11 @@
 
 | 部分 | 必选 | 说明 |
 |------|------|------|
-| `type` | ✅ | 变更类型 |
-| `scope` | ❌ | 变更范围 |
-| `subject` | ✅ | 变更简述 |
-| `body` | ❌ | 变更详情 |
-| `footer` | ❌ | Issue 引用 + 破坏性变更 |
+| `type` | ✓ | 变更类型 |
+| `scope` | ✗ | 变更范围 |
+| `subject` | ✓ | 变更简述 |
+| `body` | ✗ | 变更详情 |
+| `footer` | ✗ | Issue 引用 + 破坏性变更 |
 
 ---
 
@@ -85,10 +85,10 @@ docs(AGENTS.md): clarify port self-healing mechanism
 
 | 规则 | 说明 | 示例 |
 |------|------|------|
-| **≤ 50 字符** | 第一行（标题行）不超过 50 字符 | `feat(auth): add refresh token` ✅ |
+| **≤ 50 字符** | 第一行（标题行）不超过 50 字符 | `feat(auth): add refresh token` ✓ |
 | **祈使句** | 用动词原形开头 | `add` 而非 `added` / `adds` |
 | **首字母小写** | 不句首大写 | `add` 而非 `Add` |
-| **不以句号结尾** | 标题不加句号 | `add feature` ✅ |
+| **不以句号结尾** | 标题不加句号 | `add feature` ✓ |
 | **不换行** | subject 不换行 | — |
 
 ### 4.2 动词选择

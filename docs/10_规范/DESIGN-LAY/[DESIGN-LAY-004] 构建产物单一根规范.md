@@ -118,7 +118,7 @@ $ git diff -- 'docs/02_CONCEPTS_概念入门/CONCEPT/[CONCEPT-01] 什么是Agent
 +<script src="../../19_资产/site/mermaid.min.js"></script>
 ```
 
-跑一次 `node scripts/docs/build_docs_site.js` 就修好了全部 232 个（`docs:verify` 由「引用不可达」转为「✅ 全部通过」）。**同一次改名，三处引用（`.gitignore` / `clean.js` / 232 个 html）漂移了三种不同的方式**——这不是三个人同时手滑，这是「路径清单靠人手写」这个机制本身的失效。本规范把产物路径收敛成一份登记表，正是为了消掉这个机制。
+跑一次 `node scripts/docs/build_docs_site.js` 就修好了全部 232 个（`docs:verify` 由「引用不可达」转为「✓ 全部通过」）。**同一次改名，三处引用（`.gitignore` / `clean.js` / 232 个 html）漂移了三种不同的方式**——这不是三个人同时手滑，这是「路径清单靠人手写」这个机制本身的失效。本规范把产物路径收敛成一份登记表，正是为了消掉这个机制。
 
 **证据 C —— `.gitignore` 漏覆盖 5 个产物目录**
 
@@ -159,9 +159,9 @@ scopes: ['apps/khy-mobile/android/'],
 
 | 判据 | 要求 | 实测 |
 |---|---|---|
-| **可删** | `clean:apply` 覆盖全部产物 | ❌ 漏 17 条 |
-| **可回** | 每条产物有登记的重建命令 | ❌ 17 条漏项中 12 条无登记重建命令 |
-| **不越界** | 产物只在 `entries/` 下 | ❌ 产物根不存在，24 个目录散落 6 层 |
+| **可删** | `clean:apply` 覆盖全部产物 | ✗ 漏 17 条 |
+| **可回** | 每条产物有登记的重建命令 | ✗ 17 条漏项中 12 条无登记重建命令 |
+| **不越界** | 产物只在 `entries/` 下 | ✗ 产物根不存在，24 个目录散落 6 层 |
 
 ---
 
@@ -346,7 +346,7 @@ BUILD-OUTPUTS.json  ──┬─→ .gitignore        产物段（build:root:syn
 
 ## 8. B-L2 三步接线清单（依 SOURCING-006，一次提交只做一步）
 
-### 步骤 1「标记」——只登记、只 advisory，恒 exit 0　✅ 本次已落地
+### 步骤 1「标记」——只登记、只 advisory，恒 exit 0　✓ 本次已落地
 
 | # | 动作 | 产物 |
 |---|---|---|
@@ -363,10 +363,10 @@ BUILD-OUTPUTS.json  ──┬─→ .gitignore        产物段（build:root:syn
 
 ```bash
 node scripts/ci/check-wiring.js           # 无新增 error（2 条既有 error 属 LAYOUT-004 的历史债，与本次无关）
-node scripts/ci/check-gov-rules.js        # ✅ 治理规则检查通过
-node scripts/ci/check-rules-registry.js   # ✅ 登记体系检查通过
-npm run rules:coverage                    # ✅ check-build-root.js 已计入覆盖
-node scripts/docs/verify_docs_site.js     # ✅ 全部通过（981 md / 982 html）
+node scripts/ci/check-gov-rules.js        # ✓ 治理规则检查通过
+node scripts/ci/check-rules-registry.js   # ✓ 登记体系检查通过
+npm run rules:coverage                    # ✓ check-build-root.js 已计入覆盖
+node scripts/docs/verify_docs_site.js     # ✓ 全部通过（981 md / 982 html）
 node scripts/ci/check-repo-layout.js --list=<每个 id>   # 逐条确认未命中本次新增文件
 ```
 
@@ -395,7 +395,7 @@ node scripts/ci/check-repo-layout.js --list=<每个 id>   # 逐条确认未命�
 3. 新增 CI 作业 `build-root-roundtrip`（`clean:apply && build:all && check:build-root --after-build`）；
 4. 回写 `[DESIGN-LAY-005]` §1.4 登记 `entries/`。
 
-> ⚠️ 三步**都不需要**改 `qualityGateStages.js`，也**不需要**改 `package.json` 的 `&&` 链——门成员资格从登记表派生（`[DESIGN-ARCH-111]`）。
+> ⚠ 三步**都不需要**改 `qualityGateStages.js`，也**不需要**改 `package.json` 的 `&&` 链——门成员资格从登记表派生（`[DESIGN-ARCH-111]`）。
 
 ---
 
@@ -403,29 +403,29 @@ node scripts/ci/check-repo-layout.js --list=<每个 id>   # 逐条确认未命�
 
 | 现路径 | 目标 | 产者 | 重建命令 | 可重定向 | 备注 |
 |---|---|---|---|---|---|
-| `apps/ai-frontend/dist` | `entries/ai-frontend` | Vite | `npm run build --prefix apps/ai-frontend` | ✅ `build.outDir` | |
-| `apps/ai-frontend/coverage` | `entries/coverage/ai-frontend` | Vitest | `… --coverage` | ✅ `reportsDirectory` | |
-| `software/khyquant/frontend/coverage` | `entries/coverage/khyquant` | Vitest | 同上 | ✅ | |
-| `apps/provider-hub/dist` | `entries/provider-hub` | Vite | `npm run build --prefix apps/provider-hub` | ✅ | |
-| `apps/khy-mobile/dist` | `entries/khy-mobile` | Vite | `npx cap sync` 链路 | ✅ | |
-| `apps/khy-mobile/release` | `entries/khy-mobile` | Gradle | `gradlew assembleRelease` | ⚠️ junction | |
-| `apps/khy-mobile/android/build` | 同上 | Gradle | 同上 | ⚠️ | `clean.js` **漏登记** |
-| `apps/khy-mobile/android/capacitor-cordova-android-plugins/build` | 同上 | Gradle | 同上 | ⚠️ | `clean.js` **漏登记** |
-| `apps/khy-os-client-app/{build,release}` | `entries/flutter-android` | Flutter | `flutter build apk` | ⚠️ junction | 2.9 GB 级 |
-| `apps/khy-os-client-app/android/build` | 同上 | Gradle | 同上 | ⚠️ | |
-| `apps/khyos-desktop/{dist,dist-electron,out}` | `entries/electron` | electron-builder | `electron-builder` | ✅ `directories.output` | **`out/` 已被跟踪** |
+| `apps/ai-frontend/dist` | `entries/ai-frontend` | Vite | `npm run build --prefix apps/ai-frontend` | ✓ `build.outDir` | |
+| `apps/ai-frontend/coverage` | `entries/coverage/ai-frontend` | Vitest | `… --coverage` | ✓ `reportsDirectory` | |
+| `software/khyquant/frontend/coverage` | `entries/coverage/khyquant` | Vitest | 同上 | ✓ | |
+| `apps/provider-hub/dist` | `entries/provider-hub` | Vite | `npm run build --prefix apps/provider-hub` | ✓ | |
+| `apps/khy-mobile/dist` | `entries/khy-mobile` | Vite | `npx cap sync` 链路 | ✓ | |
+| `apps/khy-mobile/release` | `entries/khy-mobile` | Gradle | `gradlew assembleRelease` | ⚠ junction | |
+| `apps/khy-mobile/android/build` | 同上 | Gradle | 同上 | ⚠ | `clean.js` **漏登记** |
+| `apps/khy-mobile/android/capacitor-cordova-android-plugins/build` | 同上 | Gradle | 同上 | ⚠ | `clean.js` **漏登记** |
+| `apps/khy-os-client-app/{build,release}` | `entries/flutter-android` | Flutter | `flutter build apk` | ⚠ junction | 2.9 GB 级 |
+| `apps/khy-os-client-app/android/build` | 同上 | Gradle | 同上 | ⚠ | |
+| `apps/khyos-desktop/{dist,dist-electron,out}` | `entries/electron` | electron-builder | `electron-builder` | ✓ `directories.output` | **`out/` 已被跟踪** |
 | `apps/khyos-desktop/zcode-analysis/unpacked/out` | `entries/electron/zcode-analysis` | 分析工具 | 待核实 | 待核实 | `clean.js` 漏登记 |
-| `dist/` `build/` `khy_os.egg-info` | `entries/pip` | setuptools | `python -m build --outdir entries/pip` | ✅ | `check:pip-packaging --dist-dir` 需同步 |
-| `coverage/` `.nyc_output/` | `entries/coverage/root` | jest / c8 | `npm run cover-unit` | ✅ | |
-| `.cache/` | `entries/cache` | 治理脚本 | 下次运行自动重建 | ✅ | |
-| `tmp-cov/` | `entries/tmp-cov` | quality-gate | `npm run quality:gate` | ✅ | |
-| `services/backend/dist` | `entries/backend` | esbuild | `node packaging/build/esbuild-modules.js` | ✅ 脚本参数 | `clean.js` 漏登记 |
-| `kernel/moonbit/_build` | — | MoonBit | `moon build` | ❌ | **寄生**，工具写死 |
-| `apps/ai-frontend/public/vendor` | — | esbuild | `sync-md-vendor.mjs` | ❌ | **寄生**，须被 Vite 服务 |
-| `extensions/tools/khy-markdown/vendor` | — | esbuild | `ensure-vendor.mjs` | ❌ | **寄生**，须在包内 |
-| `extensions/tools/khy-dsh-compat/vendor` | — | esbuild | 拓展 prepack | ❌ | **寄生** |
-| `docs/19_资产/site/mermaid.min.js` | — | esbuild | `npm run docs:mermaid` | ❌ | **寄生**，须被文档站引用 |
-| `tools/deepseek-eyes/deepseek_eyes.egg-info` | — | pip | `pip install -e` | ❌ | **寄生**，机器本地 |
+| `dist/` `build/` `khy_os.egg-info` | `entries/pip` | setuptools | `python -m build --outdir entries/pip` | ✓ | `check:pip-packaging --dist-dir` 需同步 |
+| `coverage/` `.nyc_output/` | `entries/coverage/root` | jest / c8 | `npm run cover-unit` | ✓ | |
+| `.cache/` | `entries/cache` | 治理脚本 | 下次运行自动重建 | ✓ | |
+| `tmp-cov/` | `entries/tmp-cov` | quality-gate | `npm run quality:gate` | ✓ | |
+| `services/backend/dist` | `entries/backend` | esbuild | `node packaging/build/esbuild-modules.js` | ✓ 脚本参数 | `clean.js` 漏登记 |
+| `kernel/moonbit/_build` | — | MoonBit | `moon build` | ✗ | **寄生**，工具写死 |
+| `apps/ai-frontend/public/vendor` | — | esbuild | `sync-md-vendor.mjs` | ✗ | **寄生**，须被 Vite 服务 |
+| `extensions/tools/khy-markdown/vendor` | — | esbuild | `ensure-vendor.mjs` | ✗ | **寄生**，须在包内 |
+| `extensions/tools/khy-dsh-compat/vendor` | — | esbuild | 拓展 prepack | ✗ | **寄生** |
+| `docs/19_资产/site/mermaid.min.js` | — | esbuild | `npm run docs:mermaid` | ✗ | **寄生**，须被文档站引用 |
+| `tools/deepseek-eyes/deepseek_eyes.egg-info` | — | pip | `pip install -e` | ✗ | **寄生**，机器本地 |
 
 **计数**：正式迁移 17 条，寄生 6 条 → `meta.parasiticBudget` 初值 6，收口目标 4（`docs/19_资产/site/mermaid.min.js` 与 `extensions/tools/khy-dsh-compat/vendor` 应可随文档站/拓展重构并入产物根）。
 
@@ -453,13 +453,13 @@ $ node docs/10_规范/DESIGN-LAY/[DESIGN-LAY-004] build-root-demo.js --all
 
 | 项 | 方式 | 结果 |
 |---|---|---|
-| 判定确定性 | 纯函数，同输入同输出 | ✅ 12 场景可复现 |
-| **不误伤** | `clean` 场景（全部合规） | ✅ **0 error / 0 warning**——证明不是无脑拦 |
-| 源码同名目录不误杀 | `SOURCE_DIR_ALLOWLIST` 含 `packaging/build`、`scripts/release` | ✅ 真实扫描中这两条未报 finding |
-| 反例逐条命中 | 见 §3 反例表，每条对应一个场景 | ✅ 全部命中 |
-| 零外部依赖 | 只 require `fs` / `path` | ✅ |
-| 离线可跑 | 不联网、不调模型 | ✅ |
-| 语法自检 | `node --check` | ✅ syntax OK |
+| 判定确定性 | 纯函数，同输入同输出 | ✓ 12 场景可复现 |
+| **不误伤** | `clean` 场景（全部合规） | ✓ **0 error / 0 warning**——证明不是无脑拦 |
+| 源码同名目录不误杀 | `SOURCE_DIR_ALLOWLIST` 含 `packaging/build`、`scripts/release` | ✓ 真实扫描中这两条未报 finding |
+| 反例逐条命中 | 见 §3 反例表，每条对应一个场景 | ✓ 全部命中 |
+| 零外部依赖 | 只 require `fs` / `path` | ✓ |
+| 离线可跑 | 不联网、不调模型 | ✓ |
+| 语法自检 | `node --check` | ✓ syntax OK |
 
 ### 10.1 真实仓库扫描
 

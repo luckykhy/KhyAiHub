@@ -11,20 +11,20 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
     <div class="content">
       <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>10_规范<span class="sep">›</span>DESIGN-LAY<span class="sep">›</span>[DESIGN-LAY-002] 目录层级与文件归类规范</div>
       <header class="hero reveal"><h1>[DESIGN-LAY-002] 目录层级与文件归类规范</h1></header>
-      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-lay-002-目录层级与文件归类规范">[DESIGN-LAY-002] 目录层级与文件归类规范</a></li><li class="lvl-2"><a href="#1-红线">1. 红线</a></li><li class="lvl-2"><a href="#2-第-4-轴-可见性-pub-int-prv">2. 第 4 轴：可见性（PUB / INT / PRV）</a></li><li class="lvl-3"><a href="#2-1-三档定义">2.1 三档定义</a></li><li class="lvl-3"><a href="#2-2-判定四问">2.2 判定四问</a></li><li class="lvl-3"><a href="#2-3-现状登记">2.3 现状登记</a></li><li class="lvl-2"><a href="#3-前缀用法裁定">3. `_` 前缀用法裁定</a></li><li class="lvl-2"><a href="#4-分层-命名风格映射">4. 分层 → 命名风格映射</a></li><li class="lvl-2"><a href="#5-文件归类标准">5. 文件归类标准</a></li><li class="lvl-2"><a href="#6-典型目录树-示例-非强制格式">6. 典型目录树（示例，非强制格式）</a></li><li class="lvl-2"><a href="#7-反例-正例">7. 反例 → 正例</a></li><li class="lvl-2"><a href="#8-冲突裁决-存量矛盾三条">8. 冲突裁决（存量矛盾三条）</a></li><li class="lvl-2"><a href="#9-校验-守卫">9. 校验（守卫）</a></li><li class="lvl-2"><a href="#10-例外与豁免">10. 例外与豁免</a></li><li class="lvl-2"><a href="#11-版本历史">11. 版本历史</a></li></ul></nav>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-lay-002-目录层级与文件归类规范">[DESIGN-LAY-002] 目录层级与文件归类规范</a></li><li class="lvl-2"><a href="#1-红线">1. 红线</a></li><li class="lvl-2"><a href="#2-第-4-轴-可见性-pub-int-prv">2. 第 4 轴：可见性（PUB / INT / PRV）</a></li><li class="lvl-3"><a href="#2-1-三档定义">2.1 三档定义</a></li><li class="lvl-3"><a href="#2-2-判定四问">2.2 判定四问</a></li><li class="lvl-3"><a href="#2-3-现状登记">2.3 现状登记</a></li><li class="lvl-2"><a href="#3-前缀用法裁定">3. `_` 前缀用法裁定</a></li><li class="lvl-3"><a href="#3-1-交付物-vs-过程态工具-落点判据">3.1 交付物 vs 过程态工具 —— 落点判据</a></li><li class="lvl-2"><a href="#4-分层-命名风格映射">4. 分层 → 命名风格映射</a></li><li class="lvl-2"><a href="#5-文件归类标准">5. 文件归类标准</a></li><li class="lvl-2"><a href="#6-典型目录树-示例-非强制格式">6. 典型目录树（示例，非强制格式）</a></li><li class="lvl-2"><a href="#7-反例-正例">7. 反例 → 正例</a></li><li class="lvl-2"><a href="#8-冲突裁决-存量矛盾三条">8. 冲突裁决（存量矛盾三条）</a></li><li class="lvl-2"><a href="#9-校验-守卫">9. 校验（守卫）</a></li><li class="lvl-2"><a href="#10-例外与豁免">10. 例外与豁免</a></li><li class="lvl-2"><a href="#11-版本历史">11. 版本历史</a></li></ul></nav>
       <article class="doc-body">
 <h1 id="design-lay-002-目录层级与文件归类规范">[DESIGN-LAY-002] 目录层级与文件归类规范<a class="anchor" href="#design-lay-002-目录层级与文件归类规范" aria-label="锚点">#</a></h1>
 <!-- RULES-REGISTRY: LAYOUT-001 -->
@@ -57,7 +57,13 @@
 <blockquote><p><strong>结论</strong>：同一个 <code>_</code> 前缀在仓库里曾同时表示三种不相干的意思，是查找混乱的主要来源之一。<br><strong>2026-09-16 起 <code>docs/</code> 顶层改用统一编号轴</strong>（见 <code>[DESIGN-LAY-005]</code> §3.1），<code>_</code> 只剩两种含义，且<strong>只限于代码树内</strong>。</p></blockquote>
 <table><thead><tr><th><strong>用法</strong></th><th><strong>含义</strong></th><th><strong>裁定</strong></th></tr></thead><tbody><tr><td><code>_bootstrap.py</code>、<code>_resources/</code>、<code>_llmDecomposer.js</code></td><td>包内私有实现</td><td><strong>保留</strong>，归 PRV。仅限代码树内</td></tr><tr><td><code>khy-Trajectory/_probe*.txt</code> 等</td><td>临时探测草稿</td><td><strong>判定为草稿</strong>。草稿不得进入 <code>docs/</code> 正文层级，只能落 <code>_产物/</code> 或轨迹目录</td></tr></tbody></table>
 <blockquote><p><strong>已废止的第三种含义</strong>：<code>docs/_规范/</code>、<code>docs/_报告/</code> 曾以 <code>_</code> 表示「跨阶段资产，不在生命周期序列里」。<br>该含义<strong>已废止</strong>——<code>docs/</code> 顶层现统一为 <code>NN_中文/</code>，「编号 ≥ 10」即表达跨阶段，真源 <code>[DESIGN-LAY-005]</code> §3.1。<br>废止理由有二：① <code>_</code> 在资源管理器与 <code>ls</code> 中排序位置不确定，读者无法凭名字预判顺序；<br>② 同一个 <code>_</code> 同时表「跨阶段」与「包内私有/草稿」两义，与 LAY-8 冲突。<br>存量目录已于同日改名（<code>_规范</code>→<code>10_规范</code>、<code>_报告</code>→<code>11_报告</code>、<code>_assets</code>→<code>19_资产</code>、<code>_archive</code>→<code>18_归档</code> 等），<strong>不保留 <code>_</code> 别名</strong>。</p></blockquote>
-<p>边界：代码树内 <code>_</code> 一律 PRV（见 LAY-8）；草稿没有第四种合法去处，一律走 <code>_产物/</code>（该目录语义已是「产出即冻结、不再维护」）。</p>
+<p>边界：代码树内 <code>_</code> 一律 PRV（见 LAY-8）。</p>
+<h3 id="3-1-交付物-vs-过程态工具-落点判据">3.1 交付物 vs 过程态工具 —— 落点判据<a class="anchor" href="#3-1-交付物-vs-过程态工具-落点判据" aria-label="锚点">#</a></h3>
+<p>草稿与临时产物<strong>没有第四种合法去处</strong>，但「暂存区」与「过程区」<strong>不是同一个桶</strong>。<br>判据只有一问：<strong>这个文件是要交给人看的，还是为了这次核查 / 接线临时造的工具？</strong></p>
+<table><thead><tr><th>类别</th><th>判据</th><th>落点</th></tr></thead><tbody><tr><td><strong>交付物</strong>：报告、能力矩阵（<code>*.xlsx</code>）、方案（<code>*.docx</code>）、启动脚本、轨迹符号链接</td><td>有人会<strong>打开它</strong>读内容</td><td><code>_产物/</code>（在册根级例外，真源 <code>[DESIGN-LAY-005]</code> §1.4）</td></tr><tr><td><strong>过程态工具</strong>：探针、扫描脚本、诊断脚本、未接线原型</td><td>有人会<strong>跑它</strong>复现结论</td><td><code>.khyos/</code>（整体 gitignore）：可复跑的落 <code>.khyos/diag/</code>，一次性的落 <code>.khyos/tmp/</code></td></tr></tbody></table>
+<p>本表只管<strong>可执行的过程态工具</strong>；纯文本草稿（<code>_probe*.txt</code> 等）的裁定见上表，不变。</p>
+<p>两个桶<strong>都不入仓</strong> ⇒ 文档里引用它们时<strong>必须写明复现命令</strong>，否则新克隆的检出里没有该文件，<br>会被读成「漏提交」。</p>
+<blockquote><p>⚠ <strong>未接线的原型绝不能放 <code>scripts/ci/</code></strong>：<code>check-wiring.js</code> 对「零接线检查器」判 <strong>error</strong>，<br>放进去当场把仓库变红。原型阶段落 <code>.khyos/diag/</code>；接线时判定逻辑入 <code>scripts/lib/&lt;x&gt;Guard.js</code><br>（纯叶子：零 IO、确定性、绝不抛、可单测），走盘 / 打印入 <code>scripts/ci/</code>，并在 <code>package.json</code> 加别名。</p></blockquote>
 <hr>
 <h2 id="4-分层-命名风格映射">4. 分层 → 命名风格映射<a class="anchor" href="#4-分层-命名风格映射" aria-label="锚点">#</a></h2>
 <blockquote><p><strong>结论</strong>：风格由<strong>语言轴</strong>决定，不由层号决定。层号只告诉你「在哪」，语言轴告诉你「怎么写名」。此表是 <code>[DESIGN-NAM-001]</code> 第 10.1 节的层级化落地，不替代它。</p></blockquote>

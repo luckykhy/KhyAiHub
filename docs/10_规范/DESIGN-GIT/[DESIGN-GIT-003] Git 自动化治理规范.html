@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -46,12 +46,12 @@
 <table><thead><tr><th>Scope</th><th>对应目录</th></tr></thead><tbody><tr><td><code>cli</code></td><td><code>services/backend/src/cli/</code></td></tr><tr><td><code>gateway</code></td><td><code>services/backend/src/services/gateway/</code></td></tr><tr><td><code>backend</code></td><td><code>services/backend/</code></td></tr><tr><td><code>frontend</code></td><td><code>apps/ai-frontend/</code></td></tr><tr><td><code>desktop</code></td><td><code>apps/khyos-desktop/</code></td></tr><tr><td><code>mobile</code></td><td><code>apps/khy-os-client-app/</code></td></tr><tr><td><code>kernel</code></td><td><code>kernel/</code></td></tr><tr><td><code>platform</code></td><td><code>platform/</code></td></tr><tr><td><code>docs</code></td><td><code>docs/</code></td></tr><tr><td><code>scripts</code></td><td><code>scripts/</code></td></tr><tr><td><code>ext</code></td><td><code>extensions/</code></td></tr></tbody></table>
 <h3 id="2-4-描述规范">2.4 描述规范<a class="anchor" href="#2-4-描述规范" aria-label="锚点">#</a></h3>
 <p><strong>中文 + 动词前置 + 一句话说完</strong>：</p>
-<pre><code class="language-bash"><span class="hljs-comment"># ✅ 正确</span>
+<pre><code class="language-bash"><span class="hljs-comment"># ✓ 正确</span>
 feat(gateway): 新增 Ollama 本地模型适配器
 fix(cli): 修复中文拼音别名冲突导致命令路由错误
 docs: 补充 AGENTS.md 工程规则说明
 
-<span class="hljs-comment"># ❌ 错误</span>
+<span class="hljs-comment"># ✗ 错误</span>
 fix: bug 修复                    <span class="hljs-comment"># 无具体描述</span>
 update code                      <span class="hljs-comment"># 无 type</span>
 feat: 添加了一些新功能            <span class="hljs-comment"># 冗余修饰</span></code></pre>
@@ -73,12 +73,12 @@ Co-authored-by: Claude Opus 4 &lt;noreply@anthropic.com&gt;</code></pre>
 <table><thead><tr><th>Type</th><th>说明</th><th>示例</th></tr></thead><tbody><tr><td><code>feat/</code></td><td>新功能开发</td><td><code>feat/123-add-deepseek-adapter</code></td></tr><tr><td><code>fix/</code></td><td>Bug 修复</td><td><code>fix/456-alias-conflict</code></td></tr><tr><td><code>docs/</code></td><td>文档更新</td><td><code>docs/update-contributing</code></td></tr><tr><td><code>refactor/</code></td><td>重构</td><td><code>refactor/split-aigateway</code></td></tr><tr><td><code>chore/</code></td><td>杂项维护</td><td><code>chore/upgrade-pnpm</code></td></tr><tr><td><code>release/</code></td><td>发布准备</td><td><code>release/v1.6.0</code></td></tr><tr><td><code>hotfix/</code></td><td>紧急修复</td><td><code>hotfix/critical-auth-bug</code></td></tr></tbody></table>
 <h3 id="3-3-命名规则">3.3 命名规则<a class="anchor" href="#3-3-命名规则" aria-label="锚点">#</a></h3>
 <ul><li>全小写，单词用 <code>-</code> 连接</li><li>描述部分不超过 5 个单词</li><li>ticket-id 可选（有 Issue 时必填）</li></ul>
-<pre><code class="language-bash"><span class="hljs-comment"># ✅ 正确</span>
+<pre><code class="language-bash"><span class="hljs-comment"># ✓ 正确</span>
 feat/123-add-deepseek-adapter
 fix/456-alias-conflict
 docs/update-contributing
 
-<span class="hljs-comment"># ❌ 错误</span>
+<span class="hljs-comment"># ✗ 错误</span>
 Feature/Add_DeepSeek_Adapter    <span class="hljs-comment"># 大写+下划线</span>
 fix-123                          <span class="hljs-comment"># 缺少 type</span>
 feat/                            <span class="hljs-comment"># 缺少描述</span></code></pre>
@@ -134,7 +134,7 @@ tmp-*
 
 <span class="hljs-comment"># 1. 检查是否有 tmp-* 文件</span>
 <span class="hljs-keyword">if</span> git diff --cached --name-only | grep -q <span class="hljs-string">&quot;^tmp-&quot;</span>; <span class="hljs-keyword">then</span>
-  <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;❌ 错误：检测到 tmp-* 临时文件，请先清理&quot;</span>
+  <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;✗ 错误：检测到 tmp-* 临时文件，请先清理&quot;</span>
   <span class="hljs-built_in">exit</span> 1
 <span class="hljs-keyword">fi</span>
 
@@ -149,7 +149,7 @@ LARGE_FILES=$(git diff --cached --name-only | <span class="hljs-keyword">while</
 <span class="hljs-keyword">done</span>)
 
 <span class="hljs-keyword">if</span> [ -n <span class="hljs-string">&quot;<span class="hljs-variable">$LARGE_FILES</span>&quot;</span> ]; <span class="hljs-keyword">then</span>
-  <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;❌ 错误：检测到大文件（&gt;10MB）：&quot;</span>
+  <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;✗ 错误：检测到大文件（&gt;10MB）：&quot;</span>
   <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;<span class="hljs-variable">$LARGE_FILES</span>&quot;</span>
   <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;请使用 Git LFS 或移至外部存储&quot;</span>
   <span class="hljs-built_in">exit</span> 1
@@ -163,7 +163,7 @@ COMMIT_MSG=$(<span class="hljs-built_in">cat</span> <span class="hljs-string">&q
 PATTERN=<span class="hljs-string">&quot;^(feat|fix|docs|style|refactor|perf|test|chore|ci|revert)(\([a-z]+\))?: .+&quot;</span>
 
 <span class="hljs-keyword">if</span> ! <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;<span class="hljs-variable">$COMMIT_MSG</span>&quot;</span> | <span class="hljs-built_in">head</span> -1 | grep -qE <span class="hljs-string">&quot;<span class="hljs-variable">$PATTERN</span>&quot;</span>; <span class="hljs-keyword">then</span>
-  <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;❌ 错误：Commit message 格式不正确&quot;</span>
+  <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;✗ 错误：Commit message 格式不正确&quot;</span>
   <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;正确格式：&lt;type&gt;(&lt;scope&gt;): &lt;中文描述&gt;&quot;</span>
   <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;示例：feat(gateway): 新增 DeepSeek 适配器&quot;</span>
   <span class="hljs-built_in">exit</span> 1
@@ -191,7 +191,7 @@ PATTERN=<span class="hljs-string">&quot;^(feat|fix|docs|style|refactor|perf|test
 <span class="hljs-keyword">const</span> <span class="hljs-variable constant_">PATTERN</span> = <span class="hljs-regexp">/^(feat|fix|docs|style|refactor|perf|test|chore|ci|revert)(\([a-z]+\))?: .+/</span>;
 
 <span class="hljs-keyword">if</span> (!<span class="hljs-variable constant_">PATTERN</span>.<span class="hljs-title function_">test</span>(firstLine)) {
-  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">&#x27;❌ Commit message 格式不正确&#x27;</span>);
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">&#x27;✗ Commit message 格式不正确&#x27;</span>);
   <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">&#x27;正确格式: &lt;type&gt;(&lt;scope&gt;): &lt;中文描述&gt;&#x27;</span>);
   <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">&#x27;示例: feat(gateway): 新增 DeepSeek 适配器&#x27;</span>);
   process.<span class="hljs-title function_">exit</span>(<span class="hljs-number">1</span>);
@@ -200,11 +200,11 @@ PATTERN=<span class="hljs-string">&quot;^(feat|fix|docs|style|refactor|perf|test
 <span class="hljs-comment">// 检查描述长度</span>
 <span class="hljs-keyword">const</span> description = firstLine.<span class="hljs-title function_">replace</span>(<span class="hljs-regexp">/^(feat|fix|docs|style|refactor|perf|test|chore|ci|revert)(\([a-z]+\))?: /</span>, <span class="hljs-string">&#x27;&#x27;</span>);
 <span class="hljs-keyword">if</span> (description.<span class="hljs-property">length</span> &gt; <span class="hljs-number">72</span>) {
-  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">&#x27;❌ 描述部分超过 72 字符&#x27;</span>);
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">error</span>(<span class="hljs-string">&#x27;✗ 描述部分超过 72 字符&#x27;</span>);
   process.<span class="hljs-title function_">exit</span>(<span class="hljs-number">1</span>);
 }
 
-<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;✅ Commit message 格式正确&#x27;</span>);</code></pre>
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;✓ Commit message 格式正确&#x27;</span>);</code></pre>
 <h3 id="5-3-临时文件清理脚本">5.3 临时文件清理脚本<a class="anchor" href="#5-3-临时文件清理脚本" aria-label="锚点">#</a></h3>
 <p>创建 <code>scripts/maintenance/clean-temp.js</code>：</p>
 <pre><code class="language-javascript"><span class="hljs-meta">#!/usr/bin/env node</span>
@@ -228,7 +228,7 @@ PATTERN=<span class="hljs-string">&quot;^(feat|fix|docs|style|refactor|perf|test
   <span class="hljs-string">&#x27;.nyc_output/&#x27;</span>,
 ];
 
-<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;🔍 扫描临时文件...\n&#x27;</span>);
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;⌕ 扫描临时文件...\n&#x27;</span>);
 
 <span class="hljs-keyword">let</span> totalSize = <span class="hljs-number">0</span>;
 <span class="hljs-keyword">let</span> fileCount = <span class="hljs-number">0</span>;
@@ -248,9 +248,9 @@ PATTERN=<span class="hljs-string">&quot;^(feat|fix|docs|style|refactor|perf|test
             
             <span class="hljs-keyword">if</span> (<span class="hljs-variable constant_">APPLY</span>) {
               fs.<span class="hljs-title function_">rmSync</span>(fullPath, { <span class="hljs-attr">recursive</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">force</span>: <span class="hljs-literal">true</span> });
-              <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`  🗑️  删除: <span class="hljs-subst">${file}</span>`</span>);
+              <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`  删除: <span class="hljs-subst">${file}</span>`</span>);
             } <span class="hljs-keyword">else</span> {
-              <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`  📄 <span class="hljs-subst">${file}</span> (<span class="hljs-subst">${(stat.size / <span class="hljs-number">1024</span>).toFixed(<span class="hljs-number">1</span>)}</span> KB)`</span>);
+              <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`  <span class="hljs-subst">${file}</span> (<span class="hljs-subst">${(stat.size / <span class="hljs-number">1024</span>).toFixed(<span class="hljs-number">1</span>)}</span> KB)`</span>);
             }
           } <span class="hljs-keyword">catch</span> (e) {
             <span class="hljs-comment">// 文件可能已被删除</span>
@@ -263,12 +263,12 @@ PATTERN=<span class="hljs-string">&quot;^(feat|fix|docs|style|refactor|perf|test
   }
 });
 
-<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`\n📊 统计: <span class="hljs-subst">${fileCount}</span> 个文件, <span class="hljs-subst">${(totalSize / <span class="hljs-number">1024</span> / <span class="hljs-number">1024</span>).toFixed(<span class="hljs-number">2</span>)}</span> MB`</span>);
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">`\n统计: <span class="hljs-subst">${fileCount}</span> 个文件, <span class="hljs-subst">${(totalSize / <span class="hljs-number">1024</span> / <span class="hljs-number">1024</span>).toFixed(<span class="hljs-number">2</span>)}</span> MB`</span>);
 
 <span class="hljs-keyword">if</span> (!<span class="hljs-variable constant_">APPLY</span>) {
-  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;\n💡 运行 `node clean-temp.js --apply` 执行清理&#x27;</span>);
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;\n运行 `node clean-temp.js --apply` 执行清理&#x27;</span>);
 } <span class="hljs-keyword">else</span> {
-  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;\n✅ 清理完成&#x27;</span>);
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;\n✓ 清理完成&#x27;</span>);
 }</code></pre>
 <hr>
 <h2 id="6-gitignore-最佳实践">6. Gitignore 最佳实践<a class="anchor" href="#6-gitignore-最佳实践" aria-label="锚点">#</a></h2>
