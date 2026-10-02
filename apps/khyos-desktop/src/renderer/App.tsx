@@ -15,6 +15,7 @@ import { SettingsPage } from './components/settings/SettingsPage'
 import { AutomationsPage } from './components/automations/AutomationsPage'
 import { store, useAppSelector } from './state/store'
 import { appendMessageContent, clearMessages, setMessages, type Message } from './state/messageSlice'
+import { sanitizeUserContent } from './utils/stripSystemInjects'
 import { addToast } from './state/toastSlice'
 import { startToolExecution, updateToolExecution, recordAffectedFiles } from './state/toolExecutionSlice'
 import { ElicitationPanel } from './components/message/ElicitationPanel'
@@ -197,13 +198,24 @@ export default function App() {
         store.dispatch(addToast({ type: 'error', title: res?.error || '会话内容读取失败：host 进程无响应，请重启应用' }))
         return
       }
-      const loaded: Message[] = (res.messages || []).map((m, i) => ({
-        id: `h_${sessionId}_${i}`,
-        role: m.role === 'assistant' || m.role === 'system' ? m.role : 'user',
-        content: typeof m.content === 'string' ? m.content : '',
-        timestamp: typeof m.timestamp === 'number' ? m.timestamp : Date.now(),
-        status: 'complete' as const,
-      }))
+      // 系统提示词泄漏修复:持久化 transcript 里的用户轮是后端编排层增强过的
+      // `currentMessage`(工具循环把 [SYSTEM: …] 转向块拼进去后才入历史)。
+      // 渲染层只应显示用户真正说的话 —— 剥掉注入块;整条都是注入的合成用户轮
+      // (如任务收尾催办)直接丢弃,不留空泡。模型上下文不受影响(那只读原始历史)。
+      const loaded: Message[] = (res.messages || [])
+        .map((m, i): Message => ({
+          id: `h_${sessionId}_${i}`,
+          role: m.role === 'assistant' || m.role === 'system' ? m.role : 'user',
+          content:
+            m.role === 'assistant' || m.role === 'system'
+              ? typeof m.content === 'string'
+                ? m.content
+                : ''
+              : sanitizeUserContent(typeof m.content === 'string' ? m.content : ''),
+          timestamp: typeof m.timestamp === 'number' ? m.timestamp : Date.now(),
+          status: 'complete' as const,
+        }))
+        .filter((m) => m.role !== 'user' || m.content !== '')
       store.dispatch(setMessages(loaded))
       setSessionTitle(res.title || '')
       setSessionJsonlPath(res.jsonlPath || '')
