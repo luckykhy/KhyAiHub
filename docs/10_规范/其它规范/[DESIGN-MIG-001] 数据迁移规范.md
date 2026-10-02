@@ -90,10 +90,10 @@ module.exports = {
 ### 4.2 大表处理
 
 ```javascript
-// ❌ 错误 — 一次性更新百万行
+// ✗ 错误 — 一次性更新百万行
 await queryInterface.bulkUpdate('orders', { status: 'archived' }, {});
 
-// ✅ 正确 — 分批处理
+// ✓ 正确 — 分批处理
 async function migrateInBatches(queryInterface, batchSize = 1000) {
   let processed = 0;
   while (true) {

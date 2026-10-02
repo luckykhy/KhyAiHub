@@ -131,10 +131,10 @@
 
 | 文件 | 问题 | 处置 | 状态 |
 |------|------|------|------|
-| `docs/10_规范/[DESIGN-A2A-001] A2A 协议规范.md` | 把私有方言写成「A2A 协议规范」；§4 方法名（`a2a.discovery.register` 等）实现中零存在；§5 传输写 WebSocket/gRPC | 加定位更正横幅（已做）；新增 §0 术语与方法集更正表（权威 ACP 方法集 + 历史错误命名对照）；§4 前插入更正警示 | ✅ 本次 |
-| `docs/03_DESIGN_设计/[DESIGN-ARCH-073] 规范快速参考卡.md` | `## A2A 协议速查` 把虚构方法族（`a2a.discovery.*` / `a2a.capability.*` / `a2a.task.*` / `a2a.status.*`）当作真实 API 速查 | 改为真实 ACP 方法集，并拆成「私有 ACP（进程内）」与「标准 A2A（对外互操作）」两节 | ✅ 本次 |
-| `docs/10_规范/[DESIGN-A2A-002] A2A 标准协议适配规范.md` | 文中引用历史错误命名作为对照 | 已带豁免标记，保留为反例 | ✅ 本次 |
-| 代码注释 | `a2aRegistry.js` 等文件头自述「A2A Registry」 | P2 随改名同步修正为「ACP Registry」 | ⬜ P2 |
+| `docs/10_规范/[DESIGN-A2A-001] A2A 协议规范.md` | 把私有方言写成「A2A 协议规范」；§4 方法名（`a2a.discovery.register` 等）实现中零存在；§5 传输写 WebSocket/gRPC | 加定位更正横幅（已做）；新增 §0 术语与方法集更正表（权威 ACP 方法集 + 历史错误命名对照）；§4 前插入更正警示 | ✓ 本次 |
+| `docs/03_DESIGN_设计/[DESIGN-ARCH-073] 规范快速参考卡.md` | `## A2A 协议速查` 把虚构方法族（`a2a.discovery.*` / `a2a.capability.*` / `a2a.task.*` / `a2a.status.*`）当作真实 API 速查 | 改为真实 ACP 方法集，并拆成「私有 ACP（进程内）」与「标准 A2A（对外互操作）」两节 | ✓ 本次 |
+| `docs/10_规范/[DESIGN-A2A-002] A2A 标准协议适配规范.md` | 文中引用历史错误命名作为对照 | 已带豁免标记，保留为反例 | ✓ 本次 |
+| 代码注释 | `a2aRegistry.js` 等文件头自述「A2A Registry」 | P2 随改名同步修正为「ACP Registry」 | □ P2 |
 
 ---
 

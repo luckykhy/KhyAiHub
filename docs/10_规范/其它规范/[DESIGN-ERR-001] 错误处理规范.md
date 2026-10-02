@@ -143,11 +143,11 @@
 
 | 字段 | 类型 | 必需 | 说明 |
 |------|------|------|------|
-| code | string | ✅ | 错误码 |
-| type | string | ✅ | 错误类型 |
-| message | string | ✅ | 错误消息 |
-| details | array | ❌ | 详细错误信息 |
-| action | string | ❌ | 建议操作 |
+| code | string | ✓ | 错误码 |
+| type | string | ✓ | 错误类型 |
+| message | string | ✓ | 错误消息 |
+| details | array | ✗ | 详细错误信息 |
+| action | string | ✗ | 建议操作 |
 
 ### 3.3 建议操作
 

@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -59,7 +59,7 @@
   <span class="hljs-keyword">return</span> delay;
 }</code></pre>
 <h3 id="3-2-重试触发">3.2 重试触发<a class="anchor" href="#3-2-重试触发" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>错误类型</th><th>是否重试</th><th>说明</th></tr></thead><tbody><tr><td>网络超时</td><td>✅</td><td>临时故障</td></tr><tr><td>5xx 错误</td><td>✅</td><td>服务端临时故障</td></tr><tr><td>429 限流</td><td>✅</td><td>等待后重试</td></tr><tr><td>4xx 错误</td><td>❌</td><td>客户端错误，重试无意义</td></tr><tr><td>认证失败</td><td>❌</td><td>需要人工介入</td></tr></tbody></table>
+<table><thead><tr><th>错误类型</th><th>是否重试</th><th>说明</th></tr></thead><tbody><tr><td>网络超时</td><td>✓</td><td>临时故障</td></tr><tr><td>5xx 错误</td><td>✓</td><td>服务端临时故障</td></tr><tr><td>429 限流</td><td>✓</td><td>等待后重试</td></tr><tr><td>4xx 错误</td><td>✗</td><td>客户端错误，重试无意义</td></tr><tr><td>认证失败</td><td>✗</td><td>需要人工介入</td></tr></tbody></table>
 <hr>
 <h2 id="4-dlq-结构">4. DLQ 结构<a class="anchor" href="#4-dlq-结构" aria-label="锚点">#</a></h2>
 <pre><code class="language-javascript">{

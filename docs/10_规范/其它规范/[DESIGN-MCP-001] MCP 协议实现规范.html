@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -57,7 +57,7 @@ mcpStdioServer.js   mcpHttpServer.js   传输层：薄 IO（读写 stdin/stdout/
 <pre><code>SUPPORTED_PROTOCOL_VERSIONS ≡ { 修订 R | R 的全部 required 特性都 implemented:true }</code></pre>
 <p>守卫会断言这个恒等式双向成立：声明集合里多一个 → 红灯；少一个 → 红灯。</p>
 <h3 id="3-1-当前状态">3.1 当前状态<a class="anchor" href="#3-1-当前状态" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>修订</th><th>是否声明</th><th>原因</th></tr></thead><tbody><tr><td><code>2024-11-05</code></td><td>✅ 声明</td><td>全部 required 特性已实现</td></tr><tr><td><code>2025-03-26</code></td><td>❌ 不声明</td><td><code>required</code> 的 <strong>SSE 流式响应体</strong> 与 <strong><code>Last-Event-ID</code> 断线续传</strong>未实现</td></tr><tr><td><code>2025-06-18</code></td><td>❌ 不声明</td><td>依赖 2025-03-26 的传输能力；另缺 OAuth 资源服务器接入</td></tr><tr><td><code>2025-11-25</code></td><td>❌ 不声明</td><td>同上</td></tr></tbody></table>
+<table><thead><tr><th>修订</th><th>是否声明</th><th>原因</th></tr></thead><tbody><tr><td><code>2024-11-05</code></td><td>✓ 声明</td><td>全部 required 特性已实现</td></tr><tr><td><code>2025-03-26</code></td><td>✗ 不声明</td><td><code>required</code> 的 <strong>SSE 流式响应体</strong> 与 <strong><code>Last-Event-ID</code> 断线续传</strong>未实现</td></tr><tr><td><code>2025-06-18</code></td><td>✗ 不声明</td><td>依赖 2025-03-26 的传输能力；另缺 OAuth 资源服务器接入</td></tr><tr><td><code>2025-11-25</code></td><td>✗ 不声明</td><td>同上</td></tr></tbody></table>
 <p><strong>这不影响互操作</strong>：<code>initialize</code> 会做版本协商 —— 客户端报支持的版本，若在<br><code>SUPPORTED_PROTOCOL_VERSIONS</code> 内则<strong>回显</strong>，否则回本端支持的版本。新版客户端拿到<br><code>2024-11-05</code> 后自行决定是否继续，而不是被静默欺骗。</p>
 <h3 id="3-2-能力声明的诚实原则">3.2 能力声明的诚实原则<a class="anchor" href="#3-2-能力声明的诚实原则" aria-label="锚点">#</a></h3>
 <p><code>buildInitializeResult()</code> 的 <code>capabilities</code> <strong>只能</strong>声明真的实现了的服务端能力。<br>当前为：</p>

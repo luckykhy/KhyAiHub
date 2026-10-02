@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -68,7 +68,7 @@
 <blockquote><p><strong>为什么不在本次整改里直接做</strong>：改名牵动 5 个引用方 + 14 处 agent 注册路径 +<br>既有测试，属独立破坏性批次。且<strong>命名纪律本身已由 NAM-A2A-1~5 覆盖</strong> ——<br>文档层混淆（真正的危害源）已经消除。改名是「消除剩余的命名噪音」，优先级低于它。</p></blockquote>
 <hr>
 <h2 id="4-文档纠正清单">4. 文档纠正清单<a class="anchor" href="#4-文档纠正清单" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>文件</th><th>问题</th><th>处置</th><th>状态</th></tr></thead><tbody><tr><td><code>docs/10_规范/[DESIGN-A2A-001] A2A 协议规范.md</code></td><td>把私有方言写成「A2A 协议规范」；§4 方法名（<code>a2a.discovery.register</code> 等）实现中零存在；§5 传输写 WebSocket/gRPC</td><td>加定位更正横幅（已做）；新增 §0 术语与方法集更正表（权威 ACP 方法集 + 历史错误命名对照）；§4 前插入更正警示</td><td>✅ 本次</td></tr><tr><td><code>docs/03_DESIGN_设计/[DESIGN-ARCH-073] 规范快速参考卡.md</code></td><td><code>## A2A 协议速查</code> 把虚构方法族（<code>a2a.discovery.*</code> / <code>a2a.capability.*</code> / <code>a2a.task.*</code> / <code>a2a.status.*</code>）当作真实 API 速查</td><td>改为真实 ACP 方法集，并拆成「私有 ACP（进程内）」与「标准 A2A（对外互操作）」两节</td><td>✅ 本次</td></tr><tr><td><code>docs/10_规范/[DESIGN-A2A-002] A2A 标准协议适配规范.md</code></td><td>文中引用历史错误命名作为对照</td><td>已带豁免标记，保留为反例</td><td>✅ 本次</td></tr><tr><td>代码注释</td><td><code>a2aRegistry.js</code> 等文件头自述「A2A Registry」</td><td>P2 随改名同步修正为「ACP Registry」</td><td>⬜ P2</td></tr></tbody></table>
+<table><thead><tr><th>文件</th><th>问题</th><th>处置</th><th>状态</th></tr></thead><tbody><tr><td><code>docs/10_规范/[DESIGN-A2A-001] A2A 协议规范.md</code></td><td>把私有方言写成「A2A 协议规范」；§4 方法名（<code>a2a.discovery.register</code> 等）实现中零存在；§5 传输写 WebSocket/gRPC</td><td>加定位更正横幅（已做）；新增 §0 术语与方法集更正表（权威 ACP 方法集 + 历史错误命名对照）；§4 前插入更正警示</td><td>✓ 本次</td></tr><tr><td><code>docs/03_DESIGN_设计/[DESIGN-ARCH-073] 规范快速参考卡.md</code></td><td><code>## A2A 协议速查</code> 把虚构方法族（<code>a2a.discovery.*</code> / <code>a2a.capability.*</code> / <code>a2a.task.*</code> / <code>a2a.status.*</code>）当作真实 API 速查</td><td>改为真实 ACP 方法集，并拆成「私有 ACP（进程内）」与「标准 A2A（对外互操作）」两节</td><td>✓ 本次</td></tr><tr><td><code>docs/10_规范/[DESIGN-A2A-002] A2A 标准协议适配规范.md</code></td><td>文中引用历史错误命名作为对照</td><td>已带豁免标记，保留为反例</td><td>✓ 本次</td></tr><tr><td>代码注释</td><td><code>a2aRegistry.js</code> 等文件头自述「A2A Registry」</td><td>P2 随改名同步修正为「ACP Registry」</td><td>□ P2</td></tr></tbody></table>
 <hr>
 <h2 id="5-守卫">5. 守卫<a class="anchor" href="#5-守卫" aria-label="锚点">#</a></h2>
 <pre><code class="language-bash">npm run check:protocol-naming            <span class="hljs-comment"># 全仓</span>

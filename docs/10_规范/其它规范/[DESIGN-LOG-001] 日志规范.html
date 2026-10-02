@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -52,7 +52,7 @@
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span></code></pre>
 <h3 id="2-2-字段说明">2.2 字段说明<a class="anchor" href="#2-2-字段说明" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>字段</th><th>类型</th><th>必需</th><th>说明</th></tr></thead><tbody><tr><td>timestamp</td><td>string</td><td>✅</td><td>ISO 8601 格式时间戳</td></tr><tr><td>level</td><td>string</td><td>✅</td><td>日志级别</td></tr><tr><td>message</td><td>string</td><td>✅</td><td>日志消息</td></tr><tr><td>requestId</td><td>string</td><td>❌</td><td>请求 ID</td></tr><tr><td>userId</td><td>number</td><td>❌</td><td>用户 ID</td></tr><tr><td>module</td><td>string</td><td>❌</td><td>模块名</td></tr><tr><td>action</td><td>string</td><td>❌</td><td>操作名</td></tr><tr><td>duration</td><td>number</td><td>❌</td><td>执行时长（ms）</td></tr><tr><td>metadata</td><td>object</td><td>❌</td><td>附加元数据</td></tr></tbody></table>
+<table><thead><tr><th>字段</th><th>类型</th><th>必需</th><th>说明</th></tr></thead><tbody><tr><td>timestamp</td><td>string</td><td>✓</td><td>ISO 8601 格式时间戳</td></tr><tr><td>level</td><td>string</td><td>✓</td><td>日志级别</td></tr><tr><td>message</td><td>string</td><td>✓</td><td>日志消息</td></tr><tr><td>requestId</td><td>string</td><td>✗</td><td>请求 ID</td></tr><tr><td>userId</td><td>number</td><td>✗</td><td>用户 ID</td></tr><tr><td>module</td><td>string</td><td>✗</td><td>模块名</td></tr><tr><td>action</td><td>string</td><td>✗</td><td>操作名</td></tr><tr><td>duration</td><td>number</td><td>✗</td><td>执行时长（ms）</td></tr><tr><td>metadata</td><td>object</td><td>✗</td><td>附加元数据</td></tr></tbody></table>
 <hr>
 <h2 id="3-日志使用">3. 日志使用<a class="anchor" href="#3-日志使用" aria-label="锚点">#</a></h2>
 <h3 id="3-1-后端日志">3.1 后端日志<a class="anchor" href="#3-1-后端日志" aria-label="锚点">#</a></h3>

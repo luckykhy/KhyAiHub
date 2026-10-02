@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -80,7 +80,7 @@
   <span class="hljs-punctuation">}</span>
 <span class="hljs-punctuation">}</span></code></pre>
 <h3 id="3-2-字段说明">3.2 字段说明<a class="anchor" href="#3-2-字段说明" aria-label="锚点">#</a></h3>
-<table><thead><tr><th>字段</th><th>类型</th><th>必需</th><th>说明</th></tr></thead><tbody><tr><td>code</td><td>string</td><td>✅</td><td>错误码</td></tr><tr><td>type</td><td>string</td><td>✅</td><td>错误类型</td></tr><tr><td>message</td><td>string</td><td>✅</td><td>错误消息</td></tr><tr><td>details</td><td>array</td><td>❌</td><td>详细错误信息</td></tr><tr><td>action</td><td>string</td><td>❌</td><td>建议操作</td></tr></tbody></table>
+<table><thead><tr><th>字段</th><th>类型</th><th>必需</th><th>说明</th></tr></thead><tbody><tr><td>code</td><td>string</td><td>✓</td><td>错误码</td></tr><tr><td>type</td><td>string</td><td>✓</td><td>错误类型</td></tr><tr><td>message</td><td>string</td><td>✓</td><td>错误消息</td></tr><tr><td>details</td><td>array</td><td>✗</td><td>详细错误信息</td></tr><tr><td>action</td><td>string</td><td>✗</td><td>建议操作</td></tr></tbody></table>
 <h3 id="3-3-建议操作">3.3 建议操作<a class="anchor" href="#3-3-建议操作" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>操作</th><th>说明</th></tr></thead><tbody><tr><td>RETRY</td><td>重试</td></tr><tr><td>REFRESH_TOKEN</td><td>刷新令牌</td></tr><tr><td>LOGIN</td><td>重新登录</td></tr><tr><td>CONTACT_ADMIN</td><td>联系管理员</td></tr></tbody></table>
 <hr>

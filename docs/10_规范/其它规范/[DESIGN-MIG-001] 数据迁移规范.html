@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -67,10 +67,10 @@
 <h3 id="4-1-禁止操作">4.1 禁止操作<a class="anchor" href="#4-1-禁止操作" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>禁止</th><th>原因</th></tr></thead><tbody><tr><td>迁移中删除列</td><td>可能丢失数据</td></tr><tr><td>迁移中修改列类型</td><td>可能截断数据</td></tr><tr><td>迁移中大表重命名</td><td>长时间锁表</td></tr><tr><td>迁移中批量更新（无 WHERE）</td><td>不可回滚</td></tr></tbody></table>
 <h3 id="4-2-大表处理">4.2 大表处理<a class="anchor" href="#4-2-大表处理" aria-label="锚点">#</a></h3>
-<pre><code class="language-javascript"><span class="hljs-comment">// ❌ 错误 — 一次性更新百万行</span>
+<pre><code class="language-javascript"><span class="hljs-comment">// ✗ 错误 — 一次性更新百万行</span>
 <span class="hljs-keyword">await</span> queryInterface.<span class="hljs-title function_">bulkUpdate</span>(<span class="hljs-string">&#x27;orders&#x27;</span>, { <span class="hljs-attr">status</span>: <span class="hljs-string">&#x27;archived&#x27;</span> }, {});
 
-<span class="hljs-comment">// ✅ 正确 — 分批处理</span>
+<span class="hljs-comment">// ✓ 正确 — 分批处理</span>
 <span class="hljs-keyword">async</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">migrateInBatches</span>(<span class="hljs-params">queryInterface, batchSize = <span class="hljs-number">1000</span></span>) {
   <span class="hljs-keyword">let</span> processed = <span class="hljs-number">0</span>;
   <span class="hljs-keyword">while</span> (<span class="hljs-literal">true</span>) {
