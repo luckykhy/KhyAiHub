@@ -1,0 +1,47 @@
+{
+  "name": "config",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "按 DOMAIN-DEPS.json 的 D2 名义边界如实声明。实测出域边：D3 共 12 处（utils/ 与 constants/，合法）；D1 共 1 处 —— `nlExternalAppImportResolver.js:26` require `services/flagRegistry.js`，而该文件是 D3 归位（P2 第 17 批）后留下的兼容壳（`module.exports = require('../utils/flagRegistry')`），语义上是 D2→D3。它是 [DESIGN-LAY-008] §12.43「建门前必须先定判据」的活样本：纯路径前缀判定会把这条报成违令边。本清单登记而不写白名单。",
+  "fanIn": 8,
+  "fanInEvidence": [
+    "services/backend/src/cli/aiChatCore.js",
+    "services/backend/src/cli/handlers/capability.js",
+    "services/backend/src/cli/handlers/config.js",
+    "services/backend/src/cli/handlers/lang.js",
+    "services/backend/src/cli/handlers/sandboxToggle.js",
+    "services/backend/src/services/config/index.js",
+    "services/backend/src/services/localBrainProviderConfig.js",
+    "services/backend/src/tools/configureCapability.js"
+  ],
+  "_fanIn_note": "外部非测试消费者去重 8 个，口径如实分层：6 个逐条核到 require 行号（aiChatCore.js:1240/1265/1286/1348 四处惰性 require、capability.js:22、config.js:121、lang.js:16、sandboxToggle.js:24、services/config/index.js:4-8 再导出壳），另 2 个（localBrainProviderConfig.js、tools/configureCapability.js）只到「路径命中」一层，行号未逐条核 —— 宁可标注未核，不虚报成已核。src/tools 在 DOMAIN-DEPS 里没有域根映射（§12.43 的 Q4）。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-29",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "晋级三判据齐：单元级 README.md（本批补）、整数 fanIn、9 个源文件全部有同名同目录测试 —— 本批以显式路径复跑 **160 例 / 160 pass / 0 fail**（2026-09-29 08:31），pins 由 `grep -c KNOWN-DEFECT` 实测 18。单元早于 entry-buffer 守卫，缓冲区从未被经过。",
+  "contract": {
+    "purpose": "把自然语言意图收敛成结构化判定：语言偏好归一、能力开关意图、动作意图、外部软件配模型与反向导入、哲学内容落设计、`/sandbox-toggle` 状态与动作规划，以及「配置 khy vs 安装第三方工具」的歧义护栏。九个文件都是**纯叶子**。",
+    "ioOwner": "本单元零 IO：不读写配置、不 spawn、不联网。落盘与执行归消费者（cli/handlers/* 与会话层），本单元只给归一后的判定与描述。",
+    "gates": "唯一外指是 `nlExternalAppImportResolver.js:26` 经 flagRegistry 取开关；注册表不可用时该叶子 fail-soft 退回保守判定，不抛。",
+    "coverage_note": "purpose/ioOwner/gates 覆盖本轮实测到的面（9 份头注释 + 160 例共置测试 + require 站点核对），不是逐行审计结论。"
+  },
+  "knownDefectsPinned": [
+    "共 18 处 KNOWN-DEFECT 断言（grep -c 实测，非自报），逐条正文在各 .test.js 的中文用例标题里",
+    "本清单不重复摘录，避免与测试叙述漂移"
+  ],
+  "_known_defects_note": "一律登记不修：每条都改变自然语言的判定结果，属行为变更，需甲/乙裁决（任务 #17）。",
+  "tests": [
+    "langPreference.test.js",
+    "nlActionResolver.test.js",
+    "nlConfigResolver.test.js",
+    "nlExternalAppImportResolver.test.js",
+    "nlExternalAppResolver.test.js",
+    "nlInstallVsConfigGuard.test.js",
+    "nlProviderResolver.test.js",
+    "philosophyDesignResolver.test.js",
+    "sandboxToggleState.test.js"
+  ]
+}
