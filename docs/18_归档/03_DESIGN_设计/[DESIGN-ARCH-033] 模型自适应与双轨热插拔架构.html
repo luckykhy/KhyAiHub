@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -26,7 +26,7 @@
       <header class="hero reveal"><h1>[DESIGN-ARCH-033] 模型自适应与双轨热插拔架构</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-033-模型自适应与双轨热插拔架构">[DESIGN-ARCH-033] 模型自适应与双轨热插拔架构</a></li><li class="lvl-2"><a href="#1-目标">1. 目标</a></li><li class="lvl-2"><a href="#2-双轨与物理隔离">2. 双轨与物理隔离</a></li><li class="lvl-2"><a href="#3-合并策略-运行时拼装">3. 合并策略（运行时拼装）</a></li><li class="lvl-2"><a href="#4-模型自适应与安全降级">4. 模型自适应与安全降级</a></li><li class="lvl-2"><a href="#5-官方更新防破坏协议">5. 官方更新防破坏协议</a></li><li class="lvl-2"><a href="#6-红线符合性">6. 红线符合性</a></li><li class="lvl-2"><a href="#7-交付物">7. 交付物</a></li><li class="lvl-2"><a href="#8-验收">8. 验收</a></li><li class="lvl-2"><a href="#9-跨分类关联指引">9. 跨分类关联指引</a></li></ul></nav>
       <article class="doc-body">
-<blockquote><p>⚠️ <strong>已归档（孤儿设计稿）· 请勿据此实现</strong> ⚠️</p>
+<blockquote><p>⚠ <strong>已归档（孤儿设计稿）· 请勿据此实现</strong> ⚠</p>
 <p>本规范描述的治理引擎 <code>dualTrack（官方核心轨 + user_patch 扩展轨）</code> 经 2026-06-14「接线或删除」证据级核实为 <strong>ORPHAN</strong><br>（零消费者、从 <code>executeTool</code>/<code>toolUseLoop</code>/<code>aiManagementServer</code> 三入口均不可达），<br>已按 <code>.ai/GOVERNANCE-LEDGER.md</code> §B.0 <strong>删除其实现代码</strong>（基线 <code>0437b6b</code>，删除提交<br><code>a76785e</code> + <code>99ea828</code>）。本文件仅作<strong>历史可追溯</strong>留存，<strong>非在产、不得作为实现依据</strong>。<br>判「在产」唯一标准见 <code>.ai/GUARDS-AI.md</code> §0。</p>
 <p>——归档于 2026-06-14</p></blockquote>
 <h1 id="design-arch-033-模型自适应与双轨热插拔架构">[DESIGN-ARCH-033] 模型自适应与双轨热插拔架构<a class="anchor" href="#design-arch-033-模型自适应与双轨热插拔架构" aria-label="锚点">#</a></h1>

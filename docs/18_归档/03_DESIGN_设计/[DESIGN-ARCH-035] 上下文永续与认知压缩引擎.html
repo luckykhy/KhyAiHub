@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -26,7 +26,7 @@
       <header class="hero reveal"><h1>[DESIGN-ARCH-035] 上下文永续与认知压缩引擎</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-035-上下文永续与认知压缩引擎">[DESIGN-ARCH-035] 上下文永续与认知压缩引擎</a></li><li class="lvl-2"><a href="#一-问题与目标">一、问题与目标</a></li><li class="lvl-3"><a href="#与既有设施的关系-扩展而非复制">与既有设施的关系（扩展而非复制）</a></li><li class="lvl-2"><a href="#二-元规划-meta-plan-先扫栈再决策">二、元规划（Meta-Plan，先扫栈再决策）</a></li><li class="lvl-2"><a href="#三-架构蓝图">三、架构蓝图</a></li><li class="lvl-3"><a href="#3-1-工作台冷热三分区-cpu-寄存器模式">§3.1 工作台冷热三分区（CPU 寄存器模式）</a></li><li class="lvl-3"><a href="#3-2-三级压缩-按占用逐级榨干">§3.2 三级压缩（按占用逐级榨干）</a></li><li class="lvl-3"><a href="#3-3-状态快照-七要素-缺一不可">§3.3 状态快照（七要素，缺一不可）</a></li><li class="lvl-3"><a href="#3-4-断点续传网关">§3.4 断点续传网关</a></li><li class="lvl-2"><a href="#四-场景验证表">四、场景验证表</a></li><li class="lvl-2"><a href="#五-六条防呆-硬约束">五、六条防呆（硬约束）</a></li><li class="lvl-2"><a href="#六-交付物与后续">六、交付物与后续</a></li></ul></nav>
       <article class="doc-body">
-<blockquote><p>⚠️ <strong>已归档（孤儿设计稿）· 请勿据此实现</strong> ⚠️</p>
+<blockquote><p>⚠ <strong>已归档（孤儿设计稿）· 请勿据此实现</strong> ⚠</p>
 <p>本规范描述的治理引擎 <code>cognitiveSnapshot（与已在产 compactPipeline 平行重造）</code> 经 2026-06-14「接线或删除」证据级核实为 <strong>ORPHAN</strong><br>（零消费者、从 <code>executeTool</code>/<code>toolUseLoop</code>/<code>aiManagementServer</code> 三入口均不可达），<br>已按 <code>.ai/GOVERNANCE-LEDGER.md</code> §B.0 <strong>删除其实现代码</strong>（基线 <code>0437b6b</code>，删除提交<br><code>a76785e</code> + <code>99ea828</code>）。本文件仅作<strong>历史可追溯</strong>留存，<strong>非在产、不得作为实现依据</strong>。<br>判「在产」唯一标准见 <code>.ai/GUARDS-AI.md</code> §0。</p>
 <p>——归档于 2026-06-14</p></blockquote>
 <h1 id="design-arch-035-上下文永续与认知压缩引擎">[DESIGN-ARCH-035] 上下文永续与认知压缩引擎<a class="anchor" href="#design-arch-035-上下文永续与认知压缩引擎" aria-label="锚点">#</a></h1>
@@ -68,7 +68,7 @@ nextInstruction · offloadPointers · retryCount</code></pre>
 <hr>
 <h2 id="四-场景验证表">四、场景验证表<a class="anchor" href="#四-场景验证表" aria-label="锚点">#</a></h2>
 <p>10 步任务（含失败步），窗口 1000 token，<code>estimateTokensFn = 字符数</code>，对照三种模式：</p>
-<table><thead><tr><th>模式</th><th>触发占用</th><th>完整原始步</th><th>历史留存率</th><th>错误教训保留</th><th>冷数据落点</th><th>上下文里指针</th><th>任务可续传</th></tr></thead><tbody><tr><td>不压缩（朴素硬塞）</td><td>—</td><td>全部 10 步</td><td>100%</td><td>偶发丢失</td><td>无</td><td>无</td><td>❌ 一满即截断、进度全损</td></tr><tr><td>L1 语义折叠</td><td>60%</td><td>≤2（防呆①）</td><td>~14%（实测 0.138）</td><td>✅ 随快照常驻</td><td>无</td><td>无</td><td>✅</td></tr><tr><td>L2 骨相抽取</td><td>80%</td><td>≤2</td><td>~8%（实测 0.083）</td><td>✅（防呆③结构性保证）</td><td>无</td><td>无</td><td>✅</td></tr><tr><td>L2+L3 卸载</td><td>95%</td><td>≤2</td><td>~9%（含寻址占位）</td><td>✅</td><td>外部持久层 <code>cognitive_snapshots/offload/</code></td><td><code>&lt;offloaded ref=… sha=… bytes=…/&gt;</code></td><td>✅ 冷数据离境、按需回读</td></tr></tbody></table>
+<table><thead><tr><th>模式</th><th>触发占用</th><th>完整原始步</th><th>历史留存率</th><th>错误教训保留</th><th>冷数据落点</th><th>上下文里指针</th><th>任务可续传</th></tr></thead><tbody><tr><td>不压缩（朴素硬塞）</td><td>—</td><td>全部 10 步</td><td>100%</td><td>偶发丢失</td><td>无</td><td>无</td><td>✗ 一满即截断、进度全损</td></tr><tr><td>L1 语义折叠</td><td>60%</td><td>≤2（防呆①）</td><td>~14%（实测 0.138）</td><td>✓ 随快照常驻</td><td>无</td><td>无</td><td>✓</td></tr><tr><td>L2 骨相抽取</td><td>80%</td><td>≤2</td><td>~8%（实测 0.083）</td><td>✓（防呆③结构性保证）</td><td>无</td><td>无</td><td>✓</td></tr><tr><td>L2+L3 卸载</td><td>95%</td><td>≤2</td><td>~9%（含寻址占位）</td><td>✓</td><td>外部持久层 <code>cognitive_snapshots/offload/</code></td><td><code>&lt;offloaded ref=… sha=… bytes=…/&gt;</code></td><td>✓ 冷数据离境、按需回读</td></tr></tbody></table>
 <blockquote><p>关键对比：朴素模式 100% 留存但<strong>不可续传</strong>——撞窗即死；本引擎留存压到个位数百分比却<strong>全程可热启</strong>，<br>错误教训与核心实体状态在任何级别都不丢。L3 留存率含寻址占位（in-context 仍留 l2 摘要供定位），<br>真实冷数据已落盘离境，上下文净负担降至 ~0.1%。</p></blockquote>
 <hr>
 <h2 id="五-六条防呆-硬约束">五、六条防呆（硬约束）<a class="anchor" href="#五-六条防呆-硬约束" aria-label="锚点">#</a></h2>

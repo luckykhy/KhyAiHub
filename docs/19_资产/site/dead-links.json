@@ -1,11 +1,6 @@
 {
-  "total": 38,
+  "total": 40,
   "items": [
-    {
-      "from": "CONTRIBUTING.html",
-      "type": "a",
-      "href": "services/backend/src/services/browser/engine.js"
-    },
     {
       "from": "docs/01_INIT_立项/INIT-PRD/[INIT-PRD-001] Khy-OS-定位与已实现能力-2026-06-12.html",
       "type": "a",
@@ -39,72 +34,72 @@
     {
       "from": "docs/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
       "type": "a",
-      "href": "/home/kodehu03/Khy-OS/frontend/Dockerfile:7"
+      "href": "{$REPO_ROOT}/frontend/Dockerfile:7"
     },
     {
       "from": "docs/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
       "type": "a",
-      "href": "/home/kodehu03/Khy-OS/frontend/package.json:40"
+      "href": "{$REPO_ROOT}/frontend/package.json:40"
     },
     {
       "from": "docs/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
       "type": "a",
-      "href": "/home/kodehu03/Khy-OS/frontend/package-lock.json:30"
+      "href": "{$REPO_ROOT}/frontend/package-lock.json:30"
     },
     {
       "from": "docs/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
       "type": "a",
-      "href": "/home/kodehu03/Khy-OS/docker-compose.yml:53"
+      "href": "{$REPO_ROOT}/docker-compose.yml:53"
     },
     {
       "from": "docs/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
       "type": "a",
-      "href": "/home/kodehu03/Khy-OS/docker-compose.yml:11"
+      "href": "{$REPO_ROOT}/docker-compose.yml:11"
     },
     {
       "from": "docs/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
       "type": "a",
-      "href": "/home/kodehu03/Khy-OS/frontend/src/views/Dashboard.vue"
+      "href": "{$REPO_ROOT}/frontend/src/views/Dashboard.vue"
     },
     {
       "from": "docs/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
       "type": "a",
-      "href": "/home/kodehu03/Khy-OS/backend/src/cli/router.js"
+      "href": "{$REPO_ROOT}/backend/src/cli/router.js"
     },
     {
       "from": "docs/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
       "type": "a",
-      "href": "/home/kodehu03/Khy-OS/backend/src/routes/largeTasks.js"
+      "href": "{$REPO_ROOT}/backend/src/routes/largeTasks.js"
     },
     {
       "from": "docs/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
       "type": "a",
-      "href": "/home/kodehu03/Khy-OS/backend/src/controllers/comprehensiveDataController.js:149"
+      "href": "{$REPO_ROOT}/backend/src/controllers/comprehensiveDataController.js:149"
     },
     {
       "from": "docs/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
       "type": "a",
-      "href": "/home/kodehu03/Khy-OS/backend/src/routes/marketData.js:37"
+      "href": "{$REPO_ROOT}/backend/src/routes/marketData.js:37"
     },
     {
       "from": "docs/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
       "type": "a",
-      "href": "/home/kodehu03/Khy-OS/frontend/src/views/Dashboard.vue:1251"
+      "href": "{$REPO_ROOT}/frontend/src/views/Dashboard.vue:1251"
     },
     {
       "from": "docs/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
       "type": "a",
-      "href": "/home/kodehu03/Khy-OS/frontend/src/api/marketData.js:54"
+      "href": "{$REPO_ROOT}/frontend/src/api/marketData.js:54"
     },
     {
       "from": "docs/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
       "type": "a",
-      "href": "/home/kodehu03/Khy-OS/backend/src/controllers/marketController.js:27"
+      "href": "{$REPO_ROOT}/backend/src/controllers/marketController.js:27"
     },
     {
       "from": "docs/06_DEPLOY_部署/DEPLOY-MAN/[DEPLOY-MAN-010] pip-打包对等-发现-2026-05-17.html",
       "type": "a",
-      "href": "/home/kodehu03/Khy-OS/MANIFEST.in"
+      "href": "{$REPO_ROOT}/MANIFEST.in"
     },
     {
       "from": "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-021] opencode-任务编排经验.html",
@@ -160,6 +155,21 @@
       "from": "docs/07_OPS_运维/runbooks/00_INDEX_灾备演练剧本-总目录.html",
       "type": "a",
       "href": "drill-schedule.html"
+    },
+    {
+      "from": "docs/08_MGMT_项目管理/00_INDEX_项目管理-分类索引.html",
+      "type": "a",
+      "href": "../../CHANGELOG.html"
+    },
+    {
+      "from": "docs/08_MGMT_项目管理/00_INDEX_项目管理-分类索引.html",
+      "type": "a",
+      "href": "../../CONTRIBUTING.html"
+    },
+    {
+      "from": "docs/08_MGMT_项目管理/00_INDEX_项目管理-分类索引.html",
+      "type": "a",
+      "href": "../../SECURITY.html"
     },
     {
       "from": "docs/08_MGMT_项目管理/MGMT-STD/[MGMT-STD-006] khy-vibecoding与speccoding能力对齐-可量化验收标准.html",

@@ -11,13 +11,13 @@
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">📘 Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">🧭 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <input class="search" type="search" placeholder="🔍 过滤文档标题…" aria-label="过滤文档">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
     <div id="nav-root"></div>
   </aside>
   <main class="main">
@@ -84,7 +84,7 @@ agenticHarness 会按轮自动存档到 SQLite，默认保留 24 小时。你不
 
 任务是：&lt;在这里写具体任务&gt;</code></pre>
 <p><strong>它挂在哪</strong>：<code>isPersistentRetryEnabled()</code> 读 <code>KHY_UNATTENDED_RETRY</code>，只认 <code>'true'</code> / <code>'1'</code>。<br><code>PERSISTENT_MAX_BACKOFF_MS = 5min</code>、<code>PERSISTENT_ABSOLUTE_CAP_MS = 6h</code>、<code>HEARTBEAT_INTERVAL_MS = 30s</code> 三个常量都在 <code>retryWithBackoff.js</code> 顶部。</p>
-<blockquote><p>⚠️ 这条提示词里关于 <code>KHY_UNATTENDED_AUTOANSWER_INTENT_GUARD</code> 的警告不是虚构的：<br>guard 关掉后确实退化为按索引 0 盲选。这是个「默认安全、但可以手动作死」的开关，值得让 AI 替你盯着。</p></blockquote>
+<blockquote><p>⚠ 这条提示词里关于 <code>KHY_UNATTENDED_AUTOANSWER_INTENT_GUARD</code> 的警告不是虚构的：<br>guard 关掉后确实退化为按索引 0 盲选。这是个「默认安全、但可以手动作死」的开关，值得让 AI 替你盯着。</p></blockquote>
 <hr>
 <h2 id="二-维持与续跑">二、维持与续跑<a class="anchor" href="#二-维持与续跑" aria-label="锚点">#</a></h2>
 <h3 id="3-从断点恢复">3. 从断点恢复<a class="anchor" href="#3-从断点恢复" aria-label="锚点">#</a></h3>
@@ -321,7 +321,7 @@ khy-os 的 circuitBreaker 是三态的（closed / open / half_open）：
 <p><strong>相关文档</strong></p>
 <ul><li><a href="../给AI看/协作铁律.html">协作铁律</a> —— AGENTS.md 四条强制规则</li><li><a href="../给AI看/错误自查手册.html">错误自查手册</a> —— P/W/B/G/E 五类分诊</li><li><a href="../skills/00_INDEX_技能包-总目录.html">skills 集合总说明</a> —— 8 个可安装 skill</li><li><code>docs/10_规范/其它规范/RELIABILITY-PROTOCOL.md</code> —— 可靠性协议全文</li><li><code>docs/07_OPS_运维/OPS-MAN/[OPS-MAN-072] 目标连续多日运行不中断的底气自检.md</code> —— 长跑自检清单</li></ul>
       </article>
-      <nav class="pager"><a class="prev" href="../../../docs/17_AI协作预设包/给人看/使用说明-怎么用这套包.html"><div class="dir">← 上一篇</div><div class="ttl">🧑 使用说明 · 这套包怎么用（给你自己看）</div></a><a class="next" href="../../../docs/17_AI协作预设包/给人看/总说明-一页速览.html"><div class="dir">下一篇 →</div><div class="ttl">⚡ 一页速览（给你自己 · 先看这一篇）</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../docs/17_AI协作预设包/给人看/使用说明-怎么用这套包.html"><div class="dir">← 上一篇</div><div class="ttl">使用说明 · 这套包怎么用（给你自己看）</div></a><a class="next" href="../../../docs/17_AI协作预设包/给人看/总说明-一页速览.html"><div class="dir">下一篇 →</div><div class="ttl">✱ 一页速览（给你自己 · 先看这一篇）</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
