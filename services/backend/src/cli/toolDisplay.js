@@ -599,14 +599,14 @@ function printToolCallStart(toolName, params = {}) {
       normalizedParams.file_path || normalizedParams.filePath || normalizedParams.path;
     const _wlc = _estimateLines(normalizedParams.content);
     console.log(
-      `    ${c().dim('✏️  Writing')} ${c().cyan(filePath)} ${c().dim(`(${_wlc} ${require('./ccPlural').pluralOr(_wlc, 'line')})`)}`
+      `    ${c().dim('✏  Writing')} ${c().cyan(filePath)} ${c().dim(`(${_wlc} ${require('./ccPlural').pluralOr(_wlc, 'line')})`)}`
     );
   }
   if ((name === 'edit' || name === 'editfile' || name === 'multiedit') && normalizedParams) {
     const filePath =
       normalizedParams.file_path || normalizedParams.filePath || normalizedParams.path || '';
     if (filePath) {
-      console.log(`    ${c().dim('📝 Editing')} ${c().cyan(filePath)}`);
+      console.log(`    ${c().dim('Editing')} ${c().cyan(filePath)}`);
     }
   }
 

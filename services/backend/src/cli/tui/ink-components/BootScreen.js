@@ -50,10 +50,18 @@ const ProgressBar = require('./ProgressBar');
 const { _elapsedMsToStr } = require('../../bootPhaseLine');
 
 const FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-// ⚠️ 帧间隔此处仍是硬编码 80ms。与 [DESIGN-ARCH-102] §5.3 C9（160ms）及
-// tui/AGENTS.md §3.3（80ms）的取值冲突尚未裁决（[DESIGN-ARCH-115] §2.2）；
-// 收敛进 ccTimers.TIMING.spinner.interval 属 P1（D10），本轮不动。
-const FRAME_MS = 80;
+// 帧间隔不再硬编码 80ms —— 改为消费 perfTunables 的**单一真源**。
+//
+// 历史：此处曾硬编码 80ms，与 [DESIGN-ARCH-102] §5.3 C9 的 160ms 冲突。
+// [DESIGN-ARCH-101] §8 冲突 1 已裁定「以 perfTunables 的 160ms 为准」，
+// 并明确把 80ms 判为**陈旧第三源**。启动屏却一直没跟 —— 于是同一个 TUI 里
+// 主界面 spinner 跑 160ms、启动屏跑 80ms，且 80ms 那条还是被裁定为过时的一方。
+//
+// 改法取「不新增旋钮、不复制常量」：直接读 perfTunables.spinnerFrameMs()，
+// 这样 KHY_SPINNER_FRAME_MS / KHY_TUI_LOW_POWER 对启动屏同样生效，
+// 也自动跟随未来的裁决收敛（[DESIGN-ARCH-115] §2.2 的 P1/D10 目标）。
+const { spinnerFrameMs } = require('../perfTunables');
+const FRAME_MS = spinnerFrameMs();
 
 const OFF_VALUES = ['0', 'false', 'off', 'no', 'legacy'];
 

@@ -77,7 +77,7 @@ const DEFAULT_EXPAND_HINT = '（Ctrl+O 展开）';
  */
 function buildThinkingSummary({ chars, durationMs, env = process.env, hint = DEFAULT_EXPAND_HINT } = {}) {
   const dur = thinkingDurationEnabled(env) ? humanizeThinkingMs(durationMs, env) : '';
-  const head = dur ? `💭 思考 ${dur}` : '💭 思考';
+  const head = dur ? `思考 ${dur}` : '思考';
   return `${head} · ${chars} 字${hint}`;
 }
 
@@ -88,7 +88,7 @@ function buildThinkingSummary({ chars, durationMs, env = process.env, hint = DEF
  */
 function buildThinkingHeader({ durationMs, env = process.env } = {}) {
   const dur = thinkingDurationEnabled(env) ? humanizeThinkingMs(durationMs, env) : '';
-  return dur ? `💭 思考 ${dur}` : '💭 思考';
+  return dur ? `思考 ${dur}` : '思考';
 }
 
 module.exports = {

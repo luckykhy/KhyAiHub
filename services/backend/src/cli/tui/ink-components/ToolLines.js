@@ -930,14 +930,27 @@ function ToolLines({ tools = [], expanded = false, live = false, onErrorClick = 
   })();
 
   const blocks = tools.map((t, i) => {
+    const done = !!t.result;
+    // Treat any explicit failure signal as an error so the reason is surfaced —
+    // tools fail with varied shapes: {isError}, {is_error}, {error}, or just
+    // {success:false, reason}.
+    // 三档判定上提到 agentTree 分支之前:该分支的边框色同样按 notice 档取色 —— 旧代码
+    // 在此处(const isNotice)声明之前就在分支里引用了它,const TDZ ReferenceError
+    // 一进渲染即崩帧(agentTreeRender 套件连坐失败)。[DESIGN-ARCH-165] §8-1。
+    const isErr =
+      done &&
+      (t.result.isError || t.result.is_error || t.result.error || t.result.success === false);
+    // 第三档:notice(非成功但属可预期的边界情况 —— `ls <一个文件>`、探针命令的非零退出)。
+    // 走黄 • + 中性说明,不进红色失败通道;真错误仍是红 ✗。判定与词汇的单一真源在
+    // services/tool/toolOutcomeSeverity,渲染层只消费。
+    const isNotice = done && !isErr && t.result.severity === 'notice';
+
     // Parallel sub-agent fan-out: once the orchestrator has spawned children the
     // bridge attaches their live state here. Render the ├│└ tree IN PLACE of the
     // generic agent(...) row (header + branches + status). Before any child
     // spawns (_agentTree empty) we fall through to the normal single-line row.
     const agentTree = Array.isArray(t._agentTree) && t._agentTree.length > 0 ? t._agentTree : null;
     if (agentTree) {
-      const done = !!t.result;
-      const isErr = done && (t.result.isError || t.result.is_error || t.result.error || t.result.success === false);
       const cardColor = isErr
       ? TOOL_CARD_COLOR.error
       : isNotice
@@ -967,17 +980,8 @@ function ToolLines({ tools = [], expanded = false, live = false, onErrorClick = 
       );
     }
 
-    const done = !!t.result;
-    // Treat any explicit failure signal as an error so the reason is surfaced —
-    // tools fail with varied shapes: {isError}, {is_error}, {error}, or just
-    // {success:false, reason}.
-    const isErr =
-      done &&
-      (t.result.isError || t.result.is_error || t.result.error || t.result.success === false);
-    // 第三档:notice(非成功但属可预期的边界情况 —— `ls <一个文件>`、探针命令的非零退出)。
-    // 走黄 • + 中性说明,不进红色失败通道;真错误仍是红 ✗。判定与词汇的单一真源在
-    // services/tool/toolOutcomeSeverity,渲染层只消费。
-    const isNotice = done && !isErr && t.result.severity === 'notice';
+    // done/isErr/isNotice 已上提到 map 回调最前(agentTree 分支同样要按 notice 档取色,
+    // [DESIGN-ARCH-165] §8-1)。
     const icon = !done ? '◆' : isErr ? '✗' : isNotice ? NOTICE_GLYPH : '✓';
     const color = !done ? 'yellow' : isErr ? 'red' : isNotice ? NOTICE_COLOR : 'green';
 

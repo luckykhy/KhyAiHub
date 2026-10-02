@@ -179,7 +179,7 @@ function ChatColumn({
         ? h(
             Box,
             { flexDirection: 'row', flexWrap: 'wrap', columnGap: 1 },
-            h(Text, { color: 'blue' }, `📎 已附加 ${pendingImages.length} 张图片`),
+            h(Text, { color: 'blue' }, `已附加 ${pendingImages.length} 张图片`),
           )
         : null,
       // Task panel (full-width, above prompt)

@@ -79,9 +79,26 @@ function FooterBar({
   cooldownUntilMs,
   modelStatus,
   pinnedSkip,
+  cols,
 }) {
   const { Box, Text } = inkRuntime.get();
   const h = React.createElement;
+
+  // BUG-012 宽度预算:页脚是 height:1 的单行,任何一段超宽都会把行尾挤出终端列数,
+  // 闭合括号折到下一行留残影(2026-09-20 实测 ~125 列窗口,windsurf 停用回退长警告两次复现)。
+  // 修法:App 把 effectiveCols 解析出的列宽经 `cols` prop 传入(effectiveCols 契约禁止
+  // 叶子自读 process.stdout.columns,故走 props),对唯一的可变长段——网关警告——
+  // 按显示宽度预算截断;cols 未传(PreviewLayout 等旁路)时保持原样不预算。
+  const _cols = Number(cols) > 0 ? Number(cols) : 0;
+  const _displayWidth = (() => {
+    try {
+      const { displayWidth } = require('../../formatters');
+      if (typeof displayWidth === 'function') return displayWidth;
+    } catch {
+      /* formatters unavailable → fall back to .length */
+    }
+    return (s) => String(s).length;
+  })();
 
   // 语言偏好感知标签——对齐项目已有策略(renderTheme.js:64-68):默认中文,仅当 KHY_UI_LANG
   // 或 KHY_LANGUAGE 显式为 en/en-us/english 时走英文。Ink TUI 页脚此前硬编码英文标签,
@@ -131,6 +148,7 @@ function FooterBar({
   // 触发条件的代数逆),故倒计时归零与真实压缩同刻发生,不会像比例式那样提前十几个百分点。
   //   门控 KHY_CONTEXT_WARNING(默认开,与经典 REPL 同一个门);关/异常/首轮前 → 不渲该段
   //   (逐字节回退今日页脚)。CC 的「只在警告带内才提示」由 contextWarning 叶子负责。
+  //   段以纯文本+色收集(BUG-012 宽度预算需要实测每段宽),转 JSX 在段表统一做。
   let compactSeg = null;
   try {
     const at = contextPlan && contextPlan.autoCompactAt;
@@ -146,11 +164,7 @@ function FooterBar({
         if (decision.show) {
           const color =
             decision.style === 'error' ? 'red' : decision.style === 'warning' ? 'yellow' : null;
-          compactSeg = h(
-            Text,
-            { dimColor: !color, color: color || undefined },
-            '  ' + decision.text
-          );
+          compactSeg = { text: '  ' + decision.text, color, dim: !color };
         }
       }
     }
@@ -169,23 +183,22 @@ function FooterBar({
   // `windsurf→agnes-3.0-flash` 的双段标签 —— 两个名字同时在屏，用户一眼可对上报错。
   //   strict 时它是「下次请求必然失败」的硬预警（红）；非 strict 时只是「已回退」的
   //   中性提示（黄），语义不同故着色不同。
-  //   截断保护：通道名过长时只保留末尾标记，避免挤掉右侧上下文用量（ink 右侧先被裁）。
-  let pinnedSkipSeg = null;
+  //   截断保护（BUG-012 落地）：本段是页脚唯一可变长的段，App 传入 cols 时按
+  //   「总宽 − 其余各段实测宽」的预算截断；预算不足以放下完整文案时降级为
+  //   `⟲ <通道名>` 短标记（保住「哪个通道出事」这个最关键的信息），仍放不下才整段让位。
   const skipAdapter = pinnedSkip && pinnedSkip.active ? String(pinnedSkip.adapter || '') : '';
-  if (skipAdapter) {
-    const color = pinnedSkip.strict ? 'red' : 'yellow';
-    // 文案(2026-09-19 用户评审):「已禁用回退」读者不知所云;改为动作+后果的
-    // 完整中文短句,strict(下次请求必然失败)与非 strict(已回退)语义分开。
-    const skipText = pinnedSkip.strict
+  const skipColor = pinnedSkip && pinnedSkip.strict ? 'red' : 'yellow';
+  const skipTextFull = skipAdapter
+    ? pinnedSkip.strict
       ? `⟲ ${skipAdapter} 通道已停用回退：请求失败将直接报错`
-      : `⟲ ${skipAdapter} 通道不可用，已自动回退`;
-    pinnedSkipSeg = h(Text, { color }, `  ${skipText}`);
-  }
+      : `⟲ ${skipAdapter} 通道不可用，已自动回退`
+    : '';
 
   // CC 对齐:页脚左侧常驻一段「进程内存(RSS)· pid」,按阈值上色(512MB→warning,1GB→error)。
   // 判定在纯叶子 footerMemory 里;这里只读 process.memoryUsage().rss/pid(IO)并把 level 映射成
   // ink 颜色 props。门控关/异常 → seg 为 null → 不渲该段(逐字节回退今日「无内存段」页脚)。
-  let memSeg = null;
+  let memText = null;
+  let memColor = null;
   try {
     const footerMemory = require('../footerMemory');
     const mem = footerMemory.buildFooterMemory({
@@ -193,11 +206,73 @@ function FooterBar({
       pid: process.pid,
     });
     if (mem) {
-      const memColor = mem.level === 'error' ? 'red' : mem.level === 'warning' ? 'yellow' : null;
-      memSeg = h(Text, { dimColor: !memColor, color: memColor || undefined }, '  ' + mem.text);
+      memColor = mem.level === 'error' ? 'red' : mem.level === 'warning' ? 'yellow' : null;
+      memText = mem.text;
     }
   } catch {
     /* footer memory segment is optional; never let it break footer render */
+  }
+
+  // 段表先行:所有段的纯文本先收集,宽度预算按实测显示宽度算,最后统一转 JSX。
+  // (BUG-012:此前直接散写 JSX,没有任何一段知道自己占多少列,行尾溢出无人兜底。)
+  const leftSegs = [{ text: '■ ' + permLabel, color: permColor }];
+  if (localMode) leftSegs.push({ text: '  ◆ 本地模式 (/local)', color: 'green' });
+  if (fastMode) leftSegs.push({ text: '  ◆ 快速模式 (/fast)', color: 'yellow' });
+  if (voiceMode) leftSegs.push({ text: '  ◆ 语音模式 (/voice)', color: 'magenta' });
+  if (autoRedPass) leftSegs.push({ text: '  ● 自动破甲 (拒绝时切换 RedPass)', color: 'red' });
+  if (goalActive && goalActive.elapsedLabel != null) {
+    leftSegs.push({
+      text:
+        '  ◎ /goal ' +
+        (preferEnglishUi ? 'active' : '进行中') +
+        ' (' +
+        goalActive.elapsedLabel +
+        ')',
+      color: 'cyan',
+    });
+  }
+  if (cooldownUntilMs > 0) {
+    leftSegs.push({
+      text: '  冷却 ' + Math.max(0, Math.ceil((cooldownUntilMs - Date.now()) / 1000)) + 's',
+      color: 'red',
+    });
+  }
+
+  const rightSegs = [{ text: '[' + leftParts + ']', dim: true }];
+  // 段间分隔:mem 文案以 `pid:<n>` 结尾、ctxStr 以 `<pct>%` 开头,直接相邻会
+  // 拼成 `pid:305680% ctx`(2026-09-19 实测误读)。统一给每段 2 空格前缀。
+  if (memText) {
+    rightSegs.push({ text: '  ' + memText, dim: !memColor, color: memColor || undefined });
+  }
+  rightSegs.push({ text: '  ' + ctxStr, dim: true });
+  if (compactSeg) rightSegs.push(compactSeg);
+
+  // 网关警告段的预算:判定收敛在纯叶子 footerWidthBudget(BUG-012);这里只喂
+  // 「其余各段实测宽 + 可用列数」并消费结果。cols 未传时叶子按 full 原样返回,
+  // 与历史行为逐字节一致。
+  let skipSeg = null;
+  if (skipAdapter) {
+    let skipText = skipTextFull;
+    if (_cols > 0) {
+      try {
+        const otherWidth = leftSegs
+          .concat(rightSegs)
+          .reduce((acc, seg) => acc + _displayWidth(seg.text), 0);
+        const budgeted = require('../footerWidthBudget').skipSegment({
+          fullText: skipTextFull,
+          shortMark: `⟲ ${skipAdapter}`,
+          otherWidth,
+          cols: _cols,
+        });
+        skipText = budgeted.text;
+      } catch {
+        /* fail-soft:预算叶子不可用 → 不截断,回退完整文案 */
+      }
+    }
+    if (skipText) {
+      skipSeg = { text: `  ${skipText}`, color: skipColor };
+      rightSegs.splice(1, 0, skipSeg); // 紧跟 [model·effort] 之后,与其余右段同序
+    }
   }
 
   // DESIGN-ARCH-102 C11:页脚恒 1 行(旧实现 2 行)。左侧:权限 + 模式徽标 +
@@ -209,40 +284,20 @@ function FooterBar({
   const left = h(
     Box,
     null,
-    h(Text, { dimColor: !permColor, color: permColor }, '■ ' + permLabel),
-    localMode ? h(Text, { color: 'green' }, '  ◆ 本地模式 (/local)') : null,
-    fastMode ? h(Text, { color: 'yellow' }, '  ◆ 快速模式 (/fast)') : null,
-    voiceMode ? h(Text, { color: 'magenta' }, '  ◆ 语音模式 (/voice)') : null,
-    autoRedPass ? h(Text, { color: 'red' }, '  🔴 自动破甲 (拒绝时切换 RedPass)') : null,
-    goalActive && goalActive.elapsedLabel != null
-      ? h(
-          Text,
-          { color: 'cyan' },
-          '  ◎ /goal ' +
-            (preferEnglishUi ? 'active' : '进行中') +
-            ' (' +
-            goalActive.elapsedLabel +
-            ')'
-        )
-      : null,
-    cooldownUntilMs > 0
-      ? h(
-          Text,
-          { color: 'red' },
-          '  ⏳ 冷却 ' + Math.max(0, Math.ceil((cooldownUntilMs - Date.now()) / 1000)) + 's'
-        )
-      : null
+    leftSegs.map((seg, i) =>
+      h(Text, { key: `L${i}`, dimColor: !seg.color, color: seg.color || undefined }, seg.text)
+    )
   );
   const right = h(
     Box,
     null,
-    h(Text, { dimColor: true }, '[' + leftParts + ']'),
-    pinnedSkipSeg,
-    memSeg,
-    // 段间分隔:memSeg 文案以 `pid:<n>` 结尾、ctxStr 以 `<pct>%` 开头,直接相邻会
-    // 拼成 `pid:305680% ctx`(2026-09-19 实测误读)。统一给每段 2 空格前缀。
-    h(Text, { dimColor: true }, '  ' + ctxStr),
-    compactSeg
+    rightSegs.map((seg, i) =>
+      h(
+        Text,
+        { key: `R${i}`, dimColor: seg.dim && !seg.color, color: seg.color || undefined },
+        seg.text
+      )
+    )
   );
 
   return h(

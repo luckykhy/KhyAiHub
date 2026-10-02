@@ -100,7 +100,7 @@ function buildSpinnerMeta(elapsedSec, tokens, env = process.env, opts = {}) {
  * @param {string} [indicator] 固定指示词,便于测试与将来换语种
  * @returns {string}
  */
-function buildStallLine(displayText, stalledSec, indicator = '⏳ 等待中') {
+function buildStallLine(displayText, stalledSec, indicator = '等待中') {
   const text = String(displayText || '')
     .replace(/\s+/g, ' ')
     .trim();

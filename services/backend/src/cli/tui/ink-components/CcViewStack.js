@@ -321,7 +321,7 @@ function CcHistorySearch({ onSelect, onClose, cols, rows }) {
       paddingX: 1,
     },
       React.createElement(Box, null,
-        React.createElement(Text, { color: '#00D4D4', bold: true }, '🔍 '),
+        React.createElement(Text, { color: '#00D4D4', bold: true }, ''),
         React.createElement(Text, { wrap: 'truncate' }, ccLayout.clipLine(query, inner)),
       ),
       keep('rule')

@@ -18,11 +18,11 @@ const { Text, Box, useInput } = require('../inkRuntime').get();
 const { CC_COLORS } = require('../theme/ccTheme');
 
 const PANELS = [
-  { id: 'context', icon: '📋', label: 'Context' },
-  { id: 'files', icon: '📁', label: 'Files' },
-  { id: 'tools', icon: '🔧', label: 'Tools' },
-  { id: 'stats', icon: '📊', label: 'Stats' },
-  { id: 'mcp', icon: '🔌', label: 'MCP' },
+  { id: 'context', label: 'Context' },
+  { id: 'files', label: 'Files' },
+  { id: 'tools', label: 'Tools' },
+  { id: 'stats', label: 'Stats' },
+  { id: 'mcp', label: 'MCP' },
 ];
 
 /**
@@ -66,17 +66,10 @@ function CcSidebarPanel({
       borderColor: CC_COLORS.secondary,
       paddingX: 1,
     },
-      // 标签页导航
+      // 面板指示行:当前面板名 + 切换按键提示(←/→ 由 useInput 处理)
       React.createElement(Box, { marginBottom: 1 },
-        PANELS.map((p, i) => {
-          const isActive = p.id === currentPanel;
-          return React.createElement(Text, {
-            key: p.id,
-            color: isActive ? CC_COLORS.brand : CC_COLORS.dimColor,
-            bold: isActive,
-            marginRight: 1,
-          }, p.icon);
-        })
+        React.createElement(Text, { color: CC_COLORS.brand, bold: true }, panel.label),
+        React.createElement(Text, { color: CC_COLORS.dimColor }, ' ←/→')
       ),
 
       // 分割线

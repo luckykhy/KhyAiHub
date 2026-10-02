@@ -56,7 +56,11 @@ function build(p = {}) {
   const h1Holds = rows > 0 && liveAllowed <= rows - 1;
 
   // ── frame budget window ────────────────────────────────────────────────────
-  let frame = { p50: 0, p95: 0, p99: 0, max: 0, count: 0, overBudget: false, budgetMs: 16 };
+  // budgetMs 走 SSOT（perfTunables.frameBudgetMs），不再硬编码 16。
+  // 本模块 :32 早就 require 了 perfTunables 却**从未使用**，而这里又抄了一份字面量 ——
+  // 正是本仓反复出现的「SSOT 与消费者漂移」（[DESIGN-ARCH-101] §8 的 ccTimers 同型）。
+  // 无 frameGuard 传入时，这里是唯一的预算来源，必须与真源同源。
+  let frame = { p50: 0, p95: 0, p99: 0, max: 0, count: 0, overBudget: false, budgetMs: perfTunables.frameBudgetMs(env) };
   if (p.frameGuard && typeof p.frameGuard.stats === 'function') {
     try {
       frame = p.frameGuard.stats();

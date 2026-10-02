@@ -199,11 +199,11 @@ function CcPermissionPrompt({
 
 function CcMessageBar({ type = 'info', message, action }) {
   const config = {
-    error:   { icon: '❌', borderColor: '#F87171', bgColor: '#3D0F0F', textColor: '#F87171' },
-    warning: { icon: '⚠️', borderColor: '#FBBF24', bgColor: '#3D300F', textColor: '#FBBF24' },
-    info:    { icon: 'ℹ️', borderColor: '#58A6FF', bgColor: '#0F1A3D', textColor: '#58A6FF' },
-    success: { icon: '✅', borderColor: '#4ADE80', bgColor: '#0F3D1A', textColor: '#4ADE80' },
-  }[type] || { icon: 'ℹ️', borderColor: '#58A6FF', bgColor: '#0F1A3D', textColor: '#58A6FF' };
+    error:   { icon: '✗', borderColor: '#F87171', bgColor: '#3D0F0F', textColor: '#F87171' },
+    warning: { icon: '⚠', borderColor: '#FBBF24', bgColor: '#3D300F', textColor: '#FBBF24' },
+    info:    { icon: 'ℹ', borderColor: '#58A6FF', bgColor: '#0F1A3D', textColor: '#58A6FF' },
+    success: { icon: '✓', borderColor: '#4ADE80', bgColor: '#0F3D1A', textColor: '#4ADE80' },
+  }[type] || { icon: 'ℹ', borderColor: '#58A6FF', bgColor: '#0F1A3D', textColor: '#58A6FF' };
 
   return (
     React.createElement(Box, {

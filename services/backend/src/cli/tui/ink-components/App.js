@@ -928,11 +928,19 @@ function App({ options = {} }) {
     } catch {
       /* store unavailable */
     }
-    // Connect unified UI bridge to App overlay setters
+    // Connect unified UI bridge to App overlay setters.
+    // Payload must only contain identifiers actually declared in this scope —
+    // the former phantom `setPermissionRequest` key (no such state exists here)
+    // threw a ReferenceError on EVERY mount, swallowed by this try/catch, so
+    // setAppRefs never ran and every confirm/list/form silently degraded to the
+    // stdin fallbacks (BUG-010). Confirm is intentionally NOT wired: the native
+    // PermissionsPrompt consumes the unified-protocol request shape
+    // (request.tool_name/request.input), not uiBridge's {toolName,action,risk};
+    // bridging those shapes is a separate piece of work. uiBridge.showConfirmNative
+    // detects the absent setter and falls back explicitly — behavior unchanged.
     try {
       const bridge = require('../uiBridge');
       bridge.setAppRefs({
-        setPermissionRequest,
         setModelPicker,
         setFormFlow,
       });
@@ -5288,12 +5296,12 @@ function App({ options = {} }) {
               const redpassCheckpoint = require('../../../services/domain/security/redpass/redpassCheckpoint');
               if (redpassCheckpoint.hasCheckpoint()) {
                 const cp = redpassCheckpoint.loadCheckpoint();
-                showHint(`🔴 RedPass 发现未完成破击（第${cp.retryCount}次），输入任意内容继续`);
+                showHint(`● RedPass 发现未完成破击（第${cp.retryCount}次），输入任意内容继续`);
               } else {
-                showHint('🔴 RedPass 模式已激活：安全过滤器已禁用，所有对话将被审计记录');
+                showHint('● RedPass 模式已激活：安全过滤器已禁用，所有对话将被审计记录');
               }
             } catch {
-              showHint('🔴 RedPass 模式已激活：安全过滤器已禁用，所有对话将被审计记录');
+              showHint('● RedPass 模式已激活：安全过滤器已禁用，所有对话将被审计记录');
             }
             try {
               const redpassEngine = require('../../../services/domain/security/redpass/redpassEngine');
@@ -6055,9 +6063,9 @@ function App({ options = {} }) {
         // 窗口是**跟随尾部**的:每来一个 chunk,起点向右推进一格 ⇒ 读者看到的位置从左往右
         // 移动、旧字符从左侧移出。相位来自已累积的字符数,不是计时器 —— chunk 到达本身就
         // 让本 memo 重算(deps 含 query.streaming),所以推进免费、定格后自动静止。
-        const _budget = Math.max(1, cols - 8); // 预留 '  💭 ' 5 列 + '⋯ ' 2 列 + 1 列余量
+        const _budget = Math.max(1, cols - 5); // 预留 '  ' 2 列 + '⋯ ' 2 列 + 1 列余量
         const _win = _thinkingTailWindow(query.streaming.thinking, _budget);
-        lines.push('  💭 ' + (_win.headCut ? '⋯ ' : '') + _win.text);
+        lines.push('  ' + (_win.headCut ? '⋯ ' : '') + _win.text);
       }
       // 工具调用
       if (query.streaming.tools && query.streaming.tools.length > 0) {
@@ -7268,6 +7276,7 @@ function App({ options = {} }) {
       ? null
       : h(FooterBar, {
           ...footer,
+          cols: _resCols,
           contextTokens: query.contextTokens || 0,
           contextPlan: query.contextPlan,
           permissionMode,

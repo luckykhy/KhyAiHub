@@ -52,8 +52,7 @@
  * 现在每一条**没有调用方百分比**的进度都由 `services/progressiveProgress` 的节拍器驱动：
  * 整数百分比按 1% 的步长单调推进，分母已知时追赶真实值（永不越过），分母未知时逼近 96%
  * 天花板（永不谎报完成），`finish` 只来自真实完成。组件自持一个 `RENDER_MS` 的渲染节拍
- * （与既有 ink Spinner 的 `spinnerFrameMs` 同族），于是每一帧恰好 +1% —— 字面意义的
- * 「1% 1% 地加载」。
+ * （= progressiveProgress.STEP_MS），于是每一帧恰好 +1% —— 字面意义的「1% 1% 地加载」。
  *
  * 门控 KHY_PROGRESS_PACED（default-on·off=CANON）：关 → 逐字节回退今日观感
  * （`pulse` 回到走马灯、`time` 回到秒表、`count` 回到阶梯百分比）。减少动效
@@ -72,11 +71,14 @@ try {
 
 const BAR_WIDTH = 20;
 
-// 渲染节拍（ms）。与 progressiveProgress.STEP_MS 同值 —— 每帧恰好推进 1%。
-// perfTunables 可覆盖（KHY_TUI_LOW_POWER / 环境），失败软化到 160。
+// 渲染节拍（ms）—— 与 progressiveProgress.STEP_MS 同值，每帧恰好推进 1%。
+// 语义真源是**进度步长**（progressiveProgress），不是 spinner 帧率：早先从
+// perfTunables.spinnerFrameMs 派生是错的 —— 那样 KHY_TUI_LOW_POWER 会把重绘放宽到
+// 320ms 而步长仍是 160ms，于是一跳 2%，恰好推翻本文件上面那句「1% 1% 地加载」。
+// 失败软化到 160。
 const RENDER_MS = (() => {
   try {
-    const v = Number(require('../perfTunables').spinnerFrameMs(process.env));
+    const v = Number(_progressive && _progressive.STEP_MS);
     return Number.isFinite(v) && v > 0 ? v : 160;
   } catch {
     return 160;
@@ -95,8 +97,8 @@ const KIND_DEFAULTS = {
   bytes: { icon: '↓', color: 'cyan' },
   stage: { icon: '●', color: 'yellow' },
   count: { icon: '◆', color: 'green' },
-  time: { icon: '⏳', color: 'magenta' },
-  pulse: { icon: '⏳', color: 'cyan' },
+  time: { icon: '○', color: 'magenta' },
+  pulse: { icon: '·', color: 'cyan' },
 };
 
 // Pulse frames for indeterminate progress (legacy marquee — 门关时逐字节回退用)。

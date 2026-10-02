@@ -172,6 +172,83 @@ function getMouseModule() {
   return _mouseModule;
 }
 
+// Emacs control chords and Meta (Option/Alt) chords. Returns the new cursor to
+// `edit(...)`/`move(...)`, or undefined when the chord is unbound — the caller
+// then decides whether the byte may fall through to the printable path.
+// Module scope (not inline in onInput) so the hook body stays under the L1
+// ratchet's maxFuncLines ceiling; everything it needs arrives as an argument.
+function applyChord({ input, key, cur, killRing, move, edit }) {
+  const kill = (killed, c) => {
+    if (killed) {
+      killRing.current.push(killed);
+    }
+    return edit(c);
+  };
+
+  if (key.ctrl) {
+    switch (input) {
+      case 'a':
+        return move(cur.startOfLine());
+      case 'e':
+        return move(cur.endOfLine());
+      case 'b':
+        return move(cur.left());
+      case 'f':
+        return move(cur.right());
+      case 'k': {
+        const { cursor: c, killed } = cur.deleteToLineEnd();
+        if (killed) {
+          return kill(killed, c);
+        }
+        // Nothing left on this line: kill the line break itself (readline
+        // parity), which is how a hard-wrapped paste gets unwrapped. Without
+        // it Ctrl+K was a silent no-op at every line end. Kept in the kill
+        // ring so Ctrl+Y puts the break back.
+        if (cur.text[cur.offset] === '\n') {
+          return kill('\n', new Cursor(
+            cur.text.slice(0, cur.offset) + cur.text.slice(cur.offset + 1),
+            cur.offset
+          ));
+        }
+        return edit(c);
+      }
+      case 'u': {
+        const { cursor: c, killed } = cur.deleteToLineStart();
+        return kill(killed, c);
+      }
+      case 'w': {
+        const { cursor: c, killed } = cur.deleteWordBefore();
+        return kill(killed, c);
+      }
+      case 'd':
+        return edit(cur.del());
+      case 'y': {
+        const last = killRing.current[killRing.current.length - 1];
+        return last ? edit(cur.insert(last)) : undefined;
+      }
+      default:
+        return undefined;
+    }
+  }
+
+  if (key.meta) {
+    switch (input) {
+      case 'b':
+        return move(cur.wordLeft());
+      case 'f':
+        return move(cur.wordRight());
+      case 'd': {
+        const { cursor: c, killed } = cur.deleteWordAfter();
+        return kill(killed, c);
+      }
+      default:
+        return undefined;
+    }
+  }
+
+  return undefined;
+}
+
 function useTextInput({ onSubmit, onChange, onHistoryEmpty, mouseModule, onShellModeChange } = {}) {
   const [cursor, setCursor] = useState(() => new Cursor('', 0));
   const killRing = useRef([]);
@@ -547,78 +624,20 @@ function useTextInput({ onSubmit, onChange, onHistoryEmpty, mouseModule, onShell
         return historyNext();
       }
 
-      // ── Emacs control chords ─────────────────────────────────────────────
-      if (key.ctrl) {
-        switch (input) {
-          case 'a':
-            return move(cur.startOfLine());
-          case 'e':
-            return move(cur.endOfLine());
-          case 'b':
-            return move(cur.left());
-          case 'f':
-            return move(cur.right());
-          case 'k': {
-            const { cursor: c, killed } = cur.deleteToLineEnd();
-            if (killed) {
-              killRing.current.push(killed);
-              return edit(c);
-            }
-            // Nothing left on this line: kill the line break itself (readline
-            // parity), which is how a hard-wrapped paste gets unwrapped. Without
-            // it Ctrl+K was a silent no-op at every line end. Kept in the kill
-            // ring so Ctrl+Y puts the break back.
-            if (cur.text[cur.offset] === '\n') {
-              killRing.current.push('\n');
-              return edit(new Cursor(
-                cur.text.slice(0, cur.offset) + cur.text.slice(cur.offset + 1),
-                cur.offset
-              ));
-            }
-            return edit(c);
-          }
-          case 'u': {
-            const { cursor: c, killed } = cur.deleteToLineStart();
-            if (killed) {
-              killRing.current.push(killed);
-            }
-            return edit(c);
-          }
-          case 'w': {
-            const { cursor: c, killed } = cur.deleteWordBefore();
-            if (killed) {
-              killRing.current.push(killed);
-            }
-            return edit(c);
-          }
-          case 'd':
-            return edit(cur.del());
-          case 'y': {
-            const last = killRing.current[killRing.current.length - 1];
-            return last ? edit(cur.insert(last)) : undefined;
-          }
-          default:
-            return undefined;
-        }
+      // ── Emacs / Meta (Option/Alt) chords ─────────────────────────────────
+      // Extracted to module scope: the two switches pushed onInput's brace span
+      // past the L1 ratchet's maxFuncLines ceiling, and they need nothing from
+      // the hook's closure beyond the args we pass explicitly.
+      const chord = applyChord({ input, key, cur, killRing, move, edit });
+      if (chord !== undefined) {
+        return chord;
       }
-
-      // ── Meta (Option/Alt) chords ─────────────────────────────────────────
-      if (key.meta) {
-        switch (input) {
-          case 'b':
-            return move(cur.wordLeft());
-          case 'f':
-            return move(cur.wordRight());
-          case 'd': {
-            const { cursor: c, killed } = cur.deleteWordAfter();
-            if (killed) {
-              killRing.current.push(killed);
-            }
-            return edit(c);
-          }
-          default:
-            return undefined;
-        }
+      // An unbound CTRL chord is a single control byte; the old inline switch
+      // returned undefined for it, so keep that (nothing to insert). An unbound
+      // META chord must still fall through — a terminal can deliver a paste with
+      // the meta flag set, and the multi-char paste branch below owns that case.
+      if (key.ctrl && !key.meta) {
+        return undefined;
       }
 
       // ── Printable text / paste ───────────────────────────────────────────

@@ -78,12 +78,9 @@ function SessionSidebar({ groups = [], activeId = '', onSelect = () => {}, width
               onClick: () => onSelect(s.id),
               onMouseUp: () => onSelect(s.id),
             },
-            // Avatar
-            h(
-              Text,
-              { backgroundColor: avatarColor(s.id), color: '#fff', bold: true },
-              ' ' + (s.avatar || s.name.slice(0, 1).toUpperCase()) + ' '
-            ),
+            // Identity chip: colour only. The first letter of the session name used to sit
+            // here; it restated information the label already carried and changed per account.
+            h(Text, { backgroundColor: avatarColor(s.id), color: '#fff' }, '   '),
             // Name + meta
             h(
               Box,
