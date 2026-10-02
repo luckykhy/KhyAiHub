@@ -221,7 +221,7 @@ export function BrowserPane() {
         {/* 空态：browser.empty */}
         {!currentUrl && (
           <EmptyState
-            icon="🌐"
+            icon="◉"
             title="粘贴或输入 URL 以打开网页。"
           />
         )}
@@ -231,7 +231,7 @@ export function BrowserPane() {
           <div className="absolute inset-0 z-10 bg-panel">
             {failure.kind === 'cert' && (
               <EmptyState
-                icon="🔒"
+                icon="◆"
                 title="该站点的 HTTPS 证书不受信任"
                 description="如确认此地址可信，可在「设置 → 浏览器 → 安全」里开启「忽略证书校验」，再重启 App 后即可访问。"
                 action={{ label: '重新加载', onClick: reload }}
@@ -239,7 +239,7 @@ export function BrowserPane() {
             )}
             {failure.kind === 'load' && (
               <EmptyState
-                icon="⚠️"
+                icon="⚠"
                 title="无法打开该页面"
                 description={`页面加载失败：${failure.message}`}
                 action={{ label: '重新加载', onClick: reload }}
@@ -247,7 +247,7 @@ export function BrowserPane() {
             )}
             {failure.kind === 'guest' && (
               <div className="flex flex-col items-center justify-center h-full text-center px-8 animate-fade-in">
-                <span className="text-4xl mb-4">💥</span>
+                <span className="text-4xl mb-4">✕</span>
                 <h3 className="text-base font-medium text-foreground mb-2">内置浏览器启动失败</h3>
                 <p className="text-sm text-foreground/50 max-w-xs mb-2">
                   浏览器进程在显示页面前退出。检查系统环境后可以重试。
