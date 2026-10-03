@@ -135,7 +135,7 @@ const CROSSCUTTING = {
   // 注：原 `'_产物'` 死指针已随该根目录溶解（2026-09-27）移除——保留会让守卫在
   // 有人重建 `_产物/` 时静默放行（Q1′/Q-1 顺带修）。
   // deploy 已迁 works/deploy/（B档 2026-10-02）。
-  patches: '根级第三方依赖补丁（npm 依赖的本地 patch）',
+  // patches 已迁 works/patches/（B档 §22 R5，pnpm patchedDependencies 同批重指，2026-10-02）
 };
 // 构建/打包工具在仓库根生成的目录，不是源码层。保持封闭集合，新增项须有对应忽略规则。
 const GENERATED_TOP_LEVEL_DIRS = new Set(['build', 'dist', 'dist-electron', 'khy_os.egg-info']);
