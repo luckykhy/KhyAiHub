@@ -5911,9 +5911,26 @@ node_modules/   W7 未做故留根
 ### 22.2 施工序与闸门
 
 1. **闸门前置**：§12.60（B 档最早 10-27）须由用户明示推翻方可启动 W9′/P1–P5/W7；未推翻前各车道只做 W2/W5/W6 文件级批。
+   **用户 2026-10-02 复核确认：闸门维持 10-27 不提前**——本节 §22 仅为届时施工单，非提前开工授权；10-27 开闸日按 22.2 顺序从 W9′ 起跑。
 2. 每批照 §19.3 等价性设计抓 before/after；P3 的 docker 证明只能 CI 跑。
 3. W9′ 的存量安装数据迁移脚本与便携版兼容是新产品行为面——须单独设计与回归（非纯移动）。
 4. P1–P5 须发布冻结窗（不推 tag）；完成前新旧路径由再导出壳共存（绞杀者）。
+
+### 22.3 W9′ 点目录收编施工设计（2026-10-02 用户定调「点目录收为一个文件夹，用符号链接或改指向」）
+
+**关键实测：符号链接方案不减视觉数**——`_ensureVisibleAlias`（dataHome.js）已内置 junction 别名基础设施（khy-Trajectory 即其产物），但 junction 在资源管理器**仍显示为一个目录条目**。要让视觉数下降必须「改指向、不建别名」。
+
+| 类 | 目录 | 机制 | 视觉 | 风险面 |
+|---|---|---|---|---|
+| A 访问器改指 | .khy | 指针重定位（`~/.khy/.location.json` projectDataHome → works/data/khy）+ 存量数据迁移；**不建别名** | −1 | 活体会话/DB 路径迁移，须 `khy storage migrate` 回归 + 便携指针表（portable-relative 指针格式已支持） |
+| A 访问器改指 | .khyos | getBaseHome() 便携分支一行改指（getAppRoot()/.khyos → works/data/khyos）+ NSIS 安装/卸载清单同批 | −1 | 便携契约面（setup.nsi/uninstall 列表/打包测试） |
+| C 跟踪件 | .ai | git mv → works/record/ai + 工具链重指（metadata 生成器、check-memory-schema、hq 处理器、AGENTS.md 指针）约 12 文件 | −1 | 引用面一批可清；.ai/hq 多机入仓语义不变 |
+| B 工具根绑定 | .cursor .zcode .opencode | 第三方工具只认根，**不可移**（裁决 D-4 圈留） | 0 | 退役需用户点名 |
+| B 工具自愈 | .workbuddy .workbuddy-ai | 应用在根自建，搬走即复生——除非应用配置支持改向（待查） | 0 | 复生波动 |
+
+**视觉算术**：junction 方案 24→17（junction 仍占根，仅改真实目录数）；改指向方案 24→21（A 类+C 类各出根）；P1–P5 后 17；W7+退役后 6-7。
+
+**施工序**：C 类 .ai 先（零产品行为面）→ A 类 .khy（指针重定位 + migrate 回归）→ A 类 .khyos（便携契约批）→ B 类待用户点名。每批照 §19.3 抓 before/after（khy storage status 前后一致）。
 
 ## 关联
 
