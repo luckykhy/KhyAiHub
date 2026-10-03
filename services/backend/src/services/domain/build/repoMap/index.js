@@ -109,7 +109,7 @@ function buildRepoMap(args) {
     const tokenBudget = _resolveTokenBudget(opts.tokenBudget);
     const cacheEnabled = flagRegistry.isFlagEnabled(CACHE_FLAG);
 
-    // TODO(CONTEXT.yaml fast-path): when a FRESH .ai/CONTEXT.yaml is present and
+    // TODO(CONTEXT.yaml fast-path): when a FRESH works/record/ai/CONTEXT.yaml is present and
     // its fingerprint matches, parse it to skip the rescan. Deferred — non-trivial
     // YAML parsing; for now always call _collectContext (correct, just not the
     // cheapest cold path). The on-disk fingerprint cache below already covers the

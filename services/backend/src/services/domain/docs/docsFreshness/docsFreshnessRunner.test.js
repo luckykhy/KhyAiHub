@@ -81,7 +81,7 @@ test('_isSourceRel: 扩展名判定 + docs/.ai 排除，反斜杠先归一，裸
     ['services/backend/docs/x.js', true], // 只排仓库根的 docs/，嵌套 docs 目录不排
     ['docs/A.md', false],
     ['docs\\x.js', false], // 归一后落在 docs/ 前缀
-    ['.ai/CONTEXT.yaml', false],
+    ['works/record/ai/CONTEXT.yaml', false],
     ['.ai/x.js', false],
     ['README.md', false], // md 不是源码扩展
     ['services/x', false], // 无扩展名 → 整串当扩展名

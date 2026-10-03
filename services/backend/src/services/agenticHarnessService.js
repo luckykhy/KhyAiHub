@@ -1420,7 +1420,7 @@ function createAgenticHarness(options = {}) {
       // ── 可维护性元数据（种子文档）──────────────────────────────────
       // 目标：凡 khy 生成的项目都必须自带 .ai/ 元数据，即便将来无 AI 也能维护。
       // 仅当本次运行确实生成了项目（脚手架/模板或 >= KHY_META_MIN_FILES 个新文件）
-      // 且项目根尚无 .ai/MAP.md 时触发。fail-soft，绝不阻断任务完成。
+      // 且项目根尚无 works/record/ai/MAP.md 时触发。fail-soft，绝不阻断任务完成。
       try {
         const metaLog =
           allToolCallLogs && allToolCallLogs.length

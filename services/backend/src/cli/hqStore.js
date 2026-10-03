@@ -4,7 +4,7 @@
  * hqStore.js — 任务/Bug 状态真源的读写叶子（零副作用、可单测）。
  *
  * 背景：khy-os-hq（指挥部）的能力于 2026-09-17 被吸收进本仓库，数据落
- * `.ai/hq/`（见 `docs/03_DESIGN_设计/[DESIGN-ARCH-118] HQ 能力吸收与多机协作规范.md`）。
+ * `works/record/ai/hq/`（见 `docs/03_DESIGN_设计/[DESIGN-ARCH-118] HQ 能力吸收与多机协作规范.md`）。
  * 原 Python 脚本（`next.py` / `new_bug.py` / `update_status.py` / `hq_common.py`）
  * 已由 `khy hq …` 取代。本模块是那批脚本中**纯逻辑**部分的 JS 等价物。
  *
@@ -34,7 +34,7 @@ const path = require('path');
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 
 /** HQ 数据根（点目录，免于 LAYOUT 层级登记——见 check-repo-layout.js 的点目录豁免）。 */
-const HQ_DIR = path.join(REPO_ROOT, '.ai', 'hq');
+const HQ_DIR = path.join(REPO_ROOT, 'works', 'record', 'ai', 'hq');
 const PROMPTS_DIR = path.join(HQ_DIR, 'prompts');
 const LOGS_DIR = path.join(HQ_DIR, 'logs');
 
@@ -49,7 +49,7 @@ const CONTEXT_MD = path.join(HQ_DIR, 'CONTEXT.md');
 
 /**
  * 允许 `KHY_HQ_DIR` 覆盖数据根——供测试夹具与「多机不同工作副本」场景使用。
- * 未设或为空则用仓内默认 `.ai/hq/`。绝不读盘、绝不抛。
+ * 未设或为空则用仓内默认 `works/record/ai/hq/`。绝不读盘、绝不抛。
  */
 function hqDir(env = process.env) {
   const override = env && env.KHY_HQ_DIR;
@@ -643,7 +643,7 @@ function renderPrompt(templateText, mapping) {
  * 嵌入提示词的「工作目录」表达 —— 恒为**仓库根**。
  *
  * 注意 `paths(undefined)` 与 `paths(null)` 的区别：`paths(root)` 用 `root || HQ_DIR`
- * 兜底，那是给「显式指定数据根」的测试夹具用的；数据根是 `.ai/hq/`，而 AI 真正要
+ * 兜底，那是给「显式指定数据根」的测试夹具用的；数据根是 `works/record/ai/hq/`，而 AI 真正要
  * 工作的目录是仓库根，两者不是一回事。此处必须走 `REPO_ROOT`（或显式传入的仓库根），
  * 绝不能落到 `HQ_DIR`。
  */
@@ -1257,7 +1257,7 @@ function validateDataset(root, env = process.env) {
   const warnings = [];
   const checks = [];
   const me = machineId(env);
-  // 仓库根：`root` 是 HQ 数据目录（`.ai/hq`），故仓库根 = 其上两级。
+  // 仓库根：`root` 是 HQ 数据目录（`works/record/ai/hq`），故仓库根 = 其上两级。
   // 不走 `path.dirname(p.root)` 的模糊推导 —— `KHY_HQ_DIR` 覆盖时若指向别处，
   // 推导结果会错，而 `acceptance` 路径是相对仓库根写的，错了就全表误报。
   // 因此显式回落到本文件位置推导的 `REPO_ROOT`（`:34` 的零硬编码约定）。

@@ -3,7 +3,7 @@
 /**
  * aiMapIndex.js — runtime consumption of the project's `.ai/` seed docs.
  *
- * The repo deterministically generates `.ai/MAP.md` + `.ai/CONTEXT.yaml`
+ * The repo deterministically generates `works/record/ai/MAP.md` + `works/record/ai/CONTEXT.yaml`
  * (per-file symbols & call-chains) via projectMetadataService, but until now
  * nothing READ them at agent runtime. This module closes that gap: it parses
  * those docs into a lightweight file → {keywords, symbols} index plus an
@@ -144,9 +144,9 @@ function _parse(text) {
  */
 function buildIndex(cwd) {
   const root = cwd || process.cwd();
-  const mapPath = path.join(root, '.ai', 'MAP.md');
-  const ctxPath = path.join(root, '.ai', 'CONTEXT.yaml');
-  const autoPath = path.join(root, '.ai', 'SKELETON.auto.md');
+  const mapPath = path.join(root, 'works', 'record', 'ai', 'MAP.md');
+  const ctxPath = path.join(root, 'works', 'record', 'ai', 'CONTEXT.yaml');
+  const autoPath = path.join(root, 'works', 'record', 'ai', 'SKELETON.auto.md');
 
   const sig = [mapPath, ctxPath, autoPath].map(_statMtime).join('|');
   const cached = _cache.get(root);

@@ -402,7 +402,7 @@ Subagent types:
 - "fix" — surgical repair. Closes EXACTLY the CRITICAL/HIGH defects it is handed (typically audit findings) — root cause, minimal diff, verified — then stops. Does NOT refactor, rename, or expand scope. Pass it the findings with file:line. Pairs with "audit": audit finds, fix closes.
 - "research" — read-only multi-source investigator. Answers open questions by combining the local codebase, the live web (WebFetch/WebSearch), and read-only repo history, cross-checking sources and synthesizing an answer with a "Sources:" list. Use it when the answer needs more than a local search — use "Explore" for a fast repo-only file/keyword search.
 - "reading" — read-only deep-reading specialist. Reads the specified files/modules/documents in full and explains them faithfully (responsibilities, control/data flow, decisions, invariants, edge cases, traps) with file:line citations. Use it to comprehend given files — use "Explore" to locate where things live.
-- "map" — read-only codebase cartographer. Produces a structural map (tech stack, entry points, build/run/test commands, top-level directory responsibilities, directory tree, module dependency graph, key symbols), aligned with the repo's .ai/MAP.md skeleton. Reads existing .ai/ seed docs as ground truth. Reports the map; does NOT write files.
+- "map" — read-only codebase cartographer. Produces a structural map (tech stack, entry points, build/run/test commands, top-level directory responsibilities, directory tree, module dependency graph, key symbols), aligned with the repo's works/record/ai/MAP.md skeleton. Reads existing .ai/ seed docs as ground truth. Reports the map; does NOT write files.
 - "general-purpose" — full tool access. Can read, write, edit, execute, and search.
 
 Tips:
@@ -960,7 +960,7 @@ Tips:
         'You are a read-only research agent. Investigate the question across the local codebase (Glob/Grep/Read), the live web (WebFetch/WebSearch), and read-only repo history — cross-check sources, mark confidence honestly, and synthesize a grounded answer. End with a "Sources:" list of the URLs you used. Do NOT edit, install, or run state-changing commands.',
       reading:
         'You are a read-only reading agent. Read the specified files/documents in full and explain them faithfully — responsibilities, control/data flow, key decisions, invariants, edge cases, and traps — grounded in file:line citations. Use Glob/Grep only to locate what to read. Explain only what you actually read; never invent behavior. Do NOT edit files.',
-      map: 'You are a read-only codebase cartographer. Produce a structural map — tech stack, entry points, build/run/test commands, top-level directory responsibilities, a pruned directory tree, the module dependency graph, and key symbols. Read .ai/MAP.md and .ai/CONTEXT.yaml as ground truth when present. Report the map as your final message; do NOT write any file.',
+      map: 'You are a read-only codebase cartographer. Produce a structural map — tech stack, entry points, build/run/test commands, top-level directory responsibilities, a pruned directory tree, the module dependency graph, and key symbols. Read works/record/ai/MAP.md and works/record/ai/CONTEXT.yaml as ground truth when present. Report the map as your final message; do NOT write any file.',
       general:
         'You are a general-purpose agent. Use available tools to complete the task efficiently.',
     };

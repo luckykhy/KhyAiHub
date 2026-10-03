@@ -17,7 +17,7 @@
  *   - 可选模型增强：通过 opts.enhance 注入语义润色，仅在显式启用且模型可用时生效，
  *     失败静默降级回确定性产物，绝不阻塞。
  *   - Bounded：扫描深度/文件数/符号文件数全部 env 可调并有上限，绝不挂死调用流。
- *   - Idempotent：若 `.ai/MAP.md` 已存在则跳过（保护手写文档，如本仓库 kernel 种子文档）。
+ *   - Idempotent：若 `works/record/ai/MAP.md` 已存在则跳过（保护手写文档，如本仓库 kernel 种子文档）。
  *   - Fail-soft：任何异常都被吞掉并以结构化结果返回，不抛错打断生成它的任务。
  *   - 零硬编码：所有阈值走 env，无业务字面量写死。
  *
@@ -125,7 +125,7 @@ const SKIP_DIRS = new Set([
   '__pycache__',
   '.idea',
   '.vscode',
-  '.ai',
+  'record',
   'vendor',
   '.pytest_cache',
   '.mypy_cache',
@@ -820,7 +820,7 @@ function _renderMap(ctx, fingerprint) {
   L.push(`# MAP — ${projectName} 骨架与导航`);
   L.push('');
   L.push(
-    '> 由 khy 自动生成的可维护性种子文档（无需 AI 即可据此维护）。配套 `.ai/CONTEXT.yaml`（契约/符号）`.ai/GUARDS.md`（红线/无AI维护指南）。'
+    '> 由 khy 自动生成的可维护性种子文档（无需 AI 即可据此维护）。配套 `works/record/ai/CONTEXT.yaml`（契约/符号）`works/record/ai/GUARDS.md`（红线/无AI维护指南）。'
   );
   L.push(
     '> 本文为确定性扫描产物：目录职责按约定推断，入口/构建命令来自 manifest，符号清单来自轻量正则。带 `TODO(人工)` 处需维护者补全意图。'
@@ -1285,7 +1285,7 @@ async function _writeAutoDocs(aiDir, ctx, fingerprint, opts, log) {
   fs.writeFileSync(path.join(aiDir, 'CONTEXT.yaml'), docs.context, 'utf8');
   fs.writeFileSync(path.join(aiDir, 'GUARDS.md'), docs.guards, 'utf8');
   _writeMetahash(aiDir, fingerprint, 'auto');
-  const files = ['.ai/MAP.md', '.ai/CONTEXT.yaml', '.ai/GUARDS.md', `.ai/${METAHASH_FILE}`];
+  const files = ['works/record/ai/MAP.md', 'works/record/ai/CONTEXT.yaml', 'works/record/ai/GUARDS.md', `works/record/ai/${METAHASH_FILE}`];
   return files.concat(_linkPointers(path.dirname(aiDir), log));
 }
 
@@ -1303,7 +1303,7 @@ function _linkPointers(root, log) {
  * 确定性生成项目元数据。
  * @param {string} projectRoot 项目根绝对路径
  * @param {object} [opts]
- * @param {boolean} [opts.force] 即使 .ai/MAP.md 已存在也覆盖（默认 false → 幂等跳过）
+ * @param {boolean} [opts.force] 即使 works/record/ai/MAP.md 已存在也覆盖（默认 false → 幂等跳过）
  * @param {(msg:string)=>void} [opts.log] 进度回调
  * @param {(docs:{map,context,guards},meta)=>Promise<{map?,context?,guards?}>} [opts.enhance]
  *        可选模型增强 seam：接收确定性产物，可返回润色后的字符串覆盖。失败被吞，降级回确定性。
@@ -1320,7 +1320,7 @@ async function generateProjectMetadata(projectRoot, opts = {}) {
         files: [],
       };
     }
-    const aiDir = path.join(projectRoot, '.ai');
+    const aiDir = path.join(projectRoot, 'works', 'record', 'ai');
     const mapPath = path.join(aiDir, 'MAP.md');
     if (!opts.force && fs.existsSync(mapPath)) {
       return { generated: false, reason: 'already_exists', root: projectRoot, files: [] };
@@ -1352,7 +1352,7 @@ async function generateProjectMetadata(projectRoot, opts = {}) {
  * 随项目变化「就地更新」元数据——无需 AI、确定性、非破坏性。这是 /goal
  * 「ai 元数据要能随项目更新……产生变化就需要即时更新，最好不靠 AI 自动完成」的核心。
  *
- * 三种情形（按 .ai/MAP.md 的归属判定，绝不误伤人工文档）：
+ * 三种情形（按 works/record/ai/MAP.md 的归属判定，绝不误伤人工文档）：
  *   1. 缺失        → 首次生成完整三件套（等同 generate force）。
  *   2. 机器自有    → 比对指纹：变了就覆盖三件套+metahash（'refreshed'），没变则跳过（'unchanged'）。
  *   3. 人工撰写    → 绝不碰 MAP/CONTEXT/GUARDS；改为刷新机器派生层 SKELETON.auto.md + metahash，
@@ -1377,7 +1377,7 @@ async function refreshProjectMetadata(projectRoot, opts = {}) {
     }
     const { ctx } = collected;
     const fingerprint = _computeFingerprint(ctx);
-    const aiDir = path.join(projectRoot, '.ai');
+    const aiDir = path.join(projectRoot, 'works', 'record', 'ai');
     const mapPath = path.join(aiDir, 'MAP.md');
 
     // 情形 1：缺失 → 首次生成。
@@ -1476,7 +1476,7 @@ async function refreshProjectMetadata(projectRoot, opts = {}) {
 /**
  * 从一次 agent 运行的 toolCallLog 推断是否"生成了项目"，若是则补齐元数据。
  * 触发条件（任一）：用过 scaffoldFiles/projectTemplate，或新写文件数 >= KHY_META_MIN_FILES。
- * 始终幂等（.ai/MAP.md 存在则跳过）、fail-soft。
+ * 始终幂等（works/record/ai/MAP.md 存在则跳过）、fail-soft。
  *
  * @param {string} cwd 当前工作目录（项目根上界，生成位置不会高于此）
  * @param {Array} toolCallLog 形如 [{ tool, params:{file_path|filePath|path}, result }]
@@ -1612,7 +1612,7 @@ function checkProjectMetadata(projectRoot) {
       };
     }
     const current = _computeFingerprint(collected.ctx);
-    const aiDir = path.join(projectRoot, '.ai');
+    const aiDir = path.join(projectRoot, 'works', 'record', 'ai');
     const mapPath = path.join(aiDir, 'MAP.md');
     if (!fs.existsSync(mapPath)) {
       return {
