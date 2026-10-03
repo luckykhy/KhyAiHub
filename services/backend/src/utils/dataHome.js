@@ -397,7 +397,8 @@ function getProjectDataHome() {
     return _cachedProjectDataHome;
   }
 
-  const appDefault = path.join(getAppRoot(), '.khy');
+  // B档 W9′（2026-10-02）：项目数据家迁入 works/data/（§22 R1）；旧路径无别名——全仓经访问器解析，无其他硬编码（实测）。存量数据随本批搬移。
+  const appDefault = path.join(getAppRoot(), 'works', 'data', 'khy');
 
   // 2. Pinned pointer — honor only if the target still exists.
   const pointer = _readPointer();
@@ -630,7 +631,7 @@ function getBaseHome() {
     // can be moved across machines/drives without leaving data on the system
     // drive. Resolved lazily (never at require time) so the portable decision
     // is always final by the time any base store reads it.
-    _cachedBaseHome = path.join(getAppRoot(), '.khyos');
+    _cachedBaseHome = path.join(getAppRoot(), 'works', 'data', 'khyos');
   } else {
     _cachedBaseHome = path.join(os.homedir(), '.khyos');
   }

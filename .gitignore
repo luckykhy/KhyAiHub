@@ -281,3 +281,6 @@ apps/khy-os-client-app/android/app/src/main/assets/shizuku/*.apk
 .zcode/plans/plan-sess_*.md
 .zcode/plans/plan-sess_*.html
 .zcode/instability-report-*
+
+# --- 2026-10-02 W9′ 数据家迁入 works/data/（B档 §22 R1；本机态，gitignore 派生自 DATA-LOCATIONS roots.rel）---
+works/data/

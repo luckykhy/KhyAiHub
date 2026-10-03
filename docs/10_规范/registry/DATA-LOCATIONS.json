@@ -2,15 +2,15 @@
   "$comment": "数据落点的单一真源。派生对象：[DESIGN-LAY-007] §2 目录表、utils/dataHome.js 的 DATA_PATHS 查表、scripts/ci/check-data-layout.js 的预算常量、.gitignore 数据段。禁止在任何一处手写第二份。见 [DESIGN-LAY-004] 的「登记表派生」原则。",
   "ssot": "docs/10_规范/DESIGN-LAY/[DESIGN-LAY-007] 三态目录立体分层方案.md",
   "ruleId": "LAYOUT-007",
-  "version": "1.1.0 (2026-09-26) 新增 formats 落盘格式卫生块，配套 check-data-layout L-4；初版 1.0.0 (2026-09-18)",
+  "version": "1.1.0 (2026-09-26) 新增 formats 落盘格式卫生块，配套 check-data-layout L-4；初版 1.0.0 (2026-09-18)；W9′ 2026-10-02 roots 迁 works/data（[DESIGN-LAY-008] §22 R1）",
   "roots": {
     "khy": {
-      "rel": ".khy",
+      "rel": "works/data/khy",
       "accessor": "getDataHome()",
       "role": "应用层运行态数据"
     },
     "khyos": {
-      "rel": ".khyos",
+      "rel": "works/data/khyos",
       "accessor": "getBaseHome()",
       "role": "底座层运行态数据"
     },
@@ -104,11 +104,48 @@
   },
   "formats": {
     "$comment": "L-4 落盘格式卫生判据的单一真源。协议正文：docs/10_规范/其它规范/FILE-FORMAT-PROTOCOL.md §2.0 决策矩阵与 §2.7 边界裁决 D2/D3。blobRoots：数据根下豁免「无扩展名」检查的子树（内容寻址桶与规则5证据拷贝，其语义即不承诺格式）。machineTreeNames/machineTreePatterns：机器生成的缓存/备份/隔离树，L-4 遍历整体跳过（其内部文件不受「格式自解释」管辖——git 对象、编译缓存、备份副本本就不该按数据落点协议重排）。yamlExceptions：点名待迁移的存量运行时 YAML 例外（正则，匹配文件名），新增加载点不豁免。",
-    "blobRoots": ["trajectory_replay", "feedback"],
-    "machineTreeNames": ["node_modules", "backups", "backup", "cache", "heapdump", "quarantine", "deadcode-quarantine", "tmp-pack-quarantine", "learn-cache", "node-compile-cache", "break-cache", "housekeeping", ".github"],
-    "machineTreePatterns": ["^tmp", "-tmp$", "^backup-", "_backup$", "-sb$", "^dot-git$", "__scope_probe$", "\\.stale-dir-"],
-    "yamlExceptions": ["^proxy-core\\.yaml$", "^model_template_.*\\.yaml$", "^pnpm-(lock|workspace)\\.ya?ml$", "^docker-compose\\.ya?ml$"],
-    "noExtWhitelist": ["^Dockerfile(\\..+)?$", "^(LICENSE|NOTICE|Makefile|README|CHANGELOG)$", "^(pre-commit|commit-msg|pre-push|prepare-commit-msg|post-checkout|applypatch-msg|pre-applypatch|post-applypatch|post-merge|pre-rebase|post-rewrite|update)$", "^(HEAD|FETCH_HEAD|ORIG_HEAD|index|packed-refs)$", "^(\\.gitignore|\\.gitattributes|\\.gitkeep)$"],
+    "blobRoots": [
+      "trajectory_replay",
+      "feedback"
+    ],
+    "machineTreeNames": [
+      "node_modules",
+      "backups",
+      "backup",
+      "cache",
+      "heapdump",
+      "quarantine",
+      "deadcode-quarantine",
+      "tmp-pack-quarantine",
+      "learn-cache",
+      "node-compile-cache",
+      "break-cache",
+      "housekeeping",
+      ".github"
+    ],
+    "machineTreePatterns": [
+      "^tmp",
+      "-tmp$",
+      "^backup-",
+      "_backup$",
+      "-sb$",
+      "^dot-git$",
+      "__scope_probe$",
+      "\\.stale-dir-"
+    ],
+    "yamlExceptions": [
+      "^proxy-core\\.yaml$",
+      "^model_template_.*\\.yaml$",
+      "^pnpm-(lock|workspace)\\.ya?ml$",
+      "^docker-compose\\.ya?ml$"
+    ],
+    "noExtWhitelist": [
+      "^Dockerfile(\\..+)?$",
+      "^(LICENSE|NOTICE|Makefile|README|CHANGELOG)$",
+      "^(pre-commit|commit-msg|pre-push|prepare-commit-msg|post-checkout|applypatch-msg|pre-applypatch|post-applypatch|post-merge|pre-rebase|post-rewrite|update)$",
+      "^(HEAD|FETCH_HEAD|ORIG_HEAD|index|packed-refs)$",
+      "^(\\.gitignore|\\.gitattributes|\\.gitkeep)$"
+    ],
     "detailCap": 12
   },
   "seedEntries": [
