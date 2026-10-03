@@ -101,6 +101,8 @@ const LAYERS = {
   apps: 'L3 平台自带管理前端',
   software: 'L4 跑在平台之上的内置应用',
   extensions: 'L5 内置拓展（随主包分发，契约见 [DESIGN-TOOL-002]）',
+  delivery: 'D4 交付与接入域（方案 P 物理化，[DESIGN-LAY-005] §1.4b；判据真源 DOMAIN-DEPS _physicalization）',
+  runtime: 'D1 运行时域（方案 P 物理化；substrate 并入 runtime/substrate，P-D 裁决）',
   tools: 'L6 独立开发者工具',
 };
 // 横切层：服务于所有层，不参与依赖判定（真源同上 第 1.2/1.4 节）。
@@ -127,12 +129,12 @@ const CROSSCUTTING = {
   // 根级例外目录（真源 [DESIGN-LAY-005] 第 1.4 节）：不属 L0-L6，也不属
   // scripts/packaging/docs 这类工程横切，是历史遗留的根级实体，登记在册以免
   // 每次都被 layer-registry 判违规。
-  tests: '根级测试债务登记（DEBT.md，内容属文档性质，待迁 docs/05_TEST_测试/）',
+  // tests 已迁 docs/05_TEST_测试/tests-debt/（B档 2026-10-02，§22 施工单）；deploy 已迁 works/deploy/。
   // 只收**交付物**；过程态工具（探针/扫描脚本/未接线原型）落 .khyos/，判据真源
   // [DESIGN-LAY-002] §3.1（2026-09-29 分流，此前两类混住，见该节表格）。
   // 注：原 `'_产物'` 死指针已随该根目录溶解（2026-09-27）移除——保留会让守卫在
   // 有人重建 `_产物/` 时静默放行（Q1′/Q-1 顺带修）。
-  deploy: '根级部署配置与试验（deploy/free-test/）',
+  // deploy 已迁 works/deploy/（B档 2026-10-02）。
   patches: '根级第三方依赖补丁（npm 依赖的本地 patch）',
 };
 // 构建/打包工具在仓库根生成的目录，不是源码层。保持封闭集合，新增项须有对应忽略规则。
@@ -241,14 +243,14 @@ const WORKSPACE_ROOTS = [
   'services/backend',
   'services/ai-backend',
   'apps/ai-frontend',
-  'software/khyquant',
-  'software/khyquant/frontend',
+  'delivery/channel/khyquant',
+  'delivery/channel/khyquant/frontend',
   'platform/packages/shared',
   'platform/packages/moonbit-plugin-sdk',
   'platform/delivery',
-  'extensions/tools/khy-markdown',
+  'delivery/extension/tools/khy-markdown',
   'tools/deepseek-eyes',
-  'extensions/bridges/khy-trae-bridge',
+  'delivery/extension/bridges/khy-trae-bridge',
 ];
 
 function git(cmdArgs) {
@@ -300,6 +302,8 @@ function checkRootWhitelist(findings) {
 const ROOT_CATALOG = {
   '.ai': { category: 'contract', reason: '可维护性元数据再生件（khy metadata 产出）', reviewBy: '2026-12-31' },
   'works': { category: 'tool-retained', reason: '工程产物区：git 钩子（works/build/githooks）与构建/发布脚本', reviewBy: '2026-12-31' },
+  'delivery': { category: 'domain', reason: 'D4 交付与接入域（方案 P 物理化，[DESIGN-LAY-008] §14 / DOMAIN-DEPS _physicalization；LAYOUT-005 同批登记）', reviewBy: '2026-12-31' },
+  'runtime': { category: 'domain', reason: 'D1 运行时域（方案 P 物理化；akshare_scripts → runtime/node/backend 为附录A指定目标）', reviewBy: '2026-12-31' },
   '.github': { category: 'contract', reason: 'CI 工作流与模板', reviewBy: '2026-12-31' },
   '.cursor': { category: 'tool-retained', reason: '编辑器规则目录（裁决 D-4 保留）', reviewBy: '2026-12-31' },
   '.clinerules': { category: 'tool-retained', reason: 'Cline 规则目录（裁决 D-4 保留）', reviewBy: '2026-12-31' },
@@ -542,9 +546,9 @@ function checkLayerRegistry(findings) {
   });
 }
 
-// ── 规则 8：extensions/ 下每个目录都须遵守拓展契约 ────────────────────────
+// ── 规则 8：delivery/extension/ 下每个目录都须遵守拓展契约 ────────────────────────
 // 真源 docs/10_规范/其它规范/[DESIGN-TOOL-002] 拓展契约与核心边界规范.md 第三节。
-// 字段清单同时在 services/backend/src/services/extensions/extensionRoots.js 落地；
+// 字段清单同时在 services/backend/src/services/delivery/extension/extensionRoots.js 落地；
 // 这里刻意**不 require** 那个模块 —— 守卫属横切层，按 [DESIGN-LAY-005] 第二节
 // 「任何层 → L5/L6」的禁止边，scripts/ 只许按路径操作，不许 import L2 的实现。
 // 代价是两处各有一份字段名，收益是守卫不会因为被守卫的代码坏掉而一起坏掉。
@@ -556,7 +560,7 @@ const EXTENSION_KINDS = new Set(['runtime', 'ide-bridge', 'asset', 'toolchain', 
 //
 // 加载器**不**认这份表 —— 它只认「有没有 manifest」，任何空壳目录都能当分类（见
 // extensionRoots 的 MAX_DEPTH 注释）。收敛分类名纯属**仓库卫生**：不收的话
-// extensions/ 会长出一棵谁也说不清的树，而那正是本契约要消灭的东西。用户目录与
+// delivery/extension/ 会长出一棵谁也说不清的树，而那正是本契约要消灭的东西。用户目录与
 // KHY_EXTENSION_PATH 下的拓展不受这条约束 —— 那是别人的磁盘，不是本仓的卫生。
 const EXTENSION_CATEGORIES = new Set(['tools', 'protocols', 'mcp', 'scripts', 'software', 'bridges']);
 
@@ -574,7 +578,7 @@ function listSubdirs(dir) {
 }
 
 /**
- * 枚举 extensions/ 下的拓展目录，深度与 extensionRoots.discover() 一致（两层，§2.3）。
+ * 枚举 delivery/extension/ 下的拓展目录，深度与 extensionRoots.discover() 一致（两层，§2.3）。
  *
  * 刻意重复实现而不 require 那个模块：守卫属横切层，按 [DESIGN-LAY-005] 第二节的禁止边
  * scripts/ 不许 import L2 的实现 —— 代价是两份深度逻辑，收益是守卫不会因为被守卫的
@@ -594,33 +598,33 @@ function collectExtensionDirs(extRoot) {
     const abs = path.join(extRoot, name);
     if (fs.existsSync(path.join(abs, EXTENSION_MANIFEST))) {
       // 自带 manifest → 是拓展，不再下探（与加载器同一优先级：显式声明胜过结构推断）
-      extensions.push({ rel: `extensions/${name}`, abs, id: name, category: null });
+      extensions.push({ rel: `delivery/extension/${name}`, abs, id: name, category: null });
       continue;
     }
     const children = listSubdirs(abs);
     const inner = children.filter(c => fs.existsSync(path.join(abs, c, EXTENSION_MANIFEST)));
     if (inner.length === 0) {
       structural.push(
-        `extensions/${name} —— 既不是拓展（缺 ${EXTENSION_MANIFEST}）也不是分类目录（下面没有任何拓展）`
+        `delivery/extension/${name} —— 既不是拓展（缺 ${EXTENSION_MANIFEST}）也不是分类目录（下面没有任何拓展）`
       );
       continue;
     }
     if (!EXTENSION_CATEGORIES.has(name)) {
       structural.push(
-        `extensions/${name} —— 分类名不在 ${[...EXTENSION_CATEGORIES].join(' / ')} 内`
+        `delivery/extension/${name} —— 分类名不在 ${[...EXTENSION_CATEGORIES].join(' / ')} 内`
       );
     }
     for (const child of children) {
       const childAbs = path.join(abs, child);
       if (!inner.includes(child)) {
         structural.push(
-          `extensions/${name}/${child} —— 缺 ${EXTENSION_MANIFEST}；` +
+          `delivery/extension/${name}/${child} —— 缺 ${EXTENSION_MANIFEST}；` +
             `分类目录下只能直接放拓展，不能再套一层分类（发现只下探两层）`
         );
         continue;
       }
       extensions.push({
-        rel: `extensions/${name}/${child}`,
+        rel: `delivery/extension/${name}/${child}`,
         abs: childAbs,
         id: child,
         category: name,
@@ -660,7 +664,7 @@ function checkExtensionContract(findings, counts) {
   const extRoot = path.join(repoRoot, 'extensions');
   if (!fs.existsSync(extRoot)) {
     counts['extension-contract'] = 0;
-    return; // 没有 extensions/ 目录 → 无可违规（fixture 仓库的常态）
+    return; // 没有 delivery/extension/ 目录 → 无可违规（fixture 仓库的常态）
   }
   const { extensions, structural } = collectExtensionDirs(extRoot);
 
@@ -727,7 +731,7 @@ function checkExtensionContract(findings, counts) {
   findings.push({
     id: 'extension-contract',
     severity: 'warning',
-    message: `${violations.length} 处 extensions/ 目录不合拓展契约。`,
+    message: `${violations.length} 处 delivery/extension/ 目录不合拓展契约。`,
     detail:
       `${violations.slice(0, 3).join('；')}${violations.length > 3 ? ' …' : ''} —— 契约见 ` +
       `docs/10_规范/其它规范/[DESIGN-TOOL-002] 拓展契约与核心边界规范.md 第三节；` +
@@ -760,7 +764,7 @@ const CORE_SCAN_DIRS = ['services/backend/src'];
 // 名单保持封闭：新增项须在此显式登记并写明理由。
 const EXTENSION_ID_ALLOWLIST = new Map([
   // 契约自身的实现件：它必须能写出 id，否则契约模块过不了它自己的规则。
-  ['services/backend/src/services/extensions/markdownWorkbench.js', '*'], // LEGACY_ID 迁移期兜底
+  ['services/backend/src/services/delivery/extension/markdownWorkbench.js', '*'], // LEGACY_ID 迁移期兜底
   // pip 源码包重建：它按**仓库布局**逐目录复制（'docs'、'frontend'、'packages/shared' 同理），
   // 描述的是要重建出的那棵树长什么样，不是在这台机器上找一个已安装的拓展。
   ['services/backend/src/cli/handlers/publish.js', new Set(['khy-alpine-iso'])],
@@ -838,7 +842,7 @@ function checkExtensionIdHardcode(findings, counts) {
     counts['extension-id-hardcode'] = 0;
     return;
   }
-  // 两层枚举（§2.3）：拓展可能在 extensions/<分类>/<id>。只看一层的话，一批拓展
+  // 两层枚举（§2.3）：拓展可能在 delivery/extension/<分类>/<id>。只看一层的话，一批拓展
   // 移进分类目录后这条守卫会静默变成空转 —— 「核里不许点名拓展 id」从此不再被检查。
   const ids = collectExtensionDirs(extRoot)
     .extensions
@@ -999,7 +1003,7 @@ function checkDanglingTasks(findings, counts) {
 
 // ── 规则 5：跨 workspace 的深层相对 require ───────────────────────────────
 function workspaceRootOf(relFile) {
-  // 取最长匹配，使 software/khyquant/frontend 优先于 software/khyquant。
+  // 取最长匹配，使 delivery/channel/khyquant/frontend 优先于 delivery/channel/khyquant。
   let best = null;
   for (const root of WORKSPACE_ROOTS) {
     if (relFile === root || relFile.startsWith(`${root}/`)) {
@@ -1011,7 +1015,7 @@ function workspaceRootOf(relFile) {
 
 // 纯 re-export 壳文件：整个文件（去掉注释与空行）就是一句
 // `module.exports = require('…')`。这是仓库里刻意的**兼容别名**手法 ——
-// services/backend 保持自己的稳定路径，实现归 software/khyquant 所有。
+// services/backend 保持自己的稳定路径，实现归 delivery/channel/khyquant 所有。
 // 它不引入逻辑耦合，只是一个路径别名，所以不计入 cross-layer-require；
 // 但仍会做存在性校验（落到 unresolved-require），因为壳指空是必崩的。
 const SHIM_CACHE = new Map();
@@ -1071,11 +1075,11 @@ function isTestFixture(relFile) {
 // ── 拓展路径漂移（[DESIGN-TOOL-002] §4.1 的机器化）─────────────────────────
 // 为什么单列一条而不是靠 unresolved-require：那条只看 `../../` 起步的深层 require，
 // 于是漏掉两类「搬目录搬坏了」的典型：
-//   ① 单层 `../lib/x` —— 拓展从 scripts/<子目录>/ 挪到 extensions/scripts/<id>/ 后，
+//   ① 单层 `../lib/x` —— 拓展从 scripts/<子目录>/ 挪到 delivery/extension/scripts/<id>/ 后，
 //      同一个 `../lib` 指向的已经不是同一个地方了；
 //   ② `path.resolve(__dirname, '..', '..')` 这类爬根算术 —— 它**不会**在加载期抛错，
 //      只会静默算出一个错的根，然后在运行时表现为「什么都没探测到」。②比①危险得多。
-// 只查 extensions/：拓展是会被整体搬动的那类目录，深度敏感的代码在这里最脆。
+// 只查 delivery/extension/：拓展是会被整体搬动的那类目录，深度敏感的代码在这里最脆。
 function collectExtensionSources() {
   const out = [];
   const root = path.join(repoRoot, 'extensions');
@@ -1099,7 +1103,7 @@ function collectExtensionSources() {
 }
 
 // 从任意目录往上找到它所属拓展的根（带 khy.extension.json 的那一层）。
-// 找不到就返回 null —— extensions/ 下也存在还没上契约的目录，那由 extension-contract 管。
+// 找不到就返回 null —— delivery/extension/ 下也存在还没上契约的目录，那由 extension-contract 管。
 function extensionRootOf(dir) {
   const stop = path.join(repoRoot, 'extensions');
   let cur = dir;
@@ -1161,7 +1165,7 @@ function checkExtensionPathDrift(findings, counts) {
       if (parts.every(part => part === '..')) {
         // 纯 `..` 序列 = 拿某个祖先目录当基准。在拓展里只有两个落点说得通：
         // **仓库根**（要读仓库里的东西）或**本拓展内部**（含自己的根，如 test/ 往上一层）。
-        // 落在两者之间的 extensions/ 或 extensions/<分类>/ 上没有任何意义 —— 那是布局
+        // 落在两者之间的 delivery/extension/ 或 delivery/extension/<分类>/ 上没有任何意义 —— 那是布局
         // 的中间层，不是谁的根 —— 而这恰恰是拓展被搬深一层后必然出现的症状。
         // 这一条不能靠「路径存不存在」来判：那些中间目录**都存在**，正是它让这类漂移
         // 完全无声（不抛错、不报缺失，只是从此什么都探测不到）。所以直接钉死落点。
