@@ -5932,6 +5932,26 @@ node_modules/   W7 未做故留根
 
 **施工序**：C 类 .ai 先（零产品行为面）→ A 类 .khy（指针重定位 + migrate 回归）→ A 类 .khyos（便携契约批）→ B 类待用户点名。每批照 §19.3 抓 before/after（khy storage status 前后一致）。
 
+### 22.4 剩余批次施工计划（2026-10-02，目标：21 目录 → 6-7）
+
+起点实测 **21 目录**：.cursor .github .khy .khyos .opencode .workbuddy .workbuddy-ai .zcode apps delivery docs entries evidence kernel packaging patches platform runtime scripts services works（已出根：electron/.commandcode/extensions/software/tests/deploy/.ai + egg-info）。
+
+| # | 批 | 减目录 | 内容与等价证明 | 风险 |
+|---|---|---|---|---|
+| R1 | **W9′-A 数据家** | **−2**（.khy/.khyos） | getBaseHome() 便携分支改指 works/data/khyos + getProjectDataHome() 指针重定位 works/data/khy；存量数据用 `khy storage migrate` 回归；NSIS 安装/卸载清单同批；`khy storage status` 前后一致为证 | 中高（活体数据） |
+| R2 | **P1 kernel+platform** | **−2** | kernel/ + platform/ → runtime/substrate/（P-D 裁决）；附录A 树为图；platform/khy_platform 的 __bootstrap 路径与 pyproject 打包配置同批；import 重指后跑全套 jest | 中（打包契约） |
+| R3 | **P2 services** | **−1** | services/ → runtime/node/（akshare 先例路径）；backend 解体按 §19.3 P3（docker 证明在 CI） | 高（最大族） |
+| R4 | **P3 apps** | **−1** | apps/ → delivery/{web,desktop,mobile}/（desktop 等 khyos-desktop 车道在飞收口后动） | 中 |
+| R5 | **packaging/patches** | **−2** | packaging/ → works/ship/（80 处机器引用重指）；patches/ → works/patches/（package.json patchedDependencies 路径同批，pnpm install 前后等价） | 中（pnpm 契约） |
+| R6 | **evidence** | **−1** | evidence/ → works/record/evidence/（软著链 80 处引用重指 + COPYRIGHT-MATERIALS.json 路径批改） | 中（软著链复跑） |
+| R7 | **W7 工作区根下沉** | **−1**（node_modules） | 298 脚本 + hooks + CI 全链 `pnpm -C runtime`；独占冻结窗 | 高 |
+| R8 | **工具位退役** | **−1~-3** | .opencode（复审提前）/ .zcode / .cursor —— 每项都是你的产品决策 | 决策 |
+
+**阶梯**：21 →(R1) 19 →(R2) 17 →(R3) 16 →(R4) 15 →(R5) 13 →(R6) 12 →(R7) 11 →(R8) 8-10。
+**到 6-7 的缺口**：R8 全退役（.cursor/.zcode/.opencode 三工具位）+ docs 识别位与 entries 产物根的保留裁决——纯决策无施工。
+**顺序与并行**：R1 先行（独立面）；R2–R4 依赖 desktop 在飞收口；R5/R6 可与 R2–R4 并行（不相交）；R7 最后（独占冻结窗）。
+**不动项**：docs（GitHub 识别位+索引真源）、entries（LAYOUT-005 产物根）、works/runtime/business/delivery（域根）、.github（唯一例外）。
+
 ## 关联
 
 - 本篇 §17 = 圈留 Cline/Cursor 后重绘的终态树与可达阶梯；§15/§16 的「终局 7」已被 §17.4 作废。§18 = 方案 Q（两口径达标），待点头。**§21 = 四条裁决与统一排期（方案唯一真源，2026-10-02 已裁）。**
