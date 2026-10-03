@@ -1,9 +1,0 @@
-/var/log/khy-os/*.log {
-    daily
-    rotate 7
-    compress
-    delaycompress
-    missingok
-    notifempty
-    copytruncate
-}
