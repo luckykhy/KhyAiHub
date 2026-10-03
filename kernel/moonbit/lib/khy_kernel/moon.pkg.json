@@ -1,8 +1,0 @@
-{
-  "is-main": true,
-  "link": {
-    "native": {
-      "flags": []
-    }
-  }
-}
