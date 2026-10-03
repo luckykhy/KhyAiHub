@@ -10,7 +10,7 @@
  *   cl                     → strategy list
  *
  * 注意：`hq` **不在此表中** —— 它是自注册命令 `hq`（任务/Bug 状态真源，
- * `handlers/hq.js`，真源 `.ai/hq/`）。历史上 `hq` 曾是 `quote` 的别名，但
+ * `handlers/hq.js`，真源 `works/record/ai/hq/`）。历史上 `hq` 曾是 `quote` 的别名，但
  * 静态别名优先于自注册命令，会把 `khy hq status` 劫持去查行情，故于
  * 2026-09-17 移除（见 [DESIGN-ARCH-118] HQ 能力吸收）。查行情请用
  * `hangqing` / `行情` / `price` / `quote`；`khy hq` 现在专指任务面。

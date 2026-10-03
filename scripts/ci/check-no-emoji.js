@@ -11,7 +11,7 @@
  *
  * 四条同日的范围裁决界定了本守卫管什么：
  *   1) 禁用线 = **只禁彩色 emoji**，保留单色符号词表（✓ ✗ ⚠ ★ ❯ → ● ○ ◉ ▸ ◆ ─ …）；
- *   2) 范围 = 含 khyquant 全仓（`software/khyquant/` 一并）；
+ *   2) 范围 = 含 khyquant 全仓（`delivery/channel/khyquant/` 一并）；
  *   3) 守卫 = 加，阶段 **S1 观察者档**（只记录不阻断）；
  *   4) 文档站 = **`.md` 源与 `.html` 孪生一并清理**（「文档站的html，md也需要清理」）。
  *      故判据覆盖 `*.md` / `*.html`，且**文档生成器**（`scripts/docs/**`）同样在管内 ——
@@ -124,7 +124,7 @@ const EXEMPT = [
     until: '2027-03-31',
   },
   {
-    path: 'extensions/scripts/khy-diagnostics',
+    path: 'delivery/extension/scripts/khy-diagnostics',
     prefix: true,
     reason: '对抗式输入语料生成器（fuzzInputCorpus / fuzzFileCorpus）把 emoji 当作**被喂进解析器的输入数据**（😀 文件名、ZWJ 家庭、肤色修饰、2 万重复），与测试夹具同类：清掉它们等于削掉崩溃/挂死防护。',
     until: '2027-03-31',
@@ -182,7 +182,7 @@ const DOC_RE = /\.(md|html|htm)$/i;
 /**
  * 登记表面：JSON 登记表不是代码，但它是**会被解码并渲染**的数据 ——
  * `RULES-REGISTRY.json` 经 `gen-rules-cards.js` 变成规则卡与文档站页面，
- * `.ai/hq/*.json` 经 `khy hq status` 打进终端。emoji 藏在这里等于藏在渲染链上游，
+ * `works/record/ai/hq/*.json` 经 `khy hq status` 打进终端。emoji 藏在这里等于藏在渲染链上游，
  * 因此同样入管（`escaped-emoji` 对 JSON 也成立：`\uXXXX` 在 `JSON.parse` 后就是真字形）。
  */
 const DATA_SOURCE_RE = [

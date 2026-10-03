@@ -68,7 +68,7 @@ async function handleMetadata(parsed = {}) {
   }
 
   const root = resolveRoot(args);
-  const aiDir = path.join(root, '.ai');
+  const aiDir = path.join(root, 'works', 'record', 'ai');
   const mapPath = path.join(aiDir, 'MAP.md');
 
   if (sub === 'check') {
@@ -78,7 +78,7 @@ async function handleMetadata(parsed = {}) {
       return true;
     }
     if (!status.exists) {
-      printError(`缺少可维护性元数据：${root}/.ai/MAP.md 不存在`);
+      printError(`缺少可维护性元数据：${root}/works/record/ai/MAP.md 不存在`);
       printInfo('补齐：khy metadata gen');
     } else {
       printError(
@@ -180,7 +180,7 @@ async function handleMetadata(parsed = {}) {
   }
   switch (result.reason) {
     case 'already_exists':
-      printWarn('已存在 .ai/MAP.md，跳过（用 --force 覆盖，或 khy metadata refresh 增量更新）。');
+      printWarn('已存在 works/record/ai/MAP.md，跳过（用 --force 覆盖，或 khy metadata refresh 增量更新）。');
       break;
     case 'empty_project':
       printWarn('目录为空或无可扫描文件，未生成。');

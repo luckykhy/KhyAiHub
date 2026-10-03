@@ -300,7 +300,7 @@ function checkRootWhitelist(findings) {
 // 入口/配置契约）、tool-retained（按裁决保留的工具目录）、localdata（本机态/git）、
 // pending-retire（已裁决退役待删除）。真源 [DESIGN-LAY-008] §21，终局档位 10。
 const ROOT_CATALOG = {
-  '.ai': { category: 'contract', reason: '可维护性元数据再生件（khy metadata 产出）', reviewBy: '2026-12-31' },
+  // '.ai' 已迁 works/record/ai（B档 W9′，2026-10-02）；生成器 metadata.js aiDir 同批重指。
   'works': { category: 'tool-retained', reason: '工程产物区：git 钩子（works/build/githooks）与构建/发布脚本', reviewBy: '2026-12-31' },
   'delivery': { category: 'domain', reason: 'D4 交付与接入域（方案 P 物理化，[DESIGN-LAY-008] §14 / DOMAIN-DEPS _physicalization；LAYOUT-005 同批登记）', reviewBy: '2026-12-31' },
   'runtime': { category: 'domain', reason: 'D1 运行时域（方案 P 物理化；akshare_scripts → runtime/node/backend 为附录A指定目标）', reviewBy: '2026-12-31' },

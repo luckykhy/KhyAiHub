@@ -4,7 +4,7 @@
  * hq.js — `khy hq …` 命令族：任务/Bug 状态真源的操作面。
  *
  * 取代 khy-os-hq（指挥部）的 7 个 Python 脚本（`next.py` / `new_bug.py` /
- * `update_status.py` 等），数据真源在 `.ai/hq/`。能力吸收的背景与裁决见
+ * `update_status.py` 等），数据真源在 `works/record/ai/hq/`。能力吸收的背景与裁决见
  * `docs/03_DESIGN_设计/[DESIGN-ARCH-118] HQ 能力吸收与多机协作规范.md`。
  *
  *   khy hq status                    状态总览（Bug + 任务 + 模型路由 + 本机占用）
@@ -181,7 +181,7 @@ function _printStatus(c, data) {
   }
 
   if (data.model_routing.length) {
-    console.log('\n【模型路由】(strengths 非空者，详见 .ai/hq/MODELS.json)');
+    console.log('\n【模型路由】(strengths 非空者，详见 works/record/ai/hq/MODELS.json)');
     for (const m of data.model_routing) {
       console.log(`  ${String(m.display).padEnd(12)} 擅长: ${(m.strengths || []).join(', ')}`);
     }
@@ -468,7 +468,7 @@ async function cmdNext(ctx, positional, flags) {
       action: 'idle',
       message: '没有待办：无 open Bug、无 todo 任务',
       evidence: r.evidence,
-      how_to_add: 'khy hq bug new "标题" 登记新 Bug；或在 .ai/hq/PROGRESS.json 规划任务',
+      how_to_add: 'khy hq bug new "标题" 登记新 Bug；或在 works/record/ai/hq/PROGRESS.json 规划任务',
     };
     if (_truthy(flags.json)) {
       console.log(JSON.stringify(msg, null, 2));
@@ -778,7 +778,7 @@ function _applyState(kind, itemId, newState, flags) {
   // 现在改成「必须附验收证据」。判定逻辑在 `hqStore.reviewDoneBlockers`
   // （纯逻辑、可单测），这里只负责「拒绝写入并把原因说清楚」。
   //
-  // ⚠ 刻意不放进 `scripts/ci/`：判据查的是 `.ai/hq/` 这个**多机共享的任务账本**，
+  // ⚠ 刻意不放进 `scripts/ci/`：判据查的是 `works/record/ai/hq/` 这个**多机共享的任务账本**，
   // 按天变动，不是代码。做成 commit 门会让「改任务状态」变阻塞式操作，反而促使绕过。
   // 依据是本仓既定裁决「能落在命令写入路径上的约束，就不要升级成检查器」。
   if (kind === 'task' && newState === 'done') {
@@ -1299,7 +1299,7 @@ function cmdStates() {
 
 function _help(c) {
   console.log('');
-  console.log(c.bold('  khy hq — 任务/Bug 状态真源（.ai/hq/）'));
+  console.log(c.bold('  khy hq — 任务/Bug 状态真源（works/record/ai/hq/）'));
   console.log('');
   console.log(c.dim('    khy hq status                     状态总览'));
   console.log(c.dim('    khy hq next                       自动挑最高优先级 → 渲染提示词'));
@@ -1322,7 +1322,7 @@ function _help(c) {
   console.log(c.dim('    khy hq states                     打印状态机与合法迁移'));
   console.log('');
   console.log(c.dim('    选项: --json 机读输出 · --copy 复制提示词 · --out FILE 写入文件'));
-  console.log(c.dim('    真源: .ai/hq/{PROGRESS,BUGS,MODELS}.json + ROADMAP.md + prompts/'));
+  console.log(c.dim('    真源: works/record/ai/hq/{PROGRESS,BUGS,MODELS}.json + ROADMAP.md + prompts/'));
   console.log('');
   return true;
 }
@@ -1412,7 +1412,7 @@ module.exports = {
   _describeWriteError,
   [MANIFEST_EXPORT_KEY]: {
     name: 'hq',
-    description: '任务/Bug 状态真源操作面（.ai/hq/）：状态总览、下一步提示词、状态机迁移',
+    description: '任务/Bug 状态真源操作面（works/record/ai/hq/）：状态总览、下一步提示词、状态机迁移',
     usage: 'hq [status|next|verify|accept|scope|bug new|bug set|bug note|task set|task note|release|states]',
     subCommands: ['status', 'next', 'verify', 'accept', 'scope', 'bug', 'task', 'release', 'states'],
     category: 'workflow',

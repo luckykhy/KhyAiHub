@@ -166,7 +166,7 @@ function _renderFreshness(cockpit, parsed, f) {
   };
   const wiring = {
     pipLifeline: _exists('setup.py'),
-    aiSeedDocs: _exists('.ai/GUARDS.md') || _exists('.ai/MAP.md'),
+    aiSeedDocs: _exists('.ai/GUARDS.md') || _exists('works/record/ai/MAP.md'),
     maintenanceLaunchers: _exists('maintenance'),
     inheritanceDoc: _exists('docs/13_传承'),
   };

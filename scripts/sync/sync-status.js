@@ -22,7 +22,7 @@
  * Repo discovery: the main repo is D:\Portable\khy-os (this repo).
  *
  * ⚠ khy-os-hq（指挥部）已于 2026-09-17 归档废弃 —— 它的能力被吸收进本仓库
- * （状态真源 `.ai/hq/`，命令面 `khy hq`，多机协作改为单仓 + 租约）。归档说明与
+ * （状态真源 `works/record/ai/hq/`，命令面 `khy hq`，多机协作改为单仓 + 租约）。归档说明与
  * 完整镜像在 `D:/Portable/BuildArtifacts/hq-archive-2026-09-17/`。
  *
  * 因此默认**只监控 khy-os 一个仓库**。若哪天要临时把归档的 HQ 也纳入视图

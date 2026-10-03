@@ -17,7 +17,7 @@
 |----|------|------|
 | 语言策略 | 真源 | 本仓库权威语言策略（覆盖任何上层「仅英文」偏好） |
 | 项目概览 / 架构速查 / 关键入口点 | 指针+速查 | 仅运行时调用链速查，不覆盖 `[DESIGN-LAY-005]` |
-| 多机协作自举 | 指针+操作手册 | 单仓自举，真源 `[DESIGN-ARCH-118]`；HQ 已归档，状态在 `.ai/hq/` |
+| 多机协作自举 | 指针+操作手册 | 单仓自举，真源 `[DESIGN-ARCH-118]`；HQ 已归档，状态在 `works/record/ai/hq/` |
 | 委派边界（第 0 问：谁做） | 指针 | 真源 `[DESIGN-PROCESS-001]`，规则 `PROCESS-004`；默认自做，三闸门准入 |
 | 通道选择判定 | 指针 | 真源 `[DESIGN-ARCH-071]` |
 | 产物落盘与仓库整理 | 指针+速查 | 真源 `[DESIGN-LAY-004]`（`LAYOUT-005`）与 `[DESIGN-LAY-003]`（`LAYOUT-004`）；守卫 `check:build-root` / `organize.py` |
@@ -118,9 +118,9 @@ AI 生成的代码最容易露馅的不是语法，而是**过度工整**：每�
 >
 > | 原 HQ 资产 | 现位置 |
 > |---|---|
-> | 任务 / Bug / 进度 / 模型状态 | `.ai/hq/{PROGRESS,BUGS,MODELS}.json`（**已入仓**，多机共享） |
-> | 上下文 / 路线图 | `.ai/hq/CONTEXT.md`、`.ai/hq/ROADMAP.md` |
-> | 19 个提示词 | `.ai/hq/prompts/**` |
+> | 任务 / Bug / 进度 / 模型状态 | `works/record/ai/hq/{PROGRESS,BUGS,MODELS}.json`（**已入仓**，多机共享） |
+> | 上下文 / 路线图 | `works/record/ai/hq/CONTEXT.md`、`works/record/ai/hq/ROADMAP.md` |
+> | 19 个提示词 | `works/record/ai/hq/prompts/**` |
 > | 7 个 Python 脚本 | `khy hq` 子命令（`khy hq status` / `next` / `task set` / `bug new` / `verify` …） |
 > | 双仓同步（`sync.py`） | 删除；改由 git 远端 + 租约承担 |
 >
@@ -131,7 +131,7 @@ AI 生成的代码最容易露馅的不是语法，而是**过度工整**：每�
 
 1. **克隆本仓库**（唯一仓库）：`git clone <本仓库远端>`；已存在则 `git pull --ff-only`
 2. **确认状态真源可读**：运行 `node services/backend/bin/khy.js hq verify`，
-   应为 `0 error / 0 warning`（校验 `.ai/hq/` 的任务/Bug 计数、`next_id`、提示词占位符）
+   应为 `0 error / 0 warning`（校验 `works/record/ai/hq/` 的任务/Bug 计数、`next_id`、提示词占位符）
 3. **同步体检**：`node scripts/sync/sync-status.js` 应显示本仓库的分支 / 领先落后 / 未提交数
 4. **周期拉取**（可选）：注册 Windows 计划任务运行 `.khyos/autopull.js`
    （只推已提交内容、不 force、快进优先、永不抛；**推送目标跟随实际上游，不硬编码远端名**）
@@ -143,7 +143,7 @@ AI 生成的代码最容易露馅的不是语法，而是**过度工整**：每�
 > 任何同步脚本或文档都应用 `git rev-parse --abbrev-ref @{upstream}` **动态取上游**，
 > 不要硬编码远端名。详见 `[DESIGN-ARCH-118]` §3.6 与 `[DESIGN-SEMVER-002]`。
 >
-> ⚠ **`.ai/hq/` 必须入仓**：`.khy/` / `.khyos/` / `.khyquant/` 都被 gitignore（本机态），
+> ⚠ **`works/record/ai/hq/` 必须入仓**（原 `<root>/.ai/hq/`，B档 W9′ 迁入）：`.khy/` / `.khyos/` / `.khyquant/` 都被 gitignore（本机态），
 > 所以任务/Bug 状态**只能**放 `.ai/`，放别处会导致多机不同步。
 > 该目录受规则 `MEMORY-003` 管辖，守卫 `scripts/ci/check-memory-schema.js`。
 
@@ -1114,7 +1114,7 @@ ANSI 滚动区转义（DECSTBM），以及**无退出路径的明显死循环**
 Before changing this project, read the machine-generated seed docs in `.ai/`
 (this repo is designed to stay maintainable even without AI):
 
-1. **`.ai/MAP.md`** — skeleton & navigation: tech stack, entry points, build/run/test commands, directory tree, key symbols.
+1. **`works/record/ai/MAP.md`** — skeleton & navigation: tech stack, entry points, build/run/test commands, directory tree, key symbols.
 2. **`.ai/CONTEXT.yaml`** — machine-readable contracts: stack, entry_points, build, deps, per-file symbols.
 3. **`.ai/GUARDS.md`** — red lines & how to maintain this project *without* AI.
 
