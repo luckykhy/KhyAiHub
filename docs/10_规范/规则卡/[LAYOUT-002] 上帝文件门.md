@@ -3,7 +3,7 @@ name: 上帝文件门
 id: LAYOUT-002
 domain: LAYOUT
 nature: 约束为主，兼福利
-scope: "全部源码文件（services/**, platform/**, apps/**, software/**, kernel/**, tools/**）"
+scope: "全部源码文件（services/**, platform/**, apps/**, software/**, runtime/boot/kernel/**, tools/**）"
 priority: P1
 trigger: 新增或修改任一源码文件时
 constraint: "任何文件不得新增超过 2500 行（env KHY_PROJECT_GOD_FILE_LOC → KHY_ARCH_GOD_FILE_LOC，默认 2500）；拆解必须走 god-file governance：同名 re-export 壳 + DI，保函数体字节等价。"
@@ -15,7 +15,7 @@ status: active
 ssot: "CLAUDE.md#一红线-r1-r4（R4）"
 formerly: R4
 owner: backend-team
-enforcement: "services/backend/src/services/domain/project/projectHygiene/thresholds.js godFileLoc() / services/backend/scripts/archDebtScan.js"
+enforcement: "runtime/node/backend/src/services/domain/project/projectHygiene/thresholds.js godFileLoc() / runtime/node/backend/scripts/archDebtScan.js"
 ---
 
 # [LAYOUT-002] 上帝文件门

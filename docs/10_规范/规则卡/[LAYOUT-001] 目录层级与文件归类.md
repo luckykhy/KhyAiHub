@@ -3,7 +3,7 @@ name: 目录层级与文件归类
 id: LAYOUT-001
 domain: LAYOUT
 nature: 约束为主，兼福利
-scope: "kernel/**, platform/**, services/**, apps/**, software/**, extensions/**, tools/**, scripts/**, packaging/**, docs/**（新增或移动目录/文件时；不含测试夹具与 build/ dist/ dist-electron/ *.egg-info/）"
+scope: "runtime/boot/kernel/**, platform/**, services/**, apps/**, software/**, extensions/**, tools/**, scripts/**, works/ship/**, docs/**（新增或移动目录/文件时；不含测试夹具与 build/ dist/ dist-electron/ *.egg-info/）"
 priority: P1
 trigger: "新建目录、新建文件、移动文件跨层，或新增跨层依赖时"
 constraint: "文件必须落在 ARCH-068 登记的 L0-L6 或横切层内；跨层依赖必须经 pnpm workspace 包，禁止深层相对路径跨层 require；目录名风格必须匹配所在层语言轴；扩展名必须落在其允许层级内；docs 内 .md 必须有同名 .html 孪生；_ 前缀在代码树内表示 PRV 私有，不得被跨包依赖。"
