@@ -15,7 +15,7 @@ status: active
 ssot: "CLAUDE.md#二行为准则-b1b3（B4/B5）"
 formerly: 无
 owner: governance-team
-enforcement: "services/backend/src/services/contextCompressor.js"
+enforcement: "runtime/node/backend/src/services/contextCompressor.js"
 ---
 
 # [PROCESS-007] 引导式搜索与压缩保留清单

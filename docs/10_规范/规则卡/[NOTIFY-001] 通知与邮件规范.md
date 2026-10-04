@@ -3,7 +3,7 @@ name: 通知与邮件规范
 id: NOTIFY-001
 domain: API
 nature: 约束
-scope: "services/backend/src/services/notifications/**, services/backend/src/routes/notifications/**"
+scope: "runtime/node/backend/src/services/notifications/**, runtime/node/backend/src/routes/notifications/**"
 priority: P2
 trigger: "新增或修改邮件、Webhook、站内通知投递逻辑时"
 constraint: "邮件投递保障：超时 10 秒、重试 3 次（指数退避 1s/2s/4s）、最终失败退入 DLQ、批量限制 100/分钟（防被邮件服务商限流）。必须提供 List-Unsubscribe 头（同时给 URL 与 mailto: 形式）。Webhook 签名验证用 crypto.createHmac('sha256', secret).update(payload).digest('hex') 配合 crypto.timingSafeEqual 防时序攻击。Webhook 重试：5 次，间隔 1m/5m/30m/2h/6h，超时 10s，User-Agent Khy-Webhook/1.0；连续 5 次失败暂停 webhook 并通知用户，4xx 不重试（配置错误需人工处理），5xx/超时按退避重试。审计：投递记录保留 180 天，安全通知必须记录不可删除，投递失败超过 3 次触发告警。优先级：系统通知 P1、安全通知 P0、任务通知 P2、营销通知 P3、Webhook P2。"

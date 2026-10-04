@@ -3,7 +3,7 @@ name: Health Check 规范
 id: OPS-003
 domain: API
 nature: 约束
-scope: "services/backend/src/routes/**, services/ai-backend/src/routes/**"
+scope: "runtime/node/backend/src/routes/**, runtime/node/ai-backend/src/routes/**"
 priority: P2
 trigger: "新增或修改健康检查端点、依赖探测逻辑时"
 constraint: "四原则：三端点分离（/health 存活、/ready 就绪、/live 依赖检查）、轻量快速、状态精确（不返回 \"OK\" 掩盖实际故障）、分级返回。/health 检查进程是否存活、内存是否可用，超时 <100ms，响应码 200 始终（存活不代表就绪）；/ready 检查所有依赖是否可达、数据连接是否正常，超时 <5s，200 就绪 / 503 未就绪；/live 检查数据库、Redis、外部 API、文件系统，超时 <10s，结果缓存 30s。状态枚举：ok 200、degraded 200、ready 200、not_ready 503、unhealthy 503。依赖探测：SQLite/PostgreSQL SELECT 1 超时 2s 降级为缓存模式、Redis PING 超时 1s 跳过缓存直连 DB、文件系统 access(dataDir, R_OK) 超时 500ms 报错、外部 AI API 轻量 ping 超时 3s 标记 degraded、磁盘空间 statvfs 超时 500ms 标记 degraded。告警：/ready 返回 503 >30s 为 P0、/health degraded >60s 为 P1、依赖 responseTime >5000ms 为 P1、/ready 间歇性 503 为 P2。"

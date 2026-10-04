@@ -3,10 +3,10 @@ name: 多轨道版本同步
 id: PROCESS-002
 domain: PROCESS
 nature: 约束为主，兼福利
-scope: "pyproject.toml, packaging/npm/package.json, services/backend/package.json, packaging/modules/modules.json, services/ai-backend/package.json, platform/packages/shared/package.json, platform/packages/ui-shared/package.json, apps/ai-frontend/package.json, software/khyquant/frontend/package.json"
+scope: "pyproject.toml, works/ship/npm/package.json, runtime/node/backend/package.json, works/ship/modules/modules.json, runtime/node/ai-backend/package.json, runtime/substrate/platform/packages/shared/package.json, runtime/substrate/platform/packages/ui-shared/package.json, apps/ai-frontend/package.json, delivery/channel/khyquant/frontend/package.json"
 priority: P1
 trigger: 改动任一端版本号，或发布前
-constraint: "三条版本轨道共 9 个真源，组内必须完全一致、组间刻意不同：G1 主包 4 源、G2 ai-backend 2 源、G3 浏览器 UI 3 源（G3 为 @khy/ui-shared 依赖声明精确对齐）。platform/khy_platform/__init__.py 的 __version__ 必须运行时动态解析，不得硬编码。"
+constraint: "三条版本轨道共 9 个真源，组内必须完全一致、组间刻意不同：G1 主包 4 源、G2 ai-backend 2 源、G3 浏览器 UI 3 源（G3 为 @khy/ui-shared 依赖声明精确对齐）。runtime/substrate/platform/khy_platform/__init__.py 的 __version__ 必须运行时动态解析，不得硬编码。"
 grants: "见约束边界：授权发布时以 publish-dual.sh 的单一 --version 输入同步 G1 前三源；check-version-sync 在发布之外强制同一不变式。"
 benefit: "一次输入同步多源，不会漏 bump 某渠道；CI 门防止手动编辑造成漂移。"
 exception: "G2 与 G1 版本刻意不同；G3 是依赖声明对齐而非版本号对齐。"
@@ -29,7 +29,7 @@ owner: backend-team
 
 ## 约束
 
-三条版本轨道共 9 个真源，组内必须完全一致、组间刻意不同：G1 主包 4 源、G2 ai-backend 2 源、G3 浏览器 UI 3 源（G3 为 @khy/ui-shared 依赖声明精确对齐）。platform/khy_platform/__init__.py 的 __version__ 必须运行时动态解析，不得硬编码。
+三条版本轨道共 9 个真源，组内必须完全一致、组间刻意不同：G1 主包 4 源、G2 ai-backend 2 源、G3 浏览器 UI 3 源（G3 为 @khy/ui-shared 依赖声明精确对齐）。runtime/substrate/platform/khy_platform/__init__.py 的 __version__ 必须运行时动态解析，不得硬编码。
 
 ## 授予权力
 

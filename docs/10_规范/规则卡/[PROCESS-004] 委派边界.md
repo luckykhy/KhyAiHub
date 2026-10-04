@@ -15,7 +15,7 @@ status: active
 ssot: "docs/10_规范/其它规范/[DESIGN-PROCESS-001] 委派边界决策矩阵-第六通道外部智能体.md"
 formerly: 无
 owner: governance-team
-enforcement: "scripts/ci/check-delegation-boundary.js / services/backend/src/services/externalAgentDirective.js"
+enforcement: "scripts/ci/check-delegation-boundary.js / runtime/node/backend/src/services/externalAgentDirective.js"
 ---
 
 # [PROCESS-004] 委派边界

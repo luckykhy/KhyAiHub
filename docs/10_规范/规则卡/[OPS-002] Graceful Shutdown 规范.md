@@ -3,7 +3,7 @@ name: Graceful Shutdown 规范
 id: OPS-002
 domain: RUNTIME
 nature: 约束
-scope: "services/backend/src/**, services/ai-backend/**"
+scope: "runtime/node/backend/src/**, runtime/node/ai-backend/**"
 priority: P2
 trigger: "新增或修改服务进程启动、信号处理、连接管理逻辑时"
 constraint: "五原则：信号优先（SIGTERM 有序关闭、SIGKILL 强制终止不做清理）、停止接受新请求（先关监听端口）、Drain 存量连接（带超时）、数据持久化优先（内存数据先落盘再释放连接）、关闭顺序（子进程 → 工作线程 → 数据库连接 → 定时器）。信号映射：SIGTERM（docker stop/kill/systemctl stop）有序关闭；SIGINT（Ctrl+C）有序关闭；SIGQUIT 有序关闭 + core dump；SIGKILL 强制终止跳过清理；SIGHUP 热重载不关闭。SHUTDOWN_TIMEOUT = 30_000。标准序列：1 停止监听端口（server.close()）→ 2 Drain 活跃连接（30s 超时）→ 3 持久化内存数据 → 4 停止子进程 → 5 关闭数据库连接池 → 6 关闭 Redis/缓存连接 → 7 清理定时器 → process.exit(0)。验证：活跃连接为 0、无待写数据、无运行中 worker。"

@@ -15,7 +15,7 @@ status: active
 ssot: "CLAUDE.md#三验收门禁"
 formerly: B2
 owner: governance-team
-enforcement: "services/backend/src/cli/handlers/goal.js / services/backend/src/services/goalModeService.js"
+enforcement: "runtime/node/backend/src/cli/handlers/goal.js / runtime/node/backend/src/services/goalModeService.js"
 ---
 
 # [PROCESS-003] 验收门禁
