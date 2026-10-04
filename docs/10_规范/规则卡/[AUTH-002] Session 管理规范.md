@@ -3,7 +3,7 @@ name: Session 管理规范
 id: AUTH-002
 domain: SECURITY
 nature: 约束
-scope: "services/backend/src/routes/auth/**, services/backend/src/services/auth/**, services/ai-backend/**"
+scope: "runtime/node/backend/src/routes/auth/**, runtime/node/backend/src/services/auth/**, runtime/node/ai-backend/**"
 priority: P0
 trigger: "新增或修改登录、刷新令牌、Session 生命周期逻辑时"
 constraint: "ACCESS_TOKEN_EXPIRY = '15m'，REFRESH_TOKEN_EXPIRY = '7d'；JWT 用 RS256、issuer: 'khy-auth'、audience: 'khy-api'；必选字段 sub/iat/exp/jti，禁止字段 password/apiKey/secret 等敏感信息；MAX_CONCURRENT_SESSIONS = 5（超额淘汰最早，管理员无限但可审计）；refresh_token 存 httpOnly cookie，sameSite: 'strict'，secure: NODE_ENV === 'production'，path: '/api/v1/auth/refresh'；refresh_token SameSite=strict HttpOnly，session_id SameSite=lax HttpOnly；Token 轮换（每次刷新更换 Refresh Token 防重放）、Revocation（DB 标记 + 黑名单 jti cache）、IP 绑定、UA 变化降级确认。禁止：localStorage 存 Refresh Token（XSS 可窃取）、Access Token 有效期 > 30 分钟、Refresh Token 永不过期、URL 传 Token、JWT Secret 硬编码（必须走 env / secrets manager）。"

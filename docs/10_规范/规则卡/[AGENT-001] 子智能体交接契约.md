@@ -15,7 +15,7 @@ status: active
 ssot: "docs/10_规范/其它规范/[DESIGN-AGENT-001] 子智能体交接契约.md"
 formerly: 无
 owner: governance-team
-enforcement: "services/backend/src/tools/AgentTool/index.js"
+enforcement: "runtime/node/backend/src/tools/AgentTool/index.js"
 ---
 
 # [AGENT-001] 子智能体交接契约

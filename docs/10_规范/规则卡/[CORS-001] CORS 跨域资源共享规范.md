@@ -3,7 +3,7 @@ name: CORS 跨域资源共享规范
 id: CORS-001
 domain: API
 nature: 约束
-scope: "services/backend/src/**, services/ai-backend/**"
+scope: "runtime/node/backend/src/**, runtime/node/ai-backend/**"
 priority: P0
 trigger: 配置或修改跨域中间件时
 constraint: "四原则：最小权限（只允许必要的来源/方法/请求头）、严格 SameSite（认证相关 Cookie 用 strict 或 lax）、预检缓存（Access-Control-Max-Age: 86400，24 小时）、凭证隔离（credentials: true 时不允许通配符 origin）。配置：app.options('*', cors({ origin: getCorsOrigin(), methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'], credentials: true, maxAge: 86400 }))。credentials: true 时 origin 必须是明确域名，origin: '*' + credentials: true 被浏览器拒绝（CORS 协议禁止此组合）。"

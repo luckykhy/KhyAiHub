@@ -3,7 +3,7 @@ name: ACP 三态信封
 id: COMMS-001
 domain: COMMS
 nature: 约束为主
-scope: "ACP schema、transport、bridge（services/backend/src/contracts/acp/**, acpTransport.js）"
+scope: "ACP schema、transport、bridge（runtime/node/backend/src/contracts/acp/**, acpTransport.js）"
 priority: P1
 trigger: 新增或修改任一 ACP 请求/通知/响应时
 constraint: "按 JSON-RPC 2.0 三态区分：请求与通知含 method，响应含同一 id 与恰一 result 或 error；禁止响应同时携带 result 与 error。"
