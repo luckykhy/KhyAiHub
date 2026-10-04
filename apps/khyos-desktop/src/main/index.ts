@@ -6,6 +6,7 @@ import { createRequire } from 'node:module'
 import { execFile, fork } from 'child_process'
 import { openKeyManagerWindow } from './keyManagerWindow'
 import { registerKeyManagerIpc } from './keyManager/ipc'
+import { ptyCreate, ptyWrite, ptyResize, ptyKill, disposeAllPtys } from './ptyHost'
 import { getSettingsStore, setSetting, getTheme, setTheme } from './settingsStore'
 import { getDataHome, baseHomeFile, _resetDataHomeCache } from './keyManager/keyStore'
 import {
@@ -679,23 +680,26 @@ async function createWindow() {
     if (size.maximized === true) win.maximize()
   })
 
-  // 窗口控制
-  ipcMain.handle('window:minimize', () => win.minimize())
-  ipcMain.handle('window:maximize', () => {
-    if (win.isMaximized()) win.unmaximize()
-    else win.maximize()
-  })
-  ipcMain.handle('window:close', () => win.close())
+  // 窗口控制（minimize/maximize/close）不在此注册：见 whenReady 里「窗口级键位」一节。
+
   ipcMain.handle('app:version', () => app.getVersion())
   // Real workspace root: the cwd the app was launched from (the open
   // workspace), replacing the previous hardcoded demo path (Rule 1).
   ipcMain.handle('app:workspacePath', () => getWorkspaceRoot())
 
   // ── 工作空间选择（[DESIGN-ARCH-125] P-01/P-02）──
-  // 读：当前根 + 最近打开候选集。当前值一律经 getWorkspaceRoot() 的唯一真源
+  // 读：当前根 + 最近打开候选集 + 项目登记。当前值一律经 getWorkspaceRoot() 的唯一真源
   // 给出；desktopRecentWorkspaces 只回答「可切到哪几个」，不参与「当前是谁」。
+  // projects（[DESIGN-ARCH-177]）是**扩展既有返回值**而非新增通道 —— 另开
+  // workspace:projects 就是第二个真源，正是 settingsStore 注释反复警告的那件事。
   ipcMain.handle('workspace:list', async () => {
-    return { ok: true, current: await getWorkspaceRoot(), recents: await readRecentWorkspaces() }
+    const settings = await getSettingsStore()
+    return {
+      ok: true,
+      current: await getWorkspaceRoot(),
+      recents: await readRecentWorkspaces(),
+      projects: Array.isArray(settings.desktopProjects) ? settings.desktopProjects : [],
+    }
   })
   // 切：带 target 就切到它（选择器点「最近打开」），不带就弹系统目录框
   // （「打开其他文件夹…」）。取消不算失败，用 canceled 区分，调用方不报错。
@@ -1375,7 +1379,20 @@ app.whenReady().then(() => {
   // 现状迁到这里）。注册点选在 whenReady 而非 createWindow：这样 `--key-manager`
   // 独立启动（入口③，不建主窗）时同样可用；目标窗口一律取**发起方**窗口，
   // 而不是闭包里捕获的主窗 —— 否则在密钥管理窗按 F11 会去全屏主窗。
-  // （window:minimize/maximize/close 仍按窗口注册、作用于主窗，属既有设计，未动。）
+  // minimize/maximize/close 同此一条规矩（密钥管理窗右上角 ✕「没有用」）：原先它们
+  // 注册在 createWindow 内、目标是闭包里的 win，于是 ① 独立启动时通道根本没注册，
+  // ✕ 按下去是个「No handler registered」的空 reject；② 从主窗菜单打开时 ✕ 关掉的
+  // 是主窗，管理窗留在原地。按钮在哪个窗，就该关哪个窗。
+  const senderWindow = (e: Electron.IpcMainInvokeEvent) => BrowserWindow.fromWebContents(e.sender)
+  ipcMain.handle('window:minimize', (e) => senderWindow(e)?.minimize())
+  ipcMain.handle('window:maximize', (e) => {
+    const target = senderWindow(e)
+    if (!target) return false
+    if (target.isMaximized()) target.unmaximize()
+    else target.maximize()
+    return target.isMaximized()
+  })
+  ipcMain.handle('window:close', (e) => senderWindow(e)?.close())
   ipcMain.handle('window:toggleFullScreen', (e) => {
     const target = BrowserWindow.fromWebContents(e.sender) || BrowserWindow.getAllWindows()[0]
     if (!target) return false
@@ -1386,6 +1403,14 @@ app.whenReady().then(() => {
     const target = BrowserWindow.fromWebContents(e.sender)
     target?.webContents.toggleDevTools()
   })
+
+  // ── 真终端 PTY（[DESIGN-ARCH-176] A3）：handle 必须字面写在本文件 ——
+  // desktopUiContract D6 扫描本文件的 handle 字面量做 preload↔main 配对，
+  // 实现体在 ./ptyHost（懒加载 @lydell/node-pty，fail-soft）。
+  ipcMain.handle('pty:create', (e, opts) => ptyCreate(opts || {}, e.sender))
+  ipcMain.handle('pty:write', (_e, id, data) => ptyWrite(id, data))
+  ipcMain.handle('pty:resize', (_e, id, cols, rows) => ptyResize(id, cols, rows))
+  ipcMain.handle('pty:kill', (_e, id) => ptyKill(id))
 
   if (KEY_MANAGER_STANDALONE) {
     // standalone entry: `npm run dev -- --key-manager` — only the manager
@@ -1430,6 +1455,12 @@ app.on('window-all-closed', () => {
 
 app.on('will-quit', () => {
   settleAutomationRunsOnQuit()
+  // PTY 子进程（shell）不随父进程自退，必须显式杀（ptyHost.ts 同策略）
+  try {
+    disposeAllPtys()
+  } catch {
+    /* already gone */
+  }
   // 子进程随应用退出（scheduler 也会在 IPC disconnect 时自退，这里是双保险）
   try {
     schedulerProcess?.send?.({ type: 'shutdown' })

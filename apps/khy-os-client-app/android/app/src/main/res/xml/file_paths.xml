@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- FileProvider paths: khyos only needs to share files it writes to its
-     own internal files dir (the bundled Shizuku APK is copied there before
-     handing it to the system installer). -->
-<paths>
-    <files-path name="shared_files" path="."/>
-</paths>

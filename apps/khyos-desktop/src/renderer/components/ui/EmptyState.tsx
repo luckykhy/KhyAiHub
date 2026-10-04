@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Icon, type IconName } from './Icon'
 
 interface EmptyStateProps {
   icon?: string
@@ -29,66 +30,10 @@ export function EmptyState({ icon = '□', title, description, action }: EmptySt
 
 // 单色线性图标（stroke 走 currentColor）——对齐 ZCode 首页快捷卡片样式：
 // 紧凑 pill、细线图标、无 emoji、无副文本。
-function ChipIcon({ name }: { name: string }) {
-  const p = {
-    fill: 'none',
-    stroke: 'currentColor',
-    strokeWidth: 1.4,
-    strokeLinecap: 'round' as const,
-    strokeLinejoin: 'round' as const,
-  }
-  const s = { width: 14, height: 14, viewBox: '0 0 14 14' }
-  switch (name) {
-    case 'report': // 周报总结
-      return (
-        <svg {...s} {...p}>
-          <path d="M2.5 11.5h9" />
-          <path d="M3.5 9.5v-2M5.5 9.5V5M7.5 9.5V6.5M9.5 9.5V3.5" />
-        </svg>
-      )
-    case 'bug': // 报错修复
-      return (
-        <svg {...s} {...p}>
-          <ellipse cx="7" cy="8" rx="2.6" ry="3" />
-          <path d="M7 5V3M4.6 4.6L3.2 3.4M9.4 4.6l1.4-1.2M4.2 7H2.6M11.4 7H9.8M4.2 9.4l-1.4 1M9.8 9.4l1.4 1" />
-        </svg>
-      )
-    case 'ppt': // PPT 制作
-      return (
-        <svg {...s} {...p}>
-          <rect x="1.5" y="3" width="11" height="7" rx="1" />
-          <path d="M5 12.5h4M7 10v2.5" />
-        </svg>
-      )
-    case 'review': // 代码审查
-      return (
-        <svg {...s} {...p}>
-          <path d="M4.5 3.5L3 7l1.5 3.5M9.5 3.5L11 7l-1.5 3.5M8 4l-2 6" />
-        </svg>
-      )
-    case 'doc': // 文档生成
-      return (
-        <svg {...s} {...p}>
-          <path d="M4 2h4l3 3v7H4z" />
-          <path d="M8 2v3h3M5.5 8h3M5.5 10h3" />
-        </svg>
-      )
-    case 'idle': // 闲时任务
-      return (
-        <svg {...s} {...p}>
-          <circle cx="7" cy="7" r="5" />
-          <path d="M7 4.5V7l2 1.5" />
-        </svg>
-      )
-    default:
-      return null
-  }
-}
-
 export interface QuickAction {
   id: string
   label: string
-  icon: string
+  icon: IconName
   // 有 prompt → 填入 composer；toAutomations → 跳自动化页
   prompt?: string
   toAutomations?: boolean
@@ -164,7 +109,7 @@ export function ChatEmptyState({
               onClick={() => handleCard(item)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-card/60 text-xs text-foreground/80 hover:bg-surface-hover hover:text-foreground transition-colors"
             >
-              <span className="text-foreground/60">{<ChipIcon name={item.icon} />}</span>
+              <span className="text-foreground/60"><Icon name={item.icon} size={14} /></span>
               <span className="font-medium">{item.label}</span>
             </button>
           ))}

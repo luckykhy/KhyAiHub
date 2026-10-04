@@ -1,7 +1,40 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { useAppDispatch } from '../../state/store'
 import { addToast } from '../../state/toastSlice'
 import { FileTree } from '../filetree/FileTree'
+import { Icon } from '../ui/Icon'
+import {
+  baseName,
+  classifyWorkspacePath,
+  inferredColorKey,
+  type ProjectColorKey,
+  type ProjectIconName,
+  type ProjectRegistration,
+} from '../../shared/sidebarProjectClassify'
+
+// 设置里读回的登记项做形状校验：设置文件是用户可手改的 JSON，形状不对时
+// 丢弃该条而不是把 undefined 灌进判定层（那是崩溃而非降级）。
+function isProjectRegistration(v: unknown): v is ProjectRegistration {
+  return !!v && typeof v === 'object' && typeof (v as ProjectRegistration).path === 'string'
+}
+
+// 登记对话框的图标候选（Icon 注册表的前 8 枚）与颜色候选。
+// ⚠ 颜色**不含**任何映射到 --color-brand 的键：品牌色浅色主题下是 #000000、
+// 深色下是 #ffffff（globals.css:189 / :96），主题一切换全部项目同色。
+const PROJECT_ICON_CHOICES: ProjectIconName[] = [
+  'new-task', 'search', 'automation', 'plugins',
+  'report', 'bug', 'review', 'doc',
+]
+const PROJECT_COLOR_CHOICES: { key: ProjectColorKey; className: string }[] = [
+  { key: 'green', className: 'bg-success' },
+  { key: 'blue', className: 'bg-[var(--color-input-border-focused)]' },
+  { key: 'amber', className: 'bg-warning' },
+  { key: 'red', className: 'bg-destructive' },
+  { key: 'purple', className: 'bg-[var(--color-popover-header)]' },
+  { key: 'teal', className: 'bg-[var(--color-foreground)]' },
+]
+const projectColorClass = (key: ProjectColorKey | undefined) =>
+  PROJECT_COLOR_CHOICES.find(c => c.key === key)?.className
 
 // Local-mode account display name. Real ZCode shows the logged-in username
 // here; the shell is local-first, so a neutral name until login lands in
@@ -301,11 +334,66 @@ export function WorkspaceSidebar({
     })
   }
 
-  // workspacePath → 文件夹显示名(取路径末段)
-  const baseName = (p: string) => {
-    const seg = p.split(/[\\/]/).filter(Boolean)
-    return seg.length ? seg[seg.length - 1] : p
-  }
+  const toast = (title: string, type: 'info' | 'error' = 'info') => dispatch(addToast({ type, title }))
+
+  // 项目身份登记（[DESIGN-ARCH-177] §3.1）。持久化到 main 的 settingsStore
+  // （desktopProjects），与分组一样经 preload 的 settings:get/set 走既有通道 ——
+  // **不新增 IPC**（新通道即第二个真源）。
+  //
+  // ⚠ 顺序纪律：本段整体位于 `toast` 声明**之后**。React 的依赖数组 / JSX /
+  // 组件体表达式都是渲染期求值，若 useCallback 包的回调在依赖数组里引用了
+  // 后面才声明的 const，每次渲染都会抛 `Cannot access 'x' before
+  // initialization`，React 卸载整棵树 = 纯白屏（见 [DESIGN-ARCH] skill §8.5
+  // 中 AutomationsPage 的同病实例）。新增 hook 块时请保持声明在前、引用在后。
+  const [projectRegs, setProjectRegs] = useState<ProjectRegistration[]>([])
+  const [projectDialog, setProjectDialog] = useState<{
+    path: string
+    value: string
+    icon?: ProjectIconName
+    color?: ProjectColorKey
+  } | null>(null)
+
+  // 首次挂载拉一次登记。渲染层不缓存第二份真源：读回后仍以 settings 为准，
+  // 写操作直接落 settings 再更新本组件状态（单一真源 = main 侧 settings.json）。
+  useEffect(() => {
+    const api = (window as unknown as { __KHYOS__?: { getSettings?: () => Promise<Record<string, unknown>> } }).__KHYOS__
+    void api?.getSettings?.().then((s) => {
+      const raw = s?.desktopProjects
+      if (Array.isArray(raw)) setProjectRegs(raw.filter(isProjectRegistration))
+    }).catch(() => {
+      // 读不到就保持空登记 —— 判定层对 undefined 兼容，全部走 inferred，行为同旧版。
+    })
+  }, [])
+
+  const saveProjectRegs = useCallback((next: ProjectRegistration[]) => {
+    setProjectRegs(next)
+    const api = (window as unknown as { __KHYOS__?: { setSetting?: (k: string, v: unknown) => Promise<boolean> } }).__KHYOS__
+    void api?.setSetting?.('desktopProjects', next).catch(() => toast('项目登记保存失败：设置未能落盘', 'error'))
+  }, [toast])
+
+  const confirmProjectDialog = useCallback(() => {
+    if (!projectDialog) return
+    const name = projectDialog.value.trim()
+    const path = projectDialog.path
+    if (name && path) {
+      saveProjectRegs([
+        ...projectRegs.filter(r => r.path !== path),
+        { path, name, icon: projectDialog.icon, color: projectDialog.color },
+      ])
+      toast(`已登记项目「${name}」`)
+    }
+    setProjectDialog(null)
+  }, [projectDialog, projectRegs, saveProjectRegs, toast])
+
+  const openProjectDialog = useCallback((path: string) => {
+    const hit = projectRegs.find(r => r.path === path)
+    setProjectDialog({
+      path,
+      value: hit?.name || baseName(path),
+      icon: hit?.icon,
+      color: hit?.color,
+    })
+  }, [projectRegs])
 
   interface SidebarFolder {
     key: string
@@ -313,10 +401,15 @@ export function WorkspaceSidebar({
     name: string
     items: Task[]
     groupRef?: SidebarGroup
+    // 项目文件夹的身份字段（group/unassigned 为 undefined）。
+    projectPath?: string
+    icon?: ProjectIconName
+    color?: ProjectColorKey
+    inferred?: boolean
   }
 
   // 两个 tab 的文件夹化视图:数据源同为 filteredOrdered(已含手动排序 + 搜索过滤),
-  // 分桶维度不同 —— 项目 tab 派生自 workspacePath,分组 tab 派生自自建分组。
+  // 分桶维度不同 —— 项目 tab 派生自 workspacePath 经判定层,分组 tab 派生自自建分组。
   const folders = useMemo<SidebarFolder[]>(() => {
     if (viewMode === 'grouped') {
       const byGroup = new Map<string, Task[]>()
@@ -337,7 +430,9 @@ export function WorkspaceSidebar({
       if (ungrouped.length) out.push({ key: 'ungrouped', kind: 'ungrouped', name: '未分组', items: ungrouped })
       return out
     }
-    // 项目视图:按 workspacePath 分文件夹,零新数据模型
+    // 项目视图:按判定层分桶。旧实现直接取路径末段当项目名,导致父目录
+    // (D:\Portable → "Portable")与临时目录 (khy-durable-transcript-*)
+    // 冒充项目;现在 transient 归「未归属」,inferred 走弱化样式 + 可登记。
     const byPath = new Map<string, Task[]>()
     for (const t of filteredOrdered) {
       const p = t.workspacePath || ''
@@ -345,19 +440,37 @@ export function WorkspaceSidebar({
       arr.push(t)
       byPath.set(p, arr)
     }
-    return [...byPath.entries()]
-      .map(([p, items]) => ({
+    const out: SidebarFolder[] = []
+    const transient: Task[] = []
+    for (const [p, items] of byPath) {
+      const c = classifyWorkspacePath(p, projectRegs)
+      if (c.bucket === 'transient') { transient.push(...items); continue }
+      out.push({
         key: `project:${p || 'none'}`,
-        kind: (p ? 'project' : 'unassigned') as 'project' | 'unassigned',
-        name: p ? baseName(p) : '未归属项目',
+        kind: p ? 'project' : 'unassigned',
+        name: c.name,
         items,
-      }))
-      .sort((a, b) => {
-        if (a.kind !== b.kind) return a.kind === 'unassigned' ? 1 : -1
-        // items 已按手动序/时间排好,首项即最近活跃
-        return (b.items[0]?.updatedAt ?? 0) - (a.items[0]?.updatedAt ?? 0)
+        projectPath: p,
+        icon: c.icon,
+        color: c.color,
+        inferred: c.inferred,
       })
-  }, [viewMode, filteredOrdered, groups, taskGroup])
+    }
+    // 未归属组:空 workspacePath(本就无项目身份) + 仓外临时目录,合成一个固定分组,
+    // 永远排在最后 —— 它不是「项目」。
+    const unassigned: Task[] = []
+    for (const [p, items] of byPath) {
+      if (!p || classifyWorkspacePath(p, projectRegs).bucket === 'transient') unassigned.push(...items)
+    }
+    if (unassigned.length) {
+      out.push({ key: 'unassigned', kind: 'unassigned', name: '未归属', items: unassigned })
+    }
+    return out.sort((a, b) => {
+      if (a.kind !== b.kind) return a.kind === 'unassigned' ? 1 : -1
+      // items 已按手动序/时间排好,首项即最近活跃
+      return (b.items[0]?.updatedAt ?? 0) - (a.items[0]?.updatedAt ?? 0)
+    })
+  }, [viewMode, filteredOrdered, groups, taskGroup, projectRegs])
 
   // 拖拽落点指示线用的扁平行号(文件夹化后行仍渲染一次,行号 = filteredOrdered 下标)
   const rowIndexById = useMemo(() => {
@@ -409,8 +522,6 @@ export function WorkspaceSidebar({
       document.removeEventListener('keydown', onEsc)
     }
   }, [taskMenuId])
-
-  const toast = (title: string, type: 'info' | 'error' = 'info') => dispatch(addToast({ type, title }))
 
   // 界面主题子菜单：写 settings + 立刻应用 DOM class（theme:set 会广播到所有窗口）
   const applyTheme = (mode: string) => {
@@ -496,10 +607,7 @@ export function WorkspaceSidebar({
           onClick={onNewTask}
           className="w-full flex items-center gap-3 px-3 h-10 rounded-lg text-sm text-foreground hover:bg-surface-hover transition-colors text-left"
         >
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="flex-shrink-0">
-            <circle cx="7.5" cy="7.5" r="5.8" stroke="currentColor" strokeWidth="1.2" />
-            <path d="M7.5 5v5M5 7.5h5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-          </svg>
+          <Icon name="new-task" size={15} className="flex-shrink-0" />
           <span className="flex-1">新建任务</span>
           <span className="text-xs text-foreground/40">Ctrl+N</span>
         </button>
@@ -507,10 +615,7 @@ export function WorkspaceSidebar({
           onClick={() => window.dispatchEvent(new Event('khy:open-command-center'))}
           className="w-full flex items-center gap-3 px-3 h-10 rounded-lg text-sm text-foreground hover:bg-surface-hover transition-colors text-left"
         >
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="flex-shrink-0">
-            <circle cx="6.6" cy="6.6" r="4.6" stroke="currentColor" strokeWidth="1.2" />
-            <path d="M10 10l3 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-          </svg>
+          <Icon name="search" size={15} className="flex-shrink-0" />
           <span className="flex-1">搜索</span>
           <span className="text-xs text-foreground/40">Ctrl+K</span>
         </button>
@@ -518,20 +623,14 @@ export function WorkspaceSidebar({
           onClick={() => { window.location.hash = '#/automations' }}
           className="w-full flex items-center gap-3 px-3 h-10 rounded-lg text-sm text-foreground hover:bg-surface-hover transition-colors text-left"
         >
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="flex-shrink-0">
-            <circle cx="7.5" cy="7.5" r="2.2" stroke="currentColor" strokeWidth="1.2" />
-            <path d="M7.5 1.5v2M7.5 11.5v2M1.5 7.5h2M11.5 7.5h2M3.3 3.3l1.4 1.4M10.3 10.3l1.4 1.4M11.7 3.3l-1.4 1.4M4.7 10.3l-1.4 1.4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-          </svg>
+          <Icon name="automation" size={15} className="flex-shrink-0" />
           <span className="flex-1">自动化</span>
         </button>
         <button
           onClick={() => { window.location.hash = '#/settings/plugins' }}
           className="w-full flex items-center gap-3 px-3 h-10 rounded-lg text-sm text-foreground hover:bg-surface-hover transition-colors text-left"
         >
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="flex-shrink-0">
-            <rect x="2" y="2" width="11" height="11" rx="2" stroke="currentColor" strokeWidth="1.2" />
-            <path d="M2 5.5h11M5.5 5.5V13" stroke="currentColor" strokeWidth="1.2" />
-          </svg>
+          <Icon name="plugins" size={15} className="flex-shrink-0" />
           <span className="flex-1">插件市场</span>
         </button>
       </div>
@@ -671,8 +770,45 @@ export function WorkspaceSidebar({
                     aria-expanded={!folderCollapsed}
                   >
                     <span className="text-foreground/30 w-2 flex-shrink-0">{folderCollapsed ? '▸' : '▾'}</span>
-                    <span className="truncate flex-1 text-left">{folder.name}</span>
+                    {/* 身份色条（[DESIGN-ARCH-177] §3.3）：已登记用登记色，未登记
+                        用稳定散列色（inferredColorKey）。只由 3px 竖条承载 —— 不给
+                        文字上色，那会与 text-foreground/60 抢语义层级，且浅色主题
+                        下对比度不可控 */}
+                    {folder.kind === 'project' && (
+                      <span
+                        className={`w-[3px] h-3.5 rounded-full flex-shrink-0 ${projectColorClass(folder.color) || projectColorClass(inferredColorKey(folder.projectPath || folder.key)) || 'bg-foreground/30'}`}
+                        aria-hidden="true"
+                      />
+                    )}
+                    {folder.kind === 'project' && folder.icon && (
+                      <Icon name={folder.icon} size={13} className="text-foreground/60 flex-shrink-0" />
+                    )}
+                    <span className={`truncate flex-1 text-left ${folder.inferred ? 'text-foreground/45' : ''}`}>
+                      {folder.name}
+                    </span>
                     <span className="text-foreground/30 flex-shrink-0">{folder.items.length}</span>
+                    {/* 推测项目名 → 给「登记为项目」入口（P3 的最小闭环）。只在
+                        项目 tab 出现，且已登记的项不再显示（改登记走同一个入口） */}
+                    {folder.kind === 'project' && folder.projectPath && (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); openProjectDialog(folder.projectPath!) }}
+                        className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 transition-colors ${
+                          folderMenuOpen
+                            ? 'opacity-100 bg-surface-hover text-foreground'
+                            : 'opacity-0 group-hover/f:opacity-100 text-foreground/50 hover:text-foreground'
+                        }`}
+                        title={folder.inferred ? '登记为项目（起个正式名字）' : '编辑项目登记'}
+                        aria-label={`项目设置 ${folder.name}`}
+                        aria-haspopup="menu"
+                        aria-expanded={folderMenuOpen}
+                      >
+                        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="6" cy="6" r="2" />
+                          <path d="M6 1.5v1.6M6 8.9v1.6M10.5 6h-1.6M5.1 6H3.5" />
+                        </svg>
+                      </button>
+                    )}
                     {folder.kind === 'group' && folder.groupRef && (
                       <button
                         type="button"
@@ -698,6 +834,17 @@ export function WorkspaceSidebar({
                       </button>
                     )}
                   </div>
+                  {/* 推测项目名的路径副行（[DESIGN-ARCH-177] §3.3）：让「父目录冒充
+                      项目」这类问题自暴露。只在 inferred 态渲染 —— 已登记项的路径
+                      已被用户认可为身份，再显示路径只是噪音 */}
+                  {folder.kind === 'project' && folder.inferred && folder.projectPath && (
+                    <div
+                      className="px-2.5 pb-1 mt-[-2px] ml-[18px] text-[11px] text-foreground/35 truncate"
+                      title={folder.projectPath}
+                    >
+                      {folder.projectPath}
+                    </div>
+                  )}
                   {folder.kind === 'group' && folder.groupRef && folderMenuOpen && (
                     <div
                       role="menu"
@@ -986,10 +1133,7 @@ export function WorkspaceSidebar({
           title="移动端远程控制"
           aria-label="移动端远程控制"
         >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <rect x="4" y="1.5" width="6" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-            <path d="M6 10.8h2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-          </svg>
+          <Icon name="remote-mobile" size={14} />
         </button>
         <button
           onClick={() => { window.location.hash = '#/settings' }}
@@ -997,13 +1141,94 @@ export function WorkspaceSidebar({
           title="设置"
           aria-label="设置"
         >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <circle cx="7" cy="7" r="2" stroke="currentColor" strokeWidth="1.2" />
-            <path d="M7 1.8v1.6M7 10.6v1.6M1.8 7h1.6M10.6 7h1.6M3.3 3.3l1.1 1.1M9.6 9.6l1.1 1.1M10.7 3.3L9.6 4.4M4.4 9.6l-1.1 1.1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-          </svg>
+          <Icon name="settings" size={14} />
         </button>
       </div>
       </>
+      )}
+
+      {/* 登记项目对话框（[DESIGN-ARCH-177] §3.4）：照 groupDialog 的自绘浮层形态。
+          图标/颜色**默认留空** —— 预选就是给假数据；留空则不渲染该标识 */}
+      {projectDialog && (
+        <div
+          className="absolute inset-0 z-50 bg-black/30 flex items-center justify-center"
+          onMouseDown={() => setProjectDialog(null)}
+        >
+          <div
+            className="bg-popover border border-border rounded-lg shadow-2xl p-3 w-64"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="text-sm font-medium text-foreground mb-1">登记项目</div>
+            <div className="text-[11px] text-foreground/40 mb-2 truncate" title={projectDialog.path}>
+              {projectDialog.path}
+            </div>
+            <div className="text-xs text-foreground/60 mb-1">显示名</div>
+            <input
+              autoFocus
+              value={projectDialog.value}
+              maxLength={60}
+              onChange={(e) => setProjectDialog({ ...projectDialog, value: e.target.value })}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') confirmProjectDialog()
+                if (e.key === 'Escape') setProjectDialog(null)
+              }}
+              placeholder="项目名称"
+              className="w-full bg-input border border-input-border rounded-md px-2 py-1.5 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-input-border-focused mb-3"
+            />
+            <div className="text-xs text-foreground/60 mb-1.5">图标（可选）</div>
+            <div className="flex flex-wrap gap-1 mb-3">
+              {PROJECT_ICON_CHOICES.map(ic => (
+                <button
+                  key={ic}
+                  type="button"
+                  onClick={() => setProjectDialog({ ...projectDialog, icon: projectDialog.icon === ic ? undefined : ic })}
+                  className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${
+                    projectDialog.icon === ic
+                      ? 'bg-selected text-foreground ring-1 ring-brand/30'
+                      : 'text-foreground/50 hover:bg-surface-hover hover:text-foreground'
+                  }`}
+                  title={`图标：${ic}`}
+                  aria-label={`图标 ${ic}`}
+                  aria-pressed={projectDialog.icon === ic}
+                >
+                  <Icon name={ic} size={13} />
+                </button>
+              ))}
+            </div>
+            <div className="text-xs text-foreground/60 mb-1.5">颜色（可选）</div>
+            <div className="flex gap-1.5 mb-3">
+              {PROJECT_COLOR_CHOICES.map(c => (
+                <button
+                  key={c.key}
+                  type="button"
+                  onClick={() => setProjectDialog({ ...projectDialog, color: projectDialog.color === c.key ? undefined : c.key })}
+                  className={`w-5 h-5 rounded-full ${c.className} transition-transform ${
+                    projectDialog.color === c.key ? 'ring-2 ring-foreground/60 scale-110' : 'opacity-70 hover:opacity-100'
+                  }`}
+                  title={`颜色：${c.key}`}
+                  aria-label={`颜色 ${c.key}`}
+                  aria-pressed={projectDialog.color === c.key}
+                />
+              ))}
+            </div>
+            <div className="flex justify-end gap-1.5">
+              <button
+                type="button"
+                onClick={() => setProjectDialog(null)}
+                className="px-3 py-1.5 rounded-md text-sm text-foreground/70 hover:bg-surface-hover transition-colors"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                onClick={confirmProjectDialog}
+                className="px-3 py-1.5 rounded-md text-sm bg-brand text-white hover:opacity-90 transition-opacity"
+              >
+                登记
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* 新建/重命名分组对话框:Electron 渲染层没有 window.prompt,用自绘浮层 */}

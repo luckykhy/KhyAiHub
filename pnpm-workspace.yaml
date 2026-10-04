@@ -1,12 +1,12 @@
 packages:
-  - platform/packages/shared
-  - platform/packages/ui-shared
-  - platform/packages/plugin-sdk
-  - services/backend
+  - runtime/substrate/platform/packages/shared
+  - runtime/substrate/platform/packages/ui-shared
+  - runtime/substrate/platform/packages/plugin-sdk
+  - runtime/node/backend
   - services/ai-backend
-  - apps/ai-frontend
-  - apps/khyos-desktop
-  - apps/provider-hub
+  - delivery/web/ai-frontend
+  - delivery/desktop/khyos-desktop
+  - delivery/web/provider-hub
   - delivery/extension/tools/khy-markdown
 
 onlyBuiltDependencies:
@@ -17,7 +17,7 @@ onlyBuiltDependencies:
 
 overrides:
   khy-ai-backend>@khy/shared: workspace:*
-  khy-os-backend>@khy/shared: link:services/backend/vendor/shared
+  khy-os-backend>@khy/shared: link:runtime/node/backend/vendor/shared
   khy-os-backend>khy-ai-backend: workspace:*
   # 可选 peerDep：后端以 try/catch 包着 require，缺包走内置回退校验器。
   # 在 workspace checkout 里解析到 live 源码（与 @khy/shared 同机制），

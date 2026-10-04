@@ -1,3 +1,4 @@
+# @pattern Command
 
 import akshare as ak
 import json

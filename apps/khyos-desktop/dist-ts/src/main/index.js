@@ -6,6 +6,7 @@ import { createRequire } from 'node:module';
 import { execFile, fork } from 'child_process';
 import { openKeyManagerWindow } from './keyManagerWindow';
 import { registerKeyManagerIpc } from './keyManager/ipc';
+import { ptyCreate, ptyWrite, ptyResize, ptyKill, disposeAllPtys } from './ptyHost';
 import { getSettingsStore, setSetting, getTheme, setTheme } from './settingsStore';
 import { getDataHome, baseHomeFile, _resetDataHomeCache } from './keyManager/keyStore';
 import { getAutomations, createAutomation, updateAutomation, deleteAutomation, recordRunStart, recordRunSkipped, recordRunEnd, } from './automationStore';
@@ -39,18 +40,104 @@ app.commandLine.appendSwitch('disk-cache-dir', path.join(os.tmpdir(), 'KhyOS-Des
 // Phase 0a + 0b + 0c: 最小主进程 + IPC handler + host 进程
 // KeyManager (DESIGN-ARCH-091 P1): standalone key/endpoint manager window
 let hostProcess = null;
+// scheduler 子进程（四进程架构的第四位，见 startSchedulerProcess）
+let schedulerProcess = null;
+// Single workspace-root resolver. 打开工作区 / 添加项目 persist the chosen
+// directory to settings.desktopWorkspacePath; every workspace-scoped channel
+// (app:workspacePath, workspace:listFiles, workspace:readTree default) reads
+// through here so the chip, the file tree and the file index can never
+// disagree. Unset or no-longer-existing path falls back to process.cwd().
+async function getWorkspaceRoot() {
+    try {
+        const settings = await getSettingsStore();
+        const configured = settings.desktopWorkspacePath;
+        if (typeof configured === 'string' && configured.trim()) {
+            const resolved = path.resolve(configured.trim());
+            if (fs.existsSync(resolved) && fs.statSync(resolved).isDirectory())
+                return resolved;
+        }
+    }
+    catch {
+        /* fail-soft: settings unreadable → cwd */
+    }
+    return process.cwd();
+}
+// ── 工作空间候选集（[DESIGN-ARCH-125] P-02）──
+// MRU 上限。列表项要能真的切过去，所以读取侧先过滤已不存在的路径 ——
+// 诚实红线：宁可列表为空（选择器只渲染兜底项），也不返回切不过去的死链。
+const RECENT_WORKSPACES_MAX = 8;
+async function readRecentWorkspaces() {
+    try {
+        const settings = await getSettingsStore();
+        const raw = settings.desktopRecentWorkspaces;
+        if (!Array.isArray(raw))
+            return [];
+        const seen = new Set();
+        const out = [];
+        for (const entry of raw) {
+            if (typeof entry !== 'string' || !entry.trim())
+                continue;
+            const resolved = path.resolve(entry.trim());
+            if (seen.has(resolved))
+                continue;
+            seen.add(resolved);
+            try {
+                if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory())
+                    continue;
+            }
+            catch {
+                continue;
+            }
+            out.push({ path: resolved, name: path.basename(resolved) || resolved });
+        }
+        return out;
+    }
+    catch {
+        /* fail-soft: settings unreadable → 空列表，选择器退化为只有「打开其他文件夹…」 */
+        return [];
+    }
+}
+// 切换工作空间根：校验 → 写 desktopWorkspacePath（唯一真源）→ 更新 MRU。
+// 校验失败即返回错误且**不动任何持久化状态**，避免把坏路径写进真源后
+// getWorkspaceRoot 静默回落到 cwd、UI 却显示已切换。
+async function switchWorkspace(rawPath) {
+    const resolved = path.resolve(rawPath);
+    try {
+        if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory()) {
+            return { ok: false, error: `该路径不是可用目录：${resolved}` };
+        }
+    }
+    catch (err) {
+        return { ok: false, error: `无法访问该路径：${String(err)}` };
+    }
+    await setSetting('desktopWorkspacePath', resolved);
+    const settings = await getSettingsStore();
+    const prev = Array.isArray(settings.desktopRecentWorkspaces) ? settings.desktopRecentWorkspaces : [];
+    const next = [resolved, ...prev.filter((p) => typeof p === 'string' && path.resolve(p) !== resolved)]
+        .slice(0, RECENT_WORKSPACES_MAX);
+    await setSetting('desktopRecentWorkspaces', next);
+    return { ok: true, path: resolved };
+}
 // Pending ai.generate requests: id → resolver, answered by host messages.
 const pendingAi = new Map();
 // Pending session.list requests: id → resolver.
 const pendingSessionList = new Map();
 // Pending session.create requests: id → resolver.
 const pendingSessionCreate = new Map();
+// Pending session.messages requests: id → resolver.
+const pendingSessionMessages = new Map();
 // Pending token.usage requests: id → resolver.
 const pendingTokenUsage = new Map();
 // Pending usage.history requests: id → resolver.
 const pendingUsageHistory = new Map();
 // Pending context.size requests: id → resolver.
 const pendingContextSize = new Map();
+// Pending models.list requests: id → resolver.
+const pendingModelList = new Map();
+// Pending desktopGate requests: id → resolver.
+const pendingDesktopGate = new Map();
+// Pending background.status requests: id → resolver.
+const pendingBackgroundStatus = new Map();
 // In-flight automation runs: host request id → { automationId, startedAt }.
 // A run settles only on ai.result or host process exit — no wall-clock kill
 // (Rule 3: the gateway owns its own HTTP timeouts).
@@ -59,6 +146,16 @@ const pendingAutomationRuns = new Map();
 const runningAutomationIds = new Set();
 let aiSeq = 0;
 const AUTOMATION_HOST_PREFIX = 'auto_';
+// host 消息类型（点号）→ renderer 事件通道（冒号）。preload 的 onAi* 监听
+// 冒号通道（见 src/preload/index.ts），host 的 type 字段是点号风格 —— 单一
+// 映射点，新增流事件类型时两边同步登记。
+const HOST_EVENT_TO_RENDERER_CHANNEL = {
+    'ai.chunk': 'ai:chunk',
+    'ai.toolCall': 'ai:toolCall',
+    'ai.toolResult': 'ai:toolResult',
+    'ai.controlRequest': 'ai:controlRequest',
+    'ai.result': 'ai:result',
+};
 function parseGitStatus(stdout) {
     const entries = stdout.split('\0').filter((s) => s.length > 0);
     const branchEntry = entries.find((s) => s.startsWith('## '));
@@ -147,6 +244,14 @@ function handleHostMessage(msg) {
         }
         return;
     }
+    if (m.type === 'session.messagesResult' && m.id) {
+        const entry = pendingSessionMessages.get(m.id);
+        if (entry) {
+            pendingSessionMessages.delete(m.id);
+            entry.resolve(m);
+        }
+        return;
+    }
     if (m.type === 'token.usageResult' && m.id) {
         const entry = pendingTokenUsage.get(m.id);
         if (entry) {
@@ -171,13 +276,52 @@ function handleHostMessage(msg) {
         }
         return;
     }
+    if (m.type === 'models.listResult' && m.id) {
+        const entry = pendingModelList.get(m.id);
+        if (entry) {
+            pendingModelList.delete(m.id);
+            entry.resolve(m);
+        }
+        return;
+    }
+    if ((m.type === 'desktopGate.setResult' || m.type === 'desktopGate.getResult') && m.id) {
+        const entry = pendingDesktopGate.get(m.id);
+        if (entry) {
+            pendingDesktopGate.delete(m.id);
+            entry.resolve(m);
+            return;
+        }
+        // settings:set 的 fire-and-forget 推送没有等待方——落到日志供导出排查。
+        console.log('[host] desktopGate:', JSON.stringify(m));
+        return;
+    }
+    if (m.type === 'background.statusResult' && m.id) {
+        const entry = pendingBackgroundStatus.get(m.id);
+        if (entry) {
+            pendingBackgroundStatus.delete(m.id);
+            entry.resolve(m);
+        }
+        return;
+    }
     // Automation runs ride the same host ai.generate channel; results settle the
     // run history entry instead of being forwarded to a renderer window.
     if (m.type === 'ai.result' && m.id && String(m.id).startsWith(AUTOMATION_HOST_PREFIX)) {
         void settleAutomationRun(m.id, m);
         return;
     }
-    if ((m.type === 'ai.chunk' || m.type === 'ai.result') && m.id) {
+    // 流事件中继：文本/思考 chunk、工具调用与结果、终局 result 都发回发起窗口。
+    // toolCall / toolResult 来自 runToolUseLoop 的循环级回调（不是 chat 的 onChunk），
+    // 桌面端靠它们把「agent 真的在干活」渲染出来 —— 缺这两条通道时它们会被静默丢弃。
+    // host 消息类型是点号风格（'ai.chunk'），preload 监听的是冒号风格（'ai:chunk'）——
+    // 此前直接 send(m.type) 导致两条命名从未对上，渲染层收不到任何流事件
+    // （无流式正文、无工具卡片、无审批弹窗）。这里统一映射到 preload 契约通道。
+    if ((m.type === 'ai.chunk' ||
+        m.type === 'ai.toolCall' ||
+        m.type === 'ai.toolResult' ||
+        m.type === 'ai.controlRequest' ||
+        m.type === 'ai.result') &&
+        m.id) {
+        const rendererChannel = HOST_EVENT_TO_RENDERER_CHANNEL[m.type];
         const entry = pendingAi.get(m.id);
         if (m.type === 'ai.result')
             pendingAi.delete(m.id);
@@ -185,7 +329,7 @@ function handleHostMessage(msg) {
         const wc = entry?.win;
         if (wc && !wc.isDestroyed()) {
             try {
-                wc.webContents.send(m.type, m);
+                wc.webContents.send(rendererChannel, m);
             }
             catch (err) {
                 console.log('[host] send to renderer failed:', String(err));
@@ -207,14 +351,52 @@ function handleHostMessage(msg) {
     if (m.type === 'ready') {
         console.log('[host] ready:', JSON.stringify(m));
         unrefSockets(hostProcess);
+        void applyDesktopGateFromSettings();
         return;
     }
     console.log('[host] message:', JSON.stringify(m));
+}
+// ── 电脑控制安全闸（backend desktopControl/safetyGate）联动 ──
+// safetyGate 每次授权调用都重读 host 进程的 process.env
+// （KHY_DESKTOP_CONTROL / KHY_DESKTOP_MAX_ACTUATIONS /
+// KHY_COMPUTER_USE_ALLOWED_APPS），所以设置页写入这三个设置键后由 main
+// 转发 host 改写自己的 env，下一次操作立即生效；host 就绪时也用持久化
+// 设置初始化一遍。fail-closed：缺省不写 = off（总闸关闭）。
+const CUA_GATE_KEYS = ['cuaDesktopControlMode', 'cuaMaxActuations', 'cuaAllowedApps'];
+async function desktopGatePatchFromSettings() {
+    const settings = await getSettingsStore();
+    const patch = {};
+    const mode = String(settings.cuaDesktopControlMode || '').trim().toLowerCase();
+    if (['off', 'ask', 'on', 'strict'].includes(mode))
+        patch.mode = mode;
+    const budget = String(settings.cuaMaxActuations ?? '').trim();
+    if (/^\d+$/.test(budget) && Number(budget) > 0)
+        patch.budget = budget;
+    if (typeof settings.cuaAllowedApps === 'string')
+        patch.allowedApps = settings.cuaAllowedApps.trim();
+    return patch;
+}
+async function applyDesktopGateFromSettings() {
+    if (!hostProcess || !hostProcess.connected)
+        return;
+    try {
+        const patch = await desktopGatePatchFromSettings();
+        if (Object.keys(patch).length === 0)
+            return;
+        const id = `desktop_gate_${Date.now()}_${++aiSeq}`;
+        hostProcess.send({ type: 'desktopGate.set', id, ...patch });
+    }
+    catch (err) {
+        console.log('[host] desktopGate 初始化失败:', String(err));
+    }
 }
 const KEY_MANAGER_STANDALONE = process.argv.includes('--key-manager');
 // Fire one automation run through the host bridge (CH-2). One run per
 // automation at a time; manual triggers while busy fail with ZCode's copy,
 // schedule triggers while busy record a skipped history entry.
+// skipped：调度触发撞上「上一条还在跑」时置 true（下面 runningAutomationIds 分支
+// 会记 skipped 历史并回这个标记）。原返回类型漏了它，导致渲染层读 res.skipped
+// 报类型错 —— 运行时本就返回，是契约没写全。
 async function fireAutomation(id, trigger) {
     if (!hostProcess || !hostProcess.connected) {
         return { ok: false, error: 'host 进程未启动：请重启 KhyOS Desktop 后重试' };
@@ -327,6 +509,40 @@ function startHostProcess() {
         failAllAutomationRuns(`host 进程退出 (code=${code})，运行中断`);
     });
 }
+// 四进程架构（092 Phase 0d / CLAUDE.md「四进程 + 五 preload」）：main 拉起
+// host（Agent 运行时）与 scheduler（定时任务/闲时算力）。scheduler 的业务逻辑
+// 仍在 Phase 10，这里只保证进程存活 + IPC 通道可达，进程监视器据此显示真实 pid。
+function startSchedulerProcess() {
+    const schedulerPath = path.join(__dirname, '../scheduler/index.js');
+    try {
+        schedulerProcess = fork(schedulerPath, [], { stdio: ['pipe', 'pipe', 'pipe', 'ipc'] });
+    }
+    catch (err) {
+        console.log(`[scheduler] 进程启动失败: ${String(err)}`);
+        schedulerProcess = null;
+        return;
+    }
+    const logSafe = (tag, write) => (data) => {
+        const text = data.toString();
+        try {
+            write(text);
+        }
+        catch {
+            console.log(`[scheduler] ${tag} 输出管道已关闭，停止转发`);
+        }
+    };
+    schedulerProcess.stdout?.on('data', logSafe('stdout', (s) => console.log(`[scheduler] ${s}`)));
+    schedulerProcess.stderr?.on('data', logSafe('stderr', (s) => console.error(`[scheduler] ${s}`)));
+    schedulerProcess.on('message', (msg) => {
+        const m = msg;
+        if (m?.type === 'ready')
+            console.log(`[scheduler] ready: pid=${m.pid}`);
+    });
+    schedulerProcess.on('exit', (code) => {
+        console.log(`[scheduler] 进程退出, code=${code}`);
+        schedulerProcess = null;
+    });
+}
 // Resolve the refined app icon (deep-space blue rounded square + white K) for
 // the taskbar / window chrome. The .ico ships in several places depending on
 // how the app is launched (repo source tree vs electron-builder packaged run),
@@ -413,25 +629,39 @@ async function createWindow() {
         if (size.maximized === true)
             win.maximize();
     });
-    // 窗口控制
-    ipcMain.handle('window:minimize', () => win.minimize());
-    ipcMain.handle('window:maximize', () => {
-        if (win.isMaximized())
-            win.unmaximize();
-        else
-            win.maximize();
-    });
-    ipcMain.handle('window:close', () => win.close());
+    // 窗口控制（minimize/maximize/close）不在此注册：见 whenReady 里「窗口级键位」一节。
     ipcMain.handle('app:version', () => app.getVersion());
     // Real workspace root: the cwd the app was launched from (the open
     // workspace), replacing the previous hardcoded demo path (Rule 1).
-    ipcMain.handle('app:workspacePath', () => process.cwd());
+    ipcMain.handle('app:workspacePath', () => getWorkspaceRoot());
+    // ── 工作空间选择（[DESIGN-ARCH-125] P-01/P-02）──
+    // 读：当前根 + 最近打开候选集。当前值一律经 getWorkspaceRoot() 的唯一真源
+    // 给出；desktopRecentWorkspaces 只回答「可切到哪几个」，不参与「当前是谁」。
+    ipcMain.handle('workspace:list', async () => {
+        return { ok: true, current: await getWorkspaceRoot(), recents: await readRecentWorkspaces() };
+    });
+    // 切：带 target 就切到它（选择器点「最近打开」），不带就弹系统目录框
+    // （「打开其他文件夹…」）。取消不算失败，用 canceled 区分，调用方不报错。
+    ipcMain.handle('workspace:open', async (_e, target) => {
+        const requested = typeof target === 'string' ? target.trim() : '';
+        let chosen = requested;
+        if (!chosen) {
+            const result = await dialog.showOpenDialog(win, { properties: ['openDirectory'] });
+            if (result.canceled || !result.filePaths[0])
+                return { ok: false, canceled: true };
+            chosen = result.filePaths[0];
+        }
+        return switchWorkspace(chosen);
+    });
     // 设置读写（持久化到 baseHome/settings.json）
     ipcMain.handle('settings:get', async () => {
         return getSettingsStore();
     });
     ipcMain.handle('settings:set', async (_e, key, value) => {
         await setSetting(key, value);
+        if (typeof key === 'string' && CUA_GATE_KEYS.includes(key)) {
+            await applyDesktopGateFromSettings();
+        }
         return true;
     });
     // 数据存储路径变更：复制现有数据到 <newPath>/.khy，然后写指针。
@@ -500,6 +730,16 @@ async function createWindow() {
         const result = await dialog.showOpenDialog(win, { properties: ['openDirectory'] });
         return result.canceled ? null : result.filePaths[0];
     });
+    // 附件/图片选择（Composer 添加上下文 → 添加附件 / 上传图片）。filters 由
+    // 调用方给出（附件：文本类扩展名；图片：image/*），multiSelections 允许一次
+    // 多个 —— 返回值是真实路径数组，取消返回空数组（不再自造 file_N.tsx 假名）。
+    ipcMain.handle('fs:selectFiles', async (_e, filters) => {
+        const result = await dialog.showOpenDialog(win, {
+            properties: ['openFile', 'multiSelections'],
+            filters: Array.isArray(filters) && filters.length > 0 ? filters : undefined,
+        });
+        return result.canceled ? [] : result.filePaths;
+    });
     ipcMain.handle('fs:readFile', async (e, filePath) => {
         const fs = await import('fs/promises');
         return fs.readFile(filePath, 'utf-8');
@@ -543,7 +783,7 @@ async function createWindow() {
     // ── 打开文件（sidePane.openFile）：workspace 文件索引，仅返回文本类文件 ──
     // 深度/数量有界（Rule 3 精神：单次遍历，无长任务）；忽略 node_modules 等噪声目录。
     ipcMain.handle('workspace:listFiles', async (_e, query) => {
-        const root = process.cwd();
+        const root = await getWorkspaceRoot();
         const SKIP_DIRS = new Set([
             'node_modules', '.git', 'dist', 'out', 'build', '.khy', 'coverage', '.next', '.turbo',
         ]);
@@ -591,8 +831,46 @@ async function createWindow() {
             return { ok: false, error: `工作区文件索引失败：${err instanceof Error ? err.message : String(err)}，请检查工作区目录权限` };
         }
     });
-    // AI 网关 — 转发给 host 进程，host 动态 require KhyOS 后端 aiGateway（CH-2）
-    ipcMain.handle('ai:send', (e, payload) => {
+    // ── 工作区文件树（侧栏 fileTree 视图，workspaceFileTree.* 文案）：单目录懒加载 ──
+    // 每次只读一层（readdir withFileTypes），展开目录时再拉取子层，避免一次性
+    // 深遍历大工作区（Rule 3 精神：按需短 I/O，无长任务）。隐藏项与噪声目录
+    // （node_modules/.git 等，与 workspace:listFiles 的 SKIP_DIRS 一致）默认折叠
+    // 为 "pruned" 条目并计入，由渲染层按需懒加载展开。query 提供子串过滤。
+    ipcMain.handle('workspace:readTree', async (_e, dirPath, query) => {
+        const root = (typeof dirPath === 'string' && dirPath.trim()) ? path.resolve(dirPath.trim()) : await getWorkspaceRoot();
+        const SKIP_DIRS = new Set([
+            'node_modules', '.git', 'dist', 'out', 'build', '.khy', 'coverage', '.next', '.turbo',
+        ]);
+        const q = (query || '').trim().toLowerCase();
+        try {
+            const entries = fs.readdirSync(root, { withFileTypes: true });
+            const items = entries
+                .map((ent) => ({
+                name: ent.name,
+                path: path.join(root, ent.name),
+                kind: ent.isDirectory() ? 'directory'
+                    : ent.isFile() ? 'file'
+                        : 'other',
+            }))
+                // .name files/dirs (dotfiles) stay visible like any IDE tree; only
+                // dependency-cache and build-output dirs are pruned as noise.
+                .filter((it) => it.kind !== 'other')
+                .filter((it) => !(it.kind === 'directory' && SKIP_DIRS.has(it.name.toLowerCase())))
+                .filter((it) => !q || it.name.toLowerCase().includes(q))
+                // Directories first, then files; each bucket alphabetical (case-insensitive)
+                .sort((a, b) => a.kind === b.kind
+                ? a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+                : a.kind === 'directory' ? -1 : 1);
+            return { ok: true, root, items };
+        }
+        catch (err) {
+            return { ok: false, error: `读取目录失败：${err instanceof Error ? err.message : String(err)}，请检查目录权限后重试` };
+        }
+    });
+    // AI 网关 — 转发给 host 进程，host 动态 require KhyOS 后端 AI 入口（CH-2）。
+    // 工作区根在这里注入（单一真源 getWorkspaceRoot）：agent 的读写 / 命令都以它为
+    // 执行根，不注入则 host 会拿 apps/khyos-desktop 当根目录 —— 能跑通但改错地方。
+    ipcMain.handle('ai:send', async (e, payload) => {
         const prompt = payload?.prompt;
         if (typeof prompt !== 'string' || !prompt.trim()) {
             return { ok: false, error: '请求缺少 prompt：请输入要发送的内容后重试' };
@@ -605,9 +883,11 @@ async function createWindow() {
         if (!senderWin || senderWin.isDestroyed()) {
             return { ok: false, error: '发送窗口已关闭：请重试' };
         }
+        const workspaceRoot = await getWorkspaceRoot();
+        const options = { ...(payload?.options || {}), cwd: workspaceRoot };
         return new Promise((resolve) => {
             pendingAi.set(id, { resolve: resolve, win: senderWin });
-            hostProcess.send({ type: 'ai.generate', id, prompt, options: payload?.options || {} });
+            hostProcess.send({ type: 'ai.generate', id, prompt, options });
             // Guard: host died mid-request
             setTimeout(() => {
                 if (pendingAi.has(id)) {
@@ -659,6 +939,29 @@ async function createWindow() {
             hostProcess.send({ type: 'session.create', id, cwd });
         });
     });
+    // 会话消息 — 点击侧栏任务 / 「重载会话」时加载该会话的真实消息流。
+    // 同 session:list 链路：host 直调 sessionPersistence.restoreSession（CH-2），
+    // 返回 { sessionId, title, model, messages[] }。没有这条通道时点会话只换高亮
+    // 不换内容（复刻端侧栏「跳转」形同虚设）。
+    ipcMain.handle('session:messages', async (e, sessionId) => {
+        if (typeof sessionId !== 'string' || !sessionId.trim()) {
+            return { ok: false, messages: [], error: '会话 ID 为空：请先在左侧任务列表中选择一个会话' };
+        }
+        if (!hostProcess || !hostProcess.connected) {
+            return { ok: false, messages: [], error: 'host 进程未启动：请重启 KhyOS Desktop 后重试' };
+        }
+        const id = `sess_msgs_${Date.now()}_${++aiSeq}`;
+        return new Promise((resolve) => {
+            const timer = setTimeout(() => {
+                pendingSessionMessages.delete(id);
+                resolve({ ok: false, messages: [], error: '会话内容读取超时：请查看导出日志排查 host 状态' });
+            }, 15000);
+            pendingSessionMessages.set(id, {
+                resolve: (v) => { clearTimeout(timer); resolve(v); },
+            });
+            hostProcess.send({ type: 'session.messages', id, sessionId });
+        });
+    });
     // host 进程状态
     ipcMain.handle('host:status', async () => {
         return { running: !!hostProcess, pid: hostProcess?.pid };
@@ -700,6 +1003,44 @@ async function createWindow() {
             hostProcess.send({ type: 'usage.history', id, days: typeof days === 'number' && days > 0 ? Math.floor(days) : 30 });
         });
     });
+    // 运行中后台任务计数（P3-6①）— 转发给 host，host 统计在途 ai.generate
+    // （含自动化运行，其 hostReqId 也落在 host 侧 activeGenerations 集合）。
+    // Composer「打开运行中的后台任务」按钮数据源；count=0 时 UI 隐藏按钮，
+    // 与 ZCode 实测空态行为一致（i18n chat.composer.backgroundWorks 模板）。
+    ipcMain.handle('background:status', async () => {
+        if (!hostProcess || !hostProcess.connected) {
+            return { ok: false, status: null, error: 'host 进程未启动：请重启 KhyOS Desktop 后重试' };
+        }
+        const id = `bg_status_${Date.now()}_${++aiSeq}`;
+        return new Promise((resolve) => {
+            const timer = setTimeout(() => {
+                pendingBackgroundStatus.delete(id);
+                resolve({ ok: false, status: null, error: '后台任务计数读取超时：请查看导出日志排查 host 状态' });
+            }, 15000);
+            pendingBackgroundStatus.set(id, {
+                resolve: (v) => { clearTimeout(timer); resolve(v); },
+            });
+            hostProcess.send({ type: 'background.status', id });
+        });
+    });
+    // 电脑控制安全闸生效状态 — 从 host 读回当前真实 env（设置页展示后端
+    // 实际生效的 mode/预算/白名单，而非渲染进程自报的写入值）。
+    ipcMain.handle('desktopGate:get', async () => {
+        if (!hostProcess || !hostProcess.connected) {
+            return { ok: false, gate: null, error: 'host 进程未启动：请重启 KhyOS Desktop 后重试' };
+        }
+        const id = `desktop_gate_${Date.now()}_${++aiSeq}`;
+        return new Promise((resolve) => {
+            const timer = setTimeout(() => {
+                pendingDesktopGate.delete(id);
+                resolve({ ok: false, gate: null, error: '安全闸状态读取超时：请查看导出日志排查 host 状态' });
+            }, 15000);
+            pendingDesktopGate.set(id, {
+                resolve: (v) => { clearTimeout(timer); resolve(v); },
+            });
+            hostProcess.send({ type: 'desktopGate.get', id });
+        });
+    });
     // 上下文窗口估算 — 转发给 host，host 用后端 tokenUsageService.estimateTokens
     // （与 /cost 同源启发式）估算当前会话 token 数 + 上下文窗口上限（ZC-ALIGN-001 P3-5/P3-6）。
     ipcMain.handle('context:size', async (_e, text) => {
@@ -716,6 +1057,24 @@ async function createWindow() {
                 resolve: (v) => { clearTimeout(timer); resolve(v); },
             });
             hostProcess.send({ type: 'context.size', id, text: typeof text === 'string' ? text : '' });
+        });
+    });
+    // 模型/provider 列表 — 转发给 host，host 用后端 providerPresets.getProviderPresets()
+    // （模型选择器真源，CH-2，ZC-ALIGN-001 P3-7）。
+    ipcMain.handle('models:list', async (_e, adapterKey) => {
+        if (!hostProcess || !hostProcess.connected) {
+            return { ok: false, models: [], error: 'host 进程未启动：请重启 KhyOS Desktop 后重试' };
+        }
+        const id = `models_list_${Date.now()}_${++aiSeq}`;
+        return new Promise((resolve) => {
+            const timer = setTimeout(() => {
+                pendingModelList.delete(id);
+                resolve({ ok: false, models: [], error: '模型列表读取超时：请查看导出日志排查 host 状态' });
+            }, 15000);
+            pendingModelList.set(id, {
+                resolve: (v) => { clearTimeout(timer); resolve(v); },
+            });
+            hostProcess.send({ type: 'models.list', id, adapterKey: typeof adapterKey === 'string' ? adapterKey : undefined });
         });
     });
     // ── 自动化（定时任务）— store 落盘 + 调度 tick + 经 host ai.generate 执行 ──
@@ -811,6 +1170,58 @@ async function createWindow() {
         const err = shell.openPath(dir);
         return err ? { ok: false, error: `无法打开目录 ${dir}：${err}` } : { ok: true };
     });
+    // 「在编辑器中打开」（appHeader D6 / D9）。编辑器来自 settings.desktopEditor
+    // 或 KHY_EDITOR env（零硬编码：源码里没有字面量编辑器名/路径）。两者都未
+    // 配置时如实说明怎么配，而不是静默无响应或改开资源管理器。
+    ipcMain.handle('app:openInEditor', async (_e, target) => {
+        let editor = '';
+        try {
+            const settings = await getSettingsStore();
+            if (typeof settings.desktopEditor === 'string')
+                editor = settings.desktopEditor.trim();
+        }
+        catch {
+            /* fail-soft */
+        }
+        if (!editor)
+            editor = (process.env.KHY_EDITOR || '').trim();
+        if (!editor) {
+            return {
+                ok: false,
+                error: '未配置编辑器：请在「设置 → 常规」填写编辑器命令，或设置 KHY_EDITOR 环境变量（例如 code），然后重试',
+            };
+        }
+        const dir = typeof target === 'string' && target.trim() ? target.trim() : await getWorkspaceRoot();
+        return new Promise((resolve) => {
+            try {
+                const child = execFile(editor, [dir], { windowsHide: true }, (err) => {
+                    if (err)
+                        resolve({ ok: false, error: `编辑器 "${editor}" 启动失败：${err.message}` });
+                });
+                child.unref();
+                // execFile 的 error 回调只在启动失败时触发；resolve 成功路径用一次性定时器
+                // 兜底（短 I/O 探针，非长任务截止 —— Rule 3 合规）
+                setTimeout(() => resolve({ ok: true, editor, target: dir }), 600);
+            }
+            catch (err) {
+                resolve({ ok: false, error: `编辑器 "${editor}" 启动失败：${String(err?.message || err)}` });
+            }
+        });
+    });
+    // 进程监视器（窗口菜单 → 进程监视器，ZCode M1）。返回 main/host/scheduler
+    // 的真实 pid 与存活状态，供 renderer 的监视器弹窗渲染（不再是 disabled 死项）。
+    ipcMain.handle('app:processInfo', async () => {
+        const mem = process.memoryUsage();
+        return {
+            ok: true,
+            main: { pid: process.pid, rssBytes: mem.rss, uptimeMs: Math.round(process.uptime() * 1000) },
+            host: { pid: hostProcess?.pid ?? null, alive: Boolean(hostProcess?.connected) },
+            scheduler: { pid: schedulerProcess?.pid ?? null, alive: Boolean(schedulerProcess?.connected) },
+            rendererCount: BrowserWindow.getAllWindows().filter((w) => !w.isDestroyed()).length,
+            platform: `${os.platform()} ${os.release()}`,
+            versions: { electron: process.versions.electron, chrome: process.versions.chrome, node: process.versions.node },
+        };
+    });
     // First-party URLs come from servicesDefaults (single truth source); main
     // resolves it via KHY_OS_DIR / relative fallback, same as the host bridge.
     ipcMain.handle('app:brandingLinks', async () => {
@@ -834,12 +1245,38 @@ async function createWindow() {
         }
     });
     // 停止等待：放弃 pending 请求（底层 HTTP 无法中断，UI 立即恢复并如实说明）
+    // 人在环应答（P1）：renderer 的审批 / 提问回答 → host → toolUseLoop 的
+    // onControlRequest promise。这里只做透传，不做语义校验 —— {behavior} 三态
+    // 解码在后端解码器、超时 fail-closed 在 host 侧，两层兜底不在 main 重复造。
+    ipcMain.handle('ai:controlResponse', (_e, payload) => {
+        const id = payload?.id;
+        const requestId = payload?.requestId;
+        if (typeof id !== 'string' || !id || typeof requestId !== 'string' || !requestId) {
+            return { ok: false, error: '应答缺少 id 或 requestId：请重试' };
+        }
+        if (!hostProcess || !hostProcess.connected) {
+            return { ok: false, error: 'host 进程未启动：请重启 KhyOS Desktop 后重试' };
+        }
+        hostProcess.send({ type: 'ai.controlResponse', id, requestId, response: payload?.response });
+        return { ok: true };
+    });
     ipcMain.handle('ai:abort', async (e) => {
         let aborted = 0;
+        const senderWin = BrowserWindow.fromWebContents(e.sender);
         for (const [id, entry] of pendingAi) {
-            if (entry.win === BrowserWindow.fromWebContents(e.sender)) {
+            if (entry.win === senderWin) {
                 pendingAi.delete(id);
-                entry.resolve({ ok: false, error: '已停止等待回复：底层请求可能仍在后台执行，结果将被丢弃' });
+                // 真的中断 host 侧的工具循环（abortSignal），而不只是本地丢弃结果：
+                // 否则用户点了停止，in-flight 的 Bash / 写文件仍会在后台跑完。
+                if (hostProcess && hostProcess.connected) {
+                    try {
+                        hostProcess.send({ type: 'ai.abort', id });
+                    }
+                    catch {
+                        /* host 已断开：本地丢弃已足够 */
+                    }
+                }
+                entry.resolve({ ok: false, error: '已停止：本轮工具执行已请求中断，已产生的中间结果将被丢弃' });
                 aborted++;
             }
         }
@@ -850,6 +1287,54 @@ async function createWindow() {
 app.whenReady().then(() => {
     // Key/Endpoint Manager IPC (DESIGN-ARCH-091 §6) — global, registered once
     registerKeyManagerIpc(ipcMain);
+    // [DESIGN-ARCH-091] §5.1 入口①「主窗菜单 → 密钥与端点管理」：打开独立管理窗口。
+    // 此前该入口只存在于 src/main/menu.ts 的菜单项里，而那份菜单从未接线 —— 独立
+    // 管理窗口除 `--key-manager` 启动（入口③）外无路可入。入口②（设置页内嵌）一直是
+    // 通的，缺的是这个独立窗口入口。键位 Ctrl+Shift+K 沿用 091/旧菜单的既有值。
+    ipcMain.handle('keymanager:openWindow', () => {
+        openKeyManagerWindow();
+    });
+    // 窗口级键位（F11 全屏 / F12 开发者工具）：原先只写在 src/main/menu.ts 的菜单项里，
+    // 而那份菜单从未被 import、又被 Menu.setApplicationMenu(null) 摘掉 —— 两个键在整个
+    // 应用里都没有第二条实现路径，等于不存在（[DESIGN-ARCH-125] §5.2 step 4 删除分支，
+    // 现状迁到这里）。注册点选在 whenReady 而非 createWindow：这样 `--key-manager`
+    // 独立启动（入口③，不建主窗）时同样可用；目标窗口一律取**发起方**窗口，
+    // 而不是闭包里捕获的主窗 —— 否则在密钥管理窗按 F11 会去全屏主窗。
+    // minimize/maximize/close 同此一条规矩（密钥管理窗右上角 ✕「没有用」）：原先它们
+    // 注册在 createWindow 内、目标是闭包里的 win，于是 ① 独立启动时通道根本没注册，
+    // ✕ 按下去是个「No handler registered」的空 reject；② 从主窗菜单打开时 ✕ 关掉的
+    // 是主窗，管理窗留在原地。按钮在哪个窗，就该关哪个窗。
+    const senderWindow = (e) => BrowserWindow.fromWebContents(e.sender);
+    ipcMain.handle('window:minimize', (e) => senderWindow(e)?.minimize());
+    ipcMain.handle('window:maximize', (e) => {
+        const target = senderWindow(e);
+        if (!target)
+            return false;
+        if (target.isMaximized())
+            target.unmaximize();
+        else
+            target.maximize();
+        return target.isMaximized();
+    });
+    ipcMain.handle('window:close', (e) => senderWindow(e)?.close());
+    ipcMain.handle('window:toggleFullScreen', (e) => {
+        const target = BrowserWindow.fromWebContents(e.sender) || BrowserWindow.getAllWindows()[0];
+        if (!target)
+            return false;
+        target.setFullScreen(!target.isFullScreen());
+        return target.isFullScreen();
+    });
+    ipcMain.handle('devtools:toggle', (e) => {
+        const target = BrowserWindow.fromWebContents(e.sender);
+        target?.webContents.toggleDevTools();
+    });
+    // ── 真终端 PTY（[DESIGN-ARCH-176] A3）：handle 必须字面写在本文件 ——
+    // desktopUiContract D6 扫描本文件的 handle 字面量做 preload↔main 配对，
+    // 实现体在 ./ptyHost（懒加载 @lydell/node-pty，fail-soft）。
+    ipcMain.handle('pty:create', (e, opts) => ptyCreate(opts || {}, e.sender));
+    ipcMain.handle('pty:write', (_e, id, data) => ptyWrite(id, data));
+    ipcMain.handle('pty:resize', (_e, id, cols, rows) => ptyResize(id, cols, rows));
+    ipcMain.handle('pty:kill', (_e, id) => ptyKill(id));
     if (KEY_MANAGER_STANDALONE) {
         // standalone entry: `npm run dev -- --key-manager` — only the manager
         // window is created, no main window / host process (spec §5.1 入口③)
@@ -861,6 +1346,7 @@ app.whenReady().then(() => {
         return;
     }
     startHostProcess();
+    startSchedulerProcess();
     // 自动化调度：先算一次 nextRunAt（老数据可能缺该字段），再启动周期 tick
     void (async () => {
         const list = await getAutomations();
@@ -888,4 +1374,20 @@ app.on('window-all-closed', () => {
         app.quit();
     }
 });
-app.on('will-quit', settleAutomationRunsOnQuit);
+app.on('will-quit', () => {
+    settleAutomationRunsOnQuit();
+    // PTY 子进程（shell）不随父进程自退，必须显式杀（ptyHost.ts 同策略）
+    try {
+        disposeAllPtys();
+    }
+    catch {
+        /* already gone */
+    }
+    // 子进程随应用退出（scheduler 也会在 IPC disconnect 时自退，这里是双保险）
+    try {
+        schedulerProcess?.send?.({ type: 'shutdown' });
+    }
+    catch {
+        /* already gone */
+    }
+});

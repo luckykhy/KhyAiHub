@@ -75,6 +75,16 @@ const DEFAULTS: Record<string, unknown> = {
   // 免去每次切换都弹系统目录框。读取侧（workspace:list）会过滤掉已不存在的
   // 路径：列出来的项必须真的能切过去，不做死链陈列。
   desktopRecentWorkspaces: [],
+  // 项目登记（[DESIGN-ARCH-177] §3.1）：数组，每项 { path, name, icon?, color? }。
+  // 解决侧栏「项目」tab 的可辨识性崩塌 —— 旧实现拿会话 workspacePath 的**路径末段**
+  // 当项目名，于是父目录（D:\Portable → "Portable"）与仓外临时目录
+  // （khy-durable-transcript-*）都冒充项目，且同名项目无法区分。
+  // path 是分桶键（**精确匹配，非前缀**：登记 D:\a\b 不会让 D:\a\b\c 继承身份）。
+  // name 是用户可写的显示名，允许与目录名不同 —— 这是「显示名 ≠ 目录名」的关键。
+  // icon / color 可选，缺省即不渲染标识（不给假数据）。
+  // ⚠ 消费方是渲染层 shared/sidebarProjectClassify.ts 的三态判定；**不参与**
+  // 「当前工作空间是谁」—— 那仍只由 desktopWorkspacePath 回答。
+  desktopProjects: [],
   // Agent 模式（Composer 工具行「切换模式」选择器，i18n mode.label.glm.*）：
   // 'confirm' | 'autoEdit' | 'plan' | 'fullAccess'
   // P3-9①：默认对齐 ZCode 实测「完全访问」（mode.label.glm.yolo）；

@@ -16,6 +16,7 @@
     "test": "node --experimental-strip-types --test tests/keyStore.test.mjs tests/agentWriters.test.mjs tests/health.test.mjs tests/pacedProgress.test.mjs tests/keymapContract.test.mjs tests/wiringRuntime.test.mjs && node --test tests/keyManagerContract.test.cjs tests/desktopUiContract.test.cjs"
   },
   "dependencies": {
+    "@lydell/node-pty": "1.2.0-beta.15",
     "@radix-ui/react-dialog": "^1.1.23",
     "@radix-ui/react-dropdown-menu": "^2.1.24",
     "@radix-ui/react-popover": "^1.1.23",

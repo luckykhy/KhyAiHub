@@ -156,6 +156,23 @@ const api = {
   // 电脑控制安全闸生效状态（host env 实读，ZC-ALIGN-002 I11）
   desktopGateGet: () => ipcRenderer.invoke('desktopGate:get'),
 
+  // ── 真终端 PTY（[DESIGN-ARCH-176] A3）：通道名与 main/index.ts 的 pty:* handle 配对（D6）──
+  ptyCreate: (opts?: { cols?: number; rows?: number; cwd?: string }) => ipcRenderer.invoke('pty:create', opts || {}),
+  ptyWrite: (id: string, data: string) => ipcRenderer.invoke('pty:write', id, data),
+  ptyResize: (id: string, cols: number, rows: number) => ipcRenderer.invoke('pty:resize', id, cols, rows),
+  ptyKill: (id: string) => ipcRenderer.invoke('pty:kill', id),
+  // main → renderer 数据流（ptyHost 在 create 时的 sender 上 send）
+  onPtyData: (cb: (payload: { id: string; data: string }) => void) => {
+    const listener = (_e: unknown, payload: { id: string; data: string }) => cb(payload)
+    ipcRenderer.on('pty:data', listener)
+    return () => ipcRenderer.removeListener('pty:data', listener)
+  },
+  onPtyExit: (cb: (payload: { id: string; code: number }) => void) => {
+    const listener = (_e: unknown, payload: { id: string; code: number }) => cb(payload)
+    ipcRenderer.on('pty:exit', listener)
+    return () => ipcRenderer.removeListener('pty:exit', listener)
+  },
+
   // 平台信息
   getPlatform: () => process.platform,
 

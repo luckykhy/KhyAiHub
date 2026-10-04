@@ -1279,6 +1279,92 @@ function registerKeyManagerIpc(ipc, repoRootOverride) {
   ipc.handle("health:audit-list", async (_e, limit) => ok(await listAudit(limit || 200)));
   ipc.handle("health:audit-export", async (_e, dest) => ok(await exportAudit(dest)));
 }
+const sessions = /* @__PURE__ */ new Map();
+let nextId = 1;
+let ptyMod = null;
+const MAX_SESSIONS = 8;
+async function loadPty() {
+  if (!ptyMod) ptyMod = await import("@lydell/node-pty");
+  return ptyMod;
+}
+async function ptyCreate(opts, sender) {
+  if (sessions.size >= MAX_SESSIONS) {
+    return { ok: false, error: `PTY session limit reached (${MAX_SESSIONS})` };
+  }
+  let mod;
+  try {
+    mod = await loadPty();
+  } catch (err2) {
+    return { ok: false, error: `pty module unavailable: ${err2?.message || String(err2)}` };
+  }
+  const file = process.env.KHY_DESKTOP_SHELL || process.env.ComSpec || "cmd.exe";
+  const cols = Math.max(2, Math.floor(opts?.cols ?? 80));
+  const rows = Math.max(2, Math.floor(opts?.rows ?? 24));
+  const cwd = opts?.cwd || process.cwd();
+  try {
+    const pty = mod.spawn(file, [], {
+      name: "xterm-256color",
+      cols,
+      rows,
+      cwd,
+      env: { ...process.env }
+    });
+    const id = `pty-${nextId++}`;
+    sessions.set(id, { pty, sender });
+    pty.onData((data) => {
+      if (sender.isDestroyed()) {
+        try {
+          pty.kill();
+        } catch {
+        }
+        sessions.delete(id);
+        return;
+      }
+      sender.send("pty:data", { id, data });
+    });
+    pty.onExit(({ exitCode }) => {
+      sessions.delete(id);
+      if (!sender.isDestroyed()) sender.send("pty:exit", { id, code: exitCode });
+    });
+    return { ok: true, id, pid: pty.pid };
+  } catch (err2) {
+    return { ok: false, error: `pty spawn failed: ${err2?.message || String(err2)}` };
+  }
+}
+function ptyWrite(id, data) {
+  const s = sessions.get(id);
+  if (!s) return;
+  try {
+    s.pty.write(String(data ?? ""));
+  } catch {
+  }
+}
+function ptyResize(id, cols, rows) {
+  const s = sessions.get(id);
+  if (!s) return;
+  try {
+    s.pty.resize(Math.max(2, Math.floor(cols)), Math.max(2, Math.floor(rows)));
+  } catch {
+  }
+}
+function ptyKill(id) {
+  const s = sessions.get(id);
+  if (!s) return;
+  sessions.delete(id);
+  try {
+    s.pty.kill();
+  } catch {
+  }
+}
+function disposeAllPtys() {
+  for (const [, s] of sessions) {
+    try {
+      s.pty.kill();
+    } catch {
+    }
+  }
+  sessions.clear();
+}
 function settingsPath() {
   return baseHomeFile(SETTINGS_FILE);
 }
@@ -1335,6 +1421,16 @@ const DEFAULTS = {
   // 免去每次切换都弹系统目录框。读取侧（workspace:list）会过滤掉已不存在的
   // 路径：列出来的项必须真的能切过去，不做死链陈列。
   desktopRecentWorkspaces: [],
+  // 项目登记（[DESIGN-ARCH-177] §3.1）：数组，每项 { path, name, icon?, color? }。
+  // 解决侧栏「项目」tab 的可辨识性崩塌 —— 旧实现拿会话 workspacePath 的**路径末段**
+  // 当项目名，于是父目录（D:\Portable → "Portable"）与仓外临时目录
+  // （khy-durable-transcript-*）都冒充项目，且同名项目无法区分。
+  // path 是分桶键（**精确匹配，非前缀**：登记 D:\a\b 不会让 D:\a\b\c 继承身份）。
+  // name 是用户可写的显示名，允许与目录名不同 —— 这是「显示名 ≠ 目录名」的关键。
+  // icon / color 可选，缺省即不渲染标识（不给假数据）。
+  // ⚠ 消费方是渲染层 shared/sidebarProjectClassify.ts 的三态判定；**不参与**
+  // 「当前工作空间是谁」—— 那仍只由 desktopWorkspacePath 回答。
+  desktopProjects: [],
   // Agent 模式（Composer 工具行「切换模式」选择器，i18n mode.label.glm.*）：
   // 'confirm' | 'autoEdit' | 'plan' | 'fullAccess'
   // P3-9①：默认对齐 ZCode 实测「完全访问」（mode.label.glm.yolo）；
@@ -2728,16 +2824,16 @@ async function createWindow() {
     win.show();
     if (size.maximized === true) win.maximize();
   });
-  ipcMain.handle("window:minimize", () => win.minimize());
-  ipcMain.handle("window:maximize", () => {
-    if (win.isMaximized()) win.unmaximize();
-    else win.maximize();
-  });
-  ipcMain.handle("window:close", () => win.close());
   ipcMain.handle("app:version", () => app.getVersion());
   ipcMain.handle("app:workspacePath", () => getWorkspaceRoot());
   ipcMain.handle("workspace:list", async () => {
-    return { ok: true, current: await getWorkspaceRoot(), recents: await readRecentWorkspaces() };
+    const settings2 = await getSettingsStore();
+    return {
+      ok: true,
+      current: await getWorkspaceRoot(),
+      recents: await readRecentWorkspaces(),
+      projects: Array.isArray(settings2.desktopProjects) ? settings2.desktopProjects : []
+    };
   });
   ipcMain.handle("workspace:open", async (_e, target) => {
     const requested = typeof target === "string" ? target.trim() : "";
@@ -3331,6 +3427,16 @@ app.whenReady().then(() => {
   ipcMain.handle("keymanager:openWindow", () => {
     openKeyManagerWindow();
   });
+  const senderWindow = (e) => BrowserWindow.fromWebContents(e.sender);
+  ipcMain.handle("window:minimize", (e) => senderWindow(e)?.minimize());
+  ipcMain.handle("window:maximize", (e) => {
+    const target = senderWindow(e);
+    if (!target) return false;
+    if (target.isMaximized()) target.unmaximize();
+    else target.maximize();
+    return target.isMaximized();
+  });
+  ipcMain.handle("window:close", (e) => senderWindow(e)?.close());
   ipcMain.handle("window:toggleFullScreen", (e) => {
     const target = BrowserWindow.fromWebContents(e.sender) || BrowserWindow.getAllWindows()[0];
     if (!target) return false;
@@ -3341,6 +3447,10 @@ app.whenReady().then(() => {
     const target = BrowserWindow.fromWebContents(e.sender);
     target?.webContents.toggleDevTools();
   });
+  ipcMain.handle("pty:create", (e, opts) => ptyCreate(opts || {}, e.sender));
+  ipcMain.handle("pty:write", (_e, id, data) => ptyWrite(id, data));
+  ipcMain.handle("pty:resize", (_e, id, cols, rows) => ptyResize(id, cols, rows));
+  ipcMain.handle("pty:kill", (_e, id) => ptyKill(id));
   if (KEY_MANAGER_STANDALONE) {
     openKeyManagerWindow({ standalone: true });
     app.on("activate", () => {
@@ -3375,6 +3485,10 @@ app.on("window-all-closed", () => {
 });
 app.on("will-quit", () => {
   settleAutomationRunsOnQuit();
+  try {
+    disposeAllPtys();
+  } catch {
+  }
   try {
     schedulerProcess?.send?.({ type: "shutdown" });
   } catch {

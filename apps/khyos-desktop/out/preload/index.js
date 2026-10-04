@@ -133,6 +133,22 @@ const api = {
   backgroundStatus: () => electron.ipcRenderer.invoke("background:status"),
   // 电脑控制安全闸生效状态（host env 实读，ZC-ALIGN-002 I11）
   desktopGateGet: () => electron.ipcRenderer.invoke("desktopGate:get"),
+  // ── 真终端 PTY（[DESIGN-ARCH-176] A3）：通道名与 main/index.ts 的 pty:* handle 配对（D6）──
+  ptyCreate: (opts) => electron.ipcRenderer.invoke("pty:create", opts || {}),
+  ptyWrite: (id, data) => electron.ipcRenderer.invoke("pty:write", id, data),
+  ptyResize: (id, cols, rows) => electron.ipcRenderer.invoke("pty:resize", id, cols, rows),
+  ptyKill: (id) => electron.ipcRenderer.invoke("pty:kill", id),
+  // main → renderer 数据流（ptyHost 在 create 时的 sender 上 send）
+  onPtyData: (cb) => {
+    const listener = (_e, payload) => cb(payload);
+    electron.ipcRenderer.on("pty:data", listener);
+    return () => electron.ipcRenderer.removeListener("pty:data", listener);
+  },
+  onPtyExit: (cb) => {
+    const listener = (_e, payload) => cb(payload);
+    electron.ipcRenderer.on("pty:exit", listener);
+    return () => electron.ipcRenderer.removeListener("pty:exit", listener);
+  },
   // 平台信息
   getPlatform: () => process.platform,
   // 版本
