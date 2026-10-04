@@ -3,7 +3,7 @@ name: 文件上传规范
 id: UPLOAD-001
 domain: SECURITY
 nature: 约束
-scope: "services/backend/src/routes/uploads/**, services/backend/src/services/**"
+scope: "runtime/node/backend/src/routes/uploads/**, runtime/node/backend/src/services/**"
 priority: P0
 trigger: "新增或修改上传端点、上传存储、上传读取逻辑时"
 constraint: "五原则：不信任客户端（服务端验证）、最小权限（不可执行、不可访问其他目录）、可追溯（唯一 ID + 完整元数据）、可清理（生命周期自动清理）、类型安全（严格内容类型检查防伪装）。ID 格式 <32-hex-chars>.<extension>，32 字符十六进制，由 crypto.randomBytes(16).toString('hex') 生成，ID_RE = /^[a-f0-9]{32}$/，拒绝路径遍历。大小上限：图片 50MB、视频 500MB、音频 100MB、文档 50MB、代码 5MB、文本 10MB、压缩包 200MB、通用 100MB，各由 KHY_AI_UPLOAD_*_MAX_BYTES 覆盖。MIME 类型必须以魔数检测为准，不接受客户端声明。生产环境必须启用病毒扫描，检测到病毒立即删除，扫描超时视为通过。禁止：上传 .exe/.bat/.sh/.dll 等可执行文件、使用原始文件名存储、上传目录设为可执行、信任客户端 MIME 类型、返回服务器绝对路径。单文件 100MB、单请求 10 个文件、单请求总 500MB。"
