@@ -12,7 +12,7 @@ benefit: "密钥永不落盘，泄露面收敛到一个 env 注入点；占位 k
 exception: 无
 version: "1.1.0 (2026-09-20)"
 status: active
-ssot: "CLAUDE.md#一红线-r1-r4（R2）/ services/backend/src/services/customProviderRegistrar.js"
+ssot: "CLAUDE.md#一红线-r1-r4（R2）/ runtime/node/backend/src/services/customProviderRegistrar.js"
 formerly: R2
 owner: backend-team
 ---
@@ -25,7 +25,7 @@ owner: backend-team
 >
 > **字段真源**是 `docs/10_规范/registry/RULES-REGISTRY.json`（GOV-TOOL-006 校验），
 > 本文件由 `node scripts/docs/gen-rules-cards.js` 生成，**禁止手改**（同 [MGMT-STD-007] R6 对 .html 孪生件的约束）。
-> 正文原文在 `ssot` 指向的位置：CLAUDE.md#一红线-r1-r4（R2）/ services/backend/src/services/customProviderRegistrar.js。
+> 正文原文在 `ssot` 指向的位置：CLAUDE.md#一红线-r1-r4（R2）/ runtime/node/backend/src/services/customProviderRegistrar.js。
 
 ## 约束
 
