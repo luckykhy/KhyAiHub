@@ -3,7 +3,7 @@ name: CLI 错误标准化
 id: RUNTIME-005
 domain: RUNTIME
 nature: 约束为主，兼福利
-scope: "CLI / TUI 面向用户的失败展示（services/backend/src/cli/**）；不含 REST/SSE/WS（API-003）与 ACP JSON-RPC（COMMS-004）"
+scope: "CLI / TUI 面向用户的失败展示（runtime/node/backend/src/cli/**）；不含 REST/SSE/WS（API-003）与 ACP JSON-RPC（COMMS-004）"
 priority: P1
 trigger: "网关请求失败、级联耗尽或通道不可用需要向用户报错时"
 constraint: "必须由结构化失败信封渲染，禁止对 result.content 做长度截断后当作失败信息展示；信封必须含稳定机器码（单射互斥，一次失败只落一个码）+ 主因（一条，非清单）+ 路由披露（钉选时必现）+ 可执行 hint；静态推广清单只在无任何 hint 可给时出现。钉选优先有严格边界：仅当被钉通道 statusCode===0/不存在时才报钉选专项码，通道给出真实 HTTP 拒绝（401/403/404/429/5xx）时须照实报通道侧事实，不得用元原因覆盖已观测事实。"
@@ -15,7 +15,7 @@ status: active
 ssot: "docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-114] CLI 错误标准化规范.md"
 formerly: 无
 owner: backend-team
-enforcement: "services/backend/src/services/gateway/cliFailureEnvelope.js"
+enforcement: "runtime/node/backend/src/services/gateway/cliFailureEnvelope.js"
 ---
 
 # [RUNTIME-005] CLI 错误标准化

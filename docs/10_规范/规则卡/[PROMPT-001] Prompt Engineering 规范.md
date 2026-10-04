@@ -3,7 +3,7 @@ name: Prompt Engineering 规范
 id: PROMPT-001
 domain: API
 nature: 约束
-scope: "services/backend/src/services/**, services/backend/src/prompts/**"
+scope: "runtime/node/backend/src/services/**, runtime/node/backend/src/prompts/**"
 priority: P2
 trigger: 新增或修改 Prompt 模板时
 constraint: "五原则：版本化（每个 Prompt 模板有版本号，变更可追溯）、参数化（不硬编码业务数据，用变量占位）、可测试（模板可独立评估输出质量）、安全边界（防注入）、成本可控（有长度上限）。注册结构 prompts/index.js：{ version, template: readFile('templates/...'), params, maxTokens, createdAt }。禁止硬编码用户数据（You are helping user zhangsan with strategy ABC-123 错误；You are helping user {{userName}} with strategy {{strategyName}} 正确）。长度上限：System Prompt 2000 字符、User Prompt 4000、Tool Description 500/tool、总输入 6000（input tokens 预算）。注入防护：直接注入靠参数隔离（用户输入不进 System Prompt）、间接注入靠对外部数据消毒并标记来源、越狱靠 System Prompt 加护栏指令。变更步骤：1 修改模板文件、2 运行回归测试、3 人工评估 3 组代表性输入、4 提交时注明版本 bump、5 发布时保存版本快照。"

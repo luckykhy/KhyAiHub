@@ -3,7 +3,7 @@ name: TUI 动画节拍三方一致
 id: RUNTIME-011
 domain: RUNTIME
 nature: 约束为主，兼福利
-scope: "TUI 动画节拍的三个可能各说各话的落点：规范表 services/backend/src/cli/tui/AGENTS.md §3.3、实现真源 services/backend/src/cli/tui/perfTunables.js 的节拍默认值导出、以及组件里的兜底字面量（Spinner.js 的 FRAME_MS、topicBar.js 的 _ANIM_MS）"
+scope: "TUI 动画节拍的三个可能各说各话的落点：规范表 runtime/node/backend/src/cli/tui/AGENTS.md §3.3、实现真源 runtime/node/backend/src/cli/tui/perfTunables.js 的节拍默认值导出、以及组件里的兜底字面量（Spinner.js 的 FRAME_MS、topicBar.js 的 _ANIM_MS）"
 priority: P2
 trigger: "改动 tui/AGENTS.md §3.3 计时器表、perfTunables 的节拍导出、或任一组件兜底节拍字面量时"
 constraint: "同一动画的节拍在「规范表 / perfTunables 默认值 / 组件兜底值」三处必须一致（R1）；组件兜底值必须等于规范值（R2）；规范表 §3.3 的每一项都必须有对应的 perfTunables 导出（R3）。不一致即 finding。已由规范明确裁决保留的漂移必须在守卫的 KNOWN_DRIFTS 白名单里登记出处，否则不得降级为 info —— 无出处的降级等于把判据关掉。新增/删除节拍项造成的未对账缺口（unbound-*）按盘点处理，不判违规。"

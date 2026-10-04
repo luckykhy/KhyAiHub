@@ -3,7 +3,7 @@ name: 终端无滚动区
 id: RUNTIME-004
 domain: RUNTIME
 nature: 约束为主，兼福利
-scope: "与回滚输出共存的 CLI 内联 UI：REPL、交互式 prompt、状态行渲染（services/backend/src/cli/**）"
+scope: "与回滚输出共存的 CLI 内联 UI：REPL、交互式 prompt、状态行渲染（runtime/node/backend/src/cli/**）"
 priority: P1
 trigger: 向 stdout 写 ANSI 转义序列或实现内联状态行时
 constraint: "禁止使用 ANSI 滚动区 DECSTBM（DECSTBM 行范围序列）——它会丢弃越界滚出内容而非加入回滚缓冲；必须用保存/恢复光标（DECSC / DECRC）+ 绝对定位（CUP）+ 清行（EL）。"
