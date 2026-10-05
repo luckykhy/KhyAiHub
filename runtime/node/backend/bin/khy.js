@@ -322,25 +322,37 @@ Promise.resolve().then(() => _maybePrintInstallLocationNotice()).catch(() => {})
 // present; keep the legacy spawn for direct `node bin/khy.js` runs (no launcher
 // in front), where the console may still be on a legacy codepage.
 if (process.platform === 'win32' && String(process.env.KHY_CONSOLE_CP || '') !== '65001') {
-  // Spawn System32\chcp.com directly instead of going through `cmd /c chcp`
-  // (skips one cmd.exe process creation: ~80ms vs ~115ms measured on the
-  // critical startup path). Path comes from the SystemRoot env (no literal
-  // drive/dir); on any failure fall back to the legacy cmd form.
-  // windowsHide:true 让这第一个 chcp 派生也不闪黑框(patch 已覆盖,这里显式再保一层)。
-  try {
-    const _chcpDirect = process.env.SystemRoot
-      ? path.join(process.env.SystemRoot, 'System32', 'chcp.com')
-      : null;
-    if (_chcpDirect) {
-      try {
-        require('child_process').execFileSync(_chcpDirect, ['65001'], { stdio: 'pipe', windowsHide: true });
-      } catch {
+  // Only a legacy conhost TTY actually needs the codepage flip: piped /
+  // redirected output is byte-level UTF-8 regardless of codepage, and modern
+  // terminal hosts (Windows Terminal, VS Code) render UTF-8 natively. Skipping
+  // there removes a synchronous CreateProcess (~50-100ms measured) from every
+  // startup. KHY_FORCE_CHCP=1 restores the unconditional spawn.
+  const _needChcp =
+    process.env.KHY_FORCE_CHCP === '1' ||
+    ((process.stdout.isTTY || process.stderr.isTTY) &&
+      !process.env.WT_SESSION &&
+      process.env.TERM_PROGRAM !== 'vscode');
+  if (_needChcp) {
+    // Spawn System32\chcp.com directly instead of going through `cmd /c chcp`
+    // (skips one cmd.exe process creation: ~80ms vs ~115ms measured on the
+    // critical startup path). Path comes from the SystemRoot env (no literal
+    // drive/dir); on any failure fall back to the legacy cmd form.
+    // windowsHide:true 让这第一个 chcp 派生也不闪黑框(patch 已覆盖,这里显式再保一层)。
+    try {
+      const _chcpDirect = process.env.SystemRoot
+        ? path.join(process.env.SystemRoot, 'System32', 'chcp.com')
+        : null;
+      if (_chcpDirect) {
+        try {
+          require('child_process').execFileSync(_chcpDirect, ['65001'], { stdio: 'pipe', windowsHide: true });
+        } catch {
+          require('child_process').execFileSync('cmd', ['/c', 'chcp', '65001'], { stdio: 'pipe', windowsHide: true });
+        }
+      } else {
         require('child_process').execFileSync('cmd', ['/c', 'chcp', '65001'], { stdio: 'pipe', windowsHide: true });
       }
-    } else {
-      require('child_process').execFileSync('cmd', ['/c', 'chcp', '65001'], { stdio: 'pipe', windowsHide: true });
-    }
-  } catch { /* ignore */ }
+    } catch { /* ignore */ }
+  }
 }
 
 /**
@@ -1011,7 +1023,7 @@ async function ensureAuthenticated() {
                 }
               } catch (regErr) {
                 printInfo(`自动注册失败: ${regErr.message || 'unknown'}`);
-                printInfo(`提示: 如需使用完整功能，请先运行 'extensions/scripts/khy-installer/setup/start-all.bat' 启动后端服务`);
+                printInfo(`提示: 如需使用完整功能，请先运行 'delivery/extension/scripts/khy-installer/setup/start-all.bat' 启动后端服务`);
               }
             }
           } catch (err) {

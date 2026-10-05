@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-PERF-006] khy 启动提速方案.md -->
+<title>[DESIGN-PERF-006] khy 启动提速方案 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-PERF<span class="sep">›</span>[DESIGN-PERF-006] khy 启动提速方案</div>
+      <header class="hero reveal"><h1>[DESIGN-PERF-006] khy 启动提速方案</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-perf-006-khy-启动提速方案">[DESIGN-PERF-006] khy 启动提速方案</a></li><li class="lvl-2"><a href="#零-一句话结论">零、一句话结论</a></li><li class="lvl-2"><a href="#一-需求五问-runtime-008-source-均为本轮用户原话">一、需求五问（`RUNTIME-008`，source 均为本轮用户原话）</a></li><li class="lvl-2"><a href="#二-实测基线-2026-10-04-可复现命令见-六">二、实测基线（2026-10-04，可复现命令见 §六）</a></li><li class="lvl-3"><a href="#2-1-三条路径的墙钟">2.1 三条路径的墙钟</a></li><li class="lvl-3"><a href="#2-2-tui-启动时间线-perf-003-p1-探针-真实-conpty-run-2026-10-04">2.2 TUI 启动时间线（PERF-003 P1 探针，真实 ConPTY，run 2026-10-04）</a></li><li class="lvl-3"><a href="#2-3-单命令-830ms-分解">2.3 单命令 830ms 分解</a></li><li class="lvl-3"><a href="#2-4-cpu-侧面印证">2.4 CPU 侧面印证</a></li><li class="lvl-2"><a href="#三-与既有文档的关系-不重复劳动">三、与既有文档的关系（不重复劳动）</a></li><li class="lvl-2"><a href="#四-方案-四条工作流">四、方案（四条工作流）</a></li><li class="lvl-3"><a href="#w1-p0-tui-首帧-6-2s-目标-p50-2s">W1（P0）TUI 首帧：6.2s → 目标 p50 &lt; 2s</a></li><li class="lvl-3"><a href="#w2-p1-单命令快路径-830ms-目标-p50-300ms">W2（P1）单命令快路径：830ms → 目标 p50 &lt; 300ms</a></li><li class="lvl-3"><a href="#w3-p2-冷启动-13-8s-目标-3s">W3（P2）冷启动：13.8s → 目标 &lt; 3s</a></li><li class="lvl-3"><a href="#w4-p3-可选-结构性方案-khy-daemon">W4（P3，可选）结构性方案：khy daemon</a></li><li class="lvl-2"><a href="#五-落地顺序与阶段约束-process-008">五、落地顺序与阶段约束（`PROCESS-008`）</a></li><li class="lvl-2"><a href="#六-度量命令-本机可复现">六、度量命令（本机可复现）</a></li><li class="lvl-2"><a href="#七-现状备注-非本文范围-但影响-启动-体验">七、现状备注（非本文范围，但影响「启动」体验）</a></li><li class="lvl-2"><a href="#八-落地记录-2026-10-04-接线-同日">八、落地记录（2026-10-04 接线，同日）</a></li><li class="lvl-3"><a href="#8-1-已接线">8.1 已接线</a></li><li class="lvl-3"><a href="#8-2-w1-更正-实测推翻了本方案-四-w1-1-的前提">8.2 W1 更正（实测推翻了本方案 §四 W1-1 的前提）</a></li><li class="lvl-3"><a href="#8-3-漂移治理与度量纪律-本机实测沉淀">8.3 漂移治理与度量纪律（本机实测沉淀）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="design-perf-006-khy-启动提速方案">[DESIGN-PERF-006] khy 启动提速方案<a class="anchor" href="#design-perf-006-khy-启动提速方案" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>状态</strong>：已接线（W2/W3 全量，W1 部分更正） · <strong>日期</strong>：2026-10-04 · <strong>编号</strong>：[DESIGN-PERF-006] · <strong>落点目录</strong>：<code>docs/03_DESIGN_设计/DESIGN-PERF/</code><br><strong>适用层</strong>：<code>runtime/node/backend</code>（<code>khy</code> CLI / TUI 入口链）<br><strong>需求来源</strong>（<code>RUNTIME-008</code> source）：用户原话「khyos的启动太慢了，怎么快速启动需要设计个方案」（2026-10-04）<br><strong>关联</strong>：[DESIGN-PERF-002]（KHY_FAST_STARTUP / compile cache，已落地） · [DESIGN-PERF-003]（TUI 挂载期阻塞诊断 + 探针，提案未接线） · [DESIGN-ARCH-115]（启动板块节拍表） · [DESIGN-PROCESS-002]（<code>PROCESS-008</code> 落地阶段）<br><strong>证据基线</strong>：本文全部数字为 <strong>2026-10-04 本机实测</strong>（仓库 <code>D:\Portable\khy-os</code>，Windows 10.0.26200，Node v22.18.0）。启动耗时 run 间方差大（OS 文件缓存状态不同），故关键数字给区间或注明冷/热；<strong>推测项显式标注〔推测〕</strong>。</p></blockquote>
+<hr>
+<h2 id="零-一句话结论">零、一句话结论<a class="anchor" href="#零-一句话结论" aria-label="锚点">#</a></h2>
+<p>用户感知的「启动慢」由三段构成，今天实测：<strong>TUI 交互首帧 ~6.2s</strong>（其中 2.3s→6.2s 的 ~3.9s 是 Ink 挂载期停顿，即 [DESIGN-PERF-003] 诊断的同步阻塞，该方案至今未落地）、<strong>单命令热启动 ~830ms</strong>（其中 ~320ms 是三条<strong>串行同步</strong> git 子进程、56ms 是 chcp 子进程）、<strong>冷启动 ~13.8s</strong>（磁盘缓存冷 + Defender 扫描，代码侧无法根治）。方案 = 四条工作流：W1 接线 PERF-003 消化挂载期阻塞（P0）、W2 单命令快路径（P1）、W3 冷启动治理（P2）、W4 daemon 结构性方案（P3，可选）。</p>
+<hr>
+<h2 id="一-需求五问-runtime-008-source-均为本轮用户原话">一、需求五问（<code>RUNTIME-008</code>，source 均为本轮用户原话）<a class="anchor" href="#一-需求五问-runtime-008-source-均为本轮用户原话" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>问题</th><th>答案</th></tr></thead><tbody><tr><td>1</td><td>谁用？</td><td>每天开终端敲 <code>khy</code> 的维护者与最终用户（source：「khyos的启动太慢了」——主语是日常使用者）</td></tr><tr><td>2</td><td>什么时候用？</td><td>每次敲 <code>khy</code>（TUI）、<code>khy status</code>、<code>khy ai -p</code> 等单命令时（source：「启动」）</td></tr><tr><td>3</td><td>现在的替代做法？</td><td>等待；或绕过 bat 直接 <code>node runtime/node/backend/bin/khy.js</code>（省 ~100ms bat 解析，但不解决大头）</td></tr><tr><td>4</td><td>成功长什么样？</td><td>命令：<code>node perf-probe 探针</code> + <code>Measure-Command { khy status }</code>。期望：TUI BootScreen 首帧 p50 &lt; 2s；<code>khy status</code> 热启动 p50 &lt; 300ms；冷启动首跑 &lt; 3s（W3）</td></tr><tr><td>5</td><td>不做会怎样？</td><td>每次交互白等 6 秒起步；用户绕开 TUI 与 CLI 包装层，平台入口被架空</td></tr></tbody></table>
+<hr>
+<h2 id="二-实测基线-2026-10-04-可复现命令见-六">二、实测基线（2026-10-04，可复现命令见 §六）<a class="anchor" href="#二-实测基线-2026-10-04-可复现命令见-六" aria-label="锚点">#</a></h2>
+<h3 id="2-1-三条路径的墙钟">2.1 三条路径的墙钟<a class="anchor" href="#2-1-三条路径的墙钟" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>路径</th><th>冷（首次）</th><th>热（连续跑）</th><th>说明</th></tr></thead><tbody><tr><td>TUI（裸 <code>khy</code>，真实 ConPTY）</td><td>—</td><td><strong>首帧 6176ms</strong></td><td>见 §2.2 时间线</td></tr><tr><td>单命令 <code>khy status</code>（<code>Tools\khy.bat</code> → node 直跑）</td><td>13808ms</td><td><strong>~830ms</strong>（三次 3403/836/828）</td><td>node 自身基线 67ms</td></tr><tr><td>仓库根 <code>khy.bat</code>（Python launcher 链）</td><td>—</td><td>—</td><td><strong>当前已损坏</strong>：批处理解析报错 exit 255，40ms 即退（见 §七）</td></tr></tbody></table>
+<h3 id="2-2-tui-启动时间线-perf-003-p1-探针-真实-conpty-run-2026-10-04">2.2 TUI 启动时间线（PERF-003 P1 探针，真实 ConPTY，run 2026-10-04）<a class="anchor" href="#2-2-tui-启动时间线-perf-003-p1-探针-真实-conpty-run-2026-10-04" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>里程碑</th><th>今天（10-04）</th><th>PERF-003 实测（09-22）</th></tr></thead><tbody><tr><td>first-output</td><td>71ms</td><td>297–1558ms</td></tr><tr><td>5 步骤阶段走完（✅ 就绪 5/5）</td><td><strong>459ms</strong></td><td>1575–4144ms</td></tr><tr><td>进备用屏（<code>\x1b[?1049h</code>）</td><td><strong>2272ms</strong></td><td>3853–21476ms</td></tr><tr><td>BootScreen 首帧可见（bootscreen-art）</td><td><strong>6176ms</strong></td><td>5588–15867ms</td></tr></tbody></table>
+<p>判读：<strong>节拍表（ARCH-115 / PERF-004）治理后的前半段已明显改善</strong>（5 步骤 459ms 完成）；剩余痛点收敛为两段：</p>
+<ul><li><strong>Ink 渲染引擎就绪 ~1.65s</strong>（615ms 进度条起 → 2272ms 进备用屏，进度条 48% 处一次停顿 ~1.5s）；</li><li><strong>挂载期停顿 ~3.9s</strong>（2272ms 进备用屏 → 6176ms 首帧），与 [DESIGN-PERF-003] §三 的 render() 同步阻塞归因一致——<strong>该方案的修复至今未接线</strong>。</li></ul>
+<h3 id="2-3-单命令-830ms-分解">2.3 单命令 830ms 分解<a class="anchor" href="#2-3-单命令-830ms-分解" aria-label="锚点">#</a></h3>
+<ul><li><code>STARTUP_PROFILE=1</code>：entry → main:start = <strong>189ms</strong>（其中 entry→init:start 135ms = require 图；init 51ms）。</li><li>spawn 钩子（<code>NODE_OPTIONS=--require</code> 包裹 child_process，见 §六）实测启动期同步子进程：</li></ul>
+<table><thead><tr><th>时刻</th><th>调用</th><th>耗时</th></tr></thead><tbody><tr><td>72ms</td><td><code>execFileSync chcp.com 65001</code></td><td>56ms</td></tr><tr><td>432ms</td><td><code>execSync git rev-parse --abbrev-ref HEAD</code></td><td>72ms</td></tr><tr><td>560ms</td><td><code>execSync git status --porcelain</code></td><td><strong>128ms</strong></td></tr><tr><td>678ms</td><td><code>execSync git rev-list --left-right --count HEAD...@{u}</code></td><td>118ms</td></tr></tbody></table>
+<p>三条 git 探针<strong>串行同步</strong>执行，合计 ~318ms；本仓当时 854 个改动文件放大了 <code>git status --porcelain</code> 的成本。72ms→432ms 之间的 ~360ms 为模块加载 + init（与 <code>STARTUP_PROFILE</code> 的 135ms require 图 + 各命令 handler 懒加载对得上，量级一致，未逐模块归因〔推测：分布均匀，无单点 &gt;50ms〕）。</p>
+<h3 id="2-4-cpu-侧面印证">2.4 CPU 侧面印证<a class="anchor" href="#2-4-cpu-侧面印证" aria-label="锚点">#</a></h3>
+<p><code>--cpu-prof</code>（<code>khy status</code>）：CPU 总样本仅 ~220ms（墙钟 830ms）——<strong>大头是等待</strong>；自耗第一名 <code>child_process</code> 122ms（55.8%），<code>loader</code>（模块解析）21ms（9.6%）。与 §2.3 的 spawn 清单互证：<strong>砍同步子进程比砍 CPU 更值钱</strong>。</p>
+<hr>
+<h2 id="三-与既有文档的关系-不重复劳动">三、与既有文档的关系（不重复劳动）<a class="anchor" href="#三-与既有文档的关系-不重复劳动" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文档</th><th>已覆盖</th><th>本文增量</th></tr></thead><tbody><tr><td>[DESIGN-PERF-002]</td><td>KHY_FAST_STARTUP 默认开、enableCompileCache 已接、顶层 require 瘦身</td><td>不重复；W2 仅列其阶段 C 剩余项</td></tr><tr><td>[DESIGN-PERF-003]</td><td>TUI 挂载期阻塞的<strong>归因 + 4 支探针 + 反例教训</strong>（预热平移无效、compile cache 在噪声内）</td><td><strong>P0 就是把它的结论接线</strong>；补今天的新基线（前半段已改善，痛点收敛到挂载期）</td></tr><tr><td>[DESIGN-PERF-004]</td><td>动画节拍</td><td>不涉及</td></tr><tr><td>[DESIGN-PERF-005]</td><td>khy-chat 启动链</td><td>独立入口，另案</td></tr><tr><td>[DESIGN-ARCH-115]</td><td>启动板块节拍表 / D1 1.5s 硬超时</td><td>W1 的验收挂在它的节拍表之下</td></tr></tbody></table>
+<p>PERF-003 最重要的教训直接约束本文：<strong>同步工作要被消化，不能只换位置</strong>（setImmediate 平移实测把首帧从 5013ms 恶化到 7975ms）。W1 的每个候选措施都要过这条判据。</p>
+<hr>
+<h2 id="四-方案-四条工作流">四、方案（四条工作流）<a class="anchor" href="#四-方案-四条工作流" aria-label="锚点">#</a></h2>
+<h3 id="w1-p0-tui-首帧-6-2s-目标-p50-2s">W1（P0）TUI 首帧：6.2s → 目标 p50 &lt; 2s<a class="anchor" href="#w1-p0-tui-首帧-6-2s-目标-p50-2s" aria-label="锚点">#</a></h3>
+<p>按收益/风险排序，每项独立可回退：</p>
+<table><thead><tr><th>#</th><th>措施</th><th>预期收益</th><th>判据 / 风险</th></tr></thead><tbody><tr><td>W1-1</td><td><strong>BootScreen 静态帧先行</strong>：进备用屏后立即用纯 ANSI write 画一帧静态 art（不经过 Ink），Ink 就绪后无缝接管</td><td>首帧感知 6.2s → ~2.3s</td><td>符合 PERF-003「消化」判据（一帧 write 是 O(百字节) 输出，无同步 IO）；风险=交接闪烁，交接帧须与 Ink 首帧同一画布内容；回退 <code>KHY_BOOT_STATIC=0</code></td></tr><tr><td>W1-2</td><td><strong>挂载期同步 IO 清理</strong>：按 PERF-003 P3 探针（<code>tui-startup-probe-render.js</code> + <code>--chains</code>）列出 render()→首帧间的 spawnSync/readFileSync 清单，逐项后台化或预缓存</td><td>~3.9s 停顿逐项消减</td><td>探针已备；逐项前后对照；<strong>先列清单再动手</strong>，不盲改</td></tr><tr><td>W1-3</td><td>Ink 就绪 ~1.65s 的压降：评估 ink/react 模块图瘦身与升级；若静态帧（W1-1）落地后用户已无感，此项降级为观察</td><td>2.3s → &lt;1.5s〔推测〕</td><td>PERF-003 实测 compile cache 无效，<strong>不得以「开了 compile cache」作为此项的完成依据</strong></td></tr></tbody></table>
+<h3 id="w2-p1-单命令快路径-830ms-目标-p50-300ms">W2（P1）单命令快路径：830ms → 目标 p50 &lt; 300ms<a class="anchor" href="#w2-p1-单命令快路径-830ms-目标-p50-300ms" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>#</th><th>措施</th><th>预期收益</th><th>说明</th></tr></thead><tbody><tr><td>W2-1</td><td><strong>git 探针并行 + 异步化</strong>：<code>khy status</code> 链路的 3 条 <code>execSync</code>（rev-parse / status / rev-list）改为 <code>execFile</code> 异步 <code>Promise.all</code></td><td>~318ms → ~130ms（取最慢一条）</td><td>行为等价重构，无拦截机制，不走 PROCESS-008 升阶</td></tr><tr><td>W2-2</td><td><strong>git status TTL 缓存</strong>：<code>.khy/cache/</code> 内按 mtime 缓存 <code>--porcelain</code> 结果（秒级 TTL），连续多次 <code>khy status</code> / sync 脚本共享</td><td>二次查询 → ~0ms</td><td>只缓存只读探针；写路径不变</td></tr><tr><td>W2-3</td><td><strong>去掉 chcp execFileSync</strong>（56ms）：Windows 21H1+ / Windows Terminal 下 Node stdout 已是 UTF-8，仅旧 conhost TTY 需要时保留</td><td>-56ms</td><td>兜底：保留 <code>KHY_FORCE_CHCP=1</code> 手动开关</td></tr><tr><td>W2-4</td><td>require 图续瘦（PERF-002 阶段 C 剩余项）</td><td>entry→init 135ms 里再省〔推测 30–60ms〕</td><td>以 <code>startupProfiler</code> checkpoint 为准逐项做</td></tr></tbody></table>
+<h3 id="w3-p2-冷启动-13-8s-目标-3s">W3（P2）冷启动：13.8s → 目标 &lt; 3s<a class="anchor" href="#w3-p2-冷启动-13-8s-目标-3s" aria-label="锚点">#</a></h3>
+<ol><li><strong>Defender 排除提示</strong>：<code>khy repair</code> / 装机脚本的输出中提示用户把 <code>D:\Portable\khy-os</code>（或安装根）加入 Windows Defender 排除目录——<strong>脚本只提示不代改</strong>（改杀软排除是用户安全决策）。13.8s 与 830ms 的差值主体是 Defender 实时扫描 + 冷文件缓存，代码侧无解〔推测，可关掉实时防护复测一次验证〕。</li><li><strong>首启预热</strong>：安装/修复完成后自动跑一次 <code>khy doctor</code>（触发 compile cache 写入 + OS 文件缓存预热），把「第一次 13.8s」摊到装机时刻。</li></ol>
+<h3 id="w4-p3-可选-结构性方案-khy-daemon">W4（P3，可选）结构性方案：khy daemon<a class="anchor" href="#w4-p3-可选-结构性方案-khy-daemon" aria-label="锚点">#</a></h3>
+<p>常驻 Node 进程 + CLI 薄客户端（named pipe / localhost IPC，端口遵循 <code>RUNTIME-001</code> 动态来源），单命令与 TUI 的「进程冷启动」整体消失，目标 &lt; 200ms。<strong>成本</strong>：生命周期管理、多机租约冲突、崩活检测；<strong>仅当 W1–W3 落地后仍不达标时立项</strong>，不在本轮范围。</p>
+<hr>
+<h2 id="五-落地顺序与阶段约束-process-008">五、落地顺序与阶段约束（<code>PROCESS-008</code>）<a class="anchor" href="#五-落地顺序与阶段约束-process-008" aria-label="锚点">#</a></h2>
+<ol><li><strong>顺序</strong>：W1-2（先列清单）→ W2-1/W2-3（低风险高确定）→ W1-1 → W2-2 → W3 → 视达标情况决定 W1-3 / W4。</li><li>修复类改动集存证落 <code>.khy/feedback/DESIGN-PERF-006/</code>（<code>repro-before.txt</code> / <code>repro-after.txt</code> 用同一探针、同一命令）；涉及删除的另按 <code>RUNTIME-009</code> 报部位。</li><li>每项措施的验收都用 §六 的探针命令跑 <strong>20 连跑取 p50</strong>（PERF-003 的方差教训：不给单点值）。</li><li>本文为提案；接线时 W1-1 若引入新的启动拦截行为，按四阶段从 S1 观察者起（预期不需要：它是渲染路径改动，不是拦截机制）。</li></ol>
+<hr>
+<h2 id="六-度量命令-本机可复现">六、度量命令（本机可复现）<a class="anchor" href="#六-度量命令-本机可复现" aria-label="锚点">#</a></h2>
+<pre><code class="language-bat">:: P1 端到端（真实 ConPTY；探针原件在 works/data/khyos/housekeeping/<span class="hljs-number">2026</span>-<span class="hljs-number">09</span>-<span class="hljs-number">27</span>/_产物/，
+:: 其 ROOT 取 __dirname/..，须放到「仓根的直接子目录」运行才能解析 node_modules。
+:: 注意：原件 spawn 路径仍是迁移前的 services/backend/bin/khy.<span class="hljs-built_in">cmd</span>，须改为
+:: runtime/node/backend/bin/khy.<span class="hljs-built_in">cmd</span>；已改好的副本在 .khy/tmp/perf-probe/（本机态，gitignore））
+node &lt;仓根子目录&gt;\tui-startup-probe-e2e.js <span class="hljs-number">20000</span>
+
+:: 启动检查点
+<span class="hljs-built_in">set</span> STARTUP_PROFILE=<span class="hljs-number">1</span> &amp;&amp; node runtime\node\backend\bin\khy.js status
+
+:: 同步子进程清单（钩子文件内容见本文 §<span class="hljs-number">2</span>.<span class="hljs-number">3</span> 的产生方式：包一层 child_process 计时打点）
+<span class="hljs-built_in">set</span> NODE_OPTIONS=--require &lt;hook.js&gt; &amp;&amp; node runtime\node\backend\bin\khy.js status
+
+:: CPU 归因
+node --cpu-prof --cpu-prof-<span class="hljs-built_in">dir</span>=<span class="hljs-variable">%TEMP%</span>\khy-prof runtime\node\backend\bin\khy.js status
+
+:: 墙钟（PowerShell）
+Measure-Command { D:\Portable\Tools\khy.bat status }</code></pre>
+<hr>
+<h2 id="七-现状备注-非本文范围-但影响-启动-体验">七、现状备注（非本文范围，但影响「启动」体验）<a class="anchor" href="#七-现状备注-非本文范围-但影响-启动-体验" aria-label="锚点">#</a></h2>
+<ul><li><strong>仓库根 <code>khy.bat</code> 已损坏</strong>（批处理解析报错、exit 255，错误行含被截断的中文字符串，疑似编码/换行损伤）。用户实际生效的入口是 <code>D:\Portable\Tools\khy.bat</code>（直接 node，不经过 Python 链）。修复它须先按 <code>RUNTIME-007</code> 复现存证，另开任务。</li><li><strong>文档路径漂移</strong>：PERF-002/003 等旧文写的 <code>services/backend/bin/khy.cmd</code>，在 R2-R4 迁移后真身已移至 <code>runtime/node/backend/bin/</code>。本文按新路径书写；旧文的路径以迁移基线（commit <code>559a7a8d</code>）为准订正。</li></ul>
+<hr>
+<h2 id="八-落地记录-2026-10-04-接线-同日">八、落地记录（2026-10-04 接线，同日）<a class="anchor" href="#八-落地记录-2026-10-04-接线-同日" aria-label="锚点">#</a></h2>
+<h3 id="8-1-已接线">8.1 已接线<a class="anchor" href="#8-1-已接线" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>项</th><th>改动</th><th>实测结果（<code>repro-before/after</code> 存证 <code>.khy/feedback/DESIGN-PERF-006/</code>）</th></tr></thead><tbody><tr><td>W2-1</td><td><code>hudRenderer.js</code> 新增 <code>refreshGitAsync()</code>（三条 git 探针 <code>execFile</code> 并行、事件循环非阻塞），<code>routerDispatchSlash.js</code> status 分支 <code>await</code> 之；同步 <code>refreshGit()</code> 原样保留给无法 await 的调用方</td><td>冷跑：git 探针从「432→796ms 串行、合计 ~320–535ms」变为「~448ms 起三路并行、各 ~10ms」；<code>chcp</code> spawn 消失（见 W2-3）</td></tr><tr><td>W2-2</td><td><code>hudRenderer.js</code> 跨进程磁盘缓存：<code>&lt;dataHome&gt;/cache/git-hud-&lt;cwd-base64&gt;.json</code>，TTL 30s（与进程内一致），读路径 fail-soft；dataHome 解析沿用 <code>KHY_DATA_HOME → .khy/.location.json 指针 → ~/.khy</code> 链</td><td>命中后 spawn 数 4 → <strong>0</strong>；<code>khy status</code> 热启动 5 连跑 <strong>521/528/537/548ms</strong>（改前 5 连跑 833/904/912/833/1023ms，中位 ~870 → ~530，<strong>约 -35%</strong>）</td></tr><tr><td>W2-3</td><td><code>bin/khy.js</code> chcp 块加条件：仅「legacy conhost TTY」才 spawn（管道/重定向字节本就是 UTF-8；Windows Terminal / VS Code 终端原生渲染 UTF-8）；<code>KHY_FORCE_CHCP=1</code> 恢复无条件 spawn</td><td>管道调用下 chcp spawn 消失（改前 56–106ms）</td></tr><tr><td>W3</td><td><code>delivery/extension/scripts/khy-portable/repair-portable.js</code> 新增 <code>warmupAndHint()</code>：打印 Defender 排除提示（<strong>只提示不代改</strong>，含可直接粘贴的 <code>Add-MpPreference</code> 命令）+ 修复后自动预热一遍完整加载链（<code>spawnSync khy status</code>，60s 上限，失败不影响修复结果）</td><td>修复 dry-run 验证：提示与预热均正常；预热即把「首次 ~13.8s」摊到装机时刻</td></tr></tbody></table>
+<p>A/B 方式说明：机器状态漂移显著（同日不同时刻 entry→main 从 189ms 漂到 367–627ms），故机制层证据（spawn 数与耗时并行化）以同刻 stash A/B 交叉验证；墙钟取同批 5 连跑对照。guard：<code>check-agent-rules.js --changed</code> 通过；<code>routerDispatchSlashLeaf</code> 测试通过。</p>
+<h3 id="8-2-w1-更正-实测推翻了本方案-四-w1-1-的前提">8.2 W1 更正（实测推翻了本方案 §四 W1-1 的前提）<a class="anchor" href="#8-2-w1-更正-实测推翻了本方案-四-w1-1-的前提" aria-label="锚点">#</a></h3>
+<p>字节级 e2e 时间线（探针 chunk 逐条核对）显示：</p>
+<ol><li><strong>启动屏并不缺首帧</strong>：进入备用屏（<code>\x1B[?1049h</code>）后 <strong>~200ms</strong> 内 Ink 预热帧（含 'khy OS' 字标、进度条、节拍行）就已落地——app.js 的两步渲染（预热 BootScreen → render(App)）按设计生效。</li><li><strong>探针里程碑量错了对象</strong>：PERF-003/本文早先引用的 <code>bootscreen-art</code> 里程碑匹配的是小写 <code>khy-os</code> 字符串——那是<strong>全量 App UI 帧</strong>里输入框的 cwd 路径串，不是启动屏 art（字标实为 <code>khy OS</code>）。所谓「首帧 6.2s」实为「全 UI 就绪 6.2s」。</li><li><strong>剩余痛点重新定义为「App 挂载尾巴」</strong>：启动屏出现后到全 UI 就绪之间有 ~3.9–10s（run 间方差大）的静默期，期间 spinner 冻结。挂载期同步 IO 清单（W1-2）实测只有 2 条一次性 git 探针（<code>gitExecutableDetector</code> ~84ms + <code>_baseTool.isGitRepo</code> 首查 ~66ms，均有进程级缓存），<strong>远不足以解释尾巴</strong>；无头渲染探针 74s 墙钟仅 ~5s CPU，主体是<strong>等待</strong>而非同步 IO。真 TTY 的 CPU profile 两次尝试均未取到（探针硬杀子进程丢失 profile / PTY 探针抓到的是自身进程）。</li><li><strong>结论</strong>：W1-1（静态帧）<strong>不需要做</strong>；尾巴的构成需先拿到真实 TTY 的挂载期 profile（建议给 e2e 探针的子进程传 <code>--cpu-prof</code> 且改为优雅退出再采样），在此之前<strong>不盲改</strong>（<code>RUNTIME-007</code>）。方差本身（alt-screen 2.3s/5.3s/6.1s 三连跑）再次指向 W3 的文件系统/Defender 因素。</li></ol>
+<h3 id="8-3-漂移治理与度量纪律-本机实测沉淀">8.3 漂移治理与度量纪律（本机实测沉淀）<a class="anchor" href="#8-3-漂移治理与度量纪律-本机实测沉淀" aria-label="锚点">#</a></h3>
+<p>本机同日不同时刻 entry→main 可从 189ms 漂到 627ms（Defender 突发 / 文件缓存状态），<strong>分组采样与单点值都不可信</strong>。纪律与工具：</p>
+<ol><li><strong>墙钟数字必须「同刻交错对照」</strong>：改前/改后逐对交替采样、每对轮换起始侧，取中位数。现成工具：<code>npm run bench:startup</code>（<code>delivery/extension/scripts/khy-diagnostics/bench/startup_ab_bench.js</code>，本次已修复三处：入口路径跟随 R2-R4 迁移 → <code>runtime/node/backend/bin/khy.js</code>；采样从分组改为<strong>逐对交错</strong>；负载从 <code>khy ai</code> 换成 <code>khy status</code>——实测 <code>ai</code> REPL 在 Windows 上 stdin EOF 不退出（挂死验证过），<code>status</code> 走同一启动链且干净退出）。实测一次：6 对交错，BEFORE 中位 956.8ms vs AFTER 476.8ms，0 超时。</li><li><strong>机制层证据优先于墙钟</strong>：spawn 数量/并行度/缓存命中（spawn 钩子、<code>STARTUP_PROFILE=1</code> checkpoint）不受漂移影响，作为第一判据；墙钟对照作为第二判据。</li><li><strong><code>.bat</code> 文件防复发</strong>：<code>.gitattributes</code> 的 <code>*.bat text eol=crlf</code> 只在 checkout 时生效——工具直接写 LF 的 <code>.bat</code> 在 <code>git status</code> 里照样「干净」（本次 khy.bat 坏因）。任何脚本/AI 写 <code>.bat</code> 后必须确认 CRLF。</li></ol>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../docs/03_DESIGN_设计/DESIGN-PERF/[DESIGN-PERF-005] khy-chat-启动慢与报错链治理方案.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-PERF-005] khy chat 启动慢与报错链治理方案</div></a><a class="next" href="../../../docs/03_DESIGN_设计/DESIGN-PERF/00_INDEX_DESIGN-PERF-总目录.html"><div class="dir">下一篇 →</div><div class="ttl">DESIGN-PERF</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../";window.__KHY_CUR__="docs/03_DESIGN_设计/DESIGN-PERF/[DESIGN-PERF-006] khy 启动提速方案.html";</script>
+<script src="../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

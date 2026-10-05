@@ -29,10 +29,12 @@ const fs = require('fs');
 const path = require('path');
 const cp = require('child_process');
 
-const REPO = path.resolve(__dirname, '..', '..', '../..');
+const REPO = path.resolve(__dirname, '..', '..', '../..', '..');
 // Prefer the in-repo source entry; fall back to a bundled copy if that is what
 // the installed product uses (pip/npm layouts ship bundled/services/backend).
+// runtime/node/backend is the R2-R4 migrated home of the backend.
 const ENTRY_CANDIDATES = [
+  path.join(REPO, 'runtime/node/backend/bin/khy.js'),
   path.join(REPO, 'services/backend/bin/khy.js'),
   path.join(REPO, 'platform/khy_os/bundled/services/backend/bin/khy.js'),
 ];
@@ -55,11 +57,12 @@ function median(xs) {
 
 // Launch the real product once, timing spawn→exit wall-clock in ms. Returns
 // null if it times out (counted separately so a hang never poisons the median).
+// Workload is `status`, not the `ai` REPL: the REPL does not exit on stdin EOF
+// on Windows (verified 2026-10-04 — it hangs forever), while `status` walks the
+// same startup path (module graph → init → dispatch) and exits cleanly.
 function launchOnce(env) {
   const t0 = process.hrtime.bigint();
-  const res = cp.spawnSync(process.execPath, [ENTRY, 'ai'], {
-    // No stdin → the REPL sees EOF and shuts down cleanly (verified on Linux;
-    // readline emits 'close' the same way on Windows). stdout/stderr discarded.
+  const res = cp.spawnSync(process.execPath, [ENTRY, 'status'], {
     stdio: ['ignore', 'ignore', 'ignore'],
     timeout: TIMEOUT_MS,
     env,
@@ -76,24 +79,44 @@ function baseEnv(tmpHome, extra) {
   return Object.assign({}, process.env, { KHY_DATA_HOME: tmpHome }, extra);
 }
 
-function bench(label, extra, { wipeHwCacheEachRun }) {
-  const tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-ab-'));
-  const cacheFile = path.join(tmpHome, 'hw_probe_cache.json');
+// Sample BEFORE/AFTER alternately, run by run. Grouped sampling (all BEFORE,
+// then all AFTER) is the measurement hazard on a noisy Windows box: a Defender
+// burst or an FS-cache wave spanning tens of seconds lands entirely on one arm
+// and manufactures a fake delta. Each side keeps its own data home so the
+// per-side invariants hold (BEFORE wipes the hw-probe cache every run; AFTER
+// keeps it warm) while the two arms still interleave in wall-clock time. The
+// starting side also alternates per pair so a fixed phase in the noise cannot
+// consistently favor one arm.
+function benchInterleaved(beforeExtra, afterExtra, { wipeBeforeCacheEachRun }) {
+  const mkHome = () => fs.mkdtempSync(path.join(os.tmpdir(), 'khy-ab-'));
+  const homeBefore = mkHome();
+  const homeAfter = mkHome();
+  const cacheFile = path.join(homeBefore, 'hw_probe_cache.json');
   try {
-    // One warm-up launch (JIT, FS cache) that is not measured. For the ON side
-    // this also primes the hw-probe cache so the measured runs are warm.
-    launchOnce(baseEnv(tmpHome, extra));
-    const samples = [];
-    let timeouts = 0;
+    // One warm-up launch per side (JIT, FS cache), not measured. For AFTER this
+    // also primes its hw-probe cache so its measured runs are warm.
+    launchOnce(baseEnv(homeBefore, beforeExtra));
+    launchOnce(baseEnv(homeAfter, afterExtra));
+    const before = { samples: [], timeouts: 0 };
+    const after = { samples: [], timeouts: 0 };
     for (let i = 0; i < RUNS; i++) {
-      if (wipeHwCacheEachRun) { try { fs.unlinkSync(cacheFile); } catch { /* absent */ } }
-      const ms = launchOnce(baseEnv(tmpHome, extra));
-      if (ms === null) { timeouts += 1; continue; }
-      samples.push(ms);
+      const order = i % 2 === 0 ? ['before', 'after'] : ['after', 'before'];
+      for (const side of order) {
+        if (side === 'before' && wipeBeforeCacheEachRun) {
+          try { fs.unlinkSync(cacheFile); } catch { /* absent */ }
+        }
+        const ms = launchOnce(baseEnv(side === 'before' ? homeBefore : homeAfter,
+          side === 'before' ? beforeExtra : afterExtra));
+        const bucket = side === 'before' ? before : after;
+        if (ms === null) { bucket.timeouts += 1; continue; }
+        bucket.samples.push(ms);
+      }
     }
-    return { label, medianMs: median(samples), samples, timeouts };
+    return { before, after };
   } finally {
-    try { fs.rmSync(tmpHome, { recursive: true, force: true }); } catch { /* best-effort */ }
+    for (const home of [homeBefore, homeAfter]) {
+      try { fs.rmSync(home, { recursive: true, force: true }); } catch { /* best-effort */ }
+    }
   }
 }
 
@@ -106,33 +129,33 @@ function main() {
 
   console.log(`platform=${os.platform()} arch=${os.arch()} cpus=${os.cpus().length}`);
   console.log(`node=${process.version}  runs=${RUNS}  entry=${path.relative(REPO, ENTRY)}`);
-  console.log('Launching the REAL khy startup end-to-end, caches OFF vs ON …');
+  console.log('Launching the REAL khy startup end-to-end, caches OFF vs ON (interleaved) …');
   console.log('');
 
-  // BEFORE: startup-spawn caches OFF; wipe the hw-probe cache every run so each
-  // launch re-pays all three probe spawns + the shell-wrapped git spawns.
-  const before = bench('BEFORE  (caches OFF, cold)', {
+  // BEFORE: startup-spawn caches OFF; wipe the hw-probe cache before every
+  // launch so each one re-pays all three probe spawns + shell-wrapped git.
+  // AFTER: caches ON and warm (its own warm-up primed the hw-probe cache).
+  const { before, after } = benchInterleaved({
     KHY_GIT_SHELL_FREE: '0',
     KHY_HW_PROBE_CACHE: '0',
-  }, { wipeHwCacheEachRun: true });
-
-  // AFTER: caches ON and warm (the warm-up launch primed the hw-probe cache).
-  const after = bench('AFTER   (caches ON, warm)', {
+  }, {
     KHY_GIT_SHELL_FREE: '1',
     KHY_HW_PROBE_CACHE: '1',
-  }, { wipeHwCacheEachRun: false });
+  }, { wipeBeforeCacheEachRun: true });
 
-  const line = (r) => `  ${r.label.padEnd(28)} : median ${r.medianMs == null ? 'n/a' : r.medianMs.toFixed(1) + ' ms'}`
+  const line = (label, r) => `  ${label.padEnd(28)} : median ${median(r.samples) == null ? 'n/a' : median(r.samples).toFixed(1) + ' ms'}`
     + (r.timeouts ? `  (${r.timeouts} timeout${r.timeouts > 1 ? 's' : ''})` : '');
-  console.log(line(before));
-  console.log(line(after));
+  console.log(line('BEFORE  (caches OFF, cold)', before));
+  console.log(line('AFTER   (caches ON, warm)', after));
   console.log('  ' + '─'.repeat(60));
 
+  const beforeMedian = median(before.samples);
+  const afterMedian = median(after.samples);
   let savedMs = null;
   let savedPct = null;
-  if (before.medianMs != null && after.medianMs != null) {
-    savedMs = before.medianMs - after.medianMs;
-    savedPct = (savedMs / before.medianMs) * 100;
+  if (beforeMedian != null && afterMedian != null) {
+    savedMs = beforeMedian - afterMedian;
+    savedPct = (savedMs / beforeMedian) * 100;
     console.log(`  → the 4 startup-spawn caches remove ~${savedMs.toFixed(1)} ms `
       + `(${savedPct.toFixed(1)}%) from real cold startup on this OS.`);
   }
@@ -145,8 +168,9 @@ function main() {
     arch: os.arch(),
     node: process.version,
     runs: RUNS,
-    beforeMs: before.medianMs == null ? null : Number(before.medianMs.toFixed(2)),
-    afterMs: after.medianMs == null ? null : Number(after.medianMs.toFixed(2)),
+    sampling: 'interleaved',
+    beforeMs: beforeMedian == null ? null : Number(beforeMedian.toFixed(2)),
+    afterMs: afterMedian == null ? null : Number(afterMedian.toFixed(2)),
     savedMs: savedMs == null ? null : Number(savedMs.toFixed(2)),
     savedPct: savedPct == null ? null : Number(savedPct.toFixed(2)),
     beforeTimeouts: before.timeouts,

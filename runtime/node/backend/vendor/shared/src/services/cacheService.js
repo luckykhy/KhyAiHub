@@ -38,6 +38,7 @@ async function initRedis() {
  * 获取缓存
  */
 async function get(key) {
+  await _ensureInit();
   try {
     if (useRedis && redisClient) {
       const val = await redisClient.get(key);
@@ -63,6 +64,7 @@ async function get(key) {
  * @param {number} ttl 秒
  */
 async function set(key, value, ttl = 300) {
+  await _ensureInit();
   try {
     if (useRedis && redisClient) {
       await redisClient.setEx(key, ttl, JSON.stringify(value));
@@ -82,6 +84,7 @@ async function set(key, value, ttl = 300) {
  * 删除缓存
  */
 async function del(key) {
+  await _ensureInit();
   try {
     if (useRedis && redisClient) {
       await redisClient.del(key);
@@ -95,6 +98,7 @@ async function del(key) {
  * 按前缀清除缓存
  */
 async function clearByPrefix(prefix) {
+  await _ensureInit();
   try {
     if (useRedis && redisClient) {
       // 使用 SCAN + 批量删除替代 KEYS，避免大键空间下阻塞 Redis
@@ -123,6 +127,7 @@ async function clearByPrefix(prefix) {
  * 获取缓存状态
  */
 async function getStats() {
+  await _ensureInit();
   if (useRedis && redisClient) {
     const info = await redisClient.info('stats').catch(() => '');
     const dbSize = await redisClient.dbSize().catch(() => 0);
@@ -153,7 +158,16 @@ function isRedisConnected() {
   return useRedis && redisClient && redisClient.isReady;
 }
 
-// 初始化
-initRedis();
+// 惰性初始化（[DESIGN-ARCH-178] E1）：顶层不得有副作用。
+// 原先此处裸调 initRedis()，使 require('redis')（542 模块 / 实测 20.4s）
+// 在模块被 require 的瞬间同步执行，卡住 TUI 首帧。改为首次真正用到缓存时才初始化。
+// 单次语义：初始化失败后不再重试（_initPromise 已置位）。
+let _initPromise = null;
+function _ensureInit() {
+  if (!useRedis && !_initPromise) {
+    _initPromise = initRedis();
+  }
+  return _initPromise;
+}
 
 module.exports = { get, set, del, clearByPrefix, getStats, getRedisClient, isRedisConnected };

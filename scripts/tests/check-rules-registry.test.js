@@ -63,7 +63,7 @@ function fixture(mutate) {
     '',
     '| 规则 ID | 一句话规则 | 适用范围 | 反例 | 校验方式 |',
     '|---|---|---|---|---|',
-    '| GOV-TOOL-001 | 扩展一目录一 manifest | extensions/ | 两个扩展共用一个 manifest。 | `npm run check:layout` |',
+    '| GOV-TOOL-001 | 扩展一目录一 manifest | delivery/extension/ | 两个扩展共用一个 manifest。 | `npm run check:layout` |',
     '| GOV-BORROW-004 | 能力域归属登记 | 全仓 | 两个服务各实现一份同一能力。 | 人工评审 |',
   ].join('\n'));
 

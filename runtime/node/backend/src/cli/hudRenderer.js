@@ -12,7 +12,9 @@
  *   - cliAgentRunner (agent progress)
  *   - tokenUsageService (token/cost data)
  */
-const { execSync } = require('child_process');
+const { execSync, execFile } = require('child_process');
+const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
 // Lazy chalk
@@ -61,7 +63,127 @@ const hudState = {
 };
 
 const GIT_CACHE_TTL = 30000; // 30 seconds
+const GIT_DISK_CACHE_TTL = 30000; // same TTL as in-process; shared across processes
 const MAX_TOOL_HISTORY = 10;
+
+// ── Git probe disk cache ─────────────────────────────────────────────
+// One-shot commands (`khy status`) start a fresh process every time, so the
+// in-process TTL alone never helps them; on a repo with a large dirty set
+// `git status --porcelain` alone costs 100-300ms. Cache the probe result
+// under the resolved data home so repeated invocations within the TTL skip
+// the spawn entirely. Read-only probe; write paths are untouched.
+
+function _gitDataHome() {
+  const env = process.env;
+  if (env.KHY_DATA_HOME) {
+    return env.KHY_DATA_HOME;
+  }
+  try {
+    const pointerFile = env.KHY_LOCATION_FILE || path.join(os.homedir(), '.khy', '.location.json');
+    const obj = JSON.parse(fs.readFileSync(pointerFile, 'utf-8'));
+    if (obj && typeof obj === 'object' && obj.dataHome) {
+      return String(obj.dataHome);
+    }
+  } catch {
+    /* no/corrupt pointer → default home */
+  }
+  return path.join(os.homedir(), '.khy');
+}
+
+function _gitDiskCachePath(cwd) {
+  const key = Buffer.from(cwd, 'utf-8').toString('base64url');
+  return path.join(_gitDataHome(), 'cache', `git-hud-${key}.json`);
+}
+
+function _readGitDiskCache(cwd) {
+  try {
+    const obj = JSON.parse(fs.readFileSync(_gitDiskCachePath(cwd), 'utf-8'));
+    if (obj && obj.cwd === cwd && Date.now() - obj.t < GIT_DISK_CACHE_TTL && obj.git) {
+      return obj.git;
+    }
+  } catch {
+    /* miss → caller probes git */
+  }
+  return null;
+}
+
+function _writeGitDiskCache(cwd, git) {
+  try {
+    const file = _gitDiskCachePath(cwd);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, JSON.stringify({ t: Date.now(), cwd, git }));
+  } catch {
+    /* best effort */
+  }
+}
+
+function _gitExecutablePath() {
+  if (process.platform === 'win32') {
+    try {
+      const detected = require('../services/gitExecutableDetector').detectGitExecutable();
+      if (detected) {
+        return detected;
+      }
+    } catch {
+      /* fall back to 'git' */
+    }
+  }
+  return 'git';
+}
+
+/** Non-blocking single git probe; resolves to trimmed stdout or null. */
+function _gitOutAsync(gitPath, args, cwd) {
+  return new Promise((resolve) => {
+    execFile(
+      gitPath,
+      args,
+      { cwd, timeout: 2000, encoding: 'utf-8', windowsHide: true, maxBuffer: 8 * 1024 * 1024 },
+      (err, stdout) => resolve(err ? null : String(stdout).trim())
+    );
+  });
+}
+
+/**
+ * Async git refresh: the three probes run in parallel (sync refreshGit must
+ * stay sequential because its callers are synchronous). Never throws; the
+ * previous hudState.git is kept on failure.
+ */
+async function refreshGitAsync() {
+  const now = Date.now();
+  if (now - hudState._gitLastRefresh < GIT_CACHE_TTL) {
+    return;
+  }
+  hudState._gitLastRefresh = now;
+
+  const cwd = process.env.KHYQUANT_CWD || process.cwd();
+  const cached = _readGitDiskCache(cwd);
+  if (cached) {
+    hudState.git = cached;
+    return;
+  }
+
+  const gitPath = _gitExecutablePath();
+  const [branch, status, ab] = await Promise.all([
+    _gitOutAsync(gitPath, ['rev-parse', '--abbrev-ref', 'HEAD'], cwd),
+    _gitOutAsync(gitPath, ['status', '--porcelain'], cwd),
+    _gitOutAsync(gitPath, ['rev-list', '--left-right', '--count', 'HEAD...@{u}'], cwd),
+  ]);
+
+  if (branch == null) {
+    // Not a repo / git unavailable — same shape as the sync failure path.
+    hudState.git = { branch: '', dirty: false, dirtyCount: 0, ahead: 0, behind: 0 };
+    return;
+  }
+  const dirty = (status || '').length > 0;
+  const dirtyCount = dirty ? status.split('\n').length : 0;
+  let ahead = 0;
+  let behind = 0;
+  if (ab) {
+    [ahead, behind] = ab.split('\t').map(Number);
+  }
+  hudState.git = { branch, dirty, dirtyCount, ahead, behind };
+  _writeGitDiskCache(cwd, hudState.git);
+}
 
 // ── State mutation API ───────────────────────────────────────────────
 
@@ -246,6 +368,12 @@ function refreshGit() {
   hudState._gitLastRefresh = now;
 
   const cwd = process.env.KHYQUANT_CWD || process.cwd();
+  const cached = _readGitDiskCache(cwd);
+  if (cached) {
+    hudState.git = cached;
+    return;
+  }
+
   try {
     const branch = execSync('git rev-parse --abbrev-ref HEAD', {
       cwd,
@@ -277,6 +405,7 @@ function refreshGit() {
     }
 
     hudState.git = { branch, dirty, dirtyCount, ahead, behind };
+    _writeGitDiskCache(cwd, hudState.git);
   } catch {
     // Not a git repo or git not installed
     hudState.git = { branch: '', dirty: false, dirtyCount: 0, ahead: 0, behind: 0 };
@@ -817,6 +946,7 @@ module.exports = {
   agentUpdate,
   updateTodos,
   refreshGit,
+  refreshGitAsync,
 
   // Rendering
   renderStatusBar,

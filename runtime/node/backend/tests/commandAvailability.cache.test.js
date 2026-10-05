@@ -246,6 +246,62 @@ describe('_commandAvailability shared cache', () => {
     expect(spawnSync).not.toHaveBeenCalled();
   });
 
+  test('checkAsync coalesces CONCURRENT lookups into a single probe', async () => {
+    // The gateway's parallel adapter detect asks for the same CLI from several
+    // call sites inside one tick. Sequential awaits are already covered above;
+    // this is the case that used to fire `claude --version` twice per boot
+    // (measured 2026-10-03: 12 boot spawns, 4 of them same-command duplicates).
+    const mod = load();
+    mod._clearCache();
+
+    const [a, b, entry] = await Promise.all([
+      mod.isAvailableAsync('claude'),
+      mod.isAvailableAsync('claude'),
+      mod.checkAsync('claude'),
+    ]);
+
+    expect([a, b, entry.ok]).toEqual([true, true, true]);
+    expect(execFile).toHaveBeenCalledTimes(1);
+    expect(spawnSync).not.toHaveBeenCalled();
+
+    // Once settled, the shared probe result is served from the cache.
+    expect(await mod.isAvailableAsync('claude')).toBe(true);
+    expect(execFile).toHaveBeenCalledTimes(1);
+  });
+
+  test('force joins an in-flight probe rather than double-spawning', async () => {
+    // Adapters call isAvailableAsync(cmd, { force: forceRefresh }) from two
+    // places during boot detect. "force" means "don't trust a SETTLED cached
+    // result" — a probe already running is not stale, so both must share it.
+    const mod = load();
+    mod._clearCache();
+
+    const first = mod.checkAsync('claude');
+    const forced = await mod.checkAsync('claude', { force: true });
+    expect(execFile).toHaveBeenCalledTimes(1);
+    expect(forced.ok).toBe(true);
+
+    await first;
+    // After both settle, a plain lookup is served from the cache.
+    expect(await mod.isAvailableAsync('claude')).toBe(true);
+    expect(execFile).toHaveBeenCalledTimes(1);
+  });
+
+  test('_clearCache drops in-flight probes so nobody joins a pre-reset probe', async () => {
+    const mod = load();
+    mod._clearCache();
+
+    const inflight = mod.checkAsync('claude');
+    mod._clearCache();
+    const after = await mod.checkAsync('claude');
+
+    // The post-reset lookup starts its own probe rather than joining the promise
+    // created before the reset.
+    expect(after.ok).toBe(true);
+    expect(execFile).toHaveBeenCalledTimes(2);
+    await inflight;
+  });
+
   test('checkAsync records the error and returns ok:false when both async stages fail', async () => {
     execFile = jest.fn((cmd, args, opts, cb) => {
       const done = typeof opts === 'function' ? opts : cb;

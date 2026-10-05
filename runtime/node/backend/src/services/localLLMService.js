@@ -676,7 +676,15 @@ function terminateChildTree(child) {
 }
 
 const OLLAMA_BIN = resolveOllamaBinary();
-const PYTHON_LAUNCHER = resolvePythonLauncher();
+// resolvePythonLauncher() spawns `python --version` (up to 4 candidates, 3s timeout
+// each), and aiGateway's boot warmup requires this module — so resolving it at load
+// time put a synchronous spawn on the startup path ([DESIGN-ARCH-178] P3: 启动路径
+// 模块顶层禁 spawn). Memoized on first actual use instead.
+let _pythonLauncher = null;
+function pythonLauncher() {
+  if (!_pythonLauncher) _pythonLauncher = resolvePythonLauncher();
+  return _pythonLauncher;
+}
 
 let _modelPath = DEFAULT_MODEL_PATH;
 let _backend = null; // 'ollama-runner' | 'node-llama-cpp' | 'python-server' | 'ollama' | null
@@ -1038,7 +1046,8 @@ function isPythonLlamaCppAvailable(forceRefresh = false) {
     return _pythonLlamaCppAvailable;
   }
   try {
-    execFileSync(PYTHON_LAUNCHER.cmd, [...PYTHON_LAUNCHER.preArgs, '-c', 'import llama_cpp'], {
+    const py = pythonLauncher();
+    execFileSync(py.cmd, [...py.preArgs, '-c', 'import llama_cpp'], {
       stdio: 'ignore',
       timeout: 4000,
       env: process.env,
@@ -1863,10 +1872,11 @@ async function startPythonServer() {
     let exitCode = null;
     let stderrTail = '';
 
+    const py = pythonLauncher();
     _pythonProcess = spawn(
-      PYTHON_LAUNCHER.cmd,
+      py.cmd,
       [
-        ...PYTHON_LAUNCHER.preArgs,
+        ...py.preArgs,
         serverScript,
         '--model',
         _modelPath,

@@ -37,6 +37,9 @@ const PROBE_TIMEOUT_MS = 5000;
 // cmd -> { ok: boolean, error: string, at: number }
 const _cache = new Map();
 
+// cmd -> in-flight Promise of the above, so concurrent async lookups share one probe.
+const _inflight = new Map();
+
 /**
  * Synchronous probe: `<cmd> --version`, falling back to a PATH lookup.
  * @param {string} cmd
@@ -203,23 +206,45 @@ let _launchGate = Promise.resolve();
  * later sync {@link check} (and vice versa) — semantics are identical, only the
  * probe mechanism differs.
  *
+ * Concurrent lookups for one command share a single probe (`_inflight`) — including
+ * `force` callers: "force" means *don't trust a settled cached result*, and a probe
+ * already in flight is by definition not stale, so joining it is exactly what a
+ * forced caller wants. Without this the gateway's boot detect fires the same
+ * `<cmd> --version` twice per adapter (adapters pass `{ force: forceRefresh }`),
+ * which measured 2026-10-03 as 12 boot spawns per `gw.init()`, each native spawn
+ * blocking the JS thread 100-450 ms on Windows.
+ *
  * @param {string} cmd
  * @param {object} [options]
  * @param {number} [options.ttlMs] - Override the cache TTL for this lookup.
- * @param {boolean} [options.force] - Ignore the cache and re-probe now.
+ * @param {boolean} [options.force] - Ignore a settled cache entry; probe now
+ *   (still joins a probe that is already in flight).
  * @returns {Promise<{ ok: boolean, error: string, at: number }>}
  */
 async function checkAsync(cmd, options = {}) {
   const ttlMs = Number.isFinite(options.ttlMs) ? options.ttlMs : DEFAULT_TTL_MS;
   const now = Date.now();
+  const pending = _inflight.get(cmd);
+  if (pending) return pending;
   const hit = _cache.get(cmd);
   if (!options.force && hit && ttlMs > 0 && now - hit.at < ttlMs) {
     return hit;
   }
-  const res = await _probeAsync(cmd);
-  const entry = { ok: res.ok, error: res.error, at: Date.now() };
-  _cache.set(cmd, entry);
-  return entry;
+  const p = _probeAsync(cmd)
+    .then((res) => {
+      const entry = { ok: res.ok, error: res.error, at: Date.now() };
+      _cache.set(cmd, entry);
+      if (_inflight.get(cmd) === p) _inflight.delete(cmd);
+      return entry;
+    })
+    .catch((err) => {
+      // Never leave a settled-but-rejected promise parked in _inflight: it would
+      // poison every later lookup for this command.
+      if (_inflight.get(cmd) === p) _inflight.delete(cmd);
+      throw err;
+    });
+  _inflight.set(cmd, p);
+  return p;
 }
 
 /**
@@ -279,6 +304,9 @@ function prewarm(cmds = []) {
  */
 function _clearCache() {
   _cache.clear();
+  // Drop in-flight probes too: after a reset nobody should be handed a promise
+  // that started against the state being cleared.
+  _inflight.clear();
 }
 
 module.exports = {
