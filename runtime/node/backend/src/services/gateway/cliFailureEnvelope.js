@@ -25,6 +25,13 @@
  * 诚实边界:只翻译**已发生**的信号(复用 gatewayErrorClassifier 的 errorType 与
  * buildChannelFailureAdvice 的既有判据),不做任何写入/网络/重试/猜测。
  *
+ * [DESIGN-ARCH-181] D3-3(环境级标题分流,一期):当 `result.routeFact.environmental===true`
+ * (D2 透传)且主码属于「无具体信号」白名单(NETWORK_ERROR / TIMEOUT / CHANNEL_EXHAUSTED /
+ * NONE)时,标题换「网络/代理不通(不是通道问题)」、hint 首条置「检查网络与代理」。
+ * 其余码(auth / rate_limit / model_not_found / 5xx / unavailable / 钉选类等)承载
+ * 通道侧或请求侧的**具体事实**,照实报,不被环境级覆盖 —— 与码序(契约②)同一条纪律。
+ * 不新增判码(保 114 单射互斥);`showPromoPanel` 亦不动(D5 三期事项,一期刻意不扩面)。
+ *
  * 契约:纯叶子——零副作用、绝不抛(任何异常 → 返回 CHANNEL_EXHAUSTED 兜底信封)、
  * 只吃 { result, env }。门控 KHY_CLI_FAILURE_ENVELOPE(默认开);关门 →
  * `{ enabled:false }`,调用方逐字节回退今日的 `errorMsg` 拼接路径。
@@ -218,6 +225,61 @@ const TITLES = {
   NONE: '本次请求未能完成',
 };
 
+// ── [DESIGN-ARCH-181] D3-3 环境级标题分流 ──────────────────────────────────
+// 白名单的取法:只收「连通层失败 / 未知」的通用码 —— 它们把故障归给「通道」是错的
+// 或至少是无信息的。其余码承载具体事实(auth→查 key / rate_limit→等窗口 /
+// model_not_found→查模型名 / 5xx→服务端 / unavailable→未启用 / 钉选类→解钉),
+// 环境级判定不得覆盖它们(否则等于用「网络问题」掩盖「该修 key」)。
+const ENV_TITLE = '本次请求未能完成 —— 网络/代理不通（不是通道问题）';
+const ENV_HINT_FIRST = '检查网络与代理（`khy doctor`）；恢复后说「继续」';
+const ENV_VARIANT_CODES = new Set(['NETWORK_ERROR', 'TIMEOUT', 'CHANNEL_EXHAUSTED', 'NONE']);
+
+/** 环境级变体是否适用:D2 透传标志 + 主码白名单。纯函数、绝不抛。 */
+function _envVariant(result, code) {
+  try {
+    const rf = result && typeof result === 'object' ? result.routeFact : null;
+    return !!(rf && rf.environmental === true) && ENV_VARIANT_CODES.has(code);
+  } catch {
+    return false;
+  }
+}
+
+/** 标题解析:环境级变体优先,其余落 TITLES 表。绝不抛。 */
+function _resolveTitle(code, envVariant) {
+  try {
+    return envVariant ? ENV_TITLE : TITLES[code] || TITLES.NONE;
+  } catch {
+    return TITLES.NONE;
+  }
+}
+
+/** hint 变体:环境级时把「检查网络与代理」置首(保留既有条目,不丢信息)。绝不抛。 */
+function _applyEnvVariant(hint, envVariant) {
+  try {
+    if (!envVariant || !Array.isArray(hint)) return hint;
+    return [ENV_HINT_FIRST, ...hint];
+  } catch {
+    return hint;
+  }
+}
+
+/**
+ * [DESIGN-ARCH-139] NO_ATTEMPT 的 registryFacts 实况注入(自 buildCliFailureEnvelope
+ * 逐字抽出:只为把被改文件的最长块压回棘轮基线内,行为不变)。绝不抛。
+ */
+function _withRegistryFacts(hint, code, registryFacts) {
+  try {
+    if (code !== 'NO_ATTEMPT' || !registryFacts || typeof registryFacts !== 'object') return hint;
+    const f = registryFacts;
+    const factLine =
+      `通道注册表实况:注册 ${Number(f.registered) || 0} 条 / enabled ${Number(f.enabled) || 0} 条` +
+      (f.strictPinned ? ` / strict 钉选 "${String(f.preferred || '')}"` : '');
+    return [factLine, ...hint.slice(1)];
+  } catch {
+    return hint;
+  }
+}
+
 /**
  * 判定一条 attempt 是否「通道根本不存在/未启用」——即钉选元原因的证据。
  * 判据:errorType==='unavailable' 且 statusCode 为 0/缺失(非 HTTP 拒绝,而是路由层直接判死),
@@ -359,16 +421,10 @@ function buildCliFailureEnvelope(input) {
     if (!Array.isArray(hint)) {
       hint = [];
     }
-    // [DESIGN-ARCH-139] 一期:NO_ATTEMPT 的首条 hint 从猜测改为实数。generate 末端
-    // 会在失败结果上附带 registryFacts(注册 N 条 / enabled M 条 / 钉选 X),有则
-    // 用实况替换「注册表为空,或全部通道未启用/未就绪」的猜测行;无字段则原样回退。
-    if (code === 'NO_ATTEMPT' && r.registryFacts && typeof r.registryFacts === 'object') {
-      const f = r.registryFacts;
-      const factLine =
-        `通道注册表实况:注册 ${Number(f.registered) || 0} 条 / enabled ${Number(f.enabled) || 0} 条` +
-        (f.strictPinned ? ` / strict 钉选 "${String(f.preferred || '')}"` : '');
-      hint = [factLine, ...hint.slice(1)];
-    }
+    // [DESIGN-ARCH-139] 一期:NO_ATTEMPT 的首条 hint 从猜测改为实数(已抽至 _withRegistryFacts)。
+    // [DESIGN-ARCH-181] D3-3:环境级命中且主码无具体信号 → 标题/hint 首条换环境级变体。
+    const envVariant = _envVariant(r, code);
+    hint = _applyEnvVariant(_withRegistryFacts(hint, code, r.registryFacts), envVariant);
 
     // 静态推广清单只在「确实没有任何可执行建议」时才允许占首屏(ARCH-114 §2.2 红线 R-GW-1)。
     const showPromoPanel = hint.length === 0 || code === 'CHANNEL_EXHAUSTED';
@@ -378,7 +434,7 @@ function buildCliFailureEnvelope(input) {
       ok: false,
       code,
       severity: code === 'CANCELLED' ? 'info' : 'error',
-      title: TITLES[code] || TITLES.NONE,
+      title: _resolveTitle(code, envVariant),
       cause: primaryCause,
       routing,
       hint,

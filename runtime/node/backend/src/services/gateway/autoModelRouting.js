@@ -107,9 +107,9 @@ function getStage(env = process.env) {
 
 // relay 系渠道沿旧 auto 语义恒为最后手段,不进全局池参与排序。
 const _POOL_EXCLUDED_KEYS = new Set(['relay', 'webrelay', 'web-relay']);
-// 观察样本落点:.khy/ruleguard/auto-route.jsonl(与 authzFailureLedger 同档惯例;
+// 观察样本落点:works/data/khy/ruleguard/auto-route.jsonl(与 authzFailureLedger 同档惯例;
 // env KHY_AUTO_MODEL_OBSERVE_FILE 可覆盖,测试注入用)。
-const _OBSERVE_REL = path.join('.khy', 'ruleguard', 'auto-route.jsonl');
+const _OBSERVE_REL = path.join('works', 'data', 'khy', 'ruleguard', 'auto-route.jsonl');
 const _OBSERVE_MAX_BYTES = 2 * 1024 * 1024; // 与 ruleguard 台账同档:超限裁留后半
 
 function _observePath(env = process.env) {

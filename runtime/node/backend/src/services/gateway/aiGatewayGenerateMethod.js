@@ -32,6 +32,15 @@ const { usageTracker } = require('../usageTracker');
 const failureExplainer = require('./failureExplainer');
 const keySelector = require('./keySelector');
 const { shouldSkipManualRelayInAutoCascade } = require('./manualRelayAutoFallbackPolicy');
+// [DESIGN-ARCH-181] 二期:兜底资格纯叶子(判据单一真源 + 环境级跳过规划/判定/重置)。
+// 回滚面:options.fallbackOwnership=false 时各消费点逐字节回退(见各调用点注释)。
+const {
+  strictRelaxQualifies: _strictRelaxQualifies,
+  planEnvOutageSkipStep: _planEnvOutageSkipStep,
+  isEnvOutageActive: _isEnvOutageActive,
+  resetEnvOutagePass: _resetEnvOutagePass,
+  ENV_OUTAGE_REPORT_NOTE: _ENV_OUTAGE_REPORT_NOTE,
+} = require('./fallbackEligibilityPolicy');
 
 // Declarative KHY_* env registry (defaults + off-word dialects) — used by the
 // gateway retry/recovery enhancements (context-overflow adjust / bg fast-fail /
@@ -2494,59 +2503,24 @@ const AIGatewayGenerateMethod = {
         );
       }
     }
-    const _shouldRelaxStrictPreferredOnFailure = (entryKey, errorType, errorMessage) => {
-      if (!strictPreferredOnly) {
-        return false;
-      }
-      // 用户显式钉选的渠道绝不放宽——只在所选渠道内重试，失败明确报错，不级联到 trae 等未选渠道。
-      if (userPinnedAdapter) {
-        return false;
-      }
-      if (!preferredAdapter || preferredAdapter === 'auto') {
-        return false;
-      }
-      if (entryKey !== preferredAdapter) {
-        return false;
-      }
-      const normalizedType = String(errorType || '')
-        .trim()
-        .toLowerCase();
-      const msg = String(errorMessage || '').toLowerCase();
-      // HTTP relay/api 首选通道遇「死端点」类失败（404→model_not_found/unavailable /
-      // 4xx→bad_request / 5xx→server_error）时放宽 strict，回退到可用通道。刻意排除
-      // auth/rate_limit/unsupported：活着但被限流/鉴权失败的端点应就地重试或换 key，
-      // 不该被级联甩掉（否则会掩盖 1302 之类）。注意网关 classifyError 把 404 归为
-      // model_not_found（见 errorClassifier），这正是用户 trae 死端点的真实类型。
-      if (
-        relayDeadEndpointRelax &&
-        _isHttpRelayAdapter(preferredAdapter) &&
-        _isDeadEndpointErrorType(normalizedType) &&
-        Number(this._adapterFailures[preferredAdapter] || 0) >= strictAutoRelaxMinFailures
-      ) {
-        return true;
-      }
-      // 既有 process-sensitive 通道（IDE 桥接类）放宽路径保持不变。
-      if (!allowStrictAutoRelaxOnProcess) {
-        return false;
-      }
-      if (!_isProcessSensitiveAdapter(preferredAdapter)) {
-        return false;
-      }
-      if (
-        normalizedType === 'process' ||
-        normalizedType === 'timeout' ||
-        normalizedType === 'network'
-      ) {
-        return true;
-      }
-      if (/adapter\s+\S+\s+queue timeout|queue task timeout/.test(msg)) {
-        return true;
-      }
-      if (_isTransientGatewayTransportMessage(msg)) {
-        return true;
-      }
-      return false;
-    };
+    // [181] 二期:D4 判据收拢——S2/S3 放宽资格改由纯叶子单一真源判定
+    // (fallbackEligibilityPolicy.strictRelaxQualifies;与旧内联实现全格等价,
+    // 由 fallbackEligibilityPolicy.test.js D 组 ≈13 万组合对拍钉住)。
+    const _shouldRelaxStrictPreferredOnFailure = (entryKey, errorType, errorMessage) =>
+      _strictRelaxQualifies({
+        strictPreferredOnly,
+        userPinnedAdapter,
+        preferredAdapter,
+        entryKey,
+        errorType,
+        errorMessage,
+        isHttpRelay: _isHttpRelayAdapter(preferredAdapter),
+        isProcessSensitive: _isProcessSensitiveAdapter(preferredAdapter),
+        failuresOnPreferred: this._adapterFailures[preferredAdapter],
+        minFailures: strictAutoRelaxMinFailures,
+        relayDeadEndpointRelax,
+        allowStrictAutoRelaxOnProcess,
+      });
     let _relaxRestart = false;
     const _maybeRelaxStrictPreferredOnFailure = (entryKey, errorType, errorMessage) => {
       if (!_shouldRelaxStrictPreferredOnFailure(entryKey, errorType, errorMessage)) {
@@ -3886,6 +3860,8 @@ const AIGatewayGenerateMethod = {
     // 外层 cascadeLoop 包裹整轮级联:网络抖动使整轮耗尽且全为瞬态失败时,退避等待后清除
     // 相关通道的瞬态冷却并重跑整轮(上限 cascadeJitterRetryRounds),实现「自愈几轮」。
     let _triedAdapters = new Set();
+    // [181] 二期:环境级跳过状态袋(policyOn=回滚面;floor=本证据窗口;announced=单次宣布)。
+    const _envGuard = { policyOn: options.fallbackOwnership !== false, localKeys: this._localAdapters, armed: false, floor: 0, announced: false };
     let _adapterIdx = 0;
     cascadeLoop: while (true) {
       if (process.env.KHY_DEBUG_TOOLS === '1') {
@@ -4031,6 +4007,13 @@ const AIGatewayGenerateMethod = {
           }
           continue;
         }
+        // [181] 二期(D2/消费点一):环境级(跨通道网络不可达)成立后,跳过剩余远端/桥接类
+        // 适配器(本地通道仍可尝试);留痕同 strict_pinned_skip 的 virtualSkip 型,不毒化熔断;
+        // 回滚面 options.fallbackOwnership=false 时 _planEnvOutageSkipStep 恒空转。
+        const _envStep = _planEnvOutageSkipStep(_envGuard, entry.key, allAttempts);
+        if (_envStep.arm) _envGuard.armed = true;
+        if (_envStep.statusText) { _envGuard.announced = true; emitStatus(_envStep.statusText); }
+        if (_envStep.skip) { if (_envStep.skipEntry) allAttempts.push(_envStep.skipEntry); continue; }
         if (!firstTriedAdapter) {
           firstTriedAdapter = entry.key;
         }
@@ -6245,10 +6228,12 @@ const AIGatewayGenerateMethod = {
       // 通道的瞬态冷却并重跑整轮级联,给网络恢复「几轮」机会,而非一轮耗尽直接甩
       // 「所有 AI 通道均不可用」墙。受轮次上限(cascadeJitterRetryRounds)、墙钟硬死线
       // (KHY_GATEWAY_HARD_TIMEOUT)与级联总次数封顶(_gatewayHardDeadline)约束,杜绝病态 churn。
+      // [181] 二期(消费点二):环境级(跨通道网络不可达)命中时不跑 jitter 轮,直接交「等待网络恢复」。
       if (
         cascadeJitterRetryRounds > 0 &&
         _cascadeJitterRound < cascadeJitterRetryRounds &&
-        !gatewayAbort.signal.aborted
+        !gatewayAbort.signal.aborted &&
+        !_isEnvOutageActive(_envGuard, allAttempts) // [181] 二期:环境级前置(回滚面见 _envGuard.policyOn)
       ) {
         const _realFailures = allAttempts.filter((a) => a && !a.virtualSkip);
         const _anyJitter = _realFailures.some((a) =>
@@ -6287,6 +6272,7 @@ const AIGatewayGenerateMethod = {
           totalAdapterAttempts = 0;
           totalRetryDelayMs = 0;
           _triedAdapters = new Set();
+          _resetEnvOutagePass(_envGuard, allAttempts); // [181] 二期:新一轮重置证据窗口(防上轮证据误判)
           _adapterIdx = 0;
           continue cascadeLoop;
         }
@@ -6378,6 +6364,7 @@ const AIGatewayGenerateMethod = {
               totalAdapterAttempts = 0;
               totalRetryDelayMs = 0;
               _triedAdapters = new Set();
+              _resetEnvOutagePass(_envGuard, allAttempts); // [181] 二期:探活成功,重置证据窗口,允许诚实重试
               _adapterIdx = 0;
               _resumeRecovered = true;
               continue cascadeLoop;
@@ -6521,6 +6508,7 @@ const AIGatewayGenerateMethod = {
 
     // Build detailed failure report
     const guidanceContent =
+      (_isEnvOutageActive(_envGuard, allAttempts) ? _ENV_OUTAGE_REPORT_NOTE : '') + // [181] 二期(消费点三):环境级注记置顶
       _visionExhaustionNote +
       _channelAdviceNote +
       _jitterRoundsNote +
