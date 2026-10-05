@@ -24,7 +24,7 @@
  *
  * Isolation: KHY_DATA_HOME / KHYQUANT_ROOT / KHY_EXTENSION_REPO_ROOT /
  * KHY_APP_HOME are pointed at temp dirs so the real ~/.khy, ~/.khyquant, and
- * the repo's own extensions/ never leak into the candidate set.
+ * the repo's own delivery/extension/ never leak into the candidate set.
  */
 
 const path = require('path');
