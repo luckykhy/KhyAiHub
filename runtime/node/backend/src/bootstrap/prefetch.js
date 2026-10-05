@@ -148,9 +148,21 @@ function deferredPrefetch(options = {}) {
   // serviceLifecyclePolicy 的 cli-startup 条目一一对应,scripts/check-lifecycle-policy.js 守卫防漂移。
   const policy = require('../services/serviceLifecyclePolicy');
 
+  // 机器余量探测（P2，零 spawn：只读 os.*）。低余量时不给本会话再添常驻开销，
+  // 与 runtimeResourceProbe 的 floorFreePct 同一把尺——否则会出现「环境告警说内存
+  // 不够」与「我们照旧起满常驻」同时发生的自相矛盾。读不到就退回原行为（fail-soft）。
+  let lowHeadroom = false;
+  try {
+    const probe = require('../services/runtimeResourceProbe');
+    const machine = probe.collectMachine();
+    lowHeadroom = machine.freePct < machine.floorFreePct;
+  } catch {
+    lowHeadroom = false;
+  }
+
   // 体积自检的提示发射:完整模式与轻量模式共用一份,免得两处文案漂移。
   // 只报不删 —— .khy 下躺着会话存档与工作区快照,自动清理判错是不可逆的。
-  const emitFootprintNotice = (cleanup) => {
+  const emitFootprintStorageNotice = (cleanup) => {
     try {
       const footprint = cleanup.assessRuntimeFootprint();
       if (footprint.notice) {
@@ -159,6 +171,27 @@ function deferredPrefetch(options = {}) {
       }
     } catch {
       /* 自检失败不该拦住启动 */
+    }
+  };
+
+  // 稳态资源读数（与 khy doctor「驻留资源」同一把尺，见 runtimeResourceProbe）。
+  // 只在超出判据时出一行——每帧都响的仪表会让人学会忽略它。
+  // 刻意零 spawn：本机一次派生被 Defender 税到 3.8–7.8s（DESIGN-PERF-005 实测），
+  // 一个要派生进程的仪表不如没有。
+  //
+  // 采样点被刻意移到所有一次性启动 timer firing 之后（见下方结算 timer）：
+  // 在启动窗口内采样时，尚未 firing 的 deferred setTimeout 仍是 active Timeout，
+  // 会把「本会话刚启动」误报成「定时器超预算」（2026-10-04 实测 26/20 即此）。
+  const emitResidencyNotice = () => {
+    try {
+      const probe = require('../services/runtimeResourceProbe');
+      const residency = probe.buildResidencyNotice(probe.collectRuntimeCensus({ phase: 'tui' }));
+      if (residency) {
+        const chalk = require('chalk').default || require('chalk');
+        emit(chalk.dim(`  资源  ${residency}`));
+      }
+    } catch {
+      /* 普查失败不该拦住启动 */
     }
   };
 
@@ -211,7 +244,7 @@ function deferredPrefetch(options = {}) {
         } catch {
           /* 同上 */
         }
-        emitFootprintNotice(cleanup);
+        emitFootprintStorageNotice(cleanup);
       } catch {
         /* non-critical */
       }
@@ -245,9 +278,13 @@ function deferredPrefetch(options = {}) {
       try {
         const cleanup = require('../services/cleanupService');
         const result = cleanup.runCleanup({ trigger: 'startup' });
-        cleanup.startPeriodicCleanup({ skipInitial: true });
+        // 低余量时只保留启动清理，不起周期 timer——与 cleanupService 自身
+        // KHY_ENABLE_PERIODIC_SCAN=false 的约束硬件处理同义，但改由实测余量触发。
+        if (!lowHeadroom) {
+          cleanup.startPeriodicCleanup({ skipInitial: true });
+        }
         // 体积自检:只报不删。清理跑完之后才测,报的才是清理之后的真实占用。
-        emitFootprintNotice(cleanup);
+        emitFootprintStorageNotice(cleanup);
         if (result.summary && result.summary.actions && result.summary.actions.length > 0) {
           try {
             const chalk = require('chalk').default || require('chalk');
@@ -386,9 +423,12 @@ function deferredPrefetch(options = {}) {
         /* non-critical */
       }
 
+      // 低余量时跳过安全监视（10 分钟一扫，非关键）；低内存机器上它只会加剧换页。
       try {
-        const { startSecurityMonitor } = require('../services/securityGuardService');
-        startSecurityMonitor();
+        if (!lowHeadroom) {
+          const { startSecurityMonitor } = require('../services/securityGuardService');
+          startSecurityMonitor();
+        }
       } catch {
         /* non-critical */
       }
@@ -396,6 +436,7 @@ function deferredPrefetch(options = {}) {
   };
 
   // 由策略调度:immediate 条目走 setImmediate(不进 timers,与原语义一致);其余 setTimeout。
+  let maxDelayMs = 0;
   for (const entry of policy.listStartupSchedule(process.env, mode)) {
     const run = RUNNERS[entry.id];
     if (typeof run !== 'function') {
@@ -405,8 +446,19 @@ function deferredPrefetch(options = {}) {
       setImmediate(run);
     } else {
       timers.push(setTimeout(run, entry.delayMs));
+      if (Number(entry.delayMs) > maxDelayMs) {
+        maxDelayMs = Number(entry.delayMs);
+      }
     }
   }
+
+  // 结算 timer:等所有一次性启动 timer firing 之后再采样驻留资源。delay 取调度表最大
+  // delayMs + 1s 缓冲——事件循环若被长同步任务阻塞,到期的 setTimeout 会按注册顺序集中
+  // firing,本 timer 注册在最后且 delay 最大,故必然最后跑;届时其余一次性启动 timer 均已
+  // 销毁,不再被 getActiveResourcesInfo 计入 Timeout(消除启动窗口误报,见 emitResidencyNotice)。
+  const settleTimer = setTimeout(emitResidencyNotice, maxDelayMs + 1000);
+  settleTimer.unref?.();
+  timers.push(settleTimer);
 
   // 轻量模式历史上在发出 deferred:scheduled checkpoint 之前就 return;逐字节保留(仅完整模式标记)。
   if (mode !== 'khy') {

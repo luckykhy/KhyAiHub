@@ -1118,6 +1118,25 @@ async function handleDoctor(options = {}, args = []) {
     });
   }
 
+  // Steady-state residency census (驻留资源). Spawn-free by design — see
+  // services/runtimeResourceProbe.js for why an instrument that spawns is worse
+  // than none on a Defender-taxed box. Fail-soft like the connectivity group.
+  // Only handleDoctor() pays the data-home walk; the other runDoctorChecks()
+  // caller (preflight) must not inherit a tree scan.
+  try {
+    checks.push(..._residentResourceChecks({ disk: true }));
+  } catch (err) {
+    checks.push({
+      category: '驻留资源',
+      label: '资源普查执行',
+      ok: false,
+      detail: `检查执行异常: ${String(err?.message || err).slice(0, 120)}`,
+      level: 'warn',
+      summary: '资源普查未能完成，本组结果不完整',
+      fix: '重跑 khy doctor；持续异常时用 khy doctor --json 查看本项 detail 定位',
+    });
+  }
+
   // Two-tier report (轮二十八): per-item summary/fix/note are produced by the
   // check sources; this handler only decorates, counts, and renders.
   const decorated = doctorReport.decorateChecks(checks);
@@ -1187,6 +1206,25 @@ async function handleDoctor(options = {}, args = []) {
 
   // rc semantics: hard failures must be machine-visible (P5, 轮二十八).
   if (totalFail > 0) _markFailure();
+}
+
+/**
+ * 驻留资源组：把 runtimeResourceProbe 的普查映射成 doctor 条目。
+ * 读数与预算判定都留在服务侧（一把尺），这里只做 doctor 方言；同一份 findings 也供
+ * 启动期 notice（bootstrap/prefetch.js）使用，两个画面不会互相说不一致。
+ */
+function _residentResourceChecks(opts = {}) {
+  const probe = require('../../services/runtimeResourceProbe');
+  const snap = probe.collectRuntimeCensus({ ...opts, phase: 'cli' });
+  return probe.assessResidency(snap).map((f) => ({
+    category: '驻留资源',
+    label: f.label,
+    ok: !f.exceeded,
+    detail: f.detail,
+    level: 'warn',
+    summary: f.summary,
+    fix: f.exceeded ? f.hint : undefined,
+  }));
 }
 
 /**
@@ -1286,7 +1324,7 @@ function runDoctorChecks() {
   // there). The launcher's own SSOT says the same — in bundle mode the runtime
   // "carries its own dependencies and writes its own .env", so `npm install` and
   // `.env` writing are skipped by design (_is_standalone_bundle_install,
-  // platform/khy_platform/cli.py:448). Hard-erroring on either therefore marked
+  // runtime/substrate/platform/khy_platform/cli.py:448). Hard-erroring on either therefore marked
   // EVERY healthy fresh install as broken and told the user to run `npm install`
   // inside site-packages. Guidance stays visible at warn level, which does not
   // count into doctor's hard-failure tally.
@@ -1359,7 +1397,7 @@ function runDoctorChecks() {
     if (dbType === 'sqlite' || dbType === 'auto') {
       // Check for SQLite file in common locations
       const sqliteLocations = [
-        path.join(ROOT, '.khy', 'khyquant', 'data', 'khy-quant.db'),
+        path.join(ROOT, 'works', 'data', 'khy', 'khyquant', 'data', 'khy-quant.db'),
         path.join(ROOT, 'data', 'khy-quant.db'),
         path.join(ROOT, 'khy-quant.db'),
         path.join(ROOT, 'data', 'database.sqlite'),

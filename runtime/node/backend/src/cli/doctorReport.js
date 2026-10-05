@@ -92,7 +92,7 @@ function buildActionLines(checks, { width = 80 } = {}) {
   lines.push('');
   const head =
     `  ${chalk.red.bold('需要处理 ' + pending.length + ' 项')}` +
-    (failCount > 0 ? chalk.dim(`（其中 ${failCount} 项影响核心功能）`) : chalk.dim('（均为可选功能）'));
+    (failCount > 0 ? chalk.dim(`（其中 ${failCount} 项影响核心功能）`) : chalk.dim('（不阻断核心功能，处置见各项修复）'));
   lines.push(head);
   for (const item of pending) {
     lines.push(_clip(`    ${_icon(item)} ${chalk.bold(item.label)} — ${item.summary || ''}`, width));
@@ -145,7 +145,7 @@ function buildSummaryLines(counts) {
   if (counts.fail > 0) {
     lines.push(`  ${chalk.yellow('ℹ')} 按上方行动清单逐项处理后可重跑 ${chalk.cyan('khy doctor')} 复查`);
   } else if (counts.warn > 0) {
-    lines.push(chalk.dim('  所有核心功能正常，警告项均为可选功能'));
+    lines.push(chalk.dim('  所有核心功能正常，警告项的处置见上方行动清单'));
   } else {
     lines.push(`  ${chalk.green('✔ 所有检查通过，系统就绪')}`);
   }
