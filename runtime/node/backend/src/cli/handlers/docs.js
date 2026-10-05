@@ -14,11 +14,23 @@ const { printInfo, printSuccess, printError } = require('../formatters');
 
 const DOCS_DIR = path.resolve(__dirname, '../../../docs');
 const BUNDLED_DOCS_DIR = path.resolve(__dirname, '../../bundled/docs');
-const FASTLANE_DOC_REL_PATH = path.join('指南', 'ai-快速通道.md');
+const FASTLANE_DOC_REL_PATH = path.join('07_OPS_运维', 'OPS-MAN', '[OPS-MAN-001] ai-快速通道.md');
 const MAINTAINER_MAP_REL_PATH = path.join('14_维护者', 'registry', '维护映射表.json');
 
 function getRepoRoot() {
-  // forest layout: handlers/ -> cli -> src -> backend -> services -> repo root (mirrored in bundle)
+  // Walk up to a repo marker rather than counting directories: a hand-counted depth
+  // silently pointed at `runtime/` after the layout move, so every keyFile failed the
+  // existsSync filter and the AI fast-lane pack shipped an EMPTY read order.
+  // Fallback keeps the old bundle-mirrored behaviour when no marker is above us.
+  let dir = __dirname;
+  for (let i = 0; i < 12; i++) {
+    if (fs.existsSync(path.join(dir, 'AGENTS.md')) && fs.existsSync(path.join(dir, 'pyproject.toml'))) {
+      return dir;
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
   return path.resolve(__dirname, '../../../../../');
 }
 
@@ -94,20 +106,20 @@ function readMaintainerMap() {
 }
 
 function buildAiFastlaneContextPack() {
-  const repoRoot = path.resolve(__dirname, '../../../../../');
+  const repoRoot = getRepoRoot();
   const keyFiles = [
     'AGENTS.md',
     'README.md',
-    'khy_platform/cli.py',
-    'backend/bin/khy.js',
-    'services/backend/src/cli/router.js',
-    'services/backend/src/cli/handlers/gateway.js',
-    'services/backend/src/services/aiManagementServer.js',
-    'services/backend/scripts/ai-manage-daemon.js',
-    'services/backend/src/services/changeRegressionGate.js',
-    'services/backend/src/services/bugfixRegressionGate.js',
-    'apps/ai-frontend/src/main.js',
-    'apps/ai-frontend/src/router/index.js',
+    'runtime/substrate/platform/khy_platform/cli.py',
+    'runtime/node/backend/bin/khy.js',
+    'runtime/node/backend/src/cli/router.js',
+    'runtime/node/backend/src/cli/handlers/gateway.js',
+    'runtime/node/backend/src/services/aiManagementServer.js',
+    'runtime/node/backend/scripts/ai-manage-daemon.js',
+    'runtime/node/backend/src/services/changeRegressionGate.js',
+    'runtime/node/backend/src/services/bugfixRegressionGate.js',
+    'delivery/web/ai-frontend/src/main.js',
+    'delivery/web/ai-frontend/src/router/index.js',
     'docs/07_OPS_运维/OPS-MAN/[OPS-MAN-001] ai-快速通道.md',
   ];
 
@@ -125,24 +137,24 @@ function buildAiFastlaneContextPack() {
     '',
     '## Architecture in 8 lines',
     '1. Entry command: `khy` (Python launcher in `runtime/substrate/platform/khy_platform/cli.py`).',
-    '2. Core runtime: Node.js backend (`services/backend/`).',
-    '3. CLI routing: `services/backend/src/cli/router.js` + per-command handlers.',
-    '4. AI gateway orchestration: `services/backend/src/cli/handlers/gateway.js`.',
-    '5. Management backend server: `services/backend/src/services/aiManagementServer.js`.',
-    '6. Management daemon/session: `services/backend/scripts/ai-manage-daemon.js`.',
-    '7. Management frontend: `apps/ai-frontend/` (Vue + Vite).',
+    '2. Core runtime: Node.js backend (`runtime/node/backend/`).',
+    '3. CLI routing: `runtime/node/backend/src/cli/router.js` + per-command handlers.',
+    '4. AI gateway orchestration: `runtime/node/backend/src/cli/handlers/gateway.js`.',
+    '5. Management backend server: `runtime/node/backend/src/services/aiManagementServer.js`.',
+    '6. Management daemon/session: `runtime/node/backend/scripts/ai-manage-daemon.js`.',
+    '7. Management frontend: `delivery/web/ai-frontend/` (Vue + Vite).',
     '8. Project-level constraints: `AGENTS.md` (must read first).',
     '',
     '## Mandatory Read Order',
     ...existingFiles.map((relPath, idx) => `${idx + 1}. ${relPath}`),
     '',
     '## Fast Task Routing',
-    '- Command parse/dispatch issues -> `services/backend/src/cli/router.js`',
-    '- AI provider/model/management page -> `services/backend/src/cli/handlers/gateway.js`',
-    '- Admin API or websocket behavior -> `services/backend/src/services/aiManagementServer.js`',
-    '- Management startup/timeout/auto-shutdown -> `services/backend/scripts/ai-manage-daemon.js`',
-    '- Low-tier model change regressions -> `services/backend/src/services/changeRegressionGate.js` (legacy compatibility: `bugfixRegressionGate.js`)',
-    '- Management page routing/session bridge -> `apps/ai-frontend/src/main.js`, `apps/ai-frontend/src/router/index.js`',
+    '- Command parse/dispatch issues -> `runtime/node/backend/src/cli/router.js`',
+    '- AI provider/model/management page -> `runtime/node/backend/src/cli/handlers/gateway.js`',
+    '- Admin API or websocket behavior -> `runtime/node/backend/src/services/aiManagementServer.js`',
+    '- Management startup/timeout/auto-shutdown -> `runtime/node/backend/scripts/ai-manage-daemon.js`',
+    '- Low-tier model change regressions -> `runtime/node/backend/src/services/changeRegressionGate.js` (legacy compatibility: `bugfixRegressionGate.js`)',
+    '- Management page routing/session bridge -> `delivery/web/ai-frontend/src/main.js`, `delivery/web/ai-frontend/src/router/index.js`',
     '',
     '## Handoff Prompt Template',
     '```text',
