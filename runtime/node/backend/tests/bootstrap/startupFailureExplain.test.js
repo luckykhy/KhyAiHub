@@ -182,12 +182,26 @@ test('ESM: ERR_MODULE_NOT_FOUND + "Cannot find package" 也被归因（不再回
   assertDangerFree(out);
 });
 
-test('ESM: win32 源码树用户也能拿到可照抄的修法', () => {
+test('源码树修法给出真实存在的目录，不再钉死在改名前的字面路径', () => {
   const hit = require('node:path').join(process.cwd(), 'node_modules', 'ink', 'index.js');
-  const out = sfe.explainStartupFailure(esmPackageNotFound(hit), 'win32', {});
-  assert.match(out, /services.backend 下先 npm install/, 'Windows 源码用户须有可照抄的修法');
-  const unixOut = sfe.explainStartupFailure(esmPackageNotFound(hit), 'linux', {});
-  assert.match(unixOut, /services.backend 下先 npm install/);
+  // 调用方（bin/khy.js）注入的根：真身而非字面量，路径再改名也不会把这条测试钉死在旧目录上。
+  const root = require('node:path').resolve(__dirname, '../..');
+  // 两条 classifier 各有一套源码树措辞（补装 / 先装），逐条都判，避免只守其一。
+  for (const [label, err] of [['deps', moduleNotFound('better-sqlite3')], ['hollow', esmPackageNotFound(hit)]]) {
+    for (const plat of ['win32', 'linux']) {
+      const out = sfe.explainStartupFailure(err, plat, { KHYQUANT_ROOT: root });
+      assert.ok(out, `${label}/${plat} 须归因出内容`);
+      const m = /在 (.+) 下[^。]*npm install/.exec(out);
+      assert.ok(m, `${label}/${plat} 源码树修法须给出目录，实得：${out}`);
+      assert.strictEqual(m[1], root, `${label}/${plat} 目录须来自注入的根，实得：${m[1]}`);
+      assert.ok(require('node:fs').existsSync(require('node:path').join(m[1], 'package.json')),
+        `打印出来的目录必须真装有 package.json：${m[1]}`);
+    }
+  }
+  // 崩溃早于 launcher 赋值（无注入）→ 通用措辞，且绝不复现改名前的字面路径。
+  const fb = sfe.explainStartupFailure(esmPackageNotFound(hit), 'win32', {});
+  assert.match(fb, /后端目录（含 package\.json 的 backend 目录） 下先 npm install/, '无注入时须退回通用措辞');
+  assert.ok(!fb.includes('services/backend'), `修法不得指向已迁走的目录：${fb}`);
 });
 
 test('ESM: 门关 → null（调用方逐字节回退今日裸 stack）', () => {

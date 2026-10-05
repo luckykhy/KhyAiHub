@@ -152,7 +152,12 @@ function _looksHollow(message) {
 }
 
 // 归因规则表：顺序即匹配优先级。每条 build(ctx) 返回 { cause, fixes:{common,win32,unix} }。
-// ctx = { code, message, missingModule, platform }。
+// ctx = { code, message, missingModule, platform, backendDir }。
+// Names the directory a source-tree user must run npm install in. Never a literal:
+// the repo move took `services/backend` out from under the printed instruction, so a
+// user with a broken startup was told to cd into a path that no longer exists.
+const _srcRootLabel = (ctx) => ctx.backendDir || '后端目录（含 package.json 的 backend 目录）';
+
 const _CLASSIFIERS = [
   {
     id: 'hollow-package',
@@ -176,9 +181,9 @@ const _CLASSIFIERS = [
           ],
           win32: [
             '若链接删不掉（文件占用）：先 khy stop 释放占用再删；仍失败则删整个后端 node_modules 后重跑 khy。',
-            '若从源码树运行：在 services/backend 下先 npm install，再重跑 khy。',
+            `若从源码树运行：在 ${_srcRootLabel(ctx)} 下先 npm install，再重跑 khy。`,
           ],
-          unix: ['若从源码运行：在 services/backend 下先 npm install，再重跑 khy。'],
+          unix: [`若从源码运行：在 ${_srcRootLabel(ctx)} 下先 npm install，再重跑 khy。`],
         },
       };
     },
@@ -203,9 +208,9 @@ const _CLASSIFIERS = [
           ],
           win32: [
             'Windows 若上次升级被文件占用中断：先 khy stop 释放占用，再 pip install --force-reinstall --no-cache-dir khy-os。',
-            '若从源码树运行：在 services/backend 下执行 npm install 补齐依赖，再重跑 khy。',
+            `若从源码树运行：在 ${_srcRootLabel(ctx)} 下执行 npm install 补齐依赖，再重跑 khy。`,
           ],
-          unix: ['若从源码运行：在 services/backend 下执行 npm install 补齐依赖。'],
+          unix: [`若从源码运行：在 ${_srcRootLabel(ctx)} 下执行 npm install 补齐依赖。`],
         },
       };
     },
@@ -276,6 +281,7 @@ function explainStartupFailure(err, platform = process.platform, env = process.e
       message,
       missingModule: _missingModuleName(message),
       platform: String(platform || ''),
+      backendDir: _safeStr(() => env && env.KHYQUANT_ROOT),
     };
     for (const c of _CLASSIFIERS) {
       let hit = false;
