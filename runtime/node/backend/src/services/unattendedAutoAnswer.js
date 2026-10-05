@@ -41,6 +41,46 @@ function isEnabled(env = process.env) {
   return ON_VALUES.includes(v);
 }
 
+// 子门控:高风险拒绝(默认开——拒绝是收紧方向,与 floor/footer 的默认开惯例同向;
+// 0/false/off/no 关闭 → 逐字节回退今日盲选行为)。
+function _riskDenyEnabled(env = process.env) {
+  const v = String(
+    (env && env.KHY_UNATTENDED_AUTOANSWER_RISK_DENY) == null
+      ? ''
+      : env.KHY_UNATTENDED_AUTOANSWER_RISK_DENY
+  )
+    .trim()
+    .toLowerCase();
+  return !(v === '0' || v === 'false' || v === 'off' || v === 'no');
+}
+
+// 拒绝串:合成文本(非选项标签),downstream 渲染 Q:/A: 给模型时语义自明——
+// 破坏动作未被批准,模型走安全路径续跑。
+const RISK_DENY_ANSWER = '[无人值守·高风险，已自动拒绝]';
+
+/**
+ * 被选中选项是否命中破坏性词表(单一真源复用:shellSafetyValidator 的 destructive
+ * prose 正则族,零新词表)。fail-soft:validator 不可用 → 无拒绝(逐字节回退基线,
+ * 本叶子「绝不抛」契约优先)。
+ * 已知边界:词表为英文技术语汇,中文破坏性问句不命中——中文词表是独立提案。
+ */
+function _isDestructiveChoice(label, env = process.env) {
+  if (!label) {
+    return false;
+  }
+  try {
+    const { _selectDestructivePatterns } = require('./shellSafetyValidator');
+    for (const { pattern } of _selectDestructivePatterns(env)) {
+      if (pattern.test(label)) {
+        return true;
+      }
+    }
+  } catch {
+    /* fail-soft: 词表不可用 → 基线行为 */
+  }
+  return false;
+}
+
 /** 取一个选项的可读标签(string 直接用,对象取 label/value)。 */
 function _optLabel(o) {
   if (typeof o === 'string') {
@@ -105,6 +145,19 @@ function _pickForQuestion(q, intentContext, env = process.env) {
   if (!answer) {
     return null;
   }
+  // 105 P-04 结论 1:无人值守自动作答按风险切换终止语义——被推荐/被校准到破坏性
+  // 选项时必须「自动拒绝」,不是自动放行。门在校准之后运行:拒绝优先于本意对齐
+  // (自动化来源 + 高风险 = 拒绝,period)。
+  if (_riskDenyEnabled(env) && _isDestructiveChoice(answer, env)) {
+    return {
+      qText,
+      answer: RISK_DENY_ANSWER,
+      recommended: false,
+      realigned,
+      denied: true,
+      reason: 'destructive-vocabulary',
+    };
+  }
   let recommended = false;
   try {
     recommended = questionQuality.isRecommendedOption(chosen);
@@ -144,6 +197,9 @@ function selectAutoAnswers(questions, env = process.env, intentContext = null) {
         answer: p.answer,
         recommended: p.recommended,
         realigned: !!p.realigned,
+        // Byte-identity: benign picks keep the legacy shape — the denied field
+        // only exists when a denial actually happened.
+        ...(p.denied ? { denied: true } : {}),
         reason: p.reason,
       });
     }
@@ -164,8 +220,15 @@ function buildAutoAnswerNote(picks) {
       return '';
     }
     const parts = picks.map((p) => {
-      // 透明轨迹:被按用户本意校准过的卡显式标注,让「不偏离本意」的动作可见、可审计。
-      const tag = p.realigned ? '(已按你的目标校准)' : p.recommended ? '(推荐)' : '';
+      // 透明轨迹:被按用户本意校准过的卡显式标注,让「不偏离本意」的动作可见、可审计;
+      // 高风险拒绝的卡显式标注拒绝原因(105 P-04「独立错误码」的可见对偶)。
+      const tag = p.denied
+        ? '[高风险·自动拒绝]'
+        : p.realigned
+          ? '(已按你的目标校准)'
+          : p.recommended
+            ? '(推荐)'
+            : '';
       return `「${p.question}」→ ${p.answer}${tag}`;
     });
     return `[无人值守·已自动采用推荐选项作答] ${parts.join('; ')}`;

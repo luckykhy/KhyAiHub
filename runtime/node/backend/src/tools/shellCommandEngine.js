@@ -16,6 +16,11 @@ const fs = require('fs');
 const { spawnWithIdleTimeout, smartDecodeWinOutput } = require('../utils/spawnWithIdleTimeout');
 const _execCompat = require('./_execCompat');
 const { backgroundShells: _backgroundShells } = require('./backgroundShellRegistry');
+// Child env hygiene: shell subprocesses default-inherit the user's full
+// environment, so sensitive-name variables are stripped before spawn unless
+// explicitly allowed (KHY_CHILD_ENV_POLICY, default on; off -> inherit as-is).
+let _childEnvPolicy = null;
+try { _childEnvPolicy = require('../services/childEnvPolicy'); } catch { _childEnvPolicy = null; }
 const {
   isGuiApp,
   spawnGuiApp,
@@ -357,6 +362,7 @@ async function executeShellCommand(params, context, shellOverride = null) {
     if (params.run_in_background === true) {
       const traceCtx = context && context.traceContext ? context.traceContext : {};
       let bgEnv = { ...process.env, ...(traceCtx && typeof traceCtx === 'object' ? traceCtx.env || {} : {}) };
+      if (_childEnvPolicy && _childEnvPolicy.isEnabled(process.env)) bgEnv = _childEnvPolicy.buildChildEnv(bgEnv);
       if (shellCfg.shell !== 'cmd') bgEnv = normalizePathEnvForWindows(bgEnv);
       const bgIdleMs = Math.max(
         1000,
@@ -416,6 +422,7 @@ async function executeShellCommand(params, context, shellOverride = null) {
       );
       const traceCtx = context && context.traceContext ? context.traceContext : {};
       let spawnEnv = { ...process.env, ...(traceCtx && typeof traceCtx === 'object' ? traceCtx.env || {} : {}) };
+      if (_childEnvPolicy && _childEnvPolicy.isEnabled(process.env)) spawnEnv = _childEnvPolicy.buildChildEnv(spawnEnv);
       if (shellCfg.shell !== 'cmd') spawnEnv = normalizePathEnvForWindows(spawnEnv);
       const shellBin = shellCfg.executable;
       const shellArgs = [...shellCfg.argsPrefix, execCommand];

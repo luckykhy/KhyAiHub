@@ -39,6 +39,17 @@ function isEnabledByEnv() {
   return _isTruthy(process.env.KHY_CLIPBOARD_IMG2FILE_ENABLED, true);
 }
 
+// 启动期是否自动拉起常驻桥 —— 默认**关**。与 isEnabledByEnv() 是两回事：那把是功能总闸
+// （关掉后连手动 start 都不起），这把只管「开机要不要常驻」。默认关的代价是「复制图片后
+// 要先 clipboard bridge start 才能 Ctrl+V 出路径」，换回的是实测约 85 MB 常驻 RSS
+// （powershell 5.1 + WinForms/Drawing）加每 500ms 一次轮询（实测 12s 内 0.17s CPU ≈1.4% 单核）；
+// 本机空闲内存常压在 15% 判据线上，这笔常驻会被换页放大成卡顿。[OPS-MAN-058] KHY_CLIPBOARD_*
+// 一节本就写着「AUTO_START 默认关（按需开）」——这里是把代码回正到文档口径，不是新政策。
+// 要旧行为设 KHY_CLIPBOARD_IMG2FILE_AUTO_START=true。
+function shouldAutoStart(env = process.env) {
+  return _isTruthy(env.KHY_CLIPBOARD_IMG2FILE_AUTO_START, false);
+}
+
 // 「即使开启也不要那么敏感」:一张剪贴板图片只有在**足够新**(捕获时间距当前在该窗口内)时才算
 // 有效附件,避免把很久以前复制、早已与当前对话无关的陈旧图片反复抓进来。默认 8 秒,可经
 // KHY_CLIPBOARD_IMG2FILE_FRESH_MS 覆盖(夹在 [1s, 5min])。返回毫秒。
@@ -270,6 +281,7 @@ function getClipboardImg2FileBridgeStatus() {
 module.exports = {
   isSupported,
   isEnabledByEnv,
+  shouldAutoStart,
   isClipboardImageFresh,
   getFreshWindowMs,
   startClipboardImg2FileBridge,

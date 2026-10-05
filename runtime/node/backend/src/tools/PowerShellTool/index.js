@@ -2,6 +2,10 @@ const { spawn } = require('child_process');
 
 const { BaseTool } = require('../_baseTool');
 const { searchExecutable } = require('../platformUtils');
+// Same child-env hygiene as shellCommandEngine (KHY_CHILD_ENV_POLICY, default
+// on; off -> no env param, inheriting the parent environment as before).
+let _childEnvPolicy = null;
+try { _childEnvPolicy = require('../../services/childEnvPolicy'); } catch { _childEnvPolicy = null; }
 
 class PowerShellTool extends BaseTool {
   static toolName = 'PowerShell';
@@ -45,6 +49,9 @@ Use for Windows-specific tasks, .NET operations, or PowerShell scripting.`;
       const proc = spawn(shell, ['-NoProfile', '-Command', params.command], {
         stdio: ['ignore', 'pipe', 'pipe'],
         timeout: params.timeout || 120000,
+        ...(_childEnvPolicy && _childEnvPolicy.isEnabled(process.env)
+          ? { env: _childEnvPolicy.buildChildEnv(process.env) }
+          : {}),
       });
       proc.stdout.on('data', (d) => output.push(d.toString()));
       proc.stderr.on('data', (d) => output.push(d.toString()));

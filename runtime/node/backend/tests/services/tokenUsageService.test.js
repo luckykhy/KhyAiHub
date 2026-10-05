@@ -157,3 +157,46 @@ describe('compression stats', () => {
     expect(stats.savedTokens).toBe(0);
   });
 });
+
+describe('cache read/write ledger split (c79c931)', () => {
+  // The gateway adapters already return cacheReadInputTokens/cacheWriteInputTokens
+  // (claude/codex direct paths); the ledger previously dropped them at the
+  // recordUsage entry, so cache-write tokens (billed at a 1.25x premium) were
+  // invisible to the daily/monthly spend. The split is ADDITIVE: the existing
+  // input/output/total columns keep their semantics — a write turn must stop
+  // masquerading as (or vanishing from) the miss column, not inflate it.
+
+  test('records cache read/write as separate columns without polluting input/total', () => {
+    recordUsage('Anthropic', 'claude-3-5-sonnet', 100, 200, 0.01, 30, 50);
+    const usage = getSessionUsage();
+    expect(usage.cacheReadTokens).toBe(30);
+    expect(usage.cacheWriteTokens).toBe(50);
+    // The split must NOT inflate the existing columns (write ≠ miss).
+    expect(usage.inputTokens).toBe(100);
+    expect(usage.outputTokens).toBe(200);
+    expect(usage.totalTokens).toBe(300);
+    // Per-request detail carries the split.
+    expect(usage.records[usage.records.length - 1].cacheReadTokens).toBe(30);
+    expect(usage.records[usage.records.length - 1].cacheWriteTokens).toBe(50);
+  });
+
+  test('legacy 5-arg calls keep cache columns at 0 (not undefined)', () => {
+    recordUsage('OpenAI', 'gpt-4o-mini', 100, 200);
+    const usage = getSessionUsage();
+    expect(usage.cacheReadTokens).toBe(0);
+    expect(usage.cacheWriteTokens).toBe(0);
+    expect(usage.inputTokens).toBe(100);
+  });
+
+  test('cache columns accumulate across calls and reset with resetUsage', () => {
+    recordUsage('Anthropic', 'claude-3-5-sonnet', 100, 200, 0, 30, 50);
+    recordUsage('Anthropic', 'claude-3-5-sonnet', 100, 200, 0, 0, 50);
+    let usage = getSessionUsage();
+    expect(usage.cacheReadTokens).toBe(30);
+    expect(usage.cacheWriteTokens).toBe(100);
+    resetUsage();
+    usage = getSessionUsage();
+    expect(usage.cacheReadTokens).toBe(0);
+    expect(usage.cacheWriteTokens).toBe(0);
+  });
+});

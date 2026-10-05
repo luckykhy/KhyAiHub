@@ -829,23 +829,56 @@ DESTRUCTIVE_PATTERNS_STRICT.push({
   detail: 'World-writable permissions (chmod a+w / o+w)',
 });
 
+// ── Chinese destructive-intent phrases (gated: KHY_SHELL_DESTRUCTIVE_CHINESE) ──
+// The unattended auto-answer risk gate reuses _selectDestructivePatterns, whose
+// table is English-only — a Chinese destructive option label ("删除所有日志")
+// passed through unpunished. Phrases are scoped (verb + range word) on purpose:
+// bare verbs like 删除/格式化 false-positive on benign prose ("删除参数",
+// "格式化日期"). Fail-closed is the right bias for an unattended gate (a wrong
+// denial is recoverable; a missed denial is not), but scoped phrases keep the
+// residual false positives rare. Off → the returned table omits these entries.
+const CHINESE_DESTRUCTIVE_PATTERNS = [
+  { pattern: /删除(所有|全部)|全部删除/, severity: 'critical', detail: '中文破坏性指令：批量删除' },
+  { pattern: /清空(所有|全部)|全部清空/, severity: 'critical', detail: '中文破坏性指令：批量清空' },
+  { pattern: /卸载(所有|全部)|全部卸载/, severity: 'critical', detail: '中文破坏性指令：批量卸载' },
+  { pattern: /覆盖(所有|全部)|全部覆盖/, severity: 'critical', detail: '中文破坏性指令：批量覆盖' },
+  { pattern: /抹掉(所有|全部)|全部抹掉/, severity: 'critical', detail: '中文破坏性指令：批量抹掉' },
+  { pattern: /销毁(所有|全部)|全部销毁/, severity: 'critical', detail: '中文破坏性指令：批量销毁' },
+  { pattern: /格式化(磁盘|硬盘|系统盘|[cCＣ]盘)/, severity: 'critical', detail: '中文破坏性指令：格式化存储' },
+  { pattern: /重装系统/, severity: 'critical', detail: '中文破坏性指令：重装系统' },
+];
+
 /**
  * Select the destructive-pattern table honoring KHY_SHELL_DESTRUCTIVE_FLAG_NORMALIZE.
  * ON (default) → strict superset (closes rm/dd/git-clean/chmod flag-spelling holes).
  * OFF → byte-revert to the original DESTRUCTIVE_PATTERNS. Fail-soft: any error → strict.
  *
+ * Additionally, when KHY_SHELL_DESTRUCTIVE_CHINESE is on (default), the
+ * Chinese destructive-intent phrase table is appended to whichever base table
+ * was selected. OFF → the base table only (byte-identical to legacy).
+ *
  * @param {object} [env]
  * @returns {Array<{pattern: RegExp, severity: string, detail: string}>}
  */
 function _selectDestructivePatterns(env = process.env) {
+  let base;
   try {
     const enabled = require('./flagRegistry').isFlagEnabled(
       'KHY_SHELL_DESTRUCTIVE_FLAG_NORMALIZE',
       env
     );
-    return enabled ? DESTRUCTIVE_PATTERNS_STRICT : DESTRUCTIVE_PATTERNS;
+    base = enabled ? DESTRUCTIVE_PATTERNS_STRICT : DESTRUCTIVE_PATTERNS;
   } catch {
-    return DESTRUCTIVE_PATTERNS_STRICT;
+    base = DESTRUCTIVE_PATTERNS_STRICT;
+  }
+  try {
+    const chineseOn = require('./flagRegistry').isFlagEnabled(
+      'KHY_SHELL_DESTRUCTIVE_CHINESE',
+      env
+    );
+    return chineseOn ? base.concat(CHINESE_DESTRUCTIVE_PATTERNS) : base;
+  } catch {
+    return base;
   }
 }
 
@@ -1027,5 +1060,6 @@ module.exports = {
   INTERPRETER_EVAL_SPECS,
   DESTRUCTIVE_PATTERNS,
   DESTRUCTIVE_PATTERNS_STRICT,
+  CHINESE_DESTRUCTIVE_PATTERNS,
   _selectDestructivePatterns,
 };

@@ -132,3 +132,69 @@ describe('Unattended Auto Answer', () => {
 
 });
 
+describe('unattended risk deny (P-04 conclusion 1)', () => {
+  // 105 P-04: unattended auto-answer must switch termination semantics by risk —
+  // a high-risk question gets an AUTO-DENY (with its own marker), never an
+  // auto-pick of the recommended (possibly destructive) option. The risk signal
+  // reuses the shellSafetyValidator destructive-pattern vocabulary (single
+  // source); the gate runs AFTER the intent guard, so a denial wins over
+  // intent alignment.
+
+  const ON_ENV = { KHY_UNATTENDED_AUTOANSWER: '1' };
+
+  test('destructive recommended option ??auto-denied, not picked', () => {
+      const q = [{
+        question: 'Proceed?',
+        options: [{ label: 'DROP TABLE users CASCADE' }, { label: 'Cancel migration' }],
+      }];
+      const r = ua.selectAutoAnswers(q, ON_ENV);
+      expect(r.answers['Proceed?']).toMatch(/拒绝/);
+      expect(r.answers['Proceed?']).not.toContain('DROP TABLE');
+      expect(r.picks[0].denied).toBe(true);
+      expect(r.picks[0].reason).toBeTruthy();
+  });
+
+  test('deny wins over intent realignment (gate runs after the intent guard)', () => {
+      const env = { ...ON_ENV, KHY_UNATTENDED_AUTOANSWER_INTENT_GUARD: '1' };
+      const q = [{
+        question: 'Proceed?',
+        options: [{ label: 'Cancel migration' }, { label: 'rm -rf /tmp/build' }],
+      }];
+      const ctx = { goalText: 'clean the build directory with rm -rf /tmp/build' };
+      const r = ua.selectAutoAnswers(q, env, ctx);
+      expect(r.picks[0].denied).toBe(true);
+      expect(r.answers['Proceed?']).not.toContain('rm -rf');
+  });
+
+  test('benign question ??byte-identical to today (regression lock)', () => {
+      const q = [{ question: 'DB?', options: [{ label: 'sqlite' }, { label: 'postgres' }] }];
+      const r = ua.selectAutoAnswers(q, ON_ENV);
+      expect(r.answers['DB?']).toBe('sqlite');
+      expect(r.picks[0].denied).toBeUndefined();
+  });
+
+  test('sub-gate off (KHY_UNATTENDED_AUTOANSWER_RISK_DENY=0) ??byte-identical legacy pick', () => {
+      const env = { ...ON_ENV, KHY_UNATTENDED_AUTOANSWER_RISK_DENY: '0' };
+      const q = [{
+        question: 'Proceed?',
+        options: [{ label: 'DROP TABLE users CASCADE' }, { label: 'Cancel migration' }],
+      }];
+      const r = ua.selectAutoAnswers(q, env);
+      expect(r.answers['Proceed?']).toBe('DROP TABLE users CASCADE');
+      expect(r.picks[0].denied).toBeUndefined();
+  });
+
+  test('overall gate off ??empty regardless (existing lock, dual-branch)', () => {
+      const q = [{ question: 'Proceed?', options: [{ label: 'DROP TABLE users' }] }];
+      const r = ua.selectAutoAnswers(q, {});
+      expect(r).toEqual({ answers: {}, picks: [] });
+  });
+
+  test('buildAutoAnswerNote: denied pick shows the risk-deny tag', () => {
+      const note = ua.buildAutoAnswerNote([
+        { question: 'Proceed?', answer: '[无人值守·高风险，已自动拒绝]', recommended: false, denied: true },
+      ]);
+      expect(note).toMatch(/高风险·自动拒绝/);
+  });
+});
+

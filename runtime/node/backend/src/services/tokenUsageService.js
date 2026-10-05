@@ -37,6 +37,8 @@ let _sessionUsage = {
   totalTokens: 0,
   requests: 0,
   costUSD: 0,
+  cacheReadTokens: 0,
+  cacheWriteTokens: 0,
   records: [], // per-request detail
 };
 
@@ -173,13 +175,30 @@ function monthKey() {
 
 /**
  * Record a single AI request's token usage.
+ *
+ * Cache read/write tokens get their own columns (additive, single-ledger split):
+ * the adapters already return cacheReadInputTokens/cacheWriteInputTokens, and a
+ * cache-WRITE is billed at a 1.25x premium — lumping or dropping it would make
+ * the daily/monthly spend dishonest. The columns are diagnostics: they never
+ * inflate inputTokens/totalTokens (a write turn must not masquerade as a miss).
+ *
  * @param {string} provider - e.g. 'OpenAI', 'Anthropic', 'Groq'
  * @param {string} model - e.g. 'gpt-4o-mini', 'claude-3-5-sonnet'
  * @param {number} inputTokens - prompt/input token count
  * @param {number} outputTokens - completion/output token count
  * @param {number} [costUSD=0] - estimated cost in USD (if available)
+ * @param {number} [cacheReadTokens=0] - prompt-cache read (hit) tokens
+ * @param {number} [cacheWriteTokens=0] - prompt-cache write (creation) tokens
  */
-function recordUsage(provider, model, inputTokens = 0, outputTokens = 0, costUSD = 0) {
+function recordUsage(
+  provider,
+  model,
+  inputTokens = 0,
+  outputTokens = 0,
+  costUSD = 0,
+  cacheReadTokens = 0,
+  cacheWriteTokens = 0
+) {
   const total = inputTokens + outputTokens;
 
   // Update session
@@ -188,6 +207,8 @@ function recordUsage(provider, model, inputTokens = 0, outputTokens = 0, costUSD
   _sessionUsage.totalTokens += total;
   _sessionUsage.requests += 1;
   _sessionUsage.costUSD += costUSD;
+  _sessionUsage.cacheReadTokens += cacheReadTokens;
+  _sessionUsage.cacheWriteTokens += cacheWriteTokens;
   _sessionUsage.records.push({
     provider,
     model,
@@ -195,6 +216,8 @@ function recordUsage(provider, model, inputTokens = 0, outputTokens = 0, costUSD
     outputTokens,
     total,
     costUSD,
+    cacheReadTokens,
+    cacheWriteTokens,
     timestamp: Date.now(),
   });
 
@@ -203,22 +226,48 @@ function recordUsage(provider, model, inputTokens = 0, outputTokens = 0, costUSD
   const month = monthKey();
 
   if (!_persistedMirror.daily[day]) {
-    _persistedMirror.daily[day] = { inputTokens: 0, outputTokens: 0, totalTokens: 0, requests: 0, costUSD: 0 };
+    _persistedMirror.daily[day] = {
+      inputTokens: 0,
+      outputTokens: 0,
+      totalTokens: 0,
+      requests: 0,
+      costUSD: 0,
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
+    };
   }
   _persistedMirror.daily[day].inputTokens += inputTokens;
   _persistedMirror.daily[day].outputTokens += outputTokens;
   _persistedMirror.daily[day].totalTokens += total;
   _persistedMirror.daily[day].requests += 1;
   _persistedMirror.daily[day].costUSD += costUSD;
+  // Pre-existing persisted entries predate the split — || 0 keeps a missing
+  // column from turning the accumulator into NaN.
+  _persistedMirror.daily[day].cacheReadTokens =
+    (_persistedMirror.daily[day].cacheReadTokens || 0) + cacheReadTokens;
+  _persistedMirror.daily[day].cacheWriteTokens =
+    (_persistedMirror.daily[day].cacheWriteTokens || 0) + cacheWriteTokens;
 
   if (!_persistedMirror.monthlyTotals[month]) {
-    _persistedMirror.monthlyTotals[month] = { inputTokens: 0, outputTokens: 0, totalTokens: 0, requests: 0, costUSD: 0 };
+    _persistedMirror.monthlyTotals[month] = {
+      inputTokens: 0,
+      outputTokens: 0,
+      totalTokens: 0,
+      requests: 0,
+      costUSD: 0,
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
+    };
   }
   _persistedMirror.monthlyTotals[month].inputTokens += inputTokens;
   _persistedMirror.monthlyTotals[month].outputTokens += outputTokens;
   _persistedMirror.monthlyTotals[month].totalTokens += total;
   _persistedMirror.monthlyTotals[month].requests += 1;
   _persistedMirror.monthlyTotals[month].costUSD += costUSD;
+  _persistedMirror.monthlyTotals[month].cacheReadTokens =
+    (_persistedMirror.monthlyTotals[month].cacheReadTokens || 0) + cacheReadTokens;
+  _persistedMirror.monthlyTotals[month].cacheWriteTokens =
+    (_persistedMirror.monthlyTotals[month].cacheWriteTokens || 0) + cacheWriteTokens;
 
   // Prune old months (keep 6 months)
   const months = Object.keys(_persistedMirror.monthlyTotals).sort();
@@ -615,7 +664,16 @@ function formatCostReport() {
  * Reset all usage data.
  */
 function resetUsage() {
-  _sessionUsage = { inputTokens: 0, outputTokens: 0, totalTokens: 0, requests: 0, costUSD: 0, records: [] };
+  _sessionUsage = {
+    inputTokens: 0,
+    outputTokens: 0,
+    totalTokens: 0,
+    requests: 0,
+    costUSD: 0,
+    cacheReadTokens: 0,
+    cacheWriteTokens: 0,
+    records: [],
+  };
   _compressionStats = { originalTokens: 0, compressedTokens: 0, savedTokens: 0, requests: 0 };
   _persistedMirror = { daily: {}, monthlyTotals: {} };
   _dirty = true;
