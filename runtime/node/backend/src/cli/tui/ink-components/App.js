@@ -6663,9 +6663,51 @@ function App({ options = {} }) {
     const age = _notifyNow - n.timestamp;
     return age >= 0 && age <= _notifyTtl;
   });
+  // P4/173:右栏「当前」锚 = 第一条进行中(无则第一条错误)任务行。tasksHidden
+  // 或清单为空 → 空串(该段不渲染,由 SidebarPanel 的空闲兜底接住)。
+  // ⚠ hideTaskSection 仍传 true —— 全宽面板是清单 canonical,右栏只取单行锚点。
+  const _sidebarCurrent = (() => {
+    try {
+      const ls = tasksHidden ? [] : Array.isArray(_taskProps.lines) ? _taskProps.lines : [];
+      const { taskLineStatus: _tls } = require('./taskPanelLines');
+      let firstErr = '';
+      for (const l of ls) {
+        const s = _tls(String(l == null ? '' : l).trimStart());
+        if (s === 'in_progress') return String(l);
+        if (s === 'error' && !firstErr) firstErr = String(l);
+      }
+      return firstErr;
+    } catch {
+      return '';
+    }
+  })();
+  // P4b:环境段数据 —— 工作目录 + 已加载工具计数。registry 纯读(getEnabled 是
+  // Map 遍历 + isEnabled 判断),但 **MCP 工具池是动态的**(每次同步会 clearMcpTools
+  // 重建)⇒ 每拍现算不缓存,避免拿到过期池;registry 未就绪/抛错 → 0(诚实缺省)。
+  const _sidebarCwd = process.cwd();
+  const _sidebarToolCounts = (() => {
+    try {
+      const reg = require('../../../tools');
+      // 防御性确保注册表已装载(loadTools 幂等:`if (_loaded) return`)——
+      // 正常情况下 agent 启动路径已装载,这里兜住「TUI 先于 agent 起来」的时序。
+      if (typeof reg.loadTools === 'function') {
+        reg.loadTools();
+      }
+      let mcp = 0;
+      try {
+        mcp = reg.getMcpToolNames().length;
+      } catch {
+        mcp = 0;
+      }
+      return { total: reg.getEnabled().size, mcp };
+    } catch {
+      return { total: 0, mcp: 0 };
+    }
+  })();
   const _sidebarProps = {
     taskLines: [],
     hideTaskSection: true,
+    currentLine: _sidebarCurrent,
     streaming: query.streaming,
     queueLen: query.queueLen || 0,
     notifications: _visibleNotifications,
@@ -6675,6 +6717,9 @@ function App({ options = {} }) {
     notifyFadeRatio: _notifyFade,
     width: _sidebarWidthV,
     selectedTool,
+    cwd: _sidebarCwd,
+    loadedToolsCount: _sidebarToolCounts.total,
+    mcpToolsCount: _sidebarToolCounts.mcp,
   };
   // Reserve ledger note (任务#8/#11): the post-first-message board shares the
   // flex row with the left live column, so its rows do NOT add to the live

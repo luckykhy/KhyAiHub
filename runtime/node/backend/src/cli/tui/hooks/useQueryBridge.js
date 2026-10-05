@@ -3210,7 +3210,7 @@ ${history}
               timeLimitReached: loopResult.timeLimitReached === true,
               absoluteLimit: loopResult.absoluteLimit === true,
               loopIterations: Number(loopResult.iterations || 0),
-              loopElapsedMs: Number(loopResult.maxElapsedMs || 0),
+              loopElapsedMs: Number(loopResult.maxElapsedMs || 0), routeFact: loopResult.routeFact || null,
             };
             // 诚实告知：这一轮是被上限/超时截断的，而不是任务做完了。
             // 走既有 notice 渲染路径（同文件 :2985 的先例），不新造消息类型。
@@ -3339,7 +3339,7 @@ ${history}
         // merged. Pure & total: returns the same array on no-op, so React
         // skips a re-render. Gate KHY_TUI_DEDUP_WINDOW_MS (0/false/off/no →
         // entire sweep off), semantics locked by queryBridgeTimelineLeaf.
-        setMessages((m) => dedupAdjacentAssistantBursts(m, process.env));
+        setMessages((m) => _withCascadeNotice(dedupAdjacentAssistantBursts(m, process.env), result));
         // Record context occupancy from the turn's reported usage so the footer
         // shows a real fill percentage instead of a hardcoded 0%.
         const usage = result && result.tokenUsage;
@@ -4317,6 +4317,35 @@ expandLastFoldable,
 resetContext,
 updateContextTokens,
 };
+}
+
+/**
+ * [DESIGN-ARCH-181] D3-2：回合结束后把「发生过跨通道兜底」作为**独立 notice 行**追加。
+ *
+ * 只读 `result.routeFact`（网关在 finishResult 挂载的路由事实单一真源）；文案由
+ * routeFact 叶子的 `formatCascadeNotice` 提供（仅「成功 + 真切换」时非空）。
+ * **不注入回复正文** —— notice 是独立行，避免污染复制/解析（设计红线）。
+ * fail-soft：任何异常 → 原样返回入参数组，绝不因披露失败影响回合。
+ *
+ * 落点说明（与棘轮共存）：调用点位于 useQueryBridge 最大的函数块内部，L1 文件棘轮
+ * 的 HARD 指标（最长块）不允许新增行，故本函数置于模块级、调用处以单行替换接入。
+ *
+ * @param {Array} messages 既有消息数组（dedup 后）
+ * @param {object|null} result 回合结果（含 routeFact 时才有披露）
+ * @returns {Array}
+ */
+function _withCascadeNotice(messages, result) {
+  const list = Array.isArray(messages) ? messages : [];
+  try {
+    const fact = result && typeof result === 'object' ? result.routeFact : null;
+    if (!fact) return list;
+    const { formatCascadeNotice } = require('../../../services/gateway/routeFact');
+    const text = formatCascadeNotice(fact);
+    if (!text) return list;
+    return [...list, { role: 'notice', content: text, timestamp: Date.now() }];
+  } catch {
+    return list;
+  }
 }
 
 /**

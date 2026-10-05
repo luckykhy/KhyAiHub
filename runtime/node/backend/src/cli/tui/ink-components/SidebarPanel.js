@@ -173,6 +173,26 @@ function buildSidebarLines(props = {}) {
   const build = (foldCompleted) => {
     const lines = [];
 
+    // 0. 当前锚(P4/[DESIGN-ARCH-176]):进行中(无则错误)任务的单行锚点 —— 右栏的
+    //    「此刻正在发生什么」职责。⚠ hideTaskSection 保持 true 不变:全宽 TaskListPanel
+    //    仍是清单的 canonical(注释见下方任务段),这里走**新参数 currentLine** 只给一行,
+    //    不复用下方任务段分支 ⇒ 该分支逐字节不动,既有测试零回归。
+    //    行样式复用 taskLineStatus + TASK_GLYPH(与任务段同源,配色绝不第二份)。
+    const currentRaw = typeof props.currentLine === 'string' ? props.currentLine.trim() : '';
+    if (currentRaw) {
+      const status = taskLineStatus(currentRaw);
+      if (status) {
+        const glyph = TASK_GLYPH[status];
+        const title = currentRaw.replace(/^[✓→✗○]\s*/, '');
+        lines.push({ text: t('当前'), bold: true });
+        lines.push({ text: t(`${glyph.icon} ${title}`), color: glyph.color, bold: !!glyph.bold });
+      } else {
+        // 图标不可识别 → 诚实原样展示(灰),绝不猜状态。
+        lines.push({ text: t('当前'), bold: true });
+        lines.push({ text: t(currentRaw), color: 'gray' });
+      }
+    }
+
     // 1. Task checklist. App owns the canonical full-width TaskListPanel and
     // passes hideTaskSection here so the optional right rail does not duplicate
     // tasks or show a misleading permanent empty state.
@@ -310,6 +330,44 @@ function buildSidebarLines(props = {}) {
         }
         lines.push(nline);
       }
+    }
+
+    // 5. 环境段(P4b/用户 2026-10-03 反馈「即使没有任务也要有工作目录、已加载工具」):
+    //    常驻信息,放底部(被动信息让位给顶部的「当前」锚)。数据由 App 传入
+    //    (buildSidebarLines 保持纯叶子):cwd 超宽时**保尾**截断(路径的尾部
+    //    才是有意义的部分,头部截断只剩盘符没信息量);工具给计数 + MCP 分项。
+    const cwd = typeof props.cwd === 'string' ? props.cwd.trim() : '';
+    const toolsCount = Math.max(0, Math.floor(Number(props.loadedToolsCount) || 0));
+    const mcpCount = Math.max(0, Math.floor(Number(props.mcpToolsCount) || 0));
+    if (cwd || toolsCount > 0) {
+      if (lines.length > 0) {
+        lines.push({ ...divider });
+      }
+      if (cwd) {
+        let tail = cwd;
+        while (measure(tail) > innerW - 1 && tail.length > 1) {
+          tail = tail.slice(1);
+        }
+        lines.push({
+          text: t((tail !== cwd ? '…' : '') + tail),
+          color: 'gray',
+          dim: true,
+        });
+      }
+      if (toolsCount > 0) {
+        lines.push({
+          text: t(`工具 ${toolsCount} 个` + (mcpCount > 0 ? ` · MCP ${mcpCount}` : '')),
+          color: 'gray',
+          dim: true,
+        });
+      }
+    }
+
+    // 6. 空闲兜底(P4/173「槽位恒在」):全部段都空时的最后防线(正常情况下环境段
+    //    已经把槽位占住,这里只在 App 没喂 cwd/工具数据时触发)。给一行 dim 待命
+    //    标记,不复刻已按确认规格移除的会话主题/上下文段(页脚/置顶栏另有展示)。
+    if (lines.length === 0) {
+      lines.push({ text: t('· 待命中'), color: 'gray', dim: true });
     }
 
     return lines;

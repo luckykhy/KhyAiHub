@@ -618,3 +618,139 @@ test('truncateToWidth: ASCII 快速路径与通用路径对 pure-ASCII 串结果
   assert.ok(fastResult.endsWith('…'));
   assert.ok(fastResult.length <= 7);
 });
+
+// ── P4/[DESIGN-ARCH-176]:右栏「当前」锚 + 空闲兜底 ──────────────────────────
+
+test('P4: currentLine 进行中 → 「当前」头行 + ● 高亮单行,置顶', () => {
+  const lines = buildSidebarLines({
+    width: 30,
+    hideTaskSection: true,
+    taskLines: [],
+    currentLine: '→ 修复登录校验',
+    streaming: { tools: [{ name: 'Bash' }] },
+  });
+  assert.strictEqual(lines[0].text, '当前');
+  assert.ok(lines[0].bold, '头行应加粗');
+  const anchor = findLine(lines, '修复登录校验');
+  assert.ok(anchor, '应有锚点行');
+  assert.ok(anchor.text.includes('●'), '进行中应映射 ● 图标(与任务段同源 TASK_GLYPH)');
+  assert.strictEqual(anchor.color, 'cyan');
+});
+
+test('P4: currentLine 错误任务 → ✗ 红(失败必须被看见)', () => {
+  const lines = buildSidebarLines({
+    width: 30,
+    hideTaskSection: true,
+    currentLine: '✗ 高度账本对不齐',
+  });
+  const anchor = findLine(lines, '高度账本对不齐');
+  assert.ok(anchor);
+  assert.ok(anchor.text.includes('✗'));
+  assert.strictEqual(anchor.color, 'red');
+});
+
+test('P4: 图标不可识别 → 诚实灰行,绝不猜状态', () => {
+  const lines = buildSidebarLines({
+    width: 30,
+    hideTaskSection: true,
+    currentLine: '？说不清状态的一行',
+  });
+  const anchor = findLine(lines, '说不清状态的一行');
+  assert.ok(anchor);
+  assert.strictEqual(anchor.color, 'gray');
+});
+
+test('P4: currentLine 缺失/非字符串 → 该段不渲染(零影响)', () => {
+  for (const currentLine of [undefined, '', null, 42, ['→ x']]) {
+    const lines = buildSidebarLines({
+      width: 30,
+      hideTaskSection: true,
+      taskLines: [],
+      currentLine,
+    });
+    assert.ok(!findLine(lines, '当前'), `currentLine=${JSON.stringify(currentLine)} 不该出「当前」段`);
+  }
+});
+
+test('P4: 空闲兜底 —— 全空 + hideTaskSection 时给「待命中」占位,行集永不为空', () => {
+  const lines = buildSidebarLines({
+    width: 30,
+    hideTaskSection: true,
+    taskLines: [],
+    streaming: {},
+    queueLen: 0,
+    notifications: [],
+  });
+  assert.ok(lines.length >= 1, '行集永不为空(组件不再返 null ⇒ 槽位不空洞)');
+  const idle = findLine(lines, '待命中');
+  assert.ok(idle, '应有待命占位行');
+  assert.ok(idle.dim, '占位行应为 dim');
+  assert.strictEqual(idle.color, 'gray');
+});
+
+test('P4: hideTaskSection=false 的既有路径字节级不变(任务段空态仍自足)', () => {
+  const lines = buildSidebarLines({ width: 30, taskLines: [] });
+  assert.ok(findLine(lines, '暂无任务'));
+  // 任务段自给 ≥2 行 ⇒ 待命兜底不触发
+  assert.ok(!findLine(lines, '待命中'));
+});
+
+// ── P4b:环境段(工作目录 + 已加载工具,常驻) ─────────────────────────────────
+
+test('P4b: cwd + 工具计数 → 环境段常驻渲染(有任务也显示)', () => {
+  const lines = buildSidebarLines({
+    width: 30,
+    hideTaskSection: true,
+    taskLines: [],
+    currentLine: '→ 有任务进行中',
+    cwd: 'D:\\Portable\\khy-os',
+    loadedToolsCount: 25,
+    mcpToolsCount: 3,
+  });
+  const cwdLine = findLine(lines, 'khy-os');
+  assert.ok(cwdLine, '应有目录行');
+  assert.ok(cwdLine.dim && cwdLine.color === 'gray', '目录行应为 dim gray(被动信息)');
+  const toolLine = findLine(lines, '工具 25 个');
+  assert.ok(toolLine, '应有工具计数行');
+  assert.ok(toolLine.text.includes('MCP 3'), '应带 MCP 分项');
+  // 环境段在底部:目录行应在「当前」锚之后
+  const anchorIdx = lines.findIndex((l) => l.text === '当前');
+  assert.ok(lines.indexOf(cwdLine) > anchorIdx, '被动信息让位给顶部当前锚');
+});
+
+test('P4b: cwd 超宽 → 保尾截断(尾部才有信息量,头部只剩盘符)', () => {
+  const longPath = 'D:\\very\\deep\\nested\\path\\that\\exceeds\\thirty\\columns\\khy-os';
+  const lines = buildSidebarLines({
+    width: 30,
+    hideTaskSection: true,
+    cwd: longPath,
+    loadedToolsCount: 1,
+  });
+  const cwdLine = findLine(lines, 'khy-os');
+  assert.ok(cwdLine, '尾部应保留');
+  assert.ok(cwdLine.text.startsWith('…'), '超宽应带头部省略号');
+  assert.ok(cwdLine.text.length <= 29, `宽度应在内(实得 ${cwdLine.text.length})`);
+});
+
+test('P4b: 工具 registry 未就绪(0/缺参) → 只显示 cwd,无计数行', () => {
+  const lines = buildSidebarLines({
+    width: 30,
+    hideTaskSection: true,
+    cwd: 'D:\\Portable\\khy-os',
+    loadedToolsCount: 0,
+  });
+  assert.ok(findLine(lines, 'khy-os'));
+  assert.ok(!findLine(lines, '工具'), '计数为 0 不该有工具行(诚实缺省)');
+});
+
+test('P4b: cwd 与工具都缺 → 环境段不渲染,待命兜底仍接住', () => {
+  const lines = buildSidebarLines({
+    width: 30,
+    hideTaskSection: true,
+    taskLines: [],
+    streaming: {},
+    notifications: [],
+  });
+  assert.ok(findLine(lines, '待命中'), '最后防线仍在');
+  assert.ok(!lines.some((l) => l.text.includes('工具')));
+});

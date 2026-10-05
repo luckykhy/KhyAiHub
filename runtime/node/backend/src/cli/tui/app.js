@@ -354,6 +354,89 @@ async function startInkApp(options = {}) {
     // 随后的 render(<App/>) 复用**同一个 ink 实例**（ink/build/render.js 的
     // `instances` WeakMap 按 stdout 复用），只是替换根元素 —— 视觉上连续，
     // 而且 App 在未就绪时本来渲染的也是 BootScreen（App.js 的 `_bootScreenEl`）。
+    //
+    // ⚠ 注意：这一帧的 `render()` 就是 ink 建实例的那一次，**它** 才是真正生效的
+    // options —— 详见下面 `_inkRenderOpts` 处的说明。故此处不写 render，统一挪到
+    // `_inkRenderOpts` 之后，只保留一处、且展开 `..._inkRenderOpts`。
+
+    // ── 帧预算守卫接线（2026-10-03）────────────────────────────────────────
+    // ⚠ 这里修的是一个「看起来对、其实从未生效」，而且踩中 ink 的一处**实例复用陷阱**：
+    //
+    //   `frameBudget.js` 写得完整、有单测、有棘轮设计，注释甚至写着「app.js feeds
+    //   that into record() here」—— 但全仓 **零 require**。ink 每帧都报的
+    //   `onRender({renderTime})` 从来没人接，「渲染帧超预算」这件事从未被观测过。
+    //   用户报「卡死不动只能结束进程」时，仓库里拿不出任何帧耗时数据来定位。
+    //
+    //   而「接上」这件事本身还有个坑：ink 的 `instances` WeakMap **按 stdout 复用实例**
+    //   （node_modules/ink/build/render.js:55 `getInstance`）。下面 BootScreen 那次
+    //   `render()` 用**同一个 _tuiStdout** 先建了实例；第二次 `render(App, {onRender})`
+    //   命中同一实例 → ink 只替换根元素，**整个 inkOptions 被丢弃**。
+    //   于是 onRender 传了也永不触发（本探针实测：boot 完成时 diagFrame 行数 = 0，
+    //   且最初那版把守卫只挂在第二次 render 上 —— 必须挪到第一次）。
+    //
+    //   故守卫**两次 render 都传**（真正生效的是第一次那次）。boot screen
+    //   被门控关掉时第一次不存在，第二次就是第一次 —— 两条路都覆盖。
+    //
+    // 守卫本身零依赖、永不抛错，record() 是 O(1) 入环，不引入新热路径。
+    // KHY_TUI_DIAG_FRAME=N：每 N 帧往 stderr 打一行滚动统计（与既有 KHY_TUI_DIAG /
+    // KHY_TUI_DIAG_H 同族，默认关、不参与行为分支）。
+    const _inkRenderOpts = (() => {
+      try {
+        const _perf = require('./perfTunables');
+        const _fb = require('./frameBudget');
+        const guard = _fb.createGuard({
+          budgetMs: _perf.frameBudgetMs(process.env),
+          sink: {
+            warn: (msg) => {
+              try {
+                process.stderr.write(`${msg}\n`);
+              } catch {
+                /* stderr 不可写 → 静默 */
+              }
+            },
+          },
+        });
+        // 诊断频次闸：只有显式开了 KHY_TUI_DIAG_FRAME 才计数/打印，默认零开销。
+        const raw = String((process.env && process.env.KHY_TUI_DIAG_FRAME) || '').trim();
+        const n = Number(raw);
+        const diagEvery = raw && Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+        let frames = 0;
+        return {
+          onRender: (e) => {
+            const rt = e && Number.isFinite(Number(e.renderTime)) ? Number(e.renderTime) : null;
+            if (rt == null) return;
+            guard.record(rt);
+            if (diagEvery > 0) {
+              frames += 1;
+              if (frames % diagEvery === 0) {
+                const s = guard.stats();
+                try {
+                  process.stderr.write(
+                    `[diagFrame] frames=${s.count} p50=${s.p50.toFixed(1)}ms p95=${s.p95.toFixed(1)}ms ` +
+                      `p99=${s.p99.toFixed(1)}ms max=${s.max.toFixed(1)}ms budget=${s.budgetMs}ms ` +
+                      `over=${s.overBudget ? 'YES' : 'no'}\n`
+                  );
+                } catch {
+                  /* diag only */
+                }
+              }
+            }
+            guard.maybeWarn();
+          },
+        };
+      } catch {
+        // 叶子不可用 → 逐字节回退今日行为（render 不传 onRender）
+        return {};
+      }
+    })();
+
+    // 预热帧：一就绪就先把**只有启动屏一棵子树**的帧落地（约几十毫秒），
+    // 让这段时间有画面、且启动屏自订阅节拍真源能实时刷百分比；
+    // 随后的 render(<App/>) 复用**同一个 ink 实例**（ink/build/render.js 的
+    // `instances` WeakMap 按 stdout 复用），只是替换根元素 —— 视觉上连续，
+    // 而且 App 在未就绪时本来渲染的也是 BootScreen（App.js 的 `_bootScreenEl`）。
+    //
+    // ⚠ 因为那次复用会丢弃第二次的 options，`_inkRenderOpts` 必须**两次都展开**。
     try {
       const bootScreenMod = require('./ink-components/BootScreen');
       if (bootScreenMod && bootScreenMod.BootScreen && bootScreenMod.isBootScreenEnabled(process.env)) {
@@ -361,6 +444,7 @@ async function startInkApp(options = {}) {
           stdout: _tuiStdout,
           stdin: process.stdin,
           exitOnCtrlC: false,
+          ..._inkRenderOpts,
         });
       }
     } catch {
@@ -372,6 +456,9 @@ async function startInkApp(options = {}) {
       stdin: process.stdin,
       // We handle Ctrl+C ourselves (cancel current turn vs. exit) inside <App/>.
       exitOnCtrlC: false,
+      // 与预热帧同一份守卫：实例复用会让这里被丢弃，但门控关掉 BootScreen 时
+      // 这次就是「第一次」，必须传。
+      ..._inkRenderOpts,
     });
 
     // Expose the instance so components can yield the terminal to interactive
