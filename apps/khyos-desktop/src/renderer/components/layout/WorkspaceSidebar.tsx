@@ -441,13 +441,16 @@ export function WorkspaceSidebar({
       byPath.set(p, arr)
     }
     const out: SidebarFolder[] = []
-    const transient: Task[] = []
     for (const [p, items] of byPath) {
+      // 空 workspacePath 与仓外临时目录都属于「未归属」，不在此处生成项目文件夹：
+      // 它们若先按 unassigned 出一份，下面第二遍扫描又会把它们并进「未归属」组，
+      // 同一批任务渲染两遍。
+      if (!p) continue
       const c = classifyWorkspacePath(p, projectRegs)
-      if (c.bucket === 'transient') { transient.push(...items); continue }
+      if (c.bucket === 'transient') continue
       out.push({
-        key: `project:${p || 'none'}`,
-        kind: p ? 'project' : 'unassigned',
+        key: `project:${p}`,
+        kind: 'project',
         name: c.name,
         items,
         projectPath: p,
@@ -794,14 +797,14 @@ export function WorkspaceSidebar({
                         type="button"
                         onClick={(e) => { e.stopPropagation(); openProjectDialog(folder.projectPath!) }}
                         className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 transition-colors ${
-                          folderMenuOpen
+                          projectDialog?.path === folder.projectPath
                             ? 'opacity-100 bg-surface-hover text-foreground'
                             : 'opacity-0 group-hover/f:opacity-100 text-foreground/50 hover:text-foreground'
                         }`}
                         title={folder.inferred ? '登记为项目（起个正式名字）' : '编辑项目登记'}
                         aria-label={`项目设置 ${folder.name}`}
-                        aria-haspopup="menu"
-                        aria-expanded={folderMenuOpen}
+                        aria-haspopup="dialog"
+                        aria-expanded={projectDialog?.path === folder.projectPath}
                       >
                         <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
                           <circle cx="6" cy="6" r="2" />

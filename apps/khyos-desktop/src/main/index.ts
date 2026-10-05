@@ -1300,12 +1300,15 @@ async function createWindow() {
   })
   // First-party URLs come from servicesDefaults (single truth source); main
   // resolves it via KHY_OS_DIR / relative fallback, same as the host bridge.
+  // 相对回退的基准是 out/main（`__dirname`），到仓库根要**上溯 4 级**
+  // （out/main → out → khyos-desktop → apps → <repo>）；此前写 3 级会停在
+  // `<repo>/apps`，叠加迁移前的旧路径段后整行恒不可达。
   ipcMain.handle('app:brandingLinks', async () => {
     try {
       const root = process.env.KHY_OS_DIR
         ? path.resolve(process.env.KHY_OS_DIR)
-        : path.resolve(__dirname, '..', '..', '..')
-      const sd = nodeRequire(path.join(root, 'services', 'backend', 'src', 'constants', 'serviceDefaults.js'))
+        : path.resolve(__dirname, '..', '..', '..', '..')
+      const sd = nodeRequire(path.join(root, 'runtime', 'node', 'backend', 'src', 'constants', 'serviceDefaults.js'))
       const host = sd.CLOUD_DEFAULT_HOST || ''
       return {
         ok: true,
@@ -1408,9 +1411,9 @@ app.whenReady().then(() => {
   // desktopUiContract D6 扫描本文件的 handle 字面量做 preload↔main 配对，
   // 实现体在 ./ptyHost（懒加载 @lydell/node-pty，fail-soft）。
   ipcMain.handle('pty:create', (e, opts) => ptyCreate(opts || {}, e.sender))
-  ipcMain.handle('pty:write', (_e, id, data) => ptyWrite(id, data))
-  ipcMain.handle('pty:resize', (_e, id, cols, rows) => ptyResize(id, cols, rows))
-  ipcMain.handle('pty:kill', (_e, id) => ptyKill(id))
+  ipcMain.handle('pty:write', (e, id, data) => ptyWrite(id, data, e.sender))
+  ipcMain.handle('pty:resize', (e, id, cols, rows) => ptyResize(id, cols, rows, e.sender))
+  ipcMain.handle('pty:kill', (e, id) => ptyKill(id, e.sender))
 
   if (KEY_MANAGER_STANDALONE) {
     // standalone entry: `npm run dev -- --key-manager` — only the manager

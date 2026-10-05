@@ -13,7 +13,7 @@
     "electron:dev": "node node_modules/electron-vite/bin/electron-vite.js dev",
     "electron:build": "node node_modules/electron-vite/bin/electron-vite.js build && electron-builder",
     "start": "electron-vite preview",
-    "test": "node --experimental-strip-types --test tests/keyStore.test.mjs tests/agentWriters.test.mjs tests/health.test.mjs tests/pacedProgress.test.mjs tests/keymapContract.test.mjs tests/wiringRuntime.test.mjs && node --test tests/keyManagerContract.test.cjs tests/desktopUiContract.test.cjs"
+    "test": "node --experimental-strip-types --test tests/keyStore.test.mjs tests/agentWriters.test.mjs tests/health.test.mjs tests/pacedProgress.test.mjs tests/keymapContract.test.mjs tests/wiringRuntime.test.mjs && node --test tests/keyManagerContract.test.cjs tests/desktopUiContract.test.cjs tests/sidebarProjectClassify.test.cjs"
   },
   "dependencies": {
     "@lydell/node-pty": "1.2.0-beta.15",

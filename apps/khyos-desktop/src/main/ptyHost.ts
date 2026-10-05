@@ -88,20 +88,30 @@ export async function ptyCreate(
   }
 }
 
-export function ptyWrite(id: string, data: string): void {
+// 会话归属校验：id 是 `pty-N` 顺序号，可猜。没有这一道，任何窗口都能按 id 往
+// 别的窗口的 shell 里写按键 / 杀进程。sessions 里已存 sender，这里只用它发数据、
+// 没用它做鉴权 —— 补上（`from` 可选，缺省不校验，供将来的主进程内部调用）。
+function owned(id: string, from?: WebContents): PtySession | undefined {
   const s = sessions.get(id)
+  if (!s) return undefined
+  if (from && s.sender !== from) return undefined
+  return s
+}
+
+export function ptyWrite(id: string, data: string, from?: WebContents): void {
+  const s = owned(id, from)
   if (!s) return
   try { s.pty.write(String(data ?? '')) } catch { /* dead pty: exit event will clean up */ }
 }
 
-export function ptyResize(id: string, cols: number, rows: number): void {
-  const s = sessions.get(id)
+export function ptyResize(id: string, cols: number, rows: number, from?: WebContents): void {
+  const s = owned(id, from)
   if (!s) return
   try { s.pty.resize(Math.max(2, Math.floor(cols)), Math.max(2, Math.floor(rows))) } catch { /* dead pty */ }
 }
 
-export function ptyKill(id: string): void {
-  const s = sessions.get(id)
+export function ptyKill(id: string, from?: WebContents): void {
+  const s = owned(id, from)
   if (!s) return
   sessions.delete(id)
   try { s.pty.kill() } catch { /* already gone */ }
