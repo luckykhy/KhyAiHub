@@ -4894,6 +4894,57 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 
 ### 16.6 施工执行状态（点头后逐批登记）
 
+> **2026-10-06 03:2x 节（第 16 节）**：**本节无未门控批次，零施工**；但本节记下**根 census 的第一次回升**，
+> 并且它的来源是仓内代码——这比上节的 `$null` 严重一级，因为会随每次运行复发。
+> 四锚复验先过：`git merge-base --is-ancestor` 对 `1af02147 / e34b0486 / 9f973566 / db63c679` **四者皆 OK**，
+> 本道三个台账提交与 W2c 那一刀都还在祖先链上。开测读数（03:20）：在飞 397、百度件 0、无 `index.lock`。
+>
+> **新事实 N（census 46 → 47，+1；机制坐实到行）**：根上出现 `.khy-runtime/`（内含 `ai_fastlane_context.md`，
+> 目录 ctime **03:03:53**）。它**对 git 不可见**（`.gitignore:67 .khy-runtime/`、`.dockerignore:39` 都覆盖它），
+> 但**对守卫可见**（`check-repo-layout` 的 Q-1 走 `fs.readdirSync`）⇒ 这正是本方案最怕的形状：
+> 一个由代码在根上造的、版本控制看不见的落点。造它的代码是
+> `runtime/node/backend/src/cli/handlers/docs.js:175-186` 的 `writeAiFastlaneContextPack()`，
+> 四个写入候选里第三条就是 `path.join(repoRoot, '.khy-runtime', fileName)`，循环体对**每个**候选
+> `mkdirSync(recursive) + writeFileSync` ⇒ 跑一次 `khy docs ai-fastlane` 就在根上补一个目录。
+> 同族第二写入点：`runtime/node/backend/src/services/deliveryLedger.js:67` 用 `process.cwd()` 拼同一根目录。
+> 归属：`docs.js` 最后一次改动 = **`22a6f01c`（03:04，他道）**，距我开测 16 分钟——不是历史遗留，是刚落的新行为。
+>
+> **它已经把跟踪测试打红第二次（同一耦合，上节刚记过）**：
+> `node --test scripts/tests/q1-criteria.test.js` → **`not ok 2`**，断言原文 `根上有未登记实体：.khy-runtime`，
+> `# pass 3 / # fail 1`；`check-repo-layout` 的 `root-uncatalogued` warning 同步复现。
+> 与 `$null` 的区别决定处理优先级：`$null` 是外部 shell 习惯造的一次性残渣，
+> `.khy-runtime` 是**仓内功能每次跑都造**——所以「移走就绿」对它不成立，只有改写入点或正式登记才收敛。
+>
+> **本道的两个「不做」，都写清理由**：
+> 1. **不把 `.khy-runtime` 补进 `ROOT_CATALOG` 来消 warning**——那是用登记掩盖落点违规（本仓已有同型禁令：
+> 不得为让门变绿而把产物注册进去）；而且 `check:data-layout` 的顶层预算是 **20**，实测 **47**，
+> 此刻往里加一项等于承认预算继续被突破却不记账。
+> 2. **不改 `docs.js` / `deliveryLedger.js` 的候选清单**——两文件此刻 `git status` 干净，但
+> 造这行为的提交 16 分钟前才落地，且其提交自述正是「修好上下文包的**仓根锚点**」，
+> 说明根上那一份可能是**故意的可发现性设计**。删它=改他道刚落的对外行为，属规则 6
+> （新增/变更先答五问）的面对象，须由人裁，不由本道代改。
+>
+> **待晨审三件（每件都给了命令，不需再查）**：
+> ① `.khy-runtime` 定性：留根契约（则同时进 `ROOT_CATALOG` + `DATA-LOCATIONS.json`，并承认顶层预算 47）
+> **或** 改指 `works/data/khyos/`（则删 `docs.js:182` 的根候选、`deliveryLedger.js:67` 改用 dataHome 访问器，
+> 验收命令：`node services/backend/bin/khy.js docs ai-fastlane` 后 `check:data-layout` 的**可寻址不涨**
+> 且 `q1-criteria.test.js` 4/4）。
+> ② **四个具名闸从 02:20 到 03:20 逐字节未变**（`RULES-REGISTRY.json` +69/−58、`MANIFEST.in` +11/−11、
+> `khy.bat` +1/−1、`.opencode/README.html` +10/−10，四组 numstat 完全一致）⇒ 它们不是「正在写」而是
+> **「写了没提交」**。等自己解除＝零产出等待（本道已连续两节验证），需人逐件决定提交或丢弃；
+> 这四件一提交，W2 的 CHANGELOG、W4、W6、W9 四批同时解锁，是现在**性价比最高的一次人工动作**。
+> ③ `.env.example` 待裁 #1 仍未答（第 15 节实测它在任何 `paths` 数组里都没有，纯待裁无技术闸）。
+>
+> **四判（本节零施工，判据④ 不适用）**：`check-repo-layout` **exit 0 / 0 error / 6 warning**
+> （5 条已知棘轮 + 复现的 `root-uncatalogued`）；`check-roots-isomorphic` **15**（持平）；
+> `check-debt-ledger` **exit 0 / 0/0**；`q1-criteria.test.js` **3 pass / 1 fail**——
+> **本道未修**（修它要么动他道刚落的代码，要么把杂物登记进封闭清单，两条都违反本仓纪律），
+> 如实挂红并给出 ① 的验收命令。`check:data-layout` 顶层**可寻址 47**：相对本道上节收口值 46 **+1**，
+> 即单调下降曲线在这里出现**中断点**。归因为 `22a6f01c`，非本道；**本道不签棘轮、不改基线**
+> （`layout.root-top-level` 的 measured 仍 54 不动）。
+>
+> **回滚**：本节只追加本块文字，`git revert` 单提交即回 03:2x 前态；无文件移动、无副作用。
+
 > **2026-10-06 02:2x 节（第 15 节）**：**本节无未门控批次，零文件移动**（按「无活可干时」条款记账收口）。
 > 先把上节的锚坐实：`git merge-base --is-ancestor e34b0486 HEAD` = **通过**，W2c 那一刀仍在祖先链里
 > （第 13 节写下的复验规则第一次上岗）。开测读数（02:20，探针 `.khyos/tmp/gate-scan-1005.js`）：
