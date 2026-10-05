@@ -2489,7 +2489,7 @@ async function searchUnified(query, opts = {}) {
   if (!hint && !isHtmlParsingAvailable()) {
     hint =
       'HTML 解析依赖 cheerio 未安装，无 key 搜索引擎（百度/Bing/DuckDuckGo）已降级。' +
-      '请在 services/backend 目录执行 npm install，或配置 Kiro 令牌使用 MCP 搜索。';
+      `请在 ${process.env.KHYQUANT_ROOT || '后端目录（含 package.json 的 backend 目录）'} 目录执行 npm install，或配置 Kiro 令牌使用 MCP 搜索。`;
   }
 
   // Plan A — 如实上抛缺失依赖：只有当**所有**搜索路径都已失败后，才给失败结果打上

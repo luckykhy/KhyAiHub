@@ -86,7 +86,7 @@ const ERRNO_REMEDIATION = {
   ENOSPC: () => ['磁盘空间不足：清理空间后重试（df -h 查看占用）。'],
   EMFILE: () => ['打开文件句柄过多：提高 ulimit -n，或排查句柄泄漏。'],
   MODULE_NOT_FOUND: (ctx) => [
-    `缺少 Node 依赖${ctx ? `：${ctx}` : ''}。在 services/backend 下运行 npm install 后重试。`,
+    `缺少 Node 依赖${ctx ? `：${ctx}` : ''}。在 ${process.env.KHYQUANT_ROOT || '后端目录（含 package.json 的 backend 目录）'} 下运行 npm install 后重试。`,
   ],
   ELOOP: () => ['符号链接成环：检查目标路径的软链接是否自引用。'],
 };

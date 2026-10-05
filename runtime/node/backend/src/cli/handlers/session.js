@@ -984,7 +984,7 @@ function handleSessionSearch(args, options = {}) {
       });
       return;
     }
-    printError('检索索引不可用（未安装 better-sqlite3）：全文检索需要它，可在 services/backend 下执行 npm install better-sqlite3 后重试。');
+    printError(`检索索引不可用（未安装 better-sqlite3）：全文检索需要它，可在 ${process.env.KHYQUANT_ROOT || '后端目录（含 package.json 的 backend 目录）'} 下执行 npm install better-sqlite3 后重试。`);
     return;
   }
 
