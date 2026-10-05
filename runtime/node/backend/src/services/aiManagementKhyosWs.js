@@ -500,6 +500,23 @@ function _mdWysiwygEnabled() {
   } // 保守:注册表不可用视为开(与 md.js flagOn 同 default-on 语义)。
 }
 
+// The launcher is found by walking up to the package that actually carries bin/khy.js.
+// A hand-counted depth landed outside the backend package after the layout move, and
+// because the child runs detached with stdio ignored, its "Cannot find module" never
+// reached the user — the UI had already reported 「系统托盘启动中…」 and nothing followed.
+function _resolveCliEntry(path) {
+  const fs = require('fs');
+  let dir = __dirname;
+  for (let i = 0; i < 8; i++) {
+    const candidate = path.join(dir, 'bin', 'khy.js');
+    if (fs.existsSync(candidate)) return candidate;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return path.resolve(__dirname, '..', '..', '..', 'bin', 'khy.js');
+}
+
 function handleKhyosTrayStart(session, msg) {
   if (!_webLocalActionsEnabled()) {
     return wsSend(session, {
@@ -522,7 +539,7 @@ function handleKhyosTrayStart(session, msg) {
     // 与 CLI `khy tray --detach` 同 SSOT:后台 detached 拉起托盘,立即 unref 返回,不占 WS 会话。
     // 用绝对路径解析 khy 入口,避免 PATH 劫持 (W3)。
     const path = require('path');
-    const khyBin = path.resolve(__dirname, '..', '..', '..', 'bin', 'khy.js');
+    const khyBin = _resolveCliEntry(path);
     const child = spawn(process.execPath, [khyBin, 'tray', '--detach'], {
       detached: true,
       stdio: 'ignore',
