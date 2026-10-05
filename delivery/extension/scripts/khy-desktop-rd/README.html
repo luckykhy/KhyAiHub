@@ -13,7 +13,7 @@
   <button class="menu-toggle" aria-label="菜单">☰</button>
   <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -34,7 +34,7 @@
 <p><strong>唯一移动壳是 Capacitor</strong>，桌面壳<strong>完全空缺</strong>。这是用户希望填补的空白。</p>
 <p>后端已经是 <strong>Express + ws 同进程</strong>形态（<code>services/backend/server.js</code>），已经托管前端 dist、已经有 <code>IDLE_SHUTDOWN_MS=60000</code> 自动关停、已经有 <code>bin/khy.js:1100-1194</code> 的&quot;spawn 后端 + 探测端口 + 拉前端&quot;路径——<strong>桌面壳嵌入后端的工程阻力非常低</strong>。</p>
 <h2 id="二-调研结论-4-个核心参考项目">二、调研结论：4 个核心参考项目<a class="anchor" href="#二-调研结论-4-个核心参考项目" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>排序</th><th>项目</th><th style="text-align:right">Stars</th><th>技术栈</th><th>与 khy-os 的关系</th><th>价值</th></tr></thead><tbody><tr><td>①</td><td><a href="openflux/">OpenFlux</a></td><td style="text-align:right">225</td><td><strong>Tauri v2</strong> + Rust + 内嵌 Node.js Sidecar</td><td><strong>架构同构</strong>（Tauri v2 壳 + Node.js AI Gateway）</td><td>最直接、最可抄</td></tr><tr><td>②</td><td><a href="goose/">goose</a></td><td style="text-align:right">53.7k</td><td><strong>Electron 43</strong> + React 19 + Express + 多 LLM</td><td>后端结构同构（Express + ws）</td><td>工程化最成熟、企业级</td></tr><tr><td>③</td><td><a href="chatml/">ChatML</a></td><td style="text-align:right">48</td><td><strong>Tauri 2</strong> + Go Backend + Claude Agent SDK</td><td>多层架构清晰、Provider 两层抽象</td><td>架构哲学参考</td></tr><tr><td>④</td><td><a href="one-api/">one-api</a></td><td style="text-align:right">36.7k</td><td>Go + React + 多 LLM 网关</td><td>khy-os 前端视觉风格的源头</td><td>设计 token 追溯</td></tr><tr><td>附</td><td><a href="cmdk/">kbar</a></td><td style="text-align:right">—</td><td>React  Cmd+K 覆盖层</td><td>ZCode 风格的关键组件</td><td>UI 组件参考</td></tr></tbody></table>
+<table><thead><tr><th>排序</th><th>项目</th><th style="text-align:right">Stars</th><th>技术栈</th><th>与 khy-os 的关系</th><th>价值</th></tr></thead><tbody><tr><td>①</td><td><a href="openflux">OpenFlux</a></td><td style="text-align:right">225</td><td><strong>Tauri v2</strong> + Rust + 内嵌 Node.js Sidecar</td><td><strong>架构同构</strong>（Tauri v2 壳 + Node.js AI Gateway）</td><td>最直接、最可抄</td></tr><tr><td>②</td><td><a href="goose">goose</a></td><td style="text-align:right">53.7k</td><td><strong>Electron 43</strong> + React 19 + Express + 多 LLM</td><td>后端结构同构（Express + ws）</td><td>工程化最成熟、企业级</td></tr><tr><td>③</td><td><a href="chatml">ChatML</a></td><td style="text-align:right">48</td><td><strong>Tauri 2</strong> + Go Backend + Claude Agent SDK</td><td>多层架构清晰、Provider 两层抽象</td><td>架构哲学参考</td></tr><tr><td>④</td><td><a href="one-api">one-api</a></td><td style="text-align:right">36.7k</td><td>Go + React + 多 LLM 网关</td><td>khy-os 前端视觉风格的源头</td><td>设计 token 追溯</td></tr><tr><td>附</td><td><a href="cmdk">kbar</a></td><td style="text-align:right">—</td><td>React  Cmd+K 覆盖层</td><td>ZCode 风格的关键组件</td><td>UI 组件参考</td></tr></tbody></table>
 <blockquote><p>完整 README + 关键源码 + 架构对比都在各子目录下。</p></blockquote>
 <h2 id="三-目标视觉风格-zcode-3-10-1">三、目标视觉风格：ZCode 3.10.1<a class="anchor" href="#三-目标视觉风格-zcode-3-10-1" aria-label="锚点">#</a></h2>
 <p>源: <code>D:\Portable\4-output\ZCode-UI\running\</code> 14 张截图</p>

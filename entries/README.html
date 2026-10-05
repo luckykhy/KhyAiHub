@@ -13,7 +13,7 @@
   <button class="menu-toggle" aria-label="菜单">☰</button>
   <a class="brand" href="../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -28,7 +28,7 @@
       <article class="doc-body">
 <h1 id="entries-khy-多端入口">entries/ — Khy 多端入口<a class="anchor" href="#entries-khy-多端入口" aria-label="锚点">#</a></h1>
 <blockquote><p><strong>这个目录回答一个问题</strong>：khy 有哪些端、每个端的入口在哪、怎么起、怎么构建、现在能不能用。</p>
-<p>本目录是<strong>真源（数据）</strong>；读写它的实现在<br><code>services/backend/src/services/entrypoints/</code>（见下方「表与代码为什么分居两处」）。<br>规范真源是 <a href="../docs/03_DESIGN_设计/DESIGN-ARCH/%5BDESIGN-ARCH-117%5D%20khy-多端入口矩阵.html"><code>[DESIGN-ARCH-117] khy 多端入口矩阵</code></a>。</p></blockquote>
+<p>本目录是<strong>真源（数据）</strong>；读写它的实现在<br><code>services/backend/src/services/entrypoints/</code>（见下方「表与代码为什么分居两处」）。<br>规范真源是 <a href="../docs/html/03_DESIGN_%E8%AE%BE%E8%AE%A1/DESIGN-ARCH/[DESIGN-ARCH-117]%20khy-%E5%A4%9A%E7%AB%AF%E5%85%A5%E5%8F%A3%E7%9F%A9%E9%98%B5.html"><code>[DESIGN-ARCH-117] khy 多端入口矩阵</code></a>。</p></blockquote>
 <hr>
 <h2 id="先看这个-exe-apk-html-在哪">先看这个：exe / apk / html 在哪<a class="anchor" href="#先看这个-exe-apk-html-在哪" aria-label="锚点">#</a></h2>
 <p><strong>本目录既是索引，也是构建产物的唯一根。</strong> 按 <code>[DESIGN-LAY-004]</code>（LAYOUT-005，构建产物单一根），<br>一切可再生构建产物落 <code>entries/&lt;producer&gt;/</code>（2026-09-18 迁移，原为仓库根 <code>_build/</code>）。<br>本目录里<strong>提交的</strong>只有三件索引文件（<code>entries.json</code> / <code>launch.js</code> / <code>README.md</code>），<br>余下 <code>entries/*</code> 子目录一律 gitignore（<code>.gitignore</code> 用「<code>entries/*</code> + 逐条 <code>!</code> 白名单」实现）。</p>

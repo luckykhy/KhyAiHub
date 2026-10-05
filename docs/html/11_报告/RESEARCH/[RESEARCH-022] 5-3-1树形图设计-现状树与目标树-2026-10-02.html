@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [RESEARCH-022] 5-3-1树形图设计-现状树与目标树-2026-10-02.md -->
+<title>[RESEARCH-022] 5-3-1 树形图设计 —— 现状树与目标树（一级→二级→往下） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>11_报告<span class="sep">›</span>RESEARCH<span class="sep">›</span>[RESEARCH-022] 5-3-1 树形图设计 —— 现状树与目标树（一级→二级→往下）</div>
+      <header class="hero reveal"><h1>[RESEARCH-022] 5-3-1 树形图设计 —— 现状树与目标树（一级→二级→往下）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#research-022-5-3-1-树形图设计-现状树与目标树-一级-二级-往下">[RESEARCH-022] 5-3-1 树形图设计 —— 现状树与目标树（一级→二级→往下）</a></li><li class="lvl-2"><a href="#0-本轮体检增量-先认账-再画图">0. 本轮体检增量（先认账，再画图）</a></li><li class="lvl-2"><a href="#1-判定标尺-先立尺子-再量树">1. 判定标尺（先立尺子，再量树）</a></li><li class="lvl-2"><a href="#2-现状树-as-is-一级-二级-往下">2. 现状树（As-Is）—— 一级 → 二级 → 往下</a></li><li class="lvl-2"><a href="#3-目标树-to-be-根收敛为五域-一契约面">3. 目标树（To-Be）—— 根收敛为五域 + 一契约面</a></li><li class="lvl-3"><a href="#3-1-设计推导-为什么是这五个域">3.1 设计推导（为什么是这五个域）</a></li><li class="lvl-3"><a href="#3-2-目标树全图-一级-二级-三级">3.2 目标树全图（一级 → 二级 → 三级）</a></li><li class="lvl-3"><a href="#3-3-认知树-根的-7-2-达标方式">3.3 认知树：根的 7±2 达标方式</a></li><li class="lvl-2"><a href="#4-迁移路线图-绞杀者-零破坏">4. 迁移路线图（绞杀者，零破坏）</a></li><li class="lvl-3"><a href="#4-1-阶段划分-依赖拓扑排序-先叶子-后主干">4.1 阶段划分（依赖拓扑排序：先叶子、后主干）</a></li><li class="lvl-3"><a href="#4-2-每阶段回滚">4.2 每阶段回滚</a></li><li class="lvl-3"><a href="#4-3-高风险区与破解">4.3 高风险区与破解</a></li><li class="lvl-2"><a href="#5-验证清单-可量化">5. 验证清单（可量化）</a></li><li class="lvl-2"><a href="#6-本轮已落地">6. 本轮已落地</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="research-022-5-3-1-树形图设计-现状树与目标树-一级-二级-往下">[RESEARCH-022] 5-3-1 树形图设计 —— 现状树与目标树（一级→二级→往下）<a class="anchor" href="#research-022-5-3-1-树形图设计-现状树与目标树-一级-二级-往下" aria-label="锚点">#</a></h1>
+<blockquote><p>日期：2026-10-02 · 上游：[RESEARCH-018]（5-3-1 符合性调研）、[RESEARCH-021]（复测与方案 R 收官）、[DESIGN-LAY-008] §13（方案 R）<br>本文回答一个问题：<strong>这棵树现在长什么样，按 5-3-1 应该长成什么样</strong>。<br>所有分组决定均标注 5-3-1 条款出处；所有数字来自当轮实测（脚本见 <code>.khyos/tmp/tree-survey.js</code> / <code>root-addressable.js</code>）。</p></blockquote>
+<hr>
+<h2 id="0-本轮体检增量-先认账-再画图">0. 本轮体检增量（先认账，再画图）<a class="anchor" href="#0-本轮体检增量-先认账-再画图" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>发现</th><th>数字</th><th>处置</th></tr></thead><tbody><tr><td>根宽<strong>瞬时风暴</strong></td><td>常态 58 项；风暴中实测 <strong>78</strong>（+24）</td><td>增量全部是 <code>*.baiduyun.uploading.cfg</code>——百度网盘客户端的<strong>上传中态</strong>元数据：未跟踪也未忽略，上传完成后客户端自行删除（本轮实测：78 → 58 复原）。风暴期间污染根宽与 git status</td></tr><tr><td>风暴免疫（本轮落地）</td><td><code>.gitignore</code> += <code>*.baiduyun.uploading.cfg</code>（git 侧隔离）；<code>DATA-LOCATIONS.json</code> topLevel 新增 <code>localStatePatterns</code> 豁免档（守卫侧不计预算、报告单列）</td><td>双侧落地后，下次同步风暴根宽读数不再漂移</td></tr><tr><td>本机态基线</td><td>gitignore 命中 5 项：<code>.khy</code> <code>.khyos</code> <code>khy-Trajectory</code> <code>.commandcode</code> <code>node_modules</code></td><td>已登记，不动</td></tr><tr><td><strong>services/ L2 泄漏</strong></td><td><code>services/</code> 下混入 <code>.env</code> <code>.env.bak-cleanup</code> <code>.khy/</code> <code>.khyos/</code> <code>Tools/</code> 5 项本机态/残留</td><td>B1 清理候选（先核消费者，见 §4.3）</td></tr><tr><td><strong>七层板块物理缺层</strong></td><td><code>tools/</code> 不存在（ENOENT）——LAYOUT-005 的 L6 在物理树上已由 <code>extensions/tools/</code> 承担</td><td>病灶登记，非本轮动作</td></tr><tr><td>宽度超限层（&gt;7）</td><td>根 58（常态）、<code>.khy</code> 409、<code>.khyos</code> 127、<code>scripts</code> 33、<code>docs</code> 32、<code>kernel</code> 16、<code>.github</code> 11、<code>.ai</code> 13、<code>evidence</code> 8</td><td>见 §2 现状树逐节点标注</td></tr></tbody></table>
+<p><strong>可寻址根宽</strong>（守卫权威读数 <code>check:data-layout</code>）：常态 <strong>57</strong>（目录 17 + 文件 41，预算 20）。<br>棘轮 <code>layout.root-top-level</code> 账面 60 → 本轮同步为 <strong>57</strong>（见 §5）。</p>
+<hr>
+<h2 id="1-判定标尺-先立尺子-再量树">1. 判定标尺（先立尺子，再量树）<a class="anchor" href="#1-判定标尺-先立尺子-再量树" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>5-3-1 条款</th><th>判定规则</th><th>本文用法</th></tr></thead><tbody><tr><td>§1 米勒定律 7±2</td><td>任何目录直接子项 ≤7，理想 5</td><td>每个树节点标 <code>[n ✓/=⚠]</code>；&gt;7 判超限</td></tr><tr><td>§1 分组策略</td><td>&gt;7 时引入<strong>中间抽象层</strong>分组</td><td>见 §4.3：物理不可移的根级契约用 00_INDEX 索引层分组</td></tr><tr><td>§2 三维定位（3 跳）</td><td>根目录→领域→模块→文件</td><td>每个目标域给一条 3 跳定位示例验证</td></tr><tr><td>§2 热温冷分离</td><td>热浅层 1-2，温中层 2-3，冷深层 3-4</td><td>域的排深依据：core 浅、docs 深</td></tr><tr><td>§3 五个顶级域</td><td>按生命周期/变更频率，非技术类型</td><td>目标树五域直接物理化 DOMAIN-DEPS 的 D1–D5</td></tr><tr><td>§3 三个标准子层</td><td>域内单一维度分层，禁混用</td><td>每域注明分层维度</td></tr><tr><td>§4 入口缓冲</td><td>新代码进缓冲区，不直写核心域</td><td><code>.wip</code> 工单制（已运行，§12.52）为该条款的现有实现</td></tr><tr><td>§5 零破坏</td><td>单向依赖 + 绞杀者共存 + git mv 保历史</td><td>§5 迁移分阶段，D1→D5 方向由 DOMAIN-DEPS enforced 门执行</td></tr></tbody></table>
+<hr>
+<h2 id="2-现状树-as-is-一级-二级-往下">2. 现状树（As-Is）—— 一级 → 二级 → 往下<a class="anchor" href="#2-现状树-as-is-一级-二级-往下" aria-label="锚点">#</a></h2>
+<pre><code>khy-os/                                      ← L1 根：常态 58 项（守卫可寻址 57；风暴中曾瞬时 78）⚠超限
+│
+├─① 运行板块（七层板块，物理余 6 层）————— 热：每日变更
+│   ├─ kernel/          [16 ⚠超限]           L0：boot/ bridge/ build/ docs/ iso/ moonbit/
+│   │                                        src/ tools/ userland/ vendor/ + linker.ld
+│   │                                        Makefile Dockerfile.kernel-build
+│   │                                        tools_gen_blob.sh README.{md,html}
+│   ├─ platform/         [4 ✓]               L1：delivery/ khy_platform/ packages/ tests/
+│   ├─ services/         [7 =]               L2：ai-backend/ backend/ ← 真·子层仅 2；
+│   │                                        泄漏：.env .env.bak-cleanup .khy/ .khyos/ Tools/
+│   ├─ apps/             [4 ✓]               L3：ai-frontend/ khy-os-client-app/
+│   │                                        khyos-desktop/ provider-hub/
+│   ├─ software/         [2 ✓]               L4：akshare_scripts/ khyquant/
+│   └─ extensions/       [3 ✓]               L5：bridges/ scripts/ tools/（L6 tools 已并入此）
+│
+├─② 产物与打包 ————————————————————————— 再生冷
+│   ├─ entries/          [7 ✓]               LAYOUT-005 产物单一根：pip/ executables/
+│   │                                        portable/ tools/ + entries.json launch.js README*
+│   ├─ packaging/        [5 ✓]               build/ installer/ modules/ npm/ + .env
+│   └─ patches/          [1 ✓]               （pnpm patchedDependencies 锁定）
+│
+├─③ 工程横切 ——————————————————————————— 温
+│   ├─ scripts/          [33 ⚠超限]          admin/ backend/ ci/ copyright/ docs/ evidence/
+│   │                                        frontend/ hooks/ install/ lib/ maintenance/
+│   │                                        memory/ moonbit/ portable/ quality-gate/
+│   │                                        quarantine/ release/ restore/ ruleguard/
+│   │                                        security/ sync/ tests/ __pycache__ + 10 散文件
+│   ├─ deploy/           [1 ✓]               free-test/
+│   ├─ tests/            [2 ✓]               DEBT.{md,html}
+│   ├─ .github/          [11 ⚠超限]
+│   ├─ .githooks/        [3 ✓]
+│   └─ electron/         [3 ✓]               （退役候选，§12.58：无 package.json 无调用点）
+│
+├─④ 人读档案 ——————————————————————————— 冷
+│   ├─ docs/             [32 ⚠超限]          01_INIT…19_资产 共 19 归档轴 + 索引/报告散页
+│   └─ evidence/         [8 =]               软著申报六区（R4 钉死留根）
+│
+├─⑤ 机器契约（根级文件 24 项）—————————— 热但不可移（工具只认根）
+│   ├─ 构建契约：package.json package-lock.json pnpm-lock.yaml pnpm-workspace.yaml
+│   │            pyproject.toml MANIFEST.in
+│   ├─ 部署契约：Dockerfile docker-compose.yml .dockerignore fly.staging.toml
+│   ├─ 工具契约：.gitignore .gitattributes .editorconfig .npmrc .clinerules .env.example .portable
+│   └─ 人读契约：README.md AGENTS.md CLAUDE.md CONTRIBUTING.md CHANGELOG.md SECURITY.md
+│
+└─⑥ 本机态（gitignore，不入仓）—————————— 不计入树
+    .khy/ .khyos/ .ai/ .zcode/ .cursor/ .opencode/ .workbuddy/ .workbuddy-ai/
+    .commandcode/ khy-Trajectory/ *.baiduyun.uploading.cfg×24 .git/ node_modules/</code></pre>
+<p><strong>现状树病灶三条</strong>（对应 5-3-1 条款违反点）：</p>
+<ol><li>根常态 58 项 → 违反 §1 米勒定律；且树中混有非仓库内容（风暴期 baiduyun 上传中态，已双侧免疫）。</li><li><code>services/</code> 混入本机态 → 违反 §3「1 个功能单元」的同层单一职责（运行代码层混入运行时数据）。</li><li><code>scripts/</code> 33 项、<code>docs/</code> 32 项 → 违反 §1；<code>docs/</code> 的 01–19 归档轴本身是合规的（19 &gt; 7 但轴是时间容器分组，§4 时间容器条款），超限的是<strong>散页</strong>（索引/报告 html 孪生 + 2 个 zip/指南）。</li></ol>
+<hr>
+<h2 id="3-目标树-to-be-根收敛为五域-一契约面">3. 目标树（To-Be）—— 根收敛为五域 + 一契约面<a class="anchor" href="#3-目标树-to-be-根收敛为五域-一契约面" aria-label="锚点">#</a></h2>
+<blockquote><p>⚠ <strong>真源声明（成文后 1 小时内补记）</strong>：本节成文的同时，并行道已在<br>[DESIGN-LAY-008] §17.3 重绘出<strong>获用户圈留裁决的权威终态树</strong>（四域<br><code>runtime/ business/ delivery/ works/</code> + 工具位 + 契约位，§17.4 可达阶梯<br>现状 57 → W 批全做 21 → W7 后 15 → 退役点名后 8/7）。<strong>目标树以 §17.3 为真源</strong>，<br>本节降格为<strong>佐证性独立推导</strong>：本报告从 DOMAIN-DEPS D1–D5 独立推出同一结论<br>（四/五个生命周期域物理化 + 契约面留根 + 本机态不入树），两棵树逐项映射如下，<br>分歧点以 §17 为准（含用户 2026-10-02 圈留 <code>.clinerules</code>/<code>.cursor</code> 的裁决）。<br>本报告<strong>不再另立批次</strong>：§4 的 B0/B1/B2 对应 §17.4 的 W 批阶梯，执行以 W 批为准。</p></blockquote>
+<table><thead><tr><th>本报告独立命名</th><th>§17.3 权威命名</th><th>备注</th></tr></thead><tbody><tr><td>core/（D1+D2+D3）</td><td>runtime/（substrate/boot/node/ai-backend/bin）</td><td>权威版已含 bin/ 与 .portable</td></tr><tr><td>products/（D4 前半）</td><td>delivery/（web/desktop/mobile/extension/artifact/channel）</td><td>权威版按渠道细分</td></tr><tr><td>engineering/（D5 前半）+ entries/</td><td>works/（build/verify/record/ship/quarantine/data/archive）</td><td>权威版把产物与工程合为一域；entries→artifact 待映射</td></tr><tr><td>docs/（D5 后半）</td><td>works/archive/（W9：.ai→record/ai、.khy*→data/）</td><td>权威版把档案收进 works</td></tr><tr><td>契约面 14 项留根</td><td>§17.3 根级契约位（README/AGENTS/.npmrc/package.json 等）</td><td>一致；W7 决定 pnpm 五件套去留</td></tr></tbody></table>
+<h3 id="3-1-设计推导-为什么是这五个域">3.1 设计推导（为什么是这五个域）<a class="anchor" href="#3-1-设计推导-为什么是这五个域" aria-label="锚点">#</a></h3>
+<p>不是新发明：<strong>DOMAIN-DEPS.json 已登记 D1–D5 五个逻辑域</strong>（含 roots / mayDependOn / enforced 门）。目标树只是把这五个<strong>逻辑域物理化</strong>成五个<strong>目录域</strong>——这正是 5-3-1 §3「五个顶级域按生命周期划分」与 §5「依赖方向」的一次性对齐：</p>
+<table><thead><tr><th>目标域</th><th>物理名</th><th>承接 D 域</th><th>变更频率</th><th>5-3-1 依据</th></tr></thead><tbody><tr><td>① 运行内核</td><td><code>core/</code></td><td>D1 运行时内核 + D2 业务上下文 + D3 共享底座</td><td>热（每日）</td><td>§3 生产域；§2 热=浅层 1-2</td></tr><tr><td>② 交付接入</td><td><code>products/</code></td><td>D4 交付与接入（apps/software/extensions）</td><td>温</td><td>§3 共享域；§2 温=中层 2-3</td></tr><tr><td>③ 构建产物</td><td><code>entries/</code></td><td>LAYOUT-005 产物单一根（已就位）</td><td>再生冷</td><td>§3 归档域；§2 冷=可隔离存储</td></tr><tr><td>④ 工程</td><td><code>engineering/</code></td><td>D5 工程与档案（scripts/packaging/deploy/patches/tests/.github）</td><td>冷</td><td>§3 基础设施域</td></tr><tr><td>⑤ 档案</td><td><code>docs/</code></td><td>D5 后半（两轴归档 + evidence 迁入）</td><td>冷</td><td>§3 归档域；§4 时间容器（01–19 轴已是）</td></tr></tbody></table>
+<h3 id="3-2-目标树全图-一级-二级-三级">3.2 目标树全图（一级 → 二级 → 三级）<a class="anchor" href="#3-2-目标树全图-一级-二级-三级" aria-label="锚点">#</a></h3>
+<pre><code>khy-os/                                ← L1 根 = 19 物理项 = 5 域目录 + 14 契约文件
+│                                        （认知上经 00_INDEX 收敛为 7 组，见 3.3）
+│
+├─ core/                    【①运行内核域·热】域内分层维度：抽象层级（§3 标准子层）
+│   ├─ kernel/              ← 原 L0 原样降入（git mv 保历史）
+│   │   └─ src/ boot/ userland/ moonbit/ …   （16→按 §12.43 kernel 内部方案另收）
+│   ├─ platform/            ← 原 L1：delivery/ khy_platform/ packages/ tests/
+│   └─ services/            ← 原 L2：backend/ ai-backend/
+│       ├─ backend/src/cli/…                  3 跳定位 ✓：根→core→services→backend
+│       └─ （D2 业务上下文 = backend/src/services/domain，D3 = utils/constants，
+│            逻辑域不动，仅物理上移一层）
+│
+├─ products/                【②交付接入域·温】分层维度：交付渠道（§3 单一维度）
+│   ├─ apps/                ← ai-frontend/ khy-os-client-app/ khyos-desktop/ provider-hub/
+│   ├─ software/            ← khyquant/（独立项目载体）+ akshare_scripts/
+│   └─ extensions/          ← bridges/ scripts/ tools/
+│
+├─ entries/                 【③产物域·再生冷】分层维度：生产者（LAYOUT-005，零改动）
+│   ├─ pip/  executables/  portable/  tools/
+│   └─ entries.json  launch.js  README.md
+│
+├─ engineering/             【④工程域·冷】分层维度：职能（构建/部署/质检/同步）
+│   ├─ scripts/             ← 33 → 收敛为 ≤7 子域（ci/ release/ ruleguard/ maintenance/
+│   │                          sync/ docs/ copyright/ …聚合）
+│   ├─ packaging/  patches/  tests/
+│   ├─ deploy/              ← 含 Dockerfile 三件套与 fly.staging.toml（B1 迁入）
+│   └─ .github/  .githooks/
+│
+├─ docs/                    【⑤档案域·冷】分层维度：时间容器（01–19 轴，§4 已合）
+│   ├─ 01_INIT_立项/ … 19_资产/
+│   └─ evidence/            ← 软著申报六区迁入（R4 钉根决定在 B2 窗口重议，见 §5 风险）
+│
+├─ bin/                     【启动器集中】khy.bat khy-cli.bat khy.sh install-khy.ps1
+│                             portable-setup.bat portable-setup.sh（B1 迁入）
+│
+└─ 机器契约面（14 项，物理不可移——工具只认仓库根）
+    package.json  package-lock.json  pnpm-lock.yaml  pnpm-workspace.yaml
+    pyproject.toml  MANIFEST.in          ← 构建契约：pip/pnpm/setuptools 只认根
+    README.md  AGENTS.md  CLAUDE.md      ← 人读契约：GitHub/助手框架只认根
+    .gitignore  .gitattributes  .editorconfig  .npmrc  .clinerules  ← 工具契约只认根
+    （SECURITY.md CONTRIBUTING.md → .github/；CHANGELOG.md/Dockerfile 等可移件见 §5 B1 清单）
+│
+└─ （本机态不入树：.khy .khyos .ai .zcode .cursor .opencode .workbuddy*
+     .commandcode khy-Trajectory *.baiduyun.uploading.cfg —— gitignore + LOCAL_STATE_DIRS）</code></pre>
+<h3 id="3-3-认知树-根的-7-2-达标方式">3.3 认知树：根的 7±2 达标方式<a class="anchor" href="#3-3-认知树-根的-7-2-达标方式" aria-label="锚点">#</a></h3>
+<p>物理根 19 项仍 &gt;7，但其中 14 项契约文件是<strong>工具硬绑定</strong>（pnpm/setuptools/git/docker 只读仓库根，物理不可移——这就是方案 R「根 = 契约面」结论在 B 档的延续）。5-3-1 §1 分组策略说「超过 7 个时引入中间抽象层分组」——分组层不必是物理目录，本仓已有<strong>索引层</strong> <code>docs/00_INDEX_仓库根.md</code>（六族地板索引）承担这个角色。目标态收敛为 <strong>7 个认知组</strong>：</p>
+<table><thead><tr><th>组</th><th>成员</th><th>数</th></tr></thead><tbody><tr><td>① core 运行内核</td><td>core/</td><td>1</td></tr><tr><td>② products 交付接入</td><td>products/</td><td>1</td></tr><tr><td>③ entries 产物</td><td>entries/</td><td>1</td></tr><tr><td>④ engineering 工程</td><td>engineering/</td><td>1</td></tr><tr><td>⑤ docs 档案</td><td>docs/ + bin/</td><td>2</td></tr><tr><td>⑥ 机器契约面</td><td>14 个根级文件（索引统一分组）</td><td>1</td></tr><tr><td>⑦ 本机态</td><td>gitignore 全部（不入树）</td><td>1（组）</td></tr></tbody></table>
+<p><strong>合计 7 组 = 米勒定律上限内（理想 5 + 2 容差）</strong>；物理残留 19 项中除 5 域目录外全部有唯一组归属，无孤儿。</p>
+<hr>
+<h2 id="4-迁移路线图-绞杀者-零破坏">4. 迁移路线图（绞杀者，零破坏）<a class="anchor" href="#4-迁移路线图-绞杀者-零破坏" aria-label="锚点">#</a></h2>
+<blockquote><p><strong>执行以 [DESIGN-LAY-008] §17.4 的 W 批阶梯为真源</strong>（含批次守恒表 §20.3 与<br>「B 档最早 2026-10-27 开闸」的人裁 §12.60）。本节保留为独立推导的对照视角，<br>批次命名（B0/B1/B2）不落地、不排期。</p></blockquote>
+<h3 id="4-1-阶段划分-依赖拓扑排序-先叶子-后主干">4.1 阶段划分（依赖拓扑排序：先叶子、后主干）<a class="anchor" href="#4-1-阶段划分-依赖拓扑排序-先叶子-后主干" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>阶段</th><th>动作</th><th>触碰面</th><th>风险</th><th>前置</th></tr></thead><tbody><tr><td><strong>B0 本轮已做</strong></td><td>baiduyun ×24 收编 .gitignore；services/ 泄漏清点；本报告</td><td>0 行为面</td><td>无</td><td>—</td></tr><tr><td><strong>B1 低风险收编</strong></td><td>启动器 7 件 + fly.staging.toml → <code>bin/</code>；SECURITY.md CONTRIBUTING.md → <code>.github/</code>（GitHub 官方支持位）；Dockerfile + .dockerignore + docker-compose.yml → <code>engineering/deploy/</code>（compose <code>-f</code> 与 <code>dockerfile:</code> 指针改 3 处）；services/ 泄漏 5 项核消费者后隔离</td><td>~15 文件移动 + 少量脚本/文档指针</td><td>低：全部是入口/文档位，无 import 面</td><td>需人点头（提交面可见）</td></tr><tr><td><strong>B2 七层降级</strong></td><td>kernel/platform/services → <code>core/</code>；apps/software/extensions → <code>products/</code>；scripts/packaging/deploy/patches/tests/.github → <code>engineering/</code>；evidence → <code>docs/</code></td><td><strong>全仓 import 路径、pnpm-workspace、pyproject packages、esbuild/装配脚本、CI workflow、9 处守卫白名单</strong></td><td>高：这是 §12.58 已判「需 release-freeze + 人拍板」的那一步</td><td>B1 完成 + 棘轮 ≥4 周稳定 + 发布冻结窗口</td></tr><tr><td><strong>B3 验收</strong></td><td>守卫全套绿 + 根物理 19 / 认知 7 达标 + 3 跳定位抽检</td><td>只读</td><td>—</td><td>B2</td></tr></tbody></table>
+<blockquote><p>B2 之前的一切都不动七层板块——§5 零破坏约束：新旧结构共存，<code>core/</code> 建立之日 <code>kernel/</code> 等旧路径由指针/装配兼容期承接（绞杀者模式），切换完成后旧壳按规则 7（删除先报部位）退役。</p></blockquote>
+<h3 id="4-2-每阶段回滚">4.2 每阶段回滚<a class="anchor" href="#4-2-每阶段回滚" aria-label="锚点">#</a></h3>
+<ul><li>B0/B1：纯 git mv + 指针修改，<code>git revert</code> 单提交即可回滚；启动器移动后保留根级 3 行 shim（<code>bin/khy.bat</code> 转发）一个发布周期。</li><li>B2：移动提交与兼容层提交<strong>分离</strong>；回滚 = revert 兼容层提交即回到旧路径生效态，物理目录移动最后统一 revert。</li><li>全程 <code>.khyos/housekeeping/&lt;日期&gt;/</code> manifest（LAYOUT-003 只隔离不删除语义）。</li></ul>
+<h3 id="4-3-高风险区与破解">4.3 高风险区与破解<a class="anchor" href="#4-3-高风险区与破解" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>风险</th><th>破解</th></tr></thead><tbody><tr><td><code>scripts/</code> 33 → 7 子域的聚合会移动 CI 脚本路径（workflow YAML 引用）</td><td>聚合在 B2 内最后做；先用 <code>npm run</code> 入口层做稳定面（workflow 只引 npm script，不引路径）</td></tr><tr><td>B2 大移动与并行窗口冲突</td><td>B2 开工前冻结并行道（单窗口执行），移动提交按目录族拆 5 个提交</td></tr><tr><td>evidence 迁入 docs 与 R4「钉死留根」冲突</td><td>R4 判词是「本批不动」（软著 80 处机器引用）；B2 重议时以 <code>COPYRIGHT-MATERIALS.json</code> 路径批量更新为前提，需软著链复跑</td></tr><tr><td><code>services/.env</code> 是运行时 cwd 依赖</td><td>先核 <code>instructionFileService</code>/启动器 cwd 约定再动，属 B1 内最后一步</td></tr></tbody></table>
+<hr>
+<h2 id="5-验证清单-可量化">5. 验证清单（可量化）<a class="anchor" href="#5-验证清单-可量化" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>检查</th><th>目标</th><th>仪器</th></tr></thead><tbody><tr><td>V1</td><td>根物理项</td><td>以 §17.4 选定档位为准（21/15/8/7 阶梯）</td><td><code>check:data-layout</code> 棘轮（target 20）</td></tr><tr><td>V2</td><td>根认知组</td><td>7</td><td><code>00_INDEX</code> 覆盖探针（<code>.khyos/tmp/index-coverage.js</code>）</td></tr><tr><td>V3</td><td>每层直接子项</td><td>≤7（docs 归档轴按时间容器条款豁免）</td><td>tree-survey 常驻化候选（新机制须走规则 8 S1 起档，暂手工轮）</td></tr><tr><td>V4</td><td>依赖方向</td><td>D1–D5 enforced 门 0 error</td><td><code>archDebtScan</code> / <code>check-repo-layout</code></td></tr><tr><td>V5</td><td>3 跳定位</td><td>每域抽 1 条路径实测 ≤3 跳到模块</td><td>本报告 §3.2 注释，B3 复测</td></tr><tr><td>V6</td><td>零破坏</td><td>B1/B2 每提交后全守卫绿 + <code>khy doctor</code></td><td>pre-commit 门 + 冒烟</td></tr><tr><td>V7</td><td>历史保留</td><td>全部移动走 <code>git mv</code>（rename 检测 ≥90%）</td><td><code>git log --follow</code> 抽检</td></tr></tbody></table>
+<hr>
+<h2 id="6-本轮已落地">6. 本轮已落地<a class="anchor" href="#6-本轮已落地" aria-label="锚点">#</a></h2>
+<ol><li><code>*.baiduyun.uploading.cfg</code> 双侧免疫：<code>.gitignore</code> 追加（git 侧隔离，不删除，LAYOUT-003）+ <code>DATA-LOCATIONS.json</code> <code>topLevel.localStatePatterns</code> 豁免档 + 守卫按模式豁免并单列可见（防下次同步风暴漂移读数）。风暴在本轮观测窗口内自行消退（客户端上传完成自清在制件），守卫直读与 §17.4「现状 57」逐字吻合。</li><li>棘轮 <code>layout.root-top-level</code> measured 60 → <strong>57</strong>（本轮守卫权威读数；debt-ledger 注记两次观测：夜班「不改口径」判词 + 本批「真实出清」追加，降幅非口径调整）。</li><li>本报告（现状树 + 佐证性目标树推导）与 [DESIGN-LAY-008] §17/§20 权威终态互指；<strong>不另立 §12.59 台账条目</strong>——该文件正被并行道活跃编辑（§12.60 人裁、§16–§20 均为本日新增），避免同号冲突，本报告即本批台账。</li></ol>
+<p><strong>待拍板</strong>：全部收敛到 [DESIGN-LAY-008] §17.5 的四条（终局档位 / taste.md 收编位置 / W7 是否排期 / 其余待裁项），本报告不重复开题。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/11_报告/RESEARCH/[RESEARCH-021] 5-3-1符合性复测与方案R收官-2026-09-30.html"><div class="dir">← 上一篇</div><div class="ttl">[RESEARCH-021] 5-3-1 架构符合性复测与方案 R 收官报告</div></a><a class="next" href="../../../../docs/html/11_报告/RESEARCH/[RESEARCH-024] Q0积压分类与分组提交建议-2026-10-02.html"><div class="dir">下一篇 →</div><div class="ttl">[RESEARCH-024] Q0 积压分类与分组提交建议——晨审裁决材料（2026-10-02）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/11_报告/RESEARCH/[RESEARCH-022] 5-3-1树形图设计-现状树与目标树-2026-10-02.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

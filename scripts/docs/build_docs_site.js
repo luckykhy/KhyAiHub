@@ -2,8 +2,10 @@
 /**
  * Khy-OS 文档站生成器（离线、确定性、无新增依赖）
  * ------------------------------------------------------------------
- * 作用：把仓库里每一个 Markdown（*.md）渲染成一份同名的 HTML（*.html），
- *      放在 .md 旁边；套用统一模板（顶栏 + 侧边栏全站导航 + 面包屑 + 目录
+ * 作用：把仓库里每一个 Markdown（*.md）渲染成一份同名的 HTML（*.html）：
+ *      docs/ 内的 .md 统一生成到 docs/html/ 镜像树（相对结构与 md 树一致，
+ *      2026-10-05 裁决：md 与 html 分为两个子树）；docs 外的 .md 维持旁置孪生。
+ *      套用统一模板（顶栏 + 侧边栏全站导航 + 面包屑 + 目录
  *      + 上/下一页 + mermaid 图 + 代码高亮 + 滚动动画），并把正文里指向
  *      其它 .md 的链接改写成指向对应的 .html，实现「HTML 跳转到相关 HTML」。
  *
@@ -49,7 +51,12 @@ const SKIP_DIRS = new Set([
 // 为其生成 html 并把 href 写进 nav-data.js —— 而该文件**被 git 跟踪**、其指向的 html **不在仓里**，
 // 于是每个克隆都拿到悬空导航条目。2026-09-24 实测：HEAD 的 nav-data.js 里 `_产物` 出现 0 次，
 // 而放入 _产物/*.md 后构建一次即变成 5 次 ⇒ 下次提交就会把缺陷提交进去。与 /housekeeping/ 同类。
-const SKIP_PATH_PARTS = ["/bundled/", "/19_资产/", "/housekeeping/", "/.khyos/", "/.khyquant/", "/_产物/"];
+// `/docs/html/` 是 html 孪生的镜像树（2026-10-05 裁决：docs 内 md 与 html 分为两个子树），
+// 其中没有 .md 源文，绝不能被当成源扫描。
+// `/works/data/` 是本机运行时数据（gitignore，DATA-LOCATIONS T0-T4 管辖）：
+// 其 md 是会话记忆/备份等本机产物，为它们生成孪生只会把 ~230 条本机相对链接灌进
+// dead-links.json 淹没真信号（2026-10-05 实测 328 条死链中 236 条来自这里），并污染导航。
+const SKIP_PATH_PARTS = ["/bundled/", "/19_资产/", "/housekeeping/", "/.khyos/", "/.khyquant/", "/_产物/", "/docs/html/", "/works/data/"];
 
 // ---- 构建期代码高亮 ----
 // 解析顺序（逐条试，命中即用）：
@@ -126,6 +133,62 @@ function rewriteMdLink(href) {
   let pathPart = hashIdx >= 0 ? href.slice(0, hashIdx) : href;
   if (/\.md$/i.test(pathPart)) pathPart = pathPart.replace(/\.md$/i, ".html");
   return pathPart + anchor;
+}
+
+// md 源 → html 孪生的落点（2026-10-05 裁决：docs 内 md 与 html 分为两个子树）。
+//   docs/**.md            → docs/html/**.html（镜像树，相对结构与 md 树一致）
+//   docs 外的 .md（如 .github/CONTRIBUTING.md）→ 维持旁置孪生（用户裁决只拆 docs 内）。
+// verify_docs_site.js / cleanup-orphan-html.js 经 module.exports 复用本函数，勿另写副本。
+function htmlRelFor(mdRel) {
+  const DOC_PREFIX = "docs/";
+  if (mdRel.startsWith(DOC_PREFIX)) {
+    return "docs/html/" + mdRel.slice(DOC_PREFIX.length).replace(/\.md$/i, ".html");
+  }
+  return mdRel.replace(/\.md$/i, ".html");
+}
+
+// 把渲染出的正文里面向 md 作者视角的本地链接，改写成「从 html 镜像树位置出发」的相对链接。
+// 背景：html 从「与 md 并排」迁到 docs/html/ 镜像树后，正文里的相对链接若原样保留，
+// 会从更深的目录出发解析而整体错位一级。这里以 md 源位置解析出真实目标，再以 html
+// 落点重新给出相对路径；docs 内的 .md 目标（含手写 HTML 块里的 .html 目标）一并映射进镜像树。
+function remapBodyLinks(html, mdRel, htmlRel) {
+  const mdDirAbs = path.dirname(path.join(ROOT, mdRel));
+  const htmlDirAbs = path.dirname(path.join(ROOT, htmlRel));
+  const decodeSafe = (s) => { try { return decodeURIComponent(s); } catch (_) { return s; } };
+  return html.replace(/(\b(?:href|src)\s*=\s*)("([^"]*)"|'([^']*)')/g, (m, attr, _q, dq, sq) => {
+    const raw = dq !== undefined ? dq : sq;
+    if (/^(https?:|mailto:|data:|javascript:|#|\/\/)/i.test(raw)) return m;
+    const hashIdx = raw.indexOf("#");
+    const anchor = hashIdx >= 0 ? raw.slice(hashIdx) : "";
+    let p = hashIdx >= 0 ? raw.slice(0, hashIdx) : raw;
+    if (!p) return m;
+    p = decodeSafe(p);
+    const targetAbs = p.startsWith("/")
+      ? path.join(ROOT, p)
+      : path.resolve(mdDirAbs, p);
+    let targetRel = path.relative(ROOT, targetAbs).split(path.sep).join("/");
+    if (targetRel.startsWith("..")) return m; // 仓库外目标：不映射（维持原样，由降级器兜底）
+    if (/\.md$/i.test(targetRel)) {
+      // 根级 .md 已停用孪生（2026-09-28 裁决，见 walkMarkdown 同处注释）：
+      // 链接保留指向 .md 源文件（真实存在），改写成 .html 反而制造死链。
+      if (targetRel.includes("/")) targetRel = htmlRelFor(targetRel);
+    } else if (/\.html?$/i.test(targetRel)) {
+      // 手写 HTML 块与 renderInline 预改写产生的 .html 目标：若它其实是某个 md 的孪生，
+      // 映射回该 md 的正确落点。docs 内 → 镜像树；docs 外非根级 → 旁置孪生保持不动；
+      // 根级 md 无孪生（2026-09-28 裁决）→ 指回 .md 源文件。
+      const mdCand = targetRel.replace(/\.html?$/i, ".md");
+      if (fs.existsSync(path.join(ROOT, mdCand))) {
+        targetRel = mdCand.startsWith("docs/")
+          ? htmlRelFor(mdCand)
+          : mdCand.includes("/")
+            ? targetRel
+            : mdCand;
+      }
+    }
+    let out = path.relative(htmlDirAbs, path.join(ROOT, targetRel)).split(path.sep).join("/");
+    out = encodeURI(out).replace(/%5B/g, "[").replace(/%5D/g, "]");
+    return attr + '"' + out + anchor + '"';
+  });
 }
 
 // ============================================================
@@ -611,7 +674,7 @@ ${mirrorMeta}<title>${escapeHtml(title)} · Khy-OS 文档</title>
   <button class="menu-toggle" aria-label="菜单">☰</button>
   <a class="brand" href="${rootPrefix}docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="${rootPrefix}docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="${rootPrefix}docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -700,7 +763,7 @@ function main() {
   const docs = rels.map((rel) => {
     const src = fs.readFileSync(path.join(ROOT, rel), "utf8");
     const title = firstHeading(src) || path.basename(rel, ".md");
-    return { rel, src, title, htmlRel: rel.replace(/\.md$/i, ".html"), group: groupOf(rel) };
+    return { rel, src, title, htmlRel: htmlRelFor(rel), group: groupOf(rel) };
   });
 
   // 侧边栏导航数据（root-relative href）
@@ -754,10 +817,12 @@ function main() {
 
     const html = pageTemplate({
       rootPrefix, curHref: d.htmlRel, title: d.title, crumb,
-      bodyHtml: rendered.html, headings: rendered.headings, pager,
+      bodyHtml: remapBodyLinks(rendered.html, d.rel, d.htmlRel),
+      headings: rendered.headings, pager,
       srcMd: d.rel,
     });
     const absPath = path.join(ROOT, d.htmlRel);
+    fs.mkdirSync(path.dirname(absPath), { recursive: true });
     fs.writeFileSync(absPath, neutralizeDeadLinks(html, absPath, deadLinks, willExist));
     count += 1;
   }
@@ -821,4 +886,4 @@ if (require.main === module) {
   catch (e) { console.error("[docs-site] 生成失败:", e && e.stack || e); process.exit(1); }
 }
 
-module.exports = { renderMarkdown, makeSlugger, rewriteMdLink, rootPrefixFor };
+module.exports = { renderMarkdown, makeSlugger, rewriteMdLink, rootPrefixFor, htmlRelFor, remapBodyLinks };

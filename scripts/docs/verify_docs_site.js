@@ -3,7 +3,8 @@
  * Khy-OS 文档站校验器（B2 验证门）
  * ------------------------------------------------------------------
  * 断言三件事，任一不满足即以非零退出（红灯）：
- *   1) 每个参与生成的 .md 都有一份同名 .html（旁边）。
+ *   1) 每个参与生成的 .md 都有一份同名 .html（docs 内在 docs/html/ 镜像树，
+ *      docs 外与 .md 旁置——落点由 build_docs_site.js 的 htmlRelFor 统一定义）。
  *   2) 每个生成的 .html 里指向本地文件的链接（href/src）都能落到真实存在的文件。
  *   3) 离线资源齐全：docs/19_资产 下 mermaid.min.js / docs-site.css / docs-site.js /
  *      hljs 主题 css / nav-data.js 都在。
@@ -17,6 +18,8 @@ const fs = require("fs");
 const path = require("path");
 
 const ROOT = path.resolve(__dirname, "..", "..");
+// 孪生落点与构建器同源（docs 内 → docs/html 镜像树；docs 外 → 旁置），勿另写副本。
+const { htmlRelFor } = require("./build_docs_site.js");
 const SKIP_DIRS = new Set([
   ".git", "node_modules", "build", "dist", ".venv", "venv", "coverage",
   "__pycache__", ".pytest_cache", ".tox", "muya-embed", "national-exam-site",
@@ -29,7 +32,9 @@ const SKIP_DIRS = new Set([
 // `/housekeeping/` 是 [DESIGN-LAY-003] HK-3 隔离区，见 build_docs_site.js 同处注释）
 // `/_产物/` 是 [DESIGN-LAY-005] §1.4 登记的根级例外「工作产物暂存区」（未跟踪），
 // 理由与实测同 build_docs_site.js 同处注释 —— 此处只保留清单本身。
-const SKIP_PATH_PARTS = ["/bundled/", "/19_资产/", "/housekeeping/", "/.khyos/", "/.khyquant/", "/_产物/"];
+// `/docs/html/` 是 html 孪生镜像树（2026-10-05 裁决），树里没有 .md 源文。
+// `/works/data/` 是本机运行时数据（gitignore），不参与生成，理由见 build 同处注释。
+const SKIP_PATH_PARTS = ["/bundled/", "/19_资产/", "/housekeeping/", "/.khyos/", "/.khyquant/", "/_产物/", "/docs/html/", "/works/data/"];
 
 function walkMarkdown(dir, acc) {
   let entries;
@@ -59,7 +64,7 @@ const warnings = [];
 const mds = walkMarkdown(ROOT, []).sort();
 const htmlRels = [];
 for (const rel of mds) {
-  const htmlRel = rel.replace(/\.md$/i, ".html");
+  const htmlRel = htmlRelFor(rel);
   if (!fs.existsSync(path.join(ROOT, htmlRel))) {
     errors.push(`缺少 HTML：${htmlRel}（源：${rel}）`);
   } else {

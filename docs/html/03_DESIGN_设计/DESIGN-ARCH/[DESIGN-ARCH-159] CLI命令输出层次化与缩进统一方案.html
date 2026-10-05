@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-ARCH-159] CLI命令输出层次化与缩进统一方案.md -->
+<title>《khy-os CLI 命令输出层次化与缩进统一方案》 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>《khy-os CLI 命令输出层次化与缩进统一方案》</div>
+      <header class="hero reveal"><h1>《khy-os CLI 命令输出层次化与缩进统一方案》</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#khy-os-cli-命令输出层次化与缩进统一方案">《khy-os CLI 命令输出层次化与缩进统一方案》</a></li><li class="lvl-2"><a href="#0-一句话结论">0. 一句话结论</a></li><li class="lvl-3"><a href="#病灶速览">病灶速览</a></li><li class="lvl-2"><a href="#1-现状实证-2026-09-26-实测-全部可复核">1. 现状实证（2026-09-26 实测，全部可复核）</a></li><li class="lvl-3"><a href="#1-1-四套范式并存-真实输出采样-no-color-1-下抓取">1.1 四套范式并存（真实输出采样，`NO_COLOR=1` 下抓取）</a></li><li class="lvl-3"><a href="#1-2-逐病灶-file-line">1.2 逐病灶 file:line</a></li><li class="lvl-3"><a href="#1-3-与相邻规范的关系-边界">1.3 与相邻规范的关系（边界）</a></li><li class="lvl-2"><a href="#2-借鉴提案-b-p2-七字段">2. 借鉴提案（B-P2 七字段）</a></li><li class="lvl-2"><a href="#3-目标形态">3. 目标形态</a></li><li class="lvl-3"><a href="#3-1-新模块-services-backend-src-cli-outputblock-js">3.1 新模块：`services/backend/src/cli/outputBlock.js`</a></li><li class="lvl-3"><a href="#3-2-视觉规范-目标形态-ansi-色彩表达-浅深主题通用">3.2 视觉规范（目标形态，ANSI 色彩表达，浅深主题通用）</a></li><li class="lvl-3"><a href="#3-3-接线形态-试点命令改后读感">3.3 接线形态（试点命令改后读感）</a></li><li class="lvl-2"><a href="#4-实施分期-每期独立可回滚">4. 实施分期（每期独立可回滚）</a></li><li class="lvl-2"><a href="#5-诚实边界-刻意不纳入">5. 诚实边界（刻意不纳入）</a></li><li class="lvl-2"><a href="#6-反模式-这条路别走">6. 反模式（这条路别走）</a></li><li class="lvl-2"><a href="#7-验收方式-可复现命令-实测基线">7. 验收方式（可复现命令 + 实测基线）</a></li><li class="lvl-3"><a href="#7-1-期1">7.1 期1</a></li><li class="lvl-3"><a href="#7-2-期2">7.2 期2</a></li><li class="lvl-3"><a href="#7-3-期3">7.3 期3</a></li><li class="lvl-3"><a href="#7-4-明确限制-如实声明">7.4 明确限制（如实声明）</a></li><li class="lvl-2"><a href="#8-待核实项">8. 待核实项</a></li><li class="lvl-2"><a href="#9-变更日志">9. 变更日志</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="khy-os-cli-命令输出层次化与缩进统一方案">《khy-os CLI 命令输出层次化与缩进统一方案》<a class="anchor" href="#khy-os-cli-命令输出层次化与缩进统一方案" aria-label="锚点">#</a></h1>
+<blockquote><p>文档编号：DESIGN-ARCH-159<br>状态：<strong>提案</strong>（未实施）<br>范围：<code>services/backend/src/cli/**</code> 中 handler 层的命令输出排版（console 系）；<strong>不含</strong> TUI ink 渲染族与模型输出卫生层<br>上游依赖：无（纯新建一个纯叶子模块 + 既有模块接线）<br>调研指针：<code>[DESIGN-ARCH-128] 结构化输出方案</code>（输出卫生层，本提案只消费不重复建）、<code>[DESIGN-ARCH-122] TUI 设计族总纲</code>（TUI 侧，本提案不碰）、<code>[DESIGN-SOURCING-001]</code>（B-P2 判定）<br>规则依据：RUNTIME-008（新机制落地阶段可校验·S1 只记录）、LAYOUT-005（新文件落点）、<code>check-leaf-contract.js</code>（纯叶子纪律）<br>取证时间：2026-09-26（全部 file:line 实测于当日工作区）</p></blockquote>
+<hr>
+<h2 id="0-一句话结论">0. 一句话结论<a class="anchor" href="#0-一句话结论" aria-label="锚点">#</a></h2>
+<p>khy CLI 的命令输出<strong>有行级原语、没有块级原语</strong>——<code>formatters.js</code> 提供了 printSuccess/printTable/printDivider，但「分组标题 → 条目 → 详情 → 建议」这种层次结构没有任何抽象，导致 90+ 个 handler 各自手写缩进、各造对齐、各定截断，<strong>四个实测命令呈现四套互不相识的输出范式</strong>。本方案新建一个纯叶子模块 <code>outputBlock.js</code>（五原语：分组/条目对齐/详情缩进/截断/空值省略），先接三个试点命令，再渐进推广，守卫 S1 只记录。</p>
+<h3 id="病灶速览">病灶速览<a class="anchor" href="#病灶速览" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>#</th><th>病灶</th><th>一眼证据</th></tr></thead><tbody><tr><td>P1</td><td>四套输出范式并存</td><td><code>khy hq status</code> / <code>khy help</code> / <code>khy modules</code> / <code>khy insights</code> 四种排版互不相识</td></tr><tr><td>P2</td><td>缩进深度靠手写空格字面量</td><td><code>doctorCmdc.js</code> 同一函数内 2/9/11 三档空格</td></tr><tr><td>P3</td><td>中文标签 padEnd 对不齐</td><td><code>hq.js:163</code> <code>padEnd(8)</code> 补中文「严重」</td></tr><tr><td>P4</td><td>截断无省略号规范</td><td><code>hq.js:164</code> <code>slice(0, 36)</code> 硬切中文标题</td></tr><tr><td>P5</td><td>空值行照样渲染</td><td><code>hq status</code>「OpenCode 擅长: 」（空 strengths）</td></tr><tr><td>P6</td><td>分隔线宽度无单一来源</td><td><code>hq.js</code> 同文件 <code>repeat(62)</code> 与 <code>repeat(50)</code> 并存</td></tr><tr><td>P7</td><td>Markdown 裸直出终端</td><td><code>insights.js:37</code> <code>console.log(text)</code>，<code>#</code>/<code>##</code> 是字面字符</td></tr></tbody></table>
+<hr>
+<h2 id="1-现状实证-2026-09-26-实测-全部可复核">1. 现状实证（2026-09-26 实测，全部可复核）<a class="anchor" href="#1-现状实证-2026-09-26-实测-全部可复核" aria-label="锚点">#</a></h2>
+<h3 id="1-1-四套范式并存-真实输出采样-no-color-1-下抓取">1.1 四套范式并存（真实输出采样，<code>NO_COLOR=1</code> 下抓取）<a class="anchor" href="#1-1-四套范式并存-真实输出采样-no-color-1-下抓取" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>命令</th><th>实际范式</th><th>层次表达方式</th></tr></thead><tbody><tr><td><code>khy hq status</code></td><td>【】分组标题顶格 + 条目 2 空格</td><td><code>【Bug】共 17 条</code> → <code>  BUG-001 [closed] P1 严重 …</code></td></tr><tr><td><code>khy help</code></td><td>分组名顶格 + 条目 4 空格 + <code>─</code> 线</td><td><code>核心</code> → <code>    app list…</code></td></tr><tr><td><code>khy modules</code></td><td>cli-table3 画框表格 + 2 空格外框</td><td><code>┌──┬──┐</code> 全框</td></tr><tr><td><code>khy insights</code></td><td><strong>裸 Markdown 文本直出</strong></td><td><code># 会话洞见</code> <code>## 概览</code> <code>- 消息总数:8</code></td></tr></tbody></table>
+<p>同一终端会话里，用户每敲一个新命令都要重新学习一次「这屏怎么读」。</p>
+<h3 id="1-2-逐病灶-file-line">1.2 逐病灶 file:line<a class="anchor" href="#1-2-逐病灶-file-line" aria-label="锚点">#</a></h3>
+<p><strong>P2 缩进字面量散布</strong>（<code>console.log('  …')</code> 模式在 <code>src/cli/**</code> 命中 40+ 文件）：</p>
+<table><thead><tr><th>位置</th><th>实证</th></tr></thead><tbody><tr><td><code>handlers/doctorCmdc.js:366-370</code></td><td>条目行 2 空格、详情行 <strong>9</strong> 空格、修复行 <strong>9+2=11</strong> 空格——三档深度全为字面量，无常量、无语义名</td></tr><tr><td><code>handlers/hq.js:553-558</code></td><td>手写 2 空格与 4 空格两档（「下一步」清单）</td></tr><tr><td>命中大户</td><td><code>docs.js</code> 58 处、<code>publish.js</code> 36 处、<code>cleanup.js</code> 18 处、<code>commit.js</code> 17 处（2026-09-26 grep 计数）</td></tr></tbody></table>
+<p><strong>P3 CJK 对齐失效</strong>——<code>formatters.js</code> 明明有 CJK 感知三件套，handler 不用：</p>
+<table><thead><tr><th>实证</th><th>说明</th></tr></thead><tbody><tr><td><code>handlers/hq.js:163</code></td><td><code>_severityLabel(b.severity).padEnd(8)</code>——「严重」显示宽 4 列，<code>padEnd</code> 按 code unit 只补 6 空格，中文标签列<strong>永远差 2 列</strong></td></tr><tr><td><code>handlers/hq.js:186</code></td><td><code>${m.display}.padEnd(12)</code> 同病（display 含中文时）</td></tr><tr><td>既有能力</td><td><code>displayWidth()</code>（<code>formatters.js:354</code>）、<code>padToWidth()</code>（<code>formatters.js:372</code>）、<code>truncateToWidth()</code>（<code>formatters.js:469</code>）——<strong>能力齐全，接线为零</strong></td></tr></tbody></table>
+<p><strong>P3 加重项：同文件三个并行 pad 实现</strong>（「不新建并行真源」原则的既有债务）：</p>
+<table><thead><tr><th>位置</th><th>形态</th></tr></thead><tbody><tr><td><code>formatters.js:372</code></td><td><code>padToWidth(str, targetWidth, fill)</code>——canonical</td></tr><tr><td><code>formatters.js:865</code></td><td><code>padLabel = (s) =&gt; s + ' '.repeat(10 - displayWidth(s))</code>——printBacktestResult 局部重造</td></tr><tr><td><code>formatters.js:926</code></td><td><code>pad = (s, w) =&gt; …displayWidth(s)</code>——printHelp 又一个局部重造</td></tr></tbody></table>
+<p><strong>P4 截断无规范</strong>：</p>
+<ul><li><code>handlers/hq.js:164/179</code>：<code>String(t.title).slice(0, 36)</code>——按 code unit 硬切，中文标题被切在字中间，无 <code>…</code> 提示「还有后文」；</li><li><code>handlers/hq.js:744</code>：<code>slice(0, 80)</code> 同病。</li></ul>
+<p><strong>P5 空值行照渲染</strong>：</p>
+<ul><li><code>handlers/hq.js:184-186</code>：模型路由组里 <code>strengths</code> 为空的条目照样输出 <code>OpenCode     擅长: </code>（冒号后空白）。违背治理体系反复强调的「列表数据没有就不渲染该分组，不塞示例项充数」原则。</li></ul>
+<p><strong>P6 分隔线宽度无单一来源</strong>：</p>
+<table><thead><tr><th>位置</th><th>宽度</th></tr></thead><tbody><tr><td><code>handlers/hq.js:147</code></td><td><code>'='.repeat(62)</code>（status 头部）</td></tr><tr><td><code>handlers/hq.js:700</code></td><td><code>'='.repeat(50)</code>（同文件另一处）</td></tr><tr><td><code>formatters.js:931</code></td><td><code>'─'.repeat(min(contentW, 56))</code>（help）</td></tr></tbody></table>
+<p><strong>P7 Markdown 直出</strong>：</p>
+<ul><li><code>handlers/insights.js:37</code>：<code>console.log(text)</code> 一把梭，<code>text</code> 是 <code>#</code>/<code>##</code>/<code>-</code>/<code>&gt;</code> 构成的 Markdown 源串——终端里这些是字面字符，层次感为零。已核实该 handler 无 <code>--json</code>/文件输出分支（2026-09-26 grep：json/writeFile/stdout.write 零命中），改排版不影响任何其他消费方。</li></ul>
+<h3 id="1-3-与相邻规范的关系-边界">1.3 与相邻规范的关系（边界）<a class="anchor" href="#1-3-与相邻规范的关系-边界" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>相邻规范</th><th>它管什么</th><th>本提案</th></tr></thead><tbody><tr><td><code>[DESIGN-ARCH-128]</code></td><td>模型输出的<strong>卫生层</strong>（ANSI 剥净、Markdown 定界符语义渲染）</td><td>只消费其成果（<code>ansiSanitizer</code>/<code>markdownRenderer</code>），不重建</td></tr><tr><td><code>[DESIGN-ARCH-122]</code>/<code>[152]</code>/<code>[155]</code></td><td>TUI ink 渲染族</td><td><strong>不碰</strong>。本提案只管 console 系命令输出</td></tr><tr><td><code>tableStyle.js</code></td><td>边框风格单一真源（borderless/有框，<code>KHY_TABLE_BORDERS</code>）</td><td>复用其风格判定，块形态跟随（有框=左竖线块语言，无框=红色左竖条，先例 <code>formatters.js:582</code>）</td></tr></tbody></table>
+<hr>
+<h2 id="2-借鉴提案-b-p2-七字段">2. 借鉴提案（B-P2 七字段）<a class="anchor" href="#2-借鉴提案-b-p2-七字段" aria-label="锚点">#</a></h2>
+<p><strong>判定：非借鉴类，豁免成立。</strong> 本提案统一本仓自身的命令输出排版，不引入任何外部项目的代码、结论或结构；<code>formatters.js</code> 中既有的 &quot;Claude Code aligned layout&quot; 注释是<strong>已落地的历史事实</strong>，本提案不新增借鉴对象。依据 <code>[DESIGN-SOURCING-001]</code> §3 B-P1：零借鉴 ⇒ B-P2 本就不触发（第 1 字段「借鉴对象」无从填写）。以下按七字段体例逐项据实声明，参照 <code>[DESIGN-ARCH-149]</code> §2 先例：</p>
+<table><thead><tr><th>#</th><th>字段</th><th>声明</th></tr></thead><tbody><tr><td>1</td><td>借鉴对象</td><td><strong>不适用</strong>。零外部借鉴（依据见上）</td></tr><tr><td>2</td><td>借鉴内容</td><td><strong>不适用</strong>。所有视觉语言（左竖条、<code>✓/✗</code> 行前缀、【】标题）均取自本仓既有实现</td></tr><tr><td>3</td><td>解决的问题</td><td>khy CLI 命令输出层次结构缺失（§1 七病灶），用户原话「终端输出结构不够层次化，缩进设计这些不方便阅读」</td></tr><tr><td>4</td><td>许可证与代码性质</td><td><strong>不适用</strong>。不引入任何上游代码/二进制/资源</td></tr><tr><td>5</td><td>借鉴方式</td><td><strong>不适用</strong>。无借鉴对象即无方式</td></tr><tr><td>6</td><td>落点与现有实现对比</td><td>落点=新增 <code>src/cli/outputBlock.js</code> + 三个试点 handler 接线；现有同类实现=「块级原语」<strong>不存在</strong>（§1.2 已证：行级原语齐全、块级为零，<code>formatters.js</code> 三个并行 pad 属于待收敛的债务而非 canonical 扩展点）。对齐/截断能力<strong>扩展既有 canonical</strong>（<code>displayWidth</code>/<code>padToWidth</code>/<code>truncateToWidth</code>），不另造</td></tr><tr><td>7</td><td>验收方式</td><td>§7（可复现命令 + 实测基线）</td></tr></tbody></table>
+<hr>
+<h2 id="3-目标形态">3. 目标形态<a class="anchor" href="#3-目标形态" aria-label="锚点">#</a></h2>
+<h3 id="3-1-新模块-services-backend-src-cli-outputblock-js">3.1 新模块：<code>services/backend/src/cli/outputBlock.js</code><a class="anchor" href="#3-1-新模块-services-backend-src-cli-outputblock-js" aria-label="锚点">#</a></h3>
+<p><strong>纯叶子纪律</strong>（<code>check-leaf-contract.js</code> 强制）：零 IO、确定性、绝不抛、绝不读 env、不改入参；风格参数（borderless 与否）由<strong>调用方传入</strong>。<strong>只返回 <code>string[]</code>，绝不 <code>console.log</code></strong>——打印权在调用方（与 <code>chatChords.js</code> 同款纪律）。</p>
+<p><strong>缩进模型</strong>（单一真源常量，禁字面量）：</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> <span class="hljs-variable constant_">INDENT</span> = { <span class="hljs-attr">SECTION</span>: <span class="hljs-number">0</span>, <span class="hljs-attr">ITEM</span>: <span class="hljs-number">2</span>, <span class="hljs-attr">DETAIL</span>: <span class="hljs-number">4</span>, <span class="hljs-attr">NESTED</span>: <span class="hljs-number">6</span> }; <span class="hljs-comment">// 列，显示宽度计</span></code></pre>
+<p><strong>五原语 API 契约</strong>：</p>
+<pre><code class="language-js"><span class="hljs-comment">// 1) 分组：标题 + 子行数组 → string[]；children 为空 → 返回 []（空组不渲染，钉死 P5）</span>
+<span class="hljs-title function_">renderSection</span>({ title, children })            <span class="hljs-comment">// → string[]</span>
+
+<span class="hljs-comment">// 2) 条目：徽标列 CJK 感知对齐（内部走 padToWidth，钉死 P3）</span>
+<span class="hljs-title function_">renderItem</span>({ badge, subject, summary, badgeWidth })  <span class="hljs-comment">// → string（单行）</span>
+
+<span class="hljs-comment">// 3) 详情/嵌套：按 INDENT.DETAIL/NESTED 缩进；超宽走 truncateToWidth + &#x27;…&#x27;（钉死 P2/P4）</span>
+<span class="hljs-title function_">renderDetail</span>(text, { indent = <span class="hljs-variable constant_">INDENT</span>.<span class="hljs-property">DETAIL</span>, maxWidth }) <span class="hljs-comment">// → string</span>
+
+<span class="hljs-comment">// 4) 分隔线：宽度单一来源（终端宽派生，钉死 P6）</span>
+<span class="hljs-title function_">renderRule</span>({ width })                          <span class="hljs-comment">// → string</span>
+
+<span class="hljs-comment">// 5) 空值省略谓词：供 handler 的数据组装用</span>
+<span class="hljs-title function_">omitEmpty</span>(rows, predicate)                     <span class="hljs-comment">// → rows | []</span></code></pre>
+<h3 id="3-2-视觉规范-目标形态-ansi-色彩表达-浅深主题通用">3.2 视觉规范（目标形态，ANSI 色彩表达，浅深主题通用）<a class="anchor" href="#3-2-视觉规范-目标形态-ansi-色彩表达-浅深主题通用" aria-label="锚点">#</a></h3>
+<pre><code>【模型路由】 共 4 条                                    ← L0 标题：bold + cyan（保留【】语言）
+  Claude Code   [擅长]  refactor, quality              ← L1 条目：2sp，徽标列 padToWidth 对齐
+    详见 .ai/hq/MODELS.json                            ← L2 详情：4sp + dim
+    → khy gateway model 可切换                          ← L2 建议：4sp + '→' + cyan
+──────────────────────────────────────────             ← 分隔线：renderRule 单一宽度</code></pre>
+<ul><li>表格型数据（如 <code>khy modules</code> 的模块清单）<strong>不硬套层级</strong>——cli-table3 表格是对的，保持；</li><li>真正的自由 Markdown 文本（模型回复）仍走 <code>[DESIGN-ARCH-128]</code> 的 <code>markdownRenderer</code>，<strong>不归本模块</strong>；</li><li><code>insights</code> 这类「我们自己的结构化数据被拼成 markdown 字符串再直出」的命令，正解是<strong>直接用块原语组装</strong>（数据本来就是我们自己的，绕道 markdown 是多此一举）；</li><li>文案中文、不引入 emoji（沿用 <code>formatters.js:3</code> 与 ICON_* 表既有约定）。</li></ul>
+<h3 id="3-3-接线形态-试点命令改后读感">3.3 接线形态（试点命令改后读感）<a class="anchor" href="#3-3-接线形态-试点命令改后读感" aria-label="锚点">#</a></h3>
+<p><code>khy hq status</code>（修 P3/P4/P5/P6）：徽标列 CJK 对齐、标题截断带 <code>…</code>、空 strengths 模型整行消失、头部线走 renderRule。</p>
+<p><code>khy doctor cmdc</code>（修 P2）：2/9/11 手写空格 → INDENT.ITEM/DETAIL/NESTED 三常量，视觉结果与现状<strong>逐字节等宽</strong>（9→4 的列变化需在期2 快照对比里单独标注为「刻意变化」）。</p>
+<p><code>khy insights</code>（修 P7）：<code># 会话洞见</code> 直出 → renderSection 分组 + renderItem 条目，<code>&gt; 起始诉求</code> 缩进引用块。</p>
+<hr>
+<h2 id="4-实施分期-每期独立可回滚">4. 实施分期（每期独立可回滚）<a class="anchor" href="#4-实施分期-每期独立可回滚" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>期</th><th>内容</th><th>回滚单位</th><th>风险</th></tr></thead><tbody><tr><td><strong>期1 原语层</strong></td><td>新建 <code>outputBlock.js</code> + <code>tests/cli/outputBlock.test.js</code>（node:test 写法，覆盖：缩进常量、CJK 徽标对齐、截断省略号、空组省略、borderless 两档风格、fail-soft 畸形输入）</td><td>删两个文件即回滚</td><td>零（不接线）</td></tr><tr><td><strong>期2 三试点接线</strong></td><td><code>hq status</code> / <code>doctor cmdc</code> / <code>insights</code> 三个 handler 改走块原语；before/after 输出快照落盘 <code>.khy/tmp/</code> 对照</td><td>每命令一个独立改动，可单独回滚</td><td>低（三命令互不相干；<code>hqWriteErrno.test.js</code> 5/5 基线作回归锚点）</td></tr><tr><td><strong>期3 推广+守卫</strong></td><td>①按 §1.2 命中数排序迁移高频命令（docs/publish/cleanup/commit…）；②新守卫 <code>check-cli-output-lint.js</code> <strong>S1 只记录不阻断</strong>：识别 handler 新增的 <code>console.log('  </code> 字面量缩进、非 ASCII 字符串上的 <code>.padEnd(</code>、无省略号 <code>.slice(0,</code> 三模式；③收敛 <code>formatters.js</code> 三个并行 pad 到 <code>padToWidth</code>（顺手修，单独登记）</td><td>每命令独立；守卫可 PAUSED</td><td>中（面广 ⇒ 分批小步）</td></tr></tbody></table>
+<hr>
+<h2 id="5-诚实边界-刻意不纳入">5. 诚实边界（刻意不纳入）<a class="anchor" href="#5-诚实边界-刻意不纳入" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>不做什么</th><th>原因</th></tr></thead><tbody><tr><td>不动 TUI ink 渲染族</td><td><code>[DESIGN-ARCH-122]</code>/<code>[152]</code>/<code>[155]</code> 已管辖；TUI 有自己的帧管线契约（156）。混做=回归面不可控</td></tr><tr><td>不重建输出卫生/Markdown 语义渲染</td><td><code>[DESIGN-ARCH-128]</code> 已建（ansiSanitizer/markdownRenderer），本提案只消费</td></tr><tr><td>不强迁全部 90+ handler</td><td>一次大扫除的回归面不可控；期3 渐进 + 守卫防<strong>新增</strong>债务即可</td></tr><tr><td>不做表格型数据的层级化</td><td>表格就是表格（modules 的 cli-table3 是正确用法）</td></tr><tr><td>不加新 env 门</td><td>风格开关复用既有 <code>KHY_TABLE_BORDERS</code>（tableStyle 单一真源）；<code>check-tui-gates.js</code> MAX_GATES=220 只降不升，且「让功能变正确」不构成加门权衡</td></tr><tr><td>不修 <code>hqStore.test.js</code> jest 存量红与 <code>hqReviewGate.test.js</code> 挂起</td><td>与渲染无关的存量债务（2026-09-26 实测：前者 <code>describe is not defined</code> 型 1 fail，后者 240s 超时）；应另立条目，不在本提案混做</td></tr><tr><td>不给 <code>printBanner</code>/启动屏动刀</td><td>已由 <code>[DESIGN-ARCH-134]</code>（启动屏视觉）与 chromeBudget 体系管辖</td></tr></tbody></table>
+<hr>
+<h2 id="6-反模式-这条路别走">6. 反模式（这条路别走）<a class="anchor" href="#6-反模式-这条路别走" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>✗ 别做</th><th>为什么</th></tr></thead><tbody><tr><td>造「输出 DSL / 模板引擎」</td><td>五原语覆盖全部实测病灶；YAGNI——病灶清单里没有一个需要嵌套模板才表达得了</td></tr><tr><td>让 <code>outputBlock.js</code> 自己 <code>console.log</code></td><td>纯叶子才可测（check-leaf-contract 拦截）；打印权在调用方意味着快照测试可以纯字符串断言</td></tr><tr><td>继续在 handler 里 <code>padEnd</code> 中文标签</td><td>code unit ≠ 显示宽度，「看起来对齐」在中文标签上<strong>永远</strong>是错觉（P3 病根；必须走 <code>padToWidth</code>）</td></tr><tr><td>为「统一」把表格命令也改成缩进树</td><td>表格数据的正确形态是表格；层级原语只服务「分组-条目-详情」型数据</td></tr><tr><td>把 markdownRenderer 搬进 handler 修 P7</td><td>insights 的数据是<strong>我们自己的结构化数据</strong>，绕道 markdown 序列化再渲染是两次多余变换；块原语直接组装。只有「真自由文本」才归 markdownRenderer</td></tr><tr><td>一次 PR 迁移几十个命令</td><td>回归面爆炸 + 归因不可能（本仓并行会话常态）；必须小步分批，每批带 before/after 快照</td></tr><tr><td>新增 <code>KHY_OUTPUT_*</code> env 做风格开关</td><td>撞门预算棘轮；且 tableStyle 已是风格单一真源，再开一个门=第二个真源</td></tr></tbody></table>
+<hr>
+<h2 id="7-验收方式-可复现命令-实测基线">7. 验收方式（可复现命令 + 实测基线）<a class="anchor" href="#7-验收方式-可复现命令-实测基线" aria-label="锚点">#</a></h2>
+<h3 id="7-1-期1">7.1 期1<a class="anchor" href="#7-1-期1" aria-label="锚点">#</a></h3>
+<pre><code class="language-bash"><span class="hljs-string">&quot;&lt;node&gt;&quot;</span> --<span class="hljs-built_in">test</span> services/backend/tests/cli/outputBlock.test.js   <span class="hljs-comment"># 全绿（计数以落地实测为准）</span>
+<span class="hljs-string">&quot;&lt;node&gt;&quot;</span> scripts/ci/check-leaf-contract.js services/backend/src/cli/outputBlock.js
+<span class="hljs-comment"># → &quot;Leaf-contract check passed: no violations found.&quot;</span></code></pre>
+<h3 id="7-2-期2">7.2 期2<a class="anchor" href="#7-2-期2" aria-label="锚点">#</a></h3>
+<pre><code class="language-bash"><span class="hljs-string">&quot;&lt;node&gt;&quot;</span> --<span class="hljs-built_in">test</span> services/backend/tests/cli/hqWriteErrno.test.js
+<span class="hljs-comment"># 基线（2026-09-26 实测）：# tests 5 / # pass 5 / # fail 0 ——改后必须仍是 5/5</span></code></pre>
+<ul><li>三个试点命令 before/after 输出快照落盘 <code>.khy/tmp/output-before.txt</code> / <code>output-after.txt</code> 对照；</li><li><code>khy hq status</code>：空 strengths 模型行<strong>消失</strong>；徽标列对齐用 <code>displayWidth</code> 断言每行等宽；</li><li><code>khy insights</code>：输出中不再出现字面 <code>#</code>/<code>##</code> 行首字符。</li></ul>
+<h3 id="7-3-期3">7.3 期3<a class="anchor" href="#7-3-期3" aria-label="锚点">#</a></h3>
+<ul><li><code>check-cli-output-lint.js</code> 跑于 S1 模式：exit=0 只记录不阻断（RUNTIME-008 阶段纪律）；</li><li><code>npm run check-tui-gates.js</code> 计数与改动前零漂移（本方案零新增 <code>KHY_</code> token）；</li><li>新测试文件一律 <code>require('node:test')</code>（CI 全量扫描纪律：<code>services/backend/tests/**</code> 落地即绿）。</li></ul>
+<h3 id="7-4-明确限制-如实声明">7.4 明确限制（如实声明）<a class="anchor" href="#7-4-明确限制-如实声明" aria-label="锚点">#</a></h3>
+<p>真字节几何断言只在本地生效（<code>test:tui</code> 不在 CI）——本方案的输出快照对比同理，CI 只保证「不红」，视觉效果以本地快照对照为准。</p>
+<hr>
+<h2 id="8-待核实项">8. 待核实项<a class="anchor" href="#8-待核实项" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>项</th><th>状态</th><th>结论</th></tr></thead><tbody><tr><td>1</td><td>试点命令有无既有渲染层测试</td><td><strong>已核（2026-09-26）</strong></td><td>无渲染层测试；<code>hqWriteErrno</code> 5/5 绿为回归锚点；<code>hqStore</code> jest 红 / <code>hqReviewGate</code> 挂起为存量，排除出回归面</td></tr><tr><td>2</td><td>insights 有无非终端消费方</td><td><strong>已核（2026-09-26）</strong></td><td>无 json/文件/管道分支，改排版零外溢</td></tr><tr><td>3</td><td>doctor cmdc 有无 e2e 断言输出格式的测试</td><td>期2 落地前 Grep <code>tests/</code> 引用 <code>doctorCmdc</code></td><td>不阻断设计</td></tr><tr><td>4</td><td>守卫「非 ASCII padEnd」规则全仓误报率</td><td>期3 落地前统计（存量命中若 &gt;200 处，S1 只记录<strong>新文件新增行</strong>，不算存量）</td><td>不阻断设计</td></tr></tbody></table>
+<hr>
+<h2 id="9-变更日志">9. 变更日志<a class="anchor" href="#9-变更日志" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>日期</th><th>变更</th></tr></thead><tbody><tr><td>2026-09-26</td><td>初版提案（取证 → 编号 159 → 落盘，同日完成）</td></tr></tbody></table>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-158] TUI默认承载路径工具条目投影缺失修复方案.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-158] TUI 默认承载路径工具条目投影缺失修复方案</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-160] 惯性执行机制设计方案.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-160] 惯性执行机制设计方案</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-159] CLI命令输出层次化与缩进统一方案.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

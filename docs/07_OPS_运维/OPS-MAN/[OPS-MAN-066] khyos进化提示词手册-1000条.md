@@ -303,121 +303,121 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：面向小白概念文档 + 修仙学 AI 故事内容（作者向房屋风格 + 单人维护体检）。触发词命中时的第一反应。
   - 验证：`npm run docs:check-beginner`
 
-**65.** 如果「CLI does not start」，先读「Bootstrap and Packaging」相关文件（见 platform/khy_platform/cli.py），按 B1 说清改什么，再跑其验证命令确认现状。
+**65.** 如果「CLI does not start」，先读「Bootstrap and Packaging」相关文件（见 runtime/substrate/platform/khy_platform/cli.py），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Bootstrap and Packaging。触发词命中时的第一反应。
   - 验证：`npm run check:manifest-sync`
 
-**66.** 如果「pip package layout is broken」，先读「Bootstrap and Packaging」相关文件（见 platform/khy_platform/cli.py），按 B1 说清改什么，再跑其验证命令确认现状。
+**66.** 如果「pip package layout is broken」，先读「Bootstrap and Packaging」相关文件（见 runtime/substrate/platform/khy_platform/cli.py），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Bootstrap and Packaging。触发词命中时的第一反应。
   - 验证：`npm run check:manifest-sync`
 
-**67.** 如果「version numbers drift」，先读「Bootstrap and Packaging」相关文件（见 platform/khy_platform/cli.py），按 B1 说清改什么，再跑其验证命令确认现状。
+**67.** 如果「version numbers drift」，先读「Bootstrap and Packaging」相关文件（见 runtime/substrate/platform/khy_platform/cli.py），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Bootstrap and Packaging。触发词命中时的第一反应。
   - 验证：`npm run check:manifest-sync`
 
-**68.** 如果「first-run bootstrap fails」，先读「Bootstrap and Packaging」相关文件（见 platform/khy_platform/cli.py），按 B1 说清改什么，再跑其验证命令确认现状。
+**68.** 如果「first-run bootstrap fails」，先读「Bootstrap and Packaging」相关文件（见 runtime/substrate/platform/khy_platform/cli.py），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Bootstrap and Packaging。触发词命中时的第一反应。
   - 验证：`npm run check:manifest-sync`
 
-**69.** 如果「command not recognized」，先读「CLI Routing and Help Surface」相关文件（见 services/backend/src/constants/commandSchema.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**69.** 如果「command not recognized」，先读「CLI Routing and Help Surface」相关文件（见 runtime/node/backend/src/constants/commandSchema.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：CLI Routing and Help Surface。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
-**70.** 如果「alias routes to wrong command」，先读「CLI Routing and Help Surface」相关文件（见 services/backend/src/constants/commandSchema.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**70.** 如果「alias routes to wrong command」，先读「CLI Routing and Help Surface」相关文件（见 runtime/node/backend/src/constants/commandSchema.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：CLI Routing and Help Surface。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
-**71.** 如果「slash command missing」，先读「CLI Routing and Help Surface」相关文件（见 services/backend/src/constants/commandSchema.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**71.** 如果「slash command missing」，先读「CLI Routing and Help Surface」相关文件（见 runtime/node/backend/src/constants/commandSchema.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：CLI Routing and Help Surface。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
-**72.** 如果「help text does not match behavior」，先读「CLI Routing and Help Surface」相关文件（见 services/backend/src/constants/commandSchema.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**72.** 如果「help text does not match behavior」，先读「CLI Routing and Help Surface」相关文件（见 runtime/node/backend/src/constants/commandSchema.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：CLI Routing and Help Surface。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
-**73.** 如果「system prompt assembly is wrong」，先读「Prompt Capsule and Debug Prompt System」相关文件（见 services/backend/src/constants/prompts.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**73.** 如果「system prompt assembly is wrong」，先读「Prompt Capsule and Debug Prompt System」相关文件（见 runtime/node/backend/src/constants/prompts.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。触发词命中时的第一反应。
-  - 验证：`node --test services/backend/tests/promptOnDemandSections.test.js`
+  - 验证：`node --test runtime/node/backend/tests/promptOnDemandSections.test.js`
 
-**74.** 如果「on-demand capsules misfire」，先读「Prompt Capsule and Debug Prompt System」相关文件（见 services/backend/src/constants/prompts.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**74.** 如果「on-demand capsules misfire」，先读「Prompt Capsule and Debug Prompt System」相关文件（见 runtime/node/backend/src/constants/prompts.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。触发词命中时的第一反应。
-  - 验证：`node --test services/backend/tests/promptOnDemandSections.test.js`
+  - 验证：`node --test runtime/node/backend/tests/promptOnDemandSections.test.js`
 
-**75.** 如果「gateway debug-prompt output drifts」，先读「Prompt Capsule and Debug Prompt System」相关文件（见 services/backend/src/constants/prompts.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**75.** 如果「gateway debug-prompt output drifts」，先读「Prompt Capsule and Debug Prompt System」相关文件（见 runtime/node/backend/src/constants/prompts.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。触发词命中时的第一反应。
-  - 验证：`node --test services/backend/tests/promptOnDemandSections.test.js`
+  - 验证：`node --test runtime/node/backend/tests/promptOnDemandSections.test.js`
 
-**76.** 如果「adapter selection is wrong」，先读「AI Gateway and Adapter Layer」相关文件（见 services/backend/src/services/gateway/aiGateway.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**76.** 如果「adapter selection is wrong」，先读「AI Gateway and Adapter Layer」相关文件（见 runtime/node/backend/src/services/gateway/aiGateway.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：AI Gateway and Adapter Layer。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/aiGateway.stability.test.js services/backend/tests/gateway/transportResilience.test.js services/backend/tests/gatewayAdapters.stability.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/aiGateway.stability.test.js runtime/node/backend/tests/gateway/transportResilience.test.js runtime/node/backend/tests/gatewayAdapters.stability.test.js`
 
-**77.** 如果「streaming breaks」，先读「AI Gateway and Adapter Layer」相关文件（见 services/backend/src/services/gateway/aiGateway.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**77.** 如果「streaming breaks」，先读「AI Gateway and Adapter Layer」相关文件（见 runtime/node/backend/src/services/gateway/aiGateway.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：AI Gateway and Adapter Layer。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/aiGateway.stability.test.js services/backend/tests/gateway/transportResilience.test.js services/backend/tests/gatewayAdapters.stability.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/aiGateway.stability.test.js runtime/node/backend/tests/gateway/transportResilience.test.js runtime/node/backend/tests/gatewayAdapters.stability.test.js`
 
-**78.** 如果「model fallback is wrong」，先读「AI Gateway and Adapter Layer」相关文件（见 services/backend/src/services/gateway/aiGateway.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**78.** 如果「model fallback is wrong」，先读「AI Gateway and Adapter Layer」相关文件（见 runtime/node/backend/src/services/gateway/aiGateway.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：AI Gateway and Adapter Layer。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/aiGateway.stability.test.js services/backend/tests/gateway/transportResilience.test.js services/backend/tests/gatewayAdapters.stability.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/aiGateway.stability.test.js runtime/node/backend/tests/gateway/transportResilience.test.js runtime/node/backend/tests/gatewayAdapters.stability.test.js`
 
-**79.** 如果「request normalization is wrong」，先读「AI Gateway and Adapter Layer」相关文件（见 services/backend/src/services/gateway/aiGateway.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**79.** 如果「request normalization is wrong」，先读「AI Gateway and Adapter Layer」相关文件（见 runtime/node/backend/src/services/gateway/aiGateway.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：AI Gateway and Adapter Layer。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/aiGateway.stability.test.js services/backend/tests/gateway/transportResilience.test.js services/backend/tests/gatewayAdapters.stability.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/aiGateway.stability.test.js runtime/node/backend/tests/gateway/transportResilience.test.js runtime/node/backend/tests/gatewayAdapters.stability.test.js`
 
-**80.** 如果「daemon starts on wrong port」，先读「Proxy, Daemon, and Runtime Port Discovery」相关文件（见 services/backend/src/services/daemonManager.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**80.** 如果「daemon starts on wrong port」，先读「Proxy, Daemon, and Runtime Port Discovery」相关文件（见 runtime/node/backend/src/services/daemonManager.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/daemonManager.runtimePort.test.js services/backend/tests/gatewayManage.portDrift.integration.test.js services/backend/tests/services/proxyBaseUrl.test.js services/backend/tests/services/serviceDefaults.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/daemonManager.runtimePort.test.js runtime/node/backend/tests/gatewayManage.portDrift.integration.test.js runtime/node/backend/tests/services/proxyBaseUrl.test.js runtime/node/backend/tests/services/serviceDefaults.test.js`
 
-**81.** 如果「proxy URL is stale」，先读「Proxy, Daemon, and Runtime Port Discovery」相关文件（见 services/backend/src/services/daemonManager.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**81.** 如果「proxy URL is stale」，先读「Proxy, Daemon, and Runtime Port Discovery」相关文件（见 runtime/node/backend/src/services/daemonManager.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/daemonManager.runtimePort.test.js services/backend/tests/gatewayManage.portDrift.integration.test.js services/backend/tests/services/proxyBaseUrl.test.js services/backend/tests/services/serviceDefaults.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/daemonManager.runtimePort.test.js runtime/node/backend/tests/gatewayManage.portDrift.integration.test.js runtime/node/backend/tests/services/proxyBaseUrl.test.js runtime/node/backend/tests/services/serviceDefaults.test.js`
 
-**82.** 如果「gateway manage cannot reconnect」，先读「Proxy, Daemon, and Runtime Port Discovery」相关文件（见 services/backend/src/services/daemonManager.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**82.** 如果「gateway manage cannot reconnect」，先读「Proxy, Daemon, and Runtime Port Discovery」相关文件（见 runtime/node/backend/src/services/daemonManager.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/daemonManager.runtimePort.test.js services/backend/tests/gatewayManage.portDrift.integration.test.js services/backend/tests/services/proxyBaseUrl.test.js services/backend/tests/services/serviceDefaults.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/daemonManager.runtimePort.test.js runtime/node/backend/tests/gatewayManage.portDrift.integration.test.js runtime/node/backend/tests/services/proxyBaseUrl.test.js runtime/node/backend/tests/services/serviceDefaults.test.js`
 
-**83.** 如果「port drift appears after restart」，先读「Proxy, Daemon, and Runtime Port Discovery」相关文件（见 services/backend/src/services/daemonManager.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**83.** 如果「port drift appears after restart」，先读「Proxy, Daemon, and Runtime Port Discovery」相关文件（见 runtime/node/backend/src/services/daemonManager.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/daemonManager.runtimePort.test.js services/backend/tests/gatewayManage.portDrift.integration.test.js services/backend/tests/services/proxyBaseUrl.test.js services/backend/tests/services/serviceDefaults.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/daemonManager.runtimePort.test.js runtime/node/backend/tests/gatewayManage.portDrift.integration.test.js runtime/node/backend/tests/services/proxyBaseUrl.test.js runtime/node/backend/tests/services/serviceDefaults.test.js`
 
-**84.** 如果「gateway manage page is broken」，先读「AI Management UI and API」相关文件（见 services/backend/src/routes/aiGatewayAdmin.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**84.** 如果「gateway manage page is broken」，先读「AI Management UI and API」相关文件（见 runtime/node/backend/src/routes/aiGatewayAdmin.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：AI Management UI and API。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js services/backend/tests/gatewayManage.apiDisplay.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
 
-**85.** 如果「AI management route fails」，先读「AI Management UI and API」相关文件（见 services/backend/src/routes/aiGatewayAdmin.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**85.** 如果「AI management route fails」，先读「AI Management UI and API」相关文件（见 runtime/node/backend/src/routes/aiGatewayAdmin.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：AI Management UI and API。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js services/backend/tests/gatewayManage.apiDisplay.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
 
-**86.** 如果「admin API and AI UI drift」，先读「AI Management UI and API」相关文件（见 services/backend/src/routes/aiGatewayAdmin.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**86.** 如果「admin API and AI UI drift」，先读「AI Management UI and API」相关文件（见 runtime/node/backend/src/routes/aiGatewayAdmin.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：AI Management UI and API。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js services/backend/tests/gatewayManage.apiDisplay.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
 
-**87.** 如果「projects workspace page is broken」，先读「Coding Projects (named workspaces + chat linkage)」相关文件（见 platform/packages/shared/src/models/UserProject.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**87.** 如果「projects workspace page is broken」，先读「Coding Projects (named workspaces + chat linkage)」相关文件（见 runtime/substrate/platform/packages/shared/src/models/UserProject.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**88.** 如果「chat sidebar project filter fails」，先读「Coding Projects (named workspaces + chat linkage)」相关文件（见 platform/packages/shared/src/models/UserProject.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**88.** 如果「chat sidebar project filter fails」，先读「Coding Projects (named workspaces + chat linkage)」相关文件（见 runtime/substrate/platform/packages/shared/src/models/UserProject.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**89.** 如果「conversations not filed under the right project」，先读「Coding Projects (named workspaces + chat linkage)」相关文件（见 platform/packages/shared/src/models/UserProject.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**89.** 如果「conversations not filed under the right project」，先读「Coding Projects (named workspaces + chat linkage)」相关文件（见 runtime/substrate/platform/packages/shared/src/models/UserProject.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**90.** 如果「/api/ai/projects REST errors」，先读「Coding Projects (named workspaces + chat linkage)」相关文件（见 platform/packages/shared/src/models/UserProject.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**90.** 如果「/api/ai/projects REST errors」，先读「Coding Projects (named workspaces + chat linkage)」相关文件（见 runtime/substrate/platform/packages/shared/src/models/UserProject.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**91.** 如果「workspace snapshot behavior is wrong」，先读「Workspace, Publish, and Verification Commands」相关文件（见 services/backend/src/cli/handlers/workspace.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**91.** 如果「workspace snapshot behavior is wrong」，先读「Workspace, Publish, and Verification Commands」相关文件（见 runtime/node/backend/src/cli/handlers/workspace.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Workspace, Publish, and Verification Commands。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/publish.sourceReleaseMode.test.js services/backend/tests/publish.dbPreflight.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/publish.sourceReleaseMode.test.js runtime/node/backend/tests/publish.dbPreflight.test.js`
 
-**92.** 如果「publish command is broken」，先读「Workspace, Publish, and Verification Commands」相关文件（见 services/backend/src/cli/handlers/workspace.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**92.** 如果「publish command is broken」，先读「Workspace, Publish, and Verification Commands」相关文件（见 runtime/node/backend/src/cli/handlers/workspace.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Workspace, Publish, and Verification Commands。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/publish.sourceReleaseMode.test.js services/backend/tests/publish.dbPreflight.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/publish.sourceReleaseMode.test.js runtime/node/backend/tests/publish.dbPreflight.test.js`
 
-**93.** 如果「verification workflow regressed」，先读「Workspace, Publish, and Verification Commands」相关文件（见 services/backend/src/cli/handlers/workspace.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**93.** 如果「verification workflow regressed」，先读「Workspace, Publish, and Verification Commands」相关文件（见 runtime/node/backend/src/cli/handlers/workspace.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Workspace, Publish, and Verification Commands。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/publish.sourceReleaseMode.test.js services/backend/tests/publish.dbPreflight.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/publish.sourceReleaseMode.test.js runtime/node/backend/tests/publish.dbPreflight.test.js`
 
 **94.** 如果「you changed startup/network/task execution」，先读「Maintenance Safety and Rule Gates」相关文件（见 AGENTS.md），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Maintenance Safety and Rule Gates。触发词命中时的第一反应。
@@ -431,41 +431,41 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：Maintenance Safety and Rule Gates。触发词命中时的第一反应。
   - 验证：`npm run check:changed`
 
-**97.** 如果「you need a fixed, repeatable release path (check → build → audit → publish → verify)」，先读「Release and Rollback」相关文件（见 services/backend/src/cli/handlers/publish.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**97.** 如果「you need a fixed, repeatable release path (check → build → audit → publish → verify)」，先读「Release and Rollback」相关文件（见 runtime/node/backend/src/cli/handlers/publish.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Release and Rollback。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/publish.sourceReleaseMode.test.js services/backend/tests/publish.dbPreflight.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/publish.sourceReleaseMode.test.js runtime/node/backend/tests/publish.dbPreflight.test.js`
 
-**98.** 如果「an upgrade broke something and you must roll back to the last known-good version」，先读「Release and Rollback」相关文件（见 services/backend/src/cli/handlers/publish.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**98.** 如果「an upgrade broke something and you must roll back to the last known-good version」，先读「Release and Rollback」相关文件（见 runtime/node/backend/src/cli/handlers/publish.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Release and Rollback。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/publish.sourceReleaseMode.test.js services/backend/tests/publish.dbPreflight.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/publish.sourceReleaseMode.test.js runtime/node/backend/tests/publish.dbPreflight.test.js`
 
-**99.** 如果「you need to know which version is the current stable baseline」，先读「Release and Rollback」相关文件（见 services/backend/src/cli/handlers/publish.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**99.** 如果「you need to know which version is the current stable baseline」，先读「Release and Rollback」相关文件（见 runtime/node/backend/src/cli/handlers/publish.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Release and Rollback。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/publish.sourceReleaseMode.test.js services/backend/tests/publish.dbPreflight.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/publish.sourceReleaseMode.test.js runtime/node/backend/tests/publish.dbPreflight.test.js`
 
-**100.** 如果「release artifacts or the post-release check regressed」，先读「Release and Rollback」相关文件（见 services/backend/src/cli/handlers/publish.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**100.** 如果「release artifacts or the post-release check regressed」，先读「Release and Rollback」相关文件（见 runtime/node/backend/src/cli/handlers/publish.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Release and Rollback。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/publish.sourceReleaseMode.test.js services/backend/tests/publish.dbPreflight.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/publish.sourceReleaseMode.test.js runtime/node/backend/tests/publish.dbPreflight.test.js`
 
-**101.** 如果「the phrase 打造最佳环境 does not trigger the self-check pipeline」，先读「Build Best Environment (Self-check / Repair / Probes)」相关文件（见 services/backend/src/services/localBrainEnvOptimize.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**101.** 如果「the phrase 打造最佳环境 does not trigger the self-check pipeline」，先读「Build Best Environment (Self-check / Repair / Probes)」相关文件（见 runtime/node/backend/src/services/localBrainEnvOptimize.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Build Best Environment (Self-check / Repair / Probes)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/localBrainEnvOptimize.test.js services/backend/tests/services/envProbes.test.js services/backend/tests/services/envRepair.test.js services/backend/tests/services/envPlatform.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/localBrainEnvOptimize.test.js runtime/node/backend/tests/services/envProbes.test.js runtime/node/backend/tests/services/envRepair.test.js runtime/node/backend/tests/services/envPlatform.test.js`
 
-**102.** 如果「you want to add a new read-only health check (probe)」，先读「Build Best Environment (Self-check / Repair / Probes)」相关文件（见 services/backend/src/services/localBrainEnvOptimize.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**102.** 如果「you want to add a new read-only health check (probe)」，先读「Build Best Environment (Self-check / Repair / Probes)」相关文件（见 runtime/node/backend/src/services/localBrainEnvOptimize.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Build Best Environment (Self-check / Repair / Probes)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/localBrainEnvOptimize.test.js services/backend/tests/services/envProbes.test.js services/backend/tests/services/envRepair.test.js services/backend/tests/services/envPlatform.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/localBrainEnvOptimize.test.js runtime/node/backend/tests/services/envProbes.test.js runtime/node/backend/tests/services/envRepair.test.js runtime/node/backend/tests/services/envPlatform.test.js`
 
-**103.** 如果「you want to add a new safe create-missing repair」，先读「Build Best Environment (Self-check / Repair / Probes)」相关文件（见 services/backend/src/services/localBrainEnvOptimize.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**103.** 如果「you want to add a new safe create-missing repair」，先读「Build Best Environment (Self-check / Repair / Probes)」相关文件（见 runtime/node/backend/src/services/localBrainEnvOptimize.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Build Best Environment (Self-check / Repair / Probes)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/localBrainEnvOptimize.test.js services/backend/tests/services/envProbes.test.js services/backend/tests/services/envRepair.test.js services/backend/tests/services/envPlatform.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/localBrainEnvOptimize.test.js runtime/node/backend/tests/services/envProbes.test.js runtime/node/backend/tests/services/envRepair.test.js runtime/node/backend/tests/services/envPlatform.test.js`
 
-**104.** 如果「a probe or repair should run only on some OSes (linux/windows/macos/android/ios)」，先读「Build Best Environment (Self-check / Repair / Probes)」相关文件（见 services/backend/src/services/localBrainEnvOptimize.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**104.** 如果「a probe or repair should run only on some OSes (linux/windows/macos/android/ios)」，先读「Build Best Environment (Self-check / Repair / Probes)」相关文件（见 runtime/node/backend/src/services/localBrainEnvOptimize.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Build Best Environment (Self-check / Repair / Probes)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/localBrainEnvOptimize.test.js services/backend/tests/services/envProbes.test.js services/backend/tests/services/envRepair.test.js services/backend/tests/services/envPlatform.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/localBrainEnvOptimize.test.js runtime/node/backend/tests/services/envProbes.test.js runtime/node/backend/tests/services/envRepair.test.js runtime/node/backend/tests/services/envPlatform.test.js`
 
-**105.** 如果「the junk scan, repair, or probe section renders wrong」，先读「Build Best Environment (Self-check / Repair / Probes)」相关文件（见 services/backend/src/services/localBrainEnvOptimize.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**105.** 如果「the junk scan, repair, or probe section renders wrong」，先读「Build Best Environment (Self-check / Repair / Probes)」相关文件（见 runtime/node/backend/src/services/localBrainEnvOptimize.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Build Best Environment (Self-check / Repair / Probes)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/localBrainEnvOptimize.test.js services/backend/tests/services/envProbes.test.js services/backend/tests/services/envRepair.test.js services/backend/tests/services/envPlatform.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/localBrainEnvOptimize.test.js runtime/node/backend/tests/services/envProbes.test.js runtime/node/backend/tests/services/envRepair.test.js runtime/node/backend/tests/services/envPlatform.test.js`
 
 **106.** 如果「a novice user or weak AI needs a runnable list of safe next improvements」，先读「Evolution Prompt Playbook (1000 preset prompts)」相关文件（见 scripts/docs/gen-evolution-prompts.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Evolution Prompt Playbook (1000 preset prompts)。触发词命中时的第一反应。
@@ -543,7 +543,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：First-run Hydration Health (did the online dependency hydrate actually succeed?)。触发词命中时的第一反应。
   - 验证：`npm run doctor:hydration`
 
-**125.** 如果「a runtime dependency was renamed/removed and CRITICAL_PACKAGES must track services/backend package.json」，先读「First-run Hydration Health (did the online dependency hydrate actually succeed?)」相关文件（见 scripts/lib/hydrationHealth.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**125.** 如果「a runtime dependency was renamed/removed and CRITICAL_PACKAGES must track runtime/node/backend package.json」，先读「First-run Hydration Health (did the online dependency hydrate actually succeed?)」相关文件（见 scripts/lib/hydrationHealth.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：First-run Hydration Health (did the online dependency hydrate actually succeed?)。触发词命中时的第一反应。
   - 验证：`npm run doctor:hydration`
 
@@ -635,117 +635,117 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：Off-machine Launch-entry Contract (does each channel pin the launch script it execs?)。触发词命中时的第一反应。
   - 验证：`npm run test:one -- scripts/tests/bundleLaunchContract.test.js`
 
-**148.** 如果「selected proxy node does not route traffic」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 services/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**148.** 如果「selected proxy node does not route traffic」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 runtime/node/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/proxyCoreConfigGen.test.js services/backend/tests/proxyCoreManager.test.js services/backend/tests/proxyConfigService.egress.test.js services/backend/tests/aiManagementProxyEgress.wiring.test.js apps/ai-frontend/src/composables/useProxies.egress.wiring.test.js services/backend/tests/bootstrap/ensureProxyCoreEnv.test.js services/backend/tests/services/proxyCoreInstaller.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
 
-**149.** 如果「proxy enable/disable toggle fails」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 services/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**149.** 如果「proxy enable/disable toggle fails」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 runtime/node/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/proxyCoreConfigGen.test.js services/backend/tests/proxyCoreManager.test.js services/backend/tests/proxyConfigService.egress.test.js services/backend/tests/aiManagementProxyEgress.wiring.test.js apps/ai-frontend/src/composables/useProxies.egress.wiring.test.js services/backend/tests/bootstrap/ensureProxyCoreEnv.test.js services/backend/tests/services/proxyCoreInstaller.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
 
-**150.** 如果「core-required node reports core-missing but no guidance shown」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 services/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**150.** 如果「core-required node reports core-missing but no guidance shown」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 runtime/node/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/proxyCoreConfigGen.test.js services/backend/tests/proxyCoreManager.test.js services/backend/tests/proxyConfigService.egress.test.js services/backend/tests/aiManagementProxyEgress.wiring.test.js apps/ai-frontend/src/composables/useProxies.egress.wiring.test.js services/backend/tests/bootstrap/ensureProxyCoreEnv.test.js services/backend/tests/services/proxyCoreInstaller.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
 
-**151.** 如果「/api/proxy-egress REST errors」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 services/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**151.** 如果「/api/proxy-egress REST errors」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 runtime/node/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/proxyCoreConfigGen.test.js services/backend/tests/proxyCoreManager.test.js services/backend/tests/proxyConfigService.egress.test.js services/backend/tests/aiManagementProxyEgress.wiring.test.js apps/ai-frontend/src/composables/useProxies.egress.wiring.test.js services/backend/tests/bootstrap/ensureProxyCoreEnv.test.js services/backend/tests/services/proxyCoreInstaller.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
 
-**152.** 如果「HTTP_PROXY env not applied after choosing a node」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 services/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**152.** 如果「HTTP_PROXY env not applied after choosing a node」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 runtime/node/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/proxyCoreConfigGen.test.js services/backend/tests/proxyCoreManager.test.js services/backend/tests/proxyConfigService.egress.test.js services/backend/tests/aiManagementProxyEgress.wiring.test.js apps/ai-frontend/src/composables/useProxies.egress.wiring.test.js services/backend/tests/bootstrap/ensureProxyCoreEnv.test.js services/backend/tests/services/proxyCoreInstaller.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
 
-**153.** 如果「raw node still asks to set KHY_PROXY_CORE=1 after pip/npm install (env not auto-seeded)」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 services/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**153.** 如果「raw node still asks to set KHY_PROXY_CORE=1 after pip/npm install (env not auto-seeded)」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 runtime/node/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/proxyCoreConfigGen.test.js services/backend/tests/proxyCoreManager.test.js services/backend/tests/proxyConfigService.egress.test.js services/backend/tests/aiManagementProxyEgress.wiring.test.js apps/ai-frontend/src/composables/useProxies.egress.wiring.test.js services/backend/tests/bootstrap/ensureProxyCoreEnv.test.js services/backend/tests/services/proxyCoreInstaller.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
 
-**154.** 如果「mihomo core binary missing and not auto-installed out of the box」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 services/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**154.** 如果「mihomo core binary missing and not auto-installed out of the box」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 runtime/node/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/proxyCoreConfigGen.test.js services/backend/tests/proxyCoreManager.test.js services/backend/tests/proxyConfigService.egress.test.js services/backend/tests/aiManagementProxyEgress.wiring.test.js apps/ai-frontend/src/composables/useProxies.egress.wiring.test.js services/backend/tests/bootstrap/ensureProxyCoreEnv.test.js services/backend/tests/services/proxyCoreInstaller.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
 
-**155.** 如果「web proxy page says 'download mihomo' but never shows where to download it (download URL / dest path missing)」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 services/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**155.** 如果「web proxy page says 'download mihomo' but never shows where to download it (download URL / dest path missing)」，先读「Proxy Egress Bridge (select node + enable/disable)」相关文件（见 runtime/node/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/proxyCoreConfigGen.test.js services/backend/tests/proxyCoreManager.test.js services/backend/tests/proxyConfigService.egress.test.js services/backend/tests/aiManagementProxyEgress.wiring.test.js apps/ai-frontend/src/composables/useProxies.egress.wiring.test.js services/backend/tests/bootstrap/ensureProxyCoreEnv.test.js services/backend/tests/services/proxyCoreInstaller.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
 
-**156.** 如果「a fresh pip/npm install starts up and dies with a raw MODULE_NOT_FOUND stack trace and no explanation of why or how to fix it」，先读「Startup Failure Real-cause + Fix (does a fresh-machine crash say WHY and HOW, not just a raw stack?)」相关文件（见 services/backend/src/bootstrap/startupFailureExplain.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**156.** 如果「a fresh pip/npm install starts up and dies with a raw MODULE_NOT_FOUND stack trace and no explanation of why or how to fix it」，先读「Startup Failure Real-cause + Fix (does a fresh-machine crash say WHY and HOW, not just a raw stack?)」相关文件（见 runtime/node/backend/src/bootstrap/startupFailureExplain.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Startup Failure Real-cause + Fix (does a fresh-machine crash say WHY and HOW, not just a raw stack?)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/bootstrap/startupFailureExplain.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/bootstrap/startupFailureExplain.test.js`
 
-**157.** 如果「the backend's node_modules is half-installed / not hydrated / cleared, and you want the crash to name the real cause + a copy-paste fix instead of a cryptic trace」，先读「Startup Failure Real-cause + Fix (does a fresh-machine crash say WHY and HOW, not just a raw stack?)」相关文件（见 services/backend/src/bootstrap/startupFailureExplain.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**157.** 如果「the backend's node_modules is half-installed / not hydrated / cleared, and you want the crash to name the real cause + a copy-paste fix instead of a cryptic trace」，先读「Startup Failure Real-cause + Fix (does a fresh-machine crash say WHY and HOW, not just a raw stack?)」相关文件（见 runtime/node/backend/src/bootstrap/startupFailureExplain.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Startup Failure Real-cause + Fix (does a fresh-machine crash say WHY and HOW, not just a raw stack?)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/bootstrap/startupFailureExplain.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/bootstrap/startupFailureExplain.test.js`
 
-**158.** 如果「a native module (better-sqlite3 等) was copied across platforms without rebuild and crashes with ERR_DLOPEN_FAILED」，先读「Startup Failure Real-cause + Fix (does a fresh-machine crash say WHY and HOW, not just a raw stack?)」相关文件（见 services/backend/src/bootstrap/startupFailureExplain.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**158.** 如果「a native module (better-sqlite3 等) was copied across platforms without rebuild and crashes with ERR_DLOPEN_FAILED」，先读「Startup Failure Real-cause + Fix (does a fresh-machine crash say WHY and HOW, not just a raw stack?)」相关文件（见 runtime/node/backend/src/bootstrap/startupFailureExplain.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Startup Failure Real-cause + Fix (does a fresh-machine crash say WHY and HOW, not just a raw stack?)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/bootstrap/startupFailureExplain.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/bootstrap/startupFailureExplain.test.js`
 
-**159.** 如果「you need to add a new class of first-run crash → real-cause + fix mapping shown by bin/khy.js _emitFatal」，先读「Startup Failure Real-cause + Fix (does a fresh-machine crash say WHY and HOW, not just a raw stack?)」相关文件（见 services/backend/src/bootstrap/startupFailureExplain.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**159.** 如果「you need to add a new class of first-run crash → real-cause + fix mapping shown by bin/khy.js _emitFatal」，先读「Startup Failure Real-cause + Fix (does a fresh-machine crash say WHY and HOW, not just a raw stack?)」相关文件（见 runtime/node/backend/src/bootstrap/startupFailureExplain.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Startup Failure Real-cause + Fix (does a fresh-machine crash say WHY and HOW, not just a raw stack?)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/bootstrap/startupFailureExplain.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/bootstrap/startupFailureExplain.test.js`
 
-**160.** 如果「right-click a .md file on Windows → '选择一个应用以打开此.md文件' → khy is missing from the 建议的应用/Recommended apps section」，先读「Windows .md Suggested-app Registration (does khy show in the Open-With '建议的应用' list?)」相关文件（见 services/backend/src/services/mdSuggestedAppsPlan.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**160.** 如果「right-click a .md file on Windows → '选择一个应用以打开此.md文件' → khy is missing from the 建议的应用/Recommended apps section」，先读「Windows .md Suggested-app Registration (does khy show in the Open-With '建议的应用' list?)」相关文件（见 runtime/node/backend/src/services/mdSuggestedAppsPlan.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Windows .md Suggested-app Registration (does khy show in the Open-With '建议的应用' list?)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/mdSuggestedAppsPlan.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/mdSuggestedAppsPlan.test.js`
 
-**161.** 如果「you need khy to register as a recommended handler for .md/.markdown via Applications\<app>\SupportedTypes (not just OpenWithProgids)」，先读「Windows .md Suggested-app Registration (does khy show in the Open-With '建议的应用' list?)」相关文件（见 services/backend/src/services/mdSuggestedAppsPlan.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**161.** 如果「you need khy to register as a recommended handler for .md/.markdown via Applications\<app>\SupportedTypes (not just OpenWithProgids)」，先读「Windows .md Suggested-app Registration (does khy show in the Open-With '建议的应用' list?)」相关文件（见 runtime/node/backend/src/services/mdSuggestedAppsPlan.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Windows .md Suggested-app Registration (does khy show in the Open-With '建议的应用' list?)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/mdSuggestedAppsPlan.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/mdSuggestedAppsPlan.test.js`
 
-**162.** 如果「you add a new extension khy should be suggested to open, and must keep register/unregister PS1 symmetric (zero registry residue)」，先读「Windows .md Suggested-app Registration (does khy show in the Open-With '建议的应用' list?)」相关文件（见 services/backend/src/services/mdSuggestedAppsPlan.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**162.** 如果「you add a new extension khy should be suggested to open, and must keep register/unregister PS1 symmetric (zero registry residue)」，先读「Windows .md Suggested-app Registration (does khy show in the Open-With '建议的应用' list?)」相关文件（见 runtime/node/backend/src/services/mdSuggestedAppsPlan.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Windows .md Suggested-app Registration (does khy show in the Open-With '建议的应用' list?)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/mdSuggestedAppsPlan.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/mdSuggestedAppsPlan.test.js`
 
-**163.** 如果「the md-editor first-run auto-registration (mdEditorRegister) spawns register-windows.ps1 and you need to know exactly which HKCU keys it writes」，先读「Windows .md Suggested-app Registration (does khy show in the Open-With '建议的应用' list?)」相关文件（见 services/backend/src/services/mdSuggestedAppsPlan.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**163.** 如果「the md-editor first-run auto-registration (mdEditorRegister) spawns register-windows.ps1 and you need to know exactly which HKCU keys it writes」，先读「Windows .md Suggested-app Registration (does khy show in the Open-With '建议的应用' list?)」相关文件（见 runtime/node/backend/src/services/mdSuggestedAppsPlan.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Windows .md Suggested-app Registration (does khy show in the Open-With '建议的应用' list?)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/mdSuggestedAppsPlan.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/mdSuggestedAppsPlan.test.js`
 
-**164.** 如果「a user on a fresh machine installed via pip/npm and `khy` fails to start or behaves oddly — they need one command telling them the root cause and exact fix」，先读「Fresh-machine Off-machine-restore Self-check in `khy doctor` (真实原因+解决方法 for a fresh pip/npm install)」相关文件（见 services/backend/src/services/freshInstallDoctor.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**164.** 如果「a user on a fresh machine installed via pip/npm and `khy` fails to start or behaves oddly — they need one command telling them the root cause and exact fix」，先读「Fresh-machine Off-machine-restore Self-check in `khy doctor` (真实原因+解决方法 for a fresh pip/npm install)」相关文件（见 runtime/node/backend/src/services/freshInstallDoctor.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Fresh-machine Off-machine-restore Self-check in `khy doctor` (真实原因+解决方法 for a fresh pip/npm install)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/freshInstallDoctor.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/freshInstallDoctor.test.js`
 
-**165.** 如果「you want `khy doctor` to surface the shipped, human-facing off-machine-restore concerns: launch entry (bin/khy.js), server entry (server.js), dependency hydration (node_modules), khy-command reachability (PATH vs `python -m khy_platform`)」，先读「Fresh-machine Off-machine-restore Self-check in `khy doctor` (真实原因+解决方法 for a fresh pip/npm install)」相关文件（见 services/backend/src/services/freshInstallDoctor.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**165.** 如果「you want `khy doctor` to surface the shipped, human-facing off-machine-restore concerns: launch entry (bin/khy.js), server entry (server.js), dependency hydration (node_modules), khy-command reachability (PATH vs `python -m khy_platform`)」，先读「Fresh-machine Off-machine-restore Self-check in `khy doctor` (真实原因+解决方法 for a fresh pip/npm install)」相关文件（见 runtime/node/backend/src/services/freshInstallDoctor.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Fresh-machine Off-machine-restore Self-check in `khy doctor` (真实原因+解决方法 for a fresh pip/npm install)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/freshInstallDoctor.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/freshInstallDoctor.test.js`
 
-**166.** 如果「you add a new fresh-install concern and must keep the pure assessor / IO gatherer split (assessFreshInstall never does IO, gatherFreshInstallFacts is injectable)」，先读「Fresh-machine Off-machine-restore Self-check in `khy doctor` (真实原因+解决方法 for a fresh pip/npm install)」相关文件（见 services/backend/src/services/freshInstallDoctor.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**166.** 如果「you add a new fresh-install concern and must keep the pure assessor / IO gatherer split (assessFreshInstall never does IO, gatherFreshInstallFacts is injectable)」，先读「Fresh-machine Off-machine-restore Self-check in `khy doctor` (真实原因+解决方法 for a fresh pip/npm install)」相关文件（见 runtime/node/backend/src/services/freshInstallDoctor.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Fresh-machine Off-machine-restore Self-check in `khy doctor` (真实原因+解决方法 for a fresh pip/npm install)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/freshInstallDoctor.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/freshInstallDoctor.test.js`
 
-**167.** 如果「this is the human-facing complement to the agent-facing restore-plan (agentRestorePlan) and the build-time mirrors (scripts/lib/restoreReadiness/installIntegrity/hydrationHealth)」，先读「Fresh-machine Off-machine-restore Self-check in `khy doctor` (真实原因+解决方法 for a fresh pip/npm install)」相关文件（见 services/backend/src/services/freshInstallDoctor.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**167.** 如果「this is the human-facing complement to the agent-facing restore-plan (agentRestorePlan) and the build-time mirrors (scripts/lib/restoreReadiness/installIntegrity/hydrationHealth)」，先读「Fresh-machine Off-machine-restore Self-check in `khy doctor` (真实原因+解决方法 for a fresh pip/npm install)」相关文件（见 runtime/node/backend/src/services/freshInstallDoctor.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Fresh-machine Off-machine-restore Self-check in `khy doctor` (真实原因+解决方法 for a fresh pip/npm install)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/freshInstallDoctor.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/freshInstallDoctor.test.js`
 
-**168.** 如果「a user runs /recap on a Chinese conversation and decisions/insights/open-questions come back empty, or file names get truncated at full-width punctuation (。，；！？) — the recap extractors were English-only」，先读「CJK-ize /recap so session recap produces content on Chinese sessions」相关文件（见 services/backend/src/services/sessionRecapCjk.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**168.** 如果「a user runs /recap on a Chinese conversation and decisions/insights/open-questions come back empty, or file names get truncated at full-width punctuation (。，；！？) — the recap extractors were English-only」，先读「CJK-ize /recap so session recap produces content on Chinese sessions」相关文件（见 runtime/node/backend/src/services/sessionRecapCjk.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：CJK-ize /recap so session recap produces content on Chinese sessions。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/sessionRecapCjk.test.js services/backend/tests/services/sessionRecapService.cjk.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/sessionRecapCjk.test.js runtime/node/backend/tests/services/sessionRecapService.cjk.test.js`
 
-**169.** 如果「you add a new Chinese decision/insight trigger stem or a new CJK terminator — extend the frozen arrays in sessionRecapCjk.js (_CJK_DECISION_MARKERS/_CJK_INSIGHT_MARKERS/_CJK_TERMINATORS)」，先读「CJK-ize /recap so session recap produces content on Chinese sessions」相关文件（见 services/backend/src/services/sessionRecapCjk.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**169.** 如果「you add a new Chinese decision/insight trigger stem or a new CJK terminator — extend the frozen arrays in sessionRecapCjk.js (_CJK_DECISION_MARKERS/_CJK_INSIGHT_MARKERS/_CJK_TERMINATORS)」，先读「CJK-ize /recap so session recap produces content on Chinese sessions」相关文件（见 runtime/node/backend/src/services/sessionRecapCjk.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：CJK-ize /recap so session recap produces content on Chinese sessions。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/sessionRecapCjk.test.js services/backend/tests/services/sessionRecapService.cjk.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/sessionRecapCjk.test.js runtime/node/backend/tests/services/sessionRecapService.cjk.test.js`
 
-**170.** 如果「the CJK extraction is additive (union with the English extractors) and gated KHY_RECAP_CJK default-on; gate off byte-reverts generateRecap to the original English behavior」，先读「CJK-ize /recap so session recap produces content on Chinese sessions」相关文件（见 services/backend/src/services/sessionRecapCjk.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**170.** 如果「the CJK extraction is additive (union with the English extractors) and gated KHY_RECAP_CJK default-on; gate off byte-reverts generateRecap to the original English behavior」，先读「CJK-ize /recap so session recap produces content on Chinese sessions」相关文件（见 runtime/node/backend/src/services/sessionRecapCjk.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：CJK-ize /recap so session recap produces content on Chinese sessions。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/sessionRecapCjk.test.js services/backend/tests/services/sessionRecapService.cjk.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/sessionRecapCjk.test.js runtime/node/backend/tests/services/sessionRecapService.cjk.test.js`
 
-**171.** 如果「this is the extraction complement to the /recap command shell (handlers/recap.js, gate KHY_RECAP) and the deterministic base service sessionRecapService.js」，先读「CJK-ize /recap so session recap produces content on Chinese sessions」相关文件（见 services/backend/src/services/sessionRecapCjk.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**171.** 如果「this is the extraction complement to the /recap command shell (handlers/recap.js, gate KHY_RECAP) and the deterministic base service sessionRecapService.js」，先读「CJK-ize /recap so session recap produces content on Chinese sessions」相关文件（见 runtime/node/backend/src/services/sessionRecapCjk.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：CJK-ize /recap so session recap produces content on Chinese sessions。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/sessionRecapCjk.test.js services/backend/tests/services/sessionRecapService.cjk.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/sessionRecapCjk.test.js runtime/node/backend/tests/services/sessionRecapService.cjk.test.js`
 
-**172.** 如果「a user installs @khy-os/khy-os on a machine with Node < 20 and khy crashes cryptically deep in the backend instead of saying "need Node >= 20" — the pip channel already guards this via check_node, the npm launcher did not」，先读「npm-channel Node version preflight (parity with pip check_node; kills the cross-channel off-machine-restore contradiction)」相关文件（见 packaging/npm/scripts/nodeVersionPreflight.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**172.** 如果「a user installs @khy-os/khy-os on a machine with Node < 20 and khy crashes cryptically deep in the backend instead of saying "need Node >= 20" — the pip channel already guards this via check_node, the npm launcher did not」，先读「npm-channel Node version preflight (parity with pip check_node; kills the cross-channel off-machine-restore contradiction)」相关文件（见 works/ship/npm/scripts/nodeVersionPreflight.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：npm-channel Node version preflight (parity with pip check_node; kills the cross-channel off-machine-restore contradiction)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- packaging/npm/test/nodeVersionPreflight.test.js`
+  - 验证：`npm run test:one -- works/ship/npm/test/nodeVersionPreflight.test.js`
 
-**173.** 如果「you raise the minimum Node major: keep MIN_MAJOR in nodeVersionPreflight.js in sync with pip cli.py check_node (major>=20), backend package.json engines, and devenv.js TOOLCHAINS」，先读「npm-channel Node version preflight (parity with pip check_node; kills the cross-channel off-machine-restore contradiction)」相关文件（见 packaging/npm/scripts/nodeVersionPreflight.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**173.** 如果「you raise the minimum Node major: keep MIN_MAJOR in nodeVersionPreflight.js in sync with pip cli.py check_node (major>=20), backend package.json engines, and devenv.js TOOLCHAINS」，先读「npm-channel Node version preflight (parity with pip check_node; kills the cross-channel off-machine-restore contradiction)」相关文件（见 works/ship/npm/scripts/nodeVersionPreflight.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：npm-channel Node version preflight (parity with pip check_node; kills the cross-channel off-machine-restore contradiction)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- packaging/npm/test/nodeVersionPreflight.test.js`
+  - 验证：`npm run test:one -- works/ship/npm/test/nodeVersionPreflight.test.js`
 
-**174.** 如果「you add a platform install hint or a China-mirror branch — extend _platformHint / _isChina, mirroring pip _print_node_install_hint」，先读「npm-channel Node version preflight (parity with pip check_node; kills the cross-channel off-machine-restore contradiction)」相关文件（见 packaging/npm/scripts/nodeVersionPreflight.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**174.** 如果「you add a platform install hint or a China-mirror branch — extend _platformHint / _isChina, mirroring pip _print_node_install_hint」，先读「npm-channel Node version preflight (parity with pip check_node; kills the cross-channel off-machine-restore contradiction)」相关文件（见 works/ship/npm/scripts/nodeVersionPreflight.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：npm-channel Node version preflight (parity with pip check_node; kills the cross-channel off-machine-restore contradiction)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- packaging/npm/test/nodeVersionPreflight.test.js`
+  - 验证：`npm run test:one -- works/ship/npm/test/nodeVersionPreflight.test.js`
 
-**175.** 如果「the preflight is additive and gated KHY_NPM_NODE_PREFLIGHT default-on; gate off / any error / unparseable version byte-reverts bin/khy.js to the original unconditional spawnSync handoff (preflight must never be more fragile than the launch it protects)」，先读「npm-channel Node version preflight (parity with pip check_node; kills the cross-channel off-machine-restore contradiction)」相关文件（见 packaging/npm/scripts/nodeVersionPreflight.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**175.** 如果「the preflight is additive and gated KHY_NPM_NODE_PREFLIGHT default-on; gate off / any error / unparseable version byte-reverts bin/khy.js to the original unconditional spawnSync handoff (preflight must never be more fragile than the launch it protects)」，先读「npm-channel Node version preflight (parity with pip check_node; kills the cross-channel off-machine-restore contradiction)」相关文件（见 works/ship/npm/scripts/nodeVersionPreflight.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：npm-channel Node version preflight (parity with pip check_node; kills the cross-channel off-machine-restore contradiction)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- packaging/npm/test/nodeVersionPreflight.test.js`
+  - 验证：`npm run test:one -- works/ship/npm/test/nodeVersionPreflight.test.js`
 
 **176.** 如果「an agent is executing the restore-resolve recovery chain and needs, after each move + re-probe, a verdict on whether restore state actually advanced」，先读「Restore Convergence & Loop-Guard Verifier (after an agent executes a restore move and re-probes, did it actually advance? stop, continue, or escalate?)」相关文件（见 scripts/lib/restoreConvergenceVerifier.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Restore Convergence & Loop-Guard Verifier (after an agent executes a restore move and re-probes, did it actually advance? stop, continue, or escalate?)。触发词命中时的第一反应。
@@ -775,57 +775,57 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：Restore Convergence & Loop-Guard Verifier (after an agent executes a restore move and re-probes, did it actually advance? stop, continue, or escalate?)。触发词命中时的第一反应。
   - 验证：`npm run test:one -- scripts/tests/restoreConvergenceVerifier.test.js`
 
-**183.** 如果「khy auto-decomposes a goal into subtasks and you want the ones with declared dependencies (explore → implement → verify) to run in ORDER, not all fanned out at once」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 services/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**183.** 如果「khy auto-decomposes a goal into subtasks and you want the ones with declared dependencies (explore → implement → verify) to run in ORDER, not all fanned out at once」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 runtime/node/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
-**184.** 如果「a subtask carries a `dependencies` field (from _llmDecomposer or a future strategy) that must be honored as execution order instead of being dropped」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 services/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**184.** 如果「a subtask carries a `dependencies` field (from _llmDecomposer or a future strategy) that must be honored as execution order instead of being dropped」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 runtime/node/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
-**185.** 如果「you add a new dependency-reference syntax and must keep the pure leaf (planWaves never does IO/throws) + the conservative flat/cycle/dangling fallbacks」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 services/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**185.** 如果「you add a new dependency-reference syntax and must keep the pure leaf (planWaves never does IO/throws) + the conservative flat/cycle/dangling fallbacks」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 runtime/node/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
-**186.** 如果「this is the missing consumer bridging _llmDecomposer's dependencies output to the existing parallel primitive AgentTool._runOrchestrated via ordered waves」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 services/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**186.** 如果「this is the missing consumer bridging _llmDecomposer's dependencies output to the existing parallel primitive AgentTool._runOrchestrated via ordered waves」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 runtime/node/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
-**187.** 如果「a subtask in a later wave declares a dependency on an EARLIER subtask that FAILED — fault-aware execution (gate KHY_DEP_WAVE_FAULT_STOP) short-circuits it to skipped-failure (依赖失败，已跳过) instead of running it on a broken premise (partitionWaveBySurvivors, skip propagates transitively)」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 services/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**187.** 如果「a subtask in a later wave declares a dependency on an EARLIER subtask that FAILED — fault-aware execution (gate KHY_DEP_WAVE_FAULT_STOP) short-circuits it to skipped-failure (依赖失败，已跳过) instead of running it on a broken premise (partitionWaveBySurvivors, skip propagates transitively)」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 runtime/node/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
-**188.** 如果「a downstream wave member should SEE its direct predecessors' output (implement seeing what explore produced) instead of running blind — predecessor-result CONTEXT INJECTION (gate KHY_DEP_WAVE_CONTEXT_INJECT) prepends [前驱结果 t<n>]: <text> (4000-char truncation, ascending, direct deps only) to its prompt via buildPredecessorContext/injectPredecessorContext」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 services/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**188.** 如果「a downstream wave member should SEE its direct predecessors' output (implement seeing what explore produced) instead of running blind — predecessor-result CONTEXT INJECTION (gate KHY_DEP_WAVE_CONTEXT_INJECT) prepends [前驱结果 t<n>]: <text> (4000-char truncation, ascending, direct deps only) to its prompt via buildPredecessorContext/injectPredecessorContext」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 runtime/node/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
-**189.** 如果「the FINAL user-facing report must distinguish a dependency-SKIPPED subtask (依赖失败，已跳过) from one that genuinely ran and failed — mergeResults (taskDecomposer.js, gate KHY_MERGE_SKIP_DISTINCT) renders skips as a distinct 跳过（依赖失败） status and a separate 跳过 footer count instead of folding them into 失败 (fixes the last-mile consumer bridge for the 087 `skipped` flag)」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 services/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**189.** 如果「the FINAL user-facing report must distinguish a dependency-SKIPPED subtask (依赖失败，已跳过) from one that genuinely ran and failed — mergeResults (taskDecomposer.js, gate KHY_MERGE_SKIP_DISTINCT) renders skips as a distinct 跳过（依赖失败） status and a separate 跳过 footer count instead of folding them into 失败 (fixes the last-mile consumer bridge for the 087 `skipped` flag)」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 runtime/node/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
-**190.** 如果「the whole wave arc is a silent no-op on the DEFAULT OFFLINE path (pip/npm install, no LLM key) because the four DETERMINISTIC decompose strategies emit NO `dependencies` — only the opt-in LLM strategy 5 does, and decompose is called without callModel. The deterministic sequential-chain producer _splitSequentialChain (taskDecomposer.js, gate KHY_SEQ_CHAIN_DECOMPOSE) recognizes 先…再…/然后/首先…其次…最后/then/finally and emits `dependencies: [priorIndex]` so planWaves compiles a serial chain offline (the producer side of the arc)」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 services/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**190.** 如果「the whole wave arc is a silent no-op on the DEFAULT OFFLINE path (pip/npm install, no LLM key) because the four DETERMINISTIC decompose strategies emit NO `dependencies` — only the opt-in LLM strategy 5 does, and decompose is called without callModel. The deterministic sequential-chain producer _splitSequentialChain (taskDecomposer.js, gate KHY_SEQ_CHAIN_DECOMPOSE) recognizes 先…再…/然后/首先…其次…最后/then/finally and emits `dependencies: [priorIndex]` so planWaves compiles a serial chain offline (the producer side of the arc)」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 runtime/node/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
-**191.** 如果「the decompose `role` string (explore/verify/implement) drives model selection (subAgentModelSelect) but NOT tool scoping — a read-only explore/verify subtask still receives Write/Edit/NotebookEdit. roleToolScope(role) (orchestrator/roleToolScope.js, gate KHY_ROLE_TOOL_SCOPE) maps read-only roles (explore/verify/plan/research/audit/review) to a disallowedTools strip (Edit/Write/NotebookEdit, NOT Bash) and mergeRoleScopeInto unions it into a base denylist matching AgentTool.buildSubagentDenylist's shape (the missing tool-scoping consumer of role; consume seam = buildSubagentDenylist union point)」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 services/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**191.** 如果「the decompose `role` string (explore/verify/implement) drives model selection (subAgentModelSelect) but NOT tool scoping — a read-only explore/verify subtask still receives Write/Edit/NotebookEdit. roleToolScope(role) (orchestrator/roleToolScope.js, gate KHY_ROLE_TOOL_SCOPE) maps read-only roles (explore/verify/plan/research/audit/review) to a disallowedTools strip (Edit/Write/NotebookEdit, NOT Bash) and mergeRoleScopeInto unions it into a base denylist matching AgentTool.buildSubagentDenylist's shape (the missing tool-scoping consumer of role; consume seam = buildSubagentDenylist union point)」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 runtime/node/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
-**192.** 如果「multiple PARALLEL subtasks in the same wave each carry filesModified; mergeResults folds them into a de-duping Set so a file written by ≥2 concurrent agents silently collapses to one 修改文件 entry — a write-write race (last-write-wins, one agent's work lost) invisible in the report. detectFileConflicts/formatConflictWarning (orchestrator/mergeFileConflicts.js, gate KHY_MERGE_FILE_CONFLICT) surface a ⚠ 并行写冲突 footer line naming the file + the conflicting subtasks (path trim but case-SENSITIVE to avoid A.js/a.js false positives; honest告知 only, does not arbitrate the race). This is the second orthogonal honesty dimension of the mergeResults render (092 = skip≠fail state honesty; this = parallel write-conflict honesty)」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 services/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**192.** 如果「multiple PARALLEL subtasks in the same wave each carry filesModified; mergeResults folds them into a de-duping Set so a file written by ≥2 concurrent agents silently collapses to one 修改文件 entry — a write-write race (last-write-wins, one agent's work lost) invisible in the report. detectFileConflicts/formatConflictWarning (orchestrator/mergeFileConflicts.js, gate KHY_MERGE_FILE_CONFLICT) surface a ⚠ 并行写冲突 footer line naming the file + the conflicting subtasks (path trim but case-SENSITIVE to avoid A.js/a.js false positives; honest告知 only, does not arbitrate the race). This is the second orthogonal honesty dimension of the mergeResults render (092 = skip≠fail state honesty; this = parallel write-conflict honesty)」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 runtime/node/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
-**193.** 如果「a subtask returns success (producer uses success !== false, so ANY non-explicit-false counts) yet produced NOTHING — no body (text/output empty), no filesModified, no toolCalls. mergeResults folds this 'empty success' into successCount and renders it as 完成, indistinguishable from real work — the most insidious false-green on an offline unattended fan-out (report shows 完成 3/3 while one agent silently did nothing / was cut off / no-op'd). isEmptySuccess/formatEmptySuccessWarning (orchestrator/mergeEmptySuccess.js, gate KHY_MERGE_EMPTY_SUCCESS) render such a subtask as ⚠ 完成（无产出） and add a footer count (successCount UNCHANGED — it truly did not fail; only a visible marker + count so people can re-check). This is the THIRD orthogonal honesty dimension of the mergeResults render (092 = skip≠fail state; 098 = parallel write-conflict; this = empty-success honesty)」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 services/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**193.** 如果「a subtask returns success (producer uses success !== false, so ANY non-explicit-false counts) yet produced NOTHING — no body (text/output empty), no filesModified, no toolCalls. mergeResults folds this 'empty success' into successCount and renders it as 完成, indistinguishable from real work — the most insidious false-green on an offline unattended fan-out (report shows 完成 3/3 while one agent silently did nothing / was cut off / no-op'd). isEmptySuccess/formatEmptySuccessWarning (orchestrator/mergeEmptySuccess.js, gate KHY_MERGE_EMPTY_SUCCESS) render such a subtask as ⚠ 完成（无产出） and add a footer count (successCount UNCHANGED — it truly did not fail; only a visible marker + count so people can re-check). This is the THIRD orthogonal honesty dimension of the mergeResults render (092 = skip≠fail state; 098 = parallel write-conflict; this = empty-success honesty)」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 runtime/node/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
-**194.** 如果「every decompose subtask carries a `role` (implement/verify/explore/general via _inferRole) that drives model-selection (subAgentModelSelect) and tool-scoping (094 roleToolScope), but the FINAL user-facing report (mergeResults) folds the role away: header reads 子任务 N: preview and a failure renders 失败 with no signal WHICH KIND of work failed — a failed 验证 (results UNVALIDATED, serious) is indistinguishable from a failed 探索 (recoverable). formatRoleTag/formatRoleFailureSummary (orchestrator/mergeRoleAttribution.js, gate KHY_MERGE_ROLE_ATTRIBUTION) tag each header 子任务 N（验证）: … and add a footer ⚠ 失败分布: 验证 1 项… line (bucket counts always sum to failCount, unknown roles → 通用 so a failure is never dropped; a failed verify appends a 结果未经校验 critical hint). This is the FOURTH orthogonal honesty dimension of the mergeResults render (092 = skip≠fail state; 098 = parallel write-conflict; 099 = empty-success; this = role-attribution honesty / which TYPE of work failed)」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 services/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**194.** 如果「every decompose subtask carries a `role` (implement/verify/explore/general via _inferRole) that drives model-selection (subAgentModelSelect) and tool-scoping (094 roleToolScope), but the FINAL user-facing report (mergeResults) folds the role away: header reads 子任务 N: preview and a failure renders 失败 with no signal WHICH KIND of work failed — a failed 验证 (results UNVALIDATED, serious) is indistinguishable from a failed 探索 (recoverable). formatRoleTag/formatRoleFailureSummary (orchestrator/mergeRoleAttribution.js, gate KHY_MERGE_ROLE_ATTRIBUTION) tag each header 子任务 N（验证）: … and add a footer ⚠ 失败分布: 验证 1 项… line (bucket counts always sum to failCount, unknown roles → 通用 so a failure is never dropped; a failed verify appends a 结果未经校验 critical hint). This is the FOURTH orthogonal honesty dimension of the mergeResults render (092 = skip≠fail state; 098 = parallel write-conflict; 099 = empty-success; this = role-attribution honesty / which TYPE of work failed)」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 runtime/node/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
-**195.** 如果「OPS-094 built roleToolScope as a PURE LEAF with a documented consume seam but LEFT IT UNWIRED (zero production consumers = dead code) because god-file + blast-radius were then blocked. OPS-097 WIRES IT LIVE: AgentTool.buildSubagentDenylist gains a 4th `role` param and folds mergeRoleScopeInto(ownDeny, role) in before the spawn-tool∪ceiling logic; _runStandaloneAgent passes role at the call site. The net gap this closes: when built-in agents are unavailable (SDK mode → agentDef=null) a read-only explore/verify subtask's write-tool strip vanishes — the role now re-derives [Edit/Write/NotebookEdit] independent of agentDef; also closes the `verify`-not-in-toolFilter live gap. Wrapped in try/catch (leaf-load failure degrades to ownDeny, never breaks spawning); 4th param omitted/gate-off → byte-equivalent to the pre-wire 3-arg call. arch:god is a READ-ONLY gate (--god-report returns 0) so editing the god-file does not turn it red」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 services/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
+**195.** 如果「OPS-094 built roleToolScope as a PURE LEAF with a documented consume seam but LEFT IT UNWIRED (zero production consumers = dead code) because god-file + blast-radius were then blocked. OPS-097 WIRES IT LIVE: AgentTool.buildSubagentDenylist gains a 4th `role` param and folds mergeRoleScopeInto(ownDeny, role) in before the spawn-tool∪ceiling logic; _runStandaloneAgent passes role at the call site. The net gap this closes: when built-in agents are unavailable (SDK mode → agentDef=null) a read-only explore/verify subtask's write-tool strip vanishes — the role now re-derives [Edit/Write/NotebookEdit] independent of agentDef; also closes the `verify`-not-in-toolFilter live gap. Wrapped in try/catch (leaf-load failure degrades to ownDeny, never breaks spawning); 4th param omitted/gate-off → byte-equivalent to the pre-wire 3-arg call. arch:god is a READ-ONLY gate (--god-report returns 0) so editing the god-file does not turn it red」，先读「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」相关文件（见 runtime/node/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。触发词命中时的第一反应。
-  - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
 **196.** 如果「a landing agent must decide, BEFORE running any restore move, whether self-driving on this machine is authorized at all (the should-I that precedes the how)」，先读「Restore Self-Drive Authorization Gate (before executing any restore move, should the agent auto-drive on THIS machine at all? authorized / ask-first / forbidden)」相关文件（见 scripts/lib/restoreAutonomyGate.js），按 B1 说清改什么，再跑其验证命令确认现状。
   - 说明：子系统：Restore Self-Drive Authorization Gate (before executing any restore move, should the agent auto-drive on THIS machine at all? authorized / ask-first / forbidden)。触发词命中时的第一反应。
@@ -1068,31 +1068,31 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **255.** 验证「CLI Routing and Help Surface」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **256.** 验证「CLI Routing and Help Surface」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：CLI Routing and Help Surface。
-  - 验证：`node -e "require('./services/backend/src/cli/router')"`
+  - 验证：`node -e "require('./runtime/node/backend/src/cli/router')"`
 
 **257.** 验证「Prompt Capsule and Debug Prompt System」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`node --test services/backend/tests/promptOnDemandSections.test.js`
+  - 验证：`node --test runtime/node/backend/tests/promptOnDemandSections.test.js`
 
 **258.** 验证「Prompt Capsule and Debug Prompt System」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`node --test services/backend/tests/promptLearningRules.test.js`
+  - 验证：`node --test runtime/node/backend/tests/promptLearningRules.test.js`
 
 **259.** 验证「Prompt Capsule and Debug Prompt System」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`npx jest services/backend/tests/gatewayDebugPrompt.test.js --runInBand`
+  - 验证：`npx jest runtime/node/backend/tests/gatewayDebugPrompt.test.js --runInBand`
 
 **260.** 验证「AI Gateway and Adapter Layer」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：AI Gateway and Adapter Layer。
-  - 验证：`npm run test:one -- services/backend/tests/aiGateway.stability.test.js services/backend/tests/gateway/transportResilience.test.js services/backend/tests/gatewayAdapters.stability.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/aiGateway.stability.test.js runtime/node/backend/tests/gateway/transportResilience.test.js runtime/node/backend/tests/gatewayAdapters.stability.test.js`
 
 **261.** 验证「AI Gateway and Adapter Layer」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：AI Gateway and Adapter Layer。
-  - 验证：`node -e "require('./services/backend/src/services/gateway/aiGateway')"`
+  - 验证：`node -e "require('./runtime/node/backend/src/services/gateway/aiGateway')"`
 
 **262.** 验证「AI Gateway and Adapter Layer」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：AI Gateway and Adapter Layer。
@@ -1100,7 +1100,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **263.** 验证「Proxy, Daemon, and Runtime Port Discovery」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`npm run test:one -- services/backend/tests/daemonManager.runtimePort.test.js services/backend/tests/gatewayManage.portDrift.integration.test.js services/backend/tests/services/proxyBaseUrl.test.js services/backend/tests/services/serviceDefaults.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/daemonManager.runtimePort.test.js runtime/node/backend/tests/gatewayManage.portDrift.integration.test.js runtime/node/backend/tests/services/proxyBaseUrl.test.js runtime/node/backend/tests/services/serviceDefaults.test.js`
 
 **264.** 验证「Proxy, Daemon, and Runtime Port Discovery」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
@@ -1108,23 +1108,23 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **265.** 验证「AI Management UI and API」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：AI Management UI and API。
-  - 验证：`npm run test:one -- services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js services/backend/tests/gatewayManage.apiDisplay.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
 
 **266.** 验证「AI Management UI and API」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：AI Management UI and API。
-  - 验证：`npm run build --prefix apps/ai-frontend`
+  - 验证：`npm run build --prefix delivery/web/ai-frontend`
 
 **267.** 验证「Coding Projects (named workspaces + chat linkage)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
 **268.** 验证「Coding Projects (named workspaces + chat linkage)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run build --prefix apps/ai-frontend`
+  - 验证：`npm run build --prefix delivery/web/ai-frontend`
 
 **269.** 验证「Workspace, Publish, and Verification Commands」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Workspace, Publish, and Verification Commands。
-  - 验证：`npm run test:one -- services/backend/tests/publish.sourceReleaseMode.test.js services/backend/tests/publish.dbPreflight.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/publish.sourceReleaseMode.test.js runtime/node/backend/tests/publish.dbPreflight.test.js`
 
 **270.** 验证「Maintenance Safety and Rule Gates」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Maintenance Safety and Rule Gates。
@@ -1136,7 +1136,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **272.** 验证「Release and Rollback」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Release and Rollback。
-  - 验证：`npm run test:one -- services/backend/tests/publish.sourceReleaseMode.test.js services/backend/tests/publish.dbPreflight.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/publish.sourceReleaseMode.test.js runtime/node/backend/tests/publish.dbPreflight.test.js`
 
 **273.** 验证「Release and Rollback」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Release and Rollback。
@@ -1144,7 +1144,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **274.** 验证「Build Best Environment (Self-check / Repair / Probes)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Build Best Environment (Self-check / Repair / Probes)。
-  - 验证：`npm run test:one -- services/backend/tests/services/localBrainEnvOptimize.test.js services/backend/tests/services/envProbes.test.js services/backend/tests/services/envRepair.test.js services/backend/tests/services/envPlatform.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/localBrainEnvOptimize.test.js runtime/node/backend/tests/services/envProbes.test.js runtime/node/backend/tests/services/envRepair.test.js runtime/node/backend/tests/services/envPlatform.test.js`
 
 **275.** 验证「Evolution Prompt Playbook (1000 preset prompts)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Evolution Prompt Playbook (1000 preset prompts)。
@@ -1188,31 +1188,31 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **285.** 验证「Proxy Egress Bridge (select node + enable/disable)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。
-  - 验证：`npm run test:one -- services/backend/tests/proxyCoreConfigGen.test.js services/backend/tests/proxyCoreManager.test.js services/backend/tests/proxyConfigService.egress.test.js services/backend/tests/aiManagementProxyEgress.wiring.test.js apps/ai-frontend/src/composables/useProxies.egress.wiring.test.js services/backend/tests/bootstrap/ensureProxyCoreEnv.test.js services/backend/tests/services/proxyCoreInstaller.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
 
 **286.** 验证「Proxy Egress Bridge (select node + enable/disable)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。
-  - 验证：`npm run build --prefix apps/ai-frontend`
+  - 验证：`npm run build --prefix delivery/web/ai-frontend`
 
 **287.** 验证「Startup Failure Real-cause + Fix (does a fresh-machine crash say WHY and HOW, not just a raw stack?)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Startup Failure Real-cause + Fix (does a fresh-machine crash say WHY and HOW, not just a raw stack?)。
-  - 验证：`npm run test:one -- services/backend/tests/bootstrap/startupFailureExplain.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/bootstrap/startupFailureExplain.test.js`
 
 **288.** 验证「Windows .md Suggested-app Registration (does khy show in the Open-With '建议的应用' list?)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Windows .md Suggested-app Registration (does khy show in the Open-With '建议的应用' list?)。
-  - 验证：`npm run test:one -- services/backend/tests/services/mdSuggestedAppsPlan.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/mdSuggestedAppsPlan.test.js`
 
 **289.** 验证「Fresh-machine Off-machine-restore Self-check in `khy doctor` (真实原因+解决方法 for a fresh pip/npm install)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Fresh-machine Off-machine-restore Self-check in `khy doctor` (真实原因+解决方法 for a fresh pip/npm install)。
-  - 验证：`npm run test:one -- services/backend/tests/services/freshInstallDoctor.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/freshInstallDoctor.test.js`
 
 **290.** 验证「CJK-ize /recap so session recap produces content on Chinese sessions」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：CJK-ize /recap so session recap produces content on Chinese sessions。
-  - 验证：`npm run test:one -- services/backend/tests/services/sessionRecapCjk.test.js services/backend/tests/services/sessionRecapService.cjk.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/sessionRecapCjk.test.js runtime/node/backend/tests/services/sessionRecapService.cjk.test.js`
 
 **291.** 验证「npm-channel Node version preflight (parity with pip check_node; kills the cross-channel off-machine-restore contradiction)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：npm-channel Node version preflight (parity with pip check_node; kills the cross-channel off-machine-restore contradiction)。
-  - 验证：`npm run test:one -- packaging/npm/test/nodeVersionPreflight.test.js`
+  - 验证：`npm run test:one -- works/ship/npm/test/nodeVersionPreflight.test.js`
 
 **292.** 验证「Restore Convergence & Loop-Guard Verifier (after an agent executes a restore move and re-probes, did it actually advance? stop, continue, or escalate?)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Restore Convergence & Loop-Guard Verifier (after an agent executes a restore move and re-probes, did it actually advance? stop, continue, or escalate?)。
@@ -1220,31 +1220,31 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **293.** 验证「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。
-  - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
 **294.** 验证「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。
-  - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
 **295.** 验证「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。
-  - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
 **296.** 验证「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。
-  - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
 **297.** 验证「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。
-  - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
 **298.** 验证「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。
-  - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
 **299.** 验证「Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Dependency-aware WAVE scheduling + fault-aware execution + predecessor-result injection for auto-decomposed subtasks (拆任务 → 有序并行 → 依赖失败则跳过下游并如实汇报 → 前驱结果注入下游不再盲跑 → 跳过与失败在最终报告分列 → 确定性顺序链拆解让整条 arc 在默认离机路径活起来 → 按角色收窄子智能体工具集,只读角色不给写工具 → 多个并行子任务改同一文件时如实告警可能的写-写覆盖 → 成功但零产出的子任务如实标注不折进完成 → 最终报告按角色标注每个子任务并把失败按类型分布,让失败的验证子任务不被匿名折进失败)。
-  - 验证：`npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js`
 
 **300.** 验证「Restore Self-Drive Authorization Gate (before executing any restore move, should the agent auto-drive on THIS machine at all? authorized / ask-first / forbidden)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Restore Self-Drive Authorization Gate (before executing any restore move, should the agent auto-drive on THIS machine at all? authorized / ask-first / forbidden)。
@@ -1278,8 +1278,8 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：Restore Snapshot-Format Compatibility Gate (consumes the DEAD snapshot header format/formatVersion fields BEFORE decryption: makeSourceSnapshot stamps format='khy-source-snapshot'+formatVersion=1 but the restore/heal path (sourceHealService.decrypt, cli/handlers/publish.js) only checks crypto.algo and NEVER checks format/formatVersion -> grep 'khy-source-snapshot' has zero consumers in the restore codebase; a strange machine running OLD khy against a FUTURE formatVersion=2 snapshot decrypts blindly (cryptic auth error or silent mis-parse), and a non-khy dir enters decryption unchecked; this is the missing PRE-check answering 'does this khy even understand this snapshot format?')。
   - 验证：`npm run test:one -- scripts/tests/snapshotFormatCompat.test.js`
 
-**308.** 验证「Restore Provenance Reconciler (consumes the DEAD snapshot header captureMode/includesUncommitted/dirty fields: makeSourceSnapshot stamps whether the git archive was a clean HEAD or a dirty working-tree capture, but the restore banner (services/backend/src/cli/handlers/publish.js) only prints gitCommit.slice(0,12) and NEVER reads captureMode/includesUncommitted -> a fresh-machine user reads 'commit 44a491fb07f3' and believes the restored source EQUALS that clean published commit, when it is actually that commit PLUS uncommitted deltas (dirty capture); this pure leaf + read-only CLI answers 'which exact git state does this restored source equal?' so nobody mistakes a dirty capture for the published commit)」：跑该命令，绿灯才算这块没坏。
-  - 说明：子系统：Restore Provenance Reconciler (consumes the DEAD snapshot header captureMode/includesUncommitted/dirty fields: makeSourceSnapshot stamps whether the git archive was a clean HEAD or a dirty working-tree capture, but the restore banner (services/backend/src/cli/handlers/publish.js) only prints gitCommit.slice(0,12) and NEVER reads captureMode/includesUncommitted -> a fresh-machine user reads 'commit 44a491fb07f3' and believes the restored source EQUALS that clean published commit, when it is actually that commit PLUS uncommitted deltas (dirty capture); this pure leaf + read-only CLI answers 'which exact git state does this restored source equal?' so nobody mistakes a dirty capture for the published commit)。
+**308.** 验证「Restore Provenance Reconciler (consumes the DEAD snapshot header captureMode/includesUncommitted/dirty fields: makeSourceSnapshot stamps whether the git archive was a clean HEAD or a dirty working-tree capture, but the restore banner (runtime/node/backend/src/cli/handlers/publish.js) only prints gitCommit.slice(0,12) and NEVER reads captureMode/includesUncommitted -> a fresh-machine user reads 'commit 44a491fb07f3' and believes the restored source EQUALS that clean published commit, when it is actually that commit PLUS uncommitted deltas (dirty capture); this pure leaf + read-only CLI answers 'which exact git state does this restored source equal?' so nobody mistakes a dirty capture for the published commit)」：跑该命令，绿灯才算这块没坏。
+  - 说明：子系统：Restore Provenance Reconciler (consumes the DEAD snapshot header captureMode/includesUncommitted/dirty fields: makeSourceSnapshot stamps whether the git archive was a clean HEAD or a dirty working-tree capture, but the restore banner (runtime/node/backend/src/cli/handlers/publish.js) only prints gitCommit.slice(0,12) and NEVER reads captureMode/includesUncommitted -> a fresh-machine user reads 'commit 44a491fb07f3' and believes the restored source EQUALS that clean published commit, when it is actually that commit PLUS uncommitted deltas (dirty capture); this pure leaf + read-only CLI answers 'which exact git state does this restored source equal?' so nobody mistakes a dirty capture for the published commit)。
   - 验证：`npm run test:one -- scripts/tests/restoreProvenance.test.js`
 
 **309.** 验证「Restore Archive-Extract Compatibility Gate (consumes the DEAD snapshot header plaintextFormat/layout fields: makeSourceSnapshot stamps plaintextFormat='tar.gz'+layout='git-archive' describing the DECRYPTED inner-archive shape, but the restore/heal extractor (sourceHealService._extractTarGz, cli/handlers/publish.js) HARD-CODES `tar -xzf` and NEVER reads plaintextFormat/layout -> grep shows zero consumers in the restore codebase; a fresh machine running OLD khy against a FUTURE plaintextFormat='tar.zst'/'zip' snapshot blindly runs `tar -xzf` (gzip header mismatch -> cryptic extract error, or partial bytes mis-parsed into half a tree); this pure leaf + read-only CLI answers 'does this khy's extractor even understand the decrypted archive shape BEFORE running tar -xzf?')」：跑该命令，绿灯才算这块没坏。
@@ -1300,47 +1300,47 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **313.** 验证「Restore Completeness Reconciliation -- RUNTIME wiring (OPS-095 diagnosed that the snapshot header fileCount is a dead field -- khy restore only PRINTS it, never reconciles it against what tar actually wrote to disk -- and built a DEV-only checker scripts/restore-verify-complete.js, but never wired it into the runtime restore command; so real fresh-machine users still saw green 源码已完整还原 while files were silently missing after a tar that exited 0 on a full disk / MAX_PATH / skipped entry; THIS layer is the missing wiring: a bundled runtime pure leaf reconciles header.fileCount vs _collectRelFiles(dest).length right after extraction and makes handleRestore's banner honest, so no separate command is needed = wiring up capability that existed but was never connected)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Restore Completeness Reconciliation -- RUNTIME wiring (OPS-095 diagnosed that the snapshot header fileCount is a dead field -- khy restore only PRINTS it, never reconciles it against what tar actually wrote to disk -- and built a DEV-only checker scripts/restore-verify-complete.js, but never wired it into the runtime restore command; so real fresh-machine users still saw green 源码已完整还原 while files were silently missing after a tar that exited 0 on a full disk / MAX_PATH / skipped entry; THIS layer is the missing wiring: a bundled runtime pure leaf reconciles header.fileCount vs _collectRelFiles(dest).length right after extraction and makes handleRestore's banner honest, so no separate command is needed = wiring up capability that existed but was never connected)。
-  - 验证：`npm run test:one -- services/backend/tests/services/restoreCompletenessCheck.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/restoreCompletenessCheck.test.js`
 
 **314.** 验证「Restore PRE-DECRYPT Compatibility Preflight -- RUNTIME wiring (OPS-105 format-compat + OPS-110 crypto-suite-decryptability were built as DEV-only leaves scripts/lib/snapshotFormatCompat.js + scripts/lib/cryptoSuiteCompat.js and never wired into the runtime restore; runtime _restoreFromSnapshot's only pre-decrypt guard was header.crypto presence, then it blindly decrypt()s -- and decrypt() only accepts algo==='aes-256-gcm' and ALWAYS runs scryptSync ignoring crypto.kdf, so a future kdf:'argon2' or unknown algo snapshot on an old machine derives a WRONG key / throws low-level garbage, which publish.js's catch rewrites into the MISLEADING '请用 --secret <密钥>' = reporting a capability gap as a password error; THIS layer is the missing wiring: a bundled runtime pure leaf runs a preflight over the parsed header BEFORE decrypt and names the true cause = wiring up capability that existed but was never connected)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Restore PRE-DECRYPT Compatibility Preflight -- RUNTIME wiring (OPS-105 format-compat + OPS-110 crypto-suite-decryptability were built as DEV-only leaves scripts/lib/snapshotFormatCompat.js + scripts/lib/cryptoSuiteCompat.js and never wired into the runtime restore; runtime _restoreFromSnapshot's only pre-decrypt guard was header.crypto presence, then it blindly decrypt()s -- and decrypt() only accepts algo==='aes-256-gcm' and ALWAYS runs scryptSync ignoring crypto.kdf, so a future kdf:'argon2' or unknown algo snapshot on an old machine derives a WRONG key / throws low-level garbage, which publish.js's catch rewrites into the MISLEADING '请用 --secret <密钥>' = reporting a capability gap as a password error; THIS layer is the missing wiring: a bundled runtime pure leaf runs a preflight over the parsed header BEFORE decrypt and names the true cause = wiring up capability that existed but was never connected)。
-  - 验证：`npm run test:one -- services/backend/tests/services/restorePreflightCheck.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/restorePreflightCheck.test.js`
 
 **315.** 验证「Restore POST-DECRYPT PRE-EXTRACT inner-archive-shape check -- RUNTIME wiring (the snapshot header's plaintextFormat + layout stamps -- makeSourceSnapshot.js emits plaintextFormat:'tar.gz' at :244 and layout:'git-archive' at :239 -- were DEAD FIELDS in the runtime: the dev leaf scripts/lib/archiveExtractCompat.js could judge 'does this machine's tar -xzf understand this decrypted archive' but was consumed ONLY by dev CLI (restore-check-archive.js / restore-effect-probe.js), never wired into the runtime restore; runtime _restoreFromSnapshot decrypts + sha256-verifies then hardcodes `tar -xzf` via _extractTarGz WITHOUT ever reading plaintextFormat/layout, so a future tar.zst/zip snapshot on an old khy gets blindly tar -xzf'd into garbage / half a directory while the banner still says '目录布局原样'; THIS layer is the missing pre-extract consumer: a bundled runtime pure leaf checks the header AFTER decrypt+sha256, BEFORE creating the dest dir / unpacking = wiring up capability that existed but was never connected)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Restore POST-DECRYPT PRE-EXTRACT inner-archive-shape check -- RUNTIME wiring (the snapshot header's plaintextFormat + layout stamps -- makeSourceSnapshot.js emits plaintextFormat:'tar.gz' at :244 and layout:'git-archive' at :239 -- were DEAD FIELDS in the runtime: the dev leaf scripts/lib/archiveExtractCompat.js could judge 'does this machine's tar -xzf understand this decrypted archive' but was consumed ONLY by dev CLI (restore-check-archive.js / restore-effect-probe.js), never wired into the runtime restore; runtime _restoreFromSnapshot decrypts + sha256-verifies then hardcodes `tar -xzf` via _extractTarGz WITHOUT ever reading plaintextFormat/layout, so a future tar.zst/zip snapshot on an old khy gets blindly tar -xzf'd into garbage / half a directory while the banner still says '目录布局原样'; THIS layer is the missing pre-extract consumer: a bundled runtime pure leaf checks the header AFTER decrypt+sha256, BEFORE creating the dest dir / unpacking = wiring up capability that existed but was never connected)。
-  - 验证：`npm run test:one -- services/backend/tests/services/restoreArchiveExtractCheck.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/restoreArchiveExtractCheck.test.js`
 
 **316.** 验证「Restore ON-SUCCESS provenance honesty -- RUNTIME banner wiring (the snapshot header's captureMode + includesUncommitted + dirty stamps -- makeSourceSnapshot.js records how the snapshot was captured: working-tree(default)/head, includesUncommitted, dirty, gitCommit -- were DEAD FIELDS in the runtime banner: the dev leaf scripts/lib/restoreProvenance.js (OPS-107 assessRestoreProvenance) could judge 'which git state does this restored source actually equal' but was consumed ONLY by dev CLI (restore-provenance.js / restore-effect-probe.js), never wired into the runtime restore; runtime handleRestore's success banner printed ONLY gitCommit ('共 N 个文件 · commit 44a491fb · 目录布局原样') and NEVER read captureMode/includesUncommitted/dirty -- grep finds zero runtime consumers = dead triplet; MOST TOXIC on a fresh machine: the shipped snapshot is BY DEFAULT a dirty capture (captureMode='working-tree' includesUncommitted=true), so the restored source = commit 44a491fb PLUS uncommitted deltas, NOT the clean commit -- yet the maintainer sees 'commit 44a491fb · 目录布局原样' and mis-trusts it as exactly that commit; THIS layer is the missing on-success banner consumer: a bundled runtime pure leaf assesses the header and appends one honest banner line saying which git state the source really equals)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Restore ON-SUCCESS provenance honesty -- RUNTIME banner wiring (the snapshot header's captureMode + includesUncommitted + dirty stamps -- makeSourceSnapshot.js records how the snapshot was captured: working-tree(default)/head, includesUncommitted, dirty, gitCommit -- were DEAD FIELDS in the runtime banner: the dev leaf scripts/lib/restoreProvenance.js (OPS-107 assessRestoreProvenance) could judge 'which git state does this restored source actually equal' but was consumed ONLY by dev CLI (restore-provenance.js / restore-effect-probe.js), never wired into the runtime restore; runtime handleRestore's success banner printed ONLY gitCommit ('共 N 个文件 · commit 44a491fb · 目录布局原样') and NEVER read captureMode/includesUncommitted/dirty -- grep finds zero runtime consumers = dead triplet; MOST TOXIC on a fresh machine: the shipped snapshot is BY DEFAULT a dirty capture (captureMode='working-tree' includesUncommitted=true), so the restored source = commit 44a491fb PLUS uncommitted deltas, NOT the clean commit -- yet the maintainer sees 'commit 44a491fb · 目录布局原样' and mis-trusts it as exactly that commit; THIS layer is the missing on-success banner consumer: a bundled runtime pure leaf assesses the header and appends one honest banner line saying which git state the source really equals)。
-  - 验证：`npm run test:one -- services/backend/tests/services/restoreProvenanceCheck.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/restoreProvenanceCheck.test.js`
 
 **317.** 验证「Restore POST-DECRYPT PRE-EXTRACT cross-OS path-portability pre-scan -- RUNTIME wiring (the snapshot is PATH-BLIND at restore: makeSourceSnapshot packs the source tree into one tar.gz whose entry names were minted on Linux, then pip/npm ship it to STRANGER machines AND OSes; runtime handleRestore decrypts + blindly `tar -xzf`s WITHOUT ever looking at whether the entry names can land on the target filesystem -- on Windows/macOS a real fraction of Linux-valid names SILENTLY fail or get rewritten: Windows reserved device names (CON/PRN/AUX/NUL/COM1-9/LPT1-9, case+ext insensitive) can't be created, illegal chars (< > : " | ? * and control 0x00-0x1F) fail extraction, trailing dot/space segments get silently stripped, paths over 259 chars (MAX_PATH) get skipped, and case-insensitive collisions (Foo.js vs foo.js) overwrite each other on NTFS/APFS default volumes -- so files land FEWER than the archive holds; the ONLY cross-OS signal today is the reactive post-hoc completeness hint ('可能路径过长(Windows MAX_PATH) / tar 跳过条目…') AFTER a count shortfall = a guess that knows neither WHICH paths nor WHY; THIS layer is the missing pre-extract consumer: enumerate the archive entry names with `tar -tzf` BEFORE `tar -xzf`, classify each into the five hazard buckets, and emit a PROACTIVE, name-naming, host-aware honest banner = wiring up a cross-OS restore-honesty pre-scan the runtime never had)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Restore POST-DECRYPT PRE-EXTRACT cross-OS path-portability pre-scan -- RUNTIME wiring (the snapshot is PATH-BLIND at restore: makeSourceSnapshot packs the source tree into one tar.gz whose entry names were minted on Linux, then pip/npm ship it to STRANGER machines AND OSes; runtime handleRestore decrypts + blindly `tar -xzf`s WITHOUT ever looking at whether the entry names can land on the target filesystem -- on Windows/macOS a real fraction of Linux-valid names SILENTLY fail or get rewritten: Windows reserved device names (CON/PRN/AUX/NUL/COM1-9/LPT1-9, case+ext insensitive) can't be created, illegal chars (< > : " | ? * and control 0x00-0x1F) fail extraction, trailing dot/space segments get silently stripped, paths over 259 chars (MAX_PATH) get skipped, and case-insensitive collisions (Foo.js vs foo.js) overwrite each other on NTFS/APFS default volumes -- so files land FEWER than the archive holds; the ONLY cross-OS signal today is the reactive post-hoc completeness hint ('可能路径过长(Windows MAX_PATH) / tar 跳过条目…') AFTER a count shortfall = a guess that knows neither WHICH paths nor WHY; THIS layer is the missing pre-extract consumer: enumerate the archive entry names with `tar -tzf` BEFORE `tar -xzf`, classify each into the five hazard buckets, and emit a PROACTIVE, name-naming, host-aware honest banner = wiring up a cross-OS restore-honesty pre-scan the runtime never had)。
-  - 验证：`npm run test:one -- services/backend/tests/services/restorePathPortabilityCheck.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/restorePathPortabilityCheck.test.js`
 
 **318.** 验证「First-response silent-window guard -- WIRING an interactive responsiveness capability the REPL never had (user /goal: '当我向Khy输入提示词时，khy要及时回应' -- there is a SILENT window between the user hitting enter and the first model chunk: in raw-mode TTY the dynamic spinner is render-suppressed (spinner.js:122 `if (isRaw && blockInRawMode) return`) so nothing spins/types, and the existing turnAckVoice ack only fires at FIRST-TOOL-DISPATCH which is AFTER the model has already produced chunks -- so if the first token is slow (model/network latency), the user stares at a frozen terminal with no way to tell whether khy is thinking or hung; THIS layer is the missing consumer: a DI-timer scheduler armed at request send that, if NO chunk arrives within KHY_FIRST_RESPONSE_ACK_MS (default 1200ms), emits a wait-aware line so the user knows khy received the prompt and is working -- first chunk cancels it, finally disarms it)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：First-response silent-window guard -- WIRING an interactive responsiveness capability the REPL never had (user /goal: '当我向Khy输入提示词时，khy要及时回应' -- there is a SILENT window between the user hitting enter and the first model chunk: in raw-mode TTY the dynamic spinner is render-suppressed (spinner.js:122 `if (isRaw && blockInRawMode) return`) so nothing spins/types, and the existing turnAckVoice ack only fires at FIRST-TOOL-DISPATCH which is AFTER the model has already produced chunks -- so if the first token is slow (model/network latency), the user stares at a frozen terminal with no way to tell whether khy is thinking or hung; THIS layer is the missing consumer: a DI-timer scheduler armed at request send that, if NO chunk arrives within KHY_FIRST_RESPONSE_ACK_MS (default 1200ms), emits a wait-aware line so the user knows khy received the prompt and is working -- first chunk cancels it, finally disarms it)。
-  - 验证：`npm run test:one -- services/backend/tests/cli/firstResponseAckVoice.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/firstResponseAckVoice.test.js`
 
-**319.** 验证「readFile PRE-READ binary guard -- WIRING an existing capability (services/backend/src/services/formatInspect/fileFormatDetector.js's detectFile(absPath).isBinary was consumed by the WRITE-side tools replaceAtLocation.js:79 and inspectDocument.js:161 but was NEVER wired into the READ tool readFile.js, which only had a size guard and no binary detection; so pointing khy at a project dir containing a binary .tar.gz made readFile inject the raw binary bytes as text -- mojibake laced with NUL bytes, success:true -- into the model API request, poisoning it and hanging the request for over an hour (observed: D:\moonbit-linux\moonbit-linux-x86_64.tar.gz stuck 1h2m34s '等待响应…'); THIS is the missing wiring: run detectFile BEFORE reading and refuse binary files fast with an informative redirect instead of poisoning the context)」：跑该命令，绿灯才算这块没坏。
-  - 说明：子系统：readFile PRE-READ binary guard -- WIRING an existing capability (services/backend/src/services/formatInspect/fileFormatDetector.js's detectFile(absPath).isBinary was consumed by the WRITE-side tools replaceAtLocation.js:79 and inspectDocument.js:161 but was NEVER wired into the READ tool readFile.js, which only had a size guard and no binary detection; so pointing khy at a project dir containing a binary .tar.gz made readFile inject the raw binary bytes as text -- mojibake laced with NUL bytes, success:true -- into the model API request, poisoning it and hanging the request for over an hour (observed: D:\moonbit-linux\moonbit-linux-x86_64.tar.gz stuck 1h2m34s '等待响应…'); THIS is the missing wiring: run detectFile BEFORE reading and refuse binary files fast with an informative redirect instead of poisoning the context)。
-  - 验证：`npm run test:one -- services/backend/tests/tools/readBinaryGuard.test.js`
+**319.** 验证「readFile PRE-READ binary guard -- WIRING an existing capability (runtime/node/backend/src/services/formatInspect/fileFormatDetector.js's detectFile(absPath).isBinary was consumed by the WRITE-side tools replaceAtLocation.js:79 and inspectDocument.js:161 but was NEVER wired into the READ tool readFile.js, which only had a size guard and no binary detection; so pointing khy at a project dir containing a binary .tar.gz made readFile inject the raw binary bytes as text -- mojibake laced with NUL bytes, success:true -- into the model API request, poisoning it and hanging the request for over an hour (observed: D:\moonbit-linux\moonbit-linux-x86_64.tar.gz stuck 1h2m34s '等待响应…'); THIS is the missing wiring: run detectFile BEFORE reading and refuse binary files fast with an informative redirect instead of poisoning the context)」：跑该命令，绿灯才算这块没坏。
+  - 说明：子系统：readFile PRE-READ binary guard -- WIRING an existing capability (runtime/node/backend/src/services/formatInspect/fileFormatDetector.js's detectFile(absPath).isBinary was consumed by the WRITE-side tools replaceAtLocation.js:79 and inspectDocument.js:161 but was NEVER wired into the READ tool readFile.js, which only had a size guard and no binary detection; so pointing khy at a project dir containing a binary .tar.gz made readFile inject the raw binary bytes as text -- mojibake laced with NUL bytes, success:true -- into the model API request, poisoning it and hanging the request for over an hour (observed: D:\moonbit-linux\moonbit-linux-x86_64.tar.gz stuck 1h2m34s '等待响应…'); THIS is the missing wiring: run detectFile BEFORE reading and refuse binary files fast with an informative redirect instead of poisoning the context)。
+  - 验证：`npm run test:one -- runtime/node/backend/tests/tools/readBinaryGuard.test.js`
 
 **320.** 验证「readFile FORMAT-AWARE routing to existing extractors -- WIRING existing capabilities (OPS-121 made readFile REFUSE binary files to stop the 1h hang, but the user's real requirement is that khy should READ every format, not refuse it; the repo already had bounded extractors for PDF (documentSnippetService.extractDocumentSnippetAsync: pdftotext->pypdf->strings), image OCR (ocrSnippetService.extractImageOcrSnippetAsync: docHelper.py tesseract), archives (archiveInspectService.inspectArchive list-only-no-extract + archiveManifestPolicy.buildArchiveManifest for listing+text-peek), and docx (docHelper.py docx_to_text) -- all consumed only by the multimodal/upload/UpstreamStudy paths, NEVER by the read tool; THIS layer wires them: on binary detect, readFile first routes to the matching extractor and returns readable content, falling back to the OPS-121 refusal only for formats with no extractor (ELF/PE/xlsx/pptx/unknown) or when extraction fails; because every extractor is self-bounded (timeout+size cap) the routing can never hang)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：readFile FORMAT-AWARE routing to existing extractors -- WIRING existing capabilities (OPS-121 made readFile REFUSE binary files to stop the 1h hang, but the user's real requirement is that khy should READ every format, not refuse it; the repo already had bounded extractors for PDF (documentSnippetService.extractDocumentSnippetAsync: pdftotext->pypdf->strings), image OCR (ocrSnippetService.extractImageOcrSnippetAsync: docHelper.py tesseract), archives (archiveInspectService.inspectArchive list-only-no-extract + archiveManifestPolicy.buildArchiveManifest for listing+text-peek), and docx (docHelper.py docx_to_text) -- all consumed only by the multimodal/upload/UpstreamStudy paths, NEVER by the read tool; THIS layer wires them: on binary detect, readFile first routes to the matching extractor and returns readable content, falling back to the OPS-121 refusal only for formats with no extractor (ELF/PE/xlsx/pptx/unknown) or when extraction fails; because every extractor is self-bounded (timeout+size cap) the routing can never hang)。
-  - 验证：`npm run test:one -- services/backend/tests/tools/readFileFormatRouter.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/tools/readFileFormatRouter.test.js`
 
 **321.** 验证「readFile special-file (FIFO/socket/char-or-block-device) pre-read guard -- WIRING a type-based block against permanent hangs (OPS-121/OPS-123 covered binary content and format routing, but non-regular files still slipped through EVERY guard: a FIFO/socket/device has size:0 and is not a binary format, so it passes the size check and is not caught by the binary guard; worse, detectFile() reads magic bytes and readTextFileSmart opens+reads it, and reading the first byte of a FIFO with no writer BLOCKS FOREVER -- detectFile itself hangs; reproduced: mkfifo then readFile.execute did not return after a 6s timeout (EXIT=124); wired: same FIFO returns in 4ms with success:false; inputValidators.validateNotDevicePath is only a path-exact denylist (/dev/zero,/dev/stdin...) and cannot catch a FIFO/socket/self-made device node at an arbitrary path -- THIS layer blocks by fs.statSync TYPE predicate, which returns metadata instantly and never blocks on a FIFO/device (measured 0ms), so the check is safe BEFORE any blocking open/read)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：readFile special-file (FIFO/socket/char-or-block-device) pre-read guard -- WIRING a type-based block against permanent hangs (OPS-121/OPS-123 covered binary content and format routing, but non-regular files still slipped through EVERY guard: a FIFO/socket/device has size:0 and is not a binary format, so it passes the size check and is not caught by the binary guard; worse, detectFile() reads magic bytes and readTextFileSmart opens+reads it, and reading the first byte of a FIFO with no writer BLOCKS FOREVER -- detectFile itself hangs; reproduced: mkfifo then readFile.execute did not return after a 6s timeout (EXIT=124); wired: same FIFO returns in 4ms with success:false; inputValidators.validateNotDevicePath is only a path-exact denylist (/dev/zero,/dev/stdin...) and cannot catch a FIFO/socket/self-made device node at an arbitrary path -- THIS layer blocks by fs.statSync TYPE predicate, which returns metadata instantly and never blocks on a FIFO/device (measured 0ms), so the check is safe BEFORE any blocking open/read)。
-  - 验证：`npm run test:one -- services/backend/tests/tools/specialFileReadGuard.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/tools/specialFileReadGuard.test.js`
 
 **322.** 验证「readFile pseudo-filesystem (/proc·/sys) bounded-timeout read -- WIRING a location-based no-hang guard, the 4th orthogonal reading-hang vector (OPS-121 binary-content, OPS-123 format-routing, OPS-125 file-type FIFO/socket/device; THIS keys off file LOCATION). Linux /proc·/sys entries are REGULAR files (stat.isFile()===true), size:0, content generated-on-read; some (/proc/kmsg, certain /sys poll attrs) BLOCK FOREVER on the first byte. They slip EVERY prior guard: regular file -> passes OPS-125 type predicates (isFIFO/isSocket/... all false); size:0 -> passes the oversize check (0>maxBytes false); mostly non-binary -> detectFile() reads magic bytes and HANGS right there. Measured: /proc/cpuinfo is a size:0 regular file with all four special predicates false. Per the OPS-123 lesson (route to a bounded reader, don't blanket-refuse): most /proc·/sys files are FINITE (cpuinfo/uptime/self-status read instantly), only a few block -- so this layer does a BOUNDED read, not a refuse. Key architecture point (OPS-125 blood lesson extended): a SYNC blocking read cannot be timed out in-process (readTextFileSmart locks the event loop so Promise.race/setTimeout never fire); the ONLY sync-safe fix is to move the blocking read into a CHILD process (head -c <maxBytes> <path>) that spawnSync's timeout option can KILL. Finite pseudo-file -> head exits 0 -> content returned; blocking pseudo-file -> head killed at timeout -> bounded return, never an infinite hang. LIVE-verified: real /proc/cpuinfo via readFile.execute -> success:true format=pseudo-fs-proc 33ms; a real no-writer FIFO via real spawnSync timeout=1500 -> killed at 1502ms timedOut:true (not a hang)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：readFile pseudo-filesystem (/proc·/sys) bounded-timeout read -- WIRING a location-based no-hang guard, the 4th orthogonal reading-hang vector (OPS-121 binary-content, OPS-123 format-routing, OPS-125 file-type FIFO/socket/device; THIS keys off file LOCATION). Linux /proc·/sys entries are REGULAR files (stat.isFile()===true), size:0, content generated-on-read; some (/proc/kmsg, certain /sys poll attrs) BLOCK FOREVER on the first byte. They slip EVERY prior guard: regular file -> passes OPS-125 type predicates (isFIFO/isSocket/... all false); size:0 -> passes the oversize check (0>maxBytes false); mostly non-binary -> detectFile() reads magic bytes and HANGS right there. Measured: /proc/cpuinfo is a size:0 regular file with all four special predicates false. Per the OPS-123 lesson (route to a bounded reader, don't blanket-refuse): most /proc·/sys files are FINITE (cpuinfo/uptime/self-status read instantly), only a few block -- so this layer does a BOUNDED read, not a refuse. Key architecture point (OPS-125 blood lesson extended): a SYNC blocking read cannot be timed out in-process (readTextFileSmart locks the event loop so Promise.race/setTimeout never fire); the ONLY sync-safe fix is to move the blocking read into a CHILD process (head -c <maxBytes> <path>) that spawnSync's timeout option can KILL. Finite pseudo-file -> head exits 0 -> content returned; blocking pseudo-file -> head killed at timeout -> bounded return, never an infinite hang. LIVE-verified: real /proc/cpuinfo via readFile.execute -> success:true format=pseudo-fs-proc 33ms; a real no-writer FIFO via real spawnSync timeout=1500 -> killed at 1502ms timedOut:true (not a hang)。
-  - 验证：`npm run test:one -- services/backend/tests/tools/pseudoFileReadGuard.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/tools/pseudoFileReadGuard.test.js`
 
 **323.** 验证「Shared pre-read hang guard for secondary file-reading tools (inspectDocument/replaceAtLocation) -- WIRING the anti-hang read-guard family onto the OTHER model-facing tools that touch bytes. OPS-121/123/125/129 hardened readFile.js and OPS-146 brought FileReadTool to parity, but inspectDocument.js (aliases read_format/inspect_format) and replaceAtLocation.js (replace_at) ALSO read files and had ZERO anti-hang guards: both call detectFile(absPath) right after existsSync (detectFile reads magic bytes -> HANGS FOREVER on a FIFO/blocking-pseudo), and both then readFileSync(...,'utf-8') which blocks too. A single composed pure leaf classifyPreReadHang({absPath,stat,env}) unifies the three infinite-hang vectors (Windows reserved device name path-check + FIFO/socket/device stat-type-check + Linux /proc·/sys blocking-pseudo detect) so every 'refuse-only' read tool closes the whole class with one call before touching bytes. LIVE-verified: FIFO/proc through inspectDocument.execute + replaceAtLocation.execute return in 0-3ms with success:false (previously infinite hang)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Shared pre-read hang guard for secondary file-reading tools (inspectDocument/replaceAtLocation) -- WIRING the anti-hang read-guard family onto the OTHER model-facing tools that touch bytes. OPS-121/123/125/129 hardened readFile.js and OPS-146 brought FileReadTool to parity, but inspectDocument.js (aliases read_format/inspect_format) and replaceAtLocation.js (replace_at) ALSO read files and had ZERO anti-hang guards: both call detectFile(absPath) right after existsSync (detectFile reads magic bytes -> HANGS FOREVER on a FIFO/blocking-pseudo), and both then readFileSync(...,'utf-8') which blocks too. A single composed pure leaf classifyPreReadHang({absPath,stat,env}) unifies the three infinite-hang vectors (Windows reserved device name path-check + FIFO/socket/device stat-type-check + Linux /proc·/sys blocking-pseudo detect) so every 'refuse-only' read tool closes the whole class with one call before touching bytes. LIVE-verified: FIFO/proc through inspectDocument.execute + replaceAtLocation.execute return in 0-3ms with success:false (previously infinite hang)。
-  - 验证：`node --test services/backend/tests/tools/filePreReadHangGuard.test.js`
+  - 验证：`node --test runtime/node/backend/tests/tools/filePreReadHangGuard.test.js`
 
 **324.** 验证「Multi-Model-Type Provider Config Reconciler (the four user-facing model TYPES each resolve a provider through DISCONNECTED env namespaces: text via apiKeyPool/providerPresets/gateway, video via KHY_VIDEO_GEN_* outside the registry, vector via EMBED_URL/ollama/gateway embeddings, role via subAgentModelSelect reusing the text pool; the capability taxonomy names these buckets but NOTHING reconciles per-type whether a user supplied a working API and whether it is a relay(中转站)/direct(直连)/local endpoint; this pure leaf + read-only CLI answers "which types are ready and how is each wired" for a fresh-machine user configuring different APIs per type)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Multi-Model-Type Provider Config Reconciler (the four user-facing model TYPES each resolve a provider through DISCONNECTED env namespaces: text via apiKeyPool/providerPresets/gateway, video via KHY_VIDEO_GEN_* outside the registry, vector via EMBED_URL/ollama/gateway embeddings, role via subAgentModelSelect reusing the text pool; the capability taxonomy names these buckets but NOTHING reconciles per-type whether a user supplied a working API and whether it is a relay(中转站)/direct(直连)/local endpoint; this pure leaf + read-only CLI answers "which types are ready and how is each wired" for a fresh-machine user configuring different APIs per type)。
@@ -1348,23 +1348,23 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **325.** 验证「卡住任务的强制结束会话逃生舱(REPL busy 分支 Ctrl+C/Esc 三次升级结束会话)。事件循环仍活(转圈动画在转=setInterval 在跑=JS 处理器仍执行)但优雅取消没落地时,busy 分支的 Ctrl+C(replSession SIGINT 处理)与 Esc(busy 输入分支)原本恒做优雅取消+return、永不升级,导致 wedged 回合按几次都杀不掉。此纯叶把「同窗口内累计第 3 次 busy 中断→强制结束会话」的判定逻辑抽出(零 IO、绝不抛),replSession 在优雅取消前先问它是否该 force-exit(exit 130),前两次先走优雅取消打断卡住的任务,第 3 次才强制结束会话;无论底层 adapter 是否兑现 abort 信号,只要事件循环还活着就能杀掉卡住的回合」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：卡住任务的强制结束会话逃生舱(REPL busy 分支 Ctrl+C/Esc 三次升级结束会话)。事件循环仍活(转圈动画在转=setInterval 在跑=JS 处理器仍执行)但优雅取消没落地时,busy 分支的 Ctrl+C(replSession SIGINT 处理)与 Esc(busy 输入分支)原本恒做优雅取消+return、永不升级,导致 wedged 回合按几次都杀不掉。此纯叶把「同窗口内累计第 3 次 busy 中断→强制结束会话」的判定逻辑抽出(零 IO、绝不抛),replSession 在优雅取消前先问它是否该 force-exit(exit 130),前两次先走优雅取消打断卡住的任务,第 3 次才强制结束会话;无论底层 adapter 是否兑现 abort 信号,只要事件循环还活着就能杀掉卡住的回合。
-  - 验证：`npm run test:one -- services/backend/tests/services/cli/repl/busyInterruptEscalation.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/cli/repl/busyInterruptEscalation.test.js`
 
 **326.** 验证「把 claude/codex/opencode 做成装进 khy 数据家(~/.khy/tools)、开箱即用且可更新的便携 CLI(纯叶解析 package.json bin 字段→用当前 node 直接跑 JS 入口,绕开 Windows .cmd/.ps1 shim 与 PATH 依赖=根治 spawn ENOENT)。claude(@anthropic-ai/claude-code)与 codex(@openai/codex)npm 包发布的是带 node shebang 的 JS 入口,直接 spawn 裸名依赖系统 PATH→用户没全局装→恒 ENOENT。本子系统读已安装包 package.json 的 bin→定位真实 JS 入口→返回 {command:process.execPath,argsPrefix:[entryAbs]},跨平台一致不碰 PATH/.cmd;原生二进制入口(shebang 嗅探)回退直接执行。opencode 保留其既有专用解析器 opencodeBinResolver,泛化解析器对它返回 null;并为 opencode 补数据家候选让 khy tools install opencode 也能被解析。khy claude/codex 启动前若不可用→交互确认「是否现在安装便携版?[Y/n]」→点头即装、装完 detect(true) 复检直接继续本次启动」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：把 claude/codex/opencode 做成装进 khy 数据家(~/.khy/tools)、开箱即用且可更新的便携 CLI(纯叶解析 package.json bin 字段→用当前 node 直接跑 JS 入口,绕开 Windows .cmd/.ps1 shim 与 PATH 依赖=根治 spawn ENOENT)。claude(@anthropic-ai/claude-code)与 codex(@openai/codex)npm 包发布的是带 node shebang 的 JS 入口,直接 spawn 裸名依赖系统 PATH→用户没全局装→恒 ENOENT。本子系统读已安装包 package.json 的 bin→定位真实 JS 入口→返回 {command:process.execPath,argsPrefix:[entryAbs]},跨平台一致不碰 PATH/.cmd;原生二进制入口(shebang 嗅探)回退直接执行。opencode 保留其既有专用解析器 opencodeBinResolver,泛化解析器对它返回 null;并为 opencode 补数据家候选让 khy tools install opencode 也能被解析。khy claude/codex 启动前若不可用→交互确认「是否现在安装便携版?[Y/n]」→点头即装、装完 detect(true) 复检直接继续本次启动。
-  - 验证：`npm run test:one -- services/backend/tests/services/gateway/adapters/portableCli.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/gateway/adapters/portableCli.test.js`
 
 **327.** 验证「写记忆/召回记忆时明确告知用户(记忆操作可见化纯叶)。khy 早已自动写记忆(_maybeAutoSaveMemory)与自动召回记忆(memory engine surface + [RELEVANT_MEMORY] 注入),但两条路径都静默执行——用户看不到「刚记住了什么」或「这轮召回了哪些记忆」。本子系统抽纯叶 memoryOpsNotice.js 把这两个已有动作渲染成用户可见的状态提示,经既有 onStatus 状态通道推出:写入成功→已写入<类型>记忆(已落盘/本会话):<name>,召回命名记忆→召回 N 条相关记忆:a、b、c 等 N 条。零 IO、绝不抛、门控 default-on。直接回应 /goal 需求「写记忆和回忆时明确告知用户」」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：写记忆/召回记忆时明确告知用户(记忆操作可见化纯叶)。khy 早已自动写记忆(_maybeAutoSaveMemory)与自动召回记忆(memory engine surface + [RELEVANT_MEMORY] 注入),但两条路径都静默执行——用户看不到「刚记住了什么」或「这轮召回了哪些记忆」。本子系统抽纯叶 memoryOpsNotice.js 把这两个已有动作渲染成用户可见的状态提示,经既有 onStatus 状态通道推出:写入成功→已写入<类型>记忆(已落盘/本会话):<name>,召回命名记忆→召回 N 条相关记忆:a、b、c 等 N 条。零 IO、绝不抛、门控 default-on。直接回应 /goal 需求「写记忆和回忆时明确告知用户」。
-  - 验证：`npm run test:one -- services/backend/tests/services/memoryOpsNotice.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/memoryOpsNotice.test.js`
 
 **328.** 验证「Text-only-model Image OCR Fallback + Honest Confidence Caveat (when the running model is text-only/non-multimodal and NO vision model is reachable, khy must strip the raw image and inject locally-extracted OCR text as the answer basis; this area also closes the DEAD-FIELD gap where tesseract's per-word confidence/needsAiFallback was computed but dropped at every JS layer, so low-confidence OCR was injected as authoritative '请据此作答' with no warning — the sibling RecognizeImage tool path already honored needsAiFallback; the gateway did not)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback + Honest Confidence Caveat (when the running model is text-only/non-multimodal and NO vision model is reachable, khy must strip the raw image and inject locally-extracted OCR text as the answer basis; this area also closes the DEAD-FIELD gap where tesseract's per-word confidence/needsAiFallback was computed but dropped at every JS layer, so low-confidence OCR was injected as authoritative '请据此作答' with no warning — the sibling RecognizeImage tool path already honored needsAiFallback; the gateway did not)。
-  - 验证：`npm run test:one -- services/backend/tests/gateway/ocrConfidenceCaveat.test.js services/backend/tests/gateway/imageOcrFallbackWiring.test.js services/backend/tests/gateway/imageOcrFallbackRealImage.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/gateway/ocrConfidenceCaveat.test.js runtime/node/backend/tests/gateway/imageOcrFallbackWiring.test.js runtime/node/backend/tests/gateway/imageOcrFallbackRealImage.test.js`
 
 **329.** 验证「Text-only-model Image OCR Fallback + Honest Confidence Caveat (when the running model is text-only/non-multimodal and NO vision model is reachable, khy must strip the raw image and inject locally-extracted OCR text as the answer basis; this area also closes the DEAD-FIELD gap where tesseract's per-word confidence/needsAiFallback was computed but dropped at every JS layer, so low-confidence OCR was injected as authoritative '请据此作答' with no warning — the sibling RecognizeImage tool path already honored needsAiFallback; the gateway did not)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback + Honest Confidence Caveat (when the running model is text-only/non-multimodal and NO vision model is reachable, khy must strip the raw image and inject locally-extracted OCR text as the answer basis; this area also closes the DEAD-FIELD gap where tesseract's per-word confidence/needsAiFallback was computed but dropped at every JS layer, so low-confidence OCR was injected as authoritative '请据此作答' with no warning — the sibling RecognizeImage tool path already honored needsAiFallback; the gateway did not)。
-  - 验证：`node --test services/backend/tests/gateway/imageOcrFallbackRealImage.test.js`
+  - 验证：`node --test runtime/node/backend/tests/gateway/imageOcrFallbackRealImage.test.js`
 
 **330.** 验证「Text-only-model Image OCR Fallback + Honest Confidence Caveat (when the running model is text-only/non-multimodal and NO vision model is reachable, khy must strip the raw image and inject locally-extracted OCR text as the answer basis; this area also closes the DEAD-FIELD gap where tesseract's per-word confidence/needsAiFallback was computed but dropped at every JS layer, so low-confidence OCR was injected as authoritative '请据此作答' with no warning — the sibling RecognizeImage tool path already honored needsAiFallback; the gateway did not)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback + Honest Confidence Caveat (when the running model is text-only/non-multimodal and NO vision model is reachable, khy must strip the raw image and inject locally-extracted OCR text as the answer basis; this area also closes the DEAD-FIELD gap where tesseract's per-word confidence/needsAiFallback was computed but dropped at every JS layer, so low-confidence OCR was injected as authoritative '请据此作答' with no warning — the sibling RecognizeImage tool path already honored needsAiFallback; the gateway did not)。
@@ -1372,387 +1372,387 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **331.** 验证「Text-only-model Image OCR Fallback — Honest COVERAGE Caveat (orthogonal to ocr-fallback-confidence: confidence is about ACCURACY of the recognized words; coverage is about COMPLETENESS — whether the injected OCR text actually covers ALL input images; closes the MISSING-DIMENSION gap where extractImageOcrDetails does images.slice(0,maxImages) and silently drops images beyond the cap, and where some attempted images produce no text — so a text-only model is told '请据此作答' as if it saw everything when N-3 images and unreadable images vanished with zero trace: the textbook 'silent truncation reads as covered everything' anti-pattern)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — Honest COVERAGE Caveat (orthogonal to ocr-fallback-confidence: confidence is about ACCURACY of the recognized words; coverage is about COMPLETENESS — whether the injected OCR text actually covers ALL input images; closes the MISSING-DIMENSION gap where extractImageOcrDetails does images.slice(0,maxImages) and silently drops images beyond the cap, and where some attempted images produce no text — so a text-only model is told '请据此作答' as if it saw everything when N-3 images and unreadable images vanished with zero trace: the textbook 'silent truncation reads as covered everything' anti-pattern)。
-  - 验证：`npm run test:one -- services/backend/tests/gateway/ocrCoverageNotice.test.js services/backend/tests/gateway/imageOcrCoverageWiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/gateway/ocrCoverageNotice.test.js runtime/node/backend/tests/gateway/imageOcrCoverageWiring.test.js`
 
 **332.** 验证「Text-only-model Image OCR Fallback — Honest COVERAGE Caveat (orthogonal to ocr-fallback-confidence: confidence is about ACCURACY of the recognized words; coverage is about COMPLETENESS — whether the injected OCR text actually covers ALL input images; closes the MISSING-DIMENSION gap where extractImageOcrDetails does images.slice(0,maxImages) and silently drops images beyond the cap, and where some attempted images produce no text — so a text-only model is told '请据此作答' as if it saw everything when N-3 images and unreadable images vanished with zero trace: the textbook 'silent truncation reads as covered everything' anti-pattern)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — Honest COVERAGE Caveat (orthogonal to ocr-fallback-confidence: confidence is about ACCURACY of the recognized words; coverage is about COMPLETENESS — whether the injected OCR text actually covers ALL input images; closes the MISSING-DIMENSION gap where extractImageOcrDetails does images.slice(0,maxImages) and silently drops images beyond the cap, and where some attempted images produce no text — so a text-only model is told '请据此作答' as if it saw everything when N-3 images and unreadable images vanished with zero trace: the textbook 'silent truncation reads as covered everything' anti-pattern)。
-  - 验证：`node --check services/backend/src/services/gateway/ocrCoverageNotice.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/ocrCoverageNotice.js`
 
 **333.** 验证「Text-only-model Image OCR Fallback — Honest COVERAGE Caveat (orthogonal to ocr-fallback-confidence: confidence is about ACCURACY of the recognized words; coverage is about COMPLETENESS — whether the injected OCR text actually covers ALL input images; closes the MISSING-DIMENSION gap where extractImageOcrDetails does images.slice(0,maxImages) and silently drops images beyond the cap, and where some attempted images produce no text — so a text-only model is told '请据此作答' as if it saw everything when N-3 images and unreadable images vanished with zero trace: the textbook 'silent truncation reads as covered everything' anti-pattern)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — Honest COVERAGE Caveat (orthogonal to ocr-fallback-confidence: confidence is about ACCURACY of the recognized words; coverage is about COMPLETENESS — whether the injected OCR text actually covers ALL input images; closes the MISSING-DIMENSION gap where extractImageOcrDetails does images.slice(0,maxImages) and silently drops images beyond the cap, and where some attempted images produce no text — so a text-only model is told '请据此作答' as if it saw everything when N-3 images and unreadable images vanished with zero trace: the textbook 'silent truncation reads as covered everything' anti-pattern)。
-  - 验证：`node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 
 **334.** 验证「Text-only-model Image OCR Fallback — Honest TRUNCATION Caveat (third orthogonal honesty axis: confidence=ACCURACY of recognized words; coverage=COMPLETENESS across images; truncation=COMPLETENESS WITHIN a single image — whether a dense image's OCR full text was cut at maxChars(1200) with only a weak in-band English '...[truncated]' sentinel; closes the DEAD-FIELD gap where ocrSnippetService's _truncate silently clipped the tail and the truncated boolean never left the service, so a text-only model is told '请据此作答' on a partial text believing it complete)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — Honest TRUNCATION Caveat (third orthogonal honesty axis: confidence=ACCURACY of recognized words; coverage=COMPLETENESS across images; truncation=COMPLETENESS WITHIN a single image — whether a dense image's OCR full text was cut at maxChars(1200) with only a weak in-band English '...[truncated]' sentinel; closes the DEAD-FIELD gap where ocrSnippetService's _truncate silently clipped the tail and the truncated boolean never left the service, so a text-only model is told '请据此作答' on a partial text believing it complete)。
-  - 验证：`npm run test:one -- services/backend/tests/gateway/ocrTruncationNotice.test.js services/backend/tests/gateway/imageOcrTruncationWiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/gateway/ocrTruncationNotice.test.js runtime/node/backend/tests/gateway/imageOcrTruncationWiring.test.js`
 
 **335.** 验证「Text-only-model Image OCR Fallback — Honest TRUNCATION Caveat (third orthogonal honesty axis: confidence=ACCURACY of recognized words; coverage=COMPLETENESS across images; truncation=COMPLETENESS WITHIN a single image — whether a dense image's OCR full text was cut at maxChars(1200) with only a weak in-band English '...[truncated]' sentinel; closes the DEAD-FIELD gap where ocrSnippetService's _truncate silently clipped the tail and the truncated boolean never left the service, so a text-only model is told '请据此作答' on a partial text believing it complete)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — Honest TRUNCATION Caveat (third orthogonal honesty axis: confidence=ACCURACY of recognized words; coverage=COMPLETENESS across images; truncation=COMPLETENESS WITHIN a single image — whether a dense image's OCR full text was cut at maxChars(1200) with only a weak in-band English '...[truncated]' sentinel; closes the DEAD-FIELD gap where ocrSnippetService's _truncate silently clipped the tail and the truncated boolean never left the service, so a text-only model is told '请据此作答' on a partial text believing it complete)。
-  - 验证：`node --check services/backend/src/services/gateway/ocrTruncationNotice.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/ocrTruncationNotice.js`
 
 **336.** 验证「Text-only-model Image OCR Fallback — Honest TRUNCATION Caveat (third orthogonal honesty axis: confidence=ACCURACY of recognized words; coverage=COMPLETENESS across images; truncation=COMPLETENESS WITHIN a single image — whether a dense image's OCR full text was cut at maxChars(1200) with only a weak in-band English '...[truncated]' sentinel; closes the DEAD-FIELD gap where ocrSnippetService's _truncate silently clipped the tail and the truncated boolean never left the service, so a text-only model is told '请据此作答' on a partial text believing it complete)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — Honest TRUNCATION Caveat (third orthogonal honesty axis: confidence=ACCURACY of recognized words; coverage=COMPLETENESS across images; truncation=COMPLETENESS WITHIN a single image — whether a dense image's OCR full text was cut at maxChars(1200) with only a weak in-band English '...[truncated]' sentinel; closes the DEAD-FIELD gap where ocrSnippetService's _truncate silently clipped the tail and the truncated boolean never left the service, so a text-only model is told '请据此作答' on a partial text believing it complete)。
-  - 验证：`node --check services/backend/src/services/ocrSnippetService.js`
+  - 验证：`node --check runtime/node/backend/src/services/ocrSnippetService.js`
 
 **337.** 验证「Text-only-model Image OCR Fallback — Honest LANGUAGE-PACK Caveat (fourth orthogonal honesty axis, most directly serving '准确识别图片': confidence=ACCURACY of words; coverage=COMPLETENESS across images; truncation=COMPLETENESS within one image; language=whether the REQUESTED OCR languages could actually run — docHelper.py._resolve_lang silently narrows a 'chi_sim+eng' request to the subset that has traineddata installed, so text in a missing-language image is un-recognized/mis-transliterated while the model is told '请据此作答'; closes the DEAD-FIELD gap where the JSON returned only the narrowed lang and never the original request, so the drop was invisible)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — Honest LANGUAGE-PACK Caveat (fourth orthogonal honesty axis, most directly serving '准确识别图片': confidence=ACCURACY of words; coverage=COMPLETENESS across images; truncation=COMPLETENESS within one image; language=whether the REQUESTED OCR languages could actually run — docHelper.py._resolve_lang silently narrows a 'chi_sim+eng' request to the subset that has traineddata installed, so text in a missing-language image is un-recognized/mis-transliterated while the model is told '请据此作答'; closes the DEAD-FIELD gap where the JSON returned only the narrowed lang and never the original request, so the drop was invisible)。
-  - 验证：`npm run test:one -- services/backend/tests/gateway/ocrLanguageNotice.test.js services/backend/tests/gateway/imageOcrLanguageWiring.test.js services/backend/tests/gateway/ocrLanguageNarrowing.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/gateway/ocrLanguageNotice.test.js runtime/node/backend/tests/gateway/imageOcrLanguageWiring.test.js runtime/node/backend/tests/gateway/ocrLanguageNarrowing.test.js`
 
 **338.** 验证「Text-only-model Image OCR Fallback — Honest LANGUAGE-PACK Caveat (fourth orthogonal honesty axis, most directly serving '准确识别图片': confidence=ACCURACY of words; coverage=COMPLETENESS across images; truncation=COMPLETENESS within one image; language=whether the REQUESTED OCR languages could actually run — docHelper.py._resolve_lang silently narrows a 'chi_sim+eng' request to the subset that has traineddata installed, so text in a missing-language image is un-recognized/mis-transliterated while the model is told '请据此作答'; closes the DEAD-FIELD gap where the JSON returned only the narrowed lang and never the original request, so the drop was invisible)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — Honest LANGUAGE-PACK Caveat (fourth orthogonal honesty axis, most directly serving '准确识别图片': confidence=ACCURACY of words; coverage=COMPLETENESS across images; truncation=COMPLETENESS within one image; language=whether the REQUESTED OCR languages could actually run — docHelper.py._resolve_lang silently narrows a 'chi_sim+eng' request to the subset that has traineddata installed, so text in a missing-language image is un-recognized/mis-transliterated while the model is told '请据此作答'; closes the DEAD-FIELD gap where the JSON returned only the narrowed lang and never the original request, so the drop was invisible)。
-  - 验证：`node --check services/backend/src/services/gateway/ocrLanguageNotice.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/ocrLanguageNotice.js`
 
 **339.** 验证「Text-only-model Image OCR Fallback — Honest LANGUAGE-PACK Caveat (fourth orthogonal honesty axis, most directly serving '准确识别图片': confidence=ACCURACY of words; coverage=COMPLETENESS across images; truncation=COMPLETENESS within one image; language=whether the REQUESTED OCR languages could actually run — docHelper.py._resolve_lang silently narrows a 'chi_sim+eng' request to the subset that has traineddata installed, so text in a missing-language image is un-recognized/mis-transliterated while the model is told '请据此作答'; closes the DEAD-FIELD gap where the JSON returned only the narrowed lang and never the original request, so the drop was invisible)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — Honest LANGUAGE-PACK Caveat (fourth orthogonal honesty axis, most directly serving '准确识别图片': confidence=ACCURACY of words; coverage=COMPLETENESS across images; truncation=COMPLETENESS within one image; language=whether the REQUESTED OCR languages could actually run — docHelper.py._resolve_lang silently narrows a 'chi_sim+eng' request to the subset that has traineddata installed, so text in a missing-language image is un-recognized/mis-transliterated while the model is told '请据此作答'; closes the DEAD-FIELD gap where the JSON returned only the narrowed lang and never the original request, so the drop was invisible)。
-  - 验证：`python3 -m py_compile services/backend/src/services/docHelper.py`
+  - 验证：`python3 -m py_compile runtime/node/backend/src/services/docHelper.py`
 
 **340.** 验证「Text-only-model Image OCR Fallback — Auto-ORIENTATION Correction (FIRST CORRECTIVE axis; prior four axes — confidence/coverage/truncation/language — only DISCLOSE a problem, this one actually RECOVERS the correct text, most directly serving '准确识别图片'): a rotated photo OCRs to 'confident-looking garbage' (conf ~51-62, which partially ESCAPES the <60 low-confidence flag of OPS-104) while the correctly-oriented image OCRs at ~95; docHelper.py._maybe_reorient brute-forces 90/180/270 rotations (tesseract OSD --psm 0 is unreliable on sparse text) and keeps the highest-confidence success, stamping orientationCorrected=<deg>; the gateway then discloses that the text came from a rotated-straight image, closing the gap where a text-only model would otherwise be fed rotated garbage as authoritative」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — Auto-ORIENTATION Correction (FIRST CORRECTIVE axis; prior four axes — confidence/coverage/truncation/language — only DISCLOSE a problem, this one actually RECOVERS the correct text, most directly serving '准确识别图片'): a rotated photo OCRs to 'confident-looking garbage' (conf ~51-62, which partially ESCAPES the <60 low-confidence flag of OPS-104) while the correctly-oriented image OCRs at ~95; docHelper.py._maybe_reorient brute-forces 90/180/270 rotations (tesseract OSD --psm 0 is unreliable on sparse text) and keeps the highest-confidence success, stamping orientationCorrected=<deg>; the gateway then discloses that the text came from a rotated-straight image, closing the gap where a text-only model would otherwise be fed rotated garbage as authoritative。
-  - 验证：`npm run test:one -- services/backend/tests/gateway/ocrOrientationNotice.test.js services/backend/tests/gateway/imageOcrOrientationWiring.test.js services/backend/tests/gateway/ocrOrientationRecovery.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/gateway/ocrOrientationNotice.test.js runtime/node/backend/tests/gateway/imageOcrOrientationWiring.test.js runtime/node/backend/tests/gateway/ocrOrientationRecovery.test.js`
 
 **341.** 验证「Text-only-model Image OCR Fallback — Auto-ORIENTATION Correction (FIRST CORRECTIVE axis; prior four axes — confidence/coverage/truncation/language — only DISCLOSE a problem, this one actually RECOVERS the correct text, most directly serving '准确识别图片'): a rotated photo OCRs to 'confident-looking garbage' (conf ~51-62, which partially ESCAPES the <60 low-confidence flag of OPS-104) while the correctly-oriented image OCRs at ~95; docHelper.py._maybe_reorient brute-forces 90/180/270 rotations (tesseract OSD --psm 0 is unreliable on sparse text) and keeps the highest-confidence success, stamping orientationCorrected=<deg>; the gateway then discloses that the text came from a rotated-straight image, closing the gap where a text-only model would otherwise be fed rotated garbage as authoritative」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — Auto-ORIENTATION Correction (FIRST CORRECTIVE axis; prior four axes — confidence/coverage/truncation/language — only DISCLOSE a problem, this one actually RECOVERS the correct text, most directly serving '准确识别图片'): a rotated photo OCRs to 'confident-looking garbage' (conf ~51-62, which partially ESCAPES the <60 low-confidence flag of OPS-104) while the correctly-oriented image OCRs at ~95; docHelper.py._maybe_reorient brute-forces 90/180/270 rotations (tesseract OSD --psm 0 is unreliable on sparse text) and keeps the highest-confidence success, stamping orientationCorrected=<deg>; the gateway then discloses that the text came from a rotated-straight image, closing the gap where a text-only model would otherwise be fed rotated garbage as authoritative。
-  - 验证：`node --check services/backend/src/services/gateway/ocrOrientationNotice.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/ocrOrientationNotice.js`
 
 **342.** 验证「Text-only-model Image OCR Fallback — Auto-ORIENTATION Correction (FIRST CORRECTIVE axis; prior four axes — confidence/coverage/truncation/language — only DISCLOSE a problem, this one actually RECOVERS the correct text, most directly serving '准确识别图片'): a rotated photo OCRs to 'confident-looking garbage' (conf ~51-62, which partially ESCAPES the <60 low-confidence flag of OPS-104) while the correctly-oriented image OCRs at ~95; docHelper.py._maybe_reorient brute-forces 90/180/270 rotations (tesseract OSD --psm 0 is unreliable on sparse text) and keeps the highest-confidence success, stamping orientationCorrected=<deg>; the gateway then discloses that the text came from a rotated-straight image, closing the gap where a text-only model would otherwise be fed rotated garbage as authoritative」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — Auto-ORIENTATION Correction (FIRST CORRECTIVE axis; prior four axes — confidence/coverage/truncation/language — only DISCLOSE a problem, this one actually RECOVERS the correct text, most directly serving '准确识别图片'): a rotated photo OCRs to 'confident-looking garbage' (conf ~51-62, which partially ESCAPES the <60 low-confidence flag of OPS-104) while the correctly-oriented image OCRs at ~95; docHelper.py._maybe_reorient brute-forces 90/180/270 rotations (tesseract OSD --psm 0 is unreliable on sparse text) and keeps the highest-confidence success, stamping orientationCorrected=<deg>; the gateway then discloses that the text came from a rotated-straight image, closing the gap where a text-only model would otherwise be fed rotated garbage as authoritative。
-  - 验证：`python3 -m py_compile services/backend/src/services/docHelper.py`
+  - 验证：`python3 -m py_compile runtime/node/backend/src/services/docHelper.py`
 
 **343.** 验证「Text-only-model Image OCR Fallback — Low-RESOLUTION Auto-Upscale (SIXTH axis, SECOND CORRECTIVE one, orthogonal to & alongside the orientation axis: orientation rotates-to-fix, this one enlarges-to-fix; the four earlier axes — confidence/coverage/truncation/language — only DISCLOSE, the two corrective axes actually RECOVER text, most directly serving '准确识别图片' for tiny/low-res images): a low-resolution image OCRs to NOTHING at native size (empty, not the orientation axis's 'confident garbage') because tesseract wants ~300 DPI; docHelper.py._maybe_upscale brute-forces 2/3/4× LANCZOS enlargements, keeps the highest-confidence success, and stamps upscaledFactor=<n>; the gateway then discloses that the text came from an auto-enlarged low-res image, closing the gap where a text-only model would otherwise get no text at all from a small image」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — Low-RESOLUTION Auto-Upscale (SIXTH axis, SECOND CORRECTIVE one, orthogonal to & alongside the orientation axis: orientation rotates-to-fix, this one enlarges-to-fix; the four earlier axes — confidence/coverage/truncation/language — only DISCLOSE, the two corrective axes actually RECOVER text, most directly serving '准确识别图片' for tiny/low-res images): a low-resolution image OCRs to NOTHING at native size (empty, not the orientation axis's 'confident garbage') because tesseract wants ~300 DPI; docHelper.py._maybe_upscale brute-forces 2/3/4× LANCZOS enlargements, keeps the highest-confidence success, and stamps upscaledFactor=<n>; the gateway then discloses that the text came from an auto-enlarged low-res image, closing the gap where a text-only model would otherwise get no text at all from a small image。
-  - 验证：`npm run test:one -- services/backend/tests/gateway/ocrResolutionNotice.test.js services/backend/tests/gateway/imageOcrResolutionWiring.test.js services/backend/tests/gateway/ocrResolutionRecovery.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/gateway/ocrResolutionNotice.test.js runtime/node/backend/tests/gateway/imageOcrResolutionWiring.test.js runtime/node/backend/tests/gateway/ocrResolutionRecovery.test.js`
 
 **344.** 验证「Text-only-model Image OCR Fallback — Low-RESOLUTION Auto-Upscale (SIXTH axis, SECOND CORRECTIVE one, orthogonal to & alongside the orientation axis: orientation rotates-to-fix, this one enlarges-to-fix; the four earlier axes — confidence/coverage/truncation/language — only DISCLOSE, the two corrective axes actually RECOVER text, most directly serving '准确识别图片' for tiny/low-res images): a low-resolution image OCRs to NOTHING at native size (empty, not the orientation axis's 'confident garbage') because tesseract wants ~300 DPI; docHelper.py._maybe_upscale brute-forces 2/3/4× LANCZOS enlargements, keeps the highest-confidence success, and stamps upscaledFactor=<n>; the gateway then discloses that the text came from an auto-enlarged low-res image, closing the gap where a text-only model would otherwise get no text at all from a small image」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — Low-RESOLUTION Auto-Upscale (SIXTH axis, SECOND CORRECTIVE one, orthogonal to & alongside the orientation axis: orientation rotates-to-fix, this one enlarges-to-fix; the four earlier axes — confidence/coverage/truncation/language — only DISCLOSE, the two corrective axes actually RECOVER text, most directly serving '准确识别图片' for tiny/low-res images): a low-resolution image OCRs to NOTHING at native size (empty, not the orientation axis's 'confident garbage') because tesseract wants ~300 DPI; docHelper.py._maybe_upscale brute-forces 2/3/4× LANCZOS enlargements, keeps the highest-confidence success, and stamps upscaledFactor=<n>; the gateway then discloses that the text came from an auto-enlarged low-res image, closing the gap where a text-only model would otherwise get no text at all from a small image。
-  - 验证：`node --check services/backend/src/services/gateway/ocrResolutionNotice.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/ocrResolutionNotice.js`
 
 **345.** 验证「Text-only-model Image OCR Fallback — Low-RESOLUTION Auto-Upscale (SIXTH axis, SECOND CORRECTIVE one, orthogonal to & alongside the orientation axis: orientation rotates-to-fix, this one enlarges-to-fix; the four earlier axes — confidence/coverage/truncation/language — only DISCLOSE, the two corrective axes actually RECOVER text, most directly serving '准确识别图片' for tiny/low-res images): a low-resolution image OCRs to NOTHING at native size (empty, not the orientation axis's 'confident garbage') because tesseract wants ~300 DPI; docHelper.py._maybe_upscale brute-forces 2/3/4× LANCZOS enlargements, keeps the highest-confidence success, and stamps upscaledFactor=<n>; the gateway then discloses that the text came from an auto-enlarged low-res image, closing the gap where a text-only model would otherwise get no text at all from a small image」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — Low-RESOLUTION Auto-Upscale (SIXTH axis, SECOND CORRECTIVE one, orthogonal to & alongside the orientation axis: orientation rotates-to-fix, this one enlarges-to-fix; the four earlier axes — confidence/coverage/truncation/language — only DISCLOSE, the two corrective axes actually RECOVER text, most directly serving '准确识别图片' for tiny/low-res images): a low-resolution image OCRs to NOTHING at native size (empty, not the orientation axis's 'confident garbage') because tesseract wants ~300 DPI; docHelper.py._maybe_upscale brute-forces 2/3/4× LANCZOS enlargements, keeps the highest-confidence success, and stamps upscaledFactor=<n>; the gateway then discloses that the text came from an auto-enlarged low-res image, closing the gap where a text-only model would otherwise get no text at all from a small image。
-  - 验证：`python3 -m py_compile services/backend/src/services/docHelper.py`
+  - 验证：`python3 -m py_compile runtime/node/backend/src/services/docHelper.py`
 
 **346.** 验证「unpack Unknown-Format Self-Remediation (generic extractor fallback + gated auto-install)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：unpack Unknown-Format Self-Remediation (generic extractor fallback + gated auto-install)。
-  - 验证：`npm run test:one -- services/backend/tests/tools/unpackGeneric.test.js services/backend/tests/tools/unpackAsar.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/tools/unpackGeneric.test.js runtime/node/backend/tests/tools/unpackAsar.test.js`
 
 **347.** 验证「unpack Unknown-Format Self-Remediation (generic extractor fallback + gated auto-install)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：unpack Unknown-Format Self-Remediation (generic extractor fallback + gated auto-install)。
-  - 验证：`node --check services/backend/src/services/reverseEngineer/genericExtractor.js`
+  - 验证：`node --check runtime/node/backend/src/services/reverseEngineer/genericExtractor.js`
 
 **348.** 验证「unpack Unknown-Format Self-Remediation (generic extractor fallback + gated auto-install)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：unpack Unknown-Format Self-Remediation (generic extractor fallback + gated auto-install)。
-  - 验证：`node --check services/backend/src/tools/unpackTool.js`
+  - 验证：`node --check runtime/node/backend/src/tools/unpackTool.js`
 
 **349.** 验证「Text-only-model Image OCR Fallback — Describe-cascade-fail SAFETY FLOOR decoupled from the cosmetic failure-summary gate (UPSTREAM control-flow axis: the prior six axes 104/109/111/112/115/116 all harden honesty INSIDE the OCR path assuming it was reached; this one guarantees the OCR path is RELIABLY REACHED when the describe-and-return vision cascade fully fails — 404/model_not_found + socket hang up — so a text-only model never gets a bare image and never hallucinates '消息里没有附带图片')」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — Describe-cascade-fail SAFETY FLOOR decoupled from the cosmetic failure-summary gate (UPSTREAM control-flow axis: the prior six axes 104/109/111/112/115/116 all harden honesty INSIDE the OCR path assuming it was reached; this one guarantees the OCR path is RELIABLY REACHED when the describe-and-return vision cascade fully fails — 404/model_not_found + socket hang up — so a text-only model never gets a bare image and never hallucinates '消息里没有附带图片')。
-  - 验证：`npm run test:one -- services/backend/tests/visionOcrFallback.test.js services/backend/tests/gateway/visionDescribeFailFloorWiring.test.js services/backend/tests/gateway/visionDescribeFailFloorRealImage.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/visionOcrFallback.test.js runtime/node/backend/tests/gateway/visionDescribeFailFloorWiring.test.js runtime/node/backend/tests/gateway/visionDescribeFailFloorRealImage.test.js`
 
 **350.** 验证「Text-only-model Image OCR Fallback — Describe-cascade-fail SAFETY FLOOR decoupled from the cosmetic failure-summary gate (UPSTREAM control-flow axis: the prior six axes 104/109/111/112/115/116 all harden honesty INSIDE the OCR path assuming it was reached; this one guarantees the OCR path is RELIABLY REACHED when the describe-and-return vision cascade fully fails — 404/model_not_found + socket hang up — so a text-only model never gets a bare image and never hallucinates '消息里没有附带图片')」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — Describe-cascade-fail SAFETY FLOOR decoupled from the cosmetic failure-summary gate (UPSTREAM control-flow axis: the prior six axes 104/109/111/112/115/116 all harden honesty INSIDE the OCR path assuming it was reached; this one guarantees the OCR path is RELIABLY REACHED when the describe-and-return vision cascade fully fails — 404/model_not_found + socket hang up — so a text-only model never gets a bare image and never hallucinates '消息里没有附带图片')。
-  - 验证：`node --check services/backend/src/services/gateway/visionOcrFallback.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/visionOcrFallback.js`
 
 **351.** 验证「Text-only-model Image OCR Fallback — Describe-cascade-fail SAFETY FLOOR decoupled from the cosmetic failure-summary gate (UPSTREAM control-flow axis: the prior six axes 104/109/111/112/115/116 all harden honesty INSIDE the OCR path assuming it was reached; this one guarantees the OCR path is RELIABLY REACHED when the describe-and-return vision cascade fully fails — 404/model_not_found + socket hang up — so a text-only model never gets a bare image and never hallucinates '消息里没有附带图片')」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — Describe-cascade-fail SAFETY FLOOR decoupled from the cosmetic failure-summary gate (UPSTREAM control-flow axis: the prior six axes 104/109/111/112/115/116 all harden honesty INSIDE the OCR path assuming it was reached; this one guarantees the OCR path is RELIABLY REACHED when the describe-and-return vision cascade fully fails — 404/model_not_found + socket hang up — so a text-only model never gets a bare image and never hallucinates '消息里没有附带图片')。
-  - 验证：`node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 
 **352.** 验证「Text-only-model Image OCR Fallback — STRIP-IMAGE irreducible honesty floor decoupled from the OCR FEATURE gate (承 OPS-118: second orthogonal control-flow bridge on the same describe-cascade-fail path; OPS-118 guaranteed the floor PATH executes regardless of the cosmetic KHY_VISION_FAILURE_SUMMARY gate, but WITHIN the floor's empty-OCR else-branch the strip is UNCONDITIONAL while the '收到图但读不出' note is gated by KHY_VISION_OCR_FALLBACK — a FEATURE gate; user disables OCR fallback -> note suppressed but image still stripped -> bare prompt with no image + no note -> text model still hallucinates '消息里没有附带图片 / 当前对话中没有任何图片附件')」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — STRIP-IMAGE irreducible honesty floor decoupled from the OCR FEATURE gate (承 OPS-118: second orthogonal control-flow bridge on the same describe-cascade-fail path; OPS-118 guaranteed the floor PATH executes regardless of the cosmetic KHY_VISION_FAILURE_SUMMARY gate, but WITHIN the floor's empty-OCR else-branch the strip is UNCONDITIONAL while the '收到图但读不出' note is gated by KHY_VISION_OCR_FALLBACK — a FEATURE gate; user disables OCR fallback -> note suppressed but image still stripped -> bare prompt with no image + no note -> text model still hallucinates '消息里没有附带图片 / 当前对话中没有任何图片附件')。
-  - 验证：`npm run test:one -- services/backend/tests/gateway/visionStripImageFloorWiring.test.js services/backend/tests/gateway/visionStripImageFloorRealImage.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/gateway/visionStripImageFloorWiring.test.js runtime/node/backend/tests/gateway/visionStripImageFloorRealImage.test.js`
 
 **353.** 验证「Text-only-model Image OCR Fallback — STRIP-IMAGE irreducible honesty floor decoupled from the OCR FEATURE gate (承 OPS-118: second orthogonal control-flow bridge on the same describe-cascade-fail path; OPS-118 guaranteed the floor PATH executes regardless of the cosmetic KHY_VISION_FAILURE_SUMMARY gate, but WITHIN the floor's empty-OCR else-branch the strip is UNCONDITIONAL while the '收到图但读不出' note is gated by KHY_VISION_OCR_FALLBACK — a FEATURE gate; user disables OCR fallback -> note suppressed but image still stripped -> bare prompt with no image + no note -> text model still hallucinates '消息里没有附带图片 / 当前对话中没有任何图片附件')」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — STRIP-IMAGE irreducible honesty floor decoupled from the OCR FEATURE gate (承 OPS-118: second orthogonal control-flow bridge on the same describe-cascade-fail path; OPS-118 guaranteed the floor PATH executes regardless of the cosmetic KHY_VISION_FAILURE_SUMMARY gate, but WITHIN the floor's empty-OCR else-branch the strip is UNCONDITIONAL while the '收到图但读不出' note is gated by KHY_VISION_OCR_FALLBACK — a FEATURE gate; user disables OCR fallback -> note suppressed but image still stripped -> bare prompt with no image + no note -> text model still hallucinates '消息里没有附带图片 / 当前对话中没有任何图片附件')。
-  - 验证：`node --check services/backend/src/services/gateway/visionOcrFallback.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/visionOcrFallback.js`
 
 **354.** 验证「Text-only-model Image OCR Fallback — STRIP-IMAGE irreducible honesty floor decoupled from the OCR FEATURE gate (承 OPS-118: second orthogonal control-flow bridge on the same describe-cascade-fail path; OPS-118 guaranteed the floor PATH executes regardless of the cosmetic KHY_VISION_FAILURE_SUMMARY gate, but WITHIN the floor's empty-OCR else-branch the strip is UNCONDITIONAL while the '收到图但读不出' note is gated by KHY_VISION_OCR_FALLBACK — a FEATURE gate; user disables OCR fallback -> note suppressed but image still stripped -> bare prompt with no image + no note -> text model still hallucinates '消息里没有附带图片 / 当前对话中没有任何图片附件')」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — STRIP-IMAGE irreducible honesty floor decoupled from the OCR FEATURE gate (承 OPS-118: second orthogonal control-flow bridge on the same describe-cascade-fail path; OPS-118 guaranteed the floor PATH executes regardless of the cosmetic KHY_VISION_FAILURE_SUMMARY gate, but WITHIN the floor's empty-OCR else-branch the strip is UNCONDITIONAL while the '收到图但读不出' note is gated by KHY_VISION_OCR_FALLBACK — a FEATURE gate; user disables OCR fallback -> note suppressed but image still stripped -> bare prompt with no image + no note -> text model still hallucinates '消息里没有附带图片 / 当前对话中没有任何图片附件')。
-  - 验证：`node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 
 **355.** 验证「Text-only-model Image OCR Fallback — POST-FAILURE rescue-net STRIP-IMAGE honesty floor (承 OPS-118/120: THIRD orthogonal '剥图 ⟹ 必留痕' bridge, but in the post-failure cascade rescue net instead of the prep-phase describe cascade; when the current model is deemed vision-capable (decideVisionRouting=keep, image kept) an adapter rejects the image at RUNTIME with 404/model_not_found -> shouldOcrRescue promotes _visionFallback -> the rescue net falls back to local OCR; the OCR-text-success branch strips+injects, but the empty-OCR / OCR-throw branch historically only emitStatus'd then break'd, leaving the BARE image to survive to a downstream text adapter that silently drops it and hallucinates '消息里没有附带图片')」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — POST-FAILURE rescue-net STRIP-IMAGE honesty floor (承 OPS-118/120: THIRD orthogonal '剥图 ⟹ 必留痕' bridge, but in the post-failure cascade rescue net instead of the prep-phase describe cascade; when the current model is deemed vision-capable (decideVisionRouting=keep, image kept) an adapter rejects the image at RUNTIME with 404/model_not_found -> shouldOcrRescue promotes _visionFallback -> the rescue net falls back to local OCR; the OCR-text-success branch strips+injects, but the empty-OCR / OCR-throw branch historically only emitStatus'd then break'd, leaving the BARE image to survive to a downstream text adapter that silently drops it and hallucinates '消息里没有附带图片')。
-  - 验证：`npm run test:one -- services/backend/tests/gateway/visionRescueStripFloorWiring.test.js services/backend/tests/gateway/visionRescueStripFloorRealImage.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/gateway/visionRescueStripFloorWiring.test.js runtime/node/backend/tests/gateway/visionRescueStripFloorRealImage.test.js`
 
 **356.** 验证「Text-only-model Image OCR Fallback — POST-FAILURE rescue-net STRIP-IMAGE honesty floor (承 OPS-118/120: THIRD orthogonal '剥图 ⟹ 必留痕' bridge, but in the post-failure cascade rescue net instead of the prep-phase describe cascade; when the current model is deemed vision-capable (decideVisionRouting=keep, image kept) an adapter rejects the image at RUNTIME with 404/model_not_found -> shouldOcrRescue promotes _visionFallback -> the rescue net falls back to local OCR; the OCR-text-success branch strips+injects, but the empty-OCR / OCR-throw branch historically only emitStatus'd then break'd, leaving the BARE image to survive to a downstream text adapter that silently drops it and hallucinates '消息里没有附带图片')」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — POST-FAILURE rescue-net STRIP-IMAGE honesty floor (承 OPS-118/120: THIRD orthogonal '剥图 ⟹ 必留痕' bridge, but in the post-failure cascade rescue net instead of the prep-phase describe cascade; when the current model is deemed vision-capable (decideVisionRouting=keep, image kept) an adapter rejects the image at RUNTIME with 404/model_not_found -> shouldOcrRescue promotes _visionFallback -> the rescue net falls back to local OCR; the OCR-text-success branch strips+injects, but the empty-OCR / OCR-throw branch historically only emitStatus'd then break'd, leaving the BARE image to survive to a downstream text adapter that silently drops it and hallucinates '消息里没有附带图片')。
-  - 验证：`node --check services/backend/src/services/gateway/visionOcrFallback.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/visionOcrFallback.js`
 
 **357.** 验证「Text-only-model Image OCR Fallback — POST-FAILURE rescue-net STRIP-IMAGE honesty floor (承 OPS-118/120: THIRD orthogonal '剥图 ⟹ 必留痕' bridge, but in the post-failure cascade rescue net instead of the prep-phase describe cascade; when the current model is deemed vision-capable (decideVisionRouting=keep, image kept) an adapter rejects the image at RUNTIME with 404/model_not_found -> shouldOcrRescue promotes _visionFallback -> the rescue net falls back to local OCR; the OCR-text-success branch strips+injects, but the empty-OCR / OCR-throw branch historically only emitStatus'd then break'd, leaving the BARE image to survive to a downstream text adapter that silently drops it and hallucinates '消息里没有附带图片')」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — POST-FAILURE rescue-net STRIP-IMAGE honesty floor (承 OPS-118/120: THIRD orthogonal '剥图 ⟹ 必留痕' bridge, but in the post-failure cascade rescue net instead of the prep-phase describe cascade; when the current model is deemed vision-capable (decideVisionRouting=keep, image kept) an adapter rejects the image at RUNTIME with 404/model_not_found -> shouldOcrRescue promotes _visionFallback -> the rescue net falls back to local OCR; the OCR-text-success branch strips+injects, but the empty-OCR / OCR-throw branch historically only emitStatus'd then break'd, leaving the BARE image to survive to a downstream text adapter that silently drops it and hallucinates '消息里没有附带图片')。
-  - 验证：`node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 
 **358.** 验证「Text-only-model Image OCR Fallback — OCR-SUCCESS user-facing 'OCR was used' TRANSPARENCY disclosure (OPS-MAN-124; orthogonal to the six CONDITIONAL honesty axes: low-confidence / coverage / truncation / language / orientation / resolution — those fire only when the OCR result has a defect; when OCR succeeds CLEANLY none of them fire, so the injected prompt has only a model-facing '以下为图片 OCR 识别文本，请据此作答' header and the model answers as if it natively saw the image, never telling the USER that OCR was the reading method — violating '要能无感明显告知用户用了ocr但能正确识别图片')」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — OCR-SUCCESS user-facing 'OCR was used' TRANSPARENCY disclosure (OPS-MAN-124; orthogonal to the six CONDITIONAL honesty axes: low-confidence / coverage / truncation / language / orientation / resolution — those fire only when the OCR result has a defect; when OCR succeeds CLEANLY none of them fire, so the injected prompt has only a model-facing '以下为图片 OCR 识别文本，请据此作答' header and the model answers as if it natively saw the image, never telling the USER that OCR was the reading method — violating '要能无感明显告知用户用了ocr但能正确识别图片')。
-  - 验证：`npm run test:one -- services/backend/tests/gateway/ocrUsageNotice.test.js services/backend/tests/gateway/ocrUsageDisclosureWiring.test.js services/backend/tests/gateway/ocrUsageDisclosureRealImage.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/gateway/ocrUsageNotice.test.js runtime/node/backend/tests/gateway/ocrUsageDisclosureWiring.test.js runtime/node/backend/tests/gateway/ocrUsageDisclosureRealImage.test.js`
 
 **359.** 验证「Text-only-model Image OCR Fallback — OCR-SUCCESS user-facing 'OCR was used' TRANSPARENCY disclosure (OPS-MAN-124; orthogonal to the six CONDITIONAL honesty axes: low-confidence / coverage / truncation / language / orientation / resolution — those fire only when the OCR result has a defect; when OCR succeeds CLEANLY none of them fire, so the injected prompt has only a model-facing '以下为图片 OCR 识别文本，请据此作答' header and the model answers as if it natively saw the image, never telling the USER that OCR was the reading method — violating '要能无感明显告知用户用了ocr但能正确识别图片')」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — OCR-SUCCESS user-facing 'OCR was used' TRANSPARENCY disclosure (OPS-MAN-124; orthogonal to the six CONDITIONAL honesty axes: low-confidence / coverage / truncation / language / orientation / resolution — those fire only when the OCR result has a defect; when OCR succeeds CLEANLY none of them fire, so the injected prompt has only a model-facing '以下为图片 OCR 识别文本，请据此作答' header and the model answers as if it natively saw the image, never telling the USER that OCR was the reading method — violating '要能无感明显告知用户用了ocr但能正确识别图片')。
-  - 验证：`node --check services/backend/src/services/gateway/ocrUsageNotice.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/ocrUsageNotice.js`
 
 **360.** 验证「Text-only-model Image OCR Fallback — OCR-SUCCESS user-facing 'OCR was used' TRANSPARENCY disclosure (OPS-MAN-124; orthogonal to the six CONDITIONAL honesty axes: low-confidence / coverage / truncation / language / orientation / resolution — those fire only when the OCR result has a defect; when OCR succeeds CLEANLY none of them fire, so the injected prompt has only a model-facing '以下为图片 OCR 识别文本，请据此作答' header and the model answers as if it natively saw the image, never telling the USER that OCR was the reading method — violating '要能无感明显告知用户用了ocr但能正确识别图片')」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — OCR-SUCCESS user-facing 'OCR was used' TRANSPARENCY disclosure (OPS-MAN-124; orthogonal to the six CONDITIONAL honesty axes: low-confidence / coverage / truncation / language / orientation / resolution — those fire only when the OCR result has a defect; when OCR succeeds CLEANLY none of them fire, so the injected prompt has only a model-facing '以下为图片 OCR 识别文本，请据此作答' header and the model answers as if it natively saw the image, never telling the USER that OCR was the reading method — violating '要能无感明显告知用户用了ocr但能正确识别图片')。
-  - 验证：`node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 
 **361.** 验证「Text-only-model Image OCR Fallback — DETERMINISTIC user-facing 'OCR was used' footnote (OPS-MAN-126; 承 OPS-124). OPS-124 only injects a model-facing INSTRUCTION into the prompt asking the model to disclose OCR usage — that is ADVISORY: the model may ignore it, leaving the answer with no OCR mention, so '明显告知用户' is NOT guaranteed. finishResult's success side already hosts a family of DETERMINISTIC truth footers (answerVerifier / modelIdentityTruth / cacheMetricsTruth) that guarantee truth reaches the user regardless of model compliance; OCR-usage had no such deterministic footer. This area adds the belt to OPS-124's suspenders.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — DETERMINISTIC user-facing 'OCR was used' footnote (OPS-MAN-126; 承 OPS-124). OPS-124 only injects a model-facing INSTRUCTION into the prompt asking the model to disclose OCR usage — that is ADVISORY: the model may ignore it, leaving the answer with no OCR mention, so '明显告知用户' is NOT guaranteed. finishResult's success side already hosts a family of DETERMINISTIC truth footers (answerVerifier / modelIdentityTruth / cacheMetricsTruth) that guarantee truth reaches the user regardless of model compliance; OCR-usage had no such deterministic footer. This area adds the belt to OPS-124's suspenders.。
-  - 验证：`npm run test:one -- services/backend/tests/gateway/ocrUsageFootnote.test.js services/backend/tests/gateway/ocrUsageFootnoteWiring.test.js services/backend/tests/gateway/ocrUsageFootnoteRealImage.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/gateway/ocrUsageFootnote.test.js runtime/node/backend/tests/gateway/ocrUsageFootnoteWiring.test.js runtime/node/backend/tests/gateway/ocrUsageFootnoteRealImage.test.js`
 
 **362.** 验证「Text-only-model Image OCR Fallback — DETERMINISTIC user-facing 'OCR was used' footnote (OPS-MAN-126; 承 OPS-124). OPS-124 only injects a model-facing INSTRUCTION into the prompt asking the model to disclose OCR usage — that is ADVISORY: the model may ignore it, leaving the answer with no OCR mention, so '明显告知用户' is NOT guaranteed. finishResult's success side already hosts a family of DETERMINISTIC truth footers (answerVerifier / modelIdentityTruth / cacheMetricsTruth) that guarantee truth reaches the user regardless of model compliance; OCR-usage had no such deterministic footer. This area adds the belt to OPS-124's suspenders.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — DETERMINISTIC user-facing 'OCR was used' footnote (OPS-MAN-126; 承 OPS-124). OPS-124 only injects a model-facing INSTRUCTION into the prompt asking the model to disclose OCR usage — that is ADVISORY: the model may ignore it, leaving the answer with no OCR mention, so '明显告知用户' is NOT guaranteed. finishResult's success side already hosts a family of DETERMINISTIC truth footers (answerVerifier / modelIdentityTruth / cacheMetricsTruth) that guarantee truth reaches the user regardless of model compliance; OCR-usage had no such deterministic footer. This area adds the belt to OPS-124's suspenders.。
-  - 验证：`node --check services/backend/src/services/gateway/ocrUsageFootnote.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/ocrUsageFootnote.js`
 
 **363.** 验证「Text-only-model Image OCR Fallback — DETERMINISTIC user-facing 'OCR was used' footnote (OPS-MAN-126; 承 OPS-124). OPS-124 only injects a model-facing INSTRUCTION into the prompt asking the model to disclose OCR usage — that is ADVISORY: the model may ignore it, leaving the answer with no OCR mention, so '明显告知用户' is NOT guaranteed. finishResult's success side already hosts a family of DETERMINISTIC truth footers (answerVerifier / modelIdentityTruth / cacheMetricsTruth) that guarantee truth reaches the user regardless of model compliance; OCR-usage had no such deterministic footer. This area adds the belt to OPS-124's suspenders.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — DETERMINISTIC user-facing 'OCR was used' footnote (OPS-MAN-126; 承 OPS-124). OPS-124 only injects a model-facing INSTRUCTION into the prompt asking the model to disclose OCR usage — that is ADVISORY: the model may ignore it, leaving the answer with no OCR mention, so '明显告知用户' is NOT guaranteed. finishResult's success side already hosts a family of DETERMINISTIC truth footers (answerVerifier / modelIdentityTruth / cacheMetricsTruth) that guarantee truth reaches the user regardless of model compliance; OCR-usage had no such deterministic footer. This area adds the belt to OPS-124's suspenders.。
-  - 验证：`node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 
 **364.** 验证「Text-only-model Image OCR Fallback — DETERMINISTIC answer-side CORRECTION when the model, on the empty-OCR strip path, STILL denies receiving the image (OPS-MAN-138; 承 OPS-118/120/122 '剥图必留痕' + OPS-126 deterministic-footnote philosophy). Reproduced 2026-07-12 (paste-cache 92c0154d): text-only model + image → vision cascade all 404/socket-hang-up → OCR fallback but the image is NON-TEXT (photo/screenshot/chart) or missing langpack → local OCR reads NOTHING → the three empty-OCR sites (prep Site1 ~1626 / prep Site2 ~1736 / post-failure rescue ~2927) unconditionally strip the image AND inject a model-facing '收到图但读不出、绝不能说没收到图' honest floor — BUT that is only a PROMPT INSTRUCTION the model can ignore; in the real failure the model ignored it and answered '消息里没有附带图片 / 当前对话中没有任何图片附件'. The deterministic finishResult footer family had NO member for this: ocrUsageFootnote (KHY_OCR_USAGE_FOOTNOTE) fires ONLY on _ocrImageTextRead=true (OCR text was read); empty-OCR strip sets _ocrFallbackApplied but NOT _ocrImageTextRead → outside that footer's predicate → zero deterministic correction when the model denies the image. This area adds the last user-visible defense. OPS-MAN-140 (承 138) extends the SAME leaf with an ORTHOGONAL variant for the mirror cell — OCR **SUCCEEDED** (_ocrImageTextRead=true) yet the model STILL denies the image: OPS-138's predicate `!_ocrImageTextRead` excludes it, and ocrUsageFootnote (:858) in that cell only appends '以上关于这张图片的内容是通过 OCR 读取的' which is self-CONTRADICTORY with the denial and does not rebut it. The OCR-success variant (KHY_VISION_DENIAL_CORRECTION_OCR_READ, default-on, distinct DENIAL_CORRECTION_OCR_READ_MARKER) REPLACES (not stacks — noise-conscious) that plain footnote with a denial-aware rebuttal ('你确实发了图、OCR 已成功读出文字、是模型没采用、请据 OCR 文本重新作答'); gate-off byte-reverts to the plain ocrUsageFootnote branch.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — DETERMINISTIC answer-side CORRECTION when the model, on the empty-OCR strip path, STILL denies receiving the image (OPS-MAN-138; 承 OPS-118/120/122 '剥图必留痕' + OPS-126 deterministic-footnote philosophy). Reproduced 2026-07-12 (paste-cache 92c0154d): text-only model + image → vision cascade all 404/socket-hang-up → OCR fallback but the image is NON-TEXT (photo/screenshot/chart) or missing langpack → local OCR reads NOTHING → the three empty-OCR sites (prep Site1 ~1626 / prep Site2 ~1736 / post-failure rescue ~2927) unconditionally strip the image AND inject a model-facing '收到图但读不出、绝不能说没收到图' honest floor — BUT that is only a PROMPT INSTRUCTION the model can ignore; in the real failure the model ignored it and answered '消息里没有附带图片 / 当前对话中没有任何图片附件'. The deterministic finishResult footer family had NO member for this: ocrUsageFootnote (KHY_OCR_USAGE_FOOTNOTE) fires ONLY on _ocrImageTextRead=true (OCR text was read); empty-OCR strip sets _ocrFallbackApplied but NOT _ocrImageTextRead → outside that footer's predicate → zero deterministic correction when the model denies the image. This area adds the last user-visible defense. OPS-MAN-140 (承 138) extends the SAME leaf with an ORTHOGONAL variant for the mirror cell — OCR **SUCCEEDED** (_ocrImageTextRead=true) yet the model STILL denies the image: OPS-138's predicate `!_ocrImageTextRead` excludes it, and ocrUsageFootnote (:858) in that cell only appends '以上关于这张图片的内容是通过 OCR 读取的' which is self-CONTRADICTORY with the denial and does not rebut it. The OCR-success variant (KHY_VISION_DENIAL_CORRECTION_OCR_READ, default-on, distinct DENIAL_CORRECTION_OCR_READ_MARKER) REPLACES (not stacks — noise-conscious) that plain footnote with a denial-aware rebuttal ('你确实发了图、OCR 已成功读出文字、是模型没采用、请据 OCR 文本重新作答'); gate-off byte-reverts to the plain ocrUsageFootnote branch.。
-  - 验证：`npm run test:one -- services/backend/tests/gateway/visionDenialCorrection.test.js services/backend/tests/gateway/visionDenialCorrectionWiring.test.js services/backend/tests/gateway/visionDenialCorrectionRealImage.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/gateway/visionDenialCorrection.test.js runtime/node/backend/tests/gateway/visionDenialCorrectionWiring.test.js runtime/node/backend/tests/gateway/visionDenialCorrectionRealImage.test.js`
 
 **365.** 验证「Text-only-model Image OCR Fallback — DETERMINISTIC answer-side CORRECTION when the model, on the empty-OCR strip path, STILL denies receiving the image (OPS-MAN-138; 承 OPS-118/120/122 '剥图必留痕' + OPS-126 deterministic-footnote philosophy). Reproduced 2026-07-12 (paste-cache 92c0154d): text-only model + image → vision cascade all 404/socket-hang-up → OCR fallback but the image is NON-TEXT (photo/screenshot/chart) or missing langpack → local OCR reads NOTHING → the three empty-OCR sites (prep Site1 ~1626 / prep Site2 ~1736 / post-failure rescue ~2927) unconditionally strip the image AND inject a model-facing '收到图但读不出、绝不能说没收到图' honest floor — BUT that is only a PROMPT INSTRUCTION the model can ignore; in the real failure the model ignored it and answered '消息里没有附带图片 / 当前对话中没有任何图片附件'. The deterministic finishResult footer family had NO member for this: ocrUsageFootnote (KHY_OCR_USAGE_FOOTNOTE) fires ONLY on _ocrImageTextRead=true (OCR text was read); empty-OCR strip sets _ocrFallbackApplied but NOT _ocrImageTextRead → outside that footer's predicate → zero deterministic correction when the model denies the image. This area adds the last user-visible defense. OPS-MAN-140 (承 138) extends the SAME leaf with an ORTHOGONAL variant for the mirror cell — OCR **SUCCEEDED** (_ocrImageTextRead=true) yet the model STILL denies the image: OPS-138's predicate `!_ocrImageTextRead` excludes it, and ocrUsageFootnote (:858) in that cell only appends '以上关于这张图片的内容是通过 OCR 读取的' which is self-CONTRADICTORY with the denial and does not rebut it. The OCR-success variant (KHY_VISION_DENIAL_CORRECTION_OCR_READ, default-on, distinct DENIAL_CORRECTION_OCR_READ_MARKER) REPLACES (not stacks — noise-conscious) that plain footnote with a denial-aware rebuttal ('你确实发了图、OCR 已成功读出文字、是模型没采用、请据 OCR 文本重新作答'); gate-off byte-reverts to the plain ocrUsageFootnote branch.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — DETERMINISTIC answer-side CORRECTION when the model, on the empty-OCR strip path, STILL denies receiving the image (OPS-MAN-138; 承 OPS-118/120/122 '剥图必留痕' + OPS-126 deterministic-footnote philosophy). Reproduced 2026-07-12 (paste-cache 92c0154d): text-only model + image → vision cascade all 404/socket-hang-up → OCR fallback but the image is NON-TEXT (photo/screenshot/chart) or missing langpack → local OCR reads NOTHING → the three empty-OCR sites (prep Site1 ~1626 / prep Site2 ~1736 / post-failure rescue ~2927) unconditionally strip the image AND inject a model-facing '收到图但读不出、绝不能说没收到图' honest floor — BUT that is only a PROMPT INSTRUCTION the model can ignore; in the real failure the model ignored it and answered '消息里没有附带图片 / 当前对话中没有任何图片附件'. The deterministic finishResult footer family had NO member for this: ocrUsageFootnote (KHY_OCR_USAGE_FOOTNOTE) fires ONLY on _ocrImageTextRead=true (OCR text was read); empty-OCR strip sets _ocrFallbackApplied but NOT _ocrImageTextRead → outside that footer's predicate → zero deterministic correction when the model denies the image. This area adds the last user-visible defense. OPS-MAN-140 (承 138) extends the SAME leaf with an ORTHOGONAL variant for the mirror cell — OCR **SUCCEEDED** (_ocrImageTextRead=true) yet the model STILL denies the image: OPS-138's predicate `!_ocrImageTextRead` excludes it, and ocrUsageFootnote (:858) in that cell only appends '以上关于这张图片的内容是通过 OCR 读取的' which is self-CONTRADICTORY with the denial and does not rebut it. The OCR-success variant (KHY_VISION_DENIAL_CORRECTION_OCR_READ, default-on, distinct DENIAL_CORRECTION_OCR_READ_MARKER) REPLACES (not stacks — noise-conscious) that plain footnote with a denial-aware rebuttal ('你确实发了图、OCR 已成功读出文字、是模型没采用、请据 OCR 文本重新作答'); gate-off byte-reverts to the plain ocrUsageFootnote branch.。
-  - 验证：`node --check services/backend/src/services/gateway/visionDenialCorrection.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/visionDenialCorrection.js`
 
 **366.** 验证「Text-only-model Image OCR Fallback — DETERMINISTIC answer-side CORRECTION when the model, on the empty-OCR strip path, STILL denies receiving the image (OPS-MAN-138; 承 OPS-118/120/122 '剥图必留痕' + OPS-126 deterministic-footnote philosophy). Reproduced 2026-07-12 (paste-cache 92c0154d): text-only model + image → vision cascade all 404/socket-hang-up → OCR fallback but the image is NON-TEXT (photo/screenshot/chart) or missing langpack → local OCR reads NOTHING → the three empty-OCR sites (prep Site1 ~1626 / prep Site2 ~1736 / post-failure rescue ~2927) unconditionally strip the image AND inject a model-facing '收到图但读不出、绝不能说没收到图' honest floor — BUT that is only a PROMPT INSTRUCTION the model can ignore; in the real failure the model ignored it and answered '消息里没有附带图片 / 当前对话中没有任何图片附件'. The deterministic finishResult footer family had NO member for this: ocrUsageFootnote (KHY_OCR_USAGE_FOOTNOTE) fires ONLY on _ocrImageTextRead=true (OCR text was read); empty-OCR strip sets _ocrFallbackApplied but NOT _ocrImageTextRead → outside that footer's predicate → zero deterministic correction when the model denies the image. This area adds the last user-visible defense. OPS-MAN-140 (承 138) extends the SAME leaf with an ORTHOGONAL variant for the mirror cell — OCR **SUCCEEDED** (_ocrImageTextRead=true) yet the model STILL denies the image: OPS-138's predicate `!_ocrImageTextRead` excludes it, and ocrUsageFootnote (:858) in that cell only appends '以上关于这张图片的内容是通过 OCR 读取的' which is self-CONTRADICTORY with the denial and does not rebut it. The OCR-success variant (KHY_VISION_DENIAL_CORRECTION_OCR_READ, default-on, distinct DENIAL_CORRECTION_OCR_READ_MARKER) REPLACES (not stacks — noise-conscious) that plain footnote with a denial-aware rebuttal ('你确实发了图、OCR 已成功读出文字、是模型没采用、请据 OCR 文本重新作答'); gate-off byte-reverts to the plain ocrUsageFootnote branch.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — DETERMINISTIC answer-side CORRECTION when the model, on the empty-OCR strip path, STILL denies receiving the image (OPS-MAN-138; 承 OPS-118/120/122 '剥图必留痕' + OPS-126 deterministic-footnote philosophy). Reproduced 2026-07-12 (paste-cache 92c0154d): text-only model + image → vision cascade all 404/socket-hang-up → OCR fallback but the image is NON-TEXT (photo/screenshot/chart) or missing langpack → local OCR reads NOTHING → the three empty-OCR sites (prep Site1 ~1626 / prep Site2 ~1736 / post-failure rescue ~2927) unconditionally strip the image AND inject a model-facing '收到图但读不出、绝不能说没收到图' honest floor — BUT that is only a PROMPT INSTRUCTION the model can ignore; in the real failure the model ignored it and answered '消息里没有附带图片 / 当前对话中没有任何图片附件'. The deterministic finishResult footer family had NO member for this: ocrUsageFootnote (KHY_OCR_USAGE_FOOTNOTE) fires ONLY on _ocrImageTextRead=true (OCR text was read); empty-OCR strip sets _ocrFallbackApplied but NOT _ocrImageTextRead → outside that footer's predicate → zero deterministic correction when the model denies the image. This area adds the last user-visible defense. OPS-MAN-140 (承 138) extends the SAME leaf with an ORTHOGONAL variant for the mirror cell — OCR **SUCCEEDED** (_ocrImageTextRead=true) yet the model STILL denies the image: OPS-138's predicate `!_ocrImageTextRead` excludes it, and ocrUsageFootnote (:858) in that cell only appends '以上关于这张图片的内容是通过 OCR 读取的' which is self-CONTRADICTORY with the denial and does not rebut it. The OCR-success variant (KHY_VISION_DENIAL_CORRECTION_OCR_READ, default-on, distinct DENIAL_CORRECTION_OCR_READ_MARKER) REPLACES (not stacks — noise-conscious) that plain footnote with a denial-aware rebuttal ('你确实发了图、OCR 已成功读出文字、是模型没采用、请据 OCR 文本重新作答'); gate-off byte-reverts to the plain ocrUsageFootnote branch.。
-  - 验证：`node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 
 **367.** 验证「Text-only-model Image OCR Fallback — DEFER the vision-failure WALL until the OCR outcome is known (OPS-MAN-142; 承 OPS-138/140, directly serving '减少显示的心灵噪音'). Reproduced 2026-07-12 (paste-cache 92c0154d): text-only model + image → describe-and-return cascade to vision models all fail → aiGatewayGenerateMethod EAGERLY emitAssistantMessage's the scary failure WALL (buildVisionFailureMessage, '图像识别失败…粘贴 GLM API Key') at ~line 1590 BEFORE OCR fallback runs. When the image is a TEXT image and local OCR then SUCCEEDS reading it, that scary wall was ALREADY shown to the user — self-CONTRADICTORY with the immediately-following '已用 OCR 成功识别' and the loudest 心灵噪音 in the log. This area DEFERS the wall's emission to after the OCR result is known: OCR success → suppress the wall (rescued, wall is pure misdirection); OCR empty/failure → emit it (user genuinely needs to act). Orthogonal to the parent KHY_VISION_FAILURE_SUMMARY (which decides whether the wall's TEXT is an honest summary at all).」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — DEFER the vision-failure WALL until the OCR outcome is known (OPS-MAN-142; 承 OPS-138/140, directly serving '减少显示的心灵噪音'). Reproduced 2026-07-12 (paste-cache 92c0154d): text-only model + image → describe-and-return cascade to vision models all fail → aiGatewayGenerateMethod EAGERLY emitAssistantMessage's the scary failure WALL (buildVisionFailureMessage, '图像识别失败…粘贴 GLM API Key') at ~line 1590 BEFORE OCR fallback runs. When the image is a TEXT image and local OCR then SUCCEEDS reading it, that scary wall was ALREADY shown to the user — self-CONTRADICTORY with the immediately-following '已用 OCR 成功识别' and the loudest 心灵噪音 in the log. This area DEFERS the wall's emission to after the OCR result is known: OCR success → suppress the wall (rescued, wall is pure misdirection); OCR empty/failure → emit it (user genuinely needs to act). Orthogonal to the parent KHY_VISION_FAILURE_SUMMARY (which decides whether the wall's TEXT is an honest summary at all).。
-  - 验证：`npm run test:one -- services/backend/tests/services/gateway/visionFailureSummary.test.js services/backend/tests/gateway/visionFailureSummaryOcrSuppressWiring.test.js services/backend/tests/gateway/visionFailureSummaryOcrSuppressRealImage.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/gateway/visionFailureSummary.test.js runtime/node/backend/tests/gateway/visionFailureSummaryOcrSuppressWiring.test.js runtime/node/backend/tests/gateway/visionFailureSummaryOcrSuppressRealImage.test.js`
 
 **368.** 验证「Text-only-model Image OCR Fallback — DEFER the vision-failure WALL until the OCR outcome is known (OPS-MAN-142; 承 OPS-138/140, directly serving '减少显示的心灵噪音'). Reproduced 2026-07-12 (paste-cache 92c0154d): text-only model + image → describe-and-return cascade to vision models all fail → aiGatewayGenerateMethod EAGERLY emitAssistantMessage's the scary failure WALL (buildVisionFailureMessage, '图像识别失败…粘贴 GLM API Key') at ~line 1590 BEFORE OCR fallback runs. When the image is a TEXT image and local OCR then SUCCEEDS reading it, that scary wall was ALREADY shown to the user — self-CONTRADICTORY with the immediately-following '已用 OCR 成功识别' and the loudest 心灵噪音 in the log. This area DEFERS the wall's emission to after the OCR result is known: OCR success → suppress the wall (rescued, wall is pure misdirection); OCR empty/failure → emit it (user genuinely needs to act). Orthogonal to the parent KHY_VISION_FAILURE_SUMMARY (which decides whether the wall's TEXT is an honest summary at all).」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — DEFER the vision-failure WALL until the OCR outcome is known (OPS-MAN-142; 承 OPS-138/140, directly serving '减少显示的心灵噪音'). Reproduced 2026-07-12 (paste-cache 92c0154d): text-only model + image → describe-and-return cascade to vision models all fail → aiGatewayGenerateMethod EAGERLY emitAssistantMessage's the scary failure WALL (buildVisionFailureMessage, '图像识别失败…粘贴 GLM API Key') at ~line 1590 BEFORE OCR fallback runs. When the image is a TEXT image and local OCR then SUCCEEDS reading it, that scary wall was ALREADY shown to the user — self-CONTRADICTORY with the immediately-following '已用 OCR 成功识别' and the loudest 心灵噪音 in the log. This area DEFERS the wall's emission to after the OCR result is known: OCR success → suppress the wall (rescued, wall is pure misdirection); OCR empty/failure → emit it (user genuinely needs to act). Orthogonal to the parent KHY_VISION_FAILURE_SUMMARY (which decides whether the wall's TEXT is an honest summary at all).。
-  - 验证：`node --check services/backend/src/services/gateway/visionFailureSummary.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/visionFailureSummary.js`
 
 **369.** 验证「Text-only-model Image OCR Fallback — DEFER the vision-failure WALL until the OCR outcome is known (OPS-MAN-142; 承 OPS-138/140, directly serving '减少显示的心灵噪音'). Reproduced 2026-07-12 (paste-cache 92c0154d): text-only model + image → describe-and-return cascade to vision models all fail → aiGatewayGenerateMethod EAGERLY emitAssistantMessage's the scary failure WALL (buildVisionFailureMessage, '图像识别失败…粘贴 GLM API Key') at ~line 1590 BEFORE OCR fallback runs. When the image is a TEXT image and local OCR then SUCCEEDS reading it, that scary wall was ALREADY shown to the user — self-CONTRADICTORY with the immediately-following '已用 OCR 成功识别' and the loudest 心灵噪音 in the log. This area DEFERS the wall's emission to after the OCR result is known: OCR success → suppress the wall (rescued, wall is pure misdirection); OCR empty/failure → emit it (user genuinely needs to act). Orthogonal to the parent KHY_VISION_FAILURE_SUMMARY (which decides whether the wall's TEXT is an honest summary at all).」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — DEFER the vision-failure WALL until the OCR outcome is known (OPS-MAN-142; 承 OPS-138/140, directly serving '减少显示的心灵噪音'). Reproduced 2026-07-12 (paste-cache 92c0154d): text-only model + image → describe-and-return cascade to vision models all fail → aiGatewayGenerateMethod EAGERLY emitAssistantMessage's the scary failure WALL (buildVisionFailureMessage, '图像识别失败…粘贴 GLM API Key') at ~line 1590 BEFORE OCR fallback runs. When the image is a TEXT image and local OCR then SUCCEEDS reading it, that scary wall was ALREADY shown to the user — self-CONTRADICTORY with the immediately-following '已用 OCR 成功识别' and the loudest 心灵噪音 in the log. This area DEFERS the wall's emission to after the OCR result is known: OCR success → suppress the wall (rescued, wall is pure misdirection); OCR empty/failure → emit it (user genuinely needs to act). Orthogonal to the parent KHY_VISION_FAILURE_SUMMARY (which decides whether the wall's TEXT is an honest summary at all).。
-  - 验证：`node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 
 **370.** 验证「Text-only-model Image OCR Fallback — user-visible CLOSURE when describe-fail → OCR-SUCCESS (OPS-MAN-144; 承 OPS-142, directly serving '无感明显告知用户用了 ocr' + '减少显示的心灵噪音'). KHY_VISION_INTERMEDIATE_MESSAGE emits a '正在调用 <vision-model>，请稍候...' PROMISE before EACH vision candidate, and on describe-SUCCESS closes it at line ~1554 with '视觉识别完成，正在根据识别结果为您作答'. But when all vision models fail and local OCR then SUCCEEDS, those N '请稍候' promises are NEVER closed — the user sees N dangling promises with no '识别完成', both 心灵噪音 AND a missed 'used OCR' disclosure. This area appends ONE closure '视觉模型均不可用，已改用本地 OCR 成功识别<N 张>图片，正在据此作答' in the OCR-success fallback branch: closes the dangling promises AND unobtrusively-yet-clearly discloses the OCR downgrade at the intermediate-message layer. Shares the _intermediateEnabled precondition (off → whole thing silent); own gate KHY_VISION_OCR_SUCCESS_CLOSURE off → byte-revert (no closure). Orthogonal to OPS-142 (that suppresses the failure WALL; this closes the dangling PROMISES).」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — user-visible CLOSURE when describe-fail → OCR-SUCCESS (OPS-MAN-144; 承 OPS-142, directly serving '无感明显告知用户用了 ocr' + '减少显示的心灵噪音'). KHY_VISION_INTERMEDIATE_MESSAGE emits a '正在调用 <vision-model>，请稍候...' PROMISE before EACH vision candidate, and on describe-SUCCESS closes it at line ~1554 with '视觉识别完成，正在根据识别结果为您作答'. But when all vision models fail and local OCR then SUCCEEDS, those N '请稍候' promises are NEVER closed — the user sees N dangling promises with no '识别完成', both 心灵噪音 AND a missed 'used OCR' disclosure. This area appends ONE closure '视觉模型均不可用，已改用本地 OCR 成功识别<N 张>图片，正在据此作答' in the OCR-success fallback branch: closes the dangling promises AND unobtrusively-yet-clearly discloses the OCR downgrade at the intermediate-message layer. Shares the _intermediateEnabled precondition (off → whole thing silent); own gate KHY_VISION_OCR_SUCCESS_CLOSURE off → byte-revert (no closure). Orthogonal to OPS-142 (that suppresses the failure WALL; this closes the dangling PROMISES).。
-  - 验证：`npm run test:one -- services/backend/tests/services/gateway/visionOcrSuccessClosure.test.js services/backend/tests/gateway/visionOcrSuccessClosureWiring.test.js services/backend/tests/gateway/visionOcrSuccessClosureRealImage.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/gateway/visionOcrSuccessClosure.test.js runtime/node/backend/tests/gateway/visionOcrSuccessClosureWiring.test.js runtime/node/backend/tests/gateway/visionOcrSuccessClosureRealImage.test.js`
 
 **371.** 验证「Text-only-model Image OCR Fallback — user-visible CLOSURE when describe-fail → OCR-SUCCESS (OPS-MAN-144; 承 OPS-142, directly serving '无感明显告知用户用了 ocr' + '减少显示的心灵噪音'). KHY_VISION_INTERMEDIATE_MESSAGE emits a '正在调用 <vision-model>，请稍候...' PROMISE before EACH vision candidate, and on describe-SUCCESS closes it at line ~1554 with '视觉识别完成，正在根据识别结果为您作答'. But when all vision models fail and local OCR then SUCCEEDS, those N '请稍候' promises are NEVER closed — the user sees N dangling promises with no '识别完成', both 心灵噪音 AND a missed 'used OCR' disclosure. This area appends ONE closure '视觉模型均不可用，已改用本地 OCR 成功识别<N 张>图片，正在据此作答' in the OCR-success fallback branch: closes the dangling promises AND unobtrusively-yet-clearly discloses the OCR downgrade at the intermediate-message layer. Shares the _intermediateEnabled precondition (off → whole thing silent); own gate KHY_VISION_OCR_SUCCESS_CLOSURE off → byte-revert (no closure). Orthogonal to OPS-142 (that suppresses the failure WALL; this closes the dangling PROMISES).」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — user-visible CLOSURE when describe-fail → OCR-SUCCESS (OPS-MAN-144; 承 OPS-142, directly serving '无感明显告知用户用了 ocr' + '减少显示的心灵噪音'). KHY_VISION_INTERMEDIATE_MESSAGE emits a '正在调用 <vision-model>，请稍候...' PROMISE before EACH vision candidate, and on describe-SUCCESS closes it at line ~1554 with '视觉识别完成，正在根据识别结果为您作答'. But when all vision models fail and local OCR then SUCCEEDS, those N '请稍候' promises are NEVER closed — the user sees N dangling promises with no '识别完成', both 心灵噪音 AND a missed 'used OCR' disclosure. This area appends ONE closure '视觉模型均不可用，已改用本地 OCR 成功识别<N 张>图片，正在据此作答' in the OCR-success fallback branch: closes the dangling promises AND unobtrusively-yet-clearly discloses the OCR downgrade at the intermediate-message layer. Shares the _intermediateEnabled precondition (off → whole thing silent); own gate KHY_VISION_OCR_SUCCESS_CLOSURE off → byte-revert (no closure). Orthogonal to OPS-142 (that suppresses the failure WALL; this closes the dangling PROMISES).。
-  - 验证：`node --check services/backend/src/services/gateway/visionOcrSuccessClosure.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/visionOcrSuccessClosure.js`
 
 **372.** 验证「Text-only-model Image OCR Fallback — user-visible CLOSURE when describe-fail → OCR-SUCCESS (OPS-MAN-144; 承 OPS-142, directly serving '无感明显告知用户用了 ocr' + '减少显示的心灵噪音'). KHY_VISION_INTERMEDIATE_MESSAGE emits a '正在调用 <vision-model>，请稍候...' PROMISE before EACH vision candidate, and on describe-SUCCESS closes it at line ~1554 with '视觉识别完成，正在根据识别结果为您作答'. But when all vision models fail and local OCR then SUCCEEDS, those N '请稍候' promises are NEVER closed — the user sees N dangling promises with no '识别完成', both 心灵噪音 AND a missed 'used OCR' disclosure. This area appends ONE closure '视觉模型均不可用，已改用本地 OCR 成功识别<N 张>图片，正在据此作答' in the OCR-success fallback branch: closes the dangling promises AND unobtrusively-yet-clearly discloses the OCR downgrade at the intermediate-message layer. Shares the _intermediateEnabled precondition (off → whole thing silent); own gate KHY_VISION_OCR_SUCCESS_CLOSURE off → byte-revert (no closure). Orthogonal to OPS-142 (that suppresses the failure WALL; this closes the dangling PROMISES).」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — user-visible CLOSURE when describe-fail → OCR-SUCCESS (OPS-MAN-144; 承 OPS-142, directly serving '无感明显告知用户用了 ocr' + '减少显示的心灵噪音'). KHY_VISION_INTERMEDIATE_MESSAGE emits a '正在调用 <vision-model>，请稍候...' PROMISE before EACH vision candidate, and on describe-SUCCESS closes it at line ~1554 with '视觉识别完成，正在根据识别结果为您作答'. But when all vision models fail and local OCR then SUCCEEDS, those N '请稍候' promises are NEVER closed — the user sees N dangling promises with no '识别完成', both 心灵噪音 AND a missed 'used OCR' disclosure. This area appends ONE closure '视觉模型均不可用，已改用本地 OCR 成功识别<N 张>图片，正在据此作答' in the OCR-success fallback branch: closes the dangling promises AND unobtrusively-yet-clearly discloses the OCR downgrade at the intermediate-message layer. Shares the _intermediateEnabled precondition (off → whole thing silent); own gate KHY_VISION_OCR_SUCCESS_CLOSURE off → byte-revert (no closure). Orthogonal to OPS-142 (that suppresses the failure WALL; this closes the dangling PROMISES).。
-  - 验证：`node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 
 **373.** 验证「Text-only-model Image OCR Fallback — de-duplicate the per-candidate '正在调用...请稍候' cascade notices (OPS-MAN-145; 承 OPS-144, directly serving '减少显示的心灵噪音'). When KHY_VISION_FALLBACK_CASCADE is on, the describe-and-return loop tries multiple vision candidates (built-in GLM pin → glm-4.6v-flash, glm-4v-flash, plus provider vision models). With KHY_VISION_INTERMEDIATE_MESSAGE on, EACH candidate previously emitted the byte-identical first sentence '我无法直接识别图片内容。正在调用 <model> 进行识别，请稍候...' — the redundant preamble '我无法直接识别图片内容' repeated N times, and candidates 2..N read like fresh parallel calls rather than a cascade fallback. This area makes the notice index-aware: candidate #1 keeps the FULL legacy preamble (byte-identical), candidates 2..N collapse to '视觉模型 <prev> 不可用，正在改用 <model> 继续识别...' — drops the redundant preamble, states the cascade nature, symmetric to the success-side reframe. Shares the _intermediateEnabled precondition (off → whole thing silent); own gate KHY_VISION_CASCADE_ATTEMPT_NOTICE off → every candidate byte-reverts to the full legacy preamble. Orthogonal to OPS-144 (that closes the dangling promises on OCR success; this de-duplicates the per-candidate promises themselves).」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — de-duplicate the per-candidate '正在调用...请稍候' cascade notices (OPS-MAN-145; 承 OPS-144, directly serving '减少显示的心灵噪音'). When KHY_VISION_FALLBACK_CASCADE is on, the describe-and-return loop tries multiple vision candidates (built-in GLM pin → glm-4.6v-flash, glm-4v-flash, plus provider vision models). With KHY_VISION_INTERMEDIATE_MESSAGE on, EACH candidate previously emitted the byte-identical first sentence '我无法直接识别图片内容。正在调用 <model> 进行识别，请稍候...' — the redundant preamble '我无法直接识别图片内容' repeated N times, and candidates 2..N read like fresh parallel calls rather than a cascade fallback. This area makes the notice index-aware: candidate #1 keeps the FULL legacy preamble (byte-identical), candidates 2..N collapse to '视觉模型 <prev> 不可用，正在改用 <model> 继续识别...' — drops the redundant preamble, states the cascade nature, symmetric to the success-side reframe. Shares the _intermediateEnabled precondition (off → whole thing silent); own gate KHY_VISION_CASCADE_ATTEMPT_NOTICE off → every candidate byte-reverts to the full legacy preamble. Orthogonal to OPS-144 (that closes the dangling promises on OCR success; this de-duplicates the per-candidate promises themselves).。
-  - 验证：`npm run test:one -- services/backend/tests/services/gateway/visionCascadeAttemptNotice.test.js services/backend/tests/gateway/visionCascadeAttemptNoticeWiring.test.js services/backend/tests/gateway/visionCascadeAttemptNoticeRealImage.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/gateway/visionCascadeAttemptNotice.test.js runtime/node/backend/tests/gateway/visionCascadeAttemptNoticeWiring.test.js runtime/node/backend/tests/gateway/visionCascadeAttemptNoticeRealImage.test.js`
 
 **374.** 验证「Text-only-model Image OCR Fallback — de-duplicate the per-candidate '正在调用...请稍候' cascade notices (OPS-MAN-145; 承 OPS-144, directly serving '减少显示的心灵噪音'). When KHY_VISION_FALLBACK_CASCADE is on, the describe-and-return loop tries multiple vision candidates (built-in GLM pin → glm-4.6v-flash, glm-4v-flash, plus provider vision models). With KHY_VISION_INTERMEDIATE_MESSAGE on, EACH candidate previously emitted the byte-identical first sentence '我无法直接识别图片内容。正在调用 <model> 进行识别，请稍候...' — the redundant preamble '我无法直接识别图片内容' repeated N times, and candidates 2..N read like fresh parallel calls rather than a cascade fallback. This area makes the notice index-aware: candidate #1 keeps the FULL legacy preamble (byte-identical), candidates 2..N collapse to '视觉模型 <prev> 不可用，正在改用 <model> 继续识别...' — drops the redundant preamble, states the cascade nature, symmetric to the success-side reframe. Shares the _intermediateEnabled precondition (off → whole thing silent); own gate KHY_VISION_CASCADE_ATTEMPT_NOTICE off → every candidate byte-reverts to the full legacy preamble. Orthogonal to OPS-144 (that closes the dangling promises on OCR success; this de-duplicates the per-candidate promises themselves).」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — de-duplicate the per-candidate '正在调用...请稍候' cascade notices (OPS-MAN-145; 承 OPS-144, directly serving '减少显示的心灵噪音'). When KHY_VISION_FALLBACK_CASCADE is on, the describe-and-return loop tries multiple vision candidates (built-in GLM pin → glm-4.6v-flash, glm-4v-flash, plus provider vision models). With KHY_VISION_INTERMEDIATE_MESSAGE on, EACH candidate previously emitted the byte-identical first sentence '我无法直接识别图片内容。正在调用 <model> 进行识别，请稍候...' — the redundant preamble '我无法直接识别图片内容' repeated N times, and candidates 2..N read like fresh parallel calls rather than a cascade fallback. This area makes the notice index-aware: candidate #1 keeps the FULL legacy preamble (byte-identical), candidates 2..N collapse to '视觉模型 <prev> 不可用，正在改用 <model> 继续识别...' — drops the redundant preamble, states the cascade nature, symmetric to the success-side reframe. Shares the _intermediateEnabled precondition (off → whole thing silent); own gate KHY_VISION_CASCADE_ATTEMPT_NOTICE off → every candidate byte-reverts to the full legacy preamble. Orthogonal to OPS-144 (that closes the dangling promises on OCR success; this de-duplicates the per-candidate promises themselves).。
-  - 验证：`node --check services/backend/src/services/gateway/visionCascadeAttemptNotice.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/visionCascadeAttemptNotice.js`
 
 **375.** 验证「Text-only-model Image OCR Fallback — de-duplicate the per-candidate '正在调用...请稍候' cascade notices (OPS-MAN-145; 承 OPS-144, directly serving '减少显示的心灵噪音'). When KHY_VISION_FALLBACK_CASCADE is on, the describe-and-return loop tries multiple vision candidates (built-in GLM pin → glm-4.6v-flash, glm-4v-flash, plus provider vision models). With KHY_VISION_INTERMEDIATE_MESSAGE on, EACH candidate previously emitted the byte-identical first sentence '我无法直接识别图片内容。正在调用 <model> 进行识别，请稍候...' — the redundant preamble '我无法直接识别图片内容' repeated N times, and candidates 2..N read like fresh parallel calls rather than a cascade fallback. This area makes the notice index-aware: candidate #1 keeps the FULL legacy preamble (byte-identical), candidates 2..N collapse to '视觉模型 <prev> 不可用，正在改用 <model> 继续识别...' — drops the redundant preamble, states the cascade nature, symmetric to the success-side reframe. Shares the _intermediateEnabled precondition (off → whole thing silent); own gate KHY_VISION_CASCADE_ATTEMPT_NOTICE off → every candidate byte-reverts to the full legacy preamble. Orthogonal to OPS-144 (that closes the dangling promises on OCR success; this de-duplicates the per-candidate promises themselves).」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — de-duplicate the per-candidate '正在调用...请稍候' cascade notices (OPS-MAN-145; 承 OPS-144, directly serving '减少显示的心灵噪音'). When KHY_VISION_FALLBACK_CASCADE is on, the describe-and-return loop tries multiple vision candidates (built-in GLM pin → glm-4.6v-flash, glm-4v-flash, plus provider vision models). With KHY_VISION_INTERMEDIATE_MESSAGE on, EACH candidate previously emitted the byte-identical first sentence '我无法直接识别图片内容。正在调用 <model> 进行识别，请稍候...' — the redundant preamble '我无法直接识别图片内容' repeated N times, and candidates 2..N read like fresh parallel calls rather than a cascade fallback. This area makes the notice index-aware: candidate #1 keeps the FULL legacy preamble (byte-identical), candidates 2..N collapse to '视觉模型 <prev> 不可用，正在改用 <model> 继续识别...' — drops the redundant preamble, states the cascade nature, symmetric to the success-side reframe. Shares the _intermediateEnabled precondition (off → whole thing silent); own gate KHY_VISION_CASCADE_ATTEMPT_NOTICE off → every candidate byte-reverts to the full legacy preamble. Orthogonal to OPS-144 (that closes the dangling promises on OCR success; this de-duplicates the per-candidate promises themselves).。
-  - 验证：`node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 
 **376.** 验证「Text-only-model Image OCR Fallback — strip provider ROUTING PREFIX from vision model names in user-facing cascade notices (OPS-MAN-150; 承 OPS-145, directly serving '减少显示的心灵噪音'). On the reported OCR-fallback path the cascade's first attempt (_attempts[0] = decision.model = the switched-to-pinned vision model) keeps its provider routing prefix 'glm/glm-4.6v-flash' (prefix drives internal poolHint resolution), while all sibling candidates from collectVisionFallbackCandidates are BARE ids (glm-4v-flash, gpt-5.3-codex-review, claude-opus-4-6). So OPS-145's per-candidate '正在调用...请稍候' notices leaked the raw internal routing id 'glm/glm-4.6v-flash' into user prose for candidates [0]/[1] — inconsistent with every other bare line = mental noise leaking internal routing detail. FIX: a tiny pure leaf visionModelDisplayName.toDisplayModelName(model, env) strips the segment before the last '/' PRESERVING CASE (does NOT reuse _bareId, which is dedup-only and lowercases). Wired ONLY at the DISPLAY boundary: aiGatewayGenerateMethod normalizes model/prevModel just before buildCascadeAttemptNotice; internal _att.model/_prevAttemptModel routing state is UNTOUCHED (poolHint still resolves from the original prefixed id). Gate KHY_VISION_MODEL_DISPLAY_NAME default-on; off → byte-revert (prefix returns verbatim). Orthogonal to OPS-145 (which folds the repeated first sentence) — this folds the leaked prefix.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — strip provider ROUTING PREFIX from vision model names in user-facing cascade notices (OPS-MAN-150; 承 OPS-145, directly serving '减少显示的心灵噪音'). On the reported OCR-fallback path the cascade's first attempt (_attempts[0] = decision.model = the switched-to-pinned vision model) keeps its provider routing prefix 'glm/glm-4.6v-flash' (prefix drives internal poolHint resolution), while all sibling candidates from collectVisionFallbackCandidates are BARE ids (glm-4v-flash, gpt-5.3-codex-review, claude-opus-4-6). So OPS-145's per-candidate '正在调用...请稍候' notices leaked the raw internal routing id 'glm/glm-4.6v-flash' into user prose for candidates [0]/[1] — inconsistent with every other bare line = mental noise leaking internal routing detail. FIX: a tiny pure leaf visionModelDisplayName.toDisplayModelName(model, env) strips the segment before the last '/' PRESERVING CASE (does NOT reuse _bareId, which is dedup-only and lowercases). Wired ONLY at the DISPLAY boundary: aiGatewayGenerateMethod normalizes model/prevModel just before buildCascadeAttemptNotice; internal _att.model/_prevAttemptModel routing state is UNTOUCHED (poolHint still resolves from the original prefixed id). Gate KHY_VISION_MODEL_DISPLAY_NAME default-on; off → byte-revert (prefix returns verbatim). Orthogonal to OPS-145 (which folds the repeated first sentence) — this folds the leaked prefix.。
-  - 验证：`npm run test:one -- services/backend/tests/services/gateway/visionModelDisplayName.test.js services/backend/tests/gateway/visionModelDisplayNameWiring.test.js services/backend/tests/gateway/visionModelDisplayNameRealImage.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/gateway/visionModelDisplayName.test.js runtime/node/backend/tests/gateway/visionModelDisplayNameWiring.test.js runtime/node/backend/tests/gateway/visionModelDisplayNameRealImage.test.js`
 
 **377.** 验证「Text-only-model Image OCR Fallback — strip provider ROUTING PREFIX from vision model names in user-facing cascade notices (OPS-MAN-150; 承 OPS-145, directly serving '减少显示的心灵噪音'). On the reported OCR-fallback path the cascade's first attempt (_attempts[0] = decision.model = the switched-to-pinned vision model) keeps its provider routing prefix 'glm/glm-4.6v-flash' (prefix drives internal poolHint resolution), while all sibling candidates from collectVisionFallbackCandidates are BARE ids (glm-4v-flash, gpt-5.3-codex-review, claude-opus-4-6). So OPS-145's per-candidate '正在调用...请稍候' notices leaked the raw internal routing id 'glm/glm-4.6v-flash' into user prose for candidates [0]/[1] — inconsistent with every other bare line = mental noise leaking internal routing detail. FIX: a tiny pure leaf visionModelDisplayName.toDisplayModelName(model, env) strips the segment before the last '/' PRESERVING CASE (does NOT reuse _bareId, which is dedup-only and lowercases). Wired ONLY at the DISPLAY boundary: aiGatewayGenerateMethod normalizes model/prevModel just before buildCascadeAttemptNotice; internal _att.model/_prevAttemptModel routing state is UNTOUCHED (poolHint still resolves from the original prefixed id). Gate KHY_VISION_MODEL_DISPLAY_NAME default-on; off → byte-revert (prefix returns verbatim). Orthogonal to OPS-145 (which folds the repeated first sentence) — this folds the leaked prefix.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — strip provider ROUTING PREFIX from vision model names in user-facing cascade notices (OPS-MAN-150; 承 OPS-145, directly serving '减少显示的心灵噪音'). On the reported OCR-fallback path the cascade's first attempt (_attempts[0] = decision.model = the switched-to-pinned vision model) keeps its provider routing prefix 'glm/glm-4.6v-flash' (prefix drives internal poolHint resolution), while all sibling candidates from collectVisionFallbackCandidates are BARE ids (glm-4v-flash, gpt-5.3-codex-review, claude-opus-4-6). So OPS-145's per-candidate '正在调用...请稍候' notices leaked the raw internal routing id 'glm/glm-4.6v-flash' into user prose for candidates [0]/[1] — inconsistent with every other bare line = mental noise leaking internal routing detail. FIX: a tiny pure leaf visionModelDisplayName.toDisplayModelName(model, env) strips the segment before the last '/' PRESERVING CASE (does NOT reuse _bareId, which is dedup-only and lowercases). Wired ONLY at the DISPLAY boundary: aiGatewayGenerateMethod normalizes model/prevModel just before buildCascadeAttemptNotice; internal _att.model/_prevAttemptModel routing state is UNTOUCHED (poolHint still resolves from the original prefixed id). Gate KHY_VISION_MODEL_DISPLAY_NAME default-on; off → byte-revert (prefix returns verbatim). Orthogonal to OPS-145 (which folds the repeated first sentence) — this folds the leaked prefix.。
-  - 验证：`node --check services/backend/src/services/gateway/visionModelDisplayName.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/visionModelDisplayName.js`
 
 **378.** 验证「Text-only-model Image OCR Fallback — strip provider ROUTING PREFIX from vision model names in user-facing cascade notices (OPS-MAN-150; 承 OPS-145, directly serving '减少显示的心灵噪音'). On the reported OCR-fallback path the cascade's first attempt (_attempts[0] = decision.model = the switched-to-pinned vision model) keeps its provider routing prefix 'glm/glm-4.6v-flash' (prefix drives internal poolHint resolution), while all sibling candidates from collectVisionFallbackCandidates are BARE ids (glm-4v-flash, gpt-5.3-codex-review, claude-opus-4-6). So OPS-145's per-candidate '正在调用...请稍候' notices leaked the raw internal routing id 'glm/glm-4.6v-flash' into user prose for candidates [0]/[1] — inconsistent with every other bare line = mental noise leaking internal routing detail. FIX: a tiny pure leaf visionModelDisplayName.toDisplayModelName(model, env) strips the segment before the last '/' PRESERVING CASE (does NOT reuse _bareId, which is dedup-only and lowercases). Wired ONLY at the DISPLAY boundary: aiGatewayGenerateMethod normalizes model/prevModel just before buildCascadeAttemptNotice; internal _att.model/_prevAttemptModel routing state is UNTOUCHED (poolHint still resolves from the original prefixed id). Gate KHY_VISION_MODEL_DISPLAY_NAME default-on; off → byte-revert (prefix returns verbatim). Orthogonal to OPS-145 (which folds the repeated first sentence) — this folds the leaked prefix.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — strip provider ROUTING PREFIX from vision model names in user-facing cascade notices (OPS-MAN-150; 承 OPS-145, directly serving '减少显示的心灵噪音'). On the reported OCR-fallback path the cascade's first attempt (_attempts[0] = decision.model = the switched-to-pinned vision model) keeps its provider routing prefix 'glm/glm-4.6v-flash' (prefix drives internal poolHint resolution), while all sibling candidates from collectVisionFallbackCandidates are BARE ids (glm-4v-flash, gpt-5.3-codex-review, claude-opus-4-6). So OPS-145's per-candidate '正在调用...请稍候' notices leaked the raw internal routing id 'glm/glm-4.6v-flash' into user prose for candidates [0]/[1] — inconsistent with every other bare line = mental noise leaking internal routing detail. FIX: a tiny pure leaf visionModelDisplayName.toDisplayModelName(model, env) strips the segment before the last '/' PRESERVING CASE (does NOT reuse _bareId, which is dedup-only and lowercases). Wired ONLY at the DISPLAY boundary: aiGatewayGenerateMethod normalizes model/prevModel just before buildCascadeAttemptNotice; internal _att.model/_prevAttemptModel routing state is UNTOUCHED (poolHint still resolves from the original prefixed id). Gate KHY_VISION_MODEL_DISPLAY_NAME default-on; off → byte-revert (prefix returns verbatim). Orthogonal to OPS-145 (which folds the repeated first sentence) — this folds the leaked prefix.。
-  - 验证：`node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 
 **379.** 验证「Text-only-model Image OCR Fallback — strip provider ROUTING PREFIX from the vision model name in the FAILURE-SUMMARY wall too (OPS-MAN-159; 承 OPS-150, directly serving '减少显示的心灵噪音'). OPS-150 normalized the model name ONLY in the per-candidate cascade notices (buildCascadeAttemptNotice); the failure-summary wall (visionFailureSummary.buildVisionFailureMessage) has its OWN line '本次尝试的视觉模型:<model>' fed by the caller's _primaryModel = decision.model, which retains the 'glm/' routing prefix → the wall still leaked '本次尝试的视觉模型:glm/glm-4.6v-flash' inconsistently with the already-normalized cascade notices. This wall is user-visible when the vision cascade fully fails AND local OCR reads NO text (photos/screenshots/missing OCR langpack); on OCR-success it is suppressed by OPS-142 (_deferredFailureMsg). FIX: reuse OPS-150's pure leaf visionModelDisplayName.toDisplayModelName at the wall's DISPLAY boundary inside buildVisionFailureMessage (centralized so ALL callers — cascade path + recognizeImage.js tool — benefit), gated by the SAME flag KHY_VISION_MODEL_DISPLAY_NAME (default-on); off / leaf-unavailable → returns the raw prefixed id → byte-revert '本次尝试的视觉模型:glm/glm-4.6v-flash。'. Internal routing (_primaryModel/poolHint) UNTOUCHED. Orthogonal to OPS-150 (different emit site: the wall, not the notices).」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — strip provider ROUTING PREFIX from the vision model name in the FAILURE-SUMMARY wall too (OPS-MAN-159; 承 OPS-150, directly serving '减少显示的心灵噪音'). OPS-150 normalized the model name ONLY in the per-candidate cascade notices (buildCascadeAttemptNotice); the failure-summary wall (visionFailureSummary.buildVisionFailureMessage) has its OWN line '本次尝试的视觉模型:<model>' fed by the caller's _primaryModel = decision.model, which retains the 'glm/' routing prefix → the wall still leaked '本次尝试的视觉模型:glm/glm-4.6v-flash' inconsistently with the already-normalized cascade notices. This wall is user-visible when the vision cascade fully fails AND local OCR reads NO text (photos/screenshots/missing OCR langpack); on OCR-success it is suppressed by OPS-142 (_deferredFailureMsg). FIX: reuse OPS-150's pure leaf visionModelDisplayName.toDisplayModelName at the wall's DISPLAY boundary inside buildVisionFailureMessage (centralized so ALL callers — cascade path + recognizeImage.js tool — benefit), gated by the SAME flag KHY_VISION_MODEL_DISPLAY_NAME (default-on); off / leaf-unavailable → returns the raw prefixed id → byte-revert '本次尝试的视觉模型:glm/glm-4.6v-flash。'. Internal routing (_primaryModel/poolHint) UNTOUCHED. Orthogonal to OPS-150 (different emit site: the wall, not the notices).。
-  - 验证：`npm run test:one -- services/backend/tests/gateway/visionFailureSummaryDisplayName.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/gateway/visionFailureSummaryDisplayName.test.js`
 
 **380.** 验证「Text-only-model Image OCR Fallback — strip provider ROUTING PREFIX from the vision model name in the FAILURE-SUMMARY wall too (OPS-MAN-159; 承 OPS-150, directly serving '减少显示的心灵噪音'). OPS-150 normalized the model name ONLY in the per-candidate cascade notices (buildCascadeAttemptNotice); the failure-summary wall (visionFailureSummary.buildVisionFailureMessage) has its OWN line '本次尝试的视觉模型:<model>' fed by the caller's _primaryModel = decision.model, which retains the 'glm/' routing prefix → the wall still leaked '本次尝试的视觉模型:glm/glm-4.6v-flash' inconsistently with the already-normalized cascade notices. This wall is user-visible when the vision cascade fully fails AND local OCR reads NO text (photos/screenshots/missing OCR langpack); on OCR-success it is suppressed by OPS-142 (_deferredFailureMsg). FIX: reuse OPS-150's pure leaf visionModelDisplayName.toDisplayModelName at the wall's DISPLAY boundary inside buildVisionFailureMessage (centralized so ALL callers — cascade path + recognizeImage.js tool — benefit), gated by the SAME flag KHY_VISION_MODEL_DISPLAY_NAME (default-on); off / leaf-unavailable → returns the raw prefixed id → byte-revert '本次尝试的视觉模型:glm/glm-4.6v-flash。'. Internal routing (_primaryModel/poolHint) UNTOUCHED. Orthogonal to OPS-150 (different emit site: the wall, not the notices).」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — strip provider ROUTING PREFIX from the vision model name in the FAILURE-SUMMARY wall too (OPS-MAN-159; 承 OPS-150, directly serving '减少显示的心灵噪音'). OPS-150 normalized the model name ONLY in the per-candidate cascade notices (buildCascadeAttemptNotice); the failure-summary wall (visionFailureSummary.buildVisionFailureMessage) has its OWN line '本次尝试的视觉模型:<model>' fed by the caller's _primaryModel = decision.model, which retains the 'glm/' routing prefix → the wall still leaked '本次尝试的视觉模型:glm/glm-4.6v-flash' inconsistently with the already-normalized cascade notices. This wall is user-visible when the vision cascade fully fails AND local OCR reads NO text (photos/screenshots/missing OCR langpack); on OCR-success it is suppressed by OPS-142 (_deferredFailureMsg). FIX: reuse OPS-150's pure leaf visionModelDisplayName.toDisplayModelName at the wall's DISPLAY boundary inside buildVisionFailureMessage (centralized so ALL callers — cascade path + recognizeImage.js tool — benefit), gated by the SAME flag KHY_VISION_MODEL_DISPLAY_NAME (default-on); off / leaf-unavailable → returns the raw prefixed id → byte-revert '本次尝试的视觉模型:glm/glm-4.6v-flash。'. Internal routing (_primaryModel/poolHint) UNTOUCHED. Orthogonal to OPS-150 (different emit site: the wall, not the notices).。
-  - 验证：`node --check services/backend/src/services/gateway/visionFailureSummary.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/visionFailureSummary.js`
 
 **381.** 验证「Text-only-model Image OCR Fallback — dedup the '真实失败原因:' LABEL on the failure-summary wall (OPS-MAN-161; 承 OPS-159, directly serving '减少显示的心灵噪音'). This is the GAP flagged in the OPS-159 area's whenToUse: when a describe sub-call fails, gateway's aiGateway._buildFailureReasonSection prepends '真实失败原因:\n<真因…>', that string becomes _lastRawError → fed to buildVisionFailureMessage as rawError → cause = sanitizeCause(rawError) preserves the self-carried '真实失败原因:' label → the wall's cause push (真实失败原因:${cause}) prepends it a SECOND time = '真实失败原因:真实失败原因:…' stutter. aiGateway._prependFailureReason already has the same-intent guard `if(/真实失败原因/.test(body)) return body`; the wall historically missed the equivalent. FIX: gate KHY_VISION_FAILURE_CAUSE_DEDUP (default-on) — if cause already begins with the label (half- or full-width colon), strip the self-carried label so it appears exactly once; gate-off / exception → byte-revert to the doubled behavior. Orthogonal to OPS-159 (model-name prefix) and KHY_VISION_FAILURE_SUMMARY (whether the wall exists at all) on the SAME wall.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — dedup the '真实失败原因:' LABEL on the failure-summary wall (OPS-MAN-161; 承 OPS-159, directly serving '减少显示的心灵噪音'). This is the GAP flagged in the OPS-159 area's whenToUse: when a describe sub-call fails, gateway's aiGateway._buildFailureReasonSection prepends '真实失败原因:\n<真因…>', that string becomes _lastRawError → fed to buildVisionFailureMessage as rawError → cause = sanitizeCause(rawError) preserves the self-carried '真实失败原因:' label → the wall's cause push (真实失败原因:${cause}) prepends it a SECOND time = '真实失败原因:真实失败原因:…' stutter. aiGateway._prependFailureReason already has the same-intent guard `if(/真实失败原因/.test(body)) return body`; the wall historically missed the equivalent. FIX: gate KHY_VISION_FAILURE_CAUSE_DEDUP (default-on) — if cause already begins with the label (half- or full-width colon), strip the self-carried label so it appears exactly once; gate-off / exception → byte-revert to the doubled behavior. Orthogonal to OPS-159 (model-name prefix) and KHY_VISION_FAILURE_SUMMARY (whether the wall exists at all) on the SAME wall.。
-  - 验证：`npm run test:one -- services/backend/tests/gateway/visionFailureCauseDedup.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/gateway/visionFailureCauseDedup.test.js`
 
 **382.** 验证「Text-only-model Image OCR Fallback — dedup the '真实失败原因:' LABEL on the failure-summary wall (OPS-MAN-161; 承 OPS-159, directly serving '减少显示的心灵噪音'). This is the GAP flagged in the OPS-159 area's whenToUse: when a describe sub-call fails, gateway's aiGateway._buildFailureReasonSection prepends '真实失败原因:\n<真因…>', that string becomes _lastRawError → fed to buildVisionFailureMessage as rawError → cause = sanitizeCause(rawError) preserves the self-carried '真实失败原因:' label → the wall's cause push (真实失败原因:${cause}) prepends it a SECOND time = '真实失败原因:真实失败原因:…' stutter. aiGateway._prependFailureReason already has the same-intent guard `if(/真实失败原因/.test(body)) return body`; the wall historically missed the equivalent. FIX: gate KHY_VISION_FAILURE_CAUSE_DEDUP (default-on) — if cause already begins with the label (half- or full-width colon), strip the self-carried label so it appears exactly once; gate-off / exception → byte-revert to the doubled behavior. Orthogonal to OPS-159 (model-name prefix) and KHY_VISION_FAILURE_SUMMARY (whether the wall exists at all) on the SAME wall.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — dedup the '真实失败原因:' LABEL on the failure-summary wall (OPS-MAN-161; 承 OPS-159, directly serving '减少显示的心灵噪音'). This is the GAP flagged in the OPS-159 area's whenToUse: when a describe sub-call fails, gateway's aiGateway._buildFailureReasonSection prepends '真实失败原因:\n<真因…>', that string becomes _lastRawError → fed to buildVisionFailureMessage as rawError → cause = sanitizeCause(rawError) preserves the self-carried '真实失败原因:' label → the wall's cause push (真实失败原因:${cause}) prepends it a SECOND time = '真实失败原因:真实失败原因:…' stutter. aiGateway._prependFailureReason already has the same-intent guard `if(/真实失败原因/.test(body)) return body`; the wall historically missed the equivalent. FIX: gate KHY_VISION_FAILURE_CAUSE_DEDUP (default-on) — if cause already begins with the label (half- or full-width colon), strip the self-carried label so it appears exactly once; gate-off / exception → byte-revert to the doubled behavior. Orthogonal to OPS-159 (model-name prefix) and KHY_VISION_FAILURE_SUMMARY (whether the wall exists at all) on the SAME wall.。
-  - 验证：`node --check services/backend/src/services/gateway/visionFailureSummary.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/visionFailureSummary.js`
 
 **383.** 验证「Text-only-model Image OCR Fallback — humanize the vision-pool adapter-failure STATUS on the OCR-rescued path (OPS-MAN-164, directly serving '减少显示的心灵噪音'). GAP: on the vision→local-OCR-success path, the final generation loop still attempts the vision-pool adapter and 404s; aiGatewayGenerateMethod's two adapter-failure emit sites (~2589 / ~3202) print the raw diagnostic status `visionpool 失败: OpenAI: 404 model_not_found` in real time — but the image was already read by OCR and answered, so that 404 line is SECONDARY mental noise. FIX: pure leaf visionPoolFailStatus.buildVisionPoolFailStatus({poolName, ocrRescued, env}) gated by KHY_VISION_POOL_FAIL_STATUS_HUMANIZE (default-on): when gate on && ocrRescued (options._ocrImageTextRead===true) && poolName matches /vision/i → return '视觉通道当前不可用，已用本地 OCR 兜底'; else null → caller keeps its raw `${name} 失败: ${errMsg}` line (byte-revert). Genuine failures (no OCR rescue) and non-vision pools keep the actionable root-cause diagnostic. Strict predicate: ocrRescued===true (never truthy-but-not-true) and /vision/i name match.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — humanize the vision-pool adapter-failure STATUS on the OCR-rescued path (OPS-MAN-164, directly serving '减少显示的心灵噪音'). GAP: on the vision→local-OCR-success path, the final generation loop still attempts the vision-pool adapter and 404s; aiGatewayGenerateMethod's two adapter-failure emit sites (~2589 / ~3202) print the raw diagnostic status `visionpool 失败: OpenAI: 404 model_not_found` in real time — but the image was already read by OCR and answered, so that 404 line is SECONDARY mental noise. FIX: pure leaf visionPoolFailStatus.buildVisionPoolFailStatus({poolName, ocrRescued, env}) gated by KHY_VISION_POOL_FAIL_STATUS_HUMANIZE (default-on): when gate on && ocrRescued (options._ocrImageTextRead===true) && poolName matches /vision/i → return '视觉通道当前不可用，已用本地 OCR 兜底'; else null → caller keeps its raw `${name} 失败: ${errMsg}` line (byte-revert). Genuine failures (no OCR rescue) and non-vision pools keep the actionable root-cause diagnostic. Strict predicate: ocrRescued===true (never truthy-but-not-true) and /vision/i name match.。
-  - 验证：`npm run test:one -- services/backend/tests/gateway/visionPoolFailStatusHumanize.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/gateway/visionPoolFailStatusHumanize.test.js`
 
 **384.** 验证「Text-only-model Image OCR Fallback — humanize the vision-pool adapter-failure STATUS on the OCR-rescued path (OPS-MAN-164, directly serving '减少显示的心灵噪音'). GAP: on the vision→local-OCR-success path, the final generation loop still attempts the vision-pool adapter and 404s; aiGatewayGenerateMethod's two adapter-failure emit sites (~2589 / ~3202) print the raw diagnostic status `visionpool 失败: OpenAI: 404 model_not_found` in real time — but the image was already read by OCR and answered, so that 404 line is SECONDARY mental noise. FIX: pure leaf visionPoolFailStatus.buildVisionPoolFailStatus({poolName, ocrRescued, env}) gated by KHY_VISION_POOL_FAIL_STATUS_HUMANIZE (default-on): when gate on && ocrRescued (options._ocrImageTextRead===true) && poolName matches /vision/i → return '视觉通道当前不可用，已用本地 OCR 兜底'; else null → caller keeps its raw `${name} 失败: ${errMsg}` line (byte-revert). Genuine failures (no OCR rescue) and non-vision pools keep the actionable root-cause diagnostic. Strict predicate: ocrRescued===true (never truthy-but-not-true) and /vision/i name match.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — humanize the vision-pool adapter-failure STATUS on the OCR-rescued path (OPS-MAN-164, directly serving '减少显示的心灵噪音'). GAP: on the vision→local-OCR-success path, the final generation loop still attempts the vision-pool adapter and 404s; aiGatewayGenerateMethod's two adapter-failure emit sites (~2589 / ~3202) print the raw diagnostic status `visionpool 失败: OpenAI: 404 model_not_found` in real time — but the image was already read by OCR and answered, so that 404 line is SECONDARY mental noise. FIX: pure leaf visionPoolFailStatus.buildVisionPoolFailStatus({poolName, ocrRescued, env}) gated by KHY_VISION_POOL_FAIL_STATUS_HUMANIZE (default-on): when gate on && ocrRescued (options._ocrImageTextRead===true) && poolName matches /vision/i → return '视觉通道当前不可用，已用本地 OCR 兜底'; else null → caller keeps its raw `${name} 失败: ${errMsg}` line (byte-revert). Genuine failures (no OCR rescue) and non-vision pools keep the actionable root-cause diagnostic. Strict predicate: ocrRescued===true (never truthy-but-not-true) and /vision/i name match.。
-  - 验证：`node --check services/backend/src/services/gateway/visionPoolFailStatus.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/visionPoolFailStatus.js`
 
 **385.** 验证「Text-only-model Image OCR Fallback — DETERMINISTIC live-STATUS 'downgraded to OCR' notice at the post-failure rescue net (OPS-MAN-127; 承 OPS-124/126). OPS-124 (prompt instruction) and OPS-126 (answer footnote) cover the ANSWER layer's 'OCR was used' disclosure; this area covers the LIVE-PROGRESS layer. prep-time Site1 (~1619) and Site2 (~1693) both emit an OCR-success emitStatus telling the user OCR was used; ONLY Site3 (the post-failure rescue net — the EXACT reported path gpt-4o keep → runtime 404 → rescue net) OCR-SUCCESS branch never emitted a status (its emitStatus calls covered only OCR failure/no-text). So on the exact reproduced path the live-progress layer stayed silent about the OCR downgrade. This area adds the missing rescue-net success status, aligned with Site1/Site2.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — DETERMINISTIC live-STATUS 'downgraded to OCR' notice at the post-failure rescue net (OPS-MAN-127; 承 OPS-124/126). OPS-124 (prompt instruction) and OPS-126 (answer footnote) cover the ANSWER layer's 'OCR was used' disclosure; this area covers the LIVE-PROGRESS layer. prep-time Site1 (~1619) and Site2 (~1693) both emit an OCR-success emitStatus telling the user OCR was used; ONLY Site3 (the post-failure rescue net — the EXACT reported path gpt-4o keep → runtime 404 → rescue net) OCR-SUCCESS branch never emitted a status (its emitStatus calls covered only OCR failure/no-text). So on the exact reproduced path the live-progress layer stayed silent about the OCR downgrade. This area adds the missing rescue-net success status, aligned with Site1/Site2.。
-  - 验证：`npm run test:one -- services/backend/tests/gateway/ocrRescueStatusNotice.test.js services/backend/tests/gateway/ocrRescueStatusNoticeWiring.test.js services/backend/tests/gateway/ocrRescueStatusNoticeRealImage.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/gateway/ocrRescueStatusNotice.test.js runtime/node/backend/tests/gateway/ocrRescueStatusNoticeWiring.test.js runtime/node/backend/tests/gateway/ocrRescueStatusNoticeRealImage.test.js`
 
 **386.** 验证「Text-only-model Image OCR Fallback — DETERMINISTIC live-STATUS 'downgraded to OCR' notice at the post-failure rescue net (OPS-MAN-127; 承 OPS-124/126). OPS-124 (prompt instruction) and OPS-126 (answer footnote) cover the ANSWER layer's 'OCR was used' disclosure; this area covers the LIVE-PROGRESS layer. prep-time Site1 (~1619) and Site2 (~1693) both emit an OCR-success emitStatus telling the user OCR was used; ONLY Site3 (the post-failure rescue net — the EXACT reported path gpt-4o keep → runtime 404 → rescue net) OCR-SUCCESS branch never emitted a status (its emitStatus calls covered only OCR failure/no-text). So on the exact reproduced path the live-progress layer stayed silent about the OCR downgrade. This area adds the missing rescue-net success status, aligned with Site1/Site2.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — DETERMINISTIC live-STATUS 'downgraded to OCR' notice at the post-failure rescue net (OPS-MAN-127; 承 OPS-124/126). OPS-124 (prompt instruction) and OPS-126 (answer footnote) cover the ANSWER layer's 'OCR was used' disclosure; this area covers the LIVE-PROGRESS layer. prep-time Site1 (~1619) and Site2 (~1693) both emit an OCR-success emitStatus telling the user OCR was used; ONLY Site3 (the post-failure rescue net — the EXACT reported path gpt-4o keep → runtime 404 → rescue net) OCR-SUCCESS branch never emitted a status (its emitStatus calls covered only OCR failure/no-text). So on the exact reproduced path the live-progress layer stayed silent about the OCR downgrade. This area adds the missing rescue-net success status, aligned with Site1/Site2.。
-  - 验证：`node --check services/backend/src/services/gateway/ocrRescueStatusNotice.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/ocrRescueStatusNotice.js`
 
 **387.** 验证「Text-only-model Image OCR Fallback — DETERMINISTIC live-STATUS 'downgraded to OCR' notice at the post-failure rescue net (OPS-MAN-127; 承 OPS-124/126). OPS-124 (prompt instruction) and OPS-126 (answer footnote) cover the ANSWER layer's 'OCR was used' disclosure; this area covers the LIVE-PROGRESS layer. prep-time Site1 (~1619) and Site2 (~1693) both emit an OCR-success emitStatus telling the user OCR was used; ONLY Site3 (the post-failure rescue net — the EXACT reported path gpt-4o keep → runtime 404 → rescue net) OCR-SUCCESS branch never emitted a status (its emitStatus calls covered only OCR failure/no-text). So on the exact reproduced path the live-progress layer stayed silent about the OCR downgrade. This area adds the missing rescue-net success status, aligned with Site1/Site2.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — DETERMINISTIC live-STATUS 'downgraded to OCR' notice at the post-failure rescue net (OPS-MAN-127; 承 OPS-124/126). OPS-124 (prompt instruction) and OPS-126 (answer footnote) cover the ANSWER layer's 'OCR was used' disclosure; this area covers the LIVE-PROGRESS layer. prep-time Site1 (~1619) and Site2 (~1693) both emit an OCR-success emitStatus telling the user OCR was used; ONLY Site3 (the post-failure rescue net — the EXACT reported path gpt-4o keep → runtime 404 → rescue net) OCR-SUCCESS branch never emitted a status (its emitStatus calls covered only OCR failure/no-text). So on the exact reproduced path the live-progress layer stayed silent about the OCR downgrade. This area adds the missing rescue-net success status, aligned with Site1/Site2.。
-  - 验证：`node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 
-**388.** 验证「CI Duplicate-code Detection Gate + Shared OCR-gateway Test Harness (goal 2026-07-12: '把所有重复的函数提取成公共库,统一维护;在 CI 里加重复代码检测,超过三行相同就报警'). Two parts: (1) services/backend/tests/gateway/_ocrGatewayHarness.js — a parameterized-factory shared harness absorbing the copy-pasted scaffolding (_wireGateway/_makeRecordingAdapter/_makeRejectAdapter/_realExtractImageOcrDetails/tesseract+python probes/PIL render/env save-restore) across the 20 OCR-gateway .test.js files, byte-equivalent to each file's in-place harness; underscore-prefixed so *.test.js never selects it; it DOES IO (spawnSync/fs/imageService) so its header does NOT self-declare pure-leaf/zero-IO (else check-leaf-contract leaf-io fires). (2) A self-authored duplicate-code detector: pure guard core scripts/lib/duplicationGuard.js (crypto/path only, zero-IO, deterministic, fail-soft, gate KHY_DUPLICATION_GUARD) + thin CLI scripts/check-duplication.js (all IO). Algorithm: normalize lines (skip blank/comment/pure-punctuation), sliding window MIN_BLOCK=4 significant lines (=more than three), sha1, a hash in >=2 places is a clone class, coalesce adjacent windows to maximal spans, one finding per (file,span). Phased per user decision 'warn + baseline first, flip to hard gate after migration': stage-1 DEFAULT_MODE='warn' (all warnings, existing dup never reds CI, NOT in the blocking check:small-model:safety aggregate); stage-2 --gate / KHY_DUPLICATION_MODE=gate (in baseline → warning, not in baseline → error). Baseline .duplication-baseline.json stores normalized-window content-hash fingerprints (relocation-stable, self-shrinks as extraction deletes dup copies). Flip-to-hard-gate is one reviewable diff: change DEFAULT_MODE + re-run --write-baseline + fold check:duplication into the safety aggregate.」：跑该命令，绿灯才算这块没坏。
-  - 说明：子系统：CI Duplicate-code Detection Gate + Shared OCR-gateway Test Harness (goal 2026-07-12: '把所有重复的函数提取成公共库,统一维护;在 CI 里加重复代码检测,超过三行相同就报警'). Two parts: (1) services/backend/tests/gateway/_ocrGatewayHarness.js — a parameterized-factory shared harness absorbing the copy-pasted scaffolding (_wireGateway/_makeRecordingAdapter/_makeRejectAdapter/_realExtractImageOcrDetails/tesseract+python probes/PIL render/env save-restore) across the 20 OCR-gateway .test.js files, byte-equivalent to each file's in-place harness; underscore-prefixed so *.test.js never selects it; it DOES IO (spawnSync/fs/imageService) so its header does NOT self-declare pure-leaf/zero-IO (else check-leaf-contract leaf-io fires). (2) A self-authored duplicate-code detector: pure guard core scripts/lib/duplicationGuard.js (crypto/path only, zero-IO, deterministic, fail-soft, gate KHY_DUPLICATION_GUARD) + thin CLI scripts/check-duplication.js (all IO). Algorithm: normalize lines (skip blank/comment/pure-punctuation), sliding window MIN_BLOCK=4 significant lines (=more than three), sha1, a hash in >=2 places is a clone class, coalesce adjacent windows to maximal spans, one finding per (file,span). Phased per user decision 'warn + baseline first, flip to hard gate after migration': stage-1 DEFAULT_MODE='warn' (all warnings, existing dup never reds CI, NOT in the blocking check:small-model:safety aggregate); stage-2 --gate / KHY_DUPLICATION_MODE=gate (in baseline → warning, not in baseline → error). Baseline .duplication-baseline.json stores normalized-window content-hash fingerprints (relocation-stable, self-shrinks as extraction deletes dup copies). Flip-to-hard-gate is one reviewable diff: change DEFAULT_MODE + re-run --write-baseline + fold check:duplication into the safety aggregate.。
+**388.** 验证「CI Duplicate-code Detection Gate + Shared OCR-gateway Test Harness (goal 2026-07-12: '把所有重复的函数提取成公共库,统一维护;在 CI 里加重复代码检测,超过三行相同就报警'). Two parts: (1) runtime/node/backend/tests/gateway/_ocrGatewayHarness.js — a parameterized-factory shared harness absorbing the copy-pasted scaffolding (_wireGateway/_makeRecordingAdapter/_makeRejectAdapter/_realExtractImageOcrDetails/tesseract+python probes/PIL render/env save-restore) across the 20 OCR-gateway .test.js files, byte-equivalent to each file's in-place harness; underscore-prefixed so *.test.js never selects it; it DOES IO (spawnSync/fs/imageService) so its header does NOT self-declare pure-leaf/zero-IO (else check-leaf-contract leaf-io fires). (2) A self-authored duplicate-code detector: pure guard core scripts/lib/duplicationGuard.js (crypto/path only, zero-IO, deterministic, fail-soft, gate KHY_DUPLICATION_GUARD) + thin CLI scripts/check-duplication.js (all IO). Algorithm: normalize lines (skip blank/comment/pure-punctuation), sliding window MIN_BLOCK=4 significant lines (=more than three), sha1, a hash in >=2 places is a clone class, coalesce adjacent windows to maximal spans, one finding per (file,span). Phased per user decision 'warn + baseline first, flip to hard gate after migration': stage-1 DEFAULT_MODE='warn' (all warnings, existing dup never reds CI, NOT in the blocking check:small-model:safety aggregate); stage-2 --gate / KHY_DUPLICATION_MODE=gate (in baseline → warning, not in baseline → error). Baseline .duplication-baseline.json stores normalized-window content-hash fingerprints (relocation-stable, self-shrinks as extraction deletes dup copies). Flip-to-hard-gate is one reviewable diff: change DEFAULT_MODE + re-run --write-baseline + fold check:duplication into the safety aggregate.」：跑该命令，绿灯才算这块没坏。
+  - 说明：子系统：CI Duplicate-code Detection Gate + Shared OCR-gateway Test Harness (goal 2026-07-12: '把所有重复的函数提取成公共库,统一维护;在 CI 里加重复代码检测,超过三行相同就报警'). Two parts: (1) runtime/node/backend/tests/gateway/_ocrGatewayHarness.js — a parameterized-factory shared harness absorbing the copy-pasted scaffolding (_wireGateway/_makeRecordingAdapter/_makeRejectAdapter/_realExtractImageOcrDetails/tesseract+python probes/PIL render/env save-restore) across the 20 OCR-gateway .test.js files, byte-equivalent to each file's in-place harness; underscore-prefixed so *.test.js never selects it; it DOES IO (spawnSync/fs/imageService) so its header does NOT self-declare pure-leaf/zero-IO (else check-leaf-contract leaf-io fires). (2) A self-authored duplicate-code detector: pure guard core scripts/lib/duplicationGuard.js (crypto/path only, zero-IO, deterministic, fail-soft, gate KHY_DUPLICATION_GUARD) + thin CLI scripts/check-duplication.js (all IO). Algorithm: normalize lines (skip blank/comment/pure-punctuation), sliding window MIN_BLOCK=4 significant lines (=more than three), sha1, a hash in >=2 places is a clone class, coalesce adjacent windows to maximal spans, one finding per (file,span). Phased per user decision 'warn + baseline first, flip to hard gate after migration': stage-1 DEFAULT_MODE='warn' (all warnings, existing dup never reds CI, NOT in the blocking check:small-model:safety aggregate); stage-2 --gate / KHY_DUPLICATION_MODE=gate (in baseline → warning, not in baseline → error). Baseline .duplication-baseline.json stores normalized-window content-hash fingerprints (relocation-stable, self-shrinks as extraction deletes dup copies). Flip-to-hard-gate is one reviewable diff: change DEFAULT_MODE + re-run --write-baseline + fold check:duplication into the safety aggregate.。
   - 验证：`npm run test:one -- scripts/tests/duplicationGuard.test.js scripts/tests/check-duplication.test.js`
 
-**389.** 验证「CI Duplicate-code Detection Gate + Shared OCR-gateway Test Harness (goal 2026-07-12: '把所有重复的函数提取成公共库,统一维护;在 CI 里加重复代码检测,超过三行相同就报警'). Two parts: (1) services/backend/tests/gateway/_ocrGatewayHarness.js — a parameterized-factory shared harness absorbing the copy-pasted scaffolding (_wireGateway/_makeRecordingAdapter/_makeRejectAdapter/_realExtractImageOcrDetails/tesseract+python probes/PIL render/env save-restore) across the 20 OCR-gateway .test.js files, byte-equivalent to each file's in-place harness; underscore-prefixed so *.test.js never selects it; it DOES IO (spawnSync/fs/imageService) so its header does NOT self-declare pure-leaf/zero-IO (else check-leaf-contract leaf-io fires). (2) A self-authored duplicate-code detector: pure guard core scripts/lib/duplicationGuard.js (crypto/path only, zero-IO, deterministic, fail-soft, gate KHY_DUPLICATION_GUARD) + thin CLI scripts/check-duplication.js (all IO). Algorithm: normalize lines (skip blank/comment/pure-punctuation), sliding window MIN_BLOCK=4 significant lines (=more than three), sha1, a hash in >=2 places is a clone class, coalesce adjacent windows to maximal spans, one finding per (file,span). Phased per user decision 'warn + baseline first, flip to hard gate after migration': stage-1 DEFAULT_MODE='warn' (all warnings, existing dup never reds CI, NOT in the blocking check:small-model:safety aggregate); stage-2 --gate / KHY_DUPLICATION_MODE=gate (in baseline → warning, not in baseline → error). Baseline .duplication-baseline.json stores normalized-window content-hash fingerprints (relocation-stable, self-shrinks as extraction deletes dup copies). Flip-to-hard-gate is one reviewable diff: change DEFAULT_MODE + re-run --write-baseline + fold check:duplication into the safety aggregate.」：跑该命令，绿灯才算这块没坏。
-  - 说明：子系统：CI Duplicate-code Detection Gate + Shared OCR-gateway Test Harness (goal 2026-07-12: '把所有重复的函数提取成公共库,统一维护;在 CI 里加重复代码检测,超过三行相同就报警'). Two parts: (1) services/backend/tests/gateway/_ocrGatewayHarness.js — a parameterized-factory shared harness absorbing the copy-pasted scaffolding (_wireGateway/_makeRecordingAdapter/_makeRejectAdapter/_realExtractImageOcrDetails/tesseract+python probes/PIL render/env save-restore) across the 20 OCR-gateway .test.js files, byte-equivalent to each file's in-place harness; underscore-prefixed so *.test.js never selects it; it DOES IO (spawnSync/fs/imageService) so its header does NOT self-declare pure-leaf/zero-IO (else check-leaf-contract leaf-io fires). (2) A self-authored duplicate-code detector: pure guard core scripts/lib/duplicationGuard.js (crypto/path only, zero-IO, deterministic, fail-soft, gate KHY_DUPLICATION_GUARD) + thin CLI scripts/check-duplication.js (all IO). Algorithm: normalize lines (skip blank/comment/pure-punctuation), sliding window MIN_BLOCK=4 significant lines (=more than three), sha1, a hash in >=2 places is a clone class, coalesce adjacent windows to maximal spans, one finding per (file,span). Phased per user decision 'warn + baseline first, flip to hard gate after migration': stage-1 DEFAULT_MODE='warn' (all warnings, existing dup never reds CI, NOT in the blocking check:small-model:safety aggregate); stage-2 --gate / KHY_DUPLICATION_MODE=gate (in baseline → warning, not in baseline → error). Baseline .duplication-baseline.json stores normalized-window content-hash fingerprints (relocation-stable, self-shrinks as extraction deletes dup copies). Flip-to-hard-gate is one reviewable diff: change DEFAULT_MODE + re-run --write-baseline + fold check:duplication into the safety aggregate.。
+**389.** 验证「CI Duplicate-code Detection Gate + Shared OCR-gateway Test Harness (goal 2026-07-12: '把所有重复的函数提取成公共库,统一维护;在 CI 里加重复代码检测,超过三行相同就报警'). Two parts: (1) runtime/node/backend/tests/gateway/_ocrGatewayHarness.js — a parameterized-factory shared harness absorbing the copy-pasted scaffolding (_wireGateway/_makeRecordingAdapter/_makeRejectAdapter/_realExtractImageOcrDetails/tesseract+python probes/PIL render/env save-restore) across the 20 OCR-gateway .test.js files, byte-equivalent to each file's in-place harness; underscore-prefixed so *.test.js never selects it; it DOES IO (spawnSync/fs/imageService) so its header does NOT self-declare pure-leaf/zero-IO (else check-leaf-contract leaf-io fires). (2) A self-authored duplicate-code detector: pure guard core scripts/lib/duplicationGuard.js (crypto/path only, zero-IO, deterministic, fail-soft, gate KHY_DUPLICATION_GUARD) + thin CLI scripts/check-duplication.js (all IO). Algorithm: normalize lines (skip blank/comment/pure-punctuation), sliding window MIN_BLOCK=4 significant lines (=more than three), sha1, a hash in >=2 places is a clone class, coalesce adjacent windows to maximal spans, one finding per (file,span). Phased per user decision 'warn + baseline first, flip to hard gate after migration': stage-1 DEFAULT_MODE='warn' (all warnings, existing dup never reds CI, NOT in the blocking check:small-model:safety aggregate); stage-2 --gate / KHY_DUPLICATION_MODE=gate (in baseline → warning, not in baseline → error). Baseline .duplication-baseline.json stores normalized-window content-hash fingerprints (relocation-stable, self-shrinks as extraction deletes dup copies). Flip-to-hard-gate is one reviewable diff: change DEFAULT_MODE + re-run --write-baseline + fold check:duplication into the safety aggregate.」：跑该命令，绿灯才算这块没坏。
+  - 说明：子系统：CI Duplicate-code Detection Gate + Shared OCR-gateway Test Harness (goal 2026-07-12: '把所有重复的函数提取成公共库,统一维护;在 CI 里加重复代码检测,超过三行相同就报警'). Two parts: (1) runtime/node/backend/tests/gateway/_ocrGatewayHarness.js — a parameterized-factory shared harness absorbing the copy-pasted scaffolding (_wireGateway/_makeRecordingAdapter/_makeRejectAdapter/_realExtractImageOcrDetails/tesseract+python probes/PIL render/env save-restore) across the 20 OCR-gateway .test.js files, byte-equivalent to each file's in-place harness; underscore-prefixed so *.test.js never selects it; it DOES IO (spawnSync/fs/imageService) so its header does NOT self-declare pure-leaf/zero-IO (else check-leaf-contract leaf-io fires). (2) A self-authored duplicate-code detector: pure guard core scripts/lib/duplicationGuard.js (crypto/path only, zero-IO, deterministic, fail-soft, gate KHY_DUPLICATION_GUARD) + thin CLI scripts/check-duplication.js (all IO). Algorithm: normalize lines (skip blank/comment/pure-punctuation), sliding window MIN_BLOCK=4 significant lines (=more than three), sha1, a hash in >=2 places is a clone class, coalesce adjacent windows to maximal spans, one finding per (file,span). Phased per user decision 'warn + baseline first, flip to hard gate after migration': stage-1 DEFAULT_MODE='warn' (all warnings, existing dup never reds CI, NOT in the blocking check:small-model:safety aggregate); stage-2 --gate / KHY_DUPLICATION_MODE=gate (in baseline → warning, not in baseline → error). Baseline .duplication-baseline.json stores normalized-window content-hash fingerprints (relocation-stable, self-shrinks as extraction deletes dup copies). Flip-to-hard-gate is one reviewable diff: change DEFAULT_MODE + re-run --write-baseline + fold check:duplication into the safety aggregate.。
   - 验证：`npm run check:duplication`
 
-**390.** 验证「CI Duplicate-code Detection Gate + Shared OCR-gateway Test Harness (goal 2026-07-12: '把所有重复的函数提取成公共库,统一维护;在 CI 里加重复代码检测,超过三行相同就报警'). Two parts: (1) services/backend/tests/gateway/_ocrGatewayHarness.js — a parameterized-factory shared harness absorbing the copy-pasted scaffolding (_wireGateway/_makeRecordingAdapter/_makeRejectAdapter/_realExtractImageOcrDetails/tesseract+python probes/PIL render/env save-restore) across the 20 OCR-gateway .test.js files, byte-equivalent to each file's in-place harness; underscore-prefixed so *.test.js never selects it; it DOES IO (spawnSync/fs/imageService) so its header does NOT self-declare pure-leaf/zero-IO (else check-leaf-contract leaf-io fires). (2) A self-authored duplicate-code detector: pure guard core scripts/lib/duplicationGuard.js (crypto/path only, zero-IO, deterministic, fail-soft, gate KHY_DUPLICATION_GUARD) + thin CLI scripts/check-duplication.js (all IO). Algorithm: normalize lines (skip blank/comment/pure-punctuation), sliding window MIN_BLOCK=4 significant lines (=more than three), sha1, a hash in >=2 places is a clone class, coalesce adjacent windows to maximal spans, one finding per (file,span). Phased per user decision 'warn + baseline first, flip to hard gate after migration': stage-1 DEFAULT_MODE='warn' (all warnings, existing dup never reds CI, NOT in the blocking check:small-model:safety aggregate); stage-2 --gate / KHY_DUPLICATION_MODE=gate (in baseline → warning, not in baseline → error). Baseline .duplication-baseline.json stores normalized-window content-hash fingerprints (relocation-stable, self-shrinks as extraction deletes dup copies). Flip-to-hard-gate is one reviewable diff: change DEFAULT_MODE + re-run --write-baseline + fold check:duplication into the safety aggregate.」：跑该命令，绿灯才算这块没坏。
-  - 说明：子系统：CI Duplicate-code Detection Gate + Shared OCR-gateway Test Harness (goal 2026-07-12: '把所有重复的函数提取成公共库,统一维护;在 CI 里加重复代码检测,超过三行相同就报警'). Two parts: (1) services/backend/tests/gateway/_ocrGatewayHarness.js — a parameterized-factory shared harness absorbing the copy-pasted scaffolding (_wireGateway/_makeRecordingAdapter/_makeRejectAdapter/_realExtractImageOcrDetails/tesseract+python probes/PIL render/env save-restore) across the 20 OCR-gateway .test.js files, byte-equivalent to each file's in-place harness; underscore-prefixed so *.test.js never selects it; it DOES IO (spawnSync/fs/imageService) so its header does NOT self-declare pure-leaf/zero-IO (else check-leaf-contract leaf-io fires). (2) A self-authored duplicate-code detector: pure guard core scripts/lib/duplicationGuard.js (crypto/path only, zero-IO, deterministic, fail-soft, gate KHY_DUPLICATION_GUARD) + thin CLI scripts/check-duplication.js (all IO). Algorithm: normalize lines (skip blank/comment/pure-punctuation), sliding window MIN_BLOCK=4 significant lines (=more than three), sha1, a hash in >=2 places is a clone class, coalesce adjacent windows to maximal spans, one finding per (file,span). Phased per user decision 'warn + baseline first, flip to hard gate after migration': stage-1 DEFAULT_MODE='warn' (all warnings, existing dup never reds CI, NOT in the blocking check:small-model:safety aggregate); stage-2 --gate / KHY_DUPLICATION_MODE=gate (in baseline → warning, not in baseline → error). Baseline .duplication-baseline.json stores normalized-window content-hash fingerprints (relocation-stable, self-shrinks as extraction deletes dup copies). Flip-to-hard-gate is one reviewable diff: change DEFAULT_MODE + re-run --write-baseline + fold check:duplication into the safety aggregate.。
+**390.** 验证「CI Duplicate-code Detection Gate + Shared OCR-gateway Test Harness (goal 2026-07-12: '把所有重复的函数提取成公共库,统一维护;在 CI 里加重复代码检测,超过三行相同就报警'). Two parts: (1) runtime/node/backend/tests/gateway/_ocrGatewayHarness.js — a parameterized-factory shared harness absorbing the copy-pasted scaffolding (_wireGateway/_makeRecordingAdapter/_makeRejectAdapter/_realExtractImageOcrDetails/tesseract+python probes/PIL render/env save-restore) across the 20 OCR-gateway .test.js files, byte-equivalent to each file's in-place harness; underscore-prefixed so *.test.js never selects it; it DOES IO (spawnSync/fs/imageService) so its header does NOT self-declare pure-leaf/zero-IO (else check-leaf-contract leaf-io fires). (2) A self-authored duplicate-code detector: pure guard core scripts/lib/duplicationGuard.js (crypto/path only, zero-IO, deterministic, fail-soft, gate KHY_DUPLICATION_GUARD) + thin CLI scripts/check-duplication.js (all IO). Algorithm: normalize lines (skip blank/comment/pure-punctuation), sliding window MIN_BLOCK=4 significant lines (=more than three), sha1, a hash in >=2 places is a clone class, coalesce adjacent windows to maximal spans, one finding per (file,span). Phased per user decision 'warn + baseline first, flip to hard gate after migration': stage-1 DEFAULT_MODE='warn' (all warnings, existing dup never reds CI, NOT in the blocking check:small-model:safety aggregate); stage-2 --gate / KHY_DUPLICATION_MODE=gate (in baseline → warning, not in baseline → error). Baseline .duplication-baseline.json stores normalized-window content-hash fingerprints (relocation-stable, self-shrinks as extraction deletes dup copies). Flip-to-hard-gate is one reviewable diff: change DEFAULT_MODE + re-run --write-baseline + fold check:duplication into the safety aggregate.」：跑该命令，绿灯才算这块没坏。
+  - 说明：子系统：CI Duplicate-code Detection Gate + Shared OCR-gateway Test Harness (goal 2026-07-12: '把所有重复的函数提取成公共库,统一维护;在 CI 里加重复代码检测,超过三行相同就报警'). Two parts: (1) runtime/node/backend/tests/gateway/_ocrGatewayHarness.js — a parameterized-factory shared harness absorbing the copy-pasted scaffolding (_wireGateway/_makeRecordingAdapter/_makeRejectAdapter/_realExtractImageOcrDetails/tesseract+python probes/PIL render/env save-restore) across the 20 OCR-gateway .test.js files, byte-equivalent to each file's in-place harness; underscore-prefixed so *.test.js never selects it; it DOES IO (spawnSync/fs/imageService) so its header does NOT self-declare pure-leaf/zero-IO (else check-leaf-contract leaf-io fires). (2) A self-authored duplicate-code detector: pure guard core scripts/lib/duplicationGuard.js (crypto/path only, zero-IO, deterministic, fail-soft, gate KHY_DUPLICATION_GUARD) + thin CLI scripts/check-duplication.js (all IO). Algorithm: normalize lines (skip blank/comment/pure-punctuation), sliding window MIN_BLOCK=4 significant lines (=more than three), sha1, a hash in >=2 places is a clone class, coalesce adjacent windows to maximal spans, one finding per (file,span). Phased per user decision 'warn + baseline first, flip to hard gate after migration': stage-1 DEFAULT_MODE='warn' (all warnings, existing dup never reds CI, NOT in the blocking check:small-model:safety aggregate); stage-2 --gate / KHY_DUPLICATION_MODE=gate (in baseline → warning, not in baseline → error). Baseline .duplication-baseline.json stores normalized-window content-hash fingerprints (relocation-stable, self-shrinks as extraction deletes dup copies). Flip-to-hard-gate is one reviewable diff: change DEFAULT_MODE + re-run --write-baseline + fold check:duplication into the safety aggregate.。
   - 验证：`node --check scripts/lib/duplicationGuard.js scripts/check-duplication.js`
 
 **391.** 验证「Text-only-model Image OCR Fallback — DETERMINISTIC live-STATUS 'downgraded to OCR' notice at the PREP-time sites for NON-VERBOSE sessions (OPS-MAN-132; 承 OPS-127/124/126). OPS-127 made the Site3 rescue-net OCR-success status UNCONDITIONAL, but prep-time Site1 (~1618) and Site2 (~1692) OCR-success emitStatus were always nested inside `if (_isVerbose)`. So NON-VERBOSE sessions (default KHY_STATUS_VERBOSITY=auto) stayed silent on the live-progress layer during a prep-time OCR downgrade — asymmetric with the now-unconditional Site3. This area adds the missing unconditional prep-time status, guarded by !_isVerbose to avoid duplicating the existing verbose status.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — DETERMINISTIC live-STATUS 'downgraded to OCR' notice at the PREP-time sites for NON-VERBOSE sessions (OPS-MAN-132; 承 OPS-127/124/126). OPS-127 made the Site3 rescue-net OCR-success status UNCONDITIONAL, but prep-time Site1 (~1618) and Site2 (~1692) OCR-success emitStatus were always nested inside `if (_isVerbose)`. So NON-VERBOSE sessions (default KHY_STATUS_VERBOSITY=auto) stayed silent on the live-progress layer during a prep-time OCR downgrade — asymmetric with the now-unconditional Site3. This area adds the missing unconditional prep-time status, guarded by !_isVerbose to avoid duplicating the existing verbose status.。
-  - 验证：`npm run test:one -- services/backend/tests/gateway/ocrRescueStatusPrep.test.js services/backend/tests/gateway/ocrRescueStatusPrepWiring.test.js services/backend/tests/gateway/ocrRescueStatusPrepRealImage.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/gateway/ocrRescueStatusPrep.test.js runtime/node/backend/tests/gateway/ocrRescueStatusPrepWiring.test.js runtime/node/backend/tests/gateway/ocrRescueStatusPrepRealImage.test.js`
 
 **392.** 验证「Text-only-model Image OCR Fallback — DETERMINISTIC live-STATUS 'downgraded to OCR' notice at the PREP-time sites for NON-VERBOSE sessions (OPS-MAN-132; 承 OPS-127/124/126). OPS-127 made the Site3 rescue-net OCR-success status UNCONDITIONAL, but prep-time Site1 (~1618) and Site2 (~1692) OCR-success emitStatus were always nested inside `if (_isVerbose)`. So NON-VERBOSE sessions (default KHY_STATUS_VERBOSITY=auto) stayed silent on the live-progress layer during a prep-time OCR downgrade — asymmetric with the now-unconditional Site3. This area adds the missing unconditional prep-time status, guarded by !_isVerbose to avoid duplicating the existing verbose status.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — DETERMINISTIC live-STATUS 'downgraded to OCR' notice at the PREP-time sites for NON-VERBOSE sessions (OPS-MAN-132; 承 OPS-127/124/126). OPS-127 made the Site3 rescue-net OCR-success status UNCONDITIONAL, but prep-time Site1 (~1618) and Site2 (~1692) OCR-success emitStatus were always nested inside `if (_isVerbose)`. So NON-VERBOSE sessions (default KHY_STATUS_VERBOSITY=auto) stayed silent on the live-progress layer during a prep-time OCR downgrade — asymmetric with the now-unconditional Site3. This area adds the missing unconditional prep-time status, guarded by !_isVerbose to avoid duplicating the existing verbose status.。
-  - 验证：`node --check services/backend/src/services/gateway/ocrRescueStatusNotice.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/ocrRescueStatusNotice.js`
 
 **393.** 验证「Text-only-model Image OCR Fallback — DETERMINISTIC live-STATUS 'downgraded to OCR' notice at the PREP-time sites for NON-VERBOSE sessions (OPS-MAN-132; 承 OPS-127/124/126). OPS-127 made the Site3 rescue-net OCR-success status UNCONDITIONAL, but prep-time Site1 (~1618) and Site2 (~1692) OCR-success emitStatus were always nested inside `if (_isVerbose)`. So NON-VERBOSE sessions (default KHY_STATUS_VERBOSITY=auto) stayed silent on the live-progress layer during a prep-time OCR downgrade — asymmetric with the now-unconditional Site3. This area adds the missing unconditional prep-time status, guarded by !_isVerbose to avoid duplicating the existing verbose status.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — DETERMINISTIC live-STATUS 'downgraded to OCR' notice at the PREP-time sites for NON-VERBOSE sessions (OPS-MAN-132; 承 OPS-127/124/126). OPS-127 made the Site3 rescue-net OCR-success status UNCONDITIONAL, but prep-time Site1 (~1618) and Site2 (~1692) OCR-success emitStatus were always nested inside `if (_isVerbose)`. So NON-VERBOSE sessions (default KHY_STATUS_VERBOSITY=auto) stayed silent on the live-progress layer during a prep-time OCR downgrade — asymmetric with the now-unconditional Site3. This area adds the missing unconditional prep-time status, guarded by !_isVerbose to avoid duplicating the existing verbose status.。
-  - 验证：`node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 
 **394.** 验证「Text-only-model Image OCR Fallback — CROSS-LAYER de-duplication of the Site1 prep-status (OPS-132) and the OCR-success closure (OPS-144), so a single OCR downgrade is not announced twice as two PERMANENT lines (OPS-MAN-148; 承 OPS-132 + OPS-144, directly serving '减少显示的心灵噪音'). On the EXACT reported path (non-verbose · describe cascade all-failed → local OCR success), the same 'downgraded to OCR and succeeded' fact was announced TWICE: (1) a status chunk from OPS-132 buildOcrRescuePrepStatus ('已降级用本地 OCR 成功提取…'), which — because it contains '成功' — is mis-classified by emitRuntimeStatus into a PERMANENT '模型已连接' terminal line; and (2) an assistant_message chunk from OPS-144 buildOcrSuccessClosure ('视觉模型均不可用，已改用本地 OCR 成功识别…据此作答'). Since the OPS-144 closure already delivers the '明显告知用了 OCR' disclosure on Site1, the prep-status is a redundant, worse-worded second announcement. This area suppresses the Site1 prep-status ONLY when the closure will also fire.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — CROSS-LAYER de-duplication of the Site1 prep-status (OPS-132) and the OCR-success closure (OPS-144), so a single OCR downgrade is not announced twice as two PERMANENT lines (OPS-MAN-148; 承 OPS-132 + OPS-144, directly serving '减少显示的心灵噪音'). On the EXACT reported path (non-verbose · describe cascade all-failed → local OCR success), the same 'downgraded to OCR and succeeded' fact was announced TWICE: (1) a status chunk from OPS-132 buildOcrRescuePrepStatus ('已降级用本地 OCR 成功提取…'), which — because it contains '成功' — is mis-classified by emitRuntimeStatus into a PERMANENT '模型已连接' terminal line; and (2) an assistant_message chunk from OPS-144 buildOcrSuccessClosure ('视觉模型均不可用，已改用本地 OCR 成功识别…据此作答'). Since the OPS-144 closure already delivers the '明显告知用了 OCR' disclosure on Site1, the prep-status is a redundant, worse-worded second announcement. This area suppresses the Site1 prep-status ONLY when the closure will also fire.。
-  - 验证：`npm run test:one -- services/backend/tests/gateway/ocrRescueStatusNotice.test.js services/backend/tests/gateway/ocrRescuePrepClosureDedupWiring.test.js services/backend/tests/gateway/ocrRescuePrepClosureDedupRealImage.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/gateway/ocrRescueStatusNotice.test.js runtime/node/backend/tests/gateway/ocrRescuePrepClosureDedupWiring.test.js runtime/node/backend/tests/gateway/ocrRescuePrepClosureDedupRealImage.test.js`
 
 **395.** 验证「Text-only-model Image OCR Fallback — CROSS-LAYER de-duplication of the Site1 prep-status (OPS-132) and the OCR-success closure (OPS-144), so a single OCR downgrade is not announced twice as two PERMANENT lines (OPS-MAN-148; 承 OPS-132 + OPS-144, directly serving '减少显示的心灵噪音'). On the EXACT reported path (non-verbose · describe cascade all-failed → local OCR success), the same 'downgraded to OCR and succeeded' fact was announced TWICE: (1) a status chunk from OPS-132 buildOcrRescuePrepStatus ('已降级用本地 OCR 成功提取…'), which — because it contains '成功' — is mis-classified by emitRuntimeStatus into a PERMANENT '模型已连接' terminal line; and (2) an assistant_message chunk from OPS-144 buildOcrSuccessClosure ('视觉模型均不可用，已改用本地 OCR 成功识别…据此作答'). Since the OPS-144 closure already delivers the '明显告知用了 OCR' disclosure on Site1, the prep-status is a redundant, worse-worded second announcement. This area suppresses the Site1 prep-status ONLY when the closure will also fire.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — CROSS-LAYER de-duplication of the Site1 prep-status (OPS-132) and the OCR-success closure (OPS-144), so a single OCR downgrade is not announced twice as two PERMANENT lines (OPS-MAN-148; 承 OPS-132 + OPS-144, directly serving '减少显示的心灵噪音'). On the EXACT reported path (non-verbose · describe cascade all-failed → local OCR success), the same 'downgraded to OCR and succeeded' fact was announced TWICE: (1) a status chunk from OPS-132 buildOcrRescuePrepStatus ('已降级用本地 OCR 成功提取…'), which — because it contains '成功' — is mis-classified by emitRuntimeStatus into a PERMANENT '模型已连接' terminal line; and (2) an assistant_message chunk from OPS-144 buildOcrSuccessClosure ('视觉模型均不可用，已改用本地 OCR 成功识别…据此作答'). Since the OPS-144 closure already delivers the '明显告知用了 OCR' disclosure on Site1, the prep-status is a redundant, worse-worded second announcement. This area suppresses the Site1 prep-status ONLY when the closure will also fire.。
-  - 验证：`node --check services/backend/src/services/gateway/ocrRescueStatusNotice.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/ocrRescueStatusNotice.js`
 
 **396.** 验证「Text-only-model Image OCR Fallback — CROSS-LAYER de-duplication of the Site1 prep-status (OPS-132) and the OCR-success closure (OPS-144), so a single OCR downgrade is not announced twice as two PERMANENT lines (OPS-MAN-148; 承 OPS-132 + OPS-144, directly serving '减少显示的心灵噪音'). On the EXACT reported path (non-verbose · describe cascade all-failed → local OCR success), the same 'downgraded to OCR and succeeded' fact was announced TWICE: (1) a status chunk from OPS-132 buildOcrRescuePrepStatus ('已降级用本地 OCR 成功提取…'), which — because it contains '成功' — is mis-classified by emitRuntimeStatus into a PERMANENT '模型已连接' terminal line; and (2) an assistant_message chunk from OPS-144 buildOcrSuccessClosure ('视觉模型均不可用，已改用本地 OCR 成功识别…据此作答'). Since the OPS-144 closure already delivers the '明显告知用了 OCR' disclosure on Site1, the prep-status is a redundant, worse-worded second announcement. This area suppresses the Site1 prep-status ONLY when the closure will also fire.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Text-only-model Image OCR Fallback — CROSS-LAYER de-duplication of the Site1 prep-status (OPS-132) and the OCR-success closure (OPS-144), so a single OCR downgrade is not announced twice as two PERMANENT lines (OPS-MAN-148; 承 OPS-132 + OPS-144, directly serving '减少显示的心灵噪音'). On the EXACT reported path (non-verbose · describe cascade all-failed → local OCR success), the same 'downgraded to OCR and succeeded' fact was announced TWICE: (1) a status chunk from OPS-132 buildOcrRescuePrepStatus ('已降级用本地 OCR 成功提取…'), which — because it contains '成功' — is mis-classified by emitRuntimeStatus into a PERMANENT '模型已连接' terminal line; and (2) an assistant_message chunk from OPS-144 buildOcrSuccessClosure ('视觉模型均不可用，已改用本地 OCR 成功识别…据此作答'). Since the OPS-144 closure already delivers the '明显告知用了 OCR' disclosure on Site1, the prep-status is a redundant, worse-worded second announcement. This area suppresses the Site1 prep-status ONLY when the closure will also fire.。
-  - 验证：`node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js`
 
 **397.** 验证「Vision-Cascade Exhaustion Diagnostic — NETWORK reason class (OPS-MAN-134; 承 OPS-118/120/122 model-rejection strip-floor). diagnoseVisionExhaustion (pure leaf, already wired at aiGatewayGenerateMethod.js:3315) classified only 404 (model_not_provisioned) and 429 (rate_limited). When the vision cascade exhausts on a TRANSIENT network failure (socket hang up / ECONNRESET / tunneling-socket / 连接被重置) and terminal OCR recovers NO text (photo/color-block, no chars), the request fell to the generic '所有 AI 通道均不可用' wall — omitting the honest 'I did receive your image but the network could not deliver it to the vision model — this is NOT “no image received”' acknowledgment, which is exactly the reported failure where the model falsely denies the image. This area adds the orthogonal network_unreachable reason branch (and folds it into 'multiple' when it co-occurs with 404/429).」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Vision-Cascade Exhaustion Diagnostic — NETWORK reason class (OPS-MAN-134; 承 OPS-118/120/122 model-rejection strip-floor). diagnoseVisionExhaustion (pure leaf, already wired at aiGatewayGenerateMethod.js:3315) classified only 404 (model_not_provisioned) and 429 (rate_limited). When the vision cascade exhausts on a TRANSIENT network failure (socket hang up / ECONNRESET / tunneling-socket / 连接被重置) and terminal OCR recovers NO text (photo/color-block, no chars), the request fell to the generic '所有 AI 通道均不可用' wall — omitting the honest 'I did receive your image but the network could not deliver it to the vision model — this is NOT “no image received”' acknowledgment, which is exactly the reported failure where the model falsely denies the image. This area adds the orthogonal network_unreachable reason branch (and folds it into 'multiple' when it co-occurs with 404/429).。
-  - 验证：`npm run test:one -- services/backend/tests/services/visionExhaustionDiagnostic.test.js services/backend/tests/gateway/visionNetworkExhaustionRealImage.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/visionExhaustionDiagnostic.test.js runtime/node/backend/tests/gateway/visionNetworkExhaustionRealImage.test.js`
 
 **398.** 验证「Vision-Cascade Exhaustion Diagnostic — NETWORK reason class (OPS-MAN-134; 承 OPS-118/120/122 model-rejection strip-floor). diagnoseVisionExhaustion (pure leaf, already wired at aiGatewayGenerateMethod.js:3315) classified only 404 (model_not_provisioned) and 429 (rate_limited). When the vision cascade exhausts on a TRANSIENT network failure (socket hang up / ECONNRESET / tunneling-socket / 连接被重置) and terminal OCR recovers NO text (photo/color-block, no chars), the request fell to the generic '所有 AI 通道均不可用' wall — omitting the honest 'I did receive your image but the network could not deliver it to the vision model — this is NOT “no image received”' acknowledgment, which is exactly the reported failure where the model falsely denies the image. This area adds the orthogonal network_unreachable reason branch (and folds it into 'multiple' when it co-occurs with 404/429).」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Vision-Cascade Exhaustion Diagnostic — NETWORK reason class (OPS-MAN-134; 承 OPS-118/120/122 model-rejection strip-floor). diagnoseVisionExhaustion (pure leaf, already wired at aiGatewayGenerateMethod.js:3315) classified only 404 (model_not_provisioned) and 429 (rate_limited). When the vision cascade exhausts on a TRANSIENT network failure (socket hang up / ECONNRESET / tunneling-socket / 连接被重置) and terminal OCR recovers NO text (photo/color-block, no chars), the request fell to the generic '所有 AI 通道均不可用' wall — omitting the honest 'I did receive your image but the network could not deliver it to the vision model — this is NOT “no image received”' acknowledgment, which is exactly the reported failure where the model falsely denies the image. This area adds the orthogonal network_unreachable reason branch (and folds it into 'multiple' when it co-occurs with 404/429).。
-  - 验证：`node --check services/backend/src/services/gateway/visionExhaustionDiagnostic.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/visionExhaustionDiagnostic.js`
 
 **399.** 验证「Workflow list load — page-scoped degraded UI (silent request, no cross-page banner). Fixes the reported bug where a red 「网络连接异常:无法访问 /api/workflow。请确认 ai-backend 服务可用后重试。」 banner appeared on the UNRELATED 代理管理 (Proxy Management) page. Root cause: the workflow list fetch (Workflows.vue onMounted → useWorkflow.listWorkflows → GET /api/workflow) was NOT marked silent and had no local error UI, so request.js's interceptor fired a GLOBAL body-mounted ElMessage (notifyError) on network failure; a navigation-orphaned / backend-unreachable failure leaked that global toast onto whatever page the user had moved to. Fix (per request.js:88-94 convention): mark the list GET { silent: true } and render the failure IN-PAGE (inline el-alert + 重试) via a loadError ref, so the failure stays scoped to the Workflows page and never bleeds cross-page.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Workflow list load — page-scoped degraded UI (silent request, no cross-page banner). Fixes the reported bug where a red 「网络连接异常:无法访问 /api/workflow。请确认 ai-backend 服务可用后重试。」 banner appeared on the UNRELATED 代理管理 (Proxy Management) page. Root cause: the workflow list fetch (Workflows.vue onMounted → useWorkflow.listWorkflows → GET /api/workflow) was NOT marked silent and had no local error UI, so request.js's interceptor fired a GLOBAL body-mounted ElMessage (notifyError) on network failure; a navigation-orphaned / backend-unreachable failure leaked that global toast onto whatever page the user had moved to. Fix (per request.js:88-94 convention): mark the list GET { silent: true } and render the failure IN-PAGE (inline el-alert + 重试) via a loadError ref, so the failure stays scoped to the Workflows page and never bleeds cross-page.。
-  - 验证：`npm run test:one -- apps/ai-frontend/src/composables/useWorkflow.wiring.test.js`
+  - 验证：`npm run test:one -- delivery/web/ai-frontend/src/composables/useWorkflow.wiring.test.js`
 
 **400.** 验证「Workflow list load — page-scoped degraded UI (silent request, no cross-page banner). Fixes the reported bug where a red 「网络连接异常:无法访问 /api/workflow。请确认 ai-backend 服务可用后重试。」 banner appeared on the UNRELATED 代理管理 (Proxy Management) page. Root cause: the workflow list fetch (Workflows.vue onMounted → useWorkflow.listWorkflows → GET /api/workflow) was NOT marked silent and had no local error UI, so request.js's interceptor fired a GLOBAL body-mounted ElMessage (notifyError) on network failure; a navigation-orphaned / backend-unreachable failure leaked that global toast onto whatever page the user had moved to. Fix (per request.js:88-94 convention): mark the list GET { silent: true } and render the failure IN-PAGE (inline el-alert + 重试) via a loadError ref, so the failure stays scoped to the Workflows page and never bleeds cross-page.」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Workflow list load — page-scoped degraded UI (silent request, no cross-page banner). Fixes the reported bug where a red 「网络连接异常:无法访问 /api/workflow。请确认 ai-backend 服务可用后重试。」 banner appeared on the UNRELATED 代理管理 (Proxy Management) page. Root cause: the workflow list fetch (Workflows.vue onMounted → useWorkflow.listWorkflows → GET /api/workflow) was NOT marked silent and had no local error UI, so request.js's interceptor fired a GLOBAL body-mounted ElMessage (notifyError) on network failure; a navigation-orphaned / backend-unreachable failure leaked that global toast onto whatever page the user had moved to. Fix (per request.js:88-94 convention): mark the list GET { silent: true } and render the failure IN-PAGE (inline el-alert + 重试) via a loadError ref, so the failure stays scoped to the Workflows page and never bleeds cross-page.。
-  - 验证：`node --check apps/ai-frontend/src/composables/useWorkflow.js`
+  - 验证：`node --check delivery/web/ai-frontend/src/composables/useWorkflow.js`
 
 **401.** 验证「缓存前缀击穿归因 (prompt-cache prefix bust attribution — 命中率低时定位是谁击穿了前缀：系统提示/工具集/工具顺序)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：缓存前缀击穿归因 (prompt-cache prefix bust attribution — 命中率低时定位是谁击穿了前缀：系统提示/工具集/工具顺序)。
-  - 验证：`node --test services/backend/tests/cli/cacheWarning.test.js services/backend/tests/constants/promptPrefixShape.test.js`
+  - 验证：`node --test runtime/node/backend/tests/cli/cacheWarning.test.js runtime/node/backend/tests/constants/promptPrefixShape.test.js`
 
 **402.** 验证「缓存前缀击穿归因 (prompt-cache prefix bust attribution — 命中率低时定位是谁击穿了前缀：系统提示/工具集/工具顺序)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：缓存前缀击穿归因 (prompt-cache prefix bust attribution — 命中率低时定位是谁击穿了前缀：系统提示/工具集/工具顺序)。
-  - 验证：`node --check services/backend/src/constants/promptPrefixShape.js`
+  - 验证：`node --check runtime/node/backend/src/constants/promptPrefixShape.js`
 
 **403.** 验证「缓存前缀击穿归因 (prompt-cache prefix bust attribution — 命中率低时定位是谁击穿了前缀：系统提示/工具集/工具顺序)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：缓存前缀击穿归因 (prompt-cache prefix bust attribution — 命中率低时定位是谁击穿了前缀：系统提示/工具集/工具顺序)。
-  - 验证：`node --check services/backend/src/cli/cacheWarning.js`
+  - 验证：`node --check runtime/node/backend/src/cli/cacheWarning.js`
 
 **404.** 验证「交付门人类可读报告落盘 (deliveryGate markdown report — 把结构化 verdict 变成带逐条判定+改进建议的可打开报告)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：交付门人类可读报告落盘 (deliveryGate markdown report — 把结构化 verdict 变成带逐条判定+改进建议的可打开报告)。
-  - 验证：`node --test services/backend/tests/services/deliveryGateReporter.test.js`
+  - 验证：`node --test runtime/node/backend/tests/services/deliveryGateReporter.test.js`
 
 **405.** 验证「交付门人类可读报告落盘 (deliveryGate markdown report — 把结构化 verdict 变成带逐条判定+改进建议的可打开报告)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：交付门人类可读报告落盘 (deliveryGate markdown report — 把结构化 verdict 变成带逐条判定+改进建议的可打开报告)。
-  - 验证：`node --check services/backend/src/services/agenticHarnessService.js`
+  - 验证：`node --check runtime/node/backend/src/services/agenticHarnessService.js`
 
 **406.** 验证「交付门人类可读报告落盘 (deliveryGate markdown report — 把结构化 verdict 变成带逐条判定+改进建议的可打开报告)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：交付门人类可读报告落盘 (deliveryGate markdown report — 把结构化 verdict 变成带逐条判定+改进建议的可打开报告)。
-  - 验证：`node --check services/backend/src/utils/flagRegistry/index.js`
+  - 验证：`node --check runtime/node/backend/src/utils/flagRegistry/index.js`
 
 **407.** 验证「会话快照损坏兜底修复 (sessionFileRepair — 损坏/截断的 .json 快照在还原时先结构修复/partial salvage 再返回，而不是整段丢给 checkpoint/null)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：会话快照损坏兜底修复 (sessionFileRepair — 损坏/截断的 .json 快照在还原时先结构修复/partial salvage 再返回，而不是整段丢给 checkpoint/null)。
-  - 验证：`node --test services/backend/tests/services/sessionFileRepairWiring.test.js`
+  - 验证：`node --test runtime/node/backend/tests/services/sessionFileRepairWiring.test.js`
 
 **408.** 验证「会话快照损坏兜底修复 (sessionFileRepair — 损坏/截断的 .json 快照在还原时先结构修复/partial salvage 再返回，而不是整段丢给 checkpoint/null)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：会话快照损坏兜底修复 (sessionFileRepair — 损坏/截断的 .json 快照在还原时先结构修复/partial salvage 再返回，而不是整段丢给 checkpoint/null)。
-  - 验证：`node --check services/backend/src/services/sessionPersistence.js`
+  - 验证：`node --check runtime/node/backend/src/services/sessionPersistence.js`
 
 **409.** 验证「会话快照损坏兜底修复 (sessionFileRepair — 损坏/截断的 .json 快照在还原时先结构修复/partial salvage 再返回，而不是整段丢给 checkpoint/null)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：会话快照损坏兜底修复 (sessionFileRepair — 损坏/截断的 .json 快照在还原时先结构修复/partial salvage 再返回，而不是整段丢给 checkpoint/null)。
-  - 验证：`node --check services/backend/src/utils/flagRegistry/index.js`
+  - 验证：`node --check runtime/node/backend/src/utils/flagRegistry/index.js`
 
 **410.** 验证「任务模板执行手册注入 (taskTemplates — 用户消息命中常见任务关键词时，把该模板的分步执行手册作为 [Task Playbook] 附加进模型 loopInput，降低小模型推理负担)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：任务模板执行手册注入 (taskTemplates — 用户消息命中常见任务关键词时，把该模板的分步执行手册作为 [Task Playbook] 附加进模型 loopInput，降低小模型推理负担)。
-  - 验证：`node --test services/backend/tests/services/taskTemplateHintWiring.test.js`
+  - 验证：`node --test runtime/node/backend/tests/services/taskTemplateHintWiring.test.js`
 
 **411.** 验证「任务模板执行手册注入 (taskTemplates — 用户消息命中常见任务关键词时，把该模板的分步执行手册作为 [Task Playbook] 附加进模型 loopInput，降低小模型推理负担)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：任务模板执行手册注入 (taskTemplates — 用户消息命中常见任务关键词时，把该模板的分步执行手册作为 [Task Playbook] 附加进模型 loopInput，降低小模型推理负担)。
-  - 验证：`node --check services/backend/src/services/agenticHarnessService.js`
+  - 验证：`node --check runtime/node/backend/src/services/agenticHarnessService.js`
 
 **412.** 验证「任务模板执行手册注入 (taskTemplates — 用户消息命中常见任务关键词时，把该模板的分步执行手册作为 [Task Playbook] 附加进模型 loopInput，降低小模型推理负担)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：任务模板执行手册注入 (taskTemplates — 用户消息命中常见任务关键词时，把该模板的分步执行手册作为 [Task Playbook] 附加进模型 loopInput，降低小模型推理负担)。
-  - 验证：`node --check services/backend/src/utils/flagRegistry/index.js`
+  - 验证：`node --check runtime/node/backend/src/utils/flagRegistry/index.js`
 
 **413.** 验证「指令注册表编译期收敛守卫 (directiveRegistryAudit — 把「DIRECTIVE_REGISTRY 指令 SSOT vs aiChatCore.js 实际 compose 的 key 集合」的一致性锁成 CI/提交期不变量，堵住协议漂移入口)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：指令注册表编译期收敛守卫 (directiveRegistryAudit — 把「DIRECTIVE_REGISTRY 指令 SSOT vs aiChatCore.js 实际 compose 的 key 集合」的一致性锁成 CI/提交期不变量，堵住协议漂移入口)。
-  - 验证：`node --test services/backend/tests/services/directiveRegistryAudit.guard.test.js`
+  - 验证：`node --test runtime/node/backend/tests/services/directiveRegistryAudit.guard.test.js`
 
 **414.** 验证「指令注册表编译期收敛守卫 (directiveRegistryAudit — 把「DIRECTIVE_REGISTRY 指令 SSOT vs aiChatCore.js 实际 compose 的 key 集合」的一致性锁成 CI/提交期不变量，堵住协议漂移入口)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：指令注册表编译期收敛守卫 (directiveRegistryAudit — 把「DIRECTIVE_REGISTRY 指令 SSOT vs aiChatCore.js 实际 compose 的 key 集合」的一致性锁成 CI/提交期不变量，堵住协议漂移入口)。
-  - 验证：`node --check services/backend/src/services/directiveRegistryAudit.js`
+  - 验证：`node --check runtime/node/backend/src/services/directiveRegistryAudit.js`
 
 **415.** 验证「取来即执行安全守卫接线 (fetchExecuteGuard — 把 curl…|sh / base64 -d|bash / bash -c "$(curl…)" 这类下载-解码-执行供应链签名接进 shellSafetyValidator.analyzeCommand，fail-closed 升为 critical 拦截)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：取来即执行安全守卫接线 (fetchExecuteGuard — 把 curl…|sh / base64 -d|bash / bash -c "$(curl…)" 这类下载-解码-执行供应链签名接进 shellSafetyValidator.analyzeCommand，fail-closed 升为 critical 拦截)。
-  - 验证：`node --test services/backend/tests/security/fetchExecuteGuardWiring.test.js`
+  - 验证：`node --test runtime/node/backend/tests/security/fetchExecuteGuardWiring.test.js`
 
 **416.** 验证「取来即执行安全守卫接线 (fetchExecuteGuard — 把 curl…|sh / base64 -d|bash / bash -c "$(curl…)" 这类下载-解码-执行供应链签名接进 shellSafetyValidator.analyzeCommand，fail-closed 升为 critical 拦截)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：取来即执行安全守卫接线 (fetchExecuteGuard — 把 curl…|sh / base64 -d|bash / bash -c "$(curl…)" 这类下载-解码-执行供应链签名接进 shellSafetyValidator.analyzeCommand，fail-closed 升为 critical 拦截)。
-  - 验证：`node --check services/backend/src/services/shellSafetyValidator.js`
+  - 验证：`node --check runtime/node/backend/src/services/shellSafetyValidator.js`
 
 **417.** 验证「用户显式 git-init 白名单覆盖接线 (gitTrackWhitelist — 让用户对自动判定会「软拒绝」的精确系统/共享根显式声明「我确实要 git 化」，接进 workspaceGitInit.ensureWorkspaceRepo；硬安全约束永不覆盖)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：用户显式 git-init 白名单覆盖接线 (gitTrackWhitelist — 让用户对自动判定会「软拒绝」的精确系统/共享根显式声明「我确实要 git 化」，接进 workspaceGitInit.ensureWorkspaceRepo；硬安全约束永不覆盖)。
-  - 验证：`node --test services/backend/tests/services/gitTrackWhitelistWiring.test.js`
+  - 验证：`node --test runtime/node/backend/tests/services/gitTrackWhitelistWiring.test.js`
 
 **418.** 验证「用户显式 git-init 白名单覆盖接线 (gitTrackWhitelist — 让用户对自动判定会「软拒绝」的精确系统/共享根显式声明「我确实要 git 化」，接进 workspaceGitInit.ensureWorkspaceRepo；硬安全约束永不覆盖)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：用户显式 git-init 白名单覆盖接线 (gitTrackWhitelist — 让用户对自动判定会「软拒绝」的精确系统/共享根显式声明「我确实要 git 化」，接进 workspaceGitInit.ensureWorkspaceRepo；硬安全约束永不覆盖)。
-  - 验证：`node --check services/backend/src/services/workspaceGitInit.js`
+  - 验证：`node --check runtime/node/backend/src/services/workspaceGitInit.js`
 
 **419.** 验证「本地 Ollama 模型并入统一目录接线 (localOllamaProbe — 把本地正在服务的模型作 source:local 边接进 modelCatalogGraph.buildCatalogGraph 第 4 源，仅 live 发现时；never-throw 非阻塞)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：本地 Ollama 模型并入统一目录接线 (localOllamaProbe — 把本地正在服务的模型作 source:local 边接进 modelCatalogGraph.buildCatalogGraph 第 4 源，仅 live 发现时；never-throw 非阻塞)。
-  - 验证：`node --test services/backend/tests/gateway/localOllamaProbeCatalogWiring.test.js`
+  - 验证：`node --test runtime/node/backend/tests/gateway/localOllamaProbeCatalogWiring.test.js`
 
 **420.** 验证「本地 Ollama 模型并入统一目录接线 (localOllamaProbe — 把本地正在服务的模型作 source:local 边接进 modelCatalogGraph.buildCatalogGraph 第 4 源，仅 live 发现时；never-throw 非阻塞)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：本地 Ollama 模型并入统一目录接线 (localOllamaProbe — 把本地正在服务的模型作 source:local 边接进 modelCatalogGraph.buildCatalogGraph 第 4 源，仅 live 发现时；never-throw 非阻塞)。
-  - 验证：`node --check services/backend/src/services/gateway/modelCatalogGraph.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/modelCatalogGraph.js`
 
 **421.** 验证「行为特征化并入误报收口裁决接线 (characterizationSnapshot — falsePositiveFixGuard.finalize 就地用回归门 baseline/current 快照差分「未覆盖文件上的静默行为漂移」并入裁决；agenticHarnessService 透传快照)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：行为特征化并入误报收口裁决接线 (characterizationSnapshot — falsePositiveFixGuard.finalize 就地用回归门 baseline/current 快照差分「未覆盖文件上的静默行为漂移」并入裁决；agenticHarnessService 透传快照)。
-  - 验证：`node --test services/backend/tests/services/characterizationFpfWiring.test.js`
+  - 验证：`node --test runtime/node/backend/tests/services/characterizationFpfWiring.test.js`
 
 **422.** 验证「行为特征化并入误报收口裁决接线 (characterizationSnapshot — falsePositiveFixGuard.finalize 就地用回归门 baseline/current 快照差分「未覆盖文件上的静默行为漂移」并入裁决；agenticHarnessService 透传快照)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：行为特征化并入误报收口裁决接线 (characterizationSnapshot — falsePositiveFixGuard.finalize 就地用回归门 baseline/current 快照差分「未覆盖文件上的静默行为漂移」并入裁决；agenticHarnessService 透传快照)。
-  - 验证：`node --check services/backend/src/services/falsePositiveFixGuard.js`
+  - 验证：`node --check runtime/node/backend/src/services/falsePositiveFixGuard.js`
 
 **423.** 验证「CLI/Web 管理面平价守卫 (parityGuard.checkParity — 证明 CLI 与 Web 通过同一 registry 漏斗管理同一批资源，两个面永不矛盾，锁成 CI/提交期不变量)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：CLI/Web 管理面平价守卫 (parityGuard.checkParity — 证明 CLI 与 Web 通过同一 registry 漏斗管理同一批资源，两个面永不矛盾，锁成 CI/提交期不变量)。
-  - 验证：`node --test services/backend/tests/services/management/parityGuardWiring.test.js`
+  - 验证：`node --test runtime/node/backend/tests/services/management/parityGuardWiring.test.js`
 
 **424.** 验证「CLI/Web 管理面平价守卫 (parityGuard.checkParity — 证明 CLI 与 Web 通过同一 registry 漏斗管理同一批资源，两个面永不矛盾，锁成 CI/提交期不变量)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：CLI/Web 管理面平价守卫 (parityGuard.checkParity — 证明 CLI 与 Web 通过同一 registry 漏斗管理同一批资源，两个面永不矛盾，锁成 CI/提交期不变量)。
-  - 验证：`node --check services/backend/src/services/management/parityGuard.js`
+  - 验证：`node --check runtime/node/backend/src/services/management/parityGuard.js`
 
 **425.** 验证「动作契约极小核验器 V 的 CI 强制 (actionContractVerifier — 模型无关可证明不变量层的 fail-closed 谓词核验器,把 P1-P8 投毒抵抗+谓词/Hoare 逻辑锁成发布门禁)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：动作契约极小核验器 V 的 CI 强制 (actionContractVerifier — 模型无关可证明不变量层的 fail-closed 谓词核验器,把 P1-P8 投毒抵抗+谓词/Hoare 逻辑锁成发布门禁)。
-  - 验证：`node --test services/backend/tests/actionContractVerifier.test.js`
+  - 验证：`node --test runtime/node/backend/tests/actionContractVerifier.test.js`
 
 **426.** 验证「动作契约极小核验器 V 的 CI 强制 (actionContractVerifier — 模型无关可证明不变量层的 fail-closed 谓词核验器,把 P1-P8 投毒抵抗+谓词/Hoare 逻辑锁成发布门禁)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：动作契约极小核验器 V 的 CI 强制 (actionContractVerifier — 模型无关可证明不变量层的 fail-closed 谓词核验器,把 P1-P8 投毒抵抗+谓词/Hoare 逻辑锁成发布门禁)。
-  - 验证：`node --check services/backend/src/services/syscallGateway/actionContractVerifier.js`
+  - 验证：`node --check runtime/node/backend/src/services/syscallGateway/actionContractVerifier.js`
 
 **427.** 验证「离线文档站生成器 (build_docs_site.js：把每个 .md 确定性渲染成同名 .html，套统一模板=顶栏/侧边栏全站导航/面包屑/目录/上下一页/mermaid 图/构建期代码高亮/滚动动画，并把 .md 链接改写成 .html 实现站内跳转；verify_docs_site.js 是 B2 验证门)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：离线文档站生成器 (build_docs_site.js：把每个 .md 确定性渲染成同名 .html，套统一模板=顶栏/侧边栏全站导航/面包屑/目录/上下一页/mermaid 图/构建期代码高亮/滚动动画，并把 .md 链接改写成 .html 实现站内跳转；verify_docs_site.js 是 B2 验证门)。
@@ -1788,11 +1788,11 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **435.** 验证「离线文档站生成器 (build_docs_site.js：把每个 .md 确定性渲染成同名 .html，套统一模板=顶栏/侧边栏全站导航/面包屑/目录/上下一页/mermaid 图/构建期代码高亮/滚动动画，并把 .md 链接改写成 .html 实现站内跳转；verify_docs_site.js 是 B2 验证门)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：离线文档站生成器 (build_docs_site.js：把每个 .md 确定性渲染成同名 .html，套统一模板=顶栏/侧边栏全站导航/面包屑/目录/上下一页/mermaid 图/构建期代码高亮/滚动动画，并把 .md 链接改写成 .html 实现站内跳转；verify_docs_site.js 是 B2 验证门)。
-  - 验证：`python3 -m py_compile setup.py scripts/release/docs_bundle_regen.py platform/khy_platform/docs_site.py`
+  - 验证：`python3 -m py_compile setup.py scripts/release/docs_bundle_regen.py runtime/substrate/platform/khy_platform/docs_site.py`
 
 **436.** 验证「Google Vertex AI 端点成形 CLI 接线 (khy gateway vertex：把纯叶子 vertexRequestShaping 的 URL 成形能力接到人面前，告诉用户网关表单该填什么 baseUrl/端点/鉴权)」：跑该命令，绿灯才算这块没坏。
   - 说明：子系统：Google Vertex AI 端点成形 CLI 接线 (khy gateway vertex：把纯叶子 vertexRequestShaping 的 URL 成形能力接到人面前，告诉用户网关表单该填什么 baseUrl/端点/鉴权)。
-  - 验证：`node --check services/backend/src/services/gateway/vertexRequestShaping.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/vertexRequestShaping.js`
 
 
 ## 四、逐文件理解与补注释
@@ -1813,15 +1813,15 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：面向小白概念文档 + 修仙学 AI 故事内容（作者向房屋风格 + 单人维护体检）。读懂再动。
   - 验证：`npm run docs:check-beginner`
 
-**441.** 阅读「Bootstrap and Packaging」的 platform/khy_platform/cli.py，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**441.** 阅读「Bootstrap and Packaging」的 runtime/substrate/platform/khy_platform/cli.py，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Bootstrap and Packaging。读懂再动。
   - 验证：`npm run check:manifest-sync`
 
-**442.** 阅读「Bootstrap and Packaging」的 platform/khy_platform/_bootstrap.py，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**442.** 阅读「Bootstrap and Packaging」的 runtime/substrate/platform/khy_platform/_bootstrap.py，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Bootstrap and Packaging。读懂再动。
   - 验证：`npm run check:manifest-sync`
 
-**443.** 阅读「Bootstrap and Packaging」的 platform/khy_platform/__init__.py，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**443.** 阅读「Bootstrap and Packaging」的 runtime/substrate/platform/khy_platform/__init__.py，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Bootstrap and Packaging。读懂再动。
   - 验证：`npm run check:manifest-sync`
 
@@ -1829,259 +1829,259 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：Bootstrap and Packaging。读懂再动。
   - 验证：`npm run check:manifest-sync`
 
-**445.** 阅读「Bootstrap and Packaging」的 software/khyquant/setup.py，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**445.** 阅读「Bootstrap and Packaging」的 delivery/channel/khyquant/setup.py，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Bootstrap and Packaging。读懂再动。
   - 验证：`npm run check:manifest-sync`
 
-**446.** 阅读「Bootstrap and Packaging」的 software/khyquant/MANIFEST.in，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**446.** 阅读「Bootstrap and Packaging」的 delivery/channel/khyquant/MANIFEST.in，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Bootstrap and Packaging。读懂再动。
   - 验证：`npm run check:manifest-sync`
 
-**447.** 阅读「Bootstrap and Packaging」的 packaging/npm/package.json，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**447.** 阅读「Bootstrap and Packaging」的 works/ship/npm/package.json，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Bootstrap and Packaging。读懂再动。
   - 验证：`npm run check:manifest-sync`
 
-**448.** 阅读「Bootstrap and Packaging」的 services/backend/package.json，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**448.** 阅读「Bootstrap and Packaging」的 runtime/node/backend/package.json，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Bootstrap and Packaging。读懂再动。
   - 验证：`npm run check:manifest-sync`
 
-**449.** 阅读「CLI Routing and Help Surface」的 services/backend/src/constants/commandSchema.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**449.** 阅读「CLI Routing and Help Surface」的 runtime/node/backend/src/constants/commandSchema.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：CLI Routing and Help Surface。读懂再动。
-  - 验证：`node --check services/backend/src/constants/commandSchema.js`
+  - 验证：`node --check runtime/node/backend/src/constants/commandSchema.js`
 
-**450.** 阅读「CLI Routing and Help Surface」的 services/backend/src/cli/aliases.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**450.** 阅读「CLI Routing and Help Surface」的 runtime/node/backend/src/cli/aliases.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：CLI Routing and Help Surface。读懂再动。
-  - 验证：`node --check services/backend/src/cli/aliases.js`
+  - 验证：`node --check runtime/node/backend/src/cli/aliases.js`
 
-**451.** 阅读「CLI Routing and Help Surface」的 services/backend/src/cli/router.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**451.** 阅读「CLI Routing and Help Surface」的 runtime/node/backend/src/cli/router.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：CLI Routing and Help Surface。读懂再动。
-  - 验证：`node --check services/backend/src/cli/router.js`
+  - 验证：`node --check runtime/node/backend/src/cli/router.js`
 
-**452.** 阅读「CLI Routing and Help Surface」的 services/backend/src/cli/repl.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**452.** 阅读「CLI Routing and Help Surface」的 runtime/node/backend/src/cli/repl.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：CLI Routing and Help Surface。读懂再动。
-  - 验证：`node --check services/backend/src/cli/repl.js`
+  - 验证：`node --check runtime/node/backend/src/cli/repl.js`
 
-**453.** 阅读「CLI Routing and Help Surface」的 services/backend/src/cli/handlers，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**453.** 阅读「CLI Routing and Help Surface」的 runtime/node/backend/src/cli/handlers，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：CLI Routing and Help Surface。读懂再动。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
-**454.** 阅读「CLI Routing and Help Surface」的 services/backend/tests/cli/router.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**454.** 阅读「CLI Routing and Help Surface」的 runtime/node/backend/tests/cli/router.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：CLI Routing and Help Surface。读懂再动。
-  - 验证：`node --check services/backend/tests/cli/router.test.js`
+  - 验证：`node --check runtime/node/backend/tests/cli/router.test.js`
 
-**455.** 阅读「CLI Routing and Help Surface」的 services/backend/tests/cli/repl.tasks.interaction.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**455.** 阅读「CLI Routing and Help Surface」的 runtime/node/backend/tests/cli/repl.tasks.interaction.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：CLI Routing and Help Surface。读懂再动。
-  - 验证：`node --check services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`node --check runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
-**456.** 阅读「Prompt Capsule and Debug Prompt System」的 services/backend/src/constants/prompts.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**456.** 阅读「Prompt Capsule and Debug Prompt System」的 runtime/node/backend/src/constants/prompts.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。读懂再动。
-  - 验证：`node --check services/backend/src/constants/prompts.js`
+  - 验证：`node --check runtime/node/backend/src/constants/prompts.js`
 
-**457.** 阅读「Prompt Capsule and Debug Prompt System」的 services/backend/src/services/khyUpgradeRuntime.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**457.** 阅读「Prompt Capsule and Debug Prompt System」的 runtime/node/backend/src/services/khyUpgradeRuntime.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。读懂再动。
-  - 验证：`node --check services/backend/src/services/khyUpgradeRuntime.js`
+  - 验证：`node --check runtime/node/backend/src/services/khyUpgradeRuntime.js`
 
-**458.** 阅读「Prompt Capsule and Debug Prompt System」的 services/backend/src/services/domain/memory/compact/prompt.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**458.** 阅读「Prompt Capsule and Debug Prompt System」的 runtime/node/backend/src/services/domain/memory/compact/prompt.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。读懂再动。
-  - 验证：`node --check services/backend/src/services/domain/memory/compact/prompt.js`
+  - 验证：`node --check runtime/node/backend/src/services/domain/memory/compact/prompt.js`
 
-**459.** 阅读「Prompt Capsule and Debug Prompt System」的 services/backend/src/cli/handlers/gateway.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**459.** 阅读「Prompt Capsule and Debug Prompt System」的 runtime/node/backend/src/cli/handlers/gateway.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。读懂再动。
-  - 验证：`node --check services/backend/src/cli/handlers/gateway.js`
+  - 验证：`node --check runtime/node/backend/src/cli/handlers/gateway.js`
 
-**460.** 阅读「Prompt Capsule and Debug Prompt System」的 services/backend/tests/promptOnDemandSections.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**460.** 阅读「Prompt Capsule and Debug Prompt System」的 runtime/node/backend/tests/promptOnDemandSections.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。读懂再动。
-  - 验证：`node --check services/backend/tests/promptOnDemandSections.test.js`
+  - 验证：`node --check runtime/node/backend/tests/promptOnDemandSections.test.js`
 
-**461.** 阅读「Prompt Capsule and Debug Prompt System」的 services/backend/tests/promptLearningRules.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**461.** 阅读「Prompt Capsule and Debug Prompt System」的 runtime/node/backend/tests/promptLearningRules.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。读懂再动。
-  - 验证：`node --check services/backend/tests/promptLearningRules.test.js`
+  - 验证：`node --check runtime/node/backend/tests/promptLearningRules.test.js`
 
-**462.** 阅读「Prompt Capsule and Debug Prompt System」的 services/backend/tests/gatewayDebugPrompt.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**462.** 阅读「Prompt Capsule and Debug Prompt System」的 runtime/node/backend/tests/gatewayDebugPrompt.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。读懂再动。
-  - 验证：`node --check services/backend/tests/gatewayDebugPrompt.test.js`
+  - 验证：`node --check runtime/node/backend/tests/gatewayDebugPrompt.test.js`
 
-**463.** 阅读「AI Gateway and Adapter Layer」的 services/backend/src/services/gateway/aiGateway.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**463.** 阅读「AI Gateway and Adapter Layer」的 runtime/node/backend/src/services/gateway/aiGateway.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI Gateway and Adapter Layer。读懂再动。
-  - 验证：`node --check services/backend/src/services/gateway/aiGateway.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/aiGateway.js`
 
-**464.** 阅读「AI Gateway and Adapter Layer」的 services/backend/src/services/gateway/adapters，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**464.** 阅读「AI Gateway and Adapter Layer」的 runtime/node/backend/src/services/gateway/adapters，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI Gateway and Adapter Layer。读懂再动。
-  - 验证：`npm run test:one -- services/backend/tests/aiGateway.stability.test.js services/backend/tests/gateway/transportResilience.test.js services/backend/tests/gatewayAdapters.stability.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/aiGateway.stability.test.js runtime/node/backend/tests/gateway/transportResilience.test.js runtime/node/backend/tests/gatewayAdapters.stability.test.js`
 
-**465.** 阅读「AI Gateway and Adapter Layer」的 services/backend/src/services/gateway/proxyServer.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**465.** 阅读「AI Gateway and Adapter Layer」的 runtime/node/backend/src/services/gateway/proxyServer.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI Gateway and Adapter Layer。读懂再动。
-  - 验证：`node --check services/backend/src/services/gateway/proxyServer.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/proxyServer.js`
 
-**466.** 阅读「AI Gateway and Adapter Layer」的 services/backend/tests/aiGateway.stability.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**466.** 阅读「AI Gateway and Adapter Layer」的 runtime/node/backend/tests/aiGateway.stability.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI Gateway and Adapter Layer。读懂再动。
-  - 验证：`node --check services/backend/tests/aiGateway.stability.test.js`
+  - 验证：`node --check runtime/node/backend/tests/aiGateway.stability.test.js`
 
-**467.** 阅读「AI Gateway and Adapter Layer」的 services/backend/tests/gateway/transportResilience.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**467.** 阅读「AI Gateway and Adapter Layer」的 runtime/node/backend/tests/gateway/transportResilience.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI Gateway and Adapter Layer。读懂再动。
-  - 验证：`node --check services/backend/tests/gateway/transportResilience.test.js`
+  - 验证：`node --check runtime/node/backend/tests/gateway/transportResilience.test.js`
 
-**468.** 阅读「AI Gateway and Adapter Layer」的 services/backend/tests/gatewayAdapters.stability.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**468.** 阅读「AI Gateway and Adapter Layer」的 runtime/node/backend/tests/gatewayAdapters.stability.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI Gateway and Adapter Layer。读懂再动。
-  - 验证：`node --check services/backend/tests/gatewayAdapters.stability.test.js`
+  - 验证：`node --check runtime/node/backend/tests/gatewayAdapters.stability.test.js`
 
-**469.** 阅读「Proxy, Daemon, and Runtime Port Discovery」的 services/backend/src/services/daemonManager.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**469.** 阅读「Proxy, Daemon, and Runtime Port Discovery」的 runtime/node/backend/src/services/daemonManager.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。读懂再动。
-  - 验证：`node --check services/backend/src/services/daemonManager.js`
+  - 验证：`node --check runtime/node/backend/src/services/daemonManager.js`
 
-**470.** 阅读「Proxy, Daemon, and Runtime Port Discovery」的 services/backend/src/services/aiManagementServer.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**470.** 阅读「Proxy, Daemon, and Runtime Port Discovery」的 runtime/node/backend/src/services/aiManagementServer.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。读懂再动。
-  - 验证：`node --check services/backend/src/services/aiManagementServer.js`
+  - 验证：`node --check runtime/node/backend/src/services/aiManagementServer.js`
 
-**471.** 阅读「Proxy, Daemon, and Runtime Port Discovery」的 services/backend/src/services/gateway/proxyServer.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**471.** 阅读「Proxy, Daemon, and Runtime Port Discovery」的 runtime/node/backend/src/services/gateway/proxyServer.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。读懂再动。
-  - 验证：`node --check services/backend/src/services/gateway/proxyServer.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/proxyServer.js`
 
-**472.** 阅读「Proxy, Daemon, and Runtime Port Discovery」的 services/backend/src/utils/proxyBaseUrl.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**472.** 阅读「Proxy, Daemon, and Runtime Port Discovery」的 runtime/node/backend/src/utils/proxyBaseUrl.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。读懂再动。
-  - 验证：`node --check services/backend/src/utils/proxyBaseUrl.js`
+  - 验证：`node --check runtime/node/backend/src/utils/proxyBaseUrl.js`
 
-**473.** 阅读「Proxy, Daemon, and Runtime Port Discovery」的 services/backend/src/constants/serviceDefaults.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**473.** 阅读「Proxy, Daemon, and Runtime Port Discovery」的 runtime/node/backend/src/constants/serviceDefaults.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。读懂再动。
-  - 验证：`node --check services/backend/src/constants/serviceDefaults.js`
+  - 验证：`node --check runtime/node/backend/src/constants/serviceDefaults.js`
 
-**474.** 阅读「Proxy, Daemon, and Runtime Port Discovery」的 services/backend/tests/daemonManager.runtimePort.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**474.** 阅读「Proxy, Daemon, and Runtime Port Discovery」的 runtime/node/backend/tests/daemonManager.runtimePort.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。读懂再动。
-  - 验证：`node --check services/backend/tests/daemonManager.runtimePort.test.js`
+  - 验证：`node --check runtime/node/backend/tests/daemonManager.runtimePort.test.js`
 
-**475.** 阅读「Proxy, Daemon, and Runtime Port Discovery」的 services/backend/tests/gatewayManage.portDrift.integration.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**475.** 阅读「Proxy, Daemon, and Runtime Port Discovery」的 runtime/node/backend/tests/gatewayManage.portDrift.integration.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。读懂再动。
-  - 验证：`node --check services/backend/tests/gatewayManage.portDrift.integration.test.js`
+  - 验证：`node --check runtime/node/backend/tests/gatewayManage.portDrift.integration.test.js`
 
-**476.** 阅读「Proxy, Daemon, and Runtime Port Discovery」的 services/backend/tests/services/proxyBaseUrl.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**476.** 阅读「Proxy, Daemon, and Runtime Port Discovery」的 runtime/node/backend/tests/services/proxyBaseUrl.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。读懂再动。
-  - 验证：`node --check services/backend/tests/services/proxyBaseUrl.test.js`
+  - 验证：`node --check runtime/node/backend/tests/services/proxyBaseUrl.test.js`
 
-**477.** 阅读「Proxy, Daemon, and Runtime Port Discovery」的 services/backend/tests/services/serviceDefaults.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**477.** 阅读「Proxy, Daemon, and Runtime Port Discovery」的 runtime/node/backend/tests/services/serviceDefaults.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。读懂再动。
-  - 验证：`node --check services/backend/tests/services/serviceDefaults.test.js`
+  - 验证：`node --check runtime/node/backend/tests/services/serviceDefaults.test.js`
 
-**478.** 阅读「AI Management UI and API」的 services/backend/src/routes/aiGatewayAdmin.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**478.** 阅读「AI Management UI and API」的 runtime/node/backend/src/routes/aiGatewayAdmin.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI Management UI and API。读懂再动。
-  - 验证：`node --check services/backend/src/routes/aiGatewayAdmin.js`
+  - 验证：`node --check runtime/node/backend/src/routes/aiGatewayAdmin.js`
 
-**479.** 阅读「AI Management UI and API」的 services/ai-backend/src/routes/aiGatewayAdmin.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**479.** 阅读「AI Management UI and API」的 runtime/node/ai-backend/src/routes/aiGatewayAdmin.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI Management UI and API。读懂再动。
-  - 验证：`node --check services/ai-backend/src/routes/aiGatewayAdmin.js`
+  - 验证：`node --check runtime/node/ai-backend/src/routes/aiGatewayAdmin.js`
 
-**480.** 阅读「AI Management UI and API」的 apps/ai-frontend/src，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**480.** 阅读「AI Management UI and API」的 delivery/web/ai-frontend/src，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI Management UI and API。读懂再动。
-  - 验证：`npm run test:one -- services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js services/backend/tests/gatewayManage.apiDisplay.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
 
-**481.** 阅读「AI Management UI and API」的 apps/ai-frontend/package.json，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**481.** 阅读「AI Management UI and API」的 delivery/web/ai-frontend/package.json，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI Management UI and API。读懂再动。
-  - 验证：`npm run test:one -- services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js services/backend/tests/gatewayManage.apiDisplay.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
 
-**482.** 阅读「AI Management UI and API」的 apps/ai-frontend/vite.config.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**482.** 阅读「AI Management UI and API」的 delivery/web/ai-frontend/vite.config.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI Management UI and API。读懂再动。
-  - 验证：`node --check apps/ai-frontend/vite.config.js`
+  - 验证：`node --check delivery/web/ai-frontend/vite.config.js`
 
-**483.** 阅读「AI Management UI and API」的 services/backend/src/cli/handlers/gateway.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**483.** 阅读「AI Management UI and API」的 runtime/node/backend/src/cli/handlers/gateway.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI Management UI and API。读懂再动。
-  - 验证：`node --check services/backend/src/cli/handlers/gateway.js`
+  - 验证：`node --check runtime/node/backend/src/cli/handlers/gateway.js`
 
-**484.** 阅读「AI Management UI and API」的 services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**484.** 阅读「AI Management UI and API」的 runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI Management UI and API。读懂再动。
-  - 验证：`node --check services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js`
+  - 验证：`node --check runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js`
 
-**485.** 阅读「AI Management UI and API」的 services/backend/tests/gatewayManage.apiDisplay.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**485.** 阅读「AI Management UI and API」的 runtime/node/backend/tests/gatewayManage.apiDisplay.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI Management UI and API。读懂再动。
-  - 验证：`node --check services/backend/tests/gatewayManage.apiDisplay.test.js`
+  - 验证：`node --check runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
 
-**486.** 阅读「Coding Projects (named workspaces + chat linkage)」的 platform/packages/shared/src/models/UserProject.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**486.** 阅读「Coding Projects (named workspaces + chat linkage)」的 runtime/substrate/platform/packages/shared/src/models/UserProject.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`node --check platform/packages/shared/src/models/UserProject.js`
+  - 验证：`node --check runtime/substrate/platform/packages/shared/src/models/UserProject.js`
 
-**487.** 阅读「Coding Projects (named workspaces + chat linkage)」的 platform/packages/shared/src/models/index.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**487.** 阅读「Coding Projects (named workspaces + chat linkage)」的 runtime/substrate/platform/packages/shared/src/models/index.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`node --check platform/packages/shared/src/models/index.js`
+  - 验证：`node --check runtime/substrate/platform/packages/shared/src/models/index.js`
 
-**488.** 阅读「Coding Projects (named workspaces + chat linkage)」的 services/backend/src/services/projectStore.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**488.** 阅读「Coding Projects (named workspaces + chat linkage)」的 runtime/node/backend/src/services/projectStore.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`node --check services/backend/src/services/projectStore.js`
+  - 验证：`node --check runtime/node/backend/src/services/projectStore.js`
 
-**489.** 阅读「Coding Projects (named workspaces + chat linkage)」的 services/backend/src/services/aiManagementProjects.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**489.** 阅读「Coding Projects (named workspaces + chat linkage)」的 runtime/node/backend/src/services/aiManagementProjects.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`node --check services/backend/src/services/aiManagementProjects.js`
+  - 验证：`node --check runtime/node/backend/src/services/aiManagementProjects.js`
 
-**490.** 阅读「Coding Projects (named workspaces + chat linkage)」的 services/backend/src/services/aiManagementServer.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**490.** 阅读「Coding Projects (named workspaces + chat linkage)」的 runtime/node/backend/src/services/aiManagementServer.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`node --check services/backend/src/services/aiManagementServer.js`
+  - 验证：`node --check runtime/node/backend/src/services/aiManagementServer.js`
 
-**491.** 阅读「Coding Projects (named workspaces + chat linkage)」的 platform/packages/shared/src/models/Conversation.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**491.** 阅读「Coding Projects (named workspaces + chat linkage)」的 runtime/substrate/platform/packages/shared/src/models/Conversation.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`node --check platform/packages/shared/src/models/Conversation.js`
+  - 验证：`node --check runtime/substrate/platform/packages/shared/src/models/Conversation.js`
 
-**492.** 阅读「Coding Projects (named workspaces + chat linkage)」的 services/backend/src/services/conversationStore.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**492.** 阅读「Coding Projects (named workspaces + chat linkage)」的 runtime/node/backend/src/services/conversationStore.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`node --check services/backend/src/services/conversationStore.js`
+  - 验证：`node --check runtime/node/backend/src/services/conversationStore.js`
 
-**493.** 阅读「Coding Projects (named workspaces + chat linkage)」的 apps/ai-frontend/src/composables/useProjects.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**493.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/web/ai-frontend/src/composables/useProjects.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`node --check apps/ai-frontend/src/composables/useProjects.js`
+  - 验证：`node --check delivery/web/ai-frontend/src/composables/useProjects.js`
 
-**494.** 阅读「Coding Projects (named workspaces + chat linkage)」的 apps/ai-frontend/src/composables/useChatConversations.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**494.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/web/ai-frontend/src/composables/useChatConversations.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`node --check apps/ai-frontend/src/composables/useChatConversations.js`
+  - 验证：`node --check delivery/web/ai-frontend/src/composables/useChatConversations.js`
 
-**495.** 阅读「Coding Projects (named workspaces + chat linkage)」的 apps/ai-frontend/src/views/Projects.vue，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**495.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/web/ai-frontend/src/views/Projects.vue，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**496.** 阅读「Coding Projects (named workspaces + chat linkage)」的 apps/ai-frontend/src/views/AIChat.vue，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**496.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/web/ai-frontend/src/views/AIChat.vue，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**497.** 阅读「Coding Projects (named workspaces + chat linkage)」的 apps/ai-frontend/src/composables/useRoutePrefetch.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**497.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/web/ai-frontend/src/composables/useRoutePrefetch.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`node --check apps/ai-frontend/src/composables/useRoutePrefetch.js`
+  - 验证：`node --check delivery/web/ai-frontend/src/composables/useRoutePrefetch.js`
 
-**498.** 阅读「Coding Projects (named workspaces + chat linkage)」的 apps/ai-frontend/src/router/index.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**498.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/web/ai-frontend/src/router/index.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`node --check apps/ai-frontend/src/router/index.js`
+  - 验证：`node --check delivery/web/ai-frontend/src/router/index.js`
 
-**499.** 阅读「Coding Projects (named workspaces + chat linkage)」的 apps/ai-frontend/src/views/Layout.vue，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**499.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/web/ai-frontend/src/views/Layout.vue，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**500.** 阅读「Coding Projects (named workspaces + chat linkage)」的 services/backend/tests/projectStore.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**500.** 阅读「Coding Projects (named workspaces + chat linkage)」的 runtime/node/backend/tests/projectStore.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`node --check services/backend/tests/projectStore.test.js`
+  - 验证：`node --check runtime/node/backend/tests/projectStore.test.js`
 
-**501.** 阅读「Coding Projects (named workspaces + chat linkage)」的 apps/ai-frontend/src/composables/useProjects.wiring.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**501.** 阅读「Coding Projects (named workspaces + chat linkage)」的 delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。读懂再动。
-  - 验证：`node --check apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`node --check delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**502.** 阅读「Workspace, Publish, and Verification Commands」的 services/backend/src/cli/handlers/workspace.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**502.** 阅读「Workspace, Publish, and Verification Commands」的 runtime/node/backend/src/cli/handlers/workspace.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Workspace, Publish, and Verification Commands。读懂再动。
-  - 验证：`node --check services/backend/src/cli/handlers/workspace.js`
+  - 验证：`node --check runtime/node/backend/src/cli/handlers/workspace.js`
 
-**503.** 阅读「Workspace, Publish, and Verification Commands」的 services/backend/src/cli/handlers/publish.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**503.** 阅读「Workspace, Publish, and Verification Commands」的 runtime/node/backend/src/cli/handlers/publish.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Workspace, Publish, and Verification Commands。读懂再动。
-  - 验证：`node --check services/backend/src/cli/handlers/publish.js`
+  - 验证：`node --check runtime/node/backend/src/cli/handlers/publish.js`
 
-**504.** 阅读「Workspace, Publish, and Verification Commands」的 services/backend/src/cli/handlers/verify.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**504.** 阅读「Workspace, Publish, and Verification Commands」的 runtime/node/backend/src/cli/handlers/verify.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Workspace, Publish, and Verification Commands。读懂再动。
-  - 验证：`node --check services/backend/src/cli/handlers/verify.js`
+  - 验证：`node --check runtime/node/backend/src/cli/handlers/verify.js`
 
-**505.** 阅读「Workspace, Publish, and Verification Commands」的 services/backend/tests/publish.sourceReleaseMode.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**505.** 阅读「Workspace, Publish, and Verification Commands」的 runtime/node/backend/tests/publish.sourceReleaseMode.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Workspace, Publish, and Verification Commands。读懂再动。
-  - 验证：`node --check services/backend/tests/publish.sourceReleaseMode.test.js`
+  - 验证：`node --check runtime/node/backend/tests/publish.sourceReleaseMode.test.js`
 
-**506.** 阅读「Workspace, Publish, and Verification Commands」的 services/backend/tests/publish.dbPreflight.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**506.** 阅读「Workspace, Publish, and Verification Commands」的 runtime/node/backend/tests/publish.dbPreflight.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Workspace, Publish, and Verification Commands。读懂再动。
-  - 验证：`node --check services/backend/tests/publish.dbPreflight.test.js`
+  - 验证：`node --check runtime/node/backend/tests/publish.dbPreflight.test.js`
 
 **507.** 阅读「Maintenance Safety and Rule Gates」的 AGENTS.md，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Maintenance Safety and Rule Gates。读懂再动。
   - 验证：`npm run check:changed`
 
-**508.** 阅读「Maintenance Safety and Rule Gates」的 CONTRIBUTING.md，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**508.** 阅读「Maintenance Safety and Rule Gates」的 .github/CONTRIBUTING.md，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Maintenance Safety and Rule Gates。读懂再动。
   - 验证：`npm run check:changed`
 
@@ -2093,9 +2093,9 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：Maintenance Safety and Rule Gates。读懂再动。
   - 验证：`node --check scripts/ci/check-change-safety.js`
 
-**511.** 阅读「Maintenance Safety and Rule Gates」的 extensions/scripts/khy-installer/install-git-hooks.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**511.** 阅读「Maintenance Safety and Rule Gates」的 delivery/extension/scripts/khy-installer/install-git-hooks.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Maintenance Safety and Rule Gates。读懂再动。
-  - 验证：`node --check extensions/scripts/khy-installer/install-git-hooks.js`
+  - 验证：`node --check delivery/extension/scripts/khy-installer/install-git-hooks.js`
 
 **512.** 阅读「Maintenance Safety and Rule Gates」的 scripts/ci/check-version-sync.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Maintenance Safety and Rule Gates。读懂再动。
@@ -2113,61 +2113,61 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：Maintenance Safety and Rule Gates。读懂再动。
   - 验证：`npm run check:changed`
 
-**516.** 阅读「Release and Rollback」的 services/backend/src/cli/handlers/publish.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**516.** 阅读「Release and Rollback」的 runtime/node/backend/src/cli/handlers/publish.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Release and Rollback。读懂再动。
-  - 验证：`node --check services/backend/src/cli/handlers/publish.js`
+  - 验证：`node --check runtime/node/backend/src/cli/handlers/publish.js`
 
 **517.** 阅读「Release and Rollback」的 scripts/release/build-and-audit-pip-purity.sh，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Release and Rollback。读懂再动。
-  - 验证：`npm run test:one -- services/backend/tests/publish.sourceReleaseMode.test.js services/backend/tests/publish.dbPreflight.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/publish.sourceReleaseMode.test.js runtime/node/backend/tests/publish.dbPreflight.test.js`
 
 **518.** 阅读「Release and Rollback」的 scripts/ci/check-version-sync.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Release and Rollback。读懂再动。
   - 验证：`node --check scripts/ci/check-version-sync.js`
 
-**519.** 阅读「Build Best Environment (Self-check / Repair / Probes)」的 services/backend/src/services/localBrainEnvOptimize.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**519.** 阅读「Build Best Environment (Self-check / Repair / Probes)」的 runtime/node/backend/src/services/localBrainEnvOptimize.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Build Best Environment (Self-check / Repair / Probes)。读懂再动。
-  - 验证：`node --check services/backend/src/services/localBrainEnvOptimize.js`
+  - 验证：`node --check runtime/node/backend/src/services/localBrainEnvOptimize.js`
 
-**520.** 阅读「Build Best Environment (Self-check / Repair / Probes)」的 services/backend/src/services/envProbes.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**520.** 阅读「Build Best Environment (Self-check / Repair / Probes)」的 runtime/node/backend/src/services/envProbes.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Build Best Environment (Self-check / Repair / Probes)。读懂再动。
-  - 验证：`node --check services/backend/src/services/envProbes.js`
+  - 验证：`node --check runtime/node/backend/src/services/envProbes.js`
 
-**521.** 阅读「Build Best Environment (Self-check / Repair / Probes)」的 services/backend/src/services/envRepair.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**521.** 阅读「Build Best Environment (Self-check / Repair / Probes)」的 runtime/node/backend/src/services/envRepair.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Build Best Environment (Self-check / Repair / Probes)。读懂再动。
-  - 验证：`node --check services/backend/src/services/envRepair.js`
+  - 验证：`node --check runtime/node/backend/src/services/envRepair.js`
 
-**522.** 阅读「Build Best Environment (Self-check / Repair / Probes)」的 services/backend/src/services/envPlatform.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**522.** 阅读「Build Best Environment (Self-check / Repair / Probes)」的 runtime/node/backend/src/services/envPlatform.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Build Best Environment (Self-check / Repair / Probes)。读懂再动。
-  - 验证：`node --check services/backend/src/services/envPlatform.js`
+  - 验证：`node --check runtime/node/backend/src/services/envPlatform.js`
 
-**523.** 阅读「Build Best Environment (Self-check / Repair / Probes)」的 services/backend/src/services/diskCleanup，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**523.** 阅读「Build Best Environment (Self-check / Repair / Probes)」的 runtime/node/backend/src/services/diskCleanup，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Build Best Environment (Self-check / Repair / Probes)。读懂再动。
-  - 验证：`npm run test:one -- services/backend/tests/services/localBrainEnvOptimize.test.js services/backend/tests/services/envProbes.test.js services/backend/tests/services/envRepair.test.js services/backend/tests/services/envPlatform.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/services/localBrainEnvOptimize.test.js runtime/node/backend/tests/services/envProbes.test.js runtime/node/backend/tests/services/envRepair.test.js runtime/node/backend/tests/services/envPlatform.test.js`
 
-**524.** 阅读「Build Best Environment (Self-check / Repair / Probes)」的 services/backend/src/services/localBrainService.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**524.** 阅读「Build Best Environment (Self-check / Repair / Probes)」的 runtime/node/backend/src/services/localBrainService.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Build Best Environment (Self-check / Repair / Probes)。读懂再动。
-  - 验证：`node --check services/backend/src/services/localBrainService.js`
+  - 验证：`node --check runtime/node/backend/src/services/localBrainService.js`
 
-**525.** 阅读「Build Best Environment (Self-check / Repair / Probes)」的 services/backend/src/cli/tui/hooks/useQueryBridge.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**525.** 阅读「Build Best Environment (Self-check / Repair / Probes)」的 runtime/node/backend/src/cli/tui/hooks/useQueryBridge.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Build Best Environment (Self-check / Repair / Probes)。读懂再动。
-  - 验证：`node --check services/backend/src/cli/tui/hooks/useQueryBridge.js`
+  - 验证：`node --check runtime/node/backend/src/cli/tui/hooks/useQueryBridge.js`
 
-**526.** 阅读「Build Best Environment (Self-check / Repair / Probes)」的 services/backend/tests/services/localBrainEnvOptimize.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**526.** 阅读「Build Best Environment (Self-check / Repair / Probes)」的 runtime/node/backend/tests/services/localBrainEnvOptimize.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Build Best Environment (Self-check / Repair / Probes)。读懂再动。
-  - 验证：`node --check services/backend/tests/services/localBrainEnvOptimize.test.js`
+  - 验证：`node --check runtime/node/backend/tests/services/localBrainEnvOptimize.test.js`
 
-**527.** 阅读「Build Best Environment (Self-check / Repair / Probes)」的 services/backend/tests/services/envProbes.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**527.** 阅读「Build Best Environment (Self-check / Repair / Probes)」的 runtime/node/backend/tests/services/envProbes.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Build Best Environment (Self-check / Repair / Probes)。读懂再动。
-  - 验证：`node --check services/backend/tests/services/envProbes.test.js`
+  - 验证：`node --check runtime/node/backend/tests/services/envProbes.test.js`
 
-**528.** 阅读「Build Best Environment (Self-check / Repair / Probes)」的 services/backend/tests/services/envRepair.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**528.** 阅读「Build Best Environment (Self-check / Repair / Probes)」的 runtime/node/backend/tests/services/envRepair.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Build Best Environment (Self-check / Repair / Probes)。读懂再动。
-  - 验证：`node --check services/backend/tests/services/envRepair.test.js`
+  - 验证：`node --check runtime/node/backend/tests/services/envRepair.test.js`
 
-**529.** 阅读「Build Best Environment (Self-check / Repair / Probes)」的 services/backend/tests/services/envPlatform.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**529.** 阅读「Build Best Environment (Self-check / Repair / Probes)」的 runtime/node/backend/tests/services/envPlatform.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Build Best Environment (Self-check / Repair / Probes)。读懂再动。
-  - 验证：`node --check services/backend/tests/services/envPlatform.test.js`
+  - 验证：`node --check runtime/node/backend/tests/services/envPlatform.test.js`
 
 **530.** 阅读「Evolution Prompt Playbook (1000 preset prompts)」的 scripts/docs/gen-evolution-prompts.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Evolution Prompt Playbook (1000 preset prompts)。读懂再动。
@@ -2185,9 +2185,9 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：Symptom Triage (route a symptom to its subsystem)。读懂再动。
   - 验证：`node --check scripts/lib/maintainerTriage.js`
 
-**534.** 阅读「Symptom Triage (route a symptom to its subsystem)」的 extensions/scripts/khy-diagnostics/triage.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**534.** 阅读「Symptom Triage (route a symptom to its subsystem)」的 delivery/extension/scripts/khy-diagnostics/triage.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Symptom Triage (route a symptom to its subsystem)。读懂再动。
-  - 验证：`node --check extensions/scripts/khy-diagnostics/triage.js`
+  - 验证：`node --check delivery/extension/scripts/khy-diagnostics/triage.js`
 
 **535.** 阅读「Symptom Triage (route a symptom to its subsystem)」的 scripts/tests/maintainerTriage.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Symptom Triage (route a symptom to its subsystem)。读懂再动。
@@ -2213,9 +2213,9 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：Installed-copy Integrity (is the on-disk bundle actually complete?)。读懂再动。
   - 验证：`node --check scripts/lib/installIntegrity.js`
 
-**541.** 阅读「Installed-copy Integrity (is the on-disk bundle actually complete?)」的 extensions/scripts/khy-installer/verify-install.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**541.** 阅读「Installed-copy Integrity (is the on-disk bundle actually complete?)」的 delivery/extension/scripts/khy-installer/verify-install.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Installed-copy Integrity (is the on-disk bundle actually complete?)。读懂再动。
-  - 验证：`node --check extensions/scripts/khy-installer/verify-install.js`
+  - 验证：`node --check delivery/extension/scripts/khy-installer/verify-install.js`
 
 **542.** 阅读「Installed-copy Integrity (is the on-disk bundle actually complete?)」的 scripts/tests/installIntegrity.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Installed-copy Integrity (is the on-disk bundle actually complete?)。读懂再动。
@@ -2225,9 +2225,9 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：First-run Hydration Health (did the online dependency hydrate actually succeed?)。读懂再动。
   - 验证：`node --check scripts/lib/hydrationHealth.js`
 
-**544.** 阅读「First-run Hydration Health (did the online dependency hydrate actually succeed?)」的 extensions/scripts/khy-diagnostics/hydration-doctor.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**544.** 阅读「First-run Hydration Health (did the online dependency hydrate actually succeed?)」的 delivery/extension/scripts/khy-diagnostics/hydration-doctor.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：First-run Hydration Health (did the online dependency hydrate actually succeed?)。读懂再动。
-  - 验证：`node --check extensions/scripts/khy-diagnostics/hydration-doctor.js`
+  - 验证：`node --check delivery/extension/scripts/khy-diagnostics/hydration-doctor.js`
 
 **545.** 阅读「First-run Hydration Health (did the online dependency hydrate actually succeed?)」的 scripts/tests/hydrationHealth.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：First-run Hydration Health (did the online dependency hydrate actually succeed?)。读懂再动。
@@ -2281,273 +2281,273 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：Off-machine Launch-entry Contract (does each channel pin the launch script it execs?)。读懂再动。
   - 验证：`npm run test:one -- scripts/tests/bundleLaunchContract.test.js`
 
-**558.** 阅读「Off-machine Launch-entry Contract (does each channel pin the launch script it execs?)」的 packaging/npm/scripts/audit-purity.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**558.** 阅读「Off-machine Launch-entry Contract (does each channel pin the launch script it execs?)」的 works/ship/npm/scripts/audit-purity.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Off-machine Launch-entry Contract (does each channel pin the launch script it execs?)。读懂再动。
-  - 验证：`node --check packaging/npm/scripts/audit-purity.js`
+  - 验证：`node --check works/ship/npm/scripts/audit-purity.js`
 
-**559.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 services/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**559.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 runtime/node/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
-  - 验证：`node --check services/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js`
+  - 验证：`node --check runtime/node/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js`
 
-**560.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 services/backend/src/services/domain/network/proxy/proxyCoreManager.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**560.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 runtime/node/backend/src/services/domain/network/proxy/proxyCoreManager.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
-  - 验证：`node --check services/backend/src/services/domain/network/proxy/proxyCoreManager.js`
+  - 验证：`node --check runtime/node/backend/src/services/domain/network/proxy/proxyCoreManager.js`
 
-**561.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 services/backend/src/services/proxyConfigService.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**561.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 runtime/node/backend/src/services/proxyConfigService.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
-  - 验证：`node --check services/backend/src/services/proxyConfigService.js`
+  - 验证：`node --check runtime/node/backend/src/services/proxyConfigService.js`
 
-**562.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 services/backend/src/services/aiManagementProxyEgress.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**562.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 runtime/node/backend/src/services/aiManagementProxyEgress.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
-  - 验证：`node --check services/backend/src/services/aiManagementProxyEgress.js`
+  - 验证：`node --check runtime/node/backend/src/services/aiManagementProxyEgress.js`
 
-**563.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 services/backend/src/services/aiManagementServer.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**563.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 runtime/node/backend/src/services/aiManagementServer.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
-  - 验证：`node --check services/backend/src/services/aiManagementServer.js`
+  - 验证：`node --check runtime/node/backend/src/services/aiManagementServer.js`
 
-**564.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 apps/ai-frontend/src/composables/useProxies.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**564.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 delivery/web/ai-frontend/src/composables/useProxies.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
-  - 验证：`node --check apps/ai-frontend/src/composables/useProxies.js`
+  - 验证：`node --check delivery/web/ai-frontend/src/composables/useProxies.js`
 
-**565.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 apps/ai-frontend/src/views/ProxyManagement.vue，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**565.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 delivery/web/ai-frontend/src/views/ProxyManagement.vue，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
-  - 验证：`npm run test:one -- services/backend/tests/proxyCoreConfigGen.test.js services/backend/tests/proxyCoreManager.test.js services/backend/tests/proxyConfigService.egress.test.js services/backend/tests/aiManagementProxyEgress.wiring.test.js apps/ai-frontend/src/composables/useProxies.egress.wiring.test.js services/backend/tests/bootstrap/ensureProxyCoreEnv.test.js services/backend/tests/services/proxyCoreInstaller.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
 
-**566.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 services/backend/tests/proxyCoreConfigGen.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**566.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 runtime/node/backend/tests/proxyCoreConfigGen.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
-  - 验证：`node --check services/backend/tests/proxyCoreConfigGen.test.js`
+  - 验证：`node --check runtime/node/backend/tests/proxyCoreConfigGen.test.js`
 
-**567.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 services/backend/tests/proxyCoreManager.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**567.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 runtime/node/backend/tests/proxyCoreManager.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
-  - 验证：`node --check services/backend/tests/proxyCoreManager.test.js`
+  - 验证：`node --check runtime/node/backend/tests/proxyCoreManager.test.js`
 
-**568.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 services/backend/tests/proxyConfigService.egress.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**568.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 runtime/node/backend/tests/proxyConfigService.egress.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
-  - 验证：`node --check services/backend/tests/proxyConfigService.egress.test.js`
+  - 验证：`node --check runtime/node/backend/tests/proxyConfigService.egress.test.js`
 
-**569.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 services/backend/tests/aiManagementProxyEgress.wiring.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**569.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
-  - 验证：`node --check services/backend/tests/aiManagementProxyEgress.wiring.test.js`
+  - 验证：`node --check runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js`
 
-**570.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 apps/ai-frontend/src/composables/useProxies.egress.wiring.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**570.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
-  - 验证：`node --check apps/ai-frontend/src/composables/useProxies.egress.wiring.test.js`
+  - 验证：`node --check delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js`
 
-**571.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 services/backend/src/bootstrap/ensureProxyCoreEnv.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**571.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 runtime/node/backend/src/bootstrap/ensureProxyCoreEnv.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
-  - 验证：`node --check services/backend/src/bootstrap/ensureProxyCoreEnv.js`
+  - 验证：`node --check runtime/node/backend/src/bootstrap/ensureProxyCoreEnv.js`
 
-**572.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 services/backend/src/services/domain/network/proxy/proxyCoreInstaller.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**572.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 runtime/node/backend/src/services/domain/network/proxy/proxyCoreInstaller.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
-  - 验证：`node --check services/backend/src/services/domain/network/proxy/proxyCoreInstaller.js`
+  - 验证：`node --check runtime/node/backend/src/services/domain/network/proxy/proxyCoreInstaller.js`
 
-**573.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 services/backend/tests/bootstrap/ensureProxyCoreEnv.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**573.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
-  - 验证：`node --check services/backend/tests/bootstrap/ensureProxyCoreEnv.test.js`
+  - 验证：`node --check runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js`
 
-**574.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 services/backend/tests/services/proxyCoreInstaller.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**574.** 阅读「Proxy Egress Bridge (select node + enable/disable)」的 runtime/node/backend/tests/services/proxyCoreInstaller.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：Proxy Egress Bridge (select node + enable/disable)。读懂再动。
-  - 验证：`node --check services/backend/tests/services/proxyCoreInstaller.test.js`
+  - 验证：`node --check runtime/node/backend/tests/services/proxyCoreInstaller.test.js`
 
-**575.** 阅读「斜杠命令菜单单一真源(经典REPL⇄TUI)」的 services/backend/src/cli/slashExtraCommands.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**575.** 阅读「斜杠命令菜单单一真源(经典REPL⇄TUI)」的 runtime/node/backend/src/cli/slashExtraCommands.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：斜杠命令菜单单一真源(经典REPL⇄TUI)。读懂再动。
-  - 验证：`node --check services/backend/src/cli/slashExtraCommands.js`
+  - 验证：`node --check runtime/node/backend/src/cli/slashExtraCommands.js`
 
-**576.** 阅读「斜杠命令菜单单一真源(经典REPL⇄TUI)」的 services/backend/src/cli/resumeHint.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**576.** 阅读「斜杠命令菜单单一真源(经典REPL⇄TUI)」的 runtime/node/backend/src/cli/resumeHint.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：斜杠命令菜单单一真源(经典REPL⇄TUI)。读懂再动。
-  - 验证：`node --check services/backend/src/cli/resumeHint.js`
+  - 验证：`node --check runtime/node/backend/src/cli/resumeHint.js`
 
-**577.** 阅读「斜杠命令菜单单一真源(经典REPL⇄TUI)」的 services/backend/src/cli/replSession.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**577.** 阅读「斜杠命令菜单单一真源(经典REPL⇄TUI)」的 runtime/node/backend/src/cli/replSession.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：斜杠命令菜单单一真源(经典REPL⇄TUI)。读懂再动。
-  - 验证：`node --check services/backend/src/cli/replSession.js`
+  - 验证：`node --check runtime/node/backend/src/cli/replSession.js`
 
-**578.** 阅读「斜杠命令菜单单一真源(经典REPL⇄TUI)」的 services/backend/src/cli/tui/hooks/useCompletions.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**578.** 阅读「斜杠命令菜单单一真源(经典REPL⇄TUI)」的 runtime/node/backend/src/cli/tui/hooks/useCompletions.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：斜杠命令菜单单一真源(经典REPL⇄TUI)。读懂再动。
-  - 验证：`node --check services/backend/src/cli/tui/hooks/useCompletions.js`
+  - 验证：`node --check runtime/node/backend/src/cli/tui/hooks/useCompletions.js`
 
-**579.** 阅读「斜杠命令菜单单一真源(经典REPL⇄TUI)」的 services/backend/src/cli/tui/app.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**579.** 阅读「斜杠命令菜单单一真源(经典REPL⇄TUI)」的 runtime/node/backend/src/cli/tui/app.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：斜杠命令菜单单一真源(经典REPL⇄TUI)。读懂再动。
-  - 验证：`node --check services/backend/src/cli/tui/app.js`
+  - 验证：`node --check runtime/node/backend/src/cli/tui/app.js`
 
-**580.** 阅读「斜杠命令菜单单一真源(经典REPL⇄TUI)」的 services/backend/tests/slashExtraCommands.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**580.** 阅读「斜杠命令菜单单一真源(经典REPL⇄TUI)」的 runtime/node/backend/tests/slashExtraCommands.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：斜杠命令菜单单一真源(经典REPL⇄TUI)。读懂再动。
-  - 验证：`node --check services/backend/tests/slashExtraCommands.test.js`
+  - 验证：`node --check runtime/node/backend/tests/slashExtraCommands.test.js`
 
-**581.** 阅读「斜杠命令菜单单一真源(经典REPL⇄TUI)」的 services/backend/tests/cli/resumeHint.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**581.** 阅读「斜杠命令菜单单一真源(经典REPL⇄TUI)」的 runtime/node/backend/tests/cli/resumeHint.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：斜杠命令菜单单一真源(经典REPL⇄TUI)。读懂再动。
-  - 验证：`node --check services/backend/tests/cli/resumeHint.test.js`
+  - 验证：`node --check runtime/node/backend/tests/cli/resumeHint.test.js`
 
-**582.** 阅读「斜杠命令菜单单一真源(经典REPL⇄TUI)」的 services/backend/tests/cli/useCompletionsSlashExtras.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**582.** 阅读「斜杠命令菜单单一真源(经典REPL⇄TUI)」的 runtime/node/backend/tests/cli/useCompletionsSlashExtras.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：斜杠命令菜单单一真源(经典REPL⇄TUI)。读懂再动。
-  - 验证：`node --check services/backend/tests/cli/useCompletionsSlashExtras.test.js`
+  - 验证：`node --check runtime/node/backend/tests/cli/useCompletionsSlashExtras.test.js`
 
-**583.** 阅读「前端响应信封解包单一真源(unwrap)」的 apps/ai-frontend/src/api/unwrap.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**583.** 阅读「前端响应信封解包单一真源(unwrap)」的 delivery/web/ai-frontend/src/api/unwrap.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：前端响应信封解包单一真源(unwrap)。读懂再动。
-  - 验证：`node --check apps/ai-frontend/src/api/unwrap.js`
+  - 验证：`node --check delivery/web/ai-frontend/src/api/unwrap.js`
 
-**584.** 阅读「前端响应信封解包单一真源(unwrap)」的 apps/ai-frontend/src/api/unwrap.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**584.** 阅读「前端响应信封解包单一真源(unwrap)」的 delivery/web/ai-frontend/src/api/unwrap.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：前端响应信封解包单一真源(unwrap)。读懂再动。
-  - 验证：`node --check apps/ai-frontend/src/api/unwrap.test.js`
+  - 验证：`node --check delivery/web/ai-frontend/src/api/unwrap.test.js`
 
-**585.** 阅读「前端响应信封解包单一真源(unwrap)」的 apps/ai-frontend/src/api/unwrap.wiring.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**585.** 阅读「前端响应信封解包单一真源(unwrap)」的 delivery/web/ai-frontend/src/api/unwrap.wiring.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：前端响应信封解包单一真源(unwrap)。读懂再动。
-  - 验证：`node --check apps/ai-frontend/src/api/unwrap.wiring.test.js`
+  - 验证：`node --check delivery/web/ai-frontend/src/api/unwrap.wiring.test.js`
 
-**586.** 阅读「khy codex 凭据便捷管理(与 claude 一样启动)」的 services/backend/src/services/gateway/adapters/codexEnvAdoptPolicy.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**586.** 阅读「khy codex 凭据便捷管理(与 claude 一样启动)」的 runtime/node/backend/src/services/gateway/adapters/codexEnvAdoptPolicy.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：khy codex 凭据便捷管理(与 claude 一样启动)。读懂再动。
-  - 验证：`node --check services/backend/src/services/gateway/adapters/codexEnvAdoptPolicy.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/adapters/codexEnvAdoptPolicy.js`
 
-**587.** 阅读「khy codex 凭据便捷管理(与 claude 一样启动)」的 services/backend/src/services/gateway/adapters/openaiRelayPresets.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**587.** 阅读「khy codex 凭据便捷管理(与 claude 一样启动)」的 runtime/node/backend/src/services/gateway/adapters/openaiRelayPresets.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：khy codex 凭据便捷管理(与 claude 一样启动)。读懂再动。
-  - 验证：`node --check services/backend/src/services/gateway/adapters/openaiRelayPresets.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/adapters/openaiRelayPresets.js`
 
-**588.** 阅读「khy codex 凭据便捷管理(与 claude 一样启动)」的 services/backend/src/cli/handlers/codexAdopt.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**588.** 阅读「khy codex 凭据便捷管理(与 claude 一样启动)」的 runtime/node/backend/src/cli/handlers/codexAdopt.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：khy codex 凭据便捷管理(与 claude 一样启动)。读懂再动。
-  - 验证：`node --check services/backend/src/cli/handlers/codexAdopt.js`
+  - 验证：`node --check runtime/node/backend/src/cli/handlers/codexAdopt.js`
 
-**589.** 阅读「khy codex 凭据便捷管理(与 claude 一样启动)」的 services/backend/src/cli/router.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**589.** 阅读「khy codex 凭据便捷管理(与 claude 一样启动)」的 runtime/node/backend/src/cli/router.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：khy codex 凭据便捷管理(与 claude 一样启动)。读懂再动。
-  - 验证：`node --check services/backend/src/cli/router.js`
+  - 验证：`node --check runtime/node/backend/src/cli/router.js`
 
-**590.** 阅读「khy codex 凭据便捷管理(与 claude 一样启动)」的 services/backend/tests/services/gateway/codexEnvAdoptPolicy.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**590.** 阅读「khy codex 凭据便捷管理(与 claude 一样启动)」的 runtime/node/backend/tests/services/gateway/codexEnvAdoptPolicy.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：khy codex 凭据便捷管理(与 claude 一样启动)。读懂再动。
-  - 验证：`node --check services/backend/tests/services/gateway/codexEnvAdoptPolicy.test.js`
+  - 验证：`node --check runtime/node/backend/tests/services/gateway/codexEnvAdoptPolicy.test.js`
 
-**591.** 阅读「khy codex 凭据便捷管理(与 claude 一样启动)」的 services/backend/tests/services/gateway/openaiRelayPresets.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**591.** 阅读「khy codex 凭据便捷管理(与 claude 一样启动)」的 runtime/node/backend/tests/services/gateway/openaiRelayPresets.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：khy codex 凭据便捷管理(与 claude 一样启动)。读懂再动。
-  - 验证：`node --check services/backend/tests/services/gateway/openaiRelayPresets.test.js`
+  - 验证：`node --check runtime/node/backend/tests/services/gateway/openaiRelayPresets.test.js`
 
-**592.** 阅读「khy codex 凭据便捷管理(与 claude 一样启动)」的 services/backend/tests/cli/codexAdoptRouting.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**592.** 阅读「khy codex 凭据便捷管理(与 claude 一样启动)」的 runtime/node/backend/tests/cli/codexAdoptRouting.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：khy codex 凭据便捷管理(与 claude 一样启动)。读懂再动。
-  - 验证：`node --check services/backend/tests/cli/codexAdoptRouting.test.js`
+  - 验证：`node --check runtime/node/backend/tests/cli/codexAdoptRouting.test.js`
 
-**593.** 阅读「AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)」的 services/backend/src/services/gateway/failureReasonRanking.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**593.** 阅读「AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)」的 runtime/node/backend/src/services/gateway/failureReasonRanking.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)。读懂再动。
-  - 验证：`node --check services/backend/src/services/gateway/failureReasonRanking.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/failureReasonRanking.js`
 
-**594.** 阅读「AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)」的 services/backend/src/services/gateway/modelNotFoundRecovery.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**594.** 阅读「AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)」的 runtime/node/backend/src/services/gateway/modelNotFoundRecovery.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)。读懂再动。
-  - 验证：`node --check services/backend/src/services/gateway/modelNotFoundRecovery.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/modelNotFoundRecovery.js`
 
-**595.** 阅读「AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)」的 services/backend/src/services/gateway/modelNotFoundCooldownScope.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**595.** 阅读「AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)」的 runtime/node/backend/src/services/gateway/modelNotFoundCooldownScope.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)。读懂再动。
-  - 验证：`node --check services/backend/src/services/gateway/modelNotFoundCooldownScope.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/modelNotFoundCooldownScope.js`
 
-**596.** 阅读「AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)」的 services/backend/src/services/gateway/modelExistenceEvidence.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**596.** 阅读「AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)」的 runtime/node/backend/src/services/gateway/modelExistenceEvidence.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)。读懂再动。
-  - 验证：`node --check services/backend/src/services/gateway/modelExistenceEvidence.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/modelExistenceEvidence.js`
 
-**597.** 阅读「AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)」的 services/backend/src/services/gateway/aiGateway.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**597.** 阅读「AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)」的 runtime/node/backend/src/services/gateway/aiGateway.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)。读懂再动。
-  - 验证：`node --check services/backend/src/services/gateway/aiGateway.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/aiGateway.js`
 
-**598.** 阅读「AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)」的 services/backend/tests/services/gateway/failureReasonRanking.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**598.** 阅读「AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)」的 runtime/node/backend/tests/services/gateway/failureReasonRanking.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)。读懂再动。
-  - 验证：`node --check services/backend/tests/services/gateway/failureReasonRanking.test.js`
+  - 验证：`node --check runtime/node/backend/tests/services/gateway/failureReasonRanking.test.js`
 
-**599.** 阅读「AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)」的 services/backend/tests/services/gateway/modelNotFoundRecovery.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**599.** 阅读「AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)」的 runtime/node/backend/tests/services/gateway/modelNotFoundRecovery.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)。读懂再动。
-  - 验证：`node --check services/backend/tests/services/gateway/modelNotFoundRecovery.test.js`
+  - 验证：`node --check runtime/node/backend/tests/services/gateway/modelNotFoundRecovery.test.js`
 
-**600.** 阅读「AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)」的 services/backend/tests/services/gateway/modelNotFoundCooldownScope.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**600.** 阅读「AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)」的 runtime/node/backend/tests/services/gateway/modelNotFoundCooldownScope.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)。读懂再动。
-  - 验证：`node --check services/backend/tests/services/gateway/modelNotFoundCooldownScope.test.js`
+  - 验证：`node --check runtime/node/backend/tests/services/gateway/modelNotFoundCooldownScope.test.js`
 
-**601.** 阅读「AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)」的 services/backend/tests/services/gateway/modelExistenceEvidence.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**601.** 阅读「AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)」的 runtime/node/backend/tests/services/gateway/modelExistenceEvidence.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)。读懂再动。
-  - 验证：`node --check services/backend/tests/services/gateway/modelExistenceEvidence.test.js`
+  - 验证：`node --check runtime/node/backend/tests/services/gateway/modelExistenceEvidence.test.js`
 
-**602.** 阅读「通配兜底守卫(裸模型盲落默认池打错端点的防护)」的 services/backend/src/services/gateway/wildcardPoolGuard.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**602.** 阅读「通配兜底守卫(裸模型盲落默认池打错端点的防护)」的 runtime/node/backend/src/services/gateway/wildcardPoolGuard.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：通配兜底守卫(裸模型盲落默认池打错端点的防护)。读懂再动。
-  - 验证：`node --check services/backend/src/services/gateway/wildcardPoolGuard.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/wildcardPoolGuard.js`
 
-**603.** 阅读「通配兜底守卫(裸模型盲落默认池打错端点的防护)」的 services/backend/src/services/gateway/aiGateway.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**603.** 阅读「通配兜底守卫(裸模型盲落默认池打错端点的防护)」的 runtime/node/backend/src/services/gateway/aiGateway.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：通配兜底守卫(裸模型盲落默认池打错端点的防护)。读懂再动。
-  - 验证：`node --check services/backend/src/services/gateway/aiGateway.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/aiGateway.js`
 
-**604.** 阅读「通配兜底守卫(裸模型盲落默认池打错端点的防护)」的 services/backend/src/services/flagRegistry.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**604.** 阅读「通配兜底守卫(裸模型盲落默认池打错端点的防护)」的 runtime/node/backend/src/services/flagRegistry.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：通配兜底守卫(裸模型盲落默认池打错端点的防护)。读懂再动。
-  - 验证：`node --check services/backend/src/services/flagRegistry.js`
+  - 验证：`node --check runtime/node/backend/src/services/flagRegistry.js`
 
-**605.** 阅读「通配兜底守卫(裸模型盲落默认池打错端点的防护)」的 services/backend/src/utils/flagRegistry/index.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**605.** 阅读「通配兜底守卫(裸模型盲落默认池打错端点的防护)」的 runtime/node/backend/src/utils/flagRegistry/index.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：通配兜底守卫(裸模型盲落默认池打错端点的防护)。读懂再动。
-  - 验证：`node --check services/backend/src/utils/flagRegistry/index.js`
+  - 验证：`node --check runtime/node/backend/src/utils/flagRegistry/index.js`
 
-**606.** 阅读「通配兜底守卫(裸模型盲落默认池打错端点的防护)」的 services/backend/tests/services/gateway/wildcardPoolGuard.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**606.** 阅读「通配兜底守卫(裸模型盲落默认池打错端点的防护)」的 runtime/node/backend/tests/services/gateway/wildcardPoolGuard.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：通配兜底守卫(裸模型盲落默认池打错端点的防护)。读懂再动。
-  - 验证：`node --check services/backend/tests/services/gateway/wildcardPoolGuard.test.js`
+  - 验证：`node --check runtime/node/backend/tests/services/gateway/wildcardPoolGuard.test.js`
 
-**607.** 阅读「通配兜底守卫(裸模型盲落默认池打错端点的防护)」的 services/backend/tests/services/gateway/wildcardPoolGuard.wiring.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**607.** 阅读「通配兜底守卫(裸模型盲落默认池打错端点的防护)」的 runtime/node/backend/tests/services/gateway/wildcardPoolGuard.wiring.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：通配兜底守卫(裸模型盲落默认池打错端点的防护)。读懂再动。
-  - 验证：`node --check services/backend/tests/services/gateway/wildcardPoolGuard.wiring.test.js`
+  - 验证：`node --check runtime/node/backend/tests/services/gateway/wildcardPoolGuard.wiring.test.js`
 
-**608.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/src/services/domain/maintenance/uninstall/installLedger.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**608.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 runtime/node/backend/src/services/domain/maintenance/uninstall/installLedger.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)。读懂再动。
-  - 验证：`node --check services/backend/src/services/domain/maintenance/uninstall/installLedger.js`
+  - 验证：`node --check runtime/node/backend/src/services/domain/maintenance/uninstall/installLedger.js`
 
-**609.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/src/services/domain/maintenance/uninstall/ledgerWriter.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**609.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 runtime/node/backend/src/services/domain/maintenance/uninstall/ledgerWriter.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)。读懂再动。
-  - 验证：`node --check services/backend/src/services/domain/maintenance/uninstall/ledgerWriter.js`
+  - 验证：`node --check runtime/node/backend/src/services/domain/maintenance/uninstall/ledgerWriter.js`
 
-**610.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/src/cli/handlers/uninstall.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**610.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 runtime/node/backend/src/cli/handlers/uninstall.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)。读懂再动。
-  - 验证：`node --check services/backend/src/cli/handlers/uninstall.js`
+  - 验证：`node --check runtime/node/backend/src/cli/handlers/uninstall.js`
 
-**611.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/src/services/mdEditorRegister.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**611.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 runtime/node/backend/src/services/mdEditorRegister.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)。读懂再动。
-  - 验证：`node --check services/backend/src/services/mdEditorRegister.js`
+  - 验证：`node --check runtime/node/backend/src/services/mdEditorRegister.js`
 
-**612.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/src/services/runtimeProvisioner.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**612.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 runtime/node/backend/src/services/runtimeProvisioner.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)。读懂再动。
-  - 验证：`node --check services/backend/src/services/runtimeProvisioner.js`
+  - 验证：`node --check runtime/node/backend/src/services/runtimeProvisioner.js`
 
-**613.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/src/services/flagRegistry.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**613.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 runtime/node/backend/src/services/flagRegistry.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)。读懂再动。
-  - 验证：`node --check services/backend/src/services/flagRegistry.js`
+  - 验证：`node --check runtime/node/backend/src/services/flagRegistry.js`
 
-**614.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/src/utils/flagRegistry/index.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**614.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 runtime/node/backend/src/utils/flagRegistry/index.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)。读懂再动。
-  - 验证：`node --check services/backend/src/utils/flagRegistry/index.js`
+  - 验证：`node --check runtime/node/backend/src/utils/flagRegistry/index.js`
 
-**615.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/tests/services/installLedger.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**615.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 runtime/node/backend/tests/services/installLedger.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)。读懂再动。
-  - 验证：`node --check services/backend/tests/services/installLedger.test.js`
+  - 验证：`node --check runtime/node/backend/tests/services/installLedger.test.js`
 
-**616.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/tests/services/uninstallLedgerWiring.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**616.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 runtime/node/backend/tests/services/uninstallLedgerWiring.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)。读懂再动。
-  - 验证：`node --check services/backend/tests/services/uninstallLedgerWiring.test.js`
+  - 验证：`node --check runtime/node/backend/tests/services/uninstallLedgerWiring.test.js`
 
-**617.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 services/backend/tests/services/ledgerWriter.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**617.** 阅读「安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)」的 runtime/node/backend/tests/services/ledgerWriter.test.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)。读懂再动。
-  - 验证：`node --check services/backend/tests/services/ledgerWriter.test.js`
+  - 验证：`node --check runtime/node/backend/tests/services/ledgerWriter.test.js`
 
-**618.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/src/services/domain/desktop/deviceApps/nativeUninstallPolicy.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**618.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 runtime/node/backend/src/services/domain/desktop/deviceApps/nativeUninstallPolicy.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)。读懂再动。
-  - 验证：`node --check services/backend/src/services/domain/desktop/deviceApps/nativeUninstallPolicy.js`
+  - 验证：`node --check runtime/node/backend/src/services/domain/desktop/deviceApps/nativeUninstallPolicy.js`
 
-**619.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/src/services/domain/desktop/deviceApps/nativeUninstaller.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**619.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 runtime/node/backend/src/services/domain/desktop/deviceApps/nativeUninstaller.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)。读懂再动。
-  - 验证：`node --check services/backend/src/services/domain/desktop/deviceApps/nativeUninstaller.js`
+  - 验证：`node --check runtime/node/backend/src/services/domain/desktop/deviceApps/nativeUninstaller.js`
 
-**620.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/src/services/domain/desktop/deviceApps/uninstallRoute.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**620.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 runtime/node/backend/src/services/domain/desktop/deviceApps/uninstallRoute.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)。读懂再动。
-  - 验证：`node --check services/backend/src/services/domain/desktop/deviceApps/uninstallRoute.js`
+  - 验证：`node --check runtime/node/backend/src/services/domain/desktop/deviceApps/uninstallRoute.js`
 
-**621.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/src/cli/handlers/device.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**621.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 runtime/node/backend/src/cli/handlers/device.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)。读懂再动。
-  - 验证：`node --check services/backend/src/cli/handlers/device.js`
+  - 验证：`node --check runtime/node/backend/src/cli/handlers/device.js`
 
-**622.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/src/tools/DeviceAppsTool/index.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**622.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 runtime/node/backend/src/tools/DeviceAppsTool/index.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)。读懂再动。
-  - 验证：`node --check services/backend/src/tools/DeviceAppsTool/index.js`
+  - 验证：`node --check runtime/node/backend/src/tools/DeviceAppsTool/index.js`
 
-**623.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/src/services/flagRegistry.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**623.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 runtime/node/backend/src/services/flagRegistry.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)。读懂再动。
-  - 验证：`node --check services/backend/src/services/flagRegistry.js`
+  - 验证：`node --check runtime/node/backend/src/services/flagRegistry.js`
 
-**624.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 services/backend/src/utils/flagRegistry/index.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
+**624.** 阅读「卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)」的 runtime/node/backend/src/utils/flagRegistry/index.js，用一句话说清它做什么，并给非显然逻辑补一句注释（勿改行为）。
   - 说明：子系统：卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)。读懂再动。
-  - 验证：`node --check services/backend/src/utils/flagRegistry/index.js`
+  - 验证：`node --check runtime/node/backend/src/utils/flagRegistry/index.js`
 
 
 ## 五、进化配方（每个子系统都照做一遍）
@@ -3038,11 +3038,11 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **746.** 为「CLI Routing and Help Surface」补一条 node:test，至少覆盖：正常路径、一个边界、一个畸形/空输入。
   - 说明：补测试。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **747.** 通读「CLI Routing and Help Surface」核心文件，在顶部一句话写清职责，并给最难懂的分支补一句注释（不改行为）。
   - 说明：补可读性。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **748.** 扫描「CLI Routing and Help Surface」是否有文件超 2500 行；若有，按同名 re-export + DI 抽一个聚焦叶子，保字节等价。
   - 说明：拆上帝文件。 子系统：CLI Routing and Help Surface。
@@ -3058,19 +3058,19 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **751.** 为「CLI Routing and Help Surface」增加一个只读诊断探针：只观测不修改，绝不写盘、绝不发网络。
   - 说明：加只读探针。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **752.** 为「CLI Routing and Help Surface」增加一个「仅创建缺失项」的安全自愈：幂等、fail-soft、遇损坏拒删交人工。
   - 说明：加安全修复。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **753.** 给「CLI Routing and Help Surface」的失败路径补一条指名道姓的可执行指引，把错误码翻译成用户能照做的步骤。
   - 说明：错误可执行。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **754.** 核对「CLI Routing and Help Surface」的 verify 命令仍能一键复现绿灯；若命令漂移就修 package.json 别名。
   - 说明：verify 不漂移。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **755.** 为「CLI Routing and Help Surface」新增功能前先在 flagRegistry 登记开关，并确认父门链正确（父关则子必关）。
   - 说明：门先登记。 子系统：CLI Routing and Help Surface。
@@ -3078,15 +3078,15 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **756.** 为「CLI Routing and Help Surface」的输入做防御式校验：null/undefined/空数组/超长都有明确且安全的默认行为。
   - 说明：防御式输入。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **757.** 给「CLI Routing and Help Surface」的外部调用加超时与失败兜底，任何一路挂了都 fail-soft 而不是整体崩。
   - 说明：失败兜底。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **758.** 为「CLI Routing and Help Surface」补一条针对历史 bug 的回归测试，命名写清它守护的是哪个坑。
   - 说明：回归测试。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **759.** 检查「CLI Routing and Help Surface」的日志：敏感值只打印长度不打印明文，绝不把 key/token 落盘或进日志。
   - 说明：日志脱敏。 子系统：CLI Routing and Help Surface。
@@ -3094,7 +3094,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **760.** 为「CLI Routing and Help Surface」写一条 golden 测试：把一次已知正确的输出固化，防止未来悄悄漂移。
   - 说明：golden 固化。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **761.** 为「CLI Routing and Help Surface」排查可变状态跨簇共享：若被多处重赋值，抽取时必须用 DI 注入而非复制。
   - 说明：共享态用 DI。 子系统：CLI Routing and Help Surface。
@@ -3102,7 +3102,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **762.** 为「CLI Routing and Help Surface」补一个进程级缓存的测试重置钩子，避免测试间状态串味。
   - 说明：缓存可重置。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **763.** 把「CLI Routing and Help Surface」里散落的模型名/端点字面量收敛到单一权威来源（SSOT 访问器）。
   - 说明：收敛字面量。 子系统：CLI Routing and Help Surface。
@@ -3114,7 +3114,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **765.** 为「CLI Routing and Help Surface」增加空参数补全保护：工具/命令缺关键参数时给出可推断的安全默认。
   - 说明：空参补全。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **766.** 为「CLI Routing and Help Surface」抽取叶子后 grep 每个被调函数，凡叶子调而宿主定义者必迁或 DI。
   - 说明：查死引用。 子系统：CLI Routing and Help Surface。
@@ -3122,7 +3122,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **767.** 为「CLI Routing and Help Surface」写一条场景测试：模拟一个真实用户操作序列，断言端到端结果。
   - 说明：场景测试。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **768.** 把「CLI Routing and Help Surface」里超过三层的嵌套条件重构为早返回（guard clause），降低阅读成本。
   - 说明：早返回。 子系统：CLI Routing and Help Surface。
@@ -3134,7 +3134,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **770.** 给「CLI Routing and Help Surface」仅用于匹配的正则去掉全局 g 标志，避免 lastIndex 状态残留。
   - 说明：正则去 g。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **771.** 为「CLI Routing and Help Surface」登记进 docs/14_维护者/registry/维护映射表.json（whenToUse/paths/docs/verify 齐全）。
   - 说明：登记映射表。 子系统：CLI Routing and Help Surface。
@@ -3146,7 +3146,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **773.** 检查「CLI Routing and Help Surface」的错误信息是否可执行：告诉用户「下一步做什么」而不仅是「哪里错了」。
   - 说明：可执行错误。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **774.** 为「CLI Routing and Help Surface」的关键常量补注释解释「为什么是这个值」（保守高估、上限来源等）。
   - 说明：常量讲来源。 子系统：CLI Routing and Help Surface。
@@ -3154,11 +3154,11 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **775.** 为「CLI Routing and Help Surface」增加平台差异白名单（linux/windows/macos/android/ios），差异化规则收在注册表一处。
   - 说明：平台白名单。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **776.** 为「CLI Routing and Help Surface」补一条并发/竞态测试：同一资源被两条路径同时访问时结果仍正确。
   - 说明：并发测试。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **777.** 把「CLI Routing and Help Surface」里手写的重复逻辑抽成一个纯 helper，并给它单测。
   - 说明：抽纯 helper。 子系统：CLI Routing and Help Surface。
@@ -3174,7 +3174,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **780.** 为「CLI Routing and Help Surface」补一条端点/URL 成形的确定性测试（不发真实请求，只断言拼出的字符串正确）。
   - 说明：URL 成形测试。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **781.** 为「CLI Routing and Help Surface」的每个导出函数确认都有对应测试引用，无孤儿导出。
   - 说明：无孤儿导出。 子系统：CLI Routing and Help Surface。
@@ -3182,7 +3182,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **782.** 为「CLI Routing and Help Surface」增加预算/上限保护：循环或累积有明确终止条件，防止失控。
   - 说明：预算护栏。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **783.** 把「CLI Routing and Help Surface」的巨型 switch 按 case 簇抽子分派器（pre-dispatch + 哨兵 fall-through）。
   - 说明：switch 拆解。 子系统：CLI Routing and Help Surface。
@@ -3190,7 +3190,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **784.** 为「CLI Routing and Help Surface」补一条幂等测试：同一操作跑两次结果一致、无副作用叠加。
   - 说明：幂等测试。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **785.** 检查「CLI Routing and Help Surface」是否遵守单向依赖：叶子不得反向 require 宿主网关，需要就用 IoC 缝。
   - 说明：单向依赖。 子系统：CLI Routing and Help Surface。
@@ -3202,7 +3202,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **787.** 为「CLI Routing and Help Surface」的时间相关逻辑改为「时钟由调用方喂入」，让它可离线确定性测试。
   - 说明：时钟可注入。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **788.** 给「CLI Routing and Help Surface」补一条「截断/采样时必须 log 丢了什么」的规则，杜绝静默截断。
   - 说明：别静默截断。 子系统：CLI Routing and Help Surface。
@@ -3226,11 +3226,11 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **793.** 为「CLI Routing and Help Surface」写一条向后兼容测试：旧输入格式仍能被正确解析。
   - 说明：向后兼容。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **794.** 为「CLI Routing and Help Surface」的注册表新增一维时，确认聚合器与格式化器各只改一处（不 smear）。
   - 说明：改动不 smear。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **795.** 检查「CLI Routing and Help Surface」抽取后宿主是否仍持有核心态，叶子只拿它需要的切片。
   - 说明：核心态留宿主。 子系统：CLI Routing and Help Surface。
@@ -3238,7 +3238,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **796.** 为「CLI Routing and Help Surface」补一条跨渠道/双通道一致性测试（如版本号 pip 与 npm 必须一致）。
   - 说明：双通道一致。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **797.** 为「CLI Routing and Help Surface」的用户可见文案统一措辞与语气，避免同义词乱用误导弱模型。
   - 说明：文案统一。 子系统：CLI Routing and Help Surface。
@@ -3250,7 +3250,7 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **799.** 为「CLI Routing and Help Surface」补一条资源清理测试：临时文件用后即删、句柄关闭、无泄漏。
   - 说明：资源清理。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **800.** 把「CLI Routing and Help Surface」里可能抛的第三方调用全部包进 try/catch 并给结构化 reason。
   - 说明：结构化容错。 子系统：CLI Routing and Help Surface。
@@ -3262,11 +3262,11 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **802.** 为「CLI Routing and Help Surface」补一条空结果早退路径：0 命中时跳过昂贵的下游步骤。
   - 说明：空结果早退。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **803.** 检查「CLI Routing and Help Surface」的命令别名是否都路由到正确 handler，补一条 alias 路由测试。
   - 说明：别名路由。 子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
 **804.** 为「CLI Routing and Help Surface」建立一条 memory 记录模板，把「为什么这么改」写进传承文档。
   - 说明：沉淀传承。 子系统：CLI Routing and Help Surface。
@@ -3278,11 +3278,11 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **806.** 为「Prompt Capsule and Debug Prompt System」补一条 node:test，至少覆盖：正常路径、一个边界、一个畸形/空输入。
   - 说明：补测试。 子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`node --test services/backend/tests/promptOnDemandSections.test.js`
+  - 验证：`node --test runtime/node/backend/tests/promptOnDemandSections.test.js`
 
 **807.** 通读「Prompt Capsule and Debug Prompt System」核心文件，在顶部一句话写清职责，并给最难懂的分支补一句注释（不改行为）。
   - 说明：补可读性。 子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`node --test services/backend/tests/promptOnDemandSections.test.js`
+  - 验证：`node --test runtime/node/backend/tests/promptOnDemandSections.test.js`
 
 **808.** 扫描「Prompt Capsule and Debug Prompt System」是否有文件超 2500 行；若有，按同名 re-export + DI 抽一个聚焦叶子，保字节等价。
   - 说明：拆上帝文件。 子系统：Prompt Capsule and Debug Prompt System。
@@ -3298,11 +3298,11 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
 
 **811.** 为「Prompt Capsule and Debug Prompt System」增加一个只读诊断探针：只观测不修改，绝不写盘、绝不发网络。
   - 说明：加只读探针。 子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`node --test services/backend/tests/promptOnDemandSections.test.js`
+  - 验证：`node --test runtime/node/backend/tests/promptOnDemandSections.test.js`
 
 **812.** 为「Prompt Capsule and Debug Prompt System」增加一个「仅创建缺失项」的安全自愈：幂等、fail-soft、遇损坏拒删交人工。
   - 说明：加安全修复。 子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`node --test services/backend/tests/promptOnDemandSections.test.js`
+  - 验证：`node --test runtime/node/backend/tests/promptOnDemandSections.test.js`
 
 
 ## 六、逐文件进化
@@ -3355,39 +3355,39 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：面向小白概念文档 + 修仙学 AI 故事内容（作者向房屋风格 + 单人维护体检）。
   - 验证：`npm run check:model-hardcoding`
 
-**825.** 为 platform/khy_platform/cli.py 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**825.** 为 runtime/substrate/platform/khy_platform/cli.py 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Bootstrap and Packaging。
   - 验证：`npm run check:manifest-sync`
 
-**826.** 检查 platform/khy_platform/cli.py 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**826.** 检查 runtime/substrate/platform/khy_platform/cli.py 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Bootstrap and Packaging。
   - 验证：`npm run check:manifest-sync`
 
-**827.** 确认 platform/khy_platform/cli.py 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**827.** 确认 runtime/substrate/platform/khy_platform/cli.py 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Bootstrap and Packaging。
   - 验证：`npm run check:model-hardcoding`
 
-**828.** 为 platform/khy_platform/_bootstrap.py 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**828.** 为 runtime/substrate/platform/khy_platform/_bootstrap.py 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Bootstrap and Packaging。
   - 验证：`npm run check:manifest-sync`
 
-**829.** 检查 platform/khy_platform/_bootstrap.py 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**829.** 检查 runtime/substrate/platform/khy_platform/_bootstrap.py 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Bootstrap and Packaging。
   - 验证：`npm run check:manifest-sync`
 
-**830.** 确认 platform/khy_platform/_bootstrap.py 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**830.** 确认 runtime/substrate/platform/khy_platform/_bootstrap.py 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Bootstrap and Packaging。
   - 验证：`npm run check:model-hardcoding`
 
-**831.** 为 platform/khy_platform/__init__.py 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**831.** 为 runtime/substrate/platform/khy_platform/__init__.py 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Bootstrap and Packaging。
   - 验证：`npm run check:manifest-sync`
 
-**832.** 检查 platform/khy_platform/__init__.py 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**832.** 检查 runtime/substrate/platform/khy_platform/__init__.py 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Bootstrap and Packaging。
   - 验证：`npm run check:manifest-sync`
 
-**833.** 确认 platform/khy_platform/__init__.py 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**833.** 确认 runtime/substrate/platform/khy_platform/__init__.py 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Bootstrap and Packaging。
   - 验证：`npm run check:model-hardcoding`
 
@@ -3403,658 +3403,658 @@ npm run test:evolution-prompts         # 校验恰好 1000 条、每条带安全
   - 说明：子系统：Bootstrap and Packaging。
   - 验证：`npm run check:model-hardcoding`
 
-**837.** 为 software/khyquant/setup.py 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**837.** 为 delivery/channel/khyquant/setup.py 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Bootstrap and Packaging。
   - 验证：`npm run check:manifest-sync`
 
-**838.** 检查 software/khyquant/setup.py 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**838.** 检查 delivery/channel/khyquant/setup.py 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Bootstrap and Packaging。
   - 验证：`npm run check:manifest-sync`
 
-**839.** 确认 software/khyquant/setup.py 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**839.** 确认 delivery/channel/khyquant/setup.py 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Bootstrap and Packaging。
   - 验证：`npm run check:model-hardcoding`
 
-**840.** 为 software/khyquant/MANIFEST.in 补一条 node:test（若已有则加一个未覆盖的边界用例）。
-  - 说明：子系统：Bootstrap and Packaging。
-  - 验证：`npm run check:manifest-sync`
-
-**841.** 检查 software/khyquant/MANIFEST.in 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**840.** 为 delivery/channel/khyquant/MANIFEST.in 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Bootstrap and Packaging。
   - 验证：`npm run check:manifest-sync`
 
-**842.** 确认 software/khyquant/MANIFEST.in 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
-  - 说明：子系统：Bootstrap and Packaging。
-  - 验证：`npm run check:model-hardcoding`
-
-**843.** 为 packaging/npm/package.json 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**841.** 检查 delivery/channel/khyquant/MANIFEST.in 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Bootstrap and Packaging。
   - 验证：`npm run check:manifest-sync`
 
-**844.** 检查 packaging/npm/package.json 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**842.** 确认 delivery/channel/khyquant/MANIFEST.in 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+  - 说明：子系统：Bootstrap and Packaging。
+  - 验证：`npm run check:model-hardcoding`
+
+**843.** 为 works/ship/npm/package.json 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Bootstrap and Packaging。
   - 验证：`npm run check:manifest-sync`
 
-**845.** 确认 packaging/npm/package.json 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
-  - 说明：子系统：Bootstrap and Packaging。
-  - 验证：`npm run check:model-hardcoding`
-
-**846.** 为 services/backend/package.json 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**844.** 检查 works/ship/npm/package.json 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Bootstrap and Packaging。
   - 验证：`npm run check:manifest-sync`
 
-**847.** 检查 services/backend/package.json 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**845.** 确认 works/ship/npm/package.json 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+  - 说明：子系统：Bootstrap and Packaging。
+  - 验证：`npm run check:model-hardcoding`
+
+**846.** 为 runtime/node/backend/package.json 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Bootstrap and Packaging。
   - 验证：`npm run check:manifest-sync`
 
-**848.** 确认 services/backend/package.json 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**847.** 检查 runtime/node/backend/package.json 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+  - 说明：子系统：Bootstrap and Packaging。
+  - 验证：`npm run check:manifest-sync`
+
+**848.** 确认 runtime/node/backend/package.json 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Bootstrap and Packaging。
   - 验证：`npm run check:model-hardcoding`
 
-**849.** 为 services/backend/src/constants/commandSchema.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**849.** 为 runtime/node/backend/src/constants/commandSchema.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
-**850.** 检查 services/backend/src/constants/commandSchema.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**850.** 检查 runtime/node/backend/src/constants/commandSchema.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：CLI Routing and Help Surface。
-  - 验证：`node --check services/backend/src/constants/commandSchema.js`
+  - 验证：`node --check runtime/node/backend/src/constants/commandSchema.js`
 
-**851.** 确认 services/backend/src/constants/commandSchema.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
-  - 说明：子系统：CLI Routing and Help Surface。
-  - 验证：`npm run check:model-hardcoding`
-
-**852.** 为 services/backend/src/cli/aliases.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
-  - 说明：子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
-
-**853.** 检查 services/backend/src/cli/aliases.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
-  - 说明：子系统：CLI Routing and Help Surface。
-  - 验证：`node --check services/backend/src/cli/aliases.js`
-
-**854.** 确认 services/backend/src/cli/aliases.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**851.** 确认 runtime/node/backend/src/constants/commandSchema.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：CLI Routing and Help Surface。
   - 验证：`npm run check:model-hardcoding`
 
-**855.** 为 services/backend/src/cli/router.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**852.** 为 runtime/node/backend/src/cli/aliases.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
-**856.** 检查 services/backend/src/cli/router.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**853.** 检查 runtime/node/backend/src/cli/aliases.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：CLI Routing and Help Surface。
-  - 验证：`node --check services/backend/src/cli/router.js`
+  - 验证：`node --check runtime/node/backend/src/cli/aliases.js`
 
-**857.** 确认 services/backend/src/cli/router.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
-  - 说明：子系统：CLI Routing and Help Surface。
-  - 验证：`npm run check:model-hardcoding`
-
-**858.** 为 services/backend/src/cli/repl.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
-  - 说明：子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
-
-**859.** 检查 services/backend/src/cli/repl.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
-  - 说明：子系统：CLI Routing and Help Surface。
-  - 验证：`node --check services/backend/src/cli/repl.js`
-
-**860.** 确认 services/backend/src/cli/repl.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**854.** 确认 runtime/node/backend/src/cli/aliases.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：CLI Routing and Help Surface。
   - 验证：`npm run check:model-hardcoding`
 
-**861.** 为 services/backend/src/cli/handlers 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**855.** 为 runtime/node/backend/src/cli/router.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
-**862.** 检查 services/backend/src/cli/handlers 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**856.** 检查 runtime/node/backend/src/cli/router.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`node --check runtime/node/backend/src/cli/router.js`
 
-**863.** 确认 services/backend/src/cli/handlers 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
-  - 说明：子系统：CLI Routing and Help Surface。
-  - 验证：`npm run check:model-hardcoding`
-
-**864.** 为 services/backend/tests/cli/router.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
-  - 说明：子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
-
-**865.** 检查 services/backend/tests/cli/router.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
-  - 说明：子系统：CLI Routing and Help Surface。
-  - 验证：`node --check services/backend/tests/cli/router.test.js`
-
-**866.** 确认 services/backend/tests/cli/router.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**857.** 确认 runtime/node/backend/src/cli/router.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：CLI Routing and Help Surface。
   - 验证：`npm run check:model-hardcoding`
 
-**867.** 为 services/backend/tests/cli/repl.tasks.interaction.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**858.** 为 runtime/node/backend/src/cli/repl.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：CLI Routing and Help Surface。
-  - 验证：`npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
-**868.** 检查 services/backend/tests/cli/repl.tasks.interaction.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**859.** 检查 runtime/node/backend/src/cli/repl.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：CLI Routing and Help Surface。
-  - 验证：`node --check services/backend/tests/cli/repl.tasks.interaction.test.js`
+  - 验证：`node --check runtime/node/backend/src/cli/repl.js`
 
-**869.** 确认 services/backend/tests/cli/repl.tasks.interaction.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**860.** 确认 runtime/node/backend/src/cli/repl.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：CLI Routing and Help Surface。
   - 验证：`npm run check:model-hardcoding`
 
-**870.** 为 services/backend/src/constants/prompts.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
-  - 说明：子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`node --test services/backend/tests/promptOnDemandSections.test.js`
+**861.** 为 runtime/node/backend/src/cli/handlers 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+  - 说明：子系统：CLI Routing and Help Surface。
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
-**871.** 检查 services/backend/src/constants/prompts.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
-  - 说明：子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`node --check services/backend/src/constants/prompts.js`
+**862.** 检查 runtime/node/backend/src/cli/handlers 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+  - 说明：子系统：CLI Routing and Help Surface。
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
 
-**872.** 确认 services/backend/src/constants/prompts.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**863.** 确认 runtime/node/backend/src/cli/handlers 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+  - 说明：子系统：CLI Routing and Help Surface。
+  - 验证：`npm run check:model-hardcoding`
+
+**864.** 为 runtime/node/backend/tests/cli/router.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+  - 说明：子系统：CLI Routing and Help Surface。
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
+
+**865.** 检查 runtime/node/backend/tests/cli/router.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+  - 说明：子系统：CLI Routing and Help Surface。
+  - 验证：`node --check runtime/node/backend/tests/cli/router.test.js`
+
+**866.** 确认 runtime/node/backend/tests/cli/router.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+  - 说明：子系统：CLI Routing and Help Surface。
+  - 验证：`npm run check:model-hardcoding`
+
+**867.** 为 runtime/node/backend/tests/cli/repl.tasks.interaction.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+  - 说明：子系统：CLI Routing and Help Surface。
+  - 验证：`npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
+
+**868.** 检查 runtime/node/backend/tests/cli/repl.tasks.interaction.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+  - 说明：子系统：CLI Routing and Help Surface。
+  - 验证：`node --check runtime/node/backend/tests/cli/repl.tasks.interaction.test.js`
+
+**869.** 确认 runtime/node/backend/tests/cli/repl.tasks.interaction.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+  - 说明：子系统：CLI Routing and Help Surface。
+  - 验证：`npm run check:model-hardcoding`
+
+**870.** 为 runtime/node/backend/src/constants/prompts.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+  - 说明：子系统：Prompt Capsule and Debug Prompt System。
+  - 验证：`node --test runtime/node/backend/tests/promptOnDemandSections.test.js`
+
+**871.** 检查 runtime/node/backend/src/constants/prompts.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+  - 说明：子系统：Prompt Capsule and Debug Prompt System。
+  - 验证：`node --check runtime/node/backend/src/constants/prompts.js`
+
+**872.** 确认 runtime/node/backend/src/constants/prompts.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。
   - 验证：`npm run check:model-hardcoding`
 
-**873.** 为 services/backend/src/services/khyUpgradeRuntime.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**873.** 为 runtime/node/backend/src/services/khyUpgradeRuntime.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`node --test services/backend/tests/promptOnDemandSections.test.js`
+  - 验证：`node --test runtime/node/backend/tests/promptOnDemandSections.test.js`
 
-**874.** 检查 services/backend/src/services/khyUpgradeRuntime.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**874.** 检查 runtime/node/backend/src/services/khyUpgradeRuntime.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`node --check services/backend/src/services/khyUpgradeRuntime.js`
+  - 验证：`node --check runtime/node/backend/src/services/khyUpgradeRuntime.js`
 
-**875.** 确认 services/backend/src/services/khyUpgradeRuntime.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
-  - 说明：子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`npm run check:model-hardcoding`
-
-**876.** 为 services/backend/src/services/domain/memory/compact/prompt.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
-  - 说明：子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`node --test services/backend/tests/promptOnDemandSections.test.js`
-
-**877.** 检查 services/backend/src/services/domain/memory/compact/prompt.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
-  - 说明：子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`node --check services/backend/src/services/domain/memory/compact/prompt.js`
-
-**878.** 确认 services/backend/src/services/domain/memory/compact/prompt.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**875.** 确认 runtime/node/backend/src/services/khyUpgradeRuntime.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。
   - 验证：`npm run check:model-hardcoding`
 
-**879.** 为 services/backend/src/cli/handlers/gateway.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**876.** 为 runtime/node/backend/src/services/domain/memory/compact/prompt.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`node --test services/backend/tests/promptOnDemandSections.test.js`
+  - 验证：`node --test runtime/node/backend/tests/promptOnDemandSections.test.js`
 
-**880.** 检查 services/backend/src/cli/handlers/gateway.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**877.** 检查 runtime/node/backend/src/services/domain/memory/compact/prompt.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`node --check services/backend/src/cli/handlers/gateway.js`
+  - 验证：`node --check runtime/node/backend/src/services/domain/memory/compact/prompt.js`
 
-**881.** 确认 services/backend/src/cli/handlers/gateway.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
-  - 说明：子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`npm run check:model-hardcoding`
-
-**882.** 为 services/backend/tests/promptOnDemandSections.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
-  - 说明：子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`node --test services/backend/tests/promptOnDemandSections.test.js`
-
-**883.** 检查 services/backend/tests/promptOnDemandSections.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
-  - 说明：子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`node --check services/backend/tests/promptOnDemandSections.test.js`
-
-**884.** 确认 services/backend/tests/promptOnDemandSections.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**878.** 确认 runtime/node/backend/src/services/domain/memory/compact/prompt.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。
   - 验证：`npm run check:model-hardcoding`
 
-**885.** 为 services/backend/tests/promptLearningRules.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**879.** 为 runtime/node/backend/src/cli/handlers/gateway.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`node --test services/backend/tests/promptOnDemandSections.test.js`
+  - 验证：`node --test runtime/node/backend/tests/promptOnDemandSections.test.js`
 
-**886.** 检查 services/backend/tests/promptLearningRules.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**880.** 检查 runtime/node/backend/src/cli/handlers/gateway.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`node --check services/backend/tests/promptLearningRules.test.js`
+  - 验证：`node --check runtime/node/backend/src/cli/handlers/gateway.js`
 
-**887.** 确认 services/backend/tests/promptLearningRules.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
-  - 说明：子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`npm run check:model-hardcoding`
-
-**888.** 为 services/backend/tests/gatewayDebugPrompt.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
-  - 说明：子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`node --test services/backend/tests/promptOnDemandSections.test.js`
-
-**889.** 检查 services/backend/tests/gatewayDebugPrompt.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
-  - 说明：子系统：Prompt Capsule and Debug Prompt System。
-  - 验证：`node --check services/backend/tests/gatewayDebugPrompt.test.js`
-
-**890.** 确认 services/backend/tests/gatewayDebugPrompt.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**881.** 确认 runtime/node/backend/src/cli/handlers/gateway.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Prompt Capsule and Debug Prompt System。
   - 验证：`npm run check:model-hardcoding`
 
-**891.** 为 services/backend/src/services/gateway/aiGateway.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**882.** 为 runtime/node/backend/tests/promptOnDemandSections.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+  - 说明：子系统：Prompt Capsule and Debug Prompt System。
+  - 验证：`node --test runtime/node/backend/tests/promptOnDemandSections.test.js`
+
+**883.** 检查 runtime/node/backend/tests/promptOnDemandSections.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+  - 说明：子系统：Prompt Capsule and Debug Prompt System。
+  - 验证：`node --check runtime/node/backend/tests/promptOnDemandSections.test.js`
+
+**884.** 确认 runtime/node/backend/tests/promptOnDemandSections.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+  - 说明：子系统：Prompt Capsule and Debug Prompt System。
+  - 验证：`npm run check:model-hardcoding`
+
+**885.** 为 runtime/node/backend/tests/promptLearningRules.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+  - 说明：子系统：Prompt Capsule and Debug Prompt System。
+  - 验证：`node --test runtime/node/backend/tests/promptOnDemandSections.test.js`
+
+**886.** 检查 runtime/node/backend/tests/promptLearningRules.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+  - 说明：子系统：Prompt Capsule and Debug Prompt System。
+  - 验证：`node --check runtime/node/backend/tests/promptLearningRules.test.js`
+
+**887.** 确认 runtime/node/backend/tests/promptLearningRules.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+  - 说明：子系统：Prompt Capsule and Debug Prompt System。
+  - 验证：`npm run check:model-hardcoding`
+
+**888.** 为 runtime/node/backend/tests/gatewayDebugPrompt.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+  - 说明：子系统：Prompt Capsule and Debug Prompt System。
+  - 验证：`node --test runtime/node/backend/tests/promptOnDemandSections.test.js`
+
+**889.** 检查 runtime/node/backend/tests/gatewayDebugPrompt.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+  - 说明：子系统：Prompt Capsule and Debug Prompt System。
+  - 验证：`node --check runtime/node/backend/tests/gatewayDebugPrompt.test.js`
+
+**890.** 确认 runtime/node/backend/tests/gatewayDebugPrompt.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+  - 说明：子系统：Prompt Capsule and Debug Prompt System。
+  - 验证：`npm run check:model-hardcoding`
+
+**891.** 为 runtime/node/backend/src/services/gateway/aiGateway.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：AI Gateway and Adapter Layer。
-  - 验证：`npm run test:one -- services/backend/tests/aiGateway.stability.test.js services/backend/tests/gateway/transportResilience.test.js services/backend/tests/gatewayAdapters.stability.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/aiGateway.stability.test.js runtime/node/backend/tests/gateway/transportResilience.test.js runtime/node/backend/tests/gatewayAdapters.stability.test.js`
 
-**892.** 检查 services/backend/src/services/gateway/aiGateway.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**892.** 检查 runtime/node/backend/src/services/gateway/aiGateway.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：AI Gateway and Adapter Layer。
-  - 验证：`node --check services/backend/src/services/gateway/aiGateway.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/aiGateway.js`
 
-**893.** 确认 services/backend/src/services/gateway/aiGateway.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
-  - 说明：子系统：AI Gateway and Adapter Layer。
-  - 验证：`npm run check:model-hardcoding`
-
-**894.** 为 services/backend/src/services/gateway/adapters 补一条 node:test（若已有则加一个未覆盖的边界用例）。
-  - 说明：子系统：AI Gateway and Adapter Layer。
-  - 验证：`npm run test:one -- services/backend/tests/aiGateway.stability.test.js services/backend/tests/gateway/transportResilience.test.js services/backend/tests/gatewayAdapters.stability.test.js`
-
-**895.** 检查 services/backend/src/services/gateway/adapters 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
-  - 说明：子系统：AI Gateway and Adapter Layer。
-  - 验证：`npm run test:one -- services/backend/tests/aiGateway.stability.test.js services/backend/tests/gateway/transportResilience.test.js services/backend/tests/gatewayAdapters.stability.test.js`
-
-**896.** 确认 services/backend/src/services/gateway/adapters 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**893.** 确认 runtime/node/backend/src/services/gateway/aiGateway.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：AI Gateway and Adapter Layer。
   - 验证：`npm run check:model-hardcoding`
 
-**897.** 为 services/backend/src/services/gateway/proxyServer.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**894.** 为 runtime/node/backend/src/services/gateway/adapters 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：AI Gateway and Adapter Layer。
-  - 验证：`npm run test:one -- services/backend/tests/aiGateway.stability.test.js services/backend/tests/gateway/transportResilience.test.js services/backend/tests/gatewayAdapters.stability.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/aiGateway.stability.test.js runtime/node/backend/tests/gateway/transportResilience.test.js runtime/node/backend/tests/gatewayAdapters.stability.test.js`
 
-**898.** 检查 services/backend/src/services/gateway/proxyServer.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**895.** 检查 runtime/node/backend/src/services/gateway/adapters 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：AI Gateway and Adapter Layer。
-  - 验证：`node --check services/backend/src/services/gateway/proxyServer.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/aiGateway.stability.test.js runtime/node/backend/tests/gateway/transportResilience.test.js runtime/node/backend/tests/gatewayAdapters.stability.test.js`
 
-**899.** 确认 services/backend/src/services/gateway/proxyServer.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
-  - 说明：子系统：AI Gateway and Adapter Layer。
-  - 验证：`npm run check:model-hardcoding`
-
-**900.** 为 services/backend/tests/aiGateway.stability.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
-  - 说明：子系统：AI Gateway and Adapter Layer。
-  - 验证：`npm run test:one -- services/backend/tests/aiGateway.stability.test.js services/backend/tests/gateway/transportResilience.test.js services/backend/tests/gatewayAdapters.stability.test.js`
-
-**901.** 检查 services/backend/tests/aiGateway.stability.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
-  - 说明：子系统：AI Gateway and Adapter Layer。
-  - 验证：`node --check services/backend/tests/aiGateway.stability.test.js`
-
-**902.** 确认 services/backend/tests/aiGateway.stability.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**896.** 确认 runtime/node/backend/src/services/gateway/adapters 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：AI Gateway and Adapter Layer。
   - 验证：`npm run check:model-hardcoding`
 
-**903.** 为 services/backend/tests/gateway/transportResilience.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**897.** 为 runtime/node/backend/src/services/gateway/proxyServer.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：AI Gateway and Adapter Layer。
-  - 验证：`npm run test:one -- services/backend/tests/aiGateway.stability.test.js services/backend/tests/gateway/transportResilience.test.js services/backend/tests/gatewayAdapters.stability.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/aiGateway.stability.test.js runtime/node/backend/tests/gateway/transportResilience.test.js runtime/node/backend/tests/gatewayAdapters.stability.test.js`
 
-**904.** 检查 services/backend/tests/gateway/transportResilience.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**898.** 检查 runtime/node/backend/src/services/gateway/proxyServer.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：AI Gateway and Adapter Layer。
-  - 验证：`node --check services/backend/tests/gateway/transportResilience.test.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/proxyServer.js`
 
-**905.** 确认 services/backend/tests/gateway/transportResilience.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
-  - 说明：子系统：AI Gateway and Adapter Layer。
-  - 验证：`npm run check:model-hardcoding`
-
-**906.** 为 services/backend/tests/gatewayAdapters.stability.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
-  - 说明：子系统：AI Gateway and Adapter Layer。
-  - 验证：`npm run test:one -- services/backend/tests/aiGateway.stability.test.js services/backend/tests/gateway/transportResilience.test.js services/backend/tests/gatewayAdapters.stability.test.js`
-
-**907.** 检查 services/backend/tests/gatewayAdapters.stability.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
-  - 说明：子系统：AI Gateway and Adapter Layer。
-  - 验证：`node --check services/backend/tests/gatewayAdapters.stability.test.js`
-
-**908.** 确认 services/backend/tests/gatewayAdapters.stability.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**899.** 确认 runtime/node/backend/src/services/gateway/proxyServer.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：AI Gateway and Adapter Layer。
   - 验证：`npm run check:model-hardcoding`
 
-**909.** 为 services/backend/src/services/daemonManager.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
-  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`npm run test:one -- services/backend/tests/daemonManager.runtimePort.test.js services/backend/tests/gatewayManage.portDrift.integration.test.js services/backend/tests/services/proxyBaseUrl.test.js services/backend/tests/services/serviceDefaults.test.js`
+**900.** 为 runtime/node/backend/tests/aiGateway.stability.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+  - 说明：子系统：AI Gateway and Adapter Layer。
+  - 验证：`npm run test:one -- runtime/node/backend/tests/aiGateway.stability.test.js runtime/node/backend/tests/gateway/transportResilience.test.js runtime/node/backend/tests/gatewayAdapters.stability.test.js`
 
-**910.** 检查 services/backend/src/services/daemonManager.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
-  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`node --check services/backend/src/services/daemonManager.js`
+**901.** 检查 runtime/node/backend/tests/aiGateway.stability.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+  - 说明：子系统：AI Gateway and Adapter Layer。
+  - 验证：`node --check runtime/node/backend/tests/aiGateway.stability.test.js`
 
-**911.** 确认 services/backend/src/services/daemonManager.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**902.** 确认 runtime/node/backend/tests/aiGateway.stability.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+  - 说明：子系统：AI Gateway and Adapter Layer。
+  - 验证：`npm run check:model-hardcoding`
+
+**903.** 为 runtime/node/backend/tests/gateway/transportResilience.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+  - 说明：子系统：AI Gateway and Adapter Layer。
+  - 验证：`npm run test:one -- runtime/node/backend/tests/aiGateway.stability.test.js runtime/node/backend/tests/gateway/transportResilience.test.js runtime/node/backend/tests/gatewayAdapters.stability.test.js`
+
+**904.** 检查 runtime/node/backend/tests/gateway/transportResilience.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+  - 说明：子系统：AI Gateway and Adapter Layer。
+  - 验证：`node --check runtime/node/backend/tests/gateway/transportResilience.test.js`
+
+**905.** 确认 runtime/node/backend/tests/gateway/transportResilience.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+  - 说明：子系统：AI Gateway and Adapter Layer。
+  - 验证：`npm run check:model-hardcoding`
+
+**906.** 为 runtime/node/backend/tests/gatewayAdapters.stability.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+  - 说明：子系统：AI Gateway and Adapter Layer。
+  - 验证：`npm run test:one -- runtime/node/backend/tests/aiGateway.stability.test.js runtime/node/backend/tests/gateway/transportResilience.test.js runtime/node/backend/tests/gatewayAdapters.stability.test.js`
+
+**907.** 检查 runtime/node/backend/tests/gatewayAdapters.stability.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+  - 说明：子系统：AI Gateway and Adapter Layer。
+  - 验证：`node --check runtime/node/backend/tests/gatewayAdapters.stability.test.js`
+
+**908.** 确认 runtime/node/backend/tests/gatewayAdapters.stability.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+  - 说明：子系统：AI Gateway and Adapter Layer。
+  - 验证：`npm run check:model-hardcoding`
+
+**909.** 为 runtime/node/backend/src/services/daemonManager.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
+  - 验证：`npm run test:one -- runtime/node/backend/tests/daemonManager.runtimePort.test.js runtime/node/backend/tests/gatewayManage.portDrift.integration.test.js runtime/node/backend/tests/services/proxyBaseUrl.test.js runtime/node/backend/tests/services/serviceDefaults.test.js`
+
+**910.** 检查 runtime/node/backend/src/services/daemonManager.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
+  - 验证：`node --check runtime/node/backend/src/services/daemonManager.js`
+
+**911.** 确认 runtime/node/backend/src/services/daemonManager.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
   - 验证：`npm run check:model-hardcoding`
 
-**912.** 为 services/backend/src/services/aiManagementServer.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**912.** 为 runtime/node/backend/src/services/aiManagementServer.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`npm run test:one -- services/backend/tests/daemonManager.runtimePort.test.js services/backend/tests/gatewayManage.portDrift.integration.test.js services/backend/tests/services/proxyBaseUrl.test.js services/backend/tests/services/serviceDefaults.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/daemonManager.runtimePort.test.js runtime/node/backend/tests/gatewayManage.portDrift.integration.test.js runtime/node/backend/tests/services/proxyBaseUrl.test.js runtime/node/backend/tests/services/serviceDefaults.test.js`
 
-**913.** 检查 services/backend/src/services/aiManagementServer.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**913.** 检查 runtime/node/backend/src/services/aiManagementServer.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`node --check services/backend/src/services/aiManagementServer.js`
+  - 验证：`node --check runtime/node/backend/src/services/aiManagementServer.js`
 
-**914.** 确认 services/backend/src/services/aiManagementServer.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
-  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`npm run check:model-hardcoding`
-
-**915.** 为 services/backend/src/services/gateway/proxyServer.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
-  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`npm run test:one -- services/backend/tests/daemonManager.runtimePort.test.js services/backend/tests/gatewayManage.portDrift.integration.test.js services/backend/tests/services/proxyBaseUrl.test.js services/backend/tests/services/serviceDefaults.test.js`
-
-**916.** 检查 services/backend/src/services/gateway/proxyServer.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
-  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`node --check services/backend/src/services/gateway/proxyServer.js`
-
-**917.** 确认 services/backend/src/services/gateway/proxyServer.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**914.** 确认 runtime/node/backend/src/services/aiManagementServer.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
   - 验证：`npm run check:model-hardcoding`
 
-**918.** 为 services/backend/src/utils/proxyBaseUrl.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**915.** 为 runtime/node/backend/src/services/gateway/proxyServer.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`npm run test:one -- services/backend/tests/daemonManager.runtimePort.test.js services/backend/tests/gatewayManage.portDrift.integration.test.js services/backend/tests/services/proxyBaseUrl.test.js services/backend/tests/services/serviceDefaults.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/daemonManager.runtimePort.test.js runtime/node/backend/tests/gatewayManage.portDrift.integration.test.js runtime/node/backend/tests/services/proxyBaseUrl.test.js runtime/node/backend/tests/services/serviceDefaults.test.js`
 
-**919.** 检查 services/backend/src/utils/proxyBaseUrl.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**916.** 检查 runtime/node/backend/src/services/gateway/proxyServer.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`node --check services/backend/src/utils/proxyBaseUrl.js`
+  - 验证：`node --check runtime/node/backend/src/services/gateway/proxyServer.js`
 
-**920.** 确认 services/backend/src/utils/proxyBaseUrl.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
-  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`npm run check:model-hardcoding`
-
-**921.** 为 services/backend/src/constants/serviceDefaults.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
-  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`npm run test:one -- services/backend/tests/daemonManager.runtimePort.test.js services/backend/tests/gatewayManage.portDrift.integration.test.js services/backend/tests/services/proxyBaseUrl.test.js services/backend/tests/services/serviceDefaults.test.js`
-
-**922.** 检查 services/backend/src/constants/serviceDefaults.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
-  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`node --check services/backend/src/constants/serviceDefaults.js`
-
-**923.** 确认 services/backend/src/constants/serviceDefaults.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**917.** 确认 runtime/node/backend/src/services/gateway/proxyServer.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
   - 验证：`npm run check:model-hardcoding`
 
-**924.** 为 services/backend/tests/daemonManager.runtimePort.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**918.** 为 runtime/node/backend/src/utils/proxyBaseUrl.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`npm run test:one -- services/backend/tests/daemonManager.runtimePort.test.js services/backend/tests/gatewayManage.portDrift.integration.test.js services/backend/tests/services/proxyBaseUrl.test.js services/backend/tests/services/serviceDefaults.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/daemonManager.runtimePort.test.js runtime/node/backend/tests/gatewayManage.portDrift.integration.test.js runtime/node/backend/tests/services/proxyBaseUrl.test.js runtime/node/backend/tests/services/serviceDefaults.test.js`
 
-**925.** 检查 services/backend/tests/daemonManager.runtimePort.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**919.** 检查 runtime/node/backend/src/utils/proxyBaseUrl.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`node --check services/backend/tests/daemonManager.runtimePort.test.js`
+  - 验证：`node --check runtime/node/backend/src/utils/proxyBaseUrl.js`
 
-**926.** 确认 services/backend/tests/daemonManager.runtimePort.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
-  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`npm run check:model-hardcoding`
-
-**927.** 为 services/backend/tests/gatewayManage.portDrift.integration.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
-  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`npm run test:one -- services/backend/tests/daemonManager.runtimePort.test.js services/backend/tests/gatewayManage.portDrift.integration.test.js services/backend/tests/services/proxyBaseUrl.test.js services/backend/tests/services/serviceDefaults.test.js`
-
-**928.** 检查 services/backend/tests/gatewayManage.portDrift.integration.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
-  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`node --check services/backend/tests/gatewayManage.portDrift.integration.test.js`
-
-**929.** 确认 services/backend/tests/gatewayManage.portDrift.integration.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**920.** 确认 runtime/node/backend/src/utils/proxyBaseUrl.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
   - 验证：`npm run check:model-hardcoding`
 
-**930.** 为 services/backend/tests/services/proxyBaseUrl.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**921.** 为 runtime/node/backend/src/constants/serviceDefaults.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`npm run test:one -- services/backend/tests/daemonManager.runtimePort.test.js services/backend/tests/gatewayManage.portDrift.integration.test.js services/backend/tests/services/proxyBaseUrl.test.js services/backend/tests/services/serviceDefaults.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/daemonManager.runtimePort.test.js runtime/node/backend/tests/gatewayManage.portDrift.integration.test.js runtime/node/backend/tests/services/proxyBaseUrl.test.js runtime/node/backend/tests/services/serviceDefaults.test.js`
 
-**931.** 检查 services/backend/tests/services/proxyBaseUrl.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**922.** 检查 runtime/node/backend/src/constants/serviceDefaults.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`node --check services/backend/tests/services/proxyBaseUrl.test.js`
+  - 验证：`node --check runtime/node/backend/src/constants/serviceDefaults.js`
 
-**932.** 确认 services/backend/tests/services/proxyBaseUrl.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
-  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`npm run check:model-hardcoding`
-
-**933.** 为 services/backend/tests/services/serviceDefaults.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
-  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`npm run test:one -- services/backend/tests/daemonManager.runtimePort.test.js services/backend/tests/gatewayManage.portDrift.integration.test.js services/backend/tests/services/proxyBaseUrl.test.js services/backend/tests/services/serviceDefaults.test.js`
-
-**934.** 检查 services/backend/tests/services/serviceDefaults.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
-  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
-  - 验证：`node --check services/backend/tests/services/serviceDefaults.test.js`
-
-**935.** 确认 services/backend/tests/services/serviceDefaults.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**923.** 确认 runtime/node/backend/src/constants/serviceDefaults.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
   - 验证：`npm run check:model-hardcoding`
 
-**936.** 为 services/backend/src/routes/aiGatewayAdmin.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
-  - 说明：子系统：AI Management UI and API。
-  - 验证：`npm run test:one -- services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js services/backend/tests/gatewayManage.apiDisplay.test.js`
+**924.** 为 runtime/node/backend/tests/daemonManager.runtimePort.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
+  - 验证：`npm run test:one -- runtime/node/backend/tests/daemonManager.runtimePort.test.js runtime/node/backend/tests/gatewayManage.portDrift.integration.test.js runtime/node/backend/tests/services/proxyBaseUrl.test.js runtime/node/backend/tests/services/serviceDefaults.test.js`
 
-**937.** 检查 services/backend/src/routes/aiGatewayAdmin.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
-  - 说明：子系统：AI Management UI and API。
-  - 验证：`node --check services/backend/src/routes/aiGatewayAdmin.js`
+**925.** 检查 runtime/node/backend/tests/daemonManager.runtimePort.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
+  - 验证：`node --check runtime/node/backend/tests/daemonManager.runtimePort.test.js`
 
-**938.** 确认 services/backend/src/routes/aiGatewayAdmin.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
-  - 说明：子系统：AI Management UI and API。
+**926.** 确认 runtime/node/backend/tests/daemonManager.runtimePort.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
   - 验证：`npm run check:model-hardcoding`
 
-**939.** 为 services/ai-backend/src/routes/aiGatewayAdmin.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
-  - 说明：子系统：AI Management UI and API。
-  - 验证：`npm run test:one -- services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js services/backend/tests/gatewayManage.apiDisplay.test.js`
+**927.** 为 runtime/node/backend/tests/gatewayManage.portDrift.integration.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
+  - 验证：`npm run test:one -- runtime/node/backend/tests/daemonManager.runtimePort.test.js runtime/node/backend/tests/gatewayManage.portDrift.integration.test.js runtime/node/backend/tests/services/proxyBaseUrl.test.js runtime/node/backend/tests/services/serviceDefaults.test.js`
 
-**940.** 检查 services/ai-backend/src/routes/aiGatewayAdmin.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
-  - 说明：子系统：AI Management UI and API。
-  - 验证：`node --check services/ai-backend/src/routes/aiGatewayAdmin.js`
+**928.** 检查 runtime/node/backend/tests/gatewayManage.portDrift.integration.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
+  - 验证：`node --check runtime/node/backend/tests/gatewayManage.portDrift.integration.test.js`
 
-**941.** 确认 services/ai-backend/src/routes/aiGatewayAdmin.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
-  - 说明：子系统：AI Management UI and API。
+**929.** 确认 runtime/node/backend/tests/gatewayManage.portDrift.integration.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
   - 验证：`npm run check:model-hardcoding`
 
-**942.** 为 apps/ai-frontend/src 补一条 node:test（若已有则加一个未覆盖的边界用例）。
-  - 说明：子系统：AI Management UI and API。
-  - 验证：`npm run test:one -- services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js services/backend/tests/gatewayManage.apiDisplay.test.js`
+**930.** 为 runtime/node/backend/tests/services/proxyBaseUrl.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
+  - 验证：`npm run test:one -- runtime/node/backend/tests/daemonManager.runtimePort.test.js runtime/node/backend/tests/gatewayManage.portDrift.integration.test.js runtime/node/backend/tests/services/proxyBaseUrl.test.js runtime/node/backend/tests/services/serviceDefaults.test.js`
 
-**943.** 检查 apps/ai-frontend/src 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
-  - 说明：子系统：AI Management UI and API。
-  - 验证：`npm run test:one -- services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js services/backend/tests/gatewayManage.apiDisplay.test.js`
+**931.** 检查 runtime/node/backend/tests/services/proxyBaseUrl.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
+  - 验证：`node --check runtime/node/backend/tests/services/proxyBaseUrl.test.js`
 
-**944.** 确认 apps/ai-frontend/src 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
-  - 说明：子系统：AI Management UI and API。
+**932.** 确认 runtime/node/backend/tests/services/proxyBaseUrl.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
   - 验证：`npm run check:model-hardcoding`
 
-**945.** 为 apps/ai-frontend/package.json 补一条 node:test（若已有则加一个未覆盖的边界用例）。
-  - 说明：子系统：AI Management UI and API。
-  - 验证：`npm run test:one -- services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js services/backend/tests/gatewayManage.apiDisplay.test.js`
+**933.** 为 runtime/node/backend/tests/services/serviceDefaults.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
+  - 验证：`npm run test:one -- runtime/node/backend/tests/daemonManager.runtimePort.test.js runtime/node/backend/tests/gatewayManage.portDrift.integration.test.js runtime/node/backend/tests/services/proxyBaseUrl.test.js runtime/node/backend/tests/services/serviceDefaults.test.js`
 
-**946.** 检查 apps/ai-frontend/package.json 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
-  - 说明：子系统：AI Management UI and API。
-  - 验证：`npm run test:one -- services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js services/backend/tests/gatewayManage.apiDisplay.test.js`
+**934.** 检查 runtime/node/backend/tests/services/serviceDefaults.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
+  - 验证：`node --check runtime/node/backend/tests/services/serviceDefaults.test.js`
 
-**947.** 确认 apps/ai-frontend/package.json 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
-  - 说明：子系统：AI Management UI and API。
+**935.** 确认 runtime/node/backend/tests/services/serviceDefaults.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+  - 说明：子系统：Proxy, Daemon, and Runtime Port Discovery。
   - 验证：`npm run check:model-hardcoding`
 
-**948.** 为 apps/ai-frontend/vite.config.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**936.** 为 runtime/node/backend/src/routes/aiGatewayAdmin.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：AI Management UI and API。
-  - 验证：`npm run test:one -- services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js services/backend/tests/gatewayManage.apiDisplay.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
 
-**949.** 检查 apps/ai-frontend/vite.config.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**937.** 检查 runtime/node/backend/src/routes/aiGatewayAdmin.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：AI Management UI and API。
-  - 验证：`node --check apps/ai-frontend/vite.config.js`
+  - 验证：`node --check runtime/node/backend/src/routes/aiGatewayAdmin.js`
 
-**950.** 确认 apps/ai-frontend/vite.config.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**938.** 确认 runtime/node/backend/src/routes/aiGatewayAdmin.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：AI Management UI and API。
   - 验证：`npm run check:model-hardcoding`
 
-**951.** 为 services/backend/src/cli/handlers/gateway.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**939.** 为 runtime/node/ai-backend/src/routes/aiGatewayAdmin.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：AI Management UI and API。
-  - 验证：`npm run test:one -- services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js services/backend/tests/gatewayManage.apiDisplay.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
 
-**952.** 检查 services/backend/src/cli/handlers/gateway.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**940.** 检查 runtime/node/ai-backend/src/routes/aiGatewayAdmin.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：AI Management UI and API。
-  - 验证：`node --check services/backend/src/cli/handlers/gateway.js`
+  - 验证：`node --check runtime/node/ai-backend/src/routes/aiGatewayAdmin.js`
 
-**953.** 确认 services/backend/src/cli/handlers/gateway.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
-  - 说明：子系统：AI Management UI and API。
-  - 验证：`npm run check:model-hardcoding`
-
-**954.** 为 services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
-  - 说明：子系统：AI Management UI and API。
-  - 验证：`npm run test:one -- services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js services/backend/tests/gatewayManage.apiDisplay.test.js`
-
-**955.** 检查 services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
-  - 说明：子系统：AI Management UI and API。
-  - 验证：`node --check services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js`
-
-**956.** 确认 services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**941.** 确认 runtime/node/ai-backend/src/routes/aiGatewayAdmin.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：AI Management UI and API。
   - 验证：`npm run check:model-hardcoding`
 
-**957.** 为 services/backend/tests/gatewayManage.apiDisplay.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**942.** 为 delivery/web/ai-frontend/src 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：AI Management UI and API。
-  - 验证：`npm run test:one -- services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js services/backend/tests/gatewayManage.apiDisplay.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
 
-**958.** 检查 services/backend/tests/gatewayManage.apiDisplay.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**943.** 检查 delivery/web/ai-frontend/src 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：AI Management UI and API。
-  - 验证：`node --check services/backend/tests/gatewayManage.apiDisplay.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
 
-**959.** 确认 services/backend/tests/gatewayManage.apiDisplay.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**944.** 确认 delivery/web/ai-frontend/src 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：AI Management UI and API。
   - 验证：`npm run check:model-hardcoding`
 
-**960.** 为 platform/packages/shared/src/models/UserProject.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
-  - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+**945.** 为 delivery/web/ai-frontend/package.json 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+  - 说明：子系统：AI Management UI and API。
+  - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
 
-**961.** 检查 platform/packages/shared/src/models/UserProject.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
-  - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`node --check platform/packages/shared/src/models/UserProject.js`
+**946.** 检查 delivery/web/ai-frontend/package.json 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+  - 说明：子系统：AI Management UI and API。
+  - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
 
-**962.** 确认 platform/packages/shared/src/models/UserProject.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**947.** 确认 delivery/web/ai-frontend/package.json 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+  - 说明：子系统：AI Management UI and API。
+  - 验证：`npm run check:model-hardcoding`
+
+**948.** 为 delivery/web/ai-frontend/vite.config.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+  - 说明：子系统：AI Management UI and API。
+  - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
+
+**949.** 检查 delivery/web/ai-frontend/vite.config.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+  - 说明：子系统：AI Management UI and API。
+  - 验证：`node --check delivery/web/ai-frontend/vite.config.js`
+
+**950.** 确认 delivery/web/ai-frontend/vite.config.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+  - 说明：子系统：AI Management UI and API。
+  - 验证：`npm run check:model-hardcoding`
+
+**951.** 为 runtime/node/backend/src/cli/handlers/gateway.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+  - 说明：子系统：AI Management UI and API。
+  - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
+
+**952.** 检查 runtime/node/backend/src/cli/handlers/gateway.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+  - 说明：子系统：AI Management UI and API。
+  - 验证：`node --check runtime/node/backend/src/cli/handlers/gateway.js`
+
+**953.** 确认 runtime/node/backend/src/cli/handlers/gateway.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+  - 说明：子系统：AI Management UI and API。
+  - 验证：`npm run check:model-hardcoding`
+
+**954.** 为 runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+  - 说明：子系统：AI Management UI and API。
+  - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
+
+**955.** 检查 runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+  - 说明：子系统：AI Management UI and API。
+  - 验证：`node --check runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js`
+
+**956.** 确认 runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+  - 说明：子系统：AI Management UI and API。
+  - 验证：`npm run check:model-hardcoding`
+
+**957.** 为 runtime/node/backend/tests/gatewayManage.apiDisplay.test.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+  - 说明：子系统：AI Management UI and API。
+  - 验证：`npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
+
+**958.** 检查 runtime/node/backend/tests/gatewayManage.apiDisplay.test.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+  - 说明：子系统：AI Management UI and API。
+  - 验证：`node --check runtime/node/backend/tests/gatewayManage.apiDisplay.test.js`
+
+**959.** 确认 runtime/node/backend/tests/gatewayManage.apiDisplay.test.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+  - 说明：子系统：AI Management UI and API。
+  - 验证：`npm run check:model-hardcoding`
+
+**960.** 为 runtime/substrate/platform/packages/shared/src/models/UserProject.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+  - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
+
+**961.** 检查 runtime/substrate/platform/packages/shared/src/models/UserProject.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+  - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
+  - 验证：`node --check runtime/substrate/platform/packages/shared/src/models/UserProject.js`
+
+**962.** 确认 runtime/substrate/platform/packages/shared/src/models/UserProject.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
   - 验证：`npm run check:model-hardcoding`
 
-**963.** 为 platform/packages/shared/src/models/index.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**963.** 为 runtime/substrate/platform/packages/shared/src/models/index.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**964.** 检查 platform/packages/shared/src/models/index.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**964.** 检查 runtime/substrate/platform/packages/shared/src/models/index.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`node --check platform/packages/shared/src/models/index.js`
+  - 验证：`node --check runtime/substrate/platform/packages/shared/src/models/index.js`
 
-**965.** 确认 platform/packages/shared/src/models/index.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**965.** 确认 runtime/substrate/platform/packages/shared/src/models/index.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
   - 验证：`npm run check:model-hardcoding`
 
-**966.** 为 services/backend/src/services/projectStore.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**966.** 为 runtime/node/backend/src/services/projectStore.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**967.** 检查 services/backend/src/services/projectStore.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**967.** 检查 runtime/node/backend/src/services/projectStore.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`node --check services/backend/src/services/projectStore.js`
+  - 验证：`node --check runtime/node/backend/src/services/projectStore.js`
 
-**968.** 确认 services/backend/src/services/projectStore.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**968.** 确认 runtime/node/backend/src/services/projectStore.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
   - 验证：`npm run check:model-hardcoding`
 
-**969.** 为 services/backend/src/services/aiManagementProjects.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**969.** 为 runtime/node/backend/src/services/aiManagementProjects.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**970.** 检查 services/backend/src/services/aiManagementProjects.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**970.** 检查 runtime/node/backend/src/services/aiManagementProjects.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`node --check services/backend/src/services/aiManagementProjects.js`
+  - 验证：`node --check runtime/node/backend/src/services/aiManagementProjects.js`
 
-**971.** 确认 services/backend/src/services/aiManagementProjects.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**971.** 确认 runtime/node/backend/src/services/aiManagementProjects.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
   - 验证：`npm run check:model-hardcoding`
 
-**972.** 为 services/backend/src/services/aiManagementServer.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**972.** 为 runtime/node/backend/src/services/aiManagementServer.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**973.** 检查 services/backend/src/services/aiManagementServer.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**973.** 检查 runtime/node/backend/src/services/aiManagementServer.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`node --check services/backend/src/services/aiManagementServer.js`
+  - 验证：`node --check runtime/node/backend/src/services/aiManagementServer.js`
 
-**974.** 确认 services/backend/src/services/aiManagementServer.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**974.** 确认 runtime/node/backend/src/services/aiManagementServer.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
   - 验证：`npm run check:model-hardcoding`
 
-**975.** 为 platform/packages/shared/src/models/Conversation.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**975.** 为 runtime/substrate/platform/packages/shared/src/models/Conversation.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**976.** 检查 platform/packages/shared/src/models/Conversation.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**976.** 检查 runtime/substrate/platform/packages/shared/src/models/Conversation.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`node --check platform/packages/shared/src/models/Conversation.js`
+  - 验证：`node --check runtime/substrate/platform/packages/shared/src/models/Conversation.js`
 
-**977.** 确认 platform/packages/shared/src/models/Conversation.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**977.** 确认 runtime/substrate/platform/packages/shared/src/models/Conversation.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
   - 验证：`npm run check:model-hardcoding`
 
-**978.** 为 services/backend/src/services/conversationStore.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**978.** 为 runtime/node/backend/src/services/conversationStore.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**979.** 检查 services/backend/src/services/conversationStore.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**979.** 检查 runtime/node/backend/src/services/conversationStore.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`node --check services/backend/src/services/conversationStore.js`
+  - 验证：`node --check runtime/node/backend/src/services/conversationStore.js`
 
-**980.** 确认 services/backend/src/services/conversationStore.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**980.** 确认 runtime/node/backend/src/services/conversationStore.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
   - 验证：`npm run check:model-hardcoding`
 
-**981.** 为 apps/ai-frontend/src/composables/useProjects.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**981.** 为 delivery/web/ai-frontend/src/composables/useProjects.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**982.** 检查 apps/ai-frontend/src/composables/useProjects.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**982.** 检查 delivery/web/ai-frontend/src/composables/useProjects.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`node --check apps/ai-frontend/src/composables/useProjects.js`
+  - 验证：`node --check delivery/web/ai-frontend/src/composables/useProjects.js`
 
-**983.** 确认 apps/ai-frontend/src/composables/useProjects.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**983.** 确认 delivery/web/ai-frontend/src/composables/useProjects.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
   - 验证：`npm run check:model-hardcoding`
 
-**984.** 为 apps/ai-frontend/src/composables/useChatConversations.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**984.** 为 delivery/web/ai-frontend/src/composables/useChatConversations.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**985.** 检查 apps/ai-frontend/src/composables/useChatConversations.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**985.** 检查 delivery/web/ai-frontend/src/composables/useChatConversations.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`node --check apps/ai-frontend/src/composables/useChatConversations.js`
+  - 验证：`node --check delivery/web/ai-frontend/src/composables/useChatConversations.js`
 
-**986.** 确认 apps/ai-frontend/src/composables/useChatConversations.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**986.** 确认 delivery/web/ai-frontend/src/composables/useChatConversations.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
   - 验证：`npm run check:model-hardcoding`
 
-**987.** 为 apps/ai-frontend/src/views/Projects.vue 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**987.** 为 delivery/web/ai-frontend/src/views/Projects.vue 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**988.** 检查 apps/ai-frontend/src/views/Projects.vue 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**988.** 检查 delivery/web/ai-frontend/src/views/Projects.vue 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**989.** 确认 apps/ai-frontend/src/views/Projects.vue 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**989.** 确认 delivery/web/ai-frontend/src/views/Projects.vue 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
   - 验证：`npm run check:model-hardcoding`
 
-**990.** 为 apps/ai-frontend/src/views/AIChat.vue 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**990.** 为 delivery/web/ai-frontend/src/views/AIChat.vue 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**991.** 检查 apps/ai-frontend/src/views/AIChat.vue 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**991.** 检查 delivery/web/ai-frontend/src/views/AIChat.vue 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**992.** 确认 apps/ai-frontend/src/views/AIChat.vue 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**992.** 确认 delivery/web/ai-frontend/src/views/AIChat.vue 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
   - 验证：`npm run check:model-hardcoding`
 
-**993.** 为 apps/ai-frontend/src/composables/useRoutePrefetch.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**993.** 为 delivery/web/ai-frontend/src/composables/useRoutePrefetch.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**994.** 检查 apps/ai-frontend/src/composables/useRoutePrefetch.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**994.** 检查 delivery/web/ai-frontend/src/composables/useRoutePrefetch.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`node --check apps/ai-frontend/src/composables/useRoutePrefetch.js`
+  - 验证：`node --check delivery/web/ai-frontend/src/composables/useRoutePrefetch.js`
 
-**995.** 确认 apps/ai-frontend/src/composables/useRoutePrefetch.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**995.** 确认 delivery/web/ai-frontend/src/composables/useRoutePrefetch.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
   - 验证：`npm run check:model-hardcoding`
 
-**996.** 为 apps/ai-frontend/src/router/index.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**996.** 为 delivery/web/ai-frontend/src/router/index.js 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**997.** 检查 apps/ai-frontend/src/router/index.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**997.** 检查 delivery/web/ai-frontend/src/router/index.js 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`node --check apps/ai-frontend/src/router/index.js`
+  - 验证：`node --check delivery/web/ai-frontend/src/router/index.js`
 
-**998.** 确认 apps/ai-frontend/src/router/index.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
+**998.** 确认 delivery/web/ai-frontend/src/router/index.js 不含写死的真 key/token，敏感值只经 env 注入（只打印长度不打印值）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
   - 验证：`npm run check:model-hardcoding`
 
-**999.** 为 apps/ai-frontend/src/views/Layout.vue 补一条 node:test（若已有则加一个未覆盖的边界用例）。
+**999.** 为 delivery/web/ai-frontend/src/views/Layout.vue 补一条 node:test（若已有则加一个未覆盖的边界用例）。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`
 
-**1000.** 检查 apps/ai-frontend/src/views/Layout.vue 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
+**1000.** 检查 delivery/web/ai-frontend/src/views/Layout.vue 是否够弱模型维护：变量名自解释、无魔法数、关键分支有注释。
   - 说明：子系统：Coding Projects (named workspaces + chat linkage)。
-  - 验证：`npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js`
+  - 验证：`npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js`

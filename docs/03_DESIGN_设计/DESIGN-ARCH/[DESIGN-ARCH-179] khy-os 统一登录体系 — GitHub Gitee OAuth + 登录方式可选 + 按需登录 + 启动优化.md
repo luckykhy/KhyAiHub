@@ -449,3 +449,125 @@ dev 与生产**两条臂用的是同一个二进制**，所以 **3–10 倍这�
 若将来新增 `AGENT.md` 或出现 `classify()` 正则未覆盖的新生态文件类型，它会静默漏扫。
 修它是**零代价**（副本已验证），但**不急**；该文件另有会话在改（mtime 09:54，与 HEAD 有差异），
 **本轮未动**以免混来源。
+
+#### 12.9 E 桶逐条修复（共 2 批：16 个生产文件 + 3 个测试文件）
+
+`broken` 桶内 14 文件 / 41 处，`bothGone` 桶内另 2 文件 / 3 处。
+
+扫描口径：`node scripts/maintenance/path-integrity.js --scan-split-refs --json`。
+本仓 HEAD 复扫 **205 处 / 88 文件**（`broken` 桶 = 旧路径不存在 + 重映射后存在 ⇒ 高置信真断），
+另有 `bothGone` 281 处（新旧都不存在，多为便携/仓外相对路径）与 `oldAlive` 0 处。
+
+分桶：**PROD 44 文件 / 95 处**、TEST 32/82、DOC 9/22、GEN 3/6。本轮只动 PROD。
+
+##### 12.9.1 第一批（9 文件 / 33 处，全在 `broken` 桶）
+
+| # | 文件 | 处 | 症状（可复现判据） | 动作 | 验收 |
+|---|---|---|---|---|---|
+| 1 | `runtime/node/backend/src/services/updateCoordinator.js` | 4 | `findSourceRoot` / `findSourceRootAsync` / `readSourceVersion` / `moduleSourceRoot` 四处全指 `services/backend/package.json` ⇒ **仓库根探测恒 `null`、版本恒 `'0.0.0'`** | 四处 → `runtime/node/backend/package.json`；同步 `:212` 注释 | `node --check` ✓；`updateCoordinator.test.js`（mock fs，须同步改 mock） |
+| 2 | `runtime/node/backend/src/services/domain/deploy/publish/projectState.js` | 4 | 四条候选清单（`platform/`、`services/backend`、`packaging/npm`、`packaging/modules`）全指不存在路径 ⇒ **`check-version-sync.js` 的第 3/4 版本红线源读不到** | 按候选清单语义**补新路径在首位、保留旧项作布局兜底** | 探针：四组候选 `ALL_SETS_RESOLVE_OK`；`_readState()` 现返回 `versionAligned: true`（pyproject/npm/backend/modules 全 `1.2.0`）；`publishProjectState.test.js` **9/9** |
+| 3 | `runtime/node/backend/src/cli/handlers/gatewayManageDaemon.js` | 8 | `_resolveAiFrontendDir` / `_resolveAiFrontendDistDir` 的**全部**候选（env / cwd / `__dirname`）都落空 ⇒ 返回 `null`，gateway daemon 找不到前端 | 补 `delivery/web/ai-frontend` 候选（含 `KHYQUANT_ROOT` 上溯 3 级、cwd、`__dirname` 上溯 6 级），旧 `apps/ai-frontend` 保留 | 内存编译真源 + 探针：`DIR_OK=true DIST_OK=true`（解析到 `<root>/delivery/web/ai-frontend[/dist]`）；`node --check` ✓ |
+| 4 | `runtime/node/backend/src/services/freshInstallDoctor.js` | 7 | 已知链接清单三条的 `linkPath`/`target` 全是旧路径 ⇒ `fixPortableIssues` 的「目标不存在」闸把**三条修复全部判失败**；forest 几何检查恒不成立 | 链接清单**替换**为 `runtime/node/backend` + `runtime/substrate/platform/packages/shared`（与 `portable-health-check.js:154-162` 逐字对齐）；forest 两标记改为**新旧 OR** | `freshInstallDoctor.test.js` **46/46** |
+| 5 | `delivery/web/provider-hub/src/main/toolWriters.ts` | 4 | `resolveBackendServicesRoot` 的 portable / `_walkRepoRoot` 候选与 `_walkRepoRoot` 的上溯判据全是 `services/backend` ⇒ 源码布局下恒 `null`（与桌面端 §12.5a 同款病） | 补 `source/runtime/node/backend/…`、`runtime/node/backend/…` 候选与上溯判据；旧项保留 | `tsc --noEmit` **exit 0** |
+| 6 | `delivery/channel/khyquant/handlers/bootstrap.js` | 2 | 源码分支 `path.resolve(__dirname,'..','..','..','services','backend',…)`：文件迁到 `delivery/channel/khyquant/handlers`（深度 4）后**少了一层**，且注释早已写成 `runtime/node/backend/src/cli/` ⇒ `findBackendCli()` 恒落到 no-op | 修为上溯 4 级 + `runtime/node/backend/…`，并补旧布局兜底 | 路径算术：`dev` EXISTS / `legacy` MISSING（符合预期）；`node --check` ✓ |
+| 7 | `runtime/node/backend/src/cli/handlers/where.js` | 2 | `_findProjectRoot` 的校验检查用 `services/backend/bin` ⇒ 落到 walk-up 兜底再落到 `return startDir`。**实跑 `khy where` 复现：项目根目录误报为 `…\backend\bin`** | 校验改 `runtime/node/backend/bin`（旧项 OR）；walk-up 兜底加 `pyproject.toml` / `runtime/substrate/platform`；版本候选补新路径 | **实跑复验：项目根目录 = `D:\Portable\khy-os`** ✓ |
+| 8 | `runtime/node/backend/src/services/domain/maintenance/selfRepair/primitives.js` | 1 | 自修复跑受影响测试时按 `^services\/backend\/` 剥前缀、`cwd: projectDir/services/backend` ⇒ **cwd 不存在，`node --test` 必失败** | 前缀剥离兼容新布局；cwd 改为布局感知（新布局优先） | `node --check` ✓ |
+| 9 | `runtime/node/backend/src/services/domain/docs/docsFreshness/docsFreshnessRunner.js` | 1 | `require(repoRoot/services/backend/package.json)` 死分支（**有兜底，功能未断**） | 补新路径在首位，旧路径与模块相对兜底保留 | `docsFreshnessRunner.test.js` + `evolutionPolicy.test.js` **40/40** |
+
+**顺带修的两处测试（属 C/D 桶，但与本轮 PROD 改动同源）**：
+
+- `runtime/node/backend/tests/updateCoordinator.test.js` —— `sourceFs()` / `repoFs()` 的 `existsSync` mock 钉在 `services[\\/]backend[\\/]package\.json$`，
+  **必须跟随生产契约**改为 `runtime[\\/]node[\\/]backend[\\/]package\.json$`；`cwd: 'C:/repo/services/backend'` → `'C:/repo/runtime/node/backend'`。
+  改前 3 文件合计 **14 失败**，改后 **2 失败**（其中 1 个是下面这条既有 stale）。
+- `runtime/node/backend/tests/services/publishProjectState.test.js` —— `_readState` 断言 `deepEqual(versions, {pyproject,python,backend})` 是 **3 键**，
+  而 `_readState` 自 `bc43302f`（`feat(delivery): R4 apps 迁移收口`）起就返回 **5 键**（含 `npm`/`modules`）。
+  **用 `git show HEAD:` 把模块单独落到临时目录隔离复现，确认该失败先于本轮改动**（HEAD 版同样 `not ok`）。
+  已更正为 5 键断言，并**补一条 npm/modules 漂移用例**（补上 r59 引入 G1 对齐集时漏掉的测试覆盖）。
+
+##### 12.9.2 本轮未动（`broken` 桶剩 29 文件 / 50 处）——按「待裁决原因」分组
+
+**（a）便携包 / 安装器布局待定**（布局由打包脚本决定，不能凭源码仓推）：
+
+| 文件 | 处 | 待定问题 |
+|---|---|---|
+| `delivery/extension/scripts/khy-portable/package-portable.js` | 6 | 便携产物实为 `source/<repo 布局>`（source kind）或 `web/ai` + `runtime/khy`（payload kind），**既不是 `apps/ai-frontend` 也不是 `services/backend`** |
+| `delivery/extension/scripts/khy-portable/build-portable-artifact.js` | 3 | 同上；另有 `runtimeSourceFilter` 的 `roots` 用旧顶层（**扫描器未报，因单字面量归 `--scan-refs` 轴**） |
+| `delivery/extension/scripts/khy-installer/verify-install.js` | 3 | 安装器要同时认新旧装机 |
+| `runtime/node/backend/src/services/portableSyncService.js` | 3 | 同步源/目标的 marker 与 `node_modules` 路径 |
+| `works/ship/installer/build_installer.js` / `works/ship/npm/scripts/assemble.js` | 各 1 | 同上 |
+| `delivery/extension/scripts/khy-diagnostics/hydration-doctor.js` | 1 | 同上 |
+
+**（b）CI / 证据 / 管理脚本，需 owner 决定**：
+
+| 文件 | 处 |
+|---|---|
+| `scripts/ci/check-traffic-log.js`、`scripts/ci/check-data-layout.js`、`scripts/ci/check-f2e-wiring.js`、`scripts/ci/check-frontend-tokens.js`、`scripts/ci/check-tui-gates.js`、`scripts/ci/test-a2a-mcp-server-smoke.js` | 2+1+1+1+1+2 |
+| `scripts/evidence/collect-contribution.js`、`scripts/evidence/capture-runtime.js`、`scripts/quality-gate/provider-contract.js`、`scripts/restore/restore-check.js`、`scripts/admin/_create-admin.js`、`scripts/admin/_insert-user.js` | 2+1+1+3+1+1 |
+
+**（c）已知「陈旧但需确认口径」**：
+
+| 文件 | 处 | 说明 |
+|---|---|---|
+| `scripts/ci/check-agent-docs.js` | 3 | 见 §12.8.1，**另有会话在改**，本轮未动 |
+| `runtime/node/backend/src/services/sourceHealService.js` | 1 | `MANAGED_REL = 'services/backend/src'` 是自愈快照锚点；需确认「锚当前布局」还是「锚老装机」 |
+| `runtime/node/backend/src/cli/handlers/publish.js` | 3 | `extensions/scripts/khy-alpine-iso`（ISO 组装路径，与发布链同源） |
+| `runtime/node/backend/src/services/crossPlatform/crossLauncher.js` | 2 | `getPortableRoot()/apps/ai-frontend`，属便携布局 |
+| `delivery/channel/khyquant/handlers/formatters.js` | 1 | 同 bootstrap.js 同族 |
+| `runtime/substrate/platform/khy_platform/cli.py` | 1 | `extensions/scripts/khy-alpine-iso` |
+| `entries/launch.js` | 1 | `services/backend/bin/khy.js` |
+| `runtime/node/backend/scripts/makeSourceSnapshot.js`、`scripts/prepack.js`、`_probe_tools.js` | 各 1 | 打包/探针脚本 |
+
+##### 12.9.3 第二批：`scripts/release/*` 与 `bothGone` 桶（7 个生产文件 + 1 个测试）
+
+`broken` 桶内 5 文件 / 8 处，`bothGone` 桶内另 2 文件 / 3 处。
+
+`scripts/release/*` 是**操作本仓树**的发布工具（`root` = 仓库根），没有便携/打包布局的歧义 —— 上一轮
+把它们归到「需 owner 决定」是**过度保守**，实际全是无歧义真断。
+
+| 文件 | 处 | 症状 | 动作 | 验收 |
+|---|---|---|---|---|
+| `scripts/release/pin-khyos-toolchain.js` | 3 | 3 处 `require` 全指 `platform/packages/shared/…`（**扫描器只报了 1 处**，另 2 处因 `_artifact`/`toolchainProvisioner` 是 `.js` 文件、字面量不存在而被误判进 `bothGone`） | 三处前缀补 `runtime/substrate` | `require()` 可加载；**`manifestPins.test.js` 7/7** |
+| `scripts/release/assemble-pip-runtime.js` | 2 | `packaging/build/esbuild-modules.js`、`platform/khy_platform/bundled` 均不存在 ⇒ pip 组装断 | → `works/ship/build/…`、`runtime/substrate/platform/khy_platform/bundled` | 路径落地存在 |
+| `scripts/release/pin-runtime-binaries.js` | 2 | `services/backend/config/runtime-binaries.json`、`services/backend/node_modules` | → `runtime/node/backend/…` | 路径落地存在 |
+| `scripts/release/build-payload-assets.js` | 3 | 版本校验读 `services/backend/package.json`；快照脚本路径旧；**`resolveMarkdownExtensionDir` 两个候选全 miss ⇒ 必抛**（发布流水线断） | 前两处换新路径；候选表补 `delivery/extension/tools/khy-markdown` 在首位、旧项保留 | `resolveMarkdownExtensionDir(root)` 落到 `delivery/extension/tools/khy-markdown` |
+| `runtime/node/backend/tests/manifestPins.test.js` | — | **纯深度错**：`require('../../../scripts/release/…')` 从 `runtime/node/backend/tests`（深度 4）只上溯 3 级 ⇒ 加载即 `MODULE_NOT_FOUND`。**扫描器抓不到（无别名可命中）** | 补一级 `../../../../scripts/…` | **7/7** |
+| `scripts/ci/lint-debt-tracker.js` | 2 | `LINT-DEBT.json` 与 `cwd` 用 `services/backend`（**头注释早已写成 `runtime/node/backend/src`**） | 两处换新路径 | 路径落地存在 |
+| `scripts/hooks/agentFeedbackHint.js` | 1 | `require(REPO_ROOT/services/backend/src/utils/dataHome)` ⇒ 走 `catch` 兜底到 `~/.khyos`（**静默降级，数据家找错**） | 换新路径 | `require.resolve` 成功 |
+| `delivery/extension/scripts/khy-diagnostics/model-type-providers.js` | 2 | 两个 `require` 指 `services/backend/src/{services/gateway/providerPresets,constants/serviceDefaults}` | 换新路径 | 两个 `require.resolve` 成功 |
+
+**`bothGone` 桶的新认识**：该桶 281 处并不只是「便携/仓外相对路径」——它同时装着两类仓内命中：
+
+1. **叶子是 `.js` 文件**：`require(…'services','sessionSearchIndex')` 里 `sessionSearchIndex` 是**文件** `sessionSearchIndex.js`，
+   Node 会补扩展名，但扫描器按字面量判 ⇒ 误入 `bothGone`（例：`pin-khyos-toolchain.js` 的 `_artifact`/`toolchainProvisioner`、
+   `bucket-sessions-by-project.js` 的 `sessionSearchIndex`）。**这三处实为假阳性或已在本批修掉。**
+2. **相对引用按非仓根解析**：`require('../services/docHelper.py')` 从 `src/tools/` 上溯正好命中 `src/services/docHelper.py`，
+   扫描器却把它当顶层别名重映射 ⇒ 假阳性（`readFileFormatRouter.js`、`resourceGuard.js`）。
+3. 剩下的才是真断（本批已修 `agentFeedbackHint.js`、`model-type-providers.js`、`lint-debt-tracker.js`）。
+   `bothGone` 的 PROD 里还有大量**glob 模式**（`scripts/ruleguard/*` 的 `services/**/platform/**`）与**别名表自身**
+   （`path-integrity.js` 的 `services/→runtime/node/`），那些是刻意保留，**不是断链**。
+
+##### 12.9.4 方法论沉淀（本轮新增到 skill）
+
+1. **候选清单的验收不能用「旧字面量是否消失」判**：本轮保留旧项作布局兜底后，
+   定向复检脚本仍把 10 处报成 `BROKEN` —— 它只认「旧不存在 + 新存在」，
+   **分不出「刻意保留的兜底」**。候选清单的正确判据是 **「解析器最终落到了哪个存在路径」**
+   （本轮的 `_resolveExisting` 探针、`_resolveAiFrontendDir` 内存编译探针）。
+2. **测试 mock 是生产契约的影子**：生产路径一改，钉住旧路径的 `existsSync` mock 必然红。
+   要分清「mock 该跟着改」（本轮 12 处）与「生产改错了」。
+3. **既有红测试要先隔离归因再修**：用 `git show HEAD:<path>` 把模块落到临时目录复现，
+   能干净地证明「先于本轮改动」。本轮据此确认 `publishProjectState` 那条是 `bc43302f` 遗留的 stale 断言。
+4. **两条扫描轴不可互相替代**：`--scan-split-refs` 只认**逗号分隔的连续字面量**（`path.join('a','b')`）；
+   单字面量 `'services/backend/node_modules'` 归 `--scan-refs`。
+   例：`build-portable-artifact.js` 的 `roots` 数组全是单字面量，**拆段轴报 0、单字面量轴才报**。
+5. **命令能实跑就别只读代码**：`khy where` 的「项目根误报」是**跑出来的**，
+   只读代码时我一度把 `entryPath` 的层级也算错了（`../../..` 从 `handlers` 是落到 `backend` 而非 `src`）。
+6. **`broken` 桶不等于「全部真断」**：它只收「旧不存在 **且** 重映射后存在」。
+   两类真断会漏到 `bothGone`：① 叶子是**带扩展名的文件**（`require(…,'sessionSearchIndex')` → `sessionSearchIndex.js`，
+   扫描器按字面量判 ⇒ 误判）；② **纯深度错**（`require('../../../scripts/release/…')` 少一级，
+   字面量里没有别名可命中 ⇒ 扫描器**结构性失明**）。所以每轮都要**按别名 grep 交叉核对**，
+   并对可疑文件**实跑**（`manifestPins.test.js` 的深度错就是这么暴露的）。
+7. **`bothGone` 里的假阳性有三种**，别一律当真断：带扩展名文件、相对引用被当顶层别名重映射、
+   glob 模式 / 别名表自身（`path-integrity.js` 的 `services/→runtime/node/` 是**定义**不是引用）。
+8. **「需 owner 决定」的判断要能被证伪**：上一轮把 `scripts/release/*` 归为「改错会污染发布产物」而搁置，
+   本轮一看 —— 它们 `root = path.resolve(__dirname,'..','..')` 就是**仓库根**，只读本仓文件，
+   根本不存在打包布局歧义。**过度保守也是成本**。

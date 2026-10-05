@@ -13,7 +13,7 @@
   <button class="menu-toggle" aria-label="菜单">☰</button>
   <a class="brand" href="../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -28,7 +28,7 @@
       <article class="doc-body">
 <h1 id="scripts-quarantine-源码入口缓冲区">scripts/quarantine — 源码入口缓冲区<a class="anchor" href="#scripts-quarantine-源码入口缓冲区" aria-label="锚点">#</a></h1>
 <h2 id="这是什么">这是什么<a class="anchor" href="#这是什么" aria-label="锚点">#</a></h2>
-<p>5-3-1 §4「入口缓冲：新代码禁直写核心域」在本仓的物理落点。判据真源<br><a href="../../docs/11_报告/RESEARCH/[RESEARCH-018]%205-3-1架构符合性调研与迁移设计-2026-09-28.html"><code>[RESEARCH-018] 5-3-1 架构符合性调研与迁移设计</code></a><br>§4 C-5，落地动作是同一篇 §3 的 <strong>P5 行</strong>：新代码必须先落<br><code>D5/quarantine/&lt;日期&gt;/</code>，再按判据晋级进核心域。</p>
+<p>5-3-1 §4「入口缓冲：新代码禁直写核心域」在本仓的物理落点。判据真源<br><a href="../../docs/html/11_%E6%8A%A5%E5%91%8A/RESEARCH/[RESEARCH-018]%205-3-1%E6%9E%B6%E6%9E%84%E7%AC%A6%E5%90%88%E6%80%A7%E8%B0%83%E7%A0%94%E4%B8%8E%E8%BF%81%E7%A7%BB%E8%AE%BE%E8%AE%A1-2026-09-28.html"><code>[RESEARCH-018] 5-3-1 架构符合性调研与迁移设计</code></a><br>§4 C-5，落地动作是同一篇 §3 的 <strong>P5 行</strong>：新代码必须先落<br><code>D5/quarantine/&lt;日期&gt;/</code>，再按判据晋级进核心域。</p>
 <h2 id="为什么是-scripts-下面-而不是根级-quarantine">为什么是 scripts/ 下面，而不是根级 <code>quarantine/</code><a class="anchor" href="#为什么是-scripts-下面-而不是根级-quarantine" aria-label="锚点">#</a></h2>
 <ol><li>按 <code>[RESEARCH-018]</code> §2.2，D5 的第二层轴本来就是<strong>生命周期阶段</strong></li></ol>
 <p>（build / verify / record / <strong>quarantine</strong>），所以缓冲区的名字是 <code>quarantine</code>，<br>   它属于 D5 而不需要一个新根。</p>
@@ -51,7 +51,7 @@
 <h2 id="存量怎么办">存量怎么办<a class="anchor" href="#存量怎么办" aria-label="锚点">#</a></h2>
 <p>核心域里已有的代码没有一份走过这个缓冲区——它们是<strong>机制建立之前</strong>就在的。<br>守卫对它们只做一件事：数「有多少核心域源文件还没有可用的生命周期记录」，<br>把那个数当成只降不升的棘轮（建档基线见 <code>scripts/ci/repo-layout-baseline.json</code><br>的 <code>counts[&quot;entry-buffer&quot;]</code>）。补记的方式是给单元目录放一份<br><code>khy.module.json</code>，并在 <code>lifecycle</code> 里如实写<br><code>&quot;provenance&quot;: &quot;recorded-after-the-fact&quot;</code>——声明「这份记录是事后补的」，<br>而不是假装它走过缓冲。第一例：<br><code>services/backend/src/services/domain/onboarding/</code>。</p>
 <h2 id="字段从哪来">字段从哪来<a class="anchor" href="#字段从哪来" aria-label="锚点">#</a></h2>
-<p>不在本文件里定义 schema 真源。可机判的一切字段（核心域清单、缓冲区路径、<br>manifest 文件名、阶段取值、晋级判据）真源是<br><a href="../../docs/10_规范/registry/DOMAIN-DEPS.json"><code>docs/10_规范/registry/DOMAIN-DEPS.json</code></a><br>的 <code>_entry_buffer</code> 块，执行器是 <code>scripts/ci/check-repo-layout.js</code> 的<br><code>checkEntryBuffer()</code>。改那张表就改了守卫，本文件只解释为什么这么放。</p>
+<p>不在本文件里定义 schema 真源。可机判的一切字段（核心域清单、缓冲区路径、<br>manifest 文件名、阶段取值、晋级判据）真源是<br><a href="../../docs/10_%E8%A7%84%E8%8C%83/registry/DOMAIN-DEPS.json"><code>docs/10_规范/registry/DOMAIN-DEPS.json</code></a><br>的 <code>_entry_buffer</code> 块，执行器是 <code>scripts/ci/check-repo-layout.js</code> 的<br><code>checkEntryBuffer()</code>。改那张表就改了守卫，本文件只解释为什么这么放。</p>
       </article>
       <nav class="pager"><a class="prev" href="../../scripts/memory/README.html"><div class="dir">← 上一篇</div><div class="ttl">记忆系统管理脚本</div></a><a class="next" href="../../scripts/README.html"><div class="dir">下一篇 →</div><div class="ttl">scripts/ — 项目管理与自动化脚本</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>

@@ -277,4 +277,4 @@ khy iso build        # 产可启动 ISO，挂 QEMU/VMware 跑
 ---
 
 *本文档为现状核验快照。内核 file:line 与模块清单随演进可能变动，断言前请对照当前代码与
-[`.ai/MAP.md`](../../../.ai/MAP.md)。早期草案见 [`项目-定位.md`]([INIT-PRD-002] 项目-定位.md)。*
+[`.ai/MAP.md`](../../../works/record/ai/MAP.md)。早期草案见 [`项目-定位.md`]([INIT-PRD-002]%20项目-定位.md)。*

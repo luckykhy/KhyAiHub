@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [RUNTIME-012] 模块顶层副作用收敛.md -->
+<title>[RUNTIME-012] 模块顶层副作用收敛 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>10_规范<span class="sep">›</span>规则卡<span class="sep">›</span>[RUNTIME-012] 模块顶层副作用收敛</div>
+      <header class="hero reveal"><h1>[RUNTIME-012] 模块顶层副作用收敛</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#runtime-012-模块顶层副作用收敛">[RUNTIME-012] 模块顶层副作用收敛</a></li><li class="lvl-2"><a href="#约束">约束</a></li><li class="lvl-2"><a href="#授予权力">授予权力</a></li><li class="lvl-2"><a href="#提供福利">提供福利</a></li><li class="lvl-2"><a href="#反例">反例</a></li><li class="lvl-2"><a href="#校验方式">校验方式</a></li><li class="lvl-2"><a href="#例外">例外</a></li><li class="lvl-2"><a href="#版本记录">版本记录</a></li></ul></nav>
+      <article class="doc-body">
+<hr>
+<p>name: 模块顶层副作用收敛<br>id: RUNTIME-012<br>domain: RUNTIME<br>nature: 约束为主，兼福利<br>scope: &quot;启动路径上的 Node 模块顶层语句：runtime/node/backend/src 与 runtime/node/backend/vendor/shared/src 下的 .js（非测试）。判据只覆盖一种形态 —— 顶层语句直接调用<strong>同文件定义的函数</strong>，而该函数体内<strong>同步可达</strong> require / spawn / exec / connect。跨文件导入的被调方只盘点不判违规。&quot;<br>priority: P2<br>trigger: &quot;改动 runtime/node/backend/src 或 runtime/node/backend/vendor/shared/src 下的 .js 时（commit 快档按关心面前缀匹配；未触及则恒静默）&quot;<br>constraint: &quot;任何被启动路径 require 的模块，顶层只允许声明与常量初始化；禁止在顶层调用会 require / spawn / exec / connect 的函数。判据是「同步可达」而非「函数体里出现过」—— 命中点若包在嵌套函数（箭头 / 函数表达式）里，即视为惰性 thunk，不算违规。已知且已裁决的命中（入口脚本、刻意 eager 的 shim）必须在守卫的 KNOWN_TOPLEVEL_SIDE_EFFECTS 白名单里登记出处后降为 info；无出处的降级等于把判据关掉。跨文件导入的被调方（盲区）按盘点处理，不判违规。&quot;<br>grants: &quot;见约束边界：授权客户（团队）获得「哪些模块在 require 的瞬间就把重依赖拖进首帧」的可核查答案，不必逐个模块读源码再自行推断；也授权把入口脚本与刻意 eager 显式登记为保留，而不是被迫为迎合判据去改掉脚本入口语义。&quot;<br>benefit: &quot;实测（2026-10-04）cacheService.js 顶层写了 initRedis()，而 initRedis() 体内 require(\&quot;redis\&quot;) + createClient() + client.connect() —— require(\&quot;cacheService\&quot;) 的瞬间同步拉入整棵 redis 依赖树，require.cache 模块数 543 → 1（修掉顶层调用后），单这一条就是 20.4s / 542 模块。仓库有 1524 个模块进首帧，此前没有任何守卫能发现这类「看起来是声明、实际是执行」的顶层副作用。本规则把「模块加载期偷偷干了活」变成提交时可见的 finding。&quot;<br>exception: &quot;① 入口脚本（全仓无人 require、由 node &lt;file&gt; 直接执行）的顶层 main()/start() 属入口语义，登记出处后降为 info；② 刻意 eager 的兼容 shim（chalkCompat 必须在 import 时替换 require.cache）同理；③ 单行表达式体箭头（const g = () =&gt; require(\&quot;x\&quot;); g();）与顶层 if/try 块内的调用本判据<strong>不判</strong>（保守方向，宁可漏报不可误报）；④ 跨文件导入的被调方不追，只盘点。&quot;<br>version: &quot;1.0.0 (2026-10-04)&quot;<br>status: active<br>ssot: &quot;docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-178] TUI启动44秒病灶-redis顶层副作用与首帧前重require收敛方案.md&quot;<br>formerly: 无<br>owner: governance-team</p>
+<hr>
+<h1 id="runtime-012-模块顶层副作用收敛">[RUNTIME-012] 模块顶层副作用收敛<a class="anchor" href="#runtime-012-模块顶层副作用收敛" aria-label="锚点">#</a></h1>
+<!-- RULES-REGISTRY: RUNTIME-012 -->
+<blockquote><p><strong>规则卡</strong> · 格式依据 [MGMT-STD-008] §1（frontmatter 14 字段 + 六小节）。</p>
+<p><strong>字段真源</strong>是 <code>docs/10_规范/registry/RULES-REGISTRY.json</code>（GOV-TOOL-006 校验），<br>本文件由 <code>node scripts/docs/gen-rules-cards.js</code> 生成，<strong>禁止手改</strong>（同 [MGMT-STD-007] R6 对 .html 孪生件的约束）。<br>正文原文在 <code>ssot</code> 指向的位置：docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-178] TUI启动44秒病灶-redis顶层副作用与首帧前重require收敛方案.md。</p></blockquote>
+<h2 id="约束">约束<a class="anchor" href="#约束" aria-label="锚点">#</a></h2>
+<p>任何被启动路径 require 的模块，顶层只允许声明与常量初始化；禁止在顶层调用会 require / spawn / exec / connect 的函数。判据是「同步可达」而非「函数体里出现过」—— 命中点若包在嵌套函数（箭头 / 函数表达式）里，即视为惰性 thunk，不算违规。已知且已裁决的命中（入口脚本、刻意 eager 的 shim）必须在守卫的 KNOWN_TOPLEVEL_SIDE_EFFECTS 白名单里登记出处后降为 info；无出处的降级等于把判据关掉。跨文件导入的被调方（盲区）按盘点处理，不判违规。</p>
+<h2 id="授予权力">授予权力<a class="anchor" href="#授予权力" aria-label="锚点">#</a></h2>
+<p>见约束边界：授权客户（团队）获得「哪些模块在 require 的瞬间就把重依赖拖进首帧」的可核查答案，不必逐个模块读源码再自行推断；也授权把入口脚本与刻意 eager 显式登记为保留，而不是被迫为迎合判据去改掉脚本入口语义。</p>
+<h2 id="提供福利">提供福利<a class="anchor" href="#提供福利" aria-label="锚点">#</a></h2>
+<p>实测（2026-10-04）cacheService.js 顶层写了 initRedis()，而 initRedis() 体内 require(&quot;redis&quot;) + createClient() + client.connect() —— require(&quot;cacheService&quot;) 的瞬间同步拉入整棵 redis 依赖树，require.cache 模块数 543 → 1（修掉顶层调用后），单这一条就是 20.4s / 542 模块。仓库有 1524 个模块进首帧，此前没有任何守卫能发现这类「看起来是声明、实际是执行」的顶层副作用。本规则把「模块加载期偷偷干了活」变成提交时可见的 finding。</p>
+<h2 id="反例">反例<a class="anchor" href="#反例" aria-label="锚点">#</a></h2>
+<p>见 <code>ssot</code> 指向的真源原文；本卡不复制反例，以免与真源漂移。</p>
+<h2 id="校验方式">校验方式<a class="anchor" href="#校验方式" aria-label="锚点">#</a></h2>
+<p>人工评审（该规则暂无机械守卫）</p>
+<h2 id="例外">例外<a class="anchor" href="#例外" aria-label="锚点">#</a></h2>
+<p>① 入口脚本（全仓无人 require、由 node &lt;file&gt; 直接执行）的顶层 main()/start() 属入口语义，登记出处后降为 info；② 刻意 eager 的兼容 shim（chalkCompat 必须在 import 时替换 require.cache）同理；③ 单行表达式体箭头（const g = () =&gt; require(&quot;x&quot;); g();）与顶层 if/try 块内的调用本判据<strong>不判</strong>（保守方向，宁可漏报不可误报）；④ 跨文件导入的被调方不追，只盘点。</p>
+<h2 id="版本记录">版本记录<a class="anchor" href="#版本记录" aria-label="锚点">#</a></h2>
+<ul><li>1.0.0 (2026-10-04) 初版 / 迁移自 无</li></ul>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/10_规范/规则卡/[RUNTIME-011] TUI 动画节拍三方一致.html"><div class="dir">← 上一篇</div><div class="ttl">[RUNTIME-011] TUI 动画节拍三方一致</div></a><a class="next" href="../../../../docs/html/10_规范/规则卡/[SEC-001] 安全规范（安全头 输入验证 注入防护 日志脱敏）.html"><div class="dir">下一篇 →</div><div class="ttl">[SEC-001] 安全规范（安全头 输入验证 注入防护 日志脱敏）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/10_规范/规则卡/[RUNTIME-012] 模块顶层副作用收敛.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

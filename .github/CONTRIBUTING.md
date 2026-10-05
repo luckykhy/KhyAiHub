@@ -285,8 +285,8 @@ esbuild 打好的 6 份模块 bundle（`dist/modules/<模块>/bundle.mjs`，`--p
 生效前提是 [`.npmrc`](../.npmrc) 的 `auto-install-peers=false` —— 打开它这一格就退化成普通依赖，
 17 个包连同它们的平台二进制矩阵会全部装进来。新增可选能力时照抄这个套路，并且在 require
 失败的分支里打印中文、可照做的安装提示 —— 参考
-[`services/backend/src/observability/otel.js`](../services/backend/src/observability/otel.js)
-与 [`browser/engine.js`](../services/backend/src/services/browser/engine.js)。
+[`services/backend/src/observability/otel.js`](../runtime/node/backend/src/observability/otel.js)
+与 [`browser/engine.js`](../runtime/node/backend/src/services/domain/desktop/browser/engine.js)。
 
 `check-dependency-size.js` 会单独列出可选 peer 的数量与增删名单，但**不把它计入硬预算** ——
 它们零字节，拿来撑预算会把「声明了一个可选能力」误报成「依赖变重了」。
@@ -326,7 +326,7 @@ node scripts/ci/check-dependency-size.js --update   # 确认代价可接受后�
 合计 29.0 MB，但 `pnpm dedupe --check` exit 0 —— 一份都收敛不掉，它们全是不同依赖方的
 semver 区间真正要求的版本，不是可以合并的冗余。最大一项是 `@esbuild/win32-x64` 9.5 MB
 （0.21.5 + 0.25.12）：0.25.12 是根 devDep `esbuild`，给发布打包器
-[`packaging/build/esbuild-modules.js`](../packaging/build/esbuild-modules.js) 用；0.21.5 是
+[`works/ship/build/esbuild-modules.js`](../works/ship/build/esbuild-modules.js) 用；0.21.5 是
 `vite@5` 自己钉的。要合并只能升 vite 大版本或用 override 把 vite 的 esbuild 跨 4 个 minor
 拽到 0.25 —— 两者都在动前端构建工具链，而收益是 9.5 MB 的**开发期**磁盘（发布产物不含
 node_modules，终端用户一个字节都不受影响）。**先跑 `pnpm dedupe --check`；它说没得收敛，

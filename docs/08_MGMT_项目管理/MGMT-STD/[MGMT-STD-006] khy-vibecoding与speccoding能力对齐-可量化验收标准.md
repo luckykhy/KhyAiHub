@@ -6,7 +6,7 @@
 | 适用范围 | 判定 khy **自身**作为编码 agent,是否真的能像 Claude Code 一样实现 vibe-coding 与 spec-coding。任何声称「khy 已达成对齐」的结论**必须**用本标准量化后方可成立 |
 | 强制级别 | 铁律(未过本标准双闸即**严禁**对外宣称「已对齐 cc」) |
 | 触发关键词 | vibe-coding / spec-coding / 能力对齐 / parity / 验收标准 / 什么时候算达成 |
-| 上位 / 参考 | [MGMT-STD-001](文档结构铁律)、[MGMT-STD-005](证据→计划→落地方法论);测量工具 = `services/backend/scripts/parityScorecard.js` |
+| 上位 / 参考 | [MGMT-STD-001](%5BMGMT-STD-001%5D%20项目文档结构与索引铁律规范.md)、[MGMT-STD-005](%5BMGMT-STD-005%5D%20Khyos工作方法论-证据搜集与计划落地铁律.md);测量工具 = `services/backend/scripts/parityScorecard.js` |
 | 状态 | 定稿 |
 
 ---

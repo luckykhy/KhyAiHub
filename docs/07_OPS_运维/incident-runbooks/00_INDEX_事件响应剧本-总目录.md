@@ -32,9 +32,9 @@ P3: Backlog → Next sprint planning
 
 ## Postmortem Template
 
-See [postmortem-template.md](postmortem-template.md).
+See [postmortem-template.md](postmortem-template.md)（规划中，尚未创建——创建后此链接即生效）.
 
 ## Related
 
-- [[OPS-MAN-202] oncall](../OPS-MAN/[OPS-MAN-202] oncall.md) - oncall schedule
+- [[OPS-MAN-202] oncall](../OPS-MAN/%5BOPS-MAN-202%5D%20oncall.md) - oncall schedule
 - [../runbooks/](../runbooks/) - disaster recovery runbooks

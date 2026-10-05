@@ -13,7 +13,7 @@
   <button class="menu-toggle" aria-label="菜单">☰</button>
   <a class="brand" href="../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -28,11 +28,11 @@
       <article class="doc-body">
 <h1 id="贡献指南-contributing-to-khy-os">贡献指南（Contributing to Khy-OS）<a class="anchor" href="#贡献指南-contributing-to-khy-os" aria-label="锚点">#</a></h1>
 <p>本文件是协作规范的<strong>单一真源</strong>。GitHub 只识别仓库根目录、<code>.github/</code> 与 <code>docs/</code> 顶层的<br><code>CONTRIBUTING.md</code>，因此它放在被优先识别的 <code>.github/</code> 目录；<code>docs/08_MGMT_项目管理/CONTRIBUTING.md</code> 已改为指针页。</p>
-<p>开发者手册（架构、模块职责、AI 协作约定）见 <span class="deadlink" title="目标不存在：../AGENTS.html">AGENTS.md</span>。</p>
+<p>开发者手册（架构、模块职责、AI 协作约定）见 <a href="../AGENTS.md">AGENTS.md</a>。</p>
 <hr>
 <h2 id="1-分支策略">1. 分支策略<a class="anchor" href="#1-分支策略" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>分支</th><th>用途</th><th>保护</th></tr></thead><tbody><tr><td><code>master</code></td><td>唯一可部署主干（仓库当前主干名）</td><td>见 §6 分支保护</td></tr><tr><td><code>feat/&lt;area-id&gt;/&lt;简述&gt;</code></td><td>新功能</td><td>无</td></tr><tr><td><code>fix/&lt;area-id&gt;/&lt;简述&gt;</code></td><td>缺陷修复</td><td>无</td></tr><tr><td><code>docs/&lt;简述&gt;</code></td><td>纯文档</td><td>无</td></tr><tr><td><code>chore/&lt;简述&gt;</code></td><td>构建、依赖、CI</td><td>无</td></tr><tr><td><code>dev/&lt;姓名&gt;/&lt;简述&gt;</code></td><td>个人实验，不要求可合并</td><td>无</td></tr></tbody></table>
-<p><code>&lt;area-id&gt;</code> 取自 <a href="../docs/14_维护者/registry/维护映射表.json"><code>docs/14_维护者/registry/维护映射表.json</code></a> 的 <code>areas[].id</code>，<br>共 111 个区域。用它做前缀的好处是：分支名直接对应 CODEOWNERS 的归属单元。</p>
+<p><code>&lt;area-id&gt;</code> 取自 <a href="../docs/14_%E7%BB%B4%E6%8A%A4%E8%80%85/registry/%E7%BB%B4%E6%8A%A4%E6%98%A0%E5%B0%84%E8%A1%A8.json"><code>docs/14_维护者/registry/维护映射表.json</code></a> 的 <code>areas[].id</code>，<br>共 111 个区域。用它做前缀的好处是：分支名直接对应 CODEOWNERS 的归属单元。</p>
 <blockquote><p><strong>关于 <code>main</code> 与 <code>master</code></strong>：本仓库主干名为 <code>master</code>，但所有 workflow 的触发条件同时列出<br><code>[main, master]</code>。这样即使将来重命名主干，也不需要再改 CI 配置。</p></blockquote>
 <p><strong>分支纪律</strong></p>
 <ul><li>分支存活尽量不超过 3 天；长命分支的冲突成本远高于拆分成本。</li><li>合并前 rebase 到最新主干（<code>git fetch &amp;&amp; git rebase origin/master</code>）。</li><li>启用冲突记忆：<code>git config rerere.enabled true</code>。</li></ul>
@@ -112,10 +112,10 @@ node scripts/maintenance/gen-codeowners.js --sync-roster</code></pre>
 <blockquote><p>旧文档曾写「核心成员紧急修复可 self-merge」，<strong>该条已废止</strong>：分支保护规则的<br><code>bypass_actors</code> 为空，且 <code>required_approving_review_count: 1</code>，任何人都无法自行合并。<br>如果确实需要紧急通道，请按 <a href="rulesets/README.html"><code>.github/rulesets/README.md</code></a><br>显式添加 bypass 并在 PR 中说明，而不是靠口头约定。</p></blockquote>
 <hr>
 <h2 id="7-分支保护-ruleset-as-code">7. 分支保护（ruleset-as-code）<a class="anchor" href="#7-分支保护-ruleset-as-code" aria-label="锚点">#</a></h2>
-<p>规则以 JSON 形式版本化在 <a href="rulesets/"><code>.github/rulesets/</code></a>，不靠人在网页上点。<br>应用方式见 <a href="rulesets/README.html"><code>.github/rulesets/README.md</code></a>。</p>
+<p>规则以 JSON 形式版本化在 <a href="rulesets"><code>.github/rulesets/</code></a>，不靠人在网页上点。<br>应用方式见 <a href="rulesets/README.html"><code>.github/rulesets/README.md</code></a>。</p>
 <hr>
 <h2 id="8-安全">8. 安全<a class="anchor" href="#8-安全" aria-label="锚点">#</a></h2>
-<p><strong>不要用 Issue 报告安全问题。</strong> 流程见 <span class="deadlink" title="目标不存在：../SECURITY.html">SECURITY.md</span>。</p>
+<p><strong>不要用 Issue 报告安全问题。</strong> 流程见 <a href="../SECURITY.md">SECURITY.md</a>。</p>
 <p>日常开发中的硬性要求：</p>
 <ul><li>任何凭据、私钥、<code>.env</code> 文件都不得进入版本库（PR 门禁会阻断）。</li><li>依赖更新由 Dependabot 提出（见 <a href="dependabot.yml"><code>.github/dependabot.yml</code></a>），</li></ul>
 <p>请阅读 changelog 后再合并，不要盲批。</p>
@@ -129,9 +129,9 @@ scripts\<span class="hljs-built_in">sync</span>\merge-contributions.bat &lt;bund
 <hr>
 <h2 id="10-发布">10. 发布<a class="anchor" href="#10-发布" aria-label="锚点">#</a></h2>
 <p>发布由维护者执行。流程文档：</p>
-<ul><li><a href="../docs/07_OPS_运维/"><code>docs/07_OPS_运维/OPS-MAN/[OPS-MAN-042] 发布手册-pip与npm-无AI照做.md</code></a> — 逐步照做的发布手册</li><li><a href="../docs/07_OPS_运维/"><code>docs/07_OPS_运维/OPS-MAN/[OPS-MAN-061] 发布门禁.md</code></a> — 发布前必须通过的检查</li><li><a href="workflows/dual-channel-release.yml"><code>.github/workflows/dual-channel-release.yml</code></a> — npm + PyPI 双通道自动化</li></ul>
+<ul><li><a href="../docs/07_OPS_%E8%BF%90%E7%BB%B4"><code>docs/07_OPS_运维/OPS-MAN/[OPS-MAN-042] 发布手册-pip与npm-无AI照做.md</code></a> — 逐步照做的发布手册</li><li><a href="../docs/07_OPS_%E8%BF%90%E7%BB%B4"><code>docs/07_OPS_运维/OPS-MAN/[OPS-MAN-061] 发布门禁.md</code></a> — 发布前必须通过的检查</li><li><a href="workflows/dual-channel-release.yml"><code>.github/workflows/dual-channel-release.yml</code></a> — npm + PyPI 双通道自动化</li></ul>
 <p>贡献者只需注意一点：<strong>改动版本号时多处必须同步</strong>，以 <code>node scripts/ci/check-version-sync.js</code><br>的结论为准（仓库存在两套独立版本线：<code>khy-os</code> 与 <code>ai-backend</code>），PR 门禁会校验。</p>
-<p>变更日志写在根目录 <span class="deadlink" title="目标不存在：../CHANGELOG.html"><code>CHANGELOG.md</code></span>。发版时预置条目：</p>
+<p>变更日志写在根目录 <a href="../CHANGELOG.md"><code>CHANGELOG.md</code></a>。发版时预置条目：</p>
 <pre><code class="language-bash">node scripts/release/changelog-new.js &lt;version&gt;
 node scripts/release/changelog-new.js --check   <span class="hljs-comment"># 校验顶部版本 == pyproject 版本</span></code></pre>
 <hr>
@@ -144,7 +144,7 @@ node scripts/release/changelog-new.js --check   <span class="hljs-comment"># 校
 <p><strong>发布渠道不走上面任何一条。</strong> pip（<code>pip install khy-os</code>）与 npm（<code>@khy-os/khy-os</code>）发出去的是<br>esbuild 打好的 6 份模块 bundle（<code>dist/modules/&lt;模块&gt;/bundle.mjs</code>，<code>--prod</code> 压缩后合计约 95 MB，<br>其中主模块 <code>khy</code> 约 16.9 MB），<strong>不含 node_modules</strong>。<br>所以「几百 MB 依赖」只影响开发者的机器，不影响终端用户 —— 但自建服务端的用户走的是<br><code>install:prod</code>，那 465 个包必须是对的。</p>
 <h3 id="11-2-依赖该写进哪个字段">11.2 依赖该写进哪个字段<a class="anchor" href="#11-2-依赖该写进哪个字段" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>字段</th><th>判据</th><th>例子</th></tr></thead><tbody><tr><td><code>dependencies</code></td><td>运行时会 require，且<strong>没有</strong> try/catch 兜底</td><td>express、sequelize、node-cron</td></tr><tr><td><code>devDependencies</code></td><td>只有构建、测试、lint、本地开发会用到</td><td>esbuild、jest、eslint</td></tr><tr><td><code>optionalDependencies</code></td><td>装不上也能跑，npm 装失败不阻断安装</td><td>glob、https-proxy-agent</td></tr><tr><td><code>peerDependencies</code> + <code>peerDependenciesMeta.optional</code></td><td>代码里 try/catch 包着 require 的可选能力，<strong>默认一个字节都不装</strong></td><td>better-sqlite3、node-llama-cpp、<code>@opentelemetry/*</code></td></tr></tbody></table>
-<p>最后一格是本仓库降体积的主力机制：<strong>「能被 require 的东西必须有名字」，但有名字不等于要装。</strong><br><code>services/backend/package.json</code> 现有 16 个这样的可选 peer（<code>platform/packages/shared</code> 另有 1 个）。<br>生效前提是 <a href="../.npmrc"><code>.npmrc</code></a> 的 <code>auto-install-peers=false</code> —— 打开它这一格就退化成普通依赖，<br>17 个包连同它们的平台二进制矩阵会全部装进来。新增可选能力时照抄这个套路，并且在 require<br>失败的分支里打印中文、可照做的安装提示 —— 参考<br><span class="deadlink" title="目标不存在：../services/backend/src/observability/otel.js"><code>services/backend/src/observability/otel.js</code></span><br>与 <span class="deadlink" title="目标不存在：../services/backend/src/services/browser/engine.js"><code>browser/engine.js</code></span>。</p>
+<p>最后一格是本仓库降体积的主力机制：<strong>「能被 require 的东西必须有名字」，但有名字不等于要装。</strong><br><code>services/backend/package.json</code> 现有 16 个这样的可选 peer（<code>platform/packages/shared</code> 另有 1 个）。<br>生效前提是 <a href="../.npmrc"><code>.npmrc</code></a> 的 <code>auto-install-peers=false</code> —— 打开它这一格就退化成普通依赖，<br>17 个包连同它们的平台二进制矩阵会全部装进来。新增可选能力时照抄这个套路，并且在 require<br>失败的分支里打印中文、可照做的安装提示 —— 参考<br><a href="../runtime/node/backend/src/observability/otel.js"><code>services/backend/src/observability/otel.js</code></a><br>与 <a href="../runtime/node/backend/src/services/domain/desktop/browser/engine.js"><code>browser/engine.js</code></a>。</p>
 <p><code>check-dependency-size.js</code> 会单独列出可选 peer 的数量与增删名单，但<strong>不把它计入硬预算</strong> ——<br>它们零字节，拿来撑预算会把「声明了一个可选能力」误报成「依赖变重了」。</p>
 <blockquote><p><strong>只声明不安装，就必须自己验证解析得到。</strong> <code>playwright</code> / <code>playwright-core</code> 长期没有出现在<br>任何 manifest 里，靠前端 <code>@playwright/test</code> 提升上来的传递副本碰巧被解析到；pnpm 严格布局<br>一上线，<code>require.resolve('playwright')</code> 从 <code>services/backend</code> 直接 <code>MODULE_NOT_FOUND</code>，而<br>try/catch 把它咽掉了 —— 能力静默失效，没有任何诊断输出。<strong>判断标准不是「装上了吗」，<br>而是「从要 require 它的那个包的目录解析得到吗」。</strong></p></blockquote>
 <p><strong>不允许静默下载大型运行时、浏览器或模型文件。</strong> 需要它们的功能必须在首次启用时<br>打印安装提示，由使用者显式执行。提示里要写明体积量级：同一个能力的两条路径代价可能差<br>三个数量级（<code>playwright</code> + <code>npx playwright install chromium</code> 要额外下载约 700 MB 浏览器，<br>而连远端浏览器只需 <code>playwright-core</code>，一个字节的浏览器都不下）。不写体积，等于替使用者<br>做了一个几百 MB 的决定。</p>
@@ -158,7 +158,7 @@ node scripts/ci/check-dependency-size.js --update   <span class="hljs-comment">#
 <ul><li><strong>字节只是报告</strong>：走 5% 容差。npm 的提升结果受安装顺序影响，optional 依赖按平台挑</li></ul>
 <p>（<code>@esbuild/*</code> 二十多个平台包一台机器只落一个），Windows 的 CRLF 还会撑大文本文件 ——<br>  拿字节当阻断条件，等于让门禁在换台机器时随机失败。</p>
 <p>新增大体积依赖时，PR 描述里要回答四个问题：<strong>多大、有没有更小的替代、是不是平台专属、<br>能不能改成按需加载</strong>。脚本会把新增的直接依赖逐个点名，不用你自己找。</p>
-<p><strong>多版本共存不要用 <code>overrides</code> 硬按。</strong> 本机实测 123 个包名存在多版本、多出 158 份副本、<br>合计 29.0 MB，但 <code>pnpm dedupe --check</code> exit 0 —— 一份都收敛不掉，它们全是不同依赖方的<br>semver 区间真正要求的版本，不是可以合并的冗余。最大一项是 <code>@esbuild/win32-x64</code> 9.5 MB<br>（0.21.5 + 0.25.12）：0.25.12 是根 devDep <code>esbuild</code>，给发布打包器<br><span class="deadlink" title="目标不存在：../packaging/build/esbuild-modules.js"><code>packaging/build/esbuild-modules.js</code></span> 用；0.21.5 是<br><code>vite@5</code> 自己钉的。要合并只能升 vite 大版本或用 override 把 vite 的 esbuild 跨 4 个 minor<br>拽到 0.25 —— 两者都在动前端构建工具链，而收益是 9.5 MB 的<strong>开发期</strong>磁盘（发布产物不含<br>node_modules，终端用户一个字节都不受影响）。<strong>先跑 <code>pnpm dedupe --check</code>；它说没得收敛，<br>就不要加 override。</strong> 真要加，PR 里必须写清理由、影响面、回滚方式。</p>
+<p><strong>多版本共存不要用 <code>overrides</code> 硬按。</strong> 本机实测 123 个包名存在多版本、多出 158 份副本、<br>合计 29.0 MB，但 <code>pnpm dedupe --check</code> exit 0 —— 一份都收敛不掉，它们全是不同依赖方的<br>semver 区间真正要求的版本，不是可以合并的冗余。最大一项是 <code>@esbuild/win32-x64</code> 9.5 MB<br>（0.21.5 + 0.25.12）：0.25.12 是根 devDep <code>esbuild</code>，给发布打包器<br><a href="../works/ship/build/esbuild-modules.js"><code>works/ship/build/esbuild-modules.js</code></a> 用；0.21.5 是<br><code>vite@5</code> 自己钉的。要合并只能升 vite 大版本或用 override 把 vite 的 esbuild 跨 4 个 minor<br>拽到 0.25 —— 两者都在动前端构建工具链，而收益是 9.5 MB 的<strong>开发期</strong>磁盘（发布产物不含<br>node_modules，终端用户一个字节都不受影响）。<strong>先跑 <code>pnpm dedupe --check</code>；它说没得收敛，<br>就不要加 override。</strong> 真要加，PR 里必须写清理由、影响面、回滚方式。</p>
 <h3 id="11-4-清理构建与测试产物">11.4 清理构建与测试产物<a class="anchor" href="#11-4-清理构建与测试产物" aria-label="锚点">#</a></h3>
 <pre><code class="language-bash">npm run clean          <span class="hljs-comment"># 干跑：只列出将删除的目录与实测体积，什么都不删</span>
 npm run clean:apply    <span class="hljs-comment"># 真删</span></code></pre>

@@ -13,19 +13,26 @@ const ROOT = path.resolve(__dirname, '..', '..');
 function findOrphanHtml(dir) {
   let orphans = [];
   const skipDirs = new Set(['node_modules', '.git', 'build', 'dist', '19_资产']);
-  
+
   fs.readdirSync(dir, { withFileTypes: true }).forEach(d => {
     const p = path.join(dir, d.name);
     if (d.isDirectory() && !skipDirs.has(d.name)) {
       orphans = orphans.concat(findOrphanHtml(p));
     } else if (d.name.endsWith('.html')) {
-      const mdFile = p.replace('.html', '.md');
-      if (!fs.existsSync(mdFile)) {
+      const rel = path.relative(ROOT, p).split(path.sep).join('/');
+      // docs/html/ 镜像树：把孪生路径映射回 md 源；docs/index.html 是无源首页，豁免
+      const mdRel = rel === 'docs/index.html'
+        ? null
+        : rel.startsWith('docs/html/')
+          ? 'docs/' + rel.slice('docs/html/'.length).replace(/\.html$/i, '.md')
+          : rel.replace(/\.html$/i, '.md');
+      if (mdRel === null) return;
+      if (!fs.existsSync(path.join(ROOT, mdRel))) {
         orphans.push(p);
       }
     }
   });
-  
+
   return orphans;
 }
 

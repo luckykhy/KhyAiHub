@@ -124,13 +124,13 @@
 > **B9 按标签归夹（2026-09-18）**：本阶段内设计文档已按 `[TAG-XXX]` 标签归入 `03_DESIGN_设计/[TAG-XXX]/` 子目录；DR7 代码耦合文档（如 `[DESIGN-LAY-005]`、`[DESIGN-TOOL-002]`）留根目录不移动。子目录内文档由 `npm run docs:build` 的 `nav-data.js` 全量收录进站点导航，近索引只点名根级件。
 
 
-- [`DESIGN-ARCH-024` khyos元帅双模式任命与约束规范（已归档·孤儿引擎）](03_DESIGN_设计/_archive_已删除孤儿引擎/[DESIGN-ARCH-024] khyos元帅双模式任命与约束规范.md)
-- [`DESIGN-ARCH-033` 模型自适应与双轨热插拔架构（已归档·孤儿引擎）](03_DESIGN_设计/_archive_已删除孤儿引擎/[DESIGN-ARCH-033] 模型自适应与双轨热插拔架构.md)
-- [`DESIGN-ARCH-035` 上下文永续与认知压缩引擎（已归档·孤儿引擎）](03_DESIGN_设计/_archive_已删除孤儿引擎/[DESIGN-ARCH-035] 上下文永续与认知压缩引擎.md)
-- [`DESIGN-ARCH-038` Khyos双轨淬火-确定性保底与模型辅助增强的Bug升维引擎（已归档·孤儿引擎）](03_DESIGN_设计/_archive_已删除孤儿引擎/[DESIGN-ARCH-038] Khyos双轨淬火-确定性保底与模型辅助增强的Bug升维引擎.md)
-- [`DESIGN-ARCH-039` Khyos环境共生-环境感知与原生亲和架构（已归档·孤儿引擎）](03_DESIGN_设计/_archive_已删除孤儿引擎/[DESIGN-ARCH-039] Khyos环境共生-环境感知与原生亲和架构.md)
-- [`DESIGN-ARCH-040` Khyos数据主权与极权路由-数据主权绝对论与单一权威注入网关（已归档·孤儿引擎）](03_DESIGN_设计/_archive_已删除孤儿引擎/[DESIGN-ARCH-040] Khyos数据主权与极权路由-数据主权绝对论与单一权威注入网关.md)
-- [`DESIGN-ARCH-042` Khyos自持基建-契约即文档与影响面评估与行为守卫（已归档·孤儿引擎）](03_DESIGN_设计/_archive_已删除孤儿引擎/[DESIGN-ARCH-042] Khyos自持基建-契约即文档与影响面评估与行为守卫.md)
+- [`DESIGN-ARCH-024` khyos元帅双模式任命与约束规范（已归档·孤儿引擎）](./18_归档/03_DESIGN_设计/[DESIGN-ARCH-024]%20khyos元帅双模式任命与约束规范.md)
+- [`DESIGN-ARCH-033` 模型自适应与双轨热插拔架构（已归档·孤儿引擎）](./18_归档/03_DESIGN_设计/[DESIGN-ARCH-033]%20模型自适应与双轨热插拔架构.md)
+- [`DESIGN-ARCH-035` 上下文永续与认知压缩引擎（已归档·孤儿引擎）](./18_归档/03_DESIGN_设计/[DESIGN-ARCH-035]%20上下文永续与认知压缩引擎.md)
+- [`DESIGN-ARCH-038` Khyos双轨淬火-确定性保底与模型辅助增强的Bug升维引擎（已归档·孤儿引擎）](./18_归档/03_DESIGN_设计/[DESIGN-ARCH-038]%20Khyos双轨淬火-确定性保底与模型辅助增强的Bug升维引擎.md)
+- [`DESIGN-ARCH-039` Khyos环境共生-环境感知与原生亲和架构（已归档·孤儿引擎）](./18_归档/03_DESIGN_设计/[DESIGN-ARCH-039]%20Khyos环境共生-环境感知与原生亲和架构.md)
+- [`DESIGN-ARCH-040` Khyos数据主权与极权路由-数据主权绝对论与单一权威注入网关（已归档·孤儿引擎）](./18_归档/03_DESIGN_设计/[DESIGN-ARCH-040]%20Khyos数据主权与极权路由-数据主权绝对论与单一权威注入网关.md)
+- [`DESIGN-ARCH-042` Khyos自持基建-契约即文档与影响面评估与行为守卫（已归档·孤儿引擎）](./18_归档/03_DESIGN_设计/[DESIGN-ARCH-042]%20Khyos自持基建-契约即文档与影响面评估与行为守卫.md)
 - [`DESIGN-ARCH-050` 项目整体意识与自驱收尾保障](03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-050] 项目整体意识与自驱收尾保障.md)
 - [`DESIGN-ARCH-063` 对照《Claude Code 架构》一书读懂 Khy-OS（书序架构阅读主线）](03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-063] 对照《Claude Code 架构》一书读懂 Khy-OS.md)
 - [`DESIGN-LAY-005` 仓库层级板块规范](10_规范/DESIGN-LAY/[DESIGN-LAY-005] 仓库层级板块规范.md) — **顶层目录 L0–L6 分层、允许依赖边、`docs/` 统一编号轴命名、任务入口命名的单一真源**；新增文件或新增顶层目录前先读它，由 `npm run check:layout` 强制
@@ -143,7 +143,7 @@
 
 历史未编号件（保留原名，重命名须同步改写全部入站引用，属独立一轮工作）：
 
-- [`ycode-inspiration-plan`（未编号）](03_DESIGN_设计/[DESIGN-ARCH-083] ycode-inspiration-plan 设计与实现记录.md)
+- [`ycode-inspiration-plan`（未编号）](03_DESIGN_设计/其它设计/ycode-inspiration-plan.md)
 
 2026-09-08 补登记（此前漏链，docs-index-complete 由此降为 0）：
 
@@ -193,7 +193,7 @@
 - [`DESIGN-ARCH-107` TUI组件实现提示词](03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-107] TUI组件实现提示词.md) — 原占用 `079`，因与 TUI界面设计规范撞号改号
 - [`DESIGN-ARCH-110` TUI-CLASSIC-SYNC 设计笔记](03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-110] TUI-CLASSIC-SYNC 设计笔记.md) — 原在 `docs/design/`，该目录已合并删除
 - [`DESIGN-ARCH-114` CLI 错误标准化规范](03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-114] CLI 错误标准化规范.md) — 补齐 API-003（机器面）/ COMMS-004（进程面）之后的**人面**：CLI/TUI 失败展示的机器码登记表、结构化失败信封字段规约、三屏渲染秩序（推广清单不得占首屏）、以及「钉选优先的严格边界」；规则 `RUNTIME-005`，叶子 `cliFailureEnvelope.js`
-- [`DESIGN-ARCH-116` khyos-插件系统契约(@khy/plugin-sdk)](03_DESIGN_设计/[DESIGN-ARCH-116] khyos-插件系统契约(@khy-plugin-sdk).md) — 自有插件系统契约单一真源：manifest 4 必填字段（name / namespace / engines.khy / main）、发现源 6 路的 eager/lazy 边界、命名空间 + 版本门控；落地件 `platform/packages/plugin-sdk/`，与 `[DESIGN-TOOL-002]`（拓展契约）分工互补、与 `ccSkillBridge`（借 CC 生态）并行
+- [`DESIGN-ARCH-116` khyos-插件系统契约(@khy/plugin-sdk)](03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-116]%20khyos-插件系统契约%28@khy-plugin-sdk%29.md) — 自有插件系统契约单一真源：manifest 4 必填字段（name / namespace / engines.khy / main）、发现源 6 路的 eager/lazy 边界、命名空间 + 版本门控；落地件 `platform/packages/plugin-sdk/`，与 `[DESIGN-TOOL-002]`（拓展契约）分工互补、与 `ccSkillBridge`（借 CC 生态）并行
 - [`DESIGN-ARCH-117` khy-多端入口矩阵](03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-117] khy-多端入口矩阵.md) — 回答「khy 有哪些端、入口在哪、怎么起、怎么构建、现在能不能用」：把此前五份互相矛盾的端定义（`crossLauncher.js` 硬编码表 / `android_build.py` / `khy desktop` 与 `khy mobile` 两个同名不同义命令 / 三套桌面线）收敛成一份带检活的登记表。落点 L2 `services/backend/src/services/entrypoints/`（不新建顶层目录）、仓库级 vs 本机级定档分离、产物坐标只存指针不复制；含幽灵端 `apps/khy-mobile` 等四条未收口清单
 - [`DESIGN-ARCH-118` HQ 能力吸收与多机协作规范](03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-118] HQ 能力吸收与多机协作规范.md) — 把指挥部仓库 `khy-os-hq` 的能力**吸收**进 khy-os 单仓（非搬家）后废弃 HQ：状态真源落 `.ai/hq/`、命令面 `khy hq`（10 子命令 + 状态机 + 多机租约）、自动同步落 `.khyos/autopull.js`。含四条硬约束死因（D1 向上四级推算 `PORTABLE_ROOT` / D2 递归自扫）、`DOCS-003` D9 补上 HQ `drivability` 丢弃后的孪生面机械保障、步骤 1–3 已完成记录与「诚实代价」清单
 - [`DESIGN-ARCH-124` CC 模式剪贴板复制能力补齐提案](03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-124] CC 模式剪贴板复制能力补齐提案.md) — CC 模式（`KHY_CC_TUI=1`）下剪贴板底层通道（`utils/ccClipboard.writeClipboard`）与选区算法叶子（`selection.js`）的补齐提案（**提案待评审、尚未编码**）；上游依赖 `[DESIGN-ARCH-119]`、`[DESIGN-ARCH-111]`；属 TUI 设计族，总纲见 `[DESIGN-ARCH-122]`
@@ -215,7 +215,7 @@
 - [`DESIGN-LAY-003` 仓库整理与巡检规范](10_规范/DESIGN-LAY/[DESIGN-LAY-003] 仓库整理与巡检规范.md) — 存量杂物（生成物/临时物/产物）回收；HK-1–HK-8 红线、只隔离不删除；规则登记为 `LAYOUT-004`
 - [`DESIGN-LAY-004` 构建产物单一根规范](10_规范/DESIGN-LAY/[DESIGN-LAY-004] 构建产物单一根规范.md) — **产物放哪、删了怎么回来**：唯一产物根 `entries/`（2026-09-18 由 `_build/` 迁入）、三条不变量（可删除性 / 零越界 / 非寄生棘轮）、`BUILD-OUTPUTS.json` 一份真源派生三处清单；实测证据含「`check-build-artifacts` 绿着放行 10 个已跟踪产物」「`clean.js` 漏登记 17 条」「`.gitignore` 指向已改名路径致 3.2 MB 产物裸奔」；规则登记为 `LAYOUT-005`
 - [`DESIGN-LAY-008` 目录层级重设计执行路线图](10_规范/DESIGN-LAY/[DESIGN-LAY-008] 目录层级重设计执行路线图.md) — **搬任何东西前先看这篇**：不新增设计，只给 `[DESIGN-LAY-007]` 三态目标的执行序列（Phase 0 清创 → 骨架 → 数据归位 → 代码态减法 → 文档态分区）；裁决根级无主垃圾（立即走 LAY-003 隔离）与根启动器去留（原地登记 + 根索引，不搬）；含 2026-09-28 七项棘轮基线
-- [`DESIGN-PERF-001` 性能规范](10_规范/[DESIGN-PERF-001] 性能规范.md) — 保留 `PERF-001`；设计提案 `[DESIGN-PERF-002]` 在 `03_DESIGN_设计/`
+- [`DESIGN-PERF-001` 性能规范](./10_规范/其它规范/[DESIGN-PERF-001]%20性能规范.md) — 保留 `PERF-001`；设计提案 `[DESIGN-PERF-002]` 在 `03_DESIGN_设计/`
 - [`DESIGN-MEM-006` 记忆与维护元数据生命周期规范](10_规范/DESIGN-MEM/[DESIGN-MEM-006] 记忆与维护元数据生命周期规范.md) — GOV-MEM-001–004 契约真源：session/persistent 判定口径、persistent 记录五字段格式、记忆与 `.ai/` 元数据的指定读写入口、清理与生命周期；含 UC-001（`.ai/` 三件套缺失）裁决
 - [`DESIGN-TOOL-001` 工具与扩展升级废弃规范](10_规范/其它规范/[DESIGN-TOOL-001] 工具与扩展升级废弃规范.md) — GOV-TOOL-003 契约真源：`khy.extension.json` 的 `lifecycle` 块冻结、工具改名/移除的兼容期与迁移说明、manifest 版本策略与最小权限边界
 - [`DESIGN-ACP-001` ACP消息元数据与终态契约](10_规范/其它规范/[DESIGN-ACP-001] ACP消息元数据与终态契约.md) — GOV-ACP-001/003/004 契约真源 + UC-004 裁决：请求/通知/响应三态信封拆分、`meta`（traceId/callId/deadline/idempotencyKey）元数据、超时/取消/重试/关闭的可观察终态与错误码表
@@ -272,11 +272,11 @@
 
 未编号运维条目（2026-09-10 补登记，此前漏链）：
 
-- [disaster-recovery 依赖清单](07_OPS_运维/OPS-MAN/[OPS-MAN-201] dependencies.html) — 灾备关键依赖：基础设施、外部服务与故障半径
-- [On-Call 值班表](07_OPS_运维/OPS-MAN/[OPS-MAN-202] oncall.html) — 当前值班轮换、升级路径与值班职责
-- [规范代码 Enforcement 指南](07_OPS_运维/OPS-MAN/[OPS-MAN-203] standards-enforcement.html) — 架构总览、守卫脚本清单与 P0 阻断级规范守卫
-- [CI Gate 技术债清理报告](07_OPS_运维/OPS-MAN/[OPS-MAN-204] technical-debt-report.html) — CI 门禁技术债总览与分规则统计
-- [工作树清洁方案](07_OPS_运维/OPS-MAN/[OPS-MAN-206] 工作树清洁方案.html) — 工作树长期变脏的四条根因（HTML 孪生漂移 / 忽略规则缺口 / 根目录怪文件 / pre-commit 只见暂存区）与「四层分离」对策 M1–M7
+- [disaster-recovery 依赖清单](07_OPS_运维/OPS-MAN/[OPS-MAN-201]%20dependencies.html) — 灾备关键依赖：基础设施、外部服务与故障半径
+- [On-Call 值班表](07_OPS_运维/OPS-MAN/[OPS-MAN-202]%20oncall.html) — 当前值班轮换、升级路径与值班职责
+- [规范代码 Enforcement 指南](07_OPS_运维/OPS-MAN/[OPS-MAN-203]%20standards-enforcement.html) — 架构总览、守卫脚本清单与 P0 阻断级规范守卫
+- [CI Gate 技术债清理报告](07_OPS_运维/OPS-MAN/[OPS-MAN-204]%20technical-debt-report.html) — CI 门禁技术债总览与分规则统计
+- [工作树清洁方案](07_OPS_运维/OPS-MAN/[OPS-MAN-206]%20工作树清洁方案.html) — 工作树长期变脏的四条根因（HTML 孪生漂移 / 忽略规则缺口 / 根目录怪文件 / pre-commit 只见暂存区）与「四层分离」对策 M1–M7
 
 - [`OPS-MAN-073` 离机渠道启动入口契约自检清单](07_OPS_运维/OPS-MAN/[OPS-MAN-073] 离机渠道启动入口契约自检清单.md)
 - [`OPS-MAN-169` 项目规则总纲-命名·skill·权限·mcp](07_OPS_运维/OPS-MAN/[OPS-MAN-169] 项目规则总纲-命名·skill·权限·mcp.md)

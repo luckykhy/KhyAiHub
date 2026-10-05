@@ -19,7 +19,7 @@ This directory contains runbooks for disaster recovery.
 
 - Daily automated backup verification (see `scripts/maintenance/verify_backups.ps1`)
 - Weekly restore test (see `scripts/maintenance/test_restore.ps1`)
-- Monthly full DR drill (see [drill-schedule.md](drill-schedule.md))
+- Monthly full DR drill (see [drill-schedule.md](drill-schedule.md) — 规划中，尚未创建)
 
 ## Failover Procedures
 
@@ -38,9 +38,9 @@ This directory contains runbooks for disaster recovery.
 
 ## Dependencies
 
-See [[OPS-MAN-201] dependencies](../OPS-MAN/[OPS-MAN-201] dependencies.md) for critical service dependency map.
+See [[OPS-MAN-201] dependencies](../OPS-MAN/%5BOPS-MAN-201%5D%20dependencies.md) for critical service dependency map.
 
 ## Related
 
 - [../incident-runbooks/00_INDEX_事件响应剧本-总目录.md](../incident-runbooks/00_INDEX_事件响应剧本-总目录.md) - incident response runbooks
-- [[OPS-MAN-202] oncall](../OPS-MAN/[OPS-MAN-202] oncall.md) - oncall schedule
+- [[OPS-MAN-202] oncall](../OPS-MAN/%5BOPS-MAN-202%5D%20oncall.md) - oncall schedule

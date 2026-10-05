@@ -217,8 +217,11 @@ P2 规则走基线棘轮（`scripts/ci/ruleguard-baseline.json`，只降不升�
 | `LAYOUT-005`<br>构建产物单一根 | 一切可再生构建产物落 `entries/<producer>[/<variant>]`（深度 ≤ 2；2026-09-18 由仓库根 `_build/` 迁入 `entries/`），须在 `docs/10_规范/registry/BUILD-OUTPUTS.json` 登记 `path` + `rebuild` + `inBuildAll`；`.gitignore` / `.dockerignore` 由登记表派生，不得手写第二份 | `[DESIGN-LAY-004]`；`npm run check:build-root`（`--strict` 更严）、`npm run check:build-artifacts` |
 | `LAYOUT-004`<br>仓库整理与巡检 | 整理对象只限生成物 / 临时物 / 产物三类；git 已跟踪文件不动；**只隔离不删除**，进 `.khyos/housekeeping/<日期>/` 并留 manifest 可原路撤回 | `[DESIGN-LAY-003]`；`scripts/maintenance/organize.py --report` |
 
-> 高频误判：全仓 **1000+** 个 `.html` 孪生是 **LAY-5 强制**的合法产出（HK-4），
+> 高频误判：全仓 **3000+** 个 `.html` 孪生是 **LAY-5 强制**的合法产出（HK-4），
 > 不得以「无同名 `.md`」为由清理；`apps/*/index.html` 等入口文件同理。
+> 落点（2026-10-05 裁决）：`docs/` 内的孪生统一生成于 **`docs/html/` 镜像树**
+> （相对结构与 md 树一致），docs 外的孪生与 `.md` 旁置；落点由
+> `scripts/docs/build_docs_site.js` 的 `htmlRelFor` 单一定义。
 > 实测数以 `npm run docs:verify` 输出为准。
 
 ### 通道选择判定（五通道决策矩阵）

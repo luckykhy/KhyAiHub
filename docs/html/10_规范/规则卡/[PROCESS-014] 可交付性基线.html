@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [PROCESS-014] 可交付性基线.md -->
+<title>[PROCESS-014] 可交付性基线 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>10_规范<span class="sep">›</span>规则卡<span class="sep">›</span>[PROCESS-014] 可交付性基线</div>
+      <header class="hero reveal"><h1>[PROCESS-014] 可交付性基线</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#process-014-可交付性基线">[PROCESS-014] 可交付性基线</a></li><li class="lvl-2"><a href="#约束">约束</a></li><li class="lvl-2"><a href="#授予权力">授予权力</a></li><li class="lvl-2"><a href="#提供福利">提供福利</a></li><li class="lvl-2"><a href="#反例">反例</a></li><li class="lvl-2"><a href="#校验方式">校验方式</a></li><li class="lvl-2"><a href="#例外">例外</a></li><li class="lvl-2"><a href="#版本记录">版本记录</a></li></ul></nav>
+      <article class="doc-body">
+<hr>
+<p>name: 可交付性基线<br>id: PROCESS-014<br>domain: PROCESS<br>nature: 约束为主，兼权力与福利<br>scope: &quot;本仓库一切「交付给外部」的路径，五组：① 交付物完整性 —— 仓库克隆完整性（git 对象库无洞、历史可完整遍历）、工作区与某个已提交状态一致、发布产物真实存在（dist/ 的 wheel / sdist / tarball 非零字节）；② 失败可见性 —— 发布链上的签名 / 校验和 / 审计类步骤不得被 <code>|| echo</code>、<code>|| true</code>、<code>continue-on-error: true</code> 吞掉；③ 产物可验证性 —— 校验和与 SBOM 必须生成<strong>且</strong>被发布或被消费；④ 端到端黄金路径与边界声明（含「不支持清单」）；⑤ 产品任务面本身 —— CLI 命令 / 别名 / handler 与规则条目数的棘轮（[DESIGN-DELIV-002] §2.3）。<strong>不含</strong>两类：仓库内部一致性（分层 / 命名 / 登记 / 孪生件 / 规则卡 —— 由既有规则管辖，本条刻意不重复）；构建机或用户本机环境的网络与镜像选择（PROCESS-013 管辖）。&quot;<br>priority: P1<br>trigger: &quot;新增或修改交付渠道 / 发布 workflow / 构建脚本 / 边界文档时；新增 CLI 命令、别名或规则条目时；发版前；以及任何时候想回答「现在能不能交出去」时。&quot;<br>constraint: &quot;D1–D10 十条判据 + 任务面棘轮 + 渠道 CI 完备性，由 scripts/ci/check-delivery-baseline.js 机械执行，<strong>阈值与任务面基线全部来自</strong> [DESIGN-DELIV-002] §4 的 <code>$schema=khy-delivery-surface/1</code> JSON 块（阈值外部化，不得硬编码在检查器内部）。D1 仓库完整性：<code>git fsck</code> 的 missing blob / missing tree / missing commit / broken link / cache-table 失效计数全为 0，且 <code>git log --oneline --all</code> 退出码为 0。D2 发布物：<code>dist/</code> 内 wheel 与 sdist 均存在且非零字节。D3 克隆零缺件：<code>git status --porcelain</code> 的 <code>??</code> 与 <code>D</code> 计数均为 0。D4 失败阻断：发布相关文件里，行内同时命中「校验类词（sign/verify/checksum/audit/sbom）」与「吞错词（<code>|| echo</code>/<code>|| true</code>/<code>continue-on-error: true</code>）」的计数为 0（注释行不参与判定）。D5 校验和：必须存在生成点，且同一文件内可见其被发布出去的回路，否则判「生成但无回路」。D6 SBOM：必须存在生成点，且同一条 workflow 内存在消费步骤（grype / osv-scanner / trivy / anchore / cyclonedx validate），只 upload-artifact 判不合格。D7 债务棘轮：复用既有 scripts/ci/check-debt-ledger.js（退出码 0 为通过），不新建机制。D8 阶段结算：与发布门相关的机制不得在 S1/S2 停留超过 s1MaxDays（默认 90 天），逾期即不合格。D9 黄金路径：必须存在 scripts/ci/check-golden-path.js <strong>且</strong>被 releaseGateStages.js 引用。D10 边界：边界文档必须存在且含「不支持清单」。棘轮：命令 / 别名 / handler / 规则条目四项实测值不得超过 §4 登记的基线（只降不升），且重测口径必须与基线登记的方法一致。渠道：声明的每个交付渠道要么有 ciWorkflow，要么已在边界文档声明为不承诺交付。检查器<strong>不得</strong>在阈值真源缺失时退回内置默认值 —— 删除真源必须报 delivery-thresholds-missing，使读数失去意义而非静默继续。&quot;<br>grants: &quot;授权用一条命令取得可交付性的全量读数（npm run check:delivery）与机读结果（--json，供测试与看板消费）；授权在 CI / 发版前以 recommend 档运行它，把「能不能交出去」从评审意见变成可回归的数字；授权维护者<strong>冻结</strong>命令面（棘轮只降不升）——即有权拒绝「再加一个命令」而不必逐个论证该命令无用，只需指出棘轮已满；授权在退役命令后<strong>下调</strong>基线，从而把「一进一出」变成可操作的动作而非口号；授权按 [DESIGN-DELIV-002] §5.2 的既定路径升阶到阻断档（改执行器 STAGE 常量 + 登记表 severity + 发布门该阶段 tier，回退为反向改回）。判据不满足时不再持有「以内部一致性通过来替代交付物存在」的余地，但持有「声明豁免并写复核到期日」的权力。&quot;<br>benefit: &quot;把「交付」从一个无法反驳也无法验证的感受，变成一个可跑、可机读、可回归的记分板。实测起点（2026-09-24）：dist/ 不存在（可安装包从未在本机产出过）、发布链上 2 处 sigstore 签名失败被 <code>|| echo</code> 吞掉、SBOM 只 upload-artifact 无任何消费者、无黄金路径检查、仓库根躺着 4 个 shell 重定向事故文件。这些<strong>没有一个会让既有守卫变红</strong> —— 93 条规则守的是仓库内部自洽，75 个 check-* 里 0 个检查「产物是否存在」。本规则给出的是第一个指向外部的表针，并同时给出任务面的封闭边界，使「完全不支持的任务」（如 Windows arm64、真实下单、无 CI 的三条渠道）被写明而非留白。&quot;<br>exception: &quot;两类：① 与单次提交无关的全仓状态读数（D1 仓库完整性 / D2 发布物 / D3 克隆零缺件 / D7 债务棘轮）在 <code>--changed</code> 下<strong>不报</strong> —— 一个 pre-commit 钩子不应要求本机存在发布产物；但任务面棘轮恒报，因为命令数与规则数正是提交动作直接改变的。② 声明「本仓不做签名」并移除相应步骤，是合法的收敛方向（D4 判的是「失败被吞掉」，不是「必须有签名」）—— 移除优于吞掉。阶段豁免：本条按 [DESIGN-PROCESS-002] / PROCESS-008 落地为 <strong>S1 观察者</strong>（gate=commit 会跑 + severity=advisory 只记录），[DESIGN-DELIV-001] §4.3 关于「D1/D4/D7 可直进 S3」的主张<strong>未自动采纳</strong>，需一次显式人工裁决。&quot;<br>version: &quot;1.0.0 (2026-09-24)&quot;<br>status: active<br>ssot: &quot;docs/10_规范/其它规范/[DESIGN-DELIV-001] 可交付性判断标准.md / docs/10_规范/其它规范/[DESIGN-DELIV-002] 产品任务面与交付律.md&quot;<br>formerly: 无<br>owner: governance-team</p>
+<hr>
+<h1 id="process-014-可交付性基线">[PROCESS-014] 可交付性基线<a class="anchor" href="#process-014-可交付性基线" aria-label="锚点">#</a></h1>
+<!-- RULES-REGISTRY: PROCESS-014 -->
+<blockquote><p><strong>规则卡</strong> · 格式依据 [MGMT-STD-008] §1（frontmatter 14 字段 + 六小节）。</p>
+<p><strong>字段真源</strong>是 <code>docs/10_规范/registry/RULES-REGISTRY.json</code>（GOV-TOOL-006 校验），<br>本文件由 <code>node scripts/docs/gen-rules-cards.js</code> 生成，<strong>禁止手改</strong>（同 [MGMT-STD-007] R6 对 .html 孪生件的约束）。<br>正文原文在 <code>ssot</code> 指向的位置：docs/10_规范/其它规范/[DESIGN-DELIV-001] 可交付性判断标准.md / docs/10_规范/其它规范/[DESIGN-DELIV-002] 产品任务面与交付律.md。</p></blockquote>
+<h2 id="约束">约束<a class="anchor" href="#约束" aria-label="锚点">#</a></h2>
+<p>D1–D10 十条判据 + 任务面棘轮 + 渠道 CI 完备性，由 scripts/ci/check-delivery-baseline.js 机械执行，<strong>阈值与任务面基线全部来自</strong> [DESIGN-DELIV-002] §4 的 <code>$schema=khy-delivery-surface/1</code> JSON 块（阈值外部化，不得硬编码在检查器内部）。D1 仓库完整性：<code>git fsck</code> 的 missing blob / missing tree / missing commit / broken link / cache-table 失效计数全为 0，且 <code>git log --oneline --all</code> 退出码为 0。D2 发布物：<code>dist/</code> 内 wheel 与 sdist 均存在且非零字节。D3 克隆零缺件：<code>git status --porcelain</code> 的 <code>??</code> 与 <code>D</code> 计数均为 0。D4 失败阻断：发布相关文件里，行内同时命中「校验类词（sign/verify/checksum/audit/sbom）」与「吞错词（<code>|| echo</code>/<code>|| true</code>/<code>continue-on-error: true</code>）」的计数为 0（注释行不参与判定）。D5 校验和：必须存在生成点，且同一文件内可见其被发布出去的回路，否则判「生成但无回路」。D6 SBOM：必须存在生成点，且同一条 workflow 内存在消费步骤（grype / osv-scanner / trivy / anchore / cyclonedx validate），只 upload-artifact 判不合格。D7 债务棘轮：复用既有 scripts/ci/check-debt-ledger.js（退出码 0 为通过），不新建机制。D8 阶段结算：与发布门相关的机制不得在 S1/S2 停留超过 s1MaxDays（默认 90 天），逾期即不合格。D9 黄金路径：必须存在 scripts/ci/check-golden-path.js <strong>且</strong>被 releaseGateStages.js 引用。D10 边界：边界文档必须存在且含「不支持清单」。棘轮：命令 / 别名 / handler / 规则条目四项实测值不得超过 §4 登记的基线（只降不升），且重测口径必须与基线登记的方法一致。渠道：声明的每个交付渠道要么有 ciWorkflow，要么已在边界文档声明为不承诺交付。检查器<strong>不得</strong>在阈值真源缺失时退回内置默认值 —— 删除真源必须报 delivery-thresholds-missing，使读数失去意义而非静默继续。</p>
+<h2 id="授予权力">授予权力<a class="anchor" href="#授予权力" aria-label="锚点">#</a></h2>
+<p>授权用一条命令取得可交付性的全量读数（npm run check:delivery）与机读结果（--json，供测试与看板消费）；授权在 CI / 发版前以 recommend 档运行它，把「能不能交出去」从评审意见变成可回归的数字；授权维护者<strong>冻结</strong>命令面（棘轮只降不升）——即有权拒绝「再加一个命令」而不必逐个论证该命令无用，只需指出棘轮已满；授权在退役命令后<strong>下调</strong>基线，从而把「一进一出」变成可操作的动作而非口号；授权按 [DESIGN-DELIV-002] §5.2 的既定路径升阶到阻断档（改执行器 STAGE 常量 + 登记表 severity + 发布门该阶段 tier，回退为反向改回）。判据不满足时不再持有「以内部一致性通过来替代交付物存在」的余地，但持有「声明豁免并写复核到期日」的权力。</p>
+<h2 id="提供福利">提供福利<a class="anchor" href="#提供福利" aria-label="锚点">#</a></h2>
+<p>把「交付」从一个无法反驳也无法验证的感受，变成一个可跑、可机读、可回归的记分板。实测起点（2026-09-24）：dist/ 不存在（可安装包从未在本机产出过）、发布链上 2 处 sigstore 签名失败被 <code>|| echo</code> 吞掉、SBOM 只 upload-artifact 无任何消费者、无黄金路径检查、仓库根躺着 4 个 shell 重定向事故文件。这些<strong>没有一个会让既有守卫变红</strong> —— 93 条规则守的是仓库内部自洽，75 个 check-* 里 0 个检查「产物是否存在」。本规则给出的是第一个指向外部的表针，并同时给出任务面的封闭边界，使「完全不支持的任务」（如 Windows arm64、真实下单、无 CI 的三条渠道）被写明而非留白。</p>
+<h2 id="反例">反例<a class="anchor" href="#反例" aria-label="锚点">#</a></h2>
+<p>见 <code>ssot</code> 指向的真源原文；本卡不复制反例，以免与真源漂移。</p>
+<h2 id="校验方式">校验方式<a class="anchor" href="#校验方式" aria-label="锚点">#</a></h2>
+<p>人工评审（该规则暂无机械守卫）</p>
+<h2 id="例外">例外<a class="anchor" href="#例外" aria-label="锚点">#</a></h2>
+<p>两类：① 与单次提交无关的全仓状态读数（D1 仓库完整性 / D2 发布物 / D3 克隆零缺件 / D7 债务棘轮）在 <code>--changed</code> 下<strong>不报</strong> —— 一个 pre-commit 钩子不应要求本机存在发布产物；但任务面棘轮恒报，因为命令数与规则数正是提交动作直接改变的。② 声明「本仓不做签名」并移除相应步骤，是合法的收敛方向（D4 判的是「失败被吞掉」，不是「必须有签名」）—— 移除优于吞掉。阶段豁免：本条按 [DESIGN-PROCESS-002] / PROCESS-008 落地为 <strong>S1 观察者</strong>（gate=commit 会跑 + severity=advisory 只记录），[DESIGN-DELIV-001] §4.3 关于「D1/D4/D7 可直进 S3」的主张<strong>未自动采纳</strong>，需一次显式人工裁决。</p>
+<h2 id="版本记录">版本记录<a class="anchor" href="#版本记录" aria-label="锚点">#</a></h2>
+<ul><li>1.0.0 (2026-09-24) 初版 / 迁移自 无</li></ul>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/10_规范/规则卡/[PROCESS-013] 构建与交付依赖须原生官方源.html"><div class="dir">← 上一篇</div><div class="ttl">[PROCESS-013] 构建与交付依赖须原生官方源</div></a><a class="next" href="../../../../docs/html/10_规范/规则卡/[PROCESS-101] 贡献者规则提案权.html"><div class="dir">下一篇 →</div><div class="ttl">[PROCESS-101] 贡献者规则提案权</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/10_规范/规则卡/[PROCESS-014] 可交付性基线.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

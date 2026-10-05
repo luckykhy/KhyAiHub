@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [RESEARCH-020] 差距一Token预算正向语义Nudge实施计划-2026-09-29.md -->
+<title>[RESEARCH-020] 差距①实施计划：Token 预算正向语义（target + nudge 续跑） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>11_报告<span class="sep">›</span>RESEARCH<span class="sep">›</span>[RESEARCH-020] 差距①实施计划：Token 预算正向语义（target + nudge 续跑）</div>
+      <header class="hero reveal"><h1>[RESEARCH-020] 差距①实施计划：Token 预算正向语义（target + nudge 续跑）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#research-020-差距①实施计划-token-预算正向语义-target-nudge-续跑">[RESEARCH-020] 差距①实施计划：Token 预算正向语义（target + nudge 续跑）</a></li><li class="lvl-2"><a href="#一-现状核实-代码即真源-均已现场复核">一、现状核实（代码即真源，均已现场复核）</a></li><li class="lvl-2"><a href="#二-需求五问-runtime-008-草案-source-待客户原话回填">二、需求五问（`RUNTIME-008` 草案，`source` 待客户原话回填）</a></li><li class="lvl-2"><a href="#三-语义设计-ceiling-与-target-双轨分离">三、语义设计：ceiling 与 target 双轨分离</a></li><li class="lvl-3"><a href="#nudge-判定条件-全部满足才续跑">nudge 判定条件（全部满足才续跑）</a></li><li class="lvl-3"><a href="#nudge-文案-防灌水条款必须写进去">nudge 文案（防灌水条款必须写进去）</a></li><li class="lvl-3"><a href="#warn-档激活-顺手修死代码">warn 档激活（顺手修死代码）</a></li><li class="lvl-2"><a href="#四-改动集-4-文件-1-测试-刻意极小">四、改动集（4 文件 + 1 测试，刻意极小）</a></li><li class="lvl-3"><a href="#新增开关">新增开关</a></li><li class="lvl-2"><a href="#五-实施步骤-含每步验证">五、实施步骤（含每步验证）</a></li><li class="lvl-2"><a href="#六-验收判据-命令-期望输出">六、验收判据（命令 + 期望输出）</a></li><li class="lvl-2"><a href="#七-风险与对策">七、风险与对策</a></li><li class="lvl-2"><a href="#八-合规自检卡">八、合规自检卡</a></li><li class="lvl-2"><a href="#九-拍板结论-客户授权代决-2026-09-29-source-由你决定">九、拍板结论（客户授权代决 2026-09-29，source:「由你决定」）</a></li><li class="lvl-2"><a href="#十-实施进度-本文件随做随更">十、实施进度（本文件随做随更）</a></li><li class="lvl-2"><a href="#十二-实施中发现-回写计划">十二、实施中发现（回写计划）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="research-020-差距①实施计划-token-预算正向语义-target-nudge-续跑">[RESEARCH-020] 差距①实施计划：Token 预算正向语义（target + nudge 续跑）<a class="anchor" href="#research-020-差距①实施计划-token-预算正向语义-target-nudge-续跑" aria-label="锚点">#</a></h1>
+<blockquote><p>日期：2026-09-29。<br>差距来源：[RESEARCH-019] 差距汇总表 #1 —— 「token budget 只有截停语义，缺 CC 的接近目标注入 nudge 继续的正向语义」。<br>上游素材：《Claude Code 源码架构深度解析 V2.0》§7.3 Token Budget。<br>状态：<strong>计划稿，未开工</strong>。开工前需客户确认文末 3 个拍板点。</p></blockquote>
+<hr>
+<h2 id="一-现状核实-代码即真源-均已现场复核">一、现状核实（代码即真源，均已现场复核）<a class="anchor" href="#一-现状核实-代码即真源-均已现场复核" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>事实</th><th>位置</th><th>说明</th></tr></thead><tbody><tr><td>预算叶子已存在且健康</td><td><code>src/services/tokenBudget.js</code>（247 行，纯叶：零 I/O、确定性、fail-soft、门关逐字节回退）</td><td><code>resolveBudget</code> / <code>extractTokenCount</code> / <code>assessBudget</code>（ok/warn/stop）/ <code>buildBudgetStopNotice</code> / <code>parseTokenBudget</code> / <code>resolvePromptBudget</code></td></tr><tr><td>在提示词内指令已解析</td><td><code>tokenBudget.js:124-210</code></td><td><code>+500k</code> / <code>use 2M tokens</code> 三种识别式是 CC 逐字移植，默认开（<code>KHY_PROMPT_TOKEN_BUDGET</code>）</td></tr><tr><td><strong>in-prompt 指令被当上限接线</strong></td><td><code>src/services/tool/toolUseLoopCore.js:1937-1941</code>：<code>_tokenBudgetCfg.ceiling = _promptCeiling</code></td><td>语义错位：CC 中「+500k」是<strong>目标</strong>（朝它干），khy 现在当<strong>上限</strong>（到它停）</td></tr><tr><td><strong>warn 档是死代码</strong></td><td><code>toolUseLoopCore.js:2119-2160</code> 只有 <code>_verdict.state === 'stop'</code> 一个消费点；全文件无 <code>'warn'</code> 消费</td><td><code>warnRatio</code>（默认 0.8）算了但永远没人读</td></tr><tr><td>stop 语义健康，保留不动</td><td><code>toolUseLoopCore.js:2125-2158</code>：不额外烧模型调用、合成收尾 + <code>budgetStopped: true</code></td><td>这是「保险丝」，与目标语义共存</td></tr><tr><td>nudge 注入形态模板</td><td><code>src/services/domain/query/query/shortStopContinuation.js</code></td><td>纯叶子 + 单次封顶 + 默认关（opt-in）+ <code>isEnabled</code> 委托 flagRegistry、不可用时逐字节回退</td></tr><tr><td>goal 级拦截已存在</td><td><code>src/services/goalStopGate.js</code>（默认开）</td><td>与本计划的 budget nudge 是<strong>两个独立驱动源</strong>，须防双重续跑</td></tr><tr><td>既有单测</td><td><code>tests/services/tokenBudget.test.js</code></td><td>直接扩，不新建机制</td></tr></tbody></table>
+<p><strong>结论</strong>：缺口不是「没有预算系统」，而是「预算系统只有负向半边」。改动 = 给 in-prompt 目标补正向语义 + 激活 warn 死档。</p>
+<hr>
+<h2 id="二-需求五问-runtime-008-草案-source-待客户原话回填">二、需求五问（<code>RUNTIME-008</code> 草案，<code>source</code> 待客户原话回填）<a class="anchor" href="#二-需求五问-runtime-008-草案-source-待客户原话回填" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>问</th><th>草案答</th><th>source</th></tr></thead><tbody><tr><td>1</td><td>谁用？</td><td>在提示里写「+500k 写份详尽报告」的用户——明确表达「往这个量干」的人</td><td>待客户原话</td></tr><tr><td>2</td><td>什么时候用？</td><td>agent 循环<strong>自然终局点</strong>（模型不再调用工具、准备返回 finalResponse）且本轮目标未达</td><td>待客户原话</td></tr><tr><td>3</td><td>现在的替代做法？</td><td>用户手动说「继续」，或重发消息。每次都要人盯</td><td>待客户原话</td></tr><tr><td>4</td><td>成功长什么样？</td><td>见 §六验收判据（命令 + 期望输出）</td><td>待客户原话</td></tr><tr><td>5</td><td>不做会怎样？</td><td>「+500k」指令语义倒置：用户要的是详尽，系统却拿来当停止线；warn 档永远无人消费</td><td>待客户原话</td></tr></tbody></table>
+<blockquote><p>按规则 6，落 <code>.khy/feedback/&lt;task-id&gt;/requirement-5q.md</code> 时每条须带 <code>source: &lt;用户原话&gt;</code>，否则判 <code>self-answered</code>。</p></blockquote>
+<hr>
+<h2 id="三-语义设计-ceiling-与-target-双轨分离">三、语义设计：ceiling 与 target 双轨分离<a class="anchor" href="#三-语义设计-ceiling-与-target-双轨分离" aria-label="锚点">#</a></h2>
+<p>核心裁决：<strong>两种预算来源，两种语义，互不串线。</strong></p>
+<table><thead><tr><th>来源</th><th>语义</th><th>行为</th></tr></thead><tbody><tr><td><code>KHY_TOKEN_BUDGET</code>（env 上限）</td><td><strong>保险丝</strong>（成本控制意图）</td><td>只有 warn→提示、stop→截停。永不触发 nudge 续跑（用户设上限的意图是省钱，不是烧钱）</td></tr><tr><td>提示内 <code>+500k</code> / <code>use 2M tokens</code></td><td><strong>目标</strong>（详尽度意图，CC 原语义）</td><td>① 同时仍作保险丝（stop 照旧）；② 新增：模型想停但 <code>spent &lt; target</code> → 注入 nudge 让它继续，单次封顶</td></tr></tbody></table>
+<p>为什么 nudge 不作用于 env 上限：env 设了 500k 上限的用户，在 400k 时被系统「鼓励」继续烧到 500k，是荒谬的。CC 的 <code>tokenBudget.ts</code> nudge 也只服务 in-prompt 目标。</p>
+<h3 id="nudge-判定条件-全部满足才续跑">nudge 判定条件（全部满足才续跑）<a class="anchor" href="#nudge-判定条件-全部满足才续跑" aria-label="锚点">#</a></h3>
+<ol><li>本轮预算来自 <strong>in-prompt 指令</strong>（来源标记 <code>_budgetSource === 'prompt'</code>，接线时置位）；</li><li>模型回复<strong>不含 tool_use</strong>（自然终局意图）；</li><li><code>spent &lt; ceiling</code>（还没到停止线）；</li><li>本 turn nudge 已用次数 &lt; <code>maxNudges</code>（默认 1，见 §九代决）；</li><li><code>KHY_TOKEN_BUDGET_NUDGE</code> 开关开（<strong>默认关</strong>，opt-in）；</li><li>goalStopGate 本轮<strong>未</strong>驱动续跑（防双重驱动：同一轮只许一个「再来一轮」源，goalStopGate 优先）。</li></ol>
+<h3 id="nudge-文案-防灌水条款必须写进去">nudge 文案（防灌水条款必须写进去）<a class="anchor" href="#nudge-文案-防灌水条款必须写进去" aria-label="锚点">#</a></h3>
+<pre><code>[SYSTEM: 预算续跑] 本轮 token 目标 500k，已用 340k。若任务确已完成，请直接给出最终结论并
+明确说明「已完成」，**不要为凑预算灌水**；若仍有未完成的实质工作（未读的代码、未跑的验证、
+未写的章节），请继续推进并优先完成它。</code></pre>
+<p>诚实条款（「已完成就直说，不许凑字」）是弱模型场景的护栏——否则 nudge 退化为 token 焚化炉。</p>
+<h3 id="warn-档激活-顺手修死代码">warn 档激活（顺手修死代码）<a class="anchor" href="#warn-档激活-顺手修死代码" aria-label="锚点">#</a></h3>
+<p><code>state === 'warn'</code> 且本轮尚未提醒过 → 在状态行/HUD 一次性输出：<br><code>预算提醒: 已用 410k/500k（剩 90k），来源 KHY_TOKEN_BUDGET</code>。<br>纯告知，不拦截、不注入模型上下文——符合规则 2「动作+目标+进度」。</p>
+<hr>
+<h2 id="四-改动集-4-文件-1-测试-刻意极小">四、改动集（4 文件 + 1 测试，刻意极小）<a class="anchor" href="#四-改动集-4-文件-1-测试-刻意极小" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>改动</th><th>量级</th></tr></thead><tbody><tr><td><strong>新增</strong> <code>src/services/tokenBudgetNudge.js</code></td><td>纯叶子：<code>isEnabled(env)</code>（**自包含 opt-in 解析：仅 `'true'\</td><td>'1'<code> 开**，不委托 flagRegistry，理由见 §十二 实施中发现）/ </code>shouldNudge({budgetSource, spent, ceiling, nudgesUsed, maxNudges, hadToolCalls, goalGateDroveRedrive})<code> / </code>buildNudgeMessage({spent, ceiling, round})<code> / </code>buildWarnNotice({spent, ceiling, source})`</td></tr><tr><td><code>src/services/tokenBudget.js</code></td><td>叶子内<strong>语义修正 + 新导出</strong>：<code>resolvePromptBudget</code> 返回值改 <code>{ceiling, source:'prompt'}</code>（或加 <code>resolvePromptBudget2</code>，避免破坏现有调用点）；其余不动</td><td>~15 行</td></tr><tr><td><code>src/services/tool/toolUseLoopCore.js</code></td><td>接线两处极小缝：① <code>:1937-1941</code> 置 <code>_budgetSource</code>；② 自然终局 return 之前（<code>:2260</code>/<code>:2311</code> 一带，<strong>实施时以符号锚点现场定位</strong>，勿硬依赖行号）插 <code>shouldNudge</code> 分支：push nudge 消息进 <code>conversationMessages</code>、<code>nudgesUsed++</code>、<code>continue</code>（新 continue 点）。③ <code>:2125</code> 同块加 warn 一次性提醒</td><td>~50 行</td></tr><tr><td><code>src/services/goalStopGate.js</code></td><td>只读取其本轮是否已 redrive 的标记（若无现成返回，由接线点局部变量传递，<strong>不改此文件</strong>）</td><td>0 行（优先）</td></tr><tr><td><code>tests/services/tokenBudget.test.js</code></td><td>新增叶子测试：门关逐字节回退 / 六条件矩阵 / env 上限永不 nudge / 封顶生效</td><td>~120 行</td></tr></tbody></table>
+<p><strong>不改</strong>：<code>tokenBudget.js</code> 的 stop 路径、<code>shortStopContinuation.js</code>、HUD 之外的任何渲染层。</p>
+<h3 id="新增开关">新增开关<a class="anchor" href="#新增开关" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>env</th><th>默认</th><th>语义</th></tr></thead><tbody><tr><td><code>KHY_TOKEN_BUDGET_NUDGE</code></td><td><strong>关</strong>（仅 `'true'\</td><td>'1'` 开）</td></tr><tr><td><code>KHY_TOKEN_BUDGET_NUDGE_MAX</code></td><td>1，clamp [0,10]</td><td>单 turn nudge 上限（对齐 goalStopGate redrive=1；§九代决已把计划原拟 2 下调为 1）</td></tr></tbody></table>
+<blockquote><p><del>注册进 flagRegistry</del> <strong>实施中作废</strong>，改自包含 opt-in 解析——原因见 §十二「实施中发现」。</p></blockquote>
+<hr>
+<h2 id="五-实施步骤-含每步验证">五、实施步骤（含每步验证）<a class="anchor" href="#五-实施步骤-含每步验证" aria-label="锚点">#</a></h2>
+<ol><li><strong>S0 存证建档</strong>（规则 6/5）：建 <code>.khy/feedback/token-budget-nudge/</code>，回填需求五问（需客户原话）+ <code>mode.json</code> 声明 BUILD 模态。</li><li><strong>S1 纯叶子</strong>：写 <code>tokenBudgetNudge.js</code> + 单测。验证：<code>node -e &quot;require('./services/backend/src/services/tokenBudgetNudge')&quot;</code>；跑该测试文件全绿且<strong>断言输入&gt;0</strong>（防空转套件）。</li><li><strong>S2 基线留档</strong>：门关状态跑一次真实回合记录输出，作 before 存证（<code>repro-before.txt</code>，即便这是新增不是修复，升档评审要用）。</li><li><strong>S3 接线</strong>：toolUseLoopCore 三处缝 + <code>_budgetSource</code>。验证：<code>node --check</code> 语法 + 既有 loop 相关测试套件不红（注意：ink 套件有 5 个作者 in-flight 红族，与本改动无关，不背锅也不修）。</li><li><strong>S4 开关门实测</strong>：<code>KHY_TOKEN_BUDGET_NUDGE=1</code> 跑 §六验收命令，观察 breadcrumb <code>token-budget-nudge</code> ×≤2、最终回复、总用量；门关复跑同命令，diff 输出应逐字节等于 S2。</li><li><strong>S5 规则自检 + 文档</strong>：<code>node scripts/ci/check-agent-rules.js --changed</code> 零新增 error；更新 [RESEARCH-019] 差距表 #1 状态为「已实现（默认关）」；CHANGELOG 段按 <code>### Added</code> 记（MINOR，是否 bump 由客户按 <code>PROCESS-005</code> 决定，<strong>本改动不自动 bump</strong>）。</li></ol>
+<p><strong>前置闸门（硬性）</strong>：<code>toolUseLoopCore.js</code> 是 <code>#7</code> god-file 重构标的。若实施时该文件仍处 <code> M</code>/<code>A </code> in-flight 态（本项目共享 worktree 有活跃重构与 nightly 进程），接线改动<strong>必须等作者重构落定</strong>，或由客户明示允许并行改。叶子（S1）不受此闸门约束，可先行。</p>
+<hr>
+<h2 id="六-验收判据-命令-期望输出">六、验收判据（命令 + 期望输出）<a class="anchor" href="#六-验收判据-命令-期望输出" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">KHY_TOKEN_BUDGET_NUDGE=1 KHY_PROMPT_TOKEN_BUDGET=1 \
+  node services/backend/bin/khy.js ai <span class="hljs-string">&quot;+60k 请分章节详细解释事件循环的六个阶段&quot;</span></code></pre>
+<p>期望（全部命中即 PASS）：</p>
+<ol><li>输出流中出现 ≤2 次预算续跑状态行，形如</li></ol>
+<p><code>预算续跑 1/2：已用 34k/60k，继续未完成部分</code>（含动作+目标+进度，规则 2）；</p>
+<ol><li>最终回复为分章节长文，且模型若认为已写完会<strong>直接说完成并停止</strong>（nudge 未被用满即为诚实条款生效的证据）；</li><li>用量 HUD/统计里本轮总 token ≥ 首次自然停止点（对比门无关测）；</li><li><strong>无 nudge 死循环</strong>：nudge 次数恒 ≤ <code>KHY_TOKEN_BUDGET_NUDGE_MAX</code>；</li><li>门关回归：同命令去掉 <code>KHY_TOKEN_BUDGET_NUDGE=1</code>，输出与本改动前基线逐字节一致；</li><li><code>KHY_TOKEN_BUDGET=50000</code>（纯 env 上限）场景：只出现 warn 提醒与 stop 截停，<strong>永不</strong>出现 nudge 续跑。</li></ol>
+<hr>
+<h2 id="七-风险与对策">七、风险与对策<a class="anchor" href="#七-风险与对策" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>风险</th><th>等级</th><th>对策</th></tr></thead><tbody><tr><td>弱模型为「凑预算」灌水烧钱</td><td>中</td><td>nudge 文案内置诚实条款；<code>maxNudges=2</code> 封顶；默认关门控住爆炸半径</td></tr><tr><td>与 goalStopGate 双重驱动同轮续跑</td><td>中</td><td>条件 6：goalGate redrive 优先，同轮互斥；实施时若发现 goalGate 有自带计数器，复用其「单轮一次」纪律</td></tr><tr><td>接线落在 #7 重构热点文件，冲突/回滚难</td><td>高</td><td>前置闸门（S3 前检查 git status）；接线 diff ≤50 行、独立函数块，可整体撤回；叶子先行</td></tr><tr><td><code>resolvePromptBudget</code> 返回值形状变更破坏既有调用点</td><td>低</td><td>实施前 <code>grep -rn &quot;resolvePromptBudget&quot; src/</code> 全量核调用点；有顾虑就加新函数不改旧签名</td></tr><tr><td>nudge 注入消息污染 conversationMessages 的压缩/投影</td><td>低</td><td>文案以 <code>[SYSTEM: 预算续跑]</code> 前缀标识，与既有 <code>[SYSTEM: 续写]</code> 同族；对照 ccMessageProjection 契约（本项目 HCI/投影有镜像纪律）确认投影层不把它当用户消息展示</td></tr><tr><td>触及红线 R1</td><td>无</td><td>本计划只到「计划」；commit/push 一律人工执行</td></tr></tbody></table>
+<hr>
+<h2 id="八-合规自检卡">八、合规自检卡<a class="anchor" href="#八-合规自检卡" aria-label="锚点">#</a></h2>
+<ul><li><strong>规则 1 零硬编码</strong>：新增全是阈值默认与文案，无端点/路径字面量 ✔</li><li><strong>规则 2 状态透明</strong>：nudge/warn 文案含动作+目标+进度；错误路径复用 <code>buildBudgetStopNotice</code> 既有样式 ✔</li><li><strong>规则 3 活动式超时</strong>：不新增任何 <code>setTimeout</code>；nudge 封顶是<strong>计数</strong>不是计时 ✔</li><li><strong>规则 4 终端渲染</strong>：不引入新转义序列，warn 提醒走既有状态行通道 ✔</li><li><strong>规则 6 新增先提问</strong>：本计划 §二即五问草案，实施前须回填客户原话出处 ✔（待客户）</li><li><strong>规则 8 落地阶段</strong>：非拦截型门（不阻断 AI/CI），opt-in 开关即天然 S1 观察形态，不占 FEATURE-OWNERSHIP 门档 ✔</li><li><strong>规则 12 棘轮</strong>：不新增 CLI 命令/别名/handler/规则条目 ✔</li><li><strong>版本</strong>：不动 9 真源；发布时按 CHANGELOG <code>Added</code>→MINOR 走 <code>PROCESS-005</code>（人工点头）✔</li></ul>
+<hr>
+<h2 id="九-拍板结论-客户授权代决-2026-09-29-source-由你决定">九、拍板结论（客户授权代决 2026-09-29，source:「由你决定」）<a class="anchor" href="#九-拍板结论-客户授权代决-2026-09-29-source-由你决定" aria-label="锚点">#</a></h2>
+<p>客户把三点交给我定，取保守档：</p>
+<ol><li><strong>默认关（opt-in）</strong>。多烧钱的特性不默认生效。<code>KHY_TOKEN_BUDGET_NUDGE</code> 关时逐字节回退现状。</li></ol>
+<blockquote><p>代决 <code>source: 客户「由你决定」</code>；规则 6 的 Q1/Q2 用户角色与时机据此回填，非客户逐字原话，评审时按「代决」标注。</p></blockquote>
+<ol><li><strong>maxNudges 默认 = 1</strong>（计划原拟 2，下调）。对齐 <code>goalStopGate</code> 单轮 redrive=1。nudge 语义是「提醒一次继续未完成的工作」，<strong>不是</strong>「把预算烧到上限」；诚实条款已允许模型「已完成就直说」，一次 nudge 后仍想停即视为真完成，不该再推。<code>KHY_TOKEN_BUDGET_NUDGE_MAX</code> 仍可 env 覆盖，clamp [0,10]。</li><li><strong>warn 仅终端状态行一次性提示</strong>。HUD 已有同源预算显示（<code>hudRenderer.js:484</code>），不新增常驻元素，避免重复渲染与改动面扩大。</li></ol>
+<p>工作量估计：叶子+测试 半天，接线+实测 半天，合计 <strong>~1 人日</strong>（不含等 #7 落定的挂起时间）。</p>
+<hr>
+<h2 id="十-实施进度-本文件随做随更">十、实施进度（本文件随做随更）<a class="anchor" href="#十-实施进度-本文件随做随更" aria-label="锚点">#</a></h2>
+<ul><li>[x] 拍板三点（§九）：默认关 / maxNudges=1 / warn 仅状态行一次性提示</li><li>[x] <code>tokenBudgetNudge.js</code> 叶子 + 单测（18/18 绿；既有 tokenBudget 33/33、flagRegistry 自测 4/4 无回归；<code>check-agent-rules.js --changed</code> 0 违规）</li><li>[ ] <code>toolUseLoopCore.js</code> 接线（<strong>已确认闸门未开</strong>：<code>git status</code> 实测该文件 <code> M</code> 15+/10- 在途——#7 重构未落定，接线挂起）</li><li>[ ] 门关回归 + 门开实测（§六验收 6 条，须接线后）</li><li>[ ] 更新 [RESEARCH-019] 差距表 #1 状态；CHANGELOG <code>Added</code> 段（须接线后）</li></ul>
+<p><strong>当前交付物（未提交，R1 红线：人工执行 commit）</strong>：<br><code>services/backend/src/services/tokenBudgetNudge.js</code>（叶子）、<br><code>services/backend/tests/services/tokenBudgetNudge.test.js</code>（单测）。</p>
+<hr>
+<h2 id="十二-实施中发现-回写计划">十二、实施中发现（回写计划）<a class="anchor" href="#十二-实施中发现-回写计划" aria-label="锚点">#</a></h2>
+<p><strong>flagRegistry 目录未跟踪且活跃再生 → 放弃委托，改自包含门控。</strong></p>
+<p>登记 flag 时实测发现 <code>src/utils/flagRegistry/</code>（真源目录，非那个 tracked shim）：</p>
+<ol><li>整目录 <code>git status</code> = <code>??</code>（<strong>未跟踪</strong>，<code>git ls-files</code> 为空）；</li><li>非 gitignore；index.js 321KB，README.html mtime 08:37 / index.js 08:40——会话期间被<strong>活跃进程翻动</strong>（非本次编辑所为），属 #7 重建/再生 territory。</li></ol>
+<p>由此暴露一个<strong>语义反噬</strong>风险：<code>isFlagEnabled</code> 对「未登记的 name 保守放行为 <strong>true</strong>」（其 index.js:21 注释自陈）。若把 <code>KHY_TOKEN_BUDGET_NUDGE</code> 登记进去、而后再生把登记抹掉，委托分支会返回 true → 本门<strong>误判为默认开</strong>，与「默认关」红线相悖；且叶子 catch 兜底救不了「返回错值」（catch 只在抛错时触发）。</p>
+<p><strong>裁决</strong>：改<strong>自包含 opt-in 解析</strong>（仅 <code>'true'|'1'</code> 开），零外部依赖，语义恒定。这同时是<strong>更正确的兄弟先例</strong>——<code>tokenBudget.js</code> 自己的 <code>KHY_TOKEN_BUDGET</code> / <code>KHY_PROMPT_TOKEN_BUDGET</code> 门本就是手写 off 词表、从不碰注册表。计划 §四 原「委托+回退双保险」据此作废。</p>
+<p><strong>待人工定夺</strong>：待 #7 落定、flagRegistry 转为 tracked 后，是否把该 flag 补登记进注册表以统一口径（登记与否都不影响门语义，只影响「flag 清单可发现性」）。届时若登记，须同步把 <code>isEnabled</code> 改回「委托优先 + 本自包含逻辑为兜底」，保持单一真源。</p>
+<p><strong>未动他人文件</strong>：曾对 flagRegistry/index.js 加过一条登记，发现上述问题后<strong>已原样撤回</strong>（grep 计数 0、语法校验通过、其自测 4/4 仍绿）。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/11_报告/RESEARCH/[RESEARCH-019] Claude Code源码架构深度解析与khy-os逐章对照学习指南-2026-09-29.html"><div class="dir">← 上一篇</div><div class="ttl">[RESEARCH-019] Claude Code 源码架构深度解析 × khy-os 逐章对照学习指南</div></a><a class="next" href="../../../../docs/html/11_报告/RESEARCH/[RESEARCH-021] 5-3-1符合性复测与方案R收官-2026-09-30.html"><div class="dir">下一篇 →</div><div class="ttl">[RESEARCH-021] 5-3-1 架构符合性复测与方案 R 收官报告</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/11_报告/RESEARCH/[RESEARCH-020] 差距一Token预算正向语义Nudge实施计划-2026-09-29.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

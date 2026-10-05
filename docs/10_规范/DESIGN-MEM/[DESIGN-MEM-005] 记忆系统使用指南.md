@@ -405,8 +405,8 @@ npm run memory:clear:p2 --apply
 ## 8. 相关文档
 
 - [记忆系统标准规范]([DESIGN-MEM-001] 记忆系统标准规范.md)
-- [记忆时机指南]([DESIGN-MEM-002] 记忆时机指南.md)
-- [记忆模板库]([DESIGN-MEM-003] 记忆模板库.md)
+- [记忆时机指南](./[DESIGN-MEM-002]%20记忆时机指南.md)
+- [记忆模板库](./[DESIGN-MEM-003]%20记忆模板库.md)
 - [记忆快速参考卡]([DESIGN-MEM-004] 记忆快速参考卡.md)
 
 ---
