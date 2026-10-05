@@ -4894,6 +4894,44 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 
 ### 16.6 施工执行状态（点头后逐批登记）
 
+> **2026-10-06 02:2x 节（第 15 节）**：**本节无未门控批次，零文件移动**（按「无活可干时」条款记账收口）。
+> 先把上节的锚坐实：`git merge-base --is-ancestor e34b0486 HEAD` = **通过**，W2c 那一刀仍在祖先链里
+> （第 13 节写下的复验规则第一次上岗）。开测读数（02:20，探针 `.khyos/tmp/gate-scan-1005.js`）：
+> 根项 **47**、`check:data-layout` 可寻址 **46**（与上节收口值一致，无人动根）、在飞 385 件、
+> `*.baiduyun.uploading.cfg` **0**、`index.lock` 无、**`$null` 未复生**（计数 0）。
+>
+> **本节真正要交的东西：门控地图重画，以及「一把钥匙开多批」这一杠杆已经消失。**
+> 每个未闭批次现在都卡在一个**具名文件**上，且互不重叠——实测四把闸各只挡一批：
+>
+> | 批 | 闸（具名） | 该闸现在的改动量 | 为什么这一件挡住它 |
+> |---|---|---|---|
+> | W2 `CHANGELOG.md` → `docs/` | `docs/10_规范/registry/RULES-REGISTRY.json` | **+69 / −58**（正被重写） | `rules.41.paths[4]` 就是字面量 `"CHANGELOG.md"`。这些 glob 是**锚定到仓根**的相对路径（`scripts/ruleguard/lib/glob.js`），文件一挪，这条规则对该文件**静默解绑**——`rules:apply` 查不到、门不再纳管，属第 10 条规则的「声明面收窄必须有执行面强制」反例。要么改登记表要么先提交它，而它正在别人手里改 |
+> | W4 pip（`pyproject.toml`/`MANIFEST.in` → `delivery/channel/pip/`） | `MANIFEST.in` | +11 / −11 | R3 版本锚外科批的配套件，且该批改指后要 `check-version-sync` 验 0（三轨道 9 源），不能借道 |
+> | W6 五启动器 → `runtime/bin/` | `khy.bat` | +1 / −1 | 本体在飞；且 `runtime/bin/` 仍未建（`runtime/` 现为 `boot node substrate khy-Trajectory`） |
+> | W9 点目录归堆 | `.opencode/`（其 `README.html` +10 / −10） | 同上 | 工具位本道不碰；且 R1（W9′）已由他道以**符号链接**方式开工，见第 13 节新事实 L |
+> | W2 `.env.example` | **不门控**，只待裁 | — | 实测：把 `RULES-REGISTRY.json` 整棵 `paths` 走一遍，`.env.example` **不在任何 `paths` 数组**（探针逐键遍历）⇒ 唯一闸是人裁 #1 + 10 处用户可照抄的 `cp .env.example .env` |
+> | W3 `.gitattributes`/`.editorconfig` 分域 | 无具名文件，**结构闸** | — | 根上仍有 **28 个跟踪件**（其中 6 个是受行尾规则保护的脚本：`khy.sh`/`portable-setup.sh`/`khy.bat`/`khy-cli.bat`/`portable-setup.bat`/`install-khy.ps1`），而根 `.gitattributes` 是全仓 `*.sh eol=lf` / `*.bat *.cmd *.ps1 eol=crlf` 的**唯一**载体（`git ls-files` 实测嵌套副本 0 份）⇒ 拆散即让根件失去 CRLF 保护，仍不可单独提前 |
+> | W5 / P 批 / W7 | CI 与窗口 | — | 本机无 docker（§19.2）；R7 独占冻结窗未开 |
+>
+> 与 10-02 第 5 节「新事实 J」的对照要读准：那时五批的闸集并集是 **61 件**、且有
+> 「`RULES-REGISTRY.json` 卡满 5 批」这种一钥多锁的形状；今夜同一套判据重跑，**每把闸各挡一批、
+> 交集为空**。含义是：**「提交一个文件解锁全部」的杠杆已经用完了**，余下每一批都要等它自己的
+> 那一次他道收口，或由人裁定 #1 直接放行 `.env.example`。这不是坏消息而是收尾形状——根上
+> 该批的（R2–R6）已经做完，剩下的全是「一批一把闸」。
+>
+> **四判（本节零施工，判据④ 不适用）**：`check-repo-layout` **exit 0 / 0 error**，warning 只剩 5 条已知棘轮
+> （dangling-task 101 / cross-layer-require 37 / domain-direction 192 / functional-unit 259 / entry-buffer 2302），
+> `root-uncatalogued` 自 W2c 起不再出现。`check-roots-isomorphic` **15**（持平）。`check-debt-ledger` **exit 0 / 0/0**。
+> `scripts/tests/q1-criteria.test.js` **4 pass / 0 fail**（保持绿依赖 `$null` 不再复生；来源未断，
+> 一旦复发该子测即红，这是第 14 节已坐实的耦合）。
+>
+> **一处需人过目的读数（本道不签）**：`entry-buffer` **2301 → 2302（+1）**。上节逐字持平、今夜 +1，
+> 归因方向是他道 01:08 与 02:06 两次提交在核心域落了新文件而未带 `khy.module.json`（判据 C-5）；
+> 仍低于 10-04 同步的基线 2470，**不翻红**。本道不改基线、不签别人的数，只留此行供晨审定位。
+>
+> **回滚**：本节只追加本块文字，`git revert` 单提交即回 02:2x 前态；无文件移动、无副作用。
+
+
 > **2026-10-06 01:2x 节（第 14 节）· 批次 = W2 第三步 `SECURITY.md` 出根（N-1 证明补齐）+ 一处前置清根**
 >
 > **先更正第 12/13 节的挂起理由——它当时就是可做的，我漏查了正确的页面。**
