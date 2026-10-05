@@ -540,6 +540,16 @@ function handleKhyosTrayStart(session, msg) {
     // 用绝对路径解析 khy 入口,避免 PATH 劫持 (W3)。
     const path = require('path');
     const khyBin = _resolveCliEntry(path);
+    // The child runs detached with stdio ignored, so a missing entry produces no error
+    // event at all: spawning it and then reporting 「启动中」 is a promise the UI can never
+    // correct. Check before claiming anything is starting.
+    if (!require('fs').existsSync(khyBin)) {
+      return wsSend(session, {
+        type: 'khyos_tray_status',
+        status: 'error',
+        message: '托盘未启动：本机 CLI 入口不存在（' + khyBin + '）。请从完整安装的 khy 重新打开管理页，或运行 khy doctor 自检。',
+      });
+    }
     const child = spawn(process.execPath, [khyBin, 'tray', '--detach'], {
       detached: true,
       stdio: 'ignore',
