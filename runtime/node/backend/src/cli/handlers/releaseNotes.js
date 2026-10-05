@@ -43,7 +43,10 @@ function _resolveChangelogPath(env = process.env) {
   const candidates =
     override && String(override).trim()
       ? [String(override).trim()]
-      : [path.resolve(__dirname, '../../../../../', 'CHANGELOG.md')];
+      // A hand-counted depth broke silently when the layout moved (it landed on
+      // <root>/runtime, so the command reported "未找到 CHANGELOG.md" while the file
+      // sat one level further up). Walk ancestors that actually carry one.
+      : _ancestorChangelogs();
   for (const p of candidates) {
     try {
       if (fs.existsSync(p) && fs.statSync(p).isFile()) {
@@ -54,6 +57,18 @@ function _resolveChangelogPath(env = process.env) {
     }
   }
   return null;
+}
+
+function _ancestorChangelogs() {
+  const out = [];
+  let dir = __dirname;
+  for (let i = 0; i < 12; i++) {
+    out.push(path.join(dir, 'CHANGELOG.md'));
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return out;
 }
 
 /**
