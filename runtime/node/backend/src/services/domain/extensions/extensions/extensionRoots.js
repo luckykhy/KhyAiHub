@@ -3,10 +3,10 @@
  *
  * 背景：本仓此前有三套互不认识的拓展机制，各自硬编码自己的根目录与 manifest 名：
  *   - plugin-loader/index.js            `package.json#khy`     + `<dataHome>/plugins`
- *   - services/extensions/extensionManager  `openclaw.plugin.json` + `<appHome>/extensions`
+ *   - services/delivery/extension/extensionManager  `openclaw.plugin.json` + `<appHome>/extensions`
  *   - services/plugins/pluginContribResolver  复制了后者的三个常量（注释里写着「与
  *     extensionManager 按构造保持同步」——即靠人记住，不靠机器）。
- * 后果是「装在哪、叫什么、谁能看见」三个问题各有两个答案，且仓库自己的 `extensions/`
+ * 后果是「装在哪、叫什么、谁能看见」三个问题各有两个答案，且仓库自己的 `delivery/extension/`
  * 目录**没有任何加载器扫描它**。本模块把这些常量收敛到一处，所有加载器改从这里取。
  *
  * 核心语义：**文件系统就是注册表**。
@@ -21,7 +21,7 @@
  * 门控 KHY_EXTENSION_REPO_ROOT（default-on）只管**仓库根**这一路新增发现；关掉它 →
  * 回退到本模块引入前的根集合（用户/遗留拓展根 + 遗留 plugins 根）。
  *
- * @module services/extensions/extensionRoots
+ * @module services/delivery/extension/extensionRoots
  * @pattern Facade, Iterator
  */
 'use strict';
@@ -71,7 +71,7 @@ function _dataHome() {
 }
 
 /**
- * 仓库 / 安装根下的内置拓展目录。dev 与 pip、npm bundled 布局里 `extensions/` 都与
+ * 仓库 / 安装根下的内置拓展目录。dev 与 pip、npm bundled 布局里 `delivery/extension/` 都与
  * `services/` 同级，getAppRoot() 已把这条（含 KHY_OS_ROOT 覆盖）算好，不再自己数 `..`。
  * @returns {string|null} 绝对路径，解析失败则 null
  */
@@ -167,7 +167,7 @@ function listRoots(opts = {}) {
 //
 // 为什么判据是「有没有 manifest」而不是一份分类名白名单：白名单要么写在加载器里
 // （于是「文件系统就是注册表」变成「加载器里那张表才是注册表」），要么写进一个新的
-// extensions/ 根 manifest（于是 extensions/ 自己成了要维护的注册表，拖入目录不再够用）。
+// delivery/extension/ 根 manifest（于是 delivery/extension/ 自己成了要维护的注册表，拖入目录不再够用）。
 // 用「有无 manifest」则两者都不需要——分类目录天然是空壳。仓库自己那几个分类名的收敛
 // 由 CI（check-repo-layout 规则 8）管：那是仓库卫生，不是加载机制。
 //

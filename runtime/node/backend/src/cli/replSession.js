@@ -730,17 +730,17 @@ async function startRepl(options = {}) {
       inkRuntime.registerJsx();
       await inkRuntime.loadInk();
       _bootWindow.phase('初始化界面');
-      // Auto-start the Windows clipboard image bridge for the TUI too. The
-      // classic-mode copy lives further down startRepl (after the early return
-      // below), so the TUI path never reached it — pasted screenshots stopped
-      // becoming PNG file paths. The service is win32-only and idempotent
-      // (no-op on other platforms / when already running). Started before mount
-      // so any stderr notice lands in scrollback above the UI.
+      // Windows clipboard image bridge for the TUI too. The classic-mode copy
+      // lives further down startRepl (after the early return below), so the TUI
+      // path never reached it. Whether it starts at all is decided by the
+      // service's own shouldAutoStart() (default OFF — resident powershell costs
+      // ~85 MB; users who want boot-time residency set
+      // KHY_CLIPBOARD_IMG2FILE_AUTO_START=true), so a single ruler governs both
+      // modes. Started before mount so any stderr notice lands in scrollback
+      // above the UI.
       try {
         const clipboardBridge = require('../services/windowsClipboardImg2FileService');
-        const shouldAutoStart =
-          String(process.env.KHY_CLIPBOARD_IMG2FILE_AUTO_START || 'true').toLowerCase() !== 'false';
-        if (shouldAutoStart) {
+        if (clipboardBridge.shouldAutoStart()) {
           clipboardBridge.startClipboardImg2FileBridge();
         }
       } catch {
@@ -1122,13 +1122,13 @@ async function startRepl(options = {}) {
     /* proxy init is non-critical */
   }
 
-  // Auto-start Windows clipboard image bridge:
+  // Windows clipboard image bridge:
   // bitmap clipboard -> PNG file -> quoted file path text for Ctrl+V in CLI.
+  // Boot-time residency is off by default (see service shouldAutoStart()); the
+  // gate is read there, not here, so both modes share one ruler.
   try {
     const clipboardBridge = require('../services/windowsClipboardImg2FileService');
-    const shouldAutoStart =
-      String(process.env.KHY_CLIPBOARD_IMG2FILE_AUTO_START || 'true').toLowerCase() !== 'false';
-    if (shouldAutoStart) {
+    if (clipboardBridge.shouldAutoStart()) {
       const bridgeResult = clipboardBridge.startClipboardImg2FileBridge();
       if (bridgeResult && bridgeResult.started) {
         const pollMs = bridgeResult.meta?.pollMs || 500;

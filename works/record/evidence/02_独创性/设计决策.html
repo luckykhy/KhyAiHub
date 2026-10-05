@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: 设计决策.md -->
 <title>设计决策索引与原创机制清单（C-E2 设计决策必须落文档） · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>evidence<span class="sep">›</span>02_独创性<span class="sep">›</span>设计决策索引与原创机制清单（C-E2 设计决策必须落文档）</div>
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>works<span class="sep">›</span>record<span class="sep">›</span>evidence<span class="sep">›</span>02_独创性<span class="sep">›</span>设计决策索引与原创机制清单（C-E2 设计决策必须落文档）</div>
       <header class="hero reveal"><h1>设计决策索引与原创机制清单（C-E2 设计决策必须落文档）</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#设计决策索引与原创机制清单-c-e2-设计决策必须落文档">设计决策索引与原创机制清单（C-E2 设计决策必须落文档）</a></li><li class="lvl-2"><a href="#一-文档规模-实测-可用复算命令核对">一、文档规模（实测，可用复算命令核对）</a></li><li class="lvl-2"><a href="#二-本仓自行设计的机制-每条给出规范真源-可点开读">二、本仓自行设计的机制（每条给出规范真源，可点开读）</a></li><li class="lvl-2"><a href="#三-原创代码的硬指标-不是文档-是能数的行数">三、原创代码的硬指标（不是文档，是能数的行数）</a></li><li class="lvl-2"><a href="#四-怎么追问这些决策">四、怎么追问这些决策</a></li></ul></nav>
       <article class="doc-body">
@@ -48,14 +48,14 @@ find docs/10_规范        -name <span class="hljs-string">&#x27;*.md&#x27;</spa
 <h2 id="四-怎么追问这些决策">四、怎么追问这些决策<a class="anchor" href="#四-怎么追问这些决策" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>追问</th><th>打开哪里</th></tr></thead><tbody><tr><td>为什么这么设计？</td><td>对应设计文档的「背景 / 备选方案 / 结论」段</td></tr><tr><td>谁决定的？</td><td><code>git log main --follow --format='%ad %an %s' -- &lt;文档路径&gt;</code></td></tr><tr><td>有没有落地？</td><td>该规范引用的执行器脚本 + <code>npm run rules:gate</code> 是否包含它</td></tr><tr><td>落地到什么强度？</td><td><code>docs/10_规范/registry/FEATURE-OWNERSHIP.json</code> 的 <code>rollout.mechanisms[].stage</code></td></tr></tbody></table>
       </article>
-      <nav class="pager"><a class="prev" href="../../evidence/01_人类贡献/ai-usage.html"><div class="dir">← 上一篇</div><div class="ttl">AI 参与范围自述（C-M2 / C-M3）</div></a><a class="next" href="../../evidence/02_独创性/原创代码规模.html"><div class="dir">下一篇 →</div><div class="ttl">原创代码规模与第三方边界</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../works/record/evidence/01_人类贡献/ai-usage.html"><div class="dir">← 上一篇</div><div class="ttl">AI 参与范围自述（C-M2 / C-M3）</div></a><a class="next" href="../../../../works/record/evidence/02_独创性/原创代码规模.html"><div class="dir">下一篇 →</div><div class="ttl">原创代码规模与第三方边界</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__="evidence/02_独创性/设计决策.html";</script>
-<script src="../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="works/record/evidence/02_独创性/设计决策.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

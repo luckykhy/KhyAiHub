@@ -54,7 +54,7 @@ function addFinding(severity, rule, file, line, message) {
 // This silently degrades security when the secure path throws.
 
 function checkInsecureFallback() {
-  const scanDirs = ['services/backend/src/services', 'services/backend/src/tools'];
+  const scanDirs = ['runtime/node/backend/src/services', 'runtime/node/backend/src/tools'];
   const insecurePatterns = [
     /tool\.execute\(/,           // direct tool execution without permission
     /toolRegistry\.execute\(/,   // registry execute without permission
@@ -94,7 +94,7 @@ function checkInsecureFallback() {
 // Only flags when there are multiple try/catch or require() phases AFTER the flag.
 
 function checkPrematureGuardFlag() {
-  const scanDirs = ['services/backend/src/services', 'services/backend/src/tools'];
+  const scanDirs = ['runtime/node/backend/src/services', 'runtime/node/backend/src/tools'];
 
   for (const dir of scanDirs) {
     const fullDir = path.join(repoRoot, dir);
@@ -142,7 +142,7 @@ function checkPrematureGuardFlag() {
 // Pattern: new RegExp(variable) or new RegExp(str.replace(...)) without escaping
 
 function checkRegexInjection() {
-  const scanDirs = ['services/backend/src'];
+  const scanDirs = ['runtime/node/backend/src'];
 
   for (const dir of scanDirs) {
     const fullDir = path.join(repoRoot, dir);
@@ -185,7 +185,7 @@ function checkRegexInjection() {
 // Pattern: logging full prompt, message content, or API keys
 
 function checkDataExposure() {
-  const scanDirs = ['services/backend/src/services/gateway'];
+  const scanDirs = ['runtime/node/backend/src/services/gateway'];
   const sensitiveFields = ['\\bprompt\\b', '\\bmessages\\b', '\\bapiKey\\b', '\\bapi_key\\b', '\\bsecret\\b'];
   const logCalls = ['logEvent', 'log\\.info', 'log\\.debug', 'console\\.log', 'console\\.error', 'appendFileSync'];
 
@@ -225,7 +225,7 @@ function checkDataExposure() {
 // Pattern: new Map() without size cap or eviction
 
 function checkUnboundedCache() {
-  const scanDirs = ['services/backend/src/services'];
+  const scanDirs = ['runtime/node/backend/src/services'];
 
   for (const dir of scanDirs) {
     const fullDir = path.join(repoRoot, dir);

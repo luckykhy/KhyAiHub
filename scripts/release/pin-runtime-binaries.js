@@ -4,7 +4,7 @@
 /**
  * Maintainer helper: pin SHA256 hashes for the on-demand inference runtimes.
  *
- * Reads services/backend/config/runtime-binaries.json, downloads each pinned
+ * Reads runtime/node/backend/config/runtime-binaries.json, downloads each pinned
  * platform archive from its upstream `url`, computes the SHA256, and writes it
  * back into the manifest's `sha256` field. With an empty sha256 the runtime
  * provisioner refuses to fetch (it silently falls back to the system binary), so

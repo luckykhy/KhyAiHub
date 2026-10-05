@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: README.md -->
 <title>goose — 桌面 + CLI + API 三端 AI Agent（Electron） · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>extensions<span class="sep">›</span>scripts<span class="sep">›</span>khy-desktop-rd<span class="sep">›</span>goose<span class="sep">›</span>goose — 桌面 + CLI + API 三端 AI Agent（Electron）</div>
+      <div class="breadcrumb reveal"><a href="../../../../../docs/index.html">首页</a><span class="sep">›</span>delivery<span class="sep">›</span>extension<span class="sep">›</span>scripts<span class="sep">›</span>khy-desktop-rd<span class="sep">›</span>goose<span class="sep">›</span>goose — 桌面 + CLI + API 三端 AI Agent（Electron）</div>
       <header class="hero reveal"><h1>goose — 桌面 + CLI + API 三端 AI Agent（Electron）</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#goose-桌面-cli-api-三端-ai-agent-electron">goose — 桌面 + CLI + API 三端 AI Agent（Electron）</a></li><li class="lvl-2"><a href="#一-为什么列为第二位">一、为什么列为第二位</a></li><li class="lvl-2"><a href="#二-技术栈">二、技术栈</a></li><li class="lvl-2"><a href="#三-关键技术点-节选自-ui-desktop-package-json-与-src-main-ts">三、关键技术点（节选自 `ui/desktop/package.json` 与 `src/main.ts`）</a></li><li class="lvl-3"><a href="#3-1-goose-serve-作为外部可独立运行后端">3.1 goose serve 作为外部可独立运行后端</a></li><li class="lvl-3"><a href="#3-2-tls-证书指纹-可信启动">3.2 TLS + 证书指纹（可信启动）</a></li><li class="lvl-3"><a href="#3-3-electron-主进程-ipc-体系">3.3 Electron 主进程 IPC 体系</a></li><li class="lvl-3"><a href="#3-4-协议-deeplink-goose">3.4 协议 deeplink（`goose://`）</a></li><li class="lvl-3"><a href="#3-5-多窗口隔离-进程级-lease">3.5 多窗口隔离 + 进程级 lease</a></li><li class="lvl-3"><a href="#3-6-内置菜单中英文翻译-特别有借鉴价值">3.6 内置菜单中英文翻译（**特别有借鉴价值**）</a></li><li class="lvl-3"><a href="#3-7-快捷键-quick-launcher">3.7 快捷键 + Quick Launcher</a></li><li class="lvl-3"><a href="#3-8-react-19-tailwind-4-radix-ui-lucide-图标">3.8 React 19 + Tailwind 4 + Radix UI + Lucide 图标</a></li><li class="lvl-3"><a href="#3-9-power-save-blocker-防休眠">3.9 Power Save Blocker（防休眠）</a></li><li class="lvl-3"><a href="#3-10-auto-updater">3.10 Auto-Updater</a></li><li class="lvl-2"><a href="#四-给-khy-os-的关键启示">四、给 khy-os 的关键启示</a></li><li class="lvl-2"><a href="#五-本地文件">五、本地文件</a></li></ul></nav>
       <article class="doc-body">
@@ -201,14 +201,14 @@ mainWindow.<span class="hljs-title function_">on</span>(<span class="hljs-string
 <table><thead><tr><th>文件</th><th>来源</th></tr></thead><tbody><tr><td><code>package.json</code></td><td><code>ui/desktop/package.json</code></td></tr><tr><td><code>main.ts</code></td><td><code>ui/desktop/src/main.ts</code>（精剪版）</td></tr></tbody></table>
 <p>抓取自 <a href="https://raw.githubusercontent.com/aaif-goose/goose/main/" target="_blank" rel="noopener">https://raw.githubusercontent.com/aaif-goose/goose/main/</a></p>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../extensions/scripts/khy-desktop-rd/cmdk/README.html"><div class="dir">← 上一篇</div><div class="ttl">kbar — Cmd+K Command Palette（React）</div></a><a class="next" href="../../../../extensions/scripts/khy-desktop-rd/one-api/README.html"><div class="dir">下一篇 →</div><div class="ttl">one-api — 多 LLM API 管理 &amp; 分发系统</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../delivery/extension/scripts/khy-desktop-rd/cmdk/README.html"><div class="dir">← 上一篇</div><div class="ttl">kbar — Cmd+K Command Palette（React）</div></a><a class="next" href="../../../../../delivery/extension/scripts/khy-desktop-rd/one-api/README.html"><div class="dir">下一篇 →</div><div class="ttl">one-api — 多 LLM API 管理 &amp; 分发系统</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="extensions/scripts/khy-desktop-rd/goose/README.html";</script>
-<script src="../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../../";window.__KHY_CUR__="delivery/extension/scripts/khy-desktop-rd/goose/README.html";</script>
+<script src="../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

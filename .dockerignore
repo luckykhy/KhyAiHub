@@ -42,6 +42,7 @@ tests
 cache
 data
 khy-Trajectory
+works/data
 *.db
 *.sqlite
 *.sqlite3

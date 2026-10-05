@@ -4,7 +4,7 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const { normalizeTarget, platformSlug, validateUpdateIndex } = require('../../services/backend/src/services/updateIndexProtocol');
+const { normalizeTarget, platformSlug, validateUpdateIndex } = require('../../runtime/node/backend/src/services/updateIndexProtocol');
 
 const SCHEMA_VERSION = 1;
 const CHANNELS = new Set(['stable', 'preview', 'dev']);

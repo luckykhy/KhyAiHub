@@ -116,7 +116,7 @@ run_core() {
   info "[core] Running CLI smoke checks..."
   (
     cd "$ROOT_DIR"
-    node services/backend/bin/khy.js help >/dev/null
+    node runtime/node/backend/bin/khy.js help >/dev/null
     python3 -m khy_platform bundle verify --help >/dev/null
   )
   ok "[core] CLI smoke checks passed"
@@ -142,7 +142,7 @@ run_portable() {
   fi
   (
     cd "$ROOT_DIR"
-    bash extensions/scripts/khy-portable/build-usb-portable.sh "${args[@]}" >/dev/null
+    bash delivery/extension/scripts/khy-portable/build-usb-portable.sh "${args[@]}" >/dev/null
     ls -lh dist/khy-os-portable.tar.gz
   )
   ok "[portable] portable package built"
@@ -152,7 +152,7 @@ run_vmware_plan() {
   info "[vmware-plan] Verifying VMware image build plan..."
   (
     cd "$ROOT_DIR"
-    bash extensions/scripts/khy-portable/khytogo/make-khytogo.sh \
+    bash delivery/extension/scripts/khy-portable/khytogo/make-khytogo.sh \
       --mode vmware-plan \
       --image-path dist/khy-os-vmware.raw \
       --image-size-gib "$VM_IMAGE_SIZE_GIB" \
@@ -170,7 +170,7 @@ run_alpine_iso() {
   fi
   (
     cd "$ROOT_DIR"
-    bash extensions/scripts/khy-alpine-iso/build-khy-os-iso.sh --output dist/khy-os.iso
+    bash delivery/extension/scripts/khy-alpine-iso/build-khy-os-iso.sh --output dist/khy-os.iso
     ls -lh dist/khy-os.iso
   )
   ok "[alpine-iso] ISO built successfully"

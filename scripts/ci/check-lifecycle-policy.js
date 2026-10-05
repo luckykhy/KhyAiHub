@@ -8,7 +8,7 @@
  *
  * 校验:
  *   A.  主门 KHY_LIFECYCLE_POLICY 已在 flagRegistry.js 登记。
- *   A2. 策略声明的每个非空 gate 都是真实存在的 flag(在 services/backend/src 里可见)。
+ *   A2. 策略声明的每个非空 gate 都是真实存在的 flag(在 runtime/node/backend/src 里可见)。
  *   B.  prefetch.js 的 RUNNERS 键集合 === 策略 cli-startup 条目 id 集合(双向,防漂移)。
  *   C.  策略 process==='daemon' 条目的 startSymbol 在 daemonEntry.js / aiManagementServer.js 可见。
  *   D.  on-demand 边界:aiGateway 不得出现在 bin/khy.js / cli/bootstrap.js 顶部 require;
@@ -23,7 +23,7 @@ const fs = require('fs');
 const path = require('path');
 
 const REPO = path.join(__dirname, '..', '..');
-const SRC = path.join(REPO, 'services/backend/src');
+const SRC = path.join(REPO, 'runtime/node/backend/src');
 
 const P = {
   policy: path.join(SRC, 'services/serviceLifecyclePolicy.js'),
@@ -31,7 +31,7 @@ const P = {
   flagRegistry: path.join(SRC, 'services/flagRegistry.js'),
   daemonEntry: path.join(SRC, 'services/daemonEntry.js'),
   aiManagementServer: path.join(SRC, 'services/aiManagementServer.js'),
-  binKhy: path.join(REPO, 'services/backend/bin/khy.js'),
+  binKhy: path.join(REPO, 'runtime/node/backend/bin/khy.js'),
   bootstrap: path.join(SRC, 'cli/bootstrap.js'),
   toolsIndex: path.join(SRC, 'tools/index.js'),
 };
@@ -63,7 +63,7 @@ if (!/KHY_LIFECYCLE_POLICY\s*:/.test(flagSrc)) {
   fail('flagRegistry.js 未登记主门 KHY_LIFECYCLE_POLICY');
 }
 
-// ── A2. 每个策略 gate 都是真实 flag(在 services/backend/src 可见)──────────────
+// ── A2. 每个策略 gate 都是真实 flag(在 runtime/node/backend/src 可见)──────────────
 const gates = (typeof policy.allGates === 'function' ? policy.allGates() : []) || [];
 if (gates.length) {
   const IGNORE = new Set(['node_modules', 'tests', '__tests__', '.git', 'coverage', 'dist', 'build']);
@@ -86,7 +86,7 @@ if (gates.length) {
     }
   }
   for (const g of pending) {
-    fail(`策略声明的 gate ${g} 在 services/backend/src 里找不到引用(疑似拼写错误或已删除的 flag)`);
+    fail(`策略声明的 gate ${g} 在 runtime/node/backend/src 里找不到引用(疑似拼写错误或已删除的 flag)`);
   }
 }
 

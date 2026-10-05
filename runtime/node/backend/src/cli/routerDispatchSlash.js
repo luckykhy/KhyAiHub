@@ -911,7 +911,9 @@ async function dispatchSlashCommand(command, _ctx) {
       try {
         const ai = require('./ai');
         const hud = require('./hudRenderer');
-        hud.refreshGit();
+        // Async path: the three git probes run in parallel; sync refreshGit
+        // keeps its sequential execSync only for callers that cannot await.
+        await hud.refreshGitAsync();
         const state = hud.getState();
         const provider =
           typeof ai.getActiveProvider === 'function' ? ai.getActiveProvider() : 'unknown';

@@ -39,9 +39,9 @@ function buildFixture(opts = {}) {
   fs.writeFileSync(path.join(root, 'services', 'backend', 'scripts', 'ai-manage-daemon.js'), daemon);
 
   // 日志：一个合法 UTF-8，一个非法字节（0xff 0xfe 非 UTF-8 序）。
-  mkdir(path.join(root, '.khy', 'logs'));
-  fs.writeFileSync(path.join(root, '.khy', 'logs', 'ok.log'), Buffer.from('正常中文日志\n', 'utf8'));
-  if (opts.badLog) fs.writeFileSync(path.join(root, '.khy', 'logs', 'bad.log'), Buffer.from([0xff, 0xfe, 0x41]));
+  mkdir(path.join(root, 'works', 'data', 'khy', 'logs'));
+  fs.writeFileSync(path.join(root, 'works', 'data', 'khy', 'logs', 'ok.log'), Buffer.from('正常中文日志\n', 'utf8'));
+  if (opts.badLog) fs.writeFileSync(path.join(root, 'works', 'data', 'khy', 'logs', 'bad.log'), Buffer.from([0xff, 0xfe, 0x41]));
 
   // 发布链：SHA256 / SBOM 可分别落在脚本里或 workflow 里。
   mkdir(path.join(root, 'scripts', 'release'));
@@ -201,12 +201,12 @@ function buildPolicyFixture({ cycle = false, bigManaged = false, deepImport = fa
   const policy = {
     global: { maxFileLines: 400, forbidCycles: true, forbidDeepImports: true, managedOnly: true },
     modules: [
-      { id: 'a', roots: ['services/backend/src/a'], managed: true },
-      { id: 'b', roots: ['services/backend/src/b'], managed: true },
+      { id: 'a', roots: ['runtime/node/backend/src/a'], managed: true },
+      { id: 'b', roots: ['runtime/node/backend/src/b'], managed: true },
     ],
   };
   if (deepImport) {
-    policy.modules.push({ id: 'c', roots: ['services/backend/src/c'], managed: false, publicEntrypoints: ['services/backend/src/c/index.js'] });
+    policy.modules.push({ id: 'c', roots: ['runtime/node/backend/src/c'], managed: false, publicEntrypoints: ['runtime/node/backend/src/c/index.js'] });
     mkdir(path.join(root, 'services', 'backend', 'src', 'c'));
     fs.writeFileSync(path.join(root, 'services', 'backend', 'src', 'c', 'index.js'), 'exports.x = 1;\n');
     fs.writeFileSync(path.join(root, 'services', 'backend', 'src', 'c', 'inner.js'), 'exports.y = 2;\n');

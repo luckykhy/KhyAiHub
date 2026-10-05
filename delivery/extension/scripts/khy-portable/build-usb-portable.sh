@@ -68,34 +68,34 @@ chmod +x "$STAGE_DIR/khy.sh"
 
 # Python CLI entry
 mkdir -p "$STAGE_DIR/software/khyquant"
-cp -a "$ROOT_DIR/software/khyquant/khy_quant" "$STAGE_DIR/software/khyquant/"
-cp -a "$ROOT_DIR/software/khyquant/pyproject.toml" "$STAGE_DIR/software/khyquant/" 2>/dev/null || true
+cp -a "$ROOT_DIR/delivery/channel/khyquant/khy_quant" "$STAGE_DIR/software/khyquant/"
+cp -a "$ROOT_DIR/delivery/channel/khyquant/pyproject.toml" "$STAGE_DIR/software/khyquant/" 2>/dev/null || true
 
 # Node.js backend
-mkdir -p "$STAGE_DIR/services/backend"
-cp -a "$ROOT_DIR/services/backend/bin" "$STAGE_DIR/services/backend/"
-cp -a "$ROOT_DIR/services/backend/src" "$STAGE_DIR/services/backend/"
-cp -a "$ROOT_DIR/services/backend/scripts" "$STAGE_DIR/services/backend/"
-cp -a "$ROOT_DIR/services/backend/package.json" "$STAGE_DIR/services/backend/"
-cp -a "$ROOT_DIR/services/backend/package-lock.json" "$STAGE_DIR/services/backend/" 2>/dev/null || true
+mkdir -p "$STAGE_DIR/runtime/node/backend"
+cp -a "$ROOT_DIR/runtime/node/backend/bin" "$STAGE_DIR/runtime/node/backend/"
+cp -a "$ROOT_DIR/runtime/node/backend/src" "$STAGE_DIR/runtime/node/backend/"
+cp -a "$ROOT_DIR/runtime/node/backend/scripts" "$STAGE_DIR/runtime/node/backend/"
+cp -a "$ROOT_DIR/runtime/node/backend/package.json" "$STAGE_DIR/runtime/node/backend/"
+cp -a "$ROOT_DIR/runtime/node/backend/package-lock.json" "$STAGE_DIR/runtime/node/backend/" 2>/dev/null || true
 
 # Portable scripts (PATH wrappers installer + legacy portable CLI)
 mkdir -p "$STAGE_DIR/scripts/portable"
-cp -a "$ROOT_DIR/extensions/scripts/khy-portable/install-path-wrappers.sh" "$STAGE_DIR/extensions/scripts/khy-portable/"
-cp -a "$ROOT_DIR/extensions/scripts/khy-portable/install-path-wrappers.bat" "$STAGE_DIR/extensions/scripts/khy-portable/"
-cp -a "$ROOT_DIR/extensions/scripts/khy-portable/install-portable-cli.sh" "$STAGE_DIR/extensions/scripts/khy-portable/" 2>/dev/null || true
+cp -a "$ROOT_DIR/delivery/extension/scripts/khy-portable/install-path-wrappers.sh" "$STAGE_DIR/delivery/extension/scripts/khy-portable/"
+cp -a "$ROOT_DIR/delivery/extension/scripts/khy-portable/install-path-wrappers.bat" "$STAGE_DIR/delivery/extension/scripts/khy-portable/"
+cp -a "$ROOT_DIR/delivery/extension/scripts/khy-portable/install-portable-cli.sh" "$STAGE_DIR/delivery/extension/scripts/khy-portable/" 2>/dev/null || true
 
 mkdir -p "$STAGE_DIR/scripts/install"
-cp -a "$ROOT_DIR/extensions/scripts/khy-installer/install-khy-cli.sh" "$STAGE_DIR/extensions/scripts/khy-installer/" 2>/dev/null || true
+cp -a "$ROOT_DIR/delivery/extension/scripts/khy-installer/install-khy-cli.sh" "$STAGE_DIR/delivery/extension/scripts/khy-installer/" 2>/dev/null || true
 
 # Documentation
 cp -a "$ROOT_DIR/PORTABLE.md" "$STAGE_DIR/" 2>/dev/null || true
 cp -a "$ROOT_DIR/README.md" "$STAGE_DIR/" 2>/dev/null || true
 
 if [[ "$WITH_NODE_MODULES" == '1' ]]; then
-  if [[ -d "$ROOT_DIR/services/backend/node_modules" ]]; then
+  if [[ -d "$ROOT_DIR/runtime/node/backend/node_modules" ]]; then
     info "Including services/backend/node_modules (size may increase significantly)"
-    cp -a "$ROOT_DIR/services/backend/node_modules" "$STAGE_DIR/services/backend/"
+    cp -a "$ROOT_DIR/runtime/node/backend/node_modules" "$STAGE_DIR/runtime/node/backend/"
   else
     warn "services/backend/node_modules not found; skipping"
   fi

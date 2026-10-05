@@ -62,7 +62,7 @@ function changedFiles() {
 function targets() {
   if (rawTargets.length > 0) return rawTargets.map((t) => path.resolve(REPO_ROOT, t));
   if (changedMode) return changedFiles();
-  return walk(path.join(REPO_ROOT, 'services', 'backend', 'src', 'routes'));
+  return walk(path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'src', 'routes'));
 }
 
 // ── API-003: Idempotency on mutation endpoints ──────────────────────────────

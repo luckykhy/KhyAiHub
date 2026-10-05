@@ -17,7 +17,7 @@
  *       ⑦ 全程 fail-soft——自愈绝不能把启动/更新流程搞崩,任何异常都降级为「本次不修」。
  *
  * 治愈范围(诚实边界):只管 khy **运行时后端源码子树** `services/backend/src`——即真正
- *   被执行的代码(用户点名的「函数名少打一个字母」「个别文件丢失」都落在这里)。kernel/docs/
+ *   被执行的代码(用户点名的「函数名少打一个字母」「个别文件丢失」都落在这里)。runtime/boot/kernel/docs/
  *   前端构建产物等不在自愈范围(风险高、非运行时热路径,整树重建交给 `khy restore`)。
  *
  * 复用:解密走 sourceSnapshotCrypto(SSOT,与 makeSourceSnapshot/khy restore 同一实现),

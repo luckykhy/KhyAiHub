@@ -57,9 +57,9 @@ function getConfigPaths(cwd) {
   try {
     const root = findGitRoot(cwd || process.cwd());
     if (root) {
-      paths.push(path.join(root, '.khy', 'references.json'));
+      paths.push(path.join(root, 'works', 'data', 'khy', 'references.json'));
     } else {
-      paths.push(path.join(cwd || process.cwd(), '.khy', 'references.json'));
+      paths.push(path.join(cwd || process.cwd(), 'works', 'data', 'khy', 'references.json'));
     }
   } catch {
     /* no git root */

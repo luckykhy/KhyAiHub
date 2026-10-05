@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: 架构-agent-os双向协议.md -->
 <title>架构设计：Agent ⇄ OS 双向协议（KHY Agent Bridge） · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>kernel<span class="sep">›</span>docs<span class="sep">›</span>架构设计：Agent ⇄ OS 双向协议（KHY Agent Bridge）</div>
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>boot<span class="sep">›</span>kernel<span class="sep">›</span>docs<span class="sep">›</span>架构设计：Agent ⇄ OS 双向协议（KHY Agent Bridge）</div>
       <header class="hero reveal"><h1>架构设计：Agent ⇄ OS 双向协议（KHY Agent Bridge）</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#架构设计-agent-os-双向协议-khy-agent-bridge">架构设计：Agent ⇄ OS 双向协议（KHY Agent Bridge）</a></li><li class="lvl-2"><a href="#0-用户已澄清的四点硬需求-不再重复询问">0. 用户已澄清的四点硬需求（不再重复询问）</a></li><li class="lvl-2"><a href="#1-现状约束-已核实源码-架构必须落在这些事实上">1. 现状约束（已核实源码，架构必须落在这些事实上）</a></li><li class="lvl-2"><a href="#2-关键决策-com2-作为独立-agent-控制通道">2. 关键决策：COM2 作为独立 agent 控制通道</a></li><li class="lvl-2"><a href="#3-分层架构">3. 分层架构</a></li><li class="lvl-2"><a href="#4-帧格式-结构化-request-response">4. 帧格式（结构化 request-response）</a></li><li class="lvl-2"><a href="#5-三个面">5. 三个面</a></li><li class="lvl-3"><a href="#5-1-控制面-agent-os-复用既有内核能力-几乎零新逻辑">5.1 控制面（agent → OS）—— 复用既有内核能力，几乎零新逻辑</a></li><li class="lvl-3"><a href="#5-2-决策面-os-agent-反向-需求2-核心-最具新意">5.2 决策面（OS → agent，反向）—— 需求2 核心，最具新意</a></li><li class="lvl-3"><a href="#5-3-事件面-os-agent-单向-fire-and-forget-event-帧">5.3 事件面（OS → agent，单向 fire-and-forget）—— EVENT 帧</a></li><li class="lvl-2"><a href="#6-四需求-架构映射">6. 四需求 → 架构映射</a></li><li class="lvl-2"><a href="#7-实施阶段-紧增量-每步-qemu-可验证-零回归">7. 实施阶段（紧增量，每步 QEMU 可验证，零回归）</a></li><li class="lvl-2"><a href="#8-工程约束-agents-md-硬约束-勿违反">8. 工程约束（AGENTS.md 硬约束，勿违反）</a></li></ul></nav>
       <article class="doc-body">
@@ -131,14 +131,14 @@
 <ul><li>测试命令模式：</li></ul>
 <p><code>(sleep 8; printf 'run /bin/X.elf\n'; sleep 4) | timeout 20 qemu-system-x86_64 -cdrom build/khy-os-kernel.iso -serial stdio -display none -no-reboot</code></p>
       </article>
-      <nav class="pager"><a class="prev" href="../../kernel/bridge/README-联调.html"><div class="dir">← 上一篇</div><div class="ttl">khy-bridge 实战联调指南</div></a><a class="next" href="../../kernel/docs/进度交接-内核与agent协同pivot.html"><div class="dir">下一篇 →</div><div class="ttl">进度交接：内核「真实 OS」长弧 + agent 协同 pivot</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../runtime/boot/kernel/bridge/README-联调.html"><div class="dir">← 上一篇</div><div class="ttl">khy-bridge 实战联调指南</div></a><a class="next" href="../../../../runtime/boot/kernel/docs/进度交接-内核与agent协同pivot.html"><div class="dir">下一篇 →</div><div class="ttl">进度交接：内核「真实 OS」长弧 + agent 协同 pivot</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__="kernel/docs/架构-agent-os双向协议.html";</script>
-<script src="../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="runtime/boot/kernel/docs/架构-agent-os双向协议.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

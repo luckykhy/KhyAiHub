@@ -68,8 +68,8 @@ test('_cleanSourcePath: 剥行号/范围/列/锚点，容忍 ./ 、前导 / 与�
     ['services/backend/src/cli/router.js#L10:3', 'services/backend/src/cli/router.js'],
     ['./scripts/docs/md-to-pdf.js', 'scripts/docs/md-to-pdf.js'],
     ['/scripts/docs/md-to-pdf.js', 'scripts/docs/md-to-pdf.js'],
-    ['  kernel/src/sched.c  ', 'kernel/src/sched.c'],
-    ['kernel\\src\\sched.c', 'kernel/src/sched.c'],
+    ['  runtime/boot/kernel/src/sched.c  ', 'runtime/boot/kernel/src/sched.c'],
+    ['kernel\\src\\sched.c', 'runtime/boot/kernel/src/sched.c'],
     ['services/backend/src/x.js 的 case', 'services/backend/src/x.js'],
     ['services/backend/src/x.y.js', 'services/backend/src/x.y.js'],
     ['services/backend/src/X.JS', 'services/backend/src/X.JS'], // 扩展名判定小写，路径原样保留
@@ -87,8 +87,8 @@ test('_cleanSourcePath: 拒绝裸文件名 / 单段路径 / 未知首段 / 非�
     'services/README.md', // md 不是源码
     'services/x.js:', // 尾冒号无数字 → 扩展名变 'js:'
     'foo/bar.js', // foo 不在 ROOT_SEGMENTS
-    'platform/khy_platform/cli.py', // 已登记偏差：ROOT_SEGMENTS 无 platform
-    'software/khyquant/services/a.js', // 已登记偏差：ROOT_SEGMENTS 无 software
+    'runtime/substrate/platform/khy_platform/cli.py', // 已登记偏差：ROOT_SEGMENTS 无 platform
+    'delivery/channel/khyquant/services/a.js', // 已登记偏差：ROOT_SEGMENTS 无 software
     'docs/10_规范/x.js', // docs 不是 ROOT 段
     'services/../etc/passwd.sh', // 含 ..
     'services/backend/src/a b.js', // 空格：首 token 切分后没有扩展名

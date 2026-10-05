@@ -1,7 +1,7 @@
-# 原生 / MoonBit 门禁：kernel/（C + nasm）与 5 个 MoonBit 模块。
+# 原生 / MoonBit 门禁：runtime/boot/kernel/（C + nasm）与 5 个 MoonBit 模块。
 #
-# 现状（本 workflow 加入前）：kernel/ 与所有 .mbt 源码**没有任何 CI 覆盖** ——
-# 唯一构建它们的地方是开发者本机和 kernel/Dockerfile.kernel-build。
+# 现状（本 workflow 加入前）：runtime/boot/kernel/ 与所有 .mbt 源码**没有任何 CI 覆盖** ——
+# 唯一构建它们的地方是开发者本机和 runtime/boot/kernel/Dockerfile.kernel-build。
 #
 # 三个 job 的成熟度不同，刻意分开：
 #   1. MoonBit layout  —— 纯 Node 检查，不需要工具链，结论确定，本地已验证。
@@ -18,21 +18,21 @@ on:
   push:
     branches: [main, master]
     paths:
-      - 'kernel/**'
-      - 'platform/packages/moonbit-plugin-sdk/**'
-      - 'services/backend/wasm-chain/**'
-      - 'services/backend/wasm-context/**'
-      - 'services/backend/wasm-indicators/**'
+      - 'runtime/boot/kernel/**'
+      - 'runtime/substrate/platform/packages/moonbit-plugin-sdk/**'
+      - 'runtime/node/backend/wasm-chain/**'
+      - 'runtime/node/backend/wasm-context/**'
+      - 'runtime/node/backend/wasm-indicators/**'
       - 'scripts/ci/check-moonbit-layout.js'
       - '.github/workflows/native-ci.yml'
   pull_request:
     branches: [main, master]
     paths:
-      - 'kernel/**'
-      - 'platform/packages/moonbit-plugin-sdk/**'
-      - 'services/backend/wasm-chain/**'
-      - 'services/backend/wasm-context/**'
-      - 'services/backend/wasm-indicators/**'
+      - 'runtime/boot/kernel/**'
+      - 'runtime/substrate/platform/packages/moonbit-plugin-sdk/**'
+      - 'runtime/node/backend/wasm-chain/**'
+      - 'runtime/node/backend/wasm-context/**'
+      - 'runtime/node/backend/wasm-indicators/**'
       - 'scripts/ci/check-moonbit-layout.js'
       - '.github/workflows/native-ci.yml'
   workflow_dispatch:
@@ -89,11 +89,11 @@ jobs:
         run: |
           set +e
           status=0
-          for mod in kernel/moonbit \
-                     platform/packages/moonbit-plugin-sdk \
-                     services/backend/wasm-chain \
-                     services/backend/wasm-context \
-                     services/backend/wasm-indicators; do
+          for mod in runtime/boot/kernel/moonbit \
+                     runtime/substrate/platform/packages/moonbit-plugin-sdk \
+                     runtime/node/backend/wasm-chain \
+                     runtime/node/backend/wasm-context \
+                     runtime/node/backend/wasm-indicators; do
             echo "::group::$mod"
             ( cd "$mod" && moon check ) || { echo "::warning title=moon check failed::$mod"; status=1; }
             ( cd "$mod" && moon build ) || { echo "::warning title=moon build failed::$mod"; status=1; }
@@ -107,7 +107,7 @@ jobs:
         run: |
           set +e
           status=0
-          for mod in services/backend/wasm-chain services/backend/wasm-indicators; do
+          for mod in runtime/node/backend/wasm-chain runtime/node/backend/wasm-indicators; do
             echo "::group::test $mod"
             ( cd "$mod" && moon test ) || { echo "::warning title=moon test failed::$mod"; status=1; }
             echo "::endgroup::"
@@ -135,7 +135,7 @@ jobs:
           ld --version | head -1
           nasm -v
 
-      # MOONBIT_PREBUILT=1 让 Makefile 使用已提交的 kernel/vendor/moonbit/
+      # MOONBIT_PREBUILT=1 让 Makefile 使用已提交的 runtime/boot/kernel/vendor/moonbit/
       # （moonbit_gen.c + runtime.c + include/，见该目录 PROVENANCE.md），
       # 从而**完全不调用 moon 工具链** —— 内核构建不必依赖 MoonBit 安装。
       #
@@ -151,7 +151,7 @@ jobs:
         if: always()
         with:
           name: khy-os-kernel-bin
-          path: kernel/build/khy-os.bin
+          path: runtime/boot/kernel/build/khy-os.bin
           retention-days: 7
           # 构建是报告态，产物可能不存在；这里用 ignore 而不是 error，
           # 否则上传步骤会替失败的构建再报一次同样的错。

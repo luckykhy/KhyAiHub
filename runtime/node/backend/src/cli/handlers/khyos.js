@@ -214,7 +214,7 @@ async function provision(options = {}) {
  * cannot provide. Rather than refuse native Windows outright, this transparently
  * delegates the *unchanged* Linux build to a working backend:
  *   - WSL2   : translate the path via `wslpath` and run `make iso` inside WSL.
- *   - Docker : build a Linux toolchain image (kernel/Dockerfile.kernel-build) and
+ *   - Docker : build a Linux toolchain image (runtime/boot/kernel/Dockerfile.kernel-build) and
  *              run `make iso` in it with the kernel dir bind-mounted.
  *   - QEMU   : boot a Linux builder appliance under the QEMU khy-os already
  *              requires, share the kernel dir over virtio-9p, run `make iso`
@@ -244,7 +244,7 @@ async function kernelBuild(options = {}) {
 
   // Kernel source dir. From this handler (services/backend/src/cli/handlers) five
   // levels up is the repo root in dev mode, or khy_os/bundled in the pip wheel —
-  // both carry kernel/ there, matching where isoProvisioner probes for the build.
+  // both carry runtime/boot/kernel/ there, matching where isoProvisioner probes for the build.
   const kernelDir =
     options.kernelDir ||
     process.env.KHY_KERNEL_SRC_DIR ||
@@ -253,7 +253,7 @@ async function kernelBuild(options = {}) {
   if (!fs.existsSync(makefile)) {
     printError(`未找到内核源码 Makefile: ${makefile}`);
     printInfo(
-      'pip 包应在 khy_os/bundled/kernel/ 携带内核源码；用 `khy where` 查看 bundle 根目录。'
+      'pip 包应在 khy_os/bundled/runtime/boot/kernel/ 携带内核源码；用 `khy where` 查看 bundle 根目录。'
     );
     _writeBuildBreadcrumb(
       {
@@ -281,7 +281,7 @@ async function kernelBuild(options = {}) {
     childEnv.PATH = moonBin + path.delimiter + (childEnv.PATH || '');
   }
 
-  // MoonBit build mode. The wheel ships PREBUILT MoonBit C (kernel/vendor/moonbit/
+  // MoonBit build mode. The wheel ships PREBUILT MoonBit C (runtime/boot/kernel/vendor/moonbit/
   // moonbit_gen.c) so `make` can produce the kernel WITHOUT the `moon` toolchain.
   // Resolve which mode to use:
   //   - explicit KHY_MOONBIT_PREBUILT wins (set 0/false/no/off to force a real
@@ -593,7 +593,7 @@ function _unixToolchainBuild(ctx) {
     { name: 'ld', exe: env.KHY_LD || 'ld', apt: 'binutils' },
   ];
   // ISO authoring: Limine path needs xorriso + the limine host tool; the default
-  // GRUB path needs grub-mkrescue. (See kernel/Makefile `iso` vs `iso-limine`.)
+  // GRUB path needs grub-mkrescue. (See runtime/boot/kernel/Makefile `iso` vs `iso-limine`.)
   if (limine) {
     tools.push({ name: 'xorriso', exe: env.KHY_XORRISO || 'xorriso', apt: 'xorriso' });
     tools.push({ name: 'limine', exe: env.KHY_LIMINE || 'limine', apt: 'limine' });
@@ -705,7 +705,7 @@ function _makeDownloadProgressRenderer(stream = process.stderr) {
  * Native build path for bare Windows — no Docker, no WSL, no VM. Auto-provisions a
  * sha256-pinned LLVM (clang+ld.lld) + nasm + Limine + xorriso + make + BusyBox
  * toolchain (cached under ~/.khyquant/khyos/toolchain), then reuses the unchanged
- * kernel/Makefile via `_unixToolchainBuild` in Limine + prebuilt-MoonBit mode.
+ * runtime/boot/kernel/Makefile via `_unixToolchainBuild` in Limine + prebuilt-MoonBit mode.
  *
  * Fail-soft: when the toolchain is not provisionable (manifest unpinned, offline,
  * download/extract failure) this returns false BEFORE probing any PATH tool, so the
@@ -1138,7 +1138,7 @@ function _buildViaWsl(ctx) {
 
 /**
  * Build inside a Docker Linux container. Builds a toolchain image from
- * kernel/Dockerfile.kernel-build (idempotent/cached) unless KHY_KERNEL_BUILD_IMAGE
+ * runtime/boot/kernel/Dockerfile.kernel-build (idempotent/cached) unless KHY_KERNEL_BUILD_IMAGE
  * names a prebuilt one, then runs `make iso` with the kernel dir bind-mounted.
  */
 function _buildViaDocker(ctx) {

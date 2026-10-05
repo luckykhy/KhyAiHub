@@ -43,7 +43,7 @@
       "node-pty",
       "ws"
     ],
-    "services/backend/package.json": [
+    "runtime/node/backend/package.json": [
       "@aws/codewhisperer-streaming-client",
       "@babel/cli",
       "@babel/core",
@@ -106,7 +106,7 @@
       "yjs",
       "yoga-layout"
     ],
-    "services/ai-backend/package.json": [
+    "runtime/node/ai-backend/package.json": [
       "@aws/codewhisperer-streaming-client",
       "@khy/shared",
       "chalk",
@@ -119,7 +119,7 @@
       "sequelize",
       "ws"
     ],
-    "apps/ai-frontend/package.json": [
+    "delivery/web/ai-frontend/package.json": [
       "@element-plus/icons-vue",
       "@khy/ui-shared",
       "@vitejs/plugin-vue",
@@ -142,7 +142,7 @@
       "vue",
       "vue-router"
     ],
-    "software/khyquant/frontend/package.json": [
+    "delivery/channel/khyquant/frontend/package.json": [
       "@capacitor/android",
       "@capacitor/cli",
       "@capacitor/core",
@@ -173,7 +173,7 @@
       "vue-router",
       "workbox-window"
     ],
-    "platform/packages/shared/package.json": [
+    "runtime/substrate/platform/packages/shared/package.json": [
       "bcryptjs",
       "better-sqlite3",
       "dotenv",
@@ -185,12 +185,12 @@
       "winston",
       "winston-daily-rotate-file"
     ],
-    "platform/packages/ui-shared/package.json": [],
-    "extensions/tools/khy-markdown/package.json": []
+    "runtime/substrate/platform/packages/ui-shared/package.json": [],
+    "delivery/extension/tools/khy-markdown/package.json": []
   },
   "layout": "pnpm",
   "optionalPeers": {
-    "services/backend/package.json": [
+    "runtime/node/backend/package.json": [
       "@aws-sdk/client-s3",
       "@khy-os/khy-chain",
       "@khy/plugin-sdk",
@@ -208,7 +208,7 @@
       "playwright",
       "playwright-core"
     ],
-    "platform/packages/shared/package.json": [
+    "runtime/substrate/platform/packages/shared/package.json": [
       "sqlite3"
     ]
   }

@@ -214,24 +214,25 @@ describe('check-repo-layout: 任务入口与跨层引用', () => {
 
   test('cross-layer-require: 跨 workspace 深层相对 require → warning', () => {
     const root = makeFixture((dir) => {
-      writeFile(dir, 'services/backend/package.json', '{"name":"backend"}\n');
-      writeFile(dir, 'services/backend/src/utils/parseBoolean.js', 'module.exports = () => true;\n');
-      writeFile(dir, 'services/ai-backend/package.json', '{"name":"ai-backend"}\n');
-      writeFile(dir, 'services/ai-backend/src/routes/admin.js',
+      writeFile(dir, 'runtime/node/backend/package.json', '{"name":"backend"}\n');
+      writeFile(dir, 'runtime/node/backend/src/utils/parseBoolean.js', 'module.exports = () => true;\n');
+      writeFile(dir, 'runtime/node/ai-backend/package.json', '{"name":"ai-backend"}\n');
+      writeFile(dir, 'runtime/node/ai-backend/src/routes/admin.js',
         "const parseBoolean = require('../../../backend/src/utils/parseBoolean');\nmodule.exports = { parseBoolean };\n");
     });
     const { status, stdout } = runGuard(root, ['--list=cross-layer-require']);
     assert.equal(status, 0, stdout);
     assert.match(stdout, /cross-layer-require/);
-    assert.match(stdout, /services\/ai-backend\/src\/routes\/admin\.js/);
+    // fixture 里 ai-backend 在 runtime/node/ 下（方案 P 之后的位置），断言必须跟着走。
+    assert.match(stdout, /runtime\/node\/ai-backend\/src\/routes\/admin\.js/);
   });
 
   test('cross-layer-require: 测试 fixture 不进入运行时依赖计数', () => {
     const root = makeFixture((dir) => {
-      writeFile(dir, 'services/backend/package.json', '{"name":"backend"}\n');
-      writeFile(dir, 'services/backend/src/utils/parseBoolean.js', 'module.exports = () => true;\n');
-      writeFile(dir, 'services/ai-backend/package.json', '{"name":"ai-backend"}\n');
-      writeFile(dir, 'services/ai-backend/tests/admin.test.js',
+      writeFile(dir, 'runtime/node/backend/package.json', '{"name":"backend"}\n');
+      writeFile(dir, 'runtime/node/backend/src/utils/parseBoolean.js', 'module.exports = () => true;\n');
+      writeFile(dir, 'runtime/node/ai-backend/package.json', '{"name":"ai-backend"}\n');
+      writeFile(dir, 'runtime/node/ai-backend/tests/admin.test.js',
         "const parseBoolean = require('../../../backend/src/utils/parseBoolean');\nmodule.exports = { parseBoolean };\n");
     });
     const { status, stdout } = runGuard(root);
@@ -242,17 +243,17 @@ describe('check-repo-layout: 任务入口与跨层引用', () => {
 
   test('unresolved-require: 散文文档里的 require 引用不计，同路径可执行文件仍计', () => {
     const root = makeFixture((dir) => {
-      writeFile(dir, 'services/backend/package.json', '{"name":"backend"}\n');
-      writeFile(dir, 'services/backend/src/services/sessionPersistence.js', 'module.exports = {};\n');
+      writeFile(dir, 'runtime/node/backend/package.json', '{"name":"backend"}\n');
+      writeFile(dir, 'runtime/node/backend/src/services/sessionPersistence.js', 'module.exports = {};\n');
       // README 位于 domain/session/，照抄的是子目录 session/sessionForestService.js 里
       // 那行三级 ../ 的 require；按 README 自身目录解析必然算到 src/sessionPersistence
       // （不存在）——散文不会执行，这条判据管的是可执行文件的必崩路径。
-      writeFile(dir, 'services/backend/src/services/domain/session/README.md',
+      writeFile(dir, 'runtime/node/backend/src/services/domain/session/README.md',
         "壳转发 `require('../../../sessionPersistence')`。\n");
-      writeFile(dir, 'services/backend/src/services/domain/session/README.html',
+      writeFile(dir, 'runtime/node/backend/src/services/domain/session/README.html',
         "<p>壳转发 <code>require('../../../sessionPersistence')</code>。</p>\n");
       // 同样这行写在可执行文件里 = 真悬空，必须仍然报出来。
-      writeFile(dir, 'services/backend/src/services/domain/session/broken.js',
+      writeFile(dir, 'runtime/node/backend/src/services/domain/session/broken.js',
         "module.exports = require('../../../sessionPersistence');\n");
     });
     const { stdout } = runGuard(root, ['--list=unresolved-require']);
@@ -263,11 +264,14 @@ describe('check-repo-layout: 任务入口与跨层引用', () => {
 
   test('cross-layer-require: 纯 re-export 壳文件按兼容别名豁免', () => {
     const root = makeFixture((dir) => {
-      writeFile(dir, 'services/backend/package.json', '{"name":"backend"}\n');
-      writeFile(dir, 'software/khyquant/package.json', '{"name":"khyquant"}\n');
-      writeFile(dir, 'software/khyquant/models/Instrument.js', 'module.exports = {};\n');
-      writeFile(dir, 'services/backend/src/models/Instrument.js',
-        "module.exports = require('../../../../software/khyquant/models/Instrument');\n");
+      writeFile(dir, 'runtime/node/backend/package.json', '{"name":"backend"}\n');
+      writeFile(dir, 'delivery/channel/khyquant/package.json', '{"name":"khyquant"}\n');
+      writeFile(dir, 'delivery/channel/khyquant/models/Instrument.js', 'module.exports = {};\n');
+      // 壳文件在 runtime/node/backend/src/models/（5 段），要 **5** 级 ../ 才回到仓库根。
+      // 迁移前是 services/backend/src/models/，同样 5 段；级数没变，但少写一级就会落到
+      // runtime/ 而不是仓库根 —— 那时它不再是「纯 re-export 壳」，会被记成 unresolved。
+      writeFile(dir, 'runtime/node/backend/src/models/Instrument.js',
+        "module.exports = require('../../../../../delivery/channel/khyquant/models/Instrument');\n");
     });
     const { status, stdout } = runGuard(root);
     assert.equal(status, 0, stdout);
@@ -278,10 +282,10 @@ describe('check-repo-layout: 任务入口与跨层引用', () => {
 
   test('cross-layer-require: 注释里举例的路径不算违规', () => {
     const root = makeFixture((dir) => {
-      writeFile(dir, 'services/backend/package.json', '{"name":"backend"}\n');
-      writeFile(dir, 'services/backend/src/utils/parseBoolean.js', 'module.exports = () => true;\n');
-      writeFile(dir, 'services/ai-backend/package.json', '{"name":"ai-backend"}\n');
-      writeFile(dir, 'services/ai-backend/src/notes.js',
+      writeFile(dir, 'runtime/node/backend/package.json', '{"name":"backend"}\n');
+      writeFile(dir, 'runtime/node/backend/src/utils/parseBoolean.js', 'module.exports = () => true;\n');
+      writeFile(dir, 'runtime/node/ai-backend/package.json', '{"name":"ai-backend"}\n');
+      writeFile(dir, 'runtime/node/ai-backend/src/notes.js',
         '/**\n * 反例：不要写 require(\'../../../backend/src/utils/parseBoolean\')。\n */\n'
         + "// 也不要 require('../../../backend/src/utils/parseBoolean')\nmodule.exports = {};\n");
     });
@@ -293,28 +297,29 @@ describe('check-repo-layout: 任务入口与跨层引用', () => {
 
   test('unresolved-require: 指向不存在路径的深层 require 被单独报出', () => {
     const root = makeFixture((dir) => {
-      writeFile(dir, 'software/khyquant/package.json', '{"name":"khyquant"}\n');
-      writeFile(dir, 'software/khyquant/services/marketDataService.js', 'module.exports = {};\n');
-      // 少算一级 ../：从 handlers/ 出发解析到 software/services/…（不存在）。
-      writeFile(dir, 'software/khyquant/handlers/data.js',
+      writeFile(dir, 'delivery/channel/khyquant/package.json', '{"name":"khyquant"}\n');
+      writeFile(dir, 'delivery/channel/khyquant/services/marketDataService.js', 'module.exports = {};\n');
+      // 少算一级 ../：从 handlers/ 出发解析到 delivery/channel/services/…（不存在）。
+      writeFile(dir, 'delivery/channel/khyquant/handlers/data.js',
         "const svc = require('../../services/marketDataService');\nmodule.exports = { svc };\n");
     });
     const { status, stdout } = runGuard(root, ['--list=unresolved-require']);
     assert.equal(status, 0, stdout);
     assert.match(stdout, /unresolved-require/);
-    assert.match(stdout, /software\/services\/marketDataService/);
+    // khyquant 现在在 delivery/channel/ 下，少算一级落在 delivery/channel/services/。
+    assert.match(stdout, /delivery\/channel\/services\/marketDataService/);
   });
 
   test('unresolved-require: .json 清单散文注记里的 require 文本不算悬空边（Q1′ 修复回归）', () => {
     const root = makeFixture((dir) => {
       // 真实 require 在 JS 里，指向存在的目标 → 不该报。
-      writeFile(dir, 'software/khyquant/package.json', '{"name":"khyquant"}\n');
-      writeFile(dir, 'software/khyquant/services/real.js', 'module.exports = {};\n');
+      writeFile(dir, 'delivery/channel/khyquant/package.json', '{"name":"khyquant"}\n');
+      writeFile(dir, 'delivery/channel/khyquant/services/real.js', 'module.exports = {};\n');
       // khy.module.json 的 _note 散文里出现 `require('../../does-not-exist')` 只是文字说明，
       // JSON 不含可执行 require，扫描必须跳过 .json，否则按清单目录解 ../ 会算出假悬空。
-      writeFile(dir, 'software/khyquant/unit/khy.module.json',
+      writeFile(dir, 'delivery/channel/khyquant/unit/khy.module.json',
         JSON.stringify({ unit: 'unit', _note: "外部经 require('../../does-not-exist') 命中本单元" }, null, 2) + '\n');
-      writeFile(dir, 'software/khyquant/unit/index.js', "require('../services/real');\n");
+      writeFile(dir, 'delivery/channel/khyquant/unit/index.js', "require('../services/real');\n");
     });
     const { status, stdout } = runGuard(root, ['--list=unresolved-require']);
     assert.equal(status, 0, stdout);
@@ -326,9 +331,9 @@ describe('check-repo-layout: 任务入口与跨层引用', () => {
 describe('check-repo-layout: 拓展契约（[DESIGN-TOOL-002]）', () => {
   // 合规拓展的最小形状：canonical manifest + id 等于目录名 + main 在磁盘上。
   function writeExtension(dir, id, manifest, { withEntry = true } = {}) {
-    writeFile(dir, `extensions/${id}/khy.extension.json`, `${JSON.stringify(manifest, null, 2)}\n`);
+    writeFile(dir, `delivery/extension/${id}/khy.extension.json`, `${JSON.stringify(manifest, null, 2)}\n`);
     if (withEntry && manifest.main) {
-      writeFile(dir, `extensions/${id}/${manifest.main}`, 'module.exports = { activate() {} };\n');
+      writeFile(dir, `delivery/extension/${id}/${manifest.main}`, 'module.exports = { activate() {} };\n');
     }
   }
 
@@ -347,7 +352,7 @@ describe('check-repo-layout: 拓展契约（[DESIGN-TOOL-002]）', () => {
 
   test('缺 khy.extension.json 的目录被计入', () => {
     const root = makeFixture((dir) => {
-      writeFile(dir, 'extensions/khy-nomanifest/index.js', 'module.exports = {};\n');
+      writeFile(dir, 'delivery/extension/khy-nomanifest/index.js', 'module.exports = {};\n');
     });
     const { status, stdout } = runGuard(root, ['--list=extension-contract']);
     assert.equal(status, 0, stdout);
@@ -389,7 +394,7 @@ describe('check-repo-layout: 拓展契约（[DESIGN-TOOL-002]）', () => {
 
   test('坏 JSON 与缺 manifest 区分得开（都计一处，但原因不同）', () => {
     const root = makeFixture((dir) => {
-      writeFile(dir, 'extensions/khy-badjson/khy.extension.json', '{ "id": "khy-badjson", \n');
+      writeFile(dir, 'delivery/extension/khy-badjson/khy.extension.json', '{ "id": "khy-badjson", \n');
     });
     const { status, stdout } = runGuard(root, ['--list=extension-contract']);
     assert.equal(status, 0, stdout);
@@ -401,7 +406,7 @@ describe('check-repo-layout: 拓展契约（[DESIGN-TOOL-002]）', () => {
 
   test('超基线 → extension-contract 升为 error', () => {
     const root = makeFixture((dir) => {
-      writeFile(dir, 'extensions/khy-nomanifest/index.js', 'module.exports = {};\n');
+      writeFile(dir, 'delivery/extension/khy-nomanifest/index.js', 'module.exports = {};\n');
       writeFile(dir, 'scripts/ci/repo-layout-baseline.json',
         `${JSON.stringify({ updated: '2026-01-01', counts: { 'dangling-task': 0, 'cross-layer-require': 0, 'unresolved-require': 0, 'docs-index-complete': 0, 'extension-contract': 0 } }, null, 2)}\n`);
     });
@@ -476,13 +481,13 @@ describe('check-repo-layout: 基线棘轮与参数校验', () => {
 });
 
 describe('check-repo-layout: 拓展分类目录（[DESIGN-TOOL-002] §2.3）', () => {
-  // 分类是为「二十几个拓展平铺在 extensions/ 下没法管」加的一层布局。守卫在这里管两件
+  // 分类是为「二十几个拓展平铺在 delivery/extension/ 下没法管」加的一层布局。守卫在这里管两件
   // 加载器**故意不管**的事：分类名不许随手新造，分类目录下不许再套一层。
   // 加载器只认「有没有 manifest」，任何空壳目录都能当分类 —— 收敛分类名属仓库卫生。
   function writeNested(dir, category, id, extra = {}) {
-    writeFile(dir, `extensions/${category}/${id}/khy.extension.json`,
+    writeFile(dir, `delivery/extension/${category}/${id}/khy.extension.json`,
       `${JSON.stringify({ id, name: id, version: '1.0.0', kind: 'runtime', main: 'index.js', ...extra }, null, 2)}\n`);
-    writeFile(dir, `extensions/${category}/${id}/index.js`, 'module.exports = {};\n');
+    writeFile(dir, `delivery/extension/${category}/${id}/index.js`, 'module.exports = {};\n');
   }
 
   test('分类目录下的合规拓展不计违规', () => {
@@ -490,7 +495,7 @@ describe('check-repo-layout: 拓展分类目录（[DESIGN-TOOL-002] §2.3）', (
       writeNested(dir, 'tools', 'khy-demo');
       writeNested(dir, 'protocols', 'khy-proto');
       // 顶层与分类可以共存：分类是布局手段，不是强制层。
-      writeFile(dir, 'extensions/khy-top/khy.extension.json',
+      writeFile(dir, 'delivery/extension/khy-top/khy.extension.json',
         `${JSON.stringify({ id: 'khy-top', name: 'Top', version: '1.0.0', kind: 'ide-bridge' }, null, 2)}\n`);
     });
     const { status, stdout } = runGuard(root);
@@ -498,7 +503,7 @@ describe('check-repo-layout: 拓展分类目录（[DESIGN-TOOL-002] §2.3）', (
     assert.match(stdout, /"extension-contract":0/);
   });
 
-  test('分类名不在白名单里被计入 —— 否则 extensions/ 会长出一棵没人说得清的树', () => {
+  test('分类名不在白名单里被计入 —— 否则 delivery/extension/ 会长出一棵没人说得清的树', () => {
     const root = makeFixture((dir) => {
       writeNested(dir, 'misc', 'khy-demo');
     });
@@ -511,7 +516,7 @@ describe('check-repo-layout: 拓展分类目录（[DESIGN-TOOL-002] §2.3）', (
   test('分类目录下再套一层被计入 —— 发现只下探两层，第三层等于不存在', () => {
     const root = makeFixture((dir) => {
       writeNested(dir, 'tools', 'khy-demo');
-      writeFile(dir, 'extensions/tools/sub/khy-deep/khy.extension.json', '{}\n');
+      writeFile(dir, 'delivery/extension/tools/sub/khy-deep/khy.extension.json', '{}\n');
     });
     const { status, stdout } = runGuard(root, ['--list=extension-contract']);
     assert.equal(status, 0, stdout);
@@ -521,7 +526,7 @@ describe('check-repo-layout: 拓展分类目录（[DESIGN-TOOL-002] §2.3）', (
 
   test('既不是拓展也不是分类的目录被计入', () => {
     const root = makeFixture((dir) => {
-      writeFile(dir, 'extensions/khy-mystery/README.md', '# 说不清是什么\n');
+      writeFile(dir, 'delivery/extension/khy-mystery/README.md', '# 说不清是什么\n');
     });
     const { status, stdout } = runGuard(root, ['--list=extension-contract']);
     assert.equal(status, 0, stdout);
@@ -533,9 +538,9 @@ describe('check-repo-layout: 拓展分类目录（[DESIGN-TOOL-002] §2.3）', (
     // 反过来写（id: 'tools/khy-demo'）是迁移时最容易犯的错：看着「更完整」，
     // 实际把 state 键、冲突键与孤儿检测键一起改掉了。
     const root = makeFixture((dir) => {
-      writeFile(dir, 'extensions/tools/khy-demo/khy.extension.json',
+      writeFile(dir, 'delivery/extension/tools/khy-demo/khy.extension.json',
         `${JSON.stringify({ id: 'tools/khy-demo', name: 'D', version: '1.0.0', kind: 'runtime', main: 'index.js' }, null, 2)}\n`);
-      writeFile(dir, 'extensions/tools/khy-demo/index.js', 'module.exports = {};\n');
+      writeFile(dir, 'delivery/extension/tools/khy-demo/index.js', 'module.exports = {};\n');
     });
     const { status, stdout } = runGuard(root, ['--list=extension-contract']);
     assert.equal(status, 0, stdout);
@@ -548,7 +553,7 @@ describe('check-repo-layout: 拓展分类目录（[DESIGN-TOOL-002] §2.3）', (
     // 「核里不许点名拓展 id」这条守卫就静默变成空转，而计数依然是 0。
     const root = makeFixture((dir) => {
       writeNested(dir, 'tools', 'khy-demo');
-      writeFile(dir, 'services/backend/src/x.js', `const DIR = 'khy-demo';\n`);
+      writeFile(dir, 'runtime/node/backend/src/x.js', `const DIR = 'khy-demo';\n`);
     });
     const { status, stdout } = runGuard(root, ['--list=extension-id-hardcode']);
     assert.equal(status, 0, stdout);
@@ -560,12 +565,12 @@ describe('check-repo-layout: 拓展分类目录（[DESIGN-TOOL-002] §2.3）', (
 describe('check-repo-layout: 核不得硬编码拓展 id（[DESIGN-TOOL-002] §1.3 第四条）', () => {
   // 每个用例都要有一个「已存在的拓展」，规则才有 id 可查。
   function withDemoExtension(dir) {
-    writeFile(dir, 'extensions/khy-demo/khy.extension.json',
+    writeFile(dir, 'delivery/extension/khy-demo/khy.extension.json',
       `${JSON.stringify({ id: 'khy-demo', name: 'Demo', version: '1.0.0', kind: 'runtime', main: 'index.js' }, null, 2)}\n`);
-    writeFile(dir, 'extensions/khy-demo/index.js', 'module.exports = {};\n');
+    writeFile(dir, 'delivery/extension/khy-demo/index.js', 'module.exports = {};\n');
   }
   function core(dir, body) {
-    writeFile(dir, 'services/backend/src/x.js', body);
+    writeFile(dir, 'runtime/node/backend/src/x.js', body);
   }
 
   test('核里没有 id 字面量 → 零违规', () => {
@@ -596,8 +601,8 @@ describe('check-repo-layout: 核不得硬编码拓展 id（[DESIGN-TOOL-002] §1
       withDemoExtension(dir);
       core(dir, [
         '/**',
-        ' * 底层复用 khy-demo 拓展（extensions/khy-demo/）。',
-        ' * Pattern mirrors extensions/khy-demo/index.js',
+        ' * 底层复用 khy-demo 拓展（delivery/extension/khy-demo/）。',
+        ' * Pattern mirrors delivery/extension/khy-demo/index.js',
         ' */',
         '// 行注释里也提一次 khy-demo',
         'const ok = 1; /* 块注释 khy-demo */',
@@ -621,7 +626,7 @@ describe('check-repo-layout: 核不得硬编码拓展 id（[DESIGN-TOOL-002] §1
 
   test('kind: ide-bridge 的 id 不计（其路径由外部 IDE 决定，改服务名也影响不了）', () => {
     const root = makeFixture((dir) => {
-      writeFile(dir, 'extensions/khy-ide/khy.extension.json',
+      writeFile(dir, 'delivery/extension/khy-ide/khy.extension.json',
         `${JSON.stringify({ id: 'khy-ide', name: 'IDE', version: '1.0.0', kind: 'ide-bridge' }, null, 2)}\n`);
       core(dir, `const p = path.join(globalStorage, 'khy-ide', 'auth.json');\n`);
     });
@@ -645,19 +650,22 @@ describe('check-repo-layout: 核不得硬编码拓展 id（[DESIGN-TOOL-002] §1
 
 describe('check-repo-layout: 拓展路径漂移（搬目录搬坏了）', () => {
   // 这一组盯的是「文件被挪深一层，路径算术没跟着改」这一类。它在本仓库真实发生过：
-  // scripts/<子目录>/x.js 迁到 extensions/scripts/<id>/x.js 之后，`../lib/y` 和
-  // `path.resolve(__dirname,'..','..')` 全部指错，而后者**不抛任何错**。
+  // extensions/scripts/<id>/x.js（3 段）迁到 delivery/extension/scripts/<id>/x.js（4 段）之后，
+  // `../lib/y` 和 `path.resolve(__dirname,'..','..')` 全部指错，而后者**不抛任何错**。
+  // ⇒ 所有 fixture 的「正确级数」是 4，不是迁移前的 3。
   function ext(dir, id, files) {
-    writeFile(dir, `extensions/scripts/${id}/khy.extension.json`,
+    writeFile(dir, `delivery/extension/scripts/${id}/khy.extension.json`,
       `${JSON.stringify({ id, name: id, version: '1.0.0', kind: 'toolchain', commands: [] }, null, 2)}\n`);
-    for (const [rel, body] of Object.entries(files)) writeFile(dir, `extensions/scripts/${id}/${rel}`, body);
+    for (const [rel, body] of Object.entries(files)) writeFile(dir, `delivery/extension/scripts/${id}/${rel}`, body);
   }
 
   test('路径都对得上时不计违规', () => {
     const root = makeFixture((dir) => {
       writeFile(dir, 'scripts/lib/thing.js', 'module.exports = {};\n');
+      // 拓展现在在 delivery/extension/scripts/<id>/（4 段），回到仓库根要 4 级 —— 比迁移前的
+      // extensions/scripts/<id>/（3 段）多一级。这一条就是「级数算对了」的正例。
       ext(dir, 'khy-ok', {
-        'run.js': "const t = require('../../../scripts/lib/thing');\nconst ROOT = require('path').resolve(__dirname, '..', '..', '..');\n",
+        'run.js': "const t = require('../../../../scripts/lib/thing');\nconst ROOT = require('path').resolve(__dirname, '..', '..', '..', '..');\n",
       });
     });
     const { status, stdout } = runGuard(root);
@@ -676,9 +684,10 @@ describe('check-repo-layout: 拓展路径漂移（搬目录搬坏了）', () => 
     assert.match(stdout, /"unresolved-require":0/, '正是 unresolved-require 的盲区，所以才要单列一条');
   });
 
-  test('爬根少算一级（落在 extensions/）→ 计入，哪怕那个目录真实存在', () => {
-    // 这条是整组的理由：extensions/ 是存在的，所以任何「路径存不存在」式的检查
-    // 都看不见这处漂移 —— 它不报错，只是从此把仓库根认成了 extensions/。
+  test('爬根少算（落在 delivery/extension/，该目录真实存在）→ 计入', () => {
+    // 这条是整组的理由：delivery/extension/ 是存在的，所以任何「路径存不存在」式的检查
+    // 都看不见这处漂移 —— 它不报错，只是从此把仓库根认成了 delivery/extension/。
+    // 正确级数是 4（delivery/extension/scripts/<id> → 仓库根），这里只爬 2 级。
     const root = makeFixture((dir) => {
       ext(dir, 'khy-short', { 'run.js': "const ROOT = require('path').resolve(__dirname, '..', '..');\n" });
     });
@@ -687,9 +696,10 @@ describe('check-repo-layout: 拓展路径漂移（搬目录搬坏了）', () => 
     assert.match(stdout, /既不是仓库根也不在本拓展内/);
   });
 
-  test('爬根多算一级（爬出仓库）→ 计入', () => {
+  test('爬根多算（爬出仓库）→ 计入', () => {
     const root = makeFixture((dir) => {
-      ext(dir, 'khy-long', { 'run.js': "const ROOT = require('path').resolve(__dirname, '..', '..', '..', '..');\n" });
+      // 4 级才是仓库根；爬 5 级就出了仓库。
+      ext(dir, 'khy-long', { 'run.js': "const ROOT = require('path').resolve(__dirname, '..', '..', '..', '..', '..');\n" });
     });
     const { status, stdout } = runGuard(root, ['--list=extension-path-drift']);
     assert.match(stdout, /"extension-path-drift":1/);
@@ -742,8 +752,8 @@ describe('check-repo-layout: 拓展路径漂移（搬目录搬坏了）', () => 
 describe('check-repo-layout: domain-direction', () => {
   const MINI_DECL = {
     domains: {
-      D1: { name: '运行时内核', roots: ['services/backend/src/services'] },
-      D3: { name: '共享底座', roots: ['services/backend/src/utils'] },
+      D1: { name: '运行时内核', roots: ['runtime/node/backend/src/services'] },
+      D3: { name: '共享底座', roots: ['runtime/node/backend/src/utils'] },
       D5: { name: '工程与档案', roots: ['scripts'] },
     },
     enforced: [
@@ -754,7 +764,7 @@ describe('check-repo-layout: domain-direction', () => {
 
   test('默认 fixture 无规范登记区 → 规则静默（不误红临时仓库）', () => {
     const root = makeFixture((dir) => {
-      writeFile(dir, 'services/backend/src/utils/a.js', "require('../services/b');\n");
+      writeFile(dir, 'runtime/node/backend/src/utils/a.js', "require('../services/b');\n");
     });
     const { status, stdout } = runGuard(root);
     assert.equal(status, 0, stdout);
@@ -764,8 +774,8 @@ describe('check-repo-layout: domain-direction', () => {
   test('D3 → D1 命中，且按判据 id 分组计数', () => {
     const root = makeFixture((dir) => {
       writeFile(dir, 'docs/10_规范/registry/DOMAIN-DEPS.json', JSON.stringify(MINI_DECL, null, 2));
-      writeFile(dir, 'services/backend/src/utils/gateOn.js', "const f = require('../services/flagRegistry');\nmodule.exports = f;\n");
-      writeFile(dir, 'services/backend/src/services/flagRegistry.js', 'module.exports = {};\n');
+      writeFile(dir, 'runtime/node/backend/src/utils/gateOn.js', "const f = require('../services/flagRegistry');\nmodule.exports = f;\n");
+      writeFile(dir, 'runtime/node/backend/src/services/flagRegistry.js', 'module.exports = {};\n');
     });
     const { stdout } = runGuard(root, ['--list=domain-direction']);
     assert.match(stdout, /"domain-direction":1/);
@@ -776,7 +786,7 @@ describe('check-repo-layout: domain-direction', () => {
   test('允许方向 D1 → D3 不计违规', () => {
     const root = makeFixture((dir) => {
       writeFile(dir, 'docs/10_规范/registry/DOMAIN-DEPS.json', JSON.stringify(MINI_DECL, null, 2));
-      writeFile(dir, 'services/backend/src/services/consumer.js', "const u = require('../utils/leaf');\nmodule.exports = u;\n");
+      writeFile(dir, 'runtime/node/backend/src/services/consumer.js', "const u = require('../utils/leaf');\nmodule.exports = u;\n");
     });
     const { status, stdout } = runGuard(root);
     assert.equal(status, 0, stdout);
@@ -786,7 +796,7 @@ describe('check-repo-layout: domain-direction', () => {
   test('任何域 → D5 命中 no-reach-into-archive', () => {
     const root = makeFixture((dir) => {
       writeFile(dir, 'docs/10_规范/registry/DOMAIN-DEPS.json', JSON.stringify(MINI_DECL, null, 2));
-      writeFile(dir, 'services/backend/src/services/restorer.js', "const r = require('../../../../scripts/restore/restore-check');\nmodule.exports = r;\n");
+      writeFile(dir, 'runtime/node/backend/src/services/restorer.js', "const r = require('../../../../scripts/restore/restore-check');\nmodule.exports = r;\n");
     });
     const { stdout } = runGuard(root);
     assert.match(stdout, /"domain-direction":1/);
@@ -796,8 +806,8 @@ describe('check-repo-layout: domain-direction', () => {
   test('注释行与测试文件不计（与相邻规则同一口径）', () => {
     const root = makeFixture((dir) => {
       writeFile(dir, 'docs/10_规范/registry/DOMAIN-DEPS.json', JSON.stringify(MINI_DECL, null, 2));
-      writeFile(dir, 'services/backend/src/utils/commented.js', "// 以前写的是 require('../services/flagRegistry')\nmodule.exports = {};\n");
-      writeFile(dir, 'services/backend/src/utils/__tests__/gateOn.test.js', "require('../../services/flagRegistry');\n");
+      writeFile(dir, 'runtime/node/backend/src/utils/commented.js', "// 以前写的是 require('../services/flagRegistry')\nmodule.exports = {};\n");
+      writeFile(dir, 'runtime/node/backend/src/utils/__tests__/gateOn.test.js', "require('../../services/flagRegistry');\n");
     });
     const { status, stdout } = runGuard(root);
     assert.equal(status, 0, stdout);
@@ -819,16 +829,16 @@ describe('check-repo-layout: domain-direction', () => {
 describe('check-repo-layout: functional-unit', () => {
   const DECL_WITH_D2 = {
     domains: {
-      D1: { name: '运行时内核', roots: ['services/backend/src/services'] },
-      D2: { name: '业务上下文', roots: ['services/backend/src/services/domain'] },
-      D3: { name: '共享底座', roots: ['services/backend/src/utils'] },
+      D1: { name: '运行时内核', roots: ['runtime/node/backend/src/services'] },
+      D2: { name: '业务上下文', roots: ['runtime/node/backend/src/services/domain'] },
+      D3: { name: '共享底座', roots: ['runtime/node/backend/src/utils'] },
     },
     enforced: [{ id: 'd3-purity', from: ['D3'], forbidTargets: ['D1', 'D2'] }],
   };
   const DECL_NO_D2 = {
     domains: {
-      D1: { name: '运行时内核', roots: ['services/backend/src/services'] },
-      D3: { name: '共享底座', roots: ['services/backend/src/utils'] },
+      D1: { name: '运行时内核', roots: ['runtime/node/backend/src/services'] },
+      D3: { name: '共享底座', roots: ['runtime/node/backend/src/utils'] },
     },
     enforced: [{ id: 'd3-purity', from: ['D3'], forbidTargets: ['D1'] }],
   };
@@ -837,14 +847,14 @@ describe('check-repo-layout: functional-unit', () => {
     writeFile(dir, 'docs/10_规范/registry/DOMAIN-DEPS.json', JSON.stringify(decl, null, 2));
     // 让 enforced.from 点名的 roots 真实存在，否则这些用例会先撞上 domain-direction 的
     // 「无扫描源」error —— 本组用例要判的是 functional-unit，不能被邻居规则挡道。
-    writeFile(dir, 'services/backend/src/utils/pure.js', 'module.exports = {};');
-    writeFile(dir, 'services/backend/src/services/kernel.js', 'module.exports = {};');
+    writeFile(dir, 'runtime/node/backend/src/utils/pure.js', 'module.exports = {};');
+    writeFile(dir, 'runtime/node/backend/src/services/kernel.js', 'module.exports = {};');
   }
 
   test('登记表未声明 D2 → 规则静默（老的迷你登记表用例不受影响）', () => {
     const root = makeFixture((dir) => {
       withDecl(dir, DECL_NO_D2);
-      writeFile(dir, 'services/backend/src/services/domain/messaging/loose.js', 'module.exports = {};');
+      writeFile(dir, 'runtime/node/backend/src/services/domain/messaging/loose.js', 'module.exports = {};');
     });
     const { status, stdout } = runGuard(root);
     assert.equal(status, 0, stdout);
@@ -854,7 +864,7 @@ describe('check-repo-layout: functional-unit', () => {
   test('上下文缺 README + 源文件缺同名同目录测试 → 两条子判据分开计数', () => {
     const root = makeFixture((dir) => {
       withDecl(dir, DECL_WITH_D2);
-      writeFile(dir, 'services/backend/src/services/domain/trajectory/capability/traceRecorder.js', 'module.exports = {};');
+      writeFile(dir, 'runtime/node/backend/src/services/domain/trajectory/capability/traceRecorder.js', 'module.exports = {};');
     });
     const { stdout } = runGuard(root, ['--list=functional-unit']);
     assert.ok(stdout.includes('"functional-unit":2'), stdout);
@@ -867,10 +877,10 @@ describe('check-repo-layout: functional-unit', () => {
   test('README 与同名同目录测试齐备 → 0 违规；node_modules 不参与计数', () => {
     const root = makeFixture((dir) => {
       withDecl(dir, DECL_WITH_D2);
-      writeFile(dir, 'services/backend/src/services/domain/trajectory/README.md', '# trajectory');
-      writeFile(dir, 'services/backend/src/services/domain/trajectory/capability/traceRecorder.js', 'module.exports = {};');
-      writeFile(dir, 'services/backend/src/services/domain/trajectory/capability/traceRecorder.test.js', 'module.exports = {};');
-      writeFile(dir, 'services/backend/src/services/domain/trajectory/node_modules/junk/orphan.js', 'module.exports = {};');
+      writeFile(dir, 'runtime/node/backend/src/services/domain/trajectory/README.md', '# trajectory');
+      writeFile(dir, 'runtime/node/backend/src/services/domain/trajectory/capability/traceRecorder.js', 'module.exports = {};');
+      writeFile(dir, 'runtime/node/backend/src/services/domain/trajectory/capability/traceRecorder.test.js', 'module.exports = {};');
+      writeFile(dir, 'runtime/node/backend/src/services/domain/trajectory/node_modules/junk/orphan.js', 'module.exports = {};');
     });
     const { status, stdout } = runGuard(root);
     assert.equal(status, 0, stdout);
@@ -880,9 +890,9 @@ describe('check-repo-layout: functional-unit', () => {
   test('测试放在同级 __tests__/ 子目录不算共置（§2.3 原话是「与源同目录」）', () => {
     const root = makeFixture((dir) => {
       withDecl(dir, DECL_WITH_D2);
-      writeFile(dir, 'services/backend/src/services/domain/trajectory/README.md', '# trajectory');
-      writeFile(dir, 'services/backend/src/services/domain/trajectory/capability/traceRecorder.js', 'module.exports = {};');
-      writeFile(dir, 'services/backend/src/services/domain/trajectory/__tests__/traceRecorder.test.js', 'module.exports = {};');
+      writeFile(dir, 'runtime/node/backend/src/services/domain/trajectory/README.md', '# trajectory');
+      writeFile(dir, 'runtime/node/backend/src/services/domain/trajectory/capability/traceRecorder.js', 'module.exports = {};');
+      writeFile(dir, 'runtime/node/backend/src/services/domain/trajectory/__tests__/traceRecorder.test.js', 'module.exports = {};');
     });
     const { stdout } = runGuard(root);
     assert.ok(stdout.includes('"functional-unit":1'), stdout);
@@ -892,7 +902,7 @@ describe('check-repo-layout: functional-unit', () => {
   test('裸挂在 D2 root 上的源文件只要求测试，不要求 README', () => {
     const root = makeFixture((dir) => {
       withDecl(dir, DECL_WITH_D2);
-      writeFile(dir, 'services/backend/src/services/domain/loose.js', 'module.exports = {};');
+      writeFile(dir, 'runtime/node/backend/src/services/domain/loose.js', 'module.exports = {};');
     });
     const { stdout } = runGuard(root);
     assert.ok(stdout.includes('"functional-unit":1'), stdout);
@@ -914,8 +924,8 @@ describe('check-repo-layout: functional-unit', () => {
       withDecl(dir, DECL_WITH_D2);
       writeFile(dir, 'scripts/ci/repo-layout-baseline.json',
         `${JSON.stringify({ updated: '2026-01-01', counts: { 'functional-unit': 1 } }, null, 2)}\n`);
-      writeFile(dir, 'services/backend/src/services/domain/trajectory/a.js', 'module.exports = {};');
-      writeFile(dir, 'services/backend/src/services/domain/trajectory/b.js', 'module.exports = {};');
+      writeFile(dir, 'runtime/node/backend/src/services/domain/trajectory/a.js', 'module.exports = {};');
+      writeFile(dir, 'runtime/node/backend/src/services/domain/trajectory/b.js', 'module.exports = {};');
     });
     const { status, stdout } = runGuard(root);
     assert.equal(status, 1, stdout);
@@ -930,9 +940,9 @@ describe('check-repo-layout: functional-unit', () => {
 describe('check-repo-layout: entry-buffer', () => {
   const DECL_EB = {
     domains: {
-      D1: { name: '运行时内核', roots: ['services/backend/src/services'], mayDependOn: ['D1', 'D2', 'D3'] },
-      D2: { name: '业务上下文', roots: ['services/backend/src/services/domain'], mayDependOn: ['D2', 'D3'] },
-      D3: { name: '共享底座', roots: ['services/backend/src/utils'], mayDependOn: ['D3'] },
+      D1: { name: '运行时内核', roots: ['runtime/node/backend/src/services'], mayDependOn: ['D1', 'D2', 'D3'] },
+      D2: { name: '业务上下文', roots: ['runtime/node/backend/src/services/domain'], mayDependOn: ['D2', 'D3'] },
+      D3: { name: '共享底座', roots: ['runtime/node/backend/src/utils'], mayDependOn: ['D3'] },
     },
     enforced: [{ id: 'd3-purity', from: ['D3'], forbidTargets: ['D1', 'D2'] }],
     _entry_buffer: {
@@ -942,12 +952,12 @@ describe('check-repo-layout: entry-buffer', () => {
       stages: ['staged', 'stable'],
     },
   };
-  const UNIT = 'services/backend/src/services/domain/trajectory';
+  const UNIT = 'runtime/node/backend/src/services/domain/trajectory';
 
   function withEb(dir, mutate) {
     writeFile(dir, 'docs/10_规范/registry/DOMAIN-DEPS.json', JSON.stringify(DECL_EB, null, 2));
-    writeFile(dir, 'services/backend/src/utils/pure.js', 'module.exports = {};');
-    writeFile(dir, 'services/backend/src/services/kernel.js', 'module.exports = {};');
+    writeFile(dir, 'runtime/node/backend/src/utils/pure.js', 'module.exports = {};');
+    writeFile(dir, 'runtime/node/backend/src/services/kernel.js', 'module.exports = {};');
     // 缓冲区目录默认建好，好让 buffer-missing 只在专门用例里亮。
     writeFile(dir, 'scripts/quarantine/keep.txt', 'fixture buffer\n');
     if (mutate) mutate(dir);
@@ -983,7 +993,7 @@ describe('check-repo-layout: entry-buffer', () => {
     const { stdout } = runGuard(root, ['--list=entry-buffer']);
     assert.ok(stdout.includes('manifest-missing 1 处'), stdout);
     assert.ok(stdout.includes('traceRecorder.js 无生命周期记录'), stdout);
-    assert.ok(stdout.includes('services/backend/src/services/domain 边界内找不到 khy.module.json'), stdout);
+    assert.ok(stdout.includes('runtime/node/backend/src/services/domain 边界内找不到 khy.module.json'), stdout);
   });
 
   test('合格单元（stable + README + 整数 fanIn + 同名同目录测试）→ 0 违规', () => {
@@ -1126,7 +1136,7 @@ describe('check-repo-layout: entry-buffer', () => {
   test('声明了 coreDomains 但 roots 磁盘上都不存在 → error（本规则不 fail-open）', () => {
     const root = makeFixture((dir) => {
       const decl = JSON.parse(JSON.stringify(DECL_EB));
-      decl.domains.D2.roots = ['services/backend/src/services/nonexistent'];
+      decl.domains.D2.roots = ['runtime/node/backend/src/services/nonexistent'];
       writeFile(dir, 'docs/10_规范/registry/DOMAIN-DEPS.json', JSON.stringify(decl, null, 2));
       writeFile(dir, 'scripts/quarantine/keep.txt', 'fixture buffer\n');
     });

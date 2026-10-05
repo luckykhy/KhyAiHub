@@ -11,7 +11,7 @@ const path = require('path');
  * recorded (passes are not), so volume stays bounded.
  */
 
-const LEDGER_DIR = path.join('.khy', 'ruleguard');
+const LEDGER_DIR = path.join('works', 'data', 'khy', 'ruleguard');
 const LEDGER_FILE = 'violations.jsonl';
 const SPLIT_BYTES = 1024 * 1024;
 

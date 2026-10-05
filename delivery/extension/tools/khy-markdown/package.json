@@ -47,6 +47,6 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/khy-os/khy-os",
-    "directory": "extensions/tools/khy-markdown"
+    "directory": "delivery/extension/tools/khy-markdown"
   }
 }

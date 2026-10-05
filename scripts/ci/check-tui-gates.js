@@ -4,7 +4,7 @@
  * check-tui-gates.js — CI gate for the KHY TUI gate-token budget (DESIGN-ARCH-102 H7).
  *
  * Counts the UNIQUE `KHY_*` env-gate tokens actually read under
- * `services/backend/src/cli/tui/` (non-test source) and asserts the count does
+ * `runtime/node/backend/src/cli/tui/` (non-test source) and asserts the count does
  * not exceed BUDGET. The 103/P2 target is ≤ 40; this ships at the current
  * measured baseline so the check passes today and only *regresses* when someone
  * adds new gates. To tighten, run with `--baseline N` (N ≤ 40) to pin the new
@@ -33,7 +33,7 @@ const TUI_REL = path.join('services', 'backend', 'src', 'cli', 'tui');
 // tree kept growing to 226 with nobody re-running the check), so this is an honest
 // rebase, not a new allowance. The +1 of the rebase is KHY_PERMISSION_NOTICE — the
 // rollback gate for the permission box's "evidence moves to the transcript" split
-// (services/backend/src/cli/tui/permissionNotice.js), registered in flagRegistry.
+// (runtime/node/backend/src/cli/tui/permissionNotice.js), registered in flagRegistry.
 // It is deliberately TEMPORARY: once the new form is accepted, the gate and the
 // legacy layout inside the box are deleted together (see the tui.gates debt-ledger
 // entry, which owns the ≤40 convergence).

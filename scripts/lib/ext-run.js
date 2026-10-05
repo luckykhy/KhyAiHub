@@ -3,7 +3,7 @@
  * ext-run.js —— 把 `npm run <目标>` 派发到**拓展**里的脚本（[DESIGN-TOOL-002] §2.3 / §3.5）。
  *
  * 为什么需要它：`scripts/portable/*` 这类交付脚本按 §1.6 该迁出核，但它们的调用方是
- * `package.json` 的 npm 目标。如果 npm 目标直接写 `node extensions/scripts/khy-portable/
+ * `package.json` 的 npm 目标。如果 npm 目标直接写 `node delivery/extension/scripts/khy-portable/
  * build.js`，那么删掉这个拓展目录之后，`npm run portable:build:dev` 报的是一条 node 的
  * `Cannot find module`——用户看到的是崩溃，不是「这个能力没装」。那不叫「删目录即消失」，
  * 那叫删目录即坏掉。
@@ -51,7 +51,7 @@ function subdirs(dir) {
 }
 
 /**
- * 找一个拓展目录。扫 `extensions/<id>/` 与 `extensions/<分类>/<id>/` 两层。
+ * 找一个拓展目录。扫 `delivery/extension/<id>/` 与 `delivery/extension/<分类>/<id>/` 两层。
  *
  * 按**目录名**匹配而不是按 manifest 里的 id：§3.3 规定二者必须相等，而目录名这一侧
  * 不需要读文件就能比对——找不到时也就能明确区分「没这个目录」和「目录在但 manifest 坏了」。
@@ -97,8 +97,8 @@ function main(argv) {
   if (!found) {
     fail(
       `拓展 ${id} 未安装 —— 命令 "${command}" 不可用。\n` +
-        `  这不是故障：extensions/ 下没有这个目录，该能力就不存在（[DESIGN-TOOL-002] §4.1）。\n` +
-        `  要恢复它：把该拓展目录放回 extensions/<分类>/${id}/，无需任何注册步骤。`
+        `  这不是故障：delivery/extension/ 下没有这个目录，该能力就不存在（[DESIGN-TOOL-002] §4.1）。\n` +
+        `  要恢复它：把该拓展目录放回 delivery/extension/<分类>/${id}/，无需任何注册步骤。`
     );
   }
 
@@ -173,7 +173,7 @@ function resolveExtensionScript(id, ref = {}) {
 /**
  * `require()` 一个拓展里的模块，拓展缺失时返回 null。
  *
- * 为什么不直接写 `require('../../extensions/scripts/khy-installer/verify-install')`：
+ * 为什么不直接写 `require('../../delivery/extension/scripts/khy-installer/verify-install')`：
  * 那样一来删掉拓展目录，调用方就是一条 node 的 Cannot find module 崩溃，而按
  * [DESIGN-TOOL-002] §4.1「删目录即卸载」，缺失应当是一种**说得清的退化**。
  * 这正是 2026-08-20 那次迁移留下的坑——npm 目标经 ext-run 派发保住了，进程内

@@ -96,7 +96,7 @@ confirm() {
 # (has both pyproject.toml and services/backend), i.e. a publishable tree.
 is_source_tree() {
   local d="$1"
-  [[ -f "$d/pyproject.toml" && -d "$d/services/backend" ]]
+  [[ -f "$d/pyproject.toml" && -d "$d/runtime/node/backend" ]]
 }
 
 # find_repo_root — walk up from this script to locate the project root when the

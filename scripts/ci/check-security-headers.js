@@ -63,14 +63,14 @@ function changedFiles() {
 function targets() {
   if (rawTargets.length > 0) return rawTargets.map((t) => path.resolve(REPO_ROOT, t));
   if (changedMode) return changedFiles();
-  return walk(path.join(REPO_ROOT, 'services', 'backend', 'src'));
+  return walk(path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'src'));
 }
 
 // ── SEC-001 §8: Security Headers ────────────────────────────────────────────
 
 function checkSecurityHeaders(file, content) {
   const rel = path.relative(REPO_ROOT, file);
-  if (!rel.startsWith('services/backend/src/')) return;
+  if (!rel.startsWith('runtime/node/backend/src/')) return;
 
   // Rule 1: helmet() must be used in app setup
   if (/\bapp\.use\s*\(\s*helmet\s*\(/.test(content)) {
@@ -111,7 +111,7 @@ function checkSecurityHeaders(file, content) {
 
 function checkSqlInjection(file, content) {
   const rel = path.relative(REPO_ROOT, file);
-  if (!rel.startsWith('services/backend/src/')) return;
+  if (!rel.startsWith('runtime/node/backend/src/')) return;
 
   // Detect string concatenation in SQL queries
   // Pattern: `SELECT ... ${var}` or `"SELECT ... " + var`
@@ -167,7 +167,7 @@ function checkInputValidation(file, content) {
 
 function checkSensitiveDataInLogs(file, content) {
   const rel = path.relative(REPO_ROOT, file);
-  if (!rel.startsWith('services/backend/src/')) return;
+  if (!rel.startsWith('runtime/node/backend/src/')) return;
 
   const sensitiveFields = [
     'password', 'token', 'apiKey', 'api_key', 'secret', 'authorization',
@@ -195,7 +195,7 @@ function checkSensitiveDataInLogs(file, content) {
 
 function checkCryptoAlgorithms(file, content) {
   const rel = path.relative(REPO_ROOT, file);
-  if (!rel.startsWith('services/backend/src/')) return;
+  if (!rel.startsWith('runtime/node/backend/src/')) return;
 
   // Disallow weak hash algorithms
   const weakAlgos = /\bmd5\b|\bsha1\b|\bdes\b|\b3des\b|\bRC4\b/i;

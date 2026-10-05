@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * 生成 evidence/05_索引与对账/提交记录与证据链.md —— 把 main 的**全部提交记录**摆出来，
+ * 生成 works/record/evidence/05_索引与对账/提交记录与证据链.md —— 把 main 的**全部提交记录**摆出来，
  * 并给每条记录配三类可核验证据：① 交付载体（路径与规模，实测）② 原始血统可追溯（备份引用 + 三远端）
  * ③ 当场可复算的命令。
  *
  * 为什么必须由脚本生成：重建链的提交哈希每轮都会变，手写文档必然过期；本文件的每个数字与哈希
- * 都在生成时刻从 git 现算，重跑即刷新。数字口径与 evidence/04_机器可读/contribution-metrics.json
+ * 都在生成时刻从 git 现算，重跑即刷新。数字口径与 works/record/evidence/04_机器可读/contribution-metrics.json
  * 一致（同仓同 ref），差别只在「快照时刻」——材料冻结时两个一起重跑即可对齐。
  *
  * 依赖：`git` 在 PATH 上（与 collect-contribution.js 同款调用）。
@@ -139,7 +139,7 @@ const countFiles = (rel, filter) => {
       .filter((e) => e.isFile() && filter(e.name)).length;
   } catch { return 0; }
 };
-const feedbackDirs = countDirs('.khy/feedback');
+const feedbackDirs = countDirs('works/data/khy/feedback');
 const designDocs = (() => {
   let n = 0;
   (function walk(d) {
@@ -239,11 +239,11 @@ L.push(`   保险 bundle：${bundleFiles.length ? bundleFiles.join('、') : '（
 L.push('3. **重建过程产物**（`.khyos/diag/`，本机态）—— `verify-rebuild-57-report.json`（19 项独立验证）、');
 L.push('   `blueprint-audit-report.json`（纯增量性 / 路径唯一性 / 密钥 / 完整性缺口）、`rebuild-result-run*.json`（逐提交时刻）、');
 L.push('   `refs-before-r*.txt`（保护 ref 基线）、`2026-09-27-git-history-rebuild-execution-report.md`（逐轮执行报告）。');
-L.push(`4. **仓内开发存证** —— \`.khy/feedback/\` ${feedbackDirs} 个任务目录（三模态存证：complaint / repro-before / differential /`);
+L.push(`4. **仓内开发存证** —— \`works/data/khy/feedback/\` ${feedbackDirs} 个任务目录（三模态存证：complaint / repro-before / differential /`);
 L.push('   repro-after / requirement-5q / rollback / mode.json）；`.ai/hq/{PROGRESS,BUGS}.json`（多机共享台账）；');
 L.push(`   \`docs/03_DESIGN_设计/\` ${designDocs} 篇设计文档；\`scripts/ci/check-*.js\` ${guardCount} 个守卫检查器。`);
-L.push('5. **材料指标与图片** —— `evidence/04_机器可读/contribution-metrics.json`（每个数字带复算命令）；');
-L.push('   `evidence/03_图片/`（图表与截图由指标渲染 / 实机采集，不手绘）。');
+L.push('5. **材料指标与图片** —— `works/record/evidence/04_机器可读/contribution-metrics.json`（每个数字带复算命令）；');
+L.push('   `works/record/evidence/03_图片/`（图表与截图由指标渲染 / 实机采集，不手绘）。');
 L.push('');
 
 L.push('## 五、复算命令（逐条可跑，注释内为期望值）');
@@ -257,7 +257,7 @@ L.push(`git log --all --oneline | wc -l                             # ${allRefCo
 L.push('git rev-parse origin/main refs/remotes/khy-mirror/main refs/remotes/gitee/main');
 L.push('git log origin/main --format=%H -- kernel | wc -l         # 阶段表列算法：逐引用（本地分支 + 三远端 main）遍历后按提交去重');
 L.push(`ls scripts/ci/check-*.js | wc -l                           # ${guardCount}（守卫检查器，本机态口径见 §四）`);
-L.push(`find .khy/feedback -mindepth 1 -maxdepth 1 -type d | wc -l  # ${feedbackDirs}（本机态存证目录）`);
+L.push(`find works/data/khy/feedback -mindepth 1 -maxdepth 1 -type d | wc -l  # ${feedbackDirs}（本机态存证目录）`);
 L.push('node scripts/evidence/build-git-record.js                   # 重生成本文件（刷新哈希与数字）');
 L.push('```');
 L.push('');
@@ -266,7 +266,7 @@ L.push('## 六、待核与未知（如实列出）');
 L.push('');
 L.push('- 材料指标 `contribution-metrics.json` 是**快照**（生成时间见该文件）；与本文件的实时数字口径相同、时刻不同。');
 L.push('  材料冻结时按 `npm run evidence:collect && npm run evidence:build && npm run evidence:images` 重算对齐。');
-L.push('- 收录路径：本文件在 `evidence/05_索引与对账/证据总清单.json` 的**下一次** `npm run evidence:build` 后进入清单；');
+L.push('- 收录路径：本文件在 `works/record/evidence/05_索引与对账/证据总清单.json` 的**下一次** `npm run evidence:build` 后进入清单；');
 L.push('  其 `.html` 孪生由 `node scripts/docs/build_docs_site.js` 生成 —— 改完本 `.md` 请重跑该构建，保持孪生同步。');
 L.push('- 本文件与其 `.html` 孪生**自身**也计入树文件数（+2）——独立复核 `git ls-tree` 时会看到比上表多出的正是它们。');
 L.push('- 旧血统存在 7 个不可达对象哈希（2026-09-22 对象库事故，见 `.khyos/diag/object-store-damage-20260922.md`）；');

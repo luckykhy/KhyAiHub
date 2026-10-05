@@ -44,12 +44,12 @@ function resolveKhyOsDir(): string {
   return path.resolve(process.cwd(), '..', '..')
 }
 
-// Pre-load the gateway .env (canonical: services/backend/.env, same file the
+// Pre-load the gateway .env (canonical: runtime/node/backend/.env, same file the
 // `khy gateway config` CLI writes). The electron-spawned host does not go
 // through the khy CLI dotenv loader, so load it here — before aiGateway is
 // required — without overriding values already present in the environment.
 function loadGatewayEnvFile(): void {
-  const envPath = path.join(resolveKhyOsDir(), 'services', 'backend', '.env')
+  const envPath = path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', '.env')
   let content = ''
   try {
     content = fs.readFileSync(envPath, 'utf8')
@@ -89,7 +89,7 @@ let gateway: { generate: (prompt: string, options?: Record<string, unknown>) => 
 
 function loadGateway(): { generate: (prompt: string, options?: Record<string, unknown>) => Promise<{ text?: string; model?: string; tokenUsage?: unknown }> } {
   if (gateway) return gateway
-  const gwPath = path.join(resolveKhyOsDir(), 'services', 'backend', 'src', 'services', 'gateway', 'aiGateway.js')
+  const gwPath = path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'services', 'gateway', 'aiGateway.js')
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   gateway = nodeRequire(gwPath)
   console.log('[host] aiGateway 已加载:', gwPath)
@@ -99,7 +99,7 @@ function loadGateway(): { generate: (prompt: string, options?: Record<string, un
 // ── 智能体工具循环（CH-2 服务直调）──────────────────────────────────
 // 桌面端此前只调 aiGateway.generate(prompt)：单轮文本、不跑工具循环，于是
 // tool_use 被静默丢弃，用户只看到一条回复——与网页端修复前完全同病（见
-// services/backend/src/services/aiManagementChatHttp.js 的 transport 注释）。
+// runtime/node/backend/src/services/aiManagementChatHttp.js 的 transport 注释）。
 // 这里改用与 CLI / 网页端 / AgentTool 同一条 canonical 路径：
 //   runToolUseLoop(msg, { chat, chatOpts, onToolCall, onToolResult, ... })
 // 由既有循环负责工具派发、截断恢复、权限闸门与去重，host 只做事件适配，
@@ -123,7 +123,7 @@ let toolLoop: { runToolUseLoop: ToolLoopFn } | null = null
 
 function loadAiChat(): AiChatFn {
   if (aiChat) return aiChat
-  const chatPath = path.join(resolveKhyOsDir(), 'services', 'backend', 'src', 'cli', 'ai.js')
+  const chatPath = path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'cli', 'ai.js')
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   aiChat = nodeRequire(chatPath).chat as AiChatFn
   return aiChat
@@ -131,7 +131,7 @@ function loadAiChat(): AiChatFn {
 
 function loadToolLoop(): { runToolUseLoop: ToolLoopFn } {
   if (toolLoop) return toolLoop
-  const loopPath = path.join(resolveKhyOsDir(), 'services', 'backend', 'src', 'services', 'toolUseLoop.js')
+  const loopPath = path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'services', 'toolUseLoop.js')
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   toolLoop = nodeRequire(loopPath) as { runToolUseLoop: ToolLoopFn }
   return toolLoop
@@ -144,7 +144,7 @@ let sessionPersistence: {
 
 function loadSessionPersistence(): { listPersistedSessions: (opts?: { limit?: number }) => PersistedSession[]; persistSession: (sessionId: string | undefined, state: { messages: unknown[]; metadata?: { cwd?: string; projectDir?: string }; title?: string }) => string } {
   if (sessionPersistence) return sessionPersistence
-  const spPath = path.join(resolveKhyOsDir(), 'services', 'backend', 'src', 'services', 'sessionPersistence.js')
+  const spPath = path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'services', 'sessionPersistence.js')
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   sessionPersistence = nodeRequire(spPath)
   console.log('[host] sessionPersistence 已加载:', spPath)
@@ -173,7 +173,7 @@ function loadTokenUsageService(): {
   getModelUsage: () => Array<{ model: string; inputTokens: number; outputTokens: number; totalTokens: number; requests: number; costUSD: number; percentage: number }>
 } {
   if (tokenUsageService) return tokenUsageService
-  const tuPath = path.join(resolveKhyOsDir(), 'services', 'backend', 'src', 'services', 'tokenUsageService.js')
+  const tuPath = path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'services', 'tokenUsageService.js')
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   tokenUsageService = nodeRequire(tuPath)
   console.log('[host] tokenUsageService 已加载:', tuPath)
@@ -204,7 +204,7 @@ function loadProviderPresets(): {
   getProviderPresets: () => Array<{ id: string; label?: string; name?: string; apiFormat?: string; format?: string; models?: unknown[] }>
 } {
   if (providerPresets) return providerPresets
-  const ppPath = path.join(resolveKhyOsDir(), 'services', 'backend', 'src', 'services', 'gateway', 'providerPresets.js')
+  const ppPath = path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'services', 'gateway', 'providerPresets.js')
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   providerPresets = nodeRequire(ppPath)
   console.log('[host] providerPresets 已加载:', ppPath)
@@ -225,7 +225,7 @@ async function listModelOptions(adapterKey?: string): Promise<ModelOption[]> {
   let poolKeyByPreset: Record<string, string> = {}
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const bpc = nodeRequire(path.join(resolveKhyOsDir(), 'services', 'backend', 'src', 'services', 'gateway', 'builtinProviderConfig.js'))
+    const bpc = nodeRequire(path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'services', 'gateway', 'builtinProviderConfig.js'))
     const builtins: Array<{ poolKey?: string; name?: string; defaultEndpoint?: string }> =
       (bpc.BUILTIN_PROVIDERS || bpc.builtinProviders || []).filter(Boolean)
     // 通过 label 名称匹配 preset 与 built-in（两侧都归一化中文括号/空格）

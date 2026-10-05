@@ -24,7 +24,7 @@ function runSafetyCheck(...targets) {
 
 describe('check-change-safety maintainer map integration', () => {
   test('uses exact-file maintainer verify commands for runtime files', () => {
-    const { status, stdout } = runSafetyCheck('services/backend/src/services/daemonManager.js');
+    const { status, stdout } = runSafetyCheck('runtime/node/backend/src/services/daemonManager.js');
 
     assert.equal(status, 0);
     assert.match(stdout, /npm run test:one -- services\/backend\/tests\/daemonManager\.runtimePort\.test\.js/);
@@ -32,7 +32,7 @@ describe('check-change-safety maintainer map integration', () => {
   });
 
   test('uses directory maintainer verify commands for CLI handler targets', () => {
-    const { status, stdout } = runSafetyCheck('services/backend/src/cli/handlers');
+    const { status, stdout } = runSafetyCheck('runtime/node/backend/src/cli/handlers');
 
     assert.equal(status, 1);
     assert.match(stdout, /npm run test:one -- services\/backend\/tests\/cli\/router\.test\.js services\/backend\/tests\/cli\/repl\.tasks\.interaction\.test\.js/);
@@ -40,7 +40,7 @@ describe('check-change-safety maintainer map integration', () => {
   });
 
   test('keeps targeted agent-rules command and prompt verification for prompt core', () => {
-    const { status, stdout } = runSafetyCheck('services/backend/src/constants/prompts.js');
+    const { status, stdout } = runSafetyCheck('runtime/node/backend/src/constants/prompts.js');
 
     assert.equal(status, 0);
     assert.match(stdout, /node scripts\/ci\/check-agent-rules\.js 'services\/backend\/src\/constants\/prompts\.js'/);
@@ -49,7 +49,7 @@ describe('check-change-safety maintainer map integration', () => {
   });
 
   test('maps AI management files to the smallest useful verify commands', () => {
-    const { status, stdout } = runSafetyCheck('services/ai-backend/src/routes/aiGatewayAdmin.js');
+    const { status, stdout } = runSafetyCheck('runtime/node/ai-backend/src/routes/aiGatewayAdmin.js');
 
     assert.equal(status, 0);
     assert.match(stdout, /High-risk surface touched: route layer\./);
@@ -66,7 +66,7 @@ describe('check-change-safety maintainer map integration', () => {
   });
 
   test('prefers AI management verification over generic gateway checks for backend admin routes', () => {
-    const { status, stdout } = runSafetyCheck('services/backend/src/routes/aiGatewayAdmin.js');
+    const { status, stdout } = runSafetyCheck('runtime/node/backend/src/routes/aiGatewayAdmin.js');
 
     assert.equal(status, 0);
     assert.match(stdout, /npm run test:one -- services\/backend\/tests\/routes\/aiGatewayAdmin\.modelSlots\.test\.js services\/backend\/tests\/gatewayManage\.apiDisplay\.test\.js/);
@@ -86,7 +86,7 @@ describe('check-change-safety maintainer map integration', () => {
   });
 
   test('keeps generic gateway fallback for backend routes not covered by the maintainer map', () => {
-    const { status, stdout } = runSafetyCheck('services/backend/src/routes/largeTasks.js');
+    const { status, stdout } = runSafetyCheck('runtime/node/backend/src/routes/largeTasks.js');
 
     assert.equal(status, 0);
     assert.match(stdout, /npm run test:maintainer:gateway/);

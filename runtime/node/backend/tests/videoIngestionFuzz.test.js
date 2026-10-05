@@ -13,7 +13,7 @@
  *      engine guards return {success:false,error} before any subprocess.
  *
  * The adversarial video byte corpus + real ffmpeg/whisper spawn path are exercised
- * by extensions/scripts/khy-diagnostics/fuzz-video-io.js (247 calls, 0 throw/0 hang, including a
+ * by delivery/extension/scripts/khy-diagnostics/fuzz-video-io.js (247 calls, 0 throw/0 hang, including a
  * stubbed pathological whisper/ffmpeg/whisper-cpp chain and a hanging-tool timeout
  * proof). This suite locks the pure/guard behavior that runs on every machine.
  */
@@ -24,7 +24,7 @@ const path = require('path');
 const understanding = require('../src/services/mediaUnderstanding.js');
 const multimodal = require('../src/services/multimodalInputService.js');
 const transcription = require('../src/services/mediaTranscriptionService.js');
-const { buildVideoMimeCorpus, buildVideoCorpus } = require('../../../extensions/scripts/khy-diagnostics/fuzzVideoCorpus.js');
+const { buildVideoMimeCorpus, buildVideoCorpus } = require('../../../delivery/extension/scripts/khy-diagnostics/fuzzVideoCorpus.js');
 const CAP_VIDEO = 0b0100;
 // ── 1. mimeToCapability: correct on valid, 0 on malformed, never throws ──
 // ── 2. registry classification never throws on malformed MIME ──

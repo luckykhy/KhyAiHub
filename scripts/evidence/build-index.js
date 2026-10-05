@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 由 evidence/04_机器可读/contribution-metrics.json 生成人类贡献与原创性文档。
+ * 由 works/record/evidence/04_机器可读/contribution-metrics.json 生成人类贡献与原创性文档。
  *
  * 为什么用脚本生成而不是手写：这些文档里的每一个数字都要能被复算，手写就会漂移。
  * 重跑顺序：collect-contribution.js → build-index.js。
@@ -39,7 +39,7 @@ function head(title, subtitle) {
     '',
     '> ' + subtitle,
     '>',
-    '> 数据快照时间：' + new Date().toISOString().slice(0, 10) + '；输入：`evidence/04_机器可读/contribution-metrics.json`。',
+    '> 数据快照时间：' + new Date().toISOString().slice(0, 10) + '；输入：`works/record/evidence/04_机器可读/contribution-metrics.json`。',
     '',
   ].join('\n');
 }
@@ -68,7 +68,7 @@ function buildHumanCorpus(m) {
   });
   lines.push('');
   lines.push(`> 只列「人类指向」的 ${humanSrc.length} 条中的前 ${Math.min(80, humanSrc.length)} 条；`
-    + `其余 ${h.source字段行.去重 - humanSrc.length} 条 source 行指向文档编号或 issue，全量在 \`evidence/04_机器可读/contribution-metrics.json\` 的「人类指令语料.source字段行.条目」。`, '');
+    + `其余 ${h.source字段行.去重 - humanSrc.length} 条 source 行指向文档编号或 issue，全量在 \`works/record/evidence/04_机器可读/contribution-metrics.json\` 的「人类指令语料.source字段行.条目」。`, '');
 
   lines.push('## 二、「用户原话 / 用户要求 / 用户拍板」引述句', '');
   lines.push(`实测去重 ${quotes.length} 条。这些句子出现在**改动当时**的存证里，不是事后补写。`, '');
@@ -104,7 +104,7 @@ function buildIteration(m) {
     + '核心证据是规则 5/6/7 的落盘存证：每次修复都留了**改前原始输出**与**改后同一命令的输出**。'
   )];
 
-  lines.push('## 一、三模态反馈存证（`.khy/feedback/`）', '');
+  lines.push('## 一、三模态反馈存证（`works/data/khy/feedback/`）', '');
   lines.push(`共 **${f.任务目录数} 个任务目录**，覆盖 ${f.存证活跃日数} 个活跃日（${f.存证跨度 ? f.存证跨度.起 + ' → ' + f.存证跨度.止 : '无'}）。`, '');
   lines.push('| 存件 | 份数 | 含义 |');
   lines.push('|------|------|------|');
@@ -251,7 +251,7 @@ function buildManifest() {
   return {
     生成时间: new Date().toISOString(),
     生成器: 'scripts/evidence/build-index.js',
-    说明: 'evidence/ 全量清单：路径 / 字节 / sha256 / 类型 / 行数 / PNG 宽高（PNG 由 IHDR 直接解析，可用来核验图片真实可解码）。',
+    说明: 'works/record/evidence/ 全量清单：路径 / 字节 / sha256 / 类型 / 行数 / PNG 宽高（PNG 由 IHDR 直接解析，可用来核验图片真实可解码）。',
     条目数: items.length,
     图片数: items.filter((i) => i.类型 === '图片').length,
     零字节条目: items.filter((i) => i.字节 === 0).map((i) => i.路径),

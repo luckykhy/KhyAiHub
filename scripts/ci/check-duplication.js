@@ -34,7 +34,7 @@ const gateFlag = args.includes('--gate');
 const rawTargets = args.filter((a) => !a.startsWith('--'));
 
 // 默认扫描范围:OCR 网关测试族(本次去重的主战场)。positional 参数可覆盖。
-const DEFAULT_SCOPE = ['services/backend/tests/gateway'];
+const DEFAULT_SCOPE = ['runtime/node/backend/tests/gateway'];
 const DEFAULT_MODE = 'warn'; // 阶段一;翻转硬门时改此常量为 'gate'。
 // 基线路径:默认 scripts/ci/duplication-baseline.json(2026-09-29 由仓库根迁入,与 ruleguard-baseline 同址;方案 R-R4,[DESIGN-LAY-008] §12.58);KHY_DUPLICATION_BASELINE 可覆盖(测试隔离用)。
 const BASELINE_PATH = path.resolve(cwd, process.env.KHY_DUPLICATION_BASELINE || 'scripts/ci/duplication-baseline.json');

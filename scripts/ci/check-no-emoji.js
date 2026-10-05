@@ -18,11 +18,11 @@
  *      页面 chrome 的 emoji 是生成器注入的，只清 `.md` 清不掉 `.html`。
  *      `.md` 是**真源**、`.html` 是**构建产物**：清完 `.md` 与生成器后用
  *      `node scripts/docs/build_docs_site.js` 再生，不手改 `.html`。
- *      唯一例外面：`evidence/**`（著作权申报存证，按 `[DESIGN-IP-001]` C-MAT1
+ *      唯一例外面：`works/record/evidence/**`（著作权申报存证，按 `[DESIGN-IP-001]` C-MAT1
  *      「真实数据、不摆拍、不裁剪」不得事后改写），故 evidence 不参与判定。
  *   5) 同日补（用户实拍：文档站顶栏三个按钮仍是彩色）：清理**由守卫的发现驱动**，
  *      所以「扩展名白名单漏一类会画字的文件」＝ 画面上的 emoji 永远清不掉。实测盲区
- *      有三处：`.tsx/.jsx`（`apps/khyos-desktop` 整个 React 渲染层，图标写在
+ *      有三处：`.tsx/.jsx`（`delivery/desktop/khyos-desktop` 整个 React 渲染层，图标写在
  *      `icon: '📂'` 这类字段里）、`.css`（`content: "✨"` 是渲染内容）、
  *      `docs/19_资产/site/*.{js,css}`（每一页都引用的浏览器侧资产，主题开关的字形
  *      就在这里）。三者已并入 `RUNTIME_SOURCE_RE`；随包压缩的 `*.min.js|css`
@@ -118,7 +118,7 @@ const MONO_VOCABULARY = [
 // ── 豁免登记（每条必须给 reason + until，到期未处理即 error 级自报）───────────
 const EXEMPT = [
   {
-    path: 'services/backend/src/buddy',
+    path: 'runtime/node/backend/src/buddy',
     prefix: true,
     reason: '桌面伴侣（buddy）的物种 emoji 是该功能的数据模型与画面主体，用户明确要求保留宠物形象；它不是终端状态标记。',
     until: '2027-03-31',
@@ -170,7 +170,7 @@ const RUNTIME_SOURCE_RE = [
 const TESTISH_RE = /(\.test\.|\.spec\.|^tests\/|\/tests\/|\/__tests__\/|\/fixtures?\/|\.khy\/|\/vendor\/|\/node_modules\/|\/dist\/|\/out\/|\/unpacked\/|\.generated\.|\.min\.(js|css)$)/;
 
 /**
- * 裁决 4 的唯一例外面：`evidence/` 是著作权申报存证，`entries/` 是构建产物根
+ * 裁决 4 的唯一例外面：`works/record/evidence/` 是著作权申报存证，`entries/` 是构建产物根
  * （`[DESIGN-LAY-004]`），两者都不做事后改写 —— 前者按 C-MAT1「真实数据、不摆拍、
  * 不裁剪」，后者由 `rebuild` 命令再生。
  */
@@ -479,22 +479,22 @@ function collect(argv) {
 
 const SCENARIOS = {
   clean: [
-    { path: 'services/backend/src/cli/ui.js', content: 'const S = { ok: "\u2713", bad: "\u2717", warn: "\u26A0", dot: "\u25CF", arrow: "\u2192" };\n' },
+    { path: 'runtime/node/backend/src/cli/ui.js', content: 'const S = { ok: "\u2713", bad: "\u2717", warn: "\u26A0", dot: "\u25CF", arrow: "\u2192" };\n' },
   ],
   'literal-emoji': [
-    { path: 'services/backend/src/cli/ui.js', content: 'const head = "\uD83D\uDE80 启动";\n' },
+    { path: 'runtime/node/backend/src/cli/ui.js', content: 'const head = "\uD83D\uDE80 启动";\n' },
   ],
   'escaped-emoji': [
-    { path: 'services/backend/src/bridge/mobilePage.js', content: 'const logo = "\\uD83D\\uDD10";\nconst bar = "\\u{1F4CA} 本次";\n' },
+    { path: 'runtime/node/backend/src/bridge/mobilePage.js', content: 'const logo = "\\uD83D\\uDD10";\nconst bar = "\\u{1F4CA} 本次";\n' },
   ],
   'vs16-forced': [
-    { path: 'services/backend/src/cli/formatters.js', content: 'print(" \u26A0\uFE0F 需要授权");\n' },
+    { path: 'runtime/node/backend/src/cli/formatters.js', content: 'print(" \u26A0\uFE0F 需要授权");\n' },
   ],
   'suppressed-and-comment': [
-    { path: 'services/backend/src/cli/sanitizer.js', content: '// 历史文案里有 🚨 需要一并剥掉\nconst re = /\uD83D\uDEA8/; // khy-allow-no-emoji: 剥离外部粘贴文本里的告警标记\n' },
+    { path: 'runtime/node/backend/src/cli/sanitizer.js', content: '// 历史文案里有 🚨 需要一并剥掉\nconst re = /\uD83D\uDEA8/; // khy-allow-no-emoji: 剥离外部粘贴文本里的告警标记\n' },
   ],
   'initial-avatar': [
-    { path: 'apps/ai-frontend/src/components/Avatar.vue', content: 'const avatarChar = props.name.charAt(0).toUpperCase();\n' },
+    { path: 'delivery/web/ai-frontend/src/components/Avatar.vue', content: 'const avatarChar = props.name.charAt(0).toUpperCase();\n' },
   ],
   // 裁决 4（文档面）：markdown 标题不是注释、HTML 整行注释不渲染、抑制用 <!-- --> 形。
   'docs-surface': [
@@ -504,9 +504,9 @@ const SCENARIOS = {
   ],
   // 裁决 5（画面面）：图标字段与 CSS content 都是**画出来的**，CSS 注释不是。
   'ui-surface': [
-    { path: 'apps/khyos-desktop/src/renderer/components/layout/Sidebar.tsx', content: "const NAV = [{ id: 'git', icon: '🔀', label: 'Git' }];\n" },
+    { path: 'delivery/desktop/khyos-desktop/src/renderer/components/layout/Sidebar.tsx', content: "const NAV = [{ id: 'git', icon: '🔀', label: 'Git' }];\n" },
     { path: 'docs/19_资产/site/docs-site.css', content: '.card::after { content: "✨"; }\n' },
-    { path: 'apps/ai-frontend/src/styles/a.css', content: '.card { color: red; /* ✨ 装饰 */ }\n' },
+    { path: 'delivery/web/ai-frontend/src/styles/a.css', content: '.card { color: red; /* ✨ 装饰 */ }\n' },
   ],
 };
 

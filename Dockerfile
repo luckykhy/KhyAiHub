@@ -5,16 +5,16 @@
 # ⚠️ 重要：为什么这里必须 COPY 源码（2026-09-18 实测确认）
 #
 # `pip install khy-os` 装出来的 wheel **只有** khy_platform（Python 启动器）
-# 与一个预打包的 `bundled/runtime/khy/bundle.mjs`，**不包含 services/backend
+# 与一个预打包的 `bundled/runtime/khy/bundle.mjs`，**不包含 runtime/node/backend
 # 源码树**。证据三处：
 #   - pyproject.toml: packages = ["khy_platform"]（wheel 只收该包）
 #   - platform/khy_platform/cli.py:2070 注释原文：
 #       "A standalone-bundle install (the pip wheel) genuinely has no backend
 #        directory: the runtime is one bundle.mjs with its dependencies already
 #        linked in."
-#   - MANIFEST.in 里的 recursive-include services/backend 只作用于 sdist，不作用于 wheel
+#   - MANIFEST.in 里的 recursive-include runtime/node/backend 只作用于 sdist，不作用于 wheel
 #
-# 因此若 CMD 指向 `node services/backend/...` 而不先 COPY 源码，容器启动即
+# 因此若 CMD 指向 `node runtime/node/backend/...` 而不先 COPY 源码，容器启动即
 # MODULE_NOT_FOUND。本镜像现在**源码模式**运行：COPY 仓库树 + 装后端依赖。
 #
 # Usage:
@@ -93,40 +93,40 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 #      会逃逸到 pnpm 顶层 errorHandler，那里 process.exit(err.errno)；Linux 上
 #      errno = -2 ⇒ 构建报 "exit code: 254"（2026-09-23 实测复现）。
 COPY .npmrc ./
-COPY patches/ patches/
+COPY works/patches/ works/patches/
 # 根 preinstall 钩子（scripts/install/link-shared-dev.js）：pnpm 会在 install 时执行它，
 # 容器里缺这个文件就是 MODULE_NOT_FOUND（脚本自己「永不抛」，但**找不到文件**是 node 层面的
 # 硬失败，它没机会兜底）。带上是纯保险：该脚本在非 dev checkout 下是 no-op。
 COPY scripts/install/link-shared-dev.js scripts/install/link-shared-dev.js
-# 3) services/backend/vendor/shared —— 它是 `pnpm-workspace.yaml` 里
-#    `overrides: khy-os-backend>@khy/shared: link:services/backend/vendor/shared`
+# 3) runtime/node/backend/vendor/shared —— 它是 `pnpm-workspace.yaml` 里
+#    `overrides: khy-os-backend>@khy/shared: link:runtime/node/backend/vendor/shared`
 #    的 **link: 目标**，同理属于「锁文件口径的输入」。
 #
 # ⚠ 缺它**不会**让构建失败 —— 这是最坏的一类失败。2026-09-23 用 pnpm 10.18.0 实测：
 #    link: 目标不存在时 `pnpm install --prod --frozen-lockfile` **仍然 exit 0**，
 #    只是把 node_modules/@khy/shared 建成一条**指向空路径的绝对软链**
-#    （→ /app/services/backend/vendor/shared）。构建全绿，容器起来后
+#    （→ /app/runtime/node/backend/vendor/shared）。构建全绿，容器起来后
 #    require('@khy/shared/...') 才 MODULE_NOT_FOUND。
-#    而且随后 `COPY services/backend/` 的落点会变成一条软链，行为随 Docker 版本而异。
+#    而且随后 `COPY runtime/node/backend/` 的落点会变成一条软链，行为随 Docker 版本而异。
 # 先把真目录放进去：install 期目标就存在，落点也退化成普通的目录合并，确定性。
 # 该目录被 git 跟踪（89 个文件），preinstall 钩子见到真目录会主动跳过、不覆盖。
-COPY services/backend/vendor/shared services/backend/vendor/shared
+COPY runtime/node/backend/vendor/shared runtime/node/backend/vendor/shared
 # 必须把 **全部** workspace 成员的 package.json 都放进来：pnpm 的
 # --frozen-lockfile 会校验锁文件与整个 workspace 的一致性，缺一个成员就会
 # 报 ERR_PNPM_OUTDATED_LOCKFILE。
-COPY services/backend/package.json services/backend/
-COPY services/ai-backend/package.json services/ai-backend/
-COPY platform/packages/shared/package.json platform/packages/shared/
-COPY platform/packages/ui-shared/package.json platform/packages/ui-shared/
+COPY runtime/node/backend/package.json runtime/node/backend/
+COPY runtime/node/ai-backend/package.json runtime/node/ai-backend/
+COPY runtime/substrate/platform/packages/shared/package.json runtime/substrate/platform/packages/shared/
+COPY runtime/substrate/platform/packages/ui-shared/package.json runtime/substrate/platform/packages/ui-shared/
 # ⚠ 下面两个成员此前漏了：pnpm 的成员清单真源是 pnpm-workspace.yaml（10 个），
 # 不是根 package.json 的 workspaces（8 个）。少一个成员就可能触发
 # ERR_PNPM_OUTDATED_LOCKFILE —— 而报错信息不会告诉你是哪一个缺了。
-COPY platform/packages/plugin-sdk/package.json platform/packages/plugin-sdk/
-COPY extensions/tools/khy-markdown/package.json extensions/tools/khy-markdown/
-COPY apps/ai-frontend/package.json apps/ai-frontend/
-COPY apps/khyos-desktop/package.json apps/khyos-desktop/
-COPY apps/provider-hub/package.json apps/provider-hub/
-COPY software/khyquant/frontend/package.json software/khyquant/frontend/
+COPY runtime/substrate/platform/packages/plugin-sdk/package.json runtime/substrate/platform/packages/plugin-sdk/
+COPY delivery/extension/tools/khy-markdown/package.json delivery/extension/tools/khy-markdown/
+COPY delivery/web/ai-frontend/package.json delivery/web/ai-frontend/
+COPY delivery/desktop/khyos-desktop/package.json delivery/desktop/khyos-desktop/
+COPY delivery/web/provider-hub/package.json delivery/web/provider-hub/
+COPY delivery/channel/khyquant/frontend/package.json delivery/channel/khyquant/frontend/
 
 # --frozen-lockfile：锁文件与 package.json 不同步时**构建即失败**，
 # 而不是悄悄改锁文件。与 CI 的 install:core 保持同一纪律。
@@ -136,14 +136,14 @@ RUN pnpm install --prod --frozen-lockfile \
     --filter @khy/shared...
 
 # 源码放在依赖之后：改业务代码不必重装依赖（利用 layer cache）。
-COPY services/backend/ services/backend/
-COPY platform/packages/shared/ platform/packages/shared/
+COPY runtime/node/backend/ runtime/node/backend/
+COPY runtime/substrate/platform/packages/shared/ runtime/substrate/platform/packages/shared/
 
 # 运行期目录需对 khy 用户可写（sqlite / logs / cache）。
-RUN mkdir -p /home/khy/.khy /app/services/backend/logs /app/services/backend/data \
+RUN mkdir -p /home/khy/.khy /app/runtime/node/backend/logs /app/runtime/node/backend/data \
     && chown -R khy:khy /app /home/khy/.khy
 USER khy
-WORKDIR /app/services/backend
+WORKDIR /app/runtime/node/backend
 
 # ── Runtime defaults ──────────────────────────────────────────────────────────
 ENV KHY_HOME=/home/khy/.khy

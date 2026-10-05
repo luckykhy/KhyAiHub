@@ -3,70 +3,70 @@
 
 # Include full source trees needed to rebuild pip wheel from sdist.
 # Use broad include patterns here, then prune/exclude below.
-recursive-include services/backend *
-recursive-include services/ai-backend *
-recursive-include platform/packages/shared *
-recursive-include platform/packages/moonbit-plugin-sdk *
+recursive-include runtime/node/backend *
+recursive-include runtime/node/ai-backend *
+recursive-include runtime/substrate/platform/packages/shared *
+recursive-include runtime/substrate/platform/packages/moonbit-plugin-sdk *
 recursive-include docs *
 recursive-include extensions *
-recursive-include apps/ai-frontend *
+recursive-include delivery/web/ai-frontend *
 recursive-include software/khyquant *
-recursive-include kernel/src *
-recursive-include kernel/boot *
-recursive-include kernel/moonbit *
-recursive-include kernel/userland *
-recursive-include kernel/iso *
-recursive-include kernel/vendor *
+recursive-include runtime/boot/kernel/src *
+recursive-include runtime/boot/kernel/boot *
+recursive-include runtime/boot/kernel/moonbit *
+recursive-include runtime/boot/kernel/userland *
+recursive-include runtime/boot/kernel/iso *
+recursive-include runtime/boot/kernel/vendor *
 recursive-include scripts *
 
 # Include standalone files required by build/runtime packaging.
-include kernel/Makefile
-include kernel/linker.ld
-include kernel/README.md
-include platform/khy_platform/_resources/dev-constraints.txt
-include platform/khy_platform/_resources/__init__.py
-include platform/khy_platform/_resources/tray-icon.png
-include platform/khy_platform/bundled/runtime/khy/bundle.mjs
+include runtime/boot/kernel/Makefile
+include runtime/boot/kernel/linker.ld
+include runtime/boot/kernel/README.md
+include runtime/substrate/platform/khy_platform/_resources/dev-constraints.txt
+include runtime/substrate/platform/khy_platform/_resources/__init__.py
+include runtime/substrate/platform/khy_platform/_resources/tray-icon.png
+include runtime/substrate/platform/khy_platform/bundled/runtime/khy/bundle.mjs
 include package-lock.json
-include apps/ai-frontend/package-lock.json
-include software/khyquant/frontend/package-lock.json
+include delivery/web/ai-frontend/package-lock.json
+include delivery/channel/khyquant/frontend/package-lock.json
 include README.md
 include AGENTS.md
 
 # Exclude internal credentials docs and local env files.
 exclude docs/INTERNAL_CREDENTIALS.md
 exclude docs/19_资产/site/mermaid.min.js
-exclude services/backend/.env
-exclude services/.env
+exclude runtime/node/backend/.env
+exclude runtime/node/.env
 exclude backend/.env
 exclude .env
 exclude docs/19_资产/mermaid.min.js
-exclude apps/ai-frontend/build-bg.log
-exclude apps/ai-frontend/coverage/coverage-final.json
-exclude services/backend/TmpKoh.class
-exclude services/backend/TmpKoh.java
+exclude delivery/web/ai-frontend/build-bg.log
+exclude delivery/web/ai-frontend/coverage/coverage-final.json
+exclude runtime/node/backend/TmpKoh.class
+exclude runtime/node/backend/TmpKoh.java
 exclude docs/11_报告/历史/stash_patch.txt
-exclude services/backend/.clinerules
+exclude runtime/node/backend/.clinerules
 
 # Exclude heavy / generated / sensitive content.
 prune extensions/bridges/khy-trae-bridge/node_modules
-prune services/backend/node_modules
-prune services/backend/vendor
-prune services/backend/_source
-prune services/ai-backend/node_modules
+prune runtime/node/backend/node_modules
+prune runtime/node/backend/vendor
+prune runtime/node/backend/_source
+prune runtime/node/ai-backend/node_modules
 prune extensions/tools/khy-markdown/muya-embed/node_modules
-prune extensions/tools/khy-markdown/vendor
-prune apps/ai-frontend/node_modules
-prune services/backend/models
-prune services/backend/logs
-prune services/backend/temp
-prune services/backend/data
-prune services/backend/ml/models
-prune services/backend/ml/data
-prune platform/packages/shared/logs
-prune platform/packages/shared/node_modules
-prune platform/packages/shared/vendor
-prune software/khyquant/frontend/node_modules
+prune delivery/extension/tools/khy-markdown/vendor
+prune delivery/web/ai-frontend/node_modules
+prune runtime/node/backend/models
+prune runtime/node/backend/logs
+prune runtime/node/backend/temp
+prune runtime/node/backend/data
+prune runtime/node/backend/ml/models
+prune runtime/node/backend/ml/data
+prune runtime/substrate/platform/packages/shared/logs
+prune runtime/substrate/platform/packages/shared/node_modules
+prune runtime/substrate/platform/packages/shared/vendor
+prune delivery/channel/khyquant/frontend/node_modules
 prune software/khyquant/frontend/android
 prune software/khyquant/frontend/android-sdk
 prune software/khyquant/ml/models
@@ -74,41 +74,41 @@ prune software/khyquant/ml/data
 prune software/khyquant/khy_quant/bundled
 prune .tmp
 prune dist
-prune apps/ai-frontend/dist
+prune delivery/web/ai-frontend/dist
 prune software/khyquant/frontend/dist
-prune apps/ai-frontend/public/vendor
+prune delivery/web/ai-frontend/public/vendor
 prune docs/_ref
-prune services/backend/tests
-prune services/backend/test
+prune runtime/node/backend/tests
+prune runtime/node/backend/test
 prune scripts/tests
-prune services/ai-backend/test
-prune software/khyquant/tests
-prune platform/packages/shared/tests
-prune extensions/tools/khy-markdown/test
-prune apps/ai-frontend/test
-prune kernel/build
-prune kernel/iso/output
-prune platform/packages/moonbit-plugin-sdk/node_modules
-prune platform/packages/moonbit-plugin-sdk/target
-prune platform/packages/moonbit-plugin-sdk/_build
-prune services/backend/wasm-chain/_build
-prune services/backend/wasm-context/_build
-prune services/backend/wasm-indicators/_build
-prune kernel/moonbit/_build
-prune services/backend/bin/llama-cpp
-prune services/backend/bin/ollama-runner
-prune services/backend/.khy
-prune services/backend/src/.khy
-prune services/backend/test-data-criterion-1
-prune services/backend/test-data-criterion-2
-prune apps/ai-frontend/.vscode
-prune services/backend/.cursor
+prune runtime/node/ai-backend/test
+prune delivery/channel/khyquant/tests
+prune runtime/substrate/platform/packages/shared/tests
+prune delivery/extension/tools/khy-markdown/test
+prune delivery/web/ai-frontend/test
+prune runtime/boot/kernel/build
+prune runtime/boot/kernel/iso/output
+prune runtime/substrate/platform/packages/moonbit-plugin-sdk/node_modules
+prune runtime/substrate/platform/packages/moonbit-plugin-sdk/target
+prune runtime/substrate/platform/packages/moonbit-plugin-sdk/_build
+prune runtime/node/backend/wasm-chain/_build
+prune runtime/node/backend/wasm-context/_build
+prune runtime/node/backend/wasm-indicators/_build
+prune runtime/boot/kernel/moonbit/_build
+prune runtime/node/backend/bin/llama-cpp
+prune runtime/node/backend/bin/ollama-runner
+prune runtime/node/backend/.khy
+prune runtime/node/backend/src/.khy
+prune runtime/node/backend/test-data-criterion-1
+prune runtime/node/backend/test-data-criterion-2
+prune delivery/web/ai-frontend/.vscode
+prune runtime/node/backend/.cursor
 
 # Extension-specific recursive excludes.
-recursive-exclude services/backend *.db *.db-shm *.db-wal *.sqlite *.sqlite-shm *.sqlite-wal *.sqlite3 *.joblib *.log *.pyc *.ast *.typedtree
+recursive-exclude runtime/node/backend *.db *.db-shm *.db-wal *.sqlite *.sqlite-shm *.sqlite-wal *.sqlite3 *.joblib *.log *.pyc *.ast *.typedtree
 recursive-exclude docs/07_OPS_运维 *进化提示词手册*
 recursive-exclude kernel *.o *.bin *.elf *.efi *.iso *.img
-recursive-exclude platform/packages/moonbit-plugin-sdk *.wasm
+recursive-exclude runtime/substrate/platform/packages/moonbit-plugin-sdk *.wasm
 recursive-exclude docs *.pdf
 
 # Never ship prebuilt binaries / model payloads in pip distributions.
@@ -151,8 +151,8 @@ global-exclude *[[]*
 
 # Re-add real runtime files killed by the broad rules above.
 # MUST stay last: MANIFEST.in applies its directives in order.
-include apps/ai-frontend/index.html
-include software/khyquant/frontend/index.html
-include software/khyquant/frontend/ml-test.html
-include software/khyquant/frontend/public/offline.html
-include extensions/tools/khy-markdown/khyosMarkdown.html
+include delivery/web/ai-frontend/index.html
+include delivery/channel/khyquant/frontend/index.html
+include delivery/channel/khyquant/frontend/ml-test.html
+include delivery/channel/khyquant/frontend/public/offline.html
+include delivery/extension/tools/khy-markdown/khyosMarkdown.html

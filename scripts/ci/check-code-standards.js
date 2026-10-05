@@ -77,8 +77,8 @@ function changedFiles() {
 function targets() {
   if (rawTargets.length > 0) return rawTargets.map((t) => path.resolve(REPO_ROOT, t));
   if (changedMode) return changedFiles();
-  // Default: scan services/backend/src
-  return walk(path.join(REPO_ROOT, 'services', 'backend', 'src'));
+  // Default: scan runtime/node/backend/src
+  return walk(path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'src'));
 }
 
 // ── NAM-001: Naming conventions ─────────────────────────────────────────────

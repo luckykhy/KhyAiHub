@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: prompt.md -->
 <title>API and Interface Design · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>api-and-interface-design<span class="sep">›</span>API and Interface Design</div>
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>api-and-interface-design<span class="sep">›</span>API and Interface Design</div>
       <header class="hero reveal"><h1>API and Interface Design</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#api-and-interface-design">API and Interface Design</a></li><li class="lvl-2"><a href="#overview">Overview</a></li><li class="lvl-2"><a href="#when-to-use">When to Use</a></li><li class="lvl-2"><a href="#core-principles">Core Principles</a></li><li class="lvl-3"><a href="#hyrum-s-law">Hyrum's Law</a></li><li class="lvl-3"><a href="#the-one-version-rule">The One-Version Rule</a></li><li class="lvl-3"><a href="#1-contract-first">1. Contract First</a></li><li class="lvl-3"><a href="#2-consistent-error-semantics">2. Consistent Error Semantics</a></li><li class="lvl-3"><a href="#3-validate-at-boundaries">3. Validate at Boundaries</a></li><li class="lvl-3"><a href="#4-prefer-addition-over-modification">4. Prefer Addition Over Modification</a></li><li class="lvl-3"><a href="#5-predictable-naming">5. Predictable Naming</a></li><li class="lvl-2"><a href="#rest-api-patterns">REST API Patterns</a></li><li class="lvl-3"><a href="#resource-design">Resource Design</a></li><li class="lvl-3"><a href="#pagination">Pagination</a></li><li class="lvl-3"><a href="#filtering">Filtering</a></li><li class="lvl-3"><a href="#partial-updates-patch">Partial Updates (PATCH)</a></li><li class="lvl-2"><a href="#typescript-interface-patterns">TypeScript Interface Patterns</a></li><li class="lvl-3"><a href="#use-discriminated-unions-for-variants">Use Discriminated Unions for Variants</a></li><li class="lvl-3"><a href="#input-output-separation">Input/Output Separation</a></li><li class="lvl-3"><a href="#use-branded-types-for-ids">Use Branded Types for IDs</a></li><li class="lvl-2"><a href="#common-rationalizations">Common Rationalizations</a></li><li class="lvl-2"><a href="#red-flags">Red Flags</a></li><li class="lvl-2"><a href="#verification">Verification</a></li></ul></nav>
       <article class="doc-body">
@@ -201,14 +201,14 @@ POST   /api/tasks/:id/comments → Add a comment to a task</code></pre>
 <p>After designing an API:</p>
 <ul><li>[ ] Every endpoint has typed input and output schemas</li><li>[ ] Error responses follow a single consistent format</li><li>[ ] Validation happens at system boundaries only</li><li>[ ] List endpoints support pagination</li><li>[ ] New fields are additive and optional (backward compatible)</li><li>[ ] Naming follows consistent conventions across all endpoints</li><li>[ ] API documentation or types are committed alongside the implementation</li></ul>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../../../services/backend/src/services/gateway/aiGatewayGenerateMethod.README.html"><div class="dir">← 上一篇</div><div class="ttl">aiGatewayGenerateMethod</div></a><a class="next" href="../../../../../../services/backend/src/skills/built-in/batch/prompt.html"><div class="dir">下一篇 →</div><div class="ttl">Batch Command Runner</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.README.html"><div class="dir">← 上一篇</div><div class="ttl">aiGatewayGenerateMethod</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/skills/built-in/batch/prompt.html"><div class="dir">下一篇 →</div><div class="ttl">Batch Command Runner</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="services/backend/src/skills/built-in/api-and-interface-design/prompt.html";</script>
-<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/skills/built-in/api-and-interface-design/prompt.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

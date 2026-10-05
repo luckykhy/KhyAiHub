@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: 对账表.md -->
 <title>对账表（数字 ↔ 出处 ↔ 复算命令） · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>evidence<span class="sep">›</span>05_索引与对账<span class="sep">›</span>对账表（数字 ↔ 出处 ↔ 复算命令）</div>
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>works<span class="sep">›</span>record<span class="sep">›</span>evidence<span class="sep">›</span>05_索引与对账<span class="sep">›</span>对账表（数字 ↔ 出处 ↔ 复算命令）</div>
       <header class="hero reveal"><h1>对账表（数字 ↔ 出处 ↔ 复算命令）</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#对账表-数字-出处-复算命令">对账表（数字 ↔ 出处 ↔ 复算命令）</a></li><li class="lvl-2"><a href="#一-主数字对账">一、主数字对账</a></li><li class="lvl-2"><a href="#二-口径冲突的处理方式-本表的价值所在">二、口径冲突的处理方式（本表的价值所在）</a></li><li class="lvl-2"><a href="#三-已知不一致与未做的事-不粉饰">三、已知不一致与未做的事（不粉饰）</a></li><li class="lvl-2"><a href="#四-完整性核对">四、完整性核对</a></li></ul></nav>
       <article class="doc-body">
@@ -50,14 +50,14 @@ node -e <span class="hljs-string">&quot;const l=require(&#x27;./evidence/05_索�
 <p><strong>自指不入哈希</strong>：<code>证据总清单.json</code> 里含自身条目，其 <code>生成时间</code> 与 <code>字节/sha256</code><br>每次重跑必变（实测连跑两次只差这 3 行：第 2、483、484 行）。这是清单的时间戳，<br>不是被篡改的痕迹——核对图片时按 PNG 条目对，不要按自身条目对。</p>
 <p><code>证据总清单.json</code> 里每个 PNG 条目带 <code>宽/高/sha256</code>；任何一张被手工替换过，<br>sha256 与尺寸都会变，与本表 §一 的「16 张」以及两份清单即可对出。</p>
       </article>
-      <nav class="pager"><a class="prev" href="../../evidence/03_图片/图片证据说明.html"><div class="dir">← 上一篇</div><div class="ttl">图片证据说明（每张图怎么来的、能不能当登记材料）</div></a><a class="next" href="../../evidence/05_索引与对账/提交记录与证据链.html"><div class="dir">下一篇 →</div><div class="ttl">提交记录与证据链（git 记录 ↔ 证据 ↔ 复算命令）</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../works/record/evidence/03_图片/图片证据说明.html"><div class="dir">← 上一篇</div><div class="ttl">图片证据说明（每张图怎么来的、能不能当登记材料）</div></a><a class="next" href="../../../../works/record/evidence/05_索引与对账/提交记录与证据链.html"><div class="dir">下一篇 →</div><div class="ttl">提交记录与证据链（git 记录 ↔ 证据 ↔ 复算命令）</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__="evidence/05_索引与对账/对账表.html";</script>
-<script src="../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="works/record/evidence/05_索引与对账/对账表.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

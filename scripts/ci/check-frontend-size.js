@@ -5,9 +5,9 @@
  *   node scripts/ci/check-frontend-size.js                 # 报告态：只打表，永远 exit 0
  *   node scripts/ci/check-frontend-size.js --strict        # 超过容差则 exit 1
  *   node scripts/ci/check-frontend-size.js --update        # 用当前产物重写基线
- *   node scripts/ci/check-frontend-size.js --app apps/ai-frontend   # 只查一个应用
+ *   node scripts/ci/check-frontend-size.js --app delivery/web/ai-frontend   # 只查一个应用
  *
- * 为什么需要它：`apps/ai-frontend/dist` 目前 13.12 MB，其中 10.52 MB 是
+ * 为什么需要它：`delivery/web/ai-frontend/dist` 目前 13.12 MB，其中 10.52 MB 是
  * `public/vendor/khyos-muya.{js,css}` 这一对静态文件（直接拷贝，不过 Rollup）。
  * 也就是说**八成体积不由应用代码决定**。如果把两者混在一个数字里比，应用代码
  * 涨 30% 也只体现为总量涨 6%，门禁形同虚设。因此本脚本把两者**分开计量**：

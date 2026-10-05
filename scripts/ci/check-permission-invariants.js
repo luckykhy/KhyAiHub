@@ -5,8 +5,8 @@
  * 规则真源 docs/10_规范/registry/RULES-REGISTRY.json 的 SECURITY-004：权限档失败即拒
  * （fail-closed）；deny 优先于 allow；不可知档不得落到宽松档。
  *
- * 静态检查四个可判定不变量（载体 services/backend/src/services/tool/toolCallingPermissions.js
- * 与 services/backend/src/permissions/rules.js）：
+ * 静态检查四个可判定不变量（载体 runtime/node/backend/src/services/tool/toolCallingPermissions.js
+ * 与 runtime/node/backend/src/permissions/rules.js）：
  *   1. PERMISSION_MODES 必须是冻结字面量（防止运行期扩档绕过审查）
  *   2. 未知/非法档归一化后不得落到宽松档 —— fail-closed 的核心
  *   3. bypass 家族别名必须显式解析到 bypass，不得静默退回 default
@@ -33,9 +33,9 @@ const strictWarnings = args.includes('--strict-warnings');
 // services/toolCallingPermissions.js 自模块迁入 tool/ 后只剩一行转出壳
 // （module.exports = require('./tool/toolCallingPermissions')），其中**没有**
 // `const PERMISSION_MODES = [...]` 字面量——读壳会让第 1 条不变量判定失败。
-const PERM_MODULE = 'services/backend/src/services/tool/toolCallingPermissions.js';
-const RULES_MODULE = 'services/backend/src/permissions/rules.js';
-const SRC_ROOT = 'services/backend/src';
+const PERM_MODULE = 'runtime/node/backend/src/services/tool/toolCallingPermissions.js';
+const RULES_MODULE = 'runtime/node/backend/src/permissions/rules.js';
+const SRC_ROOT = 'runtime/node/backend/src';
 
 // 宽松档：归一化到这些档等于 fail-open。default 不在其中（最严档位）。
 const PERMISSIVE_MODES = new Set(['bypass', 'RedPass', 'auto', 'acceptEdits', 'dontAsk']);

@@ -16,7 +16,7 @@
  * 出厂件明文密钥（SECURITY-001）：本脚本兼作它的执行器。改动集模式下只看本次
  * 暂存的改动（`--changed` 透传给 `scripts/check_builtin_keys.py`）；**不带
  * `--changed` 且不给目标时**改动集为空、但出厂件检查照跑，此时会连同打包产物
- * （`apps/khy-os-client-app/release/*.apk`）一起扫 —— 这也是验证「APK 里只有
+ * （`delivery/mobile/khy-os-client-app/release/*.apk`）一起扫 —— 这也是验证「APK 里只有
  * 混淆密钥、没有明文」的那条命令。
  */
 'use strict';
@@ -111,29 +111,29 @@ const HIGH_RISK_PATH_RULES = [
 // 只查横幅是否存在(不校验内容),文件未改动则不检查。横幅文案单一真源见 weakModelGuidance.js。
 const WEAK_MODEL_BANNER_MARK = '[AI-弱模型';
 const WEAK_MODEL_BANNER_FILES = [
-  'services/backend/src/services/toolCalling.js',
+  'runtime/node/backend/src/services/toolCalling.js',
   // flagRegistry 真身 2026-09-28 归位到 D3（services/flagRegistry.js 只剩一行兼容壳，
   // 壳上无横幅，故这里必须列真身；指回壳会让 15 处 [AI-弱模型] 横幅检查两头落空）。
-  'services/backend/src/utils/flagRegistry/index.js',
-  'services/backend/src/services/goalStopGate.js',
-  'services/backend/src/services/toolUseLoop.js',
-  'services/backend/src/services/weakModelGuidance.js',
+  'runtime/node/backend/src/utils/flagRegistry/index.js',
+  'runtime/node/backend/src/services/goalStopGate.js',
+  'runtime/node/backend/src/services/toolUseLoop.js',
+  'runtime/node/backend/src/services/weakModelGuidance.js',
   // 5 个高危写/搜索工具:prompt() 带 weakModelToolNote() 注入,横幅提醒弱模型「先 Read 再改 / 参数照
   // schema / 别删注入」。改动即要求横幅仍在,防弱模型顺手删掉就地标注。
-  'services/backend/src/tools/FileEditTool/index.js',
-  'services/backend/src/tools/FileWriteTool/index.js',
-  'services/backend/src/tools/GrepTool/index.js',
-  'services/backend/src/tools/MultiEditTool/index.js',
-  'services/backend/src/tools/ApplyPatchTool/index.js',
+  'runtime/node/backend/src/tools/FileEditTool/index.js',
+  'runtime/node/backend/src/tools/FileWriteTool/index.js',
+  'runtime/node/backend/src/tools/GrepTool/index.js',
+  'runtime/node/backend/src/tools/MultiEditTool/index.js',
+  'runtime/node/backend/src/tools/ApplyPatchTool/index.js',
 ];
 
 const RECOMMENDED_CHECK_RULES = [
   {
-    match: file => file === 'services/backend/src/constants/prompts.js' || /^services\/backend\/tests\/prompt.*\.test\.js$/.test(file),
+    match: file => file === 'runtime/node/backend/src/constants/prompts.js' || /^services\/backend\/tests\/prompt.*\.test\.js$/.test(file),
     commands: [
-      'node --test services/backend/tests/promptOnDemandSections.test.js',
-      'node --test services/backend/tests/promptLearningRules.test.js',
-      'npx jest services/backend/tests/gatewayDebugPrompt.test.js --runInBand',
+      'node --test runtime/node/backend/tests/promptOnDemandSections.test.js',
+      'node --test runtime/node/backend/tests/promptLearningRules.test.js',
+      'npx jest runtime/node/backend/tests/gatewayDebugPrompt.test.js --runInBand',
     ],
   },
   {
@@ -158,7 +158,7 @@ const RECOMMENDED_CHECK_RULES = [
   },
   {
     match: file => /^apps\/ai-frontend\//.test(file),
-    commands: ['npm run build --prefix apps/ai-frontend'],
+    commands: ['npm run build --prefix delivery/web/ai-frontend'],
   },
 ];
 
@@ -392,10 +392,10 @@ function buildRecommendedCommands(entries, findings = []) {
 
   const fallbackPaths = paths.filter(file => !maintainerMatchedPaths.has(file));
 
-  if (fallbackPaths.some(file => file === 'services/backend/src/constants/prompts.js' || /^services\/backend\/tests\/prompt.*\.test\.js$/.test(file))) {
-    commands.add('node --test services/backend/tests/promptOnDemandSections.test.js');
-    commands.add('node --test services/backend/tests/promptLearningRules.test.js');
-    commands.add('npx jest services/backend/tests/gatewayDebugPrompt.test.js --runInBand');
+  if (fallbackPaths.some(file => file === 'runtime/node/backend/src/constants/prompts.js' || /^services\/backend\/tests\/prompt.*\.test\.js$/.test(file))) {
+    commands.add('node --test runtime/node/backend/tests/promptOnDemandSections.test.js');
+    commands.add('node --test runtime/node/backend/tests/promptLearningRules.test.js');
+    commands.add('npx jest runtime/node/backend/tests/gatewayDebugPrompt.test.js --runInBand');
   }
   if (fallbackPaths.some(file => /^services\/backend\/src\/cli\//.test(file))) {
     commands.add('npm run test:maintainer:cli-routing');
@@ -591,7 +591,7 @@ function main() {
         severity: 'error',
         message: `Weak-model guardrail banner missing after edit: ${watched}.`,
         detail: `This high-risk file must keep at least one "${WEAK_MODEL_BANNER_MARK}…]" banner. `
-          + 'Restore it (source of truth: services/backend/src/services/weakModelGuidance.js).',
+          + 'Restore it (source of truth: runtime/node/backend/src/services/weakModelGuidance.js).',
       });
     }
   }

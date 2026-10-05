@@ -3,7 +3,7 @@ name: Feature Flag 功能开关规范
 id: FF-001
 domain: API
 nature: 约束
-scope: "runtime/node/backend/src/**, apps/ai-frontend/src/**"
+scope: "runtime/node/backend/src/**, delivery/web/ai-frontend/src/**"
 priority: P2
 trigger: "新增或移除功能开关、灰度发布逻辑时"
 constraint: "四原则：默认关闭（新功能默认 false，渐进开启）、可回滚（关闭立即生效无需回滚代码）、可审计（变更有日志有时间有操作人）、自动清理（功能稳定后及时移除，最长存活 3 个月，过期自动升级为 FIXME）。生命周期：创建（默认 off，必须有移除计划）→ 灰度 7-14 天（10% → 50% → 100%）→ 全量 7 天（on 状态稳定运行）→ 移除（代码清理，开关删除）。配置结构含 enabled、rollout { type, value }、createdAt、expiresAt、owner。变更必须记录 flag、oldValue、newValue、actor、timestamp。开关级别：global、percentage（按用户哈希灰度）、whitelist、cohort。"

@@ -2,7 +2,7 @@
 /**
  * Model-name hardcoding checker (machine-enforced model-name single source of truth).
  *
- * Derives the watch-set straight from services/backend/src/constants/models.js (the
+ * Derives the watch-set straight from runtime/node/backend/src/constants/models.js (the
  * SSOT typed arrays) and runs changed (or explicitly passed) files through the pure
  * `assessFile` guard in scripts/lib/modelHardcodingGuard.js. Any standalone quoted
  * model-name literal that reappears in business logic — outside the data-catalog
@@ -39,7 +39,7 @@ const IGNORE_DIRS = new Set([
 ]);
 
 // SSOT 模块位置(从仓库根解析)。读不到 → 空监视名单 → 守卫静默放行(fail-soft)。
-const MODELS_MODULE = path.resolve(cwd, 'services/backend/src/constants/models.js');
+const MODELS_MODULE = path.resolve(cwd, 'runtime/node/backend/src/constants/models.js');
 
 function loadWatchedNames() {
   try {

@@ -10,7 +10,7 @@
  * 「目录在」再测「目录不在」会读到上一次的缓存，测出来的是缓存行为而不是契约行为。
  * 子进程同时让 KHY_EXTENSION_PATH 这类只在模块加载时读一次的环境变量能被逐例设置。
  *
- * **不对着真实 extensions/ 目录测机制**：那样一来任何人往仓库里放一个拓展都可能
+ * **不对着真实 delivery/extension/ 目录测机制**：那样一来任何人往仓库里放一个拓展都可能
  * 让用例飘绿或飘红。机制部分一律用临时目录当 fixture；只有最后一组「试点核验」
  * 才断言真实的 khy-notebook —— 那是本轮实际迁移的东西，它坏了就该红。
  */
@@ -210,7 +210,7 @@ describe('拓展贡献工具：模型看得见（本轮补的缺口）', () => {
     // 原因是实测出来的：KHY_EXTENSION_PATH 是「前插最高优先级」而不是「替换根集合」
     // （extensionRoots.listRoots 把 override 排在最前，随后照样 push 仓库根、用户根、
     // 遗留用户根与两个遗留 plugins 根）。所以任何 fixture 进程都还看得见真实
-    // extensions/、<dataHome>/extensions 与遗留 <appHome>/extensions ——
+    // delivery/extension/、<dataHome>/extensions 与遗留 <appHome>/extensions ——
     // 后几者在本机不存在、在别人机器上可能存在。
     // 把整份清单写死等于把用例绑在「这台机器上装了什么」上，正是本文件头要避免的飘绿飘红。
     const { root } = makeRoot({ toolName: 'FixtureAd', entryExtra: MARK });
@@ -241,7 +241,7 @@ describe('拓展贡献工具：模型看得见（本轮补的缺口）', () => {
 });
 
 describe('拓展分类目录：两层布局（[DESIGN-TOOL-002] §2.3）', () => {
-  // 分类是本轮为「25 个拓展平铺在 extensions/ 下没法管」加的布局层。它必须是**纯布局**：
+  // 分类是本轮为「25 个拓展平铺在 delivery/extension/ 下没法管」加的布局层。它必须是**纯布局**：
   // 一旦分类名渗进 id，把拓展移进分类目录就等于给它改身份，state 条目、冲突裁决与
   // 孤儿检测会同时错位 —— 那比不分类糟得多。下面每条都在钉这个「纯布局」性质。
 

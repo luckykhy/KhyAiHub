@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: orchestration-patterns.md -->
 <title>Orchestration Patterns · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>doubt-driven-development<span class="sep">›</span>references<span class="sep">›</span>Orchestration Patterns</div>
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>doubt-driven-development<span class="sep">›</span>references<span class="sep">›</span>Orchestration Patterns</div>
       <header class="hero reveal"><h1>Orchestration Patterns</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#orchestration-patterns">Orchestration Patterns</a></li><li class="lvl-2"><a href="#endorsed-patterns">Endorsed patterns</a></li><li class="lvl-3"><a href="#1-direct-invocation-no-orchestration">1. Direct invocation (no orchestration)</a></li><li class="lvl-3"><a href="#2-single-persona-slash-command">2. Single-persona slash command</a></li><li class="lvl-3"><a href="#3-parallel-fan-out-with-merge">3. Parallel fan-out with merge</a></li><li class="lvl-3"><a href="#4-sequential-pipeline-as-user-driven-slash-commands">4. Sequential pipeline as user-driven slash commands</a></li><li class="lvl-3"><a href="#5-research-isolation-context-preservation">5. Research isolation (context preservation)</a></li><li class="lvl-2"><a href="#claude-code-compatibility">Claude Code compatibility</a></li><li class="lvl-3"><a href="#where-personas-live">Where personas live</a></li><li class="lvl-3"><a href="#subagents-vs-agent-teams">Subagents vs. Agent Teams</a></li><li class="lvl-3"><a href="#platform-enforced-rules">Platform-enforced rules</a></li><li class="lvl-3"><a href="#built-in-subagents-to-know-about">Built-in subagents to know about</a></li><li class="lvl-3"><a href="#frontmatter-restrictions-for-plugin-agents">Frontmatter restrictions for plugin agents</a></li><li class="lvl-3"><a href="#spawning-multiple-subagents-in-parallel">Spawning multiple subagents in parallel</a></li><li class="lvl-2"><a href="#worked-example-agent-teams-for-competing-hypothesis-debugging">Worked example: Agent Teams for competing-hypothesis debugging</a></li><li class="lvl-3"><a href="#the-scenario">The scenario</a></li><li class="lvl-3"><a href="#why-this-is-not-a-ship-job">Why this is *not* a `/ship` job</a></li><li class="lvl-3"><a href="#setup-one-time-per-environment">Setup (one-time, per-environment)</a></li><li class="lvl-3"><a href="#the-trigger-prompt">The trigger prompt</a></li><li class="lvl-3"><a href="#what-happens">What happens</a></li><li class="lvl-3"><a href="#when-to-clean-up">When to clean up</a></li><li class="lvl-3"><a href="#cost-expectation">Cost expectation</a></li><li class="lvl-3"><a href="#anti-pattern-in-this-scenario">Anti-pattern in this scenario</a></li><li class="lvl-3"><a href="#when-not-to-use-agent-teams">When *not* to use Agent Teams</a></li><li class="lvl-2"><a href="#anti-patterns">Anti-patterns</a></li><li class="lvl-3"><a href="#a-router-persona-meta-orchestrator">A. Router persona (&quot;meta-orchestrator&quot;)</a></li><li class="lvl-3"><a href="#b-persona-that-calls-another-persona">B. Persona that calls another persona</a></li><li class="lvl-3"><a href="#c-sequential-orchestrator-that-paraphrases">C. Sequential orchestrator that paraphrases</a></li><li class="lvl-3"><a href="#d-deep-persona-trees">D. Deep persona trees</a></li><li class="lvl-2"><a href="#decision-flow">Decision flow</a></li><li class="lvl-2"><a href="#when-to-add-a-new-pattern-to-this-catalog">When to add a new pattern to this catalog</a></li></ul></nav>
       <article class="doc-body">
@@ -196,14 +196,14 @@ two teammates agree they can disprove the others'.</code></pre>
 <ol><li>You've used the pattern at least twice in real work</li><li>You can name a concrete artifact in this repo that demonstrates it</li><li>You can explain why an existing pattern wouldn't have worked</li><li>You can describe its anti-pattern shadow (what people will mistakenly build instead)</li></ol>
 <p>Premature catalog entries become aspirational documentation that no one follows.</p>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../../../../services/backend/src/skills/built-in/doubt-driven-development/prompt.html"><div class="dir">← 上一篇</div><div class="ttl">Doubt-Driven Development</div></a><a class="next" href="../../../../../../../services/backend/src/skills/built-in/dream/prompt.html"><div class="dir">下一篇 →</div><div class="ttl">Dream — Background Autonomous Agent</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/skills/built-in/doubt-driven-development/prompt.html"><div class="dir">← 上一篇</div><div class="ttl">Doubt-Driven Development</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/skills/built-in/dream/prompt.html"><div class="dir">下一篇 →</div><div class="ttl">Dream — Background Autonomous Agent</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="services/backend/src/skills/built-in/doubt-driven-development/references/orchestration-patterns.html";</script>
-<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/skills/built-in/doubt-driven-development/references/orchestration-patterns.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

@@ -146,7 +146,7 @@ test('substring false-GREEN：server.js 仅作 .template 子串 / 注释 → 判
 });
 
 test('_pinnedAsQuotedEntry：紧后是引号才算，双引号与单引号皆认，.map 不误命中', () => {
-  const p = 'services/backend/server.js';
+  const p = 'runtime/node/backend/server.js';
   assert.strictEqual(_pinnedAsQuotedEntry(`"${p}",`, p), true);
   assert.strictEqual(_pinnedAsQuotedEntry(`'${p}',`, p), true);
   assert.strictEqual(_pinnedAsQuotedEntry(`"${p}.map",`, p), false);
@@ -190,13 +190,13 @@ test('真实清单：pip(wheel/sdist) 与 npm 三渠道都钉死了启动地板'
     `启动入口契约破裂——某条离机渠道没在自己的发布完整性清单里钉死它 exec 的启动脚本：\n` +
       `${r.summary}\n` +
       `修法：把缺失路径加进 scripts/release/pip_packaging_rules.py 的 REQUIRED_WHEEL_PATHS/` +
-      `REQUIRED_SDIST_PATHS，或 packaging/npm/scripts/audit-purity.js 的 REQUIRED_PATHS。`
+      `REQUIRED_SDIST_PATHS，或 works/ship/npm/scripts/audit-purity.js 的 REQUIRED_PATHS。`
   );
 });
 
 // 钉死启动脚本只解决「文件在不在」，还有一层「进程怎么被告知它是谁」。
 // bundle.mjs 是被 spawn 的目标，argv[1] 的 basename 恒为 bundle.mjs，
-// services/backend/bin/khy.js 的 getInvokedBinary() 两个正则都不命中，
+// runtime/node/backend/bin/khy.js 的 getInvokedBinary() 两个正则都不命中，
 // 回落到 khyquant 模式，于是全部系统子命令被「khyquant 仅用于启动量化应用」挡下。
 // 实测症状：npm install -g 之后只有 --version 能用，khy gateway status 只回两行提示。
 // pip 侧靠 cli.py 设 KHYQUANT_INVOKED_AS 绕开了，npm 侧必须自己也说一声。
@@ -206,7 +206,7 @@ test('npm 启动壳把「用户敲的是哪个入口」如实传给 bundle', () 
   assert.match(
     src,
     /KHYQUANT_INVOKED_AS/,
-    'packaging/npm/bin/khy.js 没有传 KHYQUANT_INVOKED_AS：' +
+    'works/ship/npm/bin/khy.js 没有传 KHYQUANT_INVOKED_AS：' +
       'bundle 会把自己当成 khyquant，npm 渠道的系统子命令全部失效。'
   );
   assert.doesNotMatch(
@@ -229,7 +229,7 @@ test('npm 启动壳把「用户敲的是哪个入口」如实传给 bundle', () 
 // 断言它的三种情形，顺带保证 doctor 分流与启动分流用的是同一个判据。
 const { spawnSync } = require('node:child_process');
 const os = require('node:os');
-const { searchExecutable } = require('../../services/backend/src/tools/platformUtils');
+const { searchExecutable } = require('../../runtime/node/backend/src/tools/platformUtils');
 
 const PY_CANDIDATES = process.platform === 'win32'
   ? ['python', 'py', 'python3']

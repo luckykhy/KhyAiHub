@@ -118,7 +118,7 @@ function percentile(sortedAsc, p) {
 
 // ── 架构策略契约（khy-os 版 architecture-policy，对齐 ZCode 同名文件）──────────
 // 细粒度**模块边界**策略：check:layout 只管 L0–L6 粗粒度层向（DESIGN-LAY-005），
-// 本策略管 services/backend/src 内的模块级 file-size / 禁环 / 禁深引用。
+// 本策略管 runtime/node/backend/src 内的模块级 file-size / 禁环 / 禁深引用。
 // managedOnly 语义（同 ZCode）：策略只对 managed:true 模块生效；managed:false 是
 // 存量 legacy，豁免但单列展示，逐模块迁移时翻成 managed:true。
 const POLICY_REL = path.join('docs', '10_规范', 'registry', 'ARCHITECTURE-POLICY.json');
@@ -353,7 +353,7 @@ function measureDeepImports(ctx) {
 
 // ── M2 守护启动 shim fail-soft ─────────────────────────────────────────────
 function readDaemon(root) {
-  const abs = path.join(root, 'services', 'backend', 'scripts', 'ai-manage-daemon.js');
+  const abs = path.join(root, 'runtime', 'node', 'backend', 'scripts', 'ai-manage-daemon.js');
   if (!fs.existsSync(abs)) return null;
   return { abs, text: fs.readFileSync(abs, 'utf8'), lines: fs.readFileSync(abs, 'utf8').split(/\r?\n/) };
 }
@@ -415,7 +415,7 @@ function measureSuicideLoop(root) {
 
 // ── M4 日志编码 UTF-8 纯净度 ───────────────────────────────────────────────
 function measureLogEncoding(root) {
-  const logDir = process.env.KHY_ZCODE_LOG_DIR || path.join(root, '.khy', 'logs');
+  const logDir = process.env.KHY_ZCODE_LOG_DIR || path.join(root, 'works', 'data', 'khy', 'logs');
   let names = [];
   try {
     names = fs.readdirSync(logDir).filter((n) => n.endsWith('.log'));

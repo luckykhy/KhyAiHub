@@ -24,8 +24,8 @@ const cp = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const SCRIPT = path.join(ROOT, 'scripts', 'ci', 'check-weak-model-guard.js');
-const CARRIER_REL = 'services/backend/src/services/weakModelChangeGuard.js';
-const CALLER_REL = 'services/backend/src/services/toolLoop.js';
+const CARRIER_REL = 'runtime/node/backend/src/services/weakModelChangeGuard.js';
+const CALLER_REL = 'runtime/node/backend/src/services/toolLoop.js';
 const tempDirs = [];
 
 after(() => {
@@ -188,7 +188,7 @@ if (v && v.allow === false) { throw new Error('blocked'); }
   test('只在注释里提到护栏名字 ≠ 接线', () => {
     const root = makeFixture();
     fs.rmSync(path.join(root, CALLER_REL));
-    writeFile(root, 'services/backend/src/notes.js',
+    writeFile(root, 'runtime/node/backend/src/notes.js',
       '// weakModelChangeGuard: 我们以后再接\n');
     const { status, stdout } = runGuard(root);
     assert.equal(status, 1, stdout);

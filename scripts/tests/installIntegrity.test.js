@@ -68,7 +68,7 @@ test('多缺失：数量与 summary 计数一致', () => {
 
 test('确定性 + 幂等：同输入多次调用结果一致', () => {
   const probes = { ...ALL_PRESENT };
-  delete probes['kernel/Makefile'];
+  delete probes['runtime/boot/kernel/Makefile'];
   assert.deepStrictEqual(assessInstallIntegrity(probes), assessInstallIntegrity(probes));
 });
 
@@ -148,7 +148,7 @@ test('反漂移：每条 CRITICAL_BUNDLE_PATHS 都被 pip 或 npm 权威清单�
       inPip || inNpm,
       `漂移：CRITICAL_BUNDLE_PATHS 的 "${p}" 既不在 pip REQUIRED_WHEEL_PATHS ` +
         `（应含 "khy_platform/bundled/${p}"）也不在 npm REQUIRED_PATHS（应含 "package/bundled/${p}"）。` +
-        `先把它加进 scripts/release/pip_packaging_rules.py 或 packaging/npm/scripts/audit-purity.js 的权威清单。`
+        `先把它加进 scripts/release/pip_packaging_rules.py 或 works/ship/npm/scripts/audit-purity.js 的权威清单。`
     );
   }
 });

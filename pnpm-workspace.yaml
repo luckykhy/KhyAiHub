@@ -3,7 +3,7 @@ packages:
   - runtime/substrate/platform/packages/ui-shared
   - runtime/substrate/platform/packages/plugin-sdk
   - runtime/node/backend
-  - services/ai-backend
+  - runtime/node/ai-backend
   - delivery/web/ai-frontend
   - delivery/desktop/khyos-desktop
   - delivery/web/provider-hub

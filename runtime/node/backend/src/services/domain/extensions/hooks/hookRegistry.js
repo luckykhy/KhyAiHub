@@ -64,7 +64,7 @@ class HookRegistry {
       configs.push({ source: 'global', path: _globalHooksPath() });
     }
     if (projectDir) {
-      const projectHooks = path.join(projectDir, '.khy', 'hooks.json');
+      const projectHooks = path.join(projectDir, 'works', 'data', 'khy', 'hooks.json');
       if (fs.existsSync(projectHooks)) {
         configs.push({ source: 'project', path: projectHooks });
       }

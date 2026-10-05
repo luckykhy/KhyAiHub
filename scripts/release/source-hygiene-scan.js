@@ -33,7 +33,7 @@ const {
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const ALLOWLIST_REL = path.join('scripts', 'release', 'hygiene-allowlist.json');
 const LICENSE_PIN_REL = path.join('scripts', 'release', 'license-pin.json');
-const LEDGER_REL = path.join('.khy', 'ruleguard', 'release-hygiene.jsonl');
+const LEDGER_REL = path.join('works', 'data', 'khy', 'ruleguard', 'release-hygiene.jsonl');
 const TEXT_EXTENSIONS = new Set([
   '.js', '.cjs', '.mjs', '.ts', '.json', '.md', '.yml', '.yaml',
   '.sh', '.ps1', '.py', '.txt', '.toml', '.html', '.css', '.vue',

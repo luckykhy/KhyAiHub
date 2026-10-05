@@ -232,7 +232,7 @@ describe('check-tui-cadence — finding 方言被 ruleguard 解析', () => {
     assert.equal(parsed.length, 1, `ruleguard 解析数 ≠ 肉眼可见数\n${r.output}`);
     assert.equal(parsed[0].finding, 'fallback-drift');
     assert.equal(parsed[0].severity, 'warning');
-    assert.equal(parsed[0].file, 'services/backend/src/cli/tui/runtime/topicBar.js');
+    assert.equal(parsed[0].file, 'runtime/node/backend/src/cli/tui/runtime/topicBar.js');
     assert.equal(parsed[0].line, 62);
   });
 
@@ -325,7 +325,7 @@ describe('check-tui-cadence — --changed 语义', () => {
   });
 
   test('改动集触及节拍面 ⇒ 正常判定（不打印「未触及」）', () => {
-    const r = run(['--changed', '--files=services/backend/src/cli/tui/perfTunables.js']);
+    const r = run(['--changed', '--files=runtime/node/backend/src/cli/tui/perfTunables.js']);
     assert.equal(r.status, 0, r.output);
     assert.ok(!/未触及节拍面/.test(r.output), r.output);
   });

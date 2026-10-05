@@ -10,7 +10,7 @@
  *   khy md register          把 khyosMarkdown 注册进系统「打开方式」(.md 关联)
  *   khy md unregister        移除该关联
  *
- * 底层复用 khy-markdown 拓展（extensions/tools/khy-markdown/，[DESIGN-TOOL-002] 拓展契约）：
+ * 底层复用 khy-markdown 拓展（delivery/extension/tools/khy-markdown/，[DESIGN-TOOL-002] 拓展契约）：
  *   - khyos-md-bridge.js：127.0.0.1 同源桥接器（消 CORS + token 鉴权 + /vendor 静态服务）。
  *   - khyosMarkdown.html：门控加载同源本地 muya 引擎产物 vendor/，失败逐字节回退零依赖内联引擎。
  *   - register-linux.sh / register-windows.ps1：用户级关联（~/.local / HKCU，无 sudo/UAC）。
@@ -38,7 +38,7 @@ function flagOn(name) {
 /**
  * 定位 Markdown 工作台拓展目录。
  *
- * 实现已下沉到 services/extensions/markdownWorkbench —— 本 handler 不再自己知道
+ * 实现已下沉到 services/delivery/extension/markdownWorkbench —— 本 handler 不再自己知道
  * 「那个拓展叫什么、在磁盘的哪一层」，只知道它要一个 `markdown-workbench` 服务。
  * 此处保留同名导出，是因为它已是既有测试与 deps 注入的契约面（改名只会制造无谓的
  * 改动面），转发一层的代价换来四个调用点共用同一条解析路径。
@@ -100,7 +100,7 @@ async function openEditor(targetPath) {
   const { printInfo, printError, printWarn, printSuccess } = fmt();
   const toolsDir = resolveToolsDir();
   if (!toolsDir) {
-    printError('未找到 khy-markdown 拓展（extensions/tools/khy-markdown）。');
+    printError('未找到 khy-markdown 拓展（delivery/extension/tools/khy-markdown）。');
     printInfo('可设置 KHY_MD_TOOLS_DIR 指向该目录后重试。');
     return true;
   }
@@ -175,7 +175,7 @@ function runRegisterScript(action) {
   const { printInfo, printError, printWarn, printSuccess } = fmt();
   const toolsDir = resolveToolsDir();
   if (!toolsDir) {
-    printError('未找到 khy-markdown 拓展（extensions/tools/khy-markdown）。');
+    printError('未找到 khy-markdown 拓展（delivery/extension/tools/khy-markdown）。');
     printInfo('可设置 KHY_MD_TOOLS_DIR 指向该目录后重试。');
     return true;
   }

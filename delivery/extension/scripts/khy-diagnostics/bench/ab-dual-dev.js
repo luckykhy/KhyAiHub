@@ -60,7 +60,7 @@ async function main() {
   // Load claudeAdapter
   let adapter;
   try {
-    adapter = require('../../../../services/backend/src/services/gateway/adapters/claudeAdapter');
+    adapter = require('../../../../../runtime/node/backend/src/services/gateway/adapters/claudeAdapter');
   } catch (err) {
     console.error('Failed to load claudeAdapter:', err.message);
     process.exit(1);

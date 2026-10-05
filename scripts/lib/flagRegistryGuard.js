@@ -44,8 +44,8 @@ function isEnabled(env) {
 /** 惰性取注册表(可注入覆盖,测试用)。fail-soft:取不到 → 空表,该维度不误报。 */
 function _resolveRegistry(deps) {
   if (deps && deps.registry && typeof deps.registry === 'object') return deps.registry;
-  try { return require('../../services/backend/src/services/flagRegistry'); } catch { /* try next */ }
-  try { return require('../../services/backend/src/services/flagRegistry.js'); } catch { return null; }
+  try { return require('../../runtime/node/backend/src/services/flagRegistry'); } catch { /* try next */ }
+  try { return require('../../runtime/node/backend/src/services/flagRegistry.js'); } catch { return null; }
 }
 
 /**

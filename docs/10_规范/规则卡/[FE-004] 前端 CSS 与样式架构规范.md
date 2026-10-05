@@ -3,7 +3,7 @@ name: 前端 CSS 与样式架构规范
 id: FE-004
 domain: TOOLING
 nature: 约束
-scope: "apps/ai-frontend/src/**, delivery/channel/khyquant/frontend/src/**, runtime/substrate/platform/packages/ui-shared/**"
+scope: "delivery/web/ai-frontend/src/**, delivery/channel/khyquant/frontend/src/**, runtime/substrate/platform/packages/ui-shared/**"
 priority: P2
 trigger: "新增或修改样式文件、CSS 变量、组件样式时"
 constraint: "五原则：令牌优先（颜色/圆角/阴影全部走 var(--khy-*)，禁止硬编码值）、分层组织（Base → Tokens → Layout → Components → Utilities → Overrides）、就近原则（组件样式 scoped，全局样式仅放布局/令牌/动画）、无 !important（通过特异性顺序管理优先级）、移动优先（默认移动端样式，min-width 渐进增强）。令牌命名 --khy-{category}-{variant}，分类：--khy-bg-*、--khy-text-*、--khy-border-*、--khy-primary-*、--khy-{status}（success/warning/danger）、--khy-radius-*、--khy-shadow-*、--khy-font-*。双主题强制：任何颜色/阴影 token 必须同时定义浅色（:root）与深色（html.dark），仅定义浅色会在暗色下静默失效。BEM：.block__element--modifier，.is-state 状态类、.has-child 子元素指示。流式值优先 clamp() 而非媒体查询（padding: clamp(12px, 2vw, 32px)）。必须支持 prefers-reduced-motion: reduce 下关闭动画。硬编码 hex 收敛用 npm run frontend:fix-colors 扫描后替换为 var(--khy-*)。"

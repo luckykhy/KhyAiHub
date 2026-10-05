@@ -18,7 +18,7 @@
  *   "mcp": { "command": "node", "args": ["./mcp-server.js"] }
  * }
  *
- * Storage: <dataHome>/extensions/<name>/（统一解析器，默认 ~/.khy；2026-09-24 前的
+ * Storage: <dataHome>/delivery/extension/<name>/（统一解析器，默认 ~/.khy；2026-09-24 前的
  *          <appHome>/extensions 作为遗留根仍被发现，见 extensionRoots.listRoots）
  */
 const { execSync } = require('child_process');

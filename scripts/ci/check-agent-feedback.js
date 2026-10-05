@@ -229,7 +229,7 @@ function auditFiveQuestions(text) {
  * 这是本机制**最有价值**的一条（方案 §11 场景 5）：本仓有 230+ 设计文档，
  * 代码与文档的对应关系**没有机器可读的映射**，一个代码里看着是孤儿的模块，
  * 可能正是某份设计文档的实现载体。实测命中过
- * `services/backend/src/cli/tui/ThreeColumnLayout.js`——它在 App.js:26 是死导入，
+ * `runtime/node/backend/src/cli/tui/ThreeColumnLayout.js`——它在 App.js:26 是死导入，
  * 但被 docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-079] TUI界面设计规范.md 引用，属「有文档背书」→ 拒绝放行。
  *
  * 口径（沿用「零引用」清理纪律）：basename 去扩展后 **≥6 字符**才可靠，
@@ -350,37 +350,37 @@ function customerSpeech(det) {
 const SCENARIOS = {
   'fix-no-repro': {
     say: '登录后偶尔报错，帮我修一下',
-    files: ['M:services/backend/src/services/authService.js', 'M:services/backend/tests/authService.test.js'],
+    files: ['M:runtime/node/backend/src/services/authService.js', 'M:runtime/node/backend/tests/authService.test.js'],
   },
   'fix-with-repro': {
     say: '登录后偶尔报错，帮我修一下',
-    files: ['M:services/backend/src/services/authService.js'],
+    files: ['M:runtime/node/backend/src/services/authService.js'],
     evidence: { 'repro-before.txt': '$ khy login --probe\nERR token refresh raced: 2 writers' },
   },
   'build-no-questions': {
     say: '帮我加一个批量导出功能',
     files: [
-      'A:services/backend/src/services/exportService.js',
-      'A:services/backend/src/routes/export.js',
-      'A:services/backend/src/cli/handlers/export.js',
+      'A:runtime/node/backend/src/services/exportService.js',
+      'A:runtime/node/backend/src/routes/export.js',
+      'A:runtime/node/backend/src/cli/handlers/export.js',
     ],
   },
   'delete-mass': {
     say: '把不用的旧模块清理掉',
-    files: Array.from({ length: 12 }, (_, i) => `D:services/backend/src/services/legacy/mod${i}.js`),
+    files: Array.from({ length: 12 }, (_, i) => `D:runtime/node/backend/src/services/legacy/mod${i}.js`),
   },
   'delete-documented': {
     say: '删掉 intentArbiter，没人用',
-    files: ['D:services/backend/src/services/intentArbiter/index.js'],
+    files: ['D:runtime/node/backend/src/services/intentArbiter/index.js'],
   },
   mixed: {
     say: '修一下回显 bug，顺便把死代码删了',
-    files: ['M:services/backend/src/cli/tui/App.js', 'D:services/backend/src/cli/tui/ThreeColumnLayout.js'],
+    files: ['M:runtime/node/backend/src/cli/tui/App.js', 'D:runtime/node/backend/src/cli/tui/ThreeColumnLayout.js'],
   },
   // FIX 与 BUILD 近分（差 < 0.15）→ 混合带，必须显式声明主模态
   ambiguous: {
     say: '导出老是报错，帮忙看看怎么修',
-    files: ['M:services/backend/src/services/exportService.js', 'A:services/backend/src/utils/retry.js'],
+    files: ['M:runtime/node/backend/src/services/exportService.js', 'A:runtime/node/backend/src/utils/retry.js'],
   },
 };
 
@@ -453,7 +453,7 @@ function check() {
 
   const evidenceDir = path.resolve(
     REPO_ROOT,
-    argValue('--evidence', `.khy/feedback/${scenario || 'adhoc'}`)
+    argValue('--evidence', `works/data/khy/feedback/${scenario || 'adhoc'}`)
   );
 
   // 预置存证（仅 --scenario 演示用；真实运行绝不写盘）

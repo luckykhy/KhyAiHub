@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path.cwd()
-DEFAULT_TARGETS = ['platform/khy_platform', 'software/khyquant', 'services/backend', 'services/ai-backend', 'scripts']
+DEFAULT_TARGETS = ['runtime/substrate/platform/khy_platform', 'delivery/channel/khyquant', 'services/backend', 'services/ai-backend', 'scripts']
 IGNORE_DIRS = {
     '.git',
     'node_modules',

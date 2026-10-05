@@ -19,10 +19,10 @@
       "roots": [
         "kernel",
         "platform",
-        "services/backend/bin",
-        "services/backend/src/cli",
-        "services/backend/src/routes",
-        "services/backend/src/services"
+        "runtime/node/backend/bin",
+        "runtime/node/backend/src/cli",
+        "runtime/node/backend/src/routes",
+        "runtime/node/backend/src/services"
       ],
       "mayDependOn": [
         "D1",
@@ -31,7 +31,7 @@
       ],
       "overrides": [
         {
-          "prefix": "services/backend/src/services/domain",
+          "prefix": "runtime/node/backend/src/services/domain",
           "domain": "D2"
         }
       ]
@@ -41,7 +41,7 @@
       "lifecycle": "平台对外提供的业务能力，各自内聚一块业务（messaging / trajectory / project / network / security …）",
       "tier": "热/温",
       "roots": [
-        "services/backend/src/services/domain"
+        "runtime/node/backend/src/services/domain"
       ],
       "mayDependOn": [
         "D2",
@@ -54,8 +54,8 @@
       "tier": "温",
       "evidence": "fan-in>30 的 30 个枢纽（[RESEARCH-018] §1.4）绝大多数就落在这两个目录里，例如 utils/dataHome.js 入度 323、constants/serviceDefaults.js。缺的从来不是物理载体，而是显式命名与方向闸门。",
       "roots": [
-        "services/backend/src/utils",
-        "services/backend/src/constants"
+        "runtime/node/backend/src/utils",
+        "runtime/node/backend/src/constants"
       ],
       "mayDependOn": [
         "D3"

@@ -20,7 +20,7 @@
  *
  * 刻意**不**复用 `scripts/ci/run-python.js`：那是给命令行用的（`process.argv` +
  * `stdio: 'inherit'` + 字符串拼接），不是模块；也不 `require`
- * `services/backend/src/tools/platformUtils` —— 那是一条跨 workspace 的深层相对
+ * `runtime/node/backend/src/tools/platformUtils` —— 那是一条跨 workspace 的深层相对
  * require，会被 `check-repo-layout.js` 的 `cross-layer-require` 计入基线。
  */
 

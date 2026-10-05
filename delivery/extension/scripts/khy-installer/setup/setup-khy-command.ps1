@@ -5,9 +5,9 @@ Write-Host " Khy-OS 全局命令配置脚本" -ForegroundColor Cyan
 Write-Host "================================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Resolve repo root from this script's own location: <root>\extensions\scripts\khy-installer\setup\
-$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
-$khyEntry = Join-Path $repoRoot 'services\backend\bin\khy.js'
+# Resolve repo root from this script's own location: <root>\delivery\extension\scripts\khy-installer\setup\
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..\..')).Path
+$khyEntry = Join-Path $repoRoot 'runtime\node\backend\bin\khy.js'
 
 if (!(Test-Path -Path $khyEntry)) {
     Write-Host "✗ 未找到 CLI 入口: $khyEntry" -ForegroundColor Red

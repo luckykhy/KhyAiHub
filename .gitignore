@@ -125,7 +125,7 @@ coverage/
 
 # Large binary archives (encrypted snapshot & prebuild)
 # 注意：含 `/` 的模式锚定在仓库根，`_source/...` 只挡得住根级 _source/，
-# 挡不住 services/backend/_source/ —— 用 `**/` 前缀覆盖任意层级。
+# 挡不住 runtime/node/backend/_source/ —— 用 `**/` 前缀覆盖任意层级。
 **/_source/*.tar.gz.enc
 _bs3_prebuild.tar.gz
 
@@ -165,7 +165,7 @@ tmp_test.txt
 #   一跑就是 38 MB 的 Release 资产（加密源码快照 + muya 产物）。此前**未被忽略**，
 #   任何一次 `git add -A` 都会把它整包提交进来。
 #   钉住仓库根（前导 /）：裸模式会连任意层级的同名**源码**目录一起吞掉
-#   （曾误吞 services/backend/src/services/{publish,domain/deploy/publish}，见 buildRootGuard SOURCE_DIR_ALLOWLIST）。
+#   （曾误吞 runtime/node/backend/src/services/{publish,domain/deploy/publish}，见 buildRootGuard SOURCE_DIR_ALLOWLIST）。
 /publish/
 _dbg_*
 _repl_*
@@ -259,9 +259,9 @@ _tmp_dbg*
 # 实测 29 处）。此处按最窄目录粒度取回；其它同名目录（构建产物侧，如
 # apps/khyos-desktop/zcode-analysis/**）维持忽略。语义：gitignore 末段后写者优先。
 !apps/khy-os-client-app/android/app/src/**
-!services/backend/assets/
-!software/khyquant/frontend/public/assets/
-!software/khyquant/frontend/src/assets/
+!runtime/node/backend/assets/
+!delivery/channel/khyquant/frontend/public/assets/
+!delivery/channel/khyquant/frontend/src/assets/
 !scripts/release/publish/
 
 # 三方发布件（Shizuku release apk）体积大且可官方下载，不入库；构建前手工放入或脚本下载。
@@ -284,3 +284,17 @@ apps/khy-os-client-app/android/app/src/main/assets/shizuku/*.apk
 
 # --- 2026-10-02 W9′ 数据家迁入 works/data/（B档 §22 R1；本机态，gitignore 派生自 DATA-LOCATIONS roots.rel）---
 works/data/
+
+# --- 2026-10-05 未跟踪项收口 ---
+#   runtime/substrate/platform/khy_platform/bundled/ —— esbuild 产物拷贝（内容 logs/ + runtime/）。
+#   根级 platform/khy_platform/bundled/ 已被上方规则忽略，但该模式含 / 锚定仓库根，
+#   罩不住 substrate 下的这份组装拷贝，故按最窄目录补一条。
+runtime/substrate/platform/khy_platform/bundled/
+#   runtime/works/ —— 运行时数据目录（内容 data/），同 works/data/ 本机态语义。
+runtime/works/
+#   electron.vite.config.<时间戳>.mjs —— vite 启动时生成的临时配置，可再生。
+apps/khyos-desktop/electron.vite.config.*.mjs
+#   .ai/ —— 智能体探测残留（__scope_probe/probe.json），自愈型本机态（同 .workbuddy/ 先例）。
+/.ai/
+#   .codeartsdoer/ —— CodeArts Doer 工具本机状态（skills/agents/mcp/temp 等）。
+/.codeartsdoer/

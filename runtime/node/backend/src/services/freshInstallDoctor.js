@@ -92,7 +92,7 @@ function _detectChannel(root) {
  * Standalone-bundle channel — "is this process the single-file esbuild bundle?"
  *
  * Mirrors the pip launcher's SSOT `_is_standalone_bundle_install()`
- * (platform/khy_platform/cli.py:448), whose docstring names this exact obligation:
+ * (runtime/substrate/platform/khy_platform/cli.py:448), whose docstring names this exact obligation:
  * in bundle mode the runtime "carries its own dependencies and writes its own .env",
  * so the launcher itself skips `npm install` / `.env` writing / port rewriting.
  *
@@ -115,7 +115,7 @@ function _detectChannel(root) {
  * "probe the root for runtime/khy/bundle.mjs" predicate therefore read false in the
  * exact environment it had to fire in. The file next to the running module needs no
  * such assumption, and it is the artifact both launch paths exec — cli.py:2609 for
- * pip, packaging/npm/bin/khy.js:7 for npm.
+ * pip, works/ship/npm/bin/khy.js:7 for npm.
  *
  * The entry script must BE that file, so a stray `bundle.mjs` beside a source module
  * cannot flip a dev tree into bundle semantics ([RUNTIME-001] no hardcoded paths:
@@ -181,7 +181,7 @@ function assessFreshInstall(facts) {
 
     // 1. Launch entry — the script the pip/npm shell exec's on every `khy`.
     // Source: bin/khy.js. Bundle: runtime/khy/bundle.mjs (what both launch paths
-    // exec — cli.py:2609 for pip, packaging/npm/bin/khy.js:7 for npm).
+    // exec — cli.py:2609 for pip, works/ship/npm/bin/khy.js:7 for npm).
     const reinstallFix = 'pip install --force-reinstall khy-os  （npm：重装 @khy-os/khy-os）';
     checks.push(
       br
@@ -447,7 +447,7 @@ function gatherFreshInstallFacts(deps) {
   const nmDir = bundleRoot ? path.join(bundleRoot, 'node_modules') : '';
   const nodeModulesPresent = !!nmDir && safeExists(nmDir);
   // Hydration sentinel — MUST agree with the pip launcher's own SSOT definition
-  // of "hydrated" (platform/khy_platform/cli.py:1820): `node_modules exists AND is
+  // of "hydrated" (runtime/substrate/platform/khy_platform/cli.py:1820): `node_modules exists AND is
   // non-empty`. That check is content-AGNOSTIC. An earlier name-allowlist
   // (express/.package-lock.json/.bin) disagreed with it: on a hoisted/workspace
   // layout the real deps live at the repo-root node_modules, so a perfectly
@@ -677,7 +677,7 @@ function gatherPortableFacts(deps) {
   }
   // Forest-layout fact: the two geometry checks below (junction / 数据指针) only mean
   // something where a directory FOREST exists — a portable copy or a source export,
-  // which is where `services/backend` and `platform/packages/shared` live side by
+  // which is where `services/backend` and `runtime/substrate/platform/packages/shared` live side by
   // side. The off-machine payloads (pip wheel / npm tarball) ship a single esbuild
   // file and no forest, so `_portableRootOf()` lands next to site-packages and both
   // checks hard-failed on paths that cannot exist there — while recommending
@@ -753,7 +753,7 @@ function assessPortable(facts) {
         : _check(
             'junction/symlink 链接',
             true,
-            'bundled 渠道：单文件运行时无目录森林（无 services/backend、无 platform/packages/shared），本项不适用',
+            'bundled 渠道：单文件运行时无目录森林（无 services/backend、无 runtime/substrate/platform/packages/shared），本项不适用',
             'info',
             { summary: 'bundled 渠道无目录森林，本项不适用' }
           )
@@ -897,7 +897,7 @@ function fixPortableIssues(deps) {
             continue;
           }
           if (key === 'projectDataHome') {
-            const fallback = path.join(root, '.khy');
+            const fallback = path.join(root, 'works', 'data', 'khy');
             fsMod.mkdirSync(fallback, { recursive: true });
             dh._writePointer({
               projectDataHome: fallback,

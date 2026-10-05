@@ -4,7 +4,7 @@
 /**
  * codemod-f2e-bridge-mobile.js — PR: f2e-spec-beautify
  *
- * One-shot codemod for services/backend/src/bridge/mobilePage.js:
+ * One-shot codemod for runtime/node/backend/src/bridge/mobilePage.js:
  *   - Reads the file
  *   - Locates the inline <script>...</script> block (currently lines 461-1420)
  *   - Replaces var declarations and function declarations inside the
@@ -22,7 +22,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const TARGET = path.resolve(__dirname, '../../services/backend/src/bridge/mobilePage.js');
+const TARGET = path.resolve(__dirname, '../../runtime/node/backend/src/bridge/mobilePage.js');
 const src = fs.readFileSync(TARGET, 'utf8');
 
 // Find the inline <script>...</script> block. mobilePage.js has exactly one.

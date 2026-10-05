@@ -144,7 +144,7 @@ test('合并步的级别取最严（掺一个 blocker → 整步 blocker）', ()
 
 test('integrity.missing[] → bundle-source 步、判 HUMAN、标题含路径', () => {
   const p = buildRestorePlan({
-    integrity: integrity([{ path: 'services/backend/bin/khy.js', reason: '缺失', fix: '重装官方包' }]),
+    integrity: integrity([{ path: 'runtime/node/backend/bin/khy.js', reason: '缺失', fix: '重装官方包' }]),
   });
   const s = p.steps.find((x) => x.concern === 'bundle-source');
   assert.ok(s);

@@ -7,8 +7,8 @@
  * 的判定层（纯叶子：零 IO、确定性、绝不抛、可单测）。
  *
  * ── 为什么这条线值得有一道门 ────────────────────────────────────────────────
- * 发布产物是**一个 esbuild bundle**，不是一棵 node_modules。`packaging/npm/package.json`
- * 声明零依赖，真正决定「装什么」的是 `packaging/build/esbuild-modules.js`：除了 Node
+ * 发布产物是**一个 esbuild bundle**，不是一棵 node_modules。`works/ship/npm/package.json`
+ * 声明零依赖，真正决定「装什么」的是 `works/ship/build/esbuild-modules.js`：除了 Node
  * 内置和三个原生可选模块，其余全部内联进 bundle。
  *
  * 这带来一个很难自己冒出来的失败模式：一个包**没被任何 manifest 声明**，却因为

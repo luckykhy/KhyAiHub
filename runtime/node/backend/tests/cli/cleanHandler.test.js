@@ -223,7 +223,7 @@ describe('可逆性与账目', () => {
   });
 
   test('markdown 工作台的产物按服务名解析，拓展改名不需要改核代码', () => {
-    // 解析结果必须落在 extensions/ 下且带 vendor/ 产物项；解析不到时返回空清单，
+    // 解析结果必须落在 delivery/extension/ 下且带 vendor/ 产物项；解析不到时返回空清单，
     // 而不是退回一个写死的路径 —— 写死的那条才是这条守卫要防的东西。
     const targets = clean._extensionBuildTargets(REPO_ROOT);
     expect(targets).toHaveLength(1);

@@ -22,7 +22,7 @@
 ## 三端速查
 
 - **ai-frontend** (`apps/ai-frontend/`)：主 UI。全局样式 `src/styles/newapi-theme.css`，暗色 `src/composables/useTheme.js`。
-- **khyquant** (`software/khyquant/frontend/`)：交易终端。EP 全量引入，数据密集（行情/回测）。
+- **khyquant** (`delivery/channel/khyquant/frontend/`)：交易终端。EP 全量引入，数据密集（行情/回测）。
 - **khy-mobile** (`apps/khy-mobile/`)：Capacitor 移动端。自有暗色 token（`#0b1118` 底 + `#68d5c0` 强调），触控 ≥44px。
 
 ## 完工要求

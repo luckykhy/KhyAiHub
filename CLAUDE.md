@@ -88,7 +88,7 @@
 > **机制现状（2026-09-18 实测）**：`contextCompressor.js` 已有 **任务锚点保护**
 > （`:745`，首条 user 消息以 `<original_task>` 原文注入，上限 1500 字符）
 > 与 **`PreCompact` hook 通路**（`:624`，支持 `additionalContext` 注入）。
-> 故本清单**不只是文档约定**——可由 `.khy/hooks.json` 的 `PreCompact` 钩子
+> 故本清单**不只是文档约定**——可由 `works/data/khy/hooks.json` 的 `PreCompact` 钩子
 > 把清单注入压缩提示，见 `[DESIGN-PROCESS-002]` S1→S3 落地阶梯。
 
 ### B6 软件著作权就绪（指针）
@@ -264,16 +264,16 @@ B5 实测已具备机制通路（`contextCompressor.js:745` 任务锚点 + `:624
 更正为 `domain/project/`）*
 
 <!-- khy-metadata:pointer START — managed by `khy metadata link`; edits inside this block are overwritten -->
-## Maintainability metadata — read `.ai/` first
+## Maintainability metadata — read `works/record/ai/` first
 
-Before changing this project, read the machine-generated seed docs in `.ai/`
+Before changing this project, read the machine-generated seed docs in `works/record/ai/`
 (this repo is designed to stay maintainable even without AI):
 
-1. **`.ai/MAP.md`** — skeleton & navigation: tech stack, entry points, build/run/test commands, directory tree, key symbols.
-2. **`.ai/CONTEXT.yaml`** — machine-readable contracts: stack, entry_points, build, deps, per-file symbols.
-3. **`.ai/GUARDS.md`** — red lines & how to maintain this project *without* AI.
+1. **`works/record/ai/MAP.md`** — skeleton & navigation: tech stack, entry points, build/run/test commands, directory tree, key symbols.
+2. **`works/record/ai/CONTEXT.yaml`** — machine-readable contracts: stack, entry_points, build, deps, per-file symbols.
+3. **`works/record/ai/GUARDS.md`** — red lines & how to maintain this project *without* AI.
 
-If `.ai/SKELETON.auto.md` is present, the three files above are human-authored and
+If `works/record/ai/SKELETON.auto.md` is present, the three files above are human-authored and
 authoritative; `SKELETON.auto.md` is the machine-derived structural layer. All are kept
 current deterministically by `khy metadata refresh` plus a git pre-commit hook.
 <!-- khy-metadata:pointer END -->

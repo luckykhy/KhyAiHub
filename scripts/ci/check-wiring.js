@@ -107,11 +107,25 @@ function checkAliases() {
 
   for (const [name, value] of Object.entries(scripts)) {
     if (!ALIAS_PATTERN.test(name) || typeof value !== 'string') continue;
-    const match = value.match(/(?:node\s+|python\s+\S+\s+)?((?:scripts|services)\/[\w./-]+(?:\.(?:js|mjs|cjs|py)))/);
+    // 匹配「脚本路径」，不限定顶层目录。
+    //
+    // ★ 2026-10-04：此前白名单写死 `(?:scripts|services)`。方案P 迁移后
+    // 后端脚本搬到 `runtime/node/backend/scripts/…`，正则会退化成在串里
+    // **匹配子串** `scripts/archDebtScan.js`，再按仓根查 → 不存在 →
+    // 把三条本来完好的别名误报成「指向不存在的脚本」。
+    // 教训与 archDebtScan 的 `const prefix = 'services/backend/'` 同族：
+    // **任何把「旧顶层目录名」写死的解析器，都会在迁移后静默失准。**
+    const match = value.match(/(?:^|[\s"'])((?:[\w@.-]+\/)*[\w@.-]+\.(?:js|mjs|cjs|py))(?=[\s"']|$)/);
     if (!match) continue;
     const target = match[1];
-    if (!fs.existsSync(path.join(REPO_ROOT, target))) {
-      add('error', 'package.json', `别名 ${name} 指向不存在的脚本：${target}`);
+    // `--workspace <dir>` / `--prefix <dir>` 下，脚本路径是**相对该目录**的
+    // （如 `npm exec --workspace runtime/node/backend -- jest tests/x.test.js`）。
+    // 不还原这个基准就会把工作区内的测试文件误判为不存在。
+    const ws = value.match(/--(?:workspace|prefix)[= ]+([^\s"']+)/);
+    const base = ws ? path.join(REPO_ROOT, ws[1]) : REPO_ROOT;
+    if (!fs.existsSync(path.join(base, target))) {
+      const shown = ws ? `${ws[1]}/${target}` : target;
+      add('error', 'package.json', `别名 ${name} 指向不存在的脚本：${shown}`);
     }
   }
 }

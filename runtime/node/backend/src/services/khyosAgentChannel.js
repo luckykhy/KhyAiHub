@@ -6,10 +6,10 @@
  * 内核侧:agentbus_task() 在 COM2 上服务三个面(控制面 agentctl / 决策面 agentask /
  * 事件面 agentevent)。shell 的 `ai <自然语言>` 与 `agentask <问题>` 走**决策面**:
  * 内核把问题编成 DECISION_REQ 发出并阻塞调用者,宿主必须在期限内回 DECISION_RESP,
- * 否则内核按超时**诚实上报**(kernel/src/agentask.h,默认 AGENTASK_DEFAULT_TIMEOUT_MS=3s),
+ * 否则内核按超时**诚实上报**(runtime/boot/kernel/src/agentask.h,默认 AGENTASK_DEFAULT_TIMEOUT_MS=3s),
  * 绝不挂死。
  *
- * 宿主侧:本模块把 KhyOsRunner 暴露的 COM2 环回口接上 `kernel/bridge` 的 KhyBridge,
+ * 宿主侧:本模块把 KhyOsRunner 暴露的 COM2 环回口接上 `runtime/boot/kernel/bridge` 的 KhyBridge,
  * 并挂一个 brain(大脑):
  *   - 项目网关在监听 → makeGatewayBrain() 走它自己的 OpenAI 兼容端点,真模型决策;
  *   - 网关没起/超时   → 桥自带的规则脑兜底(SET/GET/SAY + ALLOW/DENY 仍成立),
@@ -56,8 +56,8 @@ function _khyosAgentChannelEnabled(env) {
 }
 
 /**
- * 定位内核树里的宿主桥(kernel/bridge)。候选顺序与 `khy os build` / isoProvisioner
- * 同一套覆盖:KHY_KERNEL_SRC_DIR → 仓库根 kernel/ → pip wheel 的 bundled 布局。
+ * 定位内核树里的宿主桥(runtime/boot/kernel/bridge)。候选顺序与 `khy os build` / isoProvisioner
+ * 同一套覆盖:KHY_KERNEL_SRC_DIR → 仓库根 runtime/boot/kernel/ → pip wheel 的 bundled 布局。
  * 找不到返回 null(调用方 fail-soft),绝不抛。
  */
 function resolveKernelBridge() {
@@ -103,7 +103,7 @@ function isPidAlive(pid) {
   }
 }
 
-/* 与 kernel/bridge/khy-brain-gateway.js 的 dataHomeCandidates() 同一批数据家:
+/* 与 runtime/boot/kernel/bridge/khy-brain-gateway.js 的 dataHomeCandidates() 同一批数据家:
  * 两套发现必须看向同一批 runtime 文件,否则一边说网关活着、一边找不到它的端口。 */
 function proxyRuntimeCandidates() {
   const dirs = [];
@@ -114,7 +114,7 @@ function proxyRuntimeCandidates() {
   push(process.env.KHY_DATA_HOME);
   push(process.env.KHY_PROJECT_DATA_HOME);
   push(path.join(require('os').homedir(), '.khy'));
-  push(path.resolve(__dirname, '..', '..', '..', '..', '.khy'));
+  push(path.resolve(__dirname, '..', '..', '..', '..', 'works', 'data', 'khy'));
   push(path.join(require('os').homedir(), '.khyquant'));
   return dirs;
 }
@@ -234,7 +234,7 @@ function createKhyosAgentChannel({ runner, log } = {}) {
       }
       const mod = resolveKernelBridge();
       if (!mod) {
-        note('内核 agent 通道:未找到 kernel/bridge(KHY_KERNEL_SRC_DIR 可覆盖),跳过挂载');
+        note('内核 agent 通道:未找到 runtime/boot/kernel/bridge(KHY_KERNEL_SRC_DIR 可覆盖),跳过挂载');
         return false;
       }
 

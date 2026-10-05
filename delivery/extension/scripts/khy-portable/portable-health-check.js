@@ -24,9 +24,9 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 const { verifyArtifactManifest } = require('./artifact-manifest');
 
-const ROOT = path.resolve(__dirname, '..', '..', '..');
+const ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const ADAPTER_PATH = path.join(
-  ROOT, 'platform', 'packages', 'shared', 'src', 'config', 'sqlite-adapter.js'
+  ROOT, 'runtime', 'substrate', 'platform', 'packages', 'shared', 'src', 'config', 'sqlite-adapter.js'
 );
 
 const SQLITE_FIXES = [
@@ -45,7 +45,7 @@ function probeSqliteDriver(options = {}) {
   };
   if (!fs.existsSync(adapterPath)) {
     result.detail = `适配器文件缺失: ${adapterPath}`;
-    result.fix = '重新同步 platform/packages/shared（安装包可能不完整）';
+    result.fix = '重新同步 runtime/substrate/platform/packages/shared（安装包可能不完整）';
     return result;
   }
   const script = [
@@ -93,7 +93,7 @@ function probeSqliteDriver(options = {}) {
 
 function _loadDataHomeModule() {
   try {
-    return require(path.join(ROOT, 'services', 'backend', 'src', 'utils', 'dataHome.js'));
+    return require(path.join(ROOT, 'runtime', 'node', 'backend', 'src', 'utils', 'dataHome.js'));
   } catch { return null; }
 }
 
@@ -151,21 +151,21 @@ function probeDataPointer() {
 function getKnownLinks() {
   const links = [
     {
-      label: 'services/backend/vendor/shared',
-      linkPath: path.join(ROOT, 'services', 'backend', 'vendor', 'shared'),
-      target: path.join(ROOT, 'platform', 'packages', 'shared'),
+      label: 'runtime/node/backend/vendor/shared',
+      linkPath: path.join(ROOT, 'runtime', 'node', 'backend', 'vendor', 'shared'),
+      target: path.join(ROOT, 'runtime', 'substrate', 'platform', 'packages', 'shared'),
       optional: false,
     },
     {
-      label: 'services/backend/node_modules/@khy/shared',
-      linkPath: path.join(ROOT, 'services', 'backend', 'node_modules', '@khy', 'shared'),
-      target: path.join(ROOT, 'services', 'backend', 'vendor', 'shared'),
+      label: 'runtime/node/backend/node_modules/@khy/shared',
+      linkPath: path.join(ROOT, 'runtime', 'node', 'backend', 'node_modules', '@khy', 'shared'),
+      target: path.join(ROOT, 'runtime', 'node', 'backend', 'vendor', 'shared'),
       optional: true, // npm 布局差异下可能不存在
     },
     {
       label: 'node_modules/@khy/shared',
       linkPath: path.join(ROOT, 'node_modules', '@khy', 'shared'),
-      target: path.join(ROOT, 'platform', 'packages', 'shared'),
+      target: path.join(ROOT, 'runtime', 'substrate', 'platform', 'packages', 'shared'),
       optional: true, // hoisted 布局才有
     },
   ];

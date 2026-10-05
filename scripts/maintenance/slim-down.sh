@@ -45,11 +45,11 @@ count_size() { # count_size <path> -> adds size to FREED_MB
 }
 
 # --- 1. Application logs (regenerated at runtime) ---
-if [[ -d "$PROJECT_ROOT/platform/packages/shared/logs" ]]; then
+if [[ -d "$PROJECT_ROOT/runtime/substrate/platform/packages/shared/logs" ]]; then
     info "[1/5] Cleaning application logs..."
-    count_size "$PROJECT_ROOT/platform/packages/shared/logs"
-    rm -rf "$PROJECT_ROOT/platform/packages/shared/logs"
-    mkdir -p "$PROJECT_ROOT/platform/packages/shared/logs"
+    count_size "$PROJECT_ROOT/runtime/substrate/platform/packages/shared/logs"
+    rm -rf "$PROJECT_ROOT/runtime/substrate/platform/packages/shared/logs"
+    mkdir -p "$PROJECT_ROOT/runtime/substrate/platform/packages/shared/logs"
     ok "       Done."
 fi
 
@@ -104,7 +104,7 @@ fi
 #     Two install layouts: root hoisted (workspaces) and legacy backend-local.
 for llama in \
     "$PROJECT_ROOT/node_modules/@node-llama-cpp" \
-    "$PROJECT_ROOT/services/backend/node_modules/@node-llama-cpp"; do
+    "$PROJECT_ROOT/runtime/node/backend/node_modules/@node-llama-cpp"; do
     if [[ -d "$llama" ]]; then
         info "[5/5] Pruning unused llama platform binaries in $(basename "$(dirname "$llama")")/$(basename "$llama") ..."
         for d in win-arm64 win-x64-cuda win-x64-cuda-ext win-x64-vulkan; do

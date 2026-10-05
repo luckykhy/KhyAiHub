@@ -22,7 +22,7 @@
 | 通道选择判定 | 指针 | 真源 `[DESIGN-ARCH-071]` |
 | 产物落盘与仓库整理 | 指针+速查 | 真源 `[DESIGN-LAY-004]`（`LAYOUT-005`）与 `[DESIGN-LAY-003]`（`LAYOUT-004`）；守卫 `check:build-root` / `organize.py` |
 | 如何新增 CLI 命令 / AI 适配器 | 指针+HOW-TO | 模式说明，非强制规则 |
-| 数据存储位置 | 真源（事实） | `.khy/` 与 `~/.khyquant/` 的目录语义 |
+| 数据存储位置 | 真源（事实） | `works/data/khy/` 与 `~/.khyquant/` 的目录语义 |
 | 版本同步 | 真源 | = 红线 R3 / `PROCESS-002`，与 `CLAUDE.md` §一 同义，守卫为 `check-version-sync.js` |
 | 版本触发（bump / 推送 / 自动触发） | 指针 | 真源 `[DESIGN-SEMVER-002]`，规则 `PROCESS-005` |
 | 代码风格 / 安全须知 | 指针 | 与 `CLAUDE.md` §五 同义摘要 |
@@ -143,7 +143,7 @@ AI 生成的代码最容易露馅的不是语法，而是**过度工整**：每�
 > 任何同步脚本或文档都应用 `git rev-parse --abbrev-ref @{upstream}` **动态取上游**，
 > 不要硬编码远端名。详见 `[DESIGN-ARCH-118]` §3.6 与 `[DESIGN-SEMVER-002]`。
 >
-> ⚠ **`works/record/ai/hq/` 必须入仓**（原 `<root>/.ai/hq/`，B档 W9′ 迁入）：`.khy/` / `.khyos/` / `.khyquant/` 都被 gitignore（本机态），
+> ⚠ **`works/record/ai/hq/` 必须入仓**（原 `<root>/.ai/hq/`，B档 W9′ 迁入）：`works/data/khy/` / `works/data/khyos/` / `.khyquant/` 都被 gitignore（本机态），
 > 所以任务/Bug 状态**只能**放 `.ai/`，放别处会导致多机不同步。
 > 该目录受规则 `MEMORY-003` 管辖，守卫 `scripts/ci/check-memory-schema.js`。
 
@@ -204,7 +204,7 @@ User → khy command → Python cli.py → Node.js services/backend/bin/khy.js
 
 违规抑制用 `// khy-allow-<规则ID>: <理由>`，**理由必填**；空理由不生效且会被报出。
 P2 规则走基线棘轮（`scripts/ci/ruleguard-baseline.json`，只降不升）。台账在
-`.khy/ruleguard/violations.jsonl`。
+`works/data/khy/ruleguard/violations.jsonl`。
 完整设计（归类枚举、门档强度映射、两种 finding 方言、抑制与台账语义、验证手段）见
 [`[DESIGN-ARCH-111] 规则遵守保障机制`](docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-111]%20规则遵守保障机制.md)。
 
@@ -259,14 +259,14 @@ P2 规则走基线棘轮（`scripts/ci/ruleguard-baseline.json`，只降不升�
 
 ## 数据存储位置
 
-> **指针**：`.khy/` 与 `.khyos/` 的**落点真源**是 `docs/10_规范/registry/DATA-LOCATIONS.json`
+> **指针**：`works/data/khy/` 与 `works/data/khyos/` 的**落点真源**是 `docs/10_规范/registry/DATA-LOCATIONS.json`
 > （T0–T4 五档 × 八领域寻址，规则 `LAYOUT-007`，守卫 `npm run check:data-layout`，S1 观察者档），
 > 设计见 `[DESIGN-LAY-007] 三态目录立体分层方案`。本节下面两张表是**速查**，不是寻址真源，
 > 亦不描述层级深度。新增数据落点前先查登记表，别在根上继续平铺（现状 211 项即为反例）。
 
-### 运行时数据目录（`.khy/`）
+### 运行时数据目录（`works/data/khy/`）
 
-项目级数据存储在 `.khy/` 目录，包含：
+项目级数据存储在 `works/data/khy/` 目录，包含：
 
 | 目录/文件 | 用途 | 说明 |
 |-----------|------|------|
@@ -474,7 +474,7 @@ G3 全 3 源的组内一致性。CI 门在发布之外强制同一不变式。
 **服务发现**：适用范围涵盖 HTTP、WebSocket、SSE 与 IPC 等一切前端 ↔ 后端
 连接通道。端点必须通过以下三种合法来源之一建立，绝不能是写死的字面量：
 - 环境变量注入（例如 `VITE_BACKEND_HOST` / `VITE_BACKEND_PORT`）；
-- 共享运行时配置文件（例如 `.khy/` 目录下的运行时 JSON）；
+- 共享运行时配置文件（例如 `works/data/khy/` 目录下的运行时 JSON）；
 - 服务注册表。
 
 同一模块若需要多个端点，则**全部**端点都必须来自上述来源之一——
@@ -803,7 +803,7 @@ process.stdout.write(`\x1B[1;${rows - 1}r`);
 `fix-blast-radius`（warning）——顺手重构 = 客户要重新做一遍全套检查。
 
 **授予的权力**：无法复现时**授权拒绝修改**并如实回报。
-不修不是失败，谎报已复现才是。存证落在 `.khy/feedback/<task-id>/`。
+不修不是失败，谎报已复现才是。存证落在 `works/data/khy/feedback/<task-id>/`。
 
 ### 规则 6：新增先提问 —— 求学（`RUNTIME-008`）
 
@@ -1109,16 +1109,16 @@ ANSI 滚动区转义（DECSTBM），以及**无退出路径的明显死循环**
 - [ ] **可交付性基线（`PROCESS-014`）**：跑 `npm run check:delivery` —— 新增 CLI 命令 / 别名 / 规则前先看棘轮（只降不升）；改了发布链 / 构建脚本 / 边界文档时看 D2–D10 是否退化
 
 <!-- khy-metadata:pointer START — managed by `khy metadata link`; edits inside this block are overwritten -->
-## Maintainability metadata — read `.ai/` first
+## Maintainability metadata — read `works/record/ai/` first
 
-Before changing this project, read the machine-generated seed docs in `.ai/`
+Before changing this project, read the machine-generated seed docs in `works/record/ai/`
 (this repo is designed to stay maintainable even without AI):
 
 1. **`works/record/ai/MAP.md`** — skeleton & navigation: tech stack, entry points, build/run/test commands, directory tree, key symbols.
-2. **`.ai/CONTEXT.yaml`** — machine-readable contracts: stack, entry_points, build, deps, per-file symbols.
-3. **`.ai/GUARDS.md`** — red lines & how to maintain this project *without* AI.
+2. **`works/record/ai/CONTEXT.yaml`** — machine-readable contracts: stack, entry_points, build, deps, per-file symbols.
+3. **`works/record/ai/GUARDS.md`** — red lines & how to maintain this project *without* AI.
 
-If `.ai/SKELETON.auto.md` is present, the three files above are human-authored and
+If `works/record/ai/SKELETON.auto.md` is present, the three files above are human-authored and
 authoritative; `SKELETON.auto.md` is the machine-derived structural layer. All are kept
 current deterministically by `khy metadata refresh` plus a git pre-commit hook.
 <!-- khy-metadata:pointer END -->

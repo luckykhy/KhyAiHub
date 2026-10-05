@@ -37,10 +37,10 @@ function Copy-DirectoryContent([string]$Source, [string]$Destination) {
 
 function Ensure-RequiredDirs([string]$RepoDir) {
   $required = @(
-    'services/backend/models',
-    'services/backend/ml/models',
-    'apps/ai-frontend/node_modules',
-    'platform/packages/shared/logs'
+    'runtime/node/backend/models',
+    'runtime/node/backend/ml/models',
+    'delivery/web/ai-frontend/node_modules',
+    'runtime/substrate/platform/packages/shared/logs'
   )
 
   foreach ($rel in $required) {

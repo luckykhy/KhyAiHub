@@ -5,7 +5,7 @@
  *
  * 三道防线：
  *   1. 更新策略（planOfficialUpdate）：官方更新包的每个目标文件**必须**解析落在官方核心轨
- *      （coreRoot）内，且**绝不**落在任何受保护用户轨（user_patch/ · extensions/）内或核心轨外。
+ *      （coreRoot）内，且**绝不**落在任何受保护用户轨（user_patch/ · delivery/extension/）内或核心轨外。
  *      任一越界 → 整包判定不安全（fail-closed），**绝不**覆盖 / 删除用户扩展轨（红线4）。
  *   2. 兼容性契约（detectBreakingChange）：若新核心移除了用户轨依赖的接入点（Hook/Slot/Override）
  *      或破坏了向后兼容的核心数据结构，**必须**在启动期检出并产出手动迁移提示，**绝不**静默作废。
@@ -62,7 +62,7 @@ function planOfficialUpdate(opts = {}) {
         hitsProtected = true;
         break;
       }
-      // 受保护名兜底：路径段含 user_patch/ extensions/ 也拦。
+      // 受保护名兜底：路径段含 user_patch/ delivery/extension/ 也拦。
     }
     const segHit = inCore.abs
       .split(pathImpl.sep)

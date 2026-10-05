@@ -261,7 +261,7 @@ function _updateVersions(projectRoot, nextVersion) {
     PYPROJECT_PATH
   );
 
-  // platform/khy_platform/__init__.py resolves __version__ dynamically from
+  // runtime/substrate/platform/khy_platform/__init__.py resolves __version__ dynamically from
   // pyproject.toml / installed metadata (enforced by check-version-sync.js as
   // the single source of truth). Only rewrite when a literal
   // `__version__ = "x.y.z"` is actually present (legacy layout); never throw
@@ -282,7 +282,7 @@ function _updateVersions(projectRoot, nextVersion) {
   backendPkg.version = version;
   const updatedBackendPkg = `${JSON.stringify(backendPkg, null, 2)}\n`;
 
-  // npm channel manifest (packaging/npm/package.json) — the THIRD version-sync
+  // npm channel manifest (works/ship/npm/package.json) — the THIRD version-sync
   // red-line source (check-version-sync.js). Historically this bump lived only
   // in publish-dual.sh, so `khy publish --version` left the npm channel behind
   // and check:version-sync would fail. Mirror the backend bump exactly. When the
@@ -302,7 +302,7 @@ function _updateVersions(projectRoot, nextVersion) {
     updatedNpmPkg = `${JSON.stringify(npmPkg, null, 2)}\n`;
   }
 
-  // Modular-packaging manifest (packaging/modules/modules.json) — the FOURTH
+  // Modular-packaging manifest (works/ship/modules/modules.json) — the FOURTH
   // G1 source the version-sync gate compares, and now part of the alignment
   // set the guard reads. Without this write the single-knob remedy
   // `--version <x.y.z>` would leave modules.json behind and the revived guard
@@ -741,7 +741,7 @@ Restore a source-like project tree from installed payload.
 - \`frontend/\`
 - \`docs/\`
 - \`alpine/\`
-- \`extensions/scripts/khy-alpine-iso/\`
+- \`delivery/extension/scripts/khy-alpine-iso/\`
 - \`packages/shared/\`
 
 ## Notes
@@ -886,7 +886,7 @@ function _buildOriginCodeBundle(projectRoot, state, options = {}) {
     )
   ) {
     sourceMappings.push({
-      target: 'extensions/scripts/khy-alpine-iso/',
+      target: 'delivery/extension/scripts/khy-alpine-iso/',
       source: sourceLocations.scriptsAlpineDir,
       note: 'ISO helper scripts',
     });
@@ -1869,7 +1869,7 @@ function _printState(state) {
   printInfo(`包名: ${state.packageName || '(未读取到)'}`);
   printInfo(`版本(pyproject): ${state.versions.pyproject || '-'}`);
   // The dynamic-version design forbids a literal __version__ in
-  // platform/khy_platform/__init__.py, so an empty read there is health, not
+  // runtime/substrate/platform/khy_platform/__init__.py, so an empty read there is health, not
   // a fault — print it as such instead of the shared '-' failure glyph.
   const pythonTrack =
     state.versions.python || (state.pythonDynamic ? '(动态解析，无字面量)' : '-');

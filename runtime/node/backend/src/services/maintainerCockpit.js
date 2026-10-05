@@ -75,7 +75,7 @@ function _findRepoRoot(startDir) {
   }
   // 回落：backend 上两级通常即仓库根（services/backend → repo）。
   const guess = path.resolve(BACKEND_ROOT, '..', '..');
-  return fs.existsSync(path.join(guess, '.ai')) ? guess : process.env.KHYQUANT_CWD || process.cwd();
+  return fs.existsSync(path.join(guess, 'works', 'record', 'ai')) ? guess : process.env.KHYQUANT_CWD || process.cwd();
 }
 
 // ── 检查 ①：.ai/ 元数据新鲜度 ──────────────────────────────────────────

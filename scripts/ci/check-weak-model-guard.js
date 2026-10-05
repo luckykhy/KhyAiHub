@@ -5,7 +5,7 @@
  * 规则真源 docs/10_规范/registry/RULES-REGISTRY.json 的 SECURITY-003：弱档(T2/T3) + red-line
  * 路径 → 拒绝并要求强模型复核；弱档 + sensitive（god 级）→ 放行但须确认。
  *
- * 载体 services/backend/src/services/weakModelChangeGuard.js 的 classifyChangeRisk()
+ * 载体 runtime/node/backend/src/services/weakModelChangeGuard.js 的 classifyChangeRisk()
  * 与 assessWeakModelChange() 都是纯函数，所以本检查器做**行为断言**而非文本扫描：
  * RED_LINE_PATTERNS 被删掉一条，文本扫描看不见，行为断言直接跑分类器当场就红。
  *
@@ -30,7 +30,7 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 
 const RULE_ID = 'SECURITY-003';
-const MODULE_REL = 'services/backend/src/services/weakModelChangeGuard.js';
+const MODULE_REL = 'runtime/node/backend/src/services/weakModelChangeGuard.js';
 const DENY_ACTION = 'require-strong-review';
 const cwd = process.cwd();
 const args = process.argv.slice(2);
@@ -72,15 +72,15 @@ if (moduleText === null) {
         'scripts/ci/check-agent-rules.js',
         '.github/workflows/pr-gate.yml',
       ],
-      'flagRegistry SSOT': ['services/backend/src/services/flagRegistry.js'],
+      'flagRegistry SSOT': ['runtime/node/backend/src/services/flagRegistry.js'],
       '版本三源': [
         'pyproject.toml',
-        'services/backend/package.json',
-        'packaging/npm/package.json',
+        'runtime/node/backend/package.json',
+        'works/ship/npm/package.json',
       ],
       '权限核心': [
-        'services/backend/src/services/permissionStore.js',
-        'services/backend/src/services/criticalGate.js',
+        'runtime/node/backend/src/services/permissionStore.js',
+        'runtime/node/backend/src/services/criticalGate.js',
       ],
       '.git': ['.git/config'],
     };
@@ -100,13 +100,13 @@ if (moduleText === null) {
     // ── 2/3/4. 裁决矩阵 ───────────────────────────────────────────────
     const WEAK_TIERS = ['T2', 'T3'];
     const STRONG_TIERS = ['T0', 'T1'];
-    const RED_SAMPLE = 'services/backend/src/services/flagRegistry.js';
+    const RED_SAMPLE = 'runtime/node/backend/src/services/flagRegistry.js';
     const SENSITIVE_SAMPLES = [
-      'services/backend/src/services/aiGateway.js',
-      'services/backend/src/services/toolUseLoopCore.js',
-      'services/backend/src/services/harness.js',
-      'services/backend/src/services/replSession.js',
-      'services/backend/src/services/sessionPersistence.js',
+      'runtime/node/backend/src/services/aiGateway.js',
+      'runtime/node/backend/src/services/toolUseLoopCore.js',
+      'runtime/node/backend/src/services/harness.js',
+      'runtime/node/backend/src/services/replSession.js',
+      'runtime/node/backend/src/services/sessionPersistence.js',
     ];
     const NORMAL_SAMPLE = 'README.md';
 

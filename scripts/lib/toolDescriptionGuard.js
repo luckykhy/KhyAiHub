@@ -6,7 +6,7 @@
  * 0/false/off/no disables → empty findings).
  *
  * Machine-enforces the Tool Description Guidelines documented at the top of
- * services/backend/src/tools/_baseTool.js so future edits cannot silently
+ * runtime/node/backend/src/tools/_baseTool.js so future edits cannot silently
  * degrade description quality below what the rewritten high-frequency tools
  * now guarantee. Input is an array of tool definitions (registry values —
  * the caller does all IO/require); output is a diagnostics array.

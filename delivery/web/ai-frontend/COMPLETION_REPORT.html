@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: COMPLETION_REPORT.md -->
 <title>AI Frontend Source Code Completion Report · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>apps<span class="sep">›</span>ai-frontend<span class="sep">›</span>AI Frontend Source Code Completion Report</div>
+      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>delivery<span class="sep">›</span>web<span class="sep">›</span>ai-frontend<span class="sep">›</span>AI Frontend Source Code Completion Report</div>
       <header class="hero reveal"><h1>AI Frontend Source Code Completion Report</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#ai-frontend-source-code-completion-report">AI Frontend Source Code Completion Report</a></li><li class="lvl-2"><a href="#生成时间">生成时间</a></li><li class="lvl-2"><a href="#项目概述">项目概述</a></li><li class="lvl-2"><a href="#技术栈">技术栈</a></li><li class="lvl-2"><a href="#目录结构">目录结构</a></li><li class="lvl-2"><a href="#已实现的功能模块">已实现的功能模块</a></li><li class="lvl-3"><a href="#1-认证系统-login-vue">1. 认证系统 (Login.vue)</a></li><li class="lvl-3"><a href="#2-工作台-dashboard-vue">2. 工作台 (Dashboard.vue)</a></li><li class="lvl-3"><a href="#3-智能体控制台-agentdashboard-vue">3. 智能体控制台 (AgentDashboard.vue)</a></li><li class="lvl-3"><a href="#4-ai-网关-aigateway-vue">4. AI 网关 (AIGateway.vue)</a></li><li class="lvl-3"><a href="#5-ai-对话-aichat-vue">5. AI 对话 (AIChat.vue)</a></li><li class="lvl-3"><a href="#6-ai-监控-aimonitor-vue">6. AI 监控 (AIMonitor.vue)</a></li><li class="lvl-3"><a href="#7-账号池管理-accountpool-vue">7. 账号池管理 (AccountPool.vue)</a></li><li class="lvl-3"><a href="#8-ai-资产管理-aiassets-vue">8. AI 资产管理 (AIAssets.vue)</a></li><li class="lvl-3"><a href="#9-支付管理-aipayments-vue">9. 支付管理 (AIPayments.vue)</a></li><li class="lvl-3"><a href="#10-系统设置-settings-vue">10. 系统设置 (Settings.vue)</a></li><li class="lvl-2"><a href="#核心特性">核心特性</a></li><li class="lvl-3"><a href="#路由守卫">路由守卫</a></li><li class="lvl-3"><a href="#状态管理">状态管理</a></li><li class="lvl-3"><a href="#api-集成">API 集成</a></li><li class="lvl-3"><a href="#ui-ux">UI/UX</a></li><li class="lvl-3"><a href="#开发工具">开发工具</a></li><li class="lvl-2"><a href="#文件统计">文件统计</a></li><li class="lvl-2"><a href="#依赖包">依赖包</a></li><li class="lvl-3"><a href="#生产依赖">生产依赖</a></li><li class="lvl-3"><a href="#开发依赖">开发依赖</a></li><li class="lvl-2"><a href="#如何使用">如何使用</a></li><li class="lvl-3"><a href="#安装依赖">安装依赖</a></li><li class="lvl-3"><a href="#启动开发服务器">启动开发服务器</a></li><li class="lvl-3"><a href="#构建生产版本">构建生产版本</a></li><li class="lvl-3"><a href="#代码检查">代码检查</a></li><li class="lvl-3"><a href="#代码格式化">代码格式化</a></li><li class="lvl-2"><a href="#api-代理配置">API 代理配置</a></li><li class="lvl-2"><a href="#环境变量">环境变量</a></li><li class="lvl-2"><a href="#待实现功能">待实现功能</a></li><li class="lvl-2"><a href="#兼容性">兼容性</a></li><li class="lvl-2"><a href="#总结">总结</a></li></ul></nav>
       <article class="doc-body">
@@ -152,14 +152,14 @@ VITE_APP_VERSION=1.1.9</code></pre>
 <ul><li>完整的 Vue 3 + Vite 项目结构</li><li>10 个功能页面组件</li><li>完善的路由和状态管理</li><li>规范的代码风格配置</li><li>详细的开发文档</li></ul>
 <p>项目可立即进入开发和构建流程。</p>
       </article>
-      <nav class="pager"><span></span><a class="next" href="../../apps/ai-frontend/README.html"><div class="dir">下一篇 →</div><div class="ttl">Khy AI Frontend</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../delivery/mobile/khy-os-client-app/README.html"><div class="dir">← 上一篇</div><div class="ttl">khyosclient</div></a><a class="next" href="../../../delivery/web/ai-frontend/README.html"><div class="dir">下一篇 →</div><div class="ttl">Khy AI Frontend</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__="apps/ai-frontend/COMPLETION_REPORT.html";</script>
-<script src="../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../";window.__KHY_CUR__="delivery/web/ai-frontend/COMPLETION_REPORT.html";</script>
+<script src="../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

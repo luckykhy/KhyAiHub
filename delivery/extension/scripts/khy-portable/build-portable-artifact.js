@@ -11,8 +11,8 @@ const {
   writeArtifactManifest,
 } = require('./artifact-manifest');
 
-const ROOT = path.resolve(__dirname, '..', '..', '..');
-const VERSION = require(path.join(ROOT, 'services', 'backend', 'package.json')).version;
+const ROOT = path.resolve(__dirname, '..', '..', '..', '..');
+const VERSION = require(path.join(ROOT, 'runtime', 'node', 'backend', 'package.json')).version;
 const NODE_VERSION = '22.12.0';
 const KINDS = new Set(['portable-dev', 'portable-runtime']);
 const ROOT_EXCLUDES = new Set([

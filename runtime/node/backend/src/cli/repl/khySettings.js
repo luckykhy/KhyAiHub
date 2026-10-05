@@ -79,8 +79,8 @@ function _managedSettingsPath() {
 function _settingsLayers(cwd = process.cwd()) {
   return [
     { name: 'user', file: _userSettingsFile() },
-    { name: 'project-shared', file: path.join(cwd, '.khy', 'settings.json') },
-    { name: 'project-local', file: path.join(cwd, '.khy', 'settings.local.json') },
+    { name: 'project-shared', file: path.join(cwd, 'works', 'data', 'khy', 'settings.json') },
+    { name: 'project-local', file: path.join(cwd, 'works', 'data', 'khy', 'settings.local.json') },
     { name: 'managed', file: _managedSettingsPath() },
   ];
 }

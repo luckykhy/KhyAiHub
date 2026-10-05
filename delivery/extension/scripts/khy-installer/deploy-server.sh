@@ -212,8 +212,8 @@ step "KHY-Quant Installation"
 
 PROJECT_DIR="$(cd "$(dirname "$0")/.." 2>/dev/null && pwd)" || PROJECT_DIR="$(pwd)"
 
-if [ -f "$PROJECT_DIR/services/backend/package.json" ]; then
-  cd "$PROJECT_DIR/services/backend"
+if [ -f "$PROJECT_DIR/runtime/node/backend/package.json" ]; then
+  cd "$PROJECT_DIR/runtime/node/backend"
   info "Installing backend dependencies..."
   npm install --no-audit --no-fund --production 2>&1 | tail -3
   ok "Backend dependencies installed"

@@ -65,13 +65,13 @@ async function _assessTiming(cwd, opts, _run) {
     }
   }
 
-  // 验证证据：.khy/feedback/<task-id>/verify.txt 里最新的一个是否比最老的改动还新
+  // 验证证据：works/data/khy/feedback/<task-id>/verify.txt 里最新的一个是否比最老的改动还新
   let verifyPending = false;
   {
     const times = changes.map((c) => c.mtimeMs).filter((t) => Number.isFinite(t));
     const anchor = times.length ? Math.min(...times) : NaN;
     try {
-      const base = path.join(cwd, '.khy', 'feedback');
+      const base = path.join(cwd, 'works', 'data', 'khy', 'feedback');
       for (const ent of fs.readdirSync(base, { withFileTypes: true })) {
         if (!ent.isDirectory()) continue;
         try {
@@ -85,7 +85,7 @@ async function _assessTiming(cwd, opts, _run) {
         }
       }
     } catch {
-      /* 没有 .khy/feedback —— 就是没有证据 */
+      /* 没有 works/data/khy/feedback —— 就是没有证据 */
     }
   }
 

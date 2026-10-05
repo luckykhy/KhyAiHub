@@ -21,19 +21,19 @@
       "until": "2027-09-20"
     },
     {
-      "file": "services/backend/tests/services/imageGenFailureSummary.test.js",
+      "file": "runtime/node/backend/tests/services/imageGenFailureSummary.test.js",
       "match": "sk-abcdef1234567890",
       "reason": "测试夹具（假值，用于验证脱敏/截断逻辑）",
       "until": "2027-09-20"
     },
     {
-      "file": "services/backend/tests/services/installLedger.test.js",
+      "file": "runtime/node/backend/tests/services/installLedger.test.js",
       "match": "sk-abcdef0123456789abcdef0123456789",
       "reason": "测试夹具（假值，用于验证脱敏/截断逻辑）",
       "until": "2027-09-20"
     },
     {
-      "file": "services/backend/tests/visionFailureSummaryModernKey.test.js",
+      "file": "runtime/node/backend/tests/visionFailureSummaryModernKey.test.js",
       "match": "sk-abcd1234EFGH5678ijkl",
       "reason": "测试夹具（假值，用于验证脱敏/截断逻辑）",
       "until": "2027-09-20"
@@ -51,153 +51,195 @@
       "until": "2027-09-29"
     },
     {
-      "file": "services/backend/src/services/domain/config/config/nlProviderResolver.test.js",
+      "file": "runtime/node/backend/src/services/domain/config/config/nlProviderResolver.test.js",
       "match": "sk-abc123456",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/config/config/nlProviderResolver.test.js",
+      "file": "runtime/node/backend/src/services/domain/config/config/nlProviderResolver.test.js",
       "match": "sk-1234567890abcdef",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/config/config/nlProviderResolver.test.js",
+      "file": "runtime/node/backend/src/services/domain/config/config/nlProviderResolver.test.js",
       "match": "sk-xyz987654321",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/config/config/nlProviderResolver.test.js",
+      "file": "runtime/node/backend/src/services/domain/config/config/nlProviderResolver.test.js",
       "match": "sk-abcdef123456",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/data/reverseEngineer/README.md",
+      "file": "runtime/node/backend/src/services/domain/data/reverseEngineer/README.md",
       "match": "-----BEGIN PRIVATE KEY-----",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/data/reverseEngineer/README.html",
+      "file": "runtime/node/backend/src/services/domain/data/reverseEngineer/README.html",
       "match": "-----BEGIN PRIVATE KEY-----",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/data/reverseEngineer/stringHarvester.js",
+      "file": "runtime/node/backend/src/services/domain/data/reverseEngineer/stringHarvester.js",
       "match": "-----BEGIN PRIVATE KEY-----",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/data/reverseEngineer/stringHarvester.test.js",
+      "file": "runtime/node/backend/src/services/domain/data/reverseEngineer/stringHarvester.test.js",
       "match": "sk-abcdefghijklmnopqrstuvwxyz",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/data/reverseEngineer/stringHarvester.test.js",
+      "file": "runtime/node/backend/src/services/domain/data/reverseEngineer/stringHarvester.test.js",
       "match": "sk-short",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/data/reverseEngineer/stringHarvester.test.js",
+      "file": "runtime/node/backend/src/services/domain/data/reverseEngineer/stringHarvester.test.js",
       "match": "AKIAABCDEFGHIJKLMNOP",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/data/reverseEngineer/stringHarvester.test.js",
+      "file": "runtime/node/backend/src/services/domain/data/reverseEngineer/stringHarvester.test.js",
       "match": "ghp_abcdefghijklmnopqrstuvwxyz1234",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/data/reverseEngineer/stringHarvester.test.js",
+      "file": "runtime/node/backend/src/services/domain/data/reverseEngineer/stringHarvester.test.js",
       "match": "-----BEGIN RSA PRIVATE KEY-----",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/data/reverseEngineer/stringHarvester.test.js",
+      "file": "runtime/node/backend/src/services/domain/data/reverseEngineer/stringHarvester.test.js",
       "match": "-----BEGIN PRIVATE KEY-----",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/data/reverseEngineer/stringHarvester.test.js",
+      "file": "runtime/node/backend/src/services/domain/data/reverseEngineer/stringHarvester.test.js",
       "match": "-----BEGIN ENCRYPTED PRIVATE KEY-----",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/data/reverseEngineer/stringHarvester.test.js",
+      "file": "runtime/node/backend/src/services/domain/data/reverseEngineer/stringHarvester.test.js",
       "match": "-----BEGIN PUBLIC KEY-----",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/project/metaplan/constitutionalRedLines.test.js",
+      "file": "runtime/node/backend/src/services/domain/project/metaplan/constitutionalRedLines.test.js",
       "match": "sk-abcdefghijklmnopqrstuvwxyz",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/project/metaplan/constitutionalRedLines.test.js",
+      "file": "runtime/node/backend/src/services/domain/project/metaplan/constitutionalRedLines.test.js",
       "match": "sk-scoring",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/project/metaplan/constitutionalRedLines.test.js",
+      "file": "runtime/node/backend/src/services/domain/project/metaplan/constitutionalRedLines.test.js",
       "match": "-----BEGIN RSA PRIVATE KEY-----",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/project/metaplan/irreversibleSignatures.test.js",
+      "file": "runtime/node/backend/src/services/domain/project/metaplan/irreversibleSignatures.test.js",
       "match": "sk-abcdefghijklmnopqrstuvwxyz",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/project/metaplan/irreversibleSignatures.test.js",
+      "file": "runtime/node/backend/src/services/domain/project/metaplan/irreversibleSignatures.test.js",
       "match": "sk-short",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/project/metaplan/irreversibleSignatures.test.js",
+      "file": "runtime/node/backend/src/services/domain/project/metaplan/irreversibleSignatures.test.js",
       "match": "sk-score",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/project/metaplan/irreversibleSignatures.test.js",
+      "file": "runtime/node/backend/src/services/domain/project/metaplan/irreversibleSignatures.test.js",
       "match": "AKIAABCDEFGHIJKLMNOP",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/project/metaplan/irreversibleSignatures.test.js",
+      "file": "runtime/node/backend/src/services/domain/project/metaplan/irreversibleSignatures.test.js",
       "match": "AKIA123",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/project/metaplan/irreversibleSignatures.test.js",
+      "file": "runtime/node/backend/src/services/domain/project/metaplan/irreversibleSignatures.test.js",
       "match": "-----BEGIN RSA PRIVATE KEY-----",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
       "until": "2027-10-02"
     },
     {
-      "file": "services/backend/src/services/domain/security/failsafe/classifierSignals.test.js",
+      "file": "runtime/node/backend/src/services/domain/security/failsafe/classifierSignals.test.js",
       "match": "sk-ABCDEFGHIJKLMNOPQRSTUV",
       "reason": "密钥检测功能（stringHarvester/classifier）自身的测试夹具与算法规格文档——假值，2026-10-02 随 Q0/G6 domain 批入库时补登",
+      "until": "2027-10-02"
+    },
+    {
+      "file": "delivery/channel/khyquant/tests/agentDisplay.test.js",
+      "match": "sk-ABCDEF1234567890",
+      "reason": "khyquant 独立项目测试夹具假值（随 delivery/channel 迁移入库，同 Q0/G6 型），2026-10-02",
+      "until": "2027-10-02"
+    },
+    {
+      "file": "delivery/channel/khyquant/tests/agentDisplay.test.js",
+      "match": "sk-SECRET1234567890",
+      "reason": "khyquant 独立项目测试夹具假值（随 delivery/channel 迁移入库，同 Q0/G6 型），2026-10-02",
+      "until": "2027-10-02"
+    },
+    {
+      "file": "works/ship/npm/bundled/runtime/khy/bundle.mjs",
+      "match": "sk-VGIvz88JG36VuWGRnvjJrtT8tMv8mgUc",
+      "reason": "打包产物内嵌假 key 形态（khy CLI bundle 内嵌密钥检测器自身文本），随 R5b 入库 2026-10-02",
+      "until": "2027-10-02"
+    },
+    {
+      "file": "works/ship/npm/bundled/runtime/khy/bundle.mjs",
+      "match": "sk-orchestrator",
+      "reason": "打包产物内嵌假 key 形态（khy CLI bundle 内嵌密钥检测器自身文本），随 R5b 入库 2026-10-02",
+      "until": "2027-10-02"
+    },
+    {
+      "file": "works/ship/npm/bundled/runtime/khy/bundle.mjs",
+      "match": "sk-assessment",
+      "reason": "打包产物内嵌假 key 形态（khy CLI bundle 内嵌密钥检测器自身文本），随 R5b 入库 2026-10-02",
+      "until": "2027-10-02"
+    },
+    {
+      "file": "works/ship/npm/bundled/runtime/khy/bundle.mjs",
+      "match": "sk-coordinator",
+      "reason": "打包产物内嵌假 key 形态（khy CLI bundle 内嵌密钥检测器自身文本），随 R5b 入库 2026-10-02",
+      "until": "2027-10-02"
+    },
+    {
+      "file": "works/ship/npm/bundled/runtime/khy/bundle.mjs",
+      "match": "sk-decomposition",
+      "reason": "打包产物内嵌假 key 形态（khy CLI bundle 内嵌密钥检测器自身文本），随 R5b 入库 2026-10-02",
       "until": "2027-10-02"
     }
   ],

@@ -23,10 +23,10 @@ const path = require('path');
 const {
   assessInstallIntegrity,
   CRITICAL_BUNDLE_PATHS,
-} = require('../../../services/backend/src/services/domain/backup/restore/installIntegrity');
-const { opsDocPath, opsDocRelPath } = require('../../../scripts/lib/docsPaths');
+} = require('../../../../runtime/node/backend/src/services/domain/backup/restore/installIntegrity');
+const { opsDocPath, opsDocRelPath } = require('../../../../scripts/lib/docsPaths');
 
-const ROOT = path.resolve(__dirname, '..', '..', '..');
+const ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const DOC_PATH = opsDocPath('[OPS-MAN-069] 已装副本完整性自检清单.md');
 const NPM_PKG_NAME = '@khy-os/khy-os';
 const PIP_PKG_NAME = 'khy-os';
@@ -153,7 +153,7 @@ function runVerifyInstall(opts = {}) {
 
 /** 由 CRITICAL_BUNDLE_PATHS + 渠道常量确定性生成清单 markdown。纯函数，不做 IO。 */
 function buildDoc() {
-  const { _PATH_HINTS } = require('../../../services/backend/src/services/domain/backup/restore/installIntegrity');
+  const { _PATH_HINTS } = require('../../../../runtime/node/backend/src/services/domain/backup/restore/installIntegrity');
   const lines = [];
   lines.push('# [OPS-MAN-069] 已装副本完整性自检清单');
   lines.push('');

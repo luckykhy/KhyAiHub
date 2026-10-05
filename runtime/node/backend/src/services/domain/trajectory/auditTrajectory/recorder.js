@@ -207,7 +207,7 @@ class AuditTrajectoryRecorder {
       return getProjectDataDir('audit-trajectory');
     } catch {
       // dataHome 不可用（裁剪部署 / 单测隔离）→ 退到 cwd 下的隐藏目录，仍不写死盘符。
-      return path.join(this.cwd, '.khy', 'audit-trajectory');
+      return path.join(this.cwd, 'works', 'data', 'khy', 'audit-trajectory');
     }
   }
 

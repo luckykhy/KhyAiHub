@@ -1,6 +1,6 @@
 {
   "all": true,
-  "include": ["services/backend/src/**/*.js"],
+  "include": ["runtime/node/backend/src/**/*.js"],
   "exclude": [
     "**/*.test.js",
     "**/__tests__/**",
@@ -8,15 +8,14 @@
     "**/generated/**",
     "**/coverage/**",
     ".cache/quality-gate/**",
-    "services/backend/src/domain/**",
-    "services/backend/src/bridge/**",
-    "services/backend/src/bootstrap/**",
-    "services/backend/src/assistant/**",
-    "services/backend/src/buddy/**",
-    "services/backend/src/cli/tui/**",
-    "services/backend/src/cli/ui/**",
-    "services/backend/src/cli/handlers/**",
-    "services/backend/src/adapters/im/**"
+    "runtime/node/backend/src/bridge/**",
+    "runtime/node/backend/src/bootstrap/**",
+    "runtime/node/backend/src/assistant/**",
+    "runtime/node/backend/src/buddy/**",
+    "runtime/node/backend/src/cli/tui/**",
+    "runtime/node/backend/src/cli/ui/**",
+    "runtime/node/backend/src/cli/handlers/**",
+    "runtime/node/backend/src/adapters/im/**"
   ],
   "check-coverage": false,
   "reporter": ["text-summary", "json-summary"],

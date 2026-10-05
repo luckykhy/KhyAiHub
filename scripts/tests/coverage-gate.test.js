@@ -18,7 +18,7 @@ describe('coverage gate', () => {
     for (const metric of ['lines', 'functions', 'branches', 'statements']) {
       assert.equal(config[metric], 60);
     }
-    assert.deepEqual(config.include, ['services/backend/src/**/*.js']);
+    assert.deepEqual(config.include, ['runtime/node/backend/src/**/*.js']);
   });
 
   test('validates environment threshold', () => {

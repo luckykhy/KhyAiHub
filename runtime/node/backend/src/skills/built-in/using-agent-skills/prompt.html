@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: prompt.md -->
 <title>Using Agent Skills · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>using-agent-skills<span class="sep">›</span>Using Agent Skills</div>
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>using-agent-skills<span class="sep">›</span>Using Agent Skills</div>
       <header class="hero reveal"><h1>Using Agent Skills</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#using-agent-skills">Using Agent Skills</a></li><li class="lvl-2"><a href="#overview">Overview</a></li><li class="lvl-2"><a href="#skill-discovery">Skill Discovery</a></li><li class="lvl-2"><a href="#core-operating-behaviors">Core Operating Behaviors</a></li><li class="lvl-3"><a href="#1-surface-assumptions">1. Surface Assumptions</a></li><li class="lvl-3"><a href="#2-manage-confusion-actively">2. Manage Confusion Actively</a></li><li class="lvl-3"><a href="#3-push-back-when-warranted">3. Push Back When Warranted</a></li><li class="lvl-3"><a href="#4-enforce-simplicity">4. Enforce Simplicity</a></li><li class="lvl-3"><a href="#5-maintain-scope-discipline">5. Maintain Scope Discipline</a></li><li class="lvl-3"><a href="#6-verify-don-t-assume">6. Verify, Don't Assume</a></li><li class="lvl-2"><a href="#failure-modes-to-avoid">Failure Modes to Avoid</a></li><li class="lvl-2"><a href="#skill-rules">Skill Rules</a></li><li class="lvl-2"><a href="#lifecycle-sequence">Lifecycle Sequence</a></li><li class="lvl-2"><a href="#quick-reference">Quick Reference</a></li></ul></nav>
       <article class="doc-body">
@@ -111,14 +111,14 @@
 <h2 id="quick-reference">Quick Reference<a class="anchor" href="#quick-reference" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>Phase</th><th>Skill</th><th>One-Line Summary</th></tr></thead><tbody><tr><td>Define</td><td>interview-me</td><td>Surface what the user actually wants before any plan, spec, or code exists</td></tr><tr><td>Define</td><td>idea-refine</td><td>Refine ideas through structured divergent and convergent thinking</td></tr><tr><td>Define</td><td>spec-driven-development</td><td>Requirements and acceptance criteria before code</td></tr><tr><td>Plan</td><td>planning-and-task-breakdown</td><td>Decompose into small, verifiable tasks</td></tr><tr><td>Build</td><td>incremental-implementation</td><td>Thin vertical slices, test each before expanding</td></tr><tr><td>Build</td><td>source-driven-development</td><td>Verify against official docs before implementing</td></tr><tr><td>Build</td><td>doubt-driven-development</td><td>Adversarial fresh-context review of every non-trivial decision</td></tr><tr><td>Build</td><td>context-engineering</td><td>Right context at the right time</td></tr><tr><td>Build</td><td>frontend-ui-engineering</td><td>Production-quality UI with accessibility</td></tr><tr><td>Build</td><td>api-and-interface-design</td><td>Stable interfaces with clear contracts</td></tr><tr><td>Verify</td><td>test-driven-development</td><td>Failing test first, then make it pass</td></tr><tr><td>Verify</td><td>browser-testing-with-devtools</td><td>Chrome DevTools MCP for runtime verification</td></tr><tr><td>Verify</td><td>debugging-and-error-recovery</td><td>Reproduce → localize → fix → guard</td></tr><tr><td>Review</td><td>code-review-and-quality</td><td>Five-axis review with quality gates</td></tr><tr><td>Review</td><td>code-simplification</td><td>Preserve behavior while reducing unnecessary complexity</td></tr><tr><td>Review</td><td>security-and-hardening</td><td>OWASP prevention, input validation, least privilege</td></tr><tr><td>Review</td><td>performance-optimization</td><td>Measure first, optimize only what matters</td></tr><tr><td>Ship</td><td>git-workflow-and-versioning</td><td>Atomic commits, clean history</td></tr><tr><td>Ship</td><td>ci-cd-and-automation</td><td>Automated quality gates on every change</td></tr><tr><td>Ship</td><td>deprecation-and-migration</td><td>Remove old systems and migrate users safely</td></tr><tr><td>Ship</td><td>documentation-and-adrs</td><td>Document the why, not just the what</td></tr><tr><td>Ship</td><td>shipping-and-launch</td><td>Pre-launch checklist, monitoring, rollback plan</td></tr></tbody></table>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../../../services/backend/src/skills/built-in/update-config/prompt.html"><div class="dir">← 上一篇</div><div class="ttl">Update Config — Configuration File Manager</div></a><a class="next" href="../../../../../../services/backend/src/skills/built-in/verify/prompt.html"><div class="dir">下一篇 →</div><div class="ttl">Verify — Change Verification</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/skills/built-in/update-config/prompt.html"><div class="dir">← 上一篇</div><div class="ttl">Update Config — Configuration File Manager</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/skills/built-in/verify/prompt.html"><div class="dir">下一篇 →</div><div class="ttl">Verify — Change Verification</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="services/backend/src/skills/built-in/using-agent-skills/prompt.html";</script>
-<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/skills/built-in/using-agent-skills/prompt.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

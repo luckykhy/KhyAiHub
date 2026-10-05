@@ -8,7 +8,7 @@
  * （2026-09-27 由 _产物/ 一次性探针迁入版本控制，先例：touch-cost 探针。）
  *
  * 纪律：零外部依赖 / 只读 / 确定性 / 可离线跑 / 绝不抛。
- * 真源：services/backend/src/tasks/largeTaskRuntimeStore.js（正则抽常量，不 require，
+ * 真源：runtime/node/backend/src/tasks/largeTaskRuntimeStore.js（正则抽常量，不 require，
  *       避免拉起运行时存储的副作用）。
  *
  * 用法：
@@ -23,7 +23,7 @@ const fs = require('fs');
 const path = require('path');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
-const STORE_REL = path.join('services', 'backend', 'src', 'tasks', 'largeTaskRuntimeStore.js');
+const STORE_REL = path.join('runtime', 'node', 'backend', 'src', 'tasks', 'largeTaskRuntimeStore.js');
 const STORE_ABS = path.join(REPO_ROOT, STORE_REL);
 
 // ── 方案主张：11 态 → 6 列 的折叠表（本表就是「设计决策」的可执行形态） ──
@@ -49,7 +49,7 @@ const EXPECTED_LANE_COUNT = 6;
 // 为什么抽文本而不是 require：agentLauncherRegistry 是纯叶子（可 require），
 // 但一旦迁进 scripts/lib/ 就多一条指向 L2 的 cross-layer-require 边（会被计入基线）。
 // 沿用本仓既有做法：源码文本抽取。
-const LAUNCHER_REL = path.join('services', 'backend', 'src', 'services', 'agentLauncherRegistry.js');
+const LAUNCHER_REL = path.join('runtime', 'node', 'backend', 'src', 'services', 'agentLauncherRegistry.js');
 const LAUNCHER_ABS = path.join(REPO_ROOT, LAUNCHER_REL);
 
 // 平台自身派发的 source（非外部编码 agent）。取值来自实际代码里出现的常量。
@@ -70,7 +70,7 @@ const AGENT_TITLES = Object.freeze({
 // （HQ 是 `T-001`；运行时是 `_newTaskId` 生成的 `<scope>-<hex4>-<seq>`）。
 // 连接键 = 运行时 id 取 `<hq_id>.<attempt>`，由 createTask 的 input.id 显式传入；
 // 反查用 listTasks({ id_prefix: '<hq_id>.' })（该过滤维度已存在）。
-const HQ_PROGRESS_REL = path.join('.ai', 'hq', 'PROGRESS.json');
+const HQ_PROGRESS_REL = path.join('works', 'record', 'ai', 'hq', 'PROGRESS.json');
 const HQ_PROGRESS_ABS = path.join(REPO_ROOT, HQ_PROGRESS_REL);
 
 const RUNTIME_ID_SEP = '.';
@@ -122,13 +122,13 @@ const CARD_CONTRACT = Object.freeze([
 // ── F4 的绑定可达性：字段存在 ≠ 有人写它 ──
 // `payload_json.worktree` 由 tools/_taskStore.bindWorktree() 写入，但那条路径只被
 // worktreeManager.createWorktree({taskId}) 触发 ⇒ 只要没人传 taskId，字段恒为 null。
-const TASK_STORE_REL = path.join('services', 'backend', 'src', 'tools', '_taskStore.js');
+const TASK_STORE_REL = path.join('runtime', 'node', 'backend', 'src', 'tools', '_taskStore.js');
 const TASK_STORE_ABS = path.join(REPO_ROOT, TASK_STORE_REL);
-const ROUTES_REL = path.join('services', 'backend', 'src', 'routes', 'largeTasks.js');
+const ROUTES_REL = path.join('runtime', 'node', 'backend', 'src', 'routes', 'largeTasks.js');
 const ROUTES_ABS = path.join(REPO_ROOT, ROUTES_REL);
 const WORKTREE_CALLER_RELS = [
-  path.join('services', 'backend', 'src', 'tools', 'EnterWorktreeTool', 'index.js'),
-  path.join('services', 'backend', 'src', 'cli', 'repl', 'worktreeCommand.js'),
+  path.join('runtime', 'node', 'backend', 'src', 'tools', 'EnterWorktreeTool', 'index.js'),
+  path.join('runtime', 'node', 'backend', 'src', 'cli', 'repl', 'worktreeCommand.js'),
 ];
 
 // ── 真源抽取 ──

@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: README.md -->
 <title>A2A 协议契约（JSON Schema） · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>contracts<span class="sep">›</span>a2a<span class="sep">›</span>A2A 协议契约（JSON Schema）</div>
+      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>contracts<span class="sep">›</span>a2a<span class="sep">›</span>A2A 协议契约（JSON Schema）</div>
       <header class="hero reveal"><h1>A2A 协议契约（JSON Schema）</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#a2a-协议契约-json-schema">A2A 协议契约（JSON Schema）</a></li><li class="lvl-2"><a href="#文件">文件</a></li><li class="lvl-2"><a href="#为什么单独建一套-而不是复用-design-a2a-001">为什么单独建一套（而不是复用 `[DESIGN-A2A-001]`）</a></li><li class="lvl-2"><a href="#关键约束-这些是历史上踩过的坑">关键约束（这些是历史上踩过的坑）</a></li><li class="lvl-2"><a href="#校验">校验</a></li></ul></nav>
       <article class="doc-body">
@@ -46,14 +46,14 @@
 <pre><code class="language-bash">node scripts/ci/check-protocol-conformance.js --a2a</code></pre>
 <p>守卫会用 fixture 逐条断言：AgentCard 通过 <code>agent-card.schema.json</code>、<br><code>message/send</code> 请求体通过 <code>message.schema.json</code>、<code>tasks/get</code> 返回体通过<br><code>task.schema.json</code>，并断言 khy-os 声明的能力与实现一致（禁绝 A3/A6 类虚报）。</p>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../../services/backend/src/cli/tui/AGENTS.html"><div class="dir">← 上一篇</div><div class="ttl">AGENTS.md — CC TUI 复刻工程约束</div></a><a class="next" href="../../../../../services/backend/src/contracts/mobile/README.html"><div class="dir">下一篇 →</div><div class="ttl">KHY Mobile Contracts</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../../runtime/node/backend/src/cli/tui/AGENTS.html"><div class="dir">← 上一篇</div><div class="ttl">AGENTS.md — CC TUI 复刻工程约束</div></a><a class="next" href="../../../../../../runtime/node/backend/src/contracts/mobile/README.html"><div class="dir">下一篇 →</div><div class="ttl">KHY Mobile Contracts</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../../";window.__KHY_CUR__="services/backend/src/contracts/a2a/README.html";</script>
-<script src="../../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/contracts/a2a/README.html";</script>
+<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

@@ -36,22 +36,22 @@ def('clean', () => {
 
 def('clean-code-dir', () => {
   // 代码目录，条目数在 implementation 档预算内
-  return guard.inspectDir('services/backend/src/utils', files(35, 'util'));
+  return guard.inspectDir('runtime/node/backend/src/utils', files(35, 'util'));
 });
 
 def('flat-overflow', () => {
   // 经典平铺：809 个文件挤在一个目录
-  return guard.inspectDir('services/backend/src/services', files(809, 'service'));
+  return guard.inspectDir('runtime/node/backend/src/services', files(809, 'service'));
 });
 
 def('flat-overflow-boundary-ok', () => {
   // 边界：恰好等于预算（40），应放行
-  return guard.inspectDir('services/backend/src/utils', files(40, 'util'));
+  return guard.inspectDir('runtime/node/backend/src/utils', files(40, 'util'));
 });
 
 def('flat-overflow-boundary-over', () => {
   // 边界：41 > 40，应拦
-  return guard.inspectDir('services/backend/src/utils', files(41, 'util'));
+  return guard.inspectDir('runtime/node/backend/src/utils', files(41, 'util'));
 });
 
 def('exempt-vendor', () => {
@@ -115,12 +115,12 @@ def('empty-index', () => {
 
 def('robust-nonarray', () => {
   // 健壮性：非数组 / null / 垃圾输入不抛
-  return guard.inspectDir('services/backend/src/services', null);
+  return guard.inspectDir('runtime/node/backend/src/services', null);
 });
 
 def('robust-badentry', () => {
   // 健壮性：条目里有 null / 数字 / 空串，不抛且不误计
-  return guard.inspectDir('services/backend/src/services',
+  return guard.inspectDir('runtime/node/backend/src/services',
     [null, 42, '', { name: 'ok.js', kind: 'file' }].concat(files(45, 'svc')));
 });
 

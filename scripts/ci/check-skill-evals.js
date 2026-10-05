@@ -6,7 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const DEFAULT_CONFIG = 'services/backend/src/skills/evals/skill-eval-baseline.json';
+const DEFAULT_CONFIG = 'runtime/node/backend/src/skills/evals/skill-eval-baseline.json';
 
 function parseArgs(argv) {
   const opts = {

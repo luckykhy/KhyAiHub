@@ -3361,7 +3361,7 @@
             "行": 27
           },
           {
-            "原文": "用户原话：「http://127.0.0.1:8090/ 打开是空白，另外网页中的内核终端不能正常使用 ai 需要修复」。",
+            "原文": "用户原话：「http://<localhost>/ 打开是空白，另外网页中的内核终端不能正常使用 ai 需要修复」。",
             "文件": ".khy/feedback/khyos-agent-terminal-20260925/complaint.md",
             "行": 3
           },
@@ -4538,13 +4538,13 @@
         },
         {
           "id": "BUG-005",
-          "title": "所有模型请求都报错：OpenAI/api 经 per-provider 代理 127.0.0.1:7890 被拒（ECONNREFUSED），且[proxy]先报『通道已建立』后才失败",
+          "title": "所有模型请求都报错：OpenAI/api 经 per-provider 代理 <proxy>:7890 被拒（ECONNREFUSED），且[proxy]先报『通道已建立』后才失败",
           "severity": "P1",
           "domain": "gateway",
           "status": "closed",
-          "symptom": "apikey 正常，但 khy 无论选哪个模型发消息都报『网络请求未能完成』：先出现 [proxy] 连接 OpenAI 经代理 127.0.0.1:7890 (per-provider, 通道已建立)，随后『真实失败原因：- OpenAI [network]: connect ECONNREFUSED 127.0.0.1:7890 - api [network]: connect ECONNREFUSED 127.0.0.1:7890』。与 apikey/模型无关，所有模型一致失败。",
-          "repro": "启动 khy → 任意模型发一条消息（如『hello』）→ 观察：先打印 per-provider 代理『通道已建立』，再打网络请求未能完成、connect ECONNREFUSED 127.0.0.1:7890。检查 127.0.0.1:7890 是否有本地代理在监听；若无，则全模型失败。",
-          "suspect_area": "gateway 适配器的 per-provider 代理逻辑（连接代理前的『通道已建立』误报）+ network/client 错误路径：代理不可达时应回退直连或给出明确『本地代理 127.0.0.1:7890 未监听』，而非先报通道已建立再 ECONNREFUSED。",
+          "symptom": "apikey 正常，但 khy 无论选哪个模型发消息都报『网络请求未能完成』：先出现 [proxy] 连接 OpenAI 经代理 <proxy>:7890 (per-provider, 通道已建立)，随后『真实失败原因：- OpenAI [network]: connect ECONNREFUSED <proxy>:7890 - api [network]: connect ECONNREFUSED <proxy>:7890』。与 apikey/模型无关，所有模型一致失败。",
+          "repro": "启动 khy → 任意模型发一条消息（如『hello』）→ 观察：先打印 per-provider 代理『通道已建立』，再打网络请求未能完成、connect ECONNREFUSED <proxy>:7890。检查 <proxy>:7890 是否有本地代理在监听；若无，则全模型失败。",
+          "suspect_area": "gateway 适配器的 per-provider 代理逻辑（连接代理前的『通道已建立』误报）+ network/client 错误路径：代理不可达时应回退直连或给出明确『本地代理 <proxy>:7890 未监听』，而非先报通道已建立再 ECONNREFUSED。",
           "root_cause": "per-provider 代理绑定即打印『通道已建立』属于无 I/O 时的虚假声明（真实 TCP/CONNECT 要到首个请求才发生），且 postWithDeadConnRetry 的 per-provider 分支缺 unreachable 判定——ECONNREFUSED 原样冒泡成裸网络错误且不回退直连，把排障方向带偏到上游/apikey。",
           "fix_summary": "multiFreeService.js 绑定日志改为『尚未建连，首个请求时才连接』；postWithDeadConnRetry 增 isProxyUnreachableError 判定（ECONNREFUSED 等）：代理不可达回退直连重试一次，仍失败则错误消息点名『per-provider 代理 X 未监听，请启动本地代理或清除该 provider 的 proxy 配置』。回归测试 tests/services/multiFreeService.providerProxyUnreachable.test.js；doctorConnectivity 增 per-provider 代理连通性体检 Check3。",
           "created": "2026-08-24",
@@ -4568,7 +4568,7 @@
           "created": "2026-08-24",
           "updated": "2026-09-20",
           "notes": [
-            "2026-08-24: 根因已定位：请求 api:sensenova:deepseek-v4-flash 在商汤感言 channel 返回 404（多次→冷却→All adapters failed）→ 网关静默回退到 relay 的 step-3.7-flash（步科星辰）响应；该模型自述把『请求身份(sensenova/deepseek)』与『自身品牌(阶跃)』混为一体，故出现『SenseNova（阶跃星辰）』。已推送缓解：khy-os 4af15f8e 在网关成功路径新增『实际响应模型≠所选模型』的状态透明披露（gateway/modelSubstitutionNotice.js + aiGatewayGenerateMethod.js 一行受保护 emitStatus）。彻底修复仍待运行时侧：为 deepseek-v4-flash 选商汤真正可执行模型、或配独立 DeepSeek provider、并处理 BUG-005 的 127.0.0.1:7890 代理。",
+            "2026-08-24: 根因已定位：请求 api:sensenova:deepseek-v4-flash 在商汤感言 channel 返回 404（多次→冷却→All adapters failed）→ 网关静默回退到 relay 的 step-3.7-flash（步科星辰）响应；该模型自述把『请求身份(sensenova/deepseek)』与『自身品牌(阶跃)』混为一体，故出现『SenseNova（阶跃星辰）』。已推送缓解：khy-os 4af15f8e 在网关成功路径新增『实际响应模型≠所选模型』的状态透明披露（gateway/modelSubstitutionNotice.js + aiGatewayGenerateMethod.js 一行受保护 emitStatus）。彻底修复仍待运行时侧：为 deepseek-v4-flash 选商汤真正可执行模型、或配独立 DeepSeek provider、并处理 BUG-005 的 <proxy>:7890 代理。",
             "2026-09-20: 2026-09-20 租约释放后状态归位：本机（QiQiaoBan）08-24 的排查占用已过期释放；缓解措施（modelSubstitutionNotice 状态透明披露）已在树上，彻底修复（deepseek-v4-flash 供应商归属）转 open 待重新开工。"
           ],
           "claimed_by": "QiQiaoBan",

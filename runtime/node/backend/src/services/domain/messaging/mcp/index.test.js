@@ -231,8 +231,8 @@ test('loadConfig: 项目级覆盖用户级 —— precedence 与 _scope 标记�
   rmUserConfig();
   writeUserConfig({ mcpServers: { shared: { command: 'user-val' }, onlyUser: { command: 'u' } } });
   const proj = path.join(TMP, 'proj');
-  fs.mkdirSync(path.join(proj, '.khy'), { recursive: true });
-  fs.writeFileSync(path.join(proj, '.khy', 'mcp.json'), JSON.stringify({
+  fs.mkdirSync(path.join(proj, 'works', 'data', 'khy'), { recursive: true });
+  fs.writeFileSync(path.join(proj, 'works', 'data', 'khy', 'mcp.json'), JSON.stringify({
     mcpServers: { shared: { command: 'proj-val' }, onlyProj: { command: 'p' } },
   }), 'utf-8');
   const m = mod.loadConfig(proj);

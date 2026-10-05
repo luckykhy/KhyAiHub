@@ -116,7 +116,7 @@ const CROSSCUTTING = {
   // 多端入口的**真源数据**——有哪些端、入口在哪、怎么起、怎么构建。
   // 它必须待在根：Python 启动器、Node CLI、脚本与文档都要按路径读同一份表，
   // 埋进任何一层的实现目录都会让其余读取方绕路或触碰禁止边。实现（含
-  // child_process）仍在 L2 `services/backend/src/services/entrypoints/`。
+  // child_process）仍在 L2 `runtime/node/backend/src/services/entrypoints/`。
   // 规范 [DESIGN-ARCH-117]。
   works: '工程产物区（build/ 下含 git 钩子 works/build/githooks；真源 [DESIGN-LAY-008] §18.3 封闭清单与 §19.3 W10b）',
   entries: '多端入口真源数据（端矩阵 entries.json + 人读地图 + 跨平台入口壳）',
@@ -124,10 +124,10 @@ const CROSSCUTTING = {
   // [DESIGN-LAY-005] 第 1.2 节）。放根的理由：它的读取方横跨 L0（kernel 手写层原创规模）、
   // L1/L2（启动器与业务逻辑的开发过程存证）、L3/L4（界面截图）与横切（docs/ 设计决策、
   // scripts/ 采集器）。埋进任何一层都会让其余证据引用变成跨层路径读取。
-  // 内容只有两类：人写的说明文档 + 由 scripts/evidence/ 从仓库实测数据派生的 JSON 与图片。
+  // 内容只有两类：人写的说明文档 + 由 scripts/works/record/evidence/ 从仓库实测数据派生的 JSON 与图片。
   evidence: '软著登记底档（人类贡献与原创性证据：说明文档 + 实测数据 JSON + 图片）',
   // 根级例外目录（真源 [DESIGN-LAY-005] 第 1.4 节）：不属 L0-L6，也不属
-  // scripts/packaging/docs 这类工程横切，是历史遗留的根级实体，登记在册以免
+  // scripts/works/ship/docs 这类工程横切，是历史遗留的根级实体，登记在册以免
   // 每次都被 layer-registry 判违规。
   // tests 已迁 docs/05_TEST_测试/tests-debt/（B档 2026-10-02，§22 施工单）；deploy 已迁 works/deploy/。
   // 只收**交付物**；过程态工具（探针/扫描脚本/未接线原型）落 .khyos/，判据真源
@@ -239,17 +239,24 @@ function checkRootJunk(findings) {
 
 // ── 跨层深引用（真源 [DESIGN-LAY-005] 第二节禁止边）─────────────────────────
 // workspace 根：一个 require 若从文件所在 workspace 根逃出去，就是跨包深引用。
+//
+// ★ 2026-10-04：本表曾写 `services/backend` / `services/ai-backend` / `tools/deepseek-eyes`。
+// 方案P 迁移后这三条**不再匹配任何文件**，而 `workspaceRootOf()` 返回 null 时
+// 调用点直接 `continue` —— 于是**整个后端被跳过**：cross-layer-require 与
+// unresolved-require 两条规则自迁移起对 backend 完全失明（计数恒 0 = 假绿）。
+// 教训：workspace 根清单必须与真实目录一一对应；迁移后要**逐条验证存在性**，
+// 不能只看「列表还在」。守护判据见 scripts/maintenance/path-integrity.js。
 const WORKSPACE_ROOTS = [
-  'services/backend',
-  'services/ai-backend',
-  'apps/ai-frontend',
+  'runtime/node/backend',
+  'runtime/node/ai-backend',
+  'delivery/web/ai-frontend',
   'delivery/channel/khyquant',
   'delivery/channel/khyquant/frontend',
-  'platform/packages/shared',
-  'platform/packages/moonbit-plugin-sdk',
-  'platform/delivery',
+  'runtime/substrate/platform/packages/shared',
+  'runtime/substrate/platform/packages/moonbit-plugin-sdk',
+  'runtime/substrate/platform/delivery',
   'delivery/extension/tools/khy-markdown',
-  'tools/deepseek-eyes',
+  'entries/tools/deepseek-eyes',
   'delivery/extension/bridges/khy-trae-bridge',
 ];
 
@@ -548,12 +555,29 @@ function checkLayerRegistry(findings) {
 
 // ── 规则 8：delivery/extension/ 下每个目录都须遵守拓展契约 ────────────────────────
 // 真源 docs/10_规范/其它规范/[DESIGN-TOOL-002] 拓展契约与核心边界规范.md 第三节。
-// 字段清单同时在 services/backend/src/services/delivery/extension/extensionRoots.js 落地；
+// 字段清单同时在 runtime/node/backend/src/services/delivery/extension/extensionRoots.js 落地；
 // 这里刻意**不 require** 那个模块 —— 守卫属横切层，按 [DESIGN-LAY-005] 第二节
 // 「任何层 → L5/L6」的禁止边，scripts/ 只许按路径操作，不许 import L2 的实现。
 // 代价是两处各有一份字段名，收益是守卫不会因为被守卫的代码坏掉而一起坏掉。
 const EXTENSION_MANIFEST = 'khy.extension.json';
 const EXTENSION_KINDS = new Set(['runtime', 'ide-bridge', 'asset', 'toolchain', 'reference']);
+
+/**
+ * 拓展根目录（仓库根相对）。
+ *
+ * ★ 2026-10-04：本文件曾有 **4 处**各自写死 `path.join(repoRoot, EXTENSION_ROOT_REL)`
+ * （checkExtensionContract / checkExtensionIdHardcode / collectExtensionSources /
+ * extensionRootOf）。方案P 把拓展搬到 `delivery/extension/` 后，这四处全部指向
+ * 不存在的目录 ⇒ 三条拓展规则（extension-contract / extension-id-hardcode /
+ * extension-path-drift）**静默空转、计数恒 0**。
+ *
+ * 尤其讽刺：checkExtensionIdHardcode 的注释明写「拓展可能在
+ * `delivery/extension/<分类>/<id>`……只看一层的话这条守卫会静默变成空转」——
+ * **注释知道新路径，代码还指着旧路径**。
+ *
+ * 故收敛为单一常量；迁移时只改这里一处。
+ */
+const EXTENSION_ROOT_REL = 'delivery/extension';
 
 // 仓库自己的分类名白名单（真源 [DESIGN-TOOL-002] §2.3 的表；来自用户原话枚举的六类：
 // tool / plugin / scripts / mcp / software / 协议）。
@@ -661,7 +685,7 @@ function _checkV2ExtensionViolations(manifest, rel, violations) {
 }
 
 function checkExtensionContract(findings, counts) {
-  const extRoot = path.join(repoRoot, 'extensions');
+  const extRoot = path.join(repoRoot, EXTENSION_ROOT_REL);
   if (!fs.existsSync(extRoot)) {
     counts['extension-contract'] = 0;
     return; // 没有 delivery/extension/ 目录 → 无可违规（fixture 仓库的常态）
@@ -751,7 +775,7 @@ function checkExtensionContract(findings, counts) {
 // **只算分派用途的字面量**。注释与面向用户的提示文案不算：一句「未找到 khy-markdown
 // 拓展」不是分支，禁掉它只会逼人把有用的错误信息写模糊，对架构没有任何好处。
 // 判据是字面量是否出现在**代码**里（剥掉注释后仍在）且**不在字符串拼接的提示上下文**。
-const CORE_SCAN_DIRS = ['services/backend/src'];
+const CORE_SCAN_DIRS = ['runtime/node/backend/src'];
 // 允许名单：**文件 → 该文件被豁免的 id 集合**（`'*'` = 整文件豁免）。
 //
 // 为什么是「文件 + id」而不是整文件：整文件豁免会连带放过这个文件**将来**新写的
@@ -764,12 +788,12 @@ const CORE_SCAN_DIRS = ['services/backend/src'];
 // 名单保持封闭：新增项须在此显式登记并写明理由。
 const EXTENSION_ID_ALLOWLIST = new Map([
   // 契约自身的实现件：它必须能写出 id，否则契约模块过不了它自己的规则。
-  ['services/backend/src/services/delivery/extension/markdownWorkbench.js', '*'], // LEGACY_ID 迁移期兜底
+  ['runtime/node/backend/src/services/delivery/extension/markdownWorkbench.js', '*'], // LEGACY_ID 迁移期兜底
   // pip 源码包重建：它按**仓库布局**逐目录复制（'docs'、'frontend'、'packages/shared' 同理），
   // 描述的是要重建出的那棵树长什么样，不是在这台机器上找一个已安装的拓展。
-  ['services/backend/src/cli/handlers/publish.js', new Set(['khy-alpine-iso'])],
+  ['runtime/node/backend/src/cli/handlers/publish.js', new Set(['khy-alpine-iso'])],
   // 历史 bug 案例数据集：files[] 记的是**当年那次事故**改了哪些文件，是史料不是分派。
-  ['services/backend/src/data/bugCases.js', new Set(['khy-alpine-iso'])],
+  ['runtime/node/backend/src/data/bugCases.js', new Set(['khy-alpine-iso'])],
 ]);
 
 /** 该文件的该 id 是否已登记豁免。 */
@@ -837,7 +861,7 @@ function stripToCode(text) {
 }
 
 function checkExtensionIdHardcode(findings, counts) {
-  const extRoot = path.join(repoRoot, 'extensions');
+  const extRoot = path.join(repoRoot, EXTENSION_ROOT_REL);
   if (!fs.existsSync(extRoot)) {
     counts['extension-id-hardcode'] = 0;
     return;
@@ -1082,7 +1106,7 @@ function isTestFixture(relFile) {
 // 只查 delivery/extension/：拓展是会被整体搬动的那类目录，深度敏感的代码在这里最脆。
 function collectExtensionSources() {
   const out = [];
-  const root = path.join(repoRoot, 'extensions');
+  const root = path.join(repoRoot, EXTENSION_ROOT_REL);
   const walk = (dir) => {
     let entries;
     try {
@@ -1105,7 +1129,7 @@ function collectExtensionSources() {
 // 从任意目录往上找到它所属拓展的根（带 khy.extension.json 的那一层）。
 // 找不到就返回 null —— delivery/extension/ 下也存在还没上契约的目录，那由 extension-contract 管。
 function extensionRootOf(dir) {
-  const stop = path.join(repoRoot, 'extensions');
+  const stop = path.join(repoRoot, EXTENSION_ROOT_REL);
   let cur = dir;
   while (cur.startsWith(stop) && cur !== stop) {
     if (fs.existsSync(path.join(cur, 'khy.extension.json'))) return cur;
@@ -1203,6 +1227,14 @@ function checkExtensionPathDrift(findings, counts) {
 }
 
 function checkCrossLayerRequires(findings, counts) {
+  // 搜索范围**从 WORKSPACE_ROOTS 派生**，不再另写一份目录清单。
+  //
+  // ★ 2026-10-04：此前这里硬编码 `services apps software platform tools extensions`。
+  // 方案P 迁移后**六个目录全部不存在**，`git grep` 对不存在的 pathspec 返回空
+  // —— 整个规则从未执行，`cross-layer-require` / `unresolved-require` 恒为 0。
+  // 与 WORKSPACE_ROOTS 的失效是**同一处真源的两次写死**：修一个漏一个。
+  // 故此处只保留一份真源（WORKSPACE_ROOTS 的顶层段），迁移后自动跟随。
+  const SEARCH_PATHS = [...new Set(WORKSPACE_ROOTS.map((r) => r.split('/')[0]))];
   const out = git([
     'grep',
     '-n',
@@ -1210,12 +1242,7 @@ function checkCrossLayerRequires(findings, counts) {
     '-E',
     "require\\(['\"](\\.\\./){2,}",
     '--',
-    'services',
-    'apps',
-    'software',
-    'platform',
-    'tools',
-    'extensions',
+    ...SEARCH_PATHS,
   ]);
 
   const offenders = [];
@@ -1314,7 +1341,7 @@ function loadDomainDeclaration() {
 }
 
 // 登记表里的 roots 拍平成 (prefix, domain) 表；同一文件命中多个前缀时取**最长前缀**，
-// 于是 services/backend/src/services/domain 归 D2 而不是它的父集 services。
+// 于是 runtime/node/backend/src/services/domain 归 D2 而不是它的父集 services。
 function buildDomainPrefixes(decl) {
   const out = [];
   for (const [id, def] of Object.entries(decl.domains || {})) {
@@ -1502,7 +1529,7 @@ function listUnitSourceFiles(absDir, relDir, acc) {
 }
 
 // 磁盘扫描会把 gitignore 掉的**构建产物**当成核心域源文件。实测事故：
-// platform/khy_platform/bundled/runtime/khy/bundle.mjs（17.7 MB，.gitignore:137 命中）
+// runtime/substrate/platform/khy_platform/bundled/runtime/khy/bundle.mjs（17.7 MB，.gitignore:137 命中）
 // 单独把 entry-buffer 从基线 2667 顶到 2668 并升级为 error —— 而 C-5 判据管的是
 // 「新**代码**禁直写核心域」，产物不是代码，补 manifest 既无意义也不该做。
 // 一次 `git check-ignore --stdin` 批量剔除；git 不可用（迷你 fixture 仓）时**不剔**，

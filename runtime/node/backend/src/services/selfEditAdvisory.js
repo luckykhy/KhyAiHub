@@ -40,12 +40,12 @@ function selfEditWatchEnabled(env = process.env) {
 
 // ── 三副本镜像规则(镜像 scripts/release/pip_packaging_rules.py 的 BASE_COPY_PAYLOADS)──
 // 两个 bundle 树根:
-const MIRROR_ROOTS = ['platform/khy_os/bundled', 'packaging/npm/bundled'];
-// 源根 → bundle 内相对根 的映射(kernel/alpine 落到 alpine/,其余原样)。
+const MIRROR_ROOTS = ['platform/khy_os/bundled', 'works/ship/npm/bundled'];
+// 源根 → bundle 内相对根 的映射(runtime/boot/kernel/alpine 落到 alpine/,其余原样)。
 const SOURCE_PAYLOADS = [
   { src: 'services/backend', dst: 'services/backend' },
   { src: 'docs', dst: 'docs' },
-  { src: 'kernel/alpine', dst: 'alpine' },
+  { src: 'runtime/boot/kernel/alpine', dst: 'alpine' },
 ];
 
 /** 归一仓库相对路径:反斜杠 → 正斜杠,去前导 ./ 与 /。永不抛。 */
@@ -101,7 +101,7 @@ function isMirroredSourcePath(repoRel) {
 /**
  * 把源文件仓库相对路径映射成两个 bundle 树下的仓库相对目标路径。非镜像源 → []。永不抛。
  * @param {string} repoRel
- * @returns {string[]}  如 [platform/khy_os/bundled/services/backend/src/x.js, packaging/npm/bundled/...]
+ * @returns {string[]}  如 [platform/khy_os/bundled/services/backend/src/x.js, works/ship/npm/bundled/...]
  */
 function computeMirrorPaths(repoRel) {
   try {

@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: prompt.md -->
 <title>CI/CD and Automation · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>ci-cd-and-automation<span class="sep">›</span>CI/CD and Automation</div>
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>ci-cd-and-automation<span class="sep">›</span>CI/CD and Automation</div>
       <header class="hero reveal"><h1>CI/CD and Automation</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#ci-cd-and-automation">CI/CD and Automation</a></li><li class="lvl-2"><a href="#overview">Overview</a></li><li class="lvl-2"><a href="#when-to-use">When to Use</a></li><li class="lvl-2"><a href="#the-quality-gate-pipeline">The Quality Gate Pipeline</a></li><li class="lvl-2"><a href="#github-actions-configuration">GitHub Actions Configuration</a></li><li class="lvl-3"><a href="#basic-ci-pipeline">Basic CI Pipeline</a></li><li class="lvl-3"><a href="#with-database-integration-tests">With Database Integration Tests</a></li><li class="lvl-3"><a href="#e2e-tests">E2E Tests</a></li><li class="lvl-2"><a href="#feeding-ci-failures-back-to-agents">Feeding CI Failures Back to Agents</a></li><li class="lvl-2"><a href="#deployment-strategies">Deployment Strategies</a></li><li class="lvl-3"><a href="#preview-deployments">Preview Deployments</a></li><li class="lvl-3"><a href="#feature-flags">Feature Flags</a></li><li class="lvl-3"><a href="#staged-rollouts">Staged Rollouts</a></li><li class="lvl-3"><a href="#rollback-plan">Rollback Plan</a></li><li class="lvl-2"><a href="#environment-management">Environment Management</a></li><li class="lvl-2"><a href="#automation-beyond-ci">Automation Beyond CI</a></li><li class="lvl-3"><a href="#dependabot-renovate">Dependabot / Renovate</a></li><li class="lvl-3"><a href="#build-cop-role">Build Cop Role</a></li><li class="lvl-3"><a href="#pr-checks">PR Checks</a></li><li class="lvl-2"><a href="#ci-optimization">CI Optimization</a></li><li class="lvl-2"><a href="#common-rationalizations">Common Rationalizations</a></li><li class="lvl-2"><a href="#red-flags">Red Flags</a></li><li class="lvl-2"><a href="#verification">Verification</a></li></ul></nav>
       <article class="doc-body">
@@ -298,14 +298,14 @@ Production secrets  → Stored in deployment platform / vault</code></pre>
 <p>After setting up or modifying CI:</p>
 <ul><li>[ ] All quality gates are present (lint, types, tests, build, audit)</li><li>[ ] Pipeline runs on every PR and push to main</li><li>[ ] Failures block merge (branch protection configured)</li><li>[ ] CI results feed back into the development loop</li><li>[ ] Secrets are stored in the secrets manager, not in code</li><li>[ ] Deployment has a rollback mechanism</li><li>[ ] Pipeline runs in under 10 minutes for the test suite</li></ul>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../../../services/backend/src/skills/built-in/browser-testing-with-devtools/prompt.html"><div class="dir">← 上一篇</div><div class="ttl">Browser Testing with DevTools</div></a><a class="next" href="../../../../../../services/backend/src/skills/built-in/claude-api/prompt.html"><div class="dir">下一篇 →</div><div class="ttl">Claude API — Anthropic API Usage Guide</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/skills/built-in/browser-testing-with-devtools/prompt.html"><div class="dir">← 上一篇</div><div class="ttl">Browser Testing with DevTools</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/skills/built-in/claude-api/prompt.html"><div class="dir">下一篇 →</div><div class="ttl">Claude API — Anthropic API Usage Guide</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="services/backend/src/skills/built-in/ci-cd-and-automation/prompt.html";</script>
-<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/skills/built-in/ci-cd-and-automation/prompt.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

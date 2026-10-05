@@ -468,14 +468,14 @@ const PLACEHOLDER = /^(demo|test|main window|untitled|未命名|未标题|placeh
 })();
 
 // ══════════════════════════════════════════════════════════ 检查 7 · C-E4
-// evidence/ 自留底档（AI 参与范围自述 / 设计决策索引 / 发布记录）
+// works/record/evidence/ 自留底档（AI 参与范围自述 / 设计决策索引 / 发布记录）
 // 主动记录比被追问好：被要求补充开发过程说明时，它就是「如实申报」的证据。
 (function checkEvidence() {
   const gi = read('.gitignore') || '';
   const ignored = /^\s*evidence\/?\s*$/m.test(gi);
   const localDir = fs.existsSync(path.join(REPO_ROOT, 'evidence'));
 
-  // ── 分支 ①：仓库内 evidence/ —— 2026-09-28 人工裁决 D-E1 起，这是**真源**，
+  // ── 分支 ①：仓库内 works/record/evidence/ —— 2026-09-28 人工裁决 D-E1 起，这是**真源**，
   // 且必须入库（证据的证明力来自「与代码同一提交图 + 逐文件时间戳」；
   // gitignore 会让它在新克隆的机器上直接消失）。见 [DESIGN-IP-001] C-E4。
   if (localDir) {
@@ -485,7 +485,7 @@ const PLACEHOLDER = /^(demo|test|main window|untitled|未命名|未标题|placeh
         'copyright-evidence-tracked',
         '.gitignore',
         1,
-        'C-E4：evidence/ 被 .gitignore 忽略了 —— 裁决 D-E1 起它是**入库真源**，' +
+        'C-E4：works/record/evidence/ 被 .gitignore 忽略了 —— 裁决 D-E1 起它是**入库真源**，' +
           '不再允许「自留底档不进提交」。忽略掉的证据等于没有证据。'
       );
     }
@@ -531,7 +531,7 @@ const PLACEHOLDER = /^(demo|test|main window|untitled|未命名|未标题|placeh
       add(
         SEV_ERROR,
         'copyright-evidence-slots',
-        'evidence/',
+        'works/record/evidence/',
         1,
         `C-E4：仓库内底档缺 ${missing.length} 类必需件：${missing.join(' ｜ ')}。` +
           '缺任一类都意味着「人的意愿 / 决策依据 / 参与范围 / 发布沿革 / 验收」中有一环无痕迹。'
@@ -550,13 +550,13 @@ const PLACEHOLDER = /^(demo|test|main window|untitled|未命名|未标题|placeh
       add(
         SEV_WARNING,
         'copyright-evidence-image',
-        'evidence/',
+        'works/record/evidence/',
         1,
         'C-E4：底档目前无一件图片证据。文字自述可被质疑为「事后补写」，' +
-          '而界面/终端截图与由仓库实测数据渲染的图表不能 —— 补进 evidence/03_图片/。'
+          '而界面/终端截图与由仓库实测数据渲染的图表不能 —— 补进 works/record/evidence/03_图片/。'
       );
     }
-    // 四类图片证据齐备性：判据写在 evidence/03_图片/图片证据说明.md，本段是其执行器。
+    // 四类图片证据齐备性：判据写在 works/record/evidence/03_图片/图片证据说明.md，本段是其执行器。
     // 声明面有标准而执行面不查，就会长期只有部分类别有图（WIRING-003 A2-4）。
     const kinds = [
       { 名: '图表（仓库数据派生）', re: /03_图片\/图表\/[^/]+\.(png|jpg|jpeg|svg)$/i },
@@ -569,11 +569,11 @@ const PLACEHOLDER = /^(demo|test|main window|untitled|未命名|未标题|placeh
       add(
         SEV_WARNING,
         'copyright-evidence-image-kinds',
-        'evidence/03_图片/',
+        'works/record/evidence/03_图片/',
         1,
         `C-E4：图片证据缺 ${missingKinds.length}/${kinds.length} 类：${missingKinds.join(' ｜ ')}。` +
-          '分类清单是 evidence/03_图片/图片证据说明.md 声明的标准，须有守卫兜底；' +
-          '重跑 node scripts/evidence/capture-runtime.js 与 render-images.js 可补齐。'
+          '分类清单是 works/record/evidence/03_图片/图片证据说明.md 声明的标准，须有守卫兜底；' +
+          '重跑 node scripts/works/record/evidence/capture-runtime.js 与 render-images.js 可补齐。'
       );
     }
     if (!missing.length && !emptyImages.length) {
@@ -581,7 +581,7 @@ const PLACEHOLDER = /^(demo|test|main window|untitled|未命名|未标题|placeh
         severity: SEV_WARNING,
         originalSeverity: SEV_WARNING,
         finding: 'copyright-evidence-ok',
-        file: 'evidence/',
+        file: 'works/record/evidence/',
         line: 1,
         message: `C-E4：仓库内底档已就位并入库 —— ${files.length} 个文件，五类必需件齐全，`
           + `图片 ${images.length} 张（四类齐备：${kinds.length - missingKinds.length}/${kinds.length}）。`,
@@ -636,7 +636,7 @@ const PLACEHOLDER = /^(demo|test|main window|untitled|未命名|未标题|placeh
       file: '.gitignore',
       line: 1,
       message:
-        'C-E4：找不到自留底档。首选做法：在仓库根建 evidence/（导览 README + AI 参与范围自述 + 设计决策索引 + 发布记录 + 人类指令语料 + 图片），**入库不忽略**（裁决 D-E1）；' +
+        'C-E4：找不到自留底档。首选做法：在仓库根建 works/record/evidence/（导览 README + AI 参与范围自述 + 设计决策索引 + 发布记录 + 人类指令语料 + 图片），**入库不忽略**（裁决 D-E1）；' +
         '②历史做法：底档放仓库外，在 ' + REG_REL + ' 的 evidence 段登记路径。底档是「被追问时如实申报」的依据 —— 主动记录比被追问好。',
     });
     return;
@@ -828,7 +828,7 @@ if (EXPLAIN && verbose) {
   process.stdout.write('  C-MAT3 界面标识不得停留占位名：Demo/test/main window/未命名\n');
   process.stdout.write('  C-MAT2 名称与版本五处一致：申请材料 / 源程序页眉 / 说明书封面 / 界面标题 / README\n');
   process.stdout.write('  C-X2  产出可解释：.vue 样式块占比过半会挤掉有效代码行（抽取时剥离即可）\n');
-  process.stdout.write('  C-E4  证据留痕：evidence/ 自留底档（AI 参与范围自述）\n');
+  process.stdout.write('  C-E4  证据留痕：works/record/evidence/ 自留底档（AI 参与范围自述）\n');
   process.stdout.write('  C-MAT1/C-X3  材料生成器就绪：scripts/copyright/ 的 vendored 树未被改动 + 本仓覆盖层在场且对冲上游「前端优先」\n');
   process.stdout.write('  机器判不了、故意不设守卫：C-M4 痕迹内容是否成立、C-X1 随机抽 3 处能解释 → 人工评审\n');
 }

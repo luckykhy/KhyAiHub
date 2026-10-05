@@ -14,7 +14,7 @@ const assert = require('node:assert/strict');
 const path = require('path');
 const { spawnSync } = require('child_process');
 
-const { searchExecutable } = require('../../services/backend/src/tools/platformUtils');
+const { searchExecutable } = require('../../runtime/node/backend/src/tools/platformUtils');
 
 const RULES_DIR = path.join(__dirname, '..', 'release');
 const CANDIDATES = process.platform === 'win32'
@@ -54,28 +54,28 @@ test('sdist allowlist', async (t) => {
 
   await t.test('accepts ordinary first-party source', () => {
     assert.deepEqual(violations(python, [
-      ['services/backend/server.js', 1024],
-      ['services/backend/src/models/index.js', 2048],
-      ['platform/khy_platform/cli.py', 4096],
+      ['runtime/node/backend/server.js', 1024],
+      ['runtime/node/backend/src/models/index.js', 2048],
+      ['runtime/substrate/platform/khy_platform/cli.py', 4096],
       ['docs/00_INDEX_文档索引.md', 8192],
-      ['software/khyquant/frontend/src/App.vue', 4096],
-      ['kernel/src/main.c', 2048],
-      ['services/backend/wasm-indicators/moon.pkg', 256],
+      ['delivery/channel/khyquant/frontend/src/App.vue', 4096],
+      ['runtime/boot/kernel/src/main.c', 2048],
+      ['runtime/node/backend/wasm-indicators/moon.pkg', 256],
       ['Makefile', 512],
       ['Dockerfile.iso-builder', 1024],
-      ['services/backend/.gitignore', 64],
+      ['runtime/node/backend/.gitignore', 64],
       ['PKG-INFO', 15000],
     ]), []);
   });
 
   await t.test('rejects every leak class the 1.1.11 sdist shipped', () => {
     const leaked = violations(python, [
-      ['services/backend/.khy/logs/heal-audit.jsonl', 523719],
-      ['services/backend/.khy_quant_bootstrapped', 14],
-      ['services/backend/test-wal-recovery.db-shm', 32768],
-      ['services/backend/wasm-indicators/indicators.mbt.ast', 28362],
-      ['services/backend/pack/khy-os-khy-os-1.2.3.tgz', 3],
-      ['services/backend/src/skills/built-in/commit/prompt.html', 4964],
+      ['runtime/node/backend/.khy/logs/heal-audit.jsonl', 523719],
+      ['runtime/node/backend/.khy_quant_bootstrapped', 14],
+      ['runtime/node/backend/test-wal-recovery.db-shm', 32768],
+      ['runtime/node/backend/wasm-indicators/indicators.mbt.ast', 28362],
+      ['runtime/node/backend/pack/khy-os-khy-os-1.2.3.tgz', 3],
+      ['runtime/node/backend/src/skills/built-in/commit/prompt.html', 4964],
       ['docs/19_资产/site/mermaid.min.js', 3271915],
     ]);
     assert.equal(leaked.length, 7, `expected all 7 flagged, got ${JSON.stringify(leaked)}`);
@@ -91,7 +91,7 @@ test('sdist allowlist', async (t) => {
 
   await t.test('the offline runtime bundle is exempt from the ceiling', () => {
     assert.deepEqual(
-      violations(python, [['platform/khy_platform/bundled/runtime/khy/bundle.mjs', 17466501]]),
+      violations(python, [['runtime/substrate/platform/khy_platform/bundled/runtime/khy/bundle.mjs', 17466501]]),
       [],
     );
   });
@@ -99,22 +99,22 @@ test('sdist allowlist', async (t) => {
   await t.test('the five real HTML entry points survive the *.html ban', () => {
     assert.deepEqual(violations(python, [
       ['apps/ai-frontend/index.html', 325],
-      ['software/khyquant/frontend/index.html', 1484],
-      ['software/khyquant/frontend/ml-test.html', 14343],
-      ['software/khyquant/frontend/public/offline.html', 2448],
-      ['extensions/tools/khy-markdown/khyosMarkdown.html', 173895],
+      ['delivery/channel/khyquant/frontend/index.html', 1484],
+      ['delivery/channel/khyquant/frontend/ml-test.html', 14343],
+      ['delivery/channel/khyquant/frontend/public/offline.html', 2448],
+      ['delivery/extension/tools/khy-markdown/khyosMarkdown.html', 173895],
     ]), []);
   });
 
   await t.test('named binaries pass by pattern so a version bump does not break the build', () => {
     assert.deepEqual(violations(python, [
-      ['extensions/bridges/khy-trae-bridge/khy-trae-bridge-0.2.1.vsix', 8053],
-      ['extensions/bridges/khy-trae-bridge/khy-trae-bridge-9.9.9.vsix', 8053],
-      ['extensions/tools/khy-markdown/KhyosMarkdown.exe', 4608],
-      ['software/khyquant/frontend/public/wasm/khy-math-demo.wasm', 41],
+      ['delivery/extension/bridges/khy-trae-bridge/khy-trae-bridge-0.2.1.vsix', 8053],
+      ['delivery/extension/bridges/khy-trae-bridge/khy-trae-bridge-9.9.9.vsix', 8053],
+      ['delivery/extension/tools/khy-markdown/KhyosMarkdown.exe', 4608],
+      ['delivery/channel/khyquant/frontend/public/wasm/khy-math-demo.wasm', 41],
     ]), []);
     // Same suffixes anywhere else stay rejected.
-    assert.deepEqual(violations(python, [['services/backend/bin/helper.exe', 4608]]),
-      ['services/backend/bin/helper.exe']);
+    assert.deepEqual(violations(python, [['runtime/node/backend/bin/helper.exe', 4608]]),
+      ['runtime/node/backend/bin/helper.exe']);
   });
 });

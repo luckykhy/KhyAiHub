@@ -85,8 +85,8 @@ function ruleOf(criterion) {
 
 // ── 事实表 ──────────────────────────────────────────────────────────────────
 
-const SPEC_FILE = 'services/backend/src/cli/tui/AGENTS.md';
-const IMPL_FILE = 'services/backend/src/cli/tui/perfTunables.js';
+const SPEC_FILE = 'runtime/node/backend/src/cli/tui/AGENTS.md';
+const IMPL_FILE = 'runtime/node/backend/src/cli/tui/perfTunables.js';
 
 /**
  * 绑定表：规范表行名 ↔ `perfTunables` 导出名 ↔ 组件兜底值所在文件。
@@ -104,13 +104,13 @@ const BINDINGS = Object.freeze([
   {
     spec: 'Spinner',
     impl: 'spinnerFrameMs',
-    fallbackFile: 'services/backend/src/cli/tui/ink-components/Spinner.js',
+    fallbackFile: 'runtime/node/backend/src/cli/tui/ink-components/Spinner.js',
     fallbackRe: /let\s+FRAME_MS\s*=\s*(\d+)/,
   },
   {
     spec: 'topicBar',
     impl: 'topicBarAnimMs',
-    fallbackFile: 'services/backend/src/cli/tui/runtime/topicBar.js',
+    fallbackFile: 'runtime/node/backend/src/cli/tui/runtime/topicBar.js',
     fallbackRe: /let\s+_ANIM_MS\s*=\s*(\d+)/,
   },
   { spec: '状态栏', impl: 'heartbeatMs', fallbackFile: null, fallbackRe: null },

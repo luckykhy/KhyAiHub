@@ -14,7 +14,7 @@ const { execFileSync } = require('child_process');
 const REPO = path.resolve(__dirname, '..', '..');
 const OUT_DIR = path.join(REPO, 'evidence', '04_机器可读');
 
-const FEEDBACK_DIR = path.join(REPO, '.khy', 'feedback');
+const FEEDBACK_DIR = path.join(REPO, 'works', 'data', 'khy', 'feedback');
 const WORKBUDDY_DIR = path.join(REPO, '.workbuddy', 'memory');
 const HQ_DIR = path.join(REPO, '.ai', 'hq');
 const KERNEL_DIR = path.join(REPO, 'kernel');
@@ -234,7 +234,7 @@ function collectFeedback() {
     存证跨度: days.length ? { 起: days[0], 止: days[days.length - 1] } : null,
     按日分布: byDay,
     逐任务清单: cases,
-    复算命令: ['ls .khy/feedback | wc -l', 'find .khy/feedback -maxdepth 2 -type f | sed \'s#.*/##\' | sort | uniq -c'],
+    复算命令: ['ls works/data/khy/feedback | wc -l', 'find works/data/khy/feedback -maxdepth 2 -type f | sed \'s#.*/##\' | sort | uniq -c'],
   };
 }
 
@@ -310,8 +310,8 @@ function collectHumanInstructions(feedback, ledgers) {
     用户引述句: { 命中: quotes.length, 去重: quoteDedup.length, 条目: quoteDedup },
     人写的验收标准: { 条数: humanAcceptanceCriteria.length, 条目: humanAcceptanceCriteria },
     复算命令: [
-      'grep -rn "source:" .khy/feedback --include=*.md | wc -l',
-      'grep -rn "用户原话\\|用户要求\\|用户拍板" .khy/feedback .workbuddy .ai/hq docs/15_维护记录 | wc -l',
+      'grep -rn "source:" works/data/khy/feedback --include=*.md | wc -l',
+      'grep -rn "用户原话\\|用户要求\\|用户拍板" works/data/khy/feedback .workbuddy .ai/hq docs/15_维护记录 | wc -l',
     ],
   };
 }
@@ -598,7 +598,7 @@ function collectDependencies() {
     跨板块边: Object.entries(跨板块).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ 路径: k, 次数: v })),
     入度排名, 出度排名, 目录权重,
     复算命令: [
-      `node -e "const p=require('./evidence/04_机器可读/contribution-metrics.json').模块依赖度量;console.log(p.可解析边,p.目录节点数)"`,
+      `node -e "const p=require('./works/record/evidence/04_机器可读/contribution-metrics.json').模块依赖度量;console.log(p.可解析边,p.目录节点数)"`,
       'node scripts/evidence/collect-contribution.js（重跑即覆盖本段）',
       "grep -rn \"require('\\\\.\\\\./services\" services/backend/src/cli | wc -l",
     ],
@@ -610,7 +610,7 @@ function main() {
   const gitMetrics = collectGit();
   log(`采集 1/6 完成: ${gitMetrics.提交总数} 条提交，${Object.keys(gitMetrics.作者).length} 位作者，第 ${gitMetrics.累计新增行} 行新增`);
 
-  log('采集 2/6: .khy/feedback 三模态存证');
+  log('采集 2/6: works/data/khy/feedback 三模态存证');
   const feedback = collectFeedback();
   log(`采集 2/6 完成: ${feedback.任务目录数 || 0} 个任务目录，复现-修复往返 ${feedback.复现修复往返数 || 0} 组`);
 

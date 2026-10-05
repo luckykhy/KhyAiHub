@@ -36,7 +36,7 @@ const queueLib = require('../lib/mirrorSyncQueue.js');
 // 所以这里用滑动空闲窗口而不是固定总时长：大仓的慢推送不会被误杀，
 // 真断网时 TCP 卡住也不会让 hook 永久挂住。每收到一个字节就重置。
 const IDLE_WINDOW_MS = 45_000;
-const QUEUE_RELATIVE_PATH = path.join('.khy', 'sync', 'mirror-queue.json');
+const QUEUE_RELATIVE_PATH = path.join('works', 'data', 'khy', 'sync', 'mirror-queue.json');
 const MIRROR_REMOTES = ['origin', 'gitee'];
 
 /* 参数解析 ------------------------------------------------------------------ */

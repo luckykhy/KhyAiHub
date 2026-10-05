@@ -48,8 +48,8 @@ test('configStore: 导出面', () => {
 });
 
 test('configStore: scopePath 优先级与 project 分支', () => {
-  assert.equal(store.scopePath('project', { cwd: '/abs/proj' }), path.join('/abs/proj', '.khy', 'mcp.json'));
-  assert.equal(store.scopePath('project', { cwd: '/abs/proj', dataHome: '/dh' }), path.join('/abs/proj', '.khy', 'mcp.json')); // project 无视 dataHome
+  assert.equal(store.scopePath('project', { cwd: '/abs/proj' }), path.join('/abs/proj', 'works', 'data', 'khy', 'mcp.json'));
+  assert.equal(store.scopePath('project', { cwd: '/abs/proj', dataHome: '/dh' }), path.join('/abs/proj', 'works', 'data', 'khy', 'mcp.json')); // project 无视 dataHome
   assert.equal(store.scopePath('user', { dataHome: '/dh' }), path.join('/dh', 'mcp.json'));
   assert.equal(store.scopePath('user', { dataHome: '/dh', homedir: '/hd' }), path.join('/dh', 'mcp.json')); // dataHome 赢
   assert.equal(store.scopePath('user', { homedir: '/hd' }), path.join('/hd', '.khy', 'mcp.json'));

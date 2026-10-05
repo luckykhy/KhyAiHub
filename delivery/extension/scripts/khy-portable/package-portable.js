@@ -6,8 +6,8 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 const { normalizeTarget, platformSlug } = require('./artifact-manifest');
 
-const ROOT = path.resolve(__dirname, '..', '..', '..');
-const VERSION = require(path.join(ROOT, 'services', 'backend', 'package.json')).version;
+const ROOT = path.resolve(__dirname, '..', '..', '..', '..');
+const VERSION = require(path.join(ROOT, 'runtime', 'node', 'backend', 'package.json')).version;
 const VALID_KINDS = new Set(['runtime', 'dev']);
 
 function hostTarget(platform = process.platform, arch = process.arch) {

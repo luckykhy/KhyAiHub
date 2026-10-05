@@ -15,7 +15,7 @@ echo.
 
 :: Start backend in new window
 echo Starting backend server...
-start "Khy-OS Backend" /D "%KHY_REPO_ROOT%\services\backend" cmd /k "npm run dev"
+start "Khy-OS Backend" /D "%KHY_REPO_ROOT%\runtime\node\backend" cmd /k "npm run dev"
 
 :: Wait a moment
 timeout /t 3 /nobreak >nul

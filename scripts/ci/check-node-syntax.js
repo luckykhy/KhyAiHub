@@ -10,7 +10,7 @@ const cp = require('child_process');
 const root = process.cwd();
 const targets = process.argv.slice(2).length
   ? process.argv.slice(2)
-  : ['services/backend', 'services/ai-backend', 'platform/packages', 'apps/ai-frontend', 'scripts'];
+  : ['services/backend', 'services/ai-backend', 'runtime/substrate/platform/packages', 'delivery/web/ai-frontend', 'scripts'];
 
 const validExts = new Set(['.js', '.cjs', '.mjs']);
 const ignoreDirs = new Set([
@@ -36,7 +36,7 @@ function collectFiles(relPath, out) {
   const normalized = path.normalize(relPath);
   // Prune ignored directories (node_modules, build, …) BEFORE descending so we
   // never walk into them. This also stops the walker from following workspace
-  // self-symlinks like platform/packages/shared/node_modules/@khy/shared →
+  // self-symlinks like runtime/substrate/platform/packages/shared/node_modules/@khy/shared →
   // itself, which previously recursed until fs.statSync threw ELOOP.
   if (shouldIgnore(normalized)) return;
 

@@ -10,7 +10,7 @@ const path = require('path');
 // portableAdapter pulls in a provider extension, node-stream-zip and the update
 // index protocol at load time. Stub all three before requiring it so no real
 // download / unzip / provider lookup happens, then restore the cache.
-const providerPath = require.resolve('../../extensions/extensions/providerModule');
+const providerPath = require.resolve('../../delivery/extension/delivery/extension/providerModule');
 const indexPath = require.resolve('../../../updateIndexProtocol');
 const zipPath = require.resolve('node-stream-zip');
 

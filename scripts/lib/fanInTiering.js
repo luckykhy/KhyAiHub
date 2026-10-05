@@ -58,8 +58,8 @@ function toRel(repoRoot, abs) {
 
 /**
  * 从 DOMAIN-DEPS.json 派生「前缀 → 域」匹配表。
- * overrides 与 roots 一起参与**最长前缀**竞争，故 `services/backend/src/services/domain`
- * 这类覆盖项会自然压过 `services/backend/src/services`。
+ * overrides 与 roots 一起参与**最长前缀**竞争，故 `runtime/node/backend/src/services/domain`
+ * 这类覆盖项会自然压过 `runtime/node/backend/src/services`。
  * @returns {Array<{prefix:string,domain:string}>}
  */
 function loadDomainMatchers(repoRoot) {
@@ -174,7 +174,7 @@ function specifiersOf(absPath) {
     let m;
     while ((m = re.exec(code))) out.push({ line: i + 1, spec: m[1] });
     // 非字面量参数（require(变量) / require(path.join(...))）：静态口径**盲区**，
-    // 实测本仓确有此类站点（extensions/scripts/khy-portable 三处指向 utils/dataHome.js），
+    // 实测本仓确有此类站点（delivery/extension/scripts/khy-portable 三处指向 utils/dataHome.js），
     // 故如实计数而不是当作零。
     const dynRe = /require\(\s*(?![\s)'"])/g;
     let d;

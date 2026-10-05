@@ -55,7 +55,7 @@ IMAGE_TAG="khy-iso-builder:latest"
 info "Building Docker image (${IMAGE_TAG})..."
 docker build $DOCKER_NOCACHE \
   -t "$IMAGE_TAG" \
-  -f "${ROOT_DIR}/extensions/scripts/khy-alpine-iso/Dockerfile.iso-builder" \
+  -f "${ROOT_DIR}/delivery/extension/scripts/khy-alpine-iso/Dockerfile.iso-builder" \
   "$ROOT_DIR" 2>&1 | tail -20
 
 info "Running ISO build inside container (--privileged for chroot/mount)..."

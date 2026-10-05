@@ -19,10 +19,10 @@ category: frontend
 | 项目 | 路径 | 技术栈 | 说明 |
 |---|---|---|---|
 | AI 平台前端 | `apps/ai-frontend/` | Vue 3 + Element Plus（按需加载）+ `src/styles/newapi-theme.css` + `useTheme` 暗色单例 | 主管理 UI，38+ 页面，覆盖网关/模型/用量/工作流/监控 |
-| 量化交易前端 | `software/khyquant/frontend/` | Vue 3 + Element Plus（全量）+ @element-plus/icons-vue + zhCn | 交易终端，27+ 页面，数据密集（行情/回测/策略） |
+| 量化交易前端 | `delivery/channel/khyquant/frontend/` | Vue 3 + Element Plus（全量）+ @element-plus/icons-vue + zhCn | 交易终端，27+ 页面，数据密集（行情/回测/策略） |
 | 移动伴侣 | `apps/khy-mobile/` | Vue 3 + Capacitor | 移动端，14+ 页面，SSE 实时 |
 
-共享包：`platform/packages/ui-shared/`（@khy/ui-shared，auth/http 工具，非样式库）、`platform/packages/shared/`（@khy/shared，后端生态）。
+共享包：`runtime/substrate/platform/packages/ui-shared/`（@khy/ui-shared，auth/http 工具，非样式库）、`runtime/substrate/platform/packages/shared/`（@khy/shared，后端生态）。
 
 ## 何时使用
 
@@ -106,7 +106,7 @@ category: frontend
 - 新增页面：`src/composables/useRoutePrefetch.js`（viewLoaders）+ `src/router/index.js` + `src/views/X.vue`。
 - 组件放 `src/components/`，网关相关在 `src/components/gateway/`。
 
-### khyquant frontend（`software/khyquant/frontend/`）
+### khyquant frontend（`delivery/channel/khyquant/frontend/`）
 - Element Plus 全量引入（`element-plus/dist/index.css`），全局样式改动在 main.js 引入的样式文件。
 - 交易数据密集：行情/回测/策略页面优先优化数字排版、涨跌色、表格密度。
 - 移动优先的布局在 khy-mobile 里做，不要在这里堆响应式。

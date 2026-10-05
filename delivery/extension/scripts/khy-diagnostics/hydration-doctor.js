@@ -25,10 +25,10 @@ const {
   _RULES,
   CRITICAL_PACKAGES,
   _PACKAGE_HINTS,
-} = require('../../../services/backend/src/services/domain/backup/restore/hydrationHealth');
-const { opsDocPath, opsDocRelPath } = require('../../../scripts/lib/docsPaths');
+} = require('../../../../runtime/node/backend/src/services/domain/backup/restore/hydrationHealth');
+const { opsDocPath, opsDocRelPath } = require('../../../../scripts/lib/docsPaths');
 
-const ROOT = path.resolve(__dirname, '..', '..', '..');
+const ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const DOC_PATH = opsDocPath('[OPS-MAN-070] 首启依赖hydration自检清单.md');
 const NPM_PKG_NAME = '@khy-os/khy-os';
 const PIP_PKG_NAME = 'khy-os';

@@ -72,7 +72,7 @@ test('导出面恰为 6 个符号，且 _gitSoft 就是 D3 的那个函数（同
 test('_isSourceRel: 扩展名判定 + docs/.ai 排除，反斜杠先归一，裸文件名不排除', () => {
   const table = [
     ['services/backend/src/x.js', true],
-    ['kernel/src/sched.c', true],
+    ['runtime/boot/kernel/src/sched.c', true],
     ['scripts/y.sh', true],
     ['services/backend/package.json', true],
     ['services\\x.js', true],

@@ -15,7 +15,7 @@
 - **`/lang` `/keybindings` `/sandbox-toggle`**：`constants/commandSchema.js:1017`、
   `:1038`、`:1073` → `cli/handlers/{lang.js:16,config.js:121,sandboxToggle.js:24}`。
 - **能力配置**：`tools/configureCapability.js:23`（另注：
-  `software/khyquant/tools/configureCapability.js:24` 指向 software 本地副本，
+  `delivery/channel/khyquant/tools/configureCapability.js:24` 指向 software 本地副本，
   不是本目录——独立项目 khyquant 的分发载体，不改变其归属）。
 
 ## 为什么这么做

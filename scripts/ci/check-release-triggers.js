@@ -72,8 +72,8 @@ const HARD_CONDITION_STEPS = [
 // 全量 9 源里有刻意不同步的组（`PROCESS-002` 组间刻意不同）。
 const BUMP_SOURCES = [
   'pyproject.toml',
-  'packaging/npm/package.json',
-  'services/backend/package.json',
+  'works/ship/npm/package.json',
+  'runtime/node/backend/package.json',
 ];
 
 // 豁免注释：`# release-trigger-exempt: <理由>`（理由必填，空理由不生效且被报出）。

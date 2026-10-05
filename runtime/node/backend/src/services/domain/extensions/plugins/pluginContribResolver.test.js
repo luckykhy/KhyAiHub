@@ -4,7 +4,7 @@
  * pluginContribResolver.test.js — 钉死插件按需惰性激活：双闸门、目录扫描过滤、
  * 冲突 first-wins、manifest/entry 字段优先级、fail-soft 绝不抛。
  *
- * 为什么必须 stub extensionRoots：真 discover() 会扫本仓 extensions/ 等真实根，
+ * 为什么必须 stub extensionRoots：真 discover() 会扫本仓 delivery/extension/ 等真实根，
  * 结果随仓库内容漂移；惰性激活器的语义（runtime kind 过滤、tools 声明、entry 相对
  * absDir 拼接、state 键是裸目录名 id）只有在受控扩展集下才可钉死。stub 走
  * require.cache，与 sync.test.js 对 registry 的做法一致。
@@ -31,7 +31,7 @@ const os = require('os');
 const path = require('path');
 
 // ── require.cache 桩（必须在 require 被测模块之前装好）──────────────────
-const ER_PATH = require.resolve('../extensions/extensionRoots');
+const ER_PATH = require.resolve('../delivery/extension/extensionRoots');
 const BASETOOL_PATH = require.resolve('../../../../tools/_baseTool');
 const TOOLS_PATH = require.resolve('../../../../tools');
 const SAVED = [ER_PATH, BASETOOL_PATH, TOOLS_PATH].map((p) => [p, require.cache[p]]);

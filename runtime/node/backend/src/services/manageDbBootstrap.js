@@ -221,7 +221,7 @@ async function ensureManageDbSeeded(env) {
     //     plugins / userGateway,以及 /api/ai-gateway-admin)的鉴权走 @khy/shared 的
     //     User 模型。注意本仓存在**两份**同版本号但内容不同的共享包:
     //     services/backend/vendor/shared(旧快照,无 aliases)与
-    //     platform/packages/shared(新,ARCH-074 的 aliases 列)。workflow 等路由经
+    //     runtime/substrate/platform/packages/shared(新,ARCH-074 的 aliases 列)。workflow 等路由经
     //     khy-ai-backend 解析到**新版**,其 User SELECT aliases,老库没有该列 →
     //     authenticateToken 摔在「no such column: aliases」,整组路由 401 认证失败
     //     (workflow 画布整个不可用)。此处把各解析视角下的共享实例逐一 additive
@@ -230,7 +230,7 @@ async function ensureManageDbSeeded(env) {
       const { createRequire } = require('module');
       const resolverRoots = [
         __filename, // 本进程视角(backend → vendor/shared)
-        require.resolve('khy-ai-backend/routes/workflow'), // 路由视角(khy-ai-backend → platform/packages/shared)
+        require.resolve('khy-ai-backend/routes/workflow'), // 路由视角(khy-ai-backend → runtime/substrate/platform/packages/shared)
       ];
       const seen = new Set();
       for (const root of resolverRoots) {

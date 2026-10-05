@@ -3,7 +3,7 @@
 /**
  * KhyOsTool — deep low-level access to the bare-metal KHY OS kernel for the agent.
  *
- * Boots the kernel (kernel/) under QEMU via the shared KhyOsRunner over a 16550
+ * Boots the kernel (runtime/boot/kernel/) under QEMU via the shared KhyOsRunner over a 16550
  * serial bridge, then runs kernel shell commands and returns their output. This
  * gives the agent operations no other tool offers: inspect processes/memory,
  * load & run Ring 3 ELF programs, exercise syscalls, and read/write RAW disk

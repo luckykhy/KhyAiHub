@@ -70,9 +70,9 @@ function targets() {
   if (rawTargets.length > 0) return rawTargets.map((t) => path.resolve(REPO_ROOT, t));
   if (changedMode) return changedFiles();
   const dirs = [
-    path.join(REPO_ROOT, 'services', 'backend', 'src', 'services'),
-    path.join(REPO_ROOT, 'services', 'backend', 'src', 'routes'),
-    path.join(REPO_ROOT, 'services', 'backend', 'migrations'),
+    path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'src', 'services'),
+    path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'src', 'routes'),
+    path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'migrations'),
   ];
   const out = [];
   for (const d of dirs) {

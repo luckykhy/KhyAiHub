@@ -13,7 +13,7 @@
  * (fs.watch 会因元数据 touch 误报)+ 出错 5s 重建。无第三方依赖(仓库无 chokidar)。
  *
  * 诚实边界:
- *   - 只监视 khy monorepo 的镜像源根(services/backend/src、docs、kernel/alpine),且仅当
+ *   - 只监视 khy monorepo 的镜像源根(services/backend/src、docs、runtime/boot/kernel/alpine),且仅当
  *     detectKhyRepoRoot 严格标记确认。非 khy 工程 → start 直接返回,零监视。
  *   - §4 去重:wasRecentlyToolEdited 命中(khy 工具刚写过)→ 跳过,避免与工具路径双重提示。
  *   - fail-open:任何 fs.watch 错误 5s 重建,绝不阻塞或崩会话。
@@ -30,7 +30,7 @@ const svc = require('./selfEditAdvisoryService');
 const DEBOUNCE_MS = 1500;
 const POLL_INTERVAL_MS = 30_000;
 // 监视的源根(相对仓库根)。services/backend 只盯 src(避开 node_modules / bundled)。
-const WATCH_DIRS = ['services/backend/src', 'docs', 'kernel/alpine'];
+const WATCH_DIRS = ['services/backend/src', 'docs', 'runtime/boot/kernel/alpine'];
 
 let _started = false;
 let _root = null;

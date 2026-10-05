@@ -45,7 +45,7 @@ const MAX_TRACES = 256; // per-trace step 计数器 Map 上限（防无界增长
 
 // ── 脱敏（§1.3 / R4）─────────────────────────────────────────────────────────
 // 命中密钥/令牌类子串即打码；保留少量首尾字符以保可排障性，其余以 *** 代替。
-// 语义与 software/khyquant/services/agentDisplay.js 一致（§6 双参考实现，底座侧不
+// 语义与 delivery/channel/khyquant/services/agentDisplay.js 一致（§6 双参考实现，底座侧不
 // 依赖应用，故为平行实现）。
 const SECRET_PATTERNS = [
   // 形如 sk-xxxx / khy-xxxx / ghp_xxxx 等带前缀的密钥

@@ -1275,7 +1275,7 @@ function loadConfig(projectDir) {
 
   if (projectDir) {
     paths.push({
-      path: path.join(projectDir, '.khy', 'mcp.json'),
+      path: path.join(projectDir, 'works', 'data', 'khy', 'mcp.json'),
       scope: ConfigScope.LOCAL,
     });
     // Legacy project config

@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: khyos-stack.md -->
 <title>khyos 前端技术栈规范（Vue 3 + Element Plus） · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>frontend-beautify<span class="sep">›</span>references<span class="sep">›</span>khyos 前端技术栈规范（Vue 3 + Element Plus）</div>
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>frontend-beautify<span class="sep">›</span>references<span class="sep">›</span>khyos 前端技术栈规范（Vue 3 + Element Plus）</div>
       <header class="hero reveal"><h1>khyos 前端技术栈规范（Vue 3 + Element Plus）</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#khyos-前端技术栈规范-vue-3-element-plus">khyos 前端技术栈规范（Vue 3 + Element Plus）</a></li><li class="lvl-2"><a href="#共享设计-token-ai-frontend-为准">共享设计 token（ai-frontend 为准）</a></li><li class="lvl-3"><a href="#核心-token-亮色">核心 token（亮色）</a></li><li class="lvl-3"><a href="#双主题机制">双主题机制</a></li><li class="lvl-2"><a href="#element-plus-使用约定">Element Plus 使用约定</a></li><li class="lvl-3"><a href="#ai-frontend-按需加载">ai-frontend（按需加载）</a></li><li class="lvl-3"><a href="#khyquant-frontend-全量引入">khyquant frontend（全量引入）</a></li><li class="lvl-2"><a href="#通用样式规则">通用样式规则</a></li><li class="lvl-3"><a href="#字体">字体</a></li><li class="lvl-3"><a href="#布局">布局</a></li><li class="lvl-3"><a href="#数据密集页面-行情-监控-回测">数据密集页面（行情/监控/回测）</a></li><li class="lvl-3"><a href="#移动端-khy-mobile">移动端（khy-mobile）</a></li><li class="lvl-2"><a href="#验证命令">验证命令</a></li></ul></nav>
       <article class="doc-body">
@@ -51,17 +51,17 @@
 <h3 id="移动端-khy-mobile">移动端（khy-mobile）<a class="anchor" href="#移动端-khy-mobile" aria-label="锚点">#</a></h3>
 <ul><li>触控目标 ≥ 44px。</li><li>慎用 hover；交互依赖 tap 状态。</li><li>实时数据（SSE）用卡片层级组织，连接状态统一走 <code>ConnectionStatus.vue</code>。</li></ul>
 <h2 id="验证命令">验证命令<a class="anchor" href="#验证命令" aria-label="锚点">#</a></h2>
-<table><thead><tr><th>项目</th><th>dev</th><th>build 检查</th></tr></thead><tbody><tr><td>ai-frontend</td><td><code>cd apps/ai-frontend &amp;&amp; npm run dev</code></td><td><code>cd apps/ai-frontend &amp;&amp; npx vite build</code></td></tr><tr><td>khyquant</td><td><code>cd software/khyquant/frontend &amp;&amp; npm run dev</code></td><td><code>cd software/khyquant/frontend &amp;&amp; npx vite build</code></td></tr><tr><td>khy-mobile</td><td><code>cd apps/khy-mobile &amp;&amp; npm run dev</code></td><td><code>cd apps/khy-mobile &amp;&amp; npx vite build</code></td></tr></tbody></table>
+<table><thead><tr><th>项目</th><th>dev</th><th>build 检查</th></tr></thead><tbody><tr><td>ai-frontend</td><td><code>cd apps/ai-frontend &amp;&amp; npm run dev</code></td><td><code>cd apps/ai-frontend &amp;&amp; npx vite build</code></td></tr><tr><td>khyquant</td><td><code>cd delivery/channel/khyquant/frontend &amp;&amp; npm run dev</code></td><td><code>cd delivery/channel/khyquant/frontend &amp;&amp; npx vite build</code></td></tr><tr><td>khy-mobile</td><td><code>cd apps/khy-mobile &amp;&amp; npm run dev</code></td><td><code>cd apps/khy-mobile &amp;&amp; npx vite build</code></td></tr></tbody></table>
 <p>每次改动后至少跑一次 build 检查确认无编译错误。</p>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../../../../services/backend/src/skills/built-in/frontend-beautify/references/khyos-frontends.html"><div class="dir">← 上一篇</div><div class="ttl">khyos 三个前端项目指引</div></a><a class="next" href="../../../../../../../services/backend/src/skills/built-in/frontend-beautify/SKILL.html"><div class="dir">下一篇 →</div><div class="ttl">Frontend Beautify — khyos 前端美化</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/skills/built-in/frontend-beautify/references/khyos-frontends.html"><div class="dir">← 上一篇</div><div class="ttl">khyos 三个前端项目指引</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/skills/built-in/frontend-beautify/SKILL.html"><div class="dir">下一篇 →</div><div class="ttl">Frontend Beautify — khyos 前端美化</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="services/backend/src/skills/built-in/frontend-beautify/references/khyos-stack.html";</script>
-<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/skills/built-in/frontend-beautify/references/khyos-stack.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 <!-- 文档分类: INDEX | 阶段: 常驻 | 上位: [MGMT-STD-001] 第 1.3 条 / [DESIGN-LAY-005] -->
 # 00_INDEX — 仓库根楼层索引
 
-> 根目录共 **61 项**，按消费方分六族。米勒定律的兑现方式是**先分组**：人记 6 族，不记 61 项；
+> 根目录共 **62 项**，按消费方分六族。米勒定律的兑现方式是**先分组**：人记 6 族，不记 61 项；
 > 族内「机器按根路径读取」的条目位置即契约，**永不动**（真源 [DESIGN-LAY-008] §3 裁决二、§4 不变量 3）。
 > 变更根条目前先读 `docs/10_规范/DESIGN-LAY/[DESIGN-LAY-008] 目录层级重设计执行路线图.md` §13（方案 R）。
 > 本索引由探针 `.khyos/tmp/root-census.js` + `.khyos/tmp/index-coverage.js` 对账（覆盖全部根条目才算数），
@@ -11,7 +11,7 @@
 
 | 条目 | 层 | 一句话 |
 | --- | --- | --- |
-| `kernel/` | L0 | 引导内核（QEMU、ELF+PE 双加载器） |
+| `runtime/boot/kernel/` | L0 | 引导内核（QEMU、ELF+PE 双加载器） |
 | `platform/` | L1 | Python 启动器 + `@khy/shared`/`@khy/ui-shared` |
 | `services/` | L2 | Node.js 后端全部业务（`services/backend`） |
 | `apps/` | L3 | 前端应用（ai-frontend、桌面端） |
@@ -41,13 +41,14 @@
 `scripts/` `packaging/` `docs/`（本索引在此）`evidence/` `entries/`（产物单一根，Lay-4；pip 族已迁入 `entries/pip`）`deploy/` `patches/` `tests/`
 ——方案 R-R4 的收纳候选，硬引用面实测见 [DESIGN-LAY-008] §12.54（scripts 584 / tests 403 / packaging 64…），逐族 sub-batch；`scripts/` `tests/` 依 §13 裁定**留根**。
 
-## ⑥ 本机态（gitignored 或工具私有，不在版本库契约内）— 6 项
+## ⑥ 本机态（gitignored 或工具私有，不在版本库契约内）— 7 项
 
 | 条目 | 性质 |
 | --- | --- |
 | `.khy/` `.khyos/` | 运行时数据 / 维护工作台（LAY-007 五档寻址） |
 | `node_modules/` | 依赖 |
 | `.commandcode/` | 工具私有（ignored 变体） |
+| `.codeartsdoer/` | 工具私有（目录内 `.gitignore` 全忽略）；2026-10-04 补登，与 `.opencode/`/`.zcode/` 同列待复审 |
 | `.workbuddy/` `.workbuddy-ai/` | 自愈型外部工具态（隔离后复生，2026-09-29 起登记不清理） |
 | `khy-Trajectory` | 自愈型符号链接 → `.khy`（khy 运行时自建，已在 `check-commit-timing.js` / `pip_packaging_rules.py` 的 LOCAL_STATE 清单登记） |
 | `.claude/` | Claude Code worktrees（本机在用） |

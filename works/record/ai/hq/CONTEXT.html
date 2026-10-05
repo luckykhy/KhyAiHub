@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: CONTEXT.md -->
 <title>CONTEXT.md — khy-os 架构速查（AI 上下文注入素材） · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>.ai<span class="sep">›</span>hq<span class="sep">›</span>CONTEXT.md — khy-os 架构速查（AI 上下文注入素材）</div>
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>works<span class="sep">›</span>record<span class="sep">›</span>ai<span class="sep">›</span>hq<span class="sep">›</span>CONTEXT.md — khy-os 架构速查（AI 上下文注入素材）</div>
       <header class="hero reveal"><h1>CONTEXT.md — khy-os 架构速查（AI 上下文注入素材）</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#context-md-khy-os-架构速查-ai-上下文注入素材">CONTEXT.md — khy-os 架构速查（AI 上下文注入素材）</a></li><li class="lvl-2"><a href="#一-项目定位">一、项目定位</a></li><li class="lvl-2"><a href="#二-分层结构">二、分层结构</a></li><li class="lvl-2"><a href="#三-关键入口点">三、关键入口点</a></li><li class="lvl-2"><a href="#四-工程红线-提示词模板同步引用-违反即返工">四、工程红线（提示词模板同步引用，违反即返工）</a></li><li class="lvl-2"><a href="#五-验证命令清单">五、验证命令清单</a></li><li class="lvl-2"><a href="#六-ai-助手须知-源自-agents-md">六、AI 助手须知（源自 AGENTS.md）</a></li><li class="lvl-2"><a href="#七-域-domain-与-khy-os-的对应关系">七、域（domain）与 khy-os 的对应关系</a></li><li class="lvl-2"><a href="#八-多机同步状态-速查-日期敏感-以最新为准">八、多机同步状态（速查，日期敏感，以最新为准）</a></li><li class="lvl-3"><a href="#六步会话协议-单仓版">六步会话协议（单仓版）</a></li><li class="lvl-3"><a href="#租约-多机不撞车的机制">租约（多机不撞车的机制）</a></li><li class="lvl-3"><a href="#2026-09-17-现状">2026-09-17 现状</a></li><li class="lvl-2"><a href="#九-khy-os-的-自动更新-分两件事-勿混">九、khy-os 的「自动更新」分两件事（勿混）</a></li><li class="lvl-2"><a href="#十-通道选择判定-五通道决策矩阵速查">十、通道选择判定（五通道决策矩阵速查）</a></li></ul></nav>
       <article class="doc-body">
@@ -111,14 +111,14 @@ git add -A &amp;&amp; git commit -m <span class="hljs-string">&quot;...&quot;</s
 <ol><li>信息只在第三方 GUI 画面 / 需视觉验证？→ <strong>看屏幕</strong>（CH-5：<code>desktopControl</code> 总闸 <code>KHY_DESKTOP_CONTROL</code> + safetyGate 审批，最后手段）</li><li>要改变系统状态？→ <strong>禁止直写状态文件</strong>，走服务直调/CLI/Web API 正门（校验、审计、FSM 在门内）</li><li>只读 + schema 稳定 + 文件即真相？→ <strong>直接读状态文件</strong>（CH-1，仅只读豁免；数据目录由 <code>src/utils/dataHome.js</code> 解析）</li><li>与 backend 同一 Node 进程？→ <strong>服务层直调</strong>（CH-2，require 服务模块，fail-soft <code>{ok,error}</code> 契约）</li><li>否则按调用方分流：人/脚本/CI/跨语言 → <strong>CLI</strong>（CH-3）；前端/远程/并发/流式 → <strong>Web API</strong>（CH-4，端点经 <code>serviceDefaults.js</code>/env/<code>ai_manage_runtime.json</code> 运行时发现，不可达降级 CLI）</li></ol>
 <p>原则：<strong>结构化优先、只读才直读、写必走正门、视觉只兜底。</strong></p>
       </article>
-      <nav class="pager"><a class="prev" href="../../.ai/GUARDS.html"><div class="dir">← 上一篇</div><div class="ttl">GUARDS — khy-os 红线与维护指南 (khy 自动生成种子文档)</div></a><a class="next" href="../../.ai/hq/prompts/bugfix/01-修复指定Bug.html"><div class="dir">下一篇 →</div><div class="ttl">提示词正文（复制下面代码块内的全部内容）</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../works/record/ai/GUARDS.html"><div class="dir">← 上一篇</div><div class="ttl">GUARDS — khy-os 红线与维护指南 (khy 自动生成种子文档)</div></a><a class="next" href="../../../../works/record/ai/hq/prompts/bugfix/01-修复指定Bug.html"><div class="dir">下一篇 →</div><div class="ttl">提示词正文（复制下面代码块内的全部内容）</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__=".ai/hq/CONTEXT.html";</script>
-<script src="../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="works/record/ai/hq/CONTEXT.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

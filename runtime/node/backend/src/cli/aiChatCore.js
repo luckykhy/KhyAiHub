@@ -4873,7 +4873,9 @@ async function chat(userMessage, opts = {}) {
       result.model || '',
       tokenUsage.inputTokens,
       tokenUsage.outputTokens,
-      0
+      0,
+      tokenUsage.cacheReadInputTokens || 0,
+      tokenUsage.cacheWriteInputTokens || 0
     );
   } catch {}
 
@@ -5082,7 +5084,7 @@ async function chat(userMessage, opts = {}) {
     truncated: _truncatedDelivery || _lastStopReason.includes('length'),
     retrieval: ragMeta,
     elapsed,
-    effort,
+    effort, routeFact: result.routeFact || null,
   };
 }
 

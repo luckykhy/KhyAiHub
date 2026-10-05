@@ -5,7 +5,7 @@
  *
  *   node --test scripts/tests/repoTuiGates.test.js
  *
- * 把 check-tui-gates.js 对准真实源码树：services/backend/src/cli/tui 下
+ * 把 check-tui-gates.js 对准真实源码树：runtime/node/backend/src/cli/tui 下
  * （测试文件除外）实际读取的 UNIQUE KHY_* token 数不得超过脚本内 MAX_GATES
  * 预算。新函数门控可临时抬高上限，但必须在 MAX_GATES 注释里留下抬升原因与
  * 收敛计划（目标 ≤40）；用户偏好类一律进 ~/.khyquant/tui.json 而非新 env token。

@@ -6647,7 +6647,7 @@ async function runToolUseLoop(userMessage, options = {}) {
           ...(_fpfState ? { _fpfState } : {}),
           // 重复请求轮次:本回合若识别出是同一请求的第 N(≥2)轮重复,把轮次挂到返回契约,
           // 供 UI/程序观测(被动兜底:首轮不挂、零噪音)。
-          ...(_promptRound > 1 ? { promptRound: _promptRound } : {}),
+          ...(_promptRound > 1 ? { promptRound: _promptRound } : {}), ...(aiResult.routeFact ? { routeFact: aiResult.routeFact } : {}),
         };
       }
 

@@ -75,7 +75,7 @@ function assembleRuntime(spec) {
     } catch {
       throw new Error(
         `[${label}] 源文件不存在：${from}\n`
-        + '  先跑一次构建(packaging/build/esbuild-modules.js --prod)再组装。'
+        + '  先跑一次构建(works/ship/build/esbuild-modules.js --prod)再组装。'
       );
     }
     if (!stat.isFile() || stat.size === 0) {

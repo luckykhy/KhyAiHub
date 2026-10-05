@@ -267,9 +267,9 @@ function analyzeWorkerValidation(workerSrc) {
 function evaluate(input, opts = {}) {
   const stage = opts.stage || 'S1';
   const findings = [];
-  const execFile = 'services/backend/src/services/domain/project/workflow/workflowExecutor.js';
-  const workerFile = 'services/backend/src/services/domain/project/workflow/workflowRunWorker.js';
-  const catalogFile = 'services/backend/vendor/shared/src/workflow/nodeCatalog.js';
+  const execFile = 'runtime/node/backend/src/services/domain/project/workflow/workflowExecutor.js';
+  const workerFile = 'runtime/node/backend/src/services/domain/project/workflow/workflowRunWorker.js';
+  const catalogFile = 'runtime/node/backend/vendor/shared/src/workflow/nodeCatalog.js';
 
   const parity = analyzeParity(input.execSrc, input.catalogSrc, {
     catalogCount: input.catalogCount,

@@ -151,7 +151,7 @@ function collectNpmScriptNames() {
   const names = new Set();
   const pkgPaths = [
     path.join(repoRoot, 'package.json'),
-    path.join(repoRoot, 'services', 'backend', 'package.json'),
+    path.join(repoRoot, 'runtime', 'node', 'backend', 'package.json'),
   ];
   for (const pkgPath of pkgPaths) {
     try {
@@ -170,7 +170,7 @@ function collectNpmScriptNames() {
 //  2. verify 里每个 `npm run <name>` 的 <name> 必须存在于根/backend package.json 的 scripts。
 //     被改名/删除的 npm 脚本会让 verify 静默烂掉,这里把它变成会亮红灯的 STALE-VERIFY。
 //  只校验 `npm run` 前缀命令;裸 `node --test <path>` / shell 命令不在此校验范围(保守不误报)。
-//  `npm run <name> --prefix apps/ai-frontend` 的 workspace 脚本:若根/backend 均无同名脚本,
+//  `npm run <name> --prefix delivery/web/ai-frontend` 的 workspace 脚本:若根/backend 均无同名脚本,
 //  但命令带 `--prefix`,视为 workspace 委托,放行(与既有映射表约定一致)。
 function checkVerify(map) {
   const scriptNames = collectNpmScriptNames();
@@ -197,7 +197,7 @@ function checkVerify(map) {
       while ((match = NPM_RUN_RE.exec(command)) !== null) {
         const name = match[1];
         if (scriptNames.has(name)) continue;
-        if (hasPrefix) continue; // workspace 委托(如 --prefix apps/ai-frontend),放行
+        if (hasPrefix) continue; // workspace 委托(如 --prefix delivery/web/ai-frontend),放行
         console.log(`STALE-VERIFY ${area.id}: npm run ${name}`);
         problems += 1;
       }

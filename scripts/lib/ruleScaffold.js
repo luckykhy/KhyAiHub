@@ -156,7 +156,7 @@ const TARGET_PATH_RE = new RegExp('^(.*?\\.(?:' + HOME_EXTS.join('|') + '))\\b')
  * "CLAUDE.md#一红线-r1-r4（R4）"
  * "AGENTS.md#工程规则-规则1"
  * "docs/10_规范/其它规范/[DESIGN-ACP-001] ….md / scripts/ci/validate-json-schemas.js"
- * "services/backend/src/services/riskGate.js isUnbypassableGate"
+ * "runtime/node/backend/src/services/riskGate.js isUnbypassableGate"
  * "docs/…/[DESIGN-SOURCING-001] ….md §4 B-U2/B-U4 / npm run check:duplication"
  * ```
  * 初版把整个字符串当文件名 ⇒ **37 条全是误报**（「文件不存在」）。

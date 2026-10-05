@@ -9,10 +9,10 @@
  * 是否被打进包**。缺了它，khy 连第一行都跑不起来——「简单还原」无从谈起。
  *
  * 为什么必须单独立一条：pip / npm 都是「先在即将报废的构建机上审产物，再发出去」。
- *   - npm 的启动壳（package/bin/khy.js → bundled/services/backend/bin/khy.js）
- *     在 packaging/npm/scripts/audit-purity.js 的 REQUIRED_PATHS 里被显式钉死。
- *   - pip 的启动壳是 platform/khy_platform/cli.py:2304 直接 exec 的
- *     `<bundle>/services/backend/bin/khy.js`；缺失即在 cli.py:2307 致命退出。
+ *   - npm 的启动壳（package/bin/khy.js → bundled/runtime/node/backend/bin/khy.js）
+ *     在 works/ship/npm/scripts/audit-purity.js 的 REQUIRED_PATHS 里被显式钉死。
+ *   - pip 的启动壳是 runtime/substrate/platform/khy_platform/cli.py:2304 直接 exec 的
+ *     `<bundle>/runtime/node/backend/bin/khy.js`；缺失即在 cli.py:2307 致命退出。
  *     但历史上 pip 的 REQUIRED_WHEEL_PATHS / REQUIRED_SDIST_PATHS 只钉死了 models/
  *     auth/main 等，**唯独漏了它自己 exec 的启动脚本**——于是一个丢了 bin/khy.js 的
  *     wheel 能通过 audit_pip_artifacts.py、正常发布，然后在别人机器上一装即死。
@@ -33,7 +33,7 @@
  * HOW-TO-EXTEND（给下一个维护者 / 小模型）
  *   1. 又出现某条渠道在启动早期就会 exec/require 的新「地板」文件（缺它即整体起不来）：
  *      先把它加进 scripts/release/pip_packaging_rules.py 的 REQUIRED_WHEEL_PATHS 与
- *      REQUIRED_SDIST_PATHS，以及 packaging/npm/scripts/audit-purity.js 的 REQUIRED_PATHS，
+ *      REQUIRED_SDIST_PATHS，以及 works/ship/npm/scripts/audit-purity.js 的 REQUIRED_PATHS，
  *      再把 bundle 相对路径加进本文件 LAUNCH_CRITICAL_BUNDLE_PATHS。
  *   2. 配套测试会解析三份真实清单、强制三渠道一致；只加一处会红，这是刻意的护栏。
  *   3. 改完跑：node --test scripts/tests/bundleLaunchContract.test.js（必须绿）。
@@ -42,14 +42,14 @@
 // 启动地板：每条离机渠道在启动早期真正 exec / require 的运行时关键脚本（相对 bundle
 // 根，即 .../bundled/ 之下）。缺任一 = khy 连第一行都跑不起来，或核心路由整片 500。
 // 逐条来源：
-//   services/backend/bin/khy.js       —— pip 壳 cli.py:2304 直接 exec；缺失即 cli.py:2307 致命退出。
-//   services/backend/package.json     —— bin/khy.js:442 与 server.js:54 顶层 boot 即 require（读 version）；
+//   runtime/node/backend/bin/khy.js       —— pip 壳 cli.py:2304 直接 exec；缺失即 cli.py:2307 致命退出。
+//   runtime/node/backend/package.json     —— bin/khy.js:442 与 server.js:54 顶层 boot 即 require（读 version）；
 //                                        缺它 boot 第一步就 `Cannot find module './package.json'` 崩溃。
-//   services/backend/server.js        —— 管理后端服务入口。
-//   services/backend/src/models/index.js —— 后端启动早期即 require 的数据模型入口。
-//   services/ai-backend/src/middleware/auth.js —— 缺它曾让 bundled 安装的每条 proxy/user-gateway 路由 500。
-//   apps/ai-frontend/src/main.js      —— 前端 SPA 入口，缺则管理页白屏。
-//   software/khyquant/frontend/src/main.js —— khyquant 前端入口，同上。
+//   runtime/node/backend/server.js        —— 管理后端服务入口。
+//   runtime/node/backend/src/models/index.js —— 后端启动早期即 require 的数据模型入口。
+//   runtime/node/ai-backend/src/middleware/auth.js —— 缺它曾让 bundled 安装的每条 proxy/user-gateway 路由 500。
+//   delivery/web/ai-frontend/src/main.js      —— 前端 SPA 入口，缺则管理页白屏。
+//   delivery/channel/khyquant/frontend/src/main.js —— khyquant 前端入口，同上。
 // pip(wheel/sdist) 早已三处钉死前 6 条；npm audit-purity 历史只钉了前 2 条——本契约
 // 就是把这条渠道非对称逼成硬门（三份清单必须都钉死同一份启动地板）。
 const LAUNCH_CRITICAL_BUNDLE_PATHS = [
@@ -61,7 +61,7 @@ const LAUNCH_CRITICAL_BUNDLE_PATHS = [
 //   pip sdist  —— <path>（源码树相对路径，无 bundled 前缀）
 //   npm        —— package/bundled/<path>
 const PIP_WHEEL_PREFIX = 'khy_platform/bundled/';
-const PIP_SDIST_PREFIX = 'platform/khy_platform/bundled/';
+const PIP_SDIST_PREFIX = 'runtime/substrate/platform/khy_platform/bundled/';
 const NPM_PREFIX = 'package/bundled/';
 
 /** 把任意入参安全转成字符串（null/undefined → ''），绝不抛。 */

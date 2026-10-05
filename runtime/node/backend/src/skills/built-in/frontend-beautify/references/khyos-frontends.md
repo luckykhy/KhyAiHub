@@ -45,11 +45,11 @@ cd apps/ai-frontend && npx vite build   # 无编译错误
 cd apps/ai-frontend && npm run dev      # 目视检查
 ```
 
-## 2. 量化交易前端（software/khyquant/frontend）
+## 2. 量化交易前端（delivery/channel/khyquant/frontend）
 
 ### 结构
 ```
-software/khyquant/frontend/src/
+delivery/channel/khyquant/frontend/src/
 ├── main.js                  # 全量引入 EP + 图标 + zhCn
 ├── router/index.js          # 路由（/dashboard /trading /strategies /backtest ...）
 ├── views/                   # 27+ 页面
@@ -71,8 +71,8 @@ software/khyquant/frontend/src/
 
 ### 验证
 ```bash
-cd software/khyquant/frontend && npx vite build
-cd software/khyquant/frontend && npm run dev
+cd delivery/channel/khyquant/frontend && npx vite build
+cd delivery/channel/khyquant/frontend && npm run dev
 ```
 
 ## 3. 移动伴侣（apps/khy-mobile）

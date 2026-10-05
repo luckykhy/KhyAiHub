@@ -45,10 +45,10 @@ const asJson = argv.includes('--json');
  * 要拦的是「构建了、而且脏」。
  */
 const DEFAULT_RUNTIME_ROOTS = Object.freeze([
-  'packaging/npm/bundled/runtime',
+  'works/ship/npm/bundled/runtime',
   // pip 通道的同位物。它比 npm 通道更需要这道门：assemble 之后只有
   // audit_pip_artifacts.py，而那个审的是打好的 wheel/sdist，不是这份 staging。
-  'platform/khy_platform/bundled/runtime',
+  'runtime/substrate/platform/khy_platform/bundled/runtime',
 ]);
 
 /** --root <path> 可重复，用于发布/便携脚本检查自己的临时 staging。 */

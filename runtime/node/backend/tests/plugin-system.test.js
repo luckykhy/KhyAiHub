@@ -34,7 +34,7 @@ describe('plugin system integration', () => {
     process.env.KHY_DATA_HOME = tmpDataHome;
     process.env.KHYQUANT_ROOT = tmpRoot;
     // 关掉仓库内置拓展根：本用例测的是 workspace 发现源，若不关，真实仓库�?
-    // extensions/ 会被扫进候选集，用例的通过与否就取决于仓库里恰好装了什�?
+    // delivery/extension/ 会被扫进候选集，用例的通过与否就取决于仓库里恰好装了什�?
     // （目前只�?khy-markdown �?engines.khy 不匹配才没影响结论）�?
     process.env.KHY_EXTENSION_REPO_ROOT = '0';
     jest.resetModules();

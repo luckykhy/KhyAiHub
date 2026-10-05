@@ -83,8 +83,8 @@ prune」的**黑名单**形态，漏东西是必然的，所以打完包之后�
 | --- | --- | --- |
 | `docs/19_资产/site/mermaid.min.js`（3.12 MB） | 可再生构建产物，不进 git 却因为 MANIFEST 走工作树而进了包 | `npm run docs:mermaid`（随后 `npm run docs:build` 生成带图表的离线站） |
 | `**/*.html`（147 个文档站派生件） | 都是 `build_docs_site.js` 从同名 `.md` 生成的；5 个真入口已单独放回 | `npm run docs:build` |
-| `services/backend/.khy/`、`.khy_*` 标记 | 本机运行时状态。带着预置的 hydration 标记发出去，新装的机器会以为 bootstrap 跑过了 | 无需重建，首次运行自动生成 |
-| `*.db-shm` / `*.db-wal` / `test-data-criterion-*/` | 本机跑校验脚本留下的 SQLite 边角料 | `node services/backend/verify-criterion-*.js` |
+| `runtime/node/backend/.khy/`、`.khy_*` 标记 | 本机运行时状态。带着预置的 hydration 标记发出去，新装的机器会以为 bootstrap 跑过了 | 无需重建，首次运行自动生成 |
+| `*.db-shm` / `*.db-wal` / `test-data-criterion-*/` | 本机跑校验脚本留下的 SQLite 边角料 | `node runtime/node/backend/verify-criterion-*.js` |
 | `*.ast` / `*.typedtree` | moon 的构建中间件，`.mbt` 源码照常分发 | `moon build` |
 | `[OPS-MAN-066] khyos进化提示词手册-1000条.md` | 内部运维材料，不该出现在公开发行版 | 仓库内原文件未删，只是不分发 |
 
@@ -98,7 +98,7 @@ prune」的**黑名单**形态，漏东西是必然的，所以打完包之后�
 
 ## 为什么 bundle.mjs 留着不动（离线安装的全部本体）
 
-`platform/khy_platform/bundled/runtime/khy/bundle.mjs` 是 sdist 里最大的单个文件，
+`runtime/substrate/platform/khy_platform/bundled/runtime/khy/bundle.mjs` 是 sdist 里最大的单个文件，
 解压后 16.66 MB，占 sdist 63.07 MB 的四分之一；在 wheel 那一侧它几乎**就是**全部
 载荷（wheel 装出来 17.31 MB / 31 个文件）。曾经评估过三条瘦身路线，全部否掉：
 
@@ -132,10 +132,10 @@ venv 里 `--no-index` 装 wheel 之后，`--version` / `doctor` / `gateway statu
 `where` / `preflight` 全部跑通，机器上没有 kernel 目录也没有 khyquant 目录。
 
 sdist 这一侧**刻意不拆**，理由写在 `pip_packaging_rules.py` 的
-`REQUIRED_SDIST_PATHS` 里：它把 `kernel/src`、`kernel/boot`、`kernel/Makefile`、两个
-kernel iso 配置、三个 `kernel/vendor/moonbit` 文件、`apps/ai-frontend/src/main.js`、
+`REQUIRED_SDIST_PATHS` 里：它把 `runtime/boot/kernel/src`、`runtime/boot/kernel/boot`、`runtime/boot/kernel/Makefile`、两个
+kernel iso 配置、三个 `runtime/boot/kernel/vendor/moonbit` 文件、`delivery/web/ai-frontend/src/main.js`、
 `software/khyquant/frontend/src/main.js` 钉成源码包的**地板**。少了任何一个就说明
-规则改错了，构建直接失败。另外 `platform/khy_platform/cli.py` 还留着一条
+规则改错了，构建直接失败。另外 `runtime/substrate/platform/khy_platform/cli.py` 还留着一条
 `bundled/services/backend` 镜像树的兼容分支，把这些目录从源码包里摘出去会同时动到
 它，属于「为省 8 MB 源码去碰启动链路」，收益和风险不成比例。
 

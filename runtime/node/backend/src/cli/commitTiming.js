@@ -171,7 +171,7 @@ function assess(changes, ctx = {}) {
   if (codeFiles.length && !docOnly && !ctx.verifyPending) {
     add(
       'T2', 'unit-unverified', codeFiles[0].path,
-      `改了 ${codeFiles.length} 个代码文件但没有验证证据（.khy/feedback/<task-id>/verify.txt）。`
+      `改了 ${codeFiles.length} 个代码文件但没有验证证据（works/data/khy/feedback/<task-id>/verify.txt）。`
     );
   }
 

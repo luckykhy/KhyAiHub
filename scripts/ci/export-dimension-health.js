@@ -13,7 +13,7 @@ const fs = require('fs');
 const path = require('path');
 
 const REPO_ROOT = path.resolve(__dirname, '../..');
-const BACKEND_SRC = path.join(REPO_ROOT, 'services/backend/src');
+const BACKEND_SRC = path.join(REPO_ROOT, 'runtime/node/backend/src');
 
 const EVIDENCE = {
   D1: {

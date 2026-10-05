@@ -88,7 +88,7 @@ const SHELL_NAMES = ['Bash', 'bash', 'shellCommand', 'shell_command'];
 
 // ── A2-2: 只读 profile 不得含 shell ─────────────────────────────────────
 function checkA2_2_readOnlyProfileHasNoShell() {
-  const rel = 'services/backend/src/tools/toolProfile.js';
+  const rel = 'runtime/node/backend/src/tools/toolProfile.js';
   const text = readText(rel);
   if (!text) {
     add('A2-2', rel, '文件不存在：无法核对只读 profile 的授权面。');
@@ -116,11 +116,11 @@ function checkA2_2_readOnlyProfileHasNoShell() {
 
 // ── A2-2: 只读 agent 定义不得缺 shell 拒绝 ──────────────────────────────
 const READ_ONLY_AGENT_FILES = [
-  'services/backend/src/agents/built-in/exploreAgent.js',
-  'services/backend/src/agents/built-in/readingAgent.js',
-  'services/backend/src/agents/built-in/mapAgent.js',
-  'services/backend/src/agents/built-in/auditAgent.js',
-  'services/backend/src/agents/built-in/planAgent.js',
+  'runtime/node/backend/src/agents/built-in/exploreAgent.js',
+  'runtime/node/backend/src/agents/built-in/readingAgent.js',
+  'runtime/node/backend/src/agents/built-in/mapAgent.js',
+  'runtime/node/backend/src/agents/built-in/auditAgent.js',
+  'runtime/node/backend/src/agents/built-in/planAgent.js',
 ];
 
 function checkA2_2_readOnlyAgentsDenyShell() {
@@ -166,7 +166,7 @@ function checkA2_2_readOnlyAgentsDenyShell() {
 
 // ── A2-3: 授权解析不得 fail-open ────────────────────────────────────────
 function checkA2_3_noFailOpen() {
-  const rel = 'services/backend/src/tools/toolProfile.js';
+  const rel = 'runtime/node/backend/src/tools/toolProfile.js';
   const text = readText(rel);
   if (!text) {
     return;
@@ -189,7 +189,7 @@ function checkA2_3_noFailOpen() {
 
 // ── A2-1: 未声明不得等于全权 ────────────────────────────────────────────
 function checkA2_1_undeclaredIsNotAllTools() {
-  const rel = 'services/backend/src/agents/builtInAgents.js';
+  const rel = 'runtime/node/backend/src/agents/builtInAgents.js';
   const text = readText(rel);
   if (!text) {
     return;
@@ -208,7 +208,7 @@ function checkA2_1_undeclaredIsNotAllTools() {
 
 // ── A2-4: 声明面收窄必须有执行面强制 ────────────────────────────────────
 function checkA2_4_executionBoundaryEnforcesScope() {
-  const rel = 'services/backend/src/services/tool/toolCalling.js';
+  const rel = 'runtime/node/backend/src/services/tool/toolCalling.js';
   const text = readText(rel);
   if (!text) {
     add('A2-4', rel, '执行漏斗文件不存在：无法核对执行面强制。');
@@ -235,8 +235,8 @@ function checkA2_4_executionBoundaryEnforcesScope() {
 const AUTHORITATIVE_READ_ONLY_ROLES = ['explore', 'verify'];
 
 function checkA2_5_singleRoleSet() {
-  const scopeRel = 'services/backend/src/services/domain/state/orchestrator/roleToolScope.js';
-  const agentRel = 'services/backend/src/tools/AgentTool/index.js';
+  const scopeRel = 'runtime/node/backend/src/services/domain/state/orchestrator/roleToolScope.js';
+  const agentRel = 'runtime/node/backend/src/tools/AgentTool/index.js';
   const scopeText = readText(scopeRel);
   const agentText = readText(agentRel);
   if (!scopeText || !agentText) {
@@ -289,7 +289,7 @@ function checkA2_5_singleRoleSet() {
 
 // ── A2-7: 权限判定失败不得静默降级 ──────────────────────────────────────
 function checkA2_7_noSilentDegradation() {
-  const rel = 'services/backend/src/cli/aiMessageBuilder.js';
+  const rel = 'runtime/node/backend/src/cli/aiMessageBuilder.js';
   const text = readText(rel);
   if (!text) {
     return;

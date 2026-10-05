@@ -22,7 +22,7 @@
  *     因此 `'前文 [{"op":"x"}] 后文'` 会被它解析成**内层对象**而不是外层数组。
  *     `graphPatch.onVar` 的补丁本体是**数组**，故这里同时接受 `{` 与 `[`。
  *   - 之所以不共用一份：`@khy/shared` 在本仓有**两棵被 git 跟踪的副本**
- *     （`platform/packages/shared/` 与 `services/backend/vendor/shared/`，实测
+ *     （`runtime/substrate/platform/packages/shared/` 与 `services/backend/vendor/shared/`，实测
  *     已存在漂移且**无同步守卫**），且 `services/backend/node_modules/@khy/shared`
  *     是指向 vendor 的软链 —— 往 shared 加子路径要同时改两棵树 + 两个 `exports`
  *     映射，风险与收益不成比例。

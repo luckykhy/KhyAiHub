@@ -387,16 +387,16 @@ function npmCause(res) {
 
 /**
  * npm 通道：声明的 goldenPath 形如 `npm i -g @khy-os/khy-os && khy doctor --check`。
- * 本地可验证的等价物：把 packaging/npm 打成 tarball 装进临时 prefix，再跑同一条自检。
+ * 本地可验证的等价物：把 works/ship/npm 打成 tarball 装进临时 prefix，再跑同一条自检。
  * 前置：`npm run assemble` 产出的 bundled/ 运行时（audit-purity 也要求它存在）。
  */
 function verifyNpm(declared) {
-  const pkgDir = path.join(ROOT, 'packaging', 'npm');
-  if (!relExists('packaging/npm/package.json')) return { status: 'SKIP', reason: 'packaging/npm/package.json 不存在' };
-  if (!relExists('packaging/npm/bundled/runtime/khy/bundle.mjs')) {
+  const pkgDir = path.join(ROOT, 'works', 'ship', 'npm');
+  if (!relExists('works/ship/npm/package.json')) return { status: 'SKIP', reason: 'works/ship/npm/package.json 不存在' };
+  if (!relExists('works/ship/npm/bundled/runtime/khy/bundle.mjs')) {
     return {
       status: 'SKIP',
-      reason: '缺 packaged 运行时 packaging/npm/bundled/runtime/khy/bundle.mjs —— 先跑：cd packaging/npm && npm run assemble',
+      reason: '缺 packaged 运行时 works/ship/npm/bundled/runtime/khy/bundle.mjs —— 先跑：cd works/ship/npm && npm run assemble',
     };
   }
   const tmp = makeTmp('npm');

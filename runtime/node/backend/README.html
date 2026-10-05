@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: README.md -->
 <title>Khy Backend · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>Khy Backend</div>
+      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>Khy Backend</div>
       <header class="hero reveal"><h1>Khy Backend</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#khy-backend">Khy Backend</a></li><li class="lvl-2"><a href="#项目概述">项目概述</a></li><li class="lvl-2"><a href="#技术栈">技术栈</a></li><li class="lvl-2"><a href="#项目结构">项目结构</a></li><li class="lvl-2"><a href="#快速开始">快速开始</a></li><li class="lvl-3"><a href="#安装依赖">安装依赖</a></li><li class="lvl-3"><a href="#启动服务">启动服务</a></li><li class="lvl-3"><a href="#cli-命令">CLI 命令</a></li><li class="lvl-2"><a href="#开发规范">开发规范</a></li><li class="lvl-3"><a href="#代码风格">代码风格</a></li><li class="lvl-3"><a href="#错误处理">错误处理</a></li><li class="lvl-3"><a href="#状态消息">状态消息</a></li><li class="lvl-3"><a href="#超时处理">超时处理</a></li><li class="lvl-2"><a href="#api-文档">API 文档</a></li><li class="lvl-3"><a href="#rest-api">REST API</a></li><li class="lvl-3"><a href="#websocket">WebSocket</a></li><li class="lvl-3"><a href="#mcp-协议">MCP 协议</a></li><li class="lvl-2"><a href="#测试">测试</a></li><li class="lvl-2"><a href="#配置">配置</a></li><li class="lvl-3"><a href="#环境变量">环境变量</a></li><li class="lvl-3"><a href="#配置文件">配置文件</a></li><li class="lvl-2"><a href="#部署">部署</a></li><li class="lvl-3"><a href="#docker-部署">Docker 部署</a></li><li class="lvl-3"><a href="#pm2-部署">PM2 部署</a></li><li class="lvl-2"><a href="#监控">监控</a></li><li class="lvl-3"><a href="#健康检查">健康检查</a></li><li class="lvl-3"><a href="#日志">日志</a></li><li class="lvl-3"><a href="#性能监控">性能监控</a></li><li class="lvl-2"><a href="#相关文档">相关文档</a></li><li class="lvl-2"><a href="#许可证">许可证</a></li></ul></nav>
       <article class="doc-body">
@@ -192,20 +192,20 @@ pm2 logs khy-backend
 <span class="hljs-comment"># 监控资源</span>
 pm2 monit</code></pre>
 <h2 id="相关文档">相关文档<a class="anchor" href="#相关文档" aria-label="锚点">#</a></h2>
-<ul><li><a href="../../docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-106]%20项目规范化总纲.html">项目规范化总纲</a></li><li><a href="../../docs/07_OPS_运维/OPS-MAN/[OPS-MAN-173]%20MCP工具接入快速上手.html">MCP 工具接入快速上手</a></li><li>[记忆系统标准规范](../../docs/10_规范/DESIGN-MEM/[DESIGN-MEM-001] 记忆系统标准规范.md)</li></ul>
+<ul><li><span class="deadlink" title="目标不存在：../../docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-106]%20项目规范化总纲.html">项目规范化总纲</span></li><li><span class="deadlink" title="目标不存在：../../docs/07_OPS_运维/OPS-MAN/[OPS-MAN-173]%20MCP工具接入快速上手.html">MCP 工具接入快速上手</span></li><li>[记忆系统标准规范](../../docs/10_规范/DESIGN-MEM/[DESIGN-MEM-001] 记忆系统标准规范.md)</li></ul>
 <h2 id="许可证">许可证<a class="anchor" href="#许可证" aria-label="锚点">#</a></h2>
 <p>MIT License</p>
 <hr>
 <p><em>本项目由 khy-os 团队维护</em></p>
       </article>
-      <nav class="pager"><a class="prev" href="../../services/backend/LINT-DEBT.html"><div class="dir">← 上一篇</div><div class="ttl">Lint 债务登记与追踪</div></a><a class="next" href="../../services/backend/src/agents/built-in/agentCreator.html"><div class="dir">下一篇 →</div><div class="ttl">Agent Creator</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../runtime/node/backend/LINT-DEBT.html"><div class="dir">← 上一篇</div><div class="ttl">Lint 债务登记与追踪</div></a><a class="next" href="../../../runtime/node/backend/src/agents/built-in/agentCreator.html"><div class="dir">下一篇 →</div><div class="ttl">Agent Creator</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__="services/backend/README.html";</script>
-<script src="../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../";window.__KHY_CUR__="runtime/node/backend/README.html";</script>
+<script src="../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

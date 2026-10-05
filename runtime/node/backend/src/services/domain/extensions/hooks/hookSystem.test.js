@@ -182,9 +182,9 @@ describe('hookSystem — 门面与初始化', () => {
 
   test('init 读项目级 .khy/hooks.json，command hook 入桶但不执行', () => {
     const proj = path.join(sandbox, 'proj-json');
-    fs.mkdirSync(path.join(proj, '.khy'), { recursive: true });
+    fs.mkdirSync(path.join(proj, 'works', 'data', 'khy'), { recursive: true });
     fs.writeFileSync(
-      path.join(proj, '.khy', 'hooks.json'),
+      path.join(proj, 'works', 'data', 'khy', 'hooks.json'),
       JSON.stringify({ version: 1, hooks: [{ event: 'PreToolUse', command: 'echo never-run', source: 'fileHook' }] })
     );
     changeWatchEnabled = false;
@@ -227,9 +227,9 @@ describe('hookSystem — 门面与初始化', () => {
     const savedEntry = require.cache[key];
     // A project config keeps registry.count > 0 so the load report branch runs.
     const proj = path.join(sandbox, 'proj-guard-explode');
-    fs.mkdirSync(path.join(proj, '.khy'), { recursive: true });
+    fs.mkdirSync(path.join(proj, 'works', 'data', 'khy'), { recursive: true });
     fs.writeFileSync(
-      path.join(proj, '.khy', 'hooks.json'),
+      path.join(proj, 'works', 'data', 'khy', 'hooks.json'),
       JSON.stringify({ version: 1, hooks: [{ event: 'PreToolUse', command: 'echo never-run', source: 'fileHook' }] })
     );
     const before = registry.getHooks('PreToolUse').filter((h) => h.source === 'builtin:StubGuard').length;

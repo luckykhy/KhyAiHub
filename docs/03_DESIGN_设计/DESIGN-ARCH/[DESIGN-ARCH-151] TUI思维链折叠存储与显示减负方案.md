@@ -130,6 +130,16 @@ CI 关联：`test:node` 全量 glob 扫 `tests/**`（`deploy-staging.yml:97-104`
 | 门预算 | `node scripts/ci/check-tui-gates.js` | **232（未上涨）**，与改动前同一既有超额基线 |
 | 工程红线 | `node scripts/ci/check-agent-rules.js --changed` | 本次 6 个改动文件 **0 命中** |
 
+**2026-10-03 复验（本会话零代码改动，纯验收）**：
+
+| 检查 | 命令 | 结果 |
+|---|---|---|
+| 投影 + 时长叶子 | `node --test` transcriptLines + thinkingDuration | `# tests 42 / pass 41 / fail 1`（唯一红仍是 `test.js:131` decision 既有红） |
+| P5 叶子 + P4 回归 | `node --test` thinkingMarquee + viewportSticky + viewportDragEdgeScroll + mouseSelectEvent + selection | **78/78 全绿** |
+| 纯叶子契约 | `node scripts/ci/check-leaf-contract.js transcriptLines.js thinkingDuration.js` | passed，0 违规 |
+| 门预算 | `node scripts/ci/check-tui-gates.js` | **FAIL — 236（limit 227）**：较 09-26 记录的 232 **+4**；本会话未改任何源码（KHY_* token 增量 0），涨幅全部来自 09-26 之后的并行会话。既有超额恶化，需按 §6.5 归因流程另立条目追责，勿默认 `--baseline 236` 吞掉 |
+| 接线三层 | Grep 实证 | P2/P4/P5 均齐全：leaf 存在（`thinkingDuration.js` / `thinkingMarquee.js`）→ App 有调用方（`App.js:6041-6042` 传 `expandedThinking`/`thinkingHint`、`:6067` 调 `tailWindow`）→ 有消费方（`lineClickAt` `App.js:1574-1600` → `setExpandedThinking`） |
+
 > ⚠ **未验证项（诚实边界）**：真实 TTY 里的鼠标点击与流式滑动**没有实机走过**——以上全是叶子级
 > 与投影级验证。`node scripts/run-ink-tui-tests.js` 现有 5 个红套件（ccOverlayFit / inkRenderSmoke
 > / agentTreeRender / helpMenuSize / toolLinesWriteDiff，16 例）经核**与本案无关**：其失败文案
@@ -142,8 +152,8 @@ CI 关联：`test:node` 全量 glob 扫 `tests/**`（`deploy-staging.yml:97-104`
 
 | 项 | 状态 |
 |---|---|
-| 截图那一次会话属 A1 还是 A3 | **待用户按 §1.3 两步判定**——它决定 P3 是否启动。判定前 P2 可独立先行 |
-| 具体 adapter 把 reasoning 并进 text 的位置 | 未定位（A3 判定为真后才值得花成本定位） |
+| 截图那一次会话属 A1 还是 A3 | **2026-10-03 会话验尸有实锤**：抽 `~/.khy/sessions`（实为 `D:\Portable\khy-os\.khy\sessions`，452 个 JSONL）最新 5 个 + 9-24 截图当场 2 个——**`thinking` 段全部为 0**（9-24 那两个连 `_timeline` 都没有）。显示链无罪：`khy.bat` 直跑源码树（`node D:\Portable\khy-os\services\backend\bin\khy.js`，无构建滞后），投影/接线全绿。**判向产出侧 A3 变体：模型从未产出 thinking chunk**。产出链逐段核实齐全（thinkingEnabled 默认开 `aiChatState.js:27`；DeepSeek 自动切 reasoner `ai.js:383-385`；OpenAI 系 `reasoning_content`→thinking `_openaiSseStream.js:318-324`；其余模型靠 `<think>` 注入协议 `ai.js:395-405`+拦截 `aiChatCore.js:1428-1430`）⇒ 剩余嫌疑收敛到：① 所用模型不理 `<think>` 协议（推理全落 text = 9-24「乱」与今天「没思考行」**同一根因**）；② DeepSeek 网关响应实际没带 reasoning_content（若坐实即 P3 的正主）。**待用户提供当前模型名 + 一次 `/thinking` 回显**即可二选一 |
+| 具体 adapter 把 reasoning 并进 text 的位置 | 未定位（上一行的二选一判定出来后才值得花成本） |
 | 既有红测试 `test.js:131` 的归因与修复 | 另立条目，不阻塞本提案 |
 
 ## 9. 变更日志
@@ -152,3 +162,5 @@ CI 关联：`test:node` 全量 glob 扫 `tests/**`（`deploy-staging.yml:97-104`
 |---|---|
 | 2026-09-24 | 初版：实证折叠/存储链已闭环，收敛真实缺口为 P1/P2/P3 |
 | 2026-09-26 | P2 落地（折叠行文案收敛到 `thinkingDuration.js` 单一真源，`hint` 由调用方注入）；用户当轮裁决**推翻 §5 第一条边界**，新增 P4（`folds` 第三条平行数组 + 逐条 `onClick` 展开，复用 `KHY_CARD_CLICK`，无新门）与 P5（`thinkingMarquee.tailWindow` 流式期尾部窗口，无新计时器）；§7 补落地实测与**未实机验证**的诚实边界 |
+| 2026-10-03 | 复验（用户令「按照方案实现」时发现 P2/P4/P5 已由并行会话全部落地并接线，本会话零代码改动）：全套验收重跑（42/41/1 + 78/78 + leaf 契约绿），接线三层 Grep 实证齐全；**门预算 232→236（+4 来自并行会话，limit 227 既有超额恶化）**，已标警示勿吞基线。P3 仍未启动（等 §1.3 判定） |
+| 2026-10-03 | 用户报「还是没看见思维链的显示」→ 会话验尸：**全部抽查会话 thinking 段 = 0**，病灶在产出侧而非显示侧（详见 §8 第一行）；A1/A3 判定收敛为二选一，待用户给出当前模型名 + `/thinking` 回显 |

@@ -144,27 +144,27 @@ if "%DRY_RUN%"=="1" (
     echo.
 )
 
-:: --- Handle services/backend/node_modules inclusion ---
+:: --- Handle runtime/node/backend/node_modules inclusion ---
 :: When --with-node-modules is set, we need a two-pass approach:
 :: Pass 1: robocopy with node_modules excluded globally
-:: Pass 2: robocopy only services/backend/node_modules
+:: Pass 2: robocopy only runtime/node/backend/node_modules
 :: This is because robocopy /XD excludes by name at all levels.
 
 if "%WITH_NODE_MODULES%"=="1" (
     :: First pass: copy everything except .git, __pycache__, .tmp, dist, node_modules
-    :: Then second pass: copy only services/backend/node_modules
+    :: Then second pass: copy only runtime/node/backend/node_modules
     set "XD_PASS1=.git __pycache__ .tmp dist node_modules"
 
     echo [1/2] Copying project files (excluding node_modules)...
     robocopy "%ROOT_DIR%" "%TARGET_DIR%" /E /XD !XD_PASS1! /COPY:DAT /R:1 /W:1 /NFL /NDL /NJH /NJS /nc /ns /np
     set "RC1=!ERRORLEVEL!"
 
-    echo [2/2] Copying services\backend\node_modules...
-    if exist "%ROOT_DIR%\services\backend\node_modules" (
-        robocopy "%ROOT_DIR%\services\backend\node_modules" "%TARGET_DIR%\services\backend\node_modules" /E /COPY:DAT /R:1 /W:1 /NFL /NDL /NJH /NJS /nc /ns /np
+    echo [2/2] Copying runtime\node\backend\node_modules...
+    if exist "%ROOT_DIR%\runtime\node\backend\node_modules" (
+        robocopy "%ROOT_DIR%\runtime\node\backend\node_modules" "%TARGET_DIR%\runtime\node\backend\node_modules" /E /COPY:DAT /R:1 /W:1 /NFL /NDL /NJH /NJS /nc /ns /np
         set "RC2=!ERRORLEVEL!"
     ) else (
-        echo        [SKIP] services\backend\node_modules not found in source
+        echo        [SKIP] runtime\node\backend\node_modules not found in source
         set "RC2=0"
     )
 
@@ -190,14 +190,14 @@ if "%WITH_NODE_MODULES%"=="1" (
 
 :: --- Post-copy cleanup: remove non-portable runtime payloads ---
 if "%DRY_RUN%"=="0" (
-    if exist "%TARGET_DIR%\services\backend\models" (
-        rmdir /s /q "%TARGET_DIR%\services\backend\models" 2>nul
+    if exist "%TARGET_DIR%\runtime\node\backend\models" (
+        rmdir /s /q "%TARGET_DIR%\runtime\node\backend\models" 2>nul
     )
-    if exist "%TARGET_DIR%\services\backend\bin\llama-cpp" (
-        rmdir /s /q "%TARGET_DIR%\services\backend\bin\llama-cpp" 2>nul
+    if exist "%TARGET_DIR%\runtime\node\backend\bin\llama-cpp" (
+        rmdir /s /q "%TARGET_DIR%\runtime\node\backend\bin\llama-cpp" 2>nul
     )
-    if exist "%TARGET_DIR%\services\backend\bin\ollama-runner" (
-        rmdir /s /q "%TARGET_DIR%\services\backend\bin\ollama-runner" 2>nul
+    if exist "%TARGET_DIR%\runtime\node\backend\bin\ollama-runner" (
+        rmdir /s /q "%TARGET_DIR%\runtime\node\backend\bin\ollama-runner" 2>nul
     )
 )
 
@@ -210,10 +210,10 @@ if "%DRY_RUN%"=="0" (
     for %%F in (
         "khy.bat"
         "khy.sh"
-        "software\khyquant\khy_quant\cli.py"
-        "services\backend\bin\khy.js"
-        "services\backend\package.json"
-        "docs\06_DEPLOY_部署\PORTABLE.md"
+        "delivery\channel\khyquant\khy_quant\cli.py"
+        "runtime\node\backend\bin\khy.js"
+        "runtime\node\backend\package.json"
+        "docs\06_DEPLOY_部署\其它部署\PORTABLE.md"
     ) do (
         if exist "%TARGET_DIR%\%%~F" (
             echo   [OK]   %%~F
@@ -260,7 +260,7 @@ echo   extensions\scripts\khy-portable\run-portable.bat --target ^<dir^> [option
 echo.
 echo Options:
 echo   --target, -t ^<dir^>    Target directory (required)
-echo   --with-node-modules    Include services/backend/node_modules (copy-and-run ready)
+echo   --with-node-modules    Include runtime/node/backend/node_modules (copy-and-run ready)
 echo   --mirror               Mirror mode: delete target files not in source
 echo   --dry-run              Show what would be copied without making changes
 echo   --help, -h             Show this help

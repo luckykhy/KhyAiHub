@@ -134,7 +134,7 @@ function discoverAllSkills(projectDir) {
 
   // Priority 1: Project-level (highest priority)
   if (projectDir) {
-    const projectKhy = loadSkillsFromDir(path.join(projectDir, '.khy', 'skills'), 'project');
+    const projectKhy = loadSkillsFromDir(path.join(projectDir, 'works', 'data', 'khy', 'skills'), 'project');
     for (const [name, skill] of projectKhy) {
       skills.set(name, skill);
     }

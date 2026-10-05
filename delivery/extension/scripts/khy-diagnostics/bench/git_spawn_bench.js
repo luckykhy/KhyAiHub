@@ -15,7 +15,7 @@
 const cp = require('child_process');
 const path = require('path');
 
-const REPO = path.resolve(__dirname, '..', '..', '../..');
+const REPO = path.resolve(__dirname, '..', '..', '../..', '..');
 const MOD = path.join(REPO, 'services/backend/src/services/workspaceGitInit.js');
 const DET = path.join(REPO, 'services/backend/src/services/gitExecutableDetector.js');
 

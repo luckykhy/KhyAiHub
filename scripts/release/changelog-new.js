@@ -19,7 +19,7 @@
  *   node scripts/release/changelog-new.js --check              # 校验顶部版本 == pyproject 版本
  *   node scripts/release/changelog-new.js --check <version>    # 校验顶部版本 == <version>
  *
- * 解析锚点(与 services/backend/src/services/changelog/changelogParse.js 一致):
+ * 解析锚点(与 runtime/node/backend/src/services/changelog/changelogParse.js 一致):
  *   版本头 `^##\s+(\S.*?)\s*$` —— 两个 `#` 后紧跟空白;stub 必须写成 `## <version>`。
  */
 

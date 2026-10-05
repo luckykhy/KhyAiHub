@@ -29,7 +29,7 @@ const atomicWriteJson = require('../../../../utils/atomicWriteJson');
 function scopePath(scope, io = {}) {
   const cwd = io.cwd || process.cwd();
   if (scope === 'project') {
-    return path.join(cwd, '.khy', 'mcp.json');
+    return path.join(cwd, 'works', 'data', 'khy', 'mcp.json');
   }
   if (io.dataHome) {
     return path.join(io.dataHome, 'mcp.json');

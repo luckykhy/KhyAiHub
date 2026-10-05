@@ -13,7 +13,7 @@
   `tools/reverseEngineer.js:74`（经壳 `services/reverseEngineer/index.js:9`）；
   `tools/UpstreamStudyTool/index.js:17`（经壳 `services/upstreamStudy/index.js:4`），
   另有 `services/upstreamStudyPlan.js`。
-- 注：`software/khyquant/tools/{unpackTool.js:232,305,reverseEngineer.js:45}`
+- 注：`delivery/channel/khyquant/tools/{unpackTool.js:232,305,reverseEngineer.js:45}`
   指向 software 本地副本，属独立项目 khyquant 的分发载体，不算本目录消费者。
 
 ## 为什么这么做

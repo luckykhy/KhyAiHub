@@ -7,7 +7,7 @@
  * （纯叶子：零 IO、确定性、绝不抛、可单测）。
  *
  * 背景：khy 模块的 bundle 是 19.3 MB，它的 source map 是 66.9 MB——3.5 倍。
- * 发布路径（packaging/npm、便携包）一直只拷 bundle.mjs，所以 map 没真的漏出去，
+ * 发布路径（works/ship/npm、便携包）一直只拷 bundle.mjs，所以 map 没真的漏出去，
  * 但那是**巧合**：靠的是「拷贝清单恰好只列了一个文件」，而不是任何一道检查。
  * 任何一次把 `copyFileSync` 改成 `copyTree`，66.9 MB 就跟着进产物了。
  *

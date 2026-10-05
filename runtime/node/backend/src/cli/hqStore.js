@@ -38,8 +38,8 @@ const HQ_DIR = path.join(REPO_ROOT, 'works', 'record', 'ai', 'hq');
 const PROMPTS_DIR = path.join(HQ_DIR, 'prompts');
 const LOGS_DIR = path.join(HQ_DIR, 'logs');
 
-/** 验收存证根：`.khy/feedback/`（与 `check-agent-feedback.js` 的 EVIDENCE 契约同址）。 */
-const FEEDBACK_DIR = path.join(REPO_ROOT, '.khy', 'feedback');
+/** 验收存证根：`works/data/khy/feedback/`（与 `check-agent-feedback.js` 的 EVIDENCE 契约同址）。 */
+const FEEDBACK_DIR = path.join(REPO_ROOT, 'works', 'data', 'khy', 'feedback');
 
 const BUGS_JSON = path.join(HQ_DIR, 'BUGS.json');
 const PROGRESS_JSON = path.join(HQ_DIR, 'PROGRESS.json');
@@ -741,7 +741,7 @@ function validateTask(task) {
   if (task.evidence !== undefined) {
     const ev = String(task.evidence || '').trim();
     if (!ev) {
-      errs.push('evidence 不可为空字符串（要么不写，要么写 .khy/feedback/ 下的目录名）');
+      errs.push('evidence 不可为空字符串（要么不写，要么写 works/data/khy/feedback/ 下的目录名）');
     } else if (!EVIDENCE_NAME_RE.test(ev)) {
       errs.push(`evidence 名称非法: ${JSON.stringify(ev)}（只允许字母/数字/./_/-，且不以符号开头）`);
     }
@@ -1071,7 +1071,7 @@ function reviewDoneBlockers(task, repoRoot, fbRoot) {
   if (!task || typeof task !== 'object') {
     return { blockers: ['任务对象为空'], warnings, verdicts };
   }
-  const evidenceRoot = fbRoot || path.join(repoRoot, '.khy', 'feedback');
+  const evidenceRoot = fbRoot || path.join(repoRoot, 'works', 'data', 'khy', 'feedback');
 
   warnings.push(...auditAcceptanceQuality(task));
   warnings.push(...auditAcceptancePaths(task, repoRoot));
@@ -1081,7 +1081,7 @@ function reviewDoneBlockers(task, repoRoot, fbRoot) {
   if (!ev || !String(ev).trim()) {
     blockers.push(
       `${task.id}: 缺 evidence 字段 —— 没有声明验收证据目录，无法核对。` +
-        '请先在 `.khy/feedback/` 下建 `<task-id>-<slug>/` 并写入 acceptance.md，' +
+        '请先在 `works/data/khy/feedback/` 下建 `<task-id>-<slug>/` 并写入 acceptance.md，' +
         `再执行：khy hq task set ${task.id} review --evidence <名称>`
     );
     return { blockers, warnings, verdicts };
@@ -1097,18 +1097,18 @@ function reviewDoneBlockers(task, repoRoot, fbRoot) {
   // ② 证据目录存在且非空
   const dir = path.join(evidenceRoot, name);
   if (!fs.existsSync(dir)) {
-    blockers.push(`${task.id}: evidence 目录不存在：.khy/feedback/${name}/`);
+    blockers.push(`${task.id}: evidence 目录不存在：works/data/khy/feedback/${name}/`);
     return { blockers, warnings, verdicts };
   }
   let entries = [];
   try {
     entries = fs.readdirSync(dir).filter((f) => !f.startsWith('.'));
   } catch (e) {
-    blockers.push(`${task.id}: evidence 目录不可读：.khy/feedback/${name}/（${e.message}）`);
+    blockers.push(`${task.id}: evidence 目录不可读：works/data/khy/feedback/${name}/（${e.message}）`);
     return { blockers, warnings, verdicts };
   }
   if (!entries.length) {
-    blockers.push(`${task.id}: evidence 目录为空：.khy/feedback/${name}/ —— 空目录不算存证`);
+    blockers.push(`${task.id}: evidence 目录为空：works/data/khy/feedback/${name}/ —— 空目录不算存证`);
     return { blockers, warnings, verdicts };
   }
 
@@ -1119,7 +1119,7 @@ function reviewDoneBlockers(task, repoRoot, fbRoot) {
     ledgerText = fs.readFileSync(ledgerPath, 'utf8');
   } catch {
     blockers.push(
-      `${task.id}: 缺验收清算文件 .khy/feedback/${name}/acceptance.md —— ` +
+      `${task.id}: 缺验收清算文件 works/data/khy/feedback/${name}/acceptance.md —— ` +
         `请按 acceptance 的 ${splitAcceptance(task.acceptance).length} 条判据逐条给出 结果/证据`
     );
     return { blockers, warnings, verdicts };

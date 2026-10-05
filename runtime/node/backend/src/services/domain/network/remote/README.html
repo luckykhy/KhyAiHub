@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: README.md -->
 <title>domain/network/remote —— 远端 SSH 执行/上传的可注入原语簇（12 文件，星形装配） · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>network<span class="sep">›</span>remote<span class="sep">›</span>domain/network/remote —— 远端 SSH 执行/上传的可注入原语簇（12 文件，星形装配）</div>
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>network<span class="sep">›</span>remote<span class="sep">›</span>domain/network/remote —— 远端 SSH 执行/上传的可注入原语簇（12 文件，星形装配）</div>
       <header class="hero reveal"><h1>domain/network/remote —— 远端 SSH 执行/上传的可注入原语簇（12 文件，星形装配）</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#domain-network-remote-远端-ssh-执行-上传的可注入原语簇-12-文件-星形装配">`domain/network/remote` —— 远端 SSH 执行/上传的可注入原语簇（12 文件，星形装配）</a></li><li class="lvl-2"><a href="#1-三问-规则-9-process-010">1. 三问（规则 9 / `PROCESS-010`）</a></li><li class="lvl-2"><a href="#2-契约-改本单元前先读这段">2. 契约（改本单元前先读这段）</a></li><li class="lvl-2"><a href="#3-实测数字-2026-09-29-磁盘遍历全数清点-非抽样-git-对象库损坏故不用-ls-files">3. 实测数字（2026-09-29，磁盘遍历全数清点，非抽样；git 对象库损坏故不用 ls-files）</a></li><li class="lvl-2"><a href="#4-测试隔离与已知警告-跑本目录测试前必读">4. 测试隔离与已知警告（跑本目录测试前必读）</a></li></ul></nav>
       <article class="doc-body">
@@ -54,14 +54,14 @@
 <p><strong>未来运行者绝不可做的事</strong>：(1) 不要把 <code>node --test</code> 指向目录——本机得到假读数，<br>必须显式列 12 个路径；(2) 不要试图复跑 <code>tests/services/remote*</code> 与<br><code>tests/routes/largeTasks.errorPathsAndWatch</code> 那 7 份——jest 未安装，装载失败会被读成<br>「产品红」，而它们从未被执行；(3) 不要翻 <code>KHY_REMOTE_SSH_ENABLE_EXEC=true</code> 来「看全路径」<br>——exec/transfer 的传输不可注入，下一条语句就是真 <code>spawn('ssh'/'scp')</code>；(4) 不要用<br><code>git ls-files</code> 做本单元任何清点——对象库已损坏（git fsck 失败），名单只认磁盘；<br>(5) 不要把 B31-R1/R3/R11/R20 当「测试在挑剔」——那四条是审批与安全叙事本身的实测破口，<br>修它们=改跟踪源文件=人的裁决。</p>
 <p><strong>本批收尾的 6 例红全部是测试侧错误</strong>（断言了源码从未有过的形状或计数，逐条证据与<br>裁决写进 <code>khy.module.json</code> 的 <code>_tests_note</code> ①–⑥ 与 <code>instrument_notes</code>）：getSession 的克隆<br>没有 <code>events</code>（真回放面是 <code>getEventsSince</code>）、两处监听器/通知计数被写漏、create_session 的<br>payload 被当成了 append_event、<code>{}</code> 构造子按现行不抛（旧断言与它自己的 message 自相矛盾，<br>登记为 B31-R23）、以及上面的 <code>~</code> 目录名打错。<strong>未删任何测试、未削弱任何断言、未动任何源码。</strong></p>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../../../../services/backend/src/services/domain/network/README.html"><div class="dir">← 上一篇</div><div class="ttl">network — 远端执行、代理、外部应用接入与依赖装配（D2）</div></a><a class="next" href="../../../../../../../services/backend/src/services/domain/onboarding/README.html"><div class="dir">下一篇 →</div><div class="ttl">onboarding — 首次引导的纯逻辑单元（D2）</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/services/domain/network/README.html"><div class="dir">← 上一篇</div><div class="ttl">network — 远端执行、代理、外部应用接入与依赖装配（D2）</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/services/domain/onboarding/README.html"><div class="dir">下一篇 →</div><div class="ttl">onboarding — 首次引导的纯逻辑单元（D2）</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/network/remote/README.html";</script>
-<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/network/remote/README.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

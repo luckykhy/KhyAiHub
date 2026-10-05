@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: README.md -->
 <title>KHY OS Kernel · Khy-OS 文档</title>
-<link rel="stylesheet" href="../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../docs/index.html">首页</a><span class="sep">›</span>kernel<span class="sep">›</span>KHY OS Kernel</div>
+      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>boot<span class="sep">›</span>kernel<span class="sep">›</span>KHY OS Kernel</div>
       <header class="hero reveal"><h1>KHY OS Kernel</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#khy-os-kernel">KHY OS Kernel</a></li><li class="lvl-2"><a href="#能力一览">能力一览</a></li><li class="lvl-2"><a href="#独立启动-无需-khy-os">独立启动（无需 khy-os）</a></li><li class="lvl-3"><a href="#方式一-qemu-最快">方式一：QEMU（最快）</a></li><li class="lvl-3"><a href="#方式二-任意虚拟机-virtualbox-vmware">方式二：任意虚拟机（VirtualBox / VMware）</a></li><li class="lvl-3"><a href="#方式三-真机-u-盘">方式三：真机（U 盘）</a></li><li class="lvl-2"><a href="#从源码构建">从源码构建</a></li><li class="lvl-3"><a href="#工具链">工具链</a></li><li class="lvl-3"><a href="#构建">构建</a></li><li class="lvl-3"><a href="#重新生成-ring-3-用户态程序">重新生成 Ring 3 用户态程序</a></li><li class="lvl-2"><a href="#shell-内建命令">Shell 内建命令</a></li><li class="lvl-2"><a href="#系统调用">系统调用</a></li><li class="lvl-2"><a href="#源码地图">源码地图</a></li><li class="lvl-2"><a href="#定位与边界-实话实说">定位与边界（实话实说）</a></li><li class="lvl-2"><a href="#与-khy-os-平台的关系">与 khy-os 平台的关系</a></li></ul></nav>
       <article class="doc-body">
@@ -90,14 +90,14 @@ port_register  port_unregister  create_process  exec  wait  yield  mmap</code></
 <ul><li><strong>TUI</strong>：<code>khy os</code> → 内核终端浮层</li><li><strong>网页</strong>：前端 <code>/khyos</code> + xterm.js，经 ai-backend <code>/ws</code> 桥接</li><li><strong>pip</strong>：<code>khy os</code> / <code>khy os run &quot;&lt;命令&gt;&quot;</code>，跨 Windows 与 Linux</li></ul>
 <p>这些都是「遥控器」——<strong>内核本身零改动、可独立启动</strong>，平台只是让它不再是孤岛。</p>
       </article>
-      <nav class="pager"><a class="prev" href="../kernel/docs/小白教程-Khyos-agent协同从零精讲.html"><div class="dir">← 上一篇</div><div class="ttl">KHY-OS 小白精讲：从零看懂「一个会跟 AI 协同的操作系统」</div></a><a class="next" href="../kernel/vendor/moonbit/PROVENANCE.html"><div class="dir">下一篇 →</div><div class="ttl">Vendored MoonBit prebuilt artifacts</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../runtime/boot/kernel/docs/小白教程-Khyos-agent协同从零精讲.html"><div class="dir">← 上一篇</div><div class="ttl">KHY-OS 小白精讲：从零看懂「一个会跟 AI 协同的操作系统」</div></a><a class="next" href="../../../runtime/boot/kernel/vendor/moonbit/PROVENANCE.html"><div class="dir">下一篇 →</div><div class="ttl">Vendored MoonBit prebuilt artifacts</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../";window.__KHY_CUR__="kernel/README.html";</script>
-<script src="../docs/19_资产/site/nav-data.js"></script>
-<script src="../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../";window.__KHY_CUR__="runtime/boot/kernel/README.html";</script>
+<script src="../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

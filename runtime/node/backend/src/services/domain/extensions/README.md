@@ -6,7 +6,7 @@
 ## 谁要（角色）
 
 - **装/卸拓展的人**：`constants/commandSchema.js:2106` 声明 `/extension`
-  （路由 `extension list`，子命令 `:371`），处理器 `cli/extensions/extensionManager.js:13`。
+  （路由 `extension list`，子命令 `:371`），处理器 `cli/delivery/extension/extensionManager.js:13`。
 - **配钩子的人**：`/hooks`（`commandSchema.js:2002`）；
   钩子系统经壳 `cli/hooks/hookSystem.js:14` 再导出本目录 `hooks/hookSystem.js`。
 - **让插件工具被模型调用的人**：`services/tool/toolCalling.js:65` require

@@ -7,9 +7,9 @@
  *   1. User config:     ~/.khyquant/config.json (legacy ~/.khy/config.json also supported)
  *   2. Local workspace: ./node_modules/khy-<name> or ./@scope/khy-<name>
  *   3. Global npm:      npm -g prefix/lib/node_modules/khy-*
- *   4. Extension roots: every root of `services/extensions/extensionRoots` —
- *                       <appRoot>/extensions/ (built-in, ships with the package),
- *                       <appHome>/extensions/, KHY_EXTENSION_PATH. **Deferred**:
+ *   4. Extension roots: every root of `services/delivery/extension/extensionRoots` —
+ *                       <appRoot>/delivery/extension/ (built-in, ships with the package),
+ *                       <appHome>/delivery/extension/, KHY_EXTENSION_PATH. **Deferred**:
  *                       see below.
  *   5. Plugin dir:      ~/.khyquant/plugins/<name>/ (legacy ~/.khy/plugins also supported)
  *   6. Environment:     KHY_PLUGINS=khyquant,khy-notes
@@ -34,13 +34,13 @@ const path = require('path');
 
 const { getDataHome } = require('../utils/dataHome');
 // 拓展根的单一真源（[DESIGN-TOOL-002]）。此前本加载器有自己的 5 个发现源，其中**没有
-// 一个**是仓库的 extensions/ —— 随包分发的内置拓展对它完全不可见。
+// 一个**是仓库的 delivery/extension/ —— 随包分发的内置拓展对它完全不可见。
 const extensionRoots = require('../services/domain/extensions/extensions/extensionRoots.js');
 
 // Optional SDK load: fall back to a built-in manifest validator when the
 // @khy/plugin-sdk package is missing (fail-soft, warn only once).
 //
-// `@khy/plugin-sdk` (platform/packages/plugin-sdk) is the *single source of
+// `@khy/plugin-sdk` (runtime/substrate/platform/packages/plugin-sdk) is the *single source of
 // truth* for the manifest contract — its validateManifest() and MANIFEST_FIELDS
 // are what a CI gate or a third-party plugin author validates against. The
 // fallback below is a byte-compatible copy of that same rule, kept so a clean
@@ -70,7 +70,7 @@ try {
     }
   }
   // Fallback validator: byte-compatible copy of the SDK's rule (see
-  // platform/packages/plugin-sdk/index.js). Kept in lockstep by
+  // runtime/substrate/platform/packages/plugin-sdk/index.js). Kept in lockstep by
   // tests/plugin-sdk.test.js — same four required fields, same error strings,
   // same { valid, errors } shape.
   validateManifest = function validateManifestFallback(manifest) {

@@ -120,7 +120,7 @@ function currentBranch(git, root) {
 /* Mirror queue debits ------------------------------------------------------ */
 
 function queueDebints(git, root) {
-  const queueFile = path.join(root, '.khy', 'sync', 'mirror-queue.json');
+  const queueFile = path.join(root, 'works', 'data', 'khy', 'sync', 'mirror-queue.json');
   let queue;
   try {
     queue = JSON.parse(fs.readFileSync(queueFile, 'utf8'));

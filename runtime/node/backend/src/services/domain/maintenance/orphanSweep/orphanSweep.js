@@ -9,7 +9,7 @@
  * 这些 stash 就**残留**下来——`src`→`~rc`、`data`→`~ata`、`logrotate.d`→`~ogrotate.d`、
  * `kernel`→`~ernel`。每次被打断的升级累加一份完整乱名副本,最终把安装树膨胀到 GB 级。
  *
- * 现有清理(`platform/khy_platform/cli.py::_sweep_corrupt_orphans`)只做**顶层浅扫**,而 stash 深藏
+ * 现有清理(`runtime/substrate/platform/khy_platform/cli.py::_sweep_corrupt_orphans`)只做**顶层浅扫**,而 stash 深藏
  * 在嵌套层(`bundled/services/backend/src`→`~rc`),永远扫不到。本叶子补上缺失的一环:**递归**遍历
  * bundled 树,删除任意深度的 `~` 前缀目录。npm 渠道由 `sourceHealService.runStartupHeal` 接线复用;
  * pip 渠道由 cli.py 平行实现(Python 侧)。

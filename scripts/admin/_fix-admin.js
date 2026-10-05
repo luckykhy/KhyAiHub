@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 
 // khyquant DB lives inside the project data home
-const DB_PATH = path.join(__dirname, '..', '..', '.khy', 'khyquant', 'data', 'khy-quant.db');
+const DB_PATH = path.join(__dirname, '..', '..', 'works', 'data', 'khy', 'khyquant', 'data', 'khy-quant.db');
 
 function query(sql, params = []) {
   const sqlite3 = require('sqlite3').verbose();
@@ -54,7 +54,7 @@ async function main() {
 
   // Save credentials file
   // Repo root = two levels up from scripts/admin/.
-  const credsDir = path.join(__dirname, '..', '..', '.khy', 'credentials');
+  const credsDir = path.join(__dirname, '..', '..', 'works', 'data', 'khy', 'credentials');
   try {
     fs.mkdirSync(credsDir, { recursive: true });
     fs.writeFileSync(path.join(credsDir, 'default-admin.json'), JSON.stringify({ username: 'qiqiaoban', password: 'testpass123', note: 'Test admin for vision testing' }, null, 2));

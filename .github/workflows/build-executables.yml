@@ -84,7 +84,7 @@ jobs:
       # 删掉这里的 continue-on-error 即恢复阻断。
       - name: Lint (report only)
         continue-on-error: true
-        working-directory: services/backend
+        working-directory: runtime/node/backend
         run: npm run lint
 
       - name: Test portable contracts
@@ -108,7 +108,7 @@ jobs:
         run: |
           KIND=dev
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then KIND=runtime; fi
-          node extensions/scripts/khy-portable/package-portable.js --kind "$KIND" --keep-artifact
+          node delivery/extension/scripts/khy-portable/package-portable.js --kind "$KIND" --keep-artifact
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -192,7 +192,7 @@ jobs:
         run: |
           python -m pip install build
           python -m build --wheel --sdist --outdir artifacts/package
-          npm pack packaging/npm --pack-destination artifacts/package
+          npm pack works/ship/npm --pack-destination artifacts/package
 
       - name: Generate and verify update index
         shell: bash

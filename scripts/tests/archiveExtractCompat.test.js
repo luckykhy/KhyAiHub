@@ -43,7 +43,7 @@ test('认识的 plaintextFormat + 认识的 layout → supported + ok:true', () 
 });
 
 test('真实 shipped 头形制（tar.gz / git-archive）→ supported', () => {
-  // 对齐 packaging/npm/bundled/_source/snapshot.json 的真实盖章值。
+  // 对齐 works/ship/npm/bundled/_source/snapshot.json 的真实盖章值。
   const r = checkArchiveExtractCompat({
     format: 'khy-source-snapshot', formatVersion: 1,
     layout: 'git-archive', plaintextFormat: 'tar.gz',

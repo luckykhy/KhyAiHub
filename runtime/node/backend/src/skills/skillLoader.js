@@ -161,7 +161,7 @@ function discoverSkills(projectDir, opts = {}) {
 
   // Priority 1: Project-level — canonical `.khy` first, then legacy `.khyquant`.
   if (projectDir) {
-    searchPaths.push({ dir: path.join(projectDir, '.khy', 'skills'), source: 'project' });
+    searchPaths.push({ dir: path.join(projectDir, 'works', 'data', 'khy', 'skills'), source: 'project' });
     searchPaths.push({ dir: path.join(projectDir, '.khyquant', 'skills'), source: 'project' });
   }
 
@@ -234,7 +234,7 @@ function discoverSkillsDeep(projectDir, opts = {}) {
 
   // Priority 1: Project-level — canonical `.khy` first, then legacy `.khyquant`.
   if (projectDir) {
-    searchPaths.push({ dir: path.join(projectDir, '.khy', 'skills'), source: 'project' });
+    searchPaths.push({ dir: path.join(projectDir, 'works', 'data', 'khy', 'skills'), source: 'project' });
     searchPaths.push({ dir: path.join(projectDir, '.khyquant', 'skills'), source: 'project' });
   }
   // Priority 2: User-level — portable-aware canonical dir first (equals

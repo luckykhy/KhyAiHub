@@ -29,7 +29,7 @@ const os = require('os');
 const path = require('path');
 const { buildVideoCorpus, buildVideoMimeCorpus } = require('./fuzzVideoCorpus');
 
-const BACKEND = path.resolve(__dirname, '..', '..', '..', 'services', 'backend', 'src');
+const BACKEND = path.resolve(__dirname, '..', '..', '..', '..', 'runtime', 'node', 'backend', 'src');
 function be(rel) { return require(path.join(BACKEND, rel)); }
 
 const CALL_BUDGET_MS = 8000; // IO + 子进程,预算比纯函数宽松

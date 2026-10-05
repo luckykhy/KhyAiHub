@@ -3,7 +3,7 @@
  *
  * 背景（[DESIGN-TOOL-002] §1.5「入向耦合三档」）：khyquant 是全仓最严重的一处
  * **硬入向**——`services/backend/src` 里有 57 个纯 re-export 壳各自写死
- * `require('../../../../software/khyquant/<模块>')`，其中 19 个路由壳被
+ * `require('../../../../delivery/channel/khyquant/<模块>')`，其中 19 个路由壳被
  * `server.js` 在启动期直接 require。后果有两条，第二条是致命的：
  *   1. 核里写死了实现的磁盘层数，57 处各写一遍，下一次移动就要改 57 个地方；
  *   2. 删掉 khyquant 目录，那 19 个 require 在**模块加载期**抛 MODULE_NOT_FOUND，
@@ -11,8 +11,8 @@
  *      正是 §4.1 要禁的。
  *
  * 本模块把 57 处「点名实现位置」收敛成一处「点名**服务**」：核说它要 `quant-app`，
- * 不说它要 software/khyquant 或 extensions/software/khy-quant。谁来满足由 manifest
- * 的 `provides` 声明（§3.4），于是 Phase 1 把目录搬进 extensions/ 时，核**一行都不用改**。
+ * 不说它要 delivery/channel/khyquant 或 delivery/extension/software/khy-quant。谁来满足由 manifest
+ * 的 `provides` 声明（§3.4），于是 Phase 1 把目录搬进 delivery/extension/ 时，核**一行都不用改**。
  *
  * 解析顺序（可信度降序，全程不抛，落空返回 null 由调用方按后果决定降级）：
  *   ① provides 契约发现 —— extensionRoots.findProvider() 扫全部根。**这是正路**。
@@ -45,7 +45,7 @@ const SERVICE = 'quant-app';
 /**
  * 迁移期兜底目录：khyquant 的 L4 现址。
  * 从 `<repo>/services/backend/src/services/domain/extensions/extensions/` 上溯
- * 7 层到仓库根（本文件从 `src/services/extensions/` 迁入此处时深了 2 层，
+ * 7 层到仓库根（本文件从 `src/services/delivery/extension/` 迁入此处时深了 2 层，
  * 原先的 5 层计数曾把 L4_DIR 指到 services/backend/software/ 而整级判「未安装」，
  * 2026-09-06 修正 —— [DESIGN-ARCH-078] §10.3）。
  */

@@ -43,7 +43,7 @@ const REPO_ROOT = process.env.KHY_PROTOCOL_CONFORMANCE_ROOT
   ? path.resolve(process.env.KHY_PROTOCOL_CONFORMANCE_ROOT)
   : path.resolve(__dirname, '..', '..');
 
-const BACKEND_SRC = path.join(REPO_ROOT, 'services', 'backend', 'src');
+const BACKEND_SRC = path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'src');
 const MCP_DIR = path.join(BACKEND_SRC, 'services', 'domain', 'messaging', 'mcp');
 const A2A_DIR = path.join(BACKEND_SRC, 'services', 'a2a');
 const A2A_CONTRACTS = path.join(BACKEND_SRC, 'contracts', 'a2a');
@@ -346,7 +346,7 @@ function runA2aChecks(report) {
   const taskStateSpec = require(path.join(A2A_DIR, 'taskStateSpec.js'));
   const manifest = require(path.join(A2A_DIR, 'builtinAgentManifest.js'));
   const routeSrc = readSource(path.join(BACKEND_SRC, 'routes', 'wellKnown.js'));
-  const serverSrc = readSource(path.join(REPO_ROOT, 'services', 'backend', 'server.js')) || '';
+  const serverSrc = readSource(path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'server.js')) || '';
 
   // ── 1) Agent Card 契约 ────────────────────────────────────────────────
   const built = agentCardSpec.buildAgentCard({
@@ -491,7 +491,7 @@ function runA2aChecks(report) {
   const a2aModule = require(path.join(A2A_DIR, 'index.js'));
   for (const fn of ['getAgentCard', 'sendMessage', 'getTask', 'cancelTask']) {
     record('a2a', `client-op:${fn}`, typeof a2aModule[fn] === 'function',
-      typeof a2aModule[fn] === 'function' ? '' : `services/a2a/index.js 未导出 ${fn}`);
+      typeof a2aModule[fn] === 'function' ? '' : `runtime/node/backend/src/services/a2a/index.js 未导出 ${fn}`);
   }
   const indexSrc = readSource(path.join(A2A_DIR, 'index.js')) || '';
   record('a2a', 'part-carries-kind', /kind:\s*'text'/.test(indexSrc),
@@ -508,7 +508,7 @@ function runA2aChecks(report) {
     /messageSend/.test(a2aServerSrc) && /tasksGet/.test(a2aServerSrc) && /tasksCancel/.test(a2aServerSrc),
     /messageSend/.test(a2aServerSrc)
       ? ''
-      : 'services/a2a/serverMethods.js 未导出 messageSend/tasksGet/tasksCancel');
+      : 'runtime/node/backend/src/services/a2a/serverMethods.js 未导出 messageSend/tasksGet/tasksCancel');
   record('a2a', 'a2a-server-routes-exist',
     /message:send/.test(a2aRouteSrc) && /tasks\//.test(a2aRouteSrc) && /:cancel/.test(a2aRouteSrc),
     /message:send/.test(a2aRouteSrc)

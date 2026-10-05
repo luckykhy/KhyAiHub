@@ -138,7 +138,7 @@ describe('quantApp seam：核点名服务，不点名位置', () => {
   test('躺在分类目录里也能被发现（§2.3 两层深度）', () => {
     const { root, dir } = makeQuantRoot({ category: 'software' });
     const out = ask(root, 'console.log(JSON.stringify({dir:q.resolveDir()}))');
-    assert.equal(out.dir, dir, 'Phase 1 的落点正是 extensions/software/<id>，这一层必须能被下探到');
+    assert.equal(out.dir, dir, 'Phase 1 的落点正是 delivery/extension/software/<id>，这一层必须能被下探到');
   });
 
   test('SERVICE 常量就是核唯一该知道的字符串', () => {

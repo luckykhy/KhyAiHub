@@ -44,11 +44,11 @@ function makeFixture(mutate) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-pattern-'));
   tempDirs.push(root);
 
-  writeFile(root, 'services/backend/src/a.js', '// a\n');
-  writeFile(root, 'services/backend/src/b.js', '// b\n');
+  writeFile(root, 'runtime/node/backend/src/a.js', '// a\n');
+  writeFile(root, 'runtime/node/backend/src/b.js', '// b\n');
   writeRegistry(root, {
-    'services/backend/src/a.js': ['Facade'],
-    'services/backend/src/b.js': ['Strategy', 'Observer'],
+    'runtime/node/backend/src/a.js': ['Facade'],
+    'runtime/node/backend/src/b.js': ['Strategy', 'Observer'],
   });
   writeBaseline(root, { 'pattern-uncovered': 0, 'pattern-ghost': 0, 'pattern-invalid': 0 });
 
@@ -91,7 +91,7 @@ describe('check-pattern-coverage: 规则命中', () => {
 
   test('pattern-uncovered: 跟踪的源文件没有条目即计数', () => {
     const root = makeFixture((dir) => {
-      writeFile(dir, 'services/backend/src/c.js', '// 没有注册表条目\n');
+      writeFile(dir, 'runtime/node/backend/src/c.js', '// 没有注册表条目\n');
     });
     const { status, stdout } = runGuard(root);
     assert.equal(status, 1, stdout);
@@ -103,8 +103,8 @@ describe('check-pattern-coverage: 规则命中', () => {
   test('pattern-ghost: 条目指向磁盘上不存在的文件即计数', () => {
     const root = makeFixture((dir) => {
       writeRegistry(dir, {
-        'services/backend/src/a.js': ['Facade'],
-        'services/backend/src/b.js': ['Strategy', 'Observer'],
+        'runtime/node/backend/src/a.js': ['Facade'],
+        'runtime/node/backend/src/b.js': ['Strategy', 'Observer'],
         'frontend/deleted.js': ['Proxy'],
       });
     });
@@ -117,8 +117,8 @@ describe('check-pattern-coverage: 规则命中', () => {
   test('pattern-invalid: 非 GoF 23 的模式名与空列表都计数', () => {
     const root = makeFixture((dir) => {
       writeRegistry(dir, {
-        'services/backend/src/a.js': ['Service Locator'],
-        'services/backend/src/b.js': [],
+        'runtime/node/backend/src/a.js': ['Service Locator'],
+        'runtime/node/backend/src/b.js': [],
       });
     });
     const { status, stdout } = runGuard(root, ['--list=pattern-invalid']);
@@ -142,8 +142,8 @@ describe('check-pattern-coverage: 扫描范围', () => {
 
   test('测试文件与 vendor/ 产物不参与标注', () => {
     const root = makeFixture((dir) => {
-      writeFile(dir, 'services/backend/tests/foo.js', '// 测试\n');
-      writeFile(dir, 'services/backend/src/bar.test.js', '// 测试\n');
+      writeFile(dir, 'runtime/node/backend/tests/foo.js', '// 测试\n');
+      writeFile(dir, 'runtime/node/backend/src/bar.test.js', '// 测试\n');
       writeFile(dir, 'apps/web/vendor/lib.js', '// 第三方\n');
       writeFile(dir, 'apps/web/dist/app.min.js', '// 压缩产物\n');
     });
@@ -154,8 +154,8 @@ describe('check-pattern-coverage: 扫描范围', () => {
 
   test('非源码扩展名不参与标注', () => {
     const root = makeFixture((dir) => {
-      writeFile(dir, 'services/backend/src/data.json', '{}\n');
-      writeFile(dir, 'services/backend/src/notes.md', '# 说明\n');
+      writeFile(dir, 'runtime/node/backend/src/data.json', '{}\n');
+      writeFile(dir, 'runtime/node/backend/src/notes.md', '# 说明\n');
     });
     const { status, stdout } = runGuard(root);
     assert.equal(status, 0, stdout);
@@ -166,7 +166,7 @@ describe('check-pattern-coverage: 扫描范围', () => {
 describe('check-pattern-coverage: 棘轮', () => {
   test('基线内的存量只是 warning，不阻断', () => {
     const root = makeFixture((dir) => {
-      writeFile(dir, 'services/backend/src/c.js', '// 存量未标注\n');
+      writeFile(dir, 'runtime/node/backend/src/c.js', '// 存量未标注\n');
       writeBaseline(dir, { 'pattern-uncovered': 1, 'pattern-ghost': 0, 'pattern-invalid': 0 });
     });
     const { status, stdout } = runGuard(root);
@@ -177,8 +177,8 @@ describe('check-pattern-coverage: 棘轮', () => {
 
   test('超基线一处即升 error —— 这才是棘轮', () => {
     const root = makeFixture((dir) => {
-      writeFile(dir, 'services/backend/src/c.js', '// 存量\n');
-      writeFile(dir, 'services/backend/src/d.js', '// 新增，超基线\n');
+      writeFile(dir, 'runtime/node/backend/src/c.js', '// 存量\n');
+      writeFile(dir, 'runtime/node/backend/src/d.js', '// 新增，超基线\n');
       writeBaseline(dir, { 'pattern-uncovered': 1, 'pattern-ghost': 0, 'pattern-invalid': 0 });
     });
     const { status, stdout } = runGuard(root);
@@ -200,7 +200,7 @@ describe('check-pattern-coverage: 棘轮', () => {
 
   test('--update-baseline 写回实测值，且保留 _ 前缀的说明字段', () => {
     const root = makeFixture((dir) => {
-      writeFile(dir, 'services/backend/src/c.js', '// 未标注\n');
+      writeFile(dir, 'runtime/node/backend/src/c.js', '// 未标注\n');
     });
     const { status } = runGuard(root, ['--update-baseline']);
     assert.equal(status, 0);

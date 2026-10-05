@@ -26,7 +26,7 @@ const findings = [];
 // ── 规则 1: 检测 eval() 和 new Function() ─────────────────────────────
 function checkDynamicCodeExec() {
   const scanDirs = [
-    'services/backend/src',
+    'runtime/node/backend/src',
   ];
   
   const dangerousPatterns = [
@@ -70,7 +70,7 @@ function checkDynamicCodeExec() {
 
 // ── 规则 2: 检测 Math.random() 在安全敏感上下文的使用 ─────────────────────
 function checkMathRandomInSecureContext() {
-  const scanDirs = ['services/backend/src'];
+  const scanDirs = ['runtime/node/backend/src'];
   const securePatterns = [
     /token/i,
     /secret/i,
@@ -121,7 +121,7 @@ function checkMathRandomInSecureContext() {
 
 // ── 规则 3: 检测无注释的空 catch 块 ─────────────────────────────────────
 function checkEmptyCatchBlocks() {
-  const scanDirs = ['services/backend/src'];
+  const scanDirs = ['runtime/node/backend/src'];
   
   for (const dir of scanDirs) {
     const fullDir = path.join(repoRoot, dir);
@@ -159,7 +159,7 @@ function checkEmptyCatchBlocks() {
 
 // ── 规则 4: 检测 JSON.parse 无 try/catch 保护 ────────────────────────────
 function checkUnsafeJsonParse() {
-  const scanDirs = ['services/backend/src'];
+  const scanDirs = ['runtime/node/backend/src'];
   
   for (const dir of scanDirs) {
     const fullDir = path.join(repoRoot, dir);

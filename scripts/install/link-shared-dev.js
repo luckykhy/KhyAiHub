@@ -4,7 +4,7 @@
 /**
  * link-shared-dev.js — root `preinstall` hook (dev-only, idempotent, never fatal).
  *
- * `services/backend` declares `"@khy/shared": "file:./vendor/shared"` so the
+ * `runtime/node/backend` declares `"@khy/shared": "file:./vendor/shared"` so the
  * PUBLISHED tarball is self-contained (prepack.js copies the workspace package
  * into vendor/shared at pack time). In a monorepo CHECKOUT that `file:` target
  * must also exist, or npm resolves it against a missing directory and leaves a
@@ -30,8 +30,8 @@ const fs = require('fs');
 const path = require('path');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
-const SHARED_SRC = path.join(REPO_ROOT, 'platform', 'packages', 'shared');
-const VENDOR_DIR = path.join(REPO_ROOT, 'services', 'backend', 'vendor');
+const SHARED_SRC = path.join(REPO_ROOT, 'runtime', 'substrate', 'platform', 'packages', 'shared');
+const VENDOR_DIR = path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'vendor');
 const VENDOR_SHARED = path.join(VENDOR_DIR, 'shared');
 
 function log(msg) { process.stdout.write(`[link-shared-dev] ${msg}\n`); }

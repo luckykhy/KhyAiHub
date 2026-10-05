@@ -346,7 +346,7 @@ const FEW_SHOT_EXAMPLES = Object.freeze({
       '我先用 glob 定位 README 文件的路径。',
       'glob',
       { pattern: '**/README.md' },
-      'glob 找到 2 个文件：README.md、kernel/README.md。',
+      'glob 找到 2 个文件：README.md、runtime/boot/kernel/README.md。',
       '定位成功，根目录 README.md 是目标文件。与计划一致，下一步用 readFile 读取它的开头部分再汇报第一段内容。'
     ),
     // Neutral demo (cwd query, not a version probe): the previous "node

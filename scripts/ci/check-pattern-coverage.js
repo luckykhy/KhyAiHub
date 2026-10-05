@@ -60,7 +60,7 @@ const EXTENSIONS = new Set(['js', 'vue', 'ts', 'c', 'h', 'py', 'asm', 'sh', 'ps1
 // vendor/ 与压缩产物不是人写的代码，_source/ 是快照 —— 要求它们标注 GoF 模式没有意义。
 //
 // 测试文件同样不标注：这不是本轮的新主张，而是既有约定的两处印证 —— 旧脚本的
-// EXCLUDE_DIRS 明确排掉了 services/backend/tests 等目录，而注册表 1139 条里只有
+// EXCLUDE_DIRS 明确排掉了 runtime/node/backend/tests 等目录，而注册表 1139 条里只有
 // 5 条是测试（0.4%）。改用 git ls-files 后若不把这条排除带上，会把 2057 个后端
 // 测试文件算成「欠标注」，等于用扫描范围的变化伪造出一批不存在的债。
 const SKIP_RE = [

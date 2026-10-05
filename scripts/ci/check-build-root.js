@@ -24,7 +24,7 @@
  * ## 为什么判定输入是登记表而不是白名单
  *
  * 原 `check-build-artifacts.js` 的 scope 只有 `apps/khy-mobile/android/` 一条，实测
- * 它绿着放行 10 个已被 git 跟踪的产物（`apps/khyos-desktop/out/**` + `kernel/moonbit/_build/.moon-lock`）。
+ * 它绿着放行 10 个已被 git 跟踪的产物（`delivery/desktop/khyos-desktop/out/**` + `runtime/boot/kernel/moonbit/_build/.moon-lock`）。
  * 路径白名单永远追不上工具的输出路径，所以这里改成「磁盘 ↔ BUILD-OUTPUTS.json」的差异判定：
  * 登记表是真源，路径清单不需要写死在代码里。
  *

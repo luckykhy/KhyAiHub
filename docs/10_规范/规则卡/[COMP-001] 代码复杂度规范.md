@@ -3,7 +3,7 @@ name: 代码复杂度规范
 id: COMP-001
 domain: TOOLING
 nature: 约束
-scope: "runtime/node/backend/src/**, apps/ai-frontend/src/**, delivery/channel/khyquant/frontend/src/**, runtime/substrate/platform/khy_platform/**"
+scope: "runtime/node/backend/src/**, delivery/web/ai-frontend/src/**, delivery/channel/khyquant/frontend/src/**, runtime/substrate/platform/khy_platform/**"
 priority: P2
 trigger: "新增或修改函数、文件、嵌套结构时"
 constraint: "圈复杂度：单函数 ≤10 通过、10-14 warning、15 error（PR 阻断）；函数长度：异步 ≤50 行、同步 ≤40 行、回调 ≤30 行，25-49 行为 warning；参数数量：≤3 通过、4-5 warning、6+ error；嵌套深度：≤2 通过、3-4 warning、5+ error；文件大小：JS 源文件 <400 行通过、400-600 warning、600+ error。行数 = 函数体 {} 之间的实际代码行，不含注释和空行。"

@@ -63,12 +63,12 @@ function targets() {
   if (rawTargets.length > 0) return rawTargets.map((t) => path.resolve(REPO_ROOT, t));
   if (changedMode) return changedFiles();
   const dirs = [
-    path.join(REPO_ROOT, 'services', 'backend', 'src', 'services', 'gateway'),
-    path.join(REPO_ROOT, 'services', 'backend', 'src', 'services', 'promptTemplateCatalog.js'),
+    path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'src', 'services', 'gateway'),
+    path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'src', 'services', 'promptTemplateCatalog.js'),
     // flagRegistry 真身 2026-09-28 归位到 D3 共享底座；services/flagRegistry.js 只剩
     // 一行兼容壳，仍留在下方作为路径存在性锚点，但被扫描的表体在这里。
-    path.join(REPO_ROOT, 'services', 'backend', 'src', 'utils', 'flagRegistry'),
-    path.join(REPO_ROOT, 'services', 'backend', 'src', 'services', 'flagRegistry.js'),
+    path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'src', 'utils', 'flagRegistry'),
+    path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'src', 'services', 'flagRegistry.js'),
   ];
   const out = [];
   for (const d of dirs) {

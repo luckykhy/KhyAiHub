@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: prompt.md -->
 <title>Doubt-Driven Development · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>doubt-driven-development<span class="sep">›</span>Doubt-Driven Development</div>
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>doubt-driven-development<span class="sep">›</span>Doubt-Driven Development</div>
       <header class="hero reveal"><h1>Doubt-Driven Development</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#doubt-driven-development">Doubt-Driven Development</a></li><li class="lvl-2"><a href="#overview">Overview</a></li><li class="lvl-2"><a href="#when-to-use">When to Use</a></li><li class="lvl-2"><a href="#loading-constraints">Loading Constraints</a></li><li class="lvl-2"><a href="#the-process">The Process</a></li><li class="lvl-3"><a href="#step-1-claim-surface-what-stands">Step 1: CLAIM — Surface what stands</a></li><li class="lvl-3"><a href="#step-2-extract-smallest-reviewable-unit">Step 2: EXTRACT — Smallest reviewable unit</a></li><li class="lvl-3"><a href="#step-3-doubt-invoke-the-fresh-context-reviewer">Step 3: DOUBT — Invoke the fresh-context reviewer</a></li><li class="lvl-3"><a href="#step-4-reconcile-fold-findings-back">Step 4: RECONCILE — Fold findings back</a></li><li class="lvl-3"><a href="#step-5-stop-bounded-loop-not-recursion">Step 5: STOP — Bounded loop, not recursion</a></li><li class="lvl-2"><a href="#common-rationalizations">Common Rationalizations</a></li><li class="lvl-2"><a href="#red-flags">Red Flags</a></li><li class="lvl-2"><a href="#interaction-with-other-skills">Interaction with Other Skills</a></li><li class="lvl-2"><a href="#verification">Verification</a></li></ul></nav>
       <article class="doc-body">
@@ -127,14 +127,14 @@ gemini --approval-mode plan -p <span class="hljs-string">&quot;&quot;</span> &lt
 <p>After applying doubt-driven development:</p>
 <ul><li>[ ] Every non-trivial decision (per the definition above) was named explicitly as a CLAIM before standing</li><li>[ ] At least one fresh-context review per non-trivial artifact (a failing test produced by TDD's RED step satisfies this for behavioral claims, per Interaction with Other Skills)</li><li>[ ] The reviewer received ARTIFACT + CONTRACT — NOT the CLAIM, NOT your reasoning</li><li>[ ] The reviewer's prompt was adversarial (&quot;find issues&quot;), not validating (&quot;is it good&quot;)</li><li>[ ] Findings were classified against the artifact text (not rubber-stamped) using the precedence: contract misread / actionable / trade-off / noise</li><li>[ ] A stop condition was met (trivial findings, 3 cycles, or user override)</li><li>[ ] In interactive mode, cross-model was <strong>explicitly offered</strong> to the user (regardless of artifact stakes) and the response was acknowledged in the output</li><li>[ ] In non-interactive mode, cross-model was skipped and the skip was announced</li><li>[ ] Any external CLI invocation was preceded by a PATH check, a working-binary test, syntax confirmation with the user, and explicit authorization to run</li></ul>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../../../services/backend/src/skills/built-in/documentation-and-adrs/prompt.html"><div class="dir">← 上一篇</div><div class="ttl">Documentation and ADRs</div></a><a class="next" href="../../../../../../services/backend/src/skills/built-in/doubt-driven-development/references/orchestration-patterns.html"><div class="dir">下一篇 →</div><div class="ttl">Orchestration Patterns</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/skills/built-in/documentation-and-adrs/prompt.html"><div class="dir">← 上一篇</div><div class="ttl">Documentation and ADRs</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/skills/built-in/doubt-driven-development/references/orchestration-patterns.html"><div class="dir">下一篇 →</div><div class="ttl">Orchestration Patterns</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="services/backend/src/skills/built-in/doubt-driven-development/prompt.html";</script>
-<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/skills/built-in/doubt-driven-development/prompt.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

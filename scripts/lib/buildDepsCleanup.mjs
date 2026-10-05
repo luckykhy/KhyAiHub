@@ -2,7 +2,7 @@
  * buildDepsCleanup.mjs — 嵌入式构建工具链的「用完即走」清理器。
  *
  * 背景（实测数字）：仓库里有两条为了产出十几 MB 而装三百 MB 的工具链
- *   extensions/tools/khy-markdown/muya-embed/node_modules  182.3 MB → vendor/ 约 11 MB
+ *   delivery/extension/tools/khy-markdown/muya-embed/node_modules  182.3 MB → vendor/ 约 11 MB
  *   scripts/docs/mermaid-embed/node_modules                127.7 MB → mermaid.min.js 约 3.3 MB
  * 两份产物本来就是「不跟踪、按需重建」的（见 .gitignore 可再生构建产物段），
  * 那这 310 MB 的安装树在产出之后就没有留存价值了。

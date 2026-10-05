@@ -6,7 +6,7 @@
 // which the user experiences as "the page is blank". So we probe the candidate ports
 // and only return a URL that answers as OUR app (identity endpoint first, page title
 // as the fallback for older dev servers), mirroring
-// apps/ai-frontend/frontendRuntime.mjs and services/backend/src/services/aiFrontendLocator.js.
+// apps/ai-frontend/frontendRuntime.mjs and runtime/node/backend/src/services/aiFrontendLocator.js.
 //
 // Returns '' when nothing answers — callers must show an honest "not running" message
 // instead of opening a guessed port.

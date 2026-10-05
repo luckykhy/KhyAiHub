@@ -35,9 +35,9 @@ const {
   CHANNEL_LOCAL,
   CHANNEL_DIRECT,
   CHANNEL_RELAY,
-} = require('../../../scripts/lib/modelTypeProviderPlan');
+} = require('../../../../scripts/lib/modelTypeProviderPlan');
 
-const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
+const REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const DOC_PATH = path.join(
   REPO_ROOT,
   'docs',

@@ -124,7 +124,7 @@ function buildAiFastlaneContextPack() {
     'Use this pack as the first read to understand KHY-OS quickly without full-repo scanning.',
     '',
     '## Architecture in 8 lines',
-    '1. Entry command: `khy` (Python launcher in `platform/khy_platform/cli.py`).',
+    '1. Entry command: `khy` (Python launcher in `runtime/substrate/platform/khy_platform/cli.py`).',
     '2. Core runtime: Node.js backend (`services/backend/`).',
     '3. CLI routing: `services/backend/src/cli/router.js` + per-command handlers.',
     '4. AI gateway orchestration: `services/backend/src/cli/handlers/gateway.js`.',
@@ -806,7 +806,7 @@ async function handleDocsBrowse(args, options) {
   const repoRoot = getRepoRoot();
 
   // 不自己拼拓展路径：本函数曾硬编码 `tools/khyos-markdown`，拓展迁入
-  // extensions/ 后该路径指向空气，而 fail-soft 把它掩成了一句提示
+  // delivery/extension/ 后该路径指向空气，而 fail-soft 把它掩成了一句提示
   // —— `khy docs browse` 因此静默失效而无人发觉。现在走服务定位（
   // [DESIGN-TOOL-002] §1.3 第四条），与 `khy md` 共用同一条解析路径。
   let workbench;

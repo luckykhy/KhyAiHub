@@ -77,7 +77,7 @@ function collectFilesFromTarget(targetPath, out) {
 }
 
 // 无参调用(npm run check:model-list-truth)的默认扫描面:模型列表接线只在后端源码里。
-const DEFAULT_TARGETS = ['services/backend/src'];
+const DEFAULT_TARGETS = ['runtime/node/backend/src'];
 
 function gatherFiles() {
   const out = new Set();

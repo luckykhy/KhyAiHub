@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Find and delete stale credentials file
-const dir = path.join('D:', 'Portable', 'khy-os', '.khy', 'credentials');
+const dir = path.join('D:', 'Portable', 'khy-os', 'works', 'data', 'khy', 'credentials');
 const file = path.join(dir, 'default-admin.json');
 console.log('Checking:', file);
 if (fs.existsSync(file)) {

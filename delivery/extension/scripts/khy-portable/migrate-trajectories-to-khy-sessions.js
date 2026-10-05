@@ -40,7 +40,9 @@ const SP_PATH = path.join(
   '..',
   '..',
   '..',
-  'services',
+  '..',
+  'runtime',
+  'node',
   'backend',
   'src',
   'services',
@@ -152,7 +154,7 @@ function main() {
 
   if (APPLY && REINDEX) {
     try {
-      const idxPath = path.join(__dirname, '..', '..', '..', 'services', 'backend', 'src', 'services', 'sessionSearchIndex');
+      const idxPath = path.join(__dirname, '..', '..', '..', '..', 'runtime', 'node', 'backend', 'src', 'services', 'sessionSearchIndex');
       const idx = require(idxPath);
       idx.init();
       const r = idx.reindexAll();

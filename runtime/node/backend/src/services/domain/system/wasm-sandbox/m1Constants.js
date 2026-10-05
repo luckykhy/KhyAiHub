@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * M1 microkernel/IPC constants shared by host runtime and adapters.
+ * M1 microruntime/boot/kernel/IPC constants shared by host runtime and adapters.
  * Keep these IDs stable once published.
  */
 

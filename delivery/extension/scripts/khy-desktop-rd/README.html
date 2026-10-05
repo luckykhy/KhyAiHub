@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: README.md -->
 <title>khy-os 桌面端调研档案（desktop-rd） · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>extensions<span class="sep">›</span>scripts<span class="sep">›</span>khy-desktop-rd<span class="sep">›</span>khy-os 桌面端调研档案（desktop-rd）</div>
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>delivery<span class="sep">›</span>extension<span class="sep">›</span>scripts<span class="sep">›</span>khy-desktop-rd<span class="sep">›</span>khy-os 桌面端调研档案（desktop-rd）</div>
       <header class="hero reveal"><h1>khy-os 桌面端调研档案（desktop-rd）</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#khy-os-桌面端调研档案-desktop-rd">khy-os 桌面端调研档案（desktop-rd）</a></li><li class="lvl-2"><a href="#一-为什么存在这个目录">一、为什么存在这个目录</a></li><li class="lvl-2"><a href="#二-调研结论-4-个核心参考项目">二、调研结论：4 个核心参考项目</a></li><li class="lvl-2"><a href="#三-目标视觉风格-zcode-3-10-1">三、目标视觉风格：ZCode 3.10.1</a></li><li class="lvl-2"><a href="#四-技术路线推荐-待用户决策">四、技术路线推荐（待用户决策）</a></li><li class="lvl-3"><a href="#路线-a-electron-内嵌现有-vue-内嵌-node-子进程-复用度-95">路线 A：Electron + 内嵌现有 Vue + 内嵌 Node 子进程（**复用度 95%**）</a></li><li class="lvl-3"><a href="#路线-b-tauri-2-现有-vue-rust-命令层-复用度-85">路线 B：Tauri 2 + 现有 Vue + Rust 命令层（**复用度 85%**）</a></li><li class="lvl-3"><a href="#路线-c-先出原型-mvp-路线后面再定">路线 C：先出原型（MVP），路线后面再定</a></li><li class="lvl-2"><a href="#五-khy-os-桌面端-v1-候选-ipc-清单">五、khy-os 桌面端 v1 候选 IPC 清单</a></li><li class="lvl-2"><a href="#六-给-khy-os-的-零硬编码-对接点">六、给 khy-os 的&quot;零硬编码&quot;对接点</a></li><li class="lvl-2"><a href="#七-桌面端-vs-现有能力对照">七、桌面端 vs 现有能力对照</a></li><li class="lvl-2"><a href="#八-待用户-团队决策">八、待用户/团队决策</a></li><li class="lvl-2"><a href="#九-文件清单">九、文件清单</a></li><li class="lvl-2"><a href="#十-抓取来源-所有素材均为-2026-08-31-抓取自-github">十、抓取来源（所有素材均为 2026-08-31 抓取自 GitHub）</a></li></ul></nav>
       <article class="doc-body">
@@ -84,14 +84,14 @@
 <h2 id="十-抓取来源-所有素材均为-2026-08-31-抓取自-github">十、抓取来源（所有素材均为 2026-08-31 抓取自 GitHub）<a class="anchor" href="#十-抓取来源-所有素材均为-2026-08-31-抓取自-github" aria-label="锚点">#</a></h2>
 <ul><li>OpenFlux: <a href="https://github.com/EDEAI/OpenFlux" target="_blank" rel="noopener">https://github.com/EDEAI/OpenFlux</a></li><li>goose: <a href="https://github.com/aaif-goose/goose" target="_blank" rel="noopener">https://github.com/aaif-goose/goose</a></li><li>ChatML: <a href="https://github.com/chatml/chatml" target="_blank" rel="noopener">https://github.com/chatml/chatml</a></li><li>one-api: <a href="https://github.com/songquanpeng/one-api" target="_blank" rel="noopener">https://github.com/songquanpeng/one-api</a></li><li>kbar: <a href="https://github.com/timc1/kbar" target="_blank" rel="noopener">https://github.com/timc1/kbar</a></li></ul>
       </article>
-      <nav class="pager"><a class="prev" href="../../../extensions/scripts/khy-desktop-rd/openflux/README.html"><div class="dir">← 上一篇</div><div class="ttl">OpenFlux — 桌面 AI Agent 客户端（Tauri v2）</div></a><a class="next" href="../../../extensions/scripts/khy-installer/setup/README.html"><div class="dir">下一篇 →</div><div class="ttl">extensions/scripts/khy-installer/setup/ — 一次性上手脚本</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../delivery/extension/scripts/khy-desktop-rd/openflux/README.html"><div class="dir">← 上一篇</div><div class="ttl">OpenFlux — 桌面 AI Agent 客户端（Tauri v2）</div></a><a class="next" href="../../../../delivery/extension/scripts/khy-installer/setup/README.html"><div class="dir">下一篇 →</div><div class="ttl">extensions/scripts/khy-installer/setup/ — 一次性上手脚本</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../";window.__KHY_CUR__="extensions/scripts/khy-desktop-rd/README.html";</script>
-<script src="../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="delivery/extension/scripts/khy-desktop-rd/README.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

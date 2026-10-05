@@ -6,7 +6,7 @@ const { Sequelize } = require('sequelize');
 async function main() {
   // khyquant DB lives inside the project data home (repo root/.khy/khyquant/data/)
   const repoRoot = path.resolve(__dirname, '..', '..');
-  const dbPath = path.join(repoRoot, '.khy', 'khyquant', 'data', 'khy-quant.db');
+  const dbPath = path.join(repoRoot, 'works', 'data', 'khy', 'khyquant', 'data', 'khy-quant.db');
   // Create a Sequelize connection directly to the SQLite file
   const sequelize = new Sequelize({
     dialect: 'sqlite',

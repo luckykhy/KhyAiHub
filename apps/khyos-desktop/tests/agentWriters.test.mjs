@@ -12,8 +12,10 @@ import fs from 'node:fs'
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-writers-'))
 process.env.KHY_DATA_HOME = path.join(tmp, 'khy')
 process.env.KHYOS_DESKTOP_REPO_ROOT = path.join(tmp, 'repo') // empty repo root → backend unresolved
-fs.mkdirSync(path.join(process.env.KHYOS_DESKTOP_REPO_ROOT, 'services', 'backend', 'src', 'services'), { recursive: true })
-// no providerPresets.js in that fake services dir → backend resolution fails → built-in writers
+// 假仓根里**建出候选目录但不放 providerPresets.js** ⇒ 走到「候选命中但该目录不完整」
+// 这条分支（而不是「一个候选都没命中」）。路径必须与 resolveBackendServicesRoot()
+// 的真实候选一致（迁移后是 runtime/node/backend），否则这条分支就测不到了。
+fs.mkdirSync(path.join(process.env.KHYOS_DESKTOP_REPO_ROOT, 'runtime', 'node', 'backend', 'src', 'services'), { recursive: true })
 process.env.HOME = path.join(tmp, 'home')
 process.env.USERPROFILE = process.env.HOME
 process.env.XDG_CONFIG_HOME = path.join(tmp, 'xdg')

@@ -19,7 +19,7 @@ const PORTABLE_EXT = path.join(ROOT, 'extensions', 'scripts', 'khy-portable');
 const POWERSHELL_LAUNCHER = path.join(PORTABLE_EXT, 'run.ps1');
 const WINDOWS_SETUP = path.join(ROOT, 'portable-setup.bat');
 const POSIX_SETUP = path.join(ROOT, 'portable-setup.sh');
-// 2026-08-15 根目录收容（MGMT-STD-001 §1.3 白名单）把这个薄壳从仓库根搬到 extensions/scripts/khy-installer/setup/，
+// 2026-08-15 根目录收容（MGMT-STD-001 §1.3 白名单）把这个薄壳从仓库根搬到 delivery/extension/scripts/khy-installer/setup/，
 // 那里离根 4 级，壳里的相对调用是 %~dp0..\..\..\..\portable-setup.bat。
 // 真入口仍是根上的 portable-setup.bat。
 const LEGACY_WINDOWS_SETUP = path.join(
@@ -53,8 +53,8 @@ test('source launchers derive the project root from their own location', () => {
   assert.match(batch, /Programs\\Python\\Python3\*/);
   assert.match(shell, /SCRIPT_DIR="\$\(cd "\$\(dirname "\$0"\)" && pwd\)"/);
   assert.match(shell, /KHY_PORTABLE_ROOT="\$SCRIPT_DIR"/);
-  // 三级而不是两级：脚本住在 extensions/scripts/khy-portable/，比原来的
-  // scripts/portable/ 深一级，少爬一级就会把 extensions/ 当成项目根。
+  // 三级而不是两级：脚本住在 delivery/extension/scripts/khy-portable/，比原来的
+  // scripts/portable/ 深一级，少爬一级就会把 delivery/extension/ 当成项目根。
   assert.match(
     powershell,
     /\$ProjectRoot = Split-Path -Parent \(Split-Path -Parent \(Split-Path -Parent \$PSScriptRoot\)\)/

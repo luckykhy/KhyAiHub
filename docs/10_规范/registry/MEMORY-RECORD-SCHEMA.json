@@ -59,7 +59,7 @@
           {
             "form": "文件路径",
             "pattern": "^[^\\s]*[./][^\\s]*$",
-            "description": "形如 services/backend/src/services/flagRegistry.js"
+            "description": "形如 runtime/node/backend/src/services/flagRegistry.js"
           },
           {
             "form": "命令输出引用",
@@ -178,7 +178,7 @@
       "storage": ".ai/ 维护元数据",
       "entry": "khy metadata gen / refresh / link",
       "entryKind": "cli-command",
-      "carrier": "services/backend/src/services/projectMetadataService.js",
+      "carrier": "runtime/node/backend/src/services/projectMetadataService.js",
       "protectedPaths": [
         ".ai/MAP.md",
         ".ai/CONTEXT.yaml",
@@ -273,8 +273,8 @@
     "note": "以下为实测（非文档摘录）。路径均于 2026-09-16 在仓库根验证存在。",
     "measuredAt": "2026-09-16",
     "memoryWriteSites": [
-      "services/backend/src/services/domain/memory/cognitiveSnapshot/offloadStore.js",
-      "services/backend/src/services/domain/memory/cognitiveSnapshot/snapshotManager.js"
+      "runtime/node/backend/src/services/domain/memory/cognitiveSnapshot/offloadStore.js",
+      "runtime/node/backend/src/services/domain/memory/cognitiveSnapshot/snapshotManager.js"
     ],
     "runtimeStorageDir": ".khy/memory/",
     "runtimeStorageObserved": [
@@ -289,7 +289,7 @@
     "recordShapeOnDisk": null,
     "recordShapeNote": "实测 .khy/memory/ 下为 Markdown 散文 + 目录，未发现带五字段的结构化记录文件；故本 schema 当前约束的是**写入方必须提供的字段契约**，而非磁盘上已存在的记录形状。checker 不得因磁盘无结构化记录而误报全库。",
     "canonicalWriteSeam": {
-      "file": "services/backend/src/memdir/memdir.js",
+      "file": "runtime/node/backend/src/memdir/memdir.js",
       "note": "实测（2026-09-16，非文档摘录）：仓库实际存在的记忆写入单点。DESIGN-MEM-006 §3 未把它登记为「指定入口」，而 §3 明写「新增记忆持久化模块：先在本表加行登记，再动码」——现有实现属未登记状态。",
       "api": [
         {
@@ -310,13 +310,13 @@
         {
           "fn": "_safeWriteFileSync(filepath, content)",
           "line": 206,
-          "io": "原子写：写 .tmp-<pid> + read-back 校验 + renameSync + 重试退避；纯叶子 services/backend/src/services/memoryWriteSafety.js"
+          "io": "原子写：写 .tmp-<pid> + read-back 校验 + renameSync + 重试退避；纯叶子 runtime/node/backend/src/services/memoryWriteSafety.js"
         }
       ]
     },
     "bypassWrites": [
       {
-        "file": "services/backend/src/assistant/autoDream.js",
+        "file": "runtime/node/backend/src/assistant/autoDream.js",
         "lines": [
           214,
           248,
@@ -326,7 +326,7 @@
         "flag": "绕过 memdir._safeWriteFileSync 裸写，AI 直接产出整个 MEMORY.md 内容"
       },
       {
-        "file": "services/backend/src/services/domain/memory/memoryEngine/distiller.js",
+        "file": "runtime/node/backend/src/services/domain/memory/memoryEngine/distiller.js",
         "lines": [
           293,
           309,

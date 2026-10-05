@@ -267,7 +267,7 @@ describe('红线4 · 官方更新防破坏', () => {
     assert.ok(plan.rejected.some((r) => r.reason.includes('核心轨之外')));
   });
 
-  test('路径段含 extensions/ 也被拦（受保护名兜底）', () => {
+  test('路径段含 delivery/extension/ 也被拦（受保护名兜底）', () => {
     const plan = planOfficialUpdate({
       coreRoot, protectedRoots: [],
       incomingFiles: [{ path: path.join(coreRoot, 'extensions', 'x.js'), content: 'x' }],

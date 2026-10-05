@@ -5952,6 +5952,51 @@ node_modules/   W7 未做故留根
 **顺序与并行**：R1 先行（独立面）；R2–R4 依赖 desktop 在飞收口；R5/R6 可与 R2–R4 并行（不相交）；R7 最后（独占冻结窗）。
 **不动项**：docs（GitHub 识别位+索引真源）、entries（LAYOUT-005 产物根）、works/runtime/business/delivery（域根）、.github（唯一例外）。
 
+### 22.5 点目录收敛复核 + `.codeartsdoer` 新位登记（2026-10-04，用户触发）
+
+> **触发**：用户 2026-10-04 传来根目录截图（`.ai` `.codeartsdoer` `.cursor` `.github` `.khy` `.khyos` `.opencode` `.workbuddy` `.workbuddy-ai` `.zcode`），
+> 原话「把这些点目录内容落在项目的合适位置，让它们在根目录消失，先做方案」。
+> 本节是对 §22.3 的**复核与增量登记**——结论与 §22.3 一致，**未产生新裁决、未提前开工**；新增登记只有 `.codeartsdoer/` 一项。
+
+#### 22.5.1 与既有裁决的关系（先读，防重复施工）
+
+- 可出根的自家位（A 访问器改指 / C 跟踪件）与不可移的工具位（B 工具根绑定 / 自愈）的分类与机制，**沿用 §22.3，不重开**。
+- 闸门维持 §22.2：B 档最早 **10-27**；未获用户明示推翻前，W9′ / P1–P5 / W7 均不动工。**本节不改变开闸时间。**
+- §22.3 已实测的关键结论继续有效：「符号链接方案不减视觉数，要让视觉数下降必须**改指向、不建别名**」。
+
+#### 22.5.2 2026-10-04 实测复核（逐目录）
+
+| 点目录 | 实测内容 | 类 | 出根路径 | 2026-10-02 → 2026-10-04 复核 |
+|---|---|---|---|---|
+| `.khy/` | **53 项活数据**（`settings.json`/`api_keys.json`/`sessions.db`/`credentials/`/`memory/`/`skills/`…） | A 访问器改指 | 指针重定位 → `works/data/khy` | 仍活（W9′ 未执行）；便携设计**刻意放根内**（§12.54 行 4521），迁走=改便携定位，须产品决定 |
+| `.khyos/` | 4 项残留（`__scope_probe/` `backup/` `diag/` `tmp/`） | A 访问器改指 | `getBaseHome()` → `works/data/khyos` | 已近空壳 |
+| `.ai/` | 1 项残留（`__scope_probe/`） | C 跟踪件 | `git mv` → `works/record/ai/` | 种子文档已随 `khy metadata` 迁走，仅剩探针；**指针漂移**：`metadataPointers.js` 的 `_pointerBody` 仍写 `.ai/GUARDS.md`，须订正 |
+| `.workbuddy/` `.workbuddy-ai/` | 各 1 项（`memory/`） | B 工具自愈 | 应用改向（待查） | 隔离后自愈复生（§12.54 实证）；**非施工可解** |
+| `.codeartsdoer/` | `.codebase/`（`file-index.db` 索引）+`rule/`+`mcp/`+`AGENTS.md`+`mem-exp-config.json` | **B 工具根绑定（新位）** | 不可移 | **§22.3 / §22.4 与 `00_INDEX` 均未登记；本节新增** |
+| `.cursor/` `.clinerules` | `rules/khy-maintainability.mdc` / 指针块 | B 工具根绑定 | 不可移 | 用户圈留（§17.2） |
+| `.opencode/` | `config.json`+`README`+`node_modules/` | B 工具根绑定 | 不可移 | 留至 2026-11-15 复审（§21.4） |
+| `.zcode/` | `plans/`（会话工件）+`tmp/`（大量临时脚本） | B 工具根绑定 | 不可移；`tmp/` 可再生 | 活工具，reviewBy 2026-12-31（§21.4） |
+| `.github/` | `workflows/` 等 | 永久契约 | 不动 | §6.3 |
+
+已出根（本节起点已无）：`.claude/`（下线）、`.commandcode/`（隔离，§21.2）。
+
+#### 22.5.3 增量登记：`.codeartsdoer/` 待复审位
+
+| 项 | 值 |
+|---|---|
+| 性质 | 第三方 CLI 智能体（CodeArts）的项目位，与 `.claude/`/`.commandcode/` 同性质；`file-index.db` 为可再生索引缓存 |
+| 能否物理出根 | **否**——工具按根路径读取，搬走即断工具链（同 §12.54 对点目录的判据） |
+| 用户裁决（2026-10-04） | **「不确定，先保留」** → 登记 `tool-retained(pending-review)`，与 `.opencode/` `.zcode/` 同列 |
+| 复审判据 | 复审日前 30 天内**非缓存**写入；在用 → 按 ②机器契约族登记进 `docs/00_INDEX_仓库根.md`；不用 → LAYOUT-003 只隔离不删除 |
+| 视觉 | 0（保留）/ −1（退役时） |
+
+#### 22.5.4 结论与待办（本节不动工）
+
+1. **无新裁决**：点目录收敛按 §22.3 执行，闸门维持 10-27；可出根的仅自家位（`.khy` `.khyos` `.ai` `.workbuddy*`），工具位（`.cursor` `.clinerules` `.opencode` `.zcode` `.codeartsdoer`）只能**退役**不能搬，`.github` 为永久契约。
+2. `.codeartsdoer/` 按用户 2026-10-04 裁定登记为待复审，不处理。
+3. **待办登记（防丢）**：① `docs/00_INDEX_仓库根.md` 补 `.codeartsdoer/`（索引当前未含它，根条目覆盖不全）；② `metadataPointers.js` 订正 `.ai/GUARDS.md` 指针漂移（种子文档已在 `works/record/ai/`）。两项均为独立小改，不在本节施工。
+4. **回滚**：删除本节即回到 2026-10-02 态——本节无文件移动、无副作用。
+
 ## 关联
 
 - 本篇 §17 = 圈留 Cline/Cursor 后重绘的终态树与可达阶梯；§15/§16 的「终局 7」已被 §17.4 作废。§18 = 方案 Q（两口径达标），待点头。**§21 = 四条裁决与统一排期（方案唯一真源，2026-10-02 已裁）。**

@@ -13,10 +13,10 @@
 
 const fs = require('fs');
 const path = require('path');
-const { triageSymptom, loadMap } = require('../../../scripts/lib/maintainerTriage');
-const { opsDocPath, opsDocRelPath } = require('../../../scripts/lib/docsPaths');
+const { triageSymptom, loadMap } = require('../../../../scripts/lib/maintainerTriage');
+const { opsDocPath, opsDocRelPath } = require('../../../../scripts/lib/docsPaths');
 
-const ROOT = path.resolve(__dirname, '..', '..', '..');
+const ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const DOC_PATH = opsDocPath('[OPS-MAN-067] 症状分诊速查表.md');
 
 const C = {

@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: testing-patterns.md -->
 <title>Testing Patterns Reference · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>test-driven-development<span class="sep">›</span>references<span class="sep">›</span>Testing Patterns Reference</div>
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>test-driven-development<span class="sep">›</span>references<span class="sep">›</span>Testing Patterns Reference</div>
       <header class="hero reveal"><h1>Testing Patterns Reference</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#testing-patterns-reference">Testing Patterns Reference</a></li><li class="lvl-2"><a href="#table-of-contents">Table of Contents</a></li><li class="lvl-2"><a href="#test-structure-arrange-act-assert">Test Structure (Arrange-Act-Assert)</a></li><li class="lvl-2"><a href="#test-naming-conventions">Test Naming Conventions</a></li><li class="lvl-2"><a href="#common-assertions">Common Assertions</a></li><li class="lvl-2"><a href="#mocking-patterns">Mocking Patterns</a></li><li class="lvl-3"><a href="#mock-functions">Mock Functions</a></li><li class="lvl-3"><a href="#mock-modules">Mock Modules</a></li><li class="lvl-3"><a href="#mock-at-boundaries-only">Mock at Boundaries Only</a></li><li class="lvl-2"><a href="#react-component-testing">React/Component Testing</a></li><li class="lvl-2"><a href="#api-integration-testing">API / Integration Testing</a></li><li class="lvl-2"><a href="#e2e-testing-playwright">E2E Testing (Playwright)</a></li><li class="lvl-2"><a href="#test-anti-patterns">Test Anti-Patterns</a></li></ul></nav>
       <article class="doc-body">
@@ -205,14 +205,14 @@ jest.<span class="hljs-title function_">mock</span>(<span class="hljs-string">&#
 <h2 id="test-anti-patterns">Test Anti-Patterns<a class="anchor" href="#test-anti-patterns" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>Anti-Pattern</th><th>Problem</th><th>Better Approach</th></tr></thead><tbody><tr><td>Testing implementation details</td><td>Breaks on refactor</td><td>Test inputs/outputs</td></tr><tr><td>Snapshot everything</td><td>No one reviews snapshot diffs</td><td>Assert specific values</td></tr><tr><td>Shared mutable state</td><td>Tests pollute each other</td><td>Setup/teardown per test</td></tr><tr><td>Testing third-party code</td><td>Wastes time, not your bug</td><td>Mock the boundary</td></tr><tr><td>Skipping tests to pass CI</td><td>Hides real bugs</td><td>Fix or delete the test</td></tr><tr><td>Using <code>test.skip</code> permanently</td><td>Dead code</td><td>Remove or fix it</td></tr><tr><td>Overly broad assertions</td><td>Doesn't catch regressions</td><td>Be specific</td></tr><tr><td>No async error handling</td><td>Swallowed errors, false passes</td><td>Always <code>await</code> async tests</td></tr></tbody></table>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../../../../services/backend/src/skills/built-in/test-driven-development/prompt.html"><div class="dir">← 上一篇</div><div class="ttl">Test-Driven Development</div></a><a class="next" href="../../../../../../../services/backend/src/skills/built-in/update-config/prompt.html"><div class="dir">下一篇 →</div><div class="ttl">Update Config — Configuration File Manager</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/skills/built-in/test-driven-development/prompt.html"><div class="dir">← 上一篇</div><div class="ttl">Test-Driven Development</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/skills/built-in/update-config/prompt.html"><div class="dir">下一篇 →</div><div class="ttl">Update Config — Configuration File Manager</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="services/backend/src/skills/built-in/test-driven-development/references/testing-patterns.html";</script>
-<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/skills/built-in/test-driven-development/references/testing-patterns.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

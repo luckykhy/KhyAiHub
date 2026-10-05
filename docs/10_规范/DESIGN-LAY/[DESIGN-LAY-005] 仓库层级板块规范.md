@@ -437,6 +437,13 @@ node scripts/ci/check-repo-layout.js --promote=root-whitelist,docs-index-first,l
 
 ---
 
+### 1.4b 方案 P 域根（2026-10-02 开闸新增）
+
+| 域根 | 承接 | 说明 |
+|---|---|---|
+| `delivery/` | D4 交付与接入域 | 方案 P 物理化第一批：extensions → delivery/extension（139 件 git mv 全 rename）。apps/software 后续批次随 P2/P3 归入。判据真源 DOMAIN-DEPS.json `_physicalization`（D4=delivery，唯一例外 .github）。 |
+| `runtime/` | D1 运行时域 | 方案 P 物理化：substrate 并入 runtime/substrate（P-D 裁决）；akshare_scripts → runtime/node/backend（附录A 指定目标）。kernel/platform/services 的归入在 P1–P5 后续批。 |
+
 ## 关联
 
 - 文档结构与索引铁律（文档侧真源）：`[MGMT-STD-001] 项目文档结构与索引铁律规范`

@@ -22,7 +22,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const LEDGER_REL = path.join('.khy', 'ruleguard', 'authz-failures.jsonl');
+const LEDGER_REL = path.join('works', 'data', 'khy', 'ruleguard', 'authz-failures.jsonl');
 
 /**
  * 解析台账绝对路径：优先 `KHY_AUTHZ_LEDGER`（测试注入用），否则相对 cwd。

@@ -23,7 +23,7 @@ if [[ "${1:-}" == "repair" ]]; then
     fi
     export KHYQUANT_PORTABLE_ROOT="$SCRIPT_DIR"
     shift
-    node "$NODE_SCRIPT_DIR/extensions/scripts/khy-portable/repair-portable.js" "$@"
+    node "$NODE_SCRIPT_DIR/delivery/extension/scripts/khy-portable/repair-portable.js" "$@"
     exit $?
 fi
 
@@ -64,7 +64,7 @@ export KHY_RUNTIME_HOME="${KHY_RUNTIME_HOME:-$KHY_DATA_HOME/runtime}"
 export KHY_CACHE_HOME="${KHY_CACHE_HOME:-$KHY_DATA_HOME/cache}"
 export KHY_LOG_HOME="${KHY_LOG_HOME:-$KHY_DATA_HOME/logs}"
 export KHY_TEMP_HOME="${KHY_TEMP_HOME:-$KHY_DATA_HOME/tmp}"
-export PYTHONPATH="$SCRIPT_DIR/platform:$SCRIPT_DIR/software/khyquant:${PYTHONPATH:-}"
+export KHY_PLATFORM_PATH="$SCRIPT_DIR/runtime/substrate/platform"
 # Tell the platform launcher which entry alias was used (python -m loses argv[0]).
 export KHY_INVOKED_AS="khy"
 
@@ -72,4 +72,6 @@ export KHY_INVOKED_AS="khy"
 # Official design: route through the platform launcher (khy_platform), not the
 # khyquant app launcher — the latter forces KHYQUANT_INVOKED_AS=khyquant and the
 # Node backend then blocks platform commands like `khy chat`.
-exec "$PYTHON_CMD" -m khy_platform "$@"
+# Path expansion must happen in Python (os.environ), not bash: the -c script is
+# single-quoted, so bash would hand literal "$VARS" strings to Python.
+exec "$PYTHON_CMD" -c "import os,sys,runpy; sys.path[:0]=[os.environ['KHY_PLATFORM_PATH'], os.path.join(os.environ['KHY_OS_ROOT'],'software','khyquant')]; sys.argv=['khy']+sys.argv[1:]; runpy.run_module('khy_platform', run_name='__main__')" "$@"

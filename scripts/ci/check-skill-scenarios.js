@@ -6,7 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const DEFAULT_SUITE = 'services/backend/src/skills/evals/skill-scenario-suite.json';
+const DEFAULT_SUITE = 'runtime/node/backend/src/skills/evals/skill-scenario-suite.json';
 
 function parseArgs(argv) {
   const options = {

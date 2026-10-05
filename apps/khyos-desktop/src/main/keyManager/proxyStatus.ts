@@ -127,7 +127,7 @@ export async function startProxy(): Promise<{ ok: boolean; error?: string; detai
   if (!root) {
     return {
       ok: false,
-      error: '本地网关启动失败：未找到 backend 服务（env KHY_BACKEND_SERVICES 或仓库内 services/backend），请改用 khy CLI 启动网关'
+      error: '本地网关启动失败：未找到 backend 服务（env KHY_BACKEND_SERVICES 或仓库内 runtime/node/backend），请改用 khy CLI 启动网关'
     }
   }
   try {

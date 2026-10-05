@@ -37,11 +37,11 @@
 <ul><li>底座经 <code>importlib.metadata</code> 的 <code>khyos.apps</code> entry_points 组 + <code>~/.khyos/apps/</code> 注册表目录</li></ul>
 <p><strong>双路动态发现</strong>应用，有则加载、无则跳过、永不崩溃。</p>
 <h3 id="步骤-2-应用生命周期协议">步骤 2 — 应用生命周期协议 ✓<a class="anchor" href="#步骤-2-应用生命周期协议" aria-label="锚点">#</a></h3>
-<ul><li>新建单一真源 <a href="../../../platform/khy_platform/app_protocol.py"><code>platform/khy_platform/app_protocol.py</code></a>（<strong>零应用导入</strong>）：<ul><li>路径主权：<code>base_home()</code>→<code>~/.khyos</code>，<code>app_home(name)</code>→<code>~/.&lt;name&gt;</code>（含路径穿越防护），</li></ul></li></ul>
+<ul><li>新建单一真源 <span class="deadlink" title="目标不存在：../../../platform/khy_platform/app_protocol.py"><code>platform/khy_platform/app_protocol.py</code></span>（<strong>零应用导入</strong>）：<ul><li>路径主权：<code>base_home()</code>→<code>~/.khyos</code>，<code>app_home(name)</code>→<code>~/.&lt;name&gt;</code>（含路径穿越防护），</li></ul></li></ul>
 <p><code>STANDARD_SUBDIRS = (data, cache, models, logs)</code>，<code>ensure_home()</code>。</p>
 <ul><li>协议基类 <code>KhyApp</code>（抽象 <code>standalone_init()</code> / <code>eco_init(ctx)</code>）+ <code>AppManifest</code> / <code>EcoContext</code>。</li><li>发现：<code>discover_apps()</code> 合并 entry_points（优先）与注册表，按 <code>name</code> 去重，<strong>任何异常不抛出</strong>。</li></ul>
 <h3 id="步骤-3-khyquant-双模自适应入口">步骤 3 — khyquant 双模自适应入口 ✓<a class="anchor" href="#步骤-3-khyquant-双模自适应入口" aria-label="锚点">#</a></h3>
-<ul><li>新建 <a href="../../../software/khyquant/khy_quant/app.py"><code>software/khyquant/khy_quant/app.py</code></a>：<code>KhyQuant(KhyApp)</code> 示范实现，</li></ul>
+<ul><li>新建 <span class="deadlink" title="目标不存在：../../../software/khyquant/khy_quant/app.py"><code>software/khyquant/khy_quant/app.py</code></span>：<code>KhyQuant(KhyApp)</code> 示范实现，</li></ul>
 <p>对底座标准模块的导入做守卫——<strong>独立安装无底座也不崩溃</strong>。</p>
 <ul><li><code>khy_quant/cli.py</code>：<code>_detect_mode()</code>（<code>KHYOS_ECO_MODE</code> 优先，否则探测底座 <code>app_protocol</code> 可导入，</li></ul>
 <p>默认 <code>standalone</code>）+ <code>_ensure_app_home()</code>，经 <code>KHYQUANT_MODE</code> / <code>KHYQUANT_HOME</code> 下传 Node 运行时。</p>

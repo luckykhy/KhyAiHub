@@ -4,9 +4,9 @@
  * 批次 18 契约测试 —— D4 交付面取运行时能力必须直指 D2 真身，不得借道 D5 兼容壳。
  *
  * 背景：scripts/lib/{hydrationHealth,installIntegrity}.js 是 3 行纯 re-export 壳，
- * 真身在 services/backend/src/services/domain/backup/restore/。壳的存在只服务于
+ * 真身在 runtime/node/backend/src/services/domain/backup/restore/。壳的存在只服务于
  * D5 本地脚本（scripts/restore/**、scripts/tests/**）——D5 可以依赖一切域，所以合法。
- * 但 extensions/**（D4）require 这两个壳，就构成「交付面伸进工程档案区」的禁止边
+ * 但 delivery/extension/**（D4）require 这两个壳，就构成「交付面伸进工程档案区」的禁止边
  * （DOMAIN-DEPS.json no-reach-into-archive）。
  *
  * check:layout 只数边的总数，不锁「某个壳的消费者范围」这一方向；本测试锁住它，
@@ -21,7 +21,7 @@ const cp = require('node:child_process');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 
-const TRUTH_DIR = 'services/backend/src/services/domain/backup/restore';
+const TRUTH_DIR = 'runtime/node/backend/src/services/domain/backup/restore';
 const SHELLS = ['scripts/lib/hydrationHealth.js', 'scripts/lib/installIntegrity.js'];
 
 function gitGrepFiles(fixedPatterns) {
@@ -62,8 +62,8 @@ test('壳的消费者只在 D5（scripts/）内，交付面一律直指真身', 
 
 test('两个 extensions 脚本的 require 指向 D2 真身而非 D5 壳', () => {
   const cases = [
-    ['extensions/scripts/khy-diagnostics/hydration-doctor.js', 'hydrationHealth'],
-    ['extensions/scripts/khy-installer/verify-install.js', 'installIntegrity'],
+    ['delivery/extension/scripts/khy-diagnostics/hydration-doctor.js', 'hydrationHealth'],
+    ['delivery/extension/scripts/khy-installer/verify-install.js', 'installIntegrity'],
   ];
   for (const [rel, mod] of cases) {
     const src = fs.readFileSync(path.join(ROOT, rel), 'utf8');

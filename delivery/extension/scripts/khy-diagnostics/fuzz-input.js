@@ -24,7 +24,7 @@
 const path = require('path');
 const { buildCorpus } = require('./fuzzInputCorpus');
 
-const BACKEND = path.resolve(__dirname, '..', '..', '..', 'services', 'backend');
+const BACKEND = path.resolve(__dirname, '..', '..', '..', '..', 'runtime', 'node', 'backend');
 function cli(mod) {
   return require(path.join(BACKEND, 'src', 'cli', mod));
 }

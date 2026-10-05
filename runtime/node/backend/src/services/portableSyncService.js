@@ -559,6 +559,7 @@ function detectTargetActivity(targetRoot, windowMs = 120000) {
     path.join(targetRoot, '_debug.log'),
     path.join(targetRoot, '.khyquant-data'),
     path.join(targetRoot, '.khy'),
+    path.join(targetRoot, 'works', 'data', 'khy'),
   ];
   const now = Date.now();
   for (const probe of probes) {

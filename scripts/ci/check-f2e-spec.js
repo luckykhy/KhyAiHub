@@ -25,8 +25,8 @@
  *
  * Usage:
  *   node scripts/ci/check-f2e-spec.js <file1.js> <file2.vue> ...
- *   node scripts/ci/check-f2e-spec.js           # scans apps/ai-frontend/src
- *                                                # + services/backend/src/bridge
+ *   node scripts/ci/check-f2e-spec.js           # scans delivery/web/ai-frontend/src
+ *                                                # + runtime/node/backend/src/bridge
  */
 
 const fs = require('fs');
@@ -37,8 +37,8 @@ const args = process.argv.slice(2);
 function defaultScope() {
   const out = [];
   const roots = [
-    'apps/ai-frontend/src',
-    'services/backend/src/bridge',
+    'delivery/web/ai-frontend/src',
+    'runtime/node/backend/src/bridge',
   ];
   for (const root of roots) {
     if (!fs.existsSync(root)) continue;
@@ -97,8 +97,8 @@ const RULES = [
 // not user-facing CLI banners. Add a file here only if you've audited that
 // every console.* in it is user-visible.
 const CONSOLE_WHITELIST = new Set([
-  'services/backend/src/bridge/bridgeServer.js',
-  'services/backend/src/cli/handlers/gatewayManageDaemon.js',
+  'runtime/node/backend/src/bridge/bridgeServer.js',
+  'runtime/node/backend/src/cli/handlers/gatewayManageDaemon.js',
 ]);
 
 const violations = [];

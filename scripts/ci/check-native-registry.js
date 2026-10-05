@@ -11,7 +11,7 @@
  * 同一份 Dockerfile 在两地构建会拉到不同 tarball（甚至镜像未同步时的旧版本），
  * 而**没有任何既有守卫会发现这件事** —— 构建照样成功，产物却不可复现。
  *
- * 实测起点（2026-09-23）：`services/backend/Dockerfile` 有 3 处 `-i mirrors.aliyun.com`，
+ * 实测起点（2026-09-23）：`runtime/node/backend/Dockerfile` 有 3 处 `-i mirrors.aliyun.com`，
  * 6 个 `package-lock.json` 共 3005 条 `resolved` 指向 `registry.npmmirror.com`。
  *
  * ## 三层判据（分工明确，不重叠）
@@ -102,7 +102,7 @@ const EXPLICIT_GATE_NAMES = ['KHY_USE_CN_MIRROR', 'KHY_KHYOS_PREFER_CN'];
  */
 const EXEMPT = [
   {
-    path: 'services/backend/src/services/offlineKnowledge.js',
+    path: 'runtime/node/backend/src/services/offlineKnowledge.js',
     reason: '离线知识库的正文文本，镜像地址是「给用户看的说明」而非可执行配置',
     reviewBy: '2027-03-31',
   },
@@ -117,7 +117,7 @@ const BUILD_CONFIG_BASENAME_RE = [
   /^\.npmrc$/,
   // package.json 同属构建配置：`scripts.*` 是构建入口，且 electron-builder 的
   // `build.electronDownload.mirror` 会把镜像钉进**构建期下载**。
-  // 实测 2026-09-23：apps/khyos-desktop/package.json 的 electronDownload.mirror
+  // 实测 2026-09-23：delivery/desktop/khyos-desktop/package.json 的 electronDownload.mirror
   // 指向 npmmirror 且无任何开关门控 —— 属 C1 零容忍（此前因本集合不含 package.json
   // 而静默漏检）。
   /^package\.json$/,
@@ -445,26 +445,26 @@ const SCENARIOS = {
   ],
   'aliyun-pip': [
     {
-      path: 'services/backend/Dockerfile',
+      path: 'runtime/node/backend/Dockerfile',
       content: 'RUN pip install -r req.txt -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com\n',
     },
   ],
   'apt-mirror-knob': [
-    { path: 'services/ai-backend/Dockerfile', content: 'ARG APT_MIRROR=""\nRUN apt-get update\n' },
+    { path: 'runtime/node/ai-backend/Dockerfile', content: 'ARG APT_MIRROR=""\nRUN apt-get update\n' },
   ],
   'lockfile-npmmirror': [
     {
-      path: 'services/backend/package-lock.json',
+      path: 'runtime/node/backend/package-lock.json',
       content:
         '{\n "packages": {\n  "node_modules/a": {\n   "resolved": "https://registry.npmmirror.com/a/-/a-1.0.0.tgz"\n  },\n  "node_modules/b": {\n   "resolved": "https://registry.npmmirror.com/b/-/b-2.0.0.tgz"\n  }\n }\n}\n',
     },
   ],
   'runtime-ungated': [
-    { path: 'platform/khy_platform/_bootstrap.py', content: 'npmrc.write_text("registry=https://registry.npmmirror.com\\n")\n' },
+    { path: 'runtime/substrate/platform/khy_platform/_bootstrap.py', content: 'npmrc.write_text("registry=https://registry.npmmirror.com\\n")\n' },
   ],
   'runtime-gated': [
     {
-      path: 'platform/khy_platform/_bootstrap.py',
+      path: 'runtime/substrate/platform/khy_platform/_bootstrap.py',
       content: 'if os.environ.get("KHY_USE_CN_MIRROR") == "1":\n    npmrc.write_text("registry=https://registry.npmmirror.com\\n")\n',
     },
   ],

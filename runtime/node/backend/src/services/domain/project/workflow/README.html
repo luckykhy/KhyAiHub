@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: README.md -->
 <title>domain/project/workflow — 确定性工作流引擎（图解释器 + 运行时自演化 + 队列 worker） · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>project<span class="sep">›</span>workflow<span class="sep">›</span>domain/project/workflow — 确定性工作流引擎（图解释器 + 运行时自演化 + 队列 worker）</div>
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>project<span class="sep">›</span>workflow<span class="sep">›</span>domain/project/workflow — 确定性工作流引擎（图解释器 + 运行时自演化 + 队列 worker）</div>
       <header class="hero reveal"><h1>domain/project/workflow — 确定性工作流引擎（图解释器 + 运行时自演化 + 队列 worker）</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#domain-project-workflow-确定性工作流引擎-图解释器-运行时自演化-队列-worker">`domain/project/workflow` — 确定性工作流引擎（图解释器 + 运行时自演化 + 队列 worker）</a></li><li class="lvl-2"><a href="#1-三问-规则-9-process-010">1. 三问（规则 9 / `PROCESS-010`）</a></li><li class="lvl-2"><a href="#2-契约-改本单元前先读这段">2. 契约（改本单元前先读这段）</a></li><li class="lvl-2"><a href="#3-实测数字-2026-09-29-全数清点非抽样">3. 实测数字（2026-09-29，全数清点非抽样）</a></li><li class="lvl-2"><a href="#4-测试隔离与已知警告">4. 测试隔离与已知警告</a></li></ul></nav>
       <article class="doc-body">
@@ -41,14 +41,14 @@
 <p><strong>RUNTIME-001（零硬编码）留档</strong>：单元内无 IP/端口/绝对路径/生产主机名字面量。<code>workflowExecutor.js:262</code> 的 <code>'Bash'</code> 是 executeTool 的工具名（非端点），<code>runCode</code> 回退路径；<code>RPATool</code> 自愈协议的提示词不在本单元。</p>
 <p><strong>单元外 7 份测试在本环境无法复跑，全是方言错配、非产品缺陷</strong>（node 把装载失败合成「1 test / 1 fail，名字即文件路径」，<strong>绝不可据此判红</strong>）：4 份裸 <code>describe</code>（<code>workflowExecutor.quantum</code> / <code>workflowExecutor.test</code> / <code>workflowExecutor.userThreading</code> / <code>services/contractChecker.nativeHttp</code>，报 <code>describe is not defined</code>；本环境未安装 jest），3 份 jest <code>beforeAll</code>（<code>workflowRunWorker.quantum</code> / <code>workflowRunWorker.starvation</code> / <code>workflowRunWorker.test</code>，报 <code>beforeAll is not defined</code>）。⚠ 另注：<code>workflowRunWorker.test.js</code> 文件头注释含 mojibake（编码损坏的中文），不影响其可测性判断，属既有瑕疵。可跑的 8 份实测 <strong>90 例 / 0 fail / 0 skip</strong>（<code>graphRewriteContract</code> / <code>healGuard</code> / <code>nativeHttpConsumers</code> / <code>services/aiChatPort</code> / <code>workflowExecutor.expand</code> / <code>.failClosed</code> / <code>.graphPatch</code> / <code>.onVar</code>）。</p>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../../../../services/backend/src/services/domain/project/README.html"><div class="dir">← 上一篇</div><div class="ttl">project — 工作流、蓝图、一致性体检与元计划（D2）</div></a><a class="next" href="../../../../../../../services/backend/src/services/domain/quality/artifact/README.html"><div class="dir">下一篇 →</div><div class="ttl">artifactPlan</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/services/domain/project/README.html"><div class="dir">← 上一篇</div><div class="ttl">project — 工作流、蓝图、一致性体检与元计划（D2）</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/services/domain/quality/artifact/README.html"><div class="dir">下一篇 →</div><div class="ttl">artifactPlan</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/project/workflow/README.html";</script>
-<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/project/workflow/README.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

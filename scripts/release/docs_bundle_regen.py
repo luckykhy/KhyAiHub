@@ -17,7 +17,7 @@
     保证「宁可无 html 也绝不发布断链」。
   - 外科手术式：清理只删生成器自己的产物（带模板签名且旁边有同名 `.md` 的 `.html`
     + `nav-data.js`/`dead-links.json`/`docs/index.html`），绝不碰前端应用页
-    （`apps/ai-frontend/**`、`frontend/dist/**`、`software/khyquant/frontend/**` 等）。
+    （`delivery/web/ai-frontend/**`、`frontend/dist/**`、`software/khyquant/frontend/**` 等）。
   - 确定性：生成器无时间戳/随机数，可复现。
 
 从 setup.py 抽出到 scripts/release/ 的原因：setup.py 在模块级调用 setup()，直接 import
@@ -97,7 +97,7 @@ def looks_like_doc_site_html(html_path: Path) -> bool:
     """判定某个 .html 是否为文档站生成器的产物（而非前端应用页）。
 
     只读文件头 ~2KB 做两处签名匹配即可零歧义分辨（见 _TEMPLATE_SIGNATURES）。这样
-    `apps/ai-frontend/index.html`、`frontend/dist/index.html`、khyquant 前端页等
+    `delivery/web/ai-frontend/index.html`、`frontend/dist/index.html`、khyquant 前端页等
     「同名恰好也叫 *.html」的真实应用产物绝不会被误判（它们不含这两处签名）。
     读取失败一律返回 False（fail-soft：不确定就不删）。
     """

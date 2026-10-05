@@ -42,41 +42,41 @@ const VERSION_SPECS = [
     regex: /^version\s*=\s*"([^"]+)"/m,
   },
   {
-    file: 'packaging/npm/package.json',
+    file: 'works/ship/npm/package.json',
     regex: /"version"\s*:\s*"([^"]+)"/m,
   },
   {
-    file: 'services/backend/package.json',
+    file: 'runtime/node/backend/package.json',
     regex: /"version"\s*:\s*"([^"]+)"/m,
   },
   {
-    file: 'packaging/modules/modules.json',
+    file: 'works/ship/modules/modules.json',
     regex: /"version"\s*:\s*"([^"]+)"/m,
   },
   // ── ai-backend ecosystem (independent version track) ────────────────────
   {
-    file: 'services/ai-backend/package.json',
+    file: 'runtime/node/ai-backend/package.json',
     regex: /"version"\s*:\s*"([^"]+)"/m,
   },
   {
-    file: 'platform/packages/shared/package.json',
+    file: 'runtime/substrate/platform/packages/shared/package.json',
     regex: /"version"\s*:\s*"([^"]+)"/m,
   },
   {
-    file: 'platform/packages/plugin-sdk/package.json',
+    file: 'runtime/substrate/platform/packages/plugin-sdk/package.json',
     regex: /"version"\s*:\s*"([^"]+)"/m,
   },
   // ── Browser UI shared package (independent version track) ───────────────
   {
-    file: 'platform/packages/ui-shared/package.json',
+    file: 'runtime/substrate/platform/packages/ui-shared/package.json',
     regex: /"version"\s*:\s*"([^"]+)"/m,
   },
   {
-    file: 'apps/ai-frontend/package.json',
+    file: 'delivery/web/ai-frontend/package.json',
     regex: /"@khy\/ui-shared"\s*:\s*"([^"]+)"/m,
   },
   {
-    file: 'software/khyquant/frontend/package.json',
+    file: 'delivery/channel/khyquant/frontend/package.json',
     regex: /"@khy\/ui-shared"\s*:\s*"([^"]+)"/m,
   },
 ];
@@ -94,33 +94,33 @@ const VERSION_GROUPS = [
     label: 'Main package version',
     files: [
       'pyproject.toml',
-      'packaging/npm/package.json',
-      'services/backend/package.json',
-      'packaging/modules/modules.json',
+      'works/ship/npm/package.json',
+      'runtime/node/backend/package.json',
+      'works/ship/modules/modules.json',
     ],
   },
   {
     id: 'ai-backend',
     label: 'AI-backend ecosystem version',
     files: [
-      'services/ai-backend/package.json',
-      'platform/packages/shared/package.json',
-      'platform/packages/plugin-sdk/package.json',
+      'runtime/node/ai-backend/package.json',
+      'runtime/substrate/platform/packages/shared/package.json',
+      'runtime/substrate/platform/packages/plugin-sdk/package.json',
     ],
   },
   {
     id: 'browser-ui',
     label: 'Browser UI shared package version',
     files: [
-      'platform/packages/ui-shared/package.json',
-      'apps/ai-frontend/package.json',
-      'software/khyquant/frontend/package.json',
+      'runtime/substrate/platform/packages/ui-shared/package.json',
+      'delivery/web/ai-frontend/package.json',
+      'delivery/channel/khyquant/frontend/package.json',
     ],
   },
 ];
 
 /** The runtime-resolved Python version source (carries no comparable literal). */
-const INIT_FILE = 'platform/khy_platform/__init__.py';
+const INIT_FILE = 'runtime/substrate/platform/khy_platform/__init__.py';
 
 /**
  * Strict semver validator (no leading "v", no pre-release/build metadata —
@@ -188,7 +188,7 @@ function runMain(repoRoot, opts = {}) {
     throw new Error(`${malformed.length} version source(s) carry non-semver values`);
   }
 
-  // platform/khy_platform/__init__.py intentionally resolves __version__ at
+  // runtime/substrate/platform/khy_platform/__init__.py intentionally resolves __version__ at
   // runtime from pyproject.toml / installed metadata (single source of truth),
   // so it carries no literal to compare. Guard against a regression that
   // re-hardcodes a literal here and silently reintroduces version drift.

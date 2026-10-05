@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: prompt.md -->
 <title>Security and Hardening · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>security-and-hardening<span class="sep">›</span>Security and Hardening</div>
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>security-and-hardening<span class="sep">›</span>Security and Hardening</div>
       <header class="hero reveal"><h1>Security and Hardening</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#security-and-hardening">Security and Hardening</a></li><li class="lvl-2"><a href="#overview">Overview</a></li><li class="lvl-2"><a href="#when-to-use">When to Use</a></li><li class="lvl-2"><a href="#the-three-tier-boundary-system">The Three-Tier Boundary System</a></li><li class="lvl-3"><a href="#always-do-no-exceptions">Always Do (No Exceptions)</a></li><li class="lvl-3"><a href="#ask-first-requires-human-approval">Ask First (Requires Human Approval)</a></li><li class="lvl-3"><a href="#never-do">Never Do</a></li><li class="lvl-2"><a href="#owasp-top-10-prevention">OWASP Top 10 Prevention</a></li><li class="lvl-3"><a href="#1-injection-sql-nosql-os-command">1. Injection (SQL, NoSQL, OS Command)</a></li><li class="lvl-3"><a href="#2-broken-authentication">2. Broken Authentication</a></li><li class="lvl-3"><a href="#3-cross-site-scripting-xss">3. Cross-Site Scripting (XSS)</a></li><li class="lvl-3"><a href="#4-broken-access-control">4. Broken Access Control</a></li><li class="lvl-3"><a href="#5-security-misconfiguration">5. Security Misconfiguration</a></li><li class="lvl-3"><a href="#6-sensitive-data-exposure">6. Sensitive Data Exposure</a></li><li class="lvl-2"><a href="#input-validation-patterns">Input Validation Patterns</a></li><li class="lvl-3"><a href="#schema-validation-at-boundaries">Schema Validation at Boundaries</a></li><li class="lvl-3"><a href="#file-upload-safety">File Upload Safety</a></li><li class="lvl-2"><a href="#triaging-npm-audit-results">Triaging npm audit Results</a></li><li class="lvl-2"><a href="#rate-limiting">Rate Limiting</a></li><li class="lvl-2"><a href="#secrets-management">Secrets Management</a></li><li class="lvl-2"><a href="#security-review-checklist">Security Review Checklist</a></li><li class="lvl-2"><a href="#see-also">See Also</a></li><li class="lvl-2"><a href="#common-rationalizations">Common Rationalizations</a></li><li class="lvl-2"><a href="#red-flags">Red Flags</a></li><li class="lvl-2"><a href="#verification">Verification</a></li></ul></nav>
       <article class="doc-body">
@@ -252,14 +252,14 @@ git diff --cached | grep -i <span class="hljs-string">&quot;password\|secret\|ap
 <p>After implementing security-relevant code:</p>
 <ul><li>[ ] <code>npm audit</code> shows no critical or high vulnerabilities</li><li>[ ] No secrets in source code or git history</li><li>[ ] All user input validated at system boundaries</li><li>[ ] Authentication and authorization checked on every protected endpoint</li><li>[ ] Security headers present in response (check with browser DevTools)</li><li>[ ] Error responses don't expose internal details</li><li>[ ] Rate limiting active on auth endpoints</li></ul>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../../../services/backend/src/skills/built-in/review-pr/prompt.html"><div class="dir">← 上一篇</div><div class="ttl">Pull Request Review Skill</div></a><a class="next" href="../../../../../../services/backend/src/skills/built-in/security-and-hardening/references/security-checklist.html"><div class="dir">下一篇 →</div><div class="ttl">Security Checklist</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/skills/built-in/review-pr/prompt.html"><div class="dir">← 上一篇</div><div class="ttl">Pull Request Review Skill</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/skills/built-in/security-and-hardening/references/security-checklist.html"><div class="dir">下一篇 →</div><div class="ttl">Security Checklist</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="services/backend/src/skills/built-in/security-and-hardening/prompt.html";</script>
-<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/skills/built-in/security-and-hardening/prompt.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

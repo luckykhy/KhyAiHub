@@ -17,7 +17,7 @@
     "rules": [
       "AGENTS.md",
       "docs/03_DESIGN_设计/[DESIGN-ARCH-081] Claude Code TUI 1复刻实施计划.md",
-      "services/backend/src/cli/tui/AGENTS.md"
+      "runtime/node/backend/src/cli/tui/AGENTS.md"
     ],
     "description": "Khy OS CC TUI 复刻项目 - 实施时严格遵守设计约束"
   }

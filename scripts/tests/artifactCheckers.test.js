@@ -123,7 +123,7 @@ describe('check-memory-schema', () => {
     write(root, 'docs/10_规范/DESIGN-MEM/[DESIGN-MEM-006] 记忆与维护元数据生命周期规范.md',
       '```yaml\nsubject: a\nsource: b\nwrittenAt: c\nscope: d\ncleanup: e\n```');
     write(root, 'carrier.js', '// carrier');
-    write(root, 'services/backend/src/memdir/memdir.js', '// seam');
+    write(root, 'runtime/node/backend/src/memdir/memdir.js', '// seam');
     const r = run(CHECKERS.memory, root);
     const errors = (r.out.match(/^\[ERROR\]/gm) || []).length;
     assert.equal(errors, 0, r.out);

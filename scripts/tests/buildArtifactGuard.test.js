@@ -50,11 +50,11 @@ test('never flags source, wrapper, or config that a clean checkout must rebuild 
 });
 
 test('scopes keep the rule from reaching outside apps/khy-os-client-app/android', () => {
-  // packaging/build/ holds CI build *scripts* — the root .gitignore carries an
-  // explicit `!packaging/build/` exception for exactly this reason. A rule that
+  // works/ship/build/ holds CI build *scripts* — the root .gitignore carries an
+  // explicit `!works/ship/build/` exception for exactly this reason. A rule that
   // matched a bare `build` segment repo-wide would flag them.
-  assert.equal(guard.classifyPath('packaging/build/make-standalone.js'), null);
-  assert.equal(guard.classifyPath('services/backend/dist/index.js'), null);
+  assert.equal(guard.classifyPath('works/ship/build/make-standalone.js'), null);
+  assert.equal(guard.classifyPath('runtime/node/backend/dist/index.js'), null);
   assert.equal(guard.classifyPath('apps/ai-frontend/dist/assets/app.js'), null);
   // The isolated ghost dir must not be flagged either — nothing lives there now.
   assert.equal(guard.classifyPath('apps/khy-mobile/android/app/build/a.apk'), null);

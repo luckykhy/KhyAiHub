@@ -69,7 +69,7 @@ const STAGES = [
     // 出厂件明文密钥(SECURITY-001 的形态判据),**全量**模式。
     // 与上一条 small-model-safety 是同一判据的两个模式:那条经 `check:change-safety`
     // 自带 `--changed`,只看本次暂存的改动;本条目**刻意不带 --changed** ⇒ 改动集为空、
-    // 检查照跑,并连同打包产物(apps/khy-os-client-app/release/*.apk)一起逐 zip 条目扫。
+    // 检查照跑,并连同打包产物(delivery/mobile/khy-os-client-app/release/*.apk)一起逐 zip 条目扫。
     // APK 是构建产物,提交时刻根本不存在 —— 所以「装到机器上的包只有混淆密钥」这件事
     // 只有发版前才查得到,也只有这道门查。APK 缺失不算失败(与 android-signature 同样
     // 容忍缺产物),此时只覆盖源树。

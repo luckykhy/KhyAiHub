@@ -22,7 +22,7 @@ updates:
   # The backend has a committed package-lock.json; Dependabot opens PRs for
   # patch/minor bumps. Group all npm deps to reduce PR noise.
   - package-ecosystem: npm
-    directory: /services/backend
+    directory: /runtime/node/backend
     schedule:
       interval: weekly
       day: monday

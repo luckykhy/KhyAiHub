@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: README.md -->
 <title>reverseEngineer — 制品逆向与自验流水线（D2 功能单元） · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>data<span class="sep">›</span>reverseEngineer<span class="sep">›</span>reverseEngineer — 制品逆向与自验流水线（D2 功能单元）</div>
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>data<span class="sep">›</span>reverseEngineer<span class="sep">›</span>reverseEngineer — 制品逆向与自验流水线（D2 功能单元）</div>
       <header class="hero reveal"><h1>reverseEngineer — 制品逆向与自验流水线（D2 功能单元）</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#reverseengineer-制品逆向与自验流水线-d2-功能单元">reverseEngineer — 制品逆向与自验流水线（D2 功能单元）</a></li><li class="lvl-2"><a href="#逐成员">逐成员</a></li><li class="lvl-2"><a href="#消费者-实测-fan-in-2-按单元路径直连计">消费者（实测 fan-in = 2，按单元路径直连计）</a></li><li class="lvl-2"><a href="#六层契约-每条都对应命名测试">六层契约（每条都对应命名测试）</a></li><li class="lvl-2"><a href="#配置-全部-env-门控-零硬编码">配置（全部 env 门控，零硬编码）</a></li><li class="lvl-2"><a href="#本单元修掉的缺陷-批次-27">本单元修掉的缺陷（批次 27）</a></li><li class="lvl-2"><a href="#已知边界-现状-未-由本单元改动">已知边界（现状，**未**由本单元改动）</a></li><li class="lvl-2"><a href="#测试怎么跑">测试怎么跑</a></li></ul></nav>
       <article class="doc-body">
@@ -99,14 +99,14 @@ node --<span class="hljs-built_in">test</span> *.test.js</code></pre>
 <ul><li><code>tests/tools/unpackGeneric.test.js</code> —— 同上 jest 方言，加载期 <code>ReferenceError: beforeAll is not defined</code>。</li></ul>
 <p>后两份已用一次性方言垫片复跑核实：asarArchive <strong>6 例全过</strong>，unpackGeneric <strong>7 过 1 skip</strong><br>（skip 的那条要求本机真有 <code>7z</code>，本机器没有——如实 skip，不是假绿）。「跑不了」不等于「红」；<br>这两条结论是<strong>实测</strong>得出，不是按方言名推断的。</p>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../../../../services/backend/src/services/domain/data/README.html"><div class="dir">← 上一篇</div><div class="ttl">data — 数据落点、资源安装、逆向工程与上游研读（D2）</div></a><a class="next" href="../../../../../../../services/backend/src/services/domain/deploy/README.html"><div class="dir">下一篇 →</div><div class="ttl">deploy — 部署、发布打包与 PR 订阅（D2）</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/services/domain/data/README.html"><div class="dir">← 上一篇</div><div class="ttl">data — 数据落点、资源安装、逆向工程与上游研读（D2）</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/services/domain/deploy/README.html"><div class="dir">下一篇 →</div><div class="ttl">deploy — 部署、发布打包与 PR 订阅（D2）</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/data/reverseEngineer/README.html";</script>
-<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/data/reverseEngineer/README.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

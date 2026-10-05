@@ -55,7 +55,7 @@ test('三面镜子一致地报同一坏事实（都判 bad）→ 不算冲突', 
 test('restore 就绪 但 integrity 不完整 → 硬矛盾、禁止自动、信 integrity', () => {
   const r = detectRestoreConflicts({
     restore: restore(true),
-    integrity: integrity(false, [{ path: 'services/backend/bin/khy.js', reason: '缺', fix: '重装' }]),
+    integrity: integrity(false, [{ path: 'runtime/node/backend/bin/khy.js', reason: '缺', fix: '重装' }]),
     hydration: hydration(true),
   });
   const c = r.conflicts.find((x) => x.id === 'ready-but-bundle-incomplete');

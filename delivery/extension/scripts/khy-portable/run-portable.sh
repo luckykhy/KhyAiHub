@@ -163,9 +163,9 @@ if [[ "$DRY_RUN" == "0" ]]; then
     for f in \
         "khy.bat" \
         "khy.sh" \
-        "software/khyquant/khy_quant/cli.py" \
-        "services/backend/bin/khy.js" \
-        "services/backend/package.json" \
+        "delivery/channel/khyquant/khy_quant/cli.py" \
+        "runtime/node/backend/bin/khy.js" \
+        "runtime/node/backend/package.json" \
         "docs/06_DEPLOY_部署/PORTABLE.md"; do
         if [[ -f "$TARGET_DIR/$f" ]]; then
             echo -e "  ${GREEN}[OK]${NC}   $f"

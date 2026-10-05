@@ -233,7 +233,7 @@ async function loadCustomAgents(cwd) {
       source: 'userSettings',
     },
     { dir: path.join(cwd, '.claude', 'agents'), source: 'projectSettings' },
-    { dir: path.join(cwd, '.khy', 'agents'), source: 'projectSettings' },
+    { dir: path.join(cwd, 'works', 'data', 'khy', 'agents'), source: 'projectSettings' },
   ];
 
   // CC agent-marketplace bridge (gated, default ON): also reuse subagents that

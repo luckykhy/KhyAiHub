@@ -9,7 +9,7 @@
 #   1. 解析/还原源码树（fresh-machine 走 `khy restore`）。
 #   2. 引导 registry 地址（默认官方 https://registry.npmjs.org/）。
 #   3. 解析 npm token（环境变量或隐藏输入）→ 写入临时 .npmrc（trap 清理）。
-#   4. prepack assemble + audit:purity + test（复用 packaging/npm 既有脚本）。
+#   4. prepack assemble + audit:purity + test（复用 works/ship/npm 既有脚本）。
 #   5. npm publish --access public。--dry-run 走 npm 自带 --dry-run 不上传。
 #
 # 用法：
@@ -58,7 +58,7 @@ command -v node >/dev/null 2>&1 || fail "需要 node"
 # ── 1. 源码树 ────────────────────────────────────────────────────────────────
 step "解析源码树"
 ROOT="$(ensure_source_tree)"
-NPM_DIR="$ROOT/packaging/npm"
+NPM_DIR="$ROOT/works/ship/npm"
 [[ -f "$NPM_DIR/package.json" ]] || fail "未找到 npm 包目录: $NPM_DIR"
 ok "npm 包目录: $NPM_DIR"
 VERSION="$(node -e 'process.stdout.write(require(process.argv[1]).version)' "$NPM_DIR/package.json" 2>/dev/null || true)"

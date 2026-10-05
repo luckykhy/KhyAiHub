@@ -206,7 +206,7 @@ function _mtimeOf(file) {
 }
 
 /**
- * 找验证证据：`.khy/feedback/<task-id>/verify.txt` 里最新的是否**比暂存集里最老的改动还新**。
+ * 找验证证据：`works/data/khy/feedback/<task-id>/verify.txt` 里最新的是否**比暂存集里最老的改动还新**。
  *
  * ⚠⚠ 这里有一个**致命陷阱**，别改回去：最初用 `process.uptime()` 当「会话开工时间」，
  *   结果 `since ≈ now`，任何早于 0.2 秒的 verify.txt 都被判为「太旧」——
@@ -221,7 +221,7 @@ function _mtimeOf(file) {
  */
 function hasVerifyEvidence(changes) {
   const list = Array.isArray(changes) ? changes : [];
-  const base = path.join(_cwd(), '.khy', 'feedback');
+  const base = path.join(_cwd(), 'works', 'data', 'khy', 'feedback');
   let entries;
   try {
     entries = fs.readdirSync(base, { withFileTypes: true });

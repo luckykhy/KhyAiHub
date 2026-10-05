@@ -2,7 +2,7 @@
  * Workflow run (execution record) — the cross-process work queue.
  *
  * One row = one requested/in-progress/finished execution of a UserWorkflow.
- * ai-backend (REST, user page) INSERTs a `queued` row; services/backend (the
+ * ai-backend (REST, user page) INSERTs a `queued` row; runtime/node/backend (the
  * agent engine) polls for `queued` rows, atomically claims one (queued ->
  * running), executes the canvas graph natively, and writes back status + per-node
  * log. The two processes never call each other — this table is the only bridge.

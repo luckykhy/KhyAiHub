@@ -3,7 +3,7 @@
  *
  * Resolved through the @khy/shared package (services/backend declares
  * "@khy/shared": "file:./vendor/shared"; in a dev checkout vendor/shared is a
- * symlink to platform/packages/shared, in a published tarball it is a real copy),
+ * symlink to runtime/substrate/platform/packages/shared, in a published tarball it is a real copy),
  * avoiding fragile cross-package relative paths after packing/moving.
  */
 

@@ -48,7 +48,7 @@ function _skillRoots(opts = {}) {
   const builtin = opts.builtinDir || path.join(__dirname, '..', '..', 'skills', 'built-in');
   return [
     { dir: builtin, source: 'built-in' },
-    { dir: path.join(cwd, '.khy', 'skills'), source: 'user' },
+    { dir: path.join(cwd, 'works', 'data', 'khy', 'skills'), source: 'user' },
     { dir: path.join(home, '.khy', 'skills'), source: 'user' },
   ];
 }

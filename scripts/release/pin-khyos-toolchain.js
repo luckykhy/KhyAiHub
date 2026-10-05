@@ -3,7 +3,7 @@
 
 /**
  * Maintainer helper: pin / re-pin the native bare-Windows build toolchain in
- * platform/packages/shared/src/runtime/khyos/khyos-manifest.json (the `toolchain`
+ * runtime/substrate/platform/packages/shared/src/runtime/khyos/khyos-manifest.json (the `toolchain`
  * table). Downloads each tool, computes its SHA256, and writes it back. Reuses the
  * provisioner's own proxy-aware downloader so it pins through the same network
  * path the runtime uses (HTTPS_PROXY / HTTP_PROXY / KHY_KHYOS_MIRROR_BASE honored).

@@ -15,7 +15,7 @@ const { execSync } = require('child_process');
 const repoRoot = process.env.RULEGUARD_REPO_ROOT || path.resolve(__dirname, '..', '..');
 const SCHEMA_REL = 'docs/10_规范/registry/MEMORY-RECORD-SCHEMA.json';
 const DESIGN_REL = 'docs/10_规范/DESIGN-MEM/[DESIGN-MEM-006] 记忆与维护元数据生命周期规范.md';
-const SEAM_REL = 'services/backend/src/memdir/memdir.js';
+const SEAM_REL = 'runtime/node/backend/src/memdir/memdir.js';
 
 const strictWarnings = process.argv.includes('--strict-warnings');
 const findings = [];
@@ -148,7 +148,7 @@ function checkSeamRegistration(s) {
   const seam = s && s.observed && s.observed.canonicalWriteSeam;
   if (!seam || seam.file !== SEAM_REL) {
     add('warn', 'seam-not-recorded', SCHEMA_REL, 0,
-      '实测写入单点 services/backend/src/memdir/memdir.js 未记入 observed.canonicalWriteSeam。');
+      '实测写入单点 runtime/node/backend/src/memdir/memdir.js 未记入 observed.canonicalWriteSeam。');
     return;
   }
   const registered = Array.isArray(s.designatedEntries) &&

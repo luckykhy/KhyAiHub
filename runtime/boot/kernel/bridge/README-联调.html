@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: README-联调.md -->
 <title>khy-bridge 实战联调指南 · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>kernel<span class="sep">›</span>bridge<span class="sep">›</span>khy-bridge 实战联调指南</div>
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>boot<span class="sep">›</span>kernel<span class="sep">›</span>bridge<span class="sep">›</span>khy-bridge 实战联调指南</div>
       <header class="hero reveal"><h1>khy-bridge 实战联调指南</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#khy-bridge-实战联调指南">khy-bridge 实战联调指南</a></li><li class="lvl-2"><a href="#先决条件">先决条件</a></li><li class="lvl-2"><a href="#路线-a-内置-agent-项目-ai-网关-真模型决策">路线 A：内置 agent + 项目 AI 网关（真模型决策）</a></li><li class="lvl-2"><a href="#路线-b-外部-agent-claude-code-经-mcp-驱动-os">路线 B：外部 agent（Claude Code）经 MCP 驱动 OS</a></li></ul></nav>
       <article class="doc-body">
@@ -79,14 +79,14 @@
 <p>例：让 Claude “列出 KHY-OS 根目录并读 /etc/motd” → 走 <code>khy_list</code> + <code>khy_read</code> →<br>真实命中内核 VFS。</p>
 <p>诊断只走 stderr，stdout 仅 MCP 协议字节，不会污染 JSON-RPC。</p>
       </article>
-      <nav class="pager"><span></span><a class="next" href="../../kernel/docs/架构-agent-os双向协议.html"><div class="dir">下一篇 →</div><div class="ttl">架构设计：Agent ⇄ OS 双向协议（KHY Agent Bridge）</div></a></nav>
+      <nav class="pager"><span></span><a class="next" href="../../../../runtime/boot/kernel/docs/架构-agent-os双向协议.html"><div class="dir">下一篇 →</div><div class="ttl">架构设计：Agent ⇄ OS 双向协议（KHY Agent Bridge）</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__="kernel/bridge/README-联调.html";</script>
-<script src="../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="runtime/boot/kernel/bridge/README-联调.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

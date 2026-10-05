@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: README.md -->
 <title>network/externalApps — 外部 AI 软件的配置读写适配层（D2 业务上下文单元） · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>network<span class="sep">›</span>externalApps<span class="sep">›</span>network/externalApps — 外部 AI 软件的配置读写适配层（D2 业务上下文单元）</div>
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>network<span class="sep">›</span>externalApps<span class="sep">›</span>network/externalApps — 外部 AI 软件的配置读写适配层（D2 业务上下文单元）</div>
       <header class="hero reveal"><h1>network/externalApps — 外部 AI 软件的配置读写适配层（D2 业务上下文单元）</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#network-externalapps-外部-ai-软件的配置读写适配层-d2-业务上下文单元">`network/externalApps` — 外部 AI 软件的配置读写适配层（D2 业务上下文单元）</a></li><li class="lvl-2"><a href="#三问-规则-9-process-010">三问（规则 9 / `PROCESS-010`）</a></li><li class="lvl-2"><a href="#契约-改动前必读">契约（改动前必读）</a></li><li class="lvl-2"><a href="#已知缺陷-不在本单元修">已知缺陷：不在本单元修</a></li></ul></nav>
       <article class="doc-body">
@@ -54,14 +54,14 @@
 <h2 id="已知缺陷-不在本单元修">已知缺陷：不在本单元修<a class="anchor" href="#已知缺陷-不在本单元修" aria-label="锚点">#</a></h2>
 <p>11 条实测缺陷登记在 <code>khy.module.json</code> 的 <code>contract.registered_defects</code>（编号 B30-S1…S11；<br>其中 S3 的病灶在 D1 的 <code>src/tools/ConfigureExternalApp</code>、S11 在单元外测试方言，都不在本目录内），逐条附<strong>复现命令与原始输出</strong>。其中 4 条是用户可见/凭据级：<br>ConfigureExternalApp 工具六个 app 全部报「不支持」（B30-S3）、便携根 <code>__dirname</code> 爬根算术<br>少两级导致真实配置被仓库内文件遮蔽（B30-S1）、<code>geminiCliAdapter.remove</code> 删掉共享凭据却留下<br>被删 provider 自己的密钥（B30-S6/S7）。<strong>修法涉及改 D1/D2 源码与删改跟踪文件，属人的裁决</strong><br>（任务 #17），本轮只登记不动源码。</p>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../../../../services/backend/src/services/domain/network/dependency/README.html"><div class="dir">← 上一篇</div><div class="ttl">dependency — Agent 依赖自愈子系统</div></a><a class="next" href="../../../../../../../services/backend/src/services/domain/network/README.html"><div class="dir">下一篇 →</div><div class="ttl">network — 远端执行、代理、外部应用接入与依赖装配（D2）</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/services/domain/network/dependency/README.html"><div class="dir">← 上一篇</div><div class="ttl">dependency — Agent 依赖自愈子系统</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/services/domain/network/README.html"><div class="dir">下一篇 →</div><div class="ttl">network — 远端执行、代理、外部应用接入与依赖装配（D2）</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/network/externalApps/README.html";</script>
-<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/network/externalApps/README.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

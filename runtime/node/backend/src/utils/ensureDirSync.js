@@ -4,7 +4,7 @@
  * ensureDirSync.js — 「存在性守护式建目录」单一真源。
  *
  * 收敛 src/ 下 4 处逐字节相同的私有 `_ensureDir(dir)`
- * (services/cronScheduler · cliAnythingGenerator · extensions/extensionManager ·
+ * (services/cronScheduler · cliAnythingGenerator · delivery/extension/extensionManager ·
  *  workspace/checkpointService):
  *   `if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });`。
  *   目录不存在 → 递归创建;已存在 → 不动。

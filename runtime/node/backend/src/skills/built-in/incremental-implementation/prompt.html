@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: prompt.md -->
 <title>Incremental Implementation · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>incremental-implementation<span class="sep">›</span>Incremental Implementation</div>
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>incremental-implementation<span class="sep">›</span>Incremental Implementation</div>
       <header class="hero reveal"><h1>Incremental Implementation</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#incremental-implementation">Incremental Implementation</a></li><li class="lvl-2"><a href="#overview">Overview</a></li><li class="lvl-2"><a href="#when-to-use">When to Use</a></li><li class="lvl-2"><a href="#the-increment-cycle">The Increment Cycle</a></li><li class="lvl-2"><a href="#slicing-strategies">Slicing Strategies</a></li><li class="lvl-3"><a href="#vertical-slices-preferred">Vertical Slices (Preferred)</a></li><li class="lvl-3"><a href="#contract-first-slicing">Contract-First Slicing</a></li><li class="lvl-3"><a href="#risk-first-slicing">Risk-First Slicing</a></li><li class="lvl-2"><a href="#implementation-rules">Implementation Rules</a></li><li class="lvl-3"><a href="#rule-0-simplicity-first">Rule 0: Simplicity First</a></li><li class="lvl-3"><a href="#rule-0-5-scope-discipline">Rule 0.5: Scope Discipline</a></li><li class="lvl-3"><a href="#rule-1-one-thing-at-a-time">Rule 1: One Thing at a Time</a></li><li class="lvl-3"><a href="#rule-2-keep-it-compilable">Rule 2: Keep It Compilable</a></li><li class="lvl-3"><a href="#rule-3-feature-flags-for-incomplete-features">Rule 3: Feature Flags for Incomplete Features</a></li><li class="lvl-3"><a href="#rule-4-safe-defaults">Rule 4: Safe Defaults</a></li><li class="lvl-3"><a href="#rule-5-rollback-friendly">Rule 5: Rollback-Friendly</a></li><li class="lvl-2"><a href="#working-with-agents">Working with Agents</a></li><li class="lvl-2"><a href="#increment-checklist">Increment Checklist</a></li><li class="lvl-2"><a href="#common-rationalizations">Common Rationalizations</a></li><li class="lvl-2"><a href="#red-flags">Red Flags</a></li><li class="lvl-2"><a href="#verification">Verification</a></li></ul></nav>
       <article class="doc-body">
@@ -143,14 +143,14 @@ nothing is broken.&quot;</code></pre>
 <p>After completing all increments for a task:</p>
 <ul><li>[ ] Each increment was individually tested and committed</li><li>[ ] The full test suite passes</li><li>[ ] The build is clean</li><li>[ ] The feature works end-to-end as specified</li><li>[ ] No uncommitted changes remain</li></ul>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../../../services/backend/src/skills/built-in/idea-refine/refinement-criteria.html"><div class="dir">← 上一篇</div><div class="ttl">Refinement &amp; Evaluation Criteria</div></a><a class="next" href="../../../../../../services/backend/src/skills/built-in/init-project/prompt.html"><div class="dir">下一篇 →</div><div class="ttl">Initialize Project</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/skills/built-in/idea-refine/refinement-criteria.html"><div class="dir">← 上一篇</div><div class="ttl">Refinement &amp; Evaluation Criteria</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/skills/built-in/init-project/prompt.html"><div class="dir">下一篇 →</div><div class="ttl">Initialize Project</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="services/backend/src/skills/built-in/incremental-implementation/prompt.html";</script>
-<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/skills/built-in/incremental-implementation/prompt.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

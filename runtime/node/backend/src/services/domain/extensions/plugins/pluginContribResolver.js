@@ -18,7 +18,7 @@
  *     pass; any failure → null → "unknown tool" → existing fuzzy-fix path. There is
  *     NO funnel bypass and NO new entrance into executeTool.
  *   - **Zero hard-coding**: roots, manifest names and state file all come from
- *     `services/extensions/extensionRoots` — the single source of truth legislated by
+ *     `services/delivery/extension/extensionRoots` — the single source of truth legislated by
  *     [DESIGN-TOOL-002]. This module used to COPY those three constants from
  *     extensionManager and keep them in step "by construction" (i.e. by a human
  *     remembering); it no longer owns any path of its own.
@@ -37,7 +37,7 @@ const fs = require('fs');
 const path = require('path');
 
 const flagRegistry = require('../../../flagRegistry');
-const extensionRoots = require('../extensions/extensionRoots');
+const extensionRoots = require('../delivery/extension/extensionRoots');
 
 // ── Gate ───────────────────────────────────────────────────────────────
 // Single-gate on flagRegistry (central registry). Default-on. The extension's
@@ -47,7 +47,7 @@ const GATE = 'KHY_PLUGIN_LAZY_LOAD';
 // ── Paths — delegated wholesale to extensionRoots (真源) ──────────────
 // These three are kept as exports ONLY because existing tests and call sites read
 // them; they are now derived, not declared. EXTENSIONS_DIR in particular is no
-// longer "the" directory — there are up to five roots (repo `extensions/` included,
+// longer "the" directory — there are up to five roots (repo `delivery/extension/` included,
 // which this resolver could not see at all before) — so it reports the user root
 // for backwards compatibility while the actual scan walks every root.
 const EXTENSIONS_DIR = extensionRoots.userExtensionsDir();
@@ -87,7 +87,7 @@ function _loadStateCached() {
   return _stateCache;
 }
 
-// Scan EVERY extension root (repo `extensions/` + user dirs + legacy plugins dirs),
+// Scan EVERY extension root (repo `delivery/extension/` + user dirs + legacy plugins dirs),
 // collecting { dir, manifest, absDir } for each enabled extension declaring at least
 // one tool. Pure manifest read — no `entry` module is required here.
 //

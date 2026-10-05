@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: DEBT.md -->
 <title>测试债务登记 (Test Debt Register) · Khy-OS 文档</title>
-<link rel="stylesheet" href="../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../docs/index.html">首页</a><span class="sep">›</span>tests<span class="sep">›</span>测试债务登记 (Test Debt Register)</div>
+      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>05_TEST_测试<span class="sep">›</span>tests-debt<span class="sep">›</span>测试债务登记 (Test Debt Register)</div>
       <header class="hero reveal"><h1>测试债务登记 (Test Debt Register)</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#测试债务登记-test-debt-register">测试债务登记 (Test Debt Register)</a></li><li class="lvl-2"><a href="#一-实测基线-2026-09-08">一、实测基线（2026-09-08）</a></li><li class="lvl-3"><a href="#失败分类-465-个失败套件-去重后按根因互斥分桶">失败分类（465 个失败套件，去重后按根因互斥分桶）</a></li><li class="lvl-2"><a href="#二-与-jest-moduledirectories-解析配置-的澄清">二、与「jest moduleDirectories 解析配置」的澄清</a></li><li class="lvl-2"><a href="#三-已定位的根因">三、已定位的根因</a></li><li class="lvl-3"><a href="#a-domain-迁移删掉了逐模块文件-已部分修复">A. domain 迁移删掉了逐模块文件（已部分修复）</a></li><li class="lvl-3"><a href="#b-双-runner-皆死的-19-个套件">B. 双 runner 皆死的 19 个套件</a></li><li class="lvl-3"><a href="#c-5s-硬超时">C. 5s 硬超时</a></li><li class="lvl-2"><a href="#四-如何诊断">四、如何诊断</a></li><li class="lvl-2"><a href="#五-下一步-按性价比排序">五、下一步（按性价比排序）</a></li><li class="lvl-2"><a href="#七-夜班组值回收记录-2026-09-13-首轮">七、夜班组值回收记录（2026-09-13 首轮）</a></li><li class="lvl-2"><a href="#八-夜班组值回收记录-2026-09-14-第二轮">八、夜班组值回收记录（2026-09-14 第二轮）</a></li><li class="lvl-2"><a href="#九-夜班组值回收记录-2026-09-16-第四轮">九、夜班组值回收记录（2026-09-16 第四轮）</a></li><li class="lvl-2"><a href="#十-夜班组值回收记录-2026-09-18-第五轮">十、夜班组值回收记录（2026-09-18 第五轮）</a></li><li class="lvl-2"><a href="#六-编码损坏隔离-2026-09-12-54-个测试文件转-quarantine-空壳">六、编码损坏隔离（2026-09-12，54 个测试文件转 QUARANTINE 空壳）</a></li><li class="lvl-2"><a href="#十一-锚点漂移探针-故意红-待第二期修复-2026-09-23-登记">十一、锚点漂移探针（**故意红**，待第二期修复）— 2026-09-23 登记</a></li></ul></nav>
       <article class="doc-body">
@@ -163,14 +163,14 @@ node node_modules/jest/bin/jest.js --listTests</code></pre>
 <p><strong>为什么不用 <code>test('...', { todo: true })</code> 或把文件挪出 <code>tests/</code></strong>：<br>本册的规则就是「失败套件必须登记」，登记 + 期限比「藏起来」更能防止它变成永久忽略；<br>且这两条红<strong>本身就是第二期的验收判据</strong> —— 先有红，才能证明接线真的生效<br>（而不是「改完顺手把断言改松了」）。</p>
 <p><strong>已核实的非阻断性</strong>：<code>.github/workflows/pr-gate.yml</code> 的 <code>test-baseline</code> job<br>当前是 <code>continue-on-error: true</code>（Phase 1 report-only），本套件<strong>今天不会卡住任何 PR</strong>。<br>但它会计入该 job 的失败计数，而该 job 的升级路径是「失败用例清零后转阻断」<br>⇒ 登记 + 限期是它的正确去处。</p>
       </article>
-      <nav class="pager"><span></span><span></span></nav>
+      <nav class="pager"><a class="prev" href="../../../docs/05_TEST_测试/TEST-RPT/00_INDEX_TEST-RPT-总目录.html"><div class="dir">← 上一篇</div><div class="ttl">TEST-RPT</div></a><span></span></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../";window.__KHY_CUR__="tests/DEBT.html";</script>
-<script src="../docs/19_资产/site/nav-data.js"></script>
-<script src="../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../";window.__KHY_CUR__="docs/05_TEST_测试/tests-debt/DEBT.html";</script>
+<script src="../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

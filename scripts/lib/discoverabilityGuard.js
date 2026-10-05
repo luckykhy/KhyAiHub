@@ -5,11 +5,11 @@
  *
  * 背景：[DESIGN-LAY-005] 已经把「东西属于哪一层」讲清楚了（L0–L6 + 横切 + 根级例外），
  * 但**层内**的「找得到 / 找不到」一直是空白。实测证据（2026-09-18）：
- *   services/backend/src/services/        809 条目（661 文件 + 148 目录）平铺
- *   services/backend/tests/services/      638 条目平铺
+ *   runtime/node/backend/src/services/        809 条目（661 文件 + 148 目录）平铺
+ *   runtime/node/backend/tests/services/      638 条目平铺
  *   docs/07_OPS_运维/                     366 份 OPS-MAN-*.md 平铺
  *   docs/03_DESIGN_设计/                  222 份 DESIGN-ARCH-*.md 平铺
- *   services/backend/src/tools/           224 条目（122 文件 + 102 目录）平铺
+ *   runtime/node/backend/src/tools/           224 条目（122 文件 + 102 目录）平铺
  * 一个 809 条目的平铺目录里，「`a2a` 相关的东西在哪」只能靠 `ls | grep`；新人无法
  * 凭目录名预判内容。**布局守卫管不到这件事**——它只看顶层目录登没登记
  * （`layer-registry`），不看层内目录有多深多宽。

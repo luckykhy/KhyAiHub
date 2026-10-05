@@ -47,9 +47,9 @@ const guard = require('../lib/workflowNodeParityGuard.js');
 // ── 阶段常量：唯一权威（FEATURE-OWNERSHIP.json 的 rollout 段只是镜像）──────────
 const STAGE = 'S1';
 
-const EXEC_REL = 'services/backend/src/services/domain/project/workflow/workflowExecutor.js';
-const WORKER_REL = 'services/backend/src/services/domain/project/workflow/workflowRunWorker.js';
-const CATALOG_REL = 'services/backend/vendor/shared/src/workflow/nodeCatalog.js';
+const EXEC_REL = 'runtime/node/backend/src/services/domain/project/workflow/workflowExecutor.js';
+const WORKER_REL = 'runtime/node/backend/src/services/domain/project/workflow/workflowRunWorker.js';
+const CATALOG_REL = 'runtime/node/backend/vendor/shared/src/workflow/nodeCatalog.js';
 
 const ROOT = (() => {
   try {

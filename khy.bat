@@ -105,11 +105,11 @@ set "KHY_RUNTIME_HOME=%KHY_DATA_HOME%\runtime"
 set "KHY_CACHE_HOME=%KHY_DATA_HOME%\cache"
 set "KHY_LOG_HOME=%KHY_DATA_HOME%\logs"
 set "KHY_TEMP_HOME=%KHY_DATA_HOME%\tmp"
-set "PYTHONPATH=%~dp0platform;%~dp0software\khyquant;%PYTHONPATH%"
+set "KHY_PLATFORM_PATH=%~dp0runtime\substrate\platform"
 set "KHY_INVOKED_AS=khy"
 
 :: --- Launch CLI ---
-%PYTHON_CMD% -m khy_platform %*
+%PYTHON_CMD% -c "import sys,runpy; sys.path[:0]=[r'%KHY_PLATFORM_PATH%', r'%~dp0software\khyquant']; sys.argv=['khy']+sys.argv[1:]; runpy.run_module('khy_platform', run_name='__main__')" %*
 exit /b %ERRORLEVEL%
 
 :discover_node

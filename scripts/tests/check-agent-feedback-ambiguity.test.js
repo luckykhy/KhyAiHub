@@ -51,8 +51,8 @@ test('零规则命中 → 不判歧义（基值播种不得冒充信号）', () 
 test('两侧都有真实信号且分差在带内 → 仍判歧义', () => {
   const det = detectMode(
     [
-      { status: 'A', path: 'services/backend/src/services/foo.js' },
-      { status: 'D', path: 'services/backend/src/services/bar.js' },
+      { status: 'A', path: 'runtime/node/backend/src/services/foo.js' },
+      { status: 'D', path: 'runtime/node/backend/src/services/bar.js' },
     ],
     ''
   );
@@ -64,7 +64,7 @@ test('两侧都有真实信号且分差在带内 → 仍判歧义', () => {
 
 // ── 第 3 组：单侧信号不构成歧义（另一侧的 0.05 只是基值）────────────────
 test('仅单侧有信号 → 不判歧义', () => {
-  const det = detectMode([{ status: 'A', path: 'services/backend/src/services/foo.js' }], '');
+  const det = detectMode([{ status: 'A', path: 'runtime/node/backend/src/services/foo.js' }], '');
   assert.ok(det.signals.BUILD > 0, 'BUILD 必须真有信号');
   assert.equal(det.signals.FIX, 0, 'FIX 必须无信号');
   assert.equal(det.ambiguous, false, '单侧信号不构成歧义');

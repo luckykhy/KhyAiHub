@@ -318,8 +318,8 @@
         "title": "前端架构",
         "desc": "Vite + Vue Router + Pinia + Element Plus",
         "files": [
-          "software/khyquant/frontend/src/main.js",
-          "software/khyquant/frontend/src/App.vue"
+          "delivery/channel/khyquant/frontend/src/main.js",
+          "delivery/channel/khyquant/frontend/src/App.vue"
         ]
       },
       {
@@ -327,7 +327,7 @@
         "title": "交易界面",
         "desc": "K线图、交易面板、持仓管理",
         "files": [
-          "software/khyquant/frontend/src/views/Trading.vue"
+          "delivery/channel/khyquant/frontend/src/views/Trading.vue"
         ]
       },
       {
@@ -367,8 +367,8 @@
         "title": "OS 内核",
         "desc": "x86 内核概览（引导/中断/IPC/ELF）— 深入学习见第 11 层「内核与 Agent 协同」",
         "files": [
-          "kernel/src/main.c",
-          "kernel/boot/boot.asm"
+          "runtime/boot/kernel/src/main.c",
+          "runtime/boot/kernel/boot/boot.asm"
         ]
       },
       {
@@ -392,8 +392,8 @@
         "title": "引导与内核入口",
         "desc": "从 GRUB 进入 64 位长模式、建 GDT/IDT、跳进 C 的 kernel_main 并按序初始化各子系统",
         "files": [
-          "kernel/boot/boot.asm",
-          "kernel/src/main.c"
+          "runtime/boot/kernel/boot/boot.asm",
+          "runtime/boot/kernel/src/main.c"
         ]
       },
       {
@@ -401,9 +401,9 @@
         "title": "内存管理：物理页 + 虚拟页 + 内核堆",
         "desc": "PMM 位图管物理页、VMM 建页表与按需分页/COW fork、kheap 内核堆分配",
         "files": [
-          "kernel/src/pmm.c",
-          "kernel/src/vmm.c",
-          "kernel/src/kheap.c"
+          "runtime/boot/kernel/src/pmm.c",
+          "runtime/boot/kernel/src/vmm.c",
+          "runtime/boot/kernel/src/kheap.c"
         ]
       },
       {
@@ -411,8 +411,8 @@
         "title": "进程与抢占式调度",
         "desc": "进程/线程结构、fork、时间片轮转抢占调度、故障进程被干净杀掉打 [FAULT] 而非 PANIC",
         "files": [
-          "kernel/src/process.c",
-          "kernel/src/sched.c"
+          "runtime/boot/kernel/src/process.c",
+          "runtime/boot/kernel/src/sched.c"
         ]
       },
       {
@@ -420,8 +420,8 @@
         "title": "系统调用与 IPC",
         "desc": "int 0x80 系统调用入口、第 56 号 SYSCALL_AGENT_ASK、lost-wakeup-safe 阻塞/唤醒 IPC",
         "files": [
-          "kernel/src/syscall.c",
-          "kernel/src/ipc.c"
+          "runtime/boot/kernel/src/syscall.c",
+          "runtime/boot/kernel/src/ipc.c"
         ]
       },
       {
@@ -429,9 +429,9 @@
         "title": "虚拟文件系统与跨重启持久化",
         "desc": "VFS 节点树、ramfs/diskfs、persist 钩子把 /disk 子树镜像到 KhyFS 实现跨重启持久化",
         "files": [
-          "kernel/src/vfs.c",
-          "kernel/src/diskfs.c",
-          "kernel/src/persist.c"
+          "runtime/boot/kernel/src/vfs.c",
+          "runtime/boot/kernel/src/diskfs.c",
+          "runtime/boot/kernel/src/persist.c"
         ]
       },
       {
@@ -439,9 +439,9 @@
         "title": "A1–A2 物理通道与帧协议",
         "desc": "COM2 独立串口物理隔离的 agent 通道；COBS 分帧 + CRC16 校验的定长二进制帧机（纯逻辑无 I/O）",
         "files": [
-          "kernel/src/serial.c",
-          "kernel/src/agentbus.c",
-          "kernel/src/agentframe.c"
+          "runtime/boot/kernel/src/serial.c",
+          "runtime/boot/kernel/src/agentbus.c",
+          "runtime/boot/kernel/src/agentframe.c"
         ]
       },
       {
@@ -449,7 +449,7 @@
         "title": "A3–A4 控制面（agent→OS）",
         "desc": "agent 经 STAT/LIST/READ/WRITE/MKDIR/REMOVE/PS 操作 OS；/bin 越权 EPERM 守卫 + 路径规范化防 .. 逃逸",
         "files": [
-          "kernel/src/agentctl.c"
+          "runtime/boot/kernel/src/agentctl.c"
         ]
       },
       {
@@ -457,7 +457,7 @@
         "title": "A5 决策面（OS→agent 求决策）",
         "desc": "内核反过来问 agent「能否放行」；等待表 + 超时兜底，agent 不在/不答也绝不挂死内核（松耦合底线）",
         "files": [
-          "kernel/src/agentask.c"
+          "runtime/boot/kernel/src/agentask.c"
         ]
       },
       {
@@ -465,7 +465,7 @@
         "title": "A6 事件面（OS→agent 单向 push）",
         "desc": "进程 SPAWN/EXIT/FAULT 生产者 O(1) 入环、消费者在 bridge 任务排空，绝不为发事件在中断/锁里做 I/O",
         "files": [
-          "kernel/src/agentevent.c"
+          "runtime/boot/kernel/src/agentevent.c"
         ]
       },
       {
@@ -473,8 +473,8 @@
         "title": "A8 系统内自然语言配置（需求4）",
         "desc": "shell ai <自然语言> → 决策面 → agent 回结构化动作 SET/GET/SAY；配置落 /disk/etc/agent.conf 跨重启",
         "files": [
-          "kernel/src/agentconf.c",
-          "kernel/src/shell.c"
+          "runtime/boot/kernel/src/agentconf.c",
+          "runtime/boot/kernel/src/shell.c"
         ]
       },
       {
@@ -482,9 +482,9 @@
         "title": "A7 host 桥：二进制帧 ⇄ JSON",
         "desc": "纯 Node 零依赖把 COM2 帧翻译成三面 JSON API；协议单一真源（逐字节镜像内核线格）便于审计",
         "files": [
-          "kernel/bridge/khy-bridge.js",
-          "kernel/bridge/khy-protocol.js",
-          "kernel/bridge/khy-frame.js"
+          "runtime/boot/kernel/bridge/khy-bridge.js",
+          "runtime/boot/kernel/bridge/khy-protocol.js",
+          "runtime/boot/kernel/bridge/khy-frame.js"
         ]
       },
       {
@@ -492,9 +492,9 @@
         "title": "A7b 双 agent + 真模型大脑",
         "desc": "内置 in-process agent 与外部 Claude Code（经 MCP）共用同一桥；brain 可注入接 AI 网关，失败自动降级规则脑",
         "files": [
-          "kernel/bridge/khy-agent.js",
-          "kernel/bridge/khy-mcp.js",
-          "kernel/bridge/khy-brain-gateway.js"
+          "runtime/boot/kernel/bridge/khy-agent.js",
+          "runtime/boot/kernel/bridge/khy-mcp.js",
+          "runtime/boot/kernel/bridge/khy-brain-gateway.js"
         ]
       },
       {
@@ -502,8 +502,8 @@
         "title": "小白精讲：从零读懂全程",
         "desc": "配套教程通读 A1–A8 八阶段全过程 + 八条工程纪律，附进度交接台账，建议最后整体串讲",
         "files": [
-          "kernel/docs/小白教程-Khyos-agent协同从零精讲.md",
-          "kernel/docs/进度交接-内核与agent协同pivot.md"
+          "runtime/boot/kernel/docs/小白教程-Khyos-agent协同从零精讲.md",
+          "runtime/boot/kernel/docs/进度交接-内核与agent协同pivot.md"
         ]
       }
     ]

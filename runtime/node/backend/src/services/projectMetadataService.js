@@ -276,7 +276,7 @@ function _resolveWorkspaceDirs(root, workspaces) {
       }
       continue;
     }
-    // 仅支持末段 glob（npm 常见形态，如 `platform/packages/khy-*`）。
+    // 仅支持末段 glob（npm 常见形态，如 `runtime/substrate/platform/packages/khy-*`）。
     const lastSlash = pat.lastIndexOf('/');
     const parent = lastSlash >= 0 ? pat.slice(0, lastSlash) : '';
     const lastSeg = lastSlash >= 0 ? pat.slice(lastSlash + 1) : pat;
@@ -1158,7 +1158,7 @@ function _byDepthPath(a, b) {
  * 公平挑选参与符号抽取的源文件——**按顶层模块轮询配额**，而非全局深度排序。
  *
  * 旧逻辑「全局 (depth,path) 排序后 slice」在大型 monorepo 下会让字典序靠前的浅层
- * 模块（apps/、kernel/、scripts/）吃满配额，深层模块（platform/、software/）的符号
+ * 模块（apps/、runtime/boot/kernel/、scripts/）吃满配额，深层模块（platform/、software/）的符号
  * 永远进不了骨架，其变更也就对指纹不可见。改为先按顶层段分桶、桶内稳定排序，再跨桶
  * 轮询取文件，确保每个主要模块都被代表，直到达到 maxSymbolFiles 上限。
  */

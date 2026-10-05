@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: readAgent.md -->
 <title>Read · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>agents<span class="sep">›</span>built-in<span class="sep">›</span>Read</div>
+      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>agents<span class="sep">›</span>built-in<span class="sep">›</span>Read</div>
       <header class="hero reveal"><h1>Read</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#read">Read</a></li><li class="lvl-2"><a href="#定位">定位</a></li><li class="lvl-2"><a href="#核心职责">核心职责</a></li><li class="lvl-2"><a href="#工具使用规范">工具使用规范</a></li><li class="lvl-3"><a href="#glob-定位文件">Glob — 定位文件</a></li><li class="lvl-3"><a href="#grep-内容搜索">Grep — 内容搜索</a></li><li class="lvl-3"><a href="#read-精读文件">Read — 精读文件</a></li><li class="lvl-3"><a href="#bash-辅助理解">Bash — 辅助理解</a></li><li class="lvl-2"><a href="#工作流程">工作流程</a></li><li class="lvl-3"><a href="#标准阅读流程">标准阅读流程</a></li><li class="lvl-3"><a href="#输出格式">输出格式</a></li><li class="lvl-2"><a href="#跨系统协作">跨系统协作</a></li><li class="lvl-3"><a href="#调用-explore">调用 Explore</a></li><li class="lvl-3"><a href="#调用-map">调用 Map</a></li><li class="lvl-3"><a href="#调用-reading">调用 reading</a></li><li class="lvl-3"><a href="#交给-edit-and-write">交给 edit-and-write</a></li><li class="lvl-2"><a href="#限制">限制</a></li><li class="lvl-2"><a href="#禁止事项">禁止事项</a></li></ul></nav>
       <article class="doc-body">
@@ -140,14 +140,14 @@ Bash: &quot;find . -name '*.test.*' | wc -l&quot;           # 测试文件计数
 <h2 id="禁止事项">禁止事项<a class="anchor" href="#禁止事项" aria-label="锚点">#</a></h2>
 <ul><li>✗ 不要修改文件（只读）</li><li>✗ 不要执行写入或破坏性 Bash 命令</li><li>✗ 不要深度精读无关文件（保持针对性）</li><li>✗ 不要停留在表面（要读到核心逻辑）</li><li>✗ 不要漏掉调用关系和依赖追踪</li><li>✗ 不要把猜测当事实——不确定的内容标注&quot;推测&quot;</li><li>✗ 不要自己执行修改——分析完成后交给 edit-and-write</li></ul>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../../services/backend/src/agents/built-in/editAndWriteAgent.html"><div class="dir">← 上一篇</div><div class="ttl">Edit and Write</div></a><a class="next" href="../../../../../services/backend/src/cli/COMMAND_AUTHORING.html"><div class="dir">下一篇 →</div><div class="ttl">Command Authoring Guide</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../../runtime/node/backend/src/agents/built-in/editAndWriteAgent.html"><div class="dir">← 上一篇</div><div class="ttl">Edit and Write</div></a><a class="next" href="../../../../../../runtime/node/backend/src/cli/COMMAND_AUTHORING.html"><div class="dir">下一篇 →</div><div class="ttl">Command Authoring Guide</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../../";window.__KHY_CUR__="services/backend/src/agents/built-in/readAgent.html";</script>
-<script src="../../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/agents/built-in/readAgent.html";</script>
+<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

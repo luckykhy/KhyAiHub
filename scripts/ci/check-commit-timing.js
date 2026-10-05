@@ -277,24 +277,24 @@ function evaluate(changes, ctx = {}) {
 /** 预置场景：让反例可复现（`[DESIGN-GIT-004]` §9 的机器可跑版本）。 */
 const SCENARIOS = {
   'clean-unit': {
-    changes: [{ status: 'M', path: 'services/backend/src/cli/router.js' }],
+    changes: [{ status: 'M', path: 'runtime/node/backend/src/cli/router.js' }],
     verifyPending: true,
   },
   'unit-multi-intent': {
     changes: [
-      { status: 'M', path: 'services/backend/src/cli/router.js' },
-      { status: 'M', path: 'apps/ai-frontend/src/App.vue' },
-      { status: 'A', path: 'extensions/demo/index.js' },
+      { status: 'M', path: 'runtime/node/backend/src/cli/router.js' },
+      { status: 'M', path: 'delivery/web/ai-frontend/src/App.vue' },
+      { status: 'A', path: 'delivery/extension/demo/index.js' },
     ],
     verifyPending: true,
   },
   'unit-unverified': {
-    changes: [{ status: 'M', path: 'services/backend/src/services/aiGateway.js' }],
+    changes: [{ status: 'M', path: 'runtime/node/backend/src/services/aiGateway.js' }],
     verifyPending: false,
   },
   'unit-stray-artifacts': {
     changes: [
-      { status: 'M', path: 'services/backend/src/cli/router.js' },
+      { status: 'M', path: 'runtime/node/backend/src/cli/router.js' },
       { status: 'A', path: 'tmp-probe.js' },
       { status: 'A', path: 'docs/_probe_out.txt' },
     ],
@@ -304,7 +304,7 @@ const SCENARIOS = {
     changes: [
       { status: 'M', path: '.khy/settings.json' },
       { status: 'M', path: '.khyos/diag/scan-structure.py' },
-      { status: 'M', path: 'services/backend/src/cli/router.js' },
+      { status: 'M', path: 'runtime/node/backend/src/cli/router.js' },
     ],
     verifyPending: true,
   },
@@ -409,9 +409,9 @@ function parseNameStatusZ(out) {
   return changes;
 }
 
-/** 判断是否存在验证证据（`.khy/feedback/<task-id>/verify.txt`）。 */
+/** 判断是否存在验证证据（`works/data/khy/feedback/<task-id>/verify.txt`）。 */
 function hasVerifyEvidence() {
-  const base = path.join(REPO_ROOT, '.khy', 'feedback');
+  const base = path.join(REPO_ROOT, 'works', 'data', 'khy', 'feedback');
   let entries;
   try {
     entries = fs.readdirSync(base, { withFileTypes: true });

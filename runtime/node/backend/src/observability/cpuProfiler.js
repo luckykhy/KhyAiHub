@@ -7,7 +7,7 @@
  *   Profiler.enable → setSamplingInterval → start → (采样窗口) → stop
  * 产出标准 `.cpuprofile`,可直接拖进 Chrome DevTools → Performance、VS Code
  * 或 speedscope 看火焰图。**零新依赖** —— 不引入 0x / clinic / pprof,
- * 因而不触碰 packaging/npm/scripts/audit-purity.js 与 pip 纯度审计。
+ * 因而不触碰 works/ship/npm/scripts/audit-purity.js 与 pip 纯度审计。
  *
  * 与 cli/heapDump.js 互补:heapDump 落 V8 堆快照(内存侧),这里落 CPU 采样。
  * 两者同一版式(纯叶子 profilerCore.js + 薄壳 + `.khy/` 下并排两个文件:

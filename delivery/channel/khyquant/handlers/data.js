@@ -7,7 +7,7 @@ const { printQuote, printTable, printSuccess, printError, withSpinner } = requir
 async function handleQuote(symbol) {
   muteDbLogs();
   const marketDataService = require('../services/marketDataService');
-  const userProfile = require('../../../services/backend/src/services/userProfile');
+  const userProfile = require('../../../../runtime/node/backend/src/services/userProfile');
   restoreDbLogs();
 
   try {

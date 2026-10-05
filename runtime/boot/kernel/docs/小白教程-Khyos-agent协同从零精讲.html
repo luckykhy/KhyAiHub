@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: 小白教程-Khyos-agent协同从零精讲.md -->
 <title>KHY-OS 小白精讲：从零看懂「一个会跟 AI 协同的操作系统」 · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>kernel<span class="sep">›</span>docs<span class="sep">›</span>KHY-OS 小白精讲：从零看懂「一个会跟 AI 协同的操作系统」</div>
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>boot<span class="sep">›</span>kernel<span class="sep">›</span>docs<span class="sep">›</span>KHY-OS 小白精讲：从零看懂「一个会跟 AI 协同的操作系统」</div>
       <header class="hero reveal"><h1>KHY-OS 小白精讲：从零看懂「一个会跟 AI 协同的操作系统」</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#khy-os-小白精讲-从零看懂-一个会跟-ai-协同的操作系统">KHY-OS 小白精讲：从零看懂「一个会跟 AI 协同的操作系统」</a></li><li class="lvl-2"><a href="#0-先讲人话-这次到底做了一件什么事">0. 先讲人话：这次到底做了一件什么事？</a></li><li class="lvl-2"><a href="#1-预备知识速成-用生活类比-5-分钟">1. 预备知识速成（用生活类比，5 分钟）</a></li><li class="lvl-2"><a href="#2-总目标与-四点硬需求-为什么这么设计">2. 总目标与「四点硬需求」（为什么这么设计）</a></li><li class="lvl-2"><a href="#3-整体架构-一张图看懂">3. 整体架构：一张图看懂</a></li><li class="lvl-2"><a href="#4-帧格式-双方约定的-包裹规格">4. 帧格式：双方约定的「包裹规格」</a></li><li class="lvl-2"><a href="#5-八个阶段-一步步搭-a1-a8">5. 八个阶段，一步步搭（A1 → A8）</a></li><li class="lvl-3"><a href="#a1-先把-线-通了-物理通道">A1 — 先把「线」通了（物理通道）</a></li><li class="lvl-3"><a href="#a2-给字节流套上-帧-结构化">A2 — 给字节流套上「帧」（结构化）</a></li><li class="lvl-3"><a href="#a3-让-agent-第一次-看见-os-的文件-控制面-只读">A3 — 让 agent 第一次「看见」OS 的文件（控制面·只读）</a></li><li class="lvl-3"><a href="#a4-让-agent-能安全地-改-os-控制面-写-看进程">A4 — 让 agent 能安全地「改」OS（控制面·写 + 看进程）</a></li><li class="lvl-3"><a href="#a5-反过来-os-主动问-agent-决策面-需求2-的核心">A5 — 反过来：OS 主动问 agent（决策面，需求2 的核心）</a></li><li class="lvl-3"><a href="#a6-os-单向广播-发生了什么-事件面">A6 — OS 单向广播「发生了什么」（事件面）</a></li><li class="lvl-3"><a href="#a7-host-桥-把二进制翻译成-json-agent-终于-好用-了">A7 — host 桥：把二进制翻译成 JSON（agent 终于「好用」了）</a></li><li class="lvl-3"><a href="#a8-在系统里用自然语言配置-需求4">A8 — 在系统里用自然语言配置（需求4）</a></li><li class="lvl-3"><a href="#a7b-双-agent-实接-需求1-整条路线的收尾">A7b — 双 agent 实接（需求1，整条路线的收尾）</a></li><li class="lvl-2"><a href="#6-两个增强-让它-真的能用">6. 两个增强：让它「真的能用」</a></li><li class="lvl-3"><a href="#增强①-内置大脑接-真模型">增强① 内置大脑接「真模型」</a></li><li class="lvl-3"><a href="#增强②-把-khy-os-接进-claude-code-真外部联调">增强② 把 KHY-OS 接进 Claude Code（真外部联调）</a></li><li class="lvl-2"><a href="#7-亲手跑一遍-hands-on">7. 亲手跑一遍（Hands-on）</a></li><li class="lvl-3"><a href="#7-1-编译并跑单元测试">7.1 编译并跑单元测试</a></li><li class="lvl-3"><a href="#7-2-手动开机-自己敲命令玩">7.2 手动开机，自己敲命令玩</a></li><li class="lvl-3"><a href="#7-3-路线-a-让内置-agent-真模型来回答">7.3 路线 A：让内置 agent + 真模型来回答</a></li><li class="lvl-3"><a href="#7-4-路线-b-让-claude-code-操作-khy-os">7.4 路线 B：让 Claude Code 操作 KHY-OS</a></li><li class="lvl-2"><a href="#8-贯穿全程的-工程纪律-最值得抄走的部分">8. 贯穿全程的「工程纪律」（最值得抄走的部分）</a></li><li class="lvl-2"><a href="#9-目录地图-想看代码去哪找">9. 目录地图：想看代码去哪找</a></li><li class="lvl-2"><a href="#10-名词速查表-glossary">10. 名词速查表（Glossary）</a></li><li class="lvl-2"><a href="#11-给初学者的练习与进阶方向">11. 给初学者的练习与进阶方向</a></li><li class="lvl-3"><a href="#结语">结语</a></li></ul></nav>
       <article class="doc-body">
@@ -237,14 +237,14 @@ node kernel/bridge/khy-agent-run.js
 <h3 id="结语">结语<a class="anchor" href="#结语" aria-label="锚点">#</a></h3>
 <p>KHY-OS 这次「agent⇄OS 协同」从一根串口的 echo（A1）一路搭到「内置/外部双 agent + 真模型 +<br>自然语言配置」（A8 / A7b / 增强），全程<strong>小步、可验证、松耦合、状态诚实</strong>。<br>你不需要一开始就懂全部——照着第 7 节跑一遍，再对着第 9 节的地图读代码，<br>这套「会跟 AI 协同的操作系统」就会在你脑子里活起来。</p>
       </article>
-      <nav class="pager"><a class="prev" href="../../kernel/docs/进度交接-内核与agent协同pivot.html"><div class="dir">← 上一篇</div><div class="ttl">进度交接：内核「真实 OS」长弧 + agent 协同 pivot</div></a><a class="next" href="../../kernel/README.html"><div class="dir">下一篇 →</div><div class="ttl">KHY OS Kernel</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../runtime/boot/kernel/docs/进度交接-内核与agent协同pivot.html"><div class="dir">← 上一篇</div><div class="ttl">进度交接：内核「真实 OS」长弧 + agent 协同 pivot</div></a><a class="next" href="../../../../runtime/boot/kernel/README.html"><div class="dir">下一篇 →</div><div class="ttl">KHY OS Kernel</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__="kernel/docs/小白教程-Khyos-agent协同从零精讲.html";</script>
-<script src="../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="runtime/boot/kernel/docs/小白教程-Khyos-agent协同从零精讲.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

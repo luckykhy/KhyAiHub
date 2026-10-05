@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 # khy-os Android signed-release builder (PowerShell, cross-platform).
 #
-# Builds the khy-os mobile app (apps/khy-os-client-app, Flutter) into a signed
+# Builds the khy-os mobile app (delivery/mobile/khy-os-client-app, Flutter) into a signed
 # release APK + AAB, verifies the signature, and copies both into
 # ./dist/android with a SHA-256 manifest.
 #

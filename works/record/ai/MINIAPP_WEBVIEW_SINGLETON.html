@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: MINIAPP_WEBVIEW_SINGLETON.md -->
 <title>小程序 WebView 单例管理规范 · Khy-OS 文档</title>
-<link rel="stylesheet" href="../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../docs/index.html">首页</a><span class="sep">›</span>.ai<span class="sep">›</span>小程序 WebView 单例管理规范</div>
+      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>works<span class="sep">›</span>record<span class="sep">›</span>ai<span class="sep">›</span>小程序 WebView 单例管理规范</div>
       <header class="hero reveal"><h1>小程序 WebView 单例管理规范</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#小程序-webview-单例管理规范">小程序 WebView 单例管理规范</a></li><li class="lvl-2"><a href="#1-变量命名规范">1. 变量命名规范</a></li><li class="lvl-3"><a href="#当前命名-统一使用">当前命名（统一使用）</a></li><li class="lvl-3"><a href="#废弃命名-不再使用">废弃命名（不再使用）</a></li><li class="lvl-2"><a href="#2-单例管理器接口">2. 单例管理器接口</a></li><li class="lvl-2"><a href="#3-webviewid-命名空间">3. webviewId 命名空间</a></li><li class="lvl-3"><a href="#格式">格式</a></li><li class="lvl-3"><a href="#示例">示例</a></li><li class="lvl-3"><a href="#生成函数">生成函数</a></li><li class="lvl-3"><a href="#理由">理由</a></li><li class="lvl-2"><a href="#4-多实例场景">4. 多实例场景</a></li><li class="lvl-3"><a href="#架构">架构</a></li><li class="lvl-3"><a href="#场景处理">场景处理</a></li><li class="lvl-2"><a href="#5-canvasprofile-hook">5. CanvasProfile Hook</a></li><li class="lvl-3"><a href="#接口定义">接口定义</a></li><li class="lvl-3"><a href="#调用点">调用点</a></li><li class="lvl-2"><a href="#6-安全检查清单">6. 安全检查清单</a></li><li class="lvl-2"><a href="#7-实施状态">7. 实施状态</a></li></ul></nav>
       <article class="doc-body">
@@ -179,14 +179,14 @@ instance-a::miniapp-analysis</code></pre>
 <h2 id="7-实施状态">7. 实施状态<a class="anchor" href="#7-实施状态" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>任务</th><th>状态</th><th>位置</th></tr></thead><tbody><tr><td>命名规范文档</td><td>✓ 完成</td><td><code>.ai/MINIAPP_WEBVIEW_SINGLETON.md</code></td></tr><tr><td>CanvasProfile hook 实现</td><td>… 待实现</td><td><code>khyos-tauri/src/core/core.js</code></td></tr><tr><td>多实例 ID 命名空间</td><td>… 待实现</td><td><code>khyos-tauri/src/core/webviewSingleton.js</code></td></tr><tr><td>CanvasStateManager 适配</td><td>… 待实现</td><td><code>khyos-tauri/src/core/canvasStateManager.js</code></td></tr></tbody></table>
       </article>
-      <nav class="pager"><a class="prev" href="../.ai/MAP.html"><div class="dir">← 上一篇</div><div class="ttl">MAP — khy-os 骨架与导航</div></a><a class="next" href="../.ai/plans/miniapp-webview-singleton.html"><div class="dir">下一篇 →</div><div class="ttl">小程序 WebView 单例 &amp; Canvas 检测 Hook 实施计划</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../works/record/ai/MAP.html"><div class="dir">← 上一篇</div><div class="ttl">MAP — khy-os 骨架与导航</div></a><a class="next" href="../../../works/record/ai/plans/miniapp-webview-singleton.html"><div class="dir">下一篇 →</div><div class="ttl">小程序 WebView 单例 &amp; Canvas 检测 Hook 实施计划</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../";window.__KHY_CUR__=".ai/MINIAPP_WEBVIEW_SINGLETON.html";</script>
-<script src="../docs/19_资产/site/nav-data.js"></script>
-<script src="../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../";window.__KHY_CUR__="works/record/ai/MINIAPP_WEBVIEW_SINGLETON.html";</script>
+<script src="../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

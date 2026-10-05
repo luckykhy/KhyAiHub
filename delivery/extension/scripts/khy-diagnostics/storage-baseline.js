@@ -21,9 +21,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const baseline = require('../../../scripts/lib/storageBaseline');
+const baseline = require('../../../../scripts/lib/storageBaseline');
 
-const ROOT = path.resolve(__dirname, '..', '..', '..');
+const ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 
 /** 目录树字节数 + 文件计数。符号链接不跟随，避免把外部盘算进来或走进环。 */
 function treeStats(dir) {

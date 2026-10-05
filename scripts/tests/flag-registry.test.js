@@ -14,7 +14,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 
 const guard = require('../lib/flagRegistryGuard');
-const realRegistry = require('../../services/backend/src/services/flagRegistry');
+const realRegistry = require('../../runtime/node/backend/src/services/flagRegistry');
 
 // 构造一个「像注册表」的注入对象(listFlags + 名白名单),用于喂坏表。
 function mkRegistry(FLAGS) {

@@ -22,7 +22,7 @@
 
 ## 二、解压并放置
 
-目标根目录(相对仓库):`services/backend/bin/ollama-runner/`
+目标根目录(相对仓库):`runtime/node/backend/bin/ollama-runner/`
 **关键是让 sentinel 文件存在**——provisioner 的 present-check 精确匹配它。
 
 ### Linux / macOS(POSIX)
@@ -30,14 +30,14 @@
 sentinel = `bin/ollama`。解压后保持归档自带的 `bin/` + `lib/` 结构:
 
 ```
-services/backend/bin/ollama-runner/
+runtime/node/backend/bin/ollama-runner/
 ├── bin/ollama            ← sentinel(必须可执行:chmod +x)
 └── lib/ollama/*.so|*.dylib
 ```
 
 ```bash
-tar -xzf ollama-linux-amd64.tgz -C services/backend/bin/ollama-runner/
-chmod +x services/backend/bin/ollama-runner/bin/ollama
+tar -xzf ollama-linux-amd64.tgz -C runtime/node/backend/bin/ollama-runner/
+chmod +x runtime/node/backend/bin/ollama-runner/bin/ollama
 ```
 
 > macOS 通用包若解出的是根级 `ollama`(无 `bin/`),把 `runtime-binaries.json` 里对应

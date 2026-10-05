@@ -56,7 +56,7 @@ test('运行时镜像已被显式开关门控：0 finding', () => {
 
 test('与依赖源无关的文件完全不进入判定面', () => {
   const entries = [
-    { path: 'services/backend/src/services/foo.js', content: 'const x = 1;\n' },
+    { path: 'runtime/node/backend/src/services/foo.js', content: 'const x = 1;\n' },
     { path: 'README.md', content: 'registry.npmmirror.com\n' },
     { path: 'docs/07_OPS_运维/OPS-MAN/x.md', content: 'mirrors.aliyun.com\n' },
   ];
@@ -66,7 +66,7 @@ test('与依赖源无关的文件完全不进入判定面', () => {
 test('豁免登记的文件不被报出', () => {
   const entries = [
     {
-      path: 'services/backend/src/services/offlineKnowledge.js',
+      path: 'runtime/node/backend/src/services/offlineKnowledge.js',
       content: '国内镜像: https://registry.npmmirror.com\n',
     },
   ];
@@ -86,7 +86,7 @@ test('Dockerfile 里的 aliyun pypi 源被判出', () => {
   assert.equal(findings.length, 1);
   assert.equal(findings[0].criterion, 'non-native-registry');
   assert.equal(findings[0].line, 1);
-  assert.equal(findings[0].file, 'services/backend/Dockerfile');
+  assert.equal(findings[0].file, 'runtime/node/backend/Dockerfile');
 });
 
 test('*_MIRROR 注入开关被判出，且同一开关只报一条', () => {
@@ -127,7 +127,7 @@ test('运行时镜像未门控：按文件聚合为一条', () => {
   const findings = evaluate(SCENARIOS['runtime-ungated']);
   assert.equal(findings.length, 1);
   assert.equal(findings[0].criterion, 'ungated-runtime-mirror');
-  assert.equal(findings[0].file, 'platform/khy_platform/_bootstrap.py');
+  assert.equal(findings[0].file, 'runtime/substrate/platform/khy_platform/_bootstrap.py');
 });
 
 test('一个文件里有多张镜像表也只报一条（setup.js 场景）', () => {
@@ -140,14 +140,14 @@ test('一个文件里有多张镜像表也只报一条（setup.js 场景）', ()
     "  aliyun: 'https://mirrors.aliyun.com/pypi/simple/',",
     '};',
   ].join('\n');
-  const findings = evaluate([{ path: 'services/backend/setup.js', content }]);
+  const findings = evaluate([{ path: 'runtime/node/backend/setup.js', content }]);
   assert.equal(findings.length, 1);
   assert.match(findings[0].message, /3 个公共镜像/);
 });
 
 test('裸主机名（无 scheme）也能命中', () => {
   const findings = evaluate([
-    { path: 'kernel/Dockerfile.kernel-build', content: "ARG X=mirrors.tuna.tsinghua.edu.cn\n" },
+    { path: 'runtime/boot/kernel/Dockerfile.kernel-build', content: "ARG X=mirrors.tuna.tsinghua.edu.cn\n" },
   ]);
   assert.equal(findings.length, 1);
   assert.equal(findings[0].criterion, 'non-native-registry');
@@ -207,7 +207,7 @@ test('package.json 无镜像时不误伤（防假红）', () => {
 
 test('S1 与 S3 的 error 数必须不同（severity 不得写死）', () => {
   const entries = [
-    { path: 'services/backend/Dockerfile', content: 'RUN pip install -i https://mirrors.aliyun.com/pypi/simple/\n' },
+    { path: 'runtime/node/backend/Dockerfile', content: 'RUN pip install -i https://mirrors.aliyun.com/pypi/simple/\n' },
     { path: 'package-lock.json', content: '{"a":{"resolved":"https://registry.npmmirror.com/a/-/a-1.tgz"}}' },
     { path: 'Dockerfile', content: 'ARG APT_MIRROR=""\n' },
   ];
@@ -242,22 +242,22 @@ test('文件分类：构建配置 / 锁文件 / 运行时源码互不误判', ()
   assert.ok(isBuildConfig('apps/ai-frontend/Dockerfile'));
   assert.ok(isBuildConfig('docker-compose.yml'));
   assert.ok(isBuildConfig('.npmrc'));
-  assert.ok(isBuildConfig('services/backend/.npmrc'));
+  assert.ok(isBuildConfig('runtime/node/backend/.npmrc'));
   assert.ok(isBuildConfig('.github/workflows/docker.yml'));
   assert.ok(isBuildConfig('requirements.txt'));
-  assert.ok(!isBuildConfig('services/backend/server.js'));
+  assert.ok(!isBuildConfig('runtime/node/backend/server.js'));
 
   assert.ok(isLockfile('package-lock.json'));
   assert.ok(isLockfile('apps/ai-frontend/package-lock.json'));
   assert.ok(!isLockfile('pnpm-lock.yaml')); // 只按 resolved 判 npm 锁文件
 
-  assert.ok(isRuntimeSource('platform/khy_platform/_bootstrap.py'));
-  assert.ok(isRuntimeSource('services/backend/setup.js'));
+  assert.ok(isRuntimeSource('runtime/substrate/platform/khy_platform/_bootstrap.py'));
+  assert.ok(isRuntimeSource('runtime/node/backend/setup.js'));
   assert.ok(!isRuntimeSource('scripts/ci/check-native-registry.js'));
 });
 
 test('路径归一化：反斜杠与 ./ 前缀', () => {
-  assert.equal(normalize('.\\services\\backend\\Dockerfile'), 'services/backend/Dockerfile');
+  assert.equal(normalize('.\\services\\backend\\Dockerfile'), 'runtime/node/backend/Dockerfile');
   assert.equal(normalize('./Dockerfile'), 'Dockerfile');
 });
 
@@ -270,7 +270,7 @@ test('注释行被跳过（否则「解释为何删除镜像开关」的注释�
       // 真实场景：删掉 APT_MIRROR 后，注释里必然要提到这个名字说明为什么删
       content: '# 刻意不提供 APT_MIRROR / NPM_REGISTRY 注入开关（PROCESS-013）\nFROM node:22-slim\n',
     },
-    { path: 'kernel/Dockerfile.kernel-build', content: '# 曾经用 mirrors.tuna.tsinghua.edu.cn，已移除\n' },
+    { path: 'runtime/boot/kernel/Dockerfile.kernel-build', content: '# 曾经用 mirrors.tuna.tsinghua.edu.cn，已移除\n' },
     { path: '.npmrc', content: '# registry=https://registry.npmmirror.com\n' },
   ];
   assert.equal(evaluate(entries).length, 0, '注释不参与执行，不应产生 finding');

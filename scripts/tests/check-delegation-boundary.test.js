@@ -7,7 +7,7 @@
  * 它用 SPAWN_CALL_RE（含 `exec\b`）逐行找外部 CLI 的进程拉起点，而 JS 里
  * `/…/i.exec(s)` 这种**正则方法调用**会被 `exec\b` 命中，且 slug 解析行天然含
  * `claude` 字样 —— 二者同时出现即产生纯误报（曾实测把
- * `services/backend/src/utils/format/ccModelName.js` 的 slug 正则报成「旁路拉起 claude」）。
+ * `runtime/node/backend/src/utils/format/ccModelName.js` 的 slug 正则报成「旁路拉起 claude」）。
  *
  * 本文件把这条边界钉成回归：正则字面量不得被判为 spawn 点，而真旁路
  * （含与正则同行的真 spawn、含除法之后的真 spawn）必须照旧被抓 ——
@@ -46,8 +46,8 @@ function writeFile(root, relPath, content) {
 function makeFixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-delg-'));
   tempDirs.push(root);
-  writeFile(root, 'services/backend/src/services/externalAgentDirective.js', "'use strict';\n");
-  writeFile(root, 'services/backend/src/tools/AgentTool/delegation.js', "'use strict';\n");
+  writeFile(root, 'runtime/node/backend/src/services/externalAgentDirective.js', "'use strict';\n");
+  writeFile(root, 'runtime/node/backend/src/tools/AgentTool/delegation.js', "'use strict';\n");
   return root;
 }
 
@@ -77,7 +77,7 @@ function bypassHits(out) {
 describe('check-delegation-boundary: bypass-spawn 判据边界', () => {
   test('真旁路：spawnSync("claude", …) 必须被抓', () => {
     const root = makeFixture();
-    const f = 'services/backend/src/services/foo/realBypass.js';
+    const f = 'runtime/node/backend/src/services/foo/realBypass.js';
     writeFile(
       root,
       f,
@@ -94,7 +94,7 @@ describe('check-delegation-boundary: bypass-spawn 判据边界', () => {
 
   test('正则字面量：/^claude-…/i.exec(raw) 不得被判为 spawn 点（历史误报）', () => {
     const root = makeFixture();
-    const f = 'services/backend/src/utils/format/slugParse.js';
+    const f = 'runtime/node/backend/src/utils/format/slugParse.js';
     writeFile(
       root,
       f,
@@ -114,7 +114,7 @@ describe('check-delegation-boundary: bypass-spawn 判据边界', () => {
 
   test('正则与真旁路同行：真信号不得被正则剥除逻辑吞掉', () => {
     const root = makeFixture();
-    const f = 'services/backend/src/services/foo/mixed.js';
+    const f = 'runtime/node/backend/src/services/foo/mixed.js';
     writeFile(
       root,
       f,
@@ -132,7 +132,7 @@ describe('check-delegation-boundary: bypass-spawn 判据边界', () => {
 
   test('除法不是正则：`a / b` 之后的真旁路不得被漏检', () => {
     const root = makeFixture();
-    const f = 'services/backend/src/services/foo/divThenSpawn.js';
+    const f = 'runtime/node/backend/src/services/foo/divThenSpawn.js';
     writeFile(
       root,
       f,
@@ -154,7 +154,7 @@ describe('check-delegation-boundary: bypass-spawn 判据边界', () => {
     const root = makeFixture();
     writeFile(
       root,
-      'services/backend/src/cli/probe.js',
+      'runtime/node/backend/src/cli/probe.js',
       [
         "'use strict';",
         "const { spawnSync } = require('child_process');",
@@ -169,7 +169,7 @@ describe('check-delegation-boundary: bypass-spawn 判据边界', () => {
     const root = makeFixture();
     writeFile(
       root,
-      'services/backend/src/services/foo/suppressed.js',
+      'runtime/node/backend/src/services/foo/suppressed.js',
       [
         "'use strict';",
         "const { spawnSync } = require('child_process');",

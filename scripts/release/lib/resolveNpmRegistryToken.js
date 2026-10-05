@@ -6,7 +6,7 @@
  * preflight 里的内联 `node -e` 薄壳)。
  *
  * 动机(消除 npm 发布 404 + 双渠道裂脑):
- *   publish-dual.sh 从 packaging/npm/ 目录发布时,committed `.npmrc` 里
+ *   publish-dual.sh 从 works/ship/npm/ 目录发布时,committed `.npmrc` 里
  *     //registry.npmjs.org/:_authToken=${NPM_TOKEN}
  *   会在 NPM_TOKEN 未设时展开为**空 token**,并 SHADOW(遮蔽)用户全局 ~/.npmrc
  *   的真 token → `npm publish` 报 404(no scope permission),而先跑的 `npm whoami`

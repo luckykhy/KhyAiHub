@@ -21,10 +21,10 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const TARGETS = [
-  'services/backend/src',
+  'runtime/node/backend/src',
   'apps/ai-frontend/src',
   'platform',
-  'software/khyquant/frontend/src',
+  'delivery/channel/khyquant/frontend/src',
 ];
 
 test('main source trees have 0 hardcoded-endpoint errors (RUNTIME-001)', () => {

@@ -54,7 +54,7 @@ services:
       # 运行态数据（sqlite / 日志 / 缓存）。命名卷而非绑定挂载：绑定挂载在
       # Windows/macOS 上会带来属主与性能问题，而镜像内这两个目录已 chown 给 khy 用户。
       - khy_home:/home/khy/.khy
-      - khy_data:/app/services/backend/data
+      - khy_data:/app/runtime/node/backend/data
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:3000/health >/dev/null || exit 1"]
       interval: 10s
@@ -69,7 +69,7 @@ services:
     profiles: ["ai", "web"]
     build:
       context: .
-      dockerfile: services/ai-backend/Dockerfile
+      dockerfile: runtime/node/ai-backend/Dockerfile
     image: ${KHY_AI_IMAGE:-khy-ai-backend:local}
     restart: unless-stopped
     ports:
@@ -88,13 +88,13 @@ services:
       start_period: 30s
 
   # ── 扩展：AI 前端静态站（profile: web）────────────────────────────────────
-  # nginx 把 /api 与 /ws 反代到 ai-backend:9090（见 apps/ai-frontend/nginx.conf），
+  # nginx 把 /api 与 /ws 反代到 ai-backend:9090（见 delivery/web/ai-frontend/nginx.conf），
   # 所以构建期的 VITE_AI_API_BASE_URL 必须留空 = 同源（前端调用路径本身就以 /api 开头）。
   web:
     profiles: ["web"]
     build:
       context: .
-      dockerfile: apps/ai-frontend/Dockerfile
+      dockerfile: delivery/web/ai-frontend/Dockerfile
       args:
         VITE_AI_API_BASE_URL: ""
     image: ${KHY_WEB_IMAGE:-khy-ai-frontend:local}

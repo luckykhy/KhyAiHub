@@ -47,7 +47,7 @@ const HOT_FILE_RE = /\.db-(wal|shm)$/i;
 function resolveProjectRoot() {
   const fromEnv = process.env.KHY_OS_ROOT || process.env.KHYQUANT_PORTABLE_ROOT;
   if (fromEnv && fs.existsSync(fromEnv)) { return path.resolve(fromEnv); }
-  return path.resolve(__dirname, '..', '..', '..');
+  return path.resolve(__dirname, '..', '..', '..', '..');
 }
 
 const PROJECT_ROOT = resolveProjectRoot();

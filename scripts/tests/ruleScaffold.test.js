@@ -88,8 +88,8 @@ test('auditRule：畸形输入不抛', () => {
 test('targetPath：剥离段尾修饰，只留文件路径', () => {
   assert.equal(guard.targetPath('CLAUDE.md#一红线-r1-r4（R4）'), 'CLAUDE.md');
   assert.equal(
-    guard.targetPath('services/backend/src/services/riskGate.js isUnbypassableGate'),
-    'services/backend/src/services/riskGate.js'
+    guard.targetPath('runtime/node/backend/src/services/riskGate.js isUnbypassableGate'),
+    'runtime/node/backend/src/services/riskGate.js'
   );
   assert.equal(
     guard.targetPath('docs/10_规范/其它规范/[DESIGN-SOURCING-001] 借鉴与实现统一规则.md §4 B-U2/B-U4'),

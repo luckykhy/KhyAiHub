@@ -180,10 +180,10 @@ if (-not $ggmlMarkers) {
   Write-Warning "Runtime package may be incomplete: no ggml/llama/cuda/rocm/vulkan markers found under lib/ollama."
 }
 
-$khyRunnerBin = Join-Path $Root 'services/backend/bin/ollama-runner/bin'
-$khyRunnerLib = Join-Path $Root 'services/backend/bin/ollama-runner/lib/ollama'
+$khyRunnerBin = Join-Path $Root 'runtime/node/backend/bin/ollama-runner/bin'
+$khyRunnerLib = Join-Path $Root 'runtime/node/backend/bin/ollama-runner/lib/ollama'
 
-Write-Host "[3/5] Syncing runtime into KHY services/backend/bin/ollama-runner ..." -ForegroundColor Cyan
+Write-Host "[3/5] Syncing runtime into KHY runtime/node/backend/bin/ollama-runner ..." -ForegroundColor Cyan
 New-Item -Path $khyRunnerBin -ItemType Directory -Force | Out-Null
 New-Item -Path $khyRunnerLib -ItemType Directory -Force | Out-Null
 

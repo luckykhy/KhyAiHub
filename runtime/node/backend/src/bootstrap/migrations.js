@@ -83,7 +83,7 @@ const MIGRATIONS = [
       'Register GUI Eval models (GuiEvalTask, GuiEvalRun) — DB tables created by sequelize.sync()',
     up: async () => {
       // No-op at the filesystem level. The two new Sequelize models are registered
-      // in platform/packages/shared/src/models/index.js and re-exported by the backend.
+      // in runtime/substrate/platform/packages/shared/src/models/index.js and re-exported by the backend.
       // sequelize.sync({alter:false}) at startup will CREATE TABLE IF NOT EXISTS for
       // gui_eval_tasks and gui_eval_runs automatically.
     },
@@ -94,7 +94,7 @@ const MIGRATIONS = [
       'Register Web Frontend Eval models (WebFrontendEvalTask, WebFrontendEvalRun) — DB tables created by sequelize.sync()',
     up: async () => {
       // No-op at the filesystem level. The two new Sequelize models are registered
-      // in platform/packages/shared/src/models/index.js. sequelize.sync() at startup
+      // in runtime/substrate/platform/packages/shared/src/models/index.js. sequelize.sync() at startup
       // will CREATE TABLE IF NOT EXISTS for web_frontend_eval_tasks and web_frontend_eval_runs.
     },
   },

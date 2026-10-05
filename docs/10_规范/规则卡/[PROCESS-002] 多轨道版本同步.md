@@ -3,7 +3,7 @@ name: 多轨道版本同步
 id: PROCESS-002
 domain: PROCESS
 nature: 约束为主，兼福利
-scope: "pyproject.toml, works/ship/npm/package.json, runtime/node/backend/package.json, works/ship/modules/modules.json, runtime/node/ai-backend/package.json, runtime/substrate/platform/packages/shared/package.json, runtime/substrate/platform/packages/ui-shared/package.json, apps/ai-frontend/package.json, delivery/channel/khyquant/frontend/package.json"
+scope: "pyproject.toml, works/ship/npm/package.json, runtime/node/backend/package.json, works/ship/modules/modules.json, runtime/node/ai-backend/package.json, runtime/substrate/platform/packages/shared/package.json, runtime/substrate/platform/packages/ui-shared/package.json, delivery/web/ai-frontend/package.json, delivery/channel/khyquant/frontend/package.json"
 priority: P1
 trigger: 改动任一端版本号，或发布前
 constraint: "三条版本轨道共 9 个真源，组内必须完全一致、组间刻意不同：G1 主包 4 源、G2 ai-backend 2 源、G3 浏览器 UI 3 源（G3 为 @khy/ui-shared 依赖声明精确对齐）。runtime/substrate/platform/khy_platform/__init__.py 的 __version__ 必须运行时动态解析，不得硬编码。"

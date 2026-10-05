@@ -7,7 +7,7 @@
  * Windows 上 python3 命令不存在，用 python 或 py -3 替代。
  */
 const { execSync } = require('child_process');
-const { searchExecutable } = require('../../services/backend/src/tools/platformUtils');
+const { searchExecutable } = require('../../runtime/node/backend/src/tools/platformUtils');
 
 const isWin = process.platform === 'win32';
 const candidates = isWin ? ['python', 'py', 'python3'] : ['python3', 'python'];

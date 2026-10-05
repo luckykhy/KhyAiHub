@@ -72,7 +72,7 @@ test('@khy/shared 软链断裂 → shared-link-broken 拦路', () => {
 });
 
 // ── 空心包（hollow）：第三态，2026-09-21 补 ───────────────────────────────────
-// 复现的故障：services/backend/node_modules/ink 是指向 .pnpm 空实体的符号链接，
+// 复现的故障：runtime/node/backend/node_modules/ink 是指向 .pnpm 空实体的符号链接，
 // existsSync 跟随链接报「存在」⇒ 存在性判据全说好 ⇒ bootstrap 跳过 npm install
 // ⇒ 永不自愈。CJS require 靠向上回退侥幸能跑，ESM import() 不回退直接崩。
 test('空心包 → hollow-package 拦路', () => {
@@ -212,7 +212,7 @@ test('反漂移：每个 CRITICAL_PACKAGES 都由 backend 或 @khy/shared 声明
     assert.ok(
       Object.prototype.hasOwnProperty.call(deps, p),
       `漂移：CRITICAL_PACKAGES 的 "${p}" 不在 backend 或 @khy/shared 的运行时依赖中。` +
-        `依赖若已改名/移除，请同步更新 services/backend/src/services/restore/hydrationHealth.js。`
+        `依赖若已改名/移除，请同步更新 runtime/node/backend/src/services/restore/hydrationHealth.js。`
     );
   }
 });

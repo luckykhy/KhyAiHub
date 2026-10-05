@@ -151,14 +151,14 @@ function _resolveProjectRoot() {
 const PROJECT_ROOT = _resolveProjectRoot();
 
 // The "forest" restructure moved top-level dirs (backend → services/backend,
-// khy_platform → platform/khy_platform, ...). curriculum.json and the scan
+// khy_platform → runtime/substrate/platform/khy_platform, ...). curriculum.json and the scan
 // rules below still carry some pre-restructure prefixes, so every reference to
 // them showed "(无法读取)". Remap old → new on the fly so existing entries —
 // and any externally-authored ones — keep resolving without a data migration.
 const _PATH_REMAPS = [
   [/^backend\//, 'services/backend/'],
   [/^ai-backend\//, 'services/ai-backend/'],
-  [/^khy_platform\//, 'platform/khy_platform/'],
+  [/^khy_platform\//, 'runtime/substrate/platform/khy_platform/'],
   [/^frontend\//, 'apps/ai-frontend/'],
 ];
 

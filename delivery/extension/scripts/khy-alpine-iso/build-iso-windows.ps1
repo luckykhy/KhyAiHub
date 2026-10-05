@@ -59,7 +59,7 @@ if (-not (Test-Path -LiteralPath $OutDir)) {
 
 $OutDirAbs = (Resolve-Path $OutDir).Path
 $ImageTag = "khy-iso-builder:latest"
-$Dockerfile = Join-Path $RootDir "extensions\scripts\khy-alpine-iso\Dockerfile.iso-builder"
+$Dockerfile = Join-Path $RootDir "delivery\extension\scripts\khy-alpine-iso\Dockerfile.iso-builder"
 
 $BuildArgs = @("build", "-t", $ImageTag, "-f", $Dockerfile, $RootDir)
 if ($NoCache) {

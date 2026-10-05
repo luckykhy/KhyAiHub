@@ -13,7 +13,7 @@ echo 正在创建默认管理员账号...
 echo 这只需要运行一次！
 echo.
 
-cd services\backend
+cd runtime\node\backend
 
 :: Run quick setup script
 node scripts\quick-setup.js

@@ -105,7 +105,7 @@ test('data-allowlisted files are exempt even with standalone literals', () => {
   const src = "{ id: 'gpt-4o', name: 'GPT-4o', isDefault: true },\n";
   // a real allowlisted suffix
   const { findings } = guard.assessFile({
-    relPath: 'services/backend/src/services/gateway/adapters/cursorAdapter.js',
+    relPath: 'runtime/node/backend/src/services/gateway/adapters/cursorAdapter.js',
     source: src, watchedNames: WATCHED,
   });
   assert.strictEqual(findings.length, 0, JSON.stringify(findings));
@@ -114,16 +114,16 @@ test('data-allowlisted files are exempt even with standalone literals', () => {
 test('the SSOT itself is exempt', () => {
   const src = "const IDE_DEFAULT_MODELS = ['gpt-4o'];\n";
   const { findings } = guard.assessFile({
-    relPath: 'services/backend/src/constants/models.js',
+    relPath: 'runtime/node/backend/src/constants/models.js',
     source: src, watchedNames: WATCHED,
   });
   assert.strictEqual(findings.length, 0);
 });
 
 test('isDataFile matches by src-relative suffix', () => {
-  assert.ok(guard.isDataFile('services/backend/src/services/usageFormatter.js'));
+  assert.ok(guard.isDataFile('runtime/node/backend/src/services/usageFormatter.js'));
   assert.ok(guard.isDataFile('src/services/usageFormatter.js'));
-  assert.ok(!guard.isDataFile('services/backend/src/services/someLogic.js'));
+  assert.ok(!guard.isDataFile('runtime/node/backend/src/services/someLogic.js'));
 });
 
 test('env gate KHY_MODEL_HARDCODING_GUARD=off disables the guard', () => {
@@ -145,7 +145,7 @@ test('one finding per distinct name per line (no duplicate spam)', () => {
 });
 
 test('integration: real SSOT watch-set flags a real model name in fake logic', () => {
-  const models = require('../../services/backend/src/constants/models');
+  const models = require('../../runtime/node/backend/src/constants/models');
   const names = guard.deriveWatchedNames(models);
   assert.ok(names.includes('claude-opus-4-8'), 'watch-set should include the real opus id');
   const src = "function pick() { return 'claude-opus-4-8'; }\n";

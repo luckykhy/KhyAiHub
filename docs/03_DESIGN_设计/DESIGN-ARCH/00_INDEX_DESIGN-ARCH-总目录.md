@@ -2,7 +2,7 @@
 
 > 本夹由 [MGMT-PLAN-009] B9「按标签 `[XXX-YYY-NNN]` 归夹」生成（2026-09-18），B10 增补归夹并按 [DESIGN-LAY-006] 分组渲染。
 > 父目录：[../](../00_INDEX_设计-分类索引.html)　就近索引：[00_INDEX_设计-分类索引.html](../00_INDEX_设计-分类索引.html)
-> 收录 132 篇。
+> 收录 135 篇。
 
 ## 文件清单
 
@@ -145,3 +145,5 @@
 - [[DESIGN-ARCH-166] 静默失效与真源漂移四例收敛方案]([DESIGN-ARCH-166] 静默失效与真源漂移四例收敛方案.md)
 - [[DESIGN-ARCH-167] 模型选择列表分组与信息分层方案]([DESIGN-ARCH-167] 模型选择列表分组与信息分层方案.md)
 - [[DESIGN-ARCH-168] 开机零自启与按需懒加载方案]([DESIGN-ARCH-168] 开机零自启与按需懒加载方案.md)
+- [[DESIGN-ARCH-179] khy-os 统一登录体系 — GitHub Gitee OAuth + 登录方式可选 + 按需登录 + 启动优化]([DESIGN-ARCH-179] khy-os 统一登录体系 — GitHub Gitee OAuth + 登录方式可选 + 按需登录 + 启动优化.md)
+- [[DESIGN-ARCH-180] 驻留资源提示判据错配修复方案]([DESIGN-ARCH-180] 驻留资源提示判据错配修复方案.md)

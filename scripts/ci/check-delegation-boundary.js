@@ -3,7 +3,7 @@
  * check-delegation-boundary.js — 委派边界守卫（PROCESS-004 的执行器）。
  *
  * 语义真源：docs/10_规范/其它规范/[DESIGN-PROCESS-001] 委派边界决策矩阵-第六通道外部智能体.md
- * 代码真源：services/backend/src/services/externalAgentDirective.js（闸门集合 + 准入判定）
+ * 代码真源：runtime/node/backend/src/services/externalAgentDirective.js（闸门集合 + 准入判定）
  *
  * 守的是什么：不是「能不能委派」——这条链早已成熟；守的是**默认档是「自做」**这件事不被悄悄改回去。
  * 派生背景（2026-09-16）：khy-os 把活甩给 Claude Code / opencode 时没有规则可依，注入给模型的
@@ -35,8 +35,8 @@ const repoRoot = process.env.KHY_DELEGATION_ROOT
 
 const RULE_ID = 'PROCESS-004';
 const SSOT_REL = 'docs/10_规范/其它规范/[DESIGN-PROCESS-001] 委派边界决策矩阵-第六通道外部智能体.md';
-const DIRECTIVE_REL = 'services/backend/src/services/externalAgentDirective.js';
-const DELEGATION_REL = 'services/backend/src/tools/AgentTool/claudeDelegation.js';
+const DIRECTIVE_REL = 'runtime/node/backend/src/services/externalAgentDirective.js';
+const DELEGATION_REL = 'runtime/node/backend/src/tools/AgentTool/claudeDelegation.js';
 
 // 开放式授权句式黑名单。这些都是「把准入权交给模型的临场感觉」的措辞，
 // 一旦在任何注入给模型的文案里复活，本规则就形同虚设，故一律判 error。
@@ -52,11 +52,11 @@ const OPEN_ENDED_PHRASES = [
 // 允许拉起外部 CLI 的位置（这些是执行链本身：适配器 / 顶层会话注册表 / 工具入口）。
 // 除此之外任何地方出现外部 CLI 的进程拉起，都视为绕过闸门的旁路 spawn。
 const SPAWN_ALLOWLIST = [
-  'services/backend/src/services/gateway/adapters/',
-  'services/backend/src/services/domain/agents/agentAssets/adapters/',
-  'services/backend/src/services/domain/network/externalApps/',
-  'services/backend/src/tools/AgentTool/',
-  'services/backend/src/cli/',
+  'runtime/node/backend/src/services/gateway/adapters/',
+  'runtime/node/backend/src/services/domain/agents/agentAssets/adapters/',
+  'runtime/node/backend/src/services/domain/network/externalApps/',
+  'runtime/node/backend/src/tools/AgentTool/',
+  'runtime/node/backend/src/cli/',
 ];
 // 外部 CLI 的字面标识符（与 externalAgentDirective.EXTERNAL_AGENTS 的 id 对齐）
 const EXTERNAL_CLI_IDS = ['claude', 'codex', 'opencode'];
@@ -126,7 +126,7 @@ function walk(dir, out) {
   }
   for (const entry of entries) {
     if (entry.name === 'node_modules' || entry.name === '.git' || entry.name.startsWith('.')) continue;
-    // 生成物目录必须跳过：platform/khy_platform/bundled/ 被 .gitignore:137 覆盖，里面是
+    // 生成物目录必须跳过：runtime/substrate/platform/khy_platform/bundled/ 被 .gitignore:137 覆盖，里面是
     // 打包后的单行压缩 bundle（~17MB / 13000+ 行）。对它逐行匹配 spawn 模式，会把
     // 「任意 JS 代码里出现 claude 字样」都报成委派旁路 —— 26 条 error 全部落在这一个
     // 文件上，人写的那份源码里一条都没有。守卫扫描面是源码，不是产物。
@@ -256,9 +256,9 @@ function checkBoundaryIsCalled() {
 // ── 7：外部 CLI 的进程拉起必须收敛在白名单目录 ───────────────────────────────
 function checkBypassSpawn(changedOnly) {
   const roots = [
-    path.join(repoRoot, 'services', 'backend', 'src'),
-    path.join(repoRoot, 'platform'),
-    path.join(repoRoot, 'extensions'),
+    path.join(repoRoot, 'runtime', 'node', 'backend', 'src'),
+    path.join(repoRoot, 'runtime', 'substrate', 'platform'),
+    path.join(repoRoot, 'delivery', 'extension'),
   ];
   const files = [];
   for (const root of roots) walk(root, files);

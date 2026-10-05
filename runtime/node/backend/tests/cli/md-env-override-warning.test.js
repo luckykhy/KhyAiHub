@@ -11,7 +11,7 @@ const path = require('path');
 const BE = path.resolve(__dirname, '..', '..');
 const ROOT = path.resolve(BE, '..', '..');
 const MOD = path.join(BE, 'src/services/domain/extensions/extensions/markdownWorkbench.js');
-const VALID = path.join(ROOT, 'extensions/tools/khy-markdown');
+const VALID = path.join(ROOT, 'delivery/extension/tools/khy-markdown');
 
 const CHILD = `
   const times = Number(process.argv[1]) || 1;

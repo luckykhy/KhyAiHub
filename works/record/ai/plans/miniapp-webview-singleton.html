@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: miniapp-webview-singleton.md -->
 <title>小程序 WebView 单例 &amp; Canvas 检测 Hook 实施计划 · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>.ai<span class="sep">›</span>plans<span class="sep">›</span>小程序 WebView 单例 &amp; Canvas 检测 Hook 实施计划</div>
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>works<span class="sep">›</span>record<span class="sep">›</span>ai<span class="sep">›</span>plans<span class="sep">›</span>小程序 WebView 单例 &amp; Canvas 检测 Hook 实施计划</div>
       <header class="hero reveal"><h1>小程序 WebView 单例 &amp; Canvas 检测 Hook 实施计划</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#小程序-webview-单例-canvas-检测-hook-实施计划">小程序 WebView 单例 &amp; Canvas 检测 Hook 实施计划</a></li><li class="lvl-2"><a href="#1-canvasprofile-hook-s00-实现">1. CanvasProfile Hook（S00）实现</a></li><li class="lvl-3"><a href="#目标">目标</a></li><li class="lvl-3"><a href="#实现位置">实现位置</a></li><li class="lvl-3"><a href="#伪代码">伪代码</a></li><li class="lvl-3"><a href="#调用点">调用点</a></li><li class="lvl-2"><a href="#2-miniapp-webview-singleton-md-命名规范">2. MINIAPP_WEBVIEW_SINGLETON.md 命名规范</a></li><li class="lvl-3"><a href="#变量命名-已确认">变量命名（已确认）</a></li><li class="lvl-3"><a href="#不再使用的命名">不再使用的命名</a></li><li class="lvl-3"><a href="#单例管理器接口">单例管理器接口</a></li><li class="lvl-2"><a href="#3-多实例场景处理">3. 多实例场景处理</a></li><li class="lvl-3"><a href="#问题">问题</a></li><li class="lvl-3"><a href="#场景分析">场景分析</a></li><li class="lvl-3"><a href="#推荐方案-实例隔离-webviewid-命名空间">推荐方案：实例隔离 + webviewId 命名空间</a></li><li class="lvl-3"><a href="#canvasstatemanager-的多实例适配">CanvasStateManager 的多实例适配</a></li><li class="lvl-2"><a href="#4-实施步骤">4. 实施步骤</a></li><li class="lvl-3"><a href="#step-1-更新-miniapp-webview-singleton-md">Step 1: 更新 MINIAPP_WEBVIEW_SINGLETON.md</a></li><li class="lvl-3"><a href="#step-2-实现-canvasprofile-hook">Step 2: 实现 CanvasProfile hook</a></li><li class="lvl-3"><a href="#step-3-多实例-id-命名空间">Step 3: 多实例 ID 命名空间</a></li><li class="lvl-3"><a href="#step-4-测试">Step 4: 测试</a></li><li class="lvl-2"><a href="#5-关键设计决策">5. 关键设计决策</a></li></ul></nav>
       <article class="doc-body">
@@ -195,14 +195,14 @@
 <h2 id="5-关键设计决策">5. 关键设计决策<a class="anchor" href="#5-关键设计决策" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>决策</th><th>选择</th><th>理由</th></tr></thead><tbody><tr><td>Canvas 状态存储位置</td><td>每个进程独立的 Map</td><td>Electron 多进程架构，天然隔离</td></tr><tr><td>webviewId 命名空间</td><td><code>instanceId::miniappId</code></td><td>防止跨实例 ID 冲突</td></tr><tr><td>isDestroyed 检查时机</td><td>acquire/release/prepareExecution</td><td>三处关键生命周期节点</td></tr><tr><td>单例管理器导出方式</td><td>模块级单例</td><td>每个进程一份，无需额外同步</td></tr></tbody></table>
       </article>
-      <nav class="pager"><a class="prev" href="../../.ai/MINIAPP_WEBVIEW_SINGLETON.html"><div class="dir">← 上一篇</div><div class="ttl">小程序 WebView 单例管理规范</div></a><span></span></nav>
+      <nav class="pager"><a class="prev" href="../../../../works/record/ai/MINIAPP_WEBVIEW_SINGLETON.html"><div class="dir">← 上一篇</div><div class="ttl">小程序 WebView 单例管理规范</div></a><a class="next" href="../../../../works/record/CLAUDE.html"><div class="dir">下一篇 →</div><div class="ttl">Maintainability metadata — read .ai/ first</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__=".ai/plans/miniapp-webview-singleton.html";</script>
-<script src="../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="works/record/ai/plans/miniapp-webview-singleton.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

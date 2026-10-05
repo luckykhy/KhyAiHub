@@ -63,7 +63,7 @@
 ```
 ✗ 禁止在 CC 模式 UI 中出现 "Claude Code" 或 "Claude" 品牌文本
 ✗ 禁止在 CC 模式 UI 中出现 Anthropic 版权信息
-✗ 禁止修改 platform/khy_platform/__init__.py 中的 __version__
+✗ 禁止修改 runtime/substrate/platform/khy_platform/__init__.py 中的 __version__
 
 ✓ 品牌文本使用 "Khy"（定义在 ccBrand.js）
 ✓ 版本信息从 package.json 动态读取

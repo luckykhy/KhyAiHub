@@ -125,14 +125,14 @@ function main() {
     files = [abs];
   } else {
     // Walk .khy/ for JSON files (skip node_modules, .git, etc.)
-    const khyDir = path.join(ROOT, '.khy');
+    const khyDir = path.join(ROOT, 'works', 'data', 'khy');
     if (!fs.existsSync(khyDir)) {
       console.warn('[json-schema] .khy/ 不存在，跳过校验');
       return 0;
     }
     if (isGitIgnored('.khy')) {
       console.warn('[json-schema] .khy/ 被 .gitignore 覆盖（入仓文件 0 个）— 运行期状态不由 pr 门判定，跳过。');
-      console.warn('[json-schema] 注意：COMMS-002 登记的 paths 是 scripts/ci/json-schemas/** 与 services/backend/src/contracts/**，与本执行器实际扫描范围不一致，属待修缺陷。');
+      console.warn('[json-schema] 注意：COMMS-002 登记的 paths 是 scripts/ci/json-schemas/** 与 runtime/node/backend/src/contracts/**，与本执行器实际扫描范围不一致，属待修缺陷。');
       return 0;
     }
     function walk(dir) {

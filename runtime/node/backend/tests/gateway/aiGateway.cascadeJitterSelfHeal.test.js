@@ -133,7 +133,18 @@ describe('Gateway transient network-jitter whole-cascade self-heal', () => {
       if (aCalls === 1) return netFail('a');
       return { success: true, content: 'recovered', provider: 'a', adapter: 'a', model: 'a-1' };
     });
-    const b = createAdapterEntry('b', async () => netFail('b'));
+    // b 用 5xx:通道侧瞬态(参与 jitter 资格)但**不进** [181] 环境级证据权重(仅
+    // network/timeout 计权)——单通道 network(权重 2 < 3)不足以判定环境级,
+    // jitter 自愈仍是该场景(单通道抖动)的兜底路径;双远端 network 场景见下方 [181] 用例。
+    const b = createAdapterEntry('b', async () => ({
+      success: false,
+      error: 'bad gateway',
+      statusCode: 503,
+      errorType: 'server_error',
+      provider: 'b',
+      adapter: 'b',
+      attempts: [],
+    }));
     gateway._adapters = [a, b];
 
     const statuses = [];
@@ -154,8 +165,19 @@ describe('Gateway transient network-jitter whole-cascade self-heal', () => {
   }, 30000);
 
   test('bounds extra rounds and reports self-heal in the failure wall', async () => {
-    const a = createAdapterEntry('a', async () => netFail('a'));
-    const b = createAdapterEntry('b', async () => netFail('b'));
+    // timeout 每通道权重 1,1+1=2 < 3 —— 低于 [181] 环境级阈值,专测 jitter 轮次上界与
+    // 失败墙披露;双远端 network(环境级被前置拦截)场景见下方 [181] 专用用例。
+    const mk = (key) => ({
+      success: false,
+      error: 'request timeout',
+      statusCode: 0,
+      errorType: 'timeout',
+      provider: key,
+      adapter: key,
+      attempts: [],
+    });
+    const a = createAdapterEntry('a', async () => mk('a'));
+    const b = createAdapterEntry('b', async () => mk('b'));
     gateway._adapters = [a, b];
 
     const result = await gateway.generate('ping', {
@@ -170,6 +192,62 @@ describe('Gateway transient network-jitter whole-cascade self-heal', () => {
     expect(String(result.content || '')).toContain('已自动执行 2/2 轮网络抖动整轮自愈重试');
     expect(String(result.content || '')).toContain('所有 AI 通道均不可用');
   }, 20000);
+
+  test('[181] 环境级:两远端 network 失败后暂停远端尝试,不跑 jitter 轮(验收 B)', async () => {
+    const a = createAdapterEntry('a', async () => netFail('a'));
+    const b = createAdapterEntry('b', async () => netFail('b'));
+    const c = createAdapterEntry('c', async () => netFail('c'));
+    gateway._adapters = [a, b, c];
+
+    const statuses = [];
+    const result = await gateway.generate('ping', {
+      maxAdapterAttempts: 1,
+      cascadeJitterRounds: 2,
+      onChunk: (ch) => {
+        if (ch && ch.type === 'status') statuses.push(String(ch.text || ''));
+      },
+    });
+
+    expect(result.success).toBe(false);
+    expect(a._generateMock).toHaveBeenCalledTimes(1);
+    expect(b._generateMock).toHaveBeenCalledTimes(1);
+    // 环境级成立(跨通道复现):剩余远端 c 不再被甩,留痕 env_outage_skip(virtualSkip)。
+    expect(c._generateMock).toHaveBeenCalledTimes(0);
+    const skips = (result.attempts || []).filter((x) => x && x.errorType === 'env_outage_skip');
+    expect(skips.length).toBe(1);
+    expect(skips[0].adapterKey).toBe('c');
+    expect(skips[0].virtualSkip).toBe(true);
+    expect(statuses.some((s) => s.includes('暂停远端尝试'))).toBe(true);
+    expect(statuses.some((s) => s.includes('整轮自愈重试'))).toBe(false);
+    expect(String(result.content || '')).not.toContain('已自动执行');
+    expect(String(result.content || '')).toContain('网络/代理不通');
+    expect(result.routeFact && result.routeFact.environmental).toBe(true);
+  }, 30000);
+
+  test('[181] 回滚面:fallbackOwnership=false 时逐通道甩 + jitter 轮照跑(字节回退)', async () => {
+    const a = createAdapterEntry('a', async () => netFail('a'));
+    const b = createAdapterEntry('b', async () => netFail('b'));
+    const c = createAdapterEntry('c', async () => netFail('c'));
+    gateway._adapters = [a, b, c];
+
+    const statuses = [];
+    const result = await gateway.generate('ping', {
+      maxAdapterAttempts: 1,
+      cascadeJitterRounds: 2,
+      fallbackOwnership: false,
+      onChunk: (ch) => {
+        if (ch && ch.type === 'status') statuses.push(String(ch.text || ''));
+      },
+    });
+
+    expect(result.success).toBe(false);
+    expect(a._generateMock).toHaveBeenCalledTimes(3);
+    expect(b._generateMock).toHaveBeenCalledTimes(3);
+    expect(c._generateMock).toHaveBeenCalledTimes(3);
+    expect(String(result.content || '')).toContain('已自动执行 2/2 轮网络抖动整轮自愈重试');
+    expect(String(result.content || '')).not.toContain('网络/代理不通');
+    expect(statuses.some((s) => s.includes('暂停远端尝试'))).toBe(false);
+  }, 30000);
 
   test('does not re-run rounds when failures are deterministic (model_not_found)', async () => {
     const a = createAdapterEntry('a', async () => ({

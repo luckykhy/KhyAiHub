@@ -3,7 +3,7 @@
 /**
  * cnMirror.js — 国内镜像开关（`PROCESS-013`）—— 默认关闭，必须用户**显式 opt-in**。
  *
- * 与 Python 侧 `platform/khy_platform/cn_mirror.py` 同构（跨语言两份实现无法合并，
+ * 与 Python 侧 `runtime/substrate/platform/khy_platform/cn_mirror.py` 同构（跨语言两份实现无法合并，
  * 故两边的判据与取值表必须逐字对齐；守卫 `check-native-registry.js` 对两个文件都
  * 要求出现开关名 `KHY_USE_CN_MIRROR`）。
  *

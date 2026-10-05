@@ -24,7 +24,7 @@ concurrency:
   cancel-in-progress: true
 
 # 关于运行时版本：刻意使用 lts/* 与 3.x 而非固定版本号，避免把 CI 钉死在某个
-# 补丁版上。项目声明的支持下限是 Node >=20（services/backend/package.json 的
+# 补丁版上。项目声明的支持下限是 Node >=20（runtime/node/backend/package.json 的
 # engines）与 Python >=3.8（pyproject.toml 的 requires-python）；对「下限仍可用」
 # 的验证由独立的兼容性矩阵流水线负责，不放在这条要求快速反馈的 PR 门禁里。
 
@@ -94,9 +94,9 @@ jobs:
       # 架构债棘轮（R1 分层倒置 / R2 新巨石 / R2b 存量巨石增长 / R3 循环依赖）。
       # 全量扫描（不接受 --changed）：基线是仓库全局属性，只看改动集看不见
       # 「基线巨石又长了一截」。零依赖、离线可跑。基线重锚：
-      # node services/backend/scripts/archDebtScan.js --update-baseline（承认现状，diff 可审）。
+      # node runtime/node/backend/scripts/archDebtScan.js --update-baseline（承认现状，diff 可审）。
       - name: Check architecture debt (R1/R2/R2b/R3 vs baseline)
-        run: node services/backend/scripts/archDebtScan.js
+        run: node runtime/node/backend/scripts/archDebtScan.js
 
       # 仓库层级/结构守卫（真源 docs/10_规范/[DESIGN-LAY-005] 仓库层级板块规范）。
       # 刻意**不**传 --changed：层级是仓库的全局属性，只看改动集会漏掉
@@ -318,7 +318,7 @@ jobs:
   # ───────────────────────────────────────────────────────────────────────────
   # 代码风格棘轮（ratchet）
   #
-  # 为什么不直接全量 `npm run lint`：实测 services/backend/src 存在
+  # 为什么不直接全量 `npm run lint`：实测 runtime/node/backend/src 存在
   # 3417 个问题（428 errors + 2989 warnings，覆盖 2246 个文件中的 1060 个）。
   # `npm run lint` 用的是 --max-warnings 0，全量检查在可预见期内不可能通过；
   # 把它设为阻断等于让主干永久红灯。
@@ -354,7 +354,7 @@ jobs:
       - name: Install dependencies
         run: npm run install:core:ignore-scripts
 
-      - name: Collect changed JS files under services/backend
+      - name: Collect changed JS files under runtime/node/backend
         id: changed
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -364,8 +364,8 @@ jobs:
           # 从该目录内调用，才能命中 config 里的相对 ignores。
           collect() {
             git diff --name-only --diff-filter="$1" "$BASE_SHA" HEAD \
-              -- 'services/backend/src/**/*.js' 'services/backend/scripts/**/*.js' 2>/dev/null \
-              | sed 's|^services/backend/||' || true
+              -- 'runtime/node/backend/src/**/*.js' 'runtime/node/backend/scripts/**/*.js' 2>/dev/null \
+              | sed 's|^runtime/node/backend/||' || true
           }
           collect A > /tmp/js-added.txt
           collect MR > /tmp/js-modified.txt
@@ -378,14 +378,14 @@ jobs:
       # 阻断项：新增文件零容忍。
       - name: Lint added files (blocking, zero tolerance)
         if: steps.changed.outputs.added != '0'
-        working-directory: services/backend
+        working-directory: runtime/node/backend
         run: xargs -a /tmp/js-added.txt npx eslint --max-warnings 0
 
       # 报告项：修改文件的存量问题只提示，不阻断。
       - name: Lint modified files (report only)
         if: steps.changed.outputs.modified != '0'
         continue-on-error: true
-        working-directory: services/backend
+        working-directory: runtime/node/backend
         run: |
           set -uo pipefail
           xargs -a /tmp/js-modified.txt npx eslint || {
@@ -458,7 +458,7 @@ jobs:
       - name: Jest
         id: jest
         continue-on-error: true
-        working-directory: services/backend
+        working-directory: runtime/node/backend
         run: |
           set -o pipefail
           # 先把退出码存下来再记录：`echo "exit=$?" >> f` 紧跟在管道后会读到
@@ -470,7 +470,7 @@ jobs:
       - name: Node built-in tests
         id: node_tests
         continue-on-error: true
-        working-directory: services/backend
+        working-directory: runtime/node/backend
         run: |
           set -o pipefail
           npm run test:node 2>&1 | tee /tmp/node-test.log

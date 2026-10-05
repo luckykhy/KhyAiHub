@@ -6,8 +6,8 @@
  * 背景（方案 §1.6 / 红线 DR7）：`docs/07_OPS_运维/` 下的手册**编号被脚本当路径常量用**
  * —— 既要写回（`--gen-doc`），又要打印给用户看。此前目录名 `'07_OPS_运维'` 在
  * 23 个文件里各硬编码一次（`scripts/restore/*` 18 + `scripts/docs/gen-evolution-prompts.js`
- * + `extensions/scripts/**` 4），运维目录一旦改名就要改 23 处，且分散在 `scripts/` 与
- * `extensions/` 两个根下，极易漏改。
+ * + `delivery/extension/scripts/**` 4），运维目录一旦改名就要改 23 处，且分散在 `scripts/` 与
+ * `delivery/extension/` 两个根下，极易漏改。
  *
  * 收敛后：目录名只在本文件出现一次。
  *

@@ -68,7 +68,7 @@ const IGNORE_DIRS = new Set([
   //
   // This is a *scope* correction, not a suppression: RUNTIME-001's own `paths`
   // in RULES-REGISTRY.json lists `services/** apps/** platform/** software/**
-  // kernel/** tools/** scripts/**` and has never included `.ai/**`.
+  // runtime/boot/kernel/** tools/** scripts/**` and has never included `.ai/**`.
   '.ai',
 ]);
 

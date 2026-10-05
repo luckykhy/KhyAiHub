@@ -16,9 +16,9 @@ const assert = require('node:assert/strict');
 
 const { detectMode, SCENARIOS } = require('../ci/check-agent-feedback.js');
 
-const HANDLER = 'services/backend/src/cli/handlers/receipts.js';
-const ROUTE = 'services/backend/src/routes/export.js';
-const PLAIN = 'services/backend/src/services/foo.js';
+const HANDLER = 'runtime/node/backend/src/cli/handlers/receipts.js';
+const ROUTE = 'runtime/node/backend/src/routes/export.js';
+const PLAIN = 'runtime/node/backend/src/services/foo.js';
 
 // ── 缺陷本体：入口路径的权重必须绑定「新增」状态 ──────────────────────────────
 

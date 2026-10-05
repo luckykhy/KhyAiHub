@@ -40,10 +40,10 @@ describe('print-maintainer-map script', () => {
     assert.equal(status, 0);
     const payload = JSON.parse(stdout);
     assert.equal(payload.area.id, 'ai-management-surface');
-    assert.ok(payload.area.paths.includes('services/backend/src/routes/aiGatewayAdmin.js'));
-    assert.ok(payload.area.paths.includes('services/ai-backend/src/routes/aiGatewayAdmin.js'));
+    assert.ok(payload.area.paths.includes('runtime/node/backend/src/routes/aiGatewayAdmin.js'));
+    assert.ok(payload.area.paths.includes('runtime/node/ai-backend/src/routes/aiGatewayAdmin.js'));
     assert.deepEqual(payload.area.verify, [
-      'npm run test:one -- services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js services/backend/tests/gatewayManage.apiDisplay.test.js',
+      'npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js',
       'npm run build --prefix apps/ai-frontend',
     ]);
   });

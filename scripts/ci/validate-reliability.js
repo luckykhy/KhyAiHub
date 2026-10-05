@@ -39,7 +39,7 @@ function pass(name) {
 
 // ── 1. 状态机转换合法性 ─────────────────────────────────────────────────────
 
-const TASK_STORE = 'services/backend/src/tasks/largeTaskRuntimeStore.js';
+const TASK_STORE = 'runtime/node/backend/src/tasks/largeTaskRuntimeStore.js';
 const TASK_STORE_PATH = path.join(ROOT, TASK_STORE);
 
 check('状态机: STATUS_TRANSITIONS 定义存在', () => {
@@ -83,14 +83,14 @@ check('状态机: 所有状态有合法后继', () => {
 // ── 2. Watchdog 覆盖率 ─────────────────────────────────────────────────────
 
 const SERVICE_FILES = [
-  'services/backend/src/services/toolCalling.js',
-  'services/backend/src/cli/aiGatewayGenerateHelpers.js',
-  'services/backend/src/cli/tui/hooks/useQueryBridge.js',
-  'services/backend/src/cli/replSession.js',
+  'runtime/node/backend/src/services/toolCalling.js',
+  'runtime/node/backend/src/cli/aiGatewayGenerateHelpers.js',
+  'runtime/node/backend/src/cli/tui/hooks/useQueryBridge.js',
+  'runtime/node/backend/src/cli/replSession.js',
 ];
 
 check('Watchdog: startWatchdog 被使用', () => {
-  const resourceGuardPath = path.join(ROOT, 'services/backend/src/services/resourceGuard.js');
+  const resourceGuardPath = path.join(ROOT, 'runtime/node/backend/src/services/resourceGuard.js');
   if (!fs.existsSync(resourceGuardPath)) {
     fail('resourceGuard.js 不存在');
     return;
@@ -125,7 +125,7 @@ check('Watchdog: 长时间工具调用有超时保护', () => {
 });
 
 check('Watchdog: Gateway 生成有 hard + idle 超时', () => {
-  const gatewayPath = path.join(ROOT, 'services/backend/src/cli/aiGatewayGenerateHelpers.js');
+  const gatewayPath = path.join(ROOT, 'runtime/node/backend/src/cli/aiGatewayGenerateHelpers.js');
   if (!fs.existsSync(gatewayPath)) {
     fail('aiGatewayGenerateHelpers.js 不存在');
     return;
@@ -142,7 +142,7 @@ check('Watchdog: Gateway 生成有 hard + idle 超时', () => {
 });
 
 check('Watchdog: timer 必须 unref', () => {
-  const resourceGuardPath = path.join(ROOT, 'services/backend/src/services/resourceGuard.js');
+  const resourceGuardPath = path.join(ROOT, 'runtime/node/backend/src/services/resourceGuard.js');
   if (!fs.existsSync(resourceGuardPath)) return;
   const content = fs.readFileSync(resourceGuardPath, 'utf-8');
   // 检查是否有 .unref() 调用（允许 timer 不阻止进程退出）
@@ -156,7 +156,7 @@ check('Watchdog: timer 必须 unref', () => {
 
 // ── 3. Receipt 闭合性 ──────────────────────────────────────────────────────
 
-const RECEIPT_SERVICE = 'services/backend/src/services/receiptService.js';
+const RECEIPT_SERVICE = 'runtime/node/backend/src/services/receiptService.js';
 
 check('Receipt: startReceipt + finalizeReceipt 存在', () => {
   const path_ = path.join(ROOT, RECEIPT_SERVICE);
@@ -197,8 +197,8 @@ check('Receipt: auto-finalize 前一个同会话 receipt', () => {
 
 // ── 4. AbortSignal 传播链路 ────────────────────────────────────────────────
 
-const REPL_SESSION = 'services/backend/src/cli/replSession.js';
-const TUI_HOOKS = 'services/backend/src/cli/tui/hooks/useQueryBridge.js';
+const REPL_SESSION = 'runtime/node/backend/src/cli/replSession.js';
+const TUI_HOOKS = 'runtime/node/backend/src/cli/tui/hooks/useQueryBridge.js';
 
 check('AbortSignal: ESC → AbortController 链路存在', () => {
   const replPath = path.join(ROOT, REPL_SESSION);
@@ -232,7 +232,7 @@ check('AbortSignal: TUI ESC handler 传播 abortSignal', () => {
 });
 
 check('AbortSignal: KHY_TOOL_ABORT_SIGNAL 门控存在', () => {
-  const files = [REPL_SESSION, TUI_HOOKS, 'services/backend/src/cli/aiMessageBuilder.js'];
+  const files = [REPL_SESSION, TUI_HOOKS, 'runtime/node/backend/src/cli/aiMessageBuilder.js'];
   let found = false;
   for (const rel of files) {
     const p = path.join(ROOT, rel);
@@ -252,7 +252,7 @@ check('AbortSignal: KHY_TOOL_ABORT_SIGNAL 门控存在', () => {
 
 // ── 5. 重试分类 ────────────────────────────────────────────────────────────
 
-const RETRY_BACKOFF = 'services/backend/src/services/retryWithBackoff.js';
+const RETRY_BACKOFF = 'runtime/node/backend/src/services/retryWithBackoff.js';
 
 check('重试: retryWithBackoff 支持 AbortSignal', () => {
   const retryPath = path.join(ROOT, RETRY_BACKOFF);

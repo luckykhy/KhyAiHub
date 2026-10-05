@@ -128,7 +128,7 @@ test('真仓反空转：源文件数、四档求和与盲区读数都必须是�
   const sum = Object.values(r.fanInTiers).reduce((a, b) => a + b, 0);
   assert.equal(sum, r.scope.sourceFiles, '四档必须无重无漏地覆盖全部源文件');
   assert.ok(r.fanInTiers.hot >= 1, '本仓确有 utils/dataHome.js 这类高扇入底座，hot=0 是可疑读数');
-  assert.ok(r.dynamicRequires.sites >= 3, '已实测 extensions/scripts/khy-portable 有 3 处动态 require');
+  assert.ok(r.dynamicRequires.sites >= 3, '已实测 delivery/extension/scripts/khy-portable 有 3 处动态 require');
   assert.ok(r.depthOver6 > 0, 'C-2 深度存量不该为 0');
   assert.equal(r.topFanIn.length, 5);
   assert.equal(typeof r.proxy, 'string');

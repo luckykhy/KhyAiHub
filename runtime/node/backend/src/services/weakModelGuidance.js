@@ -228,11 +228,11 @@ const INTENTIONAL_DESIGNS = Object.freeze([
   Object.freeze({
     id: 'dynamic-version',
     looksLikeBug:
-      'platform/khy_platform/__init__.py has no literal `__version__ = "x.y.z"` — the version looks missing / unset.',
+      'runtime/substrate/platform/khy_platform/__init__.py has no literal `__version__ = "x.y.z"` — the version looks missing / unset.',
     actualDesign:
       '__version__ is resolved at runtime via _detect_version() from the authoritative pyproject.toml. Hardcoding a literal is deliberately avoided.',
-    where: 'platform/khy_platform/__init__.py :: _detect_version() / __version__',
-    why: 'scripts/ci/check-version-sync.js ENFORCES the no-hardcode rule: pinning a literal here makes the CI version-sync gate fail on purpose. Its main-khy-os group compares FOUR sources (pyproject.toml / packaging/npm/package.json / services/backend/package.json / packaging/modules/modules.json); VERSION_GROUPS in that script is the authoritative spec — when bumping versions, sync every file it lists rather than trusting this sentence.',
+    where: 'runtime/substrate/platform/khy_platform/__init__.py :: _detect_version() / __version__',
+    why: 'scripts/ci/check-version-sync.js ENFORCES the no-hardcode rule: pinning a literal here makes the CI version-sync gate fail on purpose. Its main-khy-os group compares FOUR sources (pyproject.toml / works/ship/npm/package.json / services/backend/package.json / works/ship/modules/modules.json); VERSION_GROUPS in that script is the authoritative spec — when bumping versions, sync every file it lists rather than trusting this sentence.',
   }),
   Object.freeze({
     id: 'snapshot-sha256-blank',

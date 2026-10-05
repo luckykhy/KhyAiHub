@@ -3724,12 +3724,12 @@ const FLAGS = {
   KHY_HOOK_TOOL_PERMISSION: { mode: 'default-on', off: 'CANON', default: true },
   KHY_HOOK_PROMPT_SECTION: { mode: 'default-on', off: 'CANON', default: true },
 
-  // ── 内置拓展根(extensionRoots:仓库/安装根下的 extensions/ 参与发现)──
-  // [DESIGN-TOOL-002] 拓展契约。此前三套拓展机制都只扫用户目录,仓库自己的 extensions/
+  // ── 内置拓展根(extensionRoots:仓库/安装根下的 delivery/extension/ 参与发现)──
+  // [DESIGN-TOOL-002] 拓展契约。此前三套拓展机制都只扫用户目录,仓库自己的 delivery/extension/
   // 没有任何加载器看它 —— 本门控打开的正是这一路新增发现(<appRoot>/extensions,随主包
   // 分发的内置拓展)。默认开(内置拓展是平台承诺的一部分,不该要用户额外开一个开关);
   // 关 → extensionRoots.listRoots() 不再产出 builtin 根,根集合逐字节回退到本契约引入前
-  // (用户目录 extensions/ + 遗留 plugins/ 两处),内置拓展一个都不被发现,等价于基线。
+  // (用户目录 delivery/extension/ + 遗留 plugins/ 两处),内置拓展一个都不被发现,等价于基线。
   // 它只管**根集合**,不管激活时机 —— 惰性由 KHY_PLUGIN_LAZY_LOAD 管,两者正交。
   // 不设 parent:拓展发现是自己的顶层域,不受插件惰性/模型适配等其它域牵连。
   KHY_EXTENSION_REPO_ROOT: { mode: 'default-on', off: 'CANON', default: true },

@@ -21,7 +21,7 @@
  *   ② provides 契约发现 —— extensionRoots.findProvider() 扫全部根。**这是正路**。
  *     契约在位却说「没有」，那就是真的没有 —— 禁用与删除必须能压住兜底，否则 §4.1 失效。
  *
- * @module services/extensions/markdownWorkbench
+ * @module services/delivery/extension/markdownWorkbench
  * @pattern Facade, Strategy
  */
 'use strict';

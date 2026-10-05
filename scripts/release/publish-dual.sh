@@ -7,9 +7,9 @@
 # Flow (audit-gated — nothing is published until BOTH channels audit clean):
 #   1. Sync the version into its sources of truth:
 #        - pyproject.toml                      (pip single source — what the wheel is built under)
-#        - packaging/npm/package.json          (npm channel manifest)
-#        - services/backend/package.json       (what `khy --version` reports)
-#      platform/khy_platform/__init__.py keeps __version__ = _detect_version()
+#        - works/ship/npm/package.json          (npm channel manifest)
+#        - runtime/node/backend/package.json       (what `khy --version` reports)
+#      runtime/substrate/platform/khy_platform/__init__.py keeps __version__ = _detect_version()
 #      (resolved from pyproject.toml at runtime) so it can never drift — it is
 #      normalized to the dynamic form, never hard-coded to a literal.
 #   2. pip : isolated clean build + purity/completeness audit.
@@ -62,10 +62,10 @@ if command -v cygpath >/dev/null 2>&1; then
   NODE_ROOT_DIR="$(cygpath -w "$ROOT_DIR")"
 fi
 
-INIT_PY="$ROOT_DIR/platform/khy_platform/__init__.py"
+INIT_PY="$ROOT_DIR/runtime/substrate/platform/khy_platform/__init__.py"
 PYPROJECT="$ROOT_DIR/pyproject.toml"
-NPM_PKG="$ROOT_DIR/packaging/npm/package.json"
-BACKEND_PKG="$ROOT_DIR/services/backend/package.json"
+NPM_PKG="$ROOT_DIR/works/ship/npm/package.json"
+BACKEND_PKG="$ROOT_DIR/runtime/node/backend/package.json"
 
 VERSION=''
 DRY_RUN='0'
@@ -155,7 +155,7 @@ if [[ "$SKIP_NPM" == '0' ]]; then
   command -v npm  >/dev/null 2>&1 || fail "npm is required for the npm channel"
   command -v node >/dev/null 2>&1 || fail "node is required for the npm channel"
   if [[ "$DRY_RUN" == '0' ]]; then
-    # The npm channel publishes from packaging/npm/, whose committed .npmrc binds
+    # The npm channel publishes from works/ship/npm/, whose committed .npmrc binds
     # the registry auth token to ${NPM_TOKEN}:
     #     //registry.npmjs.org/:_authToken=${NPM_TOKEN}
     # If NPM_TOKEN is UNSET it expands to an EMPTY token that SHADOWS the real
@@ -256,7 +256,7 @@ bump_init() {
   perl -i -pe 's/^__version__\s*=.*/__version__ = _detect_version()/' "$INIT_PY"
   grep -q '^__version__ = _detect_version()' "$INIT_PY" || fail "failed to normalize $INIT_PY"
   BUMPED_FILES+=( "$INIT_PY" )
-  ok "platform/khy_platform/__init__.py (dynamic)"
+  ok "runtime/substrate/platform/khy_platform/__init__.py (dynamic)"
 }
 bump_json() {
   local file="$1" label="$2"
@@ -281,8 +281,8 @@ if [[ "$SKIP_PIP" == '0' ]]; then
   bump_pyproject
 fi
 # npm manifest + backend (what `khy --version` reports) stay in lockstep with pip.
-bump_json "$NPM_PKG" "packaging/npm/package.json"
-bump_json "$BACKEND_PKG" "services/backend/package.json"
+bump_json "$NPM_PKG" "works/ship/npm/package.json"
+bump_json "$BACKEND_PKG" "runtime/node/backend/package.json"
 
 # ── 2. Audit gate — BOTH channels must pass before anything is uploaded ───────
 # 2a. Network-free khyos toolchain pin gate: a manifest carrying a drift-prone
@@ -303,7 +303,7 @@ fi
 
 if [[ "$SKIP_NPM" == '0' ]]; then
   step "npm — prepack assemble + purity/completeness audit + unit tests"
-  ( cd "$ROOT_DIR/packaging/npm" && npm run audit:purity && npm test )
+  ( cd "$ROOT_DIR/works/ship/npm" && npm run audit:purity && npm test )
 fi
 
 ok "all audits passed — proceeding to publish"
@@ -335,17 +335,17 @@ fi
 if [[ "$SKIP_NPM" == '0' ]]; then
   step "Publishing npm"
   if [[ "$DRY_RUN" == '1' ]]; then
-    ( cd "$ROOT_DIR/packaging/npm" && npm publish --access public --dry-run )
+    ( cd "$ROOT_DIR/works/ship/npm" && npm publish --access public --dry-run )
     ok "dry run: npm publish --dry-run passed (not uploaded)"
   else
     # 先干跑再发布: rehearse with npm's own dry-run, then the real publish.
     if [[ "$REHEARSE" == '1' ]]; then
       info "rehearsing npm publish (--dry-run) before the real publish…"
-      ( cd "$ROOT_DIR/packaging/npm" && npm publish --access public --dry-run ) \
+      ( cd "$ROOT_DIR/works/ship/npm" && npm publish --access public --dry-run ) \
         || fail "npm rehearsal failed — aborting BEFORE publish (nothing published)"
       ok "npm rehearsal passed — proceeding to real publish"
     fi
-    ( cd "$ROOT_DIR/packaging/npm" && npm publish --access public )
+    ( cd "$ROOT_DIR/works/ship/npm" && npm publish --access public )
     ok "published @khy-os/khy-os $VERSION to npm"
   fi
 fi

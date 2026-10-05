@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: 进度交接-内核与agent协同pivot.md -->
 <title>进度交接：内核「真实 OS」长弧 + agent 协同 pivot · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>kernel<span class="sep">›</span>docs<span class="sep">›</span>进度交接：内核「真实 OS」长弧 + agent 协同 pivot</div>
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>boot<span class="sep">›</span>kernel<span class="sep">›</span>docs<span class="sep">›</span>进度交接：内核「真实 OS」长弧 + agent 协同 pivot</div>
       <header class="hero reveal"><h1>进度交接：内核「真实 OS」长弧 + agent 协同 pivot</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#进度交接-内核-真实-os-长弧-agent-协同-pivot">进度交接：内核「真实 OS」长弧 + agent 协同 pivot</a></li><li class="lvl-2"><a href="#1-本轮已闭合-已实测-green-零回归">1. 本轮已闭合（已实测 GREEN，零回归）</a></li><li class="lvl-2"><a href="#2-目标已-pivot-新主目标-a1-已动工">2. 目标已 pivot（新主目标，A1 已动工）</a></li><li class="lvl-3"><a href="#综合架构已定-2026-06-11">综合架构已定（2026-06-11）</a></li><li class="lvl-3"><a href="#进度-阶段-a1-已闭合-2026-06-11-qemu-实测-green">进度：阶段 A1 已闭合（2026-06-11，QEMU 实测 GREEN）</a></li><li class="lvl-3"><a href="#阶段-a7b-双-agent-实接已闭合-2026-06-11-qemu-实测-green-8-阶段-a1-a8-全部完成">阶段 A7b 双 agent 实接已闭合（2026-06-11，QEMU 实测 GREEN）—— 8 阶段 A1–A8 全部完成</a></li><li class="lvl-3"><a href="#后续增强已完成-2026-06-11-qemu-实测-green-真模型决策-claude-code-mcp-联调就位">后续增强已完成（2026-06-11，QEMU 实测 GREEN）—— 真模型决策 + Claude Code MCP 联调就位</a></li><li class="lvl-3"><a href="#后续可选-非路线图-按需">后续可选（非路线图，按需）</a></li><li class="lvl-3"><a href="#进度-阶段-a2-已闭合-2026-06-11-qemu-实测-green">进度：阶段 A2 已闭合（2026-06-11，QEMU 实测 GREEN）</a></li><li class="lvl-3"><a href="#进度-阶段-a3-已闭合-2026-06-11-qemu-实测-green">进度：阶段 A3 已闭合（2026-06-11，QEMU 实测 GREEN）</a></li><li class="lvl-3"><a href="#进度-阶段-a4-已闭合-2026-06-11-qemu-实测-green">进度：阶段 A4 已闭合（2026-06-11，QEMU 实测 GREEN）</a></li><li class="lvl-3"><a href="#进度-阶段-a5-已闭合-2026-06-11-qemu-实测-green">进度：阶段 A5 已闭合（2026-06-11，QEMU 实测 GREEN）</a></li><li class="lvl-3"><a href="#进度-阶段-a6-已闭合-2026-06-11-qemu-实测-green">进度：阶段 A6 已闭合（2026-06-11，QEMU 实测 GREEN）</a></li><li class="lvl-3"><a href="#进度-阶段-a7-已闭合-2026-06-11-qemu-实测-green">进度：阶段 A7 已闭合（2026-06-11，QEMU 实测 GREEN）</a></li><li class="lvl-3"><a href="#进度-阶段-a8-已闭合-2026-06-11-qemu-实测-green-系统内自然语言交互-持久化模型配置-需求4">进度：阶段 A8 已闭合（2026-06-11，QEMU 实测 GREEN）= 系统内自然语言交互 + 持久化模型配置（需求4）</a></li><li class="lvl-2"><a href="#3-剩余真实-os-缺口候选-背景-非当前优先">3. 剩余真实 OS 缺口候选（背景，非当前优先）</a></li><li class="lvl-2"><a href="#4-工程约束-agents-md-硬约束-勿违反">4. 工程约束（AGENTS.md 硬约束，勿违反）</a></li></ul></nav>
       <article class="doc-body">
@@ -194,14 +194,14 @@
 <ul><li>测试命令模式：</li></ul>
 <p><code>(sleep 8; printf 'run /bin/X.elf\n'; sleep 4) | timeout 20 qemu-system-x86_64 -cdrom build/khy-os-kernel.iso -serial stdio -display none -no-reboot</code></p>
       </article>
-      <nav class="pager"><a class="prev" href="../../kernel/docs/架构-agent-os双向协议.html"><div class="dir">← 上一篇</div><div class="ttl">架构设计：Agent ⇄ OS 双向协议（KHY Agent Bridge）</div></a><a class="next" href="../../kernel/docs/小白教程-Khyos-agent协同从零精讲.html"><div class="dir">下一篇 →</div><div class="ttl">KHY-OS 小白精讲：从零看懂「一个会跟 AI 协同的操作系统」</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../runtime/boot/kernel/docs/架构-agent-os双向协议.html"><div class="dir">← 上一篇</div><div class="ttl">架构设计：Agent ⇄ OS 双向协议（KHY Agent Bridge）</div></a><a class="next" href="../../../../runtime/boot/kernel/docs/小白教程-Khyos-agent协同从零精讲.html"><div class="dir">下一篇 →</div><div class="ttl">KHY-OS 小白精讲：从零看懂「一个会跟 AI 协同的操作系统」</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__="kernel/docs/进度交接-内核与agent协同pivot.html";</script>
-<script src="../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="runtime/boot/kernel/docs/进度交接-内核与agent协同pivot.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

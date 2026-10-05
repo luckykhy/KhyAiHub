@@ -1129,7 +1129,7 @@ async function cmdAccept(ctx, positional, flags) {
   ].join('\n');
 
   if (fs.existsSync(ledger)) {
-    console.log(c.yellow(`[SKIP] 已存在，未覆盖：.khy/feedback/${name}/acceptance.md`));
+    console.log(c.yellow(`[SKIP] 已存在，未覆盖：works/data/khy/feedback/${name}/acceptance.md`));
     console.log(c.dim('  如需重生成，请先自行备份并删除该文件。'));
     return true;
   }

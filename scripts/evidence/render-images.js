@@ -151,7 +151,7 @@ function buildPages(m) {
   const kindRows = Object.keys(f.逐存证类型计数).map((k) => ({ k, v: f.逐存证类型计数[k] }));
   pages.push({
     文件: '图表/02_三模态反馈存证构成.png',
-    标题: '修复-新增-删除三模态的过程存证构成（.khy/feedback/）',
+    标题: '修复-新增-删除三模态的过程存证构成（works/data/khy/feedback/）',
     判据: 'C-M4 第③类痕迹（验收动作）+ 规则 5/6/7 的落盘',
     标签: [`任务目录 ${f.任务目录数} 个`, `复现-修复往返 ${f.复现修复往返数} 组`, `快照 ${stamp}`],
     正文: tiles([
@@ -161,7 +161,7 @@ function buildPages(m) {
       { n: f.逐存证类型计数['rollback.txt'], k: '可执行回滚命令（规则 7）' },
     ]) + bars(kindRows),
     数据源: '人类贡献度量.反馈存证.逐存证类型计数 / 复现修复往返数',
-    复算: ["find .khy/feedback -maxdepth 2 -type f | sed 's#.*/##' | sort | uniq -c"],
+    复算: ["find works/data/khy/feedback -maxdepth 2 -type f | sed 's#.*/##' | sort | uniq -c"],
   });
 
   const dayRows = Object.keys(f.按日分布).sort().map((d) => ({ k: d, v: f.按日分布[d] }));
@@ -192,7 +192,7 @@ function buildPages(m) {
       { k: '每日工作笔记', v: L.每日工作笔记.文件数 },
     ]),
     数据源: '人类贡献度量.人类指令语料 / 台账',
-    复算: ['grep -rn "source:" .khy/feedback --include=*.md | wc -l'],
+    复算: ['grep -rn "source:" works/data/khy/feedback --include=*.md | wc -l'],
   });
 
   const codeRows = ['.c', '.h', '.asm', '.py', '.js']

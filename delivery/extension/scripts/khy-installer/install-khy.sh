@@ -33,8 +33,8 @@ CLI_METHOD='script'
 CLI_PROFILE='slim'
 
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
-CLI_INSTALLER="$ROOT_DIR/extensions/scripts/khy-installer/install-khy-cli.sh"
-SYSTEM_TOOL="$ROOT_DIR/extensions/scripts/khy-portable/khytogo/make-khytogo.sh"
+CLI_INSTALLER="$ROOT_DIR/delivery/extension/scripts/khy-installer/install-khy-cli.sh"
+SYSTEM_TOOL="$ROOT_DIR/delivery/extension/scripts/khy-portable/khytogo/make-khytogo.sh"
 
 usage() {
   cat <<'EOF'
@@ -137,7 +137,7 @@ if [[ "$AS" == 'system' ]]; then
   # Alpine-based modes use a different build script
   if [[ "$SYSTEM_MODE" == 'alpine-iso' ]]; then
     info "Building Alpine-based KHY OS ISO..."
-    ISO_SCRIPT="$ROOT_DIR/extensions/scripts/khy-alpine-iso/build-khy-os-iso.sh"
+    ISO_SCRIPT="$ROOT_DIR/delivery/extension/scripts/khy-alpine-iso/build-khy-os-iso.sh"
     [[ -f "$ISO_SCRIPT" ]] || fail "Missing ISO builder: $ISO_SCRIPT"
     ISO_ARGS=()
     [[ -n "$IMAGE_PATH" ]] && ISO_ARGS+=(--output "$IMAGE_PATH")
@@ -152,7 +152,7 @@ if [[ "$AS" == 'system' ]]; then
   if [[ "$SYSTEM_MODE" == 'alpine-disk' ]]; then
     info "Creating Alpine-based KHY OS bootable disk..."
     # Step 1: build rootfs via ISO script with --keep-rootfs
-    ISO_SCRIPT="$ROOT_DIR/extensions/scripts/khy-alpine-iso/build-khy-os-iso.sh"
+    ISO_SCRIPT="$ROOT_DIR/delivery/extension/scripts/khy-alpine-iso/build-khy-os-iso.sh"
     [[ -f "$ISO_SCRIPT" ]] || fail "Missing ISO builder: $ISO_SCRIPT"
     ALPINE_ROOTFS="/tmp/khy-os-alpine-rootfs"
     bash "$ISO_SCRIPT" --keep-rootfs --output /dev/null || fail "Alpine rootfs build failed"

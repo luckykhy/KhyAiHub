@@ -7,7 +7,7 @@ function resolveKhyOsDir() {
   return path.resolve(process.cwd(), "..", "..");
 }
 function loadGatewayEnvFile() {
-  const envPath = path.join(resolveKhyOsDir(), "services", "backend", ".env");
+  const envPath = path.join(resolveKhyOsDir(), "runtime", "node", "backend", ".env");
   let content = "";
   try {
     content = fs.readFileSync(envPath, "utf8");
@@ -32,20 +32,20 @@ let aiChat = null;
 let toolLoop = null;
 function loadAiChat() {
   if (aiChat) return aiChat;
-  const chatPath = path.join(resolveKhyOsDir(), "services", "backend", "src", "cli", "ai.js");
+  const chatPath = path.join(resolveKhyOsDir(), "runtime", "node", "backend", "src", "cli", "ai.js");
   aiChat = nodeRequire(chatPath).chat;
   return aiChat;
 }
 function loadToolLoop() {
   if (toolLoop) return toolLoop;
-  const loopPath = path.join(resolveKhyOsDir(), "services", "backend", "src", "services", "toolUseLoop.js");
+  const loopPath = path.join(resolveKhyOsDir(), "runtime", "node", "backend", "src", "services", "toolUseLoop.js");
   toolLoop = nodeRequire(loopPath);
   return toolLoop;
 }
 let sessionPersistence = null;
 function loadSessionPersistence() {
   if (sessionPersistence) return sessionPersistence;
-  const spPath = path.join(resolveKhyOsDir(), "services", "backend", "src", "services", "sessionPersistence.js");
+  const spPath = path.join(resolveKhyOsDir(), "runtime", "node", "backend", "src", "services", "sessionPersistence.js");
   sessionPersistence = nodeRequire(spPath);
   console.log("[host] sessionPersistence 已加载:", spPath);
   return sessionPersistence;
@@ -53,7 +53,7 @@ function loadSessionPersistence() {
 let tokenUsageService = null;
 function loadTokenUsageService() {
   if (tokenUsageService) return tokenUsageService;
-  const tuPath = path.join(resolveKhyOsDir(), "services", "backend", "src", "services", "tokenUsageService.js");
+  const tuPath = path.join(resolveKhyOsDir(), "runtime", "node", "backend", "src", "services", "tokenUsageService.js");
   tokenUsageService = nodeRequire(tuPath);
   console.log("[host] tokenUsageService 已加载:", tuPath);
   return tokenUsageService;
@@ -66,7 +66,7 @@ function contextWindowLimit() {
 let providerPresets = null;
 function loadProviderPresets() {
   if (providerPresets) return providerPresets;
-  const ppPath = path.join(resolveKhyOsDir(), "services", "backend", "src", "services", "gateway", "providerPresets.js");
+  const ppPath = path.join(resolveKhyOsDir(), "runtime", "node", "backend", "src", "services", "gateway", "providerPresets.js");
   providerPresets = nodeRequire(ppPath);
   console.log("[host] providerPresets 已加载:", ppPath);
   return providerPresets;
@@ -76,7 +76,7 @@ async function listModelOptions(adapterKey) {
   const presets = pp.getProviderPresets();
   let poolKeyByPreset = {};
   try {
-    const bpc = nodeRequire(path.join(resolveKhyOsDir(), "services", "backend", "src", "services", "gateway", "builtinProviderConfig.js"));
+    const bpc = nodeRequire(path.join(resolveKhyOsDir(), "runtime", "node", "backend", "src", "services", "gateway", "builtinProviderConfig.js"));
     const builtins = (bpc.BUILTIN_PROVIDERS || bpc.builtinProviders || []).filter(Boolean);
     const norm = (s) => String(s || "").replace(/[\s（）()·\/]/g, "").toLowerCase();
     for (const b of builtins) {

@@ -23,7 +23,7 @@ function _log(msg) { console.log(msg); }
 
 function _loadDataHome() {
   try {
-    return require(path.join(ROOT, 'services', 'backend', 'src', 'utils', 'dataHome.js'));
+    return require(path.join(ROOT, 'runtime', 'node', 'backend', 'src', 'utils', 'dataHome.js'));
   } catch { return null; }
 }
 
@@ -107,6 +107,33 @@ function fixPointer(issue) {
   return results;
 }
 
+/** 冷启动提速：Defender 排除提示（只提示，绝不代改——改杀软排除是用户安全决策）
+ *  + 一次性预热（跑一遍完整 require 链，让 V8 编译缓存与 OS 文件缓存就位）。
+ *  实测（2026-10-04，DESIGN-PERF-006）：同一命令冷启动 ~13.8s vs 热启动 ~0.8s，
+ *  差值主体是实时扫描；预热把「第一次 13.8s」摊到装机/修复时刻。 */
+function warmupAndHint() {
+  _log('');
+  _log('── 启动提速（可选）──');
+  _log(`冷启动远慢于热启动，差值主体是杀毒软件实时扫描本目录。如需提速，可在管理员 PowerShell 执行：`);
+  _log(`  Add-MpPreference -ExclusionPath "${ROOT}"`);
+  try {
+    const { spawnSync } = require('child_process');
+    const entry = path.join(ROOT, 'runtime', 'node', 'backend', 'bin', 'khy.js');
+    if (!fs.existsSync(entry)) {
+      return; // 入口缺失（老版本布局）→ 跳过预热，不影响修复结果
+    }
+    _log('正在预热（跑一遍完整加载链，写编译缓存）...');
+    const r = spawnSync(process.execPath, [entry, 'status'], {
+      stdio: 'ignore',
+      timeout: 60000,
+      windowsHide: true,
+    });
+    if (!r.error) {
+      _log('预热完成，下次启动更快。');
+    }
+  } catch { /* 预热失败不影响修复结果 */ }
+}
+
 async function main() {
   _log('══ khy 便携版一键修复 ══');
   _log(`便携根: ${ROOT}`);
@@ -117,6 +144,7 @@ async function main() {
   if (failures.length === 0) {
     hc.printReport(before);
     _log('健康状态良好，无需修复。');
+    warmupAndHint();
     process.exit(0);
   }
 
@@ -147,6 +175,7 @@ async function main() {
   _log('── 复检 ──');
   const after = await hc.runHealthCheck();
   hc.printReport(after);
+  warmupAndHint();
   process.exit(after.ok ? 0 : 1);
 }
 

@@ -35,7 +35,7 @@ Write-Host "[2/4] Adding khy global command..." -ForegroundColor Yellow
 # Resolve the entry point from this script's own location, so the generated
 # profile points at wherever the user actually cloned khy-os. Hardcoding an
 # absolute path here would leak one machine's layout to every user.
-$khyEntry = Join-Path $PSScriptRoot 'services\backend\bin\khy.js'
+$khyEntry = Join-Path $PSScriptRoot 'runtime\node\backend\bin\khy.js'
 if (!(Test-Path -Path $khyEntry)) {
     Write-Host "      ERROR: khy entry not found at $khyEntry" -ForegroundColor Red
     Write-Host "      Run this script from the khy-os repository root." -ForegroundColor Red

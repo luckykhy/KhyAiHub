@@ -38,7 +38,7 @@ test('never flags source whose name merely contains a rule word', () => {
     'src/mapper/roadmap.js',      // contains "map"
     'src/services/database.js',   // contains "database"
     'docs/logscale.md',           // contains "log"
-    'packaging/modules/modules.json',
+    'works/ship/modules/modules.json',
     'runtime/node/bin/node',
     'assets/logo.svg',
   ];

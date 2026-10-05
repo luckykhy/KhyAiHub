@@ -7,7 +7,7 @@
  *
  * ── 为什么是 VACUUM INTO 而不是 backup API ──────────────────────────────
  * 铁律 F1 给了两条路:better-sqlite3 的 `.backup()` 或 `VACUUM INTO`。实测(Node 24.19)
- * 本仓活跃驱动是 **node:sqlite**(`platform/packages/shared/src/config/sqlite-adapter.js`
+ * 本仓活跃驱动是 **node:sqlite**(`runtime/substrate/platform/packages/shared/src/config/sqlite-adapter.js`
  * 的驱动优先级 node:sqlite → better-sqlite3),而:
  *   - `node:sqlite` 的 `DatabaseSync.prototype.backup` === undefined(模块级另有一个
  *     异步 `backup()`,但适配器并未包装它);

@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: 递交核对表.md -->
 <title>递交核对表（现行口径：D-名2，2026-09-28） · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>evidence<span class="sep">›</span>06_申报材料<span class="sep">›</span>递交核对表（现行口径：D-名2，2026-09-28）</div>
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>works<span class="sep">›</span>record<span class="sep">›</span>evidence<span class="sep">›</span>06_申报材料<span class="sep">›</span>递交核对表（现行口径：D-名2，2026-09-28）</div>
       <header class="hero reveal"><h1>递交核对表（现行口径：D-名2，2026-09-28）</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#递交核对表-现行口径-d-名2-2026-09-28">递交核对表（现行口径：D-名2，2026-09-28）</a></li><li class="lvl-2"><a href="#一-申请表字段定稿值">一、申请表字段定稿值</a></li><li class="lvl-2"><a href="#二-逐件状态">二、逐件状态</a></li><li class="lvl-2"><a href="#三-名称五处一致-c-mat2-3-现状-如实">三、名称五处一致（C-MAT2/3 现状，如实）</a></li><li class="lvl-2"><a href="#四-递交前检查">四、递交前检查</a></li><li class="lvl-2"><a href="#五-新名称与既有-60-页选材不匹配-须人定案-ai-不代选">五、**新名称与既有 60 页选材不匹配**（须人定案，AI 不代选）</a></li><li class="lvl-2"><a href="#六-顺手发现的一处缺陷-低危-仅记录-本仓不代改">六、顺手发现的一处缺陷（低危，仅记录，本仓不代改）</a></li></ul></nav>
       <article class="doc-body">
@@ -57,14 +57,14 @@ grep -m1 '^version' pyproject.toml                   # 应为 1.2.0，与 V1.2.0
 <h2 id="六-顺手发现的一处缺陷-低危-仅记录-本仓不代改">六、顺手发现的一处缺陷（低危，仅记录，本仓不代改）<a class="anchor" href="#六-顺手发现的一处缺陷-低危-仅记录-本仓不代改" aria-label="锚点">#</a></h2>
 <p>仓外 <code>01_草稿/代码文件选择.json</code> 第 45 行的值内含<strong>未转义的英文双引号</strong><br>（<code>理由不是&quot;更保险&quot;</code>），整份文件因此不是合法 JSON。当前无脚本 <code>json.load</code> 它<br>（<code>extract_code.py</code> 硬编码同一份清单），故不影响产物；但任何后续工具一旦改读该文件即报错。<br>修法：把那对引号换成中文引号。</p>
       </article>
-      <nav class="pager"><a class="prev" href="../../evidence/05_索引与对账/提交记录与证据链.html"><div class="dir">← 上一篇</div><div class="ttl">提交记录与证据链（git 记录 ↔ 证据 ↔ 复算命令）</div></a><a class="next" href="../../evidence/06_申报材料/README.html"><div class="dir">下一篇 →</div><div class="ttl">06申报材料 —— 递交件工作区（不是依据文档）</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../works/record/evidence/05_索引与对账/提交记录与证据链.html"><div class="dir">← 上一篇</div><div class="ttl">提交记录与证据链（git 记录 ↔ 证据 ↔ 复算命令）</div></a><a class="next" href="../../../../works/record/evidence/06_申报材料/README.html"><div class="dir">下一篇 →</div><div class="ttl">06申报材料 —— 递交件工作区（不是依据文档）</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__="evidence/06_申报材料/递交核对表.html";</script>
-<script src="../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="works/record/evidence/06_申报材料/递交核对表.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

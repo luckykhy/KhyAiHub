@@ -30,7 +30,7 @@ const REQUIRED_BLOCKS = [
 const ACP_PROTOCOL_VERSION = '1.0';
 
 // ── ACP Schema Validation ────────────────────────────────────────────────
-const ACP_SCHEMA_PATH = 'services/backend/src/contracts/acp/acp-message.schema.json';
+const ACP_SCHEMA_PATH = 'runtime/node/backend/src/contracts/acp/acp-message.schema.json';
 
 // ── Rules Registry Validation (MGMT-STD-008) ─────────────────────────────
 // 规则单一真源登记表：docs/10_规范/registry/RULES-REGISTRY.json。
@@ -212,7 +212,7 @@ function checkGovernanceRegistration(findings, packageJson) {
  * with trace/deadline/version metadata support (GOV-ACP-001, GOV-ACP-003).
  */
 function checkAcpProtocolCompliance(findings) {
-  const transportPath = path.join(repoRoot, 'services', 'backend', 'src', 'services', 'acpTransport.js');
+  const transportPath = path.join(repoRoot, 'runtime', 'node', 'backend', 'src', 'services', 'acpTransport.js');
   if (!fs.existsSync(transportPath)) {
     return; // acpTransport.js not found, skip
   }

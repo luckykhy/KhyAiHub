@@ -100,7 +100,7 @@
   "ledger": [
     {
       "source": "moon 0.1.20260427 (48d7def 2026-04-27)",
-      "localPath": "kernel/vendor/moonbit/moonbit_gen.c",
+      "localPath": "runtime/boot/kernel/vendor/moonbit/moonbit_gen.c",
       "relationship": "generated",
       "license": null,
       "versionPin": "moon 0.1.20260427 (48d7def 2026-04-27)",
@@ -110,7 +110,7 @@
     },
     {
       "source": "~/.moon/lib/runtime.c (moon 0.1.20260427)",
-      "localPath": "kernel/vendor/moonbit/runtime.c",
+      "localPath": "runtime/boot/kernel/vendor/moonbit/runtime.c",
       "relationship": "generated",
       "license": null,
       "versionPin": "moon 0.1.20260427 (48d7def 2026-04-27)",
@@ -120,7 +120,7 @@
     },
     {
       "source": "~/.moon/include/moonbit.h (moon 0.1.20260427)",
-      "localPath": "kernel/vendor/moonbit/include/moonbit.h",
+      "localPath": "runtime/boot/kernel/vendor/moonbit/include/moonbit.h",
       "relationship": "generated",
       "license": null,
       "versionPin": "moon 0.1.20260427 (48d7def 2026-04-27)",
@@ -129,7 +129,7 @@
     },
     {
       "source": "~/.moon/include/moonbit-fundamental.h (moon 0.1.20260427)",
-      "localPath": "kernel/vendor/moonbit/include/moonbit-fundamental.h",
+      "localPath": "runtime/boot/kernel/vendor/moonbit/include/moonbit-fundamental.h",
       "relationship": "generated",
       "license": null,
       "versionPin": "moon 0.1.20260427 (48d7def 2026-04-27)",
@@ -151,7 +151,7 @@
   ],
 
   "ledgerSourceOfTruth": {
-    "path": "kernel/vendor/moonbit/PROVENANCE.md",
+    "path": "runtime/boot/kernel/vendor/moonbit/PROVENANCE.md",
     "note": "上表 4 条由该文件的 Contents 表格与 Version pin 段落逐条转录，字段值与原文一致。该文件是「上游来源 / 本地产物 / 用途」三列的既有约定，本台账沿用其模型并形式化。"
   },
 
@@ -159,11 +159,11 @@
     "note": "以下为实测（2026-09-16，仓库根）。仅列实测存在的 vendor 目录，不推测其上游。末项为 2026-09-29 vendored 入库时新增（同批实测存在）。",
     "measuredAt": "2026-09-16",
     "dirs": [
-      { "path": "kernel/vendor/moonbit", "state": "ledgered", "contents": ["PROVENANCE.md", "PROVENANCE.html", "include/", "moonbit_gen.c", "runtime.c"] },
-      { "path": "services/backend/vendor/shared", "state": "unverified", "contents": ["config", "logs", "package.json", "src", "tests"] },
+      { "path": "runtime/boot/kernel/vendor/moonbit", "state": "ledgered", "contents": ["PROVENANCE.md", "PROVENANCE.html", "include/", "moonbit_gen.c", "runtime.c"] },
+      { "path": "runtime/node/backend/vendor/shared", "state": "unverified", "contents": ["config", "logs", "package.json", "src", "tests"] },
       { "path": "extensions/tools/khy-dsh-compat/vendor", "state": "empty" },
       { "path": "extensions/tools/khy-markdown/vendor", "state": "empty" },
-      { "path": "apps/ai-frontend/public/vendor", "state": "empty" },
+      { "path": "delivery/web/ai-frontend/public/vendor", "state": "empty" },
       { "path": "scripts/copyright/vendor", "state": "ledgered", "contents": ["software-copyright-materials/"] }
     ]
   },
@@ -171,7 +171,7 @@
   "knownGaps": [
     {
       "id": "gap-1",
-      "description": "services/backend/vendor/shared 含 package.json/src/tests，形态像第三方包但未在台账登记",
+      "description": "runtime/node/backend/vendor/shared 含 package.json/src/tests，形态像第三方包但未在台账登记",
       "needed": "确认其上游（包名+版本+许可证）并补一条 ledger 记录",
       "severity": "unknown"
     },

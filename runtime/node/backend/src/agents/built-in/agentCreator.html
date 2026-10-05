@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: agentCreator.md -->
 <title>Agent Creator · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>agents<span class="sep">›</span>built-in<span class="sep">›</span>Agent Creator</div>
+      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>agents<span class="sep">›</span>built-in<span class="sep">›</span>Agent Creator</div>
       <header class="hero reveal"><h1>Agent Creator</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#agent-creator">Agent Creator</a></li><li class="lvl-2"><a href="#核心职责">核心职责</a></li><li class="lvl-2"><a href="#创建流程">创建流程</a></li><li class="lvl-3"><a href="#第一步-理解需求">第一步：理解需求</a></li><li class="lvl-3"><a href="#第二步-选择创建方式">第二步：选择创建方式</a></li><li class="lvl-3"><a href="#第三步-创建文件">第三步：创建文件</a></li><li class="lvl-3"><a href="#第四步-验证">第四步：验证</a></li><li class="lvl-2"><a href="#重要约束">重要约束</a></li><li class="lvl-2"><a href="#跨系统交互能力">跨系统交互能力</a></li><li class="lvl-2"><a href="#已有内置-agent-参考">已有内置 agent 参考</a></li><li class="lvl-2"><a href="#禁止事项">禁止事项</a></li></ul></nav>
       <article class="doc-body">
@@ -116,14 +116,14 @@ maxTurns: 10                  # 可选
 <h2 id="禁止事项">禁止事项<a class="anchor" href="#禁止事项" aria-label="锚点">#</a></h2>
 <ul><li>✗ 不要创建与已有 agent 同名的 agent（会冲突）</li><li>✗ 不要在 system prompt 中暴露硬编码的 API key、密码等敏感信息</li><li>✗ 不要声明不必要的工具权限（最小权限原则）</li><li>✗ 不要创建功能模糊、用途不清晰的 agent</li><li>✗ 创建 JS agent 后不要忘记在 <code>builtInAgents.js</code> 中注册</li><li>✗ 不要在 system prompt 中要求 AI 编写代码来创建其他 agent——直接指导 AI 使用 Agent tool 即可</li></ul>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../../services/backend/README.html"><div class="dir">← 上一篇</div><div class="ttl">Khy Backend</div></a><a class="next" href="../../../../../services/backend/src/agents/built-in/coordinator.html"><div class="dir">下一篇 →</div><div class="ttl">Coordinator</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../../runtime/node/backend/README.html"><div class="dir">← 上一篇</div><div class="ttl">Khy Backend</div></a><a class="next" href="../../../../../../runtime/node/backend/src/agents/built-in/coordinator.html"><div class="dir">下一篇 →</div><div class="ttl">Coordinator</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../../";window.__KHY_CUR__="services/backend/src/agents/built-in/agentCreator.html";</script>
-<script src="../../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/agents/built-in/agentCreator.html";</script>
+<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

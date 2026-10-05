@@ -21,7 +21,7 @@ if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
 New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
 
 Write-Host "[INFO]  Building Docker image ($ImageTag)..." -ForegroundColor Cyan
-docker build -t $ImageTag -f "$RootDir\extensions\scripts\khy-alpine-iso\Dockerfile.iso-builder" $RootDir
+docker build -t $ImageTag -f "$RootDir\delivery\extension\scripts\khy-alpine-iso\Dockerfile.iso-builder" $RootDir
 if ($LASTEXITCODE -ne 0) { Write-Error "Docker build failed"; exit 1 }
 
 Write-Host "[INFO]  Running ISO build inside container..." -ForegroundColor Cyan

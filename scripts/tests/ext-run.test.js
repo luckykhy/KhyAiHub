@@ -8,7 +8,7 @@
  * 于是 ext-run 自带了一份两层扫描）。两份实现意味着两份会漂移的语义——这里钉的就是它们
  * 不许漂：同一套「删目录即消失 / 分类只是布局」的行为，在派发器这一侧也必须成立。
  *
- * 用 KHY_EXT_RUN_ROOT 指向临时夹具仓库，不碰真实 extensions/：否则任何人往仓库里加一个
+ * 用 KHY_EXT_RUN_ROOT 指向临时夹具仓库，不碰真实 delivery/extension/：否则任何人往仓库里加一个
  * 拓展都可能让用例飘绿或飘红。
  */
 
@@ -26,7 +26,7 @@ after(() => {
   for (const d of tempDirs) fs.rmSync(d, { recursive: true, force: true });
 });
 
-/** 造一个夹具仓库，返回它的根。`category` 为 null 时拓展直接放在 extensions/ 下。 */
+/** 造一个夹具仓库，返回它的根。`category` 为 null 时拓展直接放在 delivery/extension/ 下。 */
 function makeRepo({ id = 'khy-fix', category = 'scripts', commands, script = 'run.js', body } = {}) {
   const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-extrun-'));
   tempDirs.push(repo);

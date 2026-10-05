@@ -24,7 +24,7 @@
  *
  * ## 为什么源码同名目录必须显式排除
  *
- * `packaging/build/` 是 CI 构建**脚本源码**（根 `.gitignore` 专门 `!` 放行过），
+ * `works/ship/build/` 是 CI 构建**脚本源码**（根 `.gitignore` 专门 `!` 放行过），
  * `scripts/release/` 是发布脚本。它们的名字与产物目录名重合。误杀一个源码目录，
  * 比漏掉几 MB 产物严重得多——所以 SOURCE_DIR_ALLOWLIST 是**精确路径**而非模式，
  * 新增一条都要有人签名。
@@ -91,21 +91,21 @@ const SKIP_TOP = Object.freeze([
  * 目录名恰好叫 `build` / `publish` / `release` 的**源码**目录。
  *
  * 每一条都已人工核实「它是源码不是产物」。新增须附理由：
- *   packaging/build                                 CI 构建脚本，根 .gitignore 专门 `!` 放行
+ *   works/ship/build                                 CI 构建脚本，根 .gitignore 专门 `!` 放行
  *   scripts/release, scripts/release/publish         发布脚本
- *   services/backend/src/services/.../build          后端业务模块（domain/build）
- *   services/backend/src/services/.../deploy/publish 后端业务模块
- *   services/backend/vendor, kernel/vendor           构建期镜像的源码副本（[DESIGN-LAY-002] §2）
+ *   runtime/node/backend/src/services/.../build          后端业务模块（domain/build）
+ *   runtime/node/backend/src/services/.../deploy/publish 后端业务模块
+ *   runtime/node/backend/vendor, runtime/boot/kernel/vendor           构建期镜像的源码副本（[DESIGN-LAY-002] §2）
  */
 const SOURCE_DIR_ALLOWLIST = Object.freeze([
-  'packaging/build',
+  'works/ship/build',
   'scripts/release',
   'scripts/release/publish',
-  'services/backend/src/services/domain/build',
-  'services/backend/src/services/domain/deploy/publish',
-  'services/backend/src/services/publish',
-  'services/backend/vendor',
-  'kernel/vendor',
+  'runtime/node/backend/src/services/domain/build',
+  'runtime/node/backend/src/services/domain/deploy/publish',
+  'runtime/node/backend/src/services/publish',
+  'runtime/node/backend/vendor',
+  'runtime/boot/kernel/vendor',
 ]);
 
 /**
@@ -116,11 +116,11 @@ const SOURCE_DIR_ALLOWLIST = Object.freeze([
  * 权威的 `hook` / `sunset` 以 BUILD-OUTPUTS.json 为准，本清单是它的走盘投影。
  */
 const DEFAULT_PARASITIC = Object.freeze({
-  'apps/ai-frontend/public/vendor': '必须被 Vite dev server 与 build 直接服务',
-  'extensions/tools/khy-markdown/vendor': '必须在拓展包内被 prepack 打进产物',
-  'extensions/tools/khy-dsh-compat/vendor': '必须在拓展包内被 prepack 打进产物',
+  'delivery/web/ai-frontend/public/vendor': '必须被 Vite dev server 与 build 直接服务',
+  'delivery/extension/tools/khy-markdown/vendor': '必须在拓展包内被 prepack 打进产物',
+  'delivery/extension/tools/khy-dsh-compat/vendor': '必须在拓展包内被 prepack 打进产物',
   'docs/19_资产/site/mermaid.min.js': '必须被文档站以相对路径引用',
-  'kernel/moonbit/_build': 'moon build 写死路径，不可重定向',
+  'runtime/boot/kernel/moonbit/_build': 'moon build 写死路径，不可重定向',
   'tools/deepseek-eyes/deepseek_eyes.egg-info': '机器本地 vendored 检出，不参与 CI',
 });
 

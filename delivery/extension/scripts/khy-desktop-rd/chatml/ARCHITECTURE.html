@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: ARCHITECTURE.md -->
 <title>Architecture（来源：https://raw.githubusercontent.com/chatml/chatml/main/ARCHITECTURE.md） · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>extensions<span class="sep">›</span>scripts<span class="sep">›</span>khy-desktop-rd<span class="sep">›</span>chatml<span class="sep">›</span>Architecture（来源：https://raw.githubusercontent.com/chatml/chatml/main/ARCHITECTURE.md）</div>
+      <div class="breadcrumb reveal"><a href="../../../../../docs/index.html">首页</a><span class="sep">›</span>delivery<span class="sep">›</span>extension<span class="sep">›</span>scripts<span class="sep">›</span>khy-desktop-rd<span class="sep">›</span>chatml<span class="sep">›</span>Architecture（来源：https://raw.githubusercontent.com/chatml/chatml/main/ARCHITECTURE.md）</div>
       <header class="hero reveal"><h1>Architecture（来源：https://raw.githubusercontent.com/chatml/chatml/main/ARCHITECTURE.md）</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#architecture-来源-https-raw-githubusercontent-com-chatml-chatml-main-architecture-md">Architecture（来源：https://raw.githubusercontent.com/chatml/chatml/main/ARCHITECTURE.md）</a></li><li class="lvl-2"><a href="#system-overview">System Overview</a></li><li class="lvl-2"><a href="#data-model">Data Model</a></li><li class="lvl-2"><a href="#communication-flow">Communication Flow</a></li><li class="lvl-2"><a href="#provider-architecture">Provider Architecture</a></li><li class="lvl-3"><a href="#go-backend-ai-provider-interface">Go Backend (`ai.Provider` interface)</a></li><li class="lvl-3"><a href="#agent-runner-stdio-json-protocol">Agent Runner (stdio JSON protocol)</a></li><li class="lvl-3"><a href="#provider-capabilities">Provider Capabilities</a></li><li class="lvl-2"><a href="#directory-state">Directory State</a></li><li class="lvl-2"><a href="#state-management">State Management</a></li><li class="lvl-2"><a href="#key-design-decisions">Key Design Decisions</a></li></ul></nav>
       <article class="doc-body">
@@ -104,14 +104,14 @@
 <h2 id="key-design-decisions">Key Design Decisions<a class="anchor" href="#key-design-decisions" aria-label="锚点">#</a></h2>
 <ol><li><strong>Git worktrees for isolation</strong> — Each session gets its own worktree and branch, enabling truly parallel AI development without merge conflicts.</li><li><strong>Process-per-conversation</strong> — Each agent conversation runs in its own Node.js process, providing natural isolation and the ability to kill runaway agents.</li><li><strong>Local-first</strong> — All data stays on your machine. No cloud component except the AI provider API.</li><li><strong>Stdin/stdout protocol</strong> — The Go backend communicates with agent runners via JSON over stdin/stdout, making it straightforward to swap in different AI providers without changing the backend.</li><li><strong>Static frontend export</strong> — Next.js generates static HTML that Tauri serves directly, avoiding the need for a separate web server process.</li></ol>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../extensions/bridges/khy-trae-bridge/README.html"><div class="dir">← 上一篇</div><div class="ttl">KHY Trae Bridge</div></a><a class="next" href="../../../../extensions/scripts/khy-desktop-rd/chatml/README.html"><div class="dir">下一篇 →</div><div class="ttl">ChatML — Tauri 2 + Go Backend + Claude Agent SDK</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../delivery/extension/bridges/khy-trae-bridge/README.html"><div class="dir">← 上一篇</div><div class="ttl">KHY Trae Bridge</div></a><a class="next" href="../../../../../delivery/extension/scripts/khy-desktop-rd/chatml/README.html"><div class="dir">下一篇 →</div><div class="ttl">ChatML — Tauri 2 + Go Backend + Claude Agent SDK</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="extensions/scripts/khy-desktop-rd/chatml/ARCHITECTURE.html";</script>
-<script src="../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../../";window.__KHY_CUR__="delivery/extension/scripts/khy-desktop-rd/chatml/ARCHITECTURE.html";</script>
+<script src="../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

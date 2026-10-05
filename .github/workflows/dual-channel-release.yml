@@ -66,11 +66,11 @@ jobs:
         run: npm run install:core
 
       - name: Run test suite (Jest)
-        working-directory: services/backend
+        working-directory: runtime/node/backend
         run: npm test -- --passWithNoTests
 
       - name: Run Node built-in tests
-        working-directory: services/backend
+        working-directory: runtime/node/backend
         run: npm run test:node
 
       - name: Install publish dependencies
@@ -94,15 +94,15 @@ jobs:
 
       - name: Build executables
         run: |
-          node packaging/build/esbuild-modules.js --prod
-          node packaging/build/pack-executable.js --all
+          node works/ship/build/esbuild-modules.js --prod
+          node works/ship/build/pack-executable.js --all
 
       - name: Build on-demand payload assets
         run: |
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
             VERSION="${GITHUB_REF#refs/tags/v}"
           else
-            VERSION="$(node -p "require('./services/backend/package.json').version")"
+            VERSION="$(node -p "require('./runtime/node/backend/package.json').version")"
           fi
           node scripts/release/build-payload-assets.js --version "$VERSION" --out publish/payloads
           node -e "const m=require('./publish/payloads/khy-payload-manifest.json'); if(m.version!==process.argv[1]) process.exit(1); if(Object.values(m.payloads).some(p=>p.files.some(f=>!/^[a-f0-9]{64}$/.test(f.sha256)||f.size<=0))) process.exit(1)" "$VERSION"
@@ -140,10 +140,10 @@ jobs:
         run: |
           # Create a tarball of what npm would publish and sign it.
           # This signs the exact artifact users download, not a transient build.
-          ( cd packaging/npm && npm pack --dry-run > /dev/null 2>&1 )
-          PACK_TARBALL=$(cd packaging/npm && npm pack --dry-run 2>/dev/null | tail -1)
+          ( cd works/ship/npm && npm pack --dry-run > /dev/null 2>&1 )
+          PACK_TARBALL=$(cd works/ship/npm && npm pack --dry-run 2>/dev/null | tail -1)
           if [ -z "$PACK_TARBALL" ]; then
-            echo "::error::npm pack 未产出 tarball（packaging/npm）—— 无可签名产物，发布中止"
+            echo "::error::npm pack 未产出 tarball（works/ship/npm）—— 无可签名产物，发布中止"
             exit 1
           fi
           echo "Signing npm package: $PACK_TARBALL"
@@ -206,7 +206,7 @@ jobs:
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
             VERSION="${GITHUB_REF#refs/tags/v}"
           else
-            VERSION="$(node -p "require('./services/backend/package.json').version")"
+            VERSION="$(node -p "require('./runtime/node/backend/package.json').version")"
           fi
           ARGS=( "--version" "$VERSION" "--rehearse" )
           if [ "${{ inputs.skip_pip || 'false' }}" = 'true' ]; then ARGS+=( "--skip-pip" ); fi
@@ -226,7 +226,7 @@ jobs:
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
             VERSION="${GITHUB_REF#refs/tags/v}"
           else
-            VERSION="$(node -p "require('./services/backend/package.json').version")"
+            VERSION="$(node -p "require('./runtime/node/backend/package.json').version")"
           fi
           TAG="v${VERSION}"
           gh release view "$TAG" >/dev/null 2>&1 || \

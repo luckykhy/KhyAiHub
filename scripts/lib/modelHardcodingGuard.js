@@ -4,7 +4,7 @@
  * modelHardcodingGuard.js — 「模型名称单一真源」的机器强制守卫(goal 2026-06-26
  * 续句「…如果有其他类似模型名称这样,以后可能会修改硬编码,改一处,处处该改的需要修复」)。
  *
- * 背景:模型名称已收归唯一真源 `services/backend/src/constants/models.js`(按角色/档位
+ * 背景:模型名称已收归唯一真源 `runtime/node/backend/src/constants/models.js`(按角色/档位
  * 建具名数组,首项=当前生效首选);调用点引用数组名 / `PRIMARY.<role>` 而非裸模型 id
  * 字符串,换模型只改 models.js 一处。但「单一真源」一旦只靠人自觉就会熵增:弱模型
  * 「修个 bug / 加个分支」时顺手把 `claude-opus-4-8` 这样的字面量又敲回业务逻辑里,
@@ -72,7 +72,7 @@ const DATA_FILE_SUFFIXES = [
   'src/services/ollamaModelManager.js',
   // 免费层 provider 的 availableModels catalog（backend 与 khyquant 应用镜像）
   'src/services/multiFreeService.js',
-  'software/khyquant/services/multiFreeService.js',
+  'delivery/channel/khyquant/services/multiFreeService.js',
   // 计费价格表(键=模型 id)
   'src/services/usageFormatter.js',
   'src/services/usageTracker.js',
@@ -195,7 +195,7 @@ function assessFile({ relPath = '', source = '', watchedNames = [], dataFileSuff
         line: l.no,
         message:
           `模型名 "${name}" 被硬编码进逻辑。模型名称的唯一真源是 ` +
-          `services/backend/src/constants/models.js —— 请改引用对应数组名或 ` +
+          `runtime/node/backend/src/constants/models.js —— 请改引用对应数组名或 ` +
           `PRIMARY.<role>,这样换模型只改 models.js 一处,不会「改一处、处处漏」。` +
           `(若此处确为模型属性数据 catalog/pricing/alias,请把文件加入守卫的数据白名单。)`,
         snippet: l.text.trim().slice(0, 100),

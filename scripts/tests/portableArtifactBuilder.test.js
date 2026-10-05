@@ -7,13 +7,13 @@ const os = require('os');
 const path = require('path');
 
 // 被测对象住在拓展 khy-portable 里（[DESIGN-TOOL-002]：删目录即卸载）。经 lib/ext-run
-// 解析而不写死 extensions/ 下的路径——拓展被删掉时这里退化成一条说得清的 skip，
+// 解析而不写死 delivery/extension/ 下的路径——拓展被删掉时这里退化成一条说得清的 skip，
 // 而不是一条 node 的 Cannot find module。
 const { requireExtensionModule } = require('../lib/ext-run');
 const _ext = requireExtensionModule('khy-portable', { file: 'build-portable-artifact.js' });
 if (!_ext) {
   test('拓展 khy-portable 未安装，本文件的被测对象随它一起消失', (ctx) =>
-    ctx.skip('extensions/scripts/khy-portable/ 不在磁盘上；放回该目录即恢复，无需注册步骤'));
+    ctx.skip('delivery/extension/scripts/khy-portable/ 不在磁盘上；放回该目录即恢复，无需注册步骤'));
   return;
 }
 const {
@@ -51,9 +51,9 @@ test('parses each supported artifact kind and target', () => {
 test('source filter excludes state, secrets and generated databases', () => {
   assert.equal(isExcludedSource('.khy', dirent('.khy', 'dir')), true);
   assert.equal(isExcludedSource('dist', dirent('dist', 'dir')), true);
-  assert.equal(isExcludedSource('services/backend/.env.local', dirent('.env.local', 'file')), true);
-  assert.equal(isExcludedSource('services/backend/data/live.db-wal', dirent('live.db-wal', 'file')), true);
-  assert.equal(isExcludedSource('services/backend/src/server.js', dirent('server.js', 'file')), false);
+  assert.equal(isExcludedSource('runtime/node/backend/.env.local', dirent('.env.local', 'file')), true);
+  assert.equal(isExcludedSource('runtime/node/backend/data/live.db-wal', dirent('live.db-wal', 'file')), true);
+  assert.equal(isExcludedSource('runtime/node/backend/src/server.js', dirent('server.js', 'file')), false);
   assert.equal(isExcludedSource('node_modules/pkg/index.js', dirent('index.js', 'file')), false);
 });
 
@@ -75,8 +75,8 @@ test('debug symbols never reach a portable artifact', () => {
 });
 
 test('runtime source filter is retained only for legacy callers and excludes generated state', () => {
-  assert.equal(runtimeSourceFilter('services/backend/bin/khy.js', dirent('khy.js', 'file')), true);
-  assert.equal(runtimeSourceFilter('services/backend/data/live.db', dirent('live.db', 'file')), false);
+  assert.equal(runtimeSourceFilter('runtime/node/backend/bin/khy.js', dirent('khy.js', 'file')), true);
+  assert.equal(runtimeSourceFilter('runtime/node/backend/data/live.db', dirent('live.db', 'file')), false);
 });
 
 test('copyTree handles relocated paths with spaces and Chinese characters', t => {

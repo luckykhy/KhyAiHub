@@ -31,7 +31,7 @@ const path = require('path');
 
 const APPLY = process.argv.includes('--apply');
 
-const BACKEND_SRC = path.join(__dirname, '..', '..', '..', 'services', 'backend', 'src');
+const BACKEND_SRC = path.join(__dirname, '..', '..', '..', '..', 'runtime', 'node', 'backend', 'src');
 const { getProjectDataDir } = require(path.join(BACKEND_SRC, 'utils', 'dataHome'));
 
 const UNKNOWN_BUCKET = '_unknown';

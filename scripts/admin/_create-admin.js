@@ -7,7 +7,7 @@ const path = require('path');
 // Resolve paths from this script's location (scripts/admin/ -> repo root -> backend)
 const repoRoot = path.resolve(__dirname, '..', '..');
 const backendDir = path.join(repoRoot, 'services', 'backend');
-const dbPath = path.join(repoRoot, '.khy', 'khyquant', 'data', 'khy-quant.db');
+const dbPath = path.join(repoRoot, 'works', 'data', 'khy', 'khyquant', 'data', 'khy-quant.db');
 
 // Ensure we're in the backend directory
 process.chdir(backendDir);

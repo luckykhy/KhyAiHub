@@ -14,7 +14,7 @@ const repoRoot = process.env.RULEGUARD_REPO_ROOT || path.resolve(__dirname, '..'
 const LEDGER_REL = 'docs/10_规范/registry/SOURCING-PROVENANCE.json';
 const SSOT_DOC = 'docs/10_规范/其它规范/[DESIGN-SOURCING-001] 借鉴与实现统一规则.md';
 const FEATURE_REL = 'docs/10_规范/registry/FEATURE-OWNERSHIP.json';
-const PROVENANCE_DOC_REL = 'kernel/vendor/moonbit/PROVENANCE.md';
+const PROVENANCE_DOC_REL = 'runtime/boot/kernel/vendor/moonbit/PROVENANCE.md';
 
 const strictWarnings = process.argv.includes('--strict-warnings');
 const findings = [];
@@ -117,7 +117,7 @@ function checkLedgerEntries(l) {
       if (!row.approvedBy) add('error', 'row-no-approval', LEDGER_REL, 0,
         `vendored/fork 关系必须填 approvedBy（${row.localPath}），B-P3 要求维护者显式批准且裁决人不得是唯一实现者。`);
     }
-    if (row.localPath && row.localPath.startsWith('kernel/vendor/moonbit/')) {
+    if (row.localPath && row.localPath.startsWith('runtime/boot/kernel/vendor/moonbit/')) {
       // 版本钉子不得静默变更（呼应 B-L3 决策不可回退）
       if (!row.versionPin) {
         add('warn', 'row-no-version-pin', LEDGER_REL, 0,
@@ -179,7 +179,7 @@ function checkFeatureOwnershipCrossRef(l) {
   const text = read(PROVENANCE_DOC_REL);
   if (text === null) {
     add('warn', 'provenance-doc-missing', PROVENANCE_DOC_REL, 0,
-      'kernel/vendor/moonbit/PROVENANCE.md 不存在——台账 4 条 moonbit 记录的转录来源丢失。');
+      'runtime/boot/kernel/vendor/moonbit/PROVENANCE.md 不存在——台账 4 条 moonbit 记录的转录来源丢失。');
     return;
   }
   if (!text.includes('moon 0.1.20260427')) {

@@ -4,7 +4,7 @@ const assert = require('assert/strict');
 const test = require('node:test');
 
 const baseline = require('../lib/storageBaseline');
-const backendFormatBytes = require('../../services/backend/src/utils/formatBytes');
+const backendFormatBytes = require('../../runtime/node/backend/src/utils/formatBytes');
 
 test('the env gate is off only for an explicit falsy word', () => {
   // Default-on matters: a baseline that silently reports nothing looks exactly

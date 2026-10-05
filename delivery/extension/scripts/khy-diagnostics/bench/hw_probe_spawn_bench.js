@@ -22,7 +22,7 @@ const fs = require('fs');
 const path = require('path');
 const cp = require('child_process');
 
-const REPO = path.resolve(__dirname, '..', '..', '../..');
+const REPO = path.resolve(__dirname, '..', '..', '../..', '..');
 const MOD = path.join(REPO, 'services/backend/src/services/hardwareProfileService.js');
 
 // Isolate the cache into a throwaway data home so a real ~/.khy is never touched

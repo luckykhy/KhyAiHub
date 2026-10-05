@@ -11,13 +11,13 @@ echo ========================================
 echo.
 
 :: Check if backend directory exists
-if not exist "services\backend" (
+if not exist "runtime\node\backend" (
     echo Error: Backend directory not found!
     pause
     exit /b 1
 )
 
-cd services\backend
+cd runtime\node\backend
 
 echo Starting server with auto-login enabled...
 echo.

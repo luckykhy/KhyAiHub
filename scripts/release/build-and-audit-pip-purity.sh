@@ -13,7 +13,7 @@
 #      build output may be bundled.
 #
 # Exit non-zero on the first purity violation so CI / the verification flow
-# can react. First-party vendored code (services/backend/vendor/shared, the
+# can react. First-party vendored code (runtime/node/backend/vendor/shared, the
 # @khy/shared package) is explicitly allowed; only foreign dependency trees
 # are rejected.
 set -euo pipefail

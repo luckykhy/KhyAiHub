@@ -9,7 +9,7 @@ const MANAGED_MARKER = 'KHY_MANAGED_HOOK';
 const args = process.argv.slice(2);
 const removeMode = args.includes('--remove');
 const dryRun = args.includes('--dry-run');
-const repoRoot = path.resolve(__dirname, '..', '..', '..');
+const repoRoot = path.resolve(__dirname, '..', '..', '..', '..');
 const hooksSourceDir = path.join(repoRoot, '.githooks');
 
 function run(cmd) {

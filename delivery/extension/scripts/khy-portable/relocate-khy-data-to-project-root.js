@@ -41,7 +41,7 @@ const SRC_HOME = path.join(os.homedir(), '.khy');
 
 function _projectDataHome() {
   const dataHome = require(path.join(
-    __dirname, '..', '..', '..', 'services', 'backend', 'src', 'utils', 'dataHome',
+    __dirname, '..', '..', '..', '..', 'runtime', 'node', 'backend', 'src', 'utils', 'dataHome',
   ));
   return dataHome.getProjectDataHome();
 }

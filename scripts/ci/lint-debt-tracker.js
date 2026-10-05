@@ -3,7 +3,7 @@
 /**
  * lint-debt-tracker.js — Lint 债务追踪器
  *
- * 统计 services/backend/src 的 lint 债务，输出 JSON 报告。
+ * 统计 runtime/node/backend/src 的 lint 债务，输出 JSON 报告。
  * 用于 CI 中追踪债务变化。
  *
  * Usage: node scripts/ci/lint-debt-tracker.js

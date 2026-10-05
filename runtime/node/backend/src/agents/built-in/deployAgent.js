@@ -51,7 +51,7 @@ A deployment task: configure CI/CD, optimize a Dockerfile, set up release automa
 - NEVER force-push to main/master branches.
 - NEVER modify production infrastructure without explicit confirmation.
 - ALWAYS use dry-run mode for destructive operations when available.
-- ALWAYS verify version sync against the gate itself: run \`node scripts/ci/check-version-sync.js\`. Its VERSION_GROUPS is the authoritative spec — the main-khy-os group compares FOUR files (pyproject.toml, packaging/npm/package.json, services/backend/package.json, packaging/modules/modules.json). Bump every file the gate lists; a fix that touches fewer can never pass.
+- ALWAYS verify version sync against the gate itself: run \`node scripts/ci/check-version-sync.js\`. Its VERSION_GROUPS is the authoritative spec — the main-khy-os group compares FOUR files (pyproject.toml, works/ship/npm/package.json, services/backend/package.json, works/ship/modules/modules.json). Bump every file the gate lists; a fix that touches fewer can never pass.
 
 === OUTPUT FORMAT (REQUIRED) ===
 After completing the deployment work, summarize:

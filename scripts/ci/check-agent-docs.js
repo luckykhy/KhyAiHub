@@ -205,7 +205,7 @@ function readRootDocExt() {
 function readCliTruth() {
   const names = new Set();
   try {
-    const aliases = require(path.join(repoRoot, 'services/backend/src/cli/aliases.js'));
+    const aliases = require(path.join(repoRoot, 'runtime/node/backend/src/cli/aliases.js'));
     const walk = (node) => {
       for (const key of Object.keys(node || {})) {
         const value = node[key];
@@ -223,7 +223,7 @@ function readCliTruth() {
   }
   try {
     if (!process.env.KHYQUANT_CWD) process.env.KHYQUANT_CWD = repoRoot;
-    const registry = require(path.join(repoRoot, 'services/backend/src/cli/commandAutoRegistry.js'));
+    const registry = require(path.join(repoRoot, 'runtime/node/backend/src/cli/commandAutoRegistry.js'));
     registry.init();
     for (const name of registry.getCommandNames()) names.add(String(name).toLowerCase());
   } catch (error) {
@@ -315,7 +315,7 @@ function buildRepoIndex() {
     if (entry.isDirectory()) topDirs.add(entry.name);
   }
   // 文档编号真源：**全仓**文件名里的 [XXX-NNN]。
-  // 踩过的坑：只扫根 docs/ 会把 apps/khyos-desktop/docs/[DESIGN-ARCH-092] 判成
+  // 踩过的坑：只扫根 docs/ 会把 delivery/desktop/khyos-desktop/docs/[DESIGN-ARCH-092] 判成
   // 「不存在」—— 子项目有自己的 docs/ 目录，索引必须覆盖全仓。
   const docIds = new Set();
   for (const abs of all) {
@@ -535,7 +535,7 @@ function checkDeadPointers(file, text, ctx) {
 
     // D3a `npm run [--flags] <script>` —— 脚本解析范围随 `--workspace` 或就近
     // package.json 变化。踩过三个坑：
-    //   1. `npm run dev` 写在 apps/khyos-desktop/CLAUDE.md 里指的是**子包**脚本，
+    //   1. `npm run dev` 写在 delivery/desktop/khyos-desktop/CLAUDE.md 里指的是**子包**脚本，
     //      只查根 package.json 会把它们全判死 → 改为就近 package.json。
     //   2. 参数可出现在脚本名**之前**（`npm run --workspace backend test:tui`），
     //      旧正则把 `--workspace` 当成了脚本名。
@@ -928,7 +928,7 @@ const SCENARIOS = {
     desc: '子级文件自封「以本文件为准」→ 期望 D2-precedence',
     files: [
       {
-        rel: 'services/backend/src/cli/tui/AGENTS.md',
+        rel: 'runtime/node/backend/src/cli/tui/AGENTS.md',
         tier: 'compat',
         text: '# TUI\n\n当本文件与根目录 AGENTS.md 冲突时，以本文件为准。\n',
       },
@@ -940,7 +940,7 @@ const SCENARIOS = {
     desc: '「优先于」用于普通编码指引 → 期望**放行**',
     files: [
       {
-        rel: 'services/backend/src/cli/tui/AGENTS.md',
+        rel: 'runtime/node/backend/src/cli/tui/AGENTS.md',
         tier: 'compat',
         text: '# TUI\n\n✅ 新增文件优先于修改现有文件\n',  // khy-allow-no-emoji: 喂给被检器的文档夹具，内容是待判定的展示文案，不是本仓界面
       },

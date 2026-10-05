@@ -6,7 +6,7 @@
  * RUNTIME-006 执行器：网关首选通道不得在配置文件中被硬钉。
  *
  * 为什么需要这条规则（事故史，4 次复发）：
- *   2026-09-14  services/backend/.env 残留 GATEWAY_PREFERRED_ADAPTER=codex + STRICT=true，
+ *   2026-09-14  runtime/node/backend/.env 残留 GATEWAY_PREFERRED_ADAPTER=codex + STRICT=true，
  *               而本机 codex 无凭据 → 每次调用硬失败且不回退，表现为「所有 AI 通道均不可用」，
  *               被连续三天误诊为「密钥失效」。
  *   2026-09-17  同一文件换通道名复发（windsurf），且只在注释里写「改为 auto」、值没改。

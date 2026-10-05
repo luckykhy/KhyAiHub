@@ -240,8 +240,9 @@ Shell 命令工具的默认/空闲超时、退出语义与转义上下文。
 
 ### KHY_CLIPBOARD_*
 剪贴板图片转文件（img2file）监视：目录、轮询、标记与保留。
-- 真源：`services/backend/src/cli/repl.js`（剪贴板监视集成）。
-- 默认：`KHY_CLIPBOARD_IMG2FILE_ENABLED`/`*_AUTO_START` 默认关（按需开）；目录/轮询/标记有默认。
+- 真源：`services/backend/src/services/windowsClipboardImg2FileService.js`（`shouldAutoStart()` / `isEnabledByEnv()` 两把闸都在服务里读，启动站点在 `cli/replSession.js` 的 TUI 与经典两条路径各自调用同一个 `shouldAutoStart()`）。
+- 默认：`KHY_CLIPBOARD_IMG2FILE_AUTO_START` 默认**关**（开机不常驻；会话内 `clipboard bridge start` 随用随开，要旧行为设 `=true`）。2026-10-03 由人拍板回正到本条口径——此前代码漂成默认开，每台 Windows 会话白背实测约 85 MB 常驻 powershell。
+- 默认：`KHY_CLIPBOARD_IMG2FILE_ENABLED` 默认**开**（功能总闸；关掉后连手动 `clipboard bridge start` 都不起。它曾默认关，因「更新后粘贴失效」的实测反馈恢复默认开，见该文件 35–38 行注释）。目录/轮询/标记有默认。
 - 成员：`KHY_CLIPBOARD_IMG2FILE_AUTO_START`, `KHY_CLIPBOARD_IMG2FILE_DIR`, `KHY_CLIPBOARD_IMG2FILE_ENABLED`, `KHY_CLIPBOARD_IMG2FILE_KEEP_FILES`, `KHY_CLIPBOARD_IMG2FILE_MARKER`, `KHY_CLIPBOARD_IMG2FILE_POLL_MS`, `KHY_CLIPBOARD_IMG2FILE_SHELL`
 
 ### KHY_WORKFLOW_*

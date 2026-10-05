@@ -5,7 +5,7 @@
  * 规则真源 docs/10_规范/registry/RULES-REGISTRY.json 的 SECURITY-002：不可逆操作或显式
  * critical，即便 KHY_SYSCALL_GATEWAY=off、即便 bypass/yolo，也不得绕过。
  *
- * 载体 services/backend/src/services/riskGate.js 的 isUnbypassableGate() 是这条
+ * 载体 runtime/node/backend/src/services/riskGate.js 的 isUnbypassableGate() 是这条
  * 红线的单一真源（permission gate 与 gateway L1 预授权都读它），且是纯函数 ——
  * 所以本检查器做**行为断言**而非文本扫描：改文本可能绕过正则，改行为才等于改语义。
  *
@@ -26,7 +26,7 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 
 const RULE_ID = 'SECURITY-002';
-const MODULE_REL = 'services/backend/src/services/riskGate.js';
+const MODULE_REL = 'runtime/node/backend/src/services/riskGate.js';
 const cwd = process.cwd();
 const args = process.argv.slice(2);
 const strictWarnings = args.includes('--strict-warnings');

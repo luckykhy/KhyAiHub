@@ -22,12 +22,12 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..');
 
 test('glob: 单星不跨目录', () => {
   assert.equal(matchesAny(['services/*'], 'services/backend'), true);
-  assert.equal(matchesAny(['services/*'], 'services/backend/src/x.js'), false);
+  assert.equal(matchesAny(['services/*'], 'runtime/node/backend/src/x.js'), false);
 });
 
 test('glob: 双星跨任意深度且可匹配零层', () => {
   assert.equal(matchesAny(['services/**'], 'services/a.js'), true);
-  assert.equal(matchesAny(['services/**'], 'services/backend/src/deep/a.js'), true);
+  assert.equal(matchesAny(['services/**'], 'runtime/node/backend/src/deep/a.js'), true);
   assert.equal(matchesAny(['services/**'], 'apps/ai-frontend/x.js'), false);
 });
 
@@ -102,9 +102,9 @@ test('execFromEnforcement: 区分检查器、载体与锚点', () => {
   assert.ok(!parsed.script.endsWith('.json'));
 
   // 运行时代码不进 exec.script —— 否则 ruleguard 会把服务模块当检查器去 spawn。
-  const runtime = execFromEnforcement('services/backend/src/permissions/rules.js', exists);
+  const runtime = execFromEnforcement('runtime/node/backend/src/permissions/rules.js', exists);
   assert.equal(runtime.script, null);
-  assert.deepEqual(runtime.carriers, ['services/backend/src/permissions/rules.js']);
+  assert.deepEqual(runtime.carriers, ['runtime/node/backend/src/permissions/rules.js']);
 });
 
 // ─── finding 解析 ───────────────────────────────────────────────────────────
@@ -112,10 +112,10 @@ test('execFromEnforcement: 区分检查器、载体与锚点', () => {
 test('parseFindings: 解析 [ERROR] id file:line 及其缩进正文', () => {
   const output = [
     '[ruleguard] action=start target=x',
-    '[ERROR] no-hardcoded-endpoint services/backend/src/a.js:42',
+    '[ERROR] no-hardcoded-endpoint runtime/node/backend/src/a.js:42',
     '  检测到硬编码端点 http://localhost:3000',
     '  const url = "http://localhost:3000/api"',
-    '[WARN ] no-opaque-status services/backend/src/b.js:7',
+    '[WARN ] no-opaque-status runtime/node/backend/src/b.js:7',
     '  含糊状态文本',
     '',
     'Summary: 1 error(s), 1 warning(s)',
@@ -125,7 +125,7 @@ test('parseFindings: 解析 [ERROR] id file:line 及其缩进正文', () => {
   assert.equal(findings.length, 2);
   assert.deepEqual(
     { id: findings[0].finding, file: findings[0].file, line: findings[0].line, sev: findings[0].severity },
-    { id: 'no-hardcoded-endpoint', file: 'services/backend/src/a.js', line: 42, sev: 'error' },
+    { id: 'no-hardcoded-endpoint', file: 'runtime/node/backend/src/a.js', line: 42, sev: 'error' },
   );
   assert.match(findings[0].message, /硬编码端点/);
   assert.equal(findings[1].severity, 'warning');
@@ -354,7 +354,7 @@ function makeFixture({ deadPointer = false, unclaimedError = false } = {}) {
       path.join(root, 'scripts', 'ci', secondScript),
       unclaimedError
         ? [
-          "console.log('[ERROR] unclaimed-fixture-error services/backend/src/api.js:3');",
+          "console.log('[ERROR] unclaimed-fixture-error runtime/node/backend/src/api.js:3');",
           'process.exitCode = 1;',
           '',
         ].join('\n')
@@ -490,7 +490,7 @@ test('manifest: enforced 规则必须声明真实存在的执行器', () => {
 
 test('apply: 按路径查规则且按优先级排序', () => {
   const registry = loadRegistry(REPO_ROOT);
-  const matched = applyToPath(registry.rules, 'services/backend/src/api/foo.js');
+  const matched = applyToPath(registry.rules, 'runtime/node/backend/src/api/foo.js');
   assert.ok(matched.some((r) => r.id === 'RUNTIME-001'));
   const priorities = matched.map((r) => r.priority);
   const order = { P0: 0, P1: 1, P2: 2, P3: 3 };

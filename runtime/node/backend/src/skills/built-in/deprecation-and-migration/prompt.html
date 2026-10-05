@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: prompt.md -->
 <title>Deprecation and Migration · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>deprecation-and-migration<span class="sep">›</span>Deprecation and Migration</div>
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>deprecation-and-migration<span class="sep">›</span>Deprecation and Migration</div>
       <header class="hero reveal"><h1>Deprecation and Migration</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#deprecation-and-migration">Deprecation and Migration</a></li><li class="lvl-2"><a href="#overview">Overview</a></li><li class="lvl-2"><a href="#when-to-use">When to Use</a></li><li class="lvl-2"><a href="#core-principles">Core Principles</a></li><li class="lvl-3"><a href="#code-is-a-liability">Code Is a Liability</a></li><li class="lvl-3"><a href="#hyrum-s-law-makes-removal-hard">Hyrum's Law Makes Removal Hard</a></li><li class="lvl-3"><a href="#deprecation-planning-starts-at-design-time">Deprecation Planning Starts at Design Time</a></li><li class="lvl-2"><a href="#the-deprecation-decision">The Deprecation Decision</a></li><li class="lvl-2"><a href="#compulsory-vs-advisory-deprecation">Compulsory vs Advisory Deprecation</a></li><li class="lvl-2"><a href="#the-migration-process">The Migration Process</a></li><li class="lvl-3"><a href="#step-1-build-the-replacement">Step 1: Build the Replacement</a></li><li class="lvl-3"><a href="#step-2-announce-and-document">Step 2: Announce and Document</a></li><li class="lvl-3"><a href="#step-3-migrate-incrementally">Step 3: Migrate Incrementally</a></li><li class="lvl-3"><a href="#step-4-remove-the-old-system">Step 4: Remove the Old System</a></li><li class="lvl-2"><a href="#migration-patterns">Migration Patterns</a></li><li class="lvl-3"><a href="#strangler-pattern">Strangler Pattern</a></li><li class="lvl-3"><a href="#adapter-pattern">Adapter Pattern</a></li><li class="lvl-3"><a href="#feature-flag-migration">Feature Flag Migration</a></li><li class="lvl-2"><a href="#zombie-code">Zombie Code</a></li><li class="lvl-2"><a href="#common-rationalizations">Common Rationalizations</a></li><li class="lvl-2"><a href="#red-flags">Red Flags</a></li><li class="lvl-2"><a href="#verification">Verification</a></li></ul></nav>
       <article class="doc-body">
@@ -130,14 +130,14 @@ Phase 5: Remove old system</code></pre>
 <p>After completing a deprecation:</p>
 <ul><li>[ ] Replacement is production-proven and covers all critical use cases</li><li>[ ] Migration guide exists with concrete steps and examples</li><li>[ ] All active consumers have been migrated (verified by metrics/logs)</li><li>[ ] Old code, tests, documentation, and configuration are fully removed</li><li>[ ] No references to the deprecated system remain in the codebase</li><li>[ ] Deprecation notices are removed (they served their purpose)</li></ul>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../../../services/backend/src/skills/built-in/debugging-and-error-recovery/prompt.html"><div class="dir">← 上一篇</div><div class="ttl">Debugging and Error Recovery</div></a><a class="next" href="../../../../../../services/backend/src/skills/built-in/documentation-and-adrs/prompt.html"><div class="dir">下一篇 →</div><div class="ttl">Documentation and ADRs</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/skills/built-in/debugging-and-error-recovery/prompt.html"><div class="dir">← 上一篇</div><div class="ttl">Debugging and Error Recovery</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/skills/built-in/documentation-and-adrs/prompt.html"><div class="dir">下一篇 →</div><div class="ttl">Documentation and ADRs</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="services/backend/src/skills/built-in/deprecation-and-migration/prompt.html";</script>
-<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/skills/built-in/deprecation-and-migration/prompt.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

@@ -61,7 +61,7 @@ function changedFiles() {
 function targets() {
   if (rawTargets.length > 0) return rawTargets.map((t) => path.resolve(REPO_ROOT, t));
   if (changedMode) return changedFiles();
-  return walk(path.join(REPO_ROOT, 'services', 'backend', 'src'));
+  return walk(path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'src'));
 }
 
 // ── OPS-002: Graceful shutdown ──────────────────────────────────────────────

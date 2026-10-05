@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: README.md -->
 <title>06申报材料 —— 递交件工作区（不是依据文档） · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>evidence<span class="sep">›</span>06_申报材料<span class="sep">›</span>06申报材料 —— 递交件工作区（不是依据文档）</div>
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>works<span class="sep">›</span>record<span class="sep">›</span>evidence<span class="sep">›</span>06_申报材料<span class="sep">›</span>06申报材料 —— 递交件工作区（不是依据文档）</div>
       <header class="hero reveal"><h1>06申报材料 —— 递交件工作区（不是依据文档）</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#06-申报材料-递交件工作区-不是依据文档">06_申报材料 —— 递交件工作区（不是依据文档）</a></li><li class="lvl-2"><a href="#一-两处工位-本夹是-定稿投放处-生成器在仓外">一、两处工位：本夹是**定稿投放处**，生成器在仓外</a></li><li class="lvl-2"><a href="#二-目标结构-件未生成的-本文件即占位说明">二、目标结构（件未生成的，本文件即占位说明）</a></li><li class="lvl-2"><a href="#三-生成规程-顺序不可颠倒-工具已在仓外就位-不重写一遍">三、生成规程（顺序不可颠倒；工具已在仓外就位，不重写一遍）</a></li><li class="lvl-2"><a href="#四-复算入口">四、复算入口</a></li></ul></nav>
       <article class="doc-body">
@@ -58,14 +58,14 @@
 <h2 id="四-复算入口">四、复算入口<a class="anchor" href="#四-复算入口" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>要验什么</th><th>命令</th></tr></thead><tbody><tr><td>底档完整性</td><td><code>npm run check:copyright</code>（缺件、空图片判 error）</td></tr><tr><td>全量口径（含 --all）</td><td><code>npm run check:copyright:all</code></td></tr><tr><td>主证据画面</td><td><code>node services/backend/bin/khy.js trajectory list</code></td></tr><tr><td>链路校验确为算法</td><td><code>grep -n &quot;function verifyTraceChain&quot; services/backend/src/services/sessionPersistence.js</code></td></tr><tr><td>登记版本与仓库一致</td><td><code>grep -m1 '^version' pyproject.toml</code> → <code>1.2.0</code></td></tr><tr><td>60 页重渲染 + 逐页核验</td><td><code>&quot;D:/Portable/软著交付/Khy-OS/06_工具/verify_material.py&quot; --name … --version …</code></td></tr></tbody></table>
       </article>
-      <nav class="pager"><a class="prev" href="../../evidence/06_申报材料/递交核对表.html"><div class="dir">← 上一篇</div><div class="ttl">递交核对表（现行口径：D-名2，2026-09-28）</div></a><a class="next" href="../../evidence/README.html"><div class="dir">下一篇 →</div><div class="ttl">evidence/ —— 软件著作权登记底档（人类贡献与原创性证据）</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../works/record/evidence/06_申报材料/递交核对表.html"><div class="dir">← 上一篇</div><div class="ttl">递交核对表（现行口径：D-名2，2026-09-28）</div></a><a class="next" href="../../../../works/record/evidence/README.html"><div class="dir">下一篇 →</div><div class="ttl">evidence/ —— 软件著作权登记底档（人类贡献与原创性证据）</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__="evidence/06_申报材料/README.html";</script>
-<script src="../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="works/record/evidence/06_申报材料/README.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

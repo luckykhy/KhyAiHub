@@ -228,7 +228,7 @@ function collectHomeFiles(homeDir, role, tier, backupRootAbs) {
 
 /**
  * PostgreSQL 分支。仅在 DB_MODE/DB_TYPE 明确为 postgres 时启用(auto 模式实际走 SQLite,
- * 见 platform/packages/shared/src/config/database.js 的 initDatabase)。
+ * 见 runtime/substrate/platform/packages/shared/src/config/database.js 的 initDatabase)。
  *
  * pg_dump 带 --verbose:它正常情况下静默,而 spawnWithIdleTimeout 是**基于活动**的空闲
  * 超时(AGENTS 规则 3),没有输出就无从续命 —— 一个几 GB 的库会被误判为卡死。--verbose

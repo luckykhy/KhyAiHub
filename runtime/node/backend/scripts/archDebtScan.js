@@ -47,6 +47,33 @@ const BACKEND_ROOT = path.resolve(__dirname, '..');
 const SRC_DIR = path.join(BACKEND_ROOT, 'src');
 const BASELINE_FILE = path.join(__dirname, 'arch-debt-baseline.json');
 
+/**
+ * BACKEND_ROOT 相对**仓库根**的前缀（如 `runtime/node/backend/`），**带尾斜杠**。
+ * 用 git 自己算（`ls-files` 的输出基准就是仓库根），不猜目录深度：
+ * `git rev-parse --show-prefix` 在子目录里返回该目录相对仓库根的前缀，正是所需。
+ * 取不到时（不在 git 工作树、git 不可用）返回空串。
+ *
+ * ★ 2026-10-04：本函数原为 `listChangedFiles` 内的局部闭包，被提升为模块级 ——
+ * 因为 `runChangedGate` 也需要它，而那里此前**硬编码**了 `'services/backend/'`。
+ * 方案 P 目录迁移（services/ → runtime/node/）后该硬编码永不匹配，导致
+ * `--changed` 门禁 `scanned` 恒为 0、恒报「改动文件体积全部达标」—— 假绿。
+ * 真源只此一处，`listChangedFiles` 与 `runChangedGate` 共用。
+ */
+function computeRepoPrefix() {
+  try {
+    return cp
+      .execSync('git -c core.quotePath=false rev-parse --show-prefix', {
+        cwd: BACKEND_ROOT,
+        stdio: ['ignore', 'pipe', 'pipe'],
+        encoding: 'utf8',
+      })
+      .trim()
+      .replace(/\\/g, '/');
+  } catch {
+    return '';
+  }
+}
+
 // ── 可调阈值（env 覆盖，零硬编码红线）────────────────────────────────────────
 const GOD_FILE_LOC = intEnv('KHY_ARCH_GOD_FILE_LOC', 2500);
 const CHANGED_FILE_LOC_MAX = intEnv('KHY_ARCH_CHANGED_FILE_LOC', 800);
@@ -1113,17 +1140,9 @@ function listChangedFiles() {
     }
   };
   const split = (out) => out.split('\n').map((s) => s.trim()).filter(Boolean);
-  /**
-   * BACKEND_ROOT 相对仓库根的路径前缀（如 `services/backend/`），**带尾斜杠**。
-   * 用 git 自己算（`ls-files` 的输出基准就是仓库根），不猜目录深度：
-   * `git rev-parse --show-prefix` 在子目录里返回该目录相对仓库根的前缀，正是所需。
-   * 取不到时（不在 git 工作树、git 不可用）退化为空串 —— 此时 others 的输出
-   * 保持原样，宁可漏补前缀也不拼错路径（拼错会产生「不存在的长路径」）。
-   */
-  const computeRepoPrefix = () => {
-    const out = run(`${git} rev-parse --show-prefix`);
-    return out ? out.replace(/\\/g, '/') : '';
-  };
+  // 前缀计算见模块级 computeRepoPrefix()（与 --changed 门禁共用同一真源）。
+  // 取不到时退化为空串 —— 此时 others 的输出保持原样，
+  // 宁可漏补前缀也不拼错路径（拼错会产生「不存在的长路径」）。
   const repoPrefix = computeRepoPrefix();
   const toRepoRel = (p) => {
     const norm = p.replace(/\\/g, '/');
@@ -1198,9 +1217,13 @@ function formatChangedReport({ errors, warnings, exempt, scanned, undetermined }
  */
 function runChangedGate(argv = []) {
   const changed = listChangedFiles();
-  const undetermined = changed === null;
   const list = changed || [];
-  const prefix = 'services/backend/';
+  // 后端在仓库根下的前缀（如 `runtime/node/backend/`）。**动态取**，不写死：
+  // 写死会在目录迁移后静默失配 → scanned 恒 0 → 恒报达标（假绿，2026-10-04 实测踩中）。
+  const prefix = computeRepoPrefix();
+  // 前缀取不到时同样**不可判定**：空前缀下 `startsWith('')` 对全部为真，但随后
+  // `src/` 判断又全部为假 → scanned 仍为 0。必须如实报 undetermined，不许假绿。
+  const undetermined = changed === null || prefix === '';
   const baseline = loadBaseline();
   const baseGod = new Set((baseline.godFiles || []).map((g) => g.file));
   const errors = [];

@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: prompt.md -->
 <title>Test-Driven Development · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>test-driven-development<span class="sep">›</span>Test-Driven Development</div>
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>test-driven-development<span class="sep">›</span>Test-Driven Development</div>
       <header class="hero reveal"><h1>Test-Driven Development</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#test-driven-development">Test-Driven Development</a></li><li class="lvl-2"><a href="#overview">Overview</a></li><li class="lvl-2"><a href="#when-to-use">When to Use</a></li><li class="lvl-2"><a href="#the-tdd-cycle">The TDD Cycle</a></li><li class="lvl-3"><a href="#step-1-red-write-a-failing-test">Step 1: RED — Write a Failing Test</a></li><li class="lvl-3"><a href="#step-2-green-make-it-pass">Step 2: GREEN — Make It Pass</a></li><li class="lvl-3"><a href="#step-3-refactor-clean-up">Step 3: REFACTOR — Clean Up</a></li><li class="lvl-2"><a href="#the-prove-it-pattern-bug-fixes">The Prove-It Pattern (Bug Fixes)</a></li><li class="lvl-2"><a href="#the-test-pyramid">The Test Pyramid</a></li><li class="lvl-3"><a href="#test-sizes-resource-model">Test Sizes (Resource Model)</a></li><li class="lvl-3"><a href="#decision-guide">Decision Guide</a></li><li class="lvl-2"><a href="#writing-good-tests">Writing Good Tests</a></li><li class="lvl-3"><a href="#test-state-not-interactions">Test State, Not Interactions</a></li><li class="lvl-3"><a href="#damp-over-dry-in-tests">DAMP Over DRY in Tests</a></li><li class="lvl-3"><a href="#prefer-real-implementations-over-mocks">Prefer Real Implementations Over Mocks</a></li><li class="lvl-3"><a href="#use-the-arrange-act-assert-pattern">Use the Arrange-Act-Assert Pattern</a></li><li class="lvl-3"><a href="#one-assertion-per-concept">One Assertion Per Concept</a></li><li class="lvl-3"><a href="#name-tests-descriptively">Name Tests Descriptively</a></li><li class="lvl-2"><a href="#test-anti-patterns-to-avoid">Test Anti-Patterns to Avoid</a></li><li class="lvl-2"><a href="#browser-testing-with-devtools">Browser Testing with DevTools</a></li><li class="lvl-3"><a href="#the-devtools-debugging-workflow">The DevTools Debugging Workflow</a></li><li class="lvl-3"><a href="#what-to-check">What to Check</a></li><li class="lvl-3"><a href="#security-boundaries">Security Boundaries</a></li><li class="lvl-2"><a href="#when-to-use-subagents-for-testing">When to Use Subagents for Testing</a></li><li class="lvl-2"><a href="#see-also">See Also</a></li><li class="lvl-2"><a href="#common-rationalizations">Common Rationalizations</a></li><li class="lvl-2"><a href="#red-flags">Red Flags</a></li><li class="lvl-2"><a href="#verification">Verification</a></li></ul></nav>
       <article class="doc-body">
@@ -254,14 +254,14 @@ then verifies the test passes.</code></pre>
 <ul><li>[ ] Every new behavior has a corresponding test</li><li>[ ] All tests pass: <code>npm test</code></li><li>[ ] Bug fixes include a reproduction test that failed before the fix</li><li>[ ] Test names describe the behavior being verified</li><li>[ ] No tests were skipped or disabled</li><li>[ ] Coverage hasn't decreased (if tracked)</li></ul>
 <p><strong>Note:</strong> Run each test command after a change that could affect the result. After a clean run, don't repeat the same command unless the code has changed since — re-running on unchanged code adds no confidence.</p>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../../../services/backend/src/skills/built-in/task-dispatcher.html"><div class="dir">← 上一篇</div><div class="ttl">Task Dispatcher</div></a><a class="next" href="../../../../../../services/backend/src/skills/built-in/test-driven-development/references/testing-patterns.html"><div class="dir">下一篇 →</div><div class="ttl">Testing Patterns Reference</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/skills/built-in/task-dispatcher.html"><div class="dir">← 上一篇</div><div class="ttl">Task Dispatcher</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/skills/built-in/test-driven-development/references/testing-patterns.html"><div class="dir">下一篇 →</div><div class="ttl">Testing Patterns Reference</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="services/backend/src/skills/built-in/test-driven-development/prompt.html";</script>
-<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/skills/built-in/test-driven-development/prompt.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

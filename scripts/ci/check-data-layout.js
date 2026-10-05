@@ -250,7 +250,7 @@ function scanBypass() {
     REGISTRY_REL.replace(/\\/g, '/'),
     'scripts/ci/check-data-layout.js',
   ]);
-  const roots = ['services/backend/src', 'services/backend/bin', 'electron', 'scripts', 'extensions/scripts'];
+  const roots = ['runtime/node/backend/src', 'runtime/node/backend/bin', 'electron', 'scripts', 'delivery/extension/scripts'];
   const hits = [];
   const stack = roots.map((r) => path.join(REPO_ROOT, r));
   let visited = 0;

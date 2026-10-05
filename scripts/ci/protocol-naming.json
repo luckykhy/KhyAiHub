@@ -72,9 +72,9 @@
     "[DESIGN-ACP-"
   ],
   "privateDialectQualifiers": ["私有", "进程内"],
-  "contractsA2aDir": "services/backend/src/contracts/a2a",
-  "acpTransportFile": "services/backend/src/services/acpTransport.js",
-  "acpSchemaFile": "services/backend/src/contracts/acp/acp-message.schema.json",
+  "contractsA2aDir": "runtime/node/backend/src/contracts/a2a",
+  "acpTransportFile": "runtime/node/backend/src/services/acpTransport.js",
+  "acpSchemaFile": "runtime/node/backend/src/contracts/acp/acp-message.schema.json",
   "scanExtensions": [".js", ".cjs", ".mjs", ".ts", ".tsx", ".vue", ".md", ".json", ".yml", ".yaml"],
   "skipDirs": [
     ".git",

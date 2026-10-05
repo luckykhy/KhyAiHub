@@ -22,8 +22,8 @@ const noop = async () => ({ action: 'allow' });
 
 function mkProject(dirName, config) {
   const proj = path.join(sandbox, dirName);
-  fs.mkdirSync(path.join(proj, '.khy'), { recursive: true });
-  fs.writeFileSync(path.join(proj, '.khy', 'hooks.json'), typeof config === 'string' ? config : JSON.stringify(config));
+  fs.mkdirSync(path.join(proj, 'works', 'data', 'khy'), { recursive: true });
+  fs.writeFileSync(path.join(proj, 'works', 'data', 'khy', 'hooks.json'), typeof config === 'string' ? config : JSON.stringify(config));
   return proj;
 }
 

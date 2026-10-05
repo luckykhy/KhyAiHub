@@ -7,7 +7,7 @@
  *   模式1 本地无网络无模型 / 模式2 有网络无模型 / 模式3 有网络有模型（提高 RAG 召回）。
  *
  * 本模块把「KHY-OS 知识库」抽成统一检索层：
- *   - 语料 = curriculum 知识点(title/desc/files) + 本地文档(kernel/docs、docs/指南、README、AGENTS)
+ *   - 语料 = curriculum 知识点(title/desc/files) + 本地文档(runtime/boot/kernel/docs、docs/指南、README、AGENTS)
  *     + topic 源码头部，全部切成有界 chunk。
  *   - 词法检索：始终可用、离线可跑（复用 knowledgeTeachingService 的中性 CJK/ASCII 分词，
  *     叠加 OS/内核领域同义词扩展 + 知识点标题/文件名扩展 → 提高召回）。
@@ -270,7 +270,7 @@ function _chunkMarkdown(sourceLabel, content) {
 function _listMarkdownDocs() {
   // Repo-relative directories + root files worth indexing. resolveSourceAbs
   // applies the curriculum's PROJECT_ROOT walk + old→new remaps (single source).
-  const docRoots = ['kernel/docs', 'docs/指南', 'docs'];
+  const docRoots = ['runtime/boot/kernel/docs', 'docs/指南', 'docs'];
   const rootFiles = ['README.md', 'README-EN.md', 'AGENTS.md', 'CLAUDE.md'];
   const found = []; // { label, abs }
   const seen = new Set();

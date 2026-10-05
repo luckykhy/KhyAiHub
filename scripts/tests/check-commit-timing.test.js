@@ -164,7 +164,7 @@ describe('check-commit-timing — 反例命中（每条判据都能真报警）'
   });
 
   test('T5 可回滚：改动集 > 20 文件 → unit-not-rollbackable', () => {
-    const many = Array.from({ length: 25 }, (_, i) => `M:services/backend/src/f${i}.js`).join(',');
+    const many = Array.from({ length: 25 }, (_, i) => `M:runtime/node/backend/src/f${i}.js`).join(',');
     const r = run('', { files: many });
     assert.match(r.output, /unit-not-rollbackable/);
     assert.equal(r.warnings, 1, r.output);
@@ -172,7 +172,7 @@ describe('check-commit-timing — 反例命中（每条判据都能真报警）'
 
   test('文档 + 代码同批不算多意图（SOURCING-006 要求的同步）', () => {
     const r = run('', {
-      files: 'M:docs/10_规范/DESIGN-GIT/[DESIGN-GIT-004] 提交时机规范.md,M:services/backend/src/cli/router.js',
+      files: 'M:docs/10_规范/DESIGN-GIT/[DESIGN-GIT-004] 提交时机规范.md,M:runtime/node/backend/src/cli/router.js',
     });
     assert.doesNotMatch(r.output, /unit-multi-intent/);
   });
@@ -216,7 +216,7 @@ describe('check-commit-timing — 阶段真的生效（最容易被忽略的一�
   });
 
   test('T5 是 S 判据，S3 下仍为 warning（不升 error）', () => {
-    const many = Array.from({ length: 25 }, (_, i) => `M:services/backend/src/f${i}.js`).join(',');
+    const many = Array.from({ length: 25 }, (_, i) => `M:runtime/node/backend/src/f${i}.js`).join(',');
     const r = run('', { files: many, stage: 'S3' });
     assert.match(r.output, /\[WARN \] unit-not-rollbackable/, r.output);
     assert.equal(r.errors, 0, r.output);

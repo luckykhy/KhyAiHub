@@ -97,7 +97,7 @@ jobs:
       # 一致性套件是「打向一个活的服务端」的探针，必须先有监听 3000 的进程。
       # 若后端需要数据库等前置条件而无法在 CI 启动，本步会以清晰日志失败（属已知依赖，见计划文档）。
       - name: Start backend (background)
-        working-directory: services/backend
+        working-directory: runtime/node/backend
         run: |
           set -euo pipefail
           node server.js > /tmp/khy-backend.log 2>&1 &

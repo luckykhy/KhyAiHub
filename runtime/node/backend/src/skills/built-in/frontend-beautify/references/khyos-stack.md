@@ -75,7 +75,7 @@
 | 项目 | dev | build 检查 |
 |---|---|---|
 | ai-frontend | `cd apps/ai-frontend && npm run dev` | `cd apps/ai-frontend && npx vite build` |
-| khyquant | `cd software/khyquant/frontend && npm run dev` | `cd software/khyquant/frontend && npx vite build` |
+| khyquant | `cd delivery/channel/khyquant/frontend && npm run dev` | `cd delivery/channel/khyquant/frontend && npx vite build` |
 | khy-mobile | `cd apps/khy-mobile && npm run dev` | `cd apps/khy-mobile && npx vite build` |
 
 每次改动后至少跑一次 build 检查确认无编译错误。

@@ -7,13 +7,13 @@
  * Verifies the wiring between each of the client surfaces and the Node
  * backend, so a runtime 404 / dead call is caught statically before it ships:
  *
- *   WEB    apps/ai-frontend      REST /api/*  (axios)  → backend route namespaces
- *   TUI    services/backend/src/cli  in-process service-layer `require` (CH-2)
- *   DESKTOP apps/khyos-desktop + electron/  IPC channels + endpoint source
+ *   WEB    delivery/web/ai-frontend      REST /api/*  (axios)  → backend route namespaces
+ *   TUI    runtime/node/backend/src/cli  in-process service-layer `require` (CH-2)
+ *   DESKTOP delivery/desktop/khyos-desktop + electron/  IPC channels + endpoint source
  *
  * (MOBILE direction removed: apps/khy-mobile was an isolated ghost endpoint with
  *  no source — see [DESIGN-ARCH-120] §五. The surviving mobile client is the
- *  Flutter app apps/khy-os-client-app, which has no /api/* web source to audit.)
+ *  Flutter app delivery/mobile/khy-os-client-app, which has no /api/* web source to audit.)
  *
  * Judgement per direction (see AGENTS.md 五通道决策矩阵):
  *   - WEB: every requested `/api/<ns>...` namespace must be a namespace
@@ -48,9 +48,9 @@ const STRICT_EXPORTS = process.argv.includes('--strict-exports'); // also run TU
 // `pathname === '/api/...'` dispatch) expresses its prefix as a '/api/X' literal,
 // so scanning these for '/api/X' string literals captures the full served set.
 const BACKEND_SERVER_FILES = [
-  p('services', 'backend', 'server.js'),
-  p('services', 'backend', 'src', 'services', 'aiManagementServer.js'),
-  p('services', 'ai-backend', 'server.js'),
+  p('runtime', 'node', 'backend', 'server.js'),
+  p('runtime', 'node', 'backend', 'src', 'services', 'aiManagementServer.js'),
+  p('runtime', 'node', 'ai-backend', 'server.js'),
 ];
 
 const PROD_DOMAIN = /khyquant\.(top|com|cn)\b/;
@@ -126,7 +126,7 @@ function checkTui() {
   const gaps = [];      // unguarded require target that does not resolve (hard)
   const warnings = [];   // fail-soft (try/catch) optional module absent, or missing named export
   const matched = [];   // resolved OK
-  const cliFiles = listFiles(p('services', 'backend', 'src', 'cli'), ['.js']);
+  const cliFiles = listFiles(p('runtime', 'node', 'backend', 'src', 'cli'), ['.js']);
 
   const RE_REQ = /require\(\s*(['"])([^'"]+)\1\s*\)/g;
 
@@ -242,7 +242,7 @@ function checkDesktop() {
 
   // 握手面识别：任意接收者上的 .handle('ch'，不限定变量名。
   // 早先只认 `ipcMain.handle(`，而注册点常把 IpcMain 作为注入参数传入
-  // （例：apps/khyos-desktop/src/main/keyManager/ipc.ts 的 `ipc.handle('keys:list', …)`），
+  // （例：delivery/desktop/khyos-desktop/src/main/keyManager/ipc.ts 的 `ipc.handle('keys:list', …)`），
   // 参数名一旦不是字面 `ipcMain`，整批已注册通道就被误判成孤儿 —— 2026-10-01 实测
   // 25 条假阳性即由此而来。判据应覆盖「是否注册」，而不是「用什么变量名注册」。
   const RE_HANDLE = /(?:\b[A-Za-z_$][\w$]*)\.handle\(\s*(['"`])([^'"`]+)\1/;
@@ -316,7 +316,7 @@ function checkDesktop() {
   // 不判 error 也不判 warning —— 刻意保留而无入口是既有设计选择
   // （先例：[DESIGN-ARCH-060] §四把 cli/pty.js 登记为「保留且刻意不接线」）。
   // 打印只为让维护者看见「有什么能力还没入口」，处置权在人工。
-  // 2026-10-01 实测本仓命中 1 项：host:status（apps/khyos-desktop/src/main/index.ts:1027）。
+  // 2026-10-01 实测本仓命中 1 项：host:status（delivery/desktop/khyos-desktop/src/main/index.ts:1027）。
   const danglingHandles = [...allHandles].filter((ch) => !allInvoked.has(ch)).sort();
 
   return {
@@ -374,7 +374,7 @@ function main() {
 
   // mobile direction removed: apps/khy-mobile is an isolated ghost endpoint
   // (0 git-tracked files, source lost — see [DESIGN-ARCH-120] §五). The surviving
-  // mobile client is the Flutter app apps/khy-os-client-app, which has no /api/*
+  // mobile client is the Flutter app delivery/mobile/khy-os-client-app, which has no /api/*
   // web source to audit here.
 
   let tui = { label: 'TUI (cli service-layer require)', gaps: [], warnings: [], matched: [], total: 0, skipped: true };

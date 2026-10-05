@@ -20,7 +20,7 @@
 
 const path = require('path');
 
-const BACKEND = path.resolve(__dirname, '..', '..', '..', 'services', 'backend', 'src');
+const BACKEND = path.resolve(__dirname, '..', '..', '..', '..', 'runtime', 'node', 'backend', 'src');
 function cli(mod) { return require(path.join(BACKEND, 'cli', mod)); }
 
 const CALL_BUDGET_MS = 3000; // any single call exceeding this is a HANG (ReDoS)

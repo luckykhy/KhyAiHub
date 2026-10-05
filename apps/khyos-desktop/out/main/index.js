@@ -732,7 +732,7 @@ async function startProxy() {
   if (!root) {
     return {
       ok: false,
-      error: "本地网关启动失败：未找到 backend 服务（env KHY_BACKEND_SERVICES 或仓库内 services/backend），请改用 khy CLI 启动网关"
+      error: "本地网关启动失败：未找到 backend 服务（env KHY_BACKEND_SERVICES 或仓库内 runtime/node/backend），请改用 khy CLI 启动网关"
     };
   }
   try {
@@ -758,10 +758,10 @@ function resolveBackendServicesRoot() {
   const explicit = process.env.KHY_BACKEND_SERVICES;
   if (explicit) candidates.push(path$1.resolve(explicit));
   const repoRoot = resolveRepoRoot();
-  if (repoRoot) candidates.push(path$1.join(repoRoot, "services", "backend", "src", "services"));
+  if (repoRoot) candidates.push(path$1.join(repoRoot, "runtime", "node", "backend", "src", "services"));
   const portable = process.env.KHY_PORTABLE_ROOT || process.env.KHYQUANT_PORTABLE_ROOT;
-  if (portable) candidates.push(path$1.join(portable, "khy-os", "services", "backend", "src", "services"));
-  if (portable) candidates.push(path$1.join(portable, "services", "backend", "src", "services"));
+  if (portable) candidates.push(path$1.join(portable, "khy-os", "runtime", "node", "backend", "src", "services"));
+  if (portable) candidates.push(path$1.join(portable, "runtime", "node", "backend", "src", "services"));
   for (const c of candidates) {
     try {
       if (existsSync(path$1.join(c, "gateway", "providerPresets.js"))) {
@@ -801,7 +801,7 @@ function agentTargetPath(app2) {
       return path$1.join(dir, "opencode.json");
     }
     case "qodercli":
-      return process.env.KHY_ENV_FILE || path$1.join(getRepoRootForEnvFile(), "services", "backend", ".env");
+      return process.env.KHY_ENV_FILE || path$1.join(getRepoRootForEnvFile(), "runtime", "node", "backend", ".env");
     default:
       return "";
   }
@@ -3375,8 +3375,8 @@ async function createWindow() {
   });
   ipcMain.handle("app:brandingLinks", async () => {
     try {
-      const root = process.env.KHY_OS_DIR ? path$1.resolve(process.env.KHY_OS_DIR) : path$1.resolve(__dirname, "..", "..", "..");
-      const sd = nodeRequire(path$1.join(root, "services", "backend", "src", "constants", "serviceDefaults.js"));
+      const root = process.env.KHY_OS_DIR ? path$1.resolve(process.env.KHY_OS_DIR) : path$1.resolve(__dirname, "..", "..", "..", "..");
+      const sd = nodeRequire(path$1.join(root, "runtime", "node", "backend", "src", "constants", "serviceDefaults.js"));
       const host = sd.CLOUD_DEFAULT_HOST || "";
       return {
         ok: true,

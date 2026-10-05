@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><style>body{margin:0;background:#fff;color:#111827;font-family:"Microsoft YaHei","Segoe UI",sans-serif;padding:28px 34px}
+h1{font-size:26px;margin:0 0 4px}
+.sub{font-size:14px;color:#4b5563;margin-bottom:20px}
+.src{font-size:12px;color:#6b7280;margin-top:22px;border-top:1px solid #e5e7eb;padding-top:10px;line-height:1.6}
+.bar-row{display:flex;align-items:center;margin:9px 0;font-size:14px}
+.bar-label{width:280px;flex:none;text-align:right;padding-right:12px;color:#374151}
+.bar-track{flex:1;background:#f3f4f6;border-radius:3px;height:26px;position:relative}
+.bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#1d4ed8,#3b82f6)}
+.bar-val{position:absolute;left:calc(100% + 8px);top:4px;font-size:13px;color:#111827;white-space:nowrap}
+.tiles{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.tile{flex:1;min-width:210px;border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;background:#f9fafb}
+.tile .n{font-size:30px;font-weight:700;color:#1d4ed8}
+.tile .k{font-size:13px;color:#374151;margin-top:4px;line-height:1.5}
+.chart{margin:6px 0 2px}
+svg{display:block}
+.tag{display:inline-block;font-size:12px;color:#374151;border:1px solid #d1d5db;border-radius:11px;padding:1px 9px;margin-right:6px}</style></head><body>
+<h1>KhyOS 开发过程提交活跃度（全部分支，按月）</h1>
+<div class="sub">C-M4 第④类痕迹：迭代过程，不是一次成型</div>
+<div><span class="tag">口径：--all 全分支 920 条</span><span class="tag">分支数 36</span><span class="tag">快照 2026-09-28</span></div>
+<div class="chart"><div class="tiles"><div class="tile"><div class="n">920</div><div class="k">全分支提交总数（完整开发历史）</div></div><div class="tile"><div class="n">62</div><div class="k">本分支 main 的提交数（重建后的短历史）</div></div><div class="tile"><div class="n">1</div><div class="k">作者数（唯一署名人）</div></div><div class="tile"><div class="n">88</div><div class="k">含 AI 署名的提交（占 9.6%，未抹改历史）</div></div></div><div class="bar-row"><div class="bar-label">2026-07</div><div class="bar-track"><div class="bar-fill" style="width:7.00%"></div><div class="bar-val">43</div></div></div>
+<div class="bar-row"><div class="bar-label">2026-08</div><div class="bar-track"><div class="bar-fill" style="width:60.69%"></div><div class="bar-val">373</div></div></div>
+<div class="bar-row"><div class="bar-label">2026-09</div><div class="bar-track"><div class="bar-fill" style="width:82.00%"></div><div class="bar-val">504</div></div></div></div>
+<div class="src">数据来源：人类贡献度量.git.全分支口径.月度提交 / 作者 / 含AI署名提交_全分支<br>生成命令：<code>node scripts/evidence/render-images.js</code><br>复算命令：<code>git log --all --format=%ad --date=format:%Y-%m | sort | uniq -c</code> ｜ <code>git rev-list --count --all</code></div>
+</body></html>

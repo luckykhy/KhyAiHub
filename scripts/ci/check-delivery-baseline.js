@@ -613,7 +613,7 @@ function checkD10(add, th) {
 
 // ── 任务面棘轮（[DESIGN-DELIV-002] §2.3 棘轮 1/2） ──────────────────────────
 function countRouterCommands() {
-  const rel = 'services/backend/src/constants/commandSchema.js';
+  const rel = 'runtime/node/backend/src/constants/commandSchema.js';
   const text = readText(rel);
   if (!text) return null;
   const m = /ROUTER_COMMANDS\s*[:=]\s*\[([\s\S]*?)\]/.exec(text);
@@ -623,7 +623,7 @@ function countRouterCommands() {
 }
 
 function countAliasEntries() {
-  const rel = 'services/backend/src/cli/aliases.js';
+  const rel = 'runtime/node/backend/src/cli/aliases.js';
   const text = readText(rel);
   if (!text) return null;
   const n = (text.match(/\bcommand\s*:/g) || []).length;
@@ -632,7 +632,7 @@ function countAliasEntries() {
 
 function countHandlerFiles() {
   try {
-    return fs.readdirSync(path.join(ROOT, 'services/backend/src/cli/handlers')).filter((f) => f.endsWith('.js')).length || null;
+    return fs.readdirSync(path.join(ROOT, 'runtime/node/backend/src/cli/handlers')).filter((f) => f.endsWith('.js')).length || null;
   } catch {
     return null;
   }

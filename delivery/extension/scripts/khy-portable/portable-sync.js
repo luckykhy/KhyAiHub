@@ -39,7 +39,7 @@ function parseArgv(argv) {
 
 async function main() {
   const { options, args } = parseArgv(process.argv.slice(2));
-  const { handlePortable } = require('../../../services/backend/src/cli/handlers/portable');
+  const { handlePortable } = require('../../../../runtime/node/backend/src/cli/handlers/portable');
   let sub = 'sync';
   if (options.help) sub = 'help';
   else if (options.status) sub = 'status';

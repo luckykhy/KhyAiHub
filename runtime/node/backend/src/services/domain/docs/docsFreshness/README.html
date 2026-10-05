@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: README.md -->
 <title>docsFreshness — 文档新鲜度自检（D2 功能单元） · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>docs<span class="sep">›</span>docsFreshness<span class="sep">›</span>docsFreshness — 文档新鲜度自检（D2 功能单元）</div>
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>docs<span class="sep">›</span>docsFreshness<span class="sep">›</span>docsFreshness — 文档新鲜度自检（D2 功能单元）</div>
       <header class="hero reveal"><h1>docsFreshness — 文档新鲜度自检（D2 功能单元）</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#docsfreshness-文档新鲜度自检-d2-功能单元">docsFreshness — 文档新鲜度自检（D2 功能单元）</a></li><li class="lvl-2"><a href="#逐成员">逐成员</a></li><li class="lvl-2"><a href="#契约-每条都有具名测试兜">契约（每条都有具名测试兜）</a></li><li class="lvl-2"><a href="#已登记的偏差-不在本单元内悄悄修-也不写进-maydependon-冒充许可">已登记的偏差（不在本单元内悄悄修，也不写进 `mayDependOn` 冒充许可）</a></li><li class="lvl-2"><a href="#怎么跑">怎么跑</a></li></ul></nav>
       <article class="doc-body">
@@ -82,14 +82,14 @@ node scripts/ci/check-repo-layout.js</code></pre>
 <p>runner 的测试自带临时仓库 fixture（建在 <code>.khyos/tmp/</code> 下、<code>t.after</code> 清理），<br>git 一律走注入的假 <code>gitSoft</code>，<strong>绝不</strong>碰真 git、真 <code>docs/</code>；fix 分支的测试也只写自己的 fixture 文件，<br>并断言 fixture 内不存在 <code>scripts/docs/md-to-pdf.js</code>，所以永远不会执行真实产物工具。</p>
 <p><code>*.test.js</code> / <code>*.md</code> / <code>*.json</code> 不计入源文件数，所以本单元的记录动作是<br>「5 份同名同目录测试 + 1 份清单 + 本 README」：按守卫实测，每补一份共置测试 <code>functional-unit</code> 降 1，<br>补清单一次 <code>entry-buffer</code> 降 5。</p>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../../../../services/backend/src/services/domain/desktop/README.html"><div class="dir">← 上一篇</div><div class="ttl">desktop — 屏幕操作、浏览器与设备应用的执行面（D2）</div></a><a class="next" href="../../../../../../../services/backend/src/services/domain/docs/README.html"><div class="dir">下一篇 →</div><div class="ttl">docs — 文档新鲜度与发布说明的判定层（D2）</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/services/domain/desktop/README.html"><div class="dir">← 上一篇</div><div class="ttl">desktop — 屏幕操作、浏览器与设备应用的执行面（D2）</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/services/domain/docs/README.html"><div class="dir">下一篇 →</div><div class="ttl">docs — 文档新鲜度与发布说明的判定层（D2）</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="services/backend/src/services/domain/docs/docsFreshness/README.html";</script>
-<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/docs/docsFreshness/README.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

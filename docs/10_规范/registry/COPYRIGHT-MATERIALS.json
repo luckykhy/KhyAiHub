@@ -11,23 +11,23 @@
     "行数口径": "去纯空行 + 剥离整行注释（实测下唯一能让两端同时达标的口径：保留注释时前 30 页 49.8 行/页、后 30 页 43.6 行/页）"
   },
   "前30页": [
-    { "file": "platform/khy_platform/__main__.py", "有效代码行": 16 },
-    { "file": "platform/khy_platform/cli.py", "有效代码行": 2184 },
-    { "file": "platform/khy_platform/_bootstrap.py", "有效代码行": 1724, "角色": "备选/续入" }
+    { "file": "runtime/substrate/platform/khy_platform/__main__.py", "有效代码行": 16 },
+    { "file": "runtime/substrate/platform/khy_platform/cli.py", "有效代码行": 2184 },
+    { "file": "runtime/substrate/platform/khy_platform/_bootstrap.py", "有效代码行": 1724, "角色": "备选/续入" }
   ],
   "后30页": [
-    { "file": "kernel/boot/boot.asm", "有效代码行": 123 },
-    { "file": "kernel/boot/long_mode.asm", "有效代码行": 16 },
-    { "file": "kernel/boot/isr.asm", "有效代码行": 181 },
-    { "file": "kernel/boot/context_switch.asm", "有效代码行": 32 },
-    { "file": "kernel/boot/usermode.asm", "有效代码行": 51 },
-    { "file": "kernel/src/sched.c", "有效代码行": 267 },
-    { "file": "kernel/src/vmm.c", "有效代码行": 434 },
-    { "file": "kernel/src/process.c", "有效代码行": 763 },
-    { "file": "kernel/src/syscall.c", "有效代码行": 1367, "角色": "后备/续入（后 30 页素材余量仅 14%，Word 版每页行数低于 55 时续入）" }
+    { "file": "runtime/boot/kernel/boot/boot.asm", "有效代码行": 123 },
+    { "file": "runtime/boot/kernel/boot/long_mode.asm", "有效代码行": 16 },
+    { "file": "runtime/boot/kernel/boot/isr.asm", "有效代码行": 181 },
+    { "file": "runtime/boot/kernel/boot/context_switch.asm", "有效代码行": 32 },
+    { "file": "runtime/boot/kernel/boot/usermode.asm", "有效代码行": 51 },
+    { "file": "runtime/boot/kernel/src/sched.c", "有效代码行": 267 },
+    { "file": "runtime/boot/kernel/src/vmm.c", "有效代码行": 434 },
+    { "file": "runtime/boot/kernel/src/process.c", "有效代码行": 763 },
+    { "file": "runtime/boot/kernel/src/syscall.c", "有效代码行": 1367, "角色": "后备/续入（后 30 页素材余量仅 14%，Word 版每页行数低于 55 时续入）" }
   ],
   "中段（不提交，手册描述）": [
-    { "file": "services/backend/bin/khy.js", "有效代码行": 1538 }
+    { "file": "runtime/node/backend/bin/khy.js", "有效代码行": 1538 }
   ],
   "排除清单_已核验": {
     "核验日期": "2026-09-20",
@@ -40,20 +40,20 @@
       "自动生成物tools_gen_*": 1
     },
     "排除目录重点": [
-      "kernel/vendor（含 moonbit/runtime.c、moonbit_gen.c）",
-      "services/backend/vendor",
-      "apps/khyos-desktop/dist-ts、out",
+      "runtime/boot/kernel/vendor（含 moonbit/runtime.c、moonbit_gen.c）",
+      "runtime/node/backend/vendor",
+      "delivery/desktop/khyos-desktop/dist-ts、out",
       "任意 node_modules"
     ]
   },
   "原创性声明": {
     "前30页": "自研（Python 启动器）",
-    "后30页": "自研（手写 OS 内核；全仓 .c 共 12946 行、.asm 共 5381 行，100% 位于 kernel/，是仓内唯一的原创底层语言层）",
+    "后30页": "自研（手写 OS 内核；全仓 .c 共 12946 行、.asm 共 5381 行，100% 位于 runtime/boot/kernel/，是仓内唯一的原创底层语言层）",
     "第三方": "vendor/ 与 node_modules/ 一律不入选材（已在排除清单中）"
   },
   "未决项": [
     "Word 导出后的真实页数需再复核一次（Chrome 与 Word 分页不会逐行一致）",
-    "后 30 页素材余量仅 14%，若 Word 版每页行数低于 55 需续入 kernel/src/syscall.c",
+    "后 30 页素材余量仅 14%，若 Word 版每页行数低于 55 需续入 runtime/boot/kernel/src/syscall.c",
     "人工确认：是否接受「剥离整行注释」这一材料编排方式"
   ]
 }

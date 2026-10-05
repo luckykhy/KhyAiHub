@@ -89,7 +89,7 @@ async function search(query, options) {
  * @returns {Promise<object|null>}
  */
 async function getInfo(name) {
-  const url = `${_getRegistryUrl()}/v1/extensions/${encodeURIComponent(name)}`;
+  const url = `${_getRegistryUrl()}/v1/delivery/extension/${encodeURIComponent(name)}`;
   try {
     return await _fetchJson(url);
   } catch {

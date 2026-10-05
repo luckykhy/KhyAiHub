@@ -27,7 +27,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const provisioner = require('../../services/backend/src/services/runtimeProvisioner');
+const provisioner = require('../../runtime/node/backend/src/services/runtimeProvisioner');
 
 function isExecutable(file) {
   if (process.platform === 'win32') return true; // no POSIX exec bit on Windows

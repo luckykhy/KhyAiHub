@@ -9,7 +9,7 @@ Backend resolution order:
   1. khy_quant/bundled/backend/   (pip install khy-quant)
   2. khy-quant-backend package    (standalone backend package)
   3. khy_os/bundled/backend/      (pip install khy-os)
-  4. ../../services/backend/      (source development mode)
+  4. ../../../../runtime/node/backend/      (source development mode)
 """
 import json
 import os
@@ -23,7 +23,7 @@ def get_bundle_dir() -> Path:
     # 0. Portable mode: env explicitly specifies project root
     portable_root = os.environ.get("KHYQUANT_PORTABLE_ROOT")
     if portable_root:
-        portable_backend = Path(portable_root) / "services" / "backend"
+        portable_backend = Path(portable_root) / "runtime" / "node" / "backend"
         if portable_backend.exists():
             return portable_backend
 
@@ -47,7 +47,7 @@ def get_bundle_dir() -> Path:
         pass
 
     # 4. Source development mode
-    dev = Path(__file__).resolve().parent.parent.parent.parent / "services" / "backend"
+    dev = Path(__file__).resolve().parent.parent.parent.parent.parent / "runtime" / "node" / "backend"
     if dev.exists():
         return dev
 

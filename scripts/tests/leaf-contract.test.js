@@ -45,11 +45,11 @@ test('declaresLeaf: 仅 // 行提到纯叶子(描述依赖)→ false', () => {
 });
 test('declaresLeaf: 真叶子识别 / 编排器不识别', () => {
   // 路径随该叶子搬迁至 domain/query/search/（search/index.js:7 的 re-export 是现役引用）；
-  // 旧路径 services/backend/src/services/search/searchNecessity.js 已不存在，直读会 ENOENT。
-  assert.strictEqual(guard.declaresLeaf(readSrc('services/backend/src/services/domain/query/search/searchNecessity.js')), true);
-  assert.strictEqual(guard.declaresLeaf(readSrc('services/backend/src/services/memoryTier.js')), true);
-  assert.strictEqual(guard.declaresLeaf(readSrc('services/backend/src/services/toolUseLoop.js')), false);
-  assert.strictEqual(guard.declaresLeaf(readSrc('services/backend/src/services/webSearchService.js')), false);
+  // 旧路径 runtime/node/backend/src/services/search/searchNecessity.js 已不存在，直读会 ENOENT。
+  assert.strictEqual(guard.declaresLeaf(readSrc('runtime/node/backend/src/services/domain/query/search/searchNecessity.js')), true);
+  assert.strictEqual(guard.declaresLeaf(readSrc('runtime/node/backend/src/services/memoryTier.js')), true);
+  assert.strictEqual(guard.declaresLeaf(readSrc('runtime/node/backend/src/services/toolUseLoop.js')), false);
+  assert.strictEqual(guard.declaresLeaf(readSrc('runtime/node/backend/src/services/webSearchService.js')), false);
 });
 test('declaresLeaf: 「契约词…委托给纯叶子 <模块名>」式委派(模块名尾随 marker)→ false', () => {
   // after 分支排除「纯叶子 vaultCore(单一真源)」(模块名夹在中间);此为对称缺口:
@@ -61,7 +61,7 @@ test('declaresLeaf: 「契约词…委托给纯叶子 <模块名>」式委派(�
   const real = "'use strict';\n/**\n * bar.js — 确定性路径数学,单一真源(纯叶子)。\n */\nconst x = 1;\n";
   assert.strictEqual(guard.declaresLeaf(real), true);
   // selfEditAdvisoryService.js 是本缺口的真实触发者:壳,必须 false。
-  assert.strictEqual(guard.declaresLeaf(readSrc('services/backend/src/services/selfEditAdvisoryService.js')), false);
+  assert.strictEqual(guard.declaresLeaf(readSrc('runtime/node/backend/src/services/selfEditAdvisoryService.js')), false);
 });
 
 // ── 规则 1:冲突标记 ─────────────────────────────────────────────────
@@ -79,7 +79,7 @@ test('conflict-marker: 仅起始标记(markdown 孤立)→ 不误报', () => {
 });
 test('conflict-marker: 非叶子文件也覆盖(C 源)', () => {
   const src = `int main(){\n${C_START}\nreturn 0;\n${C_MID}\nreturn 1;\n${C_END}\n}\n`;
-  const r = guard.assessFile({ relPath: 'kernel/src/x.c', source: src });
+  const r = guard.assessFile({ relPath: 'runtime/boot/kernel/src/x.c', source: src });
   assert.ok(r.findings.some(f => f.rule === 'conflict-marker'));
 });
 
@@ -169,7 +169,7 @@ test('守卫扫自身源码:零 finding', () => {
   }
 });
 test('全部自声明纯叶子:零 error(现树基线)', () => {
-  const dir = path.join(repoRoot, 'services/backend/src');
+  const dir = path.join(repoRoot, 'runtime/node/backend/src');
   const stack = [dir];
   let leafCount = 0;
   const errors = [];

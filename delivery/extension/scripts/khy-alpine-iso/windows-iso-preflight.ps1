@@ -62,9 +62,9 @@ if (-not (Test-Path -LiteralPath $OutDir)) {
 }
 
 $RequiredFiles = @(
-    (Join-Path $RootDir "extensions\scripts\khy-alpine-iso\build-iso-windows.ps1"),
-    (Join-Path $RootDir "extensions\scripts\khy-alpine-iso\Dockerfile.iso-builder"),
-    (Join-Path $RootDir "extensions\scripts\khy-alpine-iso\build-khy-os-iso.sh"),
+    (Join-Path $RootDir "delivery\extension\scripts\khy-alpine-iso\build-iso-windows.ps1"),
+    (Join-Path $RootDir "delivery\extension\scripts\khy-alpine-iso\Dockerfile.iso-builder"),
+    (Join-Path $RootDir "delivery\extension\scripts\khy-alpine-iso\build-khy-os-iso.sh"),
     (Join-Path $RootDir "alpine\etc\init.d\khy-os-backend"),
     (Join-Path $RootDir "alpine\etc\init.d\khy-os-console")
 )

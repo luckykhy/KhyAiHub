@@ -48,7 +48,7 @@ const { escalate } = require('./healEscalationService');
 // 另两个已迁为拓展（khy-installer / khy-diagnostics），必须**按服务名惰性解析**：写死相对
 // 路径的话，删掉那个拓展目录会让本模块在加载期就抛 MODULE_NOT_FOUND，整个还原服务连启动
 // 都失败——那是「删目录即整机不可用」，不是 §4.1 要的「删目录即该能力消失」。
-const { probeRestoreFacts } = require('../../../../scripts/restore/restore-check');
+const { probeRestoreFacts } = require('../../../../../scripts/restore/restore-check');
 const { requireFromProvider } = require('./domain/extensions/extensions/providerModule');
 
 const MAX_STEPS = parseInt(process.env.KHY_RESTORE_MAX_STEPS || '10', 10);

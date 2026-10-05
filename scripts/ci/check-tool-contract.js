@@ -5,7 +5,7 @@
  * Unlike per-file guards, tool-contract invariants are REGISTRY-GLOBAL: a name
  * collision or a bad tool schema can only be judged with the whole registry in
  * hand. This guard therefore requires the live tool registry + the pure-leaf
- * auditor (services/backend/src/services/domain/catalog/toolCatalog/toolContract.js) and asserts
+ * auditor (runtime/node/backend/src/services/domain/catalog/toolCatalog/toolContract.js) and asserts
  * that every registered tool is contract-valid and that no normalized key is
  * claimed by tools of different risk/category (which would make resolution
  * order-dependent — the "小工具不对" precision defect).
@@ -27,7 +27,7 @@ const guard = require('../lib/toolContractGuard');
 const descGuard = require('../lib/toolDescriptionGuard');
 
 // Registry-global findings have no per-tool file; fall back to the registry module.
-const REGISTRY_REL = 'services/backend/src/tools/index.js';
+const REGISTRY_REL = 'runtime/node/backend/src/tools/index.js';
 // Cap on per-rule warning details printed for the description audit — the
 // ~130 not-yet-rewritten legacy tools produce a large warning backlog, so the
 // full list would drown the signal. Counts stay exact; details are sampled.
@@ -74,7 +74,7 @@ function printFindings(findings) {
 // an array; this shell does all the IO/require). Returns null on load failure.
 function loadRegistryTools() {
   try {
-    const registry = require('../../services/backend/src/tools');
+    const registry = require('../../runtime/node/backend/src/tools');
     const map = registry.getAll();
     if (map && typeof map.values === 'function') return Array.from(map.values());
     if (Array.isArray(map)) return map;

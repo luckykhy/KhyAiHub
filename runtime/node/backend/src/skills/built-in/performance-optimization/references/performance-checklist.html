@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: performance-checklist.md -->
 <title>Performance Checklist · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../../../../../docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>services<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>performance-optimization<span class="sep">›</span>references<span class="sep">›</span>Performance Checklist</div>
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>performance-optimization<span class="sep">›</span>references<span class="sep">›</span>Performance Checklist</div>
       <header class="hero reveal"><h1>Performance Checklist</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#performance-checklist">Performance Checklist</a></li><li class="lvl-2"><a href="#table-of-contents">Table of Contents</a></li><li class="lvl-2"><a href="#core-web-vitals-targets">Core Web Vitals Targets</a></li><li class="lvl-2"><a href="#ttfb-diagnosis">TTFB Diagnosis</a></li><li class="lvl-2"><a href="#frontend-checklist">Frontend Checklist</a></li><li class="lvl-3"><a href="#images">Images</a></li><li class="lvl-3"><a href="#javascript">JavaScript</a></li><li class="lvl-3"><a href="#css">CSS</a></li><li class="lvl-3"><a href="#fonts">Fonts</a></li><li class="lvl-3"><a href="#network">Network</a></li><li class="lvl-3"><a href="#rendering">Rendering</a></li><li class="lvl-2"><a href="#backend-checklist">Backend Checklist</a></li><li class="lvl-3"><a href="#database">Database</a></li><li class="lvl-3"><a href="#api">API</a></li><li class="lvl-3"><a href="#infrastructure">Infrastructure</a></li><li class="lvl-2"><a href="#measurement-commands">Measurement Commands</a></li><li class="lvl-3"><a href="#inp-field-data-and-devtools-workflow">INP field data and DevTools workflow</a></li><li class="lvl-2"><a href="#common-anti-patterns">Common Anti-Patterns</a></li></ul></nav>
       <article class="doc-body">
@@ -84,14 +84,14 @@ onINP(({ value, attribution }) =&gt; {
 <h2 id="common-anti-patterns">Common Anti-Patterns<a class="anchor" href="#common-anti-patterns" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>Anti-Pattern</th><th>Impact</th><th>Fix</th></tr></thead><tbody><tr><td>N+1 queries</td><td>Linear DB load growth</td><td>Use joins, includes, or batch loading</td></tr><tr><td>Unbounded queries</td><td>Memory exhaustion, timeouts</td><td>Always paginate, add LIMIT</td></tr><tr><td>Missing indexes</td><td>Slow reads as data grows</td><td>Add indexes for filtered/sorted columns</td></tr><tr><td>Layout thrashing</td><td>Jank, dropped frames</td><td>Batch DOM reads, then batch writes</td></tr><tr><td>Unoptimized images</td><td>Slow LCP, wasted bandwidth</td><td>Use WebP, responsive sizes, lazy load</td></tr><tr><td>Large bundles</td><td>Slow Time to Interactive</td><td>Code split, tree shake, audit deps</td></tr><tr><td>Blocking main thread</td><td>Poor INP, unresponsive UI</td><td>Chunk long tasks with <code>scheduler.yield()</code> / <code>yieldToMain</code>, offload to Web Workers</td></tr><tr><td>Memory leaks</td><td>Growing memory, eventual crash</td><td>Clean up listeners, intervals, refs</td></tr></tbody></table>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../../../../services/backend/src/skills/built-in/performance-optimization/prompt.html"><div class="dir">← 上一篇</div><div class="ttl">Performance Optimization</div></a><a class="next" href="../../../../../../../services/backend/src/skills/built-in/planning-and-task-breakdown/prompt.html"><div class="dir">下一篇 →</div><div class="ttl">Planning and Task Breakdown</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/skills/built-in/performance-optimization/prompt.html"><div class="dir">← 上一篇</div><div class="ttl">Performance Optimization</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/skills/built-in/planning-and-task-breakdown/prompt.html"><div class="dir">下一篇 →</div><div class="ttl">Planning and Task Breakdown</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="services/backend/src/skills/built-in/performance-optimization/references/performance-checklist.html";</script>
-<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/skills/built-in/performance-optimization/references/performance-checklist.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

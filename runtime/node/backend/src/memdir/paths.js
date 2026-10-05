@@ -45,9 +45,9 @@ function _fallbackKhyHome() {
     if (
       process.env.KHYQUANT_PORTABLE_ROOT ||
       fs.existsSync(path.join(root, '.portable')) ||
-      fs.existsSync(path.join(root, '.khy'))
+      fs.existsSync(path.join(root, 'works', 'data', 'khy'))
     ) {
-      return path.join(root, '.khy');
+      return path.join(root, 'works', 'data', 'khy');
     }
   } catch {
     /* fall through to user home */

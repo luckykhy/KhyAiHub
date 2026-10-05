@@ -907,7 +907,7 @@ function getSourceProvenance(opts = {}) {
         result.kind = 'git';
         result.version = readSourceVersion(sourceRoot, fsImpl);
         // 每个 git 子进程在 Windows 上都是一次 CreateProcess（见
-        // extensions/scripts/khy-diagnostics/bench/git_spawn_bench.js），而这段
+        // delivery/extension/scripts/khy-diagnostics/bench/git_spawn_bench.js），而这段
         // 代码在启动首屏同步执行，所以三条信息压进一次调用：
         //   %H 提交 SHA / %cI 提交时间 / %D 指向该提交的引用装饰
         // 用 %D 而非 @{upstream}：它回答的是「这份代码正是哪个引用上的内容」。

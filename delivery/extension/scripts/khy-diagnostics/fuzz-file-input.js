@@ -25,7 +25,7 @@ const {
   buildItemCorpus,
 } = require('./fuzzFileCorpus');
 
-const BACKEND = path.resolve(__dirname, '..', '..', '..', 'services', 'backend', 'src');
+const BACKEND = path.resolve(__dirname, '..', '..', '..', '..', 'runtime', 'node', 'backend', 'src');
 function be(rel) { return require(path.join(BACKEND, rel)); }
 
 const CALL_BUDGET_MS = 2000;

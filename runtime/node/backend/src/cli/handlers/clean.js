@@ -56,19 +56,19 @@ const SCAN_SKIP = new Set([
 /**
  * 构建产物注册表。rel 相对仓库根；rebuild 是被删之后照此原样恢复的命令。
  *
- * 刻意逐条列出而不是按通配符扫 dist/build：packaging/npm 下只有 bundled/ 是产物，
+ * 刻意逐条列出而不是按通配符扫 dist/build：works/ship/npm 下只有 bundled/ 是产物，
  * package.json 和 scripts/ 是被跟踪的源码，通配符会连它们一起端走。
  */
 const BUILD_TARGETS = [
   {
     rel: 'entries/executables/modules',
     why: 'esbuild 六个模块 bundle 的公共输出目录（[LAYOUT-005] 单一根，2026-09-29 由 dist/modules 迁入）',
-    rebuild: 'node packaging/build/esbuild-modules.js --prod',
+    rebuild: 'node works/ship/build/esbuild-modules.js --prod',
   },
   {
     rel: 'entries/executables/debug-symbols',
     why: '生产构建显式导出的 source map 留档',
-    rebuild: 'node packaging/build/esbuild-modules.js --prod --debug-symbols',
+    rebuild: 'node works/ship/build/esbuild-modules.js --prod --debug-symbols',
   },
   {
     rel: 'build',
@@ -76,14 +76,14 @@ const BUILD_TARGETS = [
     rebuild: 'python -m build',
   },
   {
-    rel: 'platform/khy_platform/bundled',
+    rel: 'runtime/substrate/platform/khy_platform/bundled',
     why: 'wheel 里的生产 bundle 组装结果',
     rebuild: 'node scripts/release/assemble-pip-runtime.js',
   },
   {
-    rel: 'packaging/npm/bundled',
+    rel: 'works/ship/npm/bundled',
     why: 'npm 包的生产 bundle 组装结果',
-    rebuild: 'npm run assemble --prefix packaging/npm',
+    rebuild: 'npm run assemble --prefix works/ship/npm',
   },
   {
     rel: 'apps/ai-frontend/dist',
@@ -91,9 +91,9 @@ const BUILD_TARGETS = [
     rebuild: 'npm run build --prefix apps/ai-frontend',
   },
   {
-    rel: 'software/khyquant/frontend/dist',
+    rel: 'delivery/channel/khyquant/frontend/dist',
     why: 'khyquant 前端的 Vite 产物',
-    rebuild: 'npm run build --prefix software/khyquant/frontend',
+    rebuild: 'npm run build --prefix delivery/channel/khyquant/frontend',
   },
   {
     rel: 'docs/19_资产/site/mermaid.min.js',
@@ -290,7 +290,7 @@ function _rmChildrenExcept(abs, keep, fsImpl = fs) {
 /**
  * markdown 工作台拓展在仓库里的相对目录，按**服务名**解析。
  *
- * 为什么不直接写 `extensions/tools/khy-markdown`：[DESIGN-TOOL-002] §1.3 第四条禁止
+ * 为什么不直接写 `delivery/extension/tools/khy-markdown`：[DESIGN-TOOL-002] §1.3 第四条禁止
  * 核代码出现拓展 id 的分支 —— 拓展可以改名、可以被第三方实现顶替、可以挪进另一个分类
  * 目录，而这条命令要问的只是「那个提供 markdown-workbench 的东西，产物在哪」。于是
  * 换实现、改目录名，这里一行都不用动。
@@ -299,7 +299,7 @@ function _rmChildrenExcept(abs, keep, fsImpl = fs) {
  * 里本来就没有它的 vendor/ 和 muya-embed/ 可清，少报一项是正确结果，不是错误。
  *
  * @param {string} root 仓库根绝对路径
- * @returns {string|null} 形如 'extensions/tools/khy-markdown' 的仓库相对路径
+ * @returns {string|null} 形如 'delivery/extension/tools/khy-markdown' 的仓库相对路径
  */
 function _markdownWorkbenchRel(root) {
   let ext;
@@ -453,7 +453,7 @@ function buildCleanPlan(opts = {}) {
     try {
       dataHome = dh.getProjectDataHome();
     } catch {
-      dataHome = path.join(root, '.khy');
+      dataHome = path.join(root, 'works', 'data', 'khy');
     }
   }
   const tiers = (Array.isArray(opts.tiers) ? opts.tiers : []).filter((t) => TIERS.includes(t));

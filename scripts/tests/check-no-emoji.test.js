@@ -28,7 +28,7 @@ const HOURGLASS = String.fromCodePoint(0x23f3);          // ⏳ colour-default
 const WATCH = String.fromCodePoint(0x231a);              // ⌚ colour-default
 
 function run(content, rel, stage) {
-  return g.evaluateFile({ path: rel || 'services/backend/src/cli/ui.js', content }, { stage });
+  return g.evaluateFile({ path: rel || 'runtime/node/backend/src/cli/ui.js', content }, { stage });
 }
 
 test('code point policy: colour-default is banned, text-default mono is not', () => {
@@ -59,7 +59,7 @@ test('literal colour emoji in a user-facing string is reported', () => {
 
 test('escaped emoji is caught even though the source bytes look innocent', () => {
   const f = run('const logo = "\\uD83D\\uDE80";\nconst bar = "\\u{1F4CA}";\n',
-    'services/backend/src/bridge/mobilePage.js');
+    'runtime/node/backend/src/bridge/mobilePage.js');
   assert.deepStrictEqual(f.map((x) => x.criterion), ['escaped-emoji', 'escaped-emoji']);
 });
 
@@ -95,9 +95,9 @@ test('initial-letter avatar is flagged, array index is not', () => {
 });
 
 test('exempt paths and non-runtime paths are out of scope', () => {
-  assert.strictEqual(g.isJudged('services/backend/src/buddy/species.js'), true);
-  assert.strictEqual(run(`const x = '${EMOJI_ROCKET}';\n`, 'services/backend/src/buddy/species.js').length, 0);
-  assert.strictEqual(g.isJudged('services/backend/tests/ui.test.js'), false);
+  assert.strictEqual(g.isJudged('runtime/node/backend/src/buddy/species.js'), true);
+  assert.strictEqual(run(`const x = '${EMOJI_ROCKET}';\n`, 'runtime/node/backend/src/buddy/species.js').length, 0);
+  assert.strictEqual(g.isJudged('runtime/node/backend/tests/ui.test.js'), false);
   assert.strictEqual(g.isJudged('apps/khyos-desktop/zcode-analysis/unpacked/out/main/index.js'), false);
   assert.strictEqual(g.isJudged('docs/readme.js'), false);
   assert.strictEqual(g.isJudged('README.md'), true, 'docs surface is judged (ruling 4)');
@@ -106,7 +106,7 @@ test('exempt paths and non-runtime paths are out of scope', () => {
 test('docs surface: md and html are judged, filing material and build roots are not', () => {
   assert.strictEqual(g.isJudged('docs/03_DESIGN_设计/DESIGN-ARCH/a.md'), true);
   assert.strictEqual(g.isJudged('docs/index.html'), true);
-  assert.strictEqual(g.isJudged('software/khyquant/frontend/index.html'), true);
+  assert.strictEqual(g.isJudged('delivery/channel/khyquant/frontend/index.html'), true);
   assert.strictEqual(g.isJudged('evidence/06_申报材料/递交核对表.md'), false, 'evidence must stay verbatim');
   assert.strictEqual(g.isJudged('entries/khy-quant/out/page.html'), false);
   assert.strictEqual(g.isJudged('scripts/docs/build_docs_site.js'), true, 'generators ship chrome');
@@ -146,8 +146,8 @@ test('round 5 scope: tsx, css and the docs site assets are judged', () => {
 
 test('STAGE is live: identical input flips S1 → S3', () => {
   const content = `console.log('${EMOJI_ROCKET} 启动');\n`;
-  const s1 = run(content, 'services/backend/src/cli/ui.js', 'S1');
-  const s3 = run(content, 'services/backend/src/cli/ui.js', 'S3');
+  const s1 = run(content, 'runtime/node/backend/src/cli/ui.js', 'S1');
+  const s3 = run(content, 'runtime/node/backend/src/cli/ui.js', 'S3');
   assert.strictEqual(s1[0].severity, 'warning');
   assert.strictEqual(s3[0].severity, 'error');
   const heur = run(`const c = props.name.charAt(0); // badge\n`, 'apps/ai-frontend/src/A.vue', 'S3');

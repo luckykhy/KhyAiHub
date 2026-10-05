@@ -13,7 +13,7 @@
  */
 
 const { toKhyError, khyError, isKhyError } = require('./khyError');
-const shared = require('../../../../platform/packages/shared/src/errorEnvelope');
+const shared = require('@khy/shared/errorEnvelope');
 
 /**
  * 把 shared 的 Error 实例（轻量版）转换为 backend 的 Error（七件套）。

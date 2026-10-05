@@ -240,15 +240,15 @@ ok "KHY OS application installed ($(du -sh "${KHY_DEST}" | cut -f1))"
 # ── Step 4: Install OpenRC service files ────────────────────────────
 info "Installing OpenRC services..."
 
-cp "${ROOT_DIR}/extensions/scripts/khy-alpine-iso/rootfs/etc/init.d/khy-os-backend"  "${ROOTFS}/etc/init.d/"
-cp "${ROOT_DIR}/extensions/scripts/khy-alpine-iso/rootfs/etc/init.d/khy-os-console"  "${ROOTFS}/etc/init.d/"
+cp "${ROOT_DIR}/delivery/extension/scripts/khy-alpine-iso/rootfs/etc/init.d/khy-os-backend"  "${ROOTFS}/etc/init.d/"
+cp "${ROOT_DIR}/delivery/extension/scripts/khy-alpine-iso/rootfs/etc/init.d/khy-os-console"  "${ROOTFS}/etc/init.d/"
 chmod +x "${ROOTFS}/etc/init.d/khy-os-backend" "${ROOTFS}/etc/init.d/khy-os-console"
 
 mkdir -p "${ROOTFS}/etc/conf.d"
-cp "${ROOT_DIR}/extensions/scripts/khy-alpine-iso/rootfs/etc/conf.d/khy-os-backend"  "${ROOTFS}/etc/conf.d/"
+cp "${ROOT_DIR}/delivery/extension/scripts/khy-alpine-iso/rootfs/etc/conf.d/khy-os-backend"  "${ROOTFS}/etc/conf.d/"
 
 mkdir -p "${ROOTFS}/etc/logrotate.d"
-cp "${ROOT_DIR}/extensions/scripts/khy-alpine-iso/rootfs/etc/logrotate.d/khy-os"     "${ROOTFS}/etc/logrotate.d/"
+cp "${ROOT_DIR}/delivery/extension/scripts/khy-alpine-iso/rootfs/etc/logrotate.d/khy-os"     "${ROOTFS}/etc/logrotate.d/"
 
 # Enable services in default runlevel
 chroot "${ROOTFS}" rc-update add khy-os-backend default 2>/dev/null || \

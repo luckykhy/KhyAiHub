@@ -6,7 +6,7 @@ const os = require('os');
 const path = require('path');
 const test = require('node:test');
 
-const backendFormatBytes = require('../../services/backend/src/utils/formatBytes');
+const backendFormatBytes = require('../../runtime/node/backend/src/utils/formatBytes');
 
 // The helper is ESM (both callers are .mjs), so it comes in through dynamic import.
 const load = () => import('../lib/buildDepsCleanup.mjs');

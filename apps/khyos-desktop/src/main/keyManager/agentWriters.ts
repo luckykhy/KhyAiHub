@@ -5,9 +5,9 @@
 // claude-code / opencode / qodercli, plus Mode A (direct) for the first two.
 //
 // Backend resolution (4-level degrade, spec §4.3):
-//   1. KHY_BACKEND_SERVICES env (explicit services/ backend src dir)
-//   2. repo-relative (walk from repo root: services/backend/src/services)
-//   3. KHY_PORTABLE_ROOT / KHYQUANT_PORTABLE_ROOT + khy-os/services/backend/src/services
+//   1. KHY_BACKEND_SERVICES env (explicit backend src dir)
+//   2. repo-relative (walk from repo root: runtime/node/backend/src/services)
+//   3. KHY_PORTABLE_ROOT / KHYQUANT_PORTABLE_ROOT + khy-os/runtime/node/backend/src/services
 //   4. built-in minimal writers (this file) + audit 'backend-resolve-failed'
 //
 // Mode B security boundary (spec §8b.3): the only credential ever written to
@@ -35,10 +35,10 @@ export function resolveBackendServicesRoot(): string | null {
   const explicit = process.env.KHY_BACKEND_SERVICES
   if (explicit) candidates.push(path.resolve(explicit))
   const repoRoot = resolveRepoRoot()
-  if (repoRoot) candidates.push(path.join(repoRoot, 'services', 'backend', 'src', 'services'))
+  if (repoRoot) candidates.push(path.join(repoRoot, 'runtime', 'node', 'backend', 'src', 'services'))
   const portable = process.env.KHY_PORTABLE_ROOT || process.env.KHYQUANT_PORTABLE_ROOT
-  if (portable) candidates.push(path.join(portable, 'khy-os', 'services', 'backend', 'src', 'services'))
-  if (portable) candidates.push(path.join(portable, 'services', 'backend', 'src', 'services'))
+  if (portable) candidates.push(path.join(portable, 'khy-os', 'runtime', 'node', 'backend', 'src', 'services'))
+  if (portable) candidates.push(path.join(portable, 'runtime', 'node', 'backend', 'src', 'services'))
   for (const c of candidates) {
     try {
       if (existsSync(path.join(c, 'gateway', 'providerPresets.js'))) {
@@ -92,7 +92,7 @@ export function agentTargetPath(app: string): string {
     case 'qodercli':
       // qoder activation is a gateway-side .env patch (spec §8), not a
       // per-app live config; the target is the canonical .env file.
-      return process.env.KHY_ENV_FILE || path.join(getRepoRootForEnvFile(), 'services', 'backend', '.env')
+      return process.env.KHY_ENV_FILE || path.join(getRepoRootForEnvFile(), 'runtime', 'node', 'backend', '.env')
     default:
       return ''
   }

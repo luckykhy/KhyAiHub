@@ -20,19 +20,19 @@ const path = require('path');
 // 审计器（纯叶子）——从 scripts/lib 相对定位到 backend 源。
 // 该模块在 domain/catalog/ 下,旧 services/toolCatalog/ 只剩 toolCatalog 的转出壳
 // （**不含** toolContract）,故此处必须指向新落点,否则守卫会静默降级成「加载失败」一条错。
-const AUDITOR_PATH = path.resolve(__dirname, '../../services/backend/src/services/domain/catalog/toolCatalog/toolContract');
+const AUDITOR_PATH = path.resolve(__dirname, '../../runtime/node/backend/src/services/domain/catalog/toolCatalog/toolContract');
 // findings 无 per-tool 文件（注册表级）→ file 字段回退到注册表模块路径，line=0。
-const REGISTRY_REL = 'services/backend/src/tools/index.js';
+const REGISTRY_REL = 'runtime/node/backend/src/tools/index.js';
 
 /** 触及工具契约的路径前缀/文件（相对 repo 根，正斜杠）。 */
 const RELEVANT_PREFIXES = [
-  'services/backend/src/tools/',
+  'runtime/node/backend/src/tools/',
 ];
 const RELEVANT_FILES = new Set([
-  'services/backend/src/services/toolRegistryDedup.js',
-  'services/backend/src/services/toolCalling.js',
-  'services/backend/src/services/domain/catalog/toolCatalog/toolContract.js',
-  'services/backend/src/constants/riskOrder.js',
+  'runtime/node/backend/src/services/toolRegistryDedup.js',
+  'runtime/node/backend/src/services/toolCalling.js',
+  'runtime/node/backend/src/services/domain/catalog/toolCatalog/toolContract.js',
+  'runtime/node/backend/src/constants/riskOrder.js',
 ]);
 
 // bundled 三树是构建产物,不巡检(与既有守卫 IGNORE 一致)。

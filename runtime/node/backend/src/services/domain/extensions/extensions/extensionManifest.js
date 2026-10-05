@@ -6,7 +6,7 @@
  * 只依赖 `fs`/`path` 与自身常量，零指向宿主扩展根的 back-edge（发现/roots/state
  * 逻辑仍归宿主，宿主单向 require 本叶的 `readManifest`）。逐字搬移，行为不变。
  *
- * @module services/extensions/extensionRoots/extensionManifest
+ * @module services/delivery/extension/extensionRoots/extensionManifest
  */
 'use strict';
 
@@ -22,7 +22,7 @@ const MANIFEST_PKG = 'package.json';
 const MANIFEST_NAMES = [MANIFEST_CANONICAL, MANIFEST_LEGACY_JSON, MANIFEST_PKG];
 
 // 拓展种类。runtime = 参与运行时、可被激活；ide-bridge = 交付给外部 IDE 的产物
-// （VSIX 等），核**不激活**它，但它仍须声明自己，否则 extensions/ 下会重新出现
+// （VSIX 等），核**不激活**它，但它仍须声明自己，否则 delivery/extension/ 下会重新出现
 // 「说不清是什么」的目录——那正是本契约要消灭的东西；asset = 纯资源包。
 //
 // toolchain = 交付 / 诊断 / 构建脚本。它与 runtime 的区别是**执行位置**：核不 require

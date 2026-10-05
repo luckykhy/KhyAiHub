@@ -14,8 +14,8 @@ const chalk = require('chalk');
 // handlers/ sits five levels below the repo root
 // (services/backend/src/cli/handlers), same convention as handlers/docs.js.
 const REPO_ROOT = path.resolve(__dirname, '../../../../..');
-const MODULES_JSON = path.join(REPO_ROOT, 'packaging/modules/modules.json');
-const BUILD_SCRIPT = path.join(REPO_ROOT, 'packaging/build/build-all.js');
+const MODULES_JSON = path.join(REPO_ROOT, 'works/ship/modules/modules.json');
+const BUILD_SCRIPT = path.join(REPO_ROOT, 'works/ship/build/build-all.js');
 
 /**
  * @returns {{catalog: object|null, problem?: string}} — `problem` is a finished

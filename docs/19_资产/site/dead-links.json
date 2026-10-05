@@ -1,10 +1,65 @@
 {
-  "total": 40,
+  "total": 329,
   "items": [
+    {
+      "from": ".codeartsdoer/temp/accept/ses_ef919963affegeEjH8c9xHlavo_CLAUDE_6ebdb617a810.original.html",
+      "type": "a",
+      "href": "docs/10_规范/其它规范/[DESIGN-SEMVER-002]%20版本管理与发布触发规范.html"
+    },
+    {
+      "from": ".github/CONTRIBUTING.html",
+      "type": "a",
+      "href": "../AGENTS.html"
+    },
+    {
+      "from": ".github/CONTRIBUTING.html",
+      "type": "a",
+      "href": "../SECURITY.html"
+    },
+    {
+      "from": ".github/CONTRIBUTING.html",
+      "type": "a",
+      "href": "../CHANGELOG.html"
+    },
+    {
+      "from": ".github/CONTRIBUTING.html",
+      "type": "a",
+      "href": "../services/backend/src/observability/otel.js"
+    },
+    {
+      "from": ".github/CONTRIBUTING.html",
+      "type": "a",
+      "href": "../services/backend/src/services/browser/engine.js"
+    },
+    {
+      "from": ".github/CONTRIBUTING.html",
+      "type": "a",
+      "href": "../packaging/build/esbuild-modules.js"
+    },
+    {
+      "from": "delivery/channel/khyquant/frontend/README.html",
+      "type": "a",
+      "href": "../../../docs/10_规范/DESIGN-FE/[DESIGN-FE-001]%20前端页面规范.html"
+    },
+    {
+      "from": "delivery/channel/khyquant/frontend/README.html",
+      "type": "a",
+      "href": "../../../docs/10_规范/DESIGN-FE/[DESIGN-FE-002]%20前端组件库规范.html"
+    },
+    {
+      "from": "delivery/channel/khyquant/frontend/README.html",
+      "type": "a",
+      "href": "../../../docs/10_规范/DESIGN-FE/[DESIGN-FE-003]%20前端快速参考卡.html"
+    },
     {
       "from": "docs/01_INIT_立项/INIT-PRD/[INIT-PRD-001] Khy-OS-定位与已实现能力-2026-06-12.html",
       "type": "a",
       "href": "../../../LICENSE"
+    },
+    {
+      "from": "docs/01_INIT_立项/INIT-PRD/[INIT-PRD-001] Khy-OS-定位与已实现能力-2026-06-12.html",
+      "type": "a",
+      "href": "../../../.ai/MAP.html"
     },
     {
       "from": "docs/01_INIT_立项/INIT-PRD/[INIT-PRD-004] 用户定位与增长路线.html",
@@ -30,6 +85,16 @@
       "from": "docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-043] khy-agent-sdk-Claude对齐与D1-D6融合规范.html",
       "type": "a",
       "href": "../../platform/packages/agent-sdk/docs/llms.txt"
+    },
+    {
+      "from": "docs/04_IMPL_实现/IMPL-RPT/[IMPL-RPT-026] 生态架构重塑日志-2026-06-12.html",
+      "type": "a",
+      "href": "../../../platform/khy_platform/app_protocol.py"
+    },
+    {
+      "from": "docs/04_IMPL_实现/IMPL-RPT/[IMPL-RPT-026] 生态架构重塑日志-2026-06-12.html",
+      "type": "a",
+      "href": "../../../software/khyquant/khy_quant/app.py"
     },
     {
       "from": "docs/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
@@ -164,11 +229,6 @@
     {
       "from": "docs/08_MGMT_项目管理/00_INDEX_项目管理-分类索引.html",
       "type": "a",
-      "href": "../../CONTRIBUTING.html"
-    },
-    {
-      "from": "docs/08_MGMT_项目管理/00_INDEX_项目管理-分类索引.html",
-      "type": "a",
       "href": "../../SECURITY.html"
     },
     {
@@ -187,19 +247,1404 @@
       "href": "./COMMUNICATION-PROTOCOL.html"
     },
     {
-      "from": "services/backend/src/data/cliAnythingRegistry/skills/cli-anything-unimol-tools/SKILL.html",
+      "from": "runtime/node/backend/README.html",
+      "type": "a",
+      "href": "../../docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-106]%20项目规范化总纲.html"
+    },
+    {
+      "from": "runtime/node/backend/README.html",
+      "type": "a",
+      "href": "../../docs/07_OPS_运维/OPS-MAN/[OPS-MAN-173]%20MCP工具接入快速上手.html"
+    },
+    {
+      "from": "runtime/node/backend/src/data/cliAnythingRegistry/skills/cli-anything-unimol-tools/SKILL.html",
       "type": "a",
       "href": "../UNIMOL_TOOLS.html"
     },
     {
-      "from": "services/backend/src/data/cliAnythingRegistry/skills/cli-anything-unimol-tools/SKILL.html",
+      "from": "runtime/node/backend/src/data/cliAnythingRegistry/skills/cli-anything-unimol-tools/SKILL.html",
       "type": "a",
       "href": "../docs/guides/02-QUICK-START.html"
     },
     {
-      "from": "services/backend/src/data/cliAnythingRegistry/skills/cli-anything-unimol-tools/SKILL.html",
+      "from": "runtime/node/backend/src/data/cliAnythingRegistry/skills/cli-anything-unimol-tools/SKILL.html",
       "type": "a",
       "href": "../docs/README.html"
+    },
+    {
+      "from": "runtime/node/backend/src/skills/built-in/idea-refine/prompt.html",
+      "type": "a",
+      "href": "../../../../../../docs/02_CONCEPTS_概念入门/CONCEPT/[CONCEPT-32]%20什么是MVP-最小可行产品.html"
+    },
+    {
+      "from": "scripts/memory/README.html",
+      "type": "a",
+      "href": "../../services/backend/src/services/domain/memory/memoryEngine/distiller.js"
+    },
+    {
+      "from": "scripts/memory/README.html",
+      "type": "a",
+      "href": "../../services/backend/src/services/memoryTier.js"
+    },
+    {
+      "from": "works/data/khy/feedback/hci-r55-publish-dead/differential.html",
+      "type": "a",
+      "href": "commandSchema.js:579"
+    },
+    {
+      "from": "works/data/khy/memory/MEMORY.html",
+      "type": "a",
+      "href": "feedback_tool-execution-results_a3d9521e.html"
+    },
+    {
+      "from": "works/data/khy/memory/MEMORY.html",
+      "type": "a",
+      "href": "feedback_system----_1c477a3f.html"
+    },
+    {
+      "from": "works/data/khy/projects/0134806f4951c915/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/0134806f4951c915/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/0d867778d601d2fb/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/0d867778d601d2fb/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/12e330b4e55eeee9/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/12e330b4e55eeee9/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/14f3453356d5d943/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/14f3453356d5d943/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/16a2cb5d01cb69a4/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/16a2cb5d01cb69a4/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/1a5ccf8cb1a50bf4/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/1a5ccf8cb1a50bf4/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/2240c30c22ffe0ad/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/2240c30c22ffe0ad/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/250f481cdc79f298/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/250f481cdc79f298/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/257360821943df51/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/257360821943df51/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/2da30557fef8f422/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/2da30557fef8f422/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/2e1b3bb4ca326cb8/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/2e1b3bb4ca326cb8/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/312705b40a0ac06c/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/312705b40a0ac06c/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/31cd5c2db6bd9566/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/31cd5c2db6bd9566/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/32fa94548e1ce18f/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/32fa94548e1ce18f/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/35f410238569afd8/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/35f410238569afd8/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/381d7309b7a9fcaa/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/381d7309b7a9fcaa/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/3905f1b11db61465/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/3905f1b11db61465/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/39072685905f35d2/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/39072685905f35d2/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/39f239d4b6af1384/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/39f239d4b6af1384/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/3a871447300614ab/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/3a871447300614ab/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/3abcce3b43119c54/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/3abcce3b43119c54/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/3d79c5d8edb1a78c/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/3d79c5d8edb1a78c/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/3f5d9e71c92bcbab/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/3f5d9e71c92bcbab/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/3f6d9ae57d7f77a5/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/3f6d9ae57d7f77a5/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/430c6a89127bc42a/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/430c6a89127bc42a/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/4a8bcbb0bab57383/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/4a8bcbb0bab57383/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/4bd68864884e8ac8/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/4bd68864884e8ac8/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/536fb0a89fc748d3/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/536fb0a89fc748d3/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/54eec5f55e98da99/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/54eec5f55e98da99/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/5646bde2412e0232/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/5646bde2412e0232/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/57271c860203bf02/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/57271c860203bf02/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/5782658e7e617617/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/5782658e7e617617/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/58bfbf165795a749/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/58bfbf165795a749/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/5a1c531785151323/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/5a1c531785151323/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/5a9410d91a3bd936/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/5a9410d91a3bd936/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/5b1651bf7714ceb6/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/5b1651bf7714ceb6/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/5cbfcb7e4af4e404/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/5cbfcb7e4af4e404/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/5cc61532da6d1a09/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/5cc61532da6d1a09/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/5eec08fb7c066fd4/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/5eec08fb7c066fd4/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/5f6f9aadd572a8ad/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/5f6f9aadd572a8ad/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/627465cb5f42abcd/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/627465cb5f42abcd/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/64db5e46592f1461/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/64db5e46592f1461/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/686bacd5d374ea21/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/686bacd5d374ea21/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/6b2129be95ab7783/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/6b2129be95ab7783/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/6b4ac354fd12e9db/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/6b4ac354fd12e9db/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/6bffd50a5a73f6b4/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/6bffd50a5a73f6b4/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/6c5b9f6b3d322440/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/6c5b9f6b3d322440/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/6f309ea91999daae/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/6f309ea91999daae/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/723e520adb2c7c90/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/723e520adb2c7c90/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/7273c478bdb0e9fb/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/7273c478bdb0e9fb/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/727eedb5d3aa8413/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/727eedb5d3aa8413/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/758b1e58bc7e1dc4/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/758b1e58bc7e1dc4/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/75d13103583ca6ad/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/75d13103583ca6ad/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/7933ca23dc5329be/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/7933ca23dc5329be/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/7b1e5336ddd8a2a9/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/7b1e5336ddd8a2a9/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/7bf98aa1d9a5dcfc/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/7bf98aa1d9a5dcfc/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/80ccdab270ac8d42/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/80ccdab270ac8d42/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/83d740f6a34eac60/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/83d740f6a34eac60/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/8582a32b9c8693d9/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/8582a32b9c8693d9/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/8b463515e991c02b/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/8b463515e991c02b/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/8c15a769a7c7e7a9/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/8c15a769a7c7e7a9/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/8ca5aad4bba96b87/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/8ca5aad4bba96b87/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/9085a990a729126c/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/9085a990a729126c/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/94fc43935a3e9a3f/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/94fc43935a3e9a3f/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/9ae57d4275abded1/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/9ae57d4275abded1/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/9c4e4f42ef3f5cae/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/9c4e4f42ef3f5cae/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/9e91ec67f52ff9d0/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/9e91ec67f52ff9d0/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/a51718dae99cd50b/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/a51718dae99cd50b/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/a658ceb8d4c92745/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/a658ceb8d4c92745/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/a709beb1c341e914/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/a709beb1c341e914/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/abeefca431f31548/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/abeefca431f31548/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/ad9e37a1b584224f/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/ad9e37a1b584224f/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/afe04d5cab283f45/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/afe04d5cab283f45/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/b70eac19de911037/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/b70eac19de911037/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/b7d0ca680c1e31f3/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/b7d0ca680c1e31f3/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/b935b1404cc89060/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/b935b1404cc89060/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/b94738884417953d/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/b94738884417953d/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/b9cd4c2364e1a584/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/b9cd4c2364e1a584/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/bcb111b40fbe91c8/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/bcb111b40fbe91c8/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/be8141efafdeb143/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/be8141efafdeb143/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/bfecadec1e94ad99/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/bfecadec1e94ad99/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/c06427ca4b41d0f9/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/c06427ca4b41d0f9/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/c3269ac6a2d814be/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/c3269ac6a2d814be/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/c3eb78c5cc43b044/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/c3eb78c5cc43b044/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/c5cf40ee3ff7d6cf/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/c5cf40ee3ff7d6cf/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/c70c2b991d1380ac/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/c70c2b991d1380ac/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/c7235ef6bd135892/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/c7235ef6bd135892/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/d140f528fe21595f/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/d140f528fe21595f/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/d4147d6d5d9fc751/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/d4147d6d5d9fc751/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/d7c5cc068b9e74a1/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/d7c5cc068b9e74a1/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/d826108f8215f55c/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/d826108f8215f55c/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/da00b8a56aeca9f4/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/da00b8a56aeca9f4/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/db34148e9b54e9a6/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/db34148e9b54e9a6/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/dc6b2d5d26b3431a/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/dc6b2d5d26b3431a/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/dd8e792572b7d4e8/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/dd8e792572b7d4e8/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/dfd512e502a287eb/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/dfd512e502a287eb/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/e7a2475b7ebda32e/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/e7a2475b7ebda32e/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/ea6816172845c970/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/ea6816172845c970/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/ebdd535cca4ba150/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/ebdd535cca4ba150/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/ec1ccac696b34c45/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/ec1ccac696b34c45/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/ef1b3f05f14ff9e8/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/ef1b3f05f14ff9e8/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/f25198d4bd9ba46f/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/f25198d4bd9ba46f/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/f4a98df642307459/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/f4a98df642307459/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/f4f699b11d63b80b/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/f4f699b11d63b80b/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/f8ff596633d7b1c1/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/f8ff596633d7b1c1/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/fa9c7880c6be7b64/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/fa9c7880c6be7b64/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/fb48267fbb298aff/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/fb48267fbb298aff/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/projects/fd9b0675c866cf8e/memory/MEMORY.html",
+      "type": "a",
+      "href": "deploy.html"
+    },
+    {
+      "from": "works/data/khy/projects/fd9b0675c866cf8e/memory/MEMORY.html",
+      "type": "a",
+      "href": "ratelimit.html"
+    },
+    {
+      "from": "works/data/khy/skills/idea-refine/prompt.html",
+      "type": "a",
+      "href": "../../../docs/02_CONCEPTS_概念入门/CONCEPT/[CONCEPT-32]%20什么是MVP-最小可行产品.html"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/AGENTS.html",
+      "type": "a",
+      "href": "docs/10_规范/其它规范/[DESIGN-GOV-001]%20治理总纲与可执行规则.html"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/AGENTS.html",
+      "type": "a",
+      "href": "docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-111]%20规则遵守保障机制.html"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/AGENTS.html",
+      "type": "a",
+      "href": "docs/10_规范/其它规范/[DESIGN-PROCESS-001]%20委派边界决策矩阵-第六通道外部智能体.html"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/AGENTS.html",
+      "type": "a",
+      "href": "docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-071]%20通道选择决策矩阵.html"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/AGENTS.html",
+      "type": "a",
+      "href": "CONTRIBUTING.html"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/CHANGELOG.html",
+      "type": "a",
+      "href": "docs/03_DESIGN_设计/DESIGN-ARCH/%5BDESIGN-ARCH-138%5D%20工具调用能力判定与文本拦截协议.html"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/00_INDEX_文档索引.html",
+      "type": "a",
+      "href": "01_INIT_立项/00_INDEX_立项-分类索引.html"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/00_INDEX_文档索引.html",
+      "type": "a",
+      "href": "10_规范/其它规范/FILE-FORMAT-PROTOCOL.html"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/00_INDEX_文档索引.html",
+      "type": "a",
+      "href": "05_TEST_测试/00_INDEX_测试-分类索引.html"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/00_INDEX_文档索引.html",
+      "type": "a",
+      "href": "08_MGMT_项目管理/00_INDEX_项目管理-分类索引.html"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/01_INIT_立项/INIT-PRD/[INIT-PRD-001] Khy-OS-定位与已实现能力-2026-06-12.html",
+      "type": "a",
+      "href": "../../../LICENSE"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/01_INIT_立项/INIT-PRD/[INIT-PRD-001] Khy-OS-定位与已实现能力-2026-06-12.html",
+      "type": "a",
+      "href": "../../../.ai/MAP.html"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html",
+      "type": "a",
+      "href": "../index.html"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/02_CONCEPTS_概念入门/CONCEPT/[CONCEPT-05] 什么是Skill-技能.html",
+      "type": "a",
+      "href": "../../17_AI协作预设包/skills/khy-troubleshoot"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/02_CONCEPTS_概念入门/CONCEPT/[CONCEPT-05] 什么是Skill-技能.html",
+      "type": "a",
+      "href": "../../17_AI协作预设包/skills/khy-safe-change"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/02_CONCEPTS_概念入门/CONCEPT/[CONCEPT-05] 什么是Skill-技能.html",
+      "type": "a",
+      "href": "../../17_AI协作预设包/skills/khy-honest-closure"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/02_CONCEPTS_概念入门/CONCEPT/[CONCEPT-05] 什么是Skill-技能.html",
+      "type": "a",
+      "href": "../../17_AI协作预设包/skills/khy-pick-task"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/02_CONCEPTS_概念入门/CONCEPT/[CONCEPT-05] 什么是Skill-技能.html",
+      "type": "a",
+      "href": "../../17_AI协作预设包/skills/khy-troubleshoot"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/02_CONCEPTS_概念入门/CONCEPT/[CONCEPT-05] 什么是Skill-技能.html",
+      "type": "a",
+      "href": "../../17_AI协作预设包/skills/khy-gateway-fix"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/02_CONCEPTS_概念入门/CONCEPT/[CONCEPT-05] 什么是Skill-技能.html",
+      "type": "a",
+      "href": "../../17_AI协作预设包/skills/khy-weak-model-guardrails"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/02_CONCEPTS_概念入门/CONCEPT/[CONCEPT-05] 什么是Skill-技能.html",
+      "type": "a",
+      "href": "../../17_AI协作预设包/skills/khy-weak-model-guardrails"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/02_CONCEPTS_概念入门/CONCEPT/[CONCEPT-05] 什么是Skill-技能.html",
+      "type": "a",
+      "href": "../../index.html"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-112] khyos-Harness架构对照.html",
+      "type": "a",
+      "href": "../../10_规范/其它规范/FILE-FORMAT-PROTOCOL.html"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-121] khyos-CC-Harness借鉴清单.html",
+      "type": "a",
+      "href": "../../10_规范/其它规范/FILE-FORMAT-PROTOCOL.html"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/04_IMPL_实现/IMPL-RPT/[IMPL-RPT-026] 生态架构重塑日志-2026-06-12.html",
+      "type": "a",
+      "href": "../../../platform/khy_platform/app_protocol.py"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/04_IMPL_实现/IMPL-RPT/[IMPL-RPT-026] 生态架构重塑日志-2026-06-12.html",
+      "type": "a",
+      "href": "../../../software/khyquant/khy_quant/app.py"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/07_OPS_运维/00_INDEX_运维-分类索引.html",
+      "type": "a",
+      "href": "OPS-MAN/00_INDEX_OPS-MAN-总目录.html"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/07_OPS_运维/00_INDEX_运维-分类索引.html",
+      "type": "a",
+      "href": "其它运维/00_INDEX_其它运维-总目录.html"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/07_OPS_运维/00_INDEX_运维-分类索引.html",
+      "type": "a",
+      "href": "runbooks/00_INDEX_灾备演练剧本-总目录.html"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/07_OPS_运维/00_INDEX_运维-分类索引.html",
+      "type": "a",
+      "href": "incident-runbooks/00_INDEX_事件响应剧本-总目录.html"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/07_OPS_运维/OPS-MAN/[OPS-MAN-204] technical-debt-report.html",
+      "type": "a",
+      "href": "../../../scripts/quality-gate/lib/qualityGateStages.js"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/08_MGMT_项目管理/MGMT-STD/[MGMT-STD-006] khy-vibecoding与speccoding能力对齐-可量化验收标准.html",
+      "type": "a",
+      "href": "文档结构铁律"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/08_MGMT_项目管理/MGMT-STD/[MGMT-STD-006] khy-vibecoding与speccoding能力对齐-可量化验收标准.html",
+      "type": "a",
+      "href": "证据→计划→落地方法论"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/docs/17_AI协作预设包/00_INDEX_总入口.html",
+      "type": "a",
+      "href": "给AI看/功能提示词-03-外部Agent资产管理.html"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/extensions/scripts/khy-desktop-rd/README.html",
+      "type": "a",
+      "href": "goose/"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/extensions/scripts/khy-desktop-rd/README.html",
+      "type": "a",
+      "href": "chatml/"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/extensions/scripts/khy-desktop-rd/README.html",
+      "type": "a",
+      "href": "one-api/"
+    },
+    {
+      "from": "works/data/khyos/emoji-docs-backup/services/backend/README.html",
+      "type": "a",
+      "href": "../../docs/07_OPS_运维/OPS-MAN/[OPS-MAN-173]%20MCP工具接入快速上手.html"
+    },
+    {
+      "from": "works/data/khyos/tmp/idx_head.html",
+      "type": "a",
+      "href": "../00_INDEX_设计-分类索引.html"
+    },
+    {
+      "from": "works/data/khyos/tmp/idx_head.html",
+      "type": "a",
+      "href": "../00_INDEX_设计-分类索引.html"
+    },
+    {
+      "from": "works/data/khyos/tmp/xingyao/xingyao-y-code/docs/superpowers/plans/2026-09-01-proactive-visual-output.html",
+      "type": "img",
+      "href": "本地路径"
+    },
+    {
+      "from": "works/data/khyos/tmp/xingyao/xingyao-y-code/docs/superpowers/plans/2026-09-01-proactive-visual-output.html",
+      "type": "img",
+      "href": "本地路径"
+    },
+    {
+      "from": "works/data/khyos/tmp/xingyao/xingyao-y-code/docs/superpowers/plans/2026-09-01-proactive-visual-output.html",
+      "type": "img",
+      "href": "本地路径"
+    },
+    {
+      "from": "works/data/khyos/tmp/xingyao/xingyao-y-code/skills/baoyu-article-illustrator/references/usage.html",
+      "type": "a",
+      "href": "references/style-presets.html"
+    },
+    {
+      "from": "works/data/khyos/tmp/xingyao/xingyao-y-code/skills/gzh-design/README.html",
+      "type": "a",
+      "href": "CONTRIBUTING.html"
+    },
+    {
+      "from": "works/data/khyos/tmp/xingyao/xingyao-y-code/skills/gzh-design/README.html",
+      "type": "a",
+      "href": "README.en.html"
+    },
+    {
+      "from": "works/data/khyos/tmp/xingyao/xingyao-y-code/skills/gzh-design/README.html",
+      "type": "a",
+      "href": "docs/all-themes.html"
+    },
+    {
+      "from": "works/data/khyos/tmp/xingyao/xingyao-y-code/skills/gzh-design/README.html",
+      "type": "a",
+      "href": "../../issues/new?template=theme_request.html"
+    },
+    {
+      "from": "works/data/khyos/tmp/xingyao/xingyao-y-code/skills/gzh-design/README.html",
+      "type": "a",
+      "href": "CONTRIBUTING.html"
+    },
+    {
+      "from": "works/data/khyos/tmp/xingyao/xingyao-y-code/skills/gzh-design/SKILL.html",
+      "type": "img",
+      "href": "url"
+    },
+    {
+      "from": "works/data/khyos/tmp/xingyao/xingyao-y-code/system_prompt_gui.html",
+      "type": "img",
+      "href": "本地路径"
+    },
+    {
+      "from": "works/data/khyos/tmp/xingyao/xingyao-y-code/system_prompt_gui.html",
+      "type": "img",
+      "href": "本地路径"
     }
   ]
 }

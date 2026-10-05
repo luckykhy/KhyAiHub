@@ -98,13 +98,13 @@ const pct = (cur, base) => (base === 0 ? 0 : ((cur - base) / base) * 100);
  */
 const MANIFESTS = [
   'package.json',
-  'services/backend/package.json',
-  'services/ai-backend/package.json',
-  'apps/ai-frontend/package.json',
-  'software/khyquant/frontend/package.json',
-  'platform/packages/shared/package.json',
-  'platform/packages/ui-shared/package.json',
-  'extensions/tools/khy-markdown/package.json',
+  'runtime/node/backend/package.json',
+  'runtime/node/ai-backend/package.json',
+  'delivery/web/ai-frontend/package.json',
+  'delivery/channel/khyquant/frontend/package.json',
+  'runtime/substrate/platform/packages/shared/package.json',
+  'runtime/substrate/platform/packages/ui-shared/package.json',
+  'delivery/extension/tools/khy-markdown/package.json',
 ];
 const DEP_FIELDS = ['dependencies', 'devDependencies', 'optionalDependencies'];
 
@@ -262,7 +262,7 @@ function measureTree(rootNm, layout) {
 }
 
 /**
- * 发布产物：packaging/build/esbuild-modules.js 产出的 6 份模块 bundle。
+ * 发布产物：works/ship/build/esbuild-modules.js 产出的 6 份模块 bundle。
  *
  * pip 与 npm 两个渠道发出去的就是这些 bundle.mjs，**不含 node_modules**，
  * 所以它们才是「用户侧真实体积」的诚实指标。
@@ -461,7 +461,7 @@ if (bundles.length) {
   }
   console.log('    体积随构建模式变化：--prod 压缩，不带则不压缩。基线与当前须同模式才可比。');
 } else {
-  console.log('  未构建，跳过。重建：node packaging/build/esbuild-modules.js [--prod]');
+  console.log('  未构建，跳过。重建：node works/ship/build/esbuild-modules.js [--prod]');
 }
 
 console.log('');

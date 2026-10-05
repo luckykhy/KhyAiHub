@@ -31,9 +31,9 @@ set "FREED=0"
 set "FREED_MB=0"
 
 :: --- 1. Application logs (regenerated at runtime) ---
-if exist "%PROJECT_ROOT%\platform\packages\shared\logs" (
+if exist "%PROJECT_ROOT%\runtime\substrate\platform\packages\shared\logs" (
     echo [1/5] Cleaning application logs...
-    for /f "delims=" %%F in ('dir /a-d /b "%PROJECT_ROOT%\platform\packages\shared\logs" 2^>nul') do (
+    for /f "delims=" %%F in ('dir /a-d /b "%PROJECT_ROOT%\runtime\substrate\platform\packages\shared\logs" 2^>nul') do (
         set "SIZE=0"
         for %%A in ("%PROJECT_ROOT%\platform\packages\shared\logs\%%F") do set "SIZE=%%~zA"
         del /f /q "%PROJECT_ROOT%\platform\packages\shared\logs\%%F" >nul 2>&1
@@ -75,7 +75,7 @@ if exist "%PROJECT_ROOT%\dist" (
 
 :: --- 5. Unused node-llama-cpp platform binaries (keep win-x64) ---
 ::     Two install layouts: root hoisted (workspaces) and legacy backend-local.
-for %%L in ("%PROJECT_ROOT%\node_modules\@node-llama-cpp" "%PROJECT_ROOT%\services\backend\node_modules\@node-llama-cpp") do (
+for %%L in ("%PROJECT_ROOT%\node_modules\@node-llama-cpp" "%PROJECT_ROOT%\runtime\node\backend\node_modules\@node-llama-cpp") do (
     set "LLAMA=%%~L"
     if exist "!LLAMA!" (
         echo [5/5] Pruning unused llama platform binaries in %%~nxL\@node-llama-cpp ...
