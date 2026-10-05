@@ -199,7 +199,7 @@ node scripts/maintenance/gen-codeowners.js --sync-roster
 
 ## 8. 安全
 
-**不要用 Issue 报告安全问题。** 流程见 [SECURITY.md](../SECURITY.md)。
+**不要用 Issue 报告安全问题。** 流程见 [SECURITY.md](SECURITY.md)。
 
 日常开发中的硬性要求：
 

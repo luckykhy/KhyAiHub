@@ -228,8 +228,6 @@
       "MANIFEST.in",
       "AGENTS.md",
       "CLAUDE.md",
-      "CONTRIBUTING.md",
-      "SECURITY.md",
       "README.md",
       "CHANGELOG.md",
       "Dockerfile",

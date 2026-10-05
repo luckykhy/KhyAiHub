@@ -34,7 +34,7 @@
 
 ## ④ 人读文档（GitHub 约定根文档）— 6 项
 
-`README.md`（含维护者导航）`CHANGELOG.md` `SECURITY.md`（`CONTRIBUTING.md` 已移入 `.github/`，见下） `AGENTS.md`（AI 与人工维护总入口，截断点前含强制工程规则）`CLAUDE.md`
+`README.md`（含维护者导航）`CHANGELOG.md` `AGENTS.md`（AI 与人工维护总入口，截断点前含强制工程规则）`CLAUDE.md`（`CONTRIBUTING.md`、`SECURITY.md` 已移入 `.github/`，见下）
 
 ## ⑤ 横切层（跨板块服务，真源 [DESIGN-LAY-005] 第二节）— 9 项
 

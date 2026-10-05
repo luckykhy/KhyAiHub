@@ -44,7 +44,7 @@ function checkIncidentDocs() {
   }
 
   // Check SECURITY.md has incident response SLA
-  const securityMd = path.join(REPO_ROOT, 'SECURITY.md');
+  const securityMd = path.join(REPO_ROOT, '.github', 'SECURITY.md');
   if (fs.existsSync(securityMd)) {
     const content = fs.readFileSync(securityMd, 'utf8');
     if (!/\b(?:incident|SLA|escalation|response.?time)\b/i.test(content)) {

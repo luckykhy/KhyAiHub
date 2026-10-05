@@ -86,7 +86,7 @@
 | --- | --- | --- | --- |
 |[`CHANGELOG.md`](../../CHANGELOG.md)|版本变更记录|在产|在产|
 |[`CONTRIBUTING.md`](../../.github/CONTRIBUTING.md)|中文开发者贡献指南|在产|在产|
-|[`SECURITY.md`](../../SECURITY.md)|安全披露渠道|在产|在产|
+|[`SECURITY.md`](../../.github/SECURITY.md)|安全披露渠道|在产|在产|
 
 放在 `docs/08_MGMT_项目管理/` 下的同名副本会让 GitHub 侧失效、并制造双真源漂移，
 因此 2026-08-15 已删除本目录下的 `CHANGELOG.md` / `CONTRIBUTING.md` 副本；

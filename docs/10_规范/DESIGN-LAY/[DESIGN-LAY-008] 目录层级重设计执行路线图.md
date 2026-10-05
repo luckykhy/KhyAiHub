@@ -4894,6 +4894,66 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 
 ### 16.6 施工执行状态（点头后逐批登记）
 
+> **2026-10-06 01:2x 节（第 14 节）· 批次 = W2 第三步 `SECURITY.md` 出根（N-1 证明补齐）+ 一处前置清根**
+>
+> **先更正第 12/13 节的挂起理由——它当时就是可做的，我漏查了正确的页面。**
+> 上两节写的是「官方 security policy 页正文未列可识别路径，无法证明 `.github/SECURITY.md` 仍被识别」；
+> 复查该页（`adding-a-security-policy-to-your-repository`）确实只讲 UI 建文件步骤，**但识别位写在另一页**：
+> `creating-a-default-community-health-file` 明列受认文件**含 `SECURITY.md`**，检索顺序原文三条
+> 「* The `.github` folder / * The root of the repository / * The docs folder」——`.github` **优先于根**。
+> 即 N-1 等价证明一直存在，只是不在我查的那页。教训并入既有记忆：**「查不到」≠「不存在」，
+> 同一平台的规则常分散在相邻文档页，挂起判定前先把页面族扫一遍**；这条比上一条结论更重要，因为它说明
+> 我连续两节把「我没找到证据」写成了「不存在证据」。
+>
+> **前置清根（HK，非队列批次，无提交）**：根上 0 字节无主件 `$null`（`?? ` 未跟踪，10-05 17:34 复生）
+> 移入 `.khyos/housekeeping/2026-10-06-root-litter/null-junk`。动手理由不是「难看」，是实测：
+> **跟踪测试 `scripts/tests/q1-criteria.test.js` 子测 2「当前真实根上无未登记实体」当时是红的**
+> （`node --test` → `# pass 3 / # fail 1`，断言消息原文 `根上有未登记实体：$null`）。
+> 移走即 **4 pass / 0 fail**。上节我判「移了也复生，不值得移」——错在只算视觉账，没算这一条：
+> 该 Q-1 判据是**跟踪的 node:test**，不是 warning，红着就是全绿口径破了。
+> **来源未断**（第 13 节已记：17:33 他道隔离 → 17:34 复生；本道复跑 `git grep` 见
+> `runtime/node/backend/src/constants/shellChainStyle.js:131` 对 PowerShell 家族注入 `2>$null` 文案，
+> 若同一指令落到 cmd.exe 解释器即在 CWD 造出 `$null`——**这是推断不是实测**，未坐实前不改该行）。
+>
+> **本批逐件（六件，全部 clean 起手工，`git mv` 保历史 → `R` 检测成立）**：
+>
+> | 件 | 改动 | 为什么必须同批 |
+> |---|---|---|
+> | `SECURITY.md` → `.github/SECURITY.md` | `git mv` | 本体 |
+> | `scripts/ci/check-incident-dr.js:47` | `path.join(REPO_ROOT, 'SECURITY.md')` → `(..., '.github', 'SECURITY.md')` | 唯一硬路径消费方；不改则 IR-001 的 SLA 检查静默失去目标（existsSync 假阴） |
+> | `.github/CONTRIBUTING.md:202` | `](../SECURITY.md)` → `](SECURITY.md)` | 同目录相对链接，上批 W2a 把 CONTRIBUTING 搬进 `.github/` 后它是反向引用 |
+> | `docs/08_MGMT_项目管理/00_INDEX_项目管理-分类索引.md:89` | `](../../SECURITY.md)` → `](../../.github/SECURITY.md)` | 真死链，用第 11 节建的源码级扫描口径逐条查得 |
+> | `docs/00_INDEX_仓库根.md:37` | 根文件列举去掉 `SECURITY.md`，与 `CONTRIBUTING.md` 并列为「已移入 `.github/`」 | 根项清单必须与盘上一致 |
+> | `docs/10_规范/registry/DATA-LOCATIONS.json` | `protected.toolContractRootFiles` 删 `SECURITY.md` **与 `CONTRIBUTING.md`** | 该数组语义实测＝「允许留在根的契约件」（守卫只在**根层**做集合豁免：`!protectedSet.has(f) && !f.startsWith('.')` → `unprotectedRootFiles`），文件出根后留着条目就是让真源对盘说谎；`CONTRIBUTING.md` 是上批 W2a 的**同类遗留**，一并收口 |
+>
+> **不受影响的「假消费方」（逐条读过原文，防过度改指）**：
+> `runtime/node/backend/src/services/evolutionPolicy.js`（`['LICENSE','SECURITY.md',...].includes(_base(p))` 取 **basename** 比对，与位置无关）；
+> `runtime/node/backend/tests/ci/repoLayoutRootJunk.test.js` 与 `scripts/tests/check-repo-layout.test.js`（自建临时目录的 fixture）；
+> `scripts/ci/check-repo-layout.js:151` 的 `ROOT_DOC_WHITELIST` 与 `[MGMT-STD-001]`/`[DESIGN-LAY-005]`/`[MGMT-STD-007]` 的封闭白名单 prose——
+> 它们表达的是**许可**（根上允许有它），不是指针，文件出根不使许可失效（沿用 W2a 的同一判定）。
+> 其中 `check-repo-layout.js`、`scripts/tests/check-repo-layout.test.js`、`[DESIGN-ARCH-068]` 三件本就在飞，本批**未触碰**。
+>
+> **四判（逐字读数）**：① `check-repo-layout.js` **exit 0 / 0 error**，`root-uncatalogued` 消失（因 `$null` 出根），
+> 其余计数与 10-05 基线逐字持平（dangling-task 101 / cross-layer-require 37 / domain-direction 192 / functional-unit 259 / entry-buffer 2301）；
+> `check:data-layout` 顶层**可寻址 48 → 46**，降幅 **−2** 与本批逐字对上（SECURITY −1 + `$null` −1）。
+> ② `check-roots-isomorphic.js` **15**（与上节持平，单调不升）。③ `check-debt-ledger.js` **exit 0 / 0 error / 0 warning**。
+> ④ 等价证明四条：`DATA-LOCATIONS.json` 改后 `JSON.parse` 通过 + `check-data-layout.js` exit 0；
+> `check-incident-dr.js` 跑后 findings=2 且**两条均为既有 `docs/07_OPS_运维` 缺件**、无一条提及 SECURITY（即新路径被 existsSync 命中）；
+> `q1-criteria.test.js` **4 pass / 0 fail**；`git grep` 残留旧根路径链接式引用 **0 处**（`(../)*/SECURITY.md` 全形态）。
+> **未做的一条如实标注**：两处 `.md` 的 html 孪生（`docs/html/00_INDEX_仓库根.html`、
+> `docs/html/08_MGMT_项目管理/00_INDEX_项目管理-分类索引.html`）**没有再生**——按 §19.6 的判定，
+> 在共享 worktree 跑 `docs:build` 会把 200+ 他道派生件一并带出，故留给晨审/独占窗；本节的「全绿」不含孪生新鲜度。
+>
+> **队列推进**：W2 还剩 `CHANGELOG.md`（16 处路径消费 + PROCESS-005 bump 锚 → 需 R5 四件套）与
+> `.env.example`（**待裁 #1 仍未答**：建议照 `.dockerignore` 先例改判留根 `contract`，或授权单原子批 ≥16 文件）；
+> W3 的 blocker **换了**：不再是「五域目录未建」（`runtime/ delivery/ works/` 现已存在），
+> 实测为「**根上仍有 28 个跟踪件**」（含 `khy.sh`/`*.bat`/`*.ps1` 等 6 个受行尾规则保护的脚本），
+> 而根 `.gitattributes` 是全仓 `*.sh text eol=lf` / `*.bat *.cmd *.ps1 eol=crlf` 的**唯一**载体，
+> 嵌套 `gitattributes` 目前只有根那一份 ⇒ 拆散即让根件失去 CRLF 保护（本仓有翻搅血案记忆），仍不可单独提前。
+>
+> **回滚**：本批六件同提交，`git revert` 一个提交即全回（rename 检测保留，SECURITY 内容零改动）；
+> `$null` 的隔离按 `.khyos/housekeeping/2026-10-06-root-litter/` 原路 `mv` 回根即可（0 字节，无 sha 漂移风险）。
+
 > **2026-10-05 21:0x 节（第 13 节）**：**本节零施工、零文件移动**（队列上每一批都名花有主或闸门未开）。
 > 但本节撞上一个必须登记的结构变化：**测量在被测量的对象还在动的时候做的**——
 > 本节期间 HEAD 前进了两次（`7bfc49d9` 10:36 → `4b018f7b` 21:09 → `eae0522e` 21:12，最后一距我开测 3 分钟），
