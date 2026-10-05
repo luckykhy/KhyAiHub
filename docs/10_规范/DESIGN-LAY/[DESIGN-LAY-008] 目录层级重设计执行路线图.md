@@ -4894,6 +4894,54 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 
 ### 16.6 施工执行状态（点头后逐批登记）
 
+> **2026-10-06 05:2x 节（第 17 节）**：**本节无未门控批次，零施工**。
+> 六锚复验先过：`ace53192 / bbd424ee / 1af02147 / e34b0486 / 9f973566 / db63c679` **全部仍在祖先链**。
+> 读数（05:20）：根项 48、`check:data-layout` 可寻址 **47**（`.khy-runtime` 仍在根，第 16 节的新事实 N 未被人处置）、
+> 在飞 397、百度件 0、无 `index.lock`。
+>
+> **先把上节我自己标的那处不完整闭掉**：CHANGELOG 的消费方家族本节实测**已全部落定**——
+> `releaseNotes.js`、`changelogParse.js`、`scripts/release/changelog-new.js` 三件 `git status` 皆空
+> （他道在 04:03 `33476710` 与 05:03 `8a45cde4` 把它们提交了）。所以 W2 的 CHANGELOG 现在
+> **只剩一把闸**，不再是「登记表 + 正在写的消费方」双重门控。
+>
+> **本节真正交付的东西：把四把闸的问题从「还要等多久」改判为「该不该提交」，并用守卫自己的尺量化。**
+> 四件在飞改动（02:20 / 03:20 / 03:30 / 05:20 四点 numstat 逐次一致）经逐件开实物读，**全部是 R 迁移的
+> 收尾重指，不是半成品功能**：
+>
+> | 在飞件 | 改动实质（逐条读了 diff 行） | 量化判定 |
+> |---|---|---|
+> | `docs/10_规范/registry/RULES-REGISTRY.json`（+69/−58） | 把 `platform/**`、`services/**`、`software/**`、`extensions/**` 这类**已迁走**的路径重指为 `runtime/substrate/platform/**`、`runtime/node/**`、`delivery/web/**`、`delivery/channel/**`；`scope`/`exception` 文本同步 | **用守卫自己的判据复算**：`require('./scripts/ci/check-rules-registry.js')` 导出的 `findDanglingRegistryPaths`，注入 `fs.existsSync`，比 HEAD 版与工作区版 ⇒ **悬空 66 → 23（−43），且新增悬空 0 条**；工作区版 23 与该守卫实时输出**逐字相同**，证明我的复算与它是同一把尺不是第二把猜测的尺。含义：这 43 条不是美观问题，是**规则对已迁移文件静默解绑**的实际失效面（A2-4 反例的存量） |
+> | `MANIFEST.in`（+11/−11） | `recursive-include extensions *` → `delivery/extension *`；`software/khyquant` → `delivery/channel/khyquant`；两条 `prune` 同步 | 同一迁移的重指，无新增落点 |
+> | `khy.bat`（+1/−1） | `extensions\scripts\khy-portable\repair-portable.js` → `delivery\extension\scripts\khy-portable\...` | 一行，纯路径 |
+> | `.opencode/README.html`（+10/−10） | 孪生的 CSS 与 brand 链接深度 `../` → `../../../` | 10-05 `docs/html/` 镜像树落点裁决的连带产物 |
+>
+> ⇒ **结论一句话：四件全部「提交优于丢弃」，且这四件一落地就同时解锁 W2 的 CHANGELOG、W4、W6、W9 四批。**
+> 这比第 15/16 节的「等他自己解除」更可执行：不是等待，是**一次人工动作收四批**。
+> **本道不代提交**（门控条款 a 明写绝不触碰他人在飞件，且这四件的内容归属不在本道职权内），
+> 只把判定与复现方式交出去——**不依赖仓外临时探针**（`.khyos/tmp/` 已被证明会丢：附录A 生成器就是这么消失的），
+> 复现只用守卫自己导出的函数（本道已实跑，输出 `66 23`）：
+>
+> ```bash
+> git show HEAD:docs/10_规范/registry/RULES-REGISTRY.json > .khyos/tmp/rr-head.json
+> node -e "const {findDanglingRegistryPaths}=require('./scripts/ci/check-rules-registry.js'),fs=require('fs'),ex=p=>fs.existsSync(p),j=p=>JSON.parse(fs.readFileSync(p,'utf8')).rules;console.log(findDanglingRegistryPaths(j('.khyos/tmp/rr-head.json'),ex).length, findDanglingRegistryPaths(j('docs/10_规范/registry/RULES-REGISTRY.json'),ex).length)"
+> ```
+>
+> 两点口径必须一起读：① 存在性按**当前工作区盘**判，所以它回答「按这份登记表提交后还剩几条悬空」，
+> 不是「HEAD 提交当时」；② 中间文件路径**不能用 `/tmp/…`**——Windows 下 Node 会把它解析成 `D:\tmp\…`
+> 直接 ENOENT（本道第一版就是这么失败的），必须用仓内相对路径。
+>
+> **四判（本节零施工，判据④ 不适用）**：`check-repo-layout` **exit 0 / 0 error / 6 warning**
+> （含复现中的 `root-uncatalogued`， offender `.khy-runtime`）；`check-roots-isomorphic` **15**（持平）；
+> `check-debt-ledger` **exit 0 / 0/0**；`q1-criteria.test.js` 仍 **3 pass / 1 fail**——
+> 与第 16 节同因同处置（不靠登记换绿、不改他道刚落地的 `docs.js` 写入候选）。
+> 可寻址 47 的 +1 归因仍挂 `22a6f01c`，**本道不签棘轮、不改基线**。
+>
+> **仍挂人的三件，无变化**：① `.khy-runtime` 定性（留根契约 vs 改指 `works/data/khyos/`，验收命令见第 16 节）；
+> ② `.env.example` 待裁 #1；③ 附录A 已整体失效且生成器 `.khyos/tmp/b54-tree.js` 不在仓内（10-05 实测表内仍有
+> 101 处 `services/backend`、0 处 `runtime/node/backend`）——**流程第 6 步「重跑生成器刷新附录A」已连续三节无法执行**。
+>
+> **回滚**：本节只追加本块文字，`git revert` 单提交即回 05:2x 前态；无文件移动、无副作用。
+
 > **2026-10-06 03:2x 节（第 16 节）**：**本节无未门控批次，零施工**；但本节记下**根 census 的第一次回升**，
 > 并且它的来源是仓内代码——这比上节的 `$null` 严重一级，因为会随每次运行复发。
 > 四锚复验先过：`git merge-base --is-ancestor` 对 `1af02147 / e34b0486 / 9f973566 / db63c679` **四者皆 OK**，
