@@ -4894,6 +4894,75 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 
 ### 16.6 施工执行状态（点头后逐批登记）
 
+> **2026-10-05 21:0x 节（第 13 节）**：**本节零施工、零文件移动**（队列上每一批都名花有主或闸门未开）。
+> 但本节撞上一个必须登记的结构变化：**测量在被测量的对象还在动的时候做的**——
+> 本节期间 HEAD 前进了两次（`7bfc49d9` 10:36 → `4b018f7b` 21:09 → `eae0522e` 21:12，最后一距我开测 3 分钟），
+> 索引里压着 **965 个 staged rename + 366 个 staged M**（`docs/` 927、`runtime/` 277、`scripts/` 63、`works/` 47、`delivery/` 24），
+> 根上 `$null`/`AGENTS.md`/`MANIFEST.in`/`khy.bat`/`.github/`/`apps/` 皆在飞。⇒ 按 N-3 与「绝不夹带他人在飞件」，
+> 本道这批**一律不动**；下列读数都带时刻，不许跨节当现状复用。
+>
+> **新事实 K（闸门已被越过，且真源未记录这次越过）**：§22.2 行 5914「用户 2026-10-02 复核确认：闸门维持 10-27 不提前」
+> 与 §22.5 行 5964「本节不改变开闸时间（2026-10-04）」之后，被闸门管的批次已经执行完毕——
+>
+> | 证据 | 内容 |
+> |---|---|
+> | `96830e88` 10-03 21:33 起 **44 个子批** | 「kernel+platform→runtime 迁移收口（方案P R2，392件rename+73重指）」= §22.4 的 **R2** |
+> | `bc43302f` 10-04 10:45 | 「R4 apps 迁移收口」= **R4** |
+> | `559a7a8d`/`1a3aad9a` 10-04 12:2x | 「R2-R4 迁移后基线同步」——守卫基线跟着改判 |
+> | `7bfc49d9` 10-05 10:36 | 831 件：`evidence → works/record/evidence`（**R6**）+ 全仓路径同步（**R5** 的 packaging/patches 已在根上消失） |
+> | 本道实测 | 根项 55→**48**；根**普通目录 24→8**（`apps delivery docs entries node_modules runtime scripts works`）；`business/` 仍未建 |
+>
+> 也就是说 §22.1 阶梯里「P1–P5 → 9 目录」那一档**已经在事实上到站**（8 + `.github`），
+> 而本篇作为「方案唯一真源」对此**一行裁决出处都没有**。两种可能：人在另一窗口明示推翻（那是合法推翻，只是没落文），
+> 或某道自行开工（那是违规）。**本道无法从盘上区分这两种**——git 提交信息、`works/record/ai/hq/` 决策记录、本篇均无推翻记录。
+> ⇒ 待办转人：**要么补记「10-XX 用户明示推翻 §12.60」的出处，要么追认并改写 §22.2/§22.5 的开闸时间**。
+> 在此之前，「闸门」一词在本篇已失去可执行含义，任何后续引用它的判断都不可靠。
+>
+> **新事实 L（工具位改成符号链接：视觉 0 收益 + 多机不可复现，实测而非推断）**：六个第三方工具位在根上
+> 已不是目录，而是指向 **gitignore 路径 `works/data/<tool>`** 的符号链接（`fs.lstatSync().isSymbolicLink()` 逐个为真）：
+> `.cursor` `.zcode` `.opencode` `.workbuddy` `.workbuddy-ai` 创建于 **10-05 00:57Z**，`.codeartsdoer` **02:54Z**。
+> 逐条实测（探针 `.khyos/tmp/symlink-check-1005.js`，本节当场跑）：
+>
+> | 判项 | 实测 | 读法 |
+> |---|---|---|
+> | git 读取是否透明 | `git status --porcelain -- .cursor .opencode .zcode .workbuddy* .codeartsdoer` → **0 行**；`git ls-files -s` 仍列 5 个根路径跟踪件；`existsSync('.cursor/rules/khy-maintainability.mdc')` → true | **不坏**：中间路径由 OS 解链，本机上内容完好、守卫无感 |
+> | 谁造的链接 | `git config core.symlinks` = **false**；`git grep "works/data/(cursor\|zcode\|opencode\|codeartsdoer)"` 全仓 **0 命中** | **非 git 所造、无仓内生成器**：某道用 PowerShell 手工建，只存在于本机 |
+> | 新家的 git 语义 | `git check-ignore -v` → `.gitignore:286: works/data/` | 新家**整体被忽略**：跟踪关系仅靠根路径透链维持 |
+> | 他机 clone 会怎样 | 由上两行推得：真实目录 + 原内容（跟踪件），**无链接**、`works/data/<tool>` 为空 | 「根收敛」是**本机态**，多机自举协议下不可复现 |
+> | 视觉收益 | 根普通目录 8 不变；`check:data-layout` 可寻址 48 **含这 6 个链接** | **0**——正是 §22.3 当日实测「junction 在资源管理器仍显示为一个目录条目，要减视觉必须改指向不建别名」的同一形状 |
+> | 残余风险 | `git clean -nxd` 透链列出 `.opencode/node_modules/` 等 10+ 件；`git clean -nd`（不带 `-x`）**0 件** | 只有**激进清理**才会伸手进新家；常规清理不会。风险面如实标注为「窄但真实」 |
+>
+> 判词：**这一刀把 §22.3 分类里唯一标着「不可移（工具只认根）」的 B 类，用「搬家 + 留链」的方式搬了，代价是
+> 换来 0 视觉减项 + 一份只活在本机的布局。** 它没有破坏任何守卫（J1 仍 0 error），破坏的是「终局档位」这个口径本身的可复现性。
+> 处置**不在本道**（要撤这 6 个链是产品决定，且 §21.4 的 `.opencode`/`.zcode`/`.codeartsdoer` 复审位仍挂着）；
+> 本节只把它登记为事实，供晨审与 21.4 复审时一并裁。
+>
+> **队列逐批现状（本节实测，全部有主或闸住）**：
+>
+> | 批 | 门控 | 证据 |
+> |---|---|---|
+> | W2 `.env.example` | 待裁 #1 未答 | 消费方零在飞（未变），代价仍是 **10 处用户可照抄的 `cp .env.example .env`**；文件本身 clean |
+> | W2 `CHANGELOG.md` | 内容成本 + 发布锚 | clean，但 16 处路径消费 + PROCESS-005 bump 锚 → 判据④ 要 R5 四件套 |
+> | W2 `SECURITY.md` | **N-1 无证明** | clean；官方 security policy 页仍未列可识别路径，第 9 节挂起未变 |
+> | W5 Dockerfile/.dockerignore/docker-compose.yml | 目标在飞 + 本机无 docker | 三件本体 clean，但落点 `works/ship/` 整目录在本次 staged rename 里；`.dockerignore` 依用户裁决留根不搬 |
+> | W6 五启动器 | 落点未建 + 消费方在飞 | `runtime/bin/` 不存在（`runtime/` 现为 `boot node substrate khy-Trajectory`），且 `khy.bat` 本体 ` M` |
+> | W4 / W9′ / P1–P5 / W7 | 已在他道名下或在飞 | R2/R4/R5/R6 见新事实 K；R1（W9′）正在做（`.khyos/housekeeping/2026-10-05/manifest.md` 记 runtime/works 残壳，文本为 GBK 乱码）；R7 独占冻结窗未开；R8 是产品决策 |
+> | HK `$null` | **只能移不能治** | 0 字节无主件，`?? ` 未跟踪，今天 17:34 复生（他道 17:33 刚隔离过，manifest 就在那儿）。`check-repo-layout` 的 `findUncataloguedRootEntries` 走 `fs.readdirSync` **不读 .gitignore** ⇒ 补 ROOT_CATALOG 或加 ignore 都清不掉这条 warning，只能物理移走（复生）或断来源。来源未坐实，本节不重复移第二次 |
+>
+> **四判（本批零施工，判据④ 不适用）**：`check-repo-layout` **exit 0 / 0 error / 6 warning**
+> （唯一非棘轮项即 `root-uncatalogued: $null`；baseline 注记 updated 2026-10-04）；
+> `check-roots-isomorphic` **exit 0，余 15 条映射**（上节 19；用同一套判据跑 `7bfc49d9^` 版登记表复现 **19**，
+故 −4 确实来自 R 道提交，非读数口径变化。逐行 diff（探针 `.khyos/tmp/iso-diff-1005.js`）：消 7 增 3，
+**真正解决的是 4 条 D1**——`services/backend/{bin,src/cli,src/routes,src/services}` 在
+`services→runtime/node/backend` 改指后落入 `runtime/` 前缀而合规；另 3 条（D2 domain、D3 utils/constants）
+只是路径写法换了、仍不合规。**归因 R 道，非本道**）；`check-debt-ledger` **exit 0 无违规**；
+> `check:data-layout` 顶层**可寻址 48**（预算 20，另 9 目录 / 40 文件，node_modules 登记不计数）。
+> 棘轮 `layout.root-top-level` 台账 measured 仍写 **54**、target 15：本道**不替他道签这笔 −6**——
+> 那批减项出自 K 表的四个提交，且他道 10-04 有专门的 `chore(baseline)` 提交线在同步基线，让账面归口到人自己名下。
+> 上节遗留的三条待裁：#1 未答；**#2 已部分失效**（`runtime/` 现已存在，W6 的矛盾从「落点不存在」缩为「落点 `runtime/bin/` 未建 + 消费方在飞」）；#3 未复核不断言。
+>
+> **回滚**：本节只追加本块文字，`git revert` 单提交即回 21:0x 前态；无文件移动、无副作用。
+
 > **2026-10-03 05:20 节（第 12 节）**：**本节无未门控批次，零文件移动**（根项 55 / 可寻址 54 不变）。
 > 但有一个值得单记的变化：**门控的性质换了**——「别车道在飞件」这一类闸今夜首次归零
 > （W2 三个余量的消费方实测**零在飞**），挡住施工的是另外三类，且都不是等一等就能自己开的。
