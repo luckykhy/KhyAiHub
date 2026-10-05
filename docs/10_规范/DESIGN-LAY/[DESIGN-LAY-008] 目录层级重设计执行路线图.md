@@ -4929,10 +4929,13 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 > **或** 改指 `works/data/khyos/`（则删 `docs.js:182` 的根候选、`deliveryLedger.js:67` 改用 dataHome 访问器，
 > 验收命令：`node services/backend/bin/khy.js docs ai-fastlane` 后 `check:data-layout` 的**可寻址不涨**
 > 且 `q1-criteria.test.js` 4/4）。
-> ② **四个具名闸从 02:20 到 03:20 逐字节未变**（`RULES-REGISTRY.json` +69/−58、`MANIFEST.in` +11/−11、
-> `khy.bat` +1/−1、`.opencode/README.html` +10/−10，四组 numstat 完全一致）⇒ 它们不是「正在写」而是
-> **「写了没提交」**。等自己解除＝零产出等待（本道已连续两节验证），需人逐件决定提交或丢弃；
-> 这四件一提交，W2 的 CHANGELOG、W4、W6、W9 四批同时解锁，是现在**性价比最高的一次人工动作**。
+> ② **四个具名闸是「已写未提交、且已停手」，两把尺实测（不是推断）**：
+> numstat 三点复采一致（02:20 / 03:20 / 03:30 —— `RULES-REGISTRY.json` +69/−58、`MANIFEST.in` +11/−11、
+> `khy.bat` +1/−1、`.opencode/README.html` +10/−10），**且四件 mtime 全部停在 10-05**
+> （15:09:05 / 13:20:21 / 13:06:22 / 17:22:41，距 03:30 已 **12–14 小时无写入**）。
+> 单看 numstat 相同只能算弱证（增删行数相等不等于内容未变，本道在第 15 节就吃过「读数强度超过扫描集合」的亏），
+> 配上 mtime 才是「没有进程在写它们」的直接证据。⇒ 它们不会自己解除；这四件一提交，
+> W2 的 CHANGELOG、W4、W6、W9 四批**同时解锁**，是当下性价比最高的一次人工动作。
 > ③ `.env.example` 待裁 #1 仍未答（第 15 节实测它在任何 `paths` 数组里都没有，纯待裁无技术闸）。
 >
 > **四判（本节零施工，判据④ 不适用）**：`check-repo-layout` **exit 0 / 0 error / 6 warning**
