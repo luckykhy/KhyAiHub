@@ -91,7 +91,7 @@
 <p><strong>2026-08-10 (phase 2)</strong>: High-value patterns from deep source analysis:</p>
 <ol><li>Tool argument hallucination filter — <code>toolCalling.js</code> filters LLM-fabricated params by schema (only keeps schema-declared keys + internal keys like <code>cancel_event</code>). Matches Y-code <code>tool_registry.py:57-61</code>.</li><li>Failed subagent self-healing injection — already wired in <code>aiChatCore.js:2887</code> via <code>_buildStepRecoveryPrompt</code> + <code>aiGatewayGenerateHelpers.js:335</code>. When tools fail, model receives recovery guidance to retry with different approach.</li><li>Plan state machine guard — already satisfied architecturally: Khyos does NOT expose plan management tools to LLM (state managed by execution engine internally). Y-code's plan guard is unnecessary in Khyos's different architecture.</li></ol>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/其它设计/EXECUTION_PROMPT.html"><div class="dir">← 上一篇</div><div class="ttl">CC TUI 复刻工程 — AI 执行提示词</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-001] khy-移动智能体协议.html"><div class="dir">下一篇 →</div><div class="ttl">KHY 移动智能体协议 (v1.0)</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/其它设计/TUI-CLASSIC-SYNC.html"><div class="dir">← 上一篇</div><div class="ttl">TUI 与经典模式同步指南</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-001] khy-移动智能体协议.html"><div class="dir">下一篇 →</div><div class="ttl">KHY 移动智能体协议 (v1.0)</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>

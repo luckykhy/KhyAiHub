@@ -272,11 +272,11 @@
 
 未编号运维条目（2026-09-10 补登记，此前漏链）：
 
-- [disaster-recovery 依赖清单](07_OPS_运维/OPS-MAN/[OPS-MAN-201]%20dependencies.html) — 灾备关键依赖：基础设施、外部服务与故障半径
-- [On-Call 值班表](07_OPS_运维/OPS-MAN/[OPS-MAN-202]%20oncall.html) — 当前值班轮换、升级路径与值班职责
-- [规范代码 Enforcement 指南](07_OPS_运维/OPS-MAN/[OPS-MAN-203]%20standards-enforcement.html) — 架构总览、守卫脚本清单与 P0 阻断级规范守卫
-- [CI Gate 技术债清理报告](07_OPS_运维/OPS-MAN/[OPS-MAN-204]%20technical-debt-report.html) — CI 门禁技术债总览与分规则统计
-- [工作树清洁方案](07_OPS_运维/OPS-MAN/[OPS-MAN-206]%20工作树清洁方案.html) — 工作树长期变脏的四条根因（HTML 孪生漂移 / 忽略规则缺口 / 根目录怪文件 / pre-commit 只见暂存区）与「四层分离」对策 M1–M7
+- [disaster-recovery 依赖清单](./07_OPS_运维/OPS-MAN/[OPS-MAN-201]%20dependencies.md) — 灾备关键依赖：基础设施、外部服务与故障半径
+- [On-Call 值班表](./07_OPS_运维/OPS-MAN/[OPS-MAN-202]%20oncall.md) — 当前值班轮换、升级路径与值班职责
+- [规范代码 Enforcement 指南](./07_OPS_运维/OPS-MAN/[OPS-MAN-203]%20standards-enforcement.md) — 架构总览、守卫脚本清单与 P0 阻断级规范守卫
+- [CI Gate 技术债清理报告](./07_OPS_运维/OPS-MAN/[OPS-MAN-204]%20technical-debt-report.md) — CI 门禁技术债总览与分规则统计
+- [工作树清洁方案](./07_OPS_运维/OPS-MAN/[OPS-MAN-206]%20工作树清洁方案.md) — 工作树长期变脏的四条根因（HTML 孪生漂移 / 忽略规则缺口 / 根目录怪文件 / pre-commit 只见暂存区）与「四层分离」对策 M1–M7
 
 - [`OPS-MAN-073` 离机渠道启动入口契约自检清单](07_OPS_运维/OPS-MAN/[OPS-MAN-073] 离机渠道启动入口契约自检清单.md)
 - [`OPS-MAN-169` 项目规则总纲-命名·skill·权限·mcp](07_OPS_运维/OPS-MAN/[OPS-MAN-169] 项目规则总纲-命名·skill·权限·mcp.md)

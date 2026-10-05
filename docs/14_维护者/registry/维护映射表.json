@@ -6,25 +6,25 @@
     {
       "order": 1,
       "label": "Python launcher",
-      "path": "platform/khy_platform/cli.py",
+      "path": "runtime/substrate/platform/khy_platform/cli.py",
       "why": "First Python entrypoint for khy/khy-os/khyquant CLI execution."
     },
     {
       "order": 2,
       "label": "Node CLI bridge",
-      "path": "services/backend/bin/khy.js",
+      "path": "runtime/node/backend/bin/khy.js",
       "why": "Bridges Python launch into the Node runtime and selects backend mode."
     },
     {
       "order": 3,
       "label": "Interactive REPL",
-      "path": "services/backend/src/cli/repl.js",
+      "path": "runtime/node/backend/src/cli/repl.js",
       "why": "Owns readline flow, slash behavior, and AI loop entrypoints."
     },
     {
       "order": 4,
       "label": "Command router",
-      "path": "services/backend/src/cli/router.js",
+      "path": "runtime/node/backend/src/cli/router.js",
       "why": "Parses canonical commands and dispatches to concrete handlers."
     }
   ],
@@ -65,14 +65,14 @@
         "first-run bootstrap fails"
       ],
       "paths": [
-        "platform/khy_platform/cli.py",
-        "platform/khy_platform/_bootstrap.py",
-        "platform/khy_platform/__init__.py",
+        "runtime/substrate/platform/khy_platform/cli.py",
+        "runtime/substrate/platform/khy_platform/_bootstrap.py",
+        "runtime/substrate/platform/khy_platform/__init__.py",
         "pyproject.toml",
-        "software/khyquant/setup.py",
-        "software/khyquant/MANIFEST.in",
-        "packaging/npm/package.json",
-        "services/backend/package.json"
+        "delivery/channel/khyquant/setup.py",
+        "delivery/channel/khyquant/MANIFEST.in",
+        "works/ship/npm/package.json",
+        "runtime/node/backend/package.json"
       ],
       "docs": [
         "README.md",
@@ -94,21 +94,21 @@
         "help text does not match behavior"
       ],
       "paths": [
-        "services/backend/src/constants/commandSchema.js",
-        "services/backend/src/cli/aliases.js",
-        "services/backend/src/cli/router.js",
-        "services/backend/src/cli/repl.js",
-        "services/backend/src/cli/handlers",
-        "services/backend/tests/cli/router.test.js",
-        "services/backend/tests/cli/repl.tasks.interaction.test.js"
+        "runtime/node/backend/src/constants/commandSchema.js",
+        "runtime/node/backend/src/cli/aliases.js",
+        "runtime/node/backend/src/cli/router.js",
+        "runtime/node/backend/src/cli/repl.js",
+        "runtime/node/backend/src/cli/handlers",
+        "runtime/node/backend/tests/cli/router.test.js",
+        "runtime/node/backend/tests/cli/repl.tasks.interaction.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-013] khy-os-开发者指南.md",
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-011] khy-os-学习指南.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/cli/router.test.js services/backend/tests/cli/repl.tasks.interaction.test.js",
-        "node -e \"require('./services/backend/src/cli/router')\""
+        "npm run test:one -- runtime/node/backend/tests/cli/router.test.js runtime/node/backend/tests/cli/repl.tasks.interaction.test.js",
+        "node -e \"require('./runtime/node/backend/src/cli/router')\""
       ]
     },
     {
@@ -120,23 +120,23 @@
         "gateway debug-prompt output drifts"
       ],
       "paths": [
-        "services/backend/src/constants/prompts.js",
-        "services/backend/src/services/khyUpgradeRuntime.js",
-        "services/backend/src/services/domain/memory/compact/prompt.js",
-        "services/backend/src/cli/handlers/gateway.js",
-        "services/backend/tests/promptOnDemandSections.test.js",
-        "services/backend/tests/promptLearningRules.test.js",
-        "services/backend/tests/gatewayDebugPrompt.test.js"
+        "runtime/node/backend/src/constants/prompts.js",
+        "runtime/node/backend/src/services/khyUpgradeRuntime.js",
+        "runtime/node/backend/src/services/domain/memory/compact/prompt.js",
+        "runtime/node/backend/src/cli/handlers/gateway.js",
+        "runtime/node/backend/tests/promptOnDemandSections.test.js",
+        "runtime/node/backend/tests/promptLearningRules.test.js",
+        "runtime/node/backend/tests/gatewayDebugPrompt.test.js"
       ],
       "docs": [
         "docs/03_DESIGN_设计/DESIGN-OTHER/[DESIGN-OTHER-004] 特性访问-提示词胶囊-2026-06-01.md",
         "AGENTS.md",
-        "CONTRIBUTING.md"
+        ".github/CONTRIBUTING.md"
       ],
       "verify": [
-        "node --test services/backend/tests/promptOnDemandSections.test.js",
-        "node --test services/backend/tests/promptLearningRules.test.js",
-        "npx jest services/backend/tests/gatewayDebugPrompt.test.js --runInBand"
+        "node --test runtime/node/backend/tests/promptOnDemandSections.test.js",
+        "node --test runtime/node/backend/tests/promptLearningRules.test.js",
+        "npx jest runtime/node/backend/tests/gatewayDebugPrompt.test.js --runInBand"
       ]
     },
     {
@@ -149,20 +149,20 @@
         "request normalization is wrong"
       ],
       "paths": [
-        "services/backend/src/services/gateway/aiGateway.js",
-        "services/backend/src/services/gateway/adapters",
-        "services/backend/src/services/gateway/proxyServer.js",
-        "services/backend/tests/aiGateway.stability.test.js",
-        "services/backend/tests/gateway/transportResilience.test.js",
-        "services/backend/tests/gatewayAdapters.stability.test.js"
+        "runtime/node/backend/src/services/gateway/aiGateway.js",
+        "runtime/node/backend/src/services/gateway/adapters",
+        "runtime/node/backend/src/services/gateway/proxyServer.js",
+        "runtime/node/backend/tests/aiGateway.stability.test.js",
+        "runtime/node/backend/tests/gateway/transportResilience.test.js",
+        "runtime/node/backend/tests/gatewayAdapters.stability.test.js"
       ],
       "docs": [
         "docs/04_IMPL_实现/IMPL-RPT/[IMPL-RPT-020] 网关传输韧性修复-2026-05-29.md",
         "docs/08_MGMT_项目管理/MGMT-RPT/[MGMT-RPT-014] khy-qwen-差距修复清单.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/aiGateway.stability.test.js services/backend/tests/gateway/transportResilience.test.js services/backend/tests/gatewayAdapters.stability.test.js",
-        "node -e \"require('./services/backend/src/services/gateway/aiGateway')\"",
+        "npm run test:one -- runtime/node/backend/tests/aiGateway.stability.test.js runtime/node/backend/tests/gateway/transportResilience.test.js runtime/node/backend/tests/gatewayAdapters.stability.test.js",
+        "node -e \"require('./runtime/node/backend/src/services/gateway/aiGateway')\"",
         "khy doctor"
       ]
     },
@@ -176,22 +176,22 @@
         "port drift appears after restart"
       ],
       "paths": [
-        "services/backend/src/services/daemonManager.js",
-        "services/backend/src/services/aiManagementServer.js",
-        "services/backend/src/services/gateway/proxyServer.js",
-        "services/backend/src/utils/proxyBaseUrl.js",
-        "services/backend/src/constants/serviceDefaults.js",
-        "services/backend/tests/daemonManager.runtimePort.test.js",
-        "services/backend/tests/gatewayManage.portDrift.integration.test.js",
-        "services/backend/tests/services/proxyBaseUrl.test.js",
-        "services/backend/tests/services/serviceDefaults.test.js"
+        "runtime/node/backend/src/services/daemonManager.js",
+        "runtime/node/backend/src/services/aiManagementServer.js",
+        "runtime/node/backend/src/services/gateway/proxyServer.js",
+        "runtime/node/backend/src/utils/proxyBaseUrl.js",
+        "runtime/node/backend/src/constants/serviceDefaults.js",
+        "runtime/node/backend/tests/daemonManager.runtimePort.test.js",
+        "runtime/node/backend/tests/gatewayManage.portDrift.integration.test.js",
+        "runtime/node/backend/tests/services/proxyBaseUrl.test.js",
+        "runtime/node/backend/tests/services/serviceDefaults.test.js"
       ],
       "docs": [
         "docs/04_IMPL_实现/IMPL-RPT/[IMPL-RPT-017] 守护进程端口发现修复.md",
         "docs/04_IMPL_实现/IMPL-RPT/[IMPL-RPT-020] 网关传输韧性修复-2026-05-29.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/daemonManager.runtimePort.test.js services/backend/tests/gatewayManage.portDrift.integration.test.js services/backend/tests/services/proxyBaseUrl.test.js services/backend/tests/services/serviceDefaults.test.js",
+        "npm run test:one -- runtime/node/backend/tests/daemonManager.runtimePort.test.js runtime/node/backend/tests/gatewayManage.portDrift.integration.test.js runtime/node/backend/tests/services/proxyBaseUrl.test.js runtime/node/backend/tests/services/serviceDefaults.test.js",
         "khy doctor"
       ]
     },
@@ -204,22 +204,22 @@
         "admin API and AI UI drift"
       ],
       "paths": [
-        "services/backend/src/routes/aiGatewayAdmin.js",
-        "services/ai-backend/src/routes/aiGatewayAdmin.js",
-        "apps/ai-frontend/src",
-        "apps/ai-frontend/package.json",
-        "apps/ai-frontend/vite.config.js",
-        "services/backend/src/cli/handlers/gateway.js",
-        "services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js",
-        "services/backend/tests/gatewayManage.apiDisplay.test.js"
+        "runtime/node/backend/src/routes/aiGatewayAdmin.js",
+        "runtime/node/ai-backend/src/routes/aiGatewayAdmin.js",
+        "delivery/web/ai-frontend/src",
+        "delivery/web/ai-frontend/package.json",
+        "delivery/web/ai-frontend/vite.config.js",
+        "runtime/node/backend/src/cli/handlers/gateway.js",
+        "runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js",
+        "runtime/node/backend/tests/gatewayManage.apiDisplay.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-003] ai-管理-访问与登录.md",
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-002] ai-管理-新api对齐.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js services/backend/tests/gatewayManage.apiDisplay.test.js",
-        "npm run build --prefix apps/ai-frontend"
+        "npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js",
+        "npm run build --prefix delivery/web/ai-frontend"
       ]
     },
     {
@@ -232,29 +232,29 @@
         "/api/ai/projects REST errors"
       ],
       "paths": [
-        "platform/packages/shared/src/models/UserProject.js",
-        "platform/packages/shared/src/models/index.js",
-        "services/backend/src/services/projectStore.js",
-        "services/backend/src/services/aiManagementProjects.js",
-        "services/backend/src/services/aiManagementServer.js",
-        "platform/packages/shared/src/models/Conversation.js",
-        "services/backend/src/services/conversationStore.js",
-        "apps/ai-frontend/src/composables/useProjects.js",
-        "apps/ai-frontend/src/composables/useChatConversations.js",
-        "apps/ai-frontend/src/views/Projects.vue",
-        "apps/ai-frontend/src/views/AIChat.vue",
-        "apps/ai-frontend/src/composables/useRoutePrefetch.js",
-        "apps/ai-frontend/src/router/index.js",
-        "apps/ai-frontend/src/views/Layout.vue",
-        "services/backend/tests/projectStore.test.js",
-        "apps/ai-frontend/src/composables/useProjects.wiring.test.js"
+        "runtime/substrate/platform/packages/shared/src/models/UserProject.js",
+        "runtime/substrate/platform/packages/shared/src/models/index.js",
+        "runtime/node/backend/src/services/projectStore.js",
+        "runtime/node/backend/src/services/aiManagementProjects.js",
+        "runtime/node/backend/src/services/aiManagementServer.js",
+        "runtime/substrate/platform/packages/shared/src/models/Conversation.js",
+        "runtime/node/backend/src/services/conversationStore.js",
+        "delivery/web/ai-frontend/src/composables/useProjects.js",
+        "delivery/web/ai-frontend/src/composables/useChatConversations.js",
+        "delivery/web/ai-frontend/src/views/Projects.vue",
+        "delivery/web/ai-frontend/src/views/AIChat.vue",
+        "delivery/web/ai-frontend/src/composables/useRoutePrefetch.js",
+        "delivery/web/ai-frontend/src/router/index.js",
+        "delivery/web/ai-frontend/src/views/Layout.vue",
+        "runtime/node/backend/tests/projectStore.test.js",
+        "delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js"
       ],
       "docs": [
         "docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-026] khyos系统级服务调用审批网关规范.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/projectStore.test.js apps/ai-frontend/src/composables/useProjects.wiring.test.js",
-        "npm run build --prefix apps/ai-frontend"
+        "npm run test:one -- runtime/node/backend/tests/projectStore.test.js delivery/web/ai-frontend/src/composables/useProjects.wiring.test.js",
+        "npm run build --prefix delivery/web/ai-frontend"
       ]
     },
     {
@@ -266,18 +266,18 @@
         "verification workflow regressed"
       ],
       "paths": [
-        "services/backend/src/cli/handlers/workspace.js",
-        "services/backend/src/cli/handlers/publish.js",
-        "services/backend/src/cli/handlers/verify.js",
-        "services/backend/tests/publish.sourceReleaseMode.test.js",
-        "services/backend/tests/publish.dbPreflight.test.js"
+        "runtime/node/backend/src/cli/handlers/workspace.js",
+        "runtime/node/backend/src/cli/handlers/publish.js",
+        "runtime/node/backend/src/cli/handlers/verify.js",
+        "runtime/node/backend/tests/publish.sourceReleaseMode.test.js",
+        "runtime/node/backend/tests/publish.dbPreflight.test.js"
       ],
       "docs": [
         "docs/06_DEPLOY_部署/DEPLOY-MAN/[DEPLOY-MAN-011] pip-docker-打包部署.md",
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-022] pip-安装布局参考.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/publish.sourceReleaseMode.test.js services/backend/tests/publish.dbPreflight.test.js"
+        "npm run test:one -- runtime/node/backend/tests/publish.sourceReleaseMode.test.js runtime/node/backend/tests/publish.dbPreflight.test.js"
       ]
     },
     {
@@ -290,10 +290,10 @@
       ],
       "paths": [
         "AGENTS.md",
-        "CONTRIBUTING.md",
+        ".github/CONTRIBUTING.md",
         "scripts/ci/check-agent-rules.js",
         "scripts/ci/check-change-safety.js",
-        "extensions/scripts/khy-installer/install-git-hooks.js",
+        "delivery/extension/scripts/khy-installer/install-git-hooks.js",
         "scripts/ci/check-version-sync.js",
         "scripts/ci/check-node-syntax.js",
         "scripts/ci/check-python-syntax.py",
@@ -301,7 +301,7 @@
       ],
       "docs": [
         "AGENTS.md",
-        "CONTRIBUTING.md"
+        ".github/CONTRIBUTING.md"
       ],
       "verify": [
         "npm run check:changed",
@@ -318,16 +318,16 @@
         "release artifacts or the post-release check regressed"
       ],
       "paths": [
-        "services/backend/src/cli/handlers/publish.js",
+        "runtime/node/backend/src/cli/handlers/publish.js",
         "scripts/release/build-and-audit-pip-purity.sh",
         "scripts/ci/check-version-sync.js"
       ],
       "docs": [
-        "docs/13_传承/其它传承/KHY-OS-传承书.md",
+        "docs/13_传承/KHY-OS-传承书.md",
         "docs/06_DEPLOY_部署/DEPLOY-MAN/[DEPLOY-MAN-011] pip-docker-打包部署.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/publish.sourceReleaseMode.test.js services/backend/tests/publish.dbPreflight.test.js",
+        "npm run test:one -- runtime/node/backend/tests/publish.sourceReleaseMode.test.js runtime/node/backend/tests/publish.dbPreflight.test.js",
         "npm run check:version-sync"
       ]
     },
@@ -342,24 +342,24 @@
         "the junk scan, repair, or probe section renders wrong"
       ],
       "paths": [
-        "services/backend/src/services/localBrainEnvOptimize.js",
-        "services/backend/src/services/envProbes.js",
-        "services/backend/src/services/envRepair.js",
-        "services/backend/src/services/envPlatform.js",
-        "services/backend/src/services/diskCleanup",
-        "services/backend/src/services/localBrainService.js",
-        "services/backend/src/cli/tui/hooks/useQueryBridge.js",
-        "services/backend/tests/services/localBrainEnvOptimize.test.js",
-        "services/backend/tests/services/envProbes.test.js",
-        "services/backend/tests/services/envRepair.test.js",
-        "services/backend/tests/services/envPlatform.test.js"
+        "runtime/node/backend/src/services/localBrainEnvOptimize.js",
+        "runtime/node/backend/src/services/envProbes.js",
+        "runtime/node/backend/src/services/envRepair.js",
+        "runtime/node/backend/src/services/envPlatform.js",
+        "runtime/node/backend/src/services/diskCleanup",
+        "runtime/node/backend/src/services/localBrainService.js",
+        "runtime/node/backend/src/cli/tui/hooks/useQueryBridge.js",
+        "runtime/node/backend/tests/services/localBrainEnvOptimize.test.js",
+        "runtime/node/backend/tests/services/envProbes.test.js",
+        "runtime/node/backend/tests/services/envRepair.test.js",
+        "runtime/node/backend/tests/services/envPlatform.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-064] 打造最佳环境-如何扩展.md",
         "docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-026] khyos系统级服务调用审批网关规范.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/services/localBrainEnvOptimize.test.js services/backend/tests/services/envProbes.test.js services/backend/tests/services/envRepair.test.js services/backend/tests/services/envPlatform.test.js"
+        "npm run test:one -- runtime/node/backend/tests/services/localBrainEnvOptimize.test.js runtime/node/backend/tests/services/envProbes.test.js runtime/node/backend/tests/services/envRepair.test.js runtime/node/backend/tests/services/envPlatform.test.js"
       ]
     },
     {
@@ -394,7 +394,7 @@
       ],
       "paths": [
         "scripts/lib/maintainerTriage.js",
-        "extensions/scripts/khy-diagnostics/triage.js",
+        "delivery/extension/scripts/khy-diagnostics/triage.js",
         "scripts/tests/maintainerTriage.test.js",
         "docs/14_维护者/registry/维护映射表.json"
       ],
@@ -437,7 +437,7 @@
       ],
       "paths": [
         "scripts/lib/installIntegrity.js",
-        "extensions/scripts/khy-installer/verify-install.js",
+        "delivery/extension/scripts/khy-installer/verify-install.js",
         "scripts/tests/installIntegrity.test.js"
       ],
       "docs": [
@@ -454,12 +454,12 @@
         "khyos installed and the bundle is complete, but the backend still fails to start and you suspect node_modules is missing or half-installed",
         "you need to detect the splitbrain case: the .khy_quant_bootstrapped marker says hydration is done but node_modules was deleted",
         "the @khy/shared workspace symlink is broken, or a critical runtime dependency is missing",
-        "a runtime dependency was renamed/removed and CRITICAL_PACKAGES must track services/backend package.json",
+        "a runtime dependency was renamed/removed and CRITICAL_PACKAGES must track runtime/node/backend package.json",
         "the OPS-MAN-070 hydration checklist is out of sync with its generator"
       ],
       "paths": [
         "scripts/lib/hydrationHealth.js",
-        "extensions/scripts/khy-diagnostics/hydration-doctor.js",
+        "delivery/extension/scripts/khy-diagnostics/hydration-doctor.js",
         "scripts/tests/hydrationHealth.test.js"
       ],
       "docs": [
@@ -551,7 +551,7 @@
         "scripts/lib/bundleLaunchContract.js",
         "scripts/tests/bundleLaunchContract.test.js",
         "scripts/release/pip_packaging_rules.py",
-        "packaging/npm/scripts/audit-purity.js"
+        "works/ship/npm/scripts/audit-purity.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-073] 离机渠道启动入口契约自检清单.md"
@@ -574,29 +574,29 @@
         "web proxy page says 'download mihomo' but never shows where to download it (download URL / dest path missing)"
       ],
       "paths": [
-        "services/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js",
-        "services/backend/src/services/domain/network/proxy/proxyCoreManager.js",
-        "services/backend/src/services/proxyConfigService.js",
-        "services/backend/src/services/aiManagementProxyEgress.js",
-        "services/backend/src/services/aiManagementServer.js",
-        "apps/ai-frontend/src/composables/useProxies.js",
-        "apps/ai-frontend/src/views/ProxyManagement.vue",
-        "services/backend/tests/proxyCoreConfigGen.test.js",
-        "services/backend/tests/proxyCoreManager.test.js",
-        "services/backend/tests/proxyConfigService.egress.test.js",
-        "services/backend/tests/aiManagementProxyEgress.wiring.test.js",
-        "apps/ai-frontend/src/composables/useProxies.egress.wiring.test.js",
-        "services/backend/src/bootstrap/ensureProxyCoreEnv.js",
-        "services/backend/src/services/domain/network/proxy/proxyCoreInstaller.js",
-        "services/backend/tests/bootstrap/ensureProxyCoreEnv.test.js",
-        "services/backend/tests/services/proxyCoreInstaller.test.js"
+        "runtime/node/backend/src/services/domain/network/proxy/proxyCoreConfigGen.js",
+        "runtime/node/backend/src/services/domain/network/proxy/proxyCoreManager.js",
+        "runtime/node/backend/src/services/proxyConfigService.js",
+        "runtime/node/backend/src/services/aiManagementProxyEgress.js",
+        "runtime/node/backend/src/services/aiManagementServer.js",
+        "delivery/web/ai-frontend/src/composables/useProxies.js",
+        "delivery/web/ai-frontend/src/views/ProxyManagement.vue",
+        "runtime/node/backend/tests/proxyCoreConfigGen.test.js",
+        "runtime/node/backend/tests/proxyCoreManager.test.js",
+        "runtime/node/backend/tests/proxyConfigService.egress.test.js",
+        "runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js",
+        "delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js",
+        "runtime/node/backend/src/bootstrap/ensureProxyCoreEnv.js",
+        "runtime/node/backend/src/services/domain/network/proxy/proxyCoreInstaller.js",
+        "runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js",
+        "runtime/node/backend/tests/services/proxyCoreInstaller.test.js"
       ],
       "docs": [
         "docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-066] 前端代理出站桥-选节点实际路由与启用停用开关.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/proxyCoreConfigGen.test.js services/backend/tests/proxyCoreManager.test.js services/backend/tests/proxyConfigService.egress.test.js services/backend/tests/aiManagementProxyEgress.wiring.test.js apps/ai-frontend/src/composables/useProxies.egress.wiring.test.js services/backend/tests/bootstrap/ensureProxyCoreEnv.test.js services/backend/tests/services/proxyCoreInstaller.test.js",
-        "npm run build --prefix apps/ai-frontend"
+        "npm run test:one -- runtime/node/backend/tests/proxyCoreConfigGen.test.js runtime/node/backend/tests/proxyCoreManager.test.js runtime/node/backend/tests/proxyConfigService.egress.test.js runtime/node/backend/tests/aiManagementProxyEgress.wiring.test.js delivery/web/ai-frontend/src/composables/useProxies.egress.wiring.test.js runtime/node/backend/tests/bootstrap/ensureProxyCoreEnv.test.js runtime/node/backend/tests/services/proxyCoreInstaller.test.js",
+        "npm run build --prefix delivery/web/ai-frontend"
       ]
     },
     {
@@ -604,161 +604,161 @@
       "label": "斜杠命令菜单单一真源(经典REPL⇄TUI)",
       "whenToUse": "要新增/改一条斜杠命令菜单项、或退出时「如何还原会话」提示,却发现经典 REPL 与 Ink TUI 两处菜单/文案不同步时。这里把 commandRegistry 之外的额外命令(/study /hud …)与 resume 提示文案抽成两入口共用的叶子——改一处两处同步。",
       "paths": [
-        "services/backend/src/cli/slashExtraCommands.js",
-        "services/backend/src/cli/resumeHint.js",
-        "services/backend/src/cli/replSession.js",
-        "services/backend/src/cli/tui/hooks/useCompletions.js",
-        "services/backend/src/cli/tui/app.js",
-        "services/backend/tests/slashExtraCommands.test.js",
-        "services/backend/tests/cli/resumeHint.test.js",
-        "services/backend/tests/cli/useCompletionsSlashExtras.test.js"
+        "runtime/node/backend/src/cli/slashExtraCommands.js",
+        "runtime/node/backend/src/cli/resumeHint.js",
+        "runtime/node/backend/src/cli/replSession.js",
+        "runtime/node/backend/src/cli/tui/hooks/useCompletions.js",
+        "runtime/node/backend/src/cli/tui/app.js",
+        "runtime/node/backend/tests/slashExtraCommands.test.js",
+        "runtime/node/backend/tests/cli/resumeHint.test.js",
+        "runtime/node/backend/tests/cli/useCompletionsSlashExtras.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-011] khy-os-学习指南.md",
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-013] khy-os-开发者指南.md"
       ],
-      "verify": "npm run test:one -- services/backend/tests/slashExtraCommands.test.js services/backend/tests/cli/resumeHint.test.js services/backend/tests/cli/useCompletionsSlashExtras.test.js"
+      "verify": "npm run test:one -- runtime/node/backend/tests/slashExtraCommands.test.js runtime/node/backend/tests/cli/resumeHint.test.js runtime/node/backend/tests/cli/useCompletionsSlashExtras.test.js"
     },
     {
       "id": "frontend-response-envelope",
       "label": "前端响应信封解包单一真源(unwrap)",
       "whenToUse": "要改「后端 {success,data} 信封怎么解包成前端要用的数据」的判定逻辑,或新写一个 composable/视图要从 request.get/post 的响应里取 data 时。历史上这段逻辑被逐字复制到 13 个 composable/view(名为 unwrap 或 unwrapResponse),已收敛到唯一真源 @/api/unwrap——改判定只改这一处,全站同步;新消费方一律 import { unwrap } from '@/api/unwrap',不要再本地复制。",
       "paths": [
-        "apps/ai-frontend/src/api/unwrap.js",
-        "apps/ai-frontend/src/api/unwrap.test.js",
-        "apps/ai-frontend/src/api/unwrap.wiring.test.js"
+        "delivery/web/ai-frontend/src/api/unwrap.js",
+        "delivery/web/ai-frontend/src/api/unwrap.test.js",
+        "delivery/web/ai-frontend/src/api/unwrap.wiring.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-003] ai-管理-访问与登录.md"
       ],
-      "verify": "npm run test:one -- apps/ai-frontend/src/api/unwrap.test.js apps/ai-frontend/src/api/unwrap.wiring.test.js"
+      "verify": "npm run test:one -- delivery/web/ai-frontend/src/api/unwrap.test.js delivery/web/ai-frontend/src/api/unwrap.wiring.test.js"
     },
     {
       "id": "codex-adopt-env",
       "label": "khy codex 凭据便捷管理(与 claude 一样启动)",
       "whenToUse": "要让 `khy codex` 像 `khy claude` 一样「配一次、pip 升级后仍能用」,或改 codex 的 adopt-env/use-relay/export-env 三条便捷凭据命令时。codex 的启动骨架本就与 claude 对称(router case、launcher registry、ide handler、gateway codexAdapter 全齐);这一区补的是把当前 codex 凭据(CODEX_API_KEY/OPENAI_API_KEY + 可选中转 base url)固化进 ~/.khy/.env(chmod 600、永不进包、pip 升级不覆盖)。凭据动词从 args[0] 读取(launcher 命令不进 SUB_COMMANDS,parseInput 把动词留在 args[0]),同一处修复也修好了此前被 subCommand 判空漏掉的 claude 三命令。改判定改纯叶子 codexEnvAdoptPolicy(codex 是 OpenAI 兼容→恒 Bearer);中转预设改 openaiRelayPresets(默认空表,HOW-TO-EXTEND 在文件头);IO 写盘在 codexAdopt.js;分发在 router.js 的 launcher case。",
       "paths": [
-        "services/backend/src/services/gateway/adapters/codexEnvAdoptPolicy.js",
-        "services/backend/src/services/gateway/adapters/openaiRelayPresets.js",
-        "services/backend/src/cli/handlers/codexAdopt.js",
-        "services/backend/src/cli/router.js",
-        "services/backend/tests/services/gateway/codexEnvAdoptPolicy.test.js",
-        "services/backend/tests/services/gateway/openaiRelayPresets.test.js",
-        "services/backend/tests/cli/codexAdoptRouting.test.js"
+        "runtime/node/backend/src/services/gateway/adapters/codexEnvAdoptPolicy.js",
+        "runtime/node/backend/src/services/gateway/adapters/openaiRelayPresets.js",
+        "runtime/node/backend/src/cli/handlers/codexAdopt.js",
+        "runtime/node/backend/src/cli/router.js",
+        "runtime/node/backend/tests/services/gateway/codexEnvAdoptPolicy.test.js",
+        "runtime/node/backend/tests/services/gateway/openaiRelayPresets.test.js",
+        "runtime/node/backend/tests/cli/codexAdoptRouting.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-013] khy-os-开发者指南.md"
       ],
-      "verify": "npm run test:one -- services/backend/tests/services/gateway/codexEnvAdoptPolicy.test.js services/backend/tests/services/gateway/openaiRelayPresets.test.js services/backend/tests/cli/codexAdoptRouting.test.js"
+      "verify": "npm run test:one -- runtime/node/backend/tests/services/gateway/codexEnvAdoptPolicy.test.js runtime/node/backend/tests/services/gateway/openaiRelayPresets.test.js runtime/node/backend/tests/cli/codexAdoptRouting.test.js"
     },
     {
       "id": "failure-diagnostics",
       "label": "AI 失败诊断质量(真实失败原因排序 + model_not_found 形状分诊/按模型冷却/存在性纠偏)",
       "whenToUse": "当「真实失败原因」报的错与现场实际不符,或 model_not_found/404 的恢复指引不够精准时。四块:①失败原因排序 failureReasonRanking——同一次请求本轮 live 失败(带真实 HTTP 状态码,如 429 限流)被 238s 前缓存的陈旧跳过(virtualSkip / `recent … failure cached (cooldown Ns)`)盖过、排在前面误导用户;此纯叶子做稳定分区让 live 优先、缓存靠后,接线在 aiGateway._buildFailureReasonSection(门控 KHY_FAILURE_REASON_RANKING 默认开,关则逐字回退插入序)。②model_not_found 形状分诊 modelNotFoundRecovery.classifyModelNameShape——把送出模型串按结构分为 composite(三段式路由 id api:<pool>:<model>,送错字符串,应剥成裸名)/ prefixed(带前缀,须核对上游是否接受)/ bare(裸名,模型确实不存在)/ empty,在点名行末尾追加相应诊断,区分「送错字符串」与「模型确实不存在」(门控 KHY_MODEL_NOT_FOUND_RECOVERY)。③按模型冷却 modelNotFoundCooldownScope——model_not_found 的 fast-fail 冷却从「按通道」收窄为「按模型」:复合 id 撞 404 后剥成裸名的修正请求(不同模型串)不该被同一通道的冷却连坐,接线在 aiGatewayGenerateMethod.inspectCachedFastFail + _recordAdapterFailure 记录模型串(门控 KHY_MNF_COOLDOWN_PER_MODEL,parent KHY_MODEL_NOT_FOUND_RECOVERY)。④存在性纠偏 modelExistenceEvidence——有证据表明模型已送达上游(参数/token 类报错、或送出串为复合 id)时,为「真实失败原因」行追加注解,消解「刚嫌 token 太大、转头又说找不到模型」的矛盾,接线在 aiGateway._buildFailureReasonSection(门控 KHY_MNF_EXISTENCE_NOTE,parent KHY_MODEL_NOT_FOUND_RECOVERY,只改显示不改分类)。四者皆零 IO 纯叶子、绝不抛。",
       "paths": [
-        "services/backend/src/services/gateway/failureReasonRanking.js",
-        "services/backend/src/services/gateway/modelNotFoundRecovery.js",
-        "services/backend/src/services/gateway/modelNotFoundCooldownScope.js",
-        "services/backend/src/services/gateway/modelExistenceEvidence.js",
-        "services/backend/src/services/gateway/aiGateway.js",
-        "services/backend/tests/services/gateway/failureReasonRanking.test.js",
-        "services/backend/tests/services/gateway/modelNotFoundRecovery.test.js",
-        "services/backend/tests/services/gateway/modelNotFoundCooldownScope.test.js",
-        "services/backend/tests/services/gateway/modelExistenceEvidence.test.js"
+        "runtime/node/backend/src/services/gateway/failureReasonRanking.js",
+        "runtime/node/backend/src/services/gateway/modelNotFoundRecovery.js",
+        "runtime/node/backend/src/services/gateway/modelNotFoundCooldownScope.js",
+        "runtime/node/backend/src/services/gateway/modelExistenceEvidence.js",
+        "runtime/node/backend/src/services/gateway/aiGateway.js",
+        "runtime/node/backend/tests/services/gateway/failureReasonRanking.test.js",
+        "runtime/node/backend/tests/services/gateway/modelNotFoundRecovery.test.js",
+        "runtime/node/backend/tests/services/gateway/modelNotFoundCooldownScope.test.js",
+        "runtime/node/backend/tests/services/gateway/modelExistenceEvidence.test.js"
       ],
       "docs": [
         "docs/04_IMPL_实现/IMPL-RPT/[IMPL-RPT-020] 网关传输韧性修复-2026-05-29.md",
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-002] ai-管理-新api对齐.md"
       ],
-      "verify": "npm run test:one -- services/backend/tests/services/gateway/failureReasonRanking.test.js services/backend/tests/services/gateway/modelNotFoundRecovery.test.js services/backend/tests/services/gateway/modelNotFoundCooldownScope.test.js services/backend/tests/services/gateway/modelExistenceEvidence.test.js"
+      "verify": "npm run test:one -- runtime/node/backend/tests/services/gateway/failureReasonRanking.test.js runtime/node/backend/tests/services/gateway/modelNotFoundRecovery.test.js runtime/node/backend/tests/services/gateway/modelNotFoundCooldownScope.test.js runtime/node/backend/tests/services/gateway/modelExistenceEvidence.test.js"
     },
     {
       "id": "wildcard-pool-guard",
       "label": "通配兜底守卫(裸模型盲落默认池打错端点的防护)",
       "whenToUse": "当某个模型(尤其自定义 provider 的裸模型名,如 agnes-2.0-flash)明明有对应 provider preset,却被打到不相干的上游端点、回 400/404「模型不存在」(实测 open.bigmodel.cn code 1211)时。根因:`api` 通道 pool 解析 _resolveApiPoolProviderForRequest 的末位是**盲通配** GATEWAY_API_POOL_PROVIDER——裸模型名(无 `:`/`/`)在显式 apiPoolProvider / provider / scoped 前缀全落空后,直接被塞进通配默认池,不做任何「厂商 vs 池」核对。纯叶子 wildcardPoolGuard.evaluateWildcardModel 判定:模型厂商是已登记 preset & 无运行时池 & ≠通配池 → mismatch,解析返回 null(该通道不认领),转清晰失败 + buildUnregisteredModelHint 登记/pool:model 指引。对称于 relay_api 的 relayModelGuard;显式 pool:model / provider 命中的路由永不受影响。门控 KHY_WILDCARD_POOL_GUARD 默认开,关则逐字节回退(原样盲落=今日行为)。零 IO 绝不抛。",
       "paths": [
-        "services/backend/src/services/gateway/wildcardPoolGuard.js",
-        "services/backend/src/services/gateway/aiGateway.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/services/gateway/wildcardPoolGuard.test.js",
-        "services/backend/tests/services/gateway/wildcardPoolGuard.wiring.test.js"
+        "runtime/node/backend/src/services/gateway/wildcardPoolGuard.js",
+        "runtime/node/backend/src/services/gateway/aiGateway.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/services/gateway/wildcardPoolGuard.test.js",
+        "runtime/node/backend/tests/services/gateway/wildcardPoolGuard.wiring.test.js"
       ],
       "docs": [
         "docs/04_IMPL_实现/IMPL-RPT/[IMPL-RPT-020] 网关传输韧性修复-2026-05-29.md",
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-002] ai-管理-新api对齐.md"
       ],
-      "verify": "npm run test:one -- services/backend/tests/services/gateway/wildcardPoolGuard.test.js services/backend/tests/services/gateway/wildcardPoolGuard.wiring.test.js"
+      "verify": "npm run test:one -- runtime/node/backend/tests/services/gateway/wildcardPoolGuard.test.js runtime/node/backend/tests/services/gateway/wildcardPoolGuard.wiring.test.js"
     },
     {
       "id": "install-ledger",
       "label": "安装台账(khy 写进宿主 exe/CLI 后保证卸载干净的真源)",
       "whenToUse": "当「khy uninstall 后仍有残留」——尤其是运行时才创建、落在 pip/npm 包 manifest 之外的东西:便携 Node/ollama(runtimeProvisioner 的 targetDir)、首启 hydrate 的 node_modules、md 编辑器文件关联、autostart 开机自启、无 pidfile 的 detached 进程(daemon/tray/md 桥接)。根因:旧卸载 uninstallPlan 是**允许清单(allowlist)**——硬编码「东西可能在哪」,猜不到运行时创建物。正解=**台账(ledger)**:在**创建副作用的当刻**由 ledgerWriter.appendSideEffect 追加一行到用户数据家的 .install-ledger.jsonl,记「实际写了什么 + 怎么撤」;卸载时 uninstall handler 先 `khy stop` 停常驻进程(解锁文件避免 WinError 32),再 installLedger.computeRollback 逆序回滚(registration/process 先于 file/dir),file 类按校验和只删未被用户改动的。纯核心 installLedger 零 IO/确定性/绝不抛;门控 KHY_INSTALL_LEDGER 默认开,关 → 不记不滚,uninstall 逐字节回退 allowlist-only(零回归)。真 key/token 永不落台账(meta 白名单 + 密钥形态丢弃)。本轮已接线 Node 侧创建点:md 编辑器注册(mdEditorRegister)、便携运行时(runtimeProvisioner);autostart 与 hydrate node_modules 在 Python 侧,留后续。",
       "paths": [
-        "services/backend/src/services/domain/maintenance/uninstall/installLedger.js",
-        "services/backend/src/services/domain/maintenance/uninstall/ledgerWriter.js",
-        "services/backend/src/cli/handlers/uninstall.js",
-        "services/backend/src/services/mdEditorRegister.js",
-        "services/backend/src/services/runtimeProvisioner.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/services/installLedger.test.js",
-        "services/backend/tests/services/uninstallLedgerWiring.test.js",
-        "services/backend/tests/services/ledgerWriter.test.js"
+        "runtime/node/backend/src/services/domain/maintenance/uninstall/installLedger.js",
+        "runtime/node/backend/src/services/domain/maintenance/uninstall/ledgerWriter.js",
+        "runtime/node/backend/src/cli/handlers/uninstall.js",
+        "runtime/node/backend/src/services/mdEditorRegister.js",
+        "runtime/node/backend/src/services/runtimeProvisioner.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/services/installLedger.test.js",
+        "runtime/node/backend/tests/services/uninstallLedgerWiring.test.js",
+        "runtime/node/backend/tests/services/ledgerWriter.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-069] 已装副本完整性自检清单.md",
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-037] pip安装后-完整还原与全功能开启指南.md"
       ],
-      "verify": "npm run test:one -- services/backend/tests/services/installLedger.test.js services/backend/tests/services/uninstallLedgerWiring.test.js services/backend/tests/services/ledgerWriter.test.js"
+      "verify": "npm run test:one -- runtime/node/backend/tests/services/installLedger.test.js runtime/node/backend/tests/services/uninstallLedgerWiring.test.js runtime/node/backend/tests/services/ledgerWriter.test.js"
     },
     {
       "id": "native-uninstall",
       "label": "卸载第三方应用(原生自带卸载器 T2 层——让 khy 卸别人的 exe/CLI 卸干净)",
       "whenToUse": "当「让 khy 卸载当前设备上某个应用(exe 或 CLI)怎么保证卸干净」——与 install-ledger 是镜像:卸 khy 自己有台账(创建时记了),卸别人没有台账,只能委托给知道文件清单的东西。三档路由 decideUninstallRoute 确定性判定:T1 pm——包管理器装的(winget/choco/scoop/brew/apt/dnf/pacman)按清单精确回收(deviceAppsPolicy+deviceAppManager 已有);T2 native——原生安装器落盘的裸 exe(MSI/Inno/NSIS)不被包管理器跟踪但自己在 Windows 注册表 HKLM/HKCU\\...\\Uninstall\\<key> 登记了卸载器,nativeUninstaller(IO 壳仅 win32,reg query /s 读三根)+nativeUninstallPolicy(纯叶子归一+分类)构造卸载 argv:MSI→msiexec /x {ProductCode} /qn /norestart、Inno→QuietUninstallString 或补 /VERYSILENT /NORESTART、NSIS→/S;T3 refuse——既无清单也无自带卸载器(curl|sh 丢的裸二进制)诚实拒绝,绝不猜删安装目录(承 install-ledger 的绝不猜删红线)。红线:命令一律 argv(execFile 无 shell)、UninstallString 为空即拒绝绝不 rmdir 猜删、MSI ProductCode 过 GUID 白名单、confirmed 才执行。门控 KHY_DEVICE_APPS_NATIVE_UNINSTALL 默认开(父 KHY_DEVICE_APPS),关→native available:false 回退仅 T1+T3。仅 Windows 有注册表 Uninstall 键,Linux/mac 由 T1 覆盖。入口 khy device uninstall <包ID或应用名> 与 LLM 工具 DeviceApps action=uninstall 走同一路由。",
       "paths": [
-        "services/backend/src/services/domain/desktop/deviceApps/nativeUninstallPolicy.js",
-        "services/backend/src/services/domain/desktop/deviceApps/nativeUninstaller.js",
-        "services/backend/src/services/domain/desktop/deviceApps/uninstallRoute.js",
-        "services/backend/src/cli/handlers/device.js",
-        "services/backend/src/tools/DeviceAppsTool/index.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/services/deviceApps/nativeUninstallPolicy.test.js",
-        "services/backend/tests/services/deviceApps/nativeUninstaller.test.js",
-        "services/backend/tests/services/deviceApps/uninstallRoute.test.js",
-        "services/backend/tests/services/deviceApps/nativeUninstallWiring.test.js"
+        "runtime/node/backend/src/services/domain/desktop/deviceApps/nativeUninstallPolicy.js",
+        "runtime/node/backend/src/services/domain/desktop/deviceApps/nativeUninstaller.js",
+        "runtime/node/backend/src/services/domain/desktop/deviceApps/uninstallRoute.js",
+        "runtime/node/backend/src/cli/handlers/device.js",
+        "runtime/node/backend/src/tools/DeviceAppsTool/index.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/services/deviceApps/nativeUninstallPolicy.test.js",
+        "runtime/node/backend/tests/services/deviceApps/nativeUninstaller.test.js",
+        "runtime/node/backend/tests/services/deviceApps/uninstallRoute.test.js",
+        "runtime/node/backend/tests/services/deviceApps/nativeUninstallWiring.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-071] 卸载第三方应用怎么保证卸干净-原生自带卸载器.md",
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-069] 已装副本完整性自检清单.md"
       ],
-      "verify": "npm run test:one -- services/backend/tests/services/deviceApps/nativeUninstallPolicy.test.js services/backend/tests/services/deviceApps/nativeUninstaller.test.js services/backend/tests/services/deviceApps/uninstallRoute.test.js services/backend/tests/services/deviceApps/nativeUninstallWiring.test.js"
+      "verify": "npm run test:one -- runtime/node/backend/tests/services/deviceApps/nativeUninstallPolicy.test.js runtime/node/backend/tests/services/deviceApps/nativeUninstaller.test.js runtime/node/backend/tests/services/deviceApps/uninstallRoute.test.js runtime/node/backend/tests/services/deviceApps/nativeUninstallWiring.test.js"
     },
     {
       "id": "goal-endurance",
       "label": "持久目标连续多日运行不中断的底气自检(像 CC 那样连着跑几天、token 足够不中断)",
       "whenToUse": "当「怎么让 khy 的持久目标像 Claude Code 的 /goal 那样连续几天不完成任务、token 足够不中断地跑」——持久目标已能自主自驱(stop-gate 续接)+ 跨会话持久化,但默认配置其实敌视多日运行:闲置退役窗口默认 12 小时(goalCore.GOAL_DEFAULT_IDLE_MS),到点自动把目标退役 exhausted。纯叶子 goalEndurance.assessGoalEndurance(零 IO 绝不抛)扫描所有决定目标寿命的开关,对多日视界(默认 72h ≈「连续几天」)分类出 blockers(会中断)/warnings(建议)/notes(已就绪),每条阻断项给可照抄的 env 修法;寿命阈值单一真源在 goalCore(resolveIdleMs/resolveMaxTurns/isBounded/isReconcileEnabled),本叶子只读取分类不重复定义默认值。四道寿命边界:①idle-timeout 闲置退役(头号确定性杀手,修法 KHY_GOAL_IDLE_MS=0)②turn-budget 轮次预算(默认 25 用户轮,自主自驱几乎不消耗;修法 KHY_GOAL_MAX_TURNS=1000)③token-budget 硬 token 上限(默认关,唯一会因 token 截断本轮的开关;khy 上下文吃紧自动压缩不因 token 停,这正是 token 不中断的底气)④stop-gate 单轮自续接(默认 1,修法 KHY_GOAL_STOP_GATE_MAX=10)。入口 khy goal endurance(别名 stamina/endure);buildEnduranceEnv 给一键配置块。此外还评估两个非目标维度:①交互式会话(无需目标)底气——普通会话默认无闲置退出/无累计轮数上限,天然可连续跑几天,只有单轮回复墙钟边界会结束当条回复并自动续接(assessSessionEndurance);②AI 中途提问无人值守自动作答——纯叶子 unattendedAutoAnswer(门控 KHY_UNATTENDED_AUTOANSWER 默认关)在无人值守时用 questionQuality 排好序的推荐选项(index 0)确定性作答,绕过 toolUseLoopCore 的 AskUserQuestion 阻塞、无感续跑;③模型不可用自动无感续接由网关多层级联稳健实现(如实亮出,非本子系统新增);④错误处理——瞬时/工具/模型错误已被网关归一成返回值(而非抛)由主循环优雅收尾,永久错误诚实报错是刻意边界,此外主循环 await chat(...) 已套防御纵深纯叶子 chatErrorGuard(门 KHY_TOOL_LOOP_CHAT_GUARD 默认开)把*意外*异常(适配器 bug/解析崩)归一成「诚实的本轮结束」return——只结束本轮、会话继续,不让一次意外抛出杀掉整个多日 run;门关逐字节回退重新抛出(assessSessionEndurance 亮出 error-handling note);⑤不偏离用户本意——无人值守自动作答旧行为盲选 index 0(常只是模型第一个列出的选项),一次盲选可能把整个多日 run 悄悄带偏。纯叶子 autoAnswerIntentGuard(门 KHY_UNATTENDED_AUTOANSWER_INTENT_GUARD 默认开,嵌套在默认关的父键 KHY_UNATTENDED_AUTOANSWER 下、只在自动作答开时生效)在真正选定前用确定性词法信号(latin 词 + CJK 2-char shingle)把选择校准回「持久目标文本 ∪ 原始诉求锚点 ∪ 原始消息」:某选项与本意重叠唯一严格更高才改选,显式 (Recommended)/(推荐) 一律尊重(用户要「使用最推荐方案」),无锚点/无信号/门关逐字节回退基线 index 0;intentContext 由 toolUseLoopCore 调用点在作用域内的 goalStore.getActiveGoal().text + _intentFrame.detailAnchors + originalUserMessage 组装(无新增取数),校准过的卡在轨迹显式标注「已按你的目标校准」;词法安全网非语义理解(不做模型调用),补的是「代替用户拍板却零本意核对」这唯一确定性缺口(assessSessionEndurance 在 auto-answer 开时附 intent-fidelity note)。⑥做完任务及时验证测试——Stop-gate 的证据门(goalStopGate.claimsVerificationWithoutEvidence)只看回复里有没有「证据形状的文字」(``` 代码块 / PASS / 字面 npm test),模型贴一段假证据文字就能过关、哪怕整轮从未真正调用过 shell,于是「声称测试通过却没真跑」蒙混收尾。纯叶子新增 verificationCommandRan(toolCallLog)(门 KHY_GOAL_VERIFY_RAN_GATE 默认开,嵌套父门控 KHY_GOAL_STOP_GATE)补上「行为证据」:只认 shell 类工具(bash/exec…)携带且命中测试/检查/构建/lint 命令签名(npm test·node --test·node --check·npm run arch:god·npm run check:maintainer:safety·npm run doctor:*·pytest·jest…)的真实执行;evaluateGoalStop 在判「达成」后、契约门前插入分支——回复声称验证通过(_VERIFICATION_CLAIM_RE)但整轮 toolCallLog 找不到任何真跑过的验证命令 → 把 clear 降级为 redrive(reason verify-not-run,走同一 redrive 预算,耗尽则 pass 不自动清除),要求真正跑一遍验证再收尾。与 evidence 门互补:evidence 门拦「声称验证但无证据文字」,verify-ran 门拦「贴了假证据文字但没真执行」;toolCallLog 由 toolUseLoopCore stop-gate 接线点在作用域内直接传入(旧调用方不传 → 该门跳过 → 逐字节回退),门关字节回退。落盘 khy goal endurance --apply 支持 scope=all|goal|session。",
       "paths": [
-        "services/backend/src/services/goalEndurance.js",
-        "services/backend/src/services/unattendedAutoAnswer.js",
-        "services/backend/src/services/chatErrorGuard.js",
-        "services/backend/src/services/autoAnswerIntentGuard.js",
-        "services/backend/src/services/goalStopGate.js",
-        "services/backend/src/cli/handlers/goal.js",
-        "services/backend/tests/services/goalEndurance.test.js",
-        "services/backend/tests/services/goalEnduranceWiring.test.js",
-        "services/backend/tests/services/unattendedAutoAnswer.test.js",
-        "services/backend/tests/toolUseLoop.unattendedAutoAnswer.test.js",
-        "services/backend/tests/services/chatErrorGuard.test.js",
-        "services/backend/tests/toolUseLoop.chatErrorGuard.test.js",
-        "services/backend/tests/services/autoAnswerIntentGuard.test.js",
-        "services/backend/tests/services/goalStopGateVerifyRan.test.js"
+        "runtime/node/backend/src/services/goalEndurance.js",
+        "runtime/node/backend/src/services/unattendedAutoAnswer.js",
+        "runtime/node/backend/src/services/chatErrorGuard.js",
+        "runtime/node/backend/src/services/autoAnswerIntentGuard.js",
+        "runtime/node/backend/src/services/goalStopGate.js",
+        "runtime/node/backend/src/cli/handlers/goal.js",
+        "runtime/node/backend/tests/services/goalEndurance.test.js",
+        "runtime/node/backend/tests/services/goalEnduranceWiring.test.js",
+        "runtime/node/backend/tests/services/unattendedAutoAnswer.test.js",
+        "runtime/node/backend/tests/toolUseLoop.unattendedAutoAnswer.test.js",
+        "runtime/node/backend/tests/services/chatErrorGuard.test.js",
+        "runtime/node/backend/tests/toolUseLoop.chatErrorGuard.test.js",
+        "runtime/node/backend/tests/services/autoAnswerIntentGuard.test.js",
+        "runtime/node/backend/tests/services/goalStopGateVerifyRan.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-072] 目标连续多日运行不中断的底气自检.md"
       ],
-      "verify": "npm run test:one -- services/backend/tests/services/goalEndurance.test.js services/backend/tests/services/goalEnduranceWiring.test.js services/backend/tests/services/unattendedAutoAnswer.test.js services/backend/tests/toolUseLoop.unattendedAutoAnswer.test.js services/backend/tests/services/chatErrorGuard.test.js services/backend/tests/toolUseLoop.chatErrorGuard.test.js services/backend/tests/services/autoAnswerIntentGuard.test.js services/backend/tests/services/goalStopGateVerifyRan.test.js"
+      "verify": "npm run test:one -- runtime/node/backend/tests/services/goalEndurance.test.js runtime/node/backend/tests/services/goalEnduranceWiring.test.js runtime/node/backend/tests/services/unattendedAutoAnswer.test.js runtime/node/backend/tests/toolUseLoop.unattendedAutoAnswer.test.js runtime/node/backend/tests/services/chatErrorGuard.test.js runtime/node/backend/tests/toolUseLoop.chatErrorGuard.test.js runtime/node/backend/tests/services/autoAnswerIntentGuard.test.js runtime/node/backend/tests/services/goalStopGateVerifyRan.test.js"
     },
     {
       "id": "startup-failure-explain",
@@ -770,15 +770,15 @@
         "you need to add a new class of first-run crash → real-cause + fix mapping shown by bin/khy.js _emitFatal"
       ],
       "paths": [
-        "services/backend/src/bootstrap/startupFailureExplain.js",
-        "services/backend/tests/bootstrap/startupFailureExplain.test.js",
-        "services/backend/bin/khy.js"
+        "runtime/node/backend/src/bootstrap/startupFailureExplain.js",
+        "runtime/node/backend/tests/bootstrap/startupFailureExplain.test.js",
+        "runtime/node/backend/bin/khy.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-074] 首启崩溃真实原因加方法归因.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/bootstrap/startupFailureExplain.test.js"
+        "npm run test:one -- runtime/node/backend/tests/bootstrap/startupFailureExplain.test.js"
       ]
     },
     {
@@ -791,17 +791,17 @@
         "the md-editor first-run auto-registration (mdEditorRegister) spawns register-windows.ps1 and you need to know exactly which HKCU keys it writes"
       ],
       "paths": [
-        "services/backend/src/services/mdSuggestedAppsPlan.js",
-        "services/backend/tests/services/mdSuggestedAppsPlan.test.js",
-        "extensions/tools/khy-markdown/register-windows.ps1",
-        "extensions/tools/khy-markdown/unregister-windows.ps1",
-        "services/backend/src/services/mdEditorRegister.js"
+        "runtime/node/backend/src/services/mdSuggestedAppsPlan.js",
+        "runtime/node/backend/tests/services/mdSuggestedAppsPlan.test.js",
+        "delivery/extension/tools/khy-markdown/register-windows.ps1",
+        "delivery/extension/tools/khy-markdown/unregister-windows.ps1",
+        "runtime/node/backend/src/services/mdEditorRegister.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-077] Windows md 文件建议的应用注册.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/services/mdSuggestedAppsPlan.test.js"
+        "npm run test:one -- runtime/node/backend/tests/services/mdSuggestedAppsPlan.test.js"
       ]
     },
     {
@@ -814,15 +814,15 @@
         "this is the human-facing complement to the agent-facing restore-plan (agentRestorePlan) and the build-time mirrors (scripts/lib/restoreReadiness/installIntegrity/hydrationHealth)"
       ],
       "paths": [
-        "services/backend/src/services/freshInstallDoctor.js",
-        "services/backend/tests/services/freshInstallDoctor.test.js",
-        "services/backend/src/cli/handlers/init.js"
+        "runtime/node/backend/src/services/freshInstallDoctor.js",
+        "runtime/node/backend/tests/services/freshInstallDoctor.test.js",
+        "runtime/node/backend/src/cli/handlers/init.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-078] khy doctor 离机还原自检.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/services/freshInstallDoctor.test.js"
+        "npm run test:one -- runtime/node/backend/tests/services/freshInstallDoctor.test.js"
       ]
     },
     {
@@ -835,16 +835,16 @@
         "this is the extraction complement to the /recap command shell (handlers/recap.js, gate KHY_RECAP) and the deterministic base service sessionRecapService.js"
       ],
       "paths": [
-        "services/backend/src/services/sessionRecapCjk.js",
-        "services/backend/tests/services/sessionRecapCjk.test.js",
-        "services/backend/tests/services/sessionRecapService.cjk.test.js",
-        "services/backend/src/services/sessionRecapService.js"
+        "runtime/node/backend/src/services/sessionRecapCjk.js",
+        "runtime/node/backend/tests/services/sessionRecapCjk.test.js",
+        "runtime/node/backend/tests/services/sessionRecapService.cjk.test.js",
+        "runtime/node/backend/src/services/sessionRecapService.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-080] recap 的 CJK 化.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/services/sessionRecapCjk.test.js services/backend/tests/services/sessionRecapService.cjk.test.js"
+        "npm run test:one -- runtime/node/backend/tests/services/sessionRecapCjk.test.js runtime/node/backend/tests/services/sessionRecapService.cjk.test.js"
       ]
     },
     {
@@ -857,15 +857,15 @@
         "the preflight is additive and gated KHY_NPM_NODE_PREFLIGHT default-on; gate off / any error / unparseable version byte-reverts bin/khy.js to the original unconditional spawnSync handoff (preflight must never be more fragile than the launch it protects)"
       ],
       "paths": [
-        "packaging/npm/scripts/nodeVersionPreflight.js",
-        "packaging/npm/test/nodeVersionPreflight.test.js",
-        "packaging/npm/bin/khy.js"
+        "works/ship/npm/scripts/nodeVersionPreflight.js",
+        "works/ship/npm/test/nodeVersionPreflight.test.js",
+        "works/ship/npm/bin/khy.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-081] npm 渠道 Node 版本预检.md"
       ],
       "verify": [
-        "npm run test:one -- packaging/npm/test/nodeVersionPreflight.test.js"
+        "npm run test:one -- works/ship/npm/test/nodeVersionPreflight.test.js"
       ]
     },
     {
@@ -911,21 +911,21 @@
         "OPS-094 built roleToolScope as a PURE LEAF with a documented consume seam but LEFT IT UNWIRED (zero production consumers = dead code) because god-file + blast-radius were then blocked. OPS-097 WIRES IT LIVE: AgentTool.buildSubagentDenylist gains a 4th `role` param and folds mergeRoleScopeInto(ownDeny, role) in before the spawn-tool∪ceiling logic; _runStandaloneAgent passes role at the call site. The net gap this closes: when built-in agents are unavailable (SDK mode → agentDef=null) a read-only explore/verify subtask's write-tool strip vanishes — the role now re-derives [Edit/Write/NotebookEdit] independent of agentDef; also closes the `verify`-not-in-toolFilter live gap. Wrapped in try/catch (leaf-load failure degrades to ownDeny, never breaks spawning); 4th param omitted/gate-off → byte-equivalent to the pre-wire 3-arg call. arch:god is a READ-ONLY gate (--god-report returns 0) so editing the god-file does not turn it red"
       ],
       "paths": [
-        "services/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js",
-        "services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js",
-        "services/backend/src/services/agenticHarnessService.js",
-        "services/backend/src/services/taskDecomposer.js",
-        "services/backend/tests/services/mergeResultsSkipDistinct.test.js",
-        "services/backend/tests/services/sequentialChainDecompose.test.js",
-        "services/backend/src/services/domain/state/orchestrator/roleToolScope.js",
-        "services/backend/tests/services/orchestrator/roleToolScope.test.js",
-        "services/backend/src/tools/AgentTool/index.js",
-        "services/backend/src/services/domain/state/orchestrator/mergeFileConflicts.js",
-        "services/backend/tests/services/orchestrator/mergeFileConflicts.test.js",
-        "services/backend/src/services/domain/state/orchestrator/mergeEmptySuccess.js",
-        "services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js",
-        "services/backend/src/services/domain/state/orchestrator/mergeRoleAttribution.js",
-        "services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js"
+        "runtime/node/backend/src/services/domain/state/orchestrator/dependencyWaveScheduler.js",
+        "runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js",
+        "runtime/node/backend/src/services/agenticHarnessService.js",
+        "runtime/node/backend/src/services/taskDecomposer.js",
+        "runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js",
+        "runtime/node/backend/tests/services/sequentialChainDecompose.test.js",
+        "runtime/node/backend/src/services/domain/state/orchestrator/roleToolScope.js",
+        "runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js",
+        "runtime/node/backend/src/tools/AgentTool/index.js",
+        "runtime/node/backend/src/services/domain/state/orchestrator/mergeFileConflicts.js",
+        "runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js",
+        "runtime/node/backend/src/services/domain/state/orchestrator/mergeEmptySuccess.js",
+        "runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js",
+        "runtime/node/backend/src/services/domain/state/orchestrator/mergeRoleAttribution.js",
+        "runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-083] 依赖感知波次调度.md",
@@ -940,13 +940,13 @@
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-101] 角色归属诚实.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js",
-        "npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js",
-        "npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js",
-        "npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js",
-        "npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js",
-        "npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js",
-        "npm run test:one -- services/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js services/backend/tests/services/mergeResultsSkipDistinct.test.js services/backend/tests/services/sequentialChainDecompose.test.js services/backend/tests/services/orchestrator/roleToolScope.test.js services/backend/tests/services/orchestrator/mergeFileConflicts.test.js services/backend/tests/services/orchestrator/mergeEmptySuccess.test.js services/backend/tests/services/orchestrator/mergeRoleAttribution.test.js"
+        "npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js",
+        "npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js",
+        "npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js",
+        "npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js",
+        "npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js",
+        "npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js",
+        "npm run test:one -- runtime/node/backend/tests/services/orchestrator/dependencyWaveScheduler.test.js runtime/node/backend/tests/services/mergeResultsSkipDistinct.test.js runtime/node/backend/tests/services/sequentialChainDecompose.test.js runtime/node/backend/tests/services/orchestrator/roleToolScope.test.js runtime/node/backend/tests/services/orchestrator/mergeFileConflicts.test.js runtime/node/backend/tests/services/orchestrator/mergeEmptySuccess.test.js runtime/node/backend/tests/services/orchestrator/mergeRoleAttribution.test.js"
       ]
     },
     {
@@ -1143,7 +1143,7 @@
     },
     {
       "id": "restore-provenance",
-      "label": "Restore Provenance Reconciler (consumes the DEAD snapshot header captureMode/includesUncommitted/dirty fields: makeSourceSnapshot stamps whether the git archive was a clean HEAD or a dirty working-tree capture, but the restore banner (services/backend/src/cli/handlers/publish.js) only prints gitCommit.slice(0,12) and NEVER reads captureMode/includesUncommitted -> a fresh-machine user reads 'commit 44a491fb07f3' and believes the restored source EQUALS that clean published commit, when it is actually that commit PLUS uncommitted deltas (dirty capture); this pure leaf + read-only CLI answers 'which exact git state does this restored source equal?' so nobody mistakes a dirty capture for the published commit)",
+      "label": "Restore Provenance Reconciler (consumes the DEAD snapshot header captureMode/includesUncommitted/dirty fields: makeSourceSnapshot stamps whether the git archive was a clean HEAD or a dirty working-tree capture, but the restore banner (runtime/node/backend/src/cli/handlers/publish.js) only prints gitCommit.slice(0,12) and NEVER reads captureMode/includesUncommitted -> a fresh-machine user reads 'commit 44a491fb07f3' and believes the restored source EQUALS that clean published commit, when it is actually that commit PLUS uncommitted deltas (dirty capture); this pure leaf + read-only CLI answers 'which exact git state does this restored source equal?' so nobody mistakes a dirty capture for the published commit)",
       "whenToUse": [
         "the restore banner prints the commit hash but never reveals the snapshot was a dirty working-tree capture -> user wrongly treats restored source as the clean published commit",
         "run: node scripts/restore-provenance.js <dir> --json (exit 2 on any non-clean status so a self-driving agent does not assert 'this IS the published commit')",
@@ -1276,15 +1276,15 @@
         "the OPS-MAN-117 runtime-wiring doc is out of sync with the leaf/handler"
       ],
       "paths": [
-        "services/backend/src/services/restoreCompletenessCheck.js",
-        "services/backend/src/cli/handlers/publish.js",
-        "services/backend/tests/services/restoreCompletenessCheck.test.js"
+        "runtime/node/backend/src/services/restoreCompletenessCheck.js",
+        "runtime/node/backend/src/cli/handlers/publish.js",
+        "runtime/node/backend/tests/services/restoreCompletenessCheck.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-117] 还原完整性对账·运行时接线.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/services/restoreCompletenessCheck.test.js"
+        "npm run test:one -- runtime/node/backend/tests/services/restoreCompletenessCheck.test.js"
       ]
     },
     {
@@ -1300,15 +1300,15 @@
         "the OPS-MAN-119 runtime-wiring doc is out of sync with the leaf/handler"
       ],
       "paths": [
-        "services/backend/src/services/restorePreflightCheck.js",
-        "services/backend/src/cli/handlers/publish.js",
-        "services/backend/tests/services/restorePreflightCheck.test.js"
+        "runtime/node/backend/src/services/restorePreflightCheck.js",
+        "runtime/node/backend/src/cli/handlers/publish.js",
+        "runtime/node/backend/tests/services/restorePreflightCheck.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-119] 还原解密前兼容性预检·运行时接线.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/services/restorePreflightCheck.test.js"
+        "npm run test:one -- runtime/node/backend/tests/services/restorePreflightCheck.test.js"
       ]
     },
     {
@@ -1323,15 +1323,15 @@
         "SECRET HYGIENE (red-line): the check reads only the plaintextFormat/layout archive-shape strings -- NEVER any key material (unit test asserts the verdict JSON contains no secret values); the leaf is zero-IO and never throws"
       ],
       "paths": [
-        "services/backend/src/services/restoreArchiveExtractCheck.js",
-        "services/backend/src/cli/handlers/publish.js",
-        "services/backend/tests/services/restoreArchiveExtractCheck.test.js"
+        "runtime/node/backend/src/services/restoreArchiveExtractCheck.js",
+        "runtime/node/backend/src/cli/handlers/publish.js",
+        "runtime/node/backend/tests/services/restoreArchiveExtractCheck.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-128] restore解密后归档形制解包前把关·接线.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/services/restoreArchiveExtractCheck.test.js"
+        "npm run test:one -- runtime/node/backend/tests/services/restoreArchiveExtractCheck.test.js"
       ]
     },
     {
@@ -1346,15 +1346,15 @@
         "SECRET HYGIENE (red-line): the check reads only the provenance strings (captureMode/gitCommit/includesUncommitted/dirty) -- NEVER any key material; dirty is a VALID complete restore (content intact), the layer turns silent misleading into honest labeling, never blocks; leaf logic must stay consistent with the dev leaf scripts/lib/restoreProvenance.js (two implementations of one honesty standard)"
       ],
       "paths": [
-        "services/backend/src/services/restoreProvenanceCheck.js",
-        "services/backend/src/cli/handlers/publish.js",
-        "services/backend/tests/services/restoreProvenanceCheck.test.js"
+        "runtime/node/backend/src/services/restoreProvenanceCheck.js",
+        "runtime/node/backend/src/cli/handlers/publish.js",
+        "runtime/node/backend/tests/services/restoreProvenanceCheck.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-130] 还原来源可溯性·接线运行时横幅.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/services/restoreProvenanceCheck.test.js"
+        "npm run test:one -- runtime/node/backend/tests/services/restoreProvenanceCheck.test.js"
       ]
     },
     {
@@ -1369,15 +1369,15 @@
         "SECRET HYGIENE (red-line): the pre-scan reads only the decrypted archive's ENTRY-NAME strings -- NEVER any key material or file content (unit test asserts the verdict JSON contains no secret/key/token/cipher); enumeration is `tar -tzf` list-only, never extracts, never touches ciphertext"
       ],
       "paths": [
-        "services/backend/src/services/restorePathPortabilityCheck.js",
-        "services/backend/src/cli/handlers/publish.js",
-        "services/backend/tests/services/restorePathPortabilityCheck.test.js"
+        "runtime/node/backend/src/services/restorePathPortabilityCheck.js",
+        "runtime/node/backend/src/cli/handlers/publish.js",
+        "runtime/node/backend/tests/services/restorePathPortabilityCheck.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-133] restore跨OS路径可移植性解包前把关·接线.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/services/restorePathPortabilityCheck.test.js"
+        "npm run test:one -- runtime/node/backend/tests/services/restorePathPortabilityCheck.test.js"
       ]
     },
     {
@@ -1391,20 +1391,20 @@
         "NEVER hangs / NEVER false-fires: pure timer + fail-soft, first chunk cancels immediately, emit callback errors are swallowed, and it fires at most once per turn; touches no key material and no user input content (only fixed rotating short lines)"
       ],
       "paths": [
-        "services/backend/src/cli/firstResponseAckVoice.js",
-        "services/backend/src/cli/replSession.js",
-        "services/backend/tests/cli/firstResponseAckVoice.test.js"
+        "runtime/node/backend/src/cli/firstResponseAckVoice.js",
+        "runtime/node/backend/src/cli/replSession.js",
+        "runtime/node/backend/tests/cli/firstResponseAckVoice.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-136] 首响应静默窗口守护·提交到首token及时回应·接线.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/cli/firstResponseAckVoice.test.js"
+        "npm run test:one -- runtime/node/backend/tests/cli/firstResponseAckVoice.test.js"
       ]
     },
     {
       "id": "readfile-binary-guard",
-      "label": "readFile PRE-READ binary guard -- WIRING an existing capability (services/backend/src/services/formatInspect/fileFormatDetector.js's detectFile(absPath).isBinary was consumed by the WRITE-side tools replaceAtLocation.js:79 and inspectDocument.js:161 but was NEVER wired into the READ tool readFile.js, which only had a size guard and no binary detection; so pointing khy at a project dir containing a binary .tar.gz made readFile inject the raw binary bytes as text -- mojibake laced with NUL bytes, success:true -- into the model API request, poisoning it and hanging the request for over an hour (observed: D:\\moonbit-linux\\moonbit-linux-x86_64.tar.gz stuck 1h2m34s '等待响应…'); THIS is the missing wiring: run detectFile BEFORE reading and refuse binary files fast with an informative redirect instead of poisoning the context)",
+      "label": "readFile PRE-READ binary guard -- WIRING an existing capability (runtime/node/backend/src/services/formatInspect/fileFormatDetector.js's detectFile(absPath).isBinary was consumed by the WRITE-side tools replaceAtLocation.js:79 and inspectDocument.js:161 but was NEVER wired into the READ tool readFile.js, which only had a size guard and no binary detection; so pointing khy at a project dir containing a binary .tar.gz made readFile inject the raw binary bytes as text -- mojibake laced with NUL bytes, success:true -- into the model API request, poisoning it and hanging the request for over an hour (observed: D:\\moonbit-linux\\moonbit-linux-x86_64.tar.gz stuck 1h2m34s '等待响应…'); THIS is the missing wiring: run detectFile BEFORE reading and refuse binary files fast with an informative redirect instead of poisoning the context)",
       "whenToUse": [
         "readFile now runs detectFile(filePath) BEFORE decoding text: if the file is detected binary (magic/heuristic) it returns success:false with an informative Chinese refusal naming the type+size and redirecting to analyzeBinary / UpstreamStudy / 校验解压 -- no binary bytes ever reach the model context",
         "conservative isBinaryForRead(fmt): returns true ONLY when fmt.isBinary === strict true; anything ambiguous (malformed/missing/text) reads as before -- never false-refuse a text file",
@@ -1414,15 +1414,15 @@
         "_humanBytes handles the Number(null)===0 trap explicitly: null/''/non-finite/negative size -> '未知大小', never a misleading '0 B'"
       ],
       "paths": [
-        "services/backend/src/tools/readBinaryGuard.js",
-        "services/backend/src/tools/readFile.js",
-        "services/backend/tests/tools/readBinaryGuard.test.js"
+        "runtime/node/backend/src/tools/readBinaryGuard.js",
+        "runtime/node/backend/src/tools/readFile.js",
+        "runtime/node/backend/tests/tools/readBinaryGuard.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-121] readFile二进制文件读前防护·接线.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/tools/readBinaryGuard.test.js"
+        "npm run test:one -- runtime/node/backend/tests/tools/readBinaryGuard.test.js"
       ]
     },
     {
@@ -1437,15 +1437,15 @@
         "DI-testable: the real extractor calls are injected via deps (default lazy-require the real services), so the pure-leaf unit test covers image/pdf/docx/archive success + fall-through + gate-off without spawning python/pdftotext"
       ],
       "paths": [
-        "services/backend/src/tools/readFileFormatRouter.js",
-        "services/backend/src/tools/readFile.js",
-        "services/backend/tests/tools/readFileFormatRouter.test.js"
+        "runtime/node/backend/src/tools/readFileFormatRouter.js",
+        "runtime/node/backend/src/tools/readFile.js",
+        "runtime/node/backend/tests/tools/readFileFormatRouter.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-123] readFile按格式路由到提取器·接线.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/tools/readFileFormatRouter.test.js"
+        "npm run test:one -- runtime/node/backend/tests/tools/readFileFormatRouter.test.js"
       ]
     },
     {
@@ -1460,15 +1460,15 @@
         "distinct hang vector from OPS-121 (binary content) and OPS-123 (format routing): those key off content/format, this keys off file TYPE; together they close the 'readFile hangs on a wrong/unsupported target' class"
       ],
       "paths": [
-        "services/backend/src/tools/specialFileReadGuard.js",
-        "services/backend/src/tools/readFile.js",
-        "services/backend/tests/tools/specialFileReadGuard.test.js"
+        "runtime/node/backend/src/tools/specialFileReadGuard.js",
+        "runtime/node/backend/src/tools/readFile.js",
+        "runtime/node/backend/tests/tools/specialFileReadGuard.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-125] readFile特殊文件读前防护·接线.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/tools/specialFileReadGuard.test.js"
+        "npm run test:one -- runtime/node/backend/tests/tools/specialFileReadGuard.test.js"
       ]
     },
     {
@@ -1484,15 +1484,15 @@
         "4th orthogonal hang vector completing the family: OPS-121 binary-content, OPS-123 format, OPS-125 file-type, THIS file-location; together they close the 'readFile hangs on a wrong/unsupported target' class"
       ],
       "paths": [
-        "services/backend/src/tools/pseudoFileReadGuard.js",
-        "services/backend/src/tools/readFile.js",
-        "services/backend/tests/tools/pseudoFileReadGuard.test.js"
+        "runtime/node/backend/src/tools/pseudoFileReadGuard.js",
+        "runtime/node/backend/src/tools/readFile.js",
+        "runtime/node/backend/tests/tools/pseudoFileReadGuard.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-129] readFile伪文件系统有界超时读·接线.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/tools/pseudoFileReadGuard.test.js"
+        "npm run test:one -- runtime/node/backend/tests/tools/pseudoFileReadGuard.test.js"
       ]
     },
     {
@@ -1507,20 +1507,20 @@
         "HOW-TO-EXTEND: add a new read-hang vector as another try block honoring its family gate; existing callers need no change -- that is the value of the central pre-read check"
       ],
       "paths": [
-        "services/backend/src/tools/filePreReadHangGuard.js",
-        "services/backend/src/tools/inspectDocument.js",
-        "services/backend/src/tools/replaceAtLocation.js",
-        "services/backend/src/tools/editFile.js",
-        "services/backend/src/tools/exploreTool.js",
-        "services/backend/tests/tools/filePreReadHangGuard.test.js",
-        "services/backend/src/tools/unpackTool.js"
+        "runtime/node/backend/src/tools/filePreReadHangGuard.js",
+        "runtime/node/backend/src/tools/inspectDocument.js",
+        "runtime/node/backend/src/tools/replaceAtLocation.js",
+        "runtime/node/backend/src/tools/editFile.js",
+        "runtime/node/backend/src/tools/exploreTool.js",
+        "runtime/node/backend/tests/tools/filePreReadHangGuard.test.js",
+        "runtime/node/backend/src/tools/unpackTool.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-147] 次级读取工具统一读前防卡死前检.md",
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-149] 编辑与探索读取工具接入统一读前防卡死前检.md"
       ],
       "verify": [
-        "node --test services/backend/tests/tools/filePreReadHangGuard.test.js"
+        "node --test runtime/node/backend/tests/tools/filePreReadHangGuard.test.js"
       ]
     },
     {
@@ -1537,7 +1537,7 @@
       ],
       "paths": [
         "scripts/lib/modelTypeProviderPlan.js",
-        "extensions/scripts/khy-diagnostics/model-type-providers.js",
+        "delivery/extension/scripts/khy-diagnostics/model-type-providers.js",
         "scripts/tests/modelTypeProviderPlan.test.js"
       ],
       "docs": [
@@ -1559,15 +1559,15 @@
         "纯叶 nextBusyInterruptState/busyForceExitEnabled/resolveThreshold/resolveWindowMs 对敌意 env 绝不抛;replSession 消费点在 SIGINT busy 分支与 Esc busy 分支的 _maybeForceExitOnBusyInterrupt"
       ],
       "paths": [
-        "services/backend/src/cli/repl/busyInterruptEscalation.js",
-        "services/backend/src/cli/replSession.js",
-        "services/backend/tests/services/cli/repl/busyInterruptEscalation.test.js"
+        "runtime/node/backend/src/cli/repl/busyInterruptEscalation.js",
+        "runtime/node/backend/src/cli/replSession.js",
+        "runtime/node/backend/tests/services/cli/repl/busyInterruptEscalation.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-102] 卡住任务的强制终止逃生舱.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/services/cli/repl/busyInterruptEscalation.test.js"
+        "npm run test:one -- runtime/node/backend/tests/services/cli/repl/busyInterruptEscalation.test.js"
       ]
     },
     {
@@ -1582,21 +1582,21 @@
         "god-file 接线点:codexAdapter(2492)/claudeAdapter(2448) 的 spawn else 分支与 detect/getStatus、ide.js 可用性门(:60);均 additive、门关逐字节回退"
       ],
       "paths": [
-        "services/backend/src/services/gateway/adapters/portableCliRegistry.js",
-        "services/backend/src/services/gateway/adapters/portableCliResolver.js",
-        "services/backend/src/services/gateway/adapters/portableCliInstaller.js",
-        "services/backend/src/services/gateway/adapters/portableAdapterSpawn.js",
-        "services/backend/src/services/gateway/adapters/opencodeBinResolver.js",
-        "services/backend/src/cli/handlers/tools.js",
-        "services/backend/src/cli/handlers/_portableAutoInstall.js",
-        "services/backend/src/cli/handlers/ide.js",
-        "services/backend/tests/services/gateway/adapters/portableCli.test.js"
+        "runtime/node/backend/src/services/gateway/adapters/portableCliRegistry.js",
+        "runtime/node/backend/src/services/gateway/adapters/portableCliResolver.js",
+        "runtime/node/backend/src/services/gateway/adapters/portableCliInstaller.js",
+        "runtime/node/backend/src/services/gateway/adapters/portableAdapterSpawn.js",
+        "runtime/node/backend/src/services/gateway/adapters/opencodeBinResolver.js",
+        "runtime/node/backend/src/cli/handlers/tools.js",
+        "runtime/node/backend/src/cli/handlers/_portableAutoInstall.js",
+        "runtime/node/backend/src/cli/handlers/ide.js",
+        "runtime/node/backend/tests/services/gateway/adapters/portableCli.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-100] 便携 CLI 子系统.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/services/gateway/adapters/portableCli.test.js"
+        "npm run test:one -- runtime/node/backend/tests/services/gateway/adapters/portableCli.test.js"
       ]
     },
     {
@@ -1610,16 +1610,16 @@
         "召回通知只告知命名可核验的召回(_memSurfaced 集合);[RELEVANT_MEMORY] 注入块读取但不追加名字→宁可少报绝不伪造记忆名"
       ],
       "paths": [
-        "services/backend/src/services/memoryOpsNotice.js",
-        "services/backend/src/cli/ai.js",
-        "services/backend/src/cli/aiChatCore.js",
-        "services/backend/tests/services/memoryOpsNotice.test.js"
+        "runtime/node/backend/src/services/memoryOpsNotice.js",
+        "runtime/node/backend/src/cli/ai.js",
+        "runtime/node/backend/src/cli/aiChatCore.js",
+        "runtime/node/backend/tests/services/memoryOpsNotice.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-103] 写记忆·召回记忆明确告知用户.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/services/memoryOpsNotice.test.js"
+        "npm run test:one -- runtime/node/backend/tests/services/memoryOpsNotice.test.js"
       ]
     },
     {
@@ -1633,22 +1633,22 @@
         "dependency injection contract of aiGatewayGenerateMethod.js: setAiGatewayGenerateMethodDeps 已改为分组注入 (validation/failover/languageRecovery/ocrRescue/diagnostics) + fail-fast 校验——合并后缺失必选项在注入期点名抛错而非在 generate() 路径内静默崩坏；仅 diagnostics 组的 _advDiag/_modelSwitch/_traceAudit 可选（方法体内 if 守卫、可合法为 null）；旧扁平形态（测试桩逐项增量覆盖）仍兼容"
       ],
       "paths": [
-        "services/backend/src/services/gateway/ocrConfidenceCaveat.js",
-        "services/backend/src/services/gateway/aiGatewayGenerateMethod.js",
-        "services/backend/src/services/gateway/aiGateway.js",
-        "services/backend/src/services/ocrSnippetService.js",
-        "services/backend/src/services/docHelper.py",
-        "services/backend/tests/gateway/ocrConfidenceCaveat.test.js",
-        "services/backend/tests/gateway/imageOcrFallbackWiring.test.js",
-        "services/backend/tests/gateway/imageOcrFallbackRealImage.test.js",
+        "runtime/node/backend/src/services/gateway/ocrConfidenceCaveat.js",
+        "runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js",
+        "runtime/node/backend/src/services/gateway/aiGateway.js",
+        "runtime/node/backend/src/services/ocrSnippetService.js",
+        "runtime/node/backend/src/services/docHelper.py",
+        "runtime/node/backend/tests/gateway/ocrConfidenceCaveat.test.js",
+        "runtime/node/backend/tests/gateway/imageOcrFallbackWiring.test.js",
+        "runtime/node/backend/tests/gateway/imageOcrFallbackRealImage.test.js",
         "tests/unit/test_dochelper_ocr_confidence.py"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-104] 纯文本模型图片 OCR 兜底与低置信诚实告诫.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/gateway/ocrConfidenceCaveat.test.js services/backend/tests/gateway/imageOcrFallbackWiring.test.js services/backend/tests/gateway/imageOcrFallbackRealImage.test.js",
-        "node --test services/backend/tests/gateway/imageOcrFallbackRealImage.test.js",
+        "npm run test:one -- runtime/node/backend/tests/gateway/ocrConfidenceCaveat.test.js runtime/node/backend/tests/gateway/imageOcrFallbackWiring.test.js runtime/node/backend/tests/gateway/imageOcrFallbackRealImage.test.js",
+        "node --test runtime/node/backend/tests/gateway/imageOcrFallbackRealImage.test.js",
         "python3 -m unittest tests.unit.test_dochelper_ocr_confidence"
       ]
     },
@@ -1662,19 +1662,19 @@
         "honesty boundary: coverage note is a decoration that can be gated off; it never changes success/failure attribution, never changes the strip-image invariant; malformed input never throws and returns null"
       ],
       "paths": [
-        "services/backend/src/services/gateway/ocrCoverageNotice.js",
-        "services/backend/src/services/gateway/aiGatewayGenerateMethod.js",
-        "services/backend/src/services/gateway/aiGateway.js",
-        "services/backend/tests/gateway/ocrCoverageNotice.test.js",
-        "services/backend/tests/gateway/imageOcrCoverageWiring.test.js"
+        "runtime/node/backend/src/services/gateway/ocrCoverageNotice.js",
+        "runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js",
+        "runtime/node/backend/src/services/gateway/aiGateway.js",
+        "runtime/node/backend/tests/gateway/ocrCoverageNotice.test.js",
+        "runtime/node/backend/tests/gateway/imageOcrCoverageWiring.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-109] 纯文本模型图片 OCR 兜底覆盖率诚实告诫.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/gateway/ocrCoverageNotice.test.js services/backend/tests/gateway/imageOcrCoverageWiring.test.js",
-        "node --check services/backend/src/services/gateway/ocrCoverageNotice.js",
-        "node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js"
+        "npm run test:one -- runtime/node/backend/tests/gateway/ocrCoverageNotice.test.js runtime/node/backend/tests/gateway/imageOcrCoverageWiring.test.js",
+        "node --check runtime/node/backend/src/services/gateway/ocrCoverageNotice.js",
+        "node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js"
       ]
     },
     {
@@ -1687,20 +1687,20 @@
         "honesty boundary: truncation note is a decoration that can be gated off; it never changes success/failure attribution, never changes the strip-image invariant; malformed input never throws and returns null; the PDF OCR path is intentionally out of scope (not on the gateway image hot path)"
       ],
       "paths": [
-        "services/backend/src/services/gateway/ocrTruncationNotice.js",
-        "services/backend/src/services/ocrSnippetService.js",
-        "services/backend/src/services/gateway/aiGateway.js",
-        "services/backend/src/services/gateway/aiGatewayGenerateMethod.js",
-        "services/backend/tests/gateway/ocrTruncationNotice.test.js",
-        "services/backend/tests/gateway/imageOcrTruncationWiring.test.js"
+        "runtime/node/backend/src/services/gateway/ocrTruncationNotice.js",
+        "runtime/node/backend/src/services/ocrSnippetService.js",
+        "runtime/node/backend/src/services/gateway/aiGateway.js",
+        "runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js",
+        "runtime/node/backend/tests/gateway/ocrTruncationNotice.test.js",
+        "runtime/node/backend/tests/gateway/imageOcrTruncationWiring.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-111] 纯文本模型图片 OCR 兜底截断诚实告诫.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/gateway/ocrTruncationNotice.test.js services/backend/tests/gateway/imageOcrTruncationWiring.test.js",
-        "node --check services/backend/src/services/gateway/ocrTruncationNotice.js",
-        "node --check services/backend/src/services/ocrSnippetService.js"
+        "npm run test:one -- runtime/node/backend/tests/gateway/ocrTruncationNotice.test.js runtime/node/backend/tests/gateway/imageOcrTruncationWiring.test.js",
+        "node --check runtime/node/backend/src/services/gateway/ocrTruncationNotice.js",
+        "node --check runtime/node/backend/src/services/ocrSnippetService.js"
       ]
     },
     {
@@ -1713,22 +1713,22 @@
         "computed at the three gateway OCR injection points (aiGatewayGenerateMethod.js) via _appendOcrLanguageNotice(prompt, ocrDetails) placed immediately after the truncation notice; honesty boundary: decoration only, gate-off byte-reverts, never changes success/failure attribution or the strip-image invariant, malformed never throws"
       ],
       "paths": [
-        "services/backend/src/services/gateway/ocrLanguageNotice.js",
-        "services/backend/src/services/docHelper.py",
-        "services/backend/src/services/ocrSnippetService.js",
-        "services/backend/src/services/gateway/aiGateway.js",
-        "services/backend/src/services/gateway/aiGatewayGenerateMethod.js",
-        "services/backend/tests/gateway/ocrLanguageNotice.test.js",
-        "services/backend/tests/gateway/imageOcrLanguageWiring.test.js",
-        "services/backend/tests/gateway/ocrLanguageNarrowing.test.js"
+        "runtime/node/backend/src/services/gateway/ocrLanguageNotice.js",
+        "runtime/node/backend/src/services/docHelper.py",
+        "runtime/node/backend/src/services/ocrSnippetService.js",
+        "runtime/node/backend/src/services/gateway/aiGateway.js",
+        "runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js",
+        "runtime/node/backend/tests/gateway/ocrLanguageNotice.test.js",
+        "runtime/node/backend/tests/gateway/imageOcrLanguageWiring.test.js",
+        "runtime/node/backend/tests/gateway/ocrLanguageNarrowing.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-112] 纯文本模型图片 OCR 兜底语言包可用性诚实告诫.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/gateway/ocrLanguageNotice.test.js services/backend/tests/gateway/imageOcrLanguageWiring.test.js services/backend/tests/gateway/ocrLanguageNarrowing.test.js",
-        "node --check services/backend/src/services/gateway/ocrLanguageNotice.js",
-        "python3 -m py_compile services/backend/src/services/docHelper.py"
+        "npm run test:one -- runtime/node/backend/tests/gateway/ocrLanguageNotice.test.js runtime/node/backend/tests/gateway/imageOcrLanguageWiring.test.js runtime/node/backend/tests/gateway/ocrLanguageNarrowing.test.js",
+        "node --check runtime/node/backend/src/services/gateway/ocrLanguageNotice.js",
+        "python3 -m py_compile runtime/node/backend/src/services/docHelper.py"
       ]
     },
     {
@@ -1741,22 +1741,22 @@
         "computed at the three gateway OCR injection points (aiGatewayGenerateMethod.js) via _appendOcrOrientationNotice(prompt, ocrDetails) placed immediately after the language notice; honesty boundary: the correction is real (text is recovered), the note is decoration only — gate-off byte-reverts, never changes success/failure attribution or the strip-image invariant, malformed never throws"
       ],
       "paths": [
-        "services/backend/src/services/gateway/ocrOrientationNotice.js",
-        "services/backend/src/services/docHelper.py",
-        "services/backend/src/services/ocrSnippetService.js",
-        "services/backend/src/services/gateway/aiGateway.js",
-        "services/backend/src/services/gateway/aiGatewayGenerateMethod.js",
-        "services/backend/tests/gateway/ocrOrientationNotice.test.js",
-        "services/backend/tests/gateway/imageOcrOrientationWiring.test.js",
-        "services/backend/tests/gateway/ocrOrientationRecovery.test.js"
+        "runtime/node/backend/src/services/gateway/ocrOrientationNotice.js",
+        "runtime/node/backend/src/services/docHelper.py",
+        "runtime/node/backend/src/services/ocrSnippetService.js",
+        "runtime/node/backend/src/services/gateway/aiGateway.js",
+        "runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js",
+        "runtime/node/backend/tests/gateway/ocrOrientationNotice.test.js",
+        "runtime/node/backend/tests/gateway/imageOcrOrientationWiring.test.js",
+        "runtime/node/backend/tests/gateway/ocrOrientationRecovery.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-115] 纯文本模型图片 OCR 兜底方向自动校正.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/gateway/ocrOrientationNotice.test.js services/backend/tests/gateway/imageOcrOrientationWiring.test.js services/backend/tests/gateway/ocrOrientationRecovery.test.js",
-        "node --check services/backend/src/services/gateway/ocrOrientationNotice.js",
-        "python3 -m py_compile services/backend/src/services/docHelper.py"
+        "npm run test:one -- runtime/node/backend/tests/gateway/ocrOrientationNotice.test.js runtime/node/backend/tests/gateway/imageOcrOrientationWiring.test.js runtime/node/backend/tests/gateway/ocrOrientationRecovery.test.js",
+        "node --check runtime/node/backend/src/services/gateway/ocrOrientationNotice.js",
+        "python3 -m py_compile runtime/node/backend/src/services/docHelper.py"
       ]
     },
     {
@@ -1769,22 +1769,22 @@
         "computed at the three gateway OCR injection points (aiGatewayGenerateMethod.js) via _appendOcrResolutionNotice(prompt, ocrDetails) placed immediately after the orientation notice; honesty boundary: the recovery is real (text is recovered from an image that read empty natively), the note is decoration only — gate-off byte-reverts, never changes success/failure attribution or the strip-image invariant, malformed never throws"
       ],
       "paths": [
-        "services/backend/src/services/gateway/ocrResolutionNotice.js",
-        "services/backend/src/services/docHelper.py",
-        "services/backend/src/services/ocrSnippetService.js",
-        "services/backend/src/services/gateway/aiGateway.js",
-        "services/backend/src/services/gateway/aiGatewayGenerateMethod.js",
-        "services/backend/tests/gateway/ocrResolutionNotice.test.js",
-        "services/backend/tests/gateway/imageOcrResolutionWiring.test.js",
-        "services/backend/tests/gateway/ocrResolutionRecovery.test.js"
+        "runtime/node/backend/src/services/gateway/ocrResolutionNotice.js",
+        "runtime/node/backend/src/services/docHelper.py",
+        "runtime/node/backend/src/services/ocrSnippetService.js",
+        "runtime/node/backend/src/services/gateway/aiGateway.js",
+        "runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js",
+        "runtime/node/backend/tests/gateway/ocrResolutionNotice.test.js",
+        "runtime/node/backend/tests/gateway/imageOcrResolutionWiring.test.js",
+        "runtime/node/backend/tests/gateway/ocrResolutionRecovery.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-116] 纯文本模型图片 OCR 兜底低分辨率自动放大.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/gateway/ocrResolutionNotice.test.js services/backend/tests/gateway/imageOcrResolutionWiring.test.js services/backend/tests/gateway/ocrResolutionRecovery.test.js",
-        "node --check services/backend/src/services/gateway/ocrResolutionNotice.js",
-        "python3 -m py_compile services/backend/src/services/docHelper.py"
+        "npm run test:one -- runtime/node/backend/tests/gateway/ocrResolutionNotice.test.js runtime/node/backend/tests/gateway/imageOcrResolutionWiring.test.js runtime/node/backend/tests/gateway/ocrResolutionRecovery.test.js",
+        "node --check runtime/node/backend/src/services/gateway/ocrResolutionNotice.js",
+        "python3 -m py_compile runtime/node/backend/src/services/docHelper.py"
       ]
     },
     {
@@ -1797,18 +1797,18 @@
         "security: external extractors bypass per-entry guards, so the generic path re-verifies AFTER extraction — reject any file escaping outputDir, strip symlinks, enforce MAX_UNPACK_BYTES (delete on overflow); the mapping/selection logic is injectable (opts.platform/opts.has) for deterministic unit tests"
       ],
       "paths": [
-        "services/backend/src/services/domain/data/reverseEngineer/genericExtractor.js",
-        "services/backend/src/tools/unpackTool.js",
-        "services/backend/tests/tools/unpackGeneric.test.js",
-        "services/backend/tests/tools/unpackAsar.test.js"
+        "runtime/node/backend/src/services/domain/data/reverseEngineer/genericExtractor.js",
+        "runtime/node/backend/src/tools/unpackTool.js",
+        "runtime/node/backend/tests/tools/unpackGeneric.test.js",
+        "runtime/node/backend/tests/tools/unpackAsar.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-106] unpack 未知格式自救.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/tools/unpackGeneric.test.js services/backend/tests/tools/unpackAsar.test.js",
-        "node --check services/backend/src/services/reverseEngineer/genericExtractor.js",
-        "node --check services/backend/src/tools/unpackTool.js"
+        "npm run test:one -- runtime/node/backend/tests/tools/unpackGeneric.test.js runtime/node/backend/tests/tools/unpackAsar.test.js",
+        "node --check runtime/node/backend/src/services/reverseEngineer/genericExtractor.js",
+        "node --check runtime/node/backend/src/tools/unpackTool.js"
       ]
     },
     {
@@ -1821,21 +1821,21 @@
         "honesty boundary: two invariants enforced on describe-cascade failure — '非视觉模型永不收到裸图' (strip) and '绝不谎称没收到图' (floor injects '绝不能说没有收到图片'); the floor is SAFETY, the failure summary is DECORATION and stays independently switchable"
       ],
       "paths": [
-        "services/backend/src/services/gateway/visionOcrFallback.js",
-        "services/backend/src/services/gateway/aiGatewayGenerateMethod.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/visionOcrFallback.test.js",
-        "services/backend/tests/gateway/visionDescribeFailFloorWiring.test.js",
-        "services/backend/tests/gateway/visionDescribeFailFloorRealImage.test.js"
+        "runtime/node/backend/src/services/gateway/visionOcrFallback.js",
+        "runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/visionOcrFallback.test.js",
+        "runtime/node/backend/tests/gateway/visionDescribeFailFloorWiring.test.js",
+        "runtime/node/backend/tests/gateway/visionDescribeFailFloorRealImage.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-118] 视觉描述级联全失败 OCR 兜底底线解耦.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/visionOcrFallback.test.js services/backend/tests/gateway/visionDescribeFailFloorWiring.test.js services/backend/tests/gateway/visionDescribeFailFloorRealImage.test.js",
-        "node --check services/backend/src/services/gateway/visionOcrFallback.js",
-        "node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js"
+        "npm run test:one -- runtime/node/backend/tests/visionOcrFallback.test.js runtime/node/backend/tests/gateway/visionDescribeFailFloorWiring.test.js runtime/node/backend/tests/gateway/visionDescribeFailFloorRealImage.test.js",
+        "node --check runtime/node/backend/src/services/gateway/visionOcrFallback.js",
+        "node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js"
       ]
     },
     {
@@ -1848,20 +1848,20 @@
         "orthogonality: KHY_VISION_OCR_FALLBACK = 'does the OCR note render'; KHY_VISION_DESCRIBE_FAIL_OCR_FLOOR (OPS-118) = 'does this path run the floor at all'; KHY_VISION_STRIP_IMAGE_FLOOR (OPS-120) = 'when the OCR note is absent, back the strip with a minimal floor so it never runs bare'"
       ],
       "paths": [
-        "services/backend/src/services/gateway/visionOcrFallback.js",
-        "services/backend/src/services/gateway/aiGatewayGenerateMethod.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/gateway/visionStripImageFloorWiring.test.js",
-        "services/backend/tests/gateway/visionStripImageFloorRealImage.test.js"
+        "runtime/node/backend/src/services/gateway/visionOcrFallback.js",
+        "runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/gateway/visionStripImageFloorWiring.test.js",
+        "runtime/node/backend/tests/gateway/visionStripImageFloorRealImage.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-120] 剥图必留痕最小底线与OCR功能门解耦.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/gateway/visionStripImageFloorWiring.test.js services/backend/tests/gateway/visionStripImageFloorRealImage.test.js",
-        "node --check services/backend/src/services/gateway/visionOcrFallback.js",
-        "node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js"
+        "npm run test:one -- runtime/node/backend/tests/gateway/visionStripImageFloorWiring.test.js runtime/node/backend/tests/gateway/visionStripImageFloorRealImage.test.js",
+        "node --check runtime/node/backend/src/services/gateway/visionOcrFallback.js",
+        "node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js"
       ]
     },
     {
@@ -1874,20 +1874,20 @@
         "orthogonality: KHY_VISION_OCR_FALLBACK = 'does OCR rescue engage / does the OCR note render'; KHY_VISION_DESCRIBE_FAIL_OCR_FLOOR (OPS-118) = prep-phase describe-cascade floor path runs; KHY_VISION_STRIP_IMAGE_FLOOR (OPS-120) = prep-phase floor note present when OCR note absent; KHY_VISION_RESCUE_STRIP_FLOOR (OPS-122) = POST-FAILURE rescue net strips+notes when OCR yields no text (the three floor gates cover three distinct sites of the same invariant)"
       ],
       "paths": [
-        "services/backend/src/services/gateway/visionOcrFallback.js",
-        "services/backend/src/services/gateway/aiGatewayGenerateMethod.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/gateway/visionRescueStripFloorWiring.test.js",
-        "services/backend/tests/gateway/visionRescueStripFloorRealImage.test.js"
+        "runtime/node/backend/src/services/gateway/visionOcrFallback.js",
+        "runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/gateway/visionRescueStripFloorWiring.test.js",
+        "runtime/node/backend/tests/gateway/visionRescueStripFloorRealImage.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-122] post-failure救援网剥图必留痕解耦.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/gateway/visionRescueStripFloorWiring.test.js services/backend/tests/gateway/visionRescueStripFloorRealImage.test.js",
-        "node --check services/backend/src/services/gateway/visionOcrFallback.js",
-        "node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js"
+        "npm run test:one -- runtime/node/backend/tests/gateway/visionRescueStripFloorWiring.test.js runtime/node/backend/tests/gateway/visionRescueStripFloorRealImage.test.js",
+        "node --check runtime/node/backend/src/services/gateway/visionOcrFallback.js",
+        "node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js"
       ]
     },
     {
@@ -1900,21 +1900,21 @@
         "orthogonality: the six conditional axes disclose a DEFECT in the OCR result (accuracy/completeness/language/orientation/resolution); KHY_OCR_USAGE_DISCLOSURE discloses the METHOD itself (that OCR — not native vision — read the image) and fires on clean SUCCESS, exactly the case where the six stay silent"
       ],
       "paths": [
-        "services/backend/src/services/gateway/ocrUsageNotice.js",
-        "services/backend/src/services/gateway/aiGatewayGenerateMethod.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/gateway/ocrUsageNotice.test.js",
-        "services/backend/tests/gateway/ocrUsageDisclosureWiring.test.js",
-        "services/backend/tests/gateway/ocrUsageDisclosureRealImage.test.js"
+        "runtime/node/backend/src/services/gateway/ocrUsageNotice.js",
+        "runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/gateway/ocrUsageNotice.test.js",
+        "runtime/node/backend/tests/gateway/ocrUsageDisclosureWiring.test.js",
+        "runtime/node/backend/tests/gateway/ocrUsageDisclosureRealImage.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-124] OCR成功路径向用户透明告知用了OCR.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/gateway/ocrUsageNotice.test.js services/backend/tests/gateway/ocrUsageDisclosureWiring.test.js services/backend/tests/gateway/ocrUsageDisclosureRealImage.test.js",
-        "node --check services/backend/src/services/gateway/ocrUsageNotice.js",
-        "node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js"
+        "npm run test:one -- runtime/node/backend/tests/gateway/ocrUsageNotice.test.js runtime/node/backend/tests/gateway/ocrUsageDisclosureWiring.test.js runtime/node/backend/tests/gateway/ocrUsageDisclosureRealImage.test.js",
+        "node --check runtime/node/backend/src/services/gateway/ocrUsageNotice.js",
+        "node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js"
       ]
     },
     {
@@ -1927,21 +1927,21 @@
         "orthogonality to OPS-124: OPS-124 = model-facing INSTRUCTION in the prompt (无感 when the model complies); OPS-125 = deterministic post-hoc FOOTNOTE at finishResult (guarantees 明显 even when the model ignores the instruction). Same family as answerVerifier/modelIdentityTruth/cacheMetricsTruth deterministic truth footers."
       ],
       "paths": [
-        "services/backend/src/services/gateway/ocrUsageFootnote.js",
-        "services/backend/src/services/gateway/aiGatewayGenerateMethod.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/gateway/ocrUsageFootnote.test.js",
-        "services/backend/tests/gateway/ocrUsageFootnoteWiring.test.js",
-        "services/backend/tests/gateway/ocrUsageFootnoteRealImage.test.js"
+        "runtime/node/backend/src/services/gateway/ocrUsageFootnote.js",
+        "runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/gateway/ocrUsageFootnote.test.js",
+        "runtime/node/backend/tests/gateway/ocrUsageFootnoteWiring.test.js",
+        "runtime/node/backend/tests/gateway/ocrUsageFootnoteRealImage.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-126] OCR成功路径确定性脚注兜底告知用了OCR.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/gateway/ocrUsageFootnote.test.js services/backend/tests/gateway/ocrUsageFootnoteWiring.test.js services/backend/tests/gateway/ocrUsageFootnoteRealImage.test.js",
-        "node --check services/backend/src/services/gateway/ocrUsageFootnote.js",
-        "node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js"
+        "npm run test:one -- runtime/node/backend/tests/gateway/ocrUsageFootnote.test.js runtime/node/backend/tests/gateway/ocrUsageFootnoteWiring.test.js runtime/node/backend/tests/gateway/ocrUsageFootnoteRealImage.test.js",
+        "node --check runtime/node/backend/src/services/gateway/ocrUsageFootnote.js",
+        "node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js"
       ]
     },
     {
@@ -1955,22 +1955,22 @@
         "orthogonality to ocrUsageFootnote (OPS-126): that footer's predicate is _ocrImageTextRead=true (OCR SUCCEEDED, model didn't mention OCR AND didn't deny → append 'used OCR'); the empty-OCR variant's predicate is _ocrFallbackApplied && !_ocrImageTextRead (OCR EMPTY, model DENIED → append correction); the OPS-140 OCR-success variant's predicate is _ocrImageTextRead && detectImageDenial (OCR SUCCEEDED but model DENIED → rebut, replacing the plain footnote). Orthogonal to the three prompt-side floor gates (KHY_VISION_DESCRIBE_FAIL_OCR_FLOOR / KHY_VISION_STRIP_IMAGE_FLOOR / KHY_VISION_RESCUE_STRIP_FLOOR): those guarantee '剥图必留痕' on the PROMPT side; this guarantees the answer-side correction when the model ignores that trace."
       ],
       "paths": [
-        "services/backend/src/services/gateway/visionDenialCorrection.js",
-        "services/backend/src/services/gateway/aiGatewayGenerateMethod.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/gateway/visionDenialCorrection.test.js",
-        "services/backend/tests/gateway/visionDenialCorrectionWiring.test.js",
-        "services/backend/tests/gateway/visionDenialCorrectionRealImage.test.js"
+        "runtime/node/backend/src/services/gateway/visionDenialCorrection.js",
+        "runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/gateway/visionDenialCorrection.test.js",
+        "runtime/node/backend/tests/gateway/visionDenialCorrectionWiring.test.js",
+        "runtime/node/backend/tests/gateway/visionDenialCorrectionRealImage.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-138] 空OCR剥图路径模型仍谎称没收到图的确定性纠正脚注.md",
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-140] OCR成功读出但模型仍谎称没收到图的确定性纠正脚注.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/gateway/visionDenialCorrection.test.js services/backend/tests/gateway/visionDenialCorrectionWiring.test.js services/backend/tests/gateway/visionDenialCorrectionRealImage.test.js",
-        "node --check services/backend/src/services/gateway/visionDenialCorrection.js",
-        "node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js"
+        "npm run test:one -- runtime/node/backend/tests/gateway/visionDenialCorrection.test.js runtime/node/backend/tests/gateway/visionDenialCorrectionWiring.test.js runtime/node/backend/tests/gateway/visionDenialCorrectionRealImage.test.js",
+        "node --check runtime/node/backend/src/services/gateway/visionDenialCorrection.js",
+        "node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js"
       ]
     },
     {
@@ -1983,21 +1983,21 @@
         "noise-conscious: the wall is only ever emitted ONCE — either eagerly (gate off) or deferred (gate on, OCR empty). On OCR success with the gate on, it is emitted ZERO times. This directly reduces the loudest contradiction (scary failure wall immediately followed by OCR success)."
       ],
       "paths": [
-        "services/backend/src/services/gateway/visionFailureSummary.js",
-        "services/backend/src/services/gateway/aiGatewayGenerateMethod.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/services/gateway/visionFailureSummary.test.js",
-        "services/backend/tests/gateway/visionFailureSummaryOcrSuppressWiring.test.js",
-        "services/backend/tests/gateway/visionFailureSummaryOcrSuppressRealImage.test.js"
+        "runtime/node/backend/src/services/gateway/visionFailureSummary.js",
+        "runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/services/gateway/visionFailureSummary.test.js",
+        "runtime/node/backend/tests/gateway/visionFailureSummaryOcrSuppressWiring.test.js",
+        "runtime/node/backend/tests/gateway/visionFailureSummaryOcrSuppressRealImage.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-142] 失败墙推迟到OCR结果已知后减少心灵噪音.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/services/gateway/visionFailureSummary.test.js services/backend/tests/gateway/visionFailureSummaryOcrSuppressWiring.test.js services/backend/tests/gateway/visionFailureSummaryOcrSuppressRealImage.test.js",
-        "node --check services/backend/src/services/gateway/visionFailureSummary.js",
-        "node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js"
+        "npm run test:one -- runtime/node/backend/tests/services/gateway/visionFailureSummary.test.js runtime/node/backend/tests/gateway/visionFailureSummaryOcrSuppressWiring.test.js runtime/node/backend/tests/gateway/visionFailureSummaryOcrSuppressRealImage.test.js",
+        "node --check runtime/node/backend/src/services/gateway/visionFailureSummary.js",
+        "node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js"
       ]
     },
     {
@@ -2010,21 +2010,21 @@
         "noise-conscious: without this fix the user sees N '正在调用...请稍候' with no resolution; the single closure both resolves them and states the OCR downgrade plainly — one message, not N, and it is the affirmative resolution of promises already shown."
       ],
       "paths": [
-        "services/backend/src/services/gateway/visionOcrSuccessClosure.js",
-        "services/backend/src/services/gateway/aiGatewayGenerateMethod.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/services/gateway/visionOcrSuccessClosure.test.js",
-        "services/backend/tests/gateway/visionOcrSuccessClosureWiring.test.js",
-        "services/backend/tests/gateway/visionOcrSuccessClosureRealImage.test.js"
+        "runtime/node/backend/src/services/gateway/visionOcrSuccessClosure.js",
+        "runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/services/gateway/visionOcrSuccessClosure.test.js",
+        "runtime/node/backend/tests/gateway/visionOcrSuccessClosureWiring.test.js",
+        "runtime/node/backend/tests/gateway/visionOcrSuccessClosureRealImage.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-144] describe-fail到OCR成功的用户可见闭合减少心灵噪音.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/services/gateway/visionOcrSuccessClosure.test.js services/backend/tests/gateway/visionOcrSuccessClosureWiring.test.js services/backend/tests/gateway/visionOcrSuccessClosureRealImage.test.js",
-        "node --check services/backend/src/services/gateway/visionOcrSuccessClosure.js",
-        "node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js"
+        "npm run test:one -- runtime/node/backend/tests/services/gateway/visionOcrSuccessClosure.test.js runtime/node/backend/tests/gateway/visionOcrSuccessClosureWiring.test.js runtime/node/backend/tests/gateway/visionOcrSuccessClosureRealImage.test.js",
+        "node --check runtime/node/backend/src/services/gateway/visionOcrSuccessClosure.js",
+        "node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js"
       ]
     },
     {
@@ -2037,21 +2037,21 @@
         "noise-conscious: candidate #1 is unchanged (full context for the user), only the redundant repeats collapse — the user still sees each attempt but without N copies of '我无法直接识别图片内容'."
       ],
       "paths": [
-        "services/backend/src/services/gateway/visionCascadeAttemptNotice.js",
-        "services/backend/src/services/gateway/aiGatewayGenerateMethod.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/services/gateway/visionCascadeAttemptNotice.test.js",
-        "services/backend/tests/gateway/visionCascadeAttemptNoticeWiring.test.js",
-        "services/backend/tests/gateway/visionCascadeAttemptNoticeRealImage.test.js"
+        "runtime/node/backend/src/services/gateway/visionCascadeAttemptNotice.js",
+        "runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/services/gateway/visionCascadeAttemptNotice.test.js",
+        "runtime/node/backend/tests/gateway/visionCascadeAttemptNoticeWiring.test.js",
+        "runtime/node/backend/tests/gateway/visionCascadeAttemptNoticeRealImage.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-145] 级联逐候选请稍候提示减冗余减少心灵噪音.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/services/gateway/visionCascadeAttemptNotice.test.js services/backend/tests/gateway/visionCascadeAttemptNoticeWiring.test.js services/backend/tests/gateway/visionCascadeAttemptNoticeRealImage.test.js",
-        "node --check services/backend/src/services/gateway/visionCascadeAttemptNotice.js",
-        "node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js"
+        "npm run test:one -- runtime/node/backend/tests/services/gateway/visionCascadeAttemptNotice.test.js runtime/node/backend/tests/gateway/visionCascadeAttemptNoticeWiring.test.js runtime/node/backend/tests/gateway/visionCascadeAttemptNoticeRealImage.test.js",
+        "node --check runtime/node/backend/src/services/gateway/visionCascadeAttemptNotice.js",
+        "node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js"
       ]
     },
     {
@@ -2059,21 +2059,21 @@
       "label": "Text-only-model Image OCR Fallback — strip provider ROUTING PREFIX from vision model names in user-facing cascade notices (OPS-MAN-150; 承 OPS-145, directly serving '减少显示的心灵噪音'). On the reported OCR-fallback path the cascade's first attempt (_attempts[0] = decision.model = the switched-to-pinned vision model) keeps its provider routing prefix 'glm/glm-4.6v-flash' (prefix drives internal poolHint resolution), while all sibling candidates from collectVisionFallbackCandidates are BARE ids (glm-4v-flash, gpt-5.3-codex-review, claude-opus-4-6). So OPS-145's per-candidate '正在调用...请稍候' notices leaked the raw internal routing id 'glm/glm-4.6v-flash' into user prose for candidates [0]/[1] — inconsistent with every other bare line = mental noise leaking internal routing detail. FIX: a tiny pure leaf visionModelDisplayName.toDisplayModelName(model, env) strips the segment before the last '/' PRESERVING CASE (does NOT reuse _bareId, which is dedup-only and lowercases). Wired ONLY at the DISPLAY boundary: aiGatewayGenerateMethod normalizes model/prevModel just before buildCascadeAttemptNotice; internal _att.model/_prevAttemptModel routing state is UNTOUCHED (poolHint still resolves from the original prefixed id). Gate KHY_VISION_MODEL_DISPLAY_NAME default-on; off → byte-revert (prefix returns verbatim). Orthogonal to OPS-145 (which folds the repeated first sentence) — this folds the leaked prefix.",
       "whenToUse": "When user-facing vision cascade notices show provider-prefixed model ids (e.g. 'glm/glm-4.6v-flash') inconsistently with bare sibling names, or when adding/altering how vision model names are DISPLAYED to users. Do NOT touch internal routing ids (_att.model/poolHint) — this area is display-only.",
       "paths": [
-        "services/backend/src/services/gateway/visionModelDisplayName.js",
-        "services/backend/src/services/gateway/aiGatewayGenerateMethod.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/services/gateway/visionModelDisplayName.test.js",
-        "services/backend/tests/gateway/visionModelDisplayNameWiring.test.js",
-        "services/backend/tests/gateway/visionModelDisplayNameRealImage.test.js"
+        "runtime/node/backend/src/services/gateway/visionModelDisplayName.js",
+        "runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/services/gateway/visionModelDisplayName.test.js",
+        "runtime/node/backend/tests/gateway/visionModelDisplayNameWiring.test.js",
+        "runtime/node/backend/tests/gateway/visionModelDisplayNameRealImage.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-150] 级联中间提示显示归一去provider前缀减少心灵噪音.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/services/gateway/visionModelDisplayName.test.js services/backend/tests/gateway/visionModelDisplayNameWiring.test.js services/backend/tests/gateway/visionModelDisplayNameRealImage.test.js",
-        "node --check services/backend/src/services/gateway/visionModelDisplayName.js",
-        "node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js"
+        "npm run test:one -- runtime/node/backend/tests/services/gateway/visionModelDisplayName.test.js runtime/node/backend/tests/gateway/visionModelDisplayNameWiring.test.js runtime/node/backend/tests/gateway/visionModelDisplayNameRealImage.test.js",
+        "node --check runtime/node/backend/src/services/gateway/visionModelDisplayName.js",
+        "node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js"
       ]
     },
     {
@@ -2081,16 +2081,16 @@
       "label": "Text-only-model Image OCR Fallback — strip provider ROUTING PREFIX from the vision model name in the FAILURE-SUMMARY wall too (OPS-MAN-159; 承 OPS-150, directly serving '减少显示的心灵噪音'). OPS-150 normalized the model name ONLY in the per-candidate cascade notices (buildCascadeAttemptNotice); the failure-summary wall (visionFailureSummary.buildVisionFailureMessage) has its OWN line '本次尝试的视觉模型:<model>' fed by the caller's _primaryModel = decision.model, which retains the 'glm/' routing prefix → the wall still leaked '本次尝试的视觉模型:glm/glm-4.6v-flash' inconsistently with the already-normalized cascade notices. This wall is user-visible when the vision cascade fully fails AND local OCR reads NO text (photos/screenshots/missing OCR langpack); on OCR-success it is suppressed by OPS-142 (_deferredFailureMsg). FIX: reuse OPS-150's pure leaf visionModelDisplayName.toDisplayModelName at the wall's DISPLAY boundary inside buildVisionFailureMessage (centralized so ALL callers — cascade path + recognizeImage.js tool — benefit), gated by the SAME flag KHY_VISION_MODEL_DISPLAY_NAME (default-on); off / leaf-unavailable → returns the raw prefixed id → byte-revert '本次尝试的视觉模型:glm/glm-4.6v-flash。'. Internal routing (_primaryModel/poolHint) UNTOUCHED. Orthogonal to OPS-150 (different emit site: the wall, not the notices).",
       "whenToUse": "When the vision FAILURE-SUMMARY wall ('图像识别失败 … 本次尝试的视觉模型:<model>') shows a provider-prefixed model id inconsistently with the cascade notices, or when altering how the failure wall DISPLAYS the attempted vision model name. Display-only — do NOT touch _primaryModel/decision.model routing state. Note the separate, still-open GAP: the wall's '真实失败原因:' label can double when the raw error already carries that label (aiGateway.js:301) — that stutter-dedup is a distinct future concern, NOT this area.",
       "paths": [
-        "services/backend/src/services/gateway/visionFailureSummary.js",
-        "services/backend/src/services/gateway/visionModelDisplayName.js",
-        "services/backend/tests/gateway/visionFailureSummaryDisplayName.test.js"
+        "runtime/node/backend/src/services/gateway/visionFailureSummary.js",
+        "runtime/node/backend/src/services/gateway/visionModelDisplayName.js",
+        "runtime/node/backend/tests/gateway/visionFailureSummaryDisplayName.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-159] 失败墙视觉模型名显示归一去provider前缀减少心灵噪音.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/gateway/visionFailureSummaryDisplayName.test.js",
-        "node --check services/backend/src/services/gateway/visionFailureSummary.js"
+        "npm run test:one -- runtime/node/backend/tests/gateway/visionFailureSummaryDisplayName.test.js",
+        "node --check runtime/node/backend/src/services/gateway/visionFailureSummary.js"
       ]
     },
     {
@@ -2098,17 +2098,17 @@
       "label": "Text-only-model Image OCR Fallback — dedup the '真实失败原因:' LABEL on the failure-summary wall (OPS-MAN-161; 承 OPS-159, directly serving '减少显示的心灵噪音'). This is the GAP flagged in the OPS-159 area's whenToUse: when a describe sub-call fails, gateway's aiGateway._buildFailureReasonSection prepends '真实失败原因:\\n<真因…>', that string becomes _lastRawError → fed to buildVisionFailureMessage as rawError → cause = sanitizeCause(rawError) preserves the self-carried '真实失败原因:' label → the wall's cause push (真实失败原因:${cause}) prepends it a SECOND time = '真实失败原因:真实失败原因:…' stutter. aiGateway._prependFailureReason already has the same-intent guard `if(/真实失败原因/.test(body)) return body`; the wall historically missed the equivalent. FIX: gate KHY_VISION_FAILURE_CAUSE_DEDUP (default-on) — if cause already begins with the label (half- or full-width colon), strip the self-carried label so it appears exactly once; gate-off / exception → byte-revert to the doubled behavior. Orthogonal to OPS-159 (model-name prefix) and KHY_VISION_FAILURE_SUMMARY (whether the wall exists at all) on the SAME wall.",
       "whenToUse": "When the vision FAILURE-SUMMARY wall shows a doubled '真实失败原因:真实失败原因:' label, or when altering how the wall composes its cause line. Dedup is display-only and strips ONLY a leading self-carried label; the cause text itself is untouched. Reproduced by feeding buildVisionFailureMessage a rawError that already starts with '真实失败原因:' (as aiGateway.js:301 produces).",
       "paths": [
-        "services/backend/src/services/gateway/visionFailureSummary.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/gateway/visionFailureCauseDedup.test.js"
+        "runtime/node/backend/src/services/gateway/visionFailureSummary.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/gateway/visionFailureCauseDedup.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-161] 失败墙真实失败原因标签去重减少心灵噪音.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/gateway/visionFailureCauseDedup.test.js",
-        "node --check services/backend/src/services/gateway/visionFailureSummary.js"
+        "npm run test:one -- runtime/node/backend/tests/gateway/visionFailureCauseDedup.test.js",
+        "node --check runtime/node/backend/src/services/gateway/visionFailureSummary.js"
       ]
     },
     {
@@ -2116,18 +2116,18 @@
       "label": "Text-only-model Image OCR Fallback — humanize the vision-pool adapter-failure STATUS on the OCR-rescued path (OPS-MAN-164, directly serving '减少显示的心灵噪音'). GAP: on the vision→local-OCR-success path, the final generation loop still attempts the vision-pool adapter and 404s; aiGatewayGenerateMethod's two adapter-failure emit sites (~2589 / ~3202) print the raw diagnostic status `visionpool 失败: OpenAI: 404 model_not_found` in real time — but the image was already read by OCR and answered, so that 404 line is SECONDARY mental noise. FIX: pure leaf visionPoolFailStatus.buildVisionPoolFailStatus({poolName, ocrRescued, env}) gated by KHY_VISION_POOL_FAIL_STATUS_HUMANIZE (default-on): when gate on && ocrRescued (options._ocrImageTextRead===true) && poolName matches /vision/i → return '视觉通道当前不可用，已用本地 OCR 兜底'; else null → caller keeps its raw `${name} 失败: ${errMsg}` line (byte-revert). Genuine failures (no OCR rescue) and non-vision pools keep the actionable root-cause diagnostic. Strict predicate: ocrRescued===true (never truthy-but-not-true) and /vision/i name match.",
       "whenToUse": "When the runtime status stream shows a raw `visionpool 失败: 404 …` line AFTER the image was already handled by local OCR, or when altering how aiGatewayGenerateMethod emits adapter-failure statuses at the two final-generation emit sites (~2589 / ~3202). Humanization is display-only and fires ONLY on the OCR-rescued vision-pool case; the raw diagnostic is preserved for genuine failures and non-vision pools. Reproduced via wireCascade(makeRejectAdapter({name:'visionpool'}), rec) with a UNIQUE model name per run (the god-file has a per-model routing memory that skips the vision-pool failure emit on repeated same-model runs).",
       "paths": [
-        "services/backend/src/services/gateway/visionPoolFailStatus.js",
-        "services/backend/src/services/gateway/aiGatewayGenerateMethod.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/gateway/visionPoolFailStatusHumanize.test.js"
+        "runtime/node/backend/src/services/gateway/visionPoolFailStatus.js",
+        "runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/gateway/visionPoolFailStatusHumanize.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-164] 视觉池失败状态人话化减少心灵噪音.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/gateway/visionPoolFailStatusHumanize.test.js",
-        "node --check services/backend/src/services/gateway/visionPoolFailStatus.js"
+        "npm run test:one -- runtime/node/backend/tests/gateway/visionPoolFailStatusHumanize.test.js",
+        "node --check runtime/node/backend/src/services/gateway/visionPoolFailStatus.js"
       ]
     },
     {
@@ -2139,34 +2139,34 @@
         "the fix is surgical + additive: a pure leaf ocrRescueStatusNotice.js (isRescueStatusEnabled / buildOcrRescueStatus({count,adapterName,env}) → live-status string when gate-on and count>0, gate-off/malformed→null, never throws) + a gated emitStatus at the Site3 OCR-success branch (after the options reassign) with fail-soft try/catch; gate-off = no emit (byte-revert)"
       ],
       "paths": [
-        "services/backend/src/services/gateway/ocrRescueStatusNotice.js",
-        "services/backend/src/services/gateway/aiGatewayGenerateMethod.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/gateway/ocrRescueStatusNotice.test.js",
-        "services/backend/tests/gateway/ocrRescueStatusNoticeWiring.test.js",
-        "services/backend/tests/gateway/ocrRescueStatusNoticeRealImage.test.js"
+        "runtime/node/backend/src/services/gateway/ocrRescueStatusNotice.js",
+        "runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/gateway/ocrRescueStatusNotice.test.js",
+        "runtime/node/backend/tests/gateway/ocrRescueStatusNoticeWiring.test.js",
+        "runtime/node/backend/tests/gateway/ocrRescueStatusNoticeRealImage.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-127] OCR救援网成功实时状态告知已降级到OCR.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/gateway/ocrRescueStatusNotice.test.js services/backend/tests/gateway/ocrRescueStatusNoticeWiring.test.js services/backend/tests/gateway/ocrRescueStatusNoticeRealImage.test.js",
-        "node --check services/backend/src/services/gateway/ocrRescueStatusNotice.js",
-        "node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js"
+        "npm run test:one -- runtime/node/backend/tests/gateway/ocrRescueStatusNotice.test.js runtime/node/backend/tests/gateway/ocrRescueStatusNoticeWiring.test.js runtime/node/backend/tests/gateway/ocrRescueStatusNoticeRealImage.test.js",
+        "node --check runtime/node/backend/src/services/gateway/ocrRescueStatusNotice.js",
+        "node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js"
       ]
     },
     {
       "id": "ci-duplication-guard",
-      "label": "CI Duplicate-code Detection Gate + Shared OCR-gateway Test Harness (goal 2026-07-12: '把所有重复的函数提取成公共库,统一维护;在 CI 里加重复代码检测,超过三行相同就报警'). Two parts: (1) services/backend/tests/gateway/_ocrGatewayHarness.js — a parameterized-factory shared harness absorbing the copy-pasted scaffolding (_wireGateway/_makeRecordingAdapter/_makeRejectAdapter/_realExtractImageOcrDetails/tesseract+python probes/PIL render/env save-restore) across the 20 OCR-gateway .test.js files, byte-equivalent to each file's in-place harness; underscore-prefixed so *.test.js never selects it; it DOES IO (spawnSync/fs/imageService) so its header does NOT self-declare pure-leaf/zero-IO (else check-leaf-contract leaf-io fires). (2) A self-authored duplicate-code detector: pure guard core scripts/lib/duplicationGuard.js (crypto/path only, zero-IO, deterministic, fail-soft, gate KHY_DUPLICATION_GUARD) + thin CLI scripts/check-duplication.js (all IO). Algorithm: normalize lines (skip blank/comment/pure-punctuation), sliding window MIN_BLOCK=4 significant lines (=more than three), sha1, a hash in >=2 places is a clone class, coalesce adjacent windows to maximal spans, one finding per (file,span). Phased per user decision 'warn + baseline first, flip to hard gate after migration': stage-1 DEFAULT_MODE='warn' (all warnings, existing dup never reds CI, NOT in the blocking check:small-model:safety aggregate); stage-2 --gate / KHY_DUPLICATION_MODE=gate (in baseline → warning, not in baseline → error). Baseline .duplication-baseline.json stores normalized-window content-hash fingerprints (relocation-stable, self-shrinks as extraction deletes dup copies). Flip-to-hard-gate is one reviewable diff: change DEFAULT_MODE + re-run --write-baseline + fold check:duplication into the safety aggregate.",
+      "label": "CI Duplicate-code Detection Gate + Shared OCR-gateway Test Harness (goal 2026-07-12: '把所有重复的函数提取成公共库,统一维护;在 CI 里加重复代码检测,超过三行相同就报警'). Two parts: (1) runtime/node/backend/tests/gateway/_ocrGatewayHarness.js — a parameterized-factory shared harness absorbing the copy-pasted scaffolding (_wireGateway/_makeRecordingAdapter/_makeRejectAdapter/_realExtractImageOcrDetails/tesseract+python probes/PIL render/env save-restore) across the 20 OCR-gateway .test.js files, byte-equivalent to each file's in-place harness; underscore-prefixed so *.test.js never selects it; it DOES IO (spawnSync/fs/imageService) so its header does NOT self-declare pure-leaf/zero-IO (else check-leaf-contract leaf-io fires). (2) A self-authored duplicate-code detector: pure guard core scripts/lib/duplicationGuard.js (crypto/path only, zero-IO, deterministic, fail-soft, gate KHY_DUPLICATION_GUARD) + thin CLI scripts/check-duplication.js (all IO). Algorithm: normalize lines (skip blank/comment/pure-punctuation), sliding window MIN_BLOCK=4 significant lines (=more than three), sha1, a hash in >=2 places is a clone class, coalesce adjacent windows to maximal spans, one finding per (file,span). Phased per user decision 'warn + baseline first, flip to hard gate after migration': stage-1 DEFAULT_MODE='warn' (all warnings, existing dup never reds CI, NOT in the blocking check:small-model:safety aggregate); stage-2 --gate / KHY_DUPLICATION_MODE=gate (in baseline → warning, not in baseline → error). Baseline .duplication-baseline.json stores normalized-window content-hash fingerprints (relocation-stable, self-shrinks as extraction deletes dup copies). Flip-to-hard-gate is one reviewable diff: change DEFAULT_MODE + re-run --write-baseline + fold check:duplication into the safety aggregate.",
       "whenToUse": [
-        "you see copy-pasted scaffolding across test files, or want to extract duplicated functions into a shared library: use/extend services/backend/tests/gateway/_ocrGatewayHarness.js (parameterized factory; migrate reads from module vars to handle fields rec.finalPrompt/finalImages; keep all test bodies/assertions/env-keys/content-strings byte-equivalent)",
+        "you see copy-pasted scaffolding across test files, or want to extract duplicated functions into a shared library: use/extend runtime/node/backend/tests/gateway/_ocrGatewayHarness.js (parameterized factory; migrate reads from module vars to handle fields rec.finalPrompt/finalImages; keep all test bodies/assertions/env-keys/content-strings byte-equivalent)",
         "you want CI to alert on >3 identical lines: npm run check:duplication (warn) / check:duplication:strict (exit 1 on warn) / check:duplication:gate (hard gate: non-baseline dup → error) / check:duplication:baseline (regenerate .duplication-baseline.json)",
         "you need to flip stage-1 warn to stage-2 hard gate: change DEFAULT_MODE 'warn'→'gate' in scripts/check-duplication.js, re-run --write-baseline, and fold check:duplication into check:small-model:safety — one reviewable diff",
         "you need to tune the detector: DEFAULT_MIN_BLOCK (how many lines = duplicate) and isSignificant/COMMENT_LINE_RE/PUNCT_ONLY_RE (skip categories) live in scripts/lib/duplicationGuard.js; DEFAULT_SCOPE (what gets scanned) lives in scripts/check-duplication.js"
       ],
       "paths": [
-        "services/backend/tests/gateway/_ocrGatewayHarness.js",
+        "runtime/node/backend/tests/gateway/_ocrGatewayHarness.js",
         "scripts/lib/duplicationGuard.js",
         "scripts/ci/check-duplication.js",
         ".duplication-baseline.json",
@@ -2191,21 +2191,21 @@
         "the fix is surgical + additive: reuse the OPS-127 pure leaf ocrRescueStatusNotice.js with a NEW orthogonal prep variant (isRescuePrepStatusEnabled / buildOcrRescuePrepStatus({count,modelName,env}) → live-status string when gate-on and count>0, gate-off/malformed→null, never throws) under an INDEPENDENT gate KHY_OCR_RESCUE_STATUS_PREP + a !_isVerbose-guarded emitStatus at Site1/Site2 OCR-success branches with fail-soft try/catch; gate-off = no emit (byte-revert)"
       ],
       "paths": [
-        "services/backend/src/services/gateway/ocrRescueStatusNotice.js",
-        "services/backend/src/services/gateway/aiGatewayGenerateMethod.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/gateway/ocrRescueStatusPrep.test.js",
-        "services/backend/tests/gateway/ocrRescueStatusPrepWiring.test.js",
-        "services/backend/tests/gateway/ocrRescueStatusPrepRealImage.test.js"
+        "runtime/node/backend/src/services/gateway/ocrRescueStatusNotice.js",
+        "runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/gateway/ocrRescueStatusPrep.test.js",
+        "runtime/node/backend/tests/gateway/ocrRescueStatusPrepWiring.test.js",
+        "runtime/node/backend/tests/gateway/ocrRescueStatusPrepRealImage.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-132] prep期OCR兜底非verbose实时状态告知已降级到OCR.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/gateway/ocrRescueStatusPrep.test.js services/backend/tests/gateway/ocrRescueStatusPrepWiring.test.js services/backend/tests/gateway/ocrRescueStatusPrepRealImage.test.js",
-        "node --check services/backend/src/services/gateway/ocrRescueStatusNotice.js",
-        "node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js"
+        "npm run test:one -- runtime/node/backend/tests/gateway/ocrRescueStatusPrep.test.js runtime/node/backend/tests/gateway/ocrRescueStatusPrepWiring.test.js runtime/node/backend/tests/gateway/ocrRescueStatusPrepRealImage.test.js",
+        "node --check runtime/node/backend/src/services/gateway/ocrRescueStatusNotice.js",
+        "node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js"
       ]
     },
     {
@@ -2218,21 +2218,21 @@
         "the fix is surgical + additive: extend the existing pure leaf ocrRescueStatusNotice.js (isPrepClosureDedupEnabled + shouldSuppressPrepForClosure, reads KHY_OCR_RESCUE_PREP_CLOSURE_DEDUP via flagRegistry, zero IO, never throws, strict ===true checks so a truthy-but-not-true value never mis-suppresses) + a Site1-only guard in aiGatewayGenerateMethod.js that computes _closureWillFire (_intermediateEnabled && closure gate on) and skips the prep emitStatus when shouldSuppressPrepForClosure returns true; fail-soft try/catch → historical behavior on leaf-unavailable."
       ],
       "paths": [
-        "services/backend/src/services/gateway/ocrRescueStatusNotice.js",
-        "services/backend/src/services/gateway/aiGatewayGenerateMethod.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/gateway/ocrRescueStatusNotice.test.js",
-        "services/backend/tests/gateway/ocrRescuePrepClosureDedupWiring.test.js",
-        "services/backend/tests/gateway/ocrRescuePrepClosureDedupRealImage.test.js"
+        "runtime/node/backend/src/services/gateway/ocrRescueStatusNotice.js",
+        "runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/gateway/ocrRescueStatusNotice.test.js",
+        "runtime/node/backend/tests/gateway/ocrRescuePrepClosureDedupWiring.test.js",
+        "runtime/node/backend/tests/gateway/ocrRescuePrepClosureDedupRealImage.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-148] Site1-prep状态与OCR成功闭合跨层去重减少心灵噪音.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/gateway/ocrRescueStatusNotice.test.js services/backend/tests/gateway/ocrRescuePrepClosureDedupWiring.test.js services/backend/tests/gateway/ocrRescuePrepClosureDedupRealImage.test.js",
-        "node --check services/backend/src/services/gateway/ocrRescueStatusNotice.js",
-        "node --check services/backend/src/services/gateway/aiGatewayGenerateMethod.js"
+        "npm run test:one -- runtime/node/backend/tests/gateway/ocrRescueStatusNotice.test.js runtime/node/backend/tests/gateway/ocrRescuePrepClosureDedupWiring.test.js runtime/node/backend/tests/gateway/ocrRescuePrepClosureDedupRealImage.test.js",
+        "node --check runtime/node/backend/src/services/gateway/ocrRescueStatusNotice.js",
+        "node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js"
       ]
     },
     {
@@ -2244,18 +2244,18 @@
         "reason values: single network → 'network_unreachable'; network + (404 and/or 429) → 'multiple'; 404+429 (no network) → 'both'; single 404 → 'model_not_provisioned'; single 429 → 'rate_limited'. bare 'timeout' errorType is deliberately NOT matched as network (preserves the existing auth+timeout→null contract). The fix lives ENTIRELY inside the already-wired pure leaf (zero aiGateway edit)"
       ],
       "paths": [
-        "services/backend/src/services/gateway/visionExhaustionDiagnostic.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/services/visionExhaustionDiagnostic.test.js",
-        "services/backend/tests/gateway/visionNetworkExhaustionRealImage.test.js"
+        "runtime/node/backend/src/services/gateway/visionExhaustionDiagnostic.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/services/visionExhaustionDiagnostic.test.js",
+        "runtime/node/backend/tests/gateway/visionNetworkExhaustionRealImage.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-134] 视觉级联网络不可达终局诊断.md"
       ],
       "verify": [
-        "npm run test:one -- services/backend/tests/services/visionExhaustionDiagnostic.test.js services/backend/tests/gateway/visionNetworkExhaustionRealImage.test.js",
-        "node --check services/backend/src/services/gateway/visionExhaustionDiagnostic.js"
+        "npm run test:one -- runtime/node/backend/tests/services/visionExhaustionDiagnostic.test.js runtime/node/backend/tests/gateway/visionNetworkExhaustionRealImage.test.js",
+        "node --check runtime/node/backend/src/services/gateway/visionExhaustionDiagnostic.js"
       ]
     },
     {
@@ -2267,16 +2267,16 @@
         "adding another background/navigation-orphaned GET that should degrade locally: mirror the { silent: true } + local error-ref + view alert pattern here rather than firing the global notifyError"
       ],
       "paths": [
-        "apps/ai-frontend/src/composables/useWorkflow.js",
-        "apps/ai-frontend/src/views/Workflows.vue",
-        "apps/ai-frontend/src/composables/useWorkflow.wiring.test.js"
+        "delivery/web/ai-frontend/src/composables/useWorkflow.js",
+        "delivery/web/ai-frontend/src/views/Workflows.vue",
+        "delivery/web/ai-frontend/src/composables/useWorkflow.wiring.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-135] 工作流列表载入本页降级不泄漏全局横幅.md"
       ],
       "verify": [
-        "npm run test:one -- apps/ai-frontend/src/composables/useWorkflow.wiring.test.js",
-        "node --check apps/ai-frontend/src/composables/useWorkflow.js"
+        "npm run test:one -- delivery/web/ai-frontend/src/composables/useWorkflow.wiring.test.js",
+        "node --check delivery/web/ai-frontend/src/composables/useWorkflow.js"
       ]
     },
     {
@@ -2288,20 +2288,20 @@
         "新增一个会进请求前缀的字段(system 或 tools schema)后，想确认它是否稳定、是否会击穿 provider 最长前缀缓存"
       ],
       "paths": [
-        "services/backend/src/constants/promptPrefixShape.js",
-        "services/backend/src/cli/cacheWarning.js",
-        "services/backend/src/services/gateway/aiGatewayGenerateMethod.js",
-        "services/backend/src/cli/replSession.js",
-        "services/backend/tests/constants/promptPrefixShape.test.js",
-        "services/backend/tests/cli/cacheWarning.test.js"
+        "runtime/node/backend/src/constants/promptPrefixShape.js",
+        "runtime/node/backend/src/cli/cacheWarning.js",
+        "runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.js",
+        "runtime/node/backend/src/cli/replSession.js",
+        "runtime/node/backend/tests/constants/promptPrefixShape.test.js",
+        "runtime/node/backend/tests/cli/cacheWarning.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-151] 缓存前缀击穿归因接线.md"
       ],
       "verify": [
-        "node --test services/backend/tests/cli/cacheWarning.test.js services/backend/tests/constants/promptPrefixShape.test.js",
-        "node --check services/backend/src/constants/promptPrefixShape.js",
-        "node --check services/backend/src/cli/cacheWarning.js"
+        "node --test runtime/node/backend/tests/cli/cacheWarning.test.js runtime/node/backend/tests/constants/promptPrefixShape.test.js",
+        "node --check runtime/node/backend/src/constants/promptPrefixShape.js",
+        "node --check runtime/node/backend/src/cli/cacheWarning.js"
       ]
     },
     {
@@ -2313,19 +2313,19 @@
         "想改交付报告落盘的位置/格式，或调整门控 KHY_DELIVERY_GATE_REPORT 的开关行为"
       ],
       "paths": [
-        "services/backend/src/services/deliveryGateReporter.js",
-        "services/backend/src/services/agenticHarnessService.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/services/deliveryGateReporter.test.js"
+        "runtime/node/backend/src/services/deliveryGateReporter.js",
+        "runtime/node/backend/src/services/agenticHarnessService.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/services/deliveryGateReporter.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-152] 交付门人类可读报告落盘接线.md"
       ],
       "verify": [
-        "node --test services/backend/tests/services/deliveryGateReporter.test.js",
-        "node --check services/backend/src/services/agenticHarnessService.js",
-        "node --check services/backend/src/utils/flagRegistry/index.js"
+        "node --test runtime/node/backend/tests/services/deliveryGateReporter.test.js",
+        "node --check runtime/node/backend/src/services/agenticHarnessService.js",
+        "node --check runtime/node/backend/src/utils/flagRegistry/index.js"
       ]
     },
     {
@@ -2337,19 +2337,19 @@
         "想改损坏快照的修复策略/落盘备份(.bak)/或调整门控 KHY_SESSION_FILE_REPAIR 的开关行为(关 → 逐字节回退到旧的 checkpoint/null 兜底)"
       ],
       "paths": [
-        "services/backend/src/services/sessionFileRepair.js",
-        "services/backend/src/services/sessionPersistence.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/services/sessionFileRepairWiring.test.js"
+        "runtime/node/backend/src/services/sessionFileRepair.js",
+        "runtime/node/backend/src/services/sessionPersistence.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/services/sessionFileRepairWiring.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-153] 会话快照损坏兜底修复接线.md"
       ],
       "verify": [
-        "node --test services/backend/tests/services/sessionFileRepairWiring.test.js",
-        "node --check services/backend/src/services/sessionPersistence.js",
-        "node --check services/backend/src/utils/flagRegistry/index.js"
+        "node --test runtime/node/backend/tests/services/sessionFileRepairWiring.test.js",
+        "node --check runtime/node/backend/src/services/sessionPersistence.js",
+        "node --check runtime/node/backend/src/utils/flagRegistry/index.js"
       ]
     },
     {
@@ -2361,19 +2361,19 @@
         "想新增/改任务模板(applicableWhen 关键词、generateInstructions 分步指令)，或调整门控 KHY_TASK_TEMPLATE_HINT 的开关行为(关 → 不匹配/不注入，loopInput 逐字节回退)"
       ],
       "paths": [
-        "services/backend/src/services/taskTemplates.js",
-        "services/backend/src/services/agenticHarnessService.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/services/taskTemplateHintWiring.test.js"
+        "runtime/node/backend/src/services/taskTemplates.js",
+        "runtime/node/backend/src/services/agenticHarnessService.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/services/taskTemplateHintWiring.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-154] 任务模板执行手册注入接线.md"
       ],
       "verify": [
-        "node --test services/backend/tests/services/taskTemplateHintWiring.test.js",
-        "node --check services/backend/src/services/agenticHarnessService.js",
-        "node --check services/backend/src/utils/flagRegistry/index.js"
+        "node --test runtime/node/backend/tests/services/taskTemplateHintWiring.test.js",
+        "node --check runtime/node/backend/src/services/agenticHarnessService.js",
+        "node --check runtime/node/backend/src/utils/flagRegistry/index.js"
       ]
     },
     {
@@ -2385,17 +2385,17 @@
         "在 aiChatCore.js 新增/删除一路意图指令(composeDirectives 的 key)时——必须同步在 directiveComposer.DIRECTIVE_REGISTRY 登记正确 tier/label，否则本守卫红灯(unregistered/orphaned/duplicates)"
       ],
       "paths": [
-        "services/backend/src/services/directiveRegistryAudit.js",
-        "services/backend/src/services/directiveComposer.js",
-        "services/backend/src/cli/aiChatCore.js",
-        "services/backend/tests/services/directiveRegistryAudit.guard.test.js"
+        "runtime/node/backend/src/services/directiveRegistryAudit.js",
+        "runtime/node/backend/src/services/directiveComposer.js",
+        "runtime/node/backend/src/cli/aiChatCore.js",
+        "runtime/node/backend/tests/services/directiveRegistryAudit.guard.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-155] 指令注册表编译期收敛守卫接线.md"
       ],
       "verify": [
-        "node --test services/backend/tests/services/directiveRegistryAudit.guard.test.js",
-        "node --check services/backend/src/services/directiveRegistryAudit.js"
+        "node --test runtime/node/backend/tests/services/directiveRegistryAudit.guard.test.js",
+        "node --check runtime/node/backend/src/services/directiveRegistryAudit.js"
       ]
     },
     {
@@ -2407,18 +2407,18 @@
         "想开关这道守卫:门控 KHY_FETCH_EXEC_GUARD default-on。关 → buildFetchExecuteRisks 返 [] → analyzeCommand 的 risks 零增量 → maxSeverity 不变 → 逐字节回退到旧行为"
       ],
       "paths": [
-        "services/backend/src/services/fetchExecuteGuard.js",
-        "services/backend/src/services/shellSafetyValidator.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/security/fetchExecuteGuardWiring.test.js"
+        "runtime/node/backend/src/services/fetchExecuteGuard.js",
+        "runtime/node/backend/src/services/shellSafetyValidator.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/security/fetchExecuteGuardWiring.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-156] 取来即执行安全守卫接线.md"
       ],
       "verify": [
-        "node --test services/backend/tests/security/fetchExecuteGuardWiring.test.js",
-        "node --check services/backend/src/services/shellSafetyValidator.js"
+        "node --test runtime/node/backend/tests/security/fetchExecuteGuardWiring.test.js",
+        "node --check runtime/node/backend/src/services/shellSafetyValidator.js"
       ]
     },
     {
@@ -2431,17 +2431,17 @@
         "想开关:门控 KHY_AUTO_GIT_INIT(既有父门)+ 白名单空(默认)→ isWhitelisted 恒 false → 逐字节回退，无任何覆盖"
       ],
       "paths": [
-        "services/backend/src/services/gitTrackWhitelist.js",
-        "services/backend/src/services/workspaceGitInit.js",
-        "services/backend/src/services/workspaceGitInitPolicy.js",
-        "services/backend/tests/services/gitTrackWhitelistWiring.test.js"
+        "runtime/node/backend/src/services/gitTrackWhitelist.js",
+        "runtime/node/backend/src/services/workspaceGitInit.js",
+        "runtime/node/backend/src/services/workspaceGitInitPolicy.js",
+        "runtime/node/backend/tests/services/gitTrackWhitelistWiring.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-157] 用户显式 git-init 白名单覆盖接线.md"
       ],
       "verify": [
-        "node --test services/backend/tests/services/gitTrackWhitelistWiring.test.js",
-        "node --check services/backend/src/services/workspaceGitInit.js"
+        "node --test runtime/node/backend/tests/services/gitTrackWhitelistWiring.test.js",
+        "node --check runtime/node/backend/src/services/workspaceGitInit.js"
       ]
     },
     {
@@ -2454,43 +2454,43 @@
         "想开关:门控 KHY_LOCAL_MODEL_CATALOG default-on。关 / 非 live / Ollama 未运行 / 探测超时 → 无 source:local 边、sources.localModels===0、目录逐字节回退"
       ],
       "paths": [
-        "services/backend/src/services/gateway/localOllamaProbe.js",
-        "services/backend/src/services/gateway/modelCatalogGraph.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/gateway/localOllamaProbeCatalogWiring.test.js"
+        "runtime/node/backend/src/services/gateway/localOllamaProbe.js",
+        "runtime/node/backend/src/services/gateway/modelCatalogGraph.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/gateway/localOllamaProbeCatalogWiring.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-158] 本地模型并入统一目录接线.md"
       ],
       "verify": [
-        "node --test services/backend/tests/gateway/localOllamaProbeCatalogWiring.test.js",
-        "node --check services/backend/src/services/gateway/modelCatalogGraph.js"
+        "node --test runtime/node/backend/tests/gateway/localOllamaProbeCatalogWiring.test.js",
+        "node --check runtime/node/backend/src/services/gateway/modelCatalogGraph.js"
       ]
     },
     {
       "id": "characterization-silent-drift-fpf",
       "label": "行为特征化并入误报收口裁决接线 (characterizationSnapshot — falsePositiveFixGuard.finalize 就地用回归门 baseline/current 快照差分「未覆盖文件上的静默行为漂移」并入裁决；agenticHarnessService 透传快照)",
       "whenToUse": [
-        "characterizationSnapshot(services/backend/src/services/characterizationSnapshot.js)是纯零 IO 行为特征化叶,能差分两份验证快照产出静默行为漂移(silentChanges),falsePositiveFixGuard.finalize 也早就接受 ctx.silentBehaviorChanges,却从没有生产代码采集 baseline/current 喂给它——本区把回归门 bugfixRegressionGate 已产出的快照接进收口裁决",
+        "characterizationSnapshot(runtime/node/backend/src/services/characterizationSnapshot.js)是纯零 IO 行为特征化叶,能差分两份验证快照产出静默行为漂移(silentChanges),falsePositiveFixGuard.finalize 也早就接受 ctx.silentBehaviorChanges,却从没有生产代码采集 baseline/current 喂给它——本区把回归门 bugfixRegressionGate 已产出的快照接进收口裁决",
         "想调整静默漂移如何判定:改 characterizationSnapshot 叶(指纹/步骤对比/coveredChanges 归类)或 finalize step-3 接线(coveredFiles 复用 falsePositiveFixGuard 自己的 _computeUncovered 作单一真源,勿另造覆盖判定防漂移)",
         "抑制不变量(保留既有语义):全覆盖(allCovered)/仅测试步漂移/reproObserved 红→绿真复现闭环 → 不算静默;调用方已预算 ctx.silentBehaviorChanges 时优先采用不就地差分",
         "想开关:门控 KHY_FPF_CHARACTERIZATION default-on。关 / 无 baseline+current 快照 / 差分抛错 → silentBehaviorChanges 恒 [] → 逐字节回退,纯叶 fail-soft 绝不破坏收口裁决"
       ],
       "paths": [
-        "services/backend/src/services/characterizationSnapshot.js",
-        "services/backend/src/services/falsePositiveFixGuard.js",
-        "services/backend/src/services/agenticHarnessService.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js",
-        "services/backend/tests/services/characterizationFpfWiring.test.js"
+        "runtime/node/backend/src/services/characterizationSnapshot.js",
+        "runtime/node/backend/src/services/falsePositiveFixGuard.js",
+        "runtime/node/backend/src/services/agenticHarnessService.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js",
+        "runtime/node/backend/tests/services/characterizationFpfWiring.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-160] 行为特征化并入误报收口裁决接线.md"
       ],
       "verify": [
-        "node --test services/backend/tests/services/characterizationFpfWiring.test.js",
-        "node --check services/backend/src/services/falsePositiveFixGuard.js"
+        "node --test runtime/node/backend/tests/services/characterizationFpfWiring.test.js",
+        "node --check runtime/node/backend/src/services/falsePositiveFixGuard.js"
       ]
     },
     {
@@ -2502,17 +2502,17 @@
         "在新增 manage 子命令、改动 management registry 资源、或给资源加能力但漏实现 ops 时——必须保持 CLI(commandSchema)与 Web(registry)两面同步，否则本守卫红灯(SOURCE_CONFLICT/CLI_PARITY/NO_IMPL 等)"
       ],
       "paths": [
-        "services/backend/src/services/domain/project/management/parityGuard.js",
-        "services/backend/src/services/management/index.js",
-        "services/backend/src/constants/commandSchema.js",
-        "services/backend/tests/services/management/parityGuardWiring.test.js"
+        "runtime/node/backend/src/services/domain/project/management/parityGuard.js",
+        "runtime/node/backend/src/services/management/index.js",
+        "runtime/node/backend/src/constants/commandSchema.js",
+        "runtime/node/backend/tests/services/management/parityGuardWiring.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-162] CLI-Web管理面平价守卫接线.md"
       ],
       "verify": [
-        "node --test services/backend/tests/services/management/parityGuardWiring.test.js",
-        "node --check services/backend/src/services/management/parityGuard.js"
+        "node --test runtime/node/backend/tests/services/management/parityGuardWiring.test.js",
+        "node --check runtime/node/backend/src/services/management/parityGuard.js"
       ]
     },
     {
@@ -2525,17 +2525,17 @@
         "★叶零依赖是可审计性的一部分(全文件无 require):门 KHY_ACTION_CONTRACT 由叶读 env 直判(CANON off-words),绝不引 flagRegistry;flagRegistry 仅登记该 flag 作 SSOT 文档,无功能耦合"
       ],
       "paths": [
-        "services/backend/src/services/domain/system/syscallGateway/actionContractVerifier.js",
-        "services/backend/tests/actionContractVerifier.test.js",
-        "services/backend/src/services/flagRegistry.js",
-        "services/backend/src/utils/flagRegistry/index.js"
+        "runtime/node/backend/src/services/domain/system/syscallGateway/actionContractVerifier.js",
+        "runtime/node/backend/tests/actionContractVerifier.test.js",
+        "runtime/node/backend/src/services/flagRegistry.js",
+        "runtime/node/backend/src/utils/flagRegistry/index.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-163] 动作契约核验器CI强制接线.md"
       ],
       "verify": [
-        "node --test services/backend/tests/actionContractVerifier.test.js",
-        "node --check services/backend/src/services/syscallGateway/actionContractVerifier.js"
+        "node --test runtime/node/backend/tests/actionContractVerifier.test.js",
+        "node --check runtime/node/backend/src/services/syscallGateway/actionContractVerifier.js"
       ]
     },
     {
@@ -2548,7 +2548,7 @@
         "外科手术式约束：本生成器只新增 .html 与 docs/19_资产/site/nav-data.js、dead-links.json，不改任何 .md 源文；同输入=同输出（无时间戳/随机数），可重复运行。",
         "面向小白的互动件在 .md 里用围栏/行内语法书写，由 renderMarkdown() 渲染、docs-site.js 在客户端激活、docs-site.css 提供动画：```callout kind|标题（吉祥物插话，kind=tip/note/warn/star/ask）、```quiz（Q:/问: 题干，- [x]/- [ ] 选项，> 解释；多选自动识别）、```flip（用 --- 分正反面的翻卡）、行内 +[文字](提示)（悬浮气泡弹窗）。改这些语法或动画须同步更新 build_docs_site.test.js 的断言。",
         "互动件防呆门：lint_docs_widgets.js 扫全站 .md，抓作者常见错误——quiz 无正确答案/无题干/空选项、flip 缺 --- 分隔或正反面空、callout 用了不认识的 kind、popover 空文字/空提示、围栏未闭合、疑似拼错的围栏名。renderMarkdown 对这些是静默容错（会渲染出坏页），本 linter 补上反馈。error=一定坏页会让 docs:verify 失败，warning（如 quiz 无解释）默认只提示。已并入 docs:verify（先 lint 再查存在性/链接）；单独跑 npm run docs:lint。新增互动件规则见 lint_docs_widgets.js 顶部 HOW-TO-EXTEND，并在 lint_docs_widgets.test.js 补坏/好样本断言。",
-        "pip 安装后跳转一致性（本次修复的根因）：文档站产物（nav-data.js + 各 .html）若在完整源码开发树生成、再被裁剪进 wheel 的 khy_os/bundled/，会引用不随包的文档（CLAUDE.html、.ai/*.html 等）→ 用户点侧栏/首页卡片打开不存在的 *.html 报 ERR_FILE_NOT_FOUND。两条腿修复：①构建时——setup.py 的 BuildWithBundle.run() 在 bundle 组装完成后调 scripts/release/docs_bundle_regen.py:regenerate_docs_site()，在 bundle 内重跑生成器（ROOT 自解析为 bundle 根），产出与实际随包内容一致的站点；fail-soft：node 缺失/失败则 strip_stale_docs_artifacts() 清掉陈旧产物（只删带模板签名且有同名 .md 的 .html + nav-data.js/dead-links.json/docs-index，绝不碰 apps/ai-frontend 等应用页），宁可无 html 也绝不发布断链；设 KHY_SKIP_DOCS_REGEN=1 可跳过。②用户机器——khy docs build（别名 site/rebuild/regenerate/generate）经 platform/khy_platform/docs_site.py 在安装目录内随时重新生成；只拦这几个别名，绝不遮蔽 Node 端 docs quickstart/ai-fastlane/maintainer/... 子命令。改这两条腿须同步更新 tests/unit/test_docs_site_build.py。 点目录断链子机理：setuptools 打包**无条件丢弃一切点目录**（.khy-runtime/、.githooks/ 等，任何 glob/配置都改不了）；但重生成此刻的 bundle 仍带着这些点目录里的 .md，生成器会照常给它们建同名 .html+侧栏卡片+首页引用，随后打包又把那些 .html 连点目录一起扔掉 → 侧栏留下指向不随包 html 的**活死链卡片**（非降级纯文本）。对策在 docs_bundle_regen.py:_prune_dot_directories()——重生成**之前**把点目录从 bundle 副本里删掉（不递归/不删 symlink 目标，对齐 khy-Trajectory symlink 红线），使「重生成输入」=「实际随包内容」；指向点目录文档的交叉引用于是被 neutralizeDeadLinks 正确降级。刻意不改共享生成器 build_docs_site.js：它在完整源码开发树的 npm run docs:build 里**应当**索引 .ai/ 等点目录文档，裁剪只针对进 wheel 的 bundle 副本。"
+        "pip 安装后跳转一致性（本次修复的根因）：文档站产物（nav-data.js + 各 .html）若在完整源码开发树生成、再被裁剪进 wheel 的 khy_os/bundled/，会引用不随包的文档（CLAUDE.html、.ai/*.html 等）→ 用户点侧栏/首页卡片打开不存在的 *.html 报 ERR_FILE_NOT_FOUND。两条腿修复：①构建时——setup.py 的 BuildWithBundle.run() 在 bundle 组装完成后调 scripts/release/docs_bundle_regen.py:regenerate_docs_site()，在 bundle 内重跑生成器（ROOT 自解析为 bundle 根），产出与实际随包内容一致的站点；fail-soft：node 缺失/失败则 strip_stale_docs_artifacts() 清掉陈旧产物（只删带模板签名且有同名 .md 的 .html + nav-data.js/dead-links.json/docs-index，绝不碰 delivery/web/ai-frontend 等应用页），宁可无 html 也绝不发布断链；设 KHY_SKIP_DOCS_REGEN=1 可跳过。②用户机器——khy docs build（别名 site/rebuild/regenerate/generate）经 runtime/substrate/platform/khy_platform/docs_site.py 在安装目录内随时重新生成；只拦这几个别名，绝不遮蔽 Node 端 docs quickstart/ai-fastlane/maintainer/... 子命令。改这两条腿须同步更新 tests/unit/test_docs_site_build.py。 点目录断链子机理：setuptools 打包**无条件丢弃一切点目录**（.khy-runtime/、.githooks/ 等，任何 glob/配置都改不了）；但重生成此刻的 bundle 仍带着这些点目录里的 .md，生成器会照常给它们建同名 .html+侧栏卡片+首页引用，随后打包又把那些 .html 连点目录一起扔掉 → 侧栏留下指向不随包 html 的**活死链卡片**（非降级纯文本）。对策在 docs_bundle_regen.py:_prune_dot_directories()——重生成**之前**把点目录从 bundle 副本里删掉（不递归/不删 symlink 目标，对齐 khy-Trajectory symlink 红线），使「重生成输入」=「实际随包内容」；指向点目录文档的交叉引用于是被 neutralizeDeadLinks 正确降级。刻意不改共享生成器 build_docs_site.js：它在完整源码开发树的 npm run docs:build 里**应当**索引 .ai/ 等点目录文档，裁剪只针对进 wheel 的 bundle 副本。"
       ],
       "paths": [
         "scripts/docs/build_docs_site.js",
@@ -2560,7 +2560,7 @@
         "docs/19_资产/site/docs-site.js",
         "docs/19_资产/site/nav-data.js",
         "scripts/release/docs_bundle_regen.py",
-        "platform/khy_platform/docs_site.py",
+        "runtime/substrate/platform/khy_platform/docs_site.py",
         "setup.py",
         "tests/unit/test_docs_site_build.py"
       ],
@@ -2576,7 +2576,7 @@
         "node --test scripts/docs/build_docs_site.test.js",
         "node --test scripts/docs/lint_docs_widgets.test.js",
         "python3 -m unittest tests.unit.test_docs_site_build",
-        "python3 -m py_compile setup.py scripts/release/docs_bundle_regen.py platform/khy_platform/docs_site.py"
+        "python3 -m py_compile setup.py scripts/release/docs_bundle_regen.py runtime/substrate/platform/khy_platform/docs_site.py"
       ]
     },
     {
@@ -2588,22 +2588,22 @@
         "门控 KHY_VERTEX_REQUEST_SHAPING（默认开；0/false/off/no → 关）：关门时 describeVertexRequest 返回 {ok:false,reason:'disabled'}，CLI 回退到通用模板提示，不改任何其他行为（逐字节回退）。改成形规则（URL 方案/apiVersion/鉴权字段）改叶子 vertexRequestShaping.js 单一真源，并同步 vertexRequestShaping.test.js 与 vertexHandlerWiring.test.js 的断言；改 CLI 表面/路由改 handlers/gateway.js:handleGatewayVertex 与 cli/router.js 的 subCommand==='vertex' 分支。"
       ],
       "paths": [
-        "services/backend/src/services/gateway/vertexRequestShaping.js",
-        "services/backend/src/services/gateway/providerPresets.js",
-        "services/backend/src/cli/handlers/gateway.js",
-        "services/backend/src/cli/router.js",
-        "services/backend/tests/services/gateway/vertexRequestShaping.test.js",
-        "services/backend/tests/services/gateway/vertexHandlerWiring.test.js"
+        "runtime/node/backend/src/services/gateway/vertexRequestShaping.js",
+        "runtime/node/backend/src/services/gateway/providerPresets.js",
+        "runtime/node/backend/src/cli/handlers/gateway.js",
+        "runtime/node/backend/src/cli/router.js",
+        "runtime/node/backend/tests/services/gateway/vertexRequestShaping.test.js",
+        "runtime/node/backend/tests/services/gateway/vertexHandlerWiring.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-096] 多模型类型 Provider 配置对账.md"
       ],
       "verify": [
-        "node --check services/backend/src/services/gateway/vertexRequestShaping.js",
-        "node --check services/backend/src/cli/handlers/gateway.js",
-        "node --check services/backend/src/cli/router.js",
-        "node --test services/backend/tests/services/gateway/vertexRequestShaping.test.js",
-        "node --test services/backend/tests/services/gateway/vertexHandlerWiring.test.js"
+        "node --check runtime/node/backend/src/services/gateway/vertexRequestShaping.js",
+        "node --check runtime/node/backend/src/cli/handlers/gateway.js",
+        "node --check runtime/node/backend/src/cli/router.js",
+        "node --test runtime/node/backend/tests/services/gateway/vertexRequestShaping.test.js",
+        "node --test runtime/node/backend/tests/services/gateway/vertexHandlerWiring.test.js"
       ]
     },
     {
@@ -2617,33 +2617,33 @@
         "连接稳定（重试）：msgSender.sendText 对瞬时故障（网络错/超时/HTTP 5xx/429）指数退避重试，永久错（非法 URL/4xx/业务错误码/SSRF 拒绝）立即返回不重试。旋钮 KHY_MSG_MAX_RETRIES（默认 2，夹 [0,5]，0=关）+ KHY_MSG_RETRY_BASE_MS（默认 500ms，退避 base·2^(n-1) 封顶 30s）。分类见 _isRetryable，改重试策略同步 msgSenderRetry.test.js（注入 post+sleep 零真实延时）。返回额外带 attempts。"
       ],
       "paths": [
-        "services/backend/src/services/domain/messaging/messaging/msgChannelCore.js",
-        "services/backend/src/services/domain/messaging/messaging/msgInboundCore.js",
-        "services/backend/src/services/domain/messaging/messaging/msgConfigStore.js",
-        "services/backend/src/services/domain/messaging/messaging/msgSender.js",
-        "services/backend/src/services/domain/messaging/channels/dingtalkChannel.js",
-        "services/backend/src/services/domain/messaging/channels/feishuChannel.js",
-        "services/backend/src/services/domain/messaging/channels/wecomChannel.js",
-        "services/backend/src/services/domain/messaging/channels/messageRouter.js",
-        "services/backend/src/services/domain/messaging/messaging/msgReplyBridge.js",
-        "services/backend/src/routes/webhooks.js",
-        "services/backend/src/cli/handlers/msg.js",
-        "services/backend/src/cli/router.js",
-        "services/backend/src/constants/commandSchema.js"
+        "runtime/node/backend/src/services/domain/messaging/messaging/msgChannelCore.js",
+        "runtime/node/backend/src/services/domain/messaging/messaging/msgInboundCore.js",
+        "runtime/node/backend/src/services/domain/messaging/messaging/msgConfigStore.js",
+        "runtime/node/backend/src/services/domain/messaging/messaging/msgSender.js",
+        "runtime/node/backend/src/services/domain/messaging/channels/dingtalkChannel.js",
+        "runtime/node/backend/src/services/domain/messaging/channels/feishuChannel.js",
+        "runtime/node/backend/src/services/domain/messaging/channels/wecomChannel.js",
+        "runtime/node/backend/src/services/domain/messaging/channels/messageRouter.js",
+        "runtime/node/backend/src/services/domain/messaging/messaging/msgReplyBridge.js",
+        "runtime/node/backend/src/routes/webhooks.js",
+        "runtime/node/backend/src/cli/handlers/msg.js",
+        "runtime/node/backend/src/cli/router.js",
+        "runtime/node/backend/src/constants/commandSchema.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-167] khy msg 多平台消息收发（钉钉·飞书·企业微信）.md"
       ],
       "verify": [
-        "node --check services/backend/src/services/messaging/msgChannelCore.js",
-        "node --check services/backend/src/services/messaging/msgInboundCore.js",
-        "node --check services/backend/src/cli/handlers/msg.js",
-        "node --test services/backend/tests/services/messaging/msgChannelCore.test.js",
-        "node --test services/backend/tests/services/messaging/msgInboundCore.test.js",
-        "node --test services/backend/tests/services/messaging/msgReplyBridge.test.js",
-        "node --test services/backend/tests/services/messaging/msgReplyRoundtrip.test.js",
-        "node --test services/backend/tests/services/messaging/msgSenderRetry.test.js",
-        "node --test services/backend/tests/cli/handlers/msgHandler.test.js"
+        "node --check runtime/node/backend/src/services/messaging/msgChannelCore.js",
+        "node --check runtime/node/backend/src/services/messaging/msgInboundCore.js",
+        "node --check runtime/node/backend/src/cli/handlers/msg.js",
+        "node --test runtime/node/backend/tests/services/messaging/msgChannelCore.test.js",
+        "node --test runtime/node/backend/tests/services/messaging/msgInboundCore.test.js",
+        "node --test runtime/node/backend/tests/services/messaging/msgReplyBridge.test.js",
+        "node --test runtime/node/backend/tests/services/messaging/msgReplyRoundtrip.test.js",
+        "node --test runtime/node/backend/tests/services/messaging/msgSenderRetry.test.js",
+        "node --test runtime/node/backend/tests/cli/handlers/msgHandler.test.js"
       ]
     },
     {
@@ -2651,74 +2651,74 @@
       "label": "弱模型护栏引擎(弱/陌生模型改 khyos 前先查这里:高危位点+照抄范例+看似bug实为刻意设计清单)",
       "whenToUse": "当陌生/较弱模型要改本仓源码、或担心把某处刻意设计当 bug「修」坏时。确定性引擎 weakModelGuidance.js(纯叶子·零 IO·绝不抛·门 KHY_WEAK_MODEL_GUIDANCE 默认开·关门逐字节回退)维护三份冻结注册表作单一真源:GUARD_SITES(7 个高危位点:工具漏斗/PreToolUse 硬底/EXEC_APPROVED 戳/门控注册表/纯叶子写法/接线/工具自述)、WEAK_MODEL_EXEMPLARS(BAD→GOOD→WHY 死循环反例:超时重试/无输出重跑/手写全盘扫描/未登记门控…)、INTENTIONAL_DESIGNS(看似 bug 实为刻意设计的清单:默认口令 khy2026/verifyExportPassword 恒真/动态版本号/proxy sha256 留空/cron 默认投递进 agent/env 路径 forest 布局——防审查报告把设计当 CRITICAL 误判)。经 WeakModelGuidanceTool(view=sites/directive/exemplars/intentional/site)与 CommentGuidanceTool 及 coding-profile 三出口暴露。改动前查 view=intentional 自证,不再重蹈六轮 ultra-review 覆辙。扩展=给某注册表追加一个 Object.freeze 冻结条目(字段见文件内 HOW-TO-EXTEND 注释头),既有条目不动。",
       "paths": [
-        "services/backend/src/services/weakModelGuidance.js",
-        "services/backend/src/tools/WeakModelGuidanceTool/index.js",
-        "services/backend/src/tools/CommentGuidanceTool/index.js",
-        "services/backend/tests/services/__tests__/weakModelGuidance.test.js"
+        "runtime/node/backend/src/services/weakModelGuidance.js",
+        "runtime/node/backend/src/tools/WeakModelGuidanceTool/index.js",
+        "runtime/node/backend/src/tools/CommentGuidanceTool/index.js",
+        "runtime/node/backend/tests/services/__tests__/weakModelGuidance.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-168] 弱模型护栏与维护子系统登记.md"
       ],
-      "verify": "node --test services/backend/src/services/__tests__/weakModelGuidance.test.js"
+      "verify": "node --test runtime/node/backend/src/services/__tests__/weakModelGuidance.test.js"
     },
     {
       "id": "weak-model-change-guard",
       "label": "弱模型改动守卫(弱档模型改红线/敏感文件时拦下要求强模型复核)",
       "whenToUse": "当怀疑某次改动被误拦或漏拦、或要调整红线/敏感文件分类时。纯叶子 weakModelChangeGuard.js 按 classifyChangeRisk(红线:.env/发布·CI/flagRegistry/权限核心/版本三源/.git | 敏感:aiGateway/toolUseLoop/replSession god 级 | 普通)× 模型能力档(复用 modelTier.resolveTier,不重造)裁决:弱档(T2/T3)改红线→拦截要求强模型复核;弱档改敏感→放行须确认;强档(T0/T1)放行;门关/异常/入参不全→逐字节回退基线放行。门控 KHY_WEAK_MODEL_EDIT_GUARD 默认开,接线在 toolUseLoopCore.js(fail-soft)。扩展=在红线/敏感清单追加匹配项。",
       "paths": [
-        "services/backend/src/services/weakModelChangeGuard.js",
-        "services/backend/tests/services/weakModelChangeGuard.test.js"
+        "runtime/node/backend/src/services/weakModelChangeGuard.js",
+        "runtime/node/backend/tests/services/weakModelChangeGuard.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-168] 弱模型护栏与维护子系统登记.md"
       ],
-      "verify": "node --test services/backend/tests/services/weakModelChangeGuard.test.js"
+      "verify": "node --test runtime/node/backend/tests/services/weakModelChangeGuard.test.js"
     },
     {
       "id": "comment-guidance",
       "label": "注释引导引擎(什么地方该写什么注释·零假阳性审计)",
       "whenToUse": "当写新代码拿不准该配什么注释、或想审计某文件注释缺口时。确定性引擎 commentGuidance.js(与 weakModelGuidance 同族·正交)定义 COMMENT_LAYERS 五层注释契约、classifyCommentNeed 按语言/路径分类该写哪层、auditComments 零假阳性审计(有头注释/有文档的代码不报;缺头/缺文档/死代码/裸 TODO 才报,行号+severity 正确)、buildCommentGuidanceDirective 注入 coding profile(强调 WHY 而非 WHAT)。经 CommentGuidanceTool 暴露。扩展=给 COMMENT_LAYERS 追加一层或在分类规则加一条,既有层不动。",
       "paths": [
-        "services/backend/src/services/commentGuidance.js",
-        "services/backend/src/tools/CommentGuidanceTool/index.js",
-        "services/backend/tests/commentGuidance.test.js"
+        "runtime/node/backend/src/services/commentGuidance.js",
+        "runtime/node/backend/src/tools/CommentGuidanceTool/index.js",
+        "runtime/node/backend/tests/commentGuidance.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-168] 弱模型护栏与维护子系统登记.md"
       ],
-      "verify": "node --test services/backend/tests/commentGuidance.test.js"
+      "verify": "node --test runtime/node/backend/tests/commentGuidance.test.js"
     },
     {
       "id": "cron-scheduling",
       "label": "定时调度(khy cron·当前双实现:CC 对齐落盘 + Hermes 跨渠道投递)",
       "whenToUse": "当定时任务不触发/重复触发/落盘异常、或 khy cron 相关排障时。当前存在两套实现(诚实登记,合并是独立工程):src/jobs/cronScheduler.js(CC 对齐,落盘 ~/.khy/scheduled_tasks.json)与 src/services/cronScheduler.js(Hermes 风格,跨渠道投递)。经 ScheduleCronTool/CronListTool/CronDeleteTool + cli/handlers/cron.js + management/resources/cron.resource.js 暴露。_defaultEnqueue 把触发的 prompt 路由进 agent 作 follow-up(agent 架构·非调度器硬编码回测闭环,勿「修」成硬编码)。新增定时能力前先确认改哪一套,避免加深双实现分裂。",
       "paths": [
-        "services/backend/src/jobs/cronScheduler.js",
-        "services/backend/src/services/cronScheduler.js",
-        "services/backend/src/tools/ScheduleCronTool",
-        "services/backend/src/tools/CronListTool",
-        "services/backend/src/tools/CronDeleteTool",
-        "services/backend/src/cli/handlers/cron.js",
-        "services/backend/tests/services/cronScheduler.test.js"
+        "runtime/node/backend/src/jobs/cronScheduler.js",
+        "runtime/node/backend/src/services/cronScheduler.js",
+        "runtime/node/backend/src/tools/ScheduleCronTool",
+        "runtime/node/backend/src/tools/CronListTool",
+        "runtime/node/backend/src/tools/CronDeleteTool",
+        "runtime/node/backend/src/cli/handlers/cron.js",
+        "runtime/node/backend/tests/services/cronScheduler.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-168] 弱模型护栏与维护子系统登记.md"
       ],
-      "verify": "npx jest services/backend/tests/services/cronScheduler.test.js --runInBand"
+      "verify": "npx jest runtime/node/backend/tests/services/cronScheduler.test.js --runInBand"
     },
     {
       "id": "future-proofing",
       "label": "未来抗性四支柱体检(khy maintain freshness 背后·可无 AI 传承)",
       "whenToUse": "当要定期体检项目是否「与时俱进、可无 AI 单人传承」、或新增支柱/守卫后更新检查表时。纯叶子 futureProofing.js 扫 Node EOL 表、模型退役表、四支柱(pip 生命线/守卫免疫系统/.ai 种子文档/maintenance 双击 launcher)是否齐备、守卫覆盖是否达标。接线在 cli/handlers/maintain.js(khy maintain freshness)+ replSession.js。扩展=在 EOL/退役表或四支柱检查项追加一条(表是单一真源·改值别猜)。",
       "paths": [
-        "services/backend/src/services/futureProofing.js",
-        "services/backend/src/cli/handlers/maintain.js",
-        "services/backend/tests/services/futureProofing.test.js"
+        "runtime/node/backend/src/services/futureProofing.js",
+        "runtime/node/backend/src/cli/handlers/maintain.js",
+        "runtime/node/backend/tests/services/futureProofing.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-168] 弱模型护栏与维护子系统登记.md"
       ],
-      "verify": "node --test services/backend/tests/services/futureProofing.test.js"
+      "verify": "node --test runtime/node/backend/tests/services/futureProofing.test.js"
     },
     {
       "id": "repo-layout",

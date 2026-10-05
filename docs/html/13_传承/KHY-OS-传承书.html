@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: KHY-OS-传承书.md -->
 <title>Khy-OS 传承书 · 无 AI 也能维护的生存宪法 · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>13_传承<span class="sep">›</span>其它传承<span class="sep">›</span>Khy-OS 传承书 · 无 AI 也能维护的生存宪法</div>
+      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>13_传承<span class="sep">›</span>Khy-OS 传承书 · 无 AI 也能维护的生存宪法</div>
       <header class="hero reveal"><h1>Khy-OS 传承书 · 无 AI 也能维护的生存宪法</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#khy-os-传承书-无-ai-也能维护的生存宪法">Khy-OS 传承书 · 无 AI 也能维护的生存宪法</a></li><li class="lvl-2"><a href="#0-三十秒速览-khyos-靠四根支柱活着">0. 三十秒速览：khyos 靠四根支柱活着</a></li><li class="lvl-2"><a href="#1-你必须会的几件事-无-ai-生存操作">1. 你必须会的几件事（无 AI 生存操作）</a></li><li class="lvl-3"><a href="#操作一-安装-重装">操作一 · 安装 / 重装</a></li><li class="lvl-3"><a href="#操作二-体检-判断项目是否还健康-是否跟得上时代">操作二 · 体检（判断项目是否还健康、是否跟得上时代）</a></li><li class="lvl-3"><a href="#操作三-更新依赖-把项目更新到最新">操作三 · 更新依赖 / 把项目更新到最新</a></li><li class="lvl-3"><a href="#操作四-换模型-与时俱进的核心动作">操作四 · 换模型（与时俱进的核心动作）</a></li><li class="lvl-3"><a href="#操作五-通过-pip-发布-唯一的对外渠道">操作五 · 通过 pip 发布（唯一的对外渠道）</a></li><li class="lvl-3"><a href="#操作六-备份关键数据-配置-更新或回滚之前先做">操作六 · 备份关键数据/配置（更新或回滚之前先做）</a></li><li class="lvl-3"><a href="#操作七-回滚到最近稳定版本-升级坏了的救命操作">操作七 · 回滚到最近稳定版本（升级坏了的救命操作）</a></li><li class="lvl-3"><a href="#操作八-出问题先导出诊断-依赖坏了重装-快速验命脉">操作八 · 出问题先导出诊断 / 依赖坏了重装 / 快速验命脉</a></li><li class="lvl-3"><a href="#发布与回滚的固定链路-一条龙">发布与回滚的固定链路（一条龙）</a></li><li class="lvl-3"><a href="#入口冗余-每个关键能力都有两条路-主路径坏了走后备">入口冗余：每个关键能力都有两条路（主路径坏了走后备）</a></li><li class="lvl-2"><a href="#2-守卫免疫系统-每次提交自动拦住-越改越差">2. 守卫免疫系统：每次提交自动拦住「越改越差」</a></li><li class="lvl-2"><a href="#3-ai-与-maintenance-给人和给非工程师的两套入口">3. `.ai/` 与 `maintenance/`：给人和给非工程师的两套入口</a></li><li class="lvl-2"><a href="#4-红灯怎么办-最常见的几种">4. 红灯怎么办（最常见的几种）</a></li><li class="lvl-3"><a href="#出问题先看哪里-三步分诊-别一上来全仓乱翻">出问题先看哪里（三步分诊，别一上来全仓乱翻）</a></li><li class="lvl-2"><a href="#5-绝不能碰的红线">5. 绝不能碰的红线</a></li><li class="lvl-2"><a href="#附录-a-维护者最常用的运维-安全开关-速查">附录 A · 维护者最常用的运维/安全开关（速查）</a></li><li class="lvl-2"><a href="#6-留给你的一句话">6. 留给你的一句话</a></li></ul></nav>
       <article class="doc-body">
@@ -159,14 +159,14 @@ node maintenance/lib/ops.js toolchain     <span class="hljs-comment"># 工具链
 <p>跑一次 <code>khy maintain freshness</code>，按「→ 怎么修」照做。这就是全部。</p>
 <p>— 愿 khyos 与时俱进，不被淘汰。</p>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../docs/html/13_传承/其它传承/00_INDEX_其它传承-总目录.html"><div class="dir">← 上一篇</div><div class="ttl">其它传承</div></a><span></span></nav>
+      <nav class="pager"><a class="prev" href="../../../docs/html/13_传承/00_INDEX_传承-分类索引.html"><div class="dir">← 上一篇</div><div class="ttl">00INDEX 传承分类索引</div></a><span></span></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/13_传承/其它传承/KHY-OS-传承书.html";</script>
-<script src="../../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../";window.__KHY_CUR__="docs/html/13_传承/KHY-OS-传承书.html";</script>
+<script src="../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>

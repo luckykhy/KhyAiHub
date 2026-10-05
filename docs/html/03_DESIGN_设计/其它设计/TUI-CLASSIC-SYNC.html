@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- MIRROR: TUI-CLASSIC-SYNC.md -->
 <title>TUI 与经典模式同步指南 · Khy-OS 文档</title>
-<link rel="stylesheet" href="../../../docs/19_资产/site/hljs-github-dark.min.css">
-<link rel="stylesheet" href="../../../docs/19_资产/site/docs-site.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
 </head>
 <body>
 <div class="topbar">
   <button class="menu-toggle" aria-label="菜单">☰</button>
-  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
   <span class="spacer"></span>
-  <a href="../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
 </div>
 <div class="layout">
   <aside class="sidebar" id="sidebar">
@@ -22,7 +22,7 @@
   </aside>
   <main class="main">
     <div class="content">
-      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>design<span class="sep">›</span>TUI 与经典模式同步指南</div>
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>其它设计<span class="sep">›</span>TUI 与经典模式同步指南</div>
       <header class="hero reveal"><h1>TUI 与经典模式同步指南</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#tui-与经典模式同步指南">TUI 与经典模式同步指南</a></li><li class="lvl-2"><a href="#统一-ui-架构-2026-09-05-新增">统一 UI 架构（2026-09-05 新增）</a></li><li class="lvl-3"><a href="#核心原则">核心原则</a></li><li class="lvl-3"><a href="#新增模块">新增模块</a></li><li class="lvl-3"><a href="#使用方式">使用方式</a></li><li class="lvl-3"><a href="#已集成的命令处理器">已集成的命令处理器</a></li><li class="lvl-3"><a href="#新模式开发指南">新模式开发指南</a></li><li class="lvl-3"><a href="#添加新的-ui-类型">添加新的 UI 类型</a></li><li class="lvl-2"><a href="#代码分层与同步规则">代码分层与同步规则</a></li><li class="lvl-3"><a href="#第-1-层-共享代码-自动同步">第 1 层：共享代码（自动同步）</a></li><li class="lvl-3"><a href="#uiprompt-js-兼容层-现有">uiPrompt.js 兼容层（现有）</a></li><li class="lvl-3"><a href="#第-2-层-入口代码-需手动同步">第 2 层：入口代码（需手动同步）</a></li><li class="lvl-3"><a href="#第-3-层-命令处理器-需逐命令同步">第 3 层：命令处理器（需逐命令同步）</a></li><li class="lvl-2"><a href="#已知同步点-2026-09-04-已修复">已知同步点（2026-09-04 已修复）</a></li><li class="lvl-3"><a href="#1-shim-测试文件加载-已修复">1. shim 测试文件加载（已修复）</a></li><li class="lvl-3"><a href="#2-gateway-pool-maps-已修复">2. Gateway Pool Maps（已修复）</a></li><li class="lvl-3"><a href="#3-banner-重复显示-已修复">3. Banner 重复显示（已修复）</a></li><li class="lvl-3"><a href="#4-熔断器注释错误-已修复">4. 熔断器注释错误（已修复）</a></li><li class="lvl-2"><a href="#同步检查清单">同步检查清单</a></li><li class="lvl-3"><a href="#修改共享代码-自动同步">修改共享代码（自动同步）</a></li><li class="lvl-3"><a href="#修改入口代码-需手动同步">修改入口代码（需手动同步）</a></li><li class="lvl-3"><a href="#修改命令处理器-需逐命令同步">修改命令处理器（需逐命令同步）</a></li><li class="lvl-2"><a href="#claude-code-风格-banner-规范">Claude Code 风格 Banner 规范</a></li><li class="lvl-2"><a href="#参考-claude-code-权限提示">参考：Claude Code 权限提示</a></li><li class="lvl-2"><a href="#测试验证">测试验证</a></li></ul></nav>
       <article class="doc-body">
@@ -190,14 +190,14 @@ khy</code></pre>
 <p>验证点：</p>
 <ul><li>[ ] Banner 显示正确且不重复</li><li>[ ] 权限提示正常工作</li><li>[ ] 模型选择正常工作</li><li>[ ] 登录/注册流程正常</li><li>[ ] 所有命令在两种模式下行为一致</li></ul>
       </article>
-      <nav class="pager"><a class="prev" href="../../../docs/html/design/00_INDEX_设计笔记-分类索引.html"><div class="dir">← 上一篇</div><div class="ttl">00INDEX 设计笔记分类索引</div></a><span></span></nav>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/其它设计/00_INDEX_其它设计-总目录.html"><div class="dir">← 上一篇</div><div class="ttl">其它设计</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/其它设计/ycode-inspiration-plan.html"><div class="dir">下一篇 →</div><div class="ttl">Y-code (星瑶) → Khyos: Implementation Plan</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>
 </div>
-<script>window.__KHY_ROOT__="../../../";window.__KHY_CUR__="docs/html/design/TUI-CLASSIC-SYNC.html";</script>
-<script src="../../../docs/19_资产/site/nav-data.js"></script>
-<script src="../../../docs/19_资产/site/mermaid.min.js"></script>
-<script src="../../../docs/19_资产/site/docs-site.js"></script>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/03_DESIGN_设计/其它设计/TUI-CLASSIC-SYNC.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
 </body>
 </html>
