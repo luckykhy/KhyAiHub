@@ -67,7 +67,7 @@ function isEnabled(env) {
 //   3. 加一条「看似 bug 实为刻意设计」 → 往 INTENTIONAL_DESIGNS 追加:
 //        Object.freeze({ id, looksLikeBug, actualDesign, where, why })
 //      WHERE 必须指向现场源码注释(依据在那,不编造);别把证伪不了的当设计登记。
-//   4. 验证:  node --test services/backend/src/services/__tests__/weakModelGuidance.test.js
+//   4. 验证:  node --test runtime/node/backend/src/services/__tests__/weakModelGuidance.test.js
 //   全部保持纯叶子:零 IO、确定性、绝不抛(坏输入返安全默认)、门控 KHY_WEAK_MODEL_GUIDANCE 关时逐字节回退。
 //
 // ── 高危位点护栏(单一真源)────────────────────────────────────────────────────
@@ -76,7 +76,7 @@ function isEnabled(env) {
 const GUARD_SITES = Object.freeze({
   'tool-funnel': Object.freeze({
     title: '唯一工具执行漏斗',
-    where: 'services/backend/src/services/toolCalling.js 的 executeTool()',
+    where: 'runtime/node/backend/src/services/tool/toolCalling.js 的 executeTool()',
     danger: '在权限链中间早 return、加旁路、或另起一个绕过 executeTool 的执行入口',
     directive:
       '这里是所有工具调用的唯一漏斗,权限判定是有序 fail-closed 链。绝不早 return 跳过后续闸;' +
@@ -104,7 +104,7 @@ const GUARD_SITES = Object.freeze({
   }),
   'flag-registry': Object.freeze({
     title: 'KHY_* 门控注册表',
-    where: 'services/backend/src/services/flagRegistry.js 的 FLAGS 对象',
+    where: 'runtime/node/backend/src/services/flagRegistry.js 的 FLAGS 对象',
     danger: '新门控不登记、方言不一致、忘了 parent 父子优先级',
     directive:
       '新增 KHY_* 门控作为 FLAGS 的一个新键,形状 ' +
@@ -118,7 +118,7 @@ const GUARD_SITES = Object.freeze({
     danger: '把逻辑直接塞进大文件、抛异常、做 IO、忘门控',
     directive:
       '新逻辑写成纯叶子:零 IO、确定性、绝不抛(坏输入返安全默认)、可单测、经 KHY_* 门控(默认开)。',
-    exemplar: '照抄 services/backend/src/services/goalStopGate.js 的 isEnabled + decide 形状',
+    exemplar: '照抄 runtime/node/backend/src/services/goalStopGate.js 的 isEnabled + decide 形状',
   }),
   wiring: Object.freeze({
     title: '叶子接线(判定在叶子,这里只做 IO)',
@@ -127,16 +127,16 @@ const GUARD_SITES = Object.freeze({
     directive:
       '接线处只做 IO:require 叶子→isEnabled 门控检查→取叶子裁决→落地。' +
       '整块 try/catch,叶子异常 fail-soft 回退旧行为,绝不因叶子出错阻断交付。',
-    exemplar: '照抄 services/backend/src/services/toolUseLoop.js 的 4276-4311 接线块',
+    exemplar: '照抄 runtime/node/backend/src/services/tool/toolUseLoopCore.js 的 auto-web-search 注入块',
   }),
   'tool-description': Object.freeze({
     title: '工具对模型的自述(prompt)',
-    where: 'services/backend/src/tools/<Tool>/index.js 的 prompt() 与 inputSchema.description',
+    where: 'runtime/node/backend/src/tools/<Tool>/index.js 的 prompt() 与 inputSchema.description',
     danger: '描述含糊致弱模型误用:参数拼错、包代码块、一次调太多',
     directive:
       'prompt() 用简明祈使句说清用途/参数/边界;参数 description 逐个写清。' +
       '弱模型调工具要点:参数照 schema、别把 JSON 包在代码块里、一次一步。',
-    exemplar: '照抄 services/backend/src/tools/GrepTool/index.js 的 prompt() 与 inputSchema',
+    exemplar: '照抄 runtime/node/backend/src/tools/GrepTool/index.js 的 prompt() 与 inputSchema',
   }),
 });
 
@@ -213,7 +213,7 @@ const INTENTIONAL_DESIGNS = Object.freeze([
     actualDesign:
       'Model export is deliberately no longer password-gated. The function is kept only so existing call sites and the public export stay stable; it ignores its argument and never rejects, by design.',
     where:
-      'services/backend/src/services/modelTrainingService.js :: verifyExportPassword (see its doc comment)',
+      'runtime/node/backend/src/services/modelTrainingService.js :: verifyExportPassword (see its doc comment)',
     why: 'Deleting the function or "fixing" it to reject would break every call site and the export contract; the always-true is the intended behavior, documented in place.',
   }),
   Object.freeze({
@@ -222,7 +222,7 @@ const INTENTIONAL_DESIGNS = Object.freeze([
     actualDesign:
       'It is an intentional public default passphrase, not a real secret. Source snapshot publish/restore is no longer password-gated: the build embeds the snapshot under this fixed key so `khy restore` decrypts automatically. An explicit KHY_SOURCE_PUBLISH_SECRET / --secret still overrides it.',
     where:
-      'services/backend/src/services/sourceSnapshotCrypto.js :: DEFAULT_SOURCE_SECRET (see the block comment above it)',
+      'runtime/node/backend/src/services/sourceSnapshotCrypto.js :: DEFAULT_SOURCE_SECRET (see the block comment above it)',
     why: 'This is anti-mis-propagation packaging, not cryptographic protection. Removing it or treating it as a leaked credential would break automatic restore of already-published snapshots.',
   }),
   Object.freeze({
@@ -232,7 +232,7 @@ const INTENTIONAL_DESIGNS = Object.freeze([
     actualDesign:
       '__version__ is resolved at runtime via _detect_version() from the authoritative pyproject.toml. Hardcoding a literal is deliberately avoided.',
     where: 'runtime/substrate/platform/khy_platform/__init__.py :: _detect_version() / __version__',
-    why: 'scripts/ci/check-version-sync.js ENFORCES the no-hardcode rule: pinning a literal here makes the CI version-sync gate fail on purpose. Its main-khy-os group compares FOUR sources (pyproject.toml / works/ship/npm/package.json / services/backend/package.json / works/ship/modules/modules.json); VERSION_GROUPS in that script is the authoritative spec — when bumping versions, sync every file it lists rather than trusting this sentence.',
+    why: 'scripts/ci/check-version-sync.js ENFORCES the no-hardcode rule: pinning a literal here makes the CI version-sync gate fail on purpose. Its main-khy-os group compares FOUR sources (pyproject.toml / works/ship/npm/package.json / runtime/node/backend/package.json / works/ship/modules/modules.json); VERSION_GROUPS in that script is the authoritative spec — when bumping versions, sync every file it lists rather than trusting this sentence.',
   }),
   Object.freeze({
     id: 'snapshot-sha256-blank',
@@ -241,7 +241,7 @@ const INTENTIONAL_DESIGNS = Object.freeze([
     actualDesign:
       'The blank fingerprint is intentional. A pre-baked WRONG sha256 would make auto-install fail permanently and silently; leaving it null degrades to HTTPS transport-level integrity from the official pinned GitHub release URL.',
     where:
-      'services/backend/src/services/proxy/proxyCoreInstaller.js :: ASSETS (see the `sha256:null` comment above the table)',
+      'runtime/node/backend/src/services/domain/network/proxy/proxyCoreInstaller.js :: ASSETS (see the `sha256:null` comment above the table)',
     why: 'Filling in a guessed/placeholder hash is worse than none — it turns a working download into a permanent silent failure. Integrity comes from the pinned HTTPS release path.',
   }),
   Object.freeze({
@@ -250,7 +250,7 @@ const INTENTIONAL_DESIGNS = Object.freeze([
       '_defaultEnqueue just forwards the prompt text — the scheduled job has "no real closed loop" (e.g. a backtest never actually runs).',
     actualDesign:
       "It routes the fired prompt INTO the agent as a follow-up turn. Executing the work (tool calls, backtests, etc.) is the agent's job, not something the scheduler hardcodes.",
-    where: 'services/backend/src/jobs/cronScheduler.js :: _defaultEnqueue (see its doc comment)',
+    where: 'runtime/node/backend/src/jobs/cronScheduler.js :: _defaultEnqueue (see its doc comment)',
     why: 'This is agent-architecture by design. "Fixing" it to hardcode a specific pipeline in the scheduler would duplicate and freeze what the agent is supposed to decide dynamically.',
   }),
   Object.freeze({
@@ -258,9 +258,9 @@ const INTENTIONAL_DESIGNS = Object.freeze([
     looksLikeBug:
       'resolveGatewayEnvPaths uses `../../.env` and `../../../.env` — the relative depths look off / like a path bug.',
     actualDesign:
-      'The depths are correct for the forest layout: from src/utils, `../../.env` resolves to services/backend/.env (canonical) and `../../../.env` to services/.env (repo mirror). Consumers keep their local binding so call sites stay byte-identical.',
+      'The depths are correct for the forest layout: from src/utils, `../../.env` resolves to runtime/node/backend/.env (canonical) and `../../../.env` to runtime/node/.env (repo mirror). Consumers keep their local binding so call sites stay byte-identical.',
     where:
-      'services/backend/src/utils/resolveGatewayEnvPaths.js (see the file-head block + inline comments)',
+      'runtime/node/backend/src/utils/resolveGatewayEnvPaths.js (see the file-head block + inline comments)',
     why: 'The compensation is deliberate depth-matching across the forest, not an error. Changing either path silently writes .env to the wrong place.',
   }),
 ]);

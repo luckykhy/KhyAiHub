@@ -8,7 +8,7 @@
  * automatically — no human has to remember to amend this test.
  */
 
-const gate = require('../../../../scripts/ci/check-version-sync.js');
+const gate = require('../../../../../scripts/ci/check-version-sync.js');
 const wmg = require('../../src/services/weakModelGuidance.js');
 
 function renderedWhyLine() {
