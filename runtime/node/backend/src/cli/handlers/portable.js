@@ -26,8 +26,8 @@ const engine = require('../../services/portableSyncService');
 const { printError, printInfo, printSuccess, printWarn } = require('../formatters');
 const _markFailure = require('../../utils/markProcessFailure');
 
-// This file lives at services/backend/src/cli/handlers → repo root is 5 up.
-const SOURCE_ROOT = path.resolve(__dirname, '..', '..', '..', '..', '..');
+// This file lives at runtime/node/backend/src/cli/handlers → repo root is 6 up.
+const SOURCE_ROOT = path.resolve(__dirname, '..', '..', '..', '..', '..', '..');
 
 // Print a progress line every N processed entries (no scroll region, rule 4).
 const PROGRESS_EVERY = 200;

@@ -1,5 +1,8 @@
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
+
 const {
   EXCLUDE_DIRS,
   EXCLUDE_FILES,
@@ -32,13 +35,23 @@ describe('portableSyncRules', () => {
 
   it('should export DEP_LOCK_FILES as array', () => {
     expect(Array.isArray(DEP_LOCK_FILES)).toBe(true);
-    expect(DEP_LOCK_FILES).toContain('services/backend/package-lock.json');
+    expect(DEP_LOCK_FILES).toContain('runtime/node/backend/package-lock.json');
   });
 
   it('should export CRITICAL_ENTRY_FILES as array', () => {
     expect(Array.isArray(CRITICAL_ENTRY_FILES)).toBe(true);
-    expect(CRITICAL_ENTRY_FILES).toContain('services/backend/bin/khy.js');
-    expect(CRITICAL_ENTRY_FILES).toContain('services/backend/src/cli/router.js');
+    expect(CRITICAL_ENTRY_FILES).toContain('runtime/node/backend/bin/khy.js');
+    expect(CRITICAL_ENTRY_FILES).toContain('runtime/node/backend/src/cli/router.js');
+  });
+
+  // 这两张表是**仓根基准**被 portableSyncService.checkSourceHealth join 使用的：
+  // 任何一条指空，源码健康门就永远报「文件不存在」而拒绝同步（层级迁移时正是这样坏的）。
+  // 所以这里不钉字面量，钉存在性。
+  it('DEP_LOCK_FILES 与 CRITICAL_ENTRY_FILES 每条都必须真实存在', () => {
+    const ROOT = path.resolve(__dirname, '../../../../..');
+    for (const rel of [...DEP_LOCK_FILES, ...CRITICAL_ENTRY_FILES]) {
+      expect(fs.existsSync(path.join(ROOT, rel))).toBe(true);
+    }
   });
 
   it('should export MANIFEST_FILE as string', () => {

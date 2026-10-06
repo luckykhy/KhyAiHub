@@ -50,11 +50,11 @@ const PROTECTED_TARGET_DIRS = [
 ];
 
 // Lock files whose SHA256 gates the (expensive) node_modules mirror step.
-const DEP_LOCK_FILES = ['services/backend/package-lock.json'];
+const DEP_LOCK_FILES = ['runtime/node/backend/package-lock.json'];
 
 // Source-side health gate: each file must pass `node --check` before we are
 // allowed to push code to the portable copy (never ship broken entrypoints).
-const CRITICAL_ENTRY_FILES = ['services/backend/bin/khy.js', 'services/backend/src/cli/router.js'];
+const CRITICAL_ENTRY_FILES = ['runtime/node/backend/bin/khy.js', 'runtime/node/backend/src/cli/router.js'];
 
 // Manifest file name written at the target root after a successful sync.
 const MANIFEST_FILE = '.sync-manifest.json';
