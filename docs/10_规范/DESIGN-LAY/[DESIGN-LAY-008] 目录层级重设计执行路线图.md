@@ -4894,6 +4894,52 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 
 ### 16.6 施工执行状态（点头后逐批登记）
 
+> **2026-10-07 02:2x 节（第 19 节）**：**本节无未门控批次，零施工**。
+> 本道六锚复验全过（`60cb9a7d`=第 18 节、`83f9bb79`=第 17 节、`ace53192`、`bbd424ee`、`1af02147`、`e34b0486`
+> 均在祖先链；本节自哈希按第 18 节立的规矩由下节回填）。读数（02:21）：根项 49、可寻址 **48**
+> （与上节清根后持平）、在飞 422、百度件 0、无锁；台账文件动手前 `git status` 为空 ⇒ 本道可安全独占提交。
+>
+> **本节真正交付的是「点头的前置证据」——那四把闸提交后会不会变红，现在有实测答案：不会。**
+> 四把闸自第 18 节起 **numstat 与 mtime 双双一字未动**（`RULES-REGISTRY.json` 69/58 mt 10-06 10:40、
+> `MANIFEST.in` 11/11 mt 10-05 13:20、`khy.bat` 1/1 mt 10-05 13:06、`.opencode/README.html` 10/10 mt 10-05 17:22；
+> 后三件至今 **≈37 小时**无人收口）。把当前工作区态（＝这四笔改动已生效）直接跑守卫自己的测试：
+>
+> | 套件 | 结果 | 读法 |
+> |---|---|---|
+> | `scripts/tests/check-repo-layout.test.js` | **80 pass / 0 fail** | 层级守卫的测试面不因这四笔变红 |
+> | `scripts/tests/check-rules-registry.test.js` | **14 pass / 0 fail** | 登记表那笔（−43 悬空、新增 0）过它自己的体系校验 |
+> | `scripts/tests/q1-criteria.test.js` | 3 pass / **1 fail** | 唯一红是子测 2，offender `.khy-runtime` + `docs.rar`，**与这四笔无关**（第 16/18 节各自归属） |
+>
+> ⇒ 给晨审的一句话：**「提交这四件」的风险面已被排除，剩下等的只是决定，不是验证。**
+>
+> **逻辑层同类缺陷正在被别人制度化（对我这套报法是好信号，记为进展不是竞争）**：
+> `cfc07df3`（01:05）「把『默认解析出的路径必须存在』钉成回归测试（并修开一处同类死锚点）」、
+> `d10acbd2`（02:04）新增 `runtime/node/backend/tests/cli/handlers/docsFastlaneContextPack.test.js`（56 行）——
+> 断言包内 `RepoRoot:` 行解析出的目录下 `AGENTS.md`/`pyproject.toml` 存在、必读清单非空且**每条路径 existsSync**，
+> 并把 `buildAiFastlaneContextPack` 导出「仅为可测」，其注释自述「这三处本夜都静默坏过」。
+> 病根描述与我连续几节报的「层级迁移后锚点静默失效」同源（`从 __dirname 数层数` 迁移后指到 `runtime/`，
+> 清单被 existsSync 过滤成 0 条）。
+>
+> **顺手替自己的建议做了一次否证检查（结果：建议仍然成立）**：新测试**没有**把 `.khy-runtime` 钉成写入位置——
+> 逐行读该测试，它只校验包**内容**里的路径存在，不碰 `docs.js` 的四候选写入目录；
+> 所以第 16 节待办①（根候选改指 `works/data/khyos/`）不会撞上这个新测试。
+> **但**发现一处必须同步的耦合：`runtime/node/backend/tests/jest.taskStoreIsolation.setup.js:11` 的注释写明
+> 测试隔离层依赖 `process.cwd()/.khy-runtime/tasks` 这条回退——若动 `deliveryLedger.js:67` 的 `cwd` 拼法，
+> **该 setup 必须同批改**，否则隔离失效。这条加进待办①的验收清单。
+>
+> **根上两件旧人质的现状**：`.khy-runtime` 目录 mtime 仍 **10-06 10:43**（本夜无新的 ai-fastlane 运行），
+> 内部现有 2 件（`ai_fastlane_context.md` + 其再生 `.html` 孪生）；`docs.rar` 16,641,747B 原样未动、
+> 仍既未跟踪也未被 `.gitignore` 覆盖。本道继续不碰两者，理由见第 16/18 节。
+>
+> **四判（本道零施工，判据④ 不适用）**：`check-repo-layout` **exit 0 / 0 error / 6 warning**；
+> `check-roots-isomorphic` **15**（持平）；`check-debt-ledger` **exit 0 / 0/0**；可寻址 **48**；
+> `q1-criteria` **3 pass / 1 fail** 维持不消红。棘轮与基线一律不动（census 持平且净方向仍高于 W2c 后的 46）。
+>
+> **队列**：W2 CHANGELOG / W4 / W6 / W9 仍卡那四件；W3 仍是结构闸（根上 28 个跟踪件 + 根 `.gitattributes`
+> 是 sh/bat/ps1 行尾规则唯一载体）；W5 仍缺 docker 侧 CI 证明。**没有一批因本节解锁。**
+>
+> **回滚**：本节只追加本块文字，`git revert` 单提交即回 02:2x 前态；无文件移动、无副作用。
+
 > **2026-10-07 01:2x 节（第 18 节）· 批次 = HK 清根（census −1），队列各批仍全门控**
 >
 > 六锚复验全过（`83f9bb79`= 第 17 节行、`ace53192`、`bbd424ee`、`1af02147`、`e34b0486`、`db63c679` 均在祖先链）。
