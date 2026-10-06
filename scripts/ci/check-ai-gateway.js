@@ -65,6 +65,8 @@ function targets() {
   const dirs = [
     path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'src', 'services', 'gateway'),
     path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'src', 'services', 'promptTemplateCatalog.js'),
+    // 系统提示词正文:愿望词(不可验证的质量形容词)监测面,见 checkPromptWishword。
+    path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'src', 'constants', 'prompts.js'),
     // flagRegistry 真身 2026-09-28 归位到 D3 共享底座；services/flagRegistry.js 只剩
     // 一行兼容壳，仍留在下方作为路径存在性锚点，但被扫描的表体在这里。
     path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'src', 'utils', 'flagRegistry'),
@@ -162,6 +164,48 @@ function checkFeatureFlags(file, content) {
   }
 }
 
+// ── PROMPT-001 §2: wish-word detection ([DESIGN-PROMPT-003] §4.1) ───────────
+// 愿望词 = 作为质量指令的不可验证形容词(「更专业」「写出高水准」)。黑名单单一真源在
+// runtime/node/backend/src/services/promptStructurer.js 的 WISHWORD_PATTERNS(`prompt normalize`
+// 体检与守卫共用同一份,防漂移)。LOW 级 = advisory,不阻断提交。
+// 两条跳过:①黑名单真源文件自身(词面即其正文,扫它必自报);②注释行(注释不执行,
+// 且「解释为何删除愿望词」的注释必然要提到词面)——与本仓 check-native-registry 同约定。
+
+const WISHWORD_OWNER = path.join(
+  'runtime', 'node', 'backend', 'src', 'services', 'promptStructurer.js'
+);
+
+function _loadWishwordPatterns() {
+  try {
+    const mod = require(path.join(REPO_ROOT, WISHWORD_OWNER));
+    return Array.isArray(mod.WISHWORD_PATTERNS) ? mod.WISHWORD_PATTERNS : [];
+  } catch {
+    return []; // 真源不可达 → 不假设黑名单(静默跳过,不制造假 finding)
+  }
+}
+
+function checkPromptWishword(file, content) {
+  if (path.relative(REPO_ROOT, file) === WISHWORD_OWNER) return;
+  const patterns = _loadWishwordPatterns();
+  if (!patterns.length) return;
+
+  const lines = content.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    if (!trimmed || /^(\/\/|\/\*|\*|#)/.test(trimmed)) continue; // 注释/空行不参与
+    for (const re of patterns) {
+      const flags = re.flags.includes('g') ? re.flags : re.flags + 'g';
+      const m = line.match(new RegExp(re.source, flags));
+      if (m) {
+        addFinding('LOW', 'PROMPT-001', file, i + 1,
+          `愿望词「${m[0]}」是不可验证的质量形容词,翻译为可检查判据或删除 (PROMPT-001 §2 / [DESIGN-PROMPT-003] §4.1).`);
+        break; // 一行一 finding,避免同一行多词刷屏
+      }
+    }
+  }
+}
+
 // ── Main ────────────────────────────────────────────────────────────────────
 
 function main() {
@@ -177,6 +221,7 @@ function main() {
     checkFallbackChain(file, content);
     checkPromptVersioning(file, content);
     checkFeatureFlags(file, content);
+    checkPromptWishword(file, content);
     checked++;
   }
 

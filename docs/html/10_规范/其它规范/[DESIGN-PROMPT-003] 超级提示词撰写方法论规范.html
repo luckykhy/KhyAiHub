@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-PROMPT-003] 超级提示词撰写方法论规范.md -->
+<title>[DESIGN-PROMPT-003] 超级提示词撰写方法论规范 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>10_规范<span class="sep">›</span>其它规范<span class="sep">›</span>[DESIGN-PROMPT-003] 超级提示词撰写方法论规范</div>
+      <header class="hero reveal"><h1>[DESIGN-PROMPT-003] 超级提示词撰写方法论规范</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-prompt-003-超级提示词撰写方法论规范">[DESIGN-PROMPT-003] 超级提示词撰写方法论规范</a></li><li class="lvl-2"><a href="#1-要解决的问题">1. 要解决的问题</a></li><li class="lvl-2"><a href="#2-核心公式与资产判定">2. 核心公式与资产判定</a></li><li class="lvl-3"><a href="#2-1-核心公式">2.1 核心公式</a></li><li class="lvl-3"><a href="#2-2-资产三判据-入仓沉淀前自检-三条全过才是资产">2.2 资产三判据（入仓沉淀前自检，三条全过才是资产）</a></li><li class="lvl-2"><a href="#3-结构选型-五阶段谱系-场景适配">3. 结构选型（五阶段谱系 × 场景适配）</a></li><li class="lvl-3"><a href="#3-1-五阶段谱系">3.1 五阶段谱系</a></li><li class="lvl-3"><a href="#3-2-场景适配判定-自上而下-首个命中即停">3.2 场景适配判定（自上而下，首个命中即停）</a></li><li class="lvl-2"><a href="#4-内容三要素-内容-常量-变量-算法">4. 内容三要素（内容 = 常量 + 变量 + 算法）</a></li><li class="lvl-3"><a href="#4-1-三维度质量判据">4.1 三维度质量判据</a></li><li class="lvl-3"><a href="#4-2-反幻觉与收口-硬规则">4.2 反幻觉与收口（硬规则）</a></li><li class="lvl-2"><a href="#5-长流程四要素-afp-与-khy-os-机制映射">5. 长流程四要素（AFP）与 khy-os 机制映射</a></li><li class="lvl-2"><a href="#6-内容编排-六种模式">6. 内容编排（六种模式）</a></li><li class="lvl-2"><a href="#7-生产四步法-提示词资产的-sop">7. 生产四步法（提示词资产的 SOP）</a></li><li class="lvl-2"><a href="#8-与既有规则-规范的关系">8. 与既有规则/规范的关系</a></li><li class="lvl-2"><a href="#9-反例">9. 反例</a></li><li class="lvl-2"><a href="#10-本仓落地映射-2026-10-06-实现-design-prompt-003-1-1-0">10. 本仓落地映射（2026-10-06 实现，[DESIGN-PROMPT-003] 1.1.0）</a></li><li class="lvl-2"><a href="#11-版本历史">11. 版本历史</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- 文档分类: DESIGN-PROMPT-003 | 阶段: 规范 | 真源: 本文（方法学规范，无独立可执行真源） | 守卫: scripts/ci/check-ai-gateway.js（愿望词 finding，PROMPT-001 exec，LOW advisory）+ 人工评审兜底 --&gt;</p>
+<h1 id="design-prompt-003-超级提示词撰写方法论规范">[DESIGN-PROMPT-003] 超级提示词撰写方法论规范<a class="anchor" href="#design-prompt-003-超级提示词撰写方法论规范" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>用途</strong>：给 khy-os 的<strong>提示词资产</strong>规定「怎么设计」的方法学。适用对象：运行时系统<br>提示词段（[DESIGN-PROMPT-002] 的 32 段 + 17 胶囊）、<code>works/record/ai/hq/prompts/**</code><br>的提示词资产、AGENTS.md 指令节、运行时 Prompt 模板的撰写与重构。<br><strong>性质</strong>：规范性（normative）。方法学层，无机械守卫，人工评审兜底。<br><strong>关系</strong>：补 Prompt 规范缺的第三条轴——[DESIGN-PROMPT-001] 管「怎么<strong>管</strong>」<br>（版本化/参数化/测试/注入防护），[DESIGN-PROMPT-002] 管「怎么<strong>摆</strong>」（静态/动态分区），<br>本文管「怎么<strong>写</strong>」（结构选型、内容三要素、生产四步法）。<br><strong>出处</strong>：方法学提炼自郭泽德《超级提示词》（机械工业出版社 2026-05，<br>ISBN 978-7-111-81028-5）的 AFP（Auto-Flow Prompt）方法。<strong>只提炼方法与判据，<br>不复制原文表述</strong>——借鉴行为受 [DESIGN-SOURCING-001] 约束：思想与方法不在<br>B-S3 源码复制限制内，但文本表述不得照抄进本仓任何文件。</p></blockquote>
+<hr>
+<h2 id="1-要解决的问题">1. 要解决的问题<a class="anchor" href="#1-要解决的问题" aria-label="锚点">#</a></h2>
+<p>khy-os 本身就是一个由提示词驱动的系统：AGENTS.md 是一份「可运行的工作环境」<br>（任务工作流 + 规则边界 + 状态透明契约），<code>works/record/ai/hq/prompts/**</code> 是给<br>AI 会话用的提示词资产，运行时 system prompt 有 32 段。这些资产的写法此前没有<br>方法学约束——写法质量取决于作者当下的手感，与代码一样需要工程方法。</p>
+<p>本规范回答一个问题：<strong>写或改一份提示词资产时，如何把隐性判断固化为可执行的结构</strong>，<br>使资产可复用、可验收、可迭代，而不是一次性的愿望清单。</p>
+<hr>
+<h2 id="2-核心公式与资产判定">2. 核心公式与资产判定<a class="anchor" href="#2-核心公式与资产判定" aria-label="锚点">#</a></h2>
+<h3 id="2-1-核心公式">2.1 核心公式<a class="anchor" href="#2-1-核心公式" aria-label="锚点">#</a></h3>
+<pre><code>Prompt = Structure（结构） + Content（内容）</code></pre>
+<ul><li><strong>结构</strong>是逻辑容器、执行协议、约束边界——决定输出的<strong>下限</strong>（稳定性锁死）。</li><li><strong>内容</strong>是业务变量、背景数据、参考案例——决定输出的<strong>上限</strong>（贴合度）。</li><li>长期资产的结构权重远高于一次性指令：前者大部分篇幅写方法论、自检机制、</li></ul>
+<p>逻辑分支与质量红线，具体任务只作为一个微小变量填入。</p>
+<h3 id="2-2-资产三判据-入仓沉淀前自检-三条全过才是资产">2.2 资产三判据（入仓沉淀前自检，三条全过才是资产）<a class="anchor" href="#2-2-资产三判据-入仓沉淀前自检-三条全过才是资产" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>#</th><th>判据</th><th>一句话判定</th><th>反例（消耗品）</th></tr></thead><tbody><tr><td>1</td><td><strong>可复用性</strong></td><td>换一个主体/对象依然有效：方法论是常量，具体对象是可替换变量</td><td>内容与特定对象死锁，换目标即作废</td></tr><tr><td>2</td><td><strong>场景性</strong></td><td>定义标准（搭舞台），而非调教单次需求（调教演员）</td><td>每次都要重新解释「什么是高质量」</td></tr><tr><td>3</td><td><strong>工作流重构</strong></td><td>内置 SOP 消灭试错，而非加速「盲猜→试错→再猜」的循环</td><td>只让手工作坊更快，判断仍留在人这侧</td></tr></tbody></table>
+<p>三条全过的提示词资产才值得入仓沉淀（进 <code>works/record/ai/hq/prompts/**</code> 或<br>运行时 prompts）；只过一两条的是消耗品，就地使用、不留档。</p>
+<hr>
+<h2 id="3-结构选型-五阶段谱系-场景适配">3. 结构选型（五阶段谱系 × 场景适配）<a class="anchor" href="#3-结构选型-五阶段谱系-场景适配" aria-label="锚点">#</a></h2>
+<h3 id="3-1-五阶段谱系">3.1 五阶段谱系<a class="anchor" href="#3-1-五阶段谱系" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>阶段</th><th>特征</th><th>适用</th><th>局限</th></tr></thead><tbody><tr><td>直觉式</td><td>拟人化长句、无结构、单轮</td><td>低精度、探索性任务</td><td>不可复现，注定平庸</td></tr><tr><td>框架式</td><td>缩写词模型（BROKE/CRISPE/RTF）、要素填空</td><td>需要稳定方法论支撑</td><td>静态僵化、重结果轻过程</td></tr><tr><td>结构化</td><td>Markdown 模块化（Role/Profile/Rule/Workflow/Initialization）</td><td>长期资产的下限形态</td><td>逻辑仍静态、指令过载风险</td></tr><tr><td>代码化</td><td>伪代码：条件分支 + 循环迭代 + 对象封装</td><td>高确定性要求</td><td>理解门槛高、灵活性受限</td></tr><tr><td>自动化</td><td>意图识别 + 自动编排 + 内置监督（本文 §5 四要素）</td><td>复杂流程化任务</td><td>对简单任务是过度工程</td></tr></tbody></table>
+<h3 id="3-2-场景适配判定-自上而下-首个命中即停">3.2 场景适配判定（自上而下，首个命中即停）<a class="anchor" href="#3-2-场景适配判定-自上而下-首个命中即停" aria-label="锚点">#</a></h3>
+<blockquote><p>同 [DESIGN-ARCH-071] 通道选择的风格：先判断场景，再选结构。<strong>没有万能模板</strong>，<br>编排与场景错配的两种病：过度编排（简单任务塞满约束 → 输出呆板冗长）、<br>编排不足（复杂任务只有情绪化描述 → 推理链断裂）。</p></blockquote>
+<ol><li><strong>禁止区</strong>（低认知 × 低结构：随手改一句话、问一个事实）→ 直觉式即可，</li></ol>
+<p><strong>禁止</strong>套重型结构——流程成本高于收益，纯负收益。</p>
+<ol><li><strong>自动区</strong>（低认知 × 高结构：固定格式重复任务——周报、纪要标准化、条款提取）</li></ol>
+<p>→ 轻量模板：固化的是「结构与校验」，不是「高强度思考」。</p>
+<ol><li><strong>开放区</strong>（高认知 × 低结构：头脑风暴、创意发散）→ 创意版：给节奏、边界与</li></ol>
+<p>回收，<strong>不给</strong>硬步骤与强制格式——流程越严，创造性越弱。</p>
+<ol><li><strong>统治区</strong>（高认知 × 高结构：完整商业方案、系统综述、复杂调研沉淀）→</li></ol>
+<p>完整方法（本文 §4–§6）：把复杂工作拆成可执行流程，把关键判断写成显性规则。</p>
+<hr>
+<h2 id="4-内容三要素-内容-常量-变量-算法">4. 内容三要素（内容 = 常量 + 变量 + 算法）<a class="anchor" href="#4-内容三要素-内容-常量-变量-算法" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>要素</th><th>定义</th><th>判据</th></tr></thead><tbody><tr><td><strong>常量</strong></td><td>该场景中长期有效、被反复验证的规范、红线、方法论、审美标准</td><td>不随任务更换而变；给 AI 装「职业底座」</td></tr><tr><td><strong>变量</strong></td><td>本次任务独有的信息：数据、目标、受众、限制条件</td><td>只捕获<strong>会改变策略</strong>的关键变量，做成「待用户填写」的槽位；缺失时按默认假设处理并显式说明</td></tr><tr><td><strong>算法</strong></td><td>处理信息的可执行流程（非代码）：步骤骨架、分支规则、判断锚点、容错与收口</td><td>每步有明确输入与输出；步骤是动词（执行什么），不是形容词（保持什么语气）</td></tr></tbody></table>
+<h3 id="4-1-三维度质量判据">4.1 三维度质量判据<a class="anchor" href="#4-1-三维度质量判据" aria-label="锚点">#</a></h3>
+<ol><li><strong>逻辑颗粒度</strong>：愿望词必须翻译成参数化指令。黑名单：「更专业」「幽默点」</li></ol>
+<p>「高水准」「接地气」「像大厂」→ 改为可检查的机制（如「段落末尾使用预期违背<br>   逻辑」「先看什么指标、缺什么必须追问」）。</p>
+<ol><li><strong>上下文密度</strong>：关键知识以高相关、低干扰方式编排（术语、指标、误区、约束、</li></ol>
+<p>合规边界），防模型滑向概率最大的「平庸均值」。</p>
+<ol><li><strong>判断确定性</strong>：关键步骤内置 If-Then 决策分支——什么条件走什么路径、</li></ol>
+<p>出现什么信号必须转弯、约束冲突时如何取舍并把取舍过程说清楚。</p>
+<h3 id="4-2-反幻觉与收口-硬规则">4.2 反幻觉与收口（硬规则）<a class="anchor" href="#4-2-反幻觉与收口-硬规则" aria-label="锚点">#</a></h3>
+<ul><li>信息缺失/冲突/无法确定 → 标「待确认」、<strong>不编造事实</strong>、以保守假设推进并在</li></ul>
+<p>输出中显式说明假设前提，或提问补齐关键缺口。</p>
+<ul><li>每次交付必须<strong>收口</strong>：给出可执行的下一步（动作、命令或确认问题），不留悬空结尾。</li></ul>
+<hr>
+<h2 id="5-长流程四要素-afp-与-khy-os-机制映射">5. 长流程四要素（AFP）与 khy-os 机制映射<a class="anchor" href="#5-长流程四要素-afp-与-khy-os-机制映射" aria-label="锚点">#</a></h2>
+<p>复杂、流程化、需要多轮确认的提示词资产（统治区任务），在内容三要素之上叠加四要素：</p>
+<table><thead><tr><th>要素</th><th>要求</th><th>khy-os 既有机制映射</th></tr></thead><tbody><tr><td><strong>程序化运行</strong></td><td>交互权翻转：Push（人推 AI 走）→ Pull（AI 按工作流主动索取变量与确认）。长流程必须内置严格步进 + 停帧点 + 心跳信号，禁止一次性输出全部内容</td><td>状态透明规则（<code>RUNTIME-002</code>）的「动作+目标+进度」、规则 2.6 多阶段步骤编号；状态行/仪表盘遵守 <code>RUNTIME-004</code>（不用滚动区）</td></tr><tr><td><strong>任务工作流化</strong></td><td>经验固化成 SOP：每步是可交付的「阶段性中间件」，硬约束（完成即停）而非软引导（「请按以下步骤思考」）；工作流默认内置质检</td><td>hq 提示词的工作流段；本仓「状态机把凭运气变成走程序」的一贯立场</td></tr><tr><td><strong>角色赋能</strong></td><td>产出与质检分离：审计角色独立于执行角色，通过独立性约束（禁赞美、默认不通过、只给可执行的缺陷与修正）把「挑错与否决」制度化——从「好听」逼向「正确」</td><td>与 <code>RUNTIME-010</code> 的独立性思想同源：只读角色不持写通道；单核自审 = 自己给自己发豁免，禁止</td></tr><tr><td><strong>全景仪表盘</strong></td><td>持续状态刷新对抗指令稀释：每轮重申当前阶段、本轮交付物、质量把关（PASS/FAIL）、下一步动作。规范三字：<strong>简</strong>（只留方向盘级信号）、<strong>尾</strong>（放回复末尾收口）、<strong>少</strong>（一个主仪表盘，无独立功能不加分屏）</td><td>khy 终端状态行的「保存/恢复光标 + 绝对定位」模式（<code>RUNTIME-004</code>）；AGENTS.md 指令节受 8000 字符截断约束（放置约束见 AGENTS.md）</td></tr></tbody></table>
+<p>仪表盘内容必须<strong>来自任务本身</strong>（当前阶段/下一步/验收项/禁用项），不存在万能仪表盘；<br>任何只增加噪声、不提升可控性的展示项都应删掉。</p>
+<hr>
+<h2 id="6-内容编排-六种模式">6. 内容编排（六种模式）<a class="anchor" href="#6-内容编排-六种模式" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>模式</th><th>逻辑</th><th>适用</th></tr></thead><tbody><tr><td>串行</td><td>单链条逐步推进（Step-by-Step）</td><td>逻辑推导、长文写作、代码生成</td></tr><tr><td>并行</td><td>多视角独立运行后汇总</td><td>创意发散、多角色评审、方案对比</td></tr><tr><td>串并行混合</td><td>先串行建基线 → 中段并行分支 → 串行汇总收口</td><td>复杂谈判、商业计划、案件分析</td></tr><tr><td>迭代回环</td><td>生成 → 自我批判 → 优化（Generate→Critique→Refine）</td><td>高精度文案、逻辑校对</td></tr><tr><td>锦标赛</td><td>多候选 → 打分评估 → 选优或融合</td><td>找最优解、重要决策</td></tr><tr><td>模块化调用</td><td>预定义工具/规则模块，按触发条件调用</td><td>长对话智能体、多任务处理</td></tr></tbody></table>
+<p>选择规则：单一目标逐步深挖 → 串行；要多角度多角色 → 并行/锦标赛；既要分阶段<br>又要中途分支 → 串并行混合；质量要求极高 → 叠加迭代回环；对话中持续切换策略<br>→ 模块化调用。复杂资产可组合，但必须写明选了什么、为什么。</p>
+<hr>
+<h2 id="7-生产四步法-提示词资产的-sop">7. 生产四步法（提示词资产的 SOP）<a class="anchor" href="#7-生产四步法-提示词资产的-sop" aria-label="锚点">#</a></h2>
+<ol><li><strong>任务框架化</strong>：把脑中的「任务思维网」压缩为粗颗粒度流程（阶段 → 关键步骤 →</li></ol>
+<p>判断点），并写明<strong>适用边界</strong>（适合/不适合什么场景）与<strong>核心红线</strong>。四条提炼<br>   路径（可组合、可交叉验证）：从系统化内容提炼（图书/长文/文档中反复出现的<br>   结构）、从多条高质量提示词提炼共识（<strong>不要只看一条</strong>——单条带个人风格与偶然性）、<br>   从经验复述提炼（录音/纪要交给 AI 压缩命名）、从 AI 互动提炼（概念校准 →<br>   反问补缺口 → 标准清单 → 草案 → 案例走查回写）。粗颗粒度的原因：信息量少、<br>   逻辑断点一眼可见，避免一上来就陷进细节。</p>
+<ol><li><strong>框架内容化</strong>：把框架拆到常量/变量/算法，尽量还原真实任务的分支、取舍、</li></ol>
+<p>例外与风险——真实任务是网状而非线性流水线，还原度不够 AI 就只能按线性脚本<br>   机械推进。</p>
+<ol><li><strong>内容结构化</strong>：装入结构容器。本仓落点：运行时提示词走 [DESIGN-PROMPT-002]</li></ol>
+<p>的分层（static/dynamic 分区）与 [DESIGN-PROMPT-001] 的注册表（版本/参数/<br>   maxTokens）；hq 提示词按各自文件的既有结构。</p>
+<ol><li><strong>迭代优化</strong>：v1.0 是「刚集成完的软件」，不是成品。四道工序：<ul><li><strong>体检</strong>：人工逐段对照「装进去但被简化」（删分支、并步骤、弱化锚点、把硬</li></ul></li></ol>
+<p>约束改成软建议是要重点排查的形态——目标恰恰是保留思维网的关键节点），<br>     可再用专项审计提示词定位高危点；</p>
+<ul><li><strong>回归测试</strong>：固定测试用例集，防止「改好一处、弄坏另一处」——与本仓规则 5</li></ul>
+<p>（修复先复现）的 <code>repro-before/after</code> 存证同一文化：迭代要有证据，不凭感觉改；</p>
+<ul><li><strong>压力测试</strong>：单元（标准输入能否完整走通流程、停帧是否生效）、边缘（喂极简/</li></ul>
+<p>缺变量输入，验证触发「信息不足→提问补齐」分支而非编造背景硬跑）、对抗强度<br>     （喂漏洞明显的输入，验证审计角色能稳定抓出 ≥3 个关键问题而非礼貌附和）；</p>
+<ul><li><strong>真实任务进化</strong>：真实使用中的纠偏反馈是进化的燃料。两条路径：用户驱动</li></ul>
+<p>（哪里出问题迭代哪里，不推倒重写）与系统自进化（内置进化角色：只记录→归因<br>     →给最小补丁与回归用例，<strong>未经同意不改写整份资产</strong>）。每次迭代留版本日志<br>     （改了什么/为什么/用什么用例回归验证）。</p>
+<p>成熟提示词资产通常要迭代多轮（经验值 ≥10 版）才算稳定；一次写成的提示词<br>默认按 §2.2 判据自检，未过三条判据的不要标成资产。</p>
+<hr>
+<h2 id="8-与既有规则-规范的关系">8. 与既有规则/规范的关系<a class="anchor" href="#8-与既有规则-规范的关系" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件/规则</th><th>分工</th></tr></thead><tbody><tr><td>[DESIGN-PROMPT-001]（规则 <code>PROMPT-001</code>）</td><td>怎么<strong>管</strong>：版本化、参数化、长度上限、注入防护、变更流程——本文 §7 第 3 步的落点约束</td></tr><tr><td>[DESIGN-PROMPT-002]</td><td>怎么<strong>摆</strong>：系统提示词段的静态/动态分区与 cacheKey 纪律</td></tr><tr><td><strong>本文</strong></td><td>怎么<strong>写</strong>：结构选型、内容三要素、长流程四要素、生产四步法</td></tr><tr><td><code>RUNTIME-002</code> + 规则 2.6</td><td>状态透明与步骤编号——AFP「程序化运行 + 仪表盘」在本仓的既有强制形式</td></tr><tr><td><code>RUNTIME-004</code></td><td>终端内仪表盘/状态行的渲染边界（不用滚动区）</td></tr><tr><td><code>RUNTIME-010</code></td><td>独立性思想同源：审计角色不得兼任执行、只读不得持写</td></tr><tr><td>规则 5（<code>RUNTIME-007</code>）</td><td>修复先复现——迭代优化的「回归测试」与本仓存证文化同构</td></tr><tr><td>[DESIGN-SOURCING-001]</td><td>借鉴边界：本文只提炼方法与判据，不复制原文表述</td></tr></tbody></table>
+<hr>
+<h2 id="9-反例">9. 反例<a class="anchor" href="#9-反例" aria-label="锚点">#</a></h2>
+<pre><code>✗ 「帮我写得专业一点」「要有高级感」              → 愿望词，无颗粒度（§4.1）
+✗ 质检与产出同一角色，自审自过                    → 单核平均解 + 谄媚（§5 角色赋能）
+✗ 长流程提示词一次性输出全部内容                  → 交互权未翻转，人失去控制点（§5 程序化运行）
+✗ 随手改一句话也套五阶段重型结构                  → 禁止区过度工程（§3.2）
+✗ 信息不足时编造背景直接跑完五阶段                → 违反 §4.2 反幻觉硬规则
+✗ 把方法论照抄进本仓文件                          → 违反 [DESIGN-SOURCING-001]（提炼不照抄）
+✓ 先判场景（§3.2）→ 选结构 → 常量/变量/算法（§4）→ 四要素（§5）→ 四步法生产（§7）</code></pre>
+<hr>
+<h2 id="10-本仓落地映射-2026-10-06-实现-design-prompt-003-1-1-0">10. 本仓落地映射（2026-10-06 实现，[DESIGN-PROMPT-003] 1.1.0）<a class="anchor" href="#10-本仓落地映射-2026-10-06-实现-design-prompt-003-1-1-0" aria-label="锚点">#</a></h2>
+<p>本文各节在仓内的<strong>落地件</strong>与<strong>防护</strong>——新增提示词机制前先看这张表，避免另起一份实现：</p>
+<table><thead><tr><th>本文节</th><th>落地件</th><th>状态</th><th>说明</th></tr></thead><tbody><tr><td>§2 资产三判据</td><td><code>services/promptStructurer.js</code> 的 <code>ASSET_LENS</code></td><td>已落地（先于本文）</td><td>复杂/成类请求注入三判据透镜，与本文 §2.2 逐条对应</td></tr><tr><td>§3 结构选型</td><td><code>promptStructurer.classify</code> + <code>isWorthStructuring</code>（成本感知门）+ ``<code>spec 代码化（</code>buildCodeSpec`）</td><td>已落地</td><td>简单请求不结构化（禁止区不过度工程）；复杂任务才出 ```spec</td></tr><tr><td>§4.2 反幻觉与收口</td><td><code>promptStructurer.METHOD_RULES</code>（子门控 <code>KHY_PROMPT_STRUCTURING_METHOD_RULES</code>）</td><td><strong>本次新增</strong></td><td>复杂任务```spec 触发时追加三条硬规则（信息缺失→标待确认不编造 / 约束冲突→显式取舍 / 收口→可执行下一步）</td></tr><tr><td>§4.1 愿望词</td><td><code>promptStructurer.WISHWORD_PATTERNS</code>（黑名单单一真源）+ <code>findWishwords</code> / <code>inspectPrompt</code>（静态体检内核）</td><td><strong>本次新增</strong></td><td><code>prompt normalize</code> 体检与 <code>check-ai-gateway.js</code> 守卫<strong>共用同一份黑名单</strong>，防两处漂移</td></tr><tr><td>§4.1 系统提示词侧</td><td><code>constants/prompts.js</code> 四处愿望词句重写为可执行指令（highly capable / short and concise ×2 / do not overdo it ×2）</td><td><strong>本次新增</strong></td><td>纯文本改动，不动 tier/slot/cacheKey（PTX 不受影响）；<code>fableVoiceProfile</code> 无引用，测试无字面量依赖</td></tr><tr><td>§7 生产四步法（LLM 侧）</td><td><code>services/promptOptimizeService.js</code>（门 <code>KHY_PROMPT_OPTIMIZE</code>），CLI <code>prompt optimize &lt;文本或文件&gt;</code></td><td><strong>本次新增</strong></td><td>不进热路径、每次显式命令 = 一次 LLM 调用；fail-soft 全路径（disabled/empty/too-long/timeout/gateway-error/parse-failed/degraded）</td></tr><tr><td>§7 静态面</td><td>CLI <code>prompt normalize &lt;文本或文件路径&gt;</code>（零 LLM、只报不改）</td><td><strong>本次新增</strong></td><td>四查：愿望词 / 条件分支 / 反幻觉 / 收口；输出评分 + 逐项建议，原文一字不动</td></tr><tr><td>§4.1 机器化</td><td><code>scripts/ci/check-ai-gateway.js</code> 的 <code>checkPromptWishword</code>（PROMPT-001 exec）</td><td><strong>本次新增</strong></td><td>扫 <code>constants/prompts.js</code> + gateway 目录；LOW = advisory 不阻断；跳过黑名单真源文件与注释行</td></tr></tbody></table>
+<p><strong>边界</strong>（与本文正文一致）：方法论只约束<strong>撰写</strong>；<code>promptStructurer</code> 不改写用户原文（冲突以原文为准）；<br>优化器不自动触发、不进热路径；命令面<strong>不新增顶层命令</strong>（<code>normalize</code>/<code>optimize</code> 是 <code>prompt</code> 的子命令，<br>不受 <code>[DESIGN-DELIV-002]</code> 命令面棘轮约束）。</p>
+<hr>
+<h2 id="11-版本历史">11. 版本历史<a class="anchor" href="#11-版本历史" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>版本</th><th>日期</th><th>变更</th></tr></thead><tbody><tr><td>1.0.0</td><td>2026-10-06</td><td>首版：从郭泽德《超级提示词》提炼 AFP 方法论为 khy-os 撰写规范（资产三判据、五阶段选型、内容三要素、长流程四要素、六编排、四步法）</td></tr><tr><td>1.1.0</td><td>2026-10-06</td><td>§10 本仓落地映射 + §4.1/§4.2/§7 落地件（METHOD_RULES 注入、愿望词黑名单单一真源、prompts.js 四处重写、<code>prompt normalize</code>/<code>optimize</code> 子命令、<code>checkPromptWishword</code> 守卫）；守卫字段由「无」升级为 check-ai-gateway.js（LOW advisory）</td></tr></tbody></table>
+<hr>
+<p><em>本规范由 khy-os 平台团队维护；方法学出处见文首「出处」段，文本为本仓自有表述。</em></p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/10_规范/其它规范/[DESIGN-PROMPT-002] 系统提示词分层规范-静态与动态分区.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-PROMPT-002] 系统提示词分层规范：静态与动态分区</div></a><a class="next" href="../../../../docs/html/10_规范/其它规范/[DESIGN-QUAL-001] 门禁基线与债务台账规范.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-QUAL-001] 门禁基线与债务台账规范</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/10_规范/其它规范/[DESIGN-PROMPT-003] 超级提示词撰写方法论规范.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

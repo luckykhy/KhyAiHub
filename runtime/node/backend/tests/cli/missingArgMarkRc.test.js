@@ -44,6 +44,8 @@ const SHAPES = [
   { args: ['prompt', 'delete'], msg: /✗ 用法: prompt delete <ID>/ },
   { args: ['prompt', 'delete', 'zz-nonexistent-id'], msg: /✗ 未找到: zz-nonexistent-id/ },
   { args: ['prompt', 'search'], msg: /✗ 用法: prompt search <关键词>/ },
+  { args: ['prompt', 'normalize'], msg: /✗ 用法: prompt normalize/ },
+  { args: ['prompt', 'optimize'], msg: /✗ 用法: prompt optimize/ },
   { args: ['prompt', 'folder', 'new'], msg: /✗ 用法: prompt folder new <名称>/ },
   { args: ['knowledge', 'search'], msg: /✗ 请输入搜索关键词/ },
   { args: ['knowledge', 'sync', 'config'], msg: /✗ 请指定仓库地址/ },

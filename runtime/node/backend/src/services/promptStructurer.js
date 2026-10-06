@@ -279,6 +279,68 @@ function buildAssetLens(env) {
   }
 }
 
+// ── 方法论规则(复杂任务时把反幻觉/取舍/收口三条硬规则注入结构块)───────────────
+// [DESIGN-PROMPT-003] §4 的落点:复杂任务才有编造与跑偏空间,规则只随复杂任务注入(简单请求
+// 靠 execution_discipline 全局段兜底,不加噪——与「禁止区不过度工程」自洽)。三条都是确定性
+// 文字常量,零 LLM;冲突仍以原文为准。子门控 KHY_PROMPT_STRUCTURING_METHOD_RULES
+// (parent KHY_PROMPT_STRUCTURING)关时不追加(逐字节回退到无方法论规则的结构块)。
+const METHOD_RULES = [
+  '## 方法论规则 / Method Rules',
+  '执行本次请求时遵守以下三条(与 ## 内容 冲突时仍以内容为准):',
+  '- 信息缺失/冲突:标「待确认」并提问补齐,不编造事实;以合理假设推进时,显式说明假设前提。',
+  '- 约束冲突:显式说明取舍(保留什么、放弃什么、为什么),不静默弃掉任何一条约束。',
+  '- 交付收口:给出可执行的下一步(动作或命令),不留悬空结尾。',
+].join('\n');
+
+/**
+ * 方法论规则是否启用(子门控,parent=KHY_PROMPT_STRUCTURING;父关→子必关)。
+ * @param {object} [env]
+ * @returns {boolean}
+ */
+function methodRulesEnabled(env) {
+  const e = env || process.env || {};
+  try {
+    if (flagRegistry.isRegistryEnabled(e)) {
+      return flagRegistry.isFlagEnabled('KHY_PROMPT_STRUCTURING_METHOD_RULES', e);
+    }
+  } catch {
+    /* 注册表异常 → 回退手写判定 */
+  }
+  return !_off(e.KHY_PROMPT_STRUCTURING) && !_off(e.KHY_PROMPT_STRUCTURING_METHOD_RULES);
+}
+
+/**
+ * 构造方法论规则段。门关 / 异常 → 空串(caller 不追加)。
+ * @param {object} [env]
+ * @returns {string}
+ */
+function buildMethodRules(env) {
+  try {
+    return methodRulesEnabled(env) ? METHOD_RULES : '';
+  } catch {
+    return '';
+  }
+}
+
+// ── 愿望词黑名单(单一真源,prompt normalize 体检与 check-ai-gateway 守卫共用)─────
+// [DESIGN-PROMPT-003] §4.1:愿望词(作为质量指令的不可验证形容词)必须翻译成参数化指令。
+// 词面正则、确定性可测;刻意保守——只收「形容词级质量指令」高频形态,避免把身份描述/
+// 可验证指令误伤。命中是候选不是判决,LOW 级 advisory,人工评审兜底。
+const WISHWORD_PATTERNS = Object.freeze([
+  /更专业|更深度|更有逻辑|更高级|更智能/i,
+  /(专业|幽默|高级|生动)点/,
+  /像大厂/,
+  /接地气/,
+  /高水准/,
+  /高级感/,
+  /专业一点|震撼一点|好看一点|漂亮一点|写得(再)?好一点/,
+  /\bhighly capable\b/i,
+  /\bshort and concise\b/i,
+  /\bbe extra concise\b/i,
+  /\bdo not overdo it\b/i,
+  /\bmore professional\b/i,
+]);
+
 // ── 代码化提示词(复杂任务时把请求写成逻辑精确的声明式规格)────────────────────────
 // /goal(2026-07-06 追加):复杂任务下自然语言力不从心(歧义 / 冗余 / 非线性跳跃),而 AI 的核心
 // 强项是逻辑推理,代码是所有表达里最求极致逻辑性的——故复杂请求值得再叠一层「代码化」表达:把已
@@ -495,6 +557,11 @@ function buildStructuredPrompt(text, env) {
       }
       parts.push(`- 期望产出: ${info.expectedOutput}`);
     }
+    // 方法论规则:仅复杂任务(spec 在)时追加——反幻觉/取舍/收口三条,简单请求不注入。
+    const methodRules = spec ? buildMethodRules(env) : '';
+    if (methodRules) {
+      parts.push('', methodRules);
+    }
     // 资产化判断透镜:仅 category 作用域 + 子门控开时追加(与透镜「不为通用而通用」自洽;instance 纯噪声)。
     const lens = info.scope === 'category' ? buildAssetLens(env) : '';
     if (lens) {
@@ -507,17 +574,104 @@ function buildStructuredPrompt(text, env) {
   }
 }
 
+// ── 静态体检(§4.1 机器化,prompt normalize 的判定内核)──────────────────────────────
+// 确定性四查:愿望词 / 条件分支 / 反幻觉规则 / 收口声明。只报不改(报告含建议,改动由人决定);
+// 命中与漏检都是候选不是判决——advisory 级,人工评审兜底。词面取自书 B1–B3 与本仓 prompts.js 盘点。
+const IFTHEN_RE =
+  /(如果|若|当|一旦|万一|倘若|假如).{0,40}?(则|就|请|应|需)|否则|不然|\bif\b[\s\S]{0,60}?\bthen\b|\botherwise\b/i;
+const ANTIHALLUCINATION_RE =
+  /(不(要|得|许|可)?(编造|虚构|捏造|臆测|杜撰|猜测)|没有(依据|来源|出处).{0,10}(说明|标注|不要|不得|不能)|标(注)?[「『"]?待确认|不确定.{0,12}(提问|追问|标注|说明|如实)|do not (make up|fabricate|invent|guess)|don'?t (make up|fabricate|invent|guess)|(if|when) (unsure|uncertain|unclear).{0,24}(ask|say so|state))/i;
+const CLOSING_RE =
+  /(期望产出|输出(格式|要求|形式|结构)|输出.{0,12}(清单|表格|报告|列表|文件|代码|命令|步骤|方案|文档|json|markdown)|交付(物|格式|形式)|格式(如下|要求|为)|以.{0,12}(json|markdown|表格|列表|代码|报告|清单)形式|返回.{0,12}(格式|字段|结构|示例|清单|表格|列表|json)|给出.{0,12}(清单|表格|报告|步骤|命令)|分点|逐条列出|report\s+format|output\s+format|deliverable)/i;
+
+/**
+ * 列出文本命中的愿望词(去重,确定性,绝不抛)。与 WISHWORD_PATTERNS 同源——
+ * prompt normalize 体检与 check-ai-gateway 守卫共用,避免两份黑名单漂移。
+ * @param {string} text
+ * @returns {string[]}
+ */
+function findWishwords(text) {
+  const t = String(text || '');
+  const hits = [];
+  for (const re of WISHWORD_PATTERNS) {
+    const flags = re.flags.includes('g') ? re.flags : re.flags + 'g';
+    const m = t.match(new RegExp(re.source, flags));
+    if (m) hits.push(...m.map((s) => s.trim()));
+  }
+  return Array.from(new Set(hits));
+}
+
+/**
+ * 提示词静态体检(确定性,零 LLM,绝不抛):愿望词/条件分支/反幻觉/收口四项。
+ * 返回 { score, grade, complex, findings, wishwords };只报不改——原文一字不动。
+ * @param {string} text
+ * @returns {{score:number, grade:string, complex:boolean, findings:Array, wishwords:string[]}}
+ */
+function inspectPrompt(text) {
+  const t = String(text || '');
+  const findings = [];
+  let score = 100;
+  const wishwords = findWishwords(t);
+  if (wishwords.length) {
+    const deduction = Math.min(30, wishwords.length * 15);
+    score -= deduction;
+    findings.push({
+      id: 'wishword',
+      deduction,
+      message: `愿望词 ${wishwords.length} 处: ${wishwords.join(' / ')}`,
+      advice: '形容词不可验证——换成可检查判据(数量/格式/示例),或直接删除',
+    });
+  }
+  const complex = isComplex(t);
+  if (complex && !IFTHEN_RE.test(t)) {
+    score -= 15;
+    findings.push({
+      id: 'no-branch',
+      deduction: 15,
+      message: '复杂任务无条件分支',
+      advice: '把边界情形写成 If-Then(条件→动作),让模型不靠猜',
+    });
+  }
+  if (complex && !ANTIHALLUCINATION_RE.test(t)) {
+    score -= 15;
+    findings.push({
+      id: 'no-antihallucination',
+      deduction: 15,
+      message: '复杂任务无反幻觉规则',
+      advice: '加一条:信息缺失/冲突→标「待确认」并提问,不编造事实',
+    });
+  }
+  if (!CLOSING_RE.test(t)) {
+    score -= 20;
+    findings.push({
+      id: 'no-closing',
+      deduction: 20,
+      message: '未声明期望产出/收口形式',
+      advice: '写明交付物与格式(如「以表格返回」「给出可执行的下一步」)',
+    });
+  }
+  score = Math.max(0, score);
+  const grade = score >= 85 ? '良好' : score >= 70 ? '可用' : '待改进';
+  return { score, grade, complex, findings, wishwords };
+}
+
 module.exports = {
   isEnabled,
   assetLensEnabled,
   codeSpecEnabled,
+  methodRulesEnabled,
   classify,
   isComplex,
   isWorthStructuring,
   buildStructuredPrompt,
   buildAssetLens,
   buildCodeSpec,
+  buildMethodRules,
+  findWishwords,
+  inspectPrompt,
   STRUCTURE_MARKER,
   TASK_TYPES,
   ASSET_LENS,
+  METHOD_RULES,
+  WISHWORD_PATTERNS,
 };

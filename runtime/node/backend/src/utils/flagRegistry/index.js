@@ -3337,6 +3337,23 @@ const FLAGS = {
     parent: 'KHY_PROMPT_STRUCTURING',
   },
 
+  // 方法论规则([DESIGN-PROMPT-003] §4 的落点):复杂任务(spec 触发)时,在结构块后追加三条确定性
+  // 硬规则(信息缺失→标待确认并提问不编造 / 约束冲突→显式说明取舍 / 交付收口→可执行下一步),
+  // 零 LLM、冲突仍以原文为准。简单请求不注入(spec 不在即不追加,与「禁止区不过度工程」自洽)。
+  // parent=KHY_PROMPT_STRUCTURING:父关→本门必关。关 → buildMethodRules 返 ''、不追加该段。
+  KHY_PROMPT_STRUCTURING_METHOD_RULES: {
+    mode: 'default-on',
+    off: 'CANON',
+    default: true,
+    parent: 'KHY_PROMPT_STRUCTURING',
+  },
+
+  // 提示词 LLM 优化器(promptOptimizeService,`prompt optimize` 子命令):按 [DESIGN-PROMPT-003] 四步法
+  // (框架化→内容化→结构化→评分)把一条提示词改写为资产级,输出改写稿+评分+改动理由。**不进热路径、
+  // 不自动触发**——命令本身即显式 opt-in(同 KHY_PROMPT_COMPOSE 先例),门是能力逃生口。
+  // 关 → optimizePrompt 直接返 {reason:'disabled'},不发起任何 LLM 调用(零网络面)。
+  KHY_PROMPT_OPTIMIZE: { mode: 'default-on', off: 'CANON', default: true },
+
   // roundAdvanceAssessor 纯叶子:toolUseLoop 每完成一轮(模型回应+工具执行)后,吃每轮小结已算好的
   // 成功/失败/去重/读写命令分项,确定性判一个「本轮任务是否向前推进了一步」的判决(推进/停滞/空转)+
   // 必要性与价值档位,供每轮小结行渲染紧凑标签、并 breadcrumb 记录。纯观测,不夺取循环控制流。
