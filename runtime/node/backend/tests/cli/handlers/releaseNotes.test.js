@@ -60,6 +60,19 @@ describe('handleReleaseNotes', () => {
     delete require.cache[HANDLER_PATH];
   });
 
+  test('默认锚点(无 KHY_CHANGELOG_PATH)解析到的 CHANGELOG 必须真实存在', async () => {
+    // 层级迁移把「从 __dirname 向上数 N 层」的默认锚点挪跑了：路径照拼、文件在别处，
+    // 用户只看到一句「未找到 CHANGELOG.md」。形状断言看不见漂移，只能验存在性。
+    delete process.env.KHY_RELEASE_NOTES;
+    delete process.env.KHY_CHANGELOG_PATH;
+    const { handleReleaseNotes } = loadHandlerWithCapture();
+    const r = await handleReleaseNotes('', []);
+    assert.equal(r, true);
+    const text = allText();
+    assert.ok(!/未找到 CHANGELOG/.test(text), `默认锚点解析失败，实际输出：${text}`);
+    assert.match(text, /## \d+\.\d+\.\d+/, `未渲染任何版本条目：${text}`);
+  });
+
   test('门控 off → 不接管,返回 false(字节回退)', async () => {
     process.env.KHY_RELEASE_NOTES = 'off';
     const { handleReleaseNotes } = loadHandlerWithCapture();

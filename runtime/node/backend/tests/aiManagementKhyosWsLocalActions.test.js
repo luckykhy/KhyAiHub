@@ -85,6 +85,23 @@ test('handleKhyosTrayStart: 门开 → 以 `khy tray --detach` 后台拉起并�
   } finally { cp.spawn = orig; }
 });
 
+test('handleKhyosTrayStart: 解析出的入口必须真实存在(形状断言挡不住层级漂移)', () => {
+  // 上一条只验 argv[1] 形如 …/bin/khy.js ——路径从 services/backend 迁走以后
+  // 它拼出的死路径同样「形状正确」，测试一直绿而托盘永远起不来(detached+stdio:ignore
+  // 还把子进程的 Cannot find module 吞了)。存在性才是真判据。
+  const orig = cp.spawn;
+  let entry = null;
+  cp.spawn = (cmd, a) => { entry = a[0]; return { on() {}, unref() {} }; };
+  try {
+    withEnv({ KHY_WEB_LOCAL_ACTIONS: undefined }, () => {
+      const { session } = makeSession();
+      mod.handleKhyosTrayStart(session, {});
+    });
+  } finally { cp.spawn = orig; }
+  assert.ok(entry, '门开时应发起 spawn');
+  assert.ok(require('fs').existsSync(entry), `入口不存在：${entry}`);
+});
+
 test('handleKhyosMdOpen: 门关 → disabled', async () => {
   await withEnv({ KHY_WEB_LOCAL_ACTIONS: 'no' }, async () => {
     const { session, sent } = makeSession();

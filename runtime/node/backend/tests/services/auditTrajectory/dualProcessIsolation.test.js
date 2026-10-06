@@ -400,3 +400,22 @@ describe('attachInWorker：轨迹归属取被钉死的目录', () => {
     expect(judged.rounds[0].valid).toBe(true);
   });
 });
+
+describe('defaultEntry 的默认解析', () => {
+  // 该函数只在 args.entry 缺省时生效，而所有现存测试都显式注入 entry ⇒ 默认臂零覆盖。
+  // 层级迁移把「从本文件向上数 3 层」的锚点挪到包外，测试全绿而 Worker 起不来。
+  test('defaultEntry() 指向真实存在的 CLI 入口', () => {
+    const entry = workerProcess.defaultEntry();
+    expect(fs.existsSync(entry)).toBe(true);
+  });
+
+  test('不传 entry 的 planWorkerLaunch 也必须落在存在的入口上', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-audit-default-entry-'));
+    try {
+      const plan = workerProcess.planWorkerLaunch({ projectRoot: root, message: '把首页按钮改成主色', create: true });
+      expect(fs.existsSync(plan.argv[0])).toBe(true);
+    } finally {
+      try { fs.rmSync(root, { recursive: true, force: true }); } catch { /* ignore */ }
+    }
+  });
+});

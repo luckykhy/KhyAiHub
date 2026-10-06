@@ -33,8 +33,20 @@ const workspaceGuard = require('./workspaceGuard');
 /** 空闲超时缺省值：Worker 连续这么久没有任何输出才判定卡死。 */
 const DEFAULT_IDLE_MS = 120000;
 
-/** khy CLI 入口相对本文件的位置（services/backend/bin/khy.js）。 */
+/**
+ * khy CLI 入口：向上走到真的带 bin/khy.js 的包根。
+ * 手数层数会随仓库层级漂移（本模块被下沉两级后，旧表达式指到 src/services/bin/khy.js），
+ * 而调用方只在 plan 里 existsSync 兜底 ⇒ 默认臂静默起不来。
+ */
 function defaultEntry() {
+  let dir = __dirname;
+  for (let i = 0; i < 12; i++) {
+    const candidate = path.join(dir, 'bin', 'khy.js');
+    if (fs.existsSync(candidate)) return candidate;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
   return path.resolve(__dirname, '..', '..', '..', 'bin', 'khy.js');
 }
 
