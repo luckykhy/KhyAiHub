@@ -369,7 +369,7 @@ function getAppRoot() {
     _cachedAppRoot = path.resolve(process.env.KHY_OS_ROOT);
     return _cachedAppRoot;
   }
-  _cachedAppRoot = path.resolve(__dirname, '..', '..', '..', '..');
+  _cachedAppRoot = path.resolve(__dirname, '..', '..', '..', '..', '..');
   return _cachedAppRoot;
 }
 
