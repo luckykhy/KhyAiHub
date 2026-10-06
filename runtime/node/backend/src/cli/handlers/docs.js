@@ -933,6 +933,8 @@ const DOC_TOPICS = ['quickstart', 'start', 'ai-fastlane', 'ai', 'fastlane', 'mai
 module.exports = {
   handleDocsQuickstart,
   handleDocsAiFastlane,
+  // 上下文包构造器导出仅为可测：它决定「必读清单」与导流路径，而这三处本夜都静默坏过。
+  buildAiFastlaneContextPack,
   handleDocsMaintainer,
   handleDocsClaude,
   handleDocsGateway,
