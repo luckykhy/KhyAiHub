@@ -4894,6 +4894,59 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 
 ### 16.6 施工执行状态（点头后逐批登记）
 
+> **2026-10-07 01:2x 节（第 18 节）· 批次 = HK 清根（census −1），队列各批仍全门控**
+>
+> 六锚复验全过（`83f9bb79`= 第 17 节行、`ace53192`、`bbd424ee`、`1af02147`、`e34b0486`、`db63c679` 均在祖先链）。
+> **顺手补一个流程洞**：第 17 节我收口时没把自己的提交 hash 写进台账，本节只能靠 subject 回认——
+> 从今天起每节收尾在节录首行写自己的提交号。
+>
+> **本批做的**：根上未跟踪件 `ERR`（88B，mtime 10-06 22:41）移入
+> `.khyos/housekeeping/2026-10-07-root-litter/ERR-artifact`，manifest 带 sha256
+> `01fe924519ef6acf07af98617d7922c67f0f1956a9b138533380e9fbf0b74d5f` 与回滚命令。
+> 判它不是数据的依据是**内容本身**：三行 `/khy-frontend-identity.json - len=68`、`/ - len=393`、
+> `/vendor/khyos-muya.js - len=6439218`——一次 vendor 体积探测的标准输出，即 `> ERR` 重定向落在
+> cmd/PowerShell 里造出的字面文件名（与 `$null` 同族）。效果：`root-uncatalogued` offender **3 → 2**，
+> 可寻址 **49 → 48**。
+>
+> **上节的「已停手」判定被时间推翻了一半，而且推翻的方式恰好是我自己记过的那条**：
+> `RULES-REGISTRY.json` 的 numstat 仍是 `69/58` 一点没变，**但 mtime 从 10-05 15:09:05 走到了 10-06 10:40:22**
+> ⇒ 期间内容被重写过，只是增删行数恰好相等。这正是第 17 节我写进记忆命题的活例：
+> **相等 numstat ≠ 内容未变**。四件里其余三件 numstat 与 mtime **双双不变**（10-05 13:20 / 13:06 / 17:22），
+> 仍是真停手。用守卫自己的判据复算（`.khyos/tmp/rr-delta.js`，实跑）：那笔未提交改动依旧是
+> **悬空 66 → 23（−43）、新增 0 条**——纯治疗，放着 24 小时以上没进仓。
+>
+> **census 曲线第一次连续反向（这是本节最该被晨审看到的一行）**：
+> `46`（W2c 后）→ `47`（`.khy-runtime`，第 16 节）→ `49`（再加 `ERR` + `docs.rar`）→ 本道清 `ERR` 回 `48`。
+> 三项共同点：**未跟踪、且 `.gitignore` 都没盖住**（`git check-ignore docs.rar ERR` 双双为空）。
+> 后果是具体的：**任何一次 `git add -A` 就会把 16.6MB 的 `docs.rar` 提进仓**，而 pre-commit 的
+> 「检查大文件」只在真的 add 时才拦——东西躺在根上没有任何守卫管它。
+>
+> | 根上反增项 | 实测 | 本道处置 |
+> |---|---|---|
+> | `.khy-runtime/` | 又复生一次（目录 mtime **10-06 10:43**，与 `22a6f01c` 之后每次 ai-fastlane 运行一致） | 不动，理由同第 16 节（不靠登记换绿、不改他道写入候选），等定性 |
+> | `docs.rar` | **16,641,747B**，10-06 17:17，`git grep -F docs.rar` 全仓**零命中**（无仓内生成器） | **判为用户/外部归档件，本道不碰**；待人处置：移仓外，或 `.gitignore` 补条 + 进 `ROOT_CATALOG` 登记 |
+> | `ERR` | 88B 探测输出，同上 | 本节已隔离并留 sha256 |
+>
+> **守卫盲区补一条（与第 13 节 `ROOT_DOC_EXT_RE` 只认 `.md/.txt` 同族）**：`check-repo-layout.js` 里
+> `rar|zip|7z` **0 命中**——根上放归档件没有任何判据会报它；现在唯一的暴露面是 Q-1 的
+> `root-uncatalogued`（warning 级、不阻断），所以 16.6MB 的东西能让全部门保持绿。
+>
+> **另一件不该由我提交的**：`.github/SECURITY.html` 现在是 `??` 未跟踪——那是我 W2c 移动 `SECURITY.md`
+> 之后**他道跑 `docs:build` 生成的孪生**。按 §19.6 的判定（共享 worktree 里提交生成器产物＝夹带他道派生件），
+> 本道不并入，留给他道那一批一起落地。
+>
+> **四判**：`check-repo-layout` **exit 0 / 0 error / 6 warning**（`root-uncatalogued` offender 由 3 减到 2）；
+> `check-roots-isomorphic` **15**（持平）；`check-debt-ledger` **exit 0 / 0/0**；`q1-criteria.test.js`
+> 仍 **3 pass / 1 fail**——剩下两件各有归属（`.khy-runtime` 等定性、`docs.rar` 等人），本道不消红。
+> `check:data-layout` 可寻址 **48**。棘轮：本节的 −1 是本道清根所得，**但 census 净方向仍是升**，
+> 故 `layout.root-top-level` 的 measured 54 **不动**，`repo-layout-baseline.json` 也不动。
+>
+> **队列现状**：W2 CHANGELOG / W4 / W6 / W9 仍分别卡 `RULES-REGISTRY.json`、`MANIFEST.in`、`khy.bat`、
+> `.opencode/README.html` 那四件（其中三件双指标确认停手，见上）；W3 仍是结构闸（根上 28 个跟踪件 +
+> 根 `.gitattributes` 是行尾规则唯一载体）；W5 仍缺 docker 侧证明（本机无 docker）。**没有一批因本节解锁**。
+>
+> **回滚**：本批两部分各自可逆——`ERR` 按 manifest 里的 `mv` 命令原路回根；台账块 `git revert` 单提交即回。
+
 > **2026-10-06 05:2x 节（第 17 节）**：**本节无未门控批次，零施工**。
 > 六锚复验先过：`ace53192 / bbd424ee / 1af02147 / e34b0486 / 9f973566 / db63c679` **全部仍在祖先链**。
 > 读数（05:20）：根项 48、`check:data-layout` 可寻址 **47**（`.khy-runtime` 仍在根，第 16 节的新事实 N 未被人处置）、
