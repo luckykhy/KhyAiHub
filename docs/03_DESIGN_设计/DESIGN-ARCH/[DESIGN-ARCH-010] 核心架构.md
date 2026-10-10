@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 <!-- 文档分类: DESIGN-ARCH-010 | 阶段: 设计 | 原路径: docs/架构/核心架构.md -->
 # 核心架构
 

@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 <!-- 文档分类: DESIGN-ARCH-015 | 阶段: 设计 | 原路径: docs/16_设计模式/编码规范.md -->
 # GoF 23 设计模式标注规范
 

@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 <!-- 文档分类: DESIGN-ARCH-002 | 阶段: 设计 | 原路径: docs/架构/Khyos-CB-SSP-数学建模与实现映射.md -->
 # Khyos CB-SSP 数学建模与实现映射（落地规格）
 

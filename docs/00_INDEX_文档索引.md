@@ -54,7 +54,7 @@
 | 08 | `08_MGMT_项目管理/` | 48 | 48 |
 | 09 | `09_STORY_修仙学AI/` | 29 | 目录入口（见下） |
 | 10 | `10_规范/`（跨阶段·规范族，2026-09-10 自 `03_DESIGN_设计/` 拆出） | 145 | 目录入口（见下） |
-| 11 | `11_报告/`（跨阶段·一次性快照报告与调研件，写完即冻结） | 19 | 目录入口（见下） |
+| 11 | `11_报告/`（跨阶段·一次性快照报告与调研件，写完即冻结） | 44 | 目录入口（见下） |
 | 12 | `12_模板/`（跨阶段·文档模板） | 0 | 目录入口（见下） |
 | 13 | `13_传承/`（跨阶段·生存文档，不隶属任何生命周期阶段） | 3 | 目录入口（见下） |
 | 14 | `14_维护者/`（跨阶段·维护映射表与值班） | 0 | 目录入口（见下） |
@@ -137,7 +137,7 @@
 - [`DESIGN-GOV-001` 治理总纲与可执行规则](10_规范/其它规范/[DESIGN-GOV-001] 治理总纲与可执行规则.md) — **既有治理规则的索引与缺口登记**：MOD、MEM、TOOL、ACP、API 五板块；不推翻既有单一真源；由 `node scripts/ci/check-gov-rules.js` 守住总纲与 CI 接线。
 - [`DESIGN-ARCH-072` 任务最小闭环-裁决接线与交付台账](03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-076] 任务最小闭环-裁决接线与交付台账.md) — 普通任务从「模型想停」到「交付完成」的最小闭环单一真源：收尾仲裁门（close/redrive/close_partial 三态）+ 交付台账 `khy deliveries`
 - [`DESIGN-ARCH-073` khyos 核心任务循环-稳定交付总纲](03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-077] khyos 核心任务循环-稳定交付总纲.md) — 任务从受理到交付的核心循环运行时契约（登记→执行→裁决→交付→台账 + 想停轮 20 道门序），`072` 的上位总纲
-- [`DESIGN-PERF-001` khy-cli-交互流畅度修复方案-v1](03_DESIGN_设计/DESIGN-PERF/[DESIGN-PERF-001] khy-cli-交互流畅度修复方案-v1.md) — khy CLI 流畅度对位调研（10 处推断校正）与三阶段修复方案（fast-startup 默认化 / CLI bundle / 首 token 解耦），只立项未动码
+- [`DESIGN-PERF-001` khy-cli-交互流畅度修复方案-v1](./03_DESIGN_设计/DESIGN-PERF/[DESIGN-PERF-002]%20khy-cli-交互流畅度修复方案-v1.md) — khy CLI 流畅度对位调研（10 处推断校正）与三阶段修复方案（fast-startup 默认化 / CLI bundle / 首 token 解耦），只立项未动码
 - [`[DESIGN-RES-003]` 跨Agent技能MCP统一管理-阶段一调研](03_DESIGN_设计/DESIGN-RES/[DESIGN-RES-003] 跨Agent技能MCP统一管理-阶段一调研.md) — 只读调研：现有 `ccMcpBridge`/`ocMcpBridge`/`*SkillBridge` 只发现不写入，缺 agent 注册表与统一 import 原语；立法清单冻结前不动代码
 - [`DESIGN-LEGISLATION`（未编号）跨Agent技能MCP统一管理-阶段二立法清单](03_DESIGN_设计/其它设计/[DESIGN-LEGISLATION] 跨Agent技能MCP统一管理-阶段二立法清单.md) — 阶段三实现的冻结依据：`khy unify` 的 export/import/list/sync 范围、MCP 与技能 bridge 注册表、存量纳管写入口；依据阶段一调研 §1-§5 与铁律 F1-F8
 

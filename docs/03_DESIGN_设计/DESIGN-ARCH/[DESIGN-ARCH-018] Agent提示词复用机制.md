@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-018] khyos Agent 提示词复用机制
 
 > 状态：已实现并接入（v1）。配套代码见

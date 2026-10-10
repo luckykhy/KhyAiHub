@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 <!-- 文档分类: DESIGN-ARCH-008 | 阶段: 设计 | 原路径: docs/架构/moonbit-系统边界.md -->
 # MoonBit OS 边界
 

@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 <!-- 文档分类: DESIGN-ARCH-007 | 阶段: 设计 | 原路径: docs/架构/m1-微内核-ipc-moonbit.md -->
 # M1 微内核 + IPC + MoonBit 接口草案
 

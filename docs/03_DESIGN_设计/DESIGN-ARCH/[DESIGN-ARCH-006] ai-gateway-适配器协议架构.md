@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 <!-- 文档分类: DESIGN-ARCH-006 | 阶段: 设计 | 原路径: docs/架构/ai-gateway-适配器协议架构.md -->
 # AI Gateway 适配器协议架构
 

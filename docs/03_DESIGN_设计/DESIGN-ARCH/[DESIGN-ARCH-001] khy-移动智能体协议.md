@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 <!-- 文档分类: DESIGN-ARCH-001 | 阶段: 设计 | 原路径: docs/指南/khy-移动智能体协议.md -->
 # KHY 移动智能体协议 (v1.0)
 

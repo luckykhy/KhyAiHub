@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 <!-- 文档分类: DESIGN-ARCH-021 | 阶段: 设计 | 原路径: docs/03_DESIGN_设计/[DESIGN-ARCH-021] 巨型环反转设计.md（新建） -->
 # khyos 巨型环反转设计（Giant-SCC Inversion Design）
 

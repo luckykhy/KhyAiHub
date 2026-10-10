@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 <!-- 文档分类: DESIGN-ARCH-014 | 阶段: 设计 | 原路径: docs/16_设计模式/模式图谱.md -->
 # GoF 23 设计模式全量映射
 
