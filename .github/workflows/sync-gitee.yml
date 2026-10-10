@@ -23,6 +23,17 @@ jobs:
   mirror:
     runs-on: ubuntu-latest
     steps:
+      # 2026-10-10：原写法是 `git init` 空仓再从 https://github.com/... 匿名 fetch。
+      # 那只对**公开仓**成立 —— KhyAiHub 是 private，匿名 fetch 直接
+      # `fatal: could not read Username for 'https://github.com'`，镜像从没走到推送那步。
+      # 改用 checkout：凭据由 Actions 自动注入，且 fetch-depth: 0 给完整历史，
+      # 顺带消掉原先 --depth=1 浅克隆推送被 shallow update not allowed 拒的风险。
+      - name: Checkout source (authenticated, full history)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.branch || github.ref_name }}
+          fetch-depth: 0
+
       - name: Mirror branch to Gitee
         env:
           GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
@@ -39,10 +50,6 @@ jobs:
             *) echo "GITEE_REPOSITORY must be owner/repo" >&2; exit 1 ;;
           esac
           auth="$(printf '%s' "$GITEE_USER:$GITEE_TOKEN" | base64 -w0)"
-          git init mirror
-          cd mirror
-          git remote add github "https://github.com/${GITHUB_REPOSITORY}.git"
           git remote add gitee "https://gitee.com/${GITEE_REPOSITORY}.git"
-          git fetch --depth=1 github "${SOURCE_BRANCH}"
           git -c "http.https://gitee.com/.extraheader=Authorization: Basic ${auth}" \
-            push gitee "FETCH_HEAD:refs/heads/${SOURCE_BRANCH}"
+            push gitee "HEAD:refs/heads/${SOURCE_BRANCH}"
