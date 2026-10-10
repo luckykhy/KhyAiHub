@@ -157,11 +157,13 @@ test('configStore: setServerEnabled —— disabled 写/删不动其余字段，
   assert.equal('disabled' in JSON.parse(fs.readFileSync(echo.path, 'utf-8')).mcpServers.srv, false);
 });
 
-test('configStore: project scope 走注入 cwd 的 .khy/mcp.json', () => {
+test('configStore: project scope 走注入 cwd 的 works/data/khy/mcp.json', () => {
   const proj = path.join(TMP, 'proj');
   fs.mkdirSync(proj, { recursive: true });
   const r = store.addServer('p1', { command: 'pp' }, { scope: 'project', cwd: proj });
-  assert.equal(r.path, path.join(proj, '.khy', 'mcp.json'));
+  // W9′ (2026-10-02) moved the project data home from <cwd>/.khy to
+  // <cwd>/works/data/khy — mcpConfigStore.js:32 follows getProjectDataHome().
+  assert.equal(r.path, path.join(proj, 'works', 'data', 'khy', 'mcp.json'));
   assert.equal(fs.existsSync(r.path), true);
   const rm = store.removeServer('p1', { scope: 'project', cwd: proj });
   assert.equal(rm.removed, true);
