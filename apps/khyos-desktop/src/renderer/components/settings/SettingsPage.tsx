@@ -10,6 +10,7 @@ import { ListSettingsPage } from './ListSettingsPage'
 import { IndexSettingsPage } from './IndexSettingsPage'
 import { PluginSettings } from './PluginSettings'
 import { KeyManagerPage } from '../keyManager/KeyManagerPage'
+import { WebRemoteControlPanel } from '../remote/WebRemoteControlPanel'
 
 // ── Nav structure (mirrors ZCode v3.11.2 a11y s-30/s-42, ZC-ALIGN-003 §1-4) ──
 // Full-screen replacement layout: left nav (~240px) + right content scroll area.
@@ -35,6 +36,7 @@ const NAV_GROUPS: NavGroup[] = [
       { id: 'models', label: '模型设置' },
       { id: 'browser', label: '浏览器控制' },
       { id: 'cua', label: '电脑控制' },
+      { id: 'remote', label: '移动端远程控制' },
     ],
   },
   {
@@ -67,6 +69,7 @@ const PAGE_META: Record<string, { title: string; subtitle?: string }> = {
   models: { title: '模型设置', subtitle: '管理自定义模型供应商，配置后可在聊天时选择使用。' },
   browser: { title: '浏览器控制', subtitle: '配置内置浏览器的行为与安全策略。' },
   cua: { title: '电脑控制', subtitle: '配置 Agent 操作电脑的权限与安全边界。' },
+  remote: { title: '移动端远程控制', subtitle: '扫码或在手机上打开链接，远程控制当前工作区。' },
   memory: { title: '记忆', subtitle: '管理 Agent 记忆库，存储跨会话的上下文信息。' },
   subagents: { title: '子智能体', subtitle: '管理可委派的子智能体。' },
   plugins: { title: '插件', subtitle: '启用或停用已安装的插件。插件可打包技能、命令、Hooks 和 MCP 服务器。' },
@@ -223,6 +226,7 @@ export function SettingsPage() {
             {activePage === 'cua' && (
               <CuaSettings settings={settings} onChange={updateSetting} />
             )}
+            {activePage === 'remote' && <WebRemoteControlPanel />}
             {activePage === 'mcp' && <McpSettings />}
             {activePage === 'usage' && <UsageSettings />}
             {activePage === 'onboarding' && (

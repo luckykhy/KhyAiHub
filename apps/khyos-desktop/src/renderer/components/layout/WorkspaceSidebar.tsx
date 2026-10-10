@@ -1131,7 +1131,7 @@ export function WorkspaceSidebar({
           )}
         </div>
         <button
-          onClick={() => toast('移动端远程控制未实现：需 relay 设备配对与扫码（登记于 ZC-ALIGN-002 M3）')}
+          onClick={() => { window.location.hash = '#/settings/remote' }}
           className="w-8 h-8 rounded-lg flex items-center justify-center text-foreground/60 hover:text-foreground hover:bg-surface-hover transition-colors flex-shrink-0"
           title="移动端远程控制"
           aria-label="移动端远程控制"

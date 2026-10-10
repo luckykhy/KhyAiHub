@@ -180,12 +180,56 @@ function loadTokenUsageService(): {
   return tokenUsageService
 }
 
-// Default context window for the "上下文已用 X / 总量 Y" counter. Overridable
-// via KHY_CONTEXT_WINDOW env (zero-hardcoding: env wins).
-function contextWindowLimit(): number {
+// 上下文窗口分母「总量 Y」的解析链（与 CLI/TUI 同一套真源，DESIGN-ARCH-154）：
+//   网关已解析的真值 > env KHY_CONTEXT_WINDOW > 静态真源表 > 128000 兜底
+//
+// 改动前这里是 `return 128000` 的字面量，与模型、与网关缓存全无关联 —— 于是
+// agnes（真实 256K~512K）显示成 128K、deepseek-chat（真实 64K）也显示成 128K，
+// 后者会让自动压缩算晚一倍，真发请求时上游直接 400。静态表取「宁可写小不可写大」
+// 的保守值（见 constants/modelContextWindows.js 逐条注释与出处）。
+//
+// 兜底那个数从 contextWindowDefaults 取，不写字面量：本仓的病灶之一就是同一个回退值
+// 散在多处各写一遍，改一处不跟其余（contextWindowDefaults.js 文件头自述）。
+function loadContextWindowDefaults(): { UNKNOWN_MODEL_CONTEXT_WINDOW?: number } {
+  try {
+    return nodeRequire(
+      path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'constants', 'contextWindowDefaults.js')
+    )
+  } catch {
+    return {}
+  }
+}
+
+function contextWindowLimit(model?: string): number {
+  const unknown = loadContextWindowDefaults().UNKNOWN_MODEL_CONTEXT_WINDOW || 128000
+  const modelId = String(model || '').trim()
+  if (modelId) {
+    try {
+      // 走 loadGateway() 而非读模块级 gateway 变量：AIGateway 构造函数会把「上次实测到的
+      // 窗口」播种进它的缓存，这里必须保证那一刻已经发生，否则首屏会绕过记忆、退回静态表。
+      // loadGateway 也在 try 内 —— 后端未部署时它会抛，若放到外面就把「回落静态表」变成
+      // 「整条 context.size 报错」。
+      const gw = loadGateway() as unknown as { getModelContextWindow?: (id: string) => number } | null
+      // 同步 getter 自身已在 miss 时 fire-and-forget 触发后台解析（网关路由层
+      // getModelContextWindow 内部如此），故这里不必也不应再 await 一次。
+      const live = gw?.getModelContextWindow?.(modelId)
+      if (Number.isFinite(live) && live > 0) return Math.floor(live)
+    } catch {
+      /* 真值不可得（网关未部署/后端缺文件）：落到下面的静态表 */
+    }
+  }
   const envVal = Number(process.env.KHY_CONTEXT_WINDOW)
   if (Number.isFinite(envVal) && envVal > 0) return Math.floor(envVal)
-  return 128000
+  if (!modelId) return unknown
+  try {
+    const { resolveModelContextWindow } = nodeRequire(
+      path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'constants', 'modelContextWindows.js')
+    )
+    return resolveModelContextWindow(modelId, unknown)
+  } catch {
+    /* 静态表不可用（后端未部署/路径变了）：回到真源兜底 */
+    return unknown
+  }
 }
 
 type ModelOption = {
@@ -726,7 +770,7 @@ function handleMessage(msg: HostMsg): void {
         type: 'context.sizeResult',
         id: msg.id,
         ok: true,
-        estimate: { used: estimate, total: contextWindowLimit() },
+        estimate: { used: estimate, total: contextWindowLimit(String((msg as { model?: string }).model ?? '')) },
       })
     } catch (error) {
       // 规则 2.2：错误消息 = 问题 + 原因 + 修复建议

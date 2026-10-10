@@ -7,6 +7,7 @@ import { execFile, fork } from 'child_process'
 import { openKeyManagerWindow } from './keyManagerWindow'
 import { registerKeyManagerIpc } from './keyManager/ipc'
 import { ptyCreate, ptyWrite, ptyResize, ptyKill, disposeAllPtys } from './ptyHost'
+import { createRemoteHub, type RemoteHub } from './remote/index'
 import { getSettingsStore, setSetting, getTheme, setTheme } from './settingsStore'
 import { getDataHome, baseHomeFile, _resetDataHomeCache } from './keyManager/keyStore'
 import {
@@ -82,6 +83,9 @@ app.commandLine.appendSwitch('disk-cache-dir', path.join(os.tmpdir(), 'KhyOS-Des
 let hostProcess: ReturnType<typeof fork> | null = null
 // scheduler 子进程（四进程架构的第四位，见 startSchedulerProcess）
 let schedulerProcess: ReturnType<typeof fork> | null = null
+// 移动端远程控制（ZC-ALIGN-002 M3）：协议与监听都在后端 src/webRemoteControl/，
+// 这里只持有接线实例，退出时显式 stop。
+let remoteHub: RemoteHub | null = null
 
 // Single workspace-root resolver. 打开工作区 / 添加项目 persist the chosen
 // directory to settings.desktopWorkspacePath; every workspace-scoped channel
@@ -273,6 +277,9 @@ function unrefSockets(proc: { stdout?: NodeJS.ReadableStream; stderr?: NodeJS.Re
 function handleHostMessage(msg: unknown): void {
   const m = msg as { type?: string; id?: string; [k: string]: unknown }
   if (!m || typeof m !== 'object') return
+  // 远程控制接线优先看一眼：它自己发的 RPC 用 remote_* 前缀，主路由的 pending map
+  // 里没有这些 id，会在这里被 resolve 掉（流事件则照常继续转发给渲染层）。
+  remoteHub?.consume(m)
   if (m.type === 'session.listResult' && m.id) {
     const entry = pendingSessionList.get(m.id)
     if (entry) {
@@ -686,6 +693,53 @@ async function createWindow() {
   // Real workspace root: the cwd the app was launched from (the open
   // workspace), replacing the previous hardcoded demo path (Rule 1).
   ipcMain.handle('app:workspacePath', () => getWorkspaceRoot())
+
+  // ── 移动端远程控制（ZC-ALIGN-002 M3 / [DESIGN-ARCH-092] §7.21）──
+  // 面板要的五件事：开关、状态、二维码刷新、配对确认、设备撤销。
+  remoteHub = createRemoteHub({
+    sendToHost: (m) => {
+      if (hostProcess?.connected) hostProcess.send(m as never)
+    },
+    hostAlive: () => Boolean(hostProcess && hostProcess.connected),
+    getWorkspaceRoot,
+    onEvent: (payload) => {
+      if (win.isDestroyed()) return
+      try {
+        win.webContents.send('remote:event', payload)
+      } catch (err) {
+        console.log('[remote] 事件推送失败:', String(err))
+      }
+    },
+    logger: (line) => console.log(line),
+  })
+  const readLanFlag = async (): Promise<boolean> => {
+    try {
+      const s = (await getSettingsStore()) as unknown as Record<string, unknown>
+      return s.webRemoteLanEnabled === true
+    } catch {
+      return false
+    }
+  }
+  ipcMain.handle('remote:start', async (_e, opts?: { lanEnabled?: boolean }) => {
+    const requested = typeof opts?.lanEnabled === 'boolean' ? opts.lanEnabled : null
+    if (requested !== null) {
+      try {
+        await setSetting('webRemoteLanEnabled', requested)
+      } catch (err) {
+        console.log('[remote] 局域网开关持久化失败:', String(err))
+      }
+    }
+    return remoteHub!.start({ lanEnabled: requested ?? (await readLanFlag()) })
+  })
+  ipcMain.handle('remote:stop', () => remoteHub!.stop())
+  ipcMain.handle('remote:status', () => remoteHub!.status())
+  ipcMain.handle('remote:refreshQr', () => remoteHub!.refreshQr())
+  ipcMain.handle('remote:approve', (_e, pairingId: string, role: string) =>
+    remoteHub!.approve(String(pairingId || ''), String(role || 'viewer')),
+  )
+  ipcMain.handle('remote:reject', (_e, pairingId: string) => remoteHub!.reject(String(pairingId || '')))
+  ipcMain.handle('remote:revoke', (_e, deviceId: string) => remoteHub!.revoke(String(deviceId || '')))
+  ipcMain.handle('remote:probeBridge', () => remoteHub!.probeBridge())
 
   // ── 工作空间选择（[DESIGN-ARCH-125] P-01/P-02）──
   // 读：当前根 + 最近打开候选集 + 项目登记。当前值一律经 getWorkspaceRoot() 的唯一真源
@@ -1113,7 +1167,7 @@ async function createWindow() {
 
   // 上下文窗口估算 — 转发给 host，host 用后端 tokenUsageService.estimateTokens
   // （与 /cost 同源启发式）估算当前会话 token 数 + 上下文窗口上限（ZC-ALIGN-001 P3-5/P3-6）。
-  ipcMain.handle('context:size', async (_e, text?: string) => {
+  ipcMain.handle('context:size', async (_e, text?: string, model?: string) => {
     if (!hostProcess || !hostProcess.connected) {
       return { ok: false, estimate: null, error: 'host 进程未启动：请重启 KhyOS Desktop 后重试' }
     }
@@ -1126,7 +1180,7 @@ async function createWindow() {
       pendingContextSize.set(id, {
         resolve: (v: unknown) => { clearTimeout(timer); resolve(v) },
       })
-      hostProcess!.send({ type: 'context.size', id, text: typeof text === 'string' ? text : '' })
+      hostProcess!.send({ type: 'context.size', id, text: typeof text === 'string' ? text : '', model: typeof model === 'string' ? model : '' })
     })
   })
 
@@ -1463,6 +1517,12 @@ app.on('will-quit', () => {
     disposeAllPtys()
   } catch {
     /* already gone */
+  }
+  // 远程控制是主进程持有的监听 socket：退出前显式停，手机侧收到 KICKED 而不是悬空。
+  try {
+    void remoteHub?.stop()
+  } catch {
+    /* already stopped */
   }
   // 子进程随应用退出（scheduler 也会在 IPC disconnect 时自退，这里是双保险）
   try {
