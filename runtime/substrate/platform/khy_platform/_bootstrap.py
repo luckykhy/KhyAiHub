@@ -14,7 +14,7 @@ khy OS 首次启动初始化（bootstrap）
 初始化是"可重复安全"的：
 - 完成后会写入标记文件 `.khy_quant_bootstrapped`
 - seed 成功后会写入标记文件 `.khy_quant_seeded`
-- 下次启动检测到两个标记才完全跳过
+- 下次启动检测到两个标记**且关键依赖真有内容**才完全跳过
 - 若初始化中断，删除标记后重试即可
 """
 import os
@@ -198,6 +198,32 @@ def _path_exists_safe(p: Path) -> bool:
         return False
 
 
+def _pkg_has_content(pkg_dir: Path) -> bool:
+    """判「这个包真装好了」：跟随链接后能读到 package.json。
+
+    `Path.exists()` **跟随**符号链接，所以 pnpm 布局里「链接已建、内容没解包」的
+    空实体一律报 True。判据一旦用它，bootstrap 就跳过 npm install、marker 照写，
+    于是永不自愈：CJS require 靠向上回退侥幸能跑，ESM import 不回退直接
+    ERR_MODULE_NOT_FOUND（TUI 的 `ink` 就是这样炸的）。见 `hydrationHealth` 的
+    hollow-package 规则。
+    """
+    return _path_exists_safe(pkg_dir / "package.json")
+
+
+def _core_deps_ok(backend_dir: Path) -> bool:
+    """核心依赖是否真有内容：express（HTTP 骨架）+ @khy/shared（file: 软链）。
+
+    刻意只挑「塌陷即致命」的两个，不扩到 CRITICAL_PACKAGES 全集——ink 在 pnpm
+    布局里可能只落在仓库根 store 而非后端目录，把它纳入判据会让完好安装误判为
+    空心，反而逼出每次开机一轮 npm install。
+    """
+    nm = backend_dir / "node_modules"
+    return (
+        _pkg_has_content(nm / "express")
+        and _pkg_has_content(nm / "@khy" / "shared")
+    )
+
+
 def _has_llama_pkg(node_modules: Path) -> bool:
     """Check if node-llama-cpp is installed (scoped or flat)."""
     return (
@@ -208,7 +234,7 @@ def _has_llama_pkg(node_modules: Path) -> bool:
 
 def _has_cw_sdk(node_modules: Path) -> bool:
     """Check if the Kiro CodeWhisperer streaming SDK is installed."""
-    return _path_exists_safe(node_modules / "@aws" / "codewhisperer-streaming-client")
+    return _pkg_has_content(node_modules / "@aws" / "codewhisperer-streaming-client")
 
 
 def _node_env(backend_dir: Path) -> dict:
@@ -741,7 +767,11 @@ def ensure_bootstrapped(backend_dir: Path, node_cmd: str):
     # so that `pip install --upgrade` triggers a forced token refresh.
     _check_version_upgrade(backend_dir)
 
-    if marker.exists() and seed_marker.exists():
+    # 两个标记只证明「上一次跑到过」，不证明依赖现在还在：node_modules 事后被清空或
+    # 装成空壳时，marker 仍声称就绪并把 hydrate 短路掉 → 永不自愈（splitbrain /
+    # hollow-package）。所以短路前做一次内容级复核。
+    _deps_ready = _core_deps_ok(backend_dir)
+    if marker.exists() and seed_marker.exists() and _deps_ready:
         # B1: 并行执行独立的 _maybe_* 修复(均为文件 I/O,无互相依赖, ~50-200ms 节省)
         with ThreadPoolExecutor(max_workers=4) as pool:
             futures = [
@@ -758,6 +788,13 @@ def ensure_bootstrapped(backend_dir: Path, node_cmd: str):
         _maybe_prebuild_khyos_kernel(backend_dir, node_cmd, kernel_prebuild_marker)
         _surface_kernel_build_result(_khyos_cache_dir())
         return  # 安装与 seed 都完成，直接跳过
+
+    # 标记声称就绪但依赖空壳 → 作废安装标记，让下面的 npm 依赖步骤真的重跑
+    # （成功后才重写标记，失败则如实 WARN 且保持未写状态，下次继续尝试）。
+    if marker.exists() and not _deps_ready:
+        print("  [WARN] 依赖标记声称已装好，但关键包目录是空的（链接指向未解包的实体）"
+              "——已作废该标记，本次启动将重新安装依赖。")
+        _remove_quiet(marker)
 
     print()
     print("  khy OS first-run setup...")
@@ -1779,6 +1816,22 @@ def _maybe_configure_ide_gateway(backend_dir: Path):
     _write_marker(marker, detected)
 
 
+def _locate_ai_frontend(backend_dir: Path):
+    """Find the ai-frontend checkout that ships with this backend, or None.
+
+    Forest layout since the R4 migration: ai-frontend lives at
+    <root>/delivery/web/ai-frontend, three levels above runtime/node/backend.
+    Pre-migration checkouts kept it at <root>/apps/ai-frontend, two levels above
+    services/backend — still recognized so old installs keep bootstrapping.
+    """
+    if len(backend_dir.parents) >= 3:
+        candidate = backend_dir.parents[2] / "delivery" / "web" / "ai-frontend"
+        if candidate.exists():
+            return candidate
+    legacy = backend_dir.parent.parent / "apps" / "ai-frontend"
+    return legacy if legacy.exists() else None
+
+
 def _ensure_npm_install(backend_dir: Path) -> bool:
     """确保 Node 依赖完整；缺失时自动执行 npm install。"""
     node_modules = backend_dir / "node_modules"
@@ -1788,13 +1841,8 @@ def _ensure_npm_install(backend_dir: Path) -> bool:
 
     # Core packages that must be present; optional packages checked separately
     # so their absence does NOT trigger a full npm install loop.
-    core_packages = [node_modules / "express"]
-    # @khy/shared uses file: dep → may be a symlink/junction; use safe check
-    core_ok = (
-        _path_exists_safe(node_modules)
-        and _path_exists_safe(core_packages[0])
-        and _path_exists_safe(shared_link)
-    )
+    # 判据是内容级（跟随链接后能读到 package.json），不是路径存在——见 _pkg_has_content。
+    core_ok = _core_deps_ok(backend_dir)
 
     if core_ok:
         print("  [OK] Node.js dependencies already installed")
@@ -1867,9 +1915,8 @@ def _ensure_npm_install(backend_dir: Path) -> bool:
 
     finally:
         # ── ai-frontend npm install + build (管理界面前端) ──
-        # forest layout: ai-frontend lives at apps/ai-frontend, two levels above services/backend
-        ai_frontend_dir = backend_dir.parent.parent / "apps" / "ai-frontend"
-        if ai_frontend_dir.exists() and (ai_frontend_dir / "package.json").exists():
+        ai_frontend_dir = _locate_ai_frontend(backend_dir)
+        if ai_frontend_dir and (ai_frontend_dir / "package.json").exists():
             nm = ai_frontend_dir / "node_modules"
             lock = nm / ".package-lock.json"
             npm_ok = _path_exists_safe(nm) and _path_exists_safe(lock)
@@ -1913,9 +1960,8 @@ def _ensure_npm_install(backend_dir: Path) -> bool:
 
 def _maybe_build_ai_frontend(backend_dir: Path):
     """If ai-frontend has node_modules but no dist/index.html, run npm build once."""
-    # forest layout: ai-frontend lives at apps/ai-frontend, two levels above services/backend
-    ai_frontend_dir = backend_dir.parent.parent / "apps" / "ai-frontend"
-    if not ai_frontend_dir.exists():
+    ai_frontend_dir = _locate_ai_frontend(backend_dir)
+    if not ai_frontend_dir:
         return
     dist_index = ai_frontend_dir / "dist" / "index.html"
     if _path_exists_safe(dist_index):
