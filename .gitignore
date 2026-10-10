@@ -298,3 +298,26 @@ apps/khyos-desktop/electron.vite.config.*.mjs
 /.ai/
 #   .codeartsdoer/ —— CodeArts Doer 工具本机状态（skills/agents/mcp/temp 等）。
 /.codeartsdoer/
+
+# --- 2026-10-10 构建产物 / 本机态 / 近重复备份收口 ---
+#   apps/khyos-desktop/out/ —— esbuild 产物。此前 9 个文件被跟踪且在每次构建后
+#   产生 diff（out/main/index.js 一个文件就 +284/-10）。契约件是源码不是产物，
+#   故 git rm --cached 后整目录忽略。
+apps/khyos-desktop/out/
+#   runtime/node/backend/Microsoft/ —— PowerShell ModuleAnalysisCache 遥测缓存，
+#   在仓内生成，与本仓无关。注意与已存在的 runtime/works/ 不是同一路径。
+runtime/node/backend/Microsoft/
+#   runtime/node/backend/works/ 与 apps/khyos-desktop/works/ —— 运行时数据目录
+#   （内容 data/），同 works/data/ 本机态语义；既有的 runtime/works/ 罩不到这两处。
+runtime/node/backend/works/
+apps/khyos-desktop/works/
+#   smoke_*.tmp.jsonl / smoke_*.tmp.js —— 冒烟测试残留临时文件。
+**/smoke_*.tmp.*
+#   *.bak-<日期>-fix —— 手工改动前对**已跟踪**文件做的近重复备份
+#   （claudeAdapter.js.bak-20261009-fix 123KB、aiGatewayGenerateMethod.js.bak-20261009-fix 331KB）。
+#   原文件已在版本控制里，备份只会让两份漂移。既有 .env.bak-* 只覆盖 .env，故补通用形态。
+*.bak-*
+#   /khy-os.lnk —— 根级 Windows 快捷方式，内含硬编码 D:\Portable\khy-os（违反便携规约）。
+#   只锚定根级这一个：apps/khyos-desktop/launcher/KhyOS Desktop.lnk 是**已跟踪**的
+#   契约件，用 *.lnk 会把它一起罩住。
+/khy-os.lnk
