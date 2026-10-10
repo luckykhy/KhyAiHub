@@ -453,12 +453,17 @@ const CPA_SERVICE = Object.freeze({
 // ── Self-update sources ─────────────────────────────────────────────────────
 // Release sources and release tracks are separate concepts. Consumers select
 // sources in this fixed order while stable/preview/dev remains the track.
+//
+// 2026-10-10：这里原先硬编码默认仓 `luckykhy/khy_os`，该**公共仓已删除**
+// （它只有 1 个 Release —— v1.1.8 / 2026-07-26，而工程版本早已到 1.2.0，
+// 也就是说这个默认值从 7 月底起就一直在报错答案）。删除后三个默认值全部改为空串：
+// 没有更新源时，探针应明确报「未配置」，而不是去请求一个拼出来的坏 URL。
+// 部署侧用 KHY_UPDATE_GITHUB_REPOSITORY / KHY_UPDATE_GITHUB_RELEASES_API /
+// KHY_UPDATE_GITHUB_REPOSITORY_API 指定真实源。
 const UPDATE = Object.freeze({
-  GITHUB_REPOSITORY: process.env.KHY_UPDATE_GITHUB_REPOSITORY || 'luckykhy/khy_os',
-  GITHUB_RELEASES_API: process.env.KHY_UPDATE_GITHUB_RELEASES_API || `https://api.github.com/repos/${process.env.KHY_UPDATE_GITHUB_REPOSITORY || 'luckykhy/khy_os'}/releases`,
-  GITHUB_REPOSITORY_API:
-    process.env.KHY_UPDATE_GITHUB_REPOSITORY_API ||
-    `https://api.github.com/repos/${process.env.KHY_UPDATE_GITHUB_REPOSITORY || 'luckykhy/khy_os'}`,
+  GITHUB_REPOSITORY: process.env.KHY_UPDATE_GITHUB_REPOSITORY || '',
+  GITHUB_RELEASES_API: process.env.KHY_UPDATE_GITHUB_RELEASES_API || '',
+  GITHUB_REPOSITORY_API: process.env.KHY_UPDATE_GITHUB_REPOSITORY_API || '',
   GITHUB_RAW_BASE_URL: process.env.KHY_UPDATE_GITHUB_RAW_BASE_URL || 'https://raw.githubusercontent.com',
   // The runnable backend manifest on GitHub's default branch is also a release surface:
   // it may advance before a GitHub Release/tag is created.
@@ -484,7 +489,9 @@ const PAYLOAD = Object.freeze({
     process.env.KHY_PAYLOAD_GITHUB_REPOSITORY || UPDATE.GITHUB_REPOSITORY,
   RELEASE_DOWNLOAD_BASE_URL:
     process.env.KHY_PAYLOAD_RELEASE_BASE_URL ||
-    `https://github.com/${process.env.KHY_PAYLOAD_GITHUB_REPOSITORY || UPDATE.GITHUB_REPOSITORY}/releases/download`,
+    (UPDATE.GITHUB_REPOSITORY
+      ? `https://github.com/${UPDATE.GITHUB_REPOSITORY}/releases/download`
+      : ''),
   TAG_PATTERN: process.env.KHY_PAYLOAD_TAG_PATTERN || UPDATE.GITHUB_TAG_PATTERN,
   MANIFEST_ASSET: process.env.KHY_PAYLOAD_MANIFEST_ASSET || 'khy-payload-manifest.json',
   DOWNLOAD_IDLE_TIMEOUT_MS: parseInt(

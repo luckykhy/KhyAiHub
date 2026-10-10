@@ -99,12 +99,15 @@ describe('Latest Version Resolver', () => {
           { tag_name: 'v1.0.9' },
         ];
         const fetch = async () => ({ ok: true, status: 200, async json() { return releases; } });
-        const probed = await resolver._probeGithub({ env: {}, fetch });
+        const probed = await resolver._probeGithub({ env: { KHY_UPDATE_GITHUB_REPOSITORY: 'luckykhy/khy_os' }, fetch });
         expect(probed.version).toBe('1.1.10');
         expect(probed.raw).toBe('v1.1.10');
   });
 
   test('GitHub branch manifest wins when it is ahead of the latest formal Release', async () => {
+        // 2026-10-10：原默认仓 luckykhy/khy_os 已删除，默认值改为空串。
+        // 这里显式配置仓库，不再依赖任何硬编码默认值。
+        const env = { KHY_UPDATE_GITHUB_REPOSITORY: 'luckykhy/khy_os' };
         const fetch = async (url) => {
           if (url.endsWith('/releases')) {
             return { ok: true, status: 200, async json() { return [{ tag_name: 'v1.1.8' }]; } };
@@ -117,7 +120,7 @@ describe('Latest Version Resolver', () => {
           }
           throw new Error(`unexpected URL: ${url}`);
         };
-        const probed = await resolver._probeGithub({ env: {}, fetch });
+        const probed = await resolver._probeGithub({ env, fetch });
         expect(probed.releaseVersion).toBe('1.1.8');
         expect(probed.branchVersion).toBe('1.1.10');
         expect(probed.version).toBe('1.1.10');
@@ -126,9 +129,22 @@ describe('Latest Version Resolver', () => {
 
   test('GitHub probe reports an empty release list instead of guessing', async () => {
         const fetch = async () => ({ ok: true, status: 200, async json() { return []; } });
-        const probed = await resolver._probeGithub({ env: {}, fetch });
+        const probed = await resolver._probeGithub({ env: { KHY_UPDATE_GITHUB_REPOSITORY: 'luckykhy/khy_os' }, fetch });
         expect(probed.version).toBe(null);
         expect(probed.error).toMatch(/没有已发布\s*Release/);
+  });
+
+  test('no update source configured says so instead of fetching a malformed URL', async () => {
+        // 原默认仓 luckykhy/khy_os 已于 2026-10-10 删除，默认值改为空串。
+        // 这条锁住「不许再把某个具体仓写死成默认值」：空配置必须明确报未配置，
+        // 而不是拼出 https://api.github.com/repos//releases 然后把配置问题
+        // 报成「端点必须使用 HTTPS」。
+        let fetched = null;
+        const fetch = async (url) => { fetched = url; throw new Error('should not fetch'); };
+        const probed = await resolver._probeGithub({ env: {}, fetch });
+        expect(fetched).toBe(null);
+        expect(probed.version).toBe(null);
+        expect(probed.error).toMatch(/未配置更新源/);
   });
 
   test('npm probe reads the latest dist-tag of the scoped package', async () => {
@@ -137,7 +153,7 @@ describe('Latest Version Resolver', () => {
           requested = url;
           return { ok: true, status: 200, async json() { return { version: '0.1.31' }; } };
         };
-        const probed = await resolver._probeNpm({ env: {}, fetch });
+        const probed = await resolver._probeNpm({ env: { KHY_UPDATE_GITHUB_REPOSITORY: 'luckykhy/khy_os' }, fetch });
         expect(probed.version).toBe('0.1.31');
         expect(probed.package).toBe('@khy-os/khy-os');
         expect(requested).toMatch(/registry\.npmjs\.org\/%40khy-os%2Fkhy-os\/latest$/);
@@ -150,7 +166,7 @@ describe('Latest Version Resolver', () => {
           if (/khy-os/.test(url)) throw new Error('HTTP 404');
           return { ok: true, status: 200, async json() { return { info: { version: '1.8.0' } }; } };
         };
-        const probed = await resolver._probePypi({ env: {}, fetch });
+        const probed = await resolver._probePypi({ env: { KHY_UPDATE_GITHUB_REPOSITORY: 'luckykhy/khy_os' }, fetch });
         expect(probed.version).toBe('1.8.0');
         expect(probed.package).toBe('khy-quant');
         expect(urls.length).toBe(2);
