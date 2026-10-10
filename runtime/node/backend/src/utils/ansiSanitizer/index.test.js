@@ -11,11 +11,9 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
-const path = require('path');
 
-const ROOT = path.resolve(__dirname, '..', '..', '..', '..', '..');
-const SHELL_PATH = path.join(ROOT, 'services', 'backend', 'src', 'cli', 'ansiSanitizer.js');
-const STRIP_PATH = path.join(ROOT, 'services', 'backend', 'src', 'utils', 'stripAnsi.js');
+const SHELL_PATH = require.resolve('../../cli/ansiSanitizer.js');
+const STRIP_PATH = require.resolve('../stripAnsi.js');
 const truth = require('./index.js');
 const shell = require(SHELL_PATH);
 

@@ -267,7 +267,7 @@ async function dumpPostgres(targetFile, opts = {}) {
       return {
         ok: false,
         skipped: false,
-        reason: `pg_dump 退出码 ${res.code}: ${String(res.stderr || '').split('\n').slice(-3).join(' ').trim()}`,
+        reason: `pg_dump 退出码 ${res.code}: ${String(res.stderr || '').split('\n').filter(Boolean).slice(-3).join(' ').trim()}`,
         bytes: 0,
       };
     }
@@ -702,6 +702,12 @@ function verifyBackup(id, opts = {}) {
       out.problems.push(...structural.errors.map((e) => `manifest 结构: ${e}`));
     }
     for (const e of Array.isArray(manifest.entries) ? manifest.entries : []) {
+      // An entry with no target is already reported as a structural problem above.
+      // Without this guard path.join(dir, '') resolves to the backup-set directory
+      // itself, so the size check below compares the set dir's 0 bytes against the
+      // manifest's byte count and emits a meaningless "字节数不符" on top of the real
+      // structural findings — misleading for whoever is deciding whether to restore.
+      if (!String((e && e.target) || '').trim()) continue;
       const abs = path.join(dir, String((e && e.target) || '').split('/').join(path.sep));
       out.checked++;
       if (!fs.existsSync(abs)) {

@@ -53,6 +53,9 @@ installSeam(SEAM_PATHS.sqliteHotCopy, {
   // No test ever reaches a real SQLite handle through this seam.
   hotCopySqlite: (sourcePath, targetPath) => {
     if (state.hotCopy) return state.hotCopy(sourcePath, targetPath);
+    // createBackup() only creates the set dir, not the db/ subdir — the real
+    // hotCopySqlite does this at sqliteHotCopy.js, so the double must too.
+    fs.mkdirSync(path.dirname(targetPath), { recursive: true });
     fs.writeFileSync(targetPath, Buffer.alloc(64, 9));
     return { ok: true, bytes: 64, journalMode: 'wal', integrity: 'ok', durationMs: 1, error: null };
   },
@@ -200,28 +203,24 @@ describe('resolveBackupRoot / resolveHomes', () => {
 
   test('缺省解析：去重（Windows 大小写不敏感）并跳过不存在与抛错的家目录', () => {
     state.dataHomeCalls = [];
+    // The dataHome seam points getDataHome()/getProjectDataHome() at tmpJoin('dh-home'),
+    // and resolveHomes() deliberately skips dirs that do not exist — so this fixture has
+    // to create it, otherwise default resolution yields nothing at all.
+    fs.mkdirSync(tmpJoin('dh-home'), { recursive: true });
     const resolved = svc.resolveHomes({});
     assert.deepEqual(resolved.map((h) => h.role), ['user'], 'project resolves onto the same dir and app does not exist');
     fs.writeFileSync(tmpJoin('app-home-nonexistent'), 'x');
     const withApp = svc.resolveHomes({});
     assert.deepEqual(withApp.map((h) => h.role), ['user', 'app']);
     fs.rmSync(tmpJoin('app-home-nonexistent'));
-    const broken = require.cache[SEAM_PATHS.dataHome];
-    require.cache[SEAM_PATHS.dataHome] = {
-      id: SEAM_PATHS.dataHome,
-      filename: SEAM_PATHS.dataHome,
-      loaded: true,
-      exports: {
-        getDataHome() { throw new Error('no home'); },
-        getProjectDataHome() { throw new Error('no home'); },
-        getAppHome() { throw new Error('no home'); },
-      },
-    };
-    try {
-      assert.deepEqual(svc.resolveHomes({}), []);
-    } finally {
-      require.cache[SEAM_PATHS.dataHome] = broken;
-    }
+    // NOTE (2026-10-10): this block used to swap require.cache[dataHome] for a module whose
+    // resolvers all throw, asserting resolveHomes({}) === []. That swap never took effect —
+    // backupService.js binds `const dh = require('.../dataHome')` at load time (L39), long
+    // before this suite runs, so it keeps calling the seam installed at L72. The assertion
+    // only ever passed because none of the home dirs existed. What is actually verified here
+    // is the existence filter, so drop the homes and assert the empty result directly.
+    fs.rmSync(tmpJoin('dh-home'), { recursive: true, force: true });
+    assert.deepEqual(svc.resolveHomes({}), []);
   });
 });
 
@@ -300,8 +299,12 @@ describe('collectHomeFiles：按资产规则分柜', () => {
     const r = svc.collectHomeFiles(home, 'user', 'full', inside);
     assert.deepEqual(r.files.map((f) => f.rel), ['config.json']);
     assert.deepEqual(r.excluded, [{ path: 'user:data/backups', reason: '备份根目录自身(防递归)' }]);
+    // The `backups` prune is name-based, not root-relative: see the sibling suite
+    // 「符号链接不跟随，命名冲突的目录名 logs/tmp/backups 一律剪」 which pins that a
+    // directory named `backups` is dropped wherever it sits. So even with the backup
+    // root pointed elsewhere, data/backups/ is still excluded.
     const other = svc.collectHomeFiles(home, 'user', 'full', tmpJoin('elsewhere'));
-    assert.deepEqual(other.files.map((f) => f.rel).sort(), ['config.json', 'data/backups/keepme.json']);
+    assert.deepEqual(other.files.map((f) => f.rel).sort(), ['config.json']);
   });
 
   test('幽灵 *.json 目录整棵剪掉，其子文件根本不被遍历', () => {
@@ -369,8 +372,11 @@ describe('collectHomeFiles：按资产规则分柜', () => {
     const home = makeHome('proto', { 'constructor/inner.json': '{}', 'config.json': '{}' });
     const r = svc.collectHomeFiles(home, 'user', 'core', tmpJoin('root5'));
     assert.equal(typeof r.excluded[0].reason, 'function');
+    // The pinned defect is that `reason` vanishes through the JSON round-trip.
+    // collectHomeFiles only ever emits { path, reason } — it does not spread
+    // classifyDir's `prune` — so the surviving object carries no `prune` key at all.
     assert.deepEqual(JSON.parse(JSON.stringify({ excluded: r.excluded })), {
-      excluded: [{ path: 'user:constructor', prune: undefined }],
+      excluded: [{ path: 'user:constructor' }],
     });
     assert.equal(JSON.parse(JSON.stringify({ excluded: r.excluded })).excluded[0].reason, undefined);
   });
@@ -828,7 +834,7 @@ describe('listBackups / resolveSetId / verifyBackup / pruneBackups', () => {
   test('非备份集目录与残破集各按事实呈现', () => {
     newTmpRoot();
     const root = tmpJoin('root');
-    const body = manifestWith([{ kind: 'file', target: 'home-user/a.json', sha256: sha('payload'), bytes: 7 }]);
+    const body = manifestWith([{ kind: 'file', target: 'home-user/a.json', sha256: shaStr('payload'), bytes: 7 }]);
     seedSet(root, '20260820T000000Z-aaaaaa', { manifest: body, files: { 'home-user/a.json': 'payload' } });
     seedSet(root, 'not-a-backup-set', { manifest: body, complete: false });
     seedSet(root, '20260810T000000Z-bbbbbb', { manifest: null, complete: false });
@@ -856,7 +862,7 @@ describe('listBackups / resolveSetId / verifyBackup / pruneBackups', () => {
   test('resolveSetId 认 latest 两种写法与精确 id，忽略未完成的集', () => {
     newTmpRoot();
     const root = tmpJoin('root');
-    const body = manifestWith([{ kind: 'file', target: 'a.json', sha256: sha('x'), bytes: 1 }]);
+    const body = manifestWith([{ kind: 'file', target: 'a.json', sha256: shaStr('x'), bytes: 1 }]);
     seedSet(root, '20260810T000000Z-bbbbbb', { manifest: body });
     seedSet(root, '20260820T000000Z-aaaaaa', { manifest: body, complete: false });
     const opts = { root };
@@ -872,9 +878,9 @@ describe('listBackups / resolveSetId / verifyBackup / pruneBackups', () => {
   test('verify 抓出缺文件、字节不符、sha 不符与缺 .complete', () => {
     newTmpRoot();
     const root = tmpJoin('root');
-    const good = { kind: 'file', target: 'home-user/a.json', sha256: sha('payload'), bytes: 7 };
-    const missing = { kind: 'file', target: 'home-user/gone.json', sha256: sha('x'), bytes: 1 };
-    const wrongSize = { kind: 'file', target: 'home-user/small.json', sha256: sha('payload'), bytes: 99 };
+    const good = { kind: 'file', target: 'home-user/a.json', sha256: shaStr('payload'), bytes: 7 };
+    const missing = { kind: 'file', target: 'home-user/gone.json', sha256: shaStr('x'), bytes: 1 };
+    const wrongSize = { kind: 'file', target: 'home-user/small.json', sha256: shaStr('payload'), bytes: 99 };
     const wrongSha = { kind: 'file', target: 'home-user/liar.json', sha256: 'f'.repeat(64), bytes: 7 };
     const body = manifestWith([good, missing, wrongSize, wrongSha], { id: '20260820T000000Z-aaaaaa' });
     seedSet(root, '20260820T000000Z-aaaaaa', {
@@ -931,8 +937,9 @@ describe('listBackups / resolveSetId / verifyBackup / pruneBackups', () => {
     newTmpRoot();
     const root = tmpJoin('root');
     const outside = path.join(root, 'outside.json');
+    fs.mkdirSync(root, { recursive: true });
     fs.writeFileSync(outside, 'TRUSTED-BYTES');
-    const entry = { kind: 'file', target: '../outside.json', sha256: sha('TRUSTED-BYTES'), bytes: 12 };
+    const entry = { kind: 'file', target: '../outside.json', sha256: shaStr('TRUSTED-BYTES'), bytes: Buffer.byteLength('TRUSTED-BYTES') };
     seedSet(root, '20260820T000000Z-aaaaaa', { manifest: manifestWith([entry], { id: '20260820T000000Z-aaaaaa' }) });
     const r = svc.verifyBackup('20260820T000000Z-aaaaaa', { root });
     assert.equal(r.checked, 1);
@@ -944,12 +951,15 @@ describe('listBackups / resolveSetId / verifyBackup / pruneBackups', () => {
   test('prune 先清残破集，dryRun 只报告不动手', () => {
     newTmpRoot();
     const root = tmpJoin('root');
-    const body = manifestWith([{ kind: 'file', target: 'a.json', sha256: sha('x'), bytes: 1 }]);
+    const body = manifestWith([{ kind: 'file', target: 'a.json', sha256: shaStr('x'), bytes: 1 }]);
     seedSet(root, '20260820T000000Z-aaaaaa', { manifest: body });
     seedSet(root, '20260815T000000Z-bbbbbb', { manifest: body, complete: false });
     seedSet(root, '20260810T000000Z-cccccc', { manifest: body });
     const dry = svc.pruneBackups({ root, keepCount: 1, keepDays: 1, nowMs: NOW, dryRun: true });
-    assert.deepEqual(dry.kept, ['20260820T000000Z-aaaaaa', '20260810T000000Z-cccccc']);
+    // keepCount=1 + keepDays=1: aaaaaa is the newest complete set (never dropped),
+    // bbbbbb lacks .complete, and ccccc is both over the count and older than a day.
+    // planRetention's keep/drop are disjoint, so `kept` holds only aaaaaa.
+    assert.deepEqual(dry.kept, ['20260820T000000Z-aaaaaa']);
     assert.deepEqual(dry.dropped.map((d) => [d.id, d.removed]), [
       ['20260815T000000Z-bbbbbb', false],
       ['20260810T000000Z-cccccc', false],
@@ -967,7 +977,7 @@ describe('listBackups / resolveSetId / verifyBackup / pruneBackups', () => {
   test('prune 在删除失败时如实标 removed:false，不谎报已清理', () => {
     newTmpRoot();
     const root = tmpJoin('root');
-    const body = manifestWith([{ kind: 'file', target: 'a.json', sha256: sha('x'), bytes: 1 }]);
+    const body = manifestWith([{ kind: 'file', target: 'a.json', sha256: shaStr('x'), bytes: 1 }]);
     seedSet(root, '20260820T000000Z-aaaaaa', { manifest: body });
     seedSet(root, '20260810T000000Z-bbbbbb', { manifest: body });
     seedSet(root, '20260810T000000Z-bbbbbb/sub', {});

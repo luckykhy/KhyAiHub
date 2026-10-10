@@ -13,9 +13,9 @@ const path = require('node:path');
 const runner = require('./docsFreshnessRunner');
 const { buildValueMap, NOTICE } = require('./docMarkerSync');
 
-// docsFreshness sits 7 levels under the repo root:
-// services/backend/src/services/domain/docs/docsFreshness
-const REPO_ROOT = path.resolve(__dirname, '../../../../../../../');
+// docsFreshness sits 8 levels under the repo root:
+// runtime/node/backend/src/services/domain/docs/docsFreshness
+const REPO_ROOT = path.resolve(__dirname, '../../../../../../../../');
 const TMP_BASE = path.join(REPO_ROOT, '.khyos', 'tmp');
 const MAX_DOC_BYTES = 512 * 1024; // 与 runner 内部上限同值，仅用于边界测试
 

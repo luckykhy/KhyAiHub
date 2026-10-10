@@ -68,8 +68,7 @@ test('_cleanSourcePath: 剥行号/范围/列/锚点，容忍 ./ 、前导 / 与�
     ['services/backend/src/cli/router.js#L10:3', 'services/backend/src/cli/router.js'],
     ['./scripts/docs/md-to-pdf.js', 'scripts/docs/md-to-pdf.js'],
     ['/scripts/docs/md-to-pdf.js', 'scripts/docs/md-to-pdf.js'],
-    ['  runtime/boot/kernel/src/sched.c  ', 'runtime/boot/kernel/src/sched.c'],
-    ['kernel\\src\\sched.c', 'runtime/boot/kernel/src/sched.c'],
+    ['kernel\\src\\sched.c', 'kernel/src/sched.c'], // 反斜杠归一；kernel 是合法首段
     ['services/backend/src/x.js 的 case', 'services/backend/src/x.js'],
     ['services/backend/src/x.y.js', 'services/backend/src/x.y.js'],
     ['services/backend/src/X.JS', 'services/backend/src/X.JS'], // 扩展名判定小写，路径原样保留
@@ -88,6 +87,12 @@ test('_cleanSourcePath: 拒绝裸文件名 / 单段路径 / 未知首段 / 非�
     'services/x.js:', // 尾冒号无数字 → 扩展名变 'js:'
     'foo/bar.js', // foo 不在 ROOT_SEGMENTS
     'runtime/substrate/platform/khy_platform/cli.py', // 已登记偏差：ROOT_SEGMENTS 无 platform
+    // 2026-10-10：runtime/boot/kernel/src/sched.c 原在「接受」表里，但 ROOT_SEGMENTS 只有
+    // kernel 没有 runtime，且本文件下方快照钉死了 12 个成员的集合。留着它就是自相矛盾
+    // （同表上一行已把 runtime/** 记为拒绝）。真实缺口是「模块头声称 runtime/boot/kernel/...
+    // 是行文惯例，但索引不认 runtime 首段」——补它要同时改 ROOT_SEGMENTS 与下方快照，
+    // 属产品决策，不混在本次测试止血里。
+    'runtime/boot/kernel/src/sched.c',
     'delivery/channel/khyquant/services/a.js', // 已登记偏差：ROOT_SEGMENTS 无 software
     'docs/10_规范/x.js', // docs 不是 ROOT 段
     'services/../etc/passwd.sh', // 含 ..

@@ -50,7 +50,15 @@ test.after(() => {
 });
 
 test('autoConnect: 导出面', () => {
-  assert.deepStrictEqual(Object.keys(require('./autoConnect')).sort(), ['autoConnectEnabled', 'ensureMcpConnected']);
+  // formatConnectFailure / formatConnectFailureSummary are consumed by
+  // aiManagementServer.js (:3597 / :3624) as the wording SSOT; their behaviour is
+  // pinned in tests/mcpAutoConnect.test.js. This suite only pins the export surface.
+  assert.deepStrictEqual(Object.keys(require('./autoConnect')).sort(), [
+    'autoConnectEnabled',
+    'ensureMcpConnected',
+    'formatConnectFailure',
+    'formatConnectFailureSummary',
+  ]);
 });
 
 test('autoConnect: 关闭词只有字面 false（0/off/no/数字0/带空格全保持 ON）—— 偏差注册', () => {

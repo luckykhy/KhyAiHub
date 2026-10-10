@@ -83,9 +83,11 @@ test('bundleDirFor 传 outDir 时是纯路径拼接且数字 sessionId 强转字
 test('bundleDirFor 缺省 outDir 时落到（被重定向的）项目数据根 trajectory_replay 下', () => {
   const sid = freshSid('default-dir');
   const p = mod.bundleDirFor(sid);
+  // dataHome.js:100 routes trajectory_replay into the T3-archives tier, so the
+  // default bundle root is <projectDataHome>/T3-archives/trajectory_replay/<sid>.
   assert.strictEqual(
     p,
-    path.join(FIX_ROOT, 'data', 'trajectory_replay', sid, `${sid}.replaybundle`),
+    path.join(FIX_ROOT, 'data', 'T3-archives', 'trajectory_replay', sid, `${sid}.replaybundle`),
   );
   assert.strictEqual(path.basename(p), `${sid}.replaybundle`);
 });

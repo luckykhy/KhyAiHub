@@ -31,7 +31,7 @@ const os = require('os');
 const path = require('path');
 
 // ── require.cache 桩（必须在 require 被测模块之前装好）──────────────────
-const ER_PATH = require.resolve('../delivery/extension/extensionRoots');
+const ER_PATH = require.resolve('../extensions/extensionRoots');
 const BASETOOL_PATH = require.resolve('../../../../tools/_baseTool');
 const TOOLS_PATH = require.resolve('../../../../tools');
 const SAVED = [ER_PATH, BASETOOL_PATH, TOOLS_PATH].map((p) => [p, require.cache[p]]);
