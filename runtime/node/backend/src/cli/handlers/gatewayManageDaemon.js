@@ -205,14 +205,32 @@ function _resolveAiFrontendDir(options = {}) {
     candidates.push(path.resolve(explicit));
   }
   if (process.env.KHYQUANT_ROOT) {
-    // forest layout: KHYQUANT_ROOT = services/backend, apps/ai-frontend is two levels up
+    // forest layout: KHYQUANT_ROOT = runtime/node/backend (formerly services/backend);
+    // the AI frontend now lives at delivery/web/ai-frontend (formerly apps/ai-frontend),
+    // which is three levels above the backend root.
+    candidates.push(
+      path.resolve(process.env.KHYQUANT_ROOT, '..', '..', '..', 'delivery', 'web', 'ai-frontend')
+    );
+    candidates.push(
+      path.resolve(process.env.KHYQUANT_ROOT, '..', '..', 'delivery', 'web', 'ai-frontend')
+    );
+    candidates.push(
+      path.resolve(process.env.KHYQUANT_ROOT, '..', 'delivery', 'web', 'ai-frontend')
+    );
+    candidates.push(path.resolve(process.env.KHYQUANT_ROOT, 'delivery', 'web', 'ai-frontend'));
+    // legacy (pre-migration) layout — kept for old checkouts and portable bundles
     candidates.push(path.resolve(process.env.KHYQUANT_ROOT, '..', '..', 'apps', 'ai-frontend'));
     candidates.push(path.resolve(process.env.KHYQUANT_ROOT, '..', 'apps', 'ai-frontend'));
     candidates.push(path.resolve(process.env.KHYQUANT_ROOT, 'apps', 'ai-frontend'));
   }
+  candidates.push(path.resolve(process.cwd(), 'delivery', 'web', 'ai-frontend'));
   candidates.push(path.resolve(process.cwd(), 'apps', 'ai-frontend'));
   candidates.push(path.resolve(process.cwd(), 'ai-frontend'));
-  // forest layout (source + mirrored bundle): apps/ai-frontend is two levels above services/backend
+  // forest layout (source + mirrored bundle): delivery/web/ai-frontend is three levels
+  // above runtime/node/backend (legacy: apps/ai-frontend two levels above services/backend)
+  candidates.push(
+    path.resolve(__dirname, '..', '..', '..', '..', '..', '..', 'delivery', 'web', 'ai-frontend')
+  );
   candidates.push(path.resolve(__dirname, '..', '..', '..', '..', '..', 'apps', 'ai-frontend'));
 
   for (const dir of candidates) {
@@ -260,16 +278,40 @@ function _resolveAiFrontendDistDir(options = {}, frontendDir = null) {
     const root = path.resolve(process.env.KHYQUANT_ROOT);
     const parent = path.resolve(root, '..');
     const grandParent = path.resolve(root, '..', '..');
-    // forest layout: KHYQUANT_ROOT = services/backend, apps/ai-frontend is two levels up
+    const greatGrandParent = path.resolve(root, '..', '..', '..');
+    // forest layout: KHYQUANT_ROOT = runtime/node/backend; delivery/web/ai-frontend is
+    // three levels up (formerly apps/ai-frontend, two levels above services/backend)
+    const newRoots = [greatGrandParent, grandParent, parent, root];
+    for (const base of newRoots) {
+      push(path.join(base, 'delivery', 'web', 'ai-frontend', 'dist'));
+    }
+    // legacy (pre-migration) layout — kept for old checkouts and portable bundles
     const roots = [grandParent, parent, root];
     for (const base of roots) {
       push(path.join(base, 'apps', 'ai-frontend', 'dist'));
     }
   }
 
+  push(path.resolve(process.cwd(), 'delivery', 'web', 'ai-frontend', 'dist'));
   push(path.resolve(process.cwd(), 'apps', 'ai-frontend', 'dist'));
   push(path.resolve(process.cwd(), 'ai-frontend', 'dist'));
-  // forest layout (source + mirrored bundle): apps/ai-frontend is two levels above services/backend
+  // forest layout (source + mirrored bundle): delivery/web/ai-frontend is three levels
+  // above runtime/node/backend (legacy: apps/ai-frontend two levels above services/backend)
+  push(
+    path.resolve(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      '..',
+      '..',
+      '..',
+      'delivery',
+      'web',
+      'ai-frontend',
+      'dist'
+    )
+  );
   push(path.resolve(__dirname, '..', '..', '..', '..', '..', 'apps', 'ai-frontend', 'dist'));
 
   for (const dir of candidates) {

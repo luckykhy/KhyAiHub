@@ -40,8 +40,8 @@ const { _dirStats, _fmtBytes } = require('./storage');
 
 // ── 常量与注册表 ──
 
-/** 仓库根。handlers → cli → src → backend → services → root，共五层。 */
-const REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..', '..');
+/** 仓库根。handlers → cli → src → backend → node → runtime → root，共六层。 */
+const REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..', '..', '..');
 
 const TIERS = ['build', 'deps', 'tools', 'runtime'];
 
@@ -86,9 +86,9 @@ const BUILD_TARGETS = [
     rebuild: 'npm run assemble --prefix works/ship/npm',
   },
   {
-    rel: 'apps/ai-frontend/dist',
+    rel: 'delivery/web/ai-frontend/dist',
     why: 'AI 管理前端的 Vite 产物',
-    rebuild: 'npm run build --prefix apps/ai-frontend',
+    rebuild: 'npm run build --prefix delivery/web/ai-frontend',
   },
   {
     rel: 'delivery/channel/khyquant/frontend/dist',
@@ -116,7 +116,7 @@ const BUILD_TARGETS = [
     rebuild: '下一次 gradlew 构建自动重建',
   },
   {
-    rel: 'services/backend/coverage',
+    rel: 'runtime/node/backend/coverage',
     why: 'jest 覆盖率报告',
     rebuild: 'npm run test:backend -- --coverage',
   },
@@ -134,14 +134,14 @@ const BUILD_GLOBS = [
     rebuild: 'bash scripts/release/build-and-audit-pip-purity.sh',
   },
   {
-    // 只匹配 `.map`，**不整目录清** —— `services/backend/dist/cli.cjs` 是生产启动路径
-    // （见 services/backend/esbuild.config.js），整目录清会当场弄坏 `khy` 命令。
+    // 只匹配 `.map`，**不整目录清** —— `runtime/node/backend/dist/cli.cjs` 是生产启动路径
+    // （见 runtime/node/backend/esbuild.config.js），整目录清会当场弄坏 `khy` 命令。
     // sourcemap 是纯调试辅助（约 100 MB，占该目录八成分量），删掉只影响堆栈可读性，
     // 而且每次 `node esbuild.config.js` 都会重新生成 —— 是真·自动膨胀源。
-    dir: 'services/backend/dist',
+    dir: 'runtime/node/backend/dist',
     match: /\.map$/,
     why: '后端 bundle 的 sourcemap（调试辅助；cli.cjs / khy.cjs / khy.mjs 保留）',
-    rebuild: 'cd services/backend && node esbuild.config.js',
+    rebuild: 'cd runtime/node/backend && node esbuild.config.js',
   },
 ];
 

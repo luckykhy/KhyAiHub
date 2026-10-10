@@ -80,6 +80,8 @@ const {
   _buildLanguageFallbackDirective,
 } = require('./aiRequestParsers');
 
+const { resolveModelContextWindow } = require('../constants/modelContextWindows');
+
 // ── Constants ──
 const EFFORT_PRESETS = {
   max: { temperature: 0.2, maxTokens: 32768, label: '最高精度', thinking: { budgetTokens: 10000 } },
@@ -88,97 +90,95 @@ const EFFORT_PRESETS = {
   low: { temperature: 0.7, maxTokens: 4096, label: '快速' },
 };
 
+// 能力评分与显示名的静态表。**context 字段不写在这里** —— 窗口值已收敛到
+// constants/modelContextWindows.js（全仓单一真源），下方 post-pass 统一回填，
+// 这样新增型号不可能在这里漏写一个数而与真源漂移。
 const MODEL_CAPABILITIES = {
   // Anthropic Claude
-  'claude-opus-4': { code: 5, reasoning: 5, creative: 5, context: 1000000, label: 'Claude Opus 4' },
+  'claude-opus-4': { code: 5, reasoning: 5, creative: 5, label: 'Claude Opus 4' },
   'claude-sonnet-4': {
     code: 5,
     reasoning: 5,
     creative: 4,
-    context: 1000000,
     label: 'Claude Sonnet 4',
   },
   'claude-3-5-sonnet': {
     code: 5,
     reasoning: 5,
     creative: 4,
-    context: 200000,
     label: 'Claude 3.5 Sonnet',
   },
   'claude-3-7-sonnet': {
     code: 5,
     reasoning: 5,
     creative: 4,
-    context: 200000,
     label: 'Claude 3.7 Sonnet',
   },
   'claude-haiku-4': {
     code: 4,
     reasoning: 4,
     creative: 3,
-    context: 200000,
     label: 'Claude Haiku 4',
   },
   'claude-3-haiku': {
     code: 3,
     reasoning: 3,
     creative: 3,
-    context: 200000,
     label: 'Claude 3 Haiku',
   },
   // OpenAI GPT
-  'gpt-5-codex': { code: 5, reasoning: 5, creative: 4, context: 1000000, label: 'GPT-5 Codex' },
-  codex: { code: 5, reasoning: 5, creative: 4, context: 1000000, label: 'GPT-5 Codex' },
-  'gpt-5': { code: 5, reasoning: 5, creative: 5, context: 1000000, label: 'GPT-5' },
-  'gpt-4.1': { code: 5, reasoning: 5, creative: 4, context: 1047576, label: 'GPT-4.1' },
-  'gpt-4.1-mini': { code: 4, reasoning: 4, creative: 3, context: 1047576, label: 'GPT-4.1 Mini' },
-  'gpt-4.1-nano': { code: 3, reasoning: 3, creative: 2, context: 1047576, label: 'GPT-4.1 Nano' },
-  'gpt-4o': { code: 5, reasoning: 4, creative: 4, context: 128000, label: 'GPT-4o' },
-  'gpt-4o-mini': { code: 3, reasoning: 3, creative: 3, context: 128000, label: 'GPT-4o Mini' },
-  o3: { code: 5, reasoning: 5, creative: 4, context: 200000, label: 'o3' },
-  'o4-mini': { code: 4, reasoning: 5, creative: 3, context: 200000, label: 'o4-mini' },
+  'gpt-5-codex': { code: 5, reasoning: 5, creative: 4, label: 'GPT-5 Codex' },
+  codex: { code: 5, reasoning: 5, creative: 4, label: 'GPT-5 Codex' },
+  'gpt-5': { code: 5, reasoning: 5, creative: 5, label: 'GPT-5' },
+  'gpt-4.1': { code: 5, reasoning: 5, creative: 4, label: 'GPT-4.1' },
+  'gpt-4.1-mini': { code: 4, reasoning: 4, creative: 3, label: 'GPT-4.1 Mini' },
+  'gpt-4.1-nano': { code: 3, reasoning: 3, creative: 2, label: 'GPT-4.1 Nano' },
+  'gpt-4o': { code: 5, reasoning: 4, creative: 4, label: 'GPT-4o' },
+  'gpt-4o-mini': { code: 3, reasoning: 3, creative: 3, label: 'GPT-4o Mini' },
+  o3: { code: 5, reasoning: 5, creative: 4, label: 'o3' },
+  'o4-mini': { code: 4, reasoning: 5, creative: 3, label: 'o4-mini' },
   // DeepSeek
-  'deepseek-v3': { code: 5, reasoning: 4, creative: 3, context: 128000, label: 'DeepSeek V3' },
-  'deepseek-r1': { code: 5, reasoning: 5, creative: 3, context: 128000, label: 'DeepSeek R1' },
-  'deepseek-v2': { code: 4, reasoning: 4, creative: 3, context: 128000, label: 'DeepSeek V2' },
+  'deepseek-v3': { code: 5, reasoning: 4, creative: 3, label: 'DeepSeek V3' },
+  'deepseek-r1': { code: 5, reasoning: 5, creative: 3, label: 'DeepSeek R1' },
+  'deepseek-v2': { code: 4, reasoning: 4, creative: 3, label: 'DeepSeek V2' },
   // Google Gemini
   'gemini-2.5-pro': {
     code: 5,
     reasoning: 5,
     creative: 4,
-    context: 1048576,
     label: 'Gemini 2.5 Pro',
   },
   'gemini-2.5-flash': {
     code: 4,
     reasoning: 4,
     creative: 3,
-    context: 1048576,
     label: 'Gemini 2.5 Flash',
   },
   'gemini-2.0-flash': {
     code: 4,
     reasoning: 4,
     creative: 3,
-    context: 1048576,
     label: 'Gemini 2.0 Flash',
   },
   // Qwen (通义千问)
-  qwen3: { code: 5, reasoning: 5, creative: 4, context: 131072, label: '通义千问 Qwen3' },
-  'qwen-plus': { code: 4, reasoning: 4, creative: 3, context: 131072, label: '通义千问 Plus' },
-  'qwen-turbo': { code: 3, reasoning: 3, creative: 3, context: 131072, label: '通义千问 Turbo' },
+  qwen3: { code: 5, reasoning: 5, creative: 4, label: '通义千问 Qwen3' },
+  'qwen-plus': { code: 4, reasoning: 4, creative: 3, label: '通义千问 Plus' },
+  'qwen-turbo': { code: 3, reasoning: 3, creative: 3, label: '通义千问 Turbo' },
   // 其他
-  'kimi-k2': { code: 4, reasoning: 4, creative: 4, context: 131072, label: 'Kimi K2' },
-  'glm-4': { code: 3, reasoning: 3, creative: 3, context: 128000, label: 'GLM-4' },
-  'llama-3.3': { code: 3, reasoning: 3, creative: 2, context: 128000, label: 'Llama 3.3 (Groq)' },
+  'kimi-k2': { code: 4, reasoning: 4, creative: 4, label: 'Kimi K2' },
+  'glm-4': { code: 3, reasoning: 3, creative: 3, label: 'GLM-4' },
+  'llama-3.3': { code: 3, reasoning: 3, creative: 2, label: 'Llama 3.3 (Groq)' },
   'llama-4-maverick': {
     code: 4,
     reasoning: 4,
     creative: 3,
-    context: 1048576,
     label: 'Llama 4 Maverick',
   },
 };
+
+for (const [id, cap] of Object.entries(MODEL_CAPABILITIES)) {
+  cap.context = resolveModelContextWindow(id);
+}
 
 // ── Inject deps to request analysis (needs constants + accessors defined above) ──
 setAiRequestAnalysisDeps({ EFFORT_PRESETS, MODEL_CAPABILITIES, _resolveTaskScale, getGateway });

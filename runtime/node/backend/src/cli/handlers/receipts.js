@@ -7,6 +7,7 @@
  *   khy receipts search <keyword>                       — full-text search
  *   khy receipts orch [--limit <n>]                     — orchestration receipts
  *     (alias: receipts orchestration; written only by sub-agent runs)
+ *   khy receipts stats                                  — 轨迹⟂回执对账与达成率
  */
 const chalk = (() => {
   const m = require('chalk');
@@ -20,7 +21,7 @@ const _markFailure = require('../../utils/markProcessFailure');
 // Single source of truth for the verb slot: the manifest declares it (so
 // commandAutoRegistry._alignSubCommand can reconcile a typed token) and the
 // unknown-verb error below renders it, so the two cannot drift apart.
-const SUB_COMMANDS = ['list', 'show', 'search', 'orch', 'orchestration'];
+const SUB_COMMANDS = ['list', 'show', 'search', 'orch', 'orchestration', 'stats'];
 
 const RISK_COLOR = {
   safe: (s) => chalk.dim(s),
@@ -247,6 +248,151 @@ async function handleReceipts(subCommand, args, options) {
       }
     }
     console.log(chalk.dim(`\n  共 ${rows.length} 条\n`));
+    return true;
+  }
+
+  // 任务达成率对账：轨迹（toolLoop journal）⟂ 裁决（receipts），按 requestId 连接。
+  // 覆盖率是这张表的主行，不是脚注——对不上账就没有「率」，只有猜测。
+  if (cmd === 'stats') {
+    let journal = null;
+    let all = [];
+    try {
+      journal = require('../../services/tool/toolLoopJournal');
+    } catch {
+      /* 模块不可用 → 按 0 覆盖如实报，不编数 */
+    }
+    try {
+      all = require('../../services/receiptService').listReceipts({ full: true });
+    } catch {
+      /* 同上 */
+    }
+
+    const runs = journal ? journal.listRunIds().map((id) => journal.readJournal(id)) : [];
+    const runById = new Map();
+    const bySource = new Map();
+    let workMeasurable = 0;
+    let workAchieved = 0;
+    const byReason = new Map();
+    let withEnd = 0;
+    let withRequestId = 0;
+    let truncated = 0;
+    let zeroTool = 0;
+    let guardHits = 0;
+    let guardRuns = 0;
+    let guardEnded = 0;
+    for (const recs of runs) {
+      let start = null;
+      let end = null;
+      for (const r of recs) {
+        if (r.type === 'start') start = r;
+        else if (r.type === 'end') end = r;
+      }
+      if (!start) continue;
+      if (start.requestId) {
+        withRequestId += 1;
+        runById.set(String(start.requestId), { start, end });
+      }
+      if (!end) continue;
+      withEnd += 1;
+      const reason = String(end.reason || 'unknown');
+      byReason.set(reason, (byReason.get(reason) || 0) + 1);
+      if (reason === 'max-iterations') truncated += 1;
+      if ((Number(end.totalToolCalls) || 0) === 0) zeroTool += 1;
+      // 护栏掐断动作的读数：只有改造后的新 run 才带这两个字段，历史 run 为 null。
+      const gi = Number(end.guardInterventions) || 0;
+      if (gi > 0) { guardHits += gi; guardRuns += 1; }
+      if (end.endedOnGuard === true) guardEnded += 1;
+    }
+
+    const receiptByReq = new Map();
+    for (const r of all) {
+      if (r && r.requestId) receiptByReq.set(String(r.requestId), r);
+    }
+    // 可度量 = 同一回合既有终点记录、又有裁决。这是达成率唯一的合法分母。
+    let measurable = 0;
+    let achieved = 0;
+    for (const [reqId, run] of runById) {
+      if (!run.end) continue;
+      const rc = receiptByReq.get(reqId);
+      if (!rc || !rc.outcome || typeof rc.outcome.achieved !== 'boolean') continue;
+      measurable += 1;
+      if (rc.outcome.achieved) achieved += 1;
+      // 出处切分：夹具/测试流量必须能被单列出去，否则比率是对着一堆探针算的。
+      const src = String(run.start.source || rc.source || '未标注');
+      bySource.set(src, (bySource.get(src) || 0) + 1);
+      if (src !== 'test' && src !== '未标注') {
+        workMeasurable += 1;
+        if (rc.outcome.achieved) workAchieved += 1;
+      }
+    }
+    const legacyNoOutcome = all.filter((r) => !r.outcome).length;
+    const superseded = all.filter((r) => r.finalizeReason === 'superseded').length;
+    // 裁决族分布：intent-unfulfilled 是「模型宣告要做、本轮零工具却按完成收口」那一族。
+    const verdicts = new Map();
+    for (const r of all) {
+      const v = (r.outcome && r.outcome.verdict) || 'no-outcome';
+      verdicts.set(v, (verdicts.get(v) || 0) + 1);
+    }
+    const tagged = all.filter((r) => r.source).length;
+    const pct = (n, d) => (d > 0 ? `${((n / d) * 100).toFixed(1)}%` : '—');
+
+    console.log(chalk.bold(`\n  任务达成率对账 · 轨迹 ${runs.length} 个 run · 回执 ${all.length} 张`));
+    console.log(`    终点覆盖      ${withEnd}/${runs.length}  ${pct(withEnd, runs.length)}`);
+    console.log(`    requestId 覆盖 ${withRequestId}/${runs.length}  ${pct(withRequestId, runs.length)}`);
+    console.log(`    可对账回合    ${measurable}  ${pct(measurable, runs.length)}`);
+    if (measurable > 0) {
+      console.log(chalk.green(`    达成率        ${achieved}/${measurable}  ${pct(achieved, measurable)}`));
+      console.log(`    截断率        ${truncated}/${withEnd}  ${pct(truncated, withEnd)}`);
+      console.log(`    零工具直答    ${zeroTool}/${withEnd}  ${pct(zeroTool, withEnd)}`);
+    } else {
+      printInfo('    达成率        不可计算：没有同时具备「终点记录 + 裁决」的回合');
+    }
+    if (bySource.size) {
+      console.log(chalk.dim(
+        '    出处切分      ' + [...bySource.entries()].sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ':' + v).join(' · ')
+      ));
+    }
+    if (workMeasurable > 0) {
+      console.log(chalk.green(
+        '    真人/业务达成 ' + workAchieved + '/' + workMeasurable + '  '
+        + (workMeasurable ? (100 * workAchieved / workMeasurable).toFixed(1) + '%' : '—')
+      ));
+    }
+    // 任务被自家闸门掐断的直接读数：拦停发生几次、波及几个 run、
+    // 以及其中多少个 run 在拦停后就再没有下一步动作。
+    if (guardHits > 0) {
+      console.log(chalk.yellow(
+        `    护栏拦停      ${guardHits} 次 / ${guardRuns} 个 run`
+        + `，其中 ${guardEnded} 个 run 拦停后即收尾  ${pct(guardEnded, guardRuns)}`
+      ));
+    }
+    const reasons = [...byReason.entries()].sort((a, b) => b[1] - a[1]);
+    if (reasons.length) {
+      console.log(chalk.dim(`    终点原因      ${reasons.map(([k, v]) => `${k}:${v}`).join(' · ')}`));
+    }
+    const vrows = [...verdicts.entries()].sort((a, b) => b[1] - a[1]);
+    if (vrows.length) {
+      console.log(chalk.dim(`    裁决族        ${vrows.map(([k, v]) => `${k}:${v}`).join(' · ')}`));
+    }
+    // 分母纯度：回执里没有任何出处标记时，测试/自动化流量与真人请求混在同一分母内。
+    console.log(chalk.dim(
+      `    出处标注      ${tagged}/${all.length}  ${pct(tagged, all.length)}`
+      + (tagged === 0 ? '  ← 全部未标注，分母混有测试/自动化流量' : '')
+    ));
+    // 改造前落盘的数据不带 requestId、多数没有 end，无法回溯，只能等新一轮累积。
+    if (legacyNoOutcome > 0 || withEnd < runs.length) {
+      console.log(chalk.yellow(
+        `\n  ⚠ 覆盖率不足：${legacyNoOutcome} 张回执无裁决字段（改造前落盘），`
+        + `${runs.length - withEnd} 个 run 没有终点记录。`
+        + `\n    上面的比率只对「可对账回合」成立，不代表历史全量。`
+      ));
+    }
+    if (superseded > 0) {
+      console.log(chalk.dim(
+        `  · ${superseded} 张回执 finalizeReason=superseded（被下一轮顶掉的遗留，非任务失败）`
+      ));
+    }
+    console.log('');
     return true;
   }
 

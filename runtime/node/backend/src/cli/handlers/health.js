@@ -449,6 +449,47 @@ function _statusWord(status) {
   }
 }
 
+// `khy health tui` — 只读 TUI 健康记分卡（healthScorecard 是唯一聚合真源：
+// chrome 账本 H1 / 帧预算 / ink 实例解析 / 安全网 / 内存）。[MGMT-RPT-031] 落地的
+// P0-3 模块此前零命令面，操作员要看「终端健康吗」得逐个翻源文件。
+//
+// 调用方职责只有一个：选 sink。一次性命令独占终端（无受管 stdout），表格走
+// stdout 可管道；记分卡模块自身仍然零写。frameGuard 恒传 null：帧数据活在
+// TUI 进程的守卫闭包里（frameBudgetWiring.buildInkRenderOpts），跨进程不可达
+// —— 这是架构事实而非缺失；活动会话的帧窗口走 KHY_TUI_DIAG_FRAME 的 stderr
+// 诊断行。inkRuntime require 失败 → 传 null（记分卡 instance 段如实报正常）。
+function _renderTuiHealth(asJson) {
+  const scorecard = require('../tui/healthScorecard');
+  let inkRuntime = null;
+  try {
+    inkRuntime = require('../tui/inkRuntime');
+  } catch {
+    inkRuntime = null;
+  }
+  const snapshot = scorecard.build({
+    geometry: {
+      rows: (process.stdout && process.stdout.rows) || 0,
+      cols: (process.stdout && process.stdout.columns) || 0,
+    },
+    inkRuntime,
+    env: process.env,
+  });
+
+  if (asJson) {
+    console.log(JSON.stringify(scorecard.toJSON(snapshot), null, 2));
+  } else {
+    console.log(scorecard.renderTable(snapshot));
+  }
+
+  // 出口码只对**真信号**非零：实例解析已降级 = resize 全重绘修复失效、残线
+  // 回归风险，可作脚本门禁。H1 / 帧段在无 TTY（rows=0）或无活动会话时是环境
+  // 性读数而非故障，只展示不判红。
+  if (snapshot.instance && snapshot.instance.degraded) {
+    process.exitCode = 1;
+  }
+  return true;
+}
+
 async function handleHealth(parsed = {}) {
   const f = fmt();
   const opts = parsed.options || {};
@@ -456,6 +497,12 @@ async function handleHealth(parsed = {}) {
     opts.json === true ||
     opts.json === 'true' ||
     (Array.isArray(parsed.args) && parsed.args.includes('--json'));
+
+  // 子命令分派：'tui' → TUI 健康记分卡（缺省仍走全系统体检，行为不变）。
+  const sub = String(parsed.subCommand || (Array.isArray(parsed.args) && parsed.args[0]) || '').toLowerCase();
+  if (sub === 'tui') {
+    return _renderTuiHealth(asJson);
+  }
 
   const report = await collectHealth();
 
@@ -514,8 +561,9 @@ module.exports = {
   [MANIFEST_EXPORT_KEY]: {
     name: 'health',
     aliases: ['jkx', 'healthcheck'],
-    description: '聚合运行时/数据/认证/网络/磁盘/内存/服务注册表健康信号到一份可操作报告',
-    usage: 'health [--json]',
+    description: '聚合运行时/数据/认证/网络/磁盘/内存/服务注册表健康信号到一份可操作报告；子命令 tui 出终端渲染只读健康记分卡',
+    usage: 'health [tui] [--json]',
+    subCommands: ['tui'],
     category: 'system',
     handler: handleHealth,
   },

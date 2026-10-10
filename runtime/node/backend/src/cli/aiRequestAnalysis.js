@@ -21,6 +21,7 @@ const {
   UNKNOWN_MODEL_CONTEXT_WINDOW,
   MAX_PLAUSIBLE_CONTEXT_WINDOW,
 } = require('../constants/contextWindowDefaults');
+const { resolveModelContextWindow } = require('../constants/modelContextWindows');
 const runtime = require('../services/khyUpgradeRuntime');
 
 // Injected read-only capability tables + host accessors (avoid a require cycle back into ai.js).
@@ -94,7 +95,11 @@ function _resolveModelContextLimit(modelHint = '') {
     /* gateway not ready yet */
   }
 
-  // 2. Fallback: MODEL_CAPABILITIES static table (only used before gateway init)
+  // 2. Fallback: static table. MODEL_CAPABILITIES.context is itself filled from
+  //    constants/modelContextWindows.js, but it only lists a ~25-model subset —
+  //    the models KhyOS actually ships (agnes-*, glm-5.*, deepseek-chat) are not in
+  //    it, so going straight to the 128000 floor would still misprice them. Ask the
+  //    SSOT directly before giving up.
   for (const [key, capability] of Object.entries(MODEL_CAPABILITIES)) {
     if (
       key !== 'default' &&
@@ -104,6 +109,10 @@ function _resolveModelContextLimit(modelHint = '') {
     ) {
       return Math.max(8000, Number(capability.context));
     }
+  }
+  const fromTable = resolveModelContextWindow(lower, 0);
+  if (fromTable > 0) {
+    return fromTable;
   }
 
   // 3. Unknown model — return conservative default; gateway will async-resolve for next call

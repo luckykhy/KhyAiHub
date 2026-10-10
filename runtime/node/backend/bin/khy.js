@@ -2244,6 +2244,22 @@ async function main() {
       return;
     }
 
+    // ── khy acp serve → khy 作为编辑器 ACP 智能体常驻(stdio,[DESIGN-ARCH-184]) ──
+    // 与 mcp serve 同一纪律：常驻循环绝不能走 route() + process.exit(0)。
+    if (parsed.command === 'acp' && parsed.subCommand === 'serve') {
+      if (_startupFsm) _startupFsm.fire('skip_to_running', { step: 'acp_serve' }); // resident server, skips repl
+      try {
+        const { handleAcp } = require('../src/cli/handlers/acp');
+        const code = await handleAcp({ subCommand: 'serve', args: parsed.args || [], options: parsed.options || {} });
+        // 门控关 → handleAcp 返回非 0,此时无常驻循环,正常退出。
+        if (code && code !== 0) process.exit(Number(code));
+      } catch (err) {
+        process.stderr.write(`khy acp serve 启动失败:${err && err.message ? err.message : err}\n`);
+        process.exit(1);
+      }
+      return;
+    }
+
     if (_startupFsm) _startupFsm.fire('skip_to_running', { step: 'single_command' }); // one-shot, skips repl
     try {
       const result = await route(parsed);
