@@ -465,13 +465,24 @@ KhyAiHub 历史并推 GitHub。它逐笔应用本地 diff、保留原消息与�
 `docs/10_规范/registry/DIST-SYNC.json`，下次自动续，**不需要第二次 force-push**。
 （首次同步用 `--base <本地commit>` 指明基线；`--dry-run` 只看不推。）
 
-**两条纪律（比架构更重要）**：
+**三条纪律（比架构更重要）**：
 
 1. **绝不 force-push GitHub 的 `main`。** mirror 是 fast-forward，一旦 GitHub 被改写
    历史而 Gitee 没有，镜像推送会被**拒绝**——那时得手工 reset Gitee 对齐。
    若确有理由必须改写（本次建仓过程中发生过两次），**两边一起处理**并在报告里说明。
 2. **不要把 `sync-gitee.yml` 的失败改成 `continue-on-error: true`。** 那会把
    「镜像断了」退化成「镜像建议」——正是 `[DESIGN-ARCH-111]` 全仓批判的无绑定层模式。
+3. **`archive/full-history` 是全历史存档分支，不进 mirror、不作默认分支、不删。**
+   它承载 853 笔治理前全历史（作者仅孔浩原，零 AI 署名、零 dependabot），
+   是软著 `开发过程说明.md` 引用的时序证据 + 便携盘的异地备份。
+   **KhyAiHub 将来若要转公开，这个分支必须先删**——否则治理前的历史会随之公开。
+   （2026-10-10 由已删除的 `luckykhy/khy_os_private` 合并而来；那个仓只剩
+   main + 3 个 dependabot 分支，内容全部本地已有，删除无损失。）
+
+> ⚠ **已知未备份的 1894 笔**：本地仓有 47 个分支，其中 **1894 笔提交不在 main 上**
+> （`backup/*` 系列、`gitee-sanitized` 842 笔、`chore/tui-ux-nightly` 190 笔、
+> `rebuild/staged-rebuild` 179 笔等），**只存在于本地便携盘**。`archive/full-history`
+> 只覆盖 main。若要防盘丢，须另行决定推哪些分支——不搭车本次合并。
 
 > **边界（不可放宽）**：本规则**只自动化「推 tag 之后」的长链路**，
 > **不触碰红线 R1 / `PROCESS-001`（P0）的「禁止 AI 自动 commit/push」**。
