@@ -138,6 +138,12 @@ function runDescriptionAudit() {
   return errors;
 }
 
+function hasErrorAfter(errors, warnings) {
+  const hasError = errors > 0;
+  const hasWarn = warnings > 0;
+  return hasError || (strictWarnings && hasWarn) ? 1 : 0;
+}
+
 function main() {
   if (changedMode) {
     const changed = listChangedFiles();
@@ -149,6 +155,19 @@ function main() {
   }
 
   const { findings, errors, warnings, total } = guard.assessRegistry();
+  // 机读输出：给 check-debt-ledger.js 回调实测用（同 check-delivery-baseline.js 的 --json）。
+  // 按 rule × severity 给计数 —— debt-ledger.json 里的 metric 名是历史叫法
+  // （naming-collision-error / param-warning），与真实 rule id（tool-collision /
+  // tool-param）对不上，所以这里两种都别猜，直接把分布交出去。
+  if (process.argv.slice(2).includes('--json')) {
+    const byRule = {};
+    for (const f of findings) {
+      const key = `${f.rule}:${f.severity}`;
+      byRule[key] = (byRule[key] || 0) + 1;
+    }
+    process.stdout.write(JSON.stringify({ total, errors, warnings, byRule }, null, 2) + '\n');
+    process.exit(hasErrorAfter(errors, warnings));
+  }
   if (findings.length === 0) {
     console.log(`Tool-contract check passed: ${total} tool(s), no violations.`);
   } else {

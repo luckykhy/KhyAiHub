@@ -234,6 +234,152 @@ for (const c of coverage) {
   }
 }
 
+// ── 回调实测（朝外的表针）──────────────────────────────────────────────────
+//
+// 本守卫原来的全部判据都建立在台账自己写的数上：`measured` 是人手抄的，`status:
+// closed` 只是 `measured === 0` 的自述。2026-10-08 的 `docs(layout)` 第 23 节记录过
+// 一次当场翻车 —— 同一时刻 check-repo-layout exit 1（5 处 extension-id-hardcode），
+// 而本守卫打印「layout.extension-id-hardcode 0→0 closed ✓ 无违规」。
+//
+// 所以这里把「测量」这件事接回来：--remeasure 时逐个跑条目里声明的 guard，拿回真实
+// 读数，和台账对账。不一致即 error，并同时给出两个数。
+//
+// 为什么不默认跑：6 个守卫实测合计约 179 秒（check-delivery-baseline 一个就 121 秒），
+// 挂在 pre-commit 上不可接受。故默认只做**廉价的**自指检测（见下），实测走显式开关。
+
+/** 每个 guard 的 JSON 读数怎么取出来。键是 guard 的文件名。 */
+const GUARD_EXTRACTORS = {
+  'check-repo-layout.js': (j, metric) => num(j && j.counts && j.counts[metric]),
+  'check-code-standards.js': (j, metric) => num(j && j.metrics && j.metrics[metric]),
+  'check-tui-gates.js': (j, metric) => num(j && j.uniqueGateTokens),
+  // toolContract 的 metric 现在就是真实 rule id（2026-10-10 对齐过），直接查 byRule。
+  'check-tool-contract.js': (j, metric) => num(j && j.byRule && j.byRule[metric]),
+  // check-delivery-baseline 把读数塞进 results[].readings（"handlerFiles=158/155"），
+  // 没有结构化字段，只能解析。findings[].message 里也有一份同文本的副本。
+  'check-delivery-baseline.js': (j, metric) => {
+    const hay = [];
+    for (const r of (j && j.results) || []) {
+      for (const x of r.readings || []) hay.push(String(x));
+    }
+    for (const r of (j && j.findings) || []) {
+      for (const x of r.readings || []) hay.push(String(x));
+    }
+    for (const r of hay) {
+      const m = r.match(new RegExp(`^${escapeRe(metric)}=(\\d+)/(\\d+)$`));
+      if (m) return Number(m[1]);
+    }
+    return NaN;
+  },
+  // check-data-layout 没有与 root-top-level 对应的读数（其 --json 的相近键是
+  // directVisible / directTotal / addressableTotal，语义都不同）。返回 NaN 让调用方
+  // 报「无法实测」，而不是猜一个数填进去。
+  'check-data-layout.js': () => NaN,
+};
+
+function escapeRe(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+function num(v) {
+  return typeof v === 'number' && Number.isFinite(v) ? v : NaN;
+}
+
+/** 台账 metric 名与守卫真实口径不一致的，显式列出来（不静默跳过）。 */
+const KNOWN_METRIC_DRIFT = {
+  'layout.floor-closed-set': 'check-repo-layout.js 的 counts 里没有 floor-closed-set（BASELINE_IDS 只有 10 个 id，不含它）',
+  'layout.root-top-level': 'check-data-layout.js 的 --json 里没有 root-top-level（相近键 directVisible/directTotal/addressableTotal 语义都不同）',
+  'tui.gates': 'metric 写的是一句中文而非 id；真实口径是 check-tui-gates.js 的 uniqueGateTokens',
+};
+
+const remeasureMode = process.argv.includes('--remeasure');
+const guardCache = new Map();
+
+function runGuardJson(guardRel) {
+  if (guardCache.has(guardRel)) return guardCache.get(guardRel);
+  let out = null;
+  let err = null;
+  try {
+    const { execFileSync } = require('child_process');
+    const stdout = execFileSync(process.execPath, [path.join(REPO_ROOT, guardRel), '--json'], {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+      maxBuffer: 64 * 1024 * 1024,
+      timeout: 180000,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    out = JSON.parse(stdout);
+  } catch (e) {
+    // 有些守卫「有发现」就非零退出，但 stdout 仍是合法 JSON —— 先试着解析。
+    if (e && typeof e.stdout === 'string' && e.stdout.trim()) {
+      try {
+        out = JSON.parse(e.stdout);
+      } catch {
+        err = e.message;
+      }
+    } else {
+      err = e.message;
+    }
+  }
+  const rec = out ? { json: out } : { error: err };
+  guardCache.set(guardRel, rec);
+  return rec;
+}
+
+const remeasured = [];
+if (remeasureMode) {
+  for (const e of entries) {
+    const guardRel = String(e.guard || '');
+    const extractor = GUARD_EXTRACTORS[path.basename(guardRel)];
+    if (!extractor) {
+      remeasured.push({ id: e.id, status: 'no-extractor', ledger: e.measured, actual: null });
+      continue;
+    }
+    const rec = runGuardJson(guardRel);
+    if (rec.error) {
+      remeasured.push({ id: e.id, status: 'guard-failed', ledger: e.measured, actual: null, error: rec.error });
+      continue;
+    }
+    const actual = extractor(rec.json, e.metric);
+    if (!Number.isFinite(actual)) {
+      remeasured.push({ id: e.id, status: 'unmeasurable', ledger: e.measured, actual: null });
+      continue;
+    }
+    remeasured.push({
+      id: e.id,
+      status: actual === e.measured ? 'match' : 'drift',
+      ledger: e.measured,
+      actual,
+      ledgerStatus: e.status,
+    });
+  }
+
+  for (const r of remeasured) {
+    if (r.status === 'drift') {
+      add('error', 'remeasure-drift',
+        `${r.id}: 台账自报 measured=${r.ledger}，守卫实测 ${r.actual}（差 ${r.actual - r.ledger >= 0 ? '+' : ''}${r.actual - r.ledger}）。`
+        + `台账 status=${r.ledgerStatus}。要么改台账对齐实测，要么真去修 —— 自报数不许和实测长期不一致。`);
+    } else if (r.status === 'unmeasurable' || r.status === 'no-extractor' || r.status === 'guard-failed') {
+      add('warning', `remeasure-${r.status}`,
+        `${r.id}: 无法回调实测（${r.status}）。${KNOWN_METRIC_DRIFT[r.id] || ''}${r.error ? ' guard 错误：' + r.error : ''}`
+        + ' 该条目的 measured 仍是自报数。');
+    }
+  }
+}
+
+// 默认档的廉价自指检测：closed 是自述，不是测量。这里不跑守卫，只把「这个 closed
+// 声明多久没被复验过」摆到台面上 —— 免得「已关闭」变成一句永远不用兑付的话。
+const CLOSED_REVERIFY_DAYS = 30;
+if (!remeasureMode) {
+  for (const e of entries) {
+    if (e.status !== 'closed') continue;
+    const age = daysBetween(String(e.measuredAt || ''));
+    if (Number.isFinite(age) && age > CLOSED_REVERIFY_DAYS) {
+      add('warning', 'closed-not-reverified',
+        `${e.id}: status=closed 已 ${age} 天未被复验（> ${CLOSED_REVERIFY_DAYS}）。`
+        + 'closed 只是 measured===0 的自述，不是测量。跑 node scripts/ci/check-debt-ledger.js --remeasure 拿真实读数。');
+    }
+  }
+}
+
 // ── 输出 ──────────────────────────────────────────────────────────────────
 const errors = findings.filter((f) => f.level === 'error');
 const warnings = findings.filter((f) => f.level === 'warning');
@@ -247,6 +393,12 @@ const summary = {
   open: entries.filter((e) => e.status === 'open').length,
   closed: entries.filter((e) => e.status === 'closed').length,
   totalMeasured: entries.reduce((n, e) => n + (typeof e.measured === 'number' ? e.measured : 0), 0),
+  remeasured: remeasureMode ? {
+    match: remeasured.filter((r) => r.status === 'match').length,
+    drift: remeasured.filter((r) => r.status === 'drift').length,
+    unmeasurable: remeasured.filter((r) => r.status === 'unmeasurable' || r.status === 'no-extractor').length,
+    guardFailed: remeasured.filter((r) => r.status === 'guard-failed').length,
+  } : null,
 };
 
 if (isJson) {
@@ -256,6 +408,7 @@ if (isJson) {
     warnings: warnings.length,
     summary,
     findings,
+    remeasured: remeasureMode ? remeasured : undefined,
   }, null, 2));
 } else {
   console.log('门禁债务台账守卫');
@@ -263,11 +416,18 @@ if (isJson) {
   console.log(`台账条目 ${summary.entries} 条：open ${summary.open} / slipped ${summary.slipped} / closed ${summary.closed}`);
   console.log(`覆盖指标 ${summary.covered} / 应有 ${summary.requiredCoverage}`);
   console.log(`累计实测债务量 ${summary.totalMeasured} 处`);
+  if (!remeasureMode) {
+    console.log('（本次未回调守卫；measured 均为台账自报数。加 --remeasure 拿真实读数对账，约 3 分钟）');
+  }
 
   console.log('\n逐条：');
   for (const e of entries) {
     const mark = e.status === 'closed' ? '✓' : e.status === 'slipped' ? '!' : '·';
-    console.log(`  ${mark} [${String(e.risk || '?').padEnd(2)}] ${String(e.id).padEnd(34)} ${e.measured} → ${e.target}  (owner=${e.owner}, due=${e.dueBy}, ${e.status})`);
+    const r = remeasured.find((x) => x.id === e.id);
+    const tail = r && r.status === 'drift'
+      ? `  ← 实测 ${r.actual}（自报 ${e.measured}，差 ${r.actual - e.measured >= 0 ? '+' : ''}${r.actual - e.measured}）`
+      : r && r.status === 'match' ? '  ← 实测一致' : '';
+    console.log(`  ${mark} [${String(e.risk || '?').padEnd(2)}] ${String(e.id).padEnd(34)} ${e.measured} → ${e.target}  (owner=${e.owner}, due=${e.dueBy}, ${e.status})${tail}`);
   }
 
   if (findings.length === 0) {
