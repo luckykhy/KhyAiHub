@@ -811,6 +811,13 @@ const AIGatewayGenerateMethod = {
       if (!tokenInfo) {
         return { adjusted: false, tokenInfo: null };
       }
+      // promptTokens === 0 是「只解析出上限」的中文报错哨兵（如「模型最大上下文长度为
+      // 128000」）。此时 available ≈ 整个窗口，据此收缩会把 max_tokens 砍到接近窗口
+      // 上限 —— 那是错的。仍然把 tokenInfo 往外传：调用方只用它 limitTokens 缓存
+      // 真实窗口（_cacheProbedContextWindow），那正是这条链路的价值所在。
+      if (tokenInfo.promptTokens <= 0) {
+        return { adjusted: false, tokenInfo };
+      }
       // Safety buffer (default 512 tokens) and minimum completion floor (default 256).
       const buffer = _resolveNumeric('KHY_CONTEXT_SAFETY_BUFFER_TOKENS', process.env);
       const minCompletion = _resolveNumeric('KHY_CONTEXT_MIN_COMPLETION_TOKENS', process.env);
@@ -2560,14 +2567,23 @@ const AIGatewayGenerateMethod = {
       if (!envPinUnavailableRelax) {
         return false;
       }
-      if (!strictPreferredOnly || userPinnedAdapter || preferredAdapterFromOptions) {
+      // [2026-10-09 修复] 原门槛 `!strictPreferredOnly ||` 让 STRICT=false 的常规配置
+      // 直接绕过整个函数 —— 而网关自己的处方恰是「解钉 + STRICT=false 放行回退」,
+      // 等于租约永不触发,坏钉选永久残留(复发史已 8 次:codex→windsurf→windsurf→
+      // api→api→claude→windsurf→api)。非 strict 下调用点 true/false 都落到同一个
+      // continue(见 4441/4489 现场),行为仅差在租约计数,故放宽为不依赖 strict;
+      // strict 的解除与状态播报保持原语义,用户显式钉选仍然永不自动解除。
+      if (userPinnedAdapter || preferredAdapterFromOptions) {
         return false;
       }
       if (!preferredAdapter || preferredAdapter === 'auto' || entryKey !== preferredAdapter) {
         return false;
       }
+      const _wasStrict = strictPreferredOnly;
       strictPreferredOnly = false;
-      emitStatus(`环境钉选通道 ${preferredAdapter} ${reasonLabel}，解除钉选并继续级联兜底通道`);
+      if (_wasStrict) {
+        emitStatus(`环境钉选通道 ${preferredAdapter} ${reasonLabel}，解除钉选并继续级联兜底通道`);
+      }
       // [DESIGN-ARCH-139] 二期:钉选租约(治本)。env 钉选通道连续 N 次(默认 2,10 分钟
       // 窗口内视为「连续」)不可用 → 自动解钉写回 .env(adapter=auto, strict=false)并披露。
       // 现有 _maybeRelax 只放宽当次请求,下次照样钉回 —— 改值不改机制 = 必复发
@@ -2640,16 +2656,179 @@ const AIGatewayGenerateMethod = {
         ];
       }
       // [DESIGN-ARCH-162] S1 观察者档:不改实际路由,并行算「全局模型粒度 rank 会选谁」,
-      // 分歧样本落 .khy/ruleguard/auto-route.jsonl,升 S3 的判据(≥200 样本、误报率)
+      // 分歧样本落 works/data/khy/ruleguard/auto-route.jsonl,升 S3 的判据(≥200 样本、误报率)
       // 由人按 PROCESS-008 裁决。门控关 / 任何异常 → 无观测,路由与今日逐字节一致。
       try {
         const autoModelRouting = require('./autoModelRouting');
         if (autoModelRouting.isEnabled()) {
+          // turnId 是本轮三类样本(select/failure/outcome)的 join 锚 [DESIGN-ARCH-185] §3.5。
+          // 必须在 rank 之前开轮:失败可能发生在 rank 之前的路径上,晚开就漏掉那一类。
+          const turnId = autoModelRouting.beginTurn({ sessionId: options.sessionId });
+          options = { ...options, __khyTurnId: turnId };
+
+          // 四档模式轴 + 四道 pass。S1 阶段**只记录不改道** —— 解出来的 tier 只进样本。
+          //
+          // §5.6 两种失败必须分开处理，它们的落点相反：
+          //   运维显式关闸 → 模式轴缺席（回今日行为），**不算软失败**；
+          //   路由器自己坏了 → 落 fallbackMode（中间档）并点名，**绝不静默、绝不落最便宜档**。
+          // 改之前这里是单个 catch 把两者一起吞掉，表现为「模式轴没生效」——
+          // 那会让 route-replay 的 softFail 计数恒为 0（假绿），也会让 A4 判据不可执行。
+          let mode = null;
+          let demand = null;
+          let softFail = null;
+          try {
+            const routingMode = require('./routingMode');
+            const envForMode = options.env || process.env;
+            if (routingMode.isEnabled(envForMode)) {
+              const want = routingMode.currentModeName(envForMode);
+              mode = routingMode.resolveMode(want, { env: envForMode });
+              if (!mode) {
+                // 档位卡坏 / 档名不认识且默认档也解析不出来
+                const fb = routingMode.fallbackModeName(envForMode);
+                softFail = `档位卡解析失败(请求档=${want})，落 ${fb || '无可用兜底档'}`;
+                mode = fb ? routingMode.resolveMode(fb, { env: envForMode }) : null;
+              } else {
+                const routeDemand = require('./routeDemand');
+                // §15-2 / §16.4n R2：执行状态输入此前**没有任何生产方**，四道 pass 因此
+                // 事实上是 query-only。这里从真实 `options.messages` + 窗口取；
+                // 调用方已显式给值时仍以调用方为准（内层循环比外层更知道自己）。
+                const _sig = require('./routeContextSignals').derive(options.messages, {
+                  contextWindow: options.contextWindow,
+                  userPrompt: prompt,
+                });
+                const _hasNum = (v) => v !== undefined && v !== null && Number.isFinite(Number(v));
+                const _routeHasImage = (o, localImages) => {
+                  if (localImages || o.hasImage === true || o.hasImageInput === true) return true;
+                  if (typeof o.hasImage === 'boolean') return o.hasImage;
+                  return typeof o.hasImageInput === 'boolean' ? o.hasImageInput : undefined;
+                };
+                demand = routeDemand.decide(prompt, {
+                  card: mode._card,
+                  mode,
+                  taskType: options.taskType,
+                  taskScale: options.taskScale,
+                  turnIndex: _hasNum(options.turnIndex)
+                    ? options.turnIndex
+                    : (Array.isArray(options.messages) ? options.messages.length : undefined),
+                  ctxRatio: _hasNum(options.ctxRatio) ? options.ctxRatio : _sig.ctxRatio,
+                  estCtxTokens: _hasNum(options.estCtxTokens) ? options.estCtxTokens : _sig.estCtxTokens,
+                  toolFails: _hasNum(options.toolFails) ? options.toolFails : _sig.toolFails,
+                  irreversible: options.irreversible,
+                  // 带图判定是**三态**的，不是布尔：
+                  //   真 —— 本次 options.images 非空（本地入口归一化后那个 hasImageInput）
+                  //         或调用方显式说有图；
+                  //   假 —— 只有调用方明确表过态（给了布尔 false）才敢写；
+                  //   未知 —— 其余情况留 undefined。
+                  // 上一版把「images 为空」直接写成 false，等于替调用方编了一句「本轮无图」：
+                  // 图可能藏在 messages 的内容块里，网关这一层看不见，而 false 会让
+                  // routeDemand 不再要求 vision ⇒ §8-⑦ 的能力门槛被一个假事实整条关掉。
+                  hasImage: _routeHasImage(options, hasImageInput),
+                });
+                if (!demand) {
+                  const fb = routingMode.fallbackModeName(envForMode);
+                  softFail = `四道 pass 返回空(档=${mode.used})，落 ${fb || '无可用兜底档'}`;
+                  if (fb) mode = routingMode.resolveMode(fb, { env: envForMode });
+                }
+              }
+            }
+          } catch (e) {
+            try {
+              const routingMode = require('./routingMode');
+              const envForMode = options.env || process.env;
+              const fb = routingMode.fallbackModeName(envForMode);
+              softFail = `模式轴抛错(${(e && e.message) || 'unknown'})，落 ${fb || '无可用兜底档'}`;
+              mode = fb ? routingMode.resolveMode(fb, { env: envForMode }) : null;
+            } catch {
+              /* 连兜底档都拿不到：模式轴整体缺席，仍不影响既有路由 */
+              mode = null;
+              softFail = softFail || '模式轴不可用';
+            }
+          }
+          if (softFail) {
+            try {
+              emitStatus(`路由降级: ${softFail}｜本档仅按中间档定带，不静默改道`);
+            } catch {
+              /* 状态行失败不影响路由 */
+            }
+          }
+          // 档名拼错/不认识：路由**照旧按默认档走**，但必须点名。
+          // §5.6 要的「绝不静默」不等于「不认识就落中间档」—— 那会把一次拼写错误
+          // 变成一次静默降档（与本文件上方档位卡注释里同一条判断相反）。
+          // 这条状态行本来就是 resolveMode 文档里承诺过的，此前没人读那个字段。
+          if (mode && mode.unrecognized) {
+            try {
+              const _avail = Object.keys((mode._card && mode._card.modes) || {}).join('/');
+              emitStatus(
+                `路由档名未识别: "${mode.requested}"｜不降档，按默认档 ${mode.used} 跑（可用档名: ${_avail || '卡不可读'}）`
+              );
+            } catch {
+              /* 状态行失败不影响路由 */
+            }
+          }
+          options = { ...options, __khyRoutingMode: mode ? mode.used : null };
+
           const vRanked = autoModelRouting.rank(this, options.taskType || 'conversation', {
             taskScale: options.taskScale,
+            mode,
+            budgetRatio: options.budgetRatio,
+            // §8-⑦：pass A 算出的能力要求必须喂回筛选，否则它只是样本里一个没人读的字段。
+            capabilityRequired: demand ? demand.capabilityRequired : null,
+            // §5.5 升档入参：只有拿到 mode 才给，否则 rank 走与今日同一条路径
+            escalate: mode
+              ? {
+                  margin: undefined, // margin 要等 rank 出来才有；§16.4l 记录：rank 会补自己算的那个
+                  demand: demand ? demand.demand : undefined,
+                  verifyFailed: !!options.verifyFailed,
+                  irreversible: !!options.irreversible,
+                }
+              : null,
           });
+          // §8-⑦ 的「点名」半边：能力被挡时必须说出来。「不许改道」那一半不在这里——
+          // 它由 rank 被挡时清空候选（winner=null）保证，见 autoModelRouting 的那道锁。
+          // 尾句只写「保持原通道」：紧接着网关自己会发「识图方法: 本地 OCR …」，
+          // 这里再写「不降级硬答」就成了同一件事说两遍，而且和后面那行的口径互相打脸。
+          if (vRanked && vRanked.capability && vRanked.capability.blocked) {
+            try {
+              const cb = vRanked.capability;
+              emitStatus(
+                `路由未按能力改道: 本请求需要「${cb.blocked}」能力，` +
+                `候选中 ${cb.dropped} 个已知不具备${cb.unknown > 0 ? `、${cb.unknown} 个能力未知` : ''} ⇒ 保持原通道`
+              );
+            } catch {
+              /* 状态行失败不影响路由 */
+            }
+          }
           if (vRanked) {
             autoModelRouting.observeSelection({
+              turnId,
+              mode: mode ? mode.used : null,
+              // §5.4 的标定输入：档卡把 `strongShare` 定成**目标占比**（约多少轮次落在 T0/T1），
+              // 而 §16.4n 实测它此前零消费方。现在让目标跟着观测一起落盘，
+              // `route-replay` 就能印「实测占比 / 目标占比」的差 —— 那是 λ 反解的输入，
+              // 也是「目标定得不合理就回去改目标而不是硬调 λ」这句话唯一可核对的形式。
+              strongTarget: mode && Number.isFinite(mode.strongShare) ? mode.strongShare : null,
+              demand,
+              margin: vRanked.margin,
+              cost: vRanked.cost,
+              escalatedFrom: vRanked.escalatedFrom,
+              escalateReason: vRanked.escalateReason,
+              abstained: vRanked.abstained,
+              capability: vRanked.capability,
+              // §5.2 的 β 载体读数（见 §16.4z）：档位声明了思考档，而唯一消费者
+              // （循环里的 auto-reasoning 段）只在 `reasoning_effort === 'auto'` 的请求上运行。
+              // 全仓没有任何生产方把 effort 设成 'auto'（实测：EFFORT_PRESETS 只有 max/high/medium/low，
+              // CLI/TUI 不透传 effort），所以这一栏在真实流量上恒为 carried=false ——
+              // 「极致档多花思考」这句话目前只在 API 透传路径上成立。只记录，不改发出去的参数：
+              // 把 effort 由档默认改写是 §14-D12（有账单后果，归人）。
+              beta: mode
+                ? {
+                  declared: String(mode.thinking || 'auto'),
+                  carried: String(
+                    options.reasoningEffort || options.reasoning_effort || ''
+                  ).trim().toLowerCase() === 'auto',
+                }
+                : null,
+              softFail,
               legacy: {
                 adapter: autoResult.adapter,
                 model: options.model || autoResult.model || null,
@@ -2658,6 +2837,73 @@ const AIGatewayGenerateMethod = {
               ranked: vRanked.ranked,
               skipped: vRanked.skipped,
             });
+          }
+          // 判据 A1 要求的是「状态行含 档名 + 选中 tier + 原因」，而下面那条完整状态行
+          // 长在 **S3 改道分支里面** —— 阶段没到 S3 时用户什么都看不到，A1 就不成立。
+          // 观测档的意义恰恰是让人在「不改道」阶段看见它本来会选谁，所以这里补一条
+          // 同格式、明确标「未改道」的行。只在**显式配过档**时发：没配的人不该为
+          // 一个他没启用的功能每轮多一行噪声。
+          if (
+            vRanked &&
+            mode &&
+            vRanked.winner &&
+            // 这里**不能**写 routingMode.isApplyEnabled：本作用域里没有那个常量
+            //（两处 `const routingMode` 都在更内的 try 里）。写成那样会抛 ReferenceError，
+            // 被最外层 catch 吞掉，连带把下面的 S3 改道分支一起跳过 ——
+            // 表现为「改道功能静默失效」，而不报任何错。与下方同一条 require 保持一致。
+            !require('./routingMode').isApplyEnabled(options.env || process.env) &&
+            String((options.env || process.env).GATEWAY_ROUTING_MODE || '').trim()
+          ) {
+            try {
+              const w = vRanked.winner;
+              const bandNote = `${mode.floor}–${mode.ceiling}`;
+              const costNote =
+                vRanked.cost && vRanked.cost.participated
+                  ? `成本项 λ=${vRanked.cost.lambda}`
+                  : `成本项未参与(价表可用 ${
+                      (vRanked.cost && vRanked.cost.coverage && vRanked.cost.coverage.usable) ?? 0
+                    }/${(vRanked.cost && vRanked.cost.coverage && vRanked.cost.coverage.total) ?? 0})`;
+              emitStatus(
+                `路由(按档名 ${mode.label} 定带 ${bandNote}，本阶段只观测未改道): ${w.adapter}/${w.model} (${w.tier})｜${costNote}`
+              );
+            } catch {
+              /* 状态行失败不影响路由 */
+            }
+          }
+          // S3 才改道：KHY_ROUTE_APPLY 开 且 阶段到 S3（两层都不放行就不生效）。
+          // 到这里仍不改 options.model 是**设计要求的默认状态**，不是没写完。
+          if (
+            vRanked &&
+            vRanked.winner &&
+            // §8-⑦ 的「不识图不许改道」只有一道锁，在 rank 里：被挡时 outRanked 清空 ⇒
+            // winner 为 null ⇒ 上面这个 `vRanked.winner` 就把它挡住了。
+            // 这里曾另加过一条 `!capability.blocked` 判据，M17-d/M17-f 证明它在契约成立时
+            // 永不可达（去掉后测试毫无反应），留着只会烂掉，故删。
+            require('./routingMode').isApplyEnabled(options.env || process.env)
+          ) {
+            const w = vRanked.winner;
+            options = { ...options, model: w.model || options.model };
+            orderedAdapters = [
+              ...orderedAdapters.filter((a) => a.key === w.adapter),
+              ...orderedAdapters.filter((a) => a.key !== w.adapter),
+            ];
+            protocolHintLockedAdapter = w.adapter || protocolHintLockedAdapter;
+            try {
+              // 走本文件既有的 emitStatus 通道（尊重 abort 与 onChunk），不是裸 stdout。
+              // RUNTIME-002：动作 + 目标 + 进度 + 原因，且必须说明成本项有没有参与。
+              const why = demand && Array.isArray(demand.reasons) && demand.reasons.length
+                ? demand.reasons.join(' · ')
+                : `贴合度排序 margin=${vRanked.margin === null ? 'n/a' : vRanked.margin}`;
+              const costNote =
+                vRanked.cost && vRanked.cost.participated
+                  ? `成本项 λ=${vRanked.cost.lambda}`
+                  : '成本项未参与(价格不可知或 λ 未标定)';
+              emitStatus(
+                `路由: ${mode ? `${mode.label}档 ` : ''}${w.adapter}/${w.model} (${w.tier})｜${why}｜${costNote}`
+              );
+            } catch {
+              /* 状态行失败不影响路由 */
+            }
           }
         }
       } catch {
@@ -2676,6 +2922,21 @@ const AIGatewayGenerateMethod = {
         ...orderedAdapters.filter((a) => a.key === preferredAdapter),
         ...orderedAdapters.filter((a) => a.key !== preferredAdapter),
       ];
+      // R1：钉了渠道 ⇒ 上面整个 auto 分支（模式轴、四道 pass、样本、路由状态行）都不执行。
+      // 这在此前是**零说明**的：用户只能从 /model 画面的置灰猜。只发状态，不改路由、不产生样本，
+      // 也就不污染 §5.6 的软失败计数（实测钉选时 observeSelection 根本没被调用）。
+      try {
+        const _rm = require('./routingMode');
+        const _envForPin = options.env || process.env;
+        if (_rm.isEnabled(_envForPin) && _rm.pinnedBypass(_envForPin)) {
+          emitStatus(
+            `模式轴未参与：已钉选渠道/模型（${preferredModel || preferredAdapter}）` +
+            '｜改档无效，需在 /model 选 Auto 才按档路由'
+          );
+        }
+      } catch {
+        /* 状态行失败不影响路由 */
+      }
     } else {
       // Habit-based preference: if no env override, use learned preference
       let habitPreferred = null;
@@ -3852,6 +4113,8 @@ const AIGatewayGenerateMethod = {
       this._recordAdapterFailure(key, type, msg, {
         ...(m || {}),
         model: (m && m.model != null && String(m.model).trim()) || _currentAttemptModel,
+        // turnId 透传给模型粒度失败账本，使 failure 样本能连回同一轮的 select [DESIGN-ARCH-185] §3.5
+        turnId: options.__khyTurnId || null,
         attachmentPresent:
           hasImageInput || (Array.isArray(options.documents) && options.documents.length > 0),
       });
@@ -5686,6 +5949,41 @@ const AIGatewayGenerateMethod = {
                   cached: !!result.tokenUsage?.cached,
                   success: true,
                 });
+                // [DESIGN-ARCH-185] §6.1 本轮收尾。成本走 modelPricing 的**带状态**估算：
+                // 价格不可知时写 null，绝不写那个会把路由带偏的编造 default。
+                try {
+                  const _amr = require('./autoModelRouting');
+                  if (options.__khyTurnId && _amr.isEnabled()) {
+                    const mp = require('../modelPricing');
+                    const _mid = result.model || '';
+                    const _pr = mp.resolvePrice(_mid);
+                    const _c = mp.estimateCostDetailed(
+                      result.tokenUsage?.inputTokens || 0,
+                      result.tokenUsage?.outputTokens || 0,
+                      _mid
+                    );
+                    _amr.observeOutcome({
+                      turnId: options.__khyTurnId,
+                      ok: true,
+                      mode: options.__khyRoutingMode || null,
+                      picked: {
+                        adapter: entry.key,
+                        model: _mid || null,
+                        provider: result.provider || null,
+                      },
+                      priceState: _pr.state,
+                      costUSD: _c.costUSD,
+                      tokens: {
+                        i: result.tokenUsage?.inputTokens || 0,
+                        o: result.tokenUsage?.outputTokens || 0,
+                        cached: !!result.tokenUsage?.cached,
+                      },
+                      latencyMs: reqDuration,
+                    });
+                  }
+                } catch {
+                  /* 记账尽力而为，绝不影响成功返回 */
+                }
                 diagnostics.emitModelResponse(
                   result.model || 'unknown',
                   result.provider || entry.key,

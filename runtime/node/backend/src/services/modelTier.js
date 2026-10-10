@@ -235,6 +235,33 @@ function harnessProfile(tier, opts = {}) {
     shortContext, // window ≤ 32k: shrink the STATIC prompt only (runtime scaffolding unchanged)
   };
 
+  // [DESIGN-ARCH-185] §4.3：模式意图（β/π）在 tier 默认之上、env 显式覆盖之下应用。
+  // 优先级 env > mode > tier 是刻意的：mode 是用户选的档，env 是运维的逃生阀，
+  // 后者必须能压过前者；而两者都要压过「由模型能力档推出来的默认值」。
+  // 调用方传的是**已解析的纯数据**（不是 mode 对象），这样本模块不 require routingMode：
+  // 后者要读档位卡（fs），而本模块是零 IO 的。
+  // （原先此处写的理由是「会形成 require 环」—— 实测不成立，routingMode 的 require
+  //  闭包 8 个文件里没有本模块。见 185 §16.2。）
+  try {
+    const intent = opts && opts.modeIntent && typeof opts.modeIntent === 'object'
+      ? opts.modeIntent : null;
+    if (intent) {
+      const tf = intent.thinkingFloor === undefined ? null : intent.thinkingFloor;
+      if (tf === null) profile.thinkingFloor = null;
+      else if (_EFFORT_TIERS.includes(String(tf).toLowerCase())) {
+        profile.thinkingFloor = String(tf).toLowerCase();
+      }
+      const pv = String(intent.promptVerbosity || '').trim().toLowerCase();
+      if (pv === 'lean' || pv === 'full') profile.promptVerbosity = pv;
+      profile.modeApplied = {
+        thinkingFloor: tf === undefined ? null : tf,
+        promptVerbosity: pv || null,
+      };
+    }
+  } catch {
+    /* 意图坏 → 保持 tier 默认，绝不抛 */
+  }
+
   // Short-context override (escape hatch): force on/off regardless of window.
   const shortOverride = _envBool(process.env.KHY_HARNESS_SHORT_CONTEXT);
   if (shortOverride !== undefined) {

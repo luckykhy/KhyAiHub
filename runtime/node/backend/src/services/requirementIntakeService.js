@@ -23,8 +23,6 @@
 // 与 clarificationCards.CLEAR_MODES 一致：意图模式活跃即视为「用户已给出明确指令」。
 const CLEAR_MODES = Object.freeze(['goal', 'ultrawork', 'coding', 'analyze', 'learn']);
 
-const fs = require('fs');
-
 // 阶段权威（对齐 check-agent-feedback.js 的 STAGE 常量模式,PROCESS-008）:
 // S1 = 只记录不改变注入行为;升 S2 后 aiChatCore 才会按 aggregate() 的互斥裁决
 // 收口散装注入。升阶是人的决定,毕业看样本量（≥200 条无解释不了的样本）。
@@ -196,38 +194,10 @@ function formatIntakeStatus(understandingState) {
   return `需求理解聚合：route=${routeText}（规模 ${understandingState.scale}，${understandingState.reason}）`;
 }
 
-/**
- * S1 观察台账：一行 JSON 追加到 <dataHome>/requirements/observations.jsonl
- * （样本累计 ≥200 轮且无解释不了的样本才可按 PP-2 升阶）。fire-and-forget,
- * 任何异常吞掉 —— 观察绝不影响会话。
- * @param {object} understandingState  aggregate() 的返回值
- * @param {{toolActivity?:number, artifactCreated?:boolean}} [meta]
- */
-function observe(understandingState, meta = {}) {
-  try {
-    if (!understandingState || !understandingState.enabled) {
-      return;
-    }
-    const { getDataDir } = require('../utils/dataHome');
-    const line = JSON.stringify({
-      at: new Date().toISOString(),
-      route: understandingState.route,
-      reason: understandingState.reason,
-      scale: understandingState.scale,
-      modeActive: understandingState.modeActive,
-      directives: understandingState.injectedDirectives,
-      toolActivity: Number(meta.toolActivity || 0) || 0,
-      artifactCreated: meta.artifactCreated === true,
-    });
-    fs.appendFile(
-      getDataDir('requirements') + '/observations.jsonl',
-      line + '\n',
-      () => {}
-    );
-  } catch {
-    /* 观察失败不影响会话 */
-  }
-}
+// ── S1 观察台账已下沉 ────────────────────────────────────────────────────────
+// 本件是纯叶子（无 IO、确定性、绝不抛），裁决落盘（.khy/requirements/observations.jsonl）
+// 这一 IO 归 requirementArtifact.observeIntake（设计指定的唯一落盘点）。调用方
+// （aiChatCore）在拿到 aggregate() 结果后自行调它，本件不再导出 observe。
 
 module.exports = {
   CLEAR_MODES,
@@ -237,5 +207,4 @@ module.exports = {
   aggregate,
   assessAcceptanceGap,
   formatIntakeStatus,
-  observe,
 };

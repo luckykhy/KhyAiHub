@@ -171,52 +171,63 @@ function classifyFailureOwnership(args = {}) {
  */
 function probeEnvironmentOutage(args = {}) {
   try {
-    const a = args && typeof args === 'object' ? args : {};
-    const attempts = Array.isArray(a.attempts) ? a.attempts : [];
-    const localList = Array.isArray(a.localAdapterKeys) ? a.localAdapterKeys : DEFAULT_LOCAL_ADAPTER_KEYS;
-    const local = new Set(localList.map(_key).filter(Boolean));
-    const byKey = new Map();
-    const signatures = new Set();
-    let remoteSuccess = false;
-    for (const raw of attempts) {
-      if (!raw || typeof raw !== 'object') continue;
-      const key = _key(raw.adapterKey != null ? raw.adapterKey : raw.provider != null ? raw.provider : raw.adapter);
-      const isLocal = !!key && local.has(key);
-      if (raw.success === true) {
-        if (key && !isLocal) remoteSuccess = true;
-        continue;
-      }
-      if (raw.virtualSkip === true) continue;
-      const msg = _lower(raw.error != null ? raw.error : raw.message != null ? raw.message : raw.rawError);
-      const hits = msg.match(ENV_SIGNATURE_ALL_RE);
-      if (hits) for (const t of hits) signatures.add(String(t).toUpperCase());
-      if (!key || isLocal) continue;
-      const type = _type(raw.errorType);
-      const w = type === 'network' ? 2 : type === 'timeout' ? 1 : 0;
-      const cell = byKey.get(key) || { weight: 0 };
-      if (w > cell.weight) cell.weight = w;
-      byKey.set(key, cell);
-    }
-    const keys = [];
-    let weightSum = 0;
-    for (const entry of byKey.entries()) {
-      if (entry[1].weight > 0) {
-        keys.push(entry[0]);
-        weightSum += entry[1].weight;
-      }
-    }
-    const environmental = !remoteSuccess && (weightSum >= 3 || signatures.size > 0);
-    const evidence = [];
-    if (environmental) {
-      if (signatures.size > 0) evidence.push(`环境特征码: ${[...signatures].join(', ')}`);
-      if (weightSum >= 3) {
-        evidence.push(`跨通道网络失败: ${keys.join(', ')}（权重 ${weightSum} ≥3）`);
-      }
-    }
-    return { environmental, evidence, remoteAdaptersFailed: keys.length };
+    return _aggregateOutage(args && typeof args === 'object' ? args : {});
   } catch {
     return { environmental: false, evidence: [], remoteAdaptersFailed: 0 };
   }
+}
+
+/** D2 证据扫描：逐条 attempt 归集出「远端是否成功证伪 / 特征码集合 / 各远端适配器最高权重」。 */
+function _collectOutageEvidence(a) {
+  const attempts = Array.isArray(a.attempts) ? a.attempts : [];
+  const localList = Array.isArray(a.localAdapterKeys) ? a.localAdapterKeys : DEFAULT_LOCAL_ADAPTER_KEYS;
+  const local = new Set(localList.map(_key).filter(Boolean));
+  const byKey = new Map();
+  const signatures = new Set();
+  let remoteSuccess = false;
+  for (const raw of attempts) {
+    if (!raw || typeof raw !== 'object') continue;
+    const key = _key(raw.adapterKey != null ? raw.adapterKey : raw.provider != null ? raw.provider : raw.adapter);
+    const isLocal = !!key && local.has(key);
+    if (raw.success === true) {
+      // 远端成功即证伪环境级；local 成功不证伪（local 通恰是环境级的典型表现）。
+      remoteSuccess = remoteSuccess || (!!key && !isLocal);
+      continue;
+    }
+    if (raw.virtualSkip === true) continue;
+    const msg = _lower(raw.error != null ? raw.error : raw.message != null ? raw.message : raw.rawError);
+    const hits = msg.match(ENV_SIGNATURE_ALL_RE);
+    if (hits) for (const t of hits) signatures.add(String(t).toUpperCase());
+    if (!key || isLocal) continue;
+    const type = _type(raw.errorType);
+    const w = type === 'network' ? 2 : type === 'timeout' ? 1 : 0;
+    const cell = byKey.get(key) || { weight: 0 };
+    if (w > cell.weight) cell.weight = w;
+    byKey.set(key, cell);
+  }
+  return { byKey, signatures, remoteSuccess };
+}
+
+/** 由扫描结果算结论（权重和 ≥3 或特征码非空，且无远端成功）与可读证据行。 */
+function _aggregateOutage(a) {
+  const { byKey, signatures, remoteSuccess } = _collectOutageEvidence(a);
+  const keys = [];
+  let weightSum = 0;
+  for (const entry of byKey.entries()) {
+    if (entry[1].weight > 0) {
+      keys.push(entry[0]);
+      weightSum += entry[1].weight;
+    }
+  }
+  const environmental = !remoteSuccess && (weightSum >= 3 || signatures.size > 0);
+  const evidence = [];
+  if (environmental) {
+    if (signatures.size > 0) evidence.push(`环境特征码: ${[...signatures].join(', ')}`);
+    if (weightSum >= 3) {
+      evidence.push(`跨通道网络失败: ${keys.join(', ')}（权重 ${weightSum} ≥3）`);
+    }
+  }
+  return { environmental, evidence, remoteAdaptersFailed: keys.length };
 }
 
 /**

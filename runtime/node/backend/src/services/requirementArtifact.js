@@ -243,6 +243,32 @@ function appendReconciliation(artifactId, entries) {
   }
 }
 
+// ── S1 观察台账（[DESIGN-ARCH-164] §5 / PROCESS-008）──────────────────────────
+// 聚合件 requirementIntakeService.js 是设计上的**纯叶子**（纯函数、无 I/O、绝不抛），
+// 故「裁决落盘」这一 IO 归本模块——设计指定的**唯一落盘点**，与需求制品同处
+// .khy/requirements/。fire-and-forget：任何异常吞掉，观察绝不影响会话。
+// （样本累计 ≥200 轮且无解释不了的样本才可按 PP-2 升阶。）
+function observeIntake(understandingState, meta = {}) {
+  try {
+    if (!understandingState || !understandingState.enabled) {
+      return;
+    }
+    const line = JSON.stringify({
+      at: new Date().toISOString(),
+      route: understandingState.route,
+      reason: understandingState.reason,
+      scale: understandingState.scale,
+      modeActive: understandingState.modeActive,
+      directives: understandingState.injectedDirectives,
+      toolActivity: Number(meta.toolActivity || 0) || 0,
+      artifactCreated: meta.artifactCreated === true,
+    });
+    fs.appendFile(path.join(_dir(), 'observations.jsonl'), line + '\n', () => {});
+  } catch {
+    /* 观察失败不影响会话 */
+  }
+}
+
 module.exports = {
   DIR_NAME,
   isEnabled,
@@ -258,6 +284,8 @@ module.exports = {
   finalizeTurnArtifact,
   reconcileTurn,
   buildContextLine,
+  // S1 观察台账（[DESIGN-ARCH-164] §5）：聚合件保持纯叶子，落盘归此处
+  observeIntake,
 };
 
 // ── QA 观察缓冲（[DESIGN-ARCH-164] §4.2）──────────────────────────────────────

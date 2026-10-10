@@ -283,6 +283,7 @@ const AIGatewayCooldownMethods = {
           });
         }
         autoModelRouting.observeFailure({
+          turnId: meta && meta.turnId ? String(meta.turnId) : null,
           adapter: adapterKey,
           model: failedModel,
           errorType: normalizedType,

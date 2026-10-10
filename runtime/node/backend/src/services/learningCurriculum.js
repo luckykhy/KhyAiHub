@@ -156,10 +156,10 @@ const PROJECT_ROOT = _resolveProjectRoot();
 // them showed "(无法读取)". Remap old → new on the fly so existing entries —
 // and any externally-authored ones — keep resolving without a data migration.
 const _PATH_REMAPS = [
-  [/^backend\//, 'services/backend/'],
-  [/^ai-backend\//, 'services/ai-backend/'],
+  [/^backend\//, 'runtime/node/backend/'],
+  [/^ai-backend\//, 'runtime/node/ai-backend/'],
   [/^khy_platform\//, 'runtime/substrate/platform/khy_platform/'],
-  [/^frontend\//, 'apps/ai-frontend/'],
+  [/^frontend\//, 'delivery/web/ai-frontend/'],
 ];
 
 /**

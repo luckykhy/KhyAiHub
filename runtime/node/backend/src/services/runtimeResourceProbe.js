@@ -211,13 +211,22 @@ function collectRuntimeCensus(opts = {}) {
  * @returns {Array<{id:string,label:string,exceeded:boolean,detail:string,summary:string,hint:string}>}
  */
 function assessResidency(snap) {
-  const m = snap.memory;
-  const g = snap.modules;
+  const c = _residencyContext(snap);
+  const findings = [
+    _memoryFinding(c),
+    _modulesFinding(c),
+    _handlesFinding(c),
+    _machineFinding(c),
+    _childrenFinding(c),
+  ];
+  if (snap.dataHome) findings.push(_dataHomeFinding(snap.dataHome));
+  return findings;
+}
+
+/** 把会被多张 finding 读到的量算一次（含 phase 档位与句柄分类）。 */
+function _residencyContext(snap) {
   const h = snap.handles;
-  const ma = snap.machine;
-  const hb = _handleBudget(snap.phase);
   const watchers = (h.by.FSWatcher || 0) + (h.by.StatWatcher || 0) + (h.by.FSEvent || 0);
-  const timers = h.by.Timeout || 0;
   // The count is already split into Timeout/watchers; name the remaining handle
   // classes too so a reading is a clue, not a number.
   const otherKinds = (h.top || [])
@@ -225,91 +234,117 @@ function assessResidency(snap) {
     .slice(0, 3)
     .map((x) => `${x.kind}×${x.count}`)
     .join(' ');
-  const liveChildren = (snap.children || []).filter((c) => c.running);
+  return {
+    snap,
+    m: snap.memory,
+    g: snap.modules,
+    h,
+    ma: snap.machine,
+    hb: _handleBudget(snap.phase),
+    watchers,
+    timers: h.by.Timeout || 0,
+    otherKinds,
+    liveChildren: (snap.children || []).filter((c) => c.running),
+  };
+}
 
-  const findings = [
-    {
-      id: 'memory',
-      label: '进程内存',
-      exceeded: m.rssMB > m.rssBudgetMB,
-      detail: `RSS ${m.rssMB} MB（预算 ${m.rssBudgetMB}）· 堆 ${m.heapUsedMB}/${m.heapTotalMB} MB · 外部 ${m.externalMB} MB`,
-      reading: `RSS ${m.rssMB}/${m.rssBudgetMB} MB`,
-      summary: m.rssMB > m.rssBudgetMB
-        ? `本进程 RSS ${m.rssMB} MB，超过预算 ${m.rssBudgetMB} MB`
-        : `本进程 RSS ${m.rssMB} MB，在预算 ${m.rssBudgetMB} MB 内`,
-      hint: '在会话内执行 clipboard bridge stop 收起常驻子进程，或清理数据目录后重跑 khy doctor 复查',
-    },
-    {
-      id: 'modules',
-      label: '模块图',
-      exceeded: g.loaded > g.budget,
-      detail: `已载入 ${g.loaded} 个模块（上限 ${g.budget}）`,
-      reading: `已载入 ${g.loaded}/${g.budget}`,
-      summary: g.loaded > g.budget
-        ? `载入 ${g.loaded} 个模块，超过 ${g.budget} 上限——首帧前的 require 图在膨胀`
-        : `载入 ${g.loaded} 个模块，在 ${g.budget} 上限内`,
-      hint: '用 STARTUP_PROFILE=1 启动一次，按分阶段耗时定位是哪棵子树被 eager require，再改为按需加载',
-    },
-    {
-      id: 'handles',
-      label: '活体句柄',
-      exceeded: timers > hb.timers || watchers > hb.watchers,
-      detail: `活体资源 ${h.total} 项（定时器 ${timers} · 文件监视 ${watchers}${otherKinds ? ` · ${otherKinds}` : ''}）`,
-      reading: `定时器 ${timers}/${hb.timers} · 监视 ${watchers}/${hb.watchers}`,
-      summary: timers > hb.timers || watchers > hb.watchers
-        ? `定时器 ${timers} 个、文件监视 ${watchers} 个，高于 ${snap.phase || DEFAULT_PHASE} 档判据（定时器 ≤${hb.timers} · 监视 ≤${hb.watchers}）`
-        : `定时器 ${timers} 个、文件监视 ${watchers} 个，未见句柄堆积`,
-      hint: '对照 services/serviceLifecyclePolicy.js 的 resident 条目降档：session watchdog(1s)/内存监视(30s)/周期清理/安全监视(600s) 均为已 unref 的常驻 interval；低余量机器可 clipboard bridge stop 省约 85 MB，watcher 必须 unref 并在卸载时关闭。启动窗口内的读数含尚未 firing 的启动 timer，结算后复测更准',
-    },
-    {
-      id: 'machine',
-      label: '机器余量',
-      exceeded: ma.freePct < ma.floorFreePct,
-      detail: `物理内存 ${ma.freeMB}/${ma.totalMB} MB 空闲（${ma.freePct}%，判据 ≥${ma.floorFreePct}%）· ${ma.cpus} 核`,
-      reading: `空闲 ${ma.freePct}%/≥${ma.floorFreePct}%`,
-      summary: ma.freePct < ma.floorFreePct
-        ? `可用内存只剩 ${ma.freePct}%，低于 ${ma.floorFreePct}% 判据——此时任何常驻开销都会因换页被放大成卡顿`
-        : `可用内存 ${ma.freePct}%，余量充足`,
-      hint: '先释放系统侧占用（关闭闲置浏览器/常驻应用）再评估 khy；必须在低余量机器上工作时，在会话内执行 clipboard bridge stop 去掉约 85 MB 常驻内存',
-    },
-    {
-      id: 'children',
-      // Deliberately never an exceedance: the image bridge is resident by design
-      // (a one-shot capture would pay the Defender spawn tax on every paste). If it
-      // reported "over budget" every session, this whole notice would train people
-      // to ignore it — so it reads as a cost statement, and the disposal command
-      // stays with the user.
-      exceeded: false,
-      label: '常驻子进程',
-      detail: liveChildren.length === 0
-        ? '本进程未持有常驻子进程'
-        : liveChildren
-            .map((c) => `${c.name} pid=${c.pid}${c.pollMs ? ` 轮询 ${c.pollMs}ms` : ''}`)
-            .join('；'),
-      reading: `常驻 ${liveChildren.length} 个`,
-      summary: liveChildren.length === 0
-        ? '无常驻子进程，会话期少一份常驻内存'
-        : `会话期常驻子进程 ${liveChildren.length} 个：${liveChildren.map((c) => `${c.name}（实测约 85 MB 常驻内存，可在会话内 clipboard bridge stop 收起）`).join('、')}`,
-      hint: '确认用途后可在会话内执行 clipboard bridge stop 收起图片桥（实测约 85 MB 常驻内存），需要粘图时再 clipboard bridge start 唤回',
-    },
-  ];
+function _memoryFinding(c) {
+  const m = c.m;
+  return {
+    id: 'memory',
+    label: '进程内存',
+    exceeded: m.rssMB > m.rssBudgetMB,
+    detail: `RSS ${m.rssMB} MB（预算 ${m.rssBudgetMB}）· 堆 ${m.heapUsedMB}/${m.heapTotalMB} MB · 外部 ${m.externalMB} MB`,
+    reading: `RSS ${m.rssMB}/${m.rssBudgetMB} MB`,
+    summary: m.rssMB > m.rssBudgetMB
+      ? `本进程 RSS ${m.rssMB} MB，超过预算 ${m.rssBudgetMB} MB`
+      : `本进程 RSS ${m.rssMB} MB，在预算 ${m.rssBudgetMB} MB 内`,
+    hint: '在会话内执行 clipboard bridge stop 收起常驻子进程，或清理数据目录后重跑 khy doctor 复查',
+  };
+}
 
-  if (snap.dataHome) {
-    const d = snap.dataHome;
-    findings.push({
-      id: 'dataHome',
-      label: '数据目录',
-      exceeded: d.overThreshold,
-      detail: `${d.root} 共 ${d.totalHuman}（提示阈值 ${d.thresholdMB} MB）· 最大三项：${d.top.map((t) => `${t.rel} ${t.human}`).join('、') || '（空）'}`,
-      reading: `${d.totalMB}/${d.thresholdMB} MB`,
-      summary: d.overThreshold
-        ? `数据目录 ${d.totalHuman} 超过提示阈值 ${d.thresholdMB} MB，最大三项：${d.top.map((t) => `${t.rel} ${t.human}`).join('、')}`
-        : `数据目录 ${d.totalHuman}，在提示阈值内`,
-      hint: `运行 khy clean --runtime --dry-run 查看可回收的 ${d.reclaimableHuman}（logs/audit/tmp/cache/change-watch）；会话存档与工作区快照不在白名单内，需人工确认后再处理`,
-    });
-  }
+function _modulesFinding(c) {
+  const g = c.g;
+  return {
+    id: 'modules',
+    label: '模块图',
+    exceeded: g.loaded > g.budget,
+    detail: `已载入 ${g.loaded} 个模块（上限 ${g.budget}）`,
+    reading: `已载入 ${g.loaded}/${g.budget}`,
+    summary: g.loaded > g.budget
+      ? `载入 ${g.loaded} 个模块，超过 ${g.budget} 上限——首帧前的 require 图在膨胀`
+      : `载入 ${g.loaded} 个模块，在 ${g.budget} 上限内`,
+    hint: '用 STARTUP_PROFILE=1 启动一次，按分阶段耗时定位是哪棵子树被 eager require，再改为按需加载',
+  };
+}
 
-  return findings;
+function _handlesFinding(c) {
+  const { h, hb, timers, watchers, otherKinds } = c;
+  const over = timers > hb.timers || watchers > hb.watchers;
+  return {
+    id: 'handles',
+    label: '活体句柄',
+    exceeded: over,
+    detail: `活体资源 ${h.total} 项（定时器 ${timers} · 文件监视 ${watchers}${otherKinds ? ` · ${otherKinds}` : ''}）`,
+    reading: `定时器 ${timers}/${hb.timers} · 监视 ${watchers}/${hb.watchers}`,
+    summary: over
+      ? `定时器 ${timers} 个、文件监视 ${watchers} 个，高于 ${c.snap.phase || DEFAULT_PHASE} 档判据（定时器 ≤${hb.timers} · 监视 ≤${hb.watchers}）`
+      : `定时器 ${timers} 个、文件监视 ${watchers} 个，未见句柄堆积`,
+    hint: '对照 services/serviceLifecyclePolicy.js 的 resident 条目降档：session watchdog(1s)/内存监视(30s)/周期清理/安全监视(600s) 均为已 unref 的常驻 interval；低余量机器可 clipboard bridge stop 省约 85 MB，watcher 必须 unref 并在卸载时关闭。启动窗口内的读数含尚未 firing 的启动 timer，结算后复测更准',
+  };
+}
+
+function _machineFinding(c) {
+  const ma = c.ma;
+  return {
+    id: 'machine',
+    label: '机器余量',
+    exceeded: ma.freePct < ma.floorFreePct,
+    detail: `物理内存 ${ma.freeMB}/${ma.totalMB} MB 空闲（${ma.freePct}%，判据 ≥${ma.floorFreePct}%）· ${ma.cpus} 核`,
+    reading: `空闲 ${ma.freePct}%/≥${ma.floorFreePct}%`,
+    summary: ma.freePct < ma.floorFreePct
+      ? `可用内存只剩 ${ma.freePct}%，低于 ${ma.floorFreePct}% 判据——此时任何常驻开销都会因换页被放大成卡顿`
+      : `可用内存 ${ma.freePct}%，余量充足`,
+    hint: '先释放系统侧占用（关闭闲置浏览器/常驻应用）再评估 khy；必须在低余量机器上工作时，在会话内执行 clipboard bridge stop 去掉约 85 MB 常驻内存',
+  };
+}
+
+function _childrenFinding(c) {
+  const live = c.liveChildren;
+  return {
+    id: 'children',
+    // Deliberately never an exceedance: the image bridge is resident by design
+    // (a one-shot capture would pay the Defender spawn tax on every paste). If it
+    // reported "over budget" every session, this whole notice would train people
+    // to ignore it — so it reads as a cost statement, and the disposal command
+    // stays with the user.
+    exceeded: false,
+    label: '常驻子进程',
+    detail: live.length === 0
+      ? '本进程未持有常驻子进程'
+      : live
+          .map((x) => `${x.name} pid=${x.pid}${x.pollMs ? ` 轮询 ${x.pollMs}ms` : ''}`)
+          .join('；'),
+    reading: `常驻 ${live.length} 个`,
+    summary: live.length === 0
+      ? '无常驻子进程，会话期少一份常驻内存'
+      : `会话期常驻子进程 ${live.length} 个：${live.map((x) => `${x.name}（实测约 85 MB 常驻内存，可在会话内 clipboard bridge stop 收起）`).join('、')}`,
+    hint: '确认用途后可在会话内执行 clipboard bridge stop 收起图片桥（实测约 85 MB 常驻内存），需要粘图时再 clipboard bridge start 唤回',
+  };
+}
+
+function _dataHomeFinding(d) {
+  return {
+    id: 'dataHome',
+    label: '数据目录',
+    exceeded: d.overThreshold,
+    detail: `${d.root} 共 ${d.totalHuman}（提示阈值 ${d.thresholdMB} MB）· 最大三项：${d.top.map((t) => `${t.rel} ${t.human}`).join('、') || '（空）'}`,
+    reading: `${d.totalMB}/${d.thresholdMB} MB`,
+    summary: d.overThreshold
+      ? `数据目录 ${d.totalHuman} 超过提示阈值 ${d.thresholdMB} MB，最大三项：${d.top.map((t) => `${t.rel} ${t.human}`).join('、')}`
+      : `数据目录 ${d.totalHuman}，在提示阈值内`,
+    hint: `运行 khy clean --runtime --dry-run 查看可回收的 ${d.reclaimableHuman}（logs/audit/tmp/cache/change-watch）；会话存档与工作区快照不在白名单内，需人工确认后再处理`,
+  };
 }
 
 /** Findings the in-session notice carries: only the ones the user can act on. */

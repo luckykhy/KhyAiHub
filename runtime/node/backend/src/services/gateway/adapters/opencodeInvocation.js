@@ -7,10 +7,10 @@
  * 背景(goal「我希望 Khyos 可以指挥 cc、opencode 等代码编辑器」):khyos 已能通过
  * cliToolAdapter / claudeAdapter / codexAdapter 指挥 Claude Code、Codex、Aider,但
  * **opencode 从未被接入为可调用的子代理**。opencode 的非交互入口是
- * `opencode run [message..]`(位置参数,不读 stdin;`-m provider/model`;
+ * `opencode run [message..]`(无位置参数时从 stdin 读 prompt;`-m provider/model`;
  * `--format default|json`;`-c/--continue`、`-s/--session` 续接会话)。本叶子只负责
  * 把这些开关规范化成参数数组 —— 真正的 spawn / 探测 / 输出捕获仍复用 cliToolAdapter
- * 既有的子进程机制(与 Aider 的「位置参数 + 非流式」模式同构)。
+ * 既有的子进程机制(prompt 走 stdin,与 Claude Code / Codex 同一条通路)。
  *
  * 契约:零 IO(只做字符串/数组逻辑,不 require fs/net/子进程);确定性(同输入同输出);
  * 绝不抛(坏输入 → 安全回退)。
@@ -45,9 +45,16 @@ function looksLikeProviderModel(model) {
 }
 
 /**
- * 构建 `opencode run` 的参数数组。首两项固定为 `['run', '__PROMPT__']`,
- * `__PROMPT__` 占位符由 cliToolAdapter.invokeToolAsync 在 spawn 前替换成真实 prompt
- * (与 Aider 的 `--message __PROMPT__` 同一机制)。
+ * 构建 `opencode run` 的参数数组。首项固定为 `['run']` —— **prompt 不进 argv**,
+ * 由 cliToolAdapter.invokeToolAsync 写入子进程 stdin(写完即 end)。
+ *
+ * 位置参数形态(`run <prompt>`)在 Windows 上撞死:cmd.exe /d /s /c 把整条命令行交给
+ * CreateProcessW,上限 32767 字符,而 khy 递给 CLI 桥的扁平提示词带着完整系统提示
+ * (人格 + 工具说明段 + 24K 预算的指令文件),第 2 句起就常态越过它。本机二分实测:
+ * 32725 字符能 spawn,32763 抛 `spawn ENAMETOOLONG`。stdin 无此上限,且
+ * `opencode run` 无位置参数时确实从 stdin 取词(空 stdin 报 "You must provide a
+ * message or a command",写入并 end 后正常作答)—— 旧注释「读 stdin 必挂」量的
+ * 是不写也不 end 的裸 pipe,不是这条通路。
  *
  * @param {object} [opts]
  * @param {string} [opts.model]            provider/model(仅合法时注入 --model)
@@ -59,7 +66,7 @@ function looksLikeProviderModel(model) {
  */
 function buildRunArgs(opts = {}) {
   const o = opts && typeof opts === 'object' ? opts : {};
-  const args = ['run', '__PROMPT__'];
+  const args = ['run'];
   if (o.format === 'json') {
     args.push('--format', 'json');
   }

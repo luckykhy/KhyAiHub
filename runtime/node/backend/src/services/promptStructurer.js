@@ -530,48 +530,59 @@ function buildStructuredPrompt(text, env) {
     } // 成本感知:不值得结构化 → 原样(省 token)
 
     const info = classify(text);
-    // 表头压缩为单行:两个不可省语义——①这是对请求的结构解析(供快速抓意图)②冲突以「## 内容」原文为准。
-    const parts = [
-      `${STRUCTURE_MARKER} 下面是对你请求的结构解析(帮你快速抓意图);任何冲突以「## 内容」原文为准。`,
-      '',
-      '## 结构 / Structure',
-    ];
-    // 结构只出**一种**表示,绝不重复:复杂任务用声明式 ```spec(已含 任务/范围/动作/约束/期望,更紧、更精确),
-    // 其余用轻量 bullet。两种表示字段完全重合,同时出即冗余——故 spec 在则不再出 bullet;spec 不在(简单任务
-    // 或代码化子门控关)才回退 bullet。bullet 亦只发带正信号的行:「关键动作」对短请求 = 下方内容的逐字复述
-    //(内容一眼可见)纯冗余,故不发——需要「主诉一句话」指针的长/复杂任务由 spec 的 GOAL 承担。约束仅有时发、
-    // 含代码仅含时发、抽象层级仅成类时发;任务类型/期望产出恒发(派生信号,原文里本没有)。
-    const spec = buildCodeSpec(text, env);
-    if (spec) {
-      parts.push(spec);
-    } else {
-      parts.push(`- 任务类型: ${info.label}`);
-      if (info.constraints.length) {
-        parts.push(`- 约束: ${info.constraints.join(' / ')}`);
-      }
-      if (info.hasCode) {
-        parts.push('- 含代码/引用: 是');
-      }
-      if (info.scope === 'category') {
-        parts.push(`- 抽象层级: ${info.scopeLabel}`);
-      }
-      parts.push(`- 期望产出: ${info.expectedOutput}`);
-    }
-    // 方法论规则:仅复杂任务(spec 在)时追加——反幻觉/取舍/收口三条,简单请求不注入。
-    const methodRules = spec ? buildMethodRules(env) : '';
-    if (methodRules) {
-      parts.push('', methodRules);
-    }
-    // 资产化判断透镜:仅 category 作用域 + 子门控开时追加(与透镜「不为通用而通用」自洽;instance 纯噪声)。
-    const lens = info.scope === 'category' ? buildAssetLens(env) : '';
-    if (lens) {
-      parts.push('', lens);
-    }
-    parts.push('', '## 内容 / Content', text);
-    return parts.join('\n');
+    return _structureParts(text, info, env);
   } catch {
     return null; // fail-soft:结构化绝不反噬,失败即等价于未处理
   }
+}
+
+/** 结构块正文的组装(spec 与 bullet 二选一 + 方法论规则 + 资产透镜)。 */
+function _structureParts(text, info, env) {
+  // 表头压缩为单行:两个不可省语义——①这是对请求的结构解析(供快速抓意图)②冲突以「## 内容」原文为准。
+  const parts = [
+    `${STRUCTURE_MARKER} 下面是对你请求的结构解析(帮你快速抓意图);任何冲突以「## 内容」原文为准。`,
+    '',
+    '## 结构 / Structure',
+  ];
+  // 结构只出**一种**表示,绝不重复:复杂任务用声明式 ```spec(已含 任务/范围/动作/约束/期望,更紧、更精确),
+  // 其余用轻量 bullet。两种表示字段完全重合,同时出即冗余——故 spec 在则不再出 bullet;spec 不在(简单任务
+  // 或代码化子门控关)才回退 bullet。bullet 亦只发带正信号的行:「关键动作」对短请求 = 下方内容的逐字复述
+  //(内容一眼可见)纯冗余,故不发——需要「主诉一句话」指针的长/复杂任务由 spec 的 GOAL 承担。约束仅有时发、
+  // 含代码仅含时发、抽象层级仅成类时发;任务类型/期望产出恒发(派生信号,原文里本没有)。
+  const spec = buildCodeSpec(text, env);
+  if (spec) {
+    parts.push(spec);
+  } else {
+    parts.push(..._bulletStructure(info));
+  }
+  // 方法论规则:仅复杂任务(spec 在)时追加——反幻觉/取舍/收口三条,简单请求不注入。
+  const methodRules = spec ? buildMethodRules(env) : '';
+  if (methodRules) {
+    parts.push('', methodRules);
+  }
+  // 资产化判断透镜:仅 category 作用域 + 子门控开时追加(与透镜「不为通用而通用」自洽;instance 纯噪声)。
+  const lens = info.scope === 'category' ? buildAssetLens(env) : '';
+  if (lens) {
+    parts.push('', lens);
+  }
+  parts.push('', '## 内容 / Content', text);
+  return parts.join('\n');
+}
+
+/** spec 不适用时的轻量 bullet 结构行。 */
+function _bulletStructure(info) {
+  const bullets = [`- 任务类型: ${info.label}`];
+  if (info.constraints.length) {
+    bullets.push(`- 约束: ${info.constraints.join(' / ')}`);
+  }
+  if (info.hasCode) {
+    bullets.push('- 含代码/引用: 是');
+  }
+  if (info.scope === 'category') {
+    bullets.push(`- 抽象层级: ${info.scopeLabel}`);
+  }
+  bullets.push(`- 期望产出: ${info.expectedOutput}`);
+  return bullets;
 }
 
 // ── 静态体检(§4.1 机器化,prompt normalize 的判定内核)──────────────────────────────
