@@ -2,7 +2,7 @@
 
 > 本夹由 [MGMT-PLAN-009] B9「按标签 `[XXX-YYY-NNN]` 归夹」生成（2026-09-18）。
 > 父目录：[../](../00_INDEX_项目管理-分类索引.md)　就近索引：[00_INDEX_项目管理-分类索引.html](../00_INDEX_项目管理-分类索引.md)
-> 收录 10 篇。
+> 收录 11 篇。
 
 ## 文件清单
 
@@ -16,3 +16,4 @@
 - [[MGMT-PLAN-008] replSession与toolUseLoopCore拆分分批计划]([MGMT-PLAN-008] replSession与toolUseLoopCore拆分分批计划.md)
 - [[MGMT-PLAN-009] 文档精简与结构化整理方案]([MGMT-PLAN-009] 文档精简与结构化整理方案.md)
 - [[MGMT-PLAN-010] design-partner访谈工具包]([MGMT-PLAN-010] design-partner访谈工具包.md)
+- [[MGMT-PLAN-011] 开源对标取长补短学习计划-2026-10-10]([MGMT-PLAN-011] 开源对标取长补短学习计划-2026-10-10.md)

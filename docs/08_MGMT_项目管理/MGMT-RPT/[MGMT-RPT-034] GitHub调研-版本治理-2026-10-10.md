@@ -117,5 +117,19 @@ khy-os 版本治理板块现状（与 028 相比的增量）：
 
 ### 未实现项（待人工决策 / 留后续：1 条）
 
-- **P1 check-gov-status 接线 PR gate**（补 `check:gov-status` 脚本 + workflow 一步）：028 已标「留人工点头」——改 `package.json` 脚本表与 PR gate 接线属人工决定项，本轮不代动。
+- ~~**P1 check-gov-status 接线 PR gate**~~：**已于 2026-10-10 经人工点头接入门**（见下补记）。
 - 说明：上轮（028）落地时报告的「check-agent-rules 无 fixture 回归」短板现已由 `scripts/tests/check-agent-rules.test.js`（37 条，Rule 1/1b/1c/3/4 + scope）覆盖，本轮调研时已确认并从短板清单移除。
+
+### 接线补记（2026-10-10，人工点头）：check-gov-status 进 PR gate
+
+> 核实：`check:gov-status` 脚本条目已在 `package.json`（本轮前已被补），缺的只是 PR gate 一步。
+
+- `.github/workflows/pr-gate.yml` `contract-checks` 作业：在 `Check governance rules` 之后新增
+  **`Check governance status (aggregate)`** 步骤（`node scripts/ci/check-gov-status.js`）——
+  一表读全版本三轨道 + semver 合法性 + 规则覆盖率 + 抑制台账 + 治理接线；exit 1 只对阻断
+  红线（版本不匹配 / 非 semver / P0 未执行 / 死指针 / 接线缺口），软指标只报不阻，与 coverage 步骤同口径。
+
+**校验结果**：`check-gov-status` 本地全绿；`check-gov-rules.js`（GOV-MOD-004/TOOL-004/005/006 均满足）、
+`check-wiring.js`（106 检查器全部接线，豁免 11 项不变）、`check-workflow-sanity.js`（0 error；
+1 条 warning 为已接受现状的 package-lock 双锁文件提示）、`check-delivery-baseline.js` 棘轮读数
+与改动前逐字一致——workflow 改动零退化。

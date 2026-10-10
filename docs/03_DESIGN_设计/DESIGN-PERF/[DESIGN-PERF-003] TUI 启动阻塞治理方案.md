@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-PERF-003] TUI 启动阻塞治理方案
 
 > **状态**：提案（未接线） · **日期**：2026-09-22 · **编号**：[DESIGN-PERF-003] · **落点目录**：`docs/03_DESIGN_设计/DESIGN-PERF/`

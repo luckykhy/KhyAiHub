@@ -1,8 +1,8 @@
 # DESIGN-PERF
 
 > 本夹由 [MGMT-PLAN-009] B9「按标签 `[XXX-YYY-NNN]` 归夹」生成（2026-09-18）。
-> 父目录：[../](../00_INDEX_设计-分类索引.md)　就近索引：[00_INDEX_设计-分类索引.html](../00_INDEX_设计-分类索引.md)
-> 收录 6 篇。
+> 父目录：[../](../00_INDEX_设计-分类索引.md)　就近索引：[00_INDEX_设计-分类索引.html](../00_INDEX_设计-分类索引.html)
+> 收录 7 篇。
 
 ## 文件清单
 
@@ -13,3 +13,4 @@
 - [[DESIGN-PERF-004] TUI 动画节拍治理方案]([DESIGN-PERF-004] TUI 动画节拍治理方案.md)
 - [[DESIGN-PERF-005] khy-chat-启动慢与报错链治理方案]([DESIGN-PERF-005] khy-chat-启动慢与报错链治理方案.md)
 - [[DESIGN-PERF-006] khy 启动提速方案]([DESIGN-PERF-006] khy 启动提速方案.md)
+- [[DESIGN-PERF-007] 对标 Claude Code 与 OpenCode 的 khy 启动提速方案]([DESIGN-PERF-007] 对标 Claude Code 与 OpenCode 的 khy 启动提速方案.md)

@@ -335,7 +335,7 @@ npm run check:quality-gates
 - `scripts/ci/check-version-sync.js`
 
 **参考文档：**
-- docs/13_传承/其它传承/KHY-OS-传承书.md
+- docs/13_传承/KHY-OS-传承书.md
 - docs/06_DEPLOY_部署/DEPLOY-MAN/[DEPLOY-MAN-011] pip-docker-打包部署.md
 
 **跑这些验证命令（绿灯＝这块没坏）：**

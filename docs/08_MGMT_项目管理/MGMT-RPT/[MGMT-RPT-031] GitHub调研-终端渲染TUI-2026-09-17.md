@@ -126,6 +126,73 @@ khy-os 终端渲染板块现状（`services/backend/src/cli/tui/`）：
 
 | 项 | 说明 | 阻塞点 |
 |---|---|---|
-| 金帧 / ANSI 快照回归 `goldenFrames.js` | 需 node-pty + reconstruct-terminal，引入 PTY 依赖与 CI golden 作业 | P1，半天–1 天 |
-| 内存泄漏 CI 检测器 `leakGuard.js` | `WeakRef` sweep + `getActiveResourcesInfo` diff，需挂 CI `--leak-check` | P1，半天 |
-| `khy tui health` CLI 入口 | 走既有 router，不新增 npm run 入口 | 依赖 P0-3 接线 |
+| ~~金帧 / ANSI 快照回归 `goldenFrames.js`~~ | **已于 2026-10-10 落地**（见补记二） | 已闭合 |
+| ~~内存泄漏 CI 检测器 `leakGuard.js`~~ | **已于 2026-10-10 落地并挂 CI**（见补记二、三） | 已闭合 |
+| ~~`khy tui health` CLI 入口~~ | **已于 2026-10-10 落地为 `khy health tui`**（见下） | 已闭合 |
+
+### 后续落地补记（2026-10-10）：`khy health tui` 入口闭合
+
+> 接线点选择：**未**新增顶层命令 `khy tui`——`ROUTER_COMMANDS` 棘轮已在 breach（246/245），
+> 「加一个先退役一个」是人的决定；改走既有 `health` 命令的**子命令** `khy health tui`
+> （零棘轮影响：不加 ROUTER_COMMANDS 条目、不加 aliases 条目、不加 handler 文件），
+> 语义同族（系统健康体检 → TUI 子系统健康）。经 commandAutoRegistry 的 `_alignSubCommand`
+> 自动对齐（manifest 已声明 `subCommands: ['tui']`），router.js 零改动。
+
+- `runtime/node/backend/src/cli/handlers/health.js`：`handleHealth` 增子命令分派（`subCommand === 'tui'` 或首位置参数）→ 新增 `_renderTuiHealth`：调 `healthScorecard.build/renderTable/toJSON`（module 仍零写，本 handler 作为调用方选 stdout 为 sink——一次性命令独占终端，可管道）；`frameGuard` 恒传 null（帧数据活在 TUI 进程守卫闭包内，跨进程不可达是架构事实；活动会话走 `KHY_TUI_DIAG_FRAME` stderr 诊断）；inkRuntime require 失败 → 传 null（fail-soft）。**出口码只对真信号非零**：`instance.degraded`（残线修复失效风险）→ exit 1；H1/帧段无 TTY 时是环境性读数，只展示不判红。manifest 登记 `subCommands: ['tui']` + usage 更新。
+- `runtime/node/backend/src/constants/commandSchema.js`：`ROUTER_SUB_COMMANDS.health = ['tui']`（子命令注册表，非四棘轮计数面）。
+- `runtime/node/backend/src/cli/tui/healthScorecard.js`：H1 人类显示改**三态**——rows=0（无 TTY/管道）时显示「无法判定（无 TTY 几何）」而非「不成立」；把环境性读数误报成故障是误导（RUNTIME-002 状态透明）。
+- 顺带核对：P0-1 的 app.js 接线已被 [DESIGN-ARCH-176]（2026-10-03）演进为 `frameBudgetWiring.buildInkRenderOpts`（修复了 ink 实例复用吞 onRender 的陷阱），`frameBudgetMs` SSOT 与本报告设计一致。
+
+**校验结果（2026-10-10）**
+
+| 检查 | 结果 |
+|---|---|
+| `khy health tui`（端到端，bin/khy.js） | ✓ 记分卡表格（几何/chrome 账本/帧预算/实例解析/安全网/内存），H1 无 TTY 时如实「无法判定」 |
+| `khy health tui --json`（端到端） | ✓ JSON 可解析（`geometry/instance/safetyNets/heap` 全字段） |
+| `khy health`（缺省，端到端） | ✓ 行为不变（全系统体检 7 项全绿，未被子命令分支影响） |
+| `node --test …/tests/cli/tui/{chromeBudget,frameBudget,perfTunables}.test.js` | 49/49 通过 |
+| `node scripts/ci/check-agent-rules.js`（3 改动文件） | 零违规 |
+| `node scripts/ci/check-delivery-baseline.js` 棘轮读数 | 与改动前逐字一致（routerCommands=246/245 · aliasEntries=591/591 · handlerFiles=158/155 · ruleCount=96/94）——零新增突破 |
+
+### 后续落地补记二（2026-10-10）：金帧回归 + 泄漏检测（P1-4 / P1-5 全部闭合）
+
+> 两条 P1 的原始设想都挂「PTK/CI 基建」作阻塞点（node-pty 依赖、`--expose-gc` 作业）。
+> 本轮核实测试树后改了落点：视觉测试现状是**源码正则断言**（`bootScreenVisual.test.js`
+> 头注释明言 CI 不挂 ink 渲染），故金帧不覆盖 ink 渲染端，改覆盖渲染管线的另一端——
+> **scrollbackPreserve 四层 ANSI 变换**（3J 剥离 / ED2→H+J 改写 / 冗余重发抑制 / 尾切）。
+> 它是全 TUI 最精密的变换、纯文本进出、完全确定性，字节级金帧零 PTY 即可；泄漏检测
+> 同理，`process.getActiveResourcesInfo()`（Node ≥17.3 无 flag）+ WeakRef 分拣覆盖
+> 可确定性断言的部分，`--expose-gc` 端到端作业留作后续挂点（契约写在测试头注释）。
+
+- 新增 `runtime/node/backend/src/cli/tui/goldenFrames.js`（纯叶子）：`escapeVisible`/`fromVisible`（ESC ↔ 四字面转义，金帧文件存可 diff 文本，沿用本仓「不嵌字面 ESC 字节」纪律）；`diffFrames`（行级 diff，限前 12 行明细）；`matchGolden`（缺失→指路 `KHY_GOLDEN_UPDATE=1`；更新→须人工看 diff 再提交；比较路径零写）。
+- 新增 `runtime/node/backend/tests/cli/tui/goldenFrames.test.js`（9 条）+ `tests/cli/tui/goldens/` 7 个基线（linux 剥 3J / win32 现代帧 H+J / 老 conhost 帧 / 重发剥离留尾 / 尾切 rows=5 / 跨 write 拼装 / 门控关逐字节回退）——基线内容已人工核对，语义与 scrollbackPreserve 头注释的实测场景一一对应。
+- 新增 `runtime/node/backend/src/cli/tui/leakGuard.js`（纯叶子）：`snapshotResources`（活动资源按类型分组）+ `diffResources`（净增=疑似泄漏/净减=已释放，结构性判读不做绝对字节数地板）+ `createSweep`（WeakRef 登记表；`global.gc` 缺失时如实报 `gcUnavailable`，诚实跳过不假装测过）+ `renderDiff`。
+- 新增 `runtime/node/backend/tests/cli/tui/leakGuard.test.js`（9 条：diff 算术 / 新增类型 / fail-soft / gc 不可用诚实路径 / 非对象静默忽略）。
+- 实战验证（一次性脚本，已清理）：泄漏 4 个 interval + 1 个已清 timeout → `Timeout +5` 被抓到；清理后 diff 归零（clean）。
+
+**校验结果（2026-10-10）**
+
+| 检查 | 结果 |
+|---|---|
+| `node --test …/tests/cli/tui/{goldenFrames,leakGuard,scrollbackPreserve,frameBudget}.test.js` | **46/46 通过** |
+| `KHY_GOLDEN_UPDATE=1` 首跑生成基线 → 无更新复跑 | 9/9 通过（diff 干净） |
+| 泄漏实战脚本（4 interval 泄漏 → 抓到；清理 → 归零） | 3/3 通过 |
+| `node scripts/ci/check-agent-rules.js`（4 新文件） | 零违规 |
+
+### 接线补记三（2026-10-10，人工点头）：TUI 泄漏检测挂 CI（`--expose-gc`）
+
+> 落点选择：泄漏检测按 PROCESS-008（新拦截机制从 S1 观察者起步）放进 **report-only 的
+> Test baseline 作业**（已登记的测试债务位）——只记录不阻断 + 输出进 test-evidence
+> artifact（「非阻断不等于无证据」），不进阻断的 contract-checks 作业（那等于新机制直进 S3）。
+
+- `.github/workflows/pr-gate.yml` Test baseline 作业：`Node built-in tests` 之后新增
+  **`TUI leak check (--expose-gc)`** 步骤（`node --expose-gc --test tests/cli/tui/leakGuard.test.js`，
+  continue-on-error 随作业）——`--expose-gc` 让 WeakRef sweep 走「强制 GC 后分拣」的真路径；
+  输出并入 `Record test evidence` 的 GITHUB_STEP_SUMMARY 与 `test-evidence` artifact
+  （`/tmp/leak.log` + `/tmp/leak.status`）。
+- `leakGuard.test.js`：`--expose-gc` 下暴露一处断言对 V8 GC 时机过强（强制 gc 不保证
+  一次就回收刚丢引用的新生代对象）——断言改「分拣结构完整（collected + retained =
+  登记总数）+ retained 条目带理由」，不再断言「必然已回收」（CI 随机红根除）。
+
+**校验结果**：`node --expose-gc --test` 与常规运行时下均 **9/9**；`check-workflow-sanity.js`
+0 error；`check-gov-rules.js` / `check-wiring.js`（106 检查器全部接线）全绿；棘轮读数与改动前一致。

@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-PERF-006] khy 启动提速方案
 
 > **状态**：已接线（W2/W3 全量，W1 部分更正） · **日期**：2026-10-04 · **编号**：[DESIGN-PERF-006] · **落点目录**：`docs/03_DESIGN_设计/DESIGN-PERF/`

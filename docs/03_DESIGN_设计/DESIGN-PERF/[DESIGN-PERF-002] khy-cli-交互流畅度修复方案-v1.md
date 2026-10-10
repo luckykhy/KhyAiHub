@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-PERF-002] khy-cli 交互流畅度修复方案 v1
 
 > **状态**: 定稿
