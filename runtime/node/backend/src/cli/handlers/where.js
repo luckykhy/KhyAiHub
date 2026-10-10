@@ -61,22 +61,29 @@ function _detectInstallType(entryPath, projectRoot) {
 /**
  * Walk up from startDir to find the true project root
  * (identified by pyproject.toml or .git).
- * Falls back to 3 levels up from bin/khy.js if no marker found.
+ * Falls back to walking up for a layout marker if no direct hit.
  */
 function _findProjectRoot(startDir) {
-  // bin/khy.js lives at <root>/services/backend/bin/khy.js
-  // startDir = <root>/services/backend/bin → root is 3 levels up
+  // bin/khy.js lives at <root>/runtime/node/backend/bin/khy.js
+  // startDir = <root>/runtime/node/backend/bin → root is 3 levels up
   const candidate = path.resolve(startDir, '..', '..', '..');
-  // Validate: the candidate should contain services/backend/bin/
-  const check = path.join(candidate, 'services', 'backend', 'bin');
-  if (fs.existsSync(check)) {
+  // Validate: the candidate should contain the backend bin dir.
+  // New layout runtime/node/backend/bin; legacy services/backend/bin.
+  const check = path.join(candidate, 'runtime', 'node', 'backend', 'bin');
+  const checkLegacy = path.join(candidate, 'services', 'backend', 'bin');
+  if (fs.existsSync(check) || fs.existsSync(checkLegacy)) {
     return candidate;
   }
-  // Fallback: walk up looking for platform/ dir (unique to khy-os root)
+  // Fallback: walk up looking for a khy-os root marker — pyproject.toml, or the
+  // platform tree in either layout (new runtime/substrate/platform, legacy platform/).
   let dir = startDir;
   const root = path.parse(dir).root;
   while (dir !== root) {
-    if (fs.existsSync(path.join(dir, 'platform'))) {
+    if (
+      fs.existsSync(path.join(dir, 'pyproject.toml')) ||
+      fs.existsSync(path.join(dir, 'runtime', 'substrate', 'platform')) ||
+      fs.existsSync(path.join(dir, 'platform'))
+    ) {
       return dir;
     }
     dir = path.dirname(dir);
@@ -95,10 +102,12 @@ function handleWhere() {
   // Project root: climb up until we find pyproject.toml or top-level marker
   const projectRoot = _findProjectRoot(backendRoot);
 
-  // Version from package.json (try project root first, then services/backend)
+  // Version from package.json (try project root first, then the backend package
+  // in either layout — new runtime/node/backend, legacy services/backend)
   let version = 'unknown';
   const pkgCandidates = [
     path.join(projectRoot, 'package.json'),
+    path.join(projectRoot, 'runtime', 'node', 'backend', 'package.json'),
     path.join(projectRoot, 'services', 'backend', 'package.json'),
     path.join(backendRoot, '..', 'package.json'),
   ];

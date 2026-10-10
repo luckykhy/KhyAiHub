@@ -108,18 +108,24 @@ const _CONCERN_LABEL = Object.freeze({
 });
 
 // concern → 确认命令（修完照跑一句核对是否解决；务必安全，不含被禁动作）。
+//
+// 一律写**核自己的 npm 目标**，不写交付面里的脚本路径：交付脚本住在
+// delivery/extension/scripts/<拓展 id>/ 下，核里写那条路径就是点名拓展 id
+// （[DESIGN-TOOL-002] §1.3「不得要求核认识它」，守卫 extension-id-hardcode 基线 0）。
+// npm 目标由 scripts/lib/ext-run.js 按 manifest 派发，拓展缺失时退化成一句
+// 「该能力没装」而不是 Cannot find module——删目录即消失，不是删目录即坏掉。
 const _CONCERN_VERIFY = Object.freeze({
   'node-runtime':       'node --version',
   'npm-tool':           'npm --version',
-  'bundle-source':      'node scripts/verify-install.js',
+  'bundle-source':      'npm run verify:install',
   'network-hydrate':    'khy doctor',
-  'hydrate-modules':    'node scripts/hydration-doctor.js',
-  'heal-markers':       'node scripts/hydration-doctor.js',
+  'hydrate-modules':    'npm run doctor:hydration',
+  'heal-markers':       'npm run doctor:hydration',
   'version-sync':       'khy --version',
   'tar-tool':           'tar --version',
-  'writable-install':   'node scripts/restore-check.js',
+  'writable-install':   'node scripts/restore/restore-check.js',
   'channel-redundancy': 'khy --version',
-  'optional':           'node scripts/hydration-doctor.js',
+  'optional':           'npm run doctor:hydration',
 });
 
 /** 断言一段文本不含危险动作（内部自检 / 防越界用）。 */

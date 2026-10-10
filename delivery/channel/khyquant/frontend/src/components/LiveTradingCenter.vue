@@ -4,26 +4,54 @@
     <div class="center-header">
       <div class="header-left">
         <span class="title">实时交易中心</span>
-        <el-badge :value="pendingCount" :hidden="pendingCount === 0" type="warning">
-          <el-tag size="small" type="info">{{ orders.length }} 笔订单</el-tag>
+        <el-badge
+          :value="pendingCount"
+          :hidden="pendingCount === 0"
+          type="warning"
+        >
+          <el-tag
+            size="small"
+            type="info"
+          >
+            {{ orders.length }} 笔订单
+          </el-tag>
         </el-badge>
       </div>
       <div class="header-right">
         <el-button-group size="small">
-          <el-button :type="filterStatus === 'all' ? 'primary' : ''" @click="filterStatus = 'all'">
+          <el-button
+            :type="filterStatus === 'all' ? 'primary' : ''"
+            @click="filterStatus = 'all'"
+          >
             全部
           </el-button>
-          <el-button :type="filterStatus === 'pending' ? 'primary' : ''" @click="filterStatus = 'pending'">
-            未成交 <el-badge :value="pendingCount" :hidden="pendingCount === 0" />
+          <el-button
+            :type="filterStatus === 'pending' ? 'primary' : ''"
+            @click="filterStatus = 'pending'"
+          >
+            未成交 <el-badge
+              :value="pendingCount"
+              :hidden="pendingCount === 0"
+            />
           </el-button>
-          <el-button :type="filterStatus === 'partial' ? 'primary' : ''" @click="filterStatus = 'partial'">
+          <el-button
+            :type="filterStatus === 'partial' ? 'primary' : ''"
+            @click="filterStatus = 'partial'"
+          >
             部分成交
           </el-button>
-          <el-button :type="filterStatus === 'filled' ? 'primary' : ''" @click="filterStatus = 'filled'">
+          <el-button
+            :type="filterStatus === 'filled' ? 'primary' : ''"
+            @click="filterStatus = 'filled'"
+          >
             已成交
           </el-button>
         </el-button-group>
-        <el-button size="small" @click="clearFilledOrders" :disabled="filledCount === 0">
+        <el-button
+          size="small"
+          :disabled="filledCount === 0"
+          @click="clearFilledOrders"
+        >
           <el-icon><Delete /></el-icon>
           清空已成交
         </el-button>
@@ -32,7 +60,10 @@
 
     <!-- 订单列表 -->
     <div class="orders-container">
-      <transition-group name="order-list" tag="div">
+      <transition-group
+        name="order-list"
+        tag="div"
+      >
         <div 
           v-for="order in filteredOrders" 
           :key="order.id"
@@ -44,7 +75,10 @@
           ]"
         >
           <!-- 订单状态指示条 -->
-          <div class="status-bar" :style="{ width: getStatusProgress(order) + '%' }"></div>
+          <div
+            class="status-bar"
+            :style="{ width: getStatusProgress(order) + '%' }"
+          />
           
           <!-- 订单内容 -->
           <div class="order-content">
@@ -52,10 +86,17 @@
             <div class="order-left">
               <div class="order-symbol">
                 <span class="symbol-code">{{ order.symbol }}</span>
-                <el-tag :type="order.side === 'buy' ? 'danger' : 'success'" size="small">
+                <el-tag
+                  :type="order.side === 'buy' ? 'danger' : 'success'"
+                  size="small"
+                >
                   {{ getDirectionText(order) }}
                 </el-tag>
-                <el-tag v-if="order.isFutures" type="warning" size="small">
+                <el-tag
+                  v-if="order.isFutures"
+                  type="warning"
+                  size="small"
+                >
                   {{ order.offset === 'open' ? '开仓' : '平仓' }}
                 </el-tag>
               </div>
@@ -65,7 +106,10 @@
                   <span class="label">类型:</span>
                   <span class="value type">{{ getOrderTypeLabel(order.orderType) }}</span>
                 </span>
-                <span class="detail-item" v-if="order.strategyName">
+                <span
+                  v-if="order.strategyName"
+                  class="detail-item"
+                >
                   <span class="label">策略:</span>
                   <span class="value strategy">{{ order.strategyName }}</span>
                 </span>
@@ -87,19 +131,32 @@
             <!-- 中间：状态信息 -->
             <div class="order-middle">
               <div class="status-info">
-                <el-tag :type="getStatusType(order.status)" size="large" effect="dark">
+                <el-tag
+                  :type="getStatusType(order.status)"
+                  size="large"
+                  effect="dark"
+                >
                   {{ getStatusText(order.status) }}
                 </el-tag>
-                <div class="fill-progress" v-if="order.status !== 'pending'">
+                <div
+                  v-if="order.status !== 'pending'"
+                  class="fill-progress"
+                >
                   <span class="filled">已成交: {{ order.filledQuantity || 0 }}</span>
-                  <span class="remaining" v-if="order.status === 'partial'">
+                  <span
+                    v-if="order.status === 'partial'"
+                    class="remaining"
+                  >
                     剩余: {{ order.quantity - (order.filledQuantity || 0) }}
                   </span>
                 </div>
               </div>
               
               <!-- 期货特有信息 -->
-              <div v-if="order.isFutures" class="futures-info">
+              <div
+                v-if="order.isFutures"
+                class="futures-info"
+              >
                 <span class="info-item">
                   <span class="label">保证金:</span>
                   <span class="value">¥{{ (order.price * order.quantity * order.marginRatio).toFixed(2) }}</span>
@@ -114,7 +171,10 @@
                   <el-icon><Clock /></el-icon>
                   {{ formatTime(order.createdAt) }}
                 </div>
-                <div v-if="order.filledAt" class="filled-time">
+                <div
+                  v-if="order.filledAt"
+                  class="filled-time"
+                >
                   <el-icon><Check /></el-icon>
                   {{ formatTime(order.filledAt) }}
                 </div>
@@ -150,13 +210,21 @@
           </div>
 
           <!-- 动画效果层 -->
-          <div v-if="order.status === 'partial'" class="filling-animation"></div>
+          <div
+            v-if="order.status === 'partial'"
+            class="filling-animation"
+          />
         </div>
       </transition-group>
 
       <!-- 空状态 -->
-      <div v-if="filteredOrders.length === 0" class="empty-state">
-        <el-icon :size="48"><DocumentCopy /></el-icon>
+      <div
+        v-if="filteredOrders.length === 0"
+        class="empty-state"
+      >
+        <el-icon :size="48">
+          <DocumentCopy />
+        </el-icon>
         <p>暂无{{ getFilterStatusText() }}订单</p>
       </div>
     </div>

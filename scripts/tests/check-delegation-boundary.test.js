@@ -68,7 +68,7 @@ function bypassHits(out) {
       out
         .split('\n')
         .filter((l) => l.includes('delegation-bypass-spawn'))
-        .map((l) => (l.match(/services\/backend\/src\/[^\s:]+/) || [''])[0])
+        .map((l) => (l.match(/runtime\/node\/backend\/src\/[^\s:]+/) || [''])[0])
         .filter(Boolean),
     ),
   ];

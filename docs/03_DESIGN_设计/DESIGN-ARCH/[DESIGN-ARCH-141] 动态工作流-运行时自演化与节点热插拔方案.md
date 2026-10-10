@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-141] 动态工作流：运行时自演化、节点热插拔与公平调度方案
 
 <!-- RULES-REGISTRY: TOOLING-011 -->

@@ -102,9 +102,9 @@ function requirePath(target, label, installHint, type = 'dir') {
 }
 
 function checkRuntimePrerequisites() {
-  requirePath(path.join(ROOT, 'node_modules'), 'root dependencies', 'npm ci');
-  requirePath(path.join(ROOT, 'apps', 'ai-frontend', 'node_modules'), 'AI frontend dependencies', 'npm ci --prefix apps/ai-frontend');
-  requirePath(path.join(ROOT, 'software', 'khyquant', 'frontend', 'node_modules'), 'quant frontend dependencies', 'npm ci --prefix software/khyquant/frontend');
+  requirePath(path.join(ROOT, 'node_modules'), 'root dependencies', 'corepack pnpm install');
+  requirePath(path.join(ROOT, 'delivery', 'web', 'ai-frontend', 'node_modules'), 'AI frontend dependencies', 'corepack pnpm install --filter khy-ai-frontend...');
+  requirePath(path.join(ROOT, 'delivery', 'channel', 'khyquant', 'frontend', 'node_modules'), 'quant frontend dependencies', 'corepack pnpm install --filter quant-trading-frontend...');
 }
 
 function windowsPythonCandidates(env = process.env) {
@@ -212,13 +212,13 @@ function createStages(options, runtimeInputs) {
 
   if (options.kind === 'runtime' && !options.skipBuild) {
     stages.push(
-      { name: 'Build AI frontend', command: npm.command, args: [...npm.args, 'run', 'build', '--prefix', 'apps/ai-frontend'] },
-      { name: 'Build quant frontend', command: npm.command, args: [...npm.args, 'run', 'build', '--prefix', 'software/khyquant/frontend'] },
+      { name: 'Build AI frontend', command: npm.command, args: [...npm.args, 'run', 'build', '--prefix', 'delivery/web/ai-frontend'] },
+      { name: 'Build quant frontend', command: npm.command, args: [...npm.args, 'run', 'build', '--prefix', 'delivery/channel/khyquant/frontend'] },
     );
   }
 
   const buildArgs = [
-    'extensions/scripts/khy-portable/build-portable-artifact.js',
+    'delivery/extension/scripts/khy-portable/build-portable-artifact.js',
     '--kind', `portable-${options.kind}`,
     '--platform', options.platform,
     '--arch', options.arch,

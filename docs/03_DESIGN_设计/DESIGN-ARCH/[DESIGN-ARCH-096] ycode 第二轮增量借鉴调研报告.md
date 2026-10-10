@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-096] ycode（星瑶）第二轮增量借鉴调研报告
 
 > 状态：调研 / 提案（未实施）

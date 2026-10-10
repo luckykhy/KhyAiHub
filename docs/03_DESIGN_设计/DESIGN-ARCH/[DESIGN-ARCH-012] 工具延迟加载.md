@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 <!-- 文档分类: DESIGN-ARCH-012 | 阶段: 设计 | 原路径: docs/16_设计模式/工具延迟加载.md -->
 # 功能：工具延迟加载（defer_loading）—— Anthropic API 协议集成
 

@@ -581,25 +581,27 @@ function _portableRootOf(deps) {
   return path.resolve(__dirname, '..', '..', '..', '..');
 }
 
-/** 已知链接清单（与 scripts/link-shared-dev.js、scripts/portable-health-check.js 对齐）。 */
+/** 已知链接清单（与 scripts/link-shared-dev.js、scripts/portable-health-check.js 对齐）。
+ *  路径口径跟随当前目录布局：backend = runtime/node/backend，
+ *  shared 真源 = runtime/substrate/platform/packages/shared。 */
 function _knownPortableLinks(root) {
   return [
     {
-      label: 'services/backend/vendor/shared',
-      linkPath: path.join(root, 'services', 'backend', 'vendor', 'shared'),
-      target: path.join(root, 'platform', 'packages', 'shared'),
+      label: 'runtime/node/backend/vendor/shared',
+      linkPath: path.join(root, 'runtime', 'node', 'backend', 'vendor', 'shared'),
+      target: path.join(root, 'runtime', 'substrate', 'platform', 'packages', 'shared'),
       optional: false,
     },
     {
-      label: 'services/backend/node_modules/@khy/shared',
-      linkPath: path.join(root, 'services', 'backend', 'node_modules', '@khy', 'shared'),
-      target: path.join(root, 'services', 'backend', 'vendor', 'shared'),
+      label: 'runtime/node/backend/node_modules/@khy/shared',
+      linkPath: path.join(root, 'runtime', 'node', 'backend', 'node_modules', '@khy', 'shared'),
+      target: path.join(root, 'runtime', 'node', 'backend', 'vendor', 'shared'),
       optional: true,
     },
     {
       label: 'node_modules/@khy/shared',
       linkPath: path.join(root, 'node_modules', '@khy', 'shared'),
-      target: path.join(root, 'platform', 'packages', 'shared'),
+      target: path.join(root, 'runtime', 'substrate', 'platform', 'packages', 'shared'),
       optional: true,
     },
   ];
@@ -677,14 +679,16 @@ function gatherPortableFacts(deps) {
   }
   // Forest-layout fact: the two geometry checks below (junction / 数据指针) only mean
   // something where a directory FOREST exists — a portable copy or a source export,
-  // which is where `services/backend` and `runtime/substrate/platform/packages/shared` live side by
-  // side. The off-machine payloads (pip wheel / npm tarball) ship a single esbuild
-  // file and no forest, so `_portableRootOf()` lands next to site-packages and both
-  // checks hard-failed on paths that cannot exist there — while recommending
+  // which is where `runtime/node/backend` and `runtime/substrate/platform/packages/shared`
+  // live side by side. The off-machine payloads (pip wheel / npm tarball) ship a single
+  // esbuild file and no forest, so `_portableRootOf()` lands next to site-packages and
+  // both checks hard-failed on paths that cannot exist there — while recommending
   // `khy doctor --fix`, which would then create junctions inside site-packages.
   // Two independent signals (either one is enough) so a partly-deleted copy still
   // gets its broken junction reported. Measured shape + rationale:
   // describeBundledRuntime() above.
+  // Legacy (pre-migration) roots are kept as an OR so an old-layout copy is still
+  // recognised as a forest.
   const safeExists = (p) => {
     try {
       return !!fsMod.existsSync(p);
@@ -693,8 +697,14 @@ function gatherPortableFacts(deps) {
     }
   };
   const forest = {
-    backendTree: !!root && safeExists(path.join(root, 'services', 'backend')),
-    sharedTarget: !!root && safeExists(path.join(root, 'platform', 'packages', 'shared')),
+    backendTree:
+      !!root &&
+      (safeExists(path.join(root, 'runtime', 'node', 'backend')) ||
+        safeExists(path.join(root, 'services', 'backend'))),
+    sharedTarget:
+      !!root &&
+      (safeExists(path.join(root, 'runtime', 'substrate', 'platform', 'packages', 'shared')) ||
+        safeExists(path.join(root, 'platform', 'packages', 'shared'))),
   };
   return { root, sqlite, links, pointer, forest };
 }
@@ -753,7 +763,7 @@ function assessPortable(facts) {
         : _check(
             'junction/symlink 链接',
             true,
-            'bundled 渠道：单文件运行时无目录森林（无 services/backend、无 runtime/substrate/platform/packages/shared），本项不适用',
+            'bundled 渠道：单文件运行时无目录森林（无 runtime/node/backend、无 runtime/substrate/platform/packages/shared），本项不适用',
             'info',
             { summary: 'bundled 渠道无目录森林，本项不适用' }
           )

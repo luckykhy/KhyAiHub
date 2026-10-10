@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-178] TUI 启动 44 秒病灶：redis 顶层副作用与首帧前重 require 收敛方案
 
 <!-- RULES-REGISTRY: RUNTIME-012 -->

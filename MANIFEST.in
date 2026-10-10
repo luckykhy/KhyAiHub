@@ -8,9 +8,9 @@ recursive-include runtime/node/ai-backend *
 recursive-include runtime/substrate/platform/packages/shared *
 recursive-include runtime/substrate/platform/packages/moonbit-plugin-sdk *
 recursive-include docs *
-recursive-include extensions *
+recursive-include delivery/extension *
 recursive-include delivery/web/ai-frontend *
-recursive-include software/khyquant *
+recursive-include delivery/channel/khyquant *
 recursive-include runtime/boot/kernel/src *
 recursive-include runtime/boot/kernel/boot *
 recursive-include runtime/boot/kernel/moonbit *
@@ -49,12 +49,12 @@ exclude docs/11_报告/历史/stash_patch.txt
 exclude runtime/node/backend/.clinerules
 
 # Exclude heavy / generated / sensitive content.
-prune extensions/bridges/khy-trae-bridge/node_modules
+prune delivery/extension/bridges/khy-trae-bridge/node_modules
 prune runtime/node/backend/node_modules
 prune runtime/node/backend/vendor
 prune runtime/node/backend/_source
 prune runtime/node/ai-backend/node_modules
-prune extensions/tools/khy-markdown/muya-embed/node_modules
+prune delivery/extension/tools/khy-markdown/muya-embed/node_modules
 prune delivery/extension/tools/khy-markdown/vendor
 prune delivery/web/ai-frontend/node_modules
 prune runtime/node/backend/models
@@ -67,15 +67,15 @@ prune runtime/substrate/platform/packages/shared/logs
 prune runtime/substrate/platform/packages/shared/node_modules
 prune runtime/substrate/platform/packages/shared/vendor
 prune delivery/channel/khyquant/frontend/node_modules
-prune software/khyquant/frontend/android
-prune software/khyquant/frontend/android-sdk
-prune software/khyquant/ml/models
-prune software/khyquant/ml/data
-prune software/khyquant/khy_quant/bundled
+prune delivery/channel/khyquant/frontend/android
+prune delivery/channel/khyquant/frontend/android-sdk
+prune delivery/channel/khyquant/ml/models
+prune delivery/channel/khyquant/ml/data
+prune delivery/channel/khyquant/khy_quant/bundled
 prune .tmp
 prune dist
 prune delivery/web/ai-frontend/dist
-prune software/khyquant/frontend/dist
+prune delivery/channel/khyquant/frontend/dist
 prune delivery/web/ai-frontend/public/vendor
 prune docs/_ref
 prune runtime/node/backend/tests
@@ -107,7 +107,7 @@ prune runtime/node/backend/.cursor
 # Extension-specific recursive excludes.
 recursive-exclude runtime/node/backend *.db *.db-shm *.db-wal *.sqlite *.sqlite-shm *.sqlite-wal *.sqlite3 *.joblib *.log *.pyc *.ast *.typedtree
 recursive-exclude docs/07_OPS_运维 *进化提示词手册*
-recursive-exclude kernel *.o *.bin *.elf *.efi *.iso *.img
+recursive-exclude runtime/boot/kernel *.o *.bin *.elf *.efi *.iso *.img
 recursive-exclude runtime/substrate/platform/packages/moonbit-plugin-sdk *.wasm
 recursive-exclude docs *.pdf
 

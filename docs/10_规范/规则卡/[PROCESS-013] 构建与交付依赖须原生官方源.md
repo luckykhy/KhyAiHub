@@ -3,7 +3,7 @@ name: 构建与交付依赖须原生官方源
 id: PROCESS-013
 domain: PROCESS
 nature: 约束为主，兼福利
-scope: "本仓库一切**构建与交付**路径上的依赖获取点：① 构建/交付配置 —— Dockerfile、docker-compose、.npmrc、package-lock.json、CI workflow、构建脚本（.sh/.ps1/.nsi）、requirements 与 pip 配置、**package.json**（其 `scripts.*` 是构建入口，`build.electronDownload.mirror` 等是构建期下载镜像）；② 运行时源码里**默认生效**的镜像选择 —— platform/**、services/**、software/**。不含两类：用户本机 ~/.npmrc 的网络加速（那是用户环境而非交付物）、GitHub 制品的 ghproxy 兜底（那不是包 registry，且已由 KHY_KHYOS_PREFER_CN 显式门控）。"
+scope: "本仓库一切**构建与交付**路径上的依赖获取点：① 构建/交付配置 —— Dockerfile、docker-compose、.npmrc、package-lock.json、CI workflow、构建脚本（.sh/.ps1/.nsi）、requirements 与 pip 配置、**package.json**（其 `scripts.*` 是构建入口，`build.electronDownload.mirror` 等是构建期下载镜像）；② 运行时源码里**默认生效**的镜像选择 —— runtime/substrate/platform/**、runtime/node/**、delivery/channel/**。不含两类：用户本机 ~/.npmrc 的网络加速（那是用户环境而非交付物）、GitHub 制品的 ghproxy 兜底（那不是包 registry，且已由 KHY_KHYOS_PREFER_CN 显式门控）。"
 priority: P1
 trigger: "新增或修改任何 Dockerfile / compose / 锁文件 / CI workflow / 构建脚本时；新增会拉取依赖的运行时代码时；`docker compose up` 构建失败、构建缓慢、或怀疑产物不可复现时。"
 constraint: "四条判据，由 scripts/ci/check-native-registry.js 机械执行：C1 构建/交付配置里不得出现公共镜像主机（阿里云/淘宝 npmmirror/腾讯云/清华 tuna/中科大/华为云/网易/豆瓣等，含裸主机名形态）—— 零容忍，不设例外；判定面含 **package.json**（2026-09-23 实测漏检过 delivery/desktop/khyos-desktop 的 `build.electronDownload.mirror`）；C2 构建/交付配置里不得出现 `*_MIRROR` 形态的镜像注入开关（APT_MIRROR / KHY_APT_MIRROR / ALPINE_MIRROR 等）—— 开关本身就是「把镜像塞进构建」的口子，与是否设值无关；C3 锁文件的 `resolved` 只允许解析到官方 host（registry.npmjs.org），按文件聚合并给出 host 直方图；C4 运行时源码里出现镜像主机时，**同一文件必须出现显式开关名**（KHY_USE_CN_MIRROR 或 KHY_KHYOS_PREFER_CN），即镜像不得默认生效、不得由 locale/TZ 猜测触发。注释行一律不参与判定（注释不执行，且解释「为何删除镜像」的注释必然要提到开关名）。"

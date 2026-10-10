@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 <!-- 文档分类: DESIGN-ARCH-005 | 阶段: 设计 | 原路径: docs/架构/agentfs-智能体文件系统.md -->
 # AgentFS — 智能体文件系统
 

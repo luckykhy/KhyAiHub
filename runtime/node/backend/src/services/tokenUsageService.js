@@ -552,9 +552,104 @@ function getSessionCost() {
   let totalUSD = 0;
   for (const rec of _sessionUsage.records) {
     const pricing = TOKEN_PRICING[rec.provider] || TOKEN_PRICING['default'];
-    totalUSD += (rec.inputTokens * pricing.input + rec.outputTokens * pricing.output) / 1000000;
+    totalUSD += (rec.inputTokens * pricing.input + rec.outputTokens * pricing.output) / 1e6;
   }
   return { costUSD: totalUSD, costCNY: totalUSD * USD_TO_CNY };
+}
+
+/**
+ * 成本对账（只读，零写入）—— 借鉴 ccusage 的 display/calculate 双档设计
+ * （`rust/crates/ccusage-core/src/cost.rs` 的 `CostMode::{Display,Calculate}`）。
+ *
+ * 为什么需要它：本服务有**两条互不对账的成本路径**——
+ *   - `_sessionUsage.costUSD`：累加调用方传入的上游值（`formatUsageReport()` 打的就是它）
+ *   - `getSessionCost()`：用 `TOKEN_PRICING` 按 input/output 两桶**重算**
+ * 两条路径的数字从未被比较过，差异（价目过期 / provider 归类错 / 上游口径不同）不可见。
+ *
+ * 同时把 L1 的已知缺口变成**可见计数**而非静默错算：`recordUsage` 早已收集
+ * `cacheReadTokens`/`cacheWriteTokens`，但 `TOKEN_PRICING` 没有任何缓存价档，
+ * 于是 `getSessionCost()` 的两桶公式**系统性地把缓存 token 算成零**——缓存命中
+ * 越多，重估值偏得越狠。`cacheUncosted` 把这个偏差量化出来。
+ *
+ * 契约（对齐 ccusage 的只读性，已从其代码证实：读只有 `fs::read`，无任何写）：
+ *   - **纯函数**：不读文件、不写文件、不改 `_sessionUsage`、不改入参数组；
+ *   - 入参缺省时回退到当前会话 records（仍是只读）；
+ *   - 任何异常输入（null/非数组/缺字段）按 0 计，不抛错。
+ *
+ * @param {Array<{provider?:string,model?:string,inputTokens?:number,outputTokens?:number,
+ *                costUSD?:number,cacheReadTokens?:number,cacheWriteTokens?:number}>} [records]
+ * @returns {{records:number, upstreamUSD:number, recalculatedUSD:number, driftUSD:number,
+ *            driftPct:number|null, cacheUncostedRequests:number, cacheUncostedTokens:number,
+ *            unpricedProviders:string[]}}
+ */
+function reconcileCost(records) {
+  const list = Array.isArray(records) ? records : _sessionUsage.records;
+  let upstreamUSD = 0;
+  let recalculatedUSD = 0;
+  let cacheUncostedRequests = 0;
+  let cacheUncostedTokens = 0;
+  const unpriced = new Set();
+
+  for (const rec of list) {
+    if (!rec || typeof rec !== 'object') continue;
+    const inTok = Number(rec.inputTokens) || 0;
+    const outTok = Number(rec.outputTokens) || 0;
+    const cacheRead = Number(rec.cacheReadTokens) || 0;
+    const cacheWrite = Number(rec.cacheWriteTokens) || 0;
+    const upstream = Number(rec.costUSD) || 0;
+
+    const provider = typeof rec.provider === 'string' ? rec.provider : '';
+    const pricing = TOKEN_PRICING[provider] || TOKEN_PRICING['default'];
+    if (provider && !TOKEN_PRICING[provider]) unpriced.add(provider);
+
+    upstreamUSD += upstream;
+    // 与 getSessionCost() 逐字同公式：只用 input/output 两桶。
+    recalculatedUSD += (inTok * pricing.input + outTok * pricing.output) / 1e6;
+
+    // 缓存 token 已收集但无价档 ⇒ 计入「未计价」计数，让缺口可见。
+    if (cacheRead + cacheWrite > 0) {
+      cacheUncostedRequests += 1;
+      cacheUncostedTokens += cacheRead + cacheWrite;
+    }
+  }
+
+  const driftUSD = upstreamUSD - recalculatedUSD;
+  // 以 recalculated 为基线的相对漂移；基线为 0 时无法定义百分比，返回 null
+  // （而不是 0 或 Infinity——拿 0 假装算过比不算更糟）。
+  const driftPct = recalculatedUSD > 0 ? (driftUSD / recalculatedUSD) * 100 : null;
+
+  return {
+    records: list.length,
+    upstreamUSD,
+    recalculatedUSD,
+    driftUSD,
+    driftPct,
+    cacheUncostedRequests,
+    cacheUncostedTokens,
+    unpricedProviders: [...unpriced].sort(),
+  };
+}
+
+/**
+ * 把对账结果格式化成一行人类可读摘要（只读，不触盘）。
+ * 漂移超过 `warnPct` 时加 ⚠ 前缀——这是「两条成本路径不一致」的唯一告警面。
+ *
+ * @param {ReturnType<typeof reconcileCost>} r
+ * @param {number} [warnPct=10]
+ * @returns {string}
+ */
+function formatReconcileSummary(r, warnPct = 10) {
+  if (!r || typeof r !== 'object') return '  成本对账: 无数据';
+  const pct = r.driftPct === null ? 'n/a' : `${r.driftPct >= 0 ? '+' : ''}${r.driftPct.toFixed(1)}%`;
+  const flag = r.driftPct !== null && Math.abs(r.driftPct) >= warnPct ? '⚠ ' : '  ';
+  let out = `${flag}成本对账: 上游 $${r.upstreamUSD.toFixed(4)} / 重算 $${r.recalculatedUSD.toFixed(4)} / 漂移 ${pct}（${r.records} 条）`;
+  if (r.cacheUncostedRequests > 0) {
+    out += `\n     ⚠ ${r.cacheUncostedRequests} 条请求含缓存 token（共 ${r.cacheUncostedTokens}）但价目表无缓存档，重算值系统性偏低`;
+  }
+  if (r.unpricedProviders.length > 0) {
+    out += `\n     ⚠ provider 无专属价目、已回落 default：${r.unpricedProviders.join('、')}`;
+  }
+  return out;
 }
 
 /**
@@ -738,6 +833,8 @@ module.exports = {
   calculateCost,
   estimateCost,
   getSessionCost,
+  reconcileCost,
+  formatReconcileSummary,
   estimateTokens,
   resetUsage,
   recordCompressionSavings,

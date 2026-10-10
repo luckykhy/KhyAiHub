@@ -11,15 +11,27 @@
       </template>
     </el-alert>
 
-    <el-card shadow="never" v-loading="loadingResources">
+    <el-card
+      v-loading="loadingResources"
+      shadow="never"
+    >
       <template #header>
         <div class="card-header">
           <span class="card-title">可管理资源</span>
-          <el-button size="small" :loading="loadingResources" @click="fetchResources">刷新</el-button>
+          <el-button
+            size="small"
+            :loading="loadingResources"
+            @click="fetchResources"
+          >
+            刷新
+          </el-button>
         </div>
       </template>
 
-      <el-tabs v-model="activeId" @tab-change="onTabChange">
+      <el-tabs
+        v-model="activeId"
+        @tab-change="onTabChange"
+      >
         <el-tab-pane
           v-for="r in resources"
           :key="r.id"
@@ -27,7 +39,12 @@
           :name="r.id"
         >
           <div class="resource-meta">
-            <el-tag size="small" effect="plain">来源: {{ r.source }}:{{ r.sourceDetail }}</el-tag>
+            <el-tag
+              size="small"
+              effect="plain"
+            >
+              来源: {{ r.source }}:{{ r.sourceDetail }}
+            </el-tag>
             <el-tag
               v-for="cap in r.capabilities"
               :key="cap"
@@ -35,7 +52,9 @@
               :type="cap === 'list' ? 'info' : 'primary'"
               effect="plain"
               style="margin-left: 6px"
-            >{{ cap }}</el-tag>
+            >
+              {{ cap }}
+            </el-tag>
           </div>
 
           <div class="actions-bar">
@@ -44,20 +63,24 @@
               size="small"
               :loading="loadingItems"
               @click="loadList(r.id)"
-            >刷新列表</el-button>
+            >
+              刷新列表
+            </el-button>
             <el-button
               v-for="cap in writeCapabilities(r)"
               :key="cap"
               size="small"
               type="primary"
               @click="openOpDialog(r, cap)"
-            >{{ cap }}</el-button>
+            >
+              {{ cap }}
+            </el-button>
           </div>
 
           <el-table
             v-if="r.capabilities.includes('list')"
-            :data="items"
             v-loading="loadingItems"
+            :data="items"
             size="small"
             stripe
             style="margin-top: 12px"
@@ -74,7 +97,11 @@
                 <span>{{ renderCell(row[col]) }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="操作" min-width="200" fixed="right">
+            <el-table-column
+              label="操作"
+              min-width="200"
+              fixed="right"
+            >
               <template #default="{ row }">
                 <el-button
                   v-for="cap in rowCapabilities(r)"
@@ -83,7 +110,9 @@
                   :type="cap === 'delete' ? 'danger' : 'default'"
                   text
                   @click="openRowOp(r, cap, row)"
-                >{{ cap }}</el-button>
+                >
+                  {{ cap }}
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -97,7 +126,11 @@
     </el-card>
 
     <!-- Op argument dialog (schema-driven) -->
-    <el-dialog v-model="opDialogVisible" :title="opDialogTitle" width="520px">
+    <el-dialog
+      v-model="opDialogVisible"
+      :title="opDialogTitle"
+      width="520px"
+    >
       <el-form label-width="120px">
         <el-form-item
           v-for="field in opFields"
@@ -111,16 +144,32 @@
             :placeholder="field.required ? '必填' : '可选'"
           />
         </el-form-item>
-        <el-empty v-if="!opFields.length" description="该操作无需参数" :image-size="60" />
+        <el-empty
+          v-if="!opFields.length"
+          description="该操作无需参数"
+          :image-size="60"
+        />
       </el-form>
       <template #footer>
-        <el-button @click="opDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="invoking" @click="submitOp">执行</el-button>
+        <el-button @click="opDialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          :loading="invoking"
+          @click="submitOp"
+        >
+          执行
+        </el-button>
       </template>
     </el-dialog>
 
     <!-- Result dialog -->
-    <el-dialog v-model="resultVisible" title="执行结果" width="640px">
+    <el-dialog
+      v-model="resultVisible"
+      title="执行结果"
+      width="640px"
+    >
       <pre class="result-block">{{ resultText }}</pre>
     </el-dialog>
   </div>

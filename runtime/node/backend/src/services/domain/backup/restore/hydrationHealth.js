@@ -210,7 +210,7 @@ function _normalizeFacts(facts) {
  * 纯计算，绝不抛：任何异常退化为「无法判断」的保守空结果。
  *
  * @param {object} facts 见上「事实字段」说明；缺失字段按未知保守处理。
- * @returns {{healthy:boolean, blockers:Array, warnings:Array, checked:number, summary:string}}
+ * @returns {{healthy:boolean, indeterminate:boolean, blockers:Array, warnings:Array, checked:number, summary:string}}
  */
 function assessHydrationHealth(facts) {
   try {
@@ -234,14 +234,26 @@ function assessHydrationHealth(facts) {
       if (rule.level === LEVEL_BLOCKER) blockers.push(item);
       else warnings.push(item);
     }
+    // 未知 ≠ 健康：探针一个事实都没取到时（后端目录定位失败等），规则表逐条
+    // 不命中，healthy 会算成 true —— 仪器因此制造绿灯。这里不改 healthy / blockers
+    // 的语义（「未知不误报为拦路」是 _RULES 的既有契约，且新拦截要按 S1 观察档
+    // 逐级升），只多给一个 indeterminate 位，让呈现层如实说「未知」。
+    const indeterminate = (
+      f.nodeModulesPresent === null
+      && f.missingPackages === null
+      && f.hollowPackages === null
+    );
     const healthy = blockers.length === 0;
-    const summary = healthy
-      ? warnings.length === 0
-        ? '健康：后端依赖 hydration 完整，可正常启动。'
-        : `基本健康：无拦路项，另有 ${warnings.length} 条提醒可留意。`
-      : `不健康：有 ${blockers.length} 条拦路项须先解决（另有 ${warnings.length} 条提醒）。`;
+    const summary = indeterminate
+      ? '未知：探针未取到任何 hydration 事实（后端目录定位失败或探针异常），本结论不能当作健康。'
+      : healthy
+        ? (warnings.length === 0
+          ? '健康：后端依赖 hydration 完整，可正常启动。'
+          : `基本健康：无拦路项，另有 ${warnings.length} 条提醒可留意。`)
+        : `不健康：有 ${blockers.length} 条拦路项须先解决（另有 ${warnings.length} 条提醒）。`;
     return {
       healthy,
+      indeterminate,
       blockers,
       warnings,
       checked: _RULES.length,
@@ -250,6 +262,7 @@ function assessHydrationHealth(facts) {
   } catch {
     return {
       healthy: false,
+      indeterminate: true,
       blockers: [],
       warnings: [],
       checked: 0,

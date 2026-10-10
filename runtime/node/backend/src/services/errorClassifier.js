@@ -51,6 +51,17 @@ const ERROR_KIND_PATTERNS = {
       'request too large',
       'too large for',
       'reduce the length',
+      // 中文报错：国产厂商与 OpenAI 兼容中转大量返回中文，此前本表零中文条目
+      // → detectErrorKind 返回 undefined，整条 413/上下文溢出链路在这些端点上
+      // 完全失效（连「这是上下文超限」这个分类都给不出）。
+      '上下文长度',
+      '最大上下文',
+      '超出上下文',
+      '上下文超',
+      '上下文窗口',
+      '输入长度超过',
+      '长度超过限制',
+      '内容过长',
     ],
     codes: [],
   },
@@ -640,6 +651,22 @@ const CONTEXT_OVERFLOW_PATTERNS = [
   // Generic variant: "210000 tokens > 200000" — marked generic so the parser
   // can apply an extra promptTokens > limitTokens sanity check on it.
   { re: /(\d+)\s*tokens?\s*>\s*(\d+)/i, prompt: 1, limit: 2, generic: true },
+  // ── 中文形态（国产厂商 / OpenAI 兼容中转）────────────────────────────────
+  // 「输入长度 150000 tokens 超过模型上下文长度 128000」/「350000 > 200000」。
+  // `tokens` 一词常被省略，故不要求它；比较词与上限数字之间常夹着中文（超过**模型上下文
+  // 长度** 128000），故留一段有界间隙 `[^0-9]{0,20}`—— 不给无界间隙是因为那会把
+  // 报文里任意两个数字凑成一对。数字要求 ≥4 位（上下文窗口最小也是 8192，四位起跳顺带
+  // 挡掉版本号、年份这类巧合匹配），正确性再由 generic 的 prompt>limit 兜。
+  {
+    re: /(\d{4,})\s*(?:tokens?|个?token|字)?\s*(?:>|＞|超过|超出|大于)[^0-9]{0,20}(\d{4,})/,
+    prompt: 1,
+    limit: 2,
+    generic: true,
+  },
+  // 「模型最大上下文长度为 128000」这类**只给上限**的中文报错。limitOnly 标记让
+  // 调用方知道没有 promptTokens：只用来学窗口上限（_cacheProbedContextWindow），
+  // 绝不能拿去算 maxTokens 收缩量（见 aiGatewayGenerateMethod.tryContextOverflowAdjust）。
+  { re: /(?:最大上下文(?:长度)?|上下文(?:长度|窗口)|上限|最大|限制)[^0-9]{0,8}(\d{4,})/, limit: 1, limitOnly: true },
 ];
 
 /**
@@ -661,17 +688,22 @@ function parseContextOverflowTokens(message) {
     if (!text) {
       return null;
     }
-    for (const { re, prompt, limit, generic } of CONTEXT_OVERFLOW_PATTERNS) {
+    for (const { re, prompt, limit, generic, limitOnly } of CONTEXT_OVERFLOW_PATTERNS) {
       const m = text.match(re);
       if (!m) {
         continue;
       }
-      const promptTokens = Number.parseInt(m[prompt], 10);
       const limitTokens = Number.parseInt(m[limit], 10);
-      if (!Number.isFinite(promptTokens) || !Number.isFinite(limitTokens)) {
+      if (!Number.isFinite(limitTokens) || limitTokens <= 0) {
         continue;
       }
-      if (promptTokens <= 0 || limitTokens <= 0) {
+      if (limitOnly) {
+        // 只解析出上限：promptTokens = 0 是**有意义的哨兵**，不是缺数据 —— 调用方
+        // 据此只学窗口上限、不做任何 maxTokens 收缩（收缩量需要 promptTokens）。
+        return { promptTokens: 0, limitTokens };
+      }
+      const promptTokens = Number.parseInt(m[prompt], 10);
+      if (!Number.isFinite(promptTokens) || promptTokens <= 0) {
         continue;
       }
       // Sanity check for the generic pattern only: a real overflow implies

@@ -1,12 +1,12 @@
-# khyos 三个前端项目指引
+# khyos 两个前端项目指引
 
-本文档描述 khyos 三个前端的**项目结构、文件定位、典型改动点**，供 frontend-beautify skill 在美化时快速定位。
+本文档描述 khyos 两个前端的**项目结构、文件定位、典型改动点**，供 frontend-beautify skill 在美化时快速定位。
 
-## 1. AI 平台前端（apps/ai-frontend）
+## 1. AI 平台前端（delivery/web/ai-frontend）
 
 ### 结构
 ```
-apps/ai-frontend/src/
+delivery/web/ai-frontend/src/
 ├── main.js                  # 入口：引 EP 暗色 css-vars + newapi-theme.css + useTheme
 ├── styles/
 │   └── newapi-theme.css     # ★ 设计 token 真源（--khy-* 亮暗双主题）
@@ -41,8 +41,8 @@ apps/ai-frontend/src/
 
 ### 验证
 ```bash
-cd apps/ai-frontend && npx vite build   # 无编译错误
-cd apps/ai-frontend && npm run dev      # 目视检查
+cd delivery/web/ai-frontend && npx vite build   # 无编译错误
+cd delivery/web/ai-frontend && npm run dev      # 目视检查
 ```
 
 ## 2. 量化交易前端（delivery/channel/khyquant/frontend）
@@ -75,7 +75,14 @@ cd delivery/channel/khyquant/frontend && npx vite build
 cd delivery/channel/khyquant/frontend && npm run dev
 ```
 
-## 3. 移动伴侣（apps/khy-mobile）
+## 3. 移动伴侣（已退役）
+
+> 原 `apps/khy-mobile/`（Vue 3 + Capacitor）已删除；现存移动端为 Flutter 客户端
+> `delivery/mobile/khy-os-client-app/`，其界面不适用本技能的 Vue/Element Plus 流程。
+
+### 结构（历史存档）
+```
+apps/khy-mobile/
 
 ### 结构
 ```
@@ -105,12 +112,12 @@ apps/khy-mobile/
 
 ### 验证
 ```bash
-cd apps/khy-mobile && npx vite build
+cd delivery/mobile/khy-os-client-app && flutter build apk  # 现行为 Flutter 构建
 # 真机/模拟器：npm run dev + Capacitor（可选）
 ```
 
 ## 跨端统一注意
 
-- 三个前端**各自独立**，没有共享样式包（ui-shared 只含 auth/http 工具）。美化时保持各端既有设计语言一致即可，不必强求三端像素级相同。
+- 两个前端**各自独立**，没有共享样式包（ui-shared 只含 auth/http 工具）。美化时保持各端既有设计语言一致即可，不必强求两端像素级相同。
 - ai-frontend 与 khyquant 都基于 Element Plus：优先用 EP 既有组件 + CSS 变量，少写自定义样式。
-- khy-mobile 是纯自定义样式（非 EP），遵循它自己的暗色 token。
+- 已退役的 khy-mobile 是纯自定义样式（非 EP）；现存 Flutter 客户端遵循它自己的 Material 体系。

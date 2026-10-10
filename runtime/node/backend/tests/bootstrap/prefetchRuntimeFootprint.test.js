@@ -24,6 +24,15 @@ const HW_PATH = require.resolve('../../src/services/hardwareProfileService');
 // 这里只作定位用;数值漂了会由下面的「排程形状」用例先报出来。
 const FOOTPRINT_DELAY_MS = 3500;
 
+// 门控驱动的排程形状(真源:serviceLifecyclePolicy 的 cli-startup/khy 条目)。
+const KHY_GATE_DELAYS = [300, 3500, 5000];
+
+// [DESIGN-ARCH-180] 结算 timer:固定落在门控表最大 delay + 1s 缓冲,用于等所有一次性
+// 启动 timer 销毁之后再采样驻留资源 —— 在启动窗口内采样会把尚未 firing 的 timer 误报成
+// 超预算(2026-10-04 实测 26/20 即此)。它不是门控条目,故不参与门控形状比对。
+const SETTLE_SLACK_MS = 1000;
+const SETTLE_DELAY_MS = Math.max(...KHY_GATE_DELAYS) + SETTLE_SLACK_MS;
+
 function mkCleanupSpy() {
   const calls = [];
   const rec = (name) => () => {
@@ -109,12 +118,18 @@ describe('prefetch / khy 轻量模式体积自检', () => {
   });
 
   test('khy 启动排程形状锁定(零新增门控)', () => {
-    // TUI 门控已 236/227 超限,零余量 ⇒ 这批改动不许新增任何 KHY_* 排程条目。
+    // TUI 门控已顶格,零余量 ⇒ 这批改动不许新增任何 KHY_* 排程条目。
     // 形状变了就先在这里报,而不是等 check-tui-gates 在别处变红。
+    // 结算 timer(见文件头 SETTLE_DELAY_MS)不收门,从形状里剔除后单独断言其存在。
     const { scheduled } = runKhyFootprint();
     assert.deepEqual(
-      scheduled.map((s) => s.delay),
-      [300, 3500, 5000]
+      scheduled.map((s) => s.delay).filter((d) => d !== SETTLE_DELAY_MS),
+      KHY_GATE_DELAYS,
+      '门控驱动的排程形状不得变'
+    );
+    assert.ok(
+      scheduled.some((s) => s.delay === SETTLE_DELAY_MS),
+      `结算 timer 必须以 ${SETTLE_DELAY_MS}ms 注册 —— khy 就是 TUI 会话,驻留资源读数靠它`
     );
   });
 });

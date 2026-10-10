@@ -1,7 +1,10 @@
 <template>
   <div class="collapsible-position-bar">
     <!-- 调试信息 - 移动端显示 -->
-    <div v-if="true" class="debug-info">
+    <div
+      v-if="true"
+      class="debug-info"
+    >
       状态: {{ isExpanded ? '展开' : '收起' }} | 持仓: {{ positions.length }}
     </div>
     
@@ -13,158 +16,211 @@
       @touchstart.prevent="togglePanel"
     >
       <span class="vertical-text">{{ activeTab === 'pending' ? '委托' : '持仓' }}</span>
-      <span v-if="pendingOrders.length > 0" class="pending-badge">{{ pendingOrders.length }}</span>
+      <span
+        v-if="pendingOrders.length > 0"
+        class="pending-badge"
+      >{{ pendingOrders.length }}</span>
     </button>
 
     <!-- 底部持仓面板 -->
     <transition name="slide-up">
-      <div v-if="isExpanded" class="position-panel">
+      <div
+        v-if="isExpanded"
+        class="position-panel"
+      >
         <!-- 可滚动内容区域 -->
         <div class="panel-scroll-content">
           <div class="panel-content">
             <!-- Tab switcher -->
             <div class="panel-tabs">
-              <button class="tab-btn" :class="{ active: activeTab === 'positions' }" @click="activeTab = 'positions'">
+              <button
+                class="tab-btn"
+                :class="{ active: activeTab === 'positions' }"
+                @click="activeTab = 'positions'"
+              >
                 持仓 ({{ positions.length }})
               </button>
-              <button class="tab-btn" :class="{ active: activeTab === 'pending' }" @click="activeTab = 'pending'">
+              <button
+                class="tab-btn"
+                :class="{ active: activeTab === 'pending' }"
+                @click="activeTab = 'pending'"
+              >
                 委托 ({{ pendingOrders.length }})
               </button>
             </div>
 
             <!-- Positions tab -->
             <template v-if="activeTab === 'positions'">
-            <!-- 左侧：账户全景卡片 -->
-            <div class="account-summary-card">
-              <div class="summary-header">账户概览</div>
+              <!-- 左侧：账户全景卡片 -->
+              <div class="account-summary-card">
+                <div class="summary-header">
+                  账户概览
+                </div>
             
-              <!-- 总浮动盈亏 -->
-              <div class="total-profit">
-                <div class="profit-label">浮动盈亏</div>
-                <div class="profit-value" :class="totalProfitClass">
-                  <span class="arrow">{{ totalProfit >= 0 ? '▲' : '▼' }}</span>
-                  <span class="amount">{{ formatMoney(Math.abs(totalProfit)) }}</span>
+                <!-- 总浮动盈亏 -->
+                <div class="total-profit">
+                  <div class="profit-label">
+                    浮动盈亏
+                  </div>
+                  <div
+                    class="profit-value"
+                    :class="totalProfitClass"
+                  >
+                    <span class="arrow">{{ totalProfit >= 0 ? '▲' : '▼' }}</span>
+                    <span class="amount">{{ formatMoney(Math.abs(totalProfit)) }}</span>
+                  </div>
+                  <div
+                    class="profit-percent"
+                    :class="totalProfitClass"
+                  >
+                    {{ totalProfitPercent >= 0 ? '+' : '' }}{{ totalProfitPercent.toFixed(2) }}%
+                  </div>
                 </div>
-                <div class="profit-percent" :class="totalProfitClass">
-                  {{ totalProfitPercent >= 0 ? '+' : '' }}{{ totalProfitPercent.toFixed(2) }}%
+
+                <!-- 可用资金 -->
+                <div class="available-funds">
+                  <span class="label">可用资金</span>
+                  <span class="value">¥{{ formatMoney(availableFunds) }}</span>
                 </div>
-              </div>
 
-              <!-- 可用资金 -->
-              <div class="available-funds">
-                <span class="label">可用资金</span>
-                <span class="value">¥{{ formatMoney(availableFunds) }}</span>
-              </div>
-
-              <!-- 风险率（仅期货） -->
-              <div v-if="hasFuturesPosition" class="risk-rate">
-                <span class="label">风险率</span>
-                <span class="value" :class="riskRateClass">{{ riskRate.toFixed(2) }}%</span>
-              </div>
-            </div>
-
-            <!-- 右侧：持仓卡片流 -->
-            <div class="positions-scroll-container">
-              <div class="positions-cards">
-                <div 
-                  v-for="position in positions" 
-                  :key="position.id"
-                  class="position-card"
-                  :class="{ 'selected': selectedPositionId === position.id, 'highlight': position.isUpdating }"
-                  @click="selectPosition(position)"
+                <!-- 风险率（仅期货） -->
+                <div
+                  v-if="hasFuturesPosition"
+                  class="risk-rate"
                 >
-                  <!-- 平仓按钮（悬停显示） -->
-                  <button class="close-btn" @click.stop="closePosition(position)">
-                    平仓
-                  </button>
-
-                  <!-- 第一行：品种信息 -->
-                  <div class="card-row row-1">
-                    <div class="symbol-info">
-                      <span class="symbol-code">{{ position.symbol }}</span>
-                      <span class="symbol-name">{{ position.name }}</span>
-                    </div>
-                    <div class="direction-tag" :class="getDirectionClass(position)">
-                      {{ getDirectionText(position) }}
-                    </div>
-                  </div>
-
-                  <!-- 第二行：持仓成本 -->
-                  <div class="card-row row-2">
-                    <div class="cost-info">
-                      <span class="label">均价</span>
-                      <span class="value">{{ position.avgPrice.toFixed(2) }}</span>
-                    </div>
-                    <div class="quantity-info">
-                      <span class="label">数量</span>
-                      <span class="value">{{ position.quantity }}{{ position.isFutures ? '手' : '股' }}</span>
-                    </div>
-                  </div>
-
-                  <!-- 第三行：实时盈亏 -->
-                  <div class="card-row row-3">
-                    <div class="profit-info" :class="getProfitClass(position)">
-                      <div class="profit-amount">
-                        {{ position.profit >= 0 ? '+' : '' }}{{ formatMoney(Math.abs(position.profit)) }}
-                      </div>
-                      <div class="profit-percent">
-                        {{ position.profitPercent >= 0 ? '+' : '' }}{{ position.profitPercent.toFixed(2) }}%
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 无持仓提示 -->
-                <div v-if="positions.length === 0" class="empty-positions">
-                  <span>暂无持仓</span>
+                  <span class="label">风险率</span>
+                  <span
+                    class="value"
+                    :class="riskRateClass"
+                  >{{ riskRate.toFixed(2) }}%</span>
                 </div>
               </div>
-            </div>
+
+              <!-- 右侧：持仓卡片流 -->
+              <div class="positions-scroll-container">
+                <div class="positions-cards">
+                  <div 
+                    v-for="position in positions" 
+                    :key="position.id"
+                    class="position-card"
+                    :class="{ 'selected': selectedPositionId === position.id, 'highlight': position.isUpdating }"
+                    @click="selectPosition(position)"
+                  >
+                    <!-- 平仓按钮（悬停显示） -->
+                    <button
+                      class="close-btn"
+                      @click.stop="closePosition(position)"
+                    >
+                      平仓
+                    </button>
+
+                    <!-- 第一行：品种信息 -->
+                    <div class="card-row row-1">
+                      <div class="symbol-info">
+                        <span class="symbol-code">{{ position.symbol }}</span>
+                        <span class="symbol-name">{{ position.name }}</span>
+                      </div>
+                      <div
+                        class="direction-tag"
+                        :class="getDirectionClass(position)"
+                      >
+                        {{ getDirectionText(position) }}
+                      </div>
+                    </div>
+
+                    <!-- 第二行：持仓成本 -->
+                    <div class="card-row row-2">
+                      <div class="cost-info">
+                        <span class="label">均价</span>
+                        <span class="value">{{ position.avgPrice.toFixed(2) }}</span>
+                      </div>
+                      <div class="quantity-info">
+                        <span class="label">数量</span>
+                        <span class="value">{{ position.quantity }}{{ position.isFutures ? '手' : '股' }}</span>
+                      </div>
+                    </div>
+
+                    <!-- 第三行：实时盈亏 -->
+                    <div class="card-row row-3">
+                      <div
+                        class="profit-info"
+                        :class="getProfitClass(position)"
+                      >
+                        <div class="profit-amount">
+                          {{ position.profit >= 0 ? '+' : '' }}{{ formatMoney(Math.abs(position.profit)) }}
+                        </div>
+                        <div class="profit-percent">
+                          {{ position.profitPercent >= 0 ? '+' : '' }}{{ position.profitPercent.toFixed(2) }}%
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 无持仓提示 -->
+                  <div
+                    v-if="positions.length === 0"
+                    class="empty-positions"
+                  >
+                    <span>暂无持仓</span>
+                  </div>
+                </div>
+              </div>
             </template>
 
             <!-- Pending orders tab -->
             <template v-if="activeTab === 'pending'">
-            <div class="pending-orders-container">
-              <div class="pending-orders-cards">
-                <div
-                  v-for="order in pendingOrders"
-                  :key="order.id"
-                  class="pending-order-card"
-                >
-                  <button class="cancel-btn" @click.stop="cancelPendingOrder(order)">
-                    撤单
-                  </button>
-                  <div class="card-row row-1">
-                    <div class="symbol-info">
-                      <span class="symbol-code">{{ order.symbol }}</span>
+              <div class="pending-orders-container">
+                <div class="pending-orders-cards">
+                  <div
+                    v-for="order in pendingOrders"
+                    :key="order.id"
+                    class="pending-order-card"
+                  >
+                    <button
+                      class="cancel-btn"
+                      @click.stop="cancelPendingOrder(order)"
+                    >
+                      撤单
+                    </button>
+                    <div class="card-row row-1">
+                      <div class="symbol-info">
+                        <span class="symbol-code">{{ order.symbol }}</span>
+                      </div>
+                      <div
+                        class="order-type-tag"
+                        :class="order.side === 'buy' ? 'tag-buy' : 'tag-sell'"
+                      >
+                        {{ order.side === 'buy' ? '买入' : '卖出' }}
+                      </div>
                     </div>
-                    <div class="order-type-tag" :class="order.side === 'buy' ? 'tag-buy' : 'tag-sell'">
-                      {{ order.side === 'buy' ? '买入' : '卖出' }}
+                    <div class="card-row row-2">
+                      <div class="cost-info">
+                        <span class="label">委托价</span>
+                        <span class="value">{{ Number(order.price).toFixed(2) }}</span>
+                      </div>
+                      <div class="quantity-info">
+                        <span class="label">数量</span>
+                        <span class="value">{{ order.quantity }}股</span>
+                      </div>
+                    </div>
+                    <div class="card-row row-3">
+                      <div class="order-time">
+                        {{ formatOrderTime(order.createdAt) }}
+                      </div>
+                      <div class="order-status pending-status">
+                        待成交
+                      </div>
                     </div>
                   </div>
-                  <div class="card-row row-2">
-                    <div class="cost-info">
-                      <span class="label">委托价</span>
-                      <span class="value">{{ Number(order.price).toFixed(2) }}</span>
-                    </div>
-                    <div class="quantity-info">
-                      <span class="label">数量</span>
-                      <span class="value">{{ order.quantity }}股</span>
-                    </div>
-                  </div>
-                  <div class="card-row row-3">
-                    <div class="order-time">
-                      {{ formatOrderTime(order.createdAt) }}
-                    </div>
-                    <div class="order-status pending-status">待成交</div>
-                  </div>
-                </div>
 
-                <div v-if="pendingOrders.length === 0" class="empty-positions">
-                  <span>暂无委托单</span>
+                  <div
+                    v-if="pendingOrders.length === 0"
+                    class="empty-positions"
+                  >
+                    <span>暂无委托单</span>
+                  </div>
                 </div>
               </div>
-            </div>
             </template>
           </div>
         </div>

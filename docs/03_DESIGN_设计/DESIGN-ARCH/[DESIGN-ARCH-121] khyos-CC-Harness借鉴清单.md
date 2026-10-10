@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-121] khyos 对《Claude Code 实战·Harness 工程之道》的借鉴清单
 
 > **文档性质**：**借鉴清单 + 落地提案**。本文档不是规则语义真源——规则语义仍以

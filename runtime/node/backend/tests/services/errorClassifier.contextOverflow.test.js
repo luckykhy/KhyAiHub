@@ -105,6 +105,55 @@ describe('parseContextOverflowTokens', () => {
     });
   });
 
+  describe('Chinese format (国产厂商 / OpenAI 兼容中转)', () => {
+    // 此前分类表与解析正则全是 ASCII 锚点、零中文条目 → 中文 400/413 在这些端点上
+    // 既分类不出来、也解析不出窗口，「撞一次错就学到真实窗口」这条兜底完全失效。
+
+    test('比较式：输入超过上下文（tokens 可省略）', () => {
+      const result = parseContextOverflowTokens('输入长度 150000 tokens 超过模型上下文长度 128000');
+      expect(result).toEqual({ promptTokens: 150000, limitTokens: 128000 });
+    });
+
+    test('比较式：纯数字大于号', () => {
+      expect(parseContextOverflowTokens('错误：350000 > 200000')).toEqual({
+        promptTokens: 350000,
+        limitTokens: 200000,
+      });
+    });
+
+    test('比较式：全角大于号 + 「超出」', () => {
+      expect(parseContextOverflowTokens('请求 200000 tokens 超出 131072 tokens 的上限')).toEqual({
+        promptTokens: 200000,
+        limitTokens: 131072,
+      });
+    });
+
+    test('只给上限：promptTokens = 0 是哨兵，limitTokens 仍要拿到', () => {
+      expect(parseContextOverflowTokens('模型最大上下文长度为 128000')).toEqual({
+        promptTokens: 0,
+        limitTokens: 128000,
+      });
+    });
+
+    test('中文 sanity 检查同样生效：小于号方向返回 null', () => {
+      expect(parseContextOverflowTokens('输入 100000 超过 200000')).toBeNull();
+    });
+
+    test('少于四位的数字不当窗口（挡版本号/年份巧合匹配）', () => {
+      expect(parseContextOverflowTokens('错误 500：版本 200 不兼容')).toBeNull();
+    });
+
+    test('中文但不含窗口语义的报错不误判', () => {
+      expect(parseContextOverflowTokens('请求过于频繁，请稍后重试')).toBeNull();
+      expect(parseContextOverflowTokens('连接超时')).toBeNull();
+    });
+
+    test('中文错误对象同样能解析', () => {
+      const err = new Error('您的输入长度超过模型上下文长度，最大为 65536');
+      expect(parseContextOverflowTokens(err)).toEqual({ promptTokens: 0, limitTokens: 65536 });
+    });
+  });
+
   describe('Irrelevant messages return null', () => {
     test('unrelated error message', () => {
       expect(parseContextOverflowTokens('connection timed out')).toBeNull();

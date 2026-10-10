@@ -95,6 +95,10 @@ function policyText(key, pol = {}) {
       return `总量封顶 ${b(pol.maxTotalBytes)}（每项目）`;
     case 'runtimeLogs':
       return `保留 ${pol.keepDays} 天 / ${pol.maxFiles} 个文件 / ${b(pol.maxBytes)}`;
+    case 'atomicTmpOrphans':
+      return `孤儿临时文件超过 ${Number(pol.maxAgeHours) || 0} 小时回收（kill -9 残留）`;
+    case 'emptyDirs':
+      return `空目录超过 ${pol.minAgeDays} 天回收（KHY_EMPTY_DIR_REAP=0 可关）`;
     default:
       return '策略真源见 cleanupService.getRetentionPolicy()';
   }
@@ -115,6 +119,7 @@ function targetRows(report, policy = {}) {
       return {
         key: k,
         size: Number(v.size) || 0,
+        count: Number(v.count) || 0,
         policy: policyText(k, policy[k]),
       };
     })
@@ -145,8 +150,10 @@ function renderPreview(report, footprint, policy) {
   console.log('  ' + pad('目标', keyW + 2) + pad('当前占用', 12) + '保留策略');
   console.log('  ' + '─'.repeat(keyW + 2 + 12 + 30));
   for (const r of rows) {
-    if (r.size === 0) continue;
-    console.log('  ' + pad(r.key, keyW + 2) + pad(r.size ? mb(r.size) : '0 B', 12) + r.policy);
+    // 计数型目标（如 emptyDirs）体积恒为 0，用「N 个」占位以免被当成无数据跳过。
+    const sizeCell = r.size > 0 ? mb(r.size) : r.count > 0 ? `${r.count} 个` : '0 B';
+    if (r.size === 0 && !r.count) continue;
+    console.log('  ' + pad(r.key, keyW + 2) + pad(sizeCell, 12) + r.policy);
   }
   console.log('  ' + '─'.repeat(keyW + 2 + 12 + 30));
   console.log('  ' + pad('合计', keyW + 2) + pad(report.totalHuman || '0 B', 12));
@@ -283,6 +290,7 @@ async function handleCleanup(parsed = {}, ctx = {}) {
             key: r.key,
             bytes: r.size,
             human: mb(r.size),
+            count: r.count,
             policy: r.policy,
           })),
           footprint: footprint

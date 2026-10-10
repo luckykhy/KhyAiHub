@@ -44,7 +44,7 @@ const DEFAULT_TARGETS = {
 };
 
 // M1 扫描的源目录（仅这些顶层目录下的 JS 计入「架构表面积」）。
-const SCAN_DIRS = ['kernel', 'platform', 'services', 'apps', 'software', 'extensions', 'tools'];
+const SCAN_DIRS = ['runtime/boot/kernel', 'runtime/substrate/platform', 'runtime/node', 'apps', 'delivery/channel', 'delivery/web', 'delivery/extension', 'tools'];
 // 排除路径片段（构建产物 / 依赖 / 打包资产 / 测试）。
 const EXCLUDE_SEGMENTS = [
   'node_modules', path.sep + 'out' + path.sep, path.sep + 'dist' + path.sep,
@@ -157,7 +157,7 @@ function makeModuleResolver(policy) {
 }
 
 // 从源码抽取 require('x') / import ... from 'x' 的相对/内部说明符。
-const SPEC_RE = /(?:require\(|from\s+)['"](\.[^'"]+|services\/[^'"]+|@khy\/[^'"]+)['"]/g;
+const SPEC_RE = /(?:require\(|from\s+)['"](\.[^'"]+|runtime\/node\/[^'"]+|@khy\/[^'"]+)['"]/g;
 function extractSpecifiers(text) {
   const out = [];
   let m;
@@ -171,7 +171,7 @@ function resolveSpecifier(fromRel, spec, relSet) {
   let candidate;
   if (spec.startsWith('.')) {
     candidate = path.posix.normalize(path.posix.join(path.posix.dirname(fromRel), spec));
-  } else if (spec.startsWith('services/')) {
+  } else if (spec.startsWith('runtime/node/')) {
     candidate = path.posix.normalize(spec);
   } else {
     return null; // @khy/* 等 workspace 别名不在模块图内解析（保守忽略）

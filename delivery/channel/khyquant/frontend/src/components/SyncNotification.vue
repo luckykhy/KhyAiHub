@@ -1,21 +1,52 @@
 <template>
   <transition name="slide-fade">
-    <div v-if="visible" class="sync-notification" :class="notificationClass">
+    <div
+      v-if="visible"
+      class="sync-notification"
+      :class="notificationClass"
+    >
       <div class="notification-icon">
-        <el-icon v-if="type === 'loading'" class="rotating"><Loading /></el-icon>
-        <el-icon v-else-if="type === 'success'"><CircleCheck /></el-icon>
-        <el-icon v-else-if="type === 'warning'"><Warning /></el-icon>
-        <el-icon v-else-if="type === 'error'"><CircleClose /></el-icon>
-        <el-icon v-else><InfoFilled /></el-icon>
+        <el-icon
+          v-if="type === 'loading'"
+          class="rotating"
+        >
+          <Loading />
+        </el-icon>
+        <el-icon v-else-if="type === 'success'">
+          <CircleCheck />
+        </el-icon>
+        <el-icon v-else-if="type === 'warning'">
+          <Warning />
+        </el-icon>
+        <el-icon v-else-if="type === 'error'">
+          <CircleClose />
+        </el-icon>
+        <el-icon v-else>
+          <InfoFilled />
+        </el-icon>
       </div>
       
       <div class="notification-content">
-        <div class="notification-title">{{ title }}</div>
-        <div class="notification-message">{{ message }}</div>
-        <div v-if="details" class="notification-details">{{ details }}</div>
+        <div class="notification-title">
+          {{ title }}
+        </div>
+        <div class="notification-message">
+          {{ message }}
+        </div>
+        <div
+          v-if="details"
+          class="notification-details"
+        >
+          {{ details }}
+        </div>
       </div>
       
-      <el-icon class="notification-close" @click="close"><Close /></el-icon>
+      <el-icon
+        class="notification-close"
+        @click="close"
+      >
+        <Close />
+      </el-icon>
     </div>
   </transition>
 </template>

@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # 《khyos 元规划协议与动态约束注入规范》
 
 > 文档编号：DESIGN-ARCH-025

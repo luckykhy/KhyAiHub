@@ -2,17 +2,17 @@
   "$comment": "数据落点的单一真源。派生对象：[DESIGN-LAY-007] §2 目录表、utils/dataHome.js 的 DATA_PATHS 查表、scripts/ci/check-data-layout.js 的预算常量、.gitignore 数据段。禁止在任何一处手写第二份。见 [DESIGN-LAY-004] 的「登记表派生」原则。",
   "ssot": "docs/10_规范/DESIGN-LAY/[DESIGN-LAY-007] 三态目录立体分层方案.md",
   "ruleId": "LAYOUT-007",
-  "version": "1.1.0 (2026-09-26) 新增 formats 落盘格式卫生块，配套 check-data-layout L-4；初版 1.0.0 (2026-09-18)；W9′ 2026-10-02 roots 迁 works/data（[DESIGN-LAY-008] §22 R1）",
+  "version": "1.3.0 (2026-10-08) 用户裁决：底座家并入项目家——roots.khyos.rel 改为 works/data/khy/T1-domains/base，works/data/khyos 降级为兼容 junction（[DESIGN-LAY-007] §5 移动即建链接），correction-phrase-samples 等 seedEntries.home 随迁；accessor getBaseHome() 便携分支同步。1.2.0 (2026-10-07) W9′ 落点对齐：roots.khy.accessor 改 getProjectDataHome()；protected/budgets 路径从 .khy/… 改 works/data/…；check-data-layout 增加空目录/杂件/原子写孤儿活体读数与 L-5 棘轮比对。1.1.0 (2026-09-26) 新增 formats 落盘格式卫生块，配套 check-data-layout L-4；初版 1.0.0 (2026-09-18)；W9′ 2026-10-02 roots 迁 works/data（[DESIGN-LAY-008]§22 R1）",
   "roots": {
     "khy": {
       "rel": "works/data/khy",
-      "accessor": "getDataHome()",
+      "accessor": "getProjectDataHome()",
       "role": "应用层运行态数据"
     },
     "khyos": {
-      "rel": "works/data/khyos",
+      "rel": "works/data/khy/T1-domains/base",
       "accessor": "getBaseHome()",
-      "role": "底座层运行态数据"
+      "role": "底座层运行态数据（2026-10-08 用户裁决并入 khy；works/data/khyos 为兼容 junction，非便携仍 ~/.khyos）"
     },
     "state": {
       "rel": ".state",
@@ -48,6 +48,7 @@
         "desktop",
         "telemetry",
         "secrets",
+        "base",
         "_unsorted"
       ],
       "perChildBudget": 20
@@ -192,7 +193,7 @@
       "regenerable": false,
       "backup": "none",
       "delete": "recursive",
-      "note": "[DESIGN-ARCH-163] D5 校准话术 S1 观察样本台账（只追加 JSONL）。删除=样本计数归零、观察期重计，无业务数据损失；毕业统计见 FEATURE-OWNERSHIP.json image-calibrate-hint-skeleton。"
+      "note": "[DESIGN-ARCH-163] D5 校准话术 S1 观察样本台账（只追加 JSONL）。删除=样本计数归零、观察期重计，无业务数据损失；毕业统计见 FEATURE-OWNERSHIP.json image-calibrate-hint-skeleton。2026-10-08 起物理落点随底座家并入：works/data/khy/T1-domains/base/correction_phrase_samples.jsonl。"
     }
   ],
   "budgets": [
@@ -203,15 +204,16 @@
       "note": "仓库顶层：三态根 + 七板块 + 工具契约文件"
     },
     {
-      "dir": ".khy",
+      "dir": "works/data/khy",
       "max": 6,
       "axis": "B",
       "note": "数据态根只允许五档 + 1 个索引"
     },
     {
-      "dir": ".khyos",
-      "max": 6,
-      "axis": "B"
+      "dir": "works/data/khy/T1-domains/base",
+      "max": 20,
+      "axis": "D",
+      "note": "2026-10-08 并入后底座数据成为 T1-domains 的一个领域族，预算沿用数据族 20；实测 22 项略超（含 .bak 轮转副本），S1 如实记录"
     },
     {
       "dir": ".state",
@@ -241,11 +243,11 @@
       ".clinerules"
     ],
     "appendOnlyDataPaths": [
-      ".khy/audit-trajectory"
+      "works/data/khy/audit-trajectory"
     ],
     "permissionPreservingDataPaths": [
-      ".khy/credentials",
-      ".khy/api_keys.json"
+      "works/data/khy/credentials",
+      "works/data/khy/api_keys.json"
     ]
   },
   "measured": {

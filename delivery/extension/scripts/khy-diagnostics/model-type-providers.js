@@ -74,7 +74,7 @@ function _officialHosts() {
   try {
     const mod = require(path.join(
       REPO_ROOT,
-      'services', 'backend', 'src', 'services', 'gateway', 'providerPresets',
+      'runtime', 'node', 'backend', 'src', 'services', 'gateway', 'providerPresets',
     ));
     const presets = typeof mod.getProviderPresets === 'function' ? mod.getProviderPresets() : [];
     for (const p of Array.isArray(presets) ? presets : []) {
@@ -102,7 +102,7 @@ function _defaultEmbedBase() {
   try {
     const mod = require(path.join(
       REPO_ROOT,
-      'services', 'backend', 'src', 'constants', 'serviceDefaults',
+      'runtime', 'node', 'backend', 'src', 'constants', 'serviceDefaults',
     ));
     const host = typeof mod.OLLAMA_HOST === 'string' ? mod.OLLAMA_HOST.replace(/\/+$/, '') : '';
     return host ? host + '/api/embeddings' : '';

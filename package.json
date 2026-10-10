@@ -6,12 +6,13 @@
   "workspaces": [
     "runtime/substrate/platform/packages/shared",
     "runtime/substrate/platform/packages/ui-shared",
+    "runtime/substrate/platform/packages/plugin-sdk",
     "runtime/node/backend",
     "runtime/node/ai-backend",
     "delivery/web/ai-frontend",
-    "delivery/desktop/khyos-desktop",
     "delivery/web/provider-hub",
-    "delivery/channel/khyquant/frontend"
+    "delivery/channel/khyquant/frontend",
+    "delivery/extension/tools/khy-markdown"
   ],
   "//": "任务入口按域分组，命名规约 <域>:<动作>[:<变体>] 见 docs/10_规范/DESIGN-LAY/[DESIGN-LAY-005] 仓库层级板块规范.md 第五节；逐条说明见 docs/07_OPS_运维/OPS-MAN/[OPS-MAN-174] 任务入口总表.md。每个入口都指向一个已存在的脚本文件——check:layout 的 dangling-task 规则会守住这条。",
   "scripts": {
@@ -49,6 +50,14 @@
     "test:no-emoji": "node --test scripts/tests/check-no-emoji.test.js",
     "//delivery-baseline": "── 可交付性基线（PROCESS-014）：D1–D10 记分板 + 任务面棘轮。阈值真源 = [DESIGN-DELIV-002] §4 ──",
     "check:delivery": "node scripts/ci/check-delivery-baseline.js",
+    "check:route-replay": "node scripts/ci/route-replay.js",
+    "check:route-cache": "node scripts/ci/route-cache-observability.js",
+    "check:route-overhead": "node scripts/ci/route-overhead-probe.js",
+    "audit:route185-completion": "node scripts/maintenance/route185-completion-audit.js",
+    "audit:route185-citations": "node scripts/maintenance/route185-citation-audit.js",
+    "audit:route185-cycles": "node scripts/maintenance/route185-cycle-probe.js",
+    "test:route-overhead": "node --test scripts/ci/route-overhead-probe.test.js",
+    "test:route-cache": "node --test scripts/ci/route-cache-observability.test.js",
     "check:delivery:changed": "node scripts/ci/check-delivery-baseline.js --changed",
     "check:delivery:json": "node scripts/ci/check-delivery-baseline.js --json",
     "test:delivery-baseline": "node --test scripts/tests/check-delivery-baseline.test.js",
@@ -200,6 +209,7 @@
     "//test": "── 测试。跑单个文件用 npm run test:one -- <path>，不为每个场景登记入口。Node 22+ 的 --test 把位置参数当 glob 而非目录，故必须写通配并加引号（裸目录会被当成 entry point，报 Cannot find module）──",
     "test:one": "node --test",
     "test:scripts": "node --test \"scripts/tests/**/*.test.js\"",
+    "test:route-replay": "node --test scripts/ci/route-replay.test.js",
     "test:docs": "node --test \"scripts/docs/**/*.test.js\"",
     "test:evolution-prompts": "node --test scripts/tests/gen-evolution-prompts.test.js",
     "test:md-suggested-apps": "node --test runtime/node/backend/tests/services/mdSuggestedAppsPlan.test.js",
@@ -319,7 +329,8 @@
     "test:maintainer:gateway": "npm test --prefix runtime/node/backend -- --testPathPattern \"tests/gateway/aiGateway\"",
     "test:maintainer:runtime": "npm test --prefix runtime/node/backend -- tests/daemonManager.runtimePort.test.js tests/services/proxyBaseUrl.test.js tests/services/serviceDefaults.test.js",
     "test:maintainer:ai-management": "npm test --prefix runtime/node/backend -- tests/routes/aiGatewayAdmin.modelSlots.test.js tests/gatewayManage.apiDisplay.test.js",
-    "test:maintainer:publish": "npm test --prefix runtime/node/backend -- tests/publish.dbPreflight.test.js tests/publish.sourceReleaseMode.test.js"
+    "test:maintainer:publish": "npm test --prefix runtime/node/backend -- tests/publish.dbPreflight.test.js tests/publish.sourceReleaseMode.test.js",
+    "audit:route185-mutations": "node scripts/maintenance/route185-mutation-controls.js"
   },
   "//devDependencies": "根级 devDependencies 只放**仓库级工具链**——被 scripts/ 下的治理脚本直接调用的东西。业务运行时依赖一律声明在拥有它的 workspace 里，否则 `npm ci --omit=dev` 会把运行时代码需要的包一起省掉。2026-08-25 依据这条规则移出两类：① 5 个 @opentelemetry/* —— 链路追踪由 KHY_OTEL_ENABLED 门控、在 observability/otel.js 里 lazy require，已声明为 runtime/node/backend 的 optional peerDependencies，根级再声明一遍等于让每台开发机无条件装 36 MB 默认不启用的包；② node-cron —— 它是 delivery/channel/khyquant/services/instrumentSyncService.js 的运行时依赖（非 dev），已移到 runtime/node/backend/dependencies。",
   "devDependencies": {

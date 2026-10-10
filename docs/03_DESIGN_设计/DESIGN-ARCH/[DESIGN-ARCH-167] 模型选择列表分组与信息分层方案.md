@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 <!-- 文档分类: DESIGN-ARCH-167 | 阶段: 设计 | 原路径: 新建 -->
 # [DESIGN-ARCH-167] 模型选择列表分组与信息分层方案
 

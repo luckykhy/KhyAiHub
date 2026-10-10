@@ -4,22 +4,44 @@
     <div class="editor-toolbar">
       <div class="toolbar-left">
         <el-button-group size="small">
-          <el-button @click="insertFunction('HHV')">HHV</el-button>
-          <el-button @click="insertFunction('LLV')">LLV</el-button>
-          <el-button @click="insertFunction('MA')">MA</el-button>
-          <el-button @click="insertFunction('CROSS')">CROSS</el-button>
-          <el-button @click="insertFunction('IF')">IF</el-button>
-          <el-button @click="insertFunction('COUNT')">COUNT</el-button>
-          <el-button @click="insertFunction('SUM')">SUM</el-button>
-          <el-button @click="insertFunction('REF')">REF</el-button>
+          <el-button @click="insertFunction('HHV')">
+            HHV
+          </el-button>
+          <el-button @click="insertFunction('LLV')">
+            LLV
+          </el-button>
+          <el-button @click="insertFunction('MA')">
+            MA
+          </el-button>
+          <el-button @click="insertFunction('CROSS')">
+            CROSS
+          </el-button>
+          <el-button @click="insertFunction('IF')">
+            IF
+          </el-button>
+          <el-button @click="insertFunction('COUNT')">
+            COUNT
+          </el-button>
+          <el-button @click="insertFunction('SUM')">
+            SUM
+          </el-button>
+          <el-button @click="insertFunction('REF')">
+            REF
+          </el-button>
         </el-button-group>
       </div>
       <div class="toolbar-right">
-        <el-button size="small" @click="formatCode">
+        <el-button
+          size="small"
+          @click="formatCode"
+        >
           <el-icon><MagicStick /></el-icon>
           格式化
         </el-button>
-        <el-button size="small" @click="parseCode">
+        <el-button
+          size="small"
+          @click="parseCode"
+        >
           <el-icon><View /></el-icon>
           解析变量
         </el-button>
@@ -33,17 +55,23 @@
         v-model="localCode"
         class="tdx-code-editor"
         :placeholder="placeholder"
+        spellcheck="false"
         @input="onCodeChange"
         @keydown="onKeyDown"
-        spellcheck="false"
-      ></textarea>
+      />
       
       <!-- 语法高亮层 -->
-      <div class="syntax-highlight-layer" v-html="highlightedCode"></div>
+      <div
+        class="syntax-highlight-layer"
+        v-html="highlightedCode"
+      />
     </div>
 
     <!-- 变量列表 -->
-    <div v-if="parsedVariables.length > 0" class="variables-panel">
+    <div
+      v-if="parsedVariables.length > 0"
+      class="variables-panel"
+    >
       <div class="panel-header">
         <el-icon><List /></el-icon>
         <span>识别的变量 ({{ parsedVariables.length }})</span>
@@ -57,7 +85,10 @@
           style="margin: 4px;"
         >
           {{ variable.name }}
-          <span v-if="variable.value" style="margin-left: 4px; opacity: 0.7;">
+          <span
+            v-if="variable.value"
+            style="margin-left: 4px; opacity: 0.7;"
+          >
             = {{ variable.value }}
           </span>
         </el-tag>
@@ -79,7 +110,11 @@
           </div>
         </template>
         <div style="font-size: 12px; margin-top: 8px;">
-          <div v-for="(error, index) in syntaxErrors" :key="index" style="margin: 4px 0;">
+          <div
+            v-for="(error, index) in syntaxErrors"
+            :key="index"
+            style="margin: 4px 0;"
+          >
             <el-icon><WarningFilled /></el-icon>
             第{{ error.line }}行: {{ error.message }}
             <code style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 3px; margin-left: 8px;">
@@ -89,7 +124,10 @@
         </div>
       </el-alert>
       
-      <el-alert type="info" :closable="false">
+      <el-alert
+        type="info"
+        :closable="false"
+      >
         <template #title>
           <div style="font-size: 12px;">
             <strong>通达信公式语法：</strong>

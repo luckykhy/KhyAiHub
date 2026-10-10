@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-122] TUI 设计族总纲
 
 > **定位**：本文件是 `docs/03_DESIGN_设计/` 中 **TUI（终端用户界面）设计族** 的唯一导航入口与 scope 裁决真源。

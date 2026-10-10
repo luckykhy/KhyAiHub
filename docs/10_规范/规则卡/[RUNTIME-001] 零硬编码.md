@@ -3,7 +3,7 @@ name: 零硬编码
 id: RUNTIME-001
 domain: RUNTIME
 nature: 约束为主，兼权力与福利
-scope: "services/**, apps/**, platform/**, software/**, runtime/boot/kernel/**, tools/**, scripts/**（非测试文件）"
+scope: "runtime/node/**, apps/**, delivery/web/**, runtime/substrate/platform/**, delivery/channel/**, runtime/boot/kernel/**, tools/**, scripts/**（非测试文件）"
 priority: P1
 trigger: 源码中出现网络端点 / 文件系统路径 / 第一方生产域名的字面量时
 constraint: "禁止硬编码 IP、端口、绝对路径、第一方生产域名（清单即守卫 check-agent-rules.js 的 PRODUCTION_HOST_PATTERN）；端点必须从 constants/serviceDefaults.js 导入或由 env 覆盖；dev server 端口冲突必须自动探测下一个可用端口，不得以 EADDRINUSE 崩溃。"

@@ -45,6 +45,10 @@ let localLLMService = null;
 // 免费模型目录 getter（[DESIGN-ARCH-154] 一期供血）。注入便于测试；缺省走
 // dynamicFreeModelService 惰性 require（zen + models.dev 双源，自带 5min 文件缓存）。
 let _freeCatalogGetter = null;
+// 目录数组 → 裸id→窗口 索引 的记忆。按**数组引用**失效：目录服务命中文件缓存时
+// 返回同一份数组 → 索引复用；真刷新出新数组 → 重建。避免每个未知型号都重扫 ~10k 条。
+let _catalogIndexFor = null;
+let _catalogIndex = null;
 
 /**
  * 缺省目录加载：全量目录优先（listCatalogModels，付费自有 key 通道也有真值 ——
@@ -77,6 +81,117 @@ async function _loadFreeCatalogDefault() {
     /* fail-soft: 目录不可得 → 供血跳过 */
   }
   return [];
+}
+
+/**
+ * 把一个内部路由 id 拆成「可能出现在目录里的裸 id」候选。
+ *
+ * 形态实测（2026-09-26 apiAdapter.listModels + 聚合网关名）：
+ *   `api:<pool>:<model>`              → <model>（apiAdapter 三段式）
+ *   `<pool>:<model>`                  → <model>（zen rows `opencode-zen:mimo-…-free`）
+ *   `<vendor>/<model>[:<tag>]`        → <model>（聚合网关 `openrouter/z-ai/glm-6:free`）
+ *   裸 id `agnes-2.0-flash`           → 自身
+ *
+ * ⚠ 含 `/` 的一律走路径形态，**不做池切分**：`openrouter/z-ai/glm-6:free` 的冒号是
+ * tag 分隔符不是池分隔符，无条件按「最后一段」切会切出 `'free'` —— 目录里当然没有
+ * 这个型号，于是必 miss。
+ */
+function _bareModelIdCandidates(modelId) {
+  const id = String(modelId || '').trim();
+  if (!id) {
+    return [];
+  }
+  const out = [id.toLowerCase()];
+  if (id.includes('/')) {
+    const tail = id.slice(id.lastIndexOf('/') + 1).toLowerCase();
+    out.push(tail);
+    out.push(tail.split(':')[0]);
+    return Array.from(new Set(out.filter(Boolean)));
+  }
+  const parts = id.split(':');
+  const bare =
+    parts.length >= 3 && parts[0] === 'api' ? parts.slice(2).join(':') : parts.length >= 2 ? parts[1] : id;
+  out.push(bare.toLowerCase());
+  out.push(bare.toLowerCase().split(':')[0]);
+  return Array.from(new Set(out.filter(Boolean)));
+}
+
+/**
+ * 建 裸id→窗口 索引。**按目录数组引用记忆**：目录服务命中文件缓存时返回同一份
+ * 数组 → 索引复用；真刷新出新数组 → 重建。免得每个未知型号都重扫一遍 ~10k 条。
+ */
+function _freeCatalogByIdMap(catalog) {
+  if (!Array.isArray(catalog) || catalog.length === 0) {
+    return null;
+  }
+  if (_catalogIndexFor === catalog && _catalogIndex) {
+    return _catalogIndex;
+  }
+  const map = new Map();
+  for (const m of catalog) {
+    const cw = Number(m && m.contextWindow);
+    if (m && m.id && cw > 0) {
+      map.set(String(m.id).toLowerCase(), Math.floor(cw));
+    }
+  }
+  _catalogIndexFor = catalog;
+  _catalogIndex = map.size > 0 ? map : null;
+  return _catalogIndex;
+}
+
+async function _loadFreeCatalogArray() {
+  try {
+    const getter = typeof _freeCatalogGetter === 'function' ? _freeCatalogGetter : _loadFreeCatalogDefault;
+    const catalog = await getter();
+    return Array.isArray(catalog) && catalog.length > 0 ? catalog : null;
+  } catch {
+    return null;
+  }
+}
+
+/** 缓存里已有正值（listModels / probe / error-extract / 之前的直查）？ */
+function _hasCachedWindow(cache, key) {
+  const entry = cache.get(key);
+  if (entry === undefined) {
+    return false;
+  }
+  const val = typeof entry === 'number' ? entry : entry && entry.value;
+  return Number(val) > 0;
+}
+
+/**
+ * 目录**直查**：按模型名直接问 models.dev，不要求该型号已被某个 adapter 的
+ * listModels 枚举出来。
+ *
+ * 为什么补这条（[DESIGN-ARCH-154]）：`_feedContextWindowCacheFromFreeCatalog` 只遍历
+ * 「adapter 本轮产出的 rows」，于是「刚发布、端点 /v1/models 还没列出」的新型号查不到
+ * —— 而那恰好是最需要自动兜底的一类。目录本身是全量的（226 家 provider，无白名单），
+ * 按名字直接问即可，不用改任何静态表。
+ *
+ * 已有真值（listModels / probe / error-extract）一律让位；只填缺失。
+ */
+async function feedContextWindowFromCatalogById(gw, modelId) {
+  if (!gw || !modelId || !gw._contextWindowCache || typeof gw._setContextWindowCache !== 'function') {
+    return 0;
+  }
+  if (_hasCachedWindow(gw._contextWindowCache, modelId)) {
+    return 0;
+  }
+  const byBareId = _freeCatalogByIdMap(await _loadFreeCatalogArray());
+  if (!byBareId) {
+    return 0;
+  }
+  for (const candidate of _bareModelIdCandidates(modelId)) {
+    const cw = byBareId.get(candidate);
+    if (cw > 0) {
+      gw._setContextWindowCache(modelId, cw, 4 * 60 * 60 * 1000, 'free-catalog');
+      if (candidate !== String(modelId).toLowerCase()) {
+        gw._setContextWindowCache(candidate, cw, 4 * 60 * 60 * 1000, 'free-catalog');
+      }
+      return cw;
+    }
+  }
+  return 0;
 }
 
 function setAiGatewayRoutingMethodsDeps(deps = {}) {
@@ -1803,6 +1918,12 @@ const AIGatewayRoutingMethods = {
 
   /**
    * 带 TTL 写入上下文窗口缓存。
+   *
+   * 这是全仓上下文窗口写入的**唯一收敛点**（11 个调用点，5 种 source），所以跨重启
+   * 的记忆挂在这里而不是散到各调用点：来源分类与「谁能覆盖谁」由
+   * contextWindowStore 在存储层判定（已验证来源双向覆盖、标称来源只填缺失）。
+   * 落盘是同步小 JSON（temp→rename），沿用 toolCapabilityStore 的 fail-soft 约定。
+   *
    * @param {string} modelId
    * @param {number} value - 上下文窗口 token 数
    * @param {number} ttlMs - TTL 毫秒（默认 4 小时）
@@ -1815,6 +1936,11 @@ const AIGatewayRoutingMethods = {
       expiresAt: ttlMs > 0 ? Date.now() + ttlMs : 0,
       source,
     });
+    try {
+      require('./contextWindowStore').recordLearnedContextWindow(modelId, value, { source });
+    } catch {
+      /* 记忆落盘失败绝不影响本次请求 —— 分母已经是内存里那个真值了 */
+    }
   },
 
   /**
@@ -1975,6 +2101,16 @@ const AIGatewayRoutingMethods = {
           }
         }
 
+        // ── 目录直查级（[DESIGN-ARCH-154]）：不要求该型号已被 adapter 枚举 ──
+        // 上面的供血只遍历「adapter 本轮产出的 rows」，于是「刚发布、端点 /v1/models
+        // 还没列出」的新型号查不到 —— 而那正是最需要自动兜底的一类。目录本身是全量的，
+        // 按名字直接问即可，不用改静态表。
+        try {
+          await feedContextWindowFromCatalogById(this, modelId);
+        } catch {
+          /* fail-soft: 直查失败不影响下面的 probe 级 */
+        }
+
         // ── 实际探测级（[DESIGN-ARCH-154] 热修 4：真值来自上游，不是注册表）────
         // 目录供血值（source 'free-catalog'）是 models.dev 的**标称**占位 —— 用户
         // 要求实际探测后返回：在这里对付费通道（agnes 等，免费门 403 拦探测的 zen
@@ -2045,24 +2181,9 @@ const AIGatewayRoutingMethods = {
     if (!Array.isArray(rows) || rows.length === 0 || !this._contextWindowCache) {
       return 0;
     }
-    let catalog = null;
-    try {
-      const getter = typeof _freeCatalogGetter === 'function' ? _freeCatalogGetter : _loadFreeCatalogDefault;
-      catalog = await getter();
-    } catch {
-      return 0;
-    }
-    if (!Array.isArray(catalog) || catalog.length === 0) {
-      return 0;
-    }
-    const byBareId = new Map();
-    for (const m of catalog) {
-      const cw = Number(m && m.contextWindow);
-      if (m && m.id && cw > 0) {
-        byBareId.set(String(m.id).toLowerCase(), Math.floor(cw));
-      }
-    }
-    if (byBareId.size === 0) {
+    const catalog = await _loadFreeCatalogArray();
+    const byBareId = _freeCatalogByIdMap(catalog);
+    if (!byBareId) {
       return 0;
     }
     let fed = 0;
@@ -2074,30 +2195,22 @@ const AIGatewayRoutingMethods = {
         continue; // adapter 真值在场 → 供血无话事权
       }
       const id = String(row.id);
-      const existing = this._contextWindowCache.get(id);
-      if (existing !== undefined) {
-        const val = typeof existing === 'number' ? existing : existing && existing.value;
-        if (Number(val) > 0) {
-          continue; // 缓存已有真值（listModels/probe/error-extract）→ 不覆盖
+      if (_hasCachedWindow(this._contextWindowCache, id)) {
+        continue; // 缓存已有真值（listModels/probe/error-extract）→ 不覆盖
+      }
+      let cw = 0;
+      let hit = '';
+      for (const candidate of _bareModelIdCandidates(id)) {
+        cw = byBareId.get(candidate);
+        if (cw > 0) {
+          hit = candidate;
+          break;
         }
       }
-      const parts = id.split(':');
-      // 裸 id 解析（实测 2026-09-26 apiAdapter.listModels 两种形态并存）：
-      //   三段 `api:<pool>:<model>` → slice(2)（网关包装前缀）
-      //   两段 `<pool>:<model>`    → slice(1)（zen rows 实测 `opencode-zen:mimo-v2.6-flash-free`，
-      //     旧逻辑把整个两段串当裸 id 查目录 → 必 miss）
-      //   单段 → id 本身
-      const bareId =
-        parts.length >= 3 && parts[0] === 'api'
-          ? parts.slice(2).join(':')
-          : parts.length >= 2
-            ? parts.slice(1).join(':')
-            : id;
-      const cw = byBareId.get(bareId.toLowerCase());
       if (cw > 0) {
         this._setContextWindowCache(id, cw, 4 * 60 * 60 * 1000, 'free-catalog');
-        if (bareId !== id) {
-          this._setContextWindowCache(bareId, cw, 4 * 60 * 60 * 1000, 'free-catalog');
+        if (hit && hit !== id) {
+          this._setContextWindowCache(hit, cw, 4 * 60 * 60 * 1000, 'free-catalog');
         }
         fed += 1;
       }
@@ -2106,4 +2219,9 @@ const AIGatewayRoutingMethods = {
   },
 };
 
-module.exports = { AIGatewayRoutingMethods, setAiGatewayRoutingMethodsDeps };
+module.exports = {
+  AIGatewayRoutingMethods,
+  setAiGatewayRoutingMethodsDeps,
+  // 供单测直调：目录直查不要求 adapter 枚举过该型号（供血级做不到这件事）
+  feedContextWindowFromCatalogById,
+};

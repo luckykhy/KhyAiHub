@@ -16,40 +16,85 @@
       <!-- ============================================================ -->
       <!-- Card 1: API Key Management                                   -->
       <!-- ============================================================ -->
-      <el-col :xs="24" :lg="14">
+      <el-col
+        :xs="24"
+        :lg="14"
+      >
         <el-card shadow="never">
           <template #header>
             <div class="card-header">
               <span class="card-title">API Key 管理</span>
-              <el-tag v-if="currentKey" type="success" size="small">已激活</el-tag>
-              <el-tag v-else type="info" size="small">暂无密钥</el-tag>
+              <el-tag
+                v-if="currentKey"
+                type="success"
+                size="small"
+              >
+                已激活
+              </el-tag>
+              <el-tag
+                v-else
+                type="info"
+                size="small"
+              >
+                暂无密钥
+              </el-tag>
             </div>
           </template>
 
           <!-- Full key (shown only after generate/refresh) -->
-          <div v-if="fullKey" class="full-key-section">
-            <el-alert type="warning" :closable="false" show-icon>
-              <template #title>请立即复制密钥，完整密钥仅显示一次</template>
+          <div
+            v-if="fullKey"
+            class="full-key-section"
+          >
+            <el-alert
+              type="warning"
+              :closable="false"
+              show-icon
+            >
+              <template #title>
+                请立即复制密钥，完整密钥仅显示一次
+              </template>
             </el-alert>
             <div class="key-display-row">
               <code class="full-key-text">{{ fullKey }}</code>
-              <el-button size="small" type="primary" @click="copyFullKey">
+              <el-button
+                size="small"
+                type="primary"
+                @click="copyFullKey"
+              >
                 {{ copied ? '已复制' : '复制' }}
               </el-button>
             </div>
           </div>
 
           <!-- Masked key info -->
-          <div v-else-if="currentKey" class="key-meta">
-            <el-descriptions :column="1" border size="small">
+          <div
+            v-else-if="currentKey"
+            class="key-meta"
+          >
+            <el-descriptions
+              :column="1"
+              border
+              size="small"
+            >
               <el-descriptions-item label="密钥">
                 <code class="masked-key">{{ currentKey.keyPrefix }}••••••••••••</code>
-                <el-button size="small" text type="primary" @click="copyPrefix" style="margin-left: 8px">
+                <el-button
+                  size="small"
+                  text
+                  type="primary"
+                  style="margin-left: 8px"
+                  @click="copyPrefix"
+                >
                   复制前缀
                 </el-button>
               </el-descriptions-item>
-              <el-descriptions-item label="标签">{{ currentKey.label }}</el-descriptions-item>
-              <el-descriptions-item label="创建时间">{{ fmtDate(currentKey.createdAt) }}</el-descriptions-item>
+              <el-descriptions-item label="标签">
+                {{ currentKey.label }}
+              </el-descriptions-item>
+              <el-descriptions-item label="创建时间">
+                {{ fmtDate(currentKey.createdAt) }}
+              </el-descriptions-item>
               <el-descriptions-item label="最后使用">
                 {{ currentKey.lastUsedAt ? fmtDate(currentKey.lastUsedAt) : '从未使用' }}
               </el-descriptions-item>
@@ -57,25 +102,44 @@
           </div>
 
           <!-- No key -->
-          <div v-else class="no-key-hint">
+          <div
+            v-else
+            class="no-key-hint"
+          >
             暂无有效的 API Key。生成一个新的密钥来调用外部信号 API。
           </div>
 
           <!-- Action buttons -->
           <div class="btn-row">
-            <el-button type="primary" :loading="keyLoading" @click="generateKey">
+            <el-button
+              type="primary"
+              :loading="keyLoading"
+              @click="generateKey"
+            >
               生成新密钥
             </el-button>
-            <el-button type="warning" :loading="keyLoading" :disabled="!currentKey" @click="refreshKey">
+            <el-button
+              type="warning"
+              :loading="keyLoading"
+              :disabled="!currentKey"
+              @click="refreshKey"
+            >
               刷新密钥
             </el-button>
-            <el-button type="danger" :loading="keyLoading" :disabled="!currentKey" @click="confirmRevoke">
+            <el-button
+              type="danger"
+              :loading="keyLoading"
+              :disabled="!currentKey"
+              @click="confirmRevoke"
+            >
               吊销密钥
             </el-button>
           </div>
 
           <!-- Usage example -->
-          <el-divider content-position="left">使用示例</el-divider>
+          <el-divider content-position="left">
+            使用示例
+          </el-divider>
           <pre class="code-block"># 使用 API Key 提交交易信号
 curl -X POST {{ baseUrl }}/api/external/signal \
   -H "Content-Type: application/json" \
@@ -87,27 +151,49 @@ curl -X POST {{ baseUrl }}/api/external/signal \
       <!-- ============================================================ -->
       <!-- Card 2: SendKey Binding                                      -->
       <!-- ============================================================ -->
-      <el-col :xs="24" :lg="10">
+      <el-col
+        :xs="24"
+        :lg="10"
+      >
         <el-card shadow="never">
           <template #header>
             <div class="card-header">
               <span class="card-title">微信推送（Server酱）</span>
-              <el-tag v-if="sendKeyBound" type="success" size="small">
-                <el-icon style="vertical-align: -2px"><Check /></el-icon> 已绑定
+              <el-tag
+                v-if="sendKeyBound"
+                type="success"
+                size="small"
+              >
+                <el-icon style="vertical-align: -2px">
+                  <Check />
+                </el-icon> 已绑定
               </el-tag>
-              <el-tag v-else type="danger" size="small">
-                <el-icon style="vertical-align: -2px"><Close /></el-icon> 未绑定
+              <el-tag
+                v-else
+                type="danger"
+                size="small"
+              >
+                <el-icon style="vertical-align: -2px">
+                  <Close />
+                </el-icon> 未绑定
               </el-tag>
             </div>
           </template>
 
           <p class="hint">
             绑定您的
-            <a href="https://sct.ftqq.com" target="_blank" rel="noopener noreferrer">Server酱</a>
+            <a
+              href="https://sct.ftqq.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >Server酱</a>
             SendKey，实时接收微信交易信号推送。
           </p>
 
-          <el-form label-width="90px" style="margin-top: 16px">
+          <el-form
+            label-width="90px"
+            style="margin-top: 16px"
+          >
             <el-form-item label="SendKey">
               <el-input
                 v-model="sendKeyInput"
@@ -117,7 +203,11 @@ curl -X POST {{ baseUrl }}/api/external/signal \
               />
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" :loading="skLoading" @click="saveSendKey">
+              <el-button
+                type="primary"
+                :loading="skLoading"
+                @click="saveSendKey"
+              >
                 绑定
               </el-button>
               <el-button
@@ -132,9 +222,17 @@ curl -X POST {{ baseUrl }}/api/external/signal \
             </el-form-item>
           </el-form>
 
-          <el-divider content-position="left">使用说明</el-divider>
+          <el-divider content-position="left">
+            使用说明
+          </el-divider>
           <ol class="steps-list">
-            <li>前往 <a href="https://sct.ftqq.com" target="_blank" rel="noopener noreferrer">sct.ftqq.com</a> 注册并获取您的 SendKey。</li>
+            <li>
+              前往 <a
+                href="https://sct.ftqq.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >sct.ftqq.com</a> 注册并获取您的 SendKey。
+            </li>
             <li>将 SendKey 粘贴到上方输入框，点击"绑定"。</li>
             <li>当交易信号产生时，系统将自动推送通知到您的微信。</li>
           </ol>

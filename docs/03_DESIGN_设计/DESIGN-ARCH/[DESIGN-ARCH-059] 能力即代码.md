@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # DESIGN-ARCH-059 能力即代码（capability-as-code）
 
 > **核心判断**：Khyos 的「学习」不能过度依赖助手记忆，更应该以**代码**实现。

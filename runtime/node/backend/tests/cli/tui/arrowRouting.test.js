@@ -13,6 +13,7 @@
  *   - context 推导优先级 (shellView > executing > idle > editing)
  *   - 四个 context × 四个方向的完整绑定矩阵(逐条对照 App.js 块 4.7 的历史行为)
  *   - executing 的 ↑ 条件绑定(queueLen)
+ *   - executing 的 ↓ 条件绑定(hasTool):本回合还没有工具可看时不开空框,降为提示
  *   - editing 无条件回溯历史(CC Chat context 语义:不看空、不看换行)
  *   - 非方向键 → null;畸形入参绝不抛
  *
@@ -100,12 +101,30 @@ test('shellView: ↑↓ 滚动一行 · ← 退出面板 · → 吞掉', () => {
   assert.equal(resolveArrowAction({ ...base, key: RIGHT }), 'noop');
 });
 
-test('executing: ↑ 取回排队消息(queueLen>0)· ↓ 开面板 · ←→ 吞掉', () => {
-  const base = { busy: true, empty: true, queueLen: 2 };
+test('executing: ↑ 取回排队消息(queueLen>0)· ↓ 开副屏(已有工具)· ←→ 吞掉', () => {
+  const base = { busy: true, empty: true, queueLen: 2, hasTool: true };
   assert.equal(resolveArrowAction({ ...base, key: UP }), 'queue:editLast');
   assert.equal(resolveArrowAction({ ...base, key: DOWN }), 'subview:openShell');
   assert.equal(resolveArrowAction({ ...base, key: LEFT }), 'noop');
   assert.equal(resolveArrowAction({ ...base, key: RIGHT }), 'noop');
+});
+
+test('executing: 本回合还没有工具调用时 ↓ 降为 peekUnavailable(不开空框)', () => {
+  // 2026-10-09 用户反馈:执行中按 ↓ 得到一个占满主区、只写着「← 返回」的空框,
+  // 「不知道搞什么的」。没有内容可看就不开板,由 App 给一句话说明入口与时机。
+  const base = { busy: true, empty: true, queueLen: 1 };
+  for (const hasTool of [false, undefined, null, 0]) {
+    assert.equal(
+      resolveArrowAction({ ...base, hasTool, key: DOWN }),
+      'subview:peekUnavailable',
+      `hasTool=${String(hasTool)}`
+    );
+  }
+  // 缺省(未传 hasTool)按「还没有工具」处理:宁可不开,也不开空框。
+  assert.equal(resolveArrowAction({ ...base, key: DOWN }), 'subview:peekUnavailable');
+  // ↑ 与 hasTool 无关:排队消息取回只看队列长度。
+  assert.equal(resolveArrowAction({ ...base, hasTool: true, key: UP }), 'queue:editLast');
+  assert.equal(resolveArrowAction({ ...base, hasTool: false, key: UP }), 'queue:editLast');
 });
 
 test('executing: 队列为空时 ↑ 降为 noop(没有可取回的消息)', () => {
@@ -117,8 +136,11 @@ test('executing: 队列为空时 ↑ 降为 noop(没有可取回的消息)', () 
       `queueLen=${String(queueLen)}`
     );
   }
-  // ↓ 不受队列长度影响
-  assert.equal(resolveArrowAction({ ...base, queueLen: 0, key: DOWN }), 'subview:openShell');
+  // ↓ 不受队列长度影响(只受「本回合有没有工具」影响)
+  assert.equal(
+    resolveArrowAction({ ...base, queueLen: 0, hasTool: true, key: DOWN }),
+    'subview:openShell'
+  );
 });
 
 test('idle: ↑↓ 浏览历史 · ← 吞掉(无子视图可退) · → 转发', () => {

@@ -3,7 +3,7 @@ name: 扩展一目录一 manifest
 id: TOOLING-001
 domain: TOOLING
 nature: 约束为主
-scope: "extensions/**（每个内置扩展目录）"
+scope: "delivery/extension/**（每个内置扩展目录）"
 priority: P1
 trigger: "新增、移动或删除任一扩展时"
 constraint: "每个内置扩展必须遵守 [DESIGN-TOOL-002] 的「一目录一 khy.extension.json」契约，删除目录即卸载；两个扩展不得共用一个 manifest。"

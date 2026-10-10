@@ -24,7 +24,7 @@ const path = require('path');
 const understanding = require('../src/services/mediaUnderstanding.js');
 const multimodal = require('../src/services/multimodalInputService.js');
 const transcription = require('../src/services/mediaTranscriptionService.js');
-const { buildVideoMimeCorpus, buildVideoCorpus } = require('../../../delivery/extension/scripts/khy-diagnostics/fuzzVideoCorpus.js');
+const { buildVideoMimeCorpus, buildVideoCorpus } = require('../../../../delivery/extension/scripts/khy-diagnostics/fuzzVideoCorpus.js');
 const CAP_VIDEO = 0b0100;
 // ── 1. mimeToCapability: correct on valid, 0 on malformed, never throws ──
 // ── 2. registry classification never throws on malformed MIME ──

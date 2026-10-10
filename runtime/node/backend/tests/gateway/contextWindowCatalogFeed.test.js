@@ -18,6 +18,7 @@ const assert = require('node:assert');
 const {
   AIGatewayRoutingMethods,
   setAiGatewayRoutingMethodsDeps,
+  feedContextWindowFromCatalogById,
 } = require('../../src/services/gateway/aiGatewayRoutingMethods');
 
 const FULL_ID = 'api:opencode-zen:mimo-v2.6-flash-free';
@@ -320,4 +321,55 @@ test('付费模型让位：adapter 真值 / 缓存正值在场时全量目录绝
     0
   );
   assert.strictEqual(host._contextWindowCache.get('api:agnes:agnes-3.0-flash').value, 400000);
+});
+
+// ── 目录直查级（[DESIGN-ARCH-154]）：不要求 adapter 枚举过该型号 ────────────────
+// 病灶：供血级只遍历「adapter 本轮产出的 rows」。一个刚发布、端点 /v1/models 还没
+// 列出的新型号既不在 rows 里，也就永远查不到目录 —— 而那正是最需要兜底的一类。
+// 直查级按名字直接问目录，静态表因此不必为每个新代型号改一次。
+
+test('直查：端点从未枚举过的型号也能从目录拿到窗口', async () => {
+  injectCatalog([{ id: 'brand-new-9000', provider: 'zhipuai', contextWindow: 1000000 }]);
+  const host = makeHost();
+  // 关键前提：rows 为空（adapter 没列出它），供血级此时完全帮不上忙
+  assert.strictEqual(await AIGatewayRoutingMethods._feedContextWindowCacheFromFreeCatalog.call(host, []), 0);
+  assert.strictEqual(await feedContextWindowFromCatalogById(host, 'brand-new-9000'), 1000000);
+  assert.strictEqual(host._contextWindowCache.get('brand-new-9000').value, 1000000);
+  assert.strictEqual(
+    AIGatewayRoutingMethods.getModelContextWindow.call(host, 'brand-new-9000'),
+    1000000
+  );
+});
+
+test('直查：完整 id 与裸 id 双写，且按裸 id 查得到', async () => {
+  injectCatalog([{ id: 'brand-new-9000', provider: 'zhipuai', contextWindow: 1000000 }]);
+  const host = makeHost();
+  await feedContextWindowFromCatalogById(host, 'api:agnes:brand-new-9000');
+  assert.strictEqual(host._contextWindowCache.get('api:agnes:brand-new-9000').value, 1000000);
+  assert.strictEqual(host._contextWindowCache.get('brand-new-9000').value, 1000000);
+});
+
+test('直查：认得 vendor 路径与 :free 尾巴（聚合网关形态）', async () => {
+  injectCatalog([{ id: 'glm-6', provider: 'zai', contextWindow: 1000000 }]);
+  const host = makeHost();
+  await feedContextWindowFromCatalogById(host, 'openrouter/z-ai/glm-6:free');
+  assert.strictEqual(host._contextWindowCache.get('openrouter/z-ai/glm-6:free').value, 1000000);
+});
+
+test('直查：已有真值（probe/error-extract）时让位，绝不覆盖', async () => {
+  injectCatalog([{ id: 'brand-new-9000', provider: 'zhipuai', contextWindow: 1000000 }]);
+  const host = makeHost();
+  host._contextWindowCache.set('brand-new-9000', { value: 262144, expiresAt: 0, source: 'probe' });
+  assert.strictEqual(await feedContextWindowFromCatalogById(host, 'brand-new-9000'), 0);
+  assert.strictEqual(host._contextWindowCache.get('brand-new-9000').value, 262144);
+});
+
+test('直查：目录里没有 / 目录不可得 / 入参非法 → 0，绝不抛', async () => {
+  injectCatalog([{ id: 'known-one', provider: 'zai', contextWindow: 1000000 }]);
+  const host = makeHost();
+  assert.strictEqual(await feedContextWindowFromCatalogById(host, 'never-heard-of-it'), 0);
+  assert.strictEqual(await feedContextWindowFromCatalogById(host, ''), 0);
+  assert.strictEqual(await feedContextWindowFromCatalogById(null, 'known-one'), 0);
+  injectCatalog([]);
+  assert.strictEqual(await feedContextWindowFromCatalogById(makeHost(), 'known-one'), 0);
 });

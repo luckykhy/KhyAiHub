@@ -63,16 +63,37 @@
             size="large"
             style="width: 100%"
           >
-            <el-option label="您的出生地是？" value="您的出生地是？" />
-            <el-option label="您母亲的姓名是？" value="您母亲的姓名是？" />
-            <el-option label="您的小学名称是？" value="您的小学名称是？" />
-            <el-option label="您最喜欢的颜色是？" value="您最喜欢的颜色是？" />
-            <el-option label="您的第一个宠物名字是？" value="您的第一个宠物名字是？" />
-            <el-option label="您最喜欢的电影是？" value="您最喜欢的电影是？" />
+            <el-option
+              label="您的出生地是？"
+              value="您的出生地是？"
+            />
+            <el-option
+              label="您母亲的姓名是？"
+              value="您母亲的姓名是？"
+            />
+            <el-option
+              label="您的小学名称是？"
+              value="您的小学名称是？"
+            />
+            <el-option
+              label="您最喜欢的颜色是？"
+              value="您最喜欢的颜色是？"
+            />
+            <el-option
+              label="您的第一个宠物名字是？"
+              value="您的第一个宠物名字是？"
+            />
+            <el-option
+              label="您最喜欢的电影是？"
+              value="您最喜欢的电影是？"
+            />
           </el-select>
         </el-form-item>
         
-        <el-form-item prop="securityAnswer" v-if="registerForm.securityQuestion">
+        <el-form-item
+          v-if="registerForm.securityQuestion"
+          prop="securityAnswer"
+        >
           <el-input
             v-model="registerForm.securityAnswer"
             placeholder="输入密保答案"
@@ -86,8 +107,8 @@
             type="primary"
             size="large"
             :loading="loading"
-            @click="handleRegister"
             style="width: 100%"
+            @click="handleRegister"
           >
             注册
           </el-button>
@@ -96,7 +117,9 @@
         <el-form-item>
           <div class="login-link">
             已有账号？
-            <router-link to="/login">立即登录</router-link>
+            <router-link to="/login">
+              立即登录
+            </router-link>
           </div>
         </el-form-item>
       </el-form>

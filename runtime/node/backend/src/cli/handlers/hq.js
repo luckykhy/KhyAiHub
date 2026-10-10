@@ -1234,12 +1234,25 @@ async function cmdScope(ctx, positional) {
 
 // ── release / states / help ──────────────────────────────────────
 
-async function cmdRelease(positional) {
+async function cmdRelease(positional, flags = {}) {
   const c = _chalk();
   const p = H.paths(null);
   const me = H.machineId();
   const target = positional[0] || null;
   const released = [];
+
+  // --expired（restic unlock 的死锁清理语义）：除本机占用外，额外释放
+  // 「任何持有者 + 租约已过期 + 状态仍 doing/in_progress」的条目。pickNext 已判定
+  // 过期 = 可被他人接管，此处把该判定兑现成释放；旧机器 ID 改名后本机 release
+  // 认机不认时清不掉的死占用（实测 2026-09-20 案例）由此收敛。无 --expired 时
+  // 行为逐字节不变。
+  const releaseExpired = _truthy(flags.expired);
+  const expiredStale = (item) => {
+    if (!releaseExpired || !item || !item.claimed_by) return false;
+    if (item.status !== 'doing' && item.status !== 'in_progress') return false;
+    const exp = H.parseIso(item.lease_expires);
+    return exp instanceof Date && !Number.isNaN(exp.getTime()) && exp.getTime() < Date.now();
+  };
 
   for (const [kind, file, listKey] of [
     ['bug', p.bugs, 'bugs'],
@@ -1254,14 +1267,16 @@ async function cmdRelease(positional) {
       if (!item || !item.claimed_by) {
         continue;
       }
-      if (!H.sameMachine(item.claimed_by, me)) {
+      const mine = H.sameMachine(item.claimed_by, me);
+      if (!mine && !expiredStale(item)) {
         continue;
       }
       if (target && item.id !== target) {
         continue;
       }
+      const prevHolder = item.claimed_by;
       H.clearClaim(item);
-      released.push(`${item.id}(${kind})`);
+      released.push(`${item.id}(${kind}${mine ? '' : `, 原 ${prevHolder}, 租约已过期`})`);
       touched = true;
     }
     if (touched) {
@@ -1270,11 +1285,89 @@ async function cmdRelease(positional) {
   }
 
   if (!released.length) {
-    console.log(c.dim(`本机（${me}）当前没有持有任何占用。`));
+    if (releaseExpired) {
+      console.log(c.dim(`本机（${me}）当前没有持有任何占用，也没有过期的死占用。`));
+    } else {
+      console.log(c.dim(`本机（${me}）当前没有持有任何占用。`));
+    }
     return true;
   }
-  console.log(c.green(`[OK] 已释放本机占用: ${released.join(', ')}`));
-  H.log(`release ${released.join(',')} by ${me}`, p.root);
+  console.log(c.green(`[OK] 已释放占用: ${released.join(', ')}`));
+  H.log(`release ${released.join(',')} by ${me}${releaseExpired ? ' --expired' : ''}`, p.root);
+  return true;
+}
+
+/**
+ * 续租（`khy hq renew <ID>`）。持有者本人只刷 `claimed_at/lease_expires` 两个时间字段，
+ * 状态与备注不动——G0 howto 承诺的「由该机器续租」（hqStore pickNext）此前没有命令面，
+ * 唯一路径是重跑 `khy hq next` 全量重盖三字段。etcd LeaseKeepAlive / k8s Lease renewTime 的
+ * 同款语义：续租是持有者一等公民操作，他机/未占用/终态一律拒绝。
+ */
+async function cmdRenew(ctx, positional, flags) {
+  const c = _chalk();
+  const p = H.paths(null);
+  const me = H.machineId();
+  const id = positional[0] || null;
+  if (!id) {
+    console.log(c.yellow('[WARN] 缺少条目 ID：请指定 khy hq renew T-005 或 khy hq renew BUG-001'));
+    process.exitCode = 1;
+    return true;
+  }
+  const rawMinutes = Number(flags.minutes);
+  const minutes = Number.isFinite(rawMinutes) && rawMinutes > 0 ? Math.min(rawMinutes, 10080) : H.LEASE_MINUTES;
+
+  // find in tasks then bugs (ID prefix decides, prefix-less searches both)
+  const isTaskId = /^T-/.test(id);
+  const isBugId = /^BUG-/.test(id);
+  const progressDoc = H.readJsonSafe(p.progress);
+  const bugsDoc = H.readJsonSafe(p.bugs);
+  if (!progressDoc.ok && !bugsDoc.ok) {
+    _say(ctx, 'err', `[ERROR] PROGRESS.json 与 BUGS.json 均无法读取：${progressDoc.error || bugsDoc.error}`);
+    process.exitCode = 1;
+    return true;
+  }
+  const task = !isBugId && progressDoc.ok ? H.findItem(progressDoc.data.tasks, id) : null;
+  const bug = !isTaskId && bugsDoc.ok ? H.findItem(bugsDoc.data.bugs, id) : null;
+  if (!task && !bug) {
+    _say(ctx, 'err', `[ERROR] 未找到条目 ${id}：请用 khy hq status 核对 ID（或该 ID 属于另一台机器尚未拉取的提交）`);
+    process.exitCode = 1;
+    return true;
+  }
+  const item = task || bug;
+  const kind = task ? 'task' : 'bug';
+  const file = task ? p.progress : p.bugs;
+  const doc = task ? progressDoc : bugsDoc;
+  const terminalState = task
+    ? (item.status === 'review' || item.status === 'done')
+    : (item.status === 'pending_verify' || item.status === 'closed');
+
+  if (!item.claimed_by) {
+    _say(ctx, 'warn', `[WARN] ${id} 未被占用，无需续租：khy hq next 领取时会自动写租约`);
+    process.exitCode = 1;
+    return true;
+  }
+  if (terminalState) {
+    _say(ctx, 'warn', `[WARN] ${id} 已到 ${item.status}，不再需要租约（如需重开请先走状态迁移打回）`);
+    process.exitCode = 1;
+    return true;
+  }
+  if (H.heldByOther(item, me)) {
+    _say(ctx, 'warn', `[WARN] ${id} 被 ${item.claimed_by} 占用（租约至 ${item.lease_expires}）：他机存活租约不可由本机续租，请先与该机器确认`);
+    process.exitCode = 2;
+    return true;
+  }
+  if (!H.sameMachine(item.claimed_by, me)) {
+    // 他机占用但租约已过期：不可静默续成自己的——走显式接管
+    _say(ctx, 'warn', `[WARN] ${id} 由 ${item.claimed_by} 占用且租约已过期：请 khy hq release --expired 清理，或 khy hq next ${id} 显式接管`);
+    process.exitCode = 2;
+    return true;
+  }
+
+  const oldExpires = item.lease_expires || '(无)';
+  Object.assign(item, H.stampClaim(item, me, minutes));
+  H.saveJson(file, doc.data);
+  H.log(`renew ${kind} ${id} by ${me} +${minutes}min`, p.root);
+  console.log(c.green(`[OK] 已续租 ${id}：租约至 ${item.lease_expires}（+${minutes} 分钟，原到期 ${oldExpires}）`));
   return true;
 }
 
@@ -1318,7 +1411,8 @@ function _help(c) {
   console.log(c.dim('    khy hq task set T-002 review [--evidence <名称>] [--note "…"]'));
   console.log(c.dim('    khy hq task set T-002 done [--note "…"]        需验收清算通过才放行'));
   console.log(c.dim('    khy hq task note T-002 [--note "…"]             只补备注，不动状态'));
-  console.log(c.dim('    khy hq release [ID]               释放本机占用'));
+  console.log(c.dim('    khy hq release [ID]               释放本机占用（--expired 额外清理过期死占用）'));
+  console.log(c.dim('    khy hq renew T-005 [--minutes 60] 持有者本人续租（只刷时间，不动状态）'));
   console.log(c.dim('    khy hq states                     打印状态机与合法迁移'));
   console.log('');
   console.log(c.dim('    选项: --json 机读输出 · --copy 复制提示词 · --out FILE 写入文件'));
@@ -1386,7 +1480,9 @@ async function handleHq(parsed = {}, ctx = {}) {
       return true;
     }
     case 'release':
-      return cmdRelease(positional);
+      return cmdRelease(positional, flags);
+    case 'renew':
+      return cmdRenew(ctx, positional, flags);
     case 'states':
       return cmdStates();
     default:
@@ -1413,8 +1509,8 @@ module.exports = {
   [MANIFEST_EXPORT_KEY]: {
     name: 'hq',
     description: '任务/Bug 状态真源操作面（works/record/ai/hq/）：状态总览、下一步提示词、状态机迁移',
-    usage: 'hq [status|next|verify|accept|scope|bug new|bug set|bug note|task set|task note|release|states]',
-    subCommands: ['status', 'next', 'verify', 'accept', 'scope', 'bug', 'task', 'release', 'states'],
+    usage: 'hq [status|next|verify|accept|scope|bug new|bug set|bug note|task set|task note|release|renew|states]',
+    subCommands: ['status', 'next', 'verify', 'accept', 'scope', 'bug', 'task', 'release', 'renew', 'states'],
     category: 'workflow',
     handler: handleHq,
   },

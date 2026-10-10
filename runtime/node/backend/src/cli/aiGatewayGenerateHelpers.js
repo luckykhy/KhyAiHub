@@ -842,9 +842,19 @@ function _formatGatewayFailureDetails(result) {
     return s;
   };
 
-  const lines = [];
-  const seen = new Set();
-  let uniqueFailedCount = 0;
+  // 失败墙可读性家族共用一个开关:真因标签 + 同上游合并都吃 KHY_UPSTREAM_TRUTH_LABEL。
+  // 关 → 逐字节回退旧行为(逐适配器一条、裸 [errType]、原始 JSON 体)。
+  let _truthOn = false;
+  try {
+    _truthOn = require('../services/gateway/upstreamTruthLabel').isEnabled(process.env);
+  } catch {
+    _truthOn = false;
+  }
+
+  // 同一上游故障经常经两条适配器通道各记一条(实测:Zen 免费池经 'OpenAI' 与 'api'
+  // 各记一条逐字相同的 429 体)。按「状态+类别+错误串」合并成一行并注明适配器名——
+  // 只在错误串完全相同时合并,不掩盖真实的多通道情况;不同上游撞出同一句话可忽略。
+  const groups = new Map(); // sig -> { adapters:Set, status, kind, shown }
   for (const attempt of failed) {
     const adapter = String(attempt.adapterKey || attempt.provider || 'adapter').trim();
     const adapterSig = normalizeAdapterSig(attempt.adapterKey || attempt.provider || 'adapter');
@@ -853,27 +863,61 @@ function _formatGatewayFailureDetails(result) {
     const kindCode = String(attempt.errorType || '')
       .trim()
       .toLowerCase();
-    const kind = kindCode ? ` [${kindCode}]` : '';
     const err = String(attempt.error || 'unknown error')
       .replace(/\s+/g, ' ')
       .trim()
       .slice(0, 180);
-    const sig = `${adapterSig}|${statusCode}|${kindCode}|${err}`;
-    if (!err || seen.has(sig)) {
+    if (!err) {
       continue;
     }
-    seen.add(sig);
-    uniqueFailedCount += 1;
-    if (lines.length < 6) {
-      lines.push(`- ${adapter}${status}${kind}: ${err}`);
+    // 开 → 按「状态+类别+错误串」合并同一上游故障;关 → 逐适配器签名(旧行为)。
+    const sig = _truthOn
+      ? `${statusCode}|${kindCode}|${err}`
+      : `${adapterSig}|${statusCode}|${kindCode}|${err}`;
+    let group = groups.get(sig);
+    if (!group) {
+      let kind = kindCode ? ` [${kindCode}]` : '';
+      let shown = err;
+      // 上游真因上桌：类别把上游自己写清的原因掩盖成 [network]/[auth] 时，行内改显真因标签
+      // （upstreamTruthLabel 纯叶子，只改展示；门关 / 认不出 → 逐字节保持今日行）。
+      try {
+        const truth = _truthOn
+          ? require('../services/gateway/upstreamTruthLabel').describeUpstream(
+              attempt.error || attempt.message,
+              { errorType: kindCode, env: process.env }
+            )
+          : null;
+        if (truth) {
+          kind = ` [${truth.label}${truth.transient ? '·瞬态' : ''}]`;
+          if (truth.message) {
+            shown = truth.message.replace(/\s+/g, ' ').trim().slice(0, 180);
+          }
+        }
+      } catch {
+        /* 叶子不可用 → 保持今日行 */
+      }
+      group = { adapters: new Set(), status, kind, shown };
+      groups.set(sig, group);
     }
+    if (adapter) {
+      group.adapters.add(adapter);
+    }
+  }
+
+  const entries = Array.from(groups.values());
+  const lines = [];
+  for (const group of entries.slice(0, 6)) {
+    const names = Array.from(group.adapters);
+    const who =
+      names.length > 1 ? `${names[0]} +${names.length - 1} 个适配器` : names[0] || 'adapter';
+    lines.push(`- ${who}${group.status}${group.kind}: ${group.shown}`);
   }
 
   if (lines.length === 0) {
     return '';
   }
-  if (uniqueFailedCount > lines.length) {
-    lines.push(`- ... 还有 ${uniqueFailedCount - lines.length} 条失败记录`);
+  if (entries.length > lines.length) {
+    lines.push(`- ... 还有 ${entries.length - lines.length} 条失败记录`);
   }
   return `真实失败原因:\n${lines.join('\n')}`;
 }

@@ -108,51 +108,60 @@ describe('calculateCost', () => {
 });
 
 describe('estimateCost', () => {
-  test('matches provider key by case-insensitive substring', () => {
-    // 'gpt-4o via openai' contains 'openai' -> OpenAI pricing
-    const usd = estimateCost(1000000, 0, 'something-OpenAI-flavored');
-    expect(usd).toBeCloseTo(0.15, 6);
+  // 本块在 [DESIGN-ARCH-185] §3.4 修复后**整体重写**过。原 6 条断言锁的正是被判定为缺陷的
+  // 那套机制(对模型名做 provider 子串匹配 + 未命中静默落 default 编造价),
+  // 所以它们必须改指向,而不是被删掉:每条都保留了原意图,并新增「缺陷不可复发」的反向断言。
+  // 表注入与家族声明顺序的意图已迁到 src/services/modelPricing.test.js(那里才有意义)。
+
+  test('DEFECT MUST NOT RECUR: a model name containing a provider keyword gets no provider price', () => {
+    // 旧行为:'something-OpenAI-flavored' 子串命中 'OpenAI' → 0.15/1M。
+    // 新行为:模型名一律走模型级表;它不在表里 → unknown → 0,绝不冒领 OpenAI 的价。
+    expect(estimateCost(1000000, 0, 'something-OpenAI-flavored')).toBe(0);
+    // 真在表里的型号才拿得到数字,且拿的是**它自己**那一行:
+    expect(estimateCost(1000000, 0, 'gpt-4o-mini')).toBeCloseTo(0.15, 6);
   });
 
-  test('falls back to default when nothing matches', () => {
-    const usd = estimateCost(1000000, 1000000, 'totally-unknown-model');
-    expect(usd).toBeCloseTo(0.40, 6);
+  test('DEFECT MUST NOT RECUR: unknown model returns 0, not the fabricated default', () => {
+    // 旧行为:'totally-unknown-model' → default {0.1,0.3} → 0.40/1M+0.30 —— 与 claude-opus
+    // 报同一个数,这就是 §3.4 的病灶。
+    expect(estimateCost(1000000, 1000000, 'totally-unknown-model')).toBe(0);
   });
 
-  test('handles empty/undefined model name via default pricing', () => {
+  test('empty/undefined model name yields zero (was: fabricated default)', () => {
     expect(estimateCost(0, 0, undefined)).toBe(0);
-    expect(estimateCost(1000000, 0, '')).toBeCloseTo(0.10, 6);
+    expect(estimateCost(1000000, 0, '')).toBe(0);
   });
 
   test('zero tokens yield zero cost', () => {
     expect(estimateCost(0, 0, 'OpenAI')).toBe(0);
   });
 
-  test('first insertion-order match wins', () => {
-    const table = {
-      'aa': { input: 1, output: 1 },
-      'aab': { input: 100, output: 100 },
-      'default': { input: 0, output: 0 },
-    };
-    // 'aab-model' contains both 'aa' and 'aab'; first key wins.
-    const usd = estimateCost(1000000, 0, 'aab-model', table);
-    expect(usd).toBeCloseTo(1, 6);
+  test('provider-level coarse price is assumed and exits the cost term', () => {
+    // 精确 provider 键仍被识别(状态判定有用),但它的数字**不**经 estimateCost 流出:
+    // assumed 意味着「不知道这个型号多少钱」,拿它算等于猜。
+    expect(estimateCost(1000000, 0, 'OpenAI')).toBe(0);
+    expect(estimateCost(1000000, 0, 'DeepSeek')).toBe(0);
   });
 
-  test('non-object table falls back to built-in table', () => {
-    const usd = estimateCost(1000000, 0, 'openai-ish', null);
-    expect(usd).toBeCloseTo(0.15, 6);
+  test('table arg no longer injects numbers into estimateCost (contract change)', () => {
+    // 旧:第 4 参是 provider 表,注入即可改价。现:数字只来自模型级价格表
+    // (config/models/pricing.json,经 KHY_MODEL_PRICING_JSON / table 注入)。
+    // 这条锁住「注入 provider 表不会凭空产生成本」,防止有人把旧语义悄悄改回去。
+    const injected = { MyProv: { input: 7, output: 7 }, default: { input: 9, output: 9 } };
+    expect(estimateCost(1000000, 0, 'MyProv', injected)).toBe(0);
+    expect(estimateCost(1000000, 0, 'whatever', injected)).toBe(0);
   });
 
   test('malformed table without default yields zero cost', () => {
+    // 仍然 0 —— 但现在 0 的来源是「不可知」而非「缺 default 兜底」,两者在展示上不可区分
+    // 是已知限制(见 modelPricing.js 头注)。断言的是结果不被编造。
     const table = { 'X': { input: 5, output: 5 } };
-    const usd = estimateCost(1000000, 1000000, 'no-match', table);
-    expect(usd).toBe(0);
+    expect(estimateCost(1000000, 1000000, 'no-match', table)).toBe(0);
   });
 
   test('negative tokens propagate (no clamping)', () => {
-    const usd = estimateCost(-1000000, 0, 'no-match-uses-default');
-    expect(usd).toBeCloseTo(-0.10, 6);
+    // 意图不变,但换一个**真有价**的型号:否则 unknown→0 会让这条恒绿而什么都不测。
+    expect(estimateCost(-1000000, 0, 'gpt-4o-mini')).toBeCloseTo(-0.15, 6);
   });
 });
 

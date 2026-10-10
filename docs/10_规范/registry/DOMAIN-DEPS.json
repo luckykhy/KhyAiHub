@@ -9,7 +9,41 @@
     "本守卫只管": "两条 C-7 明列且无人管辖的边：D3 纯净性（共享底座不得反向知道业务/运行时/交付面）与 D5 不可依赖（任何运行时代码不得伸进工程档案区）。"
   },
   "_why_only_two_rules": "声明面（mayDependOn）写全五域，执行面只放开 D3 纯净性与 →D5 两条判据。原因：D2→D1 若即刻判定，实测会把 domain/ 对同层服务的既海量既有边一次性锁进基线——那是「名义边界」还没收敛就先造出一根没人看的数字。判据真源见 [RESEARCH-018] 第 4 节 C-7 与第 2.5 节对照表（顶层已有 check:layout，缺的是域内方向）。升档（把 D1/D2/D4→D3 之外的方向也纳入判定）属人的决定，见 [DESIGN-PROCESS-002] 的 S1-S4 样本门槛。【2026-09-29 更新】Q1 裁决已由人给出（任务 #17 第 19 项/§12.43 裁决表的拍板指令），D2→D1 判据以第三条 enforced 登记落为 S1 观察者；R3 运行时对账（§12.53）证实 196 团在四条诊断命令路径上零第一方成环尝试，首档读数 162（全域口径，§12.43 预估）按基线登记，不阻断。",
-  "updated": "2026-09-29",
+  "updated": "2026-10-10（roots 对账：6 条改指 + D2 增补 business；2 条缓办，见 _roots_reconciliation）",
+  "_roots_reconciliation": {
+    "_status": "✅ 已裁决并部分执行（2026-10-10 [RESEARCH-026] D0′ 批；用户授权「按建议执行」）",
+    "_note": "roots 路径曾与物理树脱节 11 天。check-roots-isomorphic.js 实测 15 条 roots-not-isomorphic，逐条核 git ls-files 后确认 8 条是「物理已搬家、roots 没跟着改」的账面陈旧。后果不是读数难看，而是守卫漏扫真代码：domain-direction 的扫描源取 roots（check-repo-layout.js:1355），指向不存在目录的 root 不贡献任何扫描面。",
+    "_applied": [
+      { "domain": "D1", "from": "kernel", "to": "runtime/boot/kernel", "effect": "关闭盲区：L0 引导内核回到域方向判据覆盖内，实测 0 新增违规" },
+      { "domain": "D1", "from": "platform", "to": "runtime/substrate/platform", "effect": "关闭盲区：L1 Python 启动器层回到覆盖内，实测 0 新增违规" },
+      { "domain": "D4", "from": "software", "to": "delivery/channel", "effect": "账面修正，实测 0 新增违规" },
+      { "domain": "D4", "from": "packaging", "to": "works/ship", "effect": "账面修正，实测 0 新增违规（域归属分歧见 _packaging_divergence）" },
+      { "domain": "D5", "from": "deploy", "to": "works/deploy", "effect": "账面修正，实测 0 新增违规" },
+      { "domain": "D5", "from": "patches", "to": "works/patches", "effect": "账面修正，实测 0 新增违规" },
+      { "domain": "D2", "from": null, "to": "business", "effect": "绞杀者第二根：business/ 尚未建成，先登记目标位；D11 搬完再退旧根" }
+    ],
+    "_deferred": [
+      {
+        "domain": "D4",
+        "from": ["extensions", "tools"],
+        "to": ["delivery/extension", "delivery/extension/tools"],
+        "why": "改指后 domain-direction 193→201，超过 repo-layout-baseline.json 的棘轮 199（该文件 _note 明令「绝不上调来让 CI 变绿」）。新增 6 处全是同一形状：delivery/extension/scripts/{khy-diagnostics,khy-installer}/** require scripts/lib/{docsPaths,modelTypeProviderPlan,storageBaseline,maintainerTriage}（D4→D5 禁止边）。",
+        "cost": "两条路：① 把这 4 个纯叶逻辑助手提升到 D3（runtime/substrate/）——它们本就同时被 D4 扩展脚本与 D5 工程脚本消费，按域模型「被多域复用的共享设施属 D3」是正解，但要改全部消费者的 require；② 重新审定 delivery/extension/scripts/ 的域归属（khy-diagnostics/khy-installer 语义上是工程检具，可能本就不该算 D4）。②有「为了消数字而改分类」的风险，须单独取证。",
+        "blind_spot_cost": "在还清这 6 处之前，delivery/extension/ 整棵树仍在域方向判据覆盖之外——与 kernel/platform 刚被关闭的盲区同型，只是这次有明确标价的债务。"
+      }
+    ],
+    "_why_not_raise_baseline": "repo-layout-baseline.json _note：「只允许下降……绝不上调来让 CI 变绿」。[RESEARCH-017] 防止越改越差的正是这类「让数字好看」的动作。故本批不上调基线，改为：能零成本关闭的盲区立刻关（6 条），有标价债务的盲区留开工单（2 条）。",
+    "_measured": { "findings_before": 15, "findings_after": 10, "domain_direction_before": 193, "domain_direction_after": 195, "baseline_ratchet": 199, "deferred_violations": 6, "guards": "check-repo-layout exit 0 / check-agent-rules exit 0 / check-roots-isomorphic exit 0" },
+    "_packaging_divergence": {
+      "adjudicated": "2026-10-10 用户授权代裁：**维持 D4 归属，只改路径**",
+      "reason": "packaging 物理落点是 works/ship（D5 的 target 前缀），但域归属仍登记 D4。改判 D5 会让既有代码对 works/ship/** 的 require 立刻变成 no-reach-into-archive 违令边；且 packaging 语义是「交付物构建」，贴 D4 的域定义。代价是 check-roots-isomorphic 长期留 1 条 works/ship → delivery/ 的发现，作为这处分歧的可见记号，不藏。",
+      "revisit": "若将来 D5 化（works/ship 内容被认定为纯工程产物），须同批处理其对端 require，不能只改登记。"
+    },
+    "_d13_tool_homes": {
+      "adjudicated": "2026-10-10 用户授权代裁：**不做「改指向」**",
+      "reason": "① 第三方工具配置格式各异，改动面不可预测，且工具升级会覆写配置（.workbuddy* 已实测隔离后自愈复生）；② 收益仅是资源管理器视觉数字；③ [DESIGN-LAY-008] §17.4 已论证根视觉数的残差只能靠退役工具位、不能靠施工。故 D13 从施工批次降级为「退役工具位时才顺带做」的附带动作。"
+    }
+  },
   "source": "[RESEARCH-018] §2.1（域划分依据：5-3-1 §3「5 个顶级域按生命周期或变更频率划分（非技术类型）」）",
   "domains": {
     "D1": {
@@ -17,8 +51,8 @@
       "lifecycle": "平台作为操作系统跑起来：引导、启动器、Node 运行时、CLI 会话",
       "tier": "热",
       "roots": [
-        "kernel",
-        "platform",
+        "runtime/boot/kernel",
+        "runtime/substrate/platform",
         "runtime/node/backend/bin",
         "runtime/node/backend/src/cli",
         "runtime/node/backend/src/routes",
@@ -41,7 +75,8 @@
       "lifecycle": "平台对外提供的业务能力，各自内聚一块业务（messaging / trajectory / project / network / security …）",
       "tier": "热/温",
       "roots": [
-        "runtime/node/backend/src/services/domain"
+        "runtime/node/backend/src/services/domain",
+        "business"
       ],
       "mayDependOn": [
         "D2",
@@ -67,11 +102,11 @@
       "tier": "热/温",
       "roots": [
         "apps",
-        "software",
+        "delivery/channel",
         "extensions",
         "tools",
         "entries",
-        "packaging"
+        "works/ship"
       ],
       "mayDependOn": [
         "D1",
@@ -88,8 +123,8 @@
         "scripts",
         "docs",
         ".github",
-        "deploy",
-        "patches"
+        "works/deploy",
+        "works/patches"
       ],
       "mayDependOn": [
         "D1",

@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # DESIGN-ARCH-030 · 源端构建 + 目标机自愈运行（跨平台 pip 依赖带进度自愈）
 
 > 状态：已实现（packaging/self-heal）

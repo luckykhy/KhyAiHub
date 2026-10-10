@@ -14,7 +14,7 @@
  *   3. 认到就**复用**（managed:false，绝不杀别人的进程），认不到才去找一个**真正空闲**
  *      的端口启动，并把实际端口交给所有消费者。
  *
- * 契约（两侧必须一致，另一侧实现见 apps/ai-frontend/frontendRuntime.mjs）：
+ * 契约（两侧必须一致，另一侧实现见 delivery/web/ai-frontend/frontendRuntime.mjs）：
  *   - 运行时文件名 `ai_frontend_runtime.json`
  *   - 身份端点    `/khy-frontend-identity.json` → { app: 'khy-ai-frontend', port, pid }
  *   - 页面标题含 `KHY`（老 dev server 没有身份端点时的回退判据）

@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # DESIGN-ARCH-065 Hermes Agent v0.18.0 参考学习：判断 / 验证 / 自我进化
 
 > **核心判断**：Hermes Agent v0.18.0 的三大关键词——**判断（MoA）/ 验证（evidence-based

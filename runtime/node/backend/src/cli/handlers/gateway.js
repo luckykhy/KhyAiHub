@@ -1996,7 +1996,16 @@ function persistGatewayPreference(selected) {
       // 钉选租约在 preferredAdapter==='auto' 时直接跳过(aiGatewayGenerateMethod 的 entryKey 判据),
       // 不会触发自动解钉。改它会动 auto 选型的语义,不在本次收敛范围。
       _writeEnvPatch(
-        { GATEWAY_PREFERRED_ADAPTER: autoSelect.AUTO_SENTINEL, GATEWAY_PREFERRED_STRICT: 'true' },
+        {
+          GATEWAY_PREFERRED_ADAPTER: autoSelect.AUTO_SENTINEL,
+          GATEWAY_PREFERRED_STRICT: 'true',
+          // [DESIGN-ARCH-185] §7-⑪：四档共用同一个 auto 语义，差别只在这个档名字段。
+          // 不把它写进 GATEWAY_PREFERRED_MODEL —— 那会让 autoSelectModel 的
+          // `!== 'auto'` 判定与 RUNTIME-006 的钉选租约把它当成「钉了真实模型」处理。
+          ...(selected && typeof selected.mode === 'string' && selected.mode
+            ? { GATEWAY_ROUTING_MODE: selected.mode }
+            : {}),
+        },
         ['GATEWAY_PREFERRED_MODEL']
       );
       return;

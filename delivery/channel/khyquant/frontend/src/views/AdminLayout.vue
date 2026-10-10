@@ -1,19 +1,35 @@
 <template>
-  <el-container class="admin-layout-container" direction="vertical">
+  <el-container
+    class="admin-layout-container"
+    direction="vertical"
+  >
     <el-header class="admin-header">
       <div class="admin-header-content">
         <div class="admin-logo">
           <span>KHY-Quant 管理控制台</span>
         </div>
         <div class="admin-header-actions">
-          <el-button type="primary" size="small" plain @click="goToUserSite">
+          <el-button
+            type="primary"
+            size="small"
+            plain
+            @click="goToUserSite"
+          >
             返回用户端
           </el-button>
           <span class="admin-user-info">
             {{ userStore.user?.username }}
-            <el-tag type="danger" size="small">管理员</el-tag>
+            <el-tag
+              type="danger"
+              size="small"
+            >管理员</el-tag>
           </span>
-          <el-button size="small" @click="handleLogout">退出</el-button>
+          <el-button
+            size="small"
+            @click="handleLogout"
+          >
+            退出
+          </el-button>
         </div>
       </div>
     </el-header>

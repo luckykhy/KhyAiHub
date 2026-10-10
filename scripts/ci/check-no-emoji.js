@@ -134,20 +134,22 @@ const EXEMPT = [
 // ── 管辖范围 ────────────────────────────────────────────────────────────────
 
 const RUNTIME_SOURCE_RE = [
-  /^services\/.*\.(js|mjs|cjs|ts|tsx|jsx)$/,
+  /^runtime\/node\/.*\.(js|mjs|cjs|ts|tsx|jsx)$/,
   /^apps\/.*\.(js|mjs|cjs|ts|tsx|jsx|vue)$/,
-  /^software\/.*\.(js|mjs|cjs|ts|tsx|jsx|vue|py)$/,
-  /^platform\/.*\.(py|js|ts|tsx|vue)$/,
-  /^extensions\/.*\.(js|mjs|cjs|ts|py)$/,
-  /^kernel\/.*\.(py|js)$/,
+  /^delivery\/web\/.*\.(js|mjs|cjs|ts|tsx|jsx|vue)$/,
+  /^delivery\/channel\/.*\.(js|mjs|cjs|ts|tsx|jsx|vue|py)$/,
+  /^runtime\/substrate\/platform\/.*\.(py|js|ts|tsx|vue)$/,
+  /^delivery\/extension\/.*\.(js|mjs|cjs|ts|py)$/,
+  /^runtime\/boot\/kernel\/.*\.(py|js)$/,
   /^scripts\/.*\.(js|py)$/,
   /^tools\/.*\.(py|js)$/,
   // 样式表里的 `content: "✨"` 与 `list-style-type` 一样会**画在屏幕上**，
   // 与 js/ts 同属生成物面；行内 `/* 🔥 说明 */` 由 codePartOf 剥掉，不产生噪声。
   /^apps\/.*\.(css|scss|less)$/,
-  /^services\/.*\.(css|scss|less)$/,
-  /^software\/.*\.(css|scss|less)$/,
-  /^platform\/.*\.(css|scss|less)$/,
+  /^delivery\/web\/.*\.(css|scss|less)$/,
+  /^runtime\/node\/.*\.(css|scss|less)$/,
+  /^delivery\/channel\/.*\.(css|scss|less)$/,
+  /^runtime\/substrate\/platform\/.*\.(css|scss|less)$/,
   // 文档站的浏览器侧资产：`docs/19_资产/site/*.{js,css}` 被每一页 `.html` 引用，
   // 主题开关 / 朗读按钮 / 悬停星标的字形就是在这里长出来的（裁决 4 的第二个盲区）。
   /^docs\/19_资产\/site\/.*\.(js|css)$/,

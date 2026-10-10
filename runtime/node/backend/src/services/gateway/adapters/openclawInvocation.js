@@ -36,8 +36,8 @@ function isEnabled(env) {
 /**
  * 构建 `openclaw agent exec` 的参数数组。固定 `--json`(完整信封输出)+ `--isolated`
  * (忽略用户配置)。尾部的 `__PROMPT__` 占位符由 cliToolAdapter.invokeToolAsync 在 spawn
- * 前替换成真实 prompt(与 Aider 的 `--message __PROMPT__` / OpenCode 的 `run __PROMPT__`
- * 同一机制)——契约「prompt 用位置参数尾部传入」。
+ * 前替换成真实 prompt(与 Aider 的 `--message __PROMPT__` 同一机制)——契约「prompt 用位置参数尾部传入」。
+ * 注意 OpenCode 已改走 stdin(见 opencodeInvocation.js),因为它的提示词会撞 Windows 命令行上限。
  *
  * @returns {string[]}
  */

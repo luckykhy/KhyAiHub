@@ -17,7 +17,7 @@
  *      与 HQ 原行为逐字对齐（`hq_common.py` 的 `BUG_TRANSITIONS` / `TASK_TRANSITIONS`）。
  *   2. **fail-soft**：可预期的失败返回 `{ ok: false, error }`，不抛异常。
  *   3. **路径零硬编码**：仓库根从本文件位置向上推导（`src/cli` → `src` → `backend`
- *      → `services` → 仓库根），不出现盘符或绝对路径。
+ *      → `node` → `runtime` → 仓库根），不出现盘符或绝对路径。
  *   4. **写入是「改完再写」而非「先写后校」**：所有校验在 `saveJson` 之前完成，
  *      失败时磁盘保持原状。
  *
@@ -30,8 +30,8 @@ const path = require('path');
 
 // ── 路径解析 ──────────────────────────────────────────────────────
 
-/** 仓库根：src/cli → src → services/backend → services → <repo> */
-const REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..');
+/** 仓库根：src/cli → src → backend → node → runtime → <repo> */
+const REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..', '..');
 
 /** HQ 数据根（点目录，免于 LAYOUT 层级登记——见 check-repo-layout.js 的点目录豁免）。 */
 const HQ_DIR = path.join(REPO_ROOT, 'works', 'record', 'ai', 'hq');
@@ -490,14 +490,14 @@ function pickNext(bugsDoc, progressDoc, me, now = new Date(), opts = {}) {
         reason: `进行中的租约已过期（持有者 ${t.claimed_by}）`,
         howto: sameMachine(t.claimed_by, me)
           ? `khy hq release ${t.id}，或领回后重新开工`
-          : `与 ${t.claimed_by} 确认是否仍在进行；由该机器续租或释放`,
+          : `与 ${t.claimed_by} 确认是否仍在进行；该机器 khy hq renew ${t.id} 续租，或 khy hq release --expired 清理`,
       })),
       ...staleBugs.map((b) => ({
         kind: 'bug', item: b,
         reason: `排查中的租约已过期（持有者 ${b.claimed_by}）`,
         howto: sameMachine(b.claimed_by, me)
           ? `khy hq release ${b.id}，或领回后继续`
-          : `与 ${b.claimed_by} 确认是否仍在进行；由该机器续租或释放`,
+          : `与 ${b.claimed_by} 确认是否仍在进行；该机器 khy hq renew ${b.id} 续租，或 khy hq release --expired 清理`,
       })),
     ];
     items.sort(
@@ -1159,8 +1159,8 @@ function reviewDoneBlockers(task, repoRoot, fbRoot) {
 /**
  * 从 scope_guard 条目里抽出**机器可核对的路径前缀**。
  *
- * 与 `auditAcceptancePaths` 不同：边界前缀通常是**目录**（`services/backend`、
- * `apps/ai-frontend`），没有扩展名，故不要求扩展名。含盘符的 token
+ * 与 `auditAcceptancePaths` 不同：边界前缀通常是**目录**（`runtime/node/backend`、
+ * `delivery/web/ai-frontend`），没有扩展名，故不要求扩展名。含盘符的 token
  * （`D:/Portable`）不是仓内相对路径，剔除。抽不出前缀的条目是**语义约束**
  * （「不动 keyStore 的对外契约」），机器核不了，由调用方标注「需人工」。
  *

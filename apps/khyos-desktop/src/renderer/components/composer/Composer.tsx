@@ -415,6 +415,7 @@ const MENTION_EMPTY: Record<string, { hint: string; settingsPage?: string; setti
 
 export function Composer({
   modelName,
+  modelId,
   prefillText,
   onPrefillConsumed,
   header,
@@ -428,6 +429,9 @@ export function Composer({
   // 当前选中模型的展示名（App 用 getModelOptionLabel 解析后传入）。此前这个 prop
   // 被解构并使用，却没写进类型里 —— App.tsx 传它时一直是类型错误。
   modelName?: string
+  /** 选中的模型**选项 id**（如 `agnes/agnes-2.0-flash`）。modelName 是显示标签，
+   *  含 `provider · model` 前缀，拿它查上下文窗口会 miss，故分母走这个。 */
+  modelId?: string
   prefillText?: string
   onPrefillConsumed?: () => void
   // 卡片顶端的可选槽位（[DESIGN-ARCH-125] P-01）：空态首页传入工作空间选择行；
@@ -485,10 +489,12 @@ export function Composer({
   const mentionRef = useRef<HTMLDivElement>(null)
   const dispatch = useAppDispatch()
 
-  // 估算当前会话上下文 token 数：汇总消息流文本 + 当前输入，经 host 真源启发式
-  const refreshContextEstimate = useCallback((currentInput: string) => {
+  // 估算当前会话上下文 token 数：汇总消息流文本 + 当前输入，经 host 真源启发式。
+  // model 一并透传：分母按所选模型的真实窗口算（host 侧解析链见 host/index.ts
+  // contextWindowLimit），否则会恒显示 128000。
+  const refreshContextEstimate = useCallback((currentInput: string, currentModel?: string) => {
     const api = (window as unknown as {
-      __KHYOS__?: { estimateContextSize?: (text?: string) => Promise<{ ok: boolean; estimate?: { used: number; total: number }; error?: string }> }
+      __KHYOS__?: { estimateContextSize?: (text?: string, model?: string) => Promise<{ ok: boolean; estimate?: { used: number; total: number }; error?: string }> }
     }).__KHYOS__
     if (!api?.estimateContextSize) {
       setCtxError('上下文估算不可用：preload 未注入 __KHYOS__，请重启应用')
@@ -496,7 +502,7 @@ export function Composer({
     }
     const { messages } = store.getState().message
     const text = [...messages.map((m) => m.content), currentInput].join('\n').slice(0, 400_000)
-    api.estimateContextSize(text).then((res) => {
+    api.estimateContextSize(text, currentModel).then((res) => {
       if (res?.ok && res.estimate) {
         setCtxUsed(res.estimate.used)
         setCtxTotal(res.estimate.total)
@@ -509,19 +515,19 @@ export function Composer({
     })
   }, [])
 
-  // 会话内容或输入变化时刷新估算（输入侧 300ms 防抖，避免逐字符打 host）
+  // 会话内容、输入或所选模型变化时刷新估算（输入侧 300ms 防抖，避免逐字符打 host）
   useEffect(() => {
-    const t = setTimeout(() => refreshContextEstimate(input), 300)
+    const t = setTimeout(() => refreshContextEstimate(input, modelId), 300)
     return () => clearTimeout(t)
-  }, [input, refreshContextEstimate])
+  }, [input, modelId, refreshContextEstimate])
 
   // 消息流追加（ai:chunk 经 appendMessageContent 更新 store）时同步刷新
   useEffect(() => {
     return store.subscribe(() => {
       const { isStreaming } = store.getState().message
-      if (isStreaming) refreshContextEstimate('')
+      if (isStreaming) refreshContextEstimate('', modelId)
     })
-  }, [refreshContextEstimate])
+  }, [modelId, refreshContextEstimate])
 
   // 「添加上下文」菜单 → 添加附件 / 上传图片：走真实文件选择对话框
   // （fs:selectFiles），加入的是用户挑中的真实路径；取消则不动。

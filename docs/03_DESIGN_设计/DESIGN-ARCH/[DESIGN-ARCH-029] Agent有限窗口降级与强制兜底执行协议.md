@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # DESIGN-ARCH-029 · Agent「有限窗口降级与强制兜底」执行协议
 
 > 状态：已实现（services/backend）

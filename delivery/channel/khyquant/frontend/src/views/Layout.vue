@@ -5,12 +5,22 @@
     <router-view />
   </MobileLayout>
   
-  <el-container v-else class="layout-container">
-    <el-header class="top-header" :class="{ 'is-collapsed': isHeaderCollapsed }">
+  <el-container
+    v-else
+    class="layout-container"
+  >
+    <el-header
+      class="top-header"
+      :class="{ 'is-collapsed': isHeaderCollapsed }"
+    >
       <div class="header-content">
         <div class="header-left">
           <div class="logo-section">
-            <img src="/logo.png" alt="KHY量化交易系统" class="logo-image" />
+            <img
+              src="/logo.png"
+              alt="KHY量化交易系统"
+              class="logo-image"
+            >
           </div>
           
           <el-menu
@@ -24,10 +34,10 @@
           >
             <el-menu-item
               v-for="item in allMenuItems"
+              v-show="!item.adminOnly || isAdmin"
               :key="item.path"
               :index="item.path"
               :class="{ 'admin-only-item': item.adminOnly }"
-              v-show="!item.adminOnly || isAdmin"
             >
               <el-icon><component :is="item.icon" /></el-icon>
               <span>{{ item.label }}</span>
@@ -36,16 +46,24 @@
         </div>
         
         <div class="header-actions">
-          <el-tag size="small" type="info" effect="plain" class="mode-tag">
+          <el-tag
+            size="small"
+            type="info"
+            effect="plain"
+            class="mode-tag"
+          >
             {{ modeLabel }}
           </el-tag>
 
-          <div v-if="isAdmin" class="admin-entrance">
+          <div
+            v-if="isAdmin"
+            class="admin-entrance"
+          >
             <el-button 
               type="primary" 
               size="small" 
-              @click="goToAdmin"
               class="admin-btn"
+              @click="goToAdmin"
             >
               <el-icon><Setting /></el-icon>
               管理后台
@@ -54,22 +72,48 @@
           
           <el-dropdown @command="handleCommand">
             <span class="user-info">
-              <img src="/school-badge.svg" alt="用户" class="user-badge" />
+              <img
+                src="/school-badge.svg"
+                alt="用户"
+                class="user-badge"
+              >
               {{ userStore.user?.username }}
               <el-icon><ArrowDown /></el-icon>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item command="profile">个人中心</el-dropdown-item>
-                <el-dropdown-item command="api-keys">API Key 管理</el-dropdown-item>
-                <el-dropdown-item command="view-auto" divided>界面: 自动适配</el-dropdown-item>
-                <el-dropdown-item command="view-mobile">界面: 强制手机版</el-dropdown-item>
-                <el-dropdown-item command="view-desktop">界面: 强制电脑版</el-dropdown-item>
-                <el-dropdown-item v-if="isAdmin" command="admin" divided>
+                <el-dropdown-item command="profile">
+                  个人中心
+                </el-dropdown-item>
+                <el-dropdown-item command="api-keys">
+                  API Key 管理
+                </el-dropdown-item>
+                <el-dropdown-item
+                  command="view-auto"
+                  divided
+                >
+                  界面: 自动适配
+                </el-dropdown-item>
+                <el-dropdown-item command="view-mobile">
+                  界面: 强制手机版
+                </el-dropdown-item>
+                <el-dropdown-item command="view-desktop">
+                  界面: 强制电脑版
+                </el-dropdown-item>
+                <el-dropdown-item
+                  v-if="isAdmin"
+                  command="admin"
+                  divided
+                >
                   <el-icon><Setting /></el-icon>
                   管理后台
                 </el-dropdown-item>
-                <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
+                <el-dropdown-item
+                  command="logout"
+                  divided
+                >
+                  退出登录
+                </el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -77,14 +121,20 @@
       </div>
     </el-header>
     
-    <div class="header-toggle-btn" @click="toggleHeader">
+    <div
+      class="header-toggle-btn"
+      @click="toggleHeader"
+    >
       <el-icon>
         <ArrowDownBold v-if="isHeaderCollapsed" />
         <ArrowUpBold v-else />
       </el-icon>
     </div>
     
-    <div class="main-content" :class="{ 'header-collapsed': isHeaderCollapsed }">
+    <div
+      class="main-content"
+      :class="{ 'header-collapsed': isHeaderCollapsed }"
+    >
       <router-view />
     </div>
   </el-container>

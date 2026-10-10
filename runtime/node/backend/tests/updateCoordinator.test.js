@@ -33,7 +33,7 @@ function gitFixture(overrides = {}) {
 function sourceFs() {
   return {
     existsSync(file) {
-      return /services[\\/]backend[\\/]package\.json$/.test(file);
+      return /runtime[\\/]node[\\/]backend[\\/]package\.json$/.test(file);
     },
     readFileSync(file) {
       if (/package\.json$/.test(file)) return '{"version":"1.1.10"}';
@@ -53,7 +53,7 @@ describe('updateCoordinator', () => {
   test('detects a source checkout and compares commits after fetch', async () => {
     const git = gitFixture();
     const state = await coordinator.checkUpdate({
-      cwd: 'C:/repo/services/backend',
+      cwd: 'C:/repo/runtime/node/backend',
       fs: sourceFs(),
       git: git.run,
       force: true,
@@ -347,7 +347,7 @@ describe('updateCoordinator provenance', () => {
     return {
       existsSync(file) {
         // 只认源码仓；.portable/BUILD-INFO.json 一律不存在，避免走便携分支
-        return /services[\\/]backend[\\/]package\.json$/.test(file);
+        return /runtime[\\/]node[\\/]backend[\\/]package\.json$/.test(file);
       },
       readFileSync(file) {
         if (/package\.json$/.test(file)) return '{"version":"1.1.11"}';
@@ -526,7 +526,7 @@ describe('updateCoordinator provenance async', () => {
   function repoFs() {
     return {
       existsSync(file) {
-        return /services[\\/]backend[\\/]package\.json$/.test(file);
+        return /runtime[\\/]node[\\/]backend[\\/]package\.json$/.test(file);
       },
       readFileSync(file) {
         if (/package\.json$/.test(file)) return '{"version":"1.1.11"}';

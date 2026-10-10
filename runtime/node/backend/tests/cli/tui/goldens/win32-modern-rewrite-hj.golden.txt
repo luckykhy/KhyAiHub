@@ -1,0 +1,2 @@
+\x1b[H\x1b[Jstatic-banner
+frame-body

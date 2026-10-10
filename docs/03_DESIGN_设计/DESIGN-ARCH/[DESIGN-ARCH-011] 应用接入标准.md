@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 <!-- 文档分类: DESIGN-ARCH-011 | 阶段: 设计 | 原路径: docs/生态架构/应用接入标准.md -->
 # khyos 生态应用接入标准（Ecosystem App Standard）
 

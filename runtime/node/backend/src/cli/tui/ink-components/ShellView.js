@@ -9,6 +9,11 @@
  * in, the panel reflects it; if the backend later streams incremental tool
  * output, this panel lights up automatically. Bounded height + a scroll offset
  * keep it within the viewport (anti-staircase, consistent with StreamingBlock).
+ *
+ * ↓ only opens it when the current turn already has a tool call: with nothing to
+ * peek at, an open panel is just an empty frame filling the main area. That
+ * condition lives in `arrowRouting` (executing.down → subview:peekUnavailable),
+ * judged on this module's own `latestTool` so the panel and the key agree.
  */
 const React = require('react');
 
@@ -139,6 +144,10 @@ function ShellView({ streaming, scroll = 0 }) {
 
   const tool = _latestTool(streaming);
   if (!tool) {
+    // 防御分支:本回合还没有工具调用时,↓ 的绑定已降级为 subview:peekUnavailable
+    // (arrowRouting),正常按不出来 —— 没有可看的东西就不该摆一个占满主区的空框。
+    // 留这条是因为本组件也可能被别处渲染;真渲染到时它得自己说清身份、入口与生命周期,
+    // 而不是只留一句「← 返回」(2026-10-09 用户反馈:执行中的 ↓ 不知是干什么的)。
     return h(
       Box,
       {
@@ -149,7 +158,9 @@ function ShellView({ streaming, scroll = 0 }) {
         paddingX: 1,
       },
       h(Text, { color: 'cyan', bold: true }, '⊟ 实时输出'),
-      h(Text, { dimColor: true }, '（暂无正在执行的工具）· ← 返回')
+      h(Text, { dimColor: true }, '本回合暂无工具调用'),
+      h(Text, { dimColor: true }, '工具开始运行后，其命令与输出显示于此'),
+      h(Text, { dimColor: true }, '← 关闭 · 回合结束后自动关闭')
     );
   }
 
@@ -203,10 +214,13 @@ function ShellView({ streaming, scroll = 0 }) {
     );
   }
 
-  // Scroll/return affordance.
+  // Scroll/return affordance. 页脚说清两件事:怎么走(← 关闭)、什么时候自己走(回合结束
+  // 自动关闭)—— 此前只有「← 返回」,用户既不知道这框是哪个键打开的,也不知道它会自己消失。
   const scrollInfo =
     maxScroll > 0 ? `  ·  ${off + 1}-${off + body.length}/${allLines.length}  (↑↓ 滚动)` : '';
-  children.push(h(Text, { key: 'hint', dimColor: true }, `← 返回${scrollInfo}`));
+  children.push(
+    h(Text, { key: 'hint', dimColor: true }, `← 关闭${scrollInfo} · 回合结束后自动关闭`)
+  );
 
   return h(
     Box,
@@ -266,7 +280,9 @@ function _renderAgentPeek({ h, Box, Text, tree, scroll }) {
 
   const scrollInfo =
     maxScroll > 0 ? `  ·  ${off + 1}-${off + body.length}/${flat.length}  (↑↓ 滚动)` : '';
-  children.push(h(Text, { key: 'hint', dimColor: true }, `← 返回${scrollInfo}`));
+  children.push(
+    h(Text, { key: 'hint', dimColor: true }, `← 关闭${scrollInfo} · 回合结束后自动关闭`)
+  );
 
   return h(
     Box,
@@ -282,3 +298,6 @@ function _renderAgentPeek({ h, Box, Text, tree, scroll }) {
 }
 
 module.exports = ShellView;
+// 供 App.js 的方向键判定复用「当前/最近一次工具」这同一把尺(单一真源):↓ 只在它有值时
+// 才有内容可看,否则打开的就是一个空框。
+module.exports.latestTool = _latestTool;

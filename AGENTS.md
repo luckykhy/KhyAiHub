@@ -1,7 +1,7 @@
 # AGENTS.md — AI 与人工维护指南
 
 <!-- RULES-REGISTRY: RUNTIME-001, RUNTIME-002, RUNTIME-003, RUNTIME-004, RUNTIME-007, RUNTIME-008, RUNTIME-009, RUNTIME-010, PROCESS-008, PROCESS-010, PROCESS-013, PROCESS-014 -->
-<!-- MIRROR: AGENTS.html -->
+<!-- 根级 .md 自 2026-09-28 裁决起不再生成 .html 孪生；旧 AGENTS.html 为遗留文件，待整理 -->
 
 
 > 本文件同时服务于 AI 编码助手（Claude Code、Codex、Cursor、Kiro、ZCode）
@@ -93,7 +93,7 @@ AI 生成的代码最容易露馅的不是语法，而是**过度工整**：每�
   （Qoder 侧有 `/deslop` skill 承担同一件事；没有它时人工过一遍即可。）
 
 > 放置位置有硬性原因：运行时读取指令文件时有 **8000 字符/文件静默截断**
-> （`services/backend/src/services/instructionFileService.js` 的 `MAX_FILE_CHARS`，
+> （`runtime/node/backend/src/services/instructionFileService.js` 的 `MAX_FILE_CHARS`，
 > 守卫 `scripts/ci/check-agent-docs.js` 规则 `DOCS-003`）。本文件截断点在本节之后，
 > 而「代码风格」节（全文后半）已在截断之外——**任何要求 AI 真的读到的约定都必须放在截断点之前**。
 
@@ -101,12 +101,12 @@ AI 生成的代码最容易露馅的不是语法，而是**过度工整**：每�
 
 ## 项目概览
 
-**Khy OS** 是一个通过 PyPI（`pip install khy-os`）和 npm（`@khy-os/khy-os`）分发的 AI 平台操作系统。它启动一个可扩展的应用运行时。**khyquant（量化交易终端）是独立项目**（人 2026-09-28 明示），它**连接** Khy OS 使用，不是 Khy OS 的内置组成部分；本仓 `software/khyquant/` 与 `khy-quant` 打包模块是它**随平台分发/接入的载体**（打包事实，不改变其独立项目与独立著作权主体的定位）。
+**Khy OS** 是一个通过 PyPI（`pip install khy-os`）和 npm（`@khy-os/khy-os`）分发的 AI 平台操作系统。它启动一个可扩展的应用运行时。**khyquant（量化交易终端）是独立项目**（人 2026-09-28 明示），它**连接** Khy OS 使用，不是 Khy OS 的内置组成部分；本仓 `delivery/channel/khyquant/` 与 `khy-quant` 打包模块是它**随平台分发/接入的载体**（打包事实，不改变其独立项目与独立著作权主体的定位）。
 
-- **Python 层**（`platform/khy_platform/`）：轻量启动器，负责拉起 Node.js
-- **Node.js 后端**（`services/backend/`）：所有业务逻辑（CLI、AI 网关、各类服务）
-- **Vue.js 前端**：`apps/ai-frontend/`（AI 平台 UI）与
-  `software/khyquant/frontend/`（独立项目 khyquant 的交易 UI，随平台分发）
+- **Python 层**（`runtime/substrate/platform/khy_platform/`）：轻量启动器，负责拉起 Node.js
+- **Node.js 后端**（`runtime/node/backend/`）：所有业务逻辑（CLI、AI 网关、各类服务）
+- **Vue.js 前端**：`delivery/web/ai-frontend/`（AI 平台 UI）与
+  `delivery/channel/khyquant/frontend/`（独立项目 khyquant 的交易 UI，随平台分发）
 
 ---
 
@@ -130,7 +130,7 @@ AI 生成的代码最容易露馅的不是语法，而是**过度工整**：每�
 **在新机器上开始任何开发前**，按以下步骤接入（可把本节原样交给本机任意编码 AI 代为执行）：
 
 1. **克隆本仓库**（唯一仓库）：`git clone <本仓库远端>`；已存在则 `git pull --ff-only`
-2. **确认状态真源可读**：运行 `node services/backend/bin/khy.js hq verify`，
+2. **确认状态真源可读**：运行 `node runtime/node/backend/bin/khy.js hq verify`，
    应为 `0 error / 0 warning`（校验 `works/record/ai/hq/` 的任务/Bug 计数、`next_id`、提示词占位符）
 3. **同步体检**：`node scripts/sync/sync-status.js` 应显示本仓库的分支 / 领先落后 / 未提交数
 4. **周期拉取**（可选）：注册 Windows 计划任务运行 `.khyos/autopull.js`
@@ -153,12 +153,11 @@ AI 生成的代码最容易露馅的不是语法，而是**过度工整**：每�
 
 > **新增文件 / 新增顶层目录 / 新增 `npm run` 入口前，先读
 > `docs/10_规范/DESIGN-LAY/[DESIGN-LAY-005] 仓库层级板块规范.md`** —— 它是顶层目录层级
-> （L0 `kernel/` → L1 `platform/` → L2 `services/` → L3 `apps/` → L4 `software/` →
-> L5 `extensions/` → L6 `tools/`）、允许的依赖方向、`docs/` 两轴命名与任务入口命名规约的
+> （L0-L6 名册与 2026-10 方案 P 物理化后的落点——L1/L2 并入 `runtime/`（`runtime/substrate`、`runtime/node`）、L4/L5 并入 `delivery/`（`delivery/channel`、`delivery/extension`）——以 `scripts/ci/check-repo-layout.js` 的 `LAYERS` 名册为准）、允许的依赖方向、`docs/` 两轴命名与任务入口命名规约的
 > **单一真源**，由 `npm run check:layout` 强制执行。本节只是运行时调用链的速查，不覆盖它。
 
 ```
-User → khy command → Python cli.py → Node.js services/backend/bin/khy.js
+User → khy command → Python cli.py → Node.js runtime/node/backend/bin/khy.js
                                           │
                          ┌────────────────┼────────────────┐
                          ▼                ▼                ▼
@@ -170,13 +169,13 @@ User → khy command → Python cli.py → Node.js services/backend/bin/khy.js
 
 | 什么 | 文件 | 用途 |
 |------|------|---------|
-| CLI 路由器 | `services/backend/src/cli/router.js` | 命令解析 + 分派（大 switch） |
-| 别名表 | `services/backend/src/cli/aliases.js` | 中文/拼音 → 英文映射 |
-| REPL 循环 | `services/backend/src/cli/repl.js` | readline 接口 + AI 模式 |
-| AI 网关 | `services/backend/src/services/gateway/aiGateway.js` | 统一的多供应商 AI 调用 |
-| Token 统计 | `services/backend/src/services/tokenUsageService.js` | 以人民币计的用量统计 |
-| 训练 | `services/backend/src/services/modelTrainingService.js` | LoRA/蒸馏/导出 |
-| 回测 | `services/backend/src/services/backtestEngine.js` | 策略模拟 |
+| CLI 路由器 | `runtime/node/backend/src/cli/router.js` | 命令解析 + 分派（大 switch） |
+| 别名表 | `runtime/node/backend/src/cli/aliases.js` | 中文/拼音 → 英文映射 |
+| REPL 循环 | `runtime/node/backend/src/cli/repl.js` | readline 接口 + AI 模式 |
+| AI 网关 | `runtime/node/backend/src/services/gateway/aiGateway.js` | 统一的多供应商 AI 调用 |
+| Token 统计 | `runtime/node/backend/src/services/tokenUsageService.js` | 以人民币计的用量统计 |
+| 训练 | `runtime/node/backend/src/services/modelTrainingService.js` | LoRA/蒸馏/导出 |
+| 回测 | `runtime/node/backend/src/services/backtestEngine.js` | 策略模拟 |
 
 ### 治理总纲
 
@@ -255,7 +254,7 @@ P2 规则走基线棘轮（`scripts/ci/ruleguard-baseline.json`，只降不升�
 
 ## 如何新增一个 AI 适配器（2 步）
 
-1. 创建 `services/backend/src/services/gateway/adapters/yourAdapter.js`，实现 `generate(prompt, options)` → `{ text, tokenUsage, model }`
+1. 创建 `runtime/node/backend/src/services/gateway/adapters/yourAdapter.js`，实现 `generate(prompt, options)` → `{ text, tokenUsage, model }`
 2. 在 `aiGateway.js` 的 adapters 数组中注册它
 
 ---
@@ -310,39 +309,40 @@ khy status           # 查看系统状态
 ## 版本同步（= 红线 R3 / `PROCESS-002`）
 
 由 `scripts/ci/check-version-sync.js` 强制（pre-commit / CI / bootstrap）。
-该脚本的 `specs` 数组校验**三条独立的版本轨道**（共 **9 个真源**）：组内必须
+该脚本的 `specs` 数组校验**三条独立的版本轨道**（共 **10 个真源**）：组内必须
 完全一致，组间刻意不同。**代码即真源**——文档表述与守卫不一致时以守卫为准。
 
 **轨道 1（G1）—— 主 khy-os 包（4 源，组内必须完全一致）**：
 
 1. `pyproject.toml` → `[project] version`
-2. `packaging/npm/package.json` → `version`（npm 渠道清单）
-3. `services/backend/package.json` → `version`
-4. `packaging/modules/modules.json` → `version`（模块化打包清单，各模块构建时继承此版本）
+2. `works/ship/npm/package.json` → `version`（npm 渠道清单）
+3. `runtime/node/backend/package.json` → `version`
+4. `works/ship/modules/modules.json` → `version`（模块化打包清单，各模块构建时继承此版本）
 
-**轨道 2（G2）—— ai-backend 生态（2 源，组内必须一致）**：
+**轨道 2（G2）—— ai-backend 生态（3 源，组内必须一致）**：
 
-1. `services/ai-backend/package.json` → `version`
-2. `platform/packages/shared/package.json` → `version`（`@khy/shared`）
+1. `runtime/node/ai-backend/package.json` → `version`
+2. `runtime/substrate/platform/packages/shared/package.json` → `version`（`@khy/shared`）
+3. `runtime/substrate/platform/packages/plugin-sdk/package.json` → `version`（`@khy/plugin-sdk`）
 
 **轨道 3（G3）—— 浏览器 UI 包（3 源，依赖声明必须精确对齐）**：
 
-1. `platform/packages/ui-shared/package.json` → `version`
-2. `apps/ai-frontend/package.json` → 其 `@khy/ui-shared` 依赖声明
-3. `software/khyquant/frontend/package.json` → 其 `@khy/ui-shared` 依赖声明
+1. `runtime/substrate/platform/packages/ui-shared/package.json` → `version`
+2. `delivery/web/ai-frontend/package.json` → 其 `@khy/ui-shared` 依赖声明
+3. `delivery/channel/khyquant/frontend/package.json` → 其 `@khy/ui-shared` 依赖声明
 
 G2 与 G1 的版本**刻意不同**（例如 1.1.x vs 1.6.x）：ai-backend 与
 `@khy/shared` 作为捆绑单元随 pip wheel 一起发布、共同开发，因此共享一条
 独立的版本轨道，脚本将其作为单独分组校验。G3 是**依赖声明对齐**而非版本号
 对齐：两个前端应用各自保留独立发布版本，但它们的 `@khy/ui-shared` 依赖必须
-精确等于 `platform/packages/ui-shared/package.json` 的版本。
+精确等于 `runtime/substrate/platform/packages/ui-shared/package.json` 的版本。
 
 > **更正记录（2026-09-15，裁决 X-002）**：本节原写「两个独立的版本轨道（共 6 个真源）」，
 > 漏登 G3 浏览器 UI 组。`[OPS-MAN-169]` §六 另称「三个版本真源」，`[DESIGN-ARCH-106]` §9.2
-> 只列 4 个文件——三处口径互不相同，现已统一以 `specs` 数组为准（三轨道 9 源），
+> 只列 4 个文件——三处口径互不相同，现已统一以 `specs` 数组为准（三轨道 10 源），
 > `[OPS-MAN-169]` §六 与 `[DESIGN-ARCH-106]` §9.2 改为指向本节。
 
-不要编辑 `platform/khy_platform/__init__.py`：它的 `__version__` 从
+不要编辑 `runtime/substrate/platform/khy_platform/__init__.py`：它的 `__version__` 从
 `pyproject.toml` / 已安装元数据中动态解析。在那里硬编码一个字面量
 `__version__ = "1.2.3"` 会让 `check-version-sync.js` 故意失败
 （它防止版本漂移被重新引入）。
@@ -351,7 +351,7 @@ G2 与 G1 的版本**刻意不同**（例如 1.1.x vs 1.6.x）：ai-backend 与
 
 > 本节是**指针**，不是真源。真源：
 > [`[DESIGN-SEMVER-002] 版本管理与发布触发规范`](docs/10_规范/其它规范/[DESIGN-SEMVER-002]%20版本管理与发布触发规范.md)。
-> 上一节回答「9 个真源对不对得上」，本节回答「**什么时候动它、动完谁推出去**」。
+> 上一节回答「10 个真源对不对得上」，本节回答「**什么时候动它、动完谁推出去**」。
 
 四句话速查（细节一律回真源）：
 
@@ -375,9 +375,9 @@ G2 与 G1 的版本**刻意不同**（例如 1.1.x vs 1.6.x）：ai-backend 与
 > 若要把推 tag 也自动化，那是修改 P0 的决定，**必须先改 `PROCESS-001` 并单独评审**。
 
 `scripts/release/publish-dual.sh` 在发布时从单一 `--version` 输入同步
-`pyproject.toml`、`packaging/npm/package.json` 与 `services/backend/package.json`
-三处 G1 真源；`packaging/modules/modules.json` 由构建流程/人工维护，
-最终由 `scripts/ci/check-version-sync.js` 统一校验 G1 全 4 源、G2 全 2 源与
+`pyproject.toml`、`works/ship/npm/package.json` 与 `runtime/node/backend/package.json`
+三处 G1 真源；`works/ship/modules/modules.json` 由构建流程/人工维护，
+最终由 `scripts/ci/check-version-sync.js` 统一校验 G1 全 4 源、G2 全 3 源与
 G3 全 3 源的组内一致性。CI 门在发布之外强制同一不变式。
 
 ---
@@ -419,7 +419,7 @@ G3 全 3 源的组内一致性。CI 门在发布之外强制同一不变式。
 1. 优先编辑现有文件，而非新建文件
 2. 遵循既定模式（AI 用适配器模式，命令用 handler 模式）
 3. 任何新命令都要同步更新 `aliases.js` 中的别名表
-4. 用 `node -e "require('./services/backend/src/...')"` 做快速校验
+4. 用 `node -e "require('./runtime/node/backend/src/...')"` 做快速校验
 5. 改动后运行 `khy doctor` 验证系统健康
 
 ---
@@ -612,7 +612,7 @@ G3 全 3 源的组内一致性。CI 门在发布之外强制同一不变式。
 ✓  读取 src/index.js
 
 ✗  运行 bash
-✓  执行 npm run build
+✓  执行 vite build
 
 ✗  运行 grep
 ✓  搜索 function main
@@ -656,7 +656,7 @@ G3 全 3 源的组内一致性。CI 门在发布之外强制同一不变式。
 ✓  … 等待中 · 读取 src/index.js
 
 ✗  … 请稍候...
-✓  … 等待中 · 执行 npm run build (已 30s)
+✓  … 等待中 · 执行 vite build (已 30s)
 ```
 
 **实现**：从 `detail` 或 `label` 获取当前活动目标，加上等待指示器和耗时。
@@ -874,7 +874,7 @@ ANSI 滚动区转义（DECSTBM），以及**无退出路径的明显死循环**
 （`while (true)` / `for (;;)` / `while True:` 体内无 break/return/throw/exit；
 刻意的无限循环用 `khy-allow-unbounded-loop: <理由>` 注释豁免，warning 级）。
 
-运行时兜底：交互会话默认装有 `services/backend/src/services/sessionWatchdog.js`（门控
+运行时兜底：交互会话默认装有 `runtime/node/backend/src/services/sessionWatchdog.js`（门控
 `KHY_SESSION_WATCHDOG`，默认开）——异步卡死（空闲超限）与同步阻塞（事件循环
 节拍漂移）都会诚实上报并给出诊断，**绝不自动杀进程**；真·同步死循环无法自报
 （物理边界），由本静态体检在提交前拦截。
@@ -950,7 +950,7 @@ ANSI 滚动区转义（DECSTBM），以及**无退出路径的明显死循环**
 
 **申报口径（指针，值以机器可读真源为准）**：登记客体 = **Khy OS 平台底座**（AI 网关 + 终端 +
 轨迹子系统）。**khyquant 不在此件内**——它是**独立项目**，只是连接 Khy OS 使用（人 2026-09-28 明示），
-另案申报，本仓 `software/khyquant/` 只是它随平台分发/接入的载体；因此 khyquant 的前端标题
+另案申报，本仓 `delivery/channel/khyquant/` 只是它随平台分发/接入的载体；因此 khyquant 的前端标题
 **不算本件的名称一致性障碍**。三字段（全称/简称/版本号）真源 =
 `docs/10_规范/registry/COPYRIGHT.json`；定名依据 `[MGMT-OTHER-006]`；人的原话
 `evidence/01_人类贡献/决策记录.md` **D-名2**；递交件 `evidence/06_申报材料/`。
@@ -981,7 +981,7 @@ ANSI 滚动区转义（DECSTBM），以及**无退出路径的明显死循环**
 **当前未闭合的两项**（阻塞递交，须人拍板，AI 不代改）：见
 `evidence/06_申报材料/递交核对表.md` §三第 4 项（界面标题与登记全称不一致）与
 §五（既有 60 页选材不含现名称载体的任何一行）。
-> 范围提醒：`software/khyquant/frontend/` 的标题**不算本件的不一致**——khyquant 是独立项目、
+> 范围提醒：`delivery/channel/khyquant/frontend/` 的标题**不算本件的不一致**——khyquant 是独立项目、
 > 另案申报（见上文申报口径），改名拍板时不要把它算进来。
 
 ---

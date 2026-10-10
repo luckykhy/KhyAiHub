@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-127] khyos 可维护性诊断与减负方案
 
 <!-- RULES-REGISTRY: TOOLING-009, TOOLING-010 -->

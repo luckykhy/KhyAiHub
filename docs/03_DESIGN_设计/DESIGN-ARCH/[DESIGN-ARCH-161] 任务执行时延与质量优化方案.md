@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: todo -->
 # [DESIGN-ARCH-161] 任务执行时延与质量优化方案（对标 ZCode 主循环）
 
 <!-- RULES-REGISTRY: RUNTIME-003, PROCESS-008 -->

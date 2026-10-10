@@ -28,6 +28,8 @@
 |[MGMT-PLAN-007] Khy-OS远景演进路线图-2026-06-12.md|远景演进路线图|在产|
 |[MGMT-PLAN-008] replSession与toolUseLoopCore拆分分批计划.md|双子星文件拆分作战地图|在产|
 |[MGMT-PLAN-009] 文档精简与结构化整理方案.md|文档去重与五层分层方案|在产|
+|[MGMT-PLAN-010] design-partner访谈工具包.md|design-partner 访谈工具包（就近索引已收，此处补漏）|在产|
+|[MGMT-PLAN-011] 开源对标取长补短学习计划-2026-10-10.md|从RPT-035矩阵落后格反推8学习项+4阶段+6项不学|在产|
 |[MGMT-RPT-001] deepseek-tui-对标.md|DeepSeek TUI对标|在产|
 |[MGMT-RPT-002] khy-对比-desirecore-借鉴分析.md|DesireCore借鉴分析|在产|
 |[MGMT-RPT-003] khy-对比-hermes-成长架构.md|Hermes成长架构对比|在产|
@@ -60,6 +62,9 @@
 |[MGMT-RPT-030] DSH-一切皆插件对-khy-os-可行性分析.md|DSH 插件化模型可行性|在产|
 |[MGMT-RPT-031] GitHub调研-终端渲染TUI-2026-09-17.md|终端渲染 / TUI / ANSI 板块 GitHub 调研（索引 8/12）：`services/backend/src/cli/tui/`（ink 6.8.0 + React.createElement 桥接）对标开源终端 UI / 渲染框架|在产|
 |[MGMT-RPT-032] 工作区脏状态盘点报告-2026-09-18.md|全仓脏状态 3629 条盘点与根因|在产|
+|[MGMT-RPT-033] GitHub调研-双机同步-2026-10-09.md|租约续租/死锁清理/fencing 对标 etcd/k8s/restic|在产|
+|[MGMT-RPT-034] GitHub调研-版本治理-2026-10-10.md|版本同步与治理检查板块对标(semver/台账/SARIF)|在产|
+|[MGMT-RPT-035] GitHub调研-同类项目对比矩阵-2026-10-10.md|开源生态无同类型项目，按7桶拆分45项目对比矩阵|在产|
 |[MGMT-OTHER-001] RESTORE_WINDOWS.md|Windows环境还原|在产|
 |[MGMT-OTHER-002] 事后分析-终端崩溃-2026-05-09.md|终端崩溃事后分析|在产|
 |[MGMT-OTHER-003] 索引.md|旧版散索引待废|在产|

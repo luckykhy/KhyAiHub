@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-079] TUI 组件实现提示词
 
 ## 说明

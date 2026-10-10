@@ -3,7 +3,7 @@ name: 新增先提问（求学）
 id: RUNTIME-008
 domain: RUNTIME
 nature: 约束为主，兼福利
-scope: "被判定为 BUILD 的改动集（加功能 / 加入口）：新增文件、新增顶层入口（cli/handlers、routes、tools/*/index.js、extensions/*/*/manifest.json）"
+scope: "被判定为 BUILD 的改动集（加功能 / 加入口）：新增文件、新增顶层入口（cli/handlers、routes、tools/*/index.js、delivery/extension/*/*/manifest.json）"
 priority: P2
 trigger: 写第一行代码前（判定为主模态 BUILD 时）
 constraint: "必须先产出 requirement-5q.md，回答需求五问（谁用 / 何时用 / 现有替代 / 成功长什么样=命令+期望输出 / 不做会怎样），每条答案须带 `source: <用户原话>` 出处；压缩成 3 行复述待客户点头。五问回答均 <40 字或缺 source 字段判 self-answered。"

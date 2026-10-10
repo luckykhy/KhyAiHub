@@ -609,7 +609,27 @@ function assemblePromptForModel(requestContext = {}) {
     let harness = {};
 
     try {
-      harness = modelTier.harnessProfile(tier, { contextWindow: rc.contextWindow });
+      // [DESIGN-ARCH-185] §4.3/§5.2 —— π 的**落地处就在这里**，不在调用方那个 `_lean` 变量上：
+      // calibrateScaffolding 读 `harness.promptVerbosity` 打 −3（脚手架节数预算），
+      // 而这份 profile 此前**不带 modeIntent**，于是选了「经济」档 ⇒ 调用方那侧知道 lean，
+      // 装配这侧仍按 tier 算 full ⇒ 档确实解出了 P0，提示词一个字没变薄。
+      // 这是 §16.4i 那个「profile 有两处」的病第三次复发：全仓 harnessProfile 有四个调用点，
+      // 接了模式轴的是 khyUpgradeRuntime 与 tool-use 循环那两处，本处与 modelFeatureRegistry 没有。
+      // env 用 rc.env（测试注入用），拿不到时 requestModeIntent 自己回落 process.env。
+      let _modeIntent = null;
+      try {
+        _modeIntent = require('./gateway/routingMode').requestModeIntent({
+          tier,
+          prompt: typeof rc.userText === 'string' ? rc.userText : '',
+          env: styles.isPlainObject(rc.env) ? rc.env : undefined,
+        });
+      } catch {
+        /* 模式轴缺席 → 纯 tier profile，逐字节回今日行为 */
+      }
+      harness = modelTier.harnessProfile(tier, {
+        contextWindow: rc.contextWindow,
+        modeIntent: _modeIntent,
+      });
     } catch {
       harness = {};
     }

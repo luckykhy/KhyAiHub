@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-180] 驻留资源提示判据错配修复方案
 
 > **隶属**：启动性能族（`[DESIGN-ARCH-178]` 的直接后续）；运行时可观测族（`runtimeResourceProbe`）

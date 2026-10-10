@@ -17,14 +17,26 @@
       @mousedown="startDrag"
       @touchstart="startDrag"
     >
-      <img src="/robot-avatar.jpg" alt="AI助手" class="robot-face-image" />
-      <div class="status-ring" :class="analysisStatus">
-        <div class="pulse-ring"></div>
+      <img
+        src="/robot-avatar.jpg"
+        alt="AI助手"
+        class="robot-face-image"
+      >
+      <div
+        class="status-ring"
+        :class="analysisStatus"
+      >
+        <div class="pulse-ring" />
       </div>
-      <div class="agent-count">{{ activeAgents.length }}</div>
+      <div class="agent-count">
+        {{ activeAgents.length }}
+      </div>
       
       <!-- 拖拽提示 -->
-      <div v-if="showDragHint && !isExpanded && !isDragging" class="robot-tooltip">
+      <div
+        v-if="showDragHint && !isExpanded && !isDragging"
+        class="robot-tooltip"
+      >
         点击展开AI智能体团队
       </div>
     </div>
@@ -44,37 +56,37 @@
           </div>
           <div class="header-actions">
             <el-button 
-              @click="openTokenManager" 
               size="small" 
-              type="primary"
+              type="primary" 
               plain
+              @click="openTokenManager"
             >
               <el-icon><Key /></el-icon>
               Token管理
             </el-button>
             <el-button 
-              @click="hideAssistant" 
               size="small" 
-              type="warning"
+              type="warning" 
               plain
               title="完全隐藏AI助手"
+              @click="hideAssistant"
             >
               <el-icon><Hide /></el-icon>
               隐藏
             </el-button>
             <el-button 
-              @click="minimizePanel" 
               size="small" 
               circle 
-              :icon="Minus"
+              :icon="Minus" 
               title="最小化面板"
+              @click="minimizePanel"
             />
             <el-button 
-              @click="closePanel" 
               size="small" 
               circle 
-              :icon="Close"
+              :icon="Close" 
               title="关闭面板"
+              @click="closePanel"
             />
           </div>
         </div>
@@ -82,275 +94,365 @@
         <!-- 面板内容区域（可滚动） -->
         <div class="panel-content">
           <!-- 股票输入区域 -->
-        <div class="stock-input-section">
-          <div class="input-group">
-            <el-input 
-              v-model="stockCode" 
-              placeholder="输入股票代码 (如: 000001, sh000300)"
-              size="large"
-              clearable
-              @keyup.enter="startAnalysis"
-              @input="validateStockCode"
-            >
-              <template #prepend>
-                <el-icon><TrendCharts /></el-icon>
-              </template>
-              <template #append>
-                <el-button 
-                  @click="startAnalysis" 
-                  :loading="isThinking"
-                  :disabled="!isValidStockCode"
-                  type="primary"
-                >
-                  {{ isThinking ? '分析中...' : '开始分析' }}
-                </el-button>
-              </template>
-            </el-input>
-          </div>
+          <div class="stock-input-section">
+            <div class="input-group">
+              <el-input 
+                v-model="stockCode" 
+                placeholder="输入股票代码 (如: 000001, sh000300)"
+                size="large"
+                clearable
+                @keyup.enter="startAnalysis"
+                @input="validateStockCode"
+              >
+                <template #prepend>
+                  <el-icon><TrendCharts /></el-icon>
+                </template>
+                <template #append>
+                  <el-button 
+                    :loading="isThinking" 
+                    :disabled="!isValidStockCode"
+                    type="primary"
+                    @click="startAnalysis"
+                  >
+                    {{ isThinking ? '分析中...' : '开始分析' }}
+                  </el-button>
+                </template>
+              </el-input>
+            </div>
           
-          <!-- 快速选择 -->
-          <div class="quick-select">
-            <span class="quick-label">快速选择:</span>
-            <el-tag 
-              v-for="stock in popularStocks" 
-              :key="stock.value"
-              @click="selectStock(stock.value)"
-              class="stock-tag"
-              effect="plain"
-            >
-              {{ stock.label }}
-            </el-tag>
+            <!-- 快速选择 -->
+            <div class="quick-select">
+              <span class="quick-label">快速选择:</span>
+              <el-tag 
+                v-for="stock in popularStocks" 
+                :key="stock.value"
+                class="stock-tag"
+                effect="plain"
+                @click="selectStock(stock.value)"
+              >
+                {{ stock.label }}
+              </el-tag>
+            </div>
           </div>
-        </div>
 
-        <!-- 智能体状态区域 -->
-        <div class="agents-section">
-          <div class="section-header">
-            <h4>智能体团队状态</h4>
-            <el-progress 
-              :percentage="overallProgress" 
-              :status="progressStatus"
-              :stroke-width="6"
-              class="overall-progress"
-            />
-          </div>
+          <!-- 智能体状态区域 -->
+          <div class="agents-section">
+            <div class="section-header">
+              <h4>智能体团队状态</h4>
+              <el-progress 
+                :percentage="overallProgress" 
+                :status="progressStatus"
+                :stroke-width="6"
+                class="overall-progress"
+              />
+            </div>
           
-          <div class="agents-grid">
-            <div
-              v-for="agent in agents"
-              :key="agent.id"
-              class="agent-card"
-              :class="{ 
-                'active': agent.isActive,
-                'analyzing': agent.status === 'analyzing',
-                'completed': agent.status === 'completed',
-                'error': agent.status === 'error'
-              }"
-              @click="toggleAgent(agent.id)"
-            >
-              <div class="agent-avatar">
-                <!-- 智能体图标 -->
-                <div class="agent-icon" v-html="getAgentIcon(agent.id)"></div>
-                <div class="agent-status-dot" :class="agent.status"></div>
-              </div>
-              <div class="agent-info">
-                <div class="agent-header-row">
-                  <div class="agent-name">{{ agent.name }}</div>
-                  <span v-if="agent.algorithm" class="algorithm-badge">{{ agent.algorithm }}</span>
-                </div>
-                <div class="agent-description">{{ agent.description }}</div>
-                <div v-if="agent.algorithmDesc" class="algorithm-description">
-                  {{ agent.algorithmDesc }}
-                </div>
-                <div v-if="agent.progress > 0" class="agent-progress">
-                  <el-progress 
-                    :percentage="agent.progress" 
-                    :stroke-width="4"
-                    :show-text="false"
+            <div class="agents-grid">
+              <div
+                v-for="agent in agents"
+                :key="agent.id"
+                class="agent-card"
+                :class="{ 
+                  'active': agent.isActive,
+                  'analyzing': agent.status === 'analyzing',
+                  'completed': agent.status === 'completed',
+                  'error': agent.status === 'error'
+                }"
+                @click="toggleAgent(agent.id)"
+              >
+                <div class="agent-avatar">
+                  <!-- 智能体图标 -->
+                  <div
+                    class="agent-icon"
+                    v-html="getAgentIcon(agent.id)"
+                  />
+                  <div
+                    class="agent-status-dot"
+                    :class="agent.status"
                   />
                 </div>
+                <div class="agent-info">
+                  <div class="agent-header-row">
+                    <div class="agent-name">
+                      {{ agent.name }}
+                    </div>
+                    <span
+                      v-if="agent.algorithm"
+                      class="algorithm-badge"
+                    >{{ agent.algorithm }}</span>
+                  </div>
+                  <div class="agent-description">
+                    {{ agent.description }}
+                  </div>
+                  <div
+                    v-if="agent.algorithmDesc"
+                    class="algorithm-description"
+                  >
+                    {{ agent.algorithmDesc }}
+                  </div>
+                  <div
+                    v-if="agent.progress > 0"
+                    class="agent-progress"
+                  >
+                    <el-progress 
+                      :percentage="agent.progress" 
+                      :stroke-width="4"
+                      :show-text="false"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- 分析结果区域 -->
-        <div v-if="analysisResult" class="results-section">
-          <div class="result-summary">
-            <h4>{{ analysisResult.stockCode }} 分析报告</h4>
-            <div class="result-meta">
-              <el-tag :type="getRecommendationType(analysisResult.recommendation)" size="small">
-                {{ analysisResult.recommendation || '待定' }}
-              </el-tag>
-              <span class="confidence">置信度: {{ analysisResult.confidence || 0 }}%</span>
-              <!-- AI提供商信息 -->
-              <div class="ai-provider-info">
-                <ChannelHealthIndicator />
+          <!-- 分析结果区域 -->
+          <div
+            v-if="analysisResult"
+            class="results-section"
+          >
+            <div class="result-summary">
+              <h4>{{ analysisResult.stockCode }} 分析报告</h4>
+              <div class="result-meta">
                 <el-tag
-                  :type="analysisResult.isRealLLM ? 'success' : 'info'"
+                  :type="getRecommendationType(analysisResult.recommendation)"
                   size="small"
-                  effect="plain"
                 >
-                  <el-icon><ChatDotRound /></el-icon>
-                  {{ analysisResult.aiProvider || '未知AI' }}
+                  {{ analysisResult.recommendation || '待定' }}
                 </el-tag>
-                <span class="model-info" v-if="analysisResult.modelName">
-                  {{ analysisResult.modelName }}
-                </span>
-              </div>
-            </div>
-            <div class="result-summary-text">{{ analysisResult.summary }}</div>
-            <!-- 详细AI信息 -->
-            <div class="ai-details" v-if="analysisResult.isRealLLM">
-              <div class="ai-detail-item">
-                <span class="label">AI模型:</span>
-                <span class="value">{{ analysisResult.modelName || 'gpt-4-turbo' }}</span>
-              </div>
-              <div class="ai-detail-item">
-                <span class="label">API版本:</span>
-                <span class="value">{{ analysisResult.apiVersion || 'v1.0' }}</span>
-              </div>
-              <div class="ai-detail-item">
-                <span class="label">分析时间:</span>
-                <span class="value">{{ formatTime(analysisResult.timestamp) }}</span>
-              </div>
-            </div>
-          </div>
-          
-          <!-- 智能体结果标签页 -->
-          <el-tabs v-model="activeResultTab" type="card" size="small">
-            <el-tab-pane 
-              v-for="agentResult in analysisResult.agentResults" 
-              :key="agentResult.agentId"
-              :label="getAgentTabLabel(agentResult)"
-              :name="agentResult.agentId"
-            >
-              <div class="agent-result-content">
-                <div class="agent-analysis">{{ agentResult.analysis }}</div>
-                <div v-if="agentResult.keyFindings" class="key-findings">
-                  <h6>关键发现:</h6>
-                  <ul>
-                    <li v-for="finding in agentResult.keyFindings" :key="finding">
-                      {{ finding }}
-                    </li>
-                  </ul>
+                <span class="confidence">置信度: {{ analysisResult.confidence || 0 }}%</span>
+                <!-- AI提供商信息 -->
+                <div class="ai-provider-info">
+                  <ChannelHealthIndicator />
+                  <el-tag
+                    :type="analysisResult.isRealLLM ? 'success' : 'info'"
+                    size="small"
+                    effect="plain"
+                  >
+                    <el-icon><ChatDotRound /></el-icon>
+                    {{ analysisResult.aiProvider || '未知AI' }}
+                  </el-tag>
+                  <span
+                    v-if="analysisResult.modelName"
+                    class="model-info"
+                  >
+                    {{ analysisResult.modelName }}
+                  </span>
                 </div>
               </div>
-            </el-tab-pane>
-          </el-tabs>
-        </div>
-
-        <!-- 对话模式区域 -->
-        <div v-if="analysisResult" class="chat-section">
-          <div class="chat-header">
-            <h5>继续对话</h5>
-            <el-tag size="small" type="success">
-              {{ currentModelName }}
-            </el-tag>
-          </div>
-          
-          <!-- 对话消息列表 -->
-          <div class="chat-messages" ref="chatMessagesRef">
-            <div 
-              v-for="(msg, index) in chatMessages" 
-              :key="index"
-              class="chat-message"
-              :class="msg.role"
-            >
-              <div class="message-content markdown-body" v-html="renderMarkdown(msg.content)"></div>
-              <div v-if="msg.role === 'assistant' && msg.model" class="message-model">{{ msg.model }}</div>
-              <div class="message-time">{{ formatTime(msg.timestamp) }}</div>
-            </div>
-            <div v-if="isStreaming" class="chat-message assistant streaming">
-              <div v-if="thinkingContent" class="thinking-block">
-                <span class="thinking-label">Thinking</span>
-                <div class="thinking-text">{{ thinkingContent }}</div>
+              <div class="result-summary-text">
+                {{ analysisResult.summary }}
               </div>
-              <div class="message-content markdown-body" v-html="renderMarkdown(streamContent || '...')"></div>
-              <div class="streaming-cursor"></div>
-            </div>
-            <div v-else-if="isChatting" class="chat-message assistant">
-              <div class="message-content typing">
-                <span></span><span></span><span></span>
+              <!-- 详细AI信息 -->
+              <div
+                v-if="analysisResult.isRealLLM"
+                class="ai-details"
+              >
+                <div class="ai-detail-item">
+                  <span class="label">AI模型:</span>
+                  <span class="value">{{ analysisResult.modelName || 'gpt-4-turbo' }}</span>
+                </div>
+                <div class="ai-detail-item">
+                  <span class="label">API版本:</span>
+                  <span class="value">{{ analysisResult.apiVersion || 'v1.0' }}</span>
+                </div>
+                <div class="ai-detail-item">
+                  <span class="label">分析时间:</span>
+                  <span class="value">{{ formatTime(analysisResult.timestamp) }}</span>
+                </div>
               </div>
             </div>
-          </div>
           
-          <!-- 对话输入框 -->
-          <div class="chat-input-area">
-            <el-input
-              v-model="chatInput"
-              type="textarea"
-              :rows="2"
-              placeholder="询问关于这只股票的问题... (小K专注金融量化分析)"
-              :disabled="isChatting"
-              clearable
-              @compositionstart="handleCompositionStart"
-              @compositionend="handleCompositionEnd"
-            />
-            <el-button
-              v-if="isStreaming"
-              type="danger"
-              @click="cancelStream"
+            <!-- 智能体结果标签页 -->
+            <el-tabs
+              v-model="activeResultTab"
+              type="card"
+              size="small"
             >
-              停止
-            </el-button>
-            <el-button
-              v-else
-              type="primary"
-              @click="sendChatMessage"
-              :loading="isChatting"
-              :disabled="!chatInput.trim()"
-            >
-              <el-icon><ChatDotRound /></el-icon>
-              发送
-            </el-button>
+              <el-tab-pane 
+                v-for="agentResult in analysisResult.agentResults" 
+                :key="agentResult.agentId"
+                :label="getAgentTabLabel(agentResult)"
+                :name="agentResult.agentId"
+              >
+                <div class="agent-result-content">
+                  <div class="agent-analysis">
+                    {{ agentResult.analysis }}
+                  </div>
+                  <div
+                    v-if="agentResult.keyFindings"
+                    class="key-findings"
+                  >
+                    <h6>关键发现:</h6>
+                    <ul>
+                      <li
+                        v-for="finding in agentResult.keyFindings"
+                        :key="finding"
+                      >
+                        {{ finding }}
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </el-tab-pane>
+            </el-tabs>
           </div>
-        </div>
 
-        <!-- 历史记录 -->
-        <div class="history-section">
-          <el-collapse v-model="activeHistoryPanel">
-            <el-collapse-item title="分析历史" name="history">
-              <div class="history-list">
-                <div 
-                  v-for="record in analysisHistory" 
-                  :key="record.id"
-                  class="history-item"
-                  @click="loadHistoryRecord(record)"
+          <!-- 对话模式区域 -->
+          <div
+            v-if="analysisResult"
+            class="chat-section"
+          >
+            <div class="chat-header">
+              <h5>继续对话</h5>
+              <el-tag
+                size="small"
+                type="success"
+              >
+                {{ currentModelName }}
+              </el-tag>
+            </div>
+          
+            <!-- 对话消息列表 -->
+            <div
+              ref="chatMessagesRef"
+              class="chat-messages"
+            >
+              <div 
+                v-for="(msg, index) in chatMessages" 
+                :key="index"
+                class="chat-message"
+                :class="msg.role"
+              >
+                <div
+                  class="message-content markdown-body"
+                  v-html="renderMarkdown(msg.content)"
+                />
+                <div
+                  v-if="msg.role === 'assistant' && msg.model"
+                  class="message-model"
                 >
-                  <div class="history-info">
-                    <span class="stock-code">{{ record.stockCode }}</span>
-                    <span class="analysis-time">{{ formatTime(record.timestamp) }}</span>
-                  </div>
-                  <div class="history-recommendation">
-                    <el-tag :type="getRecommendationType(record.recommendation)" size="small">
-                      {{ record.recommendation }}
-                    </el-tag>
-                  </div>
+                  {{ msg.model }}
+                </div>
+                <div class="message-time">
+                  {{ formatTime(msg.timestamp) }}
                 </div>
               </div>
-            </el-collapse-item>
-          </el-collapse>
-        </div>
+              <div
+                v-if="isStreaming"
+                class="chat-message assistant streaming"
+              >
+                <div
+                  v-if="thinkingContent"
+                  class="thinking-block"
+                >
+                  <span class="thinking-label">Thinking</span>
+                  <div class="thinking-text">
+                    {{ thinkingContent }}
+                  </div>
+                </div>
+                <div
+                  class="message-content markdown-body"
+                  v-html="renderMarkdown(streamContent || '...')"
+                />
+                <div class="streaming-cursor" />
+              </div>
+              <div
+                v-else-if="isChatting"
+                class="chat-message assistant"
+              >
+                <div class="message-content typing">
+                  <span /><span /><span />
+                </div>
+              </div>
+            </div>
+          
+            <!-- 对话输入框 -->
+            <div class="chat-input-area">
+              <el-input
+                v-model="chatInput"
+                type="textarea"
+                :rows="2"
+                placeholder="询问关于这只股票的问题... (小K专注金融量化分析)"
+                :disabled="isChatting"
+                clearable
+                @compositionstart="handleCompositionStart"
+                @compositionend="handleCompositionEnd"
+              />
+              <el-button
+                v-if="isStreaming"
+                type="danger"
+                @click="cancelStream"
+              >
+                停止
+              </el-button>
+              <el-button
+                v-else
+                type="primary"
+                :loading="isChatting"
+                :disabled="!chatInput.trim()"
+                @click="sendChatMessage"
+              >
+                <el-icon><ChatDotRound /></el-icon>
+                发送
+              </el-button>
+            </div>
+          </div>
+
+          <!-- 历史记录 -->
+          <div class="history-section">
+            <el-collapse v-model="activeHistoryPanel">
+              <el-collapse-item
+                title="分析历史"
+                name="history"
+              >
+                <div class="history-list">
+                  <div 
+                    v-for="record in analysisHistory" 
+                    :key="record.id"
+                    class="history-item"
+                    @click="loadHistoryRecord(record)"
+                  >
+                    <div class="history-info">
+                      <span class="stock-code">{{ record.stockCode }}</span>
+                      <span class="analysis-time">{{ formatTime(record.timestamp) }}</span>
+                    </div>
+                    <div class="history-recommendation">
+                      <el-tag
+                        :type="getRecommendationType(record.recommendation)"
+                        size="small"
+                      >
+                        {{ record.recommendation }}
+                      </el-tag>
+                    </div>
+                  </div>
+                </div>
+              </el-collapse-item>
+            </el-collapse>
+          </div>
         </div> <!-- 关闭 panel-content -->
         
         <!-- 面板底部操作（固定在底部） -->
         <div class="panel-footer">
           <div class="footer-info">
             <span class="agents-count">{{ activeAgents.length }} 个智能体待命</span>
-            <span v-if="analysisResult" class="analysis-status">• 有分析结果</span>
+            <span
+              v-if="analysisResult"
+              class="analysis-status"
+            >• 有分析结果</span>
           </div>
           <div class="footer-actions">
-            <el-button size="small" @click="resetPosition">
+            <el-button
+              size="small"
+              @click="resetPosition"
+            >
               <el-icon><Refresh /></el-icon>
               重置位置
             </el-button>
             <el-button 
               size="small" 
-              @click="exportReport" 
-              :disabled="!analysisResult"
+              :disabled="!analysisResult" 
               :title="analysisResult ? '导出分析报告' : '请先进行分析'"
+              @click="exportReport"
             >
               <el-icon><Download /></el-icon>
               导出报告
@@ -378,7 +480,11 @@
           Token将加密存储在本地，不会上传到服务器。请妥善保管您的API密钥。
         </el-alert>
 
-        <el-form :model="tokenForm" label-width="120px" label-position="left">
+        <el-form
+          :model="tokenForm"
+          label-width="120px"
+          label-position="left"
+        >
           <el-form-item label="OpenAI">
             <div class="token-input-with-test">
               <el-input
@@ -395,15 +501,23 @@
               </el-input>
               <el-button 
                 type="primary" 
-                @click="testToken('openai')"
                 :loading="testingToken === 'openai'"
                 style="margin-left: 10px;"
+                @click="testToken('openai')"
               >
                 测试
               </el-button>
             </div>
-            <div class="token-hint">用于GPT-4、GPT-3.5等模型</div>
-            <div class="token-link"><a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">前往 OpenAI 管理 API Key →</a></div>
+            <div class="token-hint">
+              用于GPT-4、GPT-3.5等模型
+            </div>
+            <div class="token-link">
+              <a
+                href="https://platform.openai.com/api-keys"
+                target="_blank"
+                rel="noopener noreferrer"
+              >前往 OpenAI 管理 API Key →</a>
+            </div>
           </el-form-item>
 
           <el-form-item label="Anthropic Claude">
@@ -422,15 +536,23 @@
               </el-input>
               <el-button 
                 type="primary" 
-                @click="testToken('anthropic')"
                 :loading="testingToken === 'anthropic'"
                 style="margin-left: 10px;"
+                @click="testToken('anthropic')"
               >
                 测试
               </el-button>
             </div>
-            <div class="token-hint">用于Claude 3系列模型</div>
-            <div class="token-link"><a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">前往 Anthropic 管理 API Key →</a></div>
+            <div class="token-hint">
+              用于Claude 3系列模型
+            </div>
+            <div class="token-link">
+              <a
+                href="https://console.anthropic.com/settings/keys"
+                target="_blank"
+                rel="noopener noreferrer"
+              >前往 Anthropic 管理 API Key →</a>
+            </div>
           </el-form-item>
 
           <el-form-item label="Google Gemini">
@@ -449,15 +571,23 @@
               </el-input>
               <el-button 
                 type="primary" 
-                @click="testToken('google')"
                 :loading="testingToken === 'google'"
                 style="margin-left: 10px;"
+                @click="testToken('google')"
               >
                 测试
               </el-button>
             </div>
-            <div class="token-hint">用于Gemini Pro等模型</div>
-            <div class="token-link"><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">前往 Google AI Studio 管理 API Key →</a></div>
+            <div class="token-hint">
+              用于Gemini Pro等模型
+            </div>
+            <div class="token-link">
+              <a
+                href="https://aistudio.google.com/apikey"
+                target="_blank"
+                rel="noopener noreferrer"
+              >前往 Google AI Studio 管理 API Key →</a>
+            </div>
           </el-form-item>
 
           <el-form-item label="Hugging Face">
@@ -476,15 +606,23 @@
               </el-input>
               <el-button 
                 type="primary" 
-                @click="testToken('huggingface')"
                 :loading="testingToken === 'huggingface'"
                 style="margin-left: 10px;"
+                @click="testToken('huggingface')"
               >
                 测试
               </el-button>
             </div>
-            <div class="token-hint">用于Hugging Face推理API和模型</div>
-            <div class="token-link"><a href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener noreferrer">前往 Hugging Face 管理 Token →</a></div>
+            <div class="token-hint">
+              用于Hugging Face推理API和模型
+            </div>
+            <div class="token-link">
+              <a
+                href="https://huggingface.co/settings/tokens"
+                target="_blank"
+                rel="noopener noreferrer"
+              >前往 Hugging Face 管理 Token →</a>
+            </div>
           </el-form-item>
 
           <el-form-item label="Finlight 新闻">
@@ -503,15 +641,23 @@
               </el-input>
               <el-button
                 type="primary"
-                @click="testToken('finlight')"
                 :loading="testingToken === 'finlight'"
                 style="margin-left: 10px;"
+                @click="testToken('finlight')"
               >
                 测试
               </el-button>
             </div>
-            <div class="token-hint">用于新闻分析师获取实时金融新闻语料</div>
-            <div class="token-link"><a href="https://app.finlight.me/api-keys" target="_blank" rel="noopener noreferrer">前往 Finlight.me 管理 API Key →</a></div>
+            <div class="token-hint">
+              用于新闻分析师获取实时金融新闻语料
+            </div>
+            <div class="token-link">
+              <a
+                href="https://app.finlight.me/api-keys"
+                target="_blank"
+                rel="noopener noreferrer"
+              >前往 Finlight.me 管理 API Key →</a>
+            </div>
           </el-form-item>
 
           <el-form-item label="百度文心一言">
@@ -530,15 +676,23 @@
               </el-input>
               <el-button 
                 type="primary" 
-                @click="testToken('baidu')"
                 :loading="testingToken === 'baidu'"
                 style="margin-left: 10px;"
+                @click="testToken('baidu')"
               >
                 测试
               </el-button>
             </div>
-            <div class="token-hint">用于文心一言系列模型</div>
-            <div class="token-link"><a href="https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application" target="_blank" rel="noopener noreferrer">前往百度千帆平台管理 API Key →</a></div>
+            <div class="token-hint">
+              用于文心一言系列模型
+            </div>
+            <div class="token-link">
+              <a
+                href="https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application"
+                target="_blank"
+                rel="noopener noreferrer"
+              >前往百度千帆平台管理 API Key →</a>
+            </div>
           </el-form-item>
 
           <el-form-item label="阿里通义千问">
@@ -557,15 +711,23 @@
               </el-input>
               <el-button 
                 type="primary" 
-                @click="testToken('alibaba')"
                 :loading="testingToken === 'alibaba'"
                 style="margin-left: 10px;"
+                @click="testToken('alibaba')"
               >
                 测试
               </el-button>
             </div>
-            <div class="token-hint">用于通义千问系列模型</div>
-            <div class="token-link"><a href="https://dashscope.console.aliyun.com/apiKey" target="_blank" rel="noopener noreferrer">前往阿里云百炼平台管理 API Key →</a></div>
+            <div class="token-hint">
+              用于通义千问系列模型
+            </div>
+            <div class="token-link">
+              <a
+                href="https://dashscope.console.aliyun.com/apiKey"
+                target="_blank"
+                rel="noopener noreferrer"
+              >前往阿里云百炼平台管理 API Key →</a>
+            </div>
           </el-form-item>
 
           <el-form-item label="讯飞星火">
@@ -584,15 +746,23 @@
               </el-input>
               <el-button 
                 type="primary" 
-                @click="testToken('xunfei')"
                 :loading="testingToken === 'xunfei'"
                 style="margin-left: 10px;"
+                @click="testToken('xunfei')"
               >
                 测试
               </el-button>
             </div>
-            <div class="token-hint">用于星火认知大模型</div>
-            <div class="token-link"><a href="https://console.xfyun.cn/services/bm35" target="_blank" rel="noopener noreferrer">前往讯飞开放平台管理 API Key →</a></div>
+            <div class="token-hint">
+              用于星火认知大模型
+            </div>
+            <div class="token-link">
+              <a
+                href="https://console.xfyun.cn/services/bm35"
+                target="_blank"
+                rel="noopener noreferrer"
+              >前往讯飞开放平台管理 API Key →</a>
+            </div>
           </el-form-item>
 
           <el-form-item label="智谱AI">
@@ -611,20 +781,30 @@
               </el-input>
               <el-button 
                 type="primary" 
-                @click="testToken('zhipu')"
                 :loading="testingToken === 'zhipu'"
                 style="margin-left: 10px;"
+                @click="testToken('zhipu')"
               >
                 测试
               </el-button>
             </div>
-            <div class="token-hint">用于ChatGLM系列模型</div>
-            <div class="token-link"><a href="https://open.bigmodel.cn/usercenter/apikeys" target="_blank" rel="noopener noreferrer">前往智谱AI开放平台管理 API Key →</a></div>
+            <div class="token-hint">
+              用于ChatGLM系列模型
+            </div>
+            <div class="token-link">
+              <a
+                href="https://open.bigmodel.cn/usercenter/apikeys"
+                target="_blank"
+                rel="noopener noreferrer"
+              >前往智谱AI开放平台管理 API Key →</a>
+            </div>
           </el-form-item>
         </el-form>
 
         <div class="token-status">
-          <el-divider content-position="left">Token状态</el-divider>
+          <el-divider content-position="left">
+            Token状态
+          </el-divider>
           <div class="status-grid">
             <div 
               v-for="(value, key) in tokenForm" 
@@ -645,40 +825,72 @@
       </div>
 
       <!-- Model Retrain Section -->
-      <div class="retrain-section" style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #e4e7ed;">
+      <div
+        class="retrain-section"
+        style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #e4e7ed;"
+      >
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
           <span style="font-weight: 600; font-size: 14px;">ML Model Management</span>
-          <el-tag :type="retrainStatus.status === 'running' ? 'warning' : retrainStatus.status === 'completed' ? 'success' : 'info'" size="small">
+          <el-tag
+            :type="retrainStatus.status === 'running' ? 'warning' : retrainStatus.status === 'completed' ? 'success' : 'info'"
+            size="small"
+          >
             {{ retrainStatus.status === 'running' ? 'Training...' : retrainStatus.status === 'completed' ? 'Ready' : 'Idle' }}
           </el-tag>
         </div>
         <el-button
           type="warning"
-          @click="triggerRetrain"
           :loading="retrainStatus.status === 'running'"
           :disabled="retrainStatus.status === 'running'"
           style="width: 100%;"
+          @click="triggerRetrain"
         >
           <el-icon><Refresh /></el-icon>
           {{ retrainStatus.status === 'running' ? 'Retraining in progress...' : 'Retrain Models' }}
         </el-button>
-        <div v-if="retrainStatus.status === 'running' && retrainStatus.logs && retrainStatus.logs.length > 0"
-             style="margin-top: 8px; max-height: 80px; overflow-y: auto; background: #1a1a2e; color: #16c784; padding: 6px 8px; border-radius: 4px; font-size: 11px; font-family: monospace; line-height: 1.4;">
-          <div v-for="(log, i) in retrainStatus.logs.slice(-5)" :key="i">{{ log }}</div>
+        <div
+          v-if="retrainStatus.status === 'running' && retrainStatus.logs && retrainStatus.logs.length > 0"
+          style="margin-top: 8px; max-height: 80px; overflow-y: auto; background: #1a1a2e; color: #16c784; padding: 6px 8px; border-radius: 4px; font-size: 11px; font-family: monospace; line-height: 1.4;"
+        >
+          <div
+            v-for="(log, i) in retrainStatus.logs.slice(-5)"
+            :key="i"
+          >
+            {{ log }}
+          </div>
         </div>
-        <div v-if="retrainStatus.status === 'completed'" style="margin-top: 6px; font-size: 12px; color: var(--khy-success);">
+        <div
+          v-if="retrainStatus.status === 'completed'"
+          style="margin-top: 6px; font-size: 12px; color: var(--khy-success);"
+        >
           Training completed at {{ retrainStatus.finishedAt }}
         </div>
-        <div v-if="retrainStatus.status === 'failed'" style="margin-top: 6px; font-size: 12px; color: var(--khy-danger);">
+        <div
+          v-if="retrainStatus.status === 'failed'"
+          style="margin-top: 6px; font-size: 12px; color: var(--khy-danger);"
+        >
           Training failed. Check logs for details.
         </div>
       </div>
 
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="tokenDialogVisible = false">取消</el-button>
-          <el-button @click="clearAllTokens" type="danger" plain>清除所有</el-button>
-          <el-button type="primary" @click="saveTokens">保存配置</el-button>
+          <el-button @click="tokenDialogVisible = false">
+            取消
+          </el-button>
+          <el-button
+            type="danger"
+            plain
+            @click="clearAllTokens"
+          >
+            清除所有
+          </el-button>
+          <el-button
+            type="primary"
+            @click="saveTokens"
+          >
+            保存配置
+          </el-button>
         </div>
       </template>
     </el-dialog>

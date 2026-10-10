@@ -83,7 +83,7 @@ const _RESOLUTIONS = [
         return [
           _move(STRATEGY_REPROBE, AGENT,
             '联网跑一次 khy 触发首启水合，再跑 hydration-doctor 复核',
-            'node scripts/hydration-doctor.js  # healthy:true 即收敛',
+            'npm run doctor:hydration  # healthy:true 即收敛',
             '水合拦路项全属首启常态（node_modules 尚未水合），非真矛盾；跑一次即自然收敛'),
         ];
       }
@@ -92,13 +92,13 @@ const _RESOLUTIONS = [
       return [
         _move(STRATEGY_REPROBE, AGENT,
           '重跑 hydration-doctor 复核，排除首启竞态',
-          'node scripts/hydration-doctor.js',
+          'npm run doctor:hydration',
           '先重探一次，排除首启抢跑造成的假阳'),
         _move(STRATEGY_TRUST_PESSIMISTIC, allAgent ? AGENT : HUMAN,
           allAgent
             ? '采信更悲观的水合自检：联网重跑 khy 重新水合缺失包、自愈裂脑/断链标记，再复核'
             : '采信更悲观的水合自检：其中含结构性拦路项（缺种子等），须人工提供官方包/种子后再复核',
-          'node scripts/hydration-doctor.js  # healthy:true 即收敛',
+          'npm run doctor:hydration  # healthy:true 即收敛',
           '安全优先信更悲观的水合自检；可水合项 agent 幂等自愈，需取源的结构性项须人工'),
       ];
     },
@@ -151,7 +151,7 @@ const _RESOLUTIONS = [
       return [
         _move(STRATEGY_RECONCILE, AGENT,
           '以明细为准：采信非空 blockers 清单（一手证据），不信顶层 healthy:true（派生结论），按不健康跑水合补救',
-          'node scripts/hydration-doctor.js  # 补救后 healthy 与 blockers 应一致',
+          'npm run doctor:hydration  # 补救后 healthy 与 blockers 应一致',
           '顶层布尔是派生量、明细清单是一手证据；证据高于结论，采信明细即当场消解自相矛盾'),
       ];
     },

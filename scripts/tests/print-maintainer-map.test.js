@@ -44,7 +44,7 @@ describe('print-maintainer-map script', () => {
     assert.ok(payload.area.paths.includes('runtime/node/ai-backend/src/routes/aiGatewayAdmin.js'));
     assert.deepEqual(payload.area.verify, [
       'npm run test:one -- runtime/node/backend/tests/routes/aiGatewayAdmin.modelSlots.test.js runtime/node/backend/tests/gatewayManage.apiDisplay.test.js',
-      'npm run build --prefix apps/ai-frontend',
+      'npm run build --prefix delivery/web/ai-frontend',
     ]);
   });
 
@@ -52,8 +52,8 @@ describe('print-maintainer-map script', () => {
     const { status, stdout } = runMaintainerMap('--check', '--area', 'ai-management-surface');
 
     assert.equal(status, 0);
-    assert.match(stdout, /OK file services\/backend\/src\/routes\/aiGatewayAdmin\.js/);
-    assert.match(stdout, /OK dir apps\/ai-frontend\/src/);
+    assert.match(stdout, /OK file runtime\/node\/backend\/src\/routes\/aiGatewayAdmin\.js/);
+    assert.match(stdout, /OK dir delivery\/web\/ai-frontend\/src/);
     assert.doesNotMatch(stdout, /MISSING /);
   });
 

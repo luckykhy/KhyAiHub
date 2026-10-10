@@ -31,7 +31,7 @@ const CATEGORY = '连接诊断';
 const PROBE_TIMEOUT_MS = 10000;
 
 // ── Backend port discovery ───────────────────────────────────────────────────
-// Mirrors apps/ai-frontend/backendDiscovery.mjs precedence:
+// Mirrors delivery/web/ai-frontend/backendDiscovery.mjs precedence:
 //   1. apiPort from ai_manage_runtime.json across known data homes
 //      (KHY_DATA_HOME → pinned pointer → ~/.khy → ~/.khyquant)
 //   2. env port hints (KHY_DAEMON_PORT / AI_MGMT_PORT)

@@ -55,14 +55,14 @@ node entries/launch.js              经本目录的跨平台壳（只要 Node，
 
 | 端 id | 类型 | 形态 | 状态 | 来源 |
 | --- | --- | --- | --- | --- |
-| `cli` | cli | shell | 就绪 | `platform/khy_platform` |
-| `cli-node` | cli | shell | 就绪 | `services/backend` |
+| `cli` | cli | shell | 就绪 | `runtime/substrate/platform/khy_platform` |
+| `cli-node` | cli | shell | 就绪 | `runtime/node/backend` |
 | `desktop` | desktop | exe | 就绪 | `apps/khyos-desktop` |
 | `desktop-legacy` | desktop | exe | 降级 | `electron/` |
-| `desktop-provider-hub` | desktop | exe | 降级 | `apps/provider-hub` |
-| `web` | web | html | 就绪 | `apps/ai-frontend` |
-| `web-quant` | web | html | 就绪 | `software/khyquant/frontend` |
-| `mobile` | mobile | apk | 就绪 | `apps/khy-os-client-app` |
+| `desktop-provider-hub` | desktop | exe | 降级 | `delivery/web/provider-hub` |
+| `web` | web | html | 就绪 | `delivery/web/ai-frontend` |
+| `web-quant` | web | html | 就绪 | `delivery/channel/khyquant/frontend` |
+| `mobile` | mobile | apk | 就绪 | `delivery/mobile/khy-os-client-app` |
 | `mobile-legacy` | mobile | apk | **损坏** | `apps/khy-mobile` |
 
 **表不会自己更新**：它是**人工定档**。哪个端改了指路方式、换了源目录、补上了打包配置，

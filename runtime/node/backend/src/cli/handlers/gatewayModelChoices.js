@@ -795,22 +795,93 @@ async function buildGatewayModelChoices({ onNotice = () => {}, onError = () => {
   // 模型列表顶部增设可选「Auto」入口(/goal「khy 在模型列表下设置一个 auto 模型」)。
   // 门控 KHY_AUTO_MODEL_SELECT 默认开;关 → 不 unshift(字节回退旧行为)。Auto 标签用纯排序
   // 原语按「当前会话默认任务」预览一个「最适合且可用」的模型 id(候选=已枚举的可用模型)。
+  //
+  // [DESIGN-ARCH-185] §4.4：模式轴开启时这里产出**四行**(Auto/极致/性能/经济)，
+  // 仍是同一个产出点，不是第 6 个。模式轴关 → 逐字节回到单行 Auto。
   try {
     const autoSelect = require('../../services/gateway/autoModelSelect');
     if (
       autoSelect.isEnabled() &&
       modelChoices.some((c) => c && c.value && !c.disabled && c.value.model)
     ) {
+      const modelTier = require('../../services/modelTier');
       const candidates = modelChoices
         .filter((c) => c && c.value && !c.disabled && c.value.model)
-        .map((c) => ({ model: c.value.model, adapter: c.value.adapter }));
-      const preview = autoSelect.pickAutoModel('conversation', candidates);
-      modelChoices.unshift(
-        autoSelect.buildAutoChoice({
-          previewModel: preview && preview.model ? preview.model : '',
-          chalk,
-        })
-      );
+        .map((c) => ({
+          model: c.value.model,
+          adapter: c.value.adapter,
+          tier: modelTier.resolveTier(c.value.model),
+        }));
+
+      let routingMode = null;
+      try {
+        const rm = require('../../services/gateway/routingMode');
+        if (rm.isEnabled()) routingMode = rm;
+      } catch {
+        /* 模式轴不可用 → 退回单行 Auto */
+      }
+
+      if (routingMode) {
+        const card = routingMode._loadCard();
+        const currentName = routingMode.currentModeName();
+        // §14-D11：钉选时模式轴整体旁路，四行档画出来可选却不生效 ⇒ 置灰并说明原因。
+        // 顺带**不**再给「当前最优」预览：那一行会声称某模型将被选中，而档根本不会生效。
+        const inert = routingMode.pinnedBypass();
+        const inertNote = inert
+          ? `已钉选${
+              String(process.env.GATEWAY_PREFERRED_MODEL || '').trim() &&
+              String(process.env.GATEWAY_PREFERRED_MODEL).trim().toLowerCase() !== 'auto'
+                ? '模型'
+                : '渠道'
+            } · 档位不生效`
+          : '';
+        // 档名列表**不在这儿硬编码**：§7-① 说档位卡是档名/floor/ceiling 的唯一真源，
+        // 而 `if (!mode) continue` 会让「卡里改了名」的这一档在选择器里静默消失——
+        // 硬编码 ORDER 就是一条第二条真源，卡与画面会分叉且没有测试会红。
+        const ORDER = routingMode.listModes({ card });
+        const specs = [];
+        for (const entry of ORDER) {
+          const mode = routingMode.resolveMode(entry.key, { card });
+          if (!mode) continue;
+          const hint = routingMode.costHintOf(mode, candidates);
+          let preview = '';
+          if (!inert) {
+            try {
+              const picked = autoSelect.rankAutoModels('conversation', candidates, {
+                band: { floorIdx: mode.floorIdx, ceilingIdx: mode.ceilingIdx },
+                max: 1,
+              });
+              preview = picked && picked[0] ? picked[0].model : '';
+            } catch {
+              /* 无预览不阻断 */
+            }
+          }
+          specs.push({
+            key: entry.key,
+            label: mode.label,
+            intent: mode.intent,
+            costHint: hint.label,
+            preview,
+            current: entry.key === currentName,
+          });
+        }
+        const rows = autoSelect.buildModeChoices({ modes: specs, chalk, inert, inertNote });
+        if (rows.length > 0) {
+          modelChoices.unshift(...rows);
+        }
+        // rows 为空时**不**抛：抛会被外层 catch 吞成「一行都没有」，比退回单行 Auto 更糟。
+        // 这里让控制流自然落到下面的单行兜底。
+        if (rows.length === 0) routingMode = null;
+      }
+      if (!routingMode) {
+        const preview = autoSelect.pickAutoModel('conversation', candidates);
+        modelChoices.unshift(
+          autoSelect.buildAutoChoice({
+            previewModel: preview && preview.model ? preview.model : '',
+            chalk,
+          })
+        );
+      }
     }
   } catch {
     /* fail-soft: no Auto entry, picker unchanged */

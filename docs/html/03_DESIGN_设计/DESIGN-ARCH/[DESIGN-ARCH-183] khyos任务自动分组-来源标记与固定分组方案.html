@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-ARCH-183] khyos任务自动分组-来源标记与固定分组方案.md -->
+<title>[DESIGN-ARCH-183] khyos 任务自动分组 — 来源标记与固定分组方案 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>[DESIGN-ARCH-183] khyos 任务自动分组 — 来源标记与固定分组方案</div>
+      <header class="hero reveal"><h1>[DESIGN-ARCH-183] khyos 任务自动分组 — 来源标记与固定分组方案</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-183-khyos-任务自动分组-来源标记与固定分组方案">[DESIGN-ARCH-183] khyos 任务自动分组 — 来源标记与固定分组方案</a></li><li class="lvl-2"><a href="#0-目标与范围">0. 目标与范围</a></li><li class="lvl-2"><a href="#1-现状与差距-事实基础">1. 现状与差距（事实基础）</a></li><li class="lvl-2"><a href="#2-设计原则">2. 设计原则</a></li><li class="lvl-2"><a href="#3-数据模型-sessions-db-迁移">3. 数据模型（sessions.db 迁移）</a></li><li class="lvl-2"><a href="#4-来源标记链路-三处创建入口">4. 来源标记链路（三处创建入口）</a></li><li class="lvl-2"><a href="#5-分组服务-后端单一所有者">5. 分组服务（后端单一所有者）</a></li><li class="lvl-2"><a href="#6-ipc-与多端接口">6. IPC 与多端接口</a></li><li class="lvl-2"><a href="#7-ui-改造-桌面端-workspacesidebar">7. UI 改造（桌面端 WorkspaceSidebar）</a></li><li class="lvl-2"><a href="#8-localstorage-一次性迁移">8. localStorage 一次性迁移</a></li><li class="lvl-2"><a href="#9-并发与防覆盖-zcode-缺陷的修正">9. 并发与防覆盖（ZCode 缺陷的修正）</a></li><li class="lvl-2"><a href="#10-实施顺序">10. 实施顺序</a></li><li class="lvl-2"><a href="#11-与-zcode-实现的对照">11. 与 ZCode 实现的对照</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="design-arch-183-khyos-任务自动分组-来源标记与固定分组方案">[DESIGN-ARCH-183] khyos 任务自动分组 — 来源标记与固定分组方案<a class="anchor" href="#design-arch-183-khyos-任务自动分组-来源标记与固定分组方案" aria-label="锚点">#</a></h1>
+<blockquote><p>关联：[DESIGN-ARCH-177] 侧栏项目分组可辨识化改造方案（&quot;项目&quot;视图）、[DESIGN-ARCH-130] 前台与后台任务编排方案。<br>借鉴对象：ZCode 的 cron/off-peak 自动分组机制（逆向自其任务索引模块），并修正其在实际运行中暴露的&quot;内存缓存回写覆盖&quot;缺陷。</p></blockquote>
+<h2 id="0-目标与范围">0. 目标与范围<a class="anchor" href="#0-目标与范围" aria-label="锚点">#</a></h2>
+<ul><li>定时自动化（后续闲时任务同理）产生的会话，<strong>自动归入固定分组</strong>，侧栏&quot;分组&quot;视图下直接可见，不靠事后标题识别。</li><li>分组数据从 renderer localStorage <strong>升级为后端 SQLite 持久化</strong>，桌面端、TUI、网页端三端共享一份真源。</li><li>保持 ZCode 的核心机制：<strong>创建时打标记、系统组用固定 ID、ensure 幂等、启动回填</strong>。</li></ul>
+<p>不在本期范围：闲时算力子系统本身（scheduler 进程 Phase 10 预留）；网页端分组管理 UI（本期只读展示，走后端接口）。</p>
+<h2 id="1-现状与差距-事实基础">1. 现状与差距（事实基础）<a class="anchor" href="#1-现状与差距-事实基础" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>环节</th><th>khy-os 现状</th><th>差距</th></tr></thead><tbody><tr><td>分组存储</td><td>renderer localStorage：<code>khy.sidebar.groups</code>、<code>khy.sidebar.taskGroup</code>（<code>WorkspaceSidebar.tsx:276-290</code>，注释明确&quot;宿主桥没有 group API&quot;）</td><td>无后端持久化，三端不共享，清缓存即丢</td></tr><tr><td>会话来源</td><td>桌面端自动化经 <code>fireAutomation()</code>→host <code>ai.generate</code>（<code>src/main/index.ts:448-479</code>，id 前缀 <code>auto_</code>）；TUI cron 调 <code>ai.chat('[Scheduled] '+prompt)</code>（<code>jobs/cronScheduler.js:510-521</code>）</td><td>两条链路都<strong>不把来源持久化</strong>到会话上，事后无法辨认</td></tr><tr><td>会话库</td><td><code>sessions.db</code>（<code>sessionSearchIndex.js</code>，better-sqlite3，WAL）：<code>conversations</code> 表只有 session_id/title/model/计数/时间</td><td>无来源列、无分组表</td></tr><tr><td>侧栏</td><td><code>WorkspaceSidebar.tsx</code> 已有「项目」视图（<code>sidebarProjectClassify.ts</code>）与「分组」视图</td><td>分组视图只认 localStorage</td></tr><tr><td>TUI</td><td><code>cli/handlers/session.js</code> 的 <code>session list</code> 仅按项目桶过滤</td><td>无分组概念</td></tr></tbody></table>
+<p>ZCode 的实现要点（逆向结论）：任务表带 <code>cron_automation_id</code> 来源列 → 代码硬编码固定组 ID（<code>zcode-default-group-cron</code>/<code>zcode-default-group-off-peak</code>）→ 会话创建时 <code>ensureCronGroupMembership()</code> 幂等挂组 → 启动时 <code>backfillCronGroupMemberships()</code> 全量回填 → UI 对固定 ID 特判（组名走 i18n、显示 <code>#</code> 图标、禁改名/删除）。<br>已知缺陷（本机实测）：ZCode 运行时把活跃任务的旧状态回写数据库，会覆盖外部写入的成员关系。<strong>根因是分组存在内存缓存里、写库不经过单一所有者。</strong></p>
+<h2 id="2-设计原则">2. 设计原则<a class="anchor" href="#2-设计原则" aria-label="锚点">#</a></h2>
+<ol><li><strong>创建时打标记，不做事后识别</strong>——来源在会话落库那一刻写入，分组零猜测。</li><li><strong>系统组用固定 ID</strong>（<code>khyos-default-group-automation</code> / 预留 <code>khyos-default-group-offpeak</code>），ensure 才能幂等。</li><li><strong>分组唯一所有者是后端 SQLite</strong>，UI 不缓存成员关系，读时 join——从根上杜绝 ZCode 的回写覆盖问题。</li><li><strong>回填必须幂等</strong>，可重复执行不产生重复成员（<code>ON CONFLICT DO UPDATE</code>）。</li><li>localStorage 降级为一次性迁移源，迁移后不再参与。</li></ol>
+<h2 id="3-数据模型-sessions-db-迁移">3. 数据模型（sessions.db 迁移）<a class="anchor" href="#3-数据模型-sessions-db-迁移" aria-label="锚点">#</a></h2>
+<p>迁移落在 <code>sessionSearchIndex.js</code> 的建库流程（与其现有表同一连接、同一事务习惯），DDL 全部 <code>IF NOT EXISTS</code>/带存在性守卫：</p>
+<pre><code class="language-sql"><span class="hljs-keyword">CREATE TABLE</span> IF <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">EXISTS</span> session_groups (
+  group_id   TEXT <span class="hljs-keyword">PRIMARY KEY</span>,
+  title      TEXT <span class="hljs-keyword">NOT NULL</span>,
+  color      TEXT <span class="hljs-keyword">NOT NULL</span> <span class="hljs-keyword">DEFAULT</span> <span class="hljs-string">&#x27;gray&#x27;</span>,  <span class="hljs-comment">-- 合法值: gray|red|orange|yellow|green|blue|purple</span>
+  kind       TEXT <span class="hljs-keyword">NOT NULL</span> <span class="hljs-keyword">DEFAULT</span> <span class="hljs-string">&#x27;user&#x27;</span>,  <span class="hljs-comment">-- &#x27;system&#x27; | &#x27;user&#x27;</span>
+  created_at <span class="hljs-type">INTEGER</span> <span class="hljs-keyword">NOT NULL</span>,
+  updated_at <span class="hljs-type">INTEGER</span> <span class="hljs-keyword">NOT NULL</span>
+);
+
+<span class="hljs-keyword">CREATE TABLE</span> IF <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">EXISTS</span> session_group_members (
+  group_id    TEXT <span class="hljs-keyword">NOT NULL</span>,
+  session_id  TEXT <span class="hljs-keyword">NOT NULL</span>,
+  project_key TEXT <span class="hljs-keyword">NOT NULL</span>,               <span class="hljs-comment">-- 会话所属项目桶（沿用 sessionPersistence 的 _encodeProject 键）</span>
+  sort_order  <span class="hljs-type">INTEGER</span>,
+  added_at    <span class="hljs-type">INTEGER</span> <span class="hljs-keyword">NOT NULL</span>,
+  created_at  <span class="hljs-type">INTEGER</span> <span class="hljs-keyword">NOT NULL</span>,
+  updated_at  <span class="hljs-type">INTEGER</span> <span class="hljs-keyword">NOT NULL</span>,
+  <span class="hljs-keyword">PRIMARY KEY</span> (project_key, session_id),
+  <span class="hljs-keyword">FOREIGN KEY</span> (group_id) <span class="hljs-keyword">REFERENCES</span> session_groups(group_id) <span class="hljs-keyword">ON</span> <span class="hljs-keyword">DELETE</span> CASCADE
+);
+
+<span class="hljs-keyword">CREATE TABLE</span> IF <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">EXISTS</span> session_group_meta (   <span class="hljs-comment">-- 一次性标记等</span>
+  key        TEXT <span class="hljs-keyword">PRIMARY KEY</span>,
+  <span class="hljs-keyword">value</span>      TEXT,
+  updated_at <span class="hljs-type">INTEGER</span> <span class="hljs-keyword">NOT NULL</span>
+);
+
+<span class="hljs-comment">-- conversations 加来源列（ALTER 前用 PRAGMA table_info 守卫，列存在则跳过）</span>
+<span class="hljs-keyword">ALTER TABLE</span> conversations <span class="hljs-keyword">ADD</span> <span class="hljs-keyword">COLUMN</span> source_type TEXT;  <span class="hljs-comment">-- &#x27;automation&#x27; | &#x27;offpeak&#x27; | NULL</span>
+<span class="hljs-keyword">ALTER TABLE</span> conversations <span class="hljs-keyword">ADD</span> <span class="hljs-keyword">COLUMN</span> source_id   TEXT;  <span class="hljs-comment">-- automationId / 闲时任务 id</span>
+<span class="hljs-keyword">CREATE</span> INDEX IF <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">EXISTS</span> idx_conversations_source
+  <span class="hljs-keyword">ON</span> conversations(source_type, source_id) <span class="hljs-keyword">WHERE</span> source_type <span class="hljs-keyword">IS</span> <span class="hljs-keyword">NOT NULL</span>;</code></pre>
+<p><strong>固定系统组</strong>（首启时 ensure 进 <code>session_groups</code>）：</p>
+<table><thead><tr><th>group_id</th><th>title（库内初始值）</th><th>color</th><th>kind</th></tr></thead><tbody><tr><td><code>khyos-default-group-automation</code></td><td>定时任务</td><td>blue</td><td>system</td></tr><tr><td><code>khyos-default-group-offpeak</code></td><td>闲时任务</td><td>purple</td><td>system（预留，闲时子系统落地后启用）</td></tr></tbody></table>
+<p>用户组 ID 沿用现有前端习惯 <code>g_&lt;uuid&gt;</code>，与系统组靠 <code>kind</code> 列区分。</p>
+<h2 id="4-来源标记链路-三处创建入口">4. 来源标记链路（三处创建入口）<a class="anchor" href="#4-来源标记链路-三处创建入口" aria-label="锚点">#</a></h2>
+<p>原则：<code>source</code> 作为会话元数据从触发点一路带到 <code>sessionPersistence.persistSession()</code>，落库时写入 <code>conversations.source_type/source_id</code>。会话 JSON 侧在 <code>.project.json</code> 同级的会话元数据里同步冗余一份 <code>source</code>（与 ZCode 的 meta_json 冗余做法一致）。</p>
+<ol><li><strong>桌面端自动化</strong>：<code>src/main/index.ts</code> <code>fireAutomation()</code> 已持有 automationId，经 host 通道 <code>ai.generate</code> 传递（现有 id 前缀 <code>auto_</code> 保留）；host 的 <code>ai.generate</code> handler 把 <code>source:{type:'automation', id}</code> 附加到最终 <code>persistSession(..., metadata)</code> 调用。</li><li><strong>TUI cron</strong>：<code>jobs/cronScheduler.js</code> <code>_defaultEnqueue</code> 的 <code>ai.chat('[Scheduled] '+prompt, { _isFollowUp: true })</code> 增加 <code>source:{type:'automation', id: job.id}</code>；<code>ai.chat</code> 链路把 options.source 透传到 persistSession。<code>[Scheduled]</code> 标题前缀保留，仅作显示层提示。</li><li><strong>手动会话</strong>：source 为空 → 不挂任何系统组，行为不变。</li></ol>
+<p>收口点：<code>sessionPersistence.persistSession()</code> 是<strong>唯一写入者</strong>——新增可选参数 <code>metadata.source</code>，写 conversations 列 + 会话元数据，缺省不写。</p>
+<h2 id="5-分组服务-后端单一所有者">5. 分组服务（后端单一所有者）<a class="anchor" href="#5-分组服务-后端单一所有者" aria-label="锚点">#</a></h2>
+<p>新文件 <code>runtime/node/backend/src/services/sessionGroupService.js</code>（复用 sessionSearchIndex 的连接）：</p>
+<ul><li><code>ensureGroup({groupId, title, color, kind})</code> — <code>INSERT OR IGNORE</code>，幂等。</li><li><code>ensureMembership({sessionId, projectKey, groupId, sortOrder})</code> — upsert（<code>ON CONFLICT(project_key,session_id) DO UPDATE</code>）。</li><li><code>ensureSystemMembership({sessionId, projectKey, sourceType, sourceId})</code> — sourceType→固定组映射后调 ensureMembership。</li><li><code>backfillSystemGroupMemberships()</code> — <code>SELECT session_id, project_key, source_type FROM conversations WHERE source_type IS NOT NULL</code> 逐条 ensure；跑完在 <code>session_group_meta</code> 写 <code>bootstrap_once</code> 标记。</li><li><code>listGroups()</code> / <code>listSessionsWithGroups({limit})</code> — <strong>侧栏读取的唯一入口</strong>，LEFT JOIN members，一次返回分组树 + 未分组列表（不再由前端拼）。</li><li><code>createGroup/renameGroup/setGroupColor/deleteGroup/moveSession/reorderGroups</code> — 用户组管理；<code>kind='system'</code> 的组在服务层直接拒绝改名/删除/改色（与 ZCode 的 UI 特判对应，但<strong>收口在服务层</strong>，多端一致）。</li></ul>
+<p><strong>启动钩子</strong>：<code>sessionSearchIndex</code> 初始化建库完成后调用 <code>backfillSystemGroupMemberships()</code>（bootstrap 标记防重复全量扫，但 backfill 本身幂等，重复执行无害）。</p>
+<h2 id="6-ipc-与多端接口">6. IPC 与多端接口<a class="anchor" href="#6-ipc-与多端接口" aria-label="锚点">#</a></h2>
+<ul><li>桌面端（main→host 透传，与现有 <code>session:list</code> 同模式）：<code>sessionGroup:list</code>、<code>sessionGroup:create</code>、<code>sessionGroup:rename</code>、<code>sessionGroup:setColor</code>、<code>sessionGroup:delete</code>、<code>sessionGroup:moveSession</code>（拖动入组/出组）、<code>sessionGroup:reorder</code>。</li><li>preload（<code>src/preload/index.ts</code>）按现有命名风格补 <code>sessionGroup.*</code> API。</li><li>网页端（Phase 2）：后端 Express 暴露 <code>GET /api/session-groups</code> 等只读+管理路由，直接调 sessionGroupService。</li><li>TUI：<code>cli/handlers/session.js</code> 的 <code>session list</code> 增加 <code>--grouped</code>：调 <code>listSessionsWithGroups</code>，系统组显示为 <code>[定时任务]</code> 分区头；现有 TaskListPanel 的 <code>splitTaskLinesBySource()</code> 不动（那是任务清单分区，不是会话列表）。</li></ul>
+<h2 id="7-ui-改造-桌面端-workspacesidebar">7. UI 改造（桌面端 WorkspaceSidebar）<a class="anchor" href="#7-ui-改造-桌面端-workspacesidebar" aria-label="锚点">#</a></h2>
+<ul><li><strong>数据源切换</strong>：「分组」视图从 localStorage（276-290 行）改为 <code>sessionGroup:list</code>，分组树与未分组列表由后端 join 返回；拖动/排序直接写回 IPC（<code>sort_order</code> + 组顺序），<strong>不再在 renderer 保留第二真源</strong>。</li><li><strong>系统组特判</strong>（对齐 ZCode）：<ul><li>显示名不读库内 title，走常量映射（<code>定时任务</code>/<code>闲时任务</code>），便于后续改文案不用迁移数据；</li><li>组头显示 <code>#</code> 图标而非颜色点；</li><li>右键菜单禁用重命名/改色/删除（服务层已有守卫，UI 同步禁用只是体验）。</li></ul></li><li><strong>用户组</strong>：保留颜色（合法值 gray|red|orange|yellow|green|blue|purple）、折叠展开、拖入拖出（拖出即回「未分组」，服务层删除成员关系）。</li><li><strong>「项目」视图不动</strong>：<code>sidebarProjectClassify.ts</code> 三态逻辑照旧，与「分组」视图并列切换。</li></ul>
+<h2 id="8-localstorage-一次性迁移">8. localStorage 一次性迁移<a class="anchor" href="#8-localstorage-一次性迁移" aria-label="锚点">#</a></h2>
+<p>renderer 首次挂载分组视图时：若 <code>khy.sidebar.groups</code> 存在且后端 <code>session_groups</code> 中用户组为空 → 经 <code>sessionGroup:importGroups</code>（批量：建组 + 按 <code>khy.sidebar.taskGroup</code> 映射搬成员）→ 迁移成功后把 localStorage 键改为 <code>khy.sidebar.groups.migratedAt</code>（保留只读备份，不再读取）。半途失败可重试（导入按 upsert 幂等）。</p>
+<h2 id="9-并发与防覆盖-zcode-缺陷的修正">9. 并发与防覆盖（ZCode 缺陷的修正）<a class="anchor" href="#9-并发与防覆盖-zcode-缺陷的修正" aria-label="锚点">#</a></h2>
+<ul><li>分组成员关系的<strong>唯一写入口是 sessionGroupService</strong>（SQLite WAL，短事务，busy_timeout），UI、TUI、网页端都经它写，不存在&quot;内存缓存另有一份真源再回写&quot;的路径——ZCode 那种运行时覆盖在本方案中结构上不可能发生。</li><li>会话本体（title/updated_at）仍由 sessionPersistence 写；分组列只在创建时写一次 + 用户拖动时更新，冲突面极小。</li><li>多实例（多 host）并发：upsert 幂等 + WAL，安全。</li></ul>
+<h2 id="10-实施顺序">10. 实施顺序<a class="anchor" href="#10-实施顺序" aria-label="锚点">#</a></h2>
+<ol><li>迁移 DDL：<code>session_groups</code> / <code>session_group_members</code> / <code>session_group_meta</code> + <code>conversations</code> 来源列与索引（列存在性守卫）。</li><li><code>sessionGroupService.js</code>：ensure/backfill/list/管理接口 + 系统组服务层守卫。</li><li>启动钩子：backfill + bootstrap 标记。</li><li>创建链路打标记：persistSession 收口 <code>metadata.source</code> → host <code>ai.generate</code> 与 TUI cronScheduler 两条链路接线。</li><li>IPC + preload。</li><li>WorkspaceSidebar：数据源切 IPC、系统组特判、拖动。</li><li>localStorage 一次性导入。</li><li>TUI <code>session list --grouped</code>。</li><li>验证：ensure 幂等单测；手动触发一次自动化 → 会话落库带 source_type → 侧栏「定时任务」组可见；重启后回填不重复成员；拖动持久化；三端（TUI）读到同一分组。</li></ol>
+<h2 id="11-与-zcode-实现的对照">11. 与 ZCode 实现的对照<a class="anchor" href="#11-与-zcode-实现的对照" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>点</th><th>ZCode</th><th>khy-os 本方案</th></tr></thead><tbody><tr><td>来源标记</td><td>tasks 表 <code>cron_automation_id</code>/<code>off_peak_task_id</code> 列 + meta_json 冗余</td><td>conversations <code>source_type</code>/<code>source_id</code> + 会话元数据冗余（一致）</td></tr><tr><td>固定组 ID</td><td><code>zcode-default-group-cron</code> 等</td><td><code>khyos-default-group-automation</code>/<code>-offpeak</code>（一致）</td></tr><tr><td>ensure/回填</td><td>ensureCronGroupMembership + 启动 backfill（一致）</td><td>sessionGroupService.ensure*/backfill + bootstrap 标记</td></tr><tr><td>UI 特判</td><td>渲染层按固定 ID 特判组名/权限</td><td>同样特判，但<strong>权限守卫下沉到服务层</strong>（多端一致）</td></tr><tr><td>存储所有者</td><td>主进程内存缓存 + SQLite 双轨（有回写覆盖缺陷）</td><td><strong>后端 SQLite 单一所有者，读时 join</strong>（修正缺陷）</td></tr><tr><td>分组对象</td><td>任务（跨项目）</td><td>会话（带 project_key 项目桶，语义一致）</td></tr></tbody></table>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-182] Watchdog阻塞归因分化-同步长任务与进程被停走区分方案.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-182] Watchdog 阻塞归因分化：同步长任务与进程被停走区分方案</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-184] khy-os 接入编辑器 ACP（Agent Client Protocol）实现方案.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-184] khy-os 接入编辑器 ACP（Agent Client Protocol）实现方案</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-183] khyos任务自动分组-来源标记与固定分组方案.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

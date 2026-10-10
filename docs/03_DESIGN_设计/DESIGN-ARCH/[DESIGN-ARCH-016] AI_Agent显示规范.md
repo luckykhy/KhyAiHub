@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 <!-- 文档分类: DESIGN-ARCH-016 | 阶段: 设计 | 原路径: docs/03_DESIGN_设计/[DESIGN-ARCH-016] AI_Agent显示规范.md（新建） -->
 # khyos 生态 AI Agent 显示规范
 

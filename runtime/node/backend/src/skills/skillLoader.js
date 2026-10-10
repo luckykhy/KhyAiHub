@@ -159,7 +159,7 @@ function discoverSkills(projectDir, opts = {}) {
   const skills = new Map();
   const searchPaths = [];
 
-  // Priority 1: Project-level — canonical `.khy` first, then legacy `.khyquant`.
+  // Priority 1: Project-level — canonical `works/data/khy` first, then legacy `.khyquant`.
   if (projectDir) {
     searchPaths.push({ dir: path.join(projectDir, 'works', 'data', 'khy', 'skills'), source: 'project' });
     searchPaths.push({ dir: path.join(projectDir, '.khyquant', 'skills'), source: 'project' });
@@ -232,7 +232,7 @@ function discoverSkillsDeep(projectDir, opts = {}) {
   const skills = new Map();
   const searchPaths = [];
 
-  // Priority 1: Project-level — canonical `.khy` first, then legacy `.khyquant`.
+  // Priority 1: Project-level — canonical `works/data/khy` first, then legacy `.khyquant`.
   if (projectDir) {
     searchPaths.push({ dir: path.join(projectDir, 'works', 'data', 'khy', 'skills'), source: 'project' });
     searchPaths.push({ dir: path.join(projectDir, '.khyquant', 'skills'), source: 'project' });

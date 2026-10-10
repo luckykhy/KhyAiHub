@@ -26,6 +26,7 @@
       <header class="hero reveal"><h1>[DESIGN-ARCH-097] KhyOS 核心边界定稿 —— 一词一解</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-097-khyos-核心边界定稿-一词一解">[DESIGN-ARCH-097] KhyOS 核心边界定稿 —— 一词一解</a></li><li class="lvl-2"><a href="#核心一词一解-七核-两层">核心一词一解（七核，两层）</a></li><li class="lvl-3"><a href="#运行核-删掉即无法启动或无法完成一次工具调用">运行核（删掉即无法启动或无法完成一次工具调用）</a></li><li class="lvl-3"><a href="#主张核-删掉系统仍能跑-但产品主张塌掉一角">主张核（删掉系统仍能跑，但产品主张塌掉一角）</a></li><li class="lvl-2"><a href="#证据锚点">证据锚点</a></li><li class="lvl-2"><a href="#与-五核-提法的对应">与「五核」提法的对应</a></li><li class="lvl-2"><a href="#定位裁决-非核心">定位裁决（非核心）</a></li><li class="lvl-2"><a href="#完成度总览">完成度总览</a></li><li class="lvl-2"><a href="#变更记录">变更记录</a></li></ul></nav>
       <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: done --&gt;</p>
 <h1 id="design-arch-097-khyos-核心边界定稿-一词一解">[DESIGN-ARCH-097] KhyOS 核心边界定稿 —— 一词一解<a class="anchor" href="#design-arch-097-khyos-核心边界定稿-一词一解" aria-label="锚点">#</a></h1>
 <blockquote><p><strong>定位</strong>：把散落各处的核心定义收成一张可查表。回答「KhyOS 的核心到底是哪几块、每块一句话」。<br><strong>上位法</strong>：三件套（壳/漏斗/网关）契约见 [DESIGN-TOOL-002] §1.1，六类拓展见 §1.2，任务闭环契约见 [DESIGN-ARCH-077]；本文只做「一词一解」的收口，不重述契约。<br><strong>判据</strong>：运行核用 [DESIGN-TOOL-002] §1.1 的删除判据——「删掉它，还能启动并跑通一次工具调用吗？」不能 → 核。主张核的判据——删掉它系统仍能跑（fail-soft），但「稳定交付的 AI 平台操作系统」这一产品主张塌掉一角。</p></blockquote>
 <hr>

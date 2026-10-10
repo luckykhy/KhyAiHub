@@ -2004,8 +2004,22 @@ async function makeSystemPrompt(
   // (modelTier.js). `lean` verbosity (T0 frontier only) drops the weak-model
   // hand-holding scaffolding sections below; T1/T2/T3 keep today's full prompt.
   const _modelTier = require('./modelTier');
+  // [DESIGN-ARCH-185] §4.3：把四档的 β/π 意图喂给 harnessProfile（优先级 env > mode > tier）。
+  // 这里拿得到 userMessage，所以 auto 档也能按「这一轮在问什么」定 β（P2d）；
+  // margin 仍拿不到（它是网关内 rank 的产物），缺它只会让「省思考」那两级不触发 ——
+  // 方向安全：没有证据时只会多想，不会少想。见 routingMode.requestModeIntent 的注释。
+  let _modeIntent = null;
+  try {
+    _modeIntent = require('./gateway/routingMode').requestModeIntent({
+      tier: _modelTier.resolveTier(modelId),
+      prompt: typeof promptRuntimeOpts.userMessage === 'string' ? promptRuntimeOpts.userMessage : '',
+    });
+  } catch {
+    /* 模式轴不可用 → 保持 tier 默认，逐字节回今日行为 */
+  }
   const _harnessProfile = _modelTier.harnessProfile(_modelTier.resolveTier(modelId), {
     contextWindow: promptContextWindow,
+    modeIntent: _modeIntent,
   });
   const _lean = _harnessProfile.promptVerbosity === 'lean';
   // Short-context (small-window) models also drop the multi-KB hand-holding

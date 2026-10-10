@@ -9,6 +9,8 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
+const { pinModelContextWindow } = require('../../constants/modelContextWindows');
+
 function _env(name) {
   return String(process.env[`KHY_MODELS_${name}`] || '').trim();
 }
@@ -29,6 +31,9 @@ function registerModel(id, config) {
     supportsTools: config.supportsTools || false,
     supportsStreaming: config.supportsStreaming !== false,
     ...config,
+    // 放最后：窗口真源（constants/modelContextWindows.js）压过调用方声明的值，
+    // initDefaults 里那批写死的数字只是「真源未登记时」的退路，不再是第二真源。
+    contextWindow: pinModelContextWindow(id, config.contextWindow || 4096),
   });
   return { success: true, id };
 }

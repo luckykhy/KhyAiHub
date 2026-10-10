@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-067] opencode 高含金量功能教学与 khy-os 差距补齐路线
 
 > **本文是「对照学习 + 差距分析 + 分阶段实施路线」,不是一次性落地稿。**

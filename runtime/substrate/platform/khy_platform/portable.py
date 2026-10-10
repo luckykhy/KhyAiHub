@@ -59,7 +59,9 @@ def _env_portable_root() -> Optional[Path]:
 def _marker_root_candidates() -> List[Path]:
     """Directories probed (in order) for the ``.portable`` marker file."""
     candidates: List[Path] = []
-    # Forest layout: platform/khy_platform/ -> platform -> install root.
+    # Source (forest) layout: <root>/runtime/substrate/platform/khy_platform/ -> five up.
+    candidates.append(Path(__file__).resolve().parent.parent.parent.parent.parent)
+    # Legacy forest layout (pre-2026-10 migration): <root>/platform/khy_platform/ -> three up.
     candidates.append(Path(__file__).resolve().parent.parent.parent)
     try:
         cwd = Path.cwd().resolve()

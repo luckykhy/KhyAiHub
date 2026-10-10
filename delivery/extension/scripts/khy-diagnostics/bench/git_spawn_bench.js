@@ -10,14 +10,14 @@
 // counts shell-mediated vs direct-git invocations so the reduction is
 // demonstrable. Run on Windows for the real per-CreateProcess wall-clock.
 //
-// Usage:  node extensions/scripts/khy-diagnostics/bench/git_spawn_bench.js
+// Usage:  node delivery/extension/scripts/khy-diagnostics/bench/git_spawn_bench.js
 
 const cp = require('child_process');
 const path = require('path');
 
 const REPO = path.resolve(__dirname, '..', '..', '../..', '..');
-const MOD = path.join(REPO, 'services/backend/src/services/workspaceGitInit.js');
-const DET = path.join(REPO, 'services/backend/src/services/gitExecutableDetector.js');
+const MOD = path.join(REPO, 'runtime/node/backend/src/services/workspaceGitInit.js');
+const DET = path.join(REPO, 'runtime/node/backend/src/services/gitExecutableDetector.js');
 
 function measure(gate) {
   delete require.cache[require.resolve(MOD)];

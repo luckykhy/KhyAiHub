@@ -40,7 +40,7 @@ const path = require('path');
 const http = require('http');
 const net = require('net');
 const crypto = require('crypto');
-const { spawn } = require('child_process');
+const { spawn, execFileSync } = require('child_process');
 const aiManagementServer = require('../src/services/aiManagementServer');
 // Workflow run worker: this daemon is the long-lived serving process that also
 // enqueues `workflow_runs` (via ai-backend's router mounted in the management
@@ -579,6 +579,53 @@ function _pipeConsoleToUtf8Log(stream, outStream) {
   });
 }
 
+// Resolve `bin` (already carrying its extension) against PATH, Windows included.
+// Returns '' when absent — PATH is the only place npm can come from, and a
+// portable install may not have one at all (see startFrontendProcess).
+function findOnPath(bin) {
+  const isWin = process.platform === 'win32';
+  const exts = isWin
+    ? ['', ...(process.env.PATHEXT || '.COM;.EXE;.BAT;.CMD').split(';')]
+    : [''];
+  const dirs = String(process.env.PATH || process.env.Path || '').split(path.delimiter).filter(Boolean);
+  for (const dir of dirs) {
+    for (const ext of exts) {
+      try {
+        const full = path.join(dir, bin + ext);
+        if (fs.statSync(full).isFile()) return full;
+      } catch {
+        /* not in this PATH entry */
+      }
+    }
+  }
+  return '';
+}
+
+// 工作区依赖会提升到仓库根 node_modules，所以从前端目录逐级向上找。
+function findViteBin(frontendDir) {
+  let dir = path.resolve(frontendDir);
+  for (let depth = 0; depth <= 6; depth += 1) {
+    const candidate = path.join(dir, 'node_modules', 'vite', 'bin', 'vite.js');
+    if (fs.existsSync(candidate)) return candidate;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return '';
+}
+
+// npm runs `predev` (sync-md-vendor) before `dev`; the npm-free path owes that one step.
+// The hook is fail-soft by design, so a sync problem must not gate the dev server.
+function runPredev(frontendDir) {
+  const script = path.join(frontendDir, 'scripts', 'sync-md-vendor.mjs');
+  if (!fs.existsSync(script)) return;
+  try {
+    execFileSync(process.execPath, [script], { cwd: frontendDir, stdio: 'ignore', timeout: 60000 });
+  } catch {
+    /* vite serves whatever public/vendor already holds */
+  }
+}
+
 async function startFrontendProcess({ host, basePort, frontendDir, apiPort: backendPort, webBackendPort }) {
   const pkgPath = path.join(frontendDir, 'package.json');
   if (!fs.existsSync(pkgPath)) {
@@ -591,7 +638,20 @@ async function startFrontendProcess({ host, basePort, frontendDir, apiPort: back
   }
 
   const isWin = process.platform === 'win32';
-  const npmCmd = isWin ? 'npm.cmd' : 'npm';
+  // npm is only a *runner* here — the dev server itself is node_modules/vite. A portable
+  // install can ship a bare node.exe with no npm anywhere on PATH, and then this whole
+  // management stack used to lose its frontend to `'npm.cmd' 不是内部或外部命令` while the
+  // deps were in fact already installed. So: use npm when it exists (it also runs the
+  // package's predev hook), otherwise drive the vite binary directly.
+  const npmBin = findOnPath(isWin ? 'npm.cmd' : 'npm');
+  const viteBin = npmBin ? '' : findViteBin(frontendDir);
+  if (!npmBin && !viteBin) {
+    return {
+      ok: false,
+      reason: `启动前端 dev server (端口 ${port}) 失败: PATH 上没有 npm，且 ${frontendDir} 向上找不到 node_modules/vite`,
+    };
+  }
+
   const args = [
     '--prefix',
     frontendDir,
@@ -613,14 +673,19 @@ async function startFrontendProcess({ host, basePort, frontendDir, apiPort: back
   // Node hardening (CVE-2024-27980) makes spawning a .cmd/.bat shim such as npm.cmd without a
   // shell throw `spawn EINVAL` on Windows. Run through a shell on Windows and quote each token
   // defensively — the frontend dir may contain spaces (e.g. C:\Users\Some Name\...).
-  const useShell = isWin;
-  const command = useShell ? [npmCmd, ...args].map(quoteForCmd).join(' ') : npmCmd;
-  const spawnArgs = useShell ? [] : args;
+  // The vite path spawns a real .exe with an argv array, so it needs no shell at all.
+  const useShell = isWin && Boolean(npmBin);
+  const command = useShell
+    ? ['npm.cmd', ...args].map(quoteForCmd).join(' ')
+    : (npmBin ? 'npm' : process.execPath);
+  const spawnArgs = useShell ? [] : (npmBin ? args : [viteBin, '--host', host, '--port', String(port)]);
+  const spawnCwd = npmBin ? path.resolve(frontendDir, '..') : frontendDir;
+  if (!npmBin) runPredev(frontendDir);
 
   let child;
   try {
     child = spawn(command, spawnArgs, {
-      cwd: path.resolve(frontendDir, '..'),
+      cwd: spawnCwd,
       detached: !isWin,
       shell: useShell,
       env: {

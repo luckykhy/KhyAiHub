@@ -99,6 +99,8 @@ const SKIP_TOP = Object.freeze([
  */
 const SOURCE_DIR_ALLOWLIST = Object.freeze([
   'works/ship/build',
+  'works/build',
+  'apps/khyos-desktop/zcode-analysis/unpacked/out',
   'scripts/release',
   'scripts/release/publish',
   'runtime/node/backend/src/services/domain/build',

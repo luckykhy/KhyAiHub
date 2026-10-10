@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-032] 内嵌 MD 工作台与跨平台右键集成
 
 | 项 | 值 |

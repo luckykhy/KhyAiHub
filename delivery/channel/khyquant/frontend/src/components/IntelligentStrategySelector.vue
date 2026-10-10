@@ -13,9 +13,9 @@
           placeholder="选择已有策略"
           clearable
           filterable
-          @change="handleExistingStrategySelect"
           style="width: 200px; margin-right: 10px;"
           size="small"
+          @change="handleExistingStrategySelect"
         >
           <el-option
             v-for="strategy in existingStrategies"
@@ -25,7 +25,11 @@
           >
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <span>{{ strategy.name }}</span>
-              <el-tag :type="getLanguageColor(strategy.language)" size="small" style="margin-left: 8px;">
+              <el-tag
+                :type="getLanguageColor(strategy.language)"
+                size="small"
+                style="margin-left: 8px;"
+              >
                 {{ getLanguageLabel(strategy.language) }}
               </el-tag>
             </div>
@@ -35,8 +39,8 @@
         <el-button 
           size="small" 
           type="primary" 
-          @click="showStrategyCreator = true"
           :disabled="!currentSymbol"
+          @click="showStrategyCreator = true"
         >
           <el-icon><Plus /></el-icon>
           创建策略
@@ -45,41 +49,81 @@
     </div>
 
     <!-- 当前适配的策略 -->
-    <div v-if="adaptedStrategy" class="adapted-strategy">
+    <div
+      v-if="adaptedStrategy"
+      class="adapted-strategy"
+    >
       <div class="strategy-card">
         <div class="strategy-info">
-          <div class="strategy-name">{{ adaptedStrategy.name }}</div>
+          <div class="strategy-name">
+            {{ adaptedStrategy.name }}
+          </div>
           <div class="strategy-meta">
-            <el-tag :type="getStrategyTypeColor(adaptedStrategy.type)" size="small">
+            <el-tag
+              :type="getStrategyTypeColor(adaptedStrategy.type)"
+              size="small"
+            >
               {{ getStrategyTypeLabel(adaptedStrategy.type) }}
             </el-tag>
-            <el-tag type="info" size="small">{{ getLanguageLabel(adaptedStrategy.language) }}</el-tag>
+            <el-tag
+              type="info"
+              size="small"
+            >
+              {{ getLanguageLabel(adaptedStrategy.language) }}
+            </el-tag>
             <span class="confidence">置信度: {{ (adaptedStrategy.confidence * 100).toFixed(0) }}%</span>
           </div>
-          <div class="strategy-description">{{ adaptedStrategy.description }}</div>
+          <div class="strategy-description">
+            {{ adaptedStrategy.description }}
+          </div>
           
           <!-- 🔥 新增：参数显示 -->
-          <div v-if="adaptedStrategy.parameters && Object.keys(adaptedStrategy.parameters).length > 0" class="strategy-parameters">
-            <div class="parameters-title">当前参数:</div>
+          <div
+            v-if="adaptedStrategy.parameters && Object.keys(adaptedStrategy.parameters).length > 0"
+            class="strategy-parameters"
+          >
+            <div class="parameters-title">
+              当前参数:
+            </div>
             <div class="parameters-list">
-              <span v-for="(value, key) in adaptedStrategy.parameters" :key="key" class="param-item">
+              <span
+                v-for="(value, key) in adaptedStrategy.parameters"
+                :key="key"
+                class="param-item"
+              >
                 {{ key }}: {{ value }}
               </span>
             </div>
           </div>
         </div>
         <div class="strategy-actions">
-          <el-button size="small" type="success" @click="applyStrategy" :loading="applying">
+          <el-button
+            size="small"
+            type="success"
+            :loading="applying"
+            @click="applyStrategy"
+          >
             应用策略
           </el-button>
-          <el-button size="small" type="warning" @click="showParametersDialog">
+          <el-button
+            size="small"
+            type="warning"
+            @click="showParametersDialog"
+          >
             <el-icon><Setting /></el-icon>
             参数
           </el-button>
-          <el-button size="small" @click="clearStrategy">
+          <el-button
+            size="small"
+            @click="clearStrategy"
+          >
             清除
           </el-button>
-          <el-button size="small" type="primary" @click="editCurrentStrategy">
+          <el-button
+            size="small"
+            type="primary"
+            @click="editCurrentStrategy"
+          >
             <el-icon><Edit /></el-icon>
             编辑
           </el-button>
@@ -88,48 +132,88 @@
     </div>
 
     <!-- 智能推荐策略列表 -->
-    <div v-else class="strategy-recommendations">
+    <div
+      v-else
+      class="strategy-recommendations"
+    >
       <div class="recommendations-header">
         <template v-if="showAllStrategies">
-          <el-button size="small" text @click="showAllStrategies = false">
+          <el-button
+            size="small"
+            text
+            @click="showAllStrategies = false"
+          >
             ← 返回推荐
           </el-button>
           <span>全部策略 ({{ allStrategies.length }})</span>
         </template>
         <template v-else>
           <span>为 {{ currentSymbol }} 推荐的策略</span>
-          <el-button size="small" text @click="refreshRecommendations" :loading="loadingRecommendations">
+          <el-button
+            size="small"
+            text
+            :loading="loadingRecommendations"
+            @click="refreshRecommendations"
+          >
             <el-icon><Refresh /></el-icon>
             刷新
           </el-button>
         </template>
       </div>
 
-      <div v-if="loadingRecommendations" class="loading-state">
-        <el-skeleton :rows="3" animated />
+      <div
+        v-if="loadingRecommendations"
+        class="loading-state"
+      >
+        <el-skeleton
+          :rows="3"
+          animated
+        />
       </div>
 
-      <div v-else-if="displayedStrategies.length > 0" class="recommendations-list">
+      <div
+        v-else-if="displayedStrategies.length > 0"
+        class="recommendations-list"
+      >
         <div
           v-for="strategy in displayedStrategies"
           :key="strategy.id"
           class="recommendation-item"
         >
-          <div class="recommendation-content" @click="selectRecommendedStrategy(strategy)">
+          <div
+            class="recommendation-content"
+            @click="selectRecommendedStrategy(strategy)"
+          >
             <div class="recommendation-info">
-              <div class="recommendation-name">{{ strategy.name }}</div>
+              <div class="recommendation-name">
+                {{ strategy.name }}
+              </div>
               <div class="recommendation-meta">
-                <el-tag :type="getStrategyTypeColor(strategy.type)" size="small">
+                <el-tag
+                  :type="getStrategyTypeColor(strategy.type)"
+                  size="small"
+                >
                   {{ getStrategyTypeLabel(strategy.type) }}
                 </el-tag>
-                <span class="match-score" v-if="!showAllStrategies">匹配度: {{ strategy.matchScore }}%</span>
+                <span
+                  v-if="!showAllStrategies"
+                  class="match-score"
+                >匹配度: {{ strategy.matchScore }}%</span>
               </div>
-              <div class="recommendation-reason">{{ strategy.reason }}</div>
+              <div class="recommendation-reason">
+                {{ strategy.reason }}
+              </div>
             </div>
-            <div class="recommendation-stats" v-if="strategy.stats">
+            <div
+              v-if="strategy.stats"
+              class="recommendation-stats"
+            >
               <div class="stat-item">
                 <span class="label">收益:</span>
-                <span class="value" :class="getProfitClass(strategy.stats.return)">
+                <span
+                  class="value"
+                  :class="getProfitClass(strategy.stats.return)"
+                >
                   {{ strategy.stats.return }}%
                 </span>
               </div>
@@ -170,16 +254,30 @@
         </div>
 
         <!-- View all button -->
-        <div class="view-all-btn" v-if="!showAllStrategies && allStrategies.length > recommendedStrategies.length">
-          <el-button text type="primary" size="small" @click="showAllStrategies = true">
+        <div
+          v-if="!showAllStrategies && allStrategies.length > recommendedStrategies.length"
+          class="view-all-btn"
+        >
+          <el-button
+            text
+            type="primary"
+            size="small"
+            @click="showAllStrategies = true"
+          >
             查看全部策略 ({{ allStrategies.length }}) →
           </el-button>
         </div>
       </div>
 
-      <div v-else class="empty-recommendations">
+      <div
+        v-else
+        class="empty-recommendations"
+      >
         <el-empty description="暂无推荐策略" />
-        <el-button type="primary" @click="showStrategyCreator = true">
+        <el-button
+          type="primary"
+          @click="showStrategyCreator = true"
+        >
           创建新策略
         </el-button>
       </div>
@@ -201,9 +299,9 @@
               <el-button 
                 size="small" 
                 type="primary" 
-                @click="analyzeCode"
                 :loading="analyzing"
                 :disabled="!strategyCode.trim()"
+                @click="analyzeCode"
               >
                 <el-icon><MagicStick /></el-icon>
                 智能分析
@@ -245,11 +343,17 @@
         </div>
 
         <!-- 智能分析结果 -->
-        <div v-if="analysisResult" class="analysis-result">
+        <div
+          v-if="analysisResult"
+          class="analysis-result"
+        >
           <div class="analysis-header">
             <el-icon><SuccessFilled /></el-icon>
             <span>智能分析结果</span>
-            <el-tag :type="getConfidenceType(analysisResult.confidence)" size="small">
+            <el-tag
+              :type="getConfidenceType(analysisResult.confidence)"
+              size="small"
+            >
               置信度: {{ (analysisResult.confidence * 100).toFixed(0) }}%
             </el-tag>
           </div>
@@ -257,7 +361,10 @@
           <div class="analysis-details">
             <div class="detail-row">
               <span class="label">检测语言:</span>
-              <el-tag type="primary" size="small">
+              <el-tag
+                type="primary"
+                size="small"
+              >
                 {{ getLanguageLabel(analysisResult.detectedLanguage.language) }}
               </el-tag>
               <span class="confidence-text">
@@ -267,7 +374,10 @@
             
             <div class="detail-row">
               <span class="label">策略类型:</span>
-              <el-tag :type="getStrategyTypeColor(analysisResult.detectedType.type)" size="small">
+              <el-tag
+                :type="getStrategyTypeColor(analysisResult.detectedType.type)"
+                size="small"
+              >
                 {{ getStrategyTypeLabel(analysisResult.detectedType.type) }}
               </el-tag>
               <span class="confidence-text">
@@ -277,12 +387,18 @@
             
             <div class="detail-row">
               <span class="label">复杂度:</span>
-              <el-tag :type="getComplexityType(analysisResult.complexity)" size="small">
+              <el-tag
+                :type="getComplexityType(analysisResult.complexity)"
+                size="small"
+              >
                 {{ getComplexityLabel(analysisResult.complexity) }}
               </el-tag>
             </div>
             
-            <div v-if="analysisResult.autoConfig.tags.length > 0" class="detail-row">
+            <div
+              v-if="analysisResult.autoConfig.tags.length > 0"
+              class="detail-row"
+            >
               <span class="label">特征标签:</span>
               <el-tag 
                 v-for="tag in analysisResult.autoConfig.tags" 
@@ -297,7 +413,9 @@
 
           <!-- 自动配置预览 -->
           <div class="auto-config-preview">
-            <div class="preview-title">自动配置预览:</div>
+            <div class="preview-title">
+              自动配置预览:
+            </div>
             <div class="config-item">
               <span class="config-label">策略名称:</span>
               <span class="config-value">{{ analysisResult.autoConfig.name }}</span>
@@ -306,31 +424,48 @@
               <span class="config-label">策略描述:</span>
               <span class="config-value">{{ analysisResult.autoConfig.description }}</span>
             </div>
-            <div v-if="Object.keys(analysisResult.autoConfig.parameters).length > 0" class="config-item">
+            <div
+              v-if="Object.keys(analysisResult.autoConfig.parameters).length > 0"
+              class="config-item"
+            >
               <span class="config-label">参数:</span>
               <span class="config-value">{{ JSON.stringify(analysisResult.autoConfig.parameters) }}</span>
             </div>
           </div>
 
           <!-- 智能建议 -->
-          <div v-if="analysisResult.recommendations.length > 0" class="recommendations">
-            <div class="recommendations-title">智能建议:</div>
+          <div
+            v-if="analysisResult.recommendations.length > 0"
+            class="recommendations"
+          >
+            <div class="recommendations-title">
+              智能建议:
+            </div>
             <div 
               v-for="(rec, index) in analysisResult.recommendations" 
               :key="index"
               class="recommendation"
               :class="rec.type"
             >
-              <el-icon v-if="rec.type === 'warning'"><Warning /></el-icon>
-              <el-icon v-else-if="rec.type === 'success'"><SuccessFilled /></el-icon>
-              <el-icon v-else><InfoFilled /></el-icon>
+              <el-icon v-if="rec.type === 'warning'">
+                <Warning />
+              </el-icon>
+              <el-icon v-else-if="rec.type === 'success'">
+                <SuccessFilled />
+              </el-icon>
+              <el-icon v-else>
+                <InfoFilled />
+              </el-icon>
               <span>{{ rec.message }}</span>
             </div>
           </div>
         </div>
 
         <!-- 手动配置选项 -->
-        <div v-if="!analysisResult || showManualConfig" class="manual-config">
+        <div
+          v-if="!analysisResult || showManualConfig"
+          class="manual-config"
+        >
           <div class="config-header">
             <span class="config-title">手动配置</span>
             <el-switch 
@@ -340,27 +475,67 @@
             />
           </div>
           
-          <el-form :model="manualConfig" label-width="100px" size="small">
+          <el-form
+            :model="manualConfig"
+            label-width="100px"
+            size="small"
+          >
             <el-form-item label="策略名称">
-              <el-input v-model="manualConfig.name" placeholder="请输入策略名称" />
+              <el-input
+                v-model="manualConfig.name"
+                placeholder="请输入策略名称"
+              />
             </el-form-item>
             
             <el-form-item label="策略类型">
-              <el-select v-model="manualConfig.type" placeholder="选择策略类型">
-                <el-option label="趋势策略" value="trend" />
-                <el-option label="均值回归" value="mean_reversion" />
-                <el-option label="动量策略" value="momentum" />
-                <el-option label="套利策略" value="arbitrage" />
-                <el-option label="做市策略" value="market_making" />
-                <el-option label="其他" value="other" />
+              <el-select
+                v-model="manualConfig.type"
+                placeholder="选择策略类型"
+              >
+                <el-option
+                  label="趋势策略"
+                  value="trend"
+                />
+                <el-option
+                  label="均值回归"
+                  value="mean_reversion"
+                />
+                <el-option
+                  label="动量策略"
+                  value="momentum"
+                />
+                <el-option
+                  label="套利策略"
+                  value="arbitrage"
+                />
+                <el-option
+                  label="做市策略"
+                  value="market_making"
+                />
+                <el-option
+                  label="其他"
+                  value="other"
+                />
               </el-select>
             </el-form-item>
             
             <el-form-item label="编程语言">
-              <el-select v-model="manualConfig.language" placeholder="选择语言">
-                <el-option label="JavaScript" value="javascript" />
-                <el-option label="Python" value="python" />
-                <el-option label="通达信公式" value="tdx" />
+              <el-select
+                v-model="manualConfig.language"
+                placeholder="选择语言"
+              >
+                <el-option
+                  label="JavaScript"
+                  value="javascript"
+                />
+                <el-option
+                  label="Python"
+                  value="python"
+                />
+                <el-option
+                  label="通达信公式"
+                  value="tdx"
+                />
               </el-select>
             </el-form-item>
           </el-form>
@@ -369,12 +544,14 @@
 
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="showStrategyCreator = false">取消</el-button>
+          <el-button @click="showStrategyCreator = false">
+            取消
+          </el-button>
           <el-button 
             type="primary" 
-            @click="createIntelligentStrategy" 
-            :loading="creating"
+            :loading="creating" 
             :disabled="!strategyCode.trim()"
+            @click="createIntelligentStrategy"
           >
             {{ editingStrategy ? '保存策略' : '创建策略' }}
           </el-button>
@@ -388,14 +565,23 @@
       title="从已有策略加载"
       width="700px"
     >
-      <div v-if="strategyTemplates.length === 0" style="text-align: center; padding: 40px; color: #909399;">
+      <div
+        v-if="strategyTemplates.length === 0"
+        style="text-align: center; padding: 40px; color: #909399;"
+      >
         <el-empty description="暂无可用策略">
-          <el-button type="primary" @click="showTemplateSelector = false">
+          <el-button
+            type="primary"
+            @click="showTemplateSelector = false"
+          >
             关闭
           </el-button>
         </el-empty>
       </div>
-      <div v-else class="template-list">
+      <div
+        v-else
+        class="template-list"
+      >
         <div 
           v-for="template in strategyTemplates" 
           :key="template.id"
@@ -403,14 +589,29 @@
           @click="selectTemplate(template)"
         >
           <div class="template-info">
-            <div class="template-name">{{ template.name }}</div>
-            <div class="template-description">{{ template.description }}</div>
+            <div class="template-name">
+              {{ template.name }}
+            </div>
+            <div class="template-description">
+              {{ template.description }}
+            </div>
             <div class="template-meta">
-              <el-tag type="primary" size="small">{{ getLanguageLabel(template.language) }}</el-tag>
-              <el-tag :type="getStrategyTypeColor(template.type)" size="small">
+              <el-tag
+                type="primary"
+                size="small"
+              >
+                {{ getLanguageLabel(template.language) }}
+              </el-tag>
+              <el-tag
+                :type="getStrategyTypeColor(template.type)"
+                size="small"
+              >
                 {{ getStrategyTypeLabel(template.type) }}
               </el-tag>
-              <span v-if="template.createdAt" style="margin-left: 8px; color: #909399; font-size: 12px;">
+              <span
+                v-if="template.createdAt"
+                style="margin-left: 8px; color: #909399; font-size: 12px;"
+              >
                 {{ formatDate(template.createdAt) }}
               </span>
             </div>
@@ -440,7 +641,11 @@
           </template>
         </el-alert>
 
-        <el-form :model="parametersForm" label-width="120px" size="default">
+        <el-form
+          :model="parametersForm"
+          label-width="120px"
+          size="default"
+        >
           <el-form-item label="箱段">
             <el-input-number 
               v-model="parametersForm.箱段" 
@@ -449,7 +654,9 @@
               :step="1"
               style="width: 100%;"
             />
-            <div class="param-hint">箱体周期，建议 10-30</div>
+            <div class="param-hint">
+              箱体周期，建议 10-30
+            </div>
           </el-form-item>
 
           <el-form-item label="交易单位">
@@ -460,7 +667,9 @@
               :step="1"
               style="width: 100%;"
             />
-            <div class="param-hint">每次交易的基础单位</div>
+            <div class="param-hint">
+              每次交易的基础单位
+            </div>
           </el-form-item>
 
           <el-form-item label="允许损比">
@@ -472,7 +681,9 @@
               :precision="4"
               style="width: 100%;"
             />
-            <div class="param-hint">凯利公式计算的资金比例，建议 0.05-0.1</div>
+            <div class="param-hint">
+              凯利公式计算的资金比例，建议 0.05-0.1
+            </div>
           </el-form-item>
 
           <el-form-item label="初始资金">
@@ -483,26 +694,37 @@
               :step="10000"
               style="width: 100%;"
             />
-            <div class="param-hint">初始资金量</div>
+            <div class="param-hint">
+              初始资金量
+            </div>
           </el-form-item>
         </el-form>
 
         <div class="parameters-json">
-          <div class="json-title">JSON 格式（高级用户）:</div>
+          <div class="json-title">
+            JSON 格式（高级用户）:
+          </div>
           <el-input
             v-model="parametersJsonStr"
             type="textarea"
             :rows="4"
-            placeholder='{"箱段": 20, "交易单位": 1, "允许损比": 0.0667, "初始资金": 50000}'
+            placeholder="{&quot;箱段&quot;: 20, &quot;交易单位&quot;: 1, &quot;允许损比&quot;: 0.0667, &quot;初始资金&quot;: 50000}"
           />
         </div>
       </div>
 
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="showParametersEditor = false">取消</el-button>
-          <el-button @click="resetParameters">重置为默认值</el-button>
-          <el-button type="primary" @click="saveParameters">
+          <el-button @click="showParametersEditor = false">
+            取消
+          </el-button>
+          <el-button @click="resetParameters">
+            重置为默认值
+          </el-button>
+          <el-button
+            type="primary"
+            @click="saveParameters"
+          >
             保存并应用
           </el-button>
         </div>

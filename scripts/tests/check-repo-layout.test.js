@@ -510,7 +510,7 @@ describe('check-repo-layout: 拓展分类目录（[DESIGN-TOOL-002] §2.3）', (
     const { status, stdout } = runGuard(root, ['--list=extension-contract']);
     assert.equal(status, 0, stdout);
     assert.match(stdout, /"extension-contract":1/);
-    assert.match(stdout, /extensions\/misc —— 分类名不在/);
+    assert.match(stdout, /delivery\/extension\/misc —— 分类名不在/);
   });
 
   test('分类目录下再套一层被计入 —— 发现只下探两层，第三层等于不存在', () => {
@@ -521,7 +521,7 @@ describe('check-repo-layout: 拓展分类目录（[DESIGN-TOOL-002] §2.3）', (
     const { status, stdout } = runGuard(root, ['--list=extension-contract']);
     assert.equal(status, 0, stdout);
     assert.match(stdout, /"extension-contract":1/);
-    assert.match(stdout, /extensions\/tools\/sub —— 缺 khy\.extension\.json/);
+    assert.match(stdout, /delivery\/extension\/tools\/sub —— 缺 khy\.extension\.json/);
   });
 
   test('既不是拓展也不是分类的目录被计入', () => {
@@ -796,7 +796,8 @@ describe('check-repo-layout: domain-direction', () => {
   test('任何域 → D5 命中 no-reach-into-archive', () => {
     const root = makeFixture((dir) => {
       writeFile(dir, 'docs/10_规范/registry/DOMAIN-DEPS.json', JSON.stringify(MINI_DECL, null, 2));
-      writeFile(dir, 'runtime/node/backend/src/services/restorer.js', "const r = require('../../../../scripts/restore/restore-check');\nmodule.exports = r;\n");
+      // restorer.js 在 runtime/node/backend/src/services/（5 段），要 **5** 级 ../ 才回到仓库根。
+      writeFile(dir, 'runtime/node/backend/src/services/restorer.js', "const r = require('../../../../../scripts/restore/restore-check');\nmodule.exports = r;\n");
     });
     const { stdout } = runGuard(root);
     assert.match(stdout, /"domain-direction":1/);

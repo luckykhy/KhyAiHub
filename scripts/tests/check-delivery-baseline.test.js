@@ -110,14 +110,14 @@ function mkFixture(mutate) {
 
   // ── 棘轮：四项实测值都与基线相等 ──
   write(
-    path.join('services', 'backend', 'src', 'constants', 'commandSchema.js'),
+    path.join('runtime', 'node', 'backend', 'src', 'constants', 'commandSchema.js'),
     "const ROUTER_COMMANDS = ['a', 'b'];\nmodule.exports = { ROUTER_COMMANDS };\n"
   );
   write(
-    path.join('services', 'backend', 'src', 'cli', 'aliases.js'),
+    path.join('runtime', 'node', 'backend', 'src', 'cli', 'aliases.js'),
     "module.exports = [{ command: 'a' }, { command: 'b' }, { command: 'c' }];\n"
   );
-  write(path.join('services', 'backend', 'src', 'cli', 'handlers', 'a.js'), "module.exports = {};\n");
+  write(path.join('runtime', 'node', 'backend', 'src', 'cli', 'handlers', 'a.js'), "module.exports = {};\n");
   write(
     path.join('docs', '10_规范', 'registry', 'RULES-REGISTRY.json'),
     JSON.stringify({ meta: { ruleCount: 1 }, rules: [{ id: 'X-001' }] }, null, 2) + '\n'
@@ -322,7 +322,7 @@ test('反向验证 D10：边界文档删掉"不支持清单" ⇒ delivery-bounda
 test('反向验证棘轮：多一个命令 / 多一条规则 ⇒ delivery-surface-ratchet-breach', () => {
   const { root } = mkFixture((write) => {
     write(
-      path.join('services', 'backend', 'src', 'constants', 'commandSchema.js'),
+      path.join('runtime', 'node', 'backend', 'src', 'constants', 'commandSchema.js'),
       "const ROUTER_COMMANDS = ['a', 'b', 'c'];\nmodule.exports = { ROUTER_COMMANDS };\n"
     );
     write(
@@ -460,7 +460,7 @@ test('--changed：全仓状态项（D2）不报，但棘轮恒报', () => {
   const { root } = mkFixture((write, r) => {
     fs.rmSync(path.join(r, 'dist'), { recursive: true, force: true });
     write(
-      path.join('services', 'backend', 'src', 'constants', 'commandSchema.js'),
+      path.join('runtime', 'node', 'backend', 'src', 'constants', 'commandSchema.js'),
       "const ROUTER_COMMANDS = ['a', 'b', 'c', 'd'];\nmodule.exports = { ROUTER_COMMANDS };\n"
     );
   });
@@ -477,7 +477,7 @@ function findingsOf(json, id) {
 test('阈值外部化：改基线即可改变判定（证明阈值真的来自文档，不是硬编码）', () => {
   const { root } = mkFixture((write, r) => {
     write(
-      path.join('services', 'backend', 'src', 'constants', 'commandSchema.js'),
+      path.join('runtime', 'node', 'backend', 'src', 'constants', 'commandSchema.js'),
       "const ROUTER_COMMANDS = ['a', 'b', 'c'];\nmodule.exports = { ROUTER_COMMANDS };\n"
     );
   });

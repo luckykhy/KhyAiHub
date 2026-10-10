@@ -27,16 +27,16 @@ def _ordered_unique(items):
 SDIST_RECURSIVE_INCLUDES = _ordered_unique([
     "runtime/node/backend",
     # ai-backend hosts the user-gateway / proxy-subscription / marketplace /
-    # plugins / workflow routers that services/backend's aiManagementServer
+    # plugins / workflow routers that runtime/node/backend's aiManagementServer
     # cross-requires via ../../../ai-backend/src/... . Omitting it made every
     # such daemon route 500 with "Cannot find module '../../../ai-backend/...'".
     "runtime/node/ai-backend",
     "runtime/substrate/platform/packages/shared",
     "runtime/substrate/platform/packages/moonbit-plugin-sdk",
     "docs",
-    "extensions",
+    "delivery/extension",
     "delivery/web/ai-frontend",
-    "software/khyquant",
+    "delivery/channel/khyquant",
     "runtime/boot/kernel/src",
     "runtime/boot/kernel/boot",
     "runtime/boot/kernel/moonbit",
@@ -56,7 +56,7 @@ SDIST_FILE_INCLUDES = _ordered_unique([
     "runtime/substrate/platform/khy_platform/bundled/runtime/khy/bundle.mjs",
     "package-lock.json",
     "delivery/web/ai-frontend/package-lock.json",
-    "software/khyquant/frontend/package-lock.json",
+    "delivery/channel/khyquant/frontend/package-lock.json",
     "README.md",
     "AGENTS.md",
 ])
@@ -65,7 +65,7 @@ SDIST_FILE_INCLUDES = _ordered_unique([
 # distribution. Keep the list path-specific where broad basenames would delete
 # required application source such as ``src/models`` or ``src/data``.
 SDIST_PRUNE_DIRS = _ordered_unique([
-    "extensions/bridges/khy-trae-bridge/node_modules",
+    "delivery/extension/bridges/khy-trae-bridge/node_modules",
     "runtime/node/backend/node_modules",
     "runtime/node/backend/vendor",
     # Historical prepack output. Source snapshots are immutable Release payloads
@@ -77,8 +77,8 @@ SDIST_PRUNE_DIRS = _ordered_unique([
     "runtime/node/ai-backend/node_modules",
     # khyosMarkdown's bridge, HTML shell, and OS integration ship in the sdist;
     # the 10.5 MB WYSIWYG vendor bundle is an immutable first-use payload.
-    "extensions/tools/khy-markdown/muya-embed/node_modules",
-    "extensions/tools/khy-markdown/vendor",
+    "delivery/extension/tools/khy-markdown/muya-embed/node_modules",
+    "delivery/extension/tools/khy-markdown/vendor",
     "delivery/web/ai-frontend/node_modules",
     "runtime/node/backend/models",
     "runtime/node/backend/logs",
@@ -89,12 +89,12 @@ SDIST_PRUNE_DIRS = _ordered_unique([
     "runtime/substrate/platform/packages/shared/logs",
     "runtime/substrate/platform/packages/shared/node_modules",
     "runtime/substrate/platform/packages/shared/vendor",
-    "software/khyquant/frontend/node_modules",
-    "software/khyquant/frontend/android",
-    "software/khyquant/frontend/android-sdk",
-    "software/khyquant/ml/models",
-    "software/khyquant/ml/data",
-    "software/khyquant/khy_quant/bundled",
+    "delivery/channel/khyquant/frontend/node_modules",
+    "delivery/channel/khyquant/frontend/android",
+    "delivery/channel/khyquant/frontend/android-sdk",
+    "delivery/channel/khyquant/ml/models",
+    "delivery/channel/khyquant/ml/data",
+    "delivery/channel/khyquant/khy_quant/bundled",
     ".tmp",
     "dist",
     # ``prune dist`` above only matches the REPOSITORY-ROOT dist/. Nested frontend
@@ -106,8 +106,8 @@ SDIST_PRUNE_DIRS = _ordered_unique([
     # of the SSOT and the public/ mirror below. Both trees regenerate from source
     # via each frontend's build script, so they are pure derivatives.
     "delivery/web/ai-frontend/dist",
-    "software/khyquant/frontend/dist",
-    # Build-time mirror of extensions/tools/khy-markdown/vendor/ produced by
+    "delivery/channel/khyquant/frontend/dist",
+    # Build-time mirror of delivery/extension/tools/khy-markdown/vendor/ produced by
     # delivery/web/ai-frontend/scripts/sync-md-vendor.mjs (srcDir -> public/vendor).
     # Verified byte-identical to the SSOT, so shipping it doubles 10.52 MB for
     # nothing; the sync script recreates it during the frontend build.
@@ -127,9 +127,9 @@ SDIST_PRUNE_DIRS = _ordered_unique([
     "runtime/node/backend/test",
     "scripts/tests",
     "runtime/node/ai-backend/test",
-    "software/khyquant/tests",
+    "delivery/channel/khyquant/tests",
     "runtime/substrate/platform/packages/shared/tests",
-    "extensions/tools/khy-markdown/test",
+    "delivery/extension/tools/khy-markdown/test",
     "delivery/web/ai-frontend/test",
     "runtime/boot/kernel/build",
     "runtime/boot/kernel/iso/output",
@@ -145,7 +145,7 @@ SDIST_PRUNE_DIRS = _ordered_unique([
     # ── Local RUNTIME STATE. Not a size problem, a correctness one. ──────────
     # Both .khy trees are this machine's own generated state (storageRoots.js
     # writes them), untracked, and reachable by ``recursive-include
-    # services/backend *``. The 1.1.11 sdist therefore shipped one developer's
+    # runtime/node/backend *``. The 1.1.11 sdist therefore shipped one developer's
     # heal-audit.jsonl (523.7 KB of local self-heal history) to every user, and
     # runtime/node/backend/src/.khy carries a khyquant SQLite database that only
     # escaped because ``*.db`` happens to be excluded below.
@@ -180,11 +180,11 @@ SDIST_EXCLUDES = _ordered_unique([
     # Defense-in-depth: exact ``.env`` paths pruned from the sdist even though
     # .gitignore already blocks them and GLOBAL_EXCLUDES ``.env.*`` covers suffixed
     # variants. Forest layout keeps real dev credentials under both the service root
-    # (services/.env) and the backend (runtime/node/backend/.env); the legacy ``backend/.env``
+    # (runtime/node/.env) and the backend (runtime/node/backend/.env); the legacy ``backend/.env``
     # stays listed so a pre-forest checkout can never regress. Users configure via real
     # env vars / docs, never a shipped file.
     "runtime/node/backend/.env",
-    "services/.env",
+    "runtime/node/.env",
     "backend/.env",
     ".env",
     # The second, drifted copy of the regenerable mermaid bundle. The exclude
@@ -245,7 +245,7 @@ SDIST_RECURSIVE_EXCLUDES = [
     # ("[OPS-MAN-066] khyos进化提示词手册-1000条.md", 594 KB) contains a space,
     # so no ``exclude``/``global-exclude`` line can name it literally.
     ("docs/07_OPS_运维", ["*进化提示词手册*"]),
-    ("kernel", ["*.o", "*.bin", "*.elf", "*.efi", "*.iso", "*.img"]),
+    ("runtime/boot/kernel", ["*.o", "*.bin", "*.elf", "*.efi", "*.iso", "*.img"]),
     ("runtime/substrate/platform/packages/moonbit-plugin-sdk", ["*.wasm"]),
     # The three docs/**/*.pdf are rendered exports of their OPS-MAN .md sources.
     # Their .html siblings used to be handled here too; that rule is now the
@@ -321,7 +321,7 @@ GLOBAL_EXCLUDES = _ordered_unique([
     # 3-byte placeholder with zero references in the tree; a real one would be a
     # packaged copy of the package being packaged.
     "*.tgz",
-    # SQLite write-ahead sidecars, anywhere. The services/backend recursive
+    # SQLite write-ahead sidecars, anywhere. The runtime/node/backend recursive
     # exclude covers today's occurrences; this keeps a future one out of any tree.
     "*.db-shm",
     "*.db-wal",
@@ -346,16 +346,16 @@ GLOBAL_EXCLUDES = _ordered_unique([
 # has an adjacent .md it is a generated derivative and must stay excluded.
 SDIST_FINAL_INCLUDES = _ordered_unique([
     "delivery/web/ai-frontend/index.html",
-    "software/khyquant/frontend/index.html",
-    "software/khyquant/frontend/ml-test.html",
-    "software/khyquant/frontend/public/offline.html",
-    "extensions/tools/khy-markdown/khyosMarkdown.html",
+    "delivery/channel/khyquant/frontend/index.html",
+    "delivery/channel/khyquant/frontend/ml-test.html",
+    "delivery/channel/khyquant/frontend/public/offline.html",
+    "delivery/extension/tools/khy-markdown/khyosMarkdown.html",
 ])
 
 # Wheel build copy/prune rules used by ``setup.py``.
 BASE_COPY_PAYLOADS = [
     ("runtime/node/backend", "runtime/node/backend"),
-    # ai-backend must sit beside services/backend in the bundle so the daemon's
+    # ai-backend must sit beside runtime/node/backend in the bundle so the daemon's
     # ../../../ai-backend/src/... cross-requires resolve. Its bare npm deps +
     # @khy/shared are resolved at runtime via a NODE_PATH fallback to
     # bundled/runtime/node/backend/node_modules (see aiBackendModuleResolve.js);
@@ -366,7 +366,7 @@ BASE_COPY_PAYLOADS = [
     # Full root scripts/ tree (workshop completeness, consistent with runtime/boot/kernel/
     # moonbit/khyquant source shipping). Ships guard cores (scripts/lib/*),
     # install/portable/khytogo/docs/ci helpers. (The Docker ISO build moved to
-    # extensions/scripts/khy-alpine-iso in the 2026-08-19 extension import and
+    # delivery/extension/scripts/khy-alpine-iso in the 2026-08-19 extension import and
     # ships via the extensions payload below.) scripts/lib/* is *runtime-referenced*: selfRepair/primitives.js
     # does require('../../../../../scripts/lib/leafContractGuard') which resolves
     # to bundled/scripts/lib in the installed layout — shipping it enables the
@@ -378,8 +378,8 @@ BASE_COPY_PAYLOADS = [
     # khyosMarkdown shell + bridge + OS registration; its vendor/ subtree is
     # excluded by SDIST_PRUNE_DIRS and provisioned from the immutable Release.
     # Shipping the whole tree (not just one extension) is what makes the repo
-    # extension root <appRoot>/extensions/ exist in an installed layout at all.
-    ("extensions", "extensions"),
+    # extension root <appRoot>/delivery/extension/ exist in an installed layout at all.
+    ("delivery/extension", "delivery/extension"),
 ]
 
 ROOT_DOCS = ["README.md", "AGENTS.md"]
@@ -440,7 +440,7 @@ COPY_EXCLUDE_PATTERNS = _ordered_unique([
     "*.key",
     "*.pem",
     # Runtime data + stray archives that are cruft, never source. *.zip is
-    # intentionally NOT excluded — services/ai-backend ships a legit test
+    # intentionally NOT excluded — runtime/node/ai-backend ships a legit test
     # fixture (test/fixtures/coze/sample-linear.zip).
     "*.rar",
     ".khy",
@@ -527,7 +527,7 @@ AUDIT_FORBIDDEN_FILE_GLOBS = _ordered_unique([
     "*.safetensors",
     # Stray archives and encrypted payloads must never land in install artifacts.
     # First-use payloads live on the immutable GitHub Release instead.
-    # *.zip is intentionally NOT forbidden — services/ai-backend ships a legit
+    # *.zip is intentionally NOT forbidden — runtime/node/ai-backend ships a legit
     # test fixture (test/fixtures/coze/sample-linear.zip).
     "*.rar",
     "*.tar.gz",
@@ -599,7 +599,7 @@ SDIST_ALLOWED_SUFFIXES = frozenset([
     ".js", ".mjs", ".cjs", ".ts", ".vue", ".py", ".c", ".h", ".asm", ".go",
     ".cs", ".mbt", ".mbti", ".sql",
     # Rust source of the first-party Tauri desktop extension
-    # (extensions/scripts/khy-desktop-rd/openflux/). Its Cargo.toml, package.json
+    # (delivery/extension/scripts/khy-desktop-rd/openflux/). Its Cargo.toml, package.json
     # and README already ship; without .rs the sdist carried a manifest whose
     # lib.rs was missing, i.e. a crate that cannot be built from the release.
     ".rs",
@@ -642,14 +642,14 @@ SDIST_ALLOWED_PATHS = _ordered_unique([
     # "never ship prebuilt binaries" rule is about provenance, not weight —
     # keeping it means the workbench has a double-clickable entry on a fresh
     # install; the .cs source ships next to it either way.
-    "extensions/tools/khy-markdown/KhyosMarkdown.exe",
+    "delivery/extension/tools/khy-markdown/KhyosMarkdown.exe",
     # 8 KB packaged VS Code / Trae extension. The bridge installs itself from
     # this file; without it the IDE bridge has nothing to hand the editor.
     # Pattern rather than exact path so a version bump does not fail the build.
-    "extensions/bridges/khy-trae-bridge/*.vsix",
+    "delivery/extension/bridges/khy-trae-bridge/*.vsix",
     # 41-byte hand-written wasm module exporting `add`, served by the frontend's
     # wasm demo page. Not a compiled payload — it IS the demo.
-    "software/khyquant/frontend/public/wasm/*.wasm",
+    "delivery/channel/khyquant/frontend/public/wasm/*.wasm",
 ])
 
 # Single-file size ceiling. Nothing in a source release should be a megabyte of
@@ -735,7 +735,7 @@ REQUIRED_SDIST_PATHS = _ordered_unique([
     # the release audit fails here instead of shipping a broken wheel.
     "runtime/node/ai-backend/src/middleware/auth.js",
     "delivery/web/ai-frontend/src/main.js",
-    "software/khyquant/frontend/src/main.js",
+    "delivery/channel/khyquant/frontend/src/main.js",
     "runtime/substrate/platform/khy_platform/bundled/runtime/khy/bundle.mjs",
 ])
 

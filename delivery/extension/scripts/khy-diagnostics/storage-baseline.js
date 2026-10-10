@@ -241,15 +241,13 @@ function countNested(dir) {
 
 function probeBuildOutputs() {
   const candidates = [
-    'apps/ai-frontend/dist',
-    'software/khyquant/frontend/dist',
-    'services/backend/dist',
-    'platform/khy_platform/bundled',
-    'packaging/npm/bundled',
-    'apps/khy-mobile/android/build',
-    'apps/khy-mobile/android/app/build',
-    'apps/khy-mobile/android/.gradle',
-    'extensions/tools/khy-markdown/vendor',
+    'delivery/web/ai-frontend/dist',
+    'delivery/channel/khyquant/frontend/dist',
+    'runtime/node/backend/dist',
+    'runtime/substrate/platform/khy_platform/bundled',
+    'works/ship/npm/bundled',
+    'entries/pip',
+    'delivery/extension/tools/khy-markdown/vendor',
     'publish',
     'coverage',
   ];
@@ -265,10 +263,10 @@ function probeBuildOutputs() {
 function probeLockfiles() {
   const names = ['package-lock.json', 'pnpm-lock.yaml', 'yarn.lock'];
   const dirs = [
-    '.', 'services/backend', 'services/ai-backend', 'apps/ai-frontend', 'apps/khy-mobile',
-    'platform/packages/shared', 'platform/packages/ui-shared', 'software/khyquant/frontend',
-    'tools/khyos-markdown', 'tools/khyos-markdown/muya-embed', 'scripts/docs/mermaid-embed',
-    'extensions/tools/khy-markdown',
+    '.', 'runtime/node/backend', 'runtime/node/ai-backend', 'delivery/web/ai-frontend',
+    'runtime/substrate/platform/packages/shared', 'runtime/substrate/platform/packages/ui-shared',
+    'delivery/channel/khyquant/frontend', 'delivery/extension/tools/khy-markdown',
+    'delivery/extension/tools/khy-markdown/muya-embed', 'scripts/docs/mermaid-embed',
   ];
   const files = [];
   for (const dir of dirs) {

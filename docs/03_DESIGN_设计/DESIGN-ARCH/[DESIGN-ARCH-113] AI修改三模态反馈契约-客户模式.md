@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-113] AI 修改三模态反馈契约（客户模式）
 
 <!-- RULES-REGISTRY: RUNTIME-007, RUNTIME-008, RUNTIME-009 -->

@@ -105,6 +105,11 @@ function isFreeZenModelId(id) {
 
 /**
  * Drop paid/non-free ids from a Zen model list (string or {id} entries).
+ *
+ * 同时剔除已废弃项：`/v1/models` 会继续挂着上游已下线的 id（exo-free 实测 410
+ * ModelDeprecated 至今仍在目录里），只判 `-free` 后缀会让用户选中后才在调用时炸。
+ * 废弃判定见 zenRetiredModels（静态名单 + 调用反馈落盘账本）。
+ *
  * Non-array → []; never throws. Order preserved.
  * @param {Array<string|{id?:string}>|null|undefined} models
  */
@@ -112,9 +117,21 @@ function filterFreeZenModels(models) {
   if (!Array.isArray(models)) {
     return [];
   }
+  let retired;
+  try {
+    retired = require('./zenRetiredModels');
+  } catch {
+    retired = null; // 账本模块缺失不该清空整个列表
+  }
   return models.filter((entry) => {
     const id = typeof entry === 'string' ? entry : entry && entry.id;
-    return isFreeZenModelId(id);
+    if (!isFreeZenModelId(id)) {
+      return false;
+    }
+    if (retired && retired.isRetired(id)) {
+      return false;
+    }
+    return true;
   });
 }
 

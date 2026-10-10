@@ -70,7 +70,7 @@ function buildPayload(khyExe) {
   fs.writeFileSync(path.join(PAYLOAD_DIR, '_internal', 'version.txt'), version);
 
   // Copy any bundled runtime files if they exist
-  const runtimeDir = path.join(ROOT, 'platform', 'khy_platform', 'bundled', 'runtime', 'khy');
+  const runtimeDir = path.join(ROOT, 'runtime', 'substrate', 'platform', 'khy_platform', 'bundled', 'runtime', 'khy');
   if (fs.existsSync(runtimeDir)) {
     fs.copyFileSync(
       path.join(runtimeDir, 'bundle.mjs'),

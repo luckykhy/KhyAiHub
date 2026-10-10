@@ -20,9 +20,17 @@
       :style="drawerStyle"
     >
       <div class="drawer-header">
-        <img src="/logo.png" alt="KHY Quant" class="drawer-logo" />
+        <img
+          src="/logo.png"
+          alt="KHY Quant"
+          class="drawer-logo"
+        >
         <div class="drawer-user">
-          <img src="/school-badge.svg" alt="avatar" class="drawer-avatar" />
+          <img
+            src="/school-badge.svg"
+            alt="avatar"
+            class="drawer-avatar"
+          >
           <span class="drawer-username">{{ userStore.user?.username || '用户' }}</span>
         </div>
       </div>
@@ -35,14 +43,18 @@
           :class="{ active: isActive(item.path) }"
           @click="navigateTo(item.path)"
         >
-          <el-icon :size="22"><component :is="item.icon" /></el-icon>
+          <el-icon :size="22">
+            <component :is="item.icon" />
+          </el-icon>
           <span>{{ item.label }}</span>
         </div>
       </nav>
 
       <div class="drawer-footer">
         <div class="drawer-mode">
-          <div class="drawer-mode-title">界面模式</div>
+          <div class="drawer-mode-title">
+            界面模式
+          </div>
           <div class="drawer-mode-actions">
             <button
               class="drawer-mode-btn"
@@ -68,8 +80,13 @@
           </div>
         </div>
 
-        <div class="drawer-nav-item logout" @click="handleLogout">
-          <el-icon :size="22"><SwitchButton /></el-icon>
+        <div
+          class="drawer-nav-item logout"
+          @click="handleLogout"
+        >
+          <el-icon :size="22">
+            <SwitchButton />
+          </el-icon>
           <span>退出登录</span>
         </div>
       </div>
@@ -78,21 +95,46 @@
     <!-- Top bar -->
     <header class="mobile-top-bar">
       <div class="top-bar-left">
-        <button class="hamburger-btn" @click="drawerOpen = !drawerOpen" aria-label="Menu">
+        <button
+          class="hamburger-btn"
+          aria-label="Menu"
+          @click="drawerOpen = !drawerOpen"
+        >
           <span class="hamburger-line" />
           <span class="hamburger-line" />
           <span class="hamburger-line" />
         </button>
-        <img src="/logo.png" alt="KHY" class="top-bar-logo" />
+        <img
+          src="/logo.png"
+          alt="KHY"
+          class="top-bar-logo"
+        >
       </div>
       <div class="top-bar-right">
-        <el-badge :value="notificationCount" :hidden="notificationCount === 0">
-          <button class="icon-btn" @click="showNotifications" aria-label="Notifications">
-            <el-icon :size="22"><Bell /></el-icon>
+        <el-badge
+          :value="notificationCount"
+          :hidden="notificationCount === 0"
+        >
+          <button
+            class="icon-btn"
+            aria-label="Notifications"
+            @click="showNotifications"
+          >
+            <el-icon :size="22">
+              <Bell />
+            </el-icon>
           </button>
         </el-badge>
-        <button class="avatar-btn" @click="navigateTo('/profile')" aria-label="Profile">
-          <img src="/school-badge.svg" alt="avatar" class="top-bar-avatar" />
+        <button
+          class="avatar-btn"
+          aria-label="Profile"
+          @click="navigateTo('/profile')"
+        >
+          <img
+            src="/school-badge.svg"
+            alt="avatar"
+            class="top-bar-avatar"
+          >
         </button>
       </div>
     </header>
@@ -111,7 +153,9 @@
         :class="{ active: isActive(item.path) }"
         @click="navigateTo(item.path)"
       >
-        <el-icon :size="20"><component :is="item.icon" /></el-icon>
+        <el-icon :size="20">
+          <component :is="item.icon" />
+        </el-icon>
         <span>{{ item.label }}</span>
       </button>
     </nav>
@@ -131,18 +175,33 @@
           @click="handleNotificationClick(notification)"
         >
           <div class="notification-icon">
-            <el-icon :size="20" :color="getNotificationColor(notification.type)">
+            <el-icon
+              :size="20"
+              :color="getNotificationColor(notification.type)"
+            >
               <component :is="getNotificationIcon(notification.type)" />
             </el-icon>
           </div>
           <div class="notification-content">
-            <div class="notification-title">{{ notification.title }}</div>
-            <div class="notification-message">{{ notification.message }}</div>
-            <div class="notification-time">{{ formatTime(notification.createdAt) }}</div>
+            <div class="notification-title">
+              {{ notification.title }}
+            </div>
+            <div class="notification-message">
+              {{ notification.message }}
+            </div>
+            <div class="notification-time">
+              {{ formatTime(notification.createdAt) }}
+            </div>
           </div>
-          <div class="notification-badge" v-if="!notification.read" />
+          <div
+            v-if="!notification.read"
+            class="notification-badge"
+          />
         </div>
-        <el-empty v-if="notifications.length === 0" description="暂无通知" />
+        <el-empty
+          v-if="notifications.length === 0"
+          description="暂无通知"
+        />
       </div>
     </el-drawer>
   </div>

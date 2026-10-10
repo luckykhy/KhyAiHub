@@ -80,6 +80,49 @@ async function parallelPrefetch(options = {}) {
 }
 
 /**
+ * 3s 档的启动清理：跑清理 → （低余量时不起周期 timer）→ 体积自检 → 实际动作播报。
+ *
+ * 抽成模块级函数只为压平 RUNNERS 闭包里的缩进（COMP-001 嵌套棘轮），执行顺序与
+ * fail-soft 语义和原内联实现逐行一致。`emit` / `emitFootprintNotice` 由调用方注入
+ * —— 它们捕获了 deferredPrefetch 内部的输出通道。
+ */
+function _runStartupCleanup(lowHeadroom, emit, emitFootprintNotice) {
+  try {
+    const cleanup = require('../services/cleanupService');
+    const result = cleanup.runCleanup({ trigger: 'startup' });
+    // 低余量时只保留启动清理，不起周期 timer——与 cleanupService 自身
+    // KHY_ENABLE_PERIODIC_SCAN=false 的约束硬件处理同义，但改由实测余量触发。
+    if (!lowHeadroom) cleanup.startPeriodicCleanup({ skipInitial: true });
+    // 体积自检:只报不删。清理跑完之后才测,报的才是清理之后的真实占用。
+    emitFootprintNotice(cleanup);
+    if (result.summary && result.summary.actions && result.summary.actions.length > 0) {
+      try {
+        const chalk = require('chalk').default || require('chalk');
+        emit(
+          chalk.dim(
+            `  清理  ${result.summary.actions.join(', ')} (释放 ${result.summary.freedHuman})`
+          )
+        );
+      } catch {
+        /* chalk not available */
+      }
+    }
+  } catch {
+    /* non-critical */
+  }
+}
+
+/** 安全监视（10 分钟一扫）。低余量时调用方直接跳过；本函数只负责 fail-soft。 */
+function _startSecurityMonitor() {
+  try {
+    const { startSecurityMonitor } = require('../services/securityGuardService');
+    startSecurityMonitor();
+  } catch {
+    /* non-critical */
+  }
+}
+
+/**
  * Schedule deferred background tasks after REPL is ready.
  *
  * Returns an array of timer IDs that can be cleared on shutdown:
@@ -273,34 +316,8 @@ function deferredPrefetch(options = {}) {
       }
     },
 
-    // 3s: Data cleanup + periodic cleanup
-    cleanupService: () => {
-      try {
-        const cleanup = require('../services/cleanupService');
-        const result = cleanup.runCleanup({ trigger: 'startup' });
-        // 低余量时只保留启动清理，不起周期 timer——与 cleanupService 自身
-        // KHY_ENABLE_PERIODIC_SCAN=false 的约束硬件处理同义，但改由实测余量触发。
-        if (!lowHeadroom) {
-          cleanup.startPeriodicCleanup({ skipInitial: true });
-        }
-        // 体积自检:只报不删。清理跑完之后才测,报的才是清理之后的真实占用。
-        emitFootprintStorageNotice(cleanup);
-        if (result.summary && result.summary.actions && result.summary.actions.length > 0) {
-          try {
-            const chalk = require('chalk').default || require('chalk');
-            emit(
-              chalk.dim(
-                `  清理  ${result.summary.actions.join(', ')} (释放 ${result.summary.freedHuman})`
-              )
-            );
-          } catch {
-            /* chalk not available */
-          }
-        }
-      } catch {
-        /* non-critical */
-      }
-    },
+    // 3s: Data cleanup + periodic cleanup（实现在模块级 _runStartupCleanup）
+    cleanupService: () => _runStartupCleanup(lowHeadroom, emit, emitFootprintStorageNotice),
 
     // 4s: Resource guard memory monitor
     resourceGuard: () => {
@@ -424,14 +441,7 @@ function deferredPrefetch(options = {}) {
       }
 
       // 低余量时跳过安全监视（10 分钟一扫，非关键）；低内存机器上它只会加剧换页。
-      try {
-        if (!lowHeadroom) {
-          const { startSecurityMonitor } = require('../services/securityGuardService');
-          startSecurityMonitor();
-        }
-      } catch {
-        /* non-critical */
-      }
+      if (!lowHeadroom) _startSecurityMonitor();
     },
   };
 

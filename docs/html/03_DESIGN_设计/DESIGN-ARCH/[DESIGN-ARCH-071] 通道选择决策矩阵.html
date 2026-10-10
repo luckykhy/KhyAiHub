@@ -26,6 +26,7 @@
       <header class="hero reveal"><h1>[DESIGN-ARCH-071] 通道选择决策矩阵</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-071-通道选择决策矩阵">[DESIGN-ARCH-071] 通道选择决策矩阵</a></li><li class="lvl-2"><a href="#0-五通道定义与真源">0. 五通道定义与真源</a></li><li class="lvl-2"><a href="#1-判定顺序-五问-自上而下首个命中即停">1. 判定顺序（五问，自上而下首个命中即停）</a></li><li class="lvl-2"><a href="#2-各通道适用-禁止-降级">2. 各通道适用 / 禁止 / 降级</a></li><li class="lvl-2"><a href="#3-反模式-命中即返工">3. 反模式（命中即返工）</a></li><li class="lvl-2"><a href="#4-与既有治理的关系">4. 与既有治理的关系</a></li><li class="lvl-2"><a href="#5-维护与验证">5. 维护与验证</a></li></ul></nav>
       <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: done --&gt;</p>
 <h1 id="design-arch-071-通道选择决策矩阵">[DESIGN-ARCH-071] 通道选择决策矩阵<a class="anchor" href="#design-arch-071-通道选择决策矩阵" aria-label="锚点">#</a></h1>
 <blockquote><p><strong>定位</strong>：任何操作者（AI 助手、agent 工具循环、REPL、人类、外部脚本）要对 khy-os 做「一次读取或一次操作」时，在五条通道之间做选择的<strong>单一真源</strong>。<br><strong>适用边界</strong>：只裁决「用哪条通道完成这次操作」，不新增运行时业务逻辑，不替代 <code>[DESIGN-LAY-005]</code>（代码层级与依赖方向）、<code>[DESIGN-GOV-001]</code>（治理板块）、<code>[DESIGN-ARCH-056]</code>（桌面操控实现）；冲突时以各单一真源为准。<br><strong>首屏速查</strong>：<code>AGENTS.md</code> 架构速查的「通道选择判定」节是本矩阵的压缩版，二者必须同步修改。</p></blockquote>
 <hr>

@@ -7,7 +7,7 @@ const { spawnSync } = require('child_process');
 const { FIXTURES } = require('./lib/providerContractFixtures');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
-const ADAPTER_DIR = path.join(REPO_ROOT, 'services', 'backend', 'src', 'services', 'gateway', 'adapters');
+const ADAPTER_DIR = path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'src', 'services', 'gateway', 'adapters');
 const CHILD_RUNNER = path.join(__dirname, 'lib', 'providerContractChild.js');
 const RESULT_PREFIX = '__KHY_PROVIDER_CONTRACT__=';
 const TOKEN_FIELDS = Object.freeze(['inputTokens', 'outputTokens', 'totalTokens']);

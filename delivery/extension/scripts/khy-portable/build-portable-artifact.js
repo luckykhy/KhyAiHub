@@ -101,8 +101,8 @@ function resolveInputs(options) {
     slug,
     artifactName: `${options.kind}-${VERSION}-${slug}`,
     artifactDir: path.join(options.out, `${options.kind}-${VERSION}-${slug}`),
-    aiFrontend: path.join(ROOT, 'apps', 'ai-frontend', 'dist'),
-    quantFrontend: path.join(ROOT, 'software', 'khyquant', 'frontend', 'dist'),
+    aiFrontend: path.join(ROOT, 'delivery', 'web', 'ai-frontend', 'dist'),
+    quantFrontend: path.join(ROOT, 'delivery', 'channel', 'khyquant', 'frontend', 'dist'),
     runtimeBundle: path.join(ROOT, 'entries', 'executables', 'modules', 'khy', 'bundle.mjs'),
   };
 }
@@ -143,8 +143,8 @@ function validateInputs(options, inputs) {
       errors,
     );
     requireDir(path.join(ROOT, 'node_modules'), 'root workspace dependencies', errors);
-    requireDir(path.join(ROOT, 'apps', 'ai-frontend', 'node_modules'), 'AI frontend dependencies', errors);
-    requireDir(path.join(ROOT, 'software', 'khyquant', 'frontend', 'node_modules'), 'quant frontend dependencies', errors);
+    requireDir(path.join(ROOT, 'delivery', 'web', 'ai-frontend', 'node_modules'), 'AI frontend dependencies', errors);
+    requireDir(path.join(ROOT, 'delivery', 'channel', 'khyquant', 'frontend', 'node_modules'), 'quant frontend dependencies', errors);
   }
   requireFile(path.join(inputs.aiFrontend, 'index.html'), 'AI frontend build', errors);
   requireFile(path.join(inputs.quantFrontend, 'index.html'), 'quant frontend build', errors);
@@ -288,7 +288,7 @@ function writeLaunchers(artifactDir, kind, target) {
     lines.push('export npm_config_cache="$ROOT/state/.khy/cache/npm"');
     lines.push('export PIP_CACHE_DIR="$ROOT/state/.khy/cache/pip"');
     if (kind === 'portable-dev') {
-      lines.push('export PYTHONPATH="$ROOT/source/platform:$ROOT/source/software/khyquant${PYTHONPATH:+:$PYTHONPATH}"');
+      lines.push('export PYTHONPATH="$ROOT/source/runtime/substrate/platform:$ROOT/source/delivery/channel/khyquant${PYTHONPATH:+:$PYTHONPATH}"');
       lines.push('export npm_config_cache="$ROOT/caches/npm"');
       lines.push('export PIP_CACHE_DIR="$ROOT/caches/pip"');
       lines.push('if [ "${1:-}" = "shell" ]; then');
@@ -349,6 +349,11 @@ function runtimeSourceFilter(relative, entry) {
   if (isExcludedSource(relative, entry)) return false;
   const normalized = relative.split(path.sep).join('/');
   const excludedRoots = [
+    'runtime/node/backend/node_modules',
+    'runtime/node/backend/tests',
+    'runtime/node/backend/coverage',
+    'delivery/channel/khyquant/frontend',
+    // 迁移前的旧布局。新布局下这些前缀永不命中，留作兜底以免旧检出被整棵打进包。
     'services/backend/node_modules',
     'services/backend/tests',
     'services/backend/coverage',
@@ -356,6 +361,11 @@ function runtimeSourceFilter(relative, entry) {
   ];
   if (excludedRoots.some(root => normalized === root || normalized.startsWith(`${root}/`))) return false;
   const roots = [
+    'runtime/node/backend',
+    'runtime/substrate/platform/packages/shared',
+    'delivery/channel/khyquant',
+    'runtime/substrate/platform/khy_platform',
+    // 旧布局兜底（同上）。
     'services/backend',
     'platform/packages/shared',
     'software/khyquant',
@@ -423,8 +433,8 @@ async function buildArtifact(options) {
           quant: { built: true, entry: 'web/quant/index.html' },
         }
       : {
-          ai: { source: 'source/apps/ai-frontend' },
-          quant: { source: 'source/software/khyquant/frontend' },
+          ai: { source: 'source/delivery/web/ai-frontend' },
+          quant: { source: 'source/delivery/channel/khyquant/frontend' },
         },
     nativeModules: [],
     source: { commit: buildInfo.sourceCommit },

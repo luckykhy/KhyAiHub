@@ -5,8 +5,8 @@ packages:
   - runtime/node/backend
   - runtime/node/ai-backend
   - delivery/web/ai-frontend
-  - delivery/desktop/khyos-desktop
   - delivery/web/provider-hub
+  - delivery/channel/khyquant/frontend
   - delivery/extension/tools/khy-markdown
 
 onlyBuiltDependencies:

@@ -49,6 +49,8 @@ function isEnabled(env) {
 const DATA_FILE_SUFFIXES = [
   // 单一真源本身
   'src/constants/models.js',
+  // 已知模型上下文窗口属性表(键=模型名/前缀,描述各模型窗口值;非选用逻辑)
+  'src/constants/modelContextWindows.js',
   // 评分 / 能力映射(键=模型 id,描述各模型属性)
   'src/cli/ai.js',
   // 网关别名表 + 各 pool 默认模型数据映射

@@ -11,7 +11,15 @@
 const test = require('node:test');
 const assert = require('node:assert');
 
+const fsx = require('node:fs');
+const osp = require('node:os');
+const pth = require('node:path');
+const TMP_HOME = fsx.mkdtempSync(pth.join(osp.tmpdir(), 'khy-local-loop-'));
+process.env.KHY_DATA_HOME = TMP_HOME;
+
 const loop = require('../../src/services/localToolLoop');
+const journal = require('../../src/services/tool/toolLoopJournal');
+const receiptSvc = require('../../src/services/receiptService');
 
 const TOOL_DEFS = [
   { name: 'Read', description: 'read a file', parameters: { type: 'object', properties: { file_path: { type: 'string' } }, required: ['file_path'] } },
@@ -511,4 +519,69 @@ test('stable dedup signature: reordered params collapse to one call', async () =
   // Param object is identical (just reordered) → executed once, then no_progress.
   assert.strictEqual(execCount, 1, 'reordered-key duplicate executed only once');
   assert.strictEqual(res.stopReason, 'no_progress');
+});
+
+function _newRuns(before) {
+  return journal.listRunIds().filter((id) => !before.has(id));
+}
+
+const _OPEN = '<' + 'tool_call>';
+const _CLOSE = '<' + '/tool_call>';
+
+test('each local-loop exit leaves a terminal record with a joinable requestId', async () => {
+  const before = new Set(journal.listRunIds());
+  const generate = scriptedGenerate([
+    '读文件。' + _OPEN + JSON.stringify({ name: 'Read', params: { path: 'a.txt' } }) + _CLOSE,
+    '读到了，回答完成。',
+  ]);
+  await loop.runLocalToolLoop('读 a.txt', {
+    generate,
+    toolDefinitions: TOOL_DEFS,
+    executeTool: async () => ({ success: true, output: 'ok' }),
+  });
+  const ids = _newRuns(before);
+  assert.ok(ids.length >= 1, '应新增至少一条轨迹');
+  const recs = journal.readJournal(ids[ids.length - 1]);
+  const start = recs.find((r) => r.type === 'start');
+  const end = recs.find((r) => r.type === 'end');
+  assert.ok(start && start.requestId, 'start 必须带 requestId——轨迹与回执唯一的公共键');
+  assert.ok(start.maxIterations > 0, 'start 记的必须是生效上限，不是请求值');
+  assert.ok(end, '正常收尾必须写终点记录');
+  assert.strictEqual(end.reason, 'final_answer');
+  assert.strictEqual(end.ok, true);
+  assert.strictEqual(end.maxIterations, start.maxIterations);
+
+  const rc = receiptSvc.listReceipts({ full: true }).find((r) => r.requestId === start.requestId);
+  assert.ok(rc, '回执必须能按 requestId 与轨迹对上账');
+  assert.strictEqual(rc.finalizeReason, 'delivery');
+  assert.strictEqual(typeof rc.outcome.achieved, 'boolean', '裁决必须落盘');
+});
+
+test('the max-iterations exit is recorded as a non-ok terminal reason', async () => {
+  const before = new Set(journal.listRunIds());
+  let n = 0;
+  const generate = async () => {
+    n += 1;
+    return {
+      success: true,
+      content: '再查第 ' + n + ' 次。' + _OPEN
+        + JSON.stringify({ name: 'Grep', params: { pattern: 'pat' + n } }) + _CLOSE,
+    };
+  };
+  const res = await loop.runLocalToolLoop('一直查', {
+    generate,
+    toolDefinitions: TOOL_DEFS,
+    maxIterations: 2,
+    executeTool: async () => ({ success: true, output: 'found' }),
+  });
+  assert.strictEqual(res.stopReason, 'max_iterations');
+  const ids = _newRuns(before);
+  const recs = journal.readJournal(ids[ids.length - 1]);
+  const end = recs.find((r) => r.type === 'end');
+  assert.ok(end, '撞上限出口也必须写终点');
+  assert.strictEqual(end.reason, 'max-iterations');
+  assert.strictEqual(end.ok, false);
+  const rc = receiptSvc.listReceipts({ full: true }).find((r) => r.requestId === recs[0].requestId);
+  assert.strictEqual(rc.outcome.stoppedByLimit, true);
+  assert.strictEqual(rc.outcome.achieved, false);
 });

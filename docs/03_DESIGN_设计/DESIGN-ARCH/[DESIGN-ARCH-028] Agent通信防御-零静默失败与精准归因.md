@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # DESIGN-ARCH-028 · Agent 通信防御：零静默失败与精准归因
 
 > 状态：已实现（services/backend）

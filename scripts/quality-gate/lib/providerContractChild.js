@@ -190,6 +190,29 @@ function installModuleFixtures(adapterName) {
         }),
       };
     }
+    // 外部 ACP 智能体：会话真身要起一个外部进程（acpAgentInvocation），夹具里替换掉整层，
+    // 只保留适配器自己的编排——注册表 → 解析命令 → 会话 → 把 chunk/usage 翻成网关形状。
+    if (adapterName === 'acpAgentAdapter.js' && (request.endsWith('/acpAgentInvocation') || request.endsWith('acpAgentInvocation'))) {
+      return {
+        loadAgentRegistry: () => ({ 'fixture-acp-agent': ['fixture-acp-command'] }),
+        resolveAgentCommand: () => ({ command: 'fixture-acp-command', args: [] }),
+        getConnection: () => ({
+          agentInfo: { name: FIXTURE_MODEL },
+          prompt: async (_text, handlers) => {
+            handlers?.onChunk?.({ type: 'text', text: FIXTURE_TEXT });
+            handlers?.onUpdate?.({
+              sessionUpdate: 'usage_update',
+              used: 2,
+              size: 5,
+              cost: { amount: 0, currency: 'CNY' },
+            });
+            return { result: { stopReason: 'end_turn' } };
+          },
+          cancel: () => {},
+        }),
+        destroyConnection: async () => {},
+      };
+    }
     if (
       adapterName === 'traeAdapter.js' &&
       (request.endsWith('/traeOfficialArtifacts') || request.endsWith('traeOfficialArtifacts'))

@@ -19,7 +19,7 @@ const repoRoot = path.resolve(npmRoot, '..', '..');
 const { assembleRuntime } = require(path.join(repoRoot, 'scripts', 'release', 'lib', 'runtimeStaging.js'));
 
 const build = spawnSync(process.execPath, [
-  path.join(repoRoot, 'packaging', 'build', 'esbuild-modules.js'),
+  path.join(repoRoot, 'works', 'ship', 'build', 'esbuild-modules.js'),
   '--module', 'khy', '--prod',
 ], {
   cwd: repoRoot,

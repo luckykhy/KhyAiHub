@@ -37,15 +37,15 @@ node scripts/restore-plan.js --json     # landing agent 直接消费
 |------|------|----------|--------|----------|----------------|
 | 10 | `node-runtime` | Node 运行时缺失或版本过低 | AGENT 可自动 | `node --version` | `node-missing`、`portable-node-missing` |
 | 15 | `npm-tool` | npm 工具缺失 | AGENT 可自动 | `npm --version` | `npm-missing` |
-| 20 | `bundle-source` | bundled 后端源码 / 源码快照不完整 | HUMAN 需人工 | `node scripts/verify-install.js` | `bundle-missing`、`bundle-file-missing`、`bundle-unresolved`、`seed-missing` |
+| 20 | `bundle-source` | bundled 后端源码 / 源码快照不完整 | HUMAN 需人工 | `npm run verify:install` | `bundle-missing`、`bundle-file-missing`、`bundle-unresolved`、`seed-missing` |
 | 30 | `network-hydrate` | 离线，无法联网水合后端依赖 | HUMAN 需人工 | `khy doctor` | `offline-no-modules` |
-| 40 | `hydrate-modules` | 后端依赖 node_modules 尚未水合 | AGENT 可自动 | `node scripts/hydration-doctor.js` | `no-node-modules`、`modules-not-hydrated`、`missing-critical-package` |
-| 45 | `heal-markers` | 水合残留标记 / 断链需修复 | AGENT 可自动 | `node scripts/hydration-doctor.js` | `shared-link-broken`、`splitbrain-marker` |
+| 40 | `hydrate-modules` | 后端依赖 node_modules 尚未水合 | AGENT 可自动 | `npm run doctor:hydration` | `no-node-modules`、`modules-not-hydrated`、`missing-critical-package` |
+| 45 | `heal-markers` | 水合残留标记 / 断链需修复 | AGENT 可自动 | `npm run doctor:hydration` | `shared-link-broken`、`splitbrain-marker` |
 | 50 | `version-sync` | pip / npm / backend 版本不一致 | AGENT 可自动 | `khy --version` | `versions-drift` |
 | 60 | `tar-tool` | 系统 tar 解包工具缺失 | HUMAN 需人工 | `tar --version` | `tar-missing` |
-| 65 | `writable-install` | 安装目录不可写 | HUMAN 需人工 | `node scripts/restore-check.js` | `install-readonly` |
+| 65 | `writable-install` | 安装目录不可写 | HUMAN 需人工 | `node scripts/restore/restore-check.js` | `install-readonly` |
 | 70 | `channel-redundancy` | 仅装了单条离机渠道 | HUMAN 需人工 | `khy --version` | `single-channel` |
-| 80 | `optional` | 可选组件降级 | AGENT 可自动 | `node scripts/hydration-doctor.js` | `optional-degraded` |
+| 80 | `optional` | 可选组件降级 | AGENT 可自动 | `npm run doctor:hydration` | `optional-degraded` |
 
 ## 保证（继承项目章程）
 

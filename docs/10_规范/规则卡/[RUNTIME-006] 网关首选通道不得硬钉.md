@@ -3,7 +3,7 @@ name: 网关首选通道不得硬钉
 id: RUNTIME-006
 domain: RUNTIME
 nature: 约束为主，兼福利
-scope: "仓库内生效的 .env 配置文件（services/**, works/ship/**, platform/**）；备份文件降级为告警"
+scope: "仓库内生效的 .env 配置文件（runtime/node/**, works/ship/**, runtime/substrate/platform/**）；备份文件降级为告警"
 priority: P1
 trigger: "新增或修改 .env 中的 GATEWAY_PREFERRED_ADAPTER / GATEWAY_PREFERRED_STRICT 时"
 constraint: "生效配置里 GATEWAY_PREFERRED_ADAPTER 必须为空或 auto；确需固定通道时必须同时写 GATEWAY_PREFERRED_STRICT=false，并经 `khy provider use <key>` 写入，禁止手改 .env 值。STRICT 语义为「未显式 false 即 strict」（与 routeFact.isStrictPinned 逐字一致），缺省等同钉死，不得因未写而放过。注释与值不得背离：注释声明了解钉（=auto /=false）而实际赋值不是，即判背离。"

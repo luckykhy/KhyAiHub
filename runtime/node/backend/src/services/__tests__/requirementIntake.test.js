@@ -87,14 +87,14 @@ describe('requirementIntakeService.aggregate', () => {
     expect(clear.reason).toContain('clear-acceptance');
   });
 
-  it('observe() appends one jsonl line, never throws', () => {
+  it('observeIntake() appends one jsonl line, never throws', () => {
     const s = intake.aggregate({
       text: '优化一下代码',
       scale: 'normal',
       clarificationNeeded: true,
       options: { requirementIntake: 'on' },
     });
-    expect(() => intake.observe(s, { toolActivity: 2 })).not.toThrow();
+    expect(() => artifact.observeIntake(s, { toolActivity: 2 })).not.toThrow();
   });
 
   it('pure function: same input → same output, never throws on garbage', () => {
@@ -150,12 +150,13 @@ describe('requirementArtifact lifecycle', () => {
     expect(artifact.buildContextLine({ ok: false })).toBe('');
   });
 
-  it('reconciliation appends ⏳ per item once (idempotent stamp)', () => {
+  it('reconciliation appends ○ per item once (honest stamp, idempotent)', () => {
     const read = artifact.readLatestArtifact('sess-test');
     const first = artifact.reconcileTurn({ _requirementArtifactId: read.id }, { toolActivity: 4 });
     expect(first.ok).toBe(true);
     const body = artifact.readArtifact(read.id).body;
-    expect(body).toContain('R1 ⏳');
+    // S1 只记录不判定：条目一律 ○（诚实上报，不冒充 ⏳/✓/✗），见 reconcileTurn 文档。
+    expect(body).toContain('R1 ○');
     expect(body).toContain('工具动作 4 次');
     expect(body).toContain('<!-- reconciled -->');
     const second = artifact.reconcileTurn({ _requirementArtifactId: read.id }, {});

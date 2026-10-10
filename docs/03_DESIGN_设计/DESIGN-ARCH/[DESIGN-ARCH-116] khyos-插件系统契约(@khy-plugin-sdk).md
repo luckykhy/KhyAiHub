@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-116] khyos 插件系统契约（@khy/plugin-sdk）
 
 > **定位**：本文件是 khyos **自有插件系统**契约的单一真源——把散在

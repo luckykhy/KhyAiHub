@@ -1,0 +1,186 @@
+{
+  "$schemaVersion": 1,
+  "_readme": [
+    "四档模式与智能路由的档位卡。真源:[DESIGN-ARCH-185] §4.1 / §5。",
+    "纯文本、零构建:编辑保存后下一次请求即生效(与 config/models/pricing.json 同惯例)。",
+    "",
+    "为什么住在这里而不是代码里:opensquilla 的落地物核对([DESIGN-ARCH-185] §2.4,E1)显示",
+    "决策骨架本来就住在配置里 —— flag_rules / thresholds / thinking_mode_rules / context_rules",
+    "四张表,模型只填 route_class 一个 argmax 槽位。它的阈值注释带着调参史",
+    "(\"tightened from 0.15 to reduce OOD over-routing\"、\"sweep winner; +1.45 pp L2\"),",
+    "即**这些数字是扫出来的,不是设计出来的**。本表所有 calibration 字段如实标注是否扫过。",
+    "",
+    "解析顺序(高 → 低):",
+    "  1. env KHY_ROUTING_MODES_JSON(内联 JSON)",
+    "  2. <appHome>/routing_modes.json(运维覆盖,其 modes/families 优先于仓内)",
+    "  3. 本文件",
+    "  4. 全坏 → routingMode.resolveMode 返回 null → 调用方走旧 autoSelectModel 路径",
+    "",
+    "⚠ 两条硬约束(代码与测试共同守):",
+    "  - lambda 一律 null 直到完成标定。价格表当前覆盖率实测 5/15(见 pricing.json 与",
+    "    works/data/khy/feedback/185-p0-price-truth/repro-after.txt),成本项依 §5.4 恒退出;",
+    "    给未标定的 λ 填一个数字 = 让「按成本路由」这件事获得虚假的数据支撑。",
+    "  - stickyTier.enabled 必须为 false。opensquilla 实现了档位粘滞然后关掉,理由是",
+    "    粘滞依赖 prev_route 而路由器自己的 prev_route 不可信(§2.4 E1 原文注释)。",
+    "  - strongShare 是 §5.4 标定程序的**目标占比**：它随每次选路写进样本行(strongTarget)，",
+    "    由 npm run check:route-replay 印「实测落在 T0/T1 的占比 / 目标占比」的差。",
+    "    2026-10-08 起它有消费方了(此前全仓零消费方，见 §16.4n / §16.4ac)。",
+    "    但它仍然**不分流**：λ 反解没接线，看到 1/0.5/0.1 不要以为流量已按比例走。",
+    "    记于此是因为「配了等于没配」的字段最容易被下一个读者当成既有行为(§16.4n)。"
+  ],
+  "unit": "tier 方向沿用 modelTier 的 _TIER_ORDER:T0 最强最重 … T3 最轻",
+  "asOf": "2026-10-08",
+  "defaultMode": "auto",
+  "fallbackMode": "perf",
+  "modes": {
+    "auto": {
+      "label": "Auto",
+      "intent": "按执行位置定档;成本与质量之间由路由器现场权衡",
+      "capabilityFloor": "T3",
+      "capabilityCeiling": "T0",
+      "strongShare": null,
+      "lambda": null,
+      "k": 1,
+      "escalateOn": ["lowMargin", "underRoutingSafety", "verifyFailed", "irreversibleWrite"],
+      "thinking": "auto",
+      "promptPolicy": "auto",
+      "expectedControls": "默认中性;命中 debug/high_risk 时抬思考预算",
+      "_note": "唯一允许轨迹内跨档的一档。存在性风险见 §2.0:论文自己的 Table 7 里 query 级 auto 输给钉死中档。判据 A10。"
+    },
+    "extreme": {
+      "label": "极致",
+      "intent": "专家级深度推理,成本不设上限;架构决策、高风险、难恢复的收尾",
+      "capabilityFloor": "T0",
+      "capabilityCeiling": "T0",
+      "strongShare": 1.0,
+      "lambda": 0,
+      "k": 1,
+      "escalateOn": [],
+      "thinking": "max",
+      "promptPolicy": "P2",
+      "expectedControls": "始终高思考 + 完整 prompt;这一档的「省」不是目标",
+      "_note": "floor==ceiling 即恒 T0,无处可升,故 escalateOn 为空。k 留位给 §5.7 的集成(P4)。"
+    },
+    "perf": {
+      "label": "性能",
+      "intent": "高级推理与高质量输出,兼顾成本;日常编码、分析、多步任务",
+      "capabilityFloor": "T1",
+      "capabilityCeiling": "T0",
+      "strongShare": 0.5,
+      "lambda": null,
+      "k": 1,
+      "escalateOn": ["verifyFailed", "irreversibleWrite", "underRoutingSafety"],
+      "thinking": "high",
+      "promptPolicy": "P1",
+      "expectedControls": "高思考;strict_format 命中时切 P2"
+    },
+    "economy": {
+      "label": "经济",
+      "intent": "标准推理,性价比优先;短问答、改写、确认、有界小任务",
+      "capabilityFloor": "T2",
+      "capabilityCeiling": "T1",
+      "strongShare": 0.1,
+      "lambda": null,
+      "k": 1,
+      "escalateOn": ["verifyFailed"],
+      "thinking": "low",
+      "promptPolicy": "P0",
+      "expectedControls": "低思考 + 缩短回答;但 debug/high_risk 命中时 P0 不得生效",
+      "_note": "capabilityCeiling=T1 是「经济」与「auto」的语义分界:越界必须能指出 escalateOn 的具体触发项(§4.2 判据)。"
+    }
+  },
+  "flag_rules": {
+    "_note": "抄 opensquilla 的 flag_rules 形状(中英双语词表 + 少量模式),但词表按本仓黑话重写([DESIGN-ARCH-185] §14-D8):他们的表里没有 回测/通道/适配器/真源/闸门/钉选/级联/守卫,直接照抄会系统性漏判 khy 的真实负载。calibration=uncalibrated:误报率未量,route-replay 上线后第一件事就是量这个。",
+    "high_risk": {
+      "keywords_zh": ["生产", "部署", "上线", "回滚", "迁移", "删除", "覆盖", "客户", "法务", "财务", "凭据", "密钥"],
+      "keywords_en": ["deploy", "rollback", "migration", "delete", "overwrite", "production", "customer-facing", "credential", "secret"]
+    },
+    "debug": {
+      "keywords": ["报错", "根因", "修复", "异常", "堆栈", "复现", "error", "bug", "exception", "traceback", "failed", "root cause"],
+      "patterns": ["Traceback \\(most recent", "stderr:", "FAILED", "TypeError:", "Cannot read propert"]
+    },
+    "repo_arch": {
+      "keywords": ["架构", "重构", "模块", "依赖", "分层", "真源", "闸门", "守卫", "repo", "codebase", "monorepo", "architecture", "module", "dependency"]
+    },
+    "implement": {
+      "keywords": ["实现", "新增", "接入", "改造", "写一个", "落地", "implement", "add support", "wire up", "integrate"]
+    },
+    "strict_format": {
+      "keywords": ["只返回", "不要解释", "按格式", "严格格式", "JSON", "YAML", "CSV", "schema", "表格"]
+    },
+    "long_context": {
+      "char_threshold": 6000,
+      "code_block_threshold": 1500,
+      "log_block_threshold": 1500,
+      "file_ref_threshold": 2
+    }
+  },
+  "thresholds": {
+    "marginUpgrade": { "value": 0.10, "calibration": "uncalibrated-borrowed", "_why": "top-2 差小于此值即升一档。借自 opensquilla 同名键,其原值是从 0.15 收紧而来(减少 OOD 过度升档)——本仓未扫,首版沿用其量级" },
+    "underRoutingSafety": { "value": 0.45, "calibration": "uncalibrated-borrowed", "_why": "判成低档但高档概率之和超此值即强制抬到次中档:「可能低估」优先于「按自己的判断走」" },
+    "highConfidence": { "value": 0.70, "calibration": "uncalibrated-borrowed", "_why": "高置信位。⚠ 其消费点在 opensquilla 源码里未逐行确认,本仓仅记录备查,不参与决策" },
+    "deepConversationTurns": { "value": 4, "calibration": "uncalibrated-borrowed", "_why": "第 4 轮之后不许留在最便宜档(E1 context_rules)" },
+    "heavyContextTokens": { "value": 2000, "calibration": "uncalibrated-borrowed", "_why": "上下文超此量即最低次中档(E1 context_rules)" },
+    "ctxRatioPromote": { "value": 0.70, "calibration": "uncalibrated-local", "_why": "占用比超此值把权重从 reasoning 转向 long_context(§5.1 hard 短路)" }
+  },
+  "thinking_mode_rules": {
+    "_why": "(β) 推理预算。降档条件比升档更严:none 需「判成最轻档」且「margin 极稳」——省需要额外证据,花不需要。",
+    "_vocabulary": "取值必须落在本仓 dial 真实存在的四态:null(不干预,= tier 默认) | low | high | max。opensquilla 的 T0..T3 与 'none'/'medium' 两级**刻意不照抄**:KHY_HARNESS_THINKING_FLOOR 只认 low|high|max 加 'none'(= 不设下限),造一个 medium 会静默退化成 null,看起来配了其实没配。",
+    "none": { "maxClass": "T3", "minMargin": 0.5, "sets": null },
+    "low": { "maxClass": "T2", "minMargin": 0.4, "sets": "low" },
+    "high": { "minClass": "T1", "anyFlags": ["debug", "long_context", "high_risk", "implement"], "sets": "high" },
+    "max": { "minClass": "T0", "sets": "max" },
+    "default": { "sets": null }
+  },
+  "prompt_policies": {
+    "_why": "(π) prompt 策略。P1 是中性(空 hint),P0 受 no_flags 门控:高风险/严格格式/调试场景下不许缩短回答。",
+    "P0": {
+      "hint_zh": "直接作答,缩短思考长度,避免无关展开。",
+      "hint_en": "Answer directly, keep thinking short, avoid irrelevant expansion.",
+      "noFlags": ["high_risk", "strict_format", "debug"]
+    },
+    "P1": { "hint_zh": "", "hint_en": "" },
+    "P2": {
+      "hint_zh": "充分分析,覆盖关键约束,避免遗漏。",
+      "hint_en": "Analyze thoroughly, cover key constraints, avoid omissions.",
+      "anyFlags": ["high_risk", "long_context", "debug", "strict_format"]
+    }
+  },
+  "demand_weights": {
+    "_why": "§5.2 的线性打分权重。刻意小且可读:demand 是「这件事要多强」的 0..1 标量,不是概率。calibration=hand-set,route-replay 上线后按档位分布反推是否系统性偏高/偏低。",
+    "calibration": "hand-set",
+    "codeBlock": 0.22,
+    "logBlock": 0.14,
+    "longContext": 0.20,
+    "fileRefs": 0.10,
+    "flags": {
+      "high_risk": 0.30,
+      "debug": 0.22,
+      "implement": 0.18,
+      "repo_arch": 0.20,
+      "strict_format": 0.06
+    },
+    "turnDepth": 0.05,
+    "irreversible": 0.25,
+    "toolFails": 0.12,
+    "hasImage": 0.0
+  },
+  "demand_tier_bands": {
+    "_why": "把 0..1 的 demand 映射到能力档。**映射方向与本仓 tier 一致:demand 越高越要靠 T0。** 阈值未标定。",
+    "calibration": "uncalibrated",
+    "T3": [0.0, 0.20],
+    "T2": [0.20, 0.45],
+    "T1": [0.45, 0.72],
+    "T0": [0.72, 1.0]
+  },
+  "stickyTier": {
+    "enabled": false,
+    "maxUserLen": 200,
+    "_why": "opensquilla 实现了这个机制然后关掉,注释理由:粘滞依赖 prev_route,而路由器自己的 prev_route 在高档位上是错的 → 历史特征被自身错误污染。本仓若开,粘滞判据只允许引用外部可验证事实(taskType/taskScale/附件/工具失败计数/turnIndex),禁止引用「上一轮判的档」。"
+  },
+  "escalation": {
+    "maxStepsPerTurn": 1,
+    "notInherited": true,
+    "_why": "只抬一档且下一轮不继承。opensquilla 的调参史显示失败方向是「升太多」,故兜底必须配上限。"
+  }
+}

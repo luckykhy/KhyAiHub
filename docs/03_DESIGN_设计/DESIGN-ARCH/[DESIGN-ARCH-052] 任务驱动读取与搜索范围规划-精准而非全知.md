@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-052] 任务驱动读取与搜索范围规划：精准而非全知
 
 > 子系统 `services/backend/src/services/contextScope/`

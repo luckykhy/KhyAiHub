@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # 《khyos 文档排版与格式控制规范》
 
 > 文档编号：DESIGN-ARCH-023

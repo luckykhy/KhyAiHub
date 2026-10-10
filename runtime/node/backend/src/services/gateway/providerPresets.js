@@ -50,7 +50,7 @@ function keyFieldForFormat(apiFormat) {
 
 /**
  * Built-in seed. Endpoints reuse the repo's authoritative values
- * (apps/ai-frontend/src/views/AIGateway.vue relayProfilePresets +
+ * (delivery/web/ai-frontend/src/views/AIGateway.vue relayProfilePresets +
  * customProviderRegistrar Agnes) plus widely-published Chinese providers.
  *
  * tier '' = automatic modelTier classification (no per-model hardcoding).

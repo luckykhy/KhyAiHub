@@ -40,8 +40,8 @@
             type="danger"
             size="large"
             :loading="loading"
-            @click="handleLogin"
             style="width: 100%"
+            @click="handleLogin"
           >
             管理员登录
           </el-button>
@@ -50,7 +50,9 @@
         <el-form-item>
           <div class="register-link">
             返回普通登录？
-            <router-link to="/login">用户登录</router-link>
+            <router-link to="/login">
+              用户登录
+            </router-link>
           </div>
         </el-form-item>
       </el-form>

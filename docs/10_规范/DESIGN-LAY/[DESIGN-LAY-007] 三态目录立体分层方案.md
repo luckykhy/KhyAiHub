@@ -131,6 +131,8 @@
 
 **红线（沿用 `dataHome.js` §生态标准）**：`.khy/` 与 `.khyos/` 之间禁止直读直写，跨域必须走服务接口。本篇不放宽，只是让这条线在**目录名上可见**。
 
+> ⚠ **2026-10-08 裁决修订（用户拍板）**：两根**合一**——底座家 `getBaseHome()` 便携部署解析改指 `works/data/khy/T1-domains/base/`（底座数据成为 T1-domains 的一个领域族 `base`，`DATA-LOCATIONS.json` v1.3.0），`works/data/khyos` 降级为兼容 junction（老路径字面量写方自动落对新位置）。存量底座数据已随批搬移，隔离与搬移台账见 `.khyos/housekeeping/2026-10-08-data-merge/manifest.jsonl`。§6.7 的「不互写」红线随两根合一失去前提，由「T1-domains 内单根分层」取代；非便携部署仍保持 `~/.khyos` 独立。
+
 ### 2.4 `.khyos/housekeeping/` —— 机制已验证可用，数据侧未接入（G-1）
 
 `[DESIGN-LAY-003]` LAYOUT-004 规定隔离区根为 `.khyos/housekeeping/<日期>/`，且**必须留 manifest 才能原路撤回**。实测复核（2026-09-18）：该根**已存在**，含 `2026-09-17/`、`2026-09-17-doc-plan/`、`2026-09-18/`、`2026-09-18-b10/` 四个批次与 `manifests/`，且**处于 git 跟踪之下**——这正是撤回能力成立的前提。所以缺口**不是**「回收站不存在」，而是**「数据侧从未接入」**：`.khy/` 的 211 项里没有一项进过回收站，66 个诊断转储与 19 个零引用孤儿因此只能继续在 `.khy/` 根上充平面。
@@ -201,6 +203,7 @@
 5. **凭据权限位不变**：`credentials/`、`api_keys.json` 迁移前后必须保持 `0700`/`0600`；迁移脚本须显式重设（Windows 走 ACL，POSIX 走 chmod），否则移动即降级安全。
 6. **`sessions.db` 可再生、`taskboard.db` 不可再生**：前者是 FTS5 派生索引（移动 = 纯文件移动 + reindex），后者无 JSON 源（权威）。两者**不同档**，禁止在备份脚本里同等对待（`[OPS-MAN-176]` 的 home-user/home-app 分档）。
 7. **`.khy/` ↔ `.khyos/` 不互写**（`dataHome.js` 生态标准）。
+   > 2026-10-08 修订：用户裁决两根合一（`getBaseHome()` 便携部署 → `works/data/khy/T1-domains/base`，见 §2.3），本条红线在便携部署上由单根分层取代；非便携部署两根并存，红线仍适用。
 8. **SQLite 的 `-wal`/`-shm` 与主库必须同父目录**：移动库必须整组同移，且移动前必须走 checkpoint，否则 WAL 落在老路径导致静默丢数据。
 9. **版本同步轨道不受影响**：本方案不触碰 `pyproject.toml` / 三个 `package.json` 的版本字段（红线 R3 / `PROCESS-002`）。
 10. **不引入新的无门规则**：本篇若缺 §7 的执行器，就只是一篇散文。规则 ID `LAYOUT-007` 必须与 `check-data-layout.js` 双向可达（`check:rules`）。

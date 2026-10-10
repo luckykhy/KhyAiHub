@@ -839,11 +839,26 @@ async function listModels() {
           continue;
         }
         seen.add(id);
+        // Zen 免费模型行:「免费层无 SLA」应当在选中前可见(1.3 剩余面);账本样本足时
+        // 再追加近期稳定度打标(P3.1),让用户在选中之前就知道哪个免费模型抖。
+        // 门关/异常 → 只剩 SLA 短标记,打标失败不影响列表。
+        let _desc = `Pool provider: ${pp.name}`;
+        if (pp.poolKey === 'opencode-zen') {
+          _desc = `${_desc} · 免费层无 SLA`;
+          try {
+            const st = require('../../zenModelStability').classify(mid);
+            if (st) {
+              _desc = `${_desc} · ${st.label}`;
+            }
+          } catch {
+            /* fail-soft: 无打标不影响列表 */
+          }
+        }
         rows.push({
           id,
           name: `${pp.name} / ${mid}`,
           provider: 'api',
-          description: `Pool provider: ${pp.name}`,
+          description: _desc,
           isDefault: mid === (defaultModelMap[pp.poolKey] || ''),
           upstreamProvider: pp.name,
           ...(ctxW > 0 ? { contextWindow: ctxW } : {}),

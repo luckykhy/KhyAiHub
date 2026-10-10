@@ -128,7 +128,12 @@ function renderTable(s) {
   lines.push(`时间 ${s.generatedAt}`);
   lines.push('');
   lines.push(`── 几何 ── rows=${s.geometry.rows || '?'} cols=${s.geometry.cols || '?'}`);
-  lines.push(`  chrome 账本 ${s.chrome.chromeRows} 行 | live 允许 ≤ ${s.chrome.liveAllowed} 行 | H1(帧高≤rows-1) ${s.chrome.h1Holds ? '成立' : '不成立(需 KHY_TUI_DIAG_H=1 查账本)'}`);
+  // H1 三态：rows=0（无 TTY/管道输出）时**无法判定**而非不成立——
+  // 把环境性读数误报成故障是误导（RUNTIME-002 状态透明）。
+  const h1Label = s.geometry.rows > 0
+    ? (s.chrome.h1Holds ? '成立' : '不成立(需 KHY_TUI_DIAG_H=1 查账本)')
+    : '无法判定（无 TTY 几何，rows 不可用）';
+  lines.push(`  chrome 账本 ${s.chrome.chromeRows} 行 | live 允许 ≤ ${s.chrome.liveAllowed} 行 | H1(帧高≤rows-1) ${h1Label}`);
   lines.push('');
   lines.push('── 帧预算（16ms 地板） ──');
   if (s.frame.count > 0) {

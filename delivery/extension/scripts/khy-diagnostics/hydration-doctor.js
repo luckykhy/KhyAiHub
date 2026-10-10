@@ -20,6 +20,7 @@
 const fs = require('fs');
 const path = require('path');
 const cp = require('child_process');
+const { createRequire } = require('module');
 const {
   assessHydrationHealth,
   _RULES,
@@ -83,9 +84,27 @@ function _probePackage(pkgDir) {
   return { exists: true, hollow: pj === false };
 }
 
+/**
+ * 按 Node 自己的解析算法判包是否可得（含祖先 node_modules 回退）。
+ * 探针自身出错 → null（未知，不误报）。
+ */
+function _resolvableFrom(fromDir, pkg) {
+  try {
+    createRequire(path.join(fromDir, 'probe-noop.js')).resolve(pkg);
+    return true;
+  } catch (err) {
+    const code = err && err.code;
+    if (code === 'MODULE_NOT_FOUND' || code === 'ERR_MODULE_NOT_FOUND') return false;
+    return null;
+  }
+}
+
 /** 定位已装 / dev 树的后端目录（与 restore-check 同序，锚点 package.json）。 */
 function _resolveBackendDir() {
   const candidates = [
+    // 方案P R2 之后的源码树落点：runtime/node/backend。缺这一条时本探针在现行
+    // 仓库里一个根都命中不了 → facts 全 null、却照样报 healthy:true（瞎报绿灯）。
+    path.join(ROOT, 'runtime', 'node', 'backend'),
     path.join(ROOT, 'platform', 'khy_os', 'bundled', 'services', 'backend'),
     path.join(ROOT, 'packaging', 'npm', 'bundled', 'services', 'backend'),
     path.join(ROOT, 'services', 'backend'),
@@ -147,13 +166,17 @@ function probeHydrationFacts() {
     if (nmPresent === true) {
       // 逐个探测关键包：区分「不在」（missing）与「在但是空壳」（hollow）——
       // 前者 npm install 能修，后者说明上次安装被中断、必须重装。
+      // 「不在」还要再走一次 Node 的解析算法：pnpm/hoist 布局里关键包合法地只存在于
+      // 上层 node_modules（本仓根 store 正是这种形态），只 stat 后端目录会把完好安装
+      // 误报成缺件。空壳不享受该回退——目录在但没内容会**遮蔽**上层，正是 ESM 炸点。
       const missing = [];
       const hollow = [];
       for (const pkg of CRITICAL_PACKAGES) {
         const pkgPath = path.join(nm, ...pkg.split('/'));
         const probe = _probePackage(pkgPath);
-        if (probe.exists === false) missing.push(pkg);
-        else if (probe.hollow === true) hollow.push(pkg);
+        if (probe.exists === false) {
+          if (_resolvableFrom(backendDir, pkg) === false) missing.push(pkg);
+        } else if (probe.hollow === true) hollow.push(pkg);
       }
       facts.missingPackages = missing;
       facts.hollowPackages = hollow;
@@ -196,9 +219,11 @@ function runHydrationDoctor(opts = {}) {
     process.stdout.write(JSON.stringify({ facts, verdict }, null, 2) + '\n');
     return verdict.healthy ? 0 : 1;
   }
-  const head = verdict.healthy
-    ? `${C.green}${C.bold}✔ ${verdict.summary}${C.reset}`
-    : `${C.red}${C.bold}✘ ${verdict.summary}${C.reset}`;
+  const head = verdict.indeterminate
+    ? `${C.yellow}${C.bold}? ${verdict.summary}${C.reset}`
+    : verdict.healthy
+      ? `${C.green}${C.bold}✔ ${verdict.summary}${C.reset}`
+      : `${C.red}${C.bold}✘ ${verdict.summary}${C.reset}`;
   let out = `${C.bold}Khy-OS 首启依赖 hydration 自检${C.reset}\n`;
   out += `${C.dim}渠道：pip ${PIP_PKG_NAME} / npm ${NPM_PKG_NAME}（依赖首启联网补齐，非打包）${C.reset}\n\n`;
   out += head + '\n';

@@ -2,52 +2,98 @@
   <div class="enhanced-positions-panel">
     <div class="panel-header">
       <span>持仓明细</span>
-      <el-button size="small" @click="loadPositions" :loading="loading">
+      <el-button
+        size="small"
+        :loading="loading"
+        @click="loadPositions"
+      >
         <el-icon><Refresh /></el-icon>
       </el-button>
     </div>
     
     <div class="panel-content">
       <el-table 
+        v-loading="loading" 
         :data="positions" 
-        size="small" 
+        size="small"
         :max-height="400"
-        v-loading="loading"
         empty-text="暂无持仓"
         :row-class-name="getRowClassName"
       >
-        <el-table-column prop="symbol" label="代码" width="90" fixed="left" />
-        <el-table-column prop="symbolName" label="名称" width="100" />
-        <el-table-column prop="direction" label="方向" width="60" align="center">
+        <el-table-column
+          prop="symbol"
+          label="代码"
+          width="90"
+          fixed="left"
+        />
+        <el-table-column
+          prop="symbolName"
+          label="名称"
+          width="100"
+        />
+        <el-table-column
+          prop="direction"
+          label="方向"
+          width="60"
+          align="center"
+        >
           <template #default="{ row }">
-            <el-tag :type="row.direction === 'long' ? 'danger' : 'success'" size="small">
+            <el-tag
+              :type="row.direction === 'long' ? 'danger' : 'success'"
+              size="small"
+            >
               {{ row.direction === 'long' ? '多' : '空' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="totalQuantity" label="总量" width="80" align="right">
+        <el-table-column
+          prop="totalQuantity"
+          label="总量"
+          width="80"
+          align="right"
+        >
           <template #default="{ row }">
             {{ row.totalQuantity }} {{ row.unit || '股' }}
           </template>
         </el-table-column>
-        <el-table-column prop="availableQuantity" label="可用" width="80" align="right">
+        <el-table-column
+          prop="availableQuantity"
+          label="可用"
+          width="80"
+          align="right"
+        >
           <template #default="{ row }">
             {{ row.availableQuantity }} {{ row.unit || '股' }}
           </template>
         </el-table-column>
-        <el-table-column prop="avgCost" label="成本价" width="90" align="right">
+        <el-table-column
+          prop="avgCost"
+          label="成本价"
+          width="90"
+          align="right"
+        >
           <template #default="{ row }">
             {{ row.avgCost.toFixed(2) }}
           </template>
         </el-table-column>
-        <el-table-column prop="currentPrice" label="现价" width="90" align="right">
+        <el-table-column
+          prop="currentPrice"
+          label="现价"
+          width="90"
+          align="right"
+        >
           <template #default="{ row }">
             <span :class="getPriceChangeClass(row)">
               {{ row.currentPrice.toFixed(2) }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="unrealizedProfit" label="浮动盈亏" width="120" align="right">
+        <el-table-column
+          prop="unrealizedProfit"
+          label="浮动盈亏"
+          width="120"
+          align="right"
+        >
           <template #default="{ row }">
             <div :class="row.unrealizedProfit >= 0 ? 'profit-up' : 'profit-down'">
               <div class="profit-amount">
@@ -59,20 +105,24 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column
+          label="操作"
+          width="150"
+          fixed="right"
+        >
           <template #default="{ row }">
             <el-button-group size="small">
               <el-button 
                 type="primary"
-                @click="showCloseDialog(row)"
                 :loading="closingPosition === row.symbol"
+                @click="showCloseDialog(row)"
               >
                 平仓
               </el-button>
               <el-button 
                 type="danger"
-                @click="quickCloseAll(row)"
                 :loading="closingPosition === row.symbol"
+                @click="quickCloseAll(row)"
               >
                 全平
               </el-button>
@@ -82,7 +132,10 @@
       </el-table>
       
       <!-- 账户信息摘要 -->
-      <div class="account-summary" v-if="accountInfo">
+      <div
+        v-if="accountInfo"
+        class="account-summary"
+      >
         <div class="summary-row">
           <div class="summary-item">
             <span class="label">总资产:</span>
@@ -106,13 +159,19 @@
         <div class="summary-row total-row">
           <div class="summary-item">
             <span class="label">总盈亏:</span>
-            <span class="value" :class="accountInfo.totalProfit >= 0 ? 'profit-up' : 'profit-down'">
+            <span
+              class="value"
+              :class="accountInfo.totalProfit >= 0 ? 'profit-up' : 'profit-down'"
+            >
               {{ accountInfo.totalProfit >= 0 ? '+' : '' }}¥{{ formatNumber(Math.abs(accountInfo.totalProfit)) }}
             </span>
           </div>
           <div class="summary-item">
             <span class="label">盈亏比:</span>
-            <span class="value" :class="accountInfo.profitRate >= 0 ? 'profit-up' : 'profit-down'">
+            <span
+              class="value"
+              :class="accountInfo.profitRate >= 0 ? 'profit-up' : 'profit-down'"
+            >
               {{ accountInfo.profitRate >= 0 ? '+' : '' }}{{ accountInfo.profitRate.toFixed(2) }}%
             </span>
           </div>
@@ -127,7 +186,10 @@
       width="500px"
       :close-on-click-modal="false"
     >
-      <div v-if="selectedPosition" class="close-dialog-content">
+      <div
+        v-if="selectedPosition"
+        class="close-dialog-content"
+      >
         <div class="position-info">
           <div class="info-row">
             <span class="label">合约:</span>
@@ -136,7 +198,10 @@
           <div class="info-row">
             <span class="label">方向:</span>
             <span class="value">
-              <el-tag :type="selectedPosition.direction === 'long' ? 'danger' : 'success'" size="small">
+              <el-tag
+                :type="selectedPosition.direction === 'long' ? 'danger' : 'success'"
+                size="small"
+              >
                 {{ selectedPosition.direction === 'long' ? '多头' : '空头' }}
               </el-tag>
             </span>
@@ -161,7 +226,10 @@
 
         <el-divider />
 
-        <el-form :model="closeForm" label-width="100px">
+        <el-form
+          :model="closeForm"
+          label-width="100px"
+        >
           <el-form-item label="平仓数量">
             <el-input-number
               v-model="closeForm.quantity"
@@ -172,9 +240,16 @@
             />
           </el-form-item>
           <el-form-item label="平仓价格">
-            <el-radio-group v-model="closeForm.priceType" style="margin-bottom: 8px;">
-              <el-radio-button label="market">市价</el-radio-button>
-              <el-radio-button label="limit">限价</el-radio-button>
+            <el-radio-group
+              v-model="closeForm.priceType"
+              style="margin-bottom: 8px;"
+            >
+              <el-radio-button label="market">
+                市价
+              </el-radio-button>
+              <el-radio-button label="limit">
+                限价
+              </el-radio-button>
             </el-radio-group>
             <el-input-number
               v-if="closeForm.priceType === 'limit'"
@@ -186,10 +261,18 @@
           </el-form-item>
           <el-form-item label="快捷选择">
             <el-button-group size="small">
-              <el-button @click="setCloseQuantity(0.25)">1/4</el-button>
-              <el-button @click="setCloseQuantity(0.5)">1/2</el-button>
-              <el-button @click="setCloseQuantity(0.75)">3/4</el-button>
-              <el-button @click="setCloseQuantity(1)">全部</el-button>
+              <el-button @click="setCloseQuantity(0.25)">
+                1/4
+              </el-button>
+              <el-button @click="setCloseQuantity(0.5)">
+                1/2
+              </el-button>
+              <el-button @click="setCloseQuantity(0.75)">
+                3/4
+              </el-button>
+              <el-button @click="setCloseQuantity(1)">
+                全部
+              </el-button>
             </el-button-group>
           </el-form-item>
         </el-form>
@@ -201,7 +284,10 @@
           </div>
           <div class="estimate-item">
             <span class="label">预估盈亏:</span>
-            <span class="value" :class="estimatedProfit >= 0 ? 'profit-up' : 'profit-down'">
+            <span
+              class="value"
+              :class="estimatedProfit >= 0 ? 'profit-up' : 'profit-down'"
+            >
               {{ estimatedProfit >= 0 ? '+' : '' }}¥{{ formatNumber(Math.abs(estimatedProfit)) }}
             </span>
           </div>
@@ -213,8 +299,8 @@
           <el-button @click="closeDialogVisible = false">取消</el-button>
           <el-button 
             type="primary" 
-            @click="confirmClose"
             :loading="closingPosition !== null"
+            @click="confirmClose"
           >
             确认平仓
           </el-button>

@@ -693,6 +693,30 @@
         "blockedBy": []
       },
       {
+        "id": "routing-mode-tiers",
+        "name": "四档模式与智能路由（auto/极致/性能/经济；本地四道 pass 定档）",
+        "ssot": "docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-185] 四档模式与智能路由方案.md",
+        "rules": [],
+        "_rules_note": "留空是刻意的:rules 的语义是「本机制强制别人的规则」,不是「本机制自己遵守的规则」。填 RUNTIME-001/002/003 会被 check-rollout-stage 的 gateStrength 复算成 blocking,于是 S1 观察者档被判为「过早阻断」(PP-3)——实测确实报红了。本机制遵守的红线记在 ssot 文档 §9,不占这个字段。",
+        "executor": "runtime/node/backend/src/services/gateway/routingMode.js",
+        "stage": "S1",
+        "stageSince": "2026-10-08",
+        "stageAuthority": "env KHY_ROUTE_APPLY_STAGE",
+        "previousStage": "",
+        "executorStage": {
+          "file": "runtime/node/backend/src/services/gateway/routingMode.js",
+          "constant": "KHY_ROUTE_APPLY_STAGE",
+          "note": "S1=观察者：四档在配置/env 里可选可记账，但 isApplyEnabled 恒 false，路由仍走旧 autoSelectModel。S2=状态行提示「本应选 X」但不改道。S3=生效：mode 决定 floor/ceiling 与 λ，解出的 model 写进 options.model。升档需人工裁决；未知阶段值一律回落 S1（禁止 fail-open 到更高阶段）。"
+        },
+        "samples": {
+          "observed": 0,
+          "target": 200,
+          "note": "样本落在 works/data/khy/ruleguard/auto-route.jsonl（与 [DESIGN-ARCH-162] 共用）。判据由 scripts/ci/route-replay.js 出（npm run check:route-replay），它按 turnId 把 select/failure/outcome 连成轮并自报 GAP，不由人眼看。2026-10-08 实测：既有 24 条样本全部无 turnId（P3 之前落的），可 join 0 —— 毕业计数从 0 重新开始，旧样本保留但不参与判定。"
+        },
+        "rollback": "KHY_ROUTING_MODES=off → 选择器回到单行 Auto、env 不读、记账不带 mode，逐字节回现状；KHY_ROUTE_APPLY=off 或阶段回落 S1 → 保留四档与观测但不改道。配置卡 config/models/routing-modes.json 与价格卡 config/models/pricing.json 均为纯数据，删除即无痕。",
+        "blockedBy": []
+      },
+      {
         "id": "trajectory-routing",
         "name": "轨迹驱动的模型路由（自我改进闭环：按历史交付通过率路由）",
         "ssot": "runtime/node/backend/src/services/trajectoryStatsStore.js",

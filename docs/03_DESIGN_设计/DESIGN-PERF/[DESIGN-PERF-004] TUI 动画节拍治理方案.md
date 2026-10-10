@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-PERF-004] TUI 动画节拍治理方案
 
 <!-- RULES-REGISTRY: RUNTIME-011 -->

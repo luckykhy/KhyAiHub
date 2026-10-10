@@ -17,6 +17,9 @@ const WelcomeBanner = require('./WelcomeBanner');
 // + 值上的 useMemo 保证：横幅内容没变 → 不重渲 → 少出一帧，配合 scrollbackPreserve
 // 的 ED2→ED0 就地擦除，把重复缓解到最低。
 const MemoWelcomeBanner = React.memo(WelcomeBanner);
+// 斜杠命令输出收集叶(2026-10-10「/ 命令一闪即过」):命令执行期收编 console 与
+// 直接 stdout 写,跑完落成 transcript notice。门控 KHY_TUI_COMMAND_CAPTURE。
+const commandOutputSink = require('../commandOutputSink');
 const Transcript = require('./Transcript');
 // Viewport — 有界视口,消息区内滚动不带动输入框(Bubble Tea viewport 范式)
 const Viewport = require('./Viewport');
@@ -620,6 +623,62 @@ function _resolveBannerProps(footer = {}, overrides = {}) {
     /* bannerProps 组装失败不影响 App 主体 */
   }
   return props;
+}
+
+/**
+ * P4/173 右栏「当前」锚：第一条「进行中」任务行；无则第一条「错误」行；都没有 → 空串。
+ * 抽成模块级叶子只为把 for + 两个 if 移出组件体内的调用点缩进（COMP-001 嵌套棘轮），
+ * 优先级（进行中 > 错误 > 空）与原内联实现逐行一致。
+ *
+ * @param {string[]} lines 任务行原文
+ * @param {(s: string) => string} taskLineStatus 行状态解析（来自 ./taskPanelLines）
+ * @returns {string}
+ */
+function _pickCurrentTaskLine(lines, taskLineStatus) {
+  let firstErr = '';
+  for (const l of lines) {
+    const s = taskLineStatus(String(l == null ? '' : l).trimStart());
+    if (s === 'in_progress') return String(l);
+    if (s === 'error' && !firstErr) firstErr = String(l);
+  }
+  return firstErr;
+}
+
+/**
+ * 收集式执行一次 route()：命令期间的 console/直接 stdout 写全部进 buffer，跑完作为
+ * 一条 `role:'notice'` 落进 transcript（门控关 → 原样直接 route，逐字节回退）。
+ *
+ * 为什么必须收（2026-10-10 用户报「/ 命令除了 /model 都是一闪即过」）：让出终端
+ * 直接打有两条取死路 —— ① ink 的 patchConsole 每拦一次 console.log 就重画整帧
+ * （writeToStdout → log.clear + 写行 + restoreLastOutput），一行输出花掉约 5 个
+ * 屏幕行，/help 百行输出 ≈300 行瞬间滚光；② 命令收尾那一帧以换行收尾，屏幕整体
+ * 上滚把输出顶出视口，而 TUI 在备用缓冲区（KHY_ALT_SCREEN 默认开）里滚出去即
+ * 永久消失。/model 不受影响是它走原生 ModelPicker 覆盖层，从不往终端打。
+ * 修法与仓内既有范式同源：tuiCommandReports.dispatchNativeCommand（/cost、
+ * /usage、/stats、/scan…）就是收行 → notice → transcript。
+ *
+ * @param {Function} route router.route
+ * @param {object} parsed parseInput 的产物
+ * @param {{setMessages: Function}} query useQueryBridge 的 query
+ * @returns {Promise<*>} route 的返回值（调用方照旧判 aiForward / 'exit'）
+ */
+async function _runRoutedCaptured(route, parsed, query) {
+  const sink = commandOutputSink.captureEnabled(process.env)
+    ? commandOutputSink.createSink()
+    : null;
+  let result;
+  try {
+    result = await route(parsed);
+  } finally {
+    if (sink) sink.restore();
+  }
+  if (sink) {
+    const content = sink.text();
+    if (content) {
+      query.setMessages((m) => [...m, { role: 'notice', content, timestamp: Date.now() }]);
+    }
+  }
+  return result;
 }
 
 function App({ options = {} }) {
@@ -3130,7 +3189,10 @@ function App({ options = {} }) {
       // 后用压缩后消息重估 token 数，经 updateContextTokens 把页脚 % 立即拉到压缩后
       // 水平，下一轮 API 报数自然校准。best-effort：估算/回显失败不影响压缩结果本身。
       if (parsed.command === 'compact') {
-        await route(parsed);
+        // 收集式执行:压缩编排器的 console 输出同样会被 ink 的 patchConsole 放大成
+        // 「一行一帧」然后滚出备用缓冲区(与下方通用路径同一病灶),故走同一条收集
+        // 管线落成 notice。压缩本体与返回值语义不变。
+        await _runRoutedCaptured(route, parsed, query);
         try {
           const runtime = require('../../../services/khyUpgradeRuntime');
           const est = require('../../ai')
@@ -3356,57 +3418,74 @@ function App({ options = {} }) {
         return;
       }
 
-      const app = inkRuntime.getApp();
-      setInputActive(false);
-      // Hand the interactive sub-command a clean full-screen scroll region: drop
-      // the pinned topic bar (块3) so its reserved row 1 / DECSTBM does not clip
-      // inquirer-style prompts. Restored in finally.
-      try {
-        topicBar.suspend();
-      } catch {
-        /* best effort */
-      }
-      // 右栏同理:交互子命令 clear() 后独占整屏,槽位里的看板必须先擦掉,
-      // 否则原生 prompt 上会挂着一块过时的板子。finally 里 resume()。
-      try {
-        sidebarRail.suspend();
-      } catch {
-        /* best effort */
-      }
-      // Let React flush the suspended (empty live UI) frame before clearing, so
-      // the handler starts from a clean transient region. 等待时长必须**超过 ink 自身的
-      // 节流窗口**(maxFps 30 → 34ms,leading+trailing):历史硬编码的 16ms 短于该窗口,
-      // 「空 live 区」那帧常仍挂在 trailing 队列 → clear() 擦除并 log.sync 了**旧**帧行数后,
-      // 迟到的 trailing onRender 又把刚擦掉的输入框 chrome 画回来 =「输入框残影」。
-      // 取值走 perfTunables 单一真源(KHY_TUI_SUSPEND_SETTLE_MS 可调);fail-soft 回退 16ms。
-      await new Promise((r) => setTimeout(r, _suspendSettleMs()));
-      try {
-        if (app && typeof app.clear === 'function') {
-          app.clear();
+      // ── 命令执行：收集式（默认）或让出终端（门控关时逐字节回退）─────────────
+      // 收集式是 2026-10-10 的修法（用户报「/ 命令除了 /model 都是一闪即过」）：
+      // 原来的让出终端路径（setInputActive(false) + suspend + app.clear() +
+      // handler 直接往终端打）有两条取死路 —— ① ink 的 patchConsole 每拦一次
+      // console.log 就重画整帧（writeToStdout → log.clear + 写行 +
+      // restoreLastOutput），一行输出花掉约 5 个屏幕行，/help 百行输出 ≈300 行
+      // 瞬间滚光；② 命令收尾那一帧以换行收尾，屏幕整体上滚 2 行把输出顶出视口，
+      // 而 TUI 跑在备用缓冲区（KHY_ALT_SCREEN 默认开）里，滚出去即永久消失。
+      // /model 从来不受影响：它走原生 ModelPicker 覆盖层，从不往终端打。
+      // 收集式把命令输出收成一条 role:'notice' 落进 transcript —— 与
+      // tuiCommandReports.dispatchNativeCommand（/cost、/usage、/stats、/scan…）
+      // 同一范式，在会话里可滚可翻、不随帧重画消失。
+      const _captureOn = commandOutputSink.captureEnabled(process.env);
+      if (!_captureOn) {
+        const app = inkRuntime.getApp();
+        setInputActive(false);
+        // Hand the interactive sub-command a clean full-screen scroll region: drop
+        // the pinned topic bar (块3) so its reserved row 1 / DECSTBM does not clip
+        // inquirer-style prompts. Restored in finally.
+        try {
+          topicBar.suspend();
+        } catch {
+          /* best effort */
         }
-      } catch {
-        /* ignore */
+        // 右栏同理:交互子命令 clear() 后独占整屏,槽位里的看板必须先擦掉,
+        // 否则原生 prompt 上会挂着一块过时的板子。finally 里 resume()。
+        try {
+          sidebarRail.suspend();
+        } catch {
+          /* best effort */
+        }
+        // Let React flush the suspended (empty live UI) frame before clearing, so
+        // the handler starts from a clean transient region. 等待时长必须**超过 ink 自身的
+        // 节流窗口**(maxFps 30 → 34ms,leading+trailing):历史硬编码的 16ms 短于该窗口,
+        // 「空 live 区」那帧常仍挂在 trailing 队列 → clear() 擦除并 log.sync 了**旧**帧行数后,
+        // 迟到的 trailing onRender 又把刚擦掉的输入框 chrome 画回来 =「输入框残影」。
+        // 取值走 perfTunables 单一真源(KHY_TUI_SUSPEND_SETTLE_MS 可调);fail-soft 回退 16ms。
+        await new Promise((r) => setTimeout(r, _suspendSettleMs()));
+        try {
+          if (app && typeof app.clear === 'function') {
+            app.clear();
+          }
+        } catch {
+          /* ignore */
+        }
       }
 
       let result;
       try {
-        result = await route(parsed);
+        result = await _runRoutedCaptured(route, parsed, query);
       } catch (err) {
         query.setMessages((m) => [
           ...m,
           { role: 'error', content: err.message, timestamp: Date.now() },
         ]);
       } finally {
-        setInputActive(true);
-        try {
-          topicBar.resume();
-        } catch {
-          /* best effort */
-        }
-        try {
-          sidebarRail.resume();
-        } catch {
-          /* best effort */
+        if (!_captureOn) {
+          setInputActive(true);
+          try {
+            topicBar.resume();
+          } catch {
+            /* best effort */
+          }
+          try {
+            sidebarRail.resume();
+          } catch {
+            /* best effort */
+          }
         }
       }
 
@@ -5599,6 +5678,9 @@ function App({ options = {} }) {
               busy,
               empty,
               queueLen: query.queueLen,
+              // ↓ 只在「本回合已有工具调用」时才开窥视面板。同一把尺:`ShellView.latestTool`
+              // —— 面板自己就是拿它取内容的,故此处有值 ⇔ 面板不会开成空框。
+              hasTool: !!(ShellView.latestTool && ShellView.latestTool(query.streaming)),
             })
           : null;
         switch (_arrowAct) {
@@ -5614,6 +5696,11 @@ function App({ options = {} }) {
           case 'subview:openShell':
             setShellScroll(0);
             setShellViewOpen(true);
+            return;
+          case 'subview:peekUnavailable':
+            // 本回合还没有工具调用:面板开了也是空框。如实说清入口与时机,而不是静默吞掉
+            // 这个键 —— 用户按了没反应,和看到一个不说话的框一样费解(2026-10-09 反馈)。
+            showHint('本回合还没有工具调用；工具开始运行后，↓ 可查看它的命令与实时输出');
             return;
           case 'queue:editLast': {
             const item = query.dequeueLast();
@@ -6670,13 +6757,7 @@ function App({ options = {} }) {
     try {
       const ls = tasksHidden ? [] : Array.isArray(_taskProps.lines) ? _taskProps.lines : [];
       const { taskLineStatus: _tls } = require('./taskPanelLines');
-      let firstErr = '';
-      for (const l of ls) {
-        const s = _tls(String(l == null ? '' : l).trimStart());
-        if (s === 'in_progress') return String(l);
-        if (s === 'error' && !firstErr) firstErr = String(l);
-      }
-      return firstErr;
+      return _pickCurrentTaskLine(ls, _tls);
     } catch {
       return '';
     }

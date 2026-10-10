@@ -166,6 +166,75 @@ async function handleUnifiedUpdateCommand(ctx) {
   return true;
 }
 
+// prompt normalize / prompt optimize 的正文:原先内联在 switch 的 case 里,嵌套到 5-6 层,
+// 且输出走裸 console.log。抽成叶子后既压回 4 层内,也改走本仓结构化打印器。
+function _readPromptSource(input) {
+  try {
+    const fsx = require('fs');
+    if (fsx.existsSync(input) && fsx.statSync(input).isFile()) {
+      return { text: fsx.readFileSync(input, 'utf8'), source: input };
+    }
+  } catch {
+    /* 非文件路径 → 按文本处理 */
+  }
+  return { text: input, source: '命令行文本' };
+}
+
+// 静态体检(确定性零 LLM):愿望词/条件分支/反幻觉/收口四项,只报不改。判定内核在
+// promptStructurer.inspectPrompt(单一真源),黑名单与 check-ai-gateway 守卫同源不漂移。
+function _runPromptNormalize(args, io) {
+  const input = args.join(' ');
+  if (!input) {
+    io.printError('用法: prompt normalize <提示词文本或 .md/.txt 文件路径>');
+    require('../utils/markProcessFailure')();
+    return true;
+  }
+  const { text: raw, source } = _readPromptSource(input);
+  const report = require('../services/promptStructurer').inspectPrompt(raw);
+  io.printInfo(`提示词体检 · ${report.grade}(${report.score}/100)`);
+  io.printInfo(`来源: ${source} · ${raw.length} 字符 · ${report.complex ? '复杂任务' : '简单请求'}`);
+  if (report.findings.length === 0) {
+    io.printSuccess('四项全过:无愿望词 · 有分支处理 · 有反幻觉规则 · 有收口声明');
+  } else {
+    for (const f of report.findings) {
+      io.printWarn(`-${f.deduction} ${f.message}(建议: ${f.advice})`);
+    }
+  }
+  io.printInfo('原文未改动。LLM 按方法论改写: prompt optimize <文本或文件路径>');
+  return true;
+}
+
+// LLM 优化器(单次调用):四步法 框架化→内容化→结构化→评分。门 KHY_PROMPT_OPTIMIZE(默认开);
+// 失败 fail-soft 回退到手改建议。改写稿只打印,存库由用户走 prompt save。
+async function _runPromptOptimize(args, io) {
+  const input = args.join(' ');
+  if (!input) {
+    io.printError('用法: prompt optimize <提示词文本或 .md/.txt 文件路径>');
+    require('../utils/markProcessFailure')();
+    return true;
+  }
+  const { text: raw } = _readPromptSource(input);
+  const before = require('../services/promptStructurer').inspectPrompt(raw);
+  io.printInfo(formatStatusMessage('优化', '提示词(单次 LLM 调用)', `改前评分 ${before.score}/100`));
+  const out = await require('../services/promptOptimizeService').optimizePrompt({ text: raw });
+  if (out.ok && out.optimized) {
+    io.printInfo(`改写稿 · ${out.after.score}/100(改前 ${before.score}/100)`);
+    io.printInfo(out.optimized);
+    for (const r of out.reasons) {
+      io.printInfo(`· ${r}`);
+    }
+    io.printInfo('存库: prompt save "标题" "<改写稿>" · 原文未改动');
+  } else if (out.reason === 'disabled') {
+    io.printInfo('提示词优化已禁用(KHY_PROMPT_OPTIMIZE=0)。可先用 prompt normalize 做静态体检');
+  } else {
+    io.printError(
+      `优化失败:${out.detail || out.reason || '未知错误'} — 可先用 prompt normalize 查看静态体检建议`
+    );
+    require('../utils/markProcessFailure')();
+  }
+  return true;
+}
+
 async function dispatchOpsCommand(command, _ctx) {
   const {
     subCommand,
@@ -1631,81 +1700,9 @@ async function dispatchOpsCommand(command, _ctx) {
           printError(`撰写失败:${result.detail || '未知错误'}`);
         }
       } else if (subCommand === 'normalize') {
-        // 静态体检(确定性零 LLM):愿望词/条件分支/反幻觉/收口四项,只报不改。判定内核在
-        // promptStructurer.inspectPrompt(单一真源),黑名单与 check-ai-gateway 守卫同源不漂移。
-        const input = args.join(' ');
-        if (!input) {
-          printError('用法: prompt normalize <提示词文本或 .md/.txt 文件路径>');
-          require('../utils/markProcessFailure')();
-          return true;
-        }
-        const fsx = require('fs');
-        let raw = input;
-        let source = '命令行文本';
-        try {
-          if (fsx.existsSync(input) && fsx.statSync(input).isFile()) {
-            raw = fsx.readFileSync(input, 'utf8');
-            source = input;
-          }
-        } catch {
-          /* 非文件路径 → 按文本处理 */
-        }
-        const report = require('../services/promptStructurer').inspectPrompt(raw);
-        console.log(chalk.bold(`\n  提示词体检 · ${report.grade}(${report.score}/100)\n`));
-        console.log(
-          chalk.dim(
-            `  来源: ${source} · ${raw.length} 字符 · ${report.complex ? '复杂任务' : '简单请求'}`
-          )
-        );
-        if (report.findings.length === 0) {
-          printSuccess('四项全过:无愿望词 · 有分支处理 · 有反幻觉规则 · 有收口声明');
-        } else {
-          report.findings.forEach((f) => {
-            console.log(chalk.yellow(`  -${f.deduction} ${f.message}`));
-            console.log(chalk.dim(`      建议: ${f.advice}`));
-          });
-        }
-        console.log(chalk.dim('\n  原文未改动。LLM 按方法论改写: prompt optimize <文本或文件路径>'));
-        console.log('');
+        return _runPromptNormalize(args, { printError, printInfo, printSuccess, printWarn });
       } else if (subCommand === 'optimize') {
-        // LLM 优化器(单次调用):四步法 框架化→内容化→结构化→评分。门 KHY_PROMPT_OPTIMIZE
-        // (默认开);失败 fail-soft 回退到手改建议。改写稿只打印,存库由用户走 prompt save。
-        const input = args.join(' ');
-        if (!input) {
-          printError('用法: prompt optimize <提示词文本或 .md/.txt 文件路径>');
-          require('../utils/markProcessFailure')();
-          return true;
-        }
-        const fsx = require('fs');
-        let raw = input;
-        try {
-          if (fsx.existsSync(input) && fsx.statSync(input).isFile()) {
-            raw = fsx.readFileSync(input, 'utf8');
-          }
-        } catch {
-          /* 非文件路径 → 按文本处理 */
-        }
-        const before = require('../services/promptStructurer').inspectPrompt(raw);
-        printInfo(formatStatusMessage('优化', '提示词(单次 LLM 调用)', `改前评分 ${before.score}/100`));
-        const optimizer = require('../services/promptOptimizeService');
-        const out = await optimizer.optimizePrompt({ text: raw });
-        if (out.ok && out.optimized) {
-          console.log(chalk.bold(`\n  改写稿 · ${out.after.score}/100(改前 ${before.score}/100)\n`));
-          console.log(out.optimized);
-          if (out.reasons.length) {
-            console.log(chalk.dim('\n  改动理由:'));
-            out.reasons.forEach((r) => console.log(chalk.dim(`  · ${r}`)));
-          }
-          console.log(chalk.dim('\n  存库: prompt save "标题" "<改写稿>" · 原文未改动'));
-          console.log('');
-        } else if (out.reason === 'disabled') {
-          printInfo('提示词优化已禁用(KHY_PROMPT_OPTIMIZE=0)。可先用 prompt normalize 做静态体检');
-        } else {
-          printError(
-            `优化失败:${out.detail || out.reason || '未知错误'} — 可先用 prompt normalize 查看静态体检建议`
-          );
-          require('../utils/markProcessFailure')();
-        }
+        return _runPromptOptimize(args, { printError, printInfo });
       }
       return true;
     }

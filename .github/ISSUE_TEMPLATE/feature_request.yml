@@ -37,12 +37,12 @@ body:
       label: 涉及模块
       options:
         - 不清楚 / 跨多个模块
-        - CLI 与 TUI (services/backend/src/cli)
-        - AI 网关与供应商适配 (services/backend/src/services/gateway)
-        - 后端服务与 Web API (services/backend)
-        - AI 管理前端 (apps/ai-frontend)
-        - khyquant 量化应用 (software/khyquant)
-        - Python 启动器 (platform/khy_platform)
+        - CLI 与 TUI (runtime/node/backend/src/cli)
+        - AI 网关与供应商适配 (runtime/node/backend/src/services/gateway)
+        - 后端服务与 Web API (runtime/node/backend)
+        - AI 管理前端 (delivery/web/ai-frontend)
+        - khyquant 量化应用 (delivery/channel/khyquant)
+        - Python 启动器 (runtime/substrate/platform/khy_platform)
         - OS 内核 (kernel, C)
         - MoonBit / WASM 模块
         - 打包与发布 (packaging, scripts/release)

@@ -35,7 +35,7 @@ for (const mp of modulePaths) {
   try { JavaScriptObfuscator = require(mp); break; } catch { /* next */ }
 }
 if (!JavaScriptObfuscator) {
-  console.error('Cannot find javascript-obfuscator. Run: cd services/backend && npm install');
+  console.error('Cannot find javascript-obfuscator. Run: cd runtime/node/backend && npm install');
   process.exit(1);
 }
 

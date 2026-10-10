@@ -188,7 +188,12 @@ function buildStartRecord(info = {}) {
     runId: info.runId || null,
     sessionId: info.sessionId || null,
     turnId: info.turnId || null,
+    // requestId 是回合与裁决（receipts / agent.delivery.final）唯一的公共键；
+    // 没有它，轨迹与「这次任务成没成」在物理上无法 join。
+    requestId: _truncate(info.requestId, MAX_NAME_CHARS),
+    traceId: _truncate(info.traceId, MAX_NAME_CHARS),
     maxIterations: _numOrNull(info.maxIterations),
+    source: info.source ? _truncate(info.source, MAX_NAME_CHARS) : null,
     userMessageLength: msg.length,
     userMessageSha1: crypto.createHash('sha1').update(msg).digest('hex').slice(0, 12),
     pid: process.pid,
@@ -238,7 +243,12 @@ function buildEndRecord(info = {}) {
     reason: info.reason ? _truncate(info.reason, MAX_ERROR_CHARS) : null,
     ok: _isNil(info.ok) ? true : !!info.ok,
     iterations: _numOrNull(info.iterations),
+    // 生效上限（非请求值）：没有它就无法分辨「跑完」与「撞上限被截断」。
+    maxIterations: _numOrNull(info.maxIterations),
     totalToolCalls: _numOrNull(info.totalToolCalls),
+    // 护栏拦停次数与「拦停后即收尾」——这是任务被自家闸门掐断的直接读数。
+    guardInterventions: _numOrNull(info.guardInterventions),
+    endedOnGuard: info.endedOnGuard === true,
     at: info.at || new Date().toISOString(),
   };
 }

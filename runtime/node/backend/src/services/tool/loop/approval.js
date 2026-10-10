@@ -68,7 +68,7 @@ function _readControlDecision(resp) {
  * approved command is not prompted twice. A Symbol key cannot be forged by the
  * model through JSON params.
  */
-async function _resolveExecApproval(call, approval, onControlRequest, signal) {
+async function _resolveExecApproval(call, approval, onControlRequest, signal, onSettled) {
   if (approval.allowed === true) {
     return 'allow';
   }
@@ -148,7 +148,7 @@ async function _resolveExecApproval(call, approval, onControlRequest, signal) {
           input: { command: call.params?.command, risk: approval.risk, reason: approval.reason },
         },
       }),
-      { signal: signal || null, env: process.env }
+      { signal: signal || null, env: process.env, ...(onSettled ? { onSettled } : {}) }
     );
   } catch {
     ctrlResp = null;

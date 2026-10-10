@@ -209,11 +209,66 @@ function _normalizeCandidates(candidates) {
  * @param {{max?:number, preferTier?:string, taskScale?:'small'|'medium'|'large'|'xlarge'|'huge'}} [opts]
  * @returns {Array<{model:string,adapter:string,tier:string,status:string}>} 失败/空 → []
  */
+/**
+ * 把离散排序键折成 0..1 的连续 fit，供 λ 混合与 margin 计算。
+ *
+ * 为什么要有这一层而不是直接改排序：既有消费者（gatewayModelChoices 的预览、
+ * enhancedModelSelector 的重排）依赖**离散键序不变**。所以只有调用方显式给出
+ * band / lambda 时才走连续打分，否则返回的条目与今日逐字节一致。
+ *
+ * 分母取「本批候选里可能出现的最差组合」，不是常数 —— 用常数会让不同批次的
+ * score 不可比，margin 就失去意义（低置信升档判据依赖它跨轮可比）。
+ */
+function _fitScore(dist, capMiss, srcRank, worst) {
+  const denom = Math.max(1e-9, worst.dist + worst.capMiss + worst.src);
+  const penalty = (dist + capMiss + srcRank) / denom;
+  return Math.max(0, Math.min(1, 1 - penalty));
+}
+
+/**
+ * 从「当前真正可用的候选模型」里按任务贴合度排序,返回排好序的候选对象数组。
+ *
+ * 规则:
+ *   1. 归一去重;非数组/空 → []。
+ *   2. 过滤不可用(status ∈ {disabled, cooldown});全被滤 → []。
+ *   3. 稳定排序(decorate-sort-undecorate):
+ *        ① 距任务期望 tier 的距离(reasoning→T0 最强 … conversation→T2 均衡);
+ *        ② 能力匹配(命中任务偏好 capability 者优先);
+ *        ③ 发现来源 remote/chat > config > hint > unknown;
+ *        ④ 原始下标(保证确定性)。
+ *   4. opts.max 截断(默认全量)。
+ *   5. [DESIGN-ARCH-185] §5.4 新增(仅在调用方显式传参时生效，否则行为与今日一致):
+ *        opts.band = { floorIdx, ceilingIdx }  → 区间外候选**出池**(硬约束,不进打分)
+ *        opts.lambda = 0..1 有限数 + opts.priceOf(model) → 成本项参与，
+ *          此时每条附 score(0..1)，调用方可用 top1−top2 作 margin。
+ *        λ 缺失/非有限 = 成本项整项退出(不是乘 0)：价格不可知时宁可退回
+ *        「不省钱的路由」，也不要「按编造的常数省钱」(§3.4)。
+ *
+ * @param {string} taskType     'reasoning'|'code'|'analysis'|'conversation'|…(未知→均衡默认)
+ * @param {Array}  candidates   [{model,adapter,tier?,status?,capability?,source?}] | 裸 id[]
+ * @param {{max?:number, preferTier?:string, taskScale?:string, band?:{floorIdx:number,ceilingIdx:number},
+ *          lambda?:number, priceOf?:function}} [opts]
+ * @returns {Array<{model:string,adapter:string,tier:string,status:string,score?:number}>} 失败/空 → []
+ */
 function rankAutoModels(taskType, candidates, opts = {}) {
   try {
-    const list = _normalizeCandidates(candidates).filter((e) => !_UNAVAILABLE_STATUS.has(e.status));
+    let list = _normalizeCandidates(candidates).filter(
+      (e) => !_UNAVAILABLE_STATUS.has(e.status)
+    );
     if (list.length === 0) {
       return [];
+    }
+
+    // band 硬约束：区间外的候选根本不参与打分（经济档不因「也许更强」进 T0）。
+    const band = opts && opts.band && typeof opts.band === 'object' ? opts.band : null;
+    if (band && Number.isFinite(band.floorIdx) && Number.isFinite(band.ceilingIdx)) {
+      list = list.filter(
+        (e) =>
+          _TIER_ORDER[e.tier] <= band.floorIdx && _TIER_ORDER[e.tier] >= band.ceilingIdx
+      );
+      if (list.length === 0) {
+        return [];
+      }
     }
 
     let preferTier =
@@ -254,6 +309,52 @@ function rankAutoModels(taskType, candidates, opts = {}) {
         src: _sourceRank(e.source),
       };
     });
+
+    const lambda = typeof (opts && opts.lambda) === 'number' ? opts.lambda : NaN;
+    const priceOf = opts && typeof opts.priceOf === 'function' ? opts.priceOf : null;
+    // 注意不能用 Number(opts.lambda) 判定：Number(null) === 0 会让「λ 未标定(null)」
+    // 被当成 λ=0 而静默启用连续打分路径。
+    const useCost = Number.isFinite(lambda) && lambda >= 0 && lambda <= 1 && !!priceOf;
+
+    if (useCost) {
+      const worst = decorated.reduce(
+        (acc, d) => ({
+          dist: Math.max(acc.dist, d.dist),
+          capMiss: Math.max(acc.capMiss, d.capMiss),
+          src: Math.max(acc.src, d.src),
+        }),
+        { dist: 0, capMiss: 0, src: 0 }
+      );
+      // 成本在本批候选内归一化到 0..1；不可计价的候选不拿到 0 分（那等于奖励「不知道多少钱」）。
+      const priced = decorated.map((d) => {
+        const c = priceOf(d.entry.model);
+        return Number.isFinite(c) ? c : null;
+      });
+      const known = priced.filter((x) => x !== null);
+      const lo = known.length ? Math.min(...known) : 0;
+      const hi = known.length ? Math.max(...known) : 0;
+      const span = hi - lo;
+      decorated.forEach((d, i) => {
+        const fit = _fitScore(d.dist, d.capMiss, d.src, worst);
+        const raw = priced[i];
+        // raw === null → 成本项对该候选退出，只用 fit；不把未知当便宜。
+        d.score =
+          raw === null || span <= 0
+            ? fit
+            : (1 - lambda) * fit + lambda * (1 - (raw - lo) / span);
+      });
+      decorated.sort((a, b) => b.score - a.score || a.idx - b.idx);
+      const ranked = decorated.map((d) => ({
+        model: d.entry.model,
+        adapter: d.entry.adapter,
+        tier: d.entry.tier,
+        status: d.entry.status || 'active',
+        score: Number(d.score.toFixed(6)),
+      }));
+      const max = Number.isFinite(opts && opts.max) && opts.max > 0 ? opts.max | 0 : ranked.length;
+      return ranked.slice(0, max);
+    }
+
     decorated.sort(
       (a, b) => a.dist - b.dist || a.capMiss - b.capMiss || a.src - b.src || a.idx - b.idx
     );
@@ -358,6 +459,81 @@ function describeAutoModelSelect() {
   };
 }
 
+/**
+ * 四档模式在选择器里的四行（[DESIGN-ARCH-185] §4.4）。
+ *
+ * 与 buildAutoChoice 的关系：这是**同一处产出点的扩展**，不是第 6 个产出点 ——
+ * [DESIGN-ARCH-167] 的分层字段（primary/secondary/group/groupMeta）必须一并供上，
+ * 否则这四行会成为表里唯一不参与分层的行，并静默依赖渲染侧 `c.primary || c.name` 的回退。
+ *
+ * 本函数保持纯：模式描述与成本提示都由调用方算好注入。理由有两条 ——
+ * 一是 autoModelSelect 不能 require routingMode（后者要读 env/配置，纯叶子契约就没了）；
+ * 二是成本提示必须来自价格真源，放在这里会让「选择器文案」与「定价」在同一模块内耦合，
+ * 而 §3.4 那个缺陷的根因正是这类耦合。
+ *
+ * value 一律 `{adapter:'auto', model:'auto', mode:<档名>}`：前三位仍是 auto 语义
+ * （isAutoSelection 认 adapter==='auto'），差别只多一个 mode 字段供持久化写 env。
+ * 这样「选了经济档」不会把 GATEWAY_PREFERRED_ADAPTER 钉成某个真实渠道，
+ * 也就不会触发 RUNTIME-006 的钉选租约自动解钉。
+ *
+ * @param {{modes:Array<{key:string,label:string,intent:string,costHint:string,preview?:string,current?:boolean}>,
+ *          chalk?:object}} opts
+ * @returns {Array<object>}
+ */
+/** 钉选状态自查。绝不抛：判据取不到时按「未钉选」处理（宁可多画一行可选档，
+ *  也不要把整组功能对正常安装置灰 —— 那与 §16.4n 里「误旁路 = 配了却静默失效」同向）。 */
+function _pinnedNow(opts) {
+  try {
+    return require('./routingMode').pinnedBypass((opts && opts.env) || process.env);
+  } catch {
+    return false;
+  }
+}
+
+function buildModeChoices(opts = {}) {
+  const GROUP = '模式';
+  const list = Array.isArray(opts && opts.modes) ? opts.modes : [];
+  const c = opts && opts.chalk;
+  const dim = c && typeof c.dim === 'function' ? c.dim : (s) => s;
+  const cyan = c && typeof c.cyan === 'function' ? c.cyan : (s) => s;
+  const out = [];
+  // §14-D11 / 185 §15-1：钉选状态下模式轴整体旁路（`pinnedBypass`），此时四行档
+  // **可选但不生效** —— 那是画面在说谎。ModelPicker 真的会跳过 disabled 行、
+  // Enter 与数字直选都拒、并画 `(不可选)`，所以这里置灰是强制性的，不是装饰。
+  //
+  // inert **不由调用方决定**：§16.4o 里唯一只有静态证据的环节就是「供数点有没有把这个
+  // 实参传进来」——删掉一个实参不会让任何测试变红，四行却立刻重新开始说谎。
+  // 现在本函数自己查钉选（实测 `autoModelSelect → routingMode` 无环：
+  // routingMode 的 require 闭包 13 个文件不含本模块），调用方显式给了布尔仍以它为准。
+  const inert =
+    typeof (opts && opts.inert) === 'boolean'
+      ? opts.inert
+      : _pinnedNow(opts);
+  const inertNote =
+    typeof (opts && opts.inertNote) === 'string' && opts.inertNote
+      ? opts.inertNote
+      : '已钉选渠道/模型 · 档位不生效';
+  for (const m of list) {
+    if (!m || typeof m.key !== 'string' || !m.key) continue;
+    const star = m.current ? '★ ' : '';
+    const primary = `${star}${m.label}`;
+    const bits = [];
+    if (inert) bits.push(dim(inertNote));
+    if (typeof m.costHint === 'string' && m.costHint) bits.push(m.costHint);
+    if (typeof m.preview === 'string' && m.preview) bits.push(`当前最优: ${m.preview}`);
+    out.push({
+      name: `${primary} ${m.intent || ''}`.trim(),
+      primary: m.current ? cyan(primary.trimEnd()) : primary.trimEnd(),
+      secondary: bits.length ? dim(`(${bits.join(' · ')})`) : '',
+      group: GROUP,
+      groupMeta: '',
+      value: { adapter: AUTO_SENTINEL, model: AUTO_SENTINEL, mode: m.key },
+      disabled: inert,
+    });
+  }
+  return out;
+}
+
 module.exports = {
   isEnabled,
   AUTO_SENTINEL,
@@ -365,5 +541,6 @@ module.exports = {
   rankAutoModels,
   pickAutoModel,
   buildAutoChoice,
+  buildModeChoices,
   describeAutoModelSelect,
 };

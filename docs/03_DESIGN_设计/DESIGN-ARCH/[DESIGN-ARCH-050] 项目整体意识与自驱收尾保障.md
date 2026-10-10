@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-050] 项目整体意识与自驱收尾保障
 
 > 规范号：DESIGN-ARCH-050

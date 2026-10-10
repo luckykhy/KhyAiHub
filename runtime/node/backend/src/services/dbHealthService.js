@@ -212,13 +212,13 @@ function _discoverDatabases() {
     // Main databases
     databases.push({
       name: 'sessions.db',
-      path: path.join(getProjectDataDir(), 'sessions.db'),
+      path: getProjectDataDir('sessions.db'),
       critical: true,
     });
 
     databases.push({
       name: 'taskboard.db',
-      path: path.join(getDataDir(), 'taskboard.db'),
+      path: getDataDir('taskboard.db'),
       critical: true,
     });
 

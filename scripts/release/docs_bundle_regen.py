@@ -17,7 +17,7 @@
     保证「宁可无 html 也绝不发布断链」。
   - 外科手术式：清理只删生成器自己的产物（带模板签名且旁边有同名 `.md` 的 `.html`
     + `nav-data.js`/`dead-links.json`/`docs/index.html`），绝不碰前端应用页
-    （`delivery/web/ai-frontend/**`、`frontend/dist/**`、`software/khyquant/frontend/**` 等）。
+    （`delivery/web/ai-frontend/**`、`frontend/dist/**`、`delivery/channel/khyquant/frontend/**` 等）。
   - 确定性：生成器无时间戳/随机数，可复现。
 
 从 setup.py 抽出到 scripts/release/ 的原因：setup.py 在模块级调用 setup()，直接 import

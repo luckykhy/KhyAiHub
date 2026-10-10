@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-114] CLI 错误标准化规范
 
 <!-- RULES-REGISTRY: RUNTIME-002, RUNTIME-005 -->

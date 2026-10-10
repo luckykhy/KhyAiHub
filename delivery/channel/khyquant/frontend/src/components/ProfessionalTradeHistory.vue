@@ -1,38 +1,104 @@
 <template>
-  <div class="professional-trade-history" :class="{ 'horizontal-mode': horizontal }">
+  <div
+    class="professional-trade-history"
+    :class="{ 'horizontal-mode': horizontal }"
+  >
     <!-- 头部工具栏 -->
     <div class="history-header">
       <div class="header-left">
-        <el-icon class="title-icon"><Document /></el-icon>
+        <el-icon class="title-icon">
+          <Document />
+        </el-icon>
         <span class="title">交易记录</span>
-        <el-tag size="small" type="info">{{ filteredTrades.length }} 笔</el-tag>
+        <el-tag
+          size="small"
+          type="info"
+        >
+          {{ filteredTrades.length }} 笔
+        </el-tag>
       </div>
       <div class="header-right">
         <!-- 筛选器 -->
-        <el-select v-model="filterType" placeholder="类型" size="small" style="width: 100px;">
-          <el-option label="全部" value="all" />
-          <el-option label="买入" value="buy" />
-          <el-option label="卖出" value="sell" />
+        <el-select
+          v-model="filterType"
+          placeholder="类型"
+          size="small"
+          style="width: 100px;"
+        >
+          <el-option
+            label="全部"
+            value="all"
+          />
+          <el-option
+            label="买入"
+            value="buy"
+          />
+          <el-option
+            label="卖出"
+            value="sell"
+          />
         </el-select>
         
-        <el-select v-model="filterOrderType" placeholder="方式" size="small" style="width: 110px;">
-          <el-option label="全部" value="all" />
-          <el-option label="限价" value="limit" />
-          <el-option label="市价" value="market" />
-          <el-option label="对手价" value="counterparty" />
-          <el-option label="排队价" value="queue" />
-          <el-option label="最优五档" value="best5" />
-          <el-option label="最优本方" value="bestOwn" />
-          <el-option label="TWAP" value="twap" />
-          <el-option label="VWAP" value="vwap" />
-          <el-option label="策略" value="strategy" />
+        <el-select
+          v-model="filterOrderType"
+          placeholder="方式"
+          size="small"
+          style="width: 110px;"
+        >
+          <el-option
+            label="全部"
+            value="all"
+          />
+          <el-option
+            label="限价"
+            value="limit"
+          />
+          <el-option
+            label="市价"
+            value="market"
+          />
+          <el-option
+            label="对手价"
+            value="counterparty"
+          />
+          <el-option
+            label="排队价"
+            value="queue"
+          />
+          <el-option
+            label="最优五档"
+            value="best5"
+          />
+          <el-option
+            label="最优本方"
+            value="bestOwn"
+          />
+          <el-option
+            label="TWAP"
+            value="twap"
+          />
+          <el-option
+            label="VWAP"
+            value="vwap"
+          />
+          <el-option
+            label="策略"
+            value="strategy"
+          />
         </el-select>
         
-        <el-button size="small" @click="refreshTrades" :loading="loading">
+        <el-button
+          size="small"
+          :loading="loading"
+          @click="refreshTrades"
+        >
           <el-icon><Refresh /></el-icon>
         </el-button>
         
-        <el-button size="small" @click="exportTrades">
+        <el-button
+          size="small"
+          @click="exportTrades"
+        >
           <el-icon><Download /></el-icon>
         </el-button>
       </div>
@@ -41,29 +107,49 @@
     <!-- 交易表格 -->
     <div class="trade-table-container">
       <el-table
+        v-loading="loading"
         :data="paginatedTrades"
         style="width: 100%"
         :height="tableHeight"
         stripe
-        v-loading="loading"
-        @row-click="handleRowClick"
         :row-class-name="getRowClassName"
+        @row-click="handleRowClick"
       >
         <!-- 序号 -->
-        <el-table-column type="index" label="#" width="50" align="center" fixed="left" />
+        <el-table-column
+          type="index"
+          label="#"
+          width="50"
+          align="center"
+          fixed="left"
+        />
         
         <!-- 时间 -->
-        <el-table-column prop="createdAt" label="时间" min-width="140" align="center">
+        <el-table-column
+          prop="createdAt"
+          label="时间"
+          min-width="140"
+          align="center"
+        >
           <template #default="{ row }">
             <div class="time-cell">
-              <div class="date">{{ formatDate(row.createdAt) }}</div>
-              <div class="time">{{ formatTime(row.createdAt) }}</div>
+              <div class="date">
+                {{ formatDate(row.createdAt) }}
+              </div>
+              <div class="time">
+                {{ formatTime(row.createdAt) }}
+              </div>
             </div>
           </template>
         </el-table-column>
         
         <!-- 标的 -->
-        <el-table-column prop="symbol" label="标的" min-width="100" align="center">
+        <el-table-column
+          prop="symbol"
+          label="标的"
+          min-width="100"
+          align="center"
+        >
           <template #default="{ row }">
             <div class="symbol-cell">
               <span class="symbol-code">{{ row.symbol }}</span>
@@ -72,32 +158,57 @@
         </el-table-column>
         
         <!-- 方向 -->
-        <el-table-column prop="side" label="方向" width="80" align="center">
+        <el-table-column
+          prop="side"
+          label="方向"
+          width="80"
+          align="center"
+        >
           <template #default="{ row }">
-            <el-tag :type="row.side === 'buy' ? 'danger' : 'success'" size="small">
+            <el-tag
+              :type="row.side === 'buy' ? 'danger' : 'success'"
+              size="small"
+            >
               {{ row.side === 'buy' ? '买' : '卖' }}
             </el-tag>
           </template>
         </el-table-column>
         
         <!-- 下单方式 -->
-        <el-table-column prop="orderType" label="方式" min-width="100" align="center">
+        <el-table-column
+          prop="orderType"
+          label="方式"
+          min-width="100"
+          align="center"
+        >
           <template #default="{ row }">
-            <el-tag :type="getOrderTypeColor(row.orderType)" size="small">
+            <el-tag
+              :type="getOrderTypeColor(row.orderType)"
+              size="small"
+            >
               {{ getOrderTypeLabel(row.orderType) }}
             </el-tag>
           </template>
         </el-table-column>
         
         <!-- 成交价 -->
-        <el-table-column prop="price" label="成交价" min-width="90" align="right">
+        <el-table-column
+          prop="price"
+          label="成交价"
+          min-width="90"
+          align="right"
+        >
           <template #default="{ row }">
             <span class="price-value">{{ formatPrice(row.price) }}</span>
           </template>
         </el-table-column>
         
         <!-- 现价 -->
-        <el-table-column label="现价" min-width="90" align="right">
+        <el-table-column
+          label="现价"
+          min-width="90"
+          align="right"
+        >
           <template #default="{ row }">
             <div class="current-price-cell">
               <span class="current-price-value">{{ formatPrice(getCurrentPrice(row.symbol)) }}</span>
@@ -109,17 +220,28 @@
         </el-table-column>
         
         <!-- 数量 -->
-        <el-table-column prop="quantity" label="数量" min-width="80" align="right">
+        <el-table-column
+          prop="quantity"
+          label="数量"
+          min-width="80"
+          align="right"
+        >
           <template #default="{ row }">
             <span class="quantity-value">{{ row.quantity }}</span>
           </template>
         </el-table-column>
         
         <!-- 盈亏 -->
-        <el-table-column label="盈亏" min-width="110" align="right">
+        <el-table-column
+          label="盈亏"
+          min-width="110"
+          align="right"
+        >
           <template #default="{ row }">
             <div class="profit-cell">
-              <div class="profit-label">{{ row.isClosed ? '最终' : '浮动' }}</div>
+              <div class="profit-label">
+                {{ row.isClosed ? '最终' : '浮动' }}
+              </div>
               <div :class="['profit-amount', getProfitClass(row)]">
                 {{ getProfitAmount(row) }}
               </div>
@@ -128,27 +250,52 @@
         </el-table-column>
         
         <!-- 订单状态 -->
-        <el-table-column prop="status" label="订单" width="80" align="center">
+        <el-table-column
+          prop="status"
+          label="订单"
+          width="80"
+          align="center"
+        >
           <template #default="{ row }">
-            <el-tag :type="getStatusType(row.status)" size="small">
+            <el-tag
+              :type="getStatusType(row.status)"
+              size="small"
+            >
               {{ getStatusText(row.status) }}
             </el-tag>
           </template>
         </el-table-column>
         
         <!-- 交易状态 -->
-        <el-table-column prop="isClosed" label="交易" width="80" align="center">
+        <el-table-column
+          prop="isClosed"
+          label="交易"
+          width="80"
+          align="center"
+        >
           <template #default="{ row }">
-            <el-tag :type="row.isClosed ? 'info' : 'success'" size="small">
+            <el-tag
+              :type="row.isClosed ? 'info' : 'success'"
+              size="small"
+            >
               {{ row.isClosed ? '已结束' : '进行中' }}
             </el-tag>
           </template>
         </el-table-column>
         
         <!-- 操作 -->
-        <el-table-column label="操作" width="120" align="center" fixed="right">
+        <el-table-column
+          label="操作"
+          width="120"
+          align="center"
+          fixed="right"
+        >
           <template #default="{ row }">
-            <el-button size="small" text @click.stop="viewDetail(row)">
+            <el-button
+              size="small"
+              text
+              @click.stop="viewDetail(row)"
+            >
               详情
             </el-button>
             <el-button 
@@ -185,8 +332,14 @@
       width="600px"
       :close-on-click-modal="false"
     >
-      <div v-if="selectedTrade" class="trade-detail">
-        <el-descriptions :column="2" border>
+      <div
+        v-if="selectedTrade"
+        class="trade-detail"
+      >
+        <el-descriptions
+          :column="2"
+          border
+        >
           <el-descriptions-item label="交易时间">
             {{ formatDateTime(selectedTrade.createdAt) }}
           </el-descriptions-item>
@@ -215,12 +368,19 @@
           <el-descriptions-item label="当前价格">
             ¥{{ formatPrice(getCurrentPrice(selectedTrade.symbol)) }}
           </el-descriptions-item>
-          <el-descriptions-item label="盈亏金额" :span="2">
+          <el-descriptions-item
+            label="盈亏金额"
+            :span="2"
+          >
             <span :class="['profit-value', getProfitClass(selectedTrade)]">
               {{ getProfitAmount(selectedTrade) }} ({{ getProfitPercent(selectedTrade) }})
             </span>
           </el-descriptions-item>
-          <el-descriptions-item v-if="selectedTrade.strategyName" label="策略名称" :span="2">
+          <el-descriptions-item
+            v-if="selectedTrade.strategyName"
+            label="策略名称"
+            :span="2"
+          >
             {{ selectedTrade.strategyName }}
           </el-descriptions-item>
           <el-descriptions-item label="订单状态">

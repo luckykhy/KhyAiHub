@@ -1,71 +1,129 @@
 <template>
   <div class="admin-panel">
     <!-- 顶部统计卡片 -->
-    <el-row :gutter="16" class="stats-row">
+    <el-row
+      :gutter="16"
+      class="stats-row"
+    >
       <el-col :span="6">
-        <el-card shadow="hover" class="stat-card">
-          <div class="stat-num">{{ stats.totalUsers }}</div>
-          <div class="stat-label">注册用户</div>
+        <el-card
+          shadow="hover"
+          class="stat-card"
+        >
+          <div class="stat-num">
+            {{ stats.totalUsers }}
+          </div>
+          <div class="stat-label">
+            注册用户
+          </div>
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card shadow="hover" class="stat-card">
-          <div class="stat-num">{{ stats.totalStrategies }}</div>
-          <div class="stat-label">策略总数</div>
+        <el-card
+          shadow="hover"
+          class="stat-card"
+        >
+          <div class="stat-num">
+            {{ stats.totalStrategies }}
+          </div>
+          <div class="stat-label">
+            策略总数
+          </div>
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card shadow="hover" class="stat-card">
-          <div class="stat-num">{{ stats.totalAnnouncements }}</div>
-          <div class="stat-label">公告总数</div>
+        <el-card
+          shadow="hover"
+          class="stat-card"
+        >
+          <div class="stat-num">
+            {{ stats.totalAnnouncements }}
+          </div>
+          <div class="stat-label">
+            公告总数
+          </div>
         </el-card>
       </el-col>
       <el-col :span="6">
-        <el-card shadow="hover" class="stat-card">
-          <div class="stat-num">{{ stats.onlineUsers }}</div>
-          <div class="stat-label">当前在线</div>
+        <el-card
+          shadow="hover"
+          class="stat-card"
+        >
+          <div class="stat-num">
+            {{ stats.onlineUsers }}
+          </div>
+          <div class="stat-label">
+            当前在线
+          </div>
         </el-card>
       </el-col>
     </el-row>
 
     <!-- 功能标签页 -->
-    <el-tabs v-model="activeTab" type="border-card" class="main-tabs">
-
+    <el-tabs
+      v-model="activeTab"
+      type="border-card"
+      class="main-tabs"
+    >
       <!-- ========== 系统概览 ========== -->
-      <el-tab-pane label="系统概览" name="overview">
+      <el-tab-pane
+        label="系统概览"
+        name="overview"
+      >
         <el-row :gutter="20">
           <el-col :span="12">
             <el-card>
               <template #header>
                 <div class="section-header">
                   <span>系统状态</span>
-                  <el-button text size="small" @click="loadSystemStatus">
+                  <el-button
+                    text
+                    size="small"
+                    @click="loadSystemStatus"
+                  >
                     <el-icon><Refresh /></el-icon>
                   </el-button>
                 </div>
               </template>
-              <div class="status-grid" v-loading="systemLoading">
+              <div
+                v-loading="systemLoading"
+                class="status-grid"
+              >
                 <div class="status-item">
                   <span>数据库</span>
-                  <el-tag :type="systemStatus.database ? 'success' : 'danger'" size="small">
+                  <el-tag
+                    :type="systemStatus.database ? 'success' : 'danger'"
+                    size="small"
+                  >
                     {{ systemStatus.database ? '正常' : '异常' }}
                   </el-tag>
                 </div>
                 <div class="status-item">
                   <span>WebSocket</span>
-                  <el-tag :type="systemStatus.websocket ? 'success' : 'danger'" size="small">
+                  <el-tag
+                    :type="systemStatus.websocket ? 'success' : 'danger'"
+                    size="small"
+                  >
                     {{ systemStatus.websocket ? '正常' : '异常' }}
                   </el-tag>
                 </div>
                 <div class="status-item">
                   <span>AI 服务</span>
-                  <el-tag :type="systemStatus.aiService ? 'success' : 'warning'" size="small">
+                  <el-tag
+                    :type="systemStatus.aiService ? 'success' : 'warning'"
+                    size="small"
+                  >
                     {{ systemStatus.aiService ? '正常' : '离线' }}
                   </el-tag>
                 </div>
                 <div class="status-item">
                   <span>系统负载</span>
-                  <el-tag type="info" size="small">{{ systemStatus.load || '-' }}</el-tag>
+                  <el-tag
+                    type="info"
+                    size="small"
+                  >
+                    {{ systemStatus.load || '-' }}
+                  </el-tag>
                 </div>
               </div>
             </el-card>
@@ -75,20 +133,39 @@
               <template #header>
                 <div class="section-header">
                   <span>最近动态</span>
-                  <el-button text size="small" @click="loadActivities">
+                  <el-button
+                    text
+                    size="small"
+                    @click="loadActivities"
+                  >
                     <el-icon><Refresh /></el-icon>
                   </el-button>
                 </div>
               </template>
-              <div class="activities-list" v-loading="activitiesLoading">
-                <div v-for="a in activities" :key="a.id" class="activity-item">
+              <div
+                v-loading="activitiesLoading"
+                class="activities-list"
+              >
+                <div
+                  v-for="a in activities"
+                  :key="a.id"
+                  class="activity-item"
+                >
                   <div class="activity-dot" />
                   <div class="activity-body">
-                    <div class="activity-text">{{ a.description }}</div>
-                    <div class="activity-time">{{ formatRelative(a.createdAt) }}</div>
+                    <div class="activity-text">
+                      {{ a.description }}
+                    </div>
+                    <div class="activity-time">
+                      {{ formatRelative(a.createdAt) }}
+                    </div>
                   </div>
                 </div>
-                <el-empty v-if="activities.length === 0 && !activitiesLoading" description="暂无动态" :image-size="60" />
+                <el-empty
+                  v-if="activities.length === 0 && !activitiesLoading"
+                  description="暂无动态"
+                  :image-size="60"
+                />
               </div>
             </el-card>
           </el-col>
@@ -96,282 +173,732 @@
       </el-tab-pane>
 
       <!-- ========== 用户管理 ========== -->
-      <el-tab-pane label="用户管理" name="users">
+      <el-tab-pane
+        label="用户管理"
+        name="users"
+      >
         <div class="toolbar">
           <div class="toolbar-left">
-            <el-input v-model="users.search" placeholder="搜索用户名/邮箱" clearable style="width:200px">
-              <template #prefix><el-icon><Search /></el-icon></template>
+            <el-input
+              v-model="users.search"
+              placeholder="搜索用户名/邮箱"
+              clearable
+              style="width:200px"
+            >
+              <template #prefix>
+                <el-icon><Search /></el-icon>
+              </template>
             </el-input>
-            <el-select v-model="users.filterRole" placeholder="角色" clearable style="width:120px">
-              <el-option label="全部角色" value="" />
-              <el-option label="管理员" value="admin" />
-              <el-option label="普通用户" value="user" />
+            <el-select
+              v-model="users.filterRole"
+              placeholder="角色"
+              clearable
+              style="width:120px"
+            >
+              <el-option
+                label="全部角色"
+                value=""
+              />
+              <el-option
+                label="管理员"
+                value="admin"
+              />
+              <el-option
+                label="普通用户"
+                value="user"
+              />
             </el-select>
-            <el-select v-model="users.filterStatus" placeholder="状态" clearable style="width:120px">
-              <el-option label="全部状态" value="" />
-              <el-option label="正常" value="active" />
-              <el-option label="停用" value="inactive" />
-              <el-option label="封禁" value="banned" />
+            <el-select
+              v-model="users.filterStatus"
+              placeholder="状态"
+              clearable
+              style="width:120px"
+            >
+              <el-option
+                label="全部状态"
+                value=""
+              />
+              <el-option
+                label="正常"
+                value="active"
+              />
+              <el-option
+                label="停用"
+                value="inactive"
+              />
+              <el-option
+                label="封禁"
+                value="banned"
+              />
             </el-select>
           </div>
           <div class="toolbar-right">
-            <el-button type="primary" @click="users.showCreate = true">
+            <el-button
+              type="primary"
+              @click="users.showCreate = true"
+            >
               <el-icon><Plus /></el-icon> 新建用户
             </el-button>
-            <el-button @click="fetchUsers" :loading="users.loading">
+            <el-button
+              :loading="users.loading"
+              @click="fetchUsers"
+            >
               <el-icon><Refresh /></el-icon>
             </el-button>
           </div>
         </div>
 
-        <el-table :data="filteredUsers" v-loading="users.loading" stripe>
-          <el-table-column prop="id" label="ID" width="70" sortable />
-          <el-table-column prop="username" label="用户名" min-width="120" sortable />
-          <el-table-column prop="email" label="邮箱" min-width="180" />
-          <el-table-column prop="role" label="角色" width="100">
+        <el-table
+          v-loading="users.loading"
+          :data="filteredUsers"
+          stripe
+        >
+          <el-table-column
+            prop="id"
+            label="ID"
+            width="70"
+            sortable
+          />
+          <el-table-column
+            prop="username"
+            label="用户名"
+            min-width="120"
+            sortable
+          />
+          <el-table-column
+            prop="email"
+            label="邮箱"
+            min-width="180"
+          />
+          <el-table-column
+            prop="role"
+            label="角色"
+            width="100"
+          >
             <template #default="{ row }">
-              <el-tag :type="row.role === 'admin' ? 'danger' : 'primary'" size="small">
+              <el-tag
+                :type="row.role === 'admin' ? 'danger' : 'primary'"
+                size="small"
+              >
                 {{ row.role === 'admin' ? '管理员' : '用户' }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="status" label="状态" width="90">
+          <el-table-column
+            prop="status"
+            label="状态"
+            width="90"
+          >
             <template #default="{ row }">
-              <el-tag :type="userStatusType(row.status)" size="small">{{ userStatusText(row.status) }}</el-tag>
+              <el-tag
+                :type="userStatusType(row.status)"
+                size="small"
+              >
+                {{ userStatusText(row.status) }}
+              </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="lastLoginAt" label="最后登录" width="160">
-            <template #default="{ row }">{{ row.lastLoginAt ? fmtDate(row.lastLoginAt) : '从未登录' }}</template>
-          </el-table-column>
-          <el-table-column prop="createdAt" label="注册时间" width="160">
-            <template #default="{ row }">{{ fmtDate(row.createdAt) }}</template>
-          </el-table-column>
-          <el-table-column label="操作" width="220" fixed="right">
+          <el-table-column
+            prop="lastLoginAt"
+            label="最后登录"
+            width="160"
+          >
             <template #default="{ row }">
-              <el-button size="small" @click="openEditUser(row)">编辑</el-button>
-              <el-button size="small" type="warning" @click="openResetPwd(row)">重置密码</el-button>
-              <el-button size="small" type="danger" @click="deleteUser(row)" :disabled="row.id === userStore.user?.id">删除</el-button>
+              {{ row.lastLoginAt ? fmtDate(row.lastLoginAt) : '从未登录' }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="createdAt"
+            label="注册时间"
+            width="160"
+          >
+            <template #default="{ row }">
+              {{ fmtDate(row.createdAt) }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            label="操作"
+            width="220"
+            fixed="right"
+          >
+            <template #default="{ row }">
+              <el-button
+                size="small"
+                @click="openEditUser(row)"
+              >
+                编辑
+              </el-button>
+              <el-button
+                size="small"
+                type="warning"
+                @click="openResetPwd(row)"
+              >
+                重置密码
+              </el-button>
+              <el-button
+                size="small"
+                type="danger"
+                :disabled="row.id === userStore.user?.id"
+                @click="deleteUser(row)"
+              >
+                删除
+              </el-button>
             </template>
           </el-table-column>
         </el-table>
 
         <div class="inline-stats">
-          <el-statistic title="总计" :value="users.list.length" />
-          <el-statistic title="管理员" :value="users.list.filter(u => u.role === 'admin').length" />
-          <el-statistic title="正常" :value="users.list.filter(u => u.status === 'active').length" />
+          <el-statistic
+            title="总计"
+            :value="users.list.length"
+          />
+          <el-statistic
+            title="管理员"
+            :value="users.list.filter(u => u.role === 'admin').length"
+          />
+          <el-statistic
+            title="正常"
+            :value="users.list.filter(u => u.status === 'active').length"
+          />
         </div>
 
         <!-- 新建用户对话框 -->
-        <el-dialog v-model="users.showCreate" title="新建用户" width="480px" @close="resetCreateForm">
-          <el-form ref="createFormRef" :model="users.createForm" :rules="users.createRules" label-width="80px">
-            <el-form-item label="用户名" prop="username">
+        <el-dialog
+          v-model="users.showCreate"
+          title="新建用户"
+          width="480px"
+          @close="resetCreateForm"
+        >
+          <el-form
+            ref="createFormRef"
+            :model="users.createForm"
+            :rules="users.createRules"
+            label-width="80px"
+          >
+            <el-form-item
+              label="用户名"
+              prop="username"
+            >
               <el-input v-model="users.createForm.username" />
             </el-form-item>
-            <el-form-item label="邮箱" prop="email">
+            <el-form-item
+              label="邮箱"
+              prop="email"
+            >
               <el-input v-model="users.createForm.email" />
             </el-form-item>
-            <el-form-item label="密码" prop="password">
-              <el-input v-model="users.createForm.password" type="password" show-password />
+            <el-form-item
+              label="密码"
+              prop="password"
+            >
+              <el-input
+                v-model="users.createForm.password"
+                type="password"
+                show-password
+              />
             </el-form-item>
-            <el-form-item label="角色" prop="role">
+            <el-form-item
+              label="角色"
+              prop="role"
+            >
               <el-select v-model="users.createForm.role">
-                <el-option label="普通用户" value="user" />
-                <el-option label="管理员" value="admin" />
+                <el-option
+                  label="普通用户"
+                  value="user"
+                />
+                <el-option
+                  label="管理员"
+                  value="admin"
+                />
               </el-select>
             </el-form-item>
           </el-form>
           <template #footer>
-            <el-button @click="users.showCreate = false">取消</el-button>
-            <el-button type="primary" @click="handleCreateUser" :loading="users.createLoading">创建</el-button>
+            <el-button @click="users.showCreate = false">
+              取消
+            </el-button>
+            <el-button
+              type="primary"
+              :loading="users.createLoading"
+              @click="handleCreateUser"
+            >
+              创建
+            </el-button>
           </template>
         </el-dialog>
 
         <!-- 编辑用户对话框 -->
-        <el-dialog v-model="users.showEdit" title="编辑用户" width="480px">
-          <el-form ref="editFormRef" :model="users.editForm" :rules="users.editRules" label-width="80px">
-            <el-form-item label="用户名" prop="username">
+        <el-dialog
+          v-model="users.showEdit"
+          title="编辑用户"
+          width="480px"
+        >
+          <el-form
+            ref="editFormRef"
+            :model="users.editForm"
+            :rules="users.editRules"
+            label-width="80px"
+          >
+            <el-form-item
+              label="用户名"
+              prop="username"
+            >
               <el-input v-model="users.editForm.username" />
             </el-form-item>
-            <el-form-item label="邮箱" prop="email">
+            <el-form-item
+              label="邮箱"
+              prop="email"
+            >
               <el-input v-model="users.editForm.email" />
             </el-form-item>
-            <el-form-item label="角色" prop="role">
+            <el-form-item
+              label="角色"
+              prop="role"
+            >
               <el-select v-model="users.editForm.role">
-                <el-option label="普通用户" value="user" />
-                <el-option label="管理员" value="admin" />
+                <el-option
+                  label="普通用户"
+                  value="user"
+                />
+                <el-option
+                  label="管理员"
+                  value="admin"
+                />
               </el-select>
             </el-form-item>
-            <el-form-item label="状态" prop="status">
+            <el-form-item
+              label="状态"
+              prop="status"
+            >
               <el-select v-model="users.editForm.status">
-                <el-option label="正常" value="active" />
-                <el-option label="停用" value="inactive" />
-                <el-option label="封禁" value="banned" />
+                <el-option
+                  label="正常"
+                  value="active"
+                />
+                <el-option
+                  label="停用"
+                  value="inactive"
+                />
+                <el-option
+                  label="封禁"
+                  value="banned"
+                />
               </el-select>
             </el-form-item>
           </el-form>
           <template #footer>
-            <el-button @click="users.showEdit = false">取消</el-button>
-            <el-button type="primary" @click="handleEditUser" :loading="users.editLoading">保存</el-button>
+            <el-button @click="users.showEdit = false">
+              取消
+            </el-button>
+            <el-button
+              type="primary"
+              :loading="users.editLoading"
+              @click="handleEditUser"
+            >
+              保存
+            </el-button>
           </template>
         </el-dialog>
 
         <!-- 重置密码对话框 -->
-        <el-dialog v-model="users.showPwd" title="重置密码" width="400px">
-          <el-form ref="pwdFormRef" :model="users.pwdForm" :rules="users.pwdRules" label-width="90px">
+        <el-dialog
+          v-model="users.showPwd"
+          title="重置密码"
+          width="400px"
+        >
+          <el-form
+            ref="pwdFormRef"
+            :model="users.pwdForm"
+            :rules="users.pwdRules"
+            label-width="90px"
+          >
             <el-form-item label="用户">
-              <el-input :value="users.selectedUser?.username" disabled />
+              <el-input
+                :value="users.selectedUser?.username"
+                disabled
+              />
             </el-form-item>
-            <el-form-item label="新密码" prop="newPassword">
-              <el-input v-model="users.pwdForm.newPassword" type="password" show-password />
+            <el-form-item
+              label="新密码"
+              prop="newPassword"
+            >
+              <el-input
+                v-model="users.pwdForm.newPassword"
+                type="password"
+                show-password
+              />
             </el-form-item>
-            <el-form-item label="确认密码" prop="confirmPassword">
-              <el-input v-model="users.pwdForm.confirmPassword" type="password" show-password />
+            <el-form-item
+              label="确认密码"
+              prop="confirmPassword"
+            >
+              <el-input
+                v-model="users.pwdForm.confirmPassword"
+                type="password"
+                show-password
+              />
             </el-form-item>
           </el-form>
           <template #footer>
-            <el-button @click="users.showPwd = false">取消</el-button>
-            <el-button type="primary" @click="handleResetPwd" :loading="users.pwdLoading">确认重置</el-button>
+            <el-button @click="users.showPwd = false">
+              取消
+            </el-button>
+            <el-button
+              type="primary"
+              :loading="users.pwdLoading"
+              @click="handleResetPwd"
+            >
+              确认重置
+            </el-button>
           </template>
         </el-dialog>
       </el-tab-pane>
 
       <!-- ========== 公告管理 ========== -->
-      <el-tab-pane label="公告管理" name="announcements">
+      <el-tab-pane
+        label="公告管理"
+        name="announcements"
+      >
         <div class="toolbar">
           <div class="toolbar-left">
-            <el-select v-model="ann.filterStatus" placeholder="状态" clearable @change="loadAnnouncements" style="width:120px">
-              <el-option label="全部" value="" />
-              <el-option label="已发布" value="published" />
-              <el-option label="草稿" value="draft" />
-              <el-option label="已归档" value="archived" />
+            <el-select
+              v-model="ann.filterStatus"
+              placeholder="状态"
+              clearable
+              style="width:120px"
+              @change="loadAnnouncements"
+            >
+              <el-option
+                label="全部"
+                value=""
+              />
+              <el-option
+                label="已发布"
+                value="published"
+              />
+              <el-option
+                label="草稿"
+                value="draft"
+              />
+              <el-option
+                label="已归档"
+                value="archived"
+              />
             </el-select>
-            <el-select v-model="ann.filterType" placeholder="类型" clearable @change="loadAnnouncements" style="width:120px">
-              <el-option label="全部" value="" />
-              <el-option label="系统" value="system" />
-              <el-option label="维护" value="maintenance" />
-              <el-option label="功能" value="feature" />
-              <el-option label="警告" value="warning" />
-              <el-option label="通知" value="info" />
+            <el-select
+              v-model="ann.filterType"
+              placeholder="类型"
+              clearable
+              style="width:120px"
+              @change="loadAnnouncements"
+            >
+              <el-option
+                label="全部"
+                value=""
+              />
+              <el-option
+                label="系统"
+                value="system"
+              />
+              <el-option
+                label="维护"
+                value="maintenance"
+              />
+              <el-option
+                label="功能"
+                value="feature"
+              />
+              <el-option
+                label="警告"
+                value="warning"
+              />
+              <el-option
+                label="通知"
+                value="info"
+              />
             </el-select>
           </div>
           <div class="toolbar-right">
-            <el-button type="primary" @click="showAnnCreate">
+            <el-button
+              type="primary"
+              @click="showAnnCreate"
+            >
               <el-icon><Plus /></el-icon> 发布公告
             </el-button>
-            <el-button @click="loadAnnouncements" :loading="ann.loading">
+            <el-button
+              :loading="ann.loading"
+              @click="loadAnnouncements"
+            >
               <el-icon><Refresh /></el-icon>
             </el-button>
           </div>
         </div>
 
-        <el-table :data="ann.list" v-loading="ann.loading" stripe>
-          <el-table-column prop="id" label="ID" width="60" />
-          <el-table-column prop="title" label="标题" min-width="200">
+        <el-table
+          v-loading="ann.loading"
+          :data="ann.list"
+          stripe
+        >
+          <el-table-column
+            prop="id"
+            label="ID"
+            width="60"
+          />
+          <el-table-column
+            prop="title"
+            label="标题"
+            min-width="200"
+          >
             <template #default="{ row }">
-              <el-tag v-if="row.isSticky" type="danger" size="small" style="margin-right:4px">置顶</el-tag>
+              <el-tag
+                v-if="row.isSticky"
+                type="danger"
+                size="small"
+                style="margin-right:4px"
+              >
+                置顶
+              </el-tag>
               <span>{{ row.title }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="type" label="类型" width="90">
+          <el-table-column
+            prop="type"
+            label="类型"
+            width="90"
+          >
             <template #default="{ row }">
-              <el-tag :type="annTypeColor(row.type)" size="small">{{ annTypeLabel(row.type) }}</el-tag>
+              <el-tag
+                :type="annTypeColor(row.type)"
+                size="small"
+              >
+                {{ annTypeLabel(row.type) }}
+              </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="status" label="状态" width="90">
+          <el-table-column
+            prop="status"
+            label="状态"
+            width="90"
+          >
             <template #default="{ row }">
-              <el-tag :type="annStatusColor(row.status)" size="small">{{ annStatusLabel(row.status) }}</el-tag>
+              <el-tag
+                :type="annStatusColor(row.status)"
+                size="small"
+              >
+                {{ annStatusLabel(row.status) }}
+              </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="actualReadCount" label="阅读" width="70" />
-          <el-table-column prop="publishAt" label="发布时间" width="160">
-            <template #default="{ row }">{{ fmtDate(row.publishAt) }}</template>
-          </el-table-column>
-          <el-table-column label="操作" width="200" fixed="right">
+          <el-table-column
+            prop="actualReadCount"
+            label="阅读"
+            width="70"
+          />
+          <el-table-column
+            prop="publishAt"
+            label="发布时间"
+            width="160"
+          >
             <template #default="{ row }">
-              <el-button size="small" @click="viewAnnouncement(row)">查看</el-button>
-              <el-button size="small" type="primary" @click="editAnnouncement(row)">编辑</el-button>
-              <el-button size="small" type="danger" @click="deleteAnnouncement(row)">删除</el-button>
+              {{ fmtDate(row.publishAt) }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            label="操作"
+            width="200"
+            fixed="right"
+          >
+            <template #default="{ row }">
+              <el-button
+                size="small"
+                @click="viewAnnouncement(row)"
+              >
+                查看
+              </el-button>
+              <el-button
+                size="small"
+                type="primary"
+                @click="editAnnouncement(row)"
+              >
+                编辑
+              </el-button>
+              <el-button
+                size="small"
+                type="danger"
+                @click="deleteAnnouncement(row)"
+              >
+                删除
+              </el-button>
             </template>
           </el-table-column>
         </el-table>
 
         <el-pagination
           v-if="ann.total > 0"
-          @current-change="(p) => { ann.page = p; loadAnnouncements() }"
-          :current-page="ann.page" :page-size="ann.pageSize" :total="ann.total"
+          :current-page="ann.page"
+          :page-size="ann.pageSize"
+          :total="ann.total"
           layout="prev, pager, next, total"
           style="margin-top:16px; justify-content:center"
+          @current-change="(p) => { ann.page = p; loadAnnouncements() }"
         />
 
         <!-- 创建/编辑公告对话框 -->
-        <el-dialog :title="ann.dialogMode === 'create' ? '发布公告' : '编辑公告'" v-model="ann.dialogVisible" width="700px">
-          <el-form ref="annFormRef" :model="ann.form" :rules="ann.formRules" label-width="80px">
-            <el-form-item label="标题" prop="title">
+        <el-dialog
+          v-model="ann.dialogVisible"
+          :title="ann.dialogMode === 'create' ? '发布公告' : '编辑公告'"
+          width="700px"
+        >
+          <el-form
+            ref="annFormRef"
+            :model="ann.form"
+            :rules="ann.formRules"
+            label-width="80px"
+          >
+            <el-form-item
+              label="标题"
+              prop="title"
+            >
               <el-input v-model="ann.form.title" />
             </el-form-item>
-            <el-form-item label="内容" prop="content">
-              <el-input v-model="ann.form.content" type="textarea" :rows="6" placeholder="支持 Markdown 格式" />
+            <el-form-item
+              label="内容"
+              prop="content"
+            >
+              <el-input
+                v-model="ann.form.content"
+                type="textarea"
+                :rows="6"
+                placeholder="支持 Markdown 格式"
+              />
             </el-form-item>
             <el-row :gutter="20">
               <el-col :span="8">
-                <el-form-item label="类型" prop="type">
+                <el-form-item
+                  label="类型"
+                  prop="type"
+                >
                   <el-select v-model="ann.form.type">
-                    <el-option label="系统" value="system" />
-                    <el-option label="维护" value="maintenance" />
-                    <el-option label="功能" value="feature" />
-                    <el-option label="警告" value="warning" />
-                    <el-option label="通知" value="info" />
+                    <el-option
+                      label="系统"
+                      value="system"
+                    />
+                    <el-option
+                      label="维护"
+                      value="maintenance"
+                    />
+                    <el-option
+                      label="功能"
+                      value="feature"
+                    />
+                    <el-option
+                      label="警告"
+                      value="warning"
+                    />
+                    <el-option
+                      label="通知"
+                      value="info"
+                    />
                   </el-select>
                 </el-form-item>
               </el-col>
               <el-col :span="8">
-                <el-form-item label="优先级" prop="priority">
+                <el-form-item
+                  label="优先级"
+                  prop="priority"
+                >
                   <el-select v-model="ann.form.priority">
-                    <el-option label="紧急" value="urgent" />
-                    <el-option label="高" value="high" />
-                    <el-option label="普通" value="normal" />
-                    <el-option label="低" value="low" />
+                    <el-option
+                      label="紧急"
+                      value="urgent"
+                    />
+                    <el-option
+                      label="高"
+                      value="high"
+                    />
+                    <el-option
+                      label="普通"
+                      value="normal"
+                    />
+                    <el-option
+                      label="低"
+                      value="low"
+                    />
                   </el-select>
                 </el-form-item>
               </el-col>
               <el-col :span="8">
                 <el-form-item label="发布时间">
-                  <el-date-picker v-model="ann.form.publishAt" type="datetime" format="YYYY-MM-DD HH:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" />
+                  <el-date-picker
+                    v-model="ann.form.publishAt"
+                    type="datetime"
+                    format="YYYY-MM-DD HH:mm:ss"
+                    value-format="YYYY-MM-DD HH:mm:ss"
+                  />
                 </el-form-item>
               </el-col>
             </el-row>
             <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="过期时间">
-                  <el-date-picker v-model="ann.form.expireAt" type="datetime" format="YYYY-MM-DD HH:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" />
+                  <el-date-picker
+                    v-model="ann.form.expireAt"
+                    type="datetime"
+                    format="YYYY-MM-DD HH:mm:ss"
+                    value-format="YYYY-MM-DD HH:mm:ss"
+                  />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="选项">
-                  <el-checkbox v-model="ann.form.isSticky">置顶</el-checkbox>
-                  <el-checkbox v-model="ann.form.isPopup">弹窗显示</el-checkbox>
+                  <el-checkbox v-model="ann.form.isSticky">
+                    置顶
+                  </el-checkbox>
+                  <el-checkbox v-model="ann.form.isPopup">
+                    弹窗显示
+                  </el-checkbox>
                 </el-form-item>
               </el-col>
             </el-row>
           </el-form>
           <template #footer>
-            <el-button @click="ann.dialogVisible = false">取消</el-button>
-            <el-button type="primary" @click="saveAnnouncement" :loading="ann.saving">
+            <el-button @click="ann.dialogVisible = false">
+              取消
+            </el-button>
+            <el-button
+              type="primary"
+              :loading="ann.saving"
+              @click="saveAnnouncement"
+            >
               {{ ann.dialogMode === 'create' ? '发布' : '保存' }}
             </el-button>
           </template>
         </el-dialog>
 
         <!-- 查看公告对话框 -->
-        <el-dialog title="公告详情" v-model="ann.viewVisible" width="650px">
-          <div v-if="ann.current" class="detail-view">
+        <el-dialog
+          v-model="ann.viewVisible"
+          title="公告详情"
+          width="650px"
+        >
+          <div
+            v-if="ann.current"
+            class="detail-view"
+          >
             <h3>{{ ann.current.title }}</h3>
             <div class="detail-meta">
-              <el-tag :type="annTypeColor(ann.current.type)" size="small">{{ annTypeLabel(ann.current.type) }}</el-tag>
+              <el-tag
+                :type="annTypeColor(ann.current.type)"
+                size="small"
+              >
+                {{ annTypeLabel(ann.current.type) }}
+              </el-tag>
               <span class="meta-time">{{ fmtDate(ann.current.publishAt) }}</span>
             </div>
             <pre class="detail-pre">{{ ann.current.content }}</pre>
-            <p class="detail-footer">阅读数: {{ ann.current.actualReadCount || 0 }} | 作者: {{ ann.current.author?.username }}</p>
+            <p class="detail-footer">
+              阅读数: {{ ann.current.actualReadCount || 0 }} | 作者: {{ ann.current.author?.username }}
+            </p>
           </div>
         </el-dialog>
       </el-tab-pane>
@@ -380,135 +907,340 @@
       <el-tab-pane name="feedback">
         <template #label>
           <span>反馈管理</span>
-          <el-badge :value="fb.unreadCount" v-if="fb.unreadCount > 0" style="margin-left:6px" />
+          <el-badge
+            v-if="fb.unreadCount > 0"
+            :value="fb.unreadCount"
+            style="margin-left:6px"
+          />
         </template>
 
         <div class="toolbar">
           <div class="toolbar-left">
-            <el-select v-model="fb.filterType" placeholder="类型" clearable @change="loadFeedbacks" style="width:120px">
-              <el-option label="全部" value="" />
-              <el-option label="缺陷" value="bug" />
-              <el-option label="建议" value="suggestion" />
-              <el-option label="需求" value="feature" />
-              <el-option label="其他" value="other" />
+            <el-select
+              v-model="fb.filterType"
+              placeholder="类型"
+              clearable
+              style="width:120px"
+              @change="loadFeedbacks"
+            >
+              <el-option
+                label="全部"
+                value=""
+              />
+              <el-option
+                label="缺陷"
+                value="bug"
+              />
+              <el-option
+                label="建议"
+                value="suggestion"
+              />
+              <el-option
+                label="需求"
+                value="feature"
+              />
+              <el-option
+                label="其他"
+                value="other"
+              />
             </el-select>
-            <el-select v-model="fb.filterStatus" placeholder="状态" clearable @change="loadFeedbacks" style="width:120px">
-              <el-option label="全部" value="" />
-              <el-option label="待处理" value="pending" />
-              <el-option label="处理中" value="processing" />
-              <el-option label="已解决" value="resolved" />
-              <el-option label="已关闭" value="closed" />
+            <el-select
+              v-model="fb.filterStatus"
+              placeholder="状态"
+              clearable
+              style="width:120px"
+              @change="loadFeedbacks"
+            >
+              <el-option
+                label="全部"
+                value=""
+              />
+              <el-option
+                label="待处理"
+                value="pending"
+              />
+              <el-option
+                label="处理中"
+                value="processing"
+              />
+              <el-option
+                label="已解决"
+                value="resolved"
+              />
+              <el-option
+                label="已关闭"
+                value="closed"
+              />
             </el-select>
-            <el-input v-model="fb.search" placeholder="搜索" clearable @keyup.enter="loadFeedbacks" style="width:180px">
-              <template #append><el-button @click="loadFeedbacks" :icon="Search" /></template>
+            <el-input
+              v-model="fb.search"
+              placeholder="搜索"
+              clearable
+              style="width:180px"
+              @keyup.enter="loadFeedbacks"
+            >
+              <template #append>
+                <el-button
+                  :icon="Search"
+                  @click="loadFeedbacks"
+                />
+              </template>
             </el-input>
           </div>
           <div class="toolbar-right">
-            <el-button @click="loadFeedbacks" :loading="fb.loading">
+            <el-button
+              :loading="fb.loading"
+              @click="loadFeedbacks"
+            >
               <el-icon><Refresh /></el-icon>
             </el-button>
           </div>
         </div>
 
-        <el-table :data="fb.list" v-loading="fb.loading" stripe>
-          <el-table-column prop="id" label="ID" width="60" />
-          <el-table-column prop="title" label="标题" min-width="200">
+        <el-table
+          v-loading="fb.loading"
+          :data="fb.list"
+          stripe
+        >
+          <el-table-column
+            prop="id"
+            label="ID"
+            width="60"
+          />
+          <el-table-column
+            prop="title"
+            label="标题"
+            min-width="200"
+          >
             <template #default="{ row }">
-              <el-tag :type="fbPriorityColor(row.priority)" size="small" style="margin-right:4px">{{ fbPriorityLabel(row.priority) }}</el-tag>
+              <el-tag
+                :type="fbPriorityColor(row.priority)"
+                size="small"
+                style="margin-right:4px"
+              >
+                {{ fbPriorityLabel(row.priority) }}
+              </el-tag>
               <span>{{ row.title }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="type" label="类型" width="90">
+          <el-table-column
+            prop="type"
+            label="类型"
+            width="90"
+          >
             <template #default="{ row }">
-              <el-tag :type="fbTypeColor(row.type)" size="small">{{ fbTypeLabel(row.type) }}</el-tag>
+              <el-tag
+                :type="fbTypeColor(row.type)"
+                size="small"
+              >
+                {{ fbTypeLabel(row.type) }}
+              </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="用户" width="100">
-            <template #default="{ row }">{{ row.user?.username }}</template>
-          </el-table-column>
-          <el-table-column prop="status" label="状态" width="90">
+          <el-table-column
+            label="用户"
+            width="100"
+          >
             <template #default="{ row }">
-              <el-tag :type="fbStatusColor(row.status)" size="small">{{ fbStatusLabel(row.status) }}</el-tag>
+              {{ row.user?.username }}
             </template>
           </el-table-column>
-          <el-table-column prop="createdAt" label="提交时间" width="160">
-            <template #default="{ row }">{{ fmtDate(row.createdAt) }}</template>
-          </el-table-column>
-          <el-table-column label="操作" width="200" fixed="right">
+          <el-table-column
+            prop="status"
+            label="状态"
+            width="90"
+          >
             <template #default="{ row }">
-              <el-button size="small" @click="viewFeedback(row)">查看</el-button>
-              <el-button size="small" type="primary" @click="openReplyFeedback(row)" :disabled="row.status === 'closed'">回复</el-button>
-              <el-button size="small" type="danger" @click="deleteFeedback(row)">删除</el-button>
+              <el-tag
+                :type="fbStatusColor(row.status)"
+                size="small"
+              >
+                {{ fbStatusLabel(row.status) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="createdAt"
+            label="提交时间"
+            width="160"
+          >
+            <template #default="{ row }">
+              {{ fmtDate(row.createdAt) }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            label="操作"
+            width="200"
+            fixed="right"
+          >
+            <template #default="{ row }">
+              <el-button
+                size="small"
+                @click="viewFeedback(row)"
+              >
+                查看
+              </el-button>
+              <el-button
+                size="small"
+                type="primary"
+                :disabled="row.status === 'closed'"
+                @click="openReplyFeedback(row)"
+              >
+                回复
+              </el-button>
+              <el-button
+                size="small"
+                type="danger"
+                @click="deleteFeedback(row)"
+              >
+                删除
+              </el-button>
             </template>
           </el-table-column>
         </el-table>
 
         <el-pagination
           v-if="fb.total > 0"
-          @current-change="(p) => { fb.page = p; loadFeedbacks() }"
-          :current-page="fb.page" :page-size="fb.pageSize" :total="fb.total"
+          :current-page="fb.page"
+          :page-size="fb.pageSize"
+          :total="fb.total"
           layout="prev, pager, next, total"
           style="margin-top:16px; justify-content:center"
+          @current-change="(p) => { fb.page = p; loadFeedbacks() }"
         />
 
         <!-- 查看反馈对话框 -->
-        <el-dialog title="反馈详情" v-model="fb.viewVisible" width="700px">
-          <div v-if="fb.current" class="detail-view">
+        <el-dialog
+          v-model="fb.viewVisible"
+          title="反馈详情"
+          width="700px"
+        >
+          <div
+            v-if="fb.current"
+            class="detail-view"
+          >
             <h3>{{ fb.current.title }}</h3>
             <div class="detail-meta">
-              <el-tag :type="fbTypeColor(fb.current.type)" size="small">{{ fbTypeLabel(fb.current.type) }}</el-tag>
-              <el-tag :type="fbStatusColor(fb.current.status)" size="small">{{ fbStatusLabel(fb.current.status) }}</el-tag>
+              <el-tag
+                :type="fbTypeColor(fb.current.type)"
+                size="small"
+              >
+                {{ fbTypeLabel(fb.current.type) }}
+              </el-tag>
+              <el-tag
+                :type="fbStatusColor(fb.current.status)"
+                size="small"
+              >
+                {{ fbStatusLabel(fb.current.status) }}
+              </el-tag>
             </div>
             <pre class="detail-pre">{{ fb.current.content }}</pre>
             <p>用户: {{ fb.current.user?.username }} | 联系方式: {{ fb.current.contactInfo || '未提供' }} | {{ fmtDate(fb.current.createdAt) }}</p>
-            <div v-if="fb.current.adminReply" class="admin-reply-box">
+            <div
+              v-if="fb.current.adminReply"
+              class="admin-reply-box"
+            >
               <h4>管理员回复:</h4>
               <pre class="detail-pre reply-pre">{{ fb.current.adminReply }}</pre>
-              <p class="reply-meta">由 {{ fb.current.admin?.username }} 回复于 {{ fmtDate(fb.current.repliedAt) }}</p>
+              <p class="reply-meta">
+                由 {{ fb.current.admin?.username }} 回复于 {{ fmtDate(fb.current.repliedAt) }}
+              </p>
             </div>
           </div>
         </el-dialog>
 
         <!-- 回复反馈对话框 -->
-        <el-dialog title="回复反馈" v-model="fb.replyVisible" width="650px">
-          <div v-if="fb.current" class="reply-form">
+        <el-dialog
+          v-model="fb.replyVisible"
+          title="回复反馈"
+          width="650px"
+        >
+          <div
+            v-if="fb.current"
+            class="reply-form"
+          >
             <div class="feedback-summary">
               <h4>{{ fb.current.title }}</h4>
               <p>{{ fb.current.content }}</p>
             </div>
-            <el-form ref="replyFormRef" :model="fb.replyForm" :rules="fb.replyRules" label-width="80px">
-              <el-form-item label="回复" prop="adminReply">
-                <el-input v-model="fb.replyForm.adminReply" type="textarea" :rows="5" />
+            <el-form
+              ref="replyFormRef"
+              :model="fb.replyForm"
+              :rules="fb.replyRules"
+              label-width="80px"
+            >
+              <el-form-item
+                label="回复"
+                prop="adminReply"
+              >
+                <el-input
+                  v-model="fb.replyForm.adminReply"
+                  type="textarea"
+                  :rows="5"
+                />
               </el-form-item>
-              <el-form-item label="状态" prop="status">
+              <el-form-item
+                label="状态"
+                prop="status"
+              >
                 <el-select v-model="fb.replyForm.status">
-                  <el-option label="处理中" value="processing" />
-                  <el-option label="已解决" value="resolved" />
-                  <el-option label="已关闭" value="closed" />
+                  <el-option
+                    label="处理中"
+                    value="processing"
+                  />
+                  <el-option
+                    label="已解决"
+                    value="resolved"
+                  />
+                  <el-option
+                    label="已关闭"
+                    value="closed"
+                  />
                 </el-select>
               </el-form-item>
             </el-form>
           </div>
           <template #footer>
-            <el-button @click="fb.replyVisible = false">取消</el-button>
-            <el-button type="primary" @click="submitReply" :loading="fb.replying">提交回复</el-button>
+            <el-button @click="fb.replyVisible = false">
+              取消
+            </el-button>
+            <el-button
+              type="primary"
+              :loading="fb.replying"
+              @click="submitReply"
+            >
+              提交回复
+            </el-button>
           </template>
         </el-dialog>
       </el-tab-pane>
 
       <!-- ========== 系统设置 ========== -->
-      <el-tab-pane label="系统设置" name="system">
+      <el-tab-pane
+        label="系统设置"
+        name="system"
+      >
         <div class="toolbar">
           <div class="toolbar-left">
-            <el-button @click="initializeSettings" :loading="sys.initLoading">
+            <el-button
+              :loading="sys.initLoading"
+              @click="initializeSettings"
+            >
               <el-icon><Setting /></el-icon> 初始化默认设置
             </el-button>
           </div>
           <div class="toolbar-right">
-            <el-button type="primary" @click="saveSettings" :loading="sys.saveLoading">
+            <el-button
+              type="primary"
+              :loading="sys.saveLoading"
+              @click="saveSettings"
+            >
               <el-icon><Check /></el-icon> 保存设置
             </el-button>
-            <el-button @click="refreshSystemInfo" :loading="sys.infoLoading">
+            <el-button
+              :loading="sys.infoLoading"
+              @click="refreshSystemInfo"
+            >
               <el-icon><Refresh /></el-icon>
             </el-button>
           </div>
@@ -517,14 +1249,32 @@
         <el-row :gutter="20">
           <el-col :span="8">
             <el-card v-if="sys.systemInfo">
-              <template #header><span>系统信息</span></template>
-              <el-descriptions :column="1" border size="small">
-                <el-descriptions-item label="系统名称">{{ sys.systemInfo.settings?.system?.find(s => s.key === 'system.name')?.value || 'KHY-Quant' }}</el-descriptions-item>
-                <el-descriptions-item label="版本">{{ sys.systemInfo.settings?.system?.find(s => s.key === 'system.version')?.value || '1.0.0' }}</el-descriptions-item>
-                <el-descriptions-item label="Node.js">{{ sys.systemInfo.systemInfo?.nodeVersion }}</el-descriptions-item>
-                <el-descriptions-item label="平台">{{ sys.systemInfo.systemInfo?.platform }}</el-descriptions-item>
-                <el-descriptions-item label="运行时间">{{ formatUptime(sys.systemInfo.systemInfo?.uptime) }}</el-descriptions-item>
-                <el-descriptions-item label="内存使用">{{ formatMemory(sys.systemInfo.systemInfo?.memoryUsage?.used) }} / {{ formatMemory(sys.systemInfo.systemInfo?.memoryUsage?.total) }}</el-descriptions-item>
+              <template #header>
+                <span>系统信息</span>
+              </template>
+              <el-descriptions
+                :column="1"
+                border
+                size="small"
+              >
+                <el-descriptions-item label="系统名称">
+                  {{ sys.systemInfo.settings?.system?.find(s => s.key === 'system.name')?.value || 'KHY-Quant' }}
+                </el-descriptions-item>
+                <el-descriptions-item label="版本">
+                  {{ sys.systemInfo.settings?.system?.find(s => s.key === 'system.version')?.value || '1.0.0' }}
+                </el-descriptions-item>
+                <el-descriptions-item label="Node.js">
+                  {{ sys.systemInfo.systemInfo?.nodeVersion }}
+                </el-descriptions-item>
+                <el-descriptions-item label="平台">
+                  {{ sys.systemInfo.systemInfo?.platform }}
+                </el-descriptions-item>
+                <el-descriptions-item label="运行时间">
+                  {{ formatUptime(sys.systemInfo.systemInfo?.uptime) }}
+                </el-descriptions-item>
+                <el-descriptions-item label="内存使用">
+                  {{ formatMemory(sys.systemInfo.systemInfo?.memoryUsage?.used) }} / {{ formatMemory(sys.systemInfo.systemInfo?.memoryUsage?.total) }}
+                </el-descriptions-item>
               </el-descriptions>
             </el-card>
           </el-col>
@@ -537,13 +1287,49 @@
                   :label="sysCategoryLabel(category)"
                   :name="category"
                 >
-                  <el-form :model="sys.form" label-width="160px" style="padding:10px 0">
-                    <el-form-item v-for="s in settings" :key="s.key" :label="s.description || s.key">
-                      <el-switch v-if="s.type === 'boolean'" v-model="sys.form[s.key]" :disabled="!s.isEditable" />
-                      <el-input-number v-else-if="s.type === 'number'" v-model="sys.form[s.key]" :disabled="!s.isEditable" style="width:200px" />
-                      <el-input v-else-if="s.type === 'text'" v-model="sys.form[s.key]" type="textarea" :disabled="!s.isEditable" :rows="3" style="width:400px" />
-                      <el-input v-else v-model="sys.form[s.key]" :disabled="!s.isEditable" style="width:300px" />
-                      <el-button v-if="s.isEditable" size="small" style="margin-left:10px" @click="resetSetting(s.key)">重置</el-button>
+                  <el-form
+                    :model="sys.form"
+                    label-width="160px"
+                    style="padding:10px 0"
+                  >
+                    <el-form-item
+                      v-for="s in settings"
+                      :key="s.key"
+                      :label="s.description || s.key"
+                    >
+                      <el-switch
+                        v-if="s.type === 'boolean'"
+                        v-model="sys.form[s.key]"
+                        :disabled="!s.isEditable"
+                      />
+                      <el-input-number
+                        v-else-if="s.type === 'number'"
+                        v-model="sys.form[s.key]"
+                        :disabled="!s.isEditable"
+                        style="width:200px"
+                      />
+                      <el-input
+                        v-else-if="s.type === 'text'"
+                        v-model="sys.form[s.key]"
+                        type="textarea"
+                        :disabled="!s.isEditable"
+                        :rows="3"
+                        style="width:400px"
+                      />
+                      <el-input
+                        v-else
+                        v-model="sys.form[s.key]"
+                        :disabled="!s.isEditable"
+                        style="width:300px"
+                      />
+                      <el-button
+                        v-if="s.isEditable"
+                        size="small"
+                        style="margin-left:10px"
+                        @click="resetSetting(s.key)"
+                      >
+                        重置
+                      </el-button>
                     </el-form-item>
                   </el-form>
                 </el-tab-pane>
@@ -555,33 +1341,97 @@
         <el-alert
           v-if="sys.form['system.maintenance_mode']"
           title="维护模式已开启 — 普通用户无法访问系统"
-          type="warning" :closable="false" show-icon style="margin-top:16px"
+          type="warning"
+          :closable="false"
+          show-icon
+          style="margin-top:16px"
         />
 
         <!-- K-Line Period Management -->
-        <el-divider content-position="left">K线周期显示管理</el-divider>
-        <el-card shadow="never" style="margin-bottom: 16px;">
+        <el-divider content-position="left">
+          K线周期显示管理
+        </el-divider>
+        <el-card
+          shadow="never"
+          style="margin-bottom: 16px;"
+        >
           <div style="margin-bottom: 12px; color: #606266; font-size: 13px;">
             控制前端交易页面可见的K线时间周期。勾选后用户才能在交易页面切换对应周期。
           </div>
-          <el-checkbox-group v-model="klinePeriods" @change="saveKlinePeriods">
-            <el-checkbox label="1m" value="1m">1分钟线</el-checkbox>
-            <el-checkbox label="5m" value="5m">5分钟线</el-checkbox>
-            <el-checkbox label="15m" value="15m">15分钟线</el-checkbox>
-            <el-checkbox label="30m" value="30m">30分钟线</el-checkbox>
-            <el-checkbox label="1h" value="1h">1小时线</el-checkbox>
-            <el-checkbox label="daily" value="daily" disabled>日线（默认）</el-checkbox>
-            <el-checkbox label="weekly" value="weekly">周线</el-checkbox>
-            <el-checkbox label="monthly" value="monthly">月线</el-checkbox>
+          <el-checkbox-group
+            v-model="klinePeriods"
+            @change="saveKlinePeriods"
+          >
+            <el-checkbox
+              label="1m"
+              value="1m"
+            >
+              1分钟线
+            </el-checkbox>
+            <el-checkbox
+              label="5m"
+              value="5m"
+            >
+              5分钟线
+            </el-checkbox>
+            <el-checkbox
+              label="15m"
+              value="15m"
+            >
+              15分钟线
+            </el-checkbox>
+            <el-checkbox
+              label="30m"
+              value="30m"
+            >
+              30分钟线
+            </el-checkbox>
+            <el-checkbox
+              label="1h"
+              value="1h"
+            >
+              1小时线
+            </el-checkbox>
+            <el-checkbox
+              label="daily"
+              value="daily"
+              disabled
+            >
+              日线（默认）
+            </el-checkbox>
+            <el-checkbox
+              label="weekly"
+              value="weekly"
+            >
+              周线
+            </el-checkbox>
+            <el-checkbox
+              label="monthly"
+              value="monthly"
+            >
+              月线
+            </el-checkbox>
           </el-checkbox-group>
-          <div v-if="klinePeriodSaving" style="margin-top: 8px; color: #909399; font-size: 12px;">保存中...</div>
+          <div
+            v-if="klinePeriodSaving"
+            style="margin-top: 8px; color: #909399; font-size: 12px;"
+          >
+            保存中...
+          </div>
         </el-card>
 
         <!-- AKShare Version Management -->
-        <el-divider content-position="left">AKShare 数据源版本管理</el-divider>
-        <el-descriptions :column="2" border>
+        <el-divider content-position="left">
+          AKShare 数据源版本管理
+        </el-divider>
+        <el-descriptions
+          :column="2"
+          border
+        >
           <el-descriptions-item label="当前版本">
-            <el-tag type="info">{{ akshareStatus.currentVersion || '检测中...' }}</el-tag>
+            <el-tag type="info">
+              {{ akshareStatus.currentVersion || '检测中...' }}
+            </el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="最新版本">
             <el-tag :type="akshareStatus.latestVersion && akshareStatus.currentVersion !== akshareStatus.latestVersion ? 'warning' : 'success'">
@@ -597,199 +1447,459 @@
         </el-descriptions>
 
         <div style="margin-top: 12px; display: flex; gap: 8px; align-items: center;">
-          <el-button type="primary" @click="checkAKShare" :loading="akshareChecking" size="small">
+          <el-button
+            type="primary"
+            :loading="akshareChecking"
+            size="small"
+            @click="checkAKShare"
+          >
             立即检查更新
           </el-button>
-          <span v-if="akshareStatus.isUpdating" style="color: #e6a23c;">
+          <span
+            v-if="akshareStatus.isUpdating"
+            style="color: #e6a23c;"
+          >
             正在升级中...
           </span>
-          <span v-if="akshareStatus.currentVersion && akshareStatus.currentVersion === akshareStatus.latestVersion" style="color: var(--khy-success);">
+          <span
+            v-if="akshareStatus.currentVersion && akshareStatus.currentVersion === akshareStatus.latestVersion"
+            style="color: var(--khy-success);"
+          >
             已是最新版本
           </span>
         </div>
 
-        <div v-if="akshareStatus.updateHistory?.length > 0" style="margin-top: 12px;">
-          <div style="font-weight: 500; margin-bottom: 8px; color: #606266;">最近更新记录</div>
-          <el-table :data="akshareStatus.updateHistory" size="small">
-            <el-table-column label="时间" width="160">
-              <template #default="{row}">{{ new Date(row.time).toLocaleString('zh-CN') }}</template>
-            </el-table-column>
-            <el-table-column label="升级路径" min-width="150">
-              <template #default="{row}">{{ row.fromVersion }} → {{ row.toVersion }}</template>
-            </el-table-column>
-            <el-table-column label="结果" width="80">
+        <div
+          v-if="akshareStatus.updateHistory?.length > 0"
+          style="margin-top: 12px;"
+        >
+          <div style="font-weight: 500; margin-bottom: 8px; color: #606266;">
+            最近更新记录
+          </div>
+          <el-table
+            :data="akshareStatus.updateHistory"
+            size="small"
+          >
+            <el-table-column
+              label="时间"
+              width="160"
+            >
               <template #default="{row}">
-                <el-tag :type="row.success ? 'success' : 'danger'" size="small">
+                {{ new Date(row.time).toLocaleString('zh-CN') }}
+              </template>
+            </el-table-column>
+            <el-table-column
+              label="升级路径"
+              min-width="150"
+            >
+              <template #default="{row}">
+                {{ row.fromVersion }} → {{ row.toVersion }}
+              </template>
+            </el-table-column>
+            <el-table-column
+              label="结果"
+              width="80"
+            >
+              <template #default="{row}">
+                <el-tag
+                  :type="row.success ? 'success' : 'danger'"
+                  size="small"
+                >
                   {{ row.success ? '成功' : '失败' }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="duration" label="耗时" width="80" />
+            <el-table-column
+              prop="duration"
+              label="耗时"
+              width="80"
+            />
           </el-table>
         </div>
       </el-tab-pane>
 
       <!-- ========== 操作日志 ========== -->
-      <el-tab-pane label="操作日志" name="logs">
+      <el-tab-pane
+        label="操作日志"
+        name="logs"
+      >
         <div class="toolbar">
           <div class="toolbar-left">
-            <el-input v-model="logs.filters.search" placeholder="搜索用户/描述" clearable style="width:200px" @keyup.enter="fetchLogs">
-              <template #prefix><el-icon><Search /></el-icon></template>
+            <el-input
+              v-model="logs.filters.search"
+              placeholder="搜索用户/描述"
+              clearable
+              style="width:200px"
+              @keyup.enter="fetchLogs"
+            >
+              <template #prefix>
+                <el-icon><Search /></el-icon>
+              </template>
             </el-input>
-            <el-select v-model="logs.filters.action" placeholder="操作类型" clearable @change="fetchLogs" style="width:140px">
-              <el-option label="全部" value="" />
-              <el-option label="登录" value="login" />
-              <el-option label="登出" value="logout" />
-              <el-option label="注册" value="register" />
-              <el-option label="修改密码" value="password_change" />
-              <el-option label="管理员重置密码" value="password_reset_by_admin" />
-              <el-option label="管理员删除账号" value="account_deleted_by_admin" />
-              <el-option label="管理员更新" value="profile_update_by_admin" />
+            <el-select
+              v-model="logs.filters.action"
+              placeholder="操作类型"
+              clearable
+              style="width:140px"
+              @change="fetchLogs"
+            >
+              <el-option
+                label="全部"
+                value=""
+              />
+              <el-option
+                label="登录"
+                value="login"
+              />
+              <el-option
+                label="登出"
+                value="logout"
+              />
+              <el-option
+                label="注册"
+                value="register"
+              />
+              <el-option
+                label="修改密码"
+                value="password_change"
+              />
+              <el-option
+                label="管理员重置密码"
+                value="password_reset_by_admin"
+              />
+              <el-option
+                label="管理员删除账号"
+                value="account_deleted_by_admin"
+              />
+              <el-option
+                label="管理员更新"
+                value="profile_update_by_admin"
+              />
             </el-select>
-            <el-select v-model="logs.filters.status" placeholder="状态" clearable @change="fetchLogs" style="width:110px">
-              <el-option label="全部" value="" />
-              <el-option label="成功" value="success" />
-              <el-option label="失败" value="failed" />
-              <el-option label="警告" value="warning" />
+            <el-select
+              v-model="logs.filters.status"
+              placeholder="状态"
+              clearable
+              style="width:110px"
+              @change="fetchLogs"
+            >
+              <el-option
+                label="全部"
+                value=""
+              />
+              <el-option
+                label="成功"
+                value="success"
+              />
+              <el-option
+                label="失败"
+                value="failed"
+              />
+              <el-option
+                label="警告"
+                value="warning"
+              />
             </el-select>
             <el-date-picker
-              v-model="logs.dateRange" type="datetimerange"
-              range-separator="至" start-placeholder="开始时间" end-placeholder="结束时间"
-              format="YYYY-MM-DD HH:mm:ss" value-format="YYYY-MM-DD HH:mm:ss"
+              v-model="logs.dateRange"
+              type="datetimerange"
+              range-separator="至"
+              start-placeholder="开始时间"
+              end-placeholder="结束时间"
+              format="YYYY-MM-DD HH:mm:ss"
+              value-format="YYYY-MM-DD HH:mm:ss"
               @change="handleLogDateChange"
             />
           </div>
           <div class="toolbar-right">
-            <el-button @click="exportLogs" :loading="logs.exportLoading">
+            <el-button
+              :loading="logs.exportLoading"
+              @click="exportLogs"
+            >
               <el-icon><Download /></el-icon> 导出
             </el-button>
             <el-button @click="logs.showCleanup = true">
               <el-icon><Delete /></el-icon> 清理
             </el-button>
-            <el-button @click="fetchLogs" :loading="logs.loading">
+            <el-button
+              :loading="logs.loading"
+              @click="fetchLogs"
+            >
               <el-icon><Refresh /></el-icon>
             </el-button>
           </div>
         </div>
 
-        <el-table :data="logs.list" v-loading="logs.loading" stripe>
-          <el-table-column prop="id" label="ID" width="70" sortable />
-          <el-table-column prop="username" label="用户" width="120" sortable />
-          <el-table-column prop="action" label="操作" width="140">
+        <el-table
+          v-loading="logs.loading"
+          :data="logs.list"
+          stripe
+        >
+          <el-table-column
+            prop="id"
+            label="ID"
+            width="70"
+            sortable
+          />
+          <el-table-column
+            prop="username"
+            label="用户"
+            width="120"
+            sortable
+          />
+          <el-table-column
+            prop="action"
+            label="操作"
+            width="140"
+          >
             <template #default="{ row }">
-              <el-tag :type="logActionType(row.action)" size="small">{{ logActionText(row.action) }}</el-tag>
+              <el-tag
+                :type="logActionType(row.action)"
+                size="small"
+              >
+                {{ logActionText(row.action) }}
+              </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="actionDescription" label="描述" min-width="200" />
-          <el-table-column prop="ipAddress" label="IP 地址" width="130" />
-          <el-table-column prop="status" label="状态" width="80">
+          <el-table-column
+            prop="actionDescription"
+            label="描述"
+            min-width="200"
+          />
+          <el-table-column
+            prop="ipAddress"
+            label="IP 地址"
+            width="130"
+          />
+          <el-table-column
+            prop="status"
+            label="状态"
+            width="80"
+          >
             <template #default="{ row }">
-              <el-tag :type="logStatusType(row.status)" size="small">{{ logStatusText(row.status) }}</el-tag>
+              <el-tag
+                :type="logStatusType(row.status)"
+                size="small"
+              >
+                {{ logStatusText(row.status) }}
+              </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="timestamp" label="时间" width="160">
-            <template #default="{ row }">{{ fmtDate(row.timestamp) }}</template>
-          </el-table-column>
-          <el-table-column label="" width="80" fixed="right">
+          <el-table-column
+            prop="timestamp"
+            label="时间"
+            width="160"
+          >
             <template #default="{ row }">
-              <el-button size="small" @click="viewLogDetail(row)">详情</el-button>
+              {{ fmtDate(row.timestamp) }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            label=""
+            width="80"
+            fixed="right"
+          >
+            <template #default="{ row }">
+              <el-button
+                size="small"
+                @click="viewLogDetail(row)"
+              >
+                详情
+              </el-button>
             </template>
           </el-table-column>
         </el-table>
 
         <div class="pagination-center">
           <el-pagination
-            v-model:current-page="logs.page" v-model:page-size="logs.limit"
-            :page-sizes="[10, 20, 50, 100]" :total="logs.total"
+            v-model:current-page="logs.page"
+            v-model:page-size="logs.limit"
+            :page-sizes="[10, 20, 50, 100]"
+            :total="logs.total"
             layout="total, sizes, prev, pager, next"
-            @size-change="fetchLogs" @current-change="fetchLogs"
+            @size-change="fetchLogs"
+            @current-change="fetchLogs"
           />
         </div>
 
         <!-- 日志详情对话框 -->
-        <el-dialog title="日志详情" v-model="logs.showDetail" width="600px">
-          <el-descriptions v-if="logs.selected" :column="1" border>
-            <el-descriptions-item label="ID">{{ logs.selected.id }}</el-descriptions-item>
-            <el-descriptions-item label="用户">{{ logs.selected.username }} (ID: {{ logs.selected.userId }})</el-descriptions-item>
+        <el-dialog
+          v-model="logs.showDetail"
+          title="日志详情"
+          width="600px"
+        >
+          <el-descriptions
+            v-if="logs.selected"
+            :column="1"
+            border
+          >
+            <el-descriptions-item label="ID">
+              {{ logs.selected.id }}
+            </el-descriptions-item>
+            <el-descriptions-item label="用户">
+              {{ logs.selected.username }} (ID: {{ logs.selected.userId }})
+            </el-descriptions-item>
             <el-descriptions-item label="操作">
-              <el-tag :type="logActionType(logs.selected.action)" size="small">{{ logActionText(logs.selected.action) }}</el-tag>
+              <el-tag
+                :type="logActionType(logs.selected.action)"
+                size="small"
+              >
+                {{ logActionText(logs.selected.action) }}
+              </el-tag>
             </el-descriptions-item>
-            <el-descriptions-item label="描述">{{ logs.selected.actionDescription }}</el-descriptions-item>
-            <el-descriptions-item label="IP 地址">{{ logs.selected.ipAddress || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="浏览器">{{ logs.selected.userAgent || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="描述">
+              {{ logs.selected.actionDescription }}
+            </el-descriptions-item>
+            <el-descriptions-item label="IP 地址">
+              {{ logs.selected.ipAddress || '-' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="浏览器">
+              {{ logs.selected.userAgent || '-' }}
+            </el-descriptions-item>
             <el-descriptions-item label="状态">
-              <el-tag :type="logStatusType(logs.selected.status)" size="small">{{ logStatusText(logs.selected.status) }}</el-tag>
+              <el-tag
+                :type="logStatusType(logs.selected.status)"
+                size="small"
+              >
+                {{ logStatusText(logs.selected.status) }}
+              </el-tag>
             </el-descriptions-item>
-            <el-descriptions-item label="时间">{{ fmtDate(logs.selected.timestamp) }}</el-descriptions-item>
-            <el-descriptions-item v-if="logs.selected.details" label="详细数据">
+            <el-descriptions-item label="时间">
+              {{ fmtDate(logs.selected.timestamp) }}
+            </el-descriptions-item>
+            <el-descriptions-item
+              v-if="logs.selected.details"
+              label="详细数据"
+            >
               <pre class="detail-pre">{{ JSON.stringify(logs.selected.details, null, 2) }}</pre>
             </el-descriptions-item>
           </el-descriptions>
         </el-dialog>
 
         <!-- 清理对话框 -->
-        <el-dialog title="清理旧日志" v-model="logs.showCleanup" width="400px">
+        <el-dialog
+          v-model="logs.showCleanup"
+          title="清理旧日志"
+          width="400px"
+        >
           <el-form label-width="100px">
             <el-form-item label="保留天数">
-              <el-input-number v-model="logs.cleanupForm.daysToKeep" :min="1" :max="365" />
+              <el-input-number
+                v-model="logs.cleanupForm.daysToKeep"
+                :min="1"
+                :max="365"
+              />
               <div style="font-size:12px;color:#909399;margin-top:4px">
                 超过 {{ logs.cleanupForm.daysToKeep }} 天的日志将被永久删除
               </div>
             </el-form-item>
           </el-form>
           <template #footer>
-            <el-button @click="logs.showCleanup = false">取消</el-button>
-            <el-button type="danger" @click="handleCleanup" :loading="logs.cleanupLoading">确认清理</el-button>
+            <el-button @click="logs.showCleanup = false">
+              取消
+            </el-button>
+            <el-button
+              type="danger"
+              :loading="logs.cleanupLoading"
+              @click="handleCleanup"
+            >
+              确认清理
+            </el-button>
           </template>
         </el-dialog>
       </el-tab-pane>
 
       <!-- ========== 资金管理 ========== -->
-      <el-tab-pane label="资金管理" name="funds">
+      <el-tab-pane
+        label="资金管理"
+        name="funds"
+      >
         <div class="toolbar">
           <div class="toolbar-left">
             <span style="font-weight:600">所有用户资金概览</span>
           </div>
           <div class="toolbar-right">
-            <el-button @click="loadFunds" :loading="fundsLoading">
+            <el-button
+              :loading="fundsLoading"
+              @click="loadFunds"
+            >
               <el-icon><Refresh /></el-icon> 刷新
             </el-button>
           </div>
         </div>
 
-        <el-table :data="fundsData" v-loading="fundsLoading" stripe border>
-          <el-table-column prop="username" label="用户名" width="120" />
-          <el-table-column prop="email" label="邮箱" min-width="160" />
-          <el-table-column label="初始资金" width="130">
+        <el-table
+          v-loading="fundsLoading"
+          :data="fundsData"
+          stripe
+          border
+        >
+          <el-table-column
+            prop="username"
+            label="用户名"
+            width="120"
+          />
+          <el-table-column
+            prop="email"
+            label="邮箱"
+            min-width="160"
+          />
+          <el-table-column
+            label="初始资金"
+            width="130"
+          >
             <template #default="{ row }">
               ¥{{ Number(row.initialFunds).toLocaleString() }}
             </template>
           </el-table-column>
-          <el-table-column label="可用资金" width="130">
+          <el-table-column
+            label="可用资金"
+            width="130"
+          >
             <template #default="{ row }">
               <span :style="{ color: Number(row.availableFunds) >= row.initialFunds ? '#67c23a' : '#f56c6c' }">
                 ¥{{ Number(row.availableFunds).toLocaleString() }}
               </span>
             </template>
           </el-table-column>
-          <el-table-column label="累计盈亏" width="120">
+          <el-table-column
+            label="累计盈亏"
+            width="120"
+          >
             <template #default="{ row }">
               <span :style="{ color: Number(row.totalProfit) >= 0 ? 'var(--khy-success)' : 'var(--khy-danger)' }">
                 {{ Number(row.totalProfit) >= 0 ? '+' : '' }}¥{{ Number(row.totalProfit).toLocaleString() }}
               </span>
             </template>
           </el-table-column>
-          <el-table-column prop="tradeCount" label="交易次数" width="90" />
-          <el-table-column label="状态" width="80">
+          <el-table-column
+            prop="tradeCount"
+            label="交易次数"
+            width="90"
+          />
+          <el-table-column
+            label="状态"
+            width="80"
+          >
             <template #default="{ row }">
-              <el-tag :type="row.status === 'active' ? 'success' : 'danger'" size="small">
+              <el-tag
+                :type="row.status === 'active' ? 'success' : 'danger'"
+                size="small"
+              >
                 {{ row.status === 'active' ? '正常' : row.status === 'banned' ? '已封禁' : '未激活' }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="100" fixed="right">
+          <el-table-column
+            label="操作"
+            width="100"
+            fixed="right"
+          >
             <template #default="{ row }">
-              <el-button size="small" @click="viewUserTrades(row.userId, row.username)">
+              <el-button
+                size="small"
+                @click="viewUserTrades(row.userId, row.username)"
+              >
                 查看交易
               </el-button>
             </template>
@@ -798,33 +1908,91 @@
       </el-tab-pane>
 
       <!-- ========== 交易记录 ========== -->
-      <el-tab-pane label="交易记录" name="trades">
-        <el-form :inline="true" class="filter-form">
+      <el-tab-pane
+        label="交易记录"
+        name="trades"
+      >
+        <el-form
+          :inline="true"
+          class="filter-form"
+        >
           <el-form-item label="用户">
-            <el-input v-model="tradeFilter.userId" placeholder="用户ID" style="width:100px" clearable />
+            <el-input
+              v-model="tradeFilter.userId"
+              placeholder="用户ID"
+              style="width:100px"
+              clearable
+            />
           </el-form-item>
           <el-form-item label="标的">
-            <el-input v-model="tradeFilter.symbol" placeholder="如 sh600519" style="width:130px" clearable />
+            <el-input
+              v-model="tradeFilter.symbol"
+              placeholder="如 sh600519"
+              style="width:130px"
+              clearable
+            />
           </el-form-item>
           <el-form-item label="方向">
-            <el-select v-model="tradeFilter.side" placeholder="全部" style="width:90px" clearable>
-              <el-option label="买入" value="buy" />
-              <el-option label="卖出" value="sell" />
+            <el-select
+              v-model="tradeFilter.side"
+              placeholder="全部"
+              style="width:90px"
+              clearable
+            >
+              <el-option
+                label="买入"
+                value="buy"
+              />
+              <el-option
+                label="卖出"
+                value="sell"
+              />
             </el-select>
           </el-form-item>
           <el-form-item label="状态">
-            <el-select v-model="tradeFilter.status" placeholder="全部" style="width:110px" clearable>
-              <el-option label="待成交" value="pending" />
-              <el-option label="已成交" value="filled" />
-              <el-option label="已取消" value="cancelled" />
-              <el-option label="已拒绝" value="rejected" />
+            <el-select
+              v-model="tradeFilter.status"
+              placeholder="全部"
+              style="width:110px"
+              clearable
+            >
+              <el-option
+                label="待成交"
+                value="pending"
+              />
+              <el-option
+                label="已成交"
+                value="filled"
+              />
+              <el-option
+                label="已取消"
+                value="cancelled"
+              />
+              <el-option
+                label="已拒绝"
+                value="rejected"
+              />
             </el-select>
           </el-form-item>
           <el-form-item label="类型">
-            <el-select v-model="tradeFilter.type" placeholder="全部" style="width:100px" clearable>
-              <el-option label="模拟交易" value="paper" />
-              <el-option label="回测" value="backtest" />
-              <el-option label="实盘" value="live" />
+            <el-select
+              v-model="tradeFilter.type"
+              placeholder="全部"
+              style="width:100px"
+              clearable
+            >
+              <el-option
+                label="模拟交易"
+                value="paper"
+              />
+              <el-option
+                label="回测"
+                value="backtest"
+              />
+              <el-option
+                label="实盘"
+                value="live"
+              />
             </el-select>
           </el-form-item>
           <el-form-item label="日期">
@@ -839,61 +2007,131 @@
             />
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" @click="loadTrades">查询</el-button>
-            <el-button @click="resetTradeFilter">重置</el-button>
+            <el-button
+              type="primary"
+              @click="loadTrades"
+            >
+              查询
+            </el-button>
+            <el-button @click="resetTradeFilter">
+              重置
+            </el-button>
           </el-form-item>
         </el-form>
 
         <el-alert
           v-if="tradeFilter.viewingUser"
           :title="`当前查看：${tradeFilter.viewingUser} 的交易记录`"
-          type="info" show-icon closable
-          @close="clearUserFilter"
+          type="info"
+          show-icon
+          closable
           style="margin-bottom:12px"
+          @close="clearUserFilter"
         />
 
-        <el-table :data="tradesData" v-loading="tradesLoading" stripe border>
-          <el-table-column prop="id" label="订单ID" width="80" />
-          <el-table-column label="用户" width="100">
-            <template #default="{ row }">{{ row.user?.username || row.user_id }}</template>
-          </el-table-column>
-          <el-table-column prop="symbol" label="标的代码" width="110" />
-          <el-table-column label="方向" width="70">
+        <el-table
+          v-loading="tradesLoading"
+          :data="tradesData"
+          stripe
+          border
+        >
+          <el-table-column
+            prop="id"
+            label="订单ID"
+            width="80"
+          />
+          <el-table-column
+            label="用户"
+            width="100"
+          >
             <template #default="{ row }">
-              <el-tag :type="row.side === 'buy' ? 'danger' : 'success'" size="small">
+              {{ row.user?.username || row.user_id }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="symbol"
+            label="标的代码"
+            width="110"
+          />
+          <el-table-column
+            label="方向"
+            width="70"
+          >
+            <template #default="{ row }">
+              <el-tag
+                :type="row.side === 'buy' ? 'danger' : 'success'"
+                size="small"
+              >
                 {{ row.side === 'buy' ? '买入' : '卖出' }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="quantity" label="数量" width="90" />
-          <el-table-column label="价格" width="100">
-            <template #default="{ row }">¥{{ Number(row.price).toFixed(2) }}</template>
-          </el-table-column>
-          <el-table-column label="金额" width="120">
-            <template #default="{ row }">¥{{ Number(row.amount).toLocaleString() }}</template>
-          </el-table-column>
-          <el-table-column label="状态" width="90">
+          <el-table-column
+            prop="quantity"
+            label="数量"
+            width="90"
+          />
+          <el-table-column
+            label="价格"
+            width="100"
+          >
             <template #default="{ row }">
-              <el-tag :type="{ pending:'warning', filled:'success', cancelled:'info', rejected:'danger' }[row.status]" size="small">
+              ¥{{ Number(row.price).toFixed(2) }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            label="金额"
+            width="120"
+          >
+            <template #default="{ row }">
+              ¥{{ Number(row.amount).toLocaleString() }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            label="状态"
+            width="90"
+          >
+            <template #default="{ row }">
+              <el-tag
+                :type="{ pending:'warning', filled:'success', cancelled:'info', rejected:'danger' }[row.status]"
+                size="small"
+              >
                 {{ { pending:'待成交', filled:'已成交', cancelled:'已取消', rejected:'已拒绝' }[row.status] }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="类型" width="90">
+          <el-table-column
+            label="类型"
+            width="90"
+          >
             <template #default="{ row }">
               {{ { paper:'模拟', backtest:'回测', live:'实盘' }[row.type] || row.type }}
             </template>
           </el-table-column>
-          <el-table-column label="盈亏" width="100">
+          <el-table-column
+            label="盈亏"
+            width="100"
+          >
             <template #default="{ row }">
-              <span v-if="row.profit !== null && row.profit !== undefined" :style="{ color: Number(row.profit) >= 0 ? 'var(--khy-success)' : 'var(--khy-danger)' }">
+              <span
+                v-if="row.profit !== null && row.profit !== undefined"
+                :style="{ color: Number(row.profit) >= 0 ? 'var(--khy-success)' : 'var(--khy-danger)' }"
+              >
                 {{ Number(row.profit) >= 0 ? '+' : '' }}¥{{ Number(row.profit).toFixed(2) }}
               </span>
-              <span v-else style="color:#909399">—</span>
+              <span
+                v-else
+                style="color:#909399"
+              >—</span>
             </template>
           </el-table-column>
-          <el-table-column label="时间" min-width="150">
-            <template #default="{ row }">{{ fmtDate(row.createdAt) }}</template>
+          <el-table-column
+            label="时间"
+            min-width="150"
+          >
+            <template #default="{ row }">
+              {{ fmtDate(row.createdAt) }}
+            </template>
           </el-table-column>
         </el-table>
 
@@ -904,26 +2142,42 @@
             :total="tradeTotal"
             layout="total, sizes, prev, pager, next"
             :page-sizes="[20, 50, 100]"
-            @size-change="loadTrades" @current-change="loadTrades"
+            @size-change="loadTrades"
+            @current-change="loadTrades"
           />
         </div>
       </el-tab-pane>
 
-      <el-tab-pane label="AI Gateway" name="ai-gateway">
-        <el-card class="gateway-config-card" shadow="never">
+      <el-tab-pane
+        label="AI Gateway"
+        name="ai-gateway"
+      >
+        <el-card
+          class="gateway-config-card"
+          shadow="never"
+        >
           <template #header>
             <div class="gateway-config-header">
               <div>
-                <div class="gateway-config-title">模型与 API Key 配置</div>
+                <div class="gateway-config-title">
+                  模型与 API Key 配置
+                </div>
                 <div class="gateway-config-subtitle">
                   兼容 Hermes / OpenClaw / OpenCode 的 OpenAI-compatible 配置方式
                 </div>
               </div>
               <div class="gateway-config-header-actions">
-                <el-tag size="small" :type="relayConfig.snapshot.hasApiKey ? 'success' : 'warning'">
+                <el-tag
+                  size="small"
+                  :type="relayConfig.snapshot.hasApiKey ? 'success' : 'warning'"
+                >
                   {{ relayConfig.snapshot.hasApiKey ? `已配置 Key (${relayConfig.snapshot.apiKeyMasked})` : '未配置 API Key' }}
                 </el-tag>
-                <el-button size="small" @click="loadRelayModelConfig" :loading="relayConfig.loading">
+                <el-button
+                  size="small"
+                  :loading="relayConfig.loading"
+                  @click="loadRelayModelConfig"
+                >
                   <el-icon><Refresh /></el-icon>
                 </el-button>
               </div>
@@ -938,36 +2192,78 @@
             title="模型 ID 不是固定值，请按你实际接入的平台填写；Base URL 可自动补全 /v1"
           />
 
-          <el-form :model="relayConfig.form" label-width="120px" class="gateway-config-form">
+          <el-form
+            :model="relayConfig.form"
+            label-width="120px"
+            class="gateway-config-form"
+          >
             <el-row :gutter="12">
-              <el-col :xs="24" :md="8">
+              <el-col
+                :xs="24"
+                :md="8"
+              >
                 <el-form-item label="配置预设">
-                  <el-select v-model="relayConfig.form.profile" @change="handleRelayProfileChange" style="width: 100%;">
-                    <el-option v-for="preset in relayProfilePresets" :key="preset.value" :label="preset.label" :value="preset.value" />
+                  <el-select
+                    v-model="relayConfig.form.profile"
+                    style="width: 100%;"
+                    @change="handleRelayProfileChange"
+                  >
+                    <el-option
+                      v-for="preset in relayProfilePresets"
+                      :key="preset.value"
+                      :label="preset.label"
+                      :value="preset.value"
+                    />
                   </el-select>
                 </el-form-item>
               </el-col>
-              <el-col :xs="24" :md="8">
+              <el-col
+                :xs="24"
+                :md="8"
+              >
                 <el-form-item label="兼容协议">
-                  <el-select v-model="relayConfig.form.compatibility" style="width: 100%;">
-                    <el-option v-for="opt in relayCompatibilityOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+                  <el-select
+                    v-model="relayConfig.form.compatibility"
+                    style="width: 100%;"
+                  >
+                    <el-option
+                      v-for="opt in relayCompatibilityOptions"
+                      :key="opt.value"
+                      :label="opt.label"
+                      :value="opt.value"
+                    />
                   </el-select>
                 </el-form-item>
               </el-col>
-              <el-col :xs="24" :md="8">
+              <el-col
+                :xs="24"
+                :md="8"
+              >
                 <el-form-item label="模型 ID">
-                  <el-input v-model="relayConfig.form.modelId" placeholder="如: gpt-4o-mini / sensenova-6.7-flash-lite / qwen-plus" />
+                  <el-input
+                    v-model="relayConfig.form.modelId"
+                    placeholder="如: gpt-4o-mini / sensenova-6.7-flash-lite / qwen-plus"
+                  />
                 </el-form-item>
               </el-col>
             </el-row>
 
             <el-row :gutter="12">
-              <el-col :xs="24" :md="12">
+              <el-col
+                :xs="24"
+                :md="12"
+              >
                 <el-form-item label="Base URL">
-                  <el-input v-model="relayConfig.form.baseUrl" placeholder="https://your-provider.com/v1" />
+                  <el-input
+                    v-model="relayConfig.form.baseUrl"
+                    placeholder="https://your-provider.com/v1"
+                  />
                 </el-form-item>
               </el-col>
-              <el-col :xs="24" :md="12">
+              <el-col
+                :xs="24"
+                :md="12"
+              >
                 <el-form-item label="API Key">
                   <el-input
                     v-model="relayConfig.form.apiKey"
@@ -980,7 +2276,10 @@
             </el-row>
 
             <el-row :gutter="12">
-              <el-col :xs="24" :md="18">
+              <el-col
+                :xs="24"
+                :md="18"
+              >
                 <el-form-item label="当前生效">
                   <div class="gateway-current-meta">
                     <div>Adapter：{{ relayConfig.snapshot.preferredAdapter || '未指定' }}</div>
@@ -989,7 +2288,10 @@
                   </div>
                 </el-form-item>
               </el-col>
-              <el-col :xs="24" :md="6">
+              <el-col
+                :xs="24"
+                :md="6"
+              >
                 <el-form-item label="清空 Key">
                   <el-switch v-model="relayConfig.form.clearApiKey" />
                 </el-form-item>
@@ -997,7 +2299,11 @@
             </el-row>
 
             <div class="gateway-config-actions">
-              <el-button type="primary" @click="saveRelayModelConfig" :loading="relayConfig.saving">
+              <el-button
+                type="primary"
+                :loading="relayConfig.saving"
+                @click="saveRelayModelConfig"
+              >
                 保存模型配置
               </el-button>
               <span class="gateway-config-hint">
@@ -1011,24 +2317,49 @@
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
           <span style="font-weight:600;font-size:15px;">API Key 池管理</span>
           <div>
-            <el-button type="primary" size="small" @click="showAddKeyDialog">
+            <el-button
+              type="primary"
+              size="small"
+              @click="showAddKeyDialog"
+            >
               <el-icon><Plus /></el-icon> 添加 Key
             </el-button>
-            <el-button size="small" @click="loadKeyPool" :loading="keyPool.loading">
+            <el-button
+              size="small"
+              :loading="keyPool.loading"
+              @click="loadKeyPool"
+            >
               <el-icon><Refresh /></el-icon>
             </el-button>
-            <el-button size="small" @click="openAIManagement">
+            <el-button
+              size="small"
+              @click="openAIManagement"
+            >
               打开 AI 管理系统
             </el-button>
           </div>
         </div>
 
         <!-- Pool Overview Stats -->
-        <el-row :gutter="12" style="margin-bottom:16px;">
-          <el-col :span="4" v-for="(info, provider) in keyPool.data" :key="provider">
-            <el-card shadow="hover" body-style="padding:12px;text-align:center;">
-              <div style="font-size:20px;font-weight:600;color:var(--el-color-primary);">{{ info.length }}</div>
-              <div style="font-size:12px;color:var(--el-text-color-regular);margin-top:4px;">{{ provider }}</div>
+        <el-row
+          :gutter="12"
+          style="margin-bottom:16px;"
+        >
+          <el-col
+            v-for="(info, provider) in keyPool.data"
+            :key="provider"
+            :span="4"
+          >
+            <el-card
+              shadow="hover"
+              body-style="padding:12px;text-align:center;"
+            >
+              <div style="font-size:20px;font-weight:600;color:var(--el-color-primary);">
+                {{ info.length }}
+              </div>
+              <div style="font-size:12px;color:var(--el-text-color-regular);margin-top:4px;">
+                {{ provider }}
+              </div>
               <div style="font-size:11px;color:var(--el-text-color-secondary);margin-top:2px;">
                 {{ info.filter(k => !k.cooldownUntil || k.cooldownUntil < Date.now()).length }} 可用 /
                 {{ info.filter(k => k.cooldownUntil && k.cooldownUntil >= Date.now()).length }} 冷却
@@ -1038,26 +2369,83 @@
         </el-row>
 
         <!-- Keys Table -->
-        <el-table :data="keyPoolFlat" v-loading="keyPool.loading" stripe size="small" style="width:100%">
-          <el-table-column prop="provider" label="供应商" width="100" />
-          <el-table-column prop="keyPreview" label="Key" width="200">
+        <el-table
+          v-loading="keyPool.loading"
+          :data="keyPoolFlat"
+          stripe
+          size="small"
+          style="width:100%"
+        >
+          <el-table-column
+            prop="provider"
+            label="供应商"
+            width="100"
+          />
+          <el-table-column
+            prop="keyPreview"
+            label="Key"
+            width="200"
+          >
             <template #default="{ row }">
               <code style="font-size:12px;">{{ row.keyPreview || maskKey(row.key) }}</code>
             </template>
           </el-table-column>
-          <el-table-column prop="label" label="标签" width="100" />
-          <el-table-column prop="priority" label="优先级" width="70" align="center" />
-          <el-table-column label="状态" width="90" align="center">
+          <el-table-column
+            prop="label"
+            label="标签"
+            width="100"
+          />
+          <el-table-column
+            prop="priority"
+            label="优先级"
+            width="70"
+            align="center"
+          />
+          <el-table-column
+            label="状态"
+            width="90"
+            align="center"
+          >
             <template #default="{ row }">
-              <el-tag :type="keyStatusType(row)" size="small">{{ keyStatusText(row) }}</el-tag>
+              <el-tag
+                :type="keyStatusType(row)"
+                size="small"
+              >
+                {{ keyStatusText(row) }}
+              </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="totalRequests" label="请求数" width="80" align="center" />
-          <el-table-column prop="totalFailures" label="失败数" width="70" align="center" />
-          <el-table-column prop="lastError" label="最后错误" min-width="160" show-overflow-tooltip />
-          <el-table-column label="操作" width="80" fixed="right" align="center">
+          <el-table-column
+            prop="totalRequests"
+            label="请求数"
+            width="80"
+            align="center"
+          />
+          <el-table-column
+            prop="totalFailures"
+            label="失败数"
+            width="70"
+            align="center"
+          />
+          <el-table-column
+            prop="lastError"
+            label="最后错误"
+            min-width="160"
+            show-overflow-tooltip
+          />
+          <el-table-column
+            label="操作"
+            width="80"
+            fixed="right"
+            align="center"
+          >
             <template #default="{ row }">
-              <el-button size="small" type="danger" link @click="removePoolKey(row)">
+              <el-button
+                size="small"
+                type="danger"
+                link
+                @click="removePoolKey(row)"
+              >
                 <el-icon><Delete /></el-icon>
               </el-button>
             </template>
@@ -1065,33 +2453,73 @@
         </el-table>
 
         <!-- Add Key Dialog -->
-        <el-dialog v-model="keyPool.addVisible" title="添加 API Key" width="480px" append-to-body>
-          <el-form :model="keyPool.addForm" label-width="90px" size="default">
+        <el-dialog
+          v-model="keyPool.addVisible"
+          title="添加 API Key"
+          width="480px"
+          append-to-body
+        >
+          <el-form
+            :model="keyPool.addForm"
+            label-width="90px"
+            size="default"
+          >
             <el-form-item label="供应商">
-              <el-select v-model="keyPool.addForm.provider" placeholder="选择供应商" style="width:100%">
-                <el-option v-for="p in keyProviders" :key="p" :label="p" :value="p" />
+              <el-select
+                v-model="keyPool.addForm.provider"
+                placeholder="选择供应商"
+                style="width:100%"
+              >
+                <el-option
+                  v-for="p in keyProviders"
+                  :key="p"
+                  :label="p"
+                  :value="p"
+                />
               </el-select>
             </el-form-item>
             <el-form-item label="API Key">
-              <el-input v-model="keyPool.addForm.key" type="password" show-password placeholder="sk-ant-..." />
+              <el-input
+                v-model="keyPool.addForm.key"
+                type="password"
+                show-password
+                placeholder="sk-ant-..."
+              />
             </el-form-item>
             <el-form-item label="接口地址">
-              <el-input v-model="keyPool.addForm.endpoint" placeholder="可选，如 https://api.anthropic.com/v1" />
+              <el-input
+                v-model="keyPool.addForm.endpoint"
+                placeholder="可选，如 https://api.anthropic.com/v1"
+              />
             </el-form-item>
             <el-form-item label="标签">
-              <el-input v-model="keyPool.addForm.label" placeholder="可选标识名" />
+              <el-input
+                v-model="keyPool.addForm.label"
+                placeholder="可选标识名"
+              />
             </el-form-item>
             <el-form-item label="优先级">
-              <el-input-number v-model="keyPool.addForm.priority" :min="0" :max="100" />
+              <el-input-number
+                v-model="keyPool.addForm.priority"
+                :min="0"
+                :max="100"
+              />
             </el-form-item>
           </el-form>
           <template #footer>
-            <el-button @click="keyPool.addVisible = false">取消</el-button>
-            <el-button type="primary" @click="handleAddKey" :loading="keyPool.addLoading">添加</el-button>
+            <el-button @click="keyPool.addVisible = false">
+              取消
+            </el-button>
+            <el-button
+              type="primary"
+              :loading="keyPool.addLoading"
+              @click="handleAddKey"
+            >
+              添加
+            </el-button>
           </template>
         </el-dialog>
       </el-tab-pane>
-
     </el-tabs>
   </div>
 </template>

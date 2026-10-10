@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-093] 密钥与智能体统一管理（工具矩阵 + zcodeAdapter）设计规范
 
 > 状态：**提案**（P1 代码已落地）· 2026-09-11

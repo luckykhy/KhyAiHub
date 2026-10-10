@@ -82,6 +82,7 @@ if (_traceAudit && typeof _traceAudit.ensureDiagnosticsBridge === 'function') {
 const localLLMService = safeRequire('../localLLMService');
 const opencodeAdapter = require('./adapters/opencodeAdapter');
 const openclawAdapter = require('./adapters/openclawAdapter');
+const acpAgentAdapter = require('./adapters/acpAgentAdapter');
 const traeAdapter = require('./adapters/traeAdapter');
 const vscodeAdapter = require('./adapters/vscodeAdapter');
 const warpAdapter = require('./adapters/warpAdapter');
@@ -252,6 +253,21 @@ function _buildFailureReasonSection(attempts = [], maxLines = 8) {
     uniqueFailedCount += 1;
     if (lines.length < Math.max(1, maxLines)) {
       let line = `- ${adapter}${status}${kind}: ${err}`;
+      // 上游真因上桌(upstreamTruthLabel 纯叶子,只改展示):429/5xx 的上游故障体被归成
+      // network 后,行内改显上游自己写清的原因(如 `上游端点不可用·瞬态`),免得用户被
+      // [network] 带去查网络。门关 / 认不出 / 叶子不可用 → 逐字节保持今日行。
+      try {
+        const truth = require('./upstreamTruthLabel').describeUpstream(
+          attempt.error || attempt.message,
+          { errorType: errTypeSig, env: process.env }
+        );
+        if (truth) {
+          const shown = truth.message ? _sanitizeFailureMessage(truth.message) : err;
+          line = `- ${adapter}${status} [${truth.label}${truth.transient ? '·瞬态' : ''}]: ${shown}`;
+        }
+      } catch {
+        /* 叶子不可用 → 今日行 */
+      }
       // Append finish_reason when present for precise diagnostics (e.g. content_filter,
       // length, tool_calls) so the user knows *why* the model produced no text.
       if (attempt.meta?.finishReason) {
@@ -2182,6 +2198,10 @@ class AIGateway {
       // 更低自动优先级。门控 KHY_OPENCLAW 默认关(见 openclawInvocation.js),关闭时
       // detect() 恒不可用,网关整体跳过,适配器探活结果与接入前字节级一致。
       { key: 'openclaw', adapter: openclawAdapter, priority: 17, enabled: true },
+      // 外部编辑器 ACP 智能体(面 B,[DESIGN-ARCH-184]):定向指挥类,经
+      // preferredAdapter:'acp' / preferredModel:<agentKey> 定向路由;未登记
+      // KHY_ACPCLIENT_AGENTS 时 detect 恒 false,网关整体跳过。
+      { key: 'acp', adapter: acpAgentAdapter, priority: 18, enabled: true },
     ];
     this._initialized = false;
     this._initPromise = null;
@@ -2195,6 +2215,23 @@ class AIGateway {
     // Capped at 500 entries to prevent unbounded growth in long-running processes.
     this._contextWindowCache = new Map();
     this._contextWindowCache._MAX = 500;
+    // 跨重启记忆：把上次实测到的窗口直接播种进来，于是**第一次读分母就是真值**，
+    // 不必等 init/warmup 的异步探测，也不必撞一次 400 才知道自己给小了。
+    // 学到的值双向生效（比静态表大就用大的、比静态表小就用小的）。
+    // 同步小 JSON 读盘，fail-soft；沿用 aiGatewayModelMethods._getLastVerifiedActiveAdapter
+    // 那条「同步路径上读跨重启事实」的既有做法。
+    try {
+      const { listLearnedContextWindows } = require('./contextWindowStore');
+      for (const rec of listLearnedContextWindows()) {
+        this._contextWindowCache.set(rec.model, {
+          value: rec.value,
+          expiresAt: Date.now() + rec.ttlMs,
+          source: rec.stale ? 'learned-stale' : 'learned',
+        });
+      }
+    } catch {
+      /* 无历史记忆 / 读盘失败：纯新装态，回落静态表 */
+    }
 
     // Per-model output token limit cache (populated alongside _contextWindowCache
     // from adapter listModels metadata; consumed by the maxTokens preflight policy)

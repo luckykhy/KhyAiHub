@@ -26,6 +26,7 @@
       <header class="hero reveal"><h1>[DESIGN-ARCH-052] 任务驱动读取与搜索范围规划：精准而非全知</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-052-任务驱动读取与搜索范围规划-精准而非全知">[DESIGN-ARCH-052] 任务驱动读取与搜索范围规划：精准而非全知</a></li><li class="lvl-2"><a href="#1-问题">1. 问题</a></li><li class="lvl-2"><a href="#2-设计原则">2. 设计原则</a></li><li class="lvl-2"><a href="#3-流水线">3. 流水线</a></li><li class="lvl-2"><a href="#4-置信度与停止">4. 置信度与停止</a></li><li class="lvl-2"><a href="#5-防呆">5. 防呆</a></li><li class="lvl-2"><a href="#6-实证">6. 实证</a></li><li class="lvl-2"><a href="#7-接入点">7. 接入点</a></li><li class="lvl-2"><a href="#8-关联">8. 关联</a></li></ul></nav>
       <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: done --&gt;</p>
 <h1 id="design-arch-052-任务驱动读取与搜索范围规划-精准而非全知">[DESIGN-ARCH-052] 任务驱动读取与搜索范围规划：精准而非全知<a class="anchor" href="#design-arch-052-任务驱动读取与搜索范围规划-精准而非全知" aria-label="锚点">#</a></h1>
 <blockquote><p>子系统 <code>services/backend/src/services/contextScope/</code><br>目标:khy 拿到任务后,确定性地判断<strong>该读哪些文件、该搜什么</strong>,做到准确读取,而非全量扫描追求全知。</p></blockquote>
 <h2 id="1-问题">1. 问题<a class="anchor" href="#1-问题" aria-label="锚点">#</a></h2>

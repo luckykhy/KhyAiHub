@@ -12,41 +12,108 @@
     </el-alert>
 
     <!-- ========================= 运行时与工具链 ========================= -->
-    <el-card shadow="never" style="margin-bottom: 24px">
+    <el-card
+      shadow="never"
+      style="margin-bottom: 24px"
+    >
       <template #header>
         <div class="card-header">
           <span class="card-title">运行时与工具链</span>
-          <el-button size="small" :loading="loading" @click="fetchInventory">刷新</el-button>
+          <el-button
+            size="small"
+            :loading="loading"
+            @click="fetchInventory"
+          >
+            刷新
+          </el-button>
         </div>
       </template>
 
-      <el-table :data="runtime" v-loading="loading" size="small" stripe>
-        <el-table-column prop="label" label="名称" min-width="140" />
-        <el-table-column label="状态" width="100">
+      <el-table
+        v-loading="loading"
+        :data="runtime"
+        size="small"
+        stripe
+      >
+        <el-table-column
+          prop="label"
+          label="名称"
+          min-width="140"
+        />
+        <el-table-column
+          label="状态"
+          width="100"
+        >
           <template #default="{ row }">
-            <el-tag v-if="row.present" type="success" size="small">已安装</el-tag>
-            <el-tag v-else type="info" size="small">未安装</el-tag>
+            <el-tag
+              v-if="row.present"
+              type="success"
+              size="small"
+            >
+              已安装
+            </el-tag>
+            <el-tag
+              v-else
+              type="info"
+              size="small"
+            >
+              未安装
+            </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="版本" width="140">
+        <el-table-column
+          label="版本"
+          width="140"
+        >
           <template #default="{ row }">
             <span v-if="row.version">{{ row.version }}</span>
-            <span v-else class="muted">—</span>
+            <span
+              v-else
+              class="muted"
+            >—</span>
           </template>
         </el-table-column>
-        <el-table-column prop="path" label="路径" min-width="220" show-overflow-tooltip>
+        <el-table-column
+          prop="path"
+          label="路径"
+          min-width="220"
+          show-overflow-tooltip
+        >
           <template #default="{ row }">
             <span v-if="row.path">{{ row.path }}</span>
-            <span v-else class="muted">不在 PATH</span>
+            <span
+              v-else
+              class="muted"
+            >不在 PATH</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" min-width="260">
+        <el-table-column
+          label="操作"
+          min-width="260"
+        >
           <template #default="{ row }">
             <template v-if="!row.present && row.installHint">
               <code class="cmd">{{ row.installHint }}</code>
-              <el-button size="small" text type="primary" @click="copyCmd(row.installHint)">复制命令</el-button>
+              <el-button
+                size="small"
+                text
+                type="primary"
+                @click="copyCmd(row.installHint)"
+              >
+                复制命令
+              </el-button>
             </template>
-            <el-link v-if="row.docsUrl" :href="row.docsUrl" target="_blank" rel="noopener noreferrer" type="primary" :underline="false" style="margin-left: 8px">文档</el-link>
+            <el-link
+              v-if="row.docsUrl"
+              :href="row.docsUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              type="primary"
+              :underline="false"
+              style="margin-left: 8px"
+            >
+              文档
+            </el-link>
           </template>
         </el-table-column>
       </el-table>
@@ -60,26 +127,79 @@
         </div>
       </template>
 
-      <el-table :data="packages" v-loading="loading" size="small" stripe>
-        <el-table-column prop="label" label="名称" min-width="200" show-overflow-tooltip />
-        <el-table-column label="状态" width="100">
+      <el-table
+        v-loading="loading"
+        :data="packages"
+        size="small"
+        stripe
+      >
+        <el-table-column
+          prop="label"
+          label="名称"
+          min-width="200"
+          show-overflow-tooltip
+        />
+        <el-table-column
+          label="状态"
+          width="100"
+        >
           <template #default="{ row }">
-            <el-tag v-if="row.present" type="success" size="small">已安装</el-tag>
-            <el-tag v-else type="info" size="small">未安装</el-tag>
+            <el-tag
+              v-if="row.present"
+              type="success"
+              size="small"
+            >
+              已安装
+            </el-tag>
+            <el-tag
+              v-else
+              type="info"
+              size="small"
+            >
+              未安装
+            </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="作用域" width="100">
+        <el-table-column
+          label="作用域"
+          width="100"
+        >
           <template #default="{ row }">
-            <el-tag v-if="row.scope === 'global'" type="warning" size="small" effect="plain">系统级</el-tag>
-            <el-tag v-else size="small" effect="plain">项目级</el-tag>
+            <el-tag
+              v-if="row.scope === 'global'"
+              type="warning"
+              size="small"
+              effect="plain"
+            >
+              系统级
+            </el-tag>
+            <el-tag
+              v-else
+              size="small"
+              effect="plain"
+            >
+              项目级
+            </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="风险" width="90">
+        <el-table-column
+          label="风险"
+          width="90"
+        >
           <template #default="{ row }">
-            <el-tag :type="riskTagType(row.risk)" size="small" effect="plain">{{ riskLabel(row.risk) }}</el-tag>
+            <el-tag
+              :type="riskTagType(row.risk)"
+              size="small"
+              effect="plain"
+            >
+              {{ riskLabel(row.risk) }}
+            </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" min-width="300">
+        <el-table-column
+          label="操作"
+          min-width="300"
+        >
           <template #default="{ row }">
             <el-button
               v-if="row.installable"
@@ -93,16 +213,37 @@
             </el-button>
             <template v-else-if="row.installHint">
               <code class="cmd">{{ row.installHint }}</code>
-              <el-button size="small" text type="primary" @click="copyCmd(row.installHint)">复制命令</el-button>
+              <el-button
+                size="small"
+                text
+                type="primary"
+                @click="copyCmd(row.installHint)"
+              >
+                复制命令
+              </el-button>
             </template>
-            <el-link v-if="row.docsUrl" :href="row.docsUrl" target="_blank" rel="noopener noreferrer" type="primary" :underline="false" style="margin-left: 8px">文档</el-link>
+            <el-link
+              v-if="row.docsUrl"
+              :href="row.docsUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              type="primary"
+              :underline="false"
+              style="margin-left: 8px"
+            >
+              文档
+            </el-link>
           </template>
         </el-table-column>
       </el-table>
     </el-card>
 
     <!-- 安装日志 -->
-    <el-dialog v-model="logVisible" title="安装日志" width="640px">
+    <el-dialog
+      v-model="logVisible"
+      title="安装日志"
+      width="640px"
+    >
       <pre class="log-block">{{ logText }}</pre>
     </el-dialog>
   </div>

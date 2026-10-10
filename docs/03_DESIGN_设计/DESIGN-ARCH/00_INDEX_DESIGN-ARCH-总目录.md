@@ -147,3 +147,5 @@
 - [[DESIGN-ARCH-168] 开机零自启与按需懒加载方案]([DESIGN-ARCH-168] 开机零自启与按需懒加载方案.md)
 - [[DESIGN-ARCH-179] khy-os 统一登录体系 — GitHub Gitee OAuth + 登录方式可选 + 按需登录 + 启动优化]([DESIGN-ARCH-179] khy-os 统一登录体系 — GitHub Gitee OAuth + 登录方式可选 + 按需登录 + 启动优化.md)
 - [[DESIGN-ARCH-180] 驻留资源提示判据错配修复方案]([DESIGN-ARCH-180] 驻留资源提示判据错配修复方案.md)
+- [[DESIGN-ARCH-182] Watchdog阻塞归因分化-同步长任务与进程被停走区分方案]([DESIGN-ARCH-182] Watchdog阻塞归因分化-同步长任务与进程被停走区分方案.md)
+- [[DESIGN-ARCH-183] khyos任务自动分组-来源标记与固定分组方案]([DESIGN-ARCH-183] khyos任务自动分组-来源标记与固定分组方案.md)

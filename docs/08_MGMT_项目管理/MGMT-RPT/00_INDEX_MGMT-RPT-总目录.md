@@ -2,7 +2,7 @@
 
 > 本夹由 [MGMT-PLAN-009] B9「按标签 `[XXX-YYY-NNN]` 归夹」生成（2026-09-18）。
 > 父目录：[../](../00_INDEX_项目管理-分类索引.md)　就近索引：[00_INDEX_项目管理-分类索引.html](../00_INDEX_项目管理-分类索引.md)
-> 收录 31 篇。
+> 收录 34 篇。
 
 ## 文件清单
 
@@ -37,3 +37,7 @@
 - [[MGMT-RPT-029] khy-os-vs-ycode-能力矩阵与学习点]([MGMT-RPT-029] khy-os-vs-ycode-能力矩阵与学习点.md)
 - [[MGMT-RPT-030] DSH-一切皆插件对-khy-os-可行性分析]([MGMT-RPT-030] DSH-一切皆插件对-khy-os-可行性分析.md)
 - [[MGMT-RPT-031] GitHub调研-终端渲染TUI-2026-09-17]([MGMT-RPT-031] GitHub调研-终端渲染TUI-2026-09-17.md)
+- [[MGMT-RPT-032] 工作区脏状态盘点报告-2026-09-18]([MGMT-RPT-032] 工作区脏状态盘点报告-2026-09-18.md)
+- [[MGMT-RPT-033] GitHub调研-双机同步-2026-10-09]([MGMT-RPT-033] GitHub调研-双机同步-2026-10-09.md)
+- [[MGMT-RPT-034] GitHub调研-版本治理-2026-10-10]([MGMT-RPT-034] GitHub调研-版本治理-2026-10-10.md)
+- [[MGMT-RPT-035] GitHub调研-同类项目对比矩阵-2026-10-10]([MGMT-RPT-035] GitHub调研-同类项目对比矩阵-2026-10-10.md)

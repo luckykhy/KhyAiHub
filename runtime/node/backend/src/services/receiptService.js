@@ -155,7 +155,7 @@ function startReceipt(ctx = {}) {
   if (_open.has(key)) {
     // Flush the stale one before opening a new turn.
     try {
-      finalizeReceipt({ sessionId: ctx.sessionId, status: 'partial' });
+      finalizeReceipt({ sessionId: ctx.sessionId, status: 'partial', finalizeReason: 'superseded' });
     } catch {
       /* ignore */
     }
@@ -178,6 +178,7 @@ function startReceipt(ctx = {}) {
     traceId: ctx.traceId || null,
     requestId: ctx.requestId || null,
     status: 'running',
+    source: ctx.source || null,
     goal: ctx.goal ? String(ctx.goal).slice(0, 2000) : '',
     plan: ctx.plan ? String(ctx.plan).slice(0, 4000) : '',
     toolChain: [],
@@ -190,6 +191,13 @@ function startReceipt(ctx = {}) {
     finalizedAt: null,
     durationMs: 0,
     counts: { tools: 0, ok: 0, failed: 0 },
+    // 裁决块。status 只有三档，且过去由 counts.failed 反推 —— 那表达的是「没有工具报错」，
+    // 不是「任务办成了」（实测 82.4% 的收据一次工具都没调，照样算 completed）。
+    // outcome 存循环自己的收尾事实，达成率的分子只认它。
+    outcome: null,
+    // 终点的来源：'delivery' = 本轮自己收口；'superseded' = 被下一轮顶掉的遗留。
+    // 后者是仪器痕迹，不是任务失败，聚合时必须区别对待。
+    finalizeReason: null,
   };
   _open.set(key, receipt);
   return receipt;
@@ -298,12 +306,22 @@ function appendToolCall(entry = {}) {
  * @returns {object|null} the finalized receipt, or null if none was open
  */
 function finalizeReceipt(opts = {}) {
-  const key = _sessionKey(opts.sessionId);
-  const receipt = _open.get(key);
+  let key = _sessionKey(opts.sessionId);
+  let receipt = _open.get(key);
+  // sessionId 归属在 REPL/TUI 正门一律缺失（实测 916/964 回合为 null），按 sessionId 找不到
+  // 自己那一张。requestId 逐回合唯一，用它兜住，免得把本轮裁决写进上一轮遗留的收据。
+  if (!receipt && opts.requestId) {
+    for (const [k, r] of _open) {
+      if (r && r.requestId === opts.requestId) {
+        key = k;
+        receipt = r;
+        break;
+      }
+    }
+  }
   if (!receipt) {
     return null;
-  }
-  _open.delete(key);
+  }  _open.delete(key);
 
   receipt.finalizedAt = new Date().toISOString();
   receipt.durationMs = Date.now() - receipt.startedTs;
@@ -319,10 +337,32 @@ function finalizeReceipt(opts = {}) {
   if (opts.gitCommit) {
     receipt.gitCommit = String(opts.gitCommit);
   }
+  if (opts.outcome && typeof opts.outcome === 'object') {
+    receipt.outcome = {
+      verdict: opts.outcome.verdict ? String(opts.outcome.verdict).slice(0, 40) : null,
+      achieved: typeof opts.outcome.achieved === 'boolean' ? opts.outcome.achieved : null,
+      intentUnfulfilled: !!opts.outcome.intentUnfulfilled,
+      hasConclusion: typeof opts.outcome.hasConclusion === 'boolean' ? opts.outcome.hasConclusion : null,
+      stoppedByLimit: !!opts.outcome.stoppedByLimit,
+      placeholderOnly: !!opts.outcome.placeholderOnly,
+      finalReplyLength: Number(opts.outcome.finalReplyLength) || 0,
+      success: typeof opts.outcome.success === 'boolean' ? opts.outcome.success : null,
+    };
+  }
+  if (opts.finalizeReason) {
+    receipt.finalizeReason = String(opts.finalizeReason).slice(0, 40);
+    // 被下一轮顶掉的遗留：durationMs 量到的是「到下一轮开始的间隔」而非本回合耗时
+    // （实测最长 5.5 小时），留着一个谎比留空更糟。
+    if (opts.finalizeReason === 'superseded') {
+      receipt.durationMs = null;
+    }
+  }
 
-  // Derive status when not explicitly provided.
+  // Derive status when not explicitly provided. 循环自己的裁决优先于「有没有工具报错」。
   if (opts.status) {
     receipt.status = opts.status;
+  } else if (receipt.outcome && receipt.outcome.achieved === false) {
+    receipt.status = 'partial';
   } else if (receipt.counts.failed > 0) {
     receipt.status = 'partial';
   } else {
@@ -422,6 +462,7 @@ function _allReceiptFiles() {
  * @param {string} [opts.sessionId] — restrict to one session
  * @param {string} [opts.companionId] — restrict to one companion (AgentFS agent)
  * @param {number} [opts.limit=50]
+ * @param {boolean} [opts.full] — 返回原始记录而非投影（聚合器要 outcome/requestId）
  * @returns {object[]} compact receipt summaries
  */
 function listReceipts(opts = {}) {
@@ -445,6 +486,9 @@ function listReceipts(opts = {}) {
     records = records.filter((r) => r.companionId === opts.companionId);
   }
   records.sort((a, b) => String(b.id).localeCompare(String(a.id)));
+  if (opts.full) {
+    return opts.limit ? records.slice(0, opts.limit) : records;
+  }
   return records.slice(0, limit).map((r) => ({
     id: r.id,
     sessionId: r.sessionId,

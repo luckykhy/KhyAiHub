@@ -282,9 +282,12 @@ const SCENARIOS = {
   },
   'unit-multi-intent': {
     changes: [
+      // 迁移后 delivery/web 与 delivery/extension 同属 delivery 顶层板块，
+      // 故第三个板块改用 works/ship（打包/交付工具）——三个**不同**顶层板块才有
+      // 多意图可言，否则 T1 判据在场景层就静默失效。
       { status: 'M', path: 'runtime/node/backend/src/cli/router.js' },
       { status: 'M', path: 'delivery/web/ai-frontend/src/App.vue' },
-      { status: 'A', path: 'delivery/extension/demo/index.js' },
+      { status: 'A', path: 'works/ship/npm/bin/helper.js' },
     ],
     verifyPending: true,
   },

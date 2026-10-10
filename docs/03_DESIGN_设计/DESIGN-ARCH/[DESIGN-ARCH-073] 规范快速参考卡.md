@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-073] 规范快速参考卡
 
 > 快速查阅 khy-os 项目所有规范的参考卡。

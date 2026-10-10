@@ -116,7 +116,7 @@ function readPointerDataHomes(fsImpl, env, homedir) {
     // The backend may pin its data home under the portable/app root and write
     // the pointer as `~PORTABLE~/<rel>` (see services/backend dataHome.js).
     // Resolve that against this package's app root (two levels up from
-    // apps/ai-frontend), mirroring the backend's read direction.
+    // delivery/web/ai-frontend), mirroring the backend's read direction.
     //
     // import.meta.dirname, not __dirname: this module runs both bundled inside
     // the Vite config (esbuild injects a dirname var there) AND imported by

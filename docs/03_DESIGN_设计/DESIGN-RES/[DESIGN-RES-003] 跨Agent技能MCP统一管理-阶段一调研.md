@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: todo -->
 # [DESIGN-RESEARCH] 跨 Agent 技能/MCP 统一管理 — 阶段一调研报告
 
 > 任务：`/goal` 规格「khy-os 跨 Agent 技能/MCP 统一管理（双向：unify 出口 + 存量纳管入口）」之阶段一（只读调研）。

@@ -60,10 +60,19 @@ function subdirs(dir) {
  * @returns {{dir: string, manifest: object}|null}
  */
 function findExtension(id) {
-  const root = path.join(repoRoot(), 'extensions');
-  const candidates = [path.join(root, id)];
-  for (const category of subdirs(root)) {
-    candidates.push(path.join(root, category, id));
+  // 内置拓展根。2026-10 目录迁移后是 `delivery/extension/`（[DESIGN-TOOL-002] §2.3）；
+  // 仓库根那个 `extensions/` 只作布局兜底保留——新布局下它不存在，subdirs() 返回空数组，
+  // 不会产生额外命中。两处扫描必须与 extensionRoots.discover 同深度（本文件头注释）。
+  const roots = [
+    path.join(repoRoot(), 'delivery', 'extension'),
+    path.join(repoRoot(), 'extensions'),
+  ];
+  const candidates = [];
+  for (const root of roots) {
+    candidates.push(path.join(root, id));
+    for (const category of subdirs(root)) {
+      candidates.push(path.join(root, category, id));
+    }
   }
   for (const dir of candidates) {
     let raw;

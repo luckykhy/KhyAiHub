@@ -42,9 +42,17 @@ const { LOGS, AUDIT, CHECKPOINT, RUNTIME_FOOTPRINT } = require('../constants/ser
 // Lazily resolve the legacy-compatible app home (portable-aware).
 // No local caching: preserves getAppHome() live-resolve semantics.
 function _baseDir() {
+  // Same precedence chain as getAppHome()/getDataHome() gave the old call sites:
+  // explicit env steers, portable falls through to the project data home (W9'
+  // moved checkpoints there), non-portable keeps the legacy-~/.khyquant semantics.
+  if (process.env.KHY_APP_HOME) return path.resolve(process.env.KHY_APP_HOME);
+  if (process.env.KHY_DATA_HOME) return path.resolve(process.env.KHY_DATA_HOME);
   try {
-    const { getAppHome } = require('../utils/dataHome');
-    return getAppHome();
+    const dh = require('../utils/dataHome');
+    if (dh.isPortableDeployment()) {
+      return dh.getProjectDataHome();
+    }
+    return dh.getAppHome();
   } catch {
     return path.join(os.homedir(), '.khyquant');
   }
@@ -104,9 +112,15 @@ const CKPT_MAX_TOTAL_MB = CHECKPOINT.MAX_TOTAL_MB;
 
 // Paths derived from well-known locations (portable-aware via dataHome).
 function _khyHome() {
+  // Explicit env override wins (same precedence getDataHome() gives it) — this is
+  // also what keeps isolated test runs pinned to their temp root.
+  if (process.env.KHY_DATA_HOME) return path.resolve(process.env.KHY_DATA_HOME);
   try {
-    const { getDataHome } = require('../utils/dataHome');
-    return getDataHome();
+    const { getDataHome, getProjectDataHome, isPortableDeployment } = require('../utils/dataHome');
+    // W9' (2026-10-02) moved the runtime data into the project data home
+    // (works/data/khy); in portable mode without an explicit env, retention must
+    // follow the project home or every measurement reads the stale shell.
+    return isPortableDeployment() ? getProjectDataHome() : getDataHome();
   } catch {
     return path.join(os.homedir(), '.khy');
   }
@@ -645,6 +659,13 @@ function getStorageReport() {
   // Daily logs
   const dailyLogDir = path.join(_khyHome(), 'memory', 'logs');
   report.dailyLogs = { size: safeTreeSize(dailyLogDir) };
+
+  // Atomic-write orphan tmp files (kill -9 leftovers from atomicWriteJson/_writePointer)
+  const tmpOrphans = _scanAtomicTmpOrphans(_khyHome());
+  report.atomicTmpOrphans = { size: tmpOrphans.bytes, count: tmpOrphans.count };
+
+  // Empty directories (eager-mkdir residue from the getProjectDataDir accessors)
+  report.emptyDirs = { size: 0, count: countEmptyDirs(_khyHome()) };
 
   // Total
   report.total = Object.values(report).reduce((acc, v) => acc + (v.size || 0), 0);
@@ -1271,6 +1292,163 @@ function cleanTaskOutputs() {
   return { removed, bytes };
 }
 
+// ── Atomic-write orphan cleanup ────────────────────────────────────────
+// atomicWriteJson / dataHome._writePointer clean their tmp files in a finally
+// block, but a kill -9 / crash between open and rename skips that block and
+// leaves `.name.tmp-<pid>-<hex12>` (or the pointer's `.name.tmp-<pid>`) behind.
+// Reap them after TEMP_MAX_AGE_HOURS: a live writer's tmp is fresh, so the age
+// check is what keeps this from racing an in-flight atomic write.
+
+const ATOMIC_TMP_RE = /^\..+\.tmp-\d+(-[0-9a-f]+)?$/;
+
+function _scanAtomicTmpOrphans(root) {
+  let count = 0;
+  let bytes = 0;
+  for (const f of safeLs(root)) {
+    if (!ATOMIC_TMP_RE.test(f)) continue;
+    try {
+      const st = fs.statSync(path.join(root, f));
+      if (st.isFile()) {
+        count++;
+        bytes += st.size;
+      }
+    } catch {
+      /* skip */
+    }
+  }
+  return { count, bytes };
+}
+
+function cleanAtomicTmpOrphans() {
+  const root = _khyHome();
+  if (!fs.existsSync(root)) {
+    return { removed: 0, bytes: 0 };
+  }
+  const cutoff = Date.now() - TEMP_MAX_AGE_HOURS * 3600000;
+  let removed = 0,
+    bytes = 0;
+  for (const f of safeLs(root)) {
+    if (!ATOMIC_TMP_RE.test(f)) continue;
+    const fp = path.join(root, f);
+    try {
+      const st = fs.statSync(fp);
+      if (st.isFile() && st.mtimeMs < cutoff) {
+        bytes += st.size;
+        fs.unlinkSync(fp);
+        removed++;
+      }
+    } catch {
+      /* skip */
+    }
+  }
+  return { removed, bytes };
+}
+
+// ── Empty directory cleanup ────────────────────────────────────────────
+// The getProjectDataDir-style accessors mkdir at path-resolution time, so any
+// feature that asks for a path but never writes leaves a permanent empty
+// directory behind. Reap empty dirs older than EMPTY_DIR_MIN_AGE_D, bottom-up
+// (a parent emptied by its children's reap is collected in the same sweep).
+// append-only / permission-preserving paths from DATA-LOCATIONS.json protected
+// block never get reaped even when empty, and the data home root itself is
+// untouchable. KHY_EMPTY_DIR_REAP=0 disables; KHY_EMPTY_DIR_MAX_AGE_D retunes.
+
+const EMPTY_DIR_MIN_AGE_D = (() => {
+  const v = parseFloat(process.env.KHY_EMPTY_DIR_MAX_AGE_D);
+  return Number.isFinite(v) && v >= 0 ? v : 7;
+})();
+
+const EMPTY_DIR_EXEMPT = new Set(['audit-trajectory', 'credentials']);
+
+function countEmptyDirs(root) {
+  if (!fs.existsSync(root)) {
+    return 0;
+  }
+  let count = 0;
+  (function walk(dir, depth) {
+    if (depth > 12) return;
+    for (const name of safeLs(dir)) {
+      const fp = path.join(dir, name);
+      let st;
+      try {
+        st = fs.lstatSync(fp);
+      } catch {
+        continue;
+      }
+      if (st.isSymbolicLink()) continue;
+      if (!st.isDirectory()) continue;
+      try {
+        if (fs.readdirSync(fp).length === 0) count++;
+      } catch {
+        continue;
+      }
+      walk(fp, depth + 1);
+    }
+  })(root, 0);
+  return count;
+}
+
+function reapEmptyDirs() {
+  if (String(process.env.KHY_EMPTY_DIR_REAP || '').trim().toLowerCase() === '0') {
+    return { removed: 0, bytes: 0 };
+  }
+  const root = _khyHome();
+  if (!fs.existsSync(root)) {
+    return { removed: 0, bytes: 0 };
+  }
+  const cutoff = Date.now() - EMPTY_DIR_MIN_AGE_D * 86400000;
+  // 收集时快照 mtime：删除子目录会刷新父目录 mtime，若回收时再 stat，嵌套空链
+  // 每轮只能剥一层。年龄以收集时的快照为准，emptiness 以删除时的现场为准。
+  const dirs = [];
+  (function collect(dir, depth) {
+    if (depth > 12) return;
+    for (const name of safeLs(dir)) {
+      const fp = path.join(dir, name);
+      let st;
+      try {
+        st = fs.lstatSync(fp);
+      } catch {
+        continue;
+      }
+      if (st.isSymbolicLink()) continue;
+      if (st.isDirectory()) {
+        dirs.push({ fp, depth, mtimeMs: st.mtimeMs });
+        collect(fp, depth + 1);
+      }
+    }
+  })(root, 0);
+  // Deepest first: removing leaves can make parents empty in this same sweep.
+  // Windows delete is momentarily pending after rmdirSync succeeds, so a parent
+  // may still list the removed child — entries reaped earlier this sweep count
+  // as empty rather than blocking their parent.
+  dirs.sort((a, b) => b.depth - a.depth);
+  const reapedThisSweep = new Set();
+  let removed = 0;
+  for (const { fp, mtimeMs } of dirs) {
+    // 根目录本身不会被 collect 推入（只推子项），无需 depth 守卫。
+    const rel = path.relative(root, fp);
+    if (EMPTY_DIR_EXEMPT.has(rel) || EMPTY_DIR_EXEMPT.has(rel.split(path.sep)[0])) continue;
+    if (mtimeMs >= cutoff) continue;
+    let entries;
+    try {
+      entries = fs.readdirSync(fp);
+    } catch {
+      continue;
+    }
+    const emptyNow =
+      entries.length === 0 || entries.every((n) => reapedThisSweep.has(path.join(fp, n)));
+    if (!emptyNow) continue;
+    try {
+      fs.rmdirSync(fp);
+      removed++;
+      reapedThisSweep.add(fp);
+    } catch {
+      /* skip */
+    }
+  }
+  return { removed, bytes: 0 };
+}
+
 // ── Runtime logger archives ─────────────────────────────────────────────
 
 function _runtimeLogRoot() {
@@ -1783,6 +1961,8 @@ function runCleanup(options = {}) {
     taskOutputs: recordCleanupTarget(metrics, 'task-outputs', () => cleanTaskOutputs()),
     checkpoints: recordCleanupTarget(metrics, 'checkpoints', () => cleanCheckpointStorage()),
     runtimeLogs: recordCleanupTarget(metrics, 'runtime-logs', () => cleanRuntimeLogs()),
+    atomicTmpOrphans: recordCleanupTarget(metrics, 'atomic-tmp-orphans', () => cleanAtomicTmpOrphans()),
+    emptyDirs: recordCleanupTarget(metrics, 'empty-dirs', () => reapEmptyDirs()),
   };
 
   // Clean backend temp/intermediate directories
@@ -1963,6 +2143,17 @@ function runCleanup(options = {}) {
     );
     freedBytes += results.checkpoints.bytes || 0;
   }
+  if (results.atomicTmpOrphans && results.atomicTmpOrphans.removed > 0) {
+    results.summary.actions.push(
+      `Removed ${results.atomicTmpOrphans.removed} orphan atomic-write tmp files (${humanSize(results.atomicTmpOrphans.bytes)})`
+    );
+    freedBytes += results.atomicTmpOrphans.bytes || 0;
+  }
+  if (results.emptyDirs && results.emptyDirs.removed > 0) {
+    results.summary.actions.push(
+      `Removed ${results.emptyDirs.removed} stale empty directories`
+    );
+  }
   for (const bc of results.backendCleanup) {
     if (bc.removed > 0) {
       results.summary.actions.push(
@@ -2090,6 +2281,8 @@ function getRetentionPolicy() {
       logMaxBytes: LOG_MAX_SIZE_BYTES,
       osTempMaxAgeHours: OS_TEMP_MAX_AGE_HOURS,
     },
+    atomicTmpOrphans: { maxAgeHours: TEMP_MAX_AGE_HOURS },
+    emptyDirs: { minAgeDays: EMPTY_DIR_MIN_AGE_D },
     footprintNoticeBytes: RUNTIME_FOOTPRINT.NOTICE_MB * 1024 * 1024,
   };
 }
@@ -2118,6 +2311,9 @@ module.exports = {
   cleanRuntimeLogs,
   cleanBackendDir,
   cleanOsTempFiles,
+  cleanAtomicTmpOrphans,
+  reapEmptyDirs,
+  countEmptyDirs,
   getLastCleanupReport,
   getStorageReport,
   assessRuntimeFootprint,

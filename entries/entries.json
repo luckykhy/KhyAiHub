@@ -62,7 +62,7 @@
       "kind": "cli",
       "title": "终端端（直连 Node，免 Python）",
       "artifactKind": "shell",
-      "delivery": "node services/backend/bin/khy.js；亦经 npm 渠道 bin/khy.js",
+      "delivery": "node runtime/node/backend/bin/khy.js；亦经 npm 渠道 bin/khy.js",
       "entryFiles": ["runtime/node/backend/bin/khy.js"],
       "source": "runtime/node/backend",
       "markers": ["bin/khy.js", "package.json"],
@@ -132,7 +132,7 @@
       "title": "桌面端（Provider Hub 卡片枢纽）",
       "artifactKind": "exe",
       "delivery": "仅 electron-vite 构建产物，无安装包",
-      "source": "apps/provider-hub",
+      "source": "delivery/web/provider-hub",
       "markers": ["package.json", "electron.vite.config.ts"],
       "toolchain": ["node"],
       "status": "degraded",
@@ -146,7 +146,7 @@
       "artifactOutput": "provider-hub",
       "ports": [],
       "notes": [
-        "定位与 GUI 规范见 [DESIGN-ARCH-094]（与 apps/ai-frontend、apps/khyos-desktop 平级的 L3 应用）。"
+        "定位与 GUI 规范见 [DESIGN-ARCH-094]（与 delivery/web/ai-frontend、apps/khyos-desktop 平级的 L3 应用）。"
       ]
     },
     {
@@ -155,7 +155,7 @@
       "title": "网页端（AI 平台管理前端）",
       "artifactKind": "html",
       "delivery": "Vite 静态产物，由 backend 托管；含 Dockerfile + nginx.conf",
-      "source": "apps/ai-frontend",
+      "source": "delivery/web/ai-frontend",
       "markers": ["index.html", "vite.config.js"],
       "toolchain": ["node"],
       "status": "ready",
@@ -194,7 +194,7 @@
       "notes": [
         "dev 端口未在 serviceDefaults 登记单一真源，因此本条目**刻意不声明端口**——写死一个数字会违反 RUNTIME-001。",
         "要让它可被解析，先在 constants/serviceDefaults.js 补常量，再回来填 ports[].ref。",
-        "artifactOutput 为空不是遗漏：software/khyquant/frontend/dist 尚未登记进 docs/10_规范/registry/BUILD-OUTPUTS.json（表里只有它的 coverage 条目）。按 LAYOUT-005，每个构建产物都要登记，这是一处待补的登记缺口——本表不代替它补 path，只如实留空。"
+        "artifactOutput 为空不是遗漏：delivery/channel/khyquant/frontend/dist 尚未登记进 docs/10_规范/registry/BUILD-OUTPUTS.json（表里只有它的 coverage 条目）。按 LAYOUT-005，每个构建产物都要登记，这是一处待补的登记缺口——本表不代替它补 path，只如实留空。"
       ]
     },
     {

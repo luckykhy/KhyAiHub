@@ -215,12 +215,14 @@ class DevicePairingManager {
       const expiresAt = Date.now() + this._requestTtlMs;
 
       // Auto-expire after TTL
-      setTimeout(() => {
+      const expiry = setTimeout(() => {
         const device = this._devices.get(deviceId);
         if (device && device.state === PAIRING_STATE.PENDING) {
           device.state = PAIRING_STATE.EXPIRED;
         }
       }, this._requestTtlMs);
+      // 兜底清理而已，不该把短生命周期进程（CLI 一次性命令、node:test）钉住 10 分钟。
+      expiry.unref?.();
 
       return { requestId, expiresAt, deviceId };
     });

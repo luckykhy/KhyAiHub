@@ -146,8 +146,8 @@ const api = {
   getTokenUsage: () => ipcRenderer.invoke('token:usage'),
   // 用量历史：近 N 日曲线 + 按模型分桶（使用统计页，ZC-ALIGN-001 P13）
   getUsageHistory: (days?: number) => ipcRenderer.invoke('usage:history', days),
-  // 上下文窗口估算（estimateTokens 真源启发式 + KHY_CONTEXT_WINDOW 上限，P3-5/P3-6）
-  estimateContextSize: (text?: string) => ipcRenderer.invoke('context:size', text),
+  // 上下文窗口估算（estimateTokens 真源启发式 + 模型上下文窗口真源，P3-5/P3-6）
+  estimateContextSize: (text?: string, model?: string) => ipcRenderer.invoke('context:size', text, model),
   // 模型/provider 列表（providerPresets 真源，P3-7；adapterKey 传入时叠加
   // 该 adapter 的运行时动态模型，P3-7③）
   listModels: (adapterKey?: string) => ipcRenderer.invoke('models:list', adapterKey),
@@ -185,6 +185,22 @@ const api = {
   // 切换成功后由渲染层广播 khy:workspace-changed，各消费者按既有约定重新发现根。
   workspaceList: () => ipcRenderer.invoke('workspace:list'),
   workspaceOpen: (target?: string) => ipcRenderer.invoke('workspace:open', target || ''),
+
+  // ── 移动端远程控制（ZC-ALIGN-002 M3）：通道名与 main 的 remote:* handle 配对 ──
+  remoteStart: (opts?: { lanEnabled?: boolean }) => ipcRenderer.invoke('remote:start', opts),
+  remoteStop: () => ipcRenderer.invoke('remote:stop'),
+  remoteStatus: () => ipcRenderer.invoke('remote:status'),
+  remoteRefreshQr: () => ipcRenderer.invoke('remote:refreshQr'),
+  remoteApprove: (pairingId: string, role: string) => ipcRenderer.invoke('remote:approve', pairingId, role),
+  remoteReject: (pairingId: string) => ipcRenderer.invoke('remote:reject', pairingId),
+  remoteRevoke: (deviceId: string) => ipcRenderer.invoke('remote:revoke', deviceId),
+  // 控制对象切到「后端 CLI 会话」时探测本机 bridge（桌面端不代它启动）
+  remoteProbeBridge: () => ipcRenderer.invoke('remote:probeBridge'),
+  onRemoteEvent: (cb: (payload: unknown) => void) => {
+    const listener = (_e: unknown, payload: unknown) => cb(payload)
+    ipcRenderer.on('remote:event', listener)
+    return () => ipcRenderer.removeListener('remote:event', listener)
+  },
 
   // ── 密钥与端点管理 (DESIGN-ARCH-091 §6, P1) ──
   // 入口①（§5.1）：主窗窗口菜单 / Ctrl+Shift+K 打开独立管理窗口

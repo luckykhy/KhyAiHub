@@ -9,7 +9,7 @@
  * (repl.js `_getSlashCommands()` / router.js `SLASH_COMMANDS`)只由 commandRegistry +
  * 静态 extras 构成,**从不枚举** ~/.khy/skills 下每个技能的 manifest.json —— 于是正确创建的用户技能
  * 永远不出现在菜单里、`/yt-dlp` 敲了也没反应。本模块补上这条发现接缝:
- *   ① listUserSkillCommands() → 扫三处技能根(built-in / 项目 .khy/skills / 家目录 .khy/skills)
+ *   ① listUserSkillCommands() → 扫三处技能根(built-in / 项目 works/data/khy/skills / 家目录 .khy/skills)
  *      读 manifest.json,产出斜杠命令描述符(cmd/label/desc + _skillDir/_skillName 供执行)。
  *   ② loadUserSkillPrompt(dir) → 读该技能的 prompt.md(回退 SKILL.md)正文,供选中时注入模型。
  *

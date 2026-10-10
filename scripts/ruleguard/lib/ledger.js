@@ -105,4 +105,87 @@ function activeSuppressions(repoRoot) {
   return byRule;
 }
 
-module.exports = { LEDGER_DIR, ledgerPath, append, readAll, activeSuppressions };
+/**
+ * Aggregate the ledger for the read-side report (the append side had no query
+ * surface before: the ledger "wrote and sank" — no way to answer "which rule
+ * is over baseline lately" / "which file is a repeat offender"). Pure read;
+ * empty/missing ledger → an empty aggregate, never an error.
+ */
+function aggregate(repoRoot) {
+  const records = readAll(repoRoot);
+  const byRule = {};
+  const byFile = {};
+  const byGate = {};
+  const byCommit = {};
+  for (const r of records) {
+    const rule = r.rule || '(unmapped)';
+    const file = r.file || '(no-file)';
+    const gate = r.gate || 'local';
+    const commit = r.commit || '(unknown)';
+    byRule[rule] = (byRule[rule] || 0) + 1;
+    byFile[file] = (byFile[file] || 0) + 1;
+    byGate[gate] = (byGate[gate] || 0) + 1;
+    byCommit[commit] = (byCommit[commit] || 0) + 1;
+  }
+  const sortDesc = (obj) => Object.entries(obj).sort((a, b) => b[1] - a[1]);
+  return {
+    total: records.length,
+    suppressed: records.filter((r) => r.suppressed).length,
+    byRule: sortDesc(byRule),
+    byFile: sortDesc(byFile),
+    byGate: sortDesc(byGate),
+    // by-commit violation counts, oldest first — the trend series the coverage
+    // report reads. Commits sort by first-seen order in the file (append order).
+    byCommit: Object.entries(byCommit),
+    span: {
+      first: records.length ? records[0].ts : null,
+      last: records.length ? records[records.length - 1].ts : null,
+    },
+  };
+}
+
+/**
+ * SARIF 2.1.0 export (Checkov pattern): the ledger / findings as a SARIF run
+ * so GitHub code scanning (or any SARIF consumer) can annotate violation lines
+ * without re-parsing this repo's dialect. `results` are the aggregated records
+ * themselves (readAll output or per-run findings). Pure function, zero IO.
+ */
+function toSarif(records, tool = 'khy-ruleguard') {
+  const rules = [];
+  const ruleIndex = new Map();
+  const results = [];
+  for (const r of records) {
+    const id = r.rule || r.finding || 'unknown';
+    if (!ruleIndex.has(id)) {
+      ruleIndex.set(id, rules.length);
+      rules.push({
+        id,
+        shortDescription: { text: (r.message || id).slice(0, 180) },
+        defaultConfiguration: { level: r.strength === 'blocking' ? 'error' : 'warning' },
+      });
+    }
+    results.push({
+      ruleId: id,
+      ruleIndex: ruleIndex.get(id),
+      level: r.strength === 'blocking' ? 'error' : 'warning',
+      message: { text: (r.message || r.finding || id).slice(0, 300) },
+      locations: r.file ? [{
+        physicalLocation: {
+          artifactLocation: { uri: String(r.file).replace(/\\/g, '/') },
+          region: { startLine: Number(r.line) || 1 },
+        },
+      }] : [],
+      suppressed: r.suppressed ? true : undefined,
+    });
+  }
+  return {
+    $schema: 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json',
+    version: '2.1.0',
+    runs: [{
+      tool: { driver: { name: tool, rules } },
+      results,
+    }],
+  };
+}
+
+module.exports = { LEDGER_DIR, ledgerPath, append, readAll, activeSuppressions, aggregate, toSarif };

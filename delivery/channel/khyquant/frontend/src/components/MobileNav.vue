@@ -2,9 +2,9 @@
   <div class="mobile-nav">
     <!-- 移动端菜单按钮 -->
     <button 
-      class="mobile-menu-btn" 
+      v-if="isMobile" 
+      class="mobile-menu-btn"
       @click="toggleMenu"
-      v-if="isMobile"
     >
       <el-icon :size="24">
         <Menu v-if="!menuOpen" />
@@ -14,11 +14,11 @@
 
     <!-- 遮罩层 -->
     <div 
-      class="mobile-overlay" 
+      v-if="isMobile" 
+      class="mobile-overlay"
       :class="{ active: menuOpen }"
       @click="closeMenu"
-      v-if="isMobile"
-    ></div>
+    />
 
     <!-- 侧边栏 -->
     <el-aside 
@@ -27,7 +27,9 @@
     >
       <div class="sidebar-header">
         <h2>KHY-Quant</h2>
-        <p v-if="!isMobile">量化交易系统</p>
+        <p v-if="!isMobile">
+          量化交易系统
+        </p>
       </div>
 
       <el-menu
@@ -55,18 +57,28 @@
           <span>数据源</span>
         </el-menu-item>
 
-        <el-menu-item index="/announcements" v-if="isAdmin">
+        <el-menu-item
+          v-if="isAdmin"
+          index="/announcements"
+        >
           <el-icon><Bell /></el-icon>
           <span>公告管理</span>
         </el-menu-item>
 
-        <el-menu-item index="/feedback" v-if="isAdmin">
+        <el-menu-item
+          v-if="isAdmin"
+          index="/feedback"
+        >
           <el-icon><ChatDotRound /></el-icon>
           <span>反馈管理</span>
         </el-menu-item>
 
         <el-menu-item index="/profile">
-          <img src="/school-badge.svg" alt="个人中心" class="menu-badge-icon" />
+          <img
+            src="/school-badge.svg"
+            alt="个人中心"
+            class="menu-badge-icon"
+          >
           <span>个人中心</span>
         </el-menu-item>
 

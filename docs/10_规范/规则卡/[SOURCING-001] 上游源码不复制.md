@@ -3,7 +3,7 @@ name: 上游源码不复制
 id: SOURCING-001
 domain: SOURCING
 nature: 约束为主
-scope: "services/**, apps/**, platform/**, software/**, runtime/boot/kernel/**, tools/**, scripts/**"
+scope: "runtime/node/**, apps/**, delivery/web/**, runtime/substrate/platform/**, delivery/channel/**, runtime/boot/kernel/**, tools/**, scripts/**"
 priority: P0
 trigger: 从外部项目引入任一源码文件时
 constraint: "上游源码文件不得复制进 khyos 源码目录；唯一例外是 vendored 档且六条件全过。"

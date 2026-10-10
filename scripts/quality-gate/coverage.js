@@ -78,7 +78,7 @@ function run(env = process.env, spawn = spawnSync, argv = process.argv) {
   }
   const config = readConfig();
   const effective = invocation.threshold ?? config.lines;
-  process.stdout.write(`[coverage] action=start scope=${invocation.scope} target=services/backend/src threshold=${effective}%\n`);
+  process.stdout.write(`[coverage] action=start scope=${invocation.scope} target=runtime/node/backend/src threshold=${effective}%\n`);
   const result = spawn(invocation.command, invocation.args, {
     cwd: REPO_ROOT,
     env,
@@ -86,11 +86,11 @@ function run(env = process.env, spawn = spawnSync, argv = process.argv) {
     windowsHide: true,
   });
   if (result.error) {
-    process.stderr.write(`[coverage] action=fail target=services/backend/src error=${result.error.message}\n`);
+    process.stderr.write(`[coverage] action=fail target=runtime/node/backend/src error=${result.error.message}\n`);
     return 1;
   }
   const code = result.status ?? 1;
-  process.stdout.write(`[coverage] action=${code === 0 ? 'pass' : 'fail'} scope=${invocation.scope} target=services/backend/src code=${code}\n`);
+  process.stdout.write(`[coverage] action=${code === 0 ? 'pass' : 'fail'} scope=${invocation.scope} target=runtime/node/backend/src code=${code}\n`);
   return code;
 }
 

@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-118] HQ 能力吸收与多机协作规范
 
 > **定位**：把 khy-os-hq（指挥部）的能力**吸收进 khy-os 现有机制**，然后废弃 HQ 仓库，

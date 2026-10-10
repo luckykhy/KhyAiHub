@@ -98,7 +98,7 @@ test('sdist allowlist', async (t) => {
 
   await t.test('the five real HTML entry points survive the *.html ban', () => {
     assert.deepEqual(violations(python, [
-      ['apps/ai-frontend/index.html', 325],
+      ['delivery/web/ai-frontend/index.html', 325],
       ['delivery/channel/khyquant/frontend/index.html', 1484],
       ['delivery/channel/khyquant/frontend/ml-test.html', 14343],
       ['delivery/channel/khyquant/frontend/public/offline.html', 2448],

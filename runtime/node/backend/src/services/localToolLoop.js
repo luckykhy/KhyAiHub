@@ -790,19 +790,88 @@ async function runLocalToolLoop(userInput, opts = {}) {
     return text;
   };
 
+  // 本文件是第三套工具回路（replSession 走它），过去既不写轨迹也不写回执，
+  // 它的回合在达成率里是隐形的。终点原因直接取各出口已有的 stopReason。
+  const _jl = (() => {
+    try {
+      const j = require('./tool/toolLoopJournal');
+      const runId = j.generateRunId();
+      const requestId = String(traceContext.requestId || traceContext.traceId || runId);
+      j.appendJournal(
+        runId,
+        j.buildStartRecord({
+          runId,
+          sessionId: traceContext.sessionId || null,
+          turnId: traceContext.turnId || null,
+          requestId,
+          traceId: traceContext.traceId || requestId,
+          maxIterations,
+          source: require("./turnProvenance").resolveTurnSource(opts.turnSource),
+          userMessage: String(userInput || ''),
+        })
+      );
+      require('./receiptService').startReceipt({
+        sessionId: traceContext.sessionId || null,
+        traceId: traceContext.traceId || requestId,
+        requestId,
+        goal: String(userInput || ''),
+        source: require("./turnProvenance").resolveTurnSource(opts.turnSource),
+      });
+      let ended = false;
+      return (ret) => {
+        if (ended) return ret;
+        ended = true;
+        const exhausted = ret.stopReason === 'max_iterations';
+        try {
+          j.appendJournal(
+            runId,
+            j.buildEndRecord({
+              reason: exhausted ? 'max-iterations' : (ret.stopReason || 'conclude'),
+              ok: !exhausted,
+              iterations: ret.iterations,
+              maxIterations,
+              totalToolCalls: (ret.toolCalls || []).length,
+            })
+          );
+          const h = require('./tool/toolUseLoopHelpers');
+          h._emitDeliveryFinalEvent(
+            require('./traceAuditService'),
+            traceContext.sessionId || null,
+            traceContext.traceId || requestId,
+            requestId,
+            {
+              requestId,
+              success: !exhausted,
+              totalToolCalls: (ret.toolCalls || []).length,
+              finalText: ret.finalText,
+              finalReplyLength: String(ret.finalText || '').trim().length,
+              hasConclusion: h._looksLikeDeliveryConclusion(ret.finalText),
+              stoppedByLimit: exhausted,
+            }
+          );
+        } catch {
+          /* 记账 fail-soft：绝不影响本地循环的交付 */
+        }
+        return ret;
+      };
+    } catch {
+      return (ret) => ret;
+    }
+  })();
+
   for (let iteration = 1; iteration <= maxIterations; iteration++) {
     onStep({ type: 'model', iteration });
     let res;
     try {
       res = await generate(String(userInput || ''), { system, messages, _localToolLoop: true });
     } catch (e) {
-      return {
+      return _jl({
         finalText: _resolveExhaustedFinalText(messages, lastText, userInput),
         iterations: iteration - 1,
         toolCalls: allToolCalls,
         stopReason: `generate_error:${e.message}`,
         mode,
-      };
+      });
     }
     const text = res && res.content != null ? String(res.content) : '';
     lastText = text || lastText;
@@ -816,13 +885,13 @@ async function runLocalToolLoop(userInput, opts = {}) {
     if (calls.length === 0) {
       const out = _finalize(text);
       onStep({ type: 'final', iteration, text: out });
-      return {
+      return _jl({
         finalText: out,
         iterations: iteration,
         toolCalls: allToolCalls,
         stopReason: 'final_answer',
         mode,
-      };
+      });
     }
 
     let progressed = false;
@@ -872,24 +941,24 @@ async function runLocalToolLoop(userInput, opts = {}) {
     if (!progressed) {
       const out = _finalize(_resolveExhaustedFinalText(messages, lastText, userInput));
       onStep({ type: 'final', iteration, text: out });
-      return {
+      return _jl({
         finalText: out,
         iterations: iteration,
         toolCalls: allToolCalls,
         stopReason: 'no_progress',
         mode,
-      };
+      });
     }
   }
 
   const exhausted = _finalize(_resolveExhaustedFinalText(messages, lastText, userInput));
-  return {
+  return _jl({
     finalText: exhausted,
     iterations: maxIterations,
     toolCalls: allToolCalls,
     stopReason: 'max_iterations',
     mode,
-  };
+  });
 }
 
 module.exports = {

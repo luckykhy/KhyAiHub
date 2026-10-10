@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-094] Provider 卡片枢纽（ProviderHub）GUI 设计规范
 
 > 状态：**M0–M3 + P3 已落地（测试 36/36 + tsc 0 错 + Electron 冒烟通过 + 守卫全绿）· 待评审转定稿** · 2026-09-11（同日：宿主改独立应用 → 交付 M1–M3 → 交付 P3 托盘/failover/用量图表）

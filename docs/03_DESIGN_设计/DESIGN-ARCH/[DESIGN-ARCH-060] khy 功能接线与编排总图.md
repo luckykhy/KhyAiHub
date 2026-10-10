@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-060] khy 功能接线与编排总图
 
 > 目的:khy 已累积大量功能(全仓 **1371** 个唯一 `KHY_*` 标识、**195** 个 router 命令名

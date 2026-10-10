@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-063] 对照《Claude Code 架构》一书读懂 Khy-OS
 
 > **本文是一条「阅读主线」,不是新设计。** 它借用一本讲 Claude Code(下称 CC)架构的书的目录

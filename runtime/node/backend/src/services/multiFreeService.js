@@ -22,6 +22,34 @@ function createProxyAgent(proxyUrl) {
 }
 
 
+/**
+ * 读尽一个非 2xx 响应的体（上限 64 KB）并返回文本。非流式错误在 nativeRequest 里已经
+ * 带回了 data，这里只为流式分支补齐 —— 流式成功路径不经过它。
+ */
+function readErrorBody(stream, limit = 64 * 1024) {
+  return new Promise((resolve) => {
+    let buf = '';
+    const done = (value) => {
+      stream.removeListener('data', onData);
+      stream.removeListener('end', onEnd);
+      stream.removeListener('error', onEnd);
+      resolve(value);
+    };
+    const onData = (chunk) => {
+      buf += chunk.toString();
+      if (buf.length >= limit) {
+        stream.resume();
+        done(buf.slice(0, limit));
+      }
+    };
+    const onEnd = () => done(buf);
+    stream.on('data', onData);
+    stream.on('end', onEnd);
+    stream.on('error', onEnd);
+    stream.resume();
+  });
+}
+
 async function nativeJsonRequest(method, url, data, config = {}) {
   const body = data === undefined || data === null ? undefined : JSON.stringify(data);
   const options = {
@@ -34,9 +62,17 @@ async function nativeJsonRequest(method, url, data, config = {}) {
   if (config.responseType === 'stream') {
     const streamed = await nativeRequestStream(url, options);
     if (streamed.status < 200 || streamed.status >= 300) {
-      streamed.stream.resume();
+      // 错误响应体仍要读出来：错误分类（尤其 Zen 废弃模型识别）只看状态码无法区分
+      // 「模型已下线」与「配额耗尽」——两者状态码可能相同。体积极小且只在非 2xx 时读，
+      // 读完即 resume 丢弃，不影响流式成功路径。
+      let errBody = '';
+      try {
+        errBody = await readErrorBody(streamed.stream);
+      } catch {
+        /* 读不到体就只剩状态码，交给调用方按状态码降级判断 */
+      }
       const err = new Error(`Request failed with status code ${streamed.status}`);
-      err.response = { status: streamed.status, headers: streamed.headers };
+      err.response = { status: streamed.status, data: errBody, headers: streamed.headers };
       throw err;
     }
     return { status: streamed.status, data: streamed.stream, headers: streamed.headers };
@@ -54,6 +90,118 @@ const axios = {
   post: (url, data, config) => nativeJsonRequest('POST', url, data, config),
   get: (url, config) => nativeJsonRequest('GET', url, undefined, config),
 };
+
+/**
+ * Zen 失败时把「上游明文宣告该模型已下线」记进废弃账本，供下次列表刷新剔除该 id
+ * （见 zenRetiredModels 模块头）。绝不抛：记档失败不该盖掉用户真正要看的原始错误。
+ * 分类严格依赖响应体，故流式分支的 body 由 nativeJsonRequest 负责取回。
+ */
+function _noteZenRetirement(err, model) {
+  try {
+    const zr = require('./zenRetiredModels');
+    const hit = zr.recordFromUpstreamError(
+      err?.response?.status ?? err?.status,
+      err?.response?.data ?? err?.body,
+      model
+    );
+    if (hit) {
+      zr.markRetired(hit.id, hit);
+      // 顺手清过期项：临时废弃到期后本就该消失，账本是唯一会长大的地方。
+      zr.pruneExpired();
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+
+// ── 同上游预跳过 + 免费模型稳定度记账 ────────────────────────────────
+// 只对走 callOpenAI 的三个 key 认「上游端点」:它们共享同一条 resolved baseUrl
+// (provider.baseUrl || OPENAI_BASE_URL || api.openai.com,见 callOpenAI 开头)。
+// 其它类型(google/groq/…)各有独立 URL builder,跨类型比较不安全,一律不认。
+const OPENAI_COMPATIBLE_PROVIDER_KEYS = new Set(['opencode-zen', 'openai', 'trae']);
+
+function _sameUpstreamSkipEnabled() {
+  const v = String(process.env.KHY_SKIP_SAME_UPSTREAM_RETRY ?? '')
+    .trim()
+    .toLowerCase();
+  return !(v === '0' || v === 'false' || v === 'off' || v === 'no');
+}
+
+/**
+ * resolved 上游端点(仅 OpenAI 兼容族,与 callOpenAI 的 baseUrl 推导逐字同口径);
+ * 其它族 → null(不参与同上游去重,也不参与稳定度记账)。
+ */
+function _openAIUpstreamKey(provider) {
+  if (!provider || !OPENAI_COMPATIBLE_PROVIDER_KEYS.has(provider.key)) {
+    return null;
+  }
+  const raw = String(
+    provider.baseUrl || process.env.OPENAI_BASE_URL || 'https://api.openai.com'
+  ).trim();
+  return raw.replace(/\/v1\/?$/, '').toLowerCase() || null;
+}
+
+/** 该 provider 的 resolved 上游是否就是 Zen 免费端点（与 zenGatekeeper.isZenEndpoint 同口径）。 */
+function _isOpenAICompatibleZenUpstream(provider) {
+  const up = _openAIUpstreamKey(provider);
+  if (!up) {
+    return false;
+  }
+  try {
+    const ssot = String(require('./zenGatekeeper').ZEN_BASE_URL || '')
+      .replace(/\/+$/, '')
+      .replace(/\/v1$/, '')
+      .toLowerCase();
+    return !!ssot && up === ssot;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Zen 免费模型稳定度记账:只在这次真的会打到 Zen 免费端点时记,key 用裸模型 id
+ * (与 apiAdapter 列表打标同键)。绝不抛;门控 KHY_ZEN_MODEL_STABILITY。
+ */
+function _noteZenStability(provider, modelId, ok, meta = {}) {
+  try {
+    if (!_isOpenAICompatibleZenUpstream(provider)) {
+      return;
+    }
+    require('./zenModelStability').recordOutcome(modelId, ok, meta);
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * 选中抖动模型的提前告知(P3.1 选型时提示):真正发请求前,把近期失败率与更稳的
+ * 替代端到用户面前——走 onChunk notice,与 callOpenAI 的 tools 剥离提示同一条既有通道。
+ * 只对真实 Zen 端点、flappy 判级生效;门关 / 无样本 / 无 onChunk → 静默,绝不挡请求。
+ */
+function _noteZenFlappyNotice(provider, modelId, options) {
+  try {
+    if (!options || typeof options.onChunk !== 'function') {
+      return;
+    }
+    if (!_isOpenAICompatibleZenUpstream(provider)) {
+      return;
+    }
+    const stab = require('./zenModelStability');
+    const d = stab.classify(modelId);
+    if (!d || d.tier !== 'flappy') {
+      return;
+    }
+    const alt = stab.suggestStableAlternative(modelId);
+    const altText = alt ? `；更稳的免费模型：${alt}` : '';
+    options.onChunk({
+      type: 'notice',
+      text: `${modelId}：${d.label}${altText}，仍继续尝试`,
+    });
+  } catch {
+    /* notice 失败不该挡住真正的请求 */
+  }
+}
 
 
 // ── Keep-alive 连接管理与死连接免疫 ─────────────────────────────────
@@ -712,6 +860,8 @@ class MultiFreeService {
     }
 
     const attempts = [];
+    // 同上游预跳过的请求内账本:key=resolved 上游端点,value=首个撞它的失败记录。
+    const failedUpstreams = new Map();
 
     for (const provider of providers) {
       // Skip non-vision providers when images are present
@@ -719,6 +869,26 @@ class MultiFreeService {
         attempts.push({ provider: provider.name, success: false, error: 'No vision support' });
         continue;
       }
+
+      // 同上游预跳过:同一请求内已失败且上游端点相同的 OpenAI 兼容 provider 不再重发——
+      // 免费级联里 zen 池失败后,OPENAI_BASE_URL 指到同一端点的 openai 通道会把同一个
+      // 429「Endpoint is unavailable」原样再等一轮。门控 KHY_SKIP_SAME_UPSTREAM_RETRY。
+      const _upKey = _sameUpstreamSkipEnabled() ? _openAIUpstreamKey(provider) : null;
+      if (_upKey && failedUpstreams.has(_upKey)) {
+        const prev = failedUpstreams.get(_upKey);
+        attempts.push({
+          provider: provider.name,
+          success: false,
+          error: `与 ${prev.provider} 同上游端点，本次请求内跳过重复尝试`,
+          errorType: prev.errorType,
+          virtualSkip: true,
+        });
+        continue;
+      }
+
+      // 选中抖动模型的提前告知(P3.1 选型时提示):发请求前把近期失败率与更稳的替代
+      // 端到用户面前。只对真实 Zen 端点 + flappy 判级生效,门关/无样本 → 静默。
+      _noteZenFlappyNotice(provider, requestedModel || provider.model, options);
 
       try {
         const result = await this.callProvider(provider, prompt, {
@@ -744,6 +914,7 @@ class MultiFreeService {
           (Array.isArray(toolUseBlocks) && toolUseBlocks.length > 0)
         ) {
           attempts.push({ provider: provider.name, success: true });
+          _noteZenStability(provider, requestedModel || provider.model, true);
           return {
             success: true,
             content: (content || '').trim(),
@@ -847,6 +1018,19 @@ class MultiFreeService {
           );
         }
         attempts.push(attemptEntry);
+        // 登记这条失败的上游端点(同上游预跳过用)+ 记一次稳定度失败样本。
+        // 空响应不记:它是模型行为毛刺不是通道健康信号(与 aiGateway 的 empty 免冷却同策)。
+        if (_upKey) {
+          failedUpstreams.set(_upKey, {
+            provider: provider.name,
+            errorType: errorType || 'unknown',
+          });
+        }
+        _noteZenStability(provider, requestedModel || provider.model, false, {
+          errorType: errorType || 'unknown',
+          statusCode:
+            error.status || error.statusCode || (error.response && error.response.status) || 0,
+        });
       }
     }
 
@@ -1301,6 +1485,12 @@ class MultiFreeService {
           provider.name
         );
       } catch (err) {
+        // Zen:上游明文宣告某模型已下线/不支持时记入废弃账本 —— 下次列表刷新该 id 自动
+        // 消失(用户实测 2026-10-09:exo-free 410 ModelDeprecated 却仍在 /v1/models 里挂着,
+        // 列表只判 -free 后缀故一路送到选型器,选中才炸)。
+        if (_zen) {
+          _noteZenRetirement(err, model);
+        }
         // On 400, retry without tools — API key is valid, payload was rejected
         const retryBody = await _retryWithoutTools(err);
         if (retryBody) {
@@ -1498,6 +1688,10 @@ class MultiFreeService {
         provider.name
       );
     } catch (err) {
+      // 同流式路径:Zen 明文宣告模型已下线时记废弃账本(见流式分支同处注释)。
+      if (_zen) {
+        _noteZenRetirement(err, model);
+      }
       const retryBody = await _retryWithoutTools(err);
       if (retryBody) {
         response = await postWithDeadConnRetry(

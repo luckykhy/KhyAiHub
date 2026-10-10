@@ -1,12 +1,28 @@
 <template>
-  <div class="first-launch-loader" v-if="visible">
+  <div
+    v-if="visible"
+    class="first-launch-loader"
+  >
     <div class="loader-card">
-      <div class="brand">KHY-Quant</div>
+      <div class="brand">
+        KHY-Quant
+      </div>
       <h2>首次安装资源初始化</h2>
-      <p class="status-text">{{ statusText }}</p>
+      <p class="status-text">
+        {{ statusText }}
+      </p>
 
-      <div class="progress-track" role="progressbar" :aria-valuenow="safeProgress" aria-valuemin="0" aria-valuemax="100">
-        <div class="progress-fill" :style="{ width: `${safeProgress}%` }" />
+      <div
+        class="progress-track"
+        role="progressbar"
+        :aria-valuenow="safeProgress"
+        aria-valuemin="0"
+        aria-valuemax="100"
+      >
+        <div
+          class="progress-fill"
+          :style="{ width: `${safeProgress}%` }"
+        />
       </div>
 
       <div class="progress-meta">

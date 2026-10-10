@@ -920,7 +920,7 @@ assert(delta < 50 * 1024 * 1024, `内存增长 ${delta} 超过 50MB 底线`);
 - [ ] 输入框与页脚在滚动时**位置不动**
 - [ ] 帧高硬约束：`KHY_TUI_DIAG_H=1 khy` 打印的 `viewport + 全部 chrome` 合计 **< rows**，
       且 `KHY_MOUSE_WHEEL=0` / `KHY_INLINE_TRANSCRIPT=0` 两条回退路径逐字节回到旧行为
-- [ ] `npm run --workspace services/backend test:tui` 全绿（含 `viewportSticky` / `mouseWheel`）
+- [ ] `npm run --workspace runtime/node/backend test:tui` 全绿（含 `viewportSticky` / `mouseWheel`）
 
 ---
 

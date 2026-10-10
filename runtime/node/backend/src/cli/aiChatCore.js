@@ -967,7 +967,8 @@ async function chat(userMessage, opts = {}) {
         });
       }
       // S1 台账（fire-and-forget）:样本累计 ≥200 轮才可按 PROCESS-008 PP-2 升阶。
-      _ri.observe(_requirementIntakeState);
+      // 落盘归 requirementArtifact（设计指定的唯一落盘点）,聚合件保持纯叶子无 IO。
+      require('../services/requirementArtifact').observeIntake(_requirementIntakeState);
       // S2 起按聚合裁决做互斥采纳；S1 阶段权威在 STAGE 常量,恒不改动注入。
       if (_ri.getStage() !== 'S1' && Array.isArray(_requirementIntakeState.injectedDirectives)) {
         if (
@@ -3478,6 +3479,24 @@ async function chat(userMessage, opts = {}) {
     console.error('[ai] rate-limit auto-retry 失败:', e?.message);
   }
 
+  // 续接提示的诚实化：失败真因若是「上游端点不可用」这类瞬态，就别说一句光秃秃的
+  // 「输入继续」——用户一试又撞同一堵墙。真因由 upstreamTruthLabel 纯叶子从 attempts
+  // 提炼；门关 / 认不出 → 逐字节回退今日通用话术。
+  const _honestContinueHint = (res) => {
+    try {
+      const truth = require('../services/gateway/upstreamTruthLabel').describeFromAttempts(
+        (res && res.attempts) || [],
+        { env: process.env }
+      );
+      if (truth && truth.advice) {
+        return `输入「继续」重试；${truth.advice}。`;
+      }
+    } catch {
+      /* 叶子不可用 → 通用话术 */
+    }
+    return _CONTINUE_HINT;
+  };
+
   if (!result || !result.success) {
     const compactFailureReason = String(
       (result && (result.content || result.error || result.errorType)) || 'AI 请求失败'
@@ -3576,8 +3595,9 @@ async function chat(userMessage, opts = {}) {
           _uncommitOrphanTurn(_turnCommittedMsg);
           const _gwErrType0 = (result && result.errorType) || 'unknown';
           const _gwResumable0 = _env0.resumable === true || _isResumableError(_gwErrType0);
+          const _gwHint0 = _honestContinueHint(result);
           if (_gwResumable0 && !/继续/.test(msg)) {
-            msg = `${msg}\n\n${_CONTINUE_HINT}`;
+            msg = `${msg}\n\n${_gwHint0}`;
           }
           return {
             reply: msg,
@@ -3586,7 +3606,7 @@ async function chat(userMessage, opts = {}) {
             failureCode: _env0.code,
             failureDetails,
             resumable: _gwResumable0,
-            continueHint: _gwResumable0 ? _CONTINUE_HINT : null,
+            continueHint: _gwResumable0 ? _gwHint0 : null,
           };
         }
       }
@@ -3626,8 +3646,9 @@ async function chat(userMessage, opts = {}) {
     const _gwErrType = (result && result.errorType) || 'unknown';
     let _gwReply = errorMsg;
     const _gwResumable = _isResumableError(_gwErrType);
+    const _gwHint = _honestContinueHint(result);
     if (_gwResumable && !/继续/.test(_gwReply)) {
-      _gwReply = `${_gwReply}\n\n${_CONTINUE_HINT}`;
+      _gwReply = `${_gwReply}\n\n${_gwHint}`;
     }
     return {
       reply: _gwReply,
@@ -3635,7 +3656,7 @@ async function chat(userMessage, opts = {}) {
       errorType: _gwErrType,
       failureDetails,
       resumable: _gwResumable,
-      continueHint: _gwResumable ? _CONTINUE_HINT : null,
+      continueHint: _gwResumable ? _gwHint : null,
     };
   }
 
@@ -4087,6 +4108,39 @@ async function chat(userMessage, opts = {}) {
       return progressed;
     };
 
+    // 第二套工具循环（本文件的文本协议路径）过去既不写轨迹也不写回执，走这条路的回合
+    // 对达成率完全不可见。这里复用 runToolUseLoop 的同一组原语，口径不分叉。
+    let _tlRunId = null;
+    let _tlReqId = null;
+    try {
+      const _tlJ = require('../services/tool/toolLoopJournal');
+      _tlRunId = _tlJ.generateRunId();
+      _tlReqId = String(opts.requestId || opts._diagTraceId || _tlRunId);
+      _tlJ.appendJournal(
+        _tlRunId,
+        _tlJ.buildStartRecord({
+          runId: _tlRunId,
+          sessionId: opts.sessionId || null,
+          turnId: opts.turnId || null,
+          requestId: _tlReqId,
+          traceId: opts._diagTraceId || _tlReqId,
+          maxIterations: TOOL_LOOP_MAX,
+          source: require("../services/turnProvenance").resolveTurnSource(opts.turnSource),
+          userMessage: String(userMessage || ''),
+        })
+      );
+      require('../services/receiptService').startReceipt({
+        sessionId: opts.sessionId || null,
+        traceId: opts._diagTraceId || _tlReqId,
+        requestId: _tlReqId,
+        goal: String(userMessage || ''),
+        source: require("../services/turnProvenance").resolveTurnSource(opts.turnSource),
+      });
+    } catch {
+      /* 插桩 fail-soft：绝不因记账能力影响本轮交付 */
+      _tlRunId = null;
+    }
+
     while (loopCount < TOOL_LOOP_MAX) {
       const call = runtime.extractNaturalToolCall(reply);
       if (!call) {
@@ -4497,6 +4551,43 @@ async function chat(userMessage, opts = {}) {
         reply = _buildToolFallbackReply(collectedToolResults);
         break;
       }
+    }
+
+    // 终点与裁决：交给 runToolUseLoop 用的同一条漏斗（写回执 outcome + agent.delivery.final），
+    // 两套循环的回合才进得了同一个分母。
+    try {
+      const _tlExhausted = loopCount >= TOOL_LOOP_MAX;
+      if (_tlRunId) {
+        const _tlJ = require('../services/tool/toolLoopJournal');
+        _tlJ.appendJournal(
+          _tlRunId,
+          _tlJ.buildEndRecord({
+            reason: _tlExhausted ? 'max-iterations' : 'conclude',
+            ok: !_tlExhausted,
+            iterations: loopCount,
+            maxIterations: TOOL_LOOP_MAX,
+            totalToolCalls: collectedToolResults.length,
+          })
+        );
+      }
+      const _tlHelpers = require('../services/tool/toolUseLoopHelpers');
+      _tlHelpers._emitDeliveryFinalEvent(
+        require('../services/traceAuditService'),
+        opts.sessionId || null,
+        opts._diagTraceId || _tlReqId,
+        _tlReqId,
+        {
+          requestId: _tlReqId,
+          success: !_tlExhausted,
+          totalToolCalls: collectedToolResults.length,
+          finalText: reply,
+          finalReplyLength: String(reply || '').trim().length,
+          hasConclusion: _tlHelpers._looksLikeDeliveryConclusion(reply),
+          stoppedByLimit: _tlExhausted,
+        }
+      );
+    } catch {
+      /* 记账 fail-soft */
     }
 
     // If loop exhausted: use collected tool results as the reply foundation

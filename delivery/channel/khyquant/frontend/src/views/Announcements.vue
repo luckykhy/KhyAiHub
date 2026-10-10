@@ -5,12 +5,15 @@
       <h2>通知公告</h2>
       <p>查看系统最新通知和公告信息</p>
       <!-- 管理员发布按钮 -->
-      <div v-if="isAdmin" class="admin-actions">
+      <div
+        v-if="isAdmin"
+        class="admin-actions"
+      >
         <el-button 
           type="primary" 
           size="large" 
-          @click="goToAdminPanel"
           class="admin-publish-btn"
+          @click="goToAdminPanel"
         >
           管理员发布公告
         </el-button>
@@ -21,23 +24,56 @@
     <el-card class="filter-card">
       <div class="filter-bar">
         <div class="filters">
-          <el-select v-model="filterType" placeholder="类型筛选" @change="loadAnnouncements">
-            <el-option label="全部类型" value="" />
-            <el-option label="系统公告" value="system" />
-            <el-option label="维护公告" value="maintenance" />
-            <el-option label="功能更新" value="feature" />
-            <el-option label="警告" value="warning" />
-            <el-option label="信息" value="info" />
+          <el-select
+            v-model="filterType"
+            placeholder="类型筛选"
+            @change="loadAnnouncements"
+          >
+            <el-option
+              label="全部类型"
+              value=""
+            />
+            <el-option
+              label="系统公告"
+              value="system"
+            />
+            <el-option
+              label="维护公告"
+              value="maintenance"
+            />
+            <el-option
+              label="功能更新"
+              value="feature"
+            />
+            <el-option
+              label="警告"
+              value="warning"
+            />
+            <el-option
+              label="信息"
+              value="info"
+            />
           </el-select>
-          <el-checkbox v-model="showUnreadOnly" @change="loadAnnouncements">
+          <el-checkbox
+            v-model="showUnreadOnly"
+            @change="loadAnnouncements"
+          >
             只显示未读
           </el-checkbox>
         </div>
         <div class="actions">
-          <el-button @click="loadAnnouncements" :loading="loading" :icon="Refresh">
+          <el-button
+            :loading="loading"
+            :icon="Refresh"
+            @click="loadAnnouncements"
+          >
             刷新
           </el-button>
-          <el-badge :value="unreadCount" :hidden="unreadCount === 0" class="unread-badge">
+          <el-badge
+            :value="unreadCount"
+            :hidden="unreadCount === 0"
+            class="unread-badge"
+          >
             <el-button :icon="Bell">
               未读通知
             </el-button>
@@ -46,8 +82,8 @@
           <el-button 
             v-if="isAdmin" 
             type="warning" 
-            @click="goToAdminPanel"
             class="admin-quick-btn"
+            @click="goToAdminPanel"
           >
             管理公告
           </el-button>
@@ -72,18 +108,36 @@
         <div class="announcement-header">
           <div class="title-section">
             <div class="tags">
-              <el-tag v-if="announcement.isSticky" type="danger" size="small">置顶</el-tag>
-              <el-tag :type="getTypeColor(announcement.type)" size="small">
+              <el-tag
+                v-if="announcement.isSticky"
+                type="danger"
+                size="small"
+              >
+                置顶
+              </el-tag>
+              <el-tag
+                :type="getTypeColor(announcement.type)"
+                size="small"
+              >
                 {{ getTypeLabel(announcement.type) }}
               </el-tag>
-              <el-tag :type="getPriorityColor(announcement.priority)" size="small">
+              <el-tag
+                :type="getPriorityColor(announcement.priority)"
+                size="small"
+              >
                 {{ getPriorityLabel(announcement.priority) }}
               </el-tag>
             </div>
-            <h3 class="title">{{ announcement.title }}</h3>
+            <h3 class="title">
+              {{ announcement.title }}
+            </h3>
           </div>
           <div class="status-section">
-            <el-badge v-if="!announcement.isRead" is-dot class="unread-dot" />
+            <el-badge
+              v-if="!announcement.isRead"
+              is-dot
+              class="unread-dot"
+            />
             <span class="publish-time">{{ formatTime(announcement.publishAt) }}</span>
           </div>
         </div>
@@ -107,7 +161,10 @@
             >
               {{ announcement.isLiked ? '已赞' : '点赞' }}
             </el-button>
-            <el-button size="small" @click.stop="viewAnnouncement(announcement)">
+            <el-button
+              size="small"
+              @click.stop="viewAnnouncement(announcement)"
+            >
               查看详情
             </el-button>
           </div>
@@ -115,35 +172,52 @@
       </div>
 
       <!-- 空状态 -->
-      <div v-if="announcements.length === 0 && !loading" class="empty-state">
+      <div
+        v-if="announcements.length === 0 && !loading"
+        class="empty-state"
+      >
         <div class="empty-state-custom">
-          <img src="/empty-state.jpg" alt="暂无数据" class="empty-image" />
-          <p class="empty-text">暂无公告信息</p>
-          <p class="empty-description">查看系统最新通知和公告信息</p>
+          <img
+            src="/empty-state.jpg"
+            alt="暂无数据"
+            class="empty-image"
+          >
+          <p class="empty-text">
+            暂无公告信息
+          </p>
+          <p class="empty-description">
+            查看系统最新通知和公告信息
+          </p>
         </div>
       </div>
 
       <!-- 加载状态 -->
-      <div v-if="loading" class="loading-state">
-        <el-skeleton :rows="3" animated />
+      <div
+        v-if="loading"
+        class="loading-state"
+      >
+        <el-skeleton
+          :rows="3"
+          animated
+        />
       </div>
     </div>
 
     <!-- 分页 -->
     <el-pagination
       v-if="total > 0"
-      @current-change="handlePageChange"
       :current-page="currentPage"
       :page-size="pageSize"
       :total="total"
       layout="prev, pager, next, total"
       class="pagination"
+      @current-change="handlePageChange"
     />
 
     <!-- 公告详情对话框 -->
     <el-dialog
-      title="公告详情"
       v-model="detailDialogVisible"
+      title="公告详情"
       width="800px"
       :destroy-on-close="true"
       :close-on-click-modal="true"
@@ -151,17 +225,32 @@
       append-to-body
       @close="handleDetailClose"
     >
-      <div v-if="currentAnnouncement" class="announcement-detail">
+      <div
+        v-if="currentAnnouncement"
+        class="announcement-detail"
+      >
         <!-- 详情头部 -->
         <div class="detail-header">
           <div class="detail-title">
             <h2>{{ currentAnnouncement.title }}</h2>
             <div class="detail-tags">
-              <el-tag v-if="currentAnnouncement.isSticky" type="danger" size="small">置顶</el-tag>
-              <el-tag :type="getTypeColor(currentAnnouncement.type)" size="small">
+              <el-tag
+                v-if="currentAnnouncement.isSticky"
+                type="danger"
+                size="small"
+              >
+                置顶
+              </el-tag>
+              <el-tag
+                :type="getTypeColor(currentAnnouncement.type)"
+                size="small"
+              >
                 {{ getTypeLabel(currentAnnouncement.type) }}
               </el-tag>
-              <el-tag :type="getPriorityColor(currentAnnouncement.priority)" size="small">
+              <el-tag
+                :type="getPriorityColor(currentAnnouncement.priority)"
+                size="small"
+              >
                 {{ getPriorityLabel(currentAnnouncement.priority) }}
               </el-tag>
             </div>
@@ -175,7 +264,10 @@
               <el-icon><Clock /></el-icon>
               发布时间: {{ formatTime(currentAnnouncement.publishAt) }}
             </p>
-            <p v-if="currentAnnouncement.expireAt" class="publish-info">
+            <p
+              v-if="currentAnnouncement.expireAt"
+              class="publish-info"
+            >
               <el-icon><Calendar /></el-icon>
               过期时间: {{ formatTime(currentAnnouncement.expireAt) }}
             </p>
@@ -192,7 +284,10 @@
         <!-- 详情底部 -->
         <div class="detail-footer">
           <div class="read-info">
-            <span v-if="currentAnnouncement.isRead" class="read-status">
+            <span
+              v-if="currentAnnouncement.isRead"
+              class="read-status"
+            >
               <el-icon><Check /></el-icon>
               已于 {{ formatTime(currentAnnouncement.readAt) }} 阅读
             </span>

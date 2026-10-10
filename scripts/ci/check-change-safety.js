@@ -92,16 +92,16 @@ const YAML_ALLOWED_RES = [
   /(?:^|\/)\.github\//,                    // CI 工作流、dependabot、issue 模板
   /^\.ai\//,                                // 元数据生成器契约（CONTEXT.yaml）
   /^\.qoder\//,                             // 知识计划配置（wiki_plan.yaml）
-  /^software\/khyquant\/ml\//,              // ML 训练配置
+  /^delivery\/channel\/khyquant\/ml\//,              // ML 训练配置
   /(?:^|\/)docker-compose[^/]*\.ya?ml$/i,   // compose 生态清单
   /(?:^|\/)pnpm-(?:lock|workspace)\.ya?ml$/i, // pnpm 生态清单
   /(?:^|\/)(?:pubspec|analysis_options)\.ya?ml$/i, // Flutter/Dart 工具契约
 ];
 
 const HIGH_RISK_PATH_RULES = [
-  { re: /^services\/backend\/src\/services\/gateway\//, label: 'backend gateway core' },
-  { re: /^services\/(?:backend|ai-backend)\/src\/routes\//, label: 'route layer' },
-  { re: /^services\/backend\/src\/constants\/prompts\.js$/, label: 'system prompt core' },
+  { re: /^runtime\/node\/backend\/src\/services\/gateway\//, label: 'backend gateway core' },
+  { re: /^runtime\/node\/(?:backend|ai-backend)\/src\/routes\//, label: 'route layer' },
+  { re: /^runtime\/node\/backend\/src\/constants\/prompts\.js$/, label: 'system prompt core' },
   { re: /(?:^|\/)(?:package\.json|pyproject\.toml|setup\.py)$/, label: 'package/build config' },
   { re: /(?:^|\/)(?:khy_platform\/__init__\.py|(?:backend|npm)\/package\.json)$/, label: 'version sync file' },
 ];
@@ -129,7 +129,7 @@ const WEAK_MODEL_BANNER_FILES = [
 
 const RECOMMENDED_CHECK_RULES = [
   {
-    match: file => file === 'runtime/node/backend/src/constants/prompts.js' || /^services\/backend\/tests\/prompt.*\.test\.js$/.test(file),
+    match: file => file === 'runtime/node/backend/src/constants/prompts.js' || /^runtime\/node\/backend\/tests\/prompt.*\.test\.js$/.test(file),
     commands: [
       'node --test runtime/node/backend/tests/promptOnDemandSections.test.js',
       'node --test runtime/node/backend/tests/promptLearningRules.test.js',
@@ -137,27 +137,27 @@ const RECOMMENDED_CHECK_RULES = [
     ],
   },
   {
-    match: file => /^services\/backend\/src\/cli\//.test(file) || /^services\/backend\/tests\/cli\//.test(file),
+    match: file => /^runtime\/node\/backend\/src\/cli\//.test(file) || /^runtime\/node\/backend\/tests\/cli\//.test(file),
     commands: ['npm run test:maintainer:cli-routing'],
   },
   {
-    match: file => /^services\/backend\/src\/services\/gateway\//.test(file) || /^services\/backend\/tests\/gateway\//.test(file),
+    match: file => /^runtime\/node\/backend\/src\/services\/gateway\//.test(file) || /^runtime\/node\/backend\/tests\/gateway\//.test(file),
     commands: ['npm run test:maintainer:gateway', 'khy doctor'],
   },
   {
-    match: file => /^(services\/backend\/src\/services\/daemonManager\.js|services\/backend\/src\/services\/gateway\/proxyServer\.js|services\/backend\/src\/utils\/proxyBaseUrl\.js|services\/backend\/src\/constants\/serviceDefaults\.js|services\/backend\/tests\/daemonManager\.runtimePort\.test\.js|services\/backend\/tests\/gatewayManage\.portDrift\.integration\.test\.js|services\/backend\/tests\/services\/proxyBaseUrl\.test\.js|services\/backend\/tests\/services\/serviceDefaults\.test\.js)$/.test(file),
+    match: file => /^(runtime\/node\/backend\/src\/services\/daemonManager\.js|runtime\/node\/backend\/src\/services\/gateway\/proxyServer\.js|runtime\/node\/backend\/src\/utils\/proxyBaseUrl\.js|runtime\/node\/backend\/src\/constants\/serviceDefaults\.js|runtime\/node\/backend\/tests\/daemonManager\.runtimePort\.test\.js|runtime\/node\/backend\/tests\/gatewayManage\.portDrift\.integration\.test\.js|runtime\/node\/backend\/tests\/services\/proxyBaseUrl\.test\.js|runtime\/node\/backend\/tests\/services\/serviceDefaults\.test\.js)$/.test(file),
     commands: ['npm run test:maintainer:runtime'],
   },
   {
-    match: file => /^(services\/backend\/src\/services\/aiManagementServer\.js|services\/ai-backend\/src\/routes\/aiGatewayAdmin\.js|services\/backend\/tests\/routes\/aiGatewayAdmin\.modelSlots\.test\.js|services\/backend\/tests\/gatewayManage\.apiDisplay\.test\.js)$/.test(file),
+    match: file => /^(runtime\/node\/backend\/src\/services\/aiManagementServer\.js|runtime\/node\/ai-backend\/src\/routes\/aiGatewayAdmin\.js|runtime\/node\/backend\/tests\/routes\/aiGatewayAdmin\.modelSlots\.test\.js|runtime\/node\/backend\/tests\/gatewayManage\.apiDisplay\.test\.js)$/.test(file),
     commands: ['npm run test:maintainer:ai-management'],
   },
   {
-    match: file => /^(pyproject\.toml|setup\.py|MANIFEST\.in|platform\/khy_platform\/__init__\.py|services\/backend\/package\.json|services\/backend\/tests\/publish\.)/.test(file),
+    match: file => /^(pyproject\.toml|setup\.py|MANIFEST\.in|runtime\/substrate\/platform\/khy_platform\/__init__\.py|runtime\/node\/backend\/package\.json|runtime\/node\/backend\/tests\/publish\.)/.test(file),
     commands: ['npm run check:manifest-sync', 'npm run test:maintainer:publish', 'bash scripts/release/build-and-audit-pip-purity.sh'],
   },
   {
-    match: file => /^apps\/ai-frontend\//.test(file),
+    match: file => /^delivery\/web\/ai-frontend\//.test(file),
     commands: ['npm run build --prefix delivery/web/ai-frontend'],
   },
 ];
@@ -392,15 +392,15 @@ function buildRecommendedCommands(entries, findings = []) {
 
   const fallbackPaths = paths.filter(file => !maintainerMatchedPaths.has(file));
 
-  if (fallbackPaths.some(file => file === 'runtime/node/backend/src/constants/prompts.js' || /^services\/backend\/tests\/prompt.*\.test\.js$/.test(file))) {
+  if (fallbackPaths.some(file => file === 'runtime/node/backend/src/constants/prompts.js' || /^runtime\/node\/backend\/tests\/prompt.*\.test\.js$/.test(file))) {
     commands.add('node --test runtime/node/backend/tests/promptOnDemandSections.test.js');
     commands.add('node --test runtime/node/backend/tests/promptLearningRules.test.js');
     commands.add('npx jest runtime/node/backend/tests/gatewayDebugPrompt.test.js --runInBand');
   }
-  if (fallbackPaths.some(file => /^services\/backend\/src\/cli\//.test(file))) {
+  if (fallbackPaths.some(file => /^runtime\/node\/backend\/src\/cli\//.test(file))) {
     commands.add('npm run test:maintainer:cli-routing');
   }
-  if (fallbackPaths.some(file => /^services\/backend\/src\/services\/gateway\//.test(file) || /^services\/backend\/src\/routes\//.test(file))) {
+  if (fallbackPaths.some(file => /^runtime\/node\/backend\/src\/services\/gateway\//.test(file) || /^runtime\/node\/backend\/src\/routes\//.test(file))) {
     commands.add('npm run test:maintainer:gateway');
     commands.add('khy doctor');
   }

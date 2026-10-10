@@ -215,6 +215,15 @@ function listFreeModelChannels(env = process.env) {
 }
 
 /**
+ * 免费层无 SLA 的一句话披露（用户 2026-10-09 报「免费模型连接中经常报错」）：
+ * 上游端点会间歇不可用、失败会自动重试自愈——但这件事应当在**选之前**就告诉用户，
+ * 而不是等撞上 HTTP 429「endpoint unavailable」再去查网络原因。
+ * 不含结尾句号，由调用方统一收尾。
+ */
+const FREE_TIER_NO_SLA_NOTE =
+  '免费层无 SLA：上游端点会间歇不可用（HTTP 429「Endpoint is unavailable」），失败会自动重试并自愈，可随时切换模型通道';
+
+/**
  * 面向用户的一行式免费渠道摘要(供 configureModelProvider 成功 note / list 结果附带)。
  * 关门/空 → ''。
  * @param {Record<string,string>} [env]
@@ -226,12 +235,13 @@ function buildFreeModelChannelsMessage(env = process.env) {
     if (!channels.length) {
       return '';
     }
-    return channels
+    const list = channels
       .map((c) => {
         const url = c.console ? `(${c.console})` : '';
         return `${c.name}${url}——${c.note}`;
       })
       .join('；');
+    return `${list}；${FREE_TIER_NO_SLA_NOTE}`;
   } catch {
     return '';
   }

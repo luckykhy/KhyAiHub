@@ -53,6 +53,8 @@
 
 const fs = require('fs');
 const path = require('path');
+// 迁移别名表的唯一真源（见 normalize() 的注释）。
+const { remapPath } = require('../maintenance/path-integrity');
 const { execFileSync } = require('child_process');
 
 // ── 阶段常量：唯一权威（FEATURE-OWNERSHIP.json 的 rollout 段只是镜像）──────────
@@ -137,11 +139,21 @@ const BUILD_CONFIG_BASENAME_RE = [
 
 const LOCKFILE_BASENAME_RE = [/^package-lock\.json$/, /^npm-shrinkwrap\.json$/];
 
-/** 归一化路径：统一为正斜杠、去掉 `./` 前缀。 */
+/**
+ * 归一化路径：统一为正斜杠、去掉 `./` 前缀，再按**迁移别名表**把旧布局折到新布局。
+ *
+ * 为什么要折别名：本守卫的分档全靠前缀（`platform/**` 是运行时源码、`services/**` 是
+ * 运行时源码……），而 2026-10 目录迁移后这些前缀都变了。只做词法归一的话，一份还写着旧
+ * 路径的清单（历史 registry、别人的旧分支、迁移期的产物）会被判成「构建配置」而不是
+ * 「运行时源码」—— 分档**静默错位**，判定结论看起来正常却是错的。
+ *
+ * 别名表是唯一真源：`scripts/maintenance/path-integrity.js` 的 MIGRATION_ALIASES。
+ */
 function normalize(rel) {
-  return String(rel || '')
+  const lex = String(rel || '')
     .replace(/\\/g, '/')
     .replace(/^\.\//, '');
+  return remapPath(lex) || lex;
 }
 
 function isWorkflow(rel) {
@@ -161,12 +173,14 @@ function isBuildConfig(rel) {
   return /\.(sh|ps1|psm1|bat|cmd)$/i.test(base);
 }
 
+// 前缀按**新布局**写。旧布局（platform/、services/、software/、apps/、extensions/）由
+// normalize() 经迁移别名表折过来，这里不再重复一份，避免两处真源。
 const RUNTIME_SOURCE_RE = [
-  /^platform\/.*\.py$/,
-  /^services\/.*\.(js|mjs|cjs|ts)$/,
-  /^software\/.*\.(py|js|mjs|cjs|ts|vue)$/,
-  /^apps\/.*\.(js|mjs|cjs|ts|vue)$/,
-  /^extensions\/.*\.(js|mjs|cjs|ts|py)$/,
+  /^runtime\/substrate\/platform\/.*\.py$/,
+  /^runtime\/node\/.*\.(js|mjs|cjs|ts)$/,
+  /^delivery\/channel\/khyquant\/.*\.(py|js|mjs|cjs|ts|vue)$/,
+  /^delivery\/web\/.*\.(js|mjs|cjs|ts|vue)$/,
+  /^delivery\/extension\/.*\.(js|mjs|cjs|ts|py)$/,
 ];
 
 function isRuntimeSource(rel) {

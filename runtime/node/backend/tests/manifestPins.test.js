@@ -18,7 +18,9 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const { isBranchArchive, lintPins } = require('../../../scripts/release/pin-khyos-toolchain');
+// tests/ lives at <root>/runtime/node/backend/tests → repo root is FOUR levels up
+// (pre-migration services/backend/tests needed only three).
+const { isBranchArchive, lintPins } = require('../../../../scripts/release/pin-khyos-toolchain');
 
 // Resolve the manifest next to the provisioner module (works in dev + vendored).
 const MANIFEST_PATH = path.join(

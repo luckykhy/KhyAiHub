@@ -10,6 +10,8 @@ for %%d in ("%APP_DIR%..") do set "APP_DIR=%%~fd"
 rem launcher -> khyos-desktop -> apps -> khy-os (root): 3 levels up from APP_DIR
 set "ROOT="
 for %%d in ("%APP_DIR%..\..\..") do set "ROOT=%%~fd"
+rem the electron app itself lives one level up (package.json + out/), not in launcher
+for %%d in ("%APP_DIR%..") do set "APP_DIR=%%~fd"
 rem electron.exe: pnpm virtual store first, then a plain node_modules
 set "ELECTRON="
 for /d %%p in ("%ROOT%\node_modules\.pnpm\electron@44.2.0") do if exist "%%~p\node_modules\electron\dist\electron.exe" set "ELECTRON=%%~p\node_modules\electron\dist\electron.exe"
