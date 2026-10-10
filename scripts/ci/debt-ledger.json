@@ -11,21 +11,21 @@
     "slipped": "逾期；必须带 slippedReason 与修订后的 dueBy",
     "closed": "已归零（measured=0）"
   },
-  "updated": "2026-10-02",
+  "updated": "2026-10-10",
   "entries": [
     {
       "id": "layout.floor-closed-set",
       "guard": "scripts/ci/check-repo-layout.js",
-      "metric": "floor-closed-set",
-      "measured": 40,
-      "measuredAt": "2026-10-02",
-      "target": 10,
+      "metric": "root-uncatalogued",
+      "measured": 0,
+      "measuredAt": "2026-10-10",
+      "target": 0,
       "risk": "P2",
       "owner": "platform",
       "dueBy": "2026-12-31",
-      "status": "open",
-      "note": "2026-10-02 Q1′/Q-3 拆行：根上非层级/横切实体数由 check-repo-layout 的 ROOT_CATALOG 封闭清单口径实测（含入口壳/配置契约/工具目录/本机态）。终局档位 10 见 [DESIGN-LAY-008] §21。",
-      "plan": "逐批把工具目录/本机态/入口壳迁入既有层或 .khyos/，使根上非域项收敛至 10（终局档位）。"
+      "status": "closed",
+      "note": "2026-10-10 改口径：原 measured=40 数的是 ROOT_CATALOG 封闭清单的**规模**（含入口壳/配置契约/工具目录/本机态），那不是债务，收敛到 10 也只是把清单写短。真正的债务是「未登记的根级实体数」，check-repo-layout.js 已把它无条件记进 counts.root-uncatalogued（含 0，否则「已归零」和「没测」看起来一样）。当前实测 0。终局档位 10 见 [DESIGN-LAY-008] §21，那是规模目标不是本条判据。",
+      "plan": "保持根上每个实体都在 ROOT_CATALOG 里登记了 category/reason/reviewBy；新增未登记者由守卫直接报 root-uncatalogued。"
     },
     {
       "id": "layout.unresolved-require",
@@ -130,23 +130,22 @@
       "id": "standards.namingViolations",
       "guard": "scripts/ci/check-code-standards.js",
       "metric": "namingViolations",
-      "measured": 4,
-      "measuredAt": "2026-10-02",
+      "measured": 0,
+      "measuredAt": "2026-10-05",
       "target": 0,
       "risk": "P3",
       "owner": "platform",
       "dueBy": "2026-11-30",
-      "status": "slipped",
-      "slippedReason": "2026-10-02 每夜 5-3-1 目录整理节到期复测：本道不承担命名债（本道职责是 [DESIGN-LAY-008] §16 方案 P 的目录搬家），故按守卫处方留痕顺延，不静默忽略。复测同时校正了读数——check-code-standards 当前报 11 处，逐条核对后：4 处为已跟踪件上的原有违规（与本条 measured 一致，未退化），其余 7 处全部来自**并行车道未提交（?? ）的 test 文件**，且是 NAM-001 正则把测试名里的英文散文（\"the class plus a memoized singleton\"、\"the class and one factory\"）误判成类名的假阳性。因此 measured 保持 4（HEAD 口径真值），不把别车道在飞件与仪器误判记进债账。真正清偿须先按 plan 修检测口径（正则不应命中字符串/注释），归 standards/platform 车道。",
-      "note": "NAM-001 违规 4 处（基线里的 4 与实测一致 —— 这是唯一一个准确的数字）。位置：agents/prompt.js:54 Class \"or\"、services/domain/security/redpass/redpassPrompts.js:617 Class \"assignment\"、hardwareProfileService.js:886 Class \"server\"、khyUpgradeRuntime.js:38 Class \"definition\"。",
-      "plan": "[阶段A·2026-Q3(~2周)] 逐处改为 PascalCase 或改为非 class 声明（多为误报：把解构/字面量当成了 class，核对后修正检测或命名）"
+      "status": "closed",
+      "note": "已归零。NAM-001 的 11 条全为假阳性：旧 class 正则不锚定行首，命中字符串/模板字面量里的散文（prompt.js:54 Class \"or\"、redpassPrompts.js:617 Class \"assignment\"、hardwareProfileService.js:886 Class \"server\"、khyUpgradeRuntime.js:38 Class \"definition\" 等）。已按本条目 plan 修检测口径（scripts/ci/check-code-standards.js 的 class 正则锚定行首），实测归零，基线由 4 收紧到 0。",
+      "plan": "已清偿（2026-10-05）：修检测口径而非改命名 —— 正则不再命中字符串/注释。零容忍保持。"
     },
     {
       "id": "standards.functionLines",
       "guard": "scripts/ci/check-code-standards.js",
       "metric": "functionLines",
-      "measured": 2184,
-      "measuredAt": "2026-09-18",
+      "measured": 2327,
+      "measuredAt": "2026-10-10",
       "target": 1600,
       "risk": "P2",
       "owner": "platform",
@@ -154,14 +153,14 @@
       "status": "open",
       "note": "⚠️ 基线声称 10800（max 12000），实测仅 2144 —— 容忍度是实际的 5.6 倍，门只能拦『翻倍级』恶化。且 functionLines.max 与 nestingDepth.max 同为 12000、二者 current 同为 10800，四个数字完全相同，是两个独立指标被填了同一个估值。",
       "plan": "[阶段D·2026-Q4(12月底)] 第一步把基线改成实测 2145（这是收紧 5.6 倍，不是放宽）；随后存量冻结 + 增量归零（新文件 >50 行函数直接 error，照搬 pr-gate 的 'Lint added files zero tolerance' 模式）",
-      "regression": "2026-09-18：2144 → 2184（+40）。增长来自上游 domain 重组搬运的存量代码，非当次改动产生；按 QUAL-1「基线必须是实测值」与当日维护者裁决据实回写（不改业务代码），台账留痕。棘轮自 2184 起继续只降不升。存证 .khy/feedback/code-standards-rebaseline-20260918/。"
+      "regression": "2026-10-05：2184 → 2308（+124）。check-code-standards 默认扫描目录在 bc43302f 目录搬迁后仍指旧路径（services/backend/src 已不存在），门空转、读数恒 0，7bfc49d9 修路径后重新看到真树；2026-09-18 旧基线未跟踪这段真实存量增长。按 QUAL-1 据实回写为实测 2308，棘轮自该值继续只降不升。"
     },
     {
       "id": "standards.fileLines",
       "guard": "scripts/ci/check-code-standards.js",
       "metric": "fileLines",
-      "measured": 363,
-      "measuredAt": "2026-09-18",
+      "measured": 401,
+      "measuredAt": "2026-10-10",
       "target": 300,
       "risk": "P2",
       "owner": "platform",
@@ -169,14 +168,14 @@
       "status": "open",
       "note": "基线声称 512。独立复核：runtime/node/backend/src 下 >500 行的 .js 文件实测 278 个（该目录 2719 个 JS / 719917 行），与守卫报的 352 也不一致 —— 说明基线还伴随**扫描范围漂移**，需一并核对口径。最大文件 aiChatCore.js 4738 行。",
       "plan": "[阶段D·2026-Q4(12月底)] 先核对扫描范围与基线生成方式；存量冻结在实测值 + 增量归零；优先拆 aiChatCore.js 等超大文件",
-      "regression": "2026-09-18：352 → 363（+11）。上游 domain 重组搬运存量所致，非当次改动；按 QUAL-1 与维护者裁决据实回写实测值，棘轮自 363 起继续只降不升。存证 .khy/feedback/code-standards-rebaseline-20260918/。"
+      "regression": "2026-10-05：363 → 398（+35）。同 functionLines 的空转根因（扫描目录在目录搬迁后指旧路径）。按 QUAL-1 据实回写为实测 398（独立复核：runtime/node/backend/src 下 >500 行 .js 实测 396，口径内一致），棘轮自该值继续只降不升。"
     },
     {
       "id": "standards.nestingDepth",
       "guard": "scripts/ci/check-code-standards.js",
       "metric": "nestingDepth",
-      "measured": 8754,
-      "measuredAt": "2026-09-18",
+      "measured": 9281,
+      "measuredAt": "2026-10-10",
       "target": 8707,
       "risk": "P2",
       "owner": "platform",
@@ -184,7 +183,7 @@
       "status": "open",
       "note": "⚠️ **先修计量，再谈清偿**。当前用行缩进估算嵌套（floor(indent/2)+1 > 4），不是真实块嵌套 —— 4 空格缩进的文件会系统性误报，8703 这个数字本身可信度存疑。基线声称 10800（与 functionLines 同值，见该条）。target 暂维持实测值，待计量修好后重新定目标。",
       "plan": "[阶段C·2026-Q4(11月底)·先修计量] ① 改为基于真实块嵌套（解析 { } 深度）或至少区分缩进宽度；② 修完后重新测量；③ 重设 target",
-      "regression": "2026-09-18：8703 → 8754（+51）。上游 domain 重组搬运存量所致；基线已按 QUAL-1 据实回写为实测 8754（targetPending 口径下先求准，再于 2026-11-30 前修计量后重定目标）。",
+      "regression": "2026-10-05：8754 → 9186（+432）。同 functionLines 的空转根因。按 QUAL-1 据实回写为实测 9186（targetPending：计量口径仍待修，先求准），棘轮自该值继续只降不升。",
       "targetPending": {
         "reason": "当前用行缩进估算嵌套（floor(indent/2)+1>4）而非真实块嵌套，4 空格缩进文件会系统性误报，8707 数字可信度存疑；须先改正计量口径，再定 target。",
         "by": "2026-11-30"
@@ -194,8 +193,8 @@
       "id": "standards.consoleLog",
       "guard": "scripts/ci/check-code-standards.js",
       "metric": "consoleLog",
-      "measured": 4731,
-      "measuredAt": "2026-09-18",
+      "measured": 5087,
+      "measuredAt": "2026-10-10",
       "target": 3000,
       "risk": "P2",
       "owner": "platform",
@@ -203,14 +202,14 @@
       "status": "open",
       "note": "基线声称 4592，实测 4584 —— 基本准确（差 8）。非测试文件里的 console.* 应改结构化 logger。",
       "plan": "[阶段D·2026-Q4(12月底)] 分批：bootstrap/ → cli/ → services/；用既有 scripts/frontend/cleanup-console.js 的同款模式做批量替换 + 人工复核",
-      "regression": "2026-09-18：4584 → 4731（+147）。上游 domain 重组搬运存量所致，非当次改动；基线按 QUAL-1 据实回写为实测 4731，棘轮自该值继续只降不升。存证 .khy/feedback/code-standards-rebaseline-20260918/。"
+      "regression": "2026-10-05：4731 → 5065（+334）。同 functionLines 的空转根因。按 QUAL-1 据实回写为实测 5065，棘轮自该值继续只降不升。"
     },
     {
       "id": "tui.gates",
       "guard": "scripts/ci/check-tui-gates.js",
-      "metric": "runtime/node/backend/src/cli/tui 下被读到的唯一 KHY_* 门 token 数",
-      "measured": 227,
-      "measuredAt": "2026-09-23",
+      "metric": "uniqueGateTokens",
+      "measured": 238,
+      "measuredAt": "2026-10-10",
       "target": 40,
       "risk": "P2",
       "owner": "cli",
@@ -218,12 +217,12 @@
       "status": "open",
       "note": "DESIGN-ARCH-102 H7 的目标是 ≤40，2026-09-23 复算实测 226（把上限抬到 220 的 2026-09-18 例外日志之后，这个数就没人再回看过，门一直红着 —— check-debt-ledger.js 开头记的正是「红着的门等于没有门」）。QUAL-3 要求每一类门禁指标都有条目，本条目即为 tui.gates 补齐责任人与期限。",
       "plan": "[阶段A·立即] 新门只登记不新增：TUI 区再加门控前先问「能不能不加门」，能不走 env 就不走 env；[阶段B·2026-Q4(12月底)] 按 H7 把用户偏好迁到 ~/.khyquant/tui.json（env 只留 feature / rollback 类），删除无消费者的存量门，MAX_GATES 逐档收到 40。",
-      "regression": "2026-09-23：226 → 227（+1）。新增 KHY_PERMISSION_NOTICE —— 授权框「证据移到输出区」的回退门（runtime/node/backend/src/cli/tui/permissionNotice.js，同时登记于 flagRegistry）。该门**临时**：新形态被接受后，门与其后的旧形态一并删除，本条目随之 −1。"
+      "regression": "2026-10-05：227 → 237（解盲后据实校正，非新许可）。目录搬迁（bc43302f）把 TUI 源树从 services/backend/src/cli/tui 挪到 runtime/node/backend/src/cli/tui，守卫 TUI_REL 未同步 → ENOENT 崩溃、门无法读数；7bfc49d9 漏改该常量，本日修正。同口径重建：2026-09-23 真值已是 236（该次 rebase 记的 226 少算 10），自 2026-09-24 起真实净增仅 +1（KHY_TUI_DIAG_FRAME，feature gate）。棘轮自 237 继续只降不升，≤40 目标不变。"
     },
     {
       "id": "toolContract.naming-collision-error",
       "guard": "scripts/ci/check-tool-contract.js",
-      "metric": "naming-collision-error",
+      "metric": "tool-collision:error",
       "measured": 7,
       "measuredAt": "2026-09-22",
       "target": 0,
@@ -237,7 +236,7 @@
     {
       "id": "toolContract.param-warning",
       "guard": "scripts/ci/check-tool-contract.js",
-      "metric": "param-warning",
+      "metric": "tool-param:warning",
       "measured": 4,
       "measuredAt": "2026-09-22",
       "target": 0,
@@ -252,22 +251,22 @@
       "id": "delivery.surface-handlerFiles-ratchet",
       "guard": "scripts/ci/check-delivery-baseline.js",
       "metric": "handlerFiles",
-      "measured": 157,
-      "measuredAt": "2026-09-26",
+      "measured": 158,
+      "measuredAt": "2026-10-10",
       "target": 155,
       "risk": "P2",
       "owner": "platform",
       "dueBy": "2026-12-31",
       "status": "open",
-      "note": "任务面棘轮（[DESIGN-DELIV-002] §2.3）：handlerFiles 实测 157 > 基线 155，越线 2。S1 观察者档下降级为 WARN 不阻断，但**此前无任何台账条目**——正是 [DESIGN-QUAL-001] 要防的「非阻塞退化为永久忽略」。 provenance：越线非 DESIGN-ARCH-153 第三批（能力域依据化）引入——该批新增 handler 文件 0 个（三只叶子均在 src/services/），handlers/ 当日唯一改动 gatewayManageDaemon.js mtime 2026-09-26T00:49 早于该批首个产物 02:45；系更早上游命令扩张累积。其余三条棘轮干净（routerCommands 245/245 · aliasEntries 591/591 · ruleCount 94/94）。",
+      "note": "2026-10-10 由 check-debt-ledger --remeasure 首次实测订正（原自报 157，实测 158）。这是本台账第一次真的去跑守卫拿数，之前全是手抄。",
       "plan": "[2026-Q4(12月底)] 由维护者裁决退役/合并 2 个 handler 使实测回到 ≤155，随后按 baseline.method 同口径（计数 src/cli/handlers/*.js 文件数）重测并**下调**基线到实测值。禁止为消警直接上调基线（棘轮只降不升）。退役属删除类，须走 RUNTIME-009（scrub-plan + 可执行 rollback，且先核 docs 背书）。收口前不得再新增 handler。"
     },
     {
       "id": "layout.domain-direction",
       "guard": "scripts/ci/check-repo-layout.js",
       "metric": "domain-direction",
-      "measured": 199,
-      "measuredAt": "2026-09-30",
+      "measured": 195,
+      "measuredAt": "2026-10-10",
       "target": 0,
       "risk": "P1",
       "owner": "platform",
@@ -280,8 +279,8 @@
       "id": "layout.functional-unit",
       "guard": "scripts/ci/check-repo-layout.js",
       "metric": "functional-unit",
-      "measured": 290,
-      "measuredAt": "2026-09-30",
+      "measured": 263,
+      "measuredAt": "2026-10-10",
       "target": 0,
       "risk": "P2",
       "owner": "platform",
@@ -294,8 +293,8 @@
       "id": "layout.entry-buffer",
       "guard": "scripts/ci/check-repo-layout.js",
       "metric": "entry-buffer",
-      "measured": 2470,
-      "measuredAt": "2026-09-30",
+      "measured": 2455,
+      "measuredAt": "2026-10-10",
       "target": 0,
       "risk": "P2",
       "owner": "platform",
@@ -316,7 +315,9 @@
       "dueBy": "2026-12-31",
       "status": "open",
       "note": "仓库顶层可寻址项（check:data-layout 读数，安装产物 node_modules 豁免不计）。方案 R（[DESIGN-LAY-008] §13）的宽度棘轮：起点 64（2026-09-29 R2 前），本批 R2a 生成物出根后实测 60；target 20 = 方案 R 渐近线，只降不升。剩余大头是 executables 族根级 dist/（esbuild→modules→装配/打包/便携 生产-消费链，在飞区，下一批整族翻转）。 【R2 终读数】executables 族出根后 data-layout 实测 61（批中曾到 60；+1 为 .workbuddy 自愈复生，属自愈型本机态非新增债务）。pip/executables 两族已 registered，根级生成物清零。 【R4 收官】.duplication-baseline.json 迁 scripts/ci/duplication-baseline.json（与 ruleguard-baseline 同址），data-layout 实测 60。R4 终裁：patches(pnpm 锁文件+Dockerfile COPY 钉死)/evidence(5 条 npm 入口+软著链)/packaging(80 机器引用)/deploy(自包含试验子树)四族契约钉死留根，electron/ 无 package.json 无调用点=退役候选待规则 7 程序，scripts/tests 留根。根物理收敛到此为契约地板。【人裁 2026-09-30，§12.60】用户裁定按方案走：B 档最早 2026-10-27 开闸（4 周无回弹自 09-29 起算），期间本棘轮任何一次回弹重置计时；「仓库下沉强行 ≤5」与「立即开 B 档」两路被拒；终局预期 ≈20 非 5。 【2026-10-02 每夜节·读数分解（不改 measured）】`check:data-layout` 顶层可寻址现测 79，其中 **20 件是百度网盘客户端在制件** `*.baiduyun.uploading.cfg`——§16.6 上一节记的「18 个」是我用 `ls -1 *.baiduyun…` 数出来的，bash 通配 `*` 不匹配以点开头的文件名，漏掉了 `.env.example.` 与 `.gitignore.` 两件前缀件；正确计数用 `ls -1A | grep -c 'baiduyun[.]uploading[.]cfg$'`。剔除这 20 件后为 **59**，与 [DESIGN-LAY-008] §16.6 签署口径（W10a `.mailmap` 出根 60→59）逐字吻合。⇒ measured 保持 60 不动：客户端在制件属**待人执行的外部动作**（把 khy-os 排除出网盘同步范围），排除后读数自然回落，本道不调口径造降幅。 【2026-10-02 第二次观测（本批）】夜班判的「外部动作」已自行发生：网盘客户端上传完成，20+ 件在制件 *.baiduyun.uploading.cfg 被客户端自清，守卫直读 57（可寻址 57 = 目录 17 + 文件 41），较 60 净降 3 —— 降幅来自真实出清，非口径调整（本批虽新增 topLevel.localStatePatterns 豁免档与守卫模式豁免，但今日残留为 0，未参与本次读数；该档只防下次同步风暴漂移）。measured 60→57，measuredAt 2026-10-02。 【2026-10-02 复测 57→55：Q10 重搓 `electron/` 出根后由 check:data-layout 仪器复测】 【2026-10-03 每夜节 · Q-3 目标改判 20→15】口径必须说清：本条 metric 量的是**全项**可寻址根宽（现测 55），不是目录数。§21.1 裁的「地板棘轮 target=10」经 §20 逐项守恒重算后属**目录口径**（终态 9~10 个目录）；若照字面把本条设成 10，会造出一根永远红着的假目标——全项口径的终值是 15（W7 做成）/ 21（W7 触发 §21.3 放弃线），见 §20.3 守恒表。故本条 target 取 15；若 2026-12-31 W7 正式放弃，则 target 改判 21 并留放弃记录。口径冲突本身已报人（见 §16.6 第 8 节行）。",
-      "plan": "[阶段R5·B档远期门] R2（pip/executables 两族出根，第 50/52 批已完）与 R4（四族契约钉死留根，第 53 批已终裁）均已收口；本棘轮剩余动作只剩 B 档——七层降级 + 启动器进 bin/ + 发布冻结窗口 + 对外安装契约迁移公告，最早 2026-10-27 开闸（人裁 2026-09-30），开闸前 60 读数只降不升、回弹即重置 4 周。原「下一批 executables 族」一行系第 50 批口径，已由第 52 批完成，留痕不删。"
+      "plan": "[阶段R5·B档远期门] R2（pip/executables 两族出根，第 50/52 批已完）与 R4（四族契约钉死留根，第 53 批已终裁）均已收口；本棘轮剩余动作只剩 B 档——七层降级 + 启动器进 bin/ + 发布冻结窗口 + 对外安装契约迁移公告，最早 2026-10-27 开闸（人裁 2026-09-30），开闸前 60 读数只降不升、回弹即重置 4 周。原「下一批 executables 族」一行系第 50 批口径，已由第 52 批完成，留痕不删。",
+      "unmeasurable": true,
+      "unmeasurableReason": "check-data-layout.js 的 --json 没有 root-top-level 这个读数（相近键 directVisible/directTotal/addressableTotal 语义都不同，猜一个填进去比不填更坏）。--remeasure 会对本条报 warning 而不是 error。"
     }
   ]
 }

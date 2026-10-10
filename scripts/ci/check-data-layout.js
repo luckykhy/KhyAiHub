@@ -30,11 +30,11 @@ const INDEX_FILE = '00_INDEX_data.md';
 // --no-tiers 供需要快档的调用方跳过（全量扫描 ~30s）。
 function measureTiers() {
   if (args.includes('--no-tiers')) return null;
-  process.stdout.write('布局体检：测量热/温/冷 fan-in 分档（判据 C-6，逐个核心域源文件）…\n');
+  progress('布局体检：测量热/温/冷 fan-in 分档（判据 C-6，逐个核心域源文件）…');
   try {
     return require('../lib/fanInTiering').measureFanInTiers({ repoRoot: REPO_ROOT, topN: 8 });
   } catch (e) {
-    process.stdout.write(`布局体检：fan-in 分档未产出 —— ${e.message}\n`);
+    progress(`布局体检：fan-in 分档未产出 —— ${e.message}`);
     return { error: e.message };
   }
 }
@@ -46,6 +46,13 @@ const opts = {
   index: args.includes('--index'),
   quiet: args.includes('--quiet'),
 };
+
+/** 进度行：--json 时改走 stderr，否则 stdout 混进中文前缀会让 JSON.parse 直接失败。 */
+function progress(msg) {
+  if (opts.quiet) return;
+  const nl = String.fromCharCode(10);
+  (opts.json ? process.stderr : process.stdout).write(msg + nl);
+}
 
 function loadRegistry() {
   if (_registry) return _registry;
@@ -72,6 +79,32 @@ function directEntries(absDir) {
     return null;
   }
   return names.filter((n) => n !== '.DS_Store');
+}
+
+/** 空目录计数：全深度走一遍（不跟随符号链接，防仓外 junction 递归），上限 5 万目录。 */
+function countEmptyDirs(absDir) {
+  let count = 0;
+  let visited = 0;
+  const stack = [absDir];
+  while (stack.length) {
+    if (visited >= 50000) return count;
+    const dir = stack.pop();
+    visited++;
+    let ents;
+    try {
+      ents = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    if (ents.length === 0) {
+      count++;
+      continue;
+    }
+    for (const e of ents) {
+      if (e.isDirectory()) stack.push(path.join(dir, e.name));
+    }
+  }
+  return count;
 }
 
 /** 定位深度：从数据态根到任一 T0 权威条目的路径段数，须落在 [2,5]。 */
@@ -135,6 +168,14 @@ function scanDataRoot(rootRel, reg) {
     findings.push({ code: 'L-2/over-budget', entry: rootRel, n: visible.length, max: rootBudget });
   }
 
+  // 顶层杂件命中：直接对登记表 formats 的机器树名单/模式判型，不另立第二份名单。
+  const fmt = reg.formats || {};
+  const machineNames = new Set(fmt.machineTreeNames || []);
+  const machinePatterns = (fmt.machineTreePatterns || []).map((s) => new RegExp(s));
+  const junkHits = entries.filter(
+    (n) => machineNames.has(n) || machinePatterns.some((re) => re.test(n))
+  ).length;
+
   const depths = measureDepth(rootRel, abs);
   return {
     rootRel,
@@ -143,6 +184,8 @@ function scanDataRoot(rootRel, reg) {
     directVisible: visible.length,
     rootBudget: rootBudget || null,
     tiers,
+    emptyDirs: countEmptyDirs(abs),
+    junkHits,
     depths: depths.length
       ? { min: Math.min(...depths), max: Math.max(...depths), outOfRange: depths.filter((d) => d < 2 || d > 5).length }
       : null,
@@ -199,6 +242,9 @@ function scanFormats(rootRel, reg) {
       // 数据根**直接子层**的裸 txt 才违 D3；任务/证据目录内的 .txt 合法（D4）。
       if (!rel.includes('/') && /\.txt$/i.test(name)) add('L-4/bare-txt', rel);
       if (/\.tmp\./i.test(name)) add('L-4/tmp-residue', rel);
+      // atomicWriteJson/_writePointer 的 tmp 命名（kill -9 残留），点开头所以
+      // 无扩展名检查不覆盖，须单独判型。
+      if (/^\..+\.tmp-\d+(-[0-9a-f]+)?$/.test(name)) add('L-4/atomic-tmp-orphan', rel);
       if (/\.ya?ml$/i.test(name) && !yamlExceptions.some((re) => re.test(name))) add('L-4/runtime-yaml', rel);
       if (!inBlob && !name.startsWith('.') && !name.includes('.')
         && !noExtWhitelist.some((re) => re.test(name))) add('L-4/extensionless', rel);
@@ -292,13 +338,37 @@ function buildReport() {
   for (const key of Object.keys(dataRoots)) {
     const rel = dataRoots[key].rel;
     if (rel === '.state') continue;
-    if (!opts.quiet) process.stdout.write(`布局体检：扫描 ${rel}（第 ${scans.length + 1}/${Object.keys(dataRoots).length - 1} 个数据根）…\n`);
+    progress(`布局体检：扫描 ${rel}（第 ${scans.length + 1}/${Object.keys(dataRoots).length - 1} 个数据根）…`);
     const s = scanDataRoot(rel, reg);
     if (s.exists) scans.push(s);
   }
   const bypass = scanBypass();
   const findings = [];
   for (const s of scans) findings.push(...s.findings);
+
+  // 棘轮：measured 是上一轮人工钉下的基线（只降不升）。守卫只复算并报告——
+  // 比基线恶化（升）记 finding，改善（降）只报读数；基线调整本身是人的决定，
+  // 守卫不回写登记表（与 PROCESS-008「守卫只校验不代劳」同一纪律）。手抄快照
+  // 腐掉正是 khyEntries 211→420 无人看见的原因，这里改为每次实算。
+  const measured = reg.measured || {};
+  const ratchetKeys = [
+    ['khyEntries', (s) => s.rootRel.endsWith('/khy'), 'directTotal'],
+    ['khyosEntries', (s) => s.rootRel.endsWith('/khyos'), 'directTotal'],
+  ];
+  const ratchet = [];
+  for (const [key, match, field] of ratchetKeys) {
+    const scan = scans.find(match);
+    if (!scan) continue;
+    const fresh = scan[field];
+    if (typeof measured[key] !== 'number') continue;
+    if (fresh > measured[key]) {
+      ratchet.push({ key, baseline: measured[key], measured: fresh, direction: 'worse' });
+      findings.push({ code: 'L-5/ratchet-regress', entry: `${key} ${measured[key]}→${fresh}`, n: fresh - measured[key] });
+    } else {
+      ratchet.push({ key, baseline: measured[key], measured: fresh, direction: 'better' });
+    }
+  }
+
   return {
     guardStage: GUARD_STAGE,
     blocking: GUARD_STAGE === 'S3' || GUARD_STAGE === 'S4',
@@ -306,6 +376,7 @@ function buildReport() {
     dataRoots: scans,
     bypass: { files: bypass.hits.length, scanned: bypass.visited },
     tiers: measureTiers(),
+    ratchet,
     findingCount: findings.length,
     findings,
   };
@@ -334,7 +405,7 @@ function main() {
   try {
     rep = buildReport();
   } catch (e) {
-    process.stdout.write(`布局体检失败：无法读取登记表 ${REGISTRY_REL} —— ${e.message}\n`);
+    progress(`布局体检失败：无法读取登记表 ${REGISTRY_REL} —— ${e.message}`);
     process.exitCode = 0;
     return;
   }
@@ -363,10 +434,16 @@ function main() {
         .filter((f) => f.code.startsWith('L-4'))
         .reduce((acc, f) => acc + (typeof f.n === 'number' ? f.n : 1), 0);
       process.stdout.write(
-        `${s.rootRel}/：${s.directVisible} 个可见条目（预算 ${s.rootBudget ?? '∞'}），已归位档位 ${s.tiers.length}，未归位 ${unreg}，L-4 格式卫生 ${l4} 项` +
+        `${s.rootRel}/：${s.directVisible} 个可见条目（预算 ${s.rootBudget ?? '∞'}），已归位档位 ${s.tiers.length}，未归位 ${unreg}，L-4 格式卫生 ${l4} 项，空目录 ${s.emptyDirs}，顶层杂件命中 ${s.junkHits}` +
           (s.depths ? `，深度区间 ${s.depths.min}–${s.depths.max}` : '') +
           '\n'
       );
+    }
+    if (rep.ratchet && rep.ratchet.length) {
+      for (const r of rep.ratchet) {
+        const dir = r.direction === 'worse' ? '↑ 恶化（留痕）' : '↓ 改善（基线下调）';
+        process.stdout.write(`棘轮 ${r.key}：基线 ${r.baseline} → 实测 ${r.measured} ${dir}\n`);
+      }
     }
     const t = rep.tiers;
     if (t && !t.error) {
@@ -394,8 +471,13 @@ function main() {
     process.exitCode = 1;
     return;
   }
-  process.stdout.write(`[LAYOUT-007 ${GUARD_STAGE}] 观察者档：只记录，不阻断。\n`);
-  process.stdout.write(`[命名声明] ${REGISTRY_TIER_NOTE}\n`);
+  // 这两行必须让位给 --json：它们原本无条件写在 JSON 后面，而 REGISTRY_TIER_NOTE
+  // 是一整段中文，JSON.parse 会在 JSON 结束处直接抛 "Unexpected non-whitespace
+  // character after JSON"——check-debt-ledger 的 --remeasure 就是这样失败的。
+  if (!opts.json) {
+    process.stdout.write(`[LAYOUT-007 ${GUARD_STAGE}] 观察者档：只记录，不阻断。\n`);
+    process.stdout.write(`[命名声明] ${REGISTRY_TIER_NOTE}\n`);
+  }
   process.exitCode = 0;
 }
 

@@ -20,7 +20,7 @@ const fs = require('fs');
 const path = require('path');
 
 // The repo-root-relative TUI source tree we audit (test files excluded).
-const TUI_REL = path.join('services', 'backend', 'src', 'cli', 'tui');
+const TUI_REL = path.join('runtime', 'node', 'backend', 'src', 'cli', 'tui');
 // DESIGN-ARCH-102 H7 target is ≤ 40 unique KHY_* tokens. The 2026-09-15 refactor
 // measured 215; the convergence plan ships in stages (delete no-consumer legacy
 // gates, migrate user prefs to ~/.khyquant/tui.json). This constant is the
@@ -38,7 +38,16 @@ const TUI_REL = path.join('services', 'backend', 'src', 'cli', 'tui');
 // legacy layout inside the box are deleted together (see the tui.gates debt-ledger
 // entry, which owns the ≤40 convergence).
 // Down-only resumes from here; ≤40 target unchanged.
-const MAX_GATES = 227;
+// Exception log 2026-10-05: 227 → 237. 这是一次**解盲后的据实校正**，不是新许可。
+// 背景：目录搬迁（bc43302f services/ → runtime/node/）把 TUI 源树挪走，而本守卫的
+// TUI_REL 仍指旧路径 services/backend/src/cli/tui —— 门自此 ENOENT 崩溃（不是恒绿，
+// 是根本没读数）。7bfc49d9 修了其余路径却漏改本常量，2026-10-05 修正后才重新看到真树。
+// 用同一口径（同 isTestFile / 同 walk）重建历史读数：2026-09-23（56a39993）时真值已是
+// **236**，即 2026-09-23 那次 rebase 记的 "measured 226" 本身就少算了 10（口径误差，
+// 非当日新增）。自 2026-09-24 至今的真实净增只有 +1：KHY_TUI_DIAG_FRAME（TUI 诊断帧
+// 开关，feature gate，非用户偏好）。故 237 是「把门抬到真值」，棘轮自此继续只降不升。
+// Down-only resumes from here; ≤40 target unchanged.
+const MAX_GATES = 237;
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const TUI_DIR = path.join(REPO_ROOT, TUI_REL);
@@ -97,6 +106,16 @@ function main() {
   }
 
   const { tokens, count, fileCount } = collectTokens();
+  // 机读输出：给 check-debt-ledger.js 回调实测用（同 check-delivery-baseline.js 的 --json）。
+  if (argv.includes('--json')) {
+    process.stdout.write(JSON.stringify({
+      uniqueGateTokens: count,
+      fileCount,
+      limit: MAX_GATES,
+      overLimit: count > MAX_GATES,
+    }, null, 2) + '\n');
+    process.exit(count > MAX_GATES ? 1 : 0);
+  }
   if (list) {
     tokens.forEach((t) => console.log('  ' + t));
     console.log(`\n${count} unique KHY_* tokens across ${fileCount} tui source files`);

@@ -41,6 +41,8 @@ const repoRoot = process.env.KHY_REPO_LAYOUT_ROOT
 const args = process.argv.slice(2);
 const strictWarnings = args.includes('--strict-warnings');
 const updateBaseline = args.includes('--update-baseline');
+// 机读输出：给 check-debt-ledger.js 回调实测用（它此前只能信台账里手抄的 measured）。
+const jsonMode = args.includes('--json');
 const promotedIds = new Set(
   args
     .filter(arg => arg.startsWith('--promote='))
@@ -318,6 +320,13 @@ const ROOT_CATALOG = {
   '.zcode': { category: 'tool-retained', reason: 'ZCode 对照留档（裁决保留）', reviewBy: '2026-12-31' },
   '.workbuddy': { category: 'tool-retained', reason: '第三方工具目录', reviewBy: '2026-12-31' },
   '.workbuddy-ai': { category: 'tool-retained', reason: '第三方工具目录', reviewBy: '2026-12-31' },
+  // CodeArts Doer 工具本机状态（skills/agents/mcp/temp 等）。.gitignore 已忽略，
+  // 同 .workbuddy/ 先例——登记为 tool-retained 以免 Q-1 在本机误报。
+  '.codeartsdoer': { category: 'tool-retained', reason: 'CodeArts Doer 工具本机状态（.gitignore 忽略，同 .workbuddy 先例）', reviewBy: '2026-12-31' },
+  // 智能体探测残留（__scope_probe/probe.json），自愈型本机态。注意：受跟踪的 .ai
+  // 内容已迁 works/record/ai（B档 W9′，2026-10-02），这里登记的是 .gitignore 忽略
+  // 的**本机残留目录**，与 .khy/.khyos 同类。
+  '.ai': { category: 'localdata', reason: '本机智能体探测残留（.gitignore 忽略，自愈型；受跟踪内容已迁 works/record/ai）', reviewBy: '2026-12-31' },
   '.portable': { category: 'localdata', reason: '便携版标记（本机态）', reviewBy: '2026-12-31' },
   '.khy': { category: 'localdata', reason: '运行时数据目录（.gitignore）', reviewBy: '2026-12-31' },
   '.khyos': { category: 'localdata', reason: 'OS 本机态/巡检暂存（.gitignore）', reviewBy: '2026-12-31' },
@@ -344,6 +353,13 @@ const ROOT_CATALOG = {
   '.gitignore': { category: 'contract', reason: '忽略清单（由 BUILD-OUTPUTS 派生）', reviewBy: '2026-12-31' },
   '.npmrc': { category: 'contract', reason: 'npm 源配置（原生源，见 PROCESS-013）', reviewBy: '2026-12-31' },
   'CLAUDE.md': { category: 'contract', reason: 'AI 指令文件（裁决保留，与 AGENTS.md 同源）', reviewBy: '2026-12-31' },
+  // Claude Code 本机项目位（仅 settings.local.json，0 跟踪件，未 gitignore）。
+  // 与 .cursor/.opencode/.zcode 同性质——AI 工具的根读取位，搬走即断工具链。
+  // 2026-10-10 [RESEARCH-026] D0″ 补登：此前 Q-1 一直报它 root-uncatalogued。
+  '.claude': { category: 'tool-retained', reason: 'Claude Code 本机项目位（settings.local.json；0 跟踪件，工具按根路径读取，同 .cursor 先例）', reviewBy: '2026-12-31' },
+  // Windows 资源管理器快捷方式（827 B，指向本仓自身 D:\Portable\khy-os），
+  // 未跟踪也未忽略——纯本机产物，无仓库语义。D9 批拟删除或改 gitignore。
+  'khy-os.lnk': { category: 'localdata', reason: 'Windows 快捷方式（未跟踪，指向本仓自身；纯本机产物，无仓库语义）', reviewBy: '2026-12-31' },
 };
 const ROOT_ALWAYS_OK = new Set(['.git', 'node_modules']);
 
@@ -373,10 +389,13 @@ function findUncataloguedRootEntries(entries) {
   }
 }
 
-function checkRootCatalogued(findings) {
+function checkRootCatalogued(findings, counts) {
   const offenders = findUncataloguedRootEntries(
     fs.readdirSync(repoRoot, { withFileTypes: true }).map(e => ({ name: e.name }))
   );
+  // 无条件计数（含 0）：这条是 debt-ledger.json 的 layout.floor-closed-set 读数源，
+  // 只在 >0 时记数会让「已归零」和「没测」看起来一样。
+  counts['root-uncatalogued'] = offenders.length;
   if (offenders.length === 0) return;
   findings.push({
     id: 'root-uncatalogued',
@@ -1821,7 +1840,7 @@ function main() {
   checkDocsIndexFirst(findings);
   checkDocsIndexComplete(findings, counts);
   checkLayerRegistry(findings);
-  checkRootCatalogued(findings);
+  checkRootCatalogued(findings, counts);
   checkDanglingTasks(findings, counts);
   checkCrossLayerRequires(findings, counts);
   checkExtensionContract(findings, counts);
@@ -1868,12 +1887,32 @@ function main() {
     return 'warning';
   };
 
-  console.log('check-repo-layout: 层级/结构守卫（真源 [DESIGN-LAY-005] + [MGMT-STD-001]）');
-  console.log(`counts: ${JSON.stringify(counts)}`);
-  if (baseline && baseline.counts) {
-    console.log(`baseline: ${JSON.stringify(baseline.counts)} (updated ${baseline.updated || 'n/a'})`);
+  if (jsonMode) {
+    // 与 check-delivery-baseline.js 的 --json 同形：counts 即各 metric 的实测值，
+    // findings 带 id，消费方按 id 取数即可。
+    process.stdout.write(JSON.stringify({
+      counts,
+      baseline: (baseline && baseline.counts) || null,
+      baselineUpdated: (baseline && baseline.updated) || null,
+      regressions,
+      findings: findings.map((f) => ({ id: f.id, severity: f.severity, message: f.message })),
+    }, null, 2));
+    process.stdout.write('\n');
   } else {
+    console.log('check-repo-layout: 层级/结构守卫（真源 [DESIGN-LAY-005] + [MGMT-STD-001]）');
+    console.log(`counts: ${JSON.stringify(counts)}`);
+  }
+  if (baseline && baseline.counts && !jsonMode) {
+    console.log(`baseline: ${JSON.stringify(baseline.counts)} (updated ${baseline.updated || 'n/a'})`);
+  } else if (!jsonMode) {
     console.log('baseline: 缺失 —— 跑 node scripts/ci/check-repo-layout.js --update-baseline 建立');
+  }
+
+  if (jsonMode) {
+    if (regressions.length > 0 || findings.some(finding => effectiveSeverity(finding) === 'error')) {
+      process.exit(1);
+    }
+    return;
   }
 
   if (findings.length === 0) {

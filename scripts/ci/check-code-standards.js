@@ -119,8 +119,13 @@ function checkJsNaming(file, content) {
       }
     }
 
-    // Check PascalCase class names
-    const classMatch = line.match(/(?:export\s+)?(?:abstract\s+)?class\s+([a-z][a-zA-Z0-9]*)/);
+    // Check PascalCase class names.
+    // 行首锚定：只有真正的类声明（可带 export / export default / abstract 前缀）才算。
+    // 旧式 `/(?:export\s+)?(?:abstract\s+)?class\s+([a-z]\w*)/` 不锚定行首，会把**字符串/
+    // 模板字面量里的散文**误判成类名——实测 11 条全为假阳性（"a specific class or function
+    // definition" → Class "or"；"8GB class server" → Class "server"；
+    // "my security class assignment" → Class "assignment"）。锚定后归零。
+    const classMatch = line.match(/^\s*(?:export\s+(?:default\s+)?)?(?:abstract\s+)?class\s+([a-z][a-zA-Z0-9]*)\b/);
     if (classMatch) {
       addFinding('MEDIUM', 'NAM-001', file, idx + 1,
         `Class "${classMatch[1]}" should be PascalCase (NAM-001).`);
@@ -259,6 +264,24 @@ function main() {
   const byRule = {};
   for (const f of findings) {
     (byRule[f.rule] ||= []).push(f);
+  }
+
+  // 机读输出必须排在下面任何打印**之前**：findings 有几千条，先打一遍再把 JSON
+  // 吐出来，消费方就解析不了了。给 check-debt-ledger.js 回调实测用。
+  if (process.argv.slice(2).includes('--json')) {
+    const RULE_TO_METRIC = {
+      'COMP-001-file': 'fileLines',
+      'COMP-001-func': 'functionLines',
+      'COMP-001-nest': 'nestingDepth',
+      'COM-001': 'consoleLog',
+      'NAM-001': 'namingViolations',
+    };
+    const metrics = {};
+    for (const [rule, metric] of Object.entries(RULE_TO_METRIC)) {
+      metrics[metric] = (byRule[rule] || []).length;
+    }
+    process.stdout.write(JSON.stringify({ checked, byRule, metrics }, null, 2) + '\n');
+    process.exit(0);
   }
 
   for (const [rule, items] of Object.entries(byRule)) {
