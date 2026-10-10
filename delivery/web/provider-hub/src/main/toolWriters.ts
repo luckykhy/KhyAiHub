@@ -35,11 +35,20 @@ export function resolveBackendServicesRoot(): string | null {
   if (explicit) candidates.push(path.resolve(explicit))
   const portable = process.env.KHY_PORTABLE_ROOT || process.env.KHYQUANT_PORTABLE_ROOT
   if (portable) {
+    // source-kind portable copies the repo under <portable>/source/, so the backend
+    // services root is <portable>/source/runtime/node/backend/src/services.
+    candidates.push(path.join(portable, 'source', 'runtime', 'node', 'backend', 'src', 'services'))
+    candidates.push(path.join(portable, 'khy-os', 'runtime', 'node', 'backend', 'src', 'services'))
+    candidates.push(path.join(portable, 'runtime', 'node', 'backend', 'src', 'services'))
+    // legacy (pre-migration) portable layouts
     candidates.push(path.join(portable, 'khy-os', 'services', 'backend', 'src', 'services'))
     candidates.push(path.join(portable, 'services', 'backend', 'src', 'services'))
   }
   const walked = _walkRepoRoot()
-  if (walked) candidates.push(path.join(walked, 'services', 'backend', 'src', 'services'))
+  if (walked) {
+    candidates.push(path.join(walked, 'runtime', 'node', 'backend', 'src', 'services'))
+    candidates.push(path.join(walked, 'services', 'backend', 'src', 'services'))
+  }
   for (const c of candidates) {
     try {
       if (existsSync(path.join(c, 'gateway', 'providerPresets.js'))) {
@@ -66,10 +75,30 @@ function _walkRepoRoot(): string | null {
     if (parent === dir) break
     dir = parent
   }
-  // 非便携安装：上溯找 services/backend/src/services 本身
+  // 非便携安装：上溯找 backend services 根本身
+  // （新布局 runtime/node/backend/src/services；旧布局 services/backend/src/services）
   dir = path.dirname(fileURLToPath(import.meta.url))
   for (let i = 0; i < 8; i += 1) {
-    if (existsSync(path.join(dir, 'services', 'backend', 'src', 'services', 'gateway', 'providerPresets.js'))) {
+    const presetNew = path.join(
+      dir,
+      'runtime',
+      'node',
+      'backend',
+      'src',
+      'services',
+      'gateway',
+      'providerPresets.js'
+    )
+    const presetOld = path.join(
+      dir,
+      'services',
+      'backend',
+      'src',
+      'services',
+      'gateway',
+      'providerPresets.js'
+    )
+    if (existsSync(presetNew) || existsSync(presetOld)) {
       return dir
     }
     const parent = path.dirname(dir)

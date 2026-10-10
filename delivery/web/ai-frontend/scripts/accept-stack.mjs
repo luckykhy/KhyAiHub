@@ -16,7 +16,7 @@
  *
  * Endpoints are discovered (runtime files + env), never hardcoded —
  * KHY_FRONTEND_URL overrides the frontend origin when set.
- * Run: `npm run accept:stack` (workdir apps/ai-frontend).
+ * Run: `npm run accept:stack` (workdir delivery/web/ai-frontend).
  *
  * @pattern Builder
  */
@@ -207,7 +207,12 @@ async function main() {
   // still closing aborts with 0xC0000409 on Windows. The unref'd watchdog is
   // only for a stranded handle — the normal path drains and exits on its own.
   process.exitCode = failed === 0 ? 0 : 1;
-  const watchdog = setTimeout(() => process.exit(process.exitCode || 1), 8000);
+  // Exit watchdog, not a work-killer: by the time this is armed every check has
+  // finished, so the loop is idle. The normal path drains and exits on its own;
+  // the unref'd timer only fires when a stranded libuv handle keeps the
+  // otherwise idle process alive, which would otherwise hang forever.
+  const IDLE_EXIT_WATCHDOG_MS = 8000;
+  const watchdog = setTimeout(() => process.exit(process.exitCode || 1), IDLE_EXIT_WATCHDOG_MS);
   watchdog.unref();
 }
 

@@ -7,7 +7,7 @@
  * 因此在源码层断言接线:每个消费方都 import 了 SSOT,且不再本地定义信封函数。
  * 这正是未来某次编辑若把某处退回内联副本时会静默破掉的不变量。
  *
- * 零依赖——用内置 Node 测试运行器跑(apps/ai-frontend 是 type:module):
+ * 零依赖——用内置 Node 测试运行器跑(delivery/web/ai-frontend 是 type:module):
  *   npx vitest run src/api/unwrap.wiring.test.js
  */
 import { test } from 'vitest';
@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const appRoot = join(here, '..'); // apps/ai-frontend/src
+const appRoot = join(here, '..'); // delivery/web/ai-frontend/src
 
 function read(rel) {
   return readFileSync(join(appRoot, rel), 'utf8');
@@ -48,8 +48,10 @@ test('SSOT api/unwrap.js re-exports the browser shared implementation', () => {
     'unwrap.js must re-export the shared implementation'
   );
 
+  // SSOT 真源在共享包源码里：src → ai-frontend → web → delivery → 仓库根，
+  // 再进 runtime/substrate/platform/packages/ui-shared。
   const shared = readFileSync(
-    join(appRoot, '..', '..', '..', 'platform', 'packages', 'ui-shared', 'src', 'http', 'response.js'),
+    join(appRoot, '..', '..', '..', '..', 'runtime', 'substrate', 'platform', 'packages', 'ui-shared', 'src', 'http', 'response.js'),
     'utf8'
   );
   assert.match(shared, /hasOwnProperty\.call\(payload, 'success'\)/, 'must gate on success key');

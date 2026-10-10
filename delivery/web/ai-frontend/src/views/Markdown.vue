@@ -212,6 +212,7 @@ function safeUrl(url) {
   const u = String(url || '');
   // 先去掉控制/零宽字符（\u0000-\u001f、\u200b-\u200f、\u2028、\u2029）——
   // 常见 scheme 混淆手法（`java\nscript:`、`j\u200bavascript:`）就靠这些绕过正则前缀。
+  // eslint-disable-next-line no-control-regex -- the sanitizer's whole job is stripping these control chars
   const clean = u.replace(/[\u0000-\u001f\u200b-\u200f\u2028\u2029]/g, '');
   const lower = clean.toLowerCase();
   const isSafe =

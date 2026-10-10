@@ -33,14 +33,28 @@ describe('W8: Keyboard Accessibility — 交互元素键盘可达', () => {
       const lines = src.split('\n');
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        if (line.includes('@click') && !line.includes('<el-') && !line.includes('<button')) {
-          const hasKeydown = lines.slice(Math.max(0, i - 3), i + 4).some((l) =>
-            l.includes('@keydown') || l.includes('@keyup') || l.includes('@keypress')
-          );
-          const hasRole = line.includes('role=') || line.includes('tabindex');
-          if (!hasKeydown && !hasRole) {
-            violations.push({ file: relative(srcRoot, file), line: i + 1, snippet: line.trim().slice(0, 80) });
+        if (!line.includes('@click')) continue;
+        // 裸 `@click.stop`（无处理表达式）只是阻止冒泡误关面板，不是点击行为，
+        // 给容器补 role="button" 反而是错误的语义——不计入违规。
+        if (!/@click(?:\.\w+)*\s*=/.test(line)) continue;
+        // 多行元素的开标签写在 @click 行之前，逐行定性会把
+        // `<el-button\n  @click=...>` 这类原生/组件按钮误报成自定义可点击元素——
+        // 先回溯到所属开标签行，再对整个开标签定性。
+        let tagIdx = i;
+        if (!/<[a-zA-Z]/.test(line)) {
+          for (let j = i - 1; j >= Math.max(0, i - 10); j--) {
+            if (/<[a-zA-Z]/.test(lines[j])) {
+              tagIdx = j;
+              break;
+            }
           }
+        }
+        if (lines[tagIdx].includes('<el-') || lines[tagIdx].includes('<button')) continue;
+        const opening = lines.slice(tagIdx, Math.min(lines.length, i + 4)).join(' ');
+        const hasKeydown = opening.includes('@keydown') || opening.includes('@keyup') || opening.includes('@keypress');
+        const hasRole = opening.includes('role=') || opening.includes('tabindex');
+        if (!hasKeydown && !hasRole) {
+          violations.push({ file: relative(srcRoot, file), line: i + 1, snippet: line.trim().slice(0, 80) });
         }
       }
     }

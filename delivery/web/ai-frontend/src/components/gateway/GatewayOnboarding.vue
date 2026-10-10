@@ -5,7 +5,15 @@
     细条(用户可手动展开)。展开/收起偏好记忆在 localStorage[storageKey]。
   -->
   <el-card class="gw-onboarding" :class="{ 'is-empty': !configured }" shadow="never">
-    <div class="gwo-head" @click="toggle">
+    <div
+      class="gwo-head"
+      role="button"
+      tabindex="0"
+      :aria-expanded="open"
+      @click="toggle"
+      @keydown.enter.prevent="toggle"
+      @keydown.space.prevent="toggle"
+    >
       <div class="gwo-head-main">
         <span class="gwo-rocket" aria-hidden="true">
           <KhyIcon kind="compass" :size="'sm'" />

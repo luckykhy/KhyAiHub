@@ -102,7 +102,11 @@
             :type="form.models.includes(d.id) ? 'success' : 'info'"
             effect="plain"
             class="pcd-disc-tag"
+            role="button"
+            tabindex="0"
             @click="importOneDiscovered(d.id)"
+            @keydown.enter.prevent="importOneDiscovered(d.id)"
+            @keydown.space.prevent="importOneDiscovered(d.id)"
           >
             {{ d.id }}
             <span v-if="capLabel(d.capability)" class="pcd-disc-cap"
