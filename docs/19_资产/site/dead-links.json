@@ -1,6 +1,21 @@
 {
-  "total": 35,
+  "total": 38,
   "items": [
+    {
+      "from": ".github/SECURITY.html",
+      "type": "a",
+      "href": "CHANGELOG.html"
+    },
+    {
+      "from": ".github/SECURITY.html",
+      "type": "a",
+      "href": "CHANGELOG.html"
+    },
+    {
+      "from": "docs/html/00_INDEX_仓库根.html",
+      "type": "a",
+      "href": "../../11_%E6%8A%A5%E5%91%8A/RESEARCH/[RESEARCH-026]%20531%E7%9B%AE%E5%BD%95%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E7%BC%BA%E5%8F%A3%E9%87%8D%E7%AE%97-2026-10-10.html"
+    },
     {
       "from": "docs/html/01_INIT_立项/INIT-PRD/[INIT-PRD-001] Khy-OS-定位与已实现能力-2026-06-12.html",
       "type": "a",

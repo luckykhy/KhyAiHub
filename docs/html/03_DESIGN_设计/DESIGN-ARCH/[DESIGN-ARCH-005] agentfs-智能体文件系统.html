@@ -26,7 +26,7 @@
       <header class="hero reveal"><h1>AgentFS — 智能体文件系统</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#agentfs-智能体文件系统">AgentFS — 智能体文件系统</a></li><li class="lvl-2"><a href="#是什么">是什么</a></li><li class="lvl-2"><a href="#目录布局">目录布局</a></li><li class="lvl-2"><a href="#分层加载-l0-l1-l2-核心">分层加载 L0 / L1 / L2（核心）</a></li><li class="lvl-2"><a href="#git-版本化">git 版本化</a></li><li class="lvl-2"><a href="#cli">CLI</a></li><li class="lvl-2"><a href="#五类核心资产模型-借鉴分析-2">五类核心资产模型（借鉴分析 #2）</a></li><li class="lvl-2"><a href="#接入系统提示词-phase-2">接入系统提示词（Phase 2）</a></li><li class="lvl-2"><a href="#代码位置">代码位置</a></li><li class="lvl-2"><a href="#非目标-留待后续">非目标（留待后续）</a></li></ul></nav>
       <article class="doc-body">
-<p>&lt;!-- 文档分类: DESIGN-ARCH-005 | 阶段: 设计 | 原路径: docs/架构/agentfs-智能体文件系统.md --&gt;</p>
+<p>&lt;!-- IMPL-STATUS: done --&gt;<br>&lt;!-- 文档分类: DESIGN-ARCH-005 | 阶段: 设计 | 原路径: docs/架构/agentfs-智能体文件系统.md --&gt;</p>
 <h1 id="agentfs-智能体文件系统">AgentFS — 智能体文件系统<a class="anchor" href="#agentfs-智能体文件系统" aria-label="锚点">#</a></h1>
 <blockquote><p>借鉴自 DesireCore AgentFS（见 [KHY 对比 DesireCore 借鉴分析](../../08_MGMT_项目管理/MGMT-RPT/[MGMT-RPT-002] khy-对比-desirecore-借鉴分析.md) 第 1 点）<br>状态：Phase 1（存储层 + git 版本化 + 分层加载 + <code>khy companion</code> CLI）+ Phase 2（接入系统提示词）+ 五类资产模型（借鉴 #2：<code>assets</code>/<code>receipts</code> 视图 + receipts 关联 companion）均已落地。</p></blockquote>
 <h2 id="是什么">是什么<a class="anchor" href="#是什么" aria-label="锚点">#</a></h2>
