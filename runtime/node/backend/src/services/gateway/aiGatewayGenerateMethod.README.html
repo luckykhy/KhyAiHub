@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: aiGatewayGenerateMethod.README.md -->
+<title>aiGatewayGenerateMethod · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>gateway<span class="sep">›</span>aiGatewayGenerateMethod</div>
+      <header class="hero reveal"><h1>aiGatewayGenerateMethod</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#aigatewaygeneratemethod">aiGatewayGenerateMethod</a></li><li class="lvl-2"><a href="#实测规模与消费者-2026-09-28">实测规模与消费者（2026-09-28）</a></li><li class="lvl-2"><a href="#内部函数的可测性边界">内部函数的可测性边界</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="aigatewaygeneratemethod">aiGatewayGenerateMethod<a class="anchor" href="#aigatewaygeneratemethod" aria-label="锚点">#</a></h1>
+<p>网关统一生成入口的实现体。<code>aiGateway.js</code> 把「一次生成」的全部策略收在这里：通道选择与降级、<br>空闲看门狗与 idle-progress 判定（<code>gatewayIdleProgressPolicy</code>）、图片/视觉通道路径、<br>重试预算（与 <code>constants/retryBudget.js</code> 同批约束）、以及 MCP 工具调用取用的绑定。</p>
+<h2 id="实测规模与消费者-2026-09-28">实测规模与消费者（2026-09-28）<a class="anchor" href="#实测规模与消费者-2026-09-28" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>项</th><th>读数</th><th>取数方式</th></tr></thead><tbody><tr><td>文件长度</td><td>6 577 行</td><td><code>wc -l src/services/gateway/aiGatewayGenerateMethod.js</code></td></tr><tr><td><code>src/</code> 内引用它的文件</td><td>24 个（含 <code>aiGateway.js</code>、<code>flagRegistry.js</code>、<code>cli/handlers/gateway.js</code>、各 adapter）</td><td><code>grep -rln aiGatewayGenerateMethod src --include=*.js</code></td></tr><tr><td>导出面</td><td><code>AIGatewayGenerateMethod</code>、<code>setAiGatewayGenerateMethodDeps</code></td><td><code>Object.keys(require(...))</code> 实测</td></tr></tbody></table>
+<p>它是 <code>[RESEARCH-018]</code> §1.4 的热枢纽，也是架构轴上的<strong>上帝文件</strong>之一（&gt;400 行上限，见<br><code>ARCHITECTURE-POLICY.json</code> 的 legacy 台账）。本 README 只登记事实，不代表它已经可拆。</p>
+<h2 id="内部函数的可测性边界">内部函数的可测性边界<a class="anchor" href="#内部函数的可测性边界" aria-label="锚点">#</a></h2>
+<p><code>_callMcpVisionTool</code>、<code>_shouldResetIdleForProgress</code> 等<strong>未导出</strong>——外部只能经<br><code>AIGatewayGenerateMethod</code> 整条回合驱动，而那条路需要网关凭据。因此本目录的同名测试<br>（<code>aiGatewayGenerateMethod.test.js</code>，2 tests / 2 pass / 0 fail，<code>node --test</code> 跑）<strong>锁的是绑定</strong>：<br>视觉通道 require 的目标必须真的提供 <code>callTool(serverName, toolName, args)</code>。<br>改前该绑定指向 <code>cli/handlers/mcp</code>（导出面只有 <code>handleMcp</code>），每次识图必然<br><code>TypeError: mcp.callTool is not a function</code>，并被内层 catch 伪装成「识图失败」的上游原因。</p>
+<p>未闭合：真正的「识图成功」回执需要一台已连接 <code>deepseek-eyes</code> MCP 服务器的机器跑一次带图请求<br>（本机探针止步于 <code>MCP server &quot;deepseek-eyes&quot; not found</code>，即已进到注册表层但无人 connect）。<br>台账见 <code>[DESIGN-LAY-008]</code> §12.6。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../runtime/node/backend/src/services/domain/workspace/README.html"><div class="dir">← 上一篇</div><div class="ttl">workspace — 检查点、恢复与工作区上下文摘要（D2）</div></a><a class="next" href="../../../../../../runtime/node/backend/src/skills/built-in/api-and-interface-design/prompt.html"><div class="dir">下一篇 →</div><div class="ttl">API and Interface Design</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.README.html";</script>
+<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

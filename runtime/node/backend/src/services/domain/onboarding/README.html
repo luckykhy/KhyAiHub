@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>onboarding — 首次引导的纯逻辑单元（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>onboarding<span class="sep">›</span>onboarding — 首次引导的纯逻辑单元（D2）</div>
+      <header class="hero reveal"><h1>onboarding — 首次引导的纯逻辑单元（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#onboarding-首次引导的纯逻辑单元-d2">onboarding — 首次引导的纯逻辑单元（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-不在本单元修">已知缺陷（登记，不在本单元修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="onboarding-首次引导的纯逻辑单元-d2">onboarding — 首次引导的纯逻辑单元（D2）<a class="anchor" href="#onboarding-首次引导的纯逻辑单元-d2" aria-label="锚点">#</a></h1>
+<p>业务上下文：<code>/onboarding</code> 这条 slash 命令与首启向导里，<strong>能脱离终端渲染和读盘独立成立</strong><br>的那一部分——参数解析、步骤元数据、只读状态文案、首次安全须知。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong>首次在新机器/陌生目录启动 khy 的人</strong>：在配置模型之前先看到一屏「接受前审阅改动 /</li></ul>
+<p>只在信任的项目上用」的安全须知（<code>onboarding/safetyNotice.js</code>）。</p>
+<ul><li><strong>在 REPL 里敲 <code>/onboarding trust</code> / <code>status</code> / <code>help</code> 的人</strong>：要一份诚实的只读现状，</li></ul>
+<p>而不是一句「已完成」（<code>onboarding/onboardingPlan.js</code> 的 <code>buildTrustStatusText</code> /<br>  <code>buildStatusText</code> / <code>buildHelpText</code>）。</p>
+<ul><li><strong>两个薄壳</strong>（<code>cli/handlers/onboarding.js</code>、<code>cli/onboarding.js</code>）与聚合器</li></ul>
+<p><code>services/onboarding/index.js</code>：它们是仅有的三个消费者，负责门控、采状态快照、着色与打印。</p>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p>历史上这两块逻辑散在 CLI 薄壳里，导致同一份引导文案有两条不一致的路径（slash 命令一条、<br>首启向导一条），而且<strong>没法在不起终端的情况下验证</strong>。<code>[RESEARCH-018]</code> §2.3 的功能单元模板<br>要求的正是这个形态：业务逻辑（<code>capability</code>）不 require 任何基础设施，IO 留在薄壳。<br>本单元的两个文件都是<strong>零 require 的纯叶子</strong>——所有外部事实（门控、cwd、信任判定、<br>MCP 数量）由调用方作为参数注入，缺就诚实留白，绝不编造。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-comment"># 1) 契约与共置测试（node:test，jest 会自动忽略 node:test 形态的文件）</span>
+<span class="hljs-comment">#    注意传 glob 而不是裸目录：本仓便携版 Node 把 `node --test &lt;目录&gt;/` 当模块去 require，会报</span>
+<span class="hljs-comment">#    &quot;Cannot find module .../onboarding&quot;；`.../*.test.js` 形态才 14 pass。</span>
+<span class="hljs-built_in">cd</span> services/backend &amp;&amp; node --<span class="hljs-built_in">test</span> src/services/domain/onboarding/onboarding/*.test.js
+
+<span class="hljs-comment"># 2) 真实命令面：门控关 → 逐字节回退今日引导</span>
+<span class="hljs-built_in">cd</span> services/backend &amp;&amp; KHY_ONBOARDING_SAFETY_NOTICE=0 node -e \
+  <span class="hljs-string">&quot;console.log(require(&#x27;./src/services/domain/onboarding/onboarding/safetyNotice.js&#x27;).buildSafetyNoticeLines().length)&quot;</span>
+<span class="hljs-comment"># 期望 0；不带该 env 时期望 8 行。</span>
+<span class="hljs-comment"># 别在这里传 `{}`：buildSafetyNoticeLines(env = process.env) 的默认参数一旦被你显式传空对象覆盖，</span>
+<span class="hljs-comment"># 门控就读不到真实 env，实测会两档都返回 8——那是命令写错，不是叶子失效。</span>
+
+<span class="hljs-comment"># 3) 单元完整性由两条守卫执行（S1，只降不升）</span>
+<span class="hljs-built_in">cd</span> &lt;repo root&gt; &amp;&amp; node scripts/ci/check-repo-layout.js   <span class="hljs-comment"># functional-unit + entry-buffer</span></code></pre>
+<h2 id="已知缺陷-登记-不在本单元修">已知缺陷（登记，不在本单元修）<a class="anchor" href="#已知缺陷-登记-不在本单元修" aria-label="锚点">#</a></h2>
+<p>源文件实际住在 <code>onboarding/onboarding/</code>——目录名重复了一层，违反 5-3-1 §1<br>「任何目录直接子项 5±2」背后的认知负载意图，也让路径读起来像笔误。修法是把内层<br><code>onboarding/</code> 的内容上提一层，但那是一次 <code>git mv</code>，在本篇第 0 步（<code>.git</code> 重建）<br>闭合前禁止执行，故先登记。</p>
+<p>另有 160 + 67 行行为测试住在 <code>services/backend/tests/services/onboarding/</code>。<br>它们与本目录的共置测试<strong>不重复</strong>：那边测的是逐条解析行为与别名表覆盖，<br>这边测的是单元契约（导出面、纯度、绝不抛、确定性、门控以注入 env 为准）。<br>两份合并同样卡在 <code>git mv</code> 禁令上。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/services/domain/network/remote/README.html"><div class="dir">← 上一篇</div><div class="ttl">domain/network/remote —— 远端 SSH 执行/上传的可注入原语簇（12 文件，星形装配）</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/services/domain/project/issue/README.html"><div class="dir">下一篇 →</div><div class="ttl">issueReport</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/onboarding/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

@@ -1,0 +1,800 @@
+'use strict';
+
+/**
+ * useTextInput — owns the editable buffer for the prompt, modelled on Claude
+ * Code's hooks/useTextInput.ts + BaseTextInput.
+ *
+ * Exposes a single `onInput(input, key)` handler (the shape ink's useInput
+ * delivers) plus the current value/offset for rendering. All editing goes
+ * through the immutable Cursor value object.
+ *
+ * Critical ink quirk handled here: a real Backspace key emits \x7f which ink
+ * reports as `key.delete` (NOT `key.backspace`). We therefore treat BOTH
+ * key.backspace and key.delete as "delete backward" — matching ink-text-input
+ * and fixing the "cannot delete" regression. (Dedicated forward-delete is rare
+ * in a single prompt and is intentionally not bound.)
+ */
+const { useState, useRef, useCallback, useEffect } = require('react');
+
+const backslashContinuation = require('../../../services/backslashContinuation');
+const { Cursor } = require('../utils/Cursor');
+const imeCommitGuard = require('../imeCommitGuard');
+
+const { isPersistEnabled, mergeHistory } = require('./historyPersist');
+const { pastedRefLineCountOr } = require('../../pastedRefLines');
+
+// A return arriving within this window after a paste burst is treated as part
+// of the paste (insert newline) rather than a submit.
+const PASTE_NEWLINE_GUARD_MS = 110;
+// Quiet period after the last paste chunk before the accumulated paste is
+// committed as one edit. ink (no bracketed-paste support) can split a large
+// paste across several stdin frames microseconds apart; accumulating avoids
+// dropping newlines that fall on a frame boundary.
+const PASTE_FLUSH_MS = 30;
+
+function stripPasteMarkers(s) {
+  return s.replace(/\x1b\[200~/g, '').replace(/\x1b\[201~/g, '');
+}
+
+// ── Typing-time toolUseLoop prefetch (DESIGN-PERF-002 v1 §阶段 D) ──
+// The first submit pays for parsing toolUseLoopCore.js (12,715 lines) on
+// demand — that cold load runs AFTER the user message is pushed but BEFORE
+// the first await, freezing the first paint by 200-400ms. We start the
+// prewarm during the seconds the user is typing so the cache is hot by the
+// time Enter is pressed. Throttled: one in-flight prewarm at a time, gated
+// by a 30s idle so idle pauses don't keep re-triggering. KHY_NO_PREFETCH=1
+// forces legacy on-demand loading (preserves 1.4s first-paint for users who
+// want to see the prompt immediately and never submit).
+let _prewarmInFlight = false;
+let _prewarmLastTs = 0;
+const PREFETCH_MIN_INTERVAL_MS = 30000;
+const PREFETCH_TEXT_THRESHOLD = 3;
+function _maybePrewarmToolUseLoop() {
+  if (_prewarmInFlight) return;
+  if (Date.now() - _prewarmLastTs < PREFETCH_MIN_INTERVAL_MS) return;
+  if (String(process.env.KHY_NO_PREFETCH ?? '').trim() === '1') return;
+  _prewarmLastTs = Date.now();
+  _prewarmInFlight = true;
+  setImmediate(() => {
+    try {
+      // Same module the runQuery path lazy-loads; touching it via require
+      // populates the module cache. Fail-soft: missing module must never
+      // affect the input box or the keystroke handler.
+      require('../../../services/toolUseLoop');
+    } catch {
+      /* prewarm is best-effort; submit-time load retries on demand */
+    } finally {
+      _prewarmInFlight = false;
+    }
+  });
+}
+
+const OFF_VALUES = ['0', 'false', 'off', 'no'];
+const PASTE_CHAR_THRESHOLD = 150;
+const PASTE_LINE_THRESHOLD = 3;
+
+// Paste archive (Claude Code / classic-REPL parity): when a long paste is
+// folded into an inline `[Pasted text #N (+M lines)]` tag, the original text
+// is kept here so the tag can be expanded back into the payload at submit
+// time. Without the archive the folded paste was silently LOST — the model
+// received the literal placeholder and the user's content never arrived.
+// Bounded at PASTE_ARCHIVE_MAX entries, oldest evicted (replSession parity).
+const _pasteArchive = new Map();
+let _pasteCounter = 0;
+const PASTE_ARCHIVE_MAX = 20;
+const PASTE_TAG_WITH_ID_RE = /\[Pasted text #(\d+)(?:\s\+\d+ lines)?\]/g;
+
+// Build the folded tag for the current paste. Mirrors replSession's
+// _storePendingPaste: M = newline count via pastedRefLineCountOr (CC
+// "incremental lines" semantics, "+2 not 3"), gate-off falls back to the
+// call-site split('\n') count.
+function _makePasteTag(text, lineCount) {
+  const refLines = pastedRefLineCountOr(text, lineCount, process.env);
+  return lineCount > 1
+    ? `[Pasted text #${_pasteCounter} +${refLines} lines]`
+    : `[Pasted text #${_pasteCounter}]`;
+}
+
+// Expand any residual [Pasted text #N ...] tags in submitted text back into
+// the archived content, wrapped in <pasted-content> — the established block
+// convention consumed by busyInputClassifiers / toolResultSanitization.
+// Unknown ids (evicted / cross-session) keep the tag verbatim; never throws.
+function _expandPasteTags(text) {
+  if (!text || _pasteArchive.size === 0) {
+    return text;
+  }
+  return text.replace(PASTE_TAG_WITH_ID_RE, (m, idStr) => {
+    const archived = _pasteArchive.get(Number(idStr));
+    return archived ? `<pasted-content>\n${archived}\n</pasted-content>` : m;
+  });
+}
+
+function isPasteSummaryEnabled(env = process.env) {
+  const v = String(env && env.KHY_PROMPT_PASTE_SUMMARY || '').trim().toLowerCase();
+  return !OFF_VALUES.includes(v);
+}
+
+function isShellModeEnabled(env = process.env) {
+  const v = String(env && env.KHY_PROMPT_SHELL_MODE || '').trim().toLowerCase();
+  return !OFF_VALUES.includes(v);
+}
+
+// BUG-120 — a merged 「text + Enter」 stdin chunk loses its Enter to the paste
+// accumulator. During the cold-start freeze (and for any fast typist) ink's
+// stdin.read() returns the buffered bytes in ONE call, so this hook receives
+// '/hello\r': ink names such a buffer NOT 'return', the submit branch below
+// never sees it, and length > 1 routes it into the paste accumulator, where
+// flushPaste() normalises CR to LF and trims ONE trailing newline — the Enter
+// becomes paste content and the whole turn dies in silence. Measured on the
+// real surface (2026-09-28 §6, .khy/feedback/merged-enter-tui-20260928/): the
+// merged arm leaves `>  MIC zzhello` in the box with the transcript still on
+// 暂无对话，输入消息开始……, while the split arm echoes `❯ zzhello` and starts
+// turn 1.
+// Predicate: pure printable body + exactly one trailing CR + no internal line
+// break can only be 「body + Enter」, so split it — commit the body, then hand
+// that CR back to this handler, which is precisely what two separate reads
+// produce.
+// Bodies starting with / @ ! # are deliberately NOT split: with the completion
+// menu open a lone Enter means 「pull the highlighted row」, not submit, and
+// submitting a half-typed slash token would forward the literal text to the
+// model through App.js's fall-through — the paid round this mechanism exists to
+// avoid, and one the split path never pays.
+// (A real GUI paste carries bracketed-paste markers, i.e. ESC bytes, which the
+// character class below can never admit.)
+const MERGED_ENTER_RE = /^[^\x00-\x08\x0a-\x1f\x7f]+\r$/;
+const MENU_PREFIX_RE = /^[/@!#]/;
+
+function isMergedEnterEnabled(env = process.env) {
+  const v = String(env && env.KHY_TUI_MERGED_ENTER || '').trim().toLowerCase();
+  return !OFF_VALUES.includes(v);
+}
+
+/** Body text when `input` is a merged 「text + Enter」 chunk, otherwise null. */
+function splitMergedEnter(input) {
+  const s = String(input || '');
+  if (!MERGED_ENTER_RE.test(s)) {
+    return null;
+  }
+  const body = s.slice(0, -1);
+  return MENU_PREFIX_RE.test(body) ? null : body;
+}
+
+let _mouseModule = null;
+function getMouseModule() {
+  if (_mouseModule !== undefined) {
+    return _mouseModule;
+  }
+  try {
+    _mouseModule = require('../mouseButtons');
+  } catch {
+    _mouseModule = null;
+  }
+  return _mouseModule;
+}
+
+// Emacs control chords and Meta (Option/Alt) chords. Returns the new cursor to
+// `edit(...)`/`move(...)`, or undefined when the chord is unbound — the caller
+// then decides whether the byte may fall through to the printable path.
+// Module scope (not inline in onInput) so the hook body stays under the L1
+// ratchet's maxFuncLines ceiling; everything it needs arrives as an argument.
+function applyChord({ input, key, cur, killRing, move, edit }) {
+  const kill = (killed, c) => {
+    if (killed) {
+      killRing.current.push(killed);
+    }
+    return edit(c);
+  };
+
+  if (key.ctrl) {
+    switch (input) {
+      case 'a':
+        return move(cur.startOfLine());
+      case 'e':
+        return move(cur.endOfLine());
+      case 'b':
+        return move(cur.left());
+      case 'f':
+        return move(cur.right());
+      case 'k': {
+        const { cursor: c, killed } = cur.deleteToLineEnd();
+        if (killed) {
+          return kill(killed, c);
+        }
+        // Nothing left on this line: kill the line break itself (readline
+        // parity), which is how a hard-wrapped paste gets unwrapped. Without
+        // it Ctrl+K was a silent no-op at every line end. Kept in the kill
+        // ring so Ctrl+Y puts the break back.
+        if (cur.text[cur.offset] === '\n') {
+          return kill('\n', new Cursor(
+            cur.text.slice(0, cur.offset) + cur.text.slice(cur.offset + 1),
+            cur.offset
+          ));
+        }
+        return edit(c);
+      }
+      case 'u': {
+        const { cursor: c, killed } = cur.deleteToLineStart();
+        return kill(killed, c);
+      }
+      case 'w': {
+        const { cursor: c, killed } = cur.deleteWordBefore();
+        return kill(killed, c);
+      }
+      case 'd':
+        return edit(cur.del());
+      case 'y': {
+        const last = killRing.current[killRing.current.length - 1];
+        return last ? edit(cur.insert(last)) : undefined;
+      }
+      default:
+        return undefined;
+    }
+  }
+
+  if (key.meta) {
+    switch (input) {
+      case 'b':
+        return move(cur.wordLeft());
+      case 'f':
+        return move(cur.wordRight());
+      case 'd': {
+        const { cursor: c, killed } = cur.deleteWordAfter();
+        return kill(killed, c);
+      }
+      default:
+        return undefined;
+    }
+  }
+
+  return undefined;
+}
+
+function useTextInput({ onSubmit, onChange, onHistoryEmpty, mouseModule, onShellModeChange } = {}) {
+  const [cursor, setCursor] = useState(() => new Cursor('', 0));
+  const killRing = useRef([]);
+  const history = useRef([]);
+  const histIdx = useRef(-1);
+  const draft = useRef(''); // stash current line while browsing history
+  const pasteAt = useRef(0);
+  // Paste accumulation across split stdin frames.
+  const pasteBuf = useRef('');
+  const pasteTimer = useRef(null);
+  // Always-current cursor mirror, so a synchronous edit that follows a paste
+  // flush within the same input tick operates on the post-flush value (the
+  // `cursor` state closure is stale until React commits).
+  const cursorRef = useRef(cursor);
+  // Shell mode state: true when the input text starts with `!`. Gated by
+  // KHY_PROMPT_SHELL_MODE; off → shellModeRef stays false → byte-identical legacy.
+  const shellModeRef = useRef(false);
+
+  // Single funnel for every cursor mutation: updates the ref synchronously and
+  // schedules the state/onChange update.
+  const commit = useCallback(
+    (next, fireChange = true) => {
+      cursorRef.current = next;
+      setCursor(next);
+      if (fireChange && onChange) {
+        onChange(next.text);
+      }
+      // Typing-time prefetch: once the user types at least 3 characters, the
+      // toolUseLoop cold-load is no longer idle prewarm; it has a real
+      // chance of paying off at submit time. The prewarm helper internally
+      // throttles to once per 30s, so this stays free.
+      if (fireChange && next && next.text && next.text.length >= PREFETCH_TEXT_THRESHOLD) {
+        _maybePrewarmToolUseLoop();
+      }
+      // Sync shell mode: if the text no longer starts with `!`, exit shell mode.
+      if (isShellModeEnabled(process.env) && shellModeRef.current && !next.text.startsWith('!')) {
+        shellModeRef.current = false;
+        if (onShellModeChange) onShellModeChange(false);
+      }
+    },
+    [onChange, onShellModeChange]
+  );
+
+  const move = useCallback((next) => commit(next, false), [commit]);
+  const edit = useCallback((next) => commit(next, true), [commit]);
+
+  // Commit the accumulated paste buffer as a single edit and return the new
+  // cursor. Cleaning and the single trailing-newline trim run on the JOINED
+  // text so frame boundaries inside the paste cannot drop internal newlines.
+  const flushPaste = useCallback(() => {
+    if (pasteTimer.current) {
+      clearTimeout(pasteTimer.current);
+      pasteTimer.current = null;
+    }
+    const joined = pasteBuf.current;
+    pasteBuf.current = '';
+    if (!joined) {
+      return cursorRef.current;
+    }
+    const clean = stripPasteMarkers(joined)
+      .replace(/\r\n?/g, '\n')
+      .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '');
+    if (clean === '') {
+      return cursorRef.current;
+    }
+    const trimmed = clean.replace(/\n$/, '');
+    pasteAt.current = Date.now();
+    const lineCount = (trimmed.match(/\n/g) || []).length + 1;
+    // Paste summary: if the pasted text exceeds the length/line thresholds and
+    // the gate is on, fold it into an inline tag instead of inserting the full
+    // content into the buffer. The original text is archived so the submit
+    // path can expand the tag back into the payload (nothing is lost). Short
+    // pastes and gate-off both fall through to the legacy insert path.
+    if (
+      isPasteSummaryEnabled(process.env) &&
+      (trimmed.length >= PASTE_CHAR_THRESHOLD || lineCount >= PASTE_LINE_THRESHOLD)
+    ) {
+      _pasteCounter += 1;
+      _pasteArchive.set(_pasteCounter, trimmed);
+      if (_pasteArchive.size > PASTE_ARCHIVE_MAX) {
+        const oldest = _pasteArchive.keys().next().value;
+        _pasteArchive.delete(oldest);
+      }
+      const placeholder = _makePasteTag(trimmed, lineCount);
+      const next = cursorRef.current.insert(placeholder);
+      commit(next, true);
+      return next;
+    }
+    const next = cursorRef.current.insert(trimmed);
+    commit(next, true);
+    return next;
+  }, [commit]);
+
+  // Flush any pending paste on unmount so it is not lost.
+  useEffect(
+    () => () => {
+      if (pasteTimer.current) {
+        clearTimeout(pasteTimer.current);
+      }
+    },
+    []
+  );
+
+  // Cross-session history persistence (Claude Code-style Up/Down recall).
+  //
+  // The Ink TUI's in-session history (`history.current`) already powers
+  // historyPrev/historyNext below; the only gap vs. Claude is that it starts
+  // empty each launch and is never written back. We close that by reusing the
+  // EXISTING persistence single source — cli/repl/history.js (the same
+  // ~/.khyquant_history file the classic REPL uses) — never a parallel store.
+  //
+  // Resolved lazily + cached: `undefined` = unresolved, `null` = disabled or
+  // module unavailable, otherwise the loaded module. Gated by
+  // KHY_TUI_HISTORY_PERSIST (default on; off → byte-identical legacy behaviour).
+  // Every fs touch is fail-soft so it can never crash TUI mount.
+  const historyStore = useRef(undefined);
+  const getHistoryStore = useCallback(() => {
+    if (historyStore.current !== undefined) {
+      return historyStore.current;
+    }
+    if (!isPersistEnabled(process.env.KHY_TUI_HISTORY_PERSIST)) {
+      historyStore.current = null;
+      return null;
+    }
+    try {
+      historyStore.current = require('../../repl/history');
+    } catch (_e) {
+      historyStore.current = null; // fail-soft: never block the prompt
+    }
+    return historyStore.current;
+  }, []);
+
+  // Pre-populate the session history from the persisted file once on mount, so
+  // the first Up press recalls the previous session's prompts.
+  useEffect(() => {
+    const store = getHistoryStore();
+    if (!store) {
+      return;
+    }
+    try {
+      const persisted = store.loadHistory();
+      if (Array.isArray(persisted) && persisted.length) {
+        history.current = mergeHistory(persisted, history.current, store.MAX_HISTORY);
+      }
+    } catch (_e) {
+      /* fail-soft: a bad/locked history file must not break the TUI */
+    }
+  }, [getHistoryStore]);
+
+  // Replace the whole buffer (used by completion accept / external clear).
+  const setText = useCallback(
+    (text, offset) => {
+      const c = new Cursor(text, offset === undefined ? text.length : offset);
+      commit(c, true);
+    },
+    [commit]
+  );
+
+  // Move the cursor to an absolute offset without changing the text or firing
+  // onChange. Built on the live ref so it composes with a setText() that ran
+  // earlier in the same tick (vim operators do setText → setOffset). Used by
+  // the vim layer (useVimInput); harmless for plain text input.
+  const setOffset = useCallback(
+    (n) => {
+      const cur = cursorRef.current;
+      const clamped = Math.max(0, Math.min(n, cur.text.length));
+      move(new Cursor(cur.text, clamped));
+    },
+    [move]
+  );
+
+  const onInput = useCallback(
+    (input, key) => {
+      // Mouse-button layer: an SGR mouse sequence (e.g. `[<0;20;10M`) must never
+      // be treated as literal text — it is dispatched by App's top-level useInput,
+      // but guards here protect every direct consumer (incl. overlays that edit
+      // their own buffer). Fail-soft: missing module byte-reverts.
+      // The mouse module is resolved ONCE (module scope cache) instead of per-keystroke.
+      const _mouse = mouseModule || getMouseModule();
+      if (_mouse && typeof _mouse.isMouseSequence === 'function' && _mouse.isMouseSequence(input)) {
+        return;
+      }
+
+      // Base every edit on the live ref, not the (possibly stale) `cursor` state
+      // closure. If a paste is mid-accumulation and a non-paste event arrives
+      // (any single key, including Enter), commit the paste first so ordering is
+      // preserved; flushPaste returns the merged cursor we then build on. The
+      // freshly-set pasteAt makes a trailing Enter insert a newline, not submit.
+      let cur = cursorRef.current;
+      if (pasteBuf.current && !(input && input.length > 1)) {
+        cur = flushPaste();
+      }
+
+      // BUG-120: split a merged 「text + Enter」 chunk before the paste branch
+      // below can swallow its CR. Gate off → this block is skipped and the byte
+      // path is exactly the pre-fix one.
+      if (!key.return && input && input.length > 1 && isMergedEnterEnabled(process.env)) {
+        const body = splitMergedEnter(input);
+        if (body !== null) {
+          // Stamp the IME recency the same way the paste branch does, so a
+          // fullwidth-only burst keeps being treated as an IME confirm instead of
+          // a submit (see the guard inside the key.return branch).
+          imeCommitGuard.noteImeCommit(body);
+          pasteBuf.current += body;
+          cur = flushPaste();
+          // flushPaste stamps pasteAt, which would turn this very Enter into a
+          // paste newline through PASTE_NEWLINE_GUARD_MS. The CR arrived inside
+          // the same burst and the buffer is committed now, so there is no
+          // pending paste left to guard.
+          pasteAt.current = 0;
+          // Re-enter this handler with the lone CR, which is the event a separate
+          // stdin read would have delivered.
+          onInput('\r', { return: true });
+          return;
+        }
+      }
+
+      // ── Shell mode (gated by KHY_PROMPT_SHELL_MODE) ──────────────────────
+      // When shell mode is active, Escape or Backspace at position 0 exits it
+      // (clears the `!` prefix). All other keys fall through to normal editing.
+      const _shellOn = isShellModeEnabled(process.env);
+      if (_shellOn && shellModeRef.current) {
+        if (key.escape) {
+          // Exit shell mode: clear the `!` prefix, keep any command text after it.
+          const text = cur.text;
+          if (text.startsWith('!')) {
+            const rest = text.slice(1);
+            const next = new Cursor(rest, Math.max(0, cur.offset - 1));
+            shellModeRef.current = false;
+            if (onShellModeChange) onShellModeChange(false);
+            commit(next, true);
+          } else {
+            shellModeRef.current = false;
+            if (onShellModeChange) onShellModeChange(false);
+          }
+          return;
+        }
+        // Backspace at position 0: if there's a `!` prefix, delete it and exit
+        // shell mode; otherwise fall through to normal backspace.
+        if ((key.backspace || key.delete) && cur.offset === 0 && cur.text.startsWith('!')) {
+          const next = new Cursor(cur.text.slice(1), 0);
+          shellModeRef.current = false;
+          if (onShellModeChange) onShellModeChange(false);
+          commit(next, true);
+          return;
+        }
+      }
+
+      // ── Submit / newline ────────────────────────────────────────────────
+      if (key.return) {
+        if (key.shift || key.meta || key.ctrl) {
+          edit(cur.insert('\n'));
+          return;
+        }
+        // IME composition confirm: the IME commits its composed text and a
+        // trailing Enter as one burst; this bare Enter within the recency
+        // window of a fullwidth-only insert is that confirm key, not a
+        // submit. The composed text is already in the buffer — swallow.
+        // MUST sit above the paste guard: a CJK-IME Enter inside the paste
+        // window would otherwise be turned into a stray newline.
+        if (imeCommitGuard.shouldSwallowBareEnter()) {
+          return;
+        }
+        if (Date.now() - pasteAt.current < PASTE_NEWLINE_GUARD_MS) {
+          edit(cur.insert('\n'));
+          return;
+        }
+        // Claude Code parity: a bare unescaped trailing '\' before Enter is a
+        // line continuation — drop the backslash, insert a newline instead of
+        // submitting. Gated (KHY_BACKSLASH_NEWLINE, default on); off →
+        // shouldContinue is always false → byte-identical legacy submit.
+        if (backslashContinuation.shouldContinue(cur.text, cur.offset)) {
+          edit(cur.backspace().insert('\n'));
+          return;
+        }
+        const text = cur.text;
+        if (text.trim()) {
+          history.current.push(text);
+          // Persist across sessions via the shared single source (fail-soft).
+          // saveHistory already merges with the file + caps to MAX_HISTORY, so a
+          // single-element array appends exactly one entry without duplication.
+          const store = getHistoryStore();
+          if (store) {
+            try {
+              store.saveHistory([text]);
+            } catch (_e) {
+              /* fail-soft */
+            }
+          }
+        }
+        histIdx.current = -1;
+        draft.current = '';
+        commit(new Cursor('', 0), true);
+        if (onSubmit) {
+          // Expand folded paste tags back into the archived content before the
+          // text leaves the input: history above stores the compact tag form
+          // (one entry per paste, recall-friendly), but the AI must receive
+          // the user's actual pasted bytes, not the placeholder.
+          onSubmit(_expandPasteTags(text));
+        }
+        return;
+      }
+
+      // Bare LF — Ctrl+J (and Alt+Enter on terminals that map it to LF) arrives as
+      // `\n`, which ink names 'enter', so key.return is false and the submit branch
+      // above never runs. Without this branch the byte is a control char and falls
+      // through to the printable path, where it is dropped: the advertised newline
+      // key becomes a silent no-op. Insert the newline here instead. (Enter itself
+      // is CR, handled above; terminals that send LF for Enter are not a supported
+      // configuration. Measured on Windows Terminal 1.24: Ctrl+J -> `\n` reaches us,
+      // Alt+Enter is eaten by the terminal's own fullscreen binding and only sends
+      // a lone ESC, so it is NOT the documented newline key on Windows.)
+      if (input === '\n' && !key.return) {
+        edit(cur.insert('\n'));
+        return;
+      }
+
+      // ── Delete backward (Backspace = \x7f → key.delete on most terminals) ─
+      if (key.backspace || key.delete) {
+        if (key.ctrl) {
+          // Ctrl+Delete (\x1b[3;5~) kills the word ahead; Ctrl+Backspace kills
+          // behind — only terminals that report it with the ctrl flag (Kitty
+          // protocol) reach that branch. A bare \x08 must stay a single-character
+          // delete below, because legacy terminals send it for a plain Backspace.
+          const { cursor: c, killed } = key.delete
+            ? cur.deleteWordAfter()
+            : cur.deleteWordBefore();
+          if (killed) {
+            killRing.current.push(killed);
+          }
+          edit(c);
+          return;
+        }
+        if (key.meta) {
+          const { cursor: c, killed } = cur.deleteWordBefore();
+          if (killed) {
+            killRing.current.push(killed);
+          }
+          edit(c);
+        } else {
+          edit(cur.backspace());
+        }
+        return;
+      }
+
+      // ── Arrow / navigation keys ──────────────────────────────────────────
+      // Ctrl+arrows (\x1b[1;5D / \x1b[1;5C) are the word chords Windows and
+      // Linux terminals actually deliver; Alt+arrows are their macOS counterpart.
+      if (key.leftArrow) {
+        return move(key.meta || key.ctrl ? cur.wordLeft() : cur.left());
+      }
+      if (key.rightArrow) {
+        return move(key.meta || key.ctrl ? cur.wordRight() : cur.right());
+      }
+      // Ctrl+Home/End (\x1b[1;5H / \x1b[1;5F) is the buffer-level half of the same
+      // unwired-chord family: ink raises the ctrl flag, and the box goes multi-line
+      // routinely (modifier+Enter inserts a newline, pastes carry newlines), so
+      // ignoring ctrl made the chord a silent duplicate of plain Home/End. Ctrl+A/E
+      // keep their emacs LINE meaning above — this stays the only buffer jump.
+      if (key.home) {
+        return move(key.ctrl ? cur.start() : cur.startOfLine());
+      }
+      if (key.end) {
+        return move(key.ctrl ? cur.end() : cur.endOfLine());
+      }
+
+      if (key.upArrow) {
+        // History stores each submitted value as one entry, including newlines.
+        // Vertical navigation therefore always advances by entry, never by line.
+        return historyPrev();
+      }
+      if (key.downArrow) {
+        return historyNext();
+      }
+
+      // ── Emacs / Meta (Option/Alt) chords ─────────────────────────────────
+      // Extracted to module scope: the two switches pushed onInput's brace span
+      // past the L1 ratchet's maxFuncLines ceiling, and they need nothing from
+      // the hook's closure beyond the args we pass explicitly.
+      const chord = applyChord({ input, key, cur, killRing, move, edit });
+      if (chord !== undefined) {
+        return chord;
+      }
+      // An unbound CTRL chord is a single control byte; the old inline switch
+      // returned undefined for it, so keep that (nothing to insert). An unbound
+      // META chord must still fall through — a terminal can deliver a paste with
+      // the meta flag set, and the multi-char paste branch below owns that case.
+      if (key.ctrl && !key.meta) {
+        return undefined;
+      }
+
+      // ── Printable text / paste ───────────────────────────────────────────
+      if (!input) {
+        return undefined;
+      }
+
+      // Multi-char chunk = paste (ink batches a paste into one call), OR a burst
+      // of repeated control keys (e.g. holding Backspace) that the terminal
+      // coalesced into one chunk WITHOUT key flags. We must not insert the latter
+      // as literal control characters — that silently corrupts the buffer and
+      // looks like "Backspace does nothing".
+      if (input.length > 1) {
+        // IME phrase commit (你好 arrives as one multi-char chunk) stamps the
+        // same recency marker; real pastes carry newlines/ASCII/control codes
+        // and fail the pure-fullwidth test, so they stay unguarded.
+        imeCommitGuard.noteImeCommit(stripPasteMarkers(input));
+        // Count backward-delete codes (\x7f Backspace, \x08 Ctrl-H) in the burst.
+        const delCount = (input.match(/[\x7f\x08]/g) || []).length;
+        // Probe whether this chunk carries any printable content (keep \n and \t).
+        const probe = stripPasteMarkers(input)
+          .replace(/\r\n?/g, '\n')
+          .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '');
+
+        if (probe === '') {
+          // Pure control burst → apply the deletions instead of inserting garbage.
+          if (delCount > 0) {
+            let c = cur;
+            for (let i = 0; i < delCount; i++) {
+              c = c.backspace();
+            }
+            edit(c);
+          }
+          return;
+        }
+
+        // Printable paste content: accumulate the RAW chunk and flush once after a
+        // short quiet period. Cleaning/trailing-newline trimming happens on the
+        // joined buffer in flushPaste(), so a newline on a frame boundary is kept.
+        pasteBuf.current += input;
+        pasteAt.current = Date.now();
+        if (pasteTimer.current) {
+          clearTimeout(pasteTimer.current);
+        }
+        pasteTimer.current = setTimeout(() => flushPaste(), PASTE_FLUSH_MS);
+        // If the pasted chunk starts with `!` and shell mode is gated on, enter
+        // shell mode immediately (the `!` prefix will appear in the buffer once
+        // flushPaste commits).
+        if (_shellOn && !shellModeRef.current && input.startsWith('!')) {
+          shellModeRef.current = true;
+          if (onShellModeChange) onShellModeChange(true);
+        }
+        return;
+      }
+
+      // Single char: ignore control codes (< 0x20) except handled above.
+      if (input.charCodeAt(0) < 0x20) {
+        return undefined;
+      }
+      // IME commit tracking (single-char commit, e.g. per-keystroke CJK).
+      imeCommitGuard.noteImeCommit(input);
+      const next = cur.insert(input);
+      // Enter shell mode when the buffer transitions to starting with `!`.
+      if (_shellOn && !shellModeRef.current && next.text.startsWith('!')) {
+        shellModeRef.current = true;
+        if (onShellModeChange) onShellModeChange(true);
+      }
+      edit(next);
+      return undefined;
+
+      function historyPrev() {
+        const h = history.current;
+        if (h.length === 0) {
+          return;
+        }
+        if (histIdx.current === -1) {
+          draft.current = cur.text;
+          histIdx.current = h.length;
+        }
+        histIdx.current = Math.max(0, histIdx.current - 1);
+        setText(h[histIdx.current]);
+      }
+
+      function historyNext() {
+        const h = history.current;
+        if (histIdx.current === -1) {
+          return;
+        }
+        histIdx.current += 1;
+        if (histIdx.current >= h.length) {
+          histIdx.current = -1;
+          setText(draft.current || '');
+          if (onHistoryEmpty) {
+            onHistoryEmpty();
+          }
+          return;
+        }
+        setText(h[histIdx.current]);
+      }
+    },
+    [commit, edit, move, onSubmit, onHistoryEmpty, setText, flushPaste, getHistoryStore]
+  );
+
+  return {
+    value: cursor.text,
+    offset: cursor.offset,
+    cursor,
+    // Synchronous mirror of the buffer: reads the latest text even before React
+    // commits, i.e. from a key that arrives in the same input packet as the one
+    // that edited the buffer (App needs it to route that key, BUG-64).
+    get liveCursor() {
+      return cursorRef.current;
+    },
+    onInput,
+    setText,
+    setOffset,
+    clear: () => {
+      shellModeRef.current = false;
+      if (onShellModeChange) onShellModeChange(false);
+      setText('');
+    },
+    // Shell mode active: true when the buffer text starts with `!` and the
+    // KHY_PROMPT_SHELL_MODE gate is on. Consumers (PromptFrame/App) use this to
+    // switch the placeholder and visual indicator.
+    get shellMode() {
+      return shellModeRef.current;
+    },
+    // Read-only snapshot of the merged (persisted + session) command history,
+    // oldest→newest, for consumers like the Ctrl+R reverse-search overlay. Never
+    // mutate the returned array; it is the live ref's backing store.
+    getHistory: () => history.current.slice(),
+  };
+}
+
+module.exports = { useTextInput };
+// Test-only internals (paste archive/expand semantics). Never used at runtime.
+module.exports._internals = {
+  _makePasteTag,
+  _expandPasteTags,
+  stripPasteMarkers,
+  isPasteSummaryEnabled,
+  isMergedEnterEnabled,
+  splitMergedEnter,
+  PASTE_CHAR_THRESHOLD,
+  PASTE_LINE_THRESHOLD,
+  PASTE_ARCHIVE_MAX,
+  get _pasteArchive() {
+    return _pasteArchive;
+  },
+  get _pasteCounter() {
+    return _pasteCounter;
+  },
+  set _pasteCounter(n) {
+    _pasteCounter = n;
+  },
+  _resetForTest() {
+    _pasteArchive.clear();
+    _pasteCounter = 0;
+  },
+};

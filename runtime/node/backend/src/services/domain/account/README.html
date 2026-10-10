@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>account — 账号池与 tokenless 压缩的两块业务逻辑（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>account<span class="sep">›</span>account — 账号池与 tokenless 压缩的两块业务逻辑（D2）</div>
+      <header class="hero reveal"><h1>account — 账号池与 tokenless 压缩的两块业务逻辑（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#account-账号池与-tokenless-压缩的两块业务逻辑-d2">account — 账号池与 tokenless 压缩的两块业务逻辑（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="account-账号池与-tokenless-压缩的两块业务逻辑-d2">account — 账号池与 tokenless 压缩的两块业务逻辑（D2）<a class="anchor" href="#account-账号池与-tokenless-压缩的两块业务逻辑-d2" aria-label="锚点">#</a></h1>
+<p>业务上下文：<code>khy pool</code>（别名 <code>nir</code> / <code>nrv</code>）背后的<strong>凭据池</strong>逻辑，以及一组<strong>纯函数</strong>的<br>上下文压缩叶子（<code>tokenless/</code>：schema / 工具输出压缩与 toon 编解码）。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong>跑 <code>khy pool</code> 的人</strong>：命令声明在 <code>constants/commandSchema.js:54</code>（子命令 <code>:303</code>），</li></ul>
+<p>处理器 <code>cli/handlers/pool.js:21</code>；<code>nir</code> / <code>nrv</code> 在 <code>cli/aliases.js:295</code> 展开成<br>  <code>pool import nirvana</code>。</p>
+<ul><li><strong>三个代码消费者</strong>：<code>services/accountPool.js:39,58,1381</code>（池主体）、</li></ul>
+<p><code>tools/ConfigureModelProvider/index.js:22</code>（配模型时取池）、<br>  <code>services/localBrainProviderConfig.js:138</code>（本地大脑取凭据）。</p>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p>池这件事天然是<strong>两半</strong>：一半必须碰盘（<code>accountPool/candidateDetect.js</code> 扫各家 CLI 的<br>凭据文件、<code>poolImporter.js</code> 导入、<code>poolSync.js</code> 回写），另一半是纯判定<br>（<code>credentialHelpers.js</code> 的 <code>normalizePoolType</code> / <code>maskToken</code> / <code>tokenHash</code> / <code>isValidEmail</code>、<br><code>poolScheduler.js</code> 的轮换选择）。本目录把这条线切开：<code>poolScheduler.js</code> 是<br><strong>零 require 的 DI 工厂</strong>（<code>createPoolScheduler(deps)</code>），IO 由 <code>accountPool.js</code> 注入，<br>所以「哪一个账号该被轮换」这种判定能在不开盘、不联网的情况下断言。<br><code>tokenless/</code> 七个文件全部纯函数（只互相 require 加 <code>utils/simpleTokenEstimate</code>），<br>同理——压缩比与截断行为必须可离线复算。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/services/accountPool/candidateDetectLeaf.test.js   <span class="hljs-comment"># 9 pass / 0 fail</span>
+node --<span class="hljs-built_in">test</span> tests/toonDecodeDepthCap.test.js                          <span class="hljs-comment"># 7 pass / 0 fail</span>
+node --<span class="hljs-built_in">test</span> tests/services/accountPoolCredentialHelpers.test.js       <span class="hljs-comment"># see note below</span></code></pre>
+<p>第三条是 <strong>jest 形态</strong>的测试文件（<code>tests/services/accountPoolCredentialHelpers.test.js</code><br>用 <code>describe</code>/<code>it</code>），在便携 Node 下 <code>node --test</code> 直接跑会因缺 <code>describe</code> 而失败，<br>正式入口是 <code>npm test</code>（<code>services/backend/jest.config.js</code>）。本 README 记录命令时<br>只保证前两条在当前 shell 可直接执行；第三条给出的是它的真实执行渠道，不是转述。</p>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> D:/Portable/khy-os
+node scripts/ci/check-repo-layout.js --list=functional-unit   <span class="hljs-comment"># 本目录缺件读数</span></code></pre>
+<h2 id="已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）<a class="anchor" href="#已知缺陷-登记-不在本单元擅自修" aria-label="锚点">#</a></h2>
+<p><code>tokenless/</code> 目前<strong>只有</strong>一个壳在消费它：<code>services/tokenless/index.js:4</code>。<br>在 <code>services/backend/src</code> 全量搜 <code>tokenlessPlugin</code> 的 gateway / CLI 接线点 →<br><strong>零命中</strong>。也就是说这套压缩叶子写完了但没接进任何请求路径。删除它属规则 7 的活<br>（需要部位清单 + 可执行 <code>rollback.txt</code>，且要先查文档背书），是否算「未完成的特性」而非孤儿<br><strong>需人裁决</strong>，本 README 只如实记录事实。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/services/domain/account/accountPool/README.html"><div class="dir">← 上一篇</div><div class="ttl">accountPool — 凭据池：探测、导入、调度与回写</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/services/domain/agents/agentAssets/adapters/README.html"><div class="dir">下一篇 →</div><div class="ttl">adapters — 外部 agent 资产适配器族</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/account/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

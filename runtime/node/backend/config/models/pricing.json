@@ -1,0 +1,124 @@
+{
+  "$schemaVersion": 1,
+  "_readme": [
+    "模型级价格表(USD per 1,000,000 tokens)。纯文本、零构建:编辑保存后下一次请求即生效。",
+    "",
+    "为什么存在(见 [DESIGN-ARCH-185] §3.4):tokenPricing.estimateCost() 过去拿**模型名**去",
+    "对 **provider 名表**做子串匹配,而模型名里通常不含 provider 名(claude-* 不含 anthropic,",
+    "glm-* 不含 智谱AI),于是实测 14 个抽样模型里 13 个静默落到 default 兜底,拿到同一个",
+    "编造价 —— claude-opus 与 gpt-4o-mini 的真实价差约 50 倍,在账单口径下完全相等。",
+    "本表把「哪一档价格描述的是哪个模型」这件事显式化:每行都带 source 与 asOf,可追责。",
+    "",
+    "解析顺序(高 → 低):",
+    "  1. env KHY_MODEL_PRICING_JSON(内联 JSON,运维覆盖)",
+    "  2. <appHome>/model_pricing.json(升级不丢)",
+    "  3. 本文件 models[<id>] 精确匹配",
+    "  4. 本文件 families[] 正则(按声明顺序**首个命中**即停 —— 顺序即优先级,故特例在前)",
+    "  5. provider 粗价(tokenPricing.TOKEN_PRICING 的**精确键**匹配,命中记 state=assumed)",
+    "  6. 全不命中 → state=unknown,cost 返回 null(绝不返回编造数字)",
+    "",
+    "state 语义(五态,[DESIGN-ARCH-185] §5.4 的三态在此细化):",
+    "  priced   命中本表 model/family 的显式价 → 可作为路由成本项",
+    "  free     确实零价(本地推理)         → 可作为成本项(最便宜的一侧)",
+    "  flat     订阅制包月,token 计价不成立  → **退出成本项**,UI 显示「包月」",
+    "  assumed  只有 provider 粗价          → **退出成本项**,UI 显示「?」",
+    "  unknown  全不命中                    → **退出成本项**,UI 显示「?」",
+    "",
+    "⚠ 本表刻意**只收录仓内既有数字**(逐行 source 指回 tokenPricing.js 的 TOKEN_PRICING 与其行尾",
+    "注释所点名的模型)。给未点名的型号(如 claude-opus-4-x / glm-5.x)外推一个价格是二次编造,",
+    "不做。缺价就标 unknown,让「不知道」保持不知道 —— 这正是 default 兜底最危险的地方。"
+  ],
+  "unit": "USD per 1,000,000 tokens",
+  "asOf": "2026-10-08",
+  "models": {},
+  "families": [
+    {
+      "id": "family-claude-sonnet-3-5",
+      "match": "claude[.-]3[.-]5[.-]sonnet",
+      "price": { "input": 3.0, "output": 15.0 },
+      "source": "TOKEN_PRICING.Anthropic 行尾注释点名的就是 claude-3-5-sonnet"
+    },
+    {
+      "id": "family-gpt-4o-mini",
+      "match": "(^|[^a-z])gpt-4o-mini([^a-z]|$)",
+      "price": { "input": 0.15, "output": 0.6 },
+      "source": "TOKEN_PRICING.OpenAI 行尾注释点名的就是 gpt-4o-mini"
+    },
+    {
+      "id": "family-gemini-flash",
+      "match": "gemini[.-]2[.-]5[.-]flash",
+      "price": { "input": 0.075, "output": 0.3 },
+      "source": "TOKEN_PRICING['Google Gemini'] 行尾注释点名的就是 gemini-2.5-flash"
+    },
+    {
+      "id": "family-deepseek-chat",
+      "match": "deepseek[.-]chat",
+      "price": { "input": 0.27, "output": 1.1 },
+      "source": "TOKEN_PRICING.DeepSeek 行尾注释「deepseek-chat (cache miss)」;cache-read 价未公布 → 不填"
+    },
+    {
+      "id": "family-glm-4",
+      "match": "(^|[^a-z])glm[.-]4([^a-z0-9.]|$)",
+      "price": { "input": 0.1, "output": 0.1 },
+      "source": "TOKEN_PRICING['智谱AI'] 行尾注释点名的就是 glm-4",
+      "note": "边界排除 '.' 与数字:注释点了版本号 → 只覆盖 glm-4 本尊与其日期后缀,不外推 glm-4.5/4.6"
+    },
+    {
+      "id": "family-qwen-turbo",
+      "match": "qwen[^a-z]*turbo",
+      "price": { "input": 0.008, "output": 0.02 },
+      "source": "TOKEN_PRICING['通义千问'] 行尾注释点名的就是 qwen-turbo"
+    },
+    {
+      "id": "family-ernie",
+      "match": "(^|[^a-z])ernie([^a-z0-9]|$)",
+      "price": { "input": 0.12, "output": 0.12 },
+      "source": "TOKEN_PRICING['百度文心'] 行尾注释点名的就是 ERNIE"
+    },
+    {
+      "id": "family-llama-3-3-70b-together",
+      "match": "llama[.-]3[.-]3[^a-z]*70b",
+      "price": { "input": 0.88, "output": 0.88 },
+      "source": "TOKEN_PRICING['Together AI'] 行尾注释 Llama-3.3-70B-Turbo",
+      "note": "必须在 family-llama-3-3-groq 之前:「首个命中即停」下否则 70B 型号拿到 Groq 的价"
+    },
+    {
+      "id": "family-llama-3-3-groq",
+      "match": "llama[.-]3[.-]3",
+      "price": { "input": 0.05, "output": 0.08 },
+      "source": "TOKEN_PRICING.Groq 行尾注释点名的就是 llama-3.3"
+    },
+    {
+      "id": "family-xunfei-free",
+      "match": "(spark|讯飞|星火)",
+      "state": "free",
+      "price": { "input": 0, "output": 0 },
+      "source": "TOKEN_PRICING['讯飞星火'] 行尾注释「free tier」"
+    },
+    {
+      "id": "family-ollama-local",
+      "match": "(^|[^a-z])ollama([^a-z]|$)",
+      "state": "free",
+      "price": { "input": 0, "output": 0 },
+      "source": "TOKEN_PRICING.Ollama 行尾注释「local」"
+    },
+    {
+      "id": "family-huggingface-free",
+      "match": "(hugging[ -]?face|^hf[.-])",
+      "state": "free",
+      "price": { "input": 0, "output": 0 },
+      "source": "TOKEN_PRICING.HuggingFace 行尾注释「free inference」"
+    },
+    {
+      "id": "flat-subscription-relays",
+      "match": "(^|[^a-z])(kiro|cursor|trae|warp|vscode|clipboard|opencode|openclaw)([^a-z]|$)",
+      "state": "flat",
+      "source": "[DESIGN-ARCH-185] §2.2-2:这些是订阅制 IDE 通道的反向接入,账单是包月,按 token 计价本身不成立"
+    }
+  ],
+  "_ordering_note": [
+    "family-llama-3-3-70b-together 必须排在 family-llama-3-3-groq 之前,否则 70B 型号被前一条",
+    "抢先命中而拿到 Groq 的价。这是「首个命中即停」的代价,也是本表唯一需要人盯的不变量。",
+    "守卫 modelPricing.test.js 里有专门一条测这个顺序。"
+  ]
+}

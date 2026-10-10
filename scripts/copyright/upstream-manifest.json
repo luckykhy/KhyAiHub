@@ -1,0 +1,214 @@
+{
+  "$purpose": "Integrity manifest for the verbatim vendored upstream skill. Checked by scripts/ci/check-copyright-readiness.js (检查 7b) to prove the vendored tree is unmodified (DESIGN-SOURCING-001 B-M1 #5, PROCESS-010 C-TOOL).",
+  "upstream": {
+    "repo": "Fokkyp/SoftwareCopyright-Skill",
+    "url": "https://github.com/Fokkyp/SoftwareCopyright-Skill",
+    "commit": "947d5963194bfda8ce57b8b454b486f13359dee4",
+    "commitDate": "2026-09-24T07:25:57Z",
+    "skillVersion": "2.5",
+    "pluginVersion": "2.2.0",
+    "license": "MIT",
+    "mirrorCommit": "luckykhy/SoftwareCopyright-Skill@947d596 (fork HEAD == upstream HEAD at vendoring time)"
+  },
+  "vendoredAt": "2026-09-29",
+  "method": "vendored",
+  "hashForm": "sha256 of the exact bytes stored in upstream git (LF, no smudge filter applied)",
+  "aggregate": "ad4855fadf79419b8a448cddf1244a148c2f58555ee499fb03a5d3db3956c90e",
+  "skillsSymlinkTarget": "../software-copyright-materials",
+  "excludedFromVendorCopy": {
+    "生成demo/": "upstream demo output (433 KB of .docx samples), not tool input",
+    "docs/screenshots/": "README marketing images (1.3 MB)",
+    ".claude-plugin/plugin.json": "one-agent-specific packaging manifest; its version is recorded here instead",
+    "skills/software-copyright-materials": "symlink to the real directory; target recorded as skillsSymlinkTarget"
+  },
+  "files": [
+    {
+      "path": "SKILL.md",
+      "bytes": 33479,
+      "sha256": "1d17ca8d7d4776a0acb5e1649ed86eeeee923cbb5f823b66950a90085f78d3fb",
+      "gitBlobSha": "40ea4373742e0a1a45632944801a000ac4901411",
+      "crlf": false
+    },
+    {
+      "path": "agents/openai.yaml",
+      "bytes": 235,
+      "sha256": "460b46fed8f98c4a85125d24cf6ca294967638188e4c1248152a59158bed59ae",
+      "gitBlobSha": "93f1d1161232fc638d3aee788f9469838619b0eb",
+      "crlf": false
+    },
+    {
+      "path": "references/application_fields.md",
+      "bytes": 5282,
+      "sha256": "dcd15ce80c06e448d18732c10ec38d7a9cc707ede859dd6be7de244428b4e64d",
+      "gitBlobSha": "4aeba737d0547b3eba42a7180915a71c8b763d4e",
+      "crlf": false
+    },
+    {
+      "path": "references/business_understanding_rules.md",
+      "bytes": 3032,
+      "sha256": "4c110fc91bd434ea900a6fb73af4527198b2fe5c1f5b70d576c78235b1af0815",
+      "gitBlobSha": "e8ce5b9f16f80ebf1bc070c944a12875ea3ac2d7",
+      "crlf": false
+    },
+    {
+      "path": "references/code_selection_rules.md",
+      "bytes": 1923,
+      "sha256": "31541d6832a9afeacfcb153ef6ada663bc08b1ceb9fa00cbfa9a03be2c141ee0",
+      "gitBlobSha": "3b39b414d810fbf24819c9afc017c6bf0c462a89",
+      "crlf": false
+    },
+    {
+      "path": "references/copyright_material_rules.md",
+      "bytes": 1634,
+      "sha256": "8df85a301c5d86660b8622d7fe3c43fb15e055bba19d57b238bdca353e9b6e7f",
+      "gitBlobSha": "05beba75f3029d4c90c66349df0687cc5bfeaeed",
+      "crlf": false
+    },
+    {
+      "path": "references/manual_structure.md",
+      "bytes": 6086,
+      "sha256": "5941d60caeca1604527595c11088301122950daf782a0d995dcaabc2650e2704",
+      "gitBlobSha": "3f7832a9689eb3b622cca0c0d9e285fe037206cb",
+      "crlf": false
+    },
+    {
+      "path": "references/officecli_backend.md",
+      "bytes": 4762,
+      "sha256": "e9f244d284961866614730405df741a6f57cb8dc71d2f40c59c69c86559ee28f",
+      "gitBlobSha": "58ce5f92640c0d6a5b793d7814eda36fbe614a02",
+      "crlf": false
+    },
+    {
+      "path": "references/playwright_cli_screenshots.md",
+      "bytes": 5979,
+      "sha256": "af380fd8223e11c3a4696e07fac63d52b3bd975eb8b2730fccfa901227637ba3",
+      "gitBlobSha": "fe58bf8af4883a2c38c1c8c3a2758151c76acdc8",
+      "crlf": false
+    },
+    {
+      "path": "scripts/analyze_project.py",
+      "bytes": 13561,
+      "sha256": "4579a859b9b09c9f489aee192639d985e62bdf090b6cfd2fab20b6255996aa4b",
+      "gitBlobSha": "ffa5436977bd9f497dd113776137adcf6891cea2",
+      "crlf": false
+    },
+    {
+      "path": "scripts/build_docx_from_md.py",
+      "bytes": 31772,
+      "sha256": "5782f88a4df3c5f729e9d0b8d38066a913dcdb0ee1b21e8e289e721031ebfacb",
+      "gitBlobSha": "4225f74d021e0637f50c1842a3ce9e858716a097",
+      "crlf": false
+    },
+    {
+      "path": "scripts/capture_screenshots.py",
+      "bytes": 2804,
+      "sha256": "cf16827703404628ade8340b38ef2cc0277cf3a07f91d1984e7b3b4010b0ad7c",
+      "gitBlobSha": "e38dd3388420291a87c02669d47b41d29f1676ab",
+      "crlf": false
+    },
+    {
+      "path": "scripts/check_environment.py",
+      "bytes": 6606,
+      "sha256": "2b7edf38207573426fa87269fef7523e3dd872584658b221ab3210b4c7327647",
+      "gitBlobSha": "cc5dada7377d0c922ee3a8025f0738332e879768",
+      "crlf": false
+    },
+    {
+      "path": "scripts/check_playwright_cli.py",
+      "bytes": 6068,
+      "sha256": "9ddfc92a185bdcd4cbf184b5bd128630a3c71092a2e88457f4da22ad1120b1d2",
+      "gitBlobSha": "a8362ff2543efd789694c4e564960d4c654de99e",
+      "crlf": false
+    },
+    {
+      "path": "scripts/common.py",
+      "bytes": 15375,
+      "sha256": "879e3e829d347d55f9706b70d8defecabcbab84132b280d1f5eebacc290c3580",
+      "gitBlobSha": "a20e7836af53dd950c54ce55fae23d737d1c74aa",
+      "crlf": false
+    },
+    {
+      "path": "scripts/confirm_stage.py",
+      "bytes": 13401,
+      "sha256": "987eee99e81203cf950d5925a0e7feebc22ae9fe4ed3e67c523e2f2648021a64",
+      "gitBlobSha": "b4063d7851fa6f58aa6f090157d7f5032bfb2839",
+      "crlf": false
+    },
+    {
+      "path": "scripts/extract_code_material.py",
+      "bytes": 14958,
+      "sha256": "0afeded373dbe93d6f359d529ef1b065eccb25f27bab4e54e68781f2037bb61a",
+      "gitBlobSha": "e7c45c86118e97ba0531501aa7eeef76de6b867e",
+      "crlf": false
+    },
+    {
+      "path": "scripts/generate_application_info.py",
+      "bytes": 33339,
+      "sha256": "18f8689109984d1178bb6cee56e33e5579f5925e0f9daeb744e5c3e40f88d3da",
+      "gitBlobSha": "d5899526462264b5fc696c43ea59e05b9638ea69",
+      "crlf": false
+    },
+    {
+      "path": "scripts/generate_business_context.py",
+      "bytes": 23097,
+      "sha256": "b6456da96c4ed822ecf0df2f8008d337acaf6f549bd3cff02b094fbed18d6803",
+      "gitBlobSha": "90382e7ba0a88fa288f6cc669661112a9f5d3fbe",
+      "crlf": false
+    },
+    {
+      "path": "scripts/generate_manual_draft.py",
+      "bytes": 35752,
+      "sha256": "243aaeb9c914f9a5f2a0cd26ecd878ffdbf522ed8f6d434583f919ceed9fb91f",
+      "gitBlobSha": "72641f84caa78c58fdfe568d885862b46b3eeeea",
+      "crlf": false
+    },
+    {
+      "path": "scripts/officecli_backend.py",
+      "bytes": 9194,
+      "sha256": "69ec3657afb0300b87aa4e21db9ba39618310acb7f8d898e1984e071489c6027",
+      "gitBlobSha": "7f1cbd2bb7f4899cc354faaf3fae3bdbd6a028d4",
+      "crlf": false
+    },
+    {
+      "path": "scripts/propose_code_selection.py",
+      "bytes": 8197,
+      "sha256": "b3fc605ba15c54f359be0fb98c14f1fe6b8001d863767e31a563c21f7c4074c7",
+      "gitBlobSha": "ca3fdb5c0b6f487e33a0541e9ced1f5c6bb7668a",
+      "crlf": false
+    },
+    {
+      "path": "tests/test_code_layout.py",
+      "bytes": 1472,
+      "sha256": "d3cef6dbfe9c30acf9443988d88a5be7341014edd582e2ca799d8dfb76eb3b47",
+      "gitBlobSha": "c5aa2a6a83dda10a7bea39a86870a61e5304d49e",
+      "crlf": false
+    },
+    {
+      "path": "tests/test_officecli_builder.py",
+      "bytes": 10412,
+      "sha256": "a66bbf37b3edc1a5d66717d7e41945d9c90cb1b6aa47b84f7473ceafc62e6bbe",
+      "gitBlobSha": "684559f497fba20b1d45b5ec6930ad2528d83017",
+      "crlf": false
+    },
+    {
+      "path": "tests/test_source_discovery.py",
+      "bytes": 3851,
+      "sha256": "e9eb6cbd18ea86f93c5f897946c2d0fc7212de3bf923280e3cf6ec03853a6832",
+      "gitBlobSha": "5229c3da4b669115f3183de7d76cd38406e07c40",
+      "crlf": false
+    },
+    {
+      "path": "tests/test_workflow_integrity.py",
+      "bytes": 6768,
+      "sha256": "3f6627835f3832a31a5e470940e0d7ed386e3310bd71bd3fb43c03a236465693",
+      "gitBlobSha": "8adefb432a80d5d045668a8769ff5ab342536898",
+      "crlf": false
+    }
+  ],
+  "generatedSiblings": {
+    "note": "Files under vendor/ that are NOT part of the pin: LAY-5 forces every .md in the repo to carry an .html twin, and scripts/docs/build_docs_site.js generates those twins in place. The pin is per entry of files[], not per byte of the directory.",
+    "pattern": "*.html next to a vendored *.md",
+    "producedBy": "npm run docs:build",
+    "notUpstreamContent": true
+  }
+}

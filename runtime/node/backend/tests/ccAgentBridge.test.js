@@ -1,0 +1,52 @@
+'use strict';
+/**
+ * ccAgentBridge �?pins the pure leaf that maps Claude Code's on-disk agent
+ * roots so khy reuses CC's agent marketplace. Zero-IO: roots are injected, so
+ * the suite is deterministic (POSIX path assertions). Covers: gate default-ON +
+ * falsy set, root enumeration (flat user + recursive plugin roots), project dir
+ * intentionally omitted, and fail-soft on junk (never throws).
+ */
+const path = require('node:path');
+const assert = require('node:assert');
+const bridge = require('../src/agents/ccAgentBridge');
+
+describe('Cc Agent Bridge', () => {
+  test('isCcAgentBridgeEnabled: default ON, {0,false,off,no} OFF', () => {
+      expect(bridge.isCcAgentBridgeEnabled({})).toBe(true);
+      expect(bridge.isCcAgentBridgeEnabled({ KHY_CC_AGENT_BRIDGE: undefined })).toBe(true);
+      expect(bridge.isCcAgentBridgeEnabled({ KHY_CC_AGENT_BRIDGE: 'true' })).toBe(true);
+      for (const v of ['0', 'false', 'off', 'no', 'OFF', ' No ']) {
+        expect(bridge.isCcAgentBridgeEnabled({ KHY_CC_AGENT_BRIDGE: v })).toBe(false, `expected off for ${v}`);
+      }
+  });
+
+  test('ccAgentSearchDirs: home �?flat user root + two recursive plugin roots', () => {
+      const home = '/home/u';
+      const dirs = bridge.ccAgentSearchDirs({ homedir: home });
+      assert.deepStrictEqual(dirs, [
+        { dir: path.join(home, '.claude', 'agents'), source: 'cc-user', recursive: false },
+        { dir: path.join(home, '.claude', 'plugins', 'cache'), source: 'cc-plugin', recursive: true },
+        { dir: path.join(home, '.claude', 'local-plugins'), source: 'cc-plugin', recursive: true },
+      ]);
+  });
+
+  test('ccAgentSearchDirs: user root is flat, plugin roots are recursive', () => {
+      const dirs = bridge.ccAgentSearchDirs({ homedir: '/h' });
+      expect(dirs[0].recursive).toBe(false, 'user agents dir is a flat *.md list');
+      expect(dirs.slice(1).every((d) => d.recursive === true)).toBe(true);
+  });
+
+  test('ccAgentSearchDirs: no home �?empty (project .claude/agents handled by khy loader)', () => {
+      expect(bridge.ccAgentSearchDirs({})).toEqual([]);
+      expect(bridge.ccAgentSearchDirs()).toEqual([]);
+      // Project dir is intentionally NOT a parameter �?never emit a project root here.
+      expect(bridge.ccAgentSearchDirs({ projectDir: '/p' })).toEqual([]);
+  });
+
+  test('ccAgentSearchDirs: never throws on junk input', () => {
+      expect(() => bridge.ccAgentSearchDirs({ homedir: {} })).not.toThrow();
+      expect(Array.isArray(bridge.ccAgentSearchDirs({ homedir: 123 }))).toBeTruthy();
+  });
+
+});
+

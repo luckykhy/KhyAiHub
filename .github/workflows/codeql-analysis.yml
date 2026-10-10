@@ -1,0 +1,64 @@
+name: CodeQL Security Scanning
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    # Nightly scan catches newly disclosed CVEs against older commits
+    - cron: '0 3 * * *'
+
+# CodeQL 单次运行分钟数较高（两种语言 + security-extended 查询集）。
+# 同一 ref 上只保留最新一次；定时任务用 schedule 作为 group 后缀，避免
+# 夜间扫描被随后的 push 取消掉（那会造成「昨夜没扫」的静默漏洞）。
+concurrency:
+  group: codeql-${{ github.ref }}-${{ github.event_name == 'schedule' && 'nightly' || 'push' }}
+  cancel-in-progress: ${{ github.event_name != 'schedule' }}
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write   # SARIF upload for Code Scanning dashboard
+      contents: read
+      actions: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript, python]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── JavaScript / TypeScript ──────────────────────────────────────────────
+      - name: Initialize CodeQL (JavaScript)
+        uses: github/codeql-action/init@v3
+        if: matrix.language == 'javascript'
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended,security-and-quality
+
+      # ── Python ───────────────────────────────────────────────────────────────
+      - name: Initialize CodeQL (Python)
+        uses: github/codeql-action/init@v3
+        if: matrix.language == 'python'
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended,security-and-quality
+
+      # ── Autobuild (no extra build step needed for both) ──────────────────────
+      # CodeQL's autobuild handles JavaScript (npm ci + esbuild) and Python
+      # (setup.py / build) automatically. If autobuild fails, a manual step
+      # below overrides it.
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      # ── Perform Analysis ─────────────────────────────────────────────────────
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"

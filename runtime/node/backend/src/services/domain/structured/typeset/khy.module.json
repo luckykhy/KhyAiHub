@@ -1,0 +1,42 @@
+{
+  "name": "typeset",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "按 DOMAIN-DEPS.json 的 D2 名义边界如实申报，不写超出项。实测本单元出域边 0 条：`styleTemplates.js:22-23` 只 require Node 内置 fs/path，`contentSchema.js`、`markdownToAst.js`、`textEmphasisPolicy.js` 零 require。名义边界允许到 D3，实际连 D3 都没碰，是 D2 里的纯叶子单元。",
+  "fanIn": 1,
+  "fanInEvidence": [
+    "services/backend/src/services/typeset/index.js"
+  ],
+  "_fanIn_note": "直接 require 本单元路径的非测试文件去重后 1 个：绞杀者模式留下的再导出壳 `services/typeset/index.js:34-37`（四个文件各一条，头两行自称 `Auto-generated shim - re-export`）。壳的下游 2 个消费者 require 的是壳不是本单元，不计入 fan-in，只记用途：`cli/markdownRenderer.js:59` 取 textEmphasisPolicy 并自带 `{}` 兜底（单元不可用不影响终端渲染）；`src/tools/renderDocument.js:33-35` 取 validateDocument / markdownToAst / resolveTemplate + listTemplates。⚠ 后者所在的 `services/backend/src/tools/**` 在 DOMAIN-DEPS.json 无域根映射（同 §12.31「未映射 7」），属归属空洞而非本单元的出域边。",
+  "lifecycle": {
+    "stage": "staged",
+    "since": "2026-09-29",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "形式三判据齐（单元 README.md + 整数 fanIn + 4 个源文件全部同名同目录测试：contentSchema 25 / markdownToAst 27 / styleTemplates 19 / textEmphasisPolicy 20，合计 91 例 / 0 fail，显式列四路径复跑），但**刻意签 staged 而非 stable**：本单元有 8 条实测钉死的 KNOWN-DEFECT，其中两条是用户可见的行为缺陷（resolveTemplate(null) 交出进程级缓存本体，改一下就永久污染后续解析；原型链名 'constructor' / '__proto__' 被当内置模板交出函数或静默退回 default，用户拼错模板名拿不到错误）。第 30/31 批已就同一情形立过口径：「此刻签 stable 就是把 promotion-incomplete 防的那张假证自己签出去」。单元早于 entry-buffer 守卫（文件建于守卫建档之前），缓冲区从未被经过，故 enteredVia 为 null 而不是 staged 记录。",
+  "contract": {
+    "purpose": "内容与样式分离的「内容」半边：模型只交语义 AST（九种封闭块型），排版一律由 src/templates/docstyles/*.json 的样式模板 + 渲染器决定。contentSchema 是封闭集与防呆闸门，markdownToAst 是确定性解析器，styleTemplates 是模板解析与深合并，textEmphasisPolicy 是终端强调层（该加粗什么、标题第几档、是否字面双宽）的唯一真源。",
+    "ioOwner": "唯一 IO 面在 `styleTemplates.js`：模板只从 `TEMPLATE_DIR`（`src/templates/docstyles`，相对本文件四级）读，读不到即 fail-soft（readdir 失败 → 空内置集；单文件 JSON 解析失败 → 跳过该文件）。其余三个文件零 IO、零 env 写、确定性。`textEmphasisPolicy.js` 的两个 env 只读不写：KHY_TYPESET_EMPHASIS（默认开）、KHY_TYPESET_BIG_HEADINGS（默认关）。",
+    "gates": "两门都关时逐字节回退旧行为（shouldBoldHeading 恒 false、bigHeadingPrefix 恒空串），这是头注释写明的兼容性承诺；分页只认显式哨兵 `[[newpage]]` / `<<<pagebreak>>>`，opts.pagebreakSentinels 可整体替换哨兵集。",
+    "coverage_note": "本清单的 purpose/ioOwner/gates 只覆盖本轮实测到的面（四文件头注释 + 本批 91 例共置测试 + 上述 require 站点逐条核到行号），不是逐行审计结论；渲染侧（docTypeset.py）与模板 JSON 的字段语义不在本单元辖内。"
+  },
+  "knownDefectsPinned": [
+    "styleTemplates.js:133-136 resolveTemplate(null) 交出模块级缓存对象本体，调用方改写即永久污染本进程后续所有 default 解析",
+    "styleTemplates.js:109 builtins[spec] 无 hasOwnProperty 守卫 ⇒ resolveTemplate('constructor')/'toString'/'valueOf' 交出函数当模板、'__proto__' 静默退回 default，绕过「未知模板名」报错（原型链一族）",
+    "styleTemplates.js:86 _deepMerge 对 base 里不存在的键按引用交出 overrides 子对象 ⇒ 调用方后续改写穿透进已解析模板",
+    "markdownToAst.js:188 只有表头的表格凭空补出 rows:[['','']]，且该伪造行使 contentSchema 的 table.rows 非空判据拦不到空表",
+    "markdownToAst.js:88 _isTableSep 要求 `-{2,}` ⇒ `| - | - |` 形态整表静默退化成段落，不报错不警告",
+    "contentSchema.js:283-286 防呆扫描覆盖 title 与全部块文本，却不扫 meta（author/abstract/keywords）⇒ \\textbf{} 放进 meta 长驱直入",
+    "contentSchema.js:175-182 paragraph 的空 runs 放行，而 list.items / table.rows / reference.entries 要求非空；figure 两字段皆可缺仍 valid",
+    "textEmphasisPolicy.js:68/112 级别类型门与同单元 contentSchema 相反：Number.isFinite 对字符串恒 false ⇒ '3' 当 H1；bigHeadingPrefix 的 `lvl <= 2` 无下界 ⇒ 0/-1/NaN/对象/布尔一律发出 DEC 双宽控制序列",
+    "contentSchema.js:148-260 封闭集只封块型不封字段：{type:'paragraph',text:'x',fontSize:99} 与 runs 项上的 underline/rawNpStyle 等未知键一律 valid，伪装成语义结构的排版主张可穿过校验器"
+  ],
+  "_known_defects_note": "以上九条全部由共置测试以 KNOWN-DEFECT 断言钉住（实测现状，非推定），一律登记不修 —— 改任何一条都是行为变更，需甲/乙裁决（任务 #17）。第 1、2 条是本批实测到的最高危面：前者是进程级状态污染，后者让用户拼错模板名时拿到函数而不是错误。",
+  "tests": [
+    "contentSchema.test.js",
+    "markdownToAst.test.js",
+    "styleTemplates.test.js",
+    "textEmphasisPolicy.test.js"
+  ]
+}

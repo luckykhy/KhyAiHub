@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>deploy — 部署、发布打包与 PR 订阅（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>deploy<span class="sep">›</span>deploy — 部署、发布打包与 PR 订阅（D2）</div>
+      <header class="hero reveal"><h1>deploy — 部署、发布打包与 PR 订阅（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#deploy-部署-发布打包与-pr-订阅-d2">deploy — 部署、发布打包与 PR 订阅（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="deploy-部署-发布打包与-pr-订阅-d2">deploy — 部署、发布打包与 PR 订阅（D2）<a class="anchor" href="#deploy-部署-发布打包与-pr-订阅-d2" aria-label="锚点">#</a></h1>
+<p>子上下文：<code>deploy</code> / <code>publish</code> / <code>subscribePr</code>。业务入口 <code>khy deploy</code>、<br><code>khy publish</code>（别名 发布/打包）、<code>/subscribe-pr</code>。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong><code>khy deploy</code></strong>：<code>constants/commandSchema.js:116</code>（<code>:591</code>、<code>:1783</code>）→</li></ul>
+<p><code>cli/handlers/deploy.js:42</code> 取 <code>deploy/deployLedger</code>。</p>
+<ul><li><strong><code>khy publish</code></strong>：<code>commandSchema.js:111</code>、<code>:769</code>、<code>:1681</code>；</li></ul>
+<p>中文别名在 <code>cli/aliases.js:377-401</code>；处理器 <code>cli/handlers/publish.js:113-156</code><br>  ——它一次取本目录 <code>publish/</code> 的全部五个文件。</p>
+<ul><li><strong><code>/subscribe-pr</code></strong>：<code>commandSchema.js:250</code>、<code>:1861</code>，派发</li></ul>
+<p><code>cli/routerDispatchSlash.js:279-281</code> → <code>cli/handlers/subscribePr.js:19-20</code>。</p>
+<ul><li><strong>别处的复用</strong>：<code>services/gitignoreService.js:61</code> 与</li></ul>
+<p><code>domain/project/projectBlueprint/index.js:35</code> 取 <code>deploy/projectDetector</code>；<br>  <code>domain/network/remote/index.js:438</code> 取 <code>publish/dockerBundleBuilder</code>。</p>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p><code>deploy/*</code> 五个文件全部走<strong>依赖注入</strong>（<code>defaultDeps</code> 里懒 require <code>fs</code> /<br><code>child_process</code>：<code>index.js:23-24</code>、<code>runners.js:19-20</code>、<code>projectDetector.js:38</code>、<br><code>syncEngine.js:19</code>、<code>deployLedger.js:31</code>）。这不是风格偏好：部署器最容易犯的错是<br>「在模块加载时就假设自己能跑 git/docker」，注入 + 懒 require 让<br><code>parseCommandOverride</code>、<code>shouldExclude</code>、<code>listReconciled</code> 这些判定可以在没装<br>docker 的机器上被测。台账单点 <code>deployLedger</code> 提供 <code>upsert / listReconciled</code>，<br>对应 <code>[DESIGN-DEPLOY-001]</code> 的「部署要对账，不能只报成功」。<br><code>publish/</code> 是<strong>产物组装</strong>，<code>subscribePr/</code> 里 <code>subscribePrPlan.js</code> 的头部（<code>:7</code>）<br>把自己钉死成「不读 <code>process.env</code>、不碰文件、不开网络、不调 <code>Date</code>」的纯计划——<br>因为它产出的通知文案必须可复算，<code>decideNotify</code> 一旦读时钟，测试就成了看运气。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/services/subscribePr/subscribePrPlan.test.js    <span class="hljs-comment"># 28 tests / 28 pass / 0 fail</span>
+node --<span class="hljs-built_in">test</span> tests/deploy.ledger.test.js                            <span class="hljs-comment"># 7 tests / 7 pass / 0 fail</span></code></pre>
+<p><code>publish/</code> 那五个文件的测试（<code>tests/services/publishUtils.test.js</code>、<br><code>publishProjectState</code>、<code>publishDockerBundleBuilder</code>、<code>publishBundleArtifacts</code>、<br><code>tests/cli/publishDispatch.test.js</code>）<strong>全是 jest 形态</strong>，本机 jest 渠道不可用——<br>即「发布打包链」在本机没有可执行的回归渠道，这是真实盲区。</p>
+<h2 id="已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）<a class="anchor" href="#已知缺陷-登记-不在本单元擅自修" aria-label="锚点">#</a></h2>
+<ol><li>`publish/{bundleArtifacts,bundleCommon,dockerBundleBuilder,projectState,</li></ol>
+<p>publishUtils}.js<code> 五个文件当前是 </code>A <code>（已入索引、尚未提交的新增），<br>   </code>subscribePr/subscribePrPlan.js<code> 是 </code> M`。本卡对这六个文件的内部行为<br>   <strong>只登记状态，不复述细节</strong>。</p>
+<ol><li>上面第 2 条盲区：publish 链在本机无测试执行渠道。</li><li>任务面棘轮已接近上限（命令 245 / 别名 591 / handler 155），</li></ol>
+<p>本单元新增入口前须先读 <code>[DESIGN-DELIV-002]</code> §4。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/services/domain/data/reverseEngineer/README.html"><div class="dir">← 上一篇</div><div class="ttl">reverseEngineer — 制品逆向与自验流水线（D2 功能单元）</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/services/domain/desktop/README.html"><div class="dir">下一篇 →</div><div class="ttl">desktop — 屏幕操作、浏览器与设备应用的执行面（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/deploy/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

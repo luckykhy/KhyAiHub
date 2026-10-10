@@ -1,0 +1,30 @@
+# 2026-10-10：全仓文本归一化总则。必须放在**最前** —— gitattributes 的规则是
+# 「后者覆盖前者」，所以下面各扩展名的特例（eol=lf / eol=crlf）仍然胜出，
+# 而此前完全没有规则覆盖的 .js/.md/.vue/.json/.py 等从此在 git add 时归一化。
+#
+# 为什么需要它：此前本文件只钉了 *.sh *.bash（lf）与 *.bat *.cmd *.ps1（crlf），
+# 其余几千个文本文件没有任何 EOL 约定。后果实测过一次 —— 2026-10-07 有 335 个文件
+# 被一次性 CRLF→LF 重写，git diff 凭空多出约 10921 行纯行尾噪音
+# （raw 28358/16125 → 忽略 CR 后 17437/5204），且下次任何一个编辑器一碰又会重来。
+# 加了这一行，归一化由 git 在入库时做，不再依赖每个工具自觉。
+* text=auto
+
+# 策略文件自身也钉死 LF：否则 * text=auto 这条总则同样罩着它们，而它们没有更具体的
+# 规则可依，换机器 checkout 时行尾可能被改写，让「谁改了 .gitattributes」变成假阳性。
+.gitattributes text eol=lf
+.gitignore text eol=lf
+
+# khy-markdown extension: ensure shell scripts keep LF line endings on all platforms
+extensions/tools/khy-markdown/khyosmarkdown         text eol=lf
+extensions/tools/khy-markdown/khyosmarkdown.command  text eol=lf
+extensions/tools/khy-markdown/register-linux.sh      text eol=lf
+extensions/tools/khy-markdown/unregister-linux.sh    text eol=lf
+
+# All shell scripts must keep LF line endings (CRLF breaks shebang on Linux/macOS)
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Windows scripts must keep CRLF line endings (CMD misparses multi-line blocks with LF-only)
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf

@@ -1,0 +1,32 @@
+{
+  "name": "adapters",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "按 DOMAIN-DEPS.json 的 D2 名义边界申报。实测出边（archDebtScan 解析后的 require 图）：D2 12 条（单元内互引 + 上层 ../_adapterBase、../assetModel），D3 1 条（khyOs.js:51 → utils/dataHome，惰性、在函数体内），D1 0 条。",
+  "fanIn": 0,
+  "fanInEvidence": [
+    "services/backend/src/services/domain/agents/agentAssets/registry.js:86 (动态 require(`./adapters/${source.module}`)，静态图不可见)"
+  ],
+  "_fanIn_note": "静态非测试消费者去重为 0：唯一消费者 registry.js 走模板串动态 require，解析后的图看不到。这是 fan-in 代理口径的已知盲区（[RESEARCH-018] §4 C-6 ③ 非字面量 require 盲区 86 处之一），如实登记，不把动态边伪装成静态计数。",
+  "lifecycle": {
+    "stage": "staged",
+    "since": "2026-09-30",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "三件套形式齐（README + 整数 fanIn + 6/6 同名同目录测试 53 例 0 fail，显式路径复跑），但签 staged 而非 stable：fan-in 申报依赖动态装载证据（registry.js:86），且六家磁盘布局的实证均绑定外部工具版本，上游布局变更时本单元是最先失真的面——留人工复核。单元早于 entry-buffer 守卫建档，enteredVia 为 null。",
+  "contract": {
+    "purpose": "把六家外部 agent 工具（claudeCode/deepseekHarness/harness/khyOs/openclaw/opencode）各自的磁盘布局翻译成统一资产模型（记忆/技能/MCP 工具三类），实现同一适配器契约，使 ../sync.js 的 import/export/sync 退化为同一段代码的三种参数，tool↔tool 直接迁移无需特判。",
+    "ioOwner": "每家适配器只读写自己那家工具的磁盘布局（路径来自注入的 env / probeRoot，绝不读 process.env 真值）；khyOs.js 一侧走 getDataHome()（D3）。",
+    "gates": "registry.js 的 isEnabled + 源 id 注册表决定装载面；各文件头列明实证来源（本机 ~/.claude 实测、上游 README、docs.openclaw.ai），非猜测。",
+    "coverage_note": "本段依据 = 六文件头注释 + 本批 53 例共置测试实测 + 上述 require 站点，不是逐行审计结论。"
+  },
+  "tests": [
+    "claudeCode.test.js",
+    "deepseekHarness.test.js",
+    "harness.test.js",
+    "khyOs.test.js",
+    "openclaw.test.js",
+    "opencode.test.js"
+  ]
+}

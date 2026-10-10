@@ -1,0 +1,3360 @@
+/**
+ * router.js — CLI command router: parse, resolve, dispatch
+ *
+ * Central dispatch hub that parses user input, resolves aliases & symbols,
+ * and routes to the correct handler or plugin. All heavy modules are
+ * lazy-loaded for fast cold start (~40ms baseline).
+ *
+ * @module cli/router
+ */
+'use strict';
+
+// ════════════════════════════════════════════════════════════════
+// Imports
+// ════════════════════════════════════════════════════════════════
+
+const path = require('path');
+
+const { createRouterHandlers } = require('./routerHandlers');
+
+const {
+  getRouterCommandNames,
+  getRouterSubCommands,
+  getStaticSlashCommands,
+} = require('../constants/commandSchema');
+
+// ════════════════════════════════════════════════════════════════
+// Helpers — Fuzzy Matching
+// ════════════════════════════════════════════════════════════════
+
+// NOTE (Batch B1 — Levenshtein convergence): one of three Levenshtein
+// implementations in services/backend. NOT merged into a shared leaf because
+// the three are byte-divergent variants of the same algorithm:
+//   - tools/FileEditTool/index.js `_levenshtein`: adds an `a === b` fast path
+//     plus an la/lb > 2000 length-cap short-circuit (returns |la - lb|).
+//   - tools/ccValidationError.js `levenshteinDistance`: coerces non-string
+//     inputs and uses a two-row swap DP.
+// This variant has no length cap; injecting FileEditTool's > 2000 short-circuit
+// here would add a code path router never had, so the variants stay separate.
+function _levenshtein(a, b) {
+  const m = a.length,
+    n = b.length;
+  if (m === 0) {
+    return n;
+  }
+  if (n === 0) {
+    return m;
+  }
+  let prev = Array.from({ length: n + 1 }, (_, i) => i);
+  for (let i = 1; i <= m; i++) {
+    const curr = [i];
+    for (let j = 1; j <= n; j++) {
+      curr[j] =
+        a[i - 1] === b[j - 1] ? prev[j - 1] : 1 + Math.min(prev[j - 1], prev[j], curr[j - 1]);
+    }
+    prev = curr;
+  }
+  return prev[n];
+}
+
+/**
+ * 在已注册命令中查找与 input 编辑距离 ≤ maxDist 的最佳候选。
+ * 同时搜索主命令和「主命令 子命令」组合。
+ * @returns {Array<{label: string, dist: number}>} 最多 3 个，按距离升序
+ */
+function _findClosestCommands(input, maxDist = 2) {
+  const lower = input.toLowerCase().replace(/^\//, '');
+  const candidates = [];
+
+  // 1) 主命令
+  const allKeys = [...COMMANDS, ...aliases().getAllAliasKeys()];
+  for (const key of new Set(allKeys)) {
+    const k = key.toLowerCase().replace(/^\//, '');
+    const d = _levenshtein(lower, k);
+    if (d > 0 && d <= maxDist) {
+      candidates.push({ label: key, dist: d });
+    }
+  }
+
+  // 2) 「主命令 子命令」组合（仅在输入含空格或主命令无匹配时）
+  const parts = lower.split(/\s+/);
+  if (parts.length >= 2) {
+    const cmdPart = parts[0];
+    const subPart = parts.slice(1).join(' ');
+    for (const [cmd, subs] of Object.entries(SUB_COMMANDS)) {
+      const cmdDist = _levenshtein(cmdPart, cmd);
+      if (cmdDist > maxDist) {
+        continue;
+      }
+      for (const sub of subs) {
+        const subDist = _levenshtein(subPart, sub);
+        const total = cmdDist + subDist;
+        if (total > 0 && total <= maxDist + 1) {
+          candidates.push({ label: `${cmd} ${sub}`, dist: total });
+        }
+      }
+    }
+  }
+
+  // 去重 + 排序 + 取前 3
+  const seen = new Set();
+  return candidates
+    .sort((a, b) => a.dist - b.dist)
+    .filter((c) => {
+      if (seen.has(c.label)) {
+        return false;
+      }
+      seen.add(c.label);
+      return true;
+    })
+    .slice(0, 3);
+}
+
+// ════════════════════════════════════════════════════════════════
+// Lazy Module Loaders
+// ════════════════════════════════════════════════════════════════
+
+let _fmt, _chalk, _aliases, _symbolResolver, _plugins;
+let _slashCommandInFlight = false; // S3: 斜杠命令并发锁,防止慢命令重入
+const fmt = () => (_fmt ??= require('./formatters'));
+const chk = () => {
+  if (_chalk) {
+    return _chalk;
+  }
+  const chalkModule = require('chalk');
+  _chalk = chalkModule.default || chalkModule;
+  return _chalk;
+};
+const aliases = () => (_aliases ??= require('./aliases'));
+const symResolver = () => (_symbolResolver ??= require('./symbolResolver'));
+const plugins = () => (_plugins ??= require('./plugins'));
+
+// getCompletions 的 allKeys 惰性构造门控(斜杠路径不用 allKeys,却每次按键/每次 Tab 白构造)。
+let _completionKeysLazy;
+const completionKeysLazy = () => (_completionKeysLazy ??= require('./completionKeysLazy'));
+
+// #18:Tab 补全并入 manifest 动词的门控(Why 见 cli/completionManifestUnion 头注释:
+// getRouterSubCommands 的 `!out[def.name]` 合并守卫使已 key 住命令的 manifest 动词永不进静态表)。
+let _completionManifestUnion;
+const completionManifestUnion = () =>
+  (_completionManifestUnion ??= require('./completionManifestUnion'));
+
+/**
+ * 斜杠命令的子命令透传门(KHY_SLASH_SUBCOMMAND_PASSTHROUGH,默认开)。
+ * 关 → 逐字节回退到「route 原样拼接用户参数」的历史行为。绝不抛。
+ * @returns {boolean}
+ */
+function _slashPassthroughEnabled() {
+  try {
+    return require('../services/flagRegistry').isFlagEnabled(
+      'KHY_SLASH_SUBCOMMAND_PASSTHROUGH',
+      process.env
+    );
+  } catch {
+    const v = String(process.env.KHY_SLASH_SUBCOMMAND_PASSTHROUGH ?? 'true')
+      .trim()
+      .toLowerCase();
+    return !['0', 'false', 'off', 'no'].includes(v);
+  }
+}
+
+// CC 后端口径对齐:字节数 → 人类可读走 CC `formatFileSize` 单一真源(ccFormat SSOT,同
+// handlers/workspace|health|storage 已采纳)。门控 KHY_CC_FORMAT(经 ccFormatEnabled)默认
+// 开;关 / require 失败 / 非有限输入 → 返回调用方传入的 `legacy` 串(逐字节回退)。
+function _ccFileSize(bytes, legacy) {
+  try {
+    const { ccFormatEnabled, ccFormatFileSize } = require('./ccFormat');
+    if (ccFormatEnabled()) {
+      const out = ccFormatFileSize(bytes);
+      if (out) {
+        return out;
+      }
+    }
+  } catch {
+    /* fall through to legacy */
+  }
+  return legacy;
+}
+
+// CC 后端口径对齐:毫秒龄差 → 人类可读「多久以前」走 ccFormat SSOT(CC `formatRelativeTime`
+// 的 **Math.trunc 截断** + 完整 year→second 区间表),复用 resumeAdvisor `_ageLabel` 这一既有
+// 中文本地化单一真源(绝不另写一份 _AGE_UNIT_ZH)。门控 KHY_CC_FORMAT(经 ccFormatEnabled)默认
+// 开;关 / require 失败 / 拿不到标签 → 返回调用方传入的 `legacy` 串(逐字节回退到旧的「Nm 前」)。
+function _ccTaskAge(ageMs, legacy) {
+  try {
+    const { ccFormatEnabled } = require('./ccFormat');
+    if (ccFormatEnabled()) {
+      const lbl = require('../services/resumeAdvisor')._ageLabel(null, undefined, ageMs);
+      if (lbl) {
+        return lbl;
+      }
+    }
+  } catch {
+    /* fall through to legacy */
+  }
+  return legacy;
+}
+const { handleAccountInfo, handleLogCommand, handlePositionInfo, resolveArg0 } =
+  createRouterHandlers({ fmt, chk, symResolver });
+
+// Ops-cluster command dispatch extracted to a sibling module (routerDispatchOps.js); the verbatim
+// case bodies live there and are re-entered via dispatchOpsCommand in route(). Wire the 3 host
+// callbacks the moved bodies still reference (handleLogCommand assigned just above; the other two
+// are hoisted function declarations).
+const {
+  dispatchOpsCommand,
+  setRouterDispatchOpsDeps,
+  ROUTER_NOT_HANDLED,
+} = require('./routerDispatchOps');
+setRouterDispatchOpsDeps({ handleLogCommand, _handleResumeFlow, _ccFileSize });
+
+// Slash-shortcut command cluster extracted to a sibling module (routerDispatchSlash.js); the
+// verbatim case bodies live there and are re-entered via dispatchSlashCommand in route(). The moved
+// bodies call route() recursively, so inject the host route function (a hoisted declaration).
+const {
+  dispatchSlashCommand,
+  setRouterDispatchSlashDeps,
+  ROUTER_NOT_HANDLED: SLASH_NOT_HANDLED,
+} = require('./routerDispatchSlash');
+setRouterDispatchSlashDeps({ route });
+
+// Tail command cluster (habit … bridge) extracted to a sibling module (routerDispatchTail.js); the
+// verbatim case bodies live there and are re-entered via dispatchTailCommand in route(). Inject chk
+// (the lazy chalk loader, already assigned at module top above).
+const {
+  dispatchTailCommand,
+  setRouterDispatchTailDeps,
+  ROUTER_NOT_HANDLED: TAIL_NOT_HANDLED,
+} = require('./routerDispatchTail');
+const { formatStatusMessage } = require('./statusMessageFormatter');
+setRouterDispatchTailDeps({ chk });
+
+// Self-registering command auto-registry (progressive migration).
+// Commands that export a manifest are dispatched here, before the
+// hardcoded switch. Unmigrated commands still fall through to the switch.
+const commandAutoRegistry = require('./commandAutoRegistry');
+commandAutoRegistry.init();
+
+// ════════════════════════════════════════════════════════════════
+// Constants
+// ════════════════════════════════════════════════════════════════
+
+const COMMANDS = getRouterCommandNames();
+const SUB_COMMANDS = getRouterSubCommands();
+
+// In khyquant app-entry mode, system-level diagnostic/ops commands should be
+// executed via `khy ...` instead of `khyquant ...`.
+const KHY_ONLY_COMMANDS_IN_APP_MODE = new Set([
+  'gateway',
+  'doctor',
+  'proxy',
+  'linux',
+  'shell',
+  'verify',
+  'security',
+  'monitor',
+  'services',
+  'init',
+  'docs',
+  'profile',
+  'cloud',
+  'update',
+  'plugin',
+  'app',
+  'workspace',
+  'publish',
+  'mobile',
+  'restore',
+  'companion',
+  'desktop',
+  'model',
+  'models',
+  'khymodel',
+  'bridge',
+  'mcp',
+  'config',
+  'context',
+  'diff',
+  'env',
+  'export',
+  'files',
+  'hooks',
+  'session',
+  'share',
+  'stats',
+  'status',
+  'summary',
+  'tasks',
+  'theme',
+  'lang',
+  'release-notes',
+  'releasenotes',
+  'terminal-setup',
+  'terminalsetup',
+  'keybindings',
+  'keys',
+  'shortcuts',
+  'perf-issue',
+  'perfissue',
+  'issue',
+  'sandbox-toggle',
+  'sandboxtoggle',
+  'init-verifiers',
+  'initverifiers',
+  'fork',
+  'topology',
+  'forest',
+  'btw',
+  'autonomy',
+  'proactive',
+  'onboarding',
+  'debug-tool-call',
+  'debugtoolcall',
+  'recap',
+  'copy',
+  'rename',
+  'tag',
+  'heapdump',
+  'break-cache',
+  'breakcache',
+  'color',
+  'advisor',
+  'autofix-pr',
+  'autofixpr',
+  'claim-main',
+  'claimmain',
+  'ide',
+  'subscribe-pr',
+  'subscribepr',
+  'pr-comments',
+  'prcomments',
+  'web-tools',
+  'webtools',
+  'upgrade',
+  'branch',
+  'debug',
+  'stickers',
+  'receipts',
+  'rewind',
+  'undo',
+  'cleandisk',
+]);
+
+// Commands that accept a Chinese positional argument (stock names, search
+// keywords). Used by parseInput's no-space Chinese alias splitter to decide
+// whether a Chinese remainder (e.g. "茅台" after "回测") is a valid arg or should
+// fall through to the AI as natural language ("启动项目" must NOT split into
+// "启动" + "项目"). Hoisted to module scope (Ch2「不要每轮重建可复用结构」): this
+// literal Set was formerly rebuilt on every parseInput call (once per submitted
+// command line, repl.js). It is consumed read-only via `.has` and never mutated
+// or returned, so a single shared instance is byte-identical.
+const ACCEPTS_ZH_ARG = new Set([
+  'quote',
+  'backtest',
+  'data',
+  'search',
+  'analyze',
+  'watch',
+  'rank',
+  'order',
+]);
+
+// ════════════════════════════════════════════════════════════════
+// Input Parsing
+// ════════════════════════════════════════════════════════════════
+
+function _isKhyquantAppOnlyMode(context = {}) {
+  const enforce = String(process.env.KHYQUANT_APP_ONLY || 'true').toLowerCase() !== 'false';
+  if (!enforce) {
+    return false;
+  }
+  const mode = String(context.mode || process.env.KHY_RUNTIME_MODE || '').toLowerCase();
+  const invokedAs = String(process.env.KHYQUANT_INVOKED_AS || '').toLowerCase();
+  return mode === 'khyquant' || invokedAs === 'khyquant';
+}
+
+function _isNumericConversationIndex(raw = '') {
+  // Accept an optional leading '#' so `resume #2` matches `resume 2`. The resume
+  // flow's _looksLikeIndex gate (`/^#?\d+$/`) already treats `#N` as an index and
+  // skips the session-resume branch for it; this resolver must agree, otherwise a
+  // `#N` arg falls through to findConversationByRef and dead-ends at INVALID_ID.
+  const token = String(raw || '')
+    .trim()
+    .replace(/^#/, '');
+  return /^\d+$/.test(token);
+}
+
+function _resolveConversationTarget(aiModule, rawArg = '') {
+  const convos = aiModule.listConversations();
+  if (convos.length === 0) {
+    return { convos, target: null, error: 'EMPTY' };
+  }
+
+  const token = String(rawArg || '').trim();
+  if (!token) {
+    return { convos, target: convos[0], error: null };
+  }
+
+  if (_isNumericConversationIndex(token)) {
+    const idx = parseInt(token.replace(/^#/, ''), 10) - 1;
+    const target = convos[idx] || null;
+    return { convos, target, error: target ? null : 'INVALID_INDEX' };
+  }
+
+  if (typeof aiModule.findConversationByRef === 'function') {
+    const target = aiModule.findConversationByRef(token);
+    return { convos, target, error: target ? null : 'INVALID_ID' };
+  }
+
+  const fallback = convos.find((c) => c.file === token || c.file === `${token}.json`) || null;
+  return { convos, target: fallback, error: fallback ? null : 'INVALID_ID' };
+}
+
+/**
+ * Try to handle `resume` as a boulder (agent task) resume rather than a
+ * conversation resume. Returns true when handled (caller should stop).
+ *   resume tasks | list  → list resumable checkpoints
+ *   resume <taskId>       → re-arm that checkpoint for live auto-resume
+ * Returns false when the argument is not a known task id, so the caller
+ * falls back to conversation-history resume.
+ * @param {string} arg0
+ * @param {object} fmtApi - formatters ({ printInfo, printSuccess, printWarn })
+ * @param {object} chalkApi
+ * @returns {boolean}
+ */
+function _tryBoulderTaskResume(arg0, fmtApi, chalkApi) {
+  const token = String(arg0 || '').trim();
+  let boulder;
+  try {
+    boulder = require('../services/boulderState');
+  } catch {
+    return false;
+  }
+
+  if (token === 'tasks' || token === 'list') {
+    const tasks = boulder.listResumableTasks();
+    if (tasks.length === 0) {
+      fmtApi.printInfo('暂无可恢复的任务检查点');
+    } else {
+      fmtApi.printInfo('可恢复的任务检查点 (khy resume <taskId>):');
+      for (const t of tasks) {
+        const ageMs = Date.now() - t.updatedAt;
+        const flag = t.status === 'interrupted' ? '⏸' : '▶';
+        const ageLabel = _ccTaskAge(ageMs, `${Math.round(ageMs / 60000)}m 前`);
+        console.log(`  ${flag} ${t.taskId}  [${t.status}, ${t.iterations} 轮, ${ageLabel}]`);
+        console.log(`     ${chalkApi.dim(t.cwd || '')}  ${chalkApi.dim(t.userMessage || '')}`);
+      }
+    }
+    return true;
+  }
+
+  if (!token) {
+    return false;
+  }
+  const rearmed = boulder.rearmForResume(token);
+  if (!rearmed) {
+    return false;
+  } // not a task id — let conversation resume handle it
+
+  fmtApi.printSuccess(`已定位任务 ${rearmed.taskId} (${rearmed.iterations} 轮已完成)`);
+  fmtApi.printInfo(`工作目录: ${rearmed.cwd}`);
+  if (rearmed.userMessage) {
+    fmtApi.printInfo(`原始指令: ${rearmed.userMessage}`);
+  }
+  const sameDir = path.resolve(rearmed.cwd) === path.resolve(process.cwd());
+  if (sameDir) {
+    fmtApi.printInfo('检查点已重新激活，重新发送上述指令即可从断点继续。');
+  } else {
+    fmtApi.printWarn(`请先切换到该目录再继续: cd ${rearmed.cwd}`);
+  }
+  return true;
+}
+
+/**
+ * Unified resume flow — the single source of truth for `resume` / `history resume`.
+ *
+ * `resume` is aliased to `history resume` (see aliases.js), so a user typing
+ * `khy resume <id>` lands in the `history` command's `resume` sub-branch, NOT the
+ * top-level `case 'resume'`. Before this helper existed, only the top-level case
+ * checked the full-fidelity JSONL transcript store (Store B); the `history resume`
+ * branch checked only the legacy summary store. The shutdown banner prints a
+ * `getLiveSessionId()` id (a Store B id), so `khy resume <that-id>` was rejected
+ * with "无效会话 ID". Routing both entry points through this helper makes the
+ * printed id resolvable regardless of which path the alias takes.
+ *
+ * Resolution order (most authoritative first):
+ *   1. bare `resume`            → re-arm the interrupted build for this cwd
+ *   2. `resume <taskId>`        → boulder (agent task) checkpoint
+ *   3. `resume <session-id>`    → full-fidelity JSONL transcript (Store B)
+ *   4. `resume <index|ref>`     → legacy summary store (compacted digest)
+ *
+ * @param {object} p
+ * @param {object} p.ai - the `./ai` module
+ * @param {string} p.arg0 - the resume argument (session id / index / ref)
+ * @param {Function} p.printSuccess
+ * @param {Function} p.printInfo
+ * @param {Function} p.printError
+ * @param {Function} p.printWarn
+ * @param {object} p.chalkApi
+ * @returns {true | { aiForward: string }} router-compatible return value
+ */
+function _handleResumeFlow({ ai, arg0, printSuccess, printInfo, printError, printWarn, chalkApi }) {
+  // 显式传了参但值是空串/纯空白(`resume "$SID"` 且 SID 为空)≠ 裸 `resume`。
+  // 旧行为把两者混为一谈,静默恢复「最近会话」并往其追加消息——写路径上的
+  // 静默改意(轮二十六)。空参就地拒绝,裸命令仍走原设计。
+  if (arg0 !== undefined && arg0 !== null && String(arg0).trim() === '') {
+    printError(
+      '会话参数为空串:请给 ID 或序号(khy resume <id>,先 khy history list 查看);' +
+        '裸 khy resume 不带参才是继续最近会话。'
+    );
+    // ✗ 已打印却 rc=0 会让 `khy resume "" && next` 继续跑(同 #82 族、r195 cron 修法)。
+    require('../utils/markProcessFailure')();
+    return true;
+  }
+  const _arg0 = String(arg0 || '').trim();
+
+  // 1. Bare resume → continue the interrupted build for this cwd (resumeAdvisor).
+  //    The saved original instruction is auto-resubmitted via the aiForward
+  //    contract so the user need not retype it. Best-effort; on miss we fall
+  //    through to conversation/session resume below.
+  if (!_arg0) {
+    try {
+      const resumeAdvisor = require('../services/resumeAdvisor');
+      const armed = resumeAdvisor.armBareResume(process.cwd());
+      if (armed && armed.userMessage) {
+        printSuccess(formatStatusMessage('继续', '未完成构建', '从上次断点恢复'));
+        printInfo(`原始目标: ${armed.userMessage}`);
+        return { aiForward: armed.userMessage };
+      }
+    } catch {
+      /* re-arming is a bonus; fall back to history resume */
+    }
+  }
+
+  // 2. Boulder (agent task) resume takes priority over conversation resume.
+  if (_tryBoulderTaskResume(_arg0, { printInfo, printSuccess, printWarn }, chalkApi)) {
+    return true;
+  }
+
+  // 3. Full-fidelity resume (Store B / JSONL transcript). Prefer restoring the
+  //    complete conversation over the legacy compacted digest. A numeric arg
+  //    (`resume 2`) keeps its legacy meaning: a 1-based index into the summary
+  //    `history list`, handled by the legacy block below.
+  const _looksLikeIndex = /^#?\d+$/.test(_arg0);
+  if (!_looksLikeIndex) {
+    const _full = _arg0 ? ai.resumePersistedSession(_arg0) : ai.resumeLastPersistedSession();
+    if (_full && _full.success) {
+      const _src = _full.source ? ` · ${_full.source}` : '';
+      printSuccess(
+        `已恢复完整会话「${_full.title || _full.sessionId}」(${_full.messageCount} 条消息${_src})`
+      );
+      printInfo('AI 已加载该会话的完整上下文，可直接继续对话；后续消息会追加到同一会话记录');
+      return true;
+    }
+    // Not found in Store B — fall through so an explicit summary-store id /
+    // legacy record still resolves.
+  }
+
+  // 4. Conversation history resume (legacy summary store).
+  const _resolved = _resolveConversationTarget(ai, arg0);
+  const _target = _resolved.target;
+  if (!_target) {
+    if (_resolved.error === 'EMPTY') {
+      // 显式点名一个会话而账本为空是失败(✗+rc=1，同 #82 族)；裸 resume 无
+      // 可恢复时的「暂无保存的对话记录」仍是信息(i、rc=0)——两种形态不能混。
+      if (_arg0) {
+        printError(`未找到会话「${_arg0}」：暂无保存的对话记录（可运行 khy history list 查看）`);
+        require('../utils/markProcessFailure')();
+      } else {
+        printInfo('暂无保存的对话记录');
+      }
+    } else if (_resolved.error === 'INVALID_ID') {
+      printError('无效会话 ID，请先运行 history list 查看');
+      require('../utils/markProcessFailure')();
+    } else {
+      printError('无效序号，请先运行 history list 查看');
+      require('../utils/markProcessFailure')();
+    }
+    return true;
+  }
+
+  const _result = ai.resumeConversation(_target.file);
+  if (_result.success) {
+    const compactNote = _result.compacted
+      ? `，已压缩摘要 (${_result.originalCount} → ${_result.messageCount} 条)`
+      : '';
+    const sid = _target.sessionId ? ` · 会话ID ${_target.sessionId}` : '';
+    printSuccess(
+      `已恢复对话 (${new Date(_result.timestamp).toLocaleString('zh-CN')}${compactNote}${sid})`
+    );
+    printInfo('AI 已加载上次对话的关键上下文，可以继续提问');
+  } else {
+    printError('恢复失败');
+    require('../utils/markProcessFailure')();
+  }
+  return true;
+}
+
+/**
+ * Serialize an argv-style array back into a shell-like raw string.
+ * @param {string[]} parts - argv tokens
+ * @returns {string} Joined, properly-quoted string
+ */
+function _stringifyArgvForRawInput(parts = []) {
+  return (Array.isArray(parts) ? parts : [])
+    .map((part) => {
+      const token = String(part ?? '');
+      if (!token) {
+        return '""';
+      }
+      return /\s|["'\\]/.test(token) ? JSON.stringify(token) : token;
+    })
+    .join(' ')
+    .trim();
+}
+
+/**
+ * Parse raw user input into a structured command descriptor.
+ *
+ * Handles slash commands, Chinese alias splitting, argv arrays,
+ * and alias resolution before returning the canonical form.
+ *
+ * @param {string|string[]} line - Raw input string or pre-split argv array
+ * @returns {Object|null} Parsed result or null if empty input
+ * @returns {string} .command - Canonical command name
+ * @returns {string|null} .subCommand - Sub-command if recognized
+ * @returns {string[]} .args - Remaining positional arguments
+ * @returns {Object} .options - Parsed --flag values
+ * @returns {string} .rawInput - Original input string
+ * @returns {string} .rawCommandToken - Original first token before resolution
+ * @returns {string|null} .flag - Slash-command flag if applicable
+ */
+/**
+ * Quote-aware line tokenizer for REPL/TUI input (轮二十一).
+ *
+ * Before this, a typed line was split with bare `/\s+/`, so `doc view "my file.md"`
+ * became ['view', '"my', 'file.md"'] — quotes kept as literal characters AND glued
+ * words torn apart: an existing spaced filename was reported missing, and broken
+ * tokens leaked verbatim into user-visible error lines. argv callers (one-shot CLI)
+ * were never affected — the OS tokenizes those — hence the damage was invisible
+ * until someone typed it.
+ *
+ * Blast-radius gate: lines with no quote character take the legacy split path
+ * byte-identically. Only quoted lines change. Kill switch KHY_QUOTED_INPUT_ARGS=off
+ * (flagRegistry CANON semantics; unregistered name defaults to on).
+ */
+function _quotedInputEnabled() {
+  try {
+    return require('../services/flagRegistry').isFlagEnabled(
+      'KHY_QUOTED_INPUT_ARGS',
+      process.env
+    );
+  } catch {
+    return !['off', '0', 'false', 'no'].includes(
+      String(process.env.KHY_QUOTED_INPUT_ARGS ?? 'true').trim().toLowerCase()
+    );
+  }
+}
+
+function _tokenizeCommandLine(line) {
+  // Gate first: unquoted lines must keep the exact legacy behavior.
+  if (!/[\"']/.test(line)) return line.split(/\s+/);
+  const tokens = [];
+  let cur = '';
+  let has = false; // distinguish an empty token ("" → '') from "no token yet"
+  let quote = null;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (quote) {
+      if (ch === '\\' && quote === '"' && line[i + 1] === '"') {
+        cur += '"';
+        i++;
+      } else if (ch === '\\' && quote === "'" && line[i + 1] === "'") {
+        cur += "'";
+        i++;
+      } else if (ch === '\\' && quote === '"' && line[i + 1] === '\\') {
+        cur += '\\';
+        i++;
+      } else if (ch === quote) {
+        quote = null;
+      } else {
+        cur += ch;
+      }
+      has = true;
+      continue;
+    }
+    // Mid-word `'` stays literal: `don't` / `it's` are prose apostrophes, and
+    // opening a quote there would silently swallow the rest of the line.
+    // `"` keeps shell-like anywhere-open so `--path="a b"` still groups.
+    if (ch === '"' || (ch === "'" && !has)) {
+      quote = ch;
+      has = true;
+    } else if (/\s/.test(ch)) {
+      if (has) tokens.push(cur);
+      cur = '';
+      has = false;
+    } else {
+      cur += ch;
+      has = true;
+    }
+  }
+  // Unterminated quote closes implicitly — never eat the user's remainder.
+  if (has) tokens.push(cur);
+  return tokens;
+}
+
+function parseInput(line) {
+  const isArgvArray = Array.isArray(line);
+  const rawInput = isArgvArray ? _stringifyArgvForRawInput(line) : String(line || '').trim();
+  let parts = isArgvArray
+    ? line.map((part) => String(part ?? ''))
+    : _quotedInputEnabled()
+      ? _tokenizeCommandLine(rawInput)
+      : rawInput.split(/\s+/);
+  if (/^khy(?:quant)?$/i.test(parts[0]) && parts.length > 1) {
+    parts.shift();
+  }
+  if (parts.length === 0 || parts[0] === '') {
+    return null;
+  }
+
+  const rawCommandToken = parts[0];
+  // Flag carried by a `{ route: null, flag: '...' }` slash command (e.g.
+  // /thinking → 'thinking', /vim → 'vim'). Surfaced on the parsed object so
+  // callers (the ink TUI's runRouted) can dispatch state-toggle flags in-UI
+  // instead of letting route() forward them to the AI.
+  let slashFlag = null;
+  if (parts[0].startsWith('/')) {
+    const slashToken = parts[0].toLowerCase();
+    let slashRoute = null;
+
+    try {
+      const cmdReg = require('./commandRegistry');
+      const slashDef = cmdReg
+        .toSlashCommands()
+        .find((sc) => sc && typeof sc.cmd === 'string' && sc.cmd.toLowerCase() === slashToken);
+      if (slashDef && slashDef.route) {
+        slashRoute = String(slashDef.route);
+      }
+      if (slashDef && slashDef.flag) {
+        slashFlag = String(slashDef.flag);
+      }
+    } catch {
+      // Fallback to static slash table when dynamic registry is unavailable.
+      const slashDef = (SLASH_COMMANDS || []).find(
+        (sc) => sc && typeof sc.cmd === 'string' && sc.cmd.toLowerCase() === slashToken
+      );
+      if (slashDef && slashDef.route) {
+        slashRoute = String(slashDef.route);
+      }
+      if (slashDef && slashDef.flag) {
+        slashFlag = String(slashDef.flag);
+      }
+    }
+
+    parts[0] = parts[0].slice(1);
+    if (!parts[0]) {
+      return null;
+    }
+
+    // Direct slash input should behave like selecting the same item from '/'.
+    // Expand route-based slash commands (e.g. /model -> gateway model).
+    if (slashRoute) {
+      const routeParts = slashRoute.trim().split(/\s+/).filter(Boolean);
+      if (routeParts.length > 0) {
+        // ── 子命令透传(KHY_SLASH_SUBCOMMAND_PASSTHROUGH,默认开)────────────
+        // 菜单条目的 route 常带一个**默认**子命令(`/msg` → `msg status`、`/daemon` →
+        // `daemon status`)。原样拼接的话,用户敲 `/daemon restart` 会变成
+        // `daemon status restart` —— 子命令位被 status 占死,restart 沦为位置参数被
+        // **静默忽略**:没有报错,只是默默做了另一件事。全库有 28 条 route 中招
+        // (/gateway model、/vault set、/mesh send、/skill search …)。
+        //
+        // 修法刻意保守:仅当用户**给了参数**、且该参数**确实是这个命令的合法子命令**时,
+        // 才丢掉 route 里的默认子命令。于是:
+        //   `/msg`          → msg status      (不变,无参时默认分支原样保留)
+        //   `/msg send x`   → msg send x      (修好)
+        //   `/msg 随便一个词` → msg status 随便一个词 (不变,不是合法子命令就不动)
+        // 因此 28 个命令**无参时的行为逐字节不变**,无需逐个核对各自的默认分支。
+        const userArgs = parts.slice(1);
+        let effectiveRoute = routeParts;
+        if (routeParts.length > 1 && userArgs.length > 0 && _slashPassthroughEnabled()) {
+          const first = String(userArgs[0] || '').toLowerCase();
+          let known = [];
+          try {
+            known =
+              require('../constants/commandSchema').getRouterSubCommands()[routeParts[0]] || [];
+          } catch {
+            known = [];
+          }
+          if (known.some((k) => String(k).toLowerCase() === first)) {
+            effectiveRoute = [routeParts[0]]; // 让用户的子命令落到子命令位
+          }
+        }
+        parts = [...effectiveRoute, ...userArgs];
+      }
+    }
+  }
+
+  // Chinese input often omits spaces (e.g. "回测茅台", "行情sh600519").
+  // Try splitting on known Chinese alias prefixes so they route correctly.
+  // Only split for commands that actually accept Chinese positional arguments
+  // (stock names, search keywords). Commands like "启动" (server start) or
+  // "退出" (exit) don't take Chinese args, so "启动项目" should not be split
+  // into "启动" + "项目" → server start.
+  if (parts.length === 1 && !aliases().resolveAlias(parts[0])) {
+    const token = parts[0];
+    const { ALIAS_MAP } = aliases();
+    const zhKeys = Object.keys(ALIAS_MAP).filter((k) => /[\u4e00-\u9fff]/.test(k));
+    // Sort longest first to match "回测" before single-char aliases
+    zhKeys.sort((a, b) => b.length - a.length);
+    for (const key of zhKeys) {
+      if (token.startsWith(key) && token.length > key.length) {
+        const remainder = token.slice(key.length);
+        const aliasTarget = ALIAS_MAP[key];
+        // English/pinyin/number remainder is always a valid arg (e.g. "回测sh600519")
+        if (/^[a-zA-Z0-9]/.test(remainder)) {
+          parts = [key, remainder];
+          break;
+        }
+        // Chinese remainder is only valid for commands that accept Chinese args
+        // (stock names like "茅台", search terms). Other commands ("启动项目",
+        // "服务状态") should fall through to AI as natural language.
+        if (
+          aliasTarget &&
+          ACCEPTS_ZH_ARG.has(aliasTarget.command) &&
+          /^[\u4e00-\u9fff]+$/.test(remainder) &&
+          remainder.length <= 4
+        ) {
+          parts = [key, remainder];
+          break;
+        }
+      }
+    }
+  }
+
+  let command = parts[0];
+  const rest = parts.slice(1);
+
+  // Parse options (--key value / --key=value) and positional args
+  // `--key=value` 的等号内联形式经纯叶子 cli/inlineOptionParse 拆分(门控
+  // KHY_INLINE_OPTION_PARSE 默认开;关 → 逐字节回退历史空格分隔逻辑,`--out=x`
+  // 仍落 options['out=x']=true)。懒加载 + fail-soft。
+  const args = [];
+  const options = {};
+  let _parseInlineOption;
+  // 子命令保护表(懒算一次):`--flag <该命令已声明的子命令>` 时不吞值 —— 见 cli/optionValueGuard。
+  // 命令此时可能仍是别名,先规范化;规范化只读,下方 alias 解析不受影响。
+  let _guardSubs;
+  let _guardSubsResolved = false;
+  // 短旗标声明表(hci-audit #44 裁决 A,见 cli/shortOptionSpec)的懒解析命令名。
+  let _shortCmd = null;
+  for (let i = 0; i < rest.length; i++) {
+    if (rest[i] === '--') {
+      args.push(...rest.slice(i + 1));
+      break;
+    }
+    // 单字母短旗标(`-n` / `-d 2`):此前原样落 args,51 处 `options.<单字母>` 读取
+    // 全部落空。布尔/取值由 shortOptionSpec 逐命令声明(未声明 → 布尔,保守默认);
+    // 门控 KHY_SHORT_OPTION_PARSE 默认开,关 → 原样落 args(逐字节回退历史行为)。
+    // 形如 `-5`(负数)、`-xy`(集群)不匹配 `/^-[A-Za-z]$/`,仍按位置参数处理。
+    if (
+      rest[i].length === 2 &&
+      rest[i].codePointAt(0) === 0x2d /* '-' */ &&
+      /[A-Za-z]/.test(rest[i].slice(1))
+    ) {
+      let _shortEnabled = false;
+      try {
+        _shortEnabled = require('./shortOptionSpec').isEnabled(process.env);
+      } catch {
+        _shortEnabled = false; // 叶子不可用 → 历史行为
+      }
+      if (!_shortEnabled) {
+        args.push(rest[i]);
+        continue;
+      }
+      const letter = rest[i].slice(1);
+      let kind = 'bool';
+      try {
+        if (_shortCmd === null) {
+          const aliasPre = aliases().resolveAlias(command);
+          _shortCmd = (aliasPre && aliasPre.command) || command;
+        }
+        kind = require('./shortOptionSpec').kindFor(_shortCmd, letter);
+      } catch {
+        kind = 'bool'; // fail-soft → 布尔(不吃后续位置参数)
+      }
+      const nextVal = kind === 'value' ? rest[i + 1] : undefined;
+      if (kind === 'value' && nextVal !== undefined && !nextVal.startsWith('-')) {
+        options[letter] = nextVal;
+        i++;
+      } else {
+        options[letter] = true;
+      }
+      continue;
+    }
+    if (rest[i].startsWith('--')) {
+      const rawKey = rest[i].slice(2);
+      let inline = { inline: false, key: rawKey };
+      try {
+        if (_parseInlineOption === undefined) {
+          _parseInlineOption = require('./inlineOptionParse').parseInlineOption;
+        }
+        if (typeof _parseInlineOption === 'function') {
+          inline = _parseInlineOption(rawKey, process.env);
+        }
+      } catch {
+        inline = { inline: false, key: rawKey };
+      }
+      if (inline.inline) {
+        options[inline.key] = inline.value;
+        continue; // 等号形式自带值,不消费下一个 token
+      }
+      const key = inline.key;
+      const nextVal = rest[i + 1];
+      if (nextVal && !nextVal.startsWith('--')) {
+        if (_guardSubsResolved === false) {
+          _guardSubsResolved = true;
+          try {
+            const aliasPre = aliases().resolveAlias(command);
+            _guardSubs = SUB_COMMANDS[(aliasPre && aliasPre.command) || command];
+          } catch {
+            _guardSubs = undefined;
+          }
+        }
+        let eatNext = true;
+        try {
+          const guard = require('./optionValueGuard').shouldConsumeNextValue;
+          eatNext = guard({ nextVal, subCommands: _guardSubs, env: process.env });
+        } catch {
+          eatNext = true; // fail-soft → 历史贪心行为
+        }
+        if (eatNext) {
+          options[key] = nextVal;
+          i++;
+        } else {
+          options[key] = true;
+        }
+      } else {
+        options[key] = true;
+      }
+    } else {
+      args.push(rest[i]);
+    }
+  }
+
+  // Resolve alias → canonical command
+  const alias = aliases().resolveAlias(command);
+  if (alias) {
+    command = alias.command;
+    // If alias implies a sub-command, prepend it — UNLESS the user already typed
+    // an explicit, valid sub-command for the resolved command. Bare-keyword
+    // aliases (e.g. "runtime" → status) must not clobber "runtime verify".
+    if (alias.subCommand) {
+      const typedSub = args[0];
+      const validSubs = SUB_COMMANDS[command];
+      const userTypedRealSub = typedSub && Array.isArray(validSubs) && validSubs.includes(typedSub);
+      if (!userTypedRealSub) {
+        args.unshift(alias.subCommand);
+      }
+    }
+    // Inject default positional arguments for shortcut aliases
+    // (e.g. "nir" -> "pool import nirvana").
+    if (Array.isArray(alias.defaultPositionals) && alias.defaultPositionals.length > 0) {
+      const defaults = alias.defaultPositionals.map((v) => String(v || '').trim()).filter(Boolean);
+      if (defaults.length > 0) {
+        if (alias.subCommand && args.length > 0) {
+          args.splice(1, 0, ...defaults);
+        } else {
+          args.unshift(...defaults);
+        }
+      }
+    }
+    // Merge default args from alias (e.g. buy → order --side buy)
+    if (alias.defaultArgs) {
+      Object.assign(options, alias.defaultArgs);
+    }
+  } else {
+    command = command.toLowerCase();
+  }
+
+  // Detect sub-command
+  let subCommand = null;
+  if (SUB_COMMANDS[command] && args.length > 0 && SUB_COMMANDS[command].includes(args[0])) {
+    subCommand = args.shift();
+  }
+
+  return {
+    command,
+    subCommand,
+    args,
+    options,
+    rawInput,
+    rawCommandToken,
+    flag: slashFlag,
+  };
+}
+
+// ════════════════════════════════════════════════════════════════
+// Main Logic — Command Dispatch
+// ════════════════════════════════════════════════════════════════
+
+/**
+ * Honor a global `--verbose` / `--debug` flag by escalating runtime verbosity.
+ * Sets LOG_LEVEL=debug (so the Winston logger emits debug lines) and KHY_DEBUG=1
+ * (so the scattered KHY_*_DEBUG fast paths and stack-trace dumps turn on).
+ *
+ * Escalate-only: if the user already pinned a MORE verbose level (e.g.
+ * LOG_LEVEL=silly), it is left untouched; we only raise quieter levels to debug.
+ * Idempotent and side-effect-safe to call once per dispatch.
+ */
+function _applyVerbosityFlag(options = {}) {
+  const on =
+    options.verbose === true ||
+    options.verbose === 'true' ||
+    options.debug === true ||
+    options.debug === 'true';
+  if (!on) {
+    return;
+  }
+  // Levels more verbose than debug that we must not downgrade.
+  const MORE_VERBOSE = new Set(['silly', 'trace']);
+  const current = String(process.env.LOG_LEVEL || '').toLowerCase();
+  if (!MORE_VERBOSE.has(current)) {
+    process.env.LOG_LEVEL = 'debug';
+  }
+  if (!process.env.KHY_DEBUG) {
+    process.env.KHY_DEBUG = '1';
+  }
+}
+
+/**
+ * Route a parsed command to its handler.
+ *
+ * @param {Object} parsed - The parsed command object from parseInput()
+ * @param {string} parsed.command - The canonical command name
+ * @param {string|null} parsed.subCommand - Sub-command or null
+ * @param {string[]} parsed.args - Positional arguments
+ * @param {Object} parsed.options - Parsed flags/options
+ * @param {Object} [context={}] - Runtime context (mode, env, etc.)
+ * @returns {Promise<boolean|string|Object>} Whether the command was handled, or a control signal
+ */
+async function route(parsed, context = {}) {
+  const { command, subCommand, args, options } = parsed;
+  const rawCommandToken = String(parsed?.rawCommandToken || '')
+    .trim()
+    .toLowerCase();
+  const { printError, printHelp, printInfo, printTable, printSuccess, printWarn, withSpinner } =
+    fmt();
+  const chalk = chk();
+
+  // Global `--verbose` / `--debug`: a single, discoverable verbosity switch that
+  // lights up Winston debug logging + the scattered KHY_*_DEBUG diagnostic paths.
+  // Idempotent and escalate-only — it never silences an already-lower level a
+  // user set explicitly via LOG_LEVEL. Applied here at the one dispatch chokepoint
+  // so every command honors it uniformly.
+  _applyVerbosityFlag(options);
+
+  // Typo'd flags used to vanish without a trace (rc=0, wrong-format output).
+  // stderr-only, near-miss-gated hint; never throws, never changes behavior.
+  try {
+    require('./flagHint').hintUnknownFlags(command, options);
+  } catch { /* hint failure must not affect dispatch */ }
+
+  if (_isKhyquantAppOnlyMode(context) && KHY_ONLY_COMMANDS_IN_APP_MODE.has(command)) {
+    const cmdTail = [command, subCommand, ...(args || [])].filter(Boolean).join(' ');
+    printWarn('`khyquant` 仅用于启动量化应用。');
+    printInfo(`请使用: khy ${cmdTail}`.trim());
+    return true;
+  }
+
+  try {
+    // Ops-cluster commands (log/cost/usage/history/update/compute/train/admin/growth/agent/prompt/
+    // voice/knowledge/security/monitor/services/linux/shell) are dispatched by a sibling module;
+    // verbatim case bodies moved there. Non-ops commands return the sentinel and fall through to
+    // the main switch below, preserving byte-identical behavior.
+    {
+      const __ops = await dispatchOpsCommand(command, {
+        subCommand,
+        args,
+        options,
+        rawCommandToken,
+        parsed,
+        context,
+        printError,
+        printHelp,
+        printInfo,
+        printTable,
+        printSuccess,
+        printWarn,
+        withSpinner,
+        chalk,
+      });
+      if (__ops !== ROUTER_NOT_HANDLED) {
+        return __ops;
+      }
+    }
+    // Slash-shortcut cluster is dispatched from routerDispatchSlash.js (see extraction note above);
+    // non-slash commands return the sentinel and fall through to the main switch below.
+    {
+      // S3: 斜杠命令并发锁 — 防止慢命令(如 /compact AI 阻塞)期间用户快速输入导致重入。
+      // context.delegated 是合法的同进程委托(handlers/onboarding.js _route):
+      // 外层 dispatchSlash 持锁期间重入必命中本锁,曾让 `onboarding theme|mcp`
+      // 永远打 ⚠ 并静默跳过步骤(rc=0 假成功)。委托方显式声明,锁只拦真实并发。
+      if (_slashCommandInFlight && !context.delegated) {
+        printWarn('另一个命令正在执行中,请稍候...');
+        return true;
+      }
+      const _wasInFlight = _slashCommandInFlight;
+      _slashCommandInFlight = true;
+      let __slash;
+      try {
+        __slash = await dispatchSlashCommand(command, {
+          subCommand,
+          args,
+          options,
+          rawCommandToken,
+          parsed,
+          context,
+          printError,
+          printHelp,
+          printInfo,
+          printTable,
+          printSuccess,
+          printWarn,
+          withSpinner,
+          chalk,
+        });
+      } finally {
+        // 嵌套委托结束时恢复外层持有者的锁状态,不得无条件清零(否则会提前释放外层锁)。
+        _slashCommandInFlight = _wasInFlight;
+      }
+      if (__slash !== SLASH_NOT_HANDLED) {
+        return __slash;
+      }
+    }
+    // Tail cluster (habit … bridge) is dispatched from routerDispatchTail.js (see extraction note
+    // above); non-tail commands return the sentinel and fall through to the main switch below.
+    {
+      const __tail = await dispatchTailCommand(command, {
+        subCommand,
+        args,
+        options,
+        rawCommandToken,
+        parsed,
+        context,
+        printError,
+        printHelp,
+        printInfo,
+        printTable,
+        printSuccess,
+        printWarn,
+        withSpinner,
+        chalk,
+      });
+      if (__tail !== TAIL_NOT_HANDLED) {
+        return __tail;
+      }
+    }
+    // Self-registering commands: dispatched before the hardcoded switch.
+    // Adding a new command no longer requires editing this file — just drop
+    // a handler in handlers/ that exports a manifest.
+    {
+      const __auto = await commandAutoRegistry.dispatch(command, {
+        subCommand,
+        args,
+        options,
+        rawCommandToken,
+        parsed,
+        context,
+        printError,
+        printHelp,
+        printInfo,
+        printTable,
+        printSuccess,
+        printWarn,
+        withSpinner,
+        chalk,
+      });
+      if (__auto.handled) {
+        return __auto.result;
+      }
+    }
+    switch (command) {
+      // ════════════════════════════════════════════════════════════════
+      // Configuration & System Commands (version, help, clear, exit, menu, khyos, meta, manage...)
+      // ════════════════════════════════════════════════════════════════
+
+      // ── Meta ──
+      case 'version': {
+        const v = process.env.KHYQUANT_PKG_VERSION || require('../../package.json').version;
+        printSuccess(`Khy-OS v${v}`);
+        return true;
+      }
+
+      case 'inertia': {
+        // [DESIGN-ARCH-160] S1：任务级惯性执行（触发路径 C：khy inertia run --plan <file>）。
+        // 外置控制器只当 runToolUseLoop 的调用方，不碰执行内核；回滚 = 删本 case。
+        const { handleInertiaCommand } = require('./inertiaCommand');
+        return await handleInertiaCommand(args, { printSuccess, printError, printInfo, printWarn });
+      }
+
+      case 'resume': {
+        // `resume` is aliased to `history resume` (aliases.js), so in practice
+        // user input reaches the `history` case below. This direct case remains
+        // for any non-aliased dispatch; both delegate to the same unified flow so
+        // Store B (JSONL transcript) ids — including the one the shutdown banner
+        // prints — resolve identically regardless of entry point.
+        return _handleResumeFlow({
+          ai: require('./ai'),
+          arg0: args[0],
+          printSuccess,
+          printInfo,
+          printError,
+          printWarn,
+          chalkApi: chalk,
+        });
+      }
+      case 'help':
+        if (args[0]) {
+          // `help <真实命令>` 不再答「未知帮助主题」——数据在 manifest 里,
+          // 入口拒答才是病症(轮二十五;KHY_HELP_CARD=off 逐字节回退旧路径)。
+          const helpCardLines = require('./helpCard').build(String(args[0]));
+          if (helpCardLines) {
+            console.log('');
+            for (const line of helpCardLines) console.log(line);
+            console.log('');
+          } else {
+            const { printHelpTopic } = require('./formatters');
+            printHelpTopic(args[0]);
+          }
+        } else {
+          printHelp();
+        }
+        return true;
+      case 'clear':
+        // REPL mode handles clear in a terminal-safe way (frame/hud reset).
+        // Keep direct clear for non-REPL invocations.
+        if (process.env.KHY_REPL_ACTIVE !== '1') {
+          console.clear();
+        }
+        return true;
+      case 'exit':
+      case 'quit':
+        return 'exit';
+      case 'menu':
+        return 'menu';
+      case 'commands':
+      case 'catalog':
+        // Static, scrollback-friendly command cheat-sheet (Rule 4: inline
+        // output only — no scroll region / alternate buffer). Complements the
+        // interactive `menu` above rather than replacing it.
+        require('./commandCatalogUi').renderCommandCatalog();
+        return true;
+
+      // ── 持久目标(khy goal …) ──
+      // 对齐 Claude Code /goal:设定后每轮注入系统提示词提醒模型朝它推进,直到清除。
+      // 判定/规范化/指令在纯叶子 goalCore;持久化在 goalStore(~/.khyos/goals)。
+      // freeform `/goal <文本>` 直设并「设定即开跑」:handler 返回 { code, aiForward } 时,
+      // 透传 aiForward 让 REPL/TUI 主循环立刻跑一轮 agentic(对齐 CC 截图的 Crystallizing)。
+      // ── 前端工程生成(khy create-frontend …) ──
+      // 薄编排入口:用户自然语言描述需求 → 组装引导性任务描述,复用既有 agentic 循环
+      // (与 goal 同一 aiForward 契约:handler 返回 { code, aiForward } 时透传给
+      // REPL/TUI 主循环跑一轮 agentic,由 ProjectBlueprint 工具自主规划并落盘)。
+      // 严禁自建执行引擎/while 循环调 AI。
+      case 'create-frontend': {
+        const cfRes = require('./handlers/createFrontend').handleCreateFrontend(
+          subCommand,
+          args,
+          options
+        );
+        if (cfRes && typeof cfRes === 'object' && cfRes.aiForward) {
+          return { aiForward: cfRes.aiForward };
+        }
+        return cfRes;
+      }
+
+      // ════════════════════════════════════════════════════════════════
+      // Data & Market Commands (quote, data, backtest, strategy, search, watch, rank, analyze...)
+      // ════════════════════════════════════════════════════════════════
+
+      // ── Quote ──
+      case 'quote': {
+        if (!args[0]) {
+          printError('用法: quote <代码|名称>  (如: hq 茅台, quote sh600519)');
+          require('../utils/markProcessFailure')();
+          return true;
+        }
+        const sym = await resolveArg0(args);
+        const { handleQuote } = require('./handlers/data');
+        await handleQuote(sym);
+        return true;
+      }
+
+      // ── Data ──
+      case 'data': {
+        const { handleDataFetch, handleDataList } = require('./handlers/data');
+        if (subCommand === 'fetch') {
+          if (!args[0]) {
+            printError('用法: data fetch <代码|名称>');
+            require('../utils/markProcessFailure')();
+            return true;
+          }
+          const sym = await resolveArg0(args);
+          await handleDataFetch(sym, options);
+        } else if (subCommand === 'list') {
+          await handleDataList();
+        } else if (!subCommand && !args[0]) {
+          // 裸命令不是错误：给出该命令的作用域帮助（与 server #9 / hq 同族口径）
+          printInfo('可用子命令: data fetch <代码|名称>（拉取行情） | data list（列出已缓存数据）');
+          // 续行不是独立通知:走 printInfo 会再吃一枚 i 子弹(竖排双弹,#131 族)。
+          // 缩进 4 列对齐首行正文(printInfo 前缀占 4 显示列)。
+          console.log('    别名: xz, sj；行情类命令见 khy help quant');
+          return true;
+        } else {
+          const given = subCommand || args[0];
+          printError(`未知 data 子命令 "${given}"：可用 fetch <代码> | list（示例: data fetch sh600519）。`);
+          require('../utils/markProcessFailure')();
+        }
+        return true;
+      }
+
+      case 'cache': {
+        const { handleCacheClear } = require('./handlers/data');
+        if (subCommand === 'clear') {
+          await handleCacheClear();
+        } else if (!subCommand && !args[0]) {
+          printInfo('可用子命令: cache clear（清空行情缓存）');
+          console.log('    别名: hc');
+          return true;
+        } else {
+          const given = subCommand || args[0];
+          printError(`未知 cache 子命令 "${given}"：可用 clear（示例: cache clear）。`);
+          require('../utils/markProcessFailure')();
+        }
+        return true;
+      }
+
+      // ── Backtest ──
+      case 'backtest': {
+        if (subCommand === 'list') {
+          const { handleBacktestList } = require('./handlers/backtest');
+          await handleBacktestList(options);
+        } else {
+          const rawSym = args[0] || subCommand;
+          if (!rawSym) {
+            printError(
+              '用法: backtest <代码|名称> [--strategy <ma_cross|rsi|macd|ID|文件> --start --end --capital --verbose]'
+            );
+            require('../utils/markProcessFailure')();
+            return true;
+          }
+          args[0] = rawSym;
+          const sym = await resolveArg0(args);
+          const { handleBacktestRun } = require('./handlers/backtest');
+          await handleBacktestRun(sym, options);
+        }
+        return true;
+      }
+
+      case 'strategy': {
+        // r203: parseInput 对未知动词置 null，`strategy <拼错>` 曾静默落 list 屏
+        // (注册表只有 list)。args[0] 回捞拒之并复述；裸命令与 list 维持默认渲染。
+        const _stSub = subCommand
+          || (Array.isArray(args) && typeof args[0] === 'string' && !args[0].startsWith('-') ? args[0] : '');
+        if (_stSub === 'help') {
+          // r222 门型(r219/r220):help 走用法墙 rc=0,不进 ✗/rc=1 回捞门。
+          printInfo('用法: strategy list');
+          return true;
+        }
+        if (_stSub === 'list' || _stSub === 'cl' || !_stSub) {
+          const { handleStrategyList } = require('./handlers/backtest');
+          await handleStrategyList();
+        } else {
+          printError(`未知子命令: strategy ${_stSub}（可用: list）`);
+          require('../utils/markProcessFailure')();
+        }
+        return true;
+      }
+
+      // ── Search ──
+      case 'search': {
+        // Web search sub-command: search web <query>
+        if (subCommand === 'web' || args[0] === 'web' || args[0] === '网页') {
+          const webArgs = subCommand === 'web' ? args : args.slice(1);
+          const webQuery = webArgs.join(' ');
+          if (!webQuery) {
+            printError('用法: search web <关键词>');
+            require('../utils/markProcessFailure')();
+            return true;
+          }
+          const webSearch = require('../services/webSearchService');
+          if (!webSearch.isAvailable()) {
+            printInfo('未检测到 Kiro 认证，自动使用回退搜索');
+          }
+          printInfo(formatStatusMessage('搜索', '网页', webQuery));
+          const result = await webSearch.search(webQuery);
+          if (result.success) {
+            console.log('');
+            console.log(chalk.bold.cyan('  搜索结果'));
+            console.log("");
+            for (const r of (result.results || []).slice(0, 10)) {
+              console.log('');
+              console.log(chalk.bold.white(`  ${r.title}`));
+              if (r.url) {
+                console.log(chalk.blue(`  ${r.url}`));
+              }
+              if (r.snippet) {
+                console.log(chalk.gray(`  ${r.snippet}`));
+              }
+              if (r.publishedDate) {
+                console.log(chalk.dim(`  ${r.publishedDate}`));
+              }
+            }
+            console.log('');
+          } else {
+            printError(result.error || '搜索失败');
+          }
+          return true;
+        }
+        if (!args[0]) {
+          printError('用法: search <关键词>  (别名: ss, sousuo)');
+          require('../utils/markProcessFailure')();
+          return true;
+        }
+        const results = await symResolver().searchInstruments(args[0]);
+        if (results.length === 0) {
+          printError(`未找到匹配 "${args[0]}" 的品种`);
+          require('../utils/markProcessFailure')();
+        } else {
+          printSuccess(`找到 ${results.length} 个匹配`);
+          printTable(
+            ['代码', '名称', '类型', '市场'],
+            results
+              .slice(0, 20)
+              .map((i) => [i.symbol, i.name || '-', i.type || '-', i.market || '-'])
+          );
+        }
+        return true;
+      }
+
+      // ── Web Search (via Kiro InvokeMCP) ──
+      case 'web_search': {
+        const webQuery = args.join(' ');
+        if (!webQuery) {
+          printError('用法: web_search <关键词>');
+          require('../utils/markProcessFailure')();
+          return true;
+        }
+        const webSearch = require('../services/webSearchService');
+        if (!webSearch.isAvailable()) {
+          printInfo('未检测到 Kiro 认证，自动使用回退搜索');
+        }
+        const wsResult = await webSearch.search(webQuery);
+        if (wsResult.success && wsResult.formatted) {
+          console.log(wsResult.formatted);
+        } else {
+          printError(wsResult.error || '搜索失败');
+        }
+        return true;
+      }
+
+      // ── Screenshot to Web (image -> runnable HTML) ──
+      case 'image2web': {
+        const imageToWebService = require('../services/imageToWebService');
+        const inputArg = String(args[0] || '').trim();
+        const fromClipboard = Boolean(
+          options.clipboard || options.paste || imageToWebService.isClipboardImageArg(inputArg)
+        );
+        if (!fromClipboard && !inputArg) {
+          printError(
+            '用法: image2web <图片路径|paste> [还原要求] [--out index.html] [--overwrite]'
+          );
+          // 两条示例是 ✗ 用法行的续行,不是独立通知(竖排双 i 弹,#135/#137 先例);
+          // 缩进 4 列对齐首行正文。
+          console.log('    示例: image2web ./landing.png 还原这个网页为可运行 HTML --out landing.html');
+          console.log('    示例: image2web paste 还原成响应式网页 --out clipboard-page.html');
+          require('../utils/markProcessFailure')();
+          return true;
+        }
+
+        let sourcePath = '';
+        let userPrompt = '';
+        if (fromClipboard) {
+          userPrompt = imageToWebService.isClipboardImageArg(inputArg)
+            ? args.slice(1).join(' ').trim()
+            : args.join(' ').trim();
+        } else {
+          sourcePath = inputArg;
+          userPrompt = args.slice(1).join(' ').trim();
+        }
+
+        const noSave = Boolean(options.print || options.stdout || options['no-save']);
+        const outRaw = String(options.out || options.output || '').trim();
+        let convertResult = null;
+        await withSpinner(
+          formatStatusMessage('还原', '网页代码', fromClipboard ? '剪贴板图片' : sourcePath),
+          async () => {
+            convertResult = await imageToWebService.convertImageToWeb({
+              imagePath: sourcePath,
+              useClipboard: fromClipboard,
+              prompt: userPrompt,
+              outputPath: outRaw,
+              overwrite: Boolean(options.overwrite || options.force),
+              save: !noSave,
+              cwd: process.env.KHYQUANT_CWD || process.cwd(),
+            });
+          },
+          { muteOutput: false }
+        );
+
+        if (!convertResult || !convertResult.success) {
+          printError((convertResult && convertResult.error) || '网页还原失败');
+          if (convertResult && convertResult.rawReply) {
+            printWarn('AI 原始返回中未找到可用 HTML 代码块，已输出原文：');
+            console.log('');
+            console.log(convertResult.rawReply);
+            console.log('');
+          }
+          return true;
+        }
+        if (noSave) {
+          console.log(convertResult.html);
+          return true;
+        }
+
+        if (convertResult.autoRenamed && convertResult.outputPath) {
+          printWarn(`目标文件已存在，自动写入新文件: ${path.basename(convertResult.outputPath)}`);
+        }
+        printSuccess(`网页已生成: ${convertResult.outputPath}`);
+        if (convertResult.provider || convertResult.model) {
+          printInfo(
+            `AI 通道: ${convertResult.provider || 'unknown'}${convertResult.model ? ` · ${convertResult.model}` : ''}`
+          );
+        }
+        return true;
+      }
+
+      // ── Account / Position / Order (production placeholders) ──
+      case 'account': {
+        // Delegate to server API if running, otherwise show DB info
+        await handleAccountInfo();
+        return true;
+      }
+
+      case 'position': {
+        await handlePositionInfo();
+        return true;
+      }
+
+      case 'order': {
+        printInfo('下单功能需要连接交易接口，当前为预览模式');
+        printInfo('用法: order <代码> --side buy|sell --qty 100 --price 50.00');
+        return true;
+      }
+
+      // ── Watch(自选监控)──
+      // 复用 userProfile 自选股 + marketDataService.getRealTimeQuote(详见 handlers/market.js)。
+      // watch <代码> 加入自选并显示行情;watch 显示自选监控面板;watch rm <代码> 移出;watch clear 清空。
+      case 'watch': {
+        // 加入时把 arg0 解析成规范代码;list/remove/clear 直接透传 args。
+        const { parseWatchArgs } = require('./handlers/market');
+        let watchArgs = args;
+        if (parseWatchArgs(args).action === 'add' && args[0]) {
+          watchArgs = [await resolveArg0(args)];
+        }
+        return await require('./handlers/market').handleWatch(watchArgs);
+      }
+
+      // ── Rank(行情排行:涨幅榜/跌幅榜)──
+      // 复用既有行情服务,对「自选 ∪ 常用」股票排序(诚实范围:非全市场)。详见 handlers/market.js。
+      // market 作为自然直觉入口并入 rank(否则用户输 `khy market` 只会撞未知命令)。
+      case 'market':
+      case 'rank': {
+        return await require('./handlers/market').handleRank(args);
+      }
+
+      // ── Analyze (AI shortcut) ──
+      case 'analyze': {
+        if (!args[0]) {
+          printError('用法: analyze <代码|名称>  (别名: fx, fenxi)');
+          require('../utils/markProcessFailure')();
+          return true;
+        }
+        const sym = await resolveArg0(args);
+        // Forward to AI with a structured prompt
+        return { aiForward: `分析一下 ${sym} 的走势和交易机会` };
+      }
+
+      // ════════════════════════════════════════════════════════════════
+      // Development & DevOps Commands (server, db, app, init, doctor, deploy, workspace...)
+      // ════════════════════════════════════════════════════════════════
+
+      // ── Server / DB / App ──
+      case 'server': {
+        const service = require('./handlers/service');
+        if (subCommand === 'start') {
+          await service.handleServerStart(options);
+        } else if (subCommand === 'status') {
+          await service.handleServerStatus();
+        } else {
+          // 未知动词被 SUB_COMMANDS 注册表吞成空 subCommand 时，从 args 回捞被拒词，
+          // 可见失败(同 r197 models / r204 cross 修法；help 豁免同 r220 族)。
+          const _svGiven = String(
+            subCommand || (Array.isArray(args) && args[0] ? String(args[0]) : '')
+          ).trim();
+          if (_svGiven === 'help') {
+            printInfo('用法: khy server start [--port N] | khy server status（别名 fw）');
+            return true;
+          }
+          printError(
+            _svGiven
+              ? `未知 server 子命令 "${_svGiven}"：请选 start 或 status（别名 fw），`
+                + '例 `khy server start [--port N]` / `khy server status`。'
+              : '缺少 server 子命令：请追加 start 或 status，'
+                + '例 `khy server start [--port N]` / `khy server status`（别名 fw）。'
+          );
+          require('../utils/markProcessFailure')();
+        }
+        return true;
+      }
+
+      case 'cross':
+      // ── Test-key(厂商连通性自检:输入 key 测是否连通)──
+      // pip 装后 `khy test-key <厂商> --key <k>` / `--all` / `list`;判定委托
+      // providerConnectivitySpec 单一真源。厂商名是动态位置参数(不进 SUB_COMMANDS),
+      // 故读 args[0] 而非 subCommand。key 只在运行时传入,绝不落盘。
+      case 'db': {
+        const service = require('./handlers/service');
+        if (subCommand === 'init') {
+          await service.handleDbInit();
+        } else if (subCommand === 'seed') {
+          await service.handleDbSeed();
+        } else if (subCommand === 'status') {
+          await service.handleDbStatus();
+        } else {
+          // ✗ 用法错误须落 rc=1(同 #82 族;此前 printError 却 rc=0 假成功)。
+          require('../utils/markProcessFailure')();
+          printError('用法: db init | db seed | db status  (别名: sjk)');
+        }
+        return true;
+      }
+
+      // ════════════════════════════════════════════════════════════════
+      // AI & Reasoning Commands (ai, gateway, models, khymodel...)
+      // ════════════════════════════════════════════════════════════════
+
+      // ── AI ──
+      case 'ai': {
+        if (subCommand === 'status') {
+          return 'ai-status';
+        }
+        if (subCommand === 'config') {
+          return 'ai-config';
+        }
+        if (subCommand === 'on') {
+          return 'ai-on';
+        }
+        if (subCommand === 'off') {
+          return 'ai-off';
+        }
+        if (subCommand === 'tech') {
+          const aiHandler = require('./ai');
+          await aiHandler.handleAiTech(options, args);
+          return true;
+        }
+        if (subCommand === 'owner') {
+          const aiHandler = require('./ai');
+          await aiHandler.handleAiOwner(args[0] || 'status', options);
+          return true;
+        }
+        if (subCommand === 'unrestricted') {
+          const aiHandler = require('./ai');
+          await aiHandler.handleAiUnrestricted(options, args);
+          return true;
+        }
+        if (subCommand === 'dangerous') {
+          const toolCalling = require('../services/toolCalling');
+          if (options.off) {
+            toolCalling.disableDangerousMode();
+            printSuccess('危险模式已关闭 — 工具调用将请求确认');
+          } else {
+            const acknowledged = toolCalling.enableDangerousMode();
+            if (!acknowledged) {
+              // 这是确认门提示，不是失败：printError 的 ✗ 与 rc=0 矛盾（#40 族反形），
+              // 且 ⚠⚠⚠+「警告」二字与字形叠成四重。两条说明是续行，走裸 console.log。
+              printWarn('危险模式将跳过所有工具调用确认!');
+              console.log('    AI 将可以不经确认地执行文件操作、命令执行等危险操作');
+              console.log('    这可能导致数据丢失或系统损坏');
+              printInfo('如果确认开启，请运行: khy ai dangerous --confirm');
+            } else {
+              printSuccess('危险模式已开启 — 工具调用将不再请求确认');
+              printWarn('请注意安全，随时可用 ai dangerous --off 关闭');
+            }
+          }
+          if (options.confirm) {
+            toolCalling.acknowledgeDangerousMode();
+            printSuccess('已确认 — 危险模式开启');
+          }
+          return true;
+        }
+        if (subCommand === 'tools') {
+          const toolCalling = require('../services/toolCalling');
+          const tools = toolCalling.listTools();
+          console.log('');
+          printInfo(`已注册 ${tools.length} 个工具 (legacy):`);
+          tools.forEach((t) => {
+            const riskColors = {
+              safe: 'green',
+              low: 'cyan',
+              medium: 'yellow',
+              high: 'red',
+              critical: 'redBright',
+            };
+            const color = riskColors[t.risk] || 'dim';
+            console.log(`    ${chalk[color](`[${t.risk}]`)} ${t.name} — ${t.description}`);
+          });
+          // Show new registry tools
+          try {
+            const registry = require('../tools');
+            const newCount = registry.count();
+            const grouped = registry.getByCategory();
+            console.log('');
+            printInfo(`工具注册表: ${newCount} 个工具 (按类别):`);
+            for (const [cat, catTools] of Object.entries(grouped)) {
+              console.log(chalk.bold(`    [${cat}]`));
+              for (const t of catTools) {
+                const riskColors = {
+                  safe: 'green',
+                  low: 'cyan',
+                  medium: 'yellow',
+                  high: 'red',
+                  critical: 'redBright',
+                };
+                const color = riskColors[t.risk] || 'dim';
+                console.log(`      ${chalk[color](`[${t.risk}]`)} ${t.name} — ${t.description}`);
+              }
+            }
+          } catch {
+            /* registry not available */
+          }
+          console.log('');
+          return true;
+        }
+        return 'ai-status';
+      }
+
+      // ── Gateway ──
+      case 'gateway': {
+        const gw = require('./handlers/gateway');
+        // r199 (#143/khymodel 族):'vertex'/'reset-failures' 不在 SUB_COMMANDS
+        // 注册表(getRouterSubCommands().gateway 缺这两项),parseInput 从不置
+        // subCommand → 下方两分支为死代码,`gateway vertex` 静默落 22s 状态探测。
+        // 治本应注册进 commandSchema.js(作者脏,不可动),此处局部回捞。
+        let _gwSub = subCommand;
+        if (!_gwSub && Array.isArray(args) && args.length > 0) {
+          if (args[0] === 'vertex' || args[0] === 'reset-failures') {
+            _gwSub = String(args.shift());
+          } else {
+            printError(`未知子命令: gateway ${args[0]}（可用动词见 khy gateway help）`);
+            require('../utils/markProcessFailure')();
+            return true;
+          }
+        }
+        const manageAliasForceDaemon = new Set([
+          'guanli',
+          'khyguanli',
+          'aiguanli',
+          'ai管理',
+          '管理页',
+        ]);
+        const manageOptions =
+          subCommand === 'manage' &&
+          manageAliasForceDaemon.has(rawCommandToken) &&
+          typeof options.daemon === 'undefined'
+            ? { ...options, daemon: true }
+            : options;
+        if (subCommand === 'status') {
+          await gw.handleGatewayStatus(options);
+        } else if (subCommand === 'guide' || subCommand === 'help') {
+          await gw.handleGatewayGuide(options);
+        } else if (subCommand === 'debug-prompt') {
+          await gw.handleGatewayDebugPrompt(args, options);
+        } else if (subCommand === 'trace') {
+          await gw.handleGatewayTrace(args, options);
+        } else if (subCommand === 'sample') {
+          await gw.handleGatewaySample(args, options);
+        } else if (subCommand === 'config') {
+          await gw.handleGatewayConfig(options);
+        } else if (subCommand === 'relay') {
+          await gw.handleGatewayRelay();
+        } else if (subCommand === 'detect') {
+          await gw.handleGatewayDetect(options);
+        } else if (subCommand === 'model') {
+          await gw.handleGatewaySelectModel(args, options);
+        } else if (subCommand === 'models') {
+          await gw.handleGatewayModels(args, options);
+        } else if (subCommand === 'prefer-remote') {
+          await gw.handleGatewayPreferRemote(options);
+        } else if (subCommand === 'test') {
+          await gw.handleGatewayTest(args[0] || null, options);
+        } else if (subCommand === 'probe-tools') {
+          await gw.handleGatewayProbeTools(args, options);
+        } else if (subCommand === 'discover-models') {
+          await gw.handleGatewayDiscoverModels(options);
+        } else if (subCommand === 'tune-local') {
+          await gw.handleGatewayTuneLocal(args, options);
+        } else if (subCommand === 'server') {
+          await gw.handleAiServer(args[0] || 'start');
+        } else if (subCommand === 'manage') {
+          await gw.handleGatewayManage(args, manageOptions);
+        } else if (subCommand === 'protocols') {
+          gw.handleGatewayProtocols(options);
+        } else if (_gwSub === 'vertex') {
+          gw.handleGatewayVertex(args, options);
+        } else if (subCommand === 'oauth') {
+          await gw.handleGatewayOAuth(args[0] || 'status', args[1] || null, options);
+        } else if (subCommand === 'key') {
+          await gw.handleGatewayKey(args[0] || '', args.slice(1), options);
+        } else if (subCommand === 'add') {
+          await gw.handleGatewayAdd(options);
+        } else if (subCommand === 'pool') {
+          await gw.handleGatewayPool(args, options);
+        } else if (_gwSub === 'reset-failures') {
+          await gw.handleGatewayResetFailures(args, options);
+        } else {
+          // Default to status when no sub-command
+          await gw.handleGatewayStatus(options);
+        }
+        return true;
+      }
+
+      // ── Init / Doctor ──
+      case 'doctor': {
+        const { handleDoctor } = require('./handlers/init');
+        await handleDoctor(options, args);
+        return true;
+      }
+
+      case 'rewind':
+      case 'undo': {
+        const { handleRollback } = require('./handlers/rollback');
+        await handleRollback(command, subCommand, args, options);
+        return true;
+      }
+
+      case 'turn-rollback':
+      case 'turnrollback': {
+        const { handleTurnRollback } = require('./handlers/turnRollback');
+        await handleTurnRollback(command, subCommand, args, options);
+        return true;
+      }
+
+      case 'profile': {
+        const userProfile = require('../services/userProfile');
+        // r199: 'profile' 整条不在 SUB_COMMANDS 注册表 → export/import/reset
+        // 三动词分支全为死代码,且默认屏 printInfo 亲口宣传「profile export —
+        // 导出画像」= 屏面自证幻影(同 r198 khymodel 病根)。局部回捞复活。
+        let _pfSub = subCommand;
+        if (!_pfSub && Array.isArray(args) && args.length > 0) {
+          if (['export', 'import', 'reset'].includes(args[0])) {
+            _pfSub = String(args.shift());
+          } else {
+            printError(`未知子命令: profile ${args[0]}（可用: export|import|reset）`);
+            require('../utils/markProcessFailure')();
+            return true;
+          }
+        }
+        if (_pfSub === 'export') {
+          const json = userProfile.exportProfile();
+          const outPath = args[0] || 'khy-profile.json';
+          require('fs').writeFileSync(outPath, json, 'utf-8');
+          printSuccess(`画像已导出到: ${outPath}`);
+        } else if (_pfSub === 'import') {
+          const filePath = args[0];
+          if (!filePath) {
+            printError('用法: profile import <file.json>');
+            require('../utils/markProcessFailure')();
+            return true;
+          }
+          try {
+            const json = require('fs').readFileSync(filePath, 'utf-8');
+            userProfile.importProfile(json);
+            printSuccess('画像已导入并合并');
+          } catch (e) {
+            printError(`导入失败: ${e.message}`);
+            require('../utils/markProcessFailure')();
+          }
+        } else if (_pfSub === 'reset') {
+          userProfile.resetProfile();
+          printSuccess('画像已重置');
+        } else {
+          // Default: show profile summary
+          const summary = userProfile.getProfileSummary();
+          console.log('');
+          console.log(chalk.cyan.bold('  用户画像'));
+          console.log("");
+          console.log(`  会话次数: ${chalk.bold(summary.sessions)}`);
+          console.log(`  命令总数: ${chalk.bold(summary.totalCommands)}`);
+          console.log(
+            `  熟练度:   ${chalk.bold(summary.skillLevel === 'beginner' ? '新手' : summary.skillLevel === 'intermediate' ? '进阶' : '高级')}`
+          );
+          if (summary.topSymbols.length > 0) {
+            console.log(`  常用品种: ${chalk.green(summary.topSymbols.join(', '))}`);
+          }
+          if (summary.topCommands.length > 0) {
+            console.log(`  常用命令: ${chalk.green(summary.topCommands.join(', '))}`);
+          }
+          if (summary.favoriteSymbols.length > 0) {
+            console.log(`  收藏品种: ${chalk.yellow(summary.favoriteSymbols.join(', '))}`);
+          }
+          console.log(chalk.dim(`  设备ID:   ${summary.deviceId}`));
+          console.log('');
+          printInfo('profile export — 导出画像 (跨设备同步)');
+          printInfo('profile import <file> — 导入画像');
+          console.log('');
+        }
+        return true;
+      }
+
+      case 'cloud': {
+        const cloud = require('../services/cloudSync');
+        // r199: 'cloud' 整条不在 SUB_COMMANDS 注册表 → 全部动词分支为死代码,
+        // 而默认屏 printInfo 亲口宣传「cloud register/login/sync/pull/logout/
+        // endpoint」= 屏面自证幻影(同 r198 khymodel 病根)。局部回捞复活。
+        let _clSub = subCommand;
+        if (!_clSub && Array.isArray(args) && args.length > 0) {
+          if (['login', 'register', 'logout', 'on', 'off', 'enable', 'disable',
+               'sync', 'pull', 'endpoint'].includes(args[0])) {
+            _clSub = String(args.shift());
+          } else {
+            printError(`未知子命令: cloud ${args[0]}（可用: login|register|logout|on|off|sync|pull|endpoint）`);
+            require('../utils/markProcessFailure')();
+            return true;
+          }
+        }
+        if (_clSub === 'login') {
+          // r199 复活守卫:inquirer 在非 TTY 下无声挂起(实测 rc=124 超时无输出)。
+          if (!process.stdin.isTTY) {
+            printError('cloud login 需要交互式终端: 请在真实终端中运行 khy cloud login');
+            require('../utils/markProcessFailure')();
+            return true;
+          }
+          const inquirer = require('inquirer');
+          const { username, password } = await inquirer.prompt([
+            {
+              type: 'input',
+              name: 'username',
+              message: '用户名:',
+              validate: (v) => v.trim().length >= 3 || '至少3个字符',
+            },
+            {
+              type: 'password',
+              name: 'password',
+              message: '密码:',
+              mask: '*',
+              validate: (v) => v.length >= 6 || '至少6个字符',
+            },
+          ]);
+          printInfo('登录中...');
+          try {
+            const result = await cloud.login(username, password);
+            if (result.success) {
+              printSuccess(`${result.message} — 欢迎回来, ${username}!`);
+            } else {
+              printError(result.message);
+            }
+          } catch (e) {
+            printError(`网络错误: ${e.message}`);
+            require('../utils/markProcessFailure')();
+          }
+        } else if (_clSub === 'register') {
+          if (!process.stdin.isTTY) {
+            printError('cloud register 需要交互式终端: 请在真实终端中运行 khy cloud register');
+            require('../utils/markProcessFailure')();
+            return true;
+          }
+          const inquirer = require('inquirer');
+          const { username, password, confirm } = await inquirer.prompt([
+            {
+              type: 'input',
+              name: 'username',
+              message: '设置用户名:',
+              validate: (v) => v.trim().length >= 3 || '至少3个字符',
+            },
+            {
+              type: 'password',
+              name: 'password',
+              message: '设置密码:',
+              mask: '*',
+              validate: (v) => v.length >= 6 || '至少6个字符',
+            },
+            { type: 'password', name: 'confirm', message: '确认密码:', mask: '*' },
+          ]);
+          if (password !== confirm) {
+            printError('两次密码不一致');
+            require('../utils/markProcessFailure')();
+            return true;
+          }
+          printInfo('注册中...');
+          try {
+            const result = await cloud.register(username, password);
+            if (result.success) {
+              printSuccess(`${result.message} — 已自动登录`);
+            } else {
+              printError(result.message);
+            }
+          } catch (e) {
+            printError(`网络错误: ${e.message}`);
+            require('../utils/markProcessFailure')();
+          }
+        } else if (_clSub === 'logout') {
+          cloud.logout();
+          printSuccess('已退出登录');
+        } else if (_clSub === 'on' || _clSub === 'enable') {
+          if (!cloud.isLoggedIn()) {
+            printError('请先登录: cloud login');
+            require('../utils/markProcessFailure')();
+            return true;
+          }
+          cloud.enableCloud();
+          printSuccess('云同步已开启');
+        } else if (_clSub === 'off' || _clSub === 'disable') {
+          cloud.disableCloud();
+          printSuccess('云同步已关闭');
+        } else if (_clSub === 'sync') {
+          if (!cloud.isLoggedIn()) {
+            printError('请先登录: cloud login');
+            require('../utils/markProcessFailure')();
+            return true;
+          }
+          printInfo(formatStatusMessage('同步', '云端画像', '上传'));
+          const up = await cloud.syncUpload();
+          if (up.success) {
+            printSuccess('画像已上传到云端');
+          } else {
+            printError(`上传失败: ${up.reason}`);
+            require('../utils/markProcessFailure')();
+          }
+        } else if (_clSub === 'pull') {
+          if (!cloud.isLoggedIn()) {
+            printError('请先登录: cloud login');
+            require('../utils/markProcessFailure')();
+            return true;
+          }
+          printInfo(formatStatusMessage('同步', '云端画像', '下载'));
+          const down = await cloud.syncDownload();
+          if (down.success) {
+            printSuccess('已从云端合并画像');
+          } else {
+            printError(`拉取失败: ${down.reason}`);
+            require('../utils/markProcessFailure')();
+          }
+        } else if (_clSub === 'endpoint') {
+          if (args[0]) {
+            cloud.setEndpoint(args[0]);
+            printSuccess(`云端地址已设为: ${args[0]}`);
+          } else {
+            console.log(`  当前地址: ${chalk.cyan(cloud.getEndpoint())}`);
+            printInfo('用法: cloud endpoint https://new-domain.com');
+          }
+        } else {
+          // Show status
+          const config = cloud.loadCloudConfig();
+          console.log('');
+          console.log(chalk.cyan.bold('  ☁  云同步状态'));
+          console.log("");
+          if (config.username) {
+            console.log(`  账号:     ${chalk.green(config.username)} ✓`);
+          } else {
+            console.log(`  账号:     ${chalk.yellow('未登录')}`);
+          }
+          console.log(
+            `  状态:     ${config.enabled ? chalk.green('已开启') : chalk.yellow('未开启')}`
+          );
+          console.log(`  统计上报: ${config.telemetryEnabled ? chalk.green('✓') : chalk.dim('✗')}`);
+          console.log(`  画像同步: ${config.syncEnabled ? chalk.green('✓') : chalk.dim('✗')}`);
+          console.log(
+            `  端点:     ${chalk.dim(config.endpoint || require('../constants/serviceDefaults').CLOUD_DEFAULT_ENDPOINT)}`
+          );
+          if (config.lastSync) {
+            console.log(`  上次同步: ${chalk.dim(config.lastSync)}`);
+          }
+          console.log('');
+          if (!config.username) {
+            printInfo('cloud register — 注册新账号');
+            printInfo('cloud login — 登录已有账号');
+          } else {
+            printInfo('cloud sync — 上传画像 · cloud pull — 拉取画像');
+            printInfo('cloud logout — 退出登录');
+          }
+          printInfo('cloud endpoint <url> — 修改服务器地址');
+          console.log('');
+        }
+        return true;
+      }
+
+      // ── Plugin management ──
+      case 'plugin': {
+        const { getPluginList, reloadPlugins, PLUGINS_DIR } = require('./plugins');
+        // r199: create/new/develop/check/validate/help 在下方派发列表里出现却
+        // 不在 SUB_COMMANDS.plugin → parseInput 从不置 subCommand,这些分支为
+        // 死代码,拼错动词也被 `!subCommand` 兜底吞进帮助墙 rc=0(khymodel 同族)。
+        // 治本应注册进 commandSchema.js(作者脏),此处局部回捞。
+        let _plSub = subCommand;
+        if (!_plSub && Array.isArray(args) && args.length > 0) {
+          if (['create', 'new', 'develop', 'check', 'validate', 'help'].includes(args[0])) {
+            _plSub = String(args.shift());
+          } else {
+            printError(`未知子命令: plugin ${args[0]}（可用: list|reload|gateway|init|dev|doctor|link|unlink|validate|check|create|help）`);
+            require('../utils/markProcessFailure')();
+            return true;
+          }
+        }
+        if (_plSub === 'list') {
+          // SDK plugins (with quality status)
+          const { handlePlugin } = require('./handlers/plugin-dev');
+          await handlePlugin(['list', ...args]);
+
+          // Legacy custom command plugins
+          const list = getPluginList();
+          if (list.length > 0) {
+            printInfo(`自定义命令插件 (${list.length})`);
+            printTable(
+              ['命令', '别名', '说明'],
+              list.map((p) => [p.name, (p.aliases || []).join(', '), p.description || ''])
+            );
+          } else {
+            printInfo(`暂无自定义命令插件，可在 ${PLUGINS_DIR}/ 添加 .js 文件`);
+          }
+        } else if (_plSub === 'reload') {
+          reloadPlugins();
+          printSuccess('插件已重新加载');
+        } else if (_plSub === 'gateway') {
+          const gwPlugins = require('../services/gateway/pluginChain');
+          const action = args[0];
+          if (action === 'list' || !action) {
+            const plugins = gwPlugins.list();
+            if (plugins.length === 0) {
+              printInfo(`网关插件目录: ${gwPlugins.getPluginsDir()}/`);
+              printInfo('暂无网关插件 — 创建 .js 文件即可加载');
+            } else {
+              printSuccess(`已加载 ${plugins.length} 个网关插件`);
+              fmt().printTable(
+                ['名称', '优先级', '状态', 'Hooks'],
+                plugins.map((p) => [
+                  p.name,
+                  String(p.priority),
+                  p.enabled ? chk().green('✓') : chk().dim('禁用'),
+                  p.hooks.join(', '),
+                ])
+              );
+            }
+          } else if (action === 'reload') {
+            const count = gwPlugins.reload();
+            printSuccess(`网关插件已重载 (${count} 个)`);
+          } else if (action === 'enable' && args[1]) {
+            gwPlugins.toggle(args[1], true);
+            printSuccess(`已启用: ${args[1]}`);
+          } else if (action === 'disable' && args[1]) {
+            gwPlugins.toggle(args[1], false);
+            printSuccess(`已禁用: ${args[1]}`);
+          } else if ((action === 'add' || action === 'create') && args[1]) {
+            // Create new plugin from template, optionally open in editor
+            const name = args[1];
+            try {
+              const template = gwPlugins
+                .getTemplate()
+                .replace(/name:\s*'[^']*'/, `name: '${name}'`);
+              gwPlugins.savePlugin(name, template);
+              printSuccess(`插件已创建: ${gwPlugins.getPluginsDir()}/${name}.js`);
+              // Open in editor if available
+              const editor = process.env.EDITOR || process.env.VISUAL;
+              if (editor && !options.noEdit) {
+                const { execFileSync } = require('child_process');
+                const pluginPath = require('path').join(gwPlugins.getPluginsDir(), `${name}.js`);
+                printInfo(`正在打开编辑器: ${editor}...`);
+                try {
+                  execFileSync(editor, [pluginPath], { stdio: 'inherit' });
+                  gwPlugins.reload();
+                  printSuccess('插件已重载');
+                } catch {
+                  /* editor closed or unavailable */
+                }
+              } else {
+                printInfo('使用 plugin gateway edit ' + name + ' 编辑');
+              }
+            } catch (e) {
+              printError(e.message);
+            }
+          } else if (action === 'delete' && args[1]) {
+            const name = args[1];
+            // Confirm deletion (native form under the Ink TUI, real inquirer otherwise)
+            const { promptCompat } = require('./uiPrompt');
+            const { confirm } = await promptCompat([
+              {
+                type: 'confirm',
+                name: 'confirm',
+                message: `确认删除插件 "${name}"?`,
+                default: false,
+              },
+            ]);
+            if (confirm) {
+              try {
+                gwPlugins.deletePlugin(name);
+                printSuccess(`插件 "${name}" 已删除`);
+              } catch (e) {
+                printError(e.message);
+              }
+            }
+          } else if (action === 'edit' && args[1]) {
+            const name = args[1];
+            try {
+              gwPlugins.getPluginCode(name); // verify it exists
+              const editor = process.env.EDITOR || process.env.VISUAL || 'vi';
+              const pluginPath = require('path').join(gwPlugins.getPluginsDir(), `${name}.js`);
+              printInfo(`打开 ${editor}...`);
+              const { execFileSync } = require('child_process');
+              execFileSync(editor, [pluginPath], { stdio: 'inherit' });
+              gwPlugins.reload();
+              printSuccess('插件已重载');
+            } catch (e) {
+              printError(e.message);
+              require('../utils/markProcessFailure')();
+            }
+          } else if (action === 'show' && args[1]) {
+            const name = args[1];
+            try {
+              const code = gwPlugins.getPluginCode(name);
+              console.log('');
+              console.log(chk().cyan(`  ─── ${name}.js ───`));
+              console.log('');
+              // Simple syntax highlighting with chalk
+              const lines = code.split('\n');
+              for (const line of lines) {
+                if (
+                  line.trim().startsWith('//') ||
+                  line.trim().startsWith('*') ||
+                  line.trim().startsWith('/**')
+                ) {
+                  console.log(chk().dim(`  ${line}`));
+                } else if (line.includes('module.exports') || line.includes('require(')) {
+                  console.log(chk().yellow(`  ${line}`));
+                } else {
+                  console.log(`  ${line}`);
+                }
+              }
+              console.log('');
+            } catch (e) {
+              printError(e.message);
+              require('../utils/markProcessFailure')();
+            }
+          } else if (action === 'import' && args[1]) {
+            const fs = require('fs');
+            const path = require('path');
+            const filePath = path.resolve(args[1]);
+            if (!fs.existsSync(filePath)) {
+              printError(`文件不存在: ${filePath}`);
+              require('../utils/markProcessFailure')();
+            } else {
+              try {
+                const code = fs.readFileSync(filePath, 'utf-8');
+                const baseName = path.basename(filePath, '.js');
+                gwPlugins.savePlugin(baseName, code);
+                printSuccess(`已导入插件: ${baseName}`);
+              } catch (e) {
+                printError(e.message);
+              }
+            }
+          } else if (action === 'add' || action === 'create') {
+            printInfo('用法: plugin gateway add <name>');
+          } else {
+            printInfo(
+              '用法: plugin gateway list | reload | enable <name> | disable <name> | add <name> | delete <name> | edit <name> | show <name> | import <file>'
+            );
+          }
+        } else if (
+          [
+            'init',
+            'create',
+            'new',
+            'dev',
+            'develop',
+            'doctor',
+            'check',
+            'validate',
+            'link',
+            'unlink',
+          ].includes(_plSub)
+        ) {
+          // SDK plugin development tools
+          const { handlePlugin } = require('./handlers/plugin-dev');
+          const optionTokens = [];
+          for (const [k, v] of Object.entries(options || {})) {
+            if (v === true) {
+              optionTokens.push(`--${k}`);
+            } else if (v !== false && v !== null && v !== undefined && String(v).length > 0) {
+              optionTokens.push(`--${k}`, String(v));
+            }
+          }
+          await handlePlugin([_plSub, ...args, ...optionTokens]);
+        } else if (!_plSub || _plSub === 'help') {
+          // Show combined help
+          const { handlePlugin } = require('./handlers/plugin-dev');
+          await handlePlugin([]);
+        } else {
+          printInfo(`插件目录: ${PLUGINS_DIR}/`);
+          printInfo('用法: plugin list | reload | gateway | init | dev | doctor | link | unlink');
+        }
+        return true;
+      }
+
+      // ════════════════════════════════════════════════════════════════
+      // IDE Integration Commands (claude, codex, cursor, kiro, trae, opencode, warp, vscode)
+      // ════════════════════════════════════════════════════════════════
+
+      // ── Agent-backend launchers (agentLauncherRegistry SSOT) ──
+      // Legacy five + registry-added backends (opencode direct, warp/vscode
+      // model-select). handleIdeCommand branches on launcher kind.
+      case 'kiro':
+      case 'cursor':
+      case 'claude':
+      case 'codex':
+      case 'trae':
+      case 'opencode':
+      case 'warp':
+      case 'vscode': {
+        // Credential-convenience verbs for the AI-agent launchers. The verb is
+        // read from `subCommand || args[0]`: launcher commands are NOT registered
+        // in SUB_COMMANDS, so parseInput leaves the verb in args[0]. When a verb
+        // matches, we consume it (shift) so any remaining positional (e.g. a relay
+        // name or export path) lines up. Non-credential input (bare `khy claude`,
+        // model names, etc.) falls through untouched to the IDE launcher below.
+        const _credVerb = String(subCommand || (args && args[0]) || '').toLowerCase();
+        const _peel = () => {
+          if (!subCommand && args && args[0] && String(args[0]).toLowerCase() === _credVerb) {
+            args.shift();
+          }
+        };
+
+        // `khy claude adopt-env` / `use-cc-env`: persist the current Claude Code
+        // credentials (ANTHROPIC_* env) into ~/.khy/.env so khy reuses the same
+        // relay + token after every pip upgrade. Intercept before the IDE handler.
+        if (command === 'claude' && (_credVerb === 'adopt-env' || _credVerb === 'use-cc-env')) {
+          _peel();
+          const { handleClaudeAdoptEnv } = require('./handlers/claudeAdopt');
+          await handleClaudeAdoptEnv(options);
+          return true;
+        }
+        // `khy claude use-relay <name>` (alias `relay`/`relays` to list): activate a
+        // shipped, opt-in relay preset — non-secret base URL comes from the package,
+        // the token is still supplied by the user's shell env.
+        if (
+          command === 'claude' &&
+          (_credVerb === 'use-relay' || _credVerb === 'relay' || _credVerb === 'relays')
+        ) {
+          _peel();
+          const { handleClaudeUseRelay } = require('./handlers/claudeAdopt');
+          await handleClaudeUseRelay((args && args[0]) || '', options);
+          return true;
+        }
+        // `khy claude export-env [path]`: write a portable credential file (default
+        // Desktop) so the user can carry it to a new machine. Local file on the
+        // user's own machine — token is written to it, never to the package.
+        if (command === 'claude' && (_credVerb === 'export-env' || _credVerb === 'export-cc-env')) {
+          _peel();
+          const { handleClaudeExportEnv } = require('./handlers/claudeAdopt');
+          await handleClaudeExportEnv((args && args[0]) || '', options);
+          return true;
+        }
+        // `khy codex adopt-env` / `use-codex-env`: codex-side parity with the claude
+        // trio — persist the current codex credentials (CODEX_API_KEY / OPENAI_API_KEY
+        // + optional relay base URL) into ~/.khy/.env so khy reuses them after every
+        // pip upgrade. Same "configure once, works after every upgrade" as `khy claude`.
+        if (command === 'codex' && (_credVerb === 'adopt-env' || _credVerb === 'use-codex-env')) {
+          _peel();
+          const { handleCodexAdoptEnv } = require('./handlers/codexAdopt');
+          await handleCodexAdoptEnv(options);
+          return true;
+        }
+        // `khy codex use-relay <name>` (alias `relay`/`relays` to list): activate a
+        // shipped, opt-in OpenAI/Codex relay preset — non-secret base URL comes from
+        // the package, the key is still supplied by the user's shell env.
+        if (
+          command === 'codex' &&
+          (_credVerb === 'use-relay' || _credVerb === 'relay' || _credVerb === 'relays')
+        ) {
+          _peel();
+          const { handleCodexUseRelay } = require('./handlers/codexAdopt');
+          await handleCodexUseRelay((args && args[0]) || '', options);
+          return true;
+        }
+        // `khy codex export-env [path]`: write a portable credential file (default
+        // Desktop) so the user can carry it to a new machine. Local file on the
+        // user's own machine — key is written to it, never to the package.
+        if (
+          command === 'codex' &&
+          (_credVerb === 'export-env' || _credVerb === 'export-codex-env')
+        ) {
+          _peel();
+          const { handleCodexExportEnv } = require('./handlers/codexAdopt');
+          await handleCodexExportEnv((args && args[0]) || '', options);
+          return true;
+        }
+        const { handleIdeCommand } = require('./handlers/ide');
+        await handleIdeCommand(command, options, context);
+        return true;
+      }
+
+      // ── Account Pool ──
+      // ── Portable Sync (legacy `khy sync`; watcher replaced by `khy portable sync`) ──
+      case 'sync': {
+        const { handlePortableSync } = require('./handlers/portableSync');
+        await handlePortableSync(subCommand, args, options);
+        return true;
+      }
+
+      // ── Portable copy one-shot sync (dev tree → portable root) ──
+      // ════════════════════════════════════════════════════════════════
+      // UI & Display Commands (skin, skill, persona, features, toollist, toolcheck...)
+      // ════════════════════════════════════════════════════════════════
+
+      // ── Skin / Theme ──
+      case 'skin': {
+        const tr = require('./themeRegistry');
+        const chalk = require('chalk').default || require('chalk');
+        if (subCommand === 'set' && args[0]) {
+          const ok = tr.setTheme(args[0]);
+          if (ok) {
+            console.log(chalk.green(`  已切换到主题: ${args[0]}`));
+          } else {
+            // 未知主题 = 用法错误,须落 rc=1(同 #82 族;此前黄字提示却 rc=0 假成功)。
+            require('../utils/markProcessFailure')();
+            console.log(
+              chalk.yellow(`  未知主题: ${args[0]}。运行 skin list 查看可用主题。`)
+            );
+          }
+        } else {
+          const themes = tr.listThemes();
+          console.log('');
+          console.log(chalk.bold('  可用主题'));
+          console.log('');
+          for (const t of themes) {
+            const marker = t.active ? chalk.green('（当前）') : '';
+            console.log(`  ${chalk.cyan(t.name.padEnd(16))} ${t.label}${marker}`);
+            if (t.description) {
+              console.log(`  ${' '.repeat(16)} ${chalk.dim(t.description)}`);
+            }
+          }
+          console.log('');
+          console.log(chalk.dim('  切换: skin set <名称>'));
+          console.log('');
+        }
+        return true;
+      }
+
+
+      // ════════════════════════════════════════════════════════════════
+      // Session & History Commands (session, storage, uninstall, heal...)
+      // ════════════════════════════════════════════════════════════════
+
+
+
+
+
+      // Feature index / command discovery. Prints every discoverable command
+      // grouped by category, consuming the same SSOT
+      // (services/commandCatalog/commandCatalog.buildCommandCatalog) as the
+      // backend GET /api/commands endpoint and the frontend FeatureCatalog view,
+      // so "有了功能却不知去哪用" never happens across surfaces.
+
+
+
+      // ── Template jobs (CC `/job` alignment) ──
+      // Instantiate a reusable markdown template into a durable job under
+      // <dataHome>/jobs, then reply/inspect. Sibling to /cron (scheduled) and
+      // /tasks (runtime tasks). Handler: cli/handlers/job.js.
+      // ── Local models (Ollama) ──
+      case 'models': {
+        const mgr = require('../services/ollamaModelManager');
+        const { _writeEnvPatch: writeEnvPatch } = require('./handlers/config');
+
+        // #143 族:parseInput 对未知动词置 subCommand=null,被拒词只留在 args[0],
+        // 会被下方 list 分支的 `!subCommand` 吞掉——`models add` 静默打模型表;
+        // Ollama 离线时更误报「Ollama 未运行」,把病因钉错。从 args 回捞被拒词,
+        // 可见失败(同 r195 cron / r196 history 修法;裸 models 仍走默认 list)。
+        if (!subCommand && Array.isArray(args) && args.length > 0) {
+          if (args[0] === 'help') {
+            printInfo('用法: models list|pull|import|delete|set');
+            return true;
+          }
+          printError(`未知子命令: models ${args[0]}（可用: list|pull|import|delete|set）`);
+          require('../utils/markProcessFailure')();
+          return true;
+        }
+
+        if (subCommand === 'list' || !subCommand) {
+          const running = await mgr.isOllamaRunning();
+          if (!running) {
+            // Ollama 未运行 = 确定性失败,人类与 --json 两面都须落 rc=1(同 #82/#103 族)。
+            require('../utils/markProcessFailure')();
+            if (options.json) {
+              console.log(
+                JSON.stringify(
+                  {
+                    ok: false,
+                    action: 'list',
+                    provider: 'ollama',
+                    error: 'ollama_not_running',
+                    message: 'Ollama 未运行。请先执行: ollama serve',
+                  },
+                  null,
+                  2
+                )
+              );
+            } else {
+              printError('Ollama 未运行。请先执行: ollama serve');
+            }
+            return true;
+          }
+          const models = await mgr.listModels();
+          if (options.json) {
+            console.log(
+              JSON.stringify(
+                {
+                  ok: true,
+                  action: 'list',
+                  provider: 'ollama',
+                  count: models.length,
+                  models,
+                },
+                null,
+                2
+              )
+            );
+            return true;
+          }
+          if (!models.length) {
+            printInfo('暂无已安装模型');
+            return true;
+          }
+          printTable(
+            ['模型', '大小', '参数量', '量化'],
+            models.map((m) => [m.name, m.size, m.paramSize || '-', m.quantization || '-'])
+          );
+          return true;
+        }
+
+        if (subCommand === 'pull') {
+          const modelId = args[0];
+          if (!modelId) {
+            // ✗ 用法错误须落 rc=1(同 #82 族;人类与 --json 两面)。
+            require('../utils/markProcessFailure')();
+            if (options.json) {
+              console.log(
+                JSON.stringify(
+                  {
+                    ok: false,
+                    action: 'pull',
+                    provider: 'ollama',
+                    error: 'missing_model_id',
+                    message: '用法: models pull <model-id>',
+                  },
+                  null,
+                  2
+                )
+              );
+            } else {
+              printError('用法: models pull <model-id>');
+            }
+            return true;
+          }
+          const running = await mgr.isOllamaRunning();
+          if (!running) {
+            // Ollama 未运行 = 确定性失败,两面 rc=1(同 #82/#103 族)。
+            require('../utils/markProcessFailure')();
+            if (options.json) {
+              console.log(
+                JSON.stringify(
+                  {
+                    ok: false,
+                    action: 'pull',
+                    provider: 'ollama',
+                    model: modelId,
+                    error: 'ollama_not_running',
+                    message: 'Ollama 未运行。请先执行: ollama serve',
+                  },
+                  null,
+                  2
+                )
+              );
+            } else {
+              printError('Ollama 未运行。请先执行: ollama serve');
+            }
+            return true;
+          }
+          printInfo(`开始下载: ${modelId}`);
+          await mgr.pullModel(modelId, (progress) => {
+            if (progress.total > 0 && process.stdout.isTTY) {
+              process.stdout.write(`\r  ⟳ ${progress.status} ${progress.percent}%`);
+            }
+          });
+          console.log('');
+          printSuccess(`下载完成: ${modelId}`);
+          return true;
+        }
+
+        if (subCommand === 'import') {
+          const sourcePath = args[0];
+          const modelName = args[1] || options.name || '';
+          if (!sourcePath) {
+            // ✗ 用法错误须落 rc=1(同 #82 族)。续行不是独立通知(竖排双弹,#131 族),
+            // 缩进 4 列对齐首行正文。
+            require('../utils/markProcessFailure')();
+            printError('用法: models import <path> [model-name] [--base qwen2.5:7b]');
+            console.log('    支持: .gguf 文件 / safetensors 模型目录 / .safetensors adapter');
+            return true;
+          }
+          const running = await mgr.isOllamaRunning();
+          if (!running) {
+            // Ollama 未运行 = 确定性失败,rc=1(同 #82 族)。
+            require('../utils/markProcessFailure')();
+            printError('Ollama 未运行。请先执行: ollama serve');
+            return true;
+          }
+          const result = await mgr.importModel(sourcePath, modelName, {
+            base: options.base,
+            systemPrompt: options.system,
+            temperature: options.temperature,
+            topP: options.top_p || options.topP,
+            numCtx: options.num_ctx || options.numCtx,
+          });
+          if (!result.success) {
+            // 导入失败 = 确定性失败,rc=1(同 #82 族;需 Ollama 在线才可触发,台账如实标注潜伏)。
+            require('../utils/markProcessFailure')();
+            printError(`导入失败: ${result.error}`);
+            if (result.sourceKind === 'adapter') {
+              printInfo(
+                'adapter 导入需要 --base，例如: models import ./adapter.safetensors mymodel --base qwen2.5:7b'
+              );
+            }
+            return true;
+          }
+          printSuccess(`导入成功: ${result.model} (${result.sourceKind})`);
+          if (options.use || options.select) {
+            writeEnvPatch({
+              GATEWAY_PREFERRED_ADAPTER: 'ollama',
+              // RUNTIME-006:钉真实通道必须同时写 STRICT=false（首选但不抑制级联回退）。
+              GATEWAY_PREFERRED_STRICT: 'false',
+              OLLAMA_MODEL: result.model,
+            });
+            try {
+              const gateway = require('../services/gateway/aiGateway');
+              await gateway.refreshAdapters();
+            } catch {
+              /* best effort */
+            }
+            printSuccess(`已切换为默认模型: ollama/${result.model}`);
+          } else {
+            printInfo(`可运行: models set ${result.model}`);
+          }
+          return true;
+        }
+
+        if (subCommand === 'set') {
+          const modelId = args[0];
+          if (!modelId) {
+            // ✗ 用法错误须落 rc=1(同 #82 族;人类与 --json 两面)。
+            require('../utils/markProcessFailure')();
+            if (options.json) {
+              console.log(
+                JSON.stringify(
+                  {
+                    ok: false,
+                    action: 'set',
+                    provider: 'ollama',
+                    error: 'missing_model_id',
+                    message: '用法: models set <model-id>',
+                  },
+                  null,
+                  2
+                )
+              );
+            } else {
+              printError('用法: models set <model-id>');
+            }
+            return true;
+          }
+          const envPath = writeEnvPatch({
+            GATEWAY_PREFERRED_ADAPTER: 'ollama',
+            // RUNTIME-006:钉真实通道必须同时写 STRICT=false（首选但不抑制级联回退）。
+            GATEWAY_PREFERRED_STRICT: 'false',
+            OLLAMA_MODEL: modelId,
+          });
+          try {
+            const gateway = require('../services/gateway/aiGateway');
+            await gateway.refreshAdapters();
+          } catch {
+            /* best effort */
+          }
+          if (options.json) {
+            console.log(
+              JSON.stringify(
+                {
+                  ok: true,
+                  action: 'set',
+                  provider: 'ollama',
+                  model: modelId,
+                  envPath,
+                },
+                null,
+                2
+              )
+            );
+          } else {
+            printSuccess(`已设置默认模型: ollama/${modelId}`);
+          }
+          return true;
+        }
+
+        if (subCommand === 'delete') {
+          const modelId = args[0];
+          if (!modelId) {
+            // ✗ 用法错误须落 rc=1(同 #82 族;人类与 --json 两面)。
+            require('../utils/markProcessFailure')();
+            if (options.json) {
+              console.log(
+                JSON.stringify(
+                  {
+                    ok: false,
+                    action: 'delete',
+                    provider: 'ollama',
+                    error: 'missing_model_id',
+                    message: '用法: models delete <model-id>',
+                  },
+                  null,
+                  2
+                )
+              );
+            } else {
+              printError('用法: models delete <model-id>');
+            }
+            return true;
+          }
+          const running = await mgr.isOllamaRunning();
+          if (!running) {
+            // Ollama 未运行 = 确定性失败,两面 rc=1(同 #82/#103 族)。
+            require('../utils/markProcessFailure')();
+            if (options.json) {
+              console.log(
+                JSON.stringify(
+                  {
+                    ok: false,
+                    action: 'delete',
+                    provider: 'ollama',
+                    model: modelId,
+                    error: 'ollama_not_running',
+                    message: 'Ollama 未运行。请先执行: ollama serve',
+                  },
+                  null,
+                  2
+                )
+              );
+            } else {
+              printError('Ollama 未运行。请先执行: ollama serve');
+            }
+            return true;
+          }
+          const ok = await mgr.deleteModel(modelId);
+          if (ok) {
+            printSuccess(`已删除模型: ${modelId}`);
+          } else {
+            // 删除失败 = 确定性失败,rc=1(需 Ollama 在线才可触发,台账如实标注潜伏)。
+            require('../utils/markProcessFailure')();
+            printError(`删除失败: ${modelId}`);
+          }
+          return true;
+        }
+
+        // ✗ 未知子命令须落 rc=1(同 #82 族)。续行不是独立通知(竖排双弹,#131 族),
+        // 缩进 4 列对齐首行正文。
+        require('../utils/markProcessFailure')();
+        printError(`未知子命令: ${subCommand}`);
+        console.log('    可用: models list|pull|import|delete|set');
+        return true;
+      }
+
+      case 'khymodel': {
+        const modelImport = require('../services/modelImportService');
+
+        // r198: 'khymodel' 不在 SUB_COMMANDS(commandSchema.js 是作者脏文件,注册顺延),
+        // parseInput 永远不会把动词放进 subCommand 位——import|export|scan 分支整体
+        // 不可达,任何动词都被 list 分支吞掉且 rc=0(比 #210 更重:合法动词也吞)。
+        // 本地回捞兜底:合法动词下沉到各自分支,非法动词 ✗ 复述+rc=1(同 r197 models)。
+        let _kmSub = subCommand;
+        if (!_kmSub && Array.isArray(args) && args.length > 0) {
+          const _KM_VERBS = ['list', 'import', 'export', 'scan'];
+          if (_KM_VERBS.includes(args[0])) {
+            _kmSub = String(args.shift());
+          } else if (args[0] === 'help') {
+            printInfo('用法: khymodel list|import|export|scan');
+            return true;
+          } else {
+            printError(`未知子命令: khymodel ${args[0]}（可用: list|import|export|scan）`);
+            require('../utils/markProcessFailure')();
+            return true;
+          }
+        }
+
+        if (_kmSub === 'list' || !_kmSub) {
+          printInfo(formatStatusMessage('扫描', '全部模型', 'KHY/Ollama/本地目录'));
+          const all = await modelImport.listAllModels();
+
+          // KHY/Ollama imported models
+          if (all.khyModels.length) {
+            printSuccess(`KHY/Ollama 已导入模型 (${all.khyModels.length})`);
+            printTable(
+              ['模型', '大小', '架构', '量化', '来源'],
+              all.khyModels.map((m) => [
+                m.name,
+                m.size,
+                m.family || '-',
+                m.quantization || '-',
+                m.source || 'ollama',
+              ])
+            );
+          } else {
+            printInfo('KHY/Ollama 已导入模型: 无');
+          }
+
+          // Local model files
+          if (all.localModels.length) {
+            console.log('');
+            printInfo(`本地模型文件 (${all.localModels.length})`);
+            printTable(
+              ['名称', '大小', '格式', '位置', '状态'],
+              all.localModels.map((m) => [
+                m.name,
+                m.sizeStr,
+                m.format,
+                m.location,
+                m.imported ? '✓ 已导入' : '✗ 未导入',
+              ])
+            );
+            const unimported = all.localModels.filter((m) => !m.imported);
+            if (unimported.length) {
+              printInfo(
+                `提示: ${unimported.length} 个模型未导入，可使用 khymodel import <序号> 或 models import <path> 导入`
+              );
+            }
+          } else {
+            printInfo('未发现本地模型文件');
+          }
+
+          // IDE models
+          if (all.ideModels && all.ideModels.length) {
+            console.log('');
+            printInfo(`IDE 可用模型 (${all.ideModels.length})`);
+            printTable(
+              ['模型', '来源IDE', '路由地址'],
+              all.ideModels.map((m) => [m.name, m.source, m.route])
+            );
+            const { resolveLocalProxyOpenAiBaseUrl } = require('../utils/proxyBaseUrl');
+            printInfo(
+              `提示: 可通过 gateway proxy 将这些模型伪装为 OpenAI API (${resolveLocalProxyOpenAiBaseUrl()})`
+            );
+          }
+
+          return true;
+        }
+
+        if (_kmSub === 'import') {
+          const sourcePath = args[0];
+          if (!sourcePath) {
+            // ✗ 用法错误须落 rc=1(同 #82 族;该分支 r198 前不可达,现随回捞门复活)。
+            require('../utils/markProcessFailure')();
+            printError('用法: khymodel import <path|url> [model-name]');
+            printInfo('支持: .gguf / .safetensors / .zip / 模型目录 / 下载URL');
+            return true;
+          }
+          printInfo(formatStatusMessage('导入', '本地模型', sourcePath));
+          const result = await modelImport.importModel(sourcePath, { name: args[1] || '' });
+          if (result.success) {
+            printSuccess(`导入成功: ${result.model} (${result.sourceKind})`);
+            if (result.steps) {
+              printInfo(`步骤: ${result.steps.join(' → ')}`);
+            }
+          } else {
+            // 导入失败 = 确定性失败,rc=1(同 #82 族)。
+            require('../utils/markProcessFailure')();
+            printError(`导入失败: ${result.error}`);
+            if (result.steps) {
+              printInfo(`步骤: ${result.steps.join(' → ')}`);
+            }
+          }
+          return true;
+        }
+
+        if (_kmSub === 'export') {
+          const modelName = args[0];
+          if (!modelName) {
+            // ✗ 用法错误须落 rc=1(同 #82 族;分支 r198 前不可达)。
+            require('../utils/markProcessFailure')();
+            printError('用法: khymodel export <ollama-model-name> [dest-dir]');
+            printInfo('从 Ollama 导出模型到 KHY 本地模型目录');
+            return true;
+          }
+          printInfo(formatStatusMessage('导出', 'Ollama 模型', modelName));
+          const result = await modelImport.exportFromOllama(modelName, args[1]);
+          if (result.success) {
+            printSuccess(`导出成功: ${result.path} (${result.sizeMB} MB)`);
+          } else {
+            // 导出失败 = 确定性失败,rc=1(同 #82 族)。
+            require('../utils/markProcessFailure')();
+            printError(`导出失败: ${result.error}`);
+          }
+          return true;
+        }
+
+        if (_kmSub === 'scan') {
+          printInfo(formatStatusMessage('扫描', '本地模型文件', '遍历常见模型目录'));
+          const localFiles = modelImport.discoverLocalModels();
+          if (!localFiles.length) {
+            printInfo('未发现模型文件');
+            return true;
+          }
+          printTable(
+            ['名称', '大小', '格式', '位置', '路径'],
+            localFiles.map((m) => [
+              m.name,
+              _ccFileSize(
+                m.sizeMB * 1024 * 1024,
+                m.sizeMB > 1024 ? `${(m.sizeMB / 1024).toFixed(1)} GB` : `${m.sizeMB} MB`
+              ),
+              m.format,
+              m.location,
+              m.path.length > 60 ? '...' + m.path.slice(-57) : m.path,
+            ])
+          );
+          return true;
+        }
+
+        printError(`未知子命令: ${subCommand}`);
+        printInfo('可用: khymodel list|import|export|scan');
+        return true;
+      }
+
+      default: {
+        // Handle /huifu shortcut for context resume
+        if (command === '/huifu' || command === '/恢复' || command === '/resume') {
+          const ai = require('./ai');
+          const result = ai.resumeConversation();
+          if (result.success) {
+            printSuccess(
+              `已恢复上次对话 (${result.messageCount} 条消息, ${new Date(result.timestamp).toLocaleString('zh-CN')})`
+            );
+            printInfo('AI 已具有之前的对话上下文，继续提问即可');
+          } else {
+            printInfo('暂无可恢复的对话记录');
+          }
+          return true;
+        }
+
+        // Handle /cost shortcut
+        if (command === '/cost' || command === '/费用') {
+          const tokenSvc = require('../services/tokenUsageService');
+          console.log(tokenSvc.formatCostReport());
+          return true;
+        }
+
+        // Handle /memory shortcut
+        if (command === '/memory' || command === '/指令' || command === '/khy') {
+          // Delegate to the 'memory' command
+          return route(
+            { command: 'memory', subCommand: null, args: [], options: {}, rawInput: command },
+            context
+          );
+        }
+
+        // Check if input is a skill trigger (e.g., /analyze)
+        const rawToken = (
+          parsed.rawCommandToken ||
+          String(parsed.rawInput || '').split(/\s+/)[0] ||
+          ''
+        ).trim();
+        if (rawToken.startsWith('/')) {
+          const skillRegistry = require('../services/skillRegistry');
+          const skill = skillRegistry.findSkillByTrigger(rawToken);
+          if (skill) {
+            const result = await skillRegistry.executeSkill(skill.id, args, { options });
+            if (result && result.type === 'ai-prompt') {
+              return { aiForward: result.prompt };
+            }
+            return true;
+          }
+        }
+
+        // Try SDK plugins (formal khy-* plugins registered via plugin-loader)
+        const cmdRegistry = require('./commandRegistry');
+        const sdkCmd = cmdRegistry
+          .getAll()
+          .find(
+            (c) =>
+              c._pluginHandler &&
+              (c.cmd === `/${command}` || (c._aliases && c._aliases.includes(command)))
+          );
+        if (sdkCmd && sdkCmd._pluginHandler) {
+          const parsedArgs = { raw: parsed.rawInput || '', positional: args, flags: options };
+          const cmdContext = {
+            print: (text) => console.log(text),
+            printStyled: (text) => console.log(text),
+            prompt: async (msg) => {
+              const readline = require('readline');
+              const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+              return new Promise((r) =>
+                rl.question(msg, (a) => {
+                  rl.close();
+                  r(a);
+                })
+              );
+            },
+            spinner: (msg) => {
+              const ora = require('ora');
+              const s = ora(msg).start();
+              return {
+                update: (m) => {
+                  s.text = m;
+                },
+                succeed: (m) => s.succeed(m),
+                fail: (m) => s.fail(m),
+                stop: () => s.stop(),
+              };
+            },
+            cwd: process.cwd(),
+          };
+          try {
+            await sdkCmd._pluginHandler(parsedArgs, cmdContext);
+          } catch (err) {
+            fmt().printError(`Plugin command error: ${err.message}`);
+          }
+          return true;
+        }
+
+        // Try user plugins
+        const pluginHandled = await plugins().tryPlugin(command, args, options);
+        if (pluginHandled) {
+          return true;
+        }
+
+        // ── G1/G2 拼写纠错 + 模糊命令建议 ──────────────────────
+        // 仅对看起来像命令的输入触发（非中文自然语言、非长句子）
+        // TUI 模式下跳过 inquirer 交互（alternate screen 与 readline 冲突），
+        // 直接 fall through 到 AI。
+        const isTui = process.stdout.isTTY;
+        // inquirer 需要真实键盘：stdout 非 TTY 的脚本/管道场景 stdin 往往也非 TTY，
+        // 弹交互菜单会永久挂起（实测 `khy service < /dev/null` 卡死）。无键盘时降级为
+        // 一行内联候选，不弹 prompt。
+        const canPrompt = Boolean(process.stdin && process.stdin.isTTY);
+        const rawForFuzzy = (parsed.rawInput || '').trim();
+        // 记录交互式(inquirer)未知命令提示是否已出现,避免下方非交互提示重复数落同一输入。
+        let _unknownInteractiveShown = false;
+        const looksLikeCommand =
+          rawForFuzzy.length <= 30 &&
+          !/[\u4e00-\u9fff]{3,}/.test(rawForFuzzy) && // 排除中文长句
+          /^[a-zA-Z/]/.test(rawForFuzzy); // 以英文或 / 开头
+        if (looksLikeCommand && !isTui) {
+          const suggestions = _findClosestCommands(rawForFuzzy);
+          if (suggestions.length > 0 && !canPrompt) {
+            // 无键盘可用：一次性列出相近命令候选，然后照常交给 AI 兜底
+            printWarn(
+              `未知命令 "${rawForFuzzy}"；相近命令：${suggestions.slice(0, 3).map((s) => s.label).join('、')}（` +
+                '查看全部: `khy help`）'
+            );
+            _unknownInteractiveShown = true;
+            _fuzzyHintShown = true; // 供 khy.js 抑制重复的「未知命令」报错
+          } else if (suggestions.length > 0) {
+            if (suggestions.length === 1 && suggestions[0].dist <= 1) {
+              // 距离 ≤1，直接提示单个候选
+              printWarn(`未知命令 "${rawForFuzzy}"，你是否想执行 "${suggestions[0].label}"？`);
+              _unknownInteractiveShown = true;
+              try {
+                const inquirer = require('inquirer');
+                const { confirm } = await inquirer.prompt([
+                  {
+                    type: 'confirm',
+                    name: 'confirm',
+                    message: `执行 "${suggestions[0].label}"？`,
+                    default: true,
+                  },
+                ]);
+                if (confirm) {
+                  const reParsed = parseInput(suggestions[0].label + ' ' + args.join(' '));
+                  if (reParsed) {
+                    return route(reParsed, context);
+                  }
+                }
+              } catch {
+                /* 用户取消或 stdin 异常，fall through to AI */
+              }
+            } else {
+              // 多个候选，列表选择
+              printWarn(`未知命令 "${rawForFuzzy}"，你是否想执行以下命令？`);
+              _unknownInteractiveShown = true;
+              try {
+                const inquirer = require('inquirer');
+                const choices = suggestions.map((s) => ({ name: s.label, value: s.label }));
+                choices.push({ name: '不，发送给 AI', value: '__ai__' });
+                const { picked } = await inquirer.prompt([
+                  {
+                    type: 'list',
+                    name: 'picked',
+                    message: '选择命令:',
+                    choices,
+                  },
+                ]);
+                if (picked !== '__ai__') {
+                  const reParsed = parseInput(picked + ' ' + args.join(' '));
+                  if (reParsed) {
+                    return route(reParsed, context);
+                  }
+                }
+              } catch {
+                /* fall through to AI */
+              }
+            }
+          }
+        }
+
+        // ── G10/G8 意图预分类 + 澄清 ──────────────────────────
+        // 对自然语言短输入尝试匹配命令路由
+        // TUI 模式下跳过需要 inquirer 的多义澄清
+        try {
+          const { matchIntentRoutes, clarifyIntent } = require('../services/inputPreprocessor');
+          const intentMatches = matchIntentRoutes(rawForFuzzy);
+          // Recursion guard (Rule 3): if intent route maps back to the same token,
+          // dispatching `route()` again re-enters this default branch → infinite loop.
+          // Observed: `khy review` printed "检测到意图: 代码审查，已跳转" 20+ times.
+          const _ctx = context || {};
+          const _depth = Number(_ctx._intentRouteDepth || 0);
+          const _selfMap =
+            intentMatches.length >= 1 &&
+            String(intentMatches[0].route || '').trim().toLowerCase() ===
+              rawForFuzzy.trim().toLowerCase();
+          if (_depth > 0 || _selfMap) {
+            // Fall through to AI honestly.
+          } else if (intentMatches.length === 1) {
+            // 单一匹配 — 直接跳转（无需 inquirer，TUI 安全）
+            printInfo(`检测到意图: ${intentMatches[0].label}，已跳转`);
+            const reParsed = parseInput(intentMatches[0].route);
+            if (reParsed) {
+              return route(reParsed, { ..._ctx, _intentRouteDepth: _depth + 1 });
+            }
+          } else if (intentMatches.length >= 2 && !isTui) {
+            // 多义匹配 — G8 澄清 + 超时降级（仅限非 TUI）
+            // 触发 inkComponents 自注册交互菜单到 interactiveMenuPort（cli→cli，
+            // 惰性，仅此分支），使 service 层 clarifyIntent 经端口取用而无需反向依赖 cli
+            // （DESIGN-ARCH-057）。端口未注册时 clarifyIntent 自降级 inquirer/首候选。
+            try {
+              require('./ui/inkComponents');
+            } catch {
+              /* 降级路径仍可用 */
+            }
+            const chosen = await clarifyIntent(intentMatches, rawForFuzzy);
+            if (chosen && chosen.route) {
+              const _chosenNorm = String(chosen.route).trim().toLowerCase();
+              if (_chosenNorm !== rawForFuzzy.trim().toLowerCase()) {
+                const reParsed = parseInput(chosen.route);
+                if (reParsed) {
+                  return route(reParsed, { ..._ctx, _intentRouteDepth: _depth + 1 });
+                }
+              }
+            }
+            // chosen === null → 用户选择发送给 AI，fall through
+          }
+        } catch {
+          /* best effort, fall through to AI */
+        }
+
+        // ── 未知斜杠命令提示(TUI 安全,非交互)──────────────────────
+        // 用户显式敲了命令语法 `/x` 却无任何命令/技能/插件/意图匹配。上面的交互式模糊纠错
+        // 在 TUI 下被 `&& !isTui` 跳过 → 此前用户毫无反馈。这里补一条非交互提示再照常交 AI。
+        // 只对显式斜杠命令发声;裸词/自然语言问句返回 null,无声交 AI(未知问题≠未知命令)。
+        if (!_unknownInteractiveShown) {
+          try {
+            const _uh = require('./unknownCommandHint');
+            if (_uh.isEnabled(process.env)) {
+              const _rawTok = String(parsed.rawCommandToken || rawForFuzzy || '').trim();
+              const _hint = _uh.buildUnknownCommandHint({
+                rawToken: _rawTok,
+                suggestions: _uh.isExplicitSlashCommand(_rawTok)
+                  ? _findClosestCommands(_rawTok)
+                  : [],
+              });
+              if (_hint) {
+                printInfo(_hint);
+              }
+            }
+          } catch {
+            /* 提示尽力而为,绝不阻断 AI 兜底 */
+          }
+        }
+
+        return false; // → AI
+      }
+    }
+  } catch (err) {
+    // 红线：绝不只显示退出码/「命令执行失败」——必须给出真实原因 + 解决方案。
+    try {
+      require('./cliErrorReporter').reportCliError(err);
+    } catch {
+      printError(
+        err && err.message
+          ? err.message
+          : '命令执行失败（且未能解析具体原因，请以 KHY_VERBOSE=1 重跑）'
+      );
+    }
+    require('../utils/markProcessFailure')();
+    return true;
+  }
+}
+
+/**
+ * Get auto-complete suggestions for partial input.
+ */
+// ════════════════════════════════════════════════════════════════
+// Tab Completions
+// ════════════════════════════════════════════════════════════════
+
+function getCompletions(partial) {
+  const parts = partial.split(/\s+/);
+  // allKeys 只喂下方非斜杠分支的 `unique`;斜杠路径(最常见,且是 TUI 每键前缀回退源)从不使用。
+  // 门控开 → 惰性构造(下沉到斜杠 early-return 之后);关 → 顶部即时构造(逐字节回退今日行为)。
+  const _lazyKeys = completionKeysLazy().isEnabled(process.env);
+  const _computeAllKeys = () => [...COMMANDS, ...aliases().getAllAliasKeys()];
+  const allKeys = _lazyKeys ? null : _computeAllKeys();
+
+  // Slash command completion (delegate to commandRegistry if available)
+  if (parts[0].startsWith('/')) {
+    const slashPartial = parts[0].toLowerCase();
+    try {
+      const cmdReg = require('./commandRegistry');
+      return cmdReg.getCompletions(slashPartial);
+    } catch {
+      /* fallback */
+    }
+    return SLASH_COMMANDS.filter((sc) => sc.cmd.startsWith(slashPartial)).map((sc) => sc.cmd);
+  }
+
+  // 到这里才真正需要 allKeys:门控开时惰性构造(斜杠路径已 return,不会到达此处)。
+  const _keys = _lazyKeys ? completionKeysLazy().buildKeys(_computeAllKeys) : allKeys;
+  const unique = [...new Set(_keys)];
+
+  if (parts.length <= 1) {
+    return unique.filter((c) => c.startsWith(parts[0].toLowerCase()));
+  }
+
+  const cmd = parts[0].toLowerCase();
+  // Resolve alias to find sub-commands
+  const alias = aliases().resolveAlias(cmd);
+  const canonicalCmd = alias ? alias.command : cmd;
+  const sub = parts[1] || '';
+
+  // #18:静态表漏动词的两条通道——(a)`getRouterSubCommands` 的 `!out[def.name]` 合并守卫
+  // 跳过已 key 住命令的 manifest 追加词;(b)SUB_COMMANDS 是 require 期快照,晚注册/
+  // manifest-only 命令(如 selfheal)整个 key 缺席。而派发期 `_alignSubCommand` 只看
+  // manifest ⇒ 动词「敲得到、Tab 补不出」。门控 KHY_COMPLETION_MANIFEST_UNION 默认开:
+  // 并入 registry 侧动词(去重、静态在前);关 → 逐字节回退历史(只读静态表快照)。
+  // registry 取用 fail-soft(异常 → 静态表原样)。
+  let _manifestSubs = [];
+  const _unionOn = completionManifestUnion().isEnabled(process.env);
+  // 别名目标可能是 camelCase(selfheal → 'selfHeal'),而静态表与 registry 的 key 都是
+  // 小写 ⇒ 精确匹配两边全瞎(#43 那族 case-fold 病根的补全侧形态)。仅在门开时折回小写 key,
+  // 门关 → 逐字节回退历史(只按 canonicalCmd 精确查静态表)。
+  const _canonLc = String(canonicalCmd).toLowerCase();
+  const canonKey =
+    _unionOn && !SUB_COMMANDS[canonicalCmd] && SUB_COMMANDS[_canonLc] ? _canonLc : canonicalCmd;
+  if (_unionOn) {
+    try {
+      const entry = require('./commandAutoRegistry')
+        .getCompletions()
+        .find(
+          (e) => e.name === canonKey || String(e.name).toLowerCase() === _canonLc
+        );
+      _manifestSubs = (entry && entry.subCommands) || [];
+    } catch {
+      _manifestSubs = [];
+    }
+  }
+  const mergedSubs = _unionOn
+    ? completionManifestUnion().union(SUB_COMMANDS[canonKey], _manifestSubs)
+    : SUB_COMMANDS[canonicalCmd];
+  if (mergedSubs && mergedSubs.length) {
+    return mergedSubs
+      .filter((s) => s.startsWith(sub.toLowerCase()))
+      .map((s) => `${parts[0]} ${s}`);
+  }
+
+  return [];
+}
+
+// ── Slash Command Registry (Claude Code style) ────────────────────────
+
+const _STATIC_SLASH_COMMANDS = getStaticSlashCommands();
+
+// Dynamic SLASH_COMMANDS: prefer commandRegistry, fallback to static
+let SLASH_COMMANDS;
+try {
+  const cmdReg = require('./commandRegistry');
+  // 把用户自建技能(~/.khy/skills)并入注册表,使 TUI SLASH_COMMANDS 与 REPL 面板同源可见。
+  // 绝不抛(内部已兜底);门控 KHY_USER_SKILL_MENU 关时为无操作。
+  try {
+    cmdReg.registerUserSkills();
+  } catch {
+    /* 技能发现失败不影响内置命令 */
+  }
+  // 把 Claude Code 自定义斜杠命令(~/.claude/commands 等)并入注册表,复用第三方命令包。
+  // 绝不抛(内部已兜底);门控 KHY_CC_COMMAND_BRIDGE 关时为无操作(逐字节回退)。
+  try {
+    cmdReg.registerCcCommands();
+  } catch {
+    /* CC 命令发现失败不影响内置命令 */
+  }
+  SLASH_COMMANDS = cmdReg.toSlashCommands();
+} catch {
+  SLASH_COMMANDS = _STATIC_SLASH_COMMANDS;
+}
+
+// ════════════════════════════════════════════════════════════════
+// Exports
+// ════════════════════════════════════════════════════════════════
+
+// Set when the router already printed a "未知命令 + 候选" hint for the current
+// input (non-TTY degraded fuzzy path), so bin/khy.js doesn't scold twice.
+let _fuzzyHintShown = false;
+function consumeFuzzyHintShown() {
+  const v = _fuzzyHintShown;
+  _fuzzyHintShown = false;
+  return v;
+}
+
+module.exports = {
+  parseInput,
+  route,
+  getCompletions,
+  COMMANDS,
+  SLASH_COMMANDS,
+  _applyVerbosityFlag,
+  _handleResumeFlow,
+  _ccFileSize,
+  _ccTaskAge,
+  consumeFuzzyHintShown,
+};
+
+// Register this router as the command dispatcher on the neutral port so the
+// services layer (toolCalling SlashCommand handler) can dispatch slash commands
+// without a reverse `services → cli/router` require (DESIGN-ARCH-021, Batch 1).
+// This is the legit `cli → services` direction; export signature is unchanged.
+try {
+  require('../services/commandDispatchPort').registerDispatcher({ parseInput, route });
+} catch {
+  /* port unavailable — handler degrades gracefully */
+}

@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-ARCH-146] TUI 卡片点击交互-选项命中与展开方案.md -->
+<title>[DESIGN-ARCH-146] TUI 卡片点击交互：选项命中与展开方案 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>[DESIGN-ARCH-146] TUI 卡片点击交互：选项命中与展开方案</div>
+      <header class="hero reveal"><h1>[DESIGN-ARCH-146] TUI 卡片点击交互：选项命中与展开方案</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-146-tui-卡片点击交互-选项命中与展开方案">[DESIGN-ARCH-146] TUI 卡片点击交互：选项命中与展开方案</a></li><li class="lvl-2"><a href="#1-需求与现状-runtime-008-需求五问">1. 需求与现状（`RUNTIME-008` 需求五问）</a></li><li class="lvl-3"><a href="#1-1-原始需求">1.1 原始需求</a></li><li class="lvl-3"><a href="#1-2-需求五问">1.2 需求五问</a></li><li class="lvl-3"><a href="#1-3-source-runtime-008">1.3 `source`（`RUNTIME-008`）</a></li><li class="lvl-2"><a href="#2-实体定位-先定名再设计">2. 实体定位（**先定名再设计**）</a></li><li class="lvl-3"><a href="#排除项-ccselectable-js-是死代码">⚠ 排除项：`CcSelectable.js` 是死代码</a></li><li class="lvl-2"><a href="#3-根因-缺口的三层结构">3. 根因：缺口的三层结构</a></li><li class="lvl-3"><a href="#3-1-第一层-卡片把鼠标事件-消费即丢弃">3.1 第一层 —— 卡片把鼠标事件「消费即丢弃」</a></li><li class="lvl-3"><a href="#3-2-第二层-即使不丢-行也-不在命中区">3.2 第二层 —— 即使不丢，行也**不在命中区**</a></li><li class="lvl-3"><a href="#3-3-第三层-守卫位置有独立缺陷">3.3 第三层 —— 守卫位置有独立缺陷</a></li><li class="lvl-2"><a href="#4-复现证据-runtime-007">4. 复现证据（`RUNTIME-007`）</a></li><li class="lvl-2"><a href="#5-关键架构事实-决定方案形态">5. 关键架构事实（**决定方案形态**）</a></li><li class="lvl-3"><a href="#5-1-app-在-让键给-overlay-之前-就已经处理了鼠标">5.1 ★★ App 在**让键给 overlay 之前**就已经处理了鼠标</a></li><li class="lvl-3"><a href="#5-2-collectlayout-遍历-整棵树-不看-overlay">5.2 ★★ `collectLayout` 遍历**整棵树**，不看 overlay</a></li><li class="lvl-3"><a href="#5-3-命中的是-最上层-渲染顺序靠后">5.3 ★ 命中的是**最上层**（渲染顺序靠后）</a></li><li class="lvl-3"><a href="#5-4-点击-vs-拖选-由-终点-区分-不由起点">5.4 ★★ 点击 vs 拖选：由**终点**区分，不由起点</a></li><li class="lvl-3"><a href="#5-5-命中粒度-由挂点决定">5.5 ★ 命中粒度**由挂点决定**</a></li><li class="lvl-2"><a href="#6-设计方案">6. 设计方案</a></li><li class="lvl-3"><a href="#6-1-总原则">6.1 总原则</a></li><li class="lvl-3"><a href="#6-2-选择卡片-questionprompt-js-改造">6.2 选择卡片（`QuestionPrompt.js`）改造</a></li><li class="lvl-3"><a href="#6-3-条件卡片-permissionsprompt-js-改造">6.3 条件卡片（`PermissionsPrompt.js`）改造</a></li><li class="lvl-3"><a href="#6-4-门控-runtime-001-runtime-002">6.4 门控（`RUNTIME-001` / `RUNTIME-002`）</a></li><li class="lvl-3"><a href="#6-5-两个挂载点必须同步-本仓反复踩的坑">6.5 两个挂载点必须同步（**§本仓反复踩的坑**）</a></li><li class="lvl-2"><a href="#7-与既有机制的交互-逐条复验">7. 与既有机制的交互（**逐条复验**）</a></li><li class="lvl-2"><a href="#8-验收判据-可机械判定">8. 验收判据（**可机械判定**）</a></li><li class="lvl-2"><a href="#9-落地清单-runtime-009-删除先报部位">9. 落地清单（`RUNTIME-009` 删除先报部位）</a></li><li class="lvl-2"><a href="#10-方案裁决-2026-09-24-用户拍板">10. 方案裁决（2026-09-24 用户拍板）</a></li><li class="lvl-2"><a href="#11-验证状态-哪些是实测-哪些是主张">11. 验证状态（**哪些是实测、哪些是主张**）</a></li><li class="lvl-3"><a href="#11-1-已实测-探针可复跑">11.1 已实测（探针可复跑）</a></li><li class="lvl-3"><a href="#11-2-仅主张-落地前必须补测">11.2 仅主张（**落地前必须补测**）</a></li><li class="lvl-3"><a href="#11-3-设计阶段-未-做的事-已被-12-实施取代">11.3 设计阶段**未**做的事（**已被 §12 实施取代**）</a></li><li class="lvl-2"><a href="#12-实施记录-2026-09-24-含一处地基被证伪">12. 实施记录（2026-09-24，**含一处地基被证伪**）</a></li><li class="lvl-3"><a href="#12-1-落地清单完成情况">12.1 落地清单完成情况</a></li><li class="lvl-3"><a href="#12-2-地基被证伪-根本不生效-本节最重要">12.2 ⚠⚠ **地基被证伪：`` 根本不生效**（本节最重要）</a></li><li class="lvl-3"><a href="#12-3-端到端验证-真渲染-真-collectlayout">12.3 端到端验证（真渲染 + 真 `collectLayout`）</a></li><li class="lvl-3"><a href="#12-4-两段式-bug-36b-裁决-的行为变化">12.4 两段式（`BUG-36b` 裁决）的行为变化</a></li><li class="lvl-3"><a href="#12-5-footer-文案的-长度是契约-改文案时踩到的坑">12.5 ⚠ footer 文案的**长度是契约**（改文案时踩到的坑）</a></li><li class="lvl-3"><a href="#12-6-门控的默认值-影响测试与真实终端">12.6 门控的默认值（**影响测试与真实终端**）</a></li><li class="lvl-3"><a href="#12-7-改后测试状态">12.7 改后测试状态</a></li><li class="lvl-3"><a href="#12-8-存证清单-khy-feedback-design-arch-146-card-click">12.8 存证清单（`.khy/feedback/DESIGN-ARCH-146-card-click/`）</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: done --&gt;</p>
+<h1 id="design-arch-146-tui-卡片点击交互-选项命中与展开方案">[DESIGN-ARCH-146] TUI 卡片点击交互：选项命中与展开方案<a class="anchor" href="#design-arch-146-tui-卡片点击交互-选项命中与展开方案" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>文档类型</strong>：设计族（<code>DESIGN-ARCH-*</code>）· 状态：<strong>方案（待评审）</strong> · 日期：2026-09-24<br><strong>上游</strong>：[DESIGN-ARCH-101] TUI 交互与展示规则细则、[DESIGN-ARCH-119] TUI 原生文本选择与复制可用性修复、[DESIGN-ARCH-129] TUI 滚动-选择-历史-固定底部共存设计<br><strong>相关规则</strong>：<code>RUNTIME-001</code>（零硬编码）、<code>RUNTIME-002</code>（状态透明）、<code>RUNTIME-003</code>（活动式超时）、<code>RUNTIME-004</code>（无滚动区 UI）、<code>RUNTIME-007</code>（修复先复现）、<code>RUNTIME-008</code>（新增先提问）、<code>RUNTIME-009</code>（删除先报部位）<br><strong>存证</strong>：<code>.khy/feedback/DESIGN-ARCH-146-card-click/</code>（<code>repro-before.txt</code> + <code>card-click-probe.cjs</code>）</p></blockquote>
+<hr>
+<h2 id="1-需求与现状-runtime-008-需求五问">1. 需求与现状（<code>RUNTIME-008</code> 需求五问）<a class="anchor" href="#1-需求与现状-runtime-008-需求五问" aria-label="锚点">#</a></h2>
+<h3 id="1-1-原始需求">1.1 原始需求<a class="anchor" href="#1-1-原始需求" aria-label="锚点">#</a></h3>
+<blockquote><p>「khyos 的选择卡片和条件卡片，点击事件在 TUI 中怎么响应需要设计一个方案，比如点击选择选项 1，或者是点击展开等。」</p></blockquote>
+<h3 id="1-2-需求五问">1.2 需求五问<a class="anchor" href="#1-2-需求五问" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>问</th><th>答</th></tr></thead><tbody><tr><td><strong>谁需要</strong></td><td>使用 khy TUI 的交互用户；在 <code>/</code> 菜单、AskUserQuestion 选项卡、权限确认卡上操作的人</td></tr><tr><td><strong>解决什么</strong></td><td>现在<strong>只能键盘</strong>（↑/↓ + 数字键 + Enter）。鼠标点击<strong>完全无响应</strong> —— 点了没有任何反馈，用户会怀疑「是不是卡死了」</td></tr><tr><td><strong>不做会怎样</strong></td><td>与「点击展开」已实现的工具卡片（<code>ToolLines.js</code>）形成<strong>同类交互不一致</strong>：同一屏里工具卡可点、选项卡不可点</td></tr><tr><td><strong>边界在哪</strong></td><td>只做<strong>卡片内</strong>的点击（选项行、展开/折叠、可讨论、Other）。不做拖拽、不做跨卡片拖放、不改既有键盘路径</td></tr><tr><td><strong>怎么算完成</strong></td><td>① 点「选项 1」＝选中第 1 项（多选卡＝切换该项勾选）；② 点「展开」＝切换该块展开态；③ <strong>档位为 <code>off</code> 时逐字节零影响</strong>；④ 不破坏「在卡片上拖选复制文字」</td></tr></tbody></table>
+<h3 id="1-3-source-runtime-008">1.3 <code>source</code>（<code>RUNTIME-008</code>）<a class="anchor" href="#1-3-source-runtime-008" aria-label="锚点">#</a></h3>
+<ul><li><strong>既有范式</strong>：<code>services/backend/src/cli/tui/ink-components/ToolLines.js</code> L1381-1402 —— 工具卡片整块 <code>&lt;Box&gt;</code> 挂 <code>onClick: () =&gt; handleToolClick(i, t)</code>，<code>toolExpanded</code> Map 逐工具切换展开态，提示文案 <code>[点击展开] / [点击折叠]</code>（L1204-1214）。<strong>本方案复用这一范式，不新造机制。</strong></li><li><strong>既有基础设施</strong>：<code>services/backend/src/cli/tui/mouseButtons.js</code>（<code>createMouseDispatcher</code> / <code>collectLayout</code> / <code>hitTest</code>）+ <code>App.js</code> <code>onSelectEvent</code>（L1538-1745）。</li><li><strong>既有门控口径</strong>：<code>OFF_VALUES = ['0','false','off','no']</code>（显式 falsy 关，其余含 unset 开）。</li></ul>
+<hr>
+<h2 id="2-实体定位-先定名再设计">2. 实体定位（<strong>先定名再设计</strong>）<a class="anchor" href="#2-实体定位-先定名再设计" aria-label="锚点">#</a></h2>
+<p>用户说的两个名词在代码里<strong>都不存在同名实体</strong> —— <code>grep -rn &quot;SelectionCard\|ConditionCard&quot;</code> 全仓<strong>零命中</strong>。<br>⇒ 必须按<strong>引用计数</strong>而不是按命名映射。这是本方案的第一条纪律。</p>
+<table><thead><tr><th>用户说法</th><th>真实实体</th><th>判定依据</th></tr></thead><tbody><tr><td><strong>选择卡片</strong></td><td><code>ink-components/QuestionPrompt.js</code>（735 行）&lt;br&gt;纯逻辑真源 <code>ink-components/questionCardModel.js</code>（244 行）</td><td>自持 <code>useInput</code>（L241）；<code>App.js</code> L4805 <code>if (query.controlRequest) return;</code> 让键；行布局 <code>rowCount = optionsLen + 2</code></td></tr><tr><td><strong>条件卡片</strong></td><td><code>ink-components/PermissionsPrompt.js</code>（543 行）</td><td>头注释 <code>Mirrors QuestionPrompt's interaction model</code>；同一套 <code>cardLayout</code> 排版；同样<strong>零鼠标分支</strong></td></tr><tr><td><strong>点击展开</strong></td><td><code>ink-components/ToolLines.js</code> 工具卡片</td><td>L1381-1402 整卡 Box 挂 <code>onClick</code>；<code>toolExpanded</code> Map</td></tr></tbody></table>
+<h3 id="排除项-ccselectable-js-是死代码">⚠ 排除项：<code>CcSelectable.js</code> 是死代码<a class="anchor" href="#排除项-ccselectable-js-是死代码" aria-label="锚点">#</a></h3>
+<p><code>ink-components/CcSelectable.js</code>（228 行）<strong>看起来像候选，但不是</strong>：</p>
+<ul><li><code>git grep &quot;CcSelectable&quot;</code> <strong>只命中它自身</strong>（定义 + <code>module.exports</code>）—— <strong>全仓零使用点</strong>；</li><li>其头注释第 10 行自称「鼠标点击支持」，但<strong>实现里零点击处理器</strong> ⇒ <strong>注释与实现不符</strong>；</li><li>内含的 4 个组件（<code>CcSelectableList</code> / <code>CcMultiSelectList</code> / <code>CcPermissionPrompt</code> / <code>CcMessageBar</code>）的 <code>useInput</code> 里<strong>均无鼠标分支</strong>。</li></ul>
+<p>⇒ <strong>教训沉淀</strong>：「命名像」≠「是目标」。<strong>判定必须靠引用计数</strong>（<code>git grep</code> 命中数 = 1 即死代码）。</p>
+<hr>
+<h2 id="3-根因-缺口的三层结构">3. 根因：缺口的三层结构<a class="anchor" href="#3-根因-缺口的三层结构" aria-label="锚点">#</a></h2>
+<h3 id="3-1-第一层-卡片把鼠标事件-消费即丢弃">3.1 第一层 —— 卡片把鼠标事件「消费即丢弃」<a class="anchor" href="#3-1-第一层-卡片把鼠标事件-消费即丢弃" aria-label="锚点">#</a></h3>
+<p><code>QuestionPrompt.js</code> L261-267 原文：</p>
+<pre><code class="language-js"><span class="hljs-comment">// Mouse-button layer: consume SGR mouse sequences (dispatched by App&#x27;s top</span>
+<span class="hljs-comment">// useInput) so they are never inserted into the typed-cursor buffer.</span>
+<span class="hljs-keyword">try</span> {
+  <span class="hljs-keyword">const</span> _mouse = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;../mouseButtons&#x27;</span>);
+  <span class="hljs-keyword">if</span> (_mouse &amp;&amp; <span class="hljs-keyword">typeof</span> _mouse.<span class="hljs-property">isMouseSequence</span> === <span class="hljs-string">&#x27;function&#x27;</span> &amp;&amp; _mouse.<span class="hljs-title function_">isMouseSequence</span>(ch)) {
+    <span class="hljs-keyword">return</span>;          <span class="hljs-comment">// ← 只 return，不做任何分派</span>
+  }
+} <span class="hljs-keyword">catch</span> {
+  <span class="hljs-comment">/* mouseButtons unavailable — skip guard */</span>
+}</code></pre>
+<p>它<strong>只 <code>return</code>，不做任何事</strong> —— 事件到了卡片门口被原地丢弃。</p>
+<h3 id="3-2-第二层-即使不丢-行也-不在命中区">3.2 第二层 —— 即使不丢，行也<strong>不在命中区</strong><a class="anchor" href="#3-2-第二层-即使不丢-行也-不在命中区" aria-label="锚点">#</a></h3>
+<p><code>mouseButtons.collectLayout</code> L387-392 的判定条件是<strong>「<code>onClick</code>/<code>onMouseUp</code>/<code>onMouseOver</code>/<code>onMouseOut</code> 任一为 function」</strong>。<br>而 <code>QuestionPrompt.js</code> L652-656 的行节点：</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> rowNodes = rowSpecs.<span class="hljs-title function_">map</span>(<span class="hljs-function">(<span class="hljs-params">s</span>) =&gt;</span> <span class="hljs-title function_">h</span>(
+  <span class="hljs-title class_">Text</span>,
+  { <span class="hljs-attr">key</span>: s.<span class="hljs-property">key</span>, <span class="hljs-attr">color</span>: s.<span class="hljs-property">color</span>, <span class="hljs-attr">bold</span>: s.<span class="hljs-property">bold</span>, <span class="hljs-attr">dimColor</span>: s.<span class="hljs-property">dim</span> },   <span class="hljs-comment">// ← 零鼠标 prop</span>
+  <span class="hljs-title function_">rowLinesOf</span>(s, rowMode).<span class="hljs-title function_">join</span>(<span class="hljs-string">&#x27;\n&#x27;</span>)
+));</code></pre>
+<p>⇒ <strong>行压根不在命中区</strong>。挂 handler 是「进命中区」的唯一途径。</p>
+<h3 id="3-3-第三层-守卫位置有独立缺陷">3.3 第三层 —— 守卫位置有独立缺陷<a class="anchor" href="#3-3-第三层-守卫位置有独立缺陷" aria-label="锚点">#</a></h3>
+<p>该守卫位于 <code>if (reviewing) {…}</code>（L246）<strong>之后</strong>、<code>if (typing) {…}</code>（L273）<strong>之前</strong>：</p>
+<ul><li><strong>Review 步与 typing 自由输入态拦不到鼠标序列</strong>；</li><li><code>typing</code> 分支 L320 <code>if (ch &amp;&amp; !key.ctrl &amp;&amp; !key.meta)</code> 会把 <code>[&lt;0;…M</code> <strong>当字面文本插进输入缓冲</strong>。</li></ul>
+<p>⇒ 修卡片点击时<strong>必须顺手把守卫提到 <code>reviewing</code> 之前</strong>。</p>
+<hr>
+<h2 id="4-复现证据-runtime-007">4. 复现证据（<code>RUNTIME-007</code>）<a class="anchor" href="#4-复现证据-runtime-007" aria-label="锚点">#</a></h2>
+<p>探针 <code>.khy/feedback/DESIGN-ARCH-146-card-click/card-click-probe.cjs</code>，存证 <code>repro-before.txt</code>。</p>
+<pre><code>=== A) 静态取证：卡片行节点是否在命中区内 ===
+FAIL  A1 QuestionPrompt.rowNodes 挂有鼠标 prop  — 无
+FAIL  A2 PermissionsPrompt 整体含鼠标 prop  — 无
+PASS  A3 QuestionPrompt 鼠标守卫「只 return 不分派」  — 确认：消费即丢弃
+
+=== B) 动态取证：真 collectLayout 命中测试（反向对照）===
+PASS  B0 mouseButtons 可 require  — collectLayout 存在
+PASS  B1 反向对照：行不挂 prop ⇒ hitTest 命中不到该行  — 确认缺陷（命中 null）
+PASS  B2 正向对照：行挂 prop ⇒ hitTest 命中该行  — 确认：该行可命中
+PASS  B3 命中后触发的是「那一行」的回调  — rowClicks=[1]（期望 [1]＝第 2 行 y=2）
+PASS  B4 粒度对照：整卡挂一个 handler ⇒ 不同行命中同一节点（无法区分选项）
+
+Summary: 6/8 PASS, 2 FAIL</code></pre>
+<p><strong>读法</strong>：A1/A2 两个 FAIL <strong>就是缺陷本身</strong>（行无鼠标 prop）；B1–B4 全 PASS <strong>证明疗法可行且非平凡</strong>：</p>
+<ul><li>B1（不挂 prop → 命中 <code>null</code>）与 B2（挂 prop → 命中该行）是<strong>同一基础设施上的反向对照</strong>，</li></ul>
+<p>证明 B2 不是恒真；</p>
+<ul><li>B3 证明「点哪行 = 触发哪行的回调」（粒度正确）；</li><li>B4 证明「整卡挂一个 handler」<strong>不足以</strong>「点选项 1 选中选项 1」⇒ 必须<strong>逐行挂</strong>。</li></ul>
+<blockquote><p>⚠ <strong>探针纪律</strong>：B1 与 B2 构成反向对照。若只有 B2，<code>hitTest</code> 返常量即可让断言恒真。<br>另：<code>hitTest(layout, col, row, offset)</code> 的 <code>offset</code> 是<strong>数字</strong>（非对象）。首版探针误传 <code>{screenTop:0}</code><br>⇒ <code>y0 = it.y + {}</code> = <code>NaN</code> ⇒ 永不命中、B2/B4 假 FAIL。<strong>这一坑已记入踩坑清单。</strong></p></blockquote>
+<hr>
+<h2 id="5-关键架构事实-决定方案形态">5. 关键架构事实（<strong>决定方案形态</strong>）<a class="anchor" href="#5-关键架构事实-决定方案形态" aria-label="锚点">#</a></h2>
+<h3 id="5-1-app-在-让键给-overlay-之前-就已经处理了鼠标">5.1 ★★ App 在<strong>让键给 overlay 之前</strong>就已经处理了鼠标<a class="anchor" href="#5-1-app-在-让键给-overlay-之前-就已经处理了鼠标" aria-label="锚点">#</a></h3>
+<p><code>App.js</code> 顶层 <code>khyKeyHandler</code> 的<strong>第 0 段</strong>（L4694-4763）：</p>
+<pre><code class="language-js">_keyHandlerRef.<span class="hljs-property">current</span> = <span class="hljs-keyword">function</span> <span class="hljs-title function_">khyKeyHandler</span>(<span class="hljs-params">input, key</span>) {
+  <span class="hljs-comment">// 0) Mouse events own the top slot: …</span>
+  <span class="hljs-keyword">if</span> (_mouse &amp;&amp; mouseDispatcherRef.<span class="hljs-property">current</span> &amp;&amp; _mouse.<span class="hljs-title function_">isMouseSequence</span>(input)) {
+    …
+    mouseDispatcherRef.<span class="hljs-property">current</span>.<span class="hljs-title function_">onInput</span>(input, {
+      <span class="hljs-attr">rootNode</span>: (_inst &amp;&amp; _inst.<span class="hljs-property">rootNode</span>) || <span class="hljs-literal">null</span>,
+      <span class="hljs-attr">rows</span>: _rows, <span class="hljs-attr">anchorBottom</span>: _anchorBottom, <span class="hljs-attr">screenTop</span>: _screenTop,
+      <span class="hljs-attr">cacheKey</span>: (_inst &amp;&amp; _inst.<span class="hljs-property">lastOutput</span>) || <span class="hljs-string">&#x27;&#x27;</span>,
+    });
+    <span class="hljs-keyword">return</span>;                     <span class="hljs-comment">// ← 鼠标事件在这里就结束了</span>
+  }
+  …
+  <span class="hljs-keyword">if</span> (query.<span class="hljs-property">controlRequest</span>) { <span class="hljs-keyword">return</span>; }   <span class="hljs-comment">// L4805 —— 让键给 overlay（只对**键盘**生效）</span></code></pre>
+<p><strong>推论（本方案的核心）</strong>：</p>
+<ul><li>鼠标分派发生在<strong>第 0 段</strong>，<code>return</code> 距 <code>query.controlRequest</code> 的让键点<strong>还有 40 多行</strong>；</li><li>⇒ <strong>卡片的 <code>useInput</code> 根本收不到鼠标序列</strong>（它们已被 App 吞掉），</li></ul>
+<p>所以 <strong>§3.3 的守卫其实是「死代码」</strong> —— 它以为自己拦到了，实则 App 早就拦了；</p>
+<ul><li>⇒ <strong>卡片要响应点击，不需要在自己的 <code>useInput</code> 里解析鼠标序列</strong>，</li></ul>
+<p>只需<strong>给行节点挂 <code>onClick</code></strong>，剩下的交给 App 的既有分派链路。<strong>这是最小改动路径。</strong></p>
+<h3 id="5-2-collectlayout-遍历-整棵树-不看-overlay">5.2 ★★ <code>collectLayout</code> 遍历<strong>整棵树</strong>，不看 overlay<a class="anchor" href="#5-2-collectlayout-遍历-整棵树-不看-overlay" aria-label="锚点">#</a></h3>
+<p><code>mouseButtons.js</code> L363-412：<code>walk(rootNode, 0, 0)</code> <strong>无条件 DFS 全部子节点</strong>，<br><code>if (!node || node.internal_static) return;</code> 是<strong>唯一</strong>的排除条件。</p>
+<p>⇒ overlay 卡片是 root 的后代 ⇒ <strong>只要行节点挂了 handler，就自动进 <code>hitTest</code></strong>，<br><strong>无需任何「overlay 注册」步骤</strong>。</p>
+<h3 id="5-3-命中的是-最上层-渲染顺序靠后">5.3 ★ 命中的是<strong>最上层</strong>（渲染顺序靠后）<a class="anchor" href="#5-3-命中的是-最上层-渲染顺序靠后" aria-label="锚点">#</a></h3>
+<p><code>hitTest</code> L512-521 遍历 <code>layout.items</code>，<strong>后者覆盖前者</strong>（<code>best = it</code> 无条件赋值）。<br>⇒ overlay 若渲染在正常内容<strong>之后</strong>，则 overlay 上的点击优先命中 —— 与视觉层级一致，无需额外处理。</p>
+<h3 id="5-4-点击-vs-拖选-由-终点-区分-不由起点">5.4 ★★ 点击 vs 拖选：由<strong>终点</strong>区分，不由起点<a class="anchor" href="#5-4-点击-vs-拖选-由-终点-区分-不由起点" aria-label="锚点">#</a></h3>
+<p><code>mouseButtons.js</code> L776-820 释放分支：</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> hit = <span class="hljs-title function_">hitTest</span>(layout, ev.<span class="hljs-property">col</span>, ev.<span class="hljs-property">row</span>, offset);
+<span class="hljs-keyword">if</span> (hit) pendingClick = <span class="hljs-literal">true</span>;                    <span class="hljs-comment">// 按下时记录「有命中」</span>
+<span class="hljs-keyword">if</span> (selectEnabled) <span class="hljs-title function_">fireSelect</span>(<span class="hljs-string">&#x27;down&#x27;</span>, ev);       <span class="hljs-comment">// 但 down **无条件上报**</span>
+<span class="hljs-keyword">return</span> !!hit;
+…
+<span class="hljs-comment">// 释放：</span>
+<span class="hljs-keyword">const</span> wasClick = pendingClick; pendingClick = <span class="hljs-literal">false</span>;
+<span class="hljs-keyword">const</span> item = <span class="hljs-title function_">hitTest</span>(layout, ev.<span class="hljs-property">col</span>, ev.<span class="hljs-property">row</span>, offset);
+<span class="hljs-keyword">const</span> consumed = selectEnabled ? <span class="hljs-title function_">fireSelect</span>(<span class="hljs-string">&#x27;up&#x27;</span>, ev) : <span class="hljs-literal">false</span>;
+<span class="hljs-keyword">if</span> (item) {
+  <span class="hljs-keyword">const</span> handler = wasClick &amp;&amp; !consumed &amp;&amp; style ? style.<span class="hljs-property">onMouseUp</span> || style.<span class="hljs-property">onClick</span> : <span class="hljs-literal">null</span>;
+  <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> handler === <span class="hljs-string">&#x27;function&#x27;</span>) { <span class="hljs-keyword">try</span> { <span class="hljs-title function_">handler</span>(ev); } <span class="hljs-keyword">catch</span> { <span class="hljs-comment">/* fail-soft */</span> } }
+  <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+}</code></pre>
+<p><strong>判据</strong>：</p>
+<ul><li><code>down</code> <strong>不论命中与否都上报</strong>（L530-575 注释记录了历史缺陷：曾经「命中即吞」⇒ <strong>拖选没有起点</strong>）；</li><li>算不算「点击」＝ <code>wasClick &amp;&amp; !consumed</code>，<code>consumed</code> 来自 <code>onSelectEvent('up')</code> <strong>严格 <code>=== true</code></strong>。</li></ul>
+<p>⇒ <strong>给卡片挂 <code>onClick</code> 不会破坏「在卡片上拖选复制文字」</strong> ——<br>拖拽时释放点与按下点不同宽/或选择层已消费 ⇒ <code>consumed === true</code> ⇒ <strong>不触发点击</strong>。<br><strong>这是本方案的安全性核心论证</strong>，也是评审时必须复验的一条。</p>
+<h3 id="5-5-命中粒度-由挂点决定">5.5 ★ 命中粒度<strong>由挂点决定</strong><a class="anchor" href="#5-5-命中粒度-由挂点决定" aria-label="锚点">#</a></h3>
+<ul><li>挂在<strong>整块卡片 Box</strong>：整卡一个点击（<code>ToolLines</code> 的展开语义刚好够用，见 §5.1 范式）；</li><li>挂在<strong>每一行 Text</strong>：点哪行就是哪行（「点选项 1 选中选项 1」<strong>必须</strong>这样）。</li></ul>
+<hr>
+<h2 id="6-设计方案">6. 设计方案<a class="anchor" href="#6-设计方案" aria-label="锚点">#</a></h2>
+<h3 id="6-1-总原则">6.1 总原则<a class="anchor" href="#6-1-总原则" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>原则</th><th>内容</th></tr></thead><tbody><tr><td><strong>最小改动</strong></td><td>复用 App 既有分派链路（§5.1）⇒ 卡片<strong>不新增鼠标解析代码</strong></td></tr><tr><td><strong>零影响承诺</strong></td><td>门控关 / 非浮层挂载点 / 档位 <code>off</code> ⇒ <strong>逐字节回退</strong>到改前形态</td></tr><tr><td><strong>不破既有承诺</strong></td><td>拖选复制、键盘路径、<code>BUG-36b</code> 待裁决项<strong>一律不动</strong></td></tr><tr><td><strong>单一真源</strong></td><td>行 → 下标的映射<strong>只从 <code>rowSpecs</code> 派生</strong>，不二次硬编码（<code>RUNTIME-001</code>）</td></tr></tbody></table>
+<h3 id="6-2-选择卡片-questionprompt-js-改造">6.2 选择卡片（<code>QuestionPrompt.js</code>）改造<a class="anchor" href="#6-2-选择卡片-questionprompt-js-改造" aria-label="锚点">#</a></h3>
+<p><strong>① 给行挂 handler</strong>（L652-656 改为）：</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> rowNodes = rowSpecs.<span class="hljs-title function_">map</span>(<span class="hljs-function">(<span class="hljs-params">s, i</span>) =&gt;</span> <span class="hljs-title function_">h</span>(
+  <span class="hljs-title class_">Text</span>,
+  {
+    <span class="hljs-attr">key</span>: s.<span class="hljs-property">key</span>,
+    <span class="hljs-attr">color</span>: s.<span class="hljs-property">color</span>, <span class="hljs-attr">bold</span>: s.<span class="hljs-property">bold</span>, <span class="hljs-attr">dimColor</span>: s.<span class="hljs-property">dim</span>,
+    <span class="hljs-comment">// 仅在选择层可点时挂载 ⇒ 档位 off 时树与改前**完全相同**</span>
+    <span class="hljs-attr">onClick</span>: clickEnabled ? <span class="hljs-function">() =&gt;</span> <span class="hljs-title function_">onRowClick</span>(i) : <span class="hljs-literal">undefined</span>,
+  },
+  <span class="hljs-title function_">rowLinesOf</span>(s, rowMode).<span class="hljs-title function_">join</span>(<span class="hljs-string">&#x27;\n&#x27;</span>)
+));</code></pre>
+<p><strong>② <code>onRowClick(i)</code> 语义</strong>（<strong>复用既有的键盘逻辑，零新语义</strong>）：</p>
+<p>下标的含义由 <code>rowSpecs</code> 的构造顺序（L487-522）唯一确定：</p>
+<table><thead><tr><th>下标区间</th><th>行</th><th>点击行为</th></tr></thead><tbody><tr><td><code>0 .. options.length-1</code></td><td>真实选项</td><td>单选：<strong>等于按数字键 <code>i+1</code></strong>（选中并提交本卡）&lt;br&gt;多选：<strong>切换该行勾选</strong>（等于 Space）</td></tr><tr><td><code>options.length</code></td><td>「可讨论」</td><td>等于按对应数字键（落 <code>discuss</code>）</td></tr><tr><td><code>options.length+1</code></td><td>Other</td><td>等于按对应数字键 ⇒ 进 <code>typing</code> 态</td></tr></tbody></table>
+<p>⇒ 实现只需<strong>调用既有的数字键分支同一函数</strong>，<strong>不新写一套选择逻辑</strong>。<br>（多卡时左右环绕、卡内上下环绕、惰性回退<strong>全部由既有逻辑负责</strong>，不重复实现。）</p>
+<p><strong>③ 修掉守卫位置</strong>（§3.3）：把 L261-270 的守卫<strong>移到 <code>if (reviewing)</code> 之前</strong>。</p>
+<p>⚠⚠ <strong>必须「移动」而不是「复制」</strong> —— 即<strong>在插入新守卫的同一个编辑里删除原守卫</strong>。<br>（原型 <code>prototype-applicability.cjs</code> 的 <strong>C4 实测</strong>：只做插入 ⇒ 源码里出现 <strong>2 处</strong> <code>isMouseSequence(ch)</code><br>⇒ 守卫重复。虽然功能上无害（第一次就 <code>return</code>），但<strong>留一处死代码</strong>且违反「单一真源」。）</p>
+<p>正确形态（<strong>一增一删</strong>）：</p>
+<pre><code class="language-js"><span class="hljs-comment">// ① 在 `// Review 步:…` 注释之前**新增**守卫</span>
+<span class="hljs-comment">// ② 同时**删除**原 L261-270 那段（`// Mouse-button layer: consume SGR …` 整块）</span></code></pre>
+<p>注意：按 §5.1，这守卫对鼠标序列其实<strong>收不到</strong>（App 顶层先吞了）；<br>保留它是为了<strong>防御未来 App 分派顺序变化</strong>，并顺手消除「typing 态被 <code>[&lt;0;…M</code> 污染」的可能。<br><strong>移动本身零行为变化</strong>，因为它对真实输入是 no-op。</p>
+<blockquote><p><strong>落点锚点（原型实测唯一命中）</strong>：</p>
+<ul><li>守卫前移锚点 ＝ <code>    // Review 步:Enter 提交 / Tab 与 ←→ 回上一卡改 / Esc 取消(上游同款三键)\n    if (reviewing) {</code></li><li><code>rowNodes</code> 锚点 ＝ <code>const rowNodes = rowSpecs.map((s) =&gt; h(</code> … <code>rowLinesOf(s, rowMode).join('\n')\n  ));</code></li></ul>
+<p>两处均为<strong>唯一命中</strong>（<code>original.split(anchor).length === 2</code>）；替换后 <code>node --check</code> 通过；<br>回退后与原文<strong>逐字节相等</strong>。这些是落盘时的<strong>机械化前置检查</strong>，见 §11.1 #12。</p></blockquote>
+<p><strong>④ 「点击展开」语义</strong>：选择卡片<strong>暂无</strong>「展开」需求（选项说明由 <code>BUG-57</code> 尺寸阶梯自动降档）。<br>若后续需要「点选项行展开它的完整说明」，<strong>复用 <code>ToolLines</code> 的 <code>toolExpanded</code> Map 范式</strong><br>（<code>Map&lt;rowIndex, bool&gt;</code> + <code>[点击展开]/[点击折叠]</code> 提示），但<strong>本次不实现</strong> —— 依 <code>RUNTIME-008</code>，<br>无需求不新增。</p>
+<h3 id="6-3-条件卡片-permissionsprompt-js-改造">6.3 条件卡片（<code>PermissionsPrompt.js</code>）改造<a class="anchor" href="#6-3-条件卡片-permissionsprompt-js-改造" aria-label="锚点">#</a></h3>
+<p><strong>① 给选项行挂 handler</strong>（L365 的 <code>kind: 'option'</code> 行）：</p>
+<pre><code class="language-js">rowSpecs.<span class="hljs-title function_">push</span>({
+  <span class="hljs-attr">key</span>: opt.<span class="hljs-property">key</span>, <span class="hljs-attr">kind</span>: <span class="hljs-string">&#x27;option&#x27;</span>,
+  <span class="hljs-attr">head</span>: <span class="hljs-string">`<span class="hljs-subst">${active ? MARKER : <span class="hljs-string">&#x27; &#x27;</span>}</span> <span class="hljs-subst">${opt.label}</span>`</span>, <span class="hljs-attr">tail</span>: <span class="hljs-title class_">String</span>(i + <span class="hljs-number">1</span>),
+  active, <span class="hljs-attr">danger</span>: !!opt.<span class="hljs-property">danger</span>,
+  <span class="hljs-attr">onClick</span>: clickEnabled ? <span class="hljs-function">() =&gt;</span> <span class="hljs-title function_">onChoose</span>(i) : <span class="hljs-literal">undefined</span>,   <span class="hljs-comment">// ← 新增</span>
+});</code></pre>
+<p>（渲染处 <strong>L405-421</strong> 的 <code>for (const spec of rowSpecs)</code> 循环里，同样要<strong>把 <code>onClick</code> 透传到 <code>&lt;Text&gt;</code></strong>：）</p>
+<pre><code class="language-js">children.<span class="hljs-title function_">push</span>(<span class="hljs-title function_">h</span>(<span class="hljs-title class_">Text</span>, {
+  <span class="hljs-attr">key</span>: spec.<span class="hljs-property">key</span>,
+  <span class="hljs-attr">color</span>: <span class="hljs-title function_">colorOf</span>(spec), <span class="hljs-attr">dimColor</span>: <span class="hljs-title function_">dimOf</span>(spec),
+  <span class="hljs-attr">bold</span>: spec.<span class="hljs-property">kind</span> === <span class="hljs-string">&#x27;title&#x27;</span> || !!spec.<span class="hljs-property">active</span>,
+  <span class="hljs-attr">onClick</span>: spec.<span class="hljs-property">onClick</span>,        <span class="hljs-comment">// ← 新增：透传（undefined 时 ink Box 不写入 style ⇒ 树与改前相同）</span>
+}, ln));</code></pre>
+<blockquote><p>⚠ 注意 L405 的循环会 <code>skip</code> <code>kind === 'diff'</code> 的 spec（<code>children.push(spec.node); continue;</code>）<br>⇒ <strong>diff 块不参与点击</strong>，这是既有行为，本方案不改。</p></blockquote>
+<p><strong>② ⚠ 下标口径必须取 <code>orderOptions</code> 重排后的下标。</strong></p>
+<p><code>planOptions</code> L151：<code>const options = permissionOptionOrder.orderOptions(builtOptions, { highRisk: isL2 });</code><br>⇒ <strong>视觉顺序 ≠ 原始顺序</strong>。<code>tail: String(i+1)</code> 的数字键口径<strong>已经是重排后</strong>的<br>⇒ <strong>点击下标必须与它同源</strong>。</p>
+<p><strong>实测后果（已执行 <code>services/permissionOptionOrder.js</code> 取证）</strong>：</p>
+<pre><code>原始顺序:        deny , allow , allowAlways
+orderOptions →   allow , allowAlways , deny        （highRisk 两种取值下同此结果）
+
+视觉第 1 行（点它的下标 = 0）实际是:  allow      / 允许本次
+若误用「原始数组下标 0」则会得到:      deny       / 拒绝
+⇒ 误用原始下标：用户想点「允许本次」却触发「拒绝」——**授权决定被反转**。</code></pre>
+<p>⇒ 这是本方案<strong>最严重</strong>的潜在缺陷（<strong>权限语义反转</strong>，比「点 1 得到 2」更坏）。<br><strong>评审必查</strong>：<code>onChoose(i)</code> 的 <code>i</code> 必须来自<strong>渲染用的那个 <code>options</code> 数组</strong>（即重排后）。</p>
+<p><strong>③ 风险分级必须与 <code>BUG-36</code> 同口径。</strong></p>
+<p>既有 <code>BUG-36</code>（L195-201）：footer <strong>必须列出 handler 实际接受的全部键类</strong>；<br>L2 曾漏写「数字键直选」，按 <code>2</code> 会直接发出<strong>「本会话内总是允许此类高危操作」</strong>（比默认行后果更重却不提示）。</p>
+<p>⇒ <strong>加鼠标点击后，<code>BUG-36</code> 的口径必须扩展到「可点区域」</strong>：</p>
+<ul><li>增加一条 footer 提示（如 <code>点击选择 · </code>），且</li><li><strong>L2 高危及 <code>danger: true</code> 的行</strong>，点击后果比默认行更重 ⇒ <strong>提示必须说清</strong>，</li></ul>
+<p>或按 <code>BUG-36b</code> 的待裁决方向<strong>把高危行的点击降格为「仅移动光标」</strong>（<strong>此项待用户拍板，本方案不擅自裁决</strong>）。</p>
+<h3 id="6-4-门控-runtime-001-runtime-002">6.4 门控（<code>RUNTIME-001</code> / <code>RUNTIME-002</code>）<a class="anchor" href="#6-4-门控-runtime-001-runtime-002" aria-label="锚点">#</a></h3>
+<p>新增门控 <strong><code>KHY_CARD_CLICK</code></strong>，沿用既有口径：</p>
+<pre><code class="language-js"><span class="hljs-comment">// 显式 falsy 关（OFF_VALUES 同源），其余（含 unset）开</span>
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">OFF</span> = [<span class="hljs-string">&#x27;0&#x27;</span>, <span class="hljs-string">&#x27;false&#x27;</span>, <span class="hljs-string">&#x27;off&#x27;</span>, <span class="hljs-string">&#x27;no&#x27;</span>];
+<span class="hljs-keyword">const</span> clickEnabled =
+  !<span class="hljs-variable constant_">OFF</span>.<span class="hljs-title function_">includes</span>(<span class="hljs-title class_">String</span>(process.<span class="hljs-property">env</span>.<span class="hljs-property">KHY_CARD_CLICK</span> || <span class="hljs-string">&#x27;&#x27;</span>).<span class="hljs-title function_">trim</span>().<span class="hljs-title function_">toLowerCase</span>()) &amp;&amp;
+  mouse.<span class="hljs-title function_">mouseButtonsEnabled</span>(process.<span class="hljs-property">env</span>);   <span class="hljs-comment">// ← 既有 API；档位为 off 时恒 false</span></code></pre>
+<blockquote><p>⚠ <strong>API 名称核对</strong>：<code>mouseButtons.js</code> 的导出面为<br><code>{ OFF_VALUES, SGR_MOUSE_RE, isMouseSequence, parseSgrMouse, autoDetectTerminal, altScreenEnabled,<br>mouseTier, mouseButtonsEnabled, mouseHoverEnabled, mouseExplicitlyDisabled, wheelDirection,<br>enableBytes, disableBytes, collectLayout, staticRowCount, liveFrameTop, screenOffset, hitTest,<br>createMouseDispatcher }</code>（L833-852）。<br><strong>没有 <code>clickableEnabled</code></strong> —— 档位判据用既有 <strong><code>mouseButtonsEnabled(env)</code></strong>（L248 <code>if (mouseTier(env) === 'off') return false</code>）。<br>落地时<strong>以导出面为准</strong>，不要凭方案里的名字臆造 API。</p></blockquote>
+<p><strong>三重前置</strong>（任一不满足 ⇒ <code>clickEnabled = false</code> ⇒ 树与改前逐字节相同）：</p>
+<ol><li><code>KHY_CARD_CLICK</code> 未被显式关闭；</li><li><code>mouseButtons.mouseButtonsEnabled(process.env)</code> 为真（档位非 <code>off</code>）；</li><li><strong>行渲染路径存在</strong>（<code>rowSpecs.length &gt; 0</code>）。</li></ol>
+<blockquote><p>⚠ <strong>前置依赖必须写进文档</strong>（<code>RUNTIME-002</code>）：<br>卡片点击生效要求终端已进 <code>click</code>/<code>full</code> 档。<code>mouseTier</code>（L230-250）：<br>备屏开（<code>KHY_ALT_SCREEN</code> 默认开）→ <code>click</code>；主屏 → <code>off</code>；<br><code>KHY_MOUSE=off</code> 显式优先恒关；CC 模式（<code>hasWheelConsumer:false</code>）→ <code>off</code>。<br>⇒ <strong>档位 <code>off</code> 时必须优雅降级为纯键盘交互</strong>（即 §6.4 的三重前置的第 2 条）。</p></blockquote>
+<h3 id="6-5-两个挂载点必须同步-本仓反复踩的坑">6.5 两个挂载点必须同步（<strong>§本仓反复踩的坑</strong>）<a class="anchor" href="#6-5-两个挂载点必须同步-本仓反复踩的坑" aria-label="锚点">#</a></h3>
+<p><code>QuestionPrompt</code> / <code>PermissionsPrompt</code> 各有<strong>两处挂载点</strong>（<strong>行号为实测</strong>）：</p>
+<ul><li><strong>挂载点 A</strong>：<code>App.js</code> <strong>L6625-6647</strong>（<code>overlayNodes</code>，宽屏三列布局用）；</li><li><strong>挂载点 B</strong>：<code>App.js</code> <strong>L6913-6930</strong>（legacy 渲染树）。</li></ul>
+<p>实测两处 props（<strong>两个组件在两条分支上都一致</strong>）：</p>
+<pre><code class="language-js"><span class="hljs-title function_">h</span>(<span class="hljs-title class_">QuestionPrompt</span>,    { request, onResolve, <span class="hljs-attr">cols</span>: _overlayCols, <span class="hljs-attr">rows</span>: _resRows })
+<span class="hljs-title function_">h</span>(<span class="hljs-title class_">PermissionsPrompt</span>, { request, onResolve, <span class="hljs-attr">cols</span>: _overlayCols })   <span class="hljs-comment">// ← 没有 rows</span></code></pre>
+<p>⚠ <strong><code>PermissionsPrompt</code> 两个挂载点都不传 <code>rows</code></strong>（实测确认）：<br>⇒ 它<strong>没有</strong> <code>QuestionPrompt</code> 那套 <code>BUG-57</code> 尺寸收敛阶梯（<code>cols</code>/<code>rows</code> 缺失时恒 <code>full</code>）；<br>⇒ 本改造<strong>不涉及 <code>rows</code></strong>，但<strong>两条分支都要核对</strong>：组件内部拿到的 <code>clickEnabled</code> 必须<strong>两条路径都算得出</strong>。<br>必须复验的反面案例：<strong>只在一条分支生效 ⇒ 复现 09-24 的同类缺陷</strong><br>（「另一条布局分支必须核对它消费了原分支的全部 props」；<br><code>PreviewLayout</code> 曾因收下 <code>completion</code> 却从不渲染 ⇒ 宽终端 ≥122 列整棵菜单不挂载）。</p>
+<hr>
+<h2 id="7-与既有机制的交互-逐条复验">7. 与既有机制的交互（<strong>逐条复验</strong>）<a class="anchor" href="#7-与既有机制的交互-逐条复验" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>既有机制</th><th>交互结论</th><th>复验方式</th></tr></thead><tbody><tr><td><strong>拖选复制</strong>（<code>onSelectEvent</code>）</td><td><strong>不冲突</strong>：<code>down</code> 无条件上报（§5.4）；拖拽时 <code>consumed === true</code> ⇒ 不触发 <code>onClick</code></td><td>在卡片上按下→拖到另一行→释放，应<strong>只复制、不选中</strong></td></tr><tr><td><strong>键盘路径</strong></td><td><strong>零改动</strong>：点击复用键盘分支同一函数</td><td>全部既有键盘测试须保持绿</td></tr><tr><td><strong><code>Ctrl+O</code> 全局展开</strong></td><td><strong>两套独立状态</strong>（<code>ToolLines</code> 的 <code>expanded</code> vs <code>toolExpanded</code>）；本方案<strong>不新增第三套</strong></td><td>—</td></tr><tr><td><strong><code>KHY_TUI_DIAG=1</code></strong></td><td>点击诊断可复用既有 <code>[mouse]</code> stderr 打点（L4749-4757）</td><td>开诊断应看到命中行信息</td></tr><tr><td><strong>尺寸收敛阶梯</strong>（<code>BUG-57</code>）</td><td>点击下标按 <strong><code>rowSpecs</code> 下标</strong>算，<strong>不按视觉行</strong>：<code>rowMode</code> 降档只影响<strong>每行的文本</strong>，不改 <code>rowSpecs</code> 数组长度</td><td>在 40 列窄屏点选项，行为与宽屏一致</td></tr><tr><td><strong><code>BUG-36b</code> 待裁决</strong></td><td>L2 高危行点击后果 ≥ 数字键 ⇒ <strong>不擅自裁决</strong>，交用户拍板</td><td>见 §6.3 ③</td></tr></tbody></table>
+<hr>
+<h2 id="8-验收判据-可机械判定">8. 验收判据（<strong>可机械判定</strong>）<a class="anchor" href="#8-验收判据-可机械判定" aria-label="锚点">#</a></h2>
+<ol><li><strong>复现→修复对照</strong>：<code>card-click-probe.cjs</code> 的 A1/A2 从 <strong>FAIL → PASS</strong>；</li></ol>
+<p>B1–B4 <strong>保持 PASS</strong>（疗法非平凡性不得退化）。</p>
+<ol><li><strong>点击=键盘等价</strong>：点选项 <code>i</code> 的结果 === 按数字键 <code>i+1</code> 的结果（单选提交 / 多选切换 / Other 进 typing），</li></ol>
+<p>逐项对照，<strong>多卡 + 惰性回退场景全覆盖</strong>。</p>
+<ol><li><strong>零影响</strong>（逐字节）：<code>KHY_CARD_CLICK=0</code> 与档位 <code>off</code> 两种情形下，</li></ol>
+<p>渲染输出与改前<strong>逐字节相等</strong>（<code>FORCE_COLOR=3</code> 且<strong>在 ink 加载前</strong>注入）。</p>
+<ol><li><strong>不破拖选</strong>：卡片上按下→拖选→释放，<strong>只复制文字、不触发选中</strong>。</li><li><strong>两挂载点一致</strong>：宽屏（<code>overlayNodes</code>）与 legacy 树<strong>行为一致</strong>。</li><li><strong><code>PermissionsPrompt</code> 下标正确</strong>：L2（<code>orderOptions</code> 重排）下点第 1 行 ⇒ 得到<strong>视觉第 1 行</strong>的语义，</li></ol>
+<p><strong>不是</strong>原始顺序第 1 项。</p>
+<ol><li>既有 TUI 测试全绿：<code>node scripts/run-ink-tui-tests.js</code>（⚠ <strong>不是</strong> <code>npx jest</code>，后者路径已断；</li></ol>
+<p>缺 <code>--experimental-vm-modules</code> 会<strong>静默 skip 像绿</strong>）。</p>
+<hr>
+<h2 id="9-落地清单-runtime-009-删除先报部位">9. 落地清单（<code>RUNTIME-009</code> 删除先报部位）<a class="anchor" href="#9-落地清单-runtime-009-删除先报部位" aria-label="锚点">#</a></h2>
+<p><strong>新增</strong>：</p>
+<table><thead><tr><th>文件</th><th>内容</th></tr></thead><tbody><tr><td><code>ink-components/cardClick.js</code>（建议）</td><td>门控判定 + <code>onRowClick</code> 纯逻辑（<strong>零依赖叶子</strong>，可离线单测）</td></tr><tr><td><code>tests/cli/tui/cardClick.test.js</code></td><td>§8 的 2/3/6 项断言 + 反向对照</td></tr></tbody></table>
+<p><strong>修改</strong>：</p>
+<table><thead><tr><th>文件</th><th>位置</th><th>改动</th></tr></thead><tbody><tr><td><code>QuestionPrompt.js</code></td><td>L652-656</td><td><code>rowNodes</code> 加 <code>onClick</code></td></tr><tr><td><code>QuestionPrompt.js</code></td><td>L261-270</td><td>守卫<strong>移到 <code>reviewing</code> 之前</strong></td></tr><tr><td><code>PermissionsPrompt.js</code></td><td>L365 / L405-421</td><td>选项行加 <code>onClick</code>，渲染循环透传</td></tr><tr><td><code>App.js</code></td><td><strong>L6625-6647 / L6913-6930</strong></td><td>核对两挂载点（实测确认<strong>无需改</strong>，仅复验）</td></tr></tbody></table>
+<p><strong><code>rollback.txt</code></strong>：删除 <code>cardClick.js</code> + 还原上述 4 处 <code>onClick</code> / 守卫位置 ⇒ 回到改前。<br><strong>因本方案为纯新增（无删除既有代码），<code>RUNTIME-009</code> 的「删除有文档背书的代码」判据不触发。</strong></p>
+<hr>
+<h2 id="10-方案裁决-2026-09-24-用户拍板">10. 方案裁决（2026-09-24 用户拍板）<a class="anchor" href="#10-方案裁决-2026-09-24-用户拍板" aria-label="锚点">#</a></h2>
+<blockquote><p>本节原为「未决项（交用户拍板）」。三项已全部裁决，<strong>裁决结果即实施依据</strong>。</p></blockquote>
+<table><thead><tr><th>#</th><th>原未决问题</th><th>裁决</th><th>落地后果</th></tr></thead><tbody><tr><td>1</td><td><code>BUG-36b</code>：L2 高危卡的数字键是否降格？</td><td><strong>两段式</strong> —— 数字键与鼠标点击<strong>只选中</strong>，须再按 Enter 才授权</td><td><code>PermissionsPrompt</code> 新增 <code>twoStep = !!isL2</code>；<code>moveOnly()</code> 替代高危路径的 <code>choose()</code>；footer 文案同步改写（<code>BUG-36</code> 教训：文案必须与 handler 实际行为一致）</td></tr><tr><td>2</td><td>门控名</td><td><strong><code>KHY_CARD_CLICK</code></strong></td><td>采原案，无改动</td></tr><tr><td>3</td><td>是否做「点选项行展开完整说明」</td><td><strong>一并做</strong></td><td><code>QuestionPrompt</code> 新增 <code>expandedRows</code> 态；<code>rowSpecs</code> 增 <code>fullDesc</code> 全文；展开态改用 <code>cardClick.expandLine()</code> 重排该行</td></tr></tbody></table>
+<p><strong>裁决带来的范围变化（诚实记录）</strong>：</p>
+<ul><li>第 1 项使 <code>PermissionsPrompt</code> 从「纯加 onClick」升级为<strong>行为策略变更</strong>。L1 不受影响（保留一键直选）；</li></ul>
+<p>L2 由「一键直选（误触即高危授权）」改为「选中 → 确认」两步。这是本次唯一改变既有行为的改动。</p>
+<ul><li>第 3 项使 <code>QuestionPrompt</code> 从「只加命中」升级为<strong>新增一种版面态</strong>。为守住原有契约</li></ul>
+<p>（<code>questionPromptSize.test.js</code>：不传 <code>cols</code> 时逐字节保持改前形态），展开态<strong>只在点击时进入</strong>，<br>  且默认（<code>expandedRows</code> 全 <code>null</code>）渲染路径与改前<strong>完全同路径</strong>。</p>
+<ul><li>随之新增 <code>cardClick.expandable()</code> 判据：空说明 / 已完整显示的行不展开（避免凭空多出空白）。</li></ul>
+<hr>
+<h2 id="11-验证状态-哪些是实测-哪些是主张">11. 验证状态（<strong>哪些是实测、哪些是主张</strong>）<a class="anchor" href="#11-验证状态-哪些是实测-哪些是主张" aria-label="锚点">#</a></h2>
+<blockquote><p>本仓纪律：「<strong>源码文本断言必须就地执行真代码</strong>，否则恒真」。故本节区分<br><strong>已实测</strong>（跑过真代码）与 <strong>仅主张</strong>（读源码/注释得出，<strong>落地前必须补测</strong>）。</p></blockquote>
+<h3 id="11-1-已实测-探针可复跑">11.1 已实测（探针可复跑）<a class="anchor" href="#11-1-已实测-探针可复跑" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>#</th><th>主张</th><th>探针</th><th>结论</th></tr></thead><tbody><tr><td>1</td><td>卡片行节点<strong>无鼠标 prop</strong> ⇒ 不在命中区</td><td><code>card-click-probe.cjs</code> A1/A2/B1</td><td>✓ 实测 FAIL＝缺陷成立</td></tr><tr><td>2</td><td>给行挂 prop ⇒ 该行<strong>可命中</strong>且回调是<strong>那一行</strong></td><td>同上 B2/B3</td><td>✓ 实测 PASS（<code>rowClicks=[1]</code>）</td></tr><tr><td>3</td><td>整卡挂一个 handler ⇒ <strong>无法区分选项</strong></td><td>同上 B4</td><td>✓ 实测 PASS</td></tr><tr><td>4</td><td>点同一行 ⇒ 触发 onClick 且<strong>被吞</strong></td><td><code>verify-safety-probe.cjs</code> P1a-c</td><td>✓ 实测 PASS（<strong>真 dispatcher</strong>）</td></tr><tr><td>5</td><td>跨行拖选且 <code>consumed=true</code> ⇒ <strong>不触发</strong> onClick</td><td>同上 P2a-c</td><td>✓ 实测 PASS ← <strong>安全性核心</strong></td></tr><tr><td>6</td><td>上述「不触发」是 <code>consumed</code> 的功劳（非恒真）</td><td>同上 P2-rev</td><td>✓ 实测 PASS（<strong>反向对照</strong>）</td></tr><tr><td>7</td><td>按下（含空白处）<strong>无条件上报</strong> <code>down</code></td><td>同上 P3a/b</td><td>✓ 实测 PASS ← 拖选起点不被吞</td></tr><tr><td>8</td><td><code>orderOptions</code> <strong>重排</strong>选项</td><td>直接执行 <code>permissionOptionOrder.js</code></td><td>✓ 实测：<code>[deny,allow,allowAlways] → [allow,allowAlways,deny]</code></td></tr><tr><td>9</td><td>误用原始下标 ⇒ <strong>授权语义反转</strong></td><td>同上</td><td>✓ 实测：想点「允许本次」实际触发「拒绝」</td></tr><tr><td>10</td><td>两挂载点<strong>都不给</strong> <code>PermissionsPrompt</code> 传 <code>rows</code></td><td>实读 <code>App.js</code> L6631-6641 / L6916-6926</td><td>✓ 实测确认</td></tr><tr><td>11</td><td>App 第 0 段（L4699）鼠标 <code>return</code> <strong>早于</strong> L4805 让键</td><td>源码控制流定位（脚本计行）</td><td>✓ 实测：<strong>相隔 106 行</strong> ⇒ 断言 A 成立</td></tr><tr><td>12</td><td><strong>两处改造点锚点唯一</strong> + 替换后 <code>node --check</code> 通过 + 回退逐字节相等</td><td><code>prototype-applicability.cjs</code> C1-C6</td><td>✓ 实测 <strong>8/8 PASS</strong>（<strong>可实施性</strong>）</td></tr><tr><td>13</td><td>既有鼠标测试<strong>基线全绿</strong>（改动前）</td><td><code>node --test</code> × 5 文件</td><td>✓ 实测 <strong>60/60 pass</strong>（8+12+9+19+12）</td></tr><tr><td>14</td><td>守卫位置＝<code>reviewing</code>(L246) 之后、<code>typing</code>(L273) 之前</td><td>脚本逐行定位</td><td>✓ 实测：守卫 <strong>L261-270</strong>，<code>typing</code> 内插字面量在 <strong>L310</strong></td></tr><tr><td>15</td><td><strong>全 TUI 测试基线</strong>（1017 例）</td><td><code>node --test &quot;tests/cli/tui/*.test.js&quot;</code></td><td>⚠ 实测 <strong>1013 pass / 4 fail</strong>，<strong>4 个失败全部来自并发会话在途文件</strong>（见下注）</td></tr></tbody></table>
+<blockquote><p><strong>⚠ 关于 #15 的 4 个失败（归属已查清，与本方案无关）</strong>：</p>
+<table><thead><tr><th>失败文件</th><th>git 状态</th><th>归属</th></tr></thead><tbody><tr><td><code>consoleMute.test.js</code>（C6）</td><td><code>??</code> untracked</td><td><strong>并发会话在途</strong></td></tr><tr><td><code>selectionAnchorDrift.test.js</code>（D-02/D-04）</td><td><code>??</code> untracked</td><td><strong>并发会话在途</strong></td></tr><tr><td><code>transcriptLines.test.js</code>（unknown roles）</td><td><code>M</code> 已修改</td><td><strong>并发会话在途</strong></td></tr></tbody></table>
+<p><strong>本轮我没有改任何 <code>services/backend/src/**</code> 或 <code>tests/**</code> 下的文件</strong>（只新增了<br><code>docs/</code> 设计文档与 <code>.khy/feedback/</code> 探针）⇒ 这 4 个失败<strong>与方案零关系</strong>。<br>落地时应以<strong>当时的</strong>基线为准，不要把「别人在途的红」当成自己的回归。</p>
+<p>⚠ <strong>跑法注意</strong>：<code>node --test tests/cli/tui/</code>（目录形态）在本机会报<br><code>Cannot find module '…/tests/cli/tui'</code>（Node 版本对目录参数的处理差异）——<br><strong>必须用 glob</strong> <code>node --test &quot;tests/cli/tui/*.test.js&quot;</code>。</p></blockquote>
+<p><strong>探针落点</strong>：<code>.khy/feedback/DESIGN-ARCH-146-card-click/</code><br>（<code>card-click-probe.cjs</code> / <code>repro-before.txt</code> / <code>verify-safety-probe.cjs</code> / <code>verify-safety-before.txt</code> /<br><code>prototype-applicability.cjs</code> / <code>prototype-applicability.txt</code>）</p>
+<blockquote><p>⚠ <strong>原型抓到了方案的一处缺漏</strong>：§6.2③ 原写「把守卫移到 <code>reviewing</code> 之前」，<br>但<strong>没写明要同时删除原守卫</strong> ⇒ 照字面实施会出现 <strong>2 处</strong> <code>isMouseSequence(ch)</code>。<br>已据实订正为该节「<strong>一增一删</strong>」形态。<strong>这是「先做可运行原型」的直接收益</strong>。</p>
+<p>⚠ <strong>原型自身也踩了一个坑</strong>（值得记）：首版把「原守卫块」用<strong>手抄常量</strong>写进探针，<br>结束空行数与真实文件差一个字节 ⇒ <strong>回退校验假 FAIL</strong>（C6）。<br>正解＝<strong>从源码现场截取</strong>（<code>original.slice(indexOf(开始), indexOf(结束标记))</code>）。<br>⇒ 教训：<strong>任何「对照用的原文常量」都不要手抄</strong>，一律现场截取。</p></blockquote>
+<h3 id="11-2-仅主张-落地前必须补测">11.2 仅主张（<strong>落地前必须补测</strong>）<a class="anchor" href="#11-2-仅主张-落地前必须补测" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>#</th><th>主张</th><th>为何尚未证</th><th>补测方式</th></tr></thead><tbody><tr><td>A</td><td><del>「卡片 <code>useInput</code> 收不到鼠标序列」</del></td><td>✓ <strong>已升级为实测 #11</strong>（控制流相隔 106 行）</td><td>—</td></tr><tr><td>B</td><td>「改后键盘路径零回归」</td><td>需改后跑既有 TUI 测试套</td><td><code>node --test tests/cli/tui/*.test.js</code>（基线已取，见 #13）</td></tr><tr><td>C</td><td>「门控关时逐字节回退」</td><td>需改后跑逐字节对照</td><td><code>FORCE_COLOR=3</code> + 在 ink 加载前注入</td></tr><tr><td>D</td><td>「<code>BUG-57</code> 降档不影响点击下标」</td><td>需窄屏实测</td><td>40 列终端点选项，对照宽屏</td></tr><tr><td>E</td><td>「<code>PermissionsPrompt</code> 点击下标取重排后下标」</td><td>需改后集成测（原型未覆盖该组件的 DOM 路径）</td><td>单测 <code>onChoose(i)</code> 的 <code>i</code> 来自重排后数组</td></tr></tbody></table>
+<h3 id="11-3-设计阶段-未-做的事-已被-12-实施取代">11.3 设计阶段<strong>未</strong>做的事（<strong>已被 §12 实施取代</strong>）<a class="anchor" href="#11-3-设计阶段-未-做的事-已被-12-实施取代" aria-label="锚点">#</a></h3>
+<blockquote><p>⚠ 本节记录的是<strong>设计阶段的边界</strong>，读到时请注意：生产代码随后已在 §12 落地。<br>保留本节是为了让「方案」与「实施」两个阶段的边界可追溯（哪条是当时的主张、哪条后来被证伪）。</p></blockquote>
+<ul><li>✓ 当时仅新增<strong>设计文档 + <code>.html</code> 孪生件 + 索引登记 + 三份探针存证</strong>；</li><li>✗ 当时<strong>未改生产代码</strong>、<strong>未新增 <code>cardClick.js</code></strong> —— 均已在 §12 完成。</li></ul>
+<hr>
+<h2 id="12-实施记录-2026-09-24-含一处地基被证伪">12. 实施记录（2026-09-24，<strong>含一处地基被证伪</strong>）<a class="anchor" href="#12-实施记录-2026-09-24-含一处地基被证伪" aria-label="锚点">#</a></h2>
+<h3 id="12-1-落地清单完成情况">12.1 落地清单完成情况<a class="anchor" href="#12-1-落地清单完成情况" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>文件</th><th>改动</th><th>状态</th></tr></thead><tbody><tr><td><code>ink-components/cardClick.js</code></td><td><strong>新增</strong>：门控 <code>cardClickEnabled</code> + 命中 <code>normalizeRowIndex</code> + 展开 <code>toggleExpandedRow</code> / <code>expandable</code> / <code>expandLine</code></td><td>✓</td></tr><tr><td><code>ink-components/QuestionPrompt.js</code></td><td>① <code>rowNodes</code> 挂点击；② 鼠标守卫「一增一删」前移到 <code>reviewing</code> 之前；③ 新增 <code>expandedRows</code> 展开态 + <code>rowSpecs.fullDesc</code></td><td>✓</td></tr><tr><td><code>ink-components/PermissionsPrompt.js</code></td><td>① 两个渲染分支（紧凑 / 旧形态）挂点击；② <strong>L2 改两段式</strong>（<code>twoStep</code>/<code>moveOnly</code>）；③ 页脚文案同步</td><td>✓</td></tr><tr><td><code>tests/tui/cardClick.test.js</code></td><td><strong>新增</strong>：17 例（门控口径 / 下标收束 / 展开态 / 反向对照）</td><td>✓ 17/17</td></tr><tr><td><code>App.js</code></td><td>挂载点核对</td><td>✓ 无需改（与设计期实测一致）</td></tr></tbody></table>
+<h3 id="12-2-地基被证伪-根本不生效-本节最重要">12.2 ⚠⚠ <strong>地基被证伪：<code>&lt;Text onClick&gt;</code> 根本不生效</strong>（本节最重要）<a class="anchor" href="#12-2-地基被证伪-根本不生效-本节最重要" aria-label="锚点">#</a></h3>
+<p><strong>设计期的错误假设</strong>：方案 §6.2① 写的是「给 <code>rowNodes</code> 的 <strong><code>Text</code></strong> 加 <code>onClick</code>」。<br>实施后用探针验证，<strong>发现这条假设是错的</strong>：</p>
+<table><thead><tr><th>组件</th><th>未知 props 处理</th><th><code>onClick</code> 落点</th><th><code>collectLayout</code> 能否命中</th></tr></thead><tbody><tr><td><code>&lt;Box&gt;</code></td><td><code>({...style})</code> <strong>透传</strong></td><td><code>node.style.onClick</code></td><td>✓ <strong>能</strong></td></tr><tr><td><code>&lt;Text&gt;</code></td><td><strong>固定 props 白名单</strong>，不展开 rest</td><td>被 React <strong>静默丢弃</strong></td><td>✗ <strong>不能</strong></td></tr></tbody></table>
+<p>ink 6.8.0 的 <code>Text.js</code> 只声明 <code>color/backgroundColor/dimColor/bold/italic/underline/strikethrough/inverse/wrap/aria-*</code>；<br>而 <code>Box.js</code> 用 <code>...style</code> 收集其余 props 并整体塞进 <code>style</code> 对象。<code>collectLayout</code> 读的正是<br><code>node.style.onClick</code>（<code>mouseButtons.js</code> L387-392）⇒ <strong>给 <code>Text</code> 挂 <code>onClick</code> 是一条静默死路</strong>：<br>代码看着对、语法通过、守卫全绿，但<strong>点了毫无反应</strong>。</p>
+<p><strong>修正</strong>：所有可点行改为 <strong><code>&lt;Box flexDirection=&quot;column&quot; onClick&gt;</code> 包一层 <code>&lt;Text&gt;</code></strong>；<br>门控关时仍返回原 <code>Text</code> 节点，保证改前渲染路径逐字节不变。<br>（<code>ToolLines.js</code> L1381-1402 / <code>RightPanel.js</code> / <code>SessionSidebar.js</code> 之所以能用，正因为它们挂的是 <code>Box</code>。）</p>
+<p><strong>实证</strong>：<code>.khy/feedback/DESIGN-ARCH-146-card-click/probe-box-vs-text.txt</code>（5/5 PASS，<br>含「<code>attributes.onClick</code> 的节点不进命中区」的反向对照）。</p>
+<blockquote><p>⚠ <strong>这正印证了本仓的一条老判据</strong>：<strong>「守卫报绿」≠「没问题」，只等于「判定面内没问题」</strong>。<br>若只跑单测与守卫，这个错误<strong>不会被任何现成机制发现</strong> —— 必须真渲染 + 用 <code>collectLayout</code> 独立复查。</p></blockquote>
+<h3 id="12-3-端到端验证-真渲染-真-collectlayout">12.3 端到端验证（真渲染 + 真 <code>collectLayout</code>）<a class="anchor" href="#12-3-端到端验证-真渲染-真-collectlayout" aria-label="锚点">#</a></h3>
+<p>探针 <code>probe-real-cards-hittest.cjs</code> 真渲染两个改后组件，从 ink 的 <code>instances</code> WeakMap 取<br><code>rootNode</code>，跑真 <code>collectLayout</code>：</p>
+<table><thead><tr><th>被测</th><th>门控</th><th>可点节点</th><th>命中屏幕行</th><th>结论</th></tr></thead><tbody><tr><td><code>QuestionPrompt</code>（3 选项）</td><td>开</td><td><strong>5</strong>（3 真实 + 可讨论 + Other）</td><td><code>[2,3,4,5,6]</code></td><td>✓ 逐行不重叠</td></tr><tr><td><code>PermissionsPrompt</code> L1（3 选项）</td><td>开</td><td><strong>3</strong></td><td><code>[6,7,8]</code></td><td>✓ 逐行不重叠</td></tr><tr><td><code>QuestionPrompt</code>（反向对照）</td><td><strong>关</strong></td><td><strong>0</strong></td><td><code>[]</code></td><td>✓ 门控真的生效</td></tr></tbody></table>
+<p><strong>8/8 PASS</strong>（存证 <code>probe-real-cards-hittest.txt</code>）。反向对照是硬要求：缺了它，<br>一个「无条件挂 <code>onClick</code>」的实现也会全绿 —— 那就等于门控不存在。</p>
+<h3 id="12-4-两段式-bug-36b-裁决-的行为变化">12.4 两段式（<code>BUG-36b</code> 裁决）的行为变化<a class="anchor" href="#12-4-两段式-bug-36b-裁决-的行为变化" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>卡型</th><th>改前</th><th>改后</th></tr></thead><tbody><tr><td><strong>L2 高危</strong></td><td>数字键<strong>一键直选</strong>（按 <code>2</code> 直接发出「本会话内总是允许此类高危操作」）</td><td>数字键/点击<strong>只选中</strong>，须再按 <code>Enter</code> 才授权</td></tr><tr><td>L1 普通</td><td>数字键一键直选</td><td><strong>不变</strong></td></tr></tbody></table>
+<p>页脚文案随之改写（<code>数字键/点击 选中 · Enter 确认执行</code>）—— 这是 <code>BUG-36</code> 的同一类纪律：<br><strong>页脚必须列出 handler 实际接受的全部键类</strong>，文案与行为不得背离。</p>
+<h3 id="12-5-footer-文案的-长度是契约-改文案时踩到的坑">12.5 ⚠ footer 文案的<strong>长度是契约</strong>（改文案时踩到的坑）<a class="anchor" href="#12-5-footer-文案的-长度是契约-改文案时踩到的坑" aria-label="锚点">#</a></h3>
+<p>改 footer 时一个看似安全的动作 ——「把文案写短一点」—— <strong>反而复发了 BUG-57</strong>。</p>
+<p><code>cardLayout.splitFooter(text, avail)</code> 按 <code> · </code> 分段折行；<strong>只有折成两行才能保证 <code>Esc 取消</code><br>整段落在行内</strong>。实测（60 列终端 ⇒ <code>avail ≈ 56</code>）：</p>
+<table><thead><tr><th>文案</th><th>显示宽</th><th><code>splitFooter(t, 56)</code></th><th>结果</th></tr></thead><tbody><tr><td>旧（改前）</td><td>63</td><td><strong>折 2 行</strong>：末行 <code>默认「确认执行」· Esc 取消</code></td><td>✓ <code>Esc 取消</code> 完整</td></tr><tr><td>实施初版（<strong>过短</strong>）</td><td>55</td><td><strong>不折</strong>（55 ≤ 56），单行</td><td>✗ 渲染时被卡宽裁成 <code>… Esc …</code></td></tr><tr><td>实施修正版（5 段结构）</td><td>73</td><td><strong>恒折 2 行</strong>（46–56 各档实测均如此）</td><td>✓ <code>Esc 取消</code> 完整</td></tr></tbody></table>
+<p><strong>教训</strong>：<strong>「短」不等于「安全」</strong>。折行阈值是个<strong>上限</strong>，短过阈值会掉到「单行 + 被裁」这一更差的形态。<br>改这类文案前必须先量 <code>visWidth</code> <strong>与</strong> <code>splitFooter(t, avail)</code> 的最坏情形，不能靠直觉。</p>
+<p>修正版刻意保留 5 段结构（<code>↑/↓ 导航 · Enter 确认执行 · 数字键/点击 选中 · 默认「确认执行」· Esc 取消</code>），<br>并在 <code>footerTextOf</code> 的注释里写明「长度是契约的一部分，不要顺手缩短」。</p>
+<h3 id="12-6-门控的默认值-影响测试与真实终端">12.6 门控的默认值（<strong>影响测试与真实终端</strong>）<a class="anchor" href="#12-6-门控的默认值-影响测试与真实终端" aria-label="锚点">#</a></h3>
+<p><code>cardClickEnabled(env)</code> 需要<strong>两条同时成立</strong>，其中第二条是 <code>mouseButtonsEnabled(env)</code>，<br>而它要求终端<strong>被识别</strong>（<code>autoDetectTerminal</code>）。实测：</p>
+<table><thead><tr><th>环境</th><th><code>mouseTier</code></th><th><code>mouseButtonsEnabled</code></th><th><code>cardClickEnabled</code></th></tr></thead><tbody><tr><td>测试 / 管道（<code>TERM=dumb</code>、无 <code>KHY_MOUSE</code>）</td><td><code>click</code></td><td><strong>false</strong></td><td><strong>false</strong></td></tr><tr><td>真实终端 + <code>KHY_MOUSE_BUTTONS=1</code></td><td><code>click</code></td><td>true</td><td><strong>true</strong></td></tr></tbody></table>
+<p><strong>两个直接后果</strong>：</p>
+<ol><li><strong>测试环境天然走「门控关」路径</strong> ⇒ <code>questionPromptSize.test.js</code> 的「不传 <code>cols</code> 时逐字节不改」</li></ol>
+<p>负对照<strong>不受本次改动影响</strong>（这也是为什么端到端探针必须显式设 <code>KHY_MOUSE_BUTTONS=1</code><br>   才看得到可点节点 —— 否则探针会<strong>假绿</strong>）。</p>
+<ol><li>终端不被识别时点击静默关闭 —— 这是既有 <code>mouseButtonsEnabled</code> 的设计（不识别就不接管），</li></ol>
+<p>非本次引入；但意味着<strong>「代码在、终端不给」时点击无反应</strong>，排查时先看这一点。</p>
+<h3 id="12-7-改后测试状态">12.7 改后测试状态<a class="anchor" href="#12-7-改后测试状态" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>项</th><th>结果</th></tr></thead><tbody><tr><td><code>cardClick.test.js</code>（新增 17 例）</td><td>✓ <strong>17/17 pass</strong>（<code>node --test</code> 族；<code>jest.config.js</code> 按 <code>require('node:test')</code> 标记自动忽略，无需手工登记）</td></tr><tr><td>端到端命中探针（真渲染 + 真 <code>collectLayout</code>）</td><td>✓ <strong>8/8 pass</strong>（含门控关反向对照）</td></tr><tr><td>机制探针（Box vs Text）</td><td>✓ <strong>5/5 pass</strong>（含 <code>attributes.onClick</code> 不入命中区的反向对照）</td></tr><tr><td>守卫前移探针（typing 态吞掉鼠标序列）</td><td>✓ <strong>3/3 pass</strong>（含「普通字符 Z 必须被插入」的反向对照）</td></tr><tr><td>两段式行为探针（L2 选中→Enter / L1 直选）</td><td>✓ <strong>9/9 pass</strong></td></tr><tr><td><code>tests/tui</code> 全量（<strong>含并发会话在途改动</strong>）</td><td>47 suites / 711 pass；2 suites / 5 fail —— <strong>失败全部属并发会话</strong>（见下）</td></tr></tbody></table>
+<p><strong>本次改动直接相关 suite 的实测（均绿）</strong>：</p>
+<pre><code>PASS tests/tui/permissionsPromptDigitFooter.test.js   ← 本次改写的契约测试
+PASS tests/tui/permissionsPromptNoticeFrame.test.js   ← 本次改写的窄屏折行用例
+PASS tests/tui/questionPromptSize.test.js             ← 「不传 cols 逐字节不变」负对照
+PASS tests/tui/cardLayout.test.js                     ← splitFooter 折行真源</code></pre>
+<p><strong>关于 2 个失败 suite（</strong>归属已查明，与本次改动无关<strong>）</strong>：</p>
+<table><thead><tr><th>suite</th><th>失败原因</th><th>归属证据</th></tr></thead><tbody><tr><td><code>ccOverlayFit.test.js</code></td><td><code>maxWriteRows</code> 比账本地板少 1（AgentTree / busy 帧让位账本）</td><td><code>App.js</code> mtime <strong>18:20:43</strong>（+743/−175 行）—— 落在并发会话工作时段，<strong>本次从未碰过 <code>App.js</code></strong></td></tr><tr><td><code>keyHandlerFreshClosure.test.js</code></td><td><code>Exceeded timeout of 60000 ms</code>（<code>openThenUp(200)</code>）</td><td><strong>超时</strong>而非断言失败；且伴随 <code>import after Jest environment torn down</code> —— 典型的<strong>机器负载 / 多 jest 进程竞争</strong>症状（本轮为赶进度同时跑了多个后台 suite）。判据：<strong>超时类红先看负载</strong>，不要当回归</td></tr></tbody></table>
+<blockquote><p>判定方法（本仓纪律）：<strong>判红灯前先看 <code>git status</code> 规模，大规模变动先按 mtime 判归属</strong>。<br>本次改动的 6 个文件 mtime 全部落在 17:52–18:30；<code>App.js</code> / <code>perfTunables.js</code> / <code>Spinner.js</code><br>在同区间被<strong>并发会话</strong>修改，故其失败不归本次。</p></blockquote>
+<p><strong>测试契约随行为同步（<code>RUNTIME-009</code>：改动有文档背书的行为须报部位）</strong>：</p>
+<table><thead><tr><th>文件</th><th>改动</th><th>理由</th></tr></thead><tbody><tr><td><code>tests/tui/permissionsPromptNoticeFrame.test.js</code></td><td>「窄屏页脚折行」用例的文案断言改为 <code>数字键/点击 选中</code> + <code>Enter 确认执行</code></td><td>L2 行为变了，文案随之变；该用例的<strong>主旨</strong>（<code>Esc 取消</code> 不许丢）不变</td></tr><tr><td><code>tests/tui/permissionsPromptDigitFooter.test.js</code></td><td>头注释补裁决记录；「数字键在 L2 直选」两个用例改为<strong>两段式</strong>（数字键只选中 ⇒ <code>hit=false</code>；加 Enter 才出原结果）；新增 L1 回归对照</td><td>该文件头注释<strong>原文即写明</strong>「若将来改变该策略，本用例必须同步改，好让那次改变是显式的而非顺手发生（BUG-36b 的裁决点）」—— 此处正是履约</td></tr></tbody></table>
+<h3 id="12-8-存证清单-khy-feedback-design-arch-146-card-click">12.8 存证清单（<code>.khy/feedback/DESIGN-ARCH-146-card-click/</code>）<a class="anchor" href="#12-8-存证清单-khy-feedback-design-arch-146-card-click" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>文件</th><th>内容</th></tr></thead><tbody><tr><td><code>card-click-probe.cjs</code> / <code>repro-before.txt</code></td><td>缺陷复现（6/8 PASS，2 FAIL 即缺陷本身）</td></tr><tr><td><code>verify-safety-probe.cjs</code> / <code>verify-safety-before.txt</code></td><td>拖选安全（9/9，含 <code>consumed</code> 反向对照）</td></tr><tr><td><code>prototype-applicability.cjs</code> / <code>.txt</code></td><td>可实施性（8/8：锚点唯一 / 回退逐字节）</td></tr><tr><td><code>probe-box-vs-text-click.cjs</code> / <code>.txt</code></td><td><strong>地基修正实证</strong>（5/5：Box 透传 vs Text 白名单）</td></tr><tr><td><code>probe-real-cards-hittest.cjs</code> / <code>.txt</code></td><td><strong>端到端命中</strong>（8/8：真渲染 + 真 <code>collectLayout</code> + 门控反向对照）</td></tr><tr><td><code>probe-guard-order.cjs</code> / <code>.txt</code></td><td><strong>守卫前移</strong>（3/3：typing 态吞序列 + 反证输入态在工作）</td></tr><tr><td><code>probe-twostep.cjs</code> / <code>.txt</code></td><td><strong>两段式行为</strong>（9/9：L2 选中→Enter / L1 直选回归对照）</td></tr></tbody></table>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-145] 用户DIY空间分层与安全边界统一方案.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-145] 用户 DIY 空间分层与安全边界统一方案</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-147] 好设计十诫的工程映射与设计判据落地方案.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-147] 好设计十诫的工程映射与设计判据落地方案</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-146] TUI 卡片点击交互-选项命中与展开方案.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><style>body{margin:0;background:#fff;font-family:"Microsoft YaHei","Segoe UI",sans-serif;padding:26px 32px;color:#111827}h1{font-size:24px;margin:0 0 4px}.sub{font-size:13.5px;color:#4b5563;margin-bottom:18px}.src{font-size:12px;color:#6b7280;margin-top:20px;border-top:1px solid #e5e7eb;padding-top:10px;line-height:1.7}</style></head><body>
+<h1>终端真实输出：khy storage status</h1><div class="sub">数据存储位置自述（各数据落点的寻址读数）　｜　进程状态：ok</div><div style="background:#0f172a;border-radius:10px;overflow:hidden;box-shadow:0 8px 26px rgba(2,6,23,.35)">
+  <div style="background:#1e293b;color:#cbd5e1;font-size:13px;padding:9px 14px;font-family:Consolas,monospace;display:flex;justify-content:space-between">
+    <span>khy-os — khy storage status</span><span>Windows 11 · Node v22.18.0 · 2026-09-28</span></div>
+  <pre style="margin:0;padding:16px 18px;font-family:Consolas,'Courier New',monospace;font-size:13.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;max-height:760px;overflow:hidden"><span style="color:#e6e6e6;font-weight:400">  i khy 存储位置
+  系统盘（写满会拖垮整机）
+    C:\  可用 20.3GB / 共 117.8GB
+  非系统盘（优先落于此处）
+    D:\  可用 124.1GB / 共 337.2GB  可写
+  数据家当前解析
+    数据家: D:\Portable\khy-os\.khy [系统盘]
+    项目家: D:\Portable\khy-os\.khy [系统盘]
+    底座家: D:\Portable\khy-os\.khyos
+  钉位指针
+    C:\Users\25789\.khy\.location.json
+    原因: 数据家=沿用既有数据 项目家=沿用既有数据
+
+  i 迁移到非系统盘：khy storage migrate [--to &lt;路径&gt;] [--dry-run]
+  迁移为显式、校验、可回滚操作；源数据保留为备份，绝不自动删除。
+</span></pre>
+</div>
+<div class="src">采集方式：<code>node services/backend/bin/khy.js storage status</code> 捕获子进程 stdout（保留 ANSI 颜色），包进终端外观后由 msedge.exe 无头截图。<br>字符内容未经改写。本命令为只读离线命令，不外呼网络。</div></body></html>

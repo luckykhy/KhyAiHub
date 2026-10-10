@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>keybindings — 键位目录单一真源与 Ctrl+R 反向历史搜索（D2 功能单元） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>config<span class="sep">›</span>keybindings<span class="sep">›</span>keybindings — 键位目录单一真源与 Ctrl+R 反向历史搜索（D2 功能单元）</div>
+      <header class="hero reveal"><h1>keybindings — 键位目录单一真源与 Ctrl+R 反向历史搜索（D2 功能单元）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#keybindings-键位目录单一真源与-ctrl-r-反向历史搜索-d2-功能单元">keybindings — 键位目录单一真源与 Ctrl+R 反向历史搜索（D2 功能单元）</a></li><li class="lvl-2"><a href="#逐成员">逐成员</a></li><li class="lvl-2"><a href="#消费者-实测-fan-in-6-均非测试文件">消费者（实测 fan-in = 6，均非测试文件）</a></li><li class="lvl-2"><a href="#契约-每条都对应命名测试">契约（每条都对应命名测试）</a></li><li class="lvl-2"><a href="#已知偏差与限制">已知偏差与限制</a></li><li class="lvl-2"><a href="#怎么跑">怎么跑</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="keybindings-键位目录单一真源与-ctrl-r-反向历史搜索-d2-功能单元">keybindings — 键位目录单一真源与 Ctrl+R 反向历史搜索（D2 功能单元）<a class="anchor" href="#keybindings-键位目录单一真源与-ctrl-r-反向历史搜索-d2-功能单元" aria-label="锚点">#</a></h1>
+<p>一句话：把「有哪些快捷键」与「Ctrl+R 往回搜历史该选中哪一条」两件事做成零 IO 叶子——<br>前者是一张<strong>按上下文分组、与真实处理器一一对应</strong>的键位目录（同时驱动 <code>/keybindings</code> 全列举<br>与 <code>?</code> 帮助浮层，取代此前散落且互不一致的几份拷贝），后者是大小写不敏感的<strong>反向增量匹配</strong><br>（输入旧→新，命中新→旧，再按跳到更旧一条、到最旧停住不回绕）。</p>
+<p>清单：<code>khy.module.json</code>（<code>domain</code> / <code>mayDependOn</code> / <code>fanIn</code> / <code>lifecycle.stage</code> 四字段被<br><code>npm run check:layout</code> 的 entry-buffer 规则读取，其余给人看）。</p>
+<h2 id="逐成员">逐成员<a class="anchor" href="#逐成员" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>角色</th><th>require</th><th>同名测试</th></tr></thead><tbody><tr><td><code>keybindingCatalog.js</code></td><td>键位目录 <code>KEYBINDING_CATALOG</code>（冻结）+ 精简视图 <code>ESSENTIAL_SHORTCUTS</code> + <code>selectCatalog</code>（按上下文/查询筛选）+ <code>formatCatalog</code>（确定性纯文本渲染）+ <code>isEnabled</code></td><td><code>../../../../utils/isOffValue</code>（D3）</td><td><code>keybindingCatalog.test.js</code></td></tr><tr><td><code>historyReverseSearch.js</code></td><td>反向搜索决策核心：<code>search(history, query, {from})</code> / <code>nextMatch(history, state)</code> / <code>isEnabled(env)</code></td><td>无</td><td><code>historyReverseSearch.test.js</code></td></tr></tbody></table>
+<h2 id="消费者-实测-fan-in-6-均非测试文件">消费者（实测 fan-in = 6，均非测试文件）<a class="anchor" href="#消费者-实测-fan-in-6-均非测试文件" aria-label="锚点">#</a></h2>
+<p><code>cli/handlers/keybindings.js</code>、<code>cli/tui/ink-components/HelpMenu.js</code>、<code>App.js</code>、<br><code>HistorySearchOverlay.js</code>、<code>cli/tui/chatChords.js</code>、<code>services/keybindings/index.js</code>（D1 再导出壳）。<br><code>utils/flagRegistry/index.js</code> 与 <code>utils/isOffValue.js</code> 的文本里也提到本单元，但实测是注释，不构成边。</p>
+<h2 id="契约-每条都对应命名测试">契约（每条都对应命名测试）<a class="anchor" href="#契约-每条都对应命名测试" aria-label="锚点">#</a></h2>
+<ol><li><strong>目录是冻结的数据模型</strong>：上下文名唯一、每条都有 <code>keys</code> 与非空 <code>desc</code>。</li></ol>
+<p>→ <code>catalog shape: frozen groups, unique contexts, every binding has keys + non-empty desc</code></p>
+<ol><li><strong>诚实边界写进数据而不是承诺</strong>：<code>Ctrl + J</code> 标注「实测可用」，</li></ol>
+<p><code>Shift + Enter</code>（与 Enter 同字节）、<code>Ctrl + Enter</code>（零字节送达）、<code>Alt + Enter</code>（本机不可用）<br>   一律带终端前提——这是 BUG-35 的教训：只看「处理器有没有这条分支」不够，还须确认终端送得出可区分的字节。<br>   → <code>the honest boundary is encoded in the data, not promised away</code></p>
+<ol><li><strong>筛选是纯函数且绝不抛</strong>：上下文名或中文标签都能寻址、大小写与首尾空白容错；</li></ol>
+<p>查询在 keys/desc/label 三处做子串匹配并丢掉空组；两个条件取交集可为空；<br>   非对象入参退化为「返回全量副本」。<br>   → <code>selectCatalog: ...</code> 四条用例</p>
+<ol><li><strong>返回的是结构副本</strong>：调用方改动拷贝不得污染 SSOT。</li></ol>
+<p>→ <code>selectCatalog: no options is a structural copy of every group</code></p>
+<ol><li><strong>渲染确定性</strong>：键列右对齐到本组最长键宽 +2 空格、组间恰好一个空行、零 ANSI 颜色；</li></ol>
+<p>空数组/null/空组都产出空串而非抛错。<br>   → <code>formatCatalog: group header, two-space indent, key column padded to the widest key</code>、<br>   <code>formatCatalog: two groups are separated by exactly one blank line</code></p>
+<ol><li><strong>反向匹配的次序与游标</strong>：命中下标天然新→旧；<code>opts.from</code> 越界双向 clamp；</li></ol>
+<p><code>nextMatch</code> 到最旧一条停住不回绕；历史与 matches 错位时产出空文本而不是抛错。<br>   → <code>search: case-insensitive substring, ordered new→old, indices point into the input</code>、<br>   <code>search: opts.from selects the nth match and is clamped at both ends</code>、<br>   <code>nextMatch: Ctrl+R again walks older and stops at the oldest (bash semantics)</code>、<br>   <code>nextMatch: degenerate states degrade to an empty selection instead of throwing</code></p>
+<ol><li><strong>两扇门控</strong>：<code>KHY_KEYBINDINGS</code> 与 <code>KHY_HISTORY_REVERSE_SEARCH</code> 都默认开；</li></ol>
+<p>前者的 off 集含空串（委托 <code>utils/isOffValue</code>），后者不含空串——两侧不完全一致，各自钉住以免误改。<br>   另实测一处<strong>不对称的退化</strong>：<code>isEnabled(undefined)</code> 走默认形参 <code>env = {}</code> 判<strong>开</strong>，<br>   而 <code>isEnabled(null)</code> 是实值，<code>env &amp;&amp;</code> 在默认值之前短路，判<strong>关</strong>——两者结果相反。<br>   调用方要拿默认开就必须传对象（<code>{}</code>）。<br>   → <code>isEnabled: KHY_KEYBINDINGS default-on, off values close it</code>、<br>   <code>isEnabled: default on; only the four off values close it</code></p>
+<h2 id="已知偏差与限制">已知偏差与限制<a class="anchor" href="#已知偏差与限制" aria-label="锚点">#</a></h2>
+<ul><li><strong>不提供重映射引擎</strong>：khy 的键位硬编码在 Ink 输入处理器里，没有「配置文件 → 解析 → 喂处理器」的通路。</li></ul>
+<p>刻意不对齐 Claude Code 的那一半，因为写一套跑不通的 JSON 重映射就是假功能。将来真接通输入层再议。</p>
+<ul><li><strong><code>ESSENTIAL_SHORTCUTS</code> 实测 18 条，而源码注释写「只列最常用的 15 条」</strong>——文档漂移。</li></ul>
+<p>测试按实测 18 钉住（<code>essential view is frozen tuples and comes from the same module</code>），<br>  增删条目时注释与测试必须同步；这条属<strong>注释订正</strong>，不在本单元擅改语义。</p>
+<ul><li><code>getEssentialShortcuts()</code> 返回的是 SSOT 本身（冻结数组），不是副本；调用方只能读，不能改。</li></ul>
+<h2 id="怎么跑">怎么跑<a class="anchor" href="#怎么跑" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">node --<span class="hljs-built_in">test</span> services/backend/src/services/domain/config/keybindings/keybindingCatalog.test.js \
+  services/backend/src/services/domain/config/keybindings/historyReverseSearch.test.js
+node scripts/ci/check-repo-layout.js --list=functional-unit | grep -c <span class="hljs-string">&quot;config/keybindings&quot;</span>   <span class="hljs-comment"># 期望 0</span>
+node scripts/ci/check-repo-layout.js --list=entry-buffer | grep -c <span class="hljs-string">&quot;domain/config/keybindings&quot;</span> <span class="hljs-comment"># 期望 0</span></code></pre>
+<p>新增 <code>README.md</code> 后须跑 <code>node scripts/docs/build_docs_site.js</code> 生成同名 <code>.html</code> 孪生，<br>否则 <code>node scripts/docs/verify_docs_site.js</code> 会报缺件。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/services/domain/config/config/README.html"><div class="dir">← 上一篇</div><div class="ttl">config — 自然语言配置意图解析与偏好归一（纯叶子族）</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/services/domain/config/README.html"><div class="dir">下一篇 →</div><div class="ttl">config — 通道卡片（cc-switch）、自然语言配置意图与键位表（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/config/keybindings/README.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

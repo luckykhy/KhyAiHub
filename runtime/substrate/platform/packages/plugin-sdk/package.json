@@ -1,0 +1,16 @@
+{
+  "name": "@khy/plugin-sdk",
+  "version": "1.6.5",
+  "description": "KhyPlugin manifest validator + discovery contract source. The single source of truth for what a khy plugin manifest must contain; loaded by plugin-loader with a built-in fallback when the package is absent.",
+  "license": "MIT",
+  "main": "index.js",
+  "type": "commonjs",
+  "keywords": [
+    "khy",
+    "khyquant",
+    "plugin",
+    "extension",
+    "manifest",
+    "sdk"
+  ]
+}

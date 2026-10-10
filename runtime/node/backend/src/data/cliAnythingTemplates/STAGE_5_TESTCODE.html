@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: STAGE_5_TESTCODE.md -->
+<title>Stage 5: Test Implementation · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>data<span class="sep">›</span>cliAnythingTemplates<span class="sep">›</span>Stage 5: Test Implementation</div>
+      <header class="hero reveal"><h1>Stage 5: Test Implementation</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#stage-5-test-implementation">Stage 5: Test Implementation</a></li><li class="lvl-2"><a href="#objective">Objective</a></li><li class="lvl-2"><a href="#inputs">Inputs</a></li><li class="lvl-2"><a href="#python-tests">Python Tests</a></li><li class="lvl-2"><a href="#node-js-tests">Node.js Tests</a></li><li class="lvl-2"><a href="#output">Output</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="stage-5-test-implementation">Stage 5: Test Implementation<a class="anchor" href="#stage-5-test-implementation" aria-label="锚点">#</a></h1>
+<h2 id="objective">Objective<a class="anchor" href="#objective" aria-label="锚点">#</a></h2>
+<p>Implement test code based on the test plan from Stage 4.</p>
+<h2 id="inputs">Inputs<a class="anchor" href="#inputs" aria-label="锚点">#</a></h2>
+<ul><li><code>TEST.md</code> from Stage 4</li><li>Source code from Stage 3</li></ul>
+<h2 id="python-tests">Python Tests<a class="anchor" href="#python-tests" aria-label="锚点">#</a></h2>
+<p>Generate test files at <code>tests/</code>:</p>
+<pre><code class="language-python"><span class="hljs-comment"># tests/test_&lt;command_group&gt;.py</span>
+<span class="hljs-keyword">import</span> pytest
+<span class="hljs-keyword">from</span> unittest.mock <span class="hljs-keyword">import</span> patch, MagicMock
+<span class="hljs-keyword">from</span> click.testing <span class="hljs-keyword">import</span> CliRunner
+<span class="hljs-keyword">from</span> cli_anything.&lt;SOFTWARE&gt;.&lt;SOFTWARE&gt;_cli <span class="hljs-keyword">import</span> cli
+
+<span class="hljs-meta">@pytest.fixture</span>
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">runner</span>():
+    <span class="hljs-keyword">return</span> CliRunner()
+
+<span class="hljs-keyword">class</span> <span class="hljs-title class_">TestProjectCommands</span>:
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">test_create_project</span>(<span class="hljs-params">self, runner</span>):
+        result = runner.invoke(cli, [<span class="hljs-string">&#x27;project&#x27;</span>, <span class="hljs-string">&#x27;create&#x27;</span>, <span class="hljs-string">&#x27;--name&#x27;</span>, <span class="hljs-string">&#x27;test&#x27;</span>])
+        <span class="hljs-keyword">assert</span> result.exit_code == <span class="hljs-number">0</span>
+
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">test_create_project_json</span>(<span class="hljs-params">self, runner</span>):
+        result = runner.invoke(cli, [<span class="hljs-string">&#x27;project&#x27;</span>, <span class="hljs-string">&#x27;create&#x27;</span>, <span class="hljs-string">&#x27;--name&#x27;</span>, <span class="hljs-string">&#x27;test&#x27;</span>, <span class="hljs-string">&#x27;--json&#x27;</span>])
+        data = json.loads(result.output)
+        <span class="hljs-keyword">assert</span> data[<span class="hljs-string">&#x27;status&#x27;</span>] == <span class="hljs-string">&#x27;success&#x27;</span>
+
+<span class="hljs-meta">    @patch(<span class="hljs-params"><span class="hljs-string">&#x27;cli_anything.&lt;SOFTWARE&gt;.utils.backend.run_command&#x27;</span></span>)</span>
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">test_backend_called</span>(<span class="hljs-params">self, mock_run, runner</span>):
+        mock_run.return_value = MagicMock(returncode=<span class="hljs-number">0</span>, stdout=<span class="hljs-string">&#x27;ok&#x27;</span>)
+        result = runner.invoke(cli, [<span class="hljs-string">&#x27;export&#x27;</span>, <span class="hljs-string">&#x27;render&#x27;</span>])
+        mock_run.assert_called_once()</code></pre>
+<h2 id="node-js-tests">Node.js Tests<a class="anchor" href="#node-js-tests" aria-label="锚点">#</a></h2>
+<p>Generate test files at <code>tests/</code>:</p>
+<pre><code class="language-javascript"><span class="hljs-comment">// tests/&lt;command_group&gt;.test.js</span>
+<span class="hljs-keyword">const</span> { execFileSync } = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;child_process&#x27;</span>);
+<span class="hljs-keyword">const</span> path = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;path&#x27;</span>);
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">CLI</span> = path.<span class="hljs-title function_">resolve</span>(__dirname, <span class="hljs-string">&#x27;../src/index.js&#x27;</span>);
+
+<span class="hljs-title function_">describe</span>(<span class="hljs-string">&#x27;&lt;command_group&gt;&#x27;</span>, <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-title function_">test</span>(<span class="hljs-string">&#x27;create project&#x27;</span>, <span class="hljs-function">() =&gt;</span> {
+    <span class="hljs-keyword">const</span> out = <span class="hljs-title function_">execFileSync</span>(<span class="hljs-string">&#x27;node&#x27;</span>, [<span class="hljs-variable constant_">CLI</span>, <span class="hljs-string">&#x27;project&#x27;</span>, <span class="hljs-string">&#x27;create&#x27;</span>, <span class="hljs-string">&#x27;--name&#x27;</span>, <span class="hljs-string">&#x27;test&#x27;</span>], { <span class="hljs-attr">encoding</span>: <span class="hljs-string">&#x27;utf-8&#x27;</span> });
+    <span class="hljs-title function_">expect</span>(out).<span class="hljs-title function_">toContain</span>(<span class="hljs-string">&#x27;Created&#x27;</span>);
+  });
+
+  <span class="hljs-title function_">test</span>(<span class="hljs-string">&#x27;create project --json&#x27;</span>, <span class="hljs-function">() =&gt;</span> {
+    <span class="hljs-keyword">const</span> out = <span class="hljs-title function_">execFileSync</span>(<span class="hljs-string">&#x27;node&#x27;</span>, [<span class="hljs-variable constant_">CLI</span>, <span class="hljs-string">&#x27;project&#x27;</span>, <span class="hljs-string">&#x27;create&#x27;</span>, <span class="hljs-string">&#x27;--name&#x27;</span>, <span class="hljs-string">&#x27;test&#x27;</span>, <span class="hljs-string">&#x27;--json&#x27;</span>], { <span class="hljs-attr">encoding</span>: <span class="hljs-string">&#x27;utf-8&#x27;</span> });
+    <span class="hljs-keyword">const</span> data = <span class="hljs-title class_">JSON</span>.<span class="hljs-title function_">parse</span>(out);
+    <span class="hljs-title function_">expect</span>(data.<span class="hljs-property">status</span>).<span class="hljs-title function_">toBe</span>(<span class="hljs-string">&#x27;success&#x27;</span>);
+  });
+});</code></pre>
+<h2 id="output">Output<a class="anchor" href="#output" aria-label="锚点">#</a></h2>
+<ul><li><code>tests/</code> directory with all test files</li><li>Updated <code>TEST.md</code> (Part 1 checked off where implemented)</li></ul>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../runtime/node/backend/src/data/cliAnythingTemplates/STAGE_4_TESTPLAN.html"><div class="dir">← 上一篇</div><div class="ttl">Stage 4: Test Planning</div></a><a class="next" href="../../../../../../runtime/node/backend/src/data/cliAnythingTemplates/STAGE_6_DOCS.html"><div class="dir">下一篇 →</div><div class="ttl">Stage 6: Documentation &amp; SKILL.md</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/data/cliAnythingTemplates/STAGE_5_TESTCODE.html";</script>
+<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

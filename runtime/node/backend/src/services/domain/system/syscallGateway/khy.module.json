@@ -1,0 +1,76 @@
+{
+  "name": "syscallGateway",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "实测出边（10 个源文件全数清点，非抽样；`grep -n require` 逐行核对，含双引号形态）：**跨域只有 1 条** —— actionContractVerifier.js:108 的 `../../../../utils/isPlainObject`（D3）。同域 2 站点 —— preExecutionExplainer.js:271 与 :275 惰性 require `../../workspace/workspace/workspaceContext`（D2 的 workspace 上下文，取 collectWorkspaceContext / formatSummary）。内建 2 处 —— intentSchema.js:19 `path`、intentSchema.js:276 `os`。其余 8 个成员零本地出边，只 require 同目录 ./ 兄弟。结论：**本单元零 D1 出边**，是已建档 D2 单元里方向最干净的一个（对照 reverseEngineer 有 1 条 D1 顶层边）。",
+  "_deviation_note": "登记而非白名单，三笔：(1) 入边方向：4 个直连消费者里 2 个属 D1（再导出壳 src/services/syscallGateway/index.js 的 :4/:5 两站点、src/services/tool/toolCallingPermissions.js 的 :647/:655 两站点），2 个属 D2（desktop/desktopControl/safetyGate.js:582、messaging/channels/ilinkDispatcher.js:1243）。D1→D2 是 DOMAIN-DEPS 允许方向（D1.mayDependOn 含 D2），不登记为偏差；这里如实记的是**壳的二次分发**：src/cli/sessionClear.js、src/cli/tui/ink-components/PermissionsPrompt.js、src/services/tool/toolCalling.js、src/services/tool/toolSandbox.js 四个 D1 消费者走的是壳而非 D2 路径，因此本单元直连 fan-in 记 4，2 跳消费面另记 4。(2) `src/tools/**` 域归属缺口在本单元**未命中**（零 src/tools 出边），与 reverseEngineer 那笔不同，无需重复登记。(3) 网关与权限模式的耦合方向是「网关在前、requestPermission 在后」：toolCalling.js:2238 用 capabilityMatrix 的 POST_TOOL_GOVERNANCE/syscallGateway 门决定是否进网关，网关判 deny 即 fail-closed，放行才盖 EXEC_APPROVED 戳（戳的所有权在 D1 的 src/services/execApproval.js:494，**不在本单元**，见 B28-S4）。",
+  "fanIn": 4,
+  "fanInEvidence": [
+    "services/backend/src/services/syscallGateway/index.js",
+    "services/backend/src/services/tool/toolCallingPermissions.js",
+    "services/backend/src/services/domain/desktop/desktopControl/safetyGate.js",
+    "services/backend/src/services/domain/messaging/channels/ilinkDispatcher.js"
+  ],
+  "_fanIn_note": "非测试消费者 4 个文件（按「直接 require 本单元路径」计，文件形态与目录形态都算：safetyGate 与 ilinkDispatcher 用目录形态 require('../../system/syscallGateway')，早期只匹配成员形态的探针把它们漏掉过，入边数因此从 2 修正为 4）。另有 4 个文件经 D1 壳二次消费（cli/sessionClear.js、cli/tui/ink-components/PermissionsPrompt.js、tool/toolCalling.js、tool/toolSandbox.js），记为 2 跳不计入本数。计数排除 *.test.js。",
+  "behaviourTestsOutsideUnit": [
+    "services/backend/tests/services/syscallGateway.bypassScope.test.js",
+    "services/backend/tests/services/syscallGateway.redLine.test.js",
+    "services/backend/tests/services/syscallGateway.scenarios.test.js",
+    "services/backend/tests/services/syscallGateway.explanation.test.js",
+    "services/backend/tests/services/denialGuidance.test.js",
+    "services/backend/tests/services/preExecutionExplainer.test.js",
+    "services/backend/tests/services/preExecutionExplainer.gitHazard.test.js",
+    "services/backend/tests/services/permissionModesAndHookFloor.test.js",
+    "services/backend/tests/root-level/capabilityMatrixParity.test.js"
+  ],
+  "_outside_test_note": "9 份全是 jest 方言，本便携环境未安装 jest（`node_modules/.bin/jest` 是悬空 shim），在 `node --test` 下**加载期即失败**。逐份用一次性方言垫片复跑核实真实断言结果：**268 例 / 0 fail**（bypassScope 11、redLine 13、scenarios 48、explanation 2、denialGuidance 5、preExecutionExplainer 9、gitHazard 7、permissionModesAndHookFloor 15、capabilityMatrixParity 158）。垫片必须复刻 jest 的 `setupFiles` 隔离，否则读数造假：`KHY_DATA_HOME` 在本会话被 khy 进程导出为真实数据根，permissionModesAndHookFloor 因此在未隔离时**假红 3 例**（permissionPolicy 读到活体 `<dataHome>/permissions.json` 的 `filesystem.pathWhitelist` 判 confirm，把 plan/acceptEdits/bypass 三条自动放行全部压成 deny）；按 tests/jest.taskStoreIsolation.setup.js 的口径把数据根指向空临时目录后 15 例全过。另三处垫片缺口修掉后才拿到真判据：`test.each` 未实现曾让 redLine 整份崩溃（仪器缺陷，不是测试红）、`afterEach` 收了不跑、否定式 `.not.toThrow`/`.not.toBeUndefined` 不生效。「跑不了」不等于「红」，也不等于「不用看」。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-29",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "晋级三判据齐（DOMAIN-DEPS._entry_buffer.promotionCriteria）：单元目录有 README.md、本清单有整数 fanIn、10 个源文件**全部**有同名同目录测试（168 例 / 0 skip / 全绿，另 268 例外部 jest 套件经垫片核实为绿）。诚实交代覆盖口径：外部 9 份的绿是**垫片复跑**而非 jest 本体的绿——本环境没有 jest 可跑；两者方言不同（`tests/` 用 describe/test 全局，共置测试用 node:test），断言结论按实测逐份比对过。",
+  "contract": {
+    "pipeline": "五段单向链（README.md「裁决契约」1–13 条逐条钉住）：intentSchema 把一次工具调用规约成不可变 Intent（动作/资源/作用域）→ resourceClassifier 出 L0/L1/L2 三级（唯一分级真源，redLine 与 preExecutionExplainer 都委托它，绝不另立判据）→ approvalRouter 纯决策零副作用（L0 自动放行 / L1 可预批可会话免审 / L2 强制键入确认串）→ breachBreaker 会话级熔断（旁路一次即跳闸，L2 硬闯累计跳闸）→ index.js 门面串联并逐段降级。",
+    "onlyTightens": "全链**只能增加拒绝，不能放松既有保护**：permissionCache 只被用于「用户已明确授予」的免审，落盘为零（纯内存，进程退出即归零）；redLine 委托分级层，不复制判据；denialGuidance 只对 cause==='no-interactive-channel' 这一类拒绝出指引，其余拒绝不解释成「可以再试」。",
+    "l2IsTyped": "L2 红灯必须严格键入确认串（默认 `YES`，`approvalRouter.js:147` 的 `typed.trim() === l2ConfirmWord`），空串/回车/`y`/小写 `yes` 一律不过；`autoApproveL1` 只作用于 L1 分支（`approvalRouter.js:81`），L2 分支不读该标志。熔断优先于一切：跳闸后连 L0 只读也拒。",
+    "failClosed": "交互器缺失、抛错、超时、返回非法值统统 DENY，并带结构化 `cause`（四类枚举见 `DENY_CAUSES`）供审计与熔断区分「环境没给通道」与「模型硬闯」。index.js:139-148 的 catch 收敛为 DENY/'L2'。",
+    "evidenceVsInference": "actionContractVerifier 是极小核验器 V：`Φ_pre/Φ_post` 作为**数据**（谓词描述子）而非代码执行，`_get` 拒绝原型链（`__proto__`/继承属性判缺失），量词元素上限 256（257 即 fail），因此坏契约只能少判、不能多判。",
+    "gates": "KHY_SYSCALL_GATEWAY（`index.js:39`，`!== 'off'`）、KHY_GATEWAY_BREAKER_SMART（`index.js:116`，同词汇）、KHY_L2_SESSION_ALLOW（permissionCache.js:29 的 `_FALSY`）、KHY_GATEWAY_BYPASS_SCOPED（intentSchema.js:97 的 `_FALSY`）、KHY_ACTION_CONTRACT（actionContractVerifier.js:62 的 `_FALSY`）、KHY_DENIAL_GUIDANCE（denialGuidance.js:19 的 `_FALSY`）。全部读 env 再回落默认值，零硬编码端点。见 knownBoundaries 的词汇分裂。",
+    "injectionPoints": [
+      "index.evaluate(intent, {prompter, cache, breaker, ...}) — 交互器/缓存/熔断全可注入，测试据此跑端到端而无需 TTY",
+      "makeControlPrompter(onControlRequest) — 把宿主控制通道适配成 {askL1, confirmL2}（D1 的 toolCalling 用的就是这条；返回值兼容 string 与 {typed, session} 两种形态）",
+      "preExecutionExplainer.explain(intent, {collectWorkspace}) — 缺数据时的主动采集可换实现",
+      "submitManifest/registerChild/unregisterChild — 工作流预审批清单与子会话注册",
+      "resetSession/resetAllSessions — 会话态归零（测试隔离用，生产不自动调用）"
+    ],
+    "knownBoundaries": [
+      "L2 的「本会话同类免审」（KHY_L2_SESSION_ALLOW，默认开）不绕过键入确认，但**放行过一次之后同类意图在本会话内不再问**（`approvalRouter.js:127-130`）。这是登记在册的可逆放宽，关它属于人的决定。",
+      "旁路探测（detectBypassMarkers）的作用域化由 KHY_GATEWAY_BYPASS_SCOPED 门控：门控关时逐字节回退旧的「全字符串扫 --force」行为，会误判内容里的 `-f`；门控开时数据字段不再判旁路但任意字段的 `force:true` 仍命中（外部 bypassScope 套件 11 例钉住两侧）。",
+      "分级层把 shell 命令的家族/风险判据建立在 `resourceClassifier` 的动态口径上：良性可逆命令不恒判 L2、真正破坏性命令恒判 L2（外部 redLine 套件用 test.each 表钉住两侧各 5+4 条），边界以实测为准。",
+      "网关不做授权持久化：进程重启即全零。任何「记住我的批准」都在调用方侧，本单元无写盘路径（这是设计，不是缺件）。",
+      "`EXEC_APPROVED` 符号的所有权在 D1 `src/services/execApproval.js:494`；本单元只产出裁决与 reasons，绝不盖戳（B28-S4 纠正的正是这处归属表述）。"
+    ],
+    "registered_defects": [
+      "B28-S1（intentSchema.js:373-377，**安全相关**）：detectBypassMarkers 把整段递归 visit 包在**一个** try/catch 里，而 `Object.entries(obj)` 在进入循环前**急切求值所有 getter**。一个取值即抛的键会中止整场扫描并 `catch { /* ignore */ }` 吞掉，后续真实 `force:true` 标记因此不再被探测——`{force:true}` 单独传返回 ['key:force']，加上一个抛错的兄弟键就返回 []，validateIntent 随之给出 `{ok:true, bypass:[]}`。fail-open 方向与「只能增加拒绝」相悖。已用测试钉住**实测行为**（intentSchema.test.js 的 B28-S1 用例），修法（逐键 try/catch 还是失败即视为旁路）改变判定语义，属人的裁决 → 任务 #17。",
+      "B28-S2（redLine.js:79）：`const action = intent && intent.action;` 落在 try/catch 之外，取值即抛的 intent 会让 describe **抛出**，与文件头「一律 fail-closed」自相矛盾（isRedLine 同输入返回 true）。已由 redLine.test.js 末条用例钉住真实行为。",
+      "B28-S3：同一单元并存两套 env-off 词汇——`_FALSY = new Set(['0','false','off','no'])` 在 actionContractVerifier.js:62、denialGuidance.js:19、intentSchema.js:97、permissionCache.js:29 **逐字重复四份**，而 index.js:39 与 :116 用 `!== 'off'`。实测分歧：`KHY_DENIAL_GUIDANCE='0'` 关掉指引，`KHY_SYSCALL_GATEWAY='0'` **关不掉**网关。与第 27 批 `_OFF`/`utils/isOffValue` 漂移同族 → 任务 #17。",
+      "B28-S4：文档/代码归属错位——外部 permissionModesAndHookFloor.test.js 的头部注释表述为网关「盖 EXEC_APPROVED 戳」，实测网关不盖，戳由 D1 execApproval 拥有、toolCalling 在网关放行后盖。README.md 已按实测改写并登记此处，未改测试文件（它在单元目录外）。"
+    ],
+    "fixed_in_this_unit": "无。本批**零修改源文件**：19 份测试全部为新增共置件（本会话只另加 intentSchema.test.js 的 B28-S1 钉线用例一条），任何缺陷均以登记代替动手（无甲/乙裁决，改旁路与门控语义属人的决定）。"
+  },
+  "tests": [
+    "actionContractVerifier.test.js",
+    "approvalRouter.test.js",
+    "breachBreaker.test.js",
+    "denialGuidance.test.js",
+    "index.test.js",
+    "intentSchema.test.js",
+    "permissionCache.test.js",
+    "preExecutionExplainer.test.js",
+    "redLine.test.js",
+    "resourceClassifier.test.js"
+  ],
+  "_test_dialect_note": "10 份全部 node:test 方言、同目录同名、共置；合计 168 例 / 0 skip / 全绿。逐文件 34/18/12/7/18/26/11/13/14/15 例，源文件里 `^test(` 的行数与 runner 自己报告的 `# tests` 逐一相等（防「绿是空转」）。README.md 的每条契约引用都过引用探针（24 条命中真实测试标题），行号引用过 `file:NN` 校验探针。把数据根指向空临时目录复跑一次，读数不变 → 这 168 例不依赖真实用户数据。"
+}

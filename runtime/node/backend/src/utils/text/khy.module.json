@@ -1,0 +1,73 @@
+{
+  "_note": "功能单元清单（[RESEARCH-018] §2.3 模板第 3 件 / 5-3-1 §3）。执行器 scripts/ci/check-repo-layout.js 的 entry-buffer 规则读本文件的 domain / mayDependOn / fanIn / lifecycle.stage 四个字段，其余字段是给人读的。字段真源与判据枚举见 docs/10_规范/registry/DOMAIN-DEPS.json 的 _entry_buffer 块。",
+  "name": "text",
+  "domain": "D3",
+  "mayDependOn": ["D3"],
+  "_mayDependOn_note": "D3 名义边界就是 [D3]（共享底座只准互相依赖）。实测本单元唯一的仓内 require 是 keyFindings.js → ../normalizeToolName（同为 D3 的 utils/ 叶子）与单元内互引（width.js → ./displayWidthMemo、imageIntent.js → ./inlineFileRefs）；其余 require 为 npm 包 strip-ansi / string-width，不构成域边。没有任何一条伸向 D1/D2/D4/D5。",
+  "fanIn": 18,
+  "fanInEvidence": [
+    "services/backend/src/cli/displayWidthMemo.js",
+    "services/backend/src/cli/repl/inlineFileRefs.js",
+    "services/backend/src/cli/permissionReply.js",
+    "services/backend/src/cli/resultGuard.js",
+    "services/backend/src/cli/repl/imageIntent.js",
+    "services/backend/src/cli/keyFindings.js",
+    "services/backend/src/cli/formatters.js",
+    "services/backend/src/cli/replSession.js",
+    "services/backend/src/cli/tui/hooks/useQueryBridge.js",
+    "services/backend/src/services/imageContextCardService.js",
+    "services/backend/src/services/aiManagementChatHttp.js",
+    "services/backend/src/services/aiMonitor.js",
+    "services/backend/src/services/gateway/inlineImageOcrGuardPolicy.js",
+    "services/backend/src/services/tool/toolCallingPermissions.js",
+    "services/backend/src/services/tool/toolUseLoopCore.js",
+    "services/backend/src/services/tool/toolUseLoopHelpers.js",
+    "services/backend/src/utils/format/consoleError.js",
+    "services/backend/src/utils/format/consoleNotice.js"
+  ],
+  "_fanIn_note": "18 个仓内消费者（实测 2026-09-28 探针 .khyos/tmp/b21-fanin.js：require 本单元 7 个模块的源文件去重计数，不含 *.test.js，不含单元内互引）。六路 cli/* 条目是归位后留下的再导出壳——壳按 [DESIGN-LAY-008] 第 0 步的约定仍算真实入口，故如实计入而不是只数真身直连者。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-28",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null,
+    "_stage_note": "stable 的依据是三条晋级判据此刻都在盘上：单元级 README.md、整数 fanIn 声明、7 个源文件各有同名同目录测试。provenance 如实写明它是机制建立后补记的存量：本单元由 [RESEARCH-018] §3.1 P1/P2 的第 16/18 批把纯叶子从 cli/ 归位而来，缓冲区路径（scripts/quarantine/）从未被经过，enteredVia: null。"
+  },
+  "contract": {
+    "purity": "纯文本/纯判定叶子：零 IO、确定性、绝不抛（垃圾入参也不抛）；行为开关一律读 env 入参，缺省为开，关闭即逐字节回退历史",
+    "ioOwner": "cli/ 与 services/ 的调用方（渲染、打印、权限对话、工具循环收尾）；本单元只返回字符串/结构体/布尔，不写盘、不发网络、不读终端尺寸",
+    "injectionPoints": [
+      "displayWidthMemo.getDisplayWidth(str, computeFn, env)（宽度算法由调用方注入）",
+      "keyFindings.* 的结论判据由 toolUseLoop 注入",
+      "resultGuard.assessClosure({ totalToolCalls, hasDeliveredConclusion, finalText }, env)（「是否已交付结论」由调用方算好传入）",
+      "inlineFileRefs.scanPathRefs(text, quotedAtom, unquotedSrc)（正则原子由调用方给出）"
+    ],
+    "gates": {
+      "KHY_DISPLAY_WIDTH_MEMO": "displayWidthMemo.isEnabled，默认开",
+      "KHY_TRUNCATE_ANSI_LINEAR": "width._truncateAnsiLinearEnabled，默认开",
+      "KHY_PERMISSION_REPLY_TOKENS": "permissionReply.permissionReplyEnabled，默认开",
+      "KHY_RESULT_GUARD": "resultGuard.resultGuardEnabled，默认开",
+      "KHY_RESULT_GUARD_EMPTY": "resultGuard.emptyAfterToolsGuardEnabled，默认开",
+      "KHY_RESULT_GUARD_PROGRESS_ONLY": "resultGuard.progressOnlyGuardEnabled，默认开",
+      "KHY_T0_DELIVERY_NUDGE": "resultGuard.deliveryNudgeForcedForWeakTier，默认开",
+      "KHY_KEY_FINDINGS / KHY_KEY_FINDINGS_TESTS / KHY_KEY_FINDINGS_MODEL / KHY_KEY_FINDINGS_DEGENERATE_GUARD": "keyFindings 四级门控，默认开",
+      "KHY_INLINE_IMAGE_OCR / D7 媒体扩展集": "由调用方以 extraExtSet 入参传入（本单元不读该门控）"
+    }
+  },
+  "tests": [
+    "displayWidthMemo.test.js",
+    "inlineFileRefs.test.js",
+    "keyFindings.test.js",
+    "permissionReply.test.js",
+    "resultGuard.test.js",
+    "width.test.js",
+    "imageIntent.test.js"
+  ],
+  "behaviourTestsOutsideUnit": [
+    "services/backend/tests/cli/displayWidthMemo.test.js",
+    "services/backend/tests/cli/keyFindings.test.js",
+    "services/backend/tests/cli/permissionReply.test.js",
+    "services/backend/tests/cli/resultGuard.test.js"
+  ],
+  "_merge_note": "共置的 7 份是**单元契约**测试（导出面 / 纯度 / 门控语义 / 永不抛），tests/cli 下的 4 份是归位前的行为回归测试，两者判据不同、不可互相替代；把它们合并进本目录需要一次 git mv（本篇第 0 步未闭合，禁令见 scripts/quarantine/README.md），故此处只如实登记位置。"
+}

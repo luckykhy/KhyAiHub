@@ -1,0 +1,92 @@
+{
+  "name": "trajectoryProvenance",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "实测出边（8 个源文件全数清点，非抽样）：**D3 仅 1 条** —— traceChain.js:30 `../../../../utils/atomicWriteJson`（链文件原子写：同目录 tmp、0600、fsync 显式 true，因为溯源是 evidence，不跟随 KHY_ATOMIC_FSYNC 的全局默认）。**零 D2→D1 出边**，因此本单元不需要 _deviation_note 来登记反向依赖；DOMAIN-DEPS 里 D2 的 mayDependOn=[\"D2\",\"D3\"] 逐字满足。同域/同目录：provenanceClassifier.js:13、quarantinePolicy.js:19、traceProjection.js:19 取 ./khyTrace，claimReconciler.js:24 取 ./claimNegation，index.js:16-21 取 6 个兄弟。内建：crypto/fs/path（只在 traceChain.js:26-28）。**零第三方出边**。⚠ 反向结构须知：`src/services/trajectoryProvenance/index.js` 是自动迁移生成的 **D1 shim**（`module.exports = require('../domain/trajectory/trajectoryProvenance')`），它把本单元再导出到 D1 命名空间下；shim 自身是 D1→D2 的允许方向入边，但它让 2 个 D1 消费者（aiChatCore.js:4718、ToolLines.js:1055）**在文本上看不见本单元**——按字符串前缀统计扇入会漏掉它们，故 fanIn 只计直连的 7 个文件，间接的 2 个单列在 _fanIn_note。",
+  "fanIn": 7,
+  "fanInEvidence": [
+    "services/backend/src/cli/aiGatewayGenerateHelpers.js",
+    "services/backend/src/cli/handlers/trace.js",
+    "services/backend/src/services/answerVerifier.js",
+    "services/backend/src/services/domain/trajectory/trajectoryReplay/replayBundle.js",
+    "services/backend/src/services/gateway/adapters/codexAdapter.js",
+    "services/backend/src/services/sessionPersistence.js",
+    "services/backend/src/services/trajectoryProvenance/index.js"
+  ],
+  "_fanIn_note": "非测试消费者 **7 个文件 / 10 个 require 站点**（按「require 说明符解析后落在本单元目录内」计，排除 *.test.js）：aiGatewayGenerateHelpers.js:649 取 claimReconciler；handlers/trace.js:24/:25 取 khyTrace.js 与 traceProjection.js（带 .js 后缀）；answerVerifier.js:151 取 claimReconciler；trajectoryReplay/replayBundle.js:141 同域取 traceChain（打便携包时顺带拷贝防篡改链）；codexAdapter.js:2221 取 quarantinePolicy（**安全热路径**：执行中转 functionCall 前裁决 allow/gate/quarantine）；sessionPersistence.js:508/:545/:643 取 khyTrace（写消息时盖 _khyTrace 戳）与 traceChain（append + verify 两站）；D1 shim index.js:4 以**目录形态** require 整包。域构成：6 个 D1 + 1 个 D2，全部允许方向。**另 2 个间接消费者**经 shim 抵达：cli/aiChatCore.js:4718、cli/tui/ink-components/ToolLines.js:1055（二者拿桶的 21 个再导出符号）。探针教训登记：本数字经三次修正才可信——(1) 只匹配成员形态会漏 `khyTrace.js` 这种带后缀站点与 `handlers/trace.js`；(2) 按子串分类会把 shim 的消费者算成直连，并把同域兄弟相对路径 `../trajectoryProvenance/traceChain` 误判为间接；(3) 最终判据改为 `path.resolve(dirname, spec)` 是否落进单元目录。桶 index.js **确有生产消费者**（经 D1 shim，而不是直接），与 trajectoryReplay 桶「生产零消费者」的处境不同。",
+  "behaviourTestsOutsideUnit": [
+    "services/backend/tests/atomicWriteMigration.test.js",
+    "services/backend/tests/cli/traceProjectionSingleGlyph.test.js",
+    "services/backend/tests/services/sessionPersistence.sidecar.test.js",
+    "services/backend/tests/services/trajectoryProvenance/p1Labels.test.js",
+    "services/backend/tests/services/trajectoryProvenance/p2Chain.test.js",
+    "services/backend/tests/services/trajectoryProvenance/p3Quarantine.test.js",
+    "services/backend/tests/services/trajectoryProvenance/p4Reconcile.test.js",
+    "services/backend/tests/services/trajectoryProvenance/p5Trace.test.js"
+  ],
+  "_outside_test_note": "全仓 grep `trajectoryProvenance` 命中单元外 8 份测试，一次清点即全数（未抽样），全部 node:test 方言可直跑：`# tests 131 / # pass 127 / # fail 0 / # skipped 4`。**4 例 skip 必须如实报**：都在 atomicWriteMigration.test.js，理由「Windows 不适用 POSIX 权限位」（本环境是 win32，属平台不适用，不是本单元的空转）。⚠ 两处同名易混：单元内共置 `traceProjection.test.js`（18 例，测投影函数本身）与单元外 `tests/cli/traceProjectionSingleGlyph.test.js`（3 例，测「单字形契约」——即 replayRow.label 不带字形、inlineLabel 必须带字形），后者是前者的**契约真源**，不是重复件。另 `tests/services/trajectoryProvenance/p*` 五份按阶段编号（P1 标签 / P2 链 / P3 隔离 / P4 核对 / P5 trace CLI），与本单元 8 个成员文件**不是一一对应**，判覆盖时不可按名字配对。跑这些套件时把 KHY_PROJECT_DATA_HOME/KHY_DATA_HOME 钉到空临时目录（p1Labels 与 p5Trace 会经 sessionPersistence 写真数据根）。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-29",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "晋级三判据齐（DOMAIN-DEPS._entry_buffer.promotionCriteria）：(1) 单元目录有 README.md；(2) 本清单有整数 fanIn=7 且逐文件实名；(3) 8 个源文件**全部**有同名同目录测试（合计 **182 例 / 0 fail / 0 skip**，逐文件 26/36/8→runner 计 7/30→23/17→14/23/35/18：`index 7`、`khyTrace 23`、`provenanceClassifier 14`，其余与声明数一致）。源文件未被本批修改（8 份测试全部新增，`git status` 只见 ??）。单元内无真实数据依赖：traceChain 与 quarantinePolicy 的测试各自用临时目录与 env 注入，复跑读数不变。",
+  "contract": {
+    "pipeline": "DESIGN-ARCH-047 五阶段落在此单元：P1 溯源信封（khyTrace 定义 `_khyTrace` 的枚举与构造；provenanceClassifier 在入站边界判 producer/trust；traceProjection 做人读投影）→ P2 防篡改链（traceChain 的 prevHash→hash 边车 + per-entry HMAC seal）→ P3 执行隔离（quarantinePolicy 裁决 allow/gate/quarantine，codexAdapter 据此决定跑不跑）→ P4 声称核对（claimReconciler 的动词→工具族词库 + claimNegation 的否定守卫）→ P5 CLI 呈现（handlers/trace.js 经投影出字形与矛盾行）。",
+    "twoOppositeFailDirections": "**这是本单元的核心设计，不可混为一谈**：标签侧 fail-**SAFE-TO-OURS**（khyTrace.js:62-64、:71-77：缺失/异常一律归 khy-local/verified，宁可少防也不把本地内容误标为外部）；执行侧 fail-**CLOSED**（quarantinePolicy.js:35-37 `_isRelayedForExec`：唯有显式 `khy-local` 才算本地，**未知/缺省 producer 一律按中转走隔离闸**）。同一条输入 `producer='totally-unknown'` 在 khyTrace.isRelayed 是 false、在 decide 是 quarantine——两者都对，因为回答的是两个问题。任何「统一 fail 方向」的提议都是在拆这个设计。",
+    "deterministicLexiconNoModel": "声称核对是**确定性词库**，零模型调用：LEXICON_VERSION=1、6 个动作族（delete/write/edit/test/commit/deploy）、30 个点名工具名（实测 MENTION_TOOL_NAMES.length===**30**；claimReconciler.js 头部注释写「29 个」是**过期注释**，不是代码缺陷）。reconcile 全程 try/catch 且 **fail-OPEN**（:165-168：核对是咨询性证据，出错绝不阻断正文）；隔离是 **fail-CLOSED**。两种失败姿态在同一单元并存。",
+    "chainIsAppendOnlyEvidence": "traceChain 只有 append 一条写入口（:123，无 update/delete），记录绑定 {seq,uuid,prevHash,producer,trust,contentHash,at}；verify 逐条重算并核对 prevHash，定位首坏块。链文件 `<basename>.trace-chain.json` 与 JSONL 并列、由 chainPathFor(:89) 派生。sessionPersistence 的链写入包在 try/catch 里（:545 起）——**链失败绝不让消息写入失败**；代价见 B29-S6：链因此可能静默缺件。",
+    "displaySingleGlyph": "字形契约：`replayRow.label` **不含**前导字形（handlers/trace.js 把 row.glyph 单独成列再拼 label，带字形就出 `✓ ✓`），而 `inlineLabel` **必须**含字形（ToolLines.js 无独立字形列）。真源是 tests/cli/traceProjectionSingleGlyph.test.js；实现靠 traceProjection.js:28 的 labelText 抽取。改任一侧都会红一支套件，这是设计好的。",
+    "envelopeIsAdditive": "`_khyTrace` 是增量字段：旧 reader 忽略未知键；stamp 返回浅拷贝不改原对象（khyTrace.js:111-114）；traceOf 对无信封条目返回结构完整的 fail-safe 信封，**绝不返回 null**（:132-137），所以下游渲染/链/核对无需判空。",
+    "sidecarNotASession": "链与 checkpoint 边车不得被当成会话枚举出来。sessionPersistence.js:148 的 `_SIDECAR_SUFFIXES = ['.checkpoint.json', '.trace-chain.json']` 是这条的落点，tests/services/sessionPersistence.sidecar.test.js 把链名钉回 `traceChain.CHAIN_EXT`（改扩展名会红测试而不是红 CLI）。这是第 29 批修掉的真实用户可见缺陷：`khy trace list` 曾因 150 条幽灵行抛 TypeError。",
+    "gates": "KHY_TRAJECTORY_QUARANTINE（默认 ON，quarantinePolicy.js:43-51；假值词汇 `0/false/off/no`，空串显式视为 ON）、KHY_CLAIM_NEGATION_GUARD（默认 ON，claimNegation.js:17-25）、KHY_TOOL_MENTION_GUARD（默认 ON，claimReconciler.js:229-237）。三处都是 `(env || process.env || {})` 可注入 env，零硬编码端点，读取失败一律回落 ON。⚠ 同一套假值词汇在本单元写了 **3 份**（Set 两份 + 内联 || 一份），见 B29-S17。",
+    "injectionPoints": [
+      "decide(signals) / assertNoAutoDangerous(ctx) — gateEnabled 可显式传入覆盖 env（quarantinePolicy.js:78、:129），测试据此在不改 process.env 的情况下测两态",
+      "isGateEnabled(env) — 整包 env 可替换（:43-44）",
+      "reconcile(prose, log, {env}) 与 reconcileToolMentions(prose, names, {env}) — opts.env 直达两个守卫（claimReconciler.js:136、:285）",
+      "traceChain.append(chainFile, record) — 链路径由调用方给定，测试全部打在临时目录",
+      "khyTrace.makeTrace/stamp(opts) — producer/producerId/trust/kind/at/contradictions/seal 七个字段全可注入，at 非有限数才取时钟"
+    ],
+    "knownBoundaries": [
+      "per-entry `seal` 用进程私有的 SEAL_SALT（crypto.randomBytes(16)），**跨进程不可验**，verify() 刻意不比 seal。它只防「同一活进程内伪造」，防不了事后改盘——那归 prevHash 链。读链审计时不要把 seal 当成防篡改证据。",
+      "contentHash 不拷贝正文（:47-59）：链绑定的是摘要，因此「正文被换但摘要字段没被重算」这类篡改只能靠 verifyAgainstEntries 与 transcript 交叉比对来发现。",
+      "词库是中英双语固定正则，新增声称类型**只能**改 CLAIM_FAMILIES（:26-77）；在别处加词会绕过 LEXICON_VERSION，跨会话比对即失真。",
+      "否定守卫的窗口是硬上限（claimNegation.js:40-51）：单字否定只看紧贴的 1 个字符（`不 修改` 即漏检），多字否定 4 字符窗口且否定词距动词 >2 字即漏检，英文 16 字符。这是**设计内**的保守边界，不是 bug，但它决定「假声称漏检率」的下限。",
+      "本单元的呈现层住在 D1（handlers/trace.js、ToolLines.js、tui），改投影语义要同时改那两处消费者；单元内改字形表不会自动传导。",
+      "D1 shim `src/services/trajectoryProvenance/index.js` 是迁移期兼容层，删除它需要同步改 aiChatCore.js:4718 与 ToolLines.js:1055 两个站点（属人的裁决，见任务 #17）。"
+    ],
+    "registered_defects": [
+      "B29-S1（**安全方向，需人裁决**）provenanceClassifier.js:17-22 的 _PRODUCER_HINTS 只有 'claude-code'/'claudecode'，**没有下划线形态 'claude_code'，也没有空格形态 'claude code'**。实测端到端：classify({adapter:'claude_code'}) → producer=khy-local、trust=verified，喂给 decide({interactive:false}) → action=**allow**。同一位置 'claude-code'/'claudecode'/'ClaudeCode' 都正确得到 claimed+quarantine。失效链条是两级放大：标签侧 fail-safe-to-ours 把外部内容标成我方，执行侧 fail-closed 又以 producer==='khy-local' 为唯一免隔离条件（quarantinePolicy.js:35-36），于是**误标直接解除隔离**。修法是补词表还是改判定（未知即隔离的 `_isRelayedForExec` 只在 producer 字段已定型后生效），属人的裁决 → 任务 #17。",
+      "B29-S2：classifyProducer 的文档签名（provenanceClassifier.js:35）声明 signals 含 `direct`，实测 :39 只读 adapter/provider/serviceType，`direct` **从未被读取**——一个有文档背书的入参是死的。按规则 7「删有文档背书的代码需先订正文档」，本批不动。",
+      "B29-S3：四个判定入口对 null 非 total。实测 classify(null)/classifyProducer(null) 抛 `TypeError: Cannot read properties of null (reading 'adapter')`；decide(null)/assertNoAutoDangerous(null) 在解构处抛 `Cannot destructure property 'producer' of ... as it is null`——`:1` 的 `= {}` 默认只对 undefined 生效，不对 null 生效。对照 khyTrace.stamp(null) 与 makeTrace(null) 都安全回落。同一单元内两种口径。",
+      "B29-S4：khyTrace.js:17 与 traceProjection.js:16 都声明「纯函数、零 IO」，实测 traceOf(:132) 对无信封条目经 makeTrace 读时钟，而 replayRow 对同一条目触发 traceOf **三次**（:65、:73→labelText:29、:74→contradictionLabels:50）→ 同输入两次调用产物不同。热路径逐行回放时 at 字段会随执行时刻漂移。",
+      "B29-S5：isTrace（khyTrace.js:117-126）只校验 producer/trust 属于枚举，**不看 kind 与 v**。一个 kind='nonsense' 或 v=99 的信封被判「结构合法」，于是 _normalizeKind 的收敛只在构造期生效，盘上篡改 kind 后无人重算。",
+      "B29-S6（**安全方向，防篡改叙事的正面缺陷**）链的**截断与整件擦除不可检测**，实测四步：3 条链 verify→ok/length 3；删尾一条→verify **仍 ok**、length 2（少一条记录但链「完好」）；对原 3 条正文调 verifyAgainstEntries→同样 ok/length 2；把链文件写成非法 JSON→_readRaw(:95-105) 的 catch 吞掉解析错误返回 []→verify ok/length 0，随后 append 返回 seq=0 并从创世重启，重启后 verify 全绿而历史已蒸发。链中间的删除**能**抓（seq 不连续），尾部删除与整件删除抓不到。唯一可用 detector 是拿 verify().length 与 transcript 行数比对，而没有任何 API 做这件事。防篡改边车与「防篡改证据」不是一回事 → 任务 #17。",
+      "B29-S7：_hashEntry 的哈希基（traceChain.js:62-73）恰为 {seq,uuid,prevHash,producer,trust,contentHash,at}，**不含 version**（:128 写入的 CHAIN_VERSION 不在认证范围内），也不含任何注入键。实测把 version 改成 99、或塞入自定义键，verify 依旧 ok——被签名的字段集与写出的字段集不等。",
+      "B29-S8：verify 非 total。实测传入 [null] 在 :166 抛 `Cannot read properties of ... 'seq' of null`；而传入顶层对象、目录路径、空串一律 `{ok:true,length:0}`（经 _readRaw 归零）。同一函数两种失败姿态：数组里一个坏元素抛错，整个文件坏掉则报「完好且为空」。",
+      "B29-S9：chainPathFor（traceChain.js:89-93）只剥 `.jsonl`，因此非幂等——对已派生名再调一次得 `s.trace-chain.json.trace-chain.json`；对 `s.json` 得 `s.json.trace-chain.json`（追加而非替换）。两处消费者依赖「仍以 CHAIN_EXT 结尾」这一事实：sessionPersistence.js:148 与 cleanupService.js:1040 把 '.trace-chain.json' **硬编码成字面量**而不引用 CHAIN_EXT，改常量不会改它们（规则 1 RUNTIME-001 意义上的真源重复）。",
+      "B29-S10（**安全方向：假阴性，检测被静默解除**）_familiesOf（claimReconciler.js:108-120）用 fam.toolNames 对工具名做**无边界子串测试**，于是良性工具名按子串伪装成整个动作族。实测 13 例假满足（声称有矛盾→0 条矛盾，即漏检）：FormatDisk/confirmDialog/Charm/Alarm/DiskFormatter 命中 delete 族（`rm`）、Committee 命中 commit、Testimonial 命中 test、Shipwright/ReleaseNotes 命中 deploy、Create/Touch/Patching/Update_file 命中 write/edit。端到端钉死：「我已经删除了所有生产表」+ {tool:'FormatDisk',success:true} → **0 条矛盾**。对照 {tool:'TotallyUnrelated'} → 1 条，证明门确实在工作、只是判据过宽。修法需要词边界与全名匹配，会改变历史轨迹的核对结果 → 任务 #17。",
+      "B29-S11：write 族的 shellCmd `/\\b(touch|tee|>\\s*\\S+)\\b/i`（claimReconciler.js:43）两侧 `\\b` 使重定向支只在前邻是单词字符时可达。实测：`echo hi > out.txt` **false**、`echo hi >out.txt` **false**（标准带空格重定向漏检 → 真写文件的 shell 回合被误报矛盾），而 `ls 2>&1` **true**、`cat x>/dev/null` **true**（只做了 stderr 重定向的无害命令**满足**了 write 族 → 假阴性）。同一条正则两头都错。端到端：声称「已写入文件」+ Bash('echo hi > out.txt', success) → 1 条矛盾。",
+      "B29-S12：Object.freeze 只到数组层。CLAIM_FAMILIES（:28）frozen=true 但元素对象 frozen=false，实测 CLAIM_FAMILIES[0].expectedTool='HACKED' 静默成功。「词库冻结」这条叙事只对容器成立，热路径任何一处误写都会永久改变本进程的词库。",
+      "B29-S13：MENTION_TOOL_NAMES 里成对的驼峰/下划线别名（如 WebFetch 与 web_fetch）对同一句点名各报一条。实测「调用 WebFetch 与 WebSearch 工具」且零执行 → **4 条矛盾对应 2 次点名**，expectedTool 依次为 WebFetch|web_fetch|WebSearch|web_search。人读列表会把一次问题看成两次。",
+      "B29-S14：建议/虚拟语气窗口只有 8 个字符（claimReconciler.js:267 `text.slice(Math.max(0, idx - 8), idx)`）。长修饰语前置（「如果你希望的话可以随后调用 X」）落在窗外即被当成点名。",
+      "B29-S15：_firstUnnegatedMatch 的 negOn=false 分支直接用原正则 exec，若调用方传入**全局**正则会把 lastIndex 推进（当前词库全是非全局故无害，但这是「绝不污染被冻结词库的 RegExp 状态」不变量的唯一缺口；克隆只发生在 negOn=true 分支）。",
+      "B29-S16：三个守卫的「空串」语义不一致——quarantinePolicy.js:46 显式把 `''` 视为 ON，claimNegation.js:21 与 claimReconciler.js:233 靠 `v !== undefined && set.has('')` 巧合得到同一结论（`''` 不在 off 词表里）。结论相同、理由不同，因此 off 词表一旦加入 `''` 会只翻转两个门。",
+      "B29-S17：同一套 off 词汇在本单元写了 3 份（claimNegation.js:17 的 Set、claimReconciler.js:229 的 Set、quarantinePolicy.js:50 的内联 ||），全仓按 `new Set(['0', 'false', 'off', 'no'])` 精确拼写实测 **252 个文件**，而 utils/isOffValue 这个 SSOT 只有 **9 个文件**引用。与第 27、28 批登记的 `_OFF` 漂移同族 → 任务 #17。",
+      "B29-S18：单元外注释指针失真——guiEval/recordingCollector.js:11 的文件头声称其 artifactHash 来自 `trajectoryProvenance.artifactHash`，而本单元**没有** artifactHash（它在兄弟单元 trajectoryReplay）。文档背书指向不存在的符号。"
+    ],
+    "fixed_in_this_unit": "无。本批**零修改单元源文件**（8 份源文件字节未动，182 例新增测试全部共置于同目录）。同批在**单元外**动了三处，都不属于本单元的缺陷：(1) sessionPersistence.js 的 `_SIDECAR_SUFFIXES` 修复 `khy trace list` 幽灵行崩溃（规则 5 全套存证 .khy/feedback/b29-trace-chain-phantom/）；(2) tests/services/trajectoryProvenance/p3Quarantine.test.js 的正则改为结构化判据（原判据对格式化盲区，且 :99 的反向断言在更危险的方向上是盲的；存证 b29-p3-quarantine-regex/）；(3) p1Labels.test.js 一条过期断言按单字形契约修正（存证 b29-p1labels-stale-glyph/）。三处的共同点：**改的是仪器，不是被试源码**。"
+  },
+  "tests": [
+    "claimNegation.test.js",
+    "claimReconciler.test.js",
+    "index.test.js",
+    "khyTrace.test.js",
+    "provenanceClassifier.test.js",
+    "quarantinePolicy.test.js",
+    "traceChain.test.js",
+    "traceProjection.test.js"
+  ],
+  "_test_dialect_note": "8 份全部 node:test 方言、同目录同名、共置；`node --test <显式 8 个路径>` 实测 **182 例 / 11 suites / 0 fail / 0 skip / exit 0**。逐文件 26/36/7/23/14/23/35/18。⚠ `node --test` 传目录参数在本便携 Node（v22.18.0）下把目录当模块解析并报 `Cannot find module`，是**仪器级假红**，任何复跑命令都必须写显式文件路径。README.md 的 12 条契约每条都引用真实测试标题；本清单的 18 条 registered_defects 里 B29-S1/S3/S4/S6/S7/S8/S9/S10/S11/S12/S13 都已由同名测试「钉住而不修复」（断言写的是**实测行为**，含缺陷行为，注释里标明「钉住/如实钉住」）。"
+}

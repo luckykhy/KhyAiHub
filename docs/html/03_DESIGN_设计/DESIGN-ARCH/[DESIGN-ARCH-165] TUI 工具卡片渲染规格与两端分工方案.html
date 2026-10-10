@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-ARCH-165] TUI 工具卡片渲染规格与两端分工方案.md -->
+<title>[DESIGN-ARCH-165] TUI 工具卡片渲染规格与两端分工方案 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>[DESIGN-ARCH-165] TUI 工具卡片渲染规格与两端分工方案</div>
+      <header class="hero reveal"><h1>[DESIGN-ARCH-165] TUI 工具卡片渲染规格与两端分工方案</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-165-tui-工具卡片渲染规格与两端分工方案">[DESIGN-ARCH-165] TUI 工具卡片渲染规格与两端分工方案</a></li><li class="lvl-2"><a href="#1-背景与现状">1. 背景与现状</a></li><li class="lvl-2"><a href="#2-卡片状态机与视觉规格">2. 卡片状态机与视觉规格</a></li><li class="lvl-2"><a href="#3-卡片解剖">3. 卡片解剖</a></li><li class="lvl-3"><a href="#3-1-头行-措辞真源-design-arch-155">3.1 头行（措辞真源 `[DESIGN-ARCH-155]`）</a></li><li class="lvl-3"><a href="#3-2-结果体类型注册表-目标态-待实施">3.2 结果体类型注册表（目标态，待实施）</a></li><li class="lvl-3"><a href="#3-3-运行中进度行-staged-transparency">3.3 运行中进度行（staged transparency）</a></li><li class="lvl-2"><a href="#4-排版规格">4. 排版规格</a></li><li class="lvl-2"><a href="#5-两端分工">5. 两端分工</a></li><li class="lvl-2"><a href="#6-交互规格">6. 交互规格</a></li><li class="lvl-2"><a href="#7-门控与回退">7. 门控与回退</a></li><li class="lvl-2"><a href="#8-实施顺序与验收判据">8. 实施顺序与验收判据</a></li><li class="lvl-2"><a href="#9-关联文件索引">9. 关联文件索引</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: done --&gt;</p>
+<h1 id="design-arch-165-tui-工具卡片渲染规格与两端分工方案">[DESIGN-ARCH-165] TUI 工具卡片渲染规格与两端分工方案<a class="anchor" href="#design-arch-165-tui-工具卡片渲染规格与两端分工方案" aria-label="锚点">#</a></h1>
+<blockquote><p>状态：已评审采纳（2026-09-28）。本文是 Ink TUI 工具卡片的<strong>渲染规格单一真源</strong>；<br>措辞真源仍是 <code>[DESIGN-ARCH-155]</code>，帧高度账本契约在 <code>[DESIGN-ARCH-156]</code>，<br>diff 规格在 <code>[DESIGN-ARCH-157]</code>——本文不重复它们，只规定「卡片」这一层。</p></blockquote>
+<h2 id="1-背景与现状">1. 背景与现状<a class="anchor" href="#1-背景与现状" aria-label="锚点">#</a></h2>
+<p>Ink TUI 中每个工具调用渲染为一张<strong>圆角边框卡片</strong>（<code>services/backend/src/cli/tui/ink-components/ToolLines.js</code>，<br>卡片 Box 在该文件 <code>borderStyle: 'round'</code> 处），渲染管线：</p>
+<pre><code>toolUseLoopCore.runToolUseLoop（services/tool/toolUseLoopCore.js）
+  → toolExecutionEngine 逐工具计时（elapsedMs）
+  → onToolCall / onToolResult 回调（签名含 iteration, elapsedMs, toolId）
+  → tui/hooks/useQueryBridge.js（pushToolFromLoop / markToolResult）写 timeline
+  → ProcessGroup 分组 → ToolLines.js 每帧渲染</code></pre>
+<p>该实现是增量演化而成，五态颜色、头行行语法、折叠策略均已成立，但缺一份统一规格；<br>且卡宽撑满终端，与 <code>tui/cardLayout.js</code> 头注释批评询问框/权限框的「框重内容空」同病。<br>本文收拢规格并规定后续演进方向。</p>
+<h2 id="2-卡片状态机与视觉规格">2. 卡片状态机与视觉规格<a class="anchor" href="#2-卡片状态机与视觉规格" aria-label="锚点">#</a></h2>
+<p>五态状态机（+ 一个视觉修饰态），判定真源 <code>services/tool/toolOutcomeSeverity</code>（成败三档）</p>
+<ul><li>结果存在性；渲染层只消费，不得自建第二份判定：</li></ul>
+<table><thead><tr><th>状态</th><th>判定</th><th>字形</th><th>边框色（<code>TOOL_CARD_COLOR</code>）</th></tr></thead><tbody><tr><td>pending</td><td>无 result 且无 progress</td><td>◆</td><td>yellow</td></tr><tr><td>running</td><td>无 result（live 中）</td><td>◆</td><td>yellow</td></tr><tr><td>done</td><td>有 result 且非 err/notice</td><td>✓</td><td>green</td></tr><tr><td>notice</td><td><code>result.severity === 'notice'</code></td><td>•（<code>NOTICE_GLYPH</code>）</td><td>yellow（<code>NOTICE_COLOR</code>）</td></tr><tr><td>error</td><td><code>result.isError/is_error/error/success===false</code></td><td>✗</td><td>red</td></tr><tr><td>hover（修饰）</td><td>鼠标悬停 300ms 后</td><td>—</td><td>blue（覆盖除 error 外的状态色）</td></tr></tbody></table>
+<p>不变式：</p>
+<ul><li><strong>颜色优先级</strong>：hover &gt; error &gt; notice &gt; done &gt; running（已实现于 ToolLines 卡片边框色取值处）。</li><li><strong>notice 不是失败</strong>：走黄 • + 中性说明，不进红色失败通道；真错误必红。</li><li>错误卡<strong>必须</strong>就地给出原因（<code>errorText</code>），权限拒绝须标注「权限被拒绝」——用户永远不该追问「为什么失败」。</li></ul>
+<h2 id="3-卡片解剖">3. 卡片解剖<a class="anchor" href="#3-卡片解剖" aria-label="锚点">#</a></h2>
+<pre><code>╭──────────────────────────────────────╮
+│ ✓ 读取 src/x.js · 340 行 · 0.2s      │  ← 头行（行语法）
+│ ⎿ …stdout 折叠窗…                    │  ← 结果体（按类型二选一）
+│   … +N 行 (ctrl+o 展开)              │  ← 诚实折叠页脚
+╰──────────────────────────────────────╯</code></pre>
+<h3 id="3-1-头行-措辞真源-design-arch-155">3.1 头行（措辞真源 <code>[DESIGN-ARCH-155]</code>）<a class="anchor" href="#3-1-头行-措辞真源-design-arch-155" aria-label="锚点">#</a></h3>
+<p>行语法 <code>字形 动词 目标 · 结果量 · 耗时</code>，四段全由 <code>cli/toolDisplayLine.js</code> 单一生产者产出<br>（<code>toolVerb</code> / <code>toolTarget</code> / <code>resultSegment</code> / <code>formatToolDuration</code>）。<br>取不到动词时回退旧 <code>名(摘要)</code> 形态。约束：</p>
+<ul><li>动词/目标缺省时以显示名补位，「动作 + 目标」永不空档（规则 2.3）；</li><li>耗时仅在工具/结果携带真实 <code>durationMs</code> 时显示，绝不估算补零（诚实原则）；</li><li>结果量只在结算后出现，从 <code>result.summary</code> 派生，缺失才回源 <code>summarizeToolResultParts</code>。</li></ul>
+<h3 id="3-2-结果体类型注册表-目标态-待实施">3.2 结果体类型注册表（目标态，待实施）<a class="anchor" href="#3-2-结果体类型注册表-目标态-待实施" aria-label="锚点">#</a></h3>
+<p>现状是 if 链：write-diff（<code>result._khyWriteDiff</code> → 红绿 diff）→ shell literal（<code>⎿</code> 折叠<br>stdout）→ 透明体（<code>toolResultTransparency</code>）→ 12 行预览。每加一种结果类型要同时改<br><strong>渲染、计数孪生（<code>estimateLiteralRows</code>）、memo 键</strong> 三处，漏一处即触发高度账本溢出<br>（<code>[IMPL-RPT-044]</code> 同族）。</p>
+<p>目标态抽成<strong>有序注册表</strong>，每项成对提供渲染与计数：</p>
+<pre><code class="language-js"><span class="hljs-comment">// 注册项契约：match → { render, estimate }，二者必须成对登记，缺一即测试失败。</span>
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">BODY_RENDERERS</span> = [
+  { <span class="hljs-attr">match</span>: <span class="hljs-function">(<span class="hljs-params">r</span>) =&gt;</span> r.<span class="hljs-property">_khyWriteDiff</span>,      <span class="hljs-attr">render</span>: renderWriteDiff,  <span class="hljs-attr">estimate</span>: estimateWriteDiff },
+  { <span class="hljs-attr">match</span>: isShellResult,               <span class="hljs-attr">render</span>: renderLiteralOutput, <span class="hljs-attr">estimate</span>: estimateLiteralOutput },
+  { <span class="hljs-attr">match</span>: shouldRenderTransparentBody, <span class="hljs-attr">render</span>: renderLiteralOutput, <span class="hljs-attr">estimate</span>: estimateLiteralOutput },
+  <span class="hljs-comment">// 兜底：collapsed 摘要 1 行 / expanded 12 行预览</span>
+];</code></pre>
+<p><code>estimate</code> 是渲染的<strong>计数孪生</strong>：计数分支镜像渲染分支逐行（同 memo、同折叠、同标记行），<br>喂给 live 区高度预算（<code>toolEntryRows</code> → <code>liveHeightClamp.toolCostOf</code>）。<br>「任何新结果体必须同时补计数分支」由注册表结构强制，而非注释约定。</p>
+<h3 id="3-3-运行中进度行-staged-transparency">3.3 运行中进度行（staged transparency）<a class="anchor" href="#3-3-运行中进度行-staged-transparency" aria-label="锚点">#</a></h3>
+<p>运行中（<code>live &amp;&amp; t.progress</code>）在 ◆ 行下渲染 <code>↳ 阶段说明</code>；结果落地后该行消失，<br>卡片翻转为 ✓/✗ + 结果体。已提交（committed）的行永远有结果，不出现进度行。</p>
+<h2 id="4-排版规格">4. 排版规格<a class="anchor" href="#4-排版规格" aria-label="锚点">#</a></h2>
+<p>复用 <code>tui/cardLayout.js</code> 三原则（该叶子是浮层卡片排版 SSOT）：</p>
+<ol><li><strong>卡宽贴合内容</strong>：卡宽 = <code>min(最宽行, 可用宽)</code>，不再撑满终端</li></ol>
+<p>（目标态：Ink 侧 <code>alignSelf: 'flex-start'</code> 或量宽后定宽；门控 <code>KHY_TOOL_CARD_FIT_WIDTH</code>，默认关起步）；</p>
+<ol><li><strong>一行一格 + 列对齐</strong>：CJK 按显示列计（宽度真源 <code>utils/text/width.js</code> 的 <code>displayWidth</code>）；</li><li><strong>右对齐尾注</strong>：耗时/键位贴右边界，头行裁到 <code>width − 尾注 − TAIL_GAP</code>，任何行不超宽。</li></ol>
+<p><strong>宽度收窄与高度账本的联动约束</strong>：折叠态行的 clip 预算目前按<br><code>cols − gutter</code>（<code>diffClipWidth</code>）计算；卡宽收窄后内容列预算须改为 <code>卡宽 − 4</code><br>（<code>BOX_CHROME_COLS</code>），否则 CJK 长行在窄卡内软换行、视觉行数超出 <code>estimateLiteralRows</code><br>按 1 源行 = 1 视觉行的计费——反阶梯纪律被破。即：<strong>改卡宽必须同步改 clip 预算与<br>（若计费口径受影响）计数孪生</strong>，三者一个提交内完成。</p>
+<h2 id="5-两端分工">5. 两端分工<a class="anchor" href="#5-两端分工" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>端</th><th>形态</th><th>理由</th></tr></thead><tbody><tr><td>Ink TUI</td><td>边框卡片（本文规格）</td><td>有交互（点击/hover/Ctrl+O），ink 每帧 diff 重绘</td></tr><tr><td>经典 readline REPL</td><td>单行动词句（<code>printStepLine</code>）+ spinner</td><td>readline 下画边框须人工记账光标，违背 <code>RUNTIME-004</code> 的低成本路径；且无鼠标交互能力</td></tr></tbody></table>
+<p>共享面<strong>只保留</strong>两份 SSOT：<code>cli/toolDisplayLine.js</code>（措辞）与<br><code>services/tool/toolOutcomeSeverity.js</code>（成败三档）。禁止在任何一端再写第二份动词表、<br>颜色表或结果量拆分（<code>[DESIGN-ARCH-155]</code> §3 R6 同旨）。</p>
+<h2 id="6-交互规格">6. 交互规格<a class="anchor" href="#6-交互规格" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>交互</th><th>行为</th></tr></thead><tbody><tr><td>单卡点击</td><td>切换该卡展开态（<code>toolExpanded</code> Map，独立于全局 Ctrl+O）；错误卡点击走 <code>onErrorClick</code> 跳侧栏</td></tr><tr><td>Ctrl+O</td><td>全局展开：折叠窗 → 全貌（诚实展开：<code>diffClipWidth</code> → Infinity，整行交 ink 换行，绝不静默丢尾）</td></tr><tr><td>hover</td><td>300ms 延迟显示参数预览，边框变蓝；门控 <code>KHY_MOUSE_HOVER</code></td></tr><tr><td>折叠页脚</td><td><code>… +N 行 (ctrl+o 展开)</code> 是<strong>独立 dim 行</strong>，不静默丢内容；截断须带真实计数 <code>[已截断 shown/total 字]</code> 与原因</td></tr></tbody></table>
+<h2 id="7-门控与回退">7. 门控与回退<a class="anchor" href="#7-门控与回退" aria-label="锚点">#</a></h2>
+<p>本文所有增量改动沿用仓库惯例：<code>KHY_*</code> env 门控 + 门控关时<strong>逐字节回退</strong>到既有输出。<br>已挂门控：<code>KHY_TOOL_HEADER_DURATION</code> / <code>KHY_TOOL_HEADER_CAP</code> / <code>KHY_TOOL_PATH_MIDDLE_TRUNCATE</code><br>/ <code>KHY_DIFF_CONTENT_WIDTH</code> / <code>KHY_TOOL_ERROR_FOLD</code> / <code>KHY_RESULT_ELBOW</code> /<br><code>KHY_TOOL_RESULT_TRANSPARENT</code> / <code>KHY_TUI_COMPONENT_MEMO</code> / <code>KHY_MOUSE_HOVER</code>。<br>新增门控：<code>KHY_TOOL_CARD_FIT_WIDTH</code>（卡宽贴合内容，默认关）。</p>
+<p>本方案不新增任何拦截型机制，不涉及 <code>PROCESS-008</code> 升阶。</p>
+<h2 id="8-实施顺序与验收判据">8. 实施顺序与验收判据<a class="anchor" href="#8-实施顺序与验收判据" aria-label="锚点">#</a></h2>
+<ol><li><strong>缺陷修复（已完成，2026-09-28）</strong>：<code>ToolLines.js</code> agentTree 分支在 <code>isNotice</code></li></ol>
+<p>声明前引用它（TDZ ReferenceError），带 <code>_agentTree</code> 的工具卡渲染即崩帧。<br>   修复：把 <code>done</code> / <code>isErr</code> / <code>isNotice</code> 上提到分支前统一计算；回归测试<br>   <code>tests/tui/toolLinesAgentTreeNotice.test.js</code>（修复前该测试以 ReferenceError 失败）。</p>
+<ol><li><strong>卡宽贴合内容</strong>（§4.1，门控起步默认关）。</li><li><strong>结果体类型注册表</strong>（§3.2，纯内部重构，配合计数孪生成对测试）。</li></ol>
+<p>验收判据：</p>
+<ul><li>修复前失败的回归测试转绿；<code>tests/tui/</code> 全部 toolLines* 测试不回退；</li><li>头行措辞一字不改（<code>[DESIGN-ARCH-155]</code> 单测锁定）；</li><li>任何结果体新增时，<code>estimate</code> 与 <code>render</code> 必须来自同一注册项（结构强制）；</li><li>经典 REPL 输出逐字节不变（两端分工的回归面）。</li></ul>
+<h2 id="9-关联文件索引">9. 关联文件索引<a class="anchor" href="#9-关联文件索引" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>角色</th><th>文件</th></tr></thead><tbody><tr><td>卡片渲染体</td><td><code>services/backend/src/cli/tui/ink-components/ToolLines.js</code></td></tr><tr><td>子代理树渲染</td><td><code>services/backend/src/cli/tui/ink-components/AgentTree.js</code></td></tr><tr><td>排版 SSOT</td><td><code>services/backend/src/cli/tui/cardLayout.js</code></td></tr><tr><td>行语法 SSOT</td><td><code>services/backend/src/cli/toolDisplayLine.js</code></td></tr><tr><td>成败三档 SSOT</td><td><code>services/backend/src/services/tool/toolOutcomeSeverity.js</code></td></tr><tr><td>宽度 SSOT</td><td><code>services/backend/src/utils/text/width.js</code></td></tr><tr><td>事件桥</td><td><code>services/backend/src/cli/tui/hooks/useQueryBridge.js</code></td></tr><tr><td>高度账本契约</td><td><code>[DESIGN-ARCH-156]</code>（<code>estimateLiteralRows</code> 计数孪生纪律）</td></tr></tbody></table>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-164] 用户需求理解管线-意图裁决澄清问询与需求固化方案.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-164] 用户需求理解管线——意图裁决、澄清问询与需求固化</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-166] 静默失效与真源漂移四例收敛方案.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-166] 静默失效与真源漂移四例收敛方案 —— 出口逃逸·幽灵目录·提示虚高·裁剪漏挂</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-165] TUI 工具卡片渲染规格与两端分工方案.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

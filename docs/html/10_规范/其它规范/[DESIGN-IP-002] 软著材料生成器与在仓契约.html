@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-IP-002] 软著材料生成器与在仓契约.md -->
+<title>[DESIGN-IP-002] 软著材料生成器与在仓契约 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>10_规范<span class="sep">›</span>其它规范<span class="sep">›</span>[DESIGN-IP-002] 软著材料生成器与在仓契约</div>
+      <header class="hero reveal"><h1>[DESIGN-IP-002] 软著材料生成器与在仓契约</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-ip-002-软著材料生成器与在仓契约">[DESIGN-IP-002] 软著材料生成器与在仓契约</a></li><li class="lvl-2"><a href="#一-工具链来源与借鉴方式">一、工具链来源与借鉴方式</a></li><li class="lvl-2"><a href="#二-落点为什么是-scripts-copyright-不是-l6-tools">二、落点为什么是 `scripts/copyright/`（不是 L6 `tools/`）</a></li><li class="lvl-2"><a href="#三-覆盖层-六处本仓口径-上游默认">三、覆盖层：六处本仓口径 &gt; 上游默认</a></li><li class="lvl-2"><a href="#四-使用方式-任何智能体生成材料前">四、使用方式（任何智能体生成材料前）</a></li><li class="lvl-2"><a href="#五-机器判据-并入-process-010-现有-s1-门-不新建规则">五、机器判据（并入 `PROCESS-010` 现有 S1 门，不新建规则）</a></li><li class="lvl-2"><a href="#六-vendored-的维护义务">六、vendored 的维护义务</a></li><li class="lvl-2"><a href="#七-b-p2-借鉴提案-六字段-登记于-feature-ownership-json-与本节前">七、B-P2 借鉴提案（六字段，登记于 `FEATURE-OWNERSHIP.json` 与本节前）</a></li><li class="lvl-2"><a href="#与其他规范的关系">与其他规范的关系</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="design-ip-002-软著材料生成器与在仓契约">[DESIGN-IP-002] 软著材料生成器与在仓契约<a class="anchor" href="#design-ip-002-软著材料生成器与在仓契约" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>一句话原则</strong>：<strong>工具逐字不改，口径写在外面。</strong></p>
+<p>本篇管一件事：软著申请资料的<strong>生成工具链</strong>在本仓的存在形式、完整性要求，<br>以及它与 <code>[DESIGN-IP-001]</code> 判据冲突时谁说了算。<br>登记判据本身（C-M / C-E / C-X / C-MAT 四组）<strong>不在本篇</strong>，真源仍是<br><code>[DESIGN-IP-001] 软件著作权就绪规范</code>（规则 <code>PROCESS-010</code>）。</p>
+<p><strong>定位边界</strong>：<code>[DESIGN-IP-001]</code> 回答「代码怎么保持可登记」，本篇回答<br>「材料用什么工具生成、工具放在哪、工具默认口径与本件登记客体不一致时怎么办」。<br>借鉴方式的判定（vendored 六条前置、许可证分级、谁批准）<strong>不重复</strong>，<br>以 <code>[DESIGN-SOURCING-001]</code> §2 B-M1 / §3 B-P2~P3 为准，本篇只给结论与落点。</p></blockquote>
+<hr>
+<h2 id="一-工具链来源与借鉴方式">一、工具链来源与借鉴方式<a class="anchor" href="#一-工具链来源与借鉴方式" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>项</th><th>值</th></tr></thead><tbody><tr><td>上游</td><td><code>Fokkyp/SoftwareCopyright-Skill</code>，SKILL.md 版本 <code>2.5</code>（plugin 清单 <code>2.2.0</code>）</td></tr><tr><td>钉子</td><td>commit <code>947d5963194bfda8ce57b8b454b486f13359dee4</code>（2026-09-24）</td></tr><tr><td>镜像</td><td><code>luckykhy/SoftwareCopyright-Skill</code> HEAD 与上游同 commit，入库时无本地分叉</td></tr><tr><td>许可证</td><td>MIT（上游根 <code>LICENSE</code>，随包留存于 <code>scripts/copyright/LICENSE</code>）</td></tr><tr><td>借鉴方式</td><td><code>vendored</code>（整包保留、只读不改）—— B-M1 六条前置逐条满足，B-P3 由维护者批准</td></tr><tr><td>官方包</td><td>无（npm 与 PyPI 均 404，实测），故依 B-M1 #2 不得走正常依赖安装</td></tr><tr><td>入库范围</td><td>26 个上游文件：<code>SKILL.md</code> + <code>agents/</code> + <code>references/</code> + <code>scripts/</code> + <code>tests/</code></td></tr><tr><td>未入库</td><td><code>生成demo/</code>（示例产物 433 KB）、<code>docs/screenshots/</code>（README 配图 1.3 MB）、<code>.claude-plugin/plugin.json</code>（单智能体专属打包清单）、<code>skills/</code> 符号链接</td></tr><tr><td>登记处</td><td><code>SOURCING-PROVENANCE.json</code> 的 <code>ledger</code> + <code>observedVendorDirs</code>；<code>FEATURE-OWNERSHIP.json</code> 的 <code>software-copyright-materials</code> 域</td></tr></tbody></table>
+<p><strong>入库字节取自上游 git blob 原始内容（LF）</strong>，不取自任何浅克隆工作区<br>—— 上游仓库自身的 <code>core.autocrlf</code> 会把工作区渲染成 CRLF，取工作区会写入与上游不同的字节。<br>本仓 <code>core.autocrlf=false</code> 且 <code>.gitattributes</code> 未对这些扩展名设 eol，故磁盘字节 = 提交字节 = 上游字节。</p>
+<h2 id="二-落点为什么是-scripts-copyright-不是-l6-tools">二、落点为什么是 <code>scripts/copyright/</code>（不是 L6 <code>tools/</code>）<a class="anchor" href="#二-落点为什么是-scripts-copyright-不是-l6-tools" aria-label="锚点">#</a></h2>
+<p>层级判据上它是「只在开发期被手动调用、不参与运行时」的 L6 形态，<strong>但实测否决了 <code>tools/</code></strong>：</p>
+<ul><li><code>.gitignore:184</code> 忽略 <code>tools/deepseek-eyes/</code>，<code>git ls-files tools</code> 实测 <strong>0 个跟踪文件</strong>；</li><li>埋在一个整目录被忽略的位置，约束在<strong>新克隆机器上不存在</strong>，直接违反多机自举</li></ul>
+<p>与 <code>[DESIGN-DELIV-001]</code> D3「新克隆零缺件」；</p>
+<ul><li><code>scripts/</code> 是 <code>[DESIGN-LAY-005]</code> §1.2 的<strong>工程横切层</strong>（「CI 守卫、公共库、维护」），</li></ul>
+<p>与既有 <code>scripts/evidence/</code>（<code>C-E4</code> 采集器）同族，且随 git 分发。</p>
+<p>因此真源目录形状为：</p>
+<pre><code class="language-plain">scripts/copyright/
+├── LICENSE                            # 上游 MIT（B-M1 #4 同路径留存）
+├── upstream-manifest.json             # 钉子 + 26 个文件的逐文件 sha256 + aggregate
+├── repo-contract.md                   # 本仓口径覆盖层（§三）
+└── vendor/software-copyright-materials/   # 26 个上游文件，逐字不改</code></pre>
+<p>目录名刻意含 <code>vendor</code> 路径段：<code>[DESIGN-IP-001]</code> <code>C-X3</code> 的排除清单<br>（<code>check-copyright-readiness.js</code> 的 <code>EXCLUDE_DIRS</code>）按路径段匹配 <code>vendor</code>，<br>于是「第三方代码不得进登记材料」这条<strong>天然命中</strong>，不需要第二份排除规则。</p>
+<h2 id="三-覆盖层-六处本仓口径-上游默认">三、覆盖层：六处本仓口径 &gt; 上游默认<a class="anchor" href="#三-覆盖层-六处本仓口径-上游默认" aria-label="锚点">#</a></h2>
+<p>覆盖层载体是 <code>scripts/copyright/repo-contract.md</code>（<strong>本仓自有文件，可自由编辑</strong>）；<br>vendored 树依 B-M1 #5 不可改，所以任何口径修正<strong>只能写在外层</strong>。<br>上游的选材脚本确实带前端偏好（<code>common.py</code> 的 <code>FRONTEND_EXTS</code>、<br><code>propose_code_selection.py</code> 的 <code>selection_tier=frontend</code>），<br>因此覆盖层不是形式主义 —— 缺它，上游口径就静默生效。</p>
+<table><thead><tr><th>#</th><th>上游默认</th><th>本仓口径</th><th>依据</th></tr></thead><tbody><tr><td>1</td><td>名称/版本以 <code>草稿/申请表信息.md</code> 为准</td><td>唯一真源 <code>COPYRIGHT.json</code>（登记版本与工程版本双口径）</td><td><code>C-MAT2</code></td></tr><tr><td>2</td><td><strong>优先抽取前端代码</strong>（入口/路由/页面/组件）</td><td>60 页选材由 <code>COPYRIGHT-MATERIALS.json</code> 派生：前 30 页=启动链、后 30 页=手写内核，按运行时调用顺序成链</td><td><code>C-MAT1</code>/<code>C-MAT3</code></td></tr><tr><td>3</td><td>候选发现按内容检测，扩展名不限</td><td>同上游，但选材结论必须逐条带 <code>model_reason</code> 回指登记条目</td><td><code>C-MAT1</code></td></tr><tr><td>4</td><td>输出到当前工作目录 <code>软件著作权申请资料/</code></td><td>草稿留该目录（本机态、gitignore）；正式件收进 <code>evidence/06_申报材料/</code>，不另起第二份材料树</td><td><code>C-E4</code></td></tr><tr><td>5</td><td>7 个 <code>STOP_FOR_USER</code> 人工门禁</td><td>一个不放宽；<code>business</code>/<code>code-selection</code> 两门禁的确认对象就是 §三 的两份登记</td><td><code>PROCESS-001</code> 同源纪律</td></tr><tr><td>6</td><td>OfficeCLI 固定 <code>1.0.151</code>、<code>playwright-cli</code> 固定版本</td><td>同上游；缺失/版本不符必须停下问人，不得静默安装或回退 python-docx/Pandoc</td><td>不代人不点头</td></tr></tbody></table>
+<p><strong>为什么第 2 条是硬冲突</strong>：本件登记客体是「基于执行轨迹记录与链路校验技术的AI助手平台」，<br>全称里每个词都得在页内有代码；<code>apps/ai-frontend</code> 是平台自带管理 UI，<br><code>software/khyquant/frontend</code> 属<strong>独立项目 khyquant</strong>（另案申报）。<br>按上游前端优先会把材料导向与本件无关的载体，正是登记补正里「材料不一致」的成因。</p>
+<h2 id="四-使用方式-任何智能体生成材料前">四、使用方式（任何智能体生成材料前）<a class="anchor" href="#四-使用方式-任何智能体生成材料前" aria-label="锚点">#</a></h2>
+<ol><li>读 <code>scripts/copyright/vendor/software-copyright-materials/SKILL.md</code>（工作流与门禁）；</li><li><strong>同时</strong>读 <code>scripts/copyright/repo-contract.md</code>，冲突以覆盖层为准；</li><li><code>&lt;PYTHON&gt;</code> 取本仓实测可用的 Python（当前 3.11.9），<code>&lt;SKILL_DIR&gt;</code> 取上表的 vendor 目录；</li><li>逐阶段执行上游脚本，门禁一律停下等人；</li><li>正式产物落 <code>evidence/06_申报材料/</code>，并按 <code>C-MAT1</code> 复核四动作（名称/版本/截图/选材）。</li></ol>
+<p>不使用上游的 plugin 清单安装路径（<code>.claude-plugin/</code> 未入库）：<br>本约束的载体是 <strong><code>AGENTS.md</code> 规则 9</strong>，对读它的任何智能体（Claude Code / Codex / Cursor / Kiro / ZCode）生效，<br>而不是装进某一个 agent 的插件目录。</p>
+<h2 id="五-机器判据-并入-process-010-现有-s1-门-不新建规则">五、机器判据（并入 <code>PROCESS-010</code> 现有 S1 门，不新建规则）<a class="anchor" href="#五-机器判据-并入-process-010-现有-s1-门-不新建规则" aria-label="锚点">#</a></h2>
+<p>执行器仍是 <code>scripts/ci/check-copyright-readiness.js</code>（<code>npm run check:copyright</code>，<br><code>STAGE='S1'</code> 恒 exit 0、只记录不阻断）。本篇新增四条 finding：</p>
+<table><thead><tr><th>finding</th><th>判什么</th><th>原发严重度</th></tr></thead><tbody><tr><td><code>copyright-vendored-skill-ok</code></td><td>26 个上游文件与 manifest 逐字节一致（留痕）</td><td>warning</td></tr><tr><td><code>copyright-vendored-skill</code></td><td>vendored 树被改动/缺失、LICENSE 非 MIT、钉子缺 repo/commit</td><td>error</td></tr><tr><td><code>copyright-overlay-missing</code></td><td><code>repo-contract.md</code> 不存在</td><td>error</td></tr><tr><td><code>copyright-overlay-conflict</code></td><td>覆盖层存在但缺关键对冲引用（未回指 <code>COPYRIGHT.json</code> / <code>COPYRIGHT-MATERIALS.json</code> / <code>C-X3</code>）</td><td>error</td></tr></tbody></table>
+<p>规则数<strong>不变</strong>（仍 94 条）：依 <code>PROCESS-014</code> 棘轮「新增一条先退役一条」，<br>本篇是 <code>PROCESS-010</code> 之下的真源细化，不是新规则 ID。<br>升阶仍是人的决定（<code>PROCESS-008</code> PP-6 一次只升一阶），本篇不代劳。</p>
+<h2 id="六-vendored-的维护义务">六、vendored 的维护义务<a class="anchor" href="#六-vendored-的维护义务" aria-label="锚点">#</a></h2>
+<ul><li><strong>改上游文件不是禁止项而是必须重登记项</strong>：确需改动时，PR 描述必须写明</li></ul>
+<p>「为什么必须改」与「下次上游同步的冲突面」（B-M1 修改禁令）；说不清就拆出为本仓文件<br>  （降为 <code>reference</code>），并在覆盖层加一条口径；</p>
+<ul><li><strong>同步策略</strong>：上游与本仓无分叉时，同步 = 重取上游 blob + 更新 <code>upstream-manifest.json</code></li></ul>
+<p>的 <code>commit</code>/<code>sha256</code>/<code>aggregate</code> + 跑 <code>check:copyright</code>；钉子变更不得静默<br>  （<code>SOURCING-PROVENANCE.json</code> integrityChecks 末条）；</p>
+<ul><li><strong><code>vendor/</code> 内出现的非上游件是正常的</strong>：LAY-5 要求仓内每个 <code>.md</code> 配 <code>.html</code> 孪生</li></ul>
+<p>（<code>[DESIGN-LAY-002]</code> 归类矩阵），<code>npm run docs:build</code> 会在 <code>vendor/**/*.md</code> 旁就地产出孪生面。<br>  钉子按 <code>upstream-manifest.json</code> 的 <code>files[]</code> <strong>逐文件</strong>比对，不是按「目录里每个字节」比对，<br>  所以这些 <code>.html</code> 不算改动上游文件；巡检时也不得把它们当孤儿文件清理（HK-4）；</p>
+<ul><li><strong>整删可回滚</strong>：<code>scripts/copyright/</code> 四件套可一次删除即完全退出，不留悬空引用</li></ul>
+<p>（守卫对缺失目录只报 error finding，S1 下不阻断）。</p>
+<h2 id="七-b-p2-借鉴提案-六字段-登记于-feature-ownership-json-与本节前">七、B-P2 借鉴提案（六字段，登记于 <code>FEATURE-OWNERSHIP.json</code> 与本节前）<a class="anchor" href="#七-b-p2-借鉴提案-六字段-登记于-feature-ownership-json-与本节前" aria-label="锚点">#</a></h2>
+<ol><li><strong>借鉴对象</strong>：<code>Fokkyp/SoftwareCopyright-Skill@947d596</code>（SKILL.md v2.5，MIT）；</li><li><strong>借鉴内容</strong>：整套材料生成工作流 + 7 个人工门禁 + OfficeCLI/页数校验后端行为；</li><li><strong>解决的问题</strong>：本仓材料生成工具链此前<strong>在仓库外</strong> <code>D:/Portable/软著交付/Khy-OS/06_工具/</code></li></ol>
+<p>（<code>[DESIGN-IP-001]</code> C-MAT2 明文），新克隆机器无件、且两份字段真源<br>   （仓外 <code>registration.json</code> vs 仓内 <code>COPYRIGHT.json</code>）需人手工 <code>sync_name.py</code> 同步；</p>
+<ol><li><strong>许可证与代码性质</strong>：MIT，核实位置 = 上游根 <code>LICENSE</code>（已同路径留存）；</li><li><strong>借鉴方式</strong>：<code>vendored</code>，判定依据 = B-M1 六条前置逐条满足（见 §一）；</li><li><strong>落点与现有实现对比</strong>：落点 <code>scripts/copyright/</code>；</li></ol>
+<p>既有同类实现搜索结论 —— 仓内只有<strong>登记侧</strong>件（<code>COPYRIGHT.json</code>、<code>COPYRIGHT-MATERIALS.json</code>、<br>   <code>scripts/ci/check-copyright-readiness.js</code>、<code>scripts/evidence/collect-contribution.js</code>），<br>   <strong>无</strong>材料生成器；<code>khy skill</code> 相关命令管的是运行时技能包，不是本工具。<br>   故本提案是<strong>补齐缺失环节</strong>，不与之并存两份。</p>
+<ol><li><strong>验收方式</strong>：<code>node scripts/ci/check-copyright-readiness.js</code> 输出含</li></ol>
+<p><code>copyright-vendored-skill-ok</code>（26/26 一致）且无 <code>copyright-overlay-*</code> finding；<br>   改动 <code>vendor/</code> 内任一文件后该 finding 翻成 <code>copyright-vendored-skill</code>。</p>
+<hr>
+<h2 id="与其他规范的关系">与其他规范的关系<a class="anchor" href="#与其他规范的关系" aria-label="锚点">#</a></h2>
+<ul><li>上位：<code>[DESIGN-IP-001]</code>（判据真源，规则 <code>PROCESS-010</code>）、<code>[DESIGN-GOV-001]</code> 治理总纲；</li><li>引用不重复：<code>[DESIGN-SOURCING-001]</code>（B-M1/B-P2/B-P3 判定逻辑）、</li></ul>
+<p><code>[DESIGN-LAY-005]</code>（横切层与落点门槛）、<code>[DESIGN-PROCESS-002]</code>（S1~S4 阶段）、<br>  <code>PROCESS-014</code>（规则棘轮）、<code>[DESIGN-DELIV-001]</code> D3；</p>
+<ul><li>载体：<code>scripts/copyright/repo-contract.md</code>（可编辑覆盖层）+ <code>AGENTS.md</code> 规则 9（约束入口）。</li></ul>
+<p><em>创建：2026-09-29（vendored 入库当日）。人的意愿：用户原话要求「不是装到 ZCode，<br>而是把这套 skill 变成 Khy OS 仓库的约束，让任何来改代码的智能体都必须遵守」。</em></p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/10_规范/其它规范/[DESIGN-IP-001] 软件著作权就绪规范.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-IP-001] 软件著作权就绪规范</div></a><a class="next" href="../../../../docs/html/10_规范/其它规范/[DESIGN-IR-001] 事件响应规范.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-IR-001] 事件响应规范</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/10_规范/其它规范/[DESIGN-IP-002] 软著材料生成器与在仓契约.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

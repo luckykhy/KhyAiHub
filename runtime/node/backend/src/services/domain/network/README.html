@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>network — 远端执行、代理、外部应用接入与依赖装配（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>network<span class="sep">›</span>network — 远端执行、代理、外部应用接入与依赖装配（D2）</div>
+      <header class="hero reveal"><h1>network — 远端执行、代理、外部应用接入与依赖装配（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#network-远端执行-代理-外部应用接入与依赖装配-d2">network — 远端执行、代理、外部应用接入与依赖装配（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="network-远端执行-代理-外部应用接入与依赖装配-d2">network — 远端执行、代理、外部应用接入与依赖装配（D2）<a class="anchor" href="#network-远端执行-代理-外部应用接入与依赖装配-d2" aria-label="锚点">#</a></h1>
+<p>业务上下文：<code>khy remote</code>（hosts/connect/exec/sessions）、<code>remotedev</code>、<code>proxy</code>，<br>以及「这条命令缺依赖时怎么装、装哪、能不能修」与「更新从哪个渠道来」。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong>操作远端机器的人</strong>：<code>constants/commandSchema.js:161</code> 的 <code>remote</code></li></ul>
+<p>（子命令 <code>:807</code>）与 <code>:162</code> 的 <code>remotedev</code> → <code>cli/handlers/remote.js:79</code><br>  取 <code>remotedev/remoteDevService.js</code>、<code>:103</code> 读会话指针；<code>cli/handlers/remotedev.js:19</code>。</p>
+<ul><li><strong>让模型自己补依赖的人</strong>：<code>tools/reverseEngineer.js:94</code> 与</li></ul>
+<p><code>services/dependencyInventory.js:24</code>（resolver）；工具侧<br>  <code>tools/compileFile.js:98</code>、<code>tools/executeCode.js:114</code>、<br>  <code>tools/WebBrowserTool/index.js:243</code>、<code>tools/deploy.js:111</code>。</p>
+<ul><li><strong>配代理/接入外部应用的人</strong>：<code>commandSchema.js:55</code> 的 <code>proxy</code> →</li></ul>
+<p><code>cli/handlers/proxyCoreInstallHandler.js:26</code>；<br>  <code>tools/ImportExternalAppModels/index.js:30</code>。</p>
+<ul><li><strong>更新链</strong>：<code>services/updateCoordinator.js:432</code>（实测：</li></ul>
+<p><code>require('./domain/network/updateAdapters/portableAdapter')</code>）、<br>  <code>updateChannelRouter.js:191</code>。治理侧 <code>scripts/ci/check-delegation-boundary.js:57</code><br>  引用 <code>externalApps</code> 路径。</p>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p>「装东西」与「连东西」是两个故障域，混在一起时错误信息无法归因，所以分成<br><code>dependency/</code>（<code>probe / ensure / detectFromError / buildInstallPlan / heal</code>，<br>外加 <code>MissingDependencyError</code> 与 <code>summarizeForAgent</code>——最后这个是给模型读的<br>结构化摘要）、<code>remote/</code>（SSH 配置、凭据守卫、执行与文件传输、状态持久化）、<br><code>remotedev/</code>（会话指针与设备侧）、<code>proxy/</code>、<code>externalApps/</code>（逐厂商适配器）、<br><code>updateAdapters/</code>（便携版与包管理器版两条更新路）六个子上下文。<br>纯叶子刻意留在判定侧：<code>dependency/registry.js</code>、<code>toolchainVersions.js</code>、<br><code>externalApps/tomlLite.js</code> 与 <code>remote/remoteWorkspaceResolver.js</code>、<br><code>remoteStateSyncService.js</code>、<code>windowsSwapScript.js</code>——<br>安装计划、版本可选集、远端路径解析这三件事必须能在不 SSH、不 spawn 的机器上复算。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/services/dependency/dependencyHealing.test.js   <span class="hljs-comment"># 43 tests / 43 pass / 0 fail</span></code></pre>
+<p><code>tests/services/remoteExecService.liveExec.test.js</code> 是 jest 形态（<code>jest.mock('child_process')</code>，<br>正式入口 <code>npm test</code>；本 shell 无 npm/npx，未在卡内复跑）。</p>
+<h2 id="已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）<a class="anchor" href="#已知缺陷-登记-不在本单元擅自修" aria-label="锚点">#</a></h2>
+<p>本目录当前<strong>无</strong> <code> M</code>/<code>A </code> 文件（是少数干净上下文），但 43 个源文件<br>全部没有共置测试——<code>check:layout --list=functional-unit</code> 逐文件点名。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/services/domain/network/externalApps/README.html"><div class="dir">← 上一篇</div><div class="ttl">network/externalApps — 外部 AI 软件的配置读写适配层（D2 业务上下文单元）</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/services/domain/network/remote/README.html"><div class="dir">下一篇 →</div><div class="ttl">domain/network/remote —— 远端 SSH 执行/上传的可注入原语簇（12 文件，星形装配）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/network/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

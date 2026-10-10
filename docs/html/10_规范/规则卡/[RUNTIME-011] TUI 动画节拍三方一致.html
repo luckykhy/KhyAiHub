@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [RUNTIME-011] TUI 动画节拍三方一致.md -->
+<title>[RUNTIME-011] TUI 动画节拍三方一致 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>10_规范<span class="sep">›</span>规则卡<span class="sep">›</span>[RUNTIME-011] TUI 动画节拍三方一致</div>
+      <header class="hero reveal"><h1>[RUNTIME-011] TUI 动画节拍三方一致</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#runtime-011-tui-动画节拍三方一致">[RUNTIME-011] TUI 动画节拍三方一致</a></li><li class="lvl-2"><a href="#约束">约束</a></li><li class="lvl-2"><a href="#授予权力">授予权力</a></li><li class="lvl-2"><a href="#提供福利">提供福利</a></li><li class="lvl-2"><a href="#反例">反例</a></li><li class="lvl-2"><a href="#校验方式">校验方式</a></li><li class="lvl-2"><a href="#例外">例外</a></li><li class="lvl-2"><a href="#版本记录">版本记录</a></li></ul></nav>
+      <article class="doc-body">
+<hr>
+<p>name: TUI 动画节拍三方一致<br>id: RUNTIME-011<br>domain: RUNTIME<br>nature: 约束为主，兼福利<br>scope: &quot;TUI 动画节拍的三个可能各说各话的落点：规范表 runtime/node/backend/src/cli/tui/AGENTS.md §3.3、实现真源 runtime/node/backend/src/cli/tui/perfTunables.js 的节拍默认值导出、以及组件里的兜底字面量（Spinner.js 的 FRAME_MS、topicBar.js 的 _ANIM_MS）&quot;<br>priority: P2<br>trigger: &quot;改动 tui/AGENTS.md §3.3 计时器表、perfTunables 的节拍导出、或任一组件兜底节拍字面量时&quot;<br>constraint: &quot;同一动画的节拍在「规范表 / perfTunables 默认值 / 组件兜底值」三处必须一致（R1）；组件兜底值必须等于规范值（R2）；规范表 §3.3 的每一项都必须有对应的 perfTunables 导出（R3）。不一致即 finding。已由规范明确裁决保留的漂移必须在守卫的 KNOWN_DRIFTS 白名单里登记出处，否则不得降级为 info —— 无出处的降级等于把判据关掉。新增/删除节拍项造成的未对账缺口（unbound-<em>）按盘点处理，不判违规。&quot;<br>grants: &quot;见约束边界：授权客户（团队）获得「终端动画到底跑多快、谁说了算」的可核查答案，不必读三处源码再自行比对；也授权把已裁决的漂移显式登记为保留，而不是被迫改代码去迎合陈旧规范值。&quot;<br>benefit: &quot;此前 Spinner 规范写 80ms、实现跑 160ms，漂移 ×2.00 存在了很久没人发现 —— 用户只看到「动画一顿一顿」，因为三处漂移时没有任何一处会报错。同族还有 ProgressBar.RENDER_MS 从错误的源派生（LOW_POWER 下一跳 2%），也是靠人工读代码才发现的。本规则把「规范写了但没人执行」变成提交时可见的 finding。&quot;<br>exception: &quot;已由规范明确裁决保留的漂移（如 [DESIGN-ARCH-101] §8 裁定 Spinner 160ms 为准）在守卫里以 KNOWN_DRIFTS 登记出处后降为 info；未登记出处的漂移不得降级。纯新增/删除节拍项导致的 unbound-</em> 缺口按盘点处理（info），不判违规。&quot;<br>version: &quot;1.0.0 (2026-09-29)&quot;<br>status: active<br>ssot: &quot;docs/03_DESIGN_设计/DESIGN-PERF/[DESIGN-PERF-004] TUI 动画节拍治理方案.md&quot;<br>formerly: 无<br>owner: governance-team</p>
+<hr>
+<h1 id="runtime-011-tui-动画节拍三方一致">[RUNTIME-011] TUI 动画节拍三方一致<a class="anchor" href="#runtime-011-tui-动画节拍三方一致" aria-label="锚点">#</a></h1>
+<!-- RULES-REGISTRY: RUNTIME-011 -->
+<blockquote><p><strong>规则卡</strong> · 格式依据 [MGMT-STD-008] §1（frontmatter 14 字段 + 六小节）。</p>
+<p><strong>字段真源</strong>是 <code>docs/10_规范/registry/RULES-REGISTRY.json</code>（GOV-TOOL-006 校验），<br>本文件由 <code>node scripts/docs/gen-rules-cards.js</code> 生成，<strong>禁止手改</strong>（同 [MGMT-STD-007] R6 对 .html 孪生件的约束）。<br>正文原文在 <code>ssot</code> 指向的位置：docs/03_DESIGN_设计/DESIGN-PERF/[DESIGN-PERF-004] TUI 动画节拍治理方案.md。</p></blockquote>
+<h2 id="约束">约束<a class="anchor" href="#约束" aria-label="锚点">#</a></h2>
+<p>同一动画的节拍在「规范表 / perfTunables 默认值 / 组件兜底值」三处必须一致（R1）；组件兜底值必须等于规范值（R2）；规范表 §3.3 的每一项都必须有对应的 perfTunables 导出（R3）。不一致即 finding。已由规范明确裁决保留的漂移必须在守卫的 KNOWN_DRIFTS 白名单里登记出处，否则不得降级为 info —— 无出处的降级等于把判据关掉。新增/删除节拍项造成的未对账缺口（unbound-*）按盘点处理，不判违规。</p>
+<h2 id="授予权力">授予权力<a class="anchor" href="#授予权力" aria-label="锚点">#</a></h2>
+<p>见约束边界：授权客户（团队）获得「终端动画到底跑多快、谁说了算」的可核查答案，不必读三处源码再自行比对；也授权把已裁决的漂移显式登记为保留，而不是被迫改代码去迎合陈旧规范值。</p>
+<h2 id="提供福利">提供福利<a class="anchor" href="#提供福利" aria-label="锚点">#</a></h2>
+<p>此前 Spinner 规范写 80ms、实现跑 160ms，漂移 ×2.00 存在了很久没人发现 —— 用户只看到「动画一顿一顿」，因为三处漂移时没有任何一处会报错。同族还有 ProgressBar.RENDER_MS 从错误的源派生（LOW_POWER 下一跳 2%），也是靠人工读代码才发现的。本规则把「规范写了但没人执行」变成提交时可见的 finding。</p>
+<h2 id="反例">反例<a class="anchor" href="#反例" aria-label="锚点">#</a></h2>
+<p>见 <code>ssot</code> 指向的真源原文；本卡不复制反例，以免与真源漂移。</p>
+<h2 id="校验方式">校验方式<a class="anchor" href="#校验方式" aria-label="锚点">#</a></h2>
+<p>人工评审（该规则暂无机械守卫）</p>
+<h2 id="例外">例外<a class="anchor" href="#例外" aria-label="锚点">#</a></h2>
+<p>已由规范明确裁决保留的漂移（如 [DESIGN-ARCH-101] §8 裁定 Spinner 160ms 为准）在守卫里以 KNOWN_DRIFTS 登记出处后降为 info；未登记出处的漂移不得降级。纯新增/删除节拍项导致的 unbound-* 缺口按盘点处理（info），不判违规。</p>
+<h2 id="版本记录">版本记录<a class="anchor" href="#版本记录" aria-label="锚点">#</a></h2>
+<ul><li>1.0.0 (2026-09-29) 初版 / 迁移自 无</li></ul>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/10_规范/规则卡/[RUNTIME-010] 工具授权须明确授予（默认拒绝）.html"><div class="dir">← 上一篇</div><div class="ttl">[RUNTIME-010] 工具授权须明确授予（默认拒绝）</div></a><a class="next" href="../../../../docs/html/10_规范/规则卡/[RUNTIME-012] 模块顶层副作用收敛.html"><div class="dir">下一篇 →</div><div class="ttl">[RUNTIME-012] 模块顶层副作用收敛</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/10_规范/规则卡/[RUNTIME-011] TUI 动画节拍三方一致.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: copyright_material_rules.md -->
+<title>软著材料规则 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../docs/index.html">首页</a><span class="sep">›</span>scripts<span class="sep">›</span>copyright<span class="sep">›</span>vendor<span class="sep">›</span>software-copyright-materials<span class="sep">›</span>references<span class="sep">›</span>软著材料规则</div>
+      <header class="hero reveal"><h1>软著材料规则</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#软著材料规则">软著材料规则</a></li><li class="lvl-2"><a href="#鉴别材料">鉴别材料</a></li><li class="lvl-2"><a href="#本-skill-的落地规则">本 skill 的落地规则</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="软著材料规则">软著材料规则<a class="anchor" href="#软著材料规则" aria-label="锚点">#</a></h1>
+<h2 id="鉴别材料">鉴别材料<a class="anchor" href="#鉴别材料" aria-label="锚点">#</a></h2>
+<p>根据《计算机软件著作权登记办法》第十条，软件鉴别材料包括程序和文档的鉴别材料。</p>
+<p>执行规则：</p>
+<ul><li>源程序和文档一般由前、后各连续 30 页组成。</li><li>整个程序或文档不足 60 页时，提交全部。</li><li>除特定情况外，程序每页不少于 50 行。</li><li>除特定情况外，文档每页不少于 30 行。</li></ul>
+<h2 id="本-skill-的落地规则">本 skill 的落地规则<a class="anchor" href="#本-skill-的落地规则" aria-label="锚点">#</a></h2>
+<ul><li>代码正文使用 8pt 字号、13pt 固定行距；代码选材默认按每页约 55 个物理行估算，以满足每页不少于 50 行的要求。这个数字只用于决定“前30页/后30页”的选材量，不是 DOCX 的硬分页边界；生成后由 OfficeCLI/Word 重新读取真实页数。</li><li>代码中的制表符先按 4 个空格展开；单行超过 90 显示列时确定性折成多个物理行，全角字符按 2 列计算，以避免 Word 因代码宽度再次换行而造成页数漂移。所有物理行连续写入 DOCX，由 Word 排版引擎根据 A4 页面、页边距、字体和行距自动换页，不插入人工分页符。</li><li>总页数 <code>&gt;= 60</code> 时，只输出前 30 页和后 30 页代码材料。</li><li>总页数 <code>&lt; 60</code> 时，只输出全部代码材料。</li><li>不为大项目输出全量代码 Word，避免文件过大且不符合常规提交需求。</li><li>代码材料必须来自项目源文件，不能由 AI 生成。</li><li>文件页眉或页首必须包含软件全称和版本号。</li><li>页码必须连续且清晰。</li><li>不把 Word 自动行号当成登记规则，也不默认给源码添加逻辑行号；需要行号时应作为单独的可选展示功能处理。</li></ul>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../scripts/copyright/vendor/software-copyright-materials/references/code_selection_rules.html"><div class="dir">← 上一篇</div><div class="ttl">代码抽取规则</div></a><a class="next" href="../../../../../scripts/copyright/vendor/software-copyright-materials/references/manual_structure.html"><div class="dir">下一篇 →</div><div class="ttl">操作手册结构</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../";window.__KHY_CUR__="scripts/copyright/vendor/software-copyright-materials/references/copyright_material_rules.html";</script>
+<script src="../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

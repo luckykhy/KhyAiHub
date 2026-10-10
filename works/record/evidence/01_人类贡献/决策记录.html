@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: 决策记录.md -->
+<title>决策记录（C-M4 人的意愿必须留下痕迹） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>works<span class="sep">›</span>record<span class="sep">›</span>evidence<span class="sep">›</span>01_人类贡献<span class="sep">›</span>决策记录（C-M4 人的意愿必须留下痕迹）</div>
+      <header class="hero reveal"><h1>决策记录（C-M4 人的意愿必须留下痕迹）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#决策记录-c-m4-人的意愿必须留下痕迹">决策记录（C-M4 人的意愿必须留下痕迹）</a></li><li class="lvl-2"><a href="#d-e1-2026-09-28-evidence-底档进-git-不加进-gitignore">D-E1 ｜ 2026-09-28 ｜ `evidence/` 底档进 git，不加进 `.gitignore`</a></li><li class="lvl-2"><a href="#d-名1-2026-09-28-登记全称与版本号-真源-mgmt-other-006-本节只做指针-底档摘要">D-名1 ｜ 2026-09-28 ｜ 登记全称与版本号（真源：`[MGMT-OTHER-006]`，本节只做指针 + 底档摘要）</a></li><li class="lvl-2"><a href="#d-名2-2026-09-28-定名改为-轨迹校验版-版本号改为沿用仓库现值">D-名2 ｜ 2026-09-28 ｜ 定名改为「轨迹校验版」+ 版本号改为沿用仓库现值</a></li><li class="lvl-2"><a href="#d-需1-d-需6-需求由人点名-ai-不得自答">D-需1 ～ D-需6 ｜ 需求由人点名，AI 不得自答</a></li><li class="lvl-2"><a href="#d-批1-d-批2-做与不做-人点头才动手">D-批1 ～ D-批2 ｜ 做与不做，人点头才动手</a></li><li class="lvl-2"><a href="#d-界1-ai-的假设必须自曝-不得冒充人给的">D-界1 ｜ AI 的假设必须自曝，不得冒充人给的</a></li><li class="lvl-2"><a href="#d-治1-历史与署名治理">D-治1 ｜ 历史与署名治理</a></li><li class="lvl-2"><a href="#d-软著skill-2026-09-29-软著材料生成器以-vendored-方式入仓-约束载体是-agents-md-规则-9">D-软著skill ｜ 2026-09-29 ｜ 软著材料生成器以 vendored 方式入仓，约束载体是 AGENTS.md 规则 9</a></li><li class="lvl-3"><a href="#b-p2-借鉴提案七字段-design-sourcing-001-3-先提案后编码">B-P2 借鉴提案七字段（`[DESIGN-SOURCING-001]` §3，先提案后编码）</a></li><li class="lvl-3"><a href="#b-p3-批准-裁决人-实现者">B-P3 批准（裁决人 ≠ 实现者）</a></li><li class="lvl-3"><a href="#与本件登记客体的冲突点-为什么必须写覆盖层">与本件登记客体的冲突点（为什么必须写覆盖层）</a></li><li class="lvl-2"><a href="#怎么核">怎么核</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="决策记录-c-m4-人的意愿必须留下痕迹">决策记录（C-M4 人的意愿必须留下痕迹）<a class="anchor" href="#决策记录-c-m4-人的意愿必须留下痕迹" aria-label="锚点">#</a></h1>
+<p>这里记的是<strong>人拍板</strong>的决策：谁定的、原话是什么、落到哪个文件、怎么验证。<br>每条都能翻到磁盘上的原始出处（<code>.khy/feedback/**</code> 里的 <code>source:</code> 行），不是事后追述。</p>
+<p>命名沿用本仓惯例：<code>D-&lt;域&gt;&lt;序号&gt;</code>。</p>
+<hr>
+<h2 id="d-e1-2026-09-28-evidence-底档进-git-不加进-gitignore">D-E1 ｜ 2026-09-28 ｜ <code>evidence/</code> 底档进 git，不加进 <code>.gitignore</code><a class="anchor" href="#d-e1-2026-09-28-evidence-底档进-git-不加进-gitignore" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>项</th><th>内容</th></tr></thead><tbody><tr><td>谁定的</td><td>用户（本轮 AskUserQuestion 选择「<strong>进 git（推荐）</strong>」）</td></tr><tr><td>背景</td><td><code>[DESIGN-IP-001]</code> C-E4 原口径是「底档放仓库外 + <code>.gitignore</code> 忽略仓库内 <code>evidence/</code>」，理由是内部记录不该进提交</td></tr><tr><td>为什么反过来</td><td>本项目的诉求是<strong>凸显开发过程中的独创与人类贡献</strong>：底档要跟代码一起被审阅、一起随克隆传播，藏在仓库外等于不存在</td></tr><tr><td>连带改动</td><td>① C-E4 正文改写并记 D-E1；② 执行器 <code>scripts/ci/check-copyright-readiness.js</code> 检查 7 反转——<strong>evidence/ 被 gitignore 反而判 error</strong>（<code>copyright-evidence-tracked</code>）；③ <code>[DESIGN-LAY-005]</code> §1.2 登记 <code>evidence/</code> 为证据横切目录</td></tr><tr><td>一致性</td><td>声明面（规范）与执行面（守卫）同时改，不留「规范说进 git、守卫罚进 git」的分裂（规则 10 A2-4 的要求）</td></tr></tbody></table>
+<blockquote><p>这条决策本身就是一个「人有在管这个项目」的痕迹：它改变了一条既有规范，<br>并且改的是<strong>对自己更严</strong>的方向（底档入库意味着里面的不利记录也一起公开）。</p></blockquote>
+<hr>
+<h2 id="d-名1-2026-09-28-登记全称与版本号-真源-mgmt-other-006-本节只做指针-底档摘要">D-名1 ｜ 2026-09-28 ｜ 登记全称与版本号（真源：<code>[MGMT-OTHER-006]</code>，本节只做指针 + 底档摘要）<a class="anchor" href="#d-名1-2026-09-28-登记全称与版本号-真源-mgmt-other-006-本节只做指针-底档摘要" aria-label="锚点">#</a></h2>
+<blockquote><p>⚠ <strong>本条已被 D-名2 取代</strong>（同日、同日更晚的决定）。保留原文不删，是因为改名往返本身<br>就是「人在核对」的痕迹；引用登记值时<strong>只读 D-名2</strong>，本条仅供追溯第一版定名的依据。</p></blockquote>
+<blockquote><p><strong>语义真源不在本文件</strong>：<code>docs/08_MGMT_项目管理/MGMT-OTHER/[MGMT-OTHER-006] khy-os软著申报定名与材料方案.md</code><br>（§一 定名 / §三 版本号 / §四 材料一致性 / §六 说明书两节）。本节记录的是「这个决定由人做的、<br>依据是什么、连带哪些底档义务」，任何与本文件冲突处以 <code>[MGMT-OTHER-006]</code> 为准。</p>
+<p>⚠ <strong>定稿状态（2026-09-28 当日回顾）</strong>：本节当初登记时，用户已在本节落地后又两次要求改名<br>（追加驱动：「材料要好写」），故当时的效力是「文档现记录值 = 待确认」。该待确认状态<br>已于同日结束——<strong>最终接受的是 D-名2 的轨迹校验版，不是本条的编排调度版</strong>。</p></blockquote>
+<p><strong>谁定的</strong>：人（孔浩原）。AI 提供的是候选、语料与举证成本测算，最终取哪一条由人决定。</p>
+<table><thead><tr><th>项</th><th>决定</th><th>依据</th></tr></thead><tbody><tr><td>覆盖范围</td><td><strong>平台底座</strong>（AI 网关 + 终端），<strong>不含 khyquant</strong></td><td>原判据写「khyquant 是跑在基座上的内置应用」；<strong>2026-09-28 订正</strong>：khyquant 是<strong>独立项目</strong>，只连接 Khy OS 使用（人明示），「不含」的结论不变、理由换成「独立客体另案申报」；混在一起还会让「独创点」被交易功能稀释</td></tr><tr><td>软件全称</td><td><strong>《基于多供应商大模型的智能体任务编排与统一调度平台》</strong>（24 字，<strong>全称栏内不写版本号</strong>）</td><td>长描述式；每一词都有代码载体（见下表）。证书上会连排显示为「…平台V1.0.0」，那是两栏拼接的结果</td></tr><tr><td>后缀</td><td>用「<strong>平台</strong>」，不用「系统」</td><td>人的否决（转述：见下方出处说明）</td></tr><tr><td>品牌词</td><td>保留英文 <strong>Khy</strong></td><td>已登记名称里英文/混合品牌词进全称是常态（语料见 §语料）</td></tr><tr><td>简称</td><td><strong>留空</strong></td><td>简称只能复用全称里已出现的字，「Khy OS」中的 <code>OS</code> 未在全称出现 → 不合法；也不能写「无」</td></tr><tr><td>版本号</td><td>填 <strong><code>V1.0.0</code></strong>（独立栏，与仓库 G1 <code>1.2.0</code> <strong>刻意不同</strong>）</td><td>硬约束：登记事项变更时<strong>版本号只允许增加或去掉「V」</strong>，首号一旦填错等于另案登记；从原点起步给 <code>V1.1.0</code>/<code>V2.0.0</code> 留位。详见 <code>[MGMT-OTHER-006]</code> §三</td></tr><tr><td>开发方式 / 权利取得</td><td>独立开发 / 原始取得</td><td>与 <code>ai-usage.md</code> 的参与范围自述一致</td></tr></tbody></table>
+<blockquote><p>❗ <strong>AI 在本条上犯过的错，保留在此不删</strong>：本节初稿把全称写成「…平台<strong>V1.2.0</strong>」，<br>并把版本号理由写成「版本号 = G1 现值」。两处都错——全称栏不含版本号，<br>且登记版本号与仓库发布轨道是两回事（仓库无 <code>v1.0.0</code> tag，最新 tag 为 <code>v1.1.15</code>）。<br>留在文档里是因为：一份只展示正确结论的底档，无法证明人真的核对过。</p></blockquote>
+<p><strong>全称逐词回查代码载体</strong>（这个名字不是文案，每个词都能指到文件）：</p>
+<table><thead><tr><th>词</th><th>载体</th><th>复算</th></tr></thead><tbody><tr><td>多供应商大模型</td><td><code>services/backend/src/services/gateway/adapters/</code>（多家供应商适配器）</td><td><code>ls services/backend/src/services/gateway/adapters</code></td></tr><tr><td>智能体任务编排</td><td><code>services/backend/src/services/toolUseLoop/</code>（工具循环 / 回合状态）</td><td><code>ls services/backend/src/services/toolUseLoop</code></td></tr><tr><td>统一调度</td><td><code>services/backend/src/services/gateway/autoModelRouting.js</code> + <code>aiGatewayCooldownMethods.js</code>（通道健康与冷却后重选）</td><td><strong>已有运行时截图</strong>：<code>../03_图片/终端截图/05_gateway_status.png</code>（17 个已启用通道 + 自动调参档位与首包延迟读数）</td></tr><tr><td>平台</td><td><code>services/backend/bin/khy.js</code> + <code>src/cli/router.js</code>（运行时与命令分派）</td><td><code>node services/backend/bin/khy.js --version</code></td></tr></tbody></table>
+<p><strong>这个名字带来的连带义务（C-MAT2 五处一致，现状如实）</strong>：</p>
+<table><thead><tr><th>#</th><th>应出现处</th><th>现状</th></tr></thead><tbody><tr><td>1</td><td>申请材料</td><td>待填（本目录即底档）</td></tr><tr><td>2</td><td>源程序页眉</td><td><strong>未加</strong>——抽取前 30 页时需带全称+版本</td></tr><tr><td>3</td><td>说明书封面与两节</td><td>待做；长名要求<strong>两段带截图的功能说明</strong>（任务编排 / 统一调度各一节，见 <code>[MGMT-OTHER-006]</code> §六）。其中「统一调度」一节的运行时截图已就位（<code>05_gateway_status.png</code>），「任务编排」一节仍需一次完整工具调用回合的采集</td></tr><tr><td>4</td><td>软件界面标题</td><td><strong>不一致</strong>：实测 <code>登录 · KHY AI 管理平台</code>、<code>KhyOS Desktop</code> → 阶段 2 改名后重拍（见 <code>03_图片/图片证据说明.md</code> §三）</td></tr><tr><td>5</td><td>README</td><td>现为本仓自述名，未含登记全称</td></tr></tbody></table>
+<p><strong>版本号与仓库现状的冲突处置（要点，全文见 <code>[MGMT-OTHER-006]</code> §三/§四）</strong>：登记填 <code>V1.0.0</code>，<br>而仓库 G1 在 <code>1.2.0</code> 且无 <code>v1.0.0</code> tag。做法是建<strong>只用于登记的快照目录</strong>（四处 G1 真源改 <code>1.0.0</code>，<br>永不提交回仓库——回改会撞红线 R3/<code>PROCESS-002</code> 与 <code>PROCESS-005</code> 的 tag 等值规则）。<br>因为应用版本串是从 <code>package.json</code> 动态读的，快照里 <code>khy about</code> / <code>--version</code> 的截图<br><strong>自动就是 V1.0.0，零修图</strong>——而「截图不得有 PS/剪切痕迹」正是补正高频项。</p>
+<p><strong>命名判据（人最终接受的是一条成本原则，不是审美）</strong>：名称里每个词都必须<strong>一张截图能证</strong>。<br>两动作式名称（「任务编排与统一调度」）会强制两节说明书，其中「完整智能体工具调用回合」<br>是全产品最难采集的一张图；而朴素/窄名称在权利上<strong>不多花一分</strong>——软著保护的是源程序<br>与文档的表达，不是名称暗示的功能范围，所以降低举证成本是免费的。</p>
+<p><strong>出处说明（不冒充人给的原话）</strong>：本条的「后缀用平台不用系统」「范围只圈平台底座」<br>是人在 2026-09-28 会话中的决定，<strong>逐字原话未落盘</strong>，故此处按转述登记；<br>可机读的逐字 <code>source:</code> 见 D-需1～D-需6。按 D-界1 的纪律，转述与原文必须可分辨。</p>
+<p><strong>§语料</strong>：候选名不是从命名科普文来的（科普文只复述规则、不给实例），<br>是从 50+ 条<strong>已登记</strong>名称的语料里比出来的。该语料同时推翻了 AI 先前的三个断言<br>（版本号是否该进名称、「操作系统」可否注册、4–10 字是否最合适），<br>推翻记录见 <code>../05_索引与对账/对账表.md</code> 的「口径冲突」段。</p>
+<hr>
+<h2 id="d-名2-2026-09-28-定名改为-轨迹校验版-版本号改为沿用仓库现值">D-名2 ｜ 2026-09-28 ｜ 定名改为「轨迹校验版」+ 版本号改为沿用仓库现值<a class="anchor" href="#d-名2-2026-09-28-定名改为-轨迹校验版-版本号改为沿用仓库现值" aria-label="锚点">#</a></h2>
+<p><strong>人下的原话（逐字）</strong>：</p>
+<blockquote><p>落到文档中基于执行轨迹记录与链路校验技术的AI助手平台，版本号先沿用现在的只有我说修改了才修改</p></blockquote>
+<table><thead><tr><th>项</th><th>决定</th><th>依据（人的驱动，非 AI 审美）</th></tr></thead><tbody><tr><td>软件全称</td><td><strong>《基于执行轨迹记录与链路校验技术的AI助手平台》</strong>（22 字，全称栏内仍不写版本号）</td><td>人在 D-名1 之后连续三次要求改名，最后一次给的驱动是「<strong>材料要好写</strong>」与「多模型适配…只要一个 api 调用…缺乏创新」</td></tr><tr><td>后缀</td><td>沿用「<strong>平台</strong>」</td><td>与 D-名1 一致</td></tr><tr><td>简称</td><td><strong>留空</strong></td><td>同上（<code>Khy</code>/<code>OS</code> 均未在全称出现）</td></tr><tr><td>版本号</td><td>填 <strong><code>V1.2.0</code></strong> = 仓库 G1 现值，<strong>只在人明示时修改</strong></td><td>人明示「先沿用现在的，只有我说修改了才修改」</td></tr><tr><td>覆盖范围</td><td>仍是<strong>平台底座</strong>（AI 网关 + 终端），不含 khyquant</td><td>未变；<strong>2026-09-28 补正</strong>：khyquant 是<strong>独立项目</strong>（人明示），它连接 Khy OS 使用，本仓 <code>software/khyquant/</code> 只是分发/接入载体——所以它天然不在本件客体里，另案申报见 <code>[MGMT-OTHER-006]</code> §九</td></tr></tbody></table>
+<p><strong>这条取代 D-名1 的两处</strong>（其余判据不变）：</p>
+<ol><li><strong>版本号</strong>：D-名1 填 <code>V1.0.0</code> 并配了一套「登记专用快照目录、四处 G1 真源改 <code>1.0.0</code>」的规程；</li></ol>
+<p>本条改为<strong>沿用 <code>1.2.0</code>，快照的改号步骤一并作废</strong>——不再伪造版本，截图里的版本串<br>   本来就是 <code>package.json</code> 动态读出来的 <code>1.2.0</code>，与申请表天然一致。<br>   代价也要如实记下：登记事项变更时版本号<strong>只允许增加或去掉「V」</strong>，故 <code>V1.2.0</code> 之后<br>   只能往 <code>V1.2.1</code>/<code>V2.0.0</code> 走，<code>V1.0.0</code> 那个「从原点起步」的余地是本条主动放弃的。</p>
+<ol><li><strong>名称逐词载体</strong>：改为下表两词，各对应<strong>一条可跑、非空的命令</strong>，举证从「两节说明书」</li></ol>
+<p>降为「一节 + 一张列表截图」：</p>
+<table><thead><tr><th>词</th><th>载体（2026-09-28 实测行号）</th><th>复算</th></tr></thead><tbody><tr><td>执行轨迹记录</td><td><code>services/backend/src/services/sessionPersistence.js</code>（会话轨迹落盘）＋ <code>src/services/domain/trajectory/trajectoryProvenance/</code>（8 文件 1,176 行，轨迹溯源）</td><td><code>node services/backend/bin/khy.js trajectory list</code></td></tr><tr><td>链路校验</td><td><code>sessionPersistence.js:625 function verifyTraceChain(sessionId)</code>；<code>src/cli/handlers/trace.js:111 traceList()</code> 渲染 <code>:123 无链</code> / <code>:125 完整(n)</code> / <code>:127 断链@#n</code> 三态</td><td><code>node services/backend/bin/khy.js trace list</code>（与 <code>trajectory list</code> 同一张表，实测逐行相同）</td></tr><tr><td>↑ 两词合一图</td><td><strong>运行时截图已就位</strong>：<code>../03_图片/终端截图/06_trajectory_list.png</code> —— 一次输出同时给出「条数」（轨迹记录）与「链」列的 <code>完整(n)</code>（链路校验），满足本条定名的「每个词一张截图」判据</td><td>采集命令见该图页脚</td></tr><tr><td>AI 助手</td><td><code>src/services/gateway/aiGateway.js</code> + <code>adapters/</code>；终端入口 <code>bin/khy.js</code> → <code>src/cli/router.js</code></td><td>运行时截图 <code>../03_图片/终端截图/05_gateway_status.png</code></td></tr><tr><td>平台</td><td>同上运行时与分派层</td><td><code>node services/backend/bin/khy.js --version</code> → <code>1.2.0</code></td></tr></tbody></table>
+<blockquote><p>D-名1 里那条「完整智能体工具调用回合是全产品最难采集的一张图」的顾虑，是本条换名的<br>直接动因：新名称的两词各一张图即可证，说明书不再需要「任务编排」与「统一调度」两节。</p></blockquote>
+<p><strong>对 D-名1 ❗ 注的拆开处理</strong>（那条注把两件事混在一起了，此处分开定性）：</p>
+<ul><li>「全称栏含版本号」——<strong>仍是错的</strong>，本条不变：全称栏不写版本号，证书上「…平台V1.2.0」是两栏拼接。</li><li>「登记版本号 ≠ 仓库发布轨道」——<strong>由人重新拍板取代</strong>：本条刻意让两者相等（<code>V1.2.0</code> = G1 现值），</li></ul>
+<p>并放弃 D-名1 用来支撑 <code>V1.0.0</code> 的「留位」理由。这是人的决定，不需要 AI 再论证一次。</p>
+<p><strong>本条连带的未了义务</strong>（逐件状态见 <code>../06_申报材料/递交核对表.md</code>）：</p>
+<ol><li>界面标题仍是 <code>登录 · KHY AI 管理平台</code> / <code>KhyOS Desktop</code> 等（仓外 09-21 记录为「4 模块 / 13 处显示名」，</li></ol>
+<p>那份清单成文于旧口径）。<strong>2026-09-28 实测</strong>：<code>check:copyright</code> 报 9 处，其中本件需改的界面标题 <strong>5 处</strong><br>   （<code>apps/ai-frontend</code>、<code>apps/khyos-desktop</code>×2、<code>apps/provider-hub</code>、<code>extensions/tools/khy-markdown</code>），<br>   <code>pyproject.toml</code> 已补上全称；其余 4 处不属本件（khyquant 独立项目 3 处 + Chromium 许可页误报 1 处）。<br>   → 仍是 C-MAT3 硬阻塞，产品侧改名须人单独拍板。</p>
+<ol><li><strong>既有 60 页源程序选材与新名称不匹配</strong>：前 30 页是 Python 启动器、后 30 页是手写内核</li></ol>
+<p><code>.c/.asm</code>，本条名称两个词的载体（<code>verifyTraceChain</code> / <code>trace.js</code> / <code>trajectoryProvenance/</code>）<br>   <strong>一行都不在其中</strong>。三条处置与代价见核对表 §五，待人定案。</p>
+<ol><li><strong>本条已同步到仓库侧机器可读真源</strong>：<code>docs/10_规范/registry/COPYRIGHT.json</code> 的</li></ol>
+<p><code>name</code> / <code>shortName</code>（改为空）/ <code>version</code> / <code>engineeringVersion</code> 已按本条改写，<br>   <code>README.md</code> 许可节的登记全称同步为新名，<code>[DESIGN-ARCH-148]</code> 里引用旧字面值处加了订正注。<br>   <strong>仍未同步</strong>：仓外字段真源 <code>软著交付/Khy-OS/06_工具/registration.json</code> 还停在 2026-09-20 的<br>   <code>KhyOS人工智能平台操作系统</code> / 简称 <code>KhyOS</code> / <code>V1.1</code>（其 <code>version_status</code> 自记<br>   <code>recommended_pending_confirmation</code>，即那版版本号从未由人拍板）。本条把它三值整体取代；<br>   同步动作（改该文件 + <code>sync_name.py --apply</code>）由人执行，因它会重写仓库外十余份文档。</p>
+<blockquote><p><strong>改名往返本身是证据</strong>：2026-09-20 一版（仓外，AI 代定）、2026-09-28 两版（D-名1 → D-名2，<br>人逐次否决后定稿）。三次的取值、依据与否决理由都在档，可逐条复算。</p></blockquote>
+<hr>
+<h2 id="d-需1-d-需6-需求由人点名-ai-不得自答">D-需1 ～ D-需6 ｜ 需求由人点名，AI 不得自答<a class="anchor" href="#d-需1-d-需6-需求由人点名-ai-不得自答" aria-label="锚点">#</a></h2>
+<p>规则 6（<code>RUNTIME-008</code>）要求新增功能前答「需求五问」，且每条答案标 <code>source:</code>。<br>下表是实测语料中的<strong>人类指向</strong>条目（完整 110 条见 <code>人类指令语料.md</code>）：</p>
+<table><thead><tr><th>编号</th><th>日期</th><th>人下的指令（原文摘录）</th><th>出处（文件:行）</th><th>落地</th></tr></thead><tbody><tr><td>D-需1</td><td>2026-09-18</td><td>「先完成第一梯队」（= 评估报告中明列的凭据租约缺口项）</td><td><code>.khy/feedback/2026-09-18-tier1-minimax-code/requirement-5q.md:8</code></td><td>第一梯队凭据/租约缺口</td></tr><tr><td>D-需2</td><td>2026-09-22</td><td>「我经常问 ai，我的 khyos 现在最需要做什么」+「但是没有明确标准」</td><td><code>.khy/feedback/priority-waterfall-20260918/requirement-5q.md:7</code>、<code>:19</code></td><td>优先级瀑布与判定标准</td></tr><tr><td>D-需3</td><td>2026-09-26</td><td>「khyos 的 help 文档也应该更新了，先设计方案直观有效」</td><td><code>.khy/feedback/help-docs-refresh/requirement-5q.md:6</code></td><td>帮助文档刷新方案</td></tr><tr><td>D-需4</td><td>2026-09-26</td><td>三档拍板：「分类一行流」「场景导引 + 命令行派生」「全量补齐」；补齐范围选「全量 119 个」</td><td><code>.khy/feedback/help-docs-refresh/requirement-5q.md:15</code>、<code>:10</code></td><td>逐命令手册的形态与范围</td></tr><tr><td>D-需5</td><td>2026-09-27</td><td>「khyos 中的会话轨迹…希望以后结束后比如是你好测试这样记录要再重复缓存多个，导致空间占用的浪费」</td><td><code>.khy/feedback/2026-09-27-session-trivial-gate/requirement-5q.md:8</code></td><td>琐碎会话写入侧门槛（L1）</td></tr><tr><td>D-需6</td><td>2026-09-27</td><td>「建立『用户账号 ↔ customer』的映射并允许 createPayment 指定属主」</td><td><code>.khy/feedback/payment-owner-mapping/requirement-5q.md:12</code></td><td>支付属主映射</td></tr></tbody></table>
+<p><strong>取舍也是人做的</strong>：D-需5 里人在两个候选层之间选了「1」（写入侧门槛），<br>原文记为 <code>source: 用户原话「测试时记录无意义会话」+ 本轮选择「1」</code><br>（<code>.khy/feedback/2026-09-27-session-trivial-gate/requirement-5q.md:16</code>）。</p>
+<hr>
+<h2 id="d-批1-d-批2-做与不做-人点头才动手">D-批1 ～ D-批2 ｜ 做与不做，人点头才动手<a class="anchor" href="#d-批1-d-批2-做与不做-人点头才动手" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>编号</th><th>日期</th><th>批准记录（原文）</th><th>出处</th></tr></thead><tbody><tr><td>D-批1</td><td>2026-09-22</td><td>「用户批准『实现 #69』（AskUserQuestion #69 = 实现）」</td><td><code>.khy/feedback/g69-gutter-strip/requirement-5q.md:7</code></td></tr><tr><td>D-批2</td><td>2026-09-22</td><td>「用户批准『实现 #71』（AskUserQuestion #71 = 实现）」</td><td><code>.khy/feedback/g71-session-recall/requirement-5q.md:7</code></td></tr></tbody></table>
+<hr>
+<h2 id="d-界1-ai-的假设必须自曝-不得冒充人给的">D-界1 ｜ AI 的假设必须自曝，不得冒充人给的<a class="anchor" href="#d-界1-ai-的假设必须自曝-不得冒充人给的" aria-label="锚点">#</a></h2>
+<p>反例也是证据。<code>.khy/feedback/g71-cross-session-pull/requirement-5q.md:4</code> 原文：</p>
+<blockquote><p>因此<strong>凡标 <code>source: 待用户确认（AI 推断）</code> 的条目都是我方的假设，需你点头或纠偏后才动手写码</strong>。</p></blockquote>
+<p>同文件 <code>:9</code>、<code>:33</code> 两条即为此类：「客户原话仅『推进 #71』，未界定使用者」「不做清单是我方为控范围所拟，需你圈定边界」。<br>这条纪律的作用是把「人说的」和「AI 猜的」在文本层面分开——<br><code>人类指令语料.md</code> 的 110 条里去重后 <strong>57 条明确指向人类主体</strong>，其余即此类待确认项，<br>两者不混计。</p>
+<hr>
+<h2 id="d-治1-历史与署名治理">D-治1 ｜ 历史与署名治理<a class="anchor" href="#d-治1-历史与署名治理" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>决策</th><th>内容</th><th>证据</th></tr></thead><tbody><tr><td>历史重建</td><td>2026-09-24 备份后重建 <code>main</code>（短历史），旧历史保留在备份 tag 与 36 个分支</td><td><code>tags/backup-pre-rebuild-20260924</code>、<code>rebuild-57-verified</code></td></tr><tr><td>AI 署名清理</td><td>提供一次性治理入口，先干跑再 <code>--apply</code>，推送单独一步</td><td>`npm run strip:ai-attribution[:apply\</td></tr><tr><td>现状</td><td><code>main</code> 含 AI 署名提交 0；全分支 88 / 920（9.6%）</td><td><code>../04_机器可读/contribution-metrics.json</code> → <code>git.全分支口径</code></td></tr></tbody></table>
+<hr>
+<h2 id="d-软著skill-2026-09-29-软著材料生成器以-vendored-方式入仓-约束载体是-agents-md-规则-9">D-软著skill ｜ 2026-09-29 ｜ 软著材料生成器以 vendored 方式入仓，约束载体是 AGENTS.md 规则 9<a class="anchor" href="#d-软著skill-2026-09-29-软著材料生成器以-vendored-方式入仓-约束载体是-agents-md-规则-9" aria-label="锚点">#</a></h2>
+<p><strong>人的原话（需求来源，C-E1 的「谁要的」）</strong>：</p>
+<blockquote><p>「https://github.com/luckykhy/SoftwareCopyright-Skill ，希望以后Khyos的代码都能结合这个skill，为申请软件著作权而努力，不是装到 ZCode,而是把这套 skill 变成 Khy OS 仓库的约束，让任何来改代码的智能体(读 AGENTS.md 的 Claude Code / Codex / Cursor / Kiro / ZCode)都必须遵守」</p></blockquote>
+<p><strong>为什么不是「装进某个智能体」</strong>：本仓的约束入口从来是 <code>AGENTS.md</code>（规则 9 = <code>PROCESS-010</code>），<br>装进单一 agent 的插件目录只对本机某一个工具生效，新克隆机器与其它智能体拿不到 ——<br>与「任何来改代码的智能体都必须遵守」这句话直接矛盾。故落点必须是<strong>随 git 分发的仓内文件</strong>。</p>
+<p><strong>落点为什么不是 L6 <code>tools/</code>（AI 自曝假设，D-界1 同款纪律）</strong>：<br>层级判据上它是 L6 形态（开发期手动调用、不参与运行时），初选即 <code>tools/software-copyright/</code>。<br>实测否决：<code>.gitignore:184</code> 忽略 <code>tools/deepseek-eyes/</code>，<code>git ls-files tools</code> = <strong>0 个跟踪文件</strong>；<br>埋在那里 = 约束在新克隆机器上不存在，违反多机自举与 <code>[DESIGN-DELIV-001]</code> D3。<br>改落 <code>scripts/copyright/</code>（<code>[DESIGN-LAY-005]</code> §1.2 工程横切层，与既有 <code>scripts/evidence/</code> 同族，随 git 分发）。</p>
+<h3 id="b-p2-借鉴提案七字段-design-sourcing-001-3-先提案后编码">B-P2 借鉴提案七字段（<code>[DESIGN-SOURCING-001]</code> §3，先提案后编码）<a class="anchor" href="#b-p2-借鉴提案七字段-design-sourcing-001-3-先提案后编码" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>#</th><th>字段</th><th>内容</th></tr></thead><tbody><tr><td>1</td><td>借鉴对象</td><td><code>Fokkyp/SoftwareCopyright-Skill@947d5963194bfda8ce57b8b454b486f13359dee4</code>（2026-09-24；SKILL.md v2.5 / plugin 2.2.0）；镜像 <code>luckykhy/SoftwareCopyright-Skill</code> HEAD 同 commit、入库时无本地分叉</td></tr><tr><td>2</td><td>借鉴内容</td><td>整套材料生成工作流（分析→业务理解→60 页代码→操作手册→申请表→OfficeCLI 出件）+ 7 个 <code>STOP_FOR_USER</code> 人工门禁的行为；<strong>不借</strong>其「优先抽取前端代码」的选材口径</td></tr><tr><td>3</td><td>解决的问题</td><td>材料生成工具链此前在<strong>仓库外</strong> <code>D:/Portable/软著交付/Khy-OS/06_工具/</code>（<code>[DESIGN-IP-001]</code> C-MAT2 原文），新克隆无件；且仓外 <code>registration.json</code> 与仓内 <code>COPYRIGHT.json</code> 是两份字段真源，需人手工 <code>sync_name.py</code> 同步</td></tr><tr><td>4</td><td>许可证与代码性质</td><td>MIT，核实位置 = 上游根 <code>LICENSE</code>（已同路径留存 <code>scripts/copyright/LICENSE</code>）；B-S4 表 MIT → 允许逐字拷贝</td></tr><tr><td>5</td><td>借鉴方式</td><td><code>vendored</code>。B-M1 六条前置逐条满足：MIT 可核实 / <strong>无官方包</strong>（npm 与 PyPI 实测均 404）/ 独立可整删目录 / 同路径 LICENSE / 保留上游原始字节 / 已登记两处（<code>SOURCING-PROVENANCE.json</code> + <code>FEATURE-OWNERSHIP.json</code>）</td></tr><tr><td>6</td><td>落点与现有实现对比</td><td>落点 <code>scripts/copyright/</code>。搜索结论：仓内既有件全是<strong>登记侧</strong>（<code>COPYRIGHT.json</code>、<code>COPYRIGHT-MATERIALS.json</code>、<code>scripts/ci/check-copyright-readiness.js</code>、<code>scripts/evidence/collect-contribution.js</code>），<strong>无材料生成器</strong>；<code>khy skill</code> 一族命令管运行时技能包，不是本工具。故属补齐缺失环节，不并存两份</td></tr><tr><td>7</td><td>验收方式</td><td><code>node scripts/ci/check-copyright-readiness.js</code> 出现 <code>copyright-vendored-skill-ok</code>（26/26 与钉子逐字节一致）且无 <code>copyright-overlay-*</code>；改 <code>vendor/</code> 内任一文件后该条翻成 <code>copyright-vendored-skill</code>（已实测：追加一行 → 翻红 → 还原 → 复绿）</td></tr></tbody></table>
+<h3 id="b-p3-批准-裁决人-实现者">B-P3 批准（裁决人 ≠ 实现者）<a class="anchor" href="#b-p3-批准-裁决人-实现者" aria-label="锚点">#</a></h3>
+<p>维护者（用户）于 2026-09-29 经选择题显式选定「<strong>vendored 原样入库</strong>」，<br>并批准覆盖层落 <code>docs/10_规范/其它规范/[DESIGN-IP-002]</code>、执行强度并入 <code>PROCESS-010</code> 现有 S1 门<br>（不新建规则 ID —— 依 <code>PROCESS-014</code> 棘轮「新增一条先退役一条」，规则数保持 94）。</p>
+<p><strong>诚实边界</strong>：<code>[DESIGN-SOURCING-001]</code> B-S4.1 登记的已知缺口「仓库根当前没有 LICENSE 文件」<br><strong>仍未闭合</strong>。本次按「vendored 不改动、不重新许可上游代码」理解 B-S4.1（该条管的是<br>「无法核实许可证的文件」，而本件上游许可证可核实），未取该条的另一读法（本仓许可未确认 →<br>降级 <code>reference</code>）。若日后补齐仓库根 LICENSE，本条口径无需改动；若裁决相反，<code>scripts/copyright/</code><br>四件套可整删退出（<code>[DESIGN-IP-002]</code> §六）。</p>
+<h3 id="与本件登记客体的冲突点-为什么必须写覆盖层">与本件登记客体的冲突点（为什么必须写覆盖层）<a class="anchor" href="#与本件登记客体的冲突点-为什么必须写覆盖层" aria-label="锚点">#</a></h3>
+<p>上游 <code>SKILL.md</code> 明写「优先抽取前端代码：入口、路由、页面、核心组件」，<br><code>scripts/propose_code_selection.py</code> 亦按 <code>common.py</code> 的 <code>FRONTEND_EXTS</code> 打 <code>selection_tier=frontend</code>。<br>本件 60 页选材真源是 <code>COPYRIGHT-MATERIALS.json</code> 的<strong>运行时调用链成链</strong>原则<br>（前 30 页=启动链，后 30 页=手写内核），登记全称「基于执行轨迹记录与链路校验技术的AI助手平台」<br>里每个词都得在页内有代码；<code>software/khyquant/frontend</code> 属独立项目 khyquant（另案申报）。<br>vendored 文件依 B-M1 #5 <strong>一行未改</strong>，所以对冲只能写在外层<br><code>scripts/copyright/repo-contract.md</code> —— 覆盖层缺失即被守卫判 error（S1 降级不拦截）。</p>
+<hr>
+<h2 id="怎么核">怎么核<a class="anchor" href="#怎么核" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-comment"># 逐条打开上表引用的文件行</span>
+sed -n <span class="hljs-string">&#x27;8p&#x27;</span> .khy/feedback/2026-09-18-tier1-minimax-code/requirement-5q.md
+<span class="hljs-comment"># 语料全量再生</span>
+npm run evidence:collect &amp;&amp; npm run evidence:build</code></pre>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../works/record/evidence/01_人类贡献/发布记录.html"><div class="dir">← 上一篇</div><div class="ttl">发布记录（C-MAT2 软件名称与版本稳定）</div></a><a class="next" href="../../../../works/record/evidence/01_人类贡献/开发过程说明.html"><div class="dir">下一篇 →</div><div class="ttl">开发过程说明（C-E1 / C-X1）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="works/record/evidence/01_人类贡献/决策记录.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

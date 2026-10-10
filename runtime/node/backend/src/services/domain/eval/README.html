@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>eval — GUI 评测与 Web 前端评测（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>eval<span class="sep">›</span>eval — GUI 评测与 Web 前端评测（D2）</div>
+      <header class="hero reveal"><h1>eval — GUI 评测与 Web 前端评测（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#eval-gui-评测与-web-前端评测-d2">eval — GUI 评测与 Web 前端评测（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-需人裁决-ai-不代决">已知缺陷（登记，需人裁决，AI 不代决）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="eval-gui-评测与-web-前端评测-d2">eval — GUI 评测与 Web 前端评测（D2）<a class="anchor" href="#eval-gui-评测与-web-前端评测-d2" aria-label="锚点">#</a></h1>
+<p>子上下文：<code>guiEval</code>（8 个文件）/ <code>webFrontendEval</code>（4 个文件）。<br>无 CLI 命令入口，可达路径只有 HTTP。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong><code>/api/web-frontend-eval</code></strong>：<code>services/aiManagementServer.js:416</code> →</li></ul>
+<p><code>routes/webFrontendEval.js:13</code> → 壳 <code>services/webFrontendEval/index.js:9</code> →<br>  本目录 <code>webFrontendEval/</code>。</p>
+<ul><li><strong>测试侧唯一消费者</strong>：<code>tests/services/computerUse/crossAppTask.test.js:300</code></li></ul>
+<p>取 <code>guiEval/runEngine</code>。</p>
+<ul><li><strong><code>guiEval/</code> 的生产消费者：零。</strong> 本卡实跑的核查（原始输出）：</li></ul>
+<pre><code class="language-bash">  $ grep -rn <span class="hljs-string">&quot;domain/eval&quot;</span> services/backend/src services/backend/tests --include=*.js \
+      | grep -v <span class="hljs-string">&quot;src/services/domain/eval/&quot;</span>
+  services/backend/src/services/webFrontendEval/index.js:9:module.exports = require(<span class="hljs-string">&#x27;../domain/eval/webFrontendEval&#x27;</span>);</code></pre>
+<p>即：<code>src</code> 内只有 webFrontendEval 的壳指过来，<code>guiEval</code> 一条都没有。<br>  再看 <code>/api/gui-eval</code>（<code>aiManagementServer.js:399</code>）的实现文件<br>  <code>routes/guiEval.js</code>：它 <code>:5</code> 直接 <code>require('@khy/shared/models')</code> 拿<br>  <code>GuiEvalTask / GuiEvalRun</code> 操作数据库，<strong>从不 require 本目录的 <code>guiEval/</code></strong>。</p>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p>本目录内部的分层是对的：<code>pricingEngine</code> / <code>scoringEngine</code> 是纯确定性计算<br>（计价与打分必须可复算），<code>checkpointVerifier</code> / <code>runEngine</code> /<br><code>recordingCollector</code> 才碰 <code>fs</code> / <code>child_process</code> / <code>vm</code>，<br><code>taskStore</code> / <code>reviewService</code> / <code>index</code> 走 Sequelize。<code>webFrontendEval/</code><br>同理：<code>qcEngine.runQC</code> 与 <code>trajectoryPackager</code> 的<br><code>validateStructure / generateManifest / zipPackage</code> 是质检与打包，<br><code>taskStore</code> 管落库。问题不在分层，在<strong>接线</strong>：<code>/api/gui-eval</code> 那条路绕开了<br>这套引擎，直接用模型层拼查询。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<p><strong>本卡没有可执行的验证命令</strong>，这是如实登记而非省略：<br><code>guiEval</code> 唯一相关套件 <code>tests/services/computerUse/crossAppTask.test.js</code> 是<br>jest 形态（本机 jest 渠道不可用，见 <code>security/README.md</code> 已知缺陷 3），<br><code>webFrontendEval/</code> 则<strong>没有任何测试文件</strong>。上面 grep 的「零消费者」是本机实跑读数。</p>
+<h2 id="已知缺陷-登记-需人裁决-ai-不代决">已知缺陷（登记，需人裁决，AI 不代决）<a class="anchor" href="#已知缺陷-登记-需人裁决-ai-不代决" aria-label="锚点">#</a></h2>
+<ol><li><code>guiEval/</code> 是「有实现、有测试（但测不到）、无生产接线」的单元，</li></ol>
+<p>且 <code>/api/gui-eval</code> 走的是另一条路——<strong>两套 GUI 评测并存</strong>的形态与<br>   规则 10 A2-5「同一个概念禁止两份不一致定义」相冲。</p>
+<ol><li><code>webFrontendEval/</code> 零测试。</li><li>裁决选项：接线（属规则 6，要先答需求五问）/ 合并两套（属规则 5 的独立改动集）/</li></ol>
+<p>下线（属规则 7，需部位清单 + 可执行 <code>rollback.txt</code> + 文档背书核查）。<br>   本 README 不代做决定。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/services/domain/docs/README.html"><div class="dir">← 上一篇</div><div class="ttl">docs — 文档新鲜度与发布说明的判定层（D2）</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/services/domain/extensions/plugins/README.html"><div class="dir">下一篇 →</div><div class="ttl">plugins — 扩展插件贡献的解析 / 调用 / 桥接</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/eval/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

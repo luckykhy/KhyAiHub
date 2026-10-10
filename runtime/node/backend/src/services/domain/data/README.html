@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>data — 数据落点、资源安装、逆向工程与上游研读（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>data<span class="sep">›</span>data — 数据落点、资源安装、逆向工程与上游研读（D2）</div>
+      <header class="hero reveal"><h1>data — 数据落点、资源安装、逆向工程与上游研读（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#data-数据落点-资源安装-逆向工程与上游研读-d2">data — 数据落点、资源安装、逆向工程与上游研读（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-需人裁决">已知缺陷（登记，需人裁决）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="data-数据落点-资源安装-逆向工程与上游研读-d2">data — 数据落点、资源安装、逆向工程与上游研读（D2）<a class="anchor" href="#data-数据落点-资源安装-逆向工程与上游研读-d2" aria-label="锚点">#</a></h1>
+<p>子上下文：<code>data</code>（DataLocation）/ <code>resources</code> / <code>reverseEngineer</code> / <code>upstreamStudy</code>。<br>17 个文件，纯叶子四个：<code>asarArchive</code> / <code>formatRegistry</code> / <code>stringHarvester</code> /<br><code>reconstructionPort</code>（+ <code>resourceTask</code> 走注入）。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong>管离线资源的人</strong>：<code>khy resource &lt;status|list|fetch|prefetch|verify|rollback|gc|path&gt;</code></li></ul>
+<p>（<code>constants/commandSchema.js:101</code>、<code>:535</code>）→ <code>cli/handlers/resource.js:4,33</code>。</p>
+<ul><li><strong>给运行时装东西</strong>：<code>services/runtimeProvisioner.js:349,358</code>。</li><li><strong>模型侧工具</strong>：<code>tools/unpackTool.js:7,272</code>；</li></ul>
+<p><code>tools/reverseEngineer.js:74</code>（经壳 <code>services/reverseEngineer/index.js:9</code>）；<br>  <code>tools/UpstreamStudyTool/index.js:17</code>（经壳 <code>services/upstreamStudy/index.js:4</code>），<br>  另有 <code>services/upstreamStudyPlan.js</code>。</p>
+<ul><li>注：<code>delivery/channel/khyquant/tools/{unpackTool.js:232,305,reverseEngineer.js:45}</code></li></ul>
+<p>指向 software 本地副本，属独立项目 khyquant 的分发载体，不算本目录消费者。</p>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p>「拿到一个不明包并恢复出可读源码」这条链每一步都可能失败在不同层面，<br>所以按判据/动作分文件而不是按流程分：<code>formatRegistry.js</code> 是<strong>格式与可恢复性表</strong><br>（<code>RECOVERABILITY</code> / <code>FORMATS</code> / <code>EMBEDDED_MARKERS</code> / <code>candidateTools</code>），<br><code>artifactScanner.js</code> 负责识别（<code>_disambiguateCafebabe</code> 这种字节级歧义消解单独成函数），<br><code>asarArchive.js</code> 是纯解析（<code>parseHeaderSize</code> / <code>flattenEntries</code>），<br><code>stringHarvester.js</code> 只做抽取与工具链指纹归类（<code>TOOLCHAIN_FINGERPRINTS</code>），<br><code>sourceRecoverer.js</code> 管安全落盘（<code>_isSafeEntry</code> / <code>_isWithinDest</code> 防路径穿越），<br><code>genericExtractor.js</code> 决定用哪个解压器与包管理器命令，<code>toolOrchestrator.js</code> 探活与<br>装配计划（<code>recommendInstall</code>、<code>TOOL_TIMEOUT_MS</code>），<br><code>verificationLedger.js</code> 出可复核清单（<code>buildManifest</code> / <code>verify</code>）。<br>最后这个是「怎么验」的机器版本：逆向结果不留台账就无法复现。<br><code>data/DataLocation.js</code> 单独存在是因为老数据家迁移（<code>hasLegacyData</code> /<br><code>migrateIfNeeded</code> / <code>markMigrationComplete</code>）是一次性动作，不能混进资源管理。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/services/reverseEngineer/reverseEngineer.test.js   <span class="hljs-comment"># 45 tests / 45 pass / 0 fail</span></code></pre>
+<p>同目录 <code>asarArchive.test.js</code>（node:test）；<code>tests/services/resources/*.test.js</code><br>是 jest 形态（本机渠道不可用）；<code>tests/tools/unpackGeneric.test.js</code>、<br><code>tests/upstreamStudy.test.js</code> 本卡未复跑。</p>
+<h2 id="已知缺陷-登记-需人裁决">已知缺陷（登记，需人裁决）<a class="anchor" href="#已知缺陷-登记-需人裁决" aria-label="锚点">#</a></h2>
+<p><code>data/DataLocation.js</code> 在代码里<strong>零消费者</strong>（只有<br><code>tests/services/dataLocationRemedyResolve.test.js</code> 按路径读它）。<br>迁移逻辑是否已作废、还是留给老安装升级路径，本卡不下结论；<br>删除属规则 7，需先查文档背书。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/services/domain/cpa/README.html"><div class="dir">← 上一篇</div><div class="ttl">cpa — CPA 密钥池、协议转换与服务面（D2）</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/services/domain/data/reverseEngineer/README.html"><div class="dir">下一篇 →</div><div class="ttl">reverseEngineer — 制品逆向与自验流水线（D2 功能单元）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/data/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

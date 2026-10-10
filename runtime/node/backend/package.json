@@ -1,0 +1,244 @@
+{
+  "name": "khy-os-backend",
+  "version": "1.2.0",
+  "description": "Khy OS AI platform backend with default app runtime",
+  "main": "server.js",
+  "bin": {
+    "khyquant": "./bin/khy.js",
+    "khy-os": "./bin/khy.js",
+    "khy": "./bin/khy.js"
+  },
+  "//files": "从上面的目录白名单里再减掉非运行时内容。npm 的 files 支持取反模式，写在这里而不是另开 .npmignore：两份清单会各自漂移，而漂移方向总是「多带了东西」。① !**/.khy —— 运行时状态。src/.khy/khyquant/data/khy-quant.db 是本机跑出来的库，未被 git 跟踪，却是 tarball 里最大的单文件（0.59 MB）；谁在自己机器上 publish 就把自己的库发出去。② 测试文件与 __tests__ —— 装到用户机器上不会跑，jest 也不在生产依赖里。③ !**/*.html —— src/ 下 132 个 .html 全部有同名 .md，是文档站渲染出来的副本；技能加载器只读 prompt.md / SKILL.md（见 src/cli/repl/userSkillCommands.js:147），运行时一个 .html 都不读。④ wasm-* 的 .ast/.typedtree/trace.json 与 *_test.mbt —— moon build 的中间产物和测试，不是可发布源码（三个 wasm 目录里本来就没有编译好的 .wasm，运行时只加载用户 --wasm 指定的路径）。",
+  "files": [
+    "bin/khy.js",
+    "bin/khy-os-init.js",
+    "src/",
+    "config/",
+    "scripts/",
+    "sql/",
+    "migrations/",
+    "assets/",
+    "akshare_scripts/",
+    "wasm-chain/",
+    "wasm-context/",
+    "wasm-indicators/",
+    "vendor/",
+    "server.js",
+    "setup.js",
+    "start-with-db.js",
+    "check-env.js",
+    "reset-database.js",
+    "create-test-users.js",
+    "test-db-connection.js",
+    "inference_server.py",
+    "babel.config.json",
+    "esbuild.config.js",
+    "jsconfig.json",
+    "README*",
+    "!**/.khy",
+    "!**/*.test.js",
+    "!**/*.spec.js",
+    "!**/__tests__",
+    "!**/*.html",
+    "!wasm-*/**/*.ast",
+    "!wasm-*/**/*.typedtree",
+    "!wasm-*/trace.json",
+    "!wasm-*/**/*_test.mbt",
+    "!wasm-*/**/*_wbtest.mbt"
+  ],
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "start:db": "node start-with-db.js",
+    "migrate": "node src/migrations/run.js",
+    "arch:debt": "node scripts/archDebtScan.js",
+    "arch:debt:baseline": "node scripts/archDebtScan.js --update-baseline",
+    "arch:god": "node scripts/archDebtScan.js --god-report",
+    "test": "jest",
+    "test:one": "jest",
+    "test:node": "node --test tests/**/*.test.js",
+    "_test_node_src_note": "jest.config.js 把所有 require('node:test') 的套件放进 testPathIgnorePatterns（即 jest 主动跳过），而 test:node 只 glob tests/ —— 单看这两条，src/ 下的 node:test 套件没有入口执行。（原文写「实测该目录下有 378 个 .test.js」「一次性挂 CI 会立刻产生大量红，那是人工裁决」——该裁决已于 2026-10-10 做出：先修后接。现由 test:node:src 提供入口并已接进 test:all 与 CI 的 src-suite-baseline job，接线时 383 套件 / 6087 断言全绿。）",
+    "test:node:src": "node --test \"src/**/*.test.js\"",
+    "test:routing-185": "node --test src/services/modelPricing.test.js src/services/gateway/routingMode.test.js src/services/gateway/routeDemand.test.js src/services/gateway/routeContextSignals.test.js src/services/gateway/autoModelRouting.test.js src/services/gateway/autoModelSelect.test.js src/services/domain/catalog/toolUseLoop/protocolContext.test.js tests/gateway/routeSoftFailE2E.test.js tests/gateway/routeJoinE2E.test.js tests/gateway/routeRollbackMatrix.test.js src/services/gateway/autoModelRouting.capability.test.js tests/gateway/routeCapabilityGate.test.js tests/gateway/routeVerbositySeam.test.js tests/gateway/routeVerbosityLive.test.js tests/gateway/routeModeListTruthSource.test.js tests/gateway/routePersistRoundTrip.test.js src/services/gateway/autoModelRouting.rotation.test.js src/services/gateway/autoModelSelect.headRevert.test.js",
+    "test:routing-185_note": "含 protocolContext.test.js（β 在循环侧的落点锁）、routeContextSignals.test.js（§15-2 输入侧）、routeJoinE2E.test.js（**生产侧 join**：真 generate() 落盘 → 真 route-replay 读回）、routeSoftFailE2E.test.js（驱动真实 generate：A4 软失败注入 + 档名可达 + A1 观测/改道 + §15-2 接缝）、routeCapabilityGate.test.js（§8-⑦：带图请求绝不改道给不识图候选；独立文件是因为候选池只并集不清空，同进程残留会把「报挡」洗成「不报挡」）与 routeVerbositySeam.test.js（§5.2 的 π 在**装配侧** calibrateScaffolding 的 −3 上落地；前两处 profile 接了模式轴不等于第三处也接了）与 routeModeListTruthSource.test.js（§7-① 的档名唯一真源：供数点曾硬编码 ORDER，卡里改名/加档时那一行会静默消失且无测试会红；第 4 行的源码形状锁已用变异对照证明能红，见 §16.4aj）与 routeVerbosityLive.test.js（π 在**生产入口** `makeSystemPrompt` 的冷进程可见性 + env>mode 优先级 + R1 复证；末行只保证「钉选可见后模式轴必须让位」这一条不变量——曾把它写成「warm 之后模式轴失效」的已知缺陷，三层自我推翻后作废：那枚探针绕过了 `bootstrap.init()`，生产里 R1 从第一轮就正确旁路，见 §16.4ah）。与 routePersistRoundTrip.test.js（§4.4 的持久化回路整条量一遍：写临时 .env → 新进程 dotenv 读回 → currentModeName → requestModeIntent 的 β/π 导出，含换档正对照；此前那行只写过「§16.4c 读得到卡」，从没测过下一个进程是否真看得见这一档）。与 autoModelRouting.rotation.test.js（§15 R6：账本越 2MB 会「留后半」，丢掉的正是最早的样本——即 S1→S2 判据的唯一存量；真实 2MB+ 夹具触发裁剪并断言热+归档=裁剪前+1、归档首行 seq=0。摘掉归档写这一行就红，已验证）。与 autoModelSelect.headRevert.test.js（§7-⑥ 的「门控关 / 不传新参数 ⇒ 现路径逐字节不变」：git show HEAD: 取旧模块、在真实目录内编译、比 JSON 串含键序；取不到 HEAD 判红不判 skip —— 第一版用了 skip，8 条空对照全报 ok，正是本文件要防的形态）。这几条都是「叶子全绿也证明不了生效」那一类的补口。",
+    "test:all": "npm test && npm run test:node && npm run test:node:src",
+    "_test_all_note": "test:node:src 于 2026-10-10 接进 test:all。此前 src/ 下的 node:test 套件被 jest.config.js 的 findNodeTestFiles 排除、又不被 test:node 的 tests/ glob 覆盖，任何入口都不执行（实测 383 个套件 / 6087 条断言，约 56 秒跑完）。接线前已把 5 个文件的失败清零（3 处迁移死路径 + docsFreshness 的 REPO_ROOT 少一层 + backupService 的测试腐坏），并修掉 2 个真产品 bug（backupService.js 的 pg_dump stderr 末三行 off-by-one、verifyBackup 对空 target 报无意义字节差）。",
+    "test:summary": "node scripts/test-summary.js",
+    "test:tui": "node scripts/run-ink-tui-tests.js",
+    "test-db": "node test-db-connection.js",
+    "check-env": "node check-env.js",
+    "reset-db": "node reset-database.js",
+    "create-users": "node create-test-users.js",
+    "seed": "node scripts/seed.js",
+    "cli": "node bin/khy.js",
+    "setup": "node setup.js",
+    "prepack": "node scripts/prepack.js",
+    "format": "prettier --write \"src/**/*.js\" \"scripts/**/*.js\" \"server.js\" \"setup.js\"",
+    "format:check": "prettier --check \"src/**/*.js\" \"scripts/**/*.js\" \"server.js\" \"setup.js\"",
+    "lint": "eslint src/ --max-warnings 0",
+    "lint:fix": "eslint src/ --fix",
+    "precommit": "lint-staged"
+  },
+  "keywords": [
+    "ai-os",
+    "agent-platform",
+    "express",
+    "postgresql"
+  ],
+  "author": "孔浩原",
+  "license": "LicenseRef-Source-Available",
+  "homepage": "https://github.com/kodehu03/khy-os#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kodehu03/khy-os.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kodehu03/khy-os/issues"
+  },
+  "engines": {
+    "node": ">=20.18.1"
+  },
+  "//dependencies": "本包是 khyquant（L4，software/khyquant/，自身没有 package.json）的**宿主进程**，因此这里有几项是替它代持的运行时依赖，backend 自己一次都不 require：moment —— 只被 khyquant 的 klineDataService.js / enhancedMockDataService.js 使用；node-cron —— 只被 khyquant 的 instrumentSyncService.js 在 start() 里 lazy require（无 try/catch，缺失即抛）。它 2026-08-25 前一直误挂在仓库根的 devDependencies 下，后果是 `npm ci --omit=dev` 装出来的树跑到定时行情同步时会 MODULE_NOT_FOUND。反过来 winston / winston-daily-rotate-file 虽在此声明，实际经 @khy/shared 间接使用，@khy/shared 自己也声明了它们——去掉这两行省不下任何字节，只是少一处冗余声明，暂留以免 khyquant 侧将来直接 require 时再回填。另：pg-hstore 没有任何一行代码显式 require，它是 sequelize 的 postgres 方言在 lib/dialects/postgres/hstore.js:2 动态 require 的，属于 sequelize 的 peer 缺口，删掉会在启用 hstore 字段时崩——不要按「无引用」清理掉它。",
+  "dependencies": {
+    "@aws/codewhisperer-streaming-client": "^1.0.45",
+    "@babel/parser": "^7.29.8",
+    "@khy/shared": "file:./vendor/shared",
+    "@simplewebauthn/server": "^13.3.0",
+    "axios": "^1.19.0",
+    "bcryptjs": "^2.4.3",
+    "chalk": "^4.1.2",
+    "cheerio": "^1.2.0",
+    "cli-table3": "^0.6.5",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^8.3.2",
+    "express-validator": "^7.0.1",
+    "helmet": "^8.0.0",
+    "iconv-lite": "^0.6.3",
+    "ink": "^6.8.0",
+    "inquirer": "^8.2.7",
+    "ipaddr.js": "^1.9.1",
+    "js-yaml": "^3.15.1",
+    "json5": "^2.2.3",
+    "jsonwebtoken": "^9.0.2",
+    "khy-ai-backend": "file:../ai-backend",
+    "moment": "^2.30.1",
+    "multer": "^1.4.5-lts.1",
+    "node-cron": "^4.2.1",
+    "node-stream-zip": "^1.15.0",
+    "ora": "^5.4.1",
+    "pg": "^8.11.3",
+    "pg-hstore": "^2.3.4",
+    "prom-client": "^15.1.3",
+    "qrcode": "^1.5.4",
+    "react": "^19.2.7",
+    "sequelize": "^6.35.2",
+    "strip-ansi": "^6.0.1",
+    "tar": "^7.5.22",
+    "undici": "^7.19.0",
+    "winston": "^3.19.0",
+    "winston-daily-rotate-file": "^5.0.0",
+    "ws": "^8.16.0",
+    "yjs": "^13.6.32"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.24.0",
+    "@babel/core": "^7.29.7",
+    "@babel/preset-react": "^7.29.7",
+    "@babel/register": "^7.29.7",
+    "ajv": "^6.15.0",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "globals": "^14.0.0",
+    "jest": "^29.7.0",
+    "lint-staged": "^15.5.2",
+    "nodemon": "^3.0.2",
+    "pkg": "^5.8.1",
+    "prettier": "^3.9.6",
+    "supertest": "^7.2.2",
+    "yoga-layout": "^3.2.1"
+  },
+  "//peerDependencies": "全部 optional。它们都是代码里 try/catch 包着 require 的可选运行时——声明在这里是为了「能被 require 的东西必须有名字」，而 optional:true 保证 npm 一个字节都不装。@aws-sdk/client-s3 由 KHY_AUDIT_S3_BUCKET 门控，@khy-os/khy-chain 装不上就退回本地链。playwright / playwright-core 是 src/services/browser/engine.js 的 loadPlaywright() 按序尝试的两个候选（浏览器渲染搜索与 WebBrowser 工具共用），2026-08-25 前两个名字在任何 manifest 里都没有声明，只能靠前端 @playwright/test 提升上来的传递副本碰巧解析到——pnpm 严格布局下从 services/backend 根本解析不到，实测 MODULE_NOT_FOUND。缺失是设计内的降级路径（返回 null，调用方退回纯 HTTP 请求），engine.js 会打印一次中文启用提示。",
+  "peerDependencies": {
+    "@aws-sdk/client-s3": "^3.0.0",
+    "@khy-os/khy-chain": "*",
+    "@khy/plugin-sdk": "*",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.207.0",
+    "@opentelemetry/instrumentation-express": "^0.56.0",
+    "@opentelemetry/instrumentation-http": "^0.207.0",
+    "@opentelemetry/resources": "^2.2.0",
+    "@opentelemetry/sdk-node": "^0.207.0",
+    "@opentelemetry/sdk-trace-base": "^2.2.0",
+    "@opentelemetry/semantic-conventions": "^1.29.0",
+    "better-sqlite3": "^12.8.0",
+    "mysql2": "^3.0.0",
+    "node-llama-cpp": "^3.18.1",
+    "node-pty": "^1.0.0",
+    "playwright": "^1.62.1",
+    "playwright-core": "^1.62.1"
+  },
+  "peerDependenciesMeta": {
+    "@aws-sdk/client-s3": {
+      "optional": true
+    },
+    "@khy-os/khy-chain": {
+      "optional": true
+    },
+    "@khy/plugin-sdk": {
+      "optional": true
+    },
+    "better-sqlite3": {
+      "optional": true
+    },
+    "mysql2": {
+      "optional": true
+    },
+    "@opentelemetry/exporter-trace-otlp-http": {
+      "optional": true
+    },
+    "@opentelemetry/instrumentation-express": {
+      "optional": true
+    },
+    "@opentelemetry/instrumentation-http": {
+      "optional": true
+    },
+    "@opentelemetry/resources": {
+      "optional": true
+    },
+    "@opentelemetry/sdk-node": {
+      "optional": true
+    },
+    "@opentelemetry/sdk-trace-base": {
+      "optional": true
+    },
+    "@opentelemetry/semantic-conventions": {
+      "optional": true
+    },
+    "node-llama-cpp": {
+      "optional": true
+    },
+    "node-pty": {
+      "optional": true
+    },
+    "playwright": {
+      "optional": true
+    },
+    "playwright-core": {
+      "optional": true
+    }
+  },
+  "lint-staged": {
+    "src/**/*.js": [
+      "prettier --check",
+      "eslint --max-warnings 999"
+    ]
+  },
+  "optionalDependencies": {
+    "@smithy/node-http-handler": "^4.6.1",
+    "glob": "^10.3.10",
+    "https-proxy-agent": "^7.0.4",
+    "string-width": "^5.1.2"
+  }
+}

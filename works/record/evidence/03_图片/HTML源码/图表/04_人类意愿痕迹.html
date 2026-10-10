@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><style>body{margin:0;background:#fff;color:#111827;font-family:"Microsoft YaHei","Segoe UI",sans-serif;padding:28px 34px}
+h1{font-size:26px;margin:0 0 4px}
+.sub{font-size:14px;color:#4b5563;margin-bottom:20px}
+.src{font-size:12px;color:#6b7280;margin-top:22px;border-top:1px solid #e5e7eb;padding-top:10px;line-height:1.6}
+.bar-row{display:flex;align-items:center;margin:9px 0;font-size:14px}
+.bar-label{width:280px;flex:none;text-align:right;padding-right:12px;color:#374151}
+.bar-track{flex:1;background:#f3f4f6;border-radius:3px;height:26px;position:relative}
+.bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#1d4ed8,#3b82f6)}
+.bar-val{position:absolute;left:calc(100% + 8px);top:4px;font-size:13px;color:#111827;white-space:nowrap}
+.tiles{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.tile{flex:1;min-width:210px;border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;background:#f9fafb}
+.tile .n{font-size:30px;font-weight:700;color:#1d4ed8}
+.tile .k{font-size:13px;color:#374151;margin-top:4px;line-height:1.5}
+.chart{margin:6px 0 2px}
+svg{display:block}
+.tag{display:inline-block;font-size:12px;color:#374151;border:1px solid #d1d5db;border-radius:11px;padding:1px 9px;margin-right:6px}</style></head><body>
+<h1>人类意愿与验收痕迹的可回查条目数</h1>
+<div class="sub">C-M4 第①类痕迹（需求来源）+ 软著三问「谁要的 / 怎么验证的」</div>
+<div><span class="tag">扫描 1463 个文件</span><span class="tag">快照 2026-09-28</span><span class="tag">逐条出处见 01_人类贡献/人类指令语料.md</span></div>
+<div class="chart"><div class="tiles"><div class="tile"><div class="n">117</div><div class="k">需求五问里带 source: 出处的行</div></div><div class="tile"><div class="n">145</div><div class="k">「用户原话 / 要求 / 拍板」引述句（去重）</div></div><div class="tile"><div class="n">29</div><div class="k">人写明的验收标准（= 成功长什么样）</div></div><div class="tile"><div class="n">46</div><div class="k">任务 29 + Bug 17 条台账（.ai/hq/）</div></div></div><div class="bar-row"><div class="bar-label">source: 出处行</div><div class="bar-track"><div class="bar-fill" style="width:66.17%"></div><div class="bar-val">117</div></div></div>
+<div class="bar-row"><div class="bar-label">用户原话/要求/拍板 引述句</div><div class="bar-track"><div class="bar-fill" style="width:82.00%"></div><div class="bar-val">145</div></div></div>
+<div class="bar-row"><div class="bar-label">人写的验收标准</div><div class="bar-track"><div class="bar-fill" style="width:16.40%"></div><div class="bar-val">29</div></div></div>
+<div class="bar-row"><div class="bar-label">每日工作笔记</div><div class="bar-track"><div class="bar-fill" style="width:9.05%"></div><div class="bar-val">16</div></div></div></div>
+<div class="src">数据来源：人类贡献度量.人类指令语料 / 台账<br>生成命令：<code>node scripts/evidence/render-images.js</code><br>复算命令：<code>grep -rn "source:" .khy/feedback --include=*.md | wc -l</code></div>
+</body></html>

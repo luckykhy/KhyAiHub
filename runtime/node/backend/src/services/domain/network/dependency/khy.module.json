@@ -1,0 +1,41 @@
+{
+  "name": "dependency",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "按 DOMAIN-DEPS.json 的 D2 名义边界如实声明，不写超出项。实测出域边 3 条：`installLocation.js:32` 惰性 require `utils/dataHome`（D3，取数据根）；`resolver.js:19` require `services/toolError.js`（D1）；`resolver.js:31` require `tools/platformUtils.js`（src/tools 在 DOMAIN-DEPS 里没有域根映射）。后两条属 declared_not_enforced 的 D2→D1 与域归属空洞，交 archDebtScan R1 / cross-layer-require 棘轮与任务 #17 第 19 项 Q4 管辖，本清单只登记不合法化。",
+  "fanIn": 3,
+  "fanInEvidence": [
+    "services/backend/src/services/dependency/index.js",
+    "services/backend/src/services/domain/maintenance/selfHeal/fixActions.js",
+    "services/backend/src/services/domain/project/management/resources/dependencies.resource.js"
+  ],
+  "_fanIn_note": "非测试外部消费者去重 3 个（`grep -rn require(...network/dependency` 逐条核到行号，排除本单元自身与 *.test.js）：D1 历史路径再导出壳 `services/dependency/index.js:4`、自愈动作面 `fixActions.js:45`（惰性 require，失败即降级为不修复）、项目管理资源 `dependencies.resource.js:12-13`（取 runInstall 与 resolver）。另有 5 个文件在字符串/注释里提到 `network/dependency` 但无 require，未计入。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-29",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "晋级三判据齐：单元级 README.md（本批补）、整数 fanIn、7 个源文件全部有同名同目录测试（第 45 批 D 车道产出，192 例 / 0 fail，2026-09-29 本道显式路径复跑复验）。单元早于 entry-buffer 守卫，缓冲区从未被经过，故 enteredVia 为 null 而不是 staged 记录。",
+  "contract": {
+    "purpose": "把「工具调用因本机依赖缺失而硬中断」转为「探测缺失 → 询问是否安装 → 隔离执行 → 回环重试」的交互式自愈。门面 index.js，真源表 registry.js，探测与计划 resolver.js，执行 installRunner.js，落点 installLocation.js，循环编排 healingLoop.js，版本矩阵 toolchainVersions.js（纯叶子：零 IO、确定性、绝不抛，env 门控 KHY_DEP_VERSIONS 默认开）。",
+    "ioOwner": "本单元是唯一 IO 面持有者：安装命令只在 installRunner.js 内隔离执行，落点决策只在 installLocation.js（应对 backend 装在只读目录的形态），数据根来自 D3 的 utils/dataHome 而不是自拼路径。消费者只拿计划与结果，不自行 spawn。",
+    "gates": "fixActions.js:45 以惰性 require 进入本单元 —— 单元不可用或抛错时自愈链降级为「不修复」，不影响主调用返回；KHY_DEP_VERSIONS 关则 toolchainVersions 退回默认版本选择。",
+    "coverage_note": "本清单的 purpose/ioOwner/gates 段只覆盖本轮实测到的面（各文件头注释 + 7 份共置测试 + 上述 require 站点逐条核到行号），不是逐行审计结论；细节以各文件头注释与共置测试为准。"
+  },
+  "knownDefectsPinned": [
+    "registry.js getDependency() 头注释承诺冻结副本，实现交出真表引用且不判 own-property ⇒ 调用方改写污染共享真源",
+    "resolver.js 缺失判定可产生 {depId: undefined, dependency: Object} 的假检测并流入 heal/install",
+    "resolver.js:191/196 真值门把合法的 0 / false 信号静默当缺失"
+  ],
+  "_known_defects_note": "以上均由共置测试以 KNOWN-DEFECT 断言钉住（本单元 11 处），一律登记不修 —— 改任何一条都是行为变更，需甲/乙裁决（任务 #17）。",
+  "tests": [
+    "healingLoop.test.js",
+    "index.test.js",
+    "installLocation.test.js",
+    "installRunner.test.js",
+    "registry.test.js",
+    "resolver.test.js",
+    "toolchainVersions.test.js"
+  ]
+}

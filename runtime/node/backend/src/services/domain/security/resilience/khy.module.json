@@ -1,0 +1,55 @@
+{
+  "_note": "功能单元清单（[RESEARCH-018] §2.3 模板第 3 件 / 5-3-1 §3）。执行器 scripts/ci/check-repo-layout.js 的 entry-buffer 规则读本文件的 domain / mayDependOn / fanIn / lifecycle.stage 四个字段，其余字段是给人读的。字段真源与判据枚举见 docs/10_规范/registry/DOMAIN-DEPS.json 的 _entry_buffer 块。",
+  "name": "resilience",
+  "domain": "D2",
+  "mayDependOn": ["D2"],
+  "_mayDependOn_note": "实测本单元 8 个源文件的仓内 require 全部是单元内互引（D2 内部）：index.js → ./budgetExecutor ./deadLoopDetector ./errorSignature ./fallbackTree ./intentTrees ./salvage；budgetExecutor.js → ./deadLoopDetector ./errorSignature ./fallbackTree ./salvage ./budgetAdapters；budgetAdapters.js → ./fallbackTree；deadLoopDetector.js → ./errorSignature；intentTrees.js → ./fallbackTree。没有任何一条 D3（src/utils / src/constants）边，所以名义边界里的 D3 不写进本字段——将来真用到了再加。单元内零 node 内建 require（无 fs/os/path），零网络、零磁盘 IO。",
+  "_deviation_note": "没有跨层边需要登记：没有任何成员伸进 D1（src/services）或 src/cli——上层是通过 require('../domain/security/resilience') 或再导出壳 src/services/resilience/index.js 反向依赖本单元的，方向合法。本单元登记的内容级偏差三条：① intentTrees.js 的 _textSalvage 在 results[] 含 null/undefined 条目时抛 TypeError，与其 JSDoc「fail-safe，绝不抛错」矛盾（复现 .khy/feedback/b23-resilience/repro-before.txt 缺陷1；生产路径因 budgetExecutor._salvageOf 的 try/catch 兜住而未爆雷）——已修（results[] 只取对象与字符串条目，null/undefined 先过滤），复诊 .khy/feedback/b23-resilience/repro-after.txt；② 同函数的 title/url 取值用 r.link 兜底，字符串条目会命中 String.prototype.link 原生函数、把「function link(){[native code]}」渲染进残料并丢弃真实值——已修（字符串条目原样入线，不再经 r.link 兜底）；③ getIntentTree 曾走原型链裸查找（'valueOf'/'hasOwnProperty' 抛 TypeError、'constructor' 返回 {}，且抛错穿透门面 ResilienceCoordinator.run），复现存证 .khy/feedback/b23-resilience/repro-before.txt 缺陷2 + .khy/feedback/b23-resilience-2/——**已于 2026-09-28 由集中工作流修复**（intentTrees.js 现用 Object.prototype.hasOwnProperty.call 只认自有键），共置测试已翻正为修复后契约（inherited keys → null）。",
+  "fanIn": 5,
+  "fanInEvidence": [
+    "services/backend/src/services/resilience/index.js",
+    "services/backend/src/services/tool/toolCalling.js",
+    "services/backend/src/services/domain/maintenance/selfHeal/fallbackTree.js",
+    "services/backend/src/services/domain/maintenance/selfHeal/errorDiagnostician.js",
+    "services/backend/src/services/domain/security/adversarial/stressHarness.js"
+  ],
+  "_fanIn_note": "5 个仓内消费者（实测 2026-09-28 探针 .khyos/tmp/b23-fanin.js：git ls-files 全量扫相对 require 路径并解析到本单元目录或其成员，去重计数，不含 *.test.js，不含单元内互引）。第 1 条 src/services/resilience/index.js 是归位后留下的再导出壳（module.exports = require('../domain/security/resilience')），按 [DESIGN-LAY-008] 第 0 步约定仍算真实入口；第 2 条 tool/toolCalling.js 经该壳间接消费（require('../resilience')），如实计入并在此标明「经壳」。其余 3 条是直接边：selfHeal 两件为惰性 require（在函数体内），adversarial/stressHarness.js 两处 require('../resilience')。tests/ 下另有 3 个 *.test.js 消费者按口径不计。注释里提到本单元的文件（如 maintenance/selfHeal/index.js:9）不计入：探针只认 require 解析结果，不认文本提及。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-28",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null,
+    "_stage_note": "stable 的依据是三条晋级判据此刻都在盘上：单元级 README.md、整数 fanIn 声明、8 个源文件各有同名同目录测试（129 个 node:test 用例全绿、0 skip）。provenance 如实写明它是机制建立后补记的存量：本单元是 Goal11「有限窗口降级与强制兜底」协议的落地件，早于入口缓冲守卫，缓冲区从未被经过，enteredVia: null。"
+  },
+  "contract": {
+    "purity": "errorSignature / deadLoopDetector / fallbackTree / budgetAdapters / salvage / intentTrees 六件为纯函数/纯内存叶子（零 IO、确定性、无定时器——RUNTIME-003/004 无涉）；budgetExecutor 与 index 是编排件，自身零 IO，一切副作用经注入的 runner/onDegrade/ctx.repair 走",
+    "ioOwner": "本单元不拥有任何 IO 面：不读盘、不发网络、不 spawn。工具调用副作用全部由调用方注入的 runner(tool, params, planMeta) 承载（index.makeToolRunner 负责把全局 executeTool 适配成该形状，非侵入）；降级上下文注入经 onDegrade 回调；唯一环境变量是地板百分比的缺省回填",
+    "injectionPoints": [
+      "runner(tool, params, planMeta)：唯一工具执行通道，BudgetAwareExecutor / ResilienceCoordinator 构造期注入（budgetExecutor.js / index.js）",
+      "budget：snapshot() → {totalUnits, remainingUnits, remainingPct} 契约，makeStepBudget/makeTokenBudget 或任意同形适配器（budgetAdapters.js）",
+      "detector：DeadLoopDetector 实例可注入复用（会话级共享），缺省每执行器新建（budgetExecutor.js）",
+      "onDegrade(text) / ctx.repair({node, failure, params, context})：模型在环的两个回调，抛异常均被吞、不影响降级推进（budgetExecutor.js）",
+      "Plan 级三个钩子：buildParams(ctx) / isSuccess(result) / extractSalvage(result)，builder 只收函数、其余归一为 null（fallbackTree.js）"
+    ],
+    "gates": [
+      "KHY_RESILIENCE_BUDGET_FLOOR_PCT：预算地板百分比（0–100），回填顺序 显式 floorPct → env → DEFAULT_FLOOR_PCT=10；越界/非数落入下一档（budgetExecutor.js）"
+    ],
+    "protocol_invariants": "① 降级树深度硬上限 3、每 Plan 重试上限硬编码 1，builder 越界即抛不静默截断；② 失败必向下降级，绝不回头重试上一 Plan；③ 同签名调用（相邻或跨位重复）判死强制跳过；④ 唯一一次重试仅在「修复后签名确实变了且新组合未被见过」时放行；⑤ 任一路径终点都交差完整兜底 JSON（status/intent/attempted_paths/salvage_data/next_action_suggestion 五字段恒在，attempted_paths 恒非空）；⑥ 执行器自身异常一律 fail-safe 收敛为 executor-error 兜底，绝不向上抛"
+  },
+  "tests": [
+    "budgetAdapters.test.js",
+    "budgetExecutor.test.js",
+    "deadLoopDetector.test.js",
+    "errorSignature.test.js",
+    "fallbackTree.test.js",
+    "index.test.js",
+    "intentTrees.test.js",
+    "salvage.test.js"
+  ],
+  "behaviourTestsOutsideUnit": [
+    "services/backend/tests/services/resilience/resilience.test.js",
+    "services/backend/tests/services/adversarial/adversarialEngine.test.js",
+    "services/backend/tests/services/selfHeal/selfHeal.test.js"
+  ],
+  "_test_dialect_note": "本目录 8 份共置测试一律 node:test（`node --test` 在 Windows 下须传显式文件名列表）。tests/ 下 3 份外部行为测试经再导出壳 require('../../../src/services/resilience') 命中本单元，同属 node:test 方言。"
+}

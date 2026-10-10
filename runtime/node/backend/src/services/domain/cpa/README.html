@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>cpa — CPA 密钥池、协议转换与服务面（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>cpa<span class="sep">›</span>cpa — CPA 密钥池、协议转换与服务面（D2）</div>
+      <header class="hero reveal"><h1>cpa — CPA 密钥池、协议转换与服务面（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#cpa-cpa-密钥池-协议转换与服务面-d2">cpa — CPA 密钥池、协议转换与服务面（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-需人裁决-ai-不代决">已知缺陷（登记，需人裁决，AI 不代决）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="cpa-cpa-密钥池-协议转换与服务面-d2">cpa — CPA 密钥池、协议转换与服务面（D2）<a class="anchor" href="#cpa-cpa-密钥池-协议转换与服务面-d2" aria-label="锚点">#</a></h1>
+<p>三个文件：<code>cpaKeyPool.js</code>（加密凭据池）、<code>cpaService.js</code>（服务面 + 端口探活）、<br><code>cpaProtocolConverter.js</code>（Anthropic ↔ OpenAI ↔ Gemini 的纯转换）。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong>目前只有测试</strong>：`tests/services/domain/cpa/{cpaService,cpaKeyPool,</li></ul>
+<p>cpaProtocolConverter}.test.js`。</p>
+<ul><li><strong>生产侧消费者：零</strong>（本次在 <code>services/backend/src</code>（本目录之外）、<code>apps/</code>、</li></ul>
+<p><code>platform/</code>、<code>scripts/</code>、<code>software/</code> 全量 grep <code>domain/cpa</code> 无命中）。<br>  相关提及全是注释：<code>constants/serviceDefaults.js:423,627</code>、<br>  <code>gateway/keyStrategyDict.js:9</code>。</p>
+<ul><li><strong>命令入口：无</strong>——<code>commandSchema.js</code> 与 <code>src/cli</code> 里没有 <code>cpa</code> 分派点。</li></ul>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p><code>cpaProtocolConverter.js</code> 头部（<code>:6</code>）写明「纯函数、无 IO、确定性」，<br>它确实不 require <code>fs</code>——协议转换必须是可表驱动的纯映射，<br>否则「同一条消息转成 OpenAI 形状」每次结果不同就没法验收。<br>IO 的两件各有单点：<code>cpaKeyPool.js:23</code> 只经 <code>fs</code> 写加密池，<br>落点走 <code>getDataDir('cpa')</code>（<code>:70</code>，规则 1：根来自 dataHome 而非字面量）；<br><code>cpaService.js:15</code> 用 <code>node:net</code> 做 <code>probePort</code> / <code>findAvailablePort</code><br>（端口不硬编码，符合规则 1 的端口韧性）。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/services/domain/cpa/cpaService.test.js          <span class="hljs-comment"># 7 tests / 7 pass / 0 fail</span></code></pre>
+<p>同目录另有 <code>cpaKeyPool.test.js</code>、<code>cpaProtocolConverter.test.js</code>（node:test，<br>本卡未复跑）。</p>
+<h2 id="已知缺陷-登记-需人裁决-ai-不代决">已知缺陷（登记，需人裁决，AI 不代决）<a class="anchor" href="#已知缺陷-登记-需人裁决-ai-不代决" aria-label="锚点">#</a></h2>
+<p><strong>这是一个「已建好但零接线」的单元</strong>：没有命令入口、没有生产 require，<br>只有设计文档（DESIGN-CPA-002 P1）与三个测试。按 <code>[RESEARCH-018]</code> 的立场，<br>这属于「新机制先落缓冲区再晋级」的正当形态，但也可以被裁为「未完成的特性」。<br>无论哪种，<strong>删除或接线都必须由人决定</strong>：删除属规则 7（部位清单 +<br>可执行 <code>rollback.txt</code> + 文档背书核查，而它正有设计文档背书 → 会被<br><code>delete-documented-code</code> 拒放行）；接线属规则 6（需求五问）。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/services/domain/config/README.html"><div class="dir">← 上一篇</div><div class="ttl">config — 通道卡片（cc-switch）、自然语言配置意图与键位表（D2）</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/services/domain/data/README.html"><div class="dir">下一篇 →</div><div class="ttl">data — 数据落点、资源安装、逆向工程与上游研读（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/cpa/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

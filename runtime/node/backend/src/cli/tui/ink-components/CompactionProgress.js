@@ -1,0 +1,205 @@
+'use strict';
+
+/**
+ * CompactionProgress — Claude-Code-style "Compacting conversation…" indicator.
+ *
+ * Renders a hatched progress bar tied to the real compression stages emitted by
+ * buildSlidingWindow (prune → guard → AI summary → done). The backend reports
+ * milestone floors (pct) per stage; this component eases the displayed
+ * percentage upward between floors so the bar keeps moving during the long
+ * AI-summary pole, and on the `done` stage keeps stepping 1% at a time up to
+ * 100% instead of filling in one frame. Honours KHY_REDUCED_MOTION by rendering
+ * a static frame at the latest milestone floor.
+ *
+ * Props:
+ *   compaction: { pct, stage, tokensBefore, startedAt }
+ */
+const React = require('react');
+
+const { formatStatusMessage } = require('../../statusMessageFormatter');
+const inkRuntime = require('../inkRuntime');
+
+const REDUCED_MOTION = process.env.KHY_REDUCED_MOTION === '1';
+const BAR_WIDTH = 24;
+
+// 渐进节拍引擎（条的唯一画法真源 + 门控）。fail-soft require：压缩条渲染绝不能抛。
+let _progressive = null;
+try {
+  _progressive = require('../../../services/progressiveProgress');
+} catch {
+  _progressive = null;
+}
+
+function _pacedEnabled() {
+  try {
+    return _progressive && typeof _progressive.isPacedEnabled === 'function'
+      ? _progressive.isPacedEnabled(process.env)
+      : false;
+  } catch {
+    return false;
+  }
+}
+
+// 阶段标签单一真源：cli/compactionDisplay（与 REPL 进度行同源，改一处两端同步）。
+const { STAGE_LABELS } = require('../../compactionDisplay');
+
+// CC 后端口径对齐:压缩进度条左侧的「已耗时」走与 spinner/turn-stats 同一个时长格式 SSOT
+// (ccFormatDuration,CC `src/utils/format.ts formatDuration` 的忠实移植)。原本地实现
+// **逐秒 floor**(`Math.floor(ms/1000)` 再拆分),与 CC 在两处分叉:
+//   ① ≥60s 时 CC 对**分内秒**用 `Math.round((ms%60000)/1000)`(60500ms→"1m 1s"),
+//      本地 floor 给 "1m 0s"——压缩耗时正好过整分钟时差 1 秒;
+//   ② CC 进位到**小时/天**("1h 1m 1s"),本地只到分钟("61m 1s")。
+// 这正是 ccFormat.js 头部点名的「另写一套近似口径」反模式。改为委托 ccFormatDuration。
+//   门控 KHY_COMPACTION_CC_FORMAT(默认开)→ ccFormatDuration;关 → 逐字节回退旧 floor 实现。
+//   ccFormat require 包在 try 里,任何异常静默回退旧实现,绝不让进度条渲染抛错。
+function formatElapsed(ms, env = process.env) {
+  const v = String((env && env.KHY_COMPACTION_CC_FORMAT) || '')
+    .trim()
+    .toLowerCase();
+  const ccMode = !(v === '0' || v === 'false' || v === 'off' || v === 'no');
+  if (ccMode) {
+    try {
+      const fmt = require('../../ccFormat').ccFormatDuration;
+      if (typeof fmt === 'function') {
+        const out = fmt(Math.max(0, Number(ms) || 0));
+        if (out) {
+          return out;
+        }
+      }
+    } catch {
+      /* fall through to the legacy floor implementation below */
+    }
+  }
+  const totalSec = Math.floor(Math.max(0, ms) / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return m > 0 ? `${m}m ${s}s` : `${s}s`;
+}
+
+// CC 后端口径对齐:压缩进度条的「↑ N tokens」走与页脚/spinner 同一个紧凑 token 格式 SSOT
+// (ccFormatTokens,CC formatTokens 的忠实移植——紧凑记数且**去掉尾随 ".0"**:24000→"24k"、
+// 1000→"1k",而非旧本地实现的 "24.0k"/"1.0k";非整千值如 1500→"1.5k"/12345→"12.3k" 两者本就一致)。
+// 保留「tokensBefore<=0 → 空串隐藏该段」的旧行为(ccFormatTokens(0) 会返 "0",故 0 守卫在最前)。
+//   门控 KHY_COMPACTION_CC_TOKENS(默认开)→ ccFormatTokens;关 → 逐字节回退旧的 toFixed(1)+"k"。
+//   ccFormat require 包在 try 里,任何异常静默回退旧实现,绝不让进度条渲染抛错。
+function formatTokens(n, env = process.env) {
+  if (!n || n <= 0) {
+    return '';
+  }
+  const v = String((env && env.KHY_COMPACTION_CC_TOKENS) || '')
+    .trim()
+    .toLowerCase();
+  const ccMode = !(v === '0' || v === 'false' || v === 'off' || v === 'no');
+  if (ccMode) {
+    try {
+      const fmt = require('../../ccFormat').ccFormatTokens;
+      if (typeof fmt === 'function') {
+        return fmt(n);
+      }
+    } catch {
+      /* fall through to the legacy form below */
+    }
+  }
+  if (n >= 1000) {
+    return `${(n / 1000).toFixed(1)}k`;
+  }
+  return String(n);
+}
+
+function CompactionProgress({ compaction }) {
+  const { Box, Text } = inkRuntime.get();
+  const h = React.createElement;
+
+  // 后端报的是**里程碑地板**（prune → guard → AI 摘要 → done），跨度很大：一次压缩里
+  // 「生成摘要」这一极可能独占几十秒，地板从 45% 到 90% 之间**一个数都不变** ——
+  // 条看着就是冻住的。渐进节拍接管显示值：以地板为权威目标，1% 1% 地追赶它
+  // （**永不越过地板** —— 不谎报任何里程碑已完成），`done` 之后仍 1% 1% 走到 100%。
+  // 门关 / 引擎不可用 / 减少动效 → 逐字节回退到「只画后端地板」的今日观感。
+  const floor = Math.max(0, Math.min(100, Number(compaction && compaction.pct) || 0));
+  const stage = (compaction && compaction.stage) || 'starting';
+  const tokensBefore = Number(compaction && compaction.tokensBefore) || 0;
+  const startedAt = Number(compaction && compaction.startedAt) || Date.now();
+  const done = stage === 'done';
+
+  const [now, setNow] = React.useState(Date.now());
+
+  // 节拍器：一次压缩只建一次，跨渲染保持；地板推进只通过 observe() 喂进去。
+  const pacerRef = React.useRef(null);
+  const pacer = React.useMemo(() => {
+    if (REDUCED_MOTION || !_progressive || !_pacedEnabled()) {
+      return null;
+    }
+    try {
+      // 起点播种为**挂载那一刻的地板**：压缩中途才挂载时不该从 0% 重来。
+      return _progressive.createPacer({ determinate: true, startPercent: Math.round(floor) });
+    } catch {
+      return null;
+    }
+    // 只建一次：floor 的变化走下方的 observe()，不能作为依赖重建（重建即丢进度）。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  pacerRef.current = pacer;
+  if (pacer) {
+    pacer.observe(floor);
+    // `done` 只宣告「工作结束」—— 剩下的距离仍由同一套 1%/帧 的节拍走过去（96 → 100 四帧），
+    // 而不是把显示值一帧填满。旧的 `done ? 100` 就是「卡在一个地方很久，然后突然加载完成」。
+    if (done) {
+      pacer.finish();
+    }
+  }
+
+  // Keep the scanning cursor moving even when percentage stalls — this is the
+  // honest activity indicator (it doesn't claim progress, just shows liveness).
+  React.useEffect(() => {
+    if (REDUCED_MOTION) {
+      return undefined;
+    }
+    const id = setInterval(() => setNow(Date.now()), 120);
+    return () => clearInterval(id);
+  }, []);
+
+  // Animation phase: cycling dots + scanning cursor (activity, not progress).
+  const anim = Math.floor(now / 260) % 4;
+  const dots = '.'.repeat(anim);
+  const sweep = Math.floor(now / 220) % Math.max(1, BAR_WIDTH);
+
+  // 显示值：节拍器在时 1% 1% 追赶地板（`done` 之后继续 1% 1% 收尾到 100）；
+  // 不在时（门关/减少动效）直接画地板 —— 那一档本来就没有动效。
+  const shown = pacer ? pacer.percent() : floor;
+  const filled = Math.round((shown / 100) * BAR_WIDTH);
+  const remaining = Math.max(0, BAR_WIDTH - filled);
+  let tail = '░'.repeat(remaining);
+  if (!done && remaining > 0) {
+    const pos = sweep % remaining;
+    tail = tail.slice(0, pos) + '▒' + tail.slice(pos + 1);
+  }
+  const bar = '█'.repeat(filled) + tail;
+  const elapsed = formatElapsed(now - startedAt);
+  const tokenStr = formatTokens(tokensBefore);
+  const stageLabel = STAGE_LABELS[stage] || formatStatusMessage('压缩', '会话上下文', `${shown}%`);
+
+  return h(
+    Box,
+    { flexDirection: 'column', marginTop: 1 },
+    h(
+      Text,
+      null,
+      h(Text, { color: 'magenta' }, '✻ '),
+      h(Text, { color: 'magenta' }, `正在压缩对话${dots} `),
+      h(Text, { dimColor: true }, `(${elapsed}${tokenStr ? ` · ↑ ${tokenStr} tokens` : ''})`)
+    ),
+    h(
+      Text,
+      null,
+      h(Text, { color: 'magenta' }, bar),
+      h(Text, { dimColor: true }, ` ${shown}%  ${stageLabel}`)
+    )
+  );
+}
+
+module.exports = CompactionProgress;
+module.exports.formatTokens = formatTokens;
+module.exports.formatElapsed = formatElapsed;
+// 阶段标签再导出：parity 测试锁「组件与 compactionDisplay 单一真源一致」。
+module.exports.STAGE_LABELS = STAGE_LABELS;
+

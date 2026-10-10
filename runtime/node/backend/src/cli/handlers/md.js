@@ -1,0 +1,308 @@
+'use strict';
+
+/**
+ * md handler — `khy md …`
+ *
+ * MarkText(muya)所见即所得 Markdown 工作台 + 系统右键「打开方式」注册。
+ *
+ *   khy md <file>            用 muya 打开某 .md（等同 open）
+ *   khy md open <file>       同上
+ *   khy md register          把 khyosMarkdown 注册进系统「打开方式」(.md 关联)
+ *   khy md unregister        移除该关联
+ *
+ * 底层复用 khy-markdown 拓展（delivery/extension/tools/khy-markdown/，[DESIGN-TOOL-002] 拓展契约）：
+ *   - khyos-md-bridge.js：127.0.0.1 同源桥接器（消 CORS + token 鉴权 + /vendor 静态服务）。
+ *   - khyosMarkdown.html：门控加载同源本地 muya 引擎产物 vendor/，失败逐字节回退零依赖内联引擎。
+ *   - register-linux.sh / register-windows.ps1：用户级关联（~/.local / HKCU，无 sudo/UAC）。
+ *
+ * 门控：KHY_MD_EDITOR（default-on）整体开关；KHY_MD_WYSIWYG（default-on）决定是否加载 muya。
+ * 全程 fail-soft：脚本缺失/平台不支持/桥接器异常都只提示，绝不抛、绝不 500。
+ */
+
+const fs = require('fs');
+const path = require('path');
+const { MANIFEST_EXPORT_KEY } = require('../commandManifest');
+
+function fmt() {
+  return require('../formatters');
+}
+
+function flagOn(name) {
+  try {
+    return require('../../services/flagRegistry').isFlagEnabled(name);
+  } catch (_) {
+    return true;
+  } // 保守：注册表不可用时视为开（default-on 语义）。
+}
+
+/**
+ * 定位 Markdown 工作台拓展目录。
+ *
+ * 实现已下沉到 services/delivery/extension/markdownWorkbench —— 本 handler 不再自己知道
+ * 「那个拓展叫什么、在磁盘的哪一层」，只知道它要一个 `markdown-workbench` 服务。
+ * 此处保留同名导出，是因为它已是既有测试与 deps 注入的契约面（改名只会制造无谓的
+ * 改动面），转发一层的代价换来四个调用点共用同一条解析路径。
+ *
+ * @returns {string|null} 绝对路径；未安装 / 已删目录 → null（调用方给提示，不抛）
+ */
+function resolveToolsDir() {
+  try {
+    return require('../../services/domain/extensions/extensions/markdownWorkbench.js').resolveDir();
+  } catch (_) {
+    return null; // 模块被裁剪 → 与「没装这个拓展」同一路径，不新增分支
+  }
+}
+
+function resolveLocalVendorDir(toolsDir) {
+  const vendorDir = path.join(toolsDir, 'vendor');
+  const required = ['MANIFEST.json', 'khyos-muya.js', 'khyos-muya.css'];
+  return required.every(name => {
+    try {
+      return fs.statSync(path.join(vendorDir, name)).isFile();
+    } catch (_) {
+      return false;
+    }
+  })
+    ? vendorDir
+    : null;
+}
+
+async function resolveVendorDir(toolsDir, printInfo, printWarn) {
+  const local = resolveLocalVendorDir(toolsDir);
+  if (local) return local;
+
+  printInfo('获取 Markdown WYSIWYG 资源（正在读取 Release 清单）');
+  const { ensurePayload } = require('../../services/payloadProvisioner');
+  let lastProgressBytes = -1;
+  const result = await ensurePayload('markdown-vendor', {
+    onProgress(progress) {
+      const received = Number(progress.received) || 0;
+      const total = Number(progress.total) || 0;
+      if (received !== total && received - lastProgressBytes < 512 * 1024) return;
+      lastProgressBytes = received;
+      const done = (received / 1024 / 1024).toFixed(1);
+      const all = total > 0 ? `/${(total / 1024 / 1024).toFixed(1)}MB` : 'MB';
+      printInfo(`下载 Markdown WYSIWYG 资源 ${progress.asset}（${done}${all}）`);
+    },
+  });
+  if (result.ok) return result.targetDir;
+
+  printWarn('Markdown WYSIWYG 资源自动获取未完成，本次使用内联引擎。');
+  printInfo(`手动获取清单: ${result.manualUrl}`);
+  printInfo(`放置目录: ${result.targetDir}`);
+  if (result.reason) printInfo(`获取状态: ${result.reason}`);
+  printInfo('离线时可在联网设备下载清单中的 markdown-vendor 文件后复制到放置目录。');
+  return null;
+}
+
+/** 打开 muya 工作台：起桥接器（内部自开浏览器），保持进程存活直到 Ctrl+C。 */
+async function openEditor(targetPath) {
+  const { printInfo, printError, printWarn, printSuccess } = fmt();
+  const toolsDir = resolveToolsDir();
+  if (!toolsDir) {
+    printError('未找到 khy-markdown 拓展（delivery/extension/tools/khy-markdown）。');
+    printInfo('可设置 KHY_MD_TOOLS_DIR 指向该目录后重试。');
+    return true;
+  }
+  let bridge;
+  try {
+    bridge = require(path.join(toolsDir, 'khyos-md-bridge.js'));
+  } catch (e) {
+    printError('加载桥接器失败：' + e.message);
+    return true;
+  }
+
+  let abs = '';
+  if (targetPath) {
+    const base = process.env.KHYQUANT_CWD || process.cwd();
+    abs = path.resolve(base, String(targetPath));
+    if (!fs.existsSync(abs)) {
+      printWarn('目标文件不存在，将以空白工作台打开：' + abs);
+    }
+  }
+
+  let wysiwyg = flagOn('KHY_MD_WYSIWYG');
+  let vendorDir;
+  if (wysiwyg) {
+    vendorDir = await resolveVendorDir(toolsDir, printInfo, printWarn);
+    if (!vendorDir) wysiwyg = false;
+  }
+  // 非 REPL 单次调用启用 autoShutdown：关浏览器标签即干净退出、释放终端，不留常驻孤儿服务；
+  // REPL 模式后台复用桥接器，故禁用（由 REPL 生命周期管理）。env KHY_MD_AUTO_SHUTDOWN 可门控回退。
+  const autoShutdown = process.env.KHY_REPL_ACTIVE !== '1';
+  let handle;
+  try {
+    handle = await bridge.startBridge({
+      targetPath: abs || undefined,
+      wysiwyg,
+      vendorDir,
+      autoShutdown,
+    });
+  } catch (e) {
+    printError('启动 Markdown 工作台失败：' + e.message);
+    return true;
+  }
+  printSuccess(
+    'khyosMarkdown 已就绪' + (wysiwyg ? '（muya WYSIWYG）' : '（内联引擎）') + '：' + handle.url
+  );
+
+  // REPL 内：桥接器 socket 常驻后台，直接返回不阻塞，编辑器持续可用。
+  if (process.env.KHY_REPL_ACTIVE === '1') {
+    return true;
+  }
+
+  // 非 REPL 单次调用：监听 socket 已保活事件循环；显式阻塞 stdin 并挂 SIGINT 清理，
+  // 让用户 Ctrl+C 干净关闭。
+  printInfo('编辑器运行中，按 Ctrl+C 关闭。');
+  const shutdown = () => {
+    try {
+      handle.server.close();
+    } catch (_) {}
+    process.exit(0);
+  };
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
+  try {
+    process.stdin.resume();
+  } catch (_) {}
+  // 永不 resolve 的等待：由 SIGINT/SIGTERM 结束进程。
+  await new Promise(() => {});
+  return true;
+}
+
+/** 注册/注销系统「打开方式」关联（平台脚本 spawn，fail-soft）。 */
+function runRegisterScript(action) {
+  const { printInfo, printError, printWarn, printSuccess } = fmt();
+  const toolsDir = resolveToolsDir();
+  if (!toolsDir) {
+    printError('未找到 khy-markdown 拓展（delivery/extension/tools/khy-markdown）。');
+    printInfo('可设置 KHY_MD_TOOLS_DIR 指向该目录后重试。');
+    return true;
+  }
+
+  const plat = process.platform;
+  let cmd, scriptArgs, scriptFile;
+  if (plat === 'win32') {
+    scriptFile = action === 'register' ? 'register-windows.ps1' : 'unregister-windows.ps1';
+    cmd = 'powershell';
+    scriptArgs = [
+      '-NoProfile',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-File',
+      path.join(toolsDir, scriptFile),
+    ];
+  } else if (plat === 'linux') {
+    scriptFile = action === 'register' ? 'register-linux.sh' : 'unregister-linux.sh';
+    cmd = 'bash';
+    scriptArgs = [path.join(toolsDir, scriptFile)];
+  } else {
+    // darwin 及其他：暂无脚本（既有注册脚本仅覆盖 Linux/Windows）。
+    printWarn('当前平台（' + plat + '）暂不支持自动注册「打开方式」。');
+    printInfo('可手动将 ' + path.join(toolsDir, 'khyos-md-bridge.js') + ' 关联到 .md 文件。');
+    return true;
+  }
+
+  const scriptPath = path.join(toolsDir, scriptFile);
+  if (!fs.existsSync(scriptPath)) {
+    printError('注册脚本缺失：' + scriptPath);
+    return true;
+  }
+
+  const { spawnSync } = require('child_process');
+  let r;
+  try {
+    r = spawnSync(cmd, scriptArgs, { cwd: toolsDir, stdio: 'inherit' });
+  } catch (e) {
+    printError((action === 'register' ? '注册' : '注销') + '失败：' + e.message);
+    return true;
+  }
+  if (r && r.status === 0) {
+    printSuccess(
+      action === 'register'
+        ? 'khyosMarkdown 已注册到系统「打开方式」——右键 .md 即可选择。'
+        : 'khyosMarkdown 关联已移除。'
+    );
+  } else {
+    printWarn(
+      (action === 'register' ? '注册' : '注销') +
+        '脚本返回非零（status=' +
+        (r ? r.status : 'n/a') +
+        '）；请检查上方输出。'
+    );
+  }
+  return true;
+}
+
+async function handleMd(parsed = {}) {
+  const { printInfo, printWarn } = fmt();
+
+  if (!flagOn('KHY_MD_EDITOR')) {
+    printWarn('Markdown 工作台已禁用（KHY_MD_EDITOR=0）。');
+    return true;
+  }
+
+  const rawArgs = Array.isArray(parsed.args) ? parsed.args.slice() : [];
+  let sub = String(parsed.subCommand || '').toLowerCase();
+  let rest = rawArgs;
+  const KNOWN = new Set(['open', 'register', 'unregister']);
+  if (!KNOWN.has(sub)) {
+    if (rawArgs.length && KNOWN.has(String(rawArgs[0]).toLowerCase())) {
+      sub = String(rawArgs[0]).toLowerCase();
+      rest = rawArgs.slice(1);
+    } else {
+      // 裸 `khy md <file>` → open；`khy md` 无参 → 项目内嵌浏览模式。
+      sub = 'open';
+    }
+  }
+
+  if (sub === 'register' || sub === 'unregister') {
+    return runRegisterScript(sub);
+  }
+
+  // --ai 选项：启用 AI 辅助写作（设置环境变量让 bridge 知道 AI 可用）
+  const hasAI = rawArgs.includes('--ai') || (parsed.options && parsed.options.ai);
+  if (hasAI) {
+    process.env.KHY_MD_AI_ENABLED = '1';
+    // 如果 khy 后端 AI 网关已运行，传递端口
+    if (!process.env.KHY_AI_GATEWAY_PORT) {
+      try {
+        // Portable-aware app home; fallback to legacy path when unavailable.
+        let configPath;
+        try {
+          const { getAppHome } = require('../../utils/dataHome');
+          configPath = path.join(getAppHome(), 'config.json');
+        } catch {
+          configPath = path.join(require('os').homedir(), '.khyquant', 'config.json');
+        }
+        const cfg = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        if (cfg.ai_gateway_port) {
+          process.env.KHY_AI_GATEWAY_PORT = String(cfg.ai_gateway_port);
+        }
+      } catch (_) {
+        /* 配置不可用，bridge 自行降级 */
+      }
+    }
+    printInfo('AI 辅助写作已启用（Ctrl+Shift+A 打开 AI 面板）');
+  }
+
+  // open
+  const file = rest.find((a) => a && !String(a).startsWith('-'));
+  return await openEditor(file || '');
+}
+
+module.exports = {
+  handleMd,
+  resolveToolsDir,
+  resolveLocalVendorDir,
+  resolveVendorDir,
+  [MANIFEST_EXPORT_KEY]: {
+    name: 'md',
+    aliases: ['markdown', 'mdeditor'],
+    description: 'Muya WYSIWYG Markdown 工作台：打开/注册/取消注册 .md 文件关联',
+    usage: 'md <file> | open <file> | register | unregister',
+    subCommands: ['open', 'register', 'unregister'],
+    category: 'dev',
+    handler: handleMd,
+  },
+};

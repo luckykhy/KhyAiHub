@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: prompt.md -->
+<title>Security and Hardening · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>security-and-hardening<span class="sep">›</span>Security and Hardening</div>
+      <header class="hero reveal"><h1>Security and Hardening</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#security-and-hardening">Security and Hardening</a></li><li class="lvl-2"><a href="#overview">Overview</a></li><li class="lvl-2"><a href="#when-to-use">When to Use</a></li><li class="lvl-2"><a href="#the-three-tier-boundary-system">The Three-Tier Boundary System</a></li><li class="lvl-3"><a href="#always-do-no-exceptions">Always Do (No Exceptions)</a></li><li class="lvl-3"><a href="#ask-first-requires-human-approval">Ask First (Requires Human Approval)</a></li><li class="lvl-3"><a href="#never-do">Never Do</a></li><li class="lvl-2"><a href="#owasp-top-10-prevention">OWASP Top 10 Prevention</a></li><li class="lvl-3"><a href="#1-injection-sql-nosql-os-command">1. Injection (SQL, NoSQL, OS Command)</a></li><li class="lvl-3"><a href="#2-broken-authentication">2. Broken Authentication</a></li><li class="lvl-3"><a href="#3-cross-site-scripting-xss">3. Cross-Site Scripting (XSS)</a></li><li class="lvl-3"><a href="#4-broken-access-control">4. Broken Access Control</a></li><li class="lvl-3"><a href="#5-security-misconfiguration">5. Security Misconfiguration</a></li><li class="lvl-3"><a href="#6-sensitive-data-exposure">6. Sensitive Data Exposure</a></li><li class="lvl-2"><a href="#input-validation-patterns">Input Validation Patterns</a></li><li class="lvl-3"><a href="#schema-validation-at-boundaries">Schema Validation at Boundaries</a></li><li class="lvl-3"><a href="#file-upload-safety">File Upload Safety</a></li><li class="lvl-2"><a href="#triaging-npm-audit-results">Triaging npm audit Results</a></li><li class="lvl-2"><a href="#rate-limiting">Rate Limiting</a></li><li class="lvl-2"><a href="#secrets-management">Secrets Management</a></li><li class="lvl-2"><a href="#security-review-checklist">Security Review Checklist</a></li><li class="lvl-2"><a href="#see-also">See Also</a></li><li class="lvl-2"><a href="#common-rationalizations">Common Rationalizations</a></li><li class="lvl-2"><a href="#red-flags">Red Flags</a></li><li class="lvl-2"><a href="#verification">Verification</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="security-and-hardening">Security and Hardening<a class="anchor" href="#security-and-hardening" aria-label="锚点">#</a></h1>
+<h2 id="overview">Overview<a class="anchor" href="#overview" aria-label="锚点">#</a></h2>
+<p>Security-first development practices for web applications. Treat every external input as hostile, every secret as sacred, and every authorization check as mandatory. Security isn't a phase — it's a constraint on every line of code that touches user data, authentication, or external systems.</p>
+<h2 id="when-to-use">When to Use<a class="anchor" href="#when-to-use" aria-label="锚点">#</a></h2>
+<ul><li>Building anything that accepts user input</li><li>Implementing authentication or authorization</li><li>Storing or transmitting sensitive data</li><li>Integrating with external APIs or services</li><li>Adding file uploads, webhooks, or callbacks</li><li>Handling payment or PII data</li></ul>
+<h2 id="the-three-tier-boundary-system">The Three-Tier Boundary System<a class="anchor" href="#the-three-tier-boundary-system" aria-label="锚点">#</a></h2>
+<h3 id="always-do-no-exceptions">Always Do (No Exceptions)<a class="anchor" href="#always-do-no-exceptions" aria-label="锚点">#</a></h3>
+<ul><li><strong>Validate all external input</strong> at the system boundary (API routes, form handlers)</li><li><strong>Parameterize all database queries</strong> — never concatenate user input into SQL</li><li><strong>Encode output</strong> to prevent XSS (use framework auto-escaping, don't bypass it)</li><li><strong>Use HTTPS</strong> for all external communication</li><li><strong>Hash passwords</strong> with bcrypt/scrypt/argon2 (never store plaintext)</li><li><strong>Set security headers</strong> (CSP, HSTS, X-Frame-Options, X-Content-Type-Options)</li><li><strong>Use httpOnly, secure, sameSite cookies</strong> for sessions</li><li><strong>Run <code>npm audit</code></strong> (or equivalent) before every release</li></ul>
+<h3 id="ask-first-requires-human-approval">Ask First (Requires Human Approval)<a class="anchor" href="#ask-first-requires-human-approval" aria-label="锚点">#</a></h3>
+<ul><li>Adding new authentication flows or changing auth logic</li><li>Storing new categories of sensitive data (PII, payment info)</li><li>Adding new external service integrations</li><li>Changing CORS configuration</li><li>Adding file upload handlers</li><li>Modifying rate limiting or throttling</li><li>Granting elevated permissions or roles</li></ul>
+<h3 id="never-do">Never Do<a class="anchor" href="#never-do" aria-label="锚点">#</a></h3>
+<ul><li><strong>Never commit secrets</strong> to version control (API keys, passwords, tokens)</li><li><strong>Never log sensitive data</strong> (passwords, tokens, full credit card numbers)</li><li><strong>Never trust client-side validation</strong> as a security boundary</li><li><strong>Never disable security headers</strong> for convenience</li><li><strong>Never use <code>eval()</code> or <code>innerHTML</code></strong> with user-provided data</li><li><strong>Never store sessions in client-accessible storage</strong> (localStorage for auth tokens)</li><li><strong>Never expose stack traces</strong> or internal error details to users</li></ul>
+<h2 id="owasp-top-10-prevention">OWASP Top 10 Prevention<a class="anchor" href="#owasp-top-10-prevention" aria-label="锚点">#</a></h2>
+<h3 id="1-injection-sql-nosql-os-command">1. Injection (SQL, NoSQL, OS Command)<a class="anchor" href="#1-injection-sql-nosql-os-command" aria-label="锚点">#</a></h3>
+<pre><code class="language-typescript"><span class="hljs-comment">// BAD: SQL injection via string concatenation</span>
+<span class="hljs-keyword">const</span> query = <span class="hljs-string">`SELECT * FROM users WHERE id = &#x27;<span class="hljs-subst">${userId}</span>&#x27;`</span>;
+
+<span class="hljs-comment">// GOOD: Parameterized query</span>
+<span class="hljs-keyword">const</span> user = <span class="hljs-keyword">await</span> db.<span class="hljs-title function_">query</span>(<span class="hljs-string">&#x27;SELECT * FROM users WHERE id = $1&#x27;</span>, [userId]);
+
+<span class="hljs-comment">// GOOD: ORM with parameterized input</span>
+<span class="hljs-keyword">const</span> user = <span class="hljs-keyword">await</span> prisma.<span class="hljs-property">user</span>.<span class="hljs-title function_">findUnique</span>({ <span class="hljs-attr">where</span>: { <span class="hljs-attr">id</span>: userId } });</code></pre>
+<h3 id="2-broken-authentication">2. Broken Authentication<a class="anchor" href="#2-broken-authentication" aria-label="锚点">#</a></h3>
+<pre><code class="language-typescript"><span class="hljs-comment">// Password hashing</span>
+<span class="hljs-keyword">import</span> { hash, compare } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;bcrypt&#x27;</span>;
+
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">SALT_ROUNDS</span> = <span class="hljs-number">12</span>;
+<span class="hljs-keyword">const</span> hashedPassword = <span class="hljs-keyword">await</span> <span class="hljs-title function_">hash</span>(plaintext, <span class="hljs-variable constant_">SALT_ROUNDS</span>);
+<span class="hljs-keyword">const</span> isValid = <span class="hljs-keyword">await</span> <span class="hljs-title function_">compare</span>(plaintext, hashedPassword);
+
+<span class="hljs-comment">// Session management</span>
+app.<span class="hljs-title function_">use</span>(<span class="hljs-title function_">session</span>({
+  <span class="hljs-attr">secret</span>: process.<span class="hljs-property">env</span>.<span class="hljs-property">SESSION_SECRET</span>,  <span class="hljs-comment">// From environment, not code</span>
+  <span class="hljs-attr">resave</span>: <span class="hljs-literal">false</span>,
+  <span class="hljs-attr">saveUninitialized</span>: <span class="hljs-literal">false</span>,
+  <span class="hljs-attr">cookie</span>: {
+    <span class="hljs-attr">httpOnly</span>: <span class="hljs-literal">true</span>,     <span class="hljs-comment">// Not accessible via JavaScript</span>
+    <span class="hljs-attr">secure</span>: <span class="hljs-literal">true</span>,       <span class="hljs-comment">// HTTPS only</span>
+    <span class="hljs-attr">sameSite</span>: <span class="hljs-string">&#x27;lax&#x27;</span>,    <span class="hljs-comment">// CSRF protection</span>
+    <span class="hljs-attr">maxAge</span>: <span class="hljs-number">24</span> * <span class="hljs-number">60</span> * <span class="hljs-number">60</span> * <span class="hljs-number">1000</span>,  <span class="hljs-comment">// 24 hours</span>
+  },
+}));</code></pre>
+<h3 id="3-cross-site-scripting-xss">3. Cross-Site Scripting (XSS)<a class="anchor" href="#3-cross-site-scripting-xss" aria-label="锚点">#</a></h3>
+<pre><code class="language-typescript"><span class="hljs-comment">// BAD: Rendering user input as HTML</span>
+element.<span class="hljs-property">innerHTML</span> = userInput;
+
+<span class="hljs-comment">// GOOD: Use framework auto-escaping (React does this by default)</span>
+<span class="hljs-keyword">return</span> <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>{userInput}<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></span>;
+
+<span class="hljs-comment">// If you MUST render HTML, sanitize first</span>
+<span class="hljs-keyword">import</span> <span class="hljs-title class_">DOMPurify</span> <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;dompurify&#x27;</span>;
+<span class="hljs-keyword">const</span> clean = <span class="hljs-title class_">DOMPurify</span>.<span class="hljs-title function_">sanitize</span>(userInput);</code></pre>
+<h3 id="4-broken-access-control">4. Broken Access Control<a class="anchor" href="#4-broken-access-control" aria-label="锚点">#</a></h3>
+<pre><code class="language-typescript"><span class="hljs-comment">// Always check authorization, not just authentication</span>
+app.<span class="hljs-title function_">patch</span>(<span class="hljs-string">&#x27;/api/tasks/:id&#x27;</span>, authenticate, <span class="hljs-title function_">async</span> (req, res) =&gt; {
+  <span class="hljs-keyword">const</span> task = <span class="hljs-keyword">await</span> taskService.<span class="hljs-title function_">findById</span>(req.<span class="hljs-property">params</span>.<span class="hljs-property">id</span>);
+
+  <span class="hljs-comment">// Check that the authenticated user owns this resource</span>
+  <span class="hljs-keyword">if</span> (task.<span class="hljs-property">ownerId</span> !== req.<span class="hljs-property">user</span>.<span class="hljs-property">id</span>) {
+    <span class="hljs-keyword">return</span> res.<span class="hljs-title function_">status</span>(<span class="hljs-number">403</span>).<span class="hljs-title function_">json</span>({
+      <span class="hljs-attr">error</span>: { <span class="hljs-attr">code</span>: <span class="hljs-string">&#x27;FORBIDDEN&#x27;</span>, <span class="hljs-attr">message</span>: <span class="hljs-string">&#x27;Not authorized to modify this task&#x27;</span> }
+    });
+  }
+
+  <span class="hljs-comment">// Proceed with update</span>
+  <span class="hljs-keyword">const</span> updated = <span class="hljs-keyword">await</span> taskService.<span class="hljs-title function_">update</span>(req.<span class="hljs-property">params</span>.<span class="hljs-property">id</span>, req.<span class="hljs-property">body</span>);
+  <span class="hljs-keyword">return</span> res.<span class="hljs-title function_">json</span>(updated);
+});</code></pre>
+<h3 id="5-security-misconfiguration">5. Security Misconfiguration<a class="anchor" href="#5-security-misconfiguration" aria-label="锚点">#</a></h3>
+<pre><code class="language-typescript"><span class="hljs-comment">// Security headers (use helmet for Express)</span>
+<span class="hljs-keyword">import</span> helmet <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;helmet&#x27;</span>;
+app.<span class="hljs-title function_">use</span>(<span class="hljs-title function_">helmet</span>());
+
+<span class="hljs-comment">// Content Security Policy</span>
+app.<span class="hljs-title function_">use</span>(helmet.<span class="hljs-title function_">contentSecurityPolicy</span>({
+  <span class="hljs-attr">directives</span>: {
+    <span class="hljs-attr">defaultSrc</span>: [<span class="hljs-string">&quot;&#x27;self&#x27;&quot;</span>],
+    <span class="hljs-attr">scriptSrc</span>: [<span class="hljs-string">&quot;&#x27;self&#x27;&quot;</span>],
+    <span class="hljs-attr">styleSrc</span>: [<span class="hljs-string">&quot;&#x27;self&#x27;&quot;</span>, <span class="hljs-string">&quot;&#x27;unsafe-inline&#x27;&quot;</span>],  <span class="hljs-comment">// Tighten if possible</span>
+    <span class="hljs-attr">imgSrc</span>: [<span class="hljs-string">&quot;&#x27;self&#x27;&quot;</span>, <span class="hljs-string">&#x27;data:&#x27;</span>, <span class="hljs-string">&#x27;https:&#x27;</span>],
+    <span class="hljs-attr">connectSrc</span>: [<span class="hljs-string">&quot;&#x27;self&#x27;&quot;</span>],
+  },
+}));
+
+<span class="hljs-comment">// CORS — restrict to known origins</span>
+app.<span class="hljs-title function_">use</span>(<span class="hljs-title function_">cors</span>({
+  <span class="hljs-attr">origin</span>: process.<span class="hljs-property">env</span>.<span class="hljs-property">ALLOWED_ORIGINS</span>?.<span class="hljs-title function_">split</span>(<span class="hljs-string">&#x27;,&#x27;</span>) || <span class="hljs-string">&#x27;http://localhost:3000&#x27;</span>,
+  <span class="hljs-attr">credentials</span>: <span class="hljs-literal">true</span>,
+}));</code></pre>
+<h3 id="6-sensitive-data-exposure">6. Sensitive Data Exposure<a class="anchor" href="#6-sensitive-data-exposure" aria-label="锚点">#</a></h3>
+<pre><code class="language-typescript"><span class="hljs-comment">// Never return sensitive fields in API responses</span>
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">sanitizeUser</span>(<span class="hljs-params"><span class="hljs-attr">user</span>: <span class="hljs-title class_">UserRecord</span></span>): <span class="hljs-title class_">PublicUser</span> {
+  <span class="hljs-keyword">const</span> { passwordHash, resetToken, ...publicFields } = user;
+  <span class="hljs-keyword">return</span> publicFields;
+}
+
+<span class="hljs-comment">// Use environment variables for secrets</span>
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">API_KEY</span> = process.<span class="hljs-property">env</span>.<span class="hljs-property">STRIPE_API_KEY</span>;
+<span class="hljs-keyword">if</span> (!<span class="hljs-variable constant_">API_KEY</span>) <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">&#x27;STRIPE_API_KEY not configured&#x27;</span>);</code></pre>
+<h2 id="input-validation-patterns">Input Validation Patterns<a class="anchor" href="#input-validation-patterns" aria-label="锚点">#</a></h2>
+<h3 id="schema-validation-at-boundaries">Schema Validation at Boundaries<a class="anchor" href="#schema-validation-at-boundaries" aria-label="锚点">#</a></h3>
+<pre><code class="language-typescript"><span class="hljs-keyword">import</span> { z } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;zod&#x27;</span>;
+
+<span class="hljs-keyword">const</span> <span class="hljs-title class_">CreateTaskSchema</span> = z.<span class="hljs-title function_">object</span>({
+  <span class="hljs-attr">title</span>: z.<span class="hljs-title function_">string</span>().<span class="hljs-title function_">min</span>(<span class="hljs-number">1</span>).<span class="hljs-title function_">max</span>(<span class="hljs-number">200</span>).<span class="hljs-title function_">trim</span>(),
+  <span class="hljs-attr">description</span>: z.<span class="hljs-title function_">string</span>().<span class="hljs-title function_">max</span>(<span class="hljs-number">2000</span>).<span class="hljs-title function_">optional</span>(),
+  <span class="hljs-attr">priority</span>: z.<span class="hljs-title function_">enum</span>([<span class="hljs-string">&#x27;low&#x27;</span>, <span class="hljs-string">&#x27;medium&#x27;</span>, <span class="hljs-string">&#x27;high&#x27;</span>]).<span class="hljs-title function_">default</span>(<span class="hljs-string">&#x27;medium&#x27;</span>),
+  <span class="hljs-attr">dueDate</span>: z.<span class="hljs-title function_">string</span>().<span class="hljs-title function_">datetime</span>().<span class="hljs-title function_">optional</span>(),
+});
+
+<span class="hljs-comment">// Validate at the route handler</span>
+app.<span class="hljs-title function_">post</span>(<span class="hljs-string">&#x27;/api/tasks&#x27;</span>, <span class="hljs-title function_">async</span> (req, res) =&gt; {
+  <span class="hljs-keyword">const</span> result = <span class="hljs-title class_">CreateTaskSchema</span>.<span class="hljs-title function_">safeParse</span>(req.<span class="hljs-property">body</span>);
+  <span class="hljs-keyword">if</span> (!result.<span class="hljs-property">success</span>) {
+    <span class="hljs-keyword">return</span> res.<span class="hljs-title function_">status</span>(<span class="hljs-number">422</span>).<span class="hljs-title function_">json</span>({
+      <span class="hljs-attr">error</span>: {
+        <span class="hljs-attr">code</span>: <span class="hljs-string">&#x27;VALIDATION_ERROR&#x27;</span>,
+        <span class="hljs-attr">message</span>: <span class="hljs-string">&#x27;Invalid input&#x27;</span>,
+        <span class="hljs-attr">details</span>: result.<span class="hljs-property">error</span>.<span class="hljs-title function_">flatten</span>(),
+      },
+    });
+  }
+  <span class="hljs-comment">// result.data is now typed and validated</span>
+  <span class="hljs-keyword">const</span> task = <span class="hljs-keyword">await</span> taskService.<span class="hljs-title function_">create</span>(result.<span class="hljs-property">data</span>);
+  <span class="hljs-keyword">return</span> res.<span class="hljs-title function_">status</span>(<span class="hljs-number">201</span>).<span class="hljs-title function_">json</span>(task);
+});</code></pre>
+<h3 id="file-upload-safety">File Upload Safety<a class="anchor" href="#file-upload-safety" aria-label="锚点">#</a></h3>
+<pre><code class="language-typescript"><span class="hljs-comment">// Restrict file types and sizes</span>
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">ALLOWED_TYPES</span> = [<span class="hljs-string">&#x27;image/jpeg&#x27;</span>, <span class="hljs-string">&#x27;image/png&#x27;</span>, <span class="hljs-string">&#x27;image/webp&#x27;</span>];
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">MAX_SIZE</span> = <span class="hljs-number">5</span> * <span class="hljs-number">1024</span> * <span class="hljs-number">1024</span>; <span class="hljs-comment">// 5MB</span>
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">validateUpload</span>(<span class="hljs-params"><span class="hljs-attr">file</span>: <span class="hljs-title class_">UploadedFile</span></span>) {
+  <span class="hljs-keyword">if</span> (!<span class="hljs-variable constant_">ALLOWED_TYPES</span>.<span class="hljs-title function_">includes</span>(file.<span class="hljs-property">mimetype</span>)) {
+    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">ValidationError</span>(<span class="hljs-string">&#x27;File type not allowed&#x27;</span>);
+  }
+  <span class="hljs-keyword">if</span> (file.<span class="hljs-property">size</span> &gt; <span class="hljs-variable constant_">MAX_SIZE</span>) {
+    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">ValidationError</span>(<span class="hljs-string">&#x27;File too large (max 5MB)&#x27;</span>);
+  }
+  <span class="hljs-comment">// Don&#x27;t trust the file extension — check magic bytes if critical</span>
+}</code></pre>
+<h2 id="triaging-npm-audit-results">Triaging npm audit Results<a class="anchor" href="#triaging-npm-audit-results" aria-label="锚点">#</a></h2>
+<p>Not all audit findings require immediate action. Use this decision tree:</p>
+<pre><code>npm audit reports a vulnerability
+├── Severity: critical or high
+│   ├── Is the vulnerable code reachable in your app?
+│   │   ├── YES --&gt; Fix immediately (update, patch, or replace the dependency)
+│   │   └── NO (dev-only dep, unused code path) --&gt; Fix soon, but not a blocker
+│   └── Is a fix available?
+│       ├── YES --&gt; Update to the patched version
+│       └── NO --&gt; Check for workarounds, consider replacing the dependency, or add to allowlist with a review date
+├── Severity: moderate
+│   ├── Reachable in production? --&gt; Fix in the next release cycle
+│   └── Dev-only? --&gt; Fix when convenient, track in backlog
+└── Severity: low
+    └── Track and fix during regular dependency updates</code></pre>
+<p><strong>Key questions:</strong></p>
+<ul><li>Is the vulnerable function actually called in your code path?</li><li>Is the dependency a runtime dependency or dev-only?</li><li>Is the vulnerability exploitable given your deployment context (e.g., a server-side vulnerability in a client-only app)?</li></ul>
+<p>When you defer a fix, document the reason and set a review date.</p>
+<h2 id="rate-limiting">Rate Limiting<a class="anchor" href="#rate-limiting" aria-label="锚点">#</a></h2>
+<pre><code class="language-typescript"><span class="hljs-keyword">import</span> rateLimit <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;express-rate-limit&#x27;</span>;
+
+<span class="hljs-comment">// General API rate limit</span>
+app.<span class="hljs-title function_">use</span>(<span class="hljs-string">&#x27;/api/&#x27;</span>, <span class="hljs-title function_">rateLimit</span>({
+  <span class="hljs-attr">windowMs</span>: <span class="hljs-number">15</span> * <span class="hljs-number">60</span> * <span class="hljs-number">1000</span>, <span class="hljs-comment">// 15 minutes</span>
+  <span class="hljs-attr">max</span>: <span class="hljs-number">100</span>,                   <span class="hljs-comment">// 100 requests per window</span>
+  <span class="hljs-attr">standardHeaders</span>: <span class="hljs-literal">true</span>,
+  <span class="hljs-attr">legacyHeaders</span>: <span class="hljs-literal">false</span>,
+}));
+
+<span class="hljs-comment">// Stricter limit for auth endpoints</span>
+app.<span class="hljs-title function_">use</span>(<span class="hljs-string">&#x27;/api/auth/&#x27;</span>, <span class="hljs-title function_">rateLimit</span>({
+  <span class="hljs-attr">windowMs</span>: <span class="hljs-number">15</span> * <span class="hljs-number">60</span> * <span class="hljs-number">1000</span>,
+  <span class="hljs-attr">max</span>: <span class="hljs-number">10</span>,  <span class="hljs-comment">// 10 attempts per 15 minutes</span>
+}));</code></pre>
+<h2 id="secrets-management">Secrets Management<a class="anchor" href="#secrets-management" aria-label="锚点">#</a></h2>
+<pre><code>.env files:
+  ├── .env.example  → Committed (template with placeholder values)
+  ├── .env          → NOT committed (contains real secrets)
+  └── .env.local    → NOT committed (local overrides)
+
+.gitignore must include:
+  .env
+  .env.local
+  .env.*.local
+  *.pem
+  *.key</code></pre>
+<p><strong>Always check before committing:</strong></p>
+<pre><code class="language-bash"><span class="hljs-comment"># Check for accidentally staged secrets</span>
+git diff --cached | grep -i <span class="hljs-string">&quot;password\|secret\|api_key\|token&quot;</span></code></pre>
+<h2 id="security-review-checklist">Security Review Checklist<a class="anchor" href="#security-review-checklist" aria-label="锚点">#</a></h2>
+<pre><code class="language-markdown"><span class="hljs-section">### Authentication</span>
+<span class="hljs-bullet">-</span> [ ] Passwords hashed with bcrypt/scrypt/argon2 (salt rounds ≥ 12)
+<span class="hljs-bullet">-</span> [ ] Session tokens are httpOnly, secure, sameSite
+<span class="hljs-bullet">-</span> [ ] Login has rate limiting
+<span class="hljs-bullet">-</span> [ ] Password reset tokens expire
+
+<span class="hljs-section">### Authorization</span>
+<span class="hljs-bullet">-</span> [ ] Every endpoint checks user permissions
+<span class="hljs-bullet">-</span> [ ] Users can only access their own resources
+<span class="hljs-bullet">-</span> [ ] Admin actions require admin role verification
+
+<span class="hljs-section">### Input</span>
+<span class="hljs-bullet">-</span> [ ] All user input validated at the boundary
+<span class="hljs-bullet">-</span> [ ] SQL queries are parameterized
+<span class="hljs-bullet">-</span> [ ] HTML output is encoded/escaped
+
+<span class="hljs-section">### Data</span>
+<span class="hljs-bullet">-</span> [ ] No secrets in code or version control
+<span class="hljs-bullet">-</span> [ ] Sensitive fields excluded from API responses
+<span class="hljs-bullet">-</span> [ ] PII encrypted at rest (if applicable)
+
+<span class="hljs-section">### Infrastructure</span>
+<span class="hljs-bullet">-</span> [ ] Security headers configured (CSP, HSTS, etc.)
+<span class="hljs-bullet">-</span> [ ] CORS restricted to known origins
+<span class="hljs-bullet">-</span> [ ] Dependencies audited for vulnerabilities
+<span class="hljs-bullet">-</span> [ ] Error messages don&#x27;t expose internals</code></pre>
+<h2 id="see-also">See Also<a class="anchor" href="#see-also" aria-label="锚点">#</a></h2>
+<p>For detailed security checklists and pre-commit verification steps, see <code>references/security-checklist.md</code>.</p>
+<h2 id="common-rationalizations">Common Rationalizations<a class="anchor" href="#common-rationalizations" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>Rationalization</th><th>Reality</th></tr></thead><tbody><tr><td>&quot;This is an internal tool, security doesn't matter&quot;</td><td>Internal tools get compromised. Attackers target the weakest link.</td></tr><tr><td>&quot;We'll add security later&quot;</td><td>Security retrofitting is 10x harder than building it in. Add it now.</td></tr><tr><td>&quot;No one would try to exploit this&quot;</td><td>Automated scanners will find it. Security by obscurity is not security.</td></tr><tr><td>&quot;The framework handles security&quot;</td><td>Frameworks provide tools, not guarantees. You still need to use them correctly.</td></tr><tr><td>&quot;It's just a prototype&quot;</td><td>Prototypes become production. Security habits from day one.</td></tr></tbody></table>
+<h2 id="red-flags">Red Flags<a class="anchor" href="#red-flags" aria-label="锚点">#</a></h2>
+<ul><li>User input passed directly to database queries, shell commands, or HTML rendering</li><li>Secrets in source code or commit history</li><li>API endpoints without authentication or authorization checks</li><li>Missing CORS configuration or wildcard (<code>*</code>) origins</li><li>No rate limiting on authentication endpoints</li><li>Stack traces or internal errors exposed to users</li><li>Dependencies with known critical vulnerabilities</li></ul>
+<h2 id="verification">Verification<a class="anchor" href="#verification" aria-label="锚点">#</a></h2>
+<p>After implementing security-relevant code:</p>
+<ul><li>[ ] <code>npm audit</code> shows no critical or high vulnerabilities</li><li>[ ] No secrets in source code or git history</li><li>[ ] All user input validated at system boundaries</li><li>[ ] Authentication and authorization checked on every protected endpoint</li><li>[ ] Security headers present in response (check with browser DevTools)</li><li>[ ] Error responses don't expose internal details</li><li>[ ] Rate limiting active on auth endpoints</li></ul>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/skills/built-in/review-pr/prompt.html"><div class="dir">← 上一篇</div><div class="ttl">Pull Request Review Skill</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/skills/built-in/security-and-hardening/references/security-checklist.html"><div class="dir">下一篇 →</div><div class="ttl">Security Checklist</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/skills/built-in/security-and-hardening/prompt.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

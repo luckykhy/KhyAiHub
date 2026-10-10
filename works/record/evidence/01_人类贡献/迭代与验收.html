@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: 迭代与验收.md -->
+<title>迭代与验收（不是一次成型的证据） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>works<span class="sep">›</span>record<span class="sep">›</span>evidence<span class="sep">›</span>01_人类贡献<span class="sep">›</span>迭代与验收（不是一次成型的证据）</div>
+      <header class="hero reveal"><h1>迭代与验收（不是一次成型的证据）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#迭代与验收-不是一次成型的证据">迭代与验收（不是一次成型的证据）</a></li><li class="lvl-2"><a href="#一-三模态反馈存证-khy-feedback">一、三模态反馈存证（`.khy/feedback/`）</a></li><li class="lvl-2"><a href="#二-按日分布-每格-当天新增存证的任务数">二、按日分布（每格 = 当天新增存证的任务数）</a></li><li class="lvl-2"><a href="#三-提交历史-两个口径必须分开引用">三、提交历史（两个口径必须分开引用）</a></li><li class="lvl-2"><a href="#四-任务-bug-台账-ai-hq-多机共享-已入仓">四、任务 / Bug 台账（`.ai/hq/`，多机共享、已入仓）</a></li><li class="lvl-3"><a href="#逐条-bug-标题-症状摘录">逐条 Bug（标题 + 症状摘录）</a></li><li class="lvl-2"><a href="#五-复算方式">五、复算方式</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- 本文件由 scripts/evidence/build-index.js 生成，勿手改数字；要改口径请改采集器。 --&gt;</p>
+<h1 id="迭代与验收-不是一次成型的证据">迭代与验收（不是一次成型的证据）<a class="anchor" href="#迭代与验收-不是一次成型的证据" aria-label="锚点">#</a></h1>
+<blockquote><p>回答软著三问的第三问「<strong>怎么验证的</strong>」与 C-M4 第 ④ 类痕迹「迭代过程」。核心证据是规则 5/6/7 的落盘存证：每次修复都留了<strong>改前原始输出</strong>与<strong>改后同一命令的输出</strong>。</p>
+<p>数据快照时间：2026-09-28；输入：<code>evidence/04_机器可读/contribution-metrics.json</code>。</p></blockquote>
+<h2 id="一-三模态反馈存证-khy-feedback">一、三模态反馈存证（<code>.khy/feedback/</code>）<a class="anchor" href="#一-三模态反馈存证-khy-feedback" aria-label="锚点">#</a></h2>
+<p>共 <strong>245 个任务目录</strong>，覆盖 10 个活跃日（2026-09-18 → 2026-09-27）。</p>
+<table><thead><tr><th>存件</th><th>份数</th><th>含义</th></tr></thead><tbody><tr><td><code>complaint.md</code></td><td>146</td><td>主诉：谁、在什么条件下、什么现象（规则 7 之「病状」）</td></tr><tr><td><code>repro-before.txt</code></td><td>171</td><td><strong>改前原始输出</strong>——没量体温不许开药（规则 5，缺则判 error）</td></tr><tr><td><code>differential.md</code></td><td>114</td><td>≥2 个候选病因，每个给一条可证伪预测</td></tr><tr><td><code>repro-after.txt</code></td><td>149</td><td>改后跑同一条命令的输出（复诊）</td></tr><tr><td><code>requirement-5q.md</code></td><td>21</td><td>新增功能前答完的需求五问（规则 6）</td></tr><tr><td><code>rollback.txt</code></td><td>47</td><td>可执行的回滚命令（规则 7，缺则判 error）</td></tr><tr><td><code>mode.json</code></td><td>22</td><td>本次改动的模态声明（FIX / BUILD / DELETE）</td></tr></tbody></table>
+<p><strong>复现-修复往返 141 组</strong>——同一任务既有改前输出又有改后输出。这是「人有在逐轮检查」最硬的证据：AI 自说自话的改动不会留下改前的真实报错。</p>
+<h2 id="二-按日分布-每格-当天新增存证的任务数">二、按日分布（每格 = 当天新增存证的任务数）<a class="anchor" href="#二-按日分布-每格-当天新增存证的任务数" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>日期</th><th>任务数</th><th>日期</th><th>任务数</th></tr></thead><tbody><tr><td>2026-09-18</td><td>15</td><td>2026-09-19</td><td>2</td></tr><tr><td>2026-09-20</td><td>3</td><td>2026-09-21</td><td>4</td></tr><tr><td>2026-09-22</td><td>25</td><td>2026-09-23</td><td>71</td></tr><tr><td>2026-09-24</td><td>87</td><td>2026-09-25</td><td>6</td></tr><tr><td>2026-09-26</td><td>18</td><td>2026-09-27</td><td>14</td></tr></tbody></table>
+<h2 id="三-提交历史-两个口径必须分开引用">三、提交历史（两个口径必须分开引用）<a class="anchor" href="#三-提交历史-两个口径必须分开引用" aria-label="锚点">#</a></h2>
+<ul><li><strong>本分支 main</strong>：62 条提交，作者 1 位（孔浩原 &lt;2578974124@qq.com&gt;），跨度 2026-07-25 → 2026-09-28。</li><li><strong>全部 36 个分支</strong>：920 条提交。含 AI 署名者 88 条（9.6%）。</li><li>两个口径差异的原因：<code>main</code> 是被<strong>重建过的短历史</strong>，完整过程留在各功能分支上。引用时不得混用，否则数字对不上。</li></ul>
+<table><thead><tr><th>月份</th><th>本分支</th><th>全分支</th></tr></thead><tbody><tr><td>2026-07</td><td>8</td><td>43</td></tr><tr><td>2026-08</td><td>18</td><td>373</td></tr><tr><td>2026-09</td><td>36</td><td>504</td></tr></tbody></table>
+<h2 id="四-任务-bug-台账-ai-hq-多机共享-已入仓">四、任务 / Bug 台账（<code>.ai/hq/</code>，多机共享、已入仓）<a class="anchor" href="#四-任务-bug-台账-ai-hq-多机共享-已入仓" aria-label="锚点">#</a></h2>
+<ul><li>任务 29 项，状态分布：{&quot;todo&quot;:18,&quot;done&quot;:8,&quot;doing&quot;:3}；</li><li>Bug 17 项，状态分布：{&quot;closed&quot;:8,&quot;open&quot;:4,&quot;pending_verify&quot;:5}；</li><li>每日工作笔记 16 篇（<code>.workbuddy/memory/</code>）。</li></ul>
+<h3 id="逐条-bug-标题-症状摘录">逐条 Bug（标题 + 症状摘录）<a class="anchor" href="#逐条-bug-标题-症状摘录" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>id</th><th>级别</th><th>状态</th><th>标题</th></tr></thead><tbody><tr><td>BUG-001</td><td>P1</td><td>closed</td><td>质量看板 D1-D5 分数是硬编码常量，exitCriteria.met 恒为 true</td></tr><tr><td>BUG-002</td><td>P2</td><td>closed</td><td>export-dimension-health.js 的 D5 相对路径少一级，把存在的文件误报为缺失，且降级时仍退出码 0</td></tr><tr><td>BUG-003</td><td>P2</td><td>closed</td><td>sync.py --status 声称只读却实际执行 pull，令「先看方向再决定拉不拉」失效</td></tr><tr><td>BUG-004</td><td>P2</td><td>closed</td><td>TUI：出现折叠状态行（如「正在初始化网关…+N 行 · 按 Ctrl+G 展开」）时，底部残留/重复「输入消息」输入框与状态面板</td></tr><tr><td>BUG-005</td><td>P1</td><td>closed</td><td>所有模型请求都报错：OpenAI/api 经 per-provider 代理 127.0.0.1:7890 被拒（ECONNREFUSED）…</td></tr><tr><td>BUG-006</td><td>P1</td><td>open</td><td>网关路由串 api:sensenova:deepseek-v4-flash 出现『供应商(SenseNova/阶跃星辰)与模型(deepse…</td></tr><tr><td>BUG-007</td><td>P1</td><td>closed</td><td>做任务时无法准确提出问题、理解用户意图（提问缺意图对齐标准与任务上下文兜底）</td></tr><tr><td>BUG-008</td><td>P1</td><td>closed</td><td>tests/ 目录 1531 个文件被一次失败的 node:test→jest 批量迁移脚本损坏（多字节字符截断、无法解析）</td></tr><tr><td>BUG-009</td><td>P2</td><td>pending_verify</td><td>TUI @补全：引用根（@alias/子路径）内文件补全静默失效——useCompletions.js 引用块作用域外的未定义标识符 fir…</td></tr><tr><td>BUG-010</td><td>P2</td><td>open</td><td>TUI 统一协议原生覆盖层静默降级：ink App.js uiBridge 接线引用从未定义的 setPermissionRequest，s…</td></tr><tr><td>BUG-011</td><td>P2</td><td>pending_verify</td><td>CcViewStack.js CcTaskCompleteCard 使用未导入的裸 Box/Text（本文件其它组件均走 inkRuntim…</td></tr><tr><td>BUG-012</td><td>P2</td><td>open</td><td>TUI 底部状态行宽度预算溢出：windsurf 停用回退等长警告使状态行超过终端列数，闭合括号被挤到下一行形成残影字符（实测 ~125 列…</td></tr><tr><td>BUG-013</td><td>P3</td><td>pending_verify</td><td>两个 QUARANTINE 占位测试壳用 jest 的 describe/it/expect 全局，在 node --test 下未定义，每…</td></tr><tr><td>BUG-014</td><td>P1</td><td>pending_verify</td><td>工具调用能力判定系统性偏「不支持」：判据把无定论读成不支持，产生 gpt-4o→text 类假阴性，且假阴性自我焊死无法被现实纠正</td></tr><tr><td>BUG-015</td><td>P2</td><td>open</td><td>khyquant 侧 services 副本与 backend 正本已分叉：multiFreeService/modelToolingCap…</td></tr><tr><td>BUG-016</td><td>P2</td><td>closed</td><td>README 承诺的首跑命令 khy preflight 不存在（实测「未知命令」exit 1，T-027 首跑 10 分钟承诺卡点）</td></tr><tr><td>BUG-017</td><td>P2</td><td>pending_verify</td><td>首跑 10 分钟承诺实测不成立（T-027）：pip 直连 PyPI 装 khy-os 1.1.7 用时 8.8 分钟（慢网），且装后 bu…</td></tr></tbody></table>
+<h2 id="五-复算方式">五、复算方式<a class="anchor" href="#五-复算方式" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">ls</span> .khy/feedback | <span class="hljs-built_in">wc</span> -l
+find .khy/feedback -maxdepth 2 -<span class="hljs-built_in">type</span> f | sed <span class="hljs-string">&#x27;s#.*/##&#x27;</span> | <span class="hljs-built_in">sort</span> | <span class="hljs-built_in">uniq</span> -c
+git <span class="hljs-built_in">log</span> --format=%an
+git <span class="hljs-built_in">log</span> --format=%ad --<span class="hljs-built_in">date</span>=format:%Y-%m
+git <span class="hljs-built_in">log</span> --numstat --format=
+git ls-files
+git rev-list --count --all
+git <span class="hljs-built_in">log</span> --all --format=<span class="hljs-string">&#x27;%b&#x27;</span> | grep -ciE <span class="hljs-string">&#x27;co-authored-by: (claude|commandcodebot)&#x27;</span></code></pre>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../works/record/CLAUDE.html"><div class="dir">← 上一篇</div><div class="ttl">Maintainability metadata — read .ai/ first</div></a><a class="next" href="../../../../works/record/evidence/01_人类贡献/发布记录.html"><div class="dir">下一篇 →</div><div class="ttl">发布记录（C-MAT2 软件名称与版本稳定）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="works/record/evidence/01_人类贡献/迭代与验收.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

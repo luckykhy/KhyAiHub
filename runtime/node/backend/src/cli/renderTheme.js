@@ -1,0 +1,408 @@
+/**
+ * renderTheme.js — Theme constants, tool metadata, and formatting helpers
+ * extracted from aiRenderer.js for modularity.
+ *
+ * Provides: THEME proxy, spinner config, dot/task indicators, phase labels,
+ * tool display names, tool kind aliases, tool family icons, and related
+ * utility functions.
+ */
+let _chalk;
+const c = () => (_chalk ??= require('chalk').default || require('chalk'));
+const {
+  ccFormatEnabled: _ccFormatEnabled,
+  ccFormatDuration: _ccFormatDuration,
+} = require('./ccFormat');
+const { displayWidth, padToWidth, truncateToWidth } = require('./formatters');
+// Duration formatting SSOT — the faithful CC `formatDuration` port (cli/ccFormat),
+// the SAME source HUD / turnStats / CompactionProgress / agent-tree already share.
+
+// ── Claude Code Theme Colors ───────────────────────────────────────────
+// Theme is now data-driven via themeRegistry. THEME is a Proxy for backward compat.
+const themeRegistry = require('./themeRegistry');
+const THEME = new Proxy(
+  {},
+  {
+    get(_, prop) {
+      return themeRegistry.getTheme().colors[prop];
+    },
+    ownKeys() {
+      return Object.keys(themeRegistry.getTheme().colors);
+    },
+    getOwnPropertyDescriptor(_, prop) {
+      const colors = themeRegistry.getTheme().colors;
+      if (prop in colors) {
+        return { value: colors[prop], enumerable: true, configurable: true };
+      }
+    },
+    has(_, prop) {
+      return prop in themeRegistry.getTheme().colors;
+    },
+  }
+);
+
+let _interactiveGuard = null;
+
+function setInteractiveGuard(fn) {
+  _interactiveGuard = typeof fn === 'function' ? fn : null;
+}
+
+function isInteractiveInputActive() {
+  try {
+    return !!(_interactiveGuard && _interactiveGuard());
+  } catch {
+    return false;
+  }
+}
+
+// ── Dynamic Spinner (Claude Code SpinnerGlyph exact match) ────────────
+// Spinner sequence adapted for Khy-OS parity:
+// keep the first frame as a solid dot, then cycle sparkle glyphs.
+// Animation bounces forward then reverse for smooth cycling.
+function _getSpinnerCharacters() {
+  const theme = themeRegistry.getTheme();
+  if (theme.spinnerChars) {
+    const key = process.platform === 'darwin' ? 'darwin' : 'fallback';
+    if (theme.spinnerChars[key]) {
+      return theme.spinnerChars[key];
+    }
+  }
+  if (process.platform === 'darwin') {
+    return ['●', '✢', '✳', '✶', '✻', '✽'];
+  }
+  return ['●', '*', '+', '×', '+', '*'];
+}
+const _SPINNER_CHARS = _getSpinnerCharacters();
+// Bounce: forward + reverse (excluding endpoints to avoid double-pause)
+const SPINNER_FRAMES = [..._SPINNER_CHARS, ..._SPINNER_CHARS.slice(1, -1).reverse()];
+const SPINNER_ACTIVE_CHAR = _SPINNER_CHARS[0];
+const REDUCED_MOTION_DOT = SPINNER_ACTIVE_CHAR;
+
+// Default UI language policy:
+// - If explicit UI language is English, keep English thinking verbs.
+// - Otherwise default to Chinese verbs for better local readability.
+const _uiLangPref = String(process.env.KHY_UI_LANG || process.env.KHY_LANGUAGE || '')
+  .trim()
+  .toLowerCase();
+const _preferEnglishUi = /^(en|en-us|english)\b/.test(_uiLangPref);
+const _zhThinkingVerbs = [
+  '解析请求',
+  '校验约束',
+  '整理上下文',
+  '评估风险',
+  '规划步骤',
+  '归纳要点',
+  '执行当前步骤',
+  '汇总结果',
+];
+const _enThinkingVerbs = [
+  'Parsing request',
+  'Checking constraints',
+  'Organizing context',
+  'Evaluating risk',
+  'Planning steps',
+  'Summarizing findings',
+  'Executing current step',
+  'Preparing response',
+];
+const THINKING_VERBS = (() => {
+  const themed = themeRegistry.getTheme().thinkingVerbs;
+  if (_preferEnglishUi) {
+    return Array.isArray(themed) && themed.length > 0 ? themed : _enThinkingVerbs;
+  }
+  if (Array.isArray(themed) && themed.length > 0) {
+    const joined = themed.join('');
+    if (/[\u3400-\u9fff]/.test(joined)) {
+      return themed;
+    }
+  }
+  return _zhThinkingVerbs;
+})();
+
+// Same localization policy as THINKING_VERBS above: a non-English UI must not
+// have its built-in Chinese phase labels clobbered by an English theme's
+// chrome. Custom themes can still override per key by supplying CJK values;
+// an English UI keeps the raw theme labels.
+const _themePhaseLabels = (() => {
+  const themed = themeRegistry.getTheme().phaseLabels;
+  if (!themed || typeof themed !== 'object') return {};
+  if (_preferEnglishUi) return themed;
+  const kept = {};
+  for (const [k, v] of Object.entries(themed)) {
+    if (/[\u3400-\u9fff]/.test(String(v))) kept[k] = v;
+  }
+  return kept;
+})();
+
+const PHASE_LABELS = Object.assign(
+  {
+    init: '初始化链路',
+    security: '安全检查中',
+    preprocess: '预处理输入',
+    request: '请求上游模型',
+    thinking: '分析约束与计划',
+    analyzing: '分析用户意图',
+    generating: '生成最终答复',
+    // 记忆召回过程态（[DESIGN-MEM-008]）：主动记忆/会话预热是「先读盘再请求模型」，
+    // 此前 spinner 一直显示「请求上游模型」⇒ 回忆过程不可见。文案真源在
+    // services/memoryOpsNotice.js 的 RECALL_PROCESS_TEXT，此处只给 spinner 用的短标签。
+    'memory-recall': '正在回忆相关记忆',
+    tools: '执行工具步骤',
+    explore: '搜索信息',
+    reading: '读取文件内容',
+    writing: '写入文件内容',
+    tool: '执行工具步骤',
+    done: '交付完成',
+    // 工具级细粒度标签 (G7)
+    'tool:bash': '执行命令',
+    'tool:shell': '执行命令',
+    'tool:read': '读取文件',
+    'tool:readfile': '读取文件',
+    'tool:write': '写入文件',
+    'tool:writefile': '写入文件',
+    'tool:createfile': '创建文件',
+    'tool:edit': '编辑文件',
+    'tool:editfile': '编辑文件',
+    'tool:multiedit': '编辑文件',
+    'tool:glob': '搜索文件',
+    'tool:grep': '搜索代码',
+    'tool:find': '搜索文件',
+    'tool:search': '搜索内容',
+    'tool:websearch': '联网搜索',
+    'tool:webfetch': '抓取网页',
+    'tool:agent': '子代理执行中',
+    'tool:task': '任务执行中',
+    'tool:todowrite': '更新待办',
+    'tool:notebookedit': '编辑笔记',
+    'tool:ls': '列出文件',
+  },
+  _themePhaseLabels
+);
+
+/**
+ * Format elapsed seconds into a human-readable duration.
+ *
+ * Routes through the faithful CC `formatDuration` SSOT (cli/ccFormat) — the SAME
+ * source HUD / turnStats / CompactionProgress / agent-tree already share — so the
+ * spinner, step lines and task panel keep the trailing `0s` at whole minutes
+ * ("2m 0s") and roll into h/d ("1h 2m 3s"), exactly like CC's SpinnerAnimationRow
+ * which calls formatDuration() with no options. Sub-minute is byte-identical to
+ * the legacy floor (ccFormatDuration's `${Math.floor(n/1000)}s` for n<60000).
+ * Gate off (KHY_CC_FORMAT=0) → byte-identical legacy口径: drops the `0s` at minute
+ * marks ("2m") and never rolls into hours (unbounded "123m 4s").
+ */
+function _formatElapsed(totalSec) {
+  const sec = Math.floor(totalSec);
+  if (_ccFormatEnabled(process.env)) {
+    return _ccFormatDuration(Math.max(0, sec) * 1000);
+  }
+  if (sec < 60) {
+    return `${sec}s`;
+  }
+  const min = Math.floor(sec / 60);
+  const rem = sec % 60;
+  return rem > 0 ? `${min}m ${rem}s` : `${min}m`;
+}
+
+function _normalizeStatusTextForDedupe(text = '') {
+  return String(text || '')
+    .replace(/\d+(\.\d+)?s\b/gi, 'Xs')
+    .replace(/\b\d+ms\b/gi, 'Xms')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Map tool names to Claude Code's userFacingName
+const _defaultToolNames = {
+  bash: 'Bash',
+  shell: 'Bash',
+  shellcommand: 'Bash',
+  command: 'Bash',
+  read: '读取',
+  readfile: '读取',
+  write: '写入',
+  writefile: '写入',
+  createfile: '写入',
+  edit: '修改',
+  editfile: '修改',
+  multiedit: '修改',
+  notebookedit: '修改',
+  glob: '搜索',
+  grep: '搜索',
+  find: '搜索',
+  findfiles: '搜索',
+  search: '搜索',
+  searchcontent: '搜索',
+  websearch: '搜索',
+  webfetch: '抓取',
+  todowrite: '待办',
+  notebookread: '读取',
+  agent: '代理',
+  task: '任务',
+  ls: '搜索',
+};
+const TOOL_DISPLAY_NAMES = Object.assign(
+  {},
+  _defaultToolNames,
+  themeRegistry.getTheme().toolDisplayNames
+);
+
+const TOOL_KIND_ALIASES = {
+  read: 'reading',
+  readfile: 'reading',
+  ls: 'explore',
+  glob: 'explore',
+  grep: 'explore',
+  find: 'explore',
+  findfiles: 'explore',
+  search: 'explore',
+  searchcontent: 'explore',
+  websearch: 'explore',
+  webfetch: 'explore',
+  todowrite: 'tools',
+  notebookread: 'reading',
+  task: 'explore',
+  bash: 'explore',
+  shell: 'explore',
+  shellcommand: 'explore',
+  command: 'explore',
+  write: 'writing',
+  writefile: 'writing',
+  createfile: 'writing',
+  edit: 'writing',
+  editfile: 'writing',
+  multiedit: 'writing',
+  notebookedit: 'writing',
+};
+
+// ── Tool-kind helpers ─────────────────────────────────────────────────
+
+function normalizeToolKind(name = '') {
+  const raw = String(name)
+    .toLowerCase()
+    .replace(/[\s_-]/g, '');
+  return TOOL_KIND_ALIASES[raw] || 'tools';
+}
+
+/**
+ * Map internal tool name to Claude Code's userFacingName.
+ * e.g. "shell_command" -> "Bash", "read_file" -> "Read", "glob" -> "Search"
+ */
+function getToolDisplayName(name = '') {
+  const raw = String(name)
+    .toLowerCase()
+    .replace(/[\s_-]/g, '');
+  return TOOL_DISPLAY_NAMES[raw] || name;
+}
+
+function summarizeToolDetail(name = '', params = '') {
+  const kind = normalizeToolKind(name);
+  const text = String(params || '')
+    .trim()
+    .replace(/\s+/g, ' ');
+  const short = text.length > 60 ? `${text.slice(0, 60)}...` : text;
+  return { kind, short };
+}
+
+function getToolKindLabel(name = '') {
+  const raw = String(name)
+    .toLowerCase()
+    .replace(/[\s_-]/g, '');
+  // 优先使用 tool: 前缀的细粒度中文标签 (G7)
+  if (PHASE_LABELS[`tool:${raw}`]) {
+    return PHASE_LABELS[`tool:${raw}`];
+  }
+  const kind = normalizeToolKind(name);
+  return PHASE_LABELS[kind] || '工具';
+}
+
+// ── Process Step Indicators (Claude Code style) ────────────────────────
+
+// Match Claude Code's exact indicator symbols
+// Claude Code uses ● (BLACK_CIRCLE) for all statuses, colored by state
+const _isMac = process.platform === 'darwin';
+const DOT_PENDING = '○'; // not started
+const DOT_INDICATOR = '●'; // in-progress (colored by context)
+const DOT_SUCCESS = '●'; // completed (green)
+const DOT_ERROR = '●'; // failed (red)
+const DOT_DONE = '●'; // finished (dimmed)
+
+// ── Task Plan Indicators ──────────────────────────────────────────────
+const TASK_PENDING = '☐';
+const TASK_IN_PROGRESS = '■';
+const TASK_COMPLETED = '✔';
+
+// ── Tool Family Icons ─────────────────────────────────────────────────
+// 不同工具类别用不同图标，一眼区分操作类型
+// 旧版 Windows 终端 (Consolas) 缺少 ⌕⊙◐☐，降级为 ASCII
+// 四端统一图标映射来自 constants/toolIcons 单一真源
+const { isLegacyWinTerminal: _isLegacyWinTerm } = require('../tools/platformUtils');
+const { TOOL_ICON_MAP, DEFAULT_ICON } = require('../constants/toolIcons');
+const _lwt = _isLegacyWinTerm();
+
+// CLI 用: 按 legacy Windows 标志选择字形
+const TOOL_FAMILY_ICONS = (() => {
+  const map = {};
+  for (const [name, icon] of Object.entries(TOOL_ICON_MAP)) {
+    map[name] = _lwt ? icon.ascii : icon.unicode;
+  }
+  return map;
+})();
+
+/**
+ * 获取工具家族图标，未匹配的返回默认 ●
+ */
+function getToolFamilyIcon(toolName) {
+  const name = String(toolName)
+    .toLowerCase()
+    .replace(/[\s_-]/g, '');
+  return TOOL_FAMILY_ICONS[name] || DOT_INDICATOR;
+}
+
+// Tree glyphs — 与 agentTreeView.js 单一真源对齐(CLI/TUI 共享)。
+const TREE_LAST = _lwt ? '`-' : '└'; // agentTreeView.BRANCH_END
+const TREE_MID = _lwt ? '|-' : '├'; // agentTreeView.BRANCH_MID
+
+module.exports = {
+  // Lazy chalk accessor
+  c,
+  // Theme
+  THEME,
+  themeRegistry,
+  // Interactive guard
+  setInteractiveGuard,
+  isInteractiveInputActive,
+  // Spinner
+  _getSpinnerCharacters,
+  SPINNER_FRAMES,
+  SPINNER_ACTIVE_CHAR,
+  REDUCED_MOTION_DOT,
+  // Labels & verbs
+  THINKING_VERBS,
+  PHASE_LABELS,
+  // Tool metadata
+  TOOL_DISPLAY_NAMES,
+  TOOL_KIND_ALIASES,
+  TOOL_FAMILY_ICONS,
+  // Formatting helpers
+  _formatElapsed,
+  _normalizeStatusTextForDedupe,
+  // Tool-kind functions
+  normalizeToolKind,
+  getToolDisplayName,
+  summarizeToolDetail,
+  getToolKindLabel,
+  getToolFamilyIcon,
+  // Dot indicators
+  DOT_PENDING,
+  DOT_INDICATOR,
+  DOT_SUCCESS,
+  DOT_ERROR,
+  DOT_DONE,
+  // Task indicators
+  TASK_PENDING,
+  TASK_IN_PROGRESS,
+  TASK_COMPLETED,
+  // Tree glyphs
+  TREE_LAST,
+  TREE_MID,
+};

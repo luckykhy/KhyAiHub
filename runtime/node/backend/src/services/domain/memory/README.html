@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>memory — 记忆引擎、上下文压缩与认知快照（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>memory<span class="sep">›</span>memory — 记忆引擎、上下文压缩与认知快照（D2）</div>
+      <header class="hero reveal"><h1>memory — 记忆引擎、上下文压缩与认知快照（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#memory-记忆引擎-上下文压缩与认知快照-d2">memory — 记忆引擎、上下文压缩与认知快照（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="memory-记忆引擎-上下文压缩与认知快照-d2">memory — 记忆引擎、上下文压缩与认知快照（D2）<a class="anchor" href="#memory-记忆引擎-上下文压缩与认知快照-d2" aria-label="锚点">#</a></h1>
+<p>业务上下文：AI 对话里「记住什么、什么时候召回、上下文爆了怎么压」的全部判定，<br>无独立 slash 命令入口（<code>memory</code> 在 <code>constants/commandSchema.js:945</code> 只做分类登记）。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong>对话管线</strong>：<code>cli/aiChatCore.js:2453,2609</code>、<code>cli/aiSession.js:379</code>、</li></ul>
+<p><code>cli/routerDispatchTail.js:469</code>、<code>cli/replSession.js:3946</code>、<br>  <code>cli/tui/hooks/useQueryBridge.js:651</code>。</p>
+<ul><li><strong>记忆目录层</strong>：<code>memdir/memdir.js:664,1127,1182</code>。</li><li><strong>工具回路</strong>：<code>services/tool/toolUseLoopHelpers.js:1386</code>（经壳</li></ul>
+<p><code>services/cognitiveSnapshot/index.js</code>）。</p>
+<ul><li>壳：<code>services/{memoryEngine,cognitiveSnapshot,compact}/index.js</code>。</li></ul>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p>三个子上下文对应三件不同时间尺度的事：<br><code>memoryEngine/</code> 管<strong>跨会话</strong>（<code>scoring</code> 打分、<code>distiller</code> 蒸馏、<code>dreamPromote</code><br>晋升、<code>topicSwitch</code> 话题切换、<code>vectorRecall</code> 召回、<code>sessionMemory</code>、<br><code>progressLog</code>、<code>sessionCheckpoint</code> 均为纯判定；落盘的只有<br><code>offloadStore</code> / <code>vectorStore</code> / <code>snapshotManager</code> / <code>distiller</code>）；<br><code>compact/</code> 管<strong>单会话内</strong>的压缩（<code>sessionMemoryCompact</code>、<code>microCompact</code>、<br><code>applyCompaction</code>、<code>shouldCompact</code> 与 <code>DEFAULT_PRESERVE_RECENT</code> /<br><code>MIN_MESSAGES_FOR_COMPACTION</code> 两个阈值）；<code>cognitiveSnapshot/</code> 管<strong>一次回合的工作台</strong><br>（<code>workbench</code>、<code>compressionEngine</code>、<code>overflowInterceptor</code> 超限拦截）。<br>阈值与判据都是纯数，为的是「为什么这轮被压掉了」可复算——规则 2.2 要求错误<br>信息说清问题与修法，压缩这件事同理。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/services/memoryEngine/progressLog.test.js      <span class="hljs-comment"># 11 tests / 11 pass / 0 fail</span>
+node --<span class="hljs-built_in">test</span> tests/services/memoryEngine/topicSwitch.test.js      <span class="hljs-comment"># 7 tests / 5 pass / 2 fail</span></code></pre>
+<p>第二条<strong>当前是红的</strong>（2 条失败）。<code>memoryEngine/topicSwitch.js</code> 本体当前干净，<br>而本目录的在做中文件是 <code>memoryEngine/progressLog.js</code>（<code> M</code>，第一条命令测的正是它，<br>此刻全绿）。红点成因未判定，需按规则 5 立独立改动集复现。<br>其余 <code>tests/services/memoryEngine/</code> 下 12 个文件混合两种形态：<br><code>distiller.test.js</code> 是 jest（用 <code>jest.resetModules()</code>），<br>而 <strong>jest 在本便携安装里跑不起来</strong>（<code>node_modules/.bin/jest</code> → MODULE_NOT_FOUND，<br><code>jest-cli</code> 未落盘），故这些套件在本机无执行渠道，已登记为缺陷。</p>
+<h2 id="已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）<a class="anchor" href="#已知缺陷-登记-不在本单元擅自修" aria-label="锚点">#</a></h2>
+<ol><li>上面 2 条红（topicSwitch）。</li><li><code>services/compact/*</code> 的三个入口（<code>sessionMemoryCompact</code> / <code>microCompact</code> /</li></ol>
+<p><code>applyCompaction</code>）在 <code>src</code> 内<strong>未发现外部消费者</strong>（只有自引用）——<br>   是「未接线的新面」还是「经由壳由别处调用」需人裁决，删除属规则 7 的活。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/services/domain/memory/compact/README.html"><div class="dir">← 上一篇</div><div class="ttl">compact — 对话压缩的提示模板与编排器（D2 功能单元）</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/services/domain/messaging/mcp/README.html"><div class="dir">下一篇 →</div><div class="ttl">domain/messaging/mcp — khy 的 MCP 双面单元（既当客户端，也当服务器）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/memory/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

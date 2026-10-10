@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>toolCatalog — 工具目录、契约与审计规则 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>catalog<span class="sep">›</span>toolCatalog<span class="sep">›</span>toolCatalog — 工具目录、契约与审计规则</div>
+      <header class="hero reveal"><h1>toolCatalog — 工具目录、契约与审计规则</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#toolcatalog-工具目录-契约与审计规则">toolCatalog — 工具目录、契约与审计规则</a></li><li class="lvl-2"><a href="#谁在用本单元-非测试外部消费者-去重-3-个已定性">谁在用本单元（非测试外部消费者，去重 3 个已定性）</a></li><li class="lvl-2"><a href="#出域边-如实登记-不写白名单">出域边（如实登记，不写白名单）</a></li><li class="lvl-2"><a href="#已知缺陷">已知缺陷</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="toolcatalog-工具目录-契约与审计规则">toolCatalog — 工具目录、契约与审计规则<a class="anchor" href="#toolcatalog-工具目录-契约与审计规则" aria-label="锚点">#</a></h1>
+<p>D2 业务上下文里的一个功能单元：把已注册工具收敛成<strong>发现所需的最小目录</strong>（分类、排序、去重），<br>并提供工具契约（<code>toolContract</code>）与目录审计规则（<code>auditRules</code>）。3 个源文件全部有同名同目录共置测试<br>（<strong>55 例 / 0 fail</strong>，2026-09-29 本道显式路径复跑；<code>grep -c KNOWN-DEFECT</code> 实测 2 处）。</p>
+<h2 id="谁在用本单元-非测试外部消费者-去重-3-个已定性">谁在用本单元（非测试外部消费者，去重 3 个已定性）<a class="anchor" href="#谁在用本单元-非测试外部消费者-去重-3-个已定性" aria-label="锚点">#</a></h2>
+<ul><li><code>src/cli/handlers/toollist.js</code> —— <code>/toollist</code> 命令面（目录的主展示口）。</li><li><code>src/cli/handlers/toolcheck.js</code> —— <code>/toolcheck</code> 命令面（契约与审计的消费方）。</li><li><code>src/services/toolCatalog/index.js</code> —— D1 侧历史路径再导出壳。</li></ul>
+<p>另有 1 处路径命中 <code>src/utils/trimIfString.js</code> —— <strong>已定性：那是该文件头注释里列举消费者的 JSDoc 行（<code>:7</code>），不是 require</strong>。<br>因此不构成 D3→D2 边，也不计入 fan-in（本单元已定性的外部消费者就是上面 3 个）。</p>
+<h2 id="出域边-如实登记-不写白名单">出域边（如实登记，不写白名单）<a class="anchor" href="#出域边-如实登记-不写白名单" aria-label="锚点">#</a></h2>
+<ul><li><strong>D3 共 6 处</strong>（<code>utils/</code>、<code>constants/</code>），名义边界内合法。</li><li><strong>D1 标签下 4 处，但逐条看只有 1 处真是 D1</strong>：<code>toolContract.js:40</code> → <code>services/flagRegistry.js</code>（该文件是</li></ul>
+<p>D3 归位后留下的兼容壳，语义为 D2→D3）；其余 3 处指向 <code>src/tools/**</code>（<code>toolCatalog.js:144</code>、<br>  <code>toolContract.js:113</code>、<code>toolContract.js:150</code>）—— <code>src/tools</code> 在 <code>DOMAIN-DEPS.json</code> 里<strong>没有域根映射</strong>，<br>  被判成 D1 纯属路径前缀误判。⇒ 本单元是 §12.43 两个「建门前必须先定判据」样本的集中地：<br>  兼容壳（Q1 的口径题）与 <code>src/tools</code> 归属（Q4）在同一条判据链上。</p>
+<h2 id="已知缺陷">已知缺陷<a class="anchor" href="#已知缺陷" aria-label="锚点">#</a></h2>
+<p>2 处 <code>KNOWN-DEFECT</code>，其中一条是 §12.42 记过的 <code>toolCatalog.js:63</code> 的<br><code>CATEGORY_META[cat] || CATEGORY_META.other</code> 对 <code>cat='constructor'</code> 返回 truthy 的 <code>Object</code> 函数、兜底被绕过<br>⇒ <code>label</code>/<code>order</code> 变 undefined，<code>/toollist</code> 的显示与排序受害（原型键一族第五次出现）。一律登记不修。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/services/domain/catalog/README.html"><div class="dir">← 上一篇</div><div class="ttl">catalog — 命令、工具与能力的登记表（D2）</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/services/domain/collab/README.html"><div class="dir">下一篇 →</div><div class="ttl">collab — 协作机会识别、IDE 状态与「伪协作」检测（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/catalog/toolCatalog/README.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

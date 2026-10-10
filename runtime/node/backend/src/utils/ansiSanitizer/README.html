@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>ansiSanitizer — 剥离 ANSI/CSI/OSC/裸 ESC 控制序列的单一真源 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>utils<span class="sep">›</span>ansiSanitizer<span class="sep">›</span>ansiSanitizer — 剥离 ANSI/CSI/OSC/裸 ESC 控制序列的单一真源</div>
+      <header class="hero reveal"><h1>ansiSanitizer — 剥离 ANSI/CSI/OSC/裸 ESC 控制序列的单一真源</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#ansisanitizer-剥离-ansi-csi-osc-裸-esc-控制序列的单一真源">ansiSanitizer — 剥离 ANSI/CSI/OSC/裸 ESC 控制序列的单一真源</a></li><li class="lvl-2"><a href="#为什么住在-d3-而不是-cli">为什么住在 D3 而不是 cli/</a></li><li class="lvl-2"><a href="#契约">契约</a></li><li class="lvl-2"><a href="#测试">测试</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="ansisanitizer-剥离-ansi-csi-osc-裸-esc-控制序列的单一真源">ansiSanitizer — 剥离 ANSI/CSI/OSC/裸 ESC 控制序列的单一真源<a class="anchor" href="#ansisanitizer-剥离-ansi-csi-osc-裸-esc-控制序列的单一真源" aria-label="锚点">#</a></h1>
+<p><strong>域</strong>：D3 共享底座 ｜ <strong>归位</strong>：2026-09-28，[RESEARCH-018] P2 第 20 批（旧路径<br><code>services/backend/src/cli/ansiSanitizer.js</code> 现在是一行再导出壳）｜ <strong>lifecycle</strong>：stable（存量归位，非经<br><code>scripts/quarantine/</code> 晋级）</p>
+<h2 id="为什么住在-d3-而不是-cli">为什么住在 D3 而不是 cli/<a class="anchor" href="#为什么住在-d3-而不是-cli" aria-label="锚点">#</a></h2>
+<p>真身全文<strong>零 <code>require</code></strong>（搬迁前置闸断言过计数为 0），却被两侧同时消费：</p>
+<table><thead><tr><th>消费方</th><th>域</th><th>用法</th></tr></thead><tbody><tr><td><code>services/backend/src/utils/stripAnsi.js:37</code></td><td>D3</td><td><code>stripAnsi()</code> 的 body 就是它</td></tr><tr><td><code>services/backend/src/cli/tui/selection.js</code></td><td>D1</td><td>选区复制前剥残留（[DESIGN-ARCH-149]）</td></tr></tbody></table>
+<p>住 <code>cli/</code> 时，D3 的 <code>stripAnsi</code> 必须<strong>向下伸进运行时</strong>取它——那是一条 <code>d3-purity</code> 禁止边<br>（<code>DOMAIN-DEPS.json</code> D3 的 <code>mayDependOn</code> 只有 <code>[D3]</code>）。搬真身、留壳、只改 D3 侧那一处 require 串，<br>边即消失，而 D1 侧消费者的 require 串逐字节未动。</p>
+<p>与第 19 批判为「喂尺」的那七个 prompt 引擎的区别，就是这里的判据：<strong>纯叶子 + 跨域消费</strong>。<br>那些是带状态与 IO 的服务、且只有 <code>constants/prompts.js</code> 一个 D3 消费者，搬进 D3 只会把边换个方向数。</p>
+<h2 id="契约">契约<a class="anchor" href="#契约" aria-label="锚点">#</a></h2>
+<ul><li><strong>纯</strong>：零 require / 零 IO / 确定性 / 绝不抛。非字符串输入<strong>原样返回</strong>（<code>null</code>、<code>undefined</code>、<code>42</code> 都不抛）。</li><li><strong>顺序敏感</strong>：多字节序列（OSC/CSI/DCS）→ 短序列与两字节 → 裸控制字符 → 零宽/BOM。换顺序会留残参。</li><li><strong>剥一半比不剥更糟</strong>：旧路径 <code>modelTextNormalizer._stripInvisible</code> 只吃 <code>0x1B</code> 一个字节，紧跟的</li></ul>
+<p><code>[1m</code> 留在屏上成可见 ASCII，并破坏紧随 <code>_</code> 的 left-flanking 条件 → <code>_标题_</code> 强调不成立。<br>  这是 <code>stripAnsiSequences(String.fromCharCode(27) + '[1m_标题_') === '_标题_'</code> 这条回归锚存在的原因。</p>
+<p>导出：<code>stripAnsiSequences</code> / <code>hasAnsiSequences</code> / <code>RE_CSI</code> / <code>RE_OSC</code> / <code>RE_DCS</code> / <code>RE_ESC_SHORT</code> /<br><code>RE_BARE_CONTROL</code> / <code>RE_ZERO_WIDTH</code>（正则外供是为了让观测埋点复用同一张判定，不再各写一份正则）。</p>
+<h2 id="测试">测试<a class="anchor" href="#测试" aria-label="锚点">#</a></h2>
+<ul><li>本单元：<code>index.test.js</code>（壳与真身同一模块对象 / 壳零逻辑 / 导出符号集 / D3 消费者不回指 D1）</li><li>行为契约：<code>services/backend/tests/ansiSanitizer.test.js</code>、<code>services/backend/tests/stripAnsi.test.js</code></li></ul>
+<p>（jest 方言；本仓无 root jest bin 时可经 <code>.khyos/tmp/jest-lite.js</code> 跑，注意该 shim 未实现<br>  <code>toBeNull</code> / <code>not.toMatch</code> / <code>toThrow</code>，命中这三条的样本须手工复验）</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../runtime/node/backend/src/skills/system-admin/linux-admin/SKILL.html"><div class="dir">← 上一篇</div><div class="ttl">Linux System Administration</div></a><a class="next" href="../../../../../../runtime/node/backend/src/utils/flagRegistry/README.html"><div class="dir">下一篇 →</div><div class="ttl">flagRegistry — D3 共享底座 / KHY 门控的声明式中央注册表</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/utils/ansiSanitizer/README.html";</script>
+<script src="../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

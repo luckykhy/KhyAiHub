@@ -1,0 +1,32 @@
+{
+  "name": "plugins",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "按 DOMAIN-DEPS.json 的 D2 名义边界申报。实测出边（archDebtScan 解析后的 require 图，本道 2026-09-30 逐条核到行号）：D2 1 条、D3 2 条、**D1 4 条**：pluginContribResolver.js:39 → services/flagRegistry.js、:60 → tools/_baseTool.js、:66 → tools/index.js，pluginInvoker.js:30 → services/urlSafety.js。这 4 条属 d2-no-reach-into-d1 门（S1 观察者档）的在册存量，登记不修：消边方式（注入或目标归位）是 [RESEARCH-018] P2/Q2 的人工裁决面，其中 tools/ 的域归属本身待 Q4。",
+  "fanIn": 4,
+  "fanInEvidence": [
+    "services/backend/src/services/gateway/adapters/claudeAdapter.js (→ pluginContribResolver)",
+    "services/backend/src/services/gateway/adapters/codexAdapter.js (→ pluginContribResolver)",
+    "services/backend/src/services/plugins/index.js (→ resolver/invoker/bridge 三家)",
+    "services/backend/src/services/tool/toolCalling.js (→ resolver/bridge)"
+  ],
+  "_fanIn_note": "非测试外部消费者去重 4 个（逐文件 fan-in：resolver 4 / invoker 1 / bridge 2），取自解析后的 require 图，与 .khyos/tmp/b54-unit-consumers.js 输出逐条对上。",
+  "lifecycle": {
+    "stage": "staged",
+    "since": "2026-09-30",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "三件套形式齐（README + 整数 fanIn + 3/3 同名同目录测试 33 例 0 fail），签 staged 而非 stable：① 出边含 4 条在册 D1 违令边未清；② 本批实测钉出「禁用 first-wins 扩展后同名工具被遮蔽者上位接管」与「listDeclaredTools 只回看 manifest」两条与直觉相反的语义（登记于测试头注释），是否属期望行为需人工裁决。",
+  "contract": {
+    "purpose": "扩展插件的唯一翻译漏斗：resolver 解析各扩展根 manifest 的贡献项（first-wins 遮蔽序 + disabled 位），invoker 按声明执行（openapiTools 契约形状、urlSafety/nativeHttp 出网），bridge 把插件工具桥成 _baseTool 形态进 tools 注册表。",
+    "ioOwner": "读扩展根磁盘 manifest（extensionRoots 由消费者注入/桩隔离）；出网面仅 invoker（urlSafety + nativeHttp，测试中桩掉防真 DNS/传输）。",
+    "gates": "disabled 位 fail-closed 需双禁用（同名遮蔽者会接管首禁用者的名字）；flagRegistry 未知 flag 默认开、off 词关闭（GATE 语义真件实测）。",
+    "coverage_note": "本段依据 = 三文件头注释 + 本批 33 例共置测试 + 逐行号 require 站点，不是逐行审计结论。"
+  },
+  "tests": [
+    "pluginContribResolver.test.js",
+    "pluginInvoker.test.js",
+    "pluginToolBridge.test.js"
+  ]
+}

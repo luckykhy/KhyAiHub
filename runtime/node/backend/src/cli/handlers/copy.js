@@ -1,0 +1,112 @@
+'use strict';
+
+/**
+ * copy.js — `/copy` 命令薄壳:把最近(或第 N 条)助手回复 / 其中代码块复制到系统剪贴板。
+ * 对齐 Claude Code `/copy`。
+ *
+ * **背后逻辑**(参数解析、选第 N 条、抽代码块、拼载荷、剪贴板失败文案)全在纯叶子
+ * `cli/copyReply.js`;本壳只做副作用:门控、解析当前 sessionId(既有
+ * `sessionForestService.getCurrentSessionId`)、读 chain(既有
+ * `sessionPersistence.buildConversationChain`)、把每条 assistant content 用既有
+ * `contentBlockUtils.contentToText` 压平成纯文本(与 `share` 路径同一压平器,不另起炉灶)、
+ * 调统一剪贴板出口 `tui/utils/ccClipboard.writeClipboard`(native 系统工具先行 +
+ * OSC 52 非 TTY 兜底,095 §3.3 P1-1)、打印回执。
+ *
+ * 用法:`/copy`(复制最近助手回复)· `/copy N`(从最近往回数第 N 条)· `/copy code [N]`
+ * (只复制其中的代码块)。
+ *
+ * **诚实边界**:native(powershell Set-Clipboard/pbcopy/xclip/wl-copy)与 OSC 52 兜底
+ * 均失败时,按统一状态对象的 reasons 如实告知失败原因,绝不假装已复制。
+ *
+ * 门控 KHY_COPY 默认开;关 → 命令不接管(返回 false 字节回退)。
+ */
+
+const leaf = require('../copyReply');
+const { printInfo, printError, printSuccess } = require('../formatters');
+
+async function handleCopy(subCommand, args = [], _options = {}) {
+  if (!leaf.isEnabled(process.env)) {
+    printInfo('copy 命令未启用(KHY_COPY=off)。');
+    return false;
+  }
+
+  const tokens = [subCommand]
+    .concat(Array.isArray(args) ? args : [])
+    .filter((t) => t != null);
+  const { nth, codeOnly, ignored } = leaf.parseCopyArgs(tokens);
+  if (ignored.length > 0) {
+    printError(
+      `copy:无法识别的参数:${ignored.join(' ')} —— copy 复制助手回复,不接受文件路径。` +
+        '用法:copy [N] 或 copy code [N]'
+    );
+    return true;
+  }
+
+  let sessionId = null;
+  try {
+    sessionId = require('../../services/domain/session/session/sessionForestService.js').getCurrentSessionId();
+  } catch {
+    /* best-effort */
+  }
+  if (!sessionId) {
+    printInfo('暂无活动会话 —— 先开始一段对话,再用 /copy 复制助手回复。');
+    return true;
+  }
+
+  let chain = [];
+  try {
+    chain = require('../../services/sessionPersistence').buildConversationChain(sessionId);
+  } catch (e) {
+    printError('读取会话 transcript 失败:' + (e && e.message ? e.message : String(e)));
+    return true;
+  }
+
+  // 把 assistant content 压平成纯文本(复用 share 路径同一压平器)。
+  let contentToText = (c) => (typeof c === 'string' ? c : '');
+  try {
+    contentToText = require('../../services/contentBlockUtils').contentToText;
+  } catch {
+    /* fallback above */
+  }
+  const texts = [];
+  for (const entry of Array.isArray(chain) ? chain : []) {
+    if (!entry || entry.role !== 'assistant') {
+      continue;
+    }
+    let t = '';
+    try {
+      t = String(contentToText(entry.content) || '').trim();
+    } catch {
+      t = '';
+    }
+    if (t) {
+      texts.push(t);
+    }
+  }
+
+  const built = leaf.buildCopyPayload(texts, { nth, codeOnly });
+  if (!built.ok) {
+    if (built.reason === 'no_reply') {
+      printInfo('未找到可复制的助手回复' + (nth > 1 ? `(本会话不足 ${nth} 条助手回复)。` : '。'));
+    } else if (built.reason === 'no_code') {
+      printInfo('该助手回复里没有代码块(``` 围栏)可复制。');
+    } else {
+      printInfo('没有可复制的内容。');
+    }
+    return true;
+  }
+
+  const wrote = require('../tui/utils/ccClipboard').writeClipboard(built.payload);
+  if (wrote.ok) {
+    const via = wrote.channels.join('+');
+    printSuccess(`已复制到剪贴板(${via}):` + built.description);
+  } else {
+    printError(
+      '写入剪贴板失败:' +
+        leaf.describeClipboardFailure(wrote.reasons, { bytes: wrote.bytes })
+    );
+  }
+  return true;
+}
+
+module.exports = { handleCopy };

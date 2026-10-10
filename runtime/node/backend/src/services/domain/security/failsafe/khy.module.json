@@ -1,0 +1,42 @@
+{
+  "name": "failsafe",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "按 DOMAIN-DEPS.json 的 D2 名义边界如实声明。实测唯一出域边：`classifierSignals.js:24` require `services/errorClassifier.js`（D1），属 declared_not_enforced 的 D2→D1，交 archDebtScan R1 与 cross-layer-require 棘轮管辖（逐条裁决面见 [DESIGN-LAY-008] §12.43）。本单元零条指向 D3（utils/constants）的 require，也不出仓到 D4/D5。",
+  "fanIn": 2,
+  "fanInEvidence": [
+    "services/backend/src/services/failsafe/index.js",
+    "services/backend/src/services/domain/maintenance/selfHeal/errorDiagnostician.js"
+  ],
+  "_fanIn_note": "非测试外部消费者去重 2 个，逐条核到 require 行号：D1 历史路径再导出壳 `services/failsafe/index.js:4`；D2 自愈诊断面 `maintenance/selfHeal/errorDiagnostician.js:41`（惰性 require，不可用时自愈诊断降级而不是抛给调用方）。计数排除 *.test.js 与单元自身内部引用。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-29",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "晋级三判据齐：单元级 README.md（本批补）、整数 fanIn、6 个源文件全部有同名同目录测试（2026-09-29 本道显式路径复跑复验）。单元早于 entry-buffer 守卫，缓冲区从未被经过，故 enteredVia 为 null。",
+  "contract": {
+    "purpose": "零静默失败 + 精准归因：classifier 把任意原始失败信号收敛到 E01–E08（errorCodes.js 为单一真源字典），classifierSignals 负责信号识别与文本脱敏/裁剪，safeResponse 是拦截器基座，streamInjector 保证流式路径的兜底协议不可绕过。",
+    "ioOwner": "本单元不拥有任何网络/进程 IO：只做归因与包装，实际的重试、安装、上报归消费者（selfHeal/errorDiagnostician 与网关侧）。错误码表是单一真源，禁止调用方自带码表。",
+    "gates": "无 env 开关：归因与兜底是安全面，不提供可关闭路径；消费者通过惰性 require 进入，单元不可用时消费者自行降级。",
+    "coverage_note": "purpose/ioOwner/gates 段覆盖本轮实测到的面（各文件头注释 + 6 份共置测试 + require 站点行号核对），不是逐行审计结论。"
+  },
+  "knownDefectsPinned": [
+    "再归因（幂等）只保住错误码，必填字段全部退化成 unknown",
+    "ctx 里过期的 error_code 压过 input 更强的显式信号；原型链上的 error_code 被当成显式归因",
+    "只读(frozen)失败信号被降级成 E04（本应 E06）；auth/billing/404 一类网关侧失败被归成「工具执行崩溃」",
+    "detail 用真值判断渲染，值为 0 的数字字段被抹掉；E07 的授权级别 0（L0）被当成缺失",
+    "ctx 传 null / 缺省时 _readMissingDep、_detectKind 直接解引用抛 TypeError（兜底路径自身会抛）",
+    "嵌套 error.code 绕过全大写形态校验，任意字符串都被当作合法错误码"
+  ],
+  "_known_defects_note": "27 处 KNOWN-DEFECT 断言（grep -c 实测，非自报），上面列其代表。一律登记不修：改任何一条都改变面向用户的归因文案与错误码，属行为变更，需甲/乙裁决（任务 #17）。",
+  "tests": [
+    "classifier.test.js",
+    "classifierSignals.test.js",
+    "errorCodes.test.js",
+    "index.test.js",
+    "safeResponse.test.js",
+    "streamInjector.test.js"
+  ]
+}

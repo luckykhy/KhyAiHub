@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-ARCH-177] 侧栏项目分组可辨识化改造方案.md -->
+<title>[DESIGN-ARCH-177] 侧栏项目分组可辨识化改造方案（项目名脱离路径末段 + 身份标识 + 层级感知） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>[DESIGN-ARCH-177] 侧栏项目分组可辨识化改造方案（项目名脱离路径末段 + 身份标识 + 层级感知）</div>
+      <header class="hero reveal"><h1>[DESIGN-ARCH-177] 侧栏项目分组可辨识化改造方案（项目名脱离路径末段 + 身份标识 + 层级感知）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-177-侧栏项目分组可辨识化改造方案-项目名脱离路径末段-身份标识-层级感知">[DESIGN-ARCH-177] 侧栏项目分组可辨识化改造方案（项目名脱离路径末段 + 身份标识 + 层级感知）</a></li><li class="lvl-2"><a href="#0-一句话结论">0. 一句话结论</a></li><li class="lvl-2"><a href="#1-现状实证">1. 现状实证</a></li><li class="lvl-3"><a href="#1-1-项目名与分桶-全部由-workspacepath-派生">1.1 项目名与分桶：全部由 `workspacePath` 派生</a></li><li class="lvl-3"><a href="#1-2-khy-durable-transcript-不是本仓产生的目录">1.2 `khy-durable-transcript-*` 不是本仓产生的目录</a></li><li class="lvl-3"><a href="#1-3-main-侧已有可复用的持久化通道-但没有-项目-实体">1.3 main 侧已有可复用的持久化通道，但没有「项目」实体</a></li><li class="lvl-3"><a href="#1-4-文件夹头与任务行的现状">1.4 文件夹头与任务行的现状</a></li><li class="lvl-3"><a href="#1-5-可用资产">1.5 可用资产</a></li><li class="lvl-2"><a href="#2-借鉴提案-b-p2-七字段">2. 借鉴提案（B-P2 七字段）</a></li><li class="lvl-2"><a href="#3-目标形态">3. 目标形态</a></li><li class="lvl-3"><a href="#3-1-数据层-引入-项目登记-实体-扩展既有-canonical">3.1 数据层：引入「项目登记」实体（扩展既有 canonical）</a></li><li class="lvl-3"><a href="#3-2-判定层-什么才算-项目-本方案的核心">3.2 判定层：什么才算「项目」（本方案的核心）</a></li><li class="lvl-3"><a href="#3-3-渲染层-文件夹头三段式-对齐图2-的信息层次">3.3 渲染层：文件夹头三段式（对齐图2 的信息层次）</a></li><li class="lvl-3"><a href="#3-4-登记入口-复用既有-groupdialog-形态">3.4 登记入口：复用既有 `groupDialog` 形态</a></li><li class="lvl-3"><a href="#3-5-文案与样式约束">3.5 文案与样式约束</a></li><li class="lvl-2"><a href="#4-实施分期-每期独立可回滚">4. 实施分期（每期独立可回滚）</a></li><li class="lvl-3"><a href="#第一期-判定层-兜底-解决-80-的可辨识性问题-零-ui-改动">第一期：判定层 + 兜底（**解决 80% 的可辨识性问题，零 UI 改动**）</a></li><li class="lvl-3"><a href="#第二期-项目登记-desktopprojects-落地">第二期：项目登记（`desktopProjects` 落地）</a></li><li class="lvl-3"><a href="#第三期-身份标识-图标-颜色">第三期：身份标识（图标 + 颜色）</a></li><li class="lvl-2"><a href="#5-诚实边界-刻意不纳入">5. 诚实边界（刻意不纳入）</a></li><li class="lvl-2"><a href="#6-反模式-这条路别走">6. 反模式（这条路别走）</a></li><li class="lvl-2"><a href="#7-验收方式">7. 验收方式</a></li><li class="lvl-2"><a href="#8-待核实项">8. 待核实项</a></li><li class="lvl-2"><a href="#9-变更日志">9. 变更日志</a></li><li class="lvl-2"><a href="#10-实施记录-2026-10-03">10. 实施记录（2026-10-03）</a></li><li class="lvl-3"><a href="#10-1-落地清单">10.1 落地清单</a></li><li class="lvl-3"><a href="#10-2-与方案的偏离-逐条给原因">10.2 与方案的偏离（逐条给原因）</a></li><li class="lvl-3"><a href="#10-3-踩到的坑-照-8-5-排查-8-秒定位">10.3 踩到的坑（照 §8.5 排查，8 秒定位）</a></li><li class="lvl-3"><a href="#10-4-验收实测">10.4 验收实测</a></li><li class="lvl-3"><a href="#10-5-明确不做">10.5 明确不做</a></li><li class="lvl-3"><a href="#10-6-落地后的目视验收-待用户确认">10.6 落地后的目视验收（待用户确认）</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: done --&gt;</p>
+<h1 id="design-arch-177-侧栏项目分组可辨识化改造方案-项目名脱离路径末段-身份标识-层级感知">[DESIGN-ARCH-177] 侧栏项目分组可辨识化改造方案（项目名脱离路径末段 + 身份标识 + 层级感知）<a class="anchor" href="#design-arch-177-侧栏项目分组可辨识化改造方案-项目名脱离路径末段-身份标识-层级感知" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>状态</strong>：<strong>已落地</strong>（2026-10-03，三期全实施并重建产物；实施记录见 §10）<br><strong>范围</strong>：<code>apps/khyos-desktop/src/renderer/components/layout/WorkspaceSidebar.tsx</code>（项目 tab 的文件夹视图）<br><strong>上游依赖</strong>：无（不借鉴任何外部项目）<br><strong>调研指针</strong>：用户 2026-10-03 提供的两张截图 —— 图1 = khyos 侧栏实况（项目名 <code>Portable</code> / <code>khy-durable-transcript-OotVEc</code> / <code>khy-os</code> 混列）；图2 = WorkBuddy「新建工作区」弹窗（源文件夹 + 名称 + 图标 + 颜色 四段式）<br><strong>模板合规</strong>：B-P2 七字段据实声明「不适用 + 依据」（见 §2，零借鉴 ⇒ 第 1 字段本就不触发）<br><strong>B-P1 豁免判定</strong>：本改动为<strong>行为修正</strong>（项目名取错、身份不可辨），非新增能力域，适用 <code>[DESIGN-SOURCING-001] §3 B-P1</code> 豁免</p></blockquote>
+<hr>
+<h2 id="0-一句话结论">0. 一句话结论<a class="anchor" href="#0-一句话结论" aria-label="锚点">#</a></h2>
+<p>侧栏「项目」tab 的文件夹名是 <code>workspacePath</code> 的<strong>路径末段机械取值</strong>，而 <code>workspacePath</code> 记录的是<strong>会话当时的工作目录</strong>，不是用户登记的「项目」。二者混用导致三类可辨识性崩塌：<strong>父目录冒充项目</strong>（<code>Portable</code> 26 条）、<strong>临时目录冒充项目</strong>（<code>khy-durable-transcript-*</code> 各 1 条）、<strong>同名项目无法区分</strong>（两个不同路径都叫 <code>backend</code>）。修法不是加图标或加颜色（那是装饰），而是<strong>先给项目一个独立身份</strong>（路径 → 项目记录的映射 + 显示名 + 可选图标/颜色），让列表按身份分组而非按路径末段。</p>
+<table><thead><tr><th>病灶</th><th>证据</th><th>用户可见症状（图1）</th></tr></thead><tbody><tr><td>P1 项目名 = 路径末段</td><td><code>WorkspaceSidebar.tsx:306-309</code> <code>baseName()</code>、<code>:353</code> <code>name: p ? baseName(p) : '未归属项目'</code></td><td><code>Portable</code> 与 <code>khy-os</code> 同列，父目录成了「项目」</td></tr><tr><td>P2 分桶键 = 完整 <code>workspacePath</code></td><td><code>:342-355</code> <code>byPath</code> 以整串路径为 key</td><td>同一项目的不同子目录被拆成多个「项目」</td></tr><tr><td>P3 身份只有路径，没有登记</td><td>全仓无项目登记表；<code>settingsStore.ts:67-77</code> 只有 <code>desktopWorkspacePath</code>（单值）+ <code>desktopRecentWorkspaces</code>（MRU，上限 8）</td><td>无法给项目起名、配色、图标；无法把散在同一项目下的会话归拢</td></tr><tr><td>P4 文件夹头无身份标识</td><td><code>:662-664</code> 仅 <code>▸/▾</code> + 名字 + 计数</td><td>一排灰字，扫不出哪个是常用项目</td></tr><tr><td>P5 会话标题未出现在文件夹头</td><td><code>:752-760</code> 任务行才有 <code>title</code></td><td>想知道「khy-os 那个项目里在干什么」必须逐条展开</td></tr></tbody></table>
+<hr>
+<h2 id="1-现状实证">1. 现状实证<a class="anchor" href="#1-现状实证" aria-label="锚点">#</a></h2>
+<h3 id="1-1-项目名与分桶-全部由-workspacepath-派生">1.1 项目名与分桶：全部由 <code>workspacePath</code> 派生<a class="anchor" href="#1-1-项目名与分桶-全部由-workspacepath-派生" aria-label="锚点">#</a></h3>
+<p><code>WorkspaceSidebar.tsx</code>：</p>
+<ul><li><code>:31-38</code> <code>interface Task { id; title; workspacePath; createdAt; updatedAt; archived }</code> —— <strong>Task 上没有 projectId</strong>，只有裸路径。</li><li><code>:306-309</code></li></ul>
+<pre><code class="language-ts">  <span class="hljs-keyword">const</span> <span class="hljs-title function_">baseName</span> = (<span class="hljs-params"><span class="hljs-attr">p</span>: <span class="hljs-built_in">string</span></span>) =&gt; {
+    <span class="hljs-keyword">const</span> seg = p.<span class="hljs-title function_">split</span>(<span class="hljs-regexp">/[\\/]/</span>).<span class="hljs-title function_">filter</span>(<span class="hljs-title class_">Boolean</span>)
+    <span class="hljs-keyword">return</span> seg.<span class="hljs-property">length</span> ? seg[seg.<span class="hljs-property">length</span> - <span class="hljs-number">1</span>] : p
+  }</code></pre>
+<p>取路径<strong>最后一段</strong>。<code>D:\Portable</code> → <code>Portable</code>；<code>D:\Portable\khy-os\apps\backend</code> → <code>backend</code>。</p>
+<ul><li><code>:342-348</code> 项目视图分桶：</li></ul>
+<pre><code class="language-ts">  <span class="hljs-keyword">const</span> byPath = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Map</span>&lt;<span class="hljs-built_in">string</span>, <span class="hljs-title class_">Task</span>[]&gt;()
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">const</span> t <span class="hljs-keyword">of</span> filteredOrdered) {
+    <span class="hljs-keyword">const</span> p = t.<span class="hljs-property">workspacePath</span> || <span class="hljs-string">&#x27;&#x27;</span>
+    ...
+  }</code></pre>
+<p>key 是<strong>整串路径</strong>（<code>:351</code> <code>key: \</code>project:${p || 'none'}\``），两个不同路径末段同名 ⇒ 屏幕上同名文件夹，key 不同 ⇒ 拖拽归组/折叠互不干扰。</p>
+<ul><li><code>:353</code> <code>name: p ? baseName(p) : '未归属项目'</code> ⇒ 名字与 key 同源，<strong>改名字就会改身份</strong>。</li><li><code>:306-309</code> 的 <code>baseName</code> 是本文件内<strong>唯一</strong>的路径取名函数（Grep <code>baseName</code> 命中 2 处：定义 + 使用），无其他 canonical 可收敛。</li></ul>
+<h3 id="1-2-khy-durable-transcript-不是本仓产生的目录">1.2 <code>khy-durable-transcript-*</code> 不是本仓产生的目录<a class="anchor" href="#1-2-khy-durable-transcript-不是本仓产生的目录" aria-label="锚点">#</a></h3>
+<ul><li>Grep <code>durable-transcript</code> / <code>durableTranscript</code>：<code>apps/khyos-desktop/src</code> <strong>零命中</strong>；<code>services/backend/src</code>（限定 <code>--glob *.js</code>）<strong>零命中</strong>。</li><li>⇒ 这些目录由<strong>仓外</strong>流程（会话落盘/转录临时目录）产生，会话的 <code>workspacePath</code> 恰好指向它们，于是被 <code>:342</code> 的自动分桶当成「项目」。</li><li>它们与真项目在数据结构上<strong>完全同形</strong>（都只是 <code>Task.workspacePath</code> 的一串值）⇒ 渲染层没有任何依据把它们摘出来。<strong>这不是渲染 bug，是缺一层「什么才算项目」的判定。</strong></li></ul>
+<h3 id="1-3-main-侧已有可复用的持久化通道-但没有-项目-实体">1.3 main 侧已有可复用的持久化通道，但没有「项目」实体<a class="anchor" href="#1-3-main-侧已有可复用的持久化通道-但没有-项目-实体" aria-label="锚点">#</a></h3>
+<ul><li><code>settingsStore.ts:71</code> <code>desktopWorkspacePath: ''</code> —— 单值，注释写明「Workspace root chosen via 窗口菜单 → 打开工作区 / 侧栏 添加项目」。⚠ <strong>注释里的「侧栏 添加项目」目前不存在</strong>：侧栏顶部只有「新建任务 / 搜索 / 自动化 / 插件市场」四个按钮（<code>WorkspaceSidebar.tsx:495-526</code>），无任何添加项目入口。注释已先行于实现（典型的意图/实现漂移）。</li><li><code>settingsStore.ts:77</code> <code>desktopRecentWorkspaces: []</code> —— MRU 候选集，<strong>上限 8</strong>，注释明确「它<strong>不是</strong>第二个真源」。</li><li><code>main/index.ts:693-695</code></li></ul>
+<pre><code class="language-ts">  ipcMain.<span class="hljs-title function_">handle</span>(<span class="hljs-string">&#x27;workspace:list&#x27;</span>, <span class="hljs-title function_">async</span> () =&gt; {
+    <span class="hljs-keyword">return</span> { <span class="hljs-attr">ok</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">current</span>: <span class="hljs-keyword">await</span> <span class="hljs-title function_">getWorkspaceRoot</span>(), <span class="hljs-attr">recents</span>: <span class="hljs-keyword">await</span> <span class="hljs-title function_">readRecentWorkspaces</span>() }
+  })</code></pre>
+<p>返回 <code>{ current, recents }</code>，<strong>无项目数组、无显示名、无标识</strong>。</p>
+<ul><li>preload <code>index.ts:186</code> <code>workspaceList</code> 桥已暴露；<code>:41</code> <code>workspaceListFiles</code> 是<strong>文件</strong>列表，与项目无关（勿混淆这两个同名方法）。</li></ul>
+<p>⇒ 落点应<strong>扩展既有 canonical</strong>（<code>workspace:list</code> + <code>settingsStore</code>），<strong>不新建第二个真源</strong>。</p>
+<h3 id="1-4-文件夹头与任务行的现状">1.4 文件夹头与任务行的现状<a class="anchor" href="#1-4-文件夹头与任务行的现状" aria-label="锚点">#</a></h3>
+<ul><li><code>:643-664</code> 文件夹头：<code>▸/▾</code> + <code>truncate</code> 名字 + <code>items.length</code> 计数。三样都是中性样式（<code>text-foreground/60</code>、<code>text-foreground/30</code>），<strong>零身份信息</strong>。</li><li><code>:752-760</code> 任务行：小圆点（激活态 <code>bg-brand</code>）+ <code>task.title</code> + <code>formatTime(task.updatedAt)</code>。<code>title</code> 只在行内出现，文件夹头看不到。</li><li>已有空态三态（<code>:588-605</code>）与归档区（<code>:853-882</code>），形态完备 ⇒ 新方案不必重写列表骨架。</li></ul>
+<h3 id="1-5-可用资产">1.5 可用资产<a class="anchor" href="#1-5-可用资产" aria-label="锚点">#</a></h3>
+<ul><li>图标：<code>components/ui/Icon.tsx:27-42</code> 注册 12 枚字形（<code>IconName</code> 联合类型），全部走 <code>currentColor</code>。⚠ 该文件头注释（<code>:1-11</code>）自述「这套字形是 2026-10-02 用户点名重做的，有意偏离 ZCode 1:1 复刻」⇒ <strong>新增项目图标应扩展这个注册表，不要引第二套图标来源</strong>。</li><li>颜色令牌：<code>theme/globals.css:9-46</code> <code>@theme</code> 块，语义令牌齐全（<code>--color-brand</code> / <code>--color-surface-hover</code> / <code>--color-selected</code> / <code>--color-border</code> …）。⚠ <code>--color-brand</code> 在浅色主题下是 <code>#000000</code>（<code>:189</code>）、深色下是 <code>#ffffff</code>（<code>:96</code>）⇒ <strong>品牌色不能承担「区分项目」的职责</strong>（浅色主题下所有项目一个黑点，等于没区分）。</li><li>现有本地化真源：<code>renderer/i18n/zh-CN.json</code>。⚠ 但 <code>WorkspaceSidebar.tsx</code> 全文<strong>未使用 i18n</strong>（Grep <code>i18n|useTranslation</code> 零命中），所有文案是硬编码中文 ⇒ 本提案<strong>沿用硬编码中文</strong>，不擅自引入 i18n 键（那是另一条战线）。</li></ul>
+<hr>
+<h2 id="2-借鉴提案-b-p2-七字段">2. 借鉴提案（B-P2 七字段）<a class="anchor" href="#2-借鉴提案-b-p2-七字段" aria-label="锚点">#</a></h2>
+<p><strong>零借鉴 ⇒ B-P2 不触发</strong>。图2 是 WorkBuddy 自身「新建工作区」弹窗，属<strong>同生态产品形态参考</strong>，非外部上游项目，故第 1 字段无对象可填。按 <code>[DESIGN-ARCH-149] §2</code> 先例逐字段据实声明：</p>
+<table><thead><tr><th>#</th><th>字段</th><th>声明</th></tr></thead><tbody><tr><td>1</td><td>借鉴对象</td><td><strong>不适用</strong> —— 未借鉴任何外部项目/版本/commit。图2 为 WorkBuddy 自身 UI 截图，仅作形态参照</td></tr><tr><td>2</td><td>借鉴内容</td><td><strong>不适用</strong> —— 无上游结论被采纳。形态上确实与图2 的「源文件夹 + 名称 + 图标 + 颜色」分段思路同向，但本方案的<strong>身份层设计来自本仓 §1.1–§1.3 的实测缺口</strong>，非移植</td></tr><tr><td>3</td><td>解决的问题</td><td><strong>不适用</strong>（B-P2 语境）；本仓待解缺口见 §0 病灶表 P1–P5，均有 file:line 证据</td></tr><tr><td>4</td><td>许可证与代码性质</td><td><strong>不适用</strong> —— 未拷贝任何外部代码。落地全部为本仓新写 TSX/CSS</td></tr><tr><td>5</td><td>借鉴方式</td><td><strong>不适用</strong> —— 无 <code>idea</code>/<code>reference</code>/<code>adapter</code>/<code>vendored</code>/<code>fork</code> 归属</td></tr><tr><td>6</td><td>落点与现有实现对比</td><td>落点：<code>WorkspaceSidebar.tsx</code>（既有文件，扩展）、<code>main/index.ts</code> + <code>settingsStore.ts</code>（既有 canonical，扩展 <code>workspace:list</code>）。<strong>搜索过</strong>：<code>baseName</code>（本文件内 2 处，无第二实现）、<code>workspace:list</code>/<code>workspaceList</code>（<code>preload/index.ts:186</code>、<code>main/index.ts:693</code>、渲染侧 3 处消费）、<code>durable-transcript</code>（仓内零命中）、<code>IconName</code>（<code>Icon.tsx:27</code>）、<code>添加项目</code>（<code>settingsStore.ts:67</code> 注释命中，侧栏无实现）。⇒ 属<strong>扩展既有 canonical</strong>，非新增并行实现</td></tr><tr><td>7</td><td>验收方式</td><td>见 §7（三条可复现命令 + 一次人工目视）</td></tr></tbody></table>
+<hr>
+<h2 id="3-目标形态">3. 目标形态<a class="anchor" href="#3-目标形态" aria-label="锚点">#</a></h2>
+<h3 id="3-1-数据层-引入-项目登记-实体-扩展既有-canonical">3.1 数据层：引入「项目登记」实体（扩展既有 canonical）<a class="anchor" href="#3-1-数据层-引入-项目登记-实体-扩展既有-canonical" aria-label="锚点">#</a></h3>
+<p>新增 <code>settingsStore.ts</code> 字段（与 <code>desktopWorkspacePath</code> 同级，走既有 <code>settings:get/set</code>）：</p>
+<pre><code class="language-ts"><span class="hljs-comment">// 项目登记表：路径 → 身份。解决「项目名 = 路径末段」导致父目录/临时目录</span>
+<span class="hljs-comment">// 冒充项目、以及同名项目不可辨。写入侧：侧栏「添加项目」或会话归组时登记；</span>
+<span class="hljs-comment">// 读取侧：项目 tab 分桶。不新建第二个真源 —— 当前工作空间仍只由</span>
+<span class="hljs-comment">// desktopWorkspacePath 回答。</span>
+<span class="hljs-attr">desktopProjects</span>: [
+  <span class="hljs-comment">// { path: &#x27;D:\\Portable\\khy-os&#x27;, name: &#x27;khy-os&#x27;, icon: &#x27;review&#x27;, color: &#x27;blue&#x27; }</span>
+],</code></pre>
+<ul><li><code>path</code> 是<strong>分桶键</strong>（替代 <code>:342</code> 的整串 <code>workspacePath</code> 裸值）。</li><li><code>name</code> 是<strong>显示名</strong>（用户可写，允许与末段不同 ⇒ 解决 P1）。</li><li><code>icon</code> / <code>color</code> 可选，缺省则不渲染标识（<strong>不给假数据</strong>）。</li><li>未登记的路径<strong>仍要显示</strong>（不能因为没登记就丢列表）—— 走 §3.2 的兜底分类。</li></ul>
+<h3 id="3-2-判定层-什么才算-项目-本方案的核心">3.2 判定层：什么才算「项目」（本方案的核心）<a class="anchor" href="#3-2-判定层-什么才算-项目-本方案的核心" aria-label="锚点">#</a></h3>
+<p>未登记路径按<strong>固定顺序</strong>判定，避免误伤：</p>
+<ol><li><strong>已登记</strong> → 用登记的 <code>name</code>/<code>icon</code>/<code>color</code>。</li><li><strong>临时/转录目录</strong>（形如 <code>khy-durable-transcript-&lt;随机6位&gt;</code>）→ 归入固定分组「<strong>未归属</strong>」，不占用项目层级。</li><li><strong>其它路径</strong> → 显示 <code>baseName()</code>，但<strong>标记为「推测项目名」</strong>（弱化样式 + <code>title</code> 提示完整路径），用户可一键「登记为项目」把它正名。</li></ol>
+<blockquote><p>⚠ 规则 2 的匹配必须<strong>锚定到具体前缀常量</strong>并写进文档与测试；<strong>不得</strong>泛化成「名字里有 random 就过滤」—— 那会误杀真项目。</p></blockquote>
+<h3 id="3-3-渲染层-文件夹头三段式-对齐图2-的信息层次">3.3 渲染层：文件夹头三段式（对齐图2 的信息层次）<a class="anchor" href="#3-3-渲染层-文件夹头三段式-对齐图2-的信息层次" aria-label="锚点">#</a></h3>
+<p>文件夹头从「▸ + 名字 + 计数」升级为：</p>
+<pre><code>[▸] [图标] 名字 .................... 计数
+                └ 副行（仅推测项目名时）：完整路径，弱化</code></pre>
+<ul><li><strong>图标</strong>：<code>Icon.tsx</code> 注册表内取，<code>size={13}</code>，<code>currentColor</code> 继承文件夹头文字色。⚠ 不新增第二套图标来源（§1.5）。</li><li><strong>颜色</strong>：只允许<strong>左侧 3px 竖条</strong>（<code>w-[3px] h-3.5 rounded-full</code>）承载，<strong>不给文字上色</strong> —— 文字上色会与 <code>text-foreground/60</code> 抢夺语义层级，且浅色主题下对比度不可控。</li><li><strong>计数</strong>保留右侧原位，不与图标争夺注意力。</li><li><strong>推测项目名</strong>的文件夹头：名字 <code>truncate</code> + 副行路径 <code>text-[11px] text-foreground/35</code>，hover 时整行可点「登记为项目」（P3 的最小闭环）。</li></ul>
+<h3 id="3-4-登记入口-复用既有-groupdialog-形态">3.4 登记入口：复用既有 <code>groupDialog</code> 形态<a class="anchor" href="#3-4-登记入口-复用既有-groupdialog-形态" aria-label="锚点">#</a></h3>
+<p><code>WorkspaceSidebar.tsx:993-1035</code> 已有自绘对话框（<code>absolute inset-0</code> + <code>bg-popover</code> 卡片 + 输入框 + 取消/确定）。<strong>照它的形状</strong>做「登记项目」对话框，新增两个可选控件：</p>
+<ul><li>名称输入（<strong>预填 <code>baseName</code></strong>，允许直接改 —— 这是解决 P1 的最短路径）。</li><li>图标选择：横排 8 枚（<code>IconName</code> 前 8 个），单选。</li><li>颜色选择：6 色圆点（<code>--color-brand</code> <strong>不可选</strong>，理由见 §1.5），单选。</li><li>「取消」= 不写任何键（保持现状渲染）；「确定」= 写 <code>desktopProjects</code>。</li></ul>
+<p>⚠ 图标/颜色<strong>默认值必须留空</strong>，不预选 —— 预选就是给假数据。</p>
+<h3 id="3-5-文案与样式约束">3.5 文案与样式约束<a class="anchor" href="#3-5-文案与样式约束" aria-label="锚点">#</a></h3>
+<ul><li>全部沿用 <code>WorkspaceSidebar.tsx</code> 硬编码中文（§1.5），不新增 i18n 键。</li><li>颜色一律走 <code>@theme</code> 令牌或 <code>currentColor</code>，<strong>禁硬编码色值</strong>（<code>check:frontend-design-tokens</code>）。</li><li>6 色候选的具体色值由 <code>@theme</code> 现有语义令牌组合而来（如 <code>success</code>/<code>warning</code>/<code>destructive</code>/<code>brand</code> 的浅色变体），<strong>不在组件里写 hex</strong>。</li></ul>
+<hr>
+<h2 id="4-实施分期-每期独立可回滚">4. 实施分期（每期独立可回滚）<a class="anchor" href="#4-实施分期-每期独立可回滚" aria-label="锚点">#</a></h2>
+<h3 id="第一期-判定层-兜底-解决-80-的可辨识性问题-零-ui-改动">第一期：判定层 + 兜底（<strong>解决 80% 的可辨识性问题，零 UI 改动</strong>）<a class="anchor" href="#第一期-判定层-兜底-解决-80-的可辨识性问题-零-ui-改动" aria-label="锚点">#</a></h3>
+<ol><li><code>WorkspaceSidebar.tsx</code> 抽出 <code>classifyWorkspacePath(path, registered)</code> 纯函数：返回 <code>{ bucket: 'registered'|'transient'|'inferred', name, icon?, color? }</code>。</li><li><code>:321-361</code> 的 <code>folders</code> memo 按判定结果分桶；<code>transient</code> 统一进「未归属」分组。</li><li>文件夹头暂不加图标/颜色。</li></ol>
+<p><strong>为什么先做这期</strong>：图1 里最刺眼的 4 个 <code>khy-durable-transcript-*</code> + <code>Portable</code> 全部由这一步解决，且<strong>不触碰持久化</strong>（不写 <code>settingsStore</code>），回滚 = 删一个纯函数。</p>
+<h3 id="第二期-项目登记-desktopprojects-落地">第二期：项目登记（<code>desktopProjects</code> 落地）<a class="anchor" href="#第二期-项目登记-desktopprojects-落地" aria-label="锚点">#</a></h3>
+<ol><li><code>settingsStore.ts</code> 加字段 + 默认值 <code>[]</code>。</li><li><code>main/index.ts:693</code> 的 <code>workspace:list</code> 返回值加 <code>projects</code>（<strong>扩展既有 IPC，不新增通道</strong>）。</li><li>preload <code>index.ts</code> 无需改（<code>workspaceList</code> 已整体透传返回）。</li><li>侧栏读 <code>projects</code> → 判定层接上「已登记」分支。</li><li>文件夹头「登记为项目」入口 + 登记对话框（§3.4）。</li></ol>
+<h3 id="第三期-身份标识-图标-颜色">第三期：身份标识（图标 + 颜色）<a class="anchor" href="#第三期-身份标识-图标-颜色" aria-label="锚点">#</a></h3>
+<ol><li><code>Icon.tsx</code> 的 <code>IconName</code> 联合类型按需增补（<strong>只增不改</strong>，防破坏既有调用方）。</li><li>文件夹头加图标 + 3px 色条（§3.3）。</li><li>登记对话框的图标/颜色选择器接线。</li></ol>
+<blockquote><p>❌ <strong>别把第三期提前</strong>。身份标识是装饰，判定层是地基。先上色条会让「<code>Portable</code> 依然是个项目」这件事看起来被解决了 —— 掩盖问题而非修复。</p></blockquote>
+<hr>
+<h2 id="5-诚实边界-刻意不纳入">5. 诚实边界（刻意不纳入）<a class="anchor" href="#5-诚实边界-刻意不纳入" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>不纳入</th><th>原因</th></tr></thead><tbody><tr><td>会话标题聚合到文件夹头</td><td>标题是自由文本，聚合需要摘要策略（取最近一条？统计？），会引入第二套语义判断。<strong>先只做身份，标题聚合留作独立提案</strong></td></tr><tr><td>项目拖拽排序持久化到 main</td><td>现有 <code>taskOrder</code> 在 <code>localStorage</code>（<code>:98-104</code>），项目级排序若另走 main 会形成第二套持久化。建议等项目登记真源定了再一并收敛（见 §6）</td></tr><tr><td>「删除项目」</td><td>会牵连会话归属（会话的 <code>workspacePath</code> 不可变）。<strong>先只做新增，正名可改，删除不做</strong></td></tr><tr><td>引入 i18n 键</td><td>该文件全硬编码中文，单独改造成本不属本提案（§1.5）</td></tr><tr><td>给临时目录做真实清理</td><td><code>khy-durable-transcript-*</code> 由仓外流程产生，<strong>本仓没有它的产生者</strong>，就无法定义「谁负责删」。本提案只做展示层归类</td></tr><tr><td>会话创建时选项目</td><td>属任务创建流程改造，超出侧栏范围</td></tr></tbody></table>
+<hr>
+<h2 id="6-反模式-这条路别走">6. 反模式（这条路别走）<a class="anchor" href="#6-反模式-这条路别走" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>❌ 别做</th><th>为什么</th></tr></thead><tbody><tr><td><strong>加图标/颜色了事</strong>（跳过判定层直接做第三期）</td><td>图标是装饰。<code>Portable</code> 加上彩色图标后依然是「26 条会话的父目录冒充项目」—— 用户以为被修好了，实际问题原样保留。<strong>先分桶，再上色</strong></td></tr><tr><td><strong>继续用 <code>baseName</code> 但加「只取有 <code>.git</code> 的目录」这类启发</strong></td><td>会把「刚 <code>git init</code> 还没提交」「纯文档项目」误杀。项目是<strong>用户意图</strong>，不是目录属性 ⇒ 只能由用户登记决定，不能由目录形状推断</td></tr><tr><td><strong>用「名字含 6 位随机串」判定临时目录</strong></td><td>泛化启发会误杀真项目（<code>khy-agents-v2</code> 之类）。必须锚定<strong>确切前缀</strong> + 单测钉住</td></tr><tr><td><strong>让用户在文件夹头上直接改名字（就地编辑）</strong></td><td>会把「显示名」和「分桶键」在用户心智里焊死 —— 他改完名，会以为项目目录也改名了。<strong>改名走登记对话框</strong>（明确「显示名 ≠ 目录名」）</td></tr><tr><td><strong>为项目再建一个 <code>workspace:projects</code> IPC 通道</strong></td><td><code>workspace:list</code> 已在返回工作空间全貌，扩展返回值是<strong>扩展 canonical</strong>；另开通道就是第二个真源，正是 <code>settingsStore.ts:69-70</code> 注释反复警告的那件事</td></tr><tr><td><strong>用 <code>--color-brand</code> 给项目上色</strong></td><td>浅色主题下 <code>--color-brand = #000000</code>（<code>globals.css:189</code>），深色下是 <code>#ffffff</code>（<code>:96</code>）⇒ 主题一切换，<strong>全部项目同一个颜色</strong>，区分功能归零</td></tr><tr><td><strong>顺手修 <code>settingsStore.ts:67</code> 那句「侧栏 添加项目」的注释</strong></td><td>注释先行是<strong>意图登记</strong>，不是缺陷。第二期落地后注释自动成真；提前改会把「谁先欠的」这条线索擦掉</td></tr></tbody></table>
+<hr>
+<h2 id="7-验收方式">7. 验收方式<a class="anchor" href="#7-验收方式" aria-label="锚点">#</a></h2>
+<pre><code class="language-powershell"><span class="hljs-comment"># 1) 判定层单测（第一期新增，必须用 node:test —— services/backend/tests 下的</span>
+<span class="hljs-comment">#    jest 风格文件会被 node --test 扫走并炸在 describe 未定义）</span>
+&amp; <span class="hljs-string">&quot;&lt;node&gt;&quot;</span> <span class="hljs-literal">--test</span> <span class="hljs-string">&quot;apps/khyos-desktop/tests/sidebarProjectClassify.test.cjs&quot;</span>
+
+<span class="hljs-comment"># 2) 桌面端 UI 契约（新增 IPC 两侧一致性，D6）</span>
+&amp; <span class="hljs-string">&quot;&lt;node&gt;&quot;</span> <span class="hljs-literal">--test</span> <span class="hljs-string">&quot;apps/khyos-desktop/tests/desktopUiContract.test.cjs&quot;</span>
+
+<span class="hljs-comment"># 3) 禁硬编码色值</span>
+&amp; <span class="hljs-string">&quot;&lt;node&gt;&quot;</span> scripts/ci/check<span class="hljs-literal">-frontend-design-tokens</span>.js</code></pre>
+<p><strong>目视验收（第二/三期后）</strong>：侧栏项目 tab 展开后，图1 的 4 个 <code>khy-durable-transcript-*</code> 应收敛进「未归属」分组；<code>Portable</code> 若已登记为父容器则显示其登记名，否则带「推测」弱化样式 + 路径副行；已登记项目显示图标 + 色条。</p>
+<p>⚠ <code>tsc --noEmit</code> 在<strong>改动前就有 33 条错误</strong>（<code>src/host/index.ts</code> 占 16 条）⇒ <strong>不能以「tsc 全绿」为门禁</strong>，只比对改动前后是否<strong>新增</strong>。</p>
+<hr>
+<h2 id="8-待核实项">8. 待核实项<a class="anchor" href="#8-待核实项" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>事项</th><th>优先级</th></tr></thead><tbody><tr><td>1</td><td><code>khy-durable-transcript-*</code> 的<strong>真正产生者</strong>在本仓之外何处 —— 若将来它改为写入 khy-os 自己的 <code>.khy/</code> 下，则 §3.2 规则 2 可简化为「一律排除 <code>.khy/</code> 下的路径」</td><td>中（不影响落地，只影响规则写法）</td></tr><tr><td>2</td><td>临时目录判定用的<strong>确切前缀常量</strong>取自何处（配置项 / 硬编码）—— 需与产生方约定，否则规则会随对方改名而失效</td><td><strong>高</strong>（阻断第二期落地）</td></tr><tr><td>3</td><td><code>Task.workspacePath</code> 是否有历史空值（<code>:344</code> 已有 `</td><td></td></tr><tr><td>4</td><td>排序/折叠状态（<code>collapsedFolders</code>，<code>:261</code>）当前只在内存，刷新即丢 —— 属「项目可辨识」相邻的独立痛点，不并入本提案</td><td>低（登记为独立条目）</td></tr></tbody></table>
+<hr>
+<h2 id="9-变更日志">9. 变更日志<a class="anchor" href="#9-变更日志" aria-label="锚点">#</a></h2>
+<ul><li>2026-10-03：初稿。基于用户实况截图 + <code>WorkspaceSidebar.tsx</code> / <code>settingsStore.ts</code> / <code>main/index.ts</code> 实读取证，编号 177（枚举 <code>DESIGN-ARCH/*.md</code> 求得 max=176）。</li><li>2026-10-03：<strong>实施落地（三期一次做完）</strong>。见 §10。</li></ul>
+<hr>
+<h2 id="10-实施记录-2026-10-03">10. 实施记录（2026-10-03）<a class="anchor" href="#10-实施记录-2026-10-03" aria-label="锚点">#</a></h2>
+<blockquote><p>状态：<strong>已落地并重建产物</strong>。三期按序完成，但<strong>在同一次改动内一并落地</strong> ——<br>判定层（纯函数 + 单测）先写成并跑绿，才接渲染；色条最后接，且<strong>只对已登记 /<br>inferred 项目生效</strong>，<code>kind !== 'project'</code> 一律不上色。</p></blockquote>
+<h3 id="10-1-落地清单">10.1 落地清单<a class="anchor" href="#10-1-落地清单" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>文件</th><th>改动</th></tr></thead><tbody><tr><td><code>src/renderer/shared/sidebarProjectClassify.ts</code></td><td><strong>新增</strong>（103 行）。<code>baseName</code> / <code>isTransientPath</code> / <code>classifyWorkspacePath</code> / <code>inferredColorKey</code> / <code>TRANSIENT_PREFIXES</code> / 类型。零 IO、零 env，登记表为可选参数（不传 = 旧行为）</td></tr><tr><td><code>tests/sidebarProjectClassify.test.cjs</code></td><td><strong>新增</strong>（17 条）。用仓内 <code>typescript@5.9.3</code> 的 <code>transpileModule</code> 正规转译后求值（<strong>不用正则剥类型</strong>）；含一条「消费方已接线」的反向断言 + 一条误杀反模式钉住（<code>khy-agents-v2</code> 不得被当临时目录）</td></tr><tr><td><code>src/renderer/components/layout/WorkspaceSidebar.tsx</code></td><td>删内联 <code>baseName</code> 与「项目名 = 路径末段」分桶；改调 <code>classifyWorkspacePath</code>；新增 <code>projectRegs</code> 状态 + 读取/保存 + 登记对话框 + 文件夹头设置入口；<strong><code>toast</code> 声明整体前移</strong>（见 10.3）</td></tr><tr><td><code>src/main/settingsStore.ts</code></td><td>新增 <code>desktopProjects: []</code> 默认值 + 字段语义注释</td></tr><tr><td><code>src/main/index.ts</code></td><td><code>workspace:list</code> 返回值加 <code>projects</code>（<strong>扩展既有通道</strong>，未新增 IPC）</td></tr><tr><td><code>src/preload/index.ts</code></td><td><strong>未改</strong> —— <code>workspaceList</code> 整体透传返回，<code>getSettings</code>/<code>setSetting</code> 桥已存在</td></tr></tbody></table>
+<h3 id="10-2-与方案的偏离-逐条给原因">10.2 与方案的偏离（逐条给原因）<a class="anchor" href="#10-2-与方案的偏离-逐条给原因" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>方案写的</th><th>实际做的</th><th>为什么</th></tr></thead><tbody><tr><td>三期分次实施</td><td>一次做完</td><td>判定层已先写成并跑绿再接线，顺序约束实际满足了；且分三次要重建三次产物</td></tr><tr><td>第三期「<code>IconName</code> 按需增补」</td><td><strong>一个字没改</strong></td><td>12 枚现有字形够用（选前 8 枚做候选）。<strong>不增补 = 零风险</strong>：动 <code>IconName</code> 会波及所有既有调用方</td></tr><tr><td>颜色候选「由 @theme 语义令牌组合」</td><td>6 色里 4 个用 <code>bg-success</code>/<code>bg-warning</code>/<code>bg-destructive</code>/<code>bg-[var(--color-foreground)]</code>，另 2 个用 <code>var()</code> 显式引用</td><td><code>@theme</code> 没有覆盖 6 个区分色的语义名。<strong>全走 CSS 变量 / 语义类、零 hex</strong> ⇒ <code>check-frontend-design-tokens</code> 零新增 finding</td></tr><tr><td>推测项目名「弱化样式」</td><td>名字 <code>text-foreground/45</code> + <strong>11px 路径副行</strong> + 散列色条</td><td>加了副行是实测后的判断：只弱化颜色时，用户仍看不出「为什么 <code>Portable</code> 是个项目」。副行把路径亮出来，问题自暴露</td></tr></tbody></table>
+<h3 id="10-3-踩到的坑-照-8-5-排查-8-秒定位">10.3 踩到的坑（照 §8.5 排查，8 秒定位）<a class="anchor" href="#10-3-踩到的坑-照-8-5-排查-8-秒定位" aria-label="锚点">#</a></h3>
+<p><strong>TDZ 白屏（已避开，留在代码注释里）</strong>：<code>saveProjectRegs</code> 是 <code>useCallback</code>，依赖数组里引用了 <code>toast</code>，而 <code>toast</code> 原本声明在 ~178 行之后。React 依赖数组是<strong>渲染期求值</strong> ⇒ 每次渲染抛 <code>Cannot access 'toast' before initialization</code>，整棵树白屏。修法：把 <code>toast</code> 声明整体前移到本段<strong>之前</strong>，并在原位留顺序警告注释。</p>
+<blockquote><p>这是 skill §8.5 记录的 <code>AutomationsPage.tsx</code> 同病实例（<code>#/automations</code> 一直白屏）的<strong>同型复发</strong>。<br>⚠ 未复发的原因是新增 hook 块时我先核了 <code>toast</code> 的行号 —— 但这说明<strong>该坑已复发两次</strong>，<br>建议后续把它做成 lint 规则而非靠人记。</p></blockquote>
+<h3 id="10-4-验收实测">10.4 验收实测<a class="anchor" href="#10-4-验收实测" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>项</th><th>结果</th></tr></thead><tbody><tr><td><code>sidebarProjectClassify.test.cjs</code></td><td><strong>17/17 绿</strong></td></tr><tr><td><code>desktopUiContract.test.cjs</code></td><td><strong>26/26 绿</strong>（D6 preload↔main 通道一致性含在内）</td></tr><tr><td><code>keyManagerContract.test.cjs</code></td><td>8/8 绿（未触碰，回归对照）</td></tr><tr><td>桌面端 <code>tests/</code> 全量（3 文件）</td><td><strong>51/51 绿，0 红</strong></td></tr><tr><td><code>tsc --noEmit</code></td><td><strong>20 条既有错误，与本次改动零重叠</strong>（全在 <code>host/index.ts</code> 15 + <code>BrowserPane.tsx</code> 3 + <code>Tooltip.tsx</code> + <code>i18n/index.ts</code>）。⚠ 基线从 33 降到 20 —— <strong>非本次所致</strong>，是并行会话修了 <code>host/</code>（skill §6.5 的归因纪律）</td></tr><tr><td><code>check-frontend-design-tokens</code></td><td><code>exit=0</code>，58 findings <strong>全在 <code>apps/ai-frontend</code></strong>，khyos-desktop 零新增</td></tr><tr><td>三段构建</td><td><code>electron-vite</code> / <code>vite.host</code> / <code>vite.scheduler</code> 全 <code>exit=0</code>；新包 <code>assets/index-CZxLM5H3.js</code>（2.2 MB）已进 <code>index.html</code></td></tr><tr><td>产物含新代码</td><td>6 个探针 5 HIT + 副行 3 HIT；<code>main/index.js</code> 含 <code>desktopProjects</code>。唯一 MISS 是探针词选错（用注释里的「推测名」三字去搜产物，产物不含注释）</td></tr></tbody></table>
+<h3 id="10-5-明确不做">10.5 明确不做<a class="anchor" href="#10-5-明确不做" aria-label="锚点">#</a></h3>
+<ul><li>不加 <code>tsc 全绿</code> 门禁（基线 20 条在 <code>host/</code>，与侧栏无关）。</li><li>不给 <code>check:frontend-size</code> 判失败（无产物可量时恒 <code>exit=2</code>，是既有行为）。</li><li>不碰 <code>settingsStore.ts:67</code> 那句「侧栏 添加项目」的注释 —— 按 §6 反模式，注释先行是意图登记。</li><li>不做项目删除、不做标题聚合、不做 i18n 化（见 §5，逐条有原因）。</li></ul>
+<h3 id="10-6-落地后的目视验收-待用户确认">10.6 落地后的目视验收（待用户确认）<a class="anchor" href="#10-6-落地后的目视验收-待用户确认" aria-label="锚点">#</a></h3>
+<p>重启应用（<code>.js</code> 不热更新）后看侧栏项目 tab：</p>
+<ol><li>4 个 <code>khy-durable-transcript-*</code> 应<strong>收敛成一个「未归属」分组</strong>（原来占 4 行）。</li><li><code>Portable</code> 这类推测项目名下会出现<strong>完整路径副行</strong> + 名字弱化 —— 父目录冒充项目的问题自暴露。</li><li>hover 任一项目文件夹头会出现<strong>齿轮状入口</strong>（登记为项目），点开可改显示名、选图标（8 枚）、选颜色（6 色）；<strong>默认全空</strong> —— 不预选即不给假数据。</li><li>登记后：显示名生效、副行消失、图标与色条出现；<code>Portable</code> 若登记为容器名，它的色条与 <code>khy-os</code> 的不同。</li></ol>
+<p>⚠ 若 <code>khy-durable-transcript-*</code> 仍散在项目层级 ⇒ 判定层没生效，先查 <code>out/renderer/index.html</code> 指向的 hash 包是否为本次产物。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-176] TUI 与桌面端统一方案：底色分层 · 稳定渲染 · 共享语义.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-176] TUI 与桌面端统一方案：底色分层 · 稳定渲染 · 共享语义</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-178] TUI启动44秒病灶-redis顶层副作用与首帧前重require收敛方案.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-178] TUI 启动 44 秒病灶：redis 顶层副作用与首帧前重 require 收敛方案</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-177] 侧栏项目分组可辨识化改造方案.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

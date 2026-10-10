@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-PERF-007] 对标 Claude Code 与 OpenCode 的 khy 启动提速方案.md -->
+<title>[DESIGN-PERF-007] 对标 Claude Code 与 OpenCode 的 khy 启动提速方案 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-PERF<span class="sep">›</span>[DESIGN-PERF-007] 对标 Claude Code 与 OpenCode 的 khy 启动提速方案</div>
+      <header class="hero reveal"><h1>[DESIGN-PERF-007] 对标 Claude Code 与 OpenCode 的 khy 启动提速方案</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-perf-007-对标-claude-code-与-opencode-的-khy-启动提速方案">[DESIGN-PERF-007] 对标 Claude Code 与 OpenCode 的 khy 启动提速方案</a></li><li class="lvl-2"><a href="#零-一句话结论">零、一句话结论</a></li><li class="lvl-2"><a href="#一-需求五问-runtime-008-source-均为本轮用户原话">一、需求五问（`RUNTIME-008`，source 均为本轮用户原话）</a></li><li class="lvl-2"><a href="#二-实测基线-2026-10-10-复现命令见-七">二、实测基线（2026-10-10，复现命令见 §七）</a></li><li class="lvl-3"><a href="#2-1-四条路径墙钟-同机同条件">2.1 四条路径墙钟（同机同条件）</a></li><li class="lvl-3"><a href="#2-2-tui-启动时间线-pty-探针-百分比为启动行实时曲线">2.2 TUI 启动时间线（PTY 探针，百分比为启动行实时曲线）</a></li><li class="lvl-3"><a href="#2-3-单命令-require-图-require-计时钩子-khy-status">2.3 单命令 require 图（require 计时钩子，`khy status`）</a></li><li class="lvl-3"><a href="#2-4-ink-esm-装载-冷-16-4s-热-0-9s">2.4 ink ESM 装载：冷 16.4s / 热 0.9s</a></li><li class="lvl-3"><a href="#2-5-cpu-等待特征">2.5 CPU / 等待特征</a></li><li class="lvl-2"><a href="#三-为什么-claude-code-opencode-快-结构解剖">三、为什么 claude code / opencode 快（结构解剖）</a></li><li class="lvl-2"><a href="#四-与-perf-006-的关系-不重复劳动">四、与 PERF-006 的关系（不重复劳动）</a></li><li class="lvl-2"><a href="#五-方案">五、方案</a></li><li class="lvl-3"><a href="#w1-p0-tui-首帧-12s-目标-p50-3s">W1（P0）TUI 首帧：12s → 目标 p50 &lt; 3s</a></li><li class="lvl-3"><a href="#w2-p1-单命令-require-图-status-530ms-目标-p50-300ms">W2（P1）单命令 require 图：status 530ms → 目标 p50 &lt; 300ms</a></li><li class="lvl-3"><a href="#w3-p2-冷启动治理">W3（P2）冷启动治理</a></li><li class="lvl-3"><a href="#w4-p3-需独立评审-结构性方案-单体二进制">W4（P3，需独立评审）结构性方案：单体二进制</a></li><li class="lvl-3"><a href="#w5-p3-备选-daemon">W5（P3，备选）daemon</a></li><li class="lvl-2"><a href="#六-落地顺序与阶段约束-process-008">六、落地顺序与阶段约束（`PROCESS-008`）</a></li><li class="lvl-2"><a href="#七-度量命令-本机可复现">七、度量命令（本机可复现）</a></li><li class="lvl-2"><a href="#八-范围边界-不做的事">八、范围边界（不做的事）</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: proposed --&gt;</p>
+<h1 id="design-perf-007-对标-claude-code-与-opencode-的-khy-启动提速方案">[DESIGN-PERF-007] 对标 Claude Code 与 OpenCode 的 khy 启动提速方案<a class="anchor" href="#design-perf-007-对标-claude-code-与-opencode-的-khy-启动提速方案" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>状态</strong>：提案（未接线） · <strong>日期</strong>：2026-10-10 · <strong>编号</strong>：[DESIGN-PERF-007] · <strong>落点目录</strong>：<code>docs/03_DESIGN_设计/DESIGN-PERF/</code><br><strong>适用层</strong>：<code>runtime/node/backend</code>（<code>khy</code> CLI / TUI 入口链）<br><strong>需求来源</strong>（<code>RUNTIME-008</code> source）：用户原话「khyos启动太慢，为什么claude code和opencode启动很快需要设计一个方案」（2026-10-10）<br><strong>关联</strong>：[DESIGN-PERF-002]（KHY_FAST_STARTUP / compile cache，已落地） · [DESIGN-PERF-006]（启动提速 W2/W3 已接线、W1 已证伪更正） · [DESIGN-PERF-003]（TUI 挂载期阻塞归因+探针） · [DESIGN-ARCH-115]（启动板块节拍表） · [DESIGN-PROCESS-002]（<code>PROCESS-008</code> 落地阶段）<br><strong>证据基线</strong>：本文全部数字为 <strong>2026-10-10 本机实测</strong>（仓库 <code>D:\Portable\khy-os</code>，Windows 10.0.26200，Node v22.18.0，claude v2.1.295）。同日不同时刻方差大（Defender / 文件缓存状态），关键数字注明冷/热与连跑次数；<strong>推测项显式标注〔推测〕</strong>。</p></blockquote>
+<hr>
+<h2 id="零-一句话结论">零、一句话结论<a class="anchor" href="#零-一句话结论" aria-label="锚点">#</a></h2>
+<p>「claude code / opencode 启动很快」在本机可复现地量成三件事：<strong>claude 是 247MB 的 Bun 单体二进制（<code>--version</code> 47ms、TUI 首帧 ~150ms，UI 先画、网络后查）；opencode 是 172MB 的 Bun 单体（TUI 进备用屏 4.1s，比 khy 快 3 倍，但 <code>--version</code> 1.3s 并不快）；khy 是 CJS + pnpm <code>node_modules</code> 的多文件模块图</strong>——同机同条件实测，<code>khy</code> TUI 启动屏首帧 <strong>12.2s</strong>（三次连跑 11.6/12.2/19.7s），<code>khy status</code> 热启动 ~530ms、冷启动（compile cache 冷）<strong>17s</strong>。khy 的慢可分解为四段，各有明确修法：<strong>ink ESM 冷编译 16.4s 从未被预热摊薄</strong>（现有预热跑的是 <code>khy status</code>，而 status 根本不装载 ink）、<strong>挂载期尾巴多秒级且主体是等待不是 CPU</strong>、<strong>单命令 require 图为一行状态装载 315 个模块含整套网关适配器</strong>、<strong>冷启动文件扫描</strong>。方案 = W1 预热与挂载期治理（P0）、W2 require 图瘦身（P1）、W3 单体打包评估（P2，需独立评审）、W4 daemon 备选（P3，沿用 PERF-006）。</p>
+<hr>
+<h2 id="一-需求五问-runtime-008-source-均为本轮用户原话">一、需求五问（<code>RUNTIME-008</code>，source 均为本轮用户原话）<a class="anchor" href="#一-需求五问-runtime-008-source-均为本轮用户原话" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>问题</th><th>答案</th></tr></thead><tbody><tr><td>1</td><td>谁用？</td><td>每天开终端敲 <code>khy</code> 的维护者与最终用户（source：「khyos启动太慢了」——主语是日常使用者）</td></tr><tr><td>2</td><td>什么时候用？</td><td>每次敲 <code>khy</code>（TUI）、<code>khy status</code> 等单命令时；以及用户拿 claude code / opencode 对比时（source：「为什么claude code和opencode启动很快」）</td></tr><tr><td>3</td><td>现在的替代做法？</td><td>等；或绕过包装层直跑 <code>node runtime/node/backend/bin/khy.js</code>（省 Python 启动器链 ~950ms，不解决大头）</td></tr><tr><td>4</td><td>成功长什么样？</td><td>命令：PTY 探针（§7.1）+ <code>Measure-Command</code>。期望：<code>khy</code> TUI 启动屏首帧 p50 &lt; 3s；<code>khy status</code> 热启动 p50 &lt; 300ms；装机后首次启动（冷）&lt; 3s</td></tr><tr><td>5</td><td>不做会怎样？</td><td>用户继续拿「别人 47ms 我家 12s」做判断，平台入口被 claude/opencode 类工具架空</td></tr></tbody></table>
+<hr>
+<h2 id="二-实测基线-2026-10-10-复现命令见-七">二、实测基线（2026-10-10，复现命令见 §七）<a class="anchor" href="#二-实测基线-2026-10-10-复现命令见-七" aria-label="锚点">#</a></h2>
+<h3 id="2-1-四条路径墙钟-同机同条件">2.1 四条路径墙钟（同机同条件）<a class="anchor" href="#2-1-四条路径墙钟-同机同条件" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>路径</th><th>冷（首次）</th><th>热（连跑）</th><th>说明</th></tr></thead><tbody><tr><td><code>claude --version</code></td><td>203ms</td><td><strong>47ms</strong>（三次 203/49/46）</td><td>Bun 单体二进制，247MB</td></tr><tr><td><code>claude.exe</code> TUI 首帧（PTY 探针）</td><td>—</td><td><strong>~150ms</strong> 出完整 logo 画面，随后联网报 403（本机未配 API，与启动无关）</td><td>UI 先行、网络后查的直接证据</td></tr><tr><td><code>opencode --version</code></td><td>3210ms</td><td><strong>~1.3s</strong>（三次 3210/1329/1374）</td><td>Bun 单体二进制，172MB；<strong>并不快</strong></td></tr><tr><td><code>opencode</code> TUI 进备用屏（PTY 探针）</td><td>—</td><td><strong>4143ms</strong></td><td>比 khy 快约 3 倍</td></tr><tr><td><code>khy --version</code></td><td>—</td><td><strong>~101ms</strong></td><td>快速路径（不经 bootstrap）</td></tr><tr><td><code>khy status</code>（直跑 node）</td><td><strong>16982ms</strong></td><td><strong>525/567ms</strong>（两次）</td><td>冷=compile cache 冷 + Defender</td></tr><tr><td><code>khy</code> TUI 启动屏首帧（PTY 探针）</td><td>19633ms</td><td><strong>11929/12202ms</strong>（两次；另一次 5/5 就绪段就花了 5.5s）</td><td>见 §2.2 时间线</td></tr></tbody></table>
+<blockquote><p>如实更正用户前提的一半：<strong>opencode 的 <code>--version</code> 在本机 1.3s，比 khy status 还慢</strong>；用户感知的「opencode 快」对应的是它的 <strong>TUI 就绪 4.1s vs khy 12s+</strong>。claude 则是全面快（47ms / 150ms）。三条对比都建立在「Bun 单体二进制」这同一结构差异上。</p></blockquote>
+<h3 id="2-2-tui-启动时间线-pty-探针-百分比为启动行实时曲线">2.2 TUI 启动时间线（PTY 探针，百分比为启动行实时曲线）<a class="anchor" href="#2-2-tui-启动时间线-pty-探针-百分比为启动行实时曲线" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>里程碑</th><th>run A</th><th>run B</th><th>run C</th></tr></thead><tbody><tr><td>first-output</td><td>348ms</td><td>239ms</td><td>154ms</td></tr><tr><td>✓ 就绪 5/5（env+认证+setup）</td><td>1246ms</td><td>1538ms</td><td><strong>5518ms</strong></td></tr><tr><td>加载渲染引擎 36%</td><td>—</td><td>1879ms→36%</td><td>6868ms</td></tr><tr><td>65%</td><td>—</td><td>3205ms</td><td>7944ms</td></tr><tr><td>71%（ stalled ~2.7s 到下一格）</td><td>—</td><td>6868ms 后 9922ms 到 75%</td><td>10623ms</td></tr><tr><td>进备用屏 <code>\x1b[?1049h</code></td><td>11578ms</td><td>19469ms</td><td>11978ms</td></tr><tr><td>启动屏首帧可见</td><td>11929ms</td><td>19633ms</td><td>12202ms</td></tr></tbody></table>
+<p>判读：<strong>「就绪 5/5 → 进备用屏」这段（ink 装载 + App 挂载）是 12s 里的主体</strong>，且 run 间方差 11.6→19.7s，与 PERF-006 §8.3 的漂移结论一致（同机不同时刻 Defender 突发）。百分比曲线证明停顿分布：65%→71% 一格 2.7s、71%→alt-screen 1.4s——<strong>不是单点，是多段等待叠加</strong>。</p>
+<h3 id="2-3-单命令-require-图-require-计时钩子-khy-status">2.3 单命令 require 图（require 计时钩子，<code>khy status</code>）<a class="anchor" href="#2-3-单命令-require-图-require-计时钩子-khy-status" aria-label="锚点">#</a></h3>
+<p>共 <strong>315 个不同模块请求</strong>，归因累计 ~1850ms（嵌套计入调用方）：</p>
+<table><thead><tr><th>顶层 require</th><th>累计</th><th>子请求数</th><th>是什么</th></tr></thead><tbody><tr><td><code>bin/khy.js</code> 自身顶层</td><td>326ms</td><td>30</td><td>入口 + bootstrap/init 链</td></tr><tr><td><code>../services/gateway/aiGateway</code></td><td><strong>257ms</strong></td><td><strong>49</strong></td><td><strong>整套网关适配器全家</strong>（claude/codex/cursor/relay/localLLM/webRelay…）</td></tr><tr><td><code>../../multiFreeService</code></td><td>133ms</td><td>11</td><td>免费模型服务</td></tr><tr><td><code>./ai</code>（src/cli/ai.js）</td><td>102ms</td><td>26</td><td>AI 对话核心</td></tr><tr><td><code>../src/utils/logger</code></td><td>84ms</td><td>1</td><td>winston 实例（backend 侧）</td></tr><tr><td><code>../src/cli/router</code></td><td>74ms</td><td>15</td><td>命令路由器</td></tr><tr><td><code>../../vendor/shared/src/utils/logger</code></td><td>73ms</td><td>13</td><td><strong>@khy/shared 侧第二份 winston 图</strong></td></tr><tr><td><code>jsonwebtoken</code></td><td>58ms</td><td>6</td><td>JWT 校验链</td></tr><tr><td><code>winston</code></td><td>51ms</td><td>14</td><td>日志器本体</td></tr></tbody></table>
+<p><strong>关键发现</strong>：<code>khy status</code> 只打印 5 行状态，却经 <code>handlers/gatewayStatusView.js:141</code> <strong>顶层 require 了整个 aiGateway</strong>（连带 multiFreeService / cli/ai）。claude/opencode 的对应操作（读一份 JSON 配置）不装载任何工具实现。</p>
+<h3 id="2-4-ink-esm-装载-冷-16-4s-热-0-9s">2.4 ink ESM 装载：冷 16.4s / 热 0.9s<a class="anchor" href="#2-4-ink-esm-装载-冷-16-4s-热-0-9s" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>条件</th><th><code>import('ink')</code> 耗时</th></tr></thead><tbody><tr><td>无 compile cache（全新/缓存被清）</td><td><strong>16359ms</strong></td></tr><tr><td>有 compile cache（<code>module.enableCompileCache()</code> 后）</td><td><strong>923ms</strong></td></tr></tbody></table>
+<p>PERF-002 落的 compile cache 把热路径压到 0.9s，<strong>但冷编译 16.4s 从未被摊薄</strong>——见 W1-1：<code>repair-portable.js</code> 的装机预热跑的是 <code>khy status</code>，而 <strong>status 路径不装载 ink</strong>，于是每个用户机器上的「第一次 <code>khy</code>」仍要付这 16s。</p>
+<h3 id="2-5-cpu-等待特征">2.5 CPU / 等待特征<a class="anchor" href="#2-5-cpu-等待特征" aria-label="锚点">#</a></h3>
+<p>PERF-006 §2.4 实测（<code>khy status</code>）：CPU 总样本 ~220ms / 墙钟 830ms，<strong>大头是等待</strong>；PERF-003 无头渲染探针 74s 墙钟仅 ~5s CPU。本文 TUI 曲线（§2.2）同样显示多段秒级停顿而进度条背后无 CPU 密集型工作〔与 PERF-003 结论一致：主体是文件系统 / Defender 扫描与子进程等待，不是同步计算〕。</p>
+<hr>
+<h2 id="三-为什么-claude-code-opencode-快-结构解剖">三、为什么 claude code / opencode 快（结构解剖）<a class="anchor" href="#三-为什么-claude-code-opencode-快-结构解剖" aria-label="锚点">#</a></h2>
+<p>五条原因，按对本机实测数据的解释力排序：</p>
+<ol><li><strong>单体编译二进制，消灭模块解析</strong>。claude.exe / opencode.exe 分别是 247MB / 172MB 的 Bun 编译单体（二进制内含 <code>bun</code> 运行时可证）。整个应用是一个文件：没有 <code>node_modules</code> 遍历、没有 315 次模块解析、没有按文件计的 Defender 实时扫描。khy 是 CJS + pnpm store 的多文件图——<strong>这是 47ms vs 12s 的第一因</strong>。</li><li><strong>UI 先行、网络后查</strong>。claude 首帧 150ms 就画出完整界面， connectivity 检查在画面之后（本机 403 也照样先出画面）。khy 的启动屏结构上依赖 ink 装载完成才能出场（PERF-006 §8.2 已证伪「缺首帧」，但 ink 之前的窗口仍由百分比过渡行覆盖）。</li><li><strong>启动图极小、工具懒加载</strong>。claude <code>--version</code> 47ms；khy <code>status</code> 装载 315 模块含整套网关适配器（§2.3）。工具实现（读写文件、执行命令）在 claude/opencode 里都是用到才加载。</li><li><strong>无本地数据库 / 迁移 / 服务器孵化</strong>。khyquant 完整模式要 spawn <code>server.js</code> 并轮询端口就绪（<code>POLL_TIMEOUT</code> 10s 预算，bin/khy.js <code>startWithServer()</code>）；khy 模式虽跳过服务器，启动链仍过认证 + setup + 网关预热。claude/opencode 的持久状态是少量 JSON 文件。</li><li><strong>运行时差异（Bun vs Node）</strong>。Bun 单文件 mmap + 启动路径更短；但 opencode <code>--version</code> 1.3s 说明「编译型」并非万能——<strong>结构（单体+懒加载）比运行时更值钱</strong>。</li></ol>
+<hr>
+<h2 id="四-与-perf-006-的关系-不重复劳动">四、与 PERF-006 的关系（不重复劳动）<a class="anchor" href="#四-与-perf-006-的关系-不重复劳动" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文档</th><th>已覆盖</th><th>本文增量</th></tr></thead><tbody><tr><td>PERF-002</td><td>compile cache / KHY_FAST_STARTUP / 顶层 require 瘦身</td><td>新实测：compile cache 热/冷两面的 16.4s 缺口未被预热覆盖</td></tr><tr><td>PERF-006</td><td>W2 单命令快路径（git 探针并行+TTL、chcp 条件化）、W3 Defender 提示+预热、W1 证伪更正</td><td><strong>对标视角</strong>（claude/opencode 同机实测 + 结构解剖）；W2 剩余项重新定位到 require 图（status→aiGateway）；指出 PERF-006 W3 预热的覆盖漏洞（§2.4）</td></tr><tr><td>PERF-003</td><td>挂载期阻塞归因 + 探针 + 「同步工作要被消化」判据</td><td>继承为 W1-2 的约束：先取真实 TTY 挂载期 profile 再动手</td></tr></tbody></table>
+<hr>
+<h2 id="五-方案">五、方案<a class="anchor" href="#五-方案" aria-label="锚点">#</a></h2>
+<h3 id="w1-p0-tui-首帧-12s-目标-p50-3s">W1（P0）TUI 首帧：12s → 目标 p50 &lt; 3s<a class="anchor" href="#w1-p0-tui-首帧-12s-目标-p50-3s" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>#</th><th>措施</th><th>预期收益</th><th>判据 / 风险</th></tr></thead><tbody><tr><td>W1-1</td><td><strong>预热覆盖 ink</strong>：<code>repair-portable.js</code> 的 <code>warmupAndHint()</code> 当前 spawn <code>khy status</code>——status 不装载 ink，16.4s 冷编译从未被摊薄。改为预热链追加一次 TUI 装载（PTY 下起到 alt-screen 即收，或直接 <code>node -e &quot;import('ink')&quot;</code>）</td><td>装机后首次 <code>khy</code> 的 ink 窗口 16.4s → &lt;1.5s</td><td>机制层证据：预热前后 <code>import('ink')</code> 耗时对照；不得以「跑了 status」充当完成依据</td></tr><tr><td>W1-2</td><td><strong>挂载期尾巴归因</strong>：按 PERF-003 判据（消化，不平移），先给 PTY 探针的子进程传 <code>--cpu-prof</code> 且改为优雅退出后采样，列出 65%→71%、71%→alt-screen 两段的同步 IO / spawn / 网络清单，逐项后台化或预缓存</td><td>多段秒级停顿逐项消减</td><td><strong>先列清单再动手，不盲改</strong>（<code>RUNTIME-007</code>）；PERF-006 两次取 profile 失败，本次须换采样方式</td></tr><tr><td>W1-3</td><td><strong>首帧窗口内的非首帧工作外移</strong>：核对 <code>_kickoffGatewayPinStartupCheck</code> / <code>_scheduleStartupUpdateCheck</code> / clipboard bridge 是否在 alt-screen 前占事件循环或同步段；能后移的后移到首帧之后</td><td>每项 ~百 ms 级〔推测〕</td><td>行为等价重构；门控保留可回退</td></tr></tbody></table>
+<h3 id="w2-p1-单命令-require-图-status-530ms-目标-p50-300ms">W2（P1）单命令 require 图：status 530ms → 目标 p50 &lt; 300ms<a class="anchor" href="#w2-p1-单命令-require-图-status-530ms-目标-p50-300ms" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>#</th><th>措施</th><th>预期收益</th><th>判据 / 风险</th></tr></thead><tbody><tr><td>W2-1</td><td><strong>status 不再装载 aiGateway</strong>：<code>gatewayStatusView.js:141</code> 顶层 require 改为按需（只取状态字段），或改读 hudRenderer 已有的磁盘缓存 + 网关快照，不拉 49 个适配器</td><td>-257ms 及其链式（multiFreeService -133ms / cli/ai -102ms 若仅服务 status）</td><td>输出逐字节不变（同一份数据两个来源要对账）；缓存 TTL 沿用 30s</td></tr><tr><td>W2-2</td><td><strong>logger 去重</strong>：CLI 路径同时装载 backend <code>utils/logger</code> 与 <code>@khy/shared</code> logger 两份 winston 图（84+73+51ms）。让 CLI 共用一份，或延迟到首次真正写日志</td><td>-100~150ms</td><td>文件 transport 全量落盘的行为不许变；warn/error 仍直达用户</td></tr><tr><td>W2-3</td><td><strong>JWT 链懒加载</strong>：jsonwebtoken 58ms 出现在 status 路径，查调用方（clAuth/session）按需拉</td><td>-58ms</td><td>status 不碰认证语义；交互路径不变</td></tr><tr><td>W2-4</td><td><strong>router handler 分簇懒加载</strong>（PERF-002 阶段 C 延续）：按命令簇拆 require，<code>khy status</code> 不编译 gateway/quant 全簇 handler</td><td>余下 74ms 里再省〔推测 30-50ms〕</td><td>以 startupProfiler / require 钩子逐项前后对照</td></tr></tbody></table>
+<h3 id="w3-p2-冷启动治理">W3（P2）冷启动治理<a class="anchor" href="#w3-p2-冷启动治理" aria-label="锚点">#</a></h3>
+<ol><li><strong>Defender 排除提示</strong>沿用 PERF-006 W3（只提示不代改）。</li><li><strong>首启预热</strong>改为覆盖完整装载链（W1-1），把「第一次 17s」摊到装机时刻。</li><li><strong>pnpm store → 打包产物</strong>的评估见 W4。</li></ol>
+<h3 id="w4-p3-需独立评审-结构性方案-单体二进制">W4（P3，需独立评审）结构性方案：单体二进制<a class="anchor" href="#w4-p3-需独立评审-结构性方案-单体二进制" aria-label="锚点">#</a></h3>
+<p>对标 claude/opencode 的<strong>唯一结构性差距</strong>：用 Bun（<code>bun build --compile</code>）或 esbuild 打包 + Node SEA，把 CLI 热路径（bin/khy.js + bootstrap + router + status/gateway 视图 + ink/react）打成<strong>单文件</strong>；<code>node_modules</code> 只留原生/可选依赖（better-sqlite3、pg、node-pty）外置。</p>
+<ul><li><strong>收益</strong>：消灭 315 次模块解析与按文件计的扫描——claude 47ms 的第一因。</li><li><strong>成本与风险</strong>（逐条需评审）：<ul><li>CJS→ESM 边界：ink 本就是 ESM（有利），但 backend 是 CJS 海；babel/esbuild 转换链要进构建；</li><li>懒加载 handler 的动态 <code>require</code> 形态改变，<code>moduleSelfHeal</code> 的 MODULE_NOT_FOUND 自愈失去作用面（其存在理由之一正是路径迁移后的引用断裂）；</li><li>发布链：三轨道版本（<code>PROCESS-002</code>）+ SBOM + 签名 + 镜像同步全部要重接；构建产物登记 <code>BUILD-OUTPUTS.json</code>（<code>LAYOUT-005</code>）；</li><li>软著登记材料：Bun 运行时属第三方代码，<strong>不进 60 页选材</strong>（<code>PROCESS-010</code> C-X3），选材仍以仓内 CJS 真源为准；</li><li>包体积 ~100MB+，安装/修复脚本（<code>repair-portable.js</code> 等）要适配。</li></ul></li><li><strong>立项条件</strong>：W1–W3 落地后 TUI p50 仍 &gt;3s 或 status p50 仍 &gt;300ms。<strong>不在本轮范围</strong>，本文只留评估结论与门槛。</li></ul>
+<h3 id="w5-p3-备选-daemon">W5（P3，备选）daemon<a class="anchor" href="#w5-p3-备选-daemon" aria-label="锚点">#</a></h3>
+<p>沿用 PERF-006 W4（常驻 Node + 薄客户端 IPC），不展开；仅当 W4 也不达标时再议。</p>
+<hr>
+<h2 id="六-落地顺序与阶段约束-process-008">六、落地顺序与阶段约束（<code>PROCESS-008</code>）<a class="anchor" href="#六-落地顺序与阶段约束-process-008" aria-label="锚点">#</a></h2>
+<ol><li><strong>顺序</strong>：W1-1（低风险高确定，先修预热漏洞）→ W2-1/W2-2（机制层证据明确）→ W1-2（先取 profile 列清单）→ W2-3/W2-4 → W3 → 视达标情况决定 W4 / W5。</li><li>修复类改动集存证落 <code>.khy/feedback/DESIGN-PERF-007/</code>（<code>repro-before.txt</code> / <code>repro-after.txt</code> 用同一探针、同一命令）；本文当前为<strong>提案</strong>，未改任何代码，故无 before/after 对——<strong>未量体温就不开药</strong>（<code>RUNTIME-007</code>），§七的命令即体温计。</li><li>每项验收用 §七 探针跑 <strong>20 连跑取 p50</strong>，且墙钟必须「同刻逐对交错」、机制层证据（spawn 数 / require 数 / 缓存命中）优先（PERF-006 §8.3 纪律）。</li><li>本文所有措施均为启动路径重构，<strong>不新增拦截型机制</strong>，不走四阶段升阶；若 W4 引入新的启动门禁（如打包产物校验），按其自身性质从 S1 起。</li></ol>
+<hr>
+<h2 id="七-度量命令-本机可复现">七、度量命令（本机可复现）<a class="anchor" href="#七-度量命令-本机可复现" aria-label="锚点">#</a></h2>
+<pre><code class="language-bat">:: <span class="hljs-number">7</span>.<span class="hljs-number">1</span> TUI 启动里程碑（真实 ConPTY；探针 .khy\tmp\perf-probe\tui-boot-probe.js，本机态）
+::     里程碑：first-output / 就绪<span class="hljs-number">5</span>/<span class="hljs-number">5</span> / 百分比曲线 / alt-screen / 启动屏首帧
+node .khy\tmp\perf-probe\tui-boot-probe.js node runtime\node\backend\bin\khy.js
+node .khy\tmp\perf-probe\tui-boot-probe.js D:\Portable\Tools\opencode\opencode.exe
+<span class="hljs-built_in">set</span> CLAUDE_CONFIG_DIR=D:\Portable\Tools\claude
+node .khy\tmp\perf-probe\tui-boot-probe.js D:\Portable\bin\claude.exe --dangerously-skip-permissions
+
+:: <span class="hljs-number">7</span>.<span class="hljs-number">2</span> 单命令墙钟（PowerShell）
+Measure-Command { node runtime\node\backend\bin\khy.js status }
+Measure-Command { claude --version }
+
+:: <span class="hljs-number">7</span>.<span class="hljs-number">3</span> require 图归因（钩子 .khy\tmp\perf-probe\require-hook.js；嵌套计入调用方）
+<span class="hljs-built_in">set</span> NODE_OPTIONS=--require D:/Portable/khy-os/.khy/tmp/perf-probe/require-hook.js
+node runtime\node\backend\bin\khy.js status
+
+:: <span class="hljs-number">7</span>.<span class="hljs-number">4</span> ink ESM 冷热对照
+node -e &quot;const t=<span class="hljs-built_in">Date</span>.now();import(&#x27;ink&#x27;).then(()=&gt;console.error(&#x27;ink cold: &#x27;+(<span class="hljs-built_in">Date</span>.now()-t)+&#x27;ms&#x27;))&quot;
+node -e &quot;require(&#x27;module&#x27;).enableCompileCache();const t=<span class="hljs-built_in">Date</span>.now();import(&#x27;ink&#x27;).then(()=&gt;console.error(&#x27;ink warm: &#x27;+(<span class="hljs-built_in">Date</span>.now()-t)+&#x27;ms&#x27;))&quot;
+
+:: <span class="hljs-number">7</span>.<span class="hljs-number">5</span> 交错 A/B（现成工具，勿在有未提交改动时跑 stash 变体）
+npm run bench:startup</code></pre>
+<blockquote><p>探针为<strong>本机态</strong>（<code>.khy/</code> gitignore），换机器时按 §7.1 路径重建；两份探针共约 120 行，无第三方依赖（tui 探针用仓库已装的 <code>node-pty</code>）。</p></blockquote>
+<hr>
+<h2 id="八-范围边界-不做的事">八、范围边界（不做的事）<a class="anchor" href="#八-范围边界-不做的事" aria-label="锚点">#</a></h2>
+<ul><li><strong>不碰 Python 启动器链</strong>：<code>khy.bat</code> 已损坏（PERF-006 §七）另案修；<code>--version</code> 底板 ~950ms 的 Python 链成本不在本文。</li><li><strong>不为提速牺牲状态透明</strong>（<code>RUNTIME-002</code>）：百分比曲线是既有合规形态，W1 各措施只消减其背后的等待，不把曲线改回含糊文案。</li><li><strong>不自行启动 W4</strong>：触及发布链（<code>PROCESS-002</code>/<code>PROCESS-013</code>/<code>PROCESS-014</code>）与软著选材（<code>PROCESS-010</code> C-X3），须人拍板后独立立项。</li><li><strong>不把 claude/opencode 的代码或二进制搬进本仓</strong>：对标只学结构（单体+懒加载+UI 先行），实现仍是本仓自己的事（<code>[DESIGN-SOURCING-001]</code>）。</li></ul>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/DESIGN-PERF/[DESIGN-PERF-006] khy 启动提速方案.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-PERF-006] khy 启动提速方案</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-PERF/00_INDEX_DESIGN-PERF-总目录.html"><div class="dir">下一篇 →</div><div class="ttl">DESIGN-PERF</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/03_DESIGN_设计/DESIGN-PERF/[DESIGN-PERF-007] 对标 Claude Code 与 OpenCode 的 khy 启动提速方案.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
