@@ -79,6 +79,28 @@ const REG_REL = 'docs/10_规范/registry/COPYRIGHT.json';
 const MATERIALS_REL = 'docs/10_规范/registry/COPYRIGHT-MATERIALS.json';
 const SSOT_REL = 'docs/10_规范/其它规范/[DESIGN-IP-001] 软件著作权就绪规范.md';
 
+// 界面/材料走查时不该进入的目录。提成模块级常量是因为原来只有检查 5（C-X3）用得
+// 上它，检查 3（C-MAT2 名称一致性）另写了一条正则、且漏了 dist-electron —— 于是
+// apps/khyos-desktop/dist-electron/win-unpacked/LICENSES.chromium.html（已被
+// .gitignore:207 忽略、0 个跟踪文件的 esbuild 产物）被当成「界面标题与登记全称
+// 不一致」报出来。两处判据分开写必然漂移，故收口到同一份。
+//
+// 2026-10-10 补 works/data：它是**运行态数据根**（.gitignore:286 + DATA-LOCATIONS
+// roots.rel 双重真源），里面的文件永远不会进提交。走查它只会产出关于「不存在于版本
+// 控制中的文件」的告警 —— 实测有 2 条来自 works/data/codeartsdoer/temp/accept/。
+// 注意与 works/record/evidence/ 区别：那份是 C-E4 明令**必须入库**的登记证据，
+// 不在此列。
+const NON_INTERFACE_DIRS = new Set([
+  'node_modules', '.git', 'dist', 'dist-electron', 'build', 'out', 'coverage', 'works',
+]);
+
+/** 相对路径的任一段是否落在非界面目录里。works 整段排除 —— works/record/evidence/
+ *  与 works/ship 等**受跟踪**内容的走查由 C-X3 / C-E4 各自按登记表进行，不走
+ *  walk(REPO_ROOT) 这条全仓路径。 */
+function inNonInterfaceDir(rel) {
+  return rel.split('/').some((seg) => NON_INTERFACE_DIRS.has(seg));
+}
+
 // ---------------------------------------------------------------- argv
 const argv = process.argv.slice(2);
 const has = (f) => argv.includes(f);
@@ -389,7 +411,7 @@ const PLACEHOLDER = /^(demo|test|main window|untitled|未命名|未标题|placeh
   walk(REPO_ROOT, 0, (full, name) => {
     if (!/\.html$/i.test(name)) return;
     const r = rel(full);
-    if (/(^|\/)(node_modules|dist|out|coverage|build)\//.test(r)) return;
+    if (inNonInterfaceDir(r)) return;
     if (/(^|\/)docs\//.test(r)) return;
     if (isDocTwin(full)) return;
     const c = read(r);
@@ -489,8 +511,8 @@ const PLACEHOLDER = /^(demo|test|main window|untitled|未命名|未标题|placeh
           '不再允许「自留底档不进提交」。忽略掉的证据等于没有证据。'
       );
     }
-    // 收集证据文件（跳过任何构建/依赖目录）
-    const SKIP = new Set(['node_modules', '.git', 'dist', 'dist-electron', 'build', 'out']);
+    // 收集证据文件（跳过一切非界面目录）—— 用模块级的 NON_INTERFACE_DIRS，
+    // 与检查 3 同一份判据（原来这里另有一份 SET，漏了 coverage/works 且容易与那边漂移）。
     const files = [];
     (function scan(dir, depth) {
       if (depth > 4) return;
@@ -503,7 +525,7 @@ const PLACEHOLDER = /^(demo|test|main window|untitled|未命名|未标题|placeh
       for (const e of ents) {
         const full = path.join(dir, e.name);
         if (e.isDirectory()) {
-          if (!SKIP.has(e.name)) scan(full, depth + 1);
+          if (!NON_INTERFACE_DIRS.has(e.name)) scan(full, depth + 1);
         } else {
           files.push(path.relative(REPO_ROOT, full).replace(/\\/g, '/'));
         }
