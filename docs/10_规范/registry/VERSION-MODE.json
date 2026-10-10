@@ -1,0 +1,16 @@
+{
+  "$schemaNote": "版本态机读真源 —— 开发态 / 发布态双态切换。由 scripts/release/version-mode.js 消费，check-version-sync.js 与此文件无关（后者只校验版本号本身一致）。",
+  "version": 1,
+  "updated": "2026-10-10",
+  "mode": "dev",
+  "modeNote": "dev = AI 迭代期，版本号随每个工作批次自动 PATCH+1，不打 v* tag（不触发发布链）。release = 正式发布态，版本号冻结，打 v<X.Y.Z> tag 触发 A1 全链发布。",
+  "batchesSinceRelease": 0,
+  "batchesNote": "自上次发布以来收口的 AI 工作批次数。每次 `version-mode.js bump` +1，`release` / `back` 时归零。",
+  "lastRelease": null,
+  "lastReleaseNote": "上一次正式发布的版本号（X.Y.Z，不带 v；tag 才带 v）。null = 本仓尚未做过正式发布。",
+  "devLineBase": "1.2.0",
+  "devLineBaseNote": "开发线基数。第一次正式发布时字段会被置为发布号（计划为 1.0.0），此后的开发线从发布号 PATCH+1 重新起算，不再是 1.2.x。",
+  "plannedFirstRelease": "1.0.0",
+  "plannedFirstReleaseNote": "计划中的第一次正式发布版本号。注意：软著登记版本现为 V1.2.0（docs/10_规范/registry/COPYRIGHT.json），若正式发布定为 1.0.0，须同步修订 COPYRIGHT.json 与申请表，否则 check-copyright-readiness 会报版本不一致。",
+  "ruleSource": "docs/10_规范/其它规范/[DESIGN-SEMVER-002] 版本管理与发布触发规范.md §2.1 R-1 的 T4 触发（2026-10-10 增设）"
+}
