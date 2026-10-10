@@ -4,7 +4,7 @@
   "updated": "2026-10-10",
   "mode": "dev",
   "modeNote": "dev = AI 迭代期，版本号随每个工作批次自动 PATCH+1，不打 v* tag（不触发发布链）。release = 正式发布态，版本号冻结，打 v<X.Y.Z> tag 触发 A1 全链发布。",
-  "batchesSinceRelease": 0,
+  "batchesSinceRelease": 1,
   "batchesNote": "自上次发布以来收口的 AI 工作批次数。每次 `version-mode.js bump` +1，`release` / `back` 时归零。",
   "lastRelease": null,
   "lastReleaseNote": "上一次正式发布的版本号（X.Y.Z，不带 v；tag 才带 v）。null = 本仓尚未做过正式发布。",

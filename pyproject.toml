@@ -14,7 +14,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "khy-os"
-version = "1.2.0"
+version = "1.2.1"
 description = "基于执行轨迹记录与链路校验技术的AI助手平台 - Khy OS: AI platform operating system, distributed via PyPI (khy-os) and npm (@khy-os/khy-os). Python layer is a lightweight launcher that boots the Node.js backend."
 readme = "README.md"
 requires-python = ">=3.8"
