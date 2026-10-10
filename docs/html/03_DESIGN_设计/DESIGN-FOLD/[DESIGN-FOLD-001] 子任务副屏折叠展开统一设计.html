@@ -26,6 +26,7 @@
       <header class="hero reveal"><h1>[DESIGN-FOLD-001] 子任务副屏折叠展开统一设计</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-fold-001-子任务副屏折叠展开统一设计">[DESIGN-FOLD-001] 子任务副屏折叠展开统一设计</a></li><li class="lvl-2"><a href="#0-结论-核验记录">0. 结论（核验记录）</a></li><li class="lvl-2"><a href="#1-现状-折叠机制对照-核验时点">1. 现状：折叠机制对照（核验时点）</a></li><li class="lvl-2"><a href="#2-三层查看模型">2. 三层查看模型</a></li><li class="lvl-2"><a href="#3-数据流-全量正文缓冲-单一接缝">3. 数据流：全量正文缓冲（单一接缝）</a></li><li class="lvl-2"><a href="#4-门控与字节回退">4. 门控与字节回退</a></li><li class="lvl-2"><a href="#5-与-runtime-004-滚动区-的关系">5. 与 RUNTIME-004（滚动区）的关系</a></li><li class="lvl-2"><a href="#6-不支持清单-诚实边界">6. 不支持清单（诚实边界）</a></li><li class="lvl-2"><a href="#7-实现清单-与本文判据一一对应">7. 实现清单（与本文判据一一对应）</a></li><li class="lvl-3"><a href="#7-1-逐判据核验手段-2026-09-27-复核">7.1 逐判据核验手段（2026-09-27 复核）</a></li></ul></nav>
       <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: done --&gt;</p>
 <h1 id="design-fold-001-子任务副屏折叠展开统一设计">[DESIGN-FOLD-001] 子任务副屏折叠展开统一设计<a class="anchor" href="#design-fold-001-子任务副屏折叠展开统一设计" aria-label="锚点">#</a></h1>
 <blockquote><p>状态：已核验、已实现（实现清单见 §7）。本文是「子任务（agent 族并行 fan-out）<br>的折叠 / 展开 / 副屏查看」的<strong>单一真源</strong>，管键位契约、数据流与门控回退；<br>不覆盖各既有折叠机制自己的真源（DESIGN-ARCH-053 / DESIGN-ARCH-103 / DESIGN-ARCH-151）。</p></blockquote>
 <h2 id="0-结论-核验记录">0. 结论（核验记录）<a class="anchor" href="#0-结论-核验记录" aria-label="锚点">#</a></h2>
@@ -38,7 +39,15 @@
 <h2 id="1-现状-折叠机制对照-核验时点">1. 现状：折叠机制对照（核验时点）<a class="anchor" href="#1-现状-折叠机制对照-核验时点" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>机制</th><th>键位</th><th>代码位置</th><th>与本设计的关系</th></tr></thead><tbody><tr><td>工具/命令输出折叠</td><td>Ctrl+O（全局）</td><td><code>toolDisplayPolicy.js</code> / <code>ToolLines.js</code> / <code>ProcessGroup.js</code></td><td>保持不动；子任务树跟随其 <code>expanded</code> prop</td></tr><tr><td>网关 notice 折叠</td><td>Ctrl+G</td><td><code>App.js</code>（<code>content._collapsed</code>）+ <code>Transcript.js</code></td><td>无关，不并入</td></tr><tr><td>思维链折叠</td><td>Ctrl+E / 点击</td><td><code>transcriptLines.js</code> folds + <code>expandedThinking</code> Set</td><td><strong>逐条点击 Set 模式的先例</strong>，本设计的逐树展开复用同型交互</td></tr><tr><td>统一折叠模型</td><td>—（模型层）</td><td><code>tui/foldModel.js</code></td><td>kind 词表增补 <code>'agent'</code>（登记性）</td></tr><tr><td>live 区高度预算</td><td>—</td><td><code>liveRegionBudget.js</code> 等</td><td>副屏沿用「有界高度」纪律，不新增预算项</td></tr></tbody></table>
 <p><strong>键位契约（统一后，各安其位、互不抢键）</strong>：</p>
-<table><thead><tr><th>键/交互</th><th>作用域</th><th>行为</th></tr></thead><tbody><tr><td>Ctrl+O</td><td>全局</td><td>折叠/展开一切可折叠（含子任务树），现状保留</td></tr><tr><td><strong>点击子任务树卡</strong></td><td>单棵树</td><td>逐树展开/收起（新增；与工具卡的既有点击展开同一 Map 状态 <code>toolExpanded</code>）</td></tr><tr><td><strong>↓（回合执行中）</strong></td><td>副屏</td><td>打开窥视副屏：最近工具是 agent 族 → <strong>子任务副屏</strong>；否则 → 既有 ShellView 实时输出</td></tr><tr><td>↑/↓、←</td><td>副屏内</td><td>滚动 / 返回（arrowRouting <code>shellView</code> context 原样复用）</td></tr></tbody></table>
+<table><thead><tr><th>键/交互</th><th>作用域</th><th>行为</th></tr></thead><tbody><tr><td>Ctrl+O</td><td>全局</td><td>折叠/展开一切可折叠（含子任务树），现状保留</td></tr><tr><td><strong>点击子任务树卡</strong></td><td>单棵树</td><td>逐树展开/收起（新增；与工具卡的既有点击展开同一 Map 状态 <code>toolExpanded</code>）</td></tr><tr><td><strong>↓（回合执行中）</strong></td><td>副屏</td><td>打开窥视副屏：最近工具是 agent 族 → <strong>子任务副屏</strong>；否则 → 既有 ShellView 实时输出。<strong>本回合还没有工具调用时不响应</strong>：没有可看的内容就不摆空框，改由一行提示说清入口与时机</td></tr><tr><td>↑/↓、←</td><td>副屏内</td><td>滚动 / 返回（arrowRouting <code>shellView</code> context 原样复用）</td></tr></tbody></table>
+<p><strong>「本回合还没有工具调用时不响应」是 2026-10-09 加的</strong>（用户反馈「执行过程中的下键不知道搞什么的，不清楚，很难看作用是什么」）。<br>改动前的行为是：执行中按 <code>↓</code> 无条件开板，于是第一轮（尚未调用任何工具）按下去得到的是一个<br><strong>占满主区、正文只有一句「← 返回」的空框</strong> —— 用户看不出它是干什么的。三处落点：</p>
+<ul><li><code>cli/tui/arrowRouting.js</code>：<code>executing.down</code> 由静态映射变为条件绑定（输入 <code>hasTool</code>），</li></ul>
+<p>没有工具可看时降级为 <code>subview:peekUnavailable</code>（缺省按「还没有」处理：宁可不开，也不开空框）；</p>
+<ul><li><code>cli/tui/ink-components/App.js</code>：该动作<strong>不静默吞键</strong>，用 <code>showHint</code> 说明入口与时机</li></ul>
+<p>（按了没反应，和看到一个不说话的框一样费解）；</p>
+<ul><li><code>cli/tui/ink-components/ShellView.js</code>：面板自己说清身份、入口与生命周期 —— 页脚由</li></ul>
+<p><code>← 返回</code> 改为 <code>← 关闭 · 回合结束后自动关闭</code>（此前只有返回键，用户既不知它是哪个键打开的，<br>  也不知它会随回合结束自己消失）；空态分支保留为组件的诚实空态（正常按不出来）。</p>
+<p>同一把尺：<code>ShellView.latestTool</code>（App 判定 <code>hasTool</code> 与面板取内容用同一个函数），<br>故「面板不会开成空框」不靠两处各自记住。键位目录侧，<code>services/domain/config/keybindings/keybindingCatalog.js</code><br>新增「回合执行中（输入框为空）」组，<code>/keybindings</code> 与 <code>?</code> 浮层不再只写「↑/↓ 浏览历史」。</p>
 <h2 id="2-三层查看模型">2. 三层查看模型<a class="anchor" href="#2-三层查看模型" aria-label="锚点">#</a></h2>
 <p>子任务输出按「信息量递增」分三层，用户逐层深入：</p>
 <pre><code>L1 折叠头行   ● Running 2 agents…  (Ctrl+O 展开)          ← committed 且未展开时
