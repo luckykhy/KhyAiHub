@@ -48,16 +48,16 @@ jobs:
         # 一个什么都没检查的步骤会显示为通过。这是实测过的静默失败，不要改回 --prefix。
         working-directory: delivery/web/ai-frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           # 显式 pin，与根 package.json 的 packageManager 保持一致。
           # 不写则依赖 action 隐式探测；一旦探测结果与 corepack 不一致，
           # 会在安装阶段额外下载第二个 pnpm，报难查的 ERR_PNPM_*。
           version: 10.18.0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           # 不写死大版本：跟随当前稳定 LTS。
           node-version: 'lts/*'
@@ -98,7 +98,7 @@ jobs:
         run: node scripts/ci/check-frontend-size.js --app delivery/web/ai-frontend
 
       - name: Upload build output
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: ai-frontend-dist
@@ -118,14 +118,14 @@ jobs:
       run:
         working-directory: delivery/channel/khyquant/frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           # 显式 pin，与根 package.json 的 packageManager 保持一致（详见本文件上方说明）。
           version: 10.18.0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 'lts/*'
           cache: pnpm
@@ -158,7 +158,7 @@ jobs:
         run: node scripts/ci/check-frontend-size.js --app delivery/channel/khyquant/frontend
 
       - name: Upload build output
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: khyquant-frontend-dist

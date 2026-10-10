@@ -46,19 +46,19 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           # 显式 pin，与根 package.json 的 packageManager 保持一致。
           # 不写则依赖 action 隐式探测；探测结果与 corepack 不一致时会在安装
           # 阶段额外下载第二个 pnpm，报难查的 ERR_PNPM_*。
           version: 10.18.0
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 'lts/*'
           cache: 'pnpm'
@@ -121,7 +121,7 @@ jobs:
       # 无论门禁结果如何都保留证据（报告 + 原始 results + TCK reports）。
       - name: Upload conformance report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: conformance-report
           if-no-files-found: ignore
