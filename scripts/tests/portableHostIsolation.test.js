@@ -8,26 +8,26 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..', '..');
-const DATA_HOME_MODULE = path.join(ROOT, 'services', 'backend', 'src', 'utils', 'dataHome.js');
-const BRIDGE_AUTH_MODULE = path.join(ROOT, 'services', 'backend', 'src', 'bridge', 'bridgeAuth.js');
-const SHARED_DATABASE_MODULE = path.join(ROOT, 'platform', 'packages', 'shared', 'src', 'config', 'database.js');
-const STORAGE_PATHS_MODULE = path.join(ROOT, 'platform', 'packages', 'shared', 'src', 'utils', 'storagePaths.js');
-const BACKEND_ENTRY = path.join(ROOT, 'services', 'backend', 'bin', 'khy.js');
+const DATA_HOME_MODULE = path.join(ROOT, 'runtime', 'node', 'backend', 'src', 'utils', 'dataHome.js');
+const BRIDGE_AUTH_MODULE = path.join(ROOT, 'runtime', 'node', 'backend', 'src', 'bridge', 'bridgeAuth.js');
+const SHARED_DATABASE_MODULE = path.join(ROOT, 'runtime', 'substrate', 'platform', 'packages', 'shared', 'src', 'config', 'database.js');
+const STORAGE_PATHS_MODULE = path.join(ROOT, 'runtime', 'substrate', 'platform', 'packages', 'shared', 'src', 'utils', 'storagePaths.js');
+const BACKEND_ENTRY = path.join(ROOT, 'runtime', 'node', 'backend', 'bin', 'khy.js');
 const WINDOWS_LAUNCHER = path.join(ROOT, 'khy.bat');
 const POSIX_LAUNCHER = path.join(ROOT, 'khy.sh');
-const PORTABLE_EXT = path.join(ROOT, 'extensions', 'scripts', 'khy-portable');
+const PORTABLE_EXT = path.join(ROOT, 'delivery', 'extension', 'scripts', 'khy-portable');
 const POWERSHELL_LAUNCHER = path.join(PORTABLE_EXT, 'run.ps1');
 const WINDOWS_SETUP = path.join(ROOT, 'portable-setup.bat');
 const POSIX_SETUP = path.join(ROOT, 'portable-setup.sh');
 // 2026-08-15 根目录收容（MGMT-STD-001 §1.3 白名单）把这个薄壳从仓库根搬到 delivery/extension/scripts/khy-installer/setup/，
-// 那里离根 4 级，壳里的相对调用是 %~dp0..\..\..\..\portable-setup.bat。
+// 那里离根 5 级，壳里的相对调用是 %~dp0..\..\..\..\..\portable-setup.bat。
 // 真入口仍是根上的 portable-setup.bat。
 const LEGACY_WINDOWS_SETUP = path.join(
-  ROOT, 'extensions', 'scripts', 'khy-installer', 'setup', 'setup-khy.bat'
+  ROOT, 'delivery', 'extension', 'scripts', 'khy-installer', 'setup', 'setup-khy.bat'
 );
 const WINDOWS_WRAPPER_INSTALLER = path.join(PORTABLE_EXT, 'install-path-wrappers.bat');
 const POSIX_WRAPPER_INSTALLER = path.join(PORTABLE_EXT, 'install-path-wrappers.sh');
-const PYTHON_PORTABLE_MODULE = path.join(ROOT, 'platform', 'khy_platform', 'portable.py');
+const PYTHON_PORTABLE_MODULE = path.join(ROOT, 'runtime', 'substrate', 'platform', 'khy_platform', 'portable.py');
 
 function listTree(root) {
   if (!fs.existsSync(root)) return [];
@@ -57,7 +57,7 @@ test('source launchers derive the project root from their own location', () => {
   // scripts/portable/ 深一级，少爬一级就会把 delivery/extension/ 当成项目根。
   assert.match(
     powershell,
-    /\$ProjectRoot = Split-Path -Parent \(Split-Path -Parent \(Split-Path -Parent \$PSScriptRoot\)\)/
+    /\$ProjectRoot = Split-Path -Parent \(Split-Path -Parent \(Split-Path -Parent \(Split-Path -Parent \$PSScriptRoot\)\)\)/
   );
   assert.match(powershell, /\$env:KHY_PORTABLE_ROOT = \$ProjectRoot/);
 
@@ -250,16 +250,16 @@ test('command setup scripts remain relocatable and use the portable launchers', 
   assert.match(posixSetup, /install-path-wrappers\.sh/);
   assert.match(
     legacySetup,
-    /%~dp0\.\.\\\.\.\\\.\.\\\.\.\\portable-setup\.bat/
+    /%~dp0\.\.\\\.\.\\\.\.\\\.\.\\\.\.\\portable-setup\.bat/
   );
   assert.doesNotMatch(legacySetup, /\$PROFILE|C:\\khy-os/i);
-  // 精确到级数：迁入拓展后是三级，写成宽松匹配的话少爬一级也照样绿。
-  assert.match(windowsInstaller, /%~dp0\.\.\\\.\.\\\.\./);
+  // 精确到级数：迁入拓展后是四级，写成宽松匹配的话少爬一级也照样绿。
+  assert.match(windowsInstaller, /%~dp0\.\.\\\.\.\\\.\.\\\.\./);
   assert.match(windowsInstaller, /call "%PROJECT_ROOT%\\khy\.bat"/);
   assert.match(windowsInstaller, /GetEnvironmentVariable\('Path','User'\)/);
   assert.match(windowsInstaller, /SetEnvironmentVariable\('Path', \(\$items -join ';'\), 'User'\)/);
   assert.doesNotMatch(windowsInstaller, /\bsetx\b/i);
-  assert.match(posixInstaller, /PROJECT_ROOT=.*SCRIPT_DIR\/\.\.\/\.\.\/\.\./);
+  assert.match(posixInstaller, /PROJECT_ROOT=.*SCRIPT_DIR\/\.\.\/\.\.\/\.\.\/\.\./);
   assert.match(posixInstaller, /RUNNER="\$PROJECT_ROOT\/khy\.sh"/);
 
   for (const content of [windowsSetup, posixSetup, legacySetup, windowsInstaller, posixInstaller]) {
@@ -271,7 +271,7 @@ test('Windows command wrappers forward arguments and exit codes from a moved sou
   const base = fs.mkdtempSync(path.join(os.tmpdir(), 'khy windows setup-'));
   t.after(() => fs.rmSync(base, { recursive: true, force: true }));
   const sourceRoot = path.join(base, '移动 后 源码');
-  const installerDir = path.join(sourceRoot, 'extensions', 'scripts', 'khy-portable');
+  const installerDir = path.join(sourceRoot, 'delivery', 'extension', 'scripts', 'khy-portable');
   const localAppData = path.join(base, 'local app data');
   const capture = path.join(base, 'arguments.txt');
   fs.mkdirSync(installerDir, { recursive: true });
@@ -327,7 +327,7 @@ test('Unix command setup updates one PATH block and keeps wrappers relocatable',
   const base = fs.mkdtempSync(path.join(os.tmpdir(), 'khy unix setup-'));
   t.after(() => fs.rmSync(base, { recursive: true, force: true }));
   const sourceRoot = path.join(base, '移动 后 源码');
-  const installerDir = path.join(sourceRoot, 'extensions', 'scripts', 'khy-portable');
+  const installerDir = path.join(sourceRoot, 'delivery', 'extension', 'scripts', 'khy-portable');
   const home = path.join(base, 'home');
   const binDir = path.join(home, 'custom bin');
   const profile = path.join(home, '.bashrc');

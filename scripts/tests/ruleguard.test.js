@@ -21,14 +21,14 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..');
 // ─── glob ───────────────────────────────────────────────────────────────────
 
 test('glob: 单星不跨目录', () => {
-  assert.equal(matchesAny(['services/*'], 'services/backend'), true);
-  assert.equal(matchesAny(['services/*'], 'runtime/node/backend/src/x.js'), false);
+  assert.equal(matchesAny(['runtime/node/*'], 'runtime/node/backend'), true);
+  assert.equal(matchesAny(['runtime/node/*'], 'runtime/node/backend/src/x.js'), false);
 });
 
 test('glob: 双星跨任意深度且可匹配零层', () => {
-  assert.equal(matchesAny(['services/**'], 'services/a.js'), true);
-  assert.equal(matchesAny(['services/**'], 'runtime/node/backend/src/deep/a.js'), true);
-  assert.equal(matchesAny(['services/**'], 'apps/ai-frontend/x.js'), false);
+  assert.equal(matchesAny(['runtime/node/**'], 'runtime/node/a.js'), true);
+  assert.equal(matchesAny(['runtime/node/**'], 'runtime/node/backend/src/deep/a.js'), true);
+  assert.equal(matchesAny(['runtime/node/**'], 'delivery/web/ai-frontend/x.js'), false);
 });
 
 test('glob: 问号匹配单字符', () => {
@@ -42,12 +42,12 @@ test('glob: 否定模式优先否决', () => {
 });
 
 test('glob: 空模式列表永不命中', () => {
-  assert.equal(matchesAny([], 'services/a.js'), false);
-  assert.equal(matchesAny(['   '], 'services/a.js'), false);
+  assert.equal(matchesAny([], 'runtime/node/a.js'), false);
+  assert.equal(matchesAny(['   '], 'runtime/node/a.js'), false);
 });
 
 test('glob: 反斜杠归一为斜杠（Windows 路径）', () => {
-  assert.equal(matchesAny(['services/**'], 'services\\backend\\src\\a.js'), true);
+  assert.equal(matchesAny(['runtime/node/**'], 'runtime\\node\\backend\\src\\a.js'), true);
 });
 
 test('glob: 正则元字符被转义而非解释', () => {

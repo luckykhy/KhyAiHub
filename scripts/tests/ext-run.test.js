@@ -31,8 +31,8 @@ function makeRepo({ id = 'khy-fix', category = 'scripts', commands, script = 'ru
   const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-extrun-'));
   tempDirs.push(repo);
   const dir = category
-    ? path.join(repo, 'extensions', category, id)
-    : path.join(repo, 'extensions', id);
+    ? path.join(repo, 'delivery', 'extension', category, id)
+    : path.join(repo, 'delivery', 'extension', id);
   fs.mkdirSync(dir, { recursive: true });
 
   const manifest = body || {
@@ -105,7 +105,7 @@ describe('ext-run：删目录即消失（而不是即崩溃）', () => {
 
   test('删掉整个分类目录 → 同样退化为「未安装」', () => {
     const { repo } = makeRepo({ id: 'khy-catgone', category: 'scripts' });
-    fs.rmSync(path.join(repo, 'extensions', 'scripts'), { recursive: true, force: true });
+    fs.rmSync(path.join(repo, 'delivery', 'extension', 'scripts'), { recursive: true, force: true });
     const r = run(repo, ['khy-catgone', 'go']);
     assert.equal(r.code, 1);
     assert.match(r.err, /未安装/);

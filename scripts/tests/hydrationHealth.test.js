@@ -201,8 +201,8 @@ test('CRITICAL_PACKAGES 非空、无重复', () => {
 // 避免自检去 stat 一个根本不该存在的包（永远误报缺失）。
 test('反漂移：每个 CRITICAL_PACKAGES 都由 backend 或 @khy/shared 声明', () => {
   const manifests = [
-    path.resolve(__dirname, '..', '..', 'services', 'backend', 'package.json'),
-    path.resolve(__dirname, '..', '..', 'platform', 'packages', 'shared', 'package.json'),
+    path.resolve(__dirname, '..', '..', 'runtime', 'node', 'backend', 'package.json'),
+    path.resolve(__dirname, '..', '..', 'runtime', 'substrate', 'platform', 'packages', 'shared', 'package.json'),
   ].map(file => JSON.parse(fs.readFileSync(file, 'utf8')));
   const deps = Object.assign({}, ...manifests.map(pkg => ({
     ...(pkg.dependencies || {}),

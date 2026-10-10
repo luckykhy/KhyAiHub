@@ -123,7 +123,7 @@ test('launchers derive all state from their own artifact directory', t => {
 
 test('backend skips host data junction initialization in portable mode', () => {
   const backendEntry = fs.readFileSync(
-    path.resolve(__dirname, '..', '..', 'services', 'backend', 'bin', 'khy.js'),
+    path.resolve(__dirname, '..', '..', 'runtime', 'node', 'backend', 'bin', 'khy.js'),
     'utf8',
   );
   assert.match(

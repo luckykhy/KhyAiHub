@@ -16,27 +16,27 @@ function mkdir(p) { fs.mkdirSync(p, { recursive: true }); }
 // 构造一个可控 fixture 根：源文件行数、守护脚本、日志编码、发布链都精确已知。
 function buildFixture(opts = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'zcb-'));
-  mkdir(path.join(root, 'services', 'backend', 'src'));
+  mkdir(path.join(root, 'runtime', 'node', 'backend', 'src'));
   // 两个源文件：一个大（可配置）、一个小。
   const bigLines = 'a'.repeat(10) + '\n';
   const big = new Array(opts.bigFileLines || 10).fill(bigLines.trimEnd()).join('\n') + '\n';
-  fs.writeFileSync(path.join(root, 'services', 'backend', 'src', 'big.js'), big);
-  fs.writeFileSync(path.join(root, 'services', 'backend', 'src', 'small.js'), 'x = 1;\n');
+  fs.writeFileSync(path.join(root, 'runtime', 'node', 'backend', 'src', 'big.js'), big);
+  fs.writeFileSync(path.join(root, 'runtime', 'node', 'backend', 'src', 'small.js'), 'x = 1;\n');
   // 测试文件应被排除（不应拉高 p99）。
-  mkdir(path.join(root, 'services', 'backend', 'src', '__tests__'));
-  fs.writeFileSync(path.join(root, 'services', 'backend', 'src', 'big.test.js'), big);
+  mkdir(path.join(root, 'runtime', 'node', 'backend', 'src', '__tests__'));
+  fs.writeFileSync(path.join(root, 'runtime', 'node', 'backend', 'src', 'big.test.js'), big);
   // node_modules 应被排除。
   mkdir(path.join(root, 'node_modules'));
   fs.writeFileSync(path.join(root, 'node_modules', 'junk.js'), big.repeat(200));
 
   // 守护脚本：是否把 workflow require 包在 try 内（M2），是否含在途工作探针
   // anyProbeActive()（M3 防抖信号之一），由 opts 决定。
-  mkdir(path.join(root, 'services', 'backend', 'scripts'));
+  mkdir(path.join(root, 'runtime', 'node', 'backend', 'scripts'));
   const probe = opts.probe ? "\nif (sessions.size > 0 || anyProbeActive()) return;\n" : '';
   const daemon = opts.guarded
     ? "const x = 1;\ntry {\n  const { w } = require('../src/services/workflow');\n} catch {}\n" + probe
     : "const x = 1;\nconst { w } = require('../src/services/workflow');\n// startup-timeout branch present\nif (idle) shutdown('startup-timeout');\nconst limit = Math.max(lastActiveAt, lastRequestAt);\n" + probe;
-  fs.writeFileSync(path.join(root, 'services', 'backend', 'scripts', 'ai-manage-daemon.js'), daemon);
+  fs.writeFileSync(path.join(root, 'runtime', 'node', 'backend', 'scripts', 'ai-manage-daemon.js'), daemon);
 
   // 日志：一个合法 UTF-8，一个非法字节（0xff 0xfe 非 UTF-8 序）。
   mkdir(path.join(root, 'works', 'data', 'khy', 'logs'));
@@ -196,8 +196,8 @@ const POLICY_PATH = path.join('docs', '10_规范', 'registry', 'ARCHITECTURE-POL
 // 建一个带 ARCHITECTURE-POLICY.json 的 fixture：两个纳管模块 a/b，可配置成环与超长。
 function buildPolicyFixture({ cycle = false, bigManaged = false, deepImport = false } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'zcbp-'));
-  mkdir(path.join(root, 'services', 'backend', 'src', 'a'));
-  mkdir(path.join(root, 'services', 'backend', 'src', 'b'));
+  mkdir(path.join(root, 'runtime', 'node', 'backend', 'src', 'a'));
+  mkdir(path.join(root, 'runtime', 'node', 'backend', 'src', 'b'));
   const policy = {
     global: { maxFileLines: 400, forbidCycles: true, forbidDeepImports: true, managedOnly: true },
     modules: [
@@ -207,17 +207,17 @@ function buildPolicyFixture({ cycle = false, bigManaged = false, deepImport = fa
   };
   if (deepImport) {
     policy.modules.push({ id: 'c', roots: ['runtime/node/backend/src/c'], managed: false, publicEntrypoints: ['runtime/node/backend/src/c/index.js'] });
-    mkdir(path.join(root, 'services', 'backend', 'src', 'c'));
-    fs.writeFileSync(path.join(root, 'services', 'backend', 'src', 'c', 'index.js'), 'exports.x = 1;\n');
-    fs.writeFileSync(path.join(root, 'services', 'backend', 'src', 'c', 'inner.js'), 'exports.y = 2;\n');
+    mkdir(path.join(root, 'runtime', 'node', 'backend', 'src', 'c'));
+    fs.writeFileSync(path.join(root, 'runtime', 'node', 'backend', 'src', 'c', 'index.js'), 'exports.x = 1;\n');
+    fs.writeFileSync(path.join(root, 'runtime', 'node', 'backend', 'src', 'c', 'inner.js'), 'exports.y = 2;\n');
   }
   mkdir(path.join(root, 'docs', '10_规范', 'registry'));
   fs.writeFileSync(path.join(root, POLICY_PATH), JSON.stringify(policy));
   const aBody = bigManaged ? Array.from({ length: 500 }, () => 'a=1;').join('\n') + '\n' : 'const b = require("../b/b.js");\n';
   let aCode = aBody;
   if (deepImport) aCode += 'const inner = require("../c/inner.js");\n';
-  fs.writeFileSync(path.join(root, 'services', 'backend', 'src', 'a', 'a.js'), aCode);
-  fs.writeFileSync(path.join(root, 'services', 'backend', 'src', 'b', 'b.js'),
+  fs.writeFileSync(path.join(root, 'runtime', 'node', 'backend', 'src', 'a', 'a.js'), aCode);
+  fs.writeFileSync(path.join(root, 'runtime', 'node', 'backend', 'src', 'b', 'b.js'),
     cycle ? 'const a = require("../a/a.js");\n' : 'const x = 1;\n');
   return root;
 }

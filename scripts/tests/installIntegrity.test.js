@@ -135,7 +135,7 @@ test('反漂移：每条 CRITICAL_BUNDLE_PATHS 都被 pip 或 npm 权威清单�
   assert.ok(pipBlock, '未能在 pip 权威文件中定位 REQUIRED_WHEEL_PATHS 块');
   const pipList = pipBlock[1];
 
-  const npmFile = path.resolve(__dirname, '..', '..', 'packaging', 'npm', 'scripts', 'audit-purity.js');
+  const npmFile = path.resolve(__dirname, '..', '..', 'works', 'ship', 'npm', 'scripts', 'audit-purity.js');
   const npmSrc = fs.readFileSync(npmFile, 'utf8');
   const npmBlock = /REQUIRED_PATHS\s*=\s*\[([\s\S]*?)\]/.exec(npmSrc);
   assert.ok(npmBlock, '未能在 npm 权威文件中定位 REQUIRED_PATHS 块');
