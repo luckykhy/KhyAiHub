@@ -8,56 +8,120 @@
 
     <div class="feedback-container">
       <!-- Submit form -->
-      <el-card class="form-card" shadow="hover">
+      <el-card
+        class="form-card"
+        shadow="hover"
+      >
         <template #header>
           <div class="card-title">
-            <el-icon :size="20"><EditPen /></el-icon>
+            <el-icon :size="20">
+              <EditPen />
+            </el-icon>
             <span>提交反馈</span>
           </div>
         </template>
 
         <el-form
+          ref="feedbackFormRef"
           :model="feedbackForm"
           :rules="rules"
-          ref="feedbackFormRef"
           label-position="top"
           class="feedback-form"
         >
           <el-row :gutter="20">
-            <el-col :xs="24" :sm="12">
-              <el-form-item label="反馈类型" prop="type">
-                <el-select v-model="feedbackForm.type" placeholder="请选择" style="width: 100%">
-                  <el-option label="功能建议" value="suggestion">
-                    <el-icon class="opt-icon" style="color:var(--khy-success)"><Star /></el-icon>
+            <el-col
+              :xs="24"
+              :sm="12"
+            >
+              <el-form-item
+                label="反馈类型"
+                prop="type"
+              >
+                <el-select
+                  v-model="feedbackForm.type"
+                  placeholder="请选择"
+                  style="width: 100%"
+                >
+                  <el-option
+                    label="功能建议"
+                    value="suggestion"
+                  >
+                    <el-icon
+                      class="opt-icon"
+                      style="color:var(--khy-success)"
+                    >
+                      <Star />
+                    </el-icon>
                     <span>功能建议</span>
                   </el-option>
-                  <el-option label="问题反馈" value="bug">
-                    <el-icon class="opt-icon" style="color:var(--khy-danger)"><WarningFilled /></el-icon>
+                  <el-option
+                    label="问题反馈"
+                    value="bug"
+                  >
+                    <el-icon
+                      class="opt-icon"
+                      style="color:var(--khy-danger)"
+                    >
+                      <WarningFilled />
+                    </el-icon>
                     <span>问题反馈</span>
                   </el-option>
-                  <el-option label="使用咨询" value="question">
-                    <el-icon class="opt-icon" style="color:var(--khy-primary)"><QuestionFilled /></el-icon>
+                  <el-option
+                    label="使用咨询"
+                    value="question"
+                  >
+                    <el-icon
+                      class="opt-icon"
+                      style="color:var(--khy-primary)"
+                    >
+                      <QuestionFilled />
+                    </el-icon>
                     <span>使用咨询</span>
                   </el-option>
-                  <el-option label="其他" value="other">
-                    <el-icon class="opt-icon" style="color:#909399"><MoreFilled /></el-icon>
+                  <el-option
+                    label="其他"
+                    value="other"
+                  >
+                    <el-icon
+                      class="opt-icon"
+                      style="color:#909399"
+                    >
+                      <MoreFilled />
+                    </el-icon>
                     <span>其他</span>
                   </el-option>
                 </el-select>
               </el-form-item>
             </el-col>
-            <el-col :xs="24" :sm="12">
+            <el-col
+              :xs="24"
+              :sm="12"
+            >
               <el-form-item label="联系方式">
-                <el-input v-model="feedbackForm.contact" placeholder="邮箱或电话（可选）" />
+                <el-input
+                  v-model="feedbackForm.contact"
+                  placeholder="邮箱或电话（可选）"
+                />
               </el-form-item>
             </el-col>
           </el-row>
 
-          <el-form-item label="标题" prop="title">
-            <el-input v-model="feedbackForm.title" placeholder="简要描述您的反馈" maxlength="100" show-word-limit />
+          <el-form-item
+            label="标题"
+            prop="title"
+          >
+            <el-input
+              v-model="feedbackForm.title"
+              placeholder="简要描述您的反馈"
+              maxlength="100"
+              show-word-limit
+            />
           </el-form-item>
 
-          <el-form-item label="详细描述" prop="content">
+          <el-form-item
+            label="详细描述"
+            prop="content"
+          >
             <el-input
               v-model="feedbackForm.content"
               type="textarea"
@@ -69,38 +133,79 @@
           </el-form-item>
 
           <div class="form-actions">
-            <el-button type="primary" @click="submitFeedback" :loading="submitting" :icon="Promotion">
+            <el-button
+              type="primary"
+              :loading="submitting"
+              :icon="Promotion"
+              @click="submitFeedback"
+            >
               提交反馈
             </el-button>
-            <el-button @click="resetForm">重置</el-button>
+            <el-button @click="resetForm">
+              重置
+            </el-button>
           </div>
         </el-form>
       </el-card>
 
       <!-- History -->
-      <el-card class="history-card" shadow="hover">
+      <el-card
+        class="history-card"
+        shadow="hover"
+      >
         <template #header>
           <div class="card-title">
-            <el-icon :size="20"><Clock /></el-icon>
+            <el-icon :size="20">
+              <Clock />
+            </el-icon>
             <span>反馈记录</span>
-            <el-button size="small" text type="primary" @click="loadFeedbackHistory" style="margin-left:auto">
+            <el-button
+              size="small"
+              text
+              type="primary"
+              style="margin-left:auto"
+              @click="loadFeedbackHistory"
+            >
               <el-icon><Refresh /></el-icon> 刷新
             </el-button>
           </div>
         </template>
 
-        <div v-if="feedbackHistory.length === 0" class="empty-box">
-          <el-empty description="暂无反馈记录" :image-size="120" />
+        <div
+          v-if="feedbackHistory.length === 0"
+          class="empty-box"
+        >
+          <el-empty
+            description="暂无反馈记录"
+            :image-size="120"
+          />
         </div>
 
-        <div v-else class="history-list">
-          <div v-for="item in feedbackHistory" :key="item.id" class="history-item">
+        <div
+          v-else
+          class="history-list"
+        >
+          <div
+            v-for="item in feedbackHistory"
+            :key="item.id"
+            class="history-item"
+          >
             <div class="item-top">
-              <el-tag :type="typeTagMap[item.type]" size="small" effect="dark" round>
+              <el-tag
+                :type="typeTagMap[item.type]"
+                size="small"
+                effect="dark"
+                round
+              >
                 {{ typeTextMap[item.type] || item.type }}
               </el-tag>
               <span class="item-title">{{ item.title }}</span>
-              <el-tag :type="statusTagMap[item.status]" size="small" effect="light" class="status-tag">
+              <el-tag
+                :type="statusTagMap[item.status]"
+                size="small"
+                effect="light"
+                class="status-tag"
+              >
                 {{ statusTextMap[item.status] || item.status }}
               </el-tag>
             </div>
@@ -110,7 +215,10 @@
             <div class="item-meta">
               <span>{{ formatDate(item.createdAt) }}</span>
             </div>
-            <div v-if="item.adminReply || item.reply" class="item-reply">
+            <div
+              v-if="item.adminReply || item.reply"
+              class="item-reply"
+            >
               <strong>管理员回复：</strong>{{ item.adminReply || item.reply }}
             </div>
           </div>

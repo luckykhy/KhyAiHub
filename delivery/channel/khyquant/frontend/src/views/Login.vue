@@ -1,10 +1,20 @@
 <template>
   <div class="login-page">
-    <canvas ref="starCanvasRef" class="star-canvas" />
+    <canvas
+      ref="starCanvasRef"
+      class="star-canvas"
+    />
 
-    <section class="login-card" :class="{ shake: shaking }">
+    <section
+      class="login-card"
+      :class="{ shake: shaking }"
+    >
       <header class="card-header">
-        <img src="/logo.png" alt="KHY-Quant" class="brand-logo" />
+        <img
+          src="/logo.png"
+          alt="KHY-Quant"
+          class="brand-logo"
+        >
         <h1>量化交易系统</h1>
         <p>KHY-Quant · 智能量化平台</p>
       </header>
@@ -28,7 +38,7 @@
               placeholder="用户名或邮箱"
               autocomplete="username"
               @keyup.enter="handleLogin"
-            />
+            >
           </div>
 
           <div class="input-wrap">
@@ -39,31 +49,66 @@
               placeholder="密码"
               autocomplete="current-password"
               @keyup.enter="handleLogin"
-            />
-            <span class="eye-btn" @click="showPwd = !showPwd">{{ showPwd ? '' : '' }}</span>
+            >
+            <span
+              class="eye-btn"
+              @click="showPwd = !showPwd"
+            >{{ showPwd ? '' : '' }}</span>
           </div>
 
           <label class="remember-wrap">
-            <input v-model="rememberPassword" type="checkbox" @change="handleRememberPasswordToggle" />
+            <input
+              v-model="rememberPassword"
+              type="checkbox"
+              @change="handleRememberPasswordToggle"
+            >
             <span>记住密码</span>
           </label>
 
-          <button class="login-btn" :disabled="loading" @click="handleLogin">
+          <button
+            class="login-btn"
+            :disabled="loading"
+            @click="handleLogin"
+          >
             <span v-if="!loading">登 录</span>
-            <span v-else class="spinner" />
+            <span
+              v-else
+              class="spinner"
+            />
           </button>
 
-          <button class="login-btn secondary bio-btn" :disabled="bioLoading" @click="startBioLogin">
+          <button
+            class="login-btn secondary bio-btn"
+            :disabled="bioLoading"
+            @click="startBioLogin"
+          >
             <span v-if="!bioLoading">生物识别登录</span>
-            <span v-else class="spinner" />
+            <span
+              v-else
+              class="spinner"
+            />
           </button>
 
-          <p v-if="!isWebAuthnSupported" class="unsupported-inline">当前设备不支持生物识别</p>
-          <p class="status-text" :class="bioStatusType">{{ bioStatusMessage }}</p>
+          <p
+            v-if="!isWebAuthnSupported"
+            class="unsupported-inline"
+          >
+            当前设备不支持生物识别
+          </p>
+          <p
+            class="status-text"
+            :class="bioStatusType"
+          >
+            {{ bioStatusMessage }}
+          </p>
 
           <div class="form-links">
-            <router-link to="/forgot-password">忘记密码？</router-link>
-            <router-link to="/register">立即注册</router-link>
+            <router-link to="/forgot-password">
+              忘记密码？
+            </router-link>
+            <router-link to="/register">
+              立即注册
+            </router-link>
           </div>
         </section>
 
@@ -72,35 +117,79 @@
         <section class="right-panel">
           <h3>扫码登录</h3>
           <div class="qr-wrap">
-            <canvas ref="qrCanvasRef" class="qr-canvas" />
+            <canvas
+              ref="qrCanvasRef"
+              class="qr-canvas"
+            />
             <div class="qr-scan-line" />
-            <div v-if="qrLoading" class="qr-overlay">二维码生成中...</div>
+            <div
+              v-if="qrLoading"
+              class="qr-overlay"
+            >
+              二维码生成中...
+            </div>
           </div>
 
-          <p class="qr-countdown">二维码 {{ qrSeconds }} 秒后刷新</p>
-          <p class="qr-hint">使用手机扫码快速登录</p>
+          <p class="qr-countdown">
+            二维码 {{ qrSeconds }} 秒后刷新
+          </p>
+          <p class="qr-hint">
+            使用手机扫码快速登录
+          </p>
 
-          <button class="refresh-btn" type="button" @click="refreshQr(true)">立即刷新</button>
-          <p v-if="qrError" class="status-text error">{{ qrError }}</p>
+          <button
+            class="refresh-btn"
+            type="button"
+            @click="refreshQr(true)"
+          >
+            立即刷新
+          </button>
+          <p
+            v-if="qrError"
+            class="status-text error"
+          >
+            {{ qrError }}
+          </p>
         </section>
       </div>
 
-      <footer v-if="showConnectionSettings" class="connection-settings">
-        <div class="setting-title">连接模式</div>
+      <footer
+        v-if="showConnectionSettings"
+        class="connection-settings"
+      >
+        <div class="setting-title">
+          连接模式
+        </div>
         <div class="setting-row">
-          <select v-model="connectionMode" class="setting-select" @change="applyConnectionSettings">
-            <option v-if="allowLocalMode" value="local">单机（离线本地）</option>
-            <option value="auto">自动（优先云端，失败回退本地）</option>
-            <option value="cloud">云端（仅服务器）</option>
+          <select
+            v-model="connectionMode"
+            class="setting-select"
+            @change="applyConnectionSettings"
+          >
+            <option
+              v-if="allowLocalMode"
+              value="local"
+            >
+              单机（离线本地）
+            </option>
+            <option value="auto">
+              自动（优先云端，失败回退本地）
+            </option>
+            <option value="cloud">
+              云端（仅服务器）
+            </option>
           </select>
         </div>
-        <div v-if="connectionMode !== 'local'" class="setting-row">
+        <div
+          v-if="connectionMode !== 'local'"
+          class="setting-row"
+        >
           <input
             v-model="backendUrl"
             class="setting-input"
             placeholder="服务器地址，例如 https://khyquant.top"
             @blur="applyConnectionSettings"
-          />
+          >
         </div>
       </footer>
     </section>

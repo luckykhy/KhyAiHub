@@ -30,8 +30,8 @@
               type="primary"
               size="large"
               :loading="loading"
-              @click="handleGetQuestion"
               style="width: 100%"
+              @click="handleGetQuestion"
             >
               下一步
             </el-button>
@@ -95,8 +95,8 @@
               type="primary"
               size="large"
               :loading="loading"
-              @click="handleResetPassword"
               style="width: 100%"
+              @click="handleResetPassword"
             >
               重置密码
             </el-button>
@@ -105,8 +105,8 @@
           <el-form-item>
             <el-button
               size="large"
-              @click="step = 1"
               style="width: 100%"
+              @click="step = 1"
             >
               返回上一步
             </el-button>
@@ -117,7 +117,9 @@
       <!-- 返回登录链接 -->
       <div class="login-link">
         记起密码了？
-        <router-link to="/login">返回登录</router-link>
+        <router-link to="/login">
+          返回登录
+        </router-link>
       </div>
     </el-card>
   </div>

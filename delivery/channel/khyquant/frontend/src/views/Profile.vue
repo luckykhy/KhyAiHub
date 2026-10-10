@@ -1,20 +1,40 @@
 <template>
-  <div class="profile-page" :class="{ 'mobile-view': isMobile }">
+  <div
+    class="profile-page"
+    :class="{ 'mobile-view': isMobile }"
+  >
     <!-- 用户头像区域 -->
     <div class="profile-banner">
       <div class="avatar-section">
         <div class="avatar-wrapper">
-          <div class="user-avatar-badge" :style="{ width: isMobile ? '80px' : '100px', height: isMobile ? '80px' : '100px' }">
-            <img src="/school-badge.svg" alt="用户头像" class="badge-image" />
+          <div
+            class="user-avatar-badge"
+            :style="{ width: isMobile ? '80px' : '100px', height: isMobile ? '80px' : '100px' }"
+          >
+            <img
+              src="/school-badge.svg"
+              alt="用户头像"
+              class="badge-image"
+            >
           </div>
         </div>
         <div class="user-basic-info">
-          <h2 class="username">{{ userStore.user?.username || '加载中...' }}</h2>
+          <h2 class="username">
+            {{ userStore.user?.username || '加载中...' }}
+          </h2>
           <div class="user-meta">
-            <el-tag :type="getRoleType(userStore.user?.role)" size="small" class="role-tag">
+            <el-tag
+              :type="getRoleType(userStore.user?.role)"
+              size="small"
+              class="role-tag"
+            >
               {{ getRoleText(userStore.user?.role) }}
             </el-tag>
-            <el-tag :type="getStatusType(userStore.user?.status)" size="small" class="status-tag">
+            <el-tag
+              :type="getStatusType(userStore.user?.status)"
+              size="small"
+              class="status-tag"
+            >
               {{ getStatusText(userStore.user?.status) }}
             </el-tag>
           </div>
@@ -23,9 +43,9 @@
       <el-button 
         class="refresh-btn" 
         :size="isMobile ? 'small' : 'default'"
-        @click="refreshUserInfo" 
-        :loading="loading"
+        :loading="loading" 
         circle
+        @click="refreshUserInfo"
       >
         <el-icon><Refresh /></el-icon>
       </el-button>
@@ -35,71 +55,131 @@
     <div class="profile-content">
       <el-row :gutter="isMobile ? 12 : 20">
         <!-- 用户信息卡片 -->
-        <el-col :xs="24" :sm="24" :md="16">
-          <el-card class="info-card" shadow="hover">
+        <el-col
+          :xs="24"
+          :sm="24"
+          :md="16"
+        >
+          <el-card
+            class="info-card"
+            shadow="hover"
+          >
             <template #header>
               <div class="card-header">
-                <el-icon class="header-icon"><InfoFilled /></el-icon>
+                <el-icon class="header-icon">
+                  <InfoFilled />
+                </el-icon>
                 <span>个人信息</span>
               </div>
             </template>
             
-            <div v-if="!userStore.user" class="loading-container">
-              <el-icon class="is-loading"><Loading /></el-icon>
+            <div
+              v-if="!userStore.user"
+              class="loading-container"
+            >
+              <el-icon class="is-loading">
+                <Loading />
+              </el-icon>
               <p>加载用户信息中...</p>
             </div>
             
-            <div v-else class="info-grid">
+            <div
+              v-else
+              class="info-grid"
+            >
               <div class="info-item">
-                <div class="info-label">用户ID</div>
-                <div class="info-value">{{ userStore.user.id }}</div>
-              </div>
-              <div class="info-item">
-                <div class="info-label">用户名</div>
-                <div class="info-value">{{ userStore.user.username }}</div>
-              </div>
-              <div class="info-item">
-                <div class="info-label">邮箱</div>
-                <div class="info-value">{{ userStore.user.email }}</div>
-              </div>
-              <div class="info-item">
-                <div class="info-label">角色</div>
+                <div class="info-label">
+                  用户ID
+                </div>
                 <div class="info-value">
-                  <el-tag :type="getRoleType(userStore.user.role)" size="small">
+                  {{ userStore.user.id }}
+                </div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">
+                  用户名
+                </div>
+                <div class="info-value">
+                  {{ userStore.user.username }}
+                </div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">
+                  邮箱
+                </div>
+                <div class="info-value">
+                  {{ userStore.user.email }}
+                </div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">
+                  角色
+                </div>
+                <div class="info-value">
+                  <el-tag
+                    :type="getRoleType(userStore.user.role)"
+                    size="small"
+                  >
                     {{ getRoleText(userStore.user.role) }}
                   </el-tag>
                 </div>
               </div>
               <div class="info-item">
-                <div class="info-label">状态</div>
+                <div class="info-label">
+                  状态
+                </div>
                 <div class="info-value">
-                  <el-tag :type="getStatusType(userStore.user.status)" size="small">
+                  <el-tag
+                    :type="getStatusType(userStore.user.status)"
+                    size="small"
+                  >
                     {{ getStatusText(userStore.user.status) }}
                   </el-tag>
                 </div>
               </div>
               <div class="info-item">
-                <div class="info-label">注册时间</div>
-                <div class="info-value">{{ formatDate(userStore.user.createdAt) }}</div>
+                <div class="info-label">
+                  注册时间
+                </div>
+                <div class="info-value">
+                  {{ formatDate(userStore.user.createdAt) }}
+                </div>
               </div>
               <div class="info-item">
-                <div class="info-label">最后登录</div>
-                <div class="info-value">{{ formatDate(userStore.user.lastLoginAt) }}</div>
+                <div class="info-label">
+                  最后登录
+                </div>
+                <div class="info-value">
+                  {{ formatDate(userStore.user.lastLoginAt) }}
+                </div>
               </div>
               <div class="info-item">
-                <div class="info-label">更新时间</div>
-                <div class="info-value">{{ formatDate(userStore.user.updatedAt) }}</div>
+                <div class="info-label">
+                  更新时间
+                </div>
+                <div class="info-value">
+                  {{ formatDate(userStore.user.updatedAt) }}
+                </div>
               </div>
             </div>
           </el-card>
         </el-col>
 
         <!-- 安全设置卡片 -->
-        <el-col :xs="24" :sm="24" :md="8">
-          <el-card class="security-card" shadow="hover">
+        <el-col
+          :xs="24"
+          :sm="24"
+          :md="8"
+        >
+          <el-card
+            class="security-card"
+            shadow="hover"
+          >
             <template #header>
               <div class="card-header">
-                <el-icon class="header-icon"><Lock /></el-icon>
+                <el-icon class="header-icon">
+                  <Lock />
+                </el-icon>
                 <span>安全设置</span>
               </div>
             </template>
@@ -107,9 +187,9 @@
             <div class="security-actions">
               <el-button 
                 type="primary" 
-                @click="showPasswordDialog = true"
                 :size="isMobile ? 'default' : 'large'"
                 class="change-password-btn"
+                @click="showPasswordDialog = true"
               >
                 <el-icon><Lock /></el-icon>
                 <span>修改密码</span>
@@ -119,11 +199,16 @@
               <div class="bio-section">
                 <div class="bio-header">
                   <span class="bio-title">生物识别登录</span>
-                  <el-tag :type="bioBound ? 'success' : 'info'" size="small">
+                  <el-tag
+                    :type="bioBound ? 'success' : 'info'"
+                    size="small"
+                  >
                     {{ bioBound ? '已绑定' : '未绑定' }}
                   </el-tag>
                 </div>
-                <p class="bio-desc">绑定后可使用 Windows Hello 人脸或指纹直接登录</p>
+                <p class="bio-desc">
+                  绑定后可使用 Windows Hello 人脸或指纹直接登录
+                </p>
                 <div class="bio-btns">
                   <el-button
                     v-if="!bioBound"
@@ -156,14 +241,19 @@
                     </el-button>
                   </template>
                 </div>
-                <p v-if="!webauthnSupported" class="bio-unsupported">
+                <p
+                  v-if="!webauthnSupported"
+                  class="bio-unsupported"
+                >
                   ⚠ 当前浏览器不支持 WebAuthn，请使用 Chrome / Edge
                 </p>
               </div>
               
               <div class="security-tips">
                 <div class="tip-header">
-                  <el-icon class="tip-icon"><Warning /></el-icon>
+                  <el-icon class="tip-icon">
+                    <Warning />
+                  </el-icon>
                   <span>安全提示</span>
                 </div>
                 <ul class="tip-list">
@@ -177,10 +267,15 @@
         </el-col>
         <!-- Bank-Securities Transfer Card (full width) -->
         <el-col :span="24">
-          <el-card class="transfer-card" shadow="hover">
+          <el-card
+            class="transfer-card"
+            shadow="hover"
+          >
             <template #header>
               <div class="card-header">
-                <el-icon class="header-icon"><Wallet /></el-icon>
+                <el-icon class="header-icon">
+                  <Wallet />
+                </el-icon>
                 <span>银证转账</span>
               </div>
             </template>
@@ -190,12 +285,20 @@
               <div class="transfer-form-section">
                 <div class="account-info-row">
                   <div class="account-box">
-                    <div class="account-label">证券账户余额</div>
-                    <div class="account-value">¥{{ formatMoney(transferState.securitiesBalance) }}</div>
+                    <div class="account-label">
+                      证券账户余额
+                    </div>
+                    <div class="account-value">
+                      ¥{{ formatMoney(transferState.securitiesBalance) }}
+                    </div>
                   </div>
                   <div class="account-box">
-                    <div class="account-label">银行账户 ({{ transferState.bankName }})</div>
-                    <div class="account-value">{{ transferState.bankAccount }}</div>
+                    <div class="account-label">
+                      银行账户 ({{ transferState.bankName }})
+                    </div>
+                    <div class="account-value">
+                      {{ transferState.bankAccount }}
+                    </div>
                   </div>
                 </div>
 
@@ -204,15 +307,22 @@
                     class="transfer-tab"
                     :class="{ active: transferDirection === 'deposit' }"
                     @click="transferDirection = 'deposit'"
-                  >银行转证券</button>
+                  >
+                    银行转证券
+                  </button>
                   <button
                     class="transfer-tab"
                     :class="{ active: transferDirection === 'withdraw' }"
                     @click="transferDirection = 'withdraw'"
-                  >证券转银行</button>
+                  >
+                    证券转银行
+                  </button>
                 </div>
 
-                <el-form class="transfer-form" @submit.prevent="handleTransfer">
+                <el-form
+                  class="transfer-form"
+                  @submit.prevent="handleTransfer"
+                >
                   <el-form-item label="转账金额 (CNY)">
                     <el-input-number
                       v-model="transferAmount"
@@ -235,8 +345,8 @@
                   <el-button
                     type="primary"
                     :loading="transferLoading"
-                    @click="handleTransfer"
                     class="transfer-submit-btn"
+                    @click="handleTransfer"
                   >
                     {{ transferDirection === 'deposit' ? '确认转入' : '确认转出' }}
                   </el-button>
@@ -247,7 +357,12 @@
               <div class="transfer-history-section">
                 <div class="history-header">
                   <span>转账记录</span>
-                  <el-button size="small" @click="loadTransferHistory" :loading="historyLoading" circle>
+                  <el-button
+                    size="small"
+                    :loading="historyLoading"
+                    circle
+                    @click="loadTransferHistory"
+                  >
                     <el-icon><Refresh /></el-icon>
                   </el-button>
                 </div>
@@ -260,18 +375,29 @@
                   >
                     <div class="history-row-top">
                       <span class="history-type">{{ record.type === 'deposit' ? '银行转入' : '证券转出' }}</span>
-                      <span class="history-amount" :class="record.type === 'deposit' ? 'amount-in' : 'amount-out'">
+                      <span
+                        class="history-amount"
+                        :class="record.type === 'deposit' ? 'amount-in' : 'amount-out'"
+                      >
                         {{ record.type === 'deposit' ? '+' : '-' }}¥{{ formatMoney(Number(record.amount)) }}
                       </span>
                     </div>
                     <div class="history-row-bottom">
                       <span class="history-time">{{ formatDate(record.createdAt) }}</span>
-                      <el-tag size="small" :type="record.status === 'completed' ? 'success' : 'warning'">
+                      <el-tag
+                        size="small"
+                        :type="record.status === 'completed' ? 'success' : 'warning'"
+                      >
                         {{ record.status === 'completed' ? '已完成' : '处理中' }}
                       </el-tag>
                     </div>
                   </div>
-                  <div v-if="transferHistory.length === 0" class="history-empty">暂无转账记录</div>
+                  <div
+                    v-if="transferHistory.length === 0"
+                    class="history-empty"
+                  >
+                    暂无转账记录
+                  </div>
                 </div>
               </div>
             </div>
@@ -286,8 +412,8 @@
       title="修改密码"
       :width="isMobile ? '90%' : '400px'"
       :fullscreen="isMobile && isPortrait"
-      @close="resetPasswordForm"
       class="password-dialog"
+      @close="resetPasswordForm"
     >
       <el-form
         ref="passwordFormRef"
@@ -296,7 +422,10 @@
         :label-width="isMobile ? '80px' : '100px'"
         class="password-form"
       >
-        <el-form-item label="当前密码" prop="currentPassword">
+        <el-form-item
+          label="当前密码"
+          prop="currentPassword"
+        >
           <el-input
             v-model="passwordForm.currentPassword"
             type="password"
@@ -305,7 +434,10 @@
             :size="isMobile ? 'default' : 'large'"
           />
         </el-form-item>
-        <el-form-item label="新密码" prop="newPassword">
+        <el-form-item
+          label="新密码"
+          prop="newPassword"
+        >
           <el-input
             v-model="passwordForm.newPassword"
             type="password"
@@ -314,7 +446,10 @@
             :size="isMobile ? 'default' : 'large'"
           />
         </el-form-item>
-        <el-form-item label="确认密码" prop="confirmPassword">
+        <el-form-item
+          label="确认密码"
+          prop="confirmPassword"
+        >
           <el-input
             v-model="passwordForm.confirmPassword"
             type="password"
@@ -326,14 +461,17 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="showPasswordDialog = false" :size="isMobile ? 'default' : 'large'">
+          <el-button
+            :size="isMobile ? 'default' : 'large'"
+            @click="showPasswordDialog = false"
+          >
             取消
           </el-button>
           <el-button 
             type="primary" 
-            @click="handleChangePassword" 
-            :loading="passwordLoading"
+            :loading="passwordLoading" 
             :size="isMobile ? 'default' : 'large'"
+            @click="handleChangePassword"
           >
             确认修改
           </el-button>

@@ -3,37 +3,60 @@
     <!-- 欢迎横幅 -->
     <div class="welcome-banner">
       <div class="welcome-content">
-        <h1 class="welcome-title">欢迎回来！</h1>
-        <p class="welcome-subtitle">开始您的量化交易之旅</p>
+        <h1 class="welcome-title">
+          欢迎回来！
+        </h1>
+        <p class="welcome-subtitle">
+          开始您的量化交易之旅
+        </p>
       </div>
       
       <!-- 呼叫小K按钮 -->
-      <button class="call-ai-btn" @click="callAIAssistant" title="呼叫小K智能助手">
+      <button
+        class="call-ai-btn"
+        title="呼叫小K智能助手"
+        @click="callAIAssistant"
+      >
         <div class="ai-icon-wrapper">
-          <img src="/robot-avatar.jpg" alt="小K" class="ai-avatar" />
-          <div class="ai-pulse"></div>
+          <img
+            src="/robot-avatar.jpg"
+            alt="小K"
+            class="ai-avatar"
+          >
+          <div class="ai-pulse" />
         </div>
         <span class="ai-text">呼叫小K</span>
       </button>
       
       <!-- 局域网访问信息 -->
-      <div class="lan-access-info" v-if="lanIpAddress">
+      <div
+        v-if="lanIpAddress"
+        class="lan-access-info"
+      >
         <div class="lan-ip-label">
           <el-icon><Monitor /></el-icon>
           <span>其它设备可访问下面这个IP进行登录</span>
         </div>
-        <div class="lan-ip-address" @click="copyLanUrl">
+        <div
+          class="lan-ip-address"
+          @click="copyLanUrl"
+        >
           <span class="ip-text">{{ lanAccessUrl }}</span>
-          <el-icon class="copy-icon"><CopyDocument /></el-icon>
+          <el-icon class="copy-icon">
+            <CopyDocument />
+          </el-icon>
         </div>
-        <div class="lan-qr-code" v-if="showQrCode">
-          <canvas ref="qrCodeCanvas"></canvas>
+        <div
+          v-if="showQrCode"
+          class="lan-qr-code"
+        >
+          <canvas ref="qrCodeCanvas" />
         </div>
         <el-button 
           size="small" 
           text 
-          @click="toggleQrCode"
           class="qr-toggle-btn"
+          @click="toggleQrCode"
         >
           <el-icon><Picture /></el-icon>
           {{ showQrCode ? '隐藏' : '显示' }}二维码
@@ -41,11 +64,18 @@
       </div>
       
       <div class="welcome-actions">
-        <el-button type="primary" size="large" @click="router.push('/strategies')">
+        <el-button
+          type="primary"
+          size="large"
+          @click="router.push('/strategies')"
+        >
           <el-icon><Plus /></el-icon>
           创建策略
         </el-button>
-        <el-button size="large" @click="router.push('/trading')">
+        <el-button
+          size="large"
+          @click="router.push('/trading')"
+        >
           <el-icon><TrendCharts /></el-icon>
           开始交易
         </el-button>
@@ -53,16 +83,28 @@
     </div>
 
     <!-- 统计卡片 -->
-    <div class="stats-grid" v-loading="loading">
+    <div
+      v-loading="loading"
+      class="stats-grid"
+    >
       <div class="stat-card stat-card-primary hover-lift">
         <div class="stat-icon-wrapper gradient-bg-primary">
-          <el-icon class="stat-icon-large"><Document /></el-icon>
+          <el-icon class="stat-icon-large">
+            <Document />
+          </el-icon>
         </div>
         <div class="stat-content">
-          <div class="stat-value">{{ stats.strategies }}</div>
-          <div class="stat-label">策略总数</div>
+          <div class="stat-value">
+            {{ stats.strategies }}
+          </div>
+          <div class="stat-label">
+            策略总数
+          </div>
         </div>
-        <div class="stat-trend" v-if="trends.strategies !== 0">
+        <div
+          v-if="trends.strategies !== 0"
+          class="stat-trend"
+        >
           <el-icon :class="trends.strategies > 0 ? 'text-up' : 'text-down'">
             <CaretTop v-if="trends.strategies > 0" />
             <CaretBottom v-else />
@@ -74,13 +116,22 @@
       </div>
       <div class="stat-card stat-card-success hover-lift">
         <div class="stat-icon-wrapper gradient-bg-success">
-          <el-icon class="stat-icon-large"><DataAnalysis /></el-icon>
+          <el-icon class="stat-icon-large">
+            <DataAnalysis />
+          </el-icon>
         </div>
         <div class="stat-content">
-          <div class="stat-value">{{ stats.backtests }}</div>
-          <div class="stat-label">回测次数</div>
+          <div class="stat-value">
+            {{ stats.backtests }}
+          </div>
+          <div class="stat-label">
+            回测次数
+          </div>
         </div>
-        <div class="stat-trend" v-if="trends.backtests !== 0">
+        <div
+          v-if="trends.backtests !== 0"
+          class="stat-trend"
+        >
           <el-icon :class="trends.backtests > 0 ? 'text-up' : 'text-down'">
             <CaretTop v-if="trends.backtests > 0" />
             <CaretBottom v-else />
@@ -92,13 +143,22 @@
       </div>
       <div class="stat-card stat-card-warning hover-lift">
         <div class="stat-icon-wrapper gradient-bg-warning">
-          <el-icon class="stat-icon-large"><ShoppingCart /></el-icon>
+          <el-icon class="stat-icon-large">
+            <ShoppingCart />
+          </el-icon>
         </div>
         <div class="stat-content">
-          <div class="stat-value">{{ stats.trades }}</div>
-          <div class="stat-label">交易记录</div>
+          <div class="stat-value">
+            {{ stats.trades }}
+          </div>
+          <div class="stat-label">
+            交易记录
+          </div>
         </div>
-        <div class="stat-trend" v-if="trends.trades !== 0">
+        <div
+          v-if="trends.trades !== 0"
+          class="stat-trend"
+        >
           <el-icon :class="trends.trades > 0 ? 'text-up' : 'text-down'">
             <CaretTop v-if="trends.trades > 0" />
             <CaretBottom v-else />
@@ -110,13 +170,22 @@
       </div>
     </div>
 
-    <el-row :gutter="20" class="handover-row">
-      <el-col :xs="24" :sm="24" :md="24">
+    <el-row
+      :gutter="20"
+      class="handover-row"
+    >
+      <el-col
+        :xs="24"
+        :sm="24"
+        :md="24"
+      >
         <el-card class="content-card hover-lift handover-card">
           <template #header>
             <div class="card-header-custom">
               <div class="card-title-wrapper">
-                <el-icon class="card-icon"><Monitor /></el-icon>
+                <el-icon class="card-icon">
+                  <Monitor />
+                </el-icon>
                 <span class="card-title-text">跨设备交接快照</span>
                 <el-tag
                   v-if="handoverSnapshot?.generated_at"
@@ -134,19 +203,32 @@
                   {{ handoverRealtimeTagText }}
                 </el-tag>
               </div>
-              <el-button link type="primary" @click="loadHandoverSnapshot(true)" :disabled="handoverLoading">
+              <el-button
+                link
+                type="primary"
+                :disabled="handoverLoading"
+                @click="loadHandoverSnapshot(true)"
+              >
                 <el-icon><Refresh /></el-icon>
                 {{ handoverLoading ? '刷新中（步骤 1/1）' : '刷新快照' }}
               </el-button>
             </div>
           </template>
 
-          <div v-if="handoverLoading" class="handover-loading">
-            <el-icon class="handover-loading-icon"><Loading /></el-icon>
+          <div
+            v-if="handoverLoading"
+            class="handover-loading"
+          >
+            <el-icon class="handover-loading-icon">
+              <Loading />
+            </el-icon>
             <span>正在读取交接快照（步骤 1/1：汇总任务、审批与保留策略状态）</span>
           </div>
 
-          <div v-else-if="handoverError" class="handover-error">
+          <div
+            v-else-if="handoverError"
+            class="handover-error"
+          >
             <el-alert
               :title="handoverError"
               type="warning"
@@ -155,7 +237,10 @@
             />
           </div>
 
-          <div v-else class="handover-content">
+          <div
+            v-else
+            class="handover-content"
+          >
             <div class="handover-metrics-grid">
               <div class="handover-metric-item">
                 <span class="metric-label">活动大型任务</span>
@@ -186,18 +271,27 @@
             <div class="handover-retention-block">
               <div class="handover-retention-header">
                 <span class="retention-title">最近保留策略调整</span>
-                <el-tag size="small" type="warning">
+                <el-tag
+                  size="small"
+                  type="warning"
+                >
                   {{ recentRetentionChanges.length }} 条
                 </el-tag>
               </div>
-              <div v-if="recentRetentionChanges.length > 0" class="retention-change-list">
+              <div
+                v-if="recentRetentionChanges.length > 0"
+                class="retention-change-list"
+              >
                 <div
                   v-for="item in recentRetentionChanges"
                   :key="item.retention_event_id"
                   class="retention-change-item"
                 >
                   <div class="retention-change-main">
-                    <el-tag :type="item.changed ? 'warning' : 'info'" size="small">
+                    <el-tag
+                      :type="item.changed ? 'warning' : 'info'"
+                      size="small"
+                    >
                       {{ item.changed ? '已变更' : '审计' }}
                     </el-tag>
                     <span class="retention-actor">{{ formatRetentionActor(item) }}</span>
@@ -208,15 +302,24 @@
                   </div>
                 </div>
               </div>
-              <div v-else class="retention-empty">
+              <div
+                v-else
+                class="retention-empty"
+              >
                 当前窗口内未出现新的保留策略修改。
               </div>
             </div>
 
-            <div v-if="handoverRealtimeLastEventAt" class="handover-realtime-meta">
+            <div
+              v-if="handoverRealtimeLastEventAt"
+              class="handover-realtime-meta"
+            >
               最近实时事件: {{ formatDateTime(handoverRealtimeLastEventAt) }}
             </div>
-            <div v-if="handoverRealtimeLastError" class="handover-realtime-error">
+            <div
+              v-if="handoverRealtimeLastError"
+              class="handover-realtime-error"
+            >
               实时同步告警: {{ handoverRealtimeLastError }}
             </div>
           </div>
@@ -225,28 +328,51 @@
     </el-row>
     
     <!-- 内容区域 -->
-    <el-row :gutter="20" class="content-row">
+    <el-row
+      :gutter="20"
+      class="content-row"
+    >
       <!-- 市场行情 -->
-      <el-col :xs="24" :sm="24" :md="24" class="market-quotes-col">
-        <el-card class="content-card hover-lift" v-loading="quotesLoading">
+      <el-col
+        :xs="24"
+        :sm="24"
+        :md="24"
+        class="market-quotes-col"
+      >
+        <el-card
+          v-loading="quotesLoading"
+          class="content-card hover-lift"
+        >
           <template #header>
             <div class="card-header-custom">
               <div class="card-title-wrapper">
-                <el-icon class="card-icon"><Histogram /></el-icon>
+                <el-icon class="card-icon">
+                  <Histogram />
+                </el-icon>
                 <span class="card-title-text">实时行情</span>
                 <el-button 
                   link 
                   type="primary" 
-                  @click="showSearchDialog = true"
                   style="margin-left: 8px"
+                  @click="showSearchDialog = true"
                 >
                   <el-icon><Search /></el-icon>
                   搜索
                 </el-button>
-                <el-tag size="small" type="success" style="margin-left: 10px" v-if="currentCategory === 'all'">
+                <el-tag
+                  v-if="currentCategory === 'all'"
+                  size="small"
+                  type="success"
+                  style="margin-left: 10px"
+                >
                   共 {{ totalItems }} 个标的
                 </el-tag>
-                <el-tag size="small" type="success" style="margin-left: 10px" v-else>
+                <el-tag
+                  v-else
+                  size="small"
+                  type="success"
+                  style="margin-left: 10px"
+                >
                   {{ getCategoryName(currentCategory) }}: {{ totalItems }} 个
                 </el-tag>
                 <el-tag 
@@ -315,47 +441,101 @@
                   <el-icon><Histogram /></el-icon>
                   {{ currentCategory === 'futures' ? '✓ 期货' : '期货' }}
                 </el-button>
-                <el-button link type="primary" @click="loadMarketQuotes" :loading="quotesLoading">
+                <el-button
+                  link
+                  type="primary"
+                  :loading="quotesLoading"
+                  @click="loadMarketQuotes"
+                >
                   <el-icon><Refresh /></el-icon>
                   刷新
                 </el-button>
               </div>
             </div>
           </template>
-          <div v-if="displayedQuotes.length === 0 && !quotesLoading" class="empty-state-quotes">
+          <div
+            v-if="displayedQuotes.length === 0 && !quotesLoading"
+            class="empty-state-quotes"
+          >
             <div class="empty-icon">
-              <el-icon :size="80" color="#909399"><TrendCharts /></el-icon>
+              <el-icon
+                :size="80"
+                color="#909399"
+              >
+                <TrendCharts />
+              </el-icon>
             </div>
-            <div class="empty-title">暂无行情数据</div>
+            <div class="empty-title">
+              暂无行情数据
+            </div>
             <div class="empty-description">
               {{ currentCategory === 'favorite' ? '请先添加自选标的' : '正在加载行情数据...' }}
             </div>
-            <div class="empty-actions" v-if="currentCategory === 'favorite'">
-              <el-button size="large" @click="router.push('/trading')">
+            <div
+              v-if="currentCategory === 'favorite'"
+              class="empty-actions"
+            >
+              <el-button
+                size="large"
+                @click="router.push('/trading')"
+              >
                 <el-icon><View /></el-icon>
                 前往交易页面
               </el-button>
             </div>
           </div>
-          <div v-else-if="quotesLoading" class="empty-state-quotes">
+          <div
+            v-else-if="quotesLoading"
+            class="empty-state-quotes"
+          >
             <div class="empty-icon">
-              <el-icon :size="80" color="var(--khy-primary)"><Loading /></el-icon>
+              <el-icon
+                :size="80"
+                color="var(--khy-primary)"
+              >
+                <Loading />
+              </el-icon>
             </div>
-            <div class="empty-title">正在加载行情数据...</div>
-            <div class="empty-description">正在从服务器获取最新行情快照</div>
+            <div class="empty-title">
+              正在加载行情数据...
+            </div>
+            <div class="empty-description">
+              正在从服务器获取最新行情快照
+            </div>
           </div>
           <div v-else>
             <!-- 统一的行情列表显示 -->
             <div class="quotes-section">
               <div class="section-header">
-                <el-icon v-if="currentCategory === 'all'"><Grid /></el-icon>
-                <el-icon v-else-if="currentCategory === 'stock'"><List /></el-icon>
-                <el-icon v-else-if="currentCategory === 'index'"><TrendCharts /></el-icon>
-                <el-icon v-else-if="currentCategory === 'etf'"><Coin /></el-icon>
-                <el-icon v-else-if="currentCategory === 'bond'"><Document /></el-icon>
+                <el-icon v-if="currentCategory === 'all'">
+                  <Grid />
+                </el-icon>
+                <el-icon v-else-if="currentCategory === 'stock'">
+                  <List />
+                </el-icon>
+                <el-icon v-else-if="currentCategory === 'index'">
+                  <TrendCharts />
+                </el-icon>
+                <el-icon v-else-if="currentCategory === 'etf'">
+                  <Coin />
+                </el-icon>
+                <el-icon v-else-if="currentCategory === 'bond'">
+                  <Document />
+                </el-icon>
                 <span>{{ getCategoryName(currentCategory) }}</span>
-                <el-tag size="small" type="success">共 {{ totalItems }} 个标的</el-tag>
-                <el-tag size="small" type="info" v-if="totalItems > pageSize">第 {{ currentPage }} 页</el-tag>
+                <el-tag
+                  size="small"
+                  type="success"
+                >
+                  共 {{ totalItems }} 个标的
+                </el-tag>
+                <el-tag
+                  v-if="totalItems > pageSize"
+                  size="small"
+                  type="info"
+                >
+                  第 {{ currentPage }} 页
+                </el-tag>
               </div>
               <div class="quotes-list">
                 <div 
@@ -367,16 +547,31 @@
                   <div class="quote-left">
                     <div class="quote-name">
                       {{ quote.name }}
-                      <el-tag v-if="quote.isDemo" size="small" type="info" style="margin-left:4px;font-size:10px;">模拟</el-tag>
+                      <el-tag
+                        v-if="quote.isDemo"
+                        size="small"
+                        type="info"
+                        style="margin-left:4px;font-size:10px;"
+                      >
+                        模拟
+                      </el-tag>
                     </div>
-                    <div class="quote-code">{{ quote.symbol }}</div>
+                    <div class="quote-code">
+                      {{ quote.symbol }}
+                    </div>
                   </div>
                   <div class="quote-right">
                     <div class="quote-price-info">
-                      <div class="quote-price" :class="getChangeClass(quote.change)">
+                      <div
+                        class="quote-price"
+                        :class="getChangeClass(quote.change)"
+                      >
                         {{ quote.price.toFixed(quote.type === 'etf' ? 3 : 2) }}
                       </div>
-                      <div class="quote-change" :class="getChangeClass(quote.change)">
+                      <div
+                        class="quote-change"
+                        :class="getChangeClass(quote.change)"
+                      >
                         {{ quote.change > 0 ? '+' : '' }}{{ quote.changePercent.toFixed(2) }}%
                       </div>
                     </div>
@@ -385,15 +580,18 @@
                       :type="isFavorite(quote.symbol) ? 'warning' : 'default'"
                       size="small"
                       circle
-                      @click="toggleFavorite(quote.symbol, $event)"
                       class="favorite-btn"
                       :title="isFavorite(quote.symbol) ? '取消自选' : '加入自选标的'"
+                      @click="toggleFavorite(quote.symbol, $event)"
                     />
                   </div>
                 </div>
               </div>
               <!-- 分页组件 -->
-              <div v-if="totalItems > pageSize" class="pagination-wrapper">
+              <div
+                v-if="totalItems > pageSize"
+                class="pagination-wrapper"
+              >
                 <el-pagination
                   v-model:current-page="currentPage"
                   :page-size="pageSize"
@@ -407,44 +605,93 @@
         </el-card>
       </el-col>
       
-      <el-col :xs="24" :sm="24" :md="24">
-        <el-card class="content-card hover-lift" v-loading="loading">
+      <el-col
+        :xs="24"
+        :sm="24"
+        :md="24"
+      >
+        <el-card
+          v-loading="loading"
+          class="content-card hover-lift"
+        >
           <template #header>
             <div class="card-header-custom">
               <div class="card-title-wrapper">
-                <el-icon class="card-icon"><TrendCharts /></el-icon>
+                <el-icon class="card-icon">
+                  <TrendCharts />
+                </el-icon>
                 <span class="card-title-text">最近策略</span>
               </div>
-              <el-button link type="primary" @click="router.push('/strategies')">
+              <el-button
+                link
+                type="primary"
+                @click="router.push('/strategies')"
+              >
                 查看全部
                 <el-icon><ArrowRight /></el-icon>
               </el-button>
             </div>
           </template>
-          <div v-if="recentStrategies.length === 0" class="empty-state">
+          <div
+            v-if="recentStrategies.length === 0"
+            class="empty-state"
+          >
             <div class="empty-state-custom">
-              <img src="/empty-state.jpg" alt="暂无数据" class="empty-image" />
-              <p class="empty-text">暂无策略数据</p>
-              <el-button type="primary" @click="router.push('/strategies')">
+              <img
+                src="/empty-state.jpg"
+                alt="暂无数据"
+                class="empty-image"
+              >
+              <p class="empty-text">
+                暂无策略数据
+              </p>
+              <el-button
+                type="primary"
+                @click="router.push('/strategies')"
+              >
                 创建第一个策略
               </el-button>
             </div>
           </div>
-          <el-table v-else :data="recentStrategies" style="width: 100%" :show-header="true">
-            <el-table-column prop="name" label="策略名称" min-width="120">
+          <el-table
+            v-else
+            :data="recentStrategies"
+            style="width: 100%"
+            :show-header="true"
+          >
+            <el-table-column
+              prop="name"
+              label="策略名称"
+              min-width="120"
+            >
               <template #default="scope">
                 <div class="strategy-name">
-                  <el-icon color="var(--khy-primary)"><Document /></el-icon>
+                  <el-icon color="var(--khy-primary)">
+                    <Document />
+                  </el-icon>
                   <span>{{ scope.row.name }}</span>
                 </div>
               </template>
             </el-table-column>
-            <el-table-column prop="type" label="类型" width="100">
+            <el-table-column
+              prop="type"
+              label="类型"
+              width="100"
+            >
               <template #default="scope">
-                <el-tag size="small" type="info">{{ scope.row.type }}</el-tag>
+                <el-tag
+                  size="small"
+                  type="info"
+                >
+                  {{ scope.row.type }}
+                </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="status" label="状态" width="80">
+            <el-table-column
+              prop="status"
+              label="状态"
+              width="80"
+            >
               <template #default="scope">
                 <el-tag 
                   size="small" 
@@ -454,9 +701,18 @@
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="80" align="center">
+            <el-table-column
+              label="操作"
+              width="80"
+              align="center"
+            >
               <template #default="scope">
-                <el-button link type="primary" size="small" @click="viewStrategy(scope.row)">
+                <el-button
+                  link
+                  type="primary"
+                  size="small"
+                  @click="viewStrategy(scope.row)"
+                >
                   查看
                 </el-button>
               </template>
@@ -478,32 +734,70 @@
           v-model="searchKeyword"
           placeholder="输入股票代码或名称搜索..."
           clearable
-          @input="handleSearch"
           size="large"
+          @input="handleSearch"
         >
           <template #prefix>
             <el-icon><Search /></el-icon>
           </template>
         </el-input>
         
-        <div class="search-results" v-loading="searchLoading">
-          <div v-if="searchResults.length === 0 && searchKeyword" class="empty-search">
+        <div
+          v-loading="searchLoading"
+          class="search-results"
+        >
+          <div
+            v-if="searchResults.length === 0 && searchKeyword"
+            class="empty-search"
+          >
             <div class="empty-state-custom">
-              <img src="/empty-state.jpg" alt="暂无数据" class="empty-image" />
-              <p class="empty-text">未找到匹配的标的</p>
+              <img
+                src="/empty-state.jpg"
+                alt="暂无数据"
+                class="empty-image"
+              >
+              <p class="empty-text">
+                未找到匹配的标的
+              </p>
             </div>
           </div>
-          <div v-else-if="searchResults.length === 0" class="search-tips">
-            <el-icon :size="48" color="#909399"><Search /></el-icon>
+          <div
+            v-else-if="searchResults.length === 0"
+            class="search-tips"
+          >
+            <el-icon
+              :size="48"
+              color="#909399"
+            >
+              <Search />
+            </el-icon>
             <p>输入股票代码或名称开始搜索</p>
             <div class="search-examples">
               <span>例如: </span>
-              <el-tag size="small" @click="searchKeyword = '贵州茅台'">贵州茅台</el-tag>
-              <el-tag size="small" @click="searchKeyword = '600519'">600519</el-tag>
-              <el-tag size="small" @click="searchKeyword = '沪深300'">沪深300</el-tag>
+              <el-tag
+                size="small"
+                @click="searchKeyword = '贵州茅台'"
+              >
+                贵州茅台
+              </el-tag>
+              <el-tag
+                size="small"
+                @click="searchKeyword = '600519'"
+              >
+                600519
+              </el-tag>
+              <el-tag
+                size="small"
+                @click="searchKeyword = '沪深300'"
+              >
+                沪深300
+              </el-tag>
             </div>
           </div>
-          <div v-else class="search-result-list">
+          <div
+            v-else
+            class="search-result-list"
+          >
             <div 
               v-for="item in searchResults" 
               :key="item.symbol"
@@ -511,11 +805,18 @@
               @click="handleSelectSearchResult(item)"
             >
               <div class="result-left">
-                <div class="result-name">{{ item.name }}</div>
-                <div class="result-code">{{ item.symbol }}</div>
+                <div class="result-name">
+                  {{ item.name }}
+                </div>
+                <div class="result-code">
+                  {{ item.symbol }}
+                </div>
               </div>
               <div class="result-right">
-                <el-tag size="small" :type="item.type === 'index' ? 'primary' : 'success'">
+                <el-tag
+                  size="small"
+                  :type="item.type === 'index' ? 'primary' : 'success'"
+                >
                   {{ item.type === 'index' ? '指数' : item.type === 'stock' ? 'A股' : '期货' }}
                 </el-tag>
                 <el-button
@@ -523,8 +824,8 @@
                   :type="isFavorite(item.symbol) ? 'warning' : 'default'"
                   size="small"
                   circle
-                  @click.stop="toggleFavorite(item.symbol, $event)"
                   :title="isFavorite(item.symbol) ? '取消自选' : '加入自选标的'"
+                  @click.stop="toggleFavorite(item.symbol, $event)"
                 />
               </div>
             </div>

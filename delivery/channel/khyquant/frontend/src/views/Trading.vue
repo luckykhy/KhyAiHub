@@ -1,32 +1,35 @@
 <template>
-
-  <div class="professional-trading" :class="{ 'mobile-mode': isMobile }">
-
+  <div
+    class="professional-trading"
+    :class="{ 'mobile-mode': isMobile }"
+  >
     <!-- 顶部股票信息栏 -->
 
-    <div class="stock-info-bar" :class="{ 'mobile': isMobile }">
-
+    <div
+      class="stock-info-bar"
+      :class="{ 'mobile': isMobile }"
+    >
       <!-- PC端股票选择器 -->
 
-      <div class="stock-selector" v-if="!isMobile">
-
+      <div
+        v-if="!isMobile"
+        class="stock-selector"
+      >
         <el-select
 
           v-model="selectedSymbol"
 
           placeholder="选择标的"
 
-          @change="onSymbolChange"
-
           class="symbol-select"
 
           filterable
+
           remote
           :remote-method="remoteSearchSymbol"
           :loading="symbolSearchLoading"
-
+          @change="onSymbolChange"
         >
-
           <!-- 🔥 显示所有标的,不再限制为自选标的 -->
 
           <el-option
@@ -38,62 +41,75 @@
             :label="`${symbol.code} ${symbol.name}`"
 
             :value="symbol.code"
-
           >
-
             <span class="option-code">{{ symbol.code }}</span>
 
             <span class="option-name">{{ symbol.name }}</span>
 
             <!-- 🔥 如果是自选标的,显示星标 -->
 
-            <el-icon v-if="isFavoriteSymbol(symbol.code)" style="color: var(--khy-warning); margin-left: 8px;">
-
+            <el-icon
+              v-if="isFavoriteSymbol(symbol.code)"
+              style="color: var(--khy-warning); margin-left: 8px;"
+            >
               <StarFilled />
-
             </el-icon>
-
           </el-option>
 
           <template v-if="safeSymbolList.length === 0">
-
-            <el-option disabled value="" label="正在加载标的列表..." />
-
+            <el-option
+              disabled
+              value=""
+              label="正在加载标的列表..."
+            />
           </template>
-
         </el-select>
-
       </div>
 
 
 
       <!-- Mobile symbol quick-select -->
 
-      <div v-if="isMobile" class="mobile-symbol-chip" @click="showMobileSymbolPicker = true">
-
+      <div
+        v-if="isMobile"
+        class="mobile-symbol-chip"
+        @click="showMobileSymbolPicker = true"
+      >
         <span>{{ currentStock.code }}</span>
 
-        <el-icon :size="14"><ArrowDown /></el-icon>
-
+        <el-icon :size="14">
+          <ArrowDown />
+        </el-icon>
       </div>
 
 
 
       <!-- 移动端紧凑布局 -->
 
-      <div class="current-stock" :class="{ 'mobile': isMobile }">
-
+      <div
+        class="current-stock"
+        :class="{ 'mobile': isMobile }"
+      >
         <span class="symbol">{{ currentStock.code }}</span>
 
-        <span class="name" v-if="!isMobile">{{ currentStock.name }}</span>
+        <span
+          v-if="!isMobile"
+          class="name"
+        >{{ currentStock.name }}</span>
 
-        <span class="price" :class="getPriceClass(currentStock.change)">
+        <span
+          class="price"
+          :class="getPriceClass(currentStock.change)"
+        >
 
           {{ currentStock.price || '--' }}
 
         </span>
 
-        <span class="change" :class="getPriceClass(currentStock.change)">
+        <span
+          class="change"
+          :class="getPriceClass(currentStock.change)"
+        >
 
           {{ currentStock.change > 0 ? '+' : '' }}{{ currentStock.change || '--' }}
 
@@ -101,12 +117,15 @@
 
         </span>
 
-        <span v-if="currentStock.dataSource" class="data-source-badge" :class="{ 'real-data': currentStock.dataSource !== '增强模拟数据' }">
+        <span
+          v-if="currentStock.dataSource"
+          class="data-source-badge"
+          :class="{ 'real-data': currentStock.dataSource !== '增强模拟数据' }"
+        >
 
           {{ currentStock.dataSource }}
 
         </span>
-
       </div>
 
       
@@ -121,22 +140,21 @@
 
         size="small"
 
-        @click="toggleReplayMode"
-
         style="margin-left: 12px;"
 
+        @click="toggleReplayMode"
       >
-
         {{ isReplayMode ? '退出回放' : '数据回放' }}
-
       </el-button>
 
 
 
       <!-- 移动端隐藏详细信息 -->
 
-      <div class="stock-details" v-if="!isMobile">
-
+      <div
+        v-if="!isMobile"
+        class="stock-details"
+      >
         <span class="detail-item">开: <span class="value">{{ currentStock.open }}</span></span>
 
         <span class="detail-item">高: <span class="value price-up">{{ currentStock.high }}</span></span>
@@ -148,9 +166,7 @@
         <span class="detail-item">量: <span class="value">{{ formatVolume(currentStock.volume) }}</span></span>
 
         <span class="detail-item">额: <span class="value">{{ formatAmount(currentStock.amount) }}</span></span>
-
       </div>
-
     </div>
 
 
@@ -158,11 +174,13 @@
     <!-- 主要内容区域 -->
 
     <div class="main-content">
-
       <!-- 左侧智能策略面板 - 移动端隐藏 -->
 
-      <div class="left-panel" v-if="!isMobile" :class="{ 'is-collapsed': isLeftPanelCollapsed }">
-
+      <div
+        v-if="!isMobile"
+        class="left-panel"
+        :class="{ 'is-collapsed': isLeftPanelCollapsed }"
+      >
         <IntelligentStrategySelector
 
           v-if="!isLeftPanelCollapsed"
@@ -178,69 +196,70 @@
           @strategy-applied="handleStrategyApplied"
 
           @signals-generated="handleSignalsGenerated"
-
         />
 
         
 
         <!-- 左侧面板收缩按钮 -->
 
-        <div class="left-panel-toggle-btn" @click="toggleLeftPanel">
-
+        <div
+          class="left-panel-toggle-btn"
+          @click="toggleLeftPanel"
+        >
           <el-icon>
-
             <DArrowRight v-if="isLeftPanelCollapsed" />
 
             <DArrowLeft v-else />
-
           </el-icon>
-
         </div>
-
       </div>
 
 
 
       <!-- 中间K线图区域 -->
 
-      <div class="center-panel" :class="{ 'full-width': isLeftPanelCollapsed || isMobile }">
-
+      <div
+        class="center-panel"
+        :class="{ 'full-width': isLeftPanelCollapsed || isMobile }"
+      >
         <!-- 策略信号控制栏 -->
 
-        <div class="strategy-control-bar" v-if="loadedStrategy">
-
+        <div
+          v-if="loadedStrategy"
+          class="strategy-control-bar"
+        >
           <div class="strategy-info">
-
             <span class="strategy-name">{{ loadedStrategy.name }}</span>
 
-            <el-tag :type="getStrategyStatusColor(loadedStrategy.status)" size="small">
-
+            <el-tag
+              :type="getStrategyStatusColor(loadedStrategy.status)"
+              size="small"
+            >
               {{ getStrategyStatusText(loadedStrategy.status) }}
-
             </el-tag>
 
             <span class="strategy-symbol">{{ currentStock.code }}</span>
-
           </div>
 
           <div class="strategy-actions">
-
-            <el-button size="small" @click="refreshStrategySignals" :loading="loadingSignals">
-
+            <el-button
+              size="small"
+              :loading="loadingSignals"
+              @click="refreshStrategySignals"
+            >
               <el-icon><Refresh /></el-icon>
 
               刷新信号
-
             </el-button>
 
-            <el-button size="small" type="danger" @click="unloadStrategy">
-
+            <el-button
+              size="small"
+              type="danger"
+              @click="unloadStrategy"
+            >
               卸载策略
-
             </el-button>
-
           </div>
-
         </div>
 
 
@@ -248,13 +267,13 @@
         <!-- Replay mode control bar -->
 
         <transition name="slide-down">
-
-          <div v-if="isReplayMode" class="replay-control-bar">
-
+          <div
+            v-if="isReplayMode"
+            class="replay-control-bar"
+          >
             <!-- Left: config -->
 
             <div class="replay-config">
-
               <el-button
 
                 type="warning"
@@ -262,23 +281,25 @@
                 size="small"
 
                 @click="toggleReplayMode"
-
               >
-
                 退出回放
-
               </el-button>
 
-              <el-radio-group v-model="replayDataSource" size="small" @change="onReplayDataSourceChange">
+              <el-radio-group
+                v-model="replayDataSource"
+                size="small"
+                @change="onReplayDataSourceChange"
+              >
+                <el-radio-button value="mock">
+                  模拟
+                </el-radio-button>
 
-                <el-radio-button value="mock">模拟</el-radio-button>
-
-                <el-radio-button value="futures-tick">Tick</el-radio-button>
-
+                <el-radio-button value="futures-tick">
+                  Tick
+                </el-radio-button>
               </el-radio-group>
 
               <template v-if="replayDataSource === 'mock'">
-
                 <el-date-picker
 
                   v-model="replayStartDate"
@@ -292,29 +313,50 @@
                   size="small"
 
                   style="width: 140px;"
-
                 />
-
               </template>
 
               <template v-if="replayDataSource === 'futures-tick'">
-
-                <el-select v-model="replayTickDate" placeholder="日期" size="small" style="width:130px;" @change="onReplayTickDateChange" :loading="replayFtLoading">
-
-                  <el-option v-for="d in replayFtDates" :key="d" :label="formatReplayTickDate(d)" :value="d" />
-
+                <el-select
+                  v-model="replayTickDate"
+                  placeholder="日期"
+                  size="small"
+                  style="width:130px;"
+                  :loading="replayFtLoading"
+                  @change="onReplayTickDateChange"
+                >
+                  <el-option
+                    v-for="d in replayFtDates"
+                    :key="d"
+                    :label="formatReplayTickDate(d)"
+                    :value="d"
+                  />
                 </el-select>
 
-                <el-select v-model="selectedSymbol" filterable placeholder="合约" size="small" style="width:120px;" :loading="replayFtLoading">
-
-                  <el-option v-for="s in replayFtSymbols" :key="s" :label="s" :value="s" />
-
+                <el-select
+                  v-model="selectedSymbol"
+                  filterable
+                  placeholder="合约"
+                  size="small"
+                  style="width:120px;"
+                  :loading="replayFtLoading"
+                >
+                  <el-option
+                    v-for="s in replayFtSymbols"
+                    :key="s"
+                    :label="s"
+                    :value="s"
+                  />
                 </el-select>
-
               </template>
 
-              <el-select v-model="replayStrategy" placeholder="策略（可选）" size="small" style="width: 150px;" clearable>
-
+              <el-select
+                v-model="replayStrategy"
+                placeholder="策略（可选）"
+                size="small"
+                style="width: 150px;"
+                clearable
+              >
                 <el-option
 
                   v-for="s in selectorStrategies"
@@ -324,26 +366,34 @@
                   :label="s.name"
 
                   :value="s.id || s.type"
-
                 />
-
               </el-select>
 
-              <el-button type="primary" size="small" @click="startReplay" :loading="replayLoading">
-
+              <el-button
+                type="primary"
+                size="small"
+                :loading="replayLoading"
+                @click="startReplay"
+              >
                 开始回放
-
               </el-button>
-
             </div>
 
 
 
             <!-- Center: playback controls (only show after session started) -->
 
-            <div v-if="replaySessionId" class="replay-controls">
-
-              <el-button size="small" @click="replayStep(1)" :disabled="replayIndex <= 0">+1</el-button>
+            <div
+              v-if="replaySessionId"
+              class="replay-controls"
+            >
+              <el-button
+                size="small"
+                :disabled="replayIndex <= 0"
+                @click="replayStep(1)"
+              >
+                +1
+              </el-button>
 
               <el-button
 
@@ -352,27 +402,46 @@
                 size="small"
 
                 @click="replayPlaying ? pauseReplay() : playReplay()"
-
               >
-
                 {{ replayPlaying ? '暂停' : '播放' }}
-
               </el-button>
 
-              <el-button size="small" @click="replayStep(10)">+10</el-button>
+              <el-button
+                size="small"
+                @click="replayStep(10)"
+              >
+                +10
+              </el-button>
 
-              <el-select v-model="replaySpeed" size="small" style="width: 80px;">
+              <el-select
+                v-model="replaySpeed"
+                size="small"
+                style="width: 80px;"
+              >
+                <el-option
+                  label="0.5x"
+                  :value="2000"
+                />
 
-                <el-option label="0.5x" :value="2000" />
+                <el-option
+                  label="1x"
+                  :value="1000"
+                />
 
-                <el-option label="1x" :value="1000" />
+                <el-option
+                  label="2x"
+                  :value="500"
+                />
 
-                <el-option label="2x" :value="500" />
+                <el-option
+                  label="5x"
+                  :value="200"
+                />
 
-                <el-option label="5x" :value="200" />
-
-                <el-option label="10x" :value="100" />
-
+                <el-option
+                  label="10x"
+                  :value="100"
+                />
               </el-select>
 
               <span class="replay-info">
@@ -384,15 +453,16 @@
                 <span style="color:var(--khy-danger);">卖出: {{ replaySellCount }}</span>
 
               </span>
-
             </div>
 
 
 
             <!-- Right: account -->
 
-            <div v-if="replaySessionId" class="replay-account">
-
+            <div
+              v-if="replaySessionId"
+              class="replay-account"
+            >
               <span>现金: <b style="color:var(--khy-primary);">{{ replayCash.toLocaleString() }}</b></span>
 
               <span style="margin-left:12px;">
@@ -406,11 +476,8 @@
                 </b>
 
               </span>
-
             </div>
-
           </div>
-
         </transition>
 
 
@@ -418,7 +485,6 @@
         <!-- 新的简洁交易界面 -->
 
         <div class="unified-interface-container">
-
           <SimpleTradingInterface
 
             :contract="selectedSymbol"
@@ -454,17 +520,13 @@
             @price-update="handlePriceUpdate"
 
             @navigate-to-backtest-analysis="handleNavigateToBacktestAnalysis"
-
           />
-
         </div>
 
 
 
         <!-- Sub-charts removed — Bollinger Bands now overlaid on main chart -->
-
       </div>
-
     </div>
 
 
@@ -478,11 +540,10 @@
       class="mobile-fab-trade"
 
       @click="mobileDrawerOpen = true"
-
     >
-
-      <el-icon :size="24"><TrendCharts /></el-icon>
-
+      <el-icon :size="24">
+        <TrendCharts />
+      </el-icon>
     </button>
 
 
@@ -496,15 +557,10 @@
       class="mobile-fab-bot"
 
       @click="dispatchEvent(new Event('show-ai-assistant'))"
-
     >
-
       <el-icon :size="20">
-
         <ChatDotRound />
-
       </el-icon>
-
     </button>
 
 
@@ -512,16 +568,18 @@
     <!-- Mobile: Symbol picker overlay -->
 
     <Teleport to="body">
-
       <Transition name="fade">
-
-        <div v-if="showMobileSymbolPicker" class="mobile-symbol-overlay" @click.self="showMobileSymbolPicker = false">
-
+        <div
+          v-if="showMobileSymbolPicker"
+          class="mobile-symbol-overlay"
+          @click.self="showMobileSymbolPicker = false"
+        >
           <div class="mobile-symbol-sheet">
-
             <div class="sheet-handle" />
 
-            <h3 class="sheet-title">选择标的</h3>
+            <h3 class="sheet-title">
+              选择标的
+            </h3>
 
             <input
 
@@ -530,11 +588,9 @@
               class="sheet-search"
 
               placeholder="搜索代码或名称..."
-
-            />
+            >
 
             <div class="sheet-list">
-
               <div
 
                 v-for="s in filteredMobileSymbols"
@@ -546,23 +602,15 @@
                 :class="{ active: s.code === selectedSymbol }"
 
                 @click="onSymbolChange(s.code); showMobileSymbolPicker = false"
-
               >
-
                 <span class="sym-code">{{ s.code }}</span>
 
                 <span class="sym-name">{{ s.name }}</span>
-
               </div>
-
             </div>
-
           </div>
-
         </div>
-
       </Transition>
-
     </Teleport>
 
 
@@ -570,11 +618,12 @@
     <!-- Mobile: Bottom drawer -->
 
     <Teleport to="body">
-
       <Transition name="slide-up">
-
-        <div v-if="isMobile && mobileDrawerOpen" class="mobile-drawer-overlay" @click.self="mobileDrawerOpen = false">
-
+        <div
+          v-if="isMobile && mobileDrawerOpen"
+          class="mobile-drawer-overlay"
+          @click.self="mobileDrawerOpen = false"
+        >
           <div
 
             class="mobile-bottom-drawer"
@@ -586,35 +635,34 @@
             @touchmove="onDrawerTouchMove"
 
             @touchend="onDrawerTouchEnd"
-
           >
-
             <div class="drawer-drag-handle" />
 
             <div class="drawer-content">
-
               <div class="drawer-section">
-
-                <h3 class="drawer-section-title">Quick Trade — {{ currentStock.code }}</h3>
+                <h3 class="drawer-section-title">
+                  Quick Trade — {{ currentStock.code }}
+                </h3>
 
                 <div class="drawer-price-row">
+                  <span
+                    class="drawer-price"
+                    :class="getPriceClass(currentStock.change)"
+                  >{{ currentStock.price || '--' }}</span>
 
-                  <span class="drawer-price" :class="getPriceClass(currentStock.change)">{{ currentStock.price || '--' }}</span>
-
-                  <span class="drawer-change" :class="getPriceClass(currentStock.change)">
+                  <span
+                    class="drawer-change"
+                    :class="getPriceClass(currentStock.change)"
+                  >
 
                     {{ currentStock.change > 0 ? '+' : '' }}{{ currentStock.changePercent || '0' }}%
 
                   </span>
-
                 </div>
-
               </div>
 
               <div class="drawer-section">
-
                 <div class="drawer-order-type">
-
                   <button
 
                     class="order-type-btn"
@@ -622,8 +670,9 @@
                     :class="{ active: mobileOrderSide === 'buy' }"
 
                     @click="mobileOrderSide = 'buy'"
-
-                  >买入</button>
+                  >
+                    买入
+                  </button>
 
                   <button
 
@@ -632,31 +681,42 @@
                     :class="{ active: mobileOrderSide === 'sell' }"
 
                     @click="mobileOrderSide = 'sell'"
-
-                  >卖出</button>
-
+                  >
+                    卖出
+                  </button>
                 </div>
 
                 <div class="drawer-input-row">
-
                   <label>价格</label>
 
-                  <input v-model.number="mobileOrderPrice" type="number" class="drawer-input" :placeholder="String(currentStock.price || 0)" />
-
+                  <input
+                    v-model.number="mobileOrderPrice"
+                    type="number"
+                    class="drawer-input"
+                    :placeholder="String(currentStock.price || 0)"
+                  >
                 </div>
 
                 <div class="drawer-input-row">
-
                   <label>数量</label>
 
-                  <input v-model.number="mobileOrderQty" type="number" class="drawer-input" placeholder="100" />
-
+                  <input
+                    v-model.number="mobileOrderQty"
+                    type="number"
+                    class="drawer-input"
+                    placeholder="100"
+                  >
                 </div>
 
                 <div class="drawer-quick-qty">
-
-                  <button v-for="pct in [25, 50, 75, 100]" :key="pct" class="quick-qty-btn" @click="setQuickQty(pct)">{{ pct }}%</button>
-
+                  <button
+                    v-for="pct in [25, 50, 75, 100]"
+                    :key="pct"
+                    class="quick-qty-btn"
+                    @click="setQuickQty(pct)"
+                  >
+                    {{ pct }}%
+                  </button>
                 </div>
 
                 <button
@@ -666,60 +726,54 @@
                   :class="mobileOrderSide"
 
                   @click="submitMobileOrder"
-
                 >
-
                   {{ mobileOrderSide === 'buy' ? '买入' : '卖出' }} {{ mobileOrderQty || 0 }} 股
-
                 </button>
-
               </div>
 
 
 
               <!-- Positions panel (swipe up to reveal) -->
 
-              <div class="drawer-section" v-if="mobileDrawerHeight >= 70">
-
-                <h3 class="drawer-section-title">持仓</h3>
+              <div
+                v-if="mobileDrawerHeight >= 70"
+                class="drawer-section"
+              >
+                <h3 class="drawer-section-title">
+                  持仓
+                </h3>
 
                 <div class="drawer-positions-placeholder">
-
                   <span style="color: var(--khy-gray-400); font-size: 13px;">暂无持仓</span>
-
                 </div>
-
               </div>
-
             </div>
-
           </div>
-
         </div>
-
       </Transition>
-
     </Teleport>
 
 
 
     <!-- 桌面端：底部状态栏 -->
 
-    <div class="bottom-status" v-if="!isMobile">
-
+    <div
+      v-if="!isMobile"
+      class="bottom-status"
+    >
       <div class="status-left">
-
         <span class="status-item">连接状态: 已连接</span>
 
         <span class="status-item">延迟: 15ms</span>
 
         <span class="status-item">更新时间: {{ lastUpdateTime }}</span>
-
       </div>
 
       <div class="status-right">
-
-        <span class="status-item" v-if="selectedSymbol === 'sh000300'">
+        <span
+          v-if="selectedSymbol === 'sh000300'"
+          class="status-item"
+        >
 
           {{ currentStock.name }}: {{ currentStock.price }} 
 
@@ -732,17 +786,11 @@
         </span>
 
         <template v-else>
-
           <span class="status-item">当前: {{ currentStock.name }} {{ currentStock.price }}</span>
-
         </template>
-
       </div>
-
     </div>
-
   </div>
-
 </template>
 
 

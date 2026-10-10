@@ -94,7 +94,7 @@ export async function resolveAiFrontendUrl() {
     : candidatePorts()
 
   for (const port of ports) {
-    // eslint-disable-next-line no-await-in-loop
+     
     if (await isKhyAiFrontend(`${proto}//${host}:${port}`)) {
       return `${proto}//${host}:${port}`
     }

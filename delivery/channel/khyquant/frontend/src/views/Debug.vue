@@ -5,12 +5,40 @@
         <span>调试页面</span>
       </template>
       
-      <el-space direction="vertical" style="width: 100%">
-        <el-button @click="testLogin" type="primary">测试登录</el-button>
-        <el-button @click="testGetUserInfo" type="success">测试获取用户信息</el-button>
-        <el-button @click="checkStore" type="info">检查Store状态</el-button>
-        <el-button @click="testWasmBridge" type="warning">测试WASM桥接</el-button>
-        <el-button @click="clearAll" type="danger">清除所有数据</el-button>
+      <el-space
+        direction="vertical"
+        style="width: 100%"
+      >
+        <el-button
+          type="primary"
+          @click="testLogin"
+        >
+          测试登录
+        </el-button>
+        <el-button
+          type="success"
+          @click="testGetUserInfo"
+        >
+          测试获取用户信息
+        </el-button>
+        <el-button
+          type="info"
+          @click="checkStore"
+        >
+          检查Store状态
+        </el-button>
+        <el-button
+          type="warning"
+          @click="testWasmBridge"
+        >
+          测试WASM桥接
+        </el-button>
+        <el-button
+          type="danger"
+          @click="clearAll"
+        >
+          清除所有数据
+        </el-button>
       </el-space>
       
       <el-divider>调试信息</el-divider>
