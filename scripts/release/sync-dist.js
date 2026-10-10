@@ -50,6 +50,27 @@ function fail(msg) {
   process.exit(1);
 }
 
+/**
+ * 邮箱映射：分发仓的提交一律改用 Gitee 匿名邮箱。
+ *
+ * 为什么必须映射：本地提交的作者邮箱是 2578974124@qq.com，而该邮箱在 Gitee 账号里
+ * 被设为「隐藏」。Gitee 的 pre-receive 钩子会拒绝任何会把隐藏邮箱公开的推送：
+ *     remote: Push will publish a hidden email ...
+ *     remote: error: hook declined to update refs/heads/main
+ * 这不是故障，是隐私设置在生效——所以顺着它，而不是去把邮箱改成公开。
+ * 匿名邮箱同时避免个人邮箱被公开仓的爬虫抓到。
+ *
+ * 作者**姓名不变**（仍是孔浩原），只换邮箱这一个字段。
+ * GitHub 侧不强制（它收 QQ 邮箱的提交），但两边共用一条链，只能取严。
+ */
+const EMAIL_MAP = {
+  '2578974124@qq.com': '11599182+luckyhaoyunkhy@user.noreply.gitee.com',
+};
+
+function mapEmail(email) {
+  return EMAIL_MAP[email] || email;
+}
+
 function readState() {
   try {
     return JSON.parse(fs.readFileSync(path.join(REPO_ROOT, STATE_REL), 'utf8'));
@@ -69,6 +90,12 @@ function localBranch() {
 
 /** KhyAiHub 远端 main 的 SHA（拉一次 refs，不拉对象）。 */
 function distTip() {
+  // --base-dist <sha>：显式指定链的起点，用于「已推上去的提交不被下游接受、必须重建」
+  // 的场景（本次即 Gitee 隐藏邮箱钩子拒收，从最后一个 Gitee 收过的点重建）。
+  const bd = args.indexOf('--base-dist');
+  if (bd !== -1 && args[bd + 1] && !args[bd + 1].startsWith('--')) {
+    return args[bd + 1];
+  }
   const out = gitQuiet(['ls-remote', DIST_REMOTE, `refs/heads/${DIST_BRANCH}`]);
   if (!out) fail(`取不到远端 ${DIST_REMOTE} 的 ${DIST_BRANCH}——remote 未配置或无权限。`);
   return out.split(/\s+/)[0];
@@ -116,6 +143,20 @@ function cmdStatus() {
 
 // ── push ───────────────────────────────────────────────────────────────────
 function cmdPush() {
+  // --force 的确认串在**最开始**校验，不等到推送前。坏 flag 应该立刻失败，
+  // 而不是让前面建链的活儿全白跑一遍才说「你 flag 打错了」。
+  const forceArg = args.find((a) => a.startsWith('--force'));
+  const forceVal = forceArg && forceArg.includes('=') ? forceArg.slice('--force='.length) : '';
+  if (forceArg && forceVal !== 'REWRITE') {
+    console.log('');
+    console.log('⚠ --force 需要确认串：--force=REWRITE');
+    console.log('  强推会重写分发仓历史，而 mirror 是 fast-forward——一旦 GitHub 被改写而 Gitee');
+    console.log('  没有，镜像推送会被拒，得手工对齐两边。所以它不该是顺手就能加上的 flag。');
+    console.log('  若确有必要（例如已推的提交不被下游接受、必须重建），请先想清三件事：');
+    console.log('    ① 为什么必须改写  ② Gitee 侧怎么对齐  ③ 已在本笔提交信息里说明');
+    process.exit(1);
+  }
+
   const from = lastSynced();
   if (!from) {
     fail('没有上次同步记录，无法判断从哪续。首次同步请用 --base <本地commit> 显式指定基线。');
@@ -161,6 +202,9 @@ function cmdPush() {
     fs.writeFileSync(msgFile, git(['log', '-1', '--format=%B', c]));
     const author = gitQuiet(['log', '-1', '--format=%an%x00%ae%x00%aI', c]).split('\0');
     const committer = gitQuiet(['log', '-1', '--format=%cn%x00%ce%x00%cI', c]).split('\0');
+    // 邮箱映射到 Gitee 匿名形式，否则推送被 Gitee 的隐藏邮箱钩子拒。
+    author[1] = mapEmail(author[1]);
+    committer[1] = mapEmail(committer[1]);
 
     const commitEnv = {
       ...process.env,
@@ -191,7 +235,15 @@ function cmdPush() {
   if (!noPush) {
     console.log(`\n推送到 ${DIST_REMOTE}/${DIST_BRANCH} ...`);
     const pushEnv = { ...process.env, GIT_TERMINAL_PROMPT: '0' };
-    git(['push', DIST_REMOTE, `${parent}:refs/heads/${DIST_BRANCH}`], { env: pushEnv, stdio: 'inherit' });
+    // 确认串已在函数开头校验过，这里只分档。默认用 --force-with-lease：
+    // 万一远端被他人推进度过，它会拒绝而不是覆盖掉别人的提交。
+    const pushArgs = forceVal === 'REWRITE'
+      ? ['push', '--force', DIST_REMOTE, `${parent}:refs/heads/${DIST_BRANCH}`]
+      : ['push', '--force-with-lease', DIST_REMOTE, `${parent}:refs/heads/${DIST_BRANCH}`];
+    if (forceVal === 'REWRITE') {
+      console.log('⚠ 强推（--force=REWRITE）：分发仓历史将被改写。');
+    }
+    git(pushArgs, { env: pushEnv, stdio: 'inherit' });
   }
 
   writeState({
