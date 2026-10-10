@@ -199,8 +199,10 @@ function cmdRelease(target) {
   console.log(`  3. node scripts/release/release-gate.js           # tier=must 全 PASS`);
   console.log(`  4. git tag -a v${target} -m "v${target}" && git push <remote> v${target}`);
   console.log('');
-  console.log('注意：软著登记版本现为 V1.2.0（COPYRIGHT.json）。若正式发布号与之不同，');
-  console.log('      须先修订 COPYRIGHT.json 与申请表，否则 check-copyright-readiness 会红。');
+  console.log('版本口径：软著登记版本是独立声明，与工程版本不互相绑定。');
+  console.log('      登记版本见 docs/10_规范/registry/COPYRIGHT.json，取得证书前固定不变；');
+  console.log('      本命令只动工程版本（G1 四源）。005 §九 要求的是「申请表与鉴别材料页眉」');
+  console.log('      这两份申报材料之间一致，不是要跟工程版本对上。');
 }
 
 function cmdBack() {
