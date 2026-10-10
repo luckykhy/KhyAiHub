@@ -457,6 +457,14 @@ mirror 推的是 `FETCH_HEAD:refs/heads/main`，是 **fast-forward**。所以 Gi
 | `GITEE_USER` | variable | `luckyhaoyunkhy` |
 | `GITEE_REPOSITORY` | variable | `luckyhaoyunkhy/KhyAiHub` |
 
+**怎么把本地推进度送进分发仓**：
+
+`node scripts/release/sync-dist.js status` 看差多少；`push` 把本地新提交**追加**进
+KhyAiHub 历史并推 GitHub。它逐笔应用本地 diff、保留原消息与作者，并在推送前校验
+「链尖树 == 本地 HEAD 树」——漏一个文件就拦下，不会推出半份。同步点记在
+`docs/10_规范/registry/DIST-SYNC.json`，下次自动续，**不需要第二次 force-push**。
+（首次同步用 `--base <本地commit>` 指明基线；`--dry-run` 只看不推。）
+
 **两条纪律（比架构更重要）**：
 
 1. **绝不 force-push GitHub 的 `main`。** mirror 是 fast-forward，一旦 GitHub 被改写

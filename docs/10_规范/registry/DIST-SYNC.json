@@ -1,0 +1,7 @@
+{
+  "$note": "本地提交 → KhyAiHub 分发仓的同步点。由 scripts/release/sync-dist.js 维护，勿手改。",
+  "lastSyncedLocalCommit": "7d878ddc44f713da9017df4de145197c72c02d4e",
+  "lastSyncedAt": "2026-10-10T12:19:09.559Z",
+  "distTip": "8835040f52eeaf0d8d185ba8b233859e4bd16414",
+  "appended": 9
+}
