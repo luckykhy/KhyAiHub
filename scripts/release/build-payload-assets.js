@@ -38,11 +38,13 @@ function copyAsset(source, outDir, asset) {
   return { asset, sha256: sha256File(destination), size: stat.size };
 }
 
-// markdown 拓展正在从 tools/khyos-markdown 改名到 extensions/tools/khy-markdown，而改名尚未落到
-// 提交树 —— 写死任一侧都会在另一侧 ENOENT（发布流水线是在 tag 的干净检出上跑的，
-// 拿不到工作树里那份暂存的改名）。所以按存在性解析，改名前后都能工作。
+// markdown 拓展从 tools/khyos-markdown 改名到 extensions/tools/khy-markdown，随后随目录迁移
+// 落到 delivery/extension/tools/khy-markdown。发布流水线在 tag 的干净检出上跑，拿不到工作树里的
+// 暂存改名，所以按存在性解析：新路径优先，旧路径保留作改名/迁移前后的兜底。
 function resolveMarkdownExtensionDir(root) {
   const candidates = [
+    path.join(root, 'delivery', 'extension', 'tools', 'khy-markdown'),
+    path.join(root, 'extensions', 'tools', 'khy-markdown'),
     path.join(root, 'extensions', 'khy-markdown'),
     path.join(root, 'tools', 'khyos-markdown'),
   ];
@@ -61,7 +63,7 @@ function buildPayloadAssets(options = {}) {
     throw new Error('expected --version X.Y.Z');
   }
   const packageVersion = String(
-    JSON.parse(fs.readFileSync(path.join(root, 'services', 'backend', 'package.json'), 'utf8')).version
+    JSON.parse(fs.readFileSync(path.join(root, 'runtime', 'node', 'backend', 'package.json'), 'utf8')).version
   );
   if (packageVersion !== version) {
     throw new Error(`payload version mismatch: requested ${version}, package ${packageVersion}`);
@@ -74,7 +76,7 @@ function buildPayloadAssets(options = {}) {
   try {
     execFileSync(
       process.execPath,
-      [path.join(root, 'services', 'backend', 'scripts', 'makeSourceSnapshot.js'), '--root', root, '--out', snapshotDir, '--require'],
+      [path.join(root, 'runtime', 'node', 'backend', 'scripts', 'makeSourceSnapshot.js'), '--root', root, '--out', snapshotDir, '--require'],
       { cwd: root, stdio: 'inherit', env: { ...process.env, KHY_SNAPSHOT_FROM: 'head' } }
     );
 

@@ -27,7 +27,7 @@ describe('check-change-safety maintainer map integration', () => {
     const { status, stdout } = runSafetyCheck('runtime/node/backend/src/services/daemonManager.js');
 
     assert.equal(status, 0);
-    assert.match(stdout, /npm run test:one -- services\/backend\/tests\/daemonManager\.runtimePort\.test\.js/);
+    assert.match(stdout, /npm run test:one -- runtime\/node\/backend\/tests\/daemonManager\.runtimePort\.test\.js/);
     assert.match(stdout, /khy doctor/);
   });
 
@@ -35,16 +35,16 @@ describe('check-change-safety maintainer map integration', () => {
     const { status, stdout } = runSafetyCheck('runtime/node/backend/src/cli/handlers');
 
     assert.equal(status, 1);
-    assert.match(stdout, /npm run test:one -- services\/backend\/tests\/cli\/router\.test\.js services\/backend\/tests\/cli\/repl\.tasks\.interaction\.test\.js/);
-    assert.match(stdout, /node -e "require\('\.\/services\/backend\/src\/cli\/router'\)"/);
+    assert.match(stdout, /npm run test:one -- runtime\/node\/backend\/tests\/cli\/router\.test\.js runtime\/node\/backend\/tests\/cli\/repl\.tasks\.interaction\.test\.js/);
+    assert.match(stdout, /node -e "require\('\.\/runtime\/node\/backend\/src\/cli\/router'\)"/);
   });
 
   test('keeps targeted agent-rules command and prompt verification for prompt core', () => {
     const { status, stdout } = runSafetyCheck('runtime/node/backend/src/constants/prompts.js');
 
     assert.equal(status, 0);
-    assert.match(stdout, /node scripts\/ci\/check-agent-rules\.js 'services\/backend\/src\/constants\/prompts\.js'/);
-    assert.match(stdout, /node --test services\/backend\/tests\/promptOnDemandSections\.test\.js/);
+    assert.match(stdout, /node scripts\/ci\/check-agent-rules\.js 'runtime\/node\/backend\/src\/constants\/prompts\.js'/);
+    assert.match(stdout, /node --test runtime\/node\/backend\/tests\/promptOnDemandSections\.test\.js/);
     assert.doesNotMatch(stdout, /node scripts\/ci\/check-agent-rules\.js --changed/);
   });
 
@@ -53,8 +53,8 @@ describe('check-change-safety maintainer map integration', () => {
 
     assert.equal(status, 0);
     assert.match(stdout, /High-risk surface touched: route layer\./);
-    assert.match(stdout, /npm run test:one -- services\/backend\/tests\/routes\/aiGatewayAdmin\.modelSlots\.test\.js services\/backend\/tests\/gatewayManage\.apiDisplay\.test\.js/);
-    assert.match(stdout, /npm run build --prefix apps\/ai-frontend/);
+    assert.match(stdout, /npm run test:one -- runtime\/node\/backend\/tests\/routes\/aiGatewayAdmin\.modelSlots\.test\.js runtime\/node\/backend\/tests\/gatewayManage\.apiDisplay\.test\.js/);
+    assert.match(stdout, /npm run build --prefix delivery\/web\/ai-frontend/);
   });
 
   test('maps safety gate files back to safety verification', () => {
@@ -69,8 +69,8 @@ describe('check-change-safety maintainer map integration', () => {
     const { status, stdout } = runSafetyCheck('runtime/node/backend/src/routes/aiGatewayAdmin.js');
 
     assert.equal(status, 0);
-    assert.match(stdout, /npm run test:one -- services\/backend\/tests\/routes\/aiGatewayAdmin\.modelSlots\.test\.js services\/backend\/tests\/gatewayManage\.apiDisplay\.test\.js/);
-    assert.match(stdout, /npm run build --prefix apps\/ai-frontend/);
+    assert.match(stdout, /npm run test:one -- runtime\/node\/backend\/tests\/routes\/aiGatewayAdmin\.modelSlots\.test\.js runtime\/node\/backend\/tests\/gatewayManage\.apiDisplay\.test\.js/);
+    assert.match(stdout, /npm run build --prefix delivery\/web\/ai-frontend/);
     assert.doesNotMatch(stdout, /npm run test:maintainer:gateway/);
   });
 

@@ -67,8 +67,9 @@ test('两个 extensions 脚本的 require 指向 D2 真身而非 D5 壳', () => 
   ];
   for (const [rel, mod] of cases) {
     const src = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+    // rel 在 delivery/extension/scripts/<sub>/（4 段），要 **4** 级 ../ 才回到仓库根。
     assert.ok(
-      src.includes(`require('../../../${TRUTH_DIR}/${mod}')`),
+      src.includes(`require('../../../../${TRUTH_DIR}/${mod}')`),
       `${rel} 未指向 ${TRUTH_DIR}/${mod}`
     );
     assert.ok(

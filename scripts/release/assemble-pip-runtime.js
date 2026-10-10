@@ -19,7 +19,7 @@ const root = path.resolve(__dirname, '..', '..');
 const { assembleRuntime } = require('./lib/runtimeStaging');
 
 const build = spawnSync(process.execPath, [
-  path.join(root, 'packaging', 'build', 'esbuild-modules.js'),
+  path.join(root, 'works', 'ship', 'build', 'esbuild-modules.js'),
   '--module', 'khy', '--prod',
 ], { cwd: root, stdio: 'inherit', windowsHide: true });
 if (build.status !== 0) process.exit(build.status == null ? 1 : build.status);
@@ -27,7 +27,7 @@ if (build.status !== 0) process.exit(build.status == null ? 1 : build.status);
 try {
   assembleRuntime({
     label: 'pip:assemble',
-    bundledDir: path.join(root, 'platform', 'khy_platform', 'bundled'),
+    bundledDir: path.join(root, 'runtime', 'substrate', 'platform', 'khy_platform', 'bundled'),
     root,
     entries: [
       {

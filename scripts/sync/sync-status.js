@@ -174,6 +174,69 @@ function checkManifest(git, root, manifestDir) {
   return { present: true, ok: missing.length === 0, missing, extra: extra > 0 ? extra : 0 };
 }
 
+/* Lease state (works/record/ai/hq/*.json) — the third mechanism ---------------- */
+
+/**
+ * HQ 归档后第三套机制是「租约」（claimed_by/claimed_at/lease_expires 三字段，
+ * 真源 works/record/ai/hq/{BUGS,PROGRESS}.json）。此前统一视图只有 git/队列/manifest，
+ * 答不了「本机持几条租约、几条将到期、几条已死」。纯读：只读 JSON，绝不写。
+ *
+ * 本文件在 scripts/ 层，依赖方向不向上 require backend src——机器身份与大小写
+ * 不敏感比较按 hqStore.js 的同款约定在此内联（KHY_MACHINE_ID / hostname）。
+ */
+const LEASE_EXPIRING_MINUTES = 30;
+
+function leaseMachineId() {
+  const override = (process.env.KHY_MACHINE_ID || '').trim();
+  return override || (require('os').hostname() || 'unknown-machine');
+}
+
+function leaseParseIso(s) {
+  if (!s) return null;
+  const t = Date.parse(s);
+  return Number.isNaN(t) ? null : t;
+}
+
+function leaseCollect(root, now = new Date()) {
+  const hqDir = path.join(root, 'works', 'record', 'ai', 'hq');
+  const files = [
+    { kind: 'task', file: path.join(hqDir, 'PROGRESS.json'), listKey: 'tasks' },
+    { kind: 'bug', file: path.join(hqDir, 'BUGS.json'), listKey: 'bugs' },
+  ];
+  const me = leaseMachineId().toLowerCase();
+  const out = { present: false, heldByMe: 0, expiring: 0, expired: 0, lines: [] };
+  for (const { kind, file, listKey } of files) {
+    let doc;
+    try {
+      doc = JSON.parse(fs.readFileSync(file, 'utf8'));
+    } catch {
+      continue; // absent/unreadable truth files → no lease view, never crash
+    }
+    for (const item of (doc && doc[listKey]) || []) {
+      if (!item || !item.claimed_by) continue;
+      out.present = true;
+      const mine = String(item.claimed_by).trim().toLowerCase() === me;
+      const exp = leaseParseIso(item.lease_expires);
+      const expired = exp !== null && exp < now.getTime();
+      const expiring = exp !== null && !expired && exp - now.getTime() <= LEASE_EXPIRING_MINUTES * 60000;
+      if (mine) out.heldByMe += 1;
+      if (expiring) out.expiring += 1;
+      if (expired) out.expired += 1;
+      if (expired || expiring || mine) {
+        const mins = exp !== null ? Math.round((exp - now.getTime()) / 60000) : null;
+        out.lines.push(
+          `${item.id}(${kind}) 持有 ${item.claimed_by} 状态 ${item.status || '?'} ` +
+            `到期 ${item.lease_expires || '(无)'}` +
+            (mins !== null ? `（${expired ? '已过期 ' + Math.abs(mins) + ' 分钟' : '剩 ' + mins + ' 分钟'}）` : '') +
+            (mine ? ' [本机]' : '') +
+            (expired ? ' [死占用: khy hq release --expired 清理]' : '')
+        );
+      }
+    }
+  }
+  return out;
+}
+
 /* Assembly ----------------------------------------------------------------- */
 
 function collect(git, repos, manifestDir) {
@@ -184,6 +247,7 @@ function collect(git, repos, manifestDir) {
     const dirty = dirtyCount(git, root);
     const queue = queueDebints(git, root);
     const manifest = checkManifest(git, root, manifestDir);
+    const leases = leaseCollect(root);
     const tip = gitSync(git, ['rev-parse', '--short', 'HEAD'], root);
     return {
       name: repo.name,
@@ -196,6 +260,7 @@ function collect(git, repos, manifestDir) {
       dirty,
       queue,
       manifest,
+      leases,
     };
   });
 }
@@ -221,6 +286,14 @@ function printHuman(entries, manifestDir) {
       for (const line of e.queue.lines) console.log(`    ${line}`);
     } else {
       console.log('  镜像补推队列: 空（无欠账）');
+    }
+    if (e.leases && e.leases.present) {
+      console.log(
+        `  租约: 本机持有 ${e.leases.heldByMe} 条 | 将到期(≤${LEASE_EXPIRING_MINUTES}分钟) ${e.leases.expiring} 条 | 已过期 ${e.leases.expired} 条`
+      );
+      for (const line of e.leases.lines) console.log(`    ${line}`);
+    } else {
+      console.log('  租约: 无（works/record/ai/hq/ 状态文件无占用条目）');
     }
     if (e.manifest.present) {
       if (e.manifest.ok) {
@@ -266,4 +339,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { collect, discoverRepos, queueDebints, checkManifest, aheadBehind, dirtyCount };
+module.exports = { collect, discoverRepos, queueDebints, checkManifest, aheadBehind, dirtyCount, leaseCollect };

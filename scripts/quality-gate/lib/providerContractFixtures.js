@@ -1,6 +1,9 @@
 'use strict';
 
 const FIXTURES = Object.freeze({
+  // 外部 ACP 智能体（[DESIGN-ARCH-184] §4.2）。真跑要 KHY_ACPCLIENT_AGENTS 指到一台
+  // 在位的智能体，夹具里连会话都由 acpAgentInvocation 的模块替身承担，故 transports 为空。
+  'acpAgentAdapter.js': { family: 'acp-agent', transports: [], markers: ['acpAgentInvocation', 'buildSuccess('] },
   'apiAdapter.js': { family: 'relay', transports: [], markers: ['svc.generateResponse('] },
   'claudeAdapter.js': { family: 'http-sse', transports: ['fetch', 'http'], markers: ['buildSuccess('] },
   'cliToolAdapter.js': { family: 'cli', transports: ['subprocess'], markers: ['buildSuccess('] },

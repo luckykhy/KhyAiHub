@@ -175,7 +175,7 @@ test('真实清单：pip(wheel/sdist) 与 npm 三渠道都钉死了启动地板'
   assert.ok(wheelBlock, '未能定位 REQUIRED_WHEEL_PATHS 块');
   assert.ok(sdistBlock, '未能定位 REQUIRED_SDIST_PATHS 块');
 
-  const npmFile = path.resolve(__dirname, '..', '..', 'packaging', 'npm', 'scripts', 'audit-purity.js');
+  const npmFile = path.resolve(__dirname, '..', '..', 'works', 'ship', 'npm', 'scripts', 'audit-purity.js');
   const npmSrc = fs.readFileSync(npmFile, 'utf8');
   const npmBlock = /REQUIRED_PATHS\s*=\s*\[([\s\S]*?)\]/.exec(npmSrc);
   assert.ok(npmBlock, '未能定位 npm REQUIRED_PATHS 块');
@@ -201,7 +201,7 @@ test('真实清单：pip(wheel/sdist) 与 npm 三渠道都钉死了启动地板'
 // 实测症状：npm install -g 之后只有 --version 能用，khy gateway status 只回两行提示。
 // pip 侧靠 cli.py 设 KHYQUANT_INVOKED_AS 绕开了，npm 侧必须自己也说一声。
 test('npm 启动壳把「用户敲的是哪个入口」如实传给 bundle', () => {
-  const shim = path.resolve(__dirname, '..', '..', 'packaging', 'npm', 'bin', 'khy.js');
+  const shim = path.resolve(__dirname, '..', '..', 'works', 'ship', 'npm', 'bin', 'khy.js');
   const src = fs.readFileSync(shim, 'utf8');
   assert.match(
     src,
@@ -270,7 +270,7 @@ test('_is_standalone_bundle_install：源码检出压过 bundle，wheel 判 True
     fs.mkdirSync(bundleDir, { recursive: true });
     fs.writeFileSync(path.join(bundleDir, 'bundle.mjs'), '// stub\n');
 
-    const platformDir = path.resolve(__dirname, '..', '..', 'platform');
+    const platformDir = path.resolve(__dirname, '..', '..', 'runtime', 'substrate', 'platform');
     const r = spawnSync(python, ['-c', STANDALONE_PROBE, platformDir, root], { encoding: 'utf8' });
     assert.equal(r.status, 0, `probe failed: ${r.stderr || r.stdout}`);
     assert.deepStrictEqual(
@@ -284,7 +284,7 @@ test('_is_standalone_bundle_install：源码检出压过 bundle，wheel 判 True
 });
 
 test('doctor 分流与启动分流共用同一个 standalone 判据（不许各算一遍）', () => {
-  const cliFile = path.resolve(__dirname, '..', '..', 'platform', 'khy_platform', 'cli.py');
+  const cliFile = path.resolve(__dirname, '..', '..', 'runtime', 'substrate', 'platform', 'khy_platform', 'cli.py');
   const src = fs.readFileSync(cliFile, 'utf8');
   assert.match(
     src,
@@ -319,7 +319,7 @@ test('standalone 模式下 preflight / where 不再把健康安装说成损坏',
   const python = pythonCommand();
   if (!python) return;
 
-  const platformDir = path.resolve(__dirname, '..', '..', 'platform');
+  const platformDir = path.resolve(__dirname, '..', '..', 'runtime', 'substrate', 'platform');
   const r = spawnSync(python, ['-c', DIAGNOSTIC_PROBE, platformDir], { encoding: 'utf8' });
   assert.equal(r.status, 0, `probe failed: ${r.stderr || r.stdout}`);
   const out = JSON.parse(r.stdout.trim());

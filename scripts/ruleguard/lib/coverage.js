@@ -66,6 +66,10 @@ function buildCoverage(repoRoot) {
     }
   }
 
+  // 台账趋势（第五问之外的补充视图）：violations.jsonl 按 commit 追加，末两期
+  // 计数环比即「违规升降」。纯读；空台账/单期 → trend 为 null，报告静默跳过。
+  const trend = ledgerTrend(repoRoot);
+
   return {
     registry: { file: registry.rel, meta: registry.meta, errors: registry.errors },
     summary: manifest.summary,
@@ -98,9 +102,36 @@ function buildCoverage(repoRoot) {
     carriers: manifest.rules.filter((rule) => rule.kind === 'carrier')
       .map((rule) => ({ id: rule.id, name: rule.name, carriers: rule.carriers })),
     activeSuppressions: ledger.activeSuppressions(repoRoot),
+    trend,
     redLines,
     rules: manifest.rules,
   };
+}
+
+/**
+ * 违规趋势（MegaLinter/Backstage 记分卡模式）：台账最近两期（按 commit 分组）
+ * 环比。纯读、绝不抛——台账是证据源不是门，缺失只能意味着「还没记」。
+ * @returns {null | {byCommit: Array<[string, number]>, prev: number, last: number,
+ *   delta: number, direction: 'up'|'down'|'flat'}}
+ */
+function ledgerTrend(repoRoot) {
+  try {
+    const agg = ledger.aggregate(repoRoot);
+    const series = agg.byCommit;
+    if (series.length < 2) return null;
+    const prev = series[series.length - 2];
+    const last = series[series.length - 1];
+    const delta = last[1] - prev[1];
+    return {
+      byCommit: series,
+      prev: prev[1],
+      last: last[1],
+      delta,
+      direction: delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat',
+    };
+  } catch {
+    return null; // ledger unreadable — soft indicator, never a gate failure
+  }
 }
 
 function countBy(items, field) {
@@ -191,6 +222,17 @@ function renderCoverage(coverage, { ci = false } = {}) {
     for (const [ruleId, count] of suppressions) lines.push(`  ${ruleId}: ${count} 次`);
   }
 
+  // 台账趋势段：最近两期环比。up 提示违规在升，down/flat 如实报——
+  // 趋势是软指标，只报不阻。
+  if (coverage.trend) {
+    const t = coverage.trend;
+    const arrow = t.direction === 'up' ? '↑' : t.direction === 'down' ? '↓' : '→';
+    lines.push('');
+    lines.push(
+      `违规趋势（台账最近两期）：${arrow} ${t.prev} → ${t.last}（${t.delta >= 0 ? '+' : ''}${t.delta}）`
+    );
+  }
+
   if (coverage.redLines.length) {
     lines.push('');
     lines.push(`阻断红线命中 ${coverage.redLines.length} 条：`);
@@ -216,4 +258,4 @@ function coverageCode(coverage) {
   return 0;
 }
 
-module.exports = { buildCoverage, renderCoverage, coverageCode, BLOCKING_CODES };
+module.exports = { buildCoverage, renderCoverage, coverageCode, ledgerTrend, BLOCKING_CODES };

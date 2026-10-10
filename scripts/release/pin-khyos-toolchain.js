@@ -40,16 +40,16 @@ const path = require('path');
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const MANIFEST_PATH = path.join(
   REPO_ROOT,
-  'platform', 'packages', 'shared', 'src', 'runtime', 'khyos', 'khyos-manifest.json',
+  'runtime', 'substrate', 'platform', 'packages', 'shared', 'src', 'runtime', 'khyos', 'khyos-manifest.json',
 );
 
 // Reuse the runtime's proxy-aware download + hashing primitives (single path).
 const { httpsDownload, sha256File } = require(path.join(
-  REPO_ROOT, 'platform', 'packages', 'shared', 'src', 'runtime', 'khyos', '_artifact',
+  REPO_ROOT, 'runtime', 'substrate', 'platform', 'packages', 'shared', 'src', 'runtime', 'khyos', '_artifact',
 ));
 // The authoritative list of tools the native rung needs (all-or-nothing).
 const { REQUIRED_TOOLS } = require(path.join(
-  REPO_ROOT, 'platform', 'packages', 'shared', 'src', 'runtime', 'khyos', 'toolchainProvisioner',
+  REPO_ROOT, 'runtime', 'substrate', 'platform', 'packages', 'shared', 'src', 'runtime', 'khyos', 'toolchainProvisioner',
 ));
 
 const BRANCH_ARCHIVE_RE =

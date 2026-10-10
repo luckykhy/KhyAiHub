@@ -31,13 +31,13 @@ const crypto = require('crypto');
 const { spawnSync } = require('child_process');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
-const MANIFEST_PATH = path.join(REPO_ROOT, 'services', 'backend', 'config', 'runtime-binaries.json');
+const MANIFEST_PATH = path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'config', 'runtime-binaries.json');
 
 function requireAxios() {
   const axios = require(require.resolve('axios', {
     paths: [
       path.join(REPO_ROOT, 'node_modules'),
-      path.join(REPO_ROOT, 'services', 'backend', 'node_modules'),
+      path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'node_modules'),
     ],
   }));
   return axios.default || axios;

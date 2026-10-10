@@ -8,6 +8,7 @@ const { buildManifest, selectForMode } = require('./lib/manifest');
 const { applyToPaths, renderApplied } = require('./lib/apply');
 const { run } = require('./lib/run');
 const coverage = require('./lib/coverage');
+const ledger = require('./lib/ledger');
 
 /**
  * ruleguard — 规则遵守保障机制的绑定层 CLI（[DESIGN-ARCH-111]）。
@@ -18,6 +19,7 @@ const coverage = require('./lib/coverage');
  *   node scripts/ruleguard/index.js coverage [--ci] [--json]
  *   node scripts/ruleguard/index.js apply <path> [<path>...] [--verbose]
  *   node scripts/ruleguard/index.js manifest [--json]
+ *   node scripts/ruleguard/index.js ledger [--json] [--sarif]
  *
  * Env:
  *   KHY_RULEGUARD_LEDGER     台账路径覆盖（测试夹具用）
@@ -36,6 +38,7 @@ function usage(exitCode = 2) {
   ruleguard coverage [--ci] [--json]
   ruleguard apply <path> [<path>...] [--verbose]
   ruleguard manifest [--json]
+  ruleguard ledger [--json] [--sarif]   违规台账聚合（按规则/文件/门 + 趋势）
 
 模式：commit ⊂ pr ⊂ release。commit 只跑支持 --changed 的执行器（pre-commit 快档）。
 `);
@@ -53,6 +56,7 @@ function parseArgs(argv) {
         opts.mode = args[++i];
         break;
       case '--json': opts.json = true; break;
+      case '--sarif': opts.sarif = true; break;
       case '--ci': opts.ci = true; break;
       case '--verbose': opts.verbose = true; break;
       case '--no-ledger': opts.ledger = false; break;
@@ -183,6 +187,49 @@ function commandManifest(opts) {
   return 0;
 }
 
+/**
+ * 违规台账聚合（`ruleguard ledger`）。纯读：只读 violations.jsonl，零写操作——
+ * 台账此前「写满即沉没」，聚合视图回答「哪条规则/哪个文件是惯犯、趋势升降如何」。
+ * `--sarif` 给 GitHub code scanning 等 SARIF 消费方导出（Checkov 模式）。
+ */
+function commandLedger(opts) {
+  const agg = ledger.aggregate(repoRoot());
+  if (opts.sarif) {
+    const sarif = ledger.toSarif(ledger.readAll(repoRoot()));
+    process.stdout.write(`${JSON.stringify(sarif, null, 2)}\n`);
+    return 0;
+  }
+  if (opts.json) {
+    process.stdout.write(`${JSON.stringify(agg, null, 2)}\n`);
+    return 0;
+  }
+  process.stdout.write(`违规台账聚合（${agg.span.first ? `${agg.span.first.slice(0, 10)} ~ ${agg.span.last.slice(0, 10)}` : '空台账'}）\n`);
+  process.stdout.write(`累计 ${agg.total} 条（含抑制 ${agg.suppressed} 条）\n\n`);
+  const printCounts = (title, entries, limit = 10) => {
+    if (!entries.length) return;
+    process.stdout.write(`${title}：\n`);
+    for (const [key, count] of entries.slice(0, limit)) {
+      process.stdout.write(`  ${String(key).padEnd(28)} ${String(count).padStart(4)}\n`);
+    }
+    if (entries.length > limit) {
+      process.stdout.write(`  （其余 ${entries.length - limit} 项略）\n`);
+    }
+    process.stdout.write('\n');
+  };
+  printCounts('按规则', agg.byRule);
+  printCounts('按文件', agg.byFile, 15);
+  printCounts('按门', agg.byGate);
+  if (agg.byCommit.length) {
+    process.stdout.write('按提交趋势（时间序）：\n');
+    for (const [commit, count] of agg.byCommit) {
+      process.stdout.write(`  ${String(commit).padEnd(12)} ${'█'.repeat(Math.min(count, 30))} ${count}\n`);
+    }
+  } else {
+    process.stdout.write('台账为空（尚无违规记录）。\n');
+  }
+  return 0;
+}
+
 function main(argv = process.argv) {
   const opts = parseArgs(argv);
   const command = opts._.shift() || 'run';
@@ -193,6 +240,7 @@ function main(argv = process.argv) {
     case 'coverage': case 'stats': code = commandCoverage(opts); break;
     case 'apply': code = commandApply(opts); break;
     case 'manifest': case 'list': code = commandManifest(opts); break;
+    case 'ledger': case 'trend': code = commandLedger(opts); break;
     default:
       process.stderr.write(`[ruleguard] 未知子命令：${command}\n`);
       usage(2);
@@ -204,4 +252,4 @@ function main(argv = process.argv) {
 
 if (require.main === module) main();
 
-module.exports = { main, commandRun, commandCoverage, commandApply, commandManifest };
+module.exports = { main, commandRun, commandCoverage, commandApply, commandManifest, commandLedger };
