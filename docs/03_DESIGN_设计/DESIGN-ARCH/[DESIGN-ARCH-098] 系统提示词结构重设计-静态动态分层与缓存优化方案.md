@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 <!-- 文档分类: DESIGN-ARCH-098 | 阶段: 设计 | 关联: [DESIGN-PROMPT-002] 分层规范、DESIGN-ARCH-047 缓存边界 -->
 # [DESIGN-ARCH-098] 系统提示词结构重设计：静态/动态分层与缓存优化方案
 
