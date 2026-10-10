@@ -19,7 +19,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const ROOT = path.resolve(__dirname, '../../../..');
+// tests/ci → tests → backend → node → runtime → 仓根 = 上 5 层。
+// 原来写的是 4 层，落到 runtime/ 下，require 直接抛 Cannot find module ——
+// 于是整个套件「failed to run」，它守的根级杂物判据**一条都没执行过**。
+const ROOT = path.resolve(__dirname, '..', '..', '..', '..', '..');
 const layout = require(path.join(ROOT, 'scripts/ci/check-repo-layout.js'));
 const { isRootJunkName, findRootJunkEntries } = layout;
 

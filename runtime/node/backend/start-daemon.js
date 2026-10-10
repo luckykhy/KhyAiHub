@@ -37,7 +37,7 @@ async function main() {
   // 浏览器访问 127.0.0.1:3000 全部落到 daemon 上 —— 表现为
   // /api/auth/* 404、/ws/cross-platform 握手挂断、user-gateway 500 一整片。
   // 端口真源是 serviceDefaults.AI_BACKEND_DEFAULT_PORT（9090），
-  // apps/ai-frontend/backendDiscovery.mjs 也镜像了同一个值。
+  // delivery/web/ai-frontend/backendDiscovery.mjs 也镜像了同一个值。
   //
   // 注意：这里刻意不把 process.env.PORT 纳入优先级 —— PORT 是 web 后端的
   // 环境变量，让 daemon 也读它会把两个服务钉在同一个端口上。

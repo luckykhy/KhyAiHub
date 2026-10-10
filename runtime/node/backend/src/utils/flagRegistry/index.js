@@ -3510,6 +3510,27 @@ const FLAGS = {
   // 刚从「永远钳位」变为「显式设置才钳位」,正是注册表该记录的东西;两者默认 0 表未设。
   KHY_CONTEXT_WINDOW: { mode: 'numeric', default: 0, min: 0, max: 10000000 },
   KHY_CONTEXT_TOKEN_LIMIT: { mode: 'numeric', default: 0, min: 0, max: 10000000 },
+  // 全新模型不进代码的覆盖出口:per-model JSON map,与 KHY_MODEL_TIER_MAP /
+  // KHY_MODEL_CAPABILITY_MAP 同构(消费方 constants/modelContextWindows.js 的
+  // _resolveEnvContextWindowMap)。默认空串 = 无覆盖;值域正整数且按
+  // KHY_CONTEXT_WINDOW_CEILING 钳位,非正/畸形条目静默丢弃。
+  KHY_MODEL_CONTEXT_WINDOW_MAP: { mode: 'default-on', off: 'CANON', default: '' },
+  // 上下文窗口的**跨重启记忆**（services/gateway/contextWindowStore.js）：实测到的值
+  // 落盘，下次启动直接播种进 _contextWindowCache，首屏分母即真值。双向修正 ——
+  // 比静态表大就用大的、比静态表小就用小的（上游 400 报出的真实限制即下调信号）。
+  // 逃生门：显式 0/false/off/no → 不记也不读，纯回落静态表。
+  KHY_CONTEXT_WINDOW_LEARNED: { mode: 'default-on', off: 'CANON', default: true },
+  // 记忆文件路径覆盖（测试与多实例分家用），默认 <dataDir>/gateway/context_window.json。
+  KHY_CONTEXT_WINDOW_LEARNED_FILE: { mode: 'default-on', off: 'CANON', default: '' },
+  // 记忆保留时长（毫秒）。过期记录仍照常返回（比猜 128000 可靠），只是会被
+  // 网关的 TTL 机制标成待刷新、顺带重新探测一遍。
+  KHY_CONTEXT_WINDOW_LEARNED_TTL_MS: {
+    mode: 'numeric',
+    default: 90 * 24 * 60 * 60 * 1000,
+    min: 60000,
+    max: 31536000000,
+  },
+  KHY_CONTEXT_WINDOW_LEARNED_MAX_ENTRIES: { mode: 'numeric', default: 500, min: 8, max: 100000 },
   // Background fast-fail: requests explicitly tagged requestSource:'background'
   // skip same-adapter retries and pool key rotation on overloaded/rate_limit
   // errors, cascading straight to the next adapter. Foreground/internal calls
@@ -3639,6 +3660,19 @@ const FLAGS = {
   KHY_REFUSAL_RECOVERY_MAX_RETRIES: { mode: 'numeric', default: 1, min: 0, max: 3 },
   // 每步的活动空闲上限(ms):基于活动的滑动超时,收到 chunk/完成即重置,绝不硬 kill 整个循环。clamp[15000, 300000]。
   KHY_REFUSAL_RECOVERY_STEP_IDLE_MS: { mode: 'numeric', default: 60000, min: 15000, max: 300000 },
+
+  // ── 四档模式与智能路由([DESIGN-ARCH-185] P1)──────────────────────────────
+  // 两把闸刻意分开,因为回滚语义不同:
+  //   关 ROUTING_MODES = 回到「模型列表里只有一个 Auto 哨兵」的现状(连观测一起没);
+  //   关 ROUTE_APPLY   = 保留四档与观测记录,但路由结果不再改写 options.model。
+  // ⚠ KHY_ROUTE_APPLY 必须是 opt-in 默认关:PROCESS-008 要求新机制从 S1 观察者起步,
+  //   而 isFlagEnabled 对**未登记** flag 返回 true(见下方 KHY_MODEL_ADAPT 同段注释)——
+  //   漏登记不会报错,会直接变成「上线即全开」。routingMode.isApplyEnabled 另有一层
+  //   「未登记即视为关」的自证,但那兜底不是登记的理由。
+  KHY_ROUTING_MODES: { mode: 'default-on', off: 'CANON', default: true },
+  KHY_ROUTE_APPLY: { mode: 'opt-in', off: 'CANON', default: false },
+  // 四道 pass 的特征与判定(routeDemand)。关 → 不产出 demand/margin,记录里对应字段为 null。
+  KHY_ROUTE_DEMAND: { mode: 'default-on', off: 'CANON', default: true, parent: 'KHY_ROUTING_MODES' },
 
   // ── 模型差异化动态适配 Dynamic Model Adaptation(modelFeatureRegistry 链)──────
   // 每请求按当前模型 id 读取完整画像(能力矩阵 11 维 / 风格 / 专长 / 路由偏好 / 段落

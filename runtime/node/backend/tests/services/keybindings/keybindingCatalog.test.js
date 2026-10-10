@@ -36,9 +36,22 @@ describe('完整目录结构', () => {
   });
   test('包含真实处理器的关键上下文', () => {
     const ctxs = KEYBINDING_CATALOG.map((g) => g.context);
-    for (const c of ['global', 'editing', 'navigation', 'completion', 'entrypoints', 'vim']) {
+    for (const c of ['global', 'editing', 'navigation', 'executing', 'completion', 'entrypoints', 'vim']) {
       assert.ok(ctxs.includes(c), `缺上下文 ${c}`);
     }
+  });
+  test('回合执行中:方向键的第二套绑定必须与 arrowRouting 一致', () => {
+    // ↑/↓ 在执行中变义(arrowRouting 的 executing context:↓ 开实时输出副屏、↑ 取回排队消息)。
+    // 目录不说这一套,用户查 /keybindings 得到的是一份「执行中会按错的说明书」。
+    const exec = KEYBINDING_CATALOG.find((g) => g.context === 'executing');
+    assert.ok(exec, '缺 executing 上下文(回合执行中的方向键绑定无处可查)');
+    const keys = exec.bindings.map((b) => b.keys);
+    for (const k of ['↓', '↑', '←']) assert.ok(keys.includes(k), `回合执行中缺 ${k} 绑定`);
+    const down = exec.bindings.find((b) => b.keys === '↓');
+    assert.match(down.desc, /实时输出/, '↓ 的说明必须点明它打开的是实时输出副屏');
+    assert.match(down.desc, /不响应/, '↓ 的说明必须交代「本回合还没有工具调用」时的行为');
+    const up = exec.bindings.find((b) => b.keys === '↑');
+    assert.match(up.desc, /排队/, '↑ 的说明必须点明它取回的是排队消息');
   });
   test('CC 对齐:新增 chat chord 组(Meta+P/O/T)与 global Ctrl+T', () => {
     const chat = KEYBINDING_CATALOG.find((g) => g.context === 'chat');
@@ -70,13 +83,18 @@ describe('?  浮层精简视图(防 HelpMenu 收敛后回归)', () => {
   // Ctrl+T 因「仅宽屏 ≥120 列」的条件性(见完整目录 global 组)不入精简表,防误导窄屏用户。
   // 代价如实登记:80×24 下浮层从「15 条全显」变为「14 条 + 另有 4 条指针」(BUG-58 收缩
   // 机制按设计接管,helpMenuSize.test.js 的 80×24 断言已同步更新)。
+  // 第四处有意改动(2026-10-09,用户反馈「执行过程中的下键不知道搞什么的」):第 5 条补上
+  // ↑/↓ 在执行中的第二套含义。此前浮层只说「逐条浏览历史 / 在菜单中移动」,而回合执行中
+  // 且输入框为空时 ↓ 其实是打开实时输出副屏、↑ 是取回排队消息 —— 用户按文档理解按键,
+  // 得到的却是另一件事。条数不变(仍 18 条),只把这一句说全;执行中的完整四条见完整目录
+  // 新增的「回合执行中(输入框为空)」组。
   const LEGACY = [
     ['Enter', '发送消息'],
     ['Ctrl + J', '换行（多行输入）'],
     ['/', '斜杠命令菜单'],
     ['@', '引用文件路径'],
     // Stage 2 有意变更:门控退役后 ↑/↓ 无条件逐条回溯,文案随之说清「逐条」。
-    ['↑ / ↓', '逐条浏览历史 / 在菜单中移动'],
+    ['↑ / ↓', '逐条浏览历史 / 菜单中移动（执行中 ↓ 看实时输出）'],
     ['Tab', '接受补全'],
     ['Shift + Tab', '切换权限模式'],
     ['Meta + P', '打开模型选择器'],

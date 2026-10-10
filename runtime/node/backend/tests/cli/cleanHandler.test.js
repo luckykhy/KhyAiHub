@@ -14,8 +14,8 @@ const path = require('path');
 
 const clean = require('../../src/cli/handlers/clean');
 
-/** 真仓库根：cli → tests → backend → services → root，共四层。按服务名解析要用真树。 */
-const REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..');
+/** 真仓库根：cli → tests → backend → node → runtime → root，共五层。按服务名解析要用真树。 */
+const REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..', '..');
 
 /** 造一棵一次性的假仓库树。返回 { root, dataHome, cleanup }。 */
 function fixture(layout = {}) {
@@ -133,31 +133,31 @@ describe('buildCleanPlan — 目标发现与安全边界', () => {
 
   test('构建档只收注册在册的产物路径，源码同级不受牵连', () => {
     const f = fixture({
-      'packaging/npm/bundled/khy/bundle.mjs': 4096,
-      'packaging/npm/package.json': 100,
-      'packaging/npm/scripts/assemble.js': 100,
-      'apps/ai-frontend/dist/index.js': 2048,
-      'apps/ai-frontend/src/main.js': 100,
+      'works/ship/npm/bundled/khy/bundle.mjs': 4096,
+      'works/ship/npm/package.json': 100,
+      'works/ship/npm/scripts/assemble.js': 100,
+      'delivery/web/ai-frontend/dist/index.js': 2048,
+      'delivery/web/ai-frontend/src/main.js': 100,
     });
     try {
       const plan = clean.buildCleanPlan({ tiers: ['build'], root: f.root, dataHome: f.dataHome });
       const rels = plan.items.map((i) => i.rel).sort();
-      expect(rels).toEqual(['apps/ai-frontend/dist', 'packaging/npm/bundled']);
+      expect(rels).toEqual(['delivery/web/ai-frontend/dist', 'works/ship/npm/bundled']);
     } finally {
       f.cleanup();
     }
   });
 
-  test('dist 下的 whl 与 tar.gz 单独收，同目录里的别的文件不动', () => {
+  test('entries/pip 下的 whl 与 tar.gz 单独收，同目录里的别的文件不动', () => {
     const f = fixture({
-      'dist/khy_os-1.1.10.tar.gz': 4096,
-      'dist/khy_os-1.1.10-py3-none-any.whl': 2048,
-      'dist/README.txt': 100,
+      'entries/pip/khy_os-1.1.10.tar.gz': 4096,
+      'entries/pip/khy_os-1.1.10-py3-none-any.whl': 2048,
+      'entries/pip/README.txt': 100,
     });
     try {
       const plan = clean.buildCleanPlan({ tiers: ['build'], root: f.root, dataHome: f.dataHome });
       const rels = plan.items.map((i) => i.rel).sort();
-      expect(rels).toEqual(['dist/khy_os-1.1.10-py3-none-any.whl', 'dist/khy_os-1.1.10.tar.gz']);
+      expect(rels).toEqual(['entries/pip/khy_os-1.1.10-py3-none-any.whl', 'entries/pip/khy_os-1.1.10.tar.gz']);
     } finally {
       f.cleanup();
     }
@@ -227,7 +227,7 @@ describe('可逆性与账目', () => {
     // 而不是退回一个写死的路径 —— 写死的那条才是这条守卫要防的东西。
     const targets = clean._extensionBuildTargets(REPO_ROOT);
     expect(targets).toHaveLength(1);
-    expect(targets[0].rel).toMatch(/^extensions\/.+\/vendor$/);
+    expect(targets[0].rel).toMatch(/^delivery\/extension\/.+\/vendor$/);
     expect(targets[0].rebuild).toBe('node ' + targets[0].rel.replace(/\/vendor$/, '') + '/muya-embed/ensure-vendor.mjs');
   });
 
@@ -239,14 +239,14 @@ describe('可逆性与账目', () => {
   });
 
   test('executeClean 回收的字节数与计划里报的一致，且真的删掉了', () => {
-    const f = fixture({ 'apps/ai-frontend/dist/index.js': 4096, 'src/keep.js': 100 });
+    const f = fixture({ 'delivery/web/ai-frontend/dist/index.js': 4096, 'src/keep.js': 100 });
     try {
       const plan = clean.buildCleanPlan({ tiers: ['build'], root: f.root, dataHome: f.dataHome });
       expect(plan.totalBytes).toBe(4096);
       const res = clean.executeClean(plan);
       expect(res.ok).toBe(true);
       expect(res.reclaimedBytes).toBe(4096);
-      expect(fs.existsSync(path.join(f.root, 'apps', 'ai-frontend', 'dist'))).toBe(false);
+      expect(fs.existsSync(path.join(f.root, 'delivery', 'web', 'ai-frontend', 'dist'))).toBe(false);
       expect(fs.existsSync(path.join(f.root, 'src', 'keep.js'))).toBe(true);
     } finally {
       f.cleanup();
@@ -254,7 +254,7 @@ describe('可逆性与账目', () => {
   });
 
   test('删不掉的一项不拖垮其余各项，并被如实报为失败', () => {
-    const f = fixture({ 'build/a.js': 1024, 'apps/ai-frontend/dist/b.js': 2048 });
+    const f = fixture({ 'build/a.js': 1024, 'delivery/web/ai-frontend/dist/b.js': 2048 });
     try {
       const plan = clean.buildCleanPlan({ tiers: ['build'], root: f.root, dataHome: f.dataHome });
       const fsImpl = {

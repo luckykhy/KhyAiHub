@@ -5,8 +5,8 @@
  * 验收要点:
  *  - 门控 isEnabled:未设/任意非关键字 → 开;0/false/off/no(含大小写/空白) → 关。
  *  - looksLikeProviderModel:仅单斜杠两侧非空的 provider/model 为真;裸模型/路径式/空 → 假。
- *  - buildRunArgs:基础 ['run','__PROMPT__'];format/session/continue/agent/model 按需拼接;
- *    非法 model 不注入。
+ *  - buildRunArgs:基础 ['run'](prompt 走 stdin,不进 argv);format/session/continue/agent/model
+ *    按需拼接;非法 model 不注入。
  *  - applyModelArg:合法 model 追加 --model,不改入参;非法 → 原样浅拷贝。
  *  - fail-soft:坏输入不抛。
  */
@@ -38,10 +38,10 @@ describe('Opencode Invocation', () => {
       expect(oc.looksLikeProviderModel(42)).toBe(false);
   });
 
-  test('buildRunArgs:基础形态 = [run, __PROMPT__]', () => {
-      assert.deepEqual(oc.buildRunArgs(), ['run', '__PROMPT__']);
-      assert.deepEqual(oc.buildRunArgs({}), ['run', '__PROMPT__']);
-      assert.deepEqual(oc.buildRunArgs(null), ['run', '__PROMPT__']);
+  test('buildRunArgs:基础形态 = [run](prompt 走 stdin,不进 argv)', () => {
+      assert.deepEqual(oc.buildRunArgs(), ['run']);
+      assert.deepEqual(oc.buildRunArgs({}), ['run']);
+      assert.deepEqual(oc.buildRunArgs(null), ['run']);
   });
 
   test('buildRunArgs:按需拼接 format/continue/session/agent/model', () => {
@@ -53,7 +53,7 @@ describe('Opencode Invocation', () => {
         model: 'anthropic/claude-sonnet-4-6',
       });
       assert.deepEqual(args, [
-        'run', '__PROMPT__',
+        'run',
         '--format', 'json',
         '--continue',
         '--session', 'ses_abc',
@@ -64,7 +64,7 @@ describe('Opencode Invocation', () => {
 
   test('buildRunArgs:非法 model 不注入;default 格式省略 --format', () => {
       const args = oc.buildRunArgs({ model: 'gpt-5', format: 'default' });
-      assert.deepEqual(args, ['run', '__PROMPT__']);
+      assert.deepEqual(args, ['run']);
   });
 
   test('applyModelArg:合法追加、非法原样、不改入参', () => {

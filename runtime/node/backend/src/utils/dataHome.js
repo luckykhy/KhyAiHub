@@ -14,7 +14,9 @@
  * All services should use getDataHome() instead of hardcoding os.homedir().
  *
  * ── 生态架构路径所有权标准（khyos 生态）──────────────────────────────
- *   底座（khyos）归属: ~/.khyos/{data,cache,models,logs}   ← getBaseHome()
+ *   底座（khyos）归属: 便携部署并入项目数据家 works/data/khy/T1-domains/base
+ *   （2026-10-08 用户裁决，works/data/khyos 降级为兼容 junction）；
+ *   非便携仍为 ~/.khyos   ← getBaseHome()
  *   应用（khyquant）归属: ~/.khyquant 或 ~/.khy（现状数据家）  ← getDataHome()
  *   红线：底座与应用各自独立，禁止互相直接读写对方目录/DB 文件；
  *         跨域取数须走对方暴露的公共 API，不得跨库直连 SQL。
@@ -35,6 +37,108 @@ const path = require('path');
 const MIN_FREE_BYTES = 1024 * 1024 * 1024; // 1 GB minimum (mirrors storageRoots.js)
 const STORAGE_POINTER_VERSION = 1;
 
+/* ── DATA_PATHS 查表（DESIGN-LAY-007 §5.2 代码引用改向单点）────────────────
+ * 逻辑名 → 档位路径（相对项目数据家）。派生自
+ * docs/10_规范/registry/DATA-LOCATIONS.json 的 tiers[1..4]；2026-10-09 归位后
+ * getDataDir('conversations') 一类调用经此表直接解析到 T 档家，绕过兼容
+ * junction。未列入的名字走老路径（root 上仍是兼容 junction，行为不变）。 */
+const DATA_PATHS = {
+  conversations: 'T1-domains/sessions/conversations',
+  sessions: 'T1-domains/sessions/sessions',
+  checkpoints: 'T1-domains/sessions/checkpoints',
+  turn_checkpoints: 'T1-domains/sessions/turn_checkpoints',
+  'sessions.db': 'T2-regenerable/sessions.db',
+  'taskboard.db': 'T0-authoritative/state/taskboard.db',
+  khyquant: 'T1-domains/_unsorted/khyquant',
+  memory: 'T1-domains/memory/memory',
+  cognitive_snapshots: 'T1-domains/memory/cognitive_snapshots',
+  gateway: 'T1-domains/ai/gateway',
+  ai_gateway_logs: 'T1-domains/ai/ai_gateway_logs',
+  prompts: 'T1-domains/ai/prompts',
+  training: 'T1-domains/ai/training',
+  'instruction-review': 'T1-domains/ai/instruction-review',
+  'ai_gateway_pricing.json': 'T1-domains/ai/ai_gateway_pricing.json',
+  'ai_gateway_customer_usage.json': 'T1-domains/ai/ai_gateway_customer_usage.json',
+  agents: 'T1-domains/agents/agents',
+  'agent-workspaces': 'T1-domains/agents/agent-workspaces',
+  orchestrator: 'T1-domains/agents/orchestrator',
+  arena: 'T1-domains/agents/arena',
+  evo_engine: 'T1-domains/agents/evo_engine',
+  approvals: 'T1-domains/agents/approvals',
+  instances: 'T1-domains/agents/instances',
+  jobs: 'T1-domains/agents/jobs',
+  plans: 'T1-domains/agents/plans',
+  projects: 'T1-domains/agents/projects',
+  tasks: 'T1-domains/agents/tasks',
+  skills: 'T1-domains/tools/skills',
+  generated_tools: 'T1-domains/tools/generated_tools',
+  commands: 'T1-domains/tools/commands',
+  hooks: 'T1-domains/tools/hooks',
+  bin: 'T1-domains/tools/bin',
+  desktopControl: 'T1-domains/desktop/desktopControl',
+  computerUse: 'T1-domains/desktop/computerUse',
+  browser: 'T1-domains/desktop/browser',
+  'clipboard-img2file': 'T1-domains/desktop/clipboard-img2file',
+  'desktop-audit': 'T1-domains/desktop/desktop-audit',
+  telemetry: 'T1-domains/telemetry/telemetry',
+  reports: 'T1-domains/telemetry/reports',
+  events: 'T1-domains/telemetry/events',
+  receipts: 'T1-domains/telemetry/receipts',
+  ruleguard: 'T1-domains/telemetry/ruleguard',
+  feedback: 'T1-domains/telemetry/feedback',
+  audit: 'T1-domains/telemetry/audit',
+  credentials: 'T1-domains/secrets/credentials',
+  cache: 'T2-regenerable/cache',
+  'learn-cache': 'T2-regenerable/learn-cache',
+  'break-cache': 'T2-regenerable/break-cache',
+  'audit-trajectory': 'T3-archives/audit-trajectory',
+  logs: 'T3-archives/logs',
+  backups: 'T3-archives/backups',
+  db_backup: 'T3-archives/db_backup',
+  tmphq_backup: 'T3-archives/tmphq_backup',
+  'tui-nightlog': 'T3-archives/tui-nightlog',
+  trajectory_replay: 'T3-archives/trajectory_replay',
+  tmp: 'T4-transient/tmp',
+  diag: 'T4-transient/diag',
+  'r231-sb': 'T4-transient/r231-sb',
+  file_history: 'T1-domains/_unsorted/file_history',
+  toolLoop: 'T1-domains/_unsorted/toolLoop',
+  tool_results: 'T1-domains/_unsorted/tool_results',
+  bridge: 'T1-domains/_unsorted/bridge',
+  sync: 'T1-domains/_unsorted/sync',
+  updates: 'T1-domains/_unsorted/updates',
+  'pr-subscriptions': 'T1-domains/_unsorted/pr-subscriptions',
+  growth: 'T1-domains/_unsorted/growth',
+  apps: 'T1-domains/_unsorted/apps',
+  boulder: 'T1-domains/_unsorted/boulder',
+  'change-watch': 'T1-domains/_unsorted/change-watch',
+  'file-sync': 'T1-domains/_unsorted/file-sync',
+  im: 'T1-domains/_unsorted/im',
+  node: 'T1-domains/_unsorted/node',
+  resources: 'T1-domains/_unsorted/resources',
+  trajectoryGuide: 'T1-domains/_unsorted/trajectoryGuide',
+  'cli-anything': 'T1-domains/_unsorted/cli-anything',
+  khyanything: 'T1-domains/_unsorted/khyanything',
+  deployments: 'T1-domains/_unsorted/deployments',
+  extensions: 'T1-domains/_unsorted/extensions',
+  monitor: 'T1-domains/_unsorted/monitor',
+  remotedev: 'T1-domains/_unsorted/remotedev',
+  templates: 'T1-domains/_unsorted/templates',
+  workflows: 'T1-domains/_unsorted/workflows',
+};
+
+// Only the first segment participates in the lookup; a rehomed root dir keeps
+// its inner shape. Unmapped names resolve exactly as before.
+function _applyDataPaths(segments) {
+  if (segments.length > 0) {
+    const mapped = DATA_PATHS[segments[0]];
+    if (mapped) {
+      return [mapped, ...segments.slice(1)];
+    }
+  }
+  return segments;
+}
+
 let _cached = null;
 let _cachedBaseHome = null;
 let _cachedAppHome = null;
@@ -51,7 +155,14 @@ function getLegacyDataHome() {
 // steer getBaseHome() (KHYOS_HOME / jest temp data home) apply uniformly and an
 // isolated run never reads the real user's live ~/.khyquant files.
 function getLegacyBaseHome() {
-  // getBaseHome() already ends in `.khyos`; take its parent and swap the tail.
+  // Legacy base-home territory sat beside the base home's parent. Since the
+  // 2026-10-08 base-home merge the portable base home lives INSIDE the project
+  // data home (works/data/khy/T1-domains/base), so anchor on works/data/
+  // instead of the base home's parent there; non-portable keeps the ~/.khyos
+  // sibling resolution.
+  if (isPortableDeployment()) {
+    return path.join(getAppRoot(), 'works', 'data', '.khyquant');
+  }
   return path.join(path.dirname(getBaseHome()), '.khyquant');
 }
 
@@ -344,7 +455,7 @@ function _pinDataHome(dir, reason, source) {
  * @returns {string} Absolute path (directory created)
  */
 function getDataDir(...segments) {
-  const dir = path.join(getDataHome(), ...segments);
+  const dir = path.join(getDataHome(), ..._applyDataPaths(segments));
   _ensureDir(dir);
   return dir;
 }
@@ -494,7 +605,7 @@ function _ensureVisibleAlias(targetDir, aliasDir) {
  * @returns {string} Absolute path (directory created)
  */
 function getProjectDataDir(...segments) {
-  const dir = path.join(getProjectDataHome(), ...segments);
+  const dir = path.join(getProjectDataHome(), ..._applyDataPaths(segments));
   _ensureDir(dir);
   return dir;
 }
@@ -627,11 +738,14 @@ function getBaseHome() {
   if (process.env.KHYOS_HOME) {
     _cachedBaseHome = path.resolve(process.env.KHYOS_HOME);
   } else if (isPortableDeployment()) {
-    // Portable: keep base data inside the install tree so the whole directory
-    // can be moved across machines/drives without leaving data on the system
-    // drive. Resolved lazily (never at require time) so the portable decision
-    // is always final by the time any base store reads it.
-    _cachedBaseHome = path.join(getAppRoot(), 'works', 'data', 'khyos');
+    // Portable: keep base data inside the install tree. 2026-10-08 (user
+    // adjudication): the base home merged INTO the project data home at
+    // works/data/khy/T1-domains/base — works/data/khyos remains only as a
+    // compatibility junction so stale literal writers land in the new home
+    // (DESIGN-LAY-007 §5 "移动即建链接"). Resolved lazily (never at require
+    // time) so the portable decision is always final by the time any base
+    // store reads it.
+    _cachedBaseHome = path.join(getAppRoot(), 'works', 'data', 'khy', 'T1-domains', 'base');
   } else {
     _cachedBaseHome = path.join(os.homedir(), '.khyos');
   }

@@ -1,7 +1,10 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const test = require('node:test');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { test, beforeEach, afterEach } = require('node:test');
 
 const {
   extractFreeModelsFromZen,
@@ -10,28 +13,70 @@ const {
   buildCatalog,
 } = require('../../src/services/dynamicFreeModelService');
 
+const retired = require('../../src/services/zenRetiredModels');
+
+let _sandbox;
+
+beforeEach(() => {
+  // 隔离废弃账本：extractFreeModelsFromZen 会经 filterFreeZenModels 读它。
+  _sandbox = fs.mkdtempSync(path.join(os.tmpdir(), 'dyn-free-'));
+  process.env.KHY_ZEN_RETIRED_FILE = path.join(_sandbox, 'zen_retired_models.json');
+  retired._reset();
+});
+
+afterEach(() => {
+  delete process.env.KHY_ZEN_RETIRED_FILE;
+  retired._reset();
+  try {
+    fs.rmSync(_sandbox, { recursive: true, force: true });
+  } catch {
+    /* ignore */
+  }
+});
+
 test('extractFreeModelsFromZen: OpenAI list envelope {object,data}', () => {
   const kept = extractFreeModelsFromZen({
     object: 'list',
     data: [
       { id: 'claude-fable-5', owned_by: 'opencode' },
       { id: 'mimo-v2.6-flash-free', owned_by: 'opencode' },
-      { id: 'deepseek-v4-flash-free', owned_by: 'opencode' },
+      { id: 'jev-1.13-free', owned_by: 'opencode' },
     ],
   });
+  // deepseek-v4-flash-free 曾在此处作样本，但它实测返回 401 not supported
+  // （2026-10-09），已进 zenRetiredModels 静态废弃名单，故不再期望出现在结果里。
   assert.deepEqual(
     kept.map((m) => m.id),
-    ['mimo-v2.6-flash-free', 'deepseek-v4-flash-free']
+    ['mimo-v2.6-flash-free', 'jev-1.13-free']
   );
   assert.equal(kept[0].source, 'zen');
   assert.equal(kept[0].provider, 'zen');
 });
 
+test('extractFreeModelsFromZen: retired ids never reach the free list', () => {
+  // 上游目录会继续挂着已废弃的 id（exo-free 至今仍在 /v1/models，调用返回 410）。
+  const kept = extractFreeModelsFromZen({
+    object: 'list',
+    data: [
+      { id: 'exo-free', owned_by: 'opencode' },
+      { id: 'mimo-v2.5-free', owned_by: 'opencode' },
+      { id: 'space-bunny-free', owned_by: 'opencode' },
+    ],
+  });
+  assert.deepEqual(
+    kept.map((m) => m.id),
+    ['space-bunny-free']
+  );
+});
+
 test('extractFreeModelsFromZen: bare array still works; junk returns []', () => {
-  const bare = extractFreeModelsFromZen([{ id: 'mimo-v2.5-free' }, { id: 'gpt-6-astra' }]);
+  const bare = extractFreeModelsFromZen([
+    { id: 'mimo-v2.6-flash-free' },
+    { id: 'gpt-6-astra' },
+  ]);
   assert.deepEqual(
     bare.map((m) => m.id),
-    ['mimo-v2.5-free']
+    ['mimo-v2.6-flash-free']
   );
   assert.deepEqual(extractFreeModelsFromZen(null), []);
   assert.deepEqual(extractFreeModelsFromZen({ object: 'list' }), []);
