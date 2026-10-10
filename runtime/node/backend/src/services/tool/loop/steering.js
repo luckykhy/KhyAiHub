@@ -204,20 +204,49 @@ function crossTurnRepeatDecision(call, recentSigs, state, env) {
     counts.set(key, prev + 1);
   }
 
-  const label = intentKey
-    ? intentKey.replace(/^(shell|path):/, '')
-    : String(params.command || params.cmd || params.path || params.file_path || name);
+  // Label must name the ACTUAL call. Falling back to the bare tool name produced
+  // "已经成功运行过这条命令（web_search: web_search）" for every non-shell/fs tool —
+  // an instruction the model cannot act on (it cannot tell which query was the
+  // duplicate), so it re-issues a different one and burns the iteration.
+  const _labelFromParams =
+    params.command
+    || params.cmd
+    || params.path
+    || params.file_path
+    || params.query
+    || params.q
+    || params.pattern
+    || params.url
+    || params.name
+    || '';
+  const label = intentKey ? intentKey.replace(/^(shell|path):/, '') : String(_labelFromParams || name);
+  const isShellCall = !!intentKey || !!(params.command || params.cmd);
+  const noun = isShellCall ? '这条命令' : '这个调用';
   const message =
-    `[SYSTEM: 你在本次对话中已经成功运行过这条命令（${name}: ${String(label).slice(0, 120)}），` +
-    '完整结果就在上方的工具结果里，不需要也不要再次运行同一条命令。请二选一：' +
+    `[SYSTEM: 你在本次对话中已经成功运行过${noun}（${name}: ${String(label).slice(0, 120)}），` +
+    '完整结果就在上方的工具结果里，不需要也不要再次运行同一' + (isShellCall ? '条命令' : '个调用') + '。请二选一：' +
     '① 直接基于上方已获取的结果，用中文写出用户要的最终回答（例如「可删除文件」表格），不要返回空白；' +
-    '② 如果这条路拿不到所需信息（此路不通），换一个明显不同的方法或路径，而不是把同一条命令原样重试。]';
+    '② 如果这条路拿不到所需信息（此路不通），换一个明显不同的方法或路径，而不是把同一条' + (isShellCall ? '命令' : '调用') + '原样重试。]';
   // displayHint 是给用户看的「干净」一句话(绝不含 [SYSTEM:…] 内部控制串);message 仅喂模型。
   // 二者分离,避免内部转向指令泄漏到可见的工具结果行(见 ToolLines.errorText 优先用它)。
   const displayHint = `本轮已成功运行过这条命令，已跳过（结果在上方）。`;
   return { steer: true, message, displayHint, signature: sig, intentKey };
 }
 
+// 跨轮转向是「换个方法继续」的指令，不是工具失败；它借 success:false 通道下发。
+// 失败计数处必须能把它与真失败分开——否则护栏会把「继续探索」掐成「停机」。
+// 护栏拦停的识别（度量面用）。两条护栏的文案各自的生产者：
+//   跨轮去重闸门 → 本文件 crossTurnRepeatDecision 的 message
+//   循环检测器   → toolLoopDetector 的 [LoopDetector:<detector>] 前缀
+// 判据只认这两个显式标记，绝不做模糊匹配，避免把真实工具错误算成护栏拦停。
+function isGuardInterventionText(text) {
+  const t = String(text || '');
+  return t.includes('你在本次对话中已经成功运行过') || t.includes('[LoopDetector:');
+}
+
+function isSteerResult(result) {
+  return !!(result && result._crossTurnSteer === true);
+}
 module.exports = {
   setSteeringDeps,
   _normalizeRecentSignatures,
@@ -226,4 +255,6 @@ module.exports = {
   _isReobserveRequested,
   _isObservationCall,
   crossTurnRepeatDecision,
+  isSteerResult,
+  isGuardInterventionText,
 };

@@ -714,15 +714,61 @@ function _looksLikeDeliveryConclusion(text = '') {
   }
 }
 
+// 「宣告即停机」负信号：模型只说了要做什么、这一轮一次工具都没调，却按完成收口。
+// 语料里这类有 90 条（>25 字的长请求，零工具，status=completed），样本原文：
+// 「我用 Read 工具读取该文件。」——version 从未被读出。纯叶子，可单测。
+function _looksLikeUnfulfilledIntent(text = '') {
+  const normalized = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!normalized) {
+    return false;
+  }
+  // 长答案里顺带提「我用了 X」不是宣告；意图句的特征是整句就是一句打算。
+  if (normalized.length > 120) {
+    return false;
+  }
+  return /(我|让我|接下来|下面|现在|我将|我要)[^。！？!?]{0,12}(用|调用|执行|运行|读取|打开|查看|看看|搜索|检索|查询|修改|编辑|写入|创建|删除|生成|跑一下|试一下)[^。！？!?]{0,30}[。！!]?$/
+    .test(normalized);
+}
+
 function _emitDeliveryFinalEvent(traceAudit, traceSessionId, diagTraceId, requestId, payload = {}) {
   // Finalize the turn receipt (A3). This is the single completion funnel for
   // all three loop exits (hook-stop / normal / max-iter), so the receipt is
   // written exactly once per turn regardless of which path concluded it.
+  const _replyLen = Number(payload.finalReplyLength) || 0;
+  // status 表达的是「这次收尾可不可信」，不是「有没有工具报错」——达成率的分子用它。
+  // hasConclusion 是启发式（_looksLikeDeliveryConclusion），聚合面必须把它当启发式报出。
+  const _achieved = payload.success === true
+    && payload.stoppedByLimit !== true
+    && payload.placeholderOnly !== true
+    && _replyLen > 0
+    && payload.hasConclusion === true;
+  // 轻档：命中「宣告未兑现」只改判定与记账，不改控制流。
+  const _intentUnfulfilled = Number(payload.totalToolCalls) === 0
+    && payload.success === true
+    && payload.stoppedByLimit !== true
+    && payload.hasConclusion !== true
+    && _looksLikeUnfulfilledIntent(payload.finalText);
   try {
     require('../receiptService').finalizeReceipt({
       sessionId: traceSessionId,
+      requestId,
       status: payload.success ? (payload.hookStopped ? 'partial' : 'completed') : 'failed',
       error: payload.success ? null : payload.error || null,
+      finalizeReason: 'delivery',
+      outcome: {
+        verdict: payload.success
+          ? (_intentUnfulfilled
+            ? 'intent-unfulfilled'
+            : (payload.stoppedByLimit ? 'max-iterations' : (payload.hasConclusion ? 'concluded' : 'no-conclusion')))
+          : 'failed',
+        achieved: _achieved,
+        intentUnfulfilled: _intentUnfulfilled,
+        hasConclusion: payload.hasConclusion,
+        stoppedByLimit: payload.stoppedByLimit,
+        placeholderOnly: payload.placeholderOnly,
+        finalReplyLength: _replyLen,
+        success: payload.success,
+      },
     });
   } catch {
     /* receipt optional */
@@ -2999,6 +3045,7 @@ module.exports = {
   _looksLikeCannedRefusal,
   _looksLikeChoiceResponse,
   _looksLikeDeliveryConclusion,
+  _looksLikeUnfulfilledIntent,
   _looksLikeDirectoryToken,
   _looksLikeFilePathToken,
   _looksLikeInfoSearchRequest,

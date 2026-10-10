@@ -44,6 +44,8 @@ const {
   _executionParams,
   _isObservationCall,
   crossTurnRepeatDecision,
+  isSteerResult,
+  isGuardInterventionText,
 } = steering;
 const toolNames = require('./loop/toolNames');
 const { _salvageToolResults, _buildLoopEndFallbackReply } = require('./loop/salvage');
@@ -970,16 +972,23 @@ async function runToolUseLoop(userMessage, options = {}) {
   // 的精确记录，供 findIncompleteRuns / summarizeForResume 回答"死在哪"。
   // 全链路 fail-soft：journal 不可用一律降级为 null，绝不阻断主循环。
   let _loopRunId = null;
+  let _loopMaxIter = null;
+  let _journalEnded = false;
   try {
     const _j = require('./toolLoopJournal');
     _loopRunId = _j.generateRunId();
+    _loopMaxIter = _resolveMaxIterations(requestedMaxIterations);
     _j.appendJournal(
       _loopRunId,
       _j.buildStartRecord({
         runId: _loopRunId,
         sessionId: traceSessionId,
         turnId: _turnId,
-        maxIterations: requestedMaxIterations,
+        requestId,
+        traceId: diagTraceId,
+        // 记生效上限而非请求值：请求值在未显式传入时是 null，事后无从判断是否被截断。
+        maxIterations: _loopMaxIter,
+        source: require("../../services/turnProvenance").resolveTurnSource(options?.turnSource),
         userMessage: String(userMessage == null ? '' : userMessage),
       })
     );
@@ -995,19 +1004,38 @@ async function runToolUseLoop(userMessage, options = {}) {
   const _iterationJournal = _createIterationJournal();
   /**
    * 写 end 记录。所有出口共用，fail-soft。
+   * 幂等：首个终点即定案，finally 的兜底只在一条终点都没写过时才补，
+   * 绝不覆盖真实原因——没有终点的 run 让达成率的分母无从谈起。
    * @param {string} reason
    * @param {boolean} [ok]
    * @param {number} [iterations]
    */
   const _jEnd = (reason, ok = true, iterations = null) => {
-    if (!_loopRunId) {
+    if (!_loopRunId || _journalEnded) {
       return;
     }
+    _journalEnded = true;
     try {
       const _j3 = require('./toolLoopJournal');
+      // 护栏拦停读数：只从 toolCallLog 的失败文案里数，不改任何控制流。
+      let _guardN = 0;
+      let _endedOnGuard = false;
+      for (const _e of toolCallLog) {
+        const _hit = isGuardInterventionText(_e && _e.result && _e.result.error);
+        if (_hit) _guardN += 1;
+        _endedOnGuard = _hit;
+      }
       _j3.appendJournal(
         _loopRunId,
-        _j3.buildEndRecord({ reason, ok, iterations, totalToolCalls })
+        _j3.buildEndRecord({
+          reason,
+          ok,
+          iterations,
+          maxIterations: _loopMaxIter,
+          totalToolCalls,
+          guardInterventions: _guardN,
+          endedOnGuard: _endedOnGuard,
+        })
       );
     } catch {
       /* journal 绝不阻断主循环 */
@@ -1054,6 +1082,7 @@ async function runToolUseLoop(userMessage, options = {}) {
       traceId: diagTraceId,
       requestId,
       goal: originalUserMessage,
+      source: require("../../services/turnProvenance").resolveTurnSource(options?.turnSource),
     });
   } catch {
     /* receipt optional */
@@ -6516,6 +6545,7 @@ async function runToolUseLoop(userMessage, options = {}) {
           requestId,
           success: true,
           totalToolCalls,
+          finalText,
           finalReplyLength: String(finalText || '').trim().length,
           hasConclusion: _looksLikeDeliveryConclusion(finalText),
           placeholderOnly: placeholder,
@@ -6595,6 +6625,8 @@ async function runToolUseLoop(userMessage, options = {}) {
         if (_loopFsm) {
           _loopFsm.fire('finish', { iteration, finalLength: String(finalText || '').length });
         }
+        // 自然收尾是最高频出口，过去从不写终点 → 964 个 run 只有 8 个有 end。
+        _jEnd('conclude', true, iteration);
         return {
           finalResponse: finalText,
           terminalNotice: _terminalNotice,
@@ -7398,7 +7430,9 @@ async function runToolUseLoop(userMessage, options = {}) {
                     call,
                     approval,
                     onControlRequest,
-                    parentAbort.signal
+                    parentAbort.signal,
+                    // Human-time: the approval wait is not loop idle (105 P-04).
+                    () => { lastActivityTime = Date.now(); }
                   );
                   if (verdict === 'deny') {
                     const result = {
@@ -8313,7 +8347,9 @@ async function runToolUseLoop(userMessage, options = {}) {
                   call,
                   approval,
                   onControlRequest,
-                  parentAbort.signal
+                  parentAbort.signal,
+                  // Human-time: the approval wait is not loop idle (105 P-04).
+                    () => { lastActivityTime = Date.now(); }
                 );
                 if (verdict === 'deny') {
                   const result = {
@@ -8952,7 +8988,9 @@ async function runToolUseLoop(userMessage, options = {}) {
                   },
                 },
               }),
-              { signal: parentAbort.signal, env: process.env }
+              { signal: parentAbort.signal, env: process.env,
+                // Human-time: the question wait is not loop idle (105 P-04).
+                onSettled: () => { lastActivityTime = Date.now(); } }
             );
           } catch {
             ctrlResp = null;
@@ -9858,7 +9896,11 @@ async function runToolUseLoop(userMessage, options = {}) {
       //   - Network error → tell AI the network may be restricted
       //   - Other → only bail out after threshold
       const allFailed =
-        toolResults.length > 0 && toolResults.every((tr) => tr.result && !tr.result.success);
+        toolResults.length > 0
+        && toolResults.every((tr) => tr.result && !tr.result.success)
+        // 纯跨轮转向轮不记失败：护栏说的是「换个方法」，若记失败则简单任务满 3 次即硬停机
+        // ——实测 42 次真实护栏拦停里 42.5% 恰好落在该 run 的最后一轮。
+        && toolResults.some((tr) => !isSteerResult(tr && tr.result));
       // ── 网络检索无可用数据 → 强制兜底决策 ────────────────────────────────
       // allFailed 只覆盖「本轮每个工具都失败」,漏掉三种最常见的空手而归:
       //   (a) 200 OK 但零条结果   (b) 抓到了页面但正文提取为空(JS 渲染页/空壳页)
@@ -10195,10 +10237,13 @@ async function runToolUseLoop(userMessage, options = {}) {
       requestId,
       success: false,
       totalToolCalls,
+      finalText: finalWarningText,
       finalReplyLength: String(finalWarningText || '').trim().length,
       hasConclusion: _looksLikeDeliveryConclusion(finalWarningText),
       stoppedByLimit: true,
     });
+    // 撞上限=任务未完成，这条过去同样没有终点记录。
+    _jEnd('max-iterations', false, effectiveMaxIterations);
     return {
       finalResponse: finalWarningText,
       toolCallLog,
@@ -10214,6 +10259,11 @@ async function runToolUseLoop(userMessage, options = {}) {
       executedCallKeys, // cross-turn dedup: let the next continuation round inherit executed keys
     };
   } finally {
+    // 终点兜底：其余哑出口（空闲超时 / AI 出错 / 权限早退 / 抛错）过去一律不写 end，
+    // 现在统一收成 exit-unrecorded，让分母至少等于分母，达成率才有可对账的可能。
+    if (!_journalEnded) {
+      _jEnd('exit-unrecorded', false, null);
+    }
     // 自主执行模式: always restore permissions
     if (_goalModeSavedState) {
       try {

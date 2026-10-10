@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "target": {
-    "skillsDir": "backend/src/skills/built-in",
+    "skillsDir": "runtime/node/backend/src/skills/built-in",
     "promptFilename": "prompt.md"
   },
   "checks": [

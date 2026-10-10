@@ -4,7 +4,7 @@
 
 ## 共享设计 token（ai-frontend 为准）
 
-`apps/ai-frontend/src/styles/newapi-theme.css` 定义了完整的 `--khy-*` token 体系（新 API 风格、oklch 派生、亮暗双主题）。这是 khyos 主前端的**设计语言真源**，所有视觉改动必须复用它。
+`delivery/web/ai-frontend/src/styles/newapi-theme.css` 定义了完整的 `--khy-*` token 体系（新 API 风格、oklch 派生、亮暗双主题）。这是 khyos 主前端的**设计语言真源**，所有视觉改动必须复用它。
 
 ### 核心 token（亮色）
 
@@ -65,7 +65,7 @@
 - 关键数值用语义色：上涨 `--khy-success`、下跌 `--khy-danger`。
 - 次要信息用 `--khy-text-secondary` / `--khy-text-muted` 降级，不要全部一样黑。
 
-### 移动端（khy-mobile）
+### 移动端（khyquant 移动布局）
 - 触控目标 ≥ 44px。
 - 慎用 hover；交互依赖 tap 状态。
 - 实时数据（SSE）用卡片层级组织，连接状态统一走 `ConnectionStatus.vue`。
@@ -74,8 +74,8 @@
 
 | 项目 | dev | build 检查 |
 |---|---|---|
-| ai-frontend | `cd apps/ai-frontend && npm run dev` | `cd apps/ai-frontend && npx vite build` |
+| ai-frontend | `cd delivery/web/ai-frontend && npm run dev` | `cd delivery/web/ai-frontend && npx vite build` |
 | khyquant | `cd delivery/channel/khyquant/frontend && npm run dev` | `cd delivery/channel/khyquant/frontend && npx vite build` |
-| khy-mobile | `cd apps/khy-mobile && npm run dev` | `cd apps/khy-mobile && npx vite build` |
+| 移动端 | `delivery/mobile/khy-os-client-app`（Flutter，`flutter run`） | `flutter build apk` |
 
 每次改动后至少跑一次 build 检查确认无编译错误。

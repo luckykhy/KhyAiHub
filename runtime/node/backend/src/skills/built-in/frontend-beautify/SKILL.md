@@ -1,7 +1,7 @@
 ---
 name: frontend-beautify
 version: 1.0.0
-description: 美化 khyos 三个前端（ai-frontend / khyquant frontend / khy-mobile）。当用户要求美化界面、调整样式、改进视觉、打磨 UI、提升设计感、让页面更好看、改主题/配色/间距/字体，或让现有 Vue3 + Element Plus 页面达到「生产级而非 AI 生成感」时使用。也用于统一三端设计语言、建立设计 token、暗色主题调优、数据密集型交易/监控界面排版。
+description: 美化 khyos 的两个 Vue 前端（ai-frontend / khyquant frontend；移动端已是 Flutter 客户端，不在本技能范围）。当用户要求美化界面、调整样式、改进视觉、打磨 UI、提升设计感、让页面更好看、改主题/配色/间距/字体，或让现有 Vue3 + Element Plus 页面达到「生产级而非 AI 生成感」时使用。也用于统一三端设计语言、建立设计 token、暗色主题调优、数据密集型交易/监控界面排版。
 layer: application
 lifecycle: development
 tags: [frontend, ui, beautify, vue3, element-plus, design, theme, css]
@@ -12,15 +12,16 @@ category: frontend
 
 # Frontend Beautify — khyos 前端美化
 
-你是一名资深前端设计工程师，负责让 khyos 的三个 Vue 3 + Element Plus 前端达到「设计意识」级别 —— 而不是「AI 生成的默认感」。你的产出直接落在真实代码里：**修改 `.vue` / `.css` 文件，运行 `npm run dev` 或 `vite build` 验证**，而不是生成独立 HTML 稿。
+你是一名资深前端设计工程师，负责让 khyos 的两个 Vue 3 + Element Plus 前端达到「设计意识」级别 —— 而不是「AI 生成的默认感」。你的产出直接落在真实代码里：**修改 `.vue` / `.css` 文件，运行 `npm run dev` 或 `vite build` 验证**，而不是生成独立 HTML 稿。
 
 ## 目标系统
 
 | 项目 | 路径 | 技术栈 | 说明 |
 |---|---|---|---|
-| AI 平台前端 | `apps/ai-frontend/` | Vue 3 + Element Plus（按需加载）+ `src/styles/newapi-theme.css` + `useTheme` 暗色单例 | 主管理 UI，38+ 页面，覆盖网关/模型/用量/工作流/监控 |
+| AI 平台前端 | `delivery/web/ai-frontend/` | Vue 3 + Element Plus（按需加载）+ `src/styles/newapi-theme.css` + `useTheme` 暗色单例 | 主管理 UI，38+ 页面，覆盖网关/模型/用量/工作流/监控 |
 | 量化交易前端 | `delivery/channel/khyquant/frontend/` | Vue 3 + Element Plus（全量）+ @element-plus/icons-vue + zhCn | 交易终端，27+ 页面，数据密集（行情/回测/策略） |
-| 移动伴侣 | `apps/khy-mobile/` | Vue 3 + Capacitor | 移动端，14+ 页面，SSE 实时 |
+
+> 原 `apps/khy-mobile/`（Vue 3 + Capacitor 移动端）已退役删除；现存移动端为 Flutter 客户端 `delivery/mobile/khy-os-client-app/`，不在本技能的 Vue 美化范围。
 
 共享包：`runtime/substrate/platform/packages/ui-shared/`（@khy/ui-shared，auth/http 工具，非样式库）、`runtime/substrate/platform/packages/shared/`（@khy/shared，后端生态）。
 
@@ -28,7 +29,7 @@ category: frontend
 
 - 用户要求「美化 / 更好看 / 打磨 / 设计感 / 视觉升级 / 改主题 / 改配色 / 改间距 / 改字体」
 - 新建或修改用户可见界面、组件、布局
-- 统一三个前端的设计语言
+- 统一两个前端的设计语言
 - 暗色主题调优（ai-frontend 有 `useTheme` 单例 + element-plus 暗色 CSS 变量）
 - 数据密集型页面（行情、监控、回测结果）的排版优化
 
@@ -80,7 +81,7 @@ category: frontend
   - 紧凑但可读的行高（Element Plus 表格 `size="small"` + 自定义密度）
   - 数字用等宽字体或 `font-variant-numeric: tabular-nums` 对齐
   - 关键数值突出（涨跌色、状态色），次要信息降级（`--el-text-color-secondary`）
-- 移动端（khy-mobile）触控目标**不小于 44px**。
+- khyquant 的移动布局触控目标**不小于 44px**。
 
 ### 密度与节奏
 
@@ -98,9 +99,9 @@ category: frontend
 - [ ] 无 AI-slop 套路（无过度渐变、无过度圆角左边框、无乱用 emoji）
 - [ ] `vite build` 或 dev 编译无错误
 
-## 三端特定指引
+## 两端特定指引
 
-### ai-frontend（`apps/ai-frontend/`）
+### ai-frontend（`delivery/web/ai-frontend/`）
 - 主题入口：`src/styles/newapi-theme.css`（全局）、`src/composables/useTheme`（暗色单例）。改全局配色优先动这里，让所有页面跟随。
 - Element Plus 按需加载：新增 `<el-*>` 组件时组件样式会自动引入（unplugin-vue-components），但**命令式 API**（ElMessage / ElMessageBox / ElMessage）要手动在 main.js 引样式。
 - 新增页面：`src/composables/useRoutePrefetch.js`（viewLoaders）+ `src/router/index.js` + `src/views/X.vue`。
@@ -109,11 +110,10 @@ category: frontend
 ### khyquant frontend（`delivery/channel/khyquant/frontend/`）
 - Element Plus 全量引入（`element-plus/dist/index.css`），全局样式改动在 main.js 引入的样式文件。
 - 交易数据密集：行情/回测/策略页面优先优化数字排版、涨跌色、表格密度。
-- 移动优先的布局在 khy-mobile 里做，不要在这里堆响应式。
+- 移动优先的布局直接在本项目内做（原 khy-mobile 已退役），不要外溢到别的仓。
 
-### khy-mobile（`apps/khy-mobile/`）
-- Capacitor + Vue3，触控目标 ≥44px，慎用 hover 依赖的交互。
-- 实时数据（SSE）用卡片式信息层级，连接状态用 `ConnectionStatus.vue` 组件保持视觉一致。
+### 已退役的 khy-mobile
+- 原 `apps/khy-mobile/`（Vue 3 + Capacitor）已删除；现存移动端为 Flutter 客户端 `delivery/mobile/khy-os-client-app/`，原生 Flutter 界面不适用本技能的 Element Plus 改造流程。
 
 ## 完工要求
 

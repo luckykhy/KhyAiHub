@@ -172,7 +172,7 @@ function findSourceRoot(start, opts = {}) {
     const root = runGit(['rev-parse', '--show-toplevel'], start || process.cwd(), opts);
     if (!root) return null;
     const fsImpl = opts.fs || fs;
-    return fsImpl.existsSync(path.join(root, 'services', 'backend', 'package.json')) ? root : null;
+    return fsImpl.existsSync(path.join(root, 'runtime', 'node', 'backend', 'package.json')) ? root : null;
   } catch {
     return null;
   }
@@ -187,7 +187,7 @@ async function findSourceRootAsync(start, opts = {}) {
     const root = await runGitAsync(['rev-parse', '--show-toplevel'], start || process.cwd(), opts);
     if (!root) return null;
     const fsImpl = opts.fs || fs;
-    return fsImpl.existsSync(path.join(root, 'services', 'backend', 'package.json')) ? root : null;
+    return fsImpl.existsSync(path.join(root, 'runtime', 'node', 'backend', 'package.json')) ? root : null;
   } catch {
     return null;
   }
@@ -196,7 +196,7 @@ async function findSourceRootAsync(start, opts = {}) {
 function readSourceVersion(root, fsImpl = fs) {
   try {
     const packageJson = JSON.parse(
-      fsImpl.readFileSync(path.join(root, 'services', 'backend', 'package.json'), 'utf8')
+      fsImpl.readFileSync(path.join(root, 'runtime', 'node', 'backend', 'package.json'), 'utf8')
     );
     return String(packageJson.version || '0.0.0');
   } catch {
@@ -209,7 +209,7 @@ function readSourceVersion(root, fsImpl = fs) {
  *
  * CLI 的 provenance 描述的是「正在运行这份代码」的来源，而非用户敲 `khy` 时所在的
  * cwd（例如从 D:\ 或 ~ 启动时，git rev-parse 在 cwd 上找不到仓库 → 更新行为空）。
- * 本函数沿 __filename 向上找「含 services/backend/package.json 且含 .git」的目录，
+ * 本函数沿 __filename 向上找「含 runtime/node/backend/package.json 且含 .git」的目录，
  * 只在确实是一个源码仓安装（dev/git-clone）时返回它；安装在 node_modules / wheel
  * （无 .git）时返回 null，交由 cwd 路径兜底，行为逐字节回退旧逻辑。
  */
@@ -218,7 +218,7 @@ function moduleSourceRoot(fsImpl = fs) {
   for (let i = 0; i < 8; i += 1) {
     try {
       if (
-        fsImpl.existsSync(path.join(candidate, 'services', 'backend', 'package.json')) &&
+        fsImpl.existsSync(path.join(candidate, 'runtime', 'node', 'backend', 'package.json')) &&
         fsImpl.existsSync(path.join(candidate, '.git'))
       ) {
         return candidate;

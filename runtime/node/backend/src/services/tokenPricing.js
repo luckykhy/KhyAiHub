@@ -95,9 +95,14 @@ function calculateCost(
 }
 
 /**
- * Convenience: estimate cost from model/provider name + token counts.
- * Tries a case-insensitive substring match against table keys (insertion
- * order, first hit wins — identical to the pre-extraction loop), then default.
+ * Convenience: estimate cost from a model id (or a provider key) + token counts.
+ *
+ * 行为变更([DESIGN-ARCH-185] §3.4 / 判据 A8):过去这里对**模型名**做 provider 关键字的
+ * 子串匹配、未命中即静默落 `default` 兜底,导致 claude-opus 与 gpt-4o-mini 报同一个价。
+ * 现委托 modelPricing 的显式表(精确模型 > 家族正则 > provider 精确键),
+ * 价格不可知时返回 0 而**不是**编造的 default —— 调用方(hudRenderer.updateModelInfo)
+ * 本就以 `> 0` 为累加前提,0 的语义是「不计入」,与「免费」在展示上不可区分是已知限制;
+ * 需要区分状态的消费者(路由器成本项)一律改用 estimateCostDetailed 的 priceState。
  * @param {number} inputTokens
  * @param {number} outputTokens
  * @param {string} modelOrProvider - model name or provider key
@@ -105,9 +110,22 @@ function calculateCost(
  * @returns {number} costUSD
  */
 function estimateCost(inputTokens, outputTokens, modelOrProvider, pricingTable = TOKEN_PRICING) {
+  let delegated = false;
+  try {
+    const mp = require('./modelPricing');
+    delegated = true;
+    const r = mp.estimateCostDetailed(inputTokens, outputTokens, modelOrProvider, {
+      providerTable: pricingTable,
+    });
+    // 关键区分:costUSD 为 null 是「价格不可知」这个**结论**,不是委托失败。
+    // 把它当失败继续往下走,就会落回下面那段编造 default 的旧逻辑 —— 那正是本函数要修的缺陷。
+    return typeof r.costUSD === 'number' ? r.costUSD : 0;
+  } catch {
+    /* 仅 require 不可用时到达回退 */
+  }
+  if (delegated) return 0;
   const table = pricingTable && typeof pricingTable === 'object' ? pricingTable : TOKEN_PRICING;
   const key = String(modelOrProvider || '').toLowerCase();
-  // Try to match a pricing key by substring
   let pricing = table['default'] || _ZERO_PRICING;
   for (const [name, p] of Object.entries(table)) {
     if (name !== 'default' && key.includes(name.toLowerCase())) {

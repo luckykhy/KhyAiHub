@@ -68,6 +68,20 @@
  * ({kind:'stall'}) and the running totals stay readable via `stats()`.
  * `=all` restores the old per-stall line byte for byte; `=off` never prints.
  *
+ * Stall ATTRIBUTION (2026-10-05, `[DESIGN-ARCH-182]`): the drift above only
+ * proves the sampler beat arrived late. It cannot tell a real sync block from a
+ * process that was not running at all — under memory pressure the whole process
+ * gets paged out, and a sleeping laptop or a CPU starved by other apps looks
+ * identical from inside. The old line asserted the worst reading (「同步长任务或
+ * 死循环嫌疑」) for all of them, so a session on a box with 10% free memory was
+ * told it had a dead loop while `runtimeResourceProbe` said, on the very same
+ * screen, 「非 khy 缺陷」. Attribution is sampled from `process.cpuUsage()`
+ * (zero spawn — see `stallAttribution.js`) and the line names the cause it
+ * found: a busy CPU keeps the sync wording and gains a profiling pointer; an
+ * idle CPU says the process was descheduled and points at memory pressure; a
+ * ratio in between says exactly that. The classification is an ADDITION — it
+ * never suppresses an observation, and `stats()`/`onHang` still see every stall.
+ *
  * Gates: KHY_SESSION_WATCHDOG (default on), idle window
  * KHY_SESSION_WATCHDOG_IDLE_MIN (default 15 minutes), stall threshold
  * KHY_SESSION_WATCHDOG_STALL_MS (default 5000), stall notice mode
@@ -296,8 +310,10 @@ function _idleLine({ silenceMs, work, handles, interruptHint }) {
  *   handles}` for an async-hang observation — `reason` is `'waiting-input'`
  *   (nothing pending: healthy, never narrated), `'work-pending'` (speaks) or
  *   `'same-episode'` (this work item already spoke) — and
- *   `{kind:'stall', stallSeconds, stallMs, reported, count}` for each sync
- *   stall — including the ones the quiet policy keeps off screen. This is the
+ *   `{kind:'stall', stallSeconds, stallMs, reported, count, attribution,
+ *   cpuRatio}` for each sync stall — `attribution` is `'sync'` / `'external'` /
+ *   `'unknown'` (`[DESIGN-ARCH-182]`) — including the ones the quiet policy
+ *   keeps off screen. This is the
  *   "observe without printing" channel: silence on the terminal is never
  *   silence for a host that subscribes.
  * @param {function} [opts.isBusy] - The host's own "a turn is in flight"
@@ -322,6 +338,13 @@ function _idleLine({ silenceMs, work, handles, interruptHint }) {
  *   immediately regardless of count (default 300 s).
  * @param {'quiet'|'all'|'off'} [opts.stallNotice] - Notice policy override
  *   (default from KHY_WATCHDOG_STALL_NOTICE, itself defaulting to 'quiet').
+ * @param {function} [opts.cpuUsage] - `() => {user,system}` microseconds.
+ *   Defaults to `process.cpuUsage`. Injected by tests to drive an attribution
+ *   verdict without blocking the loop for minutes.
+ * @param {function} [opts.freemem] - `() => bytes` free physical memory.
+ *   Defaults to `os.freemem`; only feeds the notice text.
+ * @param {function} [opts.totalmem] - `() => bytes` total physical memory.
+ *   Defaults to `os.totalmem`; only feeds the notice text.
  */
 function installSessionWatchdog(opts = {}) {
   if (globalThis[WATCHDOG_INSTALLED_KEY]) {
@@ -356,6 +379,42 @@ function installSessionWatchdog(opts = {}) {
   const stallAlertMs = opts.stallAlertMs || DEFAULT_STALL_ALERT_MS;
 
   const { startWatchdog } = require('./resourceGuard');
+  // Attribution (2026-10-05, [DESIGN-ARCH-182]). Deferred require for the same
+  // reason as the one above: nothing joins the startup graph that a session
+  // never triggers.
+  const os = require('os');
+  const { classifyStall, stallNoticeLine, KINDS: STALL_KINDS } = require('./stallAttribution');
+
+  // Attribution seams. The defaults are in-process reads (zero spawn — the
+  // whole point: a wmic/PowerShell probe would add to the stall it explains).
+  // Injectable so tests can drive a 383 s verdict in microseconds instead of
+  // actually blocking the event loop for minutes.
+  const readCpu = typeof opts.cpuUsage === 'function' ? opts.cpuUsage : () => process.cpuUsage();
+  const readFreeBytes = typeof opts.freemem === 'function' ? opts.freemem : () => os.freemem();
+  const readTotalBytes = typeof opts.totalmem === 'function' ? opts.totalmem : () => os.totalmem();
+
+  /** cpuUsage() → total µs burned, or null when the probe is unavailable. */
+  function cpuMicros() {
+    try {
+      const c = readCpu();
+      const v = c ? Number(c.user) + Number(c.system) : NaN;
+      return Number.isFinite(v) ? v : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Free-memory percent at recovery time — decoration for the notice only. */
+  function freePctNow() {
+    try {
+      const total = Number(readTotalBytes());
+      const free = Number(readFreeBytes());
+      if (!Number.isFinite(total) || total <= 0 || !Number.isFinite(free)) return null;
+      return Math.round((free / total) * 1000) / 10;
+    } catch {
+      return null;
+    }
+  }
 
   let guard = null;
   let guardFired = false;
@@ -414,6 +473,10 @@ function installSessionWatchdog(opts = {}) {
     stallTotalMs: 0,
     stallMaxMs: 0,
     stallReported: 0,
+    // Stall observations split by what the CPU probe found. A box that keeps
+    // reporting 'external' is telling the operator their memory headroom is the
+    // problem, no matter how many lines they suppress.
+    stallByKind: { sync: 0, external: 0, unknown: 0 },
     idleReports: 0,
     // Idle observations, split by what the judgment concluded. `idleReports` is
     // the honest total (every fire); the three below say where the lines went.
@@ -422,8 +485,9 @@ function installSessionWatchdog(opts = {}) {
     idleWaitingInput: 0,
   };
   // Current "burst" of stalls: reset when the window rolls over. `reported`
-  // makes the merged line fire at most once per burst.
-  let burst = { startAt: 0, count: 0, totalMs: 0, maxMs: 0, reported: false };
+  // makes the merged line fire at most once per burst. `byKind` rides along so a
+  // merged line can say what the whole burst was made of, not just how long.
+  let burst = { startAt: 0, count: 0, totalMs: 0, maxMs: 0, reported: false, byKind: {} };
 
   function arm() {
     if (stopped) {
@@ -498,25 +562,55 @@ function installSessionWatchdog(opts = {}) {
   const seconds = (ms) => (ms / 1000).toFixed(1);
 
   /**
+   * How to describe a whole burst in three words. One kind ⇒ say it plainly; a
+   * mixed burst ⇒ name both, because "3 次阻塞" without the cause is what made
+   * the original line useless.
+   */
+  function _burstAttribution(byKind) {
+    const sync = (byKind && byKind[STALL_KINDS.SYNC]) || 0;
+    const external = (byKind && byKind[STALL_KINDS.EXTERNAL]) || 0;
+    const unknown = (byKind && byKind[STALL_KINDS.UNKNOWN]) || 0;
+    const parts = [];
+    if (sync > 0) parts.push(`同步长任务嫌疑 ${sync} 次`);
+    if (external > 0) parts.push(`进程被停走 ${external} 次`);
+    if (unknown > 0) parts.push(`归因未明 ${unknown} 次`);
+    return parts.length > 0 ? parts.join('、') : '归因未明';
+  }
+
+  /**
    * A sync stall was observed. Decide whether it earns a line (see the header
    * policy): quiet by default, one merged line once a burst repeats, one
    * immediate line when a single stall is long enough to be felt.
    *
+   * Attribution ([DESIGN-ARCH-182]) rides along but never gates: every stall is
+   * still counted, still reaches `onHang`, and still earns a line on exactly
+   * the same terms as before. It only decides WHICH words the line spends — a
+   * box that was paging out is not told to go profile its startup.
+   *
    * @param {number} driftMs - How long the loop was actually blocked.
+   * @param {object} attribution - `classifyStall()` verdict for this window.
    */
-  function recordStall(driftMs) {
+  function recordStall(driftMs, attribution) {
     const now = Date.now();
     if (now - burst.startAt > stallWindowMs) {
-      burst = { startAt: now, count: 0, totalMs: 0, maxMs: 0, reported: false };
+      burst = { startAt: now, count: 0, totalMs: 0, maxMs: 0, reported: false, byKind: {} };
     }
+    const verdict =
+      attribution && STALL_KINDS && attribution.kind
+        ? attribution
+        : classifyStall({ driftMs });
     burst.count += 1;
     burst.totalMs += driftMs;
     burst.maxMs = Math.max(burst.maxMs, driftMs);
+    burst.byKind[verdict.kind] = (burst.byKind[verdict.kind] || 0) + 1;
     ledger.stallCount += 1;
     ledger.stallTotalMs += driftMs;
     ledger.stallMaxMs = Math.max(ledger.stallMaxMs, driftMs);
+    if (ledger.stallByKind && typeof ledger.stallByKind[verdict.kind] === 'number') {
+      ledger.stallByKind[verdict.kind] += 1;
+    }
 
-    const single = `[Watchdog] 事件循环曾阻塞 ${seconds(driftMs)}s（同步长任务或死循环嫌疑），现已恢复调度。`;
+    const single = stallNoticeLine({ driftMs, attribution: verdict });
     let reported = false;
     if (stallNoticeMode === 'all') {
       reported = true;
@@ -538,7 +632,7 @@ function installSessionWatchdog(opts = {}) {
             : `近 ${Math.round(stallWindowMs / 1000)} 秒`;
         report(
           `[Watchdog] 事件循环${windowLabel}内阻塞 ${burst.count} 次` +
-            `（最长 ${seconds(burst.maxMs)}s，累计 ${seconds(burst.totalMs)}s；同步长任务或死循环嫌疑），` +
+            `（最长 ${seconds(burst.maxMs)}s，累计 ${seconds(burst.totalMs)}s；${_burstAttribution(burst.byKind)}），` +
             `均已自动恢复调度（同窗口内后续同类阻塞不再逐条上屏；如需逐次可见设 KHY_WATCHDOG_STALL_NOTICE=all）。`
         );
       }
@@ -555,6 +649,9 @@ function installSessionWatchdog(opts = {}) {
           reported,
           count: burst.count,
           suppressed: !reported,
+          // The host may want to react to the CAUSE, not just the fact.
+          attribution: verdict.kind,
+          cpuRatio: verdict.cpuRatio,
         });
       } catch {
         /* host hook must never break the watchdog */
@@ -612,14 +709,27 @@ function installSessionWatchdog(opts = {}) {
   // Sync-stall detector: a blocked loop delays this beat; the drift IS the
   // stall duration. Observed AFTER the block ends (during it nothing runs).
   // Whether an observation becomes a line is recordStall()'s decision.
+  //
+  // The CPU baseline is what makes attribution possible: the window we care
+  // about is exactly the one between two beats, so the sample taken at the
+  // PREVIOUS beat is the "before" reading. Taken after the stall it would still
+  // work, but taking it per-beat costs nothing and keeps the delta honest even
+  // when several stalls land in a row.
   let lastBeatAt = Date.now();
+  let lastBeatCpuUs = cpuMicros();
   const stallTimer = setInterval(() => {
     try {
       const now = Date.now();
       const drift = now - (lastBeatAt + sampleMs);
+      const cpuUs = cpuMicros();
+      const cpuDeltaUs = lastBeatCpuUs === null || cpuUs === null ? null : cpuUs - lastBeatCpuUs;
       lastBeatAt = now;
+      lastBeatCpuUs = cpuUs;
       if (drift >= stallMs) {
-        recordStall(drift);
+        recordStall(
+          drift,
+          classifyStall({ driftMs: drift, cpuDeltaUs, freePct: freePctNow() })
+        );
       }
     } catch {
       /* watchdog must never throw into the event loop */
@@ -655,6 +765,7 @@ function installSessionWatchdog(opts = {}) {
           totalMs: ledger.stallTotalMs,
           reported: ledger.stallReported,
           suppressed: ledger.stallCount - ledger.stallReported,
+          byKind: { ...ledger.stallByKind },
         },
       };
     },

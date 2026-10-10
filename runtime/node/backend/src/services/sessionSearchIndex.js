@@ -23,7 +23,7 @@ let _available = false;
 function _dbPath() {
   try {
     const { getProjectDataDir } = require('../utils/dataHome');
-    return path.join(getProjectDataDir(), 'sessions.db');
+    return getProjectDataDir('sessions.db');
   } catch {
     const os = require('os');
     const dir = path.join(os.homedir(), '.khyquant');
