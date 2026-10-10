@@ -26,6 +26,7 @@
       <header class="hero reveal"><h1>[DESIGN-ARCH-114] CLI 错误标准化规范</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-114-cli-错误标准化规范">[DESIGN-ARCH-114] CLI 错误标准化规范</a></li><li class="lvl-2"><a href="#1-现状-三条独立的错误出口-缺口所在">1. 现状：三条独立的错误出口（缺口所在）</a></li><li class="lvl-3"><a href="#1-1-实证链路-2026-09-17-事故">1.1 实证链路（2026-09-17 事故）</a></li><li class="lvl-2"><a href="#2-目标态-cli-失败块契约-gov-cli-err-001">2. 目标态：CLI 失败块契约（GOV-CLI-ERR-001）</a></li><li class="lvl-3"><a href="#2-1-字段规约">2.1 字段规约</a></li><li class="lvl-3"><a href="#2-2-渲染秩序-首屏可见性硬约束">2.2 渲染秩序（首屏可见性硬约束）</a></li><li class="lvl-2"><a href="#3-cli-机器码登记表-初版">3. CLI 机器码登记表（初版）</a></li><li class="lvl-3"><a href="#3-1-钉选优先的严格边界-本规范最容易做错的一处">3.1 钉选优先的严格边界（⚠ 本规范最容易做错的一处）</a></li><li class="lvl-2"><a href="#4-落地改造点-按依赖序">4. 落地改造点（按依赖序）</a></li><li class="lvl-2"><a href="#5-验收标准">5. 验收标准</a></li><li class="lvl-2"><a href="#6-与既有规则的关系">6. 与既有规则的关系</a></li></ul></nav>
       <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: done --&gt;</p>
 <h1 id="design-arch-114-cli-错误标准化规范">[DESIGN-ARCH-114] CLI 错误标准化规范<a class="anchor" href="#design-arch-114-cli-错误标准化规范" aria-label="锚点">#</a></h1>
 <!-- RULES-REGISTRY: RUNTIME-002, RUNTIME-005 -->
 <blockquote><p><strong>定位</strong>：补齐 <code>[DESIGN-API-002]</code>（GOV-API-003 统一错误信封）与 <code>[DESIGN-ACP-001]</code>（GOV-ACP-004 终态错误码）<br>的<strong>第三个面</strong>——<strong>面人（CLI/TUI）</strong>。前两者冻结的是机器面（REST/SSE/WS）与进程面（ACP JSON-RPC）；<br>本文冻结人面：同一失败在终端上「长什么样、有几个字段、谁能翻译成什么」。</p>
