@@ -11,6 +11,6 @@
   "devLineBase": "1.2.0",
   "devLineBaseNote": "开发线基数。第一次正式发布时字段会被置为发布号（计划为 1.0.0），此后的开发线从发布号 PATCH+1 重新起算，不再是 1.2.x。",
   "plannedFirstRelease": "1.0.0",
-  "plannedFirstReleaseNote": "计划中的第一次正式发布版本号。注意：软著登记版本现为 V1.2.0（docs/10_规范/registry/COPYRIGHT.json），若正式发布定为 1.0.0，须同步修订 COPYRIGHT.json 与申请表，否则 check-copyright-readiness 会报版本不一致。",
+  "plannedFirstReleaseNote": "计划中的第一次正式发布版本号。版本口径（人 2026-10-10 明示）：软著登记版本是独立声明，与工程版本不互相绑定 —— 登记版本见 docs/10_规范/registry/COPYRIGHT.json，取得证书前固定不变；工程版本 1.2.x 独立演进，两者不构成矛盾。005 §九 要求「申请表与鉴别材料页眉」这两份申报材料之间一致，不是要跟工程版本对上。",
   "ruleSource": "docs/10_规范/其它规范/[DESIGN-SEMVER-002] 版本管理与发布触发规范.md §2.1 R-1 的 T4 触发（2026-10-10 增设）"
 }
