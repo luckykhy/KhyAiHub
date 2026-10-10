@@ -112,6 +112,24 @@ function highestReleaseVersion(releases) {
 async function probeGithub(opts = {}) {
   const env = opts.env || process.env;
   const repository = env.KHY_UPDATE_GITHUB_REPOSITORY || UPDATE.GITHUB_REPOSITORY;
+  // 没有配更新源时明确说。原默认仓 luckykhy/khy_os 已于 2026-10-10 删除，
+  // 空着 repository 去拼 URL 只会得到 https://api.github.com/repos//releases 这种
+  // 坏地址，报出来的错是「端点必须使用 HTTPS」——把配置问题说成了协议问题。
+  const hasExplicitApi = Boolean(
+    env.KHY_UPDATE_GITHUB_RELEASES_API || env.KHY_UPDATE_GITHUB_REPOSITORY_API
+  );
+  if (!repository && !hasExplicitApi) {
+    return {
+      version: null,
+      raw: null,
+      label: 'GitHub',
+      repository: '',
+      defaultBranch: null,
+      releaseVersion: null,
+      branchVersion: null,
+      error: '未配置更新源：设 KHY_UPDATE_GITHUB_REPOSITORY（或 KHY_UPDATE_GITHUB_RELEASES_API）',
+    };
+  }
   const [releaseResult, repositoryResult] = await Promise.allSettled([
     fetchJson(_router()._githubApiUrl(repository, env), opts),
     fetchJson(githubRepositoryApiUrl(repository, env), opts),

@@ -50,6 +50,11 @@ function platformTarget() {
 
 function repositoryUrls(env = process.env) {
   const repository = env.KHY_UPDATE_GITHUB_REPOSITORY || UPDATE.GITHUB_REPOSITORY;
+  // 原默认仓 luckykhy/khy_os 已于 2026-10-10 删除。没有配 repository 时不要拼
+  // https://github.com//releases 这种坏地址 —— 返回空串，让调用方走「未配置」分支。
+  if (!repository && !env.KHY_UPDATE_GITHUB_RELEASES_API) {
+    return { releasesApi: '', indexUrls: { stable: '', dev: '' } };
+  }
   const releaseBase = `https://github.com/${repository}/releases`;
   return {
     releasesApi: env.KHY_UPDATE_GITHUB_RELEASES_API || (repository === UPDATE.GITHUB_REPOSITORY
@@ -85,6 +90,9 @@ async function resolveIndexUrl(channel, opts = {}) {
     return configured;
   }
   if (defaults.indexUrls[channel]) return defaults.indexUrls[channel];
+  if (!defaults.releasesApi) {
+    throw new Error('未配置更新源：设 KHY_UPDATE_GITHUB_REPOSITORY 后重试');
+  }
   const releases = await fetchJson(defaults.releasesApi, opts);
   const release = Array.isArray(releases)
     ? releases.find(item => item && item.prerelease && !item.draft && Array.isArray(item.assets) &&
