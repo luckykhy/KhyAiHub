@@ -26,7 +26,7 @@
       <header class="hero reveal"><h1>核心架构</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#核心架构">核心架构</a></li><li class="lvl-2"><a href="#运行时路径">运行时路径</a></li><li class="lvl-2"><a href="#受-alpine-启发的启动分层-参考模型">受 Alpine 启发的启动分层（参考模型）</a></li><li class="lvl-2"><a href="#来自-alpine-standard-3-23-0-x86-64-iso-的具体参考点">来自 `alpine-standard-3.23.0-x86_64.iso` 的具体参考点</a></li><li class="lvl-2"><a href="#层级映射-当前-khy-os">层级映射（当前 Khy OS）</a></li><li class="lvl-3"><a href="#1-应用层">1) 应用层</a></li><li class="lvl-3"><a href="#2-wasm-沙箱层">2) WASM 沙箱层</a></li><li class="lvl-3"><a href="#3-os-组件层">3) OS 组件层</a></li><li class="lvl-3"><a href="#4-ipc-层">4) IPC 层</a></li><li class="lvl-3"><a href="#5-微内核层-仓库范围之外">5) 微内核层（仓库范围之外）</a></li><li class="lvl-2"><a href="#核心模块">核心模块</a></li><li class="lvl-2"><a href="#设计规则">设计规则</a></li></ul></nav>
       <article class="doc-body">
-<p>&lt;!-- 文档分类: DESIGN-ARCH-010 | 阶段: 设计 | 原路径: docs/架构/核心架构.md --&gt;</p>
+<p>&lt;!-- IMPL-STATUS: done --&gt;<br>&lt;!-- 文档分类: DESIGN-ARCH-010 | 阶段: 设计 | 原路径: docs/架构/核心架构.md --&gt;</p>
 <h1 id="核心架构">核心架构<a class="anchor" href="#核心架构" aria-label="锚点">#</a></h1>
 <h2 id="运行时路径">运行时路径<a class="anchor" href="#运行时路径" aria-label="锚点">#</a></h2>
 <pre><code class="language-text">User -&gt; khy CLI (Python) -&gt; Node CLI router -&gt; services/routes -&gt; data/storage</code></pre>

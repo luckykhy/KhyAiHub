@@ -26,6 +26,7 @@
       <header class="hero reveal"><h1>DESIGN-ARCH-028 · Agent 通信防御：零静默失败与精准归因</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-028-agent-通信防御-零静默失败与精准归因">DESIGN-ARCH-028 · Agent 通信防御：零静默失败与精准归因</a></li><li class="lvl-2"><a href="#1-问题陈述">1. 问题陈述</a></li><li class="lvl-2"><a href="#2-设计目标-铁律">2. 设计目标（铁律）</a></li><li class="lvl-2"><a href="#3-架构">3. 架构</a></li><li class="lvl-2"><a href="#4-错误字典-e01-e08-单一真源">4. 错误字典（E01–E08，单一真源）</a></li><li class="lvl-2"><a href="#5-归因映射-classifier-按优先级">5. 归因映射（classifier，按优先级）</a></li><li class="lvl-2"><a href="#6-防呆-硬约束">6. 防呆（硬约束）</a></li><li class="lvl-2"><a href="#7-接入点-最小侵入">7. 接入点（最小侵入）</a></li><li class="lvl-2"><a href="#8-开关与可调项">8. 开关与可调项</a></li><li class="lvl-2"><a href="#9-验收-32-用例绿-零网络-零真实进程-零真实-fs">9. 验收（32 用例绿，零网络/零真实进程/零真实 FS）</a></li></ul></nav>
       <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: done --&gt;</p>
 <h1 id="design-arch-028-agent-通信防御-零静默失败与精准归因">DESIGN-ARCH-028 · Agent 通信防御：零静默失败与精准归因<a class="anchor" href="#design-arch-028-agent-通信防御-零静默失败与精准归因" aria-label="锚点">#</a></h1>
 <blockquote><p>状态：已实现（services/backend）<br>关联代码：<code>services/backend/src/services/failsafe/</code>、<code>services/toolUseLoop.js</code>、<code>services/aiManagementServer.js</code><br>关联测试：<code>tests/services/failsafe/failsafe.test.js</code>（32 用例绿）<br>关联规范：[DESIGN-ARCH-027] 依赖自愈（E05 来源）、[DESIGN-ARCH-026] 审批网关（E07 来源）</p></blockquote>
 <h2 id="1-问题陈述">1. 问题陈述<a class="anchor" href="#1-问题陈述" aria-label="锚点">#</a></h2>
