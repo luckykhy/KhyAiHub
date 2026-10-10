@@ -240,6 +240,37 @@ v{major}.{minor}.{patch}[-{prerelease}][+{buildmetadata}]
 | 内部包 | `@khy/{name}` | `@khy/shared`、`@khy/platform` |
 | 作用域包 | 全小写 | 避免 `@Khy/` |
 
+### 9.1 远端仓库名（2026-10-10 补，原为规则盲区）
+
+**先说清这一节为什么存在**：本节补立之前，仓名**不在任何规则管辖内**——§9 只管 npm 包名，
+仓外 Portable 规约只管本地目录名。2026-10-10 建 KhyAiHub 时没有判据可查，遂在几轮问答里
+现编，编出 PascalCase，与账号下 8 个 kebab-case 仓不一致。**规则盲区比规则错误更贵**：
+后者会被守卫抓住，前者只能靠人事后发现。
+
+**现状实测（2026-10-10，GitHub `luckykhy` 共 13 仓）**：
+
+| 风格 | 数量 | 仓 |
+|---|---|---|
+| kebab-case | 8 | my-tools、knowledge-base、portable-workstation、klode-portable、opkode-portable、web-track-guide、khy-os-hq、qoder-creator |
+| 单词（无分隔） | 3 | gongkao、tidepool、khyquant |
+| snake_case | 1 | khy_os_private |
+| PascalCase | 1 | **KhyAiHub** |
+
+**现行约定（以 KhyAiHub 为既定事实，不回溯改名）**：
+
+1. **`KhyAiHub` 保持 PascalCase，不改名。** 人 2026-10-10 明示「不要用 `-`，用驼峰」。
+   理由成立：连字符在部分语言里不是合法标识符，而该仓名会作为常量出现在
+   `scripts/release/sync-dist.js` 等处。**这是选择，不是疏漏**——后续 AI 不得以
+   「与其它仓不一致」为由提议改名，要改先问人。
+2. **新建仓默认跟随主流 kebab-case**（8/13），除非有上条同类理由并被人点头。
+3. **「与其它仓不一致」本身不是改名理由。** 一致性是软偏好，功能指向与既定选择是硬约束。
+   真要统一，正确做法是问人「是否全部改成某一种」，而不是挑一个仓下手。
+
+> ⚠ 一条被否掉的论证：曾有「连字符不符合类名规范所以不能用」之说。**不适用于仓名**——
+> GitHub 仓名不是代码标识符，不出现在任何 `import` / `class` / 变量声明里。
+> 该论证对 `sync-dist.js` 里的**常量名**成立，对仓名不成立。本次按人的选择保留
+> PascalCase，但把理由钉在「人明确要求」上，不钉在那个不适用的论证上。
+
 ---
 
 ## 10. 文件名规范
