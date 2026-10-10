@@ -25,7 +25,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..', '..');
-const FRONTEND = path.join(ROOT, 'apps', 'ai-frontend', 'src');
+const FRONTEND = path.join(ROOT, 'delivery', 'web', 'ai-frontend', 'src');
 const BASELINE = path.join(__dirname, '..', 'frontend-tokens.baseline.json');
 
 // The token file itself is the vocabulary definition, not a consumer: its hex and

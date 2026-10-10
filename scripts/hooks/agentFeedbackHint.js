@@ -61,7 +61,7 @@ function storeDir() {
   if (override) return String(override);
   let base;
   try {
-    base = require(path.join(REPO_ROOT, 'services', 'backend', 'src', 'utils', 'dataHome')).getDataHome();
+    base = require(path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'src', 'utils', 'dataHome')).getDataHome();
   } catch {
     base = path.join(os.homedir(), '.khyos');
   }

@@ -16,6 +16,7 @@
  *   node scripts/ci/check-agent-rules.js --changed
  *   node scripts/ci/check-agent-rules.js <file-or-dir> [more...]
  *   node scripts/ci/check-agent-rules.js --changed --strict-warnings
+ *   node scripts/ci/check-agent-rules.js --changed --json   (machine-readable)
  */
 const fs = require('fs');
 const path = require('path');
@@ -828,11 +829,38 @@ function printFindings(findings, scannedCount) {
   console.log(`\nSummary: ${errorCount} error(s), ${warnCount} warning(s) across ${scannedCount} file(s) scanned.`);
 }
 
+// --json (eslint --format json / semgrep --json pattern): machine-readable
+// findings for CI consumers (PR review bots, code-scanning ingestion, trend
+// scrapers) — the human stdout lines were the ONLY output before, and nothing
+// downstream could parse them. Default human output stays byte-identical.
+function printFindingsJson(findings, scannedCount, notices) {
+  const out = {
+    summary: {
+      errors: findings.filter((f) => f.severity === 'error').length,
+      warnings: findings.filter((f) => f.severity === 'warning').length,
+      filesScanned: scannedCount,
+      skipped: notices || [],
+    },
+    findings: findings.map((f) => ({
+      severity: f.severity,
+      rule: f.rule,
+      file: f.file,
+      line: f.line,
+      message: f.message,
+      snippet: f.snippet || '',
+    })),
+  };
+  console.log(JSON.stringify(out, null, 2));
+}
+
 function main() {
+  const asJson = args.includes('--json');
   const files = gatherFiles();
   // Say what was left out. A gate whose coverage shrank (stale path, skipped
   // submodule) otherwise prints the same "passed" line as one that really looked.
-  for (const notice of scanNotices) console.log(`[SKIP ] ${notice}`);
+  if (!asJson) {
+    for (const notice of scanNotices) console.log(`[SKIP ] ${notice}`);
+  }
 
   if (files.length === 0) {
     // 这条「合法空集」的前提是改动集**真的读到了**、只是里面没有代码文件。
@@ -847,7 +875,11 @@ function main() {
       console.error('  修复：把 git 加入 PATH 后重跑，或改用显式路径：node scripts/ci/check-agent-rules.js <文件或目录>');
       process.exit(2);
     }
-    console.log('No target files found. Use --changed or pass file/directory paths.');
+    if (asJson) {
+      printFindingsJson([], 0, scanNotices);
+    } else {
+      console.log('No target files found. Use --changed or pass file/directory paths.');
+    }
     // An explicit target is an assertion that these paths are scannable. If none
     // resolved, the run proved nothing, so it must not read as a pass. A changed
     // set with no code files (docs-only change) is legitimately empty.
@@ -856,7 +888,12 @@ function main() {
 
   const findings = [];
   for (const file of files) checkFile(file, findings);
-  printFindings(findings, files.length);
+
+  if (asJson) {
+    printFindingsJson(findings, files.length, scanNotices);
+  } else {
+    printFindings(findings, files.length);
+  }
 
   const hasError = findings.some((f) => f.severity === 'error');
   const hasWarn = findings.some((f) => f.severity === 'warning');

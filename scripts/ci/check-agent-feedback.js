@@ -110,10 +110,10 @@ const STATEMENT_FEATURES = [
 ];
 
 const ENTRY_HINTS = [
-  /^services\/backend\/src\/cli\/handlers\//,
-  /^services\/backend\/src\/routes\//,
-  /^services\/backend\/src\/tools\/[^/]+\/index\.js$/,
-  /^extensions\/[^/]+\/[^/]+\/manifest\.json$/,
+  /^runtime\/node\/backend\/src\/cli\/handlers\//,
+  /^runtime\/node\/backend\/src\/routes\//,
+  /^runtime\/node\/backend\/src\/tools\/[^/]+\/index\.js$/,
+  /^delivery\/extension\/[^/]+\/[^/]+\/manifest\.json$/,
 ];
 
 /** 歧义带半宽：两模态分差小于它即视为「说不清」，必须显式声明主模态。 */
@@ -205,6 +205,52 @@ function readEvidence(dir, file) {
     return text || null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * 「存证在别处」提示：只在该文件确实读不到时算一次，按文件名缓存。
+ *
+ * 为什么需要它：规则 5/6/7 约定存证落 `works/data/khy/feedback/<task-id>/`，
+ * 而本门的默认读取路径是 `.../feedback/adhoc`。实测（2026-10-08）根目录下有
+ * **346 个 task-id 目录、其中 231 个带 repro-before.txt，没有任何 adhoc** ——
+ * 于是门按 AGENTS.md 写的方式被调用时（`--changed`，无人传 `--evidence`）
+ * 必然报「缺存证」，而本次任务的存证就在隔壁目录里。
+ *
+ * 刻意**不自动认领**同级同名存证：那等于让 346 个历史目录里的任意一条旧样本
+ * 替本次改动签字，把「门看不见」升级成「门恒绿」，比误报更糟。这里只报数量与
+ * 最新一处，把「该加 --evidence」这句话交回到人手里。
+ */
+const _elsewhereCache = new Map();
+function evidenceElsewhere(dir, file) {
+  try {
+    if (_elsewhereCache.has(file)) return _elsewhereCache.get(file);
+    const parent = path.dirname(dir);
+    const self = path.basename(dir);
+    let n = 0;
+    let newest = null;
+    let newestAt = 0;
+    for (const name of fs.readdirSync(parent, { withFileTypes: true })) {
+      if (!name.isDirectory() || name.name === self) continue;
+      const abs = path.join(parent, name.name, file);
+      try {
+        const st = fs.statSync(abs);
+        if (!st.isFile()) continue;
+        n += 1;
+        if (st.mtimeMs > newestAt) {
+          newestAt = st.mtimeMs;
+          newest = name.name;
+        }
+      } catch {
+        /* 该目录没有这份存证，跳过 */
+      }
+    }
+    const rel = path.relative(REPO_ROOT, dir).split(path.sep).join('/');
+    const hint = n > 0 ? `｜同级另有 ${n} 个 task-id 目录存在 ${file}（最新：${newest}）；门默认读 ${rel}，本次任务若已写存证请加 --evidence 指过去` : '';
+    _elsewhereCache.set(file, hint);
+    return hint;
+  } catch {
+    return '';
   }
 }
 
@@ -508,13 +554,13 @@ function check() {
     for (const item of EVIDENCE[mode]) {
       if (readEvidence(evidenceDir, item.file)) continue;
       if (mode === 'FIX' && item.file === 'repro-before.txt') {
-        add('error', 'fix-without-repro', `判定为 FIX 但缺 ${item.file}（${item.label}）—— 没量体温不许开药。`);
+        add('error', 'fix-without-repro', `判定为 FIX 但缺 ${item.file}（${item.label}）—— 没量体温不许开药。${evidenceElsewhere(evidenceDir, item.file)}`);
       } else if (mode === 'DELETE' && item.file === 'rollback.txt') {
-        add('error', 'delete-without-rollback', `判定为 DELETE 但缺 ${item.file}（${item.label}）—— 客户有喊停权。`);
+        add('error', 'delete-without-rollback', `判定为 DELETE 但缺 ${item.file}（${item.label}）—— 客户有喊停权。${evidenceElsewhere(evidenceDir, item.file)}`);
       } else if (mode === 'BUILD' && item.file === 'requirement-5q.md') {
-        add('warning', 'build-without-questions', `判定为 BUILD 但缺 ${item.file}（${item.label}）—— 先提问再动手。`);
+        add('warning', 'build-without-questions', `判定为 BUILD 但缺 ${item.file}（${item.label}）—— 先提问再动手。${evidenceElsewhere(evidenceDir, item.file)}`);
       } else {
-        add('warning', `missing-${item.file}`, `缺存证 ${item.file}：${item.label}`);
+        add('warning', `missing-${item.file}`, `缺存证 ${item.file}：${item.label}${evidenceElsewhere(evidenceDir, item.file)}`);
       }
     }
   }

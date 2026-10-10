@@ -44,6 +44,13 @@
     "KHY_A2A_DEAD_LETTER_ENABLED"
   ],
   "acpEnvPrefix": "KHY_ACP_",
+  "agentClientEnvPrefix": "KHY_ACPCLIENT_",
+  "_agentClientEnvNote": "编辑器 ACP（Agent Client Protocol，Zed）的专属前缀，[DESIGN-ARCH-184] §0。三前缀互斥：KHY_A2A_=标准 A2A、KHY_ACP_=私有 ACP（P2 重命名保留）、KHY_ACPCLIENT_=编辑器 ACP。新增 KHY_ACPCLIENT_* 变量必须登记进 agentClientEnvAllowlist。",
+  "agentClientEnvAllowlist": [
+    "KHY_ACPCLIENT_SERVE",
+    "KHY_ACPCLIENT_SERVE_STDIO",
+    "KHY_ACPCLIENT_AGENTS"
+  ],
   "privateAcpMethods": [
     "agent.spawn",
     "agent.kill",

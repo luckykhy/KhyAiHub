@@ -18,14 +18,14 @@ const repoRoot = process.env.KHY_REPO_LAYOUT_ROOT
   ? path.resolve(process.env.KHY_REPO_LAYOUT_ROOT)
   : path.resolve(__dirname, '..', '..');
 
-const LINT_DEBT_PATH = path.join(repoRoot, 'services', 'backend', 'LINT-DEBT.json');
+const LINT_DEBT_PATH = path.join(repoRoot, 'runtime', 'node', 'backend', 'LINT-DEBT.json');
 
 function runLint() {
   try {
     const result = execSync(
       'npx eslint --format json src/ 2>/dev/null || true',
       {
-        cwd: path.join(repoRoot, 'services', 'backend'),
+        cwd: path.join(repoRoot, 'runtime', 'node', 'backend'),
         encoding: 'utf8',
         maxBuffer: 64 * 1024 * 1024,
       }

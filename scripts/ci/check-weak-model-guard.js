@@ -270,7 +270,7 @@ function findProductionCallers() {
       }
     }
   };
-  for (const root of ['services', 'platform', 'apps', 'software']) {
+  for (const root of ['runtime/node', 'runtime/substrate/platform', 'apps', 'delivery/channel', 'delivery/web']) {
     if (fs.existsSync(path.join(cwd, root))) walk(path.join(cwd, root));
   }
   return hits;
