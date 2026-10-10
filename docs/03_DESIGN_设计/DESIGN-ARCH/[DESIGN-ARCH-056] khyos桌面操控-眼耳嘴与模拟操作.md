@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-056] Khyos 桌面操控 —— 眼、耳、嘴与模拟操作
 
 > 状态：已实现（确定性核心 + fail-closed 安全闸门 + 结构化感知层 + 复用既有 TTS/STT/OCR）

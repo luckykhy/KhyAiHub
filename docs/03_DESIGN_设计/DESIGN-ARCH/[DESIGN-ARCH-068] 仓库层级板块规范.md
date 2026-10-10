@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 <!-- 文档分类: DESIGN-ARCH-068 | 阶段: 设计 | 原路径: 新建 -->
 # [DESIGN-ARCH-068] 仓库层级板块规范
 

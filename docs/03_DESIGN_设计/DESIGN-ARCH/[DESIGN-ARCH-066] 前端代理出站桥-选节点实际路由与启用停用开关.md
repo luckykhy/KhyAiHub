@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-066] 前端代理出站桥 — 选节点实际路由 + 启用/停用开关
 
 > 状态：定稿 · 归属：`services/backend/src/services/proxy/` + `aiManagementProxyEgress.js` + 前端 `ProxyManagement.vue` · 关联：[[DESIGN-ARCH-026]]（系统级服务调用审批网关）、[[IMPL-RPT-009]]（特性访问与代理解耦）
