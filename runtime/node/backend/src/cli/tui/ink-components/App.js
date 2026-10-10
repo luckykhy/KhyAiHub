@@ -3143,7 +3143,6 @@ function App({ options = {} }) {
   // scrollback is not reprinted; only the transient live UI is suspended.
   const runRouted = React.useCallback(
     async (text) => {
-      process.stderr.write('[DBG] runRouted ' + JSON.stringify(text) + '\n');
       const { parseInput, route } = require('../../router');
       const parsed = parseInput(text.trim());
       if (!parsed) {
@@ -5549,7 +5548,6 @@ function App({ options = {} }) {
         // execute the highlighted slash command — swallow it; the composed
         // text lands in the buffer via the fall-through below.
         if (key.return) {
-          process.stderr.write('[DBG] menuEnter kind=' + menu.kind + ' items=' + JSON.stringify((menu.items || []).map((i) => i.value)) + ' idx=' + selectedIndex + ' swallow=' + imeCommitGuard.shouldSwallowBareEnter() + '\n');
           if (!key.shift && !key.ctrl && !key.meta && imeCommitGuard.shouldSwallowBareEnter()) {
             return;
           }

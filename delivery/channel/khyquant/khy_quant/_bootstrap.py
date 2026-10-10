@@ -42,6 +42,15 @@ def _path_exists_safe(p: Path) -> bool:
         return False
 
 
+def _pkg_has_content(pkg_dir: Path) -> bool:
+    """跟随符号链接后能读到 package.json 才算装好。
+
+    `Path.exists()` 跟随链接，pnpm 布局里「链接建了、内容没解包」的空壳一律报
+    True；用它当判据会跳过 npm install 并照写 marker，于是永不自愈。
+    """
+    return _path_exists_safe(pkg_dir / "package.json")
+
+
 def _node_env(backend_dir: Path) -> dict:
     env = os.environ.copy()
     node_modules = str(backend_dir / "node_modules")
@@ -65,7 +74,10 @@ def ensure_bootstrapped(backend_dir: Path, node_cmd: str):
     marker = marker_dir / MARKER_FILE
     seed_marker = marker_dir / SEED_MARKER_FILE
 
-    if marker.exists() and seed_marker.exists():
+    # marker 只证明「上一次跑到过」，不证明依赖现在还在：node_modules 事后被清空或
+    # 装成空壳时它仍声称就绪，把重装短路掉 → 永不自愈。短路前做一次内容级复核。
+    deps_ready = _pkg_has_content(backend_dir / "node_modules" / "express")
+    if marker.exists() and seed_marker.exists() and deps_ready:
         return
 
     print()
@@ -75,7 +87,7 @@ def ensure_bootstrapped(backend_dir: Path, node_cmd: str):
     install_ok = True
     seed_ok = seed_marker.exists()
 
-    if not marker.exists():
+    if not marker.exists() or not deps_ready:
         install_ok = _ensure_npm_install(backend_dir) and install_ok
 
     _ensure_env_file(backend_dir)
@@ -99,7 +111,7 @@ def ensure_bootstrapped(backend_dir: Path, node_cmd: str):
 
 def _ensure_npm_install(backend_dir: Path) -> bool:
     node_modules = backend_dir / "node_modules"
-    if _path_exists_safe(node_modules / "express"):
+    if _pkg_has_content(node_modules / "express"):
         print("  [OK] Node.js dependencies already installed")
         return True
 

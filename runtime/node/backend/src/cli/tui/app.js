@@ -181,10 +181,6 @@ async function startInkApp(options = {}) {
   // entirely and this stays byte-identical to today.
   const scrollbackPreserve = require('./scrollbackPreserve');
   const sidebarRail = require('./runtime/sidebarRail');
-  // ink 帧透传闸的写入侧：命令输出收集叶(commandOutputSink)靠它区分「ink 自己
-  // 的帧」与「handler 的直接 stdout 写」—— 不置位的话,收集器会把整帧吞进
-  // buffer,屏幕直接冻住。只包 target.write 这一处,零行为改动。
-  const inkWriteGate = require('./commandOutputSink');
   const _realOut = process.stdout;
   const _clearNormalizer = scrollbackPreserve.createClearTerminalNormalizer(
     process.env,
@@ -229,9 +225,7 @@ async function startInkApp(options = {}) {
           let rail = '';
           try { pre = sidebarRail.clearBytes(forceRailPaint); } catch { pre = ''; } // 辅助 UI,永不拖垮渲染
           try { rail = sidebarRail.paintBytes(forceRailPaint); } catch { rail = ''; }
-          const out = (pre || rail) ? pre + normalized + rail : normalized;
-          // 闸内代写:命令输出收集叶(commandOutputSink)只收非 ink 的写,帧必须透传。
-          return inkWriteGate.runInkWrite(() => target.write(out, ...rest));
+          return target.write((pre || rail) ? pre + normalized + rail : normalized, ...rest);
         };
       }
       const v = Reflect.get(target, prop, target);
