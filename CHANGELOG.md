@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **清理与保留策略度量指向旧数据家空壳（909 B 假读数）**（`services/cleanupService.js`、`cli/handlers/cleanup.js`、`khy.bat`、`registry/DATA-LOCATIONS.json`、`scripts/ci/check-data-layout.js`）
+  - **改了什么**：W9′（2026-10-02）把运行态数据迁入 `works/data/khy` 后，cleanupService 的 15 个保留目标里 13 个仍经 `getDataHome()`/`getAppHome()` 解析——启动器 `khy.bat` 把 `KHY_DATA_HOME`/`KHY_PROJECT_DATA_HOME` 钉在 `<root>/.khy` 旧落点上，实测 `khy cleanup --json` 报 totalBytes **909 B**、sessions/checkpoints/audit 全 0、`overThreshold: false`，而真身同目录树 496 MB。现改两级解析（显式 env 优先保测试隔离；否则便携模式跟随 `getProjectDataHome()`），`khy.bat` 三个钉死值对齐 W9′ 落点（`works\data\khy` / `works\data\khyos`），登记表 `roots.khy.accessor` 与 protected/budgets 路径统一到事实。修后同命令 totalBytes **206 MB**、footprint 496 MB / 500 MB，读数与文件系统一致。
+  - **为什么**：度量指向空房间时，「所有数据在限额内，无需清理」是一句诚实的谎话——表针存在、读数真实、测错了房间。这正是 `[DESIGN-DELIV-001]` D1「度量必须有一根表针朝外」的反例。
+  - **影响范围**：只改「看哪里、报多少」，零删除。新增两个保留目标（原子写孤儿 tmp 24h 回收、空目录 7 天回收，`KHY_EMPTY_DIR_REAP=0` 可关，protected 路径豁免）；`check-data-layout` 增加空目录/杂件/原子写孤儿活体读数与 L-5 棘轮比对（S1 只记录，实测 khyEntries 211→420 恶化已留痕）。`.khy` 旧壳内少量 CLI 侧文件（settings.json 等分叉副本）**未迁移未删除**，属活体数据迁移范畴。
+
 - **工具调用能力判定系统性偏「不支持」**（`services/backend/src/services/gateway/`、`multiFreeService.js`、`relayApiAdapter.js`）
   - **改了什么**：判据此前把「成功回了文字、没回 `tool_calls`」直接判成「不支持原生工具调用」。这三种输入性质完全不同且都不含「不支持」信号——回了散文（纯观测）、被 `max_tokens` 截断、模型自述不会调用工具——却得到同一个负向结论，现场产出 `gpt-4o → text` 这类假阴性。现在**负向裁决要求正面证据**：只有正文里出现显式调用语法（判据复用 `toolCallParser.hasExplicitToolCallSyntax`，不另写正则）才判 `text`；失败、截断、空、散文一律 `unknown` 不落库。截断判定（`finish_reason ∈ {length, max_tokens, max_output_tokens, content_filter}`）**早于**文本判定，否则一段被截断的前言会被读成「回了文字 = 不支持」。
   - **为什么**：判出 `text` 的后果是把该模型的原生 `tools` 从每个后续请求里删掉——删掉之后模型再也拿不到 `tools`、也就再也产生不了原生 `tool_calls`，被动学习无法翻案，一次误判就锁死到 TTL 到期。旧判据没有区分「证据的缺席」与「缺席的证据」。

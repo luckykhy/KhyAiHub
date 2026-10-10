@@ -17,8 +17,8 @@
       "按时间追加的工作备注"
     ]
   },
-  "next_id": 18,
-  "last_updated": "2026-09-28",
+  "next_id": 19,
+  "last_updated": "2026-10-05",
   "bugs": [
     {
       "id": "BUG-001",
@@ -322,6 +322,23 @@
       "notes": [
         "2026-09-23: 本轮只完成取证与修复方向登记（README 镜像提示已做），代码侧修复（包瘦身/预打包/preflight 降级）留待专门一轮，故打回 open 待领",
         "2026-09-26: 代码修复 + 复测取证完成，转 pending_verify 而非 closed——慢网直连 PyPI 安装时长与「首次 AI 对话」两段未实测（本机快网、无供应商凭据），不假装达标。证据：.khy/feedback/BUG-017-firstrun-fix/{repro-before.txt,repro-after.txt,timing-raw.txt,timing-fresh-venv.md}；单测 platform/tests/test_preflight_backend_deps.py 6 用例全过。复测确认后可闭单。"
+      ]
+    },
+    {
+      "id": "BUG-018",
+      "title": "W9-prime 数据家锚定漂移：appDefault=runtime/works 空壳被 established-wins 误钉，根别名悬空",
+      "severity": "P1",
+      "domain": "services",
+      "status": "open",
+      "symptom": "迁移收口 7bfc49d9 后本机实测：根 khy-Trajectory 别名悬空（指向已消失的 .khy）；指针 projectDataHome 钉在 runtime/works/data/khy 空壳（0 文件），真实数据家 root works/data/khy（约500MB）脱离指针引用。另致 khy hq 全系命令 ENOENT（hqStore REPO_ROOT 少回溯一层，已顺手修复）。本机已手工修复（指针校准+空壳隔离进 .khyos/housekeeping/2026-10-05+别名重建），代码未修，新机器/新克隆首启必复发",
+      "repro": "portable-health-check.js 输出 [FAIL] khy-Trajectory（可见别名）— 断链（目标不可达: ENOENT）；dataHome 探针 projectDataHome=D:/Portable/khy-os/runtime/works/data/khy 且该树 files=0；khy hq status 报 BUGS.json 无法读取 ENOENT runtime/works/record/ai/hq/BUGS.json",
+      "suspect_area": "runtime/node/backend/src/utils/dataHome.js：L401 appDefault=getAppRoot()/works/data/khy 而 getAppRoot() 方案P 后=runtime 子目录；L420 _isEstablished 把 _ensureDir 副产空目录树当已确立→established-wins 误钉；L429 fresh-auto-pick 会把项目家钉到外部盘 .khy-project；L409/L450 _ensureVisibleAlias(aliasDir=getAppRoot()) 在 runtime/ 下另造别名且不按 ROOT_CATALOG/portable-health-check 约定维护仓根别名、已有链接不修断链。delivery/extension/scripts/khy-portable/repair-portable.js L91 兜底仍指已作废的 ROOT/.khy",
+      "root_cause": "方案P 把 backend 迁到 runtime/node/backend 后，按 getAppRoot()/向上回溯层数解析的锚未同步：dataHome.appDefault 落到 runtime/works 空壳并被 _isEstablished+established-wins 钉进指针；hqStore.REPO_ROOT 少回溯一层致 khy hq 全系 ENOENT；repair-portable L91 兜底仍指已作废的 ROOT/.khy",
+      "fix_summary": "本机态已修（指针校准→works/data/khy、空壳隔离、根别名重建，portable-health-check 6/6 PASS）。代码侧已顺手修 hqStore REPO_ROOT（回溯 4→5 层，khy hq verify 全绿）；dataHome/repair-portable 的修正属代码裁决，留给后续会话按 khy hq next --bug BUG-018 处置",
+      "created": "2026-10-05",
+      "updated": "2026-10-05",
+      "notes": [
+        "2026-10-05: 存证：.khyos/housekeeping/2026-10-05/manifest.md、.khyos/diag/location.json.bak-2026-10-05、.khyos/diag/fix-pointer-20261005.cjs、datahome-probe.cjs"
       ]
     }
   ]
