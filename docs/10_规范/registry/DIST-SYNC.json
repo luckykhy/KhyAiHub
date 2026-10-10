@@ -1,7 +1,7 @@
 {
-  "$note": "本地提交 → KhyAiHub 分发仓的同步点。由 scripts/release/sync-dist.js 维护，勿手改。",
-  "lastSyncedLocalCommit": "7d878ddc44f713da9017df4de145197c72c02d4e",
-  "lastSyncedAt": "2026-10-10T12:19:09.559Z",
-  "distTip": "8835040f52eeaf0d8d185ba8b233859e4bd16414",
-  "appended": 9
+  "$note": "本地提交 → KhyAiHub 分发仓的同步点。由 scripts/release/sync-dist.js 维护，勿手改。distTip 为分发仓当前 main；2026-10-10 因 Gitee 隐藏邮箱钩子拒收而从 601e8550 重建过链，该 tip 随之改写（见 sync-dist.js 的 EMAIL_MAP 与提交信息）。",
+  "lastSyncedLocalCommit": "ad989eac6938ac036236ef42c7a74f8ef7537d71",
+  "lastSyncedAt": "2026-10-10T13:39:59.525Z",
+  "distTip": "75f98437c63b790da7442a286b83983fc04e0d96",
+  "appended": 2
 }
