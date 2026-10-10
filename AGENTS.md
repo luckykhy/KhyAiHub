@@ -416,6 +416,55 @@ R-1 规定了什么时候该 bump，但**没有任何东西在那个时刻提醒
 - **随时手查**：`node scripts/ci/check-version-freshness.js`（`--json` 机读，
   `--strict` 超阈值判红，给 CI 用）。
 
+#### 分发仓 `KhyAiHub`：只推 GitHub，Gitee 由 mirror 派生
+
+> **作用域**：这一小节只管 **`KhyAiHub` 这个分发仓**（`luckykhy/KhyAiHub` ↔
+> `luckyhaoyunkhy/KhyAiHub`）。它与上面「多机协作自举」那节的 `origin` / `khy-mirror`
+> **不是同一套远端**——那节讲的是本开发仓的内部拓扑，这节讲的是把内容发出去的那一个仓。
+> 别把两处的远端名混用。
+
+**拓扑（唯一正确形态）**：
+
+```
+本机 ──push──▶ GitHub  luckykhy/KhyAiHub      ← 真源，唯一推送目标
+                    │ Actions: .github/workflows/sync-gitee.yml
+                    ▼
+                  Gitee  luckyhaoyunkhy/KhyAiHub   ← 派生镜像，不直接推
+```
+
+**规则：本地只推 GitHub，永远不要直接推 Gitee。**
+
+为什么：两边各推一次就有**两条独立失效的凭据路径**（GitHub token + Gitee token），
+任一条断了两边悄悄分叉，而你不知道。mirror 架构下只有**一条**路径会断
+（`GITEE_TOKEN` 这一支 secret），GitHub 侧认证由 Actions 自动处理、没有 key 会过期。
+
+**凭据失效了怎么恢复（这是选这个架构的全部理由）**：
+
+mirror 推的是 `FETCH_HEAD:refs/heads/main`，是 **fast-forward**。所以 Gitee token
+过期只会**延迟**同步，不会破坏同步——历史不需要改写：
+
+1. mirror job **响亮失败**（脚本里 `: "${GITEE_TOKEN:?...}"` 缺凭据即 exit 1，
+   不会静默跳过；2026-10-10 实测 5 次运行全失败，没有一次假装成功）
+2. GitHub 上一笔不少，真源完好
+3. 换新 token → 更新 secret → 在 Actions 页面 **Run workflow**（`workflow_dispatch`，
+   可指定分支）→ Gitee 自动追上
+
+**配套 secret / variable**（缺一个 mirror 就红）：
+
+| 名 | 类型 | 值 |
+|---|---|---|
+| `GITEE_TOKEN` | secret | Gitee 私人令牌（**由人在网页上贴**，不过 AI 的手） |
+| `GITEE_USER` | variable | `luckyhaoyunkhy` |
+| `GITEE_REPOSITORY` | variable | `luckyhaoyunkhy/KhyAiHub` |
+
+**两条纪律（比架构更重要）**：
+
+1. **绝不 force-push GitHub 的 `main`。** mirror 是 fast-forward，一旦 GitHub 被改写
+   历史而 Gitee 没有，镜像推送会被**拒绝**——那时得手工 reset Gitee 对齐。
+   若确有理由必须改写（本次建仓过程中发生过两次），**两边一起处理**并在报告里说明。
+2. **不要把 `sync-gitee.yml` 的失败改成 `continue-on-error: true`。** 那会把
+   「镜像断了」退化成「镜像建议」——正是 `[DESIGN-ARCH-111]` 全仓批判的无绑定层模式。
+
 > **边界（不可放宽）**：本规则**只自动化「推 tag 之后」的长链路**，
 > **不触碰红线 R1 / `PROCESS-001`（P0）的「禁止 AI 自动 commit/push」**。
 > 人工只在**「推 tag」这一处点头一次**，之后不允许再有第二次人工判断。
