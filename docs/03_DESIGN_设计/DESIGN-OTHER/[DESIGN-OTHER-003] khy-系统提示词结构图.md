@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 <!-- 文档分类: DESIGN-OTHER-003 | 阶段: 设计 | 原路径: docs/指南/khy-系统提示词结构图.md -->
 # KHY 系统提示词结构图
 

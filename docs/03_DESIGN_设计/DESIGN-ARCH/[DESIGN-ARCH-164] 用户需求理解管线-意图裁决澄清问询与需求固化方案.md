@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-164] 用户需求理解管线——意图裁决、澄清问询与需求固化
 
 <!-- RULES-REGISTRY: RUNTIME-002, RUNTIME-008, PROCESS-008, PROCESS-014 -->

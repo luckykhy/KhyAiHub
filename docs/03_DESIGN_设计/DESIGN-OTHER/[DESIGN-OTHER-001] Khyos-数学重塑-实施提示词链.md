@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 <!-- 文档分类: DESIGN-OTHER-001 | 阶段: 设计 | 原路径: docs/指南/Khyos-数学重塑-实施提示词链.md -->
 # Khyos 数学重塑 · 实施提示词链
 
