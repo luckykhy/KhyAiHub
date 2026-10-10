@@ -93,5 +93,43 @@ describe('receiptService —turn aggregation', () => {
     expect(receipts.searchReceipts('grep').length).toBeGreaterThan(0);
     expect(receipts.searchReceipts('nonexistent-xyz')).toHaveLength(0);
   });
+
+  // 达成率对账的三条不变式：裁决优先于「有没有工具报错」；无会话归属时靠 requestId
+  // 认领自己那一张；被下一轮顶掉的遗留不得伪报本回合耗时。
+  test('outcome.achieved=false yields partial even with zero failed tools', () => {
+    receipts.startReceipt({ sessionId: 'sess-F', requestId: 'req-F', goal: 'answer' });
+    const fin = receipts.finalizeReceipt({
+      sessionId: 'sess-F',
+      requestId: 'req-F',
+      outcome: { achieved: false, hasConclusion: false, stoppedByLimit: true },
+    });
+    expect(fin.status).toBe('partial');
+    expect(fin.outcome.stoppedByLimit).toBe(true);
+    expect(fin.finalizeReason).toBe(null);
+  });
+
+  test('finalize resolves by requestId when sessionId is absent', () => {
+    receipts.startReceipt({ sessionId: null, requestId: 'req-G', goal: 'no session' });
+    const fin = receipts.finalizeReceipt({
+      sessionId: 'sess-WRONG',
+      requestId: 'req-G',
+      outcome: { achieved: true },
+    });
+    expect(fin).toBeTruthy();
+    expect(fin.requestId).toBe('req-G');
+    expect(fin.status).toBe('completed');
+  });
+
+  test('a superseded receipt does not carry the gap-to-next-turn as its duration', () => {
+    receipts.startReceipt({ sessionId: 'sess-H', requestId: 'req-H1', goal: 'first' });
+    receipts.startReceipt({ sessionId: 'sess-H', requestId: 'req-H2', goal: 'second' });
+    const stale = receipts.getReceipt(
+      receipts.listReceipts({ sessionId: 'sess-H', full: true })
+        .find((r) => r.requestId === 'req-H1').id
+    );
+    expect(stale.finalizeReason).toBe('superseded');
+    expect(stale.durationMs).toBe(null);
+    expect(stale.status).toBe('partial');
+  });
 });
 

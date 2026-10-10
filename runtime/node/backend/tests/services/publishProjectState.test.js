@@ -59,8 +59,45 @@ describe('publish/projectState — manifest parsing and version state', () => {
 
     const st = ps._readState(tmp);
     assert.equal(st.packageName, 'khy-os');
-    assert.deepEqual(st.versions, { pyproject: '1.2.3', python: '1.2.3', backend: '1.2.3' });
+    // The G1 alignment set is pyproject / npm / backend / modules (r59) — not the
+    // old three-key shape. The Python init track joins only when it carries a
+    // literal; here it does, while the npm/modules manifests are absent and so
+    // read as '' and drop out of the comparison.
+    assert.deepEqual(st.versions, {
+      pyproject: '1.2.3',
+      python: '1.2.3',
+      backend: '1.2.3',
+      npm: '',
+      modules: '',
+    });
     assert.equal(st.versionAligned, true);
+  });
+
+  test('_readState folds the npm and modules manifests into the G1 alignment set', () => {
+    fs.writeFileSync(path.join(tmp, 'pyproject.toml'), '[project]\nname = "khy-os"\nversion = "1.2.3"\n');
+    fs.mkdirSync(path.join(tmp, 'works', 'ship', 'npm'), { recursive: true });
+    fs.writeFileSync(
+      path.join(tmp, 'works', 'ship', 'npm', 'package.json'),
+      JSON.stringify({ version: '1.2.3' })
+    );
+    fs.mkdirSync(path.join(tmp, 'works', 'ship', 'modules'), { recursive: true });
+    fs.writeFileSync(
+      path.join(tmp, 'works', 'ship', 'modules', 'modules.json'),
+      JSON.stringify({ version: '1.2.3' })
+    );
+
+    const aligned = ps._readState(tmp);
+    assert.equal(aligned.versions.npm, '1.2.3');
+    assert.equal(aligned.versions.modules, '1.2.3');
+    assert.equal(aligned.versionAligned, true);
+
+    // A drift in either manifest must flip the guard, or `khy publish check`
+    // certifies a tree the release gate (check-version-sync) will reject.
+    fs.writeFileSync(
+      path.join(tmp, 'works', 'ship', 'modules', 'modules.json'),
+      JSON.stringify({ version: '9.9.9' })
+    );
+    assert.equal(ps._readState(tmp).versionAligned, false);
   });
 
   test('_readState flags a drift between manifests as not aligned', () => {

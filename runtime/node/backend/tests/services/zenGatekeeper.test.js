@@ -1,7 +1,10 @@
 'use strict';
 
 const assert = require('node:assert');
-const { test, beforeEach } = require('node:test');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { test, beforeEach, afterEach } = require('node:test');
 
 const {
   isZenEndpoint,
@@ -18,11 +21,29 @@ const {
   ZEN_BASE_URL,
 } = require('../../src/services/zenGatekeeper');
 
+const retired = require('../../src/services/zenRetiredModels');
+
+let _sandbox;
+
 beforeEach(() => {
   delete process.env.OPENCODE_CLIENT;
   delete process.env.KHY_ZEN_SESSION_ID;
   delete process.env.KHY_OPENCODE_USER_AGENT;
+  // 隔离废弃账本：本组断言依赖账本为空，否则会读到开发机真实数据文件里的条目。
+  _sandbox = fs.mkdtempSync(path.join(os.tmpdir(), 'zen-gate-'));
+  process.env.KHY_ZEN_RETIRED_FILE = path.join(_sandbox, 'zen_retired_models.json');
   _reset();
+  retired._reset();
+});
+
+afterEach(() => {
+  delete process.env.KHY_ZEN_RETIRED_FILE;
+  retired._reset();
+  try {
+    fs.rmSync(_sandbox, { recursive: true, force: true });
+  } catch {
+    /* ignore */
+  }
 });
 
 test('isZenEndpoint: matches SSOT, tolerates /v1 and trailing slash', () => {
@@ -51,18 +72,37 @@ test('filterFreeZenModels: drops paid catalog names, keeps free, never throws', 
   const kept = filterFreeZenModels([
     'mimo-v2.6-flash-free',
     'claude-fable-5',
-    { id: 'deepseek-v4-flash-free' },
+    { id: 'jev-1.13-free' },
     { id: 'gemini-3-flash' },
     null,
     'gpt-6-astra',
   ]);
   assert.deepStrictEqual(kept, [
     'mimo-v2.6-flash-free',
-    { id: 'deepseek-v4-flash-free' },
+    { id: 'jev-1.13-free' },
   ]);
   assert.deepStrictEqual(filterFreeZenModels(null), []);
   assert.deepStrictEqual(filterFreeZenModels(undefined), []);
   assert.deepStrictEqual(filterFreeZenModels('not-array'), []);
+});
+
+test('filterFreeZenModels: drops retired ids the upstream catalog still lists', () => {
+  // 实测 2026-10-09：/v1/models 仍返回 exo-free，但调用返回 410 ModelDeprecated。
+  // 只判 -free 后缀会把它送到选型器，故废弃判定必须在同一出口生效。
+  const kept = filterFreeZenModels([
+    'exo-free',
+    'mimo-v2.5-free',
+    { id: 'deepseek-v4-flash-free' },
+    { id: 'muse-spark-1.3-contributor-free' },
+    'space-bunny-free',
+  ]);
+  assert.deepStrictEqual(kept, ['space-bunny-free']);
+});
+
+test('filterFreeZenModels: suffix rule alone would still admit exo-free', () => {
+  // 守住本改动的存在意义：若哪天有人放宽后缀判据，废弃过滤必须仍然拦得住 exo-free。
+  assert.strictEqual(isFreeZenModelId('exo-free'), true);
+  assert.strictEqual(filterFreeZenModels(['exo-free']).length, 0);
 });
 
 test('buildZenHeaders: opencode fingerprint + public bearer', () => {

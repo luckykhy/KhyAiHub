@@ -20,6 +20,9 @@ jest.mock('../../src/services/subscriptionService', () => ({
   TIERS: { free: { limits: { cloud_ai_tokens: 100000 } } },
 }), { virtual: true });
 
+// 拿到被 mock 的 fs，用于断言「对账过程零写入」
+const fs = require('fs');
+
 const {
   estimateTokens,
   calculateCost,
@@ -28,6 +31,8 @@ const {
   resetUsage,
   recordCompressionSavings,
   getCompressionStats,
+  reconcileCost,
+  formatReconcileSummary,
   TOKEN_PRICING,
   USD_TO_CNY,
 } = require('../../src/services/tokenUsageService');
@@ -198,5 +203,139 @@ describe('cache read/write ledger split (c79c931)', () => {
     usage = getSessionUsage();
     expect(usage.cacheReadTokens).toBe(0);
     expect(usage.cacheWriteTokens).toBe(0);
+  });
+});
+
+// ── 成本对账（L2，借鉴 ccusage 的 display/calculate 双档）──────────────
+// 见 [MGMT-PLAN-011] 落地记录 L2。核心契约：**只读**——不写文件、不改会话状态、不改入参。
+
+describe('reconcileCost', () => {
+  /** 清掉 beforeEach/resetUsage 留下的写调用，之后即可断言「零写入」。 */
+  function clearFsWrites() {
+    fs.writeFileSync.mockClear();
+  }
+
+  test('is read-only: performs zero filesystem writes', () => {
+    clearFsWrites();
+    const r = reconcileCost([
+      { provider: 'OpenAI', inputTokens: 1000, outputTokens: 500, costUSD: 0.001 },
+    ]);
+    expect(r.records).toBe(1);
+    expect(fs.writeFileSync).not.toHaveBeenCalled();
+    expect(fs.readFileSync).not.toHaveBeenCalled();
+  });
+
+  test('does not mutate the input array or its records', () => {
+    const input = [{ provider: 'OpenAI', inputTokens: 1000, outputTokens: 500, costUSD: 0.42 }];
+    const snapshot = JSON.stringify(input);
+    reconcileCost(input);
+    expect(JSON.stringify(input)).toBe(snapshot);
+  });
+
+  test('does not mutate session state', () => {
+    recordUsage('OpenAI', 'gpt-4o-mini', 1000, 500, 0.42);
+    const before = JSON.stringify(getSessionUsage());
+    clearFsWrites();
+    reconcileCost(); // 无参 → 读会话 records
+    expect(JSON.stringify(getSessionUsage())).toBe(before);
+    expect(fs.writeFileSync).not.toHaveBeenCalled();
+  });
+
+  test('reports zero drift when upstream equals the two-bucket recomputation', () => {
+    // OpenAI: input 0.15/1M, output 0.60/1M → (1M*0.15 + 500K*0.60)/1M = 0.45
+    const r = reconcileCost([
+      { provider: 'OpenAI', inputTokens: 1e6, outputTokens: 5e5, costUSD: 0.45 },
+    ]);
+    expect(r.upstreamUSD).toBeCloseTo(0.45, 6);
+    expect(r.recalculatedUSD).toBeCloseTo(0.45, 6);
+    expect(r.driftUSD).toBeCloseTo(0, 6);
+    expect(r.driftPct).toBeCloseTo(0, 6);
+  });
+
+  test('surfaces drift between the two cost paths (the reason this exists)', () => {
+    // 上游说 0.90，两桶重算只有 0.45 ⇒ 漂移 +100%
+    const r = reconcileCost([
+      { provider: 'OpenAI', inputTokens: 1e6, outputTokens: 5e5, costUSD: 0.9 },
+    ]);
+    expect(r.upstreamUSD).toBeCloseTo(0.9, 6);
+    expect(r.recalculatedUSD).toBeCloseTo(0.45, 6);
+    expect(r.driftUSD).toBeCloseTo(0.45, 6);
+    expect(r.driftPct).toBeCloseTo(100, 4);
+  });
+
+  test('driftPct is null (not 0, not Infinity) when the recomputed baseline is zero', () => {
+    const r = reconcileCost([
+      { provider: 'Ollama', inputTokens: 1000, outputTokens: 500, costUSD: 0.5 },
+    ]);
+    expect(r.recalculatedUSD).toBe(0);
+    expect(r.upstreamUSD).toBeCloseTo(0.5, 6);
+    expect(r.driftUSD).toBeCloseTo(0.5, 6);
+    expect(r.driftPct).toBeNull();
+  });
+
+  test('quantifies the cache-token gap instead of silently mis-costing it', () => {
+    const r = reconcileCost([
+      { provider: 'Anthropic', inputTokens: 1000, outputTokens: 200, costUSD: 0, cacheReadTokens: 30, cacheWriteTokens: 50 },
+      { provider: 'Anthropic', inputTokens: 1000, outputTokens: 200, costUSD: 0 },
+    ]);
+    expect(r.cacheUncostedRequests).toBe(1);
+    expect(r.cacheUncostedTokens).toBe(80);
+  });
+
+  test('names providers that fall back to the default price list', () => {
+    const r = reconcileCost([
+      { provider: 'SomeNewVendor', inputTokens: 1000, outputTokens: 100, costUSD: 0 },
+      { provider: 'OpenAI', inputTokens: 1000, outputTokens: 100, costUSD: 0 },
+      { provider: 'AnotherVendor', inputTokens: 1000, outputTokens: 100, costUSD: 0 },
+    ]);
+    expect(r.unpricedProviders).toEqual(['AnotherVendor', 'SomeNewVendor']);
+  });
+
+  test('tolerates malformed input without throwing', () => {
+    expect(() => reconcileCost(null)).not.toThrow();
+    expect(() => reconcileCost(undefined)).not.toThrow();
+    expect(() => reconcileCost('nope')).not.toThrow();
+    expect(() => reconcileCost([null, 42, {}, { inputTokens: 'x', outputTokens: null }])).not.toThrow();
+    const r = reconcileCost([null, 42, {}]);
+    expect(r.records).toBe(3);
+    expect(r.upstreamUSD).toBe(0);
+    expect(r.recalculatedUSD).toBe(0);
+  });
+
+  test('empty input yields zeros and a null percentage', () => {
+    const r = reconcileCost([]);
+    expect(r).toMatchObject({ records: 0, upstreamUSD: 0, recalculatedUSD: 0, driftUSD: 0, driftPct: null });
+  });
+});
+
+describe('formatReconcileSummary', () => {
+  test('flags drift at or beyond the warn threshold', () => {
+    const r = reconcileCost([
+      { provider: 'OpenAI', inputTokens: 1e6, outputTokens: 5e5, costUSD: 0.9 }, // +100%
+    ]);
+    expect(formatReconcileSummary(r)).toContain('⚠');
+    expect(formatReconcileSummary(r)).toContain('+100.0%');
+  });
+
+  test('stays unflagged below the warn threshold', () => {
+    const r = reconcileCost([
+      { provider: 'OpenAI', inputTokens: 1e6, outputTokens: 5e5, costUSD: 0.46 }, // ~+2.2%
+    ]);
+    const line = formatReconcileSummary(r);
+    expect(line.startsWith('⚠')).toBe(false);
+    expect(line).toContain('上游');
+  });
+
+  test('calls out the cache gap and unpriced providers', () => {
+    const r = reconcileCost([
+      { provider: 'BrandNew', inputTokens: 1000, outputTokens: 100, costUSD: 0, cacheReadTokens: 10 },
+    ]);
+    const out = formatReconcileSummary(r);
+    expect(out).toContain('缓存 token');
+    expect(out).toContain('BrandNew');
+  });
+
+  test('handles a missing/invalid result object', () => {
+    expect(formatReconcileSummary(null)).toBe('  成本对账: 无数据');
   });
 });

@@ -112,3 +112,32 @@ describe('toolUseLoop delivery conclusion events', () => {
     expect(summary.typeCounts['agent.delivery.final']).toBe(1);
   });
 });
+
+describe('unfulfilled-intent negative signal (轻档：只改判定与记账，不改控制流)', () => {
+  const helpers = require('../src/services/tool/toolUseLoopHelpers');
+  const isUnfulfilled = helpers._looksLikeUnfulfilledIntent;
+
+  // 命中：整句只是一句打算（语料里这类有 90 条长请求被记成 completed）
+  test.each([
+    '我用 Read 工具读取该文件。',
+    '让我读取 package.json',
+    '我来执行这条命令',
+    '接下来我搜索一下新闻',
+    '我将调用 shell 运行 ls',
+    '我要修改这两个文件',
+  ])('flags bare intent declaration: %s', (text) => {
+    expect(isUnfulfilled(text)).toBe(true);
+  });
+
+  // 不误伤：给了结果、给了否定结论、或只是长答案里顺带提到工具
+  test.each([
+    'version 是 1.6.0，已在 package.json 中确认。',
+    '我查到了：今天多云，最高 24 度。',
+    '已创建 works/data/khy/x.json，共 3 个文件被修改。',
+    '我没有找到相关文件，建议确认路径。',
+    '这个仓库的架构是分层设计，L0 是启动器。',
+    `${'这是正常的长答案句子。'.repeat(40)}我先读一下文件。`,
+  ])('does not flag real delivery: %s', (text) => {
+    expect(isUnfulfilled(text)).toBe(false);
+  });
+});

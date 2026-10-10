@@ -49,11 +49,11 @@ describe('Skill Loader Native Skill Md', () => {
       }
   });
 
-  test('discoverSkillsDeep 原生发现 <project>/.khy/skills 下的 SKILL.md(项目目录)', () => {
+  test('discoverSkillsDeep 原生发现 <project>/works/data/khy/skills 下的 SKILL.md(项目目录)', () => {
       const home = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-home-'));
       const proj = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-proj-'));
       try {
-        mkSkill(path.join(proj, '.khy', 'skills'), 'native-project-skill', 'in project');
+        mkSkill(path.join(proj, 'works', 'data', 'khy', 'skills'), 'native-project-skill', 'in project');
         const skills = loader.discoverSkillsDeep(proj, { homedir: home });
         expect(skills.has('native-project-skill')).toBeTruthy();
         expect(skills.get('native-project-skill').priority).toBe('project');

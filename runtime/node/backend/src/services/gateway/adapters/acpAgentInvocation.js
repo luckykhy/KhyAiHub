@@ -193,6 +193,34 @@ class AcpAgentConnection {
     this._sessionIds.add(newResp.result.sessionId);
   }
 
+  /**
+   * 探测用会话握手（T-025 / [MGMT-PLAN-011] L4）——**加法式公开面**，不改 prompt 路径。
+   *
+   * 复用 `_ensureAgentSession()` 的 initialize + session/new（空会话、不跑 prompt），
+   * 把结果翻译成结构化探测结论。这是「已装但未登录」与「已装且可用」的唯一判据：
+   * ACP 的 `initialize` 只能证明智能体会说 ACP，不能证明它登录了（借鉴 AionUi
+   * `custom_agent_probe.rs` 的同款注释与做法）。
+   *
+   * @returns {Promise<{ok:boolean, errorCode?:string, message?:string, authMethods?:number}>}
+   */
+  async probeSession() {
+    let authMethods = 0;
+    try {
+      await this._ensureAgentSession();
+      return { ok: true, authMethods };
+    } catch (err) {
+      const message = (err && err.message) || String(err);
+      // initialize 阶段就能拿到 authMethods（空数组 = 无需登录）
+      if (this.agentInfo && Array.isArray(this.agentInfo.authMethods)) {
+        authMethods = this.agentInfo.authMethods.length;
+      }
+      if (_looksLikeAuthError(message) || (authMethods > 0 && /session\/new/.test(message))) {
+        return { ok: false, errorCode: 'auth_required', message, authMethods };
+      }
+      return { ok: false, errorCode: 'session_probe_failed', message, authMethods };
+    }
+  }
+
   _khyVersion() {
     try {
       // eslint-disable-next-line global-require
@@ -314,6 +342,16 @@ class AcpAgentConnection {
 
 /** 连接缓存（key = agentKey），adapter 单例复用。测试用 reset 清空。 */
 const _connections = new Map();
+
+/**
+ * 判一条错误消息是否「未登录/未授权」（ACP 无统一错误码，只能按消息形状匹配；
+ * 保守匹配——误判为 auth_required 的代价是 UI 多提示一次登录，远小于漏判）。
+ * @param {string} message
+ * @returns {boolean}
+ */
+function _looksLikeAuthError(message) {
+  return /auth|unauthor|login|credential|sign ?in|token|forbidden|permission denied/i.test(String(message || ''));
+}
 
 function getConnection(agentKey, resolved, opts = {}) {
   let conn = _connections.get(agentKey);

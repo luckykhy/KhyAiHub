@@ -28,8 +28,10 @@ let TMP;
 function mkTmp() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'khy-userskill-'));
 }
-function writeSkill(root, name, manifest, promptBody) {
-  const dir = path.join(root, '.khy', 'skills', name);
+function writeSkill(root, name, manifest, promptBody, skillsRel) {
+  // skillsRel 缺省 = 家目录约定 ~/.khy/skills；项目级传 'works/data/khy'
+  // （数据家统一后的项目技能根，见 DATA-LOCATIONS.json）。
+  const dir = path.join(root, skillsRel || '.khy', 'skills', name);
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, 'manifest.json'), JSON.stringify(manifest), 'utf-8');
   if (promptBody != null) fs.writeFileSync(path.join(dir, 'prompt.md'), promptBody, 'utf-8');
@@ -91,10 +93,10 @@ describe('listUserSkillCommands — 发现用户技能为斜杠命令', () => {
     expect(mod.loadUserSkillPrompt(dir2)).toBe('FALLBACK BODY');
   });
 
-  test('项目 <cwd>/.khy/skills 也被扫描', () => {
+  test('项目 <cwd>/works/data/khy/skills 也被扫描', () => {
     const proj = mkTmp();
     try {
-      writeSkill(proj, 'projskill', { name: 'projskill', command: '/projskill' }, 'body');
+      writeSkill(proj, 'projskill', { name: 'projskill', command: '/projskill' }, 'body', 'works/data/khy');
       const mod = fresh();
       const list = mod.listUserSkillCommands({ home: path.join(proj, '__nohome__'), cwd: proj, builtinDir: path.join(proj, '__no_builtin__') });
       expect(list.find((c) => c.cmd === '/projskill')).toBeTruthy();
