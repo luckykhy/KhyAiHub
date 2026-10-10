@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-031] 网关日志租界隔离 — 按需可见与净味翻译
 
 状态：已实现（Goal「Agent 日志隔离架构师」闭环）

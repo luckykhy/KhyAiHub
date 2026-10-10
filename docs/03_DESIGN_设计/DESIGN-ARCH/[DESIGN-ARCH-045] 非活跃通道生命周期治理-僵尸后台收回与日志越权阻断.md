@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-045] 非活跃通道生命周期治理 — 僵尸后台收回与日志越权阻断
 
 状态：已实现（[EvoRequirement]「非活跃通道后台僵尸行为与日志越权」闭环）

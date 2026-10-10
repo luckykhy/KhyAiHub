@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # DESIGN-ARCH-044 · Agent 自愈微循环：诊断-修复-重试（先救后报）
 
 > 状态：已实现（services/backend）

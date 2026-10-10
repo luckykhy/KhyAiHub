@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # 《khyos 系统级服务调用审批网关规范》
 
 > 文档编号：DESIGN-ARCH-026

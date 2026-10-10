@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # DESIGN-ARCH-027 · Agent 依赖自愈机制规范
 
 > 状态：已实现（services/backend）

@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 <!-- 文档分类: DESIGN-ARCH-043 | 阶段: 设计 | 主题: khy-agent-sdk Claude对齐与D1-D6融合 -->
 # khy-agent-sdk — Claude Agent SDK 对齐与 D1–D6 治理融合规范
 
