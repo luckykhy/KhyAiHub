@@ -5,6 +5,40 @@ All notable changes to khy OS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.2.1
+
+khy OS 1.2.1:开发态/发布态双态版本管理落地——AI 迭代期版本号自动随工作批次递增，小版本/大版本递增改由人批准，并补上「该换版本号了」的提示。
+
+### Highlights
+
+- **新增 `scripts/release/version-mode.js`**：`status` / `bump` / `release` / `back` / `dev`
+  五个子命令，全部支持 `--dry-run`。版本字段始终纯数字（`v` 只属于 tag），
+  「切换为 v1」是打 tag 而非改字段格式，因此守卫 `isSemver` 一行未改。
+  bump 会同步 G1 四源并复用 `changelog-new.js` 的 `insertStub` 插 CHANGELOG 段。
+- **软著登记版本 V1.2.0 → V1.0.0**（人明示，决策记录 D-版1）：与计划中的首次正式
+  发布号对齐。登记版本与工程版本不互相绑定——005 §九 要求的是「申请表与鉴别材料
+  页眉」这两份申报材料之间一致，不是要跟工程版本对上。
+- **自更新源不再写死已删除的公共仓**：`luckykhy/khy_os` 删除后，`serviceDefaults.js`
+  三个 GitHub 默认值全部 404。改为空串 + 未配置时明确报「未配置更新源」，
+  不再拼出 `https://api.github.com/repos//releases` 把配置问题报成协议问题。
+- **MINOR/MAJOR 递增必须由人批准**（R-2a / AGENTS.md / CLAUDE.md B7）：AI 不得自行
+  决定小版本或大版本递增，须先说明判据、影响面与建议递增位。三层执行面——
+  `version-mode.js --approved-by`、`pre-commit` 的 `check-version-bump-approval.js`
+  （比对暂存区+工作区与 HEAD，堵住绕过脚本私改版本号的路）、`pr-gate.yml`。
+- **「该换版本号了」提示器**：`check-version-freshness.js` + 新增 `pre-push` 钩子。
+  判据机械不猜语义——开发态下距上次 bump 已有提交就提示。恒不阻断推送。
+  首次运行即暴露本仓积压 46 个提交未 bump，本版即为该提示的直接产出。
+- **清掉全仓 `.ai/` 死指针**：8 份由 `khy metadata link` 生成、指针块停在旧路径的
+  文件按 `metadataPointers._pointerBody()` 逐字节重生成；另修 2 处代码里的同类死指针。
+
+### Compatibility
+
+- 安装 / 升级:`pip install -U khy-os` 或 `npm install -g @khy-os/khy-os`;`khy --version` 应报告 `1.2.1`。
+- 自更新：默认不再内嵌任何仓名。部署侧需设 `KHY_UPDATE_GITHUB_REPOSITORY` 或
+  `KHY_UPDATE_GITHUB_RELEASES_API`；未设置时 `khy` 明确报「未配置更新源」而不再
+  给一个三个月前的错版本（原默认仓唯一 release 是 v1.1.8 / 2026-07-26）。
+
+---
 ## 1.2.0
 
 > 修复记录：`BUG-014` ｜ 设计真源：[`[DESIGN-ARCH-138]`](docs/03_DESIGN_设计/DESIGN-ARCH/%5BDESIGN-ARCH-138%5D%20工具调用能力判定与文本拦截协议.md) ｜ 取证：`.khy/feedback/toolcall-capability-falseneg-20260923/`
