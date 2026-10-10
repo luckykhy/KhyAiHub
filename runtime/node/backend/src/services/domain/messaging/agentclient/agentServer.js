@@ -80,6 +80,9 @@ function createAgentServer({ channel, version, onErrorLog, deps } = {}) {
   const _log = onErrorLog || (() => {});
   const _deps = deps || null;
   const _ownSessions = new Set();
+  // 客户端声明过的 khy 扩展能力（initialize 时 latch 一次，见 handleInitialize）。
+  // null = 还没握手过 ⇒ clientSupports 一律 false（fail-closed）。
+  let _clientKhyCaps = null;
 
   function _getDeps() {
     return _deps || _loadDefaultDeps();
@@ -99,9 +102,51 @@ function createAgentServer({ channel, version, onErrorLog, deps } = {}) {
     channel.write({ jsonrpc: '2.0', method: 'session/update', params: { sessionId, update } });
   }
 
+  // ── 双向能力协商（[MGMT-RPT-035] L7，借鉴 goose `acp/server.rs`）──────────
+  //
+  // 面 A（khy 作为 ACP agent）将来若要发「khy 自有扩展」的 session/update —— 即
+  // ACP v1 稳定面之外的东西 —— 必须先让客户端声明收得到。否则就是往标准协议里
+  // 渗私有方言，正是 [DESIGN-ARCH-184] §0 术语红线要拦的形态。
+  //
+  // goose 的做法（实证）：agent 在 initialize 响应的 meta 里声明自己支持什么；
+  // client 在 initialize **请求**的 `clientCapabilities.goose` 里声明自己能收什么；
+  // 两侧各 latch 一次，读取处一律 `.unwrap_or(false)` —— **客户端没声明就不发**。
+  //
+  // 这里只取「读客户端声明 + 默认 false」这一半（khy 侧声明见 handleInitialize 的
+  // agentCapabilities）。命名空间用标准字段 `clientCapabilities.khy`，不新造协议字段。
+
+  /** 从 initialize 请求里取出客户端声明的 khy 扩展能力（缺省/畸形 → 空对象）。 */
+  function extractClientKhyCaps(params) {
+    const cc = params && typeof params === 'object' ? params.clientCapabilities : null;
+    if (!cc || typeof cc !== 'object') {
+      return {};
+    }
+    const khy = cc.khy;
+    if (!khy || typeof khy !== 'object' || Array.isArray(khy)) {
+      return {};
+    }
+    return khy;
+  }
+
+  /**
+   * 客户端是否声明过某项 khy 扩展能力。**未握手 / 未声明 / 声明为非 true 一律 false**——
+   * 拿 true 假装客户端收得到，比漏发严重得多（漏发只是少一个特性，误发是污染协议）。
+   */
+  function clientSupports(name) {
+    if (!_clientKhyCaps || typeof name !== 'string' || !name) {
+      return false;
+    }
+    return _clientKhyCaps[name] === true;
+  }
+
   // ── initialize / session/new ─────────────────────────────────────────
 
-  function handleInitialize() {
+  function handleInitialize(params) {
+    // latch 一次：后到的 initialize 不翻转已协商结果（对齐 goose 的 OnceCell 语义）。
+    // 同一进程被第二个客户端重连时，静默改能力会让「发/不发」的判定随时序漂移。
+    if (_clientKhyCaps === null) {
+      _clientKhyCaps = extractClientKhyCaps(params);
+    }
     return {
       protocolVersion: acp.PROTOCOL_VERSION,
       agentCapabilities: { loadSession: false }, // session/load 回放是 P2
@@ -276,7 +321,7 @@ function createAgentServer({ channel, version, onErrorLog, deps } = {}) {
   async function handleRequest(msg) {
     switch (msg.method) {
       case 'initialize':
-        return handleInitialize();
+        return handleInitialize(msg.params);
       case 'session/new':
         return handleSessionNew(msg.params);
       case 'session/prompt':
@@ -322,7 +367,7 @@ function createAgentServer({ channel, version, onErrorLog, deps } = {}) {
     _ownSessions.clear();
   }
 
-  return { handleRequest, handleNotification, close };
+  return { handleRequest, handleNotification, close, clientSupports, extractClientKhyCaps };
 }
 
 /**
