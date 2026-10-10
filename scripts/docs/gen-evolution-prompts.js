@@ -115,7 +115,7 @@ const GENERAL = [
   { text: '每次动手前先做 B1：用一句话说清「改什么 / 为什么 / 影响面」，说不清就先别改。', note: '先想再写，避免瞎改。', v: 'agent' },
   { text: '用 B2 目标驱动循环：先定义可验证的成功标准，再自循环到绿，验证没过绝不说「修好了」。', note: '核心方法论。', v: 'maint' },
   { text: '遵守 B3 外科手术式改动：只动该动的，不顺手重构、不扩大范围。', note: '把改动面压到最小。', v: 'change' },
-  { text: '改任何文件前，先读 .ai/MAP.md 与 docs/14_维护者/registry/维护映射表.json 定位正确子系统。', note: '别在错的地方改。', v: 'maint' },
+  { text: '改任何文件前，先读 works/record/ai/MAP.md 与 docs/14_维护者/registry/维护映射表.json 定位正确子系统。', note: '别在错的地方改。', v: 'maint' },
   { text: '多步任务先列 plan，每一步都写明它自己的 verify 命令。', note: '每步可验证。', v: 'agent' },
   { text: '红线：绝不 AI 自动 commit/push，任何提交都要用户明确点头。', note: '提交权在人。', v: 'agent' },
   { text: '红线：真 key/token 绝不进源码 / 包 / 提交，只经 env 注入，日志只打印长度不打印明文。', note: '密钥防泄露。', v: 'model' },

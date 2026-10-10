@@ -203,7 +203,7 @@ const MAPPING = {
 const MANUAL = {
   'LAYOUT-003': null, // mapped above
   'MEMORY-001': '记忆分档由调用方语义决定，机械上无法判定一条记录"应当"落在 session 还是 persistent；由 [DESIGN-MEM-006] 冻结的入口契约与评审兜底。',
-  'MEMORY-002': 'persistent 记录要素属内容质量约定，无确定性判定信号；靠 .ai/CONTEXT 生成与评审兜底。',
+  'MEMORY-002': 'persistent 记录要素属内容质量约定，无确定性判定信号；靠 works/record/ai/CONTEXT.yaml 生成与评审兜底。',
   'MEMORY-003': '指定读写入口已冻结于 [DESIGN-MEM-006]，但"是否走了指定入口"需跨调用图分析，超出静态守卫能力；评审兜底。',
   'MEMORY-004': 'session 生命周期清除依赖运行时行为，静态扫描无法判定；由 sessionWatchdog.js 与测试兜底。',
   'SOURCING-001': '上游源码是否"复制"需与上游仓库逐文件比对，且需人读 LICENSE 文本判定归属；CODEOWNERS 与 PR 评审兜底。',
