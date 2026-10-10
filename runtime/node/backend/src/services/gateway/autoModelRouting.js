@@ -407,13 +407,46 @@ function rank(gateway, taskType, opts = {}, env = process.env) {
         exhausted.add(r.adapter);
       }
     }
-    const finalRanked =
+    let finalRanked =
       exhausted.size > 0
         ? [
             ...ranked.filter((r) => !exhausted.has(r.adapter)),
             ...ranked.filter((r) => exhausted.has(r.adapter)),
           ]
         : ranked;
+
+    // [MGMT-PLAN-011] L6 条件路由（借鉴 Portkey conditionalRouter）——**可选**。
+    // 必须放在**排序之后**：rankAutoModels 会按自己的分数重排，若在输入侧调序会被
+    // 整个丢掉（第一版正是这么错的，测试当场抓到：prioritize 换了输入次序，
+    // ranked[0] 却仍是分数最高的那个）。
+    // 语义是「命中则把该 adapter 的候选提到前列」，不是硬过滤——硬过滤会在 target
+    // 不可用时清空池子（Portkey 由 fallback 链兜底，本壳暂无该链）。
+    // 调用方不给 opts.conditional 时 matchConditional 返回 null、prioritize 原样返回
+    // 同一个数组引用 ⇒ 下游与今日逐字节一致。
+    let conditionalInfo = null;
+    const conditional = opts && opts.conditional && typeof opts.conditional === 'object'
+      ? opts.conditional
+      : null;
+    if (conditional) {
+      try {
+        const cr = require('./conditionalRoute');
+        const ctx = conditional.ctx && typeof conditional.ctx === 'object' ? conditional.ctx : {};
+        const pri = cr.prioritize(finalRanked, cr.matchConditional(conditional, ctx));
+        if (pri.ordered !== finalRanked) {
+          // 只在真的发生了重排时替换，避免无命中也造出一个新数组
+          finalRanked = pri.ordered;
+        }
+        conditionalInfo = {
+          applied: pri.applied,
+          target: pri.target,
+          via: pri.via,
+          matchedCount: pri.matchedCount,
+        };
+      } catch {
+        // 叶子不可用 → 原样列表，逐字节回退（本壳「绝不抛」契约）
+        conditionalInfo = null;
+      }
+    }
 
     // §5.5 升档：在**已排好序**的列表上收紧 floor（只保留 ≥ 升档结果的档位），
     // 不重排、不重新打分 —— 升档的语义是「排除太弱的选项」，不是「换个排序键」。
@@ -528,6 +561,9 @@ function rank(gateway, taskType, opts = {}, env = process.env) {
         coverage: priceStates,
         bandEmptied: !!bandEmptied,
       },
+      // 条件路由的读数。没配 conditional 时为 null（而不是一个空对象）——
+      // 让消费方能区分「没开条件路由」与「开了但没命中」。
+      conditional: conditionalInfo,
     };
   } catch {
     return null;

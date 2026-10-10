@@ -5,15 +5,30 @@
       "npm": "@ai-sdk/openai-compatible",
       "name": "opencode",
       "options": {
-        "baseURL": "https://apihub.agnes-ai.com/v1",
-        "apiKey": "sk-real"
+        "baseURL": "https://x/v1",
+        "apiKey": "sk-real-xyz"
       },
       "models": {
+        "agnes-2.0-pro": {
+          "name": "agnes-2.0-pro"
+        },
         "agnes-2.0-flash": {
           "name": "agnes-2.0-flash"
         }
       }
+    },
+    "deepseek": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "deepseek",
+      "options": {
+        "baseURL": "https://api.deepseek.com/v1"
+      },
+      "models": {
+        "deepseek-chat": {
+          "name": "deepseek-chat"
+        }
+      }
     }
   },
-  "model": "opencode/agnes-2.0-flash"
+  "model": "deepseek/deepseek-chat"
 }

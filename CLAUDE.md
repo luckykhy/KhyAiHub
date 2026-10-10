@@ -1,7 +1,7 @@
 # CLAUDE.md — Khy OS 项目章程
 
 <!-- RULES-REGISTRY: LAYOUT-002, PROCESS-001, PROCESS-002, PROCESS-003, PROCESS-007, PROCESS-010, SECURITY-001 -->
-<!-- MIRROR: CLAUDE.html -->
+<!-- 根级 .md 自 2026-09-28 裁决起不再生成 .html 孪生 -->
 
 
 > 本文件是 opencode / Claude Code / Codex / ZCode 等 AI 编码助手的**项目章程真源**。
@@ -20,9 +20,9 @@
 | ID | 红线 | 一句话 | 强制真源 / 守卫 |
 | --- | --- | --- | --- |
 | **R1**<br>`PROCESS-001` | **分支纪律** | 禁止直接在主干开发；**禁止 AI 自动 `commit`/`push`**，必须用户明确点头 | 本文件 §一 R1；分支保护基线见 `[OPS-MAN-009]` |
-| **R2**<br>`SECURITY-001` | **密钥防泄露** | 真 key/token **永不以明文进 bundle / 源码 / 提交**（出厂内置密钥仅允许 XOR 混淆形态随包分发，明文形态严禁出现），只经 env 变量瞬时注入、绝不落盘；发包前 `wheel` 对已知泄露 key **0 命中**；占位 key 必须一眼假 | 本文件 §一 R2；密钥注入真源 `services/backend/src/services/customProviderRegistrar.js`；密钥家族见 `[OPS-MAN-169]` §4.6 与 `[OPS-MAN-058]`「密钥/凭证」；出厂件明文形态由 `scripts/ci/check-change-safety.js`（`builtin-key-plaintext`，判据委托 `scripts/check_builtin_keys.py`）执行 |
+| **R2**<br>`SECURITY-001` | **密钥防泄露** | 真 key/token **永不以明文进 bundle / 源码 / 提交**（出厂内置密钥仅允许 XOR 混淆形态随包分发，明文形态严禁出现），只经 env 变量瞬时注入、绝不落盘；发包前 `wheel` 对已知泄露 key **0 命中**；占位 key 必须一眼假 | 本文件 §一 R2；密钥注入真源 `runtime/node/backend/src/services/customProviderRegistrar.js`；密钥家族见 `[OPS-MAN-169]` §4.6 与 `[OPS-MAN-058]`「密钥/凭证」；出厂件明文形态由 `scripts/ci/check-change-safety.js`（`builtin-key-plaintext`，判据委托 `scripts/check_builtin_keys.py`）执行 |
 | **R3**<br>`PROCESS-002` | **多轨道版本同步** | 三条版本轨道各内部完全一致，组间刻意不同（详见下方版本轨道表） | 本文件 §一 R3；守卫 `scripts/ci/check-version-sync.js` |
-| **R4**<br>`LAYOUT-002` | **上帝文件门** | 任何文件不得**新增**超过 2500 行（`KHY_ARCH_GOD_FILE_LOC` 可调）；拆解走 god-file governance（同名 re-export + DI 保字节等价） | 本文件 §一 R4；阈值真源 `services/backend/src/services/domain/project/projectHygiene/thresholds.js` 的 `godFileLoc()`（回退 env `KHY_ARCH_GOD_FILE_LOC`，默认 2500）；扫描 `services/backend/scripts/archDebtScan.js` 的 R2 |
+| **R4**<br>`LAYOUT-002` | **上帝文件门** | 任何文件不得**新增**超过 2500 行（`KHY_ARCH_GOD_FILE_LOC` 可调）；拆解走 god-file governance（同名 re-export + DI 保字节等价） | 本文件 §一 R4；阈值真源 `runtime/node/backend/src/services/domain/project/projectHygiene/thresholds.js` 的 `godFileLoc()`（回退 env `KHY_ARCH_GOD_FILE_LOC`，默认 2500）；扫描 `runtime/node/backend/scripts/archDebtScan.js` 的 R2 |
 
 ### R3 版本轨道表（真源：`check-version-sync.js` 的 `specs` 数组）
 
@@ -30,20 +30,20 @@
 
 | 轨道 | 成员（组内必须一致） | 当前版本 |
 | --- | --- | --- |
-| **G1 主 khy-os 包**（4 源） | `pyproject.toml`（pip）、`packaging/npm/package.json`（npm 渠道清单）、`services/backend/package.json`（`khy --version`）、`packaging/modules/modules.json`（模块化打包清单） | 1.1.15 |
-| **G2 ai-backend 生态**（2 源） | `services/ai-backend/package.json`、`platform/packages/shared/package.json`（`@khy/shared`） | 1.6.5 |
-| **G3 浏览器 UI 包**（3 源） | `platform/packages/ui-shared/package.json`、`apps/ai-frontend/package.json`（其 `@khy/ui-shared` 依赖声明）、`software/khyquant/frontend/package.json`（其 `@khy/ui-shared` 依赖声明） | 0.1.0 |
+| **G1 主 khy-os 包**（4 源） | `pyproject.toml`（pip）、`works/ship/npm/package.json`（npm 渠道清单）、`runtime/node/backend/package.json`（`khy --version`）、`works/ship/modules/modules.json`（模块化打包清单） | 1.1.15 |
+| **G2 ai-backend 生态**（3 源） | `runtime/node/ai-backend/package.json`、`runtime/substrate/platform/packages/shared/package.json`（`@khy/shared`）、`runtime/substrate/platform/packages/plugin-sdk/package.json`（`@khy/plugin-sdk`） | 1.6.5 |
+| **G3 浏览器 UI 包**（3 源） | `runtime/substrate/platform/packages/ui-shared/package.json`、`delivery/web/ai-frontend/package.json`（其 `@khy/ui-shared` 依赖声明）、`delivery/channel/khyquant/frontend/package.json`（其 `@khy/ui-shared` 依赖声明） | 0.1.0 |
 
-- `platform/khy_platform/__init__.py` 的 `__version__` **运行时动态解析**（从 `pyproject.toml` /
+- `runtime/substrate/platform/khy_platform/__init__.py` 的 `__version__` **运行时动态解析**（从 `pyproject.toml` /
   已安装元数据），**不得硬编码字面量**——`check-version-sync.js` 会故意让硬编码回归失败。
 - `scripts/release/publish-dual.sh` 在发布时从单一 `--version` 输入同步 **G1 的前三处**
-  （`pyproject.toml` / `packaging/npm/package.json` / `services/backend/package.json`）；
-  `packaging/modules/modules.json` 由构建流程或人工维护，最终由
+  （`pyproject.toml` / `works/ship/npm/package.json` / `runtime/node/backend/package.json`）；
+  `works/ship/modules/modules.json` 由构建流程或人工维护，最终由
   `check-version-sync.js` 统一校验 G1 全 4 源一致。
 - G2 与 G1 的版本**刻意不同**：ai-backend 与 `@khy/shared` 作为捆绑单元随 pip wheel 一起
   发布、共同开发，因此共享一条独立版本轨道。
 - G3 是**依赖声明对齐**而非版本号对齐：两个前端应用的 `@khy/ui-shared` 依赖必须精确等于
-  `platform/packages/ui-shared/package.json` 的版本。
+  `runtime/substrate/platform/packages/ui-shared/package.json` 的版本。
 
 **R3 只管「一致」，不管「时机」。** 何时该 bump、命名与递增怎么定、何时推 GitHub/Gitee、
 哪些操作由什么条件自动触发（避免依赖人工判断发布时机）—— 见
@@ -63,7 +63,7 @@
 ### B4 引导式搜索（禁止无目标全量读取）
 
 **本仓规模让「全量读」字面不可行**：`docs/` 有 189 份设计文档与 189 份规范（2026-09-18 实测），
-`AGENTS.md` 900+ 行，`services/backend/src/services/tool/toolUseLoopCore.js` 12,100+ 行（单文件即占约 1/4 可用上下文）。
+`AGENTS.md` 900+ 行，`runtime/node/backend/src/services/tool/toolUseLoopCore.js` 12,100+ 行（单文件即占约 1/4 可用上下文）。
 
 处理多文件任务时**必须**按此序，禁止跳步直接 Read：
 
@@ -142,13 +142,13 @@ node scripts/ci/check-agent-rules.js --changed            # 三守卫之二
 node scripts/ci/check-repo-layout.js                      # 三守卫之三：层级/根目录/索引/任务入口
 node scripts/ci/check-gov-rules.js                        # 治理总纲十板块 + 规则登记表
 node scripts/ci/check-copyright-readiness.js              # 软著就绪（改动触及界面标题/产品名/版本串/模块增删时必跑，0 error）
-npm run arch:god --workspace services/backend             # 改动文件不得新增超限
+npm run arch:god --workspace runtime/node/backend             # 改动文件不得新增超限
 khy doctor                                                # 系统健康总检
 ```
 
 > 三守卫须在**仓库根**跑；untracked 新叶子须**显式**传路径扫描。
-> `arch:god` 只定义在 `services/backend/package.json`，须带 `--workspace services/backend`
-> 或先 `cd services/backend`。
+> `arch:god` 只定义在 `runtime/node/backend/package.json`，须带 `--workspace runtime/node/backend`
+> 或先 `cd runtime/node/backend`。
 
 ---
 
@@ -156,7 +156,7 @@ khy doctor                                                # 系统健康总检
 
 **Khy OS** 是一个通过 PyPI（`pip install khy-os`）和 npm（`@khy-os/khy-os`）分发的 AI 平台
 操作系统。它启动一个可扩展的应用运行时。**khyquant（量化交易终端）是独立项目**，连接 Khy OS
-使用，**不是** Khy OS 的内置部分（`software/khyquant/` 只是随平台分发/接入的载体）。完整架构速查与关键入口点见 `AGENTS.md`。
+使用，**不是** Khy OS 的内置部分（`delivery/channel/khyquant/` 只是随平台分发/接入的载体）。完整架构速查与关键入口点见 `AGENTS.md`。
 
 ---
 
@@ -176,7 +176,7 @@ khy doctor                                                # 系统健康总检
 > 本节是**工作焦点指针**，不是章程；第一章与第二章红线不受本节影响。
 >
 > **2026-09-17 更正**：本节原定性为「限期任务，完成后应删除本节」，与事实不符——CC TUI 已
-> 演进为 `services/backend/src/cli/tui/` 下 163 个 `*.js` 文件的**长期子系统**，拥有专属约束
+> 演进为 `runtime/node/backend/src/cli/tui/` 下 163 个 `*.js` 文件的**长期子系统**，拥有专属约束
 > 真源（同目录 `AGENTS.md`）、专属门禁（`npm run check:tui-gates`），并在
 > `[DESIGN-NAM-001]` §194 登记为项目级环境变量（`KHY_CC_TUI`）。自此按长期模块维护，
 > 不再按限期任务处置。
@@ -186,7 +186,7 @@ Legacy 模式默认不变。
 
 ### 必读文件（按优先级）
 
-1. **`services/backend/src/cli/tui/AGENTS.md`** — CC TUI 工程约束（红线、门控、渲染、性能）
+1. **`runtime/node/backend/src/cli/tui/AGENTS.md`** — CC TUI 工程约束（红线、门控、渲染、性能）
 2. **`docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-081] Claude Code TUI 1复刻实施计划.md`** — 完整设计规范
 3. **`docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-079] TUI界面设计规范.md`** — 界面设计规范
 
@@ -208,7 +208,7 @@ Legacy 模式默认不变。
 ### 文件组织
 
 ```
-services/backend/src/cli/tui/
+runtime/node/backend/src/cli/tui/
 ├── AGENTS.md              ← 工程约束真源
 ├── app.js                 ← 入口
 ├── ink-components/        ← Ink 组件（Cc 前缀 = CC 模式专用）

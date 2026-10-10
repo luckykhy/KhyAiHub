@@ -34,7 +34,7 @@
   { "name": "area/cli-tui",        "color": "1d76db", "description": "CLI 与 TUI（services/backend/src/cli）" },
   { "name": "area/gateway",        "color": "1d76db", "description": "AI 网关与供应商适配（src/services/gateway）" },
   { "name": "area/backend",        "color": "1d76db", "description": "后端服务与 Web API（services/backend）" },
-  { "name": "area/frontend",       "color": "1d76db", "description": "AI 管理前端（apps/ai-frontend）" },
+  { "name": "area/frontend",       "color": "1d76db", "description": "AI 管理前端（delivery/web/ai-frontend）" },
   { "name": "area/khyquant",       "color": "1d76db", "description": "khyquant 量化应用（software/khyquant）" },
   { "name": "area/python-launcher","color": "1d76db", "description": "Python 启动器（platform/khy_platform）" },
   { "name": "area/kernel",         "color": "1d76db", "description": "OS 内核（kernel/，C + 汇编）" },

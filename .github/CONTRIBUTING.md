@@ -94,14 +94,14 @@ node scripts/ci/check-node-syntax.js
 python scripts/ci/check-python-syntax.py <改动的 .py 文件...>
 
 # 7) 后端代码风格与测试
-cd services/backend
+cd runtime/node/backend
 npx eslint <你改动或新增的文件...> --max-warnings 0   # 新增文件必须零问题，见 §5
 npm test
 npm run test:node
 
-# 8) 前端（改了 apps/ai-frontend 或 software/khyquant/frontend 时）
-cd apps/ai-frontend && npm test && npm run test:node   # vitest 14 文件 / 162 用例 + node:test
-npm run build --prefix apps/ai-frontend
+# 8) 前端（改了 delivery/web/ai-frontend 或 delivery/channel/khyquant/frontend 时）
+cd delivery/web/ai-frontend && npm test && npm run test:node   # vitest 14 文件 / 162 用例 + node:test
+npm run build --prefix delivery/web/ai-frontend
 node scripts/ci/check-frontend-size.js                 # 产物体积对比基线（报告态）
 
 # 9) 依赖体积预算（动了任何 package.json 就跑一次，见 §11）
@@ -110,7 +110,7 @@ node scripts/ci/check-dependency-size.js               # 报告态：包数 / �
 
 **工具链现状请勿误信旧文档**：
 
-- JavaScript：ESLint 9（flat config，`services/backend/eslint.config.js`）+ Prettier，已配置可用。
+- JavaScript：ESLint 9（flat config，`runtime/node/backend/eslint.config.js`）+ Prettier，已配置可用。
 - Python：CI 中只有 `py_compile` 语法检查。**flake8 / black 并未配置**（仓库内不存在
   `.flake8`、`setup.cfg`、`tox.ini`，`pyproject.toml` 里也没有对应段落）。
 - Shell：**没有** shellcheck 配置。
@@ -121,7 +121,7 @@ node scripts/ci/check-dependency-size.js               # 报告态：包数 / �
 
 ## 5. 代码风格棘轮（为什么你的新文件比老文件要求更严）
 
-`services/backend/src` 现存 3417 个 lint 问题（428 errors + 2989 warnings，覆盖 2246 个
+`runtime/node/backend/src` 现存 3417 个 lint 问题（428 errors + 2989 warnings，覆盖 2246 个
 文件中的 1060 个）。全量 `--max-warnings 0` 在可预见期内不可能通过，所以门禁按文件状态分级：
 
 | 文件在本 PR 中的状态 | 要求 | 是否阻断 |
@@ -254,7 +254,7 @@ node scripts/release/changelog-new.js --check   # 校验顶部版本 == pyprojec
 
 | 场景 | 命令 | 实测规模 | 装什么 | 放错的后果 |
 | --- | --- | --- | --- | --- |
-| **生产（自建服务端）** | `npm run install:prod` | **465 包 / 85.4 MB / 15.1 s** | 只有 `services/backend` 的运行时闭包 | 运行时依赖被写进 devDependencies → 用户机器上 `MODULE_NOT_FOUND`，且只在走到那条代码路径时才炸 |
+| **生产（自建服务端）** | `npm run install:prod` | **465 包 / 85.4 MB / 15.1 s** | 只有 `runtime/node/backend` 的运行时闭包 | 运行时依赖被写进 devDependencies → 用户机器上 `MODULE_NOT_FOUND`，且只在走到那条代码路径时才炸 |
 | **核心开发** | `npm run install:core` | **955 包 / 146.8 MB / 24.5 s** | 后端、AI 后端和共享包的 dev + prod | 前端命令需要先补对应 profile |
 | **前端开发** | `npm run install:frontend` | **706 包 / 236.5 MB / 21.3 s** | 两个 Web 前端及其 Vite/Vitest/Workbox 闭包 | 未安装前端 profile 时不能构建前端 |
 | **移动端开发** | `npm run install:mobile` | **246 包 / 116.4 MB / 5.4 s** | Capacitor 移动端及其构建闭包 | 未安装移动端 profile 时不能构建移动端 |
@@ -281,11 +281,11 @@ esbuild 打好的 6 份模块 bundle（`dist/modules/<模块>/bundle.mjs`，`--p
 | `peerDependencies` + `peerDependenciesMeta.optional` | 代码里 try/catch 包着 require 的可选能力，**默认一个字节都不装** | better-sqlite3、node-llama-cpp、`@opentelemetry/*` |
 
 最后一格是本仓库降体积的主力机制：**「能被 require 的东西必须有名字」，但有名字不等于要装。**
-`services/backend/package.json` 现有 16 个这样的可选 peer（`platform/packages/shared` 另有 1 个）。
+`runtime/node/backend/package.json` 现有 16 个这样的可选 peer（`runtime/substrate/platform/packages/shared` 另有 1 个）。
 生效前提是 [`.npmrc`](../.npmrc) 的 `auto-install-peers=false` —— 打开它这一格就退化成普通依赖，
 17 个包连同它们的平台二进制矩阵会全部装进来。新增可选能力时照抄这个套路，并且在 require
 失败的分支里打印中文、可照做的安装提示 —— 参考
-[`services/backend/src/observability/otel.js`](../runtime/node/backend/src/observability/otel.js)
+[`runtime/node/backend/src/observability/otel.js`](../runtime/node/backend/src/observability/otel.js)
 与 [`browser/engine.js`](../runtime/node/backend/src/services/domain/desktop/browser/engine.js)。
 
 `check-dependency-size.js` 会单独列出可选 peer 的数量与增删名单，但**不把它计入硬预算** ——

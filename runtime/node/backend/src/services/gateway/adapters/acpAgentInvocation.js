@@ -111,6 +111,13 @@ class AcpAgentConnection {
       // stderr 是对端的日志通道：截尾转发到本端 stderr，不进 stdout 帧流。
       this._log(`[acp-agent:${this._resolved.command}] ${String(buf).trimEnd().slice(0, 2000)}`);
     });
+    // spawn 失败（典型：二进制不存在 ENOENT、权限不足）——**必须有监听者**：
+    // ChildProcess 的 'error' 事件无人监听时 Node 会直接抛出并崩掉整个进程，
+    // 而这条路径在「探测一个没装的 agent」时必然走到（T-025 四态探测）。
+    // 这里只记录并让出，交由下方 onClose / stdout close 路径把挂起请求按失败结算。
+    this._child.on('error', (err) => {
+      this._log(`[acp-agent:${this._resolved.command}] 子进程启动失败: ${(err && err.message) || err}`);
+    });
     this._channel = createJsonRpcChannel({
       input: this._child.stdout,
       output: this._child.stdin,
