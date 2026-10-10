@@ -1,12 +1,23 @@
 <template>
   <div class="data-source-indicator-classic">
-    <el-dropdown @command="handleSourceChange" trigger="click">
-      <el-tooltip :content="tooltipContent" placement="bottom">
-        <div class="source-badge" :class="statusClass">
-          <span class="source-dot"></span>
+    <el-dropdown
+      trigger="click"
+      @command="handleSourceChange"
+    >
+      <el-tooltip
+        :content="tooltipContent"
+        placement="bottom"
+      >
+        <div
+          class="source-badge"
+          :class="statusClass"
+        >
+          <span class="source-dot" />
           <span class="source-text">{{ sourceName }}</span>
           <span class="quality-tag">{{ qualityText }}</span>
-          <el-icon class="dropdown-icon"><ArrowDown /></el-icon>
+          <el-icon class="dropdown-icon">
+            <ArrowDown />
+          </el-icon>
         </div>
       </el-tooltip>
       <template #dropdown>
@@ -19,10 +30,19 @@
           >
             <div class="source-menu-item">
               <span class="source-menu-name">{{ source.name }}</span>
-              <el-tag v-if="source.key === currentSource" type="success" size="small">当前</el-tag>
+              <el-tag
+                v-if="source.key === currentSource"
+                type="success"
+                size="small"
+              >
+                当前
+              </el-tag>
             </div>
           </el-dropdown-item>
-          <el-dropdown-item divided @click="handleManage">
+          <el-dropdown-item
+            divided
+            @click="handleManage"
+          >
             <div class="source-menu-item">
               <el-icon><Setting /></el-icon>
               <span>管理数据源</span>

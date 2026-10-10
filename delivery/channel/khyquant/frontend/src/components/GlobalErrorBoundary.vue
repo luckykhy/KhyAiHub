@@ -1,12 +1,20 @@
 <template>
-  <div v-if="hasError" class="global-error-boundary">
+  <div
+    v-if="hasError"
+    class="global-error-boundary"
+  >
     <el-result
       icon="error"
       title="页面加载出现问题"
       sub-title="系统已捕获异常，请点击重试恢复页面。"
     >
       <template #extra>
-        <el-button type="primary" @click="handleRetry">重试</el-button>
+        <el-button
+          type="primary"
+          @click="handleRetry"
+        >
+          重试
+        </el-button>
       </template>
     </el-result>
   </div>

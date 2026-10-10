@@ -3,8 +3,8 @@
     <!-- 可滚动内容区域 -->
     <div class="panel-scroll-content">
       <!-- 标的信息头部 - 已在页面左上角显示,暂时隐藏避免重复 -->
-    <!-- 如需恢复显示,取消下面的注释即可 -->
-    <!--
+      <!-- 如需恢复显示,取消下面的注释即可 -->
+      <!--
     <div class="symbol-header">
       <div class="symbol-info">
         <span class="symbol-code">{{ currentSymbol || '请选择标的' }}</span>
@@ -21,307 +21,427 @@
     </div>
     -->
 
-    <!-- 订单类型选择 -->
-    <div class="order-type-section">
-      <div class="section-label">
-        <el-icon><Document /></el-icon>
-        <span>订单类型</span>
-      </div>
-      <el-select v-model="orderForm.orderType" placeholder="选择订单类型" size="large" style="width: 100%;">
-        <el-option label="限价单" value="limit">
-          <span>限价单</span>
-          <span style="float: right; color: #8492a6; font-size: 12px;">指定价格</span>
-        </el-option>
-        <el-option label="市价单" value="market">
-          <span>市价单</span>
-          <span style="float: right; color: #8492a6; font-size: 12px;">最优价格</span>
-        </el-option>
-        <el-option label="对手价" value="counterparty">
-          <span>对手价</span>
-          <span style="float: right; color: #8492a6; font-size: 12px;">买一/卖一</span>
-        </el-option>
-        <el-option label="排队价" value="queue">
-          <span>排队价</span>
-          <span style="float: right; color: #8492a6; font-size: 12px;">卖一/买一</span>
-        </el-option>
-        <el-option label="最优五档" value="best5">
-          <span>最优五档</span>
-          <span style="float: right; color: #8492a6; font-size: 12px;">五档成交</span>
-        </el-option>
-        <el-option label="最优本方" value="bestOwn">
-          <span>最优本方</span>
-          <span style="float: right; color: #8492a6; font-size: 12px;">本方最优</span>
-        </el-option>
-        <el-option label="TWAP算法" value="twap">
-          <span>TWAP算法</span>
-          <span style="float: right; color: #8492a6; font-size: 12px;">时间加权</span>
-        </el-option>
-        <el-option label="VWAP算法" value="vwap">
-          <span>VWAP算法</span>
-          <span style="float: right; color: #8492a6; font-size: 12px;">成交量加权</span>
-        </el-option>
-        <el-option label="策略下单" value="strategy">
-          <span>策略下单</span>
-          <span style="float: right; color: #8492a6; font-size: 12px;">智能策略</span>
-        </el-option>
-      </el-select>
-      
-      <!-- 订单类型说明 -->
-      <div class="order-type-hint">
-        <el-icon><InfoFilled /></el-icon>
-        <span>{{ getOrderTypeHint() }}</span>
-      </div>
-    </div>
-
-    <!-- 策略选择（仅策略下单显示） -->
-    <div v-if="orderForm.orderType === 'strategy'" class="strategy-section">
-      <div class="section-label">
-        <el-icon><TrendCharts /></el-icon>
-        <span>选择策略</span>
-      </div>
-      
-      <el-select 
-        v-model="orderForm.strategyId" 
-        placeholder="选择交易策略" 
-        size="large" 
-        style="width: 100%;"
-        filterable
-        @change="onStrategyChange"
-      >
-        <el-option
-          v-for="strategy in availableStrategies"
-          :key="strategy.id"
-          :label="strategy.name"
-          :value="strategy.id"
-        >
-          <div class="strategy-option">
-            <span class="strategy-name">{{ strategy.name }}</span>
-            <el-tag :type="getStrategyTypeColor(strategy.type)" size="small">
-              {{ getStrategyTypeLabel(strategy.type) }}
-            </el-tag>
-          </div>
-        </el-option>
-      </el-select>
-      
-      <!-- 策略信息显示 -->
-      <div v-if="selectedStrategy" class="strategy-info-display">
-        <div class="strategy-info-item">
-          <span class="label">策略类型:</span>
-          <span class="value">{{ getStrategyTypeLabel(selectedStrategy.type) }}</span>
+      <!-- 订单类型选择 -->
+      <div class="order-type-section">
+        <div class="section-label">
+          <el-icon><Document /></el-icon>
+          <span>订单类型</span>
         </div>
-        <div class="strategy-info-item" v-if="selectedStrategy.description">
-          <span class="label">策略说明:</span>
-          <span class="value desc">{{ selectedStrategy.description }}</span>
-        </div>
-        <div class="strategy-info-item" v-if="strategyStats">
-          <span class="label">历史表现:</span>
-          <span class="value">
-            收益率 <span :class="getProfitClass(strategyStats.totalReturn)">{{ strategyStats.totalReturn }}%</span>
-            | 胜率 {{ strategyStats.winRate }}%
-          </span>
-        </div>
-        <div class="strategy-info-item">
-          <span class="label">交易模式:</span>
-          <span class="value">
-            <el-tag type="warning" size="small">自动交易</el-tag>
-            <span style="margin-left: 8px; font-size: 11px; color: var(--khy-warning);">
-              策略将自动监控市场并执行买卖
-            </span>
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 期货特有：开平仓选择 -->
-    <div v-if="isFutures" class="offset-section">
-      <div class="section-label">
-        <el-icon><Operation /></el-icon>
-        <span>操作类型</span>
-      </div>
-      <el-segmented v-model="orderForm.offset" :options="offsetOptions" size="default" />
-    </div>
-
-    <!-- 价格输入 -->
-    <div class="price-section">
-      <div class="section-label">
-        <el-icon><Money /></el-icon>
-        <span>{{ getPriceSectionLabel() }}</span>
-      </div>
-      
-      <!-- 限价单：手动输入价格 -->
-      <div v-if="orderForm.orderType === 'limit'" class="price-input-group">
-        <el-button 
-          class="adjust-btn" 
-          @click="adjustPrice(-1)"
-          :disabled="!currentPrice"
-        >
-          <el-icon><Minus /></el-icon>
-        </el-button>
-        
-        <el-input-number
-          v-model="orderForm.price"
-          :precision="2"
-          :step="0.01"
-          :min="0.01"
-          :controls="false"
-          class="price-input"
+        <el-select
+          v-model="orderForm.orderType"
+          placeholder="选择订单类型"
           size="large"
-        />
-        
-        <el-button 
-          class="adjust-btn" 
-          @click="adjustPrice(1)"
-          :disabled="!currentPrice"
+          style="width: 100%;"
         >
-          <el-icon><Plus /></el-icon>
-        </el-button>
-      </div>
+          <el-option
+            label="限价单"
+            value="limit"
+          >
+            <span>限价单</span>
+            <span style="float: right; color: #8492a6; font-size: 12px;">指定价格</span>
+          </el-option>
+          <el-option
+            label="市价单"
+            value="market"
+          >
+            <span>市价单</span>
+            <span style="float: right; color: #8492a6; font-size: 12px;">最优价格</span>
+          </el-option>
+          <el-option
+            label="对手价"
+            value="counterparty"
+          >
+            <span>对手价</span>
+            <span style="float: right; color: #8492a6; font-size: 12px;">买一/卖一</span>
+          </el-option>
+          <el-option
+            label="排队价"
+            value="queue"
+          >
+            <span>排队价</span>
+            <span style="float: right; color: #8492a6; font-size: 12px;">卖一/买一</span>
+          </el-option>
+          <el-option
+            label="最优五档"
+            value="best5"
+          >
+            <span>最优五档</span>
+            <span style="float: right; color: #8492a6; font-size: 12px;">五档成交</span>
+          </el-option>
+          <el-option
+            label="最优本方"
+            value="bestOwn"
+          >
+            <span>最优本方</span>
+            <span style="float: right; color: #8492a6; font-size: 12px;">本方最优</span>
+          </el-option>
+          <el-option
+            label="TWAP算法"
+            value="twap"
+          >
+            <span>TWAP算法</span>
+            <span style="float: right; color: #8492a6; font-size: 12px;">时间加权</span>
+          </el-option>
+          <el-option
+            label="VWAP算法"
+            value="vwap"
+          >
+            <span>VWAP算法</span>
+            <span style="float: right; color: #8492a6; font-size: 12px;">成交量加权</span>
+          </el-option>
+          <el-option
+            label="策略下单"
+            value="strategy"
+          >
+            <span>策略下单</span>
+            <span style="float: right; color: #8492a6; font-size: 12px;">智能策略</span>
+          </el-option>
+        </el-select>
       
-      <!-- 市价单：显示参考价格 -->
-      <div v-else-if="orderForm.orderType === 'market'" class="market-price-display">
-        <span class="market-text">按市场最优价格成交</span>
-        <span class="reference-price">参考: ¥{{ formatPrice(currentPrice) }}</span>
-      </div>
-
-      <!-- 对手价：显示买一/卖一价格 -->
-      <div v-else-if="orderForm.orderType === 'counterparty'" class="reference-price-display">
-        <div class="ref-price-item">
-          <span class="label">买一价:</span>
-          <span class="value">¥{{ formatPrice(marketDepth.bid1) }}</span>
-        </div>
-        <div class="ref-price-item">
-          <span class="label">卖一价:</span>
-          <span class="value">¥{{ formatPrice(marketDepth.ask1) }}</span>
+        <!-- 订单类型说明 -->
+        <div class="order-type-hint">
+          <el-icon><InfoFilled /></el-icon>
+          <span>{{ getOrderTypeHint() }}</span>
         </div>
       </div>
 
-      <!-- 排队价：显示买一/卖一价格 -->
-      <div v-else-if="orderForm.orderType === 'queue'" class="reference-price-display">
-        <div class="ref-price-item">
-          <span class="label">买一价:</span>
-          <span class="value">¥{{ formatPrice(marketDepth.bid1) }}</span>
+      <!-- 策略选择（仅策略下单显示） -->
+      <div
+        v-if="orderForm.orderType === 'strategy'"
+        class="strategy-section"
+      >
+        <div class="section-label">
+          <el-icon><TrendCharts /></el-icon>
+          <span>选择策略</span>
         </div>
-        <div class="ref-price-item">
-          <span class="label">卖一价:</span>
-          <span class="value">¥{{ formatPrice(marketDepth.ask1) }}</span>
+      
+        <el-select 
+          v-model="orderForm.strategyId" 
+          placeholder="选择交易策略" 
+          size="large" 
+          style="width: 100%;"
+          filterable
+          @change="onStrategyChange"
+        >
+          <el-option
+            v-for="strategy in availableStrategies"
+            :key="strategy.id"
+            :label="strategy.name"
+            :value="strategy.id"
+          >
+            <div class="strategy-option">
+              <span class="strategy-name">{{ strategy.name }}</span>
+              <el-tag
+                :type="getStrategyTypeColor(strategy.type)"
+                size="small"
+              >
+                {{ getStrategyTypeLabel(strategy.type) }}
+              </el-tag>
+            </div>
+          </el-option>
+        </el-select>
+      
+        <!-- 策略信息显示 -->
+        <div
+          v-if="selectedStrategy"
+          class="strategy-info-display"
+        >
+          <div class="strategy-info-item">
+            <span class="label">策略类型:</span>
+            <span class="value">{{ getStrategyTypeLabel(selectedStrategy.type) }}</span>
+          </div>
+          <div
+            v-if="selectedStrategy.description"
+            class="strategy-info-item"
+          >
+            <span class="label">策略说明:</span>
+            <span class="value desc">{{ selectedStrategy.description }}</span>
+          </div>
+          <div
+            v-if="strategyStats"
+            class="strategy-info-item"
+          >
+            <span class="label">历史表现:</span>
+            <span class="value">
+              收益率 <span :class="getProfitClass(strategyStats.totalReturn)">{{ strategyStats.totalReturn }}%</span>
+              | 胜率 {{ strategyStats.winRate }}%
+            </span>
+          </div>
+          <div class="strategy-info-item">
+            <span class="label">交易模式:</span>
+            <span class="value">
+              <el-tag
+                type="warning"
+                size="small"
+              >自动交易</el-tag>
+              <span style="margin-left: 8px; font-size: 11px; color: var(--khy-warning);">
+                策略将自动监控市场并执行买卖
+              </span>
+            </span>
+          </div>
         </div>
       </div>
 
-      <!-- 最优五档/最优本方：显示参考价格 -->
-      <div v-else-if="orderForm.orderType === 'best5' || orderForm.orderType === 'bestOwn'" class="market-price-display">
-        <span class="market-text">{{ orderForm.orderType === 'best5' ? '最优五档价格成交' : '本方最优价格成交' }}</span>
-        <span class="reference-price">参考: ¥{{ formatPrice(currentPrice) }}</span>
+      <!-- 期货特有：开平仓选择 -->
+      <div
+        v-if="isFutures"
+        class="offset-section"
+      >
+        <div class="section-label">
+          <el-icon><Operation /></el-icon>
+          <span>操作类型</span>
+        </div>
+        <el-segmented
+          v-model="orderForm.offset"
+          :options="offsetOptions"
+          size="default"
+        />
       </div>
 
-      <!-- TWAP/VWAP算法：显示算法参数 -->
-      <div v-else-if="orderForm.orderType === 'twap' || orderForm.orderType === 'vwap'" class="algo-params">
-        <div class="algo-param-item">
-          <span class="param-label">执行时间段</span>
-          <el-time-picker
-            v-model="algoParams.timeRange"
-            is-range
-            range-separator="-"
-            start-placeholder="开始时间"
-            end-placeholder="结束时间"
-            format="HH:mm"
-            size="default"
-            style="width: 100%;"
-          />
+      <!-- 价格输入 -->
+      <div class="price-section">
+        <div class="section-label">
+          <el-icon><Money /></el-icon>
+          <span>{{ getPriceSectionLabel() }}</span>
         </div>
-        <div class="algo-param-item">
-          <span class="param-label">分批次数</span>
+      
+        <!-- 限价单：手动输入价格 -->
+        <div
+          v-if="orderForm.orderType === 'limit'"
+          class="price-input-group"
+        >
+          <el-button 
+            class="adjust-btn" 
+            :disabled="!currentPrice"
+            @click="adjustPrice(-1)"
+          >
+            <el-icon><Minus /></el-icon>
+          </el-button>
+        
           <el-input-number
-            v-model="algoParams.sliceCount"
-            :min="2"
-            :max="100"
-            :step="1"
-            size="default"
-            style="width: 100%;"
-          />
-        </div>
-        <div class="algo-param-item">
-          <span class="param-label">价格限制</span>
-          <el-input-number
-            v-model="algoParams.priceLimit"
+            v-model="orderForm.price"
             :precision="2"
             :step="0.01"
             :min="0.01"
-            size="default"
-            style="width: 100%;"
+            :controls="false"
+            class="price-input"
+            size="large"
+          />
+        
+          <el-button 
+            class="adjust-btn" 
+            :disabled="!currentPrice"
+            @click="adjustPrice(1)"
           >
-            <template #prefix>¥</template>
-          </el-input-number>
+            <el-icon><Plus /></el-icon>
+          </el-button>
+        </div>
+      
+        <!-- 市价单：显示参考价格 -->
+        <div
+          v-else-if="orderForm.orderType === 'market'"
+          class="market-price-display"
+        >
+          <span class="market-text">按市场最优价格成交</span>
+          <span class="reference-price">参考: ¥{{ formatPrice(currentPrice) }}</span>
+        </div>
+
+        <!-- 对手价：显示买一/卖一价格 -->
+        <div
+          v-else-if="orderForm.orderType === 'counterparty'"
+          class="reference-price-display"
+        >
+          <div class="ref-price-item">
+            <span class="label">买一价:</span>
+            <span class="value">¥{{ formatPrice(marketDepth.bid1) }}</span>
+          </div>
+          <div class="ref-price-item">
+            <span class="label">卖一价:</span>
+            <span class="value">¥{{ formatPrice(marketDepth.ask1) }}</span>
+          </div>
+        </div>
+
+        <!-- 排队价：显示买一/卖一价格 -->
+        <div
+          v-else-if="orderForm.orderType === 'queue'"
+          class="reference-price-display"
+        >
+          <div class="ref-price-item">
+            <span class="label">买一价:</span>
+            <span class="value">¥{{ formatPrice(marketDepth.bid1) }}</span>
+          </div>
+          <div class="ref-price-item">
+            <span class="label">卖一价:</span>
+            <span class="value">¥{{ formatPrice(marketDepth.ask1) }}</span>
+          </div>
+        </div>
+
+        <!-- 最优五档/最优本方：显示参考价格 -->
+        <div
+          v-else-if="orderForm.orderType === 'best5' || orderForm.orderType === 'bestOwn'"
+          class="market-price-display"
+        >
+          <span class="market-text">{{ orderForm.orderType === 'best5' ? '最优五档价格成交' : '本方最优价格成交' }}</span>
+          <span class="reference-price">参考: ¥{{ formatPrice(currentPrice) }}</span>
+        </div>
+
+        <!-- TWAP/VWAP算法：显示算法参数 -->
+        <div
+          v-else-if="orderForm.orderType === 'twap' || orderForm.orderType === 'vwap'"
+          class="algo-params"
+        >
+          <div class="algo-param-item">
+            <span class="param-label">执行时间段</span>
+            <el-time-picker
+              v-model="algoParams.timeRange"
+              is-range
+              range-separator="-"
+              start-placeholder="开始时间"
+              end-placeholder="结束时间"
+              format="HH:mm"
+              size="default"
+              style="width: 100%;"
+            />
+          </div>
+          <div class="algo-param-item">
+            <span class="param-label">分批次数</span>
+            <el-input-number
+              v-model="algoParams.sliceCount"
+              :min="2"
+              :max="100"
+              :step="1"
+              size="default"
+              style="width: 100%;"
+            />
+          </div>
+          <div class="algo-param-item">
+            <span class="param-label">价格限制</span>
+            <el-input-number
+              v-model="algoParams.priceLimit"
+              :precision="2"
+              :step="0.01"
+              :min="0.01"
+              size="default"
+              style="width: 100%;"
+            >
+              <template #prefix>
+                ¥
+              </template>
+            </el-input-number>
+          </div>
+        </div>
+
+        <!-- Price range hint (涨跌停范围提示) -->
+        <div
+          v-if="orderForm.orderType === 'limit' && !isFutures && currentPrice > 0"
+          class="price-range-hint"
+        >
+          <span>允许范围: ¥{{ (currentPrice * 0.9).toFixed(2) }} ~ ¥{{ (currentPrice * 1.1).toFixed(2) }}</span>
+        </div>
+
+        <!-- 快速价格按钮（仅限价单显示） -->
+        <div
+          v-if="orderForm.orderType === 'limit'"
+          class="quick-price-btns"
+        >
+          <el-button
+            size="small"
+            @click="setQuickPrice('bid')"
+          >
+            买一 ¥{{ formatPrice(marketDepth.bid1) }}
+          </el-button>
+          <el-button
+            size="small"
+            @click="setQuickPrice('ask')"
+          >
+            卖一 ¥{{ formatPrice(marketDepth.ask1) }}
+          </el-button>
+          <el-button
+            size="small"
+            @click="setQuickPrice('last')"
+          >
+            最新 ¥{{ formatPrice(currentPrice) }}
+          </el-button>
         </div>
       </div>
 
-      <!-- Price range hint (涨跌停范围提示) -->
-      <div v-if="orderForm.orderType === 'limit' && !isFutures && currentPrice > 0" class="price-range-hint">
-        <span>允许范围: ¥{{ (currentPrice * 0.9).toFixed(2) }} ~ ¥{{ (currentPrice * 1.1).toFixed(2) }}</span>
-      </div>
-
-      <!-- 快速价格按钮（仅限价单显示） -->
-      <div v-if="orderForm.orderType === 'limit'" class="quick-price-btns">
-        <el-button size="small" @click="setQuickPrice('bid')">
-          买一 ¥{{ formatPrice(marketDepth.bid1) }}
-        </el-button>
-        <el-button size="small" @click="setQuickPrice('ask')">
-          卖一 ¥{{ formatPrice(marketDepth.ask1) }}
-        </el-button>
-        <el-button size="small" @click="setQuickPrice('last')">
-          最新 ¥{{ formatPrice(currentPrice) }}
-        </el-button>
-      </div>
-    </div>
-
-    <!-- 数量输入 -->
-    <div class="quantity-section">
-      <div class="section-label">
-        <el-icon><Box /></el-icon>
-        <span>数量 ({{ isFutures ? '手' : '股' }})</span>
-      </div>
+      <!-- 数量输入 -->
+      <div class="quantity-section">
+        <div class="section-label">
+          <el-icon><Box /></el-icon>
+          <span>数量 ({{ isFutures ? '手' : '股' }})</span>
+        </div>
       
-      <el-input-number
-        v-model="orderForm.quantity"
-        :min="isFutures ? 1 : 100"
-        :step="isFutures ? 1 : 100"
-        class="quantity-input"
-        size="large"
-      />
+        <el-input-number
+          v-model="orderForm.quantity"
+          :min="isFutures ? 1 : 100"
+          :step="isFutures ? 1 : 100"
+          class="quantity-input"
+          size="large"
+        />
 
-      <!-- 快速数量按钮 -->
-      <div class="quick-quantity-btns">
-        <el-button size="small" @click="setQuickQuantity(0.25)">1/4</el-button>
-        <el-button size="small" @click="setQuickQuantity(0.5)">1/2</el-button>
-        <el-button size="small" @click="setQuickQuantity(0.75)">3/4</el-button>
-        <el-button size="small" @click="setQuickQuantity(1)">全仓</el-button>
+        <!-- 快速数量按钮 -->
+        <div class="quick-quantity-btns">
+          <el-button
+            size="small"
+            @click="setQuickQuantity(0.25)"
+          >
+            1/4
+          </el-button>
+          <el-button
+            size="small"
+            @click="setQuickQuantity(0.5)"
+          >
+            1/2
+          </el-button>
+          <el-button
+            size="small"
+            @click="setQuickQuantity(0.75)"
+          >
+            3/4
+          </el-button>
+          <el-button
+            size="small"
+            @click="setQuickQuantity(1)"
+          >
+            全仓
+          </el-button>
+        </div>
       </div>
-    </div>
 
-    <!-- 资金预算 -->
-    <div class="budget-section">
-      <div class="budget-item">
-        <span class="label">{{ isFutures ? '合约价值' : '预估金额' }}</span>
-        <span class="value">¥{{ formatMoney(estimatedAmount) }}</span>
-      </div>
+      <!-- 资金预算 -->
+      <div class="budget-section">
+        <div class="budget-item">
+          <span class="label">{{ isFutures ? '合约价值' : '预估金额' }}</span>
+          <span class="value">¥{{ formatMoney(estimatedAmount) }}</span>
+        </div>
       
-      <div v-if="isFutures" class="budget-item highlight">
-        <span class="label">所需保证金</span>
-        <span class="value">¥{{ formatMoney(requiredMargin) }}</span>
-      </div>
+        <div
+          v-if="isFutures"
+          class="budget-item highlight"
+        >
+          <span class="label">所需保证金</span>
+          <span class="value">¥{{ formatMoney(requiredMargin) }}</span>
+        </div>
       
-      <div class="budget-item">
-        <span class="label">可用资金</span>
-        <span class="value" :class="{ insufficient: !hasEnoughFunds }">
-          ¥{{ formatMoney(availableFunds) }}
-        </span>
-      </div>
+        <div class="budget-item">
+          <span class="label">可用资金</span>
+          <span
+            class="value"
+            :class="{ insufficient: !hasEnoughFunds }"
+          >
+            ¥{{ formatMoney(availableFunds) }}
+          </span>
+        </div>
       
-      <div v-if="isFutures" class="budget-item">
-        <span class="label">杠杆倍数</span>
-        <span class="value leverage">{{ leverageRatio }}x</span>
+        <div
+          v-if="isFutures"
+          class="budget-item"
+        >
+          <span class="label">杠杆倍数</span>
+          <span class="value leverage">{{ leverageRatio }}x</span>
+        </div>
       </div>
-    </div>
-
     </div>
     <!-- 结束 panel-scroll-content -->
 
@@ -335,13 +455,17 @@
             type="success"
             size="large"
             class="trade-btn strategy-btn"
-            @click="toggleStrategyMonitoring"
             :loading="submitting"
             :disabled="!canSubmit"
             style="width: 100%;"
+            @click="toggleStrategyMonitoring"
           >
-            <el-icon v-if="!isStrategyMonitoring"><VideoPlay /></el-icon>
-            <el-icon v-else><VideoPause /></el-icon>
+            <el-icon v-if="!isStrategyMonitoring">
+              <VideoPlay />
+            </el-icon>
+            <el-icon v-else>
+              <VideoPause />
+            </el-icon>
             <span>{{ isStrategyMonitoring ? '停止策略' : '启动策略' }}</span>
           </el-button>
         </template>
@@ -352,9 +476,9 @@
             type="danger"
             size="large"
             class="trade-btn buy-btn"
-            @click="submitOrder('buy')"
             :loading="submitting"
             :disabled="!canSubmit"
+            @click="submitOrder('buy')"
           >
             <el-icon><Top /></el-icon>
             <span>{{ getBuyText }}</span>
@@ -364,9 +488,9 @@
             type="success"
             size="large"
             class="trade-btn sell-btn"
-            @click="submitOrder('sell')"
             :loading="submitting"
             :disabled="!canSubmit"
+            @click="submitOrder('sell')"
           >
             <el-icon><Bottom /></el-icon>
             <span>{{ getSellText }}</span>
@@ -375,19 +499,28 @@
       </div>
 
       <!-- Trading hours notice -->
-      <div v-if="tradingHoursNotice" class="trading-hours-notice">
+      <div
+        v-if="tradingHoursNotice"
+        class="trading-hours-notice"
+      >
         <el-icon><Clock /></el-icon>
         <span>{{ tradingHoursNotice }}</span>
       </div>
 
       <!-- Price limit warning -->
-      <div v-if="priceLimitWarning" class="price-limit-warning">
+      <div
+        v-if="priceLimitWarning"
+        class="price-limit-warning"
+      >
         <el-icon><Warning /></el-icon>
         <span>{{ priceLimitWarning }}</span>
       </div>
 
       <!-- 风险提示 -->
-      <div v-if="riskWarning" class="risk-warning">
+      <div
+        v-if="riskWarning"
+        class="risk-warning"
+      >
         <el-icon><Warning /></el-icon>
         <span>{{ riskWarning }}</span>
       </div>

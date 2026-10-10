@@ -4,19 +4,36 @@
     <div class="editor-toolbar">
       <div class="toolbar-left">
         <el-button-group size="small">
-          <el-button @click="insertSnippet('function')">函数</el-button>
-          <el-button @click="insertSnippet('if')">IF</el-button>
-          <el-button @click="insertSnippet('for')">FOR</el-button>
-          <el-button @click="insertSnippet('const')">CONST</el-button>
-          <el-button @click="insertSnippet('arrow')">箭头函数</el-button>
+          <el-button @click="insertSnippet('function')">
+            函数
+          </el-button>
+          <el-button @click="insertSnippet('if')">
+            IF
+          </el-button>
+          <el-button @click="insertSnippet('for')">
+            FOR
+          </el-button>
+          <el-button @click="insertSnippet('const')">
+            CONST
+          </el-button>
+          <el-button @click="insertSnippet('arrow')">
+            箭头函数
+          </el-button>
         </el-button-group>
       </div>
       <div class="toolbar-right">
-        <el-button size="small" @click="formatCode">
+        <el-button
+          size="small"
+          @click="formatCode"
+        >
           <el-icon><MagicStick /></el-icon>
           格式化
         </el-button>
-        <el-button size="small" @click="validateCode" :loading="validating">
+        <el-button
+          size="small"
+          :loading="validating"
+          @click="validateCode"
+        >
           <el-icon><Check /></el-icon>
           验证语法
         </el-button>
@@ -36,11 +53,18 @@
         </div>
       </template>
       <div style="font-size: 12px; margin-top: 8px;">
-        <div v-for="(error, index) in syntaxErrors.filter(e => e.type === 'error')" :key="'err-'+index" style="margin: 4px 0;">
+        <div
+          v-for="(error, index) in syntaxErrors.filter(e => e.type === 'error')"
+          :key="'err-'+index"
+          style="margin: 4px 0;"
+        >
           <el-icon><WarningFilled /></el-icon>
           <span v-if="error.line > 0">Line {{ error.line }}: </span>
           <strong>{{ error.message }}</strong>
-          <pre v-if="error.code && error.code !== 'global'" style="background: rgba(255,255,255,0.15); padding: 4px 8px; border-radius: 3px; margin: 4px 0 0 20px; font-size: 11px; white-space: pre-wrap; overflow-x: auto;">{{ error.code }}</pre>
+          <pre
+            v-if="error.code && error.code !== 'global'"
+            style="background: rgba(255,255,255,0.15); padding: 4px 8px; border-radius: 3px; margin: 4px 0 0 20px; font-size: 11px; white-space: pre-wrap; overflow-x: auto;"
+          >{{ error.code }}</pre>
         </div>
       </div>
     </el-alert>
@@ -57,7 +81,11 @@
         </div>
       </template>
       <div style="font-size: 12px; margin-top: 8px;">
-        <div v-for="(error, index) in syntaxErrors.filter(e => e.type === 'warning')" :key="'warn-'+index" style="margin: 4px 0;">
+        <div
+          v-for="(error, index) in syntaxErrors.filter(e => e.type === 'warning')"
+          :key="'warn-'+index"
+          style="margin: 4px 0;"
+        >
           Line {{ error.line }}: {{ error.message }}
           <code style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 3px; margin-left: 8px;">
             {{ error.code }}
@@ -73,19 +101,26 @@
         v-model="localCode"
         class="js-code-editor"
         :placeholder="placeholder"
+        spellcheck="false"
         @input="onCodeChange"
         @keydown="onKeyDown"
         @scroll="syncScroll"
-        spellcheck="false"
-      ></textarea>
+      />
       
       <!-- 语法高亮层 -->
-      <div ref="highlightLayer" class="syntax-highlight-layer" v-html="highlightedCode"></div>
+      <div
+        ref="highlightLayer"
+        class="syntax-highlight-layer"
+        v-html="highlightedCode"
+      />
     </div>
 
     <!-- 语法提示 -->
     <div class="syntax-tips">
-      <el-alert type="info" :closable="false">
+      <el-alert
+        type="info"
+        :closable="false"
+      >
         <template #title>
           <div style="font-size: 12px;">
             <strong>JavaScript语法提示：</strong>

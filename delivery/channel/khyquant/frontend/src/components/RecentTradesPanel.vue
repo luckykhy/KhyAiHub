@@ -3,10 +3,18 @@
     <div class="panel-header">
       <span>最近交易</span>
       <div class="header-actions">
-        <el-button size="small" @click="loadTrades" :loading="loading">
+        <el-button
+          size="small"
+          :loading="loading"
+          @click="loadTrades"
+        >
           <el-icon><Refresh /></el-icon>
         </el-button>
-        <el-button size="small" type="primary" @click="goToTradesPage">
+        <el-button
+          size="small"
+          type="primary"
+          @click="goToTradesPage"
+        >
           查看全部
         </el-button>
       </div>
@@ -14,32 +22,62 @@
     
     <div class="panel-content">
       <el-table 
+        v-loading="loading" 
         :data="trades" 
-        size="small" 
+        size="small"
         :max-height="250"
-        v-loading="loading"
         empty-text="暂无交易记录"
       >
-        <el-table-column prop="symbol" label="代码" width="80" />
-        <el-table-column prop="side" label="方向" width="60">
+        <el-table-column
+          prop="symbol"
+          label="代码"
+          width="80"
+        />
+        <el-table-column
+          prop="side"
+          label="方向"
+          width="60"
+        >
           <template #default="{ row }">
-            <el-tag :type="row.side === 'buy' ? 'success' : 'danger'" size="small">
+            <el-tag
+              :type="row.side === 'buy' ? 'success' : 'danger'"
+              size="small"
+            >
               {{ row.side === 'buy' ? '买' : '卖' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="quantity" label="数量" width="70" align="right" />
-        <el-table-column prop="price" label="价格" width="70" align="right">
+        <el-table-column
+          prop="quantity"
+          label="数量"
+          width="70"
+          align="right"
+        />
+        <el-table-column
+          prop="price"
+          label="价格"
+          width="70"
+          align="right"
+        >
           <template #default="{ row }">
             {{ row.price.toFixed(2) }}
           </template>
         </el-table-column>
-        <el-table-column prop="amount" label="金额" width="90" align="right">
+        <el-table-column
+          prop="amount"
+          label="金额"
+          width="90"
+          align="right"
+        >
           <template #default="{ row }">
             {{ row.amount.toFixed(2) }}
           </template>
         </el-table-column>
-        <el-table-column prop="createdAt" label="时间" width="140">
+        <el-table-column
+          prop="createdAt"
+          label="时间"
+          width="140"
+        >
           <template #default="{ row }">
             {{ formatDateTime(row.createdAt) }}
           </template>

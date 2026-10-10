@@ -1,10 +1,21 @@
 <template>
   <Transition name="pwa-toast">
-    <div v-if="needRefresh" class="pwa-update-toast">
+    <div
+      v-if="needRefresh"
+      class="pwa-update-toast"
+    >
       <span class="pwa-update-text">发现新版本，更新后体验更佳</span>
       <div class="pwa-update-actions">
-        <button class="pwa-btn pwa-btn--later" @click="close">稍后</button>
-        <button class="pwa-btn pwa-btn--update" @click="updateServiceWorker(true)">
+        <button
+          class="pwa-btn pwa-btn--later"
+          @click="close"
+        >
+          稍后
+        </button>
+        <button
+          class="pwa-btn pwa-btn--update"
+          @click="updateServiceWorker(true)"
+        >
           立即更新
         </button>
       </div>

@@ -1,37 +1,65 @@
 <template>
-  <div class="channel-health-indicator" @click="expanded = !expanded">
+  <div
+    class="channel-health-indicator"
+    @click="expanded = !expanded"
+  >
     <span
       class="health-dot"
       :class="dotClass"
       :title="dotTitle"
     />
-    <span v-if="showLabel" class="health-label">{{ healthLabel }}</span>
+    <span
+      v-if="showLabel"
+      class="health-label"
+    >{{ healthLabel }}</span>
 
     <!-- Expanded popover -->
     <transition name="fade">
-      <div v-if="expanded" class="health-popover" @click.stop>
+      <div
+        v-if="expanded"
+        class="health-popover"
+        @click.stop
+      >
         <div class="popover-header">
           <span>AI Channel Status</span>
-          <span class="close-btn" @click="expanded = false">&times;</span>
+          <span
+            class="close-btn"
+            @click="expanded = false"
+          >&times;</span>
         </div>
-        <div v-if="channels.length === 0" class="popover-empty">
+        <div
+          v-if="channels.length === 0"
+          class="popover-empty"
+        >
           No channels detected
         </div>
-        <div v-else class="popover-list">
+        <div
+          v-else
+          class="popover-list"
+        >
           <div
             v-for="ch in channels"
             :key="ch.key"
             class="channel-row"
           >
-            <span class="ch-dot" :class="statusClass(ch.status)" />
+            <span
+              class="ch-dot"
+              :class="statusClass(ch.status)"
+            />
             <span class="ch-name">{{ ch.key }}</span>
             <span class="ch-state">{{ ch.circuitState }}</span>
-            <span v-if="ch.cooldownRemainingMs > 0" class="ch-cooldown">
+            <span
+              v-if="ch.cooldownRemainingMs > 0"
+              class="ch-cooldown"
+            >
               {{ Math.ceil(ch.cooldownRemainingMs / 1000) }}s
             </span>
           </div>
         </div>
-        <div v-if="activeAdapter" class="popover-active">
+        <div
+          v-if="activeAdapter"
+          class="popover-active"
+        >
           Active: <strong>{{ activeAdapter }}</strong>
         </div>
       </div>
