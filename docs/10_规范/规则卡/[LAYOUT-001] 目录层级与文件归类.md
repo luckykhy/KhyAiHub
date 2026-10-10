@@ -3,13 +3,13 @@ name: 目录层级与文件归类
 id: LAYOUT-001
 domain: LAYOUT
 nature: 约束为主，兼福利
-scope: "runtime/boot/kernel/**, platform/**, services/**, apps/**, software/**, extensions/**, tools/**, scripts/**, works/ship/**, docs/**（新增或移动目录/文件时；不含测试夹具与 build/ dist/ dist-electron/ *.egg-info/）"
+scope: "runtime/boot/kernel/**, runtime/substrate/platform/**, runtime/node/**, apps/**, delivery/web/**, delivery/channel/**, delivery/extension/**, tools/**, scripts/**, works/ship/**, docs/**（新增或移动目录/文件时；不含测试夹具与 build/ dist/ dist-electron/ *.egg-info/）"
 priority: P1
 trigger: "新建目录、新建文件、移动文件跨层，或新增跨层依赖时"
 constraint: "文件必须落在 ARCH-068 登记的 L0-L6 或横切层内；跨层依赖必须经 pnpm workspace 包，禁止深层相对路径跨层 require；目录名风格必须匹配所在层语言轴；扩展名必须落在其允许层级内；docs 内 .md 必须有同名 .html 孪生；_ 前缀在代码树内表示 PRV 私有，不得被跨包依赖。"
 grants: "见约束边界：授权依四问判定树自行决定文件放置位置与可见性档（PUB/INT/PRV），无需事前审批。"
 benefit: "一张表回答「放哪、叫什么、谁能用」，不必跨 ARCH-068 / LAY-002 / DOCS-001 三篇拼装答案，降低首次提交流放错位置的返工成本。"
-exception: "纯 re-export 单行壳（存量跨层转发，仅当保持单行）；生成目录；层内测试目录四种存量写法并存不追溯；services/backend 内历史 Python 目录不追溯迁移；docs 内文档编号与索引文件名格式归 DOCS-001/DOCS-002。"
+exception: "纯 re-export 单行壳（存量跨层转发，仅当保持单行）；生成目录；层内测试目录四种存量写法并存不追溯；runtime/node/backend 内历史 Python 目录不追溯迁移；docs 内文档编号与索引文件名格式归 DOCS-001/DOCS-002。"
 version: "1.0.0 (2026-09-15)"
 status: active
 ssot: "docs/10_规范/DESIGN-LAY/[DESIGN-LAY-002] 目录层级与文件归类规范.md"
@@ -49,7 +49,7 @@ owner: architecture-team
 
 ## 例外
 
-纯 re-export 单行壳（存量跨层转发，仅当保持单行）；生成目录；层内测试目录四种存量写法并存不追溯；services/backend 内历史 Python 目录不追溯迁移；docs 内文档编号与索引文件名格式归 DOCS-001/DOCS-002。
+纯 re-export 单行壳（存量跨层转发，仅当保持单行）；生成目录；层内测试目录四种存量写法并存不追溯；runtime/node/backend 内历史 Python 目录不追溯迁移；docs 内文档编号与索引文件名格式归 DOCS-001/DOCS-002。
 
 ## 版本记录
 

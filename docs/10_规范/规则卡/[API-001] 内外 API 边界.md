@@ -3,7 +3,7 @@ name: 内外 API 边界
 id: API-001
 domain: API
 nature: 约束为主
-scope: services/backend 的全部 API surface（内部 adapter 与外部 REST/SSE/WS/兼容 API）
+scope: runtime/node/backend 的全部 API surface（内部 adapter 与外部 REST/SSE/WS/兼容 API）
 priority: P1
 trigger: 把内部对象暴露为公开响应，或新增外部 API surface 时
 constraint: "内部 adapter 结果与外部 REST/SSE/WS/兼容 API 必须明确边界；外部变更不得以内部对象形状作为隐式契约。"

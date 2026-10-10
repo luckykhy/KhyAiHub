@@ -3,7 +3,7 @@ name: 仓库层级可发现性
 id: LAYOUT-006
 domain: LAYOUT
 nature: 约束为主，兼权力与福利
-scope: "L0–L6 各层内部（runtime/boot/kernel/**, platform/**, services/**, apps/**, software/**, extensions/**, tools/**）、横切层（scripts/**, docs/**, works/ship/**）及其任何子目录（一切「东西放在哪个目录里」的容量与检索判定；不含仓库顶层目录的层归属——那是 [DESIGN-LAY-005] / LAYOUT-001 的辖区）"
+scope: "L0–L6 各层内部（runtime/boot/kernel/**, runtime/substrate/platform/**, runtime/node/**, apps/**、delivery/web/**, delivery/channel/**, delivery/extension/**, tools/**）、横切层（scripts/**, docs/**, works/ship/**）及其任何子目录（一切「东西放在哪个目录里」的容量与检索判定；不含仓库顶层目录的层归属——那是 [DESIGN-LAY-005] / LAYOUT-001 的辖区）"
 priority: P1
 trigger: "在一个目录里新增第 N 个直接条目时；把一个平铺目录拆成子目录时；给超预算目录写 00_INDEX_* 时；审计「新人为什么找不到东西」时"
 constraint: "任何目录的直接条目数不得超过其可发现性预算（top 50 / category 50 / implementation 40 / docs 30，见 [DESIGN-LAY-006] §2）；超预算的目录必须按前缀家族拆分为子目录，或（仅文档目录）提供一个真编组的 00_INDEX_*（单个标题块内条目行数 ≤ 80，见 §3）；拆分必须整族一次移动并留下纯 re-export 壳，不得逐文件迁移；⚠ 实测（§1.3.1）：壳**计入**可发现性预算，故「迁移 + 留壳」使父目录条目 +1 —— 真正的降档必须「迁移 + 清壳」两步，且须改边数按**目标解析**判定（ 前缀 ≠ 兄弟边，实测 386 条  中仅 76 条是真兄弟）；.zcode / node_modules / vendor / 产物目录 / 一切点目录不计入。"

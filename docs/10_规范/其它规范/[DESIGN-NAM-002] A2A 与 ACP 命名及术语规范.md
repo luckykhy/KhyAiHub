@@ -24,6 +24,12 @@
 |----------|------|----------|------|--------|
 | **标准 A2A**<br>（Standard A2A / Agent2Agent） | Linux Foundation 的 Agent2Agent Protocol，代表实现为 `services/a2a/**` | `0.3.0`<br>（`agentCardSpec.A2A_PROTOCOL_VERSION`） | JSON-RPC 2.0 over HTTP + **SSE**（REST 绑定路径 `/v1/message:send` 等） | **跨厂商、跨网络** |
 | **私有 ACP**<br>（Private ACP dialect） | khy-os 自有的进程内 agent 编排方言，代表实现为 `acpTransport.js` + `a2a*` 模块群 | `1.0`<br>（`ACP_PROTOCOL_VERSION`） | 进程内 / 自建 ipc·ws·http | **单进程内** |
+| **编辑器 ACP**<br>（Agent Client Protocol） | Zed 发起的编辑器↔智能体标准协议，代表实现为 `services/domain/messaging/agentclient/**` | `v1`（整数 1） | NDJSON over **stdio** | **编辑器 ↔ 智能体子进程** |
+
+> **三协议互斥**（2026-10-07 [DESIGN-ARCH-184] 增补第三行）：文档与代码提及编辑器标准协议
+> 一律写「编辑器 ACP」或全称 "Agent Client Protocol"，禁止裸写「ACP」——裸写在本仓默认指
+> 私有 ACP。环境变量前缀：标准 A2A = `KHY_A2A_*`、私有 ACP = `KHY_ACP_*`（P2 保留）、
+> 编辑器 ACP = `KHY_ACPCLIENT_*`（见 `scripts/ci/protocol-naming.json`）。
 
 ### 1.1 关键区分点（对外解释时用这张表）
 

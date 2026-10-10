@@ -3,7 +3,7 @@ name: 修复先复现（看病）
 id: RUNTIME-007
 domain: RUNTIME
 nature: 约束为主，兼权力与福利
-scope: "被判定为 FIX 的改动集（改 bug / 修回归）：改动集含失败特征词、或改了既有测试（services/**、apps/**、extensions/**、scripts/**）"
+scope: "被判定为 FIX 的改动集（改 bug / 修回归）：改动集含失败特征词、或改了既有测试（runtime/node/**、apps/**、delivery/web/**、delivery/extension/**、scripts/**）"
 priority: P1
 trigger: 动手修 bug 前（判定为主模态 FIX 时）
 constraint: "必须有 repro-before.txt（复现命令的**原始输出**，非转述）才可改代码；改后必须有 repro-after.txt 跑同一条命令；differential.md 须列 ≥2 个候选病因且每个给可证伪预测；处方必须最小化——FIX 触及 ≥4 文件或 ≥3 顶层目录即报 fix-blast-radius。"

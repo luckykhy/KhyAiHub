@@ -161,8 +161,8 @@
     "dirs": [
       { "path": "runtime/boot/kernel/vendor/moonbit", "state": "ledgered", "contents": ["PROVENANCE.md", "PROVENANCE.html", "include/", "moonbit_gen.c", "runtime.c"] },
       { "path": "runtime/node/backend/vendor/shared", "state": "unverified", "contents": ["config", "logs", "package.json", "src", "tests"] },
-      { "path": "extensions/tools/khy-dsh-compat/vendor", "state": "empty" },
-      { "path": "extensions/tools/khy-markdown/vendor", "state": "empty" },
+      { "path": "delivery/extension/tools/khy-dsh-compat/vendor", "state": "empty" },
+      { "path": "delivery/extension/tools/khy-markdown/vendor", "state": "empty" },
       { "path": "delivery/web/ai-frontend/public/vendor", "state": "empty" },
       { "path": "scripts/copyright/vendor", "state": "ledgered", "contents": ["software-copyright-materials/"] }
     ]
