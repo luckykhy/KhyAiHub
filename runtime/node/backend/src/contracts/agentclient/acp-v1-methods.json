@@ -1,0 +1,52 @@
+{
+  "_note": "编辑器 ACP（Agent Client Protocol，Zed）v1 稳定面的方法/变体/枚举单一真源。acpTypes.js 读它。术语区分见 [DESIGN-NAM-002]：本文协议称「编辑器 ACP」，禁止与私有 ACP（acpTransport.js）和标准 A2A 混写。设计真源：[DESIGN-ARCH-184]。",
+  "protocolVersion": 1,
+  "agentMethods": [
+    "initialize",
+    "authenticate",
+    "session/new",
+    "session/prompt",
+    "session/load",
+    "session/resume",
+    "session/close",
+    "session/set_mode",
+    "session/list",
+    "session/delete"
+  ],
+  "agentNotifications": ["session/cancel"],
+  "clientMethods": [
+    "session/request_permission",
+    "fs/read_text_file",
+    "fs/write_text_file",
+    "terminal/create",
+    "terminal/output",
+    "terminal/release",
+    "terminal/wait_for_exit",
+    "terminal/kill",
+    "elicitation/create"
+  ],
+  "clientNotifications": ["session/update", "elicitation/complete"],
+  "sessionUpdateVariants": [
+    "user_message_chunk",
+    "agent_message_chunk",
+    "agent_thought_chunk",
+    "tool_call",
+    "tool_call_update",
+    "plan",
+    "available_commands_update",
+    "current_mode_update",
+    "config_option_update",
+    "session_info_update",
+    "usage_update"
+  ],
+  "stopReasons": ["end_turn", "max_tokens", "max_turn_requests", "refusal", "cancelled"],
+  "permissionKinds": ["allow_once", "allow_always", "reject_once", "reject_always"],
+  "toolKinds": ["read", "edit", "delete", "move", "search", "execute", "think", "fetch", "switch_mode", "other"],
+  "jsonrpcErrors": {
+    "parseError": -32700,
+    "invalidRequest": -32600,
+    "methodNotFound": -32601,
+    "invalidParams": -32602,
+    "internalError": -32603
+  }
+}
