@@ -110,6 +110,18 @@ jobs:
       - name: Check governance rules
         run: node scripts/ci/check-gov-rules.js
 
+      # 版本递增批准闸（R-2a / AGENTS.md「MINOR/MAJOR 必须由人批准」）。
+      # 工具无关：拦的是绕过 version-mode.js 直接编辑 pyproject.toml 的路径，
+      # 那种做法另一个 AI 或人都可能上手，脚本层的 --approved-by 拦不住。
+      # PATCH 放行（开发态批次 bump 已由 T4 预授权），只有 MAJOR/MINOR 要批准标记。
+      - name: Check version bump approval
+        run: node scripts/ci/check-version-bump-approval.js
+
+      # 「该换版本号了」提示器。软指标：报告开发态下距上次 bump 积压了多少提交，
+      # 不阻断（R-1 管什么时候该 bump，本步只负责在该做决定的时刻把事实摆出来）。
+      - name: Check version freshness
+        run: node scripts/ci/check-version-freshness.js --strict
+
       # 统一治理状态视图（MGMT-RPT-034 P0-2 落地，2026-10-10 人工点头接入门）——
       # 一表读全：版本三轨道 + semver 合法性 + 规则覆盖率 + 抑制台账 + 治理接线。
       # exit 1 只在命中阻断红线（版本不匹配 / 非 semver / P0 未执行 / 死指针 /
