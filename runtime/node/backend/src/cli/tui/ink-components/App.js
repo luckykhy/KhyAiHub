@@ -622,6 +622,25 @@ function _resolveBannerProps(footer = {}, overrides = {}) {
   return props;
 }
 
+/**
+ * P4/173 右栏「当前」锚：第一条「进行中」任务行；无则第一条「错误」行；都没有 → 空串。
+ * 抽成模块级叶子只为把 for + 两个 if 移出组件体内的调用点缩进（COMP-001 嵌套棘轮），
+ * 优先级（进行中 > 错误 > 空）与原内联实现逐行一致。
+ *
+ * @param {string[]} lines 任务行原文
+ * @param {(s: string) => string} taskLineStatus 行状态解析（来自 ./taskPanelLines）
+ * @returns {string}
+ */
+function _pickCurrentTaskLine(lines, taskLineStatus) {
+  let firstErr = '';
+  for (const l of lines) {
+    const s = taskLineStatus(String(l == null ? '' : l).trimStart());
+    if (s === 'in_progress') return String(l);
+    if (s === 'error' && !firstErr) firstErr = String(l);
+  }
+  return firstErr;
+}
+
 function App({ options = {} }) {
   const h = React.createElement;
   const { Box, Text, Static, useInput, useApp } = inkRuntime.get();
@@ -5599,6 +5618,9 @@ function App({ options = {} }) {
               busy,
               empty,
               queueLen: query.queueLen,
+              // ↓ 只在「本回合已有工具调用」时才开窥视面板。同一把尺:`ShellView.latestTool`
+              // —— 面板自己就是拿它取内容的,故此处有值 ⇔ 面板不会开成空框。
+              hasTool: !!(ShellView.latestTool && ShellView.latestTool(query.streaming)),
             })
           : null;
         switch (_arrowAct) {
@@ -5614,6 +5636,11 @@ function App({ options = {} }) {
           case 'subview:openShell':
             setShellScroll(0);
             setShellViewOpen(true);
+            return;
+          case 'subview:peekUnavailable':
+            // 本回合还没有工具调用:面板开了也是空框。如实说清入口与时机,而不是静默吞掉
+            // 这个键 —— 用户按了没反应,和看到一个不说话的框一样费解(2026-10-09 反馈)。
+            showHint('本回合还没有工具调用；工具开始运行后，↓ 可查看它的命令与实时输出');
             return;
           case 'queue:editLast': {
             const item = query.dequeueLast();
@@ -6670,13 +6697,7 @@ function App({ options = {} }) {
     try {
       const ls = tasksHidden ? [] : Array.isArray(_taskProps.lines) ? _taskProps.lines : [];
       const { taskLineStatus: _tls } = require('./taskPanelLines');
-      let firstErr = '';
-      for (const l of ls) {
-        const s = _tls(String(l == null ? '' : l).trimStart());
-        if (s === 'in_progress') return String(l);
-        if (s === 'error' && !firstErr) firstErr = String(l);
-      }
-      return firstErr;
+      return _pickCurrentTaskLine(ls, _tls);
     } catch {
       return '';
     }

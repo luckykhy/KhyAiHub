@@ -45,7 +45,7 @@ const FEEDBACK_URL = process.env.KHY_FEEDBACK_URL || `https://${CLOUD_DEFAULT_HO
 
 // ── Local AI backend (daemon) default ───────────────────────────────────────
 // The loopback port the daemon listens on when nothing else is discoverable.
-// apps/ai-frontend/backendDiscovery.mjs MIRRORS this value (a separate browser
+// delivery/web/ai-frontend/backendDiscovery.mjs MIRRORS this value (a separate browser
 // package that cannot import backend code) — keep the two in lock-step.
 const AI_BACKEND_DEFAULT_PORT = parseInt(process.env.KHY_DAEMON_PORT || '9090', 10);
 const AI_BACKEND_DEFAULT_URL = `http://localhost:${AI_BACKEND_DEFAULT_PORT}`;
@@ -99,11 +99,19 @@ const BACKEND_HOST = process.env.BACKEND_HOST || '127.0.0.1';
 // 不再各自硬编码 9222。env BRIDGE_PORT 可覆盖。
 const BRIDGE_DEFAULT_PORT = parseInt(process.env.BRIDGE_PORT || '9222', 10);
 
+// 移动端远程控制（桌面端「移动端远程控制」面板 + 手机浏览器页）默认端口。
+// 单一真源：src/webRemoteControl/server.js 与 apps/khyos-desktop 都从这里取，
+// env KHY_REMOTE_PORT 覆盖。端口被占用时服务自动顺延（最多 3 次）。
+const REMOTE_DEFAULT_PORT = parseInt(process.env.KHY_REMOTE_PORT || '9413', 10);
+// 刻意不提供 '0.0.0.0' 默认值：局域网是面板上的显式开关（lanEnabled），
+// 只有 KHY_REMOTE_BIND_HOST 被显式设置时才按环境值绑定。
+const REMOTE_BIND_HOST = process.env.KHY_REMOTE_BIND_HOST || '';
+
 // ── Cross-platform launcher (crossLauncher.js) local dev ports ───────────────
 // Web/mobile frontend dev-server ports. Env-overridable so a port conflict is a
 // single env change, not a code edit. crossLauncher.js is the ONLY consumer that
 // should reference these — no other module may re-hardcode 8090/5173.
-// AI_FRONTEND_PORT mirrors apps/ai-frontend/vite.config.js (same env, same default).
+// AI_FRONTEND_PORT mirrors delivery/web/ai-frontend/vite.config.js (same env, same default).
 const WEB_FRONTEND_PORT = parseInt(process.env.AI_FRONTEND_PORT || '8090', 10);
 // Legacy: dev-server port of the old `apps/khy-mobile` Capacitor shell. The live
 // mobile client is the Flutter app `apps/khy-os-client-app`, which is a native
@@ -573,6 +581,8 @@ const exported = {
   getWebFrontendPorts,
   // Collaboration bridge server default port (bridgeServer.js / bridgeUrlHint.js)
   BRIDGE_DEFAULT_PORT,
+  REMOTE_DEFAULT_PORT,
+  REMOTE_BIND_HOST,
   // Portable copy root single source of truth (khy portable sync)
   PORTABLE_ROOT_DEFAULT,
   // Geolocation single source of truth (GetLocation tool)

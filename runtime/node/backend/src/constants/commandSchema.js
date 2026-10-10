@@ -265,6 +265,7 @@ const ROUTER_COMMANDS = [
 const ROUTER_SUB_COMMANDS = {
   data: ['fetch', 'list'],
   cache: ['clear'],
+  health: ['tui'],
   inertia: ['run'],
   md: ['open', 'register', 'unregister'],
   tools: ['list', 'ls', 'status', 'install', 'add', 'update', 'upgrade', 'path', 'where', 'help'],

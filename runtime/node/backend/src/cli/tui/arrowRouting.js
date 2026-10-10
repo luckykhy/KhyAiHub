@@ -37,6 +37,7 @@ const ARROW_ACTIONS = Object.freeze([
   'scroll:lineDown', // 子视图下滚一行
   'subview:exit', // ← 退出当前子视图
   'subview:openShell', // ↓ 打开 shell 窥视面板
+  'subview:peekUnavailable', // ↓ 但本回合还没有工具可看:别开空框,由调用方如实说明
   'queue:editLast', // ↑ 把最后一条排队未发的消息取回输入框编辑
   'input:forward', // 交给 textInput(光标移动等)
   'noop', // 明确吞掉:此 context 下该方向无绑定
@@ -93,8 +94,8 @@ function resolveContext(state) {
 
 // ── 各 context 的方向键绑定表(照抄 CC 的「context → bindings」结构)────────────
 //
-// executing 的 ↑ 是**条件绑定**(队列为空时无可取回),故在 _resolve 里单独处理;
-// 其余全是静态映射,一眼可读、可 diff。
+// executing 的 ↑ 与 ↓ 都是**条件绑定**(队列为空 / 本回合还没有工具可看),故在 _resolve
+// 里单独处理;其余全是静态映射,一眼可读、可 diff。
 const _BINDINGS = Object.freeze({
   shellView: Object.freeze({
     up: 'scroll:lineUp',
@@ -104,7 +105,7 @@ const _BINDINGS = Object.freeze({
   }),
   executing: Object.freeze({
     up: 'queue:editLast', // 仅 queueLen > 0 时;否则降为 noop(见 _resolve)
-    down: 'subview:openShell',
+    down: 'subview:openShell', // 仅本回合已有工具时;否则降为 peekUnavailable(见 _resolve)
     left: 'noop',
     right: 'noop',
   }),
@@ -137,6 +138,8 @@ const _BINDINGS = Object.freeze({
  * @param {boolean} [args.busy] 是否有回合在执行中
  * @param {boolean} [args.empty] 输入缓冲区是否为空
  * @param {number} [args.queueLen] 排队未发消息条数(仅 executing 的 ↑ 用)
+ * @param {boolean} [args.hasTool] 本回合是否已有工具调用(仅 executing 的 ↓ 用;
+ *   缺省视为「还没有」—— 没有内容可看的面板宁可不开)
  * @returns {string|null} 动作名;非方向键输入 → null
  */
 function resolveArrowAction(args) {
@@ -157,6 +160,13 @@ function resolveArrowAction(args) {
   // 写作 `if (key.upArrow && query.queueLen > 0) {…} … return;`,落到末尾的 return)。
   if (action === 'queue:editLast' && !(Number(a.queueLen) > 0)) {
     return 'noop';
+  }
+
+  // executing 的 ↓ 同理是条件绑定:本回合还没有任何工具调用时,窥视面板没有内容可看 ——
+  // 打开它只会得到一个占满主区的空框(2026-10-09 用户反馈:「执行过程中的下键不知道搞
+  // 什么的」)。降级为 peekUnavailable,由调用方给一句话说明入口与时机,而不是把空框摆上来。
+  if (action === 'subview:openShell' && !a.hasTool) {
+    return 'subview:peekUnavailable';
   }
   return action;
 }

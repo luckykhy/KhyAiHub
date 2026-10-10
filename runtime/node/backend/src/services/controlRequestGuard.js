@@ -62,6 +62,13 @@ function resolveTimeoutMs(env, opts) {
  * @param {object} [opts.env]               门控/超时读取源(默认 process.env)
  * @param {Function} [opts.setTimeout]      可注入(测试)
  * @param {Function} [opts.clearTimeout]    可注入(测试)
+ * @param {Function} [opts.onSettled]       等待真正 settle(原 promise/abort/超时
+ *                                          三路径之一胜出)时调用一次且只一次。
+ *                                          loop 侧用它把人工应答喂给 lastActivityTime
+ *                                          —— 人工等待不是 loop 空闲，等待期不得计入
+ *                                          idle/absolute 执行超时(105 P-04 剩余
+ *                                          验收线)。门控关与非等待早退路径
+ *                                          (非 thenable/已中断/无赛跑者)不调用。
  * @returns {Promise<any>}  原值 / null(中断或超时)
  */
 function guardControlRequest(promise, opts = {}) {
@@ -80,6 +87,7 @@ function guardControlRequest(promise, opts = {}) {
   const timeoutMs = resolveTimeoutMs(env, opts);
   const _setTimeout = opts.setTimeout || setTimeout;
   const _clearTimeout = opts.clearTimeout || clearTimeout;
+  const onSettled = typeof opts.onSettled === 'function' ? opts.onSettled : null;
 
   // 已中断:立刻 fail-closed,连 race 都不必起。
   if (signal && signal.aborted) {
@@ -118,6 +126,13 @@ function guardControlRequest(promise, opts = {}) {
       }
       settled = true;
       cleanup();
+      if (onSettled) {
+        try {
+          onSettled();
+        } catch {
+          /* feed must never break the settle path */
+        }
+      }
       fn(val);
     };
 

@@ -120,6 +120,24 @@ function formatTaskLine(line, ordinal, t) {
 }
 
 /**
+ * 路径**保尾**截断：从头部逐字符剥到放得下为止 —— 路径尾部才有信息量，头部截断
+ * 只剩盘符。抽成模块级叶子只为把 while 移出 buildSidebarLines 的调用点缩进
+ * (COMP-001 嵌套棘轮)，语义与原内联 while 一致。
+ *
+ * @param {string} text 原文
+ * @param {number} innerW 可用内容宽度
+ * @param {(s: string) => number} measure 宽度测量器
+ * @returns {string} 放得下的尾部（未截断时原样返回）
+ */
+function _tailFittedTo(text, innerW, measure) {
+  let tail = text;
+  while (measure(tail) > innerW - 1 && tail.length > 1) {
+    tail = tail.slice(1);
+  }
+  return tail;
+}
+
+/**
  * Pure line builder: props in → array of {text, color?, dim?, bold?} out.
  * Sections(确认规格): tasks(always) / tools / queue / notifications。
  *  - 任务标题行总进度 `任务 已完成数/总数`;图标不可识别 → 诚实回退「任务 m 项」。
@@ -344,10 +362,7 @@ function buildSidebarLines(props = {}) {
         lines.push({ ...divider });
       }
       if (cwd) {
-        let tail = cwd;
-        while (measure(tail) > innerW - 1 && tail.length > 1) {
-          tail = tail.slice(1);
-        }
+        const tail = _tailFittedTo(cwd, innerW, measure);
         lines.push({
           text: t((tail !== cwd ? '…' : '') + tail),
           color: 'gray',

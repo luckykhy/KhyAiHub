@@ -5,7 +5,7 @@
  * on demand.
  *
  * Why this exists
- *   The khychat page (apps/ai-frontend) needs the AI management backend
+ *   The khychat page (delivery/web/ai-frontend) needs the AI management backend
  *   (`services/backend/scripts/ai-manage-daemon.js`, listens on 9090 by
  *   default) to serve `/api/auth/*` and the rest of the SPA routes. Until
  *   now, the only way to bring it up was an explicit `khy gateway server`.

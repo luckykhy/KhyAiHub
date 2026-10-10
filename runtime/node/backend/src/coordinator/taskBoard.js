@@ -67,7 +67,7 @@ let _available = false;
 function _dbPath() {
   try {
     const { getDataDir } = require('../utils/dataHome');
-    return path.join(getDataDir(), 'taskboard.db');
+    return getDataDir('taskboard.db');
   } catch {
     const os = require('os');
     const dir = path.join(os.homedir(), '.khyquant');
