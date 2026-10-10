@@ -2,12 +2,12 @@
   "$schemaNote": "软著登记真源 —— 软件全称 / 简称 / 登记版本 / 著作权人的机器可读登记。由 scripts/ci/check-copyright-readiness.js 消费，用于核验「界面标题 / README / pyproject / package.json 与登记名称是否一致」（DESIGN-IP-001 C-MAT2 + C-MAT3）。",
   "source": "真源文档 docs/10_规范/其它规范/[DESIGN-IP-001] 软件著作权就绪规范.md（规则 PROCESS-010）；名称与版本经阶段 0 人工门禁确认后填入。",
   "version": 1,
-  "updated": "2026-09-28",
+  "updated": "2026-10-10",
   "name": "基于执行轨迹记录与链路校验技术的AI助手平台",
   "shortName": "",
-  "version": "V1.2.0",
+  "version": "V1.0.0",
   "engineeringVersion": "1.2.0",
-  "versionNote": "登记版本 V1.2.0 = 工程版本 G1 现值（人 2026-09-28 明示「先沿用现在的，只有我说修改了才修改」），因此页眉与 `--version` 画面天然一致，无需快照改号。简称留空：新全称内不含 Khy/OS，简称只能复用全称已出现的字。定名与逐词载体见 [MGMT-OTHER-006]；决策原话见 works/record/evidence/01_人类贡献/决策记录.md D-名2。取代 2026-09-20 的 KhyOS人工智能平台操作系统 / KhyOS / V1.1（那版版本号自记为未拍板）。",
+  "versionNote": "登记版本 2026-10-10 由 V1.2.0 改为 V1.0.0（人明示；决策记录 D-版1）。原因：同日确立了「开发态/发布态」双态版本模型（scripts/release/version-mode.js），计划中的第一次正式发布号为 1.0.0 —— 登记版本与首次正式发布号对齐，比沿用内部迭代号 1.2.0 更贴合「这是第一个正式版」的语义。⚠ 不一致窗口：工程版本 G1 现值仍是 1.2.0，两者要到 `version-mode.js release 1.0.0` 执行后才一致；在那之前 `khy about` 打印 1.2.0 而申请表写 V1.0.0，属「材料与实际不符」的退回情形，故**递交前必须已完成 release 1.0.0**。简称留空：新全称内不含 Khy/OS，简称只能复用全称已出现的字。定名与逐词载体见 [MGMT-OTHER-006]；历史决策见决策记录 D-名2（V1.2.0 版）与 D-版1（改 V1.0.0）。",
   "nameStatusNote": "2026-09-20 的定名是「用户授权 AI 代定」；2026-09-28 现行名由人逐次否决后给出原话，故本文件的 name 现由 D-名2 支撑。",
   "copyrightHolder": {
     "type": "natural-person",
@@ -27,9 +27,9 @@
     "supportEnv": "Python 3.8 以上，Node.js 20.18.1 以上"
   },
   "evidence": {
-    "decisionEntry": "D:\\Portable\\软著交付\\Khy-OS\\00_决策入口.md",
-    "factSheet": "D:\\Portable\\软著交付\\Khy-OS\\00_体检报告\\阶段0_登记事实确认表.md",
-    "nameCandidates": "D:\\Portable\\软著交付\\Khy-OS\\00_体检报告\\命名候选对照_2026-09-20.md",
-    "$note": "交付根目录在仓库外 —— 这里是证据指针，不是被复制进仓库的内容。"
+    "$note": "交付根目录在仓库外 —— 这里是证据指针，不是被复制进仓库的内容。路径为**仓库相对**（Portable 规约第一条：绝不硬编码盘符），自 docs/10_规范/registry/ 出发上溯 4 层到 Portable 根。若把本仓移出 Portable 根，这三条会失效。",
+    "decisionEntry": "../../../../软著交付/Khy-OS/00_决策入口.md",
+    "factSheet": "../../../../软著交付/Khy-OS/00_体检报告/阶段0_登记事实确认表.md",
+    "nameCandidates": "../../../../软著交付/Khy-OS/00_体检报告/命名候选对照_2026-09-20.md"
   }
 }
