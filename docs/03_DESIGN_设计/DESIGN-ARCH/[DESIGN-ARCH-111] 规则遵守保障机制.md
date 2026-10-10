@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-111] 规则遵守保障机制（ruleguard）
 
 <!-- RULES-REGISTRY: TOOLING-004, TOOLING-005, TOOLING-006, TOOLING-007 -->

@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-134] TUI 启动屏视觉重设计
 
 > **隶属**：本文属 **TUI 设计族**（总纲 `[DESIGN-ARCH-122]`）；规则冲突一律以 `[DESIGN-ARCH-102] Khy TUI 统一规则手册` 为准。

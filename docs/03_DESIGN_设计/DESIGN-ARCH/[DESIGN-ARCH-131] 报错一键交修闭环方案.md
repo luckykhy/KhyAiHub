@@ -1,3 +1,4 @@
+<!-- IMPL-STATUS: done -->
 # [DESIGN-ARCH-131] 报错一键交修闭环方案
 
 > 状态：设计提案（未落地）
