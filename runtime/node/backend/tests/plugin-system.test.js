@@ -1,0 +1,155 @@
+'use strict';
+
+/**
+ * Integration test —verifies the full plugin lifecycle:
+ * 1. Discovery (from workspace node_modules)
+ * 2. Manifest validation
+ * 3. Activation (with timeout)
+ * 4. Command execution
+ * 5. Tool execution
+ * 6. Storage isolation
+ * 7. Deactivation / cleanup
+ */
+
+const assert = require('assert');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+describe('plugin system integration', () => {
+  let pluginLoader;
+  let createContextFactory;
+  let commandRegistry;
+  let tmpDataHome;
+  let tmpRoot;
+
+  beforeAll(() => {
+    tmpDataHome = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-plugin-test-'));
+    // Workspace that carries the khy-hello fixture as <root>/node_modules/khy-hello,
+    // so discoverPlugins() finds it without touching the real repo node_modules.
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-plugin-root-'));
+    const nm = path.join(tmpRoot, 'node_modules');
+    fs.mkdirSync(nm, { recursive: true });
+    fs.cpSync(path.join(__dirname, 'fixtures', 'khy-hello'), path.join(nm, 'khy-hello'), { recursive: true });
+    process.env.KHY_DATA_HOME = tmpDataHome;
+    process.env.KHYQUANT_ROOT = tmpRoot;
+    // 关掉仓库内置拓展根：本用例测的是 workspace 发现源，若不关，真实仓库�?
+    // delivery/extension/ 会被扫进候选集，用例的通过与否就取决于仓库里恰好装了什�?
+    // （目前只�?khy-markdown �?engines.khy 不匹配才没影响结论）�?
+    process.env.KHY_EXTENSION_REPO_ROOT = '0';
+    jest.resetModules();
+
+    pluginLoader = require('../src/plugin-loader/index.js');
+    ({ createContextFactory } = require('../src/plugin-loader/contextFactory.js'));
+    commandRegistry = require('../src/cli/commandRegistry.js');
+  });
+
+  afterAll(async () => {
+    try {
+      await pluginLoader.shutdown();
+    } catch {
+      // ignore cleanup errors in tests
+    }
+    delete process.env.KHY_DATA_HOME;
+    delete process.env.KHYQUANT_ROOT;
+    delete process.env.KHY_EXTENSION_REPO_ROOT;
+    if (tmpDataHome) {
+      fs.rmSync(tmpDataHome, { recursive: true, force: true });
+    }
+    if (tmpRoot) {
+      fs.rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  });
+
+  test('discovery -> activation -> command execution -> shutdown', async () => {
+    // Ensure clean state for this test run
+    await pluginLoader.shutdown();
+
+    // ── Test 1: Discovery ──────────────────────────────────────────
+    const candidates = pluginLoader.discoverPlugins(console);
+    const helloCandidate = candidates.find(c => c.manifestData.name === 'khy-hello');
+    assert(helloCandidate, 'khy-hello should be discovered from workspace');
+
+    // ── Test 2: Manifest validation ────────────────────────────────
+    // Validate with the loader's own validator (SDK when installed, built-in
+    // fallback otherwise) —the SDK package is optional and not always present.
+    const { validateManifest } = pluginLoader;
+    const { valid, errors } = validateManifest(helloCandidate.manifestData);
+    assert(valid, `Manifest should be valid, got errors: ${errors.join(', ')}`);
+
+    // ── Test 3: Full init (discovery + activation) ─────────────────
+    const contextFactory = createContextFactory({
+      commandRegistry,
+      toolRegistry: null,
+      aiGateway: null,
+      logger: console,
+      hostVersion: '1.0.0',
+    });
+
+    await pluginLoader.init({
+      hostVersion: '1.0.0',
+      contextFactory,
+      logger: console,
+    });
+
+    const helloPlugin = pluginLoader.getPlugin('hello');
+    assert(helloPlugin, 'hello plugin should be loaded');
+    expect(helloPlugin.state).toBe('active');
+
+    // ── Test 4: Command registration ──────────────────────────────
+    const allCmds = commandRegistry.getAll();
+    const helloCmd = allCmds.find(c => c.cmd === '/hello.greet');
+    assert(helloCmd, '/hello.greet should be registered in commandRegistry');
+    assert(helloCmd._pluginHandler, 'Command should have a plugin handler');
+
+    // ── Test 5: Command execution ─────────────────────────────────
+    let cmdOutput = '';
+    const mockCmdCtx = {
+      print: (text) => { cmdOutput = text; },
+      printStyled: (text) => { cmdOutput = text; },
+      cwd: process.cwd(),
+    };
+    await helloCmd._pluginHandler(
+      { raw: 'hello.greet khy', positional: ['khy'], flags: {} },
+      mockCmdCtx
+    );
+    assert(cmdOutput.includes('Hello, khy!'), `Expected greeting, got: ${cmdOutput}`);
+    assert(cmdOutput.includes('#1'), 'Should be greeting #1');
+
+    // ── Test 6: Storage isolation ──────────────────────────────────
+    await helloCmd._pluginHandler(
+      { raw: 'hello.greet World', positional: ['World'], flags: {} },
+      mockCmdCtx
+    );
+    assert(cmdOutput.includes('#2'), `Expected greeting #2, got: ${cmdOutput}`);
+
+    // ── Test 7: Plugin status ──────────────────────────────────────
+    const status = pluginLoader.getStatus();
+    assert(status.length > 0, 'Should have at least one plugin in status');
+    const helloStatus = status.find(s => s.namespace === 'hello');
+    expect(helloStatus.state).toBe('active');
+    expect(helloStatus.version).toBe('1.0.0');
+
+    // ── Test 8: Incompatible version handling ──────────────────────
+    const fakeManifest = {
+      name: 'khy-future',
+      version: '9.0.0',
+      engines: { khy: '>=99.0.0' },
+      main: './src/index.js',
+      namespace: 'future',
+    };
+    const vResult = validateManifest(fakeManifest);
+    assert(vResult.valid, 'Manifest structure should be valid');
+
+    // ── Test 9: Shutdown / deactivation ────────────────────────────
+    await pluginLoader.shutdown();
+    const afterShutdown = pluginLoader.getAllPlugins();
+    expect(afterShutdown.length).toBe(0);
+
+    // ── Test 10: Host runs without plugins ─────────────────────────
+    const remainingCmds = commandRegistry.getAll();
+    const pluginCmds = remainingCmds.filter(c => c.source === 'plugin');
+    expect(pluginCmds.length).toBe(0);
+  });
+});
+

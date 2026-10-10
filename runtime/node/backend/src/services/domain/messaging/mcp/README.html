@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>domain/messaging/mcp — khy 的 MCP 双面单元（既当客户端，也当服务器） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>messaging<span class="sep">›</span>mcp<span class="sep">›</span>domain/messaging/mcp — khy 的 MCP 双面单元（既当客户端，也当服务器）</div>
+      <header class="hero reveal"><h1>domain/messaging/mcp — khy 的 MCP 双面单元（既当客户端，也当服务器）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#domain-messaging-mcp-khy-的-mcp-双面单元-既当客户端-也当服务器">`domain/messaging/mcp` — khy 的 MCP 双面单元（既当客户端，也当服务器）</a></li><li class="lvl-2"><a href="#1-三问-规则-9-process-010">1. 三问（规则 9 / `PROCESS-010`）</a></li><li class="lvl-2"><a href="#2-契约-改本单元前先读这段">2. 契约（改本单元前先读这段）</a></li><li class="lvl-2"><a href="#3-实测数字-2026-09-29-全数清点非抽样">3. 实测数字（2026-09-29，全数清点非抽样）</a></li><li class="lvl-2"><a href="#4-测试隔离警告-跑本目录测试前必读">4. ⚠ 测试隔离警告（跑本目录测试前必读）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="domain-messaging-mcp-khy-的-mcp-双面单元-既当客户端-也当服务器"><code>domain/messaging/mcp</code> — khy 的 MCP 双面单元（既当客户端，也当服务器）<a class="anchor" href="#domain-messaging-mcp-khy-的-mcp-双面单元-既当客户端-也当服务器" aria-label="锚点">#</a></h1>
+<blockquote><p>本 README 是本单元的上下文真源之一。机器可读的契约、扇入与登记缺陷见同目录<br><code>khy.module.json</code>（守卫 <code>npm run check:layout</code> 的 <code>functional-unit</code> 规则要求二者并存）。</p></blockquote>
+<h2 id="1-三问-规则-9-process-010">1. 三问（规则 9 / <code>PROCESS-010</code>）<a class="anchor" href="#1-三问-规则-9-process-010" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>问</th><th>答</th></tr></thead><tbody><tr><td><strong>谁要的</strong></td><td>用户。<code>khy mcp …</code>（add/list/serve/status/export/oauth）与 <code>khy gateway</code> 侧的 MCP 工具调用，都是人直接敲的入口；扇入实测 11 个非测试消费者，第一消费者是 <code>services/backend/src/cli/handlers/mcp.js</code>（8 处引用）。</td></tr><tr><td><strong>为什么要这么做</strong></td><td>这个单元解决的是<strong>同一份 MCP 配置在四处存放</strong>的问题：khy 自己的 <code>mcp.json</code>、Claude Code 的 <code>settings.json</code>、OpenClaw 的配置、以及 14 家第三方 agent 生态（Cursor/VS Code/Codex/Gemini/Qwen/Kiro/AmazonQ/Copilot CLI/Continue/Zed/Cline/Roo/opencode…）各自的家。没有这一层，每接一家就要复制一段「探测 → 读 → 解析 → 抽 map → 打桥接标记」的分支——<code>mcpEcosystemRegistry.js</code> 把这段收敛成一张声明表（<code>ECOSYSTEMS[]</code>），这是它存在的全部理由。第二半原因是<strong>方向相反</strong>：khy 也要把自己暴露成 MCP server（stdio / Streamable HTTP / SSE 三种传输），所以服务器侧的协议层、工具暴露策略与预设表也在这里。</td></tr><tr><td><strong>怎么验证</strong></td><td><code>node --test services/backend/src/services/domain/messaging/mcp/*.test.js</code>（<strong>显式列路径</strong>，本环境给目录会得到假读数）→ 21 份共置套件 173 例 / 0 fail / 0 skip；单元外 21 份引用本单元的测试实测 13 份可跑（180 例 / 175 pass / 4 skip / 1 fail，那 1 例是既有真红，见 <code>khy.module.json</code> B30-M6），8 份在本环境<strong>无法复跑</strong>（方言错配，不是缺陷）。</td></tr></tbody></table>
+<h2 id="2-契约-改本单元前先读这段">2. 契约（改本单元前先读这段）<a class="anchor" href="#2-契约-改本单元前先读这段" aria-label="锚点">#</a></h2>
+<ul><li><strong>对外面只有 24 个键</strong>（<code>index.js</code> 的 <code>module.exports</code>，<code>index.test.js:88</code> 逐字钉死）：</li></ul>
+<p>客户端侧 <code>MCPClient</code> / <code>connectMCPServer</code> / <code>disconnectMCPServer</code> / <code>connectAll</code> /<br>  <code>disconnectAll</code> / <code>listMCPTools</code> / <code>callMCPTool</code> / <code>callTool</code> / <code>listResources</code> /<br>  <code>readResource</code> / <code>listPrompts</code> / <code>getPrompt</code> / <code>authenticate</code> / <code>getMCPInstructions</code> /<br>  <code>getState</code> / <code>getClient</code> / <code>getConnectedServers</code>，配置侧 <code>loadConfig</code> / <code>saveConfig</code>，<br>  常量侧 <code>PROTOCOL_VERSION</code> / <code>CLIENT_CAPABILITIES</code> / <code>Transport</code> / <code>ConnectionState</code> / <code>ConfigScope</code>。<br>  其余 20 个文件是<strong>纯叶子或薄 IO</strong>，各自独立导出，不聚合进 <code>index.js</code>。</p>
+<ul><li><strong>三种文件角色，改法不同</strong>：纯叶子（<code>mcpAddSpec</code> / <code>mcpServerProtocol</code> / <code>mcpServeToolPolicy</code> /</li></ul>
+<p><code>mcpDisclosurePlan</code> / <code>mcpGovernance</code> / <code>mcpServerStatus</code> / <code>mcpServerPresets</code> / <code>types</code> /<br>  三个 bridge 叶子 / <code>mcpEcosystemRegistry</code>）零 IO、确定性、可整包注入 env；<br>  薄 IO（<code>mcpConfigStore</code> / <code>mcpHttpServer</code> / <code>mcpStdioServer</code> / <code>mcpServer</code> /<br>  <code>pythonCommandResolver</code> / <code>autoConnect</code>）只做读写与进程；<code>index.js</code>（1841 行）与<br>  <code>oauthTokenStore.js</code>（675 行）是两坨有状态主体。<strong>新逻辑一律进纯叶子，不要往 <code>index.js</code> 加。</strong></p>
+<ul><li><strong>协议版本只有一个真源</strong>：<code>PROTOCOL_VERSION</code>（<code>index.test.js:98</code> 钉死它 + <code>CLIENT_CAPABILITIES</code></li></ul>
+<p>只声明 <code>roots</code> 且被 <code>Object.freeze</code>）。任何一家传输自己写死版本串就是第二个真源。</p>
+<ul><li><strong>配置读的回退链</strong>：<code>loadConfig</code> 是 project &gt; user &gt; legacy 三档合并，<code>_scope</code> / <code>_configPath</code></li></ul>
+<p>标记来源；旧格式 <code>{servers:[...]}</code> 与新格式 <code>disabled:true</code> 都折成内部 <code>_disabled</code>。</p>
+<ul><li><strong>门控</strong>（本单元源文件里出现的 <code>KHY_*</code> 全数清点，非抽样）：<code>KHY_MCP_ECOSYSTEM</code>（生态桥总闸，</li></ul>
+<p>默认开）+ 每家 <code>KHY_MCP_ECO_&lt;ID&gt;</code> 子门（13 家合此命名，opencode 那一家叫 <code>KHY_MCP_ECODE</code>，<br>  与家族不一致，见 B30-M6）+ <code>KHY_MCP_ECODE_BRIDGE</code> + <code>KHY_CC_MCP_BRIDGE</code> + <code>KHY_MCP_ADD</code> +<br>  <code>KHY_MCP_PRESETS</code> + <code>KHY_MCP_SERVE</code> + <code>KHY_MCP_AUTOCONNECT</code> + <code>KHY_MCP_DISCLOSURE</code><br>  （配 <code>KHY_MCP_DISCLOSURE_THRESHOLD_PCT</code> / <code>KHY_MCP_DISCLOSURE_WINDOW</code> 两个阈值）+<br>  <code>KHY_MCP_RESOURCE_METADATA</code>；路径/网络位 <code>KHY_APP_HOME</code> / <code>KHY_DATA_HOME</code> /<br>  <code>KHY_MCP_ALLOWED_ORIGINS</code>；<code>KHY_HUMAN_GATE</code> 由治理叶子引用。读取一律<br>  「flagRegistry 优先，本地 <code>{0,false,off,no}</code> 兜底」，<strong>flagRegistry 走的是<br>  <code>services/flagRegistry.js</code> 兼容壳，真身已在 D3 <code>utils/flagRegistry/</code></strong>。</p>
+<ul><li><strong>凭据</strong>：<code>oauthTokenStore.js</code> 存 MCP OAuth token 与 api_key/token 两类静态凭据，</li></ul>
+<p>多后端回退；<code>authenticate</code> 缺凭据时抛专词，<strong>不许静默匿名发起</strong>。</p>
+<h2 id="3-实测数字-2026-09-29-全数清点非抽样">3. 实测数字（2026-09-29，全数清点非抽样）<a class="anchor" href="#3-实测数字-2026-09-29-全数清点非抽样" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>项</th><th>读数</th></tr></thead><tbody><tr><td>源文件 / 行数</td><td>21 / 7045（<code>index.js</code> 1841、<code>mcpHttpServer.js</code> 557、<code>mcpServerProtocol.js</code> 496、<code>mcpEcosystemRegistry.js</code> 720、<code>oauthTokenStore.js</code> 675）</td></tr><tr><td>共置测试</td><td>21 份 ↔ 21 个源文件，一一对同名 → 173 例 / 1107 个断言调用点 / 0 fail / 0 skip</td></tr><tr><td>扇入（非测试）</td><td>11 个文件 / 23 个 require 站点：<code>cli/handlers/mcp.js</code> ×8、<code>services/skillSearch.js</code> ×3、<code>cli/handlers/mcpExport.js</code> ×2、<code>cli/routerDispatchSlash.js</code> ×2、<code>services/tool/toolUseLoopCore.js</code> ×2，其余 6 处各 ×1</td></tr><tr><td>出边</td><td>D3 8 个目标 / 14 站点；D1 名义 5 站点（全是 <code>services/flagRegistry</code> 兼容壳，真身 D3）；<strong>无域归属的根 4 目标 / 7 站点</strong>（<code>src/tools</code> ×2、<code>src/tools/platformUtils</code> ×3、<code>src/agents/index</code> ×1、<code>package.json</code> ×1）</td></tr><tr><td>本批改动</td><td><strong>零源文件修改</strong>。只新增 21 份共置测试 + 本 README + <code>khy.module.json</code>，<code>git status</code> 该目录全是 <code>??</code></td></tr></tbody></table>
+<h2 id="4-测试隔离警告-跑本目录测试前必读">4. ⚠ 测试隔离警告（跑本目录测试前必读）<a class="anchor" href="#4-测试隔离警告-跑本目录测试前必读" aria-label="锚点">#</a></h2>
+<p>单元内 21 份共置测试全部把 <code>KHY_DATA_HOME</code> / <code>KHY_PROJECT_DATA_HOME</code> / <code>HOME</code> 钉到<br><code>fs.mkdtempSync</code> 临时目录<strong>再 require</strong>，写路径一律打在临时目录；实测跑完<br><code>git status --porcelain -- &lt;本目录&gt;</code> 仍只有 <code>??</code>，<strong>不改任何跟踪文件</strong>。</p>
+<p>但<strong>单元外</strong>的 <code>services/backend/tests/services/externalApps/appModelImporter.test.js</code><br>（属 <code>network/externalApps</code> 单元）会改写跟踪文件<br><code>services/Tools/opencode/config/opencode.json</code>——根因是那条 B30-S1 的错便携根，<br>见 <code>../network/externalApps/README.md</code> §4。</p>
+<p>另外，本环境<strong>未安装 jest</strong>：<code>tests/mcpAutoConnectWiring</code> / <code>mcpOAuthTokenStore</code> /<br><code>mcpRemoteTransport</code> 三份是 <code>jest.mock</code> 方言，<code>tests/mcpToolPool</code> /<br><code>services/mcp/mcpServer</code> / <code>services/mcp/mcpServerProtocol</code> /<br><code>services/mcp/mcpServeToolPolicy</code> / <code>services/mcpDisclosure</code> 五份是裸 <code>describe</code><br>方言（其中三份文件头还自注 <code>(node:test)</code>，注释与代码不符）。这 8 份在 <code>node --test</code> 下<br>报的是<strong>文件级装载失败</strong>（node 把它合成 1 个 fail，名字就是文件路径），不是产品缺陷，<br><strong>绝不可据此判红</strong>。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/services/domain/memory/README.html"><div class="dir">← 上一篇</div><div class="ttl">memory — 记忆引擎、上下文压缩与认知快照（D2）</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/services/domain/messaging/README.html"><div class="dir">下一篇 →</div><div class="ttl">messaging — 消息渠道、MCP 与 iLink 协议面（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/messaging/mcp/README.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

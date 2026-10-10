@@ -1,0 +1,44 @@
+{
+  "name": "conversation",
+  "domain": "D2",
+  "mayDependOn": ["D2"],
+  "_mayDependOn_note": "实测边：btwNote.js 零 require（纯文本叶子）；btwNoteQueue.js 只 require ./btwNote（单元内，D2）。全单元不碰 fs/net/spawn，也不读 process.env（门控经 isEnabled(env) 入参注入），故不声明 D3。",
+  "fanIn": 5,
+  "fanInEvidence": [
+    "services/backend/src/cli/handlers/btw.js",
+    "services/backend/src/cli/tui/ink-components/App.js",
+    "services/backend/src/services/conversation/index.js",
+    "services/backend/src/cli/replSession.js",
+    "services/backend/src/services/selfEditWatcher.js"
+  ],
+  "_fanIn_note": "非测试消费者 5 个（去重后）：/btw 处理器、ink TUI 应用壳、D1 再导出壳 services/conversation/index.js、经典 REPL 会话、selfEditWatcher。计数排除 *.test.js。其中 cli/replSession.js 是作者 in-flight 文件，本单元只读它的 require 关系、未做任何改动。",
+  "behaviourTestsOutsideUnit": [
+    "services/backend/tests/services/conversation/btwNote.test.js",
+    "services/backend/tests/services/conversation/btwNoteQueue.test.js",
+    "services/backend/tests/cli/handlers/btw.test.js"
+  ],
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-29",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "晋级三判据齐：单元级 README.md、整数 fanIn、两个源文件各有同名同目录测试。单元早于 entry-buffer 守卫，缓冲区从未被经过。",
+  "contract": {
+    "purity": "btwNote.js 是零 IO 确定性纯叶子（绝不读 env/fs/clock/crypto，不持可变状态）；btwNoteQueue.js 是进程级内存单例，只有队列与计数，零文件 IO。IO 与回显归各 call-site。",
+    "ioOwner": "本单元无 IO 面。落盘/回显都在消费者侧（handlers/btw.js、App.js、replSession.js）。",
+    "injectionPoints": [
+      "isEnabled(env) — env 由调用方注入，叶子绝不读 process.env",
+      "normalizeNote(raw) / mergeHints(input, hints) — 文本全经入参",
+      "enqueue/count/drainAll/clear — 队列状态只在内存，可测可清"
+    ],
+    "gates": "KHY_BTW（默认开；falsy 取值 '0'/'false'/'off'/'no'/空 关掉新增的 router /btw 与 TUI 旁注出队；经典 REPL 既有 /btw 拦截不受该门控影响）",
+    "byte_identity": "mergeHints 的拼接格式 '${input}\\n\\n[附加提示]\\n${lines.join('\\n')}' 是经典 REPL 与 ink TUI 共用的单一真源，与历史 repl.js 行为逐字节一致；无提示时输入逐字节不变。",
+    "single_instance": "队列是 require 缓存保证的进程级单例——一次 khy 启动 = 一个前端进程 = 一个会话，故「每进程一份」恰等于「每会话一份」。"
+  },
+  "tests": [
+    "btwNote.test.js",
+    "btwNoteQueue.test.js"
+  ],
+  "_test_dialect_note": "两份共置测试为 node:test 方言（node --test <显式文件名>）。仓级三份测试是各自方言，见 behaviourTestsOutsideUnit。"
+}

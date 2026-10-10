@@ -1,0 +1,25 @@
+# khy 按技术栈(node)生成的忽略项
+.DS_Store
+Thumbs.db
+*.log
+.env
+.env.local
+.env.*.local
+*.tmp
+.idea/
+.vscode/
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+dist/
+# 钉住包根：裸 build/ 会吞 src/services/domain/build/（源码，见 buildRootGuard SOURCE_DIR_ALLOWLIST）
+/build/
+# 反选根级裸 build/：domain/build 是源码域(compile/forge/repoMap)，不是产物
+!src/services/domain/build/
+coverage/
+.next/
+.nuxt/
+.cache/

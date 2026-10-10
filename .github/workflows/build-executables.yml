@@ -1,0 +1,239 @@
+name: Build Standalone Executables
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      module:
+        description: 'Module to build (leave empty for all)'
+        required: false
+        default: ''
+      platform:
+        description: 'Platform (win-x64, linux-x64, macos-x64, macos-arm64, or empty for all)'
+        required: false
+        default: ''
+
+# 默认只读。release job 单独提权为 contents: write（见文件末尾）。
+permissions:
+  contents: read
+
+# 4 平台矩阵打包是最贵的流水线。同一 ref 只保留一次运行；
+# tag 构建不取消 —— 发布产物不可重放。
+concurrency:
+  group: build-executables-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win-x64
+          - os: ubuntu-latest
+            platform: linux-x64
+          - os: macos-13
+            platform: macos-x64
+          - os: macos-14
+            platform: macos-arm64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          # 显式 pin，与根 package.json 的 packageManager 保持一致。
+          # 不写则依赖 action 隐式探测；探测结果与 corepack 不一致时会在安装
+          # 阶段额外下载第二个 pnpm，报难查的 ERR_PNPM_*。
+          version: 10.18.0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: npm run install:core
+
+      - name: Install frontend dependencies
+        shell: bash
+        run: |
+          npm run install:frontend
+
+      # 发布链路上的 lint 暂为报告态。
+      # 原因：npm run lint 是 `eslint src/ --max-warnings 0`，而 src/ 现存
+      # 3417 个问题（428 errors + 2989 warnings / 2246 个文件中 1060 个命中）。
+      # 保持阻断等于让任何 v* tag 都无法出包。
+      # 质量把关改由 pr-gate.yml 的棘轮承担（新增文件零容忍），存量债务清零后
+      # 删掉这里的 continue-on-error 即恢复阻断。
+      - name: Lint (report only)
+        continue-on-error: true
+        working-directory: runtime/node/backend
+        run: npm run lint
+
+      - name: Test portable contracts
+        shell: bash
+        run: |
+          npm test --workspace=khy-os-backend -- --runInBand \
+            tests/bridge/bridgeAuth.paths.test.js \
+            tests/tasks/diskOutput.paths.test.js \
+            tests/utils/dataHome.appHome.test.js \
+            tests/utils/sharedPortablePaths.test.js
+          node --test \
+            scripts/tests/artifactManifest.test.js \
+            scripts/tests/portableArtifactBuilder.test.js \
+            scripts/tests/portableHealthCheck.artifact.test.js \
+            scripts/tests/packPortableArtifact.test.js \
+            scripts/tests/portableHostIsolation.test.js \
+            scripts/tests/packagePortable.test.js
+
+      - name: Build and package portable artifact
+        shell: bash
+        run: |
+          KIND=dev
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then KIND=runtime; fi
+          node delivery/extension/scripts/khy-portable/package-portable.js --kind "$KIND" --keep-artifact
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: khy-os-${{ matrix.platform }}
+          path: |
+            entries/portable/portable-*-${{ matrix.platform }}/
+            entries/portable/releases/portable-*-${{ matrix.platform }}.zip
+          retention-days: 30
+
+  publish-dev-index:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout update index generator
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Generate and verify dev update index
+        shell: bash
+        run: |
+          mkdir -p publish
+          while IFS= read -r -d '' archive; do
+            cp "$archive" "publish/$(basename "$archive")"
+          done < <(find artifacts -type f -name 'portable-dev-*.zip' -print0)
+          BASE_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/dev-channel"
+          node scripts/release/update-index.js \
+            --artifacts artifacts \
+            --base-url "$BASE_URL" \
+            --channel dev \
+            --commit "$GITHUB_SHA" \
+            --published-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --out publish/update-index-dev.json
+          node scripts/release/update-index.js \
+            --verify publish/update-index-dev.json \
+            --channel dev \
+            --commit "$GITHUB_SHA"
+
+      - name: Publish dev channel assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if ! gh release view dev-channel >/dev/null 2>&1; then
+            gh release create dev-channel \
+              --target "$GITHUB_SHA" \
+              --prerelease \
+              --title "KhyOS development channel" \
+              --notes "Automatically updated development-channel artifacts."
+          fi
+          gh release upload dev-channel publish/* --clobber
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    # softprops/action-gh-release needs contents:write to create the release;
+    # the default GITHUB_TOKEN is read-only and fails with 403 otherwise.
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout release metadata generator
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Build GitHub package artifacts
+        shell: bash
+        run: |
+          python -m pip install build
+          python -m build --wheel --sdist --outdir artifacts/package
+          npm pack works/ship/npm --pack-destination artifacts/package
+
+      - name: Generate and verify update index
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          CHANNEL=stable
+          if [[ "$VERSION" == *-rc* || "$VERSION" == *-beta* || "$VERSION" == *-alpha* ]]; then
+            CHANNEL=preview
+          fi
+          BASE_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}"
+          PIP_ARTIFACT="$(find artifacts/package -maxdepth 1 -type f -name '*.whl' -print -quit)"
+          NPM_ARTIFACT="$(find artifacts/package -maxdepth 1 -type f -name '*.tgz' -print -quit)"
+          test -n "$PIP_ARTIFACT"
+          test -n "$NPM_ARTIFACT"
+          node scripts/release/update-index.js \
+            --artifacts artifacts \
+            --base-url "$BASE_URL" \
+            --channel "$CHANNEL" \
+            --version "$VERSION" \
+            --commit "$GITHUB_SHA" \
+            --published-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --pip-artifact "$PIP_ARTIFACT" \
+            --npm-artifact "$NPM_ARTIFACT" \
+            --out "artifacts/update-index-${CHANNEL}.json"
+          node scripts/release/update-index.js \
+            --verify "artifacts/update-index-${CHANNEL}.json" \
+            --channel "$CHANNEL" \
+            --version "$VERSION" \
+            --commit "$GITHUB_SHA"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/**/portable-runtime-*.zip
+            artifacts/package/*.whl
+            artifacts/package/*.tar.gz
+            artifacts/package/*.tgz
+            artifacts/update-index-stable.json
+            artifacts/update-index-preview.json
+          fail_on_unmatched_files: false
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref, '-rc') || contains(github.ref, '-beta') || contains(github.ref, '-alpha') }}

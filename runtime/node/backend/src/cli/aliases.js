@@ -1,0 +1,874 @@
+/**
+ * Command Alias Registry
+ *
+ * Maps pinyin, English abbreviations, and Chinese to canonical commands.
+ * Users type whatever feels natural; the router normalizes via this table.
+ *
+ *   huice sh600519         → backtest sh600519
+ *   hangqing 茅台          → quote 茅台
+ *   xz sh000001            → data fetch sh000001
+ *   cl                     → strategy list
+ *
+ * 注意：`hq` **不在此表中** —— 它是自注册命令 `hq`（任务/Bug 状态真源，
+ * `handlers/hq.js`，真源 `works/record/ai/hq/`）。历史上 `hq` 曾是 `quote` 的别名，但
+ * 静态别名优先于自注册命令，会把 `khy hq status` 劫持去查行情，故于
+ * 2026-09-17 移除（见 [DESIGN-ARCH-118] HQ 能力吸收）。查行情请用
+ * `hangqing` / `行情` / `price` / `quote`；`khy hq` 现在专指任务面。
+ */
+
+// { alias → { command, [subCommand], [defaultArgs], [defaultPositionals] } }
+const ALIAS_MAP = {
+  // ── 行情 ──（`hq` 已让位给自注册的 `hq` 任务命令，见文件头注释）
+  hangqing: { command: 'quote' },
+  行情: { command: 'quote' },
+  price: { command: 'quote' },
+  p: { command: 'quote' },
+
+  // ── 回测 ──
+  bt: { command: 'backtest' },
+  huice: { command: 'backtest' },
+  回测: { command: 'backtest' },
+
+  // ── 策略 ──
+  cl: { command: 'strategy', subCommand: 'list' },
+  celue: { command: 'strategy', subCommand: 'list' },
+  策略: { command: 'strategy', subCommand: 'list' },
+
+  // ── 数据下载 ──
+  xz: { command: 'data', subCommand: 'fetch' },
+  xiazai: { command: 'data', subCommand: 'fetch' },
+  download: { command: 'data', subCommand: 'fetch' },
+  dl: { command: 'data', subCommand: 'fetch' },
+  下载: { command: 'data', subCommand: 'fetch' },
+
+  // ── 数据列表 ──
+  sj: { command: 'data', subCommand: 'list' },
+  shuju: { command: 'data', subCommand: 'list' },
+  数据: { command: 'data', subCommand: 'list' },
+
+  // ── 持仓 ──
+  cc: { command: 'position' },
+  chicang: { command: 'position' },
+  持仓: { command: 'position' },
+  pos: { command: 'position' },
+
+  // ── 下单 ──
+  xd: { command: 'order' },
+  xiadan: { command: 'order' },
+  下单: { command: 'order' },
+  buy: { command: 'order', defaultArgs: { side: 'buy' } },
+  sell: { command: 'order', defaultArgs: { side: 'sell' } },
+  买入: { command: 'order', defaultArgs: { side: 'buy' } },
+  卖出: { command: 'order', defaultArgs: { side: 'sell' } },
+  mai: { command: 'order', defaultArgs: { side: 'buy' } },
+  mairu: { command: 'order', defaultArgs: { side: 'buy' } },
+  maichu: { command: 'order', defaultArgs: { side: 'sell' } },
+
+  // ── 账户 ──
+  zh: { command: 'account' },
+  zhanghu: { command: 'account' },
+  账户: { command: 'account' },
+  acc: { command: 'account' },
+
+  // ── 分析 (AI) ──
+  fx: { command: 'analyze' },
+  fenxi: { command: 'analyze' },
+  分析: { command: 'analyze' },
+  analyze: { command: 'analyze' },
+
+  // ── 项目分析 (分层渐进式大项目分析) ──
+  project: { command: 'project' },
+  proj: { command: 'project' },
+  项目: { command: 'project' },
+  项目分析: { command: 'project', subCommand: 'analyze' },
+  项目地图: { command: 'project', subCommand: 'map' },
+  项目结构: { command: 'project', subCommand: 'structure' },
+  pjm: { command: 'project', subCommand: 'map' },
+  pja: { command: 'project', subCommand: 'analyze' },
+  pjs: { command: 'project', subCommand: 'structure' },
+
+  // ── 图转网页 ──
+  image2web: { command: 'image2web' },
+  i2w: { command: 'image2web' },
+  webify: { command: 'image2web' },
+  网页还原: { command: 'image2web' },
+  图转网页: { command: 'image2web' },
+  截图还原: { command: 'image2web' },
+
+  // ── 服务 ──
+  fw: { command: 'server' },
+  fuwu: { command: 'server' },
+  服务: { command: 'server' },
+  启动: { command: 'server', subCommand: 'start' },
+
+  // ── Linux 能力 ──
+  linux: { command: 'linux' },
+  shell: { command: 'shell' },
+  sh: { command: 'shell' },
+  bash: { command: 'shell' },
+  lx: { command: 'linux' },
+  终端: { command: 'linux' },
+  网络: { command: 'linux', subCommand: 'net' },
+  联网: { command: 'linux', subCommand: 'net' },
+  系统状态: { command: 'linux', subCommand: 'status' },
+
+  // ── 数据库 ──
+  sjk: { command: 'db' },
+  shujuku: { command: 'db' },
+  数据库: { command: 'db' },
+
+  // ── 本地模型 (Ollama) ──
+  模型: { command: 'models', subCommand: 'list' },
+  本地模型: { command: 'models', subCommand: 'list' },
+  moxing: { command: 'models', subCommand: 'list' },
+  导入模型: { command: 'models', subCommand: 'import' },
+  importmodel: { command: 'models', subCommand: 'import' },
+
+  // ── 产品定位 (INIT-PRD-004 的代码化; 自注册命令 handlers/about.js) ──
+  about: { command: 'about' },
+  关于: { command: 'about' },
+  guanyu: { command: 'about' },
+
+  // ── 推理运行时 (按需拉取 ollama/llama.cpp) ──
+  运行时: { command: 'runtime', subCommand: 'status' },
+  yunhangshi: { command: 'runtime', subCommand: 'status' },
+  runtime: { command: 'runtime', subCommand: 'status' },
+  安装运行时: { command: 'runtime', subCommand: 'install' },
+  runtimeinstall: { command: 'runtime', subCommand: 'install' },
+  验证运行时: { command: 'runtime', subCommand: 'verify' },
+  runtimeverify: { command: 'runtime', subCommand: 'verify' },
+
+  // ── 轨迹溯源查看 (DESIGN-ARCH-047) ──
+   轨迹: { command: 'trace', subCommand: 'show' },
+   gj: { command: 'trace', subCommand: 'show' },
+
+   // ── 流量监控 (AI 网关流量记录) ──
+   流量: { command: 'traffic', subCommand: 'status' },
+   traffic: { command: 'traffic', subCommand: 'status' },
+   抓包: { command: 'traffic', subCommand: 'watch' },
+   流量列表: { command: 'traffic', subCommand: 'list' },
+   流量详情: { command: 'traffic', subCommand: 'detail' },
+   导出流量: { command: 'traffic', subCommand: 'export' },
+
+   // ── 轨迹回放 / 确定性复现 (DESIGN-ARCH-048) ──
+  回放: { command: 'replay', subCommand: 'run' },
+  hf: { command: 'replay', subCommand: 'run' },
+
+  // ── 地图模板 / 轨迹即教材 (DESIGN-ARCH-049) ──
+  地图: { command: 'guide', subCommand: 'map' },
+  dt: { command: 'guide', subCommand: 'map' },
+
+  // ── 通道健康 / 故障转移顺序 ──
+  通道: { command: 'channels', subCommand: 'status' },
+  tongdao: { command: 'channels', subCommand: 'status' },
+  channels: { command: 'channels', subCommand: 'status' },
+  通道顺序: { command: 'channels', subCommand: 'order' },
+  tongdaoshunxu: { command: 'channels', subCommand: 'order' },
+
+  // ── 缓存 ──
+  hc: { command: 'cache', subCommand: 'clear' },
+  huancun: { command: 'cache', subCommand: 'clear' },
+  清缓存: { command: 'cache', subCommand: 'clear' },
+
+  // ── 菜单 ──
+  cd: { command: 'menu' },
+  caidan: { command: 'menu' },
+  菜单: { command: 'menu' },
+
+  // ── 命令目录 (静态命令速查表；与交互式 menu 互补，保留回滚) ──
+  cmds: { command: 'commands' },
+  mingling: { command: 'commands' },
+  命令目录: { command: 'commands' },
+  命令一览: { command: 'commands' },
+
+  // ── Markdown 编辑 ──
+  编辑: { command: 'md' },
+  编辑文件: { command: 'md' },
+  markdown: { command: 'md' },
+  文档编辑: { command: 'md' },
+
+  // ── 文档浏览 / 搜索 ──
+  文档浏览: { command: 'docs', subCommand: 'browse' },
+  浏览文档: { command: 'docs', subCommand: 'browse' },
+  文档搜索: { command: 'docs', subCommand: 'search' },
+  搜索文档: { command: 'docs', subCommand: 'search' },
+
+  // ── 帮助 ──
+  bz: { command: 'help' },
+  bangzhu: { command: 'help' },
+  帮助: { command: 'help' },
+  h: { command: 'help' },
+  ai快速通道: { command: 'docs', subCommand: 'ai-fastlane' },
+  ai快通道: { command: 'docs', subCommand: 'ai-fastlane' },
+  ai快捷通道: { command: 'docs', subCommand: 'ai-fastlane' },
+  ai快速通道复制: { command: 'docs', subCommand: 'ai-fastlane', defaultPositionals: ['copy'] },
+  ai快通道复制: { command: 'docs', subCommand: 'ai-fastlane', defaultPositionals: ['copy'] },
+  ai快捷通道复制: { command: 'docs', subCommand: 'ai-fastlane', defaultPositionals: ['copy'] },
+  aifastlane: { command: 'docs', subCommand: 'ai-fastlane' },
+  aifastlanecopy: { command: 'docs', subCommand: 'ai-fastlane', defaultPositionals: ['copy'] },
+  maintainer: { command: 'docs', subCommand: 'maintainer' },
+  // 注意：`maintain` 是 canonical 命令（维护者驾驶舱，见 router case 'maintain'），
+  // 不在此设别名，否则会劫持掉 canonical 分发。文档入口仍可经 maintainer/维护 到达。
+  weihu: { command: 'docs', subCommand: 'maintainer' },
+  维护: { command: 'docs', subCommand: 'maintainer' },
+  维护入口: { command: 'docs', subCommand: 'maintainer' },
+  维护文档: { command: 'docs', subCommand: 'maintainer' },
+  维护指南: { command: 'docs', subCommand: 'maintainer' },
+
+  // ── 退出 ──
+  q: { command: 'exit' },
+  tuichu: { command: 'exit' },
+  退出: { command: 'exit' },
+
+  // ── 清屏 ──
+  cls: { command: 'clear' },
+  qp: { command: 'clear' },
+  qingping: { command: 'clear' },
+  清屏: { command: 'clear' },
+
+  // ── 监控 ──
+  jk: { command: 'watch' },
+  jiankong: { command: 'watch' },
+  监控: { command: 'watch' },
+  watch: { command: 'watch' },
+
+  // ── 排行 ──
+  ph: { command: 'rank' },
+  paihang: { command: 'rank' },
+  排行: { command: 'rank' },
+  rank: { command: 'rank' },
+  top: { command: 'rank' },
+
+  // ── 搜索 ──
+  ss: { command: 'search' },
+  sousuo: { command: 'search' },
+  搜索: { command: 'search' },
+  find: { command: 'search' },
+  websearch: { command: 'search', subCommand: 'web' },
+  联网搜索: { command: 'search', subCommand: 'web' },
+
+  // ── 网关 ──
+  wg: { command: 'gateway' },
+  wangguan: { command: 'gateway' },
+  网关: { command: 'gateway' },
+  apikey: { command: 'gateway', subCommand: 'config' },
+  密钥配置: { command: 'gateway', subCommand: 'config' },
+  配置密钥: { command: 'gateway', subCommand: 'config' },
+  guanli: { command: 'gateway', subCommand: 'manage' },
+  khyguanli: { command: 'gateway', subCommand: 'manage' },
+  aiguanli: { command: 'gateway', subCommand: 'manage' },
+  ai管理: { command: 'gateway', subCommand: 'manage' },
+  管理页: { command: 'gateway', subCommand: 'manage' },
+  // The "manage" surface is really a frontend shell (chat + gateway UI), so the
+  // primary launch verb is `khychat`. Legacy `khyguanli`/`guanli` aliases above
+  // are kept for backward compatibility.
+  khychat: { command: 'gateway', subCommand: 'manage' },
+  chat: { command: 'gateway', subCommand: 'manage' },
+  aichat: { command: 'gateway', subCommand: 'manage' },
+  ai对话: { command: 'gateway', subCommand: 'manage' },
+  relay: { command: 'gateway', subCommand: 'relay' },
+  中转: { command: 'gateway', subCommand: 'relay' },
+  zhongzhuan: { command: 'gateway', subCommand: 'relay' },
+  模型发现: { command: 'gateway', subCommand: 'discover-models' },
+  modelscan: { command: 'gateway', subCommand: 'discover-models' },
+  discovermodels: { command: 'gateway', subCommand: 'discover-models' },
+  密钥健康: { command: 'gateway', subCommand: 'key', defaultPositionals: ['health'] },
+  keyhealth: { command: 'gateway', subCommand: 'key', defaultPositionals: ['health'] },
+  密钥轮换: { command: 'gateway', subCommand: 'key', defaultPositionals: ['rotate'] },
+  keyrotate: { command: 'gateway', subCommand: 'key', defaultPositionals: ['rotate'] },
+  重置网关失败: { command: 'gateway', subCommand: 'reset-failures' },
+  网关重置: { command: 'gateway', subCommand: 'reset-failures' },
+  chongzhiwangguan: { command: 'gateway', subCommand: 'reset-failures' },
+  resetfailures: { command: 'gateway', subCommand: 'reset-failures' },
+
+  // ── Cursor2API 集成 ──
+  c2a: { command: 'proxy', subCommand: 'cursor2api' },
+  cursor2api: { command: 'proxy', subCommand: 'cursor2api' },
+  switchcenter: { command: 'proxy', subCommand: 'switch-center' },
+  switch: { command: 'proxy', subCommand: 'switch-center' },
+  统一切换: { command: 'proxy', subCommand: 'switch-center' },
+  模型切换中心: { command: 'proxy', subCommand: 'switch-center' },
+  traeswitch: { command: 'proxy', subCommand: 'switch-center', defaultArgs: { provider: 'trae' } },
+  traeproxy: { command: 'proxy', subCommand: 'switch-center', defaultArgs: { provider: 'trae' } },
+  trae切换: { command: 'proxy', subCommand: 'switch-center', defaultArgs: { provider: 'trae' } },
+  trae代理: { command: 'proxy', subCommand: 'switch-center', defaultArgs: { provider: 'trae' } },
+  nir: { command: 'pool', subCommand: 'import', defaultPositionals: ['nirvana'] },
+  nrv: { command: 'pool', subCommand: 'import', defaultPositionals: ['nirvana'] },
+  antigravity: { command: 'trae' },
+  nirvana: { command: 'trae' },
+  fanzhongli: { command: 'trae' },
+  api提取: { command: 'proxy', subCommand: 'cursor2api' },
+  提取api: { command: 'proxy', subCommand: 'cursor2api' },
+  代理帮助: { command: 'proxy', subCommand: 'help' },
+  代理一键: { command: 'proxy', subCommand: 'quickstart' },
+  一键代理: { command: 'proxy', subCommand: 'quickstart' },
+  客户token: { command: 'proxy', subCommand: 'client' },
+  客户令牌: { command: 'proxy', subCommand: 'client' },
+  代理订阅: { command: 'proxy', subCommand: 'subscription' },
+  vpn订阅: { command: 'proxy', subCommand: 'subscription' },
+  clash订阅: { command: 'proxy', subCommand: 'subscription' },
+  翻墙订阅: { command: 'proxy', subCommand: 'subscription' },
+  梯子订阅: { command: 'proxy', subCommand: 'subscription' },
+
+  // ── 竞技场 ──
+  jjc: { command: 'arena' },
+  jingji: { command: 'arena' },
+  竞技场: { command: 'arena' },
+  对比: { command: 'arena' },
+  duibi: { command: 'arena' },
+
+  // ── 初始化 ──
+  初始化: { command: 'init' },
+  chushihua: { command: 'init' },
+  setup: { command: 'init' },
+  anzhuang: { command: 'init' },
+  安装: { command: 'init' },
+
+  // ── 同步（watcher 已被一键同步 khy portable sync 取代；旧 sync 命令降级保留）──
+  sync: { command: 'sync' },
+  同步: { command: 'sync' },
+  tongbu: { command: 'sync' },
+  同步便携版: { command: 'portable', subCommand: 'sync' },
+  'portable-sync': { command: 'portable', subCommand: 'sync' },
+  便携同步: { command: 'portable', subCommand: 'sync' },
+  便携状态: { command: 'portable', subCommand: 'status' },
+
+  // ── 定位 ──
+  where: { command: 'where' },
+  在哪: { command: 'where' },
+  zainali: { command: 'where' },
+  路径: { command: 'where' },
+  lujing: { command: 'where' },
+
+  // ── 多端入口矩阵 (DESIGN-ARCH-117) ──
+  // 注意：`desktop` / `mobile` 已被「桌面控制开关」/「配对二维码」两个命令占用，
+  // 这里**刻意不**接管它们——同名不同义正是本次要消灭的东西，不再新增一处。
+  多端: { command: 'entry', subCommand: 'list' },
+  duan: { command: 'entry', subCommand: 'list' },
+  有哪些端: { command: 'entry', subCommand: 'list' },
+  端入口: { command: 'entry', subCommand: 'list' },
+
+  // ── 诊断 ──
+  诊断: { command: 'doctor' },
+  zhenduan: { command: 'doctor' },
+  check: { command: 'doctor' },
+  jiankang: { command: 'doctor' },
+  健康: { command: 'doctor' },
+  // `khy preflight` 是 README 承诺的首跑入口（BUG-016 修复：此前该词未注册，
+  // 实测「未知命令」exit 1）。doctor 即 PATH/Node/依赖首跑诊断，别名直达。
+  preflight: { command: 'doctor' },
+  预检: { command: 'doctor' },
+  yujian: { command: 'doctor' },
+  状态机: { command: 'state' },
+  ztj: { command: 'state' },
+  fsm: { command: 'state' },
+  doctorfix: { command: 'doctor', defaultArgs: { 'fix-claude-conflict': true } },
+  docfix: { command: 'doctor', defaultArgs: { 'fix-claude-conflict': true } },
+  claudefix: { command: 'doctor', defaultArgs: { 'fix-claude-conflict': true } },
+  fixclaude: { command: 'doctor', defaultArgs: { 'fix-claude-conflict': true } },
+  claude冲突修复: { command: 'doctor', defaultArgs: { 'fix-claude-conflict': true } },
+  修复claude冲突: { command: 'doctor', defaultArgs: { 'fix-claude-conflict': true } },
+  selfheal: { command: 'selfHeal' },
+  自愈: { command: 'selfHeal' },
+  修复路径: { command: 'selfHeal' },
+  fixpaths: { command: 'selfHeal' },
+
+  // ── 发布 ──
+  fabu: { command: 'publish' },
+  发布: { command: 'publish' },
+  发布检查: { command: 'publish', subCommand: 'check' },
+  构建发布: { command: 'publish', subCommand: 'build' },
+  docker发布: { command: 'publish', subCommand: 'docker-bundle' },
+  发布docker: { command: 'publish', subCommand: 'docker-bundle' },
+  pip打包: { command: 'publish', subCommand: 'pip-dir-bundle' },
+  pip目录打包: { command: 'publish', subCommand: 'pip-dir-bundle' },
+  发布pip目录: { command: 'publish', subCommand: 'pip-dir-bundle' },
+  npm打包: { command: 'publish', subCommand: 'npm-dir-bundle' },
+  npm目录打包: { command: 'publish', subCommand: 'npm-dir-bundle' },
+  发布npm目录: { command: 'publish', subCommand: 'npm-dir-bundle' },
+  源码还原: { command: 'publish', subCommand: 'origin-code' },
+  还原源码: { command: 'publish', subCommand: 'origin-code' },
+  origin还原: { command: 'publish', subCommand: 'origin-code' },
+  还原: { command: 'restore' },
+  完整还原: { command: 'restore' },
+  还原项目: { command: 'restore' },
+  同伴: { command: 'companion' },
+  数字同伴: { command: 'companion' },
+  智能体仓库: { command: 'companion' },
+  自修复: { command: 'publish', subCommand: 'self-fix' },
+  修bug: { command: 'publish', subCommand: 'self-fix' },
+  自动修复: { command: 'publish', subCommand: 'self-fix' },
+  自发布: { command: 'publish', subCommand: 'self-pypi' },
+  自测发布: { command: 'publish', subCommand: 'self-testpypi' },
+  推送发布: { command: 'publish', subCommand: 'git-push' },
+  发布推送: { command: 'publish', subCommand: 'git-push' },
+  git推送: { command: 'publish', subCommand: 'git-push' },
+  推送仓库: { command: 'publish', subCommand: 'git-push' },
+  testpypi: { command: 'publish', subCommand: 'testpypi' },
+
+  // ── 稳定性工作流测试 ──
+  稳定测试: { command: 'verify', subCommand: 'workflow' },
+  工作流测试: { command: 'verify', subCommand: 'workflow' },
+  liantongceshi: { command: 'verify', subCommand: 'workflow' },
+  workflowtest: { command: 'verify', subCommand: 'workflow' },
+
+  // ── 恢复上下文 ──
+  huifu: { command: 'history', subCommand: 'resume' },
+  恢复: { command: 'history', subCommand: 'resume' },
+  resume: { command: 'history', subCommand: 'resume' },
+  上下文: { command: 'history', subCommand: 'resume' },
+
+  // ── 数据备份与恢复 ──
+  // 「恢复」已归 history resume、「还原」已归 restore(源码包),故数据侧一律带「数据」
+  // 二字消歧:恢复数据 / 数据恢复 / 还原数据 → backup restore。
+  beifen: { command: 'backup', subCommand: 'create' },
+  备份: { command: 'backup', subCommand: 'create' },
+  数据备份: { command: 'backup', subCommand: 'create' },
+  备份列表: { command: 'backup', subCommand: 'list' },
+  备份状态: { command: 'backup', subCommand: 'status' },
+  备份检查: { command: 'backup', subCommand: 'verify' },
+  校验备份: { command: 'backup', subCommand: 'verify' },
+  恢复数据: { command: 'backup', subCommand: 'restore' },
+  数据恢复: { command: 'backup', subCommand: 'restore' },
+  还原数据: { command: 'backup', subCommand: 'restore' },
+  清理备份: { command: 'backup', subCommand: 'prune' },
+  备份清理: { command: 'backup', subCommand: 'prune' },
+
+  // ── 费用 ──
+  feiyong: { command: 'cost' },
+  费用: { command: 'cost' },
+
+  // ── 训练 ──
+  xunlian: { command: 'train' },
+  训练: { command: 'train' },
+
+  // ── 历史 ──
+  lishi: { command: 'history' },
+  历史: { command: 'history', subCommand: 'list' },
+
+  // ── 更新 ──
+  gengxin: { command: 'update' },
+  更新: { command: 'update' },
+  upgrade: { command: 'update' },
+  级联更新: { command: 'update' },
+  jiliangengxin: { command: 'update' },
+  'cascade-update': { command: 'update' },
+
+  // ── 成长 ──
+  cz: { command: 'growth' },
+  chengzhang: { command: 'growth' },
+  成长: { command: 'growth' },
+  成长导出: { command: 'growth', subCommand: 'export' },
+  成长导入: { command: 'growth', subCommand: 'import' },
+
+  // ── 智能体 ──
+  znt: { command: 'agent' },
+  zhinengti: { command: 'agent' },
+  智能体: { command: 'agent' },
+  智能体状态: { command: 'agent', subCommand: 'status' },
+
+  // ── ULW Loop ──
+  ulw: { command: 'ulw-loop' },
+  ultrawork: { command: 'ulw-loop' },
+  ulwloop: { command: 'ulw-loop' },
+  高强度循环: { command: 'ulw-loop' },
+  超强循环: { command: 'ulw-loop' },
+
+  // ── 提示词 ──
+  tsc: { command: 'prompt' },
+  tishici: { command: 'prompt' },
+  提示词: { command: 'prompt' },
+  保存提示词: { command: 'prompt', subCommand: 'save' },
+
+  // ── 语音 ──
+  yuyin: { command: 'voice' },
+  语音: { command: 'voice' },
+
+  // ── 技能 ──
+  jineng: { command: 'skill' },
+  技能: { command: 'skill', subCommand: 'list' },
+  学技能: { command: 'skill', subCommand: 'learn' },
+  已学习: { command: 'skill', subCommand: 'learned' },
+
+  // ── 学习课程 ──
+  学习: { command: 'learn' },
+  xuexi: { command: 'learn' },
+  教程: { command: 'learn' },
+  jiaocheng: { command: 'learn' },
+  tutorial: { command: 'learn' },
+  课程: { command: 'learn' },
+  kecheng: { command: 'learn' },
+  学习进度: { command: 'learn', subCommand: 'progress' },
+  成长路线: { command: 'learn', subCommand: 'roadmap' },
+  修行之路: { command: 'learn', subCommand: 'roadmap' },
+  境界: { command: 'learn', subCommand: 'rank' },
+  段位: { command: 'learn', subCommand: 'rank' },
+  导出进度: { command: 'learn', subCommand: 'export' },
+  导入进度: { command: 'learn', subCommand: 'import' },
+  刷新课程: { command: 'learn', subCommand: 'refresh' },
+  同步课程: { command: 'learn', subCommand: 'refresh' },
+  下一课: { command: 'learn', subCommand: 'next' },
+  Bug案例: { command: 'learn', subCommand: 'bugs' },
+  bug案例: { command: 'learn', subCommand: 'bugs' },
+  bug修复: { command: 'learn', subCommand: 'bugs' },
+  bugfix: { command: 'learn', subCommand: 'bugs' },
+  bugcases: { command: 'learn', subCommand: 'bugs' },
+  学习笔记: { command: 'learn', subCommand: 'note' },
+  学习记忆: { command: 'learn', subCommand: 'memory' },
+  编辑课程: { command: 'learn', subCommand: 'edit' },
+  课程校验: { command: 'learn', subCommand: 'check' },
+  课程同步: { command: 'learn', subCommand: 'sync' },
+  难度: { command: 'learn', subCommand: 'level' },
+  档位: { command: 'learn', subCommand: 'level' },
+  nandu: { command: 'learn', subCommand: 'level' },
+  零基础: { command: 'learn', subCommand: 'level', defaultPositionals: ['beginner'] },
+  改进: { command: 'learn', subCommand: 'improve' },
+  反馈: { command: 'learn', subCommand: 'improve' },
+  记不足: { command: 'learn', subCommand: 'improve' },
+  gaijin: { command: 'learn', subCommand: 'improve' },
+  改进清单: { command: 'learn', subCommand: 'improve', defaultPositionals: ['list'] },
+  技能策展: { command: 'skill', subCommand: 'curator' },
+  固定技能: { command: 'skill', subCommand: 'pin' },
+  归档技能: { command: 'skill', subCommand: 'archive' },
+  恢复技能: { command: 'skill', subCommand: 'restore' },
+  同步技能: { command: 'skill', subCommand: 'sync' },
+  同步内置技能: { command: 'skill', subCommand: 'sync' },
+  恢复内置技能: { command: 'skill', subCommand: 'restore-builtin' },
+
+  // ── 定时任务 ──
+  定时任务: { command: 'cron', subCommand: 'list' },
+  定时: { command: 'cron', subCommand: 'list' },
+  dingshi: { command: 'cron', subCommand: 'list' },
+  添加定时: { command: 'cron', subCommand: 'add' },
+  定时状态: { command: 'cron', subCommand: 'status' },
+
+  // ── 主题 / 皮肤 ──
+  皮肤: { command: 'skin', subCommand: 'list' },
+  主题: { command: 'skin', subCommand: 'list' },
+  pifu: { command: 'skin', subCommand: 'list' },
+  zhuti: { command: 'skin', subCommand: 'list' },
+  切换主题: { command: 'skin', subCommand: 'set' },
+
+  // ── 会话搜索 ──
+  会话搜索: { command: 'session', subCommand: 'search' },
+  搜索会话: { command: 'session', subCommand: 'search' },
+  huihuasousuo: { command: 'session', subCommand: 'search' },
+  会话统计: { command: 'session', subCommand: 'stats' },
+
+  // ── 会话分析（注意：裸 fenxi/分析 已属 AI analyze 命令，此处只登记会话限定词）──
+  会话分析: { command: 'session', subCommand: 'analyze' },
+  分析会话: { command: 'session', subCommand: 'analyze' },
+  huihuafenxi: { command: 'session', subCommand: 'analyze' },
+
+  // ── 习惯 ──
+  xiguan: { command: 'habit' },
+  习惯: { command: 'habit' },
+  预测: { command: 'habit', subCommand: 'predict' },
+
+  // ── 知识库 ──
+  zhishi: { command: 'knowledge' },
+  知识: { command: 'knowledge' },
+  知识库: { command: 'knowledge' },
+  知识搜索: { command: 'knowledge', subCommand: 'search' },
+  知识同步: { command: 'knowledge', subCommand: 'sync' },
+  kb: { command: 'knowledge' },
+
+  // ── 安全 ──
+  anquan: { command: 'security' },
+  安全: { command: 'security' },
+  安全扫描: { command: 'security', subCommand: 'scan' },
+  安全监控: { command: 'security', subCommand: 'monitor' },
+
+  // ── 认证 ──
+  denglu: { command: 'login' },
+  登录: { command: 'login' },
+  zhuce: { command: 'register' },
+  注册: { command: 'register' },
+  退出登录: { command: 'logout' },
+  tuichudenglu: { command: 'logout' },
+  我是谁: { command: 'whoami' },
+  woshishui: { command: 'whoami' },
+  改密码: { command: 'passwd' },
+  gaimima: { command: 'passwd' },
+  忘记密码: { command: 'forgot' },
+  wangjimima: { command: 'forgot' },
+  找回密码: { command: 'forgot' },
+  zhaohuimima: { command: 'forgot' },
+  改账号名: { command: 'user', subCommand: 'rename' },
+  gaidangzhao: { command: 'user', subCommand: 'rename' },
+  改用户名: { command: 'user', subCommand: 'rename' },
+  gaiyonghuming: { command: 'user', subCommand: 'rename' },
+
+  // ── 守护进程 ──
+  守护: { command: 'daemon', subCommand: 'status' },
+  守护进程: { command: 'daemon', subCommand: 'status' },
+  shouhu: { command: 'daemon', subCommand: 'status' },
+  启动守护: { command: 'daemon', subCommand: 'start' },
+  停止守护: { command: 'daemon', subCommand: 'stop' },
+
+  // ── 自我画像 ──
+  自知: { command: 'self' },
+  zizhi: { command: 'self' },
+  画像: { command: 'self' },
+  huaxiang: { command: 'self' },
+  我是谁系统: { command: 'self' },
+
+  // ── 应用管理 ──
+  应用: { command: 'app', subCommand: 'list' },
+  yingyong: { command: 'app', subCommand: 'list' },
+  安装应用: { command: 'app', subCommand: 'install' },
+  运行应用: { command: 'app', subCommand: 'run' },
+
+  // ── CLI-Anything ──
+  cli生成: { command: 'app', subCommand: 'cli-gen' },
+  cli搜索: { command: 'app', subCommand: 'cli-search' },
+  cli安装: { command: 'app', subCommand: 'cli-install' },
+  cli列表: { command: 'app', subCommand: 'cli-list' },
+  cli卸载: { command: 'app', subCommand: 'cli-uninstall' },
+  cli调用: { command: 'app', subCommand: 'cli-invoke' },
+  cli同步: { command: 'app', subCommand: 'cli-sync' },
+  cli导入: { command: 'app', subCommand: 'cli-import' },
+  cli离线导入: { command: 'app', subCommand: 'cli-import' },
+  cligen: { command: 'app', subCommand: 'cli-gen' },
+  clisearch: { command: 'app', subCommand: 'cli-search' },
+  cliinstall: { command: 'app', subCommand: 'cli-install' },
+  clilist: { command: 'app', subCommand: 'cli-list' },
+  软件接入: { command: 'app', subCommand: 'cli-gen' },
+  工具生成: { command: 'app', subCommand: 'cli-gen' },
+  agent工具: { command: 'app', subCommand: 'cli-list' },
+
+  // ── 四端跨设备同步 ──
+  cross: { command: 'cross' },
+  跨端: { command: 'cross' },
+  跨设备: { command: 'cross' },
+  同步设备: { command: 'cross', subCommand: 'devices' },
+  设备列表: { command: 'cross', subCommand: 'devices' },
+  连接同步: { command: 'cross', subCommand: 'connect' },
+  断开同步: { command: 'cross', subCommand: 'disconnect' },
+  同步状态: { command: 'cross', subCommand: 'status' },
+
+  // ── KHYanything (即时代理接入；保留上方旧 cli-* 别名) ──
+  接入: { command: 'app', subCommand: 'khy-add' },
+  代理接入: { command: 'app', subCommand: 'khy-add' },
+  khy接入: { command: 'app', subCommand: 'khy-add' },
+  项目接入: { command: 'app', subCommand: 'khy-add' },
+  khyadd: { command: 'app', subCommand: 'khy-add' },
+  khy移除: { command: 'app', subCommand: 'khy-remove' },
+  khyremove: { command: 'app', subCommand: 'khy-remove' },
+  代理列表: { command: 'app', subCommand: 'khy-proxies' },
+  khyproxies: { command: 'app', subCommand: 'khy-proxies' },
+  代理运行: { command: 'app', subCommand: 'khy-run' },
+  khyrun: { command: 'app', subCommand: 'khy-run' },
+  khy搜索: { command: 'app', subCommand: 'khy-search' },
+  khy安装: { command: 'app', subCommand: 'khy-install' },
+  khy卸载: { command: 'app', subCommand: 'khy-uninstall' },
+  khy列表: { command: 'app', subCommand: 'khy-list' },
+  khy同步: { command: 'app', subCommand: 'khy-sync' },
+  khy导入: { command: 'app', subCommand: 'khy-import' },
+  khy调用: { command: 'app', subCommand: 'khy-invoke' },
+  khy生成: { command: 'app', subCommand: 'khy-gen' },
+  khysearch: { command: 'app', subCommand: 'khy-search' },
+  khyinstall: { command: 'app', subCommand: 'khy-install' },
+  khylist: { command: 'app', subCommand: 'khy-list' },
+  khygen: { command: 'app', subCommand: 'khy-gen' },
+
+  // ── 模块 ──
+  模块: { command: 'modules' },
+  模块列表: { command: 'modules', subCommand: 'list' },
+  构建模块: { command: 'modules', subCommand: 'build' },
+
+  // ── 配置 ──
+  配置: { command: 'config', subCommand: 'show' },
+  peizhi: { command: 'config', subCommand: 'show' },
+  查看配置: { command: 'config', subCommand: 'show' },
+  修改配置: { command: 'config', subCommand: 'set' },
+
+  // ── 协调器 ──
+  协调: { command: 'coordinator', subCommand: 'status' },
+  xietiao: { command: 'coordinator', subCommand: 'status' },
+  协调器: { command: 'coordinator', subCommand: 'status' },
+  协调面板: { command: 'coordinator', subCommand: 'board' },
+  协调树: { command: 'coordinator', subCommand: 'board' },
+  协调泳道: { command: 'coordinator', subCommand: 'board', extraArgs: ['pipeline'] },
+  开协调: { command: 'coordinator', subCommand: 'on' },
+  关协调: { command: 'coordinator', subCommand: 'off' },
+  工人列表: { command: 'coordinator', subCommand: 'workers' },
+  工人状态: { command: 'coordinator', subCommand: 'workers' },
+  派任务: { command: 'coordinator', subCommand: 'spawn' },
+  杀工人: { command: 'coordinator', subCommand: 'kill' },
+  工人日志: { command: 'coordinator', subCommand: 'log' },
+
+  // ── 远程 SSH ──
+  远程: { command: 'remote', subCommand: 'hosts' },
+  yuancheng: { command: 'remote', subCommand: 'hosts' },
+  ssh: { command: 'remote', subCommand: 'hosts' },
+  远程连接: { command: 'remote', subCommand: 'connect' },
+  远程执行: { command: 'remote', subCommand: 'exec' },
+  远程会话: { command: 'remote', subCommand: 'sessions' },
+
+  // ── 工作流录制 / 回放 ──
+  // '回放' stays with trajectory replay (DESIGN-ARCH-048); workflow playback
+  // uses more specific aliases below.
+  录制: { command: 'workflow', subCommand: 'record' },
+  工作流回放: { command: 'workflow', subCommand: 'playback' },
+  桌面回放: { command: 'workflow', subCommand: 'playback' },
+  wfr: { command: 'workflow', subCommand: 'record' },
+  wfp: { command: 'workflow', subCommand: 'playback' },
+  rpa: { command: 'workflow' },
+  rpa_flow: { command: 'workflow' },
+  自动化流程: { command: 'workflow' },
+
+  // ── CC 名别名(claude-code-main(1).zip 对齐·EQUIVALENT 菜单补齐)──
+  // 这些是 CC 用的命令名;khy 早有同义逻辑,只补别名让裸词 + /菜单都能分发。
+  // 详见账本 [IMPL-RPT-040]。绝不另起 switch case —— 全部路由到既有 canonical。
+  mode: { command: 'persona' }, // 行为预设
+  'security-review': { command: 'security', subCommand: 'scan' }, // 安全扫描
+  'force-snip': { command: 'snip' }, // 手动裁剪近期消息
+  skills: { command: 'skill', subCommand: 'list' }, // 技能列表
+  'skill-learning': { command: 'skill', subCommand: 'learn' }, // 技能学习
+  'skill-search': { command: 'skill', subCommand: 'search' }, // 技能搜索
+  'local-vault': { command: 'vault' }, // 本地密钥库
+  'local-memory': { command: 'memory' }, // 本地记忆
+  provider: { command: 'gateway', subCommand: 'config' }, // AI 服务商配置
+  'reload-plugins': { command: 'plugin', subCommand: 'reload' }, // 重载插件
+  'commit-push-pr': { command: 'pr', subCommand: 'create' }, // git/gh 编排
+  poor: { command: 'effort', defaultPositionals: ['low'] }, // 低 token 档
+  workflows: { command: 'workflow' }, // 工作流 CLI
+  sandbox: { command: 'sandbox-toggle' }, // 沙箱开关
+
+  // ── 前端工程生成 (create-frontend；自然语言 → 大型 Vue 多页工程) ──
+  'create-frontend': { command: 'create-frontend' },
+  frontend: { command: 'create-frontend' },
+  qianduan: { command: 'create-frontend' },
+  前端: { command: 'create-frontend' },
+  创建前端项目: { command: 'create-frontend' },
+  前端项目: { command: 'create-frontend' },
+  生成前端: { command: 'create-frontend' },
+  新建前端: { command: 'create-frontend' },
+
+  // ── 微信(个人号)扫码接入 ──
+  // 指向 wx(ilink bot,个人单聊)。**企业微信不在这里**——那是群机器人 webhook,走
+  // `khy msg set wecom`。同名歧义在 msgChannelCore 已把 wechat/weixin 别名到 wecom,
+  // 但那是「平台键」命名空间(msg 的位置参数),与这里的「命令词」互不影响。
+  wechat: { command: 'wx' },
+  weixin: { command: 'wx' },
+  微信: { command: 'wx' },
+  切换账号: { command: 'wx', subCommand: 'select' }, // 切换 CLI 主动外发的活动账号
+  wxuse: { command: 'wx', subCommand: 'use' }, // 直达 `khy wx use`
+  wxscope: { command: 'wx', subCommand: 'scope' }, // 直达 `khy wx scope`
+  wxbind: { command: 'wx', subCommand: 'bind' }, // 直达 `khy wx bind`(账号→工作空间/Agent 路由)
+  wxunbind: { command: 'wx', subCommand: 'unbind' }, // 直达 `khy wx unbind`
+  wxbindings: { command: 'wx', subCommand: 'bindings' }, // 直达 `khy wx bindings`(路由绑定一览)
+  绑定: { command: 'wx', subCommand: 'bind' }, // 策略二:把账号收信绑定到工作空间/Agent
+  绑定列表: { command: 'wx', subCommand: 'bindings' }, // 账号→工作空间/Agent 路由一览
+  解绑: { command: 'wx', subCommand: 'unbind' }, // 解除账号的路由绑定
+
+  // 指向 feishu(两种传输都由该命令统管:群机器人 webhook 与长连接)。注意 `khy msg set feishu`
+  // 只管 webhook 那一半,`khy feishu` 才是包含长连接的完整入口。
+  lark: { command: 'feishu' },
+  飞书: { command: 'feishu' },
+  飞书状态: { command: 'feishu', subCommand: 'status' },
+  飞书连接: { command: 'feishu', subCommand: 'connect' }, // 直达 `khy feishu connect`(开长连接门 + 拉起守护进程)
+
+  // ── 磁盘清理 (cleandisk；C 盘大规模清理方法论) ──
+  // 与 clean(仓库树三档) / cleanup(khy 数据保留)互不重叠。bare「清理」也归这里:
+  // 用户敲「清理」时的意图几乎总是「清磁盘」,而非另外两条内部清理。
+  cleandisk: { command: 'cleandisk' },
+  diskclean: { command: 'cleandisk' },
+  qingli: { command: 'cleandisk' },
+  qinglipan: { command: 'cleandisk' },
+  清理: { command: 'cleandisk' },
+  磁盘清理: { command: 'cleandisk' },
+  清理磁盘: { command: 'cleandisk' },
+  清理c盘: { command: 'cleandisk' },
+  c盘清理: { command: 'cleandisk' },
+
+  // 逐回合原子回滚 (DESIGN-ARCH-096 §2-A, 对齐 ycode turn_undo)
+  'turn-rollback': { command: 'turn-rollback' },
+  turnrollback: { command: 'turn-rollback' },
+  撤销回合: { command: 'turn-rollback' },
+  回合撤销: { command: 'turn-rollback' },
+  huigutan: { command: 'turn-rollback' },
+};
+
+/**
+ * Resolve an alias to its canonical command.
+ * @param {string} input - The raw command token
+ * @returns {{ command: string, subCommand?: string, defaultArgs?: object, defaultPositionals?: string[] } | null}
+ */
+function resolveAlias(input) {
+  if (!input) {
+    return null;
+  }
+  // 自然语言短语守卫(门控 KHY_NL_ALIAS_GUARD 默认开):`我是谁` 这类完整问句应转发给 AI,
+  // 不被别名劫持成命令面板。命中 → 返回 null,落到「未识别命令 → 转发 AI」路径。命令入口不受损
+  // (拼音 woshishui / 显式 /whoami 仍解析)。门控关 → 恒 false,逐字节回退历史行为。绝不抛。
+  try {
+    const nlGuard = require('./naturalLanguageAliasGuard');
+    if (nlGuard.isReservedNaturalLanguagePhrase(input)) {
+      return null;
+    }
+  } catch {
+    /* best-effort;守卫不可用则照常解析 */
+  }
+  const key = input.toLowerCase();
+  const staticResult = ALIAS_MAP[key] || ALIAS_MAP[input];
+  if (staticResult) {
+    return staticResult;
+  }
+  // Fall back to auto-registered aliases from command manifests.
+  // Handlers that export a manifest with `aliases` don't need entries here.
+  try {
+    const autoAliases = require('./commandAutoRegistry').getAliases();
+    const autoMatch = autoAliases[key] || autoAliases[input];
+    if (autoMatch) {
+      return { command: autoMatch };
+    }
+  } catch {
+    /* best-effort; auto-registry unavailable → behave as before */
+  }
+  return null;
+}
+
+/**
+ * Get all aliases for a canonical command (for help display).
+ * Includes both static aliases and auto-registered manifest aliases.
+ */
+function getAliasesForCommand(canonicalCmd) {
+  const staticAliases = Object.entries(ALIAS_MAP)
+    .filter(([, v]) => v.command === canonicalCmd)
+    .map(([k]) => k);
+  // Merge auto-registered aliases from command manifests.
+  try {
+    const autoAliases = require('./commandAutoRegistry').getAliases();
+    for (const [alias, cmd] of Object.entries(autoAliases)) {
+      if (cmd === canonicalCmd && !staticAliases.includes(alias)) {
+        staticAliases.push(alias);
+      }
+    }
+  } catch {
+    /* best-effort */
+  }
+  return staticAliases;
+}
+
+/**
+ * Get all alias keys for auto-complete.
+ * Includes both static aliases and auto-registered manifest aliases.
+ */
+function getAllAliasKeys() {
+  const staticKeys = Object.keys(ALIAS_MAP);
+  try {
+    const autoAliases = require('./commandAutoRegistry').getAliases();
+    for (const key of Object.keys(autoAliases)) {
+      if (!staticKeys.includes(key)) {
+        staticKeys.push(key);
+      }
+    }
+  } catch {
+    /* best-effort */
+  }
+  return staticKeys;
+}
+
+module.exports = { resolveAlias, getAliasesForCommand, getAllAliasKeys, ALIAS_MAP };

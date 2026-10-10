@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: ai-usage.md -->
+<title>AI 参与范围自述（C-M2 / C-M3） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>works<span class="sep">›</span>record<span class="sep">›</span>evidence<span class="sep">›</span>01_人类贡献<span class="sep">›</span>AI 参与范围自述（C-M2 / C-M3）</div>
+      <header class="hero reveal"><h1>AI 参与范围自述（C-M2 / C-M3）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#ai-参与范围自述-c-m2-c-m3">AI 参与范围自述（C-M2 / C-M3）</a></li><li class="lvl-2"><a href="#一-结论先说">一、结论先说</a></li><li class="lvl-2"><a href="#二-用过的-ai-工具-配置即证据">二、用过的 AI 工具（配置即证据）</a></li><li class="lvl-2"><a href="#三-ai-署名的历史与治理-对己不利但如实写">三、AI 署名的历史与治理（对己不利但如实写）</a></li><li class="lvl-2"><a href="#四-ai-被禁止做的事-机制强制-不是口头承诺">四、AI 被禁止做的事（机制强制，不是口头承诺）</a></li><li class="lvl-2"><a href="#五-人的意愿在哪里能看到原文">五、人的意愿在哪里能看到原文</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="ai-参与范围自述-c-m2-c-m3">AI 参与范围自述（C-M2 / C-M3）<a class="anchor" href="#ai-参与范围自述-c-m2-c-m3" aria-label="锚点">#</a></h1>
+<blockquote><p>这份文件回答登记时的一个必问：「这个项目用了多少 AI？人做了什么？」<br>口径依据 <code>[DESIGN-IP-001]</code> C-M1：<strong>判据是「有没有人的意愿」，不是「有没有用 AI」。</strong><br>因此下面的自述不试图缩小 AI 的参与比例（那是虚报），而是把<strong>分工</strong>说清楚。</p></blockquote>
+<hr>
+<h2 id="一-结论先说">一、结论先说<a class="anchor" href="#一-结论先说" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>问题</th><th>回答</th></tr></thead><tbody><tr><td>谁发起这个项目？</td><td>单人开发者（git 作者唯一：<code>孔浩原 &lt;2578974124@qq.com&gt;</code>，<code>main</code> 口径 62/62 提交）</td></tr><tr><td>写代码用 AI 吗？</td><td><strong>用，且是主力编码手</strong>。架构与算法方案大量由 AI 提出并实现</td></tr><tr><td>人做了什么？</td><td>提需求、定优先级、拍板取舍、验收结果、判「这个方案不要」、决定何时停</td></tr><tr><td>AI 能自己决定什么？</td><td>允许：技术方案、模块拆分、算法选择（C-M2 白名单）；禁止：commit/push、改名、删除有文档背书的代码（C-M3 黑名单 + 红线 R1）</td></tr><tr><td>结果谁负责？</td><td>人。所有进入登记的代码由人运行、复现、验收（见 <code>开发过程说明.md</code>）</td></tr></tbody></table>
+<hr>
+<h2 id="二-用过的-ai-工具-配置即证据">二、用过的 AI 工具（配置即证据）<a class="anchor" href="#二-用过的-ai-工具-配置即证据" aria-label="锚点">#</a></h2>
+<p>仓库内留存的工具配置目录，逐一对应一个用过的智能体：</p>
+<table><thead><tr><th>配置</th><th>工具</th></tr></thead><tbody><tr><td><code>.ai/</code>（含 <code>hq/</code> 任务状态真源）</td><td>本仓自有的智能体协作层与多机协作真源</td></tr><tr><td><code>.cursor/</code>、<code>.windsurfrules</code>、<code>.clinerules</code></td><td>Cursor / Windsurf / Cline</td></tr><tr><td><code>.opencode/</code>、<code>.zcode/</code></td><td>OpenCode / ZCode</td></tr><tr><td><code>AGENTS.md</code>、<code>CLAUDE.md</code></td><td>交给任何编码智能体的规则真源（9 条工程规则的正文所在）</td></tr></tbody></table>
+<hr>
+<h2 id="三-ai-署名的历史与治理-对己不利但如实写">三、AI 署名的历史与治理（对己不利但如实写）<a class="anchor" href="#三-ai-署名的历史与治理-对己不利但如实写" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>口径</th><th>实测</th><th>说明</th></tr></thead><tbody><tr><td><code>main</code> 分支含 AI 署名提交</td><td><strong>0</strong></td><td>C-M3 要求登记口径下提交信息不带 <code>Co-Authored-By: &lt;AI&gt;</code> / <code>Generated with &lt;AI&gt;</code></td></tr><tr><td>全分支含 AI 署名提交</td><td><strong>88 / 920（9.6%）</strong></td><td>历史开发期留下的尾注，存在于未合并/已废弃分支</td></tr></tbody></table>
+<p>复算（务必带 ref，HEAD 可能正处重建中而未出生）：</p>
+<pre><code class="language-bash">git <span class="hljs-built_in">log</span> main --format=<span class="hljs-string">&#x27;%an &lt;%ae&gt;&#x27;</span> | <span class="hljs-built_in">sort</span> | <span class="hljs-built_in">uniq</span> -c     <span class="hljs-comment"># 62 条，作者唯一</span>
+git rev-list --count --all                              <span class="hljs-comment"># 920</span></code></pre>
+<p>| 治理入口 | <code>npm run strip:ai-attribution</code>（干跑）→ <code>:apply</code> | 一次性清除尾注的维护脚本，人在本地执行 |</p>
+<p><code>main</code> 之所以只有 62 条提交而全分支 920 条：<code>main</code> 是<strong>被重建的短历史</strong>。<br>两个口径必须分开引用，不能拿 62 说「开发过程就这么短」，<br>也不能拿 920 与 62 互相打脸。完整数字与复算命令见 <code>../04_机器可读/contribution-metrics.json</code>。</p>
+<hr>
+<h2 id="四-ai-被禁止做的事-机制强制-不是口头承诺">四、AI 被禁止做的事（机制强制，不是口头承诺）<a class="anchor" href="#四-ai-被禁止做的事-机制强制-不是口头承诺" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>禁区</th><th>强制方式</th></tr></thead><tbody><tr><td>自动 commit / push</td><td>红线 R1（<code>PROCESS-001</code>，P0）；无自动提交路径，提交由人执行</td></tr><tr><td>提交信息带 AI 署名</td><td>C-M3 + <code>scripts/ci/check-copyright-readiness.js</code></td></tr><tr><td>静默删除有文档背书的代码</td><td>规则 7（<code>RUNTIME-009</code>）：删除前必须报部位并留可执行回滚；文档背书者拒绝放行</td></tr><tr><td>未复现就「修好」</td><td>规则 5（<code>RUNTIME-007</code>）：缺 <code>repro-before.txt</code> 判 error</td></tr><tr><td>自作主张加功能</td><td>规则 6（<code>RUNTIME-008</code>）：新增前须答需求五问并落 <code>requirement-5q.md</code>，且带 <code>source: &lt;用户原话&gt;</code></td></tr><tr><td>默认继承工具权限</td><td>规则 10（<code>RUNTIME-010</code>）：默认拒绝，权力只能被显式授予</td></tr></tbody></table>
+<p>规则与执行器的对应关系见 <code>docs/10_规范/registry/RULES-REGISTRY.json</code>（94 条规则，82 条有执行器）。</p>
+<hr>
+<h2 id="五-人的意愿在哪里能看到原文">五、人的意愿在哪里能看到原文<a class="anchor" href="#五-人的意愿在哪里能看到原文" aria-label="锚点">#</a></h2>
+<p><code>人类指令语料.md</code> 收录了 <code>.khy/feedback/**</code> 与任务台账中<strong>带出处的指令原文</strong><br>（<code>source: 用户原话「…」</code>），共 110 条去重指令、其中 57 条明确指向人类主体，<br>另有 29 条由人写下的<strong>验收标准</strong>（<code>[DESIGN-IP-001]</code> C-M4 要的正是这个）。<br>这些不是事后补写：每条都指向一个具体文件与行号，可直接翻原文。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../works/record/evidence/01_人类贡献/人类指令语料.html"><div class="dir">← 上一篇</div><div class="ttl">人类指令语料（需求来源原文）</div></a><a class="next" href="../../../../works/record/evidence/02_独创性/设计决策.html"><div class="dir">下一篇 →</div><div class="ttl">设计决策索引与原创机制清单（C-E2 设计决策必须落文档）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="works/record/evidence/01_人类贡献/ai-usage.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

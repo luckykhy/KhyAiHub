@@ -1,0 +1,39 @@
+{
+  "name": "accountPool",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "按 DOMAIN-DEPS.json 的 D2 名义边界声明。实测出域边 2 处，全在 D1 侧：`candidateDetect.js:608` → `src/config/sqlite-adapter.js`、`poolImporter.js:325` → `services/gateway/adapters/ideDetector.js`。⚠ 其中 `src/config/**` 在 DOMAIN-DEPS 里**没有域根映射**，被路径前缀判成 D1 属误判 —— 这是 [DESIGN-LAY-008] §12.43「建真实 require 方向门前必须先定判据」的又一个活样本（同族还有 `src/tools/**` 与本单元的外部消费者之一）。另如实记一条归位待办：本单元**零条 D3 边**，数据根与路径全部自取，未复用 utils/constants。",
+  "fanIn": 4,
+  "fanInEvidence": [
+    "services/backend/src/services/accountPool/index.js",
+    "services/backend/src/services/accountPool.js",
+    "services/backend/src/services/localBrainProviderConfig.js",
+    "services/backend/src/tools/ConfigureModelProvider/index.js"
+  ],
+  "_fanIn_note": "外部非测试消费者去重 4 个：D1 再导出壳、D1 门面本体 `services/accountPool.js`（credentialHelpers.js 的头注释明确说自己就是从这个文件逐字抽出的）、`localBrainProviderConfig.js`、以及 `src/tools/ConfigureModelProvider/index.js`（src/tools 无域根映射）。计数排除 *.test.js 与单元内部引用。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-29",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "晋级三判据齐：单元级 README.md（本批补）、整数 fanIn、5 个源文件全部有同名同目录测试 —— 本批以显式路径复跑 **102 例 / 102 pass / 0 fail**（2026-09-29 08:39），pins 由 grep 实测 30。单元早于 entry-buffer 守卫，缓冲区从未被经过。",
+  "contract": {
+    "purpose": "本机 IDE/CLI 登录态的凭据池：探测来源与采集候选、从 Trae/Cursor/Kiro/Warp/Nirvana 的本地存储导入、按租约调度过期清理与自动回收、把活跃凭据回写进本机存储。",
+    "ioOwner": "本单元是凭据 IO 的唯一持有者：读写本机 IDE 登录存储、SQLite 池与租约都只在这里发生；消费者（D1 门面与配置器）只调门面函数，不自取路径。凭据落盘位置遵循仓内既有约定（`~/.khyquant/` 与 `.khy/credentials/`），清单内不含任何密钥值。",
+    "gates": "导入与回写由调用侧配置驱动；`NIRVANA_DEFAULT_LOGIN_EMAIL` 一类的身份字段**当前有硬编码默认值**（已登记为高危缺陷，见 README），因此不能把它当作可选装饰。",
+    "coverage_note": "purpose/ioOwner/gates 覆盖本轮实测到的面（5 份头注释 + 102 例共置测试 + require 站点行号），不是逐行审计结论。"
+  },
+  "knownDefectsPinned": [
+    "共 30 处 KNOWN-DEFECT 断言（grep -c 实测，非自报），逐条正文在各 .test.js 的中文用例标题里",
+    "两条高危已具名登记（任务 #17 第 16 项）：candidateDetect.js:184 的私人邮箱语义默认值经 poolImporter 落进每条导入记录；credentialHelpers.js:55 原型键可进 SQL 参数面"
+  ],
+  "_known_defects_note": "一律登记不修：两条都涉及行为与身份数据（且第 (1) 条是否需清理既有池要人确认），属甲/乙裁决范围。",
+  "tests": [
+    "candidateDetect.test.js",
+    "credentialHelpers.test.js",
+    "poolImporter.test.js",
+    "poolScheduler.test.js",
+    "poolSync.test.js"
+  ]
+}

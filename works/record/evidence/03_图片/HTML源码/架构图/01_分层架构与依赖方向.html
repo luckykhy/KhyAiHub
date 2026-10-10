@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><style>body{margin:0;background:#fff;color:#111827;font-family:"Microsoft YaHei","Segoe UI",sans-serif;padding:28px 34px}
+h1{font-size:26px;margin:0 0 4px}
+.sub{font-size:14px;color:#4b5563;margin-bottom:20px}
+.src{font-size:12px;color:#6b7280;margin-top:22px;border-top:1px solid #e5e7eb;padding-top:10px;line-height:1.6}
+.bar-row{display:flex;align-items:center;margin:9px 0;font-size:14px}
+.bar-label{width:280px;flex:none;text-align:right;padding-right:12px;color:#374151}
+.bar-track{flex:1;background:#f3f4f6;border-radius:3px;height:26px;position:relative}
+.bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#1d4ed8,#3b82f6)}
+.bar-val{position:absolute;left:calc(100% + 8px);top:4px;font-size:13px;color:#111827;white-space:nowrap}
+.tiles{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.tile{flex:1;min-width:210px;border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;background:#f9fafb}
+.tile .n{font-size:30px;font-weight:700;color:#1d4ed8}
+.tile .k{font-size:13px;color:#374151;margin-top:4px;line-height:1.5}
+.chart{margin:6px 0 2px}
+svg{display:block}
+.tag{display:inline-block;font-size:12px;color:#374151;border:1px solid #d1d5db;border-radius:11px;padding:1px 9px;margin-right:6px}</style></head><body>
+<h1>KhyOS 仓库层级结构与允许的依赖方向</h1>
+<div class="sub">C-E2：架构分层是有意设计的，且有机器守卫执行（npm run check:layout）</div>
+<div><span class="tag">真源 [DESIGN-LAY-005] 一、二节</span><span class="tag">执行器 scripts/ci/check-repo-layout.js</span><span class="tag">快照 2026-09-28</span></div>
+<div class="chart"><div style="display:flex;gap:26px">
+    <div style="flex:1.35">
+      <div style="font-size:15px;font-weight:700;margin-bottom:8px">层级 L0–L6（顶层七板块）</div>
+      <div style="display:flex;align-items:center;margin:7px 0">
+      <div style="width:52px;flex:none;font-weight:700;color:#7c3aed;font-size:16px">L0</div>
+      <div style="width:170px;flex:none;font-family:Consolas,monospace;font-size:15px">kernel/</div>
+      <div style="flex:1;font-size:13.5px;color:#374151;border-left:4px solid #7c3aed;padding-left:10px">手写 OS 内核：调度 / 分页 / COW fork / 中断 / ELF+PE 双加载器</div>
+    </div><div style="display:flex;align-items:center;margin:7px 0">
+      <div style="width:52px;flex:none;font-weight:700;color:#2563eb;font-size:16px">L1</div>
+      <div style="width:170px;flex:none;font-family:Consolas,monospace;font-size:15px">platform/</div>
+      <div style="flex:1;font-size:13.5px;color:#374151;border-left:4px solid #2563eb;padding-left:10px">Python 启动器（探测环境、拉起 Node）+ 共享包 + 交付编排</div>
+    </div><div style="display:flex;align-items:center;margin:7px 0">
+      <div style="width:52px;flex:none;font-weight:700;color:#0891b2;font-size:16px">L2</div>
+      <div style="width:170px;flex:none;font-family:Consolas,monospace;font-size:15px">services/</div>
+      <div style="flex:1;font-size:13.5px;color:#374151;border-left:4px solid #0891b2;padding-left:10px">Node 运行时，全部业务逻辑：CLI、AI 网关、Web API</div>
+    </div><div style="display:flex;align-items:center;margin:7px 0">
+      <div style="width:52px;flex:none;font-weight:700;color:#059669;font-size:16px">L3</div>
+      <div style="width:170px;flex:none;font-family:Consolas,monospace;font-size:15px">apps/</div>
+      <div style="flex:1;font-size:13.5px;color:#374151;border-left:4px solid #059669;padding-left:10px">平台自带管理前端（AI 平台 UI）</div>
+    </div><div style="display:flex;align-items:center;margin:7px 0">
+      <div style="width:52px;flex:none;font-weight:700;color:#65a30d;font-size:16px">L4</div>
+      <div style="width:170px;flex:none;font-family:Consolas,monospace;font-size:15px">software/</div>
+      <div style="flex:1;font-size:13.5px;color:#374151;border-left:4px solid #65a30d;padding-left:10px">跑在平台之上的独立项目载体（khyquant 量化终端：独立项目，连接平台使用）</div>
+    </div><div style="display:flex;align-items:center;margin:7px 0">
+      <div style="width:52px;flex:none;font-weight:700;color:#d97706;font-size:16px">L5</div>
+      <div style="width:170px;flex:none;font-family:Consolas,monospace;font-size:15px">extensions/</div>
+      <div style="flex:1;font-size:13.5px;color:#374151;border-left:4px solid #d97706;padding-left:10px">内置拓展，随主包分发，运行时被发现并激活</div>
+    </div><div style="display:flex;align-items:center;margin:7px 0">
+      <div style="width:52px;flex:none;font-weight:700;color:#dc2626;font-size:16px">L6</div>
+      <div style="width:170px;flex:none;font-family:Consolas,monospace;font-size:15px">tools/</div>
+      <div style="flex:1;font-size:13.5px;color:#374151;border-left:4px solid #dc2626;padding-left:10px">独立开发者工具，不参与运行时</div>
+    </div>
+      <div style="font-size:15px;font-weight:700;margin:16px 0 6px">横切层（不参与 L0–L6 依赖判定）</div>
+      <div style="font-family:Consolas,monospace;font-size:13px;color:#374151;line-height:1.9">scripts/ · packaging/ · docs/ · _source/ · entries/ · evidence/ · electron/ · tests/ · deploy/ · patches/</div>
+    </div>
+    <div style="flex:1">
+      <div style="font-size:15px;font-weight:700;margin-bottom:8px">允许的依赖方向（白名单）</div>
+      <div style="font-size:13.5px;color:#065f46;margin:5px 0">✅ L1 → L2：进程启动（spawn），非模块导入</div><div style="font-size:13.5px;color:#065f46;margin:5px 0">✅ L2 → L1：workspace 包导入 @khy/shared</div><div style="font-size:13.5px;color:#065f46;margin:5px 0">✅ L3 → L2：HTTP / REST，不得跨目录 import</div><div style="font-size:13.5px;color:#065f46;margin:5px 0">✅ L4 → L2：HTTP + 少量进程调用</div><div style="font-size:13.5px;color:#065f46;margin:5px 0">✅ L4 → L1：打包清单</div><div style="font-size:13.5px;color:#065f46;margin:5px 0">✅ L2 → L4：仅限纯 re-export 壳</div><div style="font-size:13.5px;color:#065f46;margin:5px 0">✅ 横切 → 任意层：按路径引用</div>
+      <div style="font-size:15px;font-weight:700;margin:16px 0 8px">禁止边（守卫 cross-layer-require 执行）</div>
+      <div style="font-size:13.5px;color:#991b1b;margin:5px 0">⛔ L0 与任何层之间：内核独立，与 Node 栈无运行时耦合</div><div style="font-size:13.5px;color:#991b1b;margin:5px 0">⛔ L3 ↔ L4：两个前端不得互相 import</div><div style="font-size:13.5px;color:#991b1b;margin:5px 0">⛔ L2 → L3：后端不得反向 import 前端源码</div><div style="font-size:13.5px;color:#991b1b;margin:5px 0">⛔ 任何层 → L5 / L6：拓展与工具是叶子，只按契约被发现</div><div style="font-size:13.5px;color:#991b1b;margin:5px 0">⛔ 跨 workspace 的深层相对路径 require</div>
+    </div>
+  </div></div>
+<div class="src">数据来源：docs/10_规范/DESIGN-LAY/[DESIGN-LAY-005] 仓库层级板块规范.md（人工规范，非派生数据）<br>生成命令：<code>node scripts/evidence/render-images.js</code><br>复算命令：<code>node scripts/ci/check-repo-layout.js</code></div>
+</body></html>

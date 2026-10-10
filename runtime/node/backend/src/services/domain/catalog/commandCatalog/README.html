@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>commandCatalog — khy 功能索引的分组目录（D2 功能单元） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>catalog<span class="sep">›</span>commandCatalog<span class="sep">›</span>commandCatalog — khy 功能索引的分组目录（D2 功能单元）</div>
+      <header class="hero reveal"><h1>commandCatalog — khy 功能索引的分组目录（D2 功能单元）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#commandcatalog-khy-功能索引的分组目录-d2-功能单元">commandCatalog — khy 功能索引的分组目录（D2 功能单元）</a></li><li class="lvl-2"><a href="#逐成员">逐成员</a></li><li class="lvl-2"><a href="#消费者-实测-fan-in-4">消费者（实测 fan-in = 4）</a></li><li class="lvl-2"><a href="#契约-每条都对应命名测试">契约（每条都对应命名测试）</a></li><li class="lvl-2"><a href="#本单元修掉的缺陷-b26-f1-复现-复诊在-khy-feedback-b26-f1">本单元修掉的缺陷（B26-F1，复现/复诊在 `.khy/feedback/b26-F1/`）</a></li><li class="lvl-2"><a href="#已知边界-现状-未-由本单元改动">已知边界（现状，**未**由本单元改动）</a></li><li class="lvl-2"><a href="#测试怎么跑">测试怎么跑</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="commandcatalog-khy-功能索引的分组目录-d2-功能单元">commandCatalog — khy 功能索引的分组目录（D2 功能单元）<a class="anchor" href="#commandcatalog-khy-功能索引的分组目录-d2-功能单元" aria-label="锚点">#</a></h1>
+<p>一句话：把命令注册表 SSOT（<code>constants/commandSchema</code> 的 <code>getBuiltinSlashCommands</code>）整形成<br><strong>按类分组、可浏览、可折叠别名</strong>的功能目录，让 CLI/TUI 的 <code>/features</code>、HTTP 的 <code>GET /api/commands</code>、<br>前端「功能索引」视图三处消费<strong>同一份</strong>数据——goal「有了功能用户却不知去哪用」的单一真源。</p>
+<p>本叶子只<strong>整形与分组，不发明功能</strong>：清单永远来自 SSOT，它自己不持有任何命令知识。</p>
+<p>清单：<code>khy.module.json</code>（<code>domain</code> / <code>mayDependOn</code> / <code>fanIn</code> / <code>lifecycle.stage</code> 四字段被<br><code>npm run check:layout</code> 的 entry-buffer 规则读取；本单元的 D2→D1 边按偏差登记，不写白名单）。</p>
+<h2 id="逐成员">逐成员<a class="anchor" href="#逐成员" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>角色</th><th>require</th><th>同名测试</th></tr></thead><tbody><tr><td><code>commandCatalog.js</code></td><td>门控判定 + 目录整形（分组、排序、字段规整、别名折叠）</td><td><code>../../../../utils/trimIfString</code>（D3）、<code>../../../../constants/commandSchema</code>（D3，命令 + 别名 SSOT，惰性）、<code>../../../commandOverlapAudit</code>（<strong>D1</strong>，面板门控集中判定，缺失则不折叠）</td><td><code>commandCatalog.test.js</code></td></tr></tbody></table>
+<h2 id="消费者-实测-fan-in-4">消费者（实测 fan-in = 4）<a class="anchor" href="#消费者-实测-fan-in-4" aria-label="锚点">#</a></h2>
+<p><code>cli/handlers/features.js</code>（<code>/features</code>）、<code>routes/commands.js</code>（<code>GET /api/commands</code>）、<br><code>services/commandCatalog/index.js</code>（D1 再导出壳）、<code>services/selfProfile.js</code>（自审画像）。</p>
+<p>顺带一条实测事实：那个 D1 再导出壳自身在 <code>src/</code> 下<strong>零消费者</strong>——三个消费方都直接 require D2 路径，<br>壳只为历史路径兼容留着（与 <code>memory/compact</code> 的壳情况不同：那边的壳是唯一入边）。</p>
+<h2 id="契约-每条都对应命名测试">契约（每条都对应命名测试）<a class="anchor" href="#契约-每条都对应命名测试" aria-label="锚点">#</a></h2>
+<ol><li><strong>两道门各管一件事，且关档都是逐字节回退</strong>：<code>KHY_COMMAND_CATALOG</code> 关 → 整个目录是</li></ol>
+<p><code>{categories:[],total:0,generatedBy:'commandSchema'}</code>（消费方据此隐藏入口）；<br>   <code>KHY_COMMAND_PRIMARY_PANEL</code> 关 → 不折叠别名，退回全量列举，且<strong>不添加 <code>aliases</code> 字段</strong>。<br>   → <code>gate is default-on and only the documented off-words disable it</code>、<br>   <code>a disabled gate returns the empty directory, byte-for-byte the documented shape</code>、<br>   <code>panel off keeps every row and adds no aliases field (byte-for-byte fallback)</code></p>
+<ol><li><strong>关闭词表是显式的</strong>：<code>0/false/off/no/disable/disabled</code>（大小写与两端空白不敏感）关闭；</li></ol>
+<p>空白、缺省、null、无法识别的取值一律<strong>开</strong>；坏 env（null / 无参）不抛。<br>   → <code>gate treats absent/blank/whitespace as on and never throws on a bad env</code></p>
+<ol><li><strong>排序确定</strong>：类别按 <code>CATEGORY_META.order</code>，同 order 按 key 字母序；组内命令按 <code>cmd</code> 字母序；</li></ol>
+<p><code>total</code> 恒等于各组命令数之和（不自相矛盾）。<br>   → <code>categories sort by CATEGORY_META.order then key, commands sort by cmd</code></p>
+<ol><li><strong>条目只留发现所需的最小字段</strong>：<code>{cmd,name,label,desc,route}</code>（折叠时才追加 <code>aliases</code>）；</li></ol>
+<p><code>label</code> 缺省回退去斜杠的 <code>name</code>，<code>desc</code> 缺省回退 <code>description</code>，再缺省为空串（不出现 undefined）。<br>   → <code>each entry is normalized to the discovery minimum</code>、<br>   <code>label falls back to the slash-stripped name and desc falls back to description</code></p>
+<ol><li><strong>绝不抛，脏数据只被跳过</strong>：<code>null</code> / 字符串 / 数字条目、空白 <code>cmd</code>、纯斜杠 <code>cmd</code>（<code>/</code>、<code>//</code>）</li></ol>
+<p>都被丢弃；命令源不可达（返回非数组或自己抛错）→ 空目录。<br>   → <code>junk entries are skipped rather than thrown on</code>、<br>   <code>an unresolvable command source yields the empty directory, not a throw</code></p>
+<ol><li><strong>同桶内按 cmd 去重，保留首次</strong>（第一次出现的 desc 胜出，不是后者覆盖）。</li></ol>
+<p>→ <code>duplicate cmd within a category is folded to the first occurrence</code></p>
+<ol><li><strong>未知类别兜底「其他」</strong>（<code>order: 99</code>），不会被塞进已知组、也不会顶掉排序。</li></ol>
+<p>→ <code>unknown categories land in the 其他 bucket with order 99</code></p>
+<ol><li><strong>别名折叠是 route 驱动</strong>：<code>COMMAND_ALIASES</code> 的值是 canonical 的 <strong>route</strong>，凡 route 命中的条目</li></ol>
+<p>挂上排序后的 <code>aliases[]</code>，别名自身不再单独占位。因此别名可以落到另一条 cmd 上（实测：<br>   <code>/apikey</code> 折叠进 route 为 <code>gateway config</code> 的那一行）。用例注入的是<strong>真别名表</strong>，不是假数据。<br>   → <code>panel on drops the alias row and hangs it under the canonical command</code>、<br>   <code>folding is route-driven, so an alias joins the canonical row even under another cmd</code></p>
+<ol><li><strong>对真 SSOT 防空转</strong>：不加注入地跑一遍真实命令表，断言输入面 &gt;0（210 条命令）、</li></ol>
+<p>每个类别都有非空中文标签与整数 order、每组非空、<code>total</code> 与分组之和一致。<br>   → <code>the real SSOT builds a non-empty directory with every label resolved</code></p>
+<h2 id="本单元修掉的缺陷-b26-f1-复现-复诊在-khy-feedback-b26-f1">本单元修掉的缺陷（B26-F1，复现/复诊在 <code>.khy/feedback/b26-F1/</code>）<a class="anchor" href="#本单元修掉的缺陷-b26-f1-复现-复诊在-khy-feedback-b26-f1" aria-label="锚点">#</a></h2>
+<p><code>_categoryMeta</code> 原本写作 <code>CATEGORY_META[cat] || CATEGORY_META.other</code>，而 <code>cat</code> 取自<strong>数据字段</strong><br>（命令的 <code>category</code>）。当它是 <code>constructor</code> / <code>valueOf</code> / <code>toString</code> 这类 <code>Object.prototype</code><br>继承键时，取到的是继承值而不是兜底「其他」，于是分组头的 <code>label</code> 与 <code>order</code> 双双变成 <code>undefined</code>，<br>排序也退化成按 key 字母序。改法是本文件别名折叠处已经在用的 <code>hasOwnProperty</code> 自有键判定；<br>对表内 8 个类别<strong>逐字节等价</strong>，真实 SSOT 的 7 个类别读数不受影响（复现文件里最后一行就是这条证据）。<br>这是本会话在 D2 里第 <strong>4</strong> 次命中同一族失效模式（前三次：<code>executorRegistry.getExecutor</code>、<br><code>intentTrees.getIntentTree</code>、以及 <code>formatInspect</code> 里核实后判定不可达而未改的那处）。<br>→ <code>a category named after an Object.prototype key still falls back to 其他</code></p>
+<h2 id="已知边界-现状-未-由本单元改动">已知边界（现状，<strong>未</strong>由本单元改动）<a class="anchor" href="#已知边界-现状-未-由本单元改动" aria-label="锚点">#</a></h2>
+<ul><li>门控词表在本叶子是<strong>本地实现</strong>（<code>_OFF</code> 常量），与仓内 SSOT <code>utils/isOffValue</code> 档位不一致：</li></ul>
+<p><code>{KHY_COMMAND_CATALOG: false}</code> 或 <code>0</code>（非字符串）会被读成「未设置」而<strong>保持开启</strong>——<br>  因为源码走的是 <code>String((env &amp;&amp; env.KHY_COMMAND_CATALOG) || '')</code>。<br>  经由 <code>process.env</code> 的真实调用永远是字符串，所以现状无行为差异；<br>  但「三份关闭词表各自漂移」是可发现性层面的债，<strong>收敛到哪一份属人的裁决</strong>（与 <code>config/keybindings</code><br>  单元记的同一族问题合并上报），本单元不做静默改写。<br>  → <code>gate treats absent/blank/whitespace as on and never throws on a bad env</code></p>
+<ul><li><code>env</code> 形参缺省时取 <code>process.env</code>，所以「零 IO」的准确说法是<strong>默认注入 process.env、可被入参覆盖</strong>；</li></ul>
+<p>两个消费者都显式传 <code>process.env</code>，测试一律传字面对象。</p>
+<h2 id="测试怎么跑">测试怎么跑<a class="anchor" href="#测试怎么跑" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> src/services/domain/catalog/commandCatalog/commandCatalog.test.js</code></pre>
+<p>15 例、0 skip、零真 IO。改动本文件后请连仓级三份 node:test 方言的用例一起复跑<br>（<code>tests/services/commandCatalog.test.js</code>、<code>tests/allCommandsCatalog.test.js</code>、<br><code>tests/services/selfAuditRegistry.test.js</code>），它们直接消费这个叶子。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/services/domain/catalog/capabilityMatrix/README.html"><div class="dir">← 上一篇</div><div class="ttl">capabilityMatrix — 智能体能力矩阵（D2 功能单元）</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/services/domain/catalog/README.html"><div class="dir">下一篇 →</div><div class="ttl">catalog — 命令、工具与能力的登记表（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/catalog/commandCatalog/README.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

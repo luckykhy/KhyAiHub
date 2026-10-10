@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-ARCH-180] 驻留资源提示判据错配修复方案.md -->
+<title>[DESIGN-ARCH-180] 驻留资源提示判据错配修复方案 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>[DESIGN-ARCH-180] 驻留资源提示判据错配修复方案</div>
+      <header class="hero reveal"><h1>[DESIGN-ARCH-180] 驻留资源提示判据错配修复方案</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-180-驻留资源提示判据错配修复方案">[DESIGN-ARCH-180] 驻留资源提示判据错配修复方案</a></li><li class="lvl-2"><a href="#0-一句话">0. 一句话</a></li><li class="lvl-2"><a href="#1-现状证据">1. 现状证据</a></li><li class="lvl-3"><a href="#1-1-提示的发出链-file-line">1.1 提示的发出链（file:line）</a></li><li class="lvl-3"><a href="#1-2-判据的出处-它是-首帧目标-不是-稳态基线">1.2 判据的出处：它是「首帧目标」，不是「稳态基线」</a></li><li class="lvl-3"><a href="#1-3-实测-判据与测量时点错配">1.3 实测：判据与测量时点错配</a></li><li class="lvl-3"><a href="#1-4-附带缺陷-提示把判据明细丢掉了">1.4 附带缺陷：提示把判据明细丢掉了</a></li><li class="lvl-3"><a href="#1-5-现状-零文档背书-零守卫">1.5 现状：零文档背书、零守卫</a></li><li class="lvl-2"><a href="#2-设计公理">2. 设计公理</a></li><li class="lvl-2"><a href="#3-与既有机制的边界">3. 与既有机制的边界</a></li><li class="lvl-2"><a href="#4-目标形态">4. 目标形态</a></li><li class="lvl-3"><a href="#4-1-a-判据按测量时点分档">4.1 A —— 判据按测量时点分档</a></li><li class="lvl-3"><a href="#4-2-b-启动提示受众分流-补判据明细">4.2 B —— 启动提示受众分流 + 补判据明细</a></li><li class="lvl-2"><a href="#5-强度梯度">5. 强度梯度</a></li><li class="lvl-2"><a href="#6-防呆铁律">6. 防呆铁律</a></li><li class="lvl-2"><a href="#7-b-l2-三步接线清单-一次提交只做一步">7. B-L2 三步接线清单（一次提交只做一步）</a></li><li class="lvl-2"><a href="#8-验证与反例">8. 验证与反例</a></li><li class="lvl-2"><a href="#9-复现方式">9. 复现方式</a></li><li class="lvl-2"><a href="#10-未决问题-需人裁决-本方案不代拍板">10. 未决问题（需人裁决，本方案不代拍板）</a></li><li class="lvl-2"><a href="#11-变更日志">11. 变更日志</a></li><li class="lvl-2"><a href="#12-落地偏离表-方案-4-写的那样-vs-实际做法">12. 落地偏离表（方案 §4 写的那样 vs 实际做法）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="design-arch-180-驻留资源提示判据错配修复方案">[DESIGN-ARCH-180] 驻留资源提示判据错配修复方案<a class="anchor" href="#design-arch-180-驻留资源提示判据错配修复方案" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>隶属</strong>：启动性能族（<code>[DESIGN-ARCH-178]</code> 的直接后续）；运行时可观测族（<code>runtimeResourceProbe</code>）<br><strong>状态</strong>：<strong>已落地（A + B，2026-10-04；偏离见 §12）</strong> · <strong>日期</strong>：2026-10-04 · <strong>编号</strong>：[DESIGN-ARCH-180] · <strong>落点目录</strong>：<code>docs/03_DESIGN_设计/</code><br><strong>证据基准</strong>：2026-10-04 本机实测（<code>khy doctor</code> 短进程 + node-pty 真实 TUI 会话 + 用户截图）<br><strong>与 178 号的关系</strong>：178 修的是「首帧 44s」的性能病灶；本方案修的是<strong>178 留下的判据被误用到稳态</strong><br>所产生的<strong>常驻告警</strong>。178 的 P0 已落地（实测 981 模块，达标），本方案不改 178 的任何判据。</p></blockquote>
+<hr>
+<h2 id="0-一句话">0. 一句话<a class="anchor" href="#0-一句话" aria-label="锚点">#</a></h2>
+<p>启动期那条「资源 已统计本会话进程…超出判据」<strong>不是资源失控，是判据错配</strong>：<br><code>BUDGET_MODULES = 1000</code> 抄自 <code>[DESIGN-ARCH-178]</code> §7 的<strong>首帧前</strong>验收目标，<br>而 <code>runtimeResourceProbe</code> 在<strong>会话稳态</strong>测量 ⇒ 每次启动必然超标 —— 一条<strong>永远为真的告警</strong>。<br>本方案 = 判据按测量时点分档（A）+ 启动提示按受众分流并补判据明细（B）。</p>
+<hr>
+<h2 id="1-现状证据">1. 现状证据<a class="anchor" href="#1-现状证据" aria-label="锚点">#</a></h2>
+<h3 id="1-1-提示的发出链-file-line">1.1 提示的发出链（file:line）<a class="anchor" href="#1-1-提示的发出链-file-line" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>环节</th><th>位置</th><th>说明</th></tr></thead><tbody><tr><td>文案生成</td><td><code>runtime/node/backend/src/services/runtimeResourceProbe.js:268</code> <code>buildResidencyNotice()</code></td><td>无超标项时返回 <code>null</code>（静默是常态）</td></tr><tr><td>触发</td><td><code>runtime/node/backend/src/bootstrap/prefetch.js:169</code> <code>emitFootprintNotice()</code></td><td>轻量模式 <code>runtimeFootprintNotice</code>(+3.5s)；完整模式 <code>cleanupService</code>(+3s)</td></tr><tr><td>判据</td><td><code>runtimeResourceProbe.js:26</code> <code>BUDGET_MODULES = 1000</code>；<code>:41-42</code> <code>HANDLE_BUDGET_TIMERS = 20</code> / <code>HANDLE_BUDGET_WATCHERS = 2</code></td><td>单一真源</td></tr><tr><td>另一消费面</td><td><code>runtime/node/backend/src/cli/handlers/init.js:1216</code> <code>_residentResourceChecks()</code></td><td><code>khy doctor</code> 的「驻留资源」段，与启动提示共用 <code>assessResidency</code>（刻意「同一把尺」）</td></tr></tbody></table>
+<h3 id="1-2-判据的出处-它是-首帧目标-不是-稳态基线">1.2 判据的出处：它是「首帧目标」，不是「稳态基线」<a class="anchor" href="#1-2-判据的出处-它是-首帧目标-不是-稳态基线" aria-label="锚点">#</a></h3>
+<p><code>[DESIGN-ARCH-178]</code> §7 验收表第 2 条：</p>
+<table><thead><tr><th>#</th><th>判据</th><th>门槛</th></tr></thead><tbody><tr><td>2</td><td>V1 模块数</td><td><strong>≤ 1000</strong>（现状 1523）</td></tr></tbody></table>
+<p>该判据的探针跑到 <code>require('./tui/app.js')</code> <strong>停手</strong> —— 量的是<strong>首帧前</strong>的 <code>require.cache</code>。<br>178 的 P0（redis 顶层副作用改惰性）已于 2026-10-04 落地，实测 V1 = <strong>981</strong>，<strong>达标</strong>。</p>
+<h3 id="1-3-实测-判据与测量时点错配">1.3 实测：判据与测量时点错配<a class="anchor" href="#1-3-实测-判据与测量时点错配" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>场景</th><th>测量时点</th><th>模块数</th><th>活体资源</th></tr></thead><tbody><tr><td>perf 探针（178 §7）</td><td>首帧前（<code>require('./tui/app.js')</code>）</td><td><strong>981</strong> ✓</td><td>—</td></tr><tr><td><code>node bin/khy.js doctor</code>（本机，短进程）</td><td>启动后稳态</td><td><strong>1084</strong> ⚠</td><td>10 项（定时器 1 · 监视 0）✓</td></tr><tr><td>真实 TUI 会话（node-pty，本机）</td><td>REPL ready 后 +3s</td><td><strong>2079</strong> ⚠</td><td>机器余量一并超标</td></tr><tr><td>用户截图（交互会话）</td><td>会话期</td><td><strong>1475</strong> ⚠</td><td><strong>91 项</strong> ⚠</td></tr></tbody></table>
+<p>⇒ <strong>同一把尺量两个时点</strong>。稳态必然包含首帧之后懒加载进来的工具注册表 / 网关 / ink 全树<br>（<code>[DESIGN-ARCH-012]</code> 工具延迟加载、178 §3.3 的 <code>setImmediate</code> 预热）⇒ <strong>恒超标</strong>。</p>
+<blockquote><p><code>runtimeResourceProbe.js:262-263</code> 自己的注释写着：<br>「a boot line that always fires trains everyone to ignore it」<br>（每帧都响的仪表会让人学会忽略它）—— 而它正是那条。</p></blockquote>
+<h3 id="1-4-附带缺陷-提示把判据明细丢掉了">1.4 附带缺陷：提示把判据明细丢掉了<a class="anchor" href="#1-4-附带缺陷-提示把判据明细丢掉了" aria-label="锚点">#</a></h3>
+<p><code>buildResidencyNotice:271</code>：</p>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> readings = over.<span class="hljs-title function_">map</span>(<span class="hljs-function">(<span class="hljs-params">f</span>) =&gt;</span> <span class="hljs-string">`<span class="hljs-subst">${f.label}</span> <span class="hljs-subst">${f.detail.split(<span class="hljs-string">&#x27;（&#x27;</span>)[<span class="hljs-number">0</span>].trim()}</span>`</span>).<span class="hljs-title function_">join</span>(<span class="hljs-string">&#x27; · &#x27;</span>);</code></pre>
+<p><code>detail</code> 的<strong>全角括号里装的正是判据</strong>（<code>（上限 1000）</code> / <code>（定时器 X · 文件监视 Y）</code>），<br>被 <code>split('（')[0]</code> 整段丢掉 ⇒ 用户看到「活体资源 91 项」却看不出<strong>是哪个判据超</strong>。<br>这是截图无法自解的直接原因。</p>
+<h3 id="1-5-现状-零文档背书-零守卫">1.5 现状：零文档背书、零守卫<a class="anchor" href="#1-5-现状-零文档背书-零守卫" aria-label="锚点">#</a></h3>
+<p>本方案之前，<code>runtimeResourceProbe</code> 在 <code>docs/</code> 与 <code>scripts/</code> <strong>全无引用</strong>；<br><code>BUDGET_MODULES</code> 的 1000 只活在代码注释里，<strong>没有任何棘轮守着它</strong>。</p>
+<hr>
+<h2 id="2-设计公理">2. 设计公理<a class="anchor" href="#2-设计公理" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>公理</th><th>依据</th></tr></thead><tbody><tr><td>A1</td><td><strong>判据必须与测量时点同源</strong></td><td>首帧预算不能量稳态，否则永远是噪声（§1.3）</td></tr><tr><td>A2</td><td><strong>会话提示只报「用户可处置」的项</strong></td><td>模块图的处置是「改代码」，不是会话内动作；对用户是噪声</td></tr><tr><td>A3</td><td><strong>同一把尺</strong>：doctor 与启动提示的判定不得分叉</td><td><code>runtimeResourceProbe.js:165-167</code> 的既有设计意图</td></tr><tr><td>A4</td><td><strong>强度与「有可行解」同步</strong></td><td>低余量机器上用户没有回退手段 ⇒ 不升 error（本仓既有公理）</td></tr></tbody></table>
+<hr>
+<h2 id="3-与既有机制的边界">3. 与既有机制的边界<a class="anchor" href="#3-与既有机制的边界" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>既有件</th><th>管什么</th><th>本方案做什么</th><th>边界</th></tr></thead><tbody><tr><td><code>[DESIGN-ARCH-178]</code> §7</td><td>首帧前模块数 ≤1000 的<strong>验收判据</strong></td><td><strong>不动</strong>；只把它登记为 <code>frame</code> 档的语义真源</td><td>178 管首帧，本方案管稳态</td></tr><tr><td><code>[DESIGN-ARCH-062]</code> 生命周期边界</td><td>后台常驻 vs 按需加载的<strong>层级声明</strong>（<code>serviceLifecyclePolicy.js</code>）</td><td><strong>不动</strong>；句柄超标的 hint 仍指向它</td><td>062 管「谁该常驻」，本方案管「超标了怎么说」</td></tr><tr><td><code>khy doctor</code>「驻留资源」段</td><td>完整驻留体检（含磁盘树走查）</td><td><strong>不动</strong>；只让它的模块判据按 <code>cli</code> 档判定</td><td>仍是同一份 <code>assessResidency</code></td></tr><tr><td><code>check-tui-gates</code>（<code>MAX_GATES=227</code>）</td><td><code>KHY_*</code> 门控棘轮</td><td><strong>零新增门控</strong>（A4：不引入开关）</td><td>—</td></tr></tbody></table>
+<hr>
+<h2 id="4-目标形态">4. 目标形态<a class="anchor" href="#4-目标形态" aria-label="锚点">#</a></h2>
+<h3 id="4-1-a-判据按测量时点分档">4.1 A —— 判据按测量时点分档<a class="anchor" href="#4-1-a-判据按测量时点分档" aria-label="锚点">#</a></h3>
+<pre><code class="language-js"><span class="hljs-comment">// runtimeResourceProbe.js —— 模块图预算按测量时点分档（单一真源）</span>
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">MODULE_BUDGET</span> = <span class="hljs-title class_">Object</span>.<span class="hljs-title function_">freeze</span>({
+  <span class="hljs-attr">frame</span>: <span class="hljs-number">1000</span>, <span class="hljs-comment">// 首帧前；[DESIGN-ARCH-178] §7 验收判据，只有 perf 探针消费</span>
+  <span class="hljs-attr">cli</span>: <span class="hljs-number">1200</span>,   <span class="hljs-comment">// 短进程命令（khy doctor 等）实测 1084，留 ~10% 余量</span>
+  <span class="hljs-attr">tui</span>: <span class="hljs-number">2200</span>,   <span class="hljs-comment">// 交互会话实测 2079，留 ~6% 余量</span>
+});
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">DEFAULT_PHASE</span> = <span class="hljs-string">&#x27;tui&#x27;</span>; <span class="hljs-comment">// fail-open：忘传 phase 时取最宽松档，不制造噪声</span></code></pre>
+<ul><li><code>collectRuntimeCensus(opts)</code> 接受 <code>opts.phase</code>，把对应预算写进 <code>snap.modules.budget</code></li><li>调用点显式声明时点：<code>prefetch.js:169</code> → <code>{ phase: 'tui' }</code>；<code>init.js:1218</code> → <code>{ phase: 'cli' }</code></li><li><code>BUDGET_MODULES</code> 保留为 <code>MODULE_BUDGET.frame</code> 的<strong>兼容别名</strong>（既有测试引用它）</li></ul>
+<p><strong>棘轮纪律</strong>：三个值只许下调。用设计锁测试钉住（要改大必须同时改测试，属有意动作）。</p>
+<h3 id="4-2-b-启动提示受众分流-补判据明细">4.2 B —— 启动提示受众分流 + 补判据明细<a class="anchor" href="#4-2-b-启动提示受众分流-补判据明细" aria-label="锚点">#</a></h3>
+<pre><code class="language-js"><span class="hljs-comment">// 模块图的处置是「改代码」，属开发者向；会话提示只报用户可处置的项。</span>
+<span class="hljs-comment">// 它仍在 khy doctor 的「驻留资源」段完整可见（同一把尺，受众不同）。</span>
+<span class="hljs-keyword">const</span> <span class="hljs-variable constant_">SESSION_AUDIENCE</span> = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Set</span>([<span class="hljs-string">&#x27;memory&#x27;</span>, <span class="hljs-string">&#x27;handles&#x27;</span>, <span class="hljs-string">&#x27;machine&#x27;</span>, <span class="hljs-string">&#x27;children&#x27;</span>, <span class="hljs-string">&#x27;dataHome&#x27;</span>]);
+<span class="hljs-keyword">const</span> over = <span class="hljs-title function_">assessResidency</span>(snap).<span class="hljs-title function_">filter</span>(<span class="hljs-function">(<span class="hljs-params">f</span>) =&gt;</span> f.<span class="hljs-property">exceeded</span> &amp;&amp; <span class="hljs-variable constant_">SESSION_AUDIENCE</span>.<span class="hljs-title function_">has</span>(f.<span class="hljs-property">id</span>));</code></pre>
+<p>每个 finding 新增 <code>reading</code> 字段（短串，带分子/分母）：</p>
+<table><thead><tr><th>finding</th><th>reading</th></tr></thead><tbody><tr><td>memory</td><td><code>RSS 240/220 MB</code></td></tr><tr><td>handles</td><td><code>定时器 22/20 · 监视 3/2</code></td></tr><tr><td>machine</td><td><code>空闲 12%/≥15%</code></td></tr><tr><td>dataHome</td><td><code>509/500 MB</code></td></tr></tbody></table>
+<p>⇒ 提示从 <code>…：活体句柄 活体资源 91 项，均超出判据。</code><br>变为 <code>…：活体句柄 定时器 22/20 · 监视 3/2，超出判据。</code></p>
+<hr>
+<h2 id="5-强度梯度">5. 强度梯度<a class="anchor" href="#5-强度梯度" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>阶段</th><th>强度</th><th>说明</th></tr></thead><tbody><tr><td>本方案</td><td><strong>无新增阻断</strong></td><td>纯判据分档 + 文案，不改任何退出码</td></tr><tr><td>doctor 的 <code>level</code></td><td>保持 <code>warn</code></td><td>不升 error（A4：低余量机器上用户没有可行解）</td></tr></tbody></table>
+<hr>
+<h2 id="6-防呆铁律">6. 防呆铁律<a class="anchor" href="#6-防呆铁律" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>铁律</th><th>可自动判的判据</th></tr></thead><tbody><tr><td>R1</td><td>模块预算只许下调</td><td>设计锁测试 <code>assert.equal(MODULE_BUDGET.cli, 1200)</code> 等三条</td></tr><tr><td>R2</td><td>净新增 <code>KHY_*</code> 门控 = 0</td><td><code>node scripts/ci/check-tui-gates.js</code> 计数不上升</td></tr><tr><td>R3</td><td>会话提示不得含 <code>modules</code></td><td>合成 <code>modules.loaded</code> 超标的快照 ⇒ <code>buildResidencyNotice()</code> 不含「模块图」</td></tr><tr><td>R4</td><td>同一把尺不得分叉</td><td>同一快照下 <code>assessResidency</code> 的 <code>modules.exceeded</code> 在 doctor / notice 路径下一致</td></tr><tr><td>R5</td><td>明细必须带分子分母</td><td>断言 <code>/定时器 \d+\/20/</code>、<code>/监视 \d+\/2/</code> 命中</td></tr></tbody></table>
+<hr>
+<h2 id="7-b-l2-三步接线清单-一次提交只做一步">7. B-L2 三步接线清单（一次提交只做一步）<a class="anchor" href="#7-b-l2-三步接线清单-一次提交只做一步" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>步</th><th>内容</th></tr></thead><tbody><tr><td><strong>标记</strong></td><td>本文档落盘 + 就近索引回写 + html 孪生件（本步）</td></tr><tr><td><strong>迁移</strong></td><td><code>runtimeResourceProbe.js</code> 分档 + <code>reading</code> 字段 + <code>prefetch.js</code> / <code>init.js</code> 传 phase</td></tr><tr><td><strong>收口</strong></td><td>同步 <code>tests/runtimeResourceProbe.test.js</code> + 新增设计锁用例（R1/R3/R5）</td></tr></tbody></table>
+<blockquote><p><strong>不新增检查器</strong> ⇒ 不触发 <code>check-wiring</code> 的四件接线，不动 <code>RULES-REGISTRY.json</code>、不改门档阶段表。</p></blockquote>
+<hr>
+<h2 id="8-验证与反例">8. 验证与反例<a class="anchor" href="#8-验证与反例" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>场景</th><th>预期</th><th>状态</th></tr></thead><tbody><tr><td>V1</td><td>合成快照 <code>modules.loaded = 1084</code>，phase=<code>cli</code></td><td><code>exceeded: false</code></td><td>✓ 实测（单测 <code>module budget is split by measurement phase</code>）</td></tr><tr><td>V2</td><td>同上，phase=<code>frame</code></td><td><code>exceeded: true</code></td><td>✓ 实测（同上）</td></tr><tr><td>V3</td><td>合成快照 <code>handles.by.Timeout = 22</code></td><td>提示含 <code>定时器 22/20</code></td><td>✓ 实测（单测 <code>notice names the offending readings…</code>）</td></tr><tr><td>V4</td><td>合成快照<strong>仅</strong> <code>modules</code> 超标</td><td><code>buildResidencyNotice() === null</code></td><td>✓ 实测（单测 <code>the module graph never fires the session notice</code>）</td></tr><tr><td>V5</td><td>真实 TUI 会话启动</td><td><strong>不再出现</strong>「资源 …模块图…」行</td><td>✓ 实测（node-pty；见下方对比）</td></tr><tr><td>V6</td><td><code>khy doctor</code></td><td>「模块图」不再恒 ⚠</td><td>✓ 实测（<code>✓ 已载入 1084 个模块（上限 1200）</code>）</td></tr></tbody></table>
+<p><strong>V5 的改前 / 改后对比</strong>（同一台机器、同一命令、真 TTY）：</p>
+<table><thead><tr><th></th><th>提示行</th></tr></thead><tbody><tr><td>改前</td><td><code>资源  已统计本会话进程（pid 17640，运行 39.5s）：模块图 已载入 2079 个模块 · 机器余量 …</code></td></tr><tr><td>改后</td><td><code>资源  已统计本会话进程（pid 28652，运行 36.7s）：机器余量 空闲 9%/≥15%，均超出判据。处置：先释放系统侧占用（关闭闲置浏览器/常驻应用）再评估</code></td></tr></tbody></table>
+<p>⇒ 模块图不再出现（<code>grep -c 模块图</code> = 0）；读数带上分子分母；只剩<strong>用户可处置</strong>的项。</p>
+<p><strong>铁律的实测状态</strong>：R1（设计锁）· R2（零新增门控：本次改动不在 <code>cli/tui/</code> 扫描面内）·<br>R3（模块图不进提示）· R4（同一把尺：<code>assessResidency</code> 未因受众过滤而变）· R5（明细带分子分母）<br>—— 全部 ✓ 实测。</p>
+<p><strong>负对照（§5.9993 纪律）</strong>：3 个注入各只红相关用例（去受众过滤→红 7；忽略 phase→红 9+11；<br>断 phase 接线→红 9），还原后逐字节一致。</p>
+<hr>
+<h2 id="9-复现方式">9. 复现方式<a class="anchor" href="#9-复现方式" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> D:/Portable/khy-os/runtime/node/backend
+NODE=<span class="hljs-string">&quot;D:/WorkBuddyData-Intl/.workbuddy-ai/binaries/node/versions/22.22.2-2/node.exe&quot;</span>
+<span class="hljs-string">&quot;<span class="hljs-variable">$NODE</span>&quot;</span> bin/khy.js doctor 2&gt;&amp;1 | grep -A 8 <span class="hljs-string">&quot;驻留资源&quot;</span>
+<span class="hljs-string">&quot;<span class="hljs-variable">$NODE</span>&quot;</span> --<span class="hljs-built_in">test</span> tests/runtimeResourceProbe.test.js</code></pre>
+<p>真实 TUI 会话的读数用仓库自带 <code>node-pty</code> 采集（<code>prefetch.js</code> 的提示只在真 TTY 下发出）：<br>spawn <code>node bin/khy.js</code> → 自动回车推进交互提示 → 捕获含「已统计本会话进程」的行。<br>探针一次性，跑完即删。</p>
+<hr>
+<h2 id="10-未决问题-需人裁决-本方案不代拍板">10. 未决问题（需人裁决，本方案不代拍板）<a class="anchor" href="#10-未决问题-需人裁决-本方案不代拍板" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>问题</th><th>代价</th></tr></thead><tbody><tr><td>Q1</td><td><del><code>cli</code> / <code>tui</code> 两个基线取多少？</del> <strong>已按本文的 1200 / 2200 落地</strong>（2026-10-04）。如需调整，改 <code>MODULE_BUDGET</code> 三行 + 同步设计锁测试即可</td><td>已落地，仍可调</td></tr><tr><td>Q2</td><td>是否给 <code>MODULE_BUDGET</code> 加一条 CI 棘轮（读基线文件、只降不升）？本方案只用设计锁测试，<strong>无独立守卫</strong></td><td>加守卫 = 四件接线，成本 ↑</td></tr><tr><td>Q3</td><td><code>frame</code> 档是否有人真的消费？（目前只有 178 的 perf 探针，且它不是 CI）</td><td>若无人消费，可只留注释不留常量</td></tr></tbody></table>
+<hr>
+<h2 id="11-变更日志">11. 变更日志<a class="anchor" href="#11-变更日志" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>日期</th><th>变更</th></tr></thead><tbody><tr><td>2026-10-04</td><td>初版。定位提示发出链（<code>runtimeResourceProbe.js:268</code> + <code>prefetch.js:169</code>）与判据出处（178 §7 首帧目标）；实测三档读数（981 首帧 / 1084 doctor / 2079 真实 TUI 会话）证实<strong>判据错配</strong>；抓到 <code>buildResidencyNotice:271</code> 丢弃判据明细的 UX 缺陷；给出 A（分档）+ B（受众分流 + 明细）方案，含 4 条公理、4 条边界、5 条铁律、6 条验证、3 项未决。</td></tr><tr><td>2026-10-04</td><td><strong>A + B 落地</strong>。<code>runtimeResourceProbe.js</code>：<code>BUDGET_MODULES=1000</code> → <code>MODULE_BUDGET{frame:1000,cli:1200,tui:2200}</code> + <code>DEFAULT_PHASE</code> + <code>_moduleBudget()</code>；<code>collectModuleGraph(phase)</code> / <code>collectRuntimeCensus(opts.phase)</code>；5 个 finding 各加 <code>reading</code>；<code>SESSION_AUDIENCE</code> 过滤（<code>modules</code> 不进会话提示）；<code>buildResidencyNotice</code> 改用 <code>f.reading</code>（不再 <code>split('（')[0]</code> 丢判据）。接线：<code>prefetch.js:169</code> → phase=tui、<code>init.js:1218</code> → phase=cli。测试 7 → <strong>13</strong>。<strong>负对照 3/3 被精确捕获</strong>（去受众过滤→红 7；忽略 phase→红 9+11；断 phase 接线→红 9），还原逐字节一致。端到端：<code>khy doctor</code> 的模块图由 <code>⚠ 1084/1000</code> 转为 <code>✓ 1084/1200</code>。</td></tr><tr><td>2026-10-04</td><td><strong>回归 + V5 端到端补测</strong>。相关套件 <strong>54/54</strong>（<code>prefetchRuntimeFootprint</code> / <code>updateWiring</code> / <code>runtimeResourceProbe</code> / <code>doctorReport</code> / <code>startupBeats</code>）。真 TTY 会话实测：改前 <code>模块图 已载入 2079 个模块 · 机器余量 …</code> → 改后 <code>机器余量 空闲 9%/≥15%，均超出判据</code>（模块图消失，读数带分子分母）。§8 表补「状态」列，V1–V6 与 R1–R5 <strong>全部 ✓ 实测</strong>。</td></tr></tbody></table>
+<hr>
+<h2 id="12-落地偏离表-方案-4-写的那样-vs-实际做法">12. 落地偏离表（方案 §4 写的那样 vs 实际做法）<a class="anchor" href="#12-落地偏离表-方案-4-写的那样-vs-实际做法" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>方案原写</th><th>实际做法</th><th>依据</th></tr></thead><tbody><tr><td>D1</td><td><code>BUDGET_MODULES</code> <strong>保留为</strong> <code>MODULE_BUDGET.frame</code> 的兼容别名</td><td><strong>删除</strong> <code>BUDGET_MODULES</code>，只留 <code>MODULE_BUDGET</code></td><td><code>AGENTS.md</code>「手搓风格约定」：只有一个实现就不要建兼容 shim；引用它的只有本方案的测试，已同步改</td></tr><tr><td>D2</td><td>只给「会超标」的 finding 加 <code>reading</code></td><td><strong>全部 5 个</strong> finding 都加（含 <code>children</code> / <code>dataHome</code>）</td><td>契约统一，避免「有的项有 reading 有的没有」导致 <code>undefined</code> 静默进提示</td></tr><tr><td>D3</td><td>（未列）</td><td>新增一条<strong>接线判据</strong> <code>census threads the phase through to the module budget</code></td><td>负对照暴露的盲区：原「分档」用例自造 <code>budget</code>，<code>collectRuntimeCensus</code> 漏传 <code>phase</code> 时它照样绿 ⇒ 补端到端判据（§5.8「字段存在但没人写」形态）</td></tr></tbody></table>
+<blockquote><p>⚠ <strong>本轮未做</strong>：Q2（CI 棘轮守卫）、Q3（<code>frame</code> 档是否有消费者）<strong>仍是决策而非遗漏</strong>；<br>未新增任何检查器，故不触发 <code>check-wiring</code> 四件接线，<code>RULES-REGISTRY.json</code> 与门档阶段表一字未动。</p></blockquote>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-179] khy-os 统一登录体系 — GitHub Gitee OAuth + 登录方式可选 + 按需登录 + 启动优化.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-179] khy-os 统一登录体系 — GitHub/Gitee OAuth + 登录方式可选 + 按需登录 + 启动优化</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-181] 通道兜底甩出资格与披露统一策略.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-181] 通道兜底（甩出）资格与披露统一策略</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-180] 驻留资源提示判据错配修复方案.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

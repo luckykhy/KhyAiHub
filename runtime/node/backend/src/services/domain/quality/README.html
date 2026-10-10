@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>quality — 性能归因、产物工具与元约束求解（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>quality<span class="sep">›</span>quality — 性能归因、产物工具与元约束求解（D2）</div>
+      <header class="hero reveal"><h1>quality — 性能归因、产物工具与元约束求解（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#quality-性能归因-产物工具与元约束求解-d2">quality — 性能归因、产物工具与元约束求解（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="quality-性能归因-产物工具与元约束求解-d2">quality — 性能归因、产物工具与元约束求解（D2）<a class="anchor" href="#quality-性能归因-产物工具与元约束求解-d2" aria-label="锚点">#</a></h1>
+<p>业务上下文：<code>/perf-issue</code> 的报告生成、模型的 <code>Artifact</code> 工具（读写产物），<br>以及工具调用前的元约束（能力档位、风险分级、工具漏斗闸）。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong>跑 <code>/perf-issue</code> 的人</strong>：<code>constants/commandSchema.js:1045-1050</code> →</li></ul>
+<p><code>cli/handlers/perfIssue.js:29</code> 取 <code>perf/perfReport.js</code>。</p>
+<ul><li><strong>用 Artifact 工具的模型</strong>：<code>tools/ArtifactTool/index.js:4</code> 取</li></ul>
+<p><code>artifact/artifactPlan.js</code>。</p>
+<ul><li><strong>每次工具调用的约束</strong>：<code>services/tool/toolCalling.js:2448</code>；</li></ul>
+<p>目录侧 <code>services/domain/catalog/capabilityMatrix/descriptors.js:245</code><br>  以 <code>invoke: toolFunnelGuard.enforce</code> 挂上漏斗闸。</p>
+<ul><li>壳：<code>services/{metaConstraint,artifact}/index.js:4</code>。</li></ul>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p>本目录 7 个文件<strong>零 IO</strong>（<code>fs</code> / <code>net</code> / <code>child_process</code> 在本目录内 grep 无命中）：<br><code>perfReport.js</code> 只 require <code>utils/finiteNumber</code>，把「慢在哪」归因成可打印的<br>结构化结论（<code>analyzePerf</code> / <code>formatPerfReport</code>）；<code>artifactPlan.js</code> 把工具调用<br>变成纯计划（<code>validateInput / deriveSafeName / buildCreateResult / buildListResult /<br>buildErrorResult / describeActivity</code>——最后这个是给状态行用的「动作+目标」文案源）；<br><code>metaConstraint/</code> 是判定四件套：<code>capabilityProbe</code>（<code>BANDS</code> / <code>bandForReasoning</code> /<br><code>tightenBand</code>）、<code>riskClassifier</code>（<code>RISK</code> / <code>RISK_RANK</code> / <code>classify</code>）、<br><code>constraintMatrix</code>（<code>MATRIX</code> / <code>DOCTRINE</code> / <code>solveFloor</code>）、<br><code>toolFunnelGuard.enforce</code>。跨单元依赖只有三条且都是<strong>取判据</strong>：<br><code>../../project/metaplan/{constraintInjection,constraintStrategy,irreversibleSignatures}</code>、<br><code>../../security/marshal/capabilityVector</code>、<code>../../../execApproval</code>。<br>零 IO 是本单元的立场：约束求解一旦读盘，「为什么这次被拦」就无法复算。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/services/perf/perfReport.test.js               <span class="hljs-comment"># 16 tests / 16 pass / 0 fail</span>
+node --<span class="hljs-built_in">test</span> tests/services/artifact/artifactPlan.test.js         <span class="hljs-comment"># 25 tests / 25 pass / 0 fail</span>
+node --<span class="hljs-built_in">test</span> tests/services/metaConstraint/metaConstraint.test.js <span class="hljs-comment"># 24 tests / 24 pass / 0 fail</span></code></pre>
+<h2 id="已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）<a class="anchor" href="#已知缺陷-登记-不在本单元擅自修" aria-label="锚点">#</a></h2>
+<p><code>tests/services/metaConstraint/toolFunnelGuard.test.js</code> 存在但未在本卡复跑；<br>漏斗闸的拦截样本量属规则 8 的 S1 观察账，见<br><code>docs/10_规范/registry/FEATURE-OWNERSHIP.json</code>。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/services/domain/quality/perf/README.html"><div class="dir">← 上一篇</div><div class="ttl">perfReport</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/services/domain/query/README.html"><div class="dir">下一篇 →</div><div class="ttl">query — 检索必要性、续写、压缩管线与搜索证据链（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/quality/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+#!/usr/bin/env node
+/**
+ * Khy-OS 文档站校验器（B2 验证门）
+ * ------------------------------------------------------------------
+ * 断言三件事，任一不满足即以非零退出（红灯）：
+ *   1) 每个参与生成的 .md 都有一份同名 .html（docs 内在 docs/html/ 镜像树，
+ *      docs 外与 .md 旁置——落点由 build_docs_site.js 的 htmlRelFor 统一定义）。
+ *   2) 每个生成的 .html 里指向本地文件的链接（href/src）都能落到真实存在的文件。
+ *   3) 离线资源齐全：docs/19_资产 下 mermaid.min.js / docs-site.css / docs-site.js /
+ *      hljs 主题 css / nav-data.js 都在。
+ *
+ * 用法：node scripts/docs/verify_docs_site.js
+ * 依赖：先跑过 node scripts/docs/build_docs_site.js。
+ */
+"use strict";
+
+const fs = require("fs");
+const path = require("path");
+
+const ROOT = path.resolve(__dirname, "..", "..");
+// 孪生落点与构建器同源（docs 内 → docs/html 镜像树；docs 外 → 旁置），勿另写副本。
+const { htmlRelFor } = require("./build_docs_site.js");
+const SKIP_DIRS = new Set([
+  ".git", "node_modules", "build", "dist", ".venv", "venv", "coverage",
+  "__pycache__", ".pytest_cache", ".tox", "muya-embed", "national-exam-site",
+  "_archive_已删除孤儿引擎", ".claude", ".khy",
+  // ⚠️ 必须与 build_docs_site.js 的 SKIP_DIRS 逐项保持一致（两份是各自维护的副本，
+  // 只改一处会立刻漂移：2026-09-15 实测只改 build 后，verify 报出 352 处误报）。
+  ".research-tmp",
+]);
+// 路径片段命中即跳过（bundled 是打包时生成的副本，非源文；
+// `/housekeeping/` 是 [DESIGN-LAY-003] HK-3 隔离区，见 build_docs_site.js 同处注释）
+// `/_产物/` 是 [DESIGN-LAY-005] §1.4 登记的根级例外「工作产物暂存区」（未跟踪），
+// 理由与实测同 build_docs_site.js 同处注释 —— 此处只保留清单本身。
+// `/docs/html/` 是 html 孪生镜像树（2026-10-05 裁决），树里没有 .md 源文。
+// `/works/data/` 是本机运行时数据（gitignore），不参与生成，理由见 build 同处注释。
+const SKIP_PATH_PARTS = ["/bundled/", "/19_资产/", "/housekeeping/", "/.khyos/", "/.khyquant/", "/_产物/", "/docs/html/", "/works/data/"];
+
+function walkMarkdown(dir, acc) {
+  let entries;
+  try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (_) { return acc; }
+  for (const e of entries) {
+    const full = path.join(dir, e.name);
+    const rel = path.relative(ROOT, full).split(path.sep).join("/");
+    if (e.isDirectory()) {
+      if (SKIP_DIRS.has(e.name)) continue;
+      if (SKIP_PATH_PARTS.some((p) => ("/" + rel + "/").includes(p))) continue;
+      walkMarkdown(full, acc);
+    } else if (e.isFile() && /\.md$/i.test(e.name)) {
+      // 根级 .md 已停用 .html 孪生（2026-09-28 裁决，见 build_docs_site.js 同处注释），
+      // 配对判据必须同步豁免，否则 6 个根级 .md 各报一条「缺少 HTML」error。
+      if (!rel.includes("/")) continue;
+      if (SKIP_PATH_PARTS.some((p) => ("/" + rel).includes(p))) continue;
+      acc.push(rel);
+    }
+  }
+  return acc;
+}
+
+const errors = [];
+const warnings = [];
+
+// ---- 1) 每个 md 有对应 html ----
+const mds = walkMarkdown(ROOT, []).sort();
+const htmlRels = [];
+for (const rel of mds) {
+  const htmlRel = htmlRelFor(rel);
+  if (!fs.existsSync(path.join(ROOT, htmlRel))) {
+    errors.push(`缺少 HTML：${htmlRel}（源：${rel}）`);
+  } else {
+    htmlRels.push(htmlRel);
+  }
+}
+
+// ---- 2) 每个 html 的本地链接都能解析 ----
+// 注意：docs/index.html 是站点首页，没有对应的 .md 兄弟文件，若不显式纳入
+// 就会漏检其资源/卡片链接。这里把它并入待检 html 列表。
+const INDEX_HTML = "docs/index.html";
+if (fs.existsSync(path.join(ROOT, INDEX_HTML)) && !htmlRels.includes(INDEX_HTML)) {
+  htmlRels.push(INDEX_HTML);
+}
+const LINK_RE = /(?:href|src)\s*=\s*"([^"]+)"/g;
+let checkedLinks = 0;
+for (const htmlRel of htmlRels) {
+  const abs = path.join(ROOT, htmlRel);
+  const html = fs.readFileSync(abs, "utf8");
+  const dir = path.dirname(abs);
+  let m;
+  while ((m = LINK_RE.exec(html)) !== null) {
+    let href = m[1];
+    if (/^(https?:|mailto:|data:|#|\/\/|javascript:)/i.test(href)) continue;
+    // 去掉锚点和查询
+    href = href.split("#")[0].split("?")[0];
+    if (!href) continue;
+    checkedLinks += 1;
+    // 解码 %20 等，落到真实文件路径
+    let target;
+    try { target = path.resolve(dir, decodeURIComponent(href)); } catch (_) { target = path.resolve(dir, href); }
+    if (!fs.existsSync(target)) {
+      errors.push(`断链：${htmlRel}\n        -> ${m[1]}\n        (解析为 ${path.relative(ROOT, target)})`);
+    }
+  }
+}
+
+// ---- 3) 资源齐全 ----
+const REQUIRED_ASSETS = [
+  "docs/19_资产/site/mermaid.min.js",
+  "docs/19_资产/site/docs-site.css",
+  "docs/19_资产/site/docs-site.js",
+  "docs/19_资产/site/hljs-github-dark.min.css",
+  "docs/19_资产/site/nav-data.js",
+  "docs/index.html",
+];
+for (const a of REQUIRED_ASSETS) {
+  if (!fs.existsSync(path.join(ROOT, a))) errors.push(`缺少资源：${a}`);
+}
+
+// ---- 报告 ----
+console.log(`[verify] 源 Markdown：${mds.length} · 生成 HTML：${htmlRels.length} · 校验本地链接：${checkedLinks}`);
+if (warnings.length) {
+  console.log(`[verify] 警告 ${warnings.length}：`);
+  warnings.slice(0, 20).forEach((w) => console.log("  - " + w));
+}
+if (errors.length) {
+  console.error(`\n[verify] ✗ 失败：${errors.length} 个问题`);
+  errors.slice(0, 40).forEach((e) => console.error("  ✗ " + e));
+  if (errors.length > 40) console.error(`  …还有 ${errors.length - 40} 个`);
+  process.exit(1);
+}
+console.log("[verify] ✓ 全部通过：每个 md 都有 html，所有本地链接可达，资源齐全。");

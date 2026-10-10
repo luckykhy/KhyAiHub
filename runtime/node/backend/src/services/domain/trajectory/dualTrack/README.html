@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>dualTrack — 双轨热插拔运行时（D2 功能单元） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>trajectory<span class="sep">›</span>dualTrack<span class="sep">›</span>dualTrack — 双轨热插拔运行时（D2 功能单元）</div>
+      <header class="hero reveal"><h1>dualTrack — 双轨热插拔运行时（D2 功能单元）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#dualtrack-双轨热插拔运行时-d2-功能单元">dualTrack — 双轨热插拔运行时（D2 功能单元）</a></li><li class="lvl-2"><a href="#逐成员">逐成员</a></li><li class="lvl-2"><a href="#消费者-fanin-1-实测-2026-09-28">消费者（fanIn = 1，实测 2026-09-28）</a></li><li class="lvl-2"><a href="#契约-每条都有具名测试兜">契约（每条都有具名测试兜）</a></li><li class="lvl-2"><a href="#怎么跑">怎么跑</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="dualtrack-双轨热插拔运行时-d2-功能单元">dualTrack — 双轨热插拔运行时（D2 功能单元）<a class="anchor" href="#dualtrack-双轨热插拔运行时-d2-功能单元" aria-label="锚点">#</a></h1>
+<p>一句话：把「模型自适应 + 官方核心/用户扩展双轨」收敛成一个可被调度器调用的编排门面 <code>DualTrackRuntime</code>，落 DESIGN-ARCH-033 的四条宪法红线——<strong>脆弱解析致命</strong>（红线1）、<strong>未知指令静默吞没</strong>（红线2）、<strong>假设终态/白屏崩溃</strong>（红线3）、<strong>官方更新覆盖用户轨</strong>（红线4）、<strong>覆写污染核心源</strong>（红线5）。核心轨在 <code>assemble</code> 后密封不可改写；用户/模型 DIY 只能在影子扩展轨（<code>user_patch/</code>）里以 Override 覆盖，永不触碰官方源。</p>
+<p>清单：<code>khy.module.json</code>（<code>domain</code> / <code>mayDependOn</code> / <code>fanIn</code> / <code>lifecycle.stage</code> 四字段被 <code>npm run check:layout</code> 的 entry-buffer 规则读取，其余给人看）。</p>
+<h2 id="逐成员">逐成员<a class="anchor" href="#逐成员" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>角色</th><th>仓内 require</th><th>同名测试</th></tr></thead><tbody><tr><td><code>core/coreActions.js</code></td><td>官方核心轨内置动作（<code>say</code> / <code>read_file</code> / <code>noop</code>）+ 接入点契约 <code>CORE_ENTRY_POINTS</code>；冻结、纯函数</td><td>无（node 内建亦无）</td><td><code>core/coreActions.test.js</code></td></tr><tr><td><code>actionRegistry.js</code></td><td>双轨注册表：核心轨（密封只读）+ 用户覆写影子轨；解析优先级 override &gt; core &gt; unknown 兜底；核心完整性断言</td><td>无</td><td><code>actionRegistry.test.js</code></td></tr><tr><td><code>unknownActionView.js</code></td><td>未知指令安全占位符（与 UI 框架无关的数据描述符）；原始视图截断至 4000 字符；任何输入恒 renderable</td><td>无</td><td><code>unknownActionView.test.js</code></td></tr><tr><td><code>degradeStateMachine.js</code></td><td>降级状态机 <code>decideFlow</code>：已知+可调用 → PROCEED（auto），其余一律 MANUAL_CONFIRM（human），全定义、永不抛</td><td><code>./unknownActionView</code></td><td><code>degradeStateMachine.test.js</code></td></tr><tr><td><code>lenientResponseParser.js</code></td><td>宽松解析模型响应：未知字段捕获、非对象动作封装、坏 JSON 当 text 兜底，永不抛（红线1/2/3）</td><td>无</td><td><code>lenientResponseParser.test.js</code></td></tr><tr><td><code>extensionLoader.js</code></td><td>装载用户扩展轨（manifest.json）+ 沙箱边界 <code>assertWithinUserTrack</code>；单个扩展坏掉绝拖不垮基座</td><td><code>path</code>、<code>./actionRegistry</code></td><td><code>extensionLoader.test.js</code></td></tr><tr><td><code>extensionWriter.js</code></td><td>模型 DIY 授权写入扩展轨；授权闸 + 沙箱闸双保险</td><td><code>path</code>、<code>./actionRegistry</code>、<code>./extensionLoader</code></td><td><code>extensionWriter.test.js</code></td></tr><tr><td><code>updateGuard.js</code></td><td>官方更新防破坏协议：<code>planOfficialUpdate</code>（fail-closed）/ <code>detectBreakingChange</code>（迁移提示）/ <code>applyOfficialUpdate</code>（仅安全才施工）</td><td><code>path</code>、<code>./extensionLoader</code></td><td><code>updateGuard.test.js</code></td></tr><tr><td><code>index.js</code></td><td><code>DualTrackRuntime</code> 门面：assemble / parse / resolveAction / dispatch / authorizedModelWrite / planUpdate / applyUpdate / checkBreaking / coreIntact</td><td><code>path</code>、单元内 6 件</td><td><code>index.test.js</code></td></tr></tbody></table>
+<p>require 全为单元内互引或 node 内建（<code>path</code> / <code>fs</code>），<strong>无一条伸向 D3/D1</strong>，故清单 <code>mayDependOn</code> 只声明 <code>[D2]</code>（见 <code>khy.module.json</code> 的 <code>_mayDependOn_note</code> / <code>_deviation_note</code>）。</p>
+<h2 id="消费者-fanin-1-实测-2026-09-28">消费者（fanIn = 1，实测 2026-09-28）<a class="anchor" href="#消费者-fanin-1-实测-2026-09-28" aria-label="锚点">#</a></h2>
+<ul><li><code>services/backend/src/services/dualTrack/index.js</code> —— D1 侧的兼容别名壳，<code>module.exports = require('../domain/trajectory/dualTrack')</code>。按 <code>[DESIGN-LAY-008]</code> 第 0 步约定，纯 re-export 壳仍算真实入口，故如实计入 fanIn。</li></ul>
+<p>文本提及 <code>dualTrackForge</code> 的文件（<code>security/adversarial/*</code>、<code>data/reverseEngineer/*</code>）指向的是<strong>兄弟单元</strong> <code>trajectory/dualTrackForge/</code>，不是本单元，且均为注释而非 require，不计入。本单元当前是「机制已就位、尚未被业务广泛接线」的受保护基座，<code>fanIn=1</code> 是真实读数。</p>
+<h2 id="契约-每条都有具名测试兜">契约（每条都有具名测试兜）<a class="anchor" href="#契约-每条都有具名测试兜" aria-label="锚点">#</a></h2>
+<ol><li><strong>核心轨密封不可改写</strong>：<code>seal()</code> 后任何 <code>registerCore</code>（含未注册过的合法 type）抛 <code>CorePollutionError</code>；重复注册同 type 亦抛；<code>registerOverride</code> 只写影子层，核心键集合逐字节不变 → <code>actionRegistry.test.js</code></li><li><strong>解析优先级 + 未知兜底</strong>：<code>resolve</code> 恒返回 <code>{type, handler, origin, isKnown, source}</code>，未知 → <code>origin:'unknown', isKnown:false, handler:null</code>，绝不 <code>undefined</code> 也不抛；override 压过 core → <code>actionRegistry.test.js</code></li><li><strong>状态机全定义 + PROCEED 门槛</strong>：<code>decideFlow</code> 要 PROCEED 必须同时满足 <code>isKnown===true</code> <strong>且</strong> <code>handler</code> 为函数；其余（含 resolution 缺失、isKnown 但 handler 非函数）一律降级 MANUAL_CONFIRM 并交还控制权；遍历任意输入组合无一次返回 undefined → <code>degradeStateMachine.test.js</code></li><li><strong>占位符恒可渲染 + 截断</strong>：任意输入（含 null/undefined/循环引用）都产出 <code>renderable:true</code>；原始视图超 4000 字符按 <code>…(已截断，共 N 字符)</code> 截断 → <code>unknownActionView.test.js</code></li><li><strong>宽松解析永不致命</strong>：坏 JSON / 非对象根 / 非对象动作 / 缺类型 / 未知键 / 非数组 actions 全部走降级或捕获路径，顶层未知字段进 <code>unknownFields</code>、动作未知键进 <code>_unknownKeys</code>，warning 同步注入的 logger 且 logger 抛错不影响解析 → <code>lenientResponseParser.test.js</code></li><li><strong>装载优雅降级 + 沙箱</strong>：无轨 / 读失败 / manifest 坏 JSON / 单扩展坏，基座恒存活（记入 <code>skipped</code>/<code>errors</code>）；<code>module</code> 路径解析越出用户轨即抛 <code>CorePollutionError</code> 并被捕获跳过，越界模块<strong>绝不</strong>被注册 → <code>extensionLoader.test.js</code></li><li><strong>写入双闸</strong>：授权闸（<code>authorized !== true</code>）在<strong>任何 fs 调用之前</strong>拒绝；沙箱闸拒绝越界/绝对轨外路径；成功路径经注入 fs 断言 mkdir/writeFile 实参 → <code>extensionWriter.test.js</code></li><li><strong>更新 fail-closed</strong>：任一文件越出核心轨或命中受保护用户轨（含段名兜底）→ 整包 <code>safe:false</code>；<code>applyOfficialUpdate</code> 见 <code>safe!==true</code> 拒绝施工、写盘桩被调用即炸；接入点被移除时 <code>detectBreakingChange</code> 产多行迁移提示，绝不静默作废 → <code>updateGuard.test.js</code></li><li><strong>门面编排</strong>：<code>assemble</code> 注册注入的 coreActions → 密封 → 记录 loadReport；<code>dispatch</code> 未知动作绝不自主执行、executor 抛错转 MANUAL_CONFIRM 兜底并保留其 <code>Error.code</code>；<code>coreIntact</code> 在核心键漂移后返回 <code>false</code>；<code>checkBreaking</code> 用 <code>CORE_ENTRY_POINTS</code> 做兼容性差分 → <code>index.test.js</code></li></ol>
+<h2 id="怎么跑">怎么跑<a class="anchor" href="#怎么跑" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-comment"># 共置契约测试（node:test 方言；Windows 下必须逐个列文件名，目录参数会被当模块路径）</span>
+<span class="hljs-built_in">cd</span> services/backend/src/services/domain/trajectory/dualTrack
+node --<span class="hljs-built_in">test</span> actionRegistry.test.js degradeStateMachine.test.js unknownActionView.test.js \
+  lenientResponseParser.test.js extensionLoader.test.js extensionWriter.test.js \
+  updateGuard.test.js index.test.js core/coreActions.test.js</code></pre>
+<p>全部测试对 fs / requireImpl / pathImpl / logger 走桩注入，不发网络、不读写真实 <code>user_patch/</code>、不依赖开发者绝对路径。</p>
+<p>本单元的记录动作 = <strong>9 份同名同目录测试 + 1 份清单 + 本 README</strong>：按守卫实测，每补一份共置测试 <code>functional-unit</code> 降 1，一份覆盖全单元的清单 + 齐全晋级判据使 <code>entry-buffer</code> 降 9（9 个源文件从「无记录」转为「已记录 stable」）。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/services/domain/trajectory/dualTrack/core/README.html"><div class="dir">← 上一篇</div><div class="ttl">coreActions</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/services/domain/trajectory/README.html"><div class="dir">下一篇 →</div><div class="ttl">trajectory — 录制、回放、双轨与 provenance 判定（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/trajectory/dualTrack/README.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+{
+  "_note": "功能单元清单（[RESEARCH-018] §2.3 模板第 3 件 / 5-3-1 §3）。执行器 scripts/ci/check-repo-layout.js 的 entry-buffer 规则读本文件的 domain / mayDependOn / fanIn / lifecycle.stage 四个字段，其余字段是给人读的。字段真源与判据枚举见 docs/10_规范/registry/DOMAIN-DEPS.json 的 _entry_buffer 块。",
+  "name": "docsFreshness",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "D2 的名义边界是 [D2, D3]（DOMAIN-DEPS.json domains.D2.mayDependOn），本清单不宽于它。实测 5 个源文件的仓内 require 全部落在名义内：唯一的跨成员边都在 D2 单元内部（docsFreshnessRunner.js → ./docPathIndex 两处、惰性 ./docProductPlan、惰性 ./docMarkerSync）；三条 D3 边全部来自 runner（src/utils/gitSoftExec 顶层 require，src/constants/commandSchema 与 src/constants/serviceDefaults 在 _gatherSsotDeps 里惰性 require）。四个叶子（docPathIndex / docProductPlan / docMarkerSync / docSuggestDraft）源码里连 `require(` 都不出现，由各份同名测试的「纯度锁」守住。runner 另有两处 package.json 读取（repoRoot 拼接的主路径 + 模块相对 ../../../../../package.json 的回退），取的是版本号数据，不构成域边。node 内建 child_process/fs/path 不计为域边。名义与实测一致，无越界边需要单独登记。",
+  "_deviation_note": "依赖面没有越界，但功能面有四处实测偏差，如实登记而不是修在清单里：① L1 的 ROOT_SEGMENTS 缺 platform / software —— 实测 docs/**/*.md 正文有 103 处 `platform/...`、50 处 `software/...` 反引号引用被 _cleanSourcePath 判非法丢弃（探针 .khyos/tmp/b23-rootgap-probe.js），同时表里 src/bin/lib/packages/frontend 五个段在本仓根并不存在，其索引键永远匹配不上 git diff 路径（461 处 `src/...` 形式引用属此类）→ 复核提醒有结构性假阴。② L2 的 pdf-only 分支把 mode 定成 null（全量），runner 据此不带 flag 调 scripts/docs/md-to-pdf.js，而该脚本无 flag 时默认同时写 .html 与 .pdf（md-to-pdf.js:581/585）且从不使用它自己的 --pdf-only → 违反 docProductPlan.js 头部「绝不新建产物」红线；判据与原始输出见 .khy/feedback/b23-docsFreshness/repro-before.txt。③ 再导出壳 services/backend/src/services/docsFreshness/index.js re-export 本单元 5 个成员，但全仓零消费者（实测见 _fanIn_note）——一张指向本单元的死地址，按 [DESIGN-LAY-008] 仍如实计入 fanIn 并标注其下游为空。④ docSuggestDraft.buildSuggestionPrompt 无生产调用者：handler --ai 分支只判门控就打印「已生成提示词模板」，从未调用构造器（cli/handlers/docs.js:774-781）。摘掉①②的办法分别是补/删 ROOT_SEGMENTS 段与给 pdf-only 传 --pdf-only，都在叶子内改语义，需人拍板；本清单不为其开豁免。",
+  "fanIn": 2,
+  "fanInEvidence": [
+    "services/backend/src/cli/handlers/docs.js",
+    "services/backend/src/services/docsFreshness/index.js"
+  ],
+  "_fanIn_note": "2 个仓内消费者（实测 2026-09-28 探针 .khyos/tmp/b23-docsFreshness-fanin.js：对 `git ls-files` 全量 .js（排除 *.test.js 与本单元自身）解析每一条相对 require，落到本单元目录的才计数，去重后按文件计）。docs.js 取 docsFreshnessRunner（:694）与 docSuggestDraft（:774），即 `khy docs check` 的正门；services/docsFreshness/index.js 是归位遗留的再导出壳（:4-8 re-export 全部 5 个成员），实测它自己的消费者为 0 —— 壳仍是真实 require 边，故计入，但下游为空这件事写在 _deviation_note ③。注释里提到本单元的文件（src/utils/gitSoftExec.js 的头注释、services/domain/docs/README.md）不计入：探针只认 require 解析结果，不认文本提及。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-28",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null,
+    "_stage_note": "stable 的依据是三条晋级判据此刻都在盘上（DOMAIN-DEPS.json _entry_buffer 的 promotionCriteria：有测试 + 有 README + fan-in 声明）：单元级 README.md、整数 fanIn=2、5 个源文件各有同名同目录测试（78 个 node:test 用例，实测全绿）。provenance 如实写明它是机制建立后补记的存量：本单元由文档新鲜度改造（三层确定性 + 一层 AI 建议）落进 D2/docs/docsFreshness/，早于入口缓冲守卫，晋级缓冲区从未被经过，故 enteredVia: null。选 stable 而非 staged 的理由：单元已接线进 CLI（handler docs.js 消费 runDocsFreshness），四个门控语义稳定，默认 warn-only 不阻断提交。⚠ stage 认证的是「件齐且可用」，不是「零缺陷」：_deviation_note ①②③④ 四条未闭，其中 ② 与叶子自己声明的红线相冲突。"
+  },
+  "contract": {
+    "purity": "四个叶子为纯函数面（零 IO、确定性、绝不抛、env 一律注入，且源码里零 require）：docPathIndex（正文解析/反向索引/嫌疑匹配）、docProductPlan（变更 md × committed 产物 → 计划）、docMarkerSync（标记块三态处置 + buildValueMap SSOT 表）、docSuggestDraft（提示词文本构造）；只有 docsFreshnessRunner.js 有 IO，且它自己不解释语义",
+    "ioOwner": "runner 是本单元唯一的 IO 面：读 docs/**.md（跳过 node_modules/.git/bundled/dist/build/.ai/coverage，单篇 >512KB 不收）、相对 require 三个 D3 模块取 SSOT、fix 模式下 fs.writeFileSync 标记块 + git add 该文件、必要时 execFileSync(process.execPath, [md-to-pdf, md, flag?])（timeout 60s，失败 fail-soft 留旧产物）。门控关或根目录不存在时不写一个字节；默认 warn-only，productActions/markerActions/restaged 恒空",
+    "injectionPoints": [
+      "docsFreshnessEnabled(env) / docRegenEnabled(env) / docMarkerSyncEnabled(env) / docSuggestEnabled(env)：四个开关都接受显式 env 对象，显式传入时进程环境必须无效（可测性契约，四份叶子测试各自锁定）",
+      "runDocsFreshness(repoRoot, {env, staged, fix, markerSync, gitSoft})：gitSoft 可整体替换（测试全部注入假 git，绝不跑真 git）",
+      "collectChangedSources(cwd, {staged, gitSoft})：命令数组形态（--diff-filter=ACMR / --cached 组合）由测试逐字锁定",
+      "syncManagedRegions(docText, valueMap) + buildValueMap(deps)：SSOT 值由调用方注入，叶子从不自己 require 常量表",
+      "matchStaleSuspects(changedSourceRels, index)：索引由 buildDocPathIndex 构造，匹配是纯查询"
+    ],
+    "gates": [
+      "KHY_DOCS_FRESHNESS：总闸，默认开；{0,false,off,no} 关（trim+lowercase 后比较）→ runner 直接返回 ran:false 空壳",
+      "KHY_DOCS_REGEN：Layer 2 子闸，默认开，同上方言；由 docProductPlan.docRegenEnabled 自判",
+      "KHY_DOCS_MARKER_SYNC：Layer 3 子闸，默认开，同上方言；由 docMarkerSync.docMarkerSyncEnabled 自判；另有 opts.markerSync === false 的显式关闭",
+      "KHY_DOCS_AI_SUGGEST：Layer 4 子闸，**默认关**，仅 {1,true,on,yes} 开（方向与上面三个相反，且布尔 true/数字 1 算开）",
+      "KHY_DOCS_FRESHNESS_BLOCK / --ci：退出码由 handler 决定，不在本单元内",
+      "KHYQUANT_CWD：runner 在 repoRoot 参数缺省时的兜底根目录"
+    ],
+    "determinism": "叶子面对同一输入产出逐字节相同的结构：extractSourcePaths 去重保序且有 200 条上限；matchStaleSuspects 与入参顺序无关，suspects 按 exact 先于 prefix、同置信按 doc 升序，matchedSources 升序；planDocProducts 的 products 升序且 mode 严格取 '--html-only' | null；syncManagedRegions 幂等（填过的文本再跑 changed=false）；buildValueMap 无 SSOT 的 key 一律不入表（frontend-port 永不入表）。两个「现状锁定」不属承诺而是实测：bySource 被传成非 Map 时内部抛错被吞，变更既不报嫌疑也不报未匹配；CRLF 文档的块内注入行用 LF（第二次跑即收敛）。"
+  },
+  "tests": [
+    "docPathIndex.test.js",
+    "docProductPlan.test.js",
+    "docMarkerSync.test.js",
+    "docSuggestDraft.test.js",
+    "docsFreshnessRunner.test.js"
+  ],
+  "behaviourTestsOutsideUnit": [
+    "services/backend/tests/services/docPathIndex.test.js",
+    "services/backend/tests/services/docMarkerSync.test.js",
+    "services/backend/tests/services/docProductPlan.test.js",
+    "services/backend/tests/services/docsFreshnessRunner.test.js"
+  ],
+  "brokenTestsOutsideUnit": [
+    "services/backend/tests/services/docSuggestDraft.test.js"
+  ],
+  "_test_dialect_note": "本目录 5 份共置测试一律 node:test + node:assert/strict（`node --test` 须传 5 个显式文件名，Windows 下目录参数会被当模块路径报错），实测 78 用例全绿；runner 的测试自带 .khyos/tmp/ 下的临时仓库 fixture 并 t.after 清理，假 git 全程注入，fixture 内不放 scripts/docs/md-to-pdf.js 所以 Layer 2 的重生成支路只走到「工具不在位 → 空手而归」，绝不 execFileSync。tests/services/ 下另有 4 份同族 node:test 测试（44 用例全绿，与共置件互补：共置件另锁纯度、导出面、L3 三态处置、CRLF 现状、runner 的 fix 写盘与 git add 两条失败分支）与 1 份 jest 方言的 docSuggestDraft.test.js —— 后者 `node --test` 直接 ReferenceError: describe is not defined 整文件失败，且两条断言把 .toBeTruthy() 写进了字符串字面量（恒真无判定），故本目录的 docSuggestDraft.test.js 是它的实际替代品；旧文件按「不修改既有文件」留在原地，未由本单元删除。"
+}

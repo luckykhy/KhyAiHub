@@ -1,0 +1,24 @@
+{
+  "name": "@khy-os/khy-os",
+  "version": "1.2.0",
+  "description": "Khy OS - AI platform operating system (npm channel manifest). Publishes the bundled runtime; version is kept in lockstep with pyproject.toml and runtime/node/backend/package.json by scripts/ci/check-version-sync.js and scripts/release/publish-dual.sh.",
+  "bin": {
+    "khy": "bin/khy.js",
+    "khy-os": "bin/khy.js"
+  },
+  "files": [
+    "bin/",
+    "bundled/",
+    "scripts/postinstall-compress.js",
+    "scripts/install/enable-fs-compression.sh"
+  ],
+  "scripts": {
+    "assemble": "node scripts/assemble.js",
+    "prepack": "npm run assemble && npm run audit:purity",
+    "audit:purity": "node scripts/audit-purity.js --package-root .",
+    "test": "node --test \"test/**/*.test.js\""
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

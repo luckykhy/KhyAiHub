@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><style>body{margin:0;background:#fff;font-family:"Microsoft YaHei","Segoe UI",sans-serif;padding:26px 32px;color:#111827}h1{font-size:24px;margin:0 0 4px}.sub{font-size:13.5px;color:#4b5563;margin-bottom:18px}.src{font-size:12px;color:#6b7280;margin-top:20px;border-top:1px solid #e5e7eb;padding-top:10px;line-height:1.7}</style></head><body>
+<h1>终端真实输出：khy gateway status</h1><div class="sub">AI 网关通道面读数：已启用适配器清单 + 逐通道连通状态（多供应商通道的运行时证据；名称改版后本图不再是名称载体，改由 06 承载）　｜　进程状态：ok</div><div style="background:#0f172a;border-radius:10px;overflow:hidden;box-shadow:0 8px 26px rgba(2,6,23,.35)">
+  <div style="background:#1e293b;color:#cbd5e1;font-size:13px;padding:9px 14px;font-family:Consolas,monospace;display:flex;justify-content:space-between">
+    <span>khy-os — khy gateway status</span><span>Windows 11 · Node v22.18.0 · 2026-09-28</span></div>
+  <pre style="margin:0;padding:16px 18px;font-family:Consolas,'Courier New',monospace;font-size:13.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;max-height:760px;overflow:hidden"><span style="color:#e6e6e6;font-weight:400">  i 步骤 1/3: 同步 switch-center 通道配置
+  i 步骤 2/3: 初始化网关适配器
+
+  * AI 网关状态
+  步骤 3/3: 并行探测 7/17 个已启用通道（上限 22s）
+
+  ╭───┬────────────┬────────┬────────┬────────────┬──────────┬────────────╮
+  │   │ 适配器     │ 类型   │ 状态   │ 连通       │ 协议     │ 详情       │
+  ├───┼────────────┼────────┼────────┼────────────┼──────────┼────────────┤
+  │ 0 │ Kiro IDE   │ kiro   │ ⚠ ...  │ —          │ CodeW... │ 未检测...  │
+  │ 1 │ Cursor IDE │ cursor │ ⚠ ...  │ —          │ OpenAI   │ 未检测...  │
+  │ 2 │ Trae IDE   │ trae   │ ⚠ ...  │ —          │ OpenAI   │ 未检测...  │
+  │ 3 │ Claude ... │ claude │ ✓ 可用 │ ● claud... │ Anthr... │ claude ... │
+  │ 4 │ OpenAI ... │ codex  │ ⚠ ...  │ —          │ CLI S... │ 未检测...  │
+  │ 5 │ API 云...  │ api    │ ✓ 可用 │ ● 1053m... │ OpenAI   │ +agnes(... │
+  │ 7 │ VS Code... │ vscode │ ⚠ ...  │ —          │ OpenAI   │ 未检测...  │
+  │ 8 │ Warp       │ warp   │ ⚠ ...  │ —          │ Manual   │ 未检测...  │
+  │ 9 │ Cursor2API │ cur... │ ⚠ ...  │ —          │ OpenAI   │ 不可达:... │
+  │   │ API 中转   │ rel... │ ⚠ ...  │ ● 404 p... │ OpenAI   │ 已配置 ... │
+  │   │ Ollama ... │ ollama │ ⚠ ...  │ —          │ OpenAI   │ 未运行 ... │
+  │   │ 本地模型   │ loc... │ ⚠ ...  │ —          │ OpenAI   │ 未发现...  │
+  │   │ CLI 工...  │ cli    │ ✓ 可用 │ ● 2215ms   │ CLI S... │ Claude ... │
+  │   │ Web 中...  │ relay  │ ✓ 可用 │ ● 27ms     │ Manual   │ 待命 — ... │
+  │   │ 剪贴板...  │ cli... │ ✓ 可用 │ ● 142ms    │ Manual   │ 就绪 — ... │
+  │   │ OpenCode   │ ope... │ ✓ 可用 │ ● 2038ms   │ OpenAI   │ opencod... │
+  │   │ OpenClaw   │ ope... │ ⚠ ...  │ —          │ OpenAI   │ 未检测...  │
+  ╰───┴────────────┴────────┴────────┴────────────┴──────────┴────────────╯
+
+  ✓ 当前活跃通道: API 云端服务 (api) · OpenAI · 默认路由: agnes/agnes-3.0-flash
+  i 默认推荐通道: API 中转 (relay_api) 当前更稳；CLI 工具桥接 存在上游隐藏 prompt 覆盖风险，默认稳定路由降低优先级，默认降级为次级兜底
+  i KHY 协议优先级: API 云端服务 已由 KHY 网关注入最高优先级协议
+  i 语言一致性: requestId=396b20a997947e5559c394f81d45f85f 已收到模型响应，但尚无语言一致性审计事件；请复查语言审计钩子或当前适配器输出路径
+  i 最近 requestId 复盘: khy gateway trace 396b20a997947e5559c394f81d45f85f
+  i 配置默认路由: agnes/agnes-3.0-flash
+  i 首包延迟统计(khy_chat_interactive): P50/P95=18508/44895ms，失败率 7%（15/207），无首包 4%
+  i 自动调参状态: 已启用，当前档位: pending
+  i 自动调参参数: preflight 1800ms / probe 900ms / candidates 2 / retry-wait 2500ms
+  i 代理配置位置: D:\Portable\khy-os\.khy\proxy.json
+  i 模型/API Key 配置位置: D:\Portable\khy-os\services\backend\.env
+  i 多 Key 池位置: D:\Portable\khy-os\.khy\api_keys.json
+  i 智能代理路由: GATEWAY_PROXY_ROUTE_MODE=auto (auto=国外优先代理, 国内直连)
+
+  i 已配置 Key 的 Endpoint 明细:
+Provider                                        Endpoint                                                         Keys   Default Model          Source         
+agnes                                           https://apihub.agnes-ai.com/v1                                   1      —                      api_keys.json  
+Anthropic                                       https://api.anthropic.com/v1                                     1      —                      .env           </span></pre>
+</div>
+<div class="src">采集方式：<code>node services/backend/bin/khy.js gateway status</code> 捕获子进程 stdout（保留 ANSI 颜色），包进终端外观后由 msedge.exe 无头截图。<br>字符内容未经改写。注意：本命令会对外探测已启用通道的连通性，且部分通道的探测会触发一次最小模型调用（实测输出出现「已收到模型响应」字样），因此**可能产生少量费用**——本底档不宣称零成本，只如实标注。</div></body></html>

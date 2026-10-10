@@ -1,0 +1,23 @@
+{
+  "all": true,
+  "include": ["runtime/node/backend/src/**/*.js"],
+  "exclude": [
+    "**/*.test.js",
+    "**/__tests__/**",
+    "**/vendor/**",
+    "**/generated/**",
+    "**/coverage/**",
+    ".cache/quality-gate/**",
+    "runtime/node/backend/src/bridge/**",
+    "runtime/node/backend/src/bootstrap/**",
+    "runtime/node/backend/src/assistant/**",
+    "runtime/node/backend/src/buddy/**",
+    "runtime/node/backend/src/cli/tui/**",
+    "runtime/node/backend/src/cli/ui/**",
+    "runtime/node/backend/src/cli/handlers/**",
+    "runtime/node/backend/src/adapters/im/**"
+  ],
+  "check-coverage": false,
+  "reporter": ["text-summary", "json-summary"],
+  "reports-dir": ".cache/quality-gate/coverage"
+}

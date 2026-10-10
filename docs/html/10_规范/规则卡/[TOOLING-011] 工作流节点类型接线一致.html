@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [TOOLING-011] 工作流节点类型接线一致.md -->
+<title>[TOOLING-011] 工作流节点类型接线一致 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>10_规范<span class="sep">›</span>规则卡<span class="sep">›</span>[TOOLING-011] 工作流节点类型接线一致</div>
+      <header class="hero reveal"><h1>[TOOLING-011] 工作流节点类型接线一致</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#tooling-011-工作流节点类型接线一致">[TOOLING-011] 工作流节点类型接线一致</a></li><li class="lvl-2"><a href="#约束">约束</a></li><li class="lvl-2"><a href="#授予权力">授予权力</a></li><li class="lvl-2"><a href="#提供福利">提供福利</a></li><li class="lvl-2"><a href="#反例">反例</a></li><li class="lvl-2"><a href="#校验方式">校验方式</a></li><li class="lvl-2"><a href="#例外">例外</a></li><li class="lvl-2"><a href="#版本记录">版本记录</a></li></ul></nav>
+      <article class="doc-body">
+<hr>
+<p>name: 工作流节点类型接线一致<br>id: TOOLING-011<br>domain: TOOLING<br>nature: 约束为主，兼福利<br>scope: &quot;工作流引擎的<strong>节点类型声明面与执行面</strong>：<code>runtime/node/backend/vendor/shared/src/workflow/nodeCatalog.js</code>（声明 SSOT）、<code>runtime/node/backend/src/services/domain/project/workflow/workflowExecutor.js</code>（执行语义）、<code>runtime/node/backend/src/services/domain/project/workflow/workflowRunWorker.js</code>（跨进程执行路径）。不含画布前端 <code>delivery/web/ai-frontend/</code> 与 ai-backend 的 REST 校验 —— 那两处已消费目录，不构成漂移面。&quot;<br>priority: P1<br>trigger: &quot;新增 / 重命名 / 删除任一工作流节点类型时；改 <code>switch (node.type)</code> 时；改 <code>default</code> 分支时；新增或修改 <code>workflowRunWorker.executeRun</code> 时；用户报「工作流跑成功了但某一步没生效」时。&quot;<br>constraint: &quot;节点类型只有 <code>nodeCatalog.js</code> 一处真源，执行器<strong>必须消费</strong>它：① 目录声明的每个类型，执行器必须有 handler（<strong>单向包含</strong>，目录是权威）；② 对未知节点类型必须 <strong>fail-closed</strong>（抛错），<strong>不得</strong>静默标 <code>skipped</code> 后继续走 default 端口 —— 那会让整图以 <code>completed</code> 收尾而该节点什么都没做；③ worker 路径在执行前必须过目录校验，不得把未经校验的 <code>graphJson</code> 直接交给执行器。&quot;<br>grants: &quot;见约束边界：授权执行器按目录声明的端口与字段语义实现 handler，并允许目录先行登记、执行器随后补齐 —— 但补齐之前，该类型必须被守卫拦下（不允许「目录已声明而执行器静默跳过」的中间态上线）。&quot;<br>benefit: &quot;「工作流成功了但某一步没做」这类静默失真从机制上消失；新增节点类型只需改一处真源，漂移在 commit 档就被拦下，不必等到运行期靠人看日志发现。&quot;<br>exception: &quot;两类：① <code>node-undocumented</code>（执行器有 handler、目录未声明）<strong>不阻断</strong> —— 它是「画布不可达」的前置条件而非产物问题，恒为 warning；② 目录与执行器源码的<strong>注释、文档字符串</strong>里出现的类型名不计入对账（只比对目录条目的 <code>type</code> 字段与 switch 的 <code>case</code> 标签）。&quot;<br>version: &quot;1.0.0 (2026-09-23)&quot;<br>status: active<br>ssot: &quot;docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-141] 动态工作流-运行时自演化与节点热插拔方案.md&quot;<br>formerly: 无<br>owner: architecture-team<br>enforcement: &quot;scripts/ci/check-workflow-node-parity.js&quot;</p>
+<hr>
+<h1 id="tooling-011-工作流节点类型接线一致">[TOOLING-011] 工作流节点类型接线一致<a class="anchor" href="#tooling-011-工作流节点类型接线一致" aria-label="锚点">#</a></h1>
+<!-- RULES-REGISTRY: TOOLING-011 -->
+<blockquote><p><strong>规则卡</strong> · 格式依据 [MGMT-STD-008] §1（frontmatter 14 字段 + 六小节）。</p>
+<p><strong>字段真源</strong>是 <code>docs/10_规范/registry/RULES-REGISTRY.json</code>（GOV-TOOL-006 校验），<br>本文件由 <code>node scripts/docs/gen-rules-cards.js</code> 生成，<strong>禁止手改</strong>（同 [MGMT-STD-007] R6 对 .html 孪生件的约束）。<br>正文原文在 <code>ssot</code> 指向的位置：docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-141] 动态工作流-运行时自演化与节点热插拔方案.md。</p></blockquote>
+<h2 id="约束">约束<a class="anchor" href="#约束" aria-label="锚点">#</a></h2>
+<p>节点类型只有 <code>nodeCatalog.js</code> 一处真源，执行器<strong>必须消费</strong>它：① 目录声明的每个类型，执行器必须有 handler（<strong>单向包含</strong>，目录是权威）；② 对未知节点类型必须 <strong>fail-closed</strong>（抛错），<strong>不得</strong>静默标 <code>skipped</code> 后继续走 default 端口 —— 那会让整图以 <code>completed</code> 收尾而该节点什么都没做；③ worker 路径在执行前必须过目录校验，不得把未经校验的 <code>graphJson</code> 直接交给执行器。</p>
+<h2 id="授予权力">授予权力<a class="anchor" href="#授予权力" aria-label="锚点">#</a></h2>
+<p>见约束边界：授权执行器按目录声明的端口与字段语义实现 handler，并允许目录先行登记、执行器随后补齐 —— 但补齐之前，该类型必须被守卫拦下（不允许「目录已声明而执行器静默跳过」的中间态上线）。</p>
+<h2 id="提供福利">提供福利<a class="anchor" href="#提供福利" aria-label="锚点">#</a></h2>
+<p>「工作流成功了但某一步没做」这类静默失真从机制上消失；新增节点类型只需改一处真源，漂移在 commit 档就被拦下，不必等到运行期靠人看日志发现。</p>
+<h2 id="反例">反例<a class="anchor" href="#反例" aria-label="锚点">#</a></h2>
+<p>见 <code>ssot</code> 指向的真源原文；本卡不复制反例，以免与真源漂移。</p>
+<h2 id="校验方式">校验方式<a class="anchor" href="#校验方式" aria-label="锚点">#</a></h2>
+<p>人工评审（该规则暂无机械守卫）</p>
+<h2 id="例外">例外<a class="anchor" href="#例外" aria-label="锚点">#</a></h2>
+<p>两类：① <code>node-undocumented</code>（执行器有 handler、目录未声明）<strong>不阻断</strong> —— 它是「画布不可达」的前置条件而非产物问题，恒为 warning；② 目录与执行器源码的<strong>注释、文档字符串</strong>里出现的类型名不计入对账（只比对目录条目的 <code>type</code> 字段与 switch 的 <code>case</code> 标签）。</p>
+<h2 id="版本记录">版本记录<a class="anchor" href="#版本记录" aria-label="锚点">#</a></h2>
+<ul><li>1.0.0 (2026-09-23) 初版 / 迁移自 无</li></ul>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/10_规范/规则卡/[TOOLING-010] 维护成本可观测.html"><div class="dir">← 上一篇</div><div class="ttl">[TOOLING-010] 维护成本可观测</div></a><a class="next" href="../../../../docs/html/10_规范/规则卡/[UPLOAD-001] 文件上传规范.html"><div class="dir">下一篇 →</div><div class="ttl">[UPLOAD-001] 文件上传规范</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/10_规范/规则卡/[TOOLING-011] 工作流节点类型接线一致.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-ARCH-101] 代理模式统一Agent模型管理与协议桥接方案.md -->
+<title>[DESIGN-ARCH-101] 代理模式统一 Agent 模型管理与协议桥接方案 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>[DESIGN-ARCH-101] 代理模式统一 Agent 模型管理与协议桥接方案</div>
+      <header class="hero reveal"><h1>[DESIGN-ARCH-101] 代理模式统一 Agent 模型管理与协议桥接方案</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-101-代理模式统一-agent-模型管理与协议桥接方案">[DESIGN-ARCH-101] 代理模式统一 Agent 模型管理与协议桥接方案</a></li><li class="lvl-2"><a href="#1-背景与问题">1. 背景与问题</a></li><li class="lvl-3"><a href="#1-1-现状">1.1 现状</a></li><li class="lvl-3"><a href="#1-2-三个待解问题">1.2 三个待解问题</a></li><li class="lvl-3"><a href="#1-3-已有但未接线的资产">1.3 已有但未接线的资产</a></li><li class="lvl-2"><a href="#2-聚合机制判断-junction-vs-代理">2. 聚合机制判断：Junction vs 代理</a></li><li class="lvl-3"><a href="#2-1-junction-能做的-数据家目录集中化-已完成">2.1 Junction 能做的——数据家目录集中化（已完成）</a></li><li class="lvl-3"><a href="#2-2-junction-不能做的-跨-agent-配置内容共享">2.2 Junction 不能做的——跨 agent 配置内容共享</a></li><li class="lvl-3"><a href="#2-3-结论">2.3 结论</a></li><li class="lvl-2"><a href="#3-代理模式架构">3. 代理模式架构</a></li><li class="lvl-3"><a href="#3-1-核心拓扑">3.1 核心拓扑</a></li><li class="lvl-3"><a href="#3-2-代理端点与令牌的发现-零硬编码">3.2 代理端点与令牌的发现（零硬编码）</a></li><li class="lvl-3"><a href="#3-3-可路由模型名">3.3 可路由模型名</a></li><li class="lvl-2"><a href="#4-claude-code-协议桥接-已验证可用">4. Claude Code 协议桥接（已验证可用）</a></li><li class="lvl-3"><a href="#4-1-问题">4.1 问题</a></li><li class="lvl-3"><a href="#4-2-答案">4.2 答案</a></li><li class="lvl-3"><a href="#4-3-已验证的转换链路">4.3 已验证的转换链路</a></li><li class="lvl-3"><a href="#4-4-关键源码证据">4.4 关键源码证据</a></li><li class="lvl-3"><a href="#4-5-四种协议全覆盖">4.5 四种协议全覆盖</a></li><li class="lvl-3"><a href="#4-6-anthropic-直通优化-不经过-parse-reconstruct">4.6 Anthropic 直通优化（不经过 parse→reconstruct）</a></li><li class="lvl-2"><a href="#5-一处配置多-agent-共享的完整流程">5. 一处配置多 agent 共享的完整流程</a></li><li class="lvl-3"><a href="#5-1-场景">5.1 场景</a></li><li class="lvl-3"><a href="#5-2-流程-代理模式">5.2 流程（代理模式）</a></li><li class="lvl-3"><a href="#5-3-各-agent-代理模式写入差异">5.3 各 agent 代理模式写入差异</a></li><li class="lvl-2"><a href="#6-直连-vs-代理模式对比">6. 直连 vs 代理模式对比</a></li><li class="lvl-2"><a href="#7-落地步骤-2026-09-24-已实施">7. 落地步骤（✓ 2026-09-24 已实施）</a></li><li class="lvl-3"><a href="#步骤-1-在-appwriters-实现代理模式写入-核心改动">步骤 1：在 appWriters 实现代理模式写入（核心改动）</a></li><li class="lvl-3"><a href="#步骤-2-新建-proxyaccess-模块-代理端点-令牌-poolkey-解析">步骤 2：新建 proxyAccess 模块（代理端点 + 令牌 + poolKey 解析）</a></li><li class="lvl-3"><a href="#步骤-3-provider-hub-ui-加代理-直连切换">步骤 3：provider-hub UI 加代理/直连切换</a></li><li class="lvl-3"><a href="#步骤-4-接入已有但未连线的适配器-trae-与代理模式独立-可并行">步骤 4：接入已有但未连线的适配器 + Trae（与代理模式独立，可并行）</a></li><li class="lvl-3"><a href="#步骤-5-验证协议桥接-不改代码-只验证">步骤 5：验证协议桥接（不改代码，只验证）</a></li><li class="lvl-3"><a href="#步骤-6-junction-辅助-集中-khy-数据家目录-已有-无需新做">步骤 6：Junction 辅助——集中 khy 数据家目录（已有，无需新做）</a></li><li class="lvl-2"><a href="#8-文件改动清单-2026-09-24-已实施">8. 文件改动清单（✓ 2026-09-24 已实施）</a></li><li class="lvl-3"><a href="#后端">后端</a></li><li class="lvl-3"><a href="#provider-hub">provider-hub</a></li><li class="lvl-3"><a href="#零改动">零改动</a></li><li class="lvl-2"><a href="#9-风险与降级">9. 风险与降级</a></li><li class="lvl-2"><a href="#10-证据索引">10. 证据索引</a></li><li class="lvl-3"><a href="#本机-agent-配置实测">本机 agent 配置实测</a></li><li class="lvl-3"><a href="#khy-os-源码验证">khy-os 源码验证</a></li><li class="lvl-2"><a href="#附录-a-与-design-arch-094-的关系">附录 A：与 DESIGN-ARCH-094 的关系</a></li><li class="lvl-2"><a href="#附录-b-未纳入本方案的范围">附录 B：未纳入本方案的范围</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="design-arch-101-代理模式统一-agent-模型管理与协议桥接方案">[DESIGN-ARCH-101] 代理模式统一 Agent 模型管理与协议桥接方案<a class="anchor" href="#design-arch-101-代理模式统一-agent-模型管理与协议桥接方案" aria-label="锚点">#</a></h1>
+<blockquote><p>状态：<strong>已实施（2026-09-24；步骤 1–4 落地，步骤 5 协议桥接复用既有 proxyServer 未改代码）</strong> · 2026-09-24<br>实施说明：本方案按 §8 文件改动清单落地。核心新增 <code>proxyAccess.js</code>（端点/令牌/poolKey 解析）、<br><code>traeAppAdapter.js</code>（switch-chain 桥接）；<code>appWriters.applyCardToApp</code> 加 <code>mode:'proxy'</code> 分支<br>（走 <code>buildProxyCard</code> 字段替换复用适配器 add()，适配器零侵入），并接线 4 个存量适配器 + Trae。<br>provider-hub 侧透传 mode + 工具矩阵加代理/直连切换。验收：backend 78 测试 + provider-hub 36 测试全绿，<br>check:wiring / check:rules / check:gov-rules 全绿。<br>上位文档：<code>AGENTS.md</code>（工程红线）、<a href="[DESIGN-ARCH-094]%20Provider%E5%8D%A1%E7%89%87%E6%9E%A2%E7%BA%BD%EF%BC%88CardHub%EF%BC%89GUI%E8%AE%BE%E8%AE%A1%E8%A7%84%E8%8C%83.html"><code>[DESIGN-ARCH-094]</code></a> ProviderHub GUI 设计规范、<code>[DESIGN-ARCH-071]</code> 通道选择决策矩阵<br>关联实测：<code>D:\Portable\AI模型配置汇总.md</code>（本机 16 个 agent 配置位置与协议实测）、<code>[DESIGN-ARCH-118]</code> HQ 能力吸收与多机协作规范</p></blockquote>
+<!-- RULES-REGISTRY: RUNTIME-001, RUNTIME-002, RUNTIME-003, PROCESS-008 -->
+<hr>
+<h2 id="1-背景与问题">1. 背景与问题<a class="anchor" href="#1-背景与问题" aria-label="锚点">#</a></h2>
+<h3 id="1-1-现状">1.1 现状<a class="anchor" href="#1-1-现状" aria-label="锚点">#</a></h3>
+<p>khy-os 已有两层合一的统一管理基础设施（汇总文档 §8.1 / §8.6 实测确认）：</p>
+<ul><li><strong>层 A（代理网关）</strong>：<code>services/backend/src/services/gateway/proxyServer.js</code>（3103 行）暴露四协议端点（OpenAI Chat / Anthropic Messages / Gemini / Codex Responses），端口默认 9100，含端口冲突自动探测、CORS、客户配额执行器、响应缓存。</li><li><strong>层 B（agent 配置写入）</strong>：<code>services/backend/src/services/domain/config/ccSwitch/appWriters.js</code>（250 行）通过 7 个 <code>externalApps/</code> 适配器写各 agent 的 live 配置文件。</li><li><strong>provider-hub GUI</strong>：<code>apps/provider-hub/</code>（Electron + vanilla JS，DESIGN-ARCH-094 M0–M3 + P3 已落地），管理 <code>cc_switch.json</code> 卡片库 + <code>api_keys.json</code> 密钥池。</li></ul>
+<h3 id="1-2-三个待解问题">1.2 三个待解问题<a class="anchor" href="#1-2-三个待解问题" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>#</th><th>问题</th><th>根因</th></tr></thead><tbody><tr><td>1</td><td>&quot;通过符号链接或 junction 聚合在 khy-os 中&quot;——跨 agent 配置能否靠 junction 共享</td><td>junction 是目录级重定向，集中的是<strong>数据落点</strong>不是<strong>配置内容</strong>；不同 agent 的配置 schema 互不兼容，无法共享同一文件</td></tr><tr><td>2</td><td>&quot;opencode 配置某个模型后 opencode 能用，zcode 同样能用&quot;——一处配置多 agent 共享</td><td>现有 <code>appWriters</code> 只做<strong>直连模式</strong>（写 <code>card.baseUrl</code> + 真实 key），每 agent 各存一份密钥直连 provider；需要<strong>代理模式</strong>让所有 agent 指向同一代理端点</td></tr><tr><td>3</td><td>&quot;Claude Code 只支持 anthropic 协议，OpenAI chat 或 responses 协议怎么接入&quot;</td><td>khy 代理的 <code>handleMultiProtocol</code> <strong>已实现</strong> Anthropic↔OpenAI 双向协议转换（源码验证见 §4），但 <code>appWriters</code> 未把 Claude Code 的配置写成指向代理——需要代理模式接入</td></tr></tbody></table>
+<h3 id="1-3-已有但未接线的资产">1.3 已有但未接线的资产<a class="anchor" href="#1-3-已有但未接线的资产" aria-label="锚点">#</a></h3>
+<ul><li><code>cc_switch.json</code> 的 <code>agentMode</code> 字段（<code>types.ts</code> 第 24–27 行 <code>AgentModeEntry = { mode: 'proxy' | 'direct', cardId, ts }</code>）——代理/直连双模式已在类型层定义，但 <code>appWriters.js</code> 只实现了 direct，proxy 分支未写。</li><li><code>externalApps/</code> 目录下 <code>deepseekTuiAdapter.js</code>、<code>reasonixAdapter.js</code>、<code>openclawAdapter.js</code>、<code>cozeAdapter.js</code> 四个适配器文件已存在，但 <code>appWriters.js</code> 的 switch 无对应 case——接线即生效。</li><li>Trae 的配置写入由 <code>proxySwitchProfiles.js</code>（switch-center，trae-only）负责，但未纳入 <code>appWriters</code> 统一矩阵。</li></ul>
+<hr>
+<h2 id="2-聚合机制判断-junction-vs-代理">2. 聚合机制判断：Junction vs 代理<a class="anchor" href="#2-聚合机制判断-junction-vs-代理" aria-label="锚点">#</a></h2>
+<h3 id="2-1-junction-能做的-数据家目录集中化-已完成">2.1 Junction 能做的——数据家目录集中化（已完成）<a class="anchor" href="#2-1-junction-能做的-数据家目录集中化-已完成" aria-label="锚点">#</a></h3>
+<p>汇总文档 §7 / §7.8 已实测确认本机以下 junction 到位：</p>
+<table><thead><tr><th>Junction</th><th>声明路径</th><th>真实位置</th><th>作用</th></tr></thead><tbody><tr><td><code>~/.khy</code></td><td><code>C:\Users\25789\.khy</code></td><td>便携根 <code>.khy</code></td><td>khy CLI / khyos-desktop / provider-hub 三方共享同一份 <code>cc_switch.json</code> + <code>api_keys.json</code></td></tr><tr><td><code>~/.zcode</code></td><td><code>C:\Users\25789\.zcode</code></td><td><code>D:\zcode-home</code></td><td>ZCode 数据家目录重定向到便携位置</td></tr><tr><td><code>~/.khyquant</code></td><td><code>C:\Users\25789\.khyquant</code></td><td><code>C:\.khyquant</code></td><td>khyquant 运行时数据集中</td></tr><tr><td><code>~/.gradle</code></td><td><code>C:\Users\25789\.gradle</code></td><td><code>D:\GradleHome</code></td><td>Gradle 缓存重定向</td></tr></tbody></table>
+<p><strong>junction 的本质</strong>：把一个目录的物理存储搬到别处，让&quot;声明路径&quot;与&quot;真实路径&quot;分离。它集中的是<strong>数据落点</strong>——让多个工具读同一份文件，但文件内容的格式由各自的 schema 决定。</p>
+<p><strong>对统一管理的贡献</strong>：<code>~/.khy</code> junction 保证 provider-hub 改一张卡片后，khy CLI 和 khyos-desktop 重启即见——三方不锁死、不各存一份。这是<strong>同体系内</strong>的共享。</p>
+<h3 id="2-2-junction-不能做的-跨-agent-配置内容共享">2.2 Junction 不能做的——跨 agent 配置内容共享<a class="anchor" href="#2-2-junction-不能做的-跨-agent-配置内容共享" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>想法</th><th>为什么不行</th><th>证据</th></tr></thead><tbody><tr><td>让 opencode 的 <code>opencode.json</code> 与 zcode 的 <code>config.json</code> 共享同一物理文件</td><td><strong>格式不同</strong>：opencode 用 provider 树 <code>{provider:{baseURL,apiKey,model}}</code>；zcode 用 <code>provider.zai</code> 单槽位 + <code>model.main/lite</code> 双角色</td><td>汇总文档 §1.3 vs §1.1；<code>appWriters.js</code> 第 144–152 行 vs 第 183–193 行</td></tr><tr><td>junction 单个配置文件</td><td>Windows junction 是<strong>目录级</strong>（<code>IO_REPARSE_TAG_MOUNT_POINT</code> <code>0xa0000003</code>），不支持单文件</td><td>汇总文档 §7.3 重解析点类型表</td></tr><tr><td>symlink 单文件</td><td>symlink 支持文件但需管理员权限或开发者模式；且 agent 启动时可能删重建文件导致断链</td><td>汇总文档 §7.2 第 4 条 <code>ResolveLinkTarget()</code> 限制</td></tr><tr><td>junction 整个 <code>~/.config/opencode/</code> 进 khy</td><td>opencode 目录里还有 cache/skills/sessions 等 khy 不该管的状态；junction 整棵树会让 khy 承担不属于它的子目录</td><td>汇总文档 §7.2 第 6 条&quot;只解析根不够，必须递归&quot;</td></tr></tbody></table>
+<h3 id="2-3-结论">2.3 结论<a class="anchor" href="#2-3-结论" aria-label="锚点">#</a></h3>
+<p><strong>Junction 负责&quot;数据家目录在哪&quot;，代理负责&quot;模型配置怎么共享&quot;。两者互补，不可互替。</strong></p>
+<ul><li>junction = 同体系内（khy 三工具）共享数据落点 → <strong>已完成</strong></li><li>代理 = 跨体系（opencode / zcode / Claude Code 等异构 agent）共享模型与密钥 → <strong>待实现（本方案）</strong></li></ul>
+<hr>
+<h2 id="3-代理模式架构">3. 代理模式架构<a class="anchor" href="#3-代理模式架构" aria-label="锚点">#</a></h2>
+<h3 id="3-1-核心拓扑">3.1 核心拓扑<a class="anchor" href="#3-1-核心拓扑" aria-label="锚点">#</a></h3>
+<pre><code>                    ┌───────────────────────────────────────────┐
+                    │  khy 代理服务器（:9100，proxyServer.js）       │
+                    │                                           │
+                    │  持有全部 provider 密钥（api_keys.json 池）    │
+                    │  聚合全部模型（GET /v1/models）              │
+                    │  四协议端点：                               │
+                    │    POST /v1/chat/completions   (OpenAI)    │
+                    │    POST /v1/messages          (Anthropic)  │
+                    │    POST /v1/responses         (Codex)      │
+                    │    POST /v1beta/.../generateContent(Gemini) │
+                    │  协议互转（protocolConverter）               │
+                    │  故障转移 + 级联 + 用量统计                  │
+                    └───────────┬───────────────────────────────┘
+                                │ 所有 agent 指向同一端点 + 同一令牌
+              ┌─────────────────┼─────────────────────┐
+              ▼                 ▼                     ▼
+        opencode            zcode               Claude Code
+   baseUrl=代理:9100/v1  endpoint=代理:9100/v1  ANTHROPIC_BASE_URL=代理:9100
+   apiKey=代理令牌        key=代理令牌           ANTHROPIC_API_KEY=代理令牌
+   model=api:ds:chat      model=api:ds:chat      ANTHROPIC_MODEL=api:ds:chat
+   (说 OpenAI 协议)        (说 OpenAI 协议)        (说 Anthropic 协议)</code></pre>
+<h3 id="3-2-代理端点与令牌的发现-零硬编码">3.2 代理端点与令牌的发现（零硬编码）<a class="anchor" href="#3-2-代理端点与令牌的发现-零硬编码" aria-label="锚点">#</a></h3>
+<p>复用 provider-hub 已有的 <code>proxyStatus.ts</code>（<code>apps/provider-hub/src/main/proxyStatus.ts</code>）模式：</p>
+<table><thead><tr><th>数据</th><th>来源</th><th>已有实现</th></tr></thead><tbody><tr><td>代理端点</td><td>dataHome 下 <code>proxy_server_runtime.json</code></td><td><code>proxyStatus.ts</code> 第 22–45 行 <code>proxyStatus()</code></td></tr><tr><td>代理令牌</td><td>dataHome 下 <code>proxy_server_auth.json</code></td><td>代理启动时自动生成 <code>khy-&lt;48hex&gt;</code>（<code>proxyServer.js</code> 第 482–770 行 auth 段）</td></tr><tr><td>dataHome 解析</td><td>四级顺序：<code>KHY_DATA_HOME</code> env → 便携根 → <code>.portable</code> 标记上溯 → <code>os.homedir()/.khy</code></td><td><code>providers.ts</code> 第 25–49 行 <code>getDataHome()</code></td></tr></tbody></table>
+<p><strong>合规</strong>：端点 + 令牌全来自运行时文件 / env，不写死 host:port（契约undefined/ 规则 1 <code>RUNTIME-001</code>）。</p>
+<h3 id="3-3-可路由模型名">3.3 可路由模型名<a class="anchor" href="#3-3-可路由模型名" aria-label="锚点">#</a></h3>
+<p>代理的 <code>modelRouter.resolveModelRoute</code>（<code>proxyServer.js</code> 第 1215 / 1483 行）支持以下模型名格式：</p>
+<table><thead><tr><th>格式</th><th>示例</th><th>路由目标</th></tr></thead><tbody><tr><td><code>api:&lt;poolKey&gt;:&lt;model&gt;</code></td><td><code>api:deepseek:deepseek-chat</code></td><td><code>apiAdapter</code> → <code>api_keys.json</code> 池中 poolKey 对应的密钥 → 上游 OpenAI 端点</td></tr><tr><td><code>adapter/model</code></td><td><code>api/deepseek-chat</code></td><td>指定适配器 + 模型</td></tr><tr><td>裸模型名</td><td><code>deepseek-chat</code></td><td>经 <code>PROXY_MODEL_ROUTE_MAP</code> / <code>GATEWAY_API_POOL_DEFAULT_MODEL_MAP</code> 映射</td></tr></tbody></table>
+<p><strong>代理模式写入时用 <code>api:&lt;poolKey&gt;:&lt;defaultModel&gt;</code> 三段格式</strong>——始终可路由，不依赖路由表条目是否存在。</p>
+<hr>
+<h2 id="4-claude-code-协议桥接-已验证可用">4. Claude Code 协议桥接（已验证可用）<a class="anchor" href="#4-claude-code-协议桥接-已验证可用" aria-label="锚点">#</a></h2>
+<h3 id="4-1-问题">4.1 问题<a class="anchor" href="#4-1-问题" aria-label="锚点">#</a></h3>
+<p>Claude Code 只发 Anthropic <code>/v1/messages</code> 请求。如果上游是 OpenAI Chat（DeepSeek）或 Responses（Codex）协议的 provider，直连模式不可能接入——协议不匹配。</p>
+<h3 id="4-2-答案">4.2 答案<a class="anchor" href="#4-2-答案" aria-label="锚点">#</a></h3>
+<p>khy 代理已实现完整的协议互转。以下结论全部来自源码逐行验证。</p>
+<h3 id="4-3-已验证的转换链路">4.3 已验证的转换链路<a class="anchor" href="#4-3-已验证的转换链路" aria-label="锚点">#</a></h3>
+<pre><code>Claude Code
+  │ POST /v1/messages（Anthropic 格式，model=&quot;api:deepseek:deepseek-chat&quot;）
+  ▼
+handleMultiProtocol(req, res, PROTOCOLS.ANTHROPIC)          [proxyServer.js:1385]
+  │
+  ├─ protocolConverter.convertRequest(body, ANTHROPIC)       [行 1412]
+  │    Anthropic 请求体 → canonical 内部格式
+  │    提取 messages / system / tools / images / metadata
+  │
+  ├─ modelRouter.resolveModelRoute({model:&quot;api:deepseek:...&quot;})  [行 1483]
+  │    → 路由到 apiAdapter（OpenAI 格式上游）
+  │
+  ├─ Anthropic 协议特殊处理                                   [行 1490-1495]
+  │    非显式路由时 strictPreferred=false → 允许级联到任意适配器
+  │    （不只 claude 适配器；deepseek/glm 等都能接）
+  │
+  ├─ generateByRoute(gw, route, prompt, {onChunk})           [行 1259 / 1658]
+  │    → gateway.generate() → apiAdapter → DeepSeek API（OpenAI Chat 格式）
+  │    → DeepSeek 返回 OpenAI 格式响应 → 适配器归一化为 chunks
+  │
+  └─ onChunk 回调：normalized chunks → Anthropic SSE 事件    [行 1716-1733]
+       message_start → ping → content_block_start → 
+       content_block_delta(text) → content_block_stop →
+       message_delta(usage) → message_stop
+       → Claude Code 收到 Anthropic 格式 SSE 流 → 正常工作 ✓</code></pre>
+<h3 id="4-4-关键源码证据">4.4 关键源码证据<a class="anchor" href="#4-4-关键源码证据" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>断言</th><th>源码位置</th><th>原文 / 行为</th></tr></thead><tbody><tr><td>函数存在且注释明确</td><td><code>proxyServer.js</code> 第 1382–1383 行</td><td>注释原文：&quot;Handle multi-protocol requests — converts input protocol to canonical, generates via gateway, then converts response back to source protocol.&quot;</td></tr><tr><td>入站协议→canonical</td><td>第 1412 行</td><td><code>const { canonical, detectedProtocol } = protocolConverter.convertRequest(body, sourceProtocol);</code></td></tr><tr><td>路由到任意适配器</td><td>第 1483 行</td><td>`const route = modelRouter.resolveModelRoute({ model: canonical.model \</td></tr><tr><td>Anthropic 允许级联</td><td>第 1490–1495 行</td><td><code>if (sourceProtocol === PROTOCOLS.ANTHROPIC) { if (routeSource !== 'explicit' &amp;&amp; routeSource !== 'route-map') { route.strictPreferred = false; route.preferredAdapter = null; } }</code></td></tr><tr><td>出站 chunks→Anthropic SSE</td><td>第 1716–1733 行</td><td><code>if (isAnthropic) { sseEvent('message_start', {...}); sseEvent('ping', {...}); }</code></td></tr><tr><td>路由分发确认</td><td>第 2889–2937 行</td><td><code>pathname === '/v1/messages' → handleMultiProtocol(req, res, PROTOCOLS.ANTHROPIC)</code></td></tr><tr><td>WebSearch 服务端工具拦截</td><td>第 1389–1410 行</td><td>Claude Code 的 web_search 子请求被专用拦截器处理，避免非 Anthropic 后端死循环</td></tr><tr><td>tool_use/tool_result 配对修复</td><td>第 1558–1565 行</td><td><code>_repairToolUsePairing(repairedRawMessages)</code> 修复中断的 tool 会话</td></tr></tbody></table>
+<h3 id="4-5-四种协议全覆盖">4.5 四种协议全覆盖<a class="anchor" href="#4-5-四种协议全覆盖" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>入站协议</th><th>端点</th><th>上游可以是</th><th>转换方向</th></tr></thead><tbody><tr><td>Anthropic</td><td><code>POST /v1/messages</code></td><td>OpenAI / Gemini / Codex / 任意</td><td>Anthropic→canonical→任意适配器→Anthropic SSE</td></tr><tr><td>OpenAI Chat</td><td><code>POST /v1/chat/completions</code></td><td>Anthropic / Gemini / Codex / 任意</td><td>OpenAI→canonical→任意适配器→OpenAI SSE</td></tr><tr><td>Codex Responses</td><td><code>POST /v1/responses</code></td><td>OpenAI / Anthropic / 任意</td><td>Responses→canonical→任意适配器→Responses SSE</td></tr><tr><td>Gemini</td><td><code>POST /v1beta/models/{model}:generateContent</code></td><td>OpenAI / Anthropic / 任意</td><td>Gemini→canonical→任意适配器→Gemini SSE</td></tr></tbody></table>
+<p><strong>结论</strong>：Claude Code 经代理能用任意协议的上游模型，<strong>无需额外开发</strong>——代理已实现。只需在 <code>appWriters</code> 里把 Claude Code 的配置写成指向代理（代理模式），而非直写 provider 端点（直连模式）。</p>
+<h3 id="4-6-anthropic-直通优化-不经过-parse-reconstruct">4.6 Anthropic 直通优化（不经过 parse→reconstruct）<a class="anchor" href="#4-6-anthropic-直通优化-不经过-parse-reconstruct" aria-label="锚点">#</a></h3>
+<p>当入站 Anthropic 且目标也是 claude 适配器（Anthropic 上游）时，代理有 SSE 原样透传路径（<code>proxyServer.js</code> 第 1644–1648 行 <code>isAnthropicPassthrough</code>），跳过 parse→reconstruct 链路降低延迟。此路径仅在 claude 适配器可用时生效；OpenAI 上游走正常转换链路。</p>
+<hr>
+<h2 id="5-一处配置多-agent-共享的完整流程">5. 一处配置多 agent 共享的完整流程<a class="anchor" href="#5-一处配置多-agent-共享的完整流程" aria-label="锚点">#</a></h2>
+<h3 id="5-1-场景">5.1 场景<a class="anchor" href="#5-1-场景" aria-label="锚点">#</a></h3>
+<p>用户有一张 DeepSeek 卡片（key + endpoint + models）。想让 opencode、zcode、Claude Code 三个 agent 都能用 DeepSeek 的 <code>deepseek-chat</code> 模型。</p>
+<h3 id="5-2-流程-代理模式">5.2 流程（代理模式）<a class="anchor" href="#5-2-流程-代理模式" aria-label="锚点">#</a></h3>
+<pre><code>步骤 1：添加卡片（一次性）
+  用户在 provider-hub 添加 DeepSeek 卡片
+  → card 存入 cc_switch.json（含 baseUrl / keyId / models / defaultModel）
+  → 密钥存入 api_keys.json 池（provider=&quot;deepseek&quot;, key=真实密钥）
+  → 代理的 apiAdapter 从同一 api_keys.json 池读密钥
+  → 代理现在能路由到 DeepSeek（GET /v1/models 会列出 api/deepseek-chat）
+
+步骤 2：应用到 opencode（代理模式）
+  tools:apply(app=&quot;opencode&quot;, cardId=卡片ID, mode=&quot;proxy&quot;)
+  → appWriters.applyCardToApp(card, &quot;opencode&quot;, {mode:&quot;proxy&quot;})
+  → resolveProxyAccess() → 读 proxy_server_runtime.json 得 endpoint=http://127.0.0.1:9100
+                          → 读 proxy_server_auth.json 得 token=khy-&lt;48hex&gt;
+  → resolvePoolKeyFromCard(card) → 扫 api_keys.json 得 poolKey=&quot;deepseek&quot;
+  → 写 ~/.config/opencode/opencode.json:
+      provider.khy_proxy.baseURL = &quot;http://127.0.0.1:9100/v1&quot;
+      provider.khy_proxy.apiKey  = &quot;khy-&lt;48hex&gt;&quot;        ← 代理令牌，非 DeepSeek 真实 key
+      model                      = &quot;api:deepseek:deepseek-chat&quot;
+  → agentMode[&quot;opencode&quot;] = {mode:&quot;proxy&quot;, cardId, ts}
+
+步骤 3：应用到 zcode（代理模式，同一张卡）
+  → 写 ~/.zcode/cli/config.json:
+      provider.zai.endpoint = &quot;http://127.0.0.1:9100/v1&quot;
+      provider.zai.key      = &quot;khy-&lt;48hex&gt;&quot;
+      model.main            = &quot;api:deepseek:deepseek-chat&quot;
+  → agentMode[&quot;zcode&quot;] = {mode:&quot;proxy&quot;, cardId, ts}
+
+步骤 4：应用到 Claude Code（代理模式，同一张卡）
+  → 写 ~/.claude/settings.json env block:
+      ANTHROPIC_BASE_URL = &quot;http://127.0.0.1:9100&quot;      ← 不带 /v1，CC 自己拼 /v1/messages
+      ANTHROPIC_API_KEY  = &quot;khy-&lt;48hex&gt;&quot;
+      ANTHROPIC_MODEL    = &quot;api:deepseek:deepseek-chat&quot;
+  → agentMode[&quot;claude-code&quot;] = {mode:&quot;proxy&quot;, cardId, ts}
+
+结果：
+  opencode → POST 代理/v1/chat/completions（OpenAI）→ 代理路由到 DeepSeek → OpenAI SSE 回
+  zcode    → POST 代理/v1/chat/completions（OpenAI）→ 同上
+  CC       → POST 代理/v1/messages（Anthropic）→ 代理转 OpenAI → DeepSeek → 转回 Anthropic SSE
+  
+  三个 agent 用同一张卡、同一份密钥（在代理池里）、同一端点。
+  DeepSeek 真实密钥只在 api_keys.json 池里，agent 配置文件里只有代理令牌。</code></pre>
+<h3 id="5-3-各-agent-代理模式写入差异">5.3 各 agent 代理模式写入差异<a class="anchor" href="#5-3-各-agent-代理模式写入差异" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>Agent</th><th>写入文件</th><th>代理端点字段</th><th>令牌字段</th><th>模型字段</th><th>协议桥接</th></tr></thead><tbody><tr><td>Claude Code</td><td><code>~/.claude/settings.json</code> env</td><td><code>ANTHROPIC_BASE_URL</code></td><td><code>ANTHROPIC_API_KEY</code></td><td><code>ANTHROPIC_MODEL</code></td><td>Anthropic→OpenAI（代理转）</td></tr><tr><td>Codex</td><td><code>~/.codex/config.toml</code></td><td><code>base_url</code></td><td><code>env_key</code> 引用</td><td><code>model</code></td><td>Responses→OpenAI（代理转）</td></tr><tr><td>opencode</td><td><code>~/.config/opencode/opencode.json</code></td><td><code>provider.baseURL</code></td><td><code>provider.apiKey</code></td><td><code>model</code></td><td>OpenAI→OpenAI（直通）</td></tr><tr><td>zcode</td><td><code>~/.zcode/cli/config.json</code></td><td><code>provider.zai.endpoint</code></td><td><code>provider.zai.key</code></td><td><code>model.main</code></td><td>OpenAI→OpenAI（直通）</td></tr><tr><td>ycode</td><td><code>~/.ycode/config.json</code></td><td><code>endpoint</code></td><td><code>api_key_env</code> 引用</td><td><code>active_model_id</code></td><td>OpenAI→OpenAI（直通）</td></tr><tr><td>gemini</td><td><code>~/.gemini/settings.json</code> env</td><td><code>GOOGLE_GEMINI_BASE_URL</code></td><td><code>GEMINI_API_KEY</code></td><td><code>GEMINI_MODEL</code></td><td>Gemini→OpenAI（代理转）</td></tr><tr><td>command-code</td><td><code>~/.commandcode/providers.json</code></td><td><code>endpoint</code></td><td>env 引用 <code>$KHY_CC_SWITCH_*</code></td><td><code>config.json model</code></td><td>按卡片协议选端点</td></tr></tbody></table>
+<hr>
+<h2 id="6-直连-vs-代理模式对比">6. 直连 vs 代理模式对比<a class="anchor" href="#6-直连-vs-代理模式对比" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>维度</th><th>直连模式（现有）</th><th>代理模式（本方案新增）</th></tr></thead><tbody><tr><td>agent 持有的密钥</td><td>provider 真实 key</td><td>代理令牌（<code>khy-&lt;48hex&gt;</code>，非 provider key）</td></tr><tr><td>协议</td><td>必须与上游一致（CC 只能接 Anthropic provider）</td><td>任意（代理翻译）</td></tr><tr><td>一处配置多 agent</td><td>能（同一卡应用到 N agent），但各存真实 key</td><td>能，且 agent 不存真实 key</td></tr><tr><td>故障转移</td><td>无（单 provider 挂了就挂了）</td><td>有（代理级联 + failover 队列）</td></tr><tr><td>用量统计</td><td>各 agent 各自记账</td><td>代理统一记账（<code>token_usage.json</code>）</td></tr><tr><td>密钥轮换</td><td>改 N 个 agent 配置</td><td>改池一处，所有 agent 自动生效</td></tr><tr><td>代理依赖</td><td>无（agent 直连 provider）</td><td>代理必须在跑（<code>:9100</code>）</td></tr><tr><td>Claude Code + OpenAI provider</td><td><strong>不可能</strong>（协议不匹配）</td><td><strong>可能</strong>（代理翻译）</td></tr><tr><td>端点迁移</td><td>改 N 个 agent 配置</td><td>改代理一处</td></tr></tbody></table>
+<p><strong>默认推荐代理模式</strong>——它解决了核心问题（Claude Code 用 OpenAI 模型 + 一处配置多 agent 共享 + 密钥不外泄）。直连模式保留为 fallback（代理未运行时用）。</p>
+<hr>
+<h2 id="7-落地步骤-2026-09-24-已实施">7. 落地步骤（✓ 2026-09-24 已实施）<a class="anchor" href="#7-落地步骤-2026-09-24-已实施" aria-label="锚点">#</a></h2>
+<h3 id="步骤-1-在-appwriters-实现代理模式写入-核心改动">步骤 1：在 appWriters 实现代理模式写入（核心改动）<a class="anchor" href="#步骤-1-在-appwriters-实现代理模式写入-核心改动" aria-label="锚点">#</a></h3>
+<p><strong>现状</strong>：<code>appWriters.js</code> 的 <code>applyCardToApp(card, app, opts)</code> 只做直连模式——写 <code>card.baseUrl</code> + 真实密钥。<code>cc_switch.json</code> 的 <code>agentMode</code> 字段已在类型层定义（<code>types.ts</code> 第 24–27 行）但未接线。</p>
+<p><strong>改动</strong>：</p>
+<pre><code>appWriters.applyCardToApp(card, app, opts) 加 mode 参数：
+  - opts.mode = 'direct'（现有逻辑不变）
+  - opts.mode = 'proxy'（新增）：
+      1. resolveProxyAccess() → 读 runtime + auth 文件得 endpoint + token
+      2. resolvePoolKeyFromCard(card) → 扫 api_keys.json 得 poolKey
+      3. 构造 routableModel = `api:${poolKey}:${card.defaultModel}`
+      4. 调对应 agent 适配器的代理模式写入（写代理端点 + 令牌 + routableModel）
+      5. 成功后 store 记 agentMode[app] = {mode:'proxy', cardId, ts}</code></pre>
+<p>代理模式写入要复用各 <code>externalApps/</code> 适配器的 <code>add()</code> 方法，但传入代理端点 + 令牌而非 card.baseUrl + 真实 key。两种方式：</p>
+<ul><li>(a) 给每个适配器的 <code>add()</code> 加代理模式参数（侵入性中等，接口统一）</li><li>(b) 在 <code>appWriters</code> 层构造一个&quot;代理卡片&quot;（把 card.baseUrl 替换成代理端点、key 替换成令牌、model 替换成 routableModel），复用现有 <code>add()</code> 不改适配器（侵入性最低）</li></ul>
+<p><strong>推荐 (b)</strong>：在 <code>appWriters</code> 层做字段替换，适配器零改动。代理卡片构造：</p>
+<pre><code class="language-javascript"><span class="hljs-comment">// 伪代码（方案级，不执行）</span>
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">buildProxyCard</span>(<span class="hljs-params">card, { proxyEndpoint, proxyToken, routableModel }</span>) {
+  <span class="hljs-keyword">return</span> {
+    ...card,
+    <span class="hljs-attr">baseUrl</span>: proxyEndpoint,        <span class="hljs-comment">// 替换为代理端点</span>
+    <span class="hljs-comment">// key 在 applyCardToApp 调用时通过 opts.key 传入代理令牌</span>
+    <span class="hljs-attr">defaultModel</span>: routableModel,   <span class="hljs-comment">// 替换为可路由模型名</span>
+  }
+}</code></pre>
+<h3 id="步骤-2-新建-proxyaccess-模块-代理端点-令牌-poolkey-解析">步骤 2：新建 proxyAccess 模块（代理端点 + 令牌 + poolKey 解析）<a class="anchor" href="#步骤-2-新建-proxyaccess-模块-代理端点-令牌-poolkey-解析" aria-label="锚点">#</a></h3>
+<pre><code>services/backend/src/services/domain/config/ccSwitch/proxyAccess.js（新建）
+  - resolveProxyAccess(): 
+      读 dataHome/proxy_server_runtime.json 得 endpoint
+      读 dataHome/proxy_server_auth.json 得 token
+      代理未运行 → 返回 {proxyEndpoint:'', error:'代理未运行…'}（状态透明）
+  - resolvePoolKeyFromCard(card):
+      读 dataHome/api_keys.json，扫各 provider 的 entries，
+      找 keyIdFor(provider, entry.key) === card.keyId 的 provider 名
+      未找到 → 回退用 card.name.toLowerCase() 作 poolKey</code></pre>
+<h3 id="步骤-3-provider-hub-ui-加代理-直连切换">步骤 3：provider-hub UI 加代理/直连切换<a class="anchor" href="#步骤-3-provider-hub-ui-加代理-直连切换" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>文件</th><th>改动</th></tr></thead><tbody><tr><td><code>src/main/ipc.ts</code></td><td><code>tools:apply</code> handler 透传 <code>mode</code> 参数</td></tr><tr><td><code>src/main/toolWriters.ts</code></td><td><code>applyCardToTool(app, card, {key, mode})</code> 透传 mode</td></tr><tr><td><code>src/preload/index.ts</code></td><td><code>tools.apply(app, cardId, mode?)</code> 签名扩展</td></tr><tr><td><code>src/renderer/app.js</code></td><td>工具矩阵每行加代理/直连单选；默认代理模式</td></tr><tr><td><code>src/renderer/index.html</code></td><td>工具矩阵行加 mode 切换控件</td></tr></tbody></table>
+<h3 id="步骤-4-接入已有但未连线的适配器-trae-与代理模式独立-可并行">步骤 4：接入已有但未连线的适配器 + Trae（与代理模式独立，可并行）<a class="anchor" href="#步骤-4-接入已有但未连线的适配器-trae-与代理模式独立-可并行" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>适配器</th><th>状态</th><th>接入方式</th></tr></thead><tbody><tr><td><code>deepseekTuiAdapter.js</code></td><td>文件已存在，switch 缺 case</td><td><code>appWriters.js</code> 加 <code>case APPS.DEEPSEEK_TUI</code></td></tr><tr><td><code>reasonixAdapter.js</code></td><td>文件已存在，switch 缺 case</td><td>加 <code>case APPS.REASONIX</code></td></tr><tr><td><code>openclawAdapter.js</code></td><td>文件已存在，switch 缺 case</td><td>加 <code>case APPS.OPENCLAW</code></td></tr><tr><td><code>cozeAdapter.js</code></td><td>文件已存在，switch 缺 case</td><td>加 <code>case APPS.COZE</code></td></tr><tr><td>Trae</td><td><code>proxySwitchProfiles.js</code> 有写入能力，未纳入矩阵</td><td>新建 <code>externalApps/traeAppAdapter.js</code> 桥接适配器，<code>add()/list()</code> 委托 switch-center 的 <code>use/list</code> 动作</td></tr></tbody></table>
+<h3 id="步骤-5-验证协议桥接-不改代码-只验证">步骤 5：验证协议桥接（不改代码，只验证）<a class="anchor" href="#步骤-5-验证协议桥接-不改代码-只验证" aria-label="锚点">#</a></h3>
+<p>代理模式接线后，验证三种跨协议场景：</p>
+<table><thead><tr><th>场景</th><th>Agent 协议</th><th>上游协议</th><th>代理端点</th><th>预期</th></tr></thead><tbody><tr><td>Claude Code → DeepSeek</td><td>Anthropic</td><td>OpenAI Chat</td><td><code>/v1/messages</code> → 转 → DeepSeek</td><td>CC 收到 Anthropic SSE ✓</td></tr><tr><td>Claude Code → GLM</td><td>Anthropic</td><td>OpenAI Chat</td><td>同上</td><td>✓</td></tr><tr><td>Codex → DeepSeek</td><td>Responses</td><td>OpenAI Chat</td><td><code>/v1/responses</code> → 转 → DeepSeek</td><td>Codex 收到 Responses SSE ✓</td></tr><tr><td>opencode → Claude</td><td>OpenAI</td><td>Anthropic</td><td><code>/v1/chat/completions</code> → 转 → Claude</td><td>opencode 收到 OpenAI SSE ✓</td></tr></tbody></table>
+<h3 id="步骤-6-junction-辅助-集中-khy-数据家目录-已有-无需新做">步骤 6：Junction 辅助——集中 khy 数据家目录（已有，无需新做）<a class="anchor" href="#步骤-6-junction-辅助-集中-khy-数据家目录-已有-无需新做" aria-label="锚点">#</a></h3>
+<p>确认 <code>~/.khy</code> → 便携根、<code>~/.khyquant</code> → <code>C:\.khyquant</code> junction 到位（汇总文档 §7.8 实测已确认）。新机器用 <code>resolve-location.ps1</code>（汇总文档 §7.5）检测后 <code>mklink /J</code> 创建。这是<strong>部署态</strong>操作，不是代码改动。</p>
+<hr>
+<h2 id="8-文件改动清单-2026-09-24-已实施">8. 文件改动清单（✓ 2026-09-24 已实施）<a class="anchor" href="#8-文件改动清单-2026-09-24-已实施" aria-label="锚点">#</a></h2>
+<h3 id="后端">后端<a class="anchor" href="#后端" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>文件</th><th>改动</th><th>性质</th></tr></thead><tbody><tr><td><code>services/backend/src/services/domain/config/ccSwitch/appWriters.js</code></td><td><code>applyCardToApp</code> 加 <code>mode:'proxy'</code> 分支 + <code>buildProxyCard</code> 字段替换</td><td>改（核心）</td></tr><tr><td><code>services/backend/src/services/domain/config/ccSwitch/proxyAccess.js</code></td><td><code>resolveProxyAccess()</code> + <code>resolvePoolKeyFromCard()</code></td><td><strong>新建</strong></td></tr><tr><td><code>services/backend/src/services/domain/config/ccSwitch/constants.js</code></td><td><code>APPS</code> 枚举加 <code>DEEPSEEK_TUI</code> / <code>REASONIX</code> / <code>OPENCLAW</code> / <code>COZE</code> / <code>TRAE</code></td><td>改</td></tr><tr><td><code>services/backend/src/services/domain/network/externalApps/traeAppAdapter.js</code></td><td>桥接适配器，委托 <code>proxySwitchProfiles</code></td><td><strong>新建</strong></td></tr></tbody></table>
+<h3 id="provider-hub">provider-hub<a class="anchor" href="#provider-hub" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>文件</th><th>改动</th></tr></thead><tbody><tr><td><code>src/main/ipc.ts</code></td><td><code>tools:apply</code> 透传 mode</td></tr><tr><td><code>src/main/toolWriters.ts</code></td><td><code>applyCardToTool</code> 透传 mode + 默认工具列表扩到 12</td></tr><tr><td><code>src/preload/index.ts</code></td><td><code>tools.apply</code> 签名加 mode</td></tr><tr><td><code>src/renderer/app.js</code></td><td>工具矩阵加代理/直连切换 + 工具列表扩到 12</td></tr><tr><td><code>src/renderer/index.html</code></td><td>工具矩阵行加 mode 控件</td></tr></tbody></table>
+<h3 id="零改动">零改动<a class="anchor" href="#零改动" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>文件</th><th>理由</th></tr></thead><tbody><tr><td><code>proxyServer.js</code></td><td>协议桥接已实现（§4 验证），不需要改</td></tr><tr><td><code>protocolConverter</code> / <code>_protocolPipeline</code> / <code>_protocolRegistry</code></td><td>已实现</td></tr><tr><td><code>modelRouter</code></td><td>已实现</td></tr><tr><td><code>aiGateway.js</code></td><td>不涉及（代理路由在 proxyServer 层完成）</td></tr><tr><td><code>ai-frontend</code> / <code>khyos-desktop</code></td><td>不涉及（代理模式写入经 appWriters SSoT，前端零改动）</td></tr></tbody></table>
+<hr>
+<h2 id="9-风险与降级">9. 风险与降级<a class="anchor" href="#9-风险与降级" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>风险</th><th>降级</th></tr></thead><tbody><tr><td>代理未运行时代理模式不可用</td><td><code>resolveProxyAccess()</code> 检测 <code>proxyStatus().running===false</code> 时返回具体错误（状态透明，规则 2.2）；用户切直连模式用</td></tr><tr><td><code>proxy_server_auth.json</code> 不存在</td><td><code>resolveProxyAccess()</code> fail-soft 返回 <code>{proxyEndpoint:'', error:'代理未启动…'}</code>，不假装成功</td></tr><tr><td>代理令牌泄露给 agent 配置文件</td><td>令牌是 <code>khy-&lt;48hex&gt;</code>（非 provider 真实 key）；泄露后代理侧 <code>rotateAuthToken()</code> 一键轮换，无需改 provider key</td></tr><tr><td>协议翻译损耗（工具调用格式差异）</td><td>代理已有 <code>_toolSchemaConverter</code> + tool_use/tool_result 配对修复（<code>proxyServer.js</code> 第 1558–1565 行）；Claude Code 的 web_search 服务端工具有专用拦截器（第 1389–1410 行）</td></tr><tr><td>poolKey 解析失败（card.keyId 无对应池条目）</td><td><code>resolvePoolKeyFromCard</code> 返回空 → 回退用 <code>card.name.toLowerCase()</code> 作 poolKey → 仍可路由</td></tr><tr><td>代理模式写入后 agent 不认模型名</td><td><code>api:deepseek:deepseek-chat</code> 三段格式是 apiAdapter 原生格式（<code>apiAdapter.js</code> <code>parseProviderModel</code>）；如 agent 截断模型名，回退用裸名 + <code>PROXY_MODEL_ROUTE_MAP</code> 条目</td></tr><tr><td>Trae 桥接委托 switch-center 路径复杂</td><td>步骤 4 的 Trae 接入可独立于代理模式先行或后行；不阻塞核心流程</td></tr></tbody></table>
+<hr>
+<h2 id="10-证据索引">10. 证据索引<a class="anchor" href="#10-证据索引" aria-label="锚点">#</a></h2>
+<h3 id="本机-agent-配置实测">本机 agent 配置实测<a class="anchor" href="#本机-agent-配置实测" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>结论</th><th>出处</th></tr></thead><tbody><tr><td>16 个本机 agent 的配置位置 / 协议 / CLI 面</td><td><code>D:\Portable\AI模型配置汇总.md</code> 第一节（16 项逐条实测）</td></tr><tr><td>khy-os 是两层合一（代理 + 适配器）</td><td>汇总文档 §8.1 / §8.6</td></tr><tr><td>cc-switch 是隐藏中枢（只覆盖 Claude Code + opencode）</td><td>汇总文档 §8.5</td></tr><tr><td>GUI-only agent（WorkBuddy / Qoder）无法文件管理</td><td>汇总文档 §8.6 结构性排除</td></tr><tr><td>Junction 实测（<code>.zcode</code> / <code>.khyquant</code> / <code>.gradle</code>）</td><td>汇总文档 §7.8</td></tr><tr><td>重解析点类型与判定方法</td><td>汇总文档 §7.2 / §7.3</td></tr></tbody></table>
+<h3 id="khy-os-源码验证">khy-os 源码验证<a class="anchor" href="#khy-os-源码验证" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>断言</th><th>源码文件</th><th>行号</th></tr></thead><tbody><tr><td>代理四协议端点路由</td><td><code>services/backend/src/services/gateway/proxyServer.js</code></td><td>2889–2937</td></tr><tr><td><code>handleMultiProtocol</code> 协议互转</td><td>同上</td><td>1385（函数定义）/ 1412（入站转换）/ 1483（路由）/ 1716（出站转换）</td></tr><tr><td>Anthropic 级联允许（非绑死 claude 适配器）</td><td>同上</td><td>1490–1495</td></tr><tr><td>Anthropic SSE 出站事件</td><td>同上</td><td>1716–1733</td></tr><tr><td>WebSearch 服务端工具拦截</td><td>同上</td><td>1389–1410</td></tr><tr><td>tool_use/tool_result 配对修复</td><td>同上</td><td>1558–1565</td></tr><tr><td>Anthropic 直通优化</td><td>同上</td><td>1644–1648</td></tr><tr><td>代理端口 + 端口冲突探测</td><td>同上</td><td>373–450（<code>resolveStartConfig</code>）/ <code>PORT_RETRY_LIMIT=10</code></td></tr><tr><td>代理 auth（自动令牌 + managed tokens）</td><td>同上</td><td>482–770</td></tr><tr><td>代理运行时文件写 <code>proxy_server_runtime.json</code></td><td>同上</td><td>exports 段 3085–3102</td></tr><tr><td>appWriters 7 agent 直连写入</td><td><code>services/backend/src/services/domain/config/ccSwitch/appWriters.js</code></td><td>110–200</td></tr><tr><td><code>agentMode</code> 类型定义（proxy/direct）</td><td><code>apps/provider-hub/src/main/types.ts</code></td><td>24–27</td></tr><tr><td>代理端点发现（零硬编码）</td><td><code>apps/provider-hub/src/main/proxyStatus.ts</code></td><td>22–45</td></tr><tr><td>dataHome 四级解析</td><td><code>apps/provider-hub/src/main/providers.ts</code></td><td>25–49</td></tr><tr><td>11 个内置厂商</td><td><code>services/backend/src/services/gateway/builtinProviderConfig.js</code></td><td>32–126</td></tr><tr><td>12 个公共适配器</td><td><code>proxyServer.js</code></td><td>64–77</td></tr><tr><td>apiAdapter 三段模型名 <code>api:&lt;poolKey&gt;:&lt;model&gt;</code></td><td><code>services/backend/src/services/gateway/adapters/apiAdapter.js</code></td><td><code>parseProviderModel</code></td></tr><tr><td>externalApps 已有但未连线的 4 适配器</td><td><code>services/backend/src/services/domain/network/externalApps/</code></td><td><code>deepseekTuiAdapter.js</code> / <code>reasonixAdapter.js</code> / <code>openclawAdapter.js</code> / <code>cozeAdapter.js</code></td></tr><tr><td>Trae switch-center</td><td><code>services/backend/src/cli/handlers/proxySwitchProfiles.js</code></td><td>全文 301 行</td></tr></tbody></table>
+<hr>
+<h2 id="附录-a-与-design-arch-094-的关系">附录 A：与 DESIGN-ARCH-094 的关系<a class="anchor" href="#附录-a-与-design-arch-094-的关系" aria-label="锚点">#</a></h2>
+<p>本方案是 <code>[DESIGN-ARCH-094]</code> 的<strong>增量扩展</strong>：</p>
+<table><thead><tr><th>094 已落地</th><th>本方案新增</th></tr></thead><tbody><tr><td>卡片库 CRUD + 密钥池 + 脱敏不变式</td><td>代理模式写入（appWriers 加 mode 分支）</td></tr><tr><td>7 agent 直连写入</td><td>+5 agent 接入（4 个已有适配器 + Trae 桥接）</td></tr><tr><td>代理端点发现（proxyStatus.ts）</td><td>代理令牌发现 + poolKey 解析（proxyAccess.js）</td></tr><tr><td>工具矩阵 UI（应用/撤销）</td><td>工具矩阵加代理/直连切换</td></tr><tr><td>failover 备卡队列</td><td>直连 vs 代理模式对比</td></tr><tr><td>—</td><td>协议桥接验证（Anthropic↔OpenAI，已确认可用）</td></tr></tbody></table>
+<p>094 的所有不变式（零硬编码端点、卡片不含凭据、明文 key 单一出口、写必走正门、空闲超时不硬挂、fail-soft）在本方案中<strong>全部沿用，不放宽</strong>。</p>
+<h2 id="附录-b-未纳入本方案的范围">附录 B：未纳入本方案的范围<a class="anchor" href="#附录-b-未纳入本方案的范围" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>事项</th><th>理由</th><th>后续</th></tr></thead><tbody><tr><td>桌面识图（截图 + 视觉模型读 GUI-only agent 当前模型）</td><td>用户另行讨论；本方案聚焦协议桥接与代理模式</td><td>独立设计文档</td></tr><tr><td>GUI 自动化写入（模拟点击设置面板切模型）</td><td>风险高、平台相关、易误操作</td><td>暂不纳入</td></tr><tr><td>Qoder / Qoder CN 接入</td><td>catalog 加密 + uid 本机绑定，结构性排除（汇总文档 §8.6）</td><td>不可行</td></tr><tr><td>WorkBuddy 模型列表外部分发</td><td><code>acc-product-config-v3.json</code> 是输出文件，手改无效（汇总文档 §1.9）</td><td>不可行（路由可经代理，模型列表不可）</td></tr><tr><td>new-api / litellm 引入</td><td>单人本机无收益；多机协作时再评估（汇总文档 §8.8 步骤 7）</td><td>后续</td></tr></tbody></table>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-100] 模型列表真值校验与过滤规范.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-100] 模型列表真值校验与过滤规范</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-101] TUI 交互与展示规则细则.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-101] TUI 交互与展示规则细则</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-101] 代理模式统一Agent模型管理与协议桥接方案.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

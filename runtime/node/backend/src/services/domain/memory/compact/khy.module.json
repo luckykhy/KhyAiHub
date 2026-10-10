@@ -1,0 +1,44 @@
+{
+  "name": "compact",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "实测边：prompt.js 零 require（纯模板叶子）；index.js → ./prompt（单元内 D2）+ ../../../../utils/simpleTokenEstimate（D3）。除内建模块外只有这三条。",
+  "_deviation_note": "登记而非白名单：index.js 的 shouldCompact 在 try 内惰性 require('../../../contextProfile') —— 那是 src/services/contextProfile.js，属 D1（src/services 顶层），不在 D2 的名义边界内。它缺失时回退为未钳制的原始 reserve（行为退化但不抛）。另有一条反向事实：D1 再导出壳 src/services/compact/index.js 指回本单元（D1→D2，允许）。本清单如实登记这条 D2→D1 边，交由 archDebtScan R1 与 domain-direction 的既有棘轮管辖，不写白名单把它合法化。",
+  "fanIn": 1,
+  "fanInEvidence": [
+    "services/backend/src/services/compact/index.js"
+  ],
+  "_fanIn_note": "非测试消费者 1 个：D1 再导出壳 services/compact/index.js。计数排除 *.test.js。**重要事实（如实记录，不粉饰）**：该壳本身在 src/ 下零消费者，本单元不在活的 /compact 通路上——运行时压缩走的是 services/contextCompressor.js 与 domain/query/query/{compactionStages,compactPipeline}.js；src/cli/compactInstructions.js:30 明确写了「不改道去 services/compact/* 那套 getCompactPrompt 通路」。本单元目前的真实读者只有两份测试。物理去留属规则 7（删除先报部位）与人的裁决，本清单不做删除动作。",
+  "behaviourTestsOutsideUnit": [
+    "services/backend/tests/promptLearningRules.test.js",
+    "services/backend/tests/services/compactShouldCompactReserve.test.js"
+  ],
+  "_outside_test_note": "promptLearningRules.test.js 是 node:test 方言、可直接跑（19 例全绿）。compactShouldCompactReserve.test.js 是 jest 方言（describe/expect），本便携环境未安装 jest（node_modules/.bin/jest 是悬空 shim），`node --test` 跑它会因缺 describe 全局而 ReferenceError —— 故该文件在本环境**不可执行**，其 shouldCompact reserve 钳制断言已由共置 index.test.js 以同一算术复现。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-29",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "晋级三判据齐：单元级 README.md、整数 fanIn、两个源文件各有同名同目录测试（共 34 例全绿、0 skip）。单元早于 entry-buffer 守卫，缓冲区从未被经过。",
+  "contract": {
+    "purity": "prompt.js 是零 IO 纯模板/纯字符串叶子（同一输入逐字节同输出）。index.js 只做编排与算术：不 call 模型、不碰 fs/net/spawn、不读 process.env；模型调用与落盘归调用方（见 index.js 头部注释「The orchestrator does NOT call the AI itself」）。",
+    "ioOwner": "本单元无 IO 面。谁调用模型、谁写 transcript 文件都在消费者侧。",
+    "injectionPoints": [
+      "sessionMemoryCompact(messages, { preserveRecent, customInstructions })",
+      "microCompact(messages, { windowSize, customInstructions })",
+      "applyCompaction(rawSummary, preserved, { suppressFollowUp, transcriptPath })",
+      "shouldCompact(messages, contextWindowTokens, reserveTokens = 4096)",
+      "getAnchoredCompactPrompt({ previousSummary, context, customInstructions })"
+    ],
+    "gates": "无 env 门控（grep 本单元源码零 KHY_/process.env 命中）。行为分岔只来自入参。",
+    "token_math": "estimatedTokens = Σ simpleTokenEstimate(content)（chars/4 上取整，SSOT 在 utils/simpleTokenEstimate）；非字符串 content 走 JSON.stringify 分支，不抛（block-array 形状）。阈值 usage>=0.9 → 'now'、>=0.7 → 'soon'，usage = estimatedTokens / max(1, window − clampedReserve)。",
+    "reserve_clamp": "reserve 经 contextProfile.deriveReserveTokens 钳到窗口的 30%（RESERVE_CAP_RATIO，上限仍是请求值）：8k 窗口的 4096 默认被钳成 2400，否则固定预留会吃掉一半上下文、压缩在错误时点触发。大窗口不受影响。",
+    "known_boundaries": "三处如实登记的现状：(1) formatCompactSummary 对非字符串入参抛 TypeError（契约要求调用方先取到模型文本；此处不做 block-array 解包）；(2) getAnchoredCompactPrompt 的 context 默认值只对「键缺失/undefined」生效，显式 null 会命中 .length 而抛；(3) 标签重写用的是非全局正则，第二对 <analysis>/<summary> 会以原始标签残留。以上均为现状契约，由共置测试钉住，非「已修」声明。另：index.js 的 ESTIMATED_TOKENS_PER_MESSAGE 是未被引用也未导出的死常量，prompt.js 的 getAnchoredCompactPrompt 在本单元内无人调用——留待规则 7 的部位清单与人的裁决，不在本次改动集里静默清理。"
+  },
+  "tests": [
+    "index.test.js",
+    "prompt.test.js"
+  ],
+  "_test_dialect_note": "两份共置测试均为 node:test 方言，可用 node --test <显式文件名> 直接跑，零真 IO、不碰工作树、不 call 模型。"
+}

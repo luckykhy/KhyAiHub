@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>capabilityMatrix — 智能体能力矩阵（D2 功能单元） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>catalog<span class="sep">›</span>capabilityMatrix<span class="sep">›</span>capabilityMatrix — 智能体能力矩阵（D2 功能单元）</div>
+      <header class="hero reveal"><h1>capabilityMatrix — 智能体能力矩阵（D2 功能单元）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#capabilitymatrix-智能体能力矩阵-d2-功能单元">capabilityMatrix — 智能体能力矩阵（D2 功能单元）</a></li><li class="lvl-2"><a href="#逐成员">逐成员</a></li><li class="lvl-2"><a href="#契约-每条都有测试兜">契约（每条都有测试兜）</a></li><li class="lvl-2"><a href="#已登记的偏差-不在本单元内悄悄修">已登记的偏差（不在本单元内悄悄修）</a></li><li class="lvl-2"><a href="#怎么跑">怎么跑</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="capabilitymatrix-智能体能力矩阵-d2-功能单元">capabilityMatrix — 智能体能力矩阵（D2 功能单元）<a class="anchor" href="#capabilitymatrix-智能体能力矩阵-d2-功能单元" aria-label="锚点">#</a></h1>
+<p>一句话：把散落在工具循环里的 ~27 处 <code>process.env.KHY_*</code> 内联门控，收敛成一份<strong>人可编辑的数据表</strong>（19 条能力描述符）+ 一个<strong>纯函数路由器</strong>（把一次请求的能力集压成可观测的 Route）。执行位置不变、行为不变（cut 1 只做观测），改能力只需编辑 <code>descriptors.js</code>。</p>
+<p>清单：<code>khy.module.json</code>（domain / mayDependOn / fanIn / lifecycle.stage 四字段被 <code>npm run check:layout</code> 的 entry-buffer 规则读取，其余给人看）。</p>
+<h2 id="逐成员">逐成员<a class="anchor" href="#逐成员" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>角色</th><th>仓内 require</th><th>同名测试</th></tr></thead><tbody><tr><td><code>seams.js</code></td><td>5 个注入点符号 + 相位地板 + 物理宿主表；纯数据</td><td>无</td><td><code>seams.test.js</code></td></tr><tr><td><code>predicates.js</code></td><td>6 种 flag 方言的解析叶子（逐字节复现旧内联表达式）</td><td><code>utils/envFlagEnabled</code>（D3，再导出同一函数）</td><td><code>predicates.test.js</code></td></tr><tr><td><code>routePresets.js</code></td><td>3 条命名路线（research / delivery / audit），纯声明</td><td>无</td><td><code>routePresets.test.js</code></td></tr><tr><td><code>descriptors.js</code></td><td>能力 SSOT：19 条描述符，声明 data-only</td><td><code>./seams</code>；<code>unknownProblemHandler</code>（D1，惰性，见下「偏差」）</td><td><code>descriptors.test.js</code></td></tr><tr><td><code>composer.js</code></td><td>路线规划器：筛选 + 排序 + 预算背包，零 IO</td><td><code>./seams</code></td><td><code>composer.test.js</code></td></tr><tr><td><code>route.js</code></td><td>把运行期 Route 压成观测字段 / CLI 一行摘要</td><td>无</td><td><code>route.test.js</code></td></tr><tr><td><code>index.js</code></td><td>唯一运行期面：类 + 单例 + 覆盖文件读取（本单元唯一 IO 面）</td><td><code>fs/os/path</code>、单元内 4 件、<code>utils/dataHome</code>（D3）</td><td><code>index.test.js</code></td></tr></tbody></table>
+<p>外部消费者 4 个（fanIn 实测口径见清单里的 <code>_fanIn_note</code>）：<code>services/capabilityMatrix/index.js</code>（再导出壳）→ <code>tool/toolCalling.js</code>、<code>tool/toolUseLoopCore.js</code>、<code>tool/toolUseLoopHelpers.js</code>。</p>
+<h2 id="契约-每条都有测试兜">契约（每条都有测试兜）<a class="anchor" href="#契约-每条都有测试兜" aria-label="锚点">#</a></h2>
+<ol><li><strong>方言不漂移</strong>：<code>resolveFlag</code> 对每个 env 取值必须给出与旧内联检查相同的布尔；<code>offDisables</code> 不 trim 不 lowercase（<code>'OFF'</code> 仍为开），<code>onEnables</code> 默认关，<code>module</code> 抛异常按关处理 → <code>predicates.test.js</code></li><li><strong>未知 kind = fail-open，所以目录里不许出现</strong>：解析器对无法识别的 <code>kind</code> 返回 true（默认放行），真正的防线是「19 条描述符的 kind 全部在枚举内」这条目录级锁 → <code>predicates.test.js</code></li><li><strong>预设不改变谁开火</strong>：cut 1 里 preset 只贴 <code>inPreset</code> 标签和做同带内的次序微调，<code>active</code> 集合与不带预设时逐字节相同；audit 路线 <code>whenModes: []</code> 永不被自动选中，只能按 id 取 → <code>routePresets.test.js</code>、<code>composer.test.js</code></li><li><strong>预算永不砍不可逆步骤</strong>：<code>budget</code> 有限时按成本从高到低丢弃 reversible 条目；不够就把全部 reversible 丢完并如实报超限，绝不丢 <code>isReversible: false</code> → <code>composer.test.js</code></li><li><strong>目录数据不许烂</strong>：<code>invoke.module</code> 全部可解析（一次报全部死链，不像逐条断言那样在第一个失败处停），<code>requires</code> 维度必须存在于 <code>gateway/capabilityRegistry.CAPABILITIES</code>，<code>phase</code> 偏移不得越出本接缝的 100 宽带 → <code>descriptors.test.js</code></li><li><strong>清单是冻到骨子里的</strong>：<code>Object.freeze</code> 只冻数组外壳，条目与内层数组仍可写，而 <code>index.js</code> 把这些引用直接交给调用方（覆盖是浅拷贝 <code>{...d, ...override}</code>，所以覆盖路径本来就依赖「不改原表」）→ 现在每条描述符 / 预设都深度冻结，覆盖仍照常生效 → <code>descriptors.test.js</code>、<code>routePresets.test.js</code>、<code>index.test.js</code></li></ol>
+<h2 id="已登记的偏差-不在本单元内悄悄修">已登记的偏差（不在本单元内悄悄修）<a class="anchor" href="#已登记的偏差-不在本单元内悄悄修" aria-label="锚点">#</a></h2>
+<ul><li><strong>D2 → D1 一条边</strong>：<code>descriptors.js:91</code> 在 <code>unknownProblem</code> 的 <code>isEnabledFn</code> 里惰性 <code>require('../../../unknownProblemHandler')</code>。该边在 <code>DOMAIN-DEPS.json</code> 属 <code>declared_not_enforced</code>，归 archDebtScan R1 / <code>cross-layer-require</code> 棘轮管，本单元只在清单里如实登记，不写进 <code>mayDependOn</code> 冒充许可。</li><li><strong>2 个 <code>designDoc</code> 是占位 id</strong>：<code>DESIGN-ARCH-AUDIT</code>、<code>DESIGN-ARCH-CROSS-SRC</code> 在 <code>docs/</code> 下没有同名文件（其余 5 个都有）。要补文档还是改指现有真源，需人拍板；本单元不设白名单把它永久合法化。</li></ul>
+<h2 id="怎么跑">怎么跑<a class="anchor" href="#怎么跑" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-comment"># 共置契约测试（node:test 方言；目录参数在 Windows 下会被当模块路径，必须逐个列文件名）</span>
+<span class="hljs-built_in">cd</span> services/backend/src/services/domain/catalog/capabilityMatrix
+node --<span class="hljs-built_in">test</span> seams.test.js route.test.js routePresets.test.js predicates.test.js composer.test.js descriptors.test.js index.test.js
+
+<span class="hljs-comment"># 仓级行为测试：capabilityMatrixParity.test.js 是 describe/it（jest 方言），直接 node --test 会整文件 ReferenceError</span>
+node .khyos/tmp/jest-lite.js services/backend/tests/root-level/capabilityMatrixParity.test.js</code></pre>
+<p><code>*.test.js</code> 与 <code>*.md</code> / <code>*.json</code> 不计入源文件数，因此本单元的记录动作是「7 份同名同目录测试 + 1 份清单 + 本 README」——按守卫实测，每补一份共置测试 <code>functional-unit</code> 降 1，补清单一次 <code>entry-buffer</code> 降 7。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/services/domain/backup/README.html"><div class="dir">← 上一篇</div><div class="ttl">backup — 备份、磁盘分析与清理（D2）</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/services/domain/catalog/commandCatalog/README.html"><div class="dir">下一篇 →</div><div class="ttl">commandCatalog — khy 功能索引的分组目录（D2 功能单元）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/catalog/capabilityMatrix/README.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

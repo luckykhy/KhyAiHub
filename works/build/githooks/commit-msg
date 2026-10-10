@@ -1,0 +1,54 @@
+#!/bin/bash
+# works/build/githooks/commit-msg
+#
+# Git commit-msg 钩子 —— 校验**本次**提交信息。
+#
+# ## 为什么在这里、而不是 pre-commit（2026-09-24 修）
+#
+# git 对 pre-commit 的契约是「在**取得**提交信息之前」运行（githooks(5)：
+# "invoked before obtaining the proposed commit log message"）。也就是说，pre-commit
+# 执行时 `.git/COMMIT_EDITMSG` 里装的还是**上一次**的提交信息；全新克隆的第一次
+# 提交里它甚至还不存在（`[ -f ]` 直接假 → 整段校验被跳过）。
+#
+# 两提交对照实验（实测）：
+#   第 2 次提交时  pre-commit 读到 `feat(alpha): 第一次提交`（上一次的！）
+#                  commit-msg 收到 `fix(beta): 第二次提交`（真正的）
+#
+# ⇒ 原来挂在 pre-commit 的校验同时有两个方向的错：
+#   ① **假阳性**：用上一条消息拦下本条。实测 `fix(sync,guards): …` 的逗号 scope
+#      不合校验器正则（scope 只许 `[a-z0-9-]+`），导致其后**所有**提交被阻塞；
+#   ② **假阴性（更严重）**：真正要写进历史的那条消息**从未被校验**。
+#      `check-commit-message.js` 的注释明确写着「禁止 AI 署名」是**唯一必须在
+#      写入历史之前**挡住的判据（AI 署名一旦进历史只能靠改写历史清除），
+#      而这段校验读的是陈旧文件 ⇒ 该硬拦截层等于失效。
+#
+# commit-msg 由 git 把**本次消息文件的路径**作为 `$1` 传入，是唯一正确的位置。
+#
+# ⚠ 判据不在此硬编码：真源是 `scripts/ci/check-commit-message.js`（含 AI 署名形态、
+#   Conventional Commits 正则与 72 字符描述上限）。改规则请改那里。
+#
+# 说明：本钩子生效后，**格式不合规的消息会在本次提交就被拒绝**。
+# 若团队认为 `fix(a,b):`（多 scope 逗号）应属合法，那是校验器正则的策略问题，
+# 须由人改 `check-commit-message.js` 的 PATTERN —— 不要在本文件里放宽。
+
+set -e
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+MSG_FILE="${1:-}"
+if [[ -z "$MSG_FILE" || ! -f "$MSG_FILE" ]]; then
+  # git 契约异常（拿不到消息文件）时**不阻断**：宁可漏一次校验，也不把提交卡死。
+  echo "[WARN] commit-msg: 未收到消息文件路径，跳过本次校验" >&2
+  exit 0
+fi
+
+echo "📝 检查 commit message..."
+if ! node "$ROOT/scripts/ci/check-commit-message.js" "$MSG_FILE"; then
+  echo ""
+  echo "❌ 本次提交信息未通过校验。修法：**只改这次的提交信息，代码不用动**。"
+  echo "   · 改完重提：git commit --amend -F <消息文件>"
+  echo "   · 或在提交时直接给合规信息：git commit -m \"<type>(<scope>): <中文描述>\""
+  exit 1
+fi
+echo "  ✅ commit message 合规"

@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><style>body{margin:0;background:#fff;font-family:"Microsoft YaHei","Segoe UI",sans-serif;padding:26px 32px;color:#111827}h1{font-size:24px;margin:0 0 4px}.sub{font-size:13.5px;color:#4b5563;margin-bottom:18px}.src{font-size:12px;color:#6b7280;margin-top:20px;border-top:1px solid #e5e7eb;padding-top:10px;line-height:1.7}</style></head><body>
+<h1>终端真实输出：khy hq status</h1><div class="sub">任务/Bug 台账读数（.ai/hq 状态真源）　｜　进程状态：ok</div><div style="background:#0f172a;border-radius:10px;overflow:hidden;box-shadow:0 8px 26px rgba(2,6,23,.35)">
+  <div style="background:#1e293b;color:#cbd5e1;font-size:13px;padding:9px 14px;font-family:Consolas,monospace;display:flex;justify-content:space-between">
+    <span>khy-os — khy hq status</span><span>Windows 11 · Node v22.18.0 · 2026-09-28</span></div>
+  <pre style="margin:0;padding:16px 18px;font-family:Consolas,'Courier New',monospace;font-size:13.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;max-height:760px;overflow:hidden"><span style="color:#e6e6e6;font-weight:400">==============================================================
+khy-os 任务状态总览    khy_os v1.1.11    2026-09-28
+==============================================================
+
+【Bug】共 17 条
+  BUG-001 [closed] P1 严重    质量看板 D1-D5 分数是硬编码常量，exitCriteria.met
+  BUG-002 [closed] P2 一般    export-dimension-health.js 的 D5 相对路径
+  BUG-003 [closed] P2 一般    sync.py --status 声称只读却实际执行 pull，令「先看
+  BUG-004 [closed] P2 一般    TUI：出现折叠状态行（如「正在初始化网关…+N 行 · 按 Ctrl+
+  BUG-005 [closed] P1 严重    所有模型请求都报错：OpenAI/api 经 per-provider 
+  BUG-006 [open] P1 严重    网关路由串 api:sensenova:deepseek-v4-flas [本机占用]
+  BUG-007 [closed] P1 严重    做任务时无法准确提出问题、理解用户意图（提问缺意图对齐标准与任务上下文兜
+  BUG-008 [closed] P1 严重    tests/ 目录 1531 个文件被一次失败的 node:test→j
+  BUG-009 [pending_verify] P2 一般    TUI @补全：引用根（@alias/子路径）内文件补全静默失效——us
+  BUG-010 [open] P2 一般    TUI 统一协议原生覆盖层静默降级：ink App.js uiBridg
+  BUG-011 [pending_verify] P2 一般    CcViewStack.js CcTaskCompleteCard 使用
+  BUG-012 [open] P2 一般    TUI 底部状态行宽度预算溢出：windsurf 停用回退等长警告使状态
+  BUG-013 [pending_verify] P3 轻微    两个 QUARANTINE 占位测试壳用 jest 的 describe
+  BUG-014 [pending_verify] P1 严重    工具调用能力判定系统性偏「不支持」：判据把无定论读成不支持，产生 gpt
+  BUG-015 [open] P2 一般    khyquant 侧 services 副本与 backend 正本已分
+  BUG-016 [closed] P2 一般    README 承诺的首跑命令 khy preflight 不存在（实测「
+  BUG-017 [pending_verify] P2 一般    首跑 10 分钟承诺实测不成立（T-027）：pip 直连 PyPI 装
+
+【路线图任务】进度 8/29 done
+  T-001 [todo] 新功能 P1  微信 ilink 通道端到端手测收尾：扫码登录→发消息→工具审批→回复闭
+  T-002 [todo] 质量 P2  全量跑 check-agent-rules.js 清零硬编码端点与含糊状  -&gt; Claude Code
+  T-003 [todo] 质量 P2  auditLog 幂等去重与 getModuleStats 前缀过滤补单  -&gt; Claude Code
+  T-004 [todo] 文档 P3  同步 AGENTS.md / .ai/MAP.md 与实际目录树的一致性
+  T-005 [todo] 质量 P2  为 no-hardcoded-abs-path 增加「第三方安装探测候选  -&gt; Claude Code
+  T-006 [todo] 新功能 P3  多机（N 机）协作与「一处出错不处处报」遏制闭环
+  T-007 [done] 新功能 P2  sync.py 自动判断分支合并时机（方案 A：检测后询问）
+  T-008 [todo] 新功能 P2  环境/运行时管理：网页端可列出、下载安装、卸载 node/python/
+  T-009 [todo] 新功能 P2  T-008 收尾：SHA-256 按(版本/平台/架构)存+安装时取官方
+  T-010 [done] 文档 P2  五通道决策矩阵：API/CLI/状态直读/服务直调/看屏幕的清晰判定机制
+  T-011 [done] 性能 P1  启动提速第一刀：dbHealth 完整性检查后台化 + chcp 直调 
+  T-012 [todo] 性能 P2  启动提速第二刀（深水区）：Ink 1.4s 载入、Python 稳态 b
+  T-013 [todo] 新功能 P1  打造 khy-os 手机端智能体 APK：Flutter 项目骨架 + 
+  T-014 [todo] 新功能 P2  khy-os 手机端 APK Sprint 2：WebSocket 连接
+  T-015 [todo] 新功能 P2  khy-os 手机端 APK Sprint 3：语音交互 + 多对话管理
+  T-016 [done] 质量 P1  可维护性阶段0·立护栏：文件体积门禁 + 根目录残留清理（绞杀者重构前置  -&gt; Claude Code
+  T-017 [done] 重构 P2  可维护性阶段1·拆双子星：replSession.js(13421行)   -&gt; Claude Code
+  T-018 [todo] 重构 P2  可维护性阶段2·网关适配器去重：claude/codex/trae/ki  -&gt; Claude Code
+  T-019 [todo] 重构 P3  可维护性阶段3·功能审计裁剪：flagRegistry(2331行) 开  -&gt; Claude Code
+  T-020 [doing] 重构 P2  replSession.js 拆分批次 B2-B11：按 [MGMT-P  -&gt; Claude Code
+  T-021 [doing] 重构 P2  toolUseLoopCore.js 拆分批次 C1-C3：顶层叶子外迁  -&gt; Claude Code
+  T-022 [todo] 新功能 P1  四端跨设备同步：手机+网页+桌面+终端 WebSocket 实时同步与会</span></pre>
+</div>
+<div class="src">采集方式：<code>node services/backend/bin/khy.js hq status</code> 捕获子进程 stdout（保留 ANSI 颜色），包进终端外观后由 msedge.exe 无头截图。<br>字符内容未经改写。本命令为只读离线命令，不外呼网络。</div></body></html>

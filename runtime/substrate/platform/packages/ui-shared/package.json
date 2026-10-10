@@ -1,0 +1,36 @@
+{
+  "name": "@khy/ui-shared",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Browser-safe shared primitives for Khy-OS frontends",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./http/authHeaders": "./src/http/authHeaders.js",
+    "./http/fetchWithTimeout": "./src/http/fetchWithTimeout.js",
+    "./http/response": "./src/http/response.js",
+    "./http/errors": "./src/http/errors.js",
+    "./auth/token": "./src/auth/token.js",
+    "./auth/state": "./src/auth/state.js",
+    "./auth/guard": "./src/auth/guard.js",
+    "./board": "./src/board/index.js",
+    "./board/model": "./src/board/model.js",
+    "./board/TaskBoard.vue": "./src/board/TaskBoard.vue",
+    "./board/TaskCard.vue": "./src/board/TaskCard.vue",
+    "./progress": "./src/progress/index.js",
+    "./progress/pacedProgress": "./src/progress/pacedProgress.js",
+    "./progress/usePacedProgress": "./src/progress/usePacedProgress.js"
+  },
+  "scripts": {
+    "test": "node --test tests/**/*.test.js"
+  },
+  "peerDependencies": {
+    "vue": "^3.4.0"
+  },
+  "peerDependenciesMeta": {
+    "vue": {
+      "optional": true
+    }
+  }
+}

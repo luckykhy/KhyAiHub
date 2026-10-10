@@ -1,0 +1,45 @@
+{
+  "name": "ccSwitch",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "按 DOMAIN-DEPS.json 的 D2 名义边界声明，不写超出项 —— 尽管实测有 6 条 D1 出边（见 README 的逐条行号：appWriters.js:355、connectivity.js:15、store.js:41、store.js:44、usageScan.js:382、usageScan.js:449）。这 6 条属 declared_not_enforced 的 D2→D1，交 archDebtScan R1 与 cross-layer-require 棘轮管辖；本单元是仓内 D2→D1 出边最密集的一处，因此也是 [DESIGN-LAY-008] §12.43 Q2 的首要对象。清单如实登记而不用白名单把它合法化。",
+  "fanIn": 4,
+  "fanInEvidence": [
+    "services/backend/src/cli/handlers/ccSwitch.js",
+    "services/backend/src/routes/ccSwitch.js",
+    "services/backend/src/services/ccSwitch/index.js",
+    "services/backend/src/services/crossAgentTasteLearner.js"
+  ],
+  "_fanIn_note": "外部非测试消费者去重 4 个：CLI/TUI 主交互面的 handler、HTTP 路由、D1 历史路径再导出壳 `services/ccSwitch/index.js`、以及跨智能体口味学习器。单元内部互相引用（如 store ↔ routeResolver）与 *.test.js 均不计入。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-29",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "晋级三判据齐：单元级 README.md（本批补）、整数 fanIn、11 个源文件全部有同名同目录测试 —— 本批以显式路径复跑 **206 例 / 206 pass / 0 fail**（2026-09-29 08:35），pins 由 grep 实测 56。单元早于 entry-buffer 守卫，缓冲区从未被经过。",
+  "contract": {
+    "purpose": "供应商卡片的注册、持久化与活跃路由：store 管卡片与密钥引用，routeResolver 决定本地代理指向哪张活跃卡，promptGuard 在恢复时保护非受管的 prompt 文件，appWriters / codexWriter / proxyAccess 写外部应用配置，connectivity 提供连通性规格，usageScan 汇总用量与计价，constants 收敛协议与别名表，opencodeGoQuota 处理 OpenCode Go 配额。",
+    "ioOwner": "落盘只有一条：`store.js` 写卡片注册表文件（写前经 `configGuard`），密钥读写委托给 `services/apiKeyPool.js` 而不是在本单元自持；HTTP 响应形状归 `routes/ccSwitch.js`（D1），本单元不出 HTTP。",
+    "gates": "卡片协议与面板开关取自 `constants.js` 的表；对 D1 的 6 处引用全部是**能力依赖**而非可选装饰 —— 因此关不掉：注册表不可用时 store 收敛为不可写，连通性规格缺失时判未知而不是判可用。",
+    "coverage_note": "purpose/ioOwner/gates 覆盖本轮实测到的面（头注释 + 206 例共置测试 + require 站点逐条行号），不是逐行审计结论。"
+  },
+  "knownDefectsPinned": [
+    "共 56 处 KNOWN-DEFECT 断言（grep -c 实测，非自报），逐条正文在各 .test.js 的中文用例标题里",
+    "其中三组已在 [DESIGN-LAY-008] §12.42 具名：routeResolver.js:34 的 case PROTOCOLS.CODEX 实为 case undefined；updateCard(id, null) 降级成 success:false + 英文内部文案；getAgentMode 把非法 mode 静默回落成 proxy"
+  ],
+  "_known_defects_note": "一律登记不修：每条都改变对外可见的路由结果或配额读数，属行为变更，需甲/乙裁决（任务 #17）。",
+  "tests": [
+    "apiHandlers.test.js",
+    "appWriters.test.js",
+    "codexWriter.test.js",
+    "connectivity.test.js",
+    "constants.test.js",
+    "opencodeGoQuota.test.js",
+    "promptGuard.test.js",
+    "proxyAccess.test.js",
+    "routeResolver.test.js",
+    "store.test.js",
+    "usageScan.test.js"
+  ]
+}

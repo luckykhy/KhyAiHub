@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>session — 会话上下文计量、分叉与拓扑（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>session<span class="sep">›</span>session — 会话上下文计量、分叉与拓扑（D2）</div>
+      <header class="hero reveal"><h1>session — 会话上下文计量、分叉与拓扑（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#session-会话上下文计量-分叉与拓扑-d2">session — 会话上下文计量、分叉与拓扑（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="session-会话上下文计量-分叉与拓扑-d2">session — 会话上下文计量、分叉与拓扑（D2）<a class="anchor" href="#session-会话上下文计量-分叉与拓扑-d2" aria-label="锚点">#</a></h1>
+<p>业务上下文：<code>/fork</code>、<code>/topology</code>、<code>/btw</code>、<code>/context</code>、<code>/session</code> 五个命令，<br>以及 REPL / TUI 里「上下文用了多少、哪来、能不能压」的全部计量。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong><code>/fork</code> <code>/topology</code> <code>/btw</code></strong>：`constants/commandSchema.js:1087-1091,1094-1098,</li></ul>
+<p>1101-1105<code> → </code>cli/handlers/fork.js:21<code>、</code>topology.js:23<code>、</code>btw.js:16-17`。</p>
+<ul><li><strong><code>/context</code> <code>/session</code></strong>：<code>commandSchema.js:1958</code>、<code>:2014,2019</code>；</li></ul>
+<p>slash 侧 <code>cli/routerDispatchSlash.js:383</code> 取 <code>context/ctxWindowStats</code>。</p>
+<ul><li><strong>REPL 的上下文计量面板</strong>：<code>cli/replSession.js:5818,5850,5855</code></li></ul>
+<p>（contextBreakdown / contextSuggestions / messageBreakdown）；<br>  TUI 侧 <code>cli/tui/ink-components/App.js:476-479,800,3193</code>；<br>  工具侧 <code>tools/CtxInspectTool/index.js:80,136,183,190</code>。</p>
+<ul><li><strong>会话色态与其它 handler</strong>：<code>sessionColorState.js:31</code> 及</li></ul>
+<p><code>color/copy/recap/rename/statusline/tag/heapdump/debugToolCall</code> 均读<br>  <code>sessionForestService.getCurrentSessionId()</code>。</p>
+<ul><li>壳：<code>services/{chatStateIsolation,conversation,contextScope}/index.js</code>。</li></ul>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p>计量必须与渲染分开，否则「为什么这里显示 68%」无法复算：<code>context/</code> 五个文件<br>（<code>contextBreakdown</code> / <code>contextSuggestions</code> / <code>ctxWindowStats</code> / <code>messageBreakdown</code> /<br><code>webContextStats</code>）全是<strong>注入 env 的纯聚合</strong>，阈值以常量暴露<br>（<code>NEAR_CAPACITY_PERCENT</code>、<code>LARGE_TOOL_RESULT_PERCENT</code>、<code>READ_BLOAT_PERCENT</code>、<br><code>MEMORY_HIGH_TOKENS</code>、<code>DEFAULT_CONTEXT_WINDOW</code>），渲染只走<br><code>renderContextBreakdownLines</code> 一类出口。<code>contextScope/</code> 决定检索范围<br>（<code>taskSignalExtractor</code> 抽信号、<code>scopeRanker</code> 加权排序、<code>budgetController</code> 收预算、<br><code>aiMapIndex</code> 是唯一读盘的索引）。<code>conversation/</code> 的 btwNote 是纯归一 + 内存队列。<br><code>session/sessionForestService.js</code> 刻意做成 <strong>IO 壳</strong>：<code>:21</code> 转发<br><code>require('../../../sessionPersistence')</code>，拓扑算法在 <code>utils/sessionTopology</code>，<br>依赖经 <code>sessionForestPort</code> 注入——这是本仓 P2 阶段专门拆过的反向边之一。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/services/session/sessionForkPlan.test.js       <span class="hljs-comment"># 23 tests / 23 pass / 0 fail</span>
+node --<span class="hljs-built_in">test</span> tests/services/conversation/btwNote.test.js          <span class="hljs-comment"># 12 tests / 12 pass / 0 fail</span></code></pre>
+<h2 id="已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）<a class="anchor" href="#已知缺陷-登记-不在本单元擅自修" aria-label="锚点">#</a></h2>
+<p><code>session/sessionForestService.js</code> 当前是 <code> M</code>（作者在做中改动），本卡只登记<br>其结构事实（IO 壳 + 端口注入），不复述内部行为；改动落地后需复跑上面两条命令。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/services/domain/session/conversation/README.html"><div class="dir">← 上一篇</div><div class="ttl">conversation — /btw 旁注的纯文本叶子与进程级队列（D2 功能单元）</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/services/domain/skills/README.html"><div class="dir">下一篇 →</div><div class="ttl">skills — 技能蒸馏、威胁扫描与验收脚手架（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/session/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

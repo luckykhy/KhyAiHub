@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>scripts/quarantine — 源码入口缓冲区 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../docs/index.html">首页</a><span class="sep">›</span>scripts<span class="sep">›</span>quarantine<span class="sep">›</span>scripts/quarantine — 源码入口缓冲区</div>
+      <header class="hero reveal"><h1>scripts/quarantine — 源码入口缓冲区</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#scripts-quarantine-源码入口缓冲区">scripts/quarantine — 源码入口缓冲区</a></li><li class="lvl-2"><a href="#这是什么">这是什么</a></li><li class="lvl-2"><a href="#为什么是-scripts-下面-而不是根级-quarantine">为什么是 scripts/ 下面，而不是根级 `quarantine/`</a></li><li class="lvl-2"><a href="#怎么用-三步">怎么用（三步）</a></li><li class="lvl-2"><a href="#存量怎么办">存量怎么办</a></li><li class="lvl-2"><a href="#字段从哪来">字段从哪来</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="scripts-quarantine-源码入口缓冲区">scripts/quarantine — 源码入口缓冲区<a class="anchor" href="#scripts-quarantine-源码入口缓冲区" aria-label="锚点">#</a></h1>
+<h2 id="这是什么">这是什么<a class="anchor" href="#这是什么" aria-label="锚点">#</a></h2>
+<p>5-3-1 §4「入口缓冲：新代码禁直写核心域」在本仓的物理落点。判据真源<br><a href="../../docs/html/11_%E6%8A%A5%E5%91%8A/RESEARCH/[RESEARCH-018]%205-3-1%E6%9E%B6%E6%9E%84%E7%AC%A6%E5%90%88%E6%80%A7%E8%B0%83%E7%A0%94%E4%B8%8E%E8%BF%81%E7%A7%BB%E8%AE%BE%E8%AE%A1-2026-09-28.html"><code>[RESEARCH-018] 5-3-1 架构符合性调研与迁移设计</code></a><br>§4 C-5，落地动作是同一篇 §3 的 <strong>P5 行</strong>：新代码必须先落<br><code>D5/quarantine/&lt;日期&gt;/</code>，再按判据晋级进核心域。</p>
+<h2 id="为什么是-scripts-下面-而不是根级-quarantine">为什么是 scripts/ 下面，而不是根级 <code>quarantine/</code><a class="anchor" href="#为什么是-scripts-下面-而不是根级-quarantine" aria-label="锚点">#</a></h2>
+<ol><li>按 <code>[RESEARCH-018]</code> §2.2，D5 的第二层轴本来就是<strong>生命周期阶段</strong></li></ol>
+<p>（build / verify / record / <strong>quarantine</strong>），所以缓冲区的名字是 <code>quarantine</code>，<br>   它属于 D5 而不需要一个新根。</p>
+<ol><li>根级目录白名单是<strong>封闭集合</strong>（<code>[MGMT-STD-001]</code> §1.3），新增根属</li></ol>
+<p><code>[DESIGN-LAY-005]</code> 的 A 档动作，而 A 档的前置（<code>[DESIGN-LAY-008]</code> 第 0 步<br>   <code>.git</code> 重建 + 引用审计）尚未闭合。</p>
+<ol><li>最关键的一条：<code>scripts</code> 已经在 <code>DOMAIN-DEPS.json</code> 的 <code>D5.roots</code> 里，</li></ol>
+<p>于是「任何运行时代码不得 require 进这里」这条<strong>早已被<br>   <code>no-reach-into-archive</code> 强制</strong>——缓冲区天然不可被依赖，不必再造第三条禁止边。<br>   把缓冲区别处放，就得为「不可依赖」再写一条规则。</p>
+<h2 id="怎么用-三步">怎么用（三步）<a class="anchor" href="#怎么用-三步" aria-label="锚点">#</a></h2>
+<pre><code class="language-text">scripts/quarantine/2026-09-28/myUnit/
+  myThing.js
+  myThing.test.js        ← 与源同目录（晋级判据 1）
+  README.md              ← 单元级：谁要 / 为什么 / 怎么验（晋级判据 2，规则 9 三问）
+  khy.module.json        ← 声明 domain / mayDependOn / fanIn / lifecycle.stage=staged</code></pre>
+<ol><li><strong>入缓冲</strong>：新写的单元先落在 <code>scripts/quarantine/&lt;YYYY-MM-DD&gt;/&lt;单元名&gt;/</code>，</li></ol>
+<p>带一份 <code>khy.module.json</code>，<code>lifecycle.stage</code> 写 <code>staged</code>。</p>
+<ol><li><strong>达标</strong>：补齐三条晋级判据（<code>DOMAIN-DEPS.json</code> 的 <code>_entry_buffer.promotionCriteria</code>）：</li></ol>
+<p>单元目录有 <code>README.md</code>、manifest 有整数 <code>fanIn</code> 声明、每个源文件有同名同目录测试。<br>   <code>npm run check:layout</code> 的 <code>entry-buffer</code> 规则会逐条点名还缺哪一半。</p>
+<ol><li><strong>晋级</strong>：判据齐了，把整个单元目录搬进它 <code>domain</code> 字段指名的核心域，</li></ol>
+<p>并把 <code>lifecycle.stage</code> 改成 <code>stable</code>。<br>   ⚠ 第 3 步的搬移动作 = <code>git mv</code>，<strong>在第 0 步 <code>.git</code> 重建闭合前禁止执行</strong><br>   （<code>git fsck</code> 尚有断链，rename 会把损坏写进历史）。所以缓冲区现在只收<br>   「全新写、尚未被任何核心域代码 require」的单元；存量文件的补记走下面那条路。</p>
+<h2 id="存量怎么办">存量怎么办<a class="anchor" href="#存量怎么办" aria-label="锚点">#</a></h2>
+<p>核心域里已有的代码没有一份走过这个缓冲区——它们是<strong>机制建立之前</strong>就在的。<br>守卫对它们只做一件事：数「有多少核心域源文件还没有可用的生命周期记录」，<br>把那个数当成只降不升的棘轮（建档基线见 <code>scripts/ci/repo-layout-baseline.json</code><br>的 <code>counts[&quot;entry-buffer&quot;]</code>）。补记的方式是给单元目录放一份<br><code>khy.module.json</code>，并在 <code>lifecycle</code> 里如实写<br><code>&quot;provenance&quot;: &quot;recorded-after-the-fact&quot;</code>——声明「这份记录是事后补的」，<br>而不是假装它走过缓冲。第一例：<br><code>services/backend/src/services/domain/onboarding/</code>。</p>
+<h2 id="字段从哪来">字段从哪来<a class="anchor" href="#字段从哪来" aria-label="锚点">#</a></h2>
+<p>不在本文件里定义 schema 真源。可机判的一切字段（核心域清单、缓冲区路径、<br>manifest 文件名、阶段取值、晋级判据）真源是<br><a href="../../docs/10_%E8%A7%84%E8%8C%83/registry/DOMAIN-DEPS.json"><code>docs/10_规范/registry/DOMAIN-DEPS.json</code></a><br>的 <code>_entry_buffer</code> 块，执行器是 <code>scripts/ci/check-repo-layout.js</code> 的<br><code>checkEntryBuffer()</code>。改那张表就改了守卫，本文件只解释为什么这么放。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../scripts/memory/README.html"><div class="dir">← 上一篇</div><div class="ttl">记忆系统管理脚本</div></a><a class="next" href="../../scripts/README.html"><div class="dir">下一篇 →</div><div class="ttl">scripts/ — 项目管理与自动化脚本</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../";window.__KHY_CUR__="scripts/quarantine/README.html";</script>
+<script src="../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

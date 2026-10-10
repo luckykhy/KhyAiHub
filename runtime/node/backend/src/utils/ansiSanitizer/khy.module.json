@@ -1,0 +1,37 @@
+{
+  "_note": "功能单元清单（[RESEARCH-018] §2.3 模板第 3 件 / 5-3-1 §3）。执行器 scripts/ci/check-repo-layout.js 的 entry-buffer 规则读本文件的 domain / mayDependOn / fanIn / lifecycle.stage 四个字段，其余字段是给人读的。",
+  "name": "ansiSanitizer",
+  "domain": "D3",
+  "mayDependOn": [],
+  "_mayDependOn_note": "刻意声明空集：index.js 全文零 require（搬迁前置闸断言过 `require(` 计数为 0）。真身因此可原样住在共享底座而不引入任何边。",
+  "fanIn": 2,
+  "fanInEvidence": [
+    "services/backend/src/cli/tui/selection.js",
+    "services/backend/src/utils/stripAnsi.js"
+  ],
+  "_fanIn_note": "fanIn=2 为实测（2026-09-28，第 20 批）：以 git grep -F 匹配 require  specifier 尾部 \"ansiSanitizer'\" 的非测试源文件，含 D1 侧（cli/tui/selection.js、壳自身）与 D3 侧（utils/stripAnsi.js）。跨 D1/D3 消费 + 零依赖是本单元住 D3 的依据；它不是第 19 批那类只有单一 D3 消费者的有状态服务。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-28",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null,
+    "_stage_note": "stable 依据：存量归位（从 cli/ansiSanitizer.js 迁入 D3，旧路径留一行再导出壳），既有契约测试 services/backend/tests/ansiSanitizer.test.js 与消费方测试 tests/stripAnsi.test.js 在盘，另加本单元共置测试 index.test.js。不是经 scripts/quarantine/ 晋级，enteredVia: null。"
+  },
+  "contract": {
+    "purity": "零 require / 零 IO / 纯函数 / 绝不抛（非字符串输入原样返回）",
+    "ioOwner": "无：只处理调用方传入的字符串",
+    "injectionPoints": [
+      "stripAnsiSequences(text)",
+      "hasAnsiSequences(text)",
+      "RE_CSI / RE_OSC / RE_DCS / RE_ESC_SHORT / RE_BARE_CONTROL / RE_ZERO_WIDTH"
+    ]
+  },
+  "tests": [
+    "ansiSanitizer/index.test.js"
+  ],
+  "behaviourTestsOutsideUnit": [
+    "services/backend/tests/ansiSanitizer.test.js",
+    "services/backend/tests/stripAnsi.test.js"
+  ],
+  "_move_note": "[RESEARCH-018] P2 第 20 批：摘掉 utils/stripAnsi.js:37 的 D3→D1 反向边（d3-purity −1）。壳与真身导出同一模块对象（require 同一实例），故 cli/tui/selection.js 等 D1 消费者的 require 串逐字节未改。"
+}

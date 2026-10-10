@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: code_selection_rules.md -->
+<title>代码抽取规则 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../docs/index.html">首页</a><span class="sep">›</span>scripts<span class="sep">›</span>copyright<span class="sep">›</span>vendor<span class="sep">›</span>software-copyright-materials<span class="sep">›</span>references<span class="sep">›</span>代码抽取规则</div>
+      <header class="hero reveal"><h1>代码抽取规则</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#代码抽取规则">代码抽取规则</a></li><li class="lvl-2"><a href="#选择方式">选择方式</a></li><li class="lvl-2"><a href="#排除项">排除项</a></li><li class="lvl-2"><a href="#真实性要求">真实性要求</a></li><li class="lvl-2"><a href="#用户确认要求">用户确认要求</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="代码抽取规则">代码抽取规则<a class="anchor" href="#代码抽取规则" aria-label="锚点">#</a></h1>
+<h2 id="选择方式">选择方式<a class="anchor" href="#选择方式" aria-label="锚点">#</a></h2>
+<p>脚本只生成候选源码清单，不默认决定抽取文件。模型需要先理解项目业务、页面入口和源码职责，再决定抽取哪些完整文件，并在 <code>代码文件选择.json</code> 中填写：</p>
+<ul><li><code>selected</code></li><li><code>model_reason</code></li></ul>
+<p>选择时通常优先考虑审核员能看懂软件功能和运行逻辑的源码，例如入口、页面、业务组件、数据交互、状态处理、业务服务等。具体选择由模型根据项目实际判断，不能用固定路径规则直接拍板。</p>
+<p>候选发现采用内容检测而不是编程语言扩展名白名单：可读、大小合理且不属于明确文档/配置/二进制类别的文本文件都进入候选范围。新增语言、游戏引擎脚本或项目自定义脚本不需要先修改扩展名列表；候选是否与申报软件相关，仍由模型和用户在确认门禁中决定。</p>
+<h2 id="排除项">排除项<a class="anchor" href="#排除项" aria-label="锚点">#</a></h2>
+<p>排除以下内容：</p>
+<ul><li><code>node_modules</code></li><li><code>dist</code>、<code>build</code>、<code>.next</code>、<code>.nuxt</code>、<code>coverage</code></li><li>lock 文件</li><li>图片、字体、二进制文件</li><li>sourcemap、minified 文件</li><li>自动生成文件</li><li>过短且无业务意义的配置文件</li></ul>
+<h2 id="真实性要求">真实性要求<a class="anchor" href="#真实性要求" aria-label="锚点">#</a></h2>
+<ul><li>保留原始代码文本。</li><li>可添加文件路径标记用于追溯。</li><li>不改写业务逻辑。</li><li>不使用 AI 补齐代码。</li></ul>
+<h2 id="用户确认要求">用户确认要求<a class="anchor" href="#用户确认要求" aria-label="锚点">#</a></h2>
+<ul><li>代码抽取前必须先生成 <code>代码文件候选清单.md</code> 和 <code>代码文件选择.json</code>。</li><li>模型必须先填写抽取选择和 <code>model_reason</code>，再让用户确认或手动调整 <code>selected</code>。</li><li>代码材料按确认后的完整文件抽取并去除纯空行，不支持只截取某个文件的中间行段，避免遗漏上下文或产生难以追溯的片段。</li><li>抽取脚本必须以 <code>代码文件选择.json</code> 为准，不能绕过确认步骤直接抽全量代码库。</li><li><code>代码提取清单.md</code> 必须记录每个文件的完整源码范围和材料行范围，便于回溯。</li></ul>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../scripts/copyright/vendor/software-copyright-materials/references/business_understanding_rules.html"><div class="dir">← 上一篇</div><div class="ttl">业务理解规则</div></a><a class="next" href="../../../../../scripts/copyright/vendor/software-copyright-materials/references/copyright_material_rules.html"><div class="dir">下一篇 →</div><div class="ttl">软著材料规则</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../";window.__KHY_CUR__="scripts/copyright/vendor/software-copyright-materials/references/code_selection_rules.html";</script>
+<script src="../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

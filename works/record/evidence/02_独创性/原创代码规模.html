@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: 原创代码规模.md -->
+<title>原创代码规模与第三方边界 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>works<span class="sep">›</span>record<span class="sep">›</span>evidence<span class="sep">›</span>02_独创性<span class="sep">›</span>原创代码规模与第三方边界</div>
+      <header class="hero reveal"><h1>原创代码规模与第三方边界</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#原创代码规模与第三方边界">原创代码规模与第三方边界</a></li><li class="lvl-2"><a href="#一-手写内核层-kernel-l0">一、手写内核层（`kernel/`，L0）</a></li><li class="lvl-3"><a href="#被剔除项-逐文件-防-口径含糊">被剔除项（逐文件，防「口径含糊」）</a></li><li class="lvl-2"><a href="#二-第三方与生成物边界-c-x3">二、第三方与生成物边界（C-X3）</a></li><li class="lvl-2"><a href="#三-文档与治理体系规模-人提出的约束有多大">三、文档与治理体系规模（人提出的约束有多大）</a></li><li class="lvl-2"><a href="#四-复算方式">四、复算方式</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- 本文件由 scripts/evidence/build-index.js 生成，勿手改数字；要改口径请改采集器。 --&gt;</p>
+<h1 id="原创代码规模与第三方边界">原创代码规模与第三方边界<a class="anchor" href="#原创代码规模与第三方边界" aria-label="锚点">#</a></h1>
+<blockquote><p>回答「独创性在哪」。口径：<strong>只计非 vendor、非 <code>*_gen.*</code> 的源文件</strong>——把第三方代码计入手写行数，正是 C-X3 判死的那种事。</p>
+<p>数据快照时间：2026-09-28；输入：<code>evidence/04_机器可读/contribution-metrics.json</code>。</p></blockquote>
+<h2 id="一-手写内核层-kernel-l0">一、手写内核层（<code>kernel/</code>，L0）<a class="anchor" href="#一-手写内核层-kernel-l0" aria-label="锚点">#</a></h2>
+<p>剔除第三方后共 <strong>33866 行</strong>（被剔除的 vendor / 生成物 3912 行、5 个文件）。</p>
+<table><thead><tr><th>扩展名</th><th>文件数</th><th>行数</th></tr></thead><tbody><tr><td><code>.c</code></td><td>44</td><td>13185</td></tr><tr><td><code>.h</code></td><td>80</td><td>10014</td></tr><tr><td><code>.asm</code></td><td>42</td><td>5381</td></tr><tr><td><code>.ld</code></td><td>1</td><td>50</td></tr><tr><td><code>.py</code></td><td>6</td><td>1612</td></tr><tr><td><code>.js</code></td><td>14</td><td>2420</td></tr><tr><td><code>.md</code></td><td>5</td><td>1186</td></tr><tr><td><code>.json</code></td><td>2</td><td>18</td></tr></tbody></table>
+<h3 id="被剔除项-逐文件-防-口径含糊">被剔除项（逐文件，防「口径含糊」）<a class="anchor" href="#被剔除项-逐文件-防-口径含糊" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>文件</th><th>行数</th></tr></thead><tbody><tr><td><code>kernel/vendor/moonbit/moonbit_gen.c</code></td><td>1179</td></tr><tr><td><code>kernel/vendor/moonbit/PROVENANCE.md</code></td><td>45</td></tr><tr><td><code>kernel/vendor/moonbit/runtime.c</code></td><td>2335</td></tr><tr><td><code>kernel/vendor/moonbit/include/moonbit-fundamental.h</code></td><td>35</td></tr><tr><td><code>kernel/vendor/moonbit/include/moonbit.h</code></td><td>318</td></tr></tbody></table>
+<h2 id="二-第三方与生成物边界-c-x3">二、第三方与生成物边界（C-X3）<a class="anchor" href="#二-第三方与生成物边界-c-x3" aria-label="锚点">#</a></h2>
+<ul><li><code>vendor/</code> 下文件数：113；顶层 <code>node_modules</code> 包数：821；</li><li>生成物形态命中（<code>*_gen.*</code> / <code>*_blob.h</code> / <code>*.min.js</code>）：38 处 —— 全部<strong>不得进登记材料</strong>，<code>npm run check:copyright</code> 逐候选核验。</li></ul>
+<h2 id="三-文档与治理体系规模-人提出的约束有多大">三、文档与治理体系规模（人提出的约束有多大）<a class="anchor" href="#三-文档与治理体系规模-人提出的约束有多大" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>指标</th><th>实测</th></tr></thead><tbody><tr><td>CI 检查器（<code>scripts/ci/check-*.js</code> / <code>.py</code>）</td><td>78 个</td></tr><tr><td>规则登记表条目</td><td>94 条，其中 82 条有执行器、12 条纯人工</td></tr><tr><td>提示词库（<code>.ai/hq/prompts/</code>）</td><td>19 篇 / 9 个分类</td></tr><tr><td>文档轴 <code>docs/01_INIT_立项/</code></td><td>8 篇 md</td></tr><tr><td>文档轴 <code>docs/02_CONCEPTS_概念入门/</code></td><td>36 篇 md</td></tr><tr><td>文档轴 <code>docs/03_DESIGN_设计/</code></td><td>234 篇 md</td></tr><tr><td>文档轴 <code>docs/04_IMPL_实现/</code></td><td>63 篇 md</td></tr><tr><td>文档轴 <code>docs/05_TEST_测试/</code></td><td>13 篇 md</td></tr><tr><td>文档轴 <code>docs/06_DEPLOY_部署/</code></td><td>31 篇 md</td></tr><tr><td>文档轴 <code>docs/07_OPS_运维/</code></td><td>193 篇 md</td></tr><tr><td>文档轴 <code>docs/08_MGMT_项目管理/</code></td><td>60 篇 md</td></tr><tr><td>文档轴 <code>docs/09_STORY_修仙学AI/</code></td><td>40 篇 md</td></tr><tr><td>文档轴 <code>docs/10_规范/</code></td><td>212 篇 md</td></tr><tr><td>文档轴 <code>docs/11_报告/</code></td><td>39 篇 md</td></tr><tr><td>文档轴 <code>docs/12_模板/</code></td><td>1 篇 md</td></tr><tr><td>文档轴 <code>docs/13_传承/</code></td><td>3 篇 md</td></tr><tr><td>文档轴 <code>docs/14_维护者/</code></td><td>2 篇 md</td></tr><tr><td>文档轴 <code>docs/15_维护记录/</code></td><td>3 篇 md</td></tr><tr><td>文档轴 <code>docs/16_设计模式/</code></td><td>2 篇 md</td></tr><tr><td>文档轴 <code>docs/17_AI协作预设包/</code></td><td>23 篇 md</td></tr><tr><td>文档轴 <code>docs/18_归档/</code></td><td>9 篇 md</td></tr><tr><td>文档轴 <code>docs/19_资产/</code></td><td>2 篇 md</td></tr></tbody></table>
+<blockquote><p>这套治理体系是<strong>约束 AI 自己的</strong>：门成员资格从规则登记表派生（<code>[DESIGN-ARCH-111]</code>），违规要写理由才能抑制（<code>// khy-allow-&lt;规则ID&gt;: &lt;理由&gt;</code>），P2 规则走只降不升的基线棘轮。AI 不会自发地给自己造一道会挡回自己提交的门——这套东西的存在本身就是「人提出了目标与约束」的证据。</p></blockquote>
+<h2 id="四-复算方式">四、复算方式<a class="anchor" href="#四-复算方式" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">find kernel -name <span class="hljs-string">&quot;*.c&quot;</span> -not -path <span class="hljs-string">&quot;*vendor*&quot;</span> | xargs <span class="hljs-built_in">wc</span> -l | <span class="hljs-built_in">tail</span> -1
+find kernel -name <span class="hljs-string">&quot;*.asm&quot;</span> | xargs <span class="hljs-built_in">wc</span> -l | <span class="hljs-built_in">tail</span> -1
+node scripts/ci/check-copyright-readiness.js
+<span class="hljs-built_in">ls</span> scripts/ci/check-*.js scripts/ci/check-*.py | <span class="hljs-built_in">wc</span> -l
+node -e <span class="hljs-string">&quot;const r=require(&#x27;./docs/10_规范/registry/RULES-REGISTRY.json&#x27;).rules;console.log(r.length, r.filter(x=&gt;x.gate&amp;&amp;x.gate!==&#x27;manual&#x27;).length)&quot;</span>
+find .ai/hq/prompts -name <span class="hljs-string">&quot;*.md&quot;</span> | <span class="hljs-built_in">wc</span> -l</code></pre>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../works/record/evidence/02_独创性/设计决策.html"><div class="dir">← 上一篇</div><div class="ttl">设计决策索引与原创机制清单（C-E2 设计决策必须落文档）</div></a><a class="next" href="../../../../works/record/evidence/03_图片/图片证据说明.html"><div class="dir">下一篇 →</div><div class="ttl">图片证据说明（每张图怎么来的、能不能当登记材料）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="works/record/evidence/02_独创性/原创代码规模.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "name": "index",
+  "domain": "D2",
+  "mayDependOn": [
+    "D2",
+    "D3"
+  ],
+  "_mayDependOn_note": "按 DOMAIN-DEPS.json 的 D2 名义边界声明。本轮**未逐条核对本文件的出边**（批量登记只核对消费者一侧），如需 D2→D1 判定请以 .khyos/tmp/unit-profile.js 单单元复测后订正。",
+  "fanIn": 1,
+  "fanInEvidence": [
+    "services/backend/src/services/chatStateIsolation/index.js"
+  ],
+  "_fanIn_note": "非测试消费者去重 1 个，取自 archDebtScan 解析后的 require 图（排除 *.test.js 与自身）。若超 12 个，fanInEvidence 只列前 12 条。",
+  "lifecycle": {
+    "stage": "staged",
+    "since": "2026-09-30",
+    "provenance": "machine-recorded",
+    "enteredVia": "bulk-registration"
+  },
+  "_lifecycle_note": "批量登记：有同名同目录共置测试（守卫判据），但 contract 段未经人工复核，故记 staged 而非 stable。",
+  "contract": {
+    "headerVerbatim": "（该文件没有块注释头，未编造描述）",
+    "coverage_note": "本段为注释头逐字摘录，不是行为审计结论。"
+  },
+  "tests": [
+    "index.test.js"
+  ]
+}

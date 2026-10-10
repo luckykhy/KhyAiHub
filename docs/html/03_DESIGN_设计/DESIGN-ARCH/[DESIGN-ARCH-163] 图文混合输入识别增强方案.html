@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-ARCH-163] 图文混合输入识别增强方案.md -->
+<title>[DESIGN-ARCH-163] 图文混合输入识别增强方案 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>[DESIGN-ARCH-163] 图文混合输入识别增强方案</div>
+      <header class="hero reveal"><h1>[DESIGN-ARCH-163] 图文混合输入识别增强方案</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-163-图文混合输入识别增强方案">[DESIGN-ARCH-163] 图文混合输入识别增强方案</a></li><li class="lvl-2"><a href="#0-一句话结论">0. 一句话结论</a></li><li class="lvl-2"><a href="#1-需求五问-runtime-008-规则-6">1. 需求五问（RUNTIME-008 / 规则 6）</a></li><li class="lvl-2"><a href="#2-现状盘点-证据链-均为已核实-file-line">2. 现状盘点（证据链，均为已核实 file:line）</a></li><li class="lvl-2"><a href="#3-差距分析-指南策略-仓库现状">3. 差距分析（指南策略 → 仓库现状）</a></li><li class="lvl-2"><a href="#4-方案设计">4. 方案设计</a></li><li class="lvl-3"><a href="#d1-对-g2-g6-图片说明书-imagecontextcard-图文双轨契约">D1（对 G2/G6）图片说明书 `imageContextCard` —— 图文双轨契约</a></li><li class="lvl-3"><a href="#d2-对-g1-预处理改道-降尺度优先-抛错兜底">D2（对 G1）预处理改道：降尺度优先，抛错兜底</a></li><li class="lvl-3"><a href="#d1-1-已实施-2026-09-27-多格式同轮关联-一条消息多图-混排文字">D1.1（已实施 2026-09-27）多格式同轮关联：一条消息多图 + 混排文字</a></li><li class="lvl-3"><a href="#d1-2-d6-已实施-2026-09-27-多格式附件说明书-pdf-docx-md-txt-csv">D1.2 / D6（已实施 2026-09-27）多格式附件说明书：pdf / docx / md / txt / csv …</a></li><li class="lvl-3"><a href="#d7-已实施-2026-09-27-不支持格式的诚实声明与引导-压缩包-bmp-mp3-视频">D7（已实施 2026-09-27）不支持格式的诚实声明与引导：压缩包 / bmp / mp3 / 视频 …</a></li><li class="lvl-3"><a href="#d3-已实施-2026-09-27-会话图片引用化持久">D3（已实施 2026-09-27）会话图片引用化持久</a></li><li class="lvl-3"><a href="#d8-d8-1-已实施-2026-09-27-d8-2-d8-3-批次待批准-四通道输入框统一契约-tui-网页-桌面-手机">D8（D8.1 已实施 2026-09-27；D8.2/D8.3 批次待批准）四通道输入框统一契约：TUI / 网页 / 桌面 / 手机</a></li><li class="lvl-3"><a href="#d9-网页面已实施-2026-09-27-tui-桌面维持现状降级-附件在输入区与输出区的渲染与回显契约">D9（网页面已实施 2026-09-27；TUI/桌面维持现状降级）附件在输入区与输出区的渲染与回显契约</a></li><li class="lvl-3"><a href="#d4-已实施-2026-09-27-视觉能力登记求真">D4（已实施 2026-09-27）视觉能力登记求真</a></li><li class="lvl-3"><a href="#d5-已实施-2026-09-27-s1-只记录-校准话术卡">D5（已实施 2026-09-27，S1 只记录）校准话术卡</a></li><li class="lvl-2"><a href="#5-门控与开关汇总">5. 门控与开关汇总</a></li><li class="lvl-2"><a href="#6-落地阶段-process-008">6. 落地阶段（PROCESS-008）</a></li><li class="lvl-2"><a href="#7-验收判据">7. 验收判据</a></li><li class="lvl-2"><a href="#8-非目标与不支持清单">8. 非目标与不支持清单</a></li><li class="lvl-2"><a href="#9-风险与回滚">9. 风险与回滚</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="design-arch-163-图文混合输入识别增强方案">[DESIGN-ARCH-163] 图文混合输入识别增强方案<a class="anchor" href="#design-arch-163-图文混合输入识别增强方案" aria-label="锚点">#</a></h1>
+<!-- RULES-REGISTRY: RUNTIME-001, RUNTIME-002, RUNTIME-003, PROCESS-008, PROCESS-014 -->
+<blockquote><p><strong>状态</strong>：D1/D1.1/D2/D3/D4/D6/D7 已实施（2026-09-27）；D5 已实施且停在 S1 只记录档；<br>D8.1（网页粘贴丢图修复）已实施（2026-09-27）；D8.2（手机通道）、D8.3（跨通道等值验收）与<br>D9（附件渲染与回显契约）网页面已实施 2026-09-27（TUI/桌面维持现状降级，见 D9 实施记录）；<br>长图拆分默认关待升阶（见 §6）<br><strong>范围</strong>：<code>services/backend/src/services/imageService.js</code>、<code>services/multimodalInputService.js</code>、<br><code>services/gateway/**</code>（视觉能力登记）、<code>services/sessionPersistence.js</code>、<code>cli/repl/**</code> 与<br><code>cli/tui/**</code> 的图片入口。<strong>不改</strong> <code>toolUseLoopCore.js</code> / <code>replSession.js</code> 主干 / <code>toolUseLoop/*</code><br>（在途神文件重构线，任务 #7）。<br><strong>上游依据</strong>：用户提供的《khyos 图片识别解决方案实战指南》（docx，2026-09-26），<br>其核心论断：单独丢图只能「看」，<strong>图 + 结构化文字</strong>才能「理解」；不要让模型「猜」，<br>给它「确定性输入」。<br><strong>命名说明</strong>：用户原话中的「khyps」按上下文判为「khyos」的键入笔误（p 与 o 相邻），<br>本方案主语为 khy-os。若另有所指，以批准时的订正为准。</p></blockquote>
+<h2 id="0-一句话结论">0. 一句话结论<a class="anchor" href="#0-一句话结论" aria-label="锚点">#</a></h2>
+<p>khy-os 的图文混输<strong>采集与传输链路已成型</strong>（剪贴板/路径/附件 → <code>_imageCompat</code> 归一 → 各协议<br>多模态块 → 视觉路由与 OCR 兜底），但指南指出的四个真实缺口都在<strong>「理解层」而非「传输层」</strong>：<br>① 图片到达网关时缺一张自动生成的「图片说明书」（结构化上下文卡）；② 预处理只在超限链路<br>被动触发且 <code>imageService</code> 对 &gt;5MB 直接抛错；③ 会话转录不落图片，多轮/续聊时图「看过即失」；<br>④ 原生视觉能力登记失真（仅 <code>codex</code> 在册，多个 adapter 实际已能发图块）。<br>本方案沿指南「双轨制」原则补理解层：新增纯叶子 <code>imageContextCard</code> 场景分类 + 说明书装配，<br><code>imageService</code> 超限改为降尺度优先、抛错兜底，会话图片落 <code>.khy/images/</code> 引用化持久，<br>视觉登记改为探针驱动。全程按 <code>PROCESS-008</code> 走 S1 观察者档。</p>
+<h2 id="1-需求五问-runtime-008-规则-6">1. 需求五问（RUNTIME-008 / 规则 6）<a class="anchor" href="#1-需求五问-runtime-008-规则-6" aria-label="锚点">#</a></h2>
+<ol><li><strong>谁用？</strong> —— 在 REPL/TUI 中向 khy-os 发送截图（UI 设计稿、需求文档、报错截图、</li></ol>
+<p>流程图）并期望它据此干活的一切终端用户。（source: 用户原话<br>   「参照设计khyps的图片识别与文字混合问题」+ 所附指南 docx 的适用场景一节）</p>
+<ol><li><strong>什么时候用？</strong> —— 每次携带图片的生成请求发出之前（采集后、送网关前的装配时刻），</li></ol>
+<p>以及会话 resume / 多轮追问同一张图时。入口不变（既有 <code>image|图片|img</code>、<code>paste|粘贴</code>、<br>   内联路径提取、TUI Ctrl+V），<strong>不新增顶层命令</strong>（<code>PROCESS-014</code> 命令面棘轮只降不升）。</p>
+<ol><li><strong>现在的替代做法是什么？</strong> —— 用户手工把指南 §2.2.1 的模板（图片说明 + 内容转录 +</li></ol>
+<p>补充上下文）复制粘贴进输入框。这证明自动化必要性：指南第七章 Checklist 的 10 项<br>   全靠人肉执行。（source: 指南「策略二：结构化描述——这是最关键的策略」）</p>
+<ol><li><strong>成功长什么样？</strong> —— 命令 + 期望输出，见 §7 验收判据 A1–A5。核心一条：</li></ol>
+<p>发一张报错截图且不带任何文字，助手消息前自动出现「图片说明书（OCR 转录 + 场景判定 +<br>   待确认项）」，且 OCR 转录文本可被用户直接编辑修正后再发送。</p>
+<ol><li><strong>不做会怎样？</strong> —— 指南 §1.1 的五类失准场景（颜色偏差 / OCR 错字 / 堆栈截断 /</li></ol>
+<p>箭头方向搞反 / 手写批注漏识）继续由用户独自承担；重复发图得到重复错误<br>   （指南误区四），会话一续聊图片上下文即丢失。</p>
+<h2 id="2-现状盘点-证据链-均为已核实-file-line">2. 现状盘点（证据链，均为已核实 file:line）<a class="anchor" href="#2-现状盘点-证据链-均为已核实-file-line" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>层</th><th>证据</th><th>现状</th></tr></thead><tbody><tr><td>E1</td><td>采集</td><td><code>imageService.js:36-37,110-112</code></td><td>剪贴板三平台读取已有；<strong>&gt;5MB 直接 throw</strong>（<code>Image too large</code>），不尝试压缩</td></tr><tr><td>E2</td><td>入口</td><td><code>cli/repl/imageIntent.js</code>、TUI <code>pendingImageAttachments.js</code>、<code>ink-components/App.js:3942</code></td><td>路径提取、暂存附件、图无文字时兜底话术「请描述这张图片」已就绪</td></tr><tr><td>E3</td><td>归一</td><td><code>gateway/adapters/_imageCompat.js</code></td><td>各家图片形态 → 统一 <code>{base64,mimeType}</code>，Anthropic/OpenAI/Responses/Ollama/CodeWhisperer 发射器齐备</td></tr><tr><td>E4</td><td>路由</td><td><code>visionCapability.js</code>、<code>visionRouting.js</code>、<code>adapterVisionCapability.js:40</code></td><td>keep/switch-model/mcp-vision/ocr-fallback 四态决策已有；但 <code>NATIVE_VISION_ADAPTERS=['codex']</code> <strong>仅一个在册</strong></td></tr><tr><td>E5</td><td>OCR</td><td><code>services/ocrSnippetService.js</code>（pytesseract chi_sim+eng）、<code>aiGateway.js</code> 的 <code>extractImageOcrTexts</code>/<code>tryRateLimitOcrRescue</code></td><td>OCR 已作为<strong>限流兜底</strong>存在，未作为<strong>双轨常态上下文</strong>装配</td></tr><tr><td>E6</td><td>降尺度</td><td><code>gateway/glmVisionImageDownscale.js</code>、<code>adapters/_imageTranscode.js</code>（ffmpeg，≤5MB/≤2048px）</td><td>能力存在但<strong>只在特定网关链路触发</strong>，采集侧（E1）未接</td></tr><tr><td>E7</td><td>持久化</td><td><code>sessionPersistence.js:320-334</code>（<code>appendMessage</code> 仅存 <code>{uuid,parentUuid,role,content,timestamp,...}</code>）、<code>:874</code>（<code>_flattenMessageContent</code> 把内容块压平为文本）</td><td><strong>图片字节与引用都不落会话</strong>，resume 后图不可再读</td></tr></tbody></table>
+<p><strong>结论</strong>：传输层不缺，缺的是指南所说的「校验层」——把图的信息在<strong>送模型之前</strong>用文字钉死。</p>
+<h2 id="3-差距分析-指南策略-仓库现状">3. 差距分析（指南策略 → 仓库现状）<a class="anchor" href="#3-差距分析-指南策略-仓库现状" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>指南策略</th><th>要求</th><th>差距编号</th><th>现状</th></tr></thead><tbody><tr><td>一：图片预处理</td><td>放大/锐化/转 PNG/拆长图</td><td>G1</td><td>仅网关侧被动降尺度；采集侧超限抛错；无长图拆分</td></tr><tr><td>二：结构化描述（最关键）</td><td>图 + 转录文字 + 尺寸/色值 + 上下文 + 疑问</td><td><strong>G2</strong></td><td>无「说明书」装配；OCR 只在限流兜底路径出现</td></tr><tr><td>三：分步拆解</td><td>复杂图分区域多次提交</td><td>G3</td><td>TUI 附件可分批，但无分区引导</td></tr><tr><td>四：反馈校准</td><td>按「尺寸/颜色/遗漏/逻辑/文字」五类精确反馈</td><td>G4</td><td>无任何校准话术支持</td></tr><tr><td>附录：能力诚实</td><td>模型能不能看图要说真话</td><td>G5</td><td>E4 登记失真</td></tr><tr><td>五：可复用模板</td><td><code>.khyos/templates/</code> 四类模板</td><td>G6</td><td>目录不存在（<code>src/templates</code> 仅代码脚手架 JSON）</td></tr></tbody></table>
+<h2 id="4-方案设计">4. 方案设计<a class="anchor" href="#4-方案设计" aria-label="锚点">#</a></h2>
+<h3 id="d1-对-g2-g6-图片说明书-imagecontextcard-图文双轨契约">D1（对 G2/G6）图片说明书 <code>imageContextCard</code> —— 图文双轨契约<a class="anchor" href="#d1-对-g2-g6-图片说明书-imagecontextcard-图文双轨契约" aria-label="锚点">#</a></h3>
+<p>新增纯叶子 <code>services/backend/src/services/imageContextCard.js</code>（零 IO、可单测），<br>在采集完成后、送网关前，为每张图装配一张结构化上下文卡：</p>
+<pre><code>【图片说明】
+- 来源: clipboard | file:&lt;相对路径&gt; | tui-attachment 第 N/共 M 张
+- 尺寸: &lt;宽x高 px&gt; · &lt;文件大小&gt; · 格式 &lt;mime&gt;
+- 场景判定: error-screenshot | ui-design | document | diagram | handwriting | unknown
+- 运行环境: node &lt;版本&gt; / &lt;platform&gt;（报错场景自动附）
+【OCR 转录】&lt;ocrSnippetService 文本&gt;（置信度 &lt;level&gt;；低置信度行以 ⚠ 前缀标出）
+【待确认】&lt;场景模板生成的 1-3 个具体问题，如「设计稿请补充主色色值；流程图请提供 Mermaid 或节点关系文字」&gt;</code></pre>
+<ul><li><strong>场景分类</strong>为确定性启发式纯函数：OCR 文本特征（堆栈/<code>error</code>/文件路径 → error-screenshot；</li></ul>
+<p><code>#rrggbb</code>、<code>px</code>、组件词频 → ui-design；编号列表/「需求」「PRD」→ document；<br>  <code>--&gt;</code>、节点括号语法 → diagram），<strong>不猜即 unknown</strong>，unknown 不生成【待确认】以免噪音。</p>
+<ul><li>说明书与用户原文<strong>合并为同一条多模态消息</strong>送入既有 <code>options.images</code> 通道（E3 归一不动）；</li></ul>
+<p>用户文字在场时置于图块之前，保持「用户主诉优先」。</p>
+<ul><li>四类场景模板落 <code>.khyos/templates/</code>（指南 §5.1 原样采纳：<code>ui-component.md</code>、</li></ul>
+<p><code>bug-report.md</code>、<code>requirement-prd.md</code>、<code>design-token.md</code>），unknown/用户主动时可<br>  <code>khy image template &lt;场景&gt;</code> 打印骨架供填表。入口为既有 <code>image</code> 命令的子 flag，<strong>不新增顶层命令</strong>。</p>
+<ul><li>门控 <code>KHY_IMAGE_CONTEXT_CARD</code>（默认开；显式 <code>0</code> 逐字节回退旧行为）。</li></ul>
+<h3 id="d2-对-g1-预处理改道-降尺度优先-抛错兜底">D2（对 G1）预处理改道：降尺度优先，抛错兜底<a class="anchor" href="#d2-对-g1-预处理改道-降尺度优先-抛错兜底" aria-label="锚点">#</a></h3>
+<ul><li><code>imageService.readImageFromFile</code> 的 &gt;5MB 分支：先走 E6 既有平台工具链</li></ul>
+<p>（PowerShell System.Drawing / ffmpeg / sips）<strong>尽力降尺度</strong>（每轮按<br>  <code>sqrt(目标/当前)×0.85</code> 收缩、最多 3 轮，<code>_downscaleToLimit</code>），成功则继续并返回<br>  <code>downscaledFrom</code> 元数据；<strong>展示面</strong>：元数据随 D1 说明书的「预处理」行透出给模型<br>  （实测 27MB→3.5MB/866ms）。不在服务层直接打状态行——TUI 存活期直写 stdio 会留<br>  擦不掉的残行（tui/AGENTS §0.9.7 单写者红线），调用面接线待 #7 神文件落定。<br>  仅当工具缺失或失败时才抛错，且错误消息按 RUNTIME-002 模板给出<br>  「问题+原因+修复建议」（指南 §2.2 精神）。</p>
+<ul><li>高图（高度 &gt; 2×宽度 或 &gt; 2000px）：S1 阶段<strong>只在说明书追加一条【建议】</strong></li></ul>
+<p>「长图信息密度过高，建议按区域拆成 2-3 张（指南策略三）」，不自动切图——<br>  自动拆分留待 S3 且有 <code>KHY_IMAGE_SPLIT_TALL=1</code> 显式开启。</p>
+<ul><li>全程 fail-soft、活动式超时（RUNTIME-003：空闲超限才中止，不硬 kill），</li></ul>
+<p><strong>不引入 sharp 等新的原生依赖</strong>（现状零图像依赖是刻意选择）。</p>
+<h3 id="d1-1-已实施-2026-09-27-多格式同轮关联-一条消息多图-混排文字">D1.1（已实施 2026-09-27）多格式同轮关联：一条消息多图 + 混排文字<a class="anchor" href="#d1-1-已实施-2026-09-27-多格式同轮关联-一条消息多图-混排文字" aria-label="锚点">#</a></h3>
+<p>用户可在输入框一次提交「文字 + N 个本地图片路径 +（剪贴板暂存图）」。关联契约：</p>
+<ol><li><strong>提取</strong>：<code>imageIntent.extractAllInlineImageIntents</code>（纯叶，与单路径提取器共用同一</li></ol>
+<p>pathAtom 真源）非重叠扫描全部路径，引号形态优先占位，按出现序去重。</p>
+<ol><li><strong>提交语义</strong>（<code>inlineImageSubmit</code> 多路模式，门控 <code>KHY_INLINE_MULTI_IMAGE</code> 默认开）：</li></ol>
+<p>≥2 路径时<strong>用户原文逐字节不剥离</strong>——「A 和 B 哪里不一致 &lt;pathA&gt; &lt;pathB&gt;」里指代词与<br>   路径的相对位置本身就是联系，剥离反而销毁它；每张读出的图带 <code>label=原始路径</code>。<br>   恰好 1 路径 / 门控关 → 逐字节维持既有单路径 REPL 对齐行为（剥路径+上下文改写）。</p>
+<ol><li><strong>透传</strong>：<code>_imageCompat.normalizeImageItem</code> 对 <code>label</code> 做<strong>白名单透传</strong>（仅短纯字符串，</li></ol>
+<p>去控制符、截 160，hostile 形态丢弃——边界「绝不抛」契约不变）；<code>_imageTranscode</code> 的<br>   <code>{...img,...conv}</code> 天然保留。</p>
+<ol><li><strong>钉死联系</strong>：说明书按 <code>options.images</code> <strong>真实下标</strong>编号（图i = 模型收到的第 i 个图片块，</li></ol>
+<p>过滤不漂移）；≥2 张时卡片头部先出【图片对照】<code>图i=来源</code> 表 + 指代约定（「提到图i或文件名<br>   按编号对应；跨图比较逐图引用编号，歧义先问勿猜」）；出卡数 &lt; 总数时如实注明差额，不假装全有。</p>
+<p>单测锁定于 <code>tests/services/imageMixedFormatLink.test.js</code>（11 用例）+ 既有<br><code>tui.inlineImageSubmit</code> / <code>pendingImageAttachments</code> / <code>imageCompatMime</code> 全绿。</p>
+<h3 id="d1-2-d6-已实施-2026-09-27-多格式附件说明书-pdf-docx-md-txt-csv">D1.2 / D6（已实施 2026-09-27）多格式附件说明书：pdf / docx / md / txt / csv …<a class="anchor" href="#d1-2-d6-已实施-2026-09-27-多格式附件说明书-pdf-docx-md-txt-csv" aria-label="锚点">#</a></h3>
+<p>把「说明书」从图片推广到<strong>一切能在消息里以路径出现的格式</strong>。发现层与提取层：</p>
+<ol><li><strong>发现</strong>：新纯叶 <code>cli/repl/inlineFileRefs.js</code>——通用扫描引擎 <code>scanPathRefs</code></li></ol>
+<p>（<code>imageIntent.extractAllInlineImageIntents</code> 已改为复用同一引擎，单一真源）+<br>   文档/文本扩展集（pdf/docx/xlsx/pptx/txt/md/csv/json/yaml/xml/log…，与<br>   <code>aiUploadStore.classifyKind</code> 口径对齐）；图片集与文件集<strong>刻意不相交</strong>，两扫描器<br>   各管各的、按归一化路径去重合并。</p>
+<ol><li><strong>提取路由</strong>（网关侧 <code>imageContextCardService</code>，异步、门控 <code>KHY_FILE_CARDS</code> 默认开）：<ul><li>text/code 类 → <code>fs</code> 直读，截断（<code>KHY_FILE_CARD_EXCERPT_CHARS</code> 默认 4000 字，</li></ul></li></ol>
+<p>钳 500–20000）；</p>
+<ul><li><code>.pdf</code> → 既有 <code>documentSnippetService.extractDocumentSnippetAsync</code></li></ul>
+<p>（pdftotext→pypdf→strings 引擎链，短 I/O 超时 <code>KHY_FILE_CARD_TIMEOUT_MS</code><br>     默认 8s ≤10s，RUNTIME-003 合法例外）；</p>
+<ul><li><code>.docx</code> → 既有 <code>handlers/convert.runConvert</code>（python docHelper），临时产物 finally 清理；</li><li>其余（xlsx/pptx/legacy doc/未知）→ <strong>引用卡</strong>：「该格式暂无正文提取通道，仅登记引用」，</li></ul>
+<p>不假装有正文；提取失败按 RUNTIME-002.2 给「问题+修法」。</p>
+<ul><li>&gt;20MB / 不存在 / 非常规文件 → 同上诚实引用卡。</li></ul>
+<p>分开编号、逐项可指代；「图i」仍锚定图片块真实发送序，「文件j」锚定消息内路径出现序。<br>   文件卡带【正文摘录】+【待确认】「仅摘录，完整内容请用 read 工具」——说明书给确定性<br>   锚点，全文读取仍走工具正门（权限/审计不旁路）。</p>
+<ol><li><strong>挂载</strong>：网关归一收口调用从「仅图」放开为「每回合」（无图纯文本消息中的路径同样出卡）；</li></ol>
+<p>双门控任一关 → 对应面逐字节回退。全链 fail-soft。</p>
+<p>实测：一条「按 prd.md 实现校验，界面参照 shot.png，另核对 ghost.pdf」→<br>【附件对照 2/2】<code>图1=shot.png；文件1=prd.md</code> + 直读摘录卡 + 不存在路径诚实卡。<br>单测 <code>tests/services/imageFileCards.test.js</code>（11 用例）。</p>
+<h3 id="d7-已实施-2026-09-27-不支持格式的诚实声明与引导-压缩包-bmp-mp3-视频">D7（已实施 2026-09-27）不支持格式的诚实声明与引导：压缩包 / bmp / mp3 / 视频 …<a class="anchor" href="#d7-已实施-2026-09-27-不支持格式的诚实声明与引导-压缩包-bmp-mp3-视频" aria-label="锚点">#</a></h3>
+<p>D6 的引用卡目前只说「仅登记引用」——诚实，但<strong>没给路</strong>。D7 把「无通道」分支升级为<br>三段式：<strong>①声明没读到什么 ②为什么 ③下一步可做的具体动作（按当前环境真实可用性生成）</strong>，<br>并把该契约钉进卡内行为指令，模型转述而非编造。</p>
+<ol><li><strong>能确定提取的先榨干（零新依赖，全部复用既有软依赖链）</strong>：</li></ol>
+<table><thead><tr><th>格式族</th><th>本地确定性提取</th><th>通道缺失时如实声明的内容</th></tr></thead><tbody><tr><td>图片 bmp/tiff（不在发送白名单的位图）</td><td>文件头解宽高/位深/字节数；<strong>ffmpeg 在场 → 自动转 png 走正常图轨</strong>（卡注明「已转码」，D2 降尺度同族位置）</td><td>「未做视觉理解，仅登记尺寸」</td></tr><tr><td>archive zip/tar（可读清单者）</td><td>python <code>zipfile</code>/<code>tarfile</code> 列目录（前 N 条+总数+加密标志）</td><td>「包内文件未展开；加密包无口令通道」</td></tr><tr><td>audio mp3/wav/flac/m4a</td><td>ffmpeg <code>-probe</code> 容器元数据（时长/采样率/比特率/声道）+ ID3 标签 + <strong>同目录同名 <code>.lrc</code> / 内嵌 lyrics 直接按 text 轨出摘录</strong></td><td>「旋律/音调/人声内容未转录」</td></tr><tr><td>video mp4/mkv/mov/avi/webm</td><td>probe 时长/分辨率/帧率/编码/有无音轨 + <strong>同名 <code>.srt</code>/<code>.vtt</code> 字幕或内嵌字幕流按 text 轨出摘录</strong> + <strong>ffmpeg 在场自动抽帧</strong>（见下「视频专段」）</td><td>「画面内容未采样/无视觉通道时未理解」</td></tr></tbody></table>
+<p><strong>视频专段</strong>——视频不是「黑盒格式」，是<strong>可以被本地确定性地变成图 + 文本的容器</strong>：</p>
+<ul><li><strong>V1 元数据与字幕（零新依赖）</strong>：ffmpeg <code>-probe</code> 出时长/分辨率/帧率/编码/音轨有无；</li></ul>
+<p>同目录同名 <code>.srt</code>/<code>.vtt</code> 或可提取的内嵌字幕 → 按 D6 text 轨摘录（上限同<br>     <code>KHY_FILE_CARD_EXCERPT_CHARS</code>）。字幕存在时卡注明「以下摘录来自字幕文本，非画面内容」<br>     ——两者是不同的证据等级，不许混称「看懂了视频」。</p>
+<ul><li><strong>V2 自动抽帧 = 图轨复用</strong>：ffmpeg 在场 → 均匀抽 <code>KHY_VIDEO_THUMB_FRAMES</code> 帧</li></ul>
+<p>（默认 3，钳 1–8；首/中/尾或等距），每帧<strong>作为普通图片附件注入本回合图轨</strong>——<br>     于是 D1 说明书、D2 降尺度、D4 视觉通道判定、OCR 兜底全部自动生效，零新代码路径。<br>     卡内编号 <code>视频帧 j/i</code>（如 <code>文件2·帧1/3</code>），与【附件对照】表同源。帧抽取走<br>     短 I/O 子进程超时（同 <code>KHY_FILE_CARD_TIMEOUT_MS</code> 族，≤10s 合法例外）+ 临时文件<br>     finally 清理（同 docx 轨）。成本控制：本回合图数已达 <code>MAX_CARDS</code> 上限 → 跳过抽帧<br>     并在卡内如实说明「已达单轮图上限，未抽帧」。</p>
+<ul><li><strong>行为分流</strong>：视觉通道 verdict=supported（D4 台账）→ 抽帧被真视觉描述，</li></ul>
+<p>卡尾汇总「帧说明来自 &lt;通道&gt; 视觉识别」；无视觉通道 → 帧仍走 OCR（录屏类视频<br>     的字幕/UI 文本可捞回），捞不到就如实「已抽帧但无理解通道」；ffmpeg 缺席 →<br>     仅 V1 元数据 + 引导「安装 ffmpeg 或运行 khy doctor 检查」。</p>
+<ul><li><strong>音轨</strong>：视频含人声解说的转写与 mp3 同属 T2 音频通道（一个能力两处复用），</li></ul>
+<p>T1 阶段卡内声明「音轨未转录」。</p>
+<ol><li><strong>引导文本按能力三态生成</strong>（纯叶 <code>unsupportedGuide</code>：kind × 环境探测 → 动作列表）：<ul><li><strong>本地可做</strong>（ffmpeg/python 在场）→ 直接降级做了，卡注明引擎（上表）；</li><li><strong>配置可得</strong> → 给正门命令：识图 = <code>khy gateway config</code> 配视觉通道；</li></ul></li></ol>
+<p>音频转写 = 配 audio-capable 通道；解包 = 让用户展开后按路径重发（不旁路权限）；</p>
+<ul><li><strong>有通道但未实测</strong> → 接 <strong>D4 探针台账</strong>（<code>.khyos/vision_capability.json</code>）：</li></ul>
+<p>当前首选通道 verdict ≠ supported 时，引导文案直接点名「已实测支持的通道」（若有）<br>     或「运行 khy gateway 视觉探测」。用户例「配置一个识图模型返回图片说明」即此闭环：<br>     配好 → verdict=supported → 同图下一轮走真视觉轨，说明书自动从「无视觉通道」<br>     切为视觉描述，无需改码。</p>
+<ol><li><strong>音乐「音调/歌词/说明」分级落地</strong>：T1 本轮可做——歌词（.lrc/内嵌文本）+ 容器说明</li></ol>
+<p>（元数据卡）；T2 音频转写通道（复用 D4「探针+台账+引导」模式登记 audio 能力）；<br>   T3 音高/调性分析（需 librosa 级 DSP python helper）——<strong>候选登记、默认不做</strong>，<br>   卡内永远如实：「旋律级内容无通道」。</p>
+<ol><li><strong>模型行为契约</strong>（写进卡尾【行为约定】一行）：</li></ol>
+<p>「本附件正文未经通道读取。用户问及此附件时：①先声明未读到 ②从本卡『可行动作』中<br>   给具体建议 ③禁止编造画面/旋律/歌词/包内文件内容。」提取失败分支（D6 已有）同式升级。</p>
+<ol><li><strong>门控</strong>：<code>KHY_HONEST_UNSUPPORTED_GUIDE</code> 默认开；<code>0</code> → 引用卡逐字节回退 D6 文案。</li></ol>
+<p>探测全部 fail-soft（ffmpeg 缺席即当不存在，不报错不阻断）。</p>
+<p>验收判据：发 <code>x.zip song.mp3 shot.bmp demo.mp4</code> 四路径——bmp 出图卡（有 ffmpeg）或尺寸+引导卡；<br>zip 出目录清单+「展开后重发」；mp3 出元数据+（有 .lrc 则歌词摘录）+「旋律未转录」；<br>demo.mp4 出元数据卡，有 ffmpeg 时另出 3 帧进图轨（对照表见 <code>文件4·帧1/3</code>），有同名 .srt<br>则字幕摘录并注明证据等级；各卡尾均有【行为约定】；<code>KHY_HONEST_UNSUPPORTED_GUIDE=0</code> 时<br>卡文本与 D6 逐字节一致。</p>
+<p>实施记录（2026-09-27）：纯叶 <code>services/unsupportedGuide.js</code>（三态引导 + CONTRACT 一行）；<br>编排层全部落在 <code>services/imageContextCardService.js</code>（归档清单走 python <code>zipfile/tarfile</code>、<br>媒体元数据走 ffprobe JSON、bmp 文件头解宽高、<code>.lrc</code>/<code>.srt</code>/<code>.vtt</code> 同名文本轨、<br>抽帧注入 <code>options.images</code> 图轨并同步 <code>frameRefs</code> 行进【附件对照】，零改 aiGateway 与在途 #7 文件）；<br>发现层扩展 <code>cli/repl/inlineFileRefs.js</code> 导出 <code>D7_MEDIA_EXT_SET</code>，仅在门控开时并入扫描扩展名集，<br>保证关档逐字节回退 D6。单测：<code>tests/services/unsupportedGuideD7.test.js</code>（9 用例）+<br><code>tests/services/fileExtractionD7.test.js</code>（8 用例，B1–B6）。<strong>诚实备注</strong>：本机 ffmpeg/ffprobe<br>缺席（<code>searchExecutable</code> 均为 null），归档清单路径有真实 python 子进程集成用例（B1b）验证，<br>bmp 转码 / mp3 元数据 / 视频抽帧三族经注入 runner 缝验证——<strong>引擎命令行为已按 ffprobe/ffmpeg<br>文档参数拼装，但未在本机对真实二进制端到端实测</strong>，首次装有 ffmpeg 的环境应按上条验收判据复测。</p>
+<h3 id="d3-已实施-2026-09-27-会话图片引用化持久">D3（已实施 2026-09-27）会话图片引用化持久<a class="anchor" href="#d3-已实施-2026-09-27-会话图片引用化持久" aria-label="锚点">#</a></h3>
+<ul><li>图片字节落 <code>&lt;dataHome&gt;/images/&lt;sha16&gt;.&lt;ext&gt;</code>（内容寻址，天然去重；已并入</li></ul>
+<p><code>DATA-LOCATIONS.json</code> seedEntries → <code>session-images-dir</code>，规则 <code>LAYOUT-007</code>）。</p>
+<ul><li><code>sessionPersistence.appendMessage</code> 的 <code>content</code> 为内容块数组时，base64 image 块</li></ul>
+<p>（anthropic <code>{type:'image'}</code> 与 openai data-URL <code>{type:'image_url'}</code> 两形态）以<br>  <code>{type:'image_ref', path, mimeType, bytes, sha16, stored, scene?, ocrDigest?}</code> 随行存储；<br>  字符串 content 与「块数组无图」路径<strong>逐字节不变</strong>。</p>
+<ul><li>回读收口在 <code>buildConversationChain</code>（消费者唯一重建口，脏文件零改动）：引用命中 →</li></ul>
+<p>还原等效 base64 图像块；文件缺失 → 诚实占位文本（带 sha16，有 ocrDigest 则附摘要）。<br>  读侧按 image_ref 块存在而<strong>无条件</strong>解析（不受写侧门控约束），盘上原始行不动，校验/<br>  审计轨看到的仍是落盘原文。<code>path</code> 只取 basename，防转录文件被投毒后越界读盘。</p>
+<ul><li>门控 <code>KHY_SESSION_IMAGE_PERSIST</code>（默认开，<code>0/false/off/no</code> → base64 原样落行的旧行为）；</li></ul>
+<p>单图 &gt;2MB 只存引用与摘要、不复制字节（<code>stored:false</code>，指南「压缩严重 JPG 转 PNG」的对偶）。</p>
+<p>实测：200 字节图 → 行内 0 处 base64、<code>images/&lt;sha16&gt;.png</code> 字节级还原；同字节两会话<br>仅一份文件；2MB+1 → <code>stored:false</code> 不落盘；删文件后 resume 得「图片正文缺失(引用 …)」。<br>单测 <code>tests/services/sessionImagePersistD3.test.js</code>（9 用例）。</p>
+<h3 id="d8-d8-1-已实施-2026-09-27-d8-2-d8-3-批次待批准-四通道输入框统一契约-tui-网页-桌面-手机">D8（D8.1 已实施 2026-09-27；D8.2/D8.3 批次待批准）四通道输入框统一契约：TUI / 网页 / 桌面 / 手机<a class="anchor" href="#d8-d8-1-已实施-2026-09-27-d8-2-d8-3-批次待批准-四通道输入框统一契约-tui-网页-桌面-手机" aria-label="锚点">#</a></h3>
+<p>先钉不变量：<strong>通道差异只允许存在于「捕获 + 传输」层；归一（网关 <code>normalizeImages</code>）、<br>关联（【附件对照】<code>图i/文件j</code> 编号锚定）、理解（D6 提取路由 + D7 诚实引导）四层全通道<br>共享</strong>。任何通道都不允许私有一套「说明书」——四通道发同一附件集，模型必须收到同一视图。</p>
+<table><thead><tr><th>通道</th><th>图片/文件捕获</th><th>传输 payload</th><th>现状</th></tr></thead><tbody><tr><td>TUI</td><td>打字/粘贴<strong>路径文本</strong>（<code>inlineImageSubmit</code> 多路模式）+ 系统剪贴板 staging（<code>App.js</code> stagedImages 合并）</td><td><code>{images:[{base64,mimeType,label}]}</code></td><td>已齐（D1.1）</td></tr><tr><td>桌面（khy 原生壳）</td><td>同 TUI：路径提取 + 剪贴板原生可读</td><td>同上</td><td>与 TUI 同源，验收即可</td></tr><tr><td>网页（ai-frontend）</td><td>文件选择器 + <strong>粘贴（D8.1）</strong> → <code>POST /api/ai/upload</code> → <code>pendingAttachments[].id</code></td><td><code>{attachments:[ids]}</code></td><td>已接线（原「无 paste 粘贴即静默丢」bug 已修）</td></tr><tr><td>手机</td><td>触摸无桌面式剪贴板 staging；捕获=相册/相机选择器 +（支持的浏览器）长按粘贴</td><td>同网页 ids 契约</td><td>未接线</td></tr></tbody></table>
+<p><strong>D8.1 网页粘贴丢图（已实施 2026-09-27，纯前端小改动集）</strong>：</p>
+<ul><li>病根：<code>ChatInputBar.vue</code> 的 textarea 没有 <code>@paste</code> 处理——浏览器 paste 事件里图片以</li></ul>
+<p><code>clipboardData</code> File/Blob 形态存在（<strong>浏览器永远拿不到本地路径</strong>），现有唯一入口是<br>  picker，故粘贴被静默丢弃、「桌面/TUI 正常」的差异本质是原生壳能读系统剪贴板而页面没接线。</p>
+<ul><li>修法（与实施一致）：<code>ChatInputBar.vue</code> textarea 绑 <code>@paste=&quot;onComposerPaste&quot;</code> →</li></ul>
+<p><code>clipboardData.files</code> 为空则<strong>不拦截</strong>（纯文本粘贴保持原生行为）；非空则 <code>preventDefault()</code><br>  并 <code>emit('paste-attachments', files)</code>（实现接纳剪贴板里的一切文件，不限 <code>image/*</code>，<br>  与 picker 的「图片/视频/文档/项目」口径对齐）。<code>AIChat.vue</code> 侧 <code>onPasteAttachments</code> 与<br>  <code>onFilesSelected</code> 共用抽出的 <code>uploadAttachmentFiles</code> 循环：<code>FormData('file')</code> <strong>复用既有<br>  <code>/api/ai/upload</code> 管线</strong>（零新后端）→ <code>pendingAttachments</code> chip + 逐文件失败提示不阻断。<br>  截图 Blob 文件名常为 <code>blob</code>/空，仅按 MIME 补可读扩展名（<code>粘贴文件-&lt;ts&gt;-&lt;n&gt;.&lt;ext&gt;</code>），字节不动。</p>
+<ul><li>门控（实现偏差登记）：原设计 <code>KHY_WEB_PASTE_ATTACHMENT</code> env 变量；实际落在</li></ul>
+<p><code>localStorage['khy.webPasteAttachment'] === '0'</code> 关闭——Vite 前端 env 是<strong>构建期</strong>注入，<br>  做不到用户运行时可关；localStorage 键默认开、随时可关且刷新即生效。关档 = 完全回到<br>  「粘贴即忽略」旧行为。</p>
+<ul><li>网页粘「路径文本」：本地部署（页面与 backend 同机）时按 D6 文件卡路径语义处理；</li></ul>
+<p>远程部署时必然命中「文件不存在或不可读」诚实卡——这是 D6 已有行为，不新增特判。</p>
+<ul><li>单测：<code>src/views/chatInputPaste.wiring.test.js</code>（6 用例，源码级接线契约：paste 绑定 /</li></ul>
+<p>emit / 文本粘贴不拦截 / kill switch / 双入口共用同一上传循环）。</p>
+<p><strong>D8.2 手机通道</strong>：复用网页同一 paste/upload 契约（若手机走 ai-frontend 则 D8.1 自动受益）；<br>相册/相机选择走既有 picker；label 语义 = 文件名+内容寻址摘要（浏览器/移动端无绝对路径，<br><strong>不许伪装成路径</strong>，对照表如实显示 <code>图1=IMG_2049.jpg（手机相册）</code>）。</p>
+<p><strong>D8.3 跨通道等值验收（机器可判）</strong>：同一贴图 + 同一文本分别从 TUI / 网页 / 桌面发送，<br>断言模型收到的【附件对照】表与卡结构逐字段一致（编号、来源形态、溢出诚实行）；<br>单测层面可在 node:test 用三通道 payload 构造 → 同一 <code>buildContextCard</code> 输出比对。</p>
+<p>验收判据：网页粘贴截图 + 打「这图里报错怎么修」→ chip 出现、发送后卡与 TUI 同形；<br><code>localStorage['khy.webPasteAttachment']='0'</code> → 行为与修复前逐字节一致（粘贴即忽略）。</p>
+<h3 id="d9-网页面已实施-2026-09-27-tui-桌面维持现状降级-附件在输入区与输出区的渲染与回显契约">D9（网页面已实施 2026-09-27；TUI/桌面维持现状降级）附件在输入区与输出区的渲染与回显契约<a class="anchor" href="#d9-网页面已实施-2026-09-27-tui-桌面维持现状降级-附件在输入区与输出区的渲染与回显契约" aria-label="锚点">#</a></h3>
+<p>D8 钉的是「怎么进来」；D9 钉「进来之后用户看得见什么」。现状实测（2026-09-27，<br>只读勘察）：网页输入区是图标+名字+大小 chip（AIChat.vue:634-658），<strong>无任何缩略图</strong>；<br>发送后气泡里 chip 是 <code>&lt;a target=_blank href=/api/ai/upload/:id&gt;</code>（:564-580）；TUI 发送后<br>只有计数角标 <code>×N</code>（Transcript.js:315 / transcriptLines.js:270-271）；说明书只注入<br>网关 prompt、任何界面都不回显（aiGatewayGenerateMethod.js:923-927）。</p>
+<p><strong>四条原则</strong>：</p>
+<ul><li><strong>P1 单一真源</strong>：渲染只由上传返回的 descriptor <code>{id,name,kind,mimeType,size,url,extracted,transcript}</code></li></ul>
+<p>（<code>aiUploadStore.toDescriptor</code>）驱动。四通道不许私养第二套附件形状。</p>
+<ul><li><strong>P2 输入区回显「用户给了什么」</strong>：文件名/大小/类型/上传态——本地事实，零后端调用。</li></ul>
+<p>说明书内容<strong>不进</strong>输入区（那是模型视图，不是用户的）。</p>
+<ul><li><strong>P3 输出区回显「当时发出了什么」</strong>：descriptor 快照已随消息持久并可 reload 重建</li></ul>
+<p>（AIChat.vue:3118-3127 存快照、:1101-1109 入会话、retract :3326-3328 还原），<br>  回显不得依赖任何 live 上传态。</p>
+<ul><li><strong>P4 媒体必须走认证 blob 通道</strong>：<code>GET /api/ai/upload/:id</code> 只认</li></ul>
+<p><code>Authorization: Bearer</code>/<code>X-API-Key</code> 头（aiManagementServer.js:1240-1241），<br>  裸 <code>&lt;img src&gt;</code> 与浏览器导航<strong>必然 401</strong>。缩略图与下载一律<br>  <code>authedFetch → blob → URL.createObjectURL</code>（组件卸载 revoke）。<br>  ⚠ 推论：现有气泡 chip 的 <code>&lt;a target=_blank&gt;</code> 今日疑似点开即 401 JSON——<br>  <strong>属候选缺陷，实施第一步按规则 5 先对活后端复现，再处</strong>（修法二选一：<br>  点击改走 blob 下载，或后端给该 GET 路由接受短时 query token；倾向前者，零新凭据面）。</p>
+<p><strong>输入区（发送前）分型渲染</strong>：</p>
+<table><thead><tr><th>kind</th><th>网页/手机</th><th>TUI/桌面（终端无像素，如实降级）</th></tr></thead><tbody><tr><td>image</td><td>44–72px 缩略图 chip（本地 <code>File</code> → objectURL，零上传依赖）+ × 角标；点按放大</td><td>维持既有 <code>已附加 N 张图片</code>（ChatColumn.js:182）</td></tr><tr><td>document/text/code</td><td>图标+名+大小 + 状态徽标：<code>已提取正文</code>（descriptor.extracted）/ 失败徽标</td><td>路径文本本身即回显（多路模式现状）</td></tr><tr><td>archive/audio/video</td><td>图标+名+大小 + <code>已转写</code>（descriptor.transcript）等徽标</td><td>同上</td></tr><tr><td>上传态</td><td>spinner chip 保留；<strong>失败留痕</strong>：红 chip + 重试/移除（现状失败只 toast 即散，chip 无痕——gap）</td><td>—</td></tr></tbody></table>
+<p><strong>输出区（发送后回显）</strong>：</p>
+<ul><li>用户气泡：image → 认证 blob 缩略图行（点按放大）；其余 kind → 与输入区同款 chip</li></ul>
+<p>的快照版。资源 404/410（后端 GC 过期）→ 灰置「附件已不可用」徽标，<strong>不许静默消失</strong>。</p>
+<ul><li>助手侧不重复回显附件（维持现状）——模型的理解已在正文；说明书归模型视图。</li><li><strong>候选（规则 6 待用户点头，默认不做）</strong>：用户气泡加「模型看到了什么」折叠件，</li></ul>
+<p>展示该回合注入的说明书卡。代价：说明书当前<strong>不随消息存储</strong>，需要网关装配处落一份<br>  副本——新持久面，单独批准。</p>
+<ul><li>resume/reload：网页按 P3 快照重建；TUI 走 D3 <code>image_ref</code> 还原，缺文件出诚实占位。</li></ul>
+<p><strong>门控与验收</strong>：</p>
+<ul><li>门控 <code>localStorage['khy.attachmentThumbs']</code> 默认开；<code>'0'</code> → 回到纯图标 chip，逐字节现状。</li></ul>
+<p>（偏差登记：设计稿原写 env <code>KHY_ATTACHMENT_THUMBS</code>，实现改 localStorage——与 D8.1<br>  同一理由，Vite 构建期 env 做不到用户运行时可关。）</p>
+<ul><li>手机复用网页组件（响应式现有 flex-wrap 已够，无新分支）。</li><li>验收判据：网页贴截图 → 输入区见缩略图 → 发送 → 气泡内缩略图 + 刷新后仍在 →</li></ul>
+<p>点旧附件<strong>不见裸 401</strong>（出「已不可用」或成功下载）；门控 <code>'0'</code><br>  与 TUI 全路径行为逐字节不变。</p>
+<ul><li>单测面：blob 取图 helper（node:test，注入 fetch）+ 前端 wiring（气泡 image 分支</li></ul>
+<p>必须走 blob，源码级断言禁裸 <code>img :src=&quot;att.url&quot;</code>）。</p>
+<p><strong>D9 实施记录（2026-09-27，按建议档）</strong>：</p>
+<ul><li><strong>401 缺陷已按规则 5 复现后处置</strong>：对活后端 curl 无头 <code>GET /api/ai/upload/:id</code> →</li></ul>
+<p>HTTP 401「未提供认证令牌」原始输出存<br>  <code>.khy/feedback/d9-attachment-echo-2026-09-27/repro-before.txt</code>；复诊<br>  <code>repro-after.txt</code>——后端路由刻意不变（仍只认头），修复面在前端 blob 通道，<br>  未走「query 短时 token」备选（零新凭据面）。</p>
+<ul><li><strong>新文件</strong>：<code>apps/ai-frontend/src/utils/attachmentView.js</code>（纯叶：</li></ul>
+<p><code>THUMBS_KEY</code>/<code>readThumbsFlag</code>（storage 抛错 fail-soft 默认开）/<code>isImageAttachment</code>/<br>  <code>attachmentBadge</code>（已转写 · 已提取正文）/<code>downloadFileName</code>（'blob'/无名 → id 兜底））；<br>  <code>views/components/MessageAttachment.vue</code>（输出区回显：三态机 loading/idle/ready/error，<br>  <code>authedFetch(url,{silent:true})</code> → blob → objectURL，silent 防附件失败触发整页登出；<br>  模块级缓存 Map + FIFO 封顶 64 回收 objectURL；失败不缓存可重试；过期灰置<br>  「附件已不可用」）。</p>
+<ul><li><strong>AIChat.vue 接线</strong>：输入区图片本地缩略图（objectURL 只挂首个描述符，remove/send/</li></ul>
+<p>newConversation 三处 revoke；发送快照剥离 <code>thumbUrl</code>，历史里不落 blob: 死链）；<br>  descriptor 徽标（消费此前从未被前端读取的 <code>extracted</code>/<code>transcript</code>）；上传失败留痕<br>  （红 chip + 重试/忽略，仅门控开时记录，重试回灌同一上传循环）。门控关：bubble<br>  旧 <code>&lt;a target=_blank&gt;</code> block 以 <code>v-else</code> 原样保留，thumb/badge/failed 全部不渲染。</p>
+<ul><li><strong>「模型看到了什么」折叠件按建议默认不做</strong>（说明书不随消息存储，新持久面需单独批准）。</li><li><strong>测试</strong>：<code>utils/attachmentView.test.js</code>（8 用例）+ <code>views/chatAttachments.wiring.test.js</code></li></ul>
+<p>（19 用例，源码级锁 blob 通道、禁裸 <code>:src=&quot;att.url&quot;</code>、门控、revoke/快照净化、<br>  失败留痕双分支）；全量 vitest 589/590（唯一红为 HEAD 既有 W8 棘轮，违规文件均在<br>  <code>src/components/**</code>，与本改动集无关）；vite build 通过；<code>check-agent-rules.js</code><br>  显式路径全绿。</p>
+<ul><li><strong>如实备注</strong>：真实浏览器粘贴→缩略图→刷新回显的手测未在本环境执行（需登录态 UI），</li></ul>
+<p>待用户或 browser-use 验证；TUI/桌面通道按分型表维持既有 `` 计数降级，未改动。</p>
+<h3 id="d4-已实施-2026-09-27-视觉能力登记求真">D4（已实施 2026-09-27）视觉能力登记求真<a class="anchor" href="#d4-已实施-2026-09-27-视觉能力登记求真" aria-label="锚点">#</a></h3>
+<ul><li><code>adapterVisionCapability.js</code> 判定序改为：env 显式覆盖（优先级不变）→ CLI 实例自报 →</li></ul>
+<p><strong>既有探针实测灌入</strong>（<code>visionCapabilityStore.getAdapterVerdict</code> 扫<br>  <code>.khyos/vision_capability.json</code> 未过期条目，adapter 级聚合）→ 内置名单回退。<br>  实测 <code>supported</code> 自动放行；实测 <code>unsupported</code> 可否决内置名单（上游真拒图时剥 OCR<br>  才是真话）；无记录/过 TTL/store 读失败 → 逐字节回退旧判定。</p>
+<ul><li>消除「发得出但被判定发不出」或反之一的谎报；post-failure OCR 网兜底不变，放行仍安全。</li></ul>
+<p>单测 <code>tests/services/visionNativeAdapterProbe.test.js</code>（8 用例）。</p>
+<h3 id="d5-已实施-2026-09-27-s1-只记录-校准话术卡">D5（已实施 2026-09-27，S1 只记录）校准话术卡<a class="anchor" href="#d5-已实施-2026-09-27-s1-只记录-校准话术卡" aria-label="锚点">#</a></h3>
+<ul><li>纯叶子 <code>correctionPhraseCard.js</code>：五类确定性关键词表（尺寸偏差/颜色偏差/遗漏元素/</li></ul>
+<p>逻辑错误/文字错误，指南 §2.4.2）、上一条助手消息 UI/代码产物判定（string 与<br>  block-array content 双形态安全）、档位 <code>KHY_IMAGE_CALIBRATE_HINT</code>（默认 log / off / on）。</p>
+<ul><li>观测编排 <code>correctionPhraseService.js</code> 挂网关送模型前（先于说明书卡，看用户原文）：</li></ul>
+<p>本轮无图且命中句式 → 往 <code>.khyos/correction_phrase_samples.jsonl</code> 追加一行样本<br>  （类别/关键词/assistantArtifacts/sha16 摘要/≤120 字预览）。<strong>S1 只记录，绝不改写<br>  用户消息、绝不阻断</strong>。误报样本也记录（artifacts 字段），否则 S2 的误报率永远算不出。</p>
+<ul><li>骨架注入通道<strong>不存在</strong>：阶段权威常量 <code>KHY_CALIBRATE_HINT_STAGE='S1'</code>，</li></ul>
+<p><code>effectiveMode()</code> 把 on/inject 一律收敛为 log；升 S3 = 人工翻转常量 + 同步<br>  <code>FEATURE-OWNERSHIP.json</code> → <code>image-calibrate-hint-skeleton</code>（守卫<br>  <code>check-rollout-stage.js</code> 已校一致）。</p>
+<p>单测 <code>tests/services/correctionPhraseS1.test.js</code>（7 用例）。</p>
+<h2 id="5-门控与开关汇总">5. 门控与开关汇总<a class="anchor" href="#5-门控与开关汇总" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>环境变量</th><th>默认</th><th>说明</th></tr></thead><tbody><tr><td><code>KHY_IMAGE_CONTEXT_CARD</code></td><td>开</td><td>D1 说明书装配；<code>0</code> → 逐字节旧行为</td></tr><tr><td><code>KHY_IMAGE_AUTO_DOWNSCALE</code></td><td>开</td><td>D2 超限降尺度优先；<code>0</code> → 保持抛错旧行为</td></tr><tr><td><code>KHY_INLINE_MULTI_IMAGE</code></td><td>开</td><td>D1.1 多路径同轮模式；<code>0</code> → 单路径老逻辑逐字节回退</td></tr><tr><td><code>KHY_FILE_CARDS</code></td><td>开</td><td>D6 文件说明书卡；<code>0</code> → 只出图卡，逐字节回退 D1.1 面</td></tr><tr><td><code>KHY_FILE_CARD_TIMEOUT_MS</code></td><td>8000</td><td>D6 单文件提取子进程短 I/O 超时（钳 1000–15000）</td></tr><tr><td><code>KHY_FILE_CARD_EXCERPT_CHARS</code></td><td>4000</td><td>D6 正文摘录上限（钳 500–20000）</td></tr><tr><td><code>KHY_IMAGE_SPLIT_TALL</code></td><td>关</td><td>D2 长图自动拆分（仅 S3 后允许默认开）</td></tr><tr><td><code>KHY_SESSION_IMAGE_PERSIST</code></td><td>开</td><td>D3 引用化持久；<code>off</code> → 图片不落会话</td></tr><tr><td><code>KHY_NATIVE_VISION_ADAPTERS</code></td><td>未设</td><td>D4 既有显式覆盖通道，优先级高于探针灌入</td></tr><tr><td><code>KHY_IMAGE_CALIBRATE_HINT</code></td><td>记录档</td><td>D5：<code>log</code>（默认，只记样本）/ <code>on</code>（注入骨架，S3 后）/ <code>off</code></td></tr><tr><td><code>KHY_HONEST_UNSUPPORTED_GUIDE</code></td><td>开</td><td>D7：不支持格式「声明+原因+引导」三段式卡；<code>0</code> → 回退 D6 纯引用卡文案</td></tr><tr><td><code>KHY_VIDEO_THUMB_FRAMES</code></td><td>3</td><td>D7-V2 视频自动抽帧数（钳 1–8；0 或 ffmpeg 缺席 → 只出 V1 元数据卡）</td></tr><tr><td><code>localStorage['khy.webPasteAttachment']</code></td><td>开</td><td>D8.1 网页输入框粘贴文件→上传管线；<code>'0'</code> → 粘贴即忽略（修复前行为）。非 env：Vite 构建期 env 做不到用户运行时可关</td></tr><tr><td><code>localStorage['khy.attachmentThumbs']</code></td><td>开</td><td>D9 输入/输出区图片缩略图、状态徽标与失败留痕；<code>'0'</code> → 纯图标 chip 现状逐字节。非 env：与 D8.1 同口径，Vite 构建期 env 做不到运行时可关</td></tr></tbody></table>
+<h2 id="6-落地阶段-process-008">6. 落地阶段（PROCESS-008）<a class="anchor" href="#6-落地阶段-process-008" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>机制</th><th>起步阶段</th><th>毕业判据</th></tr></thead><tbody><tr><td>场景分类器（D1/D5 共用）</td><td>S1 观察者：记录判定与用户后续修正的分歧样本</td><td>≥200 样本且无解释不了的样本 → S2</td></tr><tr><td>长图拆分（D2）</td><td>不注册拦截；仅【建议】文案，属状态文本非门</td><td>—</td></tr><tr><td>校准骨架注入（D5）</td><td>S1 只记录命中</td><td>≥50 提示且误报 &lt;10% → S2；≥20 次有效校准 → S3</td></tr><tr><td>登记处</td><td><code>FEATURE-OWNERSHIP.json</code> 的 <code>rollout.mechanisms[]</code>，含 <code>executorStage</code> 与回退动作（PP-4）</td><td>一次只升一阶（PP-6）</td></tr></tbody></table>
+<h2 id="7-验收判据">7. 验收判据<a class="anchor" href="#7-验收判据" aria-label="锚点">#</a></h2>
+<ul><li><strong>A1（说明书）</strong>：<code>KHY_IMAGE_CONTEXT_CARD=1</code> 下 TUI 粘贴一张报错截图、零文字回车 →</li></ul>
+<p>送网关的 user 消息含「【图片说明】…【OCR 转录】」块，场景判定 = error-screenshot；<br>  <code>KHY_IMAGE_CONTEXT_CARD=0</code> 时消息逐字节与改前一致。</p>
+<ul><li><strong>A2（降尺度）</strong>：对一个 27MB PNG 执行 <code>readImageFromFile</code> → 不再抛</li></ul>
+<p><code>Image too large</code>，返回 ≤5MB 的 PNG 且带 <code>downscaledFrom</code> 元数据（实测 866ms，<br>  2026-09-27）；说明书含「预处理」行；无 ffmpeg/绘图工具的环境仍抛错且消息含修复建议；<br>  <code>KHY_IMAGE_AUTO_DOWNSCALE=0</code> 时错误文本逐字节等于旧版（已锁进单测）。</p>
+<ul><li><strong>A3（持久化）</strong>：带图会话 <code>khy resume</code> 后追问「图里第三行写的什么」→ 引用回读成功；</li></ul>
+<p>删除 <code>.khy/images/</code> 中对应文件后重试 → 降级 OCR 摘要 + 一行如实提示，不崩。</p>
+<ul><li><strong>A4（登记）</strong>：对 <code>.khyos/vision_capability.json</code> 中有 <code>verdict:vision-ok</code> 记录的 adapter，</li></ul>
+<p><code>adapterVisionCapability</code> 返回 true；无记录者维持保守 false。</p>
+<ul><li><strong>A5（回归）</strong>：<code>node scripts/ci/check-agent-rules.js --changed</code> 零 error；</li></ul>
+<p>既有 <code>tests/</code> 图片相关套件全绿且新增用例断言输入图片数 &gt;0（防空转）。</p>
+<h2 id="8-非目标与不支持清单">8. 非目标与不支持清单<a class="anchor" href="#8-非目标与不支持清单" aria-label="锚点">#</a></h2>
+<ul><li><strong>不</strong>新建图像依赖（sharp/jimp 等）——预处理继续走平台外部工具，缺工具即 fail-soft。</li><li><strong>不</strong>新增顶层 CLI 命令/别名（<code>PROCESS-014</code> 棘轮）；一切入口挂既有 <code>image</code>/<code>paste</code>/TUI 附件。</li><li><strong>不</strong>做自训 OCR/超分模型；放大（waifu2x/Real-ESRGAN 类）超出本仓边界，指南该节按</li></ul>
+<p>「用户自备工具」处理。</p>
+<ul><li><strong>不</strong>承诺像素级还原：说明书是「校验层」而非替代模型视觉（指南误区一的对偶——也不替代人）。</li><li>手写体识别率、暗色模式自动转亮：S1 阶段明确<strong>不支持</strong>，写入本节留痕。</li></ul>
+<h2 id="9-风险与回滚">9. 风险与回滚<a class="anchor" href="#9-风险与回滚" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>风险</th><th>缓解</th></tr></thead><tbody><tr><td>说明书文本污染 prompt（用户只想发图）</td><td>卡片前置分隔标记，token 预算计入既有 <code>glmVisionTextBudget</code>；<code>KHY_IMAGE_CONTEXT_CARD=0</code> 单开关全退</td></tr><tr><td>降尺度改变像素导致「尺寸估算更糟」</td><td>降尺度仅在 &gt;5MB（原本必失败）路径触发，不改变可达路径的字节</td></tr><tr><td>会话磁盘膨胀</td><td>内容寻址去重 + &gt;2MB 不复制字节 + <code>off</code> 全退</td></tr><tr><td>探针灌入登记误放开坏 adapter</td><td>只读取已落盘的实测 verdict；env 覆盖通道优先；探针本身维持既有只增不改语义</td></tr></tbody></table>
+<p>回滚命令（规则 7 <code>rollback.txt</code> 兑现）：各开关显式置 <code>0</code>/<code>off</code> 即逐字节回到旧行为；<br>代码级回滚 <code>git revert &lt;本方案提交&gt;</code>。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-162] Auto模式模型粒度健康路由方案.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-162] Auto 模式模型粒度健康路由方案</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-164] 用户需求理解管线-意图裁决澄清问询与需求固化方案.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-164] 用户需求理解管线——意图裁决、澄清问询与需求固化</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-163] 图文混合输入识别增强方案.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

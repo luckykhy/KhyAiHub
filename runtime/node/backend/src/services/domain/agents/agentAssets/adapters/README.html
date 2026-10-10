@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>adapters — 外部 agent 资产适配器族 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>agents<span class="sep">›</span>agentAssets<span class="sep">›</span>adapters<span class="sep">›</span>adapters — 外部 agent 资产适配器族</div>
+      <header class="hero reveal"><h1>adapters — 外部 agent 资产适配器族</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#adapters-外部-agent-资产适配器族">adapters — 外部 agent 资产适配器族</a></li><li class="lvl-2"><a href="#谁要">谁要</a></li><li class="lvl-2"><a href="#为什么">为什么</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="adapters-外部-agent-资产适配器族">adapters — 外部 agent 资产适配器族<a class="anchor" href="#adapters-外部-agent-资产适配器族" aria-label="锚点">#</a></h1>
+<p>D2 功能单元（<code>domain/agents/agentAssets/adapters/</code>）。</p>
+<h2 id="谁要">谁要<a class="anchor" href="#谁要" aria-label="锚点">#</a></h2>
+<p>用户把沉淀在某个外部 agent 工具（Claude Code / opencode / OpenClaw / DeepSeek Harness /<br>通用 harness 约定）里的记忆、技能、MCP 工具配置搬到 khy-os 或另一家工具时，需要一层<br>「每家磁盘布局 → 统一资产模型」的翻译层。编排层 <code>../sync.js</code> 只认「源 id → 目标 id」，<br>khy-os 自己也实现同一契约（<code>khyOs.js</code>），故 tool↔tool 直接迁移不需要特判。</p>
+<h2 id="为什么">为什么<a class="anchor" href="#为什么" aria-label="锚点">#</a></h2>
+<p>新增一家工具 = 新增一个 <code>adapters/&lt;id&gt;.js</code> + 注册表加一行（<code>../registry.js</code> 头注释<br>写明的扩展缝）。各家布局的实证来源写在各文件头（<code>~/.claude</code> 本机实证、上游 README、<br>docs.openclaw.ai 三页实测确认），不是猜的。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<p><code>node --test &lt;六个显式路径&gt;</code>（本仓口径禁止通配读数），6 份共置测试 / 53 例 / 0 fail，<br>全部用 <code>fs.mkdtempSync</code> 临时目录 + 注入 env，不触真实主目录。装载走 <code>registry.js:86</code><br>的动态 require（<code>require(./adapters/${module})</code>），故静态 fan-in 为 0 ——<br>验证装载面需跑经 registry 的上层（sync 套件）。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../../../runtime/node/backend/src/services/domain/account/README.html"><div class="dir">← 上一篇</div><div class="ttl">account — 账号池与 tokenless 压缩的两块业务逻辑（D2）</div></a><a class="next" href="../../../../../../../../../runtime/node/backend/src/services/domain/agents/agents/README.html"><div class="dir">下一篇 →</div><div class="ttl">delegationPromptPolicy</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/agents/agentAssets/adapters/README.html";</script>
+<script src="../../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>evidence/ —— 软件著作权登记底档（人类贡献与原创性证据） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>works<span class="sep">›</span>record<span class="sep">›</span>evidence<span class="sep">›</span>evidence/ —— 软件著作权登记底档（人类贡献与原创性证据）</div>
+      <header class="hero reveal"><h1>evidence/ —— 软件著作权登记底档（人类贡献与原创性证据）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#evidence-软件著作权登记底档-人类贡献与原创性证据">evidence/ —— 软件著作权登记底档（人类贡献与原创性证据）</a></li><li class="lvl-2"><a href="#一-本目录的两条铁律">一、本目录的两条铁律</a></li><li class="lvl-2"><a href="#二-判据-证据文件对照">二、判据 → 证据文件对照</a></li><li class="lvl-2"><a href="#三-目录结构">三、目录结构</a></li><li class="lvl-2"><a href="#四-怎么重新生成全套证据">四、怎么重新生成全套证据</a></li><li class="lvl-2"><a href="#五-边界-本目录-不是-登记材料本身">五、边界：本目录**不是**登记材料本身</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="evidence-软件著作权登记底档-人类贡献与原创性证据">evidence/ —— 软件著作权登记底档（人类贡献与原创性证据）<a class="anchor" href="#evidence-软件著作权登记底档-人类贡献与原创性证据" aria-label="锚点">#</a></h1>
+<p>本目录是<strong>入库的自留底档</strong>：登记被追问「这软件是谁做的、人做了什么、AI 做了什么」时，<br>这里放着能当场翻出来、且<strong>每一条都能在本机重跑验证</strong>的答复。</p>
+<ul><li>建立依据：<code>[DESIGN-IP-001]</code> C-E4（判据真源）</li><li>入库裁决：<strong>D-E1</strong>（2026-09-28，人工决定本目录进 git、不加进 <code>.gitignore</code>），见 <code>01_人类贡献/决策记录.md</code></li><li>层级登记：<code>[DESIGN-LAY-005]</code> §1.2 —— <code>evidence/</code> 是<strong>证据横切</strong>目录</li><li>机器校验：<code>npm run check:copyright</code>（缺件 / 空图片会被判 error）</li></ul>
+<hr>
+<h2 id="一-本目录的两条铁律">一、本目录的两条铁律<a class="anchor" href="#一-本目录的两条铁律" aria-label="锚点">#</a></h2>
+<ol><li><strong>不手写数字。</strong> 所有度量数字由 <code>scripts/evidence/</code> 下的采集器从仓库实测得出，</li></ol>
+<p>再渲染成文档与图片。任何一份文件里的数字都能用同一条「复算命令」重跑出来；<br>   重跑不一致说明数据漂移，以重跑结果为准并重新生成。</p>
+<ol><li><strong>不摆拍、不隐瞒。</strong> 图片分「可作登记材料」与「仅作开发过程证据」两类，</li></ol>
+<p>逐张在清单里标注；AI 参与范围、被剔除的第三方代码、含 AI 署名的历史提交，<br>   全部如实写出，不做粉饰。</p>
+<hr>
+<h2 id="二-判据-证据文件对照">二、判据 → 证据文件对照<a class="anchor" href="#二-判据-证据文件对照" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>判据（<code>[DESIGN-IP-001]</code>）</th><th>一句话要求</th><th>本目录里的证据</th><th>复算入口</th></tr></thead><tbody><tr><td><strong>C-M1</strong></td><td>判据是「有没有人的意愿」，不是「有没有用 AI」</td><td><code>01_人类贡献/人类指令语料.md</code>、<code>03_图片/图表/04_人类意愿痕迹.png</code></td><td><code>npm run evidence:collect</code></td></tr><tr><td><strong>C-M2/M3</strong></td><td>AI 参与范围与禁区如实记录</td><td><code>01_人类贡献/ai-usage.md</code></td><td>`git log --all --format=%B \</td></tr><tr><td><strong>C-M4</strong></td><td>人的意愿必须留下痕迹</td><td><code>01_人类贡献/决策记录.md</code>、<code>01_人类贡献/迭代与验收.md</code></td><td>见各文件内「复算命令」</td></tr><tr><td><strong>C-E1</strong></td><td>每个改动答得上「谁要的 / 为什么 / 怎么验证」</td><td><code>01_人类贡献/开发过程说明.md</code> + <code>.khy/feedback/**</code>（245 个任务目录）</td><td>`ls .khy/feedback \</td></tr><tr><td><strong>C-E2</strong></td><td>设计决策必须落文档</td><td><code>02_独创性/设计决策.md</code>、<code>02_独创性/原创代码规模.md</code>、<code>03_图片/架构图/02_模块依赖图_实测.png</code>（依赖边由源码解析实测）</td><td>`find docs/03_DESIGN_设计 -name '*.md' \</td></tr><tr><td><strong>C-E3</strong></td><td>提交信息携带人的意图</td><td><code>05_索引与对账/对账表.md</code> §三（含 AI 署名提交的历史与治理）</td><td><code>git log main --format=%s</code></td></tr><tr><td><strong>C-E4</strong></td><td>底档存在且完整</td><td>本目录整体</td><td><code>npm run check:copyright</code></td></tr><tr><td><strong>C-X1/X2</strong></td><td>进登记材料的代码人能解释</td><td><code>01_人类贡献/开发过程说明.md</code> §四、<code>02_独创性/设计决策.md</code></td><td>逐模块阅读</td></tr><tr><td><strong>C-X3</strong></td><td>第三方代码不进登记材料</td><td><code>02_独创性/原创代码规模.md</code>（vendor 逐文件剔除明细）</td><td><code>node scripts/evidence/collect-contribution.js</code></td></tr><tr><td><strong>C-MAT1</strong></td><td>核心模块可运行</td><td><code>03_图片/终端截图/</code>（6 张真实 stdout：含 <code>trajectory list</code> 的轨迹条数 + 链完整性读数，即现行登记全称两词的载体图）、<code>03_图片/界面截图/</code></td><td><code>npm run evidence:runtime</code></td></tr><tr><td><strong>C-MAT2/3</strong></td><td>名称与版本稳定、界面标识一致</td><td><code>06_申报材料/递交核对表.md</code>（定稿值 + 五处一致现状）+ <code>01_人类贡献/决策记录.md</code> <strong>D-名2</strong>（D-名1 已被取代）+ 图片清单里的「风险标注」</td><td><code>npm run check:copyright:all</code></td></tr></tbody></table>
+<hr>
+<h2 id="三-目录结构">三、目录结构<a class="anchor" href="#三-目录结构" aria-label="锚点">#</a></h2>
+<pre><code>evidence/
+├── README.md                    ← 本文件（导览）
+├── 01_人类贡献/
+│   ├── ai-usage.md              AI 参与范围自述（C-M2/M3）
+│   ├── 人类指令语料.md          人下的指令原文 + 出处（C-M1/M4，生成）
+│   ├── 开发过程说明.md          立项→设计→复现修复→验收的过程叙述（C-E1）
+│   ├── 发布记录.md              版本轨道、tag、CHANGELOG 段（C-MAT2）
+│   ├── 决策记录.md              人工拍板的决策，含 D-E1 / D-名1 / D-名2（C-M4，人工维护）
+│   └── 迭代与验收.md            Bug/任务台账与验收往返（生成）
+├── 02_独创性/
+│   ├── 原创代码规模.md          kernel 手写行数与 vendor 剔除口径（生成）
+│   └── 设计决策.md              234 份设计文档的索引与原创机制清单（C-E2）
+├── 03_图片/                     图片证据 + 两份清单（含「能否作登记材料」标注）
+├── 04_机器可读/                 contribution-metrics.json（所有数字的真源）
+├── 05_索引与对账/               证据总清单.json（逐文件 sha256/字节/行数）+ 对账表.md
+└── 06_申报材料/                 递交件工作区：README.md（生成规程）+ 递交核对表.md（人工维护）</code></pre>
+<hr>
+<h2 id="四-怎么重新生成全套证据">四、怎么重新生成全套证据<a class="anchor" href="#四-怎么重新生成全套证据" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">npm run evidence:all      <span class="hljs-comment"># 采集 → 生成文档 → 渲染图表 → 采集真实运行截图</span>
+npm run check:copyright   <span class="hljs-comment"># 校验底档齐件、图片非空</span></code></pre>
+<p>分步入口：<code>evidence:collect</code> / <code>evidence:build</code> / <code>evidence:images</code> / <code>evidence:runtime</code>。<br>采集器不写业务数据，只读仓库与台账；<code>evidence:runtime</code> 跑的是只读命令，<br>其中 <code>gateway status</code> 一条<strong>会对外探测</strong>通道连通性并可能触发一次最小模型调用<br>（即<strong>不保证零成本</strong>），已在 <code>03_图片/图片证据说明.md</code> §二与 <code>运行截图清单.json</code>（<code>对外探测: true</code>）标注。<br>（<code>--version</code> / <code>commands</code> / <code>hq status</code> / <code>storage status</code>），不触发任何模型外呼。</p>
+<hr>
+<h2 id="五-边界-本目录-不是-登记材料本身">五、边界：本目录<strong>不是</strong>登记材料本身<a class="anchor" href="#五-边界-本目录-不是-登记材料本身" aria-label="锚点">#</a></h2>
+<p>登记提交的是源程序前/后各 30 页 + 操作手册 + 申请表。<strong>递交件的工作区是<br><code>06_申报材料/</code></strong>（仓库内的独立文件夹，不与 <code>docs/</code> 混放）：那里只放<br>「将随申请出去的东西」与一份核对表，不放过程证据。<br>本目录其余部分是<strong>被追问时的答复依据</strong>，不随申请递交。因此它与登记材料的取舍不同：<br>这里保留了对己不利的记录（例如全分支仍有 88 条含 AI 署名的历史提交），<br>如实申报优于事后被问出来。</p>
+<p>三份文件的分工（避免同一决定写三遍、日后互相漂移）：</p>
+<table><thead><tr><th>位置</th><th>角色</th><th>语义真源？</th></tr></thead><tbody><tr><td><code>docs/…/[MGMT-OTHER-006]</code></td><td>定名的<strong>依据</strong>：语料、被淘汰备选、版本号论证</td><td>是（决策方案）</td></tr><tr><td><code>01_人类贡献/决策记录.md</code> D-名2</td><td><strong>人拍板的原话</strong>与连带义务</td><td>是（人的意愿痕迹）</td></tr><tr><td><code>06_申报材料/</code></td><td><strong>递交件本体</strong> + 逐件状态核对</td><td>否，只引用上两者</td></tr></tbody></table>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../works/record/evidence/06_申报材料/README.html"><div class="dir">← 上一篇</div><div class="ttl">06申报材料 —— 递交件工作区（不是依据文档）</div></a><a class="next" href="../../../works/ship/modules/README.html"><div class="dir">下一篇 →</div><div class="ttl">Khy OS 模块化打包</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../";window.__KHY_CUR__="works/record/evidence/README.html";</script>
+<script src="../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

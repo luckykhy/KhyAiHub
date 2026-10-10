@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-ARCH-170] 桌面端X报错功能接线与指路真实性方案.md -->
+<title>[DESIGN-ARCH-170] 桌面端 X 报错功能接线与指路真实性方案 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>[DESIGN-ARCH-170] 桌面端 X 报错功能接线与指路真实性方案</div>
+      <header class="hero reveal"><h1>[DESIGN-ARCH-170] 桌面端 X 报错功能接线与指路真实性方案</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-170-桌面端-x-报错功能接线与指路真实性方案">[DESIGN-ARCH-170] 桌面端 X 报错功能接线与指路真实性方案</a></li><li class="lvl-2"><a href="#0-一句话结论">0. 一句话结论</a></li><li class="lvl-2"><a href="#1-现状实证-file-line-可复核">1. 现状实证（file:line 可复核）</a></li><li class="lvl-3"><a href="#1-1-病灶-1-编辑器链路断在-设置入口不存在">1.1 病灶 1：编辑器链路断在「设置入口不存在」</a></li><li class="lvl-3"><a href="#1-2-病灶-2a-app-brandinglinks-的-root-回退少跳一级">1.2 病灶 2a：`app:brandingLinks` 的 root 回退少跳一级</a></li><li class="lvl-3"><a href="#1-3-病灶-2b-渲染层吞掉-main-返回的真实错误">1.3 病灶 2b：渲染层吞掉 main 返回的真实错误</a></li><li class="lvl-3"><a href="#1-4-病灶-2-的旁证-url-派生是第二真源">1.4 病灶 2 的旁证：URL 派生是第二真源</a></li><li class="lvl-3"><a href="#1-5-病灶-3-日志目录真源在迁移中">1.5 病灶 3：日志目录真源在迁移中</a></li><li class="lvl-3"><a href="#1-6-已经干净的面-不用再治">1.6 已经干净的面（不用再治）</a></li><li class="lvl-2"><a href="#2-借鉴提案-b-p2-七字段">2. 借鉴提案（B-P2 七字段）</a></li><li class="lvl-2"><a href="#3-目标形态-组件级契约">3. 目标形态（组件级契约）</a></li><li class="lvl-3"><a href="#3-1-设置页新增-编辑器-分区-治病灶-1">3.1 设置页新增「编辑器」分区（治病灶 1）</a></li><li class="lvl-3"><a href="#3-2-main-app-brandinglinks-修正-治病灶-2a-1-4">3.2 main `app:brandingLinks` 修正（治病灶 2a + 1.4）</a></li><li class="lvl-3"><a href="#3-3-渲染层错误透传-治病灶-2b">3.3 渲染层错误透传（治病灶 2b）</a></li><li class="lvl-3"><a href="#3-4-报错指路真实性原则-本提案沉淀的判据">3.4 报错指路真实性原则（本提案沉淀的判据）</a></li><li class="lvl-2"><a href="#4-实施分期-每期独立可回滚">4. 实施分期（每期独立可回滚）</a></li><li class="lvl-3"><a href="#p1-一次落地-零新增-ipc-全部既有文件内">P1（一次落地，零新增 IPC，全部既有文件内）</a></li><li class="lvl-3"><a href="#p2-另行小步-前置核实见-8-2">P2（另行小步，前置核实见 §8.2）</a></li><li class="lvl-3"><a href="#不在本提案-上游管辖">不在本提案（上游管辖）</a></li><li class="lvl-2"><a href="#5-诚实边界-刻意不纳入">5. 诚实边界（刻意不纳入）</a></li><li class="lvl-2"><a href="#6-反模式-这条路别走">6. 反模式（这条路别走）</a></li><li class="lvl-2"><a href="#7-验收方式-可复现命令-关联门禁">7. 验收方式（可复现命令 + 关联门禁）</a></li><li class="lvl-2"><a href="#8-待核实项">8. 待核实项</a></li><li class="lvl-2"><a href="#9-变更日志">9. 变更日志</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="design-arch-170-桌面端-x-报错功能接线与指路真实性方案">[DESIGN-ARCH-170] 桌面端 X 报错功能接线与指路真实性方案<a class="anchor" href="#design-arch-170-桌面端-x-报错功能接线与指路真实性方案" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>状态</strong>：提案（待评审）<br><strong>范围</strong>：<code>apps/khyos-desktop</code>（renderer + main，零 host 改动，零新增 IPC）<br><strong>上游依赖</strong>：无<br><strong>调研指针</strong>：[DESIGN-ARCH-125]（同域前置：命令面板诚实化与快捷键统一登记）；[DESIGN-ARCH-142]（更新机制，本提案不涉）<br><strong>模板合规</strong>：按 [DESIGN-SOURCING-001] §3 B-P2 体例逐字段填写；本提案为纯本仓缺陷修复，无外部借鉴，七字段据实声明不适用（先例：[DESIGN-ARCH-149] §2）</p></blockquote>
+<hr>
+<h2 id="0-一句话结论">0. 一句话结论<a class="anchor" href="#0-一句话结论" aria-label="锚点">#</a></h2>
+<p>两条截图 X 报错都不是「功能没做」，而是<strong>做了三层的功能断在第四层</strong>：</p>
+<table><thead><tr><th>#</th><th>用户看到</th><th>真实病灶</th><th>三层验证结论</th></tr></thead><tbody><tr><td>1</td><td>「未配置编辑器：请在『设置 → 常规』填写编辑器命令…」</td><td><strong>指路指到不存在的 UI</strong>：<code>desktopEditor</code> 在渲染层 0 处入口</td><td>handler 全（<code>main/index.ts:1253-1282</code>）+ 桥全（<code>preload/index.ts:89</code>）+ 调用方全（<code>TitleBar.tsx:132-137</code>、<code>AppHeader.tsx:51-55</code>）——缺的只是设置页一个输入框</td></tr><tr><td>2</td><td>「链接不可用：品牌真源未配置，请检查 KHY_OS_DIR 与 serviceDefaults」</td><td><strong>main 回退路径少跳一级</strong>（<code>out/main</code> 上跳三级落在 <code>apps/</code>，services 在仓库根）+ <strong>渲染层吞掉真实 error</strong></td><td>handler 全（<code>main/index.ts:1299-1317</code>）+ 桥全（<code>preload/index.ts:92</code>）+ 调用方全（<code>TitleBar.tsx:143-146</code>）——断在 root 解析与错误传递两处</td></tr><tr><td>3</td><td>「导出日志：…（自动导出通道未接线）」</td><td>日志目录真源自身在迁移中（<code>dataHome.js:24</code>），现在硬接线会逆着治理方向</td><td>无 main 侧 handler，文案里的 <code>~/.khyquant/logs</code> 指向 legacy 家目录</td></tr><tr><td>4</td><td>「检查更新：…自动更新通道未配置，跳过检查」</td><td>更新通道无能力</td><td>上游 [DESIGN-ARCH-142] 管辖，本提案不动</td></tr></tbody></table>
+<p>P1 修复 = 三处小改，全部落在<strong>既有文件</strong>内、<strong>零新增 IPC</strong>（<code>settings:set</code> / <code>app:brandingLinks</code> / <code>app:openInEditor</code> 通道全部已存在且 D6 已登记）。</p>
+<hr>
+<h2 id="1-现状实证-file-line-可复核">1. 现状实证（file:line 可复核）<a class="anchor" href="#1-现状实证-file-line-可复核" aria-label="锚点">#</a></h2>
+<h3 id="1-1-病灶-1-编辑器链路断在-设置入口不存在">1.1 病灶 1：编辑器链路断在「设置入口不存在」<a class="anchor" href="#1-1-病灶-1-编辑器链路断在-设置入口不存在" aria-label="锚点">#</a></h3>
+<p><code>desktopEditor</code> 全 src 命中仅 4 处（2026-09-30 实测 grep）：</p>
+<table><thead><tr><th>位置</th><th>角色</th><th>状态</th></tr></thead><tbody><tr><td><code>src/main/settingsStore.ts:85</code></td><td>默认值 <code>desktopEditor: ''</code></td><td>✅ 已定义</td></tr><tr><td><code>src/main/index.ts:1250-1257</code></td><td>消费方（settings → KHY_EDITOR 回退链）</td><td>✅ 已实现</td></tr><tr><td><code>src/preload/index.ts:88-89</code></td><td><code>openInEditor</code> 桥</td><td>✅ 已暴露</td></tr><tr><td><strong>渲染层</strong></td><td>设置输入框</td><td>❌ <strong>0 处</strong></td></tr></tbody></table>
+<p>报错文案 <code>main/index.ts:1265</code> 让用户去「设置 → 常规」填写 —— <code>GeneralSettings.tsx</code> 存在且九个分区齐全（引导/数据/消息流分组/消息流显示/系统行为/更新/网络与证书/终端/语言），<strong>唯独没有编辑器字段</strong>。文案指路指到了空处。</p>
+<p>可复用的现成组件：<code>GeneralSettings.tsx:322-364</code> 的 <code>SaveField</code>（输入框 + 脏态保存按钮），页面级 <code>onChange</code> 管道直通 <code>settings:set</code> IPC —— <strong>接线 = 加一个字段，零新通道</strong>。</p>
+<h3 id="1-2-病灶-2a-app-brandinglinks-的-root-回退少跳一级">1.2 病灶 2a：<code>app:brandingLinks</code> 的 root 回退少跳一级<a class="anchor" href="#1-2-病灶-2a-app-brandinglinks-的-root-回退少跳一级" aria-label="锚点">#</a></h3>
+<p><code>main/index.ts:1301-1303</code>：</p>
+<pre><code class="language-ts"><span class="hljs-keyword">const</span> root = process.<span class="hljs-property">env</span>.<span class="hljs-property">KHY_OS_DIR</span>
+  ? path.<span class="hljs-title function_">resolve</span>(process.<span class="hljs-property">env</span>.<span class="hljs-property">KHY_OS_DIR</span>)
+  : path.<span class="hljs-title function_">resolve</span>(__dirname, <span class="hljs-string">&#x27;..&#x27;</span>, <span class="hljs-string">&#x27;..&#x27;</span>, <span class="hljs-string">&#x27;..&#x27;</span>)   <span class="hljs-comment">// ← 从 out/main 上跳三级</span></code></pre>
+<p>实测（node -e 复算）：<code>path.resolve('D:/Portable/khy-os/apps/khyos-desktop/out/main','..','..','..')</code> = <strong><code>D:\Portable\khy-os\apps</code></strong>。<br>随后 <code>nodeRequire(path.join(root, 'services', 'backend', 'src', 'constants', 'serviceDefaults.js'))</code> 拼出 <code>apps/services/...</code> —— 不存在，require 必 ENOENT → catch → <code>{ ok: false, error }</code>（<code>main/index.ts:1314-1316</code>）。</p>
+<p>对照组：host 侧有<strong>正确</strong>的发现顺序 <code>host/index.ts:41-45</code>（<code>KHY_OS_DIR → cwd/../..</code>，注释自述「apps/khyos-desktop 相对仓库根」）。main 没复用它，自写了一个少跳一级的版本 —— <strong>第二真源</strong>。</p>
+<h3 id="1-3-病灶-2b-渲染层吞掉-main-返回的真实错误">1.3 病灶 2b：渲染层吞掉 main 返回的真实错误<a class="anchor" href="#1-3-病灶-2b-渲染层吞掉-main-返回的真实错误" aria-label="锚点">#</a></h3>
+<p><code>TitleBar.tsx:92-99</code>：</p>
+<pre><code class="language-ts"><span class="hljs-keyword">const</span> <span class="hljs-title function_">openUrl</span> = <span class="hljs-keyword">async</span> (<span class="hljs-params"><span class="hljs-attr">url</span>?: <span class="hljs-built_in">string</span></span>) =&gt; {
+  <span class="hljs-keyword">if</span> (!url) {
+    <span class="hljs-title function_">toast</span>(<span class="hljs-string">&#x27;链接不可用：品牌真源未配置，请检查 KHY_OS_DIR 与 serviceDefaults&#x27;</span>, <span class="hljs-string">&#x27;error&#x27;</span>)  <span class="hljs-comment">// :94</span>
+    <span class="hljs-keyword">return</span>
+  }
+  <span class="hljs-keyword">const</span> res = <span class="hljs-keyword">await</span> api?.<span class="hljs-property">openExternal</span>?.(url)
+  ...
+}</code></pre>
+<p>调用点 <code>TitleBar.tsx:143-146</code>（问题反馈 / 提需求 / 用户社群 / 产品文档四项）拿到 <code>getBrandingLinks()</code> 结果后<strong>直接解构 <code>l.feedback</code> 等字段、不检查 <code>l.ok</code> / <code>l.error</code></strong>。main 返回 <code>{ok:false, error:'品牌链接真源不可用：…'}</code> 时四个 URL 全为 undefined → 全部落进 <code>:94</code> 的笼统文案。main 精心拼装的错误信息（<code>:1315</code>）<strong>从未到达过用户</strong>。用户于是拿着一个不存在的「未配置」问题去查 <code>KHY_OS_DIR</code>。</p>
+<h3 id="1-4-病灶-2-的旁证-url-派生是第二真源">1.4 病灶 2 的旁证：URL 派生是第二真源<a class="anchor" href="#1-4-病灶-2-的旁证-url-派生是第二真源" aria-label="锚点">#</a></h3>
+<p><code>main/index.ts:1305-1312</code> 手写 <code>https://${host}/feedback</code> 派生；而 <code>serviceDefaults.js:44</code> 已导出 <code>FEEDBACK_URL</code>（<code>:561</code> 在导出表）、<code>:33-39</code> 的 <code>CLOUD_DEFAULT_HOST</code> 也有导出（<code>:559</code>）且自带 fallback <code>'khyquant.top'</code>（<code>:37</code>）。</p>
+<p><strong>关键推论</strong>：<code>CLOUD_DEFAULT_HOST</code> 永不为空、<code>FEEDBACK_URL</code> 永不为空 —— 只要 require 成功，四个 URL 就非空。所以「品牌真源未配置」的<strong>唯一触发条件是 require 失败</strong>，即 1.2 的路径问题。<code>serviceDefaults.js:22-23</code> 注释自述：「Every module that needs the default MUST import these instead of re-hardcoding the domain」—— main 现在的写法正违反它。</p>
+<h3 id="1-5-病灶-3-日志目录真源在迁移中">1.5 病灶 3：日志目录真源在迁移中<a class="anchor" href="#1-5-病灶-3-日志目录真源在迁移中" aria-label="锚点">#</a></h3>
+<p><code>TitleBar.tsx:147</code> 文案指向 <code>~/.khyquant/logs</code>；后端唯一解析器 <code>dataHome.js:24</code> 明说 <code>~/.khyquant</code> 与 <code>~/.khy</code> 混用待统一，<code>:65</code> 要求「新增/改造的写入点必须经它而非再硬写 <code>os.homedir()+'.khyquant'</code>」。运行时日志目录经 <code>getDataDir('logs')</code>（<code>dataHome.js:346</code>）解析。⇒ 现在给 main 硬接线日志路径 = 逆着收敛方向新增一个硬编码点。<strong>P2 处理，P1 不碰。</strong></p>
+<h3 id="1-6-已经干净的面-不用再治">1.6 已经干净的面（不用再治）<a class="anchor" href="#1-6-已经干净的面-不用再治" aria-label="锚点">#</a></h3>
+<ul><li><strong>命令面板</strong>：<code>CommandCenter.tsx:51-61</code> 上一轮 [DESIGN-ARCH-125] 已删 20 条空壳命令，现存每条都可执行，未注入的回调直接不渲染条目。</li><li><strong>error toast 全集</strong>（2026-09-30 grep）：除本提案病灶外，其余均为防御性兜底（preload 未注入 / 工作区路径为空 / host 超时），指向真实可操作动作，不在本提案范围。</li></ul>
+<hr>
+<h2 id="2-借鉴提案-b-p2-七字段">2. 借鉴提案（B-P2 七字段）<a class="anchor" href="#2-借鉴提案-b-p2-七字段" aria-label="锚点">#</a></h2>
+<blockquote><p>本提案为<strong>纯本仓缺陷修复与 UI 补线</strong>，无任何外部借鉴，B-P2 不触发（其第 1 字段即借鉴对象）。按体例逐字段据实声明：</p></blockquote>
+<table><thead><tr><th>#</th><th>字段</th><th>内容</th></tr></thead><tbody><tr><td>1</td><td>借鉴对象</td><td><strong>不适用</strong> —— 无外部项目、无版本/commit。</td></tr><tr><td>2</td><td>借鉴内容</td><td><strong>不适用</strong> —— 不引入任何外部结论/结构/行为/测试。</td></tr><tr><td>3</td><td>解决的问题</td><td>本仓 <code>apps/khyos-desktop</code> 既有断链：设置入口缺失（§1.1）、root 回退错误（§1.2）、错误吞噬（§1.3）、URL 派生第二真源（§1.4）。均指向现有 file:line。</td></tr><tr><td>4</td><td>许可证与代码性质</td><td><strong>不适用</strong> —— 不引入任何外部代码/二进制/资源。</td></tr><tr><td>5</td><td>借鉴方式</td><td><strong>不适用</strong>。</td></tr><tr><td>6</td><td>落点与现有实现对比</td><td>落点全部为<strong>既有文件</strong>：<code>GeneralSettings.tsx</code> / <code>main/index.ts</code> / <code>TitleBar.tsx</code>。搜索过 <code>desktopEditor</code>（全 src，4 命中）、<code>brandingLinks</code>（src，5 命中）、`autoUpdater</td></tr><tr><td>7</td><td>验收方式</td><td>见 §7。</td></tr></tbody></table>
+<p>豁免依据：零借鉴 ⇒ B-P2 本就不触发（第 1 字段为借鉴对象，据实为「不适用」）。不引用登记表作豁免依据（<code>FEATURE-OWNERSHIP.json</code> 并不含 desktop 品牌/编辑器域，该话没核过、不写）。</p>
+<hr>
+<h2 id="3-目标形态-组件级契约">3. 目标形态（组件级契约）<a class="anchor" href="#3-目标形态-组件级契约" aria-label="锚点">#</a></h2>
+<h3 id="3-1-设置页新增-编辑器-分区-治病灶-1">3.1 设置页新增「编辑器」分区（治病灶 1）<a class="anchor" href="#3-1-设置页新增-编辑器-分区-治病灶-1" aria-label="锚点">#</a></h3>
+<p><code>GeneralSettings.tsx</code> 新增一个 <code>SettingSection</code>，<strong>插在「终端」分区之前</strong>（编辑器打开的是工作区目录，与终端同属「外部工具」域，分区相邻）：</p>
+<pre><code class="language-tsx">&lt;<span class="hljs-title class_">SettingSection</span> title=<span class="hljs-string">&quot;编辑器&quot;</span>&gt;
+  <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">SaveField</span>
+    <span class="hljs-attr">label</span>=<span class="hljs-string">&quot;编辑器命令&quot;</span>
+    <span class="hljs-attr">description</span>=<span class="hljs-string">&quot;用于窗口菜单与页头的「在编辑器中打开」。填写可执行命令名或完整路径，例如 code。留空时回退读取 KHY_EDITOR 环境变量。&quot;</span>
+    <span class="hljs-attr">value</span>=<span class="hljs-string">{(settings.desktopEditor</span> <span class="hljs-attr">as</span> <span class="hljs-attr">string</span>) || &#x27;&#x27;}
+    <span class="hljs-attr">placeholder</span>=<span class="hljs-string">&quot;例如 code&quot;</span>
+    <span class="hljs-attr">onChange</span>=<span class="hljs-string">{(v)</span> =&gt;</span> onChange(&#x27;desktopEditor&#x27;, v)}
+  /&gt;</span>
+&lt;/<span class="hljs-title class_">SettingSection</span>&gt;</code></pre>
+<p>约束：</p>
+<ul><li><strong>零新增 IPC</strong>：走页面既有 <code>onChange</code> → <code>settings:set</code> 管道；<code>settingsStore.ts:85</code> 已登记默认值。</li><li><strong>样式零硬编码</strong>：<code>SaveField</code> 现成 class（<code>bg-input</code> / <code>border-input-border</code> / <code>text-foreground</code> 等 CSS 变量族），不新增任何色值。</li><li><strong>文案与 main 指路互指</strong>：description 里「设置 → 常规」的路径描述与 <code>main/index.ts:1265</code> 错误文案保持同词——错误指的路从此真实存在。</li><li>文案沿用本页现状（内联中文，与 <code>:18-19</code> 等既有条目一致）；<strong>不</strong>为单字段新开 i18n 双轨（见 §5）。</li></ul>
+<h3 id="3-2-main-app-brandinglinks-修正-治病灶-2a-1-4">3.2 main <code>app:brandingLinks</code> 修正（治病灶 2a + 1.4）<a class="anchor" href="#3-2-main-app-brandinglinks-修正-治病灶-2a-1-4" aria-label="锚点">#</a></h3>
+<pre><code class="language-ts">ipcMain.<span class="hljs-title function_">handle</span>(<span class="hljs-string">&#x27;app:brandingLinks&#x27;</span>, <span class="hljs-title function_">async</span> () =&gt; {
+  <span class="hljs-keyword">try</span> {
+    <span class="hljs-comment">// 与 host/index.ts resolveKhyOsDir 同语义：env 优先，回退以 app 包根</span>
+    <span class="hljs-comment">// （package.json 所在 = apps/khyos-desktop）上跳两级到仓库根。</span>
+    <span class="hljs-comment">// 不用 __dirname 数跳级 —— out/ 深度随构建形态漂移（本次病灶即由此而来）。</span>
+    <span class="hljs-keyword">const</span> root = process.<span class="hljs-property">env</span>.<span class="hljs-property">KHY_OS_DIR</span>
+      ? path.<span class="hljs-title function_">resolve</span>(process.<span class="hljs-property">env</span>.<span class="hljs-property">KHY_OS_DIR</span>)
+      : path.<span class="hljs-title function_">resolve</span>(app.<span class="hljs-title function_">getAppPath</span>(), <span class="hljs-string">&#x27;..&#x27;</span>, <span class="hljs-string">&#x27;..&#x27;</span>)
+    <span class="hljs-keyword">const</span> sd = <span class="hljs-title function_">nodeRequire</span>(path.<span class="hljs-title function_">join</span>(root, <span class="hljs-string">&#x27;services&#x27;</span>, <span class="hljs-string">&#x27;backend&#x27;</span>, <span class="hljs-string">&#x27;src&#x27;</span>, <span class="hljs-string">&#x27;constants&#x27;</span>, <span class="hljs-string">&#x27;serviceDefaults.js&#x27;</span>))
+    <span class="hljs-comment">// 消费导出常量（serviceDefaults.js:22-23 的 MUST import 约束），不再手写 /feedback 派生</span>
+    <span class="hljs-keyword">const</span> host = sd.<span class="hljs-property">CLOUD_DEFAULT_HOST</span> || <span class="hljs-string">&#x27;&#x27;</span>
+    <span class="hljs-keyword">return</span> {
+      <span class="hljs-attr">ok</span>: <span class="hljs-literal">true</span>,
+      <span class="hljs-attr">cloudHost</span>: host,
+      <span class="hljs-attr">feedback</span>: sd.<span class="hljs-property">FEEDBACK_URL</span> || <span class="hljs-string">&#x27;&#x27;</span>,
+      <span class="hljs-attr">docs</span>: host ? <span class="hljs-string">`https://<span class="hljs-subst">${host}</span>/docs`</span> : <span class="hljs-string">&#x27;&#x27;</span>,
+      <span class="hljs-attr">community</span>: host ? <span class="hljs-string">`https://<span class="hljs-subst">${host}</span>/community`</span> : <span class="hljs-string">&#x27;&#x27;</span>,
+      <span class="hljs-attr">issues</span>: host ? <span class="hljs-string">`https://<span class="hljs-subst">${host}</span>/issues`</span> : <span class="hljs-string">&#x27;&#x27;</span>,
+    }
+  } <span class="hljs-keyword">catch</span> (err) {
+    <span class="hljs-keyword">return</span> { <span class="hljs-attr">ok</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">error</span>: <span class="hljs-string">`品牌链接真源不可用：<span class="hljs-subst">${<span class="hljs-built_in">String</span>((err <span class="hljs-keyword">as</span> <span class="hljs-built_in">Error</span>)?.message || err)}</span>`</span> }
+  }
+})</code></pre>
+<ul><li><code>serviceDefaults.js</code> 是零依赖叶子（其 <code>:15-17</code> 自述），跨 bundle require 安全，维持现状加载方式。</li><li><code>docs/community/issues</code> 从<strong>已导出的</strong> <code>CLOUD_DEFAULT_HOST</code> 派生一次（serviceDefaults 未导出这三个常量；不为它们扩 backend canonical —— 见 §5）。</li><li><strong>待核实锚点</strong>：<code>app.getAppPath()</code> 的实际值以实施时探针输出为准，见 §8.1。</li></ul>
+<h3 id="3-3-渲染层错误透传-治病灶-2b">3.3 渲染层错误透传（治病灶 2b）<a class="anchor" href="#3-3-渲染层错误透传-治病灶-2b" aria-label="锚点">#</a></h3>
+<p><code>TitleBar.tsx</code> 四个品牌链接菜单项改为先判 <code>ok</code>：</p>
+<pre><code class="language-ts">{ <span class="hljs-attr">kind</span>: <span class="hljs-string">&#x27;action&#x27;</span>, <span class="hljs-attr">label</span>: <span class="hljs-string">&#x27;问题反馈&#x27;</span>, <span class="hljs-attr">run</span>: <span class="hljs-function">() =&gt;</span> { <span class="hljs-built_in">void</span> api?.<span class="hljs-property">getBrandingLinks</span>?.().<span class="hljs-title function_">then</span>(<span class="hljs-function">(<span class="hljs-params">l</span>) =&gt;</span> {
+    <span class="hljs-keyword">if</span> (l &amp;&amp; l.<span class="hljs-property">ok</span> === <span class="hljs-literal">false</span>) { <span class="hljs-title function_">toast</span>(l.<span class="hljs-property">error</span> || <span class="hljs-string">&#x27;品牌链接真源不可用&#x27;</span>, <span class="hljs-string">&#x27;error&#x27;</span>); <span class="hljs-keyword">return</span> }
+    <span class="hljs-title function_">openUrl</span>(l?.<span class="hljs-property">feedback</span>)
+  }) } },</code></pre>
+<ul><li>main 的真实 error（含 root 解析失败的 ENOENT 路径）<strong>原样到达用户</strong>，不再被改写成「未配置」。</li><li><code>:94</code> 的笼统文案保留为防御兜底（<code>ok:true</code> 但 URL 为空串的理论分支），加注释说明其兜底地位，<strong>不再是用户能看到的常态</strong>。</li></ul>
+<h3 id="3-4-报错指路真实性原则-本提案沉淀的判据">3.4 报错指路真实性原则（本提案沉淀的判据）<a class="anchor" href="#3-4-报错指路真实性原则-本提案沉淀的判据" aria-label="锚点">#</a></h3>
+<blockquote><p><strong>报错文案里指的路必须真实存在。</strong> 诚实红线不仅要求「如实说错」，还要求「指的路通」：文案指向设置页，设置页就得有那个字段；文案指向日志目录，那个目录就得经唯一解析器可达。</p></blockquote>
+<p>此判据与 [DESIGN-ARCH-125] 的「不渲染点不动的命令」同族：前者治「说了没有的路」，后者治「列了没有的命令」。</p>
+<hr>
+<h2 id="4-实施分期-每期独立可回滚">4. 实施分期（每期独立可回滚）<a class="anchor" href="#4-实施分期-每期独立可回滚" aria-label="锚点">#</a></h2>
+<h3 id="p1-一次落地-零新增-ipc-全部既有文件内">P1（一次落地，零新增 IPC，全部既有文件内）<a class="anchor" href="#p1-一次落地-零新增-ipc-全部既有文件内" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>步骤</th><th>文件</th><th>改动</th><th>回滚</th></tr></thead><tbody><tr><td>1</td><td><code>GeneralSettings.tsx</code></td><td>新增「编辑器」分区（§3.1）</td><td>revert 单文件</td></tr><tr><td>2</td><td><code>main/index.ts</code></td><td><code>app:brandingLinks</code> root 修正 + 消费导出常量（§3.2）</td><td>revert 单文件</td></tr><tr><td>3</td><td><code>TitleBar.tsx</code></td><td>四个链接项错误透传（§3.3）</td><td>revert 单文件</td></tr></tbody></table>
+<p>三步相互独立：任一步单独 revert 不影响其余两步的功能成立。</p>
+<h3 id="p2-另行小步-前置核实见-8-2">P2（另行小步，前置核实见 §8.2）<a class="anchor" href="#p2-另行小步-前置核实见-8-2" aria-label="锚点">#</a></h3>
+<ul><li>「导出日志」真接线：菜单项 → 打开日志目录（复用 <code>app:openPath</code>）。<strong>前置</strong>：main 侧获得 dataHome 唯一解析器的结果（经 host 查询或设置侧落定 dataPath 后推导），<strong>禁止</strong>在 main 硬编码 <code>~/.khyquant</code>（§6.5）。</li></ul>
+<h3 id="不在本提案-上游管辖">不在本提案（上游管辖）<a class="anchor" href="#不在本提案-上游管辖" aria-label="锚点">#</a></h3>
+<ul><li>「检查更新」→ [DESIGN-ARCH-142]。</li></ul>
+<hr>
+<h2 id="5-诚实边界-刻意不纳入">5. 诚实边界（刻意不纳入）<a class="anchor" href="#5-诚实边界-刻意不纳入" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>不做</th><th>原因</th></tr></thead><tbody><tr><td>自动探测编辑器（扫 PATH 找 code/cursor/…）</td><td>见 §6.1，三条理由</td></tr><tr><td>给 serviceDefaults 补 DOCS/COMMUNITY/ISSUES 常量</td><td>改 backend canonical 属另一能力域；从已导出的 <code>CLOUD_DEFAULT_HOST</code> 派生一次已消除第二<strong>字面量</strong>。要扩也是独立的 backend 小步，不混进桌面端修复</td></tr><tr><td>动「检查更新」</td><td>[DESIGN-ARCH-142] 管辖，越界</td></tr><tr><td>i18n 键迁移</td><td>GeneralSettings 现状全内联中文；单字段开键 = 造双轨。i18n 是该页面的既有债务，不在本提案扩大战线</td></tr><tr><td>给 brandingLinks / 编辑器解析加任何 <code>KHY_XXX</code> 开关</td><td>见 §6.4，撞门预算棘轮 + 破坏 B-P1 豁免</td></tr><tr><td>P1 顺手接「导出日志」</td><td>日志目录真源在迁移中（§1.5），现在接线就是新增硬编码点</td></tr></tbody></table>
+<hr>
+<h2 id="6-反模式-这条路别走">6. 反模式（这条路别走）<a class="anchor" href="#6-反模式-这条路别走" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>❌ 别做</th><th>为什么</th></tr></thead><tbody><tr><td><strong>自动探测编辑器</strong>（遍历 PATH 找 code.exe）</td><td>① 与既有单一来源链（settings.desktopEditor → KHY_EDITOR）冲突成第二真源；② 探测结果因机器而异，用户想用 cursor 却被打开 code，行为不可预测；③ <code>execFile</code> 一个探测出来的可执行文件扩大攻击面。缺省时的正确行为是<strong>把指路的路修通</strong>（§3.1），不是替用户猜</td></tr><tr><td><strong>把 <code>https://khyquant.top/feedback</code> 硬写进 main</strong></td><td>serviceDefaults.js:22-23 自述 MUST import；<code>CLOUD_FALLBACK_ENDPOINTS</code>（:25-28）就是为域名迁移预留的，硬编码让 main 在迁移日必漏</td></tr><tr><td><strong>渲染层吞 <code>ok:false</code> 继续显示笼统文案</strong></td><td>本次病灶 2b 的成因本身。错误必须原样到达用户——笼统文案让用户去查一个不存在的「未配置」问题，比不报错更糟</td></tr><tr><td><strong>加 <code>KHY_XXX</code> env 开关做回滚</strong></td><td>撞门预算棘轮（<code>check-tui-gates.js:32</code>，MAX_GATES 只降不升）；且 B-P1 的「新增配置键」判据会把 bugfix 从豁免变成非豁免。「让功能变正确」不构成用户可见权衡，回滚能力用 revert 承担</td></tr><tr><td><strong>在 main 硬写 <code>~/.khyquant/logs</code> 修日志入口</strong></td><td>dataHome.js:24/:60-65 明确正在把散落的硬编码收敛到唯一解析器；新增硬编码 = 逆着治理方向开倒车</td></tr><tr><td><strong>用 <code>__dirname</code> 数跳级修 root</strong></td><td>本次病灶 2a 的成因本身。<code>out/</code> 深度随构建形态漂移；用 <code>app.getAppPath()</code>（package.json 所在目录）做语义化锚点</td></tr></tbody></table>
+<hr>
+<h2 id="7-验收方式-可复现命令-关联门禁">7. 验收方式（可复现命令 + 关联门禁）<a class="anchor" href="#7-验收方式-可复现命令-关联门禁" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-comment"># D6（preload↔main 两侧一致）+ D9（品牌文本）——本次零新增 IPC，应原样绿</span>
+node --<span class="hljs-built_in">test</span> apps/khyos-desktop/tests/desktopUiContract.test.cjs
+
+<span class="hljs-comment"># 设计令牌门禁——新字段全走 CSS 变量，零新增 finding</span>
+node scripts/ci/check-frontend-design-tokens.js
+
+<span class="hljs-comment"># tsc 前后对照：只认「错误数不新增」，基线数字以当日实测为准（历史 33 条，不写死）</span>
+node apps/khyos-desktop/node_modules/typescript/bin/tsc -p apps/khyos-desktop/tsconfig.json --noEmit</code></pre>
+<p>手工验收脚本：</p>
+<ol><li><strong>品牌链接（正路）</strong>：不设 <code>KHY_OS_DIR</code> 启动 → 窗口菜单「问题反馈 / 给产品提需求 / 用户社群 / 产品文档」→ 应打开 <code>*.khyquant.top</code> 域链接，不再报「品牌真源未配置」。</li><li><strong>品牌链接（错误透传）</strong>：把 <code>KHY_OS_DIR</code> 指向坏目录重启 → 点任一链接项 → 应显示 main 返回的真实错误（含 ENOENT 路径），不再是笼统文案。</li><li><strong>编辑器闭环</strong>：设置 → 常规 →「编辑器」分区填 <code>code</code> → 保存 → 窗口菜单「在编辑器中打开」→ VS Code 打开工作区根。</li><li><strong>编辑器缺省</strong>：清空编辑器命令且不设 <code>KHY_EDITOR</code> → 点「在编辑器中打开」→ 报错文案与设置页字段互指，按文案走到「设置 → 常规」能看到该字段。</li></ol>
+<p>关联门禁：<code>npm run check:frontend-design-tokens</code> / <code>check:changed</code> / <code>check:proposal-index</code>（非借鉴类无需登记，跑通自身校验即可）。</p>
+<hr>
+<h2 id="8-待核实项">8. 待核实项<a class="anchor" href="#8-待核实项" aria-label="锚点">#</a></h2>
+<ol><li><strong>★ <code>app.getAppPath()</code> 在本仓 dev 与生产构建下的实际值</strong>（决定 §3.2 锚点写法）。预期 <code>apps/khyos-desktop</code>；实施时以探针输出为准，若不符则回退 <code>process.cwd()</code> 与 host 同基准。<strong>此项只影响写法，不影响方案成立</strong>（两处锚点语义均为「包根上跳两级」）。</li><li><strong><code>settings:set</code> 对 <code>desktopEditor</code> 的键校验</strong>：<code>settingsStore.ts:85</code> 已有默认值 ⇒ 大概率无白名单拦截；实施时核 <code>settings:set</code> handler 确认，若有白名单需同步登记。</li><li><strong>CI 对 <code>apps/khyos-desktop/tests/</code> 的选择范围</strong>：按 6.3 纪律，实施前核 <code>.github/workflows/pr-gate.yml</code>；如需新增 UI 行为断言，用 <code>node:test</code> 显式 <code>require</code> 写、前置条件不满足时显式 skip，杜绝 jest 风格全局。</li><li><strong>i18n 同义键</strong>：实施前在 <code>zh-CN.json</code> 搜「编辑器命令」同义键，有则复用，无则维持内联（§5）。</li></ol>
+<hr>
+<h2 id="9-变更日志">9. 变更日志<a class="anchor" href="#9-变更日志" aria-label="锚点">#</a></h2>
+<ul><li>2026-09-30 v1：初稿。病灶 1/2/3 实测定位（§1），P1 三步接线方案（§3/§4），指路真实性判据（§3.4）。</li></ul>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-169] khychat启动假阴性-就绪信号后置与守护僵尸化方案.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-169] khychat 启动假阴性 —— 就绪信号后置与守护僵尸化方案</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-171] 未接入后端判定与接线守卫真实性方案.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-171] 未接入后端判定与接线守卫真实性方案</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-170] 桌面端X报错功能接线与指路真实性方案.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

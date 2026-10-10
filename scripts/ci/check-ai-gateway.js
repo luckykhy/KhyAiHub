@@ -1,0 +1,252 @@
+#!/usr/bin/env node
+/**
+ * check-ai-gateway.js — GW-002 + PROMPT-001 + FF-001 gate
+ *
+ * Enforces:
+ *   GW-002: Fallback chain present, circuit breaker threshold
+ *   PROMPT-001: Prompt templates versioned, max length check
+ *   FF-001: Feature flags default to false, max 3-month rollout
+ *
+ * Usage: node scripts/ci/check-ai-gateway.js [--changed] [file-or-dir ...]
+ */
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+
+const REPO_ROOT = process.env.KHY_REPO_LAYOUT_ROOT
+  ? path.resolve(process.env.KHY_REPO_LAYOUT_ROOT)
+  : path.resolve(__dirname, '..', '..');
+
+const args = process.argv.slice(2);
+const changedMode = args.includes('--changed');
+const rawTargets = args.filter((a) => !a.startsWith('--'));
+
+const IGNORE_DIRS = new Set([
+  '.git', 'node_modules', 'dist', 'build', '.cache', '.tmp',
+  'coverage', 'logs', '.venv', 'venv', '__pycache__',
+  'site-packages', 'vendor', 'third_party', 'test', 'tests',
+]);
+
+const findings = [];
+let exitCode = 0;
+
+function addFinding(severity, rule, file, line, message) {
+  findings.push({ severity, rule, file: path.relative(REPO_ROOT, file), line, message });
+  if (severity === 'CRITICAL' || severity === 'HIGH') exitCode = 1;
+}
+
+function walk(dir, out = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name === 'node_modules') continue;
+    const p = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (!IGNORE_DIRS.has(entry.name)) walk(p, out);
+    } else {
+      out.push(p);
+    }
+  }
+  return out;
+}
+
+function changedFiles() {
+  const { execSync } = require('child_process');
+  try {
+    const out = execSync('git diff --name-only HEAD', { encoding: 'utf8', cwd: REPO_ROOT });
+    return out.split('\n').filter(Boolean).map((f) => path.join(REPO_ROOT, f));
+  } catch {
+    return [];
+  }
+}
+
+function targets() {
+  if (rawTargets.length > 0) return rawTargets.map((t) => path.resolve(REPO_ROOT, t));
+  if (changedMode) return changedFiles();
+  const dirs = [
+    path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'src', 'services', 'gateway'),
+    path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'src', 'services', 'promptTemplateCatalog.js'),
+    // 系统提示词正文:愿望词(不可验证的质量形容词)监测面,见 checkPromptWishword。
+    path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'src', 'constants', 'prompts.js'),
+    // flagRegistry 真身 2026-09-28 归位到 D3 共享底座；services/flagRegistry.js 只剩
+    // 一行兼容壳，仍留在下方作为路径存在性锚点，但被扫描的表体在这里。
+    path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'src', 'utils', 'flagRegistry'),
+    path.join(REPO_ROOT, 'runtime', 'node', 'backend', 'src', 'services', 'flagRegistry.js'),
+  ];
+  const out = [];
+  for (const d of dirs) {
+    if (fs.existsSync(d)) {
+      if (fs.statSync(d).isDirectory()) walk(d, out);
+      else out.push(d);
+    }
+  }
+  return out;
+}
+
+// ── GW-002: Fallback chain ──────────────────────────────────────────────────
+
+function checkFallbackChain(file, content) {
+  // Check for model fallback configuration
+  if (!/\b(?:fallback|degrad|circuit|breaker)\b/i.test(content)) return;
+
+  // Check for P0 -> P1 -> P2 degradation
+  const hasFallbackChain = /\b(?:p0|p1|p2|primary|secondary|fallback)\b/i.test(content);
+  if (hasFallbackChain) {
+    // Good — check if there's at least 2 levels
+    const levels = (content.match(/\b(?:P0|P1|P2|primary|secondary|fallback)\b/gi) || []).length;
+    if (levels < 2) {
+      addFinding('MEDIUM', 'GW-002', file, 1,
+        'AI gateway should have at least 2 fallback levels (GW-002 §2).');
+    }
+  }
+
+  // Check circuit breaker threshold
+  if (/\bcircuitBreaker\b|\bcircuit_breaker\b/i.test(content)) {
+    const hasThreshold = /\b(?:threshold|errorRate|error_rate)\b/i.test(content);
+    if (!hasThreshold) {
+      addFinding('MEDIUM', 'GW-002', file, 1,
+        'Circuit breaker should define error threshold (GW-002 §4).');
+    }
+  }
+}
+
+// ── PROMPT-001: Prompt template versioning ──────────────────────────────────
+
+function checkPromptVersioning(file, content) {
+  if (!/\bprompt\b/i.test(content) && !/\btemplate\b/i.test(content)) return;
+
+  // Check for template version
+  const hasVersion = /\bversion\b|\bv\d+/.test(content);
+  if (!hasVersion && /\b(?:prompt|template)\b/i.test(content)) {
+    addFinding('LOW', 'PROMPT-001', file, 1,
+      'Prompt/template should be versioned (PROMPT-001 §2).');
+  }
+
+  // Check for max length enforcement
+  if (/\bprompt\b.*\blength\b/i.test(content) || /\btemplate\b.*\blength\b/i.test(content)) {
+    const hasMaxLength = /\bmaxLength\b|\bmax_length\b|\bMAX_LENGTH\b|\b2000\b/.test(content);
+    if (!hasMaxLength) {
+      addFinding('LOW', 'PROMPT-001', file, 1,
+        'Prompt/template should enforce max length (PROMPT-001 §2).');
+    }
+  }
+
+  // Check for injection protection
+  if (/\bprompt\b.*\binject\b/i.test(content) || /\btemplate\b.*\binject\b/i.test(content)) {
+    const hasInjectionProtection = /\bsanitize\b|\bvalidate\b|\bclean\b|\bwhitelist\b/i.test(content);
+    if (!hasInjectionProtection) {
+      addFinding('MEDIUM', 'PROMPT-001', file, 1,
+        'Prompt processing should have injection protection (PROMPT-001 §4).');
+    }
+  }
+}
+
+// ── FF-001: Feature flags ───────────────────────────────────────────────────
+
+function checkFeatureFlags(file, content) {
+  if (!/\bflag\b|\bfeature\b.*\b(?:flag|toggle|switch)\b/i.test(content)) return;
+
+  // Check that flags default to off
+  const hasDefaultOff = /\bdefault\s*:\s*false\b|\bdefault\s*=\s*false\b|\benabled\s*:\s*false\b/.test(content);
+  if (!hasDefaultOff && /\b(?:flag|feature)\b/i.test(content)) {
+    // Only flag if it's a new flag definition
+    const isFlagDef = /(?:flag|feature)\s*[=:]\s*\{/.test(content);
+    if (isFlagDef) {
+      addFinding('MEDIUM', 'FF-001', file, 1,
+        'Feature flag should default to false (FF-001 §2).');
+    }
+  }
+
+  // Check for rollout level
+  const hasRollout = /\brollout\b|\bpercentage\b|\bwhitelist\b|\bcohort\b/i.test(content);
+  if (!hasRollout && /\b(?:flag|feature)\b.*\benabled\b/i.test(content)) {
+    addFinding('LOW', 'FF-001', file, 1,
+      'Feature flag should specify rollout strategy (FF-001 §3).');
+  }
+}
+
+// ── PROMPT-001 §2: wish-word detection ([DESIGN-PROMPT-003] §4.1) ───────────
+// 愿望词 = 作为质量指令的不可验证形容词(「更专业」「写出高水准」)。黑名单单一真源在
+// runtime/node/backend/src/services/promptStructurer.js 的 WISHWORD_PATTERNS(`prompt normalize`
+// 体检与守卫共用同一份,防漂移)。LOW 级 = advisory,不阻断提交。
+// 两条跳过:①黑名单真源文件自身(词面即其正文,扫它必自报);②注释行(注释不执行,
+// 且「解释为何删除愿望词」的注释必然要提到词面)——与本仓 check-native-registry 同约定。
+
+const WISHWORD_OWNER = path.join(
+  'runtime', 'node', 'backend', 'src', 'services', 'promptStructurer.js'
+);
+
+function _loadWishwordPatterns() {
+  try {
+    const mod = require(path.join(REPO_ROOT, WISHWORD_OWNER));
+    return Array.isArray(mod.WISHWORD_PATTERNS) ? mod.WISHWORD_PATTERNS : [];
+  } catch {
+    return []; // 真源不可达 → 不假设黑名单(静默跳过,不制造假 finding)
+  }
+}
+
+function checkPromptWishword(file, content) {
+  if (path.relative(REPO_ROOT, file) === WISHWORD_OWNER) return;
+  const patterns = _loadWishwordPatterns();
+  if (!patterns.length) return;
+
+  const lines = content.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    if (!trimmed || /^(\/\/|\/\*|\*|#)/.test(trimmed)) continue; // 注释/空行不参与
+    for (const re of patterns) {
+      const flags = re.flags.includes('g') ? re.flags : re.flags + 'g';
+      const m = line.match(new RegExp(re.source, flags));
+      if (m) {
+        addFinding('LOW', 'PROMPT-001', file, i + 1,
+          `愿望词「${m[0]}」是不可验证的质量形容词,翻译为可检查判据或删除 (PROMPT-001 §2 / [DESIGN-PROMPT-003] §4.1).`);
+        break; // 一行一 finding,避免同一行多词刷屏
+      }
+    }
+  }
+}
+
+// ── Main ────────────────────────────────────────────────────────────────────
+
+function main() {
+  const files = targets();
+  let checked = 0;
+
+  for (const file of files) {
+    if (!fs.existsSync(file)) continue;
+    const ext = path.extname(file);
+    if (!['.js', '.ts', '.tsx', '.json'].includes(ext)) continue;
+
+    const content = fs.readFileSync(file, 'utf8');
+    checkFallbackChain(file, content);
+    checkPromptVersioning(file, content);
+    checkFeatureFlags(file, content);
+    checkPromptWishword(file, content);
+    checked++;
+  }
+
+  // Report
+  const byRule = {};
+  for (const f of findings) {
+    (byRule[f.rule] ||= []).push(f);
+  }
+
+  for (const [rule, items] of Object.entries(byRule)) {
+    process.stdout.write(`\n[${rule}] ${items.length} findings:\n`);
+    for (const item of items.slice(0, 10)) {
+      process.stdout.write(
+        `  ${item.severity} ${path.relative(REPO_ROOT, item.file)}:${item.line} — ${item.message}\n`
+      );
+    }
+    if (items.length > 10) {
+      process.stdout.write(`  ... and ${items.length - 10} more\n`);
+    }
+  }
+
+  process.stdout.write(
+    `\n[ai-gateway] checked=${checked} findings=${findings.length} exit=${exitCode}\n`
+  );
+  process.exit(exitCode);
+}
+
+main();

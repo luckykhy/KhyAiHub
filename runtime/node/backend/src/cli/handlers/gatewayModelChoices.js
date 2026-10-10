@@ -1,0 +1,1318 @@
+'use strict';
+
+/**
+ * Gateway model-choice / probe / vendor-switch subsystem (extracted from cli/handlers/gateway.js).
+ *
+ * Owns: buildGatewayModelChoices (probe all enabled adapters + reliability filtering, shared by the
+ * classic CLI selector and the Ink TUI ModelPicker), applyGatewayModelSelection, handleGatewaySelectModel,
+ * buildVendorModelChoices and handleModelSwitchByVendor. Extracted verbatim (byte-identical bodies) as a
+ * same-directory sibling leaf so in-body relative require() paths resolve identically; the host re-imports
+ * every public handler by the same name to keep the model-selection command contracts unchanged.
+ *
+ * This leaf performs IO (multi-second adapter probes, interactive prompts, .env persistence, terminal
+ * output) so it does NOT self-declare as a pure zero-IO leaf. Its many host callbacks (probe cache/timeout
+ * helpers, reason classifiers, model-tag formatters, reliability filter, readline/prompt utilities, prefer
+ * persistence) plus the shared STRICT_OPERATIONAL_ADAPTERS set are injected via setGatewayModelChoicesDeps
+ * to avoid a require cycle back into the host. The debounce config + in-flight deep-probe map are used only
+ * by this subsystem and moved here wholesale.
+ */
+
+const chalkModule = require('chalk');
+
+const chalk = chalkModule.default || chalkModule;
+const { printSuccess, printError, printInfo } = require('../formatters');
+// 分组语义 / 行内分层：与 TUI `ModelPicker` 共用的**同一片叶子**（放 cli/ 根下，
+// 避免 handlers → tui 的反向依赖）。经典路径过去只平铺 `c.name`，实测 94% 的行
+// 重复 `(执行:…)`、宽度中位 91 列 ⇒ 80 列终端下每行折 2 行（[DESIGN-ARCH-167] §11）。
+const modelChoiceGrouping = require('../modelChoiceGrouping');
+
+// ── Host callbacks + shared STRICT_OPERATIONAL_ADAPTERS injected via DI (avoid require cycle) ──
+let promptWithReplGuard = null;
+let _getDeepProbeCache = null;
+let _setDeepProbeCache = null;
+let _getAdapterProbeTimeoutMs = null;
+let _getAdapterModelListTimeoutMs = null;
+let shouldTreatGenerationFailureAsWarning = null;
+let _compactReasonText = null;
+let _isTimeoutLikeReason = null;
+let _isTransientProbeLikeReason = null;
+let _classifyHiddenReason = null;
+let _shouldRetryProbeByDebounce = null;
+let _formatModelSourceTag = null;
+let _formatConnectionTag = null;
+let _formatUpstreamTag = null;
+let _formatVisionTag = null;
+let _resolvePreferredAdapterIssue = null;
+let _filterModelsByReliability = null;
+let maybeAutoSyncSwitchCenterForGateway = null;
+let getTokenInfoForSelection = null;
+let askLine = null;
+let recoverGatewayPromptInput = null;
+let withTimeout = null;
+let isAdapterOperational = null;
+let persistGatewayPreference = null;
+let STRICT_OPERATIONAL_ADAPTERS = null;
+
+function setGatewayModelChoicesDeps(deps = {}) {
+  if (typeof deps.promptWithReplGuard === 'function') {
+    promptWithReplGuard = deps.promptWithReplGuard;
+  }
+  if (typeof deps._getDeepProbeCache === 'function') {
+    _getDeepProbeCache = deps._getDeepProbeCache;
+  }
+  if (typeof deps._setDeepProbeCache === 'function') {
+    _setDeepProbeCache = deps._setDeepProbeCache;
+  }
+  if (typeof deps._getAdapterProbeTimeoutMs === 'function') {
+    _getAdapterProbeTimeoutMs = deps._getAdapterProbeTimeoutMs;
+  }
+  if (typeof deps._getAdapterModelListTimeoutMs === 'function') {
+    _getAdapterModelListTimeoutMs = deps._getAdapterModelListTimeoutMs;
+  }
+  if (typeof deps.shouldTreatGenerationFailureAsWarning === 'function') {
+    shouldTreatGenerationFailureAsWarning = deps.shouldTreatGenerationFailureAsWarning;
+  }
+  if (typeof deps._compactReasonText === 'function') {
+    _compactReasonText = deps._compactReasonText;
+  }
+  if (typeof deps._isTimeoutLikeReason === 'function') {
+    _isTimeoutLikeReason = deps._isTimeoutLikeReason;
+  }
+  if (typeof deps._isTransientProbeLikeReason === 'function') {
+    _isTransientProbeLikeReason = deps._isTransientProbeLikeReason;
+  }
+  if (typeof deps._classifyHiddenReason === 'function') {
+    _classifyHiddenReason = deps._classifyHiddenReason;
+  }
+  if (typeof deps._shouldRetryProbeByDebounce === 'function') {
+    _shouldRetryProbeByDebounce = deps._shouldRetryProbeByDebounce;
+  }
+  if (typeof deps._formatModelSourceTag === 'function') {
+    _formatModelSourceTag = deps._formatModelSourceTag;
+  }
+  if (typeof deps._formatConnectionTag === 'function') {
+    _formatConnectionTag = deps._formatConnectionTag;
+  }
+  if (typeof deps._formatUpstreamTag === 'function') {
+    _formatUpstreamTag = deps._formatUpstreamTag;
+  }
+  if (typeof deps._formatVisionTag === 'function') {
+    _formatVisionTag = deps._formatVisionTag;
+  }
+  if (typeof deps._resolvePreferredAdapterIssue === 'function') {
+    _resolvePreferredAdapterIssue = deps._resolvePreferredAdapterIssue;
+  }
+  if (typeof deps._filterModelsByReliability === 'function') {
+    _filterModelsByReliability = deps._filterModelsByReliability;
+  }
+  if (typeof deps.maybeAutoSyncSwitchCenterForGateway === 'function') {
+    maybeAutoSyncSwitchCenterForGateway = deps.maybeAutoSyncSwitchCenterForGateway;
+  }
+  if (typeof deps.getTokenInfoForSelection === 'function') {
+    getTokenInfoForSelection = deps.getTokenInfoForSelection;
+  }
+  if (typeof deps.askLine === 'function') {
+    askLine = deps.askLine;
+  }
+  if (typeof deps.recoverGatewayPromptInput === 'function') {
+    recoverGatewayPromptInput = deps.recoverGatewayPromptInput;
+  }
+  if (typeof deps.withTimeout === 'function') {
+    withTimeout = deps.withTimeout;
+  }
+  if (typeof deps.isAdapterOperational === 'function') {
+    isAdapterOperational = deps.isAdapterOperational;
+  }
+  if (typeof deps.persistGatewayPreference === 'function') {
+    persistGatewayPreference = deps.persistGatewayPreference;
+  }
+  if (deps.STRICT_OPERATIONAL_ADAPTERS) {
+    STRICT_OPERATIONAL_ADAPTERS = deps.STRICT_OPERATIONAL_ADAPTERS;
+  }
+}
+
+// ── Subsystem-local config + state (used only here; moved out of the host verbatim) ──
+const MODEL_PROBE_DEBOUNCE_ENABLED =
+  String(process.env.KHY_MODEL_PROBE_DEBOUNCE || 'true').toLowerCase() !== 'false';
+const MODEL_PROBE_DEBOUNCE_DELAY_MS = Math.max(
+  0,
+  parseInt(process.env.KHY_MODEL_PROBE_DEBOUNCE_DELAY_MS || '600', 10) || 600
+);
+const MODEL_PROBE_DEBOUNCE_MAX_RETRIES = Math.max(
+  1,
+  parseInt(process.env.KHY_MODEL_PROBE_DEBOUNCE_MAX_RETRIES || '2', 10) || 2
+);
+const _modelDeepProbeInFlight = new Map();
+
+/**
+ * 最近一次 buildGatewayModelChoices 产出的**可选项快照**(`adapter/model` 小写 key)。
+ *
+ * 为什么存在:模型列表(候选池 → 真值表的收敛)只在「构建」那一刻完成。任何**绕过选择器**的
+ * 应用路径 —— F2「最近模型」轮换、启动默认值、自然语言直选 —— 都不经过构建,于是可以把一个
+ * 早已不存在的 (adapter, model)(历史残留 / 静态目录猜测 / 本机扫描垃圾)直接写进偏好并应用,
+ * 用户看到的就是「TUI 莫名跳到不存在的模型,下一次生成才报错」。快照让这些入口能与**当前真值**
+ * 对账:不在快照里 → 拒绝并给出可执行提示,绝不落盘。
+ */
+let _lastSelectableKeys = null;
+
+/** 读最近一次 catalog 的可选 key 集(未构建过 → null,表示「无快照,不阻断」)。 */
+function getLastSelectableKeys() {
+  return _lastSelectableKeys;
+}
+
+/**
+ * 选择入口对账闸:该选择在**最近一次构建**里是否仍然可选。
+ * 无快照(null)/ model 为空(adapter 级默认模型入口)/ adapter === 'auto' → 放行(不阻断)。
+ * 有快照且快照里没有这条 → false(调用方应拒绝应用并提示重新选择)。
+ * 绝不抛。
+ * @param {{adapter?:string, model?:string|null}} selected
+ * @returns {boolean}
+ */
+function isSelectableNow(selected) {
+  try {
+    const keys = _lastSelectableKeys;
+    if (!keys || !selected) {
+      return true;
+    }
+    const adapter = String(selected.adapter || '')
+      .trim()
+      .toLowerCase();
+    const model = String(selected.model || '')
+      .trim()
+      .toLowerCase();
+    if (!adapter || adapter === 'auto' || !model) {
+      return true;
+    }
+    return keys.has(`${adapter}/${model}`);
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * 剥掉模型名里夹带的供应商前缀。
+ *
+ * api 适配器把行名拼成 `${provider} / ${mid}`，于是供应商名夹在模型名中间
+ * （[DESIGN-ARCH-167] 截图里「划分不清楚」的本体之一）。供应商升格为分组标题后，
+ * 行内只该留模型本体。**只在确实以该前缀开头时剥**，剥不动就原样返回——
+ * 宁可显示得啰嗦，也不静默改掉一个模型名。
+ */
+function _stripProviderPrefix(nameText, provider) {
+  const text = String(nameText || '');
+  const p = String(provider || '').trim();
+  if (!p) {
+    return text;
+  }
+  const prefix = `${p} / `;
+  return text.startsWith(prefix) ? text.slice(prefix.length) : text;
+}
+
+/**
+ * Select AI model from available adapters (with connectivity indicators).
+ */
+/**
+ * buildGatewayModelChoices — probe all enabled adapters and assemble the
+ * selectable model list, WITHOUT any prompting. Shared by the classic CLI
+ * handler (handleGatewaySelectModel) and the Ink TUI ModelPicker so both reuse
+ * the exact same probing, reliability filtering and adapter-hiding logic.
+ *
+ * Side-effecting progress/diagnostic output is delegated to the caller via
+ * `onNotice` / `onError` / `onProgress` callbacks (the classic CLI passes
+ * printInfo/printError; the TUI pushes transcript messages and renders a
+ * progress bar). `onProgress` receives `{ phase, current, total, label }`
+ * where current/total are 0-100 percentages. This keeps the function
+ * presentation-free while preserving streaming feedback during the probe.
+ *
+ * Returns { modelChoices, preferredIssueAfterProbe, empty }. `empty` is true
+ * when there is nothing selectable (no enabled adapters, or all filtered out);
+ * the relevant explanatory notices have already been emitted in that case.
+ */
+async function buildGatewayModelChoices({ onNotice = () => {}, onError = () => {}, onProgress = () => {} } = {}) {
+  try {
+    // Quick fail mode: skip expensive initialization if explicitly disabled
+    const quickFailMode = String(process.env.KHY_MODEL_QUICK_FAIL || 'false').toLowerCase() === 'true';
+
+    // Phase-start markers: use 'stage' kind for multi-phase init sequence.
+    // These show as ●●●○○ Step N/5 — honest about which phase we're in.
+    onProgress({ kind: 'stage', current: 1, total: 5, label: '初始化网关' });
+    onNotice('正在初始化网关...');
+    const gateway = require('../../services/gateway/aiGateway');
+
+    if (!quickFailMode) {
+      onProgress({ kind: 'stage', current: 2, total: 5, label: '同步 switch-center' });
+      onNotice('正在同步 switch-center...');
+      const autoSync = await withTimeout(
+        maybeAutoSyncSwitchCenterForGateway('gateway-model'),
+        10000,
+        'switch-center-sync'
+      ).catch(() => null);
+
+      if (!gateway.isInitialized()) {
+        onProgress({ kind: 'stage', current: 3, total: 5, label: '初始化网关适配器' });
+        onNotice('正在初始化网关适配器...');
+        await withTimeout(gateway.init(), 15000, 'gateway-init').catch((err) => {
+          onNotice(`网关初始化失败: ${err?.message || 'unknown'}`);
+        });
+      }
+
+      if (autoSync && autoSync.synced && (autoSync.changed || autoSync.activeChanged)) {
+        try {
+          onProgress({ kind: 'stage', current: 4, total: 5, label: '刷新适配器' });
+          onNotice('正在刷新适配器...');
+          await withTimeout(gateway.refreshAdapters(), 15000, 'refresh-adapters');
+        } catch {
+          /* best effort */
+        }
+        onNotice(
+          `已自动同步 switch-center: ${autoSync.profileName || autoSync.profileId || 'trae-auto'} (${autoSync.modelsCount || 0} models)`
+        );
+      }
+    } else {
+      onProgress({ kind: 'stage', current: 3, total: 5, label: '快速初始化' });
+      onNotice('快速失败模式：跳过耗时初始化');
+      // Ensure gateway is at least minimally initialized
+      if (!gateway.isInitialized()) {
+        try {
+          await Promise.race([
+            gateway.init(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('init timeout')), 3000))
+          ]);
+        } catch {
+          onNotice('快速初始化失败，使用当前状态');
+        }
+      }
+    }
+
+    onProgress({ kind: 'stage', current: 5, total: 5, label: '获取适配器状态' });
+    onNotice('正在获取适配器状态...');
+    const statuses = gateway.getStatus();
+    const enabledAdapters = statuses.filter((s) => s.enabled);
+    const verboseAdapterDetails =
+      String(process.env.KHY_MODEL_VERBOSE_ADAPTER_DETAILS || 'false').toLowerCase() === 'true';
+
+    if (enabledAdapters.length === 0) {
+      onError('无已启用 AI 通道');
+      return { modelChoices: [], preferredIssueAfterProbe: null, empty: true };
+    }
+
+  if (verboseAdapterDetails) {
+    const traeStatus = statuses.find((s) => String(s.type || '').toLowerCase() === 'trae');
+    if (traeStatus && traeStatus.tokenPath) {
+      onNotice(`Trae token 位置: ${traeStatus.tokenPath}`);
+      const official = traeStatus.officialModels || null;
+      if (official) {
+        if (official.hit) {
+          const endpointLabel = official.endpoint ? ` (${official.endpoint})` : '';
+          onNotice(
+            `Trae 官方模型列表: 已命中${endpointLabel} · 官方 ${official.officialCount} / 本地 ${official.localCount} / 合并 ${official.mergedCount}`
+          );
+        } else {
+          const reason = String(official.error || '').trim();
+          onNotice(
+            `Trae 官方模型列表: 未命中${reason ? ` (${reason})` : '（已回退本地发现）'}`
+          );
+        }
+      }
+    }
+  }
+
+  const preferredIssueBeforeProbe = _resolvePreferredAdapterIssue(statuses, {});
+  if (preferredIssueBeforeProbe && preferredIssueBeforeProbe.type === 'invalid') {
+    onError(preferredIssueBeforeProbe.message);
+    onNotice('当前将忽略该无效配置，并仅展示可执行通道');
+  }
+
+  // Fast probe for model-selection UX.
+  // For unstable-prone adapters, include a lightweight generation probe
+  // to avoid "detected but unusable" false positives in /model.
+  // Reduced default timeouts to prevent hanging on unreachable adapters
+  const probeTimeoutMs = Math.max(
+    2000,
+    parseInt(process.env.KHY_MODEL_PROBE_TIMEOUT_MS || '4000', 10) || 4000
+  );
+  const generationProbeTimeoutMs = Math.max(
+    probeTimeoutMs,
+    parseInt(process.env.KHY_MODEL_PROBE_GENERATION_TIMEOUT_MS || '8000', 10) || 8000
+  );
+  const strictOperationalAdapters = STRICT_OPERATIONAL_ADAPTERS;
+  const twoPhaseProbeEnabled =
+    String(process.env.KHY_MODEL_TWO_PHASE_PROBE || 'true').toLowerCase() !== 'false';
+
+  // Overall timeout protection: prevent hanging when multiple adapters are slow/unreachable
+  const overallTimeoutMs = Math.max(
+    15000,
+    parseInt(process.env.KHY_MODEL_OVERALL_TIMEOUT_MS || '30000', 10) || 30000
+  );
+
+  // UX2: 通道探测百分比进度 — 每完成一个通道就更新进度
+  const totalAdapters = enabledAdapters.length;
+  let probedCount = 0;
+  onNotice(`检测各通道连通性（${totalAdapters} 通道，总超时 ${Math.round(overallTimeoutMs / 1000)}s）...`);
+  const testResults = {};
+  const strictCandidates = [];
+  const testPromises = enabledAdapters.map(async (s) => {
+    const adapterType = String(s.type || '').toLowerCase();
+    const requireGenerationProbe = strictOperationalAdapters.has(adapterType);
+    const adapterProbeTimeoutMs = _getAdapterProbeTimeoutMs(adapterType, probeTimeoutMs);
+    const adapterGenerationProbeTimeoutMs = Math.max(
+      adapterProbeTimeoutMs,
+      generationProbeTimeoutMs
+    );
+    if (requireGenerationProbe) {
+      strictCandidates.push(s);
+    }
+    try {
+      testResults[s.type] = await withTimeout(
+        gateway.testAdapter(s.type, {
+          quick: !requireGenerationProbe,
+          timeoutMs: adapterProbeTimeoutMs,
+          probeGenerationTimeoutMs: adapterGenerationProbeTimeoutMs,
+        }),
+        Math.max(adapterProbeTimeoutMs + 1000, adapterGenerationProbeTimeoutMs + 1000),
+        `${s.type} probe`
+      );
+    } catch (err) {
+      testResults[s.type] = {
+        connectivity: {
+          success: false,
+          latencyMs: adapterProbeTimeoutMs,
+          error: err && err.message ? err.message : 'probe failed',
+        },
+      };
+    } finally {
+      probedCount++;
+      const pct = totalAdapters > 0 ? (probedCount / totalAdapters) * 100 : 100;
+      const latency = testResults[s.type]?.connectivity?.latencyMs;
+      const ok = testResults[s.type]?.connectivity?.success;
+      const statusIcon = ok ? '✓' : '✗';
+      onNotice(`  [${probedCount}/${totalAdapters} ${pct.toFixed(1).padStart(5)}%] ${statusIcon} ${s.type}${latency ? ` (${latency}ms)` : ''}`);
+      // Real count: probedCount / totalAdapters
+      onProgress({ kind: 'count', current: probedCount, total: totalAdapters, label: `探测 ${s.type}` });
+    }
+  });
+
+  // Race all probes against overall timeout
+  try {
+    await Promise.race([
+      Promise.all(testPromises),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('overall timeout')), overallTimeoutMs)
+      )
+    ]);
+  } catch (err) {
+    if (err && err.message === 'overall timeout') {
+      onNotice('部分通道探测超时，显示当前可用结果');
+      // Continue with whatever results we have so far
+    } else {
+      throw err;
+    }
+  }
+  const preferredIssueAfterProbe = _resolvePreferredAdapterIssue(enabledAdapters, testResults);
+
+  let debounceRetried = 0;
+  let debounceRecovered = 0;
+  if (MODEL_PROBE_DEBOUNCE_ENABLED) {
+    const retryCandidates = enabledAdapters.filter((s) => {
+      const firstTest = testResults[s.type];
+      if (isAdapterOperational(s, firstTest, strictOperationalAdapters)) {
+        return false;
+      }
+      return _shouldRetryProbeByDebounce(s, firstTest);
+    });
+    if (retryCandidates.length > 0) {
+      debounceRetried = retryCandidates.length;
+      await Promise.all(
+        retryCandidates.map(async (s) => {
+          const adapterType = String(s.type || '').toLowerCase();
+          const requireGenerationProbe = strictOperationalAdapters.has(adapterType);
+          const adapterProbeTimeoutMs = _getAdapterProbeTimeoutMs(adapterType, probeTimeoutMs);
+          const adapterGenerationProbeTimeoutMs = Math.max(
+            adapterProbeTimeoutMs,
+            generationProbeTimeoutMs
+          );
+          for (let attempt = 1; attempt <= MODEL_PROBE_DEBOUNCE_MAX_RETRIES; attempt++) {
+            if (MODEL_PROBE_DEBOUNCE_DELAY_MS > 0) {
+              const waitMs = MODEL_PROBE_DEBOUNCE_DELAY_MS * attempt;
+              await new Promise((resolve) => setTimeout(resolve, waitMs));
+            }
+            try {
+              const retried = await withTimeout(
+                gateway.testAdapter(s.type, {
+                  quick: !requireGenerationProbe,
+                  timeoutMs: adapterProbeTimeoutMs,
+                  probeGenerationTimeoutMs: adapterGenerationProbeTimeoutMs,
+                }),
+                Math.max(adapterProbeTimeoutMs + 1000, adapterGenerationProbeTimeoutMs + 1000),
+                `${s.type} debounce-probe`
+              );
+              testResults[s.type] = retried;
+              if (isAdapterOperational(s, retried, strictOperationalAdapters)) {
+                debounceRecovered += 1;
+                break;
+              }
+              if (!_shouldRetryProbeByDebounce(s, retried)) {
+                break;
+              }
+            } catch (err) {
+              testResults[s.type] = {
+                connectivity: {
+                  success: false,
+                  latencyMs: adapterProbeTimeoutMs,
+                  error: err && err.message ? err.message : 'debounce probe failed',
+                },
+              };
+            }
+          }
+        })
+      );
+    }
+  }
+
+  let backgroundDeepProbeStarted = 0;
+  if (twoPhaseProbeEnabled && strictCandidates.length > 0) {
+    for (const s of strictCandidates) {
+      const adapterType = String(s.type || '').toLowerCase();
+      const currentGeneration = testResults[s.type]?.generation || null;
+      if (currentGeneration?.success) {
+        continue;
+      }
+      if (
+        currentGeneration &&
+        !_isTransientProbeLikeReason(String(currentGeneration.error || ''))
+      ) {
+        continue;
+      }
+      const cached = _getDeepProbeCache(adapterType);
+      if (cached && cached.test && cached.test.generation) {
+        const cachedGeneration = cached.test.generation;
+        // Prefer fresh live probe result; only use cache when it can improve confidence.
+        if (!currentGeneration || (cachedGeneration?.success && !currentGeneration.success)) {
+          testResults[s.type] = {
+            ...(testResults[s.type] || {}),
+            generation: cachedGeneration,
+          };
+        }
+        continue;
+      }
+      if (_modelDeepProbeInFlight.has(adapterType)) {
+        continue;
+      }
+      backgroundDeepProbeStarted += 1;
+      const deepTask = (async () => {
+        try {
+          const adapterProbeTimeoutMs = _getAdapterProbeTimeoutMs(s.type, probeTimeoutMs);
+          const adapterGenerationProbeTimeoutMs = Math.max(
+            adapterProbeTimeoutMs,
+            generationProbeTimeoutMs
+          );
+          const deep = await withTimeout(
+            gateway.testAdapter(s.type, {
+              quick: false,
+              timeoutMs: adapterProbeTimeoutMs,
+              probeGenerationTimeoutMs: adapterGenerationProbeTimeoutMs,
+            }),
+            Math.max(adapterProbeTimeoutMs + 3000, adapterGenerationProbeTimeoutMs + 3000),
+            `${s.type} deep-probe`
+          );
+          _setDeepProbeCache(adapterType, deep);
+        } catch (err) {
+          _setDeepProbeCache(adapterType, {
+            connectivity: {
+              success: false,
+              error: err && err.message ? err.message : 'deep probe failed',
+            },
+            generation: {
+              success: false,
+              error: err && err.message ? err.message : 'deep probe failed',
+            },
+          });
+        } finally {
+          _modelDeepProbeInFlight.delete(adapterType);
+        }
+      })();
+      _modelDeepProbeInFlight.set(adapterType, deepTask);
+      deepTask.catch(() => {});
+    }
+  }
+
+  // Collect models from all available adapters with indicators
+  onProgress({ kind: 'count', current: 0, total: enabledAdapters.length, label: '获取模型列表' });
+  const modelChoices = [];
+  let skippedUnavailableAdapters = 0;
+  const hiddenAdapters = [];
+  let generationWarnCount = 0;
+  let filteredModelCount = 0;
+  const filteredModelReasonCount = {};
+  let listedCount = 0;
+  for (const s of enabledAdapters) {
+    const test = testResults[s.type];
+    const adapterOk = isAdapterOperational(s, test);
+    if (!adapterOk) {
+      skippedUnavailableAdapters += 1;
+      hiddenAdapters.push({
+        name: s.name || s.type,
+        type: s.type,
+        reason: _classifyHiddenReason(s, test),
+      });
+      continue;
+    }
+    const generationWarn = !!(
+      test?.generation &&
+      !test.generation.success &&
+      shouldTreatGenerationFailureAsWarning(s.type)
+    );
+    if (generationWarn) {
+      generationWarnCount += 1;
+    }
+    const indicator = generationWarn
+      ? chalk.yellow(`● ${test.generation.error || '实测告警'}`)
+      : chalk.green(`● ${test.connectivity.latencyMs}ms`);
+    const statusTag = generationWarn ? chalk.yellow('[可用-告警]') : chalk.green('[可用]');
+    // 组级三件套：同一 adapter 下每一行都相同，留在行内就是「每行重复」（截图病根）。
+    // 升格到分组标题只写一次；段太短没画标题时由渲染侧回落到行内（ModelPicker 的 orphan）。
+    const adapterTag = chalk.dim(`(执行:${s.name}/${s.type})`);
+    const groupMeta = `${statusTag} ${indicator} ${adapterTag}`;
+
+    let listModelsErr;
+    try {
+      const modelListTimeoutMs = _getAdapterModelListTimeoutMs(
+        s.type,
+        Math.max(3000, probeTimeoutMs)
+      );
+      const models = await withTimeout(
+        gateway.listModels(s.type),
+        modelListTimeoutMs,
+        `${s.type} listModels`
+      );
+      if (models && models.length > 0) {
+        const reliabilityFiltered = _filterModelsByReliability(s, test, models);
+        if (reliabilityFiltered.filtered > 0) {
+          filteredModelCount += reliabilityFiltered.filtered;
+          for (const reason of reliabilityFiltered.reasons) {
+            filteredModelReasonCount[reason] = (filteredModelReasonCount[reason] || 0) + 1;
+          }
+        }
+        for (const m of reliabilityFiltered.models) {
+          const sourceTag = _formatModelSourceTag(m);
+          const connTag = _formatConnectionTag(m);
+          const upstreamTag = _formatUpstreamTag(m);
+          const visionTag = _formatVisionTag(m);
+          // 分组依据优先取结构化上游供应商：api 适配器下几十个模型同属一个 adapter，
+          // 按 adapter 分等于不分，能真正分层的是上游供应商（[DESIGN-ARCH-167] P1）。
+          const provider = String(m.upstreamProvider || '').trim();
+          const group = provider || s.name || s.type;
+          const secondary = [
+            visionTag,
+            sourceTag,
+            upstreamTag,
+            connTag,
+            m.isDefault ? chalk.green('✓ 当前') : '',
+          ]
+            .filter(Boolean)
+            .join(' ');
+          modelChoices.push({
+            // `name` 只增不减：advisor.js 拿它当 label，拆了会静默丢标签。
+            name: `${statusTag} ${m.name || m.id}${visionTag ? ` ${visionTag}` : ''}${sourceTag ? ` ${sourceTag}` : ''}${upstreamTag ? ` ${upstreamTag}` : ''}${connTag ? ` ${connTag}` : ''} ${adapterTag} ${indicator}${m.isDefault ? chalk.green(' ✓ 当前') : ''}`,
+            primary: _stripProviderPrefix(m.name || m.id, provider),
+            secondary,
+            group,
+            groupMeta,
+            value: { adapter: s.type, model: m.id },
+            disabled: false,
+          });
+        }
+      } else {
+        // Adapter available but no model list (e.g. relay)
+        modelChoices.push({
+          name: `${statusTag} ${s.name} ${chalk.dim('(默认模型)')} ${indicator}`,
+          primary: s.name || s.type,
+          secondary: chalk.dim('(默认模型)'),
+          group: s.name || s.type,
+          groupMeta,
+          value: { adapter: s.type, model: null },
+          disabled: false,
+        });
+      }
+      listedCount++;
+    } catch (err) {
+      listedCount++;
+      listModelsErr = err;
+    } finally {
+      onProgress({ kind: 'count', current: listedCount, total: enabledAdapters.length, label: '获取模型列表' });
+      const reasonText = listModelsErr && listModelsErr.message ? listModelsErr.message : 'listModels failed';
+      if (String(s.type || '').toLowerCase() === 'kiro' && _isTimeoutLikeReason(reasonText)) {
+        // Keep Kiro selectable when model listing is slow; selection still works
+        // and runtime can refresh models in background.
+        modelChoices.push({
+          name: `${statusTag} ${s.name} ${chalk.dim('(模型列表超时，使用默认模型)')} ${indicator}`,
+          primary: s.name || s.type,
+          secondary: chalk.dim('(模型列表超时，使用默认模型)'),
+          group: s.name || s.type,
+          groupMeta,
+          value: { adapter: s.type, model: null },
+          disabled: false,
+        });
+        hiddenAdapters.push({
+          name: s.name || s.type,
+          type: s.type,
+          reason: `模型列表超时，已保留默认模型入口: ${_compactReasonText(reasonText)}`,
+        });
+        continue;
+      }
+      skippedUnavailableAdapters += 1;
+      hiddenAdapters.push({
+        name: s.name || s.type,
+        type: s.type,
+        reason: _classifyHiddenReason(s, test, reasonText),
+      });
+    }
+  }
+
+  // ── 外部智能体模型投影(自动发现 opencode / claude-code 已配置的模型,复用其配置)──
+  // 投影为 `<模型>(opencode)` / `<模型>(claudecode)`,选中后路由到对应 gateway 适配器:
+  //   · opencode    → opencodeAdapter(指挥 `opencode run`,读它自己的 opencode.json)
+  //   · claude-code → claudeAdapter(会话内先采纳其 env,复用同款 endpoint/token/model)
+  // khy 不需要替用户重复配置 endpoint/key——各自 agent 的配置文件就是真源。
+  try {
+    const projection = require('../../services/gateway/agentModelProjection');
+    // 采纳 claude-code env + opencode 便携配置定位,让对应适配器在本会话即可调出配置同款模型。
+    try {
+      projection.ensureClaudeCodeEnv(process.env);
+    } catch {
+      /* fail-soft */
+    }
+    try {
+      projection.ensureOpenCodeEnv(process.env);
+    } catch {
+      /* fail-soft */
+    }
+    const proj = projection.discover(process.env);
+    if (proj.ok && Array.isArray(proj.models) && proj.models.length) {
+      // 只投影其 gateway 适配器通道**已启用**的智能体模型,避免展示「选中但不可调用」的入口。
+      const enabledTypes = new Set(
+        enabledAdapters.map((s) => String(s.type || '').trim().toLowerCase())
+      );
+      const projectedShown = proj.models.filter(
+        (pm) => enabledTypes.has(String(pm.adapter || '').trim().toLowerCase())
+      );
+      for (const pm of projectedShown) {
+        const connTag = pm.protocol === 'anthropic' ? chalk.yellow('中继') : chalk.cyan('直连');
+        const keyTag = pm.hasKey ? chalk.green('● ready') : chalk.dim('● 未含 key');
+        modelChoices.push({
+          name: `${chalk.green('[可用]')} ${pm.name}${connTag ? ` ${connTag}` : ''} ${keyTag}`,
+          primary: pm.name || pm.model,
+          // 投影行没有 per-adapter 探测状态，组级三件套里只有 key 就绪度可挂。
+          secondary: `${connTag} ${keyTag}`.trim(),
+          group: pm.adapter,
+          groupMeta: `${chalk.green('[可用]')} ${keyTag}`,
+          value: { adapter: pm.adapter, model: pm.model },
+          disabled: false,
+          externalAgent: true,
+        });
+      }
+    }
+  } catch {
+    /* fail-soft: 投影失败绝不影响主线模型列表 */
+  }
+
+  if (modelChoices.length === 0) {
+    onNotice('当前无可执行模型可选（已过滤未通过实测的通道）');
+    if (preferredIssueAfterProbe && preferredIssueAfterProbe.type === 'unavailable') {
+      onNotice(preferredIssueAfterProbe.message);
+      onNotice('可先运行 khy gateway status 查看失败细节，再切换到可执行通道');
+    }
+    return { modelChoices: [], preferredIssueAfterProbe, empty: true };
+  }
+
+  if (skippedUnavailableAdapters > 0) {
+    onNotice(
+      `已隐藏 ${skippedUnavailableAdapters} 个未通过实测的通道（可用 khy gateway status 查看详情）`
+    );
+    const shown = [];
+    const seen = new Set();
+    for (const item of hiddenAdapters) {
+      const key = `${String(item.type || '').toLowerCase()}|${String(item.reason || '').toLowerCase()}`;
+      if (seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      shown.push(item);
+      if (shown.length >= 3) {
+        break;
+      }
+    }
+    for (const item of shown) {
+      onNotice(`  - ${item.name} (${item.type}): ${item.reason}`);
+    }
+    if (hiddenAdapters.length > shown.length) {
+      onNotice(
+        `  - 其余 ${hiddenAdapters.length - shown.length} 个通道请用 khy gateway status 查看完整原因`
+      );
+    }
+  }
+  if (preferredIssueAfterProbe && preferredIssueAfterProbe.type === 'unavailable') {
+    onNotice(preferredIssueAfterProbe.message);
+  }
+  if (generationWarnCount > 0) {
+    onNotice(`探测告警 ${generationWarnCount} 项：为快速健康探测结果，不等同于运行时必然失败`);
+  }
+  if (filteredModelCount > 0) {
+    const reasonLabels = {
+      hint: '提示源模型',
+      builtin: '内置回退模型',
+      'warn-unverified': '告警通道的未验证模型',
+      'cross-provider-claude': '跨提供商 Claude 模型',
+      unconfirmed: '无上游证据的猜测模型（静态目录/本机扫描）',
+      malformed: '形态非法的模型 ID',
+      'verify-failed': '实测探活失败的模型',
+    };
+    const reasonSummary = Object.keys(filteredModelReasonCount)
+      .map((key) => `${reasonLabels[key] || key}×${filteredModelReasonCount[key]}`)
+      .join('，');
+    onNotice(`已过滤 ${filteredModelCount} 个低置信模型（${reasonSummary || '默认可靠性策略'}）`);
+
+    // Smart adapter suggestion: if Claude models were filtered due to cross-provider,
+    // suggest switching to claude adapter
+    if (filteredModelReasonCount['cross-provider-claude'] > 0) {
+      const claudeAdapterAvailable = enabledAdapters.find(
+        (s) => String(s.type || '').toLowerCase() === 'claude' && s.available
+      );
+      if (claudeAdapterAvailable) {
+        onNotice(`提示: 若需使用 Claude Opus 4.8/4.7 等模型，可切换到 Claude 适配器`);
+        onNotice(`   快速切换: export GATEWAY_PREFERRED_ADAPTER=claude && khy`);
+      }
+    }
+  }
+  if (debounceRetried > 0) {
+    onNotice(`防抖复检: 已复检 ${debounceRetried} 个抖动通道，恢复 ${debounceRecovered} 个`);
+  }
+  if (twoPhaseProbeEnabled && backgroundDeepProbeStarted > 0) {
+    onNotice(
+      `已启动 ${backgroundDeepProbeStarted} 个后台深测任务（strict 通道），下次 /model 会显示更准确告警`
+    );
+  }
+
+  // 模型列表顶部增设可选「Auto」入口(/goal「khy 在模型列表下设置一个 auto 模型」)。
+  // 门控 KHY_AUTO_MODEL_SELECT 默认开;关 → 不 unshift(字节回退旧行为)。Auto 标签用纯排序
+  // 原语按「当前会话默认任务」预览一个「最适合且可用」的模型 id(候选=已枚举的可用模型)。
+  try {
+    const autoSelect = require('../../services/gateway/autoModelSelect');
+    if (
+      autoSelect.isEnabled() &&
+      modelChoices.some((c) => c && c.value && !c.disabled && c.value.model)
+    ) {
+      const candidates = modelChoices
+        .filter((c) => c && c.value && !c.disabled && c.value.model)
+        .map((c) => ({ model: c.value.model, adapter: c.value.adapter }));
+      const preview = autoSelect.pickAutoModel('conversation', candidates);
+      modelChoices.unshift(
+        autoSelect.buildAutoChoice({
+          previewModel: preview && preview.model ? preview.model : '',
+          chalk,
+        })
+      );
+    }
+  } catch {
+    /* fail-soft: no Auto entry, picker unchanged */
+  }
+
+    onProgress({ kind: 'count', current: 100, total: 100, label: '完成' });
+    // 记录本次构建的可选快照:选择/回跳入口(F2 最近模型、启动默认、自然语言直选)据此对账,
+    // 防止把一个已不在列表里的模型写进偏好并应用(见 isSelectableNow 的注释)。
+    try {
+      _lastSelectableKeys = new Set(
+        modelChoices
+          .filter((c) => c && c.value && !c.disabled && c.value.adapter && c.value.model)
+          .map(
+            (c) =>
+              `${String(c.value.adapter).trim().toLowerCase()}/${String(c.value.model)
+                .trim()
+                .toLowerCase()}`
+          )
+      );
+    } catch {
+      _lastSelectableKeys = null;
+    }
+    return { modelChoices, preferredIssueAfterProbe, empty: false };
+  } catch (err) {
+    onError(`构建模型列表失败: ${(err && err.message) || 'unknown'}`);
+    return { modelChoices: [], preferredIssueAfterProbe: null, empty: true };
+  }
+}
+
+/**
+ * applyGatewayModelSelection — persist a chosen { adapter, model } as the
+ * gateway preference, sync the live switch, and refresh adapters. Shared by the
+ * classic CLI handler and the Ink TUI ModelPicker so selection has identical
+ * side effects regardless of the front-end. Returns { tokenInfo } describing the
+ * token source resolved for the selection.
+ */
+async function applyGatewayModelSelection(selected, options = {}) {
+  const refreshTimeoutMs = Number.isFinite(options.refreshTimeoutMs)
+    ? options.refreshTimeoutMs
+    : 10000;
+  const gateway = require('../../services/gateway/aiGateway');
+  persistGatewayPreference(selected);
+  // Mirror the user's explicit choice into lastVerifiedModelStore so that
+  // getActiveAdapter() tier-2 resolver can restore it on the next startup,
+  // even when GATEWAY_PREFERRED_ADAPTER env is set (tier 1 always wins over
+  // tier 2, but the store is the authoritative "last used" record).
+  try {
+    const { recordLastVerifiedModel } = require('../../services/gateway/lastVerifiedModelStore');
+    const adapterKey = String((selected && selected.adapter) || '').trim();
+    if (adapterKey && adapterKey !== 'auto') {
+      recordLastVerifiedModel({ adapter: adapterKey, model: (selected && selected.model) || null });
+    }
+  } catch {
+    /* fail-soft: store write is best-effort */
+  }
+  try {
+    gateway.syncModelSwitch(selected.model || null);
+  } catch {
+    /* best effort */
+  }
+  try {
+    await withTimeout(gateway.refreshAdapters(), refreshTimeoutMs, 'post-select-refresh');
+  } catch {
+    /* best effort */
+  }
+  return { tokenInfo: getTokenInfoForSelection(selected) };
+}
+
+async function handleGatewaySelectModel(args = [], options = {}) {
+  try {
+    // Add overall timeout protection for the entire build process
+    const buildTimeoutMs = Math.max(
+      20000,
+      parseInt(process.env.KHY_MODEL_BUILD_TIMEOUT_MS || '45000', 10) || 45000
+    );
+
+    let built;
+    try {
+      built = await Promise.race([
+        buildGatewayModelChoices({ onNotice: printInfo, onError: printError }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('构建模型列表超时')), buildTimeoutMs)
+        )
+      ]);
+    } catch (err) {
+      if (err && err.message === '构建模型列表超时') {
+        printError('模型列表构建超时，请检查网络连接和适配器配置');
+        printInfo('提示: 可以尝试禁用不使用的适配器或使用 gateway status 命令');
+        return;
+      }
+      throw err;
+    }
+
+    if (built.empty) {
+      return;
+    }
+    const { modelChoices } = built;
+
+    const isInteractive = !!(
+      process.stdin &&
+      process.stdin.isTTY &&
+      process.stdout &&
+      process.stdout.isTTY
+    );
+    const requestedAdapter = (args[0] || options.adapter || '').toLowerCase();
+    const requestedModel = options.model || args[1] || '';
+
+    // Non-interactive mode: auto-pick a model without prompting.
+    if (!isInteractive) {
+      let pick = null;
+      if (requestedAdapter || requestedModel) {
+        pick =
+          modelChoices.find((c) => {
+            if (!c || !c.value || c.disabled) {
+              return false;
+            }
+            const adapterOk = !requestedAdapter || c.value.adapter === requestedAdapter;
+            const modelOk = !requestedModel || c.value.model === requestedModel;
+            return adapterOk && modelOk;
+          }) || null;
+      }
+      if (!pick) {
+        // Blind fallback must NOT pick the synthetic Auto sentinel entry (/goal「auto 模型」):
+        // Auto is an explicit user choice, not a default. It is only selected above when
+        // requestedAdapter/requestedModel === 'auto'. Gate-off → no Auto entry exists → no-op filter.
+        let _isAutoValue;
+        try {
+          _isAutoValue = require('../../services/gateway/autoModelSelect').isAutoSelection;
+        } catch {
+          _isAutoValue = () => false;
+        }
+        pick =
+          modelChoices.find((c) => c && c.value && !c.disabled && !_isAutoValue(c.value)) || null;
+      }
+      if (!pick) {
+        printError('无可用模型可选择');
+        return;
+      }
+      const selected = pick.value;
+      const { tokenInfo } = await applyGatewayModelSelection(selected);
+      printSuccess(`已选择: ${selected.model || '默认模型'} (${selected.adapter})`);
+      printInfo(`可用性: ${pick.disabled ? '不可用' : '可用'}`);
+      printInfo(`Token: ${tokenInfo.source} → ${tokenInfo.detail}`);
+      return;
+    }
+
+    let selected = null;
+    let picked = null;
+    try {
+      const inquirer = require('inquirer');
+      const preferredAdapter = String(process.env.GATEWAY_PREFERRED_ADAPTER || '')
+        .trim()
+        .toLowerCase();
+      const preferredModel = String(process.env.GATEWAY_PREFERRED_MODEL || '').trim();
+      const defaultChoice = modelChoices.find((c) => {
+        if (!c || !c.value || c.disabled) {
+          return false;
+        }
+        if (!preferredAdapter) {
+          return false;
+        }
+        if (c.value.adapter !== preferredAdapter) {
+          return false;
+        }
+        return preferredModel ? String(c.value.model || '') === preferredModel : true;
+      });
+
+      const { selectedValue } = await promptWithReplGuard([
+        {
+          type: 'list',
+          name: 'selectedValue',
+          message: '选择模型（上下方向键选择，回车确认）:',
+          choices: [
+            // 组边界画 Separator（不可选中 ⇒ 不会打乱选择语义），模型行只放
+            // primary + 次信息 —— 与 TUI 同一套分组/分层（共享叶子）。
+            ...buildClassicInquirerChoices(modelChoices, inquirer, chalk),
+            new inquirer.Separator(),
+            { name: '返回', value: null },
+          ],
+          pageSize: Math.min(16, Math.max(8, modelChoices.length + 2)),
+          default: defaultChoice ? defaultChoice.value : undefined,
+          loop: false,
+        },
+      ]);
+      if (!selectedValue) {
+        printInfo('已取消模型选择');
+        return;
+      }
+      selected = selectedValue;
+      picked =
+        modelChoices.find(
+          (c) =>
+            c &&
+            c.value &&
+            c.value.adapter === selected.adapter &&
+            String(c.value.model || '') === String(selected.model || '')
+        ) || null;
+    } catch (err) {
+      // User cancelled (Ctrl+C or Esc) or inquirer unavailable
+      const isUserCancel =
+        err &&
+        (err.message === 'User force closed the prompt' ||
+          err.name === 'ExitPromptError' ||
+          String(err).includes('force closed'));
+      if (isUserCancel) {
+        console.log('');
+        printInfo('已取消模型选择');
+        return;
+      }
+
+      // Fallback: numeric selection for environments where inquirer is unavailable.
+      // 与 inquirer 路径共用同一份显示条目 ⇒ 分组标题照画，**编号只给模型行**。
+      const numeric = buildClassicNumericLines(modelChoices, chalk);
+      console.log('');
+      for (const line of numeric.lines) {
+        console.log(line);
+      }
+      console.log(`  ${chalk.dim('0. 返回')}`);
+      console.log('');
+
+      const answer = await askLine(chalk.dim('  输入编号: '));
+      // 编号 → choice 的映射由渲染侧给出（显示序），不再按原始下标取 ——
+      // 否则归并（stableGroupOrder）后「输入 3」会落到另一个模型上。
+      // 解析逻辑抽在纯函数 `resolveNumericPick` 里（可单测，见 gatewayModelChoicesLeaf.test.js）。
+      const pick = resolveNumericPick(numeric, answer);
+      if (!pick.ok) {
+        if (pick.reason === 'cancel') {
+          printInfo('已取消模型选择');
+        } else if (pick.reason === 'out-of-range') {
+          printError('编号超出范围');
+        } else {
+          printError('该模型当前不可选，请选择可用模型');
+        }
+        return;
+      }
+      picked = pick.choice;
+      selected = picked.value;
+    }
+
+    // Save selection to .env and apply (sync + refresh) via the shared helper.
+    const { tokenInfo } = await applyGatewayModelSelection(selected);
+
+    printSuccess(`已选择: ${selected.model || '默认模型'} (${selected.adapter})`);
+    const selectedChoice = modelChoices.find((c) => {
+      if (!c || !c.value) {
+        return false;
+      }
+      return (
+        c.value.adapter === selected.adapter &&
+        String(c.value.model || '') === String(selected.model || '')
+      );
+    });
+    printInfo(`可用性: ${selectedChoice && selectedChoice.disabled ? '不可用' : '可用'}`);
+    printInfo(`Token: ${tokenInfo.source} → ${tokenInfo.detail}`);
+    console.log('');
+  } finally {
+    recoverGatewayPromptInput();
+  }
+}
+
+/**
+ * Build the model choices for a SINGLE vendor, reusing the exact same catalog
+ * `/model` uses (buildGatewayModelChoices) and filtering it via the pure leaf
+ * nlModelSwitchResolver. Powers the natural-language "切换模型到 <vendor>" flow
+ * in both front-ends (TUI openModelPickerForVendor / classic handleModelSwitchByVendor).
+ *
+ * @param {object} opts
+ * @param {string} opts.vendor       poolKey (e.g. 'deepseek')
+ * @param {string} [opts.modelHint]  concrete model id if the user named one
+ * @param {function} [opts.onNotice]
+ * @param {function} [opts.onError]
+ * @returns {Promise<{modelChoices:Array, directPick:(object|null), empty:boolean, vendor:string}>}
+ */
+async function buildVendorModelChoices({
+  vendor,
+  modelHint = '',
+  onNotice = () => {},
+  onError = () => {},
+  onProgress = () => {},
+} = {}) {
+  const built = await buildGatewayModelChoices({ onNotice, onError, onProgress });
+  if (!built || built.empty) {
+    return { modelChoices: [], directPick: null, empty: true, vendor };
+  }
+  const leaf = require('../nlModelSwitchResolver');
+  const filtered = leaf.filterModelChoices(built.modelChoices, vendor, modelHint);
+  if (!filtered || filtered.length === 0) {
+    onNotice(`未找到厂商 ${vendor} 的可用模型（可先运行 khy gateway status 查看通道状态）`);
+    return { modelChoices: [], directPick: null, empty: true, vendor };
+  }
+  const directPick = leaf.resolveDirectPick(filtered, modelHint);
+  return { modelChoices: filtered, directPick, empty: false, vendor };
+}
+
+/**
+ * Classic-REPL entry for natural-language model switching: list a vendor's models
+ * (via buildVendorModelChoices) and let the user pick, OR — when the user named a
+ * concrete model that uniquely matches — apply it directly. Mirrors
+ * handleGatewaySelectModel's inquirer + numeric-fallback + apply flow.
+ *
+ * @param {object} opts
+ * @param {string} opts.vendor
+ * @param {string} [opts.modelHint]
+ */
+async function handleModelSwitchByVendor({ vendor, modelHint = '' } = {}) {
+  const hadGuard = global.__KHY_INQUIRER_ACTIVE__ === true;
+  global.__KHY_INQUIRER_ACTIVE__ = true;
+  try {
+    const built = await buildVendorModelChoices({
+      vendor,
+      modelHint,
+      onNotice: printInfo,
+      onError: printError,
+    });
+    if (built.empty) {
+      return;
+    }
+    const { modelChoices, directPick } = built;
+
+    // Uniquely-named model → apply directly, no picker.
+    if (directPick) {
+      const { tokenInfo } = await applyGatewayModelSelection(directPick);
+      printSuccess(`已切换: ${directPick.model || '默认模型'} (${directPick.adapter})`);
+      printInfo(`Token: ${tokenInfo.source} → ${tokenInfo.detail}`);
+      console.log('');
+      return;
+    }
+
+    let selected = null;
+    let picked = null;
+    try {
+      const inquirer = require('inquirer');
+      const { selectedValue } = await promptWithReplGuard([
+        {
+          type: 'list',
+          name: 'selectedValue',
+          message: `选择 ${vendor} 模型（上下方向键选择，回车确认）:`,
+          choices: [
+            ...buildClassicInquirerChoices(modelChoices, inquirer, chalk),
+            new inquirer.Separator(),
+            { name: '返回', value: null },
+          ],
+          pageSize: Math.min(16, Math.max(8, modelChoices.length + 2)),
+          loop: false,
+        },
+      ]);
+      if (!selectedValue) {
+        printInfo('已取消模型选择');
+        return;
+      }
+      selected = selectedValue;
+    } catch (err) {
+      const isUserCancel =
+        err &&
+        (err.message === 'User force closed the prompt' ||
+          err.name === 'ExitPromptError' ||
+          String(err).includes('force closed'));
+      if (isUserCancel) {
+        console.log('');
+        printInfo('已取消模型选择');
+        return;
+      }
+      // Numeric fallback for environments where inquirer is unavailable.
+      const numeric = buildClassicNumericLines(modelChoices, chalk);
+      console.log('');
+      for (const line of numeric.lines) {
+        console.log(line);
+      }
+      console.log(`  ${chalk.dim('0. 返回')}`);
+      console.log('');
+      const answer = await askLine(chalk.dim('  输入编号: '));
+      const pick = resolveNumericPick(numeric, answer);
+      if (!pick.ok) {
+        if (pick.reason === 'cancel') {
+          printInfo('已取消模型选择');
+        } else if (pick.reason === 'out-of-range') {
+          printError('编号超出范围');
+        } else {
+          printError('该模型当前不可选，请选择可用模型');
+        }
+        return;
+      }
+      picked = pick.choice;
+      selected = picked.value;
+    }
+
+    const { tokenInfo } = await applyGatewayModelSelection(selected);
+    printSuccess(`已切换: ${selected.model || '默认模型'} (${selected.adapter})`);
+    printInfo(`Token: ${tokenInfo.source} → ${tokenInfo.detail}`);
+    console.log('');
+  } finally {
+    if (!hadGuard) {
+      global.__KHY_INQUIRER_ACTIVE__ = false;
+    }
+    recoverGatewayPromptInput();
+  }
+}
+
+/**
+ * 经典 REPL `/model` 的**显示条目**：分组语义与行内分层都取自共享叶子
+ * `cli/modelChoiceGrouping`（与 TUI `ModelPicker` 同一套 —— 同一份 modelChoices 的
+ * 两个消费表面不得各写一份，否则就是第二真源）。
+ *
+ * 为什么这里没有 TUI 那套「模型下标 ↔ 条目下标」的桥：inquirer 的 `Separator`
+ * **不可选中**（方向键会跳过它），所以「屏幕上第 n 行」与「按 n 命中」不会脱节 ——
+ * 那是 ink 自己排版才有的风险（[DESIGN-ARCH-167] §2.3）。
+ */
+function classicDisplayEntries(modelChoices) {
+  const list = Array.isArray(modelChoices) ? modelChoices : [];
+  return modelChoiceGrouping.buildEntries(modelChoiceGrouping.stableGroupOrder(list), '');
+}
+
+/** 标题行的展示文本（两个经典渲染共用一处，避免 inquirer 与数字兜底各写一份）。 */
+function classicSectionText(entry) {
+  return `── ${entry.name} · ${entry.count} 个 ──${entry.meta ? ` ${entry.meta}` : ''}`;
+}
+
+/**
+ * 经典 inquirer 列表的 choices（分组标题 → Separator；模型行 → primary + 次信息）。
+ * `inquirer`/`chalk` 由调用方注入 ⇒ 本函数可单测（不必真起 inquirer）。
+ */
+function buildClassicInquirerChoices(modelChoices, inquirer, chalkRef) {
+  const out = [];
+  for (const e of classicDisplayEntries(modelChoices)) {
+    if (e.kind === 'section') {
+      out.push(new inquirer.Separator(chalkRef.dim(classicSectionText(e))));
+      continue;
+    }
+    const { primary, secondary } = modelChoiceGrouping.layeredTextOf(e);
+    out.push({
+      name: secondary ? `${primary}  ${chalkRef.dim(secondary)}` : primary,
+      value: e.choice.value,
+      disabled: e.choice.disabled ? '不可选' : false,
+    });
+  }
+  return out;
+}
+
+/**
+ * 数字兜底渲染（inquirer 不可用时的环境）：标题行照画，**编号只给模型行**
+ * （与 TUI「标题行不占号」同一约定），返回的 `models` 就是编号 → choice 的映射，
+ * 调用方按 `models[idx-1]` 取，不再按原始下标取。
+ */
+function buildClassicNumericLines(modelChoices, chalkRef) {
+  const lines = [];
+  const models = [];
+  for (const e of classicDisplayEntries(modelChoices)) {
+    if (e.kind === 'section') {
+      lines.push(chalkRef.dim(`  ${classicSectionText(e)}`));
+      continue;
+    }
+    const { primary, secondary } = modelChoiceGrouping.layeredTextOf(e);
+    models.push(e.choice);
+    const tail = secondary ? `  ${chalkRef.dim(secondary)}` : '';
+    const unavailable = e.choice.disabled ? chalkRef.dim(' (不可选)') : '';
+    lines.push(`  ${chalkRef.white(`${models.length}.`)} ${primary}${tail}${unavailable}`);
+  }
+  return { lines, models };
+}
+
+/**
+ * 把「用户在数字兜底里输入的编号」解析成一条 choice —— **纯函数**（不打印、不退出、不 IO）。
+ *
+ * 为什么单独抽出来：这是经典路径上**唯一**把「屏幕上的编号」接回「模型」的那一步，
+ * 判据必须挂在它身上。原先它是两处内联的 3 行（`picked = numeric.models[idx - 1]`），
+ * 没有任何测试覆盖 —— 改回 `modelChoices[idx - 1]` 不会让任何断言变红，而症状恰好是
+ * 本方案的主题：「屏幕上写 3.」与「按 3 选中」脱节（[DESIGN-ARCH-167] §9-16）。
+ *
+ * 判据：编号活在**显示序**上 —— `models` 由 `buildClassicNumericLines` 给出（归并后的序），
+ * **不是**原始 `modelChoices` 的下标。
+ *
+ * @param {{models:Array}} numeric `buildClassicNumericLines` 的返回值
+ * @param {*} rawAnswer 用户输入（字符串/数字/null）
+ * @returns {{ok:true, choice:object} | {ok:false, reason:'cancel'|'out-of-range'|'disabled'}}
+ */
+function resolveNumericPick(numeric, rawAnswer) {
+  const models = numeric && Array.isArray(numeric.models) ? numeric.models : [];
+  const idx = Number.parseInt(String(rawAnswer == null ? '' : rawAnswer).trim(), 10);
+  if (!Number.isFinite(idx) || idx === 0) {
+    return { ok: false, reason: 'cancel' };
+  }
+  if (idx < 1 || idx > models.length) {
+    return { ok: false, reason: 'out-of-range' };
+  }
+  const choice = models[idx - 1];
+  if (!choice || choice.disabled) {
+    return { ok: false, reason: 'disabled' };
+  }
+  return { ok: true, choice };
+}
+
+module.exports = {
+  buildGatewayModelChoices,
+  applyGatewayModelSelection,
+  handleGatewaySelectModel,
+  buildVendorModelChoices,
+  handleModelSwitchByVendor,
+  getLastSelectableKeys,
+  isSelectableNow,
+  setGatewayModelChoicesDeps,
+  // 纯函数，导出给单测（真起 inquirer 才能验的东西不该只能靠手测）
+  buildClassicInquirerChoices,
+  buildClassicNumericLines,
+  resolveNumericPick,
+};

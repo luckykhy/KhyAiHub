@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>agents — 智能体定义、授权契约与顾问面（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>agents<span class="sep">›</span>agents — 智能体定义、授权契约与顾问面（D2）</div>
+      <header class="hero reveal"><h1>agents — 智能体定义、授权契约与顾问面（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#agents-智能体定义-授权契约与顾问面-d2">agents — 智能体定义、授权契约与顾问面（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="agents-智能体定义-授权契约与顾问面-d2">agents — 智能体定义、授权契约与顾问面（D2）<a class="anchor" href="#agents-智能体定义-授权契约与顾问面-d2" aria-label="锚点">#</a></h1>
+<p>子上下文：<code>advisor</code> / <code>agentAssets</code> / <code>agentFs</code> / <code>agents</code> / <code>agentsight</code> /<br><code>assistant</code> / <code>autonomy</code>。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong>跑顾问/自治/伴随的人</strong>：<code>cli/handlers/advisor.js</code>、<code>agentAssets.js</code>、</li></ul>
+<p><code>autonomy.js</code>、<code>companion.js</code>、<code>proactive.js</code> 各自 require 本目录。</p>
+<ul><li><strong>要「系统提示词里那段智能体定义」的人</strong>：<code>src/agents/prompt.js</code> 与</li></ul>
+<p><code>src/constants/prompts.js</code> 取 <code>agents/</code>。</p>
+<ul><li><strong>每次工具调用的权限判定</strong>：真源在 <code>domain/state/orchestrator/roleToolScope.js</code>，</li></ul>
+<p>本目录提供的是<strong>角色与资产的定义面</strong>（壳 <code>services/advisor/index.js</code>）。</p>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p>规则 10 的立场是「默认拒绝，权力只能被明确授予」，因此定义面（谁能被实例化成<br>一个角色、带哪些提示词与资产）与判定面（这个角色实际拿到哪些工具）<strong>必须是两份<br>文件</strong>：判定面单独放在 <code>state/orchestrator/roleToolScope</code>，正是为了避免 A2-5<br>「同一个『只读角色』概念有两份不一致定义」。设计契约由<br><code>tests/agents/agentAuthz.designContract.test.js</code> 锁住——它测的就是这条分离。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/agents/agentAuthz.designContract.test.js        <span class="hljs-comment"># 10 tests / 10 pass / 0 fail</span>
+node --<span class="hljs-built_in">test</span> tests/agents/auditAgent.test.js                        <span class="hljs-comment"># 9 tests / 8 pass / 1 fail</span></code></pre>
+<p>第二条<strong>当前有 1 条红</strong>（失败用例名未在本卡采集，不做推断）。<br><code>assistant/</code> 是作者在做中的伴随/助手面，本卡不复述其行为。</p>
+<h2 id="已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）<a class="anchor" href="#已知缺陷-登记-不在本单元擅自修" aria-label="锚点">#</a></h2>
+<ol><li><code>auditAgent.test.js</code> 的 1 条红（待按规则 5 复现）。</li><li><code>assistant/</code> 子上下文与作者的助手改动同侧，README 刻意不写其行为细节。</li></ol>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/services/domain/agents/agents/README.html"><div class="dir">← 上一篇</div><div class="ttl">delegationPromptPolicy</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/services/domain/backup/README.html"><div class="dir">下一篇 →</div><div class="ttl">backup — 备份、磁盘分析与清理（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/agents/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

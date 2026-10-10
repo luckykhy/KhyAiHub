@@ -1,0 +1,62 @@
+{
+  "_note": "功能单元清单（[RESEARCH-018] §2.3 模板第 3 件 / 5-3-1 §3）。执行器 scripts/ci/check-repo-layout.js 的 entry-buffer 规则读本文件的 domain / mayDependOn / fanIn / lifecycle.stage 四个字段，其余字段是给人读的。字段真源与判据枚举见 docs/10_规范/registry/DOMAIN-DEPS.json 的 _entry_buffer 块。",
+  "name": "config",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "D2 的名义边界是 [D2, D3]（docs/10_规范/registry/DOMAIN-DEPS.json domains.D2.mayDependOn）。实测本单元 22 个源文件、非测试文件里 50 条仓内相对 require（探针 .khyos/tmp/wb-edges2.js，2026-09-29；另有 14 条非相对 = node 内建与包）：单元内互引 11 条；D3 边 21 条（收口到 8 个目标：utils 的 atomicWriteJson / cleanText / dataHome / extractEndpoint / firstGroup / isOffValue / nativeHttp / stripCodeSpans）；D2 边 11 条（appWriters.js → ../../network/externalApps/ 下 11 个 adapter，一一对应 APPS 表）。这三类全部落在名义边界内。另有一类不在名义内，如实登记而不写进 mayDependOn 冒充许可：D2 → D1 出域边 7 条、7 个不同目标 —— store.js → apiKeyPool / configGuard、usageScan.js → tokenUsageService / tokenPricing、connectivity.js → gateway/providerConnectivitySpec、appWriters.js → gateway/adapters/codexAdapter、nlExternalAppImportResolver.js → flagRegistry。D2 → D1 在 DOMAIN-DEPS.json 里是 declared_not_enforced，owner = archDebtScan R1，基线真源 scripts/arch-debt-baseline.json（即 check:layout 的 cross-layer-require 计数），不在本清单管辖内，也不得由本清单私自豁免。若要摘掉它们，办法是让调用方注入依赖（store 已经只把 dataHome 与 safeReadJsonSync 下沉到 D3/D1 叶子，可作范例），不是改本字段。",
+  "fanIn": 13,
+  "fanInEvidence": [
+    "services/backend/src/cli/aiChatCore.js",
+    "services/backend/src/cli/handlers/capability.js",
+    "services/backend/src/cli/handlers/ccSwitch.js",
+    "services/backend/src/cli/handlers/config.js",
+    "services/backend/src/cli/handlers/lang.js",
+    "services/backend/src/cli/handlers/sandboxToggle.js",
+    "services/backend/src/routes/ccSwitch.js",
+    "services/backend/src/services/ccSwitch/index.js",
+    "services/backend/src/services/config/index.js",
+    "services/backend/src/services/crossAgentTasteLearner.js",
+    "services/backend/src/services/keybindings/index.js",
+    "services/backend/src/services/localBrainProviderConfig.js",
+    "services/backend/src/tools/configureCapability.js"
+  ],
+  "_fanIn_note": "13 个仓内消费者（探针 .khyos/tmp/wb-fanin.js，2026-09-29；口径与 scripts/lib/fanInTiering.js 同源：剥注释后解析 require 字面量、解析到本单元任一成员、跨全仓扫描，排除 *.test.js 与 tests/ 目录、排除单元内互引后去重计数）。其中 3 条是归位后留下的再导出壳（services/{ccSwitch,config,keybindings}/index.js），按 [DESIGN-LAY-008] 第 0 步约定壳仍算真实入口，故如实计入。口径差异如实声明：fanInTiering 叶子只扫核心域（剔 D5），本探针扫全仓，因此本数不小于叶子读数；反过来 D5（scripts/）消费者不在两者任一范围内，故本数是下界而非上界。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-29",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null,
+    "_stage_note": "stable 的依据是三条晋级判据此刻都在盘上：①单元级 README.md（2026-09-28 落盘，正文自称本单元为「22 个文件、IO 集中在 store / 写盘器 / 探测三处」的单元卡，与本次 22 个源文件逐一对应）；②整数 fanIn 声明；③22 个源文件各有同名同目录测试（20 个已达标文件的测试里共 74 行 KNOWN-DEFECT 钉，按 grep -c 语义计）。provenance 如实写明它是机制建立后补记的存量：本单元早于 entry-buffer 守卫，缓冲区（scripts/quarantine/）从未被经过，故 enteredVia: null 而不是一条 staged 记录。"
+  },
+  "contract": {
+    "purpose": "三块子上下文的合体单元卡：ccSwitch/ 管外部 agent 的 provider 卡片（constants.js 是 PROTOCOLS 4 种 wire 协议 / APPS 12 个 app / AGENT_MODES / PROTOCOL_DEFAULT_MODELS 的唯一真源）；config/ 把「一句话改配置」拆成每个能力一个 resolver + 一张能力表（nlConfigResolver 暴露 CAPABILITIES / ON_VALUE / OFF_VALUE / buildEnvPatch / findCapability，命中不了返回未命中而不是猜；nlInstallVsConfigGuard 专门拦「用户说要装、其实是要配」这类混淆；philosophyDesignResolver 把设计取向类指令单独分档）；keybindings/ 是键位表。",
+    "ioOwner": "IO 按写盘目标各归一处，判定侧全纯：store.js 独占 <dataHome>/cc_switch.json（卡片注册表，卡片按 keyId 引用 apiKeyPool 条目、本文件刻意不含凭据以便备份导出；经 utils/atomicWriteJson 原子写、configGuard.safeReadJsonSync 读、getLegacyDataHome 一次性迁移，全程 fail-soft）；codexWriter.js 写 Codex 侧 live config（preflightCodexWrite 预检 + RESERVED_PROVIDER_IDS + 旧形状自愈 _healLegacyShapes）；appWriters.js 把卡片应用到各 app（经 ../../network/externalApps/ 的 adapter）；proxyAccess.js 写代理卡与运行文件；connectivity.js / opencodeGoQuota.js / usageScan.js 是探测侧。纯判定叶子 routeResolver.js（resolveCardRoute / appsForProtocol）与 constants.js 不碰 IO。",
+    "gates": "KHY_PROXY_ENDPOINT 是本单位唯一的字面 env 名（proxyAccess.js，覆盖代理端点）。其余 env 一律**注入**而不是直读：resolver 与探测叶子以 `env = process.env` 作可注入默认参数（nlConfigResolver.resolveConfigIntent、usageScan.collectSessionFiles 的 per-app 目录解析等），langPreference.js 更收成「默认空对象、绝不直接读 process.env」。因此本清单不列一份会腐烂的 env 白名单——哪条能力对应哪个 env 变量，真源是能力表 nlConfigResolver.CAPABILITIES（buildEnvPatch 由它派生补丁）。落盘写入点在薄 IO 层 _writeEnvPatch，叶子本身零 IO、确定性、绝不抛。",
+    "coverage_note": "本清单的 purpose / ioOwner / gates 三段只覆盖本轮实测到的面（22 个源文件的头注释 + 22 份共置测试文件名 + 非测试文件 50 条仓内相对 require 站点逐条解析分类 + 导出名逐条核对），不是逐行审计结论；细节以各文件头注释与共置测试为准。本单元已知盲区：卡片写盘链（codexWriter / appWriters）的回归只有 jest 侧覆盖，本机无 jest 渠道，故「写盘正确」在本机不可证——这是 README「已知缺陷」节已登记的项，本清单只转记不修。"
+  },
+  "tests": [
+    "ccSwitch/apiHandlers.test.js",
+    "ccSwitch/appWriters.test.js",
+    "ccSwitch/codexWriter.test.js",
+    "ccSwitch/connectivity.test.js",
+    "ccSwitch/constants.test.js",
+    "ccSwitch/opencodeGoQuota.test.js",
+    "ccSwitch/promptGuard.test.js",
+    "ccSwitch/proxyAccess.test.js",
+    "ccSwitch/routeResolver.test.js",
+    "ccSwitch/store.test.js",
+    "ccSwitch/usageScan.test.js",
+    "config/langPreference.test.js",
+    "config/nlActionResolver.test.js",
+    "config/nlConfigResolver.test.js",
+    "config/nlExternalAppImportResolver.test.js",
+    "config/nlExternalAppResolver.test.js",
+    "config/nlInstallVsConfigGuard.test.js",
+    "config/nlProviderResolver.test.js",
+    "config/philosophyDesignResolver.test.js",
+    "config/sandboxToggleState.test.js",
+    "keybindings/historyReverseSearch.test.js",
+    "keybindings/keybindingCatalog.test.js"
+  ],
+  "_tests_note": "路径相对本单元目录。前 20 份正是本次由「无可达 khy.module.json」转正的文件的共置测试；后 2 份（keybindings/）的宿主目录另有自己的 config/keybindings/khy.module.json，按「从文件所在目录向上取第一份」的规则仍由那份近邻清单管辖，本清单只为它们所属的父单元补上单元卡。"
+}

@@ -1,0 +1,85 @@
+/**
+ * providerModule.js — 「按**服务名**惰性取一个拓展模块」的通用解析点（[DESIGN-TOOL-002] §1.3 / §2.2）。
+ *
+ * 背景：把 scripts/ 里的交付与诊断脚本迁成拓展之后，守卫立刻在核里揪出三处
+ * `require('../../../../delivery/extension/scripts/<某个拓展>/…')`——
+ *   - restoreAgentService  → khy-installer/verify-install、khy-diagnostics/hydration-doctor
+ *   - updateAdapters/portableAdapter → khy-portable/artifact-manifest、portable-health-check
+ * 这类**加载期**相对 require 有两个问题，且第二个是致命的：
+ *   1. 核里写死了拓展 id 与它在磁盘上的层数，下一次移动就烂（docs.js 已经这么烂过一次）；
+ *   2. 删掉那个拓展目录，`require` 在**模块加载期**抛 MODULE_NOT_FOUND，整个核服务连
+ *      加载都失败。那不叫「删目录即消失」，那叫删目录即整机不可用——正是 §4.1 要禁的。
+ *
+ * 本模块把它换成：核说「我要 `portable-artifact` 这个服务的 artifact-manifest 模块」，
+ * 不说「我要 delivery/extension/scripts/khy-portable/artifact-manifest.js」。谁满足由 manifest 的
+ * `provides` 声明；拓展缺席时返回 null，由调用方决定怎么降级——而降级是可以说清楚的，
+ * 崩溃不是。
+ *
+ * 与 markdownWorkbench 的关系：那个是**单个**服务的专用解析点（它还带着 env 覆盖与
+ * 迁移期 id 兜底两条历史包袱）；这个是通用的，只走 provides 这一条正路。
+ *
+ * @module services/delivery/extension/providerModule
+ * @pattern Facade, Proxy
+ */
+'use strict';
+
+const path = require('path');
+
+// 解析结果缓存：键是 `${service}\0${file}`。值可能是 null（记住「没有」同样重要——
+// 否则每次调用都要重扫全部根）。缓存的代价是同进程内热插拔不生效，这与 resolver 的
+// 目录扫描缓存是同一权衡，且这些是交付/诊断路径，不是需要热插拔的地方。
+const _cache = new Map();
+
+/**
+ * 取一个由某服务提供的模块。
+ *
+ * @param {string} service - manifest `provides` 里声明的服务名，如 'portable-artifact'
+ * @param {string} file - 相对拓展目录的模块路径，如 'artifact-manifest.js'
+ * @returns {object|null} require 到的模块；拓展未安装 / 已禁用 / 该文件不存在 / 加载抛错 → null
+ */
+function requireFromProvider(service, file) {
+  const key = `${service}\0${file}`;
+  if (_cache.has(key)) {
+    return _cache.get(key);
+  }
+  let mod = null;
+  try {
+    // probe 传 file 本身：声明了服务却没带着这个模块的目录不算数，否则一个同名空目录
+    // 就能骗过解析，错误会推迟到第一次真正调用时才炸。
+    const ext = require('./extensionRoots').findProvider(service, { probe: file });
+    if (ext) {
+      mod = require(path.join(ext.dir, file));
+    }
+  } catch (_) {
+    mod = null; // 拓展自身坏掉不得连累核 —— 与 extensionRoots 的只读探测器同约定
+  }
+  _cache.set(key, mod);
+  return mod;
+}
+
+/**
+ * 取模块里的某个函数；拿不到则返回 `fallback`。
+ *
+ * 存在的理由是调用点的可读性：没有它，每个调用点都要写一遍「先判 mod 再判 mod.fn」，
+ * 而那三行样板正是容易被写成 `mod.fn(...)` 然后在拓展缺席时抛 TypeError 的地方。
+ *
+ * @param {string} service - 服务名
+ * @param {string} file - 相对拓展目录的模块路径
+ * @param {string} fnName - 导出函数名
+ * @param {Function} [fallback] - 缺席时的替代实现（缺省返回一个恒为 null 的函数）
+ * @returns {Function}
+ */
+function fnFromProvider(service, file, fnName, fallback) {
+  const mod = requireFromProvider(service, file);
+  if (mod && typeof mod[fnName] === 'function') {
+    return mod[fnName].bind(mod);
+  }
+  return typeof fallback === 'function' ? fallback : () => null;
+}
+
+/** 清缓存（仅供测试；生产路径不需要，见上面缓存注释）。 */
+function __resetCache() {
+  _cache.clear();
+}
+
+module.exports = { requireFromProvider, fnFromProvider, __resetCache };

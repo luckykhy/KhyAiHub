@@ -1,0 +1,64 @@
+{
+  "_note": "功能单元清单（[RESEARCH-018] §2.3 模板第 3 件 / 5-3-1 §3）。执行器 scripts/ci/check-repo-layout.js 的 entry-buffer 规则读本文件的 domain / mayDependOn / fanIn / lifecycle.stage 四个字段，其余字段是给人读的。字段真源与判据枚举见 docs/10_规范/registry/DOMAIN-DEPS.json 的 _entry_buffer 块。",
+  "name": "metaplan",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "D2 的名义边界是 [D2, D3]（docs/10_规范/registry/DOMAIN-DEPS.json domains.D2.mayDependOn），本清单按名义上限声明。**实测 D3 用量当前为 0**：9 个源文件的仓内 require 只有两类——单元内互引（constitutionalRedLines.js → ./constraintStrategy ./irreversibleSignatures；constraintInjection.js → ./codeInterceptors ./constraintStrategy ./executorRegistry；metaPlanSchema.js → ./constraintStrategy ./executorRegistry；trustCircuitBreaker.js → ./constraintStrategy；index.js → 单元内 7 件）与 node 内建 child_process / vm（不构成域边）。@babel/parser 是 npm 依赖，同样不构成域边。因此 [D2] 才是此刻的真实上限；保留 D3 是因为它是名义允许集、且新增 utils 常量时的合法落点，收紧为 [\"D2\"] 的时机动机应是「第一次出现 D3 取数需求时确认它确实属于共享底座」，不是现在凭空承诺。",
+  "_deviation_note": "有一条边不在名义集合里，如实登记而不是把它写进 mayDependOn 冒充许可：metaPlanSchema.js:25 在文件头 `require('../../../gateway/safeJsonParse')` 取 extractFirstJson（src/services/gateway/safeJsonParse.js = D1）。它是本单元唯一的跨域取数点，也是唯一的非单元内 require。D2 → D1 在 DOMAIN-DEPS.json 里是 declared_not_enforced 条目，owner = archDebtScan R1/R3，真源基线 scripts/arch-debt-baseline.json（即 check:layout 的 cross-layer-require 计数），不在本清单的管辖内，也不得由本清单私自豁免。摘掉它的办法不是改本字段，而是把 extractFirstJson 这一纯字符串叶子下沉到 D3（src/utils），或由调用方把它作为 dep 注入 parseMetaPlan。另有四项**行为**偏差登记在 README「已登记的缺口」一节，它们归本单元 owner 的修复队列，不由清单豁免：① executorRegistry.getExecutor 与 isRegistered 曾对 Object.prototype 键判定不一致（DEFECT，**已于 2026-09-28 中央应用修复**，复现链 .khy/feedback/b23-metaplan/repro-before.txt → repro-after.txt，测试现钉修复后的一致行为）；② EXECUTORS 只冻数组外壳不冻条目、且 languages 数组按引用外泄（未修）；③ isStrategy 对单元素数组做键强转（未修）；④ _str 对函数值返回 undefined（未修）。",
+  "fanIn": 9,
+  "fanInEvidence": [
+    "services/backend/src/services/constraintLattice.js",
+    "services/backend/src/services/domain/quality/metaConstraint/constraintMatrix.js",
+    "services/backend/src/services/domain/quality/metaConstraint/index.js",
+    "services/backend/src/services/domain/quality/metaConstraint/riskClassifier.js",
+    "services/backend/src/services/domain/quality/metaConstraint/toolFunnelGuard.js",
+    "services/backend/src/services/domain/structured/structuredFurnace/anomalyHandler.js",
+    "services/backend/src/services/domain/structured/structuredFurnace/dimensionReducer.js",
+    "services/backend/src/services/domain/structured/structuredFurnace/forgeSchema.js",
+    "services/backend/src/services/metaplan/index.js"
+  ],
+  "_fanIn_note": "9 个仓内非测试消费者（实测 2026-09-28 探针 .khyos/tmp/b23-fanin.js：git ls-files 全量扫 require 路径并解析到本单元 9 个成员，去重计数，不含 *.test.js，不含单元内互引）。最后一条 services/metaplan/index.js 是归位后留下的再导出壳（`module.exports = require('../domain/project/metaplan')`），壳按 [DESIGN-LAY-008] 第 0 步约定仍算真实入口，故如实计入——它本身在 D1 里另有一份 entry-buffer 缺件待补，不归本单元。除它以外没有别的文件经壳取数：tests/services/metaplan/metaPlanSubsystem.test.js 是唯一走壳的消费者，因排除 *.test.js 而不计入。把测试算进来的完整读数是 12（另加 constraintLatticeStrategyDuality.test.js、structuredFurnace.test.js、metaPlanSubsystem.test.js）。被解析到但未计入的文本提及不算：irreversibleSignatures.js 头注释里点名的 riskClassifier.js 确实有 require，计入的是它而不是注释。取数面很窄：9 个消费者里 7 个只取 constraintStrategy 的枚举，1 个取 irreversibleSignatures 的签名库，1 个取 constraintInjection——**没有一个消费者取 index.js 那个协调器**，除壳以外。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-28",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null,
+    "_stage_note": "stable 的依据是三条晋级判据此刻都在盘上：单元级 README.md、整数 fanIn 声明、9 个源文件各有同名同目录测试（functional-unit 与 entry-buffer 两条读数同时下降 9 即为其机器证据）。provenance 如实写明它是机制建立后补记的存量：本单元是目标11 元规划子系统落进 D2/project/ 的结果，早于入口缓冲守卫，缓冲区从未被经过，enteredVia: null。**注意**：stage=stable 是对「功能单元齐件」的判定，不是对缺陷的豁免——README「已登记的缺口」仍列三项未修（执行器表未深冻、isStrategy 键强转、_str 对函数返回 undefined），本字段不应被引用为「该单元无已知缺陷」——已登记的缺口仍有五项未修（执行器表未深冻、红线 1 的 DB_FILE 库不扫 SQL 文本、动作面无顶层 sql 便捷字段、isStrategy 键强转、_str 对函数返回 undefined）。"
+  },
+  "contract": {
+    "purpose": "目标11「元规划 + 动态约束注入」的执行前闭环：模型必须先产出一份三元 JSON（toolchain / constraint_strategy / risk_dissent），系统据此按风险配发锁具——Prompt_Soft 不加锁、Code_Hard 挂代码拦截器、System_Block 挂起并要求快照+确认；再由宪法红线（不可覆盖）与信任熔断（连续误判则全会话强制 Code_Hard）两层单向加严。核心承诺是**只能加锁不能减锁**：所有覆盖层都经 constraintStrategy.escalate（单调并上确界）合成。",
+    "purity": "8/9 件是纯函数或纯数据，零 IO：constraintStrategy / executorRegistry / irreversibleSignatures / constitutionalRedLines / trustCircuitBreaker / constraintInjection 的 resolveInjection 半边全部确定性；codeInterceptors 声明「Pure w.r.t. the filesystem」，它对 python_ast 会 spawnSync 一个只解析 stdin 字符串、绝不写盘的短命子进程，对 babel/vm/balance 三个 arm 完全不碰文件系统；metaPlanSchema 只做结构与 env 阈值。唯一有编排状态的是 index.js 的 MetaPlanCoordinator，其状态全部住在实例的 breaker 上（无模块级单例、无 memoize、无全局累加器）",
+    "ioOwner": "本单元唯一的进程外触点是 codeInterceptors.validatePython：spawnSync(KHY_PYTHON_BIN || 'python3', ['-c', 'import sys,ast; ast.parse(...stdin...)'], {timeout: 8000})——不写盘、不发网络；工具缺失/启动失败按文档降级为 {ok:true, skipped:true, note} 而不是阻断工作。宪法红线与熔断层零 IO",
+    "injectionPoints": [
+      "new MetaPlanCoordinator({breaker, breakerOptions})：熔断器可整体注入（测试与不同会话各自持有实例，index.js）",
+      "new TrustCircuitBreaker({sessionTripThreshold})：阈值以显式数字优先于 env，env 非法值回落 DEFAULT_SESSION_TRIP_THRESHOLD=2（trustCircuitBreaker.js）",
+      "runInterceptor(validatorKey, content, {language})：校验器键由调用方（注册表）给定，本文件不猜（codeInterceptors.js）",
+      "checkAction/enforce(currentStrategy, action)：动作以 {tool, params, command, path, content} 松散描述，红线层不依赖任何具体工具实现（constitutionalRedLines.js）"
+    ],
+    "gates": [
+      "KHY_METAPLAN_MIN_DISSENT：risk_dissent 的最低字数，默认 12；非数字/负数/空串一律回落默认（metaPlanSchema.js，测试内设并还原）",
+      "KHY_METAPLAN_SESSION_TRIP：会话级熔断的连续翻车阈值，必须 >0 才生效，否则回落 2（trustCircuitBreaker.js，测试内设并还原）",
+      "KHY_PYTHON_BIN：python_ast 拦截器的解释器名/路径，默认 python3；不存在时走 skipped 降级 arm（codeInterceptors.js）",
+      "JEST_WORKER_ID：存在时 _getBabel 直接放弃 @babel/parser 改走 vm 编译探测；该决定在首次调用时被缓存，故测试必须在 require 前清掉它（codeInterceptors.js）",
+      "无总开关：本单元不自建 KHY_* 启用闸门，是否挂载由上层 metaConstraint/constraintLattice 决定；红线层「a non-match changes nothing (returns null)」且「never relaxes」"
+    ],
+    "byte_identity": "无对外字面契约（不发 HTTP、不写文件），但有两处「两处真源必须逐字节一致」的锁：① buildMetaPlanSchema 的 toolchain enum 必须逐元素等于 executorRegistry.executorIds()，② describeForModel() 的每一行必须来自同一张 EXECUTORS 表——模型看到的菜单与被校验器接受的集合若分叉，防呆①「不可凭空捏造执行器」就形同虚设。这两条在 metaPlanSchema.test.js 与 executorRegistry.test.js 各锁一次，并在 index.test.js 里从协调器视角再锁一次。"
+  },
+  "tests": [
+    "constraintStrategy.test.js",
+    "irreversibleSignatures.test.js",
+    "constitutionalRedLines.test.js",
+    "metaPlanSchema.test.js",
+    "executorRegistry.test.js",
+    "codeInterceptors.test.js",
+    "constraintInjection.test.js",
+    "trustCircuitBreaker.test.js",
+    "index.test.js"
+  ],
+  "behaviourTestsOutsideUnit": [
+    "services/backend/tests/services/metaplan/metaPlanSubsystem.test.js",
+    "services/backend/tests/services/constraintLatticeStrategyDuality.test.js",
+    "services/backend/tests/services/structuredFurnace/structuredFurnace.test.js"
+  ],
+  "_test_dialect_note": "本目录 9 份共置测试一律 node:test + node:assert/strict，`node --test` 须传 9 个显式文件名（Windows 下把目录当参数会被当模块路径报错）。tests/services/metaplan/metaPlanSubsystem.test.js 同为 node:test 方言，但它 require 的是 D1 再导出壳 services/metaplan，可直接 node --test 跑。跨域取数纪律：单元内互引一律用 ./<name>，本清单所在目录之外不得再复制一份红线/枚举定义。"
+}

@@ -1,0 +1,180 @@
+{
+  "total": 35,
+  "items": [
+    {
+      "from": "docs/html/01_INIT_立项/INIT-PRD/[INIT-PRD-001] Khy-OS-定位与已实现能力-2026-06-12.html",
+      "type": "a",
+      "href": "../../../../LICENSE"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-043] khy-agent-sdk-Claude对齐与D1-D6融合规范.html",
+      "type": "a",
+      "href": "../../../platform/packages/agent-sdk/docs/%E5%B7%AE%E5%BC%82%E5%9B%BE%E8%B0%B1.html"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-043] khy-agent-sdk-Claude对齐与D1-D6融合规范.html",
+      "type": "a",
+      "href": "../../../platform/packages/agent-sdk/docs/%E8%9E%8D%E5%90%88%E6%9E%B6%E6%9E%84.html"
+    },
+    {
+      "from": "docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-043] khy-agent-sdk-Claude对齐与D1-D6融合规范.html",
+      "type": "a",
+      "href": "../../../platform/packages/agent-sdk/docs/llms.txt"
+    },
+    {
+      "from": "docs/html/04_IMPL_实现/IMPL-RPT/[IMPL-RPT-026] 生态架构重塑日志-2026-06-12.html",
+      "type": "a",
+      "href": "../../../../platform/khy_platform/app_protocol.py"
+    },
+    {
+      "from": "docs/html/04_IMPL_实现/IMPL-RPT/[IMPL-RPT-026] 生态架构重塑日志-2026-06-12.html",
+      "type": "a",
+      "href": "../../../../software/khyquant/khy_quant/app.py"
+    },
+    {
+      "from": "docs/html/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
+      "type": "a",
+      "href": "../../../..{$HOME}/Khy-OS/frontend/Dockerfile:7"
+    },
+    {
+      "from": "docs/html/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
+      "type": "a",
+      "href": "../../../..{$HOME}/Khy-OS/frontend/package.json:40"
+    },
+    {
+      "from": "docs/html/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
+      "type": "a",
+      "href": "../../../..{$HOME}/Khy-OS/frontend/package-lock.json:30"
+    },
+    {
+      "from": "docs/html/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
+      "type": "a",
+      "href": "../../../..{$HOME}/Khy-OS/docker-compose.yml:53"
+    },
+    {
+      "from": "docs/html/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
+      "type": "a",
+      "href": "../../../..{$HOME}/Khy-OS/docker-compose.yml:11"
+    },
+    {
+      "from": "docs/html/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
+      "type": "a",
+      "href": "../../../..{$HOME}/Khy-OS/frontend/src/views/Dashboard.vue"
+    },
+    {
+      "from": "docs/html/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
+      "type": "a",
+      "href": "../../../..{$HOME}/Khy-OS/backend/src/cli/router.js"
+    },
+    {
+      "from": "docs/html/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
+      "type": "a",
+      "href": "../../../..{$HOME}/Khy-OS/backend/src/routes/largeTasks.js"
+    },
+    {
+      "from": "docs/html/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
+      "type": "a",
+      "href": "../../../..{$HOME}/Khy-OS/backend/src/controllers/comprehensiveDataController.js:149"
+    },
+    {
+      "from": "docs/html/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
+      "type": "a",
+      "href": "../../../..{$HOME}/Khy-OS/backend/src/routes/marketData.js:37"
+    },
+    {
+      "from": "docs/html/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
+      "type": "a",
+      "href": "../../../..{$HOME}/Khy-OS/frontend/src/views/Dashboard.vue:1251"
+    },
+    {
+      "from": "docs/html/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
+      "type": "a",
+      "href": "../../../..{$HOME}/Khy-OS/frontend/src/api/marketData.js:54"
+    },
+    {
+      "from": "docs/html/05_TEST_测试/TEST-RPT/[TEST-RPT-001] 验收不合规-2026-05-16.html",
+      "type": "a",
+      "href": "../../../..{$HOME}/Khy-OS/backend/src/controllers/marketController.js:27"
+    },
+    {
+      "from": "docs/html/06_DEPLOY_部署/DEPLOY-MAN/[DEPLOY-MAN-010] pip-打包对等-发现-2026-05-17.html",
+      "type": "a",
+      "href": "../../../..{$HOME}/Khy-OS/MANIFEST.in"
+    },
+    {
+      "from": "docs/html/07_OPS_运维/OPS-MAN/[OPS-MAN-021] opencode-任务编排经验.html",
+      "type": "a",
+      "href": "../../../../tmp/opencode-dev/opencode-dev/packages/opencode/src/agent/agent.ts"
+    },
+    {
+      "from": "docs/html/07_OPS_运维/OPS-MAN/[OPS-MAN-021] opencode-任务编排经验.html",
+      "type": "a",
+      "href": "../../../../tmp/opencode-dev/opencode-dev/packages/opencode/src/tool/task.ts"
+    },
+    {
+      "from": "docs/html/07_OPS_运维/OPS-MAN/[OPS-MAN-021] opencode-任务编排经验.html",
+      "type": "a",
+      "href": "../../../../tmp/opencode-dev/opencode-dev/packages/opencode/src/tool/task_status.ts"
+    },
+    {
+      "from": "docs/html/07_OPS_运维/OPS-MAN/[OPS-MAN-021] opencode-任务编排经验.html",
+      "type": "a",
+      "href": "../../../../tmp/opencode-dev/opencode-dev/packages/opencode/src/background/job.ts"
+    },
+    {
+      "from": "docs/html/07_OPS_运维/OPS-MAN/[OPS-MAN-021] opencode-任务编排经验.html",
+      "type": "a",
+      "href": "../../../../tmp/opencode-dev/opencode-dev/packages/opencode/src/session/run-state.ts"
+    },
+    {
+      "from": "docs/html/07_OPS_运维/OPS-MAN/[OPS-MAN-021] opencode-任务编排经验.html",
+      "type": "a",
+      "href": "../../../../tmp/opencode-dev/opencode-dev/packages/opencode/src/session/status.ts"
+    },
+    {
+      "from": "docs/html/07_OPS_运维/OPS-MAN/[OPS-MAN-021] opencode-任务编排经验.html",
+      "type": "a",
+      "href": "../../../../tmp/opencode-dev/opencode-dev/packages/opencode/src/session/processor.ts"
+    },
+    {
+      "from": "docs/html/07_OPS_运维/OPS-MAN/[OPS-MAN-021] opencode-任务编排经验.html",
+      "type": "a",
+      "href": "../../../../tmp/opencode-dev/opencode-dev/packages/opencode/src/session/retry.ts"
+    },
+    {
+      "from": "docs/html/07_OPS_运维/OPS-MAN/[OPS-MAN-021] opencode-任务编排经验.html",
+      "type": "a",
+      "href": "../../../../tmp/opencode-dev/opencode-dev/packages/opencode/src/tool/plan.ts"
+    },
+    {
+      "from": "docs/html/07_OPS_运维/incident-runbooks/00_INDEX_事件响应剧本-总目录.html",
+      "type": "a",
+      "href": "../../../07_OPS_%E8%BF%90%E7%BB%B4/incident-runbooks/postmortem-template.html"
+    },
+    {
+      "from": "docs/html/07_OPS_运维/runbooks/00_INDEX_灾备演练剧本-总目录.html",
+      "type": "a",
+      "href": "../../../07_OPS_%E8%BF%90%E7%BB%B4/runbooks/drill-schedule.html"
+    },
+    {
+      "from": "docs/html/10_规范/其它规范/FILE-FORMAT-PROTOCOL.html",
+      "type": "a",
+      "href": "../../../10_%E8%A7%84%E8%8C%83/%E5%85%B6%E5%AE%83%E8%A7%84%E8%8C%83/COMMUNICATION-PROTOCOL.html"
+    },
+    {
+      "from": "runtime/node/backend/src/data/cliAnythingRegistry/skills/cli-anything-unimol-tools/SKILL.html",
+      "type": "a",
+      "href": "../UNIMOL_TOOLS.html"
+    },
+    {
+      "from": "runtime/node/backend/src/data/cliAnythingRegistry/skills/cli-anything-unimol-tools/SKILL.html",
+      "type": "a",
+      "href": "../docs/guides/02-QUICK-START.html"
+    },
+    {
+      "from": "runtime/node/backend/src/data/cliAnythingRegistry/skills/cli-anything-unimol-tools/SKILL.html",
+      "type": "a",
+      "href": "../docs/README.html"
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>query — 检索必要性、续写、压缩管线与搜索证据链（D2） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>query<span class="sep">›</span>query — 检索必要性、续写、压缩管线与搜索证据链（D2）</div>
+      <header class="hero reveal"><h1>query — 检索必要性、续写、压缩管线与搜索证据链（D2）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#query-检索必要性-续写-压缩管线与搜索证据链-d2">query — 检索必要性、续写、压缩管线与搜索证据链（D2）</a></li><li class="lvl-2"><a href="#谁要-角色">谁要（角色）</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li><li class="lvl-2"><a href="#已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="query-检索必要性-续写-压缩管线与搜索证据链-d2">query — 检索必要性、续写、压缩管线与搜索证据链（D2）<a class="anchor" href="#query-检索必要性-续写-压缩管线与搜索证据链-d2" aria-label="锚点">#</a></h1>
+<p>子上下文：<code>query</code>（15 个文件）/ <code>search</code>（11 个文件）。<br>无独立 slash 命令，全部由对话管线与工具回路调用。</p>
+<h2 id="谁要-角色">谁要（角色）<a class="anchor" href="#谁要-角色" aria-label="锚点">#</a></h2>
+<ul><li><strong>联网检索</strong>：<code>services/webSearchService.js:69,106,143,180,217,252,305,1046</code></li></ul>
+<p>是本目录最大的消费者；本地大脑 <code>services/localBrainService.js:2359</code>。</p>
+<ul><li><strong>对话管线</strong>：<code>cli/aiChatCore.js:1060</code>（检索必要性路由）、</li></ul>
+<p><code>:2924,4380</code>（<code>compactPipeline.persistOversizedToolResults</code>）。</p>
+<ul><li><strong>工具回路</strong>：<code>services/tool/toolUseLoopCore.js:1886-1910,2471,2534</code></li></ul>
+<p>（续写、重复守卫、最大 token 恢复等）。</p>
+<ul><li>治理侧锁：<code>scripts/tests/leaf-contract.test.js:49</code> 断言</li></ul>
+<p><code>search/searchNecessity.js</code> 声明自己是叶子。</p>
+<ul><li>壳：<code>services/{query,search}/index.js</code>。</li></ul>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p><code>search/</code> 这一族解决的是「AI 说的这句有没有证据」，所以每条判据单独成文件且<br>都是纯打分函数：<code>searchNecessity</code>（要不要搜）、<code>searchSourceDiscovery</code> /<br><code>searchSourceChainResolver</code>（来源与来源链）、<code>searchFreshness</code>（时效）、<br><code>crossSourceMerge</code>（跨源合并）、<code>searchAdversarialVerifier</code> /<br><code>searchClaimVerifier</code> / <code>searchContradictionDetector</code>（对抗、断言、矛盾三侧<br>互相独立，避免「同一段提示词既当证据又当裁判」）、<code>searchQualityEnhancer</code>，<br>每个都另出 <code>format*Footer</code> 供状态行满足规则 2 的「动作+目标+进度」。<br><code>query/</code> 管的是<strong>回合能不能继续</strong>：<code>continuation</code> / <code>inertialContinuation</code> /<br><code>shortStopContinuation</code> / <code>seamlessResume</code> / <code>maxTokensRecovery</code> /<br><code>streamRepetitionGuard</code> / <code>responseDebounce</code> / <code>searchConvergence</code>，<br>加 <code>compactPipeline</code> + <code>compactionStages</code>（阈值 <code>AUTOCOMPACT_THRESHOLD</code>）。<br>IO 只在两处：<code>toolResultPersistence.js</code>（<code>:22-24</code> 的 <code>fs</code>/<code>os</code>/<code>path</code>，<br>超限工具结果落盘）与 <code>streamingToolExecutor.js</code>（<code>crypto</code>）。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+node --<span class="hljs-built_in">test</span> tests/services/searchNecessity.test.js               <span class="hljs-comment"># 19 tests / 19 pass / 0 fail</span></code></pre>
+<p>同族（node:test，本卡未逐条复跑）：<code>tests/services/{crossSourceMerge,<br>searchFreshness,searchSourceDiscovery,unifiedSearch}.test.js</code>、<br><code>tests/{activeAssist,inertialContinuation,searchConvergence,<br>shortStopContinuation,streamRepetitionGuard,mojeekEngine,inertiaCompletion}.test.js</code>。<br>注意：<code>tests/activeAssist.test.js</code> 与<br><code>tests/services/domain/query/query/responseDebounce.test.js</code> 在 <code>node --test</code> 下<br>报 <code>describe is not defined</code>（jest 形态，本机 jest 渠道不可用）。<br><code>tests/maxTokensRecovery.test.js</code> 亦为 jest 形态。</p>
+<h2 id="已知缺陷-登记-不在本单元擅自修">已知缺陷（登记，不在本单元擅自修）<a class="anchor" href="#已知缺陷-登记-不在本单元擅自修" aria-label="锚点">#</a></h2>
+<p>七个文件在做中改动（均 <code> M</code>）：<code>query/maxTokensRecovery.js</code>、<br><code>search/{searchAdversarialVerifier,searchClaimVerifier,<br>searchContradictionDetector,searchQualityEnhancer,<br>searchSourceChainResolver,searchSourceDiscovery}.js</code>。<br>上面那条 19 pass 测的是 <code>searchNecessity.js</code>（当前干净），<br><strong>不能</strong>当作这七个文件的绿证。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/services/domain/quality/README.html"><div class="dir">← 上一篇</div><div class="ttl">quality — 性能归因、产物工具与元约束求解（D2）</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/services/domain/security/failsafe/README.html"><div class="dir">下一篇 →</div><div class="ttl">failsafe — 零静默失败与精准归因子系统</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/query/README.html";</script>
+<script src="../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

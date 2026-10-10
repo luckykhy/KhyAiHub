@@ -1,0 +1,46 @@
+{
+  "name": "commandCatalog",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "实测边（本单元只有一个源文件 commandCatalog.js）：`../../../../utils/trimIfString`（D3）、`../../../../constants/commandSchema`（D3，命令与别名 SSOT，惰性 require）。除内建模块外没有别的边。",
+  "_deviation_note": "登记而非白名单：别名折叠段在 try 内 require `../../../commandOverlapAudit` —— 那是 src/services/commandOverlapAudit.js，属 D1（src/services 顶层），不在 D2 的名义边界内。它缺失或抛错时 fail-soft 回退为「不折叠」，目录逐字节退回全量列举。D2→D1 属 DOMAIN-DEPS 的 declared_not_enforced，交由 archDebtScan R1 与 cross-layer-require 棘轮管辖，本清单如实登记，不写白名单把它合法化。",
+  "fanIn": 4,
+  "fanInEvidence": [
+    "services/backend/src/cli/handlers/features.js",
+    "services/backend/src/routes/commands.js",
+    "services/backend/src/services/commandCatalog/index.js",
+    "services/backend/src/services/selfProfile.js"
+  ],
+  "_fanIn_note": "非测试消费者 4 个（去重后）：`/features` 处理器（CLI/TUI 主交互面）、`GET /api/commands` HTTP 路由（前端功能索引视图）、D1 再导出壳 services/commandCatalog/index.js、selfProfile（自审画像）。计数排除 *.test.js。三个面共用同一份整形结果，正是本单元存在的理由（头注释原话：「三处消费同一份数据」「永不漂移」）。注：该再导出壳自身在 src/ 下零消费者——三个消费方都直接 require D2 路径，壳只为历史路径兼容留着。",
+  "behaviourTestsOutsideUnit": [
+    "services/backend/tests/services/commandCatalog.test.js",
+    "services/backend/tests/allCommandsCatalog.test.js",
+    "services/backend/tests/services/selfAuditRegistry.test.js",
+    "services/backend/tests/routes/commands.test.js",
+    "services/backend/tests/aiManagementServer.commandsRoute.test.js"
+  ],
+  "_outside_test_note": "前三份是 node:test 方言，本环境可跑且改动后复跑全绿（13 / 11 / 13）。后两份是 jest 方言（describe/expect），本便携环境未安装 jest（node_modules/.bin/jest 是悬空 shim），`node --test` 跑它会因缺 describe 全局而 ReferenceError —— 「跑不了」不等于「红」。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-29",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "晋级三判据齐：单元级 README.md、整数 fanIn、唯一源文件有同名同目录测试（15 例全绿、0 skip）。单元早于 entry-buffer 守卫，缓冲区从未被经过。",
+  "contract": {
+    "purity": "零 IO 纯叶子（leaf-contract）：只整形与分组，**不发明功能**——命令清单永远来自 constants/commandSchema SSOT。确定性、绝不抛：源不可达 / 返回非数组 / 取值抛错，全部收敛为 `{categories:[],total:0,generatedBy:'commandSchema'}`。",
+    "ioOwner": "本单元无 IO 面。读写配置文件、渲染颜色、HTTP 响应都归消费者（features.js / routes/commands.js / commandCatalogUi）。",
+    "injectionPoints": [
+      "commandCatalogEnabled(env) — env 注入，缺省才取 process.env",
+      "buildCommandCatalog(deps, env) — deps.getBuiltinSlashCommands 可注入（测试用的正式缝）"
+    ],
+    "gates": "KHY_COMMAND_CATALOG（关 → 空目录，各消费方据此逐字节回退/隐藏入口）；KHY_COMMAND_PRIMARY_PANEL（关 → 不做别名折叠，全量列举）；后者经 commandOverlapAudit.isPanelEnabled 集中判定，其内部再走 flagRegistry，注册表不可用时本地回退。",
+    "shaping": "类别桶按 CATEGORY_META.order 排序、同 order 按 key 字母序；组内命令按 cmd 字母序；条目规整为发现所需的最小字段 {cmd,name,label,desc,route}(+aliases)；label 缺省回退去斜杠的 name，desc 缺省回退 description 字段；同桶内按 cmd 去重（保留首次）。未知类别兜底「其他」(order 99)。",
+    "alias_folding": "折叠是 **route 驱动**而非同名驱动：COMMAND_ALIASES 的 value 是 canonical 的 route，凡 route 命中的规范条目挂上排序后的 aliases[]，别名自身不再单独占位（收敛自审 #7「命令过载」的可发现性面）。",
+    "fixed_in_this_unit": "B26-F1（本批修掉，复现与复诊见 .khy/feedback/b26-F1/）：`_categoryMeta` 原写 `CATEGORY_META[cat] || CATEGORY_META.other`，cat 取自数据字段，落到 constructor/valueOf/toString 等 Object.prototype 继承键时返回继承值而非兜底 —— 分组头的 label 与 order 双双变 undefined，排序退化为按 key。现改自有键判定（与本文件别名折叠处 hasOwnProperty 的既有写法一致），对表内 8 个类别逐字节等价，真实 SSOT 的 7 个类别读数不受影响。"
+  },
+  "tests": [
+    "commandCatalog.test.js"
+  ],
+  "_test_dialect_note": "node:test 方言，零真 IO。折叠用例注入的是**真别名表**（deps 只替 getBuiltinSlashCommands，别名仍来自 constants/commandSchema SSOT），因此 '/schedule→cron'、'/apikey→gateway config' 是仓内事实而非造出来的假数据。"
+}

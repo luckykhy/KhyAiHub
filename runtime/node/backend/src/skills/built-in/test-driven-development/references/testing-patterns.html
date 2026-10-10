@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: testing-patterns.md -->
+<title>Testing Patterns Reference · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>skills<span class="sep">›</span>built-in<span class="sep">›</span>test-driven-development<span class="sep">›</span>references<span class="sep">›</span>Testing Patterns Reference</div>
+      <header class="hero reveal"><h1>Testing Patterns Reference</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#testing-patterns-reference">Testing Patterns Reference</a></li><li class="lvl-2"><a href="#table-of-contents">Table of Contents</a></li><li class="lvl-2"><a href="#test-structure-arrange-act-assert">Test Structure (Arrange-Act-Assert)</a></li><li class="lvl-2"><a href="#test-naming-conventions">Test Naming Conventions</a></li><li class="lvl-2"><a href="#common-assertions">Common Assertions</a></li><li class="lvl-2"><a href="#mocking-patterns">Mocking Patterns</a></li><li class="lvl-3"><a href="#mock-functions">Mock Functions</a></li><li class="lvl-3"><a href="#mock-modules">Mock Modules</a></li><li class="lvl-3"><a href="#mock-at-boundaries-only">Mock at Boundaries Only</a></li><li class="lvl-2"><a href="#react-component-testing">React/Component Testing</a></li><li class="lvl-2"><a href="#api-integration-testing">API / Integration Testing</a></li><li class="lvl-2"><a href="#e2e-testing-playwright">E2E Testing (Playwright)</a></li><li class="lvl-2"><a href="#test-anti-patterns">Test Anti-Patterns</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="testing-patterns-reference">Testing Patterns Reference<a class="anchor" href="#testing-patterns-reference" aria-label="锚点">#</a></h1>
+<p>Quick reference for common testing patterns across the stack. Use alongside the <code>test-driven-development</code> skill.</p>
+<h2 id="table-of-contents">Table of Contents<a class="anchor" href="#table-of-contents" aria-label="锚点">#</a></h2>
+<ul><li><a href="#test-structure-arrange-act-assert">Test Structure (Arrange-Act-Assert)</a></li><li><a href="#test-naming-conventions">Test Naming Conventions</a></li><li><a href="#common-assertions">Common Assertions</a></li><li><a href="#mocking-patterns">Mocking Patterns</a></li><li><a href="#reactcomponent-testing">React/Component Testing</a></li><li><a href="#api--integration-testing">API / Integration Testing</a></li><li><a href="#e2e-testing-playwright">E2E Testing (Playwright)</a></li><li><a href="#test-anti-patterns">Test Anti-Patterns</a></li></ul>
+<h2 id="test-structure-arrange-act-assert">Test Structure (Arrange-Act-Assert)<a class="anchor" href="#test-structure-arrange-act-assert" aria-label="锚点">#</a></h2>
+<pre><code class="language-typescript"><span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;describes expected behavior&#x27;</span>, <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-comment">// Arrange: Set up test data and preconditions</span>
+  <span class="hljs-keyword">const</span> input = { <span class="hljs-attr">title</span>: <span class="hljs-string">&#x27;Test Task&#x27;</span>, <span class="hljs-attr">priority</span>: <span class="hljs-string">&#x27;high&#x27;</span> };
+
+  <span class="hljs-comment">// Act: Perform the action being tested</span>
+  <span class="hljs-keyword">const</span> result = <span class="hljs-title function_">createTask</span>(input);
+
+  <span class="hljs-comment">// Assert: Verify the outcome</span>
+  <span class="hljs-title function_">expect</span>(result.<span class="hljs-property">title</span>).<span class="hljs-title function_">toBe</span>(<span class="hljs-string">&#x27;Test Task&#x27;</span>);
+  <span class="hljs-title function_">expect</span>(result.<span class="hljs-property">priority</span>).<span class="hljs-title function_">toBe</span>(<span class="hljs-string">&#x27;high&#x27;</span>);
+  <span class="hljs-title function_">expect</span>(result.<span class="hljs-property">status</span>).<span class="hljs-title function_">toBe</span>(<span class="hljs-string">&#x27;pending&#x27;</span>);
+});</code></pre>
+<h2 id="test-naming-conventions">Test Naming Conventions<a class="anchor" href="#test-naming-conventions" aria-label="锚点">#</a></h2>
+<pre><code class="language-typescript"><span class="hljs-comment">// Pattern: [unit] [expected behavior] [condition]</span>
+<span class="hljs-title function_">describe</span>(<span class="hljs-string">&#x27;TaskService.createTask&#x27;</span>, <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;creates a task with default pending status&#x27;</span>, <span class="hljs-function">() =&gt;</span> {});
+  <span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;throws ValidationError when title is empty&#x27;</span>, <span class="hljs-function">() =&gt;</span> {});
+  <span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;trims whitespace from title&#x27;</span>, <span class="hljs-function">() =&gt;</span> {});
+  <span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;generates a unique ID for each task&#x27;</span>, <span class="hljs-function">() =&gt;</span> {});
+});</code></pre>
+<h2 id="common-assertions">Common Assertions<a class="anchor" href="#common-assertions" aria-label="锚点">#</a></h2>
+<pre><code class="language-typescript"><span class="hljs-comment">// Equality</span>
+<span class="hljs-title function_">expect</span>(result).<span class="hljs-title function_">toBe</span>(expected);           <span class="hljs-comment">// Strict equality (===)</span>
+<span class="hljs-title function_">expect</span>(result).<span class="hljs-title function_">toEqual</span>(expected);        <span class="hljs-comment">// Deep equality (objects/arrays)</span>
+<span class="hljs-title function_">expect</span>(result).<span class="hljs-title function_">toStrictEqual</span>(expected);  <span class="hljs-comment">// Deep equality + type matching</span>
+
+<span class="hljs-comment">// Truthiness</span>
+<span class="hljs-title function_">expect</span>(result).<span class="hljs-title function_">toBeTruthy</span>();
+<span class="hljs-title function_">expect</span>(result).<span class="hljs-title function_">toBeFalsy</span>();
+<span class="hljs-title function_">expect</span>(result).<span class="hljs-title function_">toBeNull</span>();
+<span class="hljs-title function_">expect</span>(result).<span class="hljs-title function_">toBeDefined</span>();
+<span class="hljs-title function_">expect</span>(result).<span class="hljs-title function_">toBeUndefined</span>();
+
+<span class="hljs-comment">// Numbers</span>
+<span class="hljs-title function_">expect</span>(result).<span class="hljs-title function_">toBeGreaterThan</span>(<span class="hljs-number">5</span>);
+<span class="hljs-title function_">expect</span>(result).<span class="hljs-title function_">toBeLessThanOrEqual</span>(<span class="hljs-number">10</span>);
+<span class="hljs-title function_">expect</span>(result).<span class="hljs-title function_">toBeCloseTo</span>(<span class="hljs-number">0.3</span>, <span class="hljs-number">5</span>);      <span class="hljs-comment">// Floating point</span>
+
+<span class="hljs-comment">// Strings</span>
+<span class="hljs-title function_">expect</span>(result).<span class="hljs-title function_">toMatch</span>(<span class="hljs-regexp">/pattern/</span>);
+<span class="hljs-title function_">expect</span>(result).<span class="hljs-title function_">toContain</span>(<span class="hljs-string">&#x27;substring&#x27;</span>);
+
+<span class="hljs-comment">// Arrays / Objects</span>
+<span class="hljs-title function_">expect</span>(array).<span class="hljs-title function_">toContain</span>(item);
+<span class="hljs-title function_">expect</span>(array).<span class="hljs-title function_">toHaveLength</span>(<span class="hljs-number">3</span>);
+<span class="hljs-title function_">expect</span>(<span class="hljs-built_in">object</span>).<span class="hljs-title function_">toHaveProperty</span>(<span class="hljs-string">&#x27;key&#x27;</span>, <span class="hljs-string">&#x27;value&#x27;</span>);
+
+<span class="hljs-comment">// Errors</span>
+<span class="hljs-title function_">expect</span>(<span class="hljs-function">() =&gt;</span> <span class="hljs-title function_">fn</span>()).<span class="hljs-title function_">toThrow</span>();
+<span class="hljs-title function_">expect</span>(<span class="hljs-function">() =&gt;</span> <span class="hljs-title function_">fn</span>()).<span class="hljs-title function_">toThrow</span>(<span class="hljs-title class_">ValidationError</span>);
+<span class="hljs-title function_">expect</span>(<span class="hljs-function">() =&gt;</span> <span class="hljs-title function_">fn</span>()).<span class="hljs-title function_">toThrow</span>(<span class="hljs-string">&#x27;specific message&#x27;</span>);
+
+<span class="hljs-comment">// Async</span>
+<span class="hljs-keyword">await</span> <span class="hljs-title function_">expect</span>(<span class="hljs-title function_">asyncFn</span>()).<span class="hljs-property">resolves</span>.<span class="hljs-title function_">toBe</span>(value);
+<span class="hljs-keyword">await</span> <span class="hljs-title function_">expect</span>(<span class="hljs-title function_">asyncFn</span>()).<span class="hljs-property">rejects</span>.<span class="hljs-title function_">toThrow</span>(<span class="hljs-title class_">Error</span>);</code></pre>
+<h2 id="mocking-patterns">Mocking Patterns<a class="anchor" href="#mocking-patterns" aria-label="锚点">#</a></h2>
+<h3 id="mock-functions">Mock Functions<a class="anchor" href="#mock-functions" aria-label="锚点">#</a></h3>
+<pre><code class="language-typescript"><span class="hljs-keyword">const</span> mockFn = jest.<span class="hljs-title function_">fn</span>();
+mockFn.<span class="hljs-title function_">mockReturnValue</span>(<span class="hljs-number">42</span>);
+mockFn.<span class="hljs-title function_">mockResolvedValue</span>({ <span class="hljs-attr">data</span>: <span class="hljs-string">&#x27;test&#x27;</span> });
+mockFn.<span class="hljs-title function_">mockImplementation</span>(<span class="hljs-function">(<span class="hljs-params">x</span>) =&gt;</span> x * <span class="hljs-number">2</span>);
+
+<span class="hljs-title function_">expect</span>(mockFn).<span class="hljs-title function_">toHaveBeenCalled</span>();
+<span class="hljs-title function_">expect</span>(mockFn).<span class="hljs-title function_">toHaveBeenCalledWith</span>(<span class="hljs-string">&#x27;arg1&#x27;</span>, <span class="hljs-string">&#x27;arg2&#x27;</span>);
+<span class="hljs-title function_">expect</span>(mockFn).<span class="hljs-title function_">toHaveBeenCalledTimes</span>(<span class="hljs-number">3</span>);</code></pre>
+<h3 id="mock-modules">Mock Modules<a class="anchor" href="#mock-modules" aria-label="锚点">#</a></h3>
+<pre><code class="language-typescript"><span class="hljs-comment">// Mock an entire module</span>
+jest.<span class="hljs-title function_">mock</span>(<span class="hljs-string">&#x27;./database&#x27;</span>, <span class="hljs-function">() =&gt;</span> ({
+  <span class="hljs-attr">query</span>: jest.<span class="hljs-title function_">fn</span>().<span class="hljs-title function_">mockResolvedValue</span>([{ <span class="hljs-attr">id</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">title</span>: <span class="hljs-string">&#x27;Test&#x27;</span> }]),
+}));
+
+<span class="hljs-comment">// Mock specific exports</span>
+jest.<span class="hljs-title function_">mock</span>(<span class="hljs-string">&#x27;./utils&#x27;</span>, <span class="hljs-function">() =&gt;</span> ({
+  ...jest.<span class="hljs-title function_">requireActual</span>(<span class="hljs-string">&#x27;./utils&#x27;</span>),
+  <span class="hljs-attr">generateId</span>: jest.<span class="hljs-title function_">fn</span>().<span class="hljs-title function_">mockReturnValue</span>(<span class="hljs-string">&#x27;test-id&#x27;</span>),
+}));</code></pre>
+<h3 id="mock-at-boundaries-only">Mock at Boundaries Only<a class="anchor" href="#mock-at-boundaries-only" aria-label="锚点">#</a></h3>
+<pre><code>Mock these:                    Don't mock these:
+├── Database calls             ├── Internal utility functions
+├── HTTP requests              ├── Business logic
+├── File system operations     ├── Data transformations
+├── External API calls         ├── Validation functions
+└── Time/Date (when needed)    └── Pure functions</code></pre>
+<h2 id="react-component-testing">React/Component Testing<a class="anchor" href="#react-component-testing" aria-label="锚点">#</a></h2>
+<pre><code class="language-tsx"><span class="hljs-keyword">import</span> { render, screen, fireEvent, waitFor } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;@testing-library/react&#x27;</span>;
+
+<span class="hljs-title function_">describe</span>(<span class="hljs-string">&#x27;TaskForm&#x27;</span>, <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;submits the form with entered data&#x27;</span>, <span class="hljs-title function_">async</span> () =&gt; {
+    <span class="hljs-keyword">const</span> onSubmit = jest.<span class="hljs-title function_">fn</span>();
+    <span class="hljs-title function_">render</span>(<span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">TaskForm</span> <span class="hljs-attr">onSubmit</span>=<span class="hljs-string">{onSubmit}</span> /&gt;</span></span>);
+
+    <span class="hljs-comment">// Find elements by accessible role/label (not test IDs)</span>
+    <span class="hljs-keyword">await</span> screen.<span class="hljs-title function_">findByRole</span>(<span class="hljs-string">&#x27;textbox&#x27;</span>, { <span class="hljs-attr">name</span>: <span class="hljs-regexp">/title/i</span> });
+    fireEvent.<span class="hljs-title function_">change</span>(screen.<span class="hljs-title function_">getByRole</span>(<span class="hljs-string">&#x27;textbox&#x27;</span>, { <span class="hljs-attr">name</span>: <span class="hljs-regexp">/title/i</span> }), {
+      <span class="hljs-attr">target</span>: { <span class="hljs-attr">value</span>: <span class="hljs-string">&#x27;New Task&#x27;</span> },
+    });
+    fireEvent.<span class="hljs-title function_">click</span>(screen.<span class="hljs-title function_">getByRole</span>(<span class="hljs-string">&#x27;button&#x27;</span>, { <span class="hljs-attr">name</span>: <span class="hljs-regexp">/create/i</span> }));
+
+    <span class="hljs-keyword">await</span> <span class="hljs-title function_">waitFor</span>(<span class="hljs-function">() =&gt;</span> {
+      <span class="hljs-title function_">expect</span>(onSubmit).<span class="hljs-title function_">toHaveBeenCalledWith</span>({ <span class="hljs-attr">title</span>: <span class="hljs-string">&#x27;New Task&#x27;</span> });
+    });
+  });
+
+  <span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;shows validation error for empty title&#x27;</span>, <span class="hljs-title function_">async</span> () =&gt; {
+    <span class="hljs-title function_">render</span>(<span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">TaskForm</span> <span class="hljs-attr">onSubmit</span>=<span class="hljs-string">{jest.fn()}</span> /&gt;</span></span>);
+
+    fireEvent.<span class="hljs-title function_">click</span>(screen.<span class="hljs-title function_">getByRole</span>(<span class="hljs-string">&#x27;button&#x27;</span>, { <span class="hljs-attr">name</span>: <span class="hljs-regexp">/create/i</span> }));
+
+    <span class="hljs-title function_">expect</span>(<span class="hljs-keyword">await</span> screen.<span class="hljs-title function_">findByText</span>(<span class="hljs-regexp">/title is required/i</span>)).<span class="hljs-title function_">toBeInTheDocument</span>();
+  });
+});</code></pre>
+<h2 id="api-integration-testing">API / Integration Testing<a class="anchor" href="#api-integration-testing" aria-label="锚点">#</a></h2>
+<pre><code class="language-typescript"><span class="hljs-keyword">import</span> request <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;supertest&#x27;</span>;
+<span class="hljs-keyword">import</span> { app } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;../src/app&#x27;</span>;
+
+<span class="hljs-title function_">describe</span>(<span class="hljs-string">&#x27;POST /api/tasks&#x27;</span>, <span class="hljs-function">() =&gt;</span> {
+  <span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;creates a task and returns 201&#x27;</span>, <span class="hljs-title function_">async</span> () =&gt; {
+    <span class="hljs-keyword">const</span> response = <span class="hljs-keyword">await</span> <span class="hljs-title function_">request</span>(app)
+      .<span class="hljs-title function_">post</span>(<span class="hljs-string">&#x27;/api/tasks&#x27;</span>)
+      .<span class="hljs-title function_">send</span>({ <span class="hljs-attr">title</span>: <span class="hljs-string">&#x27;Test Task&#x27;</span> })
+      .<span class="hljs-title function_">set</span>(<span class="hljs-string">&#x27;Authorization&#x27;</span>, <span class="hljs-string">`Bearer <span class="hljs-subst">${testToken}</span>`</span>)
+      .<span class="hljs-title function_">expect</span>(<span class="hljs-number">201</span>);
+
+    <span class="hljs-title function_">expect</span>(response.<span class="hljs-property">body</span>).<span class="hljs-title function_">toMatchObject</span>({
+      <span class="hljs-attr">id</span>: expect.<span class="hljs-title function_">any</span>(<span class="hljs-title class_">String</span>),
+      <span class="hljs-attr">title</span>: <span class="hljs-string">&#x27;Test Task&#x27;</span>,
+      <span class="hljs-attr">status</span>: <span class="hljs-string">&#x27;pending&#x27;</span>,
+    });
+  });
+
+  <span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;returns 422 for invalid input&#x27;</span>, <span class="hljs-title function_">async</span> () =&gt; {
+    <span class="hljs-keyword">const</span> response = <span class="hljs-keyword">await</span> <span class="hljs-title function_">request</span>(app)
+      .<span class="hljs-title function_">post</span>(<span class="hljs-string">&#x27;/api/tasks&#x27;</span>)
+      .<span class="hljs-title function_">send</span>({ <span class="hljs-attr">title</span>: <span class="hljs-string">&#x27;&#x27;</span> })
+      .<span class="hljs-title function_">set</span>(<span class="hljs-string">&#x27;Authorization&#x27;</span>, <span class="hljs-string">`Bearer <span class="hljs-subst">${testToken}</span>`</span>)
+      .<span class="hljs-title function_">expect</span>(<span class="hljs-number">422</span>);
+
+    <span class="hljs-title function_">expect</span>(response.<span class="hljs-property">body</span>.<span class="hljs-property">error</span>.<span class="hljs-property">code</span>).<span class="hljs-title function_">toBe</span>(<span class="hljs-string">&#x27;VALIDATION_ERROR&#x27;</span>);
+  });
+
+  <span class="hljs-title function_">it</span>(<span class="hljs-string">&#x27;returns 401 without authentication&#x27;</span>, <span class="hljs-title function_">async</span> () =&gt; {
+    <span class="hljs-keyword">await</span> <span class="hljs-title function_">request</span>(app)
+      .<span class="hljs-title function_">post</span>(<span class="hljs-string">&#x27;/api/tasks&#x27;</span>)
+      .<span class="hljs-title function_">send</span>({ <span class="hljs-attr">title</span>: <span class="hljs-string">&#x27;Test&#x27;</span> })
+      .<span class="hljs-title function_">expect</span>(<span class="hljs-number">401</span>);
+  });
+});</code></pre>
+<h2 id="e2e-testing-playwright">E2E Testing (Playwright)<a class="anchor" href="#e2e-testing-playwright" aria-label="锚点">#</a></h2>
+<pre><code class="language-typescript"><span class="hljs-keyword">import</span> { test, expect } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;@playwright/test&#x27;</span>;
+
+<span class="hljs-title function_">test</span>(<span class="hljs-string">&#x27;user can create and complete a task&#x27;</span>, <span class="hljs-title function_">async</span> ({ page }) =&gt; {
+  <span class="hljs-comment">// Navigate and authenticate</span>
+  <span class="hljs-keyword">await</span> page.<span class="hljs-title function_">goto</span>(<span class="hljs-string">&#x27;/&#x27;</span>);
+  <span class="hljs-keyword">await</span> page.<span class="hljs-title function_">fill</span>(<span class="hljs-string">&#x27;[name=&quot;email&quot;]&#x27;</span>, <span class="hljs-string">&#x27;test@example.com&#x27;</span>);
+  <span class="hljs-keyword">await</span> page.<span class="hljs-title function_">fill</span>(<span class="hljs-string">&#x27;[name=&quot;password&quot;]&#x27;</span>, <span class="hljs-string">&#x27;testpass123&#x27;</span>);
+  <span class="hljs-keyword">await</span> page.<span class="hljs-title function_">click</span>(<span class="hljs-string">&#x27;button:has-text(&quot;Log in&quot;)&#x27;</span>);
+
+  <span class="hljs-comment">// Create a task</span>
+  <span class="hljs-keyword">await</span> page.<span class="hljs-title function_">click</span>(<span class="hljs-string">&#x27;button:has-text(&quot;New Task&quot;)&#x27;</span>);
+  <span class="hljs-keyword">await</span> page.<span class="hljs-title function_">fill</span>(<span class="hljs-string">&#x27;[name=&quot;title&quot;]&#x27;</span>, <span class="hljs-string">&#x27;Buy groceries&#x27;</span>);
+  <span class="hljs-keyword">await</span> page.<span class="hljs-title function_">click</span>(<span class="hljs-string">&#x27;button:has-text(&quot;Create&quot;)&#x27;</span>);
+
+  <span class="hljs-comment">// Verify task appears</span>
+  <span class="hljs-keyword">await</span> <span class="hljs-title function_">expect</span>(page.<span class="hljs-title function_">locator</span>(<span class="hljs-string">&#x27;text=Buy groceries&#x27;</span>)).<span class="hljs-title function_">toBeVisible</span>();
+
+  <span class="hljs-comment">// Complete the task</span>
+  <span class="hljs-keyword">await</span> page.<span class="hljs-title function_">click</span>(<span class="hljs-string">&#x27;[aria-label=&quot;Complete Buy groceries&quot;]&#x27;</span>);
+  <span class="hljs-keyword">await</span> <span class="hljs-title function_">expect</span>(page.<span class="hljs-title function_">locator</span>(<span class="hljs-string">&#x27;text=Buy groceries&#x27;</span>)).<span class="hljs-title function_">toHaveCSS</span>(
+    <span class="hljs-string">&#x27;text-decoration-line&#x27;</span>, <span class="hljs-string">&#x27;line-through&#x27;</span>
+  );
+});</code></pre>
+<h2 id="test-anti-patterns">Test Anti-Patterns<a class="anchor" href="#test-anti-patterns" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>Anti-Pattern</th><th>Problem</th><th>Better Approach</th></tr></thead><tbody><tr><td>Testing implementation details</td><td>Breaks on refactor</td><td>Test inputs/outputs</td></tr><tr><td>Snapshot everything</td><td>No one reviews snapshot diffs</td><td>Assert specific values</td></tr><tr><td>Shared mutable state</td><td>Tests pollute each other</td><td>Setup/teardown per test</td></tr><tr><td>Testing third-party code</td><td>Wastes time, not your bug</td><td>Mock the boundary</td></tr><tr><td>Skipping tests to pass CI</td><td>Hides real bugs</td><td>Fix or delete the test</td></tr><tr><td>Using <code>test.skip</code> permanently</td><td>Dead code</td><td>Remove or fix it</td></tr><tr><td>Overly broad assertions</td><td>Doesn't catch regressions</td><td>Be specific</td></tr><tr><td>No async error handling</td><td>Swallowed errors, false passes</td><td>Always <code>await</code> async tests</td></tr></tbody></table>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/skills/built-in/test-driven-development/prompt.html"><div class="dir">← 上一篇</div><div class="ttl">Test-Driven Development</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/skills/built-in/update-config/prompt.html"><div class="dir">下一篇 →</div><div class="ttl">Update Config — Configuration File Manager</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/skills/built-in/test-driven-development/references/testing-patterns.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

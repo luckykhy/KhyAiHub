@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-ARCH-168] 开机零自启与按需懒加载方案.md -->
+<title>[DESIGN-ARCH-168] 开机零自启与按需懒加载方案 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>03_DESIGN_设计<span class="sep">›</span>DESIGN-ARCH<span class="sep">›</span>[DESIGN-ARCH-168] 开机零自启与按需懒加载方案</div>
+      <header class="hero reveal"><h1>[DESIGN-ARCH-168] 开机零自启与按需懒加载方案</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-arch-168-开机零自启与按需懒加载方案">[DESIGN-ARCH-168] 开机零自启与按需懒加载方案</a></li><li class="lvl-2"><a href="#0-一句话结论">0. 一句话结论</a></li><li class="lvl-2"><a href="#1-现状实证-2026-09-30-本机实测-可复跑">1. 现状实证（2026-09-30 本机实测，可复跑）</a></li><li class="lvl-3"><a href="#1-1-四条必须说清的推论">1.1 四条必须说清的推论</a></li><li class="lvl-3"><a href="#1-2-逐项建议">1.2 逐项建议</a></li><li class="lvl-2"><a href="#2-目标模型">2. 目标模型</a></li><li class="lvl-2"><a href="#3-抑制手段的选型">3. 抑制手段的选型</a></li><li class="lvl-3"><a href="#3-1-工具化时才发现-12-字节不需要猜">3.1 【工具化时才发现】12 字节不需要猜</a></li><li class="lvl-2"><a href="#4-按需入口-本机不需要新建任何东西">4. 按需入口：本机不需要新建任何东西</a></li><li class="lvl-3"><a href="#4-1-若将来某项真的没有入口">4.1 若将来某项真的没有入口</a></li><li class="lvl-2"><a href="#5-自愈守卫-没有它-两周后回到原样">5. 自愈守卫：没有它，两周后回到原样</a></li><li class="lvl-3"><a href="#5-1-工具化时才发现-更新器的名字带版本号-精确匹配必然失效">5.1 【工具化时才发现】更新器的名字带版本号，精确匹配必然失效</a></li><li class="lvl-3"><a href="#5-2-守卫的两条硬边界-写进代码注释了">5.2 守卫的两条硬边界（写进代码注释了）</a></li><li class="lvl-3"><a href="#5-3-工具化时才发现-注册表与计划任务是两个命名空间">5.3 【工具化时才发现】注册表与计划任务是两个命名空间</a></li><li class="lvl-2"><a href="#6-分阶段落地与当前进度">6. 分阶段落地与当前进度</a></li><li class="lvl-3"><a href="#6-1-p0-的诚实局限-拿到的是稳态-不是登录波">6.1 P0 的诚实局限：拿到的是稳态，不是登录波</a></li><li class="lvl-3"><a href="#6-2-p3-执行结果-2026-09-30-10-34">6.2 P3 执行结果（2026-09-30 10:34）</a></li><li class="lvl-3"><a href="#6-3-执行时才发现-根路径计划任务-不能用-split-2">6.3 【执行时才发现】根路径计划任务：不能用 `Split('\',2)`</a></li><li class="lvl-3"><a href="#6-4-执行时才发现-可重入的-apply-必须累积存档原值">6.4 【执行时才发现】可重入的 apply 必须累积存档原值</a></li><li class="lvl-3"><a href="#6-5-p5-已上线-开机自动跑-不需要人管-2026-09-30-11-5x">6.5 P5 已上线：开机自动跑，不需要人管（2026-09-30 11:5x）</a></li><li class="lvl-3"><a href="#6-6-必须记账-守卫本身就是我新增的一个自启项">6.6 【必须记账】守卫本身就是我新增的一个自启项</a></li><li class="lvl-3"><a href="#6-7-执行时才发现-批量正则改脚本会改到函数自己">6.7 【执行时才发现】批量正则改脚本会改到函数自己</a></li><li class="lvl-2"><a href="#7-稳定性加固-2026-09-30-14-3x">7. 稳定性加固（2026-09-30 14:3x）</a></li><li class="lvl-3"><a href="#7-1-最坏的一种失效-守卫崩了却不留痕">7.1 最坏的一种失效：守卫崩了却不留痕</a></li><li class="lvl-3"><a href="#7-2-心跳-守卫死了必须能被发现">7.2 心跳：守卫死了必须能被发现</a></li><li class="lvl-3"><a href="#7-3-稳定性加固时才发现-写在脚本内部的-bom-自检是无效代码">7.3 【稳定性加固时才发现】写在脚本内部的 BOM 自检是无效代码</a></li><li class="lvl-3"><a href="#7-4-稳定性加固时才发现-x-字面量-不插值">7.4 【稳定性加固时才发现】`&quot;{$($x)} 字面量&quot;` 不插值</a></li><li class="lvl-3"><a href="#7-5-稳定性自检结果">7.5 稳定性自检结果</a></li><li class="lvl-2"><a href="#8-运行期-不重启也要管住后台-2026-09-30-15-2x">8. 运行期：不重启也要管住后台（2026-09-30 15:2x）</a></li><li class="lvl-3"><a href="#8-1-问题的真实形状">8.1 问题的真实形状</a></li><li class="lvl-3"><a href="#8-2-关键-有没有窗口-不是判据-是否被需要-我判不出来">8.2 【关键】「有没有窗口」不是判据，「是否被需要」我判不出来</a></li><li class="lvl-3"><a href="#8-3-账本同时约束启动期与运行期">8.3 账本同时约束启动期与运行期</a></li><li class="lvl-3"><a href="#8-4-实测结果">8.4 实测结果</a></li><li class="lvl-3"><a href="#8-5-顺带发现-onedrive-禁用后仍在跑">8.5 顺带发现：OneDrive 禁用后仍在跑</a></li><li class="lvl-3"><a href="#8-6-本节新增风险">8.6 本节新增风险</a></li><li class="lvl-2"><a href="#7-风险与回滚">7. 风险与回滚</a></li><li class="lvl-2"><a href="#8-有意排除">8. 有意排除</a></li><li class="lvl-2"><a href="#9-工具">9. 工具</a></li><li class="lvl-3"><a href="#9-1-两个编码坑-都已踩过并修好">9.1 两个编码坑（都已踩过并修好）</a></li><li class="lvl-3"><a href="#9-2-与既有脚本的关系">9.2 与既有脚本的关系</a></li><li class="lvl-2"><a href="#10-复现">10. 复现</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- 文档分类: DESIGN-ARCH-168 | 阶段: 设计 | 原路径: 新建 --&gt;</p>
+<h1 id="design-arch-168-开机零自启与按需懒加载方案">[DESIGN-ARCH-168] 开机零自启与按需懒加载方案<a class="anchor" href="#design-arch-168-开机零自启与按需懒加载方案" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>定位</strong>：本文只管<strong>这一台 Windows 电脑</strong>——登录那一刻被谁拉起来了、该不该拉、要用时怎么拉。<br>本文<strong>不管</strong>：任何软件内部的懒加载机制、仓库代码的启动性能、khy-os 或任何其他项目的进程模型。<br>（初稿曾把 khy-os 内部的端生命周期一并写进来，那是另一个问题，已整体删除。）</p>
+<p><strong>状态</strong>：<strong>P3 已执行（2026-09-30 10:34）</strong>。11 项全部落地并经独立复核 + 守卫交叉印证。<br>改动<strong>下次登录才生效</strong>。账本 <code>machineState: APPLIED</code>，存档 <code>autostart-backup-20260930-103411.json</code>。</p>
+<p><strong>配套工具</strong>：<code>D:\Portable\Scripts\maintenance\开机自启管理.bat</code>（菜单入口）+ <code>autostart\*.ps1</code> ×5。<br>入口选项 1–4 只读，5 才会写系统。</p>
+<p><strong>取证时间</strong>：2026-09-30。§1 全部数字与本文七处「工具化/执行时才发现」均由当日实测产出。</p>
+<p><strong>本文不新增规则</strong>，不携带 <code>&lt;!-- RULES-REGISTRY --&gt;</code> 标记。</p></blockquote>
+<hr>
+<h2 id="0-一句话结论">0. 一句话结论<a class="anchor" href="#0-一句话结论" aria-label="锚点">#</a></h2>
+<p>开机那 120 秒卡，<strong>不是应用太多，是没有任何一份名单负责回答「这些应用值不值得在这 120 秒里启动」</strong>。<br>清单散在四个互不相认的地方（<code>Run</code> 键 / 计划任务 / 服务 / Startup 文件夹），<br>谁都能往里加，谁都不负责减——<strong>包括从来没人在任务管理器里关过任何一项</strong>（§1 证据）。</p>
+<p>方案是<strong>先减法后加法</strong>：</p>
+<blockquote><p><strong>不该醒的不醒（减法）→ 醒的用一次就够（按需入口）→ 别让它自己爬回来（自愈守卫）</strong></p></blockquote>
+<p><strong>为什么默认是减不是加</strong>：绝大多数开机自启是装软件时写死的，用户从没主动选过。<br>所以默认减掉，<strong>想回一个就回一个</strong>，而不是先问「你要加哪些」。</p>
+<p><strong>实测结论：登录波内 14 项，建议禁 11 项（7 个 <code>Run</code> + 4 个计划任务），服务层一个都不动。</strong><br>零新建入口——四个要按需启动的应用<strong>开始菜单快捷方式本来就全在</strong>（§4.1）。</p>
+<hr>
+<h2 id="1-现状实证-2026-09-30-本机实测-可复跑">1. 现状实证（2026-09-30 本机实测，可复跑）<a class="anchor" href="#1-现状实证-2026-09-30-本机实测-可复跑" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>启动源</th><th>数量</th><th>是否抢登录波</th></tr></thead><tbody><tr><td><code>Run</code> 键（HKCU 8 + HKLM 1）</td><td>9</td><td><strong>是</strong></td></tr><tr><td>计划任务 · Logon 触发</td><td>5</td><td><strong>是</strong></td></tr><tr><td>Startup 文件夹</td><td><strong>0</strong>（用户级与全局级都只有 <code>desktop.ini</code>）</td><td>否</td></tr><tr><td>服务 · <code>StartMode=Auto</code>（非 Windows 路径）</td><td>18</td><td>部分（服务在 boot 阶段，早于登录）</td></tr></tbody></table>
+<h3 id="1-1-四条必须说清的推论">1.1 四条必须说清的推论<a class="anchor" href="#1-1-四条必须说清的推论" aria-label="锚点">#</a></h3>
+<p><strong>① 9 个 <code>Run</code> 项全部处于启用态，且一个都不是用户选的。</strong><br><code>StartupApproved</code> 里 8 个 HKCU 项首字节均为 <code>02</code>（启用），HKLM 的 <code>SecurityHealth</code> 为 <code>06</code>（启用）。<br>这些值是<strong>装软件时的默认值</strong>——任务管理器「启动应用」页里它们全是绿的，因为没人手动关过。<br><strong>这说明现状是「全默认」，不是「用户的选择」。</strong> 减法的前提就在这里。</p>
+<p><strong>② 登录波里只有一个「真·天天用的应用」。</strong><br><code>PixPin</code>（截图）是唯一的高频需求项。其余是浏览器预启动（4）、后台更新器（5）、网盘（2）、<br>安全托盘（1）、本机自定义项（1）。<strong>更新器在登录波里启动是纯粹的浪费</strong>——更新不需要和用户抢那 120 秒。</p>
+<p><strong>③ 服务这一层一个都不动。</strong> 18 个 Auto 服务里：<br>Defender 3 个（关掉丢实时防护）、<code>ClickToRunSvc</code>（Office 更新依赖）、<br><strong><code>ToDesk_Service</code>（远程自救通道）</strong> 属于 <code>keep</code>；<br>华为/驱动/音频/系统组件 10 个属于 <code>out-of-scope</code>——<strong>卸载禁用是 PC Manager 的管辖范围，不越界</strong>；<br>剩 3 个（<code>AppGalleryService</code> / <code>OfficePLUS Service</code> / <code>edgeupdate</code>）用途需判断，进 <code>need-confirm</code>。</p>
+<blockquote><p>⚠ <strong><code>ToDesk_Service</code> 明确不建议关。</strong> 它是「人不在家时能自救」的通道，<br>关掉等于用一点后台资源换掉一条退路。这个取舍只能由人做，本文只提出、不代劳。</p></blockquote>
+<p><strong>④ 之前记的 <code>StartupApproved</code> 格式有个坑。</strong><br><code>HKCU\...\StartupApproved\Run</code> 的启用/禁用字节是 <code>02</code>/<code>03</code>，<br>而 <strong><code>HKLM\...\StartupApproved\Run</code> 是 <code>06</code>/<code>07</code></strong>。<br>只读 HKCU 会把 HKLM 项显示成「未登记」——<strong>看起来像没被管过，实际是读漏了</strong>。<br>扫描器第一次跑就踩了这个（把 <code>SecurityHealth</code> 报成「未登记」），已改为三处全读。</p>
+<h3 id="1-2-逐项建议">1.2 逐项建议<a class="anchor" href="#1-2-逐项建议" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>档</th><th>项</th><th>禁掉失去什么</th></tr></thead><tbody><tr><td><code>kill</code></td><td><code>GoogleChromeAutoLaunch_*</code>、<code>MicrosoftEdgeAutoLaunch_*</code> ×3</td><td>首次打开慢几百毫秒</td></tr><tr><td><code>kill</code></td><td><code>GoogleUpdaterTaskUser*</code>（Run + 任务）、<code>QuarkUpdaterTaskUser*</code>（Run + 任务）、<code>QianwenUpdaterTaskUser*</code>（任务）</td><td>这三个浏览器不自动更新，需手动</td></tr><tr><td><code>demand</code></td><td><code>OneDrive</code>（Run 1 + 任务 1，<strong>两个都在登录波里起同一个东西</strong>）</td><td>文件不自动同步、资源管理器左侧无 OneDrive 项</td></tr><tr><td><code>delay</code></td><td><code>PixPin\Autorun</code>（PT3S → 建议 PT10M）</td><td>快捷键晚 10 分钟可用。<strong>本轮不处理</strong>（改延迟要重建任务，不和「禁用」混一次改动）</td></tr><tr><td><code>keep</code></td><td><code>SecurityHealth</code>、Defender 系、<code>ClickToRunSvc</code>、<code>ToDesk_Service</code></td><td>无</td></tr><tr><td><code>need-confirm</code></td><td><code>WorkBuddy.WorkBuddy</code>、<code>AppGalleryService</code>、<code>OfficePLUS Service</code>、<code>edgeupdate</code></td><td>需你判断</td></tr><tr><td><code>out-of-scope</code></td><td>华为/驱动/音频/系统组件 10 个</td><td>不越界处理</td></tr></tbody></table>
+<hr>
+<h2 id="2-目标模型">2. 目标模型<a class="anchor" href="#2-目标模型" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>档</th><th>语义</th></tr></thead><tbody><tr><td><code>kill</code></td><td>登录即禁用，用时按需拉起</td></tr><tr><td><code>demand</code></td><td>不登录起；<strong>保证用户有找得到的入口</strong></td></tr><tr><td><code>delay</code></td><td>仍启动，但触发器从 Logon+3s 改为 Logon+10m</td></tr><tr><td><code>keep</code></td><td>原样保留</td></tr></tbody></table>
+<p><code>need-confirm</code> 与 <code>out-of-scope</code> 不是档位，是「本文不做决定」的诚实出口。<br>扫描器规则表未命中即 <code>need-confirm</code>，<strong>不猜</strong>。</p>
+<pre><code>  登录
+    ├─▶ [kill]    不启动。零进程创建。需要时点开始菜单已有入口即可
+    ├─▶ [demand]  同上。本机四者入口已齐，**不新建任何东西**
+    ├─▶ [delay]   仍启动，但推迟到 Logon+10M
+    └─▶ [keep]    原样</code></pre>
+<hr>
+<h2 id="3-抑制手段的选型">3. 抑制手段的选型<a class="anchor" href="#3-抑制手段的选型" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>手段</th><th>做法</th><th>抗更新器复活</th><th>可回滚</th><th>判级</th></tr></thead><tbody><tr><td>删 / 改名 <code>Run</code> 值</td><td>直接改注册表项</td><td><strong>差</strong>——装软件/更新器会重写</td><td><strong>差</strong>——没留原始值就找不回来</td><td>✗ 不用</td></tr><tr><td>写 <code>StartupApproved</code></td><td>任务管理器「启动」页禁用的<strong>同一份</strong>数据</td><td><strong>中</strong>——更新器改 <code>Run</code> 不会自动清这个位，但<strong>重装/大版本升级可能重置</strong></td><td><strong>好</strong></td><td>✓ <strong>默认</strong></td></tr><tr><td>计划任务 <code>Disable-ScheduledTask</code></td><td>任务级禁用，系统 cmdlet</td><td><strong>中</strong>——同上；<code>-Force</code> 重注册会重置</td><td><strong>好</strong></td><td>✓ 推荐</td></tr><tr><td>服务 <code>StartMode</code></td><td>服务级</td><td>n/a</td><td>好</td><td>△ 需管理员；<strong>本轮一个都不用</strong></td></tr></tbody></table>
+<p><strong>默认用 <code>StartupApproved</code>，三条理由</strong>：<br>① 它是<strong>用户已经在用</strong>的机制（任务管理器干的同一件事），不是本文发明的状态；<br>② 它<strong>不改</strong> <code>Run</code> 值本身，所以更新器重写 <code>Run</code> 不会与我们打架——只是会被自愈守卫再关一次（§5）；<br>③ 恢复成本是一次赋值。</p>
+<h3 id="3-1-工具化时才发现-12-字节不需要猜">3.1 【工具化时才发现】12 字节不需要猜<a class="anchor" href="#3-1-工具化时才发现-12-字节不需要猜" aria-label="锚点">#</a></h3>
+<p>初稿写「完整的 12 字节结构必须实测取样，不凭记忆写死」。<strong>写工具时把这句落实了，结论比预想的好</strong>：</p>
+<pre><code>HKCU OneDrive          : 02-00-00-00-00-00-00-00-00-00-00-00
+HKCU Chrome            : 02-00-00-00-00-00-00-00-00-00-00-00
+HKLM SecurityHealth    : 06-00-00-00-00-00-00-00-00-00-00-00</code></pre>
+<p><strong>本机全部 9 项都是「首字节 = 状态，后 11 字节全零」。</strong></p>
+<p>于是执行策略不是「构造一个禁用值」，而是：<strong>读出真实存在的 12 字节，只把第 0 位从 <code>02</code> 改成 <code>03</code>，其余 10 字节原样写回</strong>。<br>这比原设想更安全——<strong>不构造任何字节</strong>，所以即使对 Windows 内部布局的推断有误，最坏结果也只是改错一位，且能被审计发现。<br>写入走 .NET API 显式指定 <code>RegistryValueKind.Binary</code>（<code>Set-ItemProperty</code> 对 REG_BINARY 的类型推断不可靠，写错类型会让 Windows <strong>静默忽略</strong>这个禁用项，表现为「禁了但还在启动」）。</p>
+<p><strong>没有 <code>ApprovedBytes</code> 的项一律拒写</strong>：那种情况必须先在任务管理器里手动禁用一次，让 Windows 自己生成样本，再重扫。<strong>拒写是正确行为，不是失败。</strong></p>
+<hr>
+<h2 id="4-按需入口-本机不需要新建任何东西">4. 按需入口：本机不需要新建任何东西<a class="anchor" href="#4-按需入口-本机不需要新建任何东西" aria-label="锚点">#</a></h2>
+<p>原方案给了「文件关联 / 快捷方式 / PATH shim」三选一。<strong>实测后本机四者的入口全都已存在</strong>：</p>
+<table><thead><tr><th>应用</th><th>开始菜单快捷方式</th><th>指向</th><th>exe 存在</th></tr></thead><tbody><tr><td>Chrome</td><td>✅</td><td><code>…\Local\Google\Chrome\Application\chrome.exe</code></td><td>✅</td></tr><tr><td>Edge</td><td>✅</td><td><code>C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe</code></td><td>✅</td></tr><tr><td>OneDrive</td><td>✅</td><td><code>…\Local\Microsoft\OneDrive\OneDrive.exe</code></td><td>✅</td></tr><tr><td>PixPin</td><td>✅</td><td><code>D:\Portable\PixPin\PixPin\PixPin.exe</code></td><td>✅</td></tr></tbody></table>
+<p><strong>结论：禁掉的只是登录波里的预热，不是用户的入口。</strong> 所以本方案<strong>零新建入口</strong>——<br>这比原设计少一步，且少一个「为了少启动东西而多启动一个常驻 launcher」的自相矛盾（§4.2）。</p>
+<p>这条也直接消解了风险 R4（关掉后发现「原来我每天都要用」）对浏览器与 OneDrive 的适用性：<br><strong>它们本来就有入口。</strong></p>
+<h3 id="4-1-若将来某项真的没有入口">4.1 若将来某项真的没有入口<a class="anchor" href="#4-1-若将来某项真的没有入口" aria-label="锚点">#</a></h3>
+<p>优先级：<strong>① 文件关联</strong>（目标是「文件打开器」时）→ <strong>② 快捷方式</strong>（通用）→ <strong>③ PATH shim</strong>（命令行用户）。<br><strong>不选「常驻 launcher 脚本」</strong>——它自己也在登录波里，是自相矛盾的方案。</p>
+<p>入口若必须自己写，实现要求：<strong>幂等</strong>（先探，活着就返回，不重复拉起）、<strong>单飞</strong>（并发共享锁）、<br><strong>有界等待的是「拉起」不是「运行」</strong>（起来就立即返回，绝不等它退出）、<strong>诚实报错</strong>（不许静默失败或假装成功）。</p>
+<hr>
+<h2 id="5-自愈守卫-没有它-两周后回到原样">5. 自愈守卫：没有它，两周后回到原样<a class="anchor" href="#5-自愈守卫-没有它-两周后回到原样" aria-label="锚点">#</a></h2>
+<p><strong>这是最容易被跳过、也最决定成败的一环。</strong> 更新器、装软件、大版本升级都会把 <code>Run</code> 项复活。</p>
+<p>三段式：<strong>① 登录后 +5m 巡检</strong>（不是 +3s——此时各更新器刚跑完，复查才有意义）、<br><strong>② 每日兜底</strong>（覆盖「没重新登录但期间被升级复活」）、<strong>③ 只读模式先跑一周</strong>（只报差异不动手）。</p>
+<h3 id="5-1-工具化时才发现-更新器的名字带版本号-精确匹配必然失效">5.1 【工具化时才发现】更新器的名字带版本号，精确匹配必然失效<a class="anchor" href="#5-1-工具化时才发现-更新器的名字带版本号-精确匹配必然失效" aria-label="锚点">#</a></h3>
+<pre><code>GoogleUpdaterTaskUser156.0.8067.0      ← 账本里的名字
+GoogleUpdaterTaskUser157.0.xxxx         ← 一次 Chrome 升级后
+QuarkUpdaterTaskUser1.0.0.21            ← 夸克升级后
+QianwenUpdaterTaskUser1.0.0.7
+OneDrive\26.168.0830.0006\OneDriveLauncher.exe</code></pre>
+<p><strong>注册表值名和 exe 路径里都嵌着版本号。</strong> 所以守卫<strong>必须按模式匹配，不能按精确名</strong>——<br>账本因此额外携带 <code>Match</code> 正则字段（由扫描阶段生成）。</p>
+<h3 id="5-2-守卫的两条硬边界-写进代码注释了">5.2 守卫的两条硬边界（写进代码注释了）<a class="anchor" href="#5-2-守卫的两条硬边界-写进代码注释了" aria-label="锚点">#</a></h3>
+<ol><li><strong>只动账本里 <code>Tier ∈ {kill, demand}</code> 且当前实际存在的匹配项。</strong> 账本外的一律不管。</li><li><strong>没有删除动作。</strong> 只有「禁用 / 恢复」两种写操作。删注册表项不在能力范围内——</li></ol>
+<p><strong>删错一个就再也回不来了，而收益是零。</strong></p>
+<h3 id="5-3-工具化时才发现-注册表与计划任务是两个命名空间">5.3 【工具化时才发现】注册表与计划任务是两个命名空间<a class="anchor" href="#5-3-工具化时才发现-注册表与计划任务是两个命名空间" aria-label="锚点">#</a></h3>
+<p>写守卫时第一版把它们放进同一个池子查，结果：计划任务<br><code>\GoogleUser\GoogleUpdater\GoogleUpdaterTaskUser156.0.8067.0{5554A084-...}</code><br>与注册表值 <code>GoogleUpdaterTaskUser156.0.8067.0</code> <strong>共享一段子串</strong>，<br>于是任务条目把注册表项错误命中，报告里凭空多出 4 条漂移。</p>
+<p>必须<strong>分来源处理</strong>：注册表侧走 <code>$actual</code> 快照 + 首字节比对，任务侧走 <code>Get-ScheduledTask</code> 的 <code>.State</code>。<br>修正后守卫报出 11 项漂移，与 <code>apply</code> 的 11 项计划<strong>完全一致</strong>（7 Run + 4 Task）——两份工具互相印证。</p>
+<hr>
+<h2 id="6-分阶段落地与当前进度">6. 分阶段落地与当前进度<a class="anchor" href="#6-分阶段落地与当前进度" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>阶段</th><th>做什么</th><th>判据</th><th>回滚</th><th>状态</th></tr></thead><tbody><tr><td><strong>P0 观测</strong></td><td>登录后 0/15/30/60/120s 测进程数、CPU、磁盘 IO</td><td>能回答「禁 11 项省多少」</td><td>未改状态</td><td>⚠️ <strong>部分</strong>（见 §6.1 局限）</td></tr><tr><td><strong>P1 扫描出表</strong></td><td>只读盘点 + 建议账本</td><td>出表</td><td>无需回滚</td><td>✅ 完成</td></tr><tr><td><strong>P2 逐条确认</strong></td><td>逐档点头</td><td><code>need-confirm</code> 清零</td><td>无需回滚</td><td>✅ 完成（按本文建议）</td></tr><tr><td><strong>P3 落禁用</strong></td><td>按账本写 <code>StartupApproved</code> / 禁用任务</td><td>重启后登录波进程数下降；<strong>3 个工作日无异常</strong></td><td>写回首字节（存档已备）</td><td>✅ <strong>已执行</strong>，见 §6.2</td></tr><tr><td><strong>P4 按需入口</strong></td><td>给无入口的项建入口</td><td>每个 <code>demand</code> 项能拉起</td><td>删快捷方式</td><td>✅ <strong>本机不需要</strong>（§4）</td></tr><tr><td><strong>P5 自愈守卫</strong></td><td>三段式，先只读跑一周</td><td>只读期差异全部可解释</td><td>禁用守卫任务</td><td>✅ <strong>已注册并实测跑通</strong>（§6.4）</td></tr></tbody></table>
+<h3 id="6-1-p0-的诚实局限-拿到的是稳态-不是登录波">6.1 P0 的诚实局限：拿到的是稳态，不是登录波<a class="anchor" href="#6-1-p0-的诚实局限-拿到的是稳态-不是登录波" aria-label="锚点">#</a></h3>
+<p>改前基线（<code>logon-wave-before-20260930-102839.json</code>）记录了 <strong>16 个被关注进程存活</strong>：<br><code>msedge</code> ×2、<code>OneDrive</code> ×2、<code>PixPin</code>。<strong>Chrome 当时没在跑</strong>（只有 Edge），更新器进程早已退出。</p>
+<p><strong>但这是在会话中途测的稳态，不是登录瞬间的波。</strong> 原因是顺序问题：<br>测量必须紧贴登录时刻，而 P3 一旦执行，下次登录就已经是「改后」状态了——<br><strong>登录波的 before 数据已经取不回来了。</strong></p>
+<p>所以 P0/P3 的结论要分开看：</p>
+<table><thead><tr><th>可比</th><th>不可比</th></tr></thead><tbody><tr><td><strong>进程存活与否</strong>（Edge / OneDrive / PixPin 改后是否还在）——这是本方案的核心问题，<strong>有效</strong></td><td><strong>登录波期间的 CPU% 与磁盘 IO</strong>——before 是稳态、after 是波峰，<strong>不可比</strong></td></tr></tbody></table>
+<p>若必须要登录波的 before/after 对照，唯一诚实的办法是：<br><strong>回退 → 在登录时刻挂一个采样任务取 before 波 → 再执行 P3 → 下次登录取 after 波 → 摘掉采样任务。</strong><br>代价是两次重启 + 一个临时登录任务（本方案正在减少自启，临时加一个采样任务有点讽刺，但它是拿到数据的唯一途径）。<br><strong>当前不做</strong>——「进程是否还在自启」已经能回答本方案要回答的问题。</p>
+<h3 id="6-2-p3-执行结果-2026-09-30-10-34">6.2 P3 执行结果（2026-09-30 10:34）<a class="anchor" href="#6-2-p3-执行结果-2026-09-30-10-34" aria-label="锚点">#</a></h3>
+<p>第一次执行 <strong>10 成功 1 失败</strong>（根路径任务，见 §6.3）。修好后重跑补齐。<br>最终状态经<strong>三重独立验证</strong>：</p>
+<table><thead><tr><th>验证方式</th><th>结果</th></tr></thead><tbody><tr><td>直接读 <code>HKCU\...\StartupApproved\Run</code> 首字节</td><td>7 项 = <code>03</code> 已禁用，<strong>长度仍为 12 字节</strong>（未被截断/重构）</td></tr><tr><td>直接读 4 个 logon 任务的 <code>.State</code></td><td>全部 <code>Disabled</code></td></tr><tr><td>守卫独立巡检（<code>guard_autostart.ps1</code>）</td><td><strong>11 项符合账本 / 0 漂移 / 0 失效</strong></td></tr><tr><td>恢复预演（<code>restore_autostart.ps1</code>）</td><td>11 项均能正确解析并显示 <code>03→02</code>、<code>Disabled→启用</code>；确认预演未写系统</td></tr></tbody></table>
+<p><strong>未动的项</strong>（按设计）：<code>WorkBuddy.WorkBuddy</code> 仍启用、<code>CC Switch</code> 不在账本内、<br><code>SecurityHealth</code> 仍启用、18 个 Auto 服务一个未改、<code>PixPin</code> 任务未动（<code>delay</code> 档本轮不处理）。</p>
+<p><strong>回滚方式</strong>：</p>
+<pre><code class="language-powershell">&amp; <span class="hljs-string">&#x27;D:\Portable\Scripts\maintenance\autostart\restore_autostart.ps1&#x27;</span>            <span class="hljs-comment"># 预演</span>
+&amp; <span class="hljs-string">&#x27;D:\Portable\Scripts\maintenance\autostart\restore_autostart.ps1&#x27;</span> <span class="hljs-literal">-Apply</span>     <span class="hljs-comment"># 真恢复</span></code></pre>
+<h3 id="6-3-执行时才发现-根路径计划任务-不能用-split-2">6.3 【执行时才发现】根路径计划任务：不能用 <code>Split('\',2)</code><a class="anchor" href="#6-3-执行时才发现-根路径计划任务-不能用-split-2" aria-label="锚点">#</a></h3>
+<p><code>\OneDrive Startup Task-S-1-5-21-...-1001</code> 是<strong>根路径任务</strong>——去掉开头的 <code>\</code> 之后<strong>整串里再没有 <code>\</code></strong>。<br>原写法 <code>TrimStart('\').Split('\',2)</code> 只切出 1 个元素，取 <code>$parts[1]</code> 得到 <code>null</code>，<br><code>Disable-ScheduledTask</code> 报「参数为 Null 或空」。<strong>这是静默漏项的典型</strong>：报错被捕获后继续，<br>汇总行只显示「成功 10，失败 1」，很容易被当成偶发而不追。</p>
+<p>修法：按<strong>最后一个</strong> <code>\</code> 切，切点之前补回尾部 <code>\</code>：</p>
+<pre><code>\OneDrive Startup Task-S-...            → Path=[\]  Name=[OneDrive Startup Task-S-...]
+\GoogleUser\GoogleUpdater\GoogleUpd...  → Path=[\GoogleUser\GoogleUpdater\]  Name=[GoogleUpd...]</code></pre>
+<p><code>apply</code> / <code>restore</code> / <code>guard</code> 三处<strong>同一个 bug</strong>，已一并修掉。</p>
+<h3 id="6-4-执行时才发现-可重入的-apply-必须累积存档原值">6.4 【执行时才发现】可重入的 apply 必须累积存档原值<a class="anchor" href="#6-4-执行时才发现-可重入的-apply-必须累积存档原值" aria-label="锚点">#</a></h3>
+<p>第一次执行失败 1 项后要重跑。<strong>若不处理，重跑会把「已禁用」当原值存进新存档，<br>于是 restore 恢复不回启用态——回滚能力被静默废掉，而回滚是本方案的最后一道保险。</strong></p>
+<p>修法：写新存档前先扫全部历史 <code>autostart-backup-*.json</code>，<strong>同名项沿用最早的原始值</strong>。<br>本次实测生效：重跑时提示「找到 11 项历史存档，将沿用其原值」，新存档里 7 项 <code>Run</code> 记录的是<br><code>02-...</code>（真原值）而非当前的 <code>03-...</code>。</p>
+<p>同时加了<strong>幂等</strong>：已是目标态的项直接跳过（本次「已是目标态跳过 10 项」），不重复写、不污染新存档。</p>
+<h3 id="6-5-p5-已上线-开机自动跑-不需要人管-2026-09-30-11-5x">6.5 P5 已上线：开机自动跑，不需要人管（2026-09-30 11:5x）<a class="anchor" href="#6-5-p5-已上线-开机自动跑-不需要人管-2026-09-30-11-5x" aria-label="锚点">#</a></h3>
+<p>按需求「重启后不用跑」，守卫调度已注册并<strong>实测触发验证</strong>：</p>
+<table><thead><tr><th>任务</th><th>触发</th><th>模式</th><th>身份</th><th>上次运行</th></tr></thead><tbody><tr><td><code>khy-autostart-guard-logon</code></td><td><code>LogonTrigger</code> <strong>delay=PT5M</strong></td><td>READ-ONLY</td><td><code>25789</code> / Limited</td><td>11:55:58 · 结果 0</td></tr><tr><td><code>khy-autostart-guard-daily</code></td><td><code>DailyTrigger</code> 03:17</td><td>AUTO-FIX</td><td><code>25789</code> / Limited</td><td>11:57:30 · 结果 0</td></tr></tbody></table>
+<p><strong>两条任务故意是不同模式</strong>，理由：<br>Logon+5min 是<strong>最可能发现漂移</strong>的时刻（各更新器刚跑完），但也是用户正要开始干活的时刻——<br><strong>那时只报不动，把写操作放到凌晨。发现要快，动手续要静。</strong><br>代价是漂移最多存在 24h；要登录即修就 <code>-Install -FixAtLogon</code> 重装（一个参数）。</p>
+<p><strong>延迟取 5min 而不是 3s</strong>：+3s 时各更新器还没跑完，巡检必然看不到它们将要做的改动，白跑一趟。<br>这正是 PixPin 现在是 PT3S 的同一个教训。</p>
+<p><strong>两条路径都实测触发过</strong>（不是只看注册成功）：手动 <code>Start-ScheduledTask</code> 各跑一次，<br>日志分别增长 367 B / 301 B，<code>AUTO-FIX</code> 那次在 0 漂移时正确地什么都没改。</p>
+<p>日志：<code>autostart\guard-log-&lt;年月&gt;.log</code>，<strong>追加写</strong>。追加而非覆盖的理由——<br>守卫的价值恰恰在于「历史上漂移过几次」这件事被记下来。</p>
+<h3 id="6-6-必须记账-守卫本身就是我新增的一个自启项">6.6 【必须记账】守卫本身就是我新增的一个自启项<a class="anchor" href="#6-6-必须记账-守卫本身就是我新增的一个自启项" aria-label="锚点">#</a></h3>
+<p>本方案的目标是减少登录波里的项，<strong>而 P5 往回加了 1 个</strong>：一个 Logon+5min 触发的<br>隐藏 PowerShell 进程。<strong>这是自相矛盾的一处，必须写明而不是藏起来。</strong></p>
+<p>取舍是划算的，但要诚实对比：</p>
+<table><thead><tr><th></th><th>省掉的</th><th>新增的</th></tr></thead><tbody><tr><td>数量</td><td>7 个 <code>Run</code> + 4 个计划任务</td><td>1 个隐藏 <code>powershell.exe</code></td></tr><tr><td>负载</td><td>Edge ×2、OneDrive ×2、5 个更新器</td><td>约 3 秒的 <code>Get-ScheduledTask</code> + 注册表读</td></tr><tr><td>退路</td><td>开始菜单入口全在（§4）</td><td>单个可卸载的任务，菜单 <code>[8]c</code> 一键移除</td></tr></tbody></table>
+<p><strong>它跑在 Logon+5min，不在洪峰里</strong>，所以不与登录波抢资源。卸载入口：<br><code>开机自启管理.bat</code> → <code>[8] c</code>，或 <code>manage_guard_task.ps1 -Action Uninstall</code>。<br><strong>卸载调度不会恢复已禁用的自启项</strong>（那是 <code>restore_autostart.ps1</code> 的事，两者刻意分开）。</p>
+<h3 id="6-7-执行时才发现-批量正则改脚本会改到函数自己">6.7 【执行时才发现】批量正则改脚本会改到函数自己<a class="anchor" href="#6-7-执行时才发现-批量正则改脚本会改到函数自己" aria-label="锚点">#</a></h3>
+<p>给守卫加日志时，用正则把所有 <code>Write-Host </code> 批量替换成 <code>Write-Line </code>。<br><strong>这条正则同时命中了新写的 <code>Write-Line</code> 函数体内部那一句</strong> ——<br>函数变成了自己调自己，运行直接 <code>CallDepthOverflow</code>，且因为在<br><code>Start-Job</code> 里而表现为「脚本卡住不动」而不是干脆报错。</p>
+<p>修法：那一句必须回到 <code>Write-Host</code>；并在函数里留注释说明为什么。<br>教训：<strong>批量改脚本后必须回看被改函数自己的定义</strong>——<br>正则改的是文本，不理解「这一行是实现，不是调用」。</p>
+<hr>
+<h2 id="7-稳定性加固-2026-09-30-14-3x">7. 稳定性加固（2026-09-30 14:3x）<a class="anchor" href="#7-稳定性加固-2026-09-30-14-3x" aria-label="锚点">#</a></h2>
+<p>前面五节把「功能对不对」做完了。这一节只回答一件事：<strong>它坏了你怎么知道。</strong></p>
+<h3 id="7-1-最坏的一种失效-守卫崩了却不留痕">7.1 最坏的一种失效：守卫崩了却不留痕<a class="anchor" href="#7-1-最坏的一种失效-守卫崩了却不留痕" aria-label="锚点">#</a></h3>
+<p><strong>实测（不是推演）</strong>：把账本移走再跑守卫——<br>崩在 <code>throw &quot;账本不存在&quot;</code>，而日志写在函数末尾的正常路径上，<strong>一个字都没写</strong>。</p>
+<p>这是最坏的组合：守卫坏了，而它的存在证据（没有漂移记录）与「一切正常」<strong>完全无法区分</strong>。</p>
+<p>修法：整个运行体包进 <code>try / catch / finally</code>，<strong>日志写在 <code>finally</code></strong>。<br>现在四种退出路径——正常、无漂移、已修正、<strong>崩溃</strong>——全部留痕，崩溃记录长这样：</p>
+<pre><code>===== 2026-09-30 14:18:19  模式=READ-ONLY  结局=崩溃(账本不存在：…先跑 scan_autostart.ps1 重建)  符合=0  漂移=0  …  =====
+  !! 守卫异常终止：账本不存在：…
+  !! 本次未做任何修正。若是被禁的项复活了，它们会一直留在复活状态。</code></pre>
+<p>日志上限 2MB 自动轮转一份：日志无上限的话一年后近万行，<br><code>Add-Content</code> 每次都要重开一个越来越大的文件。</p>
+<h3 id="7-2-心跳-守卫死了必须能被发现">7.2 心跳：守卫死了必须能被发现<a class="anchor" href="#7-2-心跳-守卫死了必须能被发现" aria-label="锚点">#</a></h3>
+<p>光有日志不够——<strong>没人会去看日志</strong>。所以 <code>manage_guard_task.ps1 -Action Status</code> 做四类判据：</p>
+<table><thead><tr><th>判据</th><th>阈值</th><th>为什么要它</th></tr></thead><tbody><tr><td>logon 任务</td><td>上次运行 &gt; 7 天</td><td>超过一周没登录过机器，属正常</td></tr><tr><td>daily 任务</td><td>上次运行 &gt; 2.4 天</td><td>它本该每天 03:17 跑一次；2.4 天没跑 = 死了</td></tr><tr><td><code>LastTaskResult</code></td><td>≠ 0</td><td>任务跑过但失败</td></tr><tr><td><strong>回退存档</strong></td><td>缺失 / 0 条目 / 解析失败</td><td><strong>它是整个方案唯一的退路</strong>。备份坏了而你还不知道 = 禁用成功但不可撤销</td></tr><tr><td>账本</td><td>缺失</td><td>守卫会崩溃</td></tr></tbody></table>
+<p><strong>误报比不报更糟</strong>——会训练你忽略红色。所以安装后有 <strong>3 天宽限期</strong>：<br>重新注册任务必然把 <code>LastRunTime</code> 清成「从未运行」，那是注册动作的副作用而非守卫坏了，<br>宽限期内显示<strong>黄色「刚安装待首跑」</strong>而不是红色。安装时刻记在 <code>guard-installed.txt</code>。<br>（这条是在实测中真出现过一次误报后加的。）</p>
+<h3 id="7-3-稳定性加固时才发现-写在脚本内部的-bom-自检是无效代码">7.3 【稳定性加固时才发现】写在脚本内部的 BOM 自检是无效代码<a class="anchor" href="#7-3-稳定性加固时才发现-写在脚本内部的-bom-自检是无效代码" aria-label="锚点">#</a></h3>
+<p>先说清楚触发场景：<code>.ps1</code> 缺 UTF-8 BOM 时，PowerShell 5.1 按 ANSI(GBK) 解码，<br>中文被破坏、<strong>字符串终止符也被破坏</strong> → 整文件 <code>ParserError</code>。</p>
+<p>关键在于：<strong>PowerShell 在执行任何语句之前先解析整个文件。</strong><br>于是「脚本内部检查自己有没有 BOM」检查的是一个<strong>永远不会执行到的位置</strong>。<br>实测：剥掉 BOM 后 <code>ParseError</code> 报在第 1 行，而我写在第 22 行的自检根本没机会跑。</p>
+<p>已把那 5 处自检全部撤除（留着就是误导性的死代码），改为<strong>独立诊断器</strong><br><code>autostart\check_bom.ps1</code>，挂在菜单 <code>[c]</code>：</p>
+<ul><li><strong>它自己必须是纯 ASCII 且无 BOM</strong>——否则它也会被同样的机制打死。</li></ul>
+<p>（第一版我给它写了中文注释，它立刻把自己判成 FAIL。改成 0 个非 ASCII 字符。）</p>
+<ul><li><strong>诊断路径不能依赖被诊断对象</strong>：菜单 <code>.bat</code> 是纯 ASCII，</li></ul>
+<p>所以即使 7 个中文脚本全部烂掉，从菜单调它仍然能给出答案。<strong>已实测验证。</strong></p>
+<ul><li><strong>只管自己的文件</strong>：仓库里另有 9 个历史 <code>.bat</code> 有 LF-only 等问题，</li></ul>
+<p>但那是别人的脚本。<strong>一个对无关文件乱报的检查器会被无视</strong>，<br>  所以按 ASCII 标记 <code>Autostart Manager</code> 识别归属，其余报「skipped」。</p>
+<p>判定规则（实测得出）：<code>.ps1</code> 含 CJK → 必须有 BOM；<code>.ps1</code> 纯 ASCII → BOM 可选；<br><code>.bat</code> → 必须无 BOM + 必须 CRLF + 必须无 CJK。</p>
+<h3 id="7-4-稳定性加固时才发现-x-字面量-不插值">7.4 【稳定性加固时才发现】<code>&quot;{$($x)} 字面量&quot;</code> 不插值<a class="anchor" href="#7-4-稳定性加固时才发现-x-字面量-不插值" aria-label="锚点">#</a></h3>
+<p><code>&quot;{$([int]$age.TotalDays)} 天前&quot;</code> 在本机 PowerShell 里<strong>原样输出 <code>{0} 天前</code></strong>。<br>它偏偏出现在<strong>「报告守卫是否还活着」那行</strong>上——<br>也就是稳定性告警本身显示错了。已改为先算进变量再用 <code>-f</code>；并全仓扫过，只此一处。</p>
+<p><strong>安静的显示错误比崩溃更危险</strong>：崩溃你立刻知道，错误的「一切正常」你不会去看。</p>
+<h3 id="7-5-稳定性自检结果">7.5 稳定性自检结果<a class="anchor" href="#7-5-稳定性自检结果" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>项</th><th>结果</th></tr></thead><tbody><tr><td>守卫崩溃是否留痕</td><td>✓ 实测：账本移走后日志增长 588 B（修复前 0 B）</td></tr><tr><td>告警是否真的会亮</td><td>✓ 实测：卸载任务 + 移走账本 → 两条标红 + 总结提示</td></tr><tr><td>告警是否会产生误报</td><td>✓ 已修：3 天宽限期，误报转黄色</td></tr><tr><td>诊断器在全体脚本损坏时能否工作</td><td>✓ 实测：剥掉全部 6 个脚本的 BOM，检查器仍报出全部 FAIL</td></tr><tr><td>任务无头执行</td><td>✓ 实测：两条任务各手动触发一次，<code>结果=0</code>，日志增长 382 B</td></tr><tr><td>编码自检</td><td>✓ 7 个 <code>.ps1</code> + 1 个 <code>.bat</code> 全 OK</td></tr><tr><td>守卫巡检</td><td>✓ 11 项符合 / 0 漂移 / 0 失效</td></tr><tr><td>自启项状态</td><td>7 禁用 / 2 启用（<code>WorkBuddy</code>、<code>CC Switch</code>，本就不该动），长度 9/9 全 12B</td></tr><tr><td>Auto 服务改动</td><td>0</td></tr></tbody></table>
+<p><strong>剩下的真实风险</strong>（不是缺陷，是取舍）：<br>① 漂移最多存在 24h（登录只读、次日 03:17 才修）——想要 0 窗口就 <code>-Install -FixAtLogon</code>；<br>② 每日任务绑在 03:17，<strong>关机跳过则顺延到下次开机后的下一个 03:17</strong>（Task Scheduler 的 <code>StartWhenAvailable</code> 语义）；<br>③ 守卫本身是 1 个新增的登录自启项（§6.6 已记账）。</p>
+<hr>
+<h2 id="8-运行期-不重启也要管住后台-2026-09-30-15-2x">8. 运行期：不重启也要管住后台（2026-09-30 15:2x）<a class="anchor" href="#8-运行期-不重启也要管住后台-2026-09-30-15-2x" aria-label="锚点">#</a></h2>
+<h3 id="8-1-问题的真实形状">8.1 问题的真实形状<a class="anchor" href="#8-1-问题的真实形状" aria-label="锚点">#</a></h3>
+<p>前六节管的都是「下次登录会不会自己起来」。<strong>但机器可以不重启。</strong><br>本机实测已连续运行 4 天（<code>LastBootUpTime</code> = 9/26 15:05），<br>禁用的效果<strong>一次都没生效过</strong>——而后台已经堆成：</p>
+<table><thead><tr><th>进程</th><th>数量</th><th>内存</th><th>窗口</th><th>启动于</th></tr></thead><tbody><tr><td>WorkBuddyAI</td><td>10</td><td>~1450 MB</td><td>✅</td><td>9/26</td></tr><tr><td><strong>quark</strong></td><td>49–57</td><td><strong>~2800–3400 MB</strong></td><td>✅</td><td>9/26</td></tr><tr><td>ZCode</td><td>16</td><td>~1200 MB</td><td>✅</td><td>9/29</td></tr><tr><td>Qoder</td><td>11</td><td>~630 MB</td><td>✅</td><td>—</td></tr><tr><td>BaiduNetdiskUnite</td><td>12</td><td>~350 MB</td><td>✅</td><td>9/30 8:31</td></tr><tr><td>msedgewebview2</td><td>13</td><td>~400 MB</td><td>❌</td><td>9/30 14:27</td></tr><tr><td>WeChatAppEx</td><td>7</td><td>~435 MB</td><td>❌</td><td>9/26</td></tr><tr><td><strong>WorkBuddy</strong></td><td>15</td><td>~440 MB</td><td>❌</td><td>9/26</td></tr><tr><td>copilotapp</td><td>9</td><td>~115 MB</td><td>❌</td><td>9/29</td></tr></tbody></table>
+<p>新增 <code>manage_runtime.ps1</code>（<code>-Action Audit\|Close</code>），菜单 <code>[r]</code> 审计、<code>[s]</code> 关闭指定进程，<br>并注册第三条任务 <code>khy-autostart-runtime-audit</code>（每日 03:47，<strong>AUDIT-ONLY</strong>）。</p>
+<h3 id="8-2-关键-有没有窗口-不是判据-是否被需要-我判不出来">8.2 【关键】「有没有窗口」不是判据，「是否被需要」我判不出来<a class="anchor" href="#8-2-关键-有没有窗口-不是判据-是否被需要-我判不出来" aria-label="锚点">#</a></h3>
+<p>初版判据是「无窗口 + CPU 不涨 + 够大 = 闲置可回收」。<strong>实测两次连续运行给出互相矛盾的结果</strong>：<br><code>msedgewebview2</code> / <code>Weixin</code> 一轮被判孤儿、下一轮变 busy。</p>
+<p>错因：沿 PPID 上溯最终总会走到 <code>wininit.exe</code> / <code>svchost.exe</code>，而它们的父 PID 必然查不到<br>（系统启动时就没有父）。于是「<strong>祖先</strong>的父死了」被当成「<strong>我</strong>是孤儿」——<br><code>clash-verge.exe</code> 自己活得好好的（有窗口、正在跑你的代理），却被算成「根的父已退出」。</p>
+<p>而且在 Electron/Chromium 树上「孤儿」这个概念根本不成立：启动器派生子进程后就退出<br>（<code>msedge</code> 浏览器进程 44324 活着，它的父 51432 早退了），<br>按「父死了就是孤儿」会把一个正常浏览器判成垃圾。</p>
+<p><strong>具体差点造成的伤害</strong>（这就是为什么要实测）：</p>
+<table><thead><tr><th>若按初版自动回收</th><th>后果</th></tr></thead><tbody><tr><td><code>msedgewebview2</code> 423MB</td><td>根是 <strong><code>clash-verge.exe</code></strong> —— 当场断网</td></tr><tr><td><code>WeChatAppEx</code> 435MB</td><td>根是 <code>Weixin.exe</code> —— 微信小程序崩掉</td></tr><tr><td><code>WorkBuddy</code> 440MB</td><td>与 <code>WorkBuddyAI</code> 同产品家族，后者有窗口在用</td></tr></tbody></table>
+<p>而 <code>quark</code> 在第一轮审计里还是「0 窗口」，第二轮变成「1 窗口可见」——<br><strong>你当时正开着它</strong>。窗口检查救了一次，但下一次就未必。</p>
+<p><strong>因此改成诚实的四类判定</strong>（能确定的只有这些）：</p>
+<table><thead><tr><th>判定</th><th>依据</th><th>能否自动处置</th></tr></thead><tbody><tr><td><code>in-use</code></td><td>有可见窗口</td><td>否</td></tr><tr><td><code>busy</code></td><td>采样期 CPU 增量 ≥ 0.5s</td><td>否</td></tr><tr><td><code>never-touch</code></td><td>硬编码名单：Defender / 安全中心 / <strong>ToDesk</strong> / dwm / explorer / 系统壳</td><td><strong>永不</strong></td></tr><tr><td><code>undecided</code></td><td><strong>账本里是 need-confirm / keep / delay</strong></td><td>否——等人拍板</td></tr><tr><td><code>unknown-candidate</code></td><td>无窗口 + 不忙 + ≥100MB，<strong>但看不出是否还需要</strong></td><td><strong>否，必须点名</strong></td></tr></tbody></table>
+<p><code>unknown-candidate</code> 的措辞是刻意的：<strong>不说「闲置」，说「无法判定是否还需要」</strong>。<br>并<strong>删掉了 <code>-All</code> 一键全关</strong>——判据既然不可靠，批量自动关闭必然误伤。<br>关闭必须 <code>-Targets</code> 显式点名 + 交互输入 <code>YES</code> 二次确认。</p>
+<h3 id="8-3-账本同时约束启动期与运行期">8.3 账本同时约束启动期与运行期<a class="anchor" href="#8-3-账本同时约束启动期与运行期" aria-label="锚点">#</a></h3>
+<p><code>WorkBuddy.exe</code> 有 15 个渲染进程占 440MB，账本里 <code>WorkBuddy</code> 是 <code>need-confirm</code>（Run 项仍启用）。<br>若运行期不看账本，就会替人做决定把它的渲染进程杀掉。<strong>现在账本说「人还没决定」的进程，<br>运行期也不碰</strong>（<code>undecided</code> 档）——两个时期共用一个判断源。</p>
+<h3 id="8-4-实测结果">8.4 实测结果<a class="anchor" href="#8-4-实测结果" aria-label="锚点">#</a></h3>
+<p>三次连跑，<strong>类目结构完全一致</strong>（<code>unknown-candidate</code> / <code>undecided</code> / <code>in-use</code> / <code>small</code> 各归各的）。<br>唯一摆动的是 <code>msedgewebview2</code> 在 <code>busy</code> 与 <code>unknown-candidate</code> 之间，<br>因其 CPU 增量在 0.54–0.63s 之间跨过 0.5s 阈值——<strong>这是诚实的活动度差异，不是结构性误判</strong>。</p>
+<p>需要人工确认的稳定项（约 980–1380 MB）：<br><code>WeChatAppEx</code> 435MB、<code>msedge</code> 320MB、<code>copilotapp</code> 115MB、<code>OneDrive</code> 112MB。<br><strong>本轮一个都没关</strong>——判据既已被证伪，就不该由我替你决定关哪个。</p>
+<h3 id="8-5-顺带发现-onedrive-禁用后仍在跑">8.5 顺带发现：OneDrive 禁用后仍在跑<a class="anchor" href="#8-5-顺带发现-onedrive-禁用后仍在跑" aria-label="锚点">#</a></h3>
+<p><code>OneDrive.exe</code> 启动于 <strong>15:15</strong>，而禁用发生在 <strong>10:34</strong>。<strong>禁了自启项，它还是在禁用之后被拉起来的。</strong><br>说明存在 Run 键之外的第二条启动路径（OneDrive 自身的会话重启机制或更新器）。<br><strong>守卫只能修「自启项漂移」，修不了「应用自己复活自己」</strong>——这是本方案的边界，记在这里。</p>
+<h3 id="8-6-本节新增风险">8.6 本节新增风险<a class="anchor" href="#8-6-本节新增风险" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>#</th><th>风险</th><th>对策</th></tr></thead><tbody><tr><td>R17</td><td>自动回收误杀正在用的东西</td><td><strong>不做自动回收</strong>；只审计，关闭需点名 + 二次确认（§8.2）</td></tr><tr><td>R18</td><td>应用自我复活，自启项治理失效</td><td>已实测 OneDrive；守卫覆盖不到，需单独处理（§8.5）</td></tr></tbody></table>
+<hr>
+<h2 id="7-风险与回滚">7. 风险与回滚<a class="anchor" href="#7-风险与回滚" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>风险</th><th>概率</th><th>后果</th><th>对策</th></tr></thead><tbody><tr><td>R1</td><td>更新器 / 大版本升级复活被禁的自启项</td><td><strong>高</strong>（必然发生）</td><td>回到原状</td><td>§5 守卫；<strong>必须按模式匹配</strong>（§5.1）。调度待 P5 启用</td></tr><tr><td>R2</td><td>写错字节，禁用没生效或误禁别的</td><td>中</td><td>自启行为不可预期</td><td><strong>只翻首字节、不构造</strong>（§3.1）；每次写前存档。<strong>实测 7 项长度仍 12 字节</strong></td></tr><tr><td>R3</td><td>写错注册表值类型，Windows 静默忽略</td><td>中</td><td>「禁了但还在启动」</td><td>.NET API 显式 <code>Binary</code>（§3.1）。<strong>实测 11 项全部生效</strong></td></tr><tr><td>R4</td><td>关掉某项后发现「原来我每天都要用」</td><td><strong>低</strong></td><td>体验回退</td><td><strong>四个应用开始菜单入口全在</strong>（§4）；恢复是一次赋值</td></tr><tr><td>R5</td><td>守卫把差异「修」错，越修越乱</td><td>中</td><td>自启行为不可预测</td><td>只读模式先跑一周 + 存档 + <strong>无删除动作</strong></td></tr><tr><td>R6</td><td>跨命名空间误命中，报告失真</td><td><strong>已发生并修复</strong></td><td>报告多出不存在的问题</td><td>分来源处理（§5.3）；两份工具交叉印证</td></tr><tr><td>R7</td><td>账本里的名字因版本号变化而失效</td><td><strong>高</strong></td><td>守卫漏管</td><td>守卫报「账本失效」并提示重扫；<strong>重扫不自动禁用新名字，那仍是人的决定</strong></td></tr><tr><td>R8</td><td>根路径计划任务被漏处理</td><td><strong>已发生并修复</strong></td><td>OneDrive 登录自启没禁掉</td><td>按最后一个 <code>\</code> 切（§6.3）；三处同 bug 已一并修</td></tr><tr><td>R9</td><td>重跑 apply 污染存档，回滚能力被静默废掉</td><td><strong>已发生并修复</strong></td><td>restore 恢复不回启用态</td><td>存档累积沿用最早原值（§6.4）+ 幂等跳过</td></tr><tr><td>R10</td><td>把稳态数据当登录波数据解读，得出错误结论</td><td><strong>高</strong>（易犯）</td><td>「省了 40% CPU」之类的不实结论</td><td>§6.1 明确区分可比/不可比；只有「进程是否还在自启」有效</td></tr><tr><td>R11</td><td>守卫自动改错，且无人察觉</td><td>低</td><td>自启状态与预期不符</td><td>登录那次只读（先看）、每日才修（§6.5）；<strong>每次修正都落日志</strong>；单一可卸载入口</td></tr><tr><td>R12</td><td>批量正则改脚本改到函数自身定义</td><td><strong>已发生并修复</strong></td><td><code>CallDepthOverflow</code>，脚本表现为卡死</td><td>函数内保留 <code>Write-Host</code> 并注释原因（§6.7）</td></tr><tr><td>R13</td><td><strong>守卫崩溃不留痕</strong>，与「从无漂移」无法区分</td><td><strong>已发生并修复</strong></td><td>守卫死掉而你以为一切正常</td><td>日志写在 <code>finally</code>，四种退出路径全留痕（§7.1）</td></tr><tr><td>R14</td><td>守卫死了没人知道</td><td><strong>高</strong></td><td>被禁的项复活后长期不复位</td><td>心跳判据 + 存档可读性检查（§7.2）；<strong>误报比不报更糟</strong>，故有 3 天宽限期</td></tr><tr><td>R15</td><td>脚本被编辑掉 BOM 后静默出错</td><td>中</td><td>中文规则/提示被破坏</td><td>独立纯 ASCII 诊断器（§7.3）。<strong>脚本内自检无效</strong>——PS 5.1 先解析整文件，自检跑不到</td></tr><tr><td>R16</td><td>稳定性告警本身显示错误</td><td><strong>已发生并修复</strong></td><td>「守卫还活着」显示成 <code>{0} 天前</code></td><td><code>&quot;{$($x)}&quot;</code> 不插值，改用 <code>-f</code>（§7.4）。<strong>安静的显示错误比崩溃危险</strong></td></tr></tbody></table>
+<hr>
+<h2 id="8-有意排除">8. 有意排除<a class="anchor" href="#8-有意排除" aria-label="锚点">#</a></h2>
+<ul><li><strong>不动服务层任何一项。</strong> 华为/驱动/音频/Office 组件属厂商工具管辖范围，<strong>不越界</strong>。</li><li><strong>不建议关 <code>ToDesk_Service</code>。</strong> 远程自救通道的价值高于它占的资源，取舍只能由人做。</li><li><strong>不改任何软件的安装配置</strong>，只动它们在登录波里的<strong>启用态</strong>。</li><li><strong>不删任何注册表项。</strong> 只翻一个字节。</li><li><strong>不新建按需入口。</strong> 本机四个应用入口已齐（§4）——不做多余的事。</li><li><strong>本轮不处理 <code>delay</code> 档（PixPin）。</strong> 改触发器延迟要重建计划任务，属独立一步，</li></ul>
+<p>不和「禁用」混在同一次改动里。</p>
+<ul><li><strong>不提供「一键全部禁用」。</strong> 逐条确认是这个方案的一部分，不是流程冗余。</li><li><strong>不删 <code>Scripts\maintenance\启动项优化.bat</code>。</strong> 它的 <code>.reg</code> 导出目前仍是唯一的整机备份；</li></ul>
+<p>按 <code>Scripts/CLAUDE.md</code> 的迁移规程应移入 <code>_deprecated/</code> 并标注替代关系——<strong>等 P3 跑通后再动</strong>。</p>
+<hr>
+<h2 id="9-工具">9. 工具<a class="anchor" href="#9-工具" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>作用</th><th>写系统状态？</th></tr></thead><tbody><tr><td><code>Scripts\maintenance\开机自启管理.bat</code></td><td>菜单入口，选项 1–7</td><td>5 / 6 / 7 才会</td></tr><tr><td><code>autostart\scan_autostart.ps1</code></td><td>只读盘点；分类规则在文件顶部 <code>$RULES</code> 表，<strong>未命中即 <code>need-confirm</code></strong></td><td>否</td></tr><tr><td><code>autostart\apply_autostart.ps1</code></td><td>按账本禁用。<strong>默认预演，<code>-Apply</code> 才写</strong></td><td><code>-Apply</code> 时是</td></tr><tr><td><code>autostart\restore_autostart.ps1</code></td><td>从存档恢复。<strong>整份 12 字节回写</strong>（不是再翻一次）</td><td><code>-Apply</code> 时是</td></tr><tr><td><code>autostart\guard_autostart.ps1</code></td><td>自愈守卫。<strong>默认只读巡检，<code>-Apply</code> 才修</strong></td><td><code>-Apply</code> 时是</td></tr><tr><td><code>autostart\measure_logon_wave.ps1</code></td><td>登录波基线测量</td><td>否</td></tr><tr><td><code>autostart\manage_guard_task.ps1</code></td><td>注册/卸载/查询守卫调度（`-Action Install\</td><td>Uninstall\</td></tr><tr><td><code>autostart\check_bom.ps1</code></td><td><strong>独立</strong>编码自检。<strong>纯 ASCII 无 BOM</strong>，所以全体中文脚本都烂掉时它仍能用（§7.3）</td><td>否</td></tr><tr><td><code>autostart\guard-installed.txt</code></td><td>安装时刻，供 Status 的 3 天宽限期判据用</td><td>否</td></tr><tr><td><code>autostart\guard-log-&lt;年月&gt;.log</code></td><td>守卫运行日志，<strong>追加写</strong>，<code>finally</code> 里落盘，2MB 轮转</td><td>否</td></tr><tr><td><code>autostart\autostart-ledger.json</code></td><td>建议账本（含 <code>machineState</code> 标记）</td><td>否</td></tr><tr><td><code>autostart\autostart-backup-*.json</code></td><td>写入前的全量存档（累积沿用最早原值）</td><td>否</td></tr></tbody></table>
+<p>菜单新增：<code>[8]</code> 管理守卫调度、<code>[9]</code> 查状态 + 看日志尾部 25 行。</p>
+<p><strong>三个工具全部默认只读</strong>，必须显式 <code>-Apply</code> 才写系统状态。菜单 <code>[5]</code> 还要额外输入 <code>YES</code> 二次确认。</p>
+<h3 id="9-1-两个编码坑-都已踩过并修好">9.1 两个编码坑（都已踩过并修好）<a class="anchor" href="#9-1-两个编码坑-都已踩过并修好" aria-label="锚点">#</a></h3>
+<p><strong>① <code>.ps1</code> 必须存 UTF-8 with BOM。</strong><br>PowerShell 5.1 按 ANSI(GBK) 读<strong>无 BOM</strong> 的 <code>.ps1</code>，中文规则表会被静默解码破坏成语法错误。<br>扫描器首次运行就是这样炸的。脚本已加 BOM 自检——缺 BOM 直接 <code>throw</code>，<strong>不允许静默跑出错误结果</strong>。<br><code>apply</code> / <code>restore</code> / <code>guard</code> / <code>measure</code> 同样必须带 BOM。</p>
+<p><strong>② 菜单 <code>.bat</code> 必须纯 ASCII，且不能用 <code>chcp</code>。</strong><br>cmd.exe 是<strong>逐字节边执行边读</strong> <code>.bat</code> 的，中途 <code>chcp 65001</code> 会让后续字节用新代码页解码、<br>已解析的部分用旧的——实测直接把菜单解析撕碎（某一行被当成命令执行）。<br>所以菜单文本全英文，中文交给各自设好 <code>OutputEncoding</code> 的 <code>.ps1</code>。<br>另：<code>.bat</code> 必须 <strong>CRLF</strong> 换行（LF-only 会让 <code>echo</code> 被截成 <code>ho</code>），且存 <strong>UTF-8 无 BOM</strong><br>（有 BOM 会被 cmd 当普通字符打印）。</p>
+<h3 id="9-2-与既有脚本的关系">9.2 与既有脚本的关系<a class="anchor" href="#9-2-与既有脚本的关系" aria-label="锚点">#</a></h3>
+<p><code>Scripts\maintenance\启动项优化.bat</code> <strong>早于本方案存在，且从未真正禁过任何一项</strong>：<br>它 <code>reg export</code> 备份了 <code>Run</code> 键（这部分有价值，保留），随后生成一份 markdown 清单，<br>内容是 <code>Spotify / Discord / Steam</code> 之类的通用样板（<strong>与这台机器无关</strong>），<br>最后 <code>echo</code> 提示「请打开任务管理器手动禁用」。本方案取代它的「分析 + 清单」职责。</p>
+<hr>
+<h2 id="10-复现">10. 复现<a class="anchor" href="#10-复现" aria-label="锚点">#</a></h2>
+<pre><code class="language-powershell"><span class="hljs-comment"># 只读盘点</span>
+&amp; <span class="hljs-string">&#x27;D:\Portable\Scripts\maintenance\autostart\scan_autostart.ps1&#x27;</span>
+
+<span class="hljs-comment"># 某一项当前的启用字节（HKCU 是 02/03，HKLM 是 06/07）</span>
+(<span class="hljs-built_in">Get-ItemProperty</span> <span class="hljs-string">&#x27;HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run&#x27;</span>).
+  PSObject.Properties | <span class="hljs-built_in">Where-Object</span> Name <span class="hljs-operator">-notlike</span> <span class="hljs-string">&#x27;PS*&#x27;</span> |
+  <span class="hljs-built_in">ForEach-Object</span> { <span class="hljs-string">&quot;<span class="hljs-variable">$</span>(<span class="hljs-variable">$_</span>.Name) : <span class="hljs-variable">$</span>([BitConverter]::ToString(<span class="hljs-variable">$_</span>.Value[0..1]))&quot;</span> }
+
+<span class="hljs-comment"># 登录触发的计划任务</span>
+<span class="hljs-built_in">Get-ScheduledTask</span> | <span class="hljs-built_in">Where-Object</span> TaskPath <span class="hljs-operator">-notlike</span> <span class="hljs-string">&#x27;\Microsoft\*&#x27;</span> |
+  <span class="hljs-built_in">ForEach-Object</span> { <span class="hljs-string">&quot;<span class="hljs-variable">$</span>(<span class="hljs-variable">$_</span>.TaskPath)<span class="hljs-variable">$</span>(<span class="hljs-variable">$_</span>.TaskName) :: &quot;</span> +
+    ((<span class="hljs-variable">$_</span>.Triggers | <span class="hljs-built_in">ForEach-Object</span> { <span class="hljs-variable">$_</span>.CimClass.CimClassName }) <span class="hljs-operator">-join</span> <span class="hljs-string">&#x27;+&#x27;</span>) }
+
+<span class="hljs-comment"># 自动启动的第三方服务</span>
+<span class="hljs-built_in">Get-CimInstance</span> Win32_Service |
+  <span class="hljs-built_in">Where-Object</span> { <span class="hljs-variable">$_</span>.StartMode <span class="hljs-operator">-eq</span> <span class="hljs-string">&#x27;Auto&#x27;</span> <span class="hljs-operator">-and</span> <span class="hljs-variable">$_</span>.PathName <span class="hljs-operator">-notmatch</span> <span class="hljs-string">&#x27;^[Cc]:\\Windows&#x27;</span> } |
+  <span class="hljs-built_in">Select-Object</span> Name, State, PathName</code></pre>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-167] 模型选择列表分组与信息分层方案.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-ARCH-167] 模型选择列表分组与信息分层方案</div></a><a class="next" href="../../../../docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-169] khychat启动假阴性-就绪信号后置与守护僵尸化方案.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-ARCH-169] khychat 启动假阴性 —— 就绪信号后置与守护僵尸化方案</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-168] 开机零自启与按需懒加载方案.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

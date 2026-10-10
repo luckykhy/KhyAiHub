@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>dependency — Agent 依赖自愈子系统 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>network<span class="sep">›</span>dependency<span class="sep">›</span>dependency — Agent 依赖自愈子系统</div>
+      <header class="hero reveal"><h1>dependency — Agent 依赖自愈子系统</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#dependency-agent-依赖自愈子系统">dependency — Agent 依赖自愈子系统</a></li><li class="lvl-2"><a href="#各文件的职责-取自各文件头注释-未做二次概括">各文件的职责（取自各文件头注释，未做二次概括）</a></li><li class="lvl-2"><a href="#谁在用本单元-非测试消费者-去重-3-个">谁在用本单元（非测试消费者，去重 3 个）</a></li><li class="lvl-2"><a href="#出域边-如实登记-不写白名单把它合法化">出域边（如实登记，不写白名单把它合法化）</a></li><li class="lvl-2"><a href="#已知缺陷-共置测试里以-known-defect-钉住-一律登记不修">已知缺陷（共置测试里以 `KNOWN-DEFECT:` 钉住，一律登记不修）</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="dependency-agent-依赖自愈子系统">dependency — Agent 依赖自愈子系统<a class="anchor" href="#dependency-agent-依赖自愈子系统" aria-label="锚点">#</a></h1>
+<p>D2 业务上下文里的一个功能单元：当一次工具调用因为<strong>本机依赖缺失</strong>而失败时，<br>不把硬中断抛回用户，而是走「探测缺失 → 询问是否安装 → 隔离执行安装 → 回环重试」的交互式修复。</p>
+<p>7 个源文件，全部有同名同目录的共置测试（<code>node --test</code>，192 例 / 0 fail，2026-09-29 复验）。</p>
+<h2 id="各文件的职责-取自各文件头注释-未做二次概括">各文件的职责（取自各文件头注释，未做二次概括）<a class="anchor" href="#各文件的职责-取自各文件头注释-未做二次概括" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>角色</th></tr></thead><tbody><tr><td><code>index.js</code></td><td>单元门面，串起探测 → 询问 → 安装 → 重试</td></tr><tr><td><code>registry.js</code></td><td>依赖缺失场景的<strong>单一真源</strong>：每个逻辑依赖收敛为四件事，禁止散落硬编码</td></tr><tr><td><code>resolver.js</code></td><td>依赖探测、回溯辨认与安装计划构建</td></tr><tr><td><code>installRunner.js</code></td><td>隔离执行依赖安装命令</td></tr><tr><td><code>installLocation.js</code></td><td>决定 project 作用域依赖装到哪里（应对 backend 跑在只读目录的形态）</td></tr><tr><td><code>healingLoop.js</code></td><td>自愈循环编排（核心流程）</td></tr><tr><td><code>toolchainVersions.js</code></td><td>「按客户需求选版本」的工具链版本矩阵，纯叶子：零 IO、确定性、绝不抛</td></tr></tbody></table>
+<h2 id="谁在用本单元-非测试消费者-去重-3-个">谁在用本单元（非测试消费者，去重 3 个）<a class="anchor" href="#谁在用本单元-非测试消费者-去重-3-个" aria-label="锚点">#</a></h2>
+<ul><li><code>src/services/dependency/index.js:4</code> —— D1 侧的历史路径再导出壳（<code>module.exports = require('../domain/network/dependency')</code>）。</li><li><code>src/services/domain/maintenance/selfHeal/fixActions.js:45</code> —— D2 内惰性 require，自愈动作面。</li><li><code>src/services/domain/project/management/resources/dependencies.resource.js:12-13</code> —— D2 内，取 <code>runInstall</code> 与 <code>resolver</code>。</li></ul>
+<h2 id="出域边-如实登记-不写白名单把它合法化">出域边（如实登记，不写白名单把它合法化）<a class="anchor" href="#出域边-如实登记-不写白名单把它合法化" aria-label="锚点">#</a></h2>
+<ul><li><code>installLocation.js:32</code> → <code>utils/dataHome</code>（D3，箭头函数内惰性 require，取数据根）。</li><li><code>resolver.js:19</code> → <code>services/toolError.js</code>（<strong>D1</strong>）：<code>DOMAIN-DEPS.json</code> 里 D2 的 <code>mayDependOn</code> 只有 <code>[&quot;D2&quot;,&quot;D3&quot;]</code>，</li></ul>
+<p>这条属 <code>declared_not_enforced</code> 的 D2→D1，交 <code>archDebtScan</code> R1 与 <code>cross-layer-require</code> 棘轮管辖。</p>
+<ul><li><code>resolver.js:31</code> → <code>tools/platformUtils.js</code>：<code>src/tools/**</code> 在 <code>DOMAIN-DEPS.json</code> 中<strong>没有域根映射</strong>，</li></ul>
+<p>既不是 D1 也不是 D3。该归属空洞见 <code>[RESEARCH-018]</code> C-7 与 <code>[DESIGN-LAY-008]</code> §12.43 的 Q4。</p>
+<h2 id="已知缺陷-共置测试里以-known-defect-钉住-一律登记不修">已知缺陷（共置测试里以 <code>KNOWN-DEFECT:</code> 钉住，一律登记不修）<a class="anchor" href="#已知缺陷-共置测试里以-known-defect-钉住-一律登记不修" aria-label="锚点">#</a></h2>
+<ul><li><code>registry.js</code> 的 <code>getDependency()</code> 头注释承诺「冻结副本浅引用」，实现既不判 own-property、</li></ul>
+<p>交出的又是真表引用 —— 调用方改写即污染共享真源。</p>
+<ul><li><code>resolver.js</code> 的缺失判定可产生 <code>{depId: undefined, dependency: Object}</code> 形态的<strong>假检测</strong>并流入 heal/install。</li><li><code>resolver.js:191/196</code> 的真值门把合法的 <code>0</code> / <code>false</code> 信号静默当缺失。</li></ul>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/services/domain/messaging/README.html"><div class="dir">← 上一篇</div><div class="ttl">messaging — 消息渠道、MCP 与 iLink 协议面（D2）</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/services/domain/network/externalApps/README.html"><div class="dir">下一篇 →</div><div class="ttl">network/externalApps — 外部 AI 软件的配置读写适配层（D2 业务上下文单元）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/network/dependency/README.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

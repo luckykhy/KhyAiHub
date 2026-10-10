@@ -1,0 +1,38 @@
+{
+  "name": "cognitiveSnapshot",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "按 DOMAIN-DEPS.json 的 D2 名义边界如实声明。实测出域边：D3 共 8 处（utils/ 与 constants/，名义边界内合法，逐条站点由探针 .khyos/tmp/unit-profile.js 输出）；D1 共 3 处且全部指向同一文件 `services/contextWasm.js` —— `compressionEngine.js:42`、`index.js:55`、`workbench.js:34`。这 3 条属 declared_not_enforced 的 D2→D1，交 archDebtScan R1 与 cross-layer-require 棘轮管辖（裁决面见 [DESIGN-LAY-008] §12.43 的 Q2），本清单只登记不合法化。",
+  "fanIn": 2,
+  "fanInEvidence": [
+    "services/backend/src/services/cognitiveSnapshot/index.js",
+    "services/backend/src/services/tool/toolUseLoopHelpers.js"
+  ],
+  "_fanIn_note": "非测试外部消费者去重 2 个，逐条核到 require 行号：D1 历史路径再导出壳 `services/cognitiveSnapshot/index.js:4`；工具循环侧 `services/tool/toolUseLoopHelpers.js:1386` 惰性 require 取 CognitiveContextEngine。计数排除 *.test.js 与单元内部引用；同目录内的互相引用（如门面 → 各引擎）不计入对外 fan-in。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-09-29",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "晋级三判据齐：单元级 README.md（本批补）、整数 fanIn、6 个源文件全部有同名同目录测试（本批以显式路径复跑复验，读数见 [DESIGN-LAY-008] §12.45 的收尾段）。单元早于 entry-buffer 守卫，缓冲区从未被经过，故 enteredVia 为 null。",
+  "contract": {
+    "purpose": "长会话的上下文永续：三级认知压缩（L1/L2/L3）、状态快照与热插拔接力、溢出拦截与断点续传、工作台冷热分层。门面 index.js 对外只暴露 CognitiveContextEngine。",
+    "ioOwner": "外部持久层只有一条：offloadStore.js 负责 L3 卸载离境的持久与指针集；其余文件不各自开 IO 通道。上下文渲染与网络调用归消费者（工具循环侧）与 D1/D3，本单元不自持 HTTP。",
+    "gates": "无 env 开关：溢出拦截与压缩是上下文完整性的承重面，不提供可静默关闭的路径；消费者按惰性 require 进入。",
+    "coverage_note": "purpose/ioOwner/gates 段覆盖本轮实测到的面（6 份文件头注释 + 6 份共置测试 + require 站点行号核对），不是逐行审计结论。"
+  },
+  "knownDefectsPinned": [
+    "共 30 处 KNOWN-DEFECT 断言（grep -c 实测，非自报）：compressionEngine 4 / index 4 / offloadStore 4 / overflowInterceptor 5 / snapshotManager 7 / workbench 6",
+    "逐条正文在各 .test.js 的用例标题里（中文），本清单不重复摘录以免与测试漂移"
+  ],
+  "_known_defects_note": "一律登记不修：每一条都改变面向模型的上下文取舍结果或持久层契约，属行为变更，需甲/乙裁决（任务 #17）。",
+  "tests": [
+    "compressionEngine.test.js",
+    "index.test.js",
+    "offloadStore.test.js",
+    "overflowInterceptor.test.js",
+    "snapshotManager.test.js",
+    "workbench.test.js"
+  ]
+}

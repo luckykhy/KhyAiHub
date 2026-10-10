@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-DELIV-002] 产品任务面与交付律.md -->
+<title>[DESIGN-DELIV-002] 产品任务面与交付律 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>10_规范<span class="sep">›</span>其它规范<span class="sep">›</span>[DESIGN-DELIV-002] 产品任务面与交付律</div>
+      <header class="hero reveal"><h1>[DESIGN-DELIV-002] 产品任务面与交付律</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-deliv-002-产品任务面与交付律">[DESIGN-DELIV-002] 产品任务面与交付律</a></li><li class="lvl-2"><a href="#0-本文补的是哪一半">§0 本文补的是哪一半</a></li><li class="lvl-2"><a href="#1-产品任务面-封闭清单">§1 产品任务面（封闭清单）</a></li><li class="lvl-3"><a href="#1-1-划分判据">1.1 划分判据</a></li><li class="lvl-3"><a href="#1-2-t0-核心任务-唯一-p0">1.2 T0 —— 核心任务（唯一 P0）</a></li><li class="lvl-3"><a href="#1-3-t1-让-t0-可行的四件事-四个任务族">1.3 T1 —— 让 T0 可行的四件事（四个任务族）</a></li><li class="lvl-3"><a href="#1-4-t2-垂直应用-独立项目-khyquant-接入-不是基座">1.4 T2 —— 垂直应用（独立项目 khyquant 接入，不是基座）</a></li><li class="lvl-3"><a href="#1-5-t3-交付通道-装得上-升得动">1.5 T3 —— 交付通道（装得上、升得动）</a></li><li class="lvl-3"><a href="#1-6-非目标-冻结-不再扩">1.6 非目标（冻结，不再扩）</a></li><li class="lvl-2"><a href="#2-交付律">§2 交付律</a></li><li class="lvl-3"><a href="#2-1-地基-一次做完-之后所有周期才有意义">2.1 地基（一次做完，之后所有周期才有意义）</a></li><li class="lvl-3"><a href="#2-2-周期预算-一个周期硬化一个任务族">2.2 周期预算：一个周期硬化一个任务族</a></li><li class="lvl-3"><a href="#2-3-三只棘轮-把-堆砌-变成单调递减">2.3 三只棘轮（把&quot;堆砌&quot;变成单调递减）</a></li><li class="lvl-3"><a href="#2-4-阈值外部化-防空转断言">2.4 阈值外部化（防空转断言）</a></li><li class="lvl-2"><a href="#3-边界声明-d10">§3 边界声明（D10）</a></li><li class="lvl-3"><a href="#3-1-支持的平台矩阵">3.1 支持的平台矩阵</a></li><li class="lvl-3"><a href="#3-2-明确不支持清单">3.2 明确不支持清单</a></li><li class="lvl-3"><a href="#3-3-降级策略">3.3 降级策略</a></li><li class="lvl-2"><a href="#4-阈值与任务面真源-机器可读">§4 阈值与任务面真源（机器可读）</a></li><li class="lvl-2"><a href="#5-度量与接线">§5 度量与接线</a></li><li class="lvl-3"><a href="#5-1-记分板">5.1 记分板</a></li><li class="lvl-3"><a href="#5-2-阶段与升阶-process-008">5.2 阶段与升阶（PROCESS-008）</a></li><li class="lvl-3"><a href="#5-3-反例-本规则要挡的东西">5.3 反例（本规则要挡的东西）</a></li><li class="lvl-2"><a href="#6-实施顺序-三件事">§6 实施顺序（三件事）</a></li><li class="lvl-2"><a href="#7-与既有真源的关系">§7 与既有真源的关系</a></li><li class="lvl-2"><a href="#8-版本记录">§8 版本记录</a></li></ul></nav>
+      <article class="doc-body">
+<!-- RULES-REGISTRY: PROCESS-014 -->
+<h1 id="design-deliv-002-产品任务面与交付律">[DESIGN-DELIV-002] 产品任务面与交付律<a class="anchor" href="#design-deliv-002-产品任务面与交付律" aria-label="锚点">#</a></h1>
+<blockquote><p>文档编号（非规则 ID）：<code>[DESIGN-DELIV-002]</code><br>落点：<code>docs/10_规范/其它规范/</code><br>孪生件：<code>[DESIGN-DELIV-002] 产品任务面与交付律.html</code>（由 <code>scripts/docs/build_docs_site.js</code> 生成）<br>制定日期：2026-09-24<br>规则：<code>PROCESS-014 可交付性基线</code>（执行器 <code>scripts/ci/check-delivery-baseline.js</code>）<br>上游：<a href="[DESIGN-DELIV-001]%20%E5%8F%AF%E4%BA%A4%E4%BB%98%E6%80%A7%E5%88%A4%E6%96%AD%E6%A0%87%E5%87%86.html"><code>[DESIGN-DELIV-001] 可交付性判断标准</code></a>（定义&quot;能不能交出去&quot;，D1–D10）<br>互补：<code>[DESIGN-ARCH-073]</code>（任务怎么跑）、<code>[DESIGN-PROCESS-002]</code>（新机制怎么升阶）</p></blockquote>
+<hr>
+<h2 id="0-本文补的是哪一半">§0 本文补的是哪一半<a class="anchor" href="#0-本文补的是哪一半" aria-label="锚点">#</a></h2>
+<p>交付这件事有两个问题，本仓此前只答了一半：</p>
+<table><thead><tr><th>问题</th><th>谁能回答</th><th>状态</th></tr></thead><tbody><tr><td><strong>能不能交出去</strong></td><td><code>[DESIGN-DELIV-001]</code> 的 D1–D10</td><td>已定义，<strong>未执行</strong></td></tr><tr><td><strong>交付的是哪些任务</strong></td><td><strong>本文</strong></td><td>此前无人回答</td></tr></tbody></table>
+<p><code>[DESIGN-DELIV-001]</code> §5.1 的诊断是：<strong>&quot;治理全部指向内部一致性，没有一条指向外部可交付性&quot;</strong>。<br>本文承认这条诊断，并补上它没覆盖的一层——<strong>连&quot;产品是哪些任务&quot;都没有被声明过</strong>。<br>在 245 个命令平权的前提下，&quot;交付&quot;没有宾语，可交付性再高也不知道在交付什么。</p>
+<p>本文给出两样东西：</p>
+<ol><li><strong>产品任务面</strong>（§1）：一份封闭的、分层的任务清单，附明确的非目标。</li><li><strong>交付律</strong>（§2–§3）：可持续的节奏——一条路径、一个周期预算、三只棘轮、一份边界声明。</li></ol>
+<p>本文是 <code>PROCESS-014</code> 的语义真源之一，也是该规则<strong>阈值与任务面的单一真源</strong>（§4 的 JSON 块）。</p>
+<hr>
+<h2 id="1-产品任务面-封闭清单">§1 产品任务面（封闭清单）<a class="anchor" href="#1-产品任务面-封闭清单" aria-label="锚点">#</a></h2>
+<h3 id="1-1-划分判据">1.1 划分判据<a class="anchor" href="#1-1-划分判据" aria-label="锚点">#</a></h3>
+<p>按<strong>用户拿到的结果</strong>分族，不按命令数、不按代码量、不按 handler 文件数。<br>判据三条，自上而下：</p>
+<ol><li>用户<strong>直接收到</strong>它的产出（答案 / 改好的文件 / 一条消息 / 一个回测结果）；</li><li>它的失败<strong>用户能感知</strong>（而不是只有维护者能感知）；</li><li>它<strong>出现在文档教用户用的路径</strong>里。</li></ol>
+<p>三条全中 → 产品面；只中第 3 条的（如 <code>publish</code>）→ 维护者面；三条都不中的 → 非目标。</p>
+<h3 id="1-2-t0-核心任务-唯一-p0">1.2 T0 —— 核心任务（唯一 P0）<a class="anchor" href="#1-2-t0-核心任务-唯一-p0" aria-label="锚点">#</a></h3>
+<blockquote><p><strong>把一件事交给它，它做完，并诚实告诉你做完了没有。</strong></p></blockquote>
+<p>这是唯一&quot;必须支持&quot;的任务。其余三族存在的理由，都只是&quot;让 T0 可行&quot;。</p>
+<ul><li>入口：<code>khy</code>（REPL 交互）/ <code>khy -p &quot;任务&quot;</code>（headless 一次性）/ <code>khy resume &lt;taskId&gt;</code>（断点续跑）</li><li>契约真源：<code>[DESIGN-ARCH-073] khyos 核心任务循环 — 稳定交付总纲</code></li><li>不变式：登记必达 / 终态必达 / <strong>诚实收尾</strong> / 有界续跑 / 证据门 / 台账必记</li></ul>
+<p><strong>T0 的验收不是&quot;命令返回 0&quot;，是&quot;台账里有这一条，且缺口如实写在台账里&quot;。</strong></p>
+<h3 id="1-3-t1-让-t0-可行的四件事-四个任务族">1.3 T1 —— 让 T0 可行的四件事（四个任务族）<a class="anchor" href="#1-3-t1-让-t0-可行的四件事-四个任务族" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>族</th><th>用户拿到的结果</th><th>收敛后的命令面</th></tr></thead><tbody><tr><td><strong>接上通道</strong></td><td>有一个能用的模型在回话</td><td><code>gateway</code> <code>model</code> <code>proxy</code> <code>pool</code> <code>channels</code></td></tr><tr><td><strong>记得住上下文</strong></td><td>它知道上次干到哪</td><td><code>session</code> <code>history</code> <code>memory</code> <code>compact</code></td></tr><tr><td><strong>有工具可用</strong></td><td>它真能动手改东西</td><td>文件 / 命令 / 搜索 / 浏览器 / MCP / skill</td></tr><tr><td><strong>诚实收尾</strong></td><td>它不谎报完成</td><td>交付门 + 验证代理 + <code>deliveries</code> + <code>receipts</code></td></tr></tbody></table>
+<p>四个族<strong>各自是任务</strong>，不是一个功能清单。一个周期只硬化其中<strong>一个</strong>（§2.2）。</p>
+<h3 id="1-4-t2-垂直应用-独立项目-khyquant-接入-不是基座">1.4 T2 —— 垂直应用（独立项目 khyquant 接入，不是基座）<a class="anchor" href="#1-4-t2-垂直应用-独立项目-khyquant-接入-不是基座" aria-label="锚点">#</a></h3>
+<p>khyquant 量化交易终端：<code>quote</code> <code>data</code> <code>backtest</code> <code>market</code> <code>watch</code> <code>account</code> <code>position</code>。<br>它装在基座之上（<code>[DESIGN-LAY-005]</code> 的 L4），<strong>不应与基座命令共享同一张 help 菜单</strong>。</p>
+<p>划定边界的现实理由（实测）：<code>backtest</code> 族在 2743 个测试文件里只有 4–5 个，<br><code>account</code>/<code>position</code>/<code>order</code> 中 <code>order</code> 是<strong>预览占位</strong>（无真实下单）。<br>把它当&quot;基座能力&quot;宣传，会让用户以为这是一个可交易的终端。</p>
+<h3 id="1-5-t3-交付通道-装得上-升得动">1.5 T3 —— 交付通道（装得上、升得动）<a class="anchor" href="#1-5-t3-交付通道-装得上-升得动" aria-label="锚点">#</a></h3>
+<p><strong>仅三条</strong>，且每条都必须有一条端到端验证过的路径（§3）：</p>
+<table><thead><tr><th>渠道</th><th>清单</th><th>CI</th></tr></thead><tbody><tr><td>PyPI（<code>pip install khy-os</code>）</td><td><code>pyproject.toml</code></td><td>✓ <code>dual-channel-release.yml</code></td></tr><tr><td>npm（<code>@khy-os/khy-os</code>）</td><td><code>packaging/npm/package.json</code></td><td>✓ <code>dual-channel-release.yml</code></td></tr><tr><td>Docker（GHCR）</td><td><code>Dockerfile</code> / <code>docker-compose.yml</code></td><td>✓ <code>docker.yml</code></td></tr></tbody></table>
+<h3 id="1-6-非目标-冻结-不再扩">1.6 非目标（冻结，不再扩）<a class="anchor" href="#1-6-非目标-冻结-不再扩" aria-label="锚点">#</a></h3>
+<p><strong>约 75 个维护者命令</strong>：<code>publish</code> <code>repo</code> <code>forge</code> <code>pr</code> <code>mr</code> <code>ci</code> <code>review</code> <code>evolve</code> <code>deps</code><br><code>workflow</code> <code>bridge</code> <code>ide</code> <code>remotedev</code> <code>remote</code> <code>metadata</code> <code>maintain</code> <code>heal</code> <code>selfHeal</code><br><code>toolcheck</code> <code>toollist</code> <code>capabilities</code> <code>state</code> <code>trace</code> <code>replay</code> <code>traffic</code> <code>monitor</code> <code>debug</code><br><code>heapdump</code> <code>break-cache</code> <code>statusline</code> <code>cleanup</code> <code>clean</code> <code>cleandisk</code> <code>storage</code> <code>portable</code><br><code>cross</code> <code>uninstall</code> <code>mod署名</code>…</p>
+<p>它们服务的是<strong>仓库自己</strong>，不是用户。当前它们和产品命令挤在同一张 help、同一份<br><strong>591 条别名表</strong>、同一个斜杠菜单里——<strong>这就是&quot;功能堆砌&quot;感的来源</strong>：<br>用户看到的 245 个命令里，属于他的只有约 70 个。</p>
+<p><strong>冻结语义</strong>：不是&quot;删除&quot;，是&quot;不再增加，且不再配面向用户的手册&quot;。<br>删除走 <code>RUNTIME-009</code>（删除先报部位）+ <code>LAYOUT-004</code>（只隔离不删除）。</p>
+<hr>
+<h2 id="2-交付律">§2 交付律<a class="anchor" href="#2-交付律" aria-label="锚点">#</a></h2>
+<p>一句话：<strong>一进一出</strong> —— 每交付一个任务族，就必须退役一份治理负担。<br>&quot;可持续&quot;的全部含义在此：交付速度的上限不是&quot;写第 1 处的难度&quot;，<br>是&quot;同步剩下 N−1 处的难度&quot;（<code>[DESIGN-ARCH-127]</code> 公理 1）。</p>
+<h3 id="2-1-地基-一次做完-之后所有周期才有意义">2.1 地基（一次做完，之后所有周期才有意义）<a class="anchor" href="#2-1-地基-一次做完-之后所有周期才有意义" aria-label="锚点">#</a></h3>
+<p>按 <code>[DESIGN-DELIV-001]</code> §5 的 1/2/3，判据文档已写好：</p>
+<table><thead><tr><th>序</th><th>动作</th><th>判据</th><th>验收</th></tr></thead><tbody><tr><td>1</td><td>修仓库完整性</td><td>D1</td><td><code>git fsck</code> 的 missing blob/tree/commit、broken link、cache-tree 计数全 0；<code>git log --all</code> 退出码 0</td></tr><tr><td>2</td><td>补件与收口</td><td>D3</td><td><code>git status --porcelain</code> 的 <code>??</code> = 0 且 <code>D</code> = 0</td></tr><tr><td>3</td><td>产出一次发布物并留盘</td><td>D2</td><td><code>dist/</code> 内 wheel + sdist + npm tarball 均存在且非零字节</td></tr></tbody></table>
+<p><strong>在这三件之前，任何关于交付的讨论都建在流沙上。</strong></p>
+<h3 id="2-2-周期预算-一个周期硬化一个任务族">2.2 周期预算：一个周期硬化一个任务族<a class="anchor" href="#2-2-周期预算-一个周期硬化一个任务族" aria-label="锚点">#</a></h3>
+<ul><li>一个周期 = 从 §1.3 挑<strong>一个</strong>任务族，做<strong>端到端硬化</strong>：</li></ul>
+<p>干净环境跑通 + 该族测试补全 + 文档更新 + <code>khy deliveries</code> 有真实记录。</p>
+<ul><li><strong>周期内禁止净新增命令</strong>。要加，先下线一条（§2.3 棘轮 1）。</li><li>周期的验收物不是代码行数，是<strong>记分板上有格子动了</strong>：</li></ul>
+<p>D1–D10 记分板、任务面棘轮、交付台账三处至少动一处。</p>
+<h3 id="2-3-三只棘轮-把-堆砌-变成单调递减">2.3 三只棘轮（把&quot;堆砌&quot;变成单调递减）<a class="anchor" href="#2-3-三只棘轮-把-堆砌-变成单调递减" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>#</th><th>棘轮</th><th>基线（2026-09-24 实测）</th><th>规则</th></tr></thead><tbody><tr><td>1</td><td>CLI 命令 / 别名 / handler</td><td>245 命令 / 591 别名 / 155 handler</td><td><strong>只降不升</strong></td></tr><tr><td>2</td><td>规则条目</td><td>94 条（含本条）</td><td><strong>不许净增</strong>：新增一条先退役一条</td></tr><tr><td>3</td><td>逐命令手册</td><td><code>OPS-MAN</code> 209 篇</td><td>不再手写；不在 T0–T3 内的命令不配手册</td></tr></tbody></table>
+<p><strong>复用既有机制，不新建</strong>：<code>scripts/ci/ruleguard-baseline.json</code> + <code>check:debt-ledger</code><br>已有&quot;measured → target 单调改善、逾期留 <code>slipped</code> 痕迹&quot;的语义。<br>本律的棘轮 1 由 <code>scripts/ci/check-delivery-baseline.js</code> 承担（§4 的 JSON 块是基线真源）。</p>
+<blockquote><p>⚠ <strong>本文自身的张力必须写明</strong>：<code>PROCESS-014</code> 本身就是&quot;净增的第 94 条规则&quot;。<br>它被判为可接受，理由是它是<strong>第一条指向外部的规则</strong>——<br>93 条守&quot;仓库内部自洽&quot;，它是第 1 条守&quot;陌生人能不能用上&quot;。<br>棘轮 2 从本条之后开始生效：下一条新规则必须伴随一条退役。</p></blockquote>
+<h3 id="2-4-阈值外部化-防空转断言">2.4 阈值外部化（防空转断言）<a class="anchor" href="#2-4-阈值外部化-防空转断言" aria-label="锚点">#</a></h3>
+<p><code>[DESIGN-DELIV-001]</code> §4.2 的三条硬要求，本文全部继承：</p>
+<ol><li><strong>结构化输出</strong>：<code>--json</code> 可被测试消费；判读一律认 <code>counts</code>，不认人读文案；</li><li><strong>反向验证</strong>：每个检查项必须有 fixture 让它在违规时<strong>真变红</strong>；</li><li><strong>阈值外部化</strong>：阈值来自 §4 的 JSON 块，<strong>不得硬编码在检查器内部</strong>。</li></ol>
+<p>理由是本仓已有两次前科：<code>check-zcode-baseline.js</code> 打印 <code>PASS 7</code> 却自述&quot;恒返回 0&quot;，<br><code>source-hygiene-scan.js</code> 自述 <code>ALWAYS exits 0</code>。<strong>一个恒真的断言与没有断言等价。</strong></p>
+<hr>
+<h2 id="3-边界声明-d10">§3 边界声明（D10）<a class="anchor" href="#3-边界声明-d10" aria-label="锚点">#</a></h2>
+<blockquote><p>本节即 <code>[DESIGN-DELIV-001]</code> D10 要求的&quot;边界文档&quot;，含<strong>不支持清单</strong>。<br>宣布不做什么，是&quot;高效&quot;的第一步。</p></blockquote>
+<h3 id="3-1-支持的平台矩阵">3.1 支持的平台矩阵<a class="anchor" href="#3-1-支持的平台矩阵" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>OS × 架构</th><th>Python 层</th><th>Node 后端</th><th>Docker</th></tr></thead><tbody><tr><td>Windows x64</td><td>✓</td><td>✓</td><td>✓（WSL2 / Docker Desktop）</td></tr><tr><td>Linux x64 (glibc)</td><td>✓</td><td>✓</td><td>✓</td></tr><tr><td>macOS arm64</td><td>✓</td><td>✓</td><td>✓</td></tr><tr><td>macOS x64</td><td>✓</td><td>✓</td><td>✓</td></tr><tr><td>Linux arm64</td><td>⚠ 未在 CI 覆盖</td><td>⚠ 未在 CI 覆盖</td><td>⚠ 未在 CI 覆盖</td></tr><tr><td>Windows arm64</td><td>✗ <strong>不支持</strong></td><td>✗ <strong>不支持</strong></td><td>✗ <strong>不支持</strong></td></tr></tbody></table>
+<h3 id="3-2-明确不支持清单">3.2 明确不支持清单<a class="anchor" href="#3-2-明确不支持清单" aria-label="锚点">#</a></h3>
+<ul><li>✗ <strong>Windows arm64</strong>：无 CI 矩阵、无原生依赖预编译产物，直说不支持。</li><li>✗ <strong>免 Node 安装</strong>：pip/npm 渠道在 build 期已内嵌 bundled 运行时，</li></ul>
+<p>但本仓<strong>不发布</strong>每平台独立二进制 tarball（opencode 式的 <code>postinstall</code> 选型未做）。</p>
+<ul><li>✗ <strong>包管理器生态</strong>：Homebrew / Scoop / AUR / Nix —— <strong>一个字都没有</strong>，不承诺。</li><li>✗ <strong><code>order</code> 真实下单</strong>：khyquant 的下单是预览占位（§1.4），不是可交易的终端。</li><li>✗ <strong><code>khy-dual-channel</code> 以外的渠道</strong>：Electron 桌面、Android APK、NSIS 安装器、</li></ul>
+<p>便携版四条<strong>有代码、有构建脚本，但没有 CI workflow</strong>，一律标为<br>  <strong>实验性、不承诺交付</strong>。要进 T3，先补 CI 与端到端验证。</p>
+<h3 id="3-3-降级策略">3.3 降级策略<a class="anchor" href="#3-3-降级策略" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>情况</th><th>行为</th><th>不做什么</th></tr></thead><tbody><tr><td>无可用模型通道</td><td><code>gateway</code> 明确报&quot;无可用通道&quot;并给修复命令（<code>RUNTIME-005</code>）</td><td>不静默回退到某内置免费通道</td></tr><tr><td>端口被占</td><td>dev server 自动探测下一个可用端口并把实际端口传播给消费者</td><td>不以 <code>EADDRINUSE</code> 崩溃</td></tr><tr><td>无 Node</td><td>pip 渠道报缺少 bundled 运行时的<strong>具体文件路径</strong></td><td>不装作能跑</td></tr><tr><td>网络不可达</td><td>模型调用报可诊断错误（<code>RUNTIME-002</code> §2.2 错误消息具体化）</td><td>不吞失败、不返回空壳成功</td></tr></tbody></table>
+<hr>
+<h2 id="4-阈值与任务面真源-机器可读">§4 阈值与任务面真源（机器可读）<a class="anchor" href="#4-阈值与任务面真源-机器可读" aria-label="锚点">#</a></h2>
+<blockquote><p>本块是 <code>PROCESS-014</code> 执行器读取的<strong>唯一阈值来源</strong>。<br>检查器<strong>不得</strong>在内部硬编码这些数字；读取失败必须报 finding（删除本块不能静默关掉守卫）。</p></blockquote>
+<pre><code class="language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;$schema&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;khy-delivery-surface/1&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;updated&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;2026-09-24&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;note&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;PROCESS-014 阈值与任务面单一真源。执行器 scripts/ci/check-delivery-baseline.js 只读、只记为 基线；任何数字的变更都在本块进行。&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;taskFacing&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">&quot;T0&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">&quot;khy&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;resume&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;deliveries&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;receipts&quot;</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;T1&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">&quot;gateway&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;model&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;proxy&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;pool&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;channels&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;session&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;history&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;memory&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;compact&quot;</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;T2&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">&quot;quote&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;data&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;backtest&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;market&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;watch&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;account&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;position&quot;</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;T3&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">&quot;publish-pypi&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;publish-npm&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;docker&quot;</span><span class="hljs-punctuation">]</span>
+  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;ratchet&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">&quot;note&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;只降不升。实测值 &gt; 基线值即 finding delivery-surface-ratchet-breach。基线只在退役命令后下调，且必须用与 baseline.method 相同的口径重测——口径变则基线同时失效。&quot;</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;routerCommands&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;baseline&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">245</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;method&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;正则捕获 services/backend/src/constants/commandSchema.js 的 ROUTER_COMMANDS 数组项数&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;source&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;services/backend/src/constants/commandSchema.js&quot;</span> <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;aliasEntries&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;baseline&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">591</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;method&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;计数 services/backend/src/cli/aliases.js 中 `command:` 键的出现次数&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;source&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;services/backend/src/cli/aliases.js&quot;</span> <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;handlerFiles&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;baseline&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">155</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;method&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;计数 services/backend/src/cli/handlers/ 下 .js 文件数&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;source&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;services/backend/src/cli/handlers/&quot;</span> <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;ruleCount&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;baseline&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">94</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;method&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;计数 RULES-REGISTRY.json 的 rules 数组长度&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;source&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;docs/10_规范/registry/RULES-REGISTRY.json&quot;</span> <span class="hljs-punctuation">}</span>
+  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;thresholds&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">&quot;s1MaxDays&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">90</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;note&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;发布相关机制停在 S1/S2 的容忍天数（D8）。逾期即 GAP——防的是「登记了观察期却从不结算」的墓碑化。&quot;</span>
+  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;channels&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">&quot;note&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;T3 交付通道。ciWorkflow 为 null 即「有代码无 CI」⇒ 必须出现在 §3.2 不支持清单里。&quot;</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;pypi&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;manifest&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;pyproject.toml&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;ciWorkflow&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;.github/workflows/dual-channel-release.yml&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;goldenPath&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;pip install khy-os &amp;&amp; khy doctor --check&quot;</span> <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;npm&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;manifest&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;packaging/npm/package.json&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;ciWorkflow&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;.github/workflows/dual-channel-release.yml&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;goldenPath&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;npm i -g @khy-os/khy-os &amp;&amp; khy doctor --check&quot;</span> <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;docker&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;manifest&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;docker-compose.yml&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;ciWorkflow&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;.github/workflows/docker.yml&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;goldenPath&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;docker compose up -d --build&quot;</span> <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;electron&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;manifest&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;electron/main.js&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;ciWorkflow&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">null</span></span> <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;android&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;manifest&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;apps/khy-os-client-app/pubspec.yaml&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;ciWorkflow&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">null</span></span> <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;nsis&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;manifest&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;packaging/installer/khyos_setup.nsi&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;ciWorkflow&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">null</span></span> <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;portable&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;manifest&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;packaging/modules/modules.json&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;ciWorkflow&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;.github/workflows/build-executables.yml&quot;</span> <span class="hljs-punctuation">}</span>
+  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;boundaryDoc&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">&quot;docPath&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;docs/10_规范/其它规范/[DESIGN-DELIV-002] 产品任务面与交付律.md&quot;</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;sectionAnchor&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;§3 边界声明&quot;</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;requiresUnsupportedList&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span>
+  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;artifactRoot&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;path&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;dist&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;requiredFiles&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">&quot;wheel&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;sdist&quot;</span><span class="hljs-punctuation">]</span> <span class="hljs-punctuation">}</span>
+<span class="hljs-punctuation">}</span></code></pre>
+<hr>
+<h2 id="5-度量与接线">§5 度量与接线<a class="anchor" href="#5-度量与接线" aria-label="锚点">#</a></h2>
+<h3 id="5-1-记分板">5.1 记分板<a class="anchor" href="#5-1-记分板" aria-label="锚点">#</a></h3>
+<p><code>npm run check:delivery</code> 打印 D1–D10 记分板（格式对齐 <code>check-zcode-baseline.js</code>）：</p>
+<pre><code>== 可交付性记分板（PROCESS-014 / [DESIGN-DELIV-001] D1–D10）==
+阶段: S1(观察者)   根: &lt;repoRoot&gt;
+[D1 GAP] 仓库完整性        期望 fsck error=0 · log --all=0 · 实测 ...
+[D2 GAP] 发布物存在        期望 dist/ 含 wheel+sdist · 实测 dist/ 不存在
+...
+[D7 PASS] 债务可收敛
+[TS GAP] 任务面棘轮        实测 245 / 基线 245
+Summary: PASS n · PARTIAL n · GAP n · 阶段 S1 只记录不阻断</code></pre>
+<h3 id="5-2-阶段与升阶-process-008">5.2 阶段与升阶（PROCESS-008）<a class="anchor" href="#5-2-阶段与升阶-process-008" aria-label="锚点">#</a></h3>
+<p>本机制按 <code>PROCESS-006</code> PP-1 登记为 <strong>S1 观察者</strong>：<code>gate=commit</code>（会跑）</p>
+<ul><li><code>severity=advisory</code>（只记录不阻断），执行器 <code>STAGE</code> 常量恒 <code>exit 0</code>。</li></ul>
+<p>阶段登记在 <code>FEATURE-OWNERSHIP.json</code> 的 <code>rollout.mechanisms[]</code>（id=<code>delivery-baseline-guard</code>）。</p>
+<blockquote><p><strong><code>[DESIGN-DELIV-001]</code> §4.3 的例外主张未被自动采纳。</strong> 该文主张 D1/D4/D7<br>因引用权威外部判定（<code>git fsck</code> / 文本事实 / 既有棘轮）可直进 S3。<br>该主张<strong>需要一次人的裁决</strong>（PP-6 是人的决定），本文不代为豁免。<br>在裁决之前，本机制一律按 S1 记录，<strong>不得</strong>因&quot;看起来是外部判定&quot;而自行阻断。</p></blockquote>
+<p><strong>升阶动作</strong>（人的决定，非脚本的决定）：改执行器 <code>STAGE</code> 常量为 <code>S3</code> +<br>登记表 <code>severity</code> 同步，<code>releaseGateStages.js</code> 中本阶段 <code>tier</code> 由<br><code>recommended</code> 改为 <code>must</code>。回退动作：把两处常量改回（纯配置，PP-4 合规）。</p>
+<h3 id="5-3-反例-本规则要挡的东西">5.3 反例（本规则要挡的东西）<a class="anchor" href="#5-3-反例-本规则要挡的东西" aria-label="锚点">#</a></h3>
+<pre><code>✗ 新增第 246 个命令，且未退役任何命令      → delivery-surface-ratchet-breach
+✗ 把 §4 的 JSON 块删掉&quot;以让检查通过&quot;        → delivery-thresholds-missing
+✗ 有构建脚本但没有 CI workflow 的渠道       → delivery-channel-no-ci
+✗ 边界文档删掉&quot;不支持清单&quot;                   → delivery-boundary-no-unsupported-list
+✗ 记分板恒返回 0（空转断言）                 → 由 §6 的反向验证测试挡</code></pre>
+<hr>
+<h2 id="6-实施顺序-三件事">§6 实施顺序（三件事）<a class="anchor" href="#6-实施顺序-三件事" aria-label="锚点">#</a></h2>
+<p>若只能做三件，按此顺序：</p>
+<ol><li><strong>产出一次 <code>dist/</code></strong>（D2）——没有产物，其余讨论都是空的；</li><li><strong>落地 <code>check-delivery-baseline.js</code>，并实测&quot;关掉它会变红&quot;</strong>（D1/D4/D7）；</li><li><strong>冻结命令面棘轮 + 一个周期只硬化一个任务族</strong>。</li></ol>
+<hr>
+<h2 id="7-与既有真源的关系">§7 与既有真源的关系<a class="anchor" href="#7-与既有真源的关系" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>本文说的</th><th>真源在哪</th><th>本文的角色</th></tr></thead><tbody><tr><td>任务怎么跑（登记→执行→裁决→交付→台账）</td><td><code>[DESIGN-ARCH-073]</code></td><td>不重复，只引用</td></tr><tr><td>可交付性的 D1–D10 判据</td><td><code>[DESIGN-DELIV-001]</code></td><td>继承并给出机器可读阈值块</td></tr><tr><td>新机制怎么升阶</td><td><code>[DESIGN-PROCESS-002]</code> / <code>PROCESS-008</code></td><td>遵守，不豁免</td></tr><tr><td>层级与依赖方向</td><td><code>[DESIGN-LAY-005]</code></td><td>遵守（本文落 10_规范）</td></tr><tr><td>发布流程与触发</td><td><code>[DESIGN-SEMVER-002]</code> / <code>PROCESS-005</code></td><td>不触碰</td></tr></tbody></table>
+<p>本文<strong>不替代</strong>上述任何一份。它新增的只有两样：<strong>任务面的封闭清单</strong>与<strong>交付律</strong>。</p>
+<hr>
+<h2 id="8-版本记录">§8 版本记录<a class="anchor" href="#8-版本记录" aria-label="锚点">#</a></h2>
+<ul><li>1.0.0 (2026-09-24) 初版。回应&quot;仓库功能堆砌、交付才是最重要的&quot;：</li></ul>
+<p>补上从未有人回答的&quot;需要支持哪些任务&quot;（§1），并给出可持续交付律（§2–§3）。<br>  规则 <code>PROCESS-014</code> 执行器 <code>scripts/ci/check-delivery-baseline.js</code>，按 <code>PROCESS-008</code> 定 S1。<br>  编号说明：主 PROCESS 序列为 001–011 / 013，本条顺延为 <strong>014</strong>；<br>  101/102 是另一支「决策 / 提案权」系列，未并入。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/10_规范/其它规范/[DESIGN-DELIV-001] 可交付性判断标准.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-DELIV-001] 可交付性判断标准</div></a><a class="next" href="../../../../docs/html/10_规范/其它规范/[DESIGN-DEP-001] 依赖管理规范.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-DEP-001] 依赖管理规范</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/10_规范/其它规范/[DESIGN-DELIV-002] 产品任务面与交付律.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

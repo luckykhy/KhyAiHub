@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>trajectoryProvenance — 轨迹溯源与防篡改链（D2 业务上下文） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>trajectory<span class="sep">›</span>trajectoryProvenance<span class="sep">›</span>trajectoryProvenance — 轨迹溯源与防篡改链（D2 业务上下文）</div>
+      <header class="hero reveal"><h1>trajectoryProvenance — 轨迹溯源与防篡改链（D2 业务上下文）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#trajectoryprovenance-轨迹溯源与防篡改链-d2-业务上下文">trajectoryProvenance — 轨迹溯源与防篡改链（D2 业务上下文）</a></li><li class="lvl-2"><a href="#本单元守的是什么">本单元守的是什么</a></li><li class="lvl-2"><a href="#逐成员">逐成员</a></li><li class="lvl-2"><a href="#扇入-谁在用">扇入（谁在用）</a></li><li class="lvl-2"><a href="#裁决契约-每条都由同目录测试钉住">裁决契约（每条都由同目录测试钉住）</a></li><li class="lvl-2"><a href="#门控-全部-env-可读-零硬编码">门控（全部 env 可读、零硬编码）</a></li><li class="lvl-2"><a href="#登记的偏差与缺陷-只登记-未自行动手">登记的偏差与缺陷（只登记，未自行动手）</a></li><li class="lvl-2"><a href="#测试怎么跑">测试怎么跑</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="trajectoryprovenance-轨迹溯源与防篡改链-d2-业务上下文">trajectoryProvenance — 轨迹溯源与防篡改链（D2 业务上下文）<a class="anchor" href="#trajectoryprovenance-轨迹溯源与防篡改链-d2-业务上下文" aria-label="锚点">#</a></h1>
+<blockquote><p>一句话定位：当 Khyos 经<strong>外部 agent 中转</strong>（codex / claude-code / 通用 relay）时，<br>外来正文、thinking 与工具调用请求会流进 Khyos 自己的对话轨迹。本单元给每一条轨迹条目<br>盖上「谁产的、可信到什么程度」的信封 <code>_khyTrace</code>，把整条轨迹钉进一条 sha256 prevHash→hash<br>边车链，并用<strong>零模型调用</strong>的确定性词库核对「正文声称 vs 本地工具日志」。<br>设计真源：<code>[DESIGN-ARCH-047]</code>（PHASE 1 标签 / 2 链 / 3 隔离 / 4 核对 / 5 双投影与 <code>khy trace</code>）。</p></blockquote>
+<h2 id="本单元守的是什么">本单元守的是什么<a class="anchor" href="#本单元守的是什么" aria-label="锚点">#</a></h2>
+<p>威胁模型是<strong>轨迹投毒</strong>，不是&quot;模型出错&quot;：</p>
+<ul><li>中转正文可以声称「我已经删了旧表」而本地从未跑过任何删除工具 → 由 <code>claimReconciler</code> 抓</li></ul>
+<p>（渲染成 <code>⚠ unverified claim</code>），不是靠&quot;再问一次模型&quot;；</p>
+<ul><li>中转的工具调用请求可以被照单全收地自动批准执行 → 由 <code>quarantinePolicy</code> 在执行前裁决</li></ul>
+<p><code>allow / gate / quarantine</code>；</p>
+<ul><li>事后的 transcript 可以被改写 → 由 <code>traceChain</code> 的边车哈希链在 <code>verify()</code> 时当场暴露。</li></ul>
+<p><strong>两条相反的 fail 方向是本单元的核心设计，不是不一致</strong>：</p>
+<table><thead><tr><th>侧</th><th>缺信息时的默认</th><th>真源</th><th>为什么</th></tr></thead><tbody><tr><td>标签侧</td><td>fail-<strong>SAFE-TO-OURS</strong>：归 <code>khy-local</code> / <code>verified</code></td><td><code>khyTrace.js:62-65</code>、<code>provenanceClassifier.js:52</code></td><td>隔离与核对按 <code>producer != khy-local</code> 触发，宁可少防也不可把自家内容错标成外部；漏标方向只能偏&quot;我方&quot;</td></tr><tr><td>执行侧</td><td>fail-<strong>CLOSED</strong>：非 <code>khy-local</code> 的一切（含未知/缺省 producer）都当中转，须过闸</td><td><code>quarantinePolicy.js:35-37</code></td><td>执行面错了不可回滚</td></tr></tbody></table>
+<p>于是同一个未知 producer 串，<code>khyTrace.isRelayed('totally-unknown')</code> 是 <strong>false</strong>，<br>而 <code>quarantinePolicy.decide({producer:'totally-unknown'})</code> 判 <strong>quarantine</strong>。<br>这条不对称被 <code>khyTrace.test.js</code> 与 <code>quarantinePolicy.test.js</code> <strong>各自钉住</strong>，改任何一侧都会红。</p>
+<h2 id="逐成员">逐成员<a class="anchor" href="#逐成员" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>行</th><th>导出</th><th>角色</th><th>出边</th></tr></thead><tbody><tr><td><code>khyTrace.js</code></td><td>157</td><td>10</td><td><code>_khyTrace</code> 信封 schema 唯一真源（producer/trust/kind 枚举 + 盖戳 + 取值兜底）</td><td>无（纯函数、零 IO）</td></tr><tr><td><code>provenanceClassifier.js</code></td><td>71</td><td>2</td><td>入站边界按 adapter/provider/serviceType 判 producer 与初始 trust</td><td>同目录 <code>./khyTrace</code></td></tr><tr><td><code>quarantinePolicy.js</code></td><td>144</td><td>5</td><td><strong>安全核心</strong>：中转工具调用的 allow/gate/quarantine 纯裁决 + 防呆④不变式</td><td>同目录 <code>./khyTrace</code></td></tr><tr><td><code>traceChain.js</code></td><td>254</td><td>10</td><td>防篡改边车哈希链（<code>&lt;session&gt;.trace-chain.json</code>），含 <code>verifyAgainstEntries</code> 交叉校验</td><td><code>src/utils/atomicWriteJson</code>（D3）+ 内建 <code>crypto/fs/path</code></td></tr><tr><td><code>claimNegation.js</code></td><td>83</td><td>3</td><td>否定守卫纯叶子（三扇窗口 + off 词表 + 全局克隆匹配，绝不污染冻结词库的 RegExp 状态）</td><td>仅 <code>process.env</code> 与自身正则</td></tr><tr><td><code>claimReconciler.js</code></td><td>336</td><td>8</td><td>版本化中英双语「动词→工具族」词库（6 族）+ 工具点名核对（29 名），确定性、fail-<strong>OPEN</strong></td><td>同目录 <code>./claimNegation</code></td></tr><tr><td><code>traceProjection.js</code></td><td>95</td><td>5</td><td>人读投影：内联标签、回放行、矛盾标签、链状态页脚</td><td>同目录 <code>./khyTrace</code></td></tr><tr><td><code>index.js</code></td><td>36</td><td>21</td><td>桶（spread <code>khyTrace</code> 顶层 + 5 个命名空间再导出）</td><td>全部同目录</td></tr><tr><td><strong>合计</strong></td><td><strong>1176</strong></td><td>—</td><td>8 个源文件</td><td>外部出边<strong>只有 1 条</strong>（D3），<strong>零 D2→D1 反向边</strong></td></tr></tbody></table>
+<h2 id="扇入-谁在用">扇入（谁在用）<a class="anchor" href="#扇入-谁在用" aria-label="锚点">#</a></h2>
+<p><strong>直接 require 本单元：7 个文件 / 10 个站点</strong>（探针按「解析后的落点是否真在单元目录内」判定，<br>故兄弟相对写法 <code>require('../trajectoryProvenance/traceChain')</code> 与带 <code>.js</code> 后缀的写法都算数——<br>只用字符串前缀匹配的探针会同时漏掉这两类，本数字经一次形态修正后复测）：</p>
+<table><thead><tr><th>消费者</th><th>域</th><th>站点</th><th>用了什么</th></tr></thead><tbody><tr><td><code>src/services/trajectoryProvenance/index.js</code></td><td>D1（自动生成 shim）</td><td>:4</td><td>整包再导出（目录形态）</td></tr><tr><td><code>src/cli/handlers/trace.js</code></td><td>D1</td><td>:24, :25</td><td><code>khyTrace.js</code>（TRUST）+ <code>traceProjection.js</code></td></tr><tr><td><code>src/cli/aiGatewayGenerateHelpers.js</code></td><td>D1</td><td>:649</td><td><code>claimReconciler.reconcileToolMentions</code>（惰性）</td></tr><tr><td><code>src/services/answerVerifier.js</code></td><td>D1</td><td>:151</td><td><code>claimReconciler.reconcile</code>（惰性）</td></tr><tr><td><code>src/services/gateway/adapters/codexAdapter.js</code></td><td>D1</td><td>:2221</td><td><code>quarantinePolicy</code>（裁决 + <code>assertNoAutoDangerous</code>）</td></tr><tr><td><code>src/services/sessionPersistence.js</code></td><td>D1</td><td>:508, :545, :643</td><td><code>khyTrace</code> 盖戳、<code>traceChain</code> 写链与验链</td></tr><tr><td><code>src/services/domain/trajectory/trajectoryReplay/replayBundle.js</code></td><td>D2</td><td>:141</td><td><code>traceChain.chainPathFor</code>（便携包顺带拷链，try/catch）</td></tr></tbody></table>
+<p>另有 <strong>2 个文件经 D1 shim 间接消费</strong>（<code>src/cli/aiChatCore.js:4718</code> 取 <code>classify</code>/<code>PRODUCER</code>、<br><code>src/cli/tui/ink-components/ToolLines.js:1055</code> 取 <code>projection.inlineLabel</code>）——<br>它们不指向本单元路径，所以<strong>不计入 fanIn</strong>，但说明桶并非无人使用。</p>
+<h2 id="裁决契约-每条都由同目录测试钉住">裁决契约（每条都由同目录测试钉住）<a class="anchor" href="#裁决契约-每条都由同目录测试钉住" aria-label="锚点">#</a></h2>
+<ol><li><strong>信封不可缺</strong>：<code>traceOf()</code> 永不返回 null，缺/畸形一律回 <code>khy-local</code>/<code>verified</code> 的新信封</li></ol>
+<p>（<code>khyTrace.js:132-137</code>）。链、投影、核对三处下游因此不必各自兜底。</p>
+<ol><li><strong>未知 producer 坍缩为 <code>relay</code> + <code>producerId</code>=原值</strong>，热路径永不抛（<code>normalizeProducer</code>）；</li></ol>
+<p>但 <code>isTrace()</code> <strong>只校验 producer 与 trust</strong>，不校验 <code>kind</code>/<code>v</code>（实测钉住，见「登记的偏差」）。</p>
+<ol><li><strong>链是边车，不折进 JSONL</strong>：<code>CHAIN_EXT = '.trace-chain.json'</code> 与 <code>&lt;session&gt;.jsonl</code> 并列。</li></ol>
+<p>理由写在 <code>traceChain.js:6-24</code>——JSONL 是多消费者 append-only，逐行嵌 prevHash 会把每个<br>   reader 耦合进链算，且单行损坏污染整链重建。<br>   ⚠ 这个&quot;并列&quot;设计有一个必须同时被守住的后果：<strong>边车不是会话</strong>，任何枚举 sessions 目录<br>   的消费者都要排除它，否则产出 <code>sessionId: undefined</code> 的幽灵行（<code>khy trace list</code> 的<br>   <code>TypeError</code> 即源于此，2026-09-29 修在 <code>sessionPersistence._collectSnapshotFiles</code>，<br>   并由 <code>tests/services/sessionPersistence.sidecar.test.js</code> 用 <code>traceChain.CHAIN_EXT</code><br>   反推文件名把两者钉在一起——将来改扩展名会先红测试，而不是在线上崩）。</p>
+<ol><li><strong>封印 <code>seal</code> 只在活会话内有意义</strong>：进程私有盐（<code>SEAL_SALT = crypto.randomBytes(16)</code>），</li></ol>
+<p>跨进程读不出，所以 <code>verify()</code> <strong>刻意只用确定性 sha256 链</strong>，绝不因跨进程算不出 seal 而误报断链。</p>
+<ol><li><strong>链的写入口只有一个且 fail-soft</strong>：<code>append()</code> 把一切异常折成 <code>{ok:false,error}</code> 返回，</li></ol>
+<p>绝不抛给热路径；<code>sessionPersistence.js:544-556</code> 因此只在 try 里调用它。<br>   但&quot;不抛&quot;不等于&quot;没事&quot;——见「登记的偏差」里链静默重启那一条。</p>
+<ol><li><strong>隔离闸默认 ON</strong>，仅显式 <code>0/false/off/no</code> 关闭（<code>quarantinePolicy.js:43-51</code>）；</li></ol>
+<p>逃生口放行时 trust 仍是 <strong>CLAIMED 而不是 VERIFIED</strong>，即&quot;放行&quot;不改写真相。</p>
+<ol><li><strong><code>preApproved → VERIFIED</code>、<code>interactive → GATE</code>、非交互无批准 → QUARANTINE</strong>：</li></ol>
+<p><code>decide</code> 的五分支决策矩阵连 <code>trust</code> 一起钉（trust 是安全叙事的一部分，不是附属字段）。</p>
+<ol><li><strong>防呆④不变式</strong>：<code>assertNoAutoDangerous({producer, enablingDangerous, gateEnabled})</code></li></ol>
+<p>在「中转 + 闸开 + 想自动开全局 dangerous mode」时<strong>抛错阻断</strong>。<br>   <code>codexAdapter.js:2232-2247</code> 的 <code>willEnableDangerous = !gateEnabled &amp;&amp; !wasDangerous</code><br>   使正常路径不可能触发，这段守卫锁的是&quot;日后改动把它接回去&quot;。<br>   对应的结构守卫在 <code>tests/services/trajectoryProvenance/p3Quarantine.test.js</code>，<br>   2026-09-29 由单行字面量正则改为<strong>形态无关 + 调用点唯一性</strong>（旧写法对花括号块形态是瞎的，<br>   既会恒红也会恒绿）。</p>
+<ol><li><strong>核对是咨询性证据，姿态 fail-OPEN</strong>：<code>reconcile</code>/<code>reconcileToolMentions</code> 任何异常都返回</li></ol>
+<p>空矛盾数组，绝不阻断 turn、绝不改模型正文（<code>claimReconciler.js:129,165-168,282,321-324</code>）。<br>   只应对 <code>producer != khy-local</code> 的正文跑，由调用方门控。</p>
+<ol><li><strong>否定守卫三扇窗口</strong>：紧贴 1 字（未/没/无/毋/勿/别/不）、4 字内多字否定（没有/无需/尚未…）、</li></ol>
+<p>英文否定 16 字内。窗口外即假阴性——这是设计内的诚实边界，已按实测钉住。</p>
+<ol><li><strong>词库版本化且冻结</strong>：<code>LEXICON_VERSION = 1</code>、6 个动作族、<strong>30</strong> 个点名工具名</li></ol>
+<p>（<code>MENTION_TOOL_NAMES.length</code> 实测 30，源码头注释与历史文档写的 29 是<strong>过时口径</strong>），<br>    且共置测试断言 <code>_firstUnnegatedMatch</code> 的克隆<strong>不推进被冻结词库的 RegExp 状态</strong>。</p>
+<ol><li><strong>单字形契约</strong>：<code>replayRow()</code> 把字形只放进 <code>glyph</code>，<code>label</code> <strong>不带</strong>前导字形——</li></ol>
+<p>因为 <code>cli/handlers/trace.js:161/164</code> 把 glyph 当独立列再拼 label，带字形就渲染成 <code>⟳ ⟳</code>。<br>    <code>inlineLabel()</code> 反过来<strong>必须保留</strong>字形（<code>ToolLines.js</code> 没有独立字形列）。<br>    契约真源是 <code>tests/cli/traceProjectionSingleGlyph.test.js</code>。</p>
+<h2 id="门控-全部-env-可读-零硬编码">门控（全部 env 可读、零硬编码）<a class="anchor" href="#门控-全部-env-可读-零硬编码" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>变量</th><th>默认</th><th>语义</th><th>读处</th></tr></thead><tbody><tr><td><code>KHY_TRAJECTORY_QUARANTINE</code></td><td><strong>开</strong></td><td>中转调用隔离闸；仅 <code>0/false/off/no</code> 关闭（四次比较的拼写法）</td><td><code>quarantinePolicy.js:43-51</code></td></tr><tr><td><code>KHY_CLAIM_NEGATION_GUARD</code></td><td><strong>开</strong></td><td>声称抽取的否定守卫；off 词表是 <code>Set(['0','false','off','no'])</code></td><td><code>claimNegation.js:17-25</code></td></tr><tr><td><code>KHY_TOOL_MENTION_GUARD</code></td><td><strong>开</strong></td><td>工具点名核对；off 词表是<strong>第二份逐字重复</strong>的 <code>Set([...])</code></td><td><code>claimReconciler.js:229-237</code></td></tr></tbody></table>
+<p>三处开关语义相同（默认可关），词表却写了<strong>三份、两种形态</strong>（两份 Set + 一份四元 <code>||</code> 比较），<br>且与仓内 252 个文件里的同族 <code>new Set(['0','false','off','no'])</code> 拼写并存<br>（实测计数，见「登记的偏差」）。</p>
+<h2 id="登记的偏差与缺陷-只登记-未自行动手">登记的偏差与缺陷（只登记，未自行动手）<a class="anchor" href="#登记的偏差与缺陷-只登记-未自行动手" aria-label="锚点">#</a></h2>
+<p>见同目录 <code>khy.module.json</code> 的 <code>registered_defects</code>（B29-S1…），全部为<strong>实测</strong>结论，<br>处置权在人 → 任务 #17。其中安全相关的两条：</p>
+<ul><li><strong>分类器认不出 <code>claude_code</code> 下划线形态</strong> → 判 <code>khy-local</code>，方向恰是铁律最怕的</li></ul>
+<p>「外部内容漏标为我方」（实测 <code>classifyProducer({adapter:'claude_code'})</code> → <code>khy-local</code>，<br>  而 <code>claude-code</code> / <code>claudecode</code> 两种形态都正确判 <code>claude-code</code>）。</p>
+<ul><li><strong>边车链可被&quot;清空&quot;而非&quot;改坏&quot;</strong>：截断/删空链文件后 <code>verify()</code> 仍报 <code>ok:true</code>（空链是完整链），</li></ul>
+<p>截掉末尾记录同样检测不到。检测删行只能靠 <code>verifyAgainstEntries</code> 与 transcript 交叉比对。</p>
+<h2 id="测试怎么跑">测试怎么跑<a class="anchor" href="#测试怎么跑" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> services/backend
+<span class="hljs-comment"># 同目录共置（8 支）</span>
+node --<span class="hljs-built_in">test</span> src/services/domain/trajectory/trajectoryProvenance/*.test.js
+<span class="hljs-comment"># 单元外按 PHASE 分层的 7 支</span>
+node --<span class="hljs-built_in">test</span> tests/services/trajectoryProvenance/p1Labels.test.js \
+            tests/services/trajectoryProvenance/p2Chain.test.js \
+            tests/services/trajectoryProvenance/p3Quarantine.test.js \
+            tests/services/trajectoryProvenance/p4Reconcile.test.js \
+            tests/services/trajectoryProvenance/p5Trace.test.js \
+            tests/cli/traceProjectionSingleGlyph.test.js \
+            tests/atomicWriteMigration.test.js</code></pre>
+<p>⚠ <code>node --test</code> 在本便携工具链（实际 spawn 的是 Node 22）下<strong>不接受目录参数</strong>——<br>传目录会被当成模块解析，报 <code>Cannot find module</code> 并伪装成 <code>not ok</code>。一律给显式文件路径。</p>
+<p>⚠ 涉及会话/权限的套件在 require 持久化模块<strong>之前</strong>必须钉 <code>KHY_PROJECT_DATA_HOME</code><br>（<code>dataHome</code> 首次解析即缓存）。真实数据根里有 350 个会话与它们的边车链，<br>任何&quot;跑真实根全绿&quot;的结论都可能是空转或污染。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/services/domain/trajectory/README.html"><div class="dir">← 上一篇</div><div class="ttl">trajectory — 录制、回放、双轨与 provenance 判定（D2）</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/services/domain/trajectory/trajectoryReplay/README.html"><div class="dir">下一篇 →</div><div class="ttl">trajectoryReplay — 轨迹录制与确定性回放（D2 业务上下文）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/trajectory/trajectoryProvenance/README.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

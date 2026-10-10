@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>docsFreshness — 文档新鲜度自检（D2 功能单元） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>docs<span class="sep">›</span>docsFreshness<span class="sep">›</span>docsFreshness — 文档新鲜度自检（D2 功能单元）</div>
+      <header class="hero reveal"><h1>docsFreshness — 文档新鲜度自检（D2 功能单元）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#docsfreshness-文档新鲜度自检-d2-功能单元">docsFreshness — 文档新鲜度自检（D2 功能单元）</a></li><li class="lvl-2"><a href="#逐成员">逐成员</a></li><li class="lvl-2"><a href="#契约-每条都有具名测试兜">契约（每条都有具名测试兜）</a></li><li class="lvl-2"><a href="#已登记的偏差-不在本单元内悄悄修-也不写进-maydependon-冒充许可">已登记的偏差（不在本单元内悄悄修，也不写进 `mayDependOn` 冒充许可）</a></li><li class="lvl-2"><a href="#怎么跑">怎么跑</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="docsfreshness-文档新鲜度自检-d2-功能单元">docsFreshness — 文档新鲜度自检（D2 功能单元）<a class="anchor" href="#docsfreshness-文档新鲜度自检-d2-功能单元" aria-label="锚点">#</a></h1>
+<p>一句话：代码常更新、文档跟不上。本单元把「改了源码 → 哪些文档可能过时，请复核」做成<br><strong>四层可判定流水线</strong>：L1 从文档正文既有约定反推 source→doc 映射并列出嫌疑（纯解析）、<br>L2 规划已 committed 的 .html/.pdf 兄弟重生成（纯规划）、L3 按 SSOT 填充 <code>khy-docs-sync</code><br>标记块的值（纯替换）、L4 为高置信嫌疑构造改稿提示词（纯文本）；IO（git / 读 docs / 写盘 /<br>re-stage / 调 md-to-pdf）全部收在唯一的薄壳 <code>docsFreshnessRunner.js</code> 里。</p>
+<p>清单：<code>khy.module.json</code>（<code>domain</code> / <code>mayDependOn</code> / <code>fanIn</code> / <code>lifecycle.stage</code> 四字段被<br><code>npm run check:layout</code> 的 entry-buffer 规则读取，其余给人看）。<br>入口：<code>khy docs check</code>（<code>services/backend/src/cli/handlers/docs.js</code> 的 <code>handleDocsFreshness</code>）。<br>定位：<strong>warn-only</strong> —— 默认只报不写；写盘只发生在 <code>fix</code> 模式；CI 阻断由 handler 依<br><code>KHY_DOCS_FRESHNESS_BLOCK</code> / <code>--ci</code> 决定退出码，本单元自身不决定阻断。</p>
+<h2 id="逐成员">逐成员<a class="anchor" href="#逐成员" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>角色</th><th>仓内 require</th><th>同名测试</th></tr></thead><tbody><tr><td><code>docPathIndex.js</code></td><td>L1 纯叶子：反引号正文 → 源码路径 → 反向索引 → exact/prefix 嫌疑</td><td>无（零 require）</td><td><code>docPathIndex.test.js</code></td></tr><tr><td><code>docProductPlan.js</code></td><td>L2 纯叶子：变更 .md + committed 产物清单 → 重生成计划</td><td>无</td><td><code>docProductPlan.test.js</code></td></tr><tr><td><code>docMarkerSync.js</code></td><td>L3 纯叶子：<code>khy-docs-sync</code> 标记块按 valueMap 填充（幂等）</td><td>无</td><td><code>docMarkerSync.test.js</code></td></tr><tr><td><code>docSuggestDraft.js</code></td><td>L4 纯叶子：改稿提示词构造器（不调模型、不写文件）</td><td>无</td><td><code>docSuggestDraft.test.js</code></td></tr><tr><td><code>docsFreshnessRunner.js</code></td><td>唯一 IO 薄壳：git 探测、读 <code>docs/**.md</code>、写盘、re-stage、调 md-to-pdf</td><td><code>child_process/fs/path</code>（内建）、单元内 3 件、<code>src/utils/gitSoftExec</code>、<code>src/constants/commandSchema</code>、<code>src/constants/serviceDefaults</code>（均 D3）</td><td><code>docsFreshnessRunner.test.js</code></td></tr></tbody></table>
+<p>四个叶子是<strong>真零 IO</strong>：源码里连 <code>require(</code> 都不出现，env 只在默认参数一处（<code>env = process.env</code>），<br>这条由各份同名测试的「纯度锁」守住，不靠注释。</p>
+<p>外部消费者 2 个（fanIn 实测口径见清单 <code>_fanIn_note</code>）：<br><code>cli/handlers/docs.js</code>（取 <code>docsFreshnessRunner</code> + <code>docSuggestDraft</code>）、<br><code>services/docsFreshness/index.js</code>（归位遗留的再导出壳，逐一 re-export 5 个成员）。</p>
+<h2 id="契约-每条都有具名测试兜">契约（每条都有具名测试兜）<a class="anchor" href="#契约-每条都有具名测试兜" aria-label="锚点">#</a></h2>
+<ol><li><strong>门控方言不漂移</strong>：L1/L2/L3 三个开关（<code>KHY_DOCS_FRESHNESS</code> / <code>KHY_DOCS_REGEN</code> /</li></ol>
+<p><code>KHY_DOCS_MARKER_SYNC</code>）默认开、只有 <code>{0,false,off,no}</code> 关且先 trim+lowercase；<br>   <strong>L4 方向相反</strong>（<code>KHY_DOCS_AI_SUGGEST</code> 默认关，仅 <code>{1,true,on,yes}</code> 开，且布尔 <code>true</code>/数字 <code>1</code> 算开）<br>   → <code>docPathIndex.test.js</code>、<code>docProductPlan.test.js</code>、<code>docMarkerSync.test.js</code>、<code>docSuggestDraft.test.js</code></p>
+<ol><li><strong>注入压过环境</strong>（可测性契约）：四个叶子显式传 env 时，进程环境里的同名开关<strong>必须</strong>无效</li></ol>
+<p>→ 同上四份测试的「注入 env 优先于进程环境」</p>
+<ol><li><strong>正文解析只认锚定路径</strong>：反引号 token 必须首段在 <code>ROOT_SEGMENTS</code>、扩展名在 <code>SOURCE_EXTS</code>、</li></ol>
+<p>至少 <code>dir/file</code> 两段、不含 <code>..</code>；行号/范围/列/锚点与 Windows 反斜杠、<code>./</code>、前导 <code>/</code> 都要剥掉；<br>   每篇上限 200 条 → <code>docPathIndex.test.js</code></p>
+<ol><li><strong>嫌疑分两级且 exact 一定排在前</strong>：exact（文档直接引用该文件）&gt; prefix（同目录兄弟，跨目录绝不命中），</li></ol>
+<p>同一文档先 prefix 后 exact 会升级；输出确定（与入参顺序无关）、<code>matchedSources</code> 升序 → <code>docPathIndex.test.js</code></p>
+<ol><li><strong>坏输入返回空结构，绝不抛</strong>：<code>extractSourcePaths(12345)</code> → <code>[]</code>、<code>buildDocPathIndex(null)</code> → 空索引、</li></ol>
+<p><code>planDocProducts(null, null)</code> → 空计划、<code>syncManagedRegions(42, …)</code> → <code>text:''</code>、<br>   <code>collectChangedSources</code> 遇 git 抛错 → <code>[]</code> → 对应各叶子测试</p>
+<ol><li><strong>L2 红线「绝不新建产物」的清单侧</strong>：<code>regen.products</code> 永远是 committed 清单的子集，</li></ol>
+<p>同名兄弟判据不误伤别的文档，<code>mode</code> 严格为 <code>'--html-only' | null</code>（不是 <code>undefined</code>）<br>   → <code>docProductPlan.test.js</code></p>
+<ol><li><strong>L3 三态处置</strong>：已知 key → 块内重建为 <code>NOTICE + 值</code>（begin/end 行逐字保留）；未知 key → 整块原样<ul><li><code>unknownKeys</code>；不平衡/嵌套/key 不匹配 → 原样 + <code>skipped</code>。嵌套只废外层，内层照常填充。</li></ul></li></ol>
+<p>free prose 与孤立 end 行绝不动；填过的文本再跑一次 <code>changed=false</code>（幂等）<br>   → <code>docMarkerSync.test.js</code></p>
+<ol><li><strong>无 SSOT 不杜撰</strong>：<code>buildValueMap</code> 只认 <code>slash-commands</code> / <code>ai-backend-port</code> / <code>khy-version</code> 三个 key，</li></ol>
+<p>缺依赖即不入表，<code>frontend-port</code> 永远不入表 → <code>docMarkerSync.test.js</code></p>
+<ol><li><strong>L4 两条红线</strong>：①只产文本——零 <code>require</code>、不碰 <code>fs</code>/<code>child_process</code>/网关，片段与 diff 各截 4000 字符，</li></ol>
+<p>最小输入的骨架逐字节固定；②确定性层（L1/L2/L3 + runner）<strong>绝不</strong>引用 <code>docSuggestDraft</code><br>   → <code>docSuggestDraft.test.js</code>（红线②是对 4 个兄弟源文件文本的实扫，不是自我声明）</p>
+<ol><li><strong>runner 的 IO 纪律</strong>：门控关 → 返回逐字固定的空壳（连 <code>changedSources</code> 都不带）；</li></ol>
+<p>默认 warn-only 零写盘；<code>fix</code> 才动盘且幂等；<code>markerSync:false</code> 或 <code>KHY_DOCS_MARKER_SYNC=0</code> 一个字节都不写；<br>    <code>git add</code> 失败 → <code>restaged:false</code>（写盘副作用已发生，如实报）；<code>git add</code> 抛错 → <code>ok:false + err</code>；<br>    md-to-pdf 不在位 → Layer 2 空手而归且不新建产物；<code>docs/**</code> 读取跳过 <code>node_modules/.git/bundled/dist/build/.ai/coverage</code>，<br>    单篇 &gt; 512 KB 不收（恰好 512 KB 收）→ <code>docsFreshnessRunner.test.js</code></p>
+<h2 id="已登记的偏差-不在本单元内悄悄修-也不写进-maydependon-冒充许可">已登记的偏差（不在本单元内悄悄修，也不写进 <code>mayDependOn</code> 冒充许可）<a class="anchor" href="#已登记的偏差-不在本单元内悄悄修-也不写进-maydependon-冒充许可" aria-label="锚点">#</a></h2>
+<ul><li><strong>L1 的 ROOT 锚点表不含 <code>platform</code> / <code>software</code></strong>：实测 <code>docs/**.md</code> 正文里有 103 处</li></ul>
+<p>`<code> </code>platform/...<code> </code><code>、50 处 </code><code> </code>software/...<code> </code><code> 引用被 </code>_cleanSourcePath<code> 判成非法而丢弃<br>  （探针 </code>.khyos/tmp/b23-rootgap-probe.js<code>）。这两个都是本仓真实的顶层目录，于是「改了 Python 启动器<br>  或 khyquant 载体 → 哪些文档过时」这条提醒**结构性缺失**。反向也有噪音：表里的 </code>src<code>/</code>bin<code>/</code>lib<code>/<br>  </code>packages<code>/</code>frontend<code> 五个段在本仓根**并不存在**，它们产生的索引键永远匹配不上 </code>git diff<code> 的路径<br>  （实测 461 处 </code>src/...` 形式的引用属此类）。头注释自称「假阳/假阴必有，故定位为复核提醒」，<br>  所以这不是崩溃型缺陷，但它是<strong>可量化的覆盖面缺口</strong>，补哪一段该由人拍板。</p>
+<ul><li><strong>L2 的 pdf-only 分支曾违反自家「绝不新建产物」红线（本批已修，planner 现给 --pdf-only）</strong>：committed 只有 <code>.pdf</code> 时 planner 给 <code>mode:null</code></li></ul>
+<p>（全量），runner 据此<strong>不带 flag</strong> 调 <code>scripts/docs/md-to-pdf.js</code>，而该脚本无 flag 时默认同时写<br>  <code>.html</code> 与 <code>.pdf</code>（<code>md-to-pdf.js:581/585</code>），且它<strong>从不使用</strong>已经存在的 <code>--pdf-only</code>。<br>  后果：pdf-only 文档的重生成要么新建一个未版本控制的 <code>.html</code>（有 Chrome 时），要么整体失败（无 Chrome 时）。<br>  复现与判据见 <code>.khy/feedback/b23-docsFreshness/repro-before.txt</code>。叶子测试只<strong>锁当前 planner 输出</strong>，<br>  不背书该语义。</p>
+<ul><li><strong>再导出壳 <code>services/docsFreshness/index.js</code> 零消费者</strong>：它 re-export 本单元 5 个成员，</li></ul>
+<p>但全仓没有任何文件 require 它（实测见 <code>_fanIn_note</code>）——即一张指向本单元的死地址。<br>  按 [DESIGN-LAY-008] 归位约定，壳仍算真实入口时才计入 fanIn；这里如实计入并标注其下游为空。</p>
+<ul><li><strong>L4 的 <code>buildSuggestionPrompt</code> 无生产调用者</strong>：handler 的 <code>--ai</code> 分支只判了门控就打印</li></ul>
+<p>「已生成提示词模板」，实际一次都没调用构造器（<code>handlers/docs.js:774-781</code>）。<br>  门控与文本本身有测试，「草稿是否真出现在用户面前」没有。</p>
+<ul><li><strong>同族仓级测试里有一份跑不起来</strong>：<code>services/backend/tests/services/docSuggestDraft.test.js</code> 是</li></ul>
+<p>jest 方言（<code>describe/expect</code>），<code>node --test</code> 直接 <code>ReferenceError: describe is not defined</code> 整文件失败，<br>  且其中两条断言把 <code>.toBeTruthy()</code> 写进了字符串字面量（恒真、无判定）。本目录的共置测试是它的替代品，<br>  旧文件按「不修改既有文件」的约束留在原地。</p>
+<ul><li><strong>CRLF 文档的块内注入行用 LF</strong>：<code>docs/</code> 下 125 个 <code>.md</code> 工作树是 CRLF，标记块被填后会出现</li></ul>
+<p>LF/CRLF 混排（第二次跑即收敛，不会反复 re-stage）。现状由 <code>docMarkerSync.test.js</code> 锁定，不美化。</p>
+<h2 id="怎么跑">怎么跑<a class="anchor" href="#怎么跑" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-comment"># 共置契约测试（node:test 方言；Windows 下必须逐个列文件名，目录参数会被当模块路径）</span>
+node --<span class="hljs-built_in">test</span> \
+  services/backend/src/services/domain/docs/docsFreshness/docPathIndex.test.js \
+  services/backend/src/services/domain/docs/docsFreshness/docProductPlan.test.js \
+  services/backend/src/services/domain/docs/docsFreshness/docMarkerSync.test.js \
+  services/backend/src/services/domain/docs/docsFreshness/docSuggestDraft.test.js \
+  services/backend/src/services/domain/docs/docsFreshness/docsFreshnessRunner.test.js
+
+<span class="hljs-comment"># 守卫（functional-unit 共置 + entry-buffer 清单）</span>
+node scripts/ci/check-repo-layout.js --list=functional-unit
+node scripts/ci/check-repo-layout.js</code></pre>
+<p>runner 的测试自带临时仓库 fixture（建在 <code>.khyos/tmp/</code> 下、<code>t.after</code> 清理），<br>git 一律走注入的假 <code>gitSoft</code>，<strong>绝不</strong>碰真 git、真 <code>docs/</code>；fix 分支的测试也只写自己的 fixture 文件，<br>并断言 fixture 内不存在 <code>scripts/docs/md-to-pdf.js</code>，所以永远不会执行真实产物工具。</p>
+<p><code>*.test.js</code> / <code>*.md</code> / <code>*.json</code> 不计入源文件数，所以本单元的记录动作是<br>「5 份同名同目录测试 + 1 份清单 + 本 README」：按守卫实测，每补一份共置测试 <code>functional-unit</code> 降 1，<br>补清单一次 <code>entry-buffer</code> 降 5。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/services/domain/desktop/README.html"><div class="dir">← 上一篇</div><div class="ttl">desktop — 屏幕操作、浏览器与设备应用的执行面（D2）</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/services/domain/docs/README.html"><div class="dir">下一篇 →</div><div class="ttl">docs — 文档新鲜度与发布说明的判定层（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/docs/docsFreshness/README.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
