@@ -148,11 +148,42 @@ function cmdStatus() {
   console.log(`本批计数    : ${mode.batchesSinceRelease}（自上次发布以来的工作批次）`);
   console.log(`上次发布    : ${mode.lastRelease || '（尚无）'}`);
   if (mode.mode === 'dev') {
-    console.log(`下一个批次  : bump → ${bumpPatch(v)}`);
+    console.log(`下一个批次  : bump → ${bumpPatch(v)}   （PATCH，开发态已预授权）`);
+    console.log(`小/大版本   : 必须人批准 —— bump --minor|--major --approved-by <批准人>`);
   } else {
     console.log(`发布态已冻结；继续开发用 back → ${bumpPatch(v)}`);
     console.log(`打 tag 发布 : git tag -a v${v} -m "..." && git push <remote> v${v}`);
   }
+}
+
+function bumpMinor(v) {
+  const m = String(v).match(/^(\d+)\.(\d+)\.(\d+)$/);
+  if (!m) fail(`无法对 "${v}" 取 MINOR+1（必须是 X.Y.Z）`);
+  return `${m[1]}.${Number(m[2]) + 1}.0`;
+}
+
+function bumpMajor(v) {
+  const m = String(v).match(/^(\d+)\.(\d+)\.(\d+)$/);
+  if (!m) fail(`无法对 "${v}" 取 MAJOR+1（必须是 X.Y.Z）`);
+  return `${Number(m[1]) + 1}.0.0`;
+}
+
+/** R-2a：MINOR/MAJOR 递增必须由人点头。缺 --approved-by 时拒绝执行。
+ *  为什么放在工具层：判据要放在会执行的地方，不放在人的记忆里——与
+ *  check-commit-message.js 拦 AI 署名同一思路。 */
+function requireApproval(level, next) {
+  const i = args.indexOf('--approved-by');
+  const who = i === -1 ? '' : String(args[i + 1] || '').trim();
+  if (!who || who.startsWith('--')) {
+    fail(
+      `${level} 递增（→ ${next}）必须由人批准。\n`
+      + `  AI 不得自行决定小版本/大版本递增 —— 见 [DESIGN-SEMVER-002] R-2a。\n`
+      + `  请先向人说明：命中了哪条触发（T1 功能新增 / T2 行为或破坏性变更）、\n`
+      + `  影响面（哪些对外契约/CLI/数据格式受影响）、建议递增到几，然后带上批准人重跑：\n`
+      + `    node scripts/release/version-mode.js bump --${level.toLowerCase()} --approved-by <批准人>`
+    );
+  }
+  return who;
 }
 
 function cmdBump() {
@@ -161,8 +192,23 @@ function cmdBump() {
     fail('当前是发布态，不能 bump。先 `version-mode.js back` 回开发态。');
   }
   const cur = verifySources();
-  const next = bumpPatch(cur);
-  console.log(`开发态批次 bump：${cur} → ${next}`);
+  let next;
+  let level = 'PATCH';
+  if (args.includes('--major')) {
+    level = 'MAJOR';
+    next = bumpMajor(cur);
+  } else if (args.includes('--minor')) {
+    level = 'MINOR';
+    next = bumpMinor(cur);
+  } else {
+    next = bumpPatch(cur);
+  }
+  if (level !== 'PATCH') {
+    const who = requireApproval(level, next);
+    console.log(`${level} 递增已由 ${who} 批准：${cur} → ${next}`);
+  } else {
+    console.log(`开发态批次 bump：${cur} → ${next}`);
+  }
   setAllSources(next);
   if (!dryRun) {
     insertChangelog(next);
@@ -236,6 +282,7 @@ function cmdDev() {
 const USAGE = `用法:
   node scripts/release/version-mode.js status
   node scripts/release/version-mode.js bump [--dry-run]
+  node scripts/release/version-mode.js bump --minor|--major --approved-by <批准人>   # 必须人批准
   node scripts/release/version-mode.js release <X.Y.Z> [--dry-run]
   node scripts/release/version-mode.js back [--dry-run]
   node scripts/release/version-mode.js dev [--dry-run]`;

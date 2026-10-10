@@ -133,3 +133,35 @@ test('--dry-run 一个字节都不写', () => {
   assert.deepEqual(after, before, 'dry-run 不得改动任何文件');
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+test('MINOR/MAJOR 递增没有 --approved-by 就被拒，且一个字节都不写', () => {
+  // R-2a：AI 不得自行决定小版本/大版本递增。判据必须放在会执行的地方。
+  for (const flag of ['--minor', '--major']) {
+    const dir = fixture();
+    const before = G1_FILES.map((r) => fs.readFileSync(path.join(dir, r), 'utf8'));
+    assert.throws(() => run(dir, 'bump', flag), /必须由人批准|R-2a/, `${flag} 缺少批准必须被拒`);
+    const after = G1_FILES.map((r) => fs.readFileSync(path.join(dir, r), 'utf8'));
+    assert.deepEqual(after, before, '被拒之后不得留下任何改动');
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('MINOR/MAJOR 带 --approved-by 才执行，且归零/进位正确', () => {
+  const dir = fixture();
+  run(dir, 'bump', '--minor', '--approved-by', '孔浩原');
+  assert.equal(versionsIn(dir)['pyproject.toml'], '1.3.0', 'MINOR+1 且 PATCH 归零');
+
+  const dir2 = fixture();
+  run(dir2, 'bump', '--major', '--approved-by', '孔浩原');
+  assert.equal(versionsIn(dir2)['pyproject.toml'], '2.0.0', 'MAJOR+1 且 MINOR/PATCH 归零');
+
+  for (const d of [dir, dir2]) fs.rmSync(d, { recursive: true, force: true });
+});
+
+test('PATCH 不需要批准（开发态已预授权）', () => {
+  const dir = fixture();
+  // 不带 --approved-by 也必须能跑 —— 否则开发态自动 bump 就废了
+  assert.doesNotThrow(() => run(dir, 'bump'));
+  assert.equal(versionsIn(dir)['pyproject.toml'], '1.2.1');
+  fs.rmSync(dir, { recursive: true, force: true });
+});
