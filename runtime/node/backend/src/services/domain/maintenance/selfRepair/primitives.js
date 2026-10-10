@@ -257,11 +257,17 @@ function create(opts = {}) {
     if (plan && plan.runTests) {
       const runnable = _runnableTests(files); // repo 相对、存在且 node:test 的候选
       coverage = safety.assessCoverage({ changedFiles: files, runnableTests: runnable });
-      // node --test 在 services/backend 下跑,路径需相对该目录。
-      const testFiles = [...runnable].map((c) => c.replace(/^services\/backend\//, ''));
+      // node --test 在 backend 根下跑,路径需相对该目录。
+      // 新布局 runtime/node/backend;旧布局 services/backend。
+      const backendDir = fs.existsSync(path.join(projectDir, 'runtime', 'node', 'backend'))
+        ? path.join(projectDir, 'runtime', 'node', 'backend')
+        : path.join(projectDir, 'services', 'backend');
+      const testFiles = [...runnable].map((c) =>
+        c.replace(/^runtime\/node\/backend\//, '').replace(/^services\/backend\//, '')
+      );
       if (testFiles.length) {
         const r = spawnSync(process.execPath, ['--test', ...testFiles], {
-          cwd: path.join(projectDir, 'services', 'backend'),
+          cwd: backendDir,
           encoding: 'utf8',
           timeout: 120000,
           stdio: ['pipe', 'pipe', 'pipe'],

@@ -125,10 +125,12 @@ const TOOLS = [
     priority: 3,
   },
   {
-    // OpenCode: non-interactive `opencode run [message..]`. Positional prompt
-    // (no stdin), auto-approves in run mode, prints the response and exits —
-    // same shape as Aider. Model injection uses opencode's `-m provider/model`
-    // form via applyModel (only when the model looks like provider/model).
+    // OpenCode: non-interactive `opencode run`, prompt via stdin rather than a
+    // positional argv entry — the argv form overflows Windows' 32767-char
+    // command line with khy's flat prompt and throws `spawn ENAMETOOLONG`.
+    // Threshold and proof: see opencodeInvocation.buildRunArgs.
+    // Model injection uses opencode's `-m provider/model` form via applyModel
+    // (only when the model looks like provider/model).
     // Gated by KHY_OPENCODE (default on); when off, detect() skips it so the
     // detected-tool set is byte-identical to before opencode was integrated.
     name: 'OpenCode',
@@ -136,7 +138,7 @@ const TOOLS = [
     buildArgs: () => require('./opencodeInvocation').buildRunArgs(),
     applyModel: (args, model) => require('./opencodeInvocation').applyModelArg(args, model),
     gate: (env) => require('./opencodeInvocation').isEnabled(env),
-    useStdin: false,
+    useStdin: true,
     streaming: false,
     priority: 4,
   },
@@ -1186,10 +1188,10 @@ function invokeToolAsync(tool, prompt, options = {}) {
 
     const _st = _spawnTarget(_effectiveCmd(tool), args);
     const child = spawn(_st.cmd, _st.args, {
-      // 不读 stdin 的工具(opencode/aider/openclaw,提示词是位置参数)若仍是 pipe,
-      // 会因「stdin 打开但无输入」而挂起等待 EOF —— opencode run 实测必挂。这里在
+      // 不读 stdin 的工具(aider/openclaw,提示词是位置参数)若仍是 pipe,
+      // 会因「stdin 打开但无输入」而挂起等待 EOF。这里在
       // useStdin=false 时把 stdin 置为 'ignore'(子进程立即读到 EOF);useStdin=true 的
-      // codex/claude 仍保持 pipe 以便写入提示词。
+      // codex/claude/opencode 仍保持 pipe 以便写入提示词。
       stdio: [tool.useStdin ? 'pipe' : 'ignore', 'pipe', 'pipe'],
       env: _cliToolChildEnv(tool),
     });

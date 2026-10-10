@@ -37,7 +37,7 @@ const fs = require('fs');
 const path = require('path');
 
 const flagRegistry = require('../../../flagRegistry');
-const extensionRoots = require('../delivery/extension/extensionRoots');
+const extensionRoots = require('../extensions/extensionRoots');
 
 // ── Gate ───────────────────────────────────────────────────────────────
 // Single-gate on flagRegistry (central registry). Default-on. The extension's

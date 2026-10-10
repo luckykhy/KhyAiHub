@@ -32,13 +32,26 @@ function resolveProtocolContext(deps) {
   // available from options/chatOpts before effectiveChatOpts is built) so its
   // dials can shape the loop cap below and the scaffolding gates downstream.
   // Only T0 (frontier) relaxes; T1/T2/T3 keep current behavior. See modelTier.js.
-  const harnessProfile = modelTier.harnessProfile(
-    modelTier.resolveTier(
-      String(
-        (chatOpts && chatOpts.model) || options?.model || process.env.GATEWAY_PREFERRED_MODEL || ''
-      )
+  const _tierForProfile = modelTier.resolveTier(
+    String(
+      (chatOpts && chatOpts.model) || options?.model || process.env.GATEWAY_PREFERRED_MODEL || ''
     )
   );
+  // [DESIGN-ARCH-185] §5.2 —— 四档的 β 要到这一行才真的生效。
+  // 本处是 tool-use 循环**自己的**那份 profile，而 thinkingFloor 的唯一消费者
+  //（循环里 auto-reasoning 取档那段）读的就是它。khyUpgradeRuntime 的 prompt 组装
+  // 路径另建一份，改那边不会影响这里 —— 两处都要接，否则档选了、思考预算没变。
+  // 这里只取 staticIntentForTier（β/π 由档名唯一决定）：本函数的 deps 袋里没有用户
+  // 原话（它是循环的函数参数，不在 chatOpts/options 内），auto 档「按这一轮在问什么」
+  // 定 β 需要把 userMessage 透进 resolveProtocolContext，那一处在作者正在重构的
+  // toolUseLoopCore.js 里，不在本次改动集内。
+  let _modeIntent = null;
+  try {
+    _modeIntent = require('../../../gateway/routingMode').staticIntentForTier(_tierForProfile);
+  } catch {
+    /* 模式轴缺席 → 纯 tier profile，逐字节回今日行为 */
+  }
+  const harnessProfile = modelTier.harnessProfile(_tierForProfile, { modeIntent: _modeIntent });
   loopBreadcrumb('harness-profile', harnessProfile);
 
   // Is the active model known to LACK reliable native tool calling? If so, the

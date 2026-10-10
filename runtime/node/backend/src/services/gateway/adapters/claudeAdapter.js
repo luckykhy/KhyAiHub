@@ -12,6 +12,7 @@ const path = require('path');
 // Model-name SSOT: default Claude model flows from constants/models.js so
 // switching the tier model edits one place (env ANTHROPIC_MODEL overrides first).
 const { PRIMARY: MODELS } = require('../../../constants/models');
+const { resolveModelContextWindow } = require('../../../constants/modelContextWindows');
 const {
   isWin,
   platformShell,
@@ -195,6 +196,61 @@ function _resolveDirectBaseUrl(endpoint) {
   return base
     ? base.replace(/\/+$/, '').replace(/\/v\d+$/, '')
     : 'https://api.anthropic.com';
+}
+
+/**
+ * Bridge 子进程 env 防递归 —— /v1/messages 挂死的主根因修复([2026-10-09])。
+ *
+ * 桥接模式 spawn 的 claude 子进程若继承 `ANTHROPIC_BASE_URL=<本代理>`(如
+ * http://127.0.0.1:9100),它会把自己的 /v1/messages 请求再打回同一个网关,
+ * 网关级联又选中桥接通道再 spawn 一层……无限递归/401 重试风暴,把串行适配器
+ * 队列与硬截止全部烧穿(症状即 bridge_no_stream_events, events=0, stderr=none)。
+ * 直连模式早有 `_resolveDirectBaseUrl` 同源防护,cliToolAdapter 也有
+ * `_cliToolChildEnv`,唯独这里漏了。本函数补两道防线:
+ *   1) 同源剔除:子进程 env 里指向本代理的 ANTHROPIC_BASE_URL 一律删除 ——
+ *      子进程改走自己的 settings.json / 默认上游(最坏 fail-fast 401,绝不套娃);
+ *   2) 深度标记:KHY_GATEWAY_BRIDGE_DEPTH 逐层 +1,runClaudeAttempt 入口
+ *      见 ≥1 直接拒绝嵌套 spawn(base 被别处改写过也拦得住)。
+ * 门控 KHY_GATEWAY_BRIDGE_RECURSION_GUARD={0|false|off|no} 关闭,逐字节回退旧行为。
+ * Pure-ish: never throws; 任何异常都原样返回 process.env。
+ * @returns {object} 子进程 spawn 用的 env
+ */
+function _resolveBridgeChildEnv() {
+  const guardOff = ['0', 'false', 'off', 'no'].includes(
+    String(process.env.KHY_GATEWAY_BRIDGE_RECURSION_GUARD || 'true').trim().toLowerCase()
+  );
+  if (guardOff) {
+    return process.env;
+  }
+  try {
+    const env = { ...process.env };
+    const childBase = String(env.ANTHROPIC_BASE_URL || '').trim();
+    const { resolveLocalProxyBaseUrl, resolveAnthropicBaseUrl } = require('../../../utils/proxyBaseUrl');
+    const selfCandidates = [resolveLocalProxyBaseUrl(), resolveAnthropicBaseUrl()].filter(Boolean);
+    const originOf = (u) => {
+      try {
+        const parsed = new URL(String(u).trim());
+        let host = String(parsed.hostname || '').toLowerCase();
+        if (host === 'localhost' || host === '::1' || host === '[::]') {
+          host = '127.0.0.1';
+        }
+        const port = parsed.port || (parsed.protocol === 'https:' ? '443' : '80');
+        return `${host}:${port}`;
+      } catch {
+        return '';
+      }
+    };
+    const selfOrigins = new Set(selfCandidates.map(originOf).filter(Boolean));
+    if (childBase && selfOrigins.has(originOf(childBase))) {
+      delete env.ANTHROPIC_BASE_URL;
+    }
+    const currentDepth = parseInt(String(env.KHY_GATEWAY_BRIDGE_DEPTH || '0'), 10) || 0;
+    env.KHY_GATEWAY_BRIDGE_DEPTH = String(currentDepth + 1);
+    return env;
+  } catch {
+    /* 防护是 best-effort:任何异常都回退原 env,不阻塞 spawn */
+    return process.env;
+  }
 }
 
 function resolveConnectionMode() {
@@ -430,6 +486,8 @@ const DIRECT_SIMPLE_MAX_ROUNDS = Math.max(
 );
 
 // Known Claude Code models (detected dynamically where possible)
+// contextWindow 不在这里写死 —— 窗口值已收敛到 constants/modelContextWindows.js
+// （全仓单一真源），下方 post-pass 统一回填，避免这里与真源各自漂移。
 const KNOWN_MODELS = [
   // Claude 5 family (latest)
   {
@@ -438,7 +496,6 @@ const KNOWN_MODELS = [
     isDefault: true,
     tier: 'ultra',
     category: 'reasoning',
-    contextWindow: 2000000,
   },
   {
     id: 'claude-sonnet-5',
@@ -446,7 +503,6 @@ const KNOWN_MODELS = [
     isDefault: false,
     tier: 'high',
     category: 'general',
-    contextWindow: 2000000,
   },
   {
     id: 'claude-fable-5',
@@ -454,7 +510,6 @@ const KNOWN_MODELS = [
     isDefault: false,
     tier: 'medium',
     category: 'fast',
-    contextWindow: 1000000,
   },
   // Claude 4 family (legacy)
   {
@@ -463,7 +518,6 @@ const KNOWN_MODELS = [
     isDefault: false,
     tier: 'ultra',
     category: 'reasoning',
-    contextWindow: 1000000,
   },
   {
     id: 'claude-opus-4-7',
@@ -471,7 +525,6 @@ const KNOWN_MODELS = [
     isDefault: false,
     tier: 'ultra',
     category: 'reasoning',
-    contextWindow: 1000000,
   },
   {
     id: 'claude-opus-4-6',
@@ -479,7 +532,6 @@ const KNOWN_MODELS = [
     isDefault: false,
     tier: 'ultra',
     category: 'reasoning',
-    contextWindow: 1000000,
   },
   {
     id: 'claude-sonnet-4-6',
@@ -487,7 +539,6 @@ const KNOWN_MODELS = [
     isDefault: false,
     tier: 'high',
     category: 'general',
-    contextWindow: 1000000,
   },
   {
     id: 'claude-haiku-4-5-latest',
@@ -495,9 +546,12 @@ const KNOWN_MODELS = [
     isDefault: false,
     tier: 'medium',
     category: 'fast',
-    contextWindow: 200000,
   },
 ];
+
+for (const m of KNOWN_MODELS) {
+  m.contextWindow = resolveModelContextWindow(m.id);
+}
 
 let _available = null;
 const _runtimeDiagnosticsStore = createAdapterRuntimeDiagnosticsStore('claude');
@@ -1255,6 +1309,21 @@ async function runClaudeAttempt({
   onControlRequest,
   abortSignal = null,
 }) {
+  // 防递归第二道闸(见 _resolveBridgeChildEnv):本进程若已是某个桥接子进程
+  // 的后代,拒绝再 spawn 一层 claude,让递归在第一层就 fail-fast。
+  const _guardOff = ['0', 'false', 'off', 'no'].includes(
+    String(process.env.KHY_GATEWAY_BRIDGE_RECURSION_GUARD || 'true').trim().toLowerCase()
+  );
+  const _bridgeDepth = parseInt(String(process.env.KHY_GATEWAY_BRIDGE_DEPTH || '0'), 10) || 0;
+  if (!_guardOff && _bridgeDepth >= 1) {
+    return Promise.reject(
+      new Error(
+        `claude bridge recursion guard: nested bridge spawn refused at depth ${_bridgeDepth} ` +
+          `(KHY_GATEWAY_BRIDGE_RECURSION_GUARD=off restores the previous behavior)`
+      )
+    );
+  }
+  const _bridgeChildEnv = _resolveBridgeChildEnv();
   return new Promise((resolve, reject) => {
     let child = null;
     let abortWatcher = null;
@@ -1420,7 +1489,7 @@ async function runClaudeAttempt({
       const sh = { cmd: _cfg.executable, args: [..._cfg.argsPrefix, shellCmd] };
       child = spawn(sh.cmd, sh.args, {
         stdio: ['pipe', 'pipe', 'pipe'],
-        env: process.env,
+        env: _bridgeChildEnv,
         signal: abortSignal || undefined,
         detached: !isWin,
       });
@@ -1431,7 +1500,7 @@ async function runClaudeAttempt({
       const _sp = _portableClaudeSpawn(args, launchCmd, launchArgs);
       child = spawn(_sp.command, _sp.args, {
         stdio: ['pipe', 'pipe', 'pipe'],
-        env: process.env,
+        env: _bridgeChildEnv,
         signal: abortSignal || undefined,
         detached: !isWin,
       });

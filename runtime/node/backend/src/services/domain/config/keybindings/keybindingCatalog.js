@@ -20,6 +20,8 @@
  *
  * 数据来源(真实处理器,逐条核对):
  *   - 全局链   src/cli/tui/ink-components/App.js(Ctrl+C/D/L/V/O/T、Shift+Tab、?、Esc、补全菜单导航)
+ *   - 方向键   src/cli/tui/arrowRouting.js(context → bindings;↑/↓ 的含义随「输入框是否为空」
+ *              与「本回合是否已有工具调用」而变,见下方「回合执行中」组)
  *   - 对话 chord src/cli/tui/chatChords.js → App.js 分派(Meta+P 模型 / Meta+O fast / Meta+T thinking)
  *   - 编辑链   src/cli/tui/hooks/useTextInput.js(Enter、Shift/Alt/Ctrl+Enter、emacs Ctrl/Alt 链)
  *   - Vim 链   src/cli/tui/hooks/useVimInput.js(/vim 开启时)
@@ -110,9 +112,19 @@ const KEYBINDING_CATALOG = Object.freeze([
       { keys: '← / →', desc: '按字符移动光标' },
       { keys: 'Meta + ← / →', desc: '按词移动光标' },
       { keys: 'Home / End', desc: '移到行首 / 行尾' },
-      { keys: '↑ / ↓', desc: '逐条浏览历史(含换行的提交算一条);首次 ↑ 会暂存当前草稿,↓ 走过最新一条时还原' },
+      { keys: '↑ / ↓', desc: '逐条浏览历史(含换行的提交算一条);首次 ↑ 会暂存当前草稿,↓ 走过最新一条时还原(回合执行中且输入框为空时改用下面「回合执行中」组的绑定)' },
       { keys: 'PageUp / PageDown', desc: '上下翻整页会话内容(内容超出视口时;Preview 布局下右栏看板同步)' },
       { keys: 'Ctrl + R', desc: '反向增量搜索历史命令;再按跳到更旧一条(不回绕),Enter/Tab/方向键取用当前匹配并关闭,退格缩短查询,Esc/Ctrl+G/Ctrl+C 取消' },
+    ]),
+  },
+  {
+    context: 'executing',
+    label: '回合执行中(输入框为空)',
+    bindings: Object.freeze([
+      { keys: '↓', desc: '打开实时输出副屏:最近一次工具的命令与完整输出;最近一次是子任务 fan-out 时改为显示各子任务正文(本回合还没有工具调用时不响应,只作提示)' },
+      { keys: '↑', desc: '取回排队未发送的最后一条消息到输入框编辑(队列为空时不响应)' },
+      { keys: '←', desc: '关闭副屏返回对话(副屏在回合结束时也会自动关闭)' },
+      { keys: '↑ / ↓', desc: '副屏打开后:上下滚动副屏内容(输出未超出可视高度时无此绑定)' },
     ]),
   },
   {
@@ -158,7 +170,6 @@ const KEYBINDING_CATALOG = Object.freeze([
     bindings: Object.freeze([
       { keys: 'Esc', desc: '回到 NORMAL 模式' },
       { keys: 'i', desc: '进入 INSERT 模式' },
-      { keys: 'v', desc: '进入 VISUAL 模式(仅 CC 模式;默认 Vim 链尚未实现该模式)' },
       { keys: 'h / j / k / l', desc: '左 / 下 / 上 / 右移动' },
     ]),
   },
@@ -174,7 +185,7 @@ const ESSENTIAL_SHORTCUTS = Object.freeze([
   Object.freeze(['Ctrl + J', '换行（多行输入）']),
   Object.freeze(['/', '斜杠命令菜单']),
   Object.freeze(['@', '引用文件路径']),
-  Object.freeze(['↑ / ↓', '逐条浏览历史 / 在菜单中移动']),
+  Object.freeze(['↑ / ↓', '逐条浏览历史 / 菜单中移动（执行中 ↓ 看实时输出）']),
   Object.freeze(['Tab', '接受补全']),
   Object.freeze(['Shift + Tab', '切换权限模式']),
   Object.freeze(['Meta + P', '打开模型选择器']),

@@ -367,18 +367,25 @@ function _gatherSsotDeps(repoRoot) {
     /* ignore */
   }
   try {
-    const pkg = require(path.join(repoRoot, 'services', 'backend', 'package.json'));
+    const pkg = require(path.join(repoRoot, 'runtime', 'node', 'backend', 'package.json'));
     if (pkg && pkg.version) {
       deps.khyVersion = pkg.version;
     }
   } catch {
     try {
-      const pkg2 = require('../../../../../package.json');
-      if (pkg2 && pkg2.version) {
-        deps.khyVersion = pkg2.version;
+      const pkgLegacy = require(path.join(repoRoot, 'services', 'backend', 'package.json'));
+      if (pkgLegacy && pkgLegacy.version) {
+        deps.khyVersion = pkgLegacy.version;
       }
     } catch {
-      /* ignore */
+      try {
+        const pkg2 = require('../../../../../package.json');
+        if (pkg2 && pkg2.version) {
+          deps.khyVersion = pkg2.version;
+        }
+      } catch {
+        /* ignore */
+      }
     }
   }
   return deps;

@@ -25,24 +25,32 @@ const PYPROJECT_PATH = 'pyproject.toml';
 // against an ordered candidate list (preferred → legacy) to support both
 // layouts. The first candidate is the canonical path used for new writes/labels.
 const PYTHON_INIT_CANDIDATES = [
+  path.join('runtime', 'substrate', 'platform', 'khy_platform', '__init__.py'),
   path.join('platform', 'khy_platform', '__init__.py'),
   path.join('khy_platform', '__init__.py'),
 ];
 const BACKEND_PKG_CANDIDATES = [
+  path.join('runtime', 'node', 'backend', 'package.json'),
   path.join('services', 'backend', 'package.json'),
   path.join('backend', 'package.json'),
 ];
 // npm channel manifest (@khy-os/khy-os). This is the THIRD version-sync red-line
 // source enforced by scripts/ci/check-version-sync.js (alongside pyproject.toml
-// and services/backend/package.json); a version bump that skips it makes
+// and runtime/node/backend/package.json); a version bump that skips it makes
 // check:version-sync fail. Resolved via the same candidate-list pattern for
 // layout-compat, though today only the forest path exists.
-const NPM_PKG_CANDIDATES = [path.join('packaging', 'npm', 'package.json')];
+const NPM_PKG_CANDIDATES = [
+  path.join('works', 'ship', 'npm', 'package.json'),
+  path.join('packaging', 'npm', 'package.json'),
+];
 // Modular-packaging manifest — the FOURTH G1 source compared by
 // scripts/ci/check-version-sync.js. It must join the alignment set here too:
 // a guard narrower than the gate lets `khy publish check` certify "aligned"
 // for a tree the release gate will reject.
-const MODULES_JSON_CANDIDATES = [path.join('packaging', 'modules', 'modules.json')];
+const MODULES_JSON_CANDIDATES = [
+  path.join('works', 'ship', 'modules', 'modules.json'),
+  path.join('packaging', 'modules', 'modules.json'),
+];
 
 function _findProjectRoot(startDir = process.cwd()) {
   let current = path.resolve(startDir);

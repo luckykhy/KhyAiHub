@@ -71,14 +71,16 @@ function _dataHome() {
 }
 
 /**
- * 仓库 / 安装根下的内置拓展目录。dev 与 pip、npm bundled 布局里 `delivery/extension/` 都与
- * `services/` 同级，getAppRoot() 已把这条（含 KHY_OS_ROOT 覆盖）算好，不再自己数 `..`。
+ * 仓库 / 安装根下的内置拓展目录。R4 迁移后在 dev 与 pip、npm bundled 布局里都位于
+ * `<appRoot>/delivery/extension/`（随包按仓库结构摆放，见 MANIFEST.in 的
+ * `recursive-include delivery/extension`），getAppRoot() 已把 appRoot
+ * （含 KHY_OS_ROOT 覆盖）算好，不再自己数 `..`。
  * @returns {string|null} 绝对路径，解析失败则 null
  */
 function repoExtensionsDir() {
   try {
     const { getAppRoot } = require('../../../../utils/dataHome');
-    return path.join(getAppRoot(), 'extensions');
+    return path.join(getAppRoot(), 'delivery', 'extension');
   } catch {
     return null;
   }
@@ -104,7 +106,7 @@ function userExtensionsDir() {
  * 全部拓展根，**按优先级降序**。同名（= 同目录名）拓展先出现者胜。
  *
  * 1. KHY_EXTENSION_PATH   path-list 覆盖（开发 / 测试用，最高）
- * 2. <appRoot>/extensions 仓库内置拓展，随包分发（门控 KHY_EXTENSION_REPO_ROOT）
+ * 2. <appRoot>/delivery/extension 仓库内置拓展，随包分发（门控 KHY_EXTENSION_REPO_ROOT）
  * 3. <dataHome>/extensions 用户安装的（extensionManager 的家，2026-09-24 起）
  * 4. <appHome>/extensions 遗留用户安装目录（2026-09-24 前的家；仍被发现，同名让位新根）
  * 5. <appHome>/plugins    遗留 plugin-loader 目录

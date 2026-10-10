@@ -61,7 +61,7 @@ function looksLikeProviderModel(model) {
 
 /**
  * 构建 `cmdcode --print` 的参数数组。`__PROMPT__` 占位符由 cliToolAdapter
- * 在 spawn 前替换为真实 prompt(与 OpenCode 的 `run __PROMPT__` 同一机制)。
+ * 在 spawn 前替换为真实 prompt(与 Aider 的 `--message __PROMPT__` 同一机制)。
  *
  * @param {object} [opts]
  * @param {string} [opts.model]            provider/model(仅合法时注入 --model)
