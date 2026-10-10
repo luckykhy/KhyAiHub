@@ -133,6 +133,20 @@ if git diff --cached --name-only | grep -qE '^\.github/workflows/.*\.ya?ml$'; th
   fi
 fi
 
+# 4.6 版本递增批准闸（R-2a / CLAUDE.md B7）
+#      工具无关：另一个 AI（Codex/Cursor/ZCode/CodeArts）或人直接编辑
+#      pyproject.toml 时，version-mode.js 的 --approved-by 闸拦不住。
+#      这里比对「暂存区 + 工作区」与 HEAD，只要 MAJOR/MINOR 动了就要批准标记。
+#      PATCH 不受限——开发态批次 bump 已由 T4 预授权，逐次审批会废掉自动 bump。
+#      与 4.2 拦 AI 署名同一思路：判据放在会执行的地方。
+echo "🔢 检查版本递增批准..."
+if ! node "$ROOT/scripts/ci/check-version-bump-approval.js"; then
+  echo ""
+  echo "❌ 小版本/大版本递增未获批准。要么补批准标记，要么用正规入口："
+  echo "    node scripts/release/version-mode.js bump --minor|--major --approved-by <批准人>"
+  exit 1
+fi
+
 # 5. commit message 格式 —— **已移出本钩子**（2026-09-24）
 #
 #    原实现校验 `$ROOT/.git/COMMIT_EDITMSG`，但 git 的 pre-commit 契约是

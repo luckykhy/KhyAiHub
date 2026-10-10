@@ -358,6 +358,9 @@ G2 与 G1 的版本**刻意不同**（例如 1.1.x vs 1.6.x）：ai-backend 与
 1. **何时 bump**：按 `CHANGELOG.md` 段落可机判 —— `### Added` → MINOR；
    `### Changed`/`### Removed`/`### Security` → MAJOR 或 MINOR；仅 `### Fixed` → PATCH。
    仅改文档/测试/CI、内部重构不改对外行为、**工作区未收口** → **不 bump**。
+   **例外 T4（2026-10-10 增设，默认关）**：版本态为 `dev` 时，每个 **AI 工作批次**
+   收口可 PATCH+1（`docs/10_规范/registry/VERSION-MODE.json`）。这是为 AI 迭代期
+   大半是文档/测试/CI 工作而开的口子，`mode=release` 时不生效。
 2. **命名**：严格 `X.Y.Z` 三位，禁前导 `v`、禁预发布后缀。**三条轨道独立递增，
    禁止对齐**（G2/G3 与 G1 刻意不同）。G1 须同改 3 处（见上节 1–3 项）。
    **先写 CHANGELOG 段、再 bump 版本号**（`changelog-new.js --check` 以 pyproject 为锚）。
@@ -368,6 +371,50 @@ G2 与 G1 的版本**刻意不同**（例如 1.1.x vs 1.6.x）：ai-backend 与
    四条**硬阻断**：`check-version-sync` / `changelog-new --check` / `release-gate.js`
    均须 exit 0，且 tag 与 `pyproject.toml` 版本相等 ——
    **禁止把这些 step 改成 `continue-on-error: true`**。
+
+#### ⚠ MINOR / MAJOR 递增必须由人批准（R-2a，2026-10-10 增设）
+
+**任何 AI 助手与人类开发者都适用**——本节不是 Claude 专有条款，Codex / Cursor /
+Kiro / ZCode / CodeArts 与人同样受约束。
+
+**AI 不得自行决定工程版本的小版本或大版本递增。** 需要往前推时，必须先向人说明
+三件事再等点头：
+
+| 要说清 | 为什么 |
+|---|---|
+| **判据** —— 命中 T1（功能新增）还是 T2（行为/破坏性变更） | 判据是机械的（CHANGELOG 段位），但"算不算用户可见的新功能"机械答不出 |
+| **影响面** —— 哪些对外契约 / CLI 用法 / 数据格式受影响 | MAJOR 宣称"有破坏性变更"，说错用户不敢升 |
+| **建议递增到几** | 让人有东西可批，而不是开放题 |
+
+**为什么单独立这条**：版本号是用户判断要不要升级的**唯一依据**。猜错的代价不是号难看，
+而是**版本号对用户说谎**——把内部重构宣成功能新增，或把破坏性变更藏进 MINOR。
+PATCH 在开发态下已由 T4 预授权，**不受此限**。
+
+**三层执行面（都不是文档约定）**：
+
+| 层 | 拦什么 | 在哪 |
+|---|---|---|
+| 正规入口 | 走 `version-mode.js` 的 | `bump --minor\|--major` 缺 `--approved-by` 直接拒绝、一个字节都不写 |
+| 提交钩子 | 绕过脚本**私改** `pyproject.toml` 的 | `pre-commit` 调 `check-version-bump-approval.js`，比对暂存区+工作区与 HEAD |
+| 批准标记 | 让人能合规地手改 | 提交信息加 `version-bump-approved-by: <批准人>` |
+
+```bash
+# 正规做法（四源同步 + CHANGELOG 段一并搞定）
+node scripts/release/version-mode.js bump --minor --approved-by <批准人>
+
+# 已手改完版本号的补救：在提交信息里加一行
+#   version-bump-approved-by: <批准人>
+```
+
+#### 「该换版本号了」的提示（人与 AI 都受益）
+
+R-1 规定了什么时候该 bump，但**没有任何东西在那个时刻提醒你**——尤其是人开发时
+没有 AI 在场，改完就推，版本号原地不动，只能靠 `git log` 数。
+
+- **`pre-push` 钩子**：每次推送前报告「开发态 · 当前版本 X.Y.Z · 距上次 bump N 个提交」，
+  该 bump 时给出命令。**不阻断推送**（恒 exit 0）。
+- **随时手查**：`node scripts/ci/check-version-freshness.js`（`--json` 机读，
+  `--strict` 超阈值判红，给 CI 用）。
 
 > **边界（不可放宽）**：本规则**只自动化「推 tag 之后」的长链路**，
 > **不触碰红线 R1 / `PROCESS-001`（P0）的「禁止 AI 自动 commit/push」**。
