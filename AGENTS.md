@@ -479,10 +479,42 @@ KhyAiHub 历史并推 GitHub。它逐笔应用本地 diff、保留原消息与�
    （2026-10-10 由已删除的 `luckykhy/khy_os_private` 合并而来；那个仓只剩
    main + 3 个 dependabot 分支，内容全部本地已有，删除无损失。）
 
-> ⚠ **已知未备份的 1894 笔**：本地仓有 47 个分支，其中 **1894 笔提交不在 main 上**
-> （`backup/*` 系列、`gitee-sanitized` 842 笔、`chore/tui-ux-nightly` 190 笔、
-> `rebuild/staged-rebuild` 179 笔等），**只存在于本地便携盘**。`archive/full-history`
-> 只覆盖 main。若要防盘丢，须另行决定推哪些分支——不搭车本次合并。
+### 分支备份现状（2026-10-11 实测）
+
+本地 25 个分支（`refs/heads`）已按下述口径备份到 `KhyAiHub`：
+
+| 落点 | 内容 |
+|---|---|
+| `archive/full-history` | `main` 的 853 笔治理前全历史 |
+| `archive/branch/<原名>` | 15 个本地分支逐一推送 |
+
+**已备份（16 个）**：`main`、`backup/main-r3~r11`（9 个）、`backup/main-ai-polluted-20260927`、
+`backup/main-pre-sanitize-20260927`、`backup/workspace-20261010`、`chore/hygiene-20261010`、
+`chore/repo-layer-taxonomy`、`rebuild/from-scratch`。
+
+**⚠ 未能备份（8 个）——本地对象库损坏，非疏忽**：
+
+`heads/backup-pre-rebuild-20260924`、`backup-workspace-20260918`、`backup/main-old-20260924`、
+`backup/main-pre-r11-devcommits-20260928`、`chore/tui-ux-nightly`、`gitee-sanitized`、
+`rebuild/staged-rebuild`、`workbuddy/chore-tui-ux-nightly-0cb4b970`。
+
+根因：`git fsck` 报 **12 个对象缺失**（4 commit + 8 tree），`git push` 生成 pack 时要
+遍历全量对象，缺一个就整包失败。受影响提交集中在 **2026-09-20 14:07–14:18** 一段
+（自动化时代的写入窗口）。已逐一排查的恢复源**全部无果**：
+
+| 源 | 结果 |
+|---|---|
+| `gitee-private`（Gitee 私有仓） | 只有 `main`，缺的对象不在其上 |
+| Gitee `KHY-OS` | 只有 `main` + `feat/bootstrap-packaging/android-apk` |
+| `ghfast.top` 代理（原 `khy_os`/`khy_os_private`） | 两仓已删，代理不再服务 |
+| `khy-os-nightly` | 同一对象库的 worktree，同样缺 |
+| Portable 下其它副本 | 均无 `.git` |
+
+**重要：这 8 个分支本地仍完全可用**——`git log` / `git diff` / `git ls-tree` 全部正常，
+只是推不出去。缺的是深层层面的旧快照，近期历史完好。**它们没有丢，只是没有异地备份。**
+
+> 恢复路径（若日后再遇）：从任一仍持有这批对象的克隆重新 fetch。当前无此来源。
+> 亦可考虑 `git repair` / 从打包备份中捞对象，但本机无可用的打包备份。
 
 > **边界（不可放宽）**：本规则**只自动化「推 tag 之后」的长链路**，
 > **不触碰红线 R1 / `PROCESS-001`（P0）的「禁止 AI 自动 commit/push」**。
