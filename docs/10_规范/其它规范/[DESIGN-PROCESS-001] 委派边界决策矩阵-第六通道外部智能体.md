@@ -1,3 +1,6 @@
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
 # [DESIGN-PROCESS-001] 委派边界决策矩阵（第六通道：外部智能体）
 
 <!-- RULES-REGISTRY: PROCESS-004 -->

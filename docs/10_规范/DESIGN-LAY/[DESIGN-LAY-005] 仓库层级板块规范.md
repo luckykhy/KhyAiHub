@@ -1,4 +1,7 @@
 <!-- 文档分类: DESIGN-LAY-005 | 阶段: 设计 | 原路径: 新建 -->
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：34 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # [DESIGN-LAY-005] 仓库层级板块规范
 
 <!-- RULES-REGISTRY: LAYOUT-003 -->

@@ -358,6 +358,9 @@ khyquant 使用 SCSS（`sass`），ai-frontend 不预装。规范：
 使用 `npm run frontend:fix-colors` 扫描，逐步替换为 `var(--khy-*)`：
 
 ```bash
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。
 # 预览（不改文件）
 npm run frontend:fix-colors
 
