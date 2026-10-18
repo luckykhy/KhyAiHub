@@ -19,6 +19,9 @@ formerly: 无
 
 <!-- RULES-REGISTRY: PROCESS-102 -->
 
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
 # [PROCESS-102] 下一步最该做什么决策标准
 
 > **域**：PROCESS（分支 / 提交 / 发布 / 评审 / 版本同步）
