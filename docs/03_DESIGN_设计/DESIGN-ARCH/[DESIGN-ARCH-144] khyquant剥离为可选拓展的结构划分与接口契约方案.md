@@ -180,6 +180,9 @@ khy-os-khyquant/（未来独立仓库形态）
 ## 7. 验收方式
 
 ```bash
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
 # 基线与回归（Phase 1 后必须全绿，基线数字以实际跑出为准，不许估）
 node --test services/backend/tests/extensions/quantAppSeam.test.js
 node --test services/backend/tests/extensions/quantAppServerMount.test.js

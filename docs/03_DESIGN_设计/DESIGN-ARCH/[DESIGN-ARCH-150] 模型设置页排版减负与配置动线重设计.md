@@ -138,6 +138,9 @@ P1 与 P2 无耦合，可并行；P3 依赖 P2 的表单组件形状（跳转预
 ## 7. 验收方式
 
 ```bash
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
 # 类型：改前基线 20 条错误（2026-09-24 实测，全在 src/host/index.ts），改后必须恰为 20、零新增
 "<node>" apps/khyos-desktop/node_modules/typescript/bin/tsc -p apps/khyos-desktop/tsconfig.json --noEmit
 

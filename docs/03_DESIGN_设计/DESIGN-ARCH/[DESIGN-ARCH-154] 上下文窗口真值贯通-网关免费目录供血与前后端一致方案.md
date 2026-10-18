@@ -173,6 +173,9 @@ _feedContextWindowCacheFromFreeCatalog(rows)
 **自动化（每期落地即跑）**：
 
 ```bash
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
 # 新测试（node:test，落地即绿）
 node --test tests/gateway/contextWindowCatalogFeed.test.js        # 一期
 # 零回归基线（实施时逐文件跑，读 # tests/# pass/# fail 三行，不许估）：

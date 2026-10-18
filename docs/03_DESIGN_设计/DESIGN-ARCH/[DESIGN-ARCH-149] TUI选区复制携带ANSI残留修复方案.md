@@ -1,5 +1,8 @@
 > 状态：提案（待确认后实施）｜范围：`services/backend/src/cli/tui/selection.js`（可选带 `ccMessageProjection.js` 一处）｜上游依赖：无｜调研指针：本文 §1｜模板合规：B-P2 七字段据实声明见 §2
 
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
 # [DESIGN-ARCH-149] TUI选区复制携带ANSI残留修复方案
 
 ## 0. 一句话结论

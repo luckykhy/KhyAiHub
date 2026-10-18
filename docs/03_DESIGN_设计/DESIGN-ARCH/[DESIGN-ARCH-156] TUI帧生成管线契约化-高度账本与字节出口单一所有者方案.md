@@ -1,5 +1,8 @@
 > 状态：提案（**S0 只读测量已执行并回填 §5.1**；S1 及以后待 §9 X-001~X-004 裁决）｜范围：`services/backend/src/cli/tui/` 的**几何账本层**（`chromeBudget.js` / `ink-components/liveRegionBudget.js` / `liveHeightClamp.js` / `overlayLiveBudget.js` / `frameBudget.js`）与**字节出口层**（`app.js` 的 stdout Proxy + `scrollbackPreserve.js` + `runtime/sidebarRail.js`）｜上游依赖：`[DESIGN-ARCH-102]` §3 硬约束 H1/H2/H6/H7/H8、§4.3 chrome 账本、§4.6 缩放与重绘；`[DESIGN-ARCH-103]` P0-5；`tui/AGENTS.md` §0.9.2/§0.9.7｜调研指针：本文 §1｜模板合规：B-P2 七字段据实声明见 §2
 
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
 # [DESIGN-ARCH-156] TUI 帧生成管线契约化 —— 高度账本与字节出口的单一所有者方案
 
 ## 0. 一句话结论

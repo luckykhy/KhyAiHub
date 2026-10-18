@@ -1,5 +1,8 @@
 > 状态：提案（**A 层四件最小改动已逐条给出 file:line，未实施**；B 层防复发零新增规则 ID / 零新增门控）｜范围：① `cli/tui/` 的**子进程 fd 出口**、② `utils/dataHome.js` 的**目录创建收口**、③ `cleanupService` ↔ `clean` 的**清理目标真源**、④ `bootstrap/prefetch.js` 的**轻量入口裁剪面**｜上游依赖：`[DESIGN-ARCH-156]` §1.5/§7/§8、`[DESIGN-ARCH-102]` §3 H7、`tui/AGENTS.md` §0.9.7 单写者原则、`[DESIGN-LAY-002]` §3.1、`[DESIGN-LAY-003]` HK-3｜调研指针：本文 §1、`.khyos/diag/2026-09-29-storage-notice-and-tui-leak-diagnosis.md`｜模板合规：B-P2 七字段据实声明见 §2.1
 
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
 # [DESIGN-ARCH-166] 静默失效与真源漂移四例收敛方案 —— 出口逃逸·幽灵目录·提示虚高·裁剪漏挂
 
 ## 0. 一句话结论
