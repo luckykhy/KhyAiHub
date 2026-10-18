@@ -418,6 +418,9 @@ src/
 
 **标准结构**：
 ```markdown
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
 # [TYPE-CATEGORY-NNN] 标题
 
 > 摘要

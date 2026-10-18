@@ -1,4 +1,7 @@
 <!-- 文档分类: DESIGN-ARCH-017 | 阶段: 设计 | 原路径: docs/03_DESIGN_设计/[DESIGN-ARCH-017] 元工具系统设计.md（新建） -->
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：2 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # khyos 元工具系统设计（Meta-Tool / Tool-Forging）
 
 > 版本 v1.0（2026-06-12）。本文定义 khyos 生态底座的**元工具系统**：当现有工具

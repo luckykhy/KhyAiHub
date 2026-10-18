@@ -1,4 +1,7 @@
 <!-- 文档分类: DESIGN-ARCH-004 | 阶段: 设计 | 原路径: docs/架构/_cbssp_progress.md -->
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：6 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # CB-SSP 数学重塑 · 实施进度
 
 > 配套：设计文档 [`docs/03_DESIGN_设计/[DESIGN-ARCH-003] Khyos-数学重塑-受约束随机最短路径.md`]([DESIGN-ARCH-003] Khyos-数学重塑-受约束随机最短路径.md)

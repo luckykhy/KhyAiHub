@@ -1,3 +1,6 @@
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。
 # [DESIGN-ARCH-041] Khyos意图精准裁决 — 意图光谱解析与动态提权网关
 
 > 状态：定稿 · 归属：`services/backend/src/services/intentArbiter/` · 关联：[[DESIGN-ARCH-040]]（数据主权网关，执行带下游）、[[DESIGN-ARCH-019]]（用户输入预处理规范）、[[DESIGN-ARCH-037]]（自举闭环自愈，进化需求）

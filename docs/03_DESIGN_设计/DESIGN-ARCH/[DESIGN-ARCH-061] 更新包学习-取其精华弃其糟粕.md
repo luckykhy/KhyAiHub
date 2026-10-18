@@ -1,3 +1,6 @@
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：5 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # DESIGN-ARCH-061 更新包学习：取其精华弃其糟粕（upstream archive study）
 
 > **核心判断**：Khy 开发过程中参考了大量开源项目。这些项目更新时，把新版压缩包交给 Khyos，
