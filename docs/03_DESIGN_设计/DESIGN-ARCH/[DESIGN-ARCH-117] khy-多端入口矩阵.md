@@ -373,6 +373,9 @@ await entrypoints.build('mobile');      // 构建
 ## 八、验证方式
 
 ```bash
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：24 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # 层级契约本身（改过 §1.2 或 CROSSCUTTING 后必跑——这条是 error 级）
 npm run check:layout
 
