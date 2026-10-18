@@ -189,7 +189,9 @@ function collectDocs(dir, acc = []) {
 const findings = [];
 const stats = {
   docsScanned: 0,
+  docsInScope: 0,
   docsWithMarker: 0,
+  docsOutOfScope: 0,
   docsWithoutMarker: 0,
   candidatesChecked: 0,
   missingAfterRelocation: 0,
@@ -198,6 +200,26 @@ const stats = {
   todoMarkedMissing: 0,
 };
 const missingPaths = [];
+const unmarkedInScope = [];
+
+/**
+ * 本规则只对「提出设计/规范并声称落码」的文档有意义。索引页不描述实现、
+ * 修仙学AI 是叙事章节、报告是事后记录——给它们硬塞 done/todo 只会制造
+ * 几百条虚假声明。故按板块声明适用范围，范围外的只计数不判漂移。
+ */
+const IN_SCOPE = /^docs\/(03_DESIGN_设计|10_规范)\//;
+
+/**
+ * 就近索引页即使在适用板块内也不适用本规则：它索引别的文档，
+ * 不描述自己的实现。实测范围内 20 份未标的全是 00_INDEX_*。
+ * 故排除，而不是给它们贴一个无意义的标记。
+ *
+ * 规则卡同理：它们由 docs/docs:rules-cards 从 RULES-REGISTRY.json 生成
+ * （TOOLING-008），是登记表的渲染产物而非设计文档；往里塞实现状态既无意义，
+ * 也会在下一次重渲染时被覆盖掉。实测范围内 97 份未标的全属此类。
+ */
+const INDEX_PAGE = /(?:^|\/)00_INDEX_/;
+const GENERATED_CARD = /^docs\/10_规范\/规则卡\//;
 
 const docsRoot = path.join(repoRoot, 'docs');
 if (fs.existsSync(docsRoot)) {
@@ -206,10 +228,18 @@ if (fs.existsSync(docsRoot)) {
     stats.docsScanned += 1;
     const text = fs.readFileSync(abs, 'utf8');
     const marker = /<!--\s*IMPL-STATUS:\s*([a-zA-Z-]+)\s*-->/.exec(text);
-    // 没有标记的文档本脚本判不了（无自述状态），只计数不出 finding——
-    // 让「漏标」可见，但不把它误报成漂移。
+
+    // 范围外：标记对它无意义，不要求、也不判。
+    if (!IN_SCOPE.test(rel) || INDEX_PAGE.test(rel) || GENERATED_CARD.test(rel)) {
+      stats.docsOutOfScope += 1;
+      continue;
+    }
+    stats.docsInScope += 1;
+
+    // 范围内但没标记：判不了（无自述状态），计入待补清单而非误报成漂移。
     if (!marker) {
       stats.docsWithoutMarker += 1;
+      unmarkedInScope.push(rel);
       continue;
     }
     stats.docsWithMarker += 1;
@@ -279,7 +309,24 @@ if (stats.todoMarkedMissing > 0) {
   });
 }
 
+if (stats.docsWithoutMarker > 0) {
+  // 范围内漏标：这些文档此刻处于「不知道谁先谁后」的状态。
+  // 单列而非并入漂移——缺标记不是错，是账未清。
+  findings.push({
+    id: 'impl-status-missing-in-scope',
+    severity: 'warning',
+    message:
+      `${stats.docsWithoutMarker} 份范围内文档（03_DESIGN_设计 / 10_规范）尚未标注 IMPL-STATUS，` +
+      `因而完全无法参与漂移判定（全量名单用 --list=impl-status-missing-in-scope）。`,
+    detail: unmarkedInScope.map((d) => ({ doc: d, claimed: '', status: '(无标记)' })),
+  });
+}
+
 if (listMode) {
+  if (listMode === 'impl-status-missing-in-scope') {
+    for (const d of unmarkedInScope) process.stdout.write(d + '\n');
+    process.exit(0);
+  }
   const hit = missingPaths.filter((m) => {
     if (listMode === 'impl-status-done-but-missing') return m.status === 'done';
     if (listMode === 'impl-status-superseded-historical') return m.status === 'superseded';
@@ -309,7 +356,8 @@ if (jsonMode) {
   process.stdout.write('文档 ↔ 源码漂移观察者（DOCS-005 · S1 观察者 · 恒 exit 0）\n');
   process.stdout.write('='.repeat(60) + '\n');
   process.stdout.write(
-    `扫 ${stats.docsScanned} 份 md：带标记 ${stats.docsWithMarker}、未带 ${stats.docsWithoutMarker}\n`,
+    `扫 ${stats.docsScanned} 份 md：适用范围内 ${stats.docsInScope}` +
+      `（带标记 ${stats.docsWithMarker}、待补 ${stats.docsWithoutMarker}），范围外 ${stats.docsOutOfScope}\n`,
   );
   process.stdout.write(
     `根锚定候选路径 ${stats.candidatesChecked} 条，搬迁映射后仍缺失 ${stats.missingAfterRelocation}` +
