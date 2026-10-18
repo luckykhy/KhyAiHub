@@ -222,6 +222,9 @@ R2 巨石文件（>2500 行）总数：26
 ```bash
 cd /d/Portable/khy-os
 
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
 # 0. 【必做】落点漂移复核 —— 行号可能已失效
 git status --short -- <本次落点文件...>
 git diff -- <本次落点文件...>

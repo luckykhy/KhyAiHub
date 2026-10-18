@@ -151,6 +151,9 @@
 ## 7. 验收方式
 
 ```bash
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
 # P1a：迁移 touches 检查器
 node scripts/ci/check-migration-touches.js   # 存量 4 条补声明后 0 error
 

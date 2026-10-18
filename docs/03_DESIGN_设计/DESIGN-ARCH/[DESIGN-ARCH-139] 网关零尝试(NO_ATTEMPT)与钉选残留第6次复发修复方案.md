@@ -158,6 +158,9 @@
 ## 7. 验收方式
 
 ```bash
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。
 # 单测（新增文件用 node:test，落地即绿）
 node --test services/backend/tests/gateway/<新测试文件>.test.js
 # 既有信封套件零回归（jest 风格 —— 本机无 jest，走影子跑纪律，见提案技能 §8.2）

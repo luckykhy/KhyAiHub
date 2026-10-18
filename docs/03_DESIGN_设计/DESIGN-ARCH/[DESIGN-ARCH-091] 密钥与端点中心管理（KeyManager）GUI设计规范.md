@@ -1,3 +1,6 @@
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
 # [DESIGN-ARCH-091] 密钥与端点中心管理（KeyManager）GUI 设计规范
 
 > 状态：**提案**（待评审）· 2026-09-10（§8b GitHub 调研补充同日）
