@@ -89,6 +89,9 @@
 
 ```bash
 git gc --aggressive --prune=now
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：13 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # 预期从 326 MB → ~200 MB
 ```
 

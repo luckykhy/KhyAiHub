@@ -12,6 +12,9 @@
 
 **组件文档模板**：
 ```markdown
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。
 # KhyButton 按钮
 
 ## 基本用法
