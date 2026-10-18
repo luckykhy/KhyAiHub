@@ -237,6 +237,9 @@ ipcMain.handle('app:brandingLinks', async () => {
 ## 7. 验收方式（可复现命令 + 关联门禁）
 
 ```bash
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。
 # D6（preload↔main 两侧一致）+ D9（品牌文本）——本次零新增 IPC，应原样绿
 node --test apps/khyos-desktop/tests/desktopUiContract.test.cjs
 

@@ -167,6 +167,9 @@ P1a 与 P1b 顺序不可颠倒：先有 phase 字段，CLI 的 phase 分支才�
 ## 7. 验收方式
 
 ```bash
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
 # 回归锚点（改动前后数字必须不变）
 & $node --test services/backend/tests/aiManageDaemonFrontendReuse.test.js   # 基线 6/6
 & $node --test services/backend/tests/cli/handlers/gatewayManageDaemonLeaf.test.js  # 基线 4/4
