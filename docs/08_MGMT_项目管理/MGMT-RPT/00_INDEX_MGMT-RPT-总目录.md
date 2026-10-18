@@ -41,3 +41,4 @@
 - [[MGMT-RPT-033] GitHub调研-双机同步-2026-10-09]([MGMT-RPT-033] GitHub调研-双机同步-2026-10-09.md)
 - [[MGMT-RPT-034] GitHub调研-版本治理-2026-10-10]([MGMT-RPT-034] GitHub调研-版本治理-2026-10-10.md)
 - [[MGMT-RPT-035] GitHub调研-同类项目对比矩阵-2026-10-10]([MGMT-RPT-035] GitHub调研-同类项目对比矩阵-2026-10-10.md)
+- [[[MGMT-RPT-036] GitHub调研-会话监控-2026-10-10]]([MGMT-RPT-036] GitHub调研-会话监控-2026-10-10.md)
