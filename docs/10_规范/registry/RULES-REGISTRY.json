@@ -1912,6 +1912,37 @@
       ]
     },
     {
+      "id": "DOCS-005",
+      "name": "文档实现状态标注与校验",
+      "domain": "DOCS",
+      "nature": "约束为主，兼福利",
+      "scope": "docs/** 下带 <!-- IMPL-STATUS: --> 标记的文档（当前 127 份）；判据为该文档声称的实现路径在仓库中是否真实存在",
+      "priority": "P1",
+      "status": "active",
+      "trigger": "新增或修改任一带 IMPL-STATUS 标记的文档时；或运行 npm run check:doc-drift 时",
+      "constraint": "一份文档标 IMPL-STATUS: done，其声称的实现路径必须在仓库中真实存在——搬迁过的须先过方案 P 前缀映射与同名兜底；标 todo 的文档可写尚不存在的路径（属规划非漂移）；不得以人工标记为准而不核对代码；864 份无标记文档不受本条管辖。",
+      "grants": "授权维护者在 S1 阶段据本守卫的候选清单自行判断是否改动文档——守卫只报告不裁决，约 10% 为已知误报（agent 基础设施与本机态目录、Windows 路径、相对片段）；授权对误报加注释豁免而不修改判据。",
+      "benefit": "把「这份设计落码了没有」从一句无守卫的人工约定变成可判定事实——此前 127 份标记文档中无一被任何脚本消费，且标记本身已被证伪（[DESIGN-ARCH-131] 首行 done 而正文写未落地、[DESIGN-ARCH-030] done 而实现已从仓库消失）；首轮 done 54 vs todo 7 的不对称证明标记携带信息，判据有区分力；经一轮收口（误报排除 + 路径更正 + 据实改标记）后 done 类漂移归零。",
+      "exception": "无标记文档不在管辖范围（占 993 份中的 866 份），需先补标记才受检；docs/html/ 孪生件排除；命名模板（<域>.js、{A,B}.js）与 node_modules 排除；.khy/.khyos/.zcode/.claude 等 agent 基础设施与本机态目录排除；superseded 文档的历史路径单列审计项、不算漂移；内容级漂移（数值/口径/命令/错误码与代码不符）不在本条射程——git 时间戳判先后已被实测证伪，理由见 SSOT §四。",
+      "version": "1.1.0 (2026-10-18 收口：新增 superseded 第三态，done 类漂移归零)",
+      "formerly": "无",
+      "ssot": "docs/10_规范/DESIGN-DOC/[DESIGN-DOC-004] 文档实现状态标注规范.md",
+      "owner": "governance-team",
+      "gate": "pr",
+      "severity": "advisory",
+      "paths": [
+        "docs/**/*.md"
+      ],
+      "exec": {
+        "script": "scripts/ci/check-doc-drift.js",
+        "findings": [
+          "impl-status-done-but-missing",
+          "impl-status-superseded-historical",
+          "impl-status-todo-but-missing"
+        ]
+      }
+    },
+    {
       "id": "MGMT-STD-008",
       "name": "规则编写与管理规范（元规则）",
       "domain": "DOCS",
@@ -2636,7 +2667,7 @@
       "name": "前端 CSS 与样式架构规范",
       "domain": "TOOLING",
       "nature": "约束",
-      "scope": "delivery/web/ai-frontend/src/**, delivery/channel/khyquant/frontend/src/**, runtime/substrate/platform/packages/ui-shared/**",
+      "scope": "delivery/web/ai-frontend/src/**, delivery/channel/khyquant/frontend/src/**, runtime/substrate/platform/packages/ui-shared/**, apps/khyos-desktop/src/renderer/theme/**, delivery/mobile/khy-os-client-app/lib/ui/theme/**",
       "priority": "P2",
       "trigger": "新增或修改样式文件、CSS 变量、组件样式时",
       "constraint": "五原则：令牌优先（颜色/圆角/阴影全部走 var(--khy-*)，禁止硬编码值）、分层组织（Base → Tokens → Layout → Components → Utilities → Overrides）、就近原则（组件样式 scoped，全局样式仅放布局/令牌/动画）、无 !important（通过特异性顺序管理优先级）、移动优先（默认移动端样式，min-width 渐进增强）。令牌命名 --khy-{category}-{variant}，分类：--khy-bg-*、--khy-text-*、--khy-border-*、--khy-primary-*、--khy-{status}（success/warning/danger）、--khy-radius-*、--khy-shadow-*、--khy-font-*。双主题强制：任何颜色/阴影 token 必须同时定义浅色（:root）与深色（html.dark），仅定义浅色会在暗色下静默失效。BEM：.block__element--modifier，.is-state 状态类、.has-child 子元素指示。流式值优先 clamp() 而非媒体查询（padding: clamp(12px, 2vw, 32px)）。必须支持 prefers-reduced-motion: reduce 下关闭动画。硬编码 hex 收敛用 npm run frontend:fix-colors 扫描后替换为 var(--khy-*)。",
@@ -2651,7 +2682,9 @@
       "paths": [
         "delivery/web/ai-frontend/src/**",
         "delivery/channel/khyquant/frontend/src/**",
-        "runtime/substrate/platform/packages/ui-shared/**"
+        "runtime/substrate/platform/packages/ui-shared/**",
+        "apps/khyos-desktop/src/renderer/theme/**",
+        "delivery/mobile/khy-os-client-app/lib/ui/theme/**"
       ],
       "exec": {
         "script": "scripts/ci/check-frontend-design-tokens.js",

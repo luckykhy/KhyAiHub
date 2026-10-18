@@ -5,6 +5,8 @@
 
 ## 文件清单
 
+- `AESTHETICS-TOKENS.json` —— 软件美学令牌真源（语义名/必需性/跨端映射），语义真源 `[DESIGN-FE-012]` §3
+- `API-SURFACE.json` —— **对客端点清单**，五要素（版本 / 请求响应字段 / 认证方式 / 错误码 / 迁移说明）逐端点登记；`[DESIGN-API-002]` §4「先登记后实现」的机读落点，§7 目录表的真源形态；由 `[DESIGN-ARCH-190]` §五 P1-0 建立（2026-10-15）
 - `ARCHITECTURE-POLICY.json`
 - `BUILD-OUTPUTS.json`
 - `COPYRIGHT-MATERIALS.json` —— 软著登记材料候选清单（哪两端进材料），守卫 `check:copyright` 消费
