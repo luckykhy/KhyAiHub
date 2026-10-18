@@ -1,3 +1,6 @@
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：4 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # [DESIGN-A2A-001] A2A 协议规范
 
 <!-- naming-guard: exempt 本文档保留历史错误命名作为对照，供读过旧版本的读者自查 -->

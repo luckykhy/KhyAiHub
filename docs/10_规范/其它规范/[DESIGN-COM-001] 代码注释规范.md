@@ -187,6 +187,9 @@ Modules: cli.router, cli.aliases
 Standards: DESIGN-ACP-001, DESIGN-COMM-001
 """
 
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。
 # Single-line copyright notice (optional for internal files)
 # Copyright (c) 2026 khy-os platform team
 ```

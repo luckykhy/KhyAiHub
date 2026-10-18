@@ -389,6 +389,9 @@ REPL 侧的**最小改动**：`replSession.js:10340` 分类链中，`init` 阶�
 **推荐做法（最小干预，可恢复）**：
 
 ```bash
+<!-- IMPL-STATUS: done -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：14 条根锚定路径全部可解析，且文中自述已实现；据 DOCS-005 §二 标 done。
 # 1) 先把目标文件移入归档（等价于 clear-memory.js 的 safeDelete：renameSync 到 .archive/）
 #    注意 feedback_tool-execution-results_a3d9521e.md 在 .archive/ 已有同名（Sep-3），
 #    需带时间戳后缀避免覆盖 —— clear-memory.js 已有该逻辑，可参照。

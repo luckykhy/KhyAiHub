@@ -1,3 +1,6 @@
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：10 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # khy-os 长任务可靠性协议 (Reliability Protocol)
 
 > 版本: 1.0.0 | 生效: 2026-07-26
