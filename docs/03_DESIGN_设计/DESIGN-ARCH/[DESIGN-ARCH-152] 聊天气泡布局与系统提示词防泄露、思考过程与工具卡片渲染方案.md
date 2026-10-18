@@ -145,6 +145,9 @@ P2/P3 共享「消息挂载到 streaming 消息」的取值方式，可并行。
 ## 7. 验收方式
 
 ```bash
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
 # 类型：改前基线 20 条（2026-09-24 实测，全在 src/host/index.ts，含本次将改的 :617 附近——
 # 实施后必须仍为 20、零新增；host 过滤处为纯数组操作，不应引入新错误）
 "<node>" apps/khyos-desktop/node_modules/typescript/bin/tsc -p apps/khyos-desktop/tsconfig.json --noEmit

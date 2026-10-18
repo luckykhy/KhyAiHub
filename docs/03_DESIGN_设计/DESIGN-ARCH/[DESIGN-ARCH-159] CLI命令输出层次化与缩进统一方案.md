@@ -215,6 +215,9 @@ omitEmpty(rows, predicate)                     // → rows | []
 ```bash
 "<node>" --test services/backend/tests/cli/outputBlock.test.js   # 全绿（计数以落地实测为准）
 "<node>" scripts/ci/check-leaf-contract.js services/backend/src/cli/outputBlock.js
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
 # → "Leaf-contract check passed: no violations found."
 ```
 
