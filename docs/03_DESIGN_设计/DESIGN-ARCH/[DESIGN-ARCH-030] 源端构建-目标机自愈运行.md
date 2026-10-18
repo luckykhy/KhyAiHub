@@ -1,8 +1,11 @@
-<!-- IMPL-STATUS: done -->
+<!-- IMPL-STATUS: superseded -->
+
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 S1 观察者据实校正；理由见下 -->
+> **标记校正（superseded）**：本篇自称已实现，但所列实现路径在仓库中已不存在（见下方「关联代码」等条目）。文档保留为设计记录，实现已不在仓库。
 # DESIGN-ARCH-030 · 源端构建 + 目标机自愈运行（跨平台 pip 依赖带进度自愈）
 
-> 状态：已实现（packaging/self-heal）
-> 关联代码：`packaging/self-heal/templates/{entry.js,self_healer.js}`、`packaging/self-heal/build.sh`
+> 状态：已实现过，实现已不在仓库（2026-10-18 校正，见上方标记校正说明）
+> 关联代码（**已随搬迁消失，下列为历史记录**）：`packaging/self-heal/templates/{entry.js,self_healer.js}`、`packaging/self-heal/build.sh`
 > 关联测试：`packaging/self-heal/test/self-heal.test.js`（16 用例绿，零网络/零真实安装）
 > 区分参照：`packaging/npm/scripts/devenv.js`（源端/开发期静默工具链自愈，**非**本规范范畴）
 > 安全门禁参照：`setup.py` EXCLUDE_PATTERNS、`scripts/release/build-and-audit-pip-purity.sh`

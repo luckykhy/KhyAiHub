@@ -1,4 +1,7 @@
-<!-- IMPL-STATUS: done -->
+<!-- IMPL-STATUS: todo -->
+
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 S1 观察者据实校正；理由见下 -->
+> **标记校正（todo）**：本篇自述为调研 / 提案 / 借鉴清单，从未落码；原 `done` 标记为误标，文中所列路径均非已实现实现物。
 # [DESIGN-ARCH-121] khyos 对《Claude Code 实战·Harness 工程之道》的借鉴清单
 
 > **文档性质**：**借鉴清单 + 落地提案**。本文档不是规则语义真源——规则语义仍以

@@ -1,4 +1,7 @@
-<!-- IMPL-STATUS: done -->
+<!-- IMPL-STATUS: superseded -->
+
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 S1 观察者据实校正；理由见下 -->
+> **标记校正（superseded）**：本篇自称已实现，但所列实现路径在仓库中已不存在（见下方「关联代码」等条目）。文档保留为设计记录，实现已不在仓库。
 # [DESIGN-ARCH-086] CC TUI 复刻总计划与子任务跟踪
 
 > **隶属**：本文属 **TUI 设计族**（20 编号 / 21 文件），总纲与 scope 裁决见 `[DESIGN-ARCH-122] TUI 设计族总纲`；规则冲突一律以 `[DESIGN-ARCH-102] Khy TUI 统一规则手册` 为准。
@@ -323,9 +326,10 @@ Phase 5 ────────────────────────
 | 2026-09-15 | 复制/Toast 反馈对齐 [DESIGN-ARCH-087] §1 CC 规范（今日单项，优先级④）：① 修复 `CcApp.js` `handleCopyLast` 的 **TDZ 崩溃**（`addToast`/`dismissToast` 声明晚于其使用点，CC 模式挂载即抛 `Cannot access 'addToast' before initialization`，整树白屏）——将 Toast 管理块前移至 `handleCopyLast` 之前；② `handleCopyLast` 复制回执改走 `ccFormatters.formatCopyFeedback` 单一真源（`copied N chars / N lines / N.NKB` CC 规范文案），门控 `KHY_CC_COPY_TOAST`（默认开=CC 文案；显式 `0` → 中文旧文案逐字节回退，零破坏）；③ 修 `ccFormatters.formatCopyFeedback`/`formatPasteFeedback` 的 emoji 过计数 bug——字符计数由 `text.length`（UTF-16 码元，`` 记 2）改为 `[...text].length`（code-point，`` 记 1），对齐 Claude Code CHANGELOG「copied N chars overcounting emoji」修正；④ `CcToast.js` 顶层 `inkRuntime.get()` 改惰性（与 CcScrollIndicators 同模式，消除 require 期抛错）。调研背书：[RESEARCH-001] TUI微交互调研（opencode 单槽替换 toast 5s、CC 带 N 计数 toast、bubbles list 行内 1s、KHY_* 门控默认=旧行为+`0`回退惯例）。验证：node --check 3 文件 OK；check-agent-rules 零违规；formatCopyFeedback 纯 emoji 串（3 个）正确输出 `copied 3 chars`；CcApp+CcToast+ccFormatters 加载 OK。flagRegistry 无需新增（KHY_CC_COPY_TOAST 随 KHY_CC_TUI 主开关，默认开） |
 | 2026-09-16 | 子视图 ViewStack 完善落地（今日单项，优先级⑤，[DESIGN-ARCH-085] §1/§4.1）：`CcViewStack.js` 是 CcApp import 了但从未接入的死代码，且自身有 3 个挂载即崩的 bug——① 顶层 `inkRuntime.get()`（loadInk 前 require 即抛错，改惰性，与 CcToast/CcScrollIndicators 同模式）；② `CcCommandPalette`/`CcHistorySearch` 用了 `Text`/`useInput` 却从未 import（挂载即 `ReferenceError`）——补惰性导入；③ 真正接入 `CcApp`：门控 `KHY_CC_VIEW_STACK`（默认开）下 CC 模式 Ctrl+P 命令面板改走 `CcCommandPalette`（分组 + 实时过滤 + ↑/↓ 导航 + Enter 执行），`=0` 逐字节回退既有 `CcFuzzyPicker` 路径；`/copy` 命令在两路径下均路由到 `handleCopyLast`。对齐 [DESIGN-ARCH-085] §1「视图栈：Esc 返回 / 子视图不影响主对话 / 滚动独立」。验证：node --check 2 文件 OK；check-agent-rules 零违规；CcCommandPalette/CcHistorySearch 单独挂载 + CcApp 门控开/关两路径挂载全绿；ccClipboard.test.js 20/20 回归。`CcHistorySearch`（Ctrl+R 历史搜索）本次只修通、未接入 CcApp（遗留：下轮接 Ctrl+R 并走 ViewProvider 状态缓存） |
 | 2026-09-17 | CcApp 子视图收尾落地（优先级⑤ 续，[DESIGN-ARCH-085] §1/§4.3 + [DESIGN-ARCH-087] §2.4 双击退出）：① `CcHistorySearch` 真正接入 `CcApp`——Ctrl+R 打开历史搜索覆盖层（反向增量搜索 `ccHistory.searchHistory` 持久化历史，选中条目回填 CcPromptInput 输入框，Esc 关闭），完成「子视图 ViewStack 完善」遗留项；② 修 CcApp 退出行为对齐 [DESIGN-ARCH-087] 验收项「双击 Ctrl+C 退出：首次提示，二次退出」——原 Ctrl+C/Ctrl+D 单按即 `exit()` 的裸行为改为 3s 窗口双击确认（`ccTimers.TIMING.doubleTapExit.windowMs` 单一真源），首次只发 `再按一次 Ctrl+C 退出` 警告 Toast。验证：node --check OK；check-agent-rules 零违规；CcApp 门控开/关（KHY_CC_VIEW_STACK）两路径挂载全绿；ccClipboard.test.js 20/20 回归。Legacy 模式（KHY_CC_TUI 未设置）未触碰 |
+| 2026-09-18 | 子视图状态保持落地（今日单项，[DESIGN-ARCH-085] §1.2「切换视图后恢复位置和状态」+ §0「上下文保持」）：`ViewProvider`/`ViewContext` 的每视图 `viewState` 缓存自设计起就从未被 CcApp 消费，Ctrl+P 命令面板与 Ctrl+R 历史搜索都是「开即新挂载」的浮层，filter/query/cursor 只存组件本地 `useState`——Esc 一关现场全丢。本轮补齐契约两端：① `CcCommandPalette`/`CcHistorySearch` 新增**可选** `initialState`（播种 filter/query/cursor）+ `onStateChange`（回写现场，按 JSON 快照去重避免每帧重复上报），两个 prop 都不传即与改动前逐字节一致（`''`/`0`）；② `CcApp` 持 `viewStateCache` ref 按视图 id（`commandPalette`/`historySearch`）缓存最后一次现场并在打开时播种——用 ref 不用 state，切换视图不触发整树重渲。验证：`node --check` 2 文件 OK；check-agent-rules 零违规；状态保持探针 5 例全绿（不传 props 播种默认 / 播种 `filter:'model',cursor:3` 与 `query:'deploy',cursor:2` 各上报恰好一次 / 宿主缓存往返值正确）；CcApp 门控开/关两路径挂载全绿；ccClipboard.test.js 20/20 回归。Legacy 模式未触碰 |
 
 ---
 
 > **文档状态**：Active — 持续更新
 > **创建日期**：2026-09-09
-> **最后更新**：2026-09-17
+> **最后更新**：2026-09-18

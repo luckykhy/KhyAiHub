@@ -1,4 +1,7 @@
-<!-- IMPL-STATUS: done -->
+<!-- IMPL-STATUS: superseded -->
+
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 S1 观察者据实校正；理由见下 -->
+> **标记校正（superseded）**：本篇自称已实现，但所列实现路径在仓库中已不存在（见下方「关联代码」等条目）。文档保留为设计记录，实现已不在仓库。
 # [DESIGN-ARCH-164] 用户需求理解管线——意图裁决、澄清问询与需求固化
 
 <!-- RULES-REGISTRY: RUNTIME-002, RUNTIME-008, PROCESS-008, PROCESS-014 -->

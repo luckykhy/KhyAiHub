@@ -213,7 +213,7 @@ khy 把这条落成**工程约束**:提示词改动同样过守卫(`check-agent-
 - **微内核(C/MoonBit)**:仓库根 `kernel/`(`kernel/moonbit/lib/khy_kernel/main.mbt`、`Dockerfile.kernel-build`),
   插件 SDK `platform/packages/moonbit-plugin-sdk/khy_sys.mbt`;backend 内 wasm 模块 `wasm-context/`/`wasm-chain/`/
   `wasm-indicators/`。深读 [DESIGN-ARCH-007] 微内核-ipc-moonbit、[DESIGN-ARCH-008] moonbit-系统边界。
-- **后台任务(进程即调度单元)**:`src/services/backgroundTaskSpec.js`(纯叶子)+ `scripts/task-runner.js`(分离执行
+- **后台任务(进程即调度单元)**:`src/services/backgroundTaskSpec.js`(纯叶子)+ `runtime/node/backend/scripts/task-runner.js`(分离执行
   进程,`khy tasks run` 每任务一个 detached 子进程,关掉 REPL 也存活)+ `backgroundTaskLauncher.js`(launch/stop/
   tailLogs)+ 复用持久化 `src/tasks/largeTaskRuntimeStore.js` 状态机。这是 khy「让 Agent 拥有后台进程」的最新一块。
 - **守护进程(daemon)**:`src/services/daemonEntry.js`/`daemonManager.js`/`daemonSpawnLocation.js` + `cli/handlers/daemon.js`。
