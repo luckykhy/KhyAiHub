@@ -1,5 +1,8 @@
 <!-- RULES-REGISTRY: PROCESS-014 -->
 
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：6 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # [DESIGN-DELIV-002] 产品任务面与交付律
 
 > 文档编号（非规则 ID）：`[DESIGN-DELIV-002]`

@@ -1,5 +1,8 @@
 <!-- RULES-REGISTRY: PROCESS-014 -->
 
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
 # [DESIGN-DELIV-001] 可交付性判断标准
 
 > 文档编号（非规则 ID）：`[DESIGN-DELIV-001]`
