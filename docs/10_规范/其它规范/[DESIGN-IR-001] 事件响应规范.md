@@ -131,6 +131,9 @@ P3: 不升级
 ### 5.1 频道命名
 
 ```
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。
 # incident-p0-<YYYYMMDD>-<简短描述>    ← P0 专用（所有人可见）
 # incident-p1-<YYYYMMDD>-<简短描述>    ← P1 专用
 ```
