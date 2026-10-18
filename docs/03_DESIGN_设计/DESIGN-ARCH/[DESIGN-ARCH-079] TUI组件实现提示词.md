@@ -1,4 +1,7 @@
-<!-- IMPL-STATUS: done -->
+<!-- IMPL-STATUS: superseded -->
+
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 S1 观察者据实校正；理由见下 -->
+> **标记校正（superseded）**：本篇自称已实现，但所列实现路径在仓库中已不存在（见下方「关联代码」等条目）。文档保留为设计记录，实现已不在仓库。
 # [DESIGN-ARCH-079] TUI 组件实现提示词
 
 ## 说明
@@ -122,7 +125,7 @@
 >
 > 1. **审计现有代码**：
 >    - 读取 `services/backend/src/cli/tui/ink-components/StreamingBlock.js`（441 行）
->    - 读取 `services/backend/src/cli/tui/markdownRenderer.js`（流式渲染）
+>    - 读取 `runtime/node/backend/src/cli/markdownRenderer.js`（流式渲染）
 >    - 读取 `services/backend/src/cli/tui/ink-components/TextBlock.js`（文本块）
 >    - 读取 `services/backend/src/cli/tui/ink-components/ToolCard.js`（工具卡片）
 >    - 对比 OpenCode 的 streaming 实现

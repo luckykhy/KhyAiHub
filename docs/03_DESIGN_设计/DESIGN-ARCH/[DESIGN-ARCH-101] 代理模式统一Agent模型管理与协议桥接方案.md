@@ -105,7 +105,7 @@ khy-os 已有两层合一的统一管理基础设施（汇总文档 §8.1 / §8.
 
 ### 3.2 代理端点与令牌的发现（零硬编码）
 
-复用 provider-hub 已有的 `proxyStatus.ts`（`apps/provider-hub/src/main/proxyStatus.ts`）模式：
+复用 provider-hub 已有的 `proxyStatus.ts`（`delivery/web/provider-hub/src/main/proxyStatus.ts`）模式：
 
 | 数据 | 来源 | 已有实现 |
 |---|---|---|
@@ -445,9 +445,9 @@ services/backend/src/services/domain/config/ccSwitch/proxyAccess.js（新建）
 | 代理 auth（自动令牌 + managed tokens） | 同上 | 482–770 |
 | 代理运行时文件写 `proxy_server_runtime.json` | 同上 | exports 段 3085–3102 |
 | appWriters 7 agent 直连写入 | `services/backend/src/services/domain/config/ccSwitch/appWriters.js` | 110–200 |
-| `agentMode` 类型定义（proxy/direct） | `apps/provider-hub/src/main/types.ts` | 24–27 |
-| 代理端点发现（零硬编码） | `apps/provider-hub/src/main/proxyStatus.ts` | 22–45 |
-| dataHome 四级解析 | `apps/provider-hub/src/main/providers.ts` | 25–49 |
+| `agentMode` 类型定义（proxy/direct） | `delivery/web/provider-hub/src/main/types.ts` | 24–27 |
+| 代理端点发现（零硬编码） | `delivery/web/provider-hub/src/main/proxyStatus.ts` | 22–45 |
+| dataHome 四级解析 | `delivery/web/provider-hub/src/main/providers.ts` | 25–49 |
 | 11 个内置厂商 | `services/backend/src/services/gateway/builtinProviderConfig.js` | 32–126 |
 | 12 个公共适配器 | `proxyServer.js` | 64–77 |
 | apiAdapter 三段模型名 `api:<poolKey>:<model>` | `services/backend/src/services/gateway/adapters/apiAdapter.js` | `parseProviderModel` |

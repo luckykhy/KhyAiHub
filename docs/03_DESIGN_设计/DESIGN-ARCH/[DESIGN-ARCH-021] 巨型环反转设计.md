@@ -13,7 +13,7 @@
 
 ## 0. 本轮交付的工具增强（只读分析，零业务改动）
 
-为支撑本设计，给自研分析器 `scripts/archDebtScan.js` 增了两条**纯只读**能力，
+为支撑本设计，给自研分析器 `runtime/node/backend/scripts/archDebtScan.js` 增了两条**纯只读**能力，
 默认 `npm run arch:debt` 的行为与退码语义**完全不变**，新能力走独立子命令：
 
 | 子命令 | 能力 | 性质 |

@@ -1,4 +1,7 @@
-<!-- IMPL-STATUS: done -->
+<!-- IMPL-STATUS: superseded -->
+
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 S1 观察者据实校正；理由见下 -->
+> **标记校正（superseded）**：本篇自称已实现，但所列实现路径在仓库中已不存在（见下方「关联代码」等条目）。文档保留为设计记录，实现已不在仓库。
 # [DESIGN-ARCH-118] HQ 能力吸收与多机协作规范
 
 > **定位**：把 khy-os-hq（指挥部）的能力**吸收进 khy-os 现有机制**，然后废弃 HQ 仓库，

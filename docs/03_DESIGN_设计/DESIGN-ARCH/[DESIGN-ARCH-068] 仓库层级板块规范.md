@@ -312,7 +312,7 @@ git grep -I -o -h --untracked -E 'npm run [a-zA-Z0-9:_-]+' | sort -u
 node scripts/ci/check-repo-layout.js --promote=root-whitelist,docs-index-first,layer-registry
 ```
 
-三条 error 级规则阻断合并；五条 warning 级规则由基线棘轮把关（超基线自动升 error）。因为守卫不接受 `--changed`，该步骤**不需要** `GIT_BASE_REF` 环境变量，与相邻的 `check-change-safety` / `check-agent-rules` 步骤不同。维护归属登记在 `docs/_维护者/维护映射表.json` 的 `repo-layout` area（`verify` 字段即上面两条命令）。
+三条 error 级规则阻断合并；五条 warning 级规则由基线棘轮把关（超基线自动升 error）。因为守卫不接受 `--changed`，该步骤**不需要** `GIT_BASE_REF` 环境变量，与相邻的 `check-change-safety` / `check-agent-rules` 步骤不同。维护归属登记在 `docs/14_维护者/registry/维护映射表.json` 的 `repo-layout` area（`verify` 字段即上面两条命令）。
 
 守卫的可移植性约定：`--promote=<id>` 精确挑选要阻断的规则，`--strict-warnings` 全部升级，`--list=<id>` 打全量清单，拼错 id 以**退出码 2** 失败（不静默放过）——与 `check-change-safety.js` 同一套参数语义。测试通过 `KHY_REPO_LAYOUT_ROOT` 指向临时 fixture 仓库，不依赖本仓库当时的真实违规数。
 
@@ -326,4 +326,4 @@ node scripts/ci/check-repo-layout.js --promote=root-whitelist,docs-index-first,l
 - 文档排版与格式控制：`[DESIGN-ARCH-023] khyos文档排版与格式控制规范`
 - 拓展契约与核心边界（本文 L5 的下位法）：`[DESIGN-ARCH-069] 拓展契约与核心边界规范`
 - 设计模式标注规范：`[DESIGN-ARCH-015] 编码规范`
-- 维护区域映射（111 个 area → 文件 → 验证命令）：`docs/_维护者/维护映射表.json`
+- 维护区域映射（111 个 area → 文件 → 验证命令）：`docs/14_维护者/registry/维护映射表.json`
