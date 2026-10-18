@@ -1,7 +1,7 @@
 {
   "$schemaNote": "能力域 → 唯一实现位置登记表。schema 单一真源：docs/10_规范/其它规范/[DESIGN-SOURCING-001] 借鉴与实现统一规则.md §4 B-U1。守卫脚本 check:feature-ownership 尚未落地（B-G1/B-G2 分阶段建设项），本文件当前由人工评审使用。",
   "version": 2,
-  "updated": "2026-09-28",
+  "updated": "2026-10-13",
   "status": "seeded",
   "capabilities": [
     {
@@ -335,11 +335,32 @@
       "forbidden": [],
       "status": "active",
       "notes": "登记 2026-10-03（ycode 借用第 7 轮落地，khy-Trajectory/ycode-borrowing/2026-10-02-riskdeny-计划.md + 同日台账）。_pickForQuestion 在 intentGuard 校准之后加风险门：被选中标签命中词表 → 合成拒绝串 RISK_DENY_ANSWER（非选项标签原文，downstream Q:/A: 渲染语义自明）+ pick.denied:true + reason=destructive-vocabulary（105「独立错误码」的可见对偶）。子门控 KHY_UNATTENDED_AUTOANSWER_RISK_DENY 默认开（拒绝是收紧方向），关 → 逐字节回退盲选行为。字节身份：良性 pick 不携带 denied 字段（条件展开，legacy 形状不变）。已知边界：词表为英文技术语汇，中文破坏性问句不命中——中文词表独立提案（已补全：见 2026-10-04 轮，CHINESE_DESTRUCTIVE_PATTERNS 进入 _selectDestructivePatterns 返回，shell-command-risk 域 notes）。刻意不扫：全选项与问题文本（命中面最小化，被推荐/被校准到破坏选项才是真放行风险）。测试 unattendedAutoAnswer.test.js 追加 describe 6 条（先红 3/21 后绿 21/21；3 条回归锁：良性字节回退/子门关/总门关；deny-wins-over-intent 实证通过）。既有 toolUseLoop.unattendedAutoAnswer.test.js 4/4 失败经真 HEAD 基线 A/B 归因（git show 原字节还原，6870 字节核对一致）为存量/在途（ESM 工具 jest 加载失败 + housekeeping 扰动），与本轮无关。"
+    },
+    {
+      "domain": "external-delegation-gate",
+      "summary": "外部智能体委派审批闸：响应渠道切给非 khyos 智能体（claude/codex/opencode/openclaw/acp/commandcode/cli）前必须先经用户批准，代码级 fail-closed，auto 档不豁免",
+      "canonical": "runtime/node/backend/src/services/gateway/delegationGate.js",
+      "ownedLayers": [
+        "L2"
+      ],
+      "pattern": "Gate",
+      "method": "self-developed",
+      "source": null,
+      "aliases": [
+        "外部智能体委派审批闸",
+        "delegationGate",
+        "委派审批"
+      ],
+      "forbidden": [],
+      "status": "active",
+      "notes": "登记 2026-10-11（产品所有者明确要求，用户原话与需求五问存证 works/data/khy/feedback/external-delegation-gate-20261011/requirement-5q.md）。闸插在 _generateWithAdapterIsolation（aiGatewayRoutingMethods.js）——全仓唯一 entry.adapter.generate 内容生成执行点（探活 ping 的三处直调不承载用户内容，刻意不过闸），一次设闸覆盖 REPL/TUI/任务/工具循环/Web/khy <agent> 全部入口。判定次序：policy deny→拒（压过一切）；policy allow→放；humanPin 字面 'user-command'（全仓唯一写入点 cli/handlers/ide.js startChat，用户亲手敲 `khy <agent>`）→放；会话 'always' 记忆→放；其余经 options.onControlRequest 的 can_use_tool 通道询问（tool_name='external_delegation'），headless/抛异常/应答非法一律拒绝并留 cause。env 钉选（GATEWAY_PREFERRED_ADAPTER）不构成人类批准——预检直写 process.env / 自检修复写 .env / setActiveChannel 直写三条机器写入路径实证，外部 key 钉选一律过闸。测试 src/services/gateway/delegationGate.test.js（node:test 旁置，18 条全绿）。",
+      "rolloutStage": "S3",
+      "rolloutNote": "外部智能体委派审批是产品所有者明确要求的用户交互审批闸（同命令风险分级/工具 requestPermission 族）：交互授权是产品契约本身，不是叠加在 AI 贡献者上的治理机制，不属 PROCESS-008 rollout.mechanisms[] 管辖域；按 PP-1「存量豁免」口径登记 S3（对照 shell-command-risk 条目同型）。每次判定留痕 works/data/khy/ruleguard/delegation-gate.jsonl（KHY_DELEGATION_GATE_OBSERVE_FILE 可覆盖、2MB 裁半、fail-soft），若将来人决定纳入 PROCESS-008 升阶管理，样本流已在；升阶是人的决定，登记不代劳。"
     }
   ],
   "rollout": {
     "$note": "新机制落地阶段登记（单一真源 [DESIGN-PROCESS-002] §6 建议落点）。gate 成员资格仍以 RULES-REGISTRY.json 为准；本段只登记「处于哪一阶段」，供 scripts/ci/check-rollout-stage.js 校验 PP-1（禁止直进 S3）、PP-2（毕业看样本量）、PP-6（一次只升一阶）。stage 取值 S1|S2|S3|S4。",
-    "updated": "2026-09-27",
+    "updated": "2026-10-13",
     "mechanisms": [
       {
         "id": "agent-feedback-contract",
@@ -644,6 +665,36 @@
           "note": "2026-09-24 首跑：单次运行即产出 5 个 GAP 读数（D2 dist/ 不存在、D4 两处 sigstore 失败被吞、D6 SBOM 无消费者、D9 无黄金路径、TS 别名棘轮越界 591>589）。样本按「每次运行 1 条」计，首跑即 1 条；门槛 200 条需持续运行累积。注意首跑读数与 [DESIGN-DELIV-001] §1 的独立测量互相印证（该文 2026-09-22 用另一套手段得出同样结论），这降低了「自研判定误报」的风险，但**不构成**跳过 S1 观察期的理由 —— 升阶仍是人的决定（PP-6）。"
         },
         "rollback": "三处纯配置回退，无代码依赖：① 从 RULES-REGISTRY.json 摘掉 PROCESS-014 的 exec（回到 gate=manual 人工评审）；② 删除 FEATURE-OWNERSHIP.json 本条目；③ 删除 scripts/release/lib/releaseGateStages.js 中的 delivery-baseline 阶段。执行器与文档可保留为人工体检工具而不再是门成员。",
+        "blockedBy": []
+      },
+      {
+        "id": "aesthetics-guard",
+        "name": "美学守卫（令牌 schema + 跨端必需项存在性 + WCAG 2.2 对比度）",
+        "ssot": "docs/10_规范/DESIGN-FE/[DESIGN-FE-012] khy-os 软件美学标准.md",
+        "rules": [
+          "FE-004"
+        ],
+        "executor": "scripts/ci/check-aesthetics.js",
+        "stage": "S1",
+        "stageSince": "2026-10-14",
+        "stageAuthority": "scripts/ci/check-aesthetics.js 的 STAGE 常量",
+        "previousStage": "",
+        "executorStage": {
+          "file": "scripts/ci/check-aesthetics.js",
+          "constant": "STAGE",
+          "note": "阶段权威在执行器源码里（STAGE='S1'）。S1 恒 exit 0、只记录不阻断（PP-3）：三类判定（令牌 schema、跨端必需项存在性、WCAG 2.2 对比度）全部输出 finding，但 severityFor() 在 S1/S2 一律降为 warning，error 级只在 S3 起生效。升阶只改这一个常量 + 登记表的 severity，不需改接线。"
+        },
+        "samples": {
+          "observed": 0,
+          "target": 200,
+          "note": "2026-10-14 落地（Q1–Q9 定案）：本轮把 CHECKED_ENDS 从 tui/web 扩到五端、为 web/khyquant 加 WCAG 2.2 对比度断言（var() 链递归解析 + alpha 合成）、把 null 声明收敛为「已登记缺口不重复告警」。首跑在真实仓库产出 6 条对比度 warning（0 error）——那是「机制有效性」验证，按 PP-2 毕业判据仍须积累 ≥200 条跨运行样本。",
+          "hints": {
+            "observed": 0,
+            "target": 50,
+            "note": "S2 的提示样本从升 S2 后开始计数。"
+          }
+        },
+        "rollback": "三处纯配置回退，无代码依赖：① 从 scripts/quality-gate/lib/qualityGateStages.js 的 pr 档摘掉 aesthetics 阶段（回到只由 package.json 的 check:aesthetics 别名按需调用）；② 改 check-aesthetics.js 的 STAGE 常量（本就是 S1，纯配置，PP-4 合规）；③ 删除 FEATURE-OWNERSHIP.json 本条目。执行器与文档可保留为人工体检工具而不再是门成员。",
         "blockedBy": []
       },
       {
@@ -1021,6 +1072,114 @@
         },
         "rollback": "删本条目 + 删 RULES-REGISTRY 的 RUNTIME-012 + 删 package.json 的 check:toplevel-side-effects 别名 + 删 scripts/ci/check-toplevel-side-effects.js 与 scripts/lib/toplevelSideEffectGuard.js（git revert 本次提交）",
         "blockedBy": []
+      },
+      {
+        "id": "confidence-calibration",
+        "name": "确信度校准（开口前先判「我到底知不知道」；零工具纯问答的笃定断言与自称核验观察）",
+        "ssot": "无独立设计文档：缺陷陈述与两半接线记录在执行器源码头部注释里（runtime/node/backend/src/services/confidenceCalibration.js），本条目是它的登记镜像；边界真源：claimReconciler（动作族词库）/answerVerifier（同一接缝对账）/claimNegation（否定判定）为复用来源，本机制不另立词表",
+        "rules": [],
+        "executor": "runtime/node/backend/src/services/confidenceCalibration.js",
+        "stage": "S1",
+        "stageSince": "2026-10-13",
+        "stageAuthority": "runtime/node/backend/src/services/confidenceCalibration.js 的 KHY_CONFIDENCE_CALIBRATION_STAGE 字面常量（env 同名变量可覆盖）",
+        "previousStage": "",
+        "executorStage": {
+          "file": "runtime/node/backend/src/services/confidenceCalibration.js",
+          "constant": "KHY_CONFIDENCE_CALIBRATION_STAGE",
+          "note": "S1=观察者：harness 收尾对最终回复做确定性扫描，样本落 <dataHome>/ruleguard/confidence-observations.jsonl，不改写回复、不阻断交付。两个 finding 类各有边界：unbacked_certainty 是启发式（零工具轮 + 强笃定措辞 + 非反问式收尾 + 实质长度下限——中文主导回复 40 非空白字符、其余 120）；unbacked_verification_claim 确定性成立的前提是「本轮工具日志为空且 loopResult.conversationMessages 无工具活动痕迹」（跨轮真实引用不误报）。命中 claimReconciler.CLAIM_FAMILIES 六族的文本已由 answerVerifier 在同一接缝用户可见地纠错，本观察器按 ±40 字窗口跳过、不重复计量（read/check 系自称是词库盲区，即本机制的增量）。观察器扫描的 finalResponse 是 answerVerifier 追加纠错注记之后的文本，故两条 finding 与 answerVerifier 命中类可能有交叠（样本按含注记文本计数）。S2/S3 升级路径留待升档时实现——当前代码里刻意不存在任何按阶段改变行为的路径。门控 KHY_CONFIDENCE_CALIBRATION=off → 提示词与观察器逐字节回退（require 仍发生，叶子零顶层副作用）。"
+        },
+        "samples": {
+          "observed": 0,
+          "target": 200,
+          "note": "2026-10-13 落地。样本=confidence-observations.jsonl 事件行（每组 finding 一行，行内带 replyChars / priorToolActivity 便于复核口径）。已知召回边界：60 字级中文典型过度自信短答随 CJK 档（40）入样，20 字级极短答仍不入样；只用表内强措辞的过度自信识别不出；跨轮引用在 conversationMessages 缺失的调用路径仍可能记账（台账不存正文，复核需按轮次回捞）。覆盖率边界：只覆盖 harness 默认收尾路径，KHY_QUERY_ENGINE_HARNESS=off / harness 抛错走 queryEngine 回退的轮次不扫。台账无容量上限/轮转（与 authzFailureLedger 同型）。毕业需 ≥200 条且无解释不了的样本（PROCESS-008 PP-2，以样本量计不以时间计）。"
+        },
+        "rollback": "设 KHY_CONFIDENCE_CALIBRATION=off → 提示词不注入、harness 不扫描不落账，两处接缝逐字节回退；彻底停用=删本条目 + 删两个叶子模块与测试 + 还原 selfProfile/agenticHarnessService 两处接线（git revert 本次提交）。",
+        "blockedBy": []
+      },
+      {
+        "id": "clue-vault",
+        "name": "线索保全（压缩/归档/断点前确定性抽取「丢了会出错」线索并回流）",
+        "ssot": "runtime/node/backend/src/services/clueVault.js",
+        "rules": [],
+        "executor": "runtime/node/backend/src/services/clueVault.js",
+        "stage": "S1",
+        "stageSince": "2026-10-13",
+        "stageAuthority": "runtime/node/backend/src/services/clueVault.js 的 KHY_CLUE_VAULT_STAGE 字面常量（env 同名变量可覆盖）",
+        "previousStage": "",
+        "samples": {
+          "observed": 0,
+          "target": 200,
+          "note": "2026-10-13 落地 S1。样本 = 注入发生次数（compress 与增量摘要两条审计行的 clueCount>0），从 works/data/khy 审计台账统计；cycle boundary/checkpoint 注入不计入样本（由测试锁）。毕业需 ≥200 条且无解释不了的样本（PP-2）。"
+        },
+        "rollback": "KHY_CLUE_VAULT=off → 四处注入全部返空/不加段，摘要提示、增量提示、cycle boundary briefing 与 checkpoint contextSummary 逐字节回退（clueVault.test.js 以不可变基线 889920fe 版 contextCompressor 做逐字节对照锁死）；已写入 boulder contextSummary 的台账随 24h TTL 过期（boulderState.js TTL_MS），不删任何既有字段。",
+        "executorStage": {
+          "file": "runtime/node/backend/src/services/clueVault.js",
+          "constant": "KHY_CLUE_VAULT_STAGE",
+          "note": "S1=观察者：四处接缝全部只增不改——不调 splitIndex、不接 adjustSplitForPins（该函数至今零调用方），不改任何既有字段；S2 才允许把判据接入压缩决策（split 调整），S3 才允许 pin 强制，每次升阶须人工裁决（PP-6 一次一阶）。"
+        }
+      },
+      {
+        "id": "deferred-recall-index",
+        "name": "延迟工具召回词表注入（自审 #4 残余面:召回不到）",
+        "ssot": "docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-012] 工具延迟加载.md（协议侧）+ 叶子自述 runtime/node/backend/src/services/tool/deferredRecallIndex.js（词表面）",
+        "rules": [],
+        "executor": "runtime/node/backend/src/services/tool/deferredRecallIndex.js",
+        "stage": "S1",
+        "stageSince": "2026-10-13",
+        "samples": {
+          "observed": 0,
+          "target": 200,
+          "note": "非拦截型（只往系统提示加召回词，不改判定/不阻断）。样本 = 观察期内「模型据词表用 select:/关键词命中并真正调用」的实例；升阶动作 = 接进 toolSearch 零命中回退（会改工具结果，须先攒够样本）。"
+        },
+        "rollback": "KHY_TOOL_RECALL_INDEX=0 → 叶子返历史裸名清单（接缝逐字节回退，字节已由 tests/services/deferredRecallIndex.test.js 锁死）",
+        "blockedBy": [],
+        "executorStage": {
+          "file": "runtime/node/backend/src/services/tool/deferredRecallIndex.js",
+          "constant": "KHY_TOOL_RECALL_INDEX_STAGE",
+          "note": "S1 铁律：只加词、不拦截。check-rollout-stage.js 读源码比对登记阶段与代码阻断语义是否漂移。"
+        }
+      },
+      {
+        "id": "doc-vs-measured",
+        "name": "「文档 vs 实测」纪律注入 + 结论期文档引述观察器（S1 只记录）",
+        "ssot": "runtime/node/backend/src/services/docVsMeasuredPolicy.js（语义真源在代码内 docblock）",
+        "rules": [],
+        "executor": "runtime/node/backend/src/services/docVsMeasuredPolicy.js",
+        "stage": "S1",
+        "stageSince": "2026-10-13",
+        "stageAuthority": "see executorStage",
+        "previousStage": "",
+        "executorStage": {
+          "file": "runtime/node/backend/src/services/docVsMeasuredPolicy.js",
+          "constant": "STAGE",
+          "note": "阶段权威在本叶子的字面常量 STAGE（当前 S1）。S1 语义 = 只记录不阻断：结论期观察器只写观察记录（既有 toolLoopJournal，event 'doc-grounding'，KHY_LOOP_JOURNAL 默认开；KHY_LOOP_DEBUG 开时叠 breadcrumb），无 nudge/continue；提示词注入本身不阻断任何流程。"
+        },
+        "samples": {
+          "observed": 0,
+          "target": 200,
+          "note": "2026-10-13 接线。样本来自 toolUseLoopCore 零工具调用收尾时的 doc-grounding 观察记录，落既有 toolLoopJournal（getDataDir('toolLoop')/loop-<runId>.jsonl，KHY_LOOP_JOURNAL 默认开；关则该 run 无样本），breadcrumb 为叠加诊断通道（KHY_LOOP_DEBUG 开时才落文件）。累计 ≥200 条且无误报解释不了前不升阶。"
+        },
+        "sisterMechanisms": "confidence-calibration（services/confidenceCalibration.js；同期接线、同为 S1 观察器；其收尾观察器在 agenticHarnessService.js:1202-1235，其 A 层注入按其叶子契约走 selfProfile 接缝）。判据不重叠（说话方式 vs 引述路径）、档位一一对应；若其条目后登，请在彼处回引 doc-vs-measured（两条目互引）。",
+        "rollback": "删本条目 + 回退 selfProfile 注入块与 toolUseLoopCore 观察块 + 删 runtime/node/backend/src/services/docVsMeasuredPolicy.js 与 tests/services/docVsMeasuredPolicy.test.js + 回退 flagRegistry 的 KHY_DOC_VS_MEASURED 与 selfAuditRegistry 的 #8 条目（git revert 本次提交）",
+        "blockedBy": []
+      },
+      {
+        "id": "doc-drift-guard",
+        "stage": "S1",
+        "previousStage": null,
+        "owner": "governance-team",
+        "script": "scripts/ci/check-doc-drift.js",
+        "rule": "DOCS-005",
+        "samples": {
+          "observed": 0,
+          "note": "S1 观察者，样本量按 events 计；毕业看样本不看时间（PP-2）"
+        },
+        "rollback": "从 RULES-OWNERSHIP/FEATURE-OWNERSHIP 摘除 mechanisms 条目 + 摘除 RULES-REGISTRY 的 DOCS-005 条目 + 删除 package.json 的 check:doc-drift* 三个别名 + 删除 scripts/ci/check-doc-drift.js。全部为删除，无数据损失。",
+        "executorStage": {
+          "constant": "STAGE",
+          "file": "scripts/ci/check-doc-drift.js",
+          "note": "阶段权威在执行器 STAGE 常量；登记表只是镜像，漂移即报 authority-drift。"
+        }
       }
     ]
   }
