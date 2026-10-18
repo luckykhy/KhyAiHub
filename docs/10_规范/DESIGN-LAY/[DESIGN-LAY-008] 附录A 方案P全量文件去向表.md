@@ -1,4 +1,7 @@
 <!-- 文档分类: DESIGN-LAY 附录 | 生成器: .khyos/tmp/b54-tree.js | 构建产物不得手改 -->
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。
 # [DESIGN-LAY-008] 附录A · 方案 P 全量文件去向表
 
 > 由 git ls-files 全量 11457 个跟踪文件逐行生成。迁移 11345 · 退役 109 · 孪生 html 随 md 再生 0（不单独决策） · UNMAPPED-待议 3。

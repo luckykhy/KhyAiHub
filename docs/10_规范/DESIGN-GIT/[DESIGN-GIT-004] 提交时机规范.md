@@ -315,6 +315,9 @@ docs-only             0e / 0w       docs-only             0e / 0w
 ```bash
 NODE="D:/WorkBuddyData-Intl/.workbuddy-ai/binaries/node/versions/22.22.2-2/node.exe"
 
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：12 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # 语法自检
 $NODE --check scripts/ci/check-commit-timing.js
 

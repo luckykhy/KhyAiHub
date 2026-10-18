@@ -400,6 +400,9 @@ updated: 2026-09-04T00:00:00.000Z
 ### 7.1 创建用户记忆
 
 ```bash
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。
 # 1. 复制模板
 cp docs/03_DESIGN_设计/\[DESIGN-MEM-003\]\ 记忆模板库.md .khy/memory/user_basic-profile_$(uuidgen | cut -c1-8).md
 

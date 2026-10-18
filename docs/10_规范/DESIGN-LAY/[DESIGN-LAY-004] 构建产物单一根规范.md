@@ -20,6 +20,9 @@ owner: architecture-team
 
 <!-- RULES-REGISTRY: LAYOUT-005 -->
 
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：24 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # [DESIGN-LAY-004] 构建产物单一根规范
 
 > **2026-09-18 更新**：单一产物根由 `_build/` 迁移至 `entries/`（与「多端入口矩阵」同址，见 `[DESIGN-ARCH-117]`）。§1.x 的实测快照为迁移前证据，仍记旧根名 `_build/`；正文规范（§3–§9）已统一到 `entries/`。
