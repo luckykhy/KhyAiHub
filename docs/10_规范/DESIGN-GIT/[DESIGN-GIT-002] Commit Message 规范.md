@@ -289,6 +289,9 @@ tabs open. Will re-implement with tab-aware session tracking.
 ### 9.2 交互式提交
 
 ```bash
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：1 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # 使用 git commit 的交互式模式
 git commit -m "$(cat <<'EOF'
 feat(scope): subject

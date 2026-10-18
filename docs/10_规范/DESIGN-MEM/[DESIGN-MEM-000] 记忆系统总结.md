@@ -164,6 +164,9 @@ khy memory project
 
 **步骤 3：配置记忆系统**
 ```bash
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。
 # 查看环境变量
 echo $KHY_DISABLE_MEMORY
 echo $KHY_PROACTIVE_MEMORY
