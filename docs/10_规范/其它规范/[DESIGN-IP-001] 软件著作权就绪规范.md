@@ -1,3 +1,6 @@
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：8 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # [DESIGN-IP-001] 软件著作权就绪规范
 
 <!-- RULES-REGISTRY: PROCESS-010 -->

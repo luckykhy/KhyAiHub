@@ -1,3 +1,6 @@
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
 # [DESIGN-GOV-001] 治理总纲与可执行规则
 
 <!-- RULES-REGISTRY: TOOLING-004, TOOLING-005, TOOLING-006, TOOLING-007, TOOLING-008, MOD-004 -->

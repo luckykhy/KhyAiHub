@@ -1,3 +1,6 @@
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：1 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # [DESIGN-COMP-001] 代码复杂度规范
 
 <!-- RULES-REGISTRY: COMP-001 -->

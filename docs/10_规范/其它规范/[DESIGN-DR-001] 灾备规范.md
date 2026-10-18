@@ -68,6 +68,9 @@ P2（最后恢复）：文档 → 分析工具 → 非核心服务
 ### 3.2 备份验证
 
 ```bash
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：2 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # 每周自动验证备份可恢复性
 scripts/backup/verify-restore.sh --backup-id <latest> --dry-run
 ```
