@@ -224,6 +224,9 @@ body 由 `str.replace(/\x1b\[[0-9;]*m/g, '')` 改为委托 `stripAnsiSequences(s
 ### 6.4 验收标准（可复现命令）
 
 ```bash
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：5 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # 1) 单一真源覆盖度
 node .khy/feedback/structured-output-20260922/probe.js
 # 期望：ANSI 段「漏剥: 0/6」

@@ -1,4 +1,7 @@
 <!-- 文档分类: DESIGN-ARCH-126 | 阶段: 设计 | 新建 -->
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：28 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # [DESIGN-ARCH-126] 跨端 AI 编程任务看板泳道编排方案
 
 > **状态**：方案（未施工） · **日期**：2026-09-20 · **参考**：Cline Kanban（research preview）

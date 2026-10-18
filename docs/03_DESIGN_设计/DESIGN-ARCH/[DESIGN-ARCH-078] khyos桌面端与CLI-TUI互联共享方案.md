@@ -1,3 +1,6 @@
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：13 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # [DESIGN-ARCH-078] khyos桌面端与CLI-TUI互联共享方案
 
 > **定位**：裁决 `apps/khyos-desktop`（Electron 桌面端）与 `khy` CLI/TUI（`src/cli/` REPL + Ink TUI）之间「建立联系与共享」的目标架构与分阶段落地路径的**设计方案**。

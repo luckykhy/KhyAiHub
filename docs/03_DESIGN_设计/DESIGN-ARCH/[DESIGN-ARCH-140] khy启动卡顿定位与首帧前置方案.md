@@ -101,6 +101,9 @@ node bin/khy.js main()                 khy.js:1353
 ## 4. 用户侧立即处置（不改代码，今天就生效）
 
 ```powershell
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。
 # 1) 关掉注定失败的内核自动构建（本机无工具链，日志已证）
 setx KHY_KERNEL_AUTOBUILD 0
 # 2) 清掉 09:15 留下的残留（锁 + 状态标记）
