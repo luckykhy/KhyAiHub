@@ -1,3 +1,6 @@
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。
 # [DESIGN-ARCH-053] 命令与第三方应用输出折叠：几行预览与 Ctrl+O 展开
 
 > 渲染层 `services/backend/src/cli/tui/ink-components/`（ink TUI，默认交互渲染器）

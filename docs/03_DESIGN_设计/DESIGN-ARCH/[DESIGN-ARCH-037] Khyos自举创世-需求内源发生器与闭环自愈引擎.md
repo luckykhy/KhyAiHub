@@ -1,3 +1,6 @@
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。
 # [DESIGN-ARCH-037] Khyos 自举创世——需求内源发生器与闭环自愈引擎
 
 > 架构与设计规范 · 遵循 [MGMT-STD-001] · 关联 [DESIGN-ARCH-025] 元规划约束注入、[DESIGN-ARCH-044] 自愈微循环、[DESIGN-ARCH-033] 双轨热插拔、[DESIGN-ARCH-034] 动态约束求解

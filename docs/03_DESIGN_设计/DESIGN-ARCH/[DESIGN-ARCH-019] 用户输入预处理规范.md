@@ -1,4 +1,7 @@
 <!-- 文档分类: DESIGN-ARCH-019 | 阶段: 设计 | 原路径: docs/03_DESIGN_设计/[DESIGN-ARCH-019] 用户输入预处理规范.md（新建） -->
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：1 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # khyos 用户输入预处理规范（Input Sanitization）
 
 > 版本 v1.0（2026-06-12）。本文定义 khyos 生态底座在**把用户输入送入模型之前**的

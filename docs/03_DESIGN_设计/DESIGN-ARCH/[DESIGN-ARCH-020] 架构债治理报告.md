@@ -1,4 +1,7 @@
 <!-- 文档分类: DESIGN-ARCH-020 | 阶段: 设计 | 原路径: docs/03_DESIGN_设计/[DESIGN-ARCH-020] 架构债治理报告.md（新建） -->
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：3 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # khyos 架构债治理报告（Architecture Debt Governance）
 
 > 版本 v1.1（2026-06-12）。本报告从**系统全局视角**识别 khyos 后端（`services/backend`，
