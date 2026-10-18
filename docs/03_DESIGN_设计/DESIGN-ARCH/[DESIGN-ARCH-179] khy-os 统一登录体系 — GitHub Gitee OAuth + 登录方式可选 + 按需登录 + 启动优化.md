@@ -207,6 +207,9 @@ GitHub/Gitee 的 `login`（用户名）**可变**，稳定的只有数字 `id`�
 ## 10. 复现方式（实施时可直接粘贴）
 
 ```bash
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：79 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # 现状证据复核
 sed -n '62,90p' runtime/node/backend/src/routes/auth.js          # oauthProviders: []
 grep -niE "oauth|github|gitee" .env.example                       # 空

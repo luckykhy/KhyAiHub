@@ -225,6 +225,9 @@ environmental: false,             // D2 结论透出
 ## 7. 验收方式
 
 ```bash
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
 # 叶子单测（node:test，落地即绿；CI 的 test:node 全量 glob 会扫到）
 node --test runtime/node/backend/tests/gateway/fallbackEligibilityPolicy.test.js
 node --test runtime/node/backend/tests/gateway/environmentOutageSignal.test.js   # 若拆文件

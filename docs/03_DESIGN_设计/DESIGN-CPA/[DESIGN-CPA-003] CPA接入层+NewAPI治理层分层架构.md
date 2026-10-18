@@ -179,6 +179,9 @@ KhyOS 解决: 如何让用户方便地使用
 ### 3.1 CPA 配置 (config.yaml)
 
 ```yaml
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：5 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # CPA Server 配置
 server:
   port: 8317

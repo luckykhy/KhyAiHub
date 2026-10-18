@@ -1,4 +1,7 @@
 <!-- 文档分类: DESIGN-OTHER-002 | 阶段: 设计 | 原路径: docs/指南/_cbssp_分阶段防闪退提示词.md -->
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。
 # Khyos CB-SSP 重塑 · 分阶段防闪退提示词
 
 > 配套设计文档：[`docs/03_DESIGN_设计/[DESIGN-ARCH-003] Khyos-数学重塑-受约束随机最短路径.md`](../DESIGN-ARCH/[DESIGN-ARCH-003] Khyos-数学重塑-受约束随机最短路径.md)

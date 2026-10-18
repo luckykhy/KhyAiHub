@@ -1,3 +1,6 @@
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：51 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # [DESIGN-ARCH-185] 四档模式与智能路由方案（auto / 极致 / 性能 / 经济）
 
 <!-- RULES-REGISTRY: RUNTIME-001, RUNTIME-002, RUNTIME-003, RUNTIME-008, PROCESS-008, PROCESS-014 -->
