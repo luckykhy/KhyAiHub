@@ -65,10 +65,12 @@ const listIds = new Set(
 
 const ALL_FINDING_IDS = new Set([
   'root-whitelist',
+  'root-shadow-dir',
   'root-junk',
   'root-uncatalogued',
   'docs-index-first',
   'layer-registry',
+  'layer-registry-stale',
   'dangling-task',
   'cross-layer-require',
   'unresolved-require',
@@ -96,24 +98,36 @@ const BASELINE_IDS = new Set([
 ]);
 
 // ── 层级清单（真源 [DESIGN-LAY-005] 第一节）────────────────────────────────
+//
+// ★ 2026-10-15：**键一律是仓库根相对路径**，不再是「层名」。
+// 此前键写的是层名（`kernel`/`platform`/`services`/`software`/`extensions`/`tools`/
+// `packaging`/`_source`/`evidence`），而方案 P 已把这九个目录全部物理化搬走，
+// 键却一个没跟 —— 于是 `checkLayerRegistry` 只查「磁盘上多出来的顶层目录」，
+// 这批「名册有、磁盘无」的死键**一个都不报**，规则在真正该响的地方全程静默
+// （同类事故在本文件里有两处前科：WORKSPACE_ROOTS 与 CROSSLAYER_SEARCH_PATHS，
+// 各自因写死旧路径让整条规则恒为 0 = 假绿）。
+// 键改成真实落点后，同一张表既回答「磁盘上多出来的是什么」（取路径首段），
+// 也回答「名册登记的还在不在」（`layer-registry-stale` 直接 stat 每个键）。
 const LAYERS = {
-  kernel: 'L0 手写 OS 内核',
-  platform: 'L1 Python 启动器 + 共享包 + 交付',
-  services: 'L2 Node 运行时（全部业务逻辑）',
-  apps: 'L3 平台自带管理前端',
-  software: 'L4 跑在平台之上的内置应用',
-  extensions: 'L5 内置拓展（随主包分发，契约见 [DESIGN-TOOL-002]）',
-  delivery: 'D4 交付与接入域（方案 P 物理化，[DESIGN-LAY-005] §1.4b；判据真源 DOMAIN-DEPS _physicalization）',
-  runtime: 'D1 运行时域（方案 P 物理化；substrate 并入 runtime/substrate，P-D 裁决）',
-  tools: 'L6 独立开发者工具',
+  'runtime/boot/kernel': 'L0 手写 OS 内核（方案 P：顶层 kernel/ → runtime/boot/kernel）',
+  'runtime/substrate/platform': 'L1 Python 启动器 + 共享包 + 交付（方案 P：顶层 platform/ → runtime/substrate/platform；substrate 并入 runtime/ 是 P-D 裁决）',
+  'runtime/node': 'L2 Node 运行时，全部业务逻辑（方案 P：顶层 services/ → runtime/node）',
+  'apps': 'L3 平台自带管理前端（未搬动；管理前端主体已随方案 P 进 delivery/web/ai-frontend，本目录留桌面端 apps/khyos-desktop）',
+  'delivery/channel': 'L4 跑在平台之上的内置应用（方案 P：顶层 software/ → delivery/channel）',
+  'delivery/extension': 'L5 内置拓展，随主包分发，契约见 [DESIGN-TOOL-002]（方案 P：顶层 extensions/ → delivery/extension）',
+  'delivery/extension/tools': 'L6 独立开发者工具（方案 P：顶层 tools/ → delivery/extension/tools）',
+  'delivery': 'D4 交付与接入域（方案 P 物理化，[DESIGN-LAY-005] §1.4b；判据真源 DOMAIN-DEPS _physicalization）',
+  'runtime': 'D1 运行时域（方案 P 物理化；substrate 并入 runtime/substrate，P-D 裁决）',
 };
-// 横切层：服务于所有层，不参与依赖判定（真源同上 第 1.2/1.4 节）。
+// 横切层：服务于所有层，不参与依赖判定（真源同上 第 1.2/1.4 节）。键同样是真���落点。
 const CROSSCUTTING = {
-  docs: '全部文档',
-  scripts: '工程任务脚本',
-  packaging: '打包清单与板块切分',
-  _source: '加密源码快照与恢复说明',
-  // 运行时横切（与上面四项的「工程横切」不同类，但同样「服务于所有层、不参与依赖
+  'docs': '全部文档',
+  'scripts': '工程任务脚本',
+  // 打包清单与板块切分。物理落点是 works/ship（modules.json / npm 清单 / installer），
+  // 与 DOMAIN-DEPS.json `_roots_reconciliation._applied` 的「D4 packaging → works/ship」
+  // 同批对齐（域归属仍登记 D4，理由见该文件 _packaging_divergence）。
+  'works/ship': '打包清单与板块切分（方案 P：顶层 packaging/ → works/ship）',
+  // 运行时横切（与上面几项的「工程横切」不同类，但同样「服务于所有层、不参与依赖
   // 判定」，故登记在同一张表；真源 [DESIGN-LAY-005] 第 1.2 节）：
   // 多端入口的**真源数据**——有哪些端、入口在哪、怎么起、怎么构建。
   // 它必须待在根：Python 启动器、Node CLI、脚本与文档都要按路径读同一份表，
@@ -123,11 +137,13 @@ const CROSSCUTTING = {
   works: '工程产物区（build/ 下含 git 钩子 works/build/githooks；真源 [DESIGN-LAY-008] §18.3 封闭清单与 §19.3 W10b）',
   entries: '多端入口真源数据（端矩阵 entries.json + 人读地图 + 跨平台入口壳）',
   // 软著登记底档（真源 [DESIGN-IP-001] C-E4，2026-09-28 由人拍板改为入库；层级登记见
-  // [DESIGN-LAY-005] 第 1.2 节）。放根的理由：它的读取方横跨 L0（kernel 手写层原创规模）、
-  // L1/L2（启动器与业务逻辑的开发过程存证）、L3/L4（界面截图）与横切（docs/ 设计决策、
-  // scripts/ 采集器）。埋进任何一层都会让其余证据引用变成跨层路径读取。
-  // 内容只有两类：人写的说明文档 + 由 scripts/works/record/evidence/ 从仓库实测数据派生的 JSON 与图片。
-  evidence: '软著登记底档（人类贡献与原创性证据：说明文档 + 实测数据 JSON + 图片）',
+  // [DESIGN-LAY-005] 第 1.2 节）。原登记为根级 `evidence/`，2026-10-02 随 B 档迁入
+  // works/record/evidence/ —— 读取方本就横跨 L0（kernel 手写层原创规模）、L1/L2
+  // （启动器与业务逻辑的开发过程存证）、L3/L4（界面截图）与横切（docs/ 设计决策、
+  // scripts/evidence/ 采集器），落进 works/record/ 与 works/record/ai 并排后，
+  // 这些引用一律变成同一条路径上的邻接读取。
+  // 内容只有两类：人写的说明文档 + 由 scripts/evidence/*.js 从仓库实测数据派生的 JSON 与图片。
+  'works/record/evidence': '软著登记底档（人类贡献与原创性证据：说明文档 + 实测数据 JSON + 图片；2026-10-02 迁入 works/record/）',
   // 根级例外目录（真源 [DESIGN-LAY-005] 第 1.4 节）：不属 L0-L6，也不属
   // scripts/works/ship/docs 这类工程横切，是历史遗留的根级实体，登记在册以免
   // 每次都被 layer-registry 判违规。
@@ -138,6 +154,14 @@ const CROSSCUTTING = {
   // 有人重建 `_产物/` 时静默放行（Q1′/Q-1 顺带修）。
   // deploy 已迁 works/deploy/（B档 2026-10-02）。
   // patches 已迁 works/patches/（B档 §22 R5，pnpm patchedDependencies 同批重指，2026-10-02）
+  //
+  // 注：原 `_source` 键（加密源码快照与恢复说明）于 2026-10-15 删除，**不是**改指。
+  // 它是 [DESIGN-LAY-002] §8 第 ③ 条已裁定为「已废弃登记」的幻影——磁盘上从未存在，
+  // 全仓无一处落点，故没有「真实落点」可指；给它硬造一个落点（如 works/source/）只会
+  // 把一条无内容的登记包装成合规。该条的清除要求「ARCH-068 §1.2 表格 + 守卫 CROSSCUTTING
+  // + baseline」三处同改，本批完成了守卫与 [DESIGN-LAY-005] §1.2 两处，
+  // [DESIGN-ARCH-068]（已被 LAY-005 取代的旧版同名规范）与 repo-layout-baseline.json
+  // 两处待人拍板后同批清理，见本次交付的 risks。
 };
 // 构建/打包工具在仓库根生成的目录，不是源码层。保持封闭集合，新增项须有对应忽略规则。
 const GENERATED_TOP_LEVEL_DIRS = new Set(['build', 'dist', 'dist-electron', 'khy_os.egg-info']);
@@ -220,6 +244,41 @@ function findRootJunkEntries(entries) {
   } catch {
     return [];
   }
+}
+
+// ── 仓库根影子数据目录（B8）───────────────────────────────────────────────
+// `.khy` / `.khyos` / `.khy-runtime` 出现在仓库根，只意味着一件事：某处还在用
+// cwd 相对的路径写状态。它们不是"用户自己的目录"，是分叉的第二棵状态树。
+//
+// 历史（这也是为什么单独立一条守卫而不是只写文档）：2026-10-05 ~ 10-11 之间
+// 清理过六次，每次归档进 .khyos/housekeeping/<日期>*，每次都复发——因为 10 处
+// path.join(process.cwd(), '.khy') 从未被修。2026-10-12 修了那 10 处，才有这个
+// 守卫；没有它，第 N 次清理和第 N+1 次复发之间没有任何东西会响。
+//
+// 合法形态：数据家在 works/data/khy，生态基座在其内的 T1-domains/base，
+// works/data/khyos 只是指向那里的兼容联结。仓库根不应出现任何一个。
+const ROOT_SHADOW_DIRS = ['.khy', '.khyos', '.khy-runtime'];
+
+function checkRootShadowDirs(findings) {
+  const offenders = [];
+  for (const name of ROOT_SHADOW_DIRS) {
+    try {
+      if (fs.existsSync(path.join(repoRoot, name))) offenders.push(name);
+    } catch { /* 探测失败不当成 offenders */ }
+  }
+  if (offenders.length === 0) return;
+  findings.push({
+    id: 'root-shadow-dir',
+    severity: 'error',
+    message: `仓库根出现 ${offenders.length} 个影子数据目录（CLAUDE.md §二 B8）。`,
+    detail:
+      `删掉它们，并修掉制造它的 cwd 相对写者：${offenders.join(', ')}。`
+      + ' 这些目录意味着某处仍在用 process.cwd() 拼数据家路径；正确做法是经 '
+      + 'utils/dataHome 解析器（getDataHome / getDataDir / getProjectDataDir）取址。'
+      + ' 清理前先确认内容是否需要合并——影子树里可能存着唯一的状态（历史上 heal-audit.jsonl '
+      + '与 heal_escalation*.json 都曾只存在于影子树那一侧）。',
+    full: offenders,
+  });
 }
 
 function checkRootJunk(findings) {
@@ -343,6 +402,8 @@ const ROOT_CATALOG = {
   'khy.bat': { category: 'contract', reason: 'Windows CLI 入口壳', reviewBy: '2026-12-31' },
   'khy.sh': { category: 'contract', reason: 'POSIX CLI 入口壳', reviewBy: '2026-12-31' },
   'khy-cli.bat': { category: 'contract', reason: 'Windows CLI 备用入口壳', reviewBy: '2026-12-31' },
+  'khy-env.bat': { category: 'contract', reason: 'KHY_* 环境契约单一真源（四个入口共用，止住数据家分叉）', reviewBy: '2026-12-31' },
+  'KhyOS-Desktop.lnk': { category: 'artifact', reason: '桌面端启动快捷方式（指向 dist-electron 构建产物；无空格，见 root-junk 规则）', reviewBy: '2026-12-31' },
   'install-khy.ps1': { category: 'contract', reason: 'PowerShell 安装脚本', reviewBy: '2026-12-31' },
   'portable-setup.bat': { category: 'contract', reason: '便携版初始化（Win）', reviewBy: '2026-12-31' },
   'portable-setup.sh': { category: 'contract', reason: '便携版初始化（POSIX）', reviewBy: '2026-12-31' },
@@ -364,6 +425,23 @@ const ROOT_CATALOG = {
 const ROOT_ALWAYS_OK = new Set(['.git', 'node_modules']);
 
 /**
+ * 名册键 → 它们覆盖的**顶层目录名**集合。
+ *
+ * 键自 2026-10-15 起是仓库根相对路径（`runtime/boot/kernel`），而 layer-registry 与
+ * root-uncatalogued 判的都是**顶层目录名**（`runtime`）。故顶层名 = 键的首段：
+ * 目录搬进了某一层，它仍是那棵树的顶层成员，不该因为登记写细了就变成「未登记」。
+ * 键本身就是顶层名时首段即它自己，行为不变。
+ */
+function topLevelNamesCoveredByRegistry() {
+  const out = new Set();
+  for (const key of [...Object.keys(LAYERS), ...Object.keys(CROSSCUTTING)]) {
+    const top = toPosix(key).split('/')[0];
+    if (top) out.add(top);
+  }
+  return out;
+}
+
+/**
  * 根级实体是否已登记（Q1′/Q-1）。绝不抛。
  * @param {Array<{name:string}>} entries
  * @returns {string[]} 未登记的根级条目名（排序）
@@ -371,8 +449,7 @@ const ROOT_ALWAYS_OK = new Set(['.git', 'node_modules']);
 function findUncataloguedRootEntries(entries) {
   try {
     const catalogued = new Set([
-      ...Object.keys(LAYERS),
-      ...Object.keys(CROSSCUTTING),
+      ...topLevelNamesCoveredByRegistry(),
       ...GENERATED_TOP_LEVEL_DIRS,
       ...ROOT_DOC_WHITELIST,
       ...Object.keys(ROOT_CATALOG),
@@ -505,27 +582,46 @@ function checkDocsIndexComplete(findings, counts) {
   const missing = [];
   const perStage = {};
   let delegated = 0;
-  for (const dir of stageDirs) {
-    const dirPath = path.join(docsRoot, dir);
-    // 就近索引：本阶段目录自己的 00_INDEX_*.md —— 阶段内清单的真源（B8）。
-    const nearbyText = fs
+  // 读一个目录就近索引的全部正文（可能有多份 00_INDEX_*.md）。
+  const nearbyIndexText = (dirPath) =>
+    fs
       .readdirSync(dirPath)
       .filter(name => name.toLowerCase().endsWith('.md') && name.startsWith('00_INDEX_'))
       .map(name => decodeIndexText(fs.readFileSync(path.join(dirPath, name), 'utf8')))
       .join('\n');
+
+  for (const dir of stageDirs) {
+    const dirPath = path.join(docsRoot, dir);
+    // 就近索引：本阶段目录自己的 00_INDEX_*.md —— 阶段内清单的真源（B8）。
+    const nearbyText = nearbyIndexText(dirPath);
     let dirMissing = 0;
-    for (const name of fs.readdirSync(dirPath).sort()) {
-      if (!name.toLowerCase().endsWith('.md')) continue;
-      // 就近索引自身不必被主索引逐个点名（主索引按阶段分区链接正文文档）。
-      if (name.startsWith('00_INDEX_')) continue;
-      if (text.includes(name)) continue;
-      // 就近索引已收录 → 视为主索引的合法委派，不再算漏链（B8 去重）。
-      if (nearbyText.includes(name)) {
-        delegated += 1;
-        continue;
+    // 阶段目录下的正文可能直挂，也可能再分子目录（如 03_DESIGN_设计/DESIGN-ARCH/）。
+    // 只扫一层时子目录整棵被跳过——实测 588 份阶段文档 0 份直挂，全部在二层，
+    // 于是本检查恒为 0、宣称覆盖的实为空。故下探一层，并让每个子目录的
+    // 00_INDEX_*.md 就地充当该子目录的就近索引（子目录无索引时回落到阶段级索引）。
+    const subEntries = fs.readdirSync(dirPath, { withFileTypes: true });
+    const docDirs = [{ name: dir, abs: dirPath, index: nearbyText }];
+    for (const entry of subEntries) {
+      if (!entry.isDirectory()) continue;
+      const subPath = path.join(dirPath, entry.name);
+      const subIndex = nearbyIndexText(subPath);
+      docDirs.push({ name: `${dir}/${entry.name}`, abs: subPath, index: subIndex || nearbyText });
+    }
+
+    for (const docDir of docDirs) {
+      for (const name of fs.readdirSync(docDir.abs).sort()) {
+        if (!name.toLowerCase().endsWith('.md')) continue;
+        // 就近索引自身不必被主索引逐个点名（主索引按阶段分区链接正文文档）。
+        if (name.startsWith('00_INDEX_')) continue;
+        if (text.includes(name)) continue;
+        // 就近索引已收录 → 视为主索引的合法委派，不再算漏链（B8 去重）。
+        if (docDir.index.includes(name)) {
+          delegated += 1;
+          continue;
+        }
+        missing.push(`docs/${docDir.name}/${name}`);
+        dirMissing += 1;
       }
-      missing.push(`docs/${dir}/${name}`);
-      dirMissing += 1;
     }
     if (dirMissing > 0) perStage[dir] = dirMissing;
   }
@@ -549,8 +645,42 @@ function checkDocsIndexComplete(findings, counts) {
 }
 
 
-function checkLayerRegistry(findings) {
-  const known = new Set([...Object.keys(LAYERS), ...Object.keys(CROSSCUTTING)]);
+/**
+ * 名册死键：登记了、磁盘上却没有。
+ *
+ * 为什么必须补这一半：`checkLayerRegistry` 原本只有 `.filter(name => !known.has(name))`
+ * 一个方向 —— 查「磁盘上多出来的顶层目录」。名册本身是**只进不出**的：目录搬走了
+ * （方案 P 把 kernel/platform/services/software/extensions/tools 物理化进 runtime/ 与
+ * delivery/），键还留在表里，于是守卫对着一批空气宣称「层级合规」。
+ * 2026-10-15 实测 9 个键在磁盘上一个都不存在（kernel / platform / services /
+ * software / extensions / tools / packaging / _source / evidence），而这一条从不响。
+ *
+ * 判据成立的前提是「键 = 仓库根相对路径」：LAYERS / CROSSCUTTING 的键自 2026-10-15
+ * 起一律写成实际落点（如 `runtime/boot/kernel`），故 stale 判定就是一句 statSync。
+ * 只查顶层名的老写法下这条判据无法成立——那时键和路径是两回事。
+ *
+ * 与 layer-registry 是同一张表的两个方向，故紧挨着它报，共用一次磁盘读。
+ */
+function findStaleRegistryKeys() {
+  const registry = { ...LAYERS, ...CROSSCUTTING };
+  return Object.keys(registry)
+    .filter(key => {
+      try {
+        return !fs.statSync(path.join(repoRoot, key)).isDirectory();
+      } catch {
+        return true; // ENOENT 与 stat 失败都算 stale（不 fail-open）
+      }
+    })
+    .sort();
+}
+
+function checkLayerRegistry(findings, counts) {
+  const known = topLevelNamesCoveredByRegistry();
+  const stale = findStaleRegistryKeys();
+  // 无条件计数（含 0），与 checkRootCatalogued 同理：只在该 finding 触发时才写 counts，
+  // 会让机读消费方（--json / check-debt-ledger）把「已归零」与「这条规则根本没跑」
+  // 读成同一个 undefined —— 那正是本规则要治的那类假绿。0 是有意义的读数。
+  counts['layer-registry-stale'] = stale.length;
   const unregistered = fs
     .readdirSync(repoRoot, { withFileTypes: true })
     .filter(entry => entry.isDirectory())
@@ -561,14 +691,29 @@ function checkLayerRegistry(findings) {
     .filter(name => !known.has(name))
     .sort();
 
-  if (unregistered.length === 0) return;
+  if (unregistered.length > 0) {
+    findings.push({
+      id: 'layer-registry',
+      severity: 'error',
+      message: `${unregistered.length} 个顶层目录未登记在层级清单里。`,
+      detail:
+        `${unregistered.join(', ')} —— 要新增顶层目录，先改 ` +
+        `docs/10_规范/DESIGN-LAY/[DESIGN-LAY-005] 仓库层级板块规范.md 第一节，再改本脚本的 LAYERS / CROSSCUTTING。`,
+    });
+  }
+
+  if (stale.length === 0) return;
   findings.push({
-    id: 'layer-registry',
+    id: 'layer-registry-stale',
     severity: 'error',
-    message: `${unregistered.length} 个顶层目录未登记在层级清单里。`,
+    message: `${stale.length} 个层级/横切登记项在磁盘上不存在（名册只进不出的一端）。`,
     detail:
-      `${unregistered.join(', ')} —— 要新增顶层目录，先改 ` +
-      `docs/10_规范/DESIGN-LAY/[DESIGN-LAY-005] 仓库层级板块规范.md 第一节，再改本脚本的 LAYERS / CROSSCUTTING。`,
+      `${stale.join(', ')} —— 这些键登记后目录已被搬走或从未落地。`
+      + '两条改法二选一：把键改成该层/该横切的真实落点，或确认它确已废弃后删键。'
+      + '改键或删键都必须与 '
+      + '`docs/10_规范/DESIGN-LAY/[DESIGN-LAY-005] 仓库层级板块规范.md` 第 1.1/1.2 节表格同改，'
+      + '只改一边会让守卫与规范各说各话。',
+    full: stale,
   });
 }
 
@@ -1836,10 +1981,11 @@ function main() {
   const counts = {};
 
   checkRootWhitelist(findings);
+  checkRootShadowDirs(findings);
   checkRootJunk(findings);
   checkDocsIndexFirst(findings);
   checkDocsIndexComplete(findings, counts);
-  checkLayerRegistry(findings);
+  checkLayerRegistry(findings, counts);
   checkRootCatalogued(findings, counts);
   checkDanglingTasks(findings, counts);
   checkCrossLayerRequires(findings, counts);
@@ -1949,9 +2095,14 @@ if (require.main === module) {
 module.exports = {
   isRootJunkName,
   findRootJunkEntries,
+  checkRootShadowDirs,
   checkRootJunk,
   ROOT_JUNK_FILE_RES,
   ROOT_JUNK_DIR_RES,
   findUncataloguedRootEntries,
+  topLevelNamesCoveredByRegistry,
+  findStaleRegistryKeys,
+  LAYERS,
+  CROSSCUTTING,
   ROOT_CATALOG,
 };

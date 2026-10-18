@@ -2,7 +2,7 @@
 
 > 本夹由 [MGMT-PLAN-009] B9「按标签 `[XXX-YYY-NNN]` 归夹」生成（2026-09-18），B10 增补归夹并按 [DESIGN-LAY-006] 分组渲染。
 > 父目录：[../](../00_INDEX_设计-分类索引.md)　就近索引：[00_INDEX_设计-分类索引.html](../00_INDEX_设计-分类索引.md)
-> 收录 135 篇。
+> 收录 183 篇。
 
 ## 文件清单
 
@@ -149,3 +149,52 @@
 - [[DESIGN-ARCH-180] 驻留资源提示判据错配修复方案]([DESIGN-ARCH-180] 驻留资源提示判据错配修复方案.md)
 - [[DESIGN-ARCH-182] Watchdog阻塞归因分化-同步长任务与进程被停走区分方案]([DESIGN-ARCH-182] Watchdog阻塞归因分化-同步长任务与进程被停走区分方案.md)
 - [[DESIGN-ARCH-183] khyos任务自动分组-来源标记与固定分组方案]([DESIGN-ARCH-183] khyos任务自动分组-来源标记与固定分组方案.md)
+
+## 文件清单（补录：2026-10-18 check:layout 下探一层后新点名的设计）
+
+- [[[DESIGN-ARCH-101] 代理模式统一Agent模型管理与协议桥接方案]]([DESIGN-ARCH-101] 代理模式统一Agent模型管理与协议桥接方案.md)
+- [[[DESIGN-ARCH-130] 任务叙事-热奈特话语层]]([DESIGN-ARCH-130] 任务叙事-热奈特话语层.md)
+- [[[DESIGN-ARCH-132] TUI选区锚点漂移修复方案]]([DESIGN-ARCH-132] TUI选区锚点漂移修复方案.md)
+- [[[DESIGN-ARCH-133] 桌面端基本任务闭环-接入智能体工具循环]]([DESIGN-ARCH-133] 桌面端基本任务闭环-接入智能体工具循环.md)
+- [[[DESIGN-ARCH-134] TUI 启动屏视觉重设计]]([DESIGN-ARCH-134] TUI 启动屏视觉重设计.md)
+- [[[DESIGN-ARCH-135] TUI长任务会话中断与压缩不接续修复方案]]([DESIGN-ARCH-135] TUI长任务会话中断与压缩不接续修复方案.md)
+- [[[DESIGN-ARCH-138] 工具调用能力判定与文本拦截协议]]([DESIGN-ARCH-138] 工具调用能力判定与文本拦截协议.md)
+- [[[DESIGN-ARCH-139] 网关零尝试(NO_ATTEMPT)与钉选残留第6次复发修复方案]]([DESIGN-ARCH-139] 网关零尝试(NO_ATTEMPT)与钉选残留第6次复发修复方案.md)
+- [[[DESIGN-ARCH-140] khy启动卡顿定位与首帧前置方案]]([DESIGN-ARCH-140] khy启动卡顿定位与首帧前置方案.md)
+- [[[DESIGN-ARCH-140] 规则与规范依托全景盘点与补全提案]]([DESIGN-ARCH-140] 规则与规范依托全景盘点与补全提案.md)
+- [[[DESIGN-ARCH-142] 用户数据安全更新与可选更新机制]]([DESIGN-ARCH-142] 用户数据安全更新与可选更新机制.md)
+- [[[DESIGN-ARCH-143] DSH插件生态接入评估与分层适配方案]]([DESIGN-ARCH-143] DSH插件生态接入评估与分层适配方案.md)
+- [[[DESIGN-ARCH-144] khyquant剥离为可选拓展的结构划分与接口契约方案]]([DESIGN-ARCH-144] khyquant剥离为可选拓展的结构划分与接口契约方案.md)
+- [[[DESIGN-ARCH-145] 用户DIY空间分层与安全边界统一方案]]([DESIGN-ARCH-145] 用户DIY空间分层与安全边界统一方案.md)
+- [[[DESIGN-ARCH-147] 好设计十诫的工程映射与设计判据落地方案]]([DESIGN-ARCH-147] 好设计十诫的工程映射与设计判据落地方案.md)
+- [[[DESIGN-ARCH-148] README漏斗式重设计与真源指针化方案]]([DESIGN-ARCH-148] README漏斗式重设计与真源指针化方案.md)
+- [[[DESIGN-ARCH-149] TUI选区复制携带ANSI残留修复方案]]([DESIGN-ARCH-149] TUI选区复制携带ANSI残留修复方案.md)
+- [[[DESIGN-ARCH-150] 模型设置页排版减负与配置动线重设计]]([DESIGN-ARCH-150] 模型设置页排版减负与配置动线重设计.md)
+- [[[DESIGN-ARCH-151] TUI思维链折叠存储与显示减负方案]]([DESIGN-ARCH-151] TUI思维链折叠存储与显示减负方案.md)
+- [[[DESIGN-ARCH-152] 聊天气泡布局与系统提示词防泄露、思考过程与工具卡片渲染方案]]([DESIGN-ARCH-152] 聊天气泡布局与系统提示词防泄露、思考过程与工具卡片渲染方案.md)
+- [[[DESIGN-ARCH-153] khy 自知面对齐规范]]([DESIGN-ARCH-153] khy 自知面对齐规范.md)
+- [[[DESIGN-ARCH-154] 上下文窗口真值贯通-网关免费目录供血与前后端一致方案]]([DESIGN-ARCH-154] 上下文窗口真值贯通-网关免费目录供血与前后端一致方案.md)
+- [[[DESIGN-ARCH-155] 工具调用短显示规范-TUI与桌面统一]]([DESIGN-ARCH-155] 工具调用短显示规范-TUI与桌面统一.md)
+- [[[DESIGN-ARCH-156] TUI帧生成管线契约化-高度账本与字节出口单一所有者方案]]([DESIGN-ARCH-156] TUI帧生成管线契约化-高度账本与字节出口单一所有者方案.md)
+- [[[DESIGN-ARCH-157] 文件修改红绿diff三端统一规格]]([DESIGN-ARCH-157] 文件修改红绿diff三端统一规格.md)
+- [[[DESIGN-ARCH-159] CLI命令输出层次化与缩进统一方案]]([DESIGN-ARCH-159] CLI命令输出层次化与缩进统一方案.md)
+- [[[DESIGN-ARCH-160] 惯性执行机制设计方案]]([DESIGN-ARCH-160] 惯性执行机制设计方案.md)
+- [[[DESIGN-ARCH-161] 任务执行时延与质量优化方案]]([DESIGN-ARCH-161] 任务执行时延与质量优化方案.md)
+- [[[DESIGN-ARCH-162] Auto模式模型粒度健康路由方案]]([DESIGN-ARCH-162] Auto模式模型粒度健康路由方案.md)
+- [[[DESIGN-ARCH-163] 图文混合输入识别增强方案]]([DESIGN-ARCH-163] 图文混合输入识别增强方案.md)
+- [[[DESIGN-ARCH-164] 用户需求理解管线-意图裁决澄清问询与需求固化方案]]([DESIGN-ARCH-164] 用户需求理解管线-意图裁决澄清问询与需求固化方案.md)
+- [[[DESIGN-ARCH-169] khychat启动假阴性-就绪信号后置与守护僵尸化方案]]([DESIGN-ARCH-169] khychat启动假阴性-就绪信号后置与守护僵尸化方案.md)
+- [[[DESIGN-ARCH-170] 桌面端X报错功能接线与指路真实性方案]]([DESIGN-ARCH-170] 桌面端X报错功能接线与指路真实性方案.md)
+- [[[DESIGN-ARCH-171] 未接入后端判定与接线守卫真实性方案]]([DESIGN-ARCH-171] 未接入后端判定与接线守卫真实性方案.md)
+- [[[DESIGN-ARCH-176] TUI 与桌面端统一方案：底色分层 · 稳定渲染 · 共享语义]]([DESIGN-ARCH-176] TUI 与桌面端统一方案：底色分层 · 稳定渲染 · 共享语义.md)
+- [[[DESIGN-ARCH-177] 侧栏项目分组可辨识化改造方案]]([DESIGN-ARCH-177] 侧栏项目分组可辨识化改造方案.md)
+- [[[DESIGN-ARCH-178] TUI启动44秒病灶-redis顶层副作用与首帧前重require收敛方案]]([DESIGN-ARCH-178] TUI启动44秒病灶-redis顶层副作用与首帧前重require收敛方案.md)
+- [[[DESIGN-ARCH-181] 通道兜底甩出资格与披露统一策略]]([DESIGN-ARCH-181] 通道兜底甩出资格与披露统一策略.md)
+- [[[DESIGN-ARCH-184] khy-os 接入编辑器 ACP（Agent Client Protocol）实现方案]]([DESIGN-ARCH-184] khy-os 接入编辑器 ACP（Agent Client Protocol）实现方案.md)
+- [[[DESIGN-ARCH-185] 四档模式与智能路由方案]]([DESIGN-ARCH-185] 四档模式与智能路由方案.md)
+- [[[DESIGN-ARCH-186] 自知识四机制整合方案（确信度校准·线索保全·工具召回词表·文档vs实测）]]([DESIGN-ARCH-186] 自知识四机制整合方案（确信度校准·线索保全·工具召回词表·文档vs实测）.md)
+- [[[DESIGN-ARCH-187] 数据与逻辑解耦重构方案]]([DESIGN-ARCH-187] 数据与逻辑解耦重构方案.md)
+- [[[DESIGN-ARCH-188] 数据流理清图（按 187 方案的目标态与现状对照）]]([DESIGN-ARCH-188] 数据流理清图（按 187 方案的目标态与现状对照）.md)
+- [[[DESIGN-ARCH-189] 应用中心方案-参考 RouterCode 的客户端应用清单与一键配置]]([DESIGN-ARCH-189] 应用中心方案-参考 RouterCode 的客户端应用清单与一键配置.md)
+- [[[DESIGN-ARCH-190] SaaS 化对外 API 服务目标形态与落地路径]]([DESIGN-ARCH-190] SaaS 化对外 API 服务目标形态与落地路径.md)
+- [[[DESIGN-ARCH-191] 思维链仲裁与预算闭环方案]]([DESIGN-ARCH-191] 思维链仲裁与预算闭环方案.md)

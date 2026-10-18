@@ -82,6 +82,24 @@ check('状态机: 所有状态有合法后继', () => {
 
 // ── 2. Watchdog 覆盖率 ─────────────────────────────────────────────────────
 
+// 方案 P 的 domain 化搬迁为旧路径留了一行转发 shim（`module.exports = require('./x')`）。
+// 直接读 shim 会读到 1 行、关键词命中 0，让 must 级门恒红——这就是本文件踩过的坑。
+// 故统一 resolve：跟随转发到真身，读不到真身才回落原路径。
+function resolveRealSource(relPath) {
+  const abs = path.join(ROOT, relPath);
+  let current = abs;
+  for (let hop = 0; hop < 5; hop++) {
+    if (!fs.existsSync(current)) return abs;
+    const body = fs.readFileSync(current, 'utf-8');
+    const m = /^module\.exports\s*=\s*require\(\s*['"](\.[^'"]+)['"]\s*\)/m.exec(body);
+    if (!m) return current;
+    current = path.resolve(path.dirname(current), m[1]);
+    if (!current.endsWith('.js') && fs.existsSync(current + '.js')) current += '.js';
+    else if (fs.existsSync(path.join(current, 'index.js'))) current = path.join(current, 'index.js');
+  }
+  return current;
+}
+
 const SERVICE_FILES = [
   'runtime/node/backend/src/services/toolCalling.js',
   'runtime/node/backend/src/cli/aiGatewayGenerateHelpers.js',
@@ -90,7 +108,7 @@ const SERVICE_FILES = [
 ];
 
 check('Watchdog: startWatchdog 被使用', () => {
-  const resourceGuardPath = path.join(ROOT, 'runtime/node/backend/src/services/resourceGuard.js');
+  const resourceGuardPath = resolveRealSource('runtime/node/backend/src/services/resourceGuard.js');
   if (!fs.existsSync(resourceGuardPath)) {
     fail('resourceGuard.js 不存在');
     return;
@@ -108,7 +126,7 @@ check('Watchdog: startWatchdog 被使用', () => {
 });
 
 check('Watchdog: 长时间工具调用有超时保护', () => {
-  const toolCallingPath = path.join(ROOT, SERVICE_FILES[0]);
+  const toolCallingPath = resolveRealSource(SERVICE_FILES[0]);
   if (!fs.existsSync(toolCallingPath)) {
     fail('toolCalling.js 不存在');
     return;
@@ -125,7 +143,7 @@ check('Watchdog: 长时间工具调用有超时保护', () => {
 });
 
 check('Watchdog: Gateway 生成有 hard + idle 超时', () => {
-  const gatewayPath = path.join(ROOT, 'runtime/node/backend/src/cli/aiGatewayGenerateHelpers.js');
+  const gatewayPath = resolveRealSource('runtime/node/backend/src/cli/aiGatewayGenerateHelpers.js');
   if (!fs.existsSync(gatewayPath)) {
     fail('aiGatewayGenerateHelpers.js 不存在');
     return;
@@ -142,7 +160,7 @@ check('Watchdog: Gateway 生成有 hard + idle 超时', () => {
 });
 
 check('Watchdog: timer 必须 unref', () => {
-  const resourceGuardPath = path.join(ROOT, 'runtime/node/backend/src/services/resourceGuard.js');
+  const resourceGuardPath = resolveRealSource('runtime/node/backend/src/services/resourceGuard.js');
   if (!fs.existsSync(resourceGuardPath)) return;
   const content = fs.readFileSync(resourceGuardPath, 'utf-8');
   // 检查是否有 .unref() 调用（允许 timer 不阻止进程退出）
@@ -159,7 +177,7 @@ check('Watchdog: timer 必须 unref', () => {
 const RECEIPT_SERVICE = 'runtime/node/backend/src/services/receiptService.js';
 
 check('Receipt: startReceipt + finalizeReceipt 存在', () => {
-  const path_ = path.join(ROOT, RECEIPT_SERVICE);
+  const path_ = resolveRealSource(RECEIPT_SERVICE);
   if (!fs.existsSync(path_)) {
     fail('receiptService.js 不存在');
     return;
@@ -180,7 +198,7 @@ check('Receipt: startReceipt + finalizeReceipt 存在', () => {
 });
 
 check('Receipt: auto-finalize 前一个同会话 receipt', () => {
-  const path_ = path.join(ROOT, RECEIPT_SERVICE);
+  const path_ = resolveRealSource(RECEIPT_SERVICE);
   if (!fs.existsSync(path_)) return;
   const content = fs.readFileSync(path_, 'utf-8');
   // 检查 startReceipt 中是否有清理前一个 open receipt 的逻辑
@@ -201,7 +219,7 @@ const REPL_SESSION = 'runtime/node/backend/src/cli/replSession.js';
 const TUI_HOOKS = 'runtime/node/backend/src/cli/tui/hooks/useQueryBridge.js';
 
 check('AbortSignal: ESC → AbortController 链路存在', () => {
-  const replPath = path.join(ROOT, REPL_SESSION);
+  const replPath = resolveRealSource(REPL_SESSION);
   if (!fs.existsSync(replPath)) {
     fail('replSession.js 不存在');
     return;
@@ -215,7 +233,7 @@ check('AbortSignal: ESC → AbortController 链路存在', () => {
 });
 
 check('AbortSignal: TUI ESC handler 传播 abortSignal', () => {
-  const tuiPath = path.join(ROOT, TUI_HOOKS);
+  const tuiPath = resolveRealSource(TUI_HOOKS);
   if (!fs.existsSync(tuiPath)) {
     fail('useQueryBridge.js 不存在');
     return;
@@ -255,7 +273,7 @@ check('AbortSignal: KHY_TOOL_ABORT_SIGNAL 门控存在', () => {
 const RETRY_BACKOFF = 'runtime/node/backend/src/services/retryWithBackoff.js';
 
 check('重试: retryWithBackoff 支持 AbortSignal', () => {
-  const retryPath = path.join(ROOT, RETRY_BACKOFF);
+  const retryPath = resolveRealSource(RETRY_BACKOFF);
   if (!fs.existsSync(retryPath)) {
     fail('retryWithBackoff.js 不存在');
     return;
