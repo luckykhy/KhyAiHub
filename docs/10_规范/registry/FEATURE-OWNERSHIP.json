@@ -1180,6 +1180,23 @@
           "file": "scripts/ci/check-doc-drift.js",
           "note": "阶段权威在执行器 STAGE 常量；登记表只是镜像，漂移即报 authority-drift。"
         }
+      },
+      {
+        "id": "doc-claims-guard",
+        "stage": "S1",
+        "previousStage": null,
+        "owner": "governance-team",
+        "script": "scripts/ci/check-doc-claims.js",
+        "rule": "DOCS-006",
+        "samples": {
+          "observed": 9,
+          "note": "首轮 9 条端点主张无实现，已逐条人工核实 9/9 为真漂移"
+        },
+        "rollback": "摘除 FEATURE-OWNERSHIP 的 doc-claims-guard 条目 + 摘除 RULES-REGISTRY 的 DOCS-006 条目 + 删除 package.json 的 check:doc-claims* 别名 + 删除 scripts/ci/check-doc-claims.js + 删除规范文档。全部为删除，无数据损失。",
+        "executorStage": {
+          "constant": "STAGE",
+          "file": "scripts/ci/check-doc-claims.js"
+        }
       }
     ]
   }
