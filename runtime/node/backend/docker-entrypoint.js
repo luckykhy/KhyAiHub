@@ -1,8 +1,28 @@
 #!/usr/bin/env node
 'use strict';
 
+// ── 弱密钥守卫：先于一切 require / 端口钉死执行 ───────────────────────────────
+// production 下 JWT_SECRET 为空、或短于 32 位时一律拒启动：
+//   · 空——容器没配 JWT_SECRET（compose 侧 ${JWT_SECRET:?} 是第一道，这里是不经
+//     compose 直跑时的第二道）；
+//   · 短于 32 位——低于 ensureAuthSecret 自签发门槛的密钥照此签登录态，令牌可被
+//     伪造。已知的占位值（.env.example 与部署包生成器里那串）都短于 32 位，长度
+//     门槛已把它们一并兜住，故此处不逐个列名——也就不会再往代码里写一份弱默认值。
+const MIN_JWT_SECRET_LEN = 32;
+if (process.env.NODE_ENV === 'production') {
+  const jwtSecret = (process.env.JWT_SECRET || '').trim();
+  if (jwtSecret.length < MIN_JWT_SECRET_LEN) {
+    console.error(
+      '[entrypoint] 拒绝启动：JWT_SECRET 未正确配置'
+      + '（生产环境要求非空且长度不小于 ' + MIN_JWT_SECRET_LEN + ' 位）。'
+      + '请设置 JWT_SECRET=$(openssl rand -hex 32) 后重启容器。'
+    );
+    process.exit(1);
+  }
+}
+
 /**
- * services/backend/docker-entrypoint.js — 容器专用 HTTP 服务入口
+ * runtime/node/backend/docker-entrypoint.js — 容器专用 HTTP 服务入口
  *
  * 为什么需要它（而不是直接用 `khy` 或 `node server.js`）：
  *
@@ -22,7 +42,7 @@
  *      /health、/api/*）。新写一套会产生「两个 health 端点、两种判据」的
  *      语义分叉，正是要避免的。
  *
- * 端口来源：services/backend/src/constants/serviceDefaults.js:89
+ * 端口来源：runtime/node/backend/src/constants/serviceDefaults.js:89
  *           `BACKEND_PORT = parseInt(process.env.PORT || '3000', 10)`
  *           ⇒ PORT 是唯一的杠杆，设它即可。
  */

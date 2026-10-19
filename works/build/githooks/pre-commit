@@ -80,6 +80,20 @@ if ! node "$ROOT/scripts/ci/check-staged-secrets.js"; then
 fi
 echo "  ✅ 无敏感信息\n"
 
+# 3.1 高置信密钥形态内容扫描（真源：scripts/ci/check-secrets-staged.js）
+#     第 3 步只认 sk-/AKIA/ghp_/PRIVATE KEY 四类，且按「文件 + 完整值」豁免；两份
+#     .env.tmp.<时间戳> 里的 64 位 hex JWT_SECRET 就是这么漏过去的。本机 gitleaks /
+#     secretlint 都不可用（不在 PATH，也不在 node_modules），故用仓内离线零依赖的
+#     内容扫描补齐：64 位 hex / sk- / qual 长 token / ghp_ / github_pat_ / AKIA /
+#     PRIVATE KEY 块 / 赋值型长随机串；按形态豁免 *.example / *.md / 锁文件 / 测试。
+echo "🔑 高置信密钥形态扫描..."
+if ! node "$ROOT/scripts/ci/check-secrets-staged.js"; then
+  echo ""
+  echo "命中高置信密钥形态，值已打码。真实密钥请移入 .env（已 gitignore），不要提交。"
+  exit 1
+fi
+echo "  ✅ 无高置信密钥形态\n"
+
 # 4. 规则执行器 commit 快档（[DESIGN-ARCH-111]）
 #    门成员资格从 docs/10_规范/RULES-REGISTRY.json 派生，不在此硬编码。
 #    commit 档只跑 gate=commit 且声明了 --changed 的执行器（秒级），
