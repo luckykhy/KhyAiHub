@@ -698,6 +698,34 @@
         "blockedBy": []
       },
       {
+        "id": "repo-hygiene-guard",
+        "name": "仓库卫生守卫（垃圾文件名形态回流拦截：.env.tmp 原子写残留 / vite 时间戳 / 调试脚本 / Java 编译产物）",
+        "ssot": "AGENTS.md 工程规则节 LAYOUT-004（仓库整理与巡检）+ 2026-10 事故形态（runtime/node/backend/.env.tmp.<时间戳>×2 与 delivery/web/ai-frontend/vite.config.js.timestamp-*.mjs×5 被跟踪入库）",
+        "rules": [],
+        "executor": "scripts/ci/check-repo-hygiene.js",
+        "stage": "S1",
+        "stageSince": "2026-10-19",
+        "stageAuthority": "scripts/ci/check-repo-hygiene.js 的 STAGE 常量",
+        "previousStage": "",
+        "executorStage": {
+          "file": "scripts/ci/check-repo-hygiene.js",
+          "constant": "STAGE",
+          "note": "阶段权威在执行器源码里（STAGE='S1'）。S1 恒 exit 0、只记录不阻断（PP-3）：BAD 形态命中全部输出 finding 但不拦截；升 S3 后命中才参与阻断。升阶只改这一个常量 + 本条目，不需改接线（check:repo-hygiene 别名已入 check:changed 链）。"
+        },
+        "samples": {
+          "observed": 0,
+          "target": 200,
+          "note": "2026-10-19 落地（P2 批次）：16 个已跟踪残留同批清除并补 .gitignore 形态。首跑全量跟踪面 0 命中——那是「机制有效性」验证（清除后应干净），按 PP-2 毕业判据仍须积累 ≥200 条跨运行样本。",
+          "hints": {
+            "observed": 0,
+            "target": 50,
+            "note": "S2 的提示样本从升 S2 后开始计数。"
+          }
+        },
+        "rollback": "三处纯配置回退，无数据副作用：① 从 package.json 的 check:changed 链与 check:repo-hygiene 别名摘掉调用；② 删除 scripts/ci/check-repo-hygiene.js；③ 删除本条目。S1 未拦截任何提交，PP-4 合规。",
+        "blockedBy": []
+      },
+      {
         "id": "read-before-edit-guard",
         "name": "editFile 读前强制（防盲改未读文件）",
         "ssot": "runtime/node/backend/src/tools/editFile.js（A3 实现）",
