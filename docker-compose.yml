@@ -44,8 +44,10 @@ services:
       KHY_CONTAINER: "1"
       KHY_HOME: /home/khy/.khy
       LOG_LEVEL: ${LOG_LEVEL:-info}
-      # 生产务必覆盖：`JWT_SECRET=$(openssl rand -hex 32)`
-      JWT_SECRET: ${JWT_SECRET:-change_this_in_production}
+      # 生产必填：`JWT_SECRET=$(openssl rand -hex 32)`。用 `:?` 而非 `:-`：没配就
+      # 直接 compose 报错，比「留空自签发」（会用公开已知的占位值签登录态）更可靠。
+      # docker-entrypoint.js 另有一道「非空 / >=32 位 / 非弱默认」的启动守卫。
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
       # AI 供应商凭据按需注入（留空即该能力不可用，不会回落成假 key）
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
@@ -56,6 +58,9 @@ services:
       - khy_home:/home/khy/.khy
       - khy_data:/app/runtime/node/backend/data
     healthcheck:
+      # 容器内部探活：127.0.0.1 是容器内回环，3000 是容器内固定端口
+      # （同 docker-entrypoint.js 钉死的 PORT），对外端口由 ports 映射变量控制。
+      # khy-allow-RUNTIME-001: 容器内部 healthcheck 回环地址与容器内固定端口，对外端口走 ports 映射变量
       test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:3000/health >/dev/null || exit 1"]
       interval: 10s
       timeout: 5s
@@ -77,10 +82,13 @@ services:
     environment:
       NODE_ENV: production
       PORT: "9090"
-      JWT_SECRET: ${JWT_SECRET:-change_this_in_production}
+      # ai-backend 不自签发：production 下短于 32 位直接拒启动。与 backend 同为必填。
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
     volumes:
       - ai_backend_data:/app/data
     healthcheck:
+      # 容器内部探活：9090 是 ai-backend 容器内固定端口，对外 19090 由 ports 映射变量控制。
+      # khy-allow-RUNTIME-001: 同 backend，容器内部 healthcheck，回环地址与容器内固定端口
       test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9090/api/health >/dev/null || exit 1"]
       interval: 10s
       timeout: 5s
@@ -107,6 +115,8 @@ services:
     # 显式声明而非依赖镜像内的 HEALTHCHECK：`depends_on: service_healthy`
     # 在编排层的可读性依赖这里能直接看到判据。
     healthcheck:
+      # nginx 静态站在容器内回环 80 端口答，对外端口由 ports 映射变量控制。
+      # khy-allow-RUNTIME-001: 同 backend，容器内部 healthcheck，回环地址与容器内固定端口
       test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
       interval: 10s
       timeout: 5s
