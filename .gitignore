@@ -49,6 +49,14 @@ DebugProbesKt.bin
 .env.*.local
 # .env 备份/清理存档（由清理脚本改写产生，含密钥，绝不入库）
 .env.bak-*
+# .env.<任意后缀> 泛化兜底：运行时原子写（aiManagementServer.js 的
+# writeFileSync + renameSync）中断会留下 .env.tmp.<时间戳>，两份曾带着真实
+# JWT_SECRET 入库（df6a6544 → bc43302f R100 改名）。按形态兜住，不再逐个补名。
+# 模板反选：根 / runtime/node/backend / delivery/web/ai-frontend 三份已跟踪的
+# .env.example 必须继续入库；entries/tools/deepseek-eyes/.env.example 由下方
+# entries/* 规则继续忽略（本反选在其之前，后写者优先）。
+.env.*
+!.env.example
 
 # Local data directories
 .khy/
@@ -251,6 +259,29 @@ entries/*
 _tmp_dbg*
 *.tmp-*
 
+# --- P2 仓库卫生（2026-10-19）---
+# 16 个已跟踪残留（backend 11 + ai-frontend vite 时间戳 5）清除后的形态兜底；
+# 跟踪面由 scripts/ci/check-repo-hygiene.js 守，这里拦未跟踪面的 status 噪音。
+# m\[*\]\) 需要反斜杠转义方括号：裸 m[0]) 会被 gitignore 读成字符类 m0)。
+vite.config.js.timestamp-*
+*.class
+*.jar
+_chk_*
+_probe_*
+proxy_test*
+TmpKoh*
+.zcode-tmp-*
+.khyos-diag-*.txt
+/runtime/node/backend/note.txt
+m\[*\]\)
+
+# .tmp_* 与根目录 *.tmp —— 一次性运维脚本（含凭据，R2 红线：明文密钥永不进提交）。
+# 2026-10-11 加入：.tmp_archive_push.sh 把 SSH passphrase 写在脚本正文里，
+# 一旦误入暂存区就是凭据泄露。按形态兜住，不依赖具体文件名。
+.tmp_*
+/.tmp_*
+/*.tmp
+
 
 
 # --- 2026-09-27 源码目录精确取回（重建历史时实测发现）---
@@ -321,3 +352,10 @@ apps/khyos-desktop/works/
 #   只锚定根级这一个：apps/khyos-desktop/launcher/KhyOS Desktop.lnk 是**已跟踪**的
 #   契约件，用 *.lnk 会把它一起罩住。
 /khy-os.lnk
+#   /KhyOS-Desktop.lnk —— 根级 Windows 快捷方式，与 /khy-os.lnk 同性质（内含硬编码
+#   绝对路径）。只锚根级：apps/khyos-desktop/launcher/KhyOS Desktop.lnk 是**已跟踪**的
+#   契约件，用 *.lnk 会把它一起罩住（同 /khy-os.lnk 的理由）。
+/KhyOS-Desktop.lnk
+#   *.cpuprofile —— node --cpu-prof 的采样输出（repl / status / status2 三个），
+#   在仓内生成，与本仓无关。仓内无已跟踪 .cpuprofile，可安全全域罩。
+*.cpuprofile
