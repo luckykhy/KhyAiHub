@@ -14,8 +14,15 @@
  *   ③ 拆出后 IlinkDispatcher 只剩「编排」职责，读起来先看得到队列/路由/权限的主干。
  *
  * 契约（与拆分前的类方法逐字节同构）：
- *   - 取 `state`（{ channel, queueLength, running }）与 `opts`，返回字符串。
- *   - 绝不抛：所有外部读取（gateway / accountStore / channel.toJSON）都在 try 里，
+ *   - 取 `state`（{ channel, queueLength, running, allowMode, peerCount,
+ *     pendingDrafts, draftOwners, draftDirect }）与 `opts`，返回字符串。
+ *     state 形状由 ilinkDispatcher._diagState 单点生产；**扩展形状时要同步
+ *     改这一句**，否则注释就成了骗人的契约。
+ *   - `state` 是**提问者视角**，不是全量：`pendingDrafts` / `draftOwners` 只算当前
+ *     这一个发送者（_draftStatsFor）。所以 `draftOwners` 至多 1 个元素，非空时恒等于
+ *     「你自己」。本模块原样渲染收到的值，**不做任何过滤** —— 隔离责任全在生产点：
+ *     在渲染点过滤看起来更贴近出口，实际最容易漏（每多一个渲染函数就多一个漏网处）。
+ *   - 绝不抛：所有外部读取（gateway / accountStore / channel.toJSON / allowlist）都在 try 里，
  *     失败退化为「取不到」的诚实措辞，而不是让 /conn /route /adapters 崩掉。
  *   - 纯读：不写任何状态。
  */
@@ -27,6 +34,12 @@
  * @param {object} [state.channel]     IlinkChannel（读 toJSON()）
  * @param {number} [state.queueLength] 队列长度
  * @param {boolean} [state.running]    是否有 1 条在处理中
+ * @param {{strict:boolean, label:string}} [state.allowMode] 当前发送者准入档位
+ * @param {number} [state.peerCount]   存储层允许名单人数
+ * @param {number} [state.pendingDrafts] **提问者本人**的待批出站草稿条数（非全量）
+ * @param {string[]} [state.draftOwners] 提问者本人的 id，非空时恒为 `[自己]`
+ *   （**不含草稿正文**；恒不含他人 id —— 这是隔离不变量，见文件头契约）
+ * @param {boolean} [state.draftDirect] 是否处于直发档（草稿被关掉）
  * @returns {string}
  */
 function describeConnection(state = {}) {
@@ -66,6 +79,31 @@ function describeConnection(state = {}) {
 
   const qlen = Number(state.queueLength) || 0;
   lines.push(`队列:${qlen} 条等待${state.running ? '、1 条处理中' : ''}`);
+
+  // 草稿位:草稿**会静默过期**,只报队列长度的话,用户看到「队列空闲」而他的回复
+  // 其实还压在待批里。两条都要报:有多少条待批,以及当前是不是直发档
+  // （「我没看到草稿」有三种可能——回复太短、已过期、档位是直发）。
+  const drafts = Number(state.pendingDrafts) || 0;
+  if (state.draftDirect) {
+    lines.push('草稿:未启用(直发档,回复直接发出)');
+  } else {
+    lines.push(`草稿:${drafts} 条待批`);
+    if (drafts) {
+      lines.push(`待批发送者:${(state.draftOwners || []).join('/')}`);
+    }
+  }
+
+  // 准入档位必须出现在诊断面：两档行为完全相反(默认严格 vs 显式开的观察期)，
+  // 不报出来的话运维会以为名单已经生效。三个展示面（这里 / khy wx status /
+  // wx allow list）读的是同一个 ilinkPeerAllowlist.allowMode()，不允许各写一份。
+  if (state.allowMode && state.allowMode.label) {
+    lines.push(`发送者准入:${state.allowMode.label}`);
+    lines.push(
+      `允许名单:${Number(state.peerCount) || 0} 人` +
+        `${state.allowMode.strict ? '' : '(当前档位下这份名单不参与放行判定)'}`
+    );
+  }
+
   lines.push('');
   lines.push('你能收到这条,说明收发都是通的。想看模型路由发 /status。');
   return lines.join('\n');

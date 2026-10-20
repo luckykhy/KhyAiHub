@@ -4,8 +4,8 @@
  * ilinkStorePaths.js — 微信 ilink 存储的文件路径与校验叶子(零 IO 副作用)。
  *
  * 把「文件名怎么拼、accountId 合不合法、凭据文件权限位」这几个被各存储家族
- * (凭据 / 游标 / 会话状态 / context-token)共享的私有助手收在这里,使宿主与各
- * 叶子都朝本模块**单向**依赖(叶子 → 路径),不构成回边、不成环。
+ * (凭据 / 游标 / 会话状态 / context-token / 发送者允许名单)共享的私有助手收在这里,
+ * 使宿主与各叶子都朝本模块**单向**依赖(叶子 → 路径),不构成回边、不成环。
  *
  * _dir() 每次调用都过 getBaseDataDir(而非在 load 期定值),这样测试可通过设置
  * 家目录 env 把整套路径改到临时目录。
@@ -46,6 +46,14 @@ function _ctxTokenFile() {
   return path.join(_dir(), 'ilink-context-tokens.json');
 }
 
+function _peersFile() {
+  return path.join(_dir(), 'ilink-peers.json');
+}
+
+function _peersBak() {
+  return path.join(_dir(), 'ilink-peers.bak');
+}
+
 function _isValidAccountId(id) {
   return typeof id === 'string' && !!id && ACCOUNT_ID_RE.test(id);
 }
@@ -59,5 +67,7 @@ module.exports = {
   _cursorFile,
   _stateFile,
   _ctxTokenFile,
+  _peersFile,
+  _peersBak,
   _isValidAccountId,
 };

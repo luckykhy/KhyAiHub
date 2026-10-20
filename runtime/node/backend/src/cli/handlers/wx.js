@@ -59,6 +59,53 @@ function _binding() {
   return require('../../services/domain/messaging/messaging/ilinkBindingStore.js');
 }
 
+function _allowlist() {
+  return require('../../services/domain/messaging/messaging/ilinkPeerAllowlist.js');
+}
+
+/**
+ * 当前发送者准入档位。`khy wx status` / `wx allow list` / 微信内 `/wx` 三个展示面
+ * 全部读它（真源在 ilinkPeerAllowlist.allowMode），不允许各写一份。
+ * @returns {{strict:boolean, label:string}}
+ */
+function _allowMode() {
+  return _allowlist().allowMode();
+}
+
+/**
+ * 改完名单后必须附带的档位说明。
+ *
+ * 为什么不能只回「✓ 已加入」:观察期档下,名单写了也不参与放行判定 —— 用户拿到一张
+ * 成功回执、安全上什么都没变,这正是规则 2 (RUNTIME-002 状态透明)禁止的形态。
+ *
+ * 非严格分支里 env 名只在这里出现一次。档位标签不写它(三个展示面 + 这里都会渲染它),
+ * 两处都写会串成「…(手动 KHY_ILINK_ALLOW_UNLISTED=1)(观察期需手动 …=1);…」。
+ * @returns {string}
+ */
+function _allowModeNotice() {
+  const mode = _allowMode();
+  return mode.strict
+    ? `当前档位:${mode.label},名单里的 userId 立即参与放行判定。`
+    : `当前档位:${mode.label};本条配置暂不生效,未列名者仍会被放行;要收紧:khy wx allow env off`;
+}
+
+/**
+ * 出站草稿档位（每条回复先出预览、回「发」才外发）。
+ *
+ * undefined → true：**安全方向只有一个**（拿不准就不发）。常量缺失时按草稿态渲染，
+ * 而不是把字符串 "undefined" 打到用户脸上。
+ * @returns {{on:boolean, label:string}}
+ */
+function _draftMode() {
+  const on = _defaults().ILINK_DRAFT_CONFIRM !== false;
+  return {
+    on,
+    label: on
+      ? '逐条批准(回复先出草稿,回「发」才发出)'
+      : '直发(回复直接发出,KHY_ILINK_DRAFT_CONFIRM=0)',
+  };
+}
+
 // 会话隔离策略的中文说明(键与 serviceDefaults.ILINK_SESSION_SCOPES 对齐,单一真源在那边)。
 const SCOPE_LABELS = Object.freeze({
   main: '所有私信共享一个会话',
@@ -125,6 +172,18 @@ async function _handleStatus() {
       a.createdAt || '-',
     ])
   );
+  // 准入档位与名单规模:紧跟在账号表之后,让「谁能驱动这个实例」和「账号是谁」同屏。
+  try {
+    const mode = _allowMode();
+    printInfo(`发送者准入:${mode.label}`);
+    printInfo(
+      `允许名单:${_allowlist().peerCount()} 人` +
+        `${mode.strict ? '' : '(当前档位下这份名单不参与放行判定)'}`
+    );
+  } catch {
+    printWarn('允许名单读取失败,无法显示当前准入档位。');
+  }
+  printInfo(`出站草稿:${_draftMode().label}`);
   if (!_core().isEnabled()) {
     printWarn('消息能力当前已关闭(KHY_MSG=off),微信通道不会收发。开启:khy msg on。');
     return 0;
@@ -626,6 +685,206 @@ function _handleBindings() {
 }
 
 /**
+ * `khy wx allow <add|rm|list|self|env> …` —— 入站发送者允许名单（四层并集里可配的那两层）。
+ *
+ * 为什么要有 env 这一支:名单落盘（~/.khyos/ilink-peers.json）是本机态,换机器/多人运维
+ * 时靠文件搬运太脆;KHY_ILINK_ALLOWED_PEERS 是跨账号、随 .env 走的配置面。
+ *
+ * **所有成功回执都带当前档位**——见 _allowModeNotice 的理由。
+ *
+ * @param {string[]} args
+ * @returns {number}
+ */
+function _handleAllow(args) {
+  let rest = Array.isArray(args) ? args.slice() : [];
+  // 未知动词会被 parseInput 连同 args[0] 一起派过来（见 handleWx 顶部注释），
+  // 两种形态（subCommand='allow' 且 args[0]='add' / args[0]='allow'）都要吃得下。
+  const head = String(rest[0] || '').toLowerCase();
+  if (head === 'allow' || head === 'allowlist') {
+    rest = rest.slice(1);
+  }
+  const verb = String(rest[0] || 'list').toLowerCase();
+  const ids = rest.slice(1).filter((s) => String(s).trim());
+
+  if (verb === 'list') {
+    return _allowList();
+  }
+  if (verb === 'self') {
+    return _allowSelf();
+  }
+  if (verb === 'env') {
+    return _allowEnv(ids);
+  }
+  if (verb === 'add' || verb === 'rm') {
+    return ids.length ? _allowMutate(verb, ids) : _allowUsage();
+  }
+  return _allowUsage();
+}
+
+function _allowUsage() {
+  printError('用法:khy wx allow <add|rm|list|self|env>。');
+  printInfo('  add <userId...>  把这些微信 ID 加进允许名单（对全部已绑定账号生效）');
+  printInfo('  rm  <userId...>  移出允许名单');
+  printInfo('  self            把各账号自己的 ID 写进名单（一次自愈）');
+  printInfo('  env <userId|off|on> 把名单/档位写进 .env；off = 收紧(默认档)，on = 观察期放行');
+  printInfo('  list            列出当前名单与档位');
+  return 1;
+}
+
+/** add/rm 共用:名单按账号分桶,这里对全部已绑定账号生效（入站 id 只在账号内有意义）。 */
+function _allowMutate(verb, ids) {
+  const accounts = _store().listAccounts();
+  if (!accounts.length) {
+    printErrorPanel({
+      title: '尚未绑定微信账号',
+      message: '无法维护允许名单,没有账号可以挂这份名单。',
+      reason: '已绑定账号列表为空。',
+      suggestions: ['运行 khy wx login 扫码绑定微信账号', '运行 khy wx status 查看已绑定账号'],
+    });
+    return 1;
+  }
+  const allow = _allowlist();
+  const failed = [];
+  for (const id of ids) {
+    const userId = String(id).trim();
+    for (const a of accounts) {
+      const res = verb === 'add' ? allow.addPeer(a.accountId, userId) : allow.removePeer(a.accountId, userId);
+      if (!res.ok) {
+        failed.push(`${userId}@${a.accountId}:${res.error}`);
+      }
+    }
+  }
+  if (failed.length) {
+    printErrorPanel({
+      title: verb === 'add' ? '加入允许名单失败' : '移出允许名单失败',
+      message: '名单未更新,配置保持原样。',
+      reason: failed.join(';'),
+      suggestions: ['检查 ~/.khyos 目录是否可写', '运行 khy wx allow list 查看当前名单'],
+    });
+    return 1;
+  }
+  printSuccess(
+    `✓ 已${verb === 'add' ? '加入' : '移出'}允许名单:${ids.join('、')}(账号 ${accounts
+      .map((a) => a.accountId)
+      .join('、')})。`
+  );
+  printWarn(_allowModeNotice());
+  return 0;
+}
+
+/** `khy wx allow self` —— 把账号记录里的 userId 显式写进名单。 */
+function _allowSelf() {
+  const accounts = _store().listAccounts();
+  if (!accounts.length) {
+    printErrorPanel({
+      title: '尚未绑定微信账号',
+      message: '无法写入自身 ID,没有账号记录可读。',
+      reason: '已绑定账号列表为空。',
+      suggestions: ['运行 khy wx login 扫码绑定微信账号'],
+    });
+    return 1;
+  }
+  const allow = _allowlist();
+  const done = [];
+  const missing = [];
+  for (const a of accounts) {
+    const userId = String(a.userId || '').trim();
+    if (!userId) {
+      missing.push(a.accountId);
+      continue;
+    }
+    const res = allow.addPeer(a.accountId, userId, 'self');
+    if (res.ok) {
+      done.push(`${a.accountId}:${userId}`);
+    } else {
+      missing.push(`${a.accountId}:${res.error}`);
+    }
+  }
+  if (!done.length) {
+    printErrorPanel({
+      title: '写入自身 ID 失败',
+      message: '没有任何账号的自身 ID 被写入允许名单。',
+      reason: missing.join(';') || '账号记录里没有 userId',
+      suggestions: ['运行 khy wx login 重新扫码(登录报文里带 ilink_user_id)', '运行 khy wx status 查看账号用户 ID'],
+    });
+    return 1;
+  }
+  printSuccess(`✓ 已把账号自身的微信 ID 写入允许名单:${done.join('、')}。`);
+  if (missing.length) {
+    printWarn(`未写入:${missing.join('、')}。`);
+  }
+  printWarn(_allowModeNotice());
+  return 0;
+}
+
+/** `khy wx allow env <ids|off|on>` —— 写 .env。ids 覆盖 KHY_ILINK_ALLOWED_PEERS，
+ *  off/on 写档位开关（默认档是严格；on 是把默认临时翻回观察期的逃生阀）。 */
+function _allowEnv(ids) {
+  const token = String(ids[0] || '').trim();
+  const lowered = token.toLowerCase();
+  if (!token) {
+    printError('用法:khy wx allow env <userId,userId|off|on>。未指定内容。');
+    printInfo('  env u2,u3   把这两个 ID 作为跨账号允许名单写进 .env');
+    printInfo('  env off     收紧档位:仅允许名单内的发送者可驱动本实例(默认档)');
+    printInfo('  env on      临时放回观察期:未列名者放行但记 warn(用完记得收回)');
+    return 1;
+  }
+  const isOff = lowered === 'off';
+  const isOn = lowered === 'on';
+  const patch = isOff || isOn
+    ? { KHY_ILINK_ALLOW_UNLISTED: isOff ? '0' : '1' }
+    : { KHY_ILINK_ALLOWED_PEERS: token };
+  const written = isOff || isOn
+    ? `KHY_ILINK_ALLOW_UNLISTED=${isOff ? '0' : '1'}(${isOff ? '仅名单内放行' : '观察期放行'})`
+    : `KHY_ILINK_ALLOWED_PEERS=${token}`;
+  try {
+    const { _writeEnvPatch } = require('./config');
+    const envPath = _writeEnvPatch(patch);
+    printSuccess(`✓ 已写入 .env:${written}`);
+    printInfo(`已写入:${envPath}`);
+    printInfo('需重启守护进程生效:khy wx start。');
+    if (isOff) {
+      printWarn('收紧后,没在名单里的发送者会被直接拒答 —— 先确认自己与关键对话方都在名单里。');
+    }
+    if (isOn) {
+      printWarn('观察期已开:没在名单里的发送者也能驱动本实例,只记一条 warn。窗口期结束请 khy wx allow env off 收回。');
+    }
+    return 0;
+  } catch (e) {
+    printErrorPanel({
+      title: '写 .env 失败',
+      message: '准入配置未更新,档位保持原样。',
+      reason: (e && e.message) || String(e),
+      suggestions: ['检查 .env 是否存在且可写后重试', '运行 khy wx allow list 查看当前档位'],
+    });
+    return 1;
+  }
+}
+
+/** `khy wx allow list` —— 只读:名单一览 + 当前档位 + 隐式层说明。 */
+function _allowList() {
+  const mode = _allowMode();
+  printInfo(`当前档位:${mode.label}`);
+  const rows = _allowlist().listPeers();
+  if (!rows.length) {
+    printInfo('允许名单为空（各账号自身的微信 ID 属于隐式允许,无需登记）。');
+  } else {
+    printTable(
+      ['账号ID', '微信 ID', '来源', '加入时间'],
+      rows.map((r) => [r.accountId, r.userId, r.source || '-', r.addedAt || '-'])
+    );
+    printInfo(`共 ${rows.length} 条。`);
+  }
+  for (const a of _store().listAccounts()) {
+    printInfo(`账号 ${a.accountId} 的隐式允许 ID:${a.userId || '(登录记录里没有,需 khy wx allow self)'}`);
+  }
+  if (!mode.strict) {
+    printWarn('当前为观察期档位,这份名单暂不参与放行判定;收紧:khy wx allow env off。');
+  }
+  return 0;
+}
+
+/**
  * @param {string} subCommand
  * @param {string[]} args
  * @param {object} options
@@ -645,7 +904,20 @@ function handleWx(subCommand, args = [], options = {}) {
     printInfo(
       'bind 把某账号收信绑定到工作空间/Agent(策略二);bindings 列出全部路由绑定;unbind 解除绑定。改绑定需 khy wx start 重启生效。'
     );
+    printInfo(
+      'allow 管理入站发送者允许名单:allow add/rm/list/self/env。当前档位用 allow list 或 wx status 查看;只有严格档下这份名单才参与放行判定(默认即严格)。'
+    );
     printInfo('微信里可发 /wx 查连接健康、/help 看全部命令。');
+    printInfo(
+      '绑定码只在终端申请:khy wx login。二维码只显示在你的终端,不经过任何聊天转发。'
+    );
+    printInfo(
+      'SendUserFile 在微信上会真的把文件发出去,凭据/密钥类路径一律拒发(含符号链接指向的)。'
+    );
+    printInfo(`准入档位:${_allowMode().label}。`);
+    printInfo(
+      `出站草稿:${_draftMode().label}。微信里发 /draft 看自己的档位,/draft off 可关掉自己那一份（仅本进程,重启失效）。`
+    );
     return 0;
   }
   if (!sub || sub === 'status' || sub === 'show' || sub === 'list') {
@@ -663,6 +935,9 @@ function handleWx(subCommand, args = [], options = {}) {
   if (sub === 'bindings') {
     return _handleBindings();
   }
+  if (sub === 'allow' || sub === 'allowlist') {
+    return _handleAllow(args);
+  }
   if (sub === 'unbind') {
     return _handleUnbind(args);
   }
@@ -679,7 +954,7 @@ function handleWx(subCommand, args = [], options = {}) {
     return _handleStop();
   }
   printError(
-    `未知子命令:${sub}。可用:status / use(select) / bind / bindings / unbind / scope / scan(login) / connect(start) / stop / logout。`
+    `未知子命令:${sub}。可用:status / use(select) / bind / bindings / unbind / scope / allow / scan(login) / connect(start) / stop / logout。`
   );
   _markFailure();
   return 1;

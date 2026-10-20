@@ -55,10 +55,12 @@ const {
   isSessionExpired,
   createDedupe,
   parsePermissionReply,
+  parseDraftReply,
   parseSlashCommand,
   isRetryableSendError,
   sendBackoffMs,
   formatPermissionPrompt,
+  formatDraftPreview,
 } = require('./ilinkSendPolicy');
 
 const _FALSY = new Set(['0', 'false', 'off', 'no']);
@@ -142,8 +144,10 @@ module.exports = {
   isSessionExpired,
   createDedupe,
   parsePermissionReply,
+  parseDraftReply,
   parseSlashCommand,
   formatPermissionPrompt,
+  formatDraftPreview,
   SEND_BACKOFF_MAX_MS,
   isRetryableSendError,
   sendBackoffMs,

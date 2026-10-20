@@ -36,6 +36,8 @@ const _diag = require('./ilinkDispatchDiagnostics');
 const _routing = require('./ilinkWorkspaceRouting');
 // 「文件投递」职责簇 —— 失败矩阵密集 + 铁律「绝不影响后续文本回复」，单独成文件。
 const _delivery = require('./ilinkFileDelivery');
+// 「待批出站草稿」职责簇 —— 按发送者分桶的队列（作者绑定与过期语义都在那里）。
+const { ReplyDraftQueue } = require('./ilinkReplyDraft');
 
 /**
  * 取 chat 内核。
@@ -125,10 +127,15 @@ function _resolveSessionControl(getter) {
 const _TIMED_OUT = Symbol('ilink-query-timeout');
 
 /**
- * 判定一条自然语言文本是否在请求「发绑定二维码」。
+ * 判定一条自然语言文本是否在请求「发绑定二维码」。**纯诊断用途，不接任何发送路径。**
  *
- * 仅匹配明确含「二维码/绑定码/qrcode」意图的短语,避免误伤正常对话
- * (比如只提到“二维码”三个字但在问别的事)。纯函数。
+ * 为什么留着：它仍是对外导出的（module.exports.isBindQrIntent），诊断与排障
+ * 「用户是不是在要码」要靠它。但它**不再**构成发码入口 —— 原来 handle() 里
+ * `isBindQrIntent(msg.text)` 命中即 `_sendBindQrCode`，那一步在任何 agent 判断
+ * 之前就把码发出去，是整个洞的全部。现在自然语言里的「发我二维码」只当普通 prompt
+ * 进 agent，由模型按系统提示回答「去终端跑 khy wx login」。
+ *
+ * 纯函数。
  * @param {string} text
  * @returns {boolean}
  */
@@ -203,6 +210,19 @@ function _ilinkStrictRoute(env = process.env) {
 }
 
 /**
+ * 取入站发送者允许名单模块（惰性 require：它会读 store 与 serviceDefaults，
+ * 不该在通道模块的加载期就被拽进来）。取不到返回 null，调用方各自 fail-soft。
+ * @returns {object|null}
+ */
+function _allowlist() {
+  try {
+    return require('../messaging/ilinkPeerAllowlist');
+  } catch {
+    return null;
+  }
+}
+
+/**
  * 微信通道单轮追加的 khy-os 身份 / 绑定说明系统提示。
  *
  * 为什么必须有:底层云端大模型的训练语料里带着 OpenClaw/ClawBot 官方产品套路
@@ -225,10 +245,11 @@ const ILINK_IDENTITY_SYSTEM_PROMPT = [
   '2. 扫码成功后运行 khy wx start,(重)启守护进程,微信这条通道才会持续在线。',
   '3. 会话过期时,重新运行 khy wx login 扫码即可恢复。',
   '',
-  '绝对不要这样回答:不要建议用户去 openclaws io 下载 WorkBuddy;不要声称「二维码只能显示在',
-  '我自己的屏幕上、我无法生成或发送」。事实相反:khy-os 支持在微信里直接发送「绑定二维码」或',
-  '「发我二维码」之类的短语,由 bot 现场申请并以图片形式发回一张绑定码。该绑定码用于邀请其他',
-  '受信任的人接入同一个 khy-os 实例,发送时请附带简短安全提示(仅发给信任的人,勿公开转发)。',
+  '绝对不要这样回答:不要建议用户去 openclaws io 下载 WorkBuddy。',
+  '',
+  '关于「发绑定二维码 / 发我二维码 / 把二维码发给我」这类请求:绑定码只在用户自己的',
+  '终端申请**。二维码只显示在运行 khy wx login 的那台机器的终端里,不经过任何聊天转发,',
+  '你无法生成、也无法代为转发它。请如实这样回答,不要说「已发送」「稍等」再让用户空等。',
   '',
   '保持简洁,只补充上述 khy-os 身份与微信绑定事实,不与既有全局人设冲突,不改变其他任何行为。',
 ].join('\n');
@@ -336,12 +357,15 @@ function _isImageFile(fileName) {
  * CLI 仍保留工具返回的本地路径。
  * @param {string|null} reply
  * @param {*} out
+ * @param {{pendingLabel?:string}} [opts] pendingLabel 覆盖占位语。草稿态必须换词:
+ *        图**还没发**,说「已发送」是当着人的面撒谎(规则 2)。
  * @returns {string|null}
  */
-function _sanitizeGeneratedImageReply(reply, out) {
+function _sanitizeGeneratedImageReply(reply, out, opts = {}) {
   if (!defaults.ILINK_SANITIZE_PATHS || typeof reply !== 'string') {
     return reply;
   }
+  const done = String(opts.pendingLabel || '（图片已发送）');
   const logArr = out && Array.isArray(out.toolCallLog) ? out.toolCallLog : [];
   const generatedPaths = [];
   const hasSuccessfulImage = logArr.some((entry) => {
@@ -367,13 +391,13 @@ function _sanitizeGeneratedImageReply(reply, out) {
     .split(/\r?\n/)
     .map((line) =>
       (knownPathPattern && knownPathPattern.test(line)) || tempPathPattern.test(line)
-        ? '（图片已发送）'
+        ? done
         : line
     )
-    .filter((line, index, lines) => line !== '（图片已发送）' || lines.indexOf(line) === index)
+    .filter((line, index, lines) => line !== done || lines.indexOf(line) === index)
     .join('\n')
     .trim();
-  return cleaned || '（图片已发送）';
+  return cleaned || done;
 }
 
 /**
@@ -496,6 +520,18 @@ function _migrateLegacyIlinkSession(persistence, scope, accountId, userId) {
   return { migrated: true, reason: 'MIGRATED' };
 }
 
+/** 草稿到期回执。措辞必须说清「过期」且「没发」—— 静默作废会让人一直等。 */
+const DRAFT_EXPIRED_NOTICE = '上一条草稿已过期(未发送)。请重新发一次你的指令。';
+
+/**
+ * 绑定码自助发放关闭时的唯一回执。
+ *
+ * 措辞纪律（RUNTIME-002）：必须说清**没做**什么 + **去哪儿做**。不能写「功能不可用」
+ * 这种含糊话，也不能给替代路径的暗示 —— 这里给的就是本机终端。
+ */
+const QR_SELF_SERVE_OFF_NOTICE =
+  '绑定码不在微信里发放：请在本机终端运行 khy wx login，二维码只显示在你的终端，不经过任何聊天转发。';
+
 class IlinkDispatcher {
   /**
    * @param {object} opts
@@ -504,6 +540,8 @@ class IlinkDispatcher {
    * @param {Function} [opts.getPersistence] 注入 sessionPersistence 解析器(测试用)
    * @param {Function} [opts.getBindingStore] 注入 ilinkBindingStore 解析器(测试用)
    * @param {Function} [opts.getWorkspaceRouter] 注入工作空间路由器解析器(测试用)
+   * @param {Function} [opts.getAccountStore] 注入 ilinkAccountStore 解析器(测试用,
+   *        隐式允许层要读账号记录里的 userId)
    * @param {string} [opts.accountId] 归属账号 id,用于按 dmScope 构造会话键
    */
   constructor(opts = {}) {
@@ -512,6 +550,7 @@ class IlinkDispatcher {
     this._getPersistence = opts.getPersistence;
     this._getBindingStore = opts.getBindingStore;
     this._getWorkspaceRouter = opts.getWorkspaceRouter;
+    this._getAccountStore = opts.getAccountStore;
     this.accountId = String(opts.accountId || '');
     /** @type {Array<{msg:object, resolve:Function}>} 串行队列 */
     this._queue = [];
@@ -520,23 +559,210 @@ class IlinkDispatcher {
     this._pendingPermission = null;
     this._warnedNoChat = false;
     this._warnedNoToolLoop = false;
+    /**
+     * 未列名发送者的告警计数(按 accountId|userId)。
+     * **只给模板串计数用**;阶段 2 的前置数据(带 loginUserId 的结构化元数据)每次都发,
+     * 不受这个窗口影响 —— 降噪不能把观测数据一起降没了。
+     * @type {Map<string,{count:number, since:number}>}
+     */
+    this._allowWarnCounts = new Map();
+    /**
+     * 待批出站草稿(按发送者分桶)。KHY_ILINK_DRAFT_CONFIRM=0 时整条通道不启用,
+     * 队列保持 null,所有分支照旧直发 —— 逃生阀必须是「回到旧行为」而不是「近似直发」。
+     * @type {ReplyDraftQueue|null}
+     */
+    this._draftQueue =
+      defaults.ILINK_DRAFT_CONFIRM === false
+        ? null
+        : new ReplyDraftQueue({ ttlMs: defaults.ILINK_DRAFT_TTL_MS, max: defaults.ILINK_DRAFT_MAX });
+    /**
+     * 草稿过期后的迟到答复宽限期。**独立于 _graceUntil**:
+     *   · 消费判据不同(_graceUntil 只认 y/n,迟到的「发」会一路穿过它被当新 prompt
+     *     丢给模型 —— 那正是它注释要防的事);
+     *   · 共用一个标量的话,草稿到期会踩掉权限的宽限窗口,反之亦然。
+     * @type {number}
+     */
+    this._draftGraceUntil = 0;
+    /**
+     * 宽限窗口内「刚被清掉草稿」的发送者。迟到答复只对这些 id 生效 ——
+     * 过期之后队列里已经没有条目,判定依据只能是清条目的那一刻记下的作者。
+     * @type {Set<string>}
+     */
+    this._draftLateOwners = new Set();
+    /**
+     * 本实例内选了「直发」的发送者(/draft off 开的)。**只在本实例有效,重启即失效**
+     * —— 逃生阀不该比它保护的东西活得更久。
+     * @type {Set<string>}
+     */
+    this._draftDirectUsers = new Set();
   }
 
   /**
    * 把本实例的运行时状态打包给诊断簇。
    *
    * 显式传 state（而不是把 `this` 整个递过去）是有意的：诊断模块只应看到它真正
-   * 需要读的三样东西（channel / 队列长度 / 是否在处理）。这样它在编译期就不可能
-   * 写到本类的任何私有字段，职责边界由**参数形状**保证，而不是靠注释约定。
+   * 需要读的东西。这样它在编译期就不可能写到本类的任何私有字段，职责边界由**参数形状**
+   * 保证，而不是靠注释约定。
    *
-   * @returns {{channel:object, queueLength:number, running:boolean}}
+   * `userId` 是**提问者**，不是「全体」。草稿读数只算他一个人（见 `_draftStatsFor`）：
+   * state 会被 /wx、/status 原样渲染给当前发送者，全量 owners 等于把同 bot 其他人的
+   * 标识符报给一个无权知道它的人（复核员实测 uA 从 /wx 看到「待批发送者:uB」）。
+   * 少报是安全方向，故这里**不提供**全量路径 —— 要全量走 `toJSON`。
+   *
+   * @param {string} [userId] 提问者 id；缺省按「无此人」读，草稿位恒 0（fail-closed）
+   * @returns {{channel:object, queueLength:number, running:boolean,
+   *            allowMode:object, peerCount:number,
+   *            pendingDrafts:number, draftOwners:string[], draftDirect:boolean}}
    */
-  _diagState() {
+  _diagState(userId) {
+    let allowMode = { strict: false, label: '' };
+    let peerCount = 0;
+    try {
+      allowMode = _allowlist().allowMode();
+      peerCount = _allowlist().peerCount();
+    } catch {
+      /* fail-soft：诊断面绝不因为读不到名单就崩 */
+    }
+    const draft = this._draftStatsFor(userId);
     return {
       channel: this.channel,
       queueLength: this._queue.length,
       running: this._running,
+      allowMode,
+      peerCount,
+      pendingDrafts: draft.total,
+      draftOwners: draft.owners,
+      // 直发档同样要报出来:「我没看到草稿」有两种可能——没有草稿,或根本没开草稿,
+      // 只报前者会让人以为确认机制在工作。
+      draftDirect: !this._draftQueue,
     };
+  }
+
+  /**
+   * 草稿读数(**全量,进程内**)。**只给计数与发送者 id,永不含草稿正文** ——
+   * 正文是用户的私有内容。
+   *
+   * 消费者只有 `toJSON()` 与进程内日志。**凡是会渲染成发给微信用户的文本,一律不许
+   * 调这个**,走 `_draftStatsFor`。
+   * @returns {{total:number, owners:string[]}}
+   */
+  _draftStats() {
+    try {
+      return this._draftQueue ? this._draftQueue.stats() : { total: 0, owners: [] };
+    } catch {
+      return { total: 0, owners: [] };
+    }
+  }
+
+  /**
+   * 草稿读数(**作者视角**)。形状与 `_draftStats()` 逐字相同,这样诊断模块一行都不用改 ——
+   * 隔离责任全落在**生产点**,而不是渲染点过滤(后者最容易漏:新加一个渲染函数就绕过去了)。
+   *
+   * owners 只会是 `[userId]` 或 `[]`:草稿按作者分桶,别人的桶既不计数也不进 owners,
+   * 所以收件人无从推断还有谁在用这个 bot。
+   *
+   * @param {string} userId 读者自己;null/undefined 归一成空键 = 「无此人」= 恒 0 条,
+   *   这是 fail-closed:漏传调用点会安静地少报,而不是多报。
+   * @returns {{total:number, owners:string[]}}
+   */
+  _draftStatsFor(userId) {
+    try {
+      if (!this._draftQueue) {
+        return { total: 0, owners: [] };
+      }
+      const total = this._draftQueue.pendingCount(userId);
+      return { total, owners: total ? [String(userId == null ? '' : userId)] : [] };
+    } catch {
+      return { total: 0, owners: [] };
+    }
+  }
+
+  /**
+   * 入站发送者是否放行。
+   *
+   * 返回 true = 继续处理；false = 调用方必须就此终止本条消息。
+   *
+   * 逃生层 ILINK_ALLOW_UNLISTED 默认**关**（严格档）：未列名者直接拒答。要临时放回
+   * 观察期必须显式 KHY_ILINK_ALLOW_UNLISTED=1（或 khy wx allow env on）。
+   *
+   * 无论哪一档，**未列名者每次都记一条带 loginUserId 的结构化 warn**。这条不是阶段 1
+   * 的遗留：它现在落在拒答路径上，是发现「主人被误关在门外」的唯一手段 —— 出了这种
+   * 事故，日志里那对 loginUserId / userId 就是直接证据。删掉它等于把现场抹了。
+   *
+   * @param {object} msg
+   * @returns {Promise<boolean>}
+   */
+  async _isAllowedSender(msg) {
+    const allow = _allowlist();
+    if (!allow) {
+      // 名单模块取不到 → 按「未列名」处理，而不是默默放行。
+      await this._say(msg, '发送者允许名单读取失败,这条没有交给 agent。请检查守护进程日志。');
+      return false;
+    }
+    const userId = String(msg.userId || '');
+    const accountStore = this._resolveAccountStore();
+    const opts = accountStore ? { accountStore } : {};
+    const loginUserId = allow.accountLoginUserId(this.accountId, opts);
+    if (allow.isPeerAllowed(this.accountId, userId, opts)) {
+      return true;
+    }
+    const mode = allow.allowMode();
+    this._noteUnlistedSender(userId, loginUserId, msg.messageId, mode.strict);
+    // 档位判定只走 allowMode() —— 与三个展示面读的是同一个函数。直接读
+    // defaults.ILINK_ALLOW_UNLISTED 的真假值会在「常量缺失」时与档位标签分叉。
+    if (!mode.strict) {
+      return true;
+    }
+    await this._say(
+      msg,
+      `你的微信 ID ${userId} 不在本实例允许名单内,这条没有交给 agent。放行:khy wx allow add ${userId}`
+    );
+    return false;
+  }
+
+  /**
+   * 记一条「未列名发送者」。**两条日志分开打**：
+   *   · 结构化元数据(每次都发) —— 现在落在拒答路径上,是发现「主人被误关在门外」的
+   *     唯一证据。少一条,那种事故就查不下去。
+   *     必须传**单个对象**:winston 只把最后一个对象参数当 meta,字符串进 splat 后
+   *     根本不会出现在 console/文件 transport 里(实测 `log.warn('m','a','b',1)` 三个
+   *     标识符全部消失)。元数据里只有标识符、**没有正文** —— 正文是攻击者可控的,
+   *     落盘即二次风险。
+   *   · 模板串聚合计数(每窗口一条) —— 只为降噪,按 (accountId,userId) 计数。
+   * @param {string} userId 入站发送者
+   * @param {string} loginUserId 账号记录里的 userId(可能为空)
+   * @param {number|null} messageId
+   * @param {boolean} strict 当前是否为严格档(措辞要如实反映这一条到底放没放)
+   */
+  _noteUnlistedSender(userId, loginUserId, messageId, strict) {
+    const key = `${this.accountId}|${userId}`;
+    const now = Date.now();
+    const windowMs = Number(defaults.ILINK_ALLOW_WARN_WINDOW_MS) || 600000;
+    const prev = this._allowWarnCounts.get(key);
+    if (!prev || now - prev.since >= windowMs) {
+      // 发送者 id 来自入站报文(攻击者可控)。超量直接清空整表,不给「用假 id 撑爆内存」
+      // 留口子;下一条自然会重新建表。
+      if (this._allowWarnCounts.size > 256) {
+        this._allowWarnCounts.clear();
+      }
+      this._allowWarnCounts.set(key, { count: 1, since: now });
+      log.warn(
+        `ilink: 账号 ${this.accountId} 出现未列名发送者 ${userId}` +
+          `(登录 userId:${loginUserId || '(无记录)'},消息 ${messageId}),${strict ? '已拒答' : '观察期放行'}`
+      );
+    } else {
+      prev.count += 1;
+      log.warn(
+        `ilink: 账号 ${this.accountId} 的未列名发送者 ${userId} 已连续触发 ${prev.count} 次` +
+          (strict ? '(均已拒答)' : '(仍在放行,收紧:khy wx allow env off)')
+      );
+    }
+    log.warn('ilink: 发送者未在允许名单内', {
+      accountId: this.accountId,
+      userId,
+      loginUserId,
+      messageId: messageId == null ? null : messageId,
+    });
   }
 
   /**
@@ -548,6 +774,17 @@ class IlinkDispatcher {
     if (!msg || !msg.userId) {
       return;
     }
+
+    // ⓪ 发送者准入。位置是硬约束：**必须在 context-token 落盘与权限回复插队之前**。
+    //   上下文 token 落盘在前等于替未列名者开通了「主动向他发消息」的通道；
+    //   权限回复插队在前则一条 "y" 就能放行正在跑的工具（那条 y 必须来自列名者）。
+    if (!(await this._isAllowedSender(msg))) {
+      return;
+    }
+
+    // 清掉已过期的草稿:回执作者 + 记下宽限窗口的作者集合。放在任何草稿判定之前,
+    // 迟到的那条「发」才来得及被宽限分支吞掉而不是掉进普通流程。
+    this._sweepDrafts();
 
     // 持久化本轮入站的 context-token(msg.threadId 即 context_token,见 parseInboundMessage),
     // 供后续主动发送(如发绑定二维码)在无 threadId 时 fallback 取用。
@@ -583,6 +820,36 @@ class IlinkDispatcher {
       return;
     }
 
+    // ②½ 草稿:**先按发送者取本发送者的待批草稿**。
+    //     作者绑定是硬约束:队列会积压、可来自同一账号下的多个 peer,拿 FIFO 队首
+    //     就等于让 peer B 的一个「发」放行 peer A 从未批准的私有内容(或把 A 的正文发进
+    //     B 的会话)。
+    //     关键:不匹配时**必须 fall through 而不是丢弃** —— B 的「发」照常当普通 prompt
+    //     进 agent(B 不会莫名少一条消息),A 的草稿纹丝不动。
+    const mineDraft = this._draftQueue && this._draftQueue.pending(msg.userId);
+    const draftVerdict = mineDraft ? core.parseDraftReply(msg.text) : null;
+    if (mineDraft && draftVerdict) {
+      await this._settleDraft(msg, mineDraft, draftVerdict);
+      return;
+    }
+
+    // ②¾ 迟到的答复(草稿已过期)。**作者判定仍然是硬的**,而且要求此刻**没有**待批草稿:
+    //     上一次草稿过期后的宽限窗口内,用户可能已经攒下了新草稿,那时的「发」是新草稿的
+    //     批准,不能被旧窗口吞掉。作者集合与窗口都由 _sweepDrafts 在清条目那一刻写下。
+    if (this._draftQueue && this._draftGraceUntil) {
+      if (Date.now() >= this._draftGraceUntil) {
+        this._draftGraceUntil = 0;
+        this._draftLateOwners.clear();
+      } else if (!mineDraft && this._draftLateOwners.has(String(msg.userId || ''))) {
+        if (core.parseDraftReply(msg.text)) {
+          this._draftGraceUntil = 0;
+          this._draftLateOwners.clear();
+          await this._say(msg, DRAFT_EXPIRED_NOTICE);
+          return;
+        }
+      }
+    }
+
     // ③ 空文本(纯图片/语音等)在阶段 4 之前先如实告知,不静默丢。
     if (!msg.text) {
       if (msg.unsupported && msg.unsupported.length) {
@@ -602,12 +869,10 @@ class IlinkDispatcher {
       return;
     }
 
-    // ⑤½ 自然语言拦截:请求发绑定二维码。在进 AI 队列之前直接发码,
-    //    不该把这类意图当普通 prompt 丢给模型。
-    if (isBindQrIntent(msg.text)) {
-      await this._sendBindQrCode(msg);
-      return;
-    }
+    // ⑤½ 「发我二维码」这类自然语言**不再有直达发码的分支**。
+    //    原来这里在任何 agent 判断之前就把码发出去 —— 整个洞就是这一段。
+    //    现在它与 /qr 一样统一收口到 _sendBindQrCode：默认关（ILINK_QR_SELF_SERVE），
+    //    关时只回一句「去终端跑 khy wx login」。
 
     // ⑤ 排队(串行)。队列有上限,避免有人连发几十条把内存和 token 都撑爆。
 
@@ -651,51 +916,78 @@ class IlinkDispatcher {
           '/clear   — 清空对话历史(随时可用)',
           '/reset   — 同 /clear',
           '/queue   — 查看排队情况',
+          '/draft   — 出站草稿档位(on=逐条批准 / off=直发)',
           '/version — khy 版本',
           '',
           '直接发文字即可对话;需要授权时回 y 允许、n 拒绝。',
+          '草稿态下回复只出预览,回「发」发出、「撤」丢弃、「改 <新内容>」换一稿。',
+          '绑定码只在终端申请:khy wx login。二维码不经过聊天转发。',
+          'SendUserFile 在微信上会真的把文件发出去,凭据/密钥类路径一律拒发(含符号链接指向的)。',
         ].join('\n');
 
       case 'wx':
       case 'conn':
       case 'connection':
-        return this._describeConnection();
+        return this._describeConnection(msg.userId);
 
       case 'ping':
         return '在。';
 
       case 'status':
-        return this._describeRoute(true);
+        return this._describeRoute(true, msg.userId);
 
       case 'model':
-        return this._describeRoute(false);
+        return this._describeRoute(false, msg.userId);
 
       case 'models':
         return this._listAdapters();
 
       case 'clear':
       case 'reset':
-      case 'new':
+      case 'new': {
         // 永远可执行 —— 这是卡死时唯一的逃生口,绝不因为「忙」而挡掉。
         try {
           _resolveSessionControl('getClearHistory')();
-          this._queue.length = 0;
-          return '已清空对话历史(排队中的消息也一并丢弃)。';
+          // 队列是**全账号共享**的串行队列,别人的入站消息同样在里面。收窄成按发送者
+          // 过滤会给这个逃生口引入新的死锁面,所以保持整队清空 —— 但回执必须说清它对谁
+          // 生效,并留一条结构化 warn:被丢的人收不到任何提示,事后只能靠日志查。
+          const droppedMsgs = this._queue.splice(0, this._queue.length);
+          const cleared = this._draftQueue ? this._draftQueue.clear(msg.userId) : 0;
+          if (droppedMsgs.length) {
+            log.warn(
+              `ilink: 账号 ${this.accountId} 的 /clear 清空了共享排队队列,${droppedMsgs.length} 条入站消息未发送也未回复`,
+              {
+                accountId: this.accountId,
+                count: droppedMsgs.length,
+                clearedBy: String(msg.userId || ''),
+                // 只有标识符,没有消息正文 —— 正文是用户的私有内容,不入日志。
+                senders: Array.from(new Set(droppedMsgs.map((m) => String((m && m.userId) || '')))),
+              }
+            );
+          }
+          return [
+            '已清空对话历史(只影响你与我的这一段对话)。',
+            droppedMsgs.length
+              ? `排队队列是全账号共享的,本次一并清空:其中 ${droppedMsgs.length} 条(含他人排队的消息)未发送也未回复。`
+              : '排队队列本次一并清空,当时没有排队消息。',
+            cleared ? `你的待批草稿清了 ${cleared} 条(未发送)。` : '你名下没有待批草稿。',
+          ].join('');
         } catch (e) {
           return `⚠ 清空失败:${(e && e.message) || e}`;
         }
+      }
 
       case 'queue':
-        return (
-          `队列:${this._queue.length} 条等待中${this._running ? '(有一条正在处理)' : ''}` +
-          `${this._pendingPermission ? ',正在等你的授权回复' : ''}。`
-        );
+        return this._describeQueue(msg.userId);
+
+      case 'draft':
+        return this._describeDraftMode(msg, cmd.args);
 
       case 'qr':
       case 'bind':
       case '二维码':
-        // 发送是多步异步(申请→渲染→上传→发图/降级发链接),自己发完,
-        // 返回空串让 _runSlash 的 _say 不再叠发多余文本。
+        // 闸门在 _sendBindQrCode 自己入口(默认关、且要求发送者在允许名单内),
+        // 这里不重复判。多步异步自己发完,返回空串让 _runSlash 的 _say 不叠发。
         await this._sendBindQrCode(msg);
         return '';
 
@@ -712,6 +1004,65 @@ class IlinkDispatcher {
   }
 
   /**
+   * 队列诊断。**必须报出待批草稿**:草稿会静默过期(每发送者上限 N 条),用户卡着等下一句
+   * 话时如果 /queue 只显示「队列空闲」,他就无从判断自己的回复去了哪儿。
+   * 0 条时**不加**那一段 —— 不制造噪音。
+   *
+   * 草稿段只算 `userId` 自己:「发送者:」那一行在作者视角下恒等于「你自己」,保留了
+   * 是为了让人确认「这确实是等我批的那条」;若这里报全量 owners,uA 就能从 /queue 读出
+   * 「还有 uB、uC 在用这个 bot」——与草稿正文无关的标识符泄露(复核员实测)。
+   *
+   * @param {string} [userId] 提问者;缺省按「无此人」= 0 条(fail-closed)
+   * @returns {string}
+   */
+  _describeQueue(userId) {
+    const draft = this._draftStatsFor(userId);
+    return (
+      `队列:${this._queue.length} 条等待中${this._running ? '(有一条正在处理)' : ''}` +
+      `${this._pendingPermission ? ',正在等你的授权回复' : ''}` +
+      `${draft.total ? `,${draft.total} 条草稿待你批准(发送者:${draft.owners.join('/')})` : ''}。`
+    );
+  }
+
+  /**
+   * `/draft [on|off|status]` —— 出站草稿档位。
+   *
+   * 档位必须在这里说出来(规则 2):「我没看到草稿」有三种可能——回复太短、已过期、
+   * 或者档位是直发。不报档位,用户只能去猜第三条。
+   * @param {object} msg
+   * @param {string} args
+   * @returns {string}
+   */
+  _describeDraftMode(msg, args) {
+    const verb = String(args || '').trim().toLowerCase();
+    if (!this._draftQueue) {
+      return (
+        '出站草稿确认已被 KHY_ILINK_DRAFT_CONFIRM=0 关掉(当前是直发:回复直接发出)。' +
+        '改配置并重启守护进程:khy wx start。'
+      );
+    }
+    const userId = String(msg.userId || '');
+    if (verb === 'on' || verb === 'off') {
+      const direct = verb === 'off';
+      if (direct) {
+        this._draftDirectUsers.add(userId);
+      } else {
+        this._draftDirectUsers.delete(userId);
+      }
+      return direct
+        ? '✓ 你的回复改为直接发出(不再逐条等你批准)。只影响你自己,且重启守护进程后失效。发 /draft on 可恢复。'
+        : '✓ 已恢复逐条批准:每轮回复只出预览,回「发」才发出。发 /draft off 可恢复直发。';
+    }
+    if (verb && verb !== 'status') {
+      return `未知参数:/draft ${verb}。可用:/draft on、/draft off、/draft(不带参数看当前档位)。`;
+    }
+    return (
+      `草稿档位:${this._draftActiveFor(userId) ? '逐条批准(草稿态)' : '直发(你已用 /draft off 关掉草稿)'}` +
+      `。${defaults.ILINK_DRAFT_TTL_MS} 秒内没批准就作废,不会自动发。`
+    );
+  }
+
+  /**
    * 连接健康。回答的是「这条链路本身好不好」,而不是「模型是谁」(那是 /status)。
    *
    * 注意能收到这条命令本身就说明入站是通的 —— 所以真正有信息量的是**出站以外**的东西:
@@ -720,20 +1071,25 @@ class IlinkDispatcher {
   /**
    * 「连接健康」自述。实现在 ilinkDispatchDiagnostics（纯文本渲染职责簇）。
    *
+   * @param {string} [userId] 提问者;缺省草稿位恒 0(fail-closed)
    * @returns {string}
    */
-  _describeConnection() {
-    return _diag.describeConnection(this._diagState());
+  _describeConnection(userId) {
+    return _diag.describeConnection(this._diagState(userId));
   }
 
   /**
    * 报告路由。**严格区分「已证实」与「只是配置」**（口径详解见诊断模块）。
    *
+   * `userId` 目前不参与路由渲染,但 state 是同一个生产点 —— 透传它,是为了让「诊断 state
+   * 一律按提问者视角生产」这条纪律没有例外分支可躲(漏传的代价见 `_diagState`)。
+   *
    * @param {boolean} full 是否附带通道/队列状态
+   * @param {string} [userId] 提问者;缺省草稿位恒 0(fail-closed)
    * @returns {string}
    */
-  _describeRoute(full) {
-    return _diag.describeRoute(this._diagState(), full);
+  _describeRoute(full, userId) {
+    return _diag.describeRoute(this._diagState(userId), full);
   }
 
   /** 列出已连通的通道。 */
@@ -802,11 +1158,23 @@ class IlinkDispatcher {
         }
       });
       let reply = normalizeReply(out);
-      // 先投递本轮工具产出的文件,再发文本回复。内部 fail-soft,
-      // 绝不因发文件失败而影响后面的文本回复。
-      await this._deliverFiles(msg, out);
-      reply = _sanitizeGeneratedImageReply(reply, out);
-      await this._say(msg, reply || '(没有产生可发送的回答)');
+      // 草稿态必须换占位语:图**还没发**,说「已发送」是当着人的面撒谎(规则 2)。
+      const drafting = this._draftActiveFor(msg.userId);
+      reply = _sanitizeGeneratedImageReply(
+        reply,
+        out,
+        drafting ? { pendingLabel: '（图片待你批准后发送）' } : {}
+      );
+      if (drafting) {
+        // 草稿态:正文与文件都**不外发**,只登记等批准。登记不等待 —— turn 在这里就结束,
+        // stopTyping 照常在 finally 跑,typing 不会因为等批准而长时间挂着。
+        await this._offerDraft(msg, out, reply);
+      } else {
+        // 先投递本轮工具产出的文件,再发文本回复。内部 fail-soft,
+        // 绝不因发文件失败而影响后面的文本回复。
+        await this._deliverFiles(msg, out);
+        await this._say(msg, reply || '(没有产生可发送的回答)');
+      }
       // 断点续接「写」侧修复:微信路从不触发 clearHistory/eofExit,自动检查点
       // (maybeAutoCheckpointProgress)只在那些路径被调 → PROGRESS.md 永不落盘 →
       // 「学完记不住学到哪」。这里在每轮成功收尾后补一次(叶子自带三道门槛:
@@ -836,6 +1204,162 @@ class IlinkDispatcher {
       defaults,
       log,
     });
+  }
+
+  /**
+   * 这条消息的回复要不要走草稿。三个档位,任何一个取不到都按「要草稿」处理 ——
+   * 安全方向只有一个:拿不准就不发。
+   * @param {string} userId
+   * @returns {boolean}
+   */
+  _draftActiveFor(userId) {
+    if (!this._draftQueue) {
+      return false;
+    }
+    return !this._draftDirectUsers.has(String(userId == null ? '' : userId));
+  }
+
+  /**
+   * 清掉已过期的草稿并逐条回执。**只清不送** —— 没人看过的东西不替他发出去。
+   *
+   * 顺带把「刚被清的作者」记进宽限窗口:过期之后队列里已无条目,迟到的「发」只能靠
+   * 这个集合判定是不是答复;不带作者判定的话,别人一句「发」也会被吞掉。
+   * @returns {number} 清掉几条
+   */
+  _sweepDrafts() {
+    if (!this._draftQueue) {
+      return 0;
+    }
+    const expired = this._draftQueue.expire();
+    if (!expired.length) {
+      return 0;
+    }
+    this._draftGraceUntil = Date.now() + defaults.ILINK_DRAFT_GRACE_MS;
+    for (const d of expired) {
+      this._draftLateOwners.add(String((d.msg && d.msg.userId) || ''));
+      this._say(d.msg, DRAFT_EXPIRED_NOTICE).catch(() => {});
+    }
+    log.warn(
+      `ilink: 账号 ${this.accountId} 有 ${expired.length} 条草稿过期(未发送),已通知作者`,
+      {
+        accountId: this.accountId,
+        count: expired.length,
+        // 只有标识符,没有草稿正文 —— 正文是用户的私有内容,不入日志。
+        owners: Array.from(new Set(expired.map((d) => (d.msg && d.msg.userId) || ''))),
+      }
+    );
+    return expired.length;
+  }
+
+  /**
+   * 登记一条待批草稿并把预览发回给作者。**只登记不等待** —— turn 到此为止。
+   *
+   * @param {object} msg 本轮入站消息(作者本人)
+   * @param {*} out _chatWithWatchdog 的返回(读 toolCallLog)
+   * @param {string|null} reply 正文
+   */
+  async _offerDraft(msg, out, reply) {
+    const body = reply || '(没有产生可发送的回答)';
+    const fileItems = await this._draftFileItems(out);
+    const preview = this._renderDraftPreview(body, fileItems);
+    const { dropped } = this._draftQueue.push(msg.userId, {
+      msg,
+      text: body,
+      files: out && Array.isArray(out.toolCallLog) ? out.toolCallLog : [],
+      fileItems,
+      preview,
+    });
+    if (dropped) {
+      await this._say(
+        dropped.msg,
+        `你之前还有一条草稿没批,已达上限 ${defaults.ILINK_DRAFT_MAX} 条,最旧的那条已被丢弃(未发送)。`
+      );
+    }
+    await this._say(msg, preview);
+  }
+
+  /**
+   * 处理一条草稿裁决。
+   *
+   * 投递顺序:**先文件后正文** —— 草稿下文件必须跟着批准一起走;先发文件等于
+   * 草稿没挡住(文件本身就是最敏感的那部分)。
+   *
+   * @param {object} msg 审批消息(与 draft 同属一个发送者,已在调用方判定过)
+   * @param {object} draft 待批草稿
+   * @param {'send'|'drop'|{edit:string}} verdict
+   */
+  async _settleDraft(msg, draft, verdict) {
+    const userId = String(msg.userId || '');
+    if (verdict === 'send') {
+      this._draftQueue.resolve(userId);
+      await this._deliverDraft(draft);
+      await this._say(msg, '✓ 已发出。以后想直接发,在微信里发 /draft off。');
+      return;
+    }
+    if (verdict === 'drop') {
+      this._draftQueue.resolve(userId);
+      await this._say(msg, '已丢弃,这条没有发出去。');
+      return;
+    }
+    // 改:旧稿**绝不外发**,正文换掉重开一稿。先 resolve 再 push,否则新稿排到队尾,
+    // 用户批的仍是那条旧的。
+    this._draftQueue.resolve(userId);
+    const preview = this._renderDraftPreview(verdict.edit, draft.fileItems);
+    this._draftQueue.push(userId, {
+      msg,
+      text: verdict.edit,
+      files: draft.files,
+      fileItems: draft.fileItems,
+      preview,
+    });
+    await this._say(msg, `已按你的新内容重开一稿,回「发」才发出。\n\n${preview}`);
+  }
+
+  /** 投递一条已批准的草稿:文件在前,正文在后。 */
+  async _deliverDraft(draft) {
+    await this._deliverFiles(draft.msg, { toolCallLog: draft.files });
+    await this._say(draft.msg, draft.text);
+  }
+
+  /** @param {string} text @param {Array<{name:string,bytes?:number}>} fileItems */
+  _renderDraftPreview(text, fileItems) {
+    return core.formatDraftPreview(text, fileItems, {
+      maxChars: defaults.ILINK_DRAFT_PREVIEW_CHARS,
+      ttlMs: defaults.ILINK_DRAFT_TTL_MS,
+      hintTurnOff: true,
+    });
+  }
+
+  /**
+   * 从 toolCallLog 里取出待发文件的展示项:{ name, bytes }。
+   *
+   * **只给 basename + 大小,永不给本地绝对路径** —— 多 peer 场景下「哪个发送者能拿到
+   * 本机哪个文件」本身就是信息。stat 拿不到字节数就留空(预览里显示「大小未知」),
+   * 绝不让一次 stat 失败把整条草稿吞掉。
+   * @param {*} out
+   * @returns {Promise<Array<{name:string, bytes:number|null}>>}
+   */
+  async _draftFileItems(out) {
+    const logArr = out && Array.isArray(out.toolCallLog) ? out.toolCallLog : [];
+    const items = [];
+    for (const entry of logArr) {
+      if (!entry || entry.tool !== 'SendUserFile' || !entry.result || entry.result.success !== true) {
+        continue;
+      }
+      const filePath = entry.result.file || entry.result.file_path;
+      if (!filePath) {
+        continue;
+      }
+      let bytes = null;
+      try {
+        const st = await fs.promises.stat(filePath);
+        bytes = st.size;
+      } catch {
+        /* 取不到大小不影响草稿本身 */
+      }
+      items.push({ name: path.basename(String(filePath)), bytes });
+    }
+    return items;
   }
 
   /**
@@ -892,6 +1416,27 @@ class IlinkDispatcher {
     }
     try {
       return require('../messaging/ilinkBindingStore');
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Resolve the account store (implicit allow layer reads its userId). Injection
+   * wins (test stub); otherwise lazy require. Unresolvable → null (the implicit
+   * layer simply does not match, and the caller keeps its fail-soft behaviour).
+   * @returns {object|null}
+   */
+  _resolveAccountStore() {
+    if (typeof this._getAccountStore === 'function') {
+      try {
+        return this._getAccountStore() || null;
+      } catch {
+        return null;
+      }
+    }
+    try {
+      return require('../messaging/ilinkAccountStore');
     } catch {
       return null;
     }
@@ -1238,6 +1783,11 @@ class IlinkDispatcher {
     // L2 确认串取自网关协议常量(DEFAULT_L2_CONFIRM),不写死字面量;取不到时
     // 回落协议默认 'YES'。allow 同时给 behavior 与 typed,一次满足 L1(behavior)、
     // L2(typed 匹配确认串)、exec(behavior) 三个消费方。
+    //
+    // **这里自己伪造 typed 正是草稿批准不能借用这个形状的原因**:用户只回了一个 `y`,
+    // 却由代码替他补出 L2 要求「必须键入」的确认串 —— ilink 上 L2 的「必须键入」本就空转。
+    // 草稿批准不造这种凭证:它要求的是**内容本身**经本人过目(见 formatDraftPreview),
+    // 批准即投递,不存在「代填确认串」这一步。
     let l2Word = 'YES';
     try {
       const w = require('../../system/syscallGateway').DEFAULT_L2_CONFIRM;
@@ -1277,11 +1827,41 @@ class IlinkDispatcher {
   /**
    * 申请并发送微信绑定二维码。fail-soft:全程不抛。
    *
-   * 流程:申请二维码 → 渲染 PNG → 优先发图;图片发送失败(协议未验证可能
-   * 失败)时降级为发送扫码链接文字。无论哪种形式都附带中文安全提示。
+   * **默认关**（`ILINK_QR_SELF_SERVE`，默认 false）。这是「不做这能力」而不是
+   * 「给它加一道门」：绑定码 = 拿到码的人扫码就能用你的实例，而本仓没有
+   * accountId→userId 的反查路径（`_resolveAccountId` 只解 accountId），做不到
+   * 「只发给本人」——所以默认形态就是不提供这条路径，而不是提供一个判不准的路径。
+   *
+   * 显式打开后仍有两道硬约束：
+   *   1. 发送对象必须**显式在允许名单里**（`isPeerAllowed`）。这里不能用
+   *      `_isAllowedSender`：观察期档下未列名者本来就会放行，那等于没约束。
+   *   2. 图片发不出去时**不再降级发链接** —— 那只是把 `qr.qrcodeUrl` 换个形式外发，
+   *      「关掉降级」才真的关掉了外发。
+   *
+   * 流程:申请二维码 → 渲染 PNG → 发图。发图失败即如实失败。
    * @param {object} msg
    */
   async _sendBindQrCode(msg) {
+    if (!defaults.ILINK_QR_SELF_SERVE) {
+      await this._say(msg, QR_SELF_SERVE_OFF_NOTICE);
+      return;
+    }
+    // 显式允许名单判定（不走 allowMode：观察期档下未列名者会放行，那不是约束）。
+    const allow = _allowlist();
+    const userId = String((msg && msg.userId) || '');
+    if (!allow || !allow.isPeerAllowed(this.accountId, userId)) {
+      log.warn('ilink: 绑定码自助发放 —— 发送者未在允许名单内', {
+        accountId: this.accountId,
+        userId,
+        messageId: msg && msg.messageId != null ? msg.messageId : null,
+      });
+      await this._say(
+        msg,
+        `发送绑定码要求发送者在允许名单里。放行:khy wx allow add ${userId}`
+      );
+      return;
+    }
+
     const login = require('../messaging/ilinkLogin');
     await this._say(msg, '正在申请微信绑定二维码…');
 
@@ -1303,37 +1883,43 @@ class IlinkDispatcher {
       '请只转发给你完全信任的人;二维码有时效,过期需重新申请。',
     ].join('\n');
 
-    // 优先发图:渲染 PNG data URL → 拆出 base64 → Buffer → channel.sendImage。
-    let imageSent = false;
+    // 只发图。渲染或上传失败就如实失败,绝不把 qrcodeUrl 换成文字再发一遍 ——
+    // 那条降级路是「关掉二维码外发」之后最容易漏掉的后门。
+    let buf = null;
     try {
       const dataUrl = await login.renderQrToDataUrl(qr.qrcodeUrl);
       const base64 =
         dataUrl && dataUrl.includes(',') ? dataUrl.slice(dataUrl.indexOf(',') + 1) : '';
-      const buf = base64 ? Buffer.from(base64, 'base64') : null;
-      if (buf && buf.length && this.channel && typeof this.channel.sendImage === 'function') {
+      buf = base64 ? Buffer.from(base64, 'base64') : null;
+    } catch (e) {
+      log.warn(`ilink: 绑定二维码渲染异常:${(e && e.message) || e}`);
+    }
+
+    let sent = false;
+    if (buf && buf.length && this.channel && typeof this.channel.sendImage === 'function') {
+      try {
         const r = await this.channel.sendImage(msg.channelId || msg.userId, buf, {
           threadId: msg.threadId || '',
           fileName: 'khy-bind-qr.png',
         });
-        imageSent = !!(r && r.ok);
-        if (!imageSent) {
-          log.warn(`ilink: 绑定二维码图片发送失败,降级发链接:${r && r.error}`);
+        sent = !!(r && r.ok);
+        if (!sent) {
+          log.warn(`ilink: 绑定二维码图片发送失败(不降级发链接):${r && r.error}`);
         }
+      } catch (e) {
+        log.warn(`ilink: 绑定二维码发送异常(不降级发链接):${(e && e.message) || e}`);
       }
-    } catch (e) {
-      log.warn(`ilink: 绑定二维码渲染/发图异常,降级发链接:${(e && e.message) || e}`);
     }
 
-    if (imageSent) {
-      // 图片已发,追一条安全提示。
+    if (sent) {
       await this._say(msg, safety);
-    } else {
-      // 降级:图片发不出去时,改发扫码链接文字 + 安全提示。
-      await this._say(
-        msg,
-        [`扫码绑定链接:${qr.qrcodeUrl}`, '(图片发送暂不可用,已改发链接)', '', safety].join('\n')
-      );
+      return;
     }
+    await this._say(
+      msg,
+      '⚠ 绑定二维码图片发送失败,没有改发链接（二维码链接同样等同授权入口）。' +
+        '请在本机终端运行 khy wx login，二维码只显示在你的终端。'
+    );
   }
 
   /** 发一句话回原会话。fail-soft:发不出去只记日志。 */
@@ -1351,12 +1937,23 @@ class IlinkDispatcher {
     }
   }
 
-  /** 诊断用。 */
+  /**
+   * 诊断用。草稿位必须在这里:草稿**会静默过期**,只报队列长度的话,用户看到的是
+   * 「队列空闲」而他的回复其实还没发出去。只报计数与发送者 id,不带任何草稿正文。
+   *
+   * **本形状是全量的,且只给进程内诊断**(日志、status 条)。任何要渲染成发给微信用户的
+   * 文本的路径,都必须改走 `_draftStatsFor(userId)` —— 否则哪天把 toJSON 接到 /wx 上,
+   * `draftOwners` 会把全 bot 的发送者 id 原样报给当前这一个发送者。
+   */
   toJSON() {
+    const draft = this._draftStats();
     return {
       queued: this._queue.length,
       running: this._running,
       awaitingPermission: !!this._pendingPermission,
+      draftConfirm: !!this._draftQueue,
+      pendingDrafts: draft.total,
+      draftOwners: draft.owners,
     };
   }
 }
