@@ -448,3 +448,92 @@ test('_deliverFiles: 多文件时单个失败不影响其余(fail-soft 且继续
   assert.strictEqual(d.says.length, 1, '仅第一个失败发一条告知');
   assert.ok(/发送失败/.test(d.says[0]));
 });
+
+// ── 4½ 投递守卫接线(本轮新修的洞)────────────────────────────────────────
+//
+// 闸门在 stat 之前：stat/readFile 都跟随符号链接，只看调用方给的路径字符串等于
+// 让「一个指向凭据的链接」畅通无阻。详见 src/.../channels/ilinkDeliveryGuard.js 文件头。
+
+test('_deliverFiles: 命中禁发清单 —— sendFile/sendImage 零调用,且必须回话', async () => {
+  const ch = fakeFileChannel();
+  const d = mkDispatcher(ch);
+  const p = makeTmpFile('.env', 'SECRET=1');
+  await d._deliverFiles(MSG, { toolCallLog: [sendUserFileEntry(p)] });
+  assert.strictEqual(ch.fileCalls.length, 0, '禁发文件绝不能上传');
+  assert.strictEqual(ch.imageCalls.length, 0);
+  assert.strictEqual(d.says.length, 1, '必须回话 —— 静默丢会让模型换个写法重试');
+  assert.match(d.says[0], /命中禁发规则/);
+  assert.ok(d.says[0].includes('.env'), `应点名文件:${d.says[0]}`);
+});
+
+test('_deliverFiles: 目录前缀类凭据(getBaseHome 之下)—— 零调用', async () => {
+  const ch = fakeFileChannel();
+  const d = mkDispatcher(ch);
+  const baseHome = require('../../../src/utils/dataHome').getBaseHome();
+  const p = path.join(baseHome, 'ilink-guard-probe.txt');
+  fs.writeFileSync(p, 'token');
+  try {
+    await d._deliverFiles(MSG, { toolCallLog: [sendUserFileEntry(p)] });
+    assert.strictEqual(ch.fileCalls.length, 0, '禁发目录下的文件绝不能上传');
+    assert.strictEqual(ch.imageCalls.length, 0);
+    assert.match(d.says[0], /命中禁发规则/);
+  } finally {
+    try { fs.unlinkSync(p); } catch { /* 清理失败不该让测试红 */ }
+  }
+});
+
+test('_deliverFiles: 走链接路径的条目同样零调用(realpath 之后才判定)', async () => {
+  // 本机文件符号链接需要管理员/开发者模式，建不了就用目录 junction —— 两者对
+  // realpath 是同一条路径（都必须跟随），对守卫是完全等价的验证面。
+  const ch = fakeFileChannel();
+  const d = mkDispatcher(ch);
+  const baseHome = require('../../../src/utils/dataHome').getBaseHome();
+  const secret = path.join(baseHome, 'ilink-guard-probe2.txt');
+  fs.writeFileSync(secret, 'token');
+  const allowDir = fs.mkdtempSync(path.join(os.tmpdir(), 'khyos-deliver-link-'));
+  try {
+    fs.symlinkSync(baseHome, path.join(allowDir, 'docs'), 'junction');
+  } catch (err) {
+    fs.unlinkSync(secret);
+    assert.fail(`本机无法建目录链接(junction),用例无法执行:${err.code}`);
+  }
+  const viaLink = path.join(allowDir, 'docs', 'ilink-guard-probe2.txt');
+  try {
+    assert.ok(fs.existsSync(viaLink), '链接路径应可读');
+    await d._deliverFiles(MSG, { toolCallLog: [sendUserFileEntry(viaLink)] });
+    assert.strictEqual(ch.fileCalls.length, 0, '经链接进入的凭据绝不能上传');
+    assert.strictEqual(ch.imageCalls.length, 0);
+    assert.match(d.says[0], /命中禁发规则/);
+  } finally {
+    try { fs.unlinkSync(secret); } catch { /* 清理失败不该让测试红 */ }
+  }
+});
+
+test('_deliverFiles: 混合列表 —— 只拒该拒的,普通文件照发(逐文件隔离)', async () => {  const ch = fakeFileChannel();
+  const d = mkDispatcher(ch);
+  // 正文刻意不写成真的 PEM 头：守卫只判文件名与路径（.pem 在禁发名里），正文不参与
+  // 判定。写成真的 PEM 头会被 pre-commit 的密钥扫描当成真的私钥块拦下，而豁免它
+  // 等于给一条安全测试开一道常设例外。
+  const bad = makeTmpFile('server.pem', 'placeholder body, content is not inspected');
+  const good = makeTmpFile('ok.txt', 'hi');
+  await d._deliverFiles(MSG, { toolCallLog: [sendUserFileEntry(bad), sendUserFileEntry(good)] });
+  assert.strictEqual(ch.fileCalls.length, 1, '只应投递那个普通文件');
+  assert.strictEqual(ch.fileCalls[0].opts.fileName, 'ok.txt');
+  assert.strictEqual(d.says.length, 1);
+  assert.match(d.says[0], /命中禁发规则/);
+});
+
+test('_deliverFiles: 断链/不存在 —— 回话必须说「路径解析失败」,不得混成禁发规则', async () => {
+  const ch = fakeFileChannel();
+  const d = mkDispatcher(ch);
+  const p = path.join(os.tmpdir(), `khyos-deliver-gone-${Date.now()}.txt`);
+  await d._deliverFiles(MSG, { toolCallLog: [sendUserFileEntry(p)] });
+  assert.strictEqual(ch.fileCalls.length, 0);
+  assert.strictEqual(ch.imageCalls.length, 0);
+  assert.strictEqual(d.says.length, 1);
+  assert.match(d.says[0], /路径解析失败/, `实际:${d.says[0]}`);
+  assert.ok(
+    !/命中禁发规则/.test(d.says[0]),
+    `断链与禁发是两件事,混成一句就是含糊状态:${d.says[0]}`
+  );
+});

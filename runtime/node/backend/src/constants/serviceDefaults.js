@@ -232,6 +232,44 @@ const ILINK_DELIVER_TOOLS = String(
   .split(',')
   .map((name) => name.trim())
   .filter(Boolean);
+
+// ── 出站投递守卫（ilinkDeliveryGuard）────────────────────────────────────
+// 文件名禁发清单。逗号分隔的 glob（`*` 通配，大小写不敏感）。
+// 为什么名单是「构造上 fail-closed」的：漏一条 = 漏一个密钥；所以覆盖面宁滥勿缺，
+// 代价是偶尔误伤一个叫 `notes.key` 的普通文件 —— 那只是发不出去，不是安全问题。
+const ILINK_DELIVERY_DENY_NAMES = String(
+  process.env.KHY_ILINK_DELIVERY_DENY_NAMES ||
+    '.env,.env.*,.npmrc,*.pem,*.key,*.p12,*.kdbx,id_rsa*,id_ed25519*,*credentials*,*secret*,' +
+    'permissions.json,tool_permissions.json,ilink.json'
+)
+  .split(',')
+  .map((name) => name.trim().toLowerCase())
+  .filter(Boolean);
+
+// 允许投递的根目录白名单（逗号分隔）。**默认空 = 不限根**：默认「全拒」会把正常投递
+// 一并打死，那不是安全。禁发清单本身是 fail-closed 的，非空时 realpath 必须落在某个
+// 根之下（穿越 `..` 会被 realpath 解析掉，落在根外即拒）。
+const ILINK_DELIVERY_ROOTS = String(process.env.KHY_ILINK_DELIVERY_ROOTS || '')
+  .split(',')
+  .map((p) => p.trim())
+  .filter(Boolean);
+
+// 出站投递的硬链接数上限（nlink）。**默认 1 = 只放行唯一目录项**。
+// 为什么需要它：realpath 对硬链接返回链接自身，于是同一份凭据字节能被硬链接成
+// 允许目录下的 `notes.txt`，前缀规则与文件名规则全部落空（实测外发了 889 字节真实
+// 凭据）。硬链接在禁发目录之外没有「真名」可查 —— 别名即文件名 —— 所以 nlink 是
+// 唯一既便宜又可判的信号（比对 dev/ino 要预先索引所有禁发目录，便宜一个数量级换
+// 不来更强保证：两次 stat 之间照样可换）。取不到 / 非整数 / <1 一律拒。
+// 已知误伤面：被 `git clone --local` 或备份工具硬链接过的普通文件发不出去。调大它
+// = 承认接受「多目录项文件身份不确定」；默认 1 不接受。
+const ILINK_DELIVERY_MAX_NLINKS = parseInt(process.env.KHY_ILINK_DELIVERY_MAX_NLINKS || '1', 10);
+
+// 微信内自助发放绑定码。**默认关**：绑定码 = 别人扫码就能用你的实例，而本仓没有
+// accountId→userId 的反查路径，做不到「只发给本人」。不做这能力，而不是给它加一道门。
+// extended:false：不认单字母 y/n（同一个理由：打错的值走 fallback，而不是翻转一道闸门）。
+const ILINK_QR_SELF_SERVE = parseBoolean(process.env.KHY_ILINK_QR_SELF_SERVE, false, {
+  extended: false,
+});
 const ILINK_SANITIZE_PATHS = !/^(?:0|false|off|no)$/i.test(
   String(process.env.KHY_ILINK_SANITIZE_PATHS || 'true').trim()
 );
@@ -290,6 +328,59 @@ const ILINK_QR_ERROR_CORRECTION = String(
 // per-account-channel-peer：按《账号 + 通道 + 对端》隔离，避免不同微信账号/不同聊天对象的上下文串位。
 const ILINK_SESSION_SCOPE = process.env.KHY_ILINK_SESSION_SCOPE || 'per-account-channel-peer';
 const ILINK_SESSION_SCOPES = ['main', 'per-peer', 'per-channel-peer', 'per-account-channel-peer'];
+// ── 入站发送者准入（默认档：fail-closed）──────────────────────────────────
+// true = 观察期：未列入允许名单的发送者仍放行，只打 warn；
+// false = 严格档：未列名者直接拒答。**默认是 false**。
+//
+// 为什么默认严格：默认放行等于「没配名单 = 全放行」，一次部署疏漏就直接把人接到
+// agent 上。而隐式允许层（账号记录里登录时落盘的 ilink_user_id）本就覆盖主人自己——
+// ilinkLogin._accountFromConfirmed 落 userId，ilinkMessageCodec.parseInboundMessage 取
+// from_user_id，两者相等时主人不需要登记也在名单内。
+//
+// 观察期要显式 KHY_ILINK_ALLOW_UNLISTED=1 才开，且只在窗口期开；用完记得
+// khy wx allow env off 收回（env 名只在这一处与 wx.js 的提示里各出现一次，
+// 不写进档位标签 —— 标签会被三个展示面反复渲染，env 名跟着重复就成了噪音）。
+//
+// extended:false：不认单字母 y/n。手滑一个字母不该翻转一道安全闸门；打错的值走
+// fallback（= 未配置时的默认档），而不是被当成 true/false。
+const ILINK_ALLOW_UNLISTED = parseBoolean(process.env.KHY_ILINK_ALLOW_UNLISTED, false, {
+  extended: false,
+});
+// 跨账号允许名单（逗号或空白分隔）。与隐式层/存储层取并集，不是白名单的替代。
+// 保持字符串形态：分隔规则只有一处（ilinkPeerAllowlist._envPeers）。
+const ILINK_ALLOWED_PEERS = String(process.env.KHY_ILINK_ALLOWED_PEERS || '');
+// 未列名告警的聚合计数窗口。观测用的那条结构化元数据**每次都发**，本窗口只管
+// 那条模板串计数——两者分开打，免得为了降噪把阶段 2 的前置数据也一起降没了。
+const ILINK_ALLOW_WARN_WINDOW_MS = parseInt(
+  process.env.KHY_ILINK_ALLOW_WARN_WINDOW_MS || '600000',
+  10
+);
+
+// ── 出站草稿确认（agent 答完不直接发，先出预览，等本人一句「发」）─────────────
+// true = 每轮回复只发预览，批准（发）后才外发正文与文件；
+// false = 恢复直发（等于本机制不存在）。
+//
+// 为什么 fallback 是 true：危险档是「不发」而不是「发」——不开草稿意味着一句话就替人
+// 往外发，泄密与内容外泄都发生在这里。escape hatch 必须显式写 0。
+// extended:false：不认单字母 y/n（同一个理由：打错的值走 fallback 而不是翻转闸门），
+// 且「发/撤/改」也不在 parsePermissionReply 的 y/n 词表里，两套通道互不误读。
+const ILINK_DRAFT_CONFIRM = parseBoolean(process.env.KHY_ILINK_DRAFT_CONFIRM, true, {
+  extended: false,
+});
+// 草稿存活时长。与 ILINK_PERMISSION_TIMEOUT_MS 同量同值：等审批的心智预期一致。
+// 到期**绝不自动发送**，只清条目并回执——没人看过的东西不该替他发出去。
+const ILINK_DRAFT_TTL_MS = parseInt(process.env.KHY_ILINK_DRAFT_TTL_MS || '120000', 10);
+// 迟到答复的宽限期：草稿过期后发来的「发」要被吞掉，而不是当新 prompt 丢给模型。
+// 独立于 ILINK_PERMISSION_GRACE_MS —— 两个通道共用一个标量会互相踩掉对方的窗口。
+const ILINK_DRAFT_GRACE_MS = parseInt(process.env.KHY_ILINK_DRAFT_GRACE_MS || '15000', 10);
+// 预览正文截断长度（UTF-16 码元）。超长按 formatPermissionPrompt 的纪律截断并标注总字数。
+const ILINK_DRAFT_PREVIEW_CHARS = parseInt(
+  process.env.KHY_ILINK_DRAFT_PREVIEW_CHARS || '800',
+  10
+);
+// 每个发送者最多积压几条待批草稿。草稿不阻塞后续提问，故必须封顶：否则连发十几条
+// 会攒出一长串待批，用户根本分不清哪条是哪条。超出丢最旧并告知。
+const ILINK_DRAFT_MAX = parseInt(process.env.KHY_ILINK_DRAFT_MAX || '3', 10);
 
 // ── 语音输入（Win+H 触发，voiceInputService）────────────────────────────────
 // PowerShell 模拟 Win+H 按键的墙钟上限；超时后 kill 子进程，避免挂死请求。
@@ -611,6 +702,10 @@ const exported = {
   ILINK_CDN_TIMEOUT_MS,
   ILINK_MAX_FILE_SIZE_BYTES,
   ILINK_DELIVER_TOOLS,
+  ILINK_DELIVERY_DENY_NAMES,
+  ILINK_DELIVERY_ROOTS,
+  ILINK_DELIVERY_MAX_NLINKS,
+  ILINK_QR_SELF_SERVE,
   ILINK_SANITIZE_PATHS,
   ILINK_FILE_UPLOAD_TIMEOUT_MS,
   ILINK_BACKOFF_SHORT_MS,
@@ -630,6 +725,14 @@ const exported = {
   ILINK_QR_ERROR_CORRECTION,
   ILINK_SESSION_SCOPE,
   ILINK_SESSION_SCOPES,
+  ILINK_ALLOW_UNLISTED,
+  ILINK_ALLOWED_PEERS,
+  ILINK_ALLOW_WARN_WINDOW_MS,
+  ILINK_DRAFT_CONFIRM,
+  ILINK_DRAFT_TTL_MS,
+  ILINK_DRAFT_GRACE_MS,
+  ILINK_DRAFT_PREVIEW_CHARS,
+  ILINK_DRAFT_MAX,
   // 语音输入（Win+H）单一真源
   VOICE_INPUT_TRIGGER_TIMEOUT_MS,
   VOICE_SILENCE_TIMEOUT_MS,

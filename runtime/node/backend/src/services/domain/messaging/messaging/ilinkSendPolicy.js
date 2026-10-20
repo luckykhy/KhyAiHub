@@ -5,9 +5,9 @@
  *
  * 覆盖:
  *   轮询退避:decideBackoffMs / isSessionExpired / createDedupe
- *   入站意图:parsePermissionReply / parseSlashCommand
+ *   入站意图:parsePermissionReply / parseDraftReply / parseSlashCommand
  *   出站重试:isRetryableSendError / sendBackoffMs
- *   审批渲染:formatPermissionPrompt
+ *   审批渲染:formatPermissionPrompt / formatDraftPreview
  *
  * 协议常量从 ilinkProtocol 取(单向依赖,不回边宿主)。
  *
@@ -232,13 +232,103 @@ function formatPermissionPrompt(info, maxValueLen = 200) {
   return lines.join('\n');
 }
 
+/** 「改 <新内容>」:全角/半角冒号与空格都收,冒号后的内容取原文（不 lowerCase）。 */
+const DRAFT_EDIT_RE = /^改[\s:：]+(.*)$/;
+const DRAFT_SEND_WORDS = new Set(['发', 'send', '发送', '确认']);
+const DRAFT_DROP_WORDS = new Set(['撤', '取消', 'cancel', '丢弃', '放弃']);
+
+/**
+ * 判定一条文本是否在答复「上一条待批草稿」。
+ *
+ * 与 parsePermissionReply **词表零交集**是硬约束:两套通道共用词表的后果是用户回一句
+ * 「n」既可能被当成撤草稿又被当成拒授权,或更糟——两个单槽抢同一条消息。所以这里只认
+ * 「发 / 撤 / 改 <新内容>」;y/yes/是/好/允许/同意/n/否/不/拒绝/不允许 一律 null,
+ * 交给权限通道或当普通 prompt。
+ *
+ * @param {string} text
+ * @returns {'send'|'drop'|{edit:string}|null}
+ */
+function parseDraftReply(text) {
+  const raw = String(text == null ? '' : text).trim();
+  if (!raw) {
+    return null;
+  }
+  const t = raw.toLowerCase().replace(/[。．.!!]+$/, '');
+  if (DRAFT_SEND_WORDS.has(t)) {
+    return 'send';
+  }
+  if (DRAFT_DROP_WORDS.has(t)) {
+    return 'drop';
+  }
+  // 「改」必须带新内容才有意义。裸一个「改」→ null 放行,否则这四个字会被当审批消费掉,
+  // 用户的消息凭空消失。
+  // 匹配走**原文**而不是小写化的 t:捕获组就是用户要的新内容,小写化会把
+  // 「改 Deploy to Prod」变成「deploy to prod」—— 等于替他改了要发的话。
+  const edit = raw.match(DRAFT_EDIT_RE);
+  if (edit) {
+    const body = String(edit[1] || '').trim();
+    if (body) {
+      return { edit: body };
+    }
+  }
+  return null;
+}
+
+/**
+ * 把一轮待发内容渲染成中文预览。
+ *
+ * 截断纪律照 formatPermissionPrompt:正文与文件清单都可能很长,原样发出去既刷屏
+ * 又可能带出不该给这一位发送者看的东西。
+ *
+ * **不回显本地绝对路径**:多 peer 场景下「哪个发送者能拿到这台机器上哪个文件」本身
+ * 就是信息。文件项由调用方给成 { name, bytes } —— 纯叶子不做 stat。
+ *
+ * @param {string} text 正文
+ * @param {Array<{name:string, bytes?:number}>} [files] 附随文件
+ * @param {{maxChars?:number, ttlMs?:number, hintTurnOff?:boolean}} [opts]
+ * @returns {string}
+ */
+function formatDraftPreview(text, files = [], opts = {}) {
+  const body = String(text == null ? '' : text);
+  const maxChars = Number(opts.maxChars) > 0 ? Number(opts.maxChars) : 800;
+  const ttlSec = Math.max(1, Math.round((Number(opts.ttlMs) || 120000) / 1000));
+  const lines = [
+    '【草稿】这条还没发出,回「发」才发出去,回「撤」丢弃,回「改 <新内容>」换一稿。',
+  ];
+
+  if (body.length > maxChars) {
+    lines.push('', `${body.slice(0, maxChars)}…(全文 ${body.length} 字)`);
+  } else {
+    lines.push('', body);
+  }
+
+  const list = (Array.isArray(files) ? files : []).filter((f) => f && f.name);
+  if (list.length) {
+    lines.push('');
+    for (const f of list) {
+      const bytes = Number(f.bytes);
+      const size = Number.isFinite(bytes) && bytes >= 0 ? `${Math.max(1, Math.round(bytes / 1024))}KB` : '大小未知';
+      lines.push(`· ${f.name}(${size})`);
+    }
+  }
+
+  lines.push('');
+  lines.push(`${ttlSec} 秒内没等到批准就作废(不会自动发)。`);
+  if (opts.hintTurnOff) {
+    lines.push('以后不想逐条批准:在微信里发 /draft off。');
+  }
+  return lines.join('\n');
+}
+
 module.exports = {
   decideBackoffMs,
   isSessionExpired,
   createDedupe,
   parsePermissionReply,
+  parseDraftReply,
   parseSlashCommand,
   isRetryableSendError,
   sendBackoffMs,
   formatPermissionPrompt,
+  formatDraftPreview,
 };
