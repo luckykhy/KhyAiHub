@@ -77,6 +77,18 @@ app.commandLine.appendSwitch('disable-gpu-compositing')
 // os/path already imported at module top as node:fs/node:path — reuse via import.meta.
 app.commandLine.appendSwitch('disk-cache-dir', path.join(os.tmpdir(), 'KhyOS-Desktop', 'GPUCache'))
 
+// ── 单实例闸门 ────────────────────────────────────────────────────────────
+// 桌面端是「一个工作区一个窗口」的形态。此前重复双击快捷方式会起第二个完整
+// 实例：第二个主窗 + 第二套 host/scheduler 子进程 + 第二个 remote hub（两个
+// 进程抢同一个监听端口）。锁必须在任何初始化副作用之前拿到 —— whenReady 里的
+// startHostProcess / startSchedulerProcess 一旦跑起来就晚了。
+// 拿不到锁的进程只做一件事：退出。把「用户想看到窗口」交给持有锁那一侧的
+// second-instance 事件（见下方 handler），不在这里建窗。
+const hasSingleInstanceLock = app.requestSingleInstanceLock()
+if (!hasSingleInstanceLock) {
+  app.quit()
+}
+
 // Phase 0a + 0b + 0c: 最小主进程 + IPC handler + host 进程
 // KeyManager (DESIGN-ARCH-091 P1): standalone key/endpoint manager window
 
@@ -86,6 +98,9 @@ let schedulerProcess: ReturnType<typeof fork> | null = null
 // 移动端远程控制（ZC-ALIGN-002 M3）：协议与监听都在后端 src/webRemoteControl/，
 // 这里只持有接线实例，退出时显式 stop。
 let remoteHub: RemoteHub | null = null
+// 主窗引用。second-instance（用户重复点图标）要把它恢复/置前，而不是新建一个 ——
+// createWindow 返回的 win 原先没人保存，所以重复启动除了再建一个窗口别无选择。
+let mainWindow: BrowserWindow | null = null
 
 // Single workspace-root resolver. 打开工作区 / 添加项目 persist the chosen
 // directory to settings.desktopWorkspacePath; every workspace-scoped channel
@@ -654,6 +669,11 @@ async function createWindow() {
       // equivalent (back/forward/reload + did-navigate/did-fail-load events).
       webviewTag: true
     }
+  })
+  // 记下主窗：second-instance 与 activate 都靠它判断「已经有一个了」。
+  mainWindow = win
+  win.on('closed', () => {
+    if (mainWindow === win) mainWindow = null
   })
 
   // Persist window geometry on close so the next launch restores it.
@@ -1419,6 +1439,10 @@ async function createWindow() {
 }
 
 app.whenReady().then(() => {
+  // 没拿到单实例锁的进程已经在上面 app.quit()；这里再挡一道，保证它连
+  // host/scheduler 子进程都不会起（quit 是异步的，不能假设 ready 一定不触发）。
+  if (!hasSingleInstanceLock) return
+
   // Key/Endpoint Manager IPC (DESIGN-ARCH-091 §6) — global, registered once
   registerKeyManagerIpc(ipcMain)
 
@@ -1502,6 +1526,30 @@ app.whenReady().then(() => {
     }
   })
 })
+
+// 第二个实例唯一的职责：把「用户又点了一次图标」翻译成「把已有窗口拿到前面」。
+// 不重建窗口、不重启 host/scheduler —— 那些只属于持有锁的那一个进程。
+// 带 --key-manager 的第二次启动是「打开管理窗」的意图，不该抢主窗焦点。
+if (hasSingleInstanceLock) {
+  app.on('second-instance', (_event, argv) => {
+    if (argv.includes('--key-manager')) {
+      openKeyManagerWindow({ standalone: KEY_MANAGER_STANDALONE })
+      return
+    }
+    const target =
+      mainWindow && !mainWindow.isDestroyed()
+        ? mainWindow
+        : BrowserWindow.getAllWindows().find((w) => !w.isDestroyed())
+    if (!target) {
+      // 窗口全关了但进程还活着（macOS 语义）：补一个，等同 activate。
+      void createWindow()
+      return
+    }
+    if (target.isMinimized()) target.restore()
+    target.show()
+    target.focus()
+  })
+}
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
