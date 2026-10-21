@@ -1225,6 +1225,23 @@
           "constant": "STAGE",
           "file": "scripts/ci/check-doc-claims.js"
         }
+      },
+      {
+        "id": "doc-numbers-guard",
+        "stage": "S1",
+        "previousStage": null,
+        "owner": "governance-team",
+        "script": "scripts/ci/check-doc-numbers.js",
+        "rule": "DOCS-007",
+        "samples": {
+          "observed": 10,
+          "note": "首轮 10 处不符，已逐条人工核实 10/10 为真漂移并全部修正"
+        },
+        "rollback": "摘除 FEATURE-OWNERSHIP 的 doc-numbers-guard 条目 + 摘除 RULES-REGISTRY 的 DOCS-007 条目 + 删除 package.json 的 check:doc-numbers* 别名 + 删除 scripts/ci/check-doc-numbers.js + 删除规范文档。全部为删除，无数据损失。",
+        "executorStage": {
+          "constant": "STAGE",
+          "file": "scripts/ci/check-doc-numbers.js"
+        }
       }
     ]
   }
