@@ -2,7 +2,7 @@
 
 > **索引总领文件** · 本目录唯一入口 · 排序首位 · 结构遵循 [MGMT-STD-001] 第三章
 >
-> 逐条规则卡，格式依据 [MGMT-STD-008] §1。共 98 张，覆盖 §3.1 十大域。
+> 逐条规则卡，格式依据 [MGMT-STD-008] §1。共 99 张，覆盖 §3.1 十大域。
 >
 > **本目录全部文件由 `node scripts/docs/gen-rules-cards.js` 生成，禁止手改。**
 > 字段真源是 `docs/10_规范/registry/RULES-REGISTRY.json`；正文原文在各卡 `ssot` 指向的位置。
@@ -40,7 +40,7 @@
 | [COMMS-003] 全链路追踪标识.md | 全链路追踪标识 | P1 / active |
 | [COMMS-004] 可观察终态与错误码.md | 可观察终态与错误码 | P1 / active |
 | [NAM-002] A2A 与 ACP 命名及术语规范.md | A2A 与 ACP 命名及术语规范 | P1 / active |
-### DOCS（9 张）
+### DOCS（10 张）
 
 | 文件名(含编号) | 核心职责(10字内) | 状态 |
 | --- | --- | --- |
@@ -50,6 +50,7 @@
 | [DOCS-004] README 内容规范.md | README 内容规范 | P2 / active |
 | [DOCS-005] 文档实现状态标注与校验.md | 文档实现状态标注与校验 | P1 / active |
 | [DOCS-006] 文档可执行主张与代码一致.md | 文档可执行主张与代码一致 | P1 / active |
+| [DOCS-007] 文档数值主张与代码一致.md | 文档数值主张与代码一致 | P1 / active |
 | [MGMT-STD-008] 规则编写与管理规范（元规则）.md | 规则编写与管理规范（元规则） | P2 / active |
 | [MOD-004] 治理总纲板块入口.md | 治理总纲板块入口 | P2 / active |
 | [SKILL-001] Skill 编写规范.md | Skill 编写规范 | P1 / active |

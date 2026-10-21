@@ -40,7 +40,7 @@
 | `tests/cli/startupBeats.test.js` | `# tests 17 / pass 17 / fail 0` | 本设计必须保持全绿 |
 | `tests/cli/tui/startupBeatsWiring.test.js` | `# tests 8 / pass 8 / fail 0` | 同上 |
 | `tests/tui/liveFrameGeometry.test.js` | `# tests 1 / pass 0 / fail 1` | **改动前就已红**（他人未提交的新文件 `??`，用 jest 全局 `describe/test` 写在 `tests/tui/` 下，被 `test:node` 的 glob 扫到） |
-| `npm run check:tui-gates` | `FAIL — 226 unique KHY_* tokens (limit 220)` | **改动前就已红**；`scripts/ci/check-tui-gates.js:32` `MAX_GATES = 220`，注释写明「only moves DOWN」 |
+| `npm run check:tui-gates` | `FAIL — 242 unique KHY_* tokens (limit 237)` | **改动前就已红**；`scripts/ci/check-tui-gates.js` `MAX_GATES = 237`，注释写明「only moves DOWN」 |
 | CI 测试选择范围 | `services/backend/package.json:59` `test:node = node --test tests/**/*.test.js`，被 `.github/workflows/pr-gate.yml` 调用 | ⇒ **新增测试必须落地即绿**，本设计不采纳「先落一条红探针」 |
 | ink 真帧套件 | `services/backend/scripts/run-ink-tui-tests.js` 存在（`test:tui` = jest `tests/tui`）；其 `:15` 声称「Used by …the CI 'Ink TUI' job」，但 `.github/workflows/` 内**不存在该 job** | ink TUI 套件当前**零 CI 覆盖**；见 §8 |
 

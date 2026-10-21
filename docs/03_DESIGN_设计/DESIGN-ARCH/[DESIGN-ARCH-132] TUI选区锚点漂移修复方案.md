@@ -231,7 +231,7 @@ T1 松手  → extractText(lines, sel)               ← 内部先 relocate 再 
 - 验收：`selectionAnchorDrift.test.js` 的 **D-02 转绿**。
 
 > ⚠ **刻意不新增 `KHY_SELECT_FP` env** —— 依据是本项目的棘轮守卫（已实测）：
-> `scripts/ci/check-tui-gates.js:32` 的 `MAX_GATES = 220`，注释写明「**only moves DOWN**」，
+> `scripts/ci/check-tui-gates.js` 的 `MAX_GATES = 237`，注释写明「**only moves DOWN**」，
 > 且 `:28-30` 记载 2026-09-18 曾为 `KHY_SELECT*` 一族破例 +8。再开一个新门会**撞棘轮**，
 > 而 `services/backend/src/cli/tui/utils/selectGates.js:18` 又明写「三个子开关……**别合并**」
 > ⇒ 往 `selectGates` 里加第四个门也会与该叶子的设计意图冲突。

@@ -238,7 +238,7 @@ TUI 的 `result` 构造补上 `loopResult` 的终态字段，并至少做两件�
 | ✗ 别做 | 为什么 |
 |---|---|
 | **用「把 `conversationMessages` 直接赋给 `_chatState.messages`」实现回写** | 会把 TUI 的**显示历史**与模型的**工作历史**合并成一个真源。二者语义不同（显示历史需要保留用户看到的完整原文），合并后用户会看到界面历史被摘要顶掉，且丢证据 |
-| **为「让功能变正确」新增 `KHY_AUTO_CONTINUE` 之类 env 门** | `scripts/ci/check-tui-gates.js:32` 的 `MAX_GATES = 220` 是**只降不升**的棘轮；且 `utils/selectGates.js:18` 明写「只有当开关对应一种真实的用户可见权衡时才值得加门」。回滚能力用**可选参数**（`undefined` → 老行为）即可，既不加门、又保住 B-P1 豁免 |
+| **为「让功能变正确」新增 `KHY_AUTO_CONTINUE` 之类 env 门** | `scripts/ci/check-tui-gates.js` 的 `MAX_GATES = 237` 是**只降不升**的棘轮；且 `utils/selectGates.js:18` 明写「只有当开关对应一种真实的用户可见权衡时才值得加门」。回滚能力用**可选参数**（`undefined` → 老行为）即可，既不加门、又保住 B-P1 豁免 |
 | **在 `useQueryBridge` 里就地写续跑 `while` 循环** | 见 §5。逻辑进叶子/纯函数，App 层只负责取数据传进去（`[DESIGN-ARCH-132]` §6 同款纪律）|
 | **只补 UI 文案（「达到上限」）就算修好了** | 文案只解决「可见性」（二期），不解决「压缩不接续」（一期）。二者都要做，但**一期才是长任务能不能活下去的关键** |
 
