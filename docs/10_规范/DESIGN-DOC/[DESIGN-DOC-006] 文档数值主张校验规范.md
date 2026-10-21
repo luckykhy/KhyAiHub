@@ -1,3 +1,9 @@
+
+<!-- DOCS-NUMBERS-EXEMPT: 本文以「过期数值」为题材举例，文中出现的旧值是反例而非当前主张 -->
+
+<!-- IMPL-STATUS: done -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-19 · DOCS-007 自举：本文所述机制已实现 -->
+> **标记依据**：本文规范的是 scripts/ci/check-doc-numbers.js，该脚本已落地并接入 ruleguard（DOCS-007 / doc-numbers-guard / S1 观察者），反向验证通过（注入 MAX_GATES=999 → 计数 0→1 并正确指认真值 237）。
 # [DESIGN-DOC-006] 文档数值主张校验规范
 
 > **规则 ID**：`DOCS-007`　**域**：DOCS　**门档**：pr　**优先级**：P1

@@ -2,6 +2,8 @@
 <!-- IMPL-STATUS: done -->
 <!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-006 自举：本文所述机制已实现 -->
 > **标记依据**：本文规范的是 scripts/ci/check-doc-claims.js，该脚本已落地并接入 ruleguard（DOCS-006 / doc-claims-guard / S1 观察者），反向验证通过（注入端点 8→9）。
+
+<!-- DOCS-CLAIMS-EXEMPT: 本文以「失效端点」为题材举例，文中出现的旧端点是反例而非当前契约 -->
 # [DESIGN-DOC-005] 文档可执行主张校验规范
 
 > **规则 ID**：`DOCS-006`　**域**：DOCS　**门档**：pr　**优先级**：P1

@@ -59,6 +59,21 @@ const listMode = (() => {
 const IN_SCOPE = /^docs\/(03_DESIGN_设计|10_规范)\//;
 const EXCLUDE = /(?:^|\/)00_INDEX_|^docs\/10_规范\/规则卡\//;
 
+/**
+ * 「举这个问题为例」的文档不是在下承诺。
+ * 一份规范文档引用某个过期数值来论证漂移存在，与一份设计文档写下该数值
+ * 声称它是当前真值，是两件事。
+ *
+ * ⚠ 这里**不靠语气词判定**——实测 DOCS-006 与 DOCS-007 两条规范都因此
+ *   把自己的例句判成了漂移（表格行里没有「反例」二字，措辞判定漏掉了）。
+ *   改用**显式声明式豁免**：文档顶部写一行 `<!-- DOCS-NUMBERS-EXEMPT: 理由 -->`，
+ *   该文档的全部数值主张免判。理由必填，可被追责。
+ *
+ * 这与仓库既有的 `// khy-allow-<规则ID>: <理由>` 抑制同构——
+ * 豁免必须是显式且带理由的，不靠机器猜。
+ */
+const EXEMPT_MARK = /<!--\s*DOCS-NUMBERS-EXEMPT:\s*([^\n>]+?)\s*-->/;
+
 /** 代码侧扫描范围。entries/ 与 bundled/ 是构建产物（LAYOUT-005），
  *  bundle.mjs 单个 17MB、压缩后的常量与源码不是一回事，故排除。 */
 const CODE_GLOBS = ['runtime/', 'delivery/', 'apps/', 'scripts/', 'works/ship/', 'tools/'];
@@ -88,19 +103,26 @@ for (const line of gitGrep('(const|let|var) [A-Z][A-Z0-9_]{2,} = [0-9]+', CODE_G
 
 // ── 文档侧：主张 ──
 const findings = [];
-const stats = { docsScanned: 0, claims: 0, judgeable: 0, valueMismatch: 0, lineMismatch: 0 };
+const stats = { docsScanned: 0, exemptDocs: 0, claims: 0, judgeable: 0, valueMismatch: 0, lineMismatch: 0 };
 const raw = gitGrep('[A-Z][A-Z0-9_]{2,} = [0-9]+', ['docs/']);
 
 for (const line of raw.split('\n')) {
   if (!line) continue;
   const dm = /^([^:]+):(\d+):(.*)$/.exec(line);
   if (!dm) continue;
-  const [, file, docLine, text] = dm;
+  const [, file, docLine, lineText] = dm;
   if (!IN_SCOPE.test(file) || EXCLUDE.test(file)) continue;
   if (!file.endsWith('.md')) continue;   // docs/ 下还有 .js 探针脚本，不是文档
+  const text = fs.readFileSync(path.join(repoRoot, file), 'utf8');
+  if (EXEMPT_MARK.test(text)) {
+    stats.exemptDocs += 1;
+    continue;
+  }
   stats.docsScanned += 1;
 
-  for (const cm of text.matchAll(/\b([A-Z][A-Z0-9_]{2,})\b\s*=\s*\**\s*(\d+)/g)) {
+  // 逐行判定：文档里「常量名 = 数值」是一行一对的主张，
+  // 跨行匹配会把同一文件里所有常量与所有数字两两配对，凭空造出大量假漂移。
+  for (const cm of lineText.matchAll(/\b([A-Z][A-Z0-9_]{2,})\b\s*=\s*\**\s*(\d+)/g)) {
     stats.claims += 1;
     const name = cm[1];
     const claimed = Number(cm[2]);
