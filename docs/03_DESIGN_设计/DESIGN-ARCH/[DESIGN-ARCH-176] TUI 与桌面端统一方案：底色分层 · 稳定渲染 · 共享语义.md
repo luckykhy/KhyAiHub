@@ -11,7 +11,7 @@
 > - **不改**任务数据模型、**不改**租约语义、**不改**宽度几何层
 > **上游依赖**：无运行时依赖新增
 > **规则真源**：`[DESIGN-ARCH-102] Khy TUI 统一规则手册` C17 / C18 / §10；桌面端契约见 `desktopUiContract.test.cjs`（D6/D9）
-> **门约束**：`check-tui-gates.js:41` `MAX_GATES = 227`（**只降不升**）⇒ 本方案**不新增 `KHY_*` 门**，
+> **门约束**：`check-tui-gates.js` `MAX_GATES = 237`（**只降不升**）⇒ 本方案**不新增 `KHY_*` 门**，
 > 用户偏好走 `~/.khyquant/tui.json`（`tuiConfig.js:6-7` 明文要求）
 
 ---
@@ -395,7 +395,7 @@ if (depth < 8) {
 新增字段：`appearance.bgMode: 'auto' | 'light' | 'dark'`（默认 `'auto'`）。
 解析沿用 `tuiConfig.js:35-45` 的 fail-soft 形状（文件缺失/损坏 → 全默认，绝不阻断启动）。
 
-⚠ **为什么不加 `KHY_BG_MODE` env 门**：`check-tui-gates.js:41` `MAX_GATES = 227`，
+⚠ **为什么不加 `KHY_BG_MODE` env 门**：`check-tui-gates.js` `MAX_GATES = 237`，
 注释 `:24-40` 明写该值**只降不升**，且 `:28-30` 记载「user prefs 应迁往 `~/.khyquant/tui.json`」
 —— 加 env 门既撞棘轮又违背既定收敛方向。
 
@@ -654,7 +654,7 @@ PromptFrame     Composer          ← 输入各自，模型里没有
 | **从 `updatedAt - createdAt` 反推耗时** | 那是总时长不是已跑时长，**谎称即造假** |
 | **sparkline 历史趋势** | store 无历史采样，**加了就是拿假数据充数** |
 | **去掉已完成行的删除线** | 它是**唯一**语义不可替代的线条（表达「已删去」），且是 CC 对齐项（`taskLineStyle.js:6-11`） |
-| **新增 `KHY_*` 门** | `MAX_GATES = 227` **只降不升**；「让面板变好看」不构成用户可见权衡 |
+| **新增 `KHY_*` 门** | `MAX_GATES = 237` **只降不升**；「让面板变好看」不构成用户可见权衡 |
 | **嵌套 Box 做渐变式层次** | `render-background.js` 嵌套背景是**覆盖**非叠加 |
 | **顺手统一 6 个既有硬编码底色** | §8 #5：独立条目，不在本方案范围 |
 | **PTY / node-pty** | §6.2 三条硬理由，且与约束⑦**直接冲突** |

@@ -312,7 +312,7 @@ runToolUseLoop(userMessage: string, options: {
 
 ### ✗ 3. 新增 `KHY_DESKTOP_AGENT` 之类的 env 开关
 
-**为什么不行**：`scripts/ci/check-tui-gates.js:32` 有 `MAX_GATES = 220`，注释写明 **only moves DOWN**。且按 `[DESIGN-SOURCING-001]` B-P1，「让功能变正确」不构成用户可见权衡——那类回滚能力用**可选参数**（`undefined` → 老行为）即可，既不加 env、又不撞棘轮，**还保住豁免判定**（加了 env 会把本次从"豁免"变成"非豁免"）。
+**为什么不行**：`scripts/ci/check-tui-gates.js` 有 `MAX_GATES = 237`，注释写明 **only moves DOWN**。且按 `[DESIGN-SOURCING-001]` B-P1，「让功能变正确」不构成用户可见权衡——那类回滚能力用**可选参数**（`undefined` → 老行为）即可，既不加 env、又不撞棘轮，**还保住豁免判定**（加了 env 会把本次从"豁免"变成"非豁免"）。
 
 ### ✗ 4. 给 `ToolExecutionPanel` 塞 mock 数据让它"看起来在工作"
 

@@ -272,7 +272,7 @@ function _ensureInit() {
    唯一正确的解是**不 require**。
 
 3. ❌ **加 `KHY_REDIS_LAZY` 之类的 env 门**。
-   门预算 `check-tui-gates.js:41` `MAX_GATES = 227`，当前实测**恰好 227**（顶格，只降不升）。
+   门预算 `check-tui-gates.js` `MAX_GATES = 237`，当前实测**242**（超基线 5 项，只降不升）。
    且本仓已有先例判据（`[DESIGN-ARCH-124]`）：**「让功能变正确」不构成权衡，不值得加门**。
    redis 懒加载是修缺陷，不是给用户一个开关。
 

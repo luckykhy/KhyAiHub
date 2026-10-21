@@ -203,7 +203,7 @@ if (retryPass && retryPass.result) {
    处置：khy provider use <key>  或  把 GATEWAY_PREFERRED_ADAPTER 设为 auto
 ```
 
-> ⚠ **不新增 env 开关** —— `check-tui-gates.js:32` 的 `MAX_GATES = 220` 是**只降不升**的棘轮。本项并入既有 `khy gateway status` 输出即可，零新门。
+> ⚠ **不新增 env 开关** —— `check-tui-gates.js` 的 `MAX_GATES = 237` 是**只降不升**的棘轮。本项并入既有 `khy gateway status` 输出即可，零新门。
 
 ---
 
