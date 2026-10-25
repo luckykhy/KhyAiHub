@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>network/amoo — Amoo 协作层（D2 业务上下文单元） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>network<span class="sep">›</span>amoo<span class="sep">›</span>network/amoo — Amoo 协作层（D2 业务上下文单元）</div>
+      <header class="hero reveal"><h1>network/amoo — Amoo 协作层（D2 业务上下文单元）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#network-amoo-amoo-协作层-d2-业务上下文单元">`network/amoo` — Amoo 协作层（D2 业务上下文单元）</a></li><li class="lvl-2"><a href="#三问-规则-9-process-010">三问（规则 9 / `PROCESS-010`）</a></li><li class="lvl-2"><a href="#契约-改动前必读">契约（改动前必读）</a></li><li class="lvl-3"><a href="#目录与角色">目录与角色</a></li><li class="lvl-3"><a href="#面板供数路径-视图模型-provider">面板供数路径（视图模型 + provider）</a></li><li class="lvl-3"><a href="#d1-接入点-2026-10-21-晚间">D1 接入点（2026-10-21 晚间）</a></li><li class="lvl-3"><a href="#安全边界">安全边界</a></li><li class="lvl-3"><a href="#已知边界-不是缺陷-是事实">已知边界（不是缺陷，是事实）</a></li><li class="lvl-2"><a href="#命令行面-khy-amoo">命令行面（`khy amoo`）</a></li><li class="lvl-2"><a href="#手机侧资产的送达">手机侧资产的送达</a></li><li class="lvl-2"><a href="#环境变量">环境变量</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="network-amoo-amoo-协作层-d2-业务上下文单元"><code>network/amoo</code> — Amoo 协作层（D2 业务上下文单元）<a class="anchor" href="#network-amoo-amoo-协作层-d2-业务上下文单元" aria-label="锚点">#</a></h1>
+<blockquote><p>5-3-1 定位：<strong>D2 / network 上下文</strong>的功能单元（[RESEARCH-018] §3 P3、C-4/C-5 判据见<br><code>docs/10_规范/registry/DOMAIN-DEPS.json</code>）。生命周期记录在同目录 <code>khy.module.json</code>。</p>
+<p>服务对象：<strong>StepX PZ261A（Android 16 / SDK 36）上的手机智能体 Amoo</strong>（包<br><code>com.stepos.ailauncher</code>）与 PC 侧 khy-os。两个方向都在这个单元里，主方向是<br>「Amoo 主动来调 khy-os」。</p></blockquote>
+<h2 id="三问-规则-9-process-010">三问（规则 9 / <code>PROCESS-010</code>）<a class="anchor" href="#三问-规则-9-process-010" aria-label="锚点">#</a></h2>
+<p><strong>谁要？</strong> 人要的是「手机上那个 Amoo 能和 PC 上的 khy-os 互相使唤」，而且两件事<br>都得可审计：谁发的、发了什么、拿到了什么。调用方有三类——① 人（经 CLI<br><code>khy amoo …</code> 与工具面 <code>AmooBridgeTool</code>，2026-10-21 晚间接入，fanIn=2）；<br>② Amoo 自己（经 <code>client/amoo-khy-client.js</code>，方向反过来）；<br>③ 只读状态消费者（<code>runner.collectStatus()</code>）。</p>
+<p><strong>为什么在这里而不是别处？</strong> 这块业务的知识是「这台手机 + 这个桥 + 这个助手」的<br>实测事实，全部集中在一处才有意义：</p>
+<table><thead><tr><th>实测事实（2026-10-21）</th><th>后果</th></tr></thead><tbody><tr><td>StepBridge 装在 <code>com.stepx.amoobridge</code>，真实端口 <strong>8896</strong>（不是 8898），绑定 0.0.0.0</td><td>端口只在本单元出现一次，env 可覆盖</td></tr><tr><td>令牌与信箱在 <code>/sdcard/bridge-amoobridge</code>（不是 <code>/sdcard/bridge</code>）</td><td>路径同上</td></tr><tr><td><strong>lite 版没有无障碍服务、没有任何 UI 工具</strong>（<code>ui_dump</code>/<code>ui_tap</code>/<code>shot_b64</code> 全部 <code>unknown tool</code>，源码 manifest 无 <code>BIND_ACCESSIBILITY_SERVICE</code>）</td><td>读屏与点击<strong>只能走 PC 侧 adb</strong>（<code>uiautomator dump</code> / <code>input tap</code> / <code>input keyevent</code>，shell uid 可用且已验证）</td></tr><tr><td>Amoo 聊天组件 <code>com.stepos.ailauncher/.chat.activity.ChatMainActivity</code>，<strong>无 LAUNCHER 类别</strong></td><td>只能按组件+动作打开，<code>monkey</code>/launcher intent 无效</td></tr><tr><td><code>adb shell input text</code> 不认 CJK，<code>cmd clipboard</code> 未实现，无 ADBIME</td><td><strong>中文只能走桥 clipboard + <code>keyevent 279</code>（粘贴键）</strong>，已验证可粘贴</td></tr><tr><td>空输入框的 <code>text</code> 是<strong>提示语</strong>（待机 <code>发消息或按住说话</code>，聚焦 <code>发消息</code>）</td><td>「输入框空不空」不能看字数，要看是否含载荷</td></tr><tr><td><strong>空会话时 <code>chat_list</code> 铺满整个内容区</strong>（实测 <code>[0,196][1200,2660]</code>），输入框在几何上落在它里面</td><td>抽聊天文本必须按 resource-id 排除输入框/发送按钮，否则提示语会被当成一条聊天气泡</td></tr><tr><td>输入框坐标随软键盘上移约 1300px，发送按钮只在有文本时出现</td><td>所有点击坐标<strong>从当次 dump 现算</strong>，不记忆</td></tr><tr><td><strong>一台手机会在 <code>adb devices</code> 里出现两条记录</strong>（<code>192.168.2.46:33743</code> 与 mDNS/TLS 的 <code>adb-&lt;序列号&gt;._adb-tls-connect._tcp</code>）</td><td>除 <code>connect</code>/<code>devices</code> 外<strong>每条命令都必须带 <code>-s &lt;serial&gt;</code></strong>，否则报 <code>more than one device/emulator</code>（<code>buildRecoverBridgeArgv</code> 曾在这里漏了 serial，真机一跑就暴露）</td></tr><tr><td>桥服务 <code>am force-stop</code> 后不会自恢复；<code>am start -n .../.MainActivity</code> 被 AMS 过期 top-most 记录吞掉；<code>am start-service</code> 因 exported=false 被拒</td><td>唯一恢复路是 <code>monkey -p &lt;pkg&gt; -c android.intent.category.LAUNCHER 1</code>（进程活着但 HTTP 线程卡死时同样有效，已实测）</td></tr><tr><td>33743 是无线调试 <strong>connect</strong> 端口，不是 pairing 端口</td><td><code>adb pair</code> 在本单元<strong>不可表示</strong></td></tr><tr><td>桥 HTTP 每连接一线程，但一次卡死的 <code>clipboard</code> 调用曾把整个服务冻住</td><td>卡死按「桥需要重启」处理，且请求体必须走文件/UTF-8，不能经 shell 重引号</td></tr></tbody></table>
+<p>放 D2 而不是 D3：这是「这一台手机这一个助手」的业务上下文，不是被 30 个模块复用<br>的底座。真正的共享件（<code>utils/envFlagByName</code>、<code>utils/dataHome</code>）在 D3，本单元按<br>允许方向取用。</p>
+<p><strong>怎么验？</strong> 三层，全部命令可复跑：</p>
+<ol><li><strong>语法</strong>：<code>node --check</code> 逐个文件（12 个源文件）。</li><li><strong>单元内共置 node:test</strong>：12 个源文件各有同名同目录测试，共 <strong>169 例</strong>：</li></ol>
+<pre><code class="language-bash">   <span class="hljs-built_in">cd</span> runtime/node/backend
+   node --<span class="hljs-built_in">test</span> src/services/domain/network/amoo/*.test.js \
+              src/services/domain/network/amoo/client/*.test.js</code></pre>
+<p>实测 <code># tests 169 / # pass 169 / # fail 0</code>。隔离方式：<code>HOME</code>/<code>USERPROFILE</code>/<br>   <code>KHY_DATA_HOME</code>/<code>XDG_CONFIG_HOME</code> 钉进 <code>mkdtemp</code>；<code>child_process.spawn</code> 在<br>   require 之前换成 argv 路由器（<code>pair</code> 直接判失败）；桥的 HTTP 端口用<strong>真实<br>   loopback 临时服务器</strong>（ephemeral port）；provider 测试的 runner / liveness /<br>   时钟全注入假件。不打真手机、不发真消息。</p>
+<ol><li><strong>真机只读联验</strong>（2026-10-21，<code>KHY_AMOO_ADB_PATH</code> 指向本机 platform-tools）：</li></ol>
+<p><code>khy amoo status</code> 回报 <code>设备已连接 / forward 已建 / 桥在线 22 工具 / 令牌 5500…8d30 /<br>   当前界面 18 节点</code>；<code>khy amoo plan &lt;文本&gt;</code> 渲染出 10 步下发计划且<strong>一条 adb 都没发</strong>。<br>   <strong>全程未向 Amoo 发送任何消息</strong>（<code>khy amoo send</code> 需人显式 <code>--confirm</code>，属用户的手机）。</p>
+<ol><li><strong>守卫</strong>：<code>node scripts/ci/check-repo-layout.js</code>（functional-unit / entry-buffer），</li></ol>
+<p><code>node scripts/ci/check-agent-rules.js &lt;本目录&gt;</code>（RUNTIME-001 零硬编码端点/绝对<br>   路径、no-opaque-status、no-hard-timeout-kill、no-unbounded-loop）。</p>
+<h2 id="契约-改动前必读">契约（改动前必读）<a class="anchor" href="#契约-改动前必读" aria-label="锚点">#</a></h2>
+<h3 id="目录与角色">目录与角色<a class="anchor" href="#目录与角色" aria-label="锚点">#</a></h3>
+<pre><code>amoo/
+├── amooBridgeConfig.js     纯叶子：所有端口/路径/超时的 env 解析 + 来源记账
+├── amooBridgePolicy.js     纯叶子：桥工具允许清单、参数校验、confirm 门、adb argv 构造器
+├── amooUiSnapshot.js       纯叶子：uiautomator XML 解析、坐标现算、回复抽取与稳定判据
+├── amooDispatchPlan.js     纯叶子：下发步骤序、轮询退避、停止条件、中文渲染（含 stopReason 映射）
+├── amooBridgeClient.js     薄 IO：唯一 spawn/开 socket 的文件（adb + 桥 HTTP + 令牌）
+├── amooMailbox.js          薄 IO：文件信箱兜底通道
+├── amooDispatchRunner.js   薄 IO：一次「任务进、答复出」的编排（可选 onStep/onPoll 进度钩子）
+├── amooCliPlan.js          纯叶子：`khy amoo` 的 argv 解析与中文文案
+├── amooPanelViewModel.js   纯叶子：collectStatus 快照 + dispatch 结果 → 面板行模型（固定 7 行）
+├── amooStatusProvider.js   薄 IO：状态 TTL 缓存供数器（单飞/完成时刻起算/deadline/忙位停读屏）
+├── index.js                星形装配 + 测试复位（provider/视图模型只导出引用，不建单例）
+├── client/
+│   └── amooKhyClient.js    手机侧可执行资产（单文件零依赖，Amoo 工作区里跑）
+└── prompts/
+    └── amooPrompts.md      中文提示词包 K0–K8 + 交接记忆模板 + 连通速查</code></pre>
+<p><strong>新逻辑一律进纯叶子，不要往 IO shell 里加判断。</strong> 判据（argv、参数校验、风险档、<br>文案）必须能在<strong>不接手机</strong>的情况下断言。</p>
+<h3 id="面板供数路径-视图模型-provider">面板供数路径（视图模型 + provider）<a class="anchor" href="#面板供数路径-视图模型-provider" aria-label="锚点">#</a></h3>
+<p>面板（CC TUI 的 <code>Cc*</code> 组件）<strong>不直接调 collectStatus()</strong>，链路是：</p>
+<pre><code>useAmooStatus（hook，轮询，间隔唯一真源 utils/ccTimers 的 TIMING）
+   └─ AmooStatusProvider（amooStatusProvider.js，唯一碰 IO 的外壳）
+        ├─ runner.collectStatus()         全量快照（实测 3.1s ~ 28s）
+        ├─ liveness.probe()               忙位期间只读 status.json 心跳（~180ms）
+        └─ buildAmooPanelModel()          纯叶子，快照 + 结果 → 固定 7 行 + dispatch 段</code></pre>
+<p>四条从实测逼出来的纪律（缺一条就会出事）：<strong>单飞</strong>（并发轮询会叠成真实 adb.exe<br>子进程堆积）、<strong>TTL 从完成时刻起算</strong>（28s 的坏样本会让「发起时刻起算」永久排队）、<br><strong>outer deadline + 序号判废</strong>（deadline 杀不掉已 spawn 的 adb，晚到的结果不许覆盖<br>新快照）、<strong>忙位停读屏</strong>（uiautomator dump 是设备级争用资源，面板的 dump 和 dispatch<br>自己的 dump 同时跑会把成功的下发伪造成 <code>screen_unreadable</code>）。失败语义：一次<br>collectStatus 失败不抛不清空，返回上一份好快照 + 陈旧徽章。</p>
+<p><strong>当前状态</strong>：provider 与视图模型已落地并有共置测试（48 例），但<strong>还没有消费方</strong>——<br><code>src/cli/tui/</code> 侧的 hook（<code>useAmooStatus</code>：轮询 + <code>TIMING.mcp.interval</code> 间隔 +<br>KHY_CC_TUI 门控）与 <code>Cc*</code> 面板是下一批的事，所以 fanIn 仍记 2。dispatch 的实时进度<br>由 <code>dispatchTask({ onStep, onPoll })</code> 喂给 provider 的 <code>noteStep</code> / <code>notePoll</code> /<br><code>noteDispatchResult</code>（三个都零 IO，只入队重画）。</p>
+<h3 id="d1-接入点-2026-10-21-晚间">D1 接入点（2026-10-21 晚间）<a class="anchor" href="#d1-接入点-2026-10-21-晚间" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>消费方</th><th>形态</th><th>入口</th></tr></thead><tbody><tr><td><code>src/cli/handlers/amoo.js</code></td><td>`khy amoo &lt;status\</td><td>plan\</td></tr><tr><td><code>src/tools/AmooBridgeTool/index.js</code></td><td>AI 工具 <code>AmooBridge</code>（risk high、shouldDefer）</td><td>经 index.js 单点；门控读 amooBridgeConfig 的 gates</td></tr></tbody></table>
+<p><code>src/cli/**</code> 是 D1 root 且 <code>commandAutoRegistry</code> 只扫 <code>handlers/</code> 下的<strong>扁平</strong><br><code>.js</code>，所以这两个 handler 无法像本单元一样带 <code>khy.module.json</code>——<br><code>check-repo-layout.js</code> 的 entry-buffer 因此各记一条 manifest-missing（基线本就超限，<br>见该守卫的 remaining reds）。</p>
+<h3 id="安全边界">安全边界<a class="anchor" href="#安全边界" aria-label="锚点">#</a></h3>
+<ul><li><strong>执行闸门</strong>：<code>dispatchTask({ confirm: true })</code> 才真的动手机；缺 confirm 只返回</li></ul>
+<p>计划（<code>plan</code> + <code>planText</code>），一条 adb 都不发。总闸 <code>KHY_AMOO_BRIDGE_ENABLED</code><br>  （默认开）、信箱闸 <code>KHY_AMOO_MAILBOX_ENABLED</code>（默认开）。</p>
+<ul><li><strong><code>exec</code> / <code>rm</code> 需要 <code>confirm: true</code></strong>，否则只回计划（同 DeviceAppsTool 契约）。</li><li><strong>令牌是秘密</strong>：只在 <code>readToken()</code> 的返回值里出现一次，永不进日志、状态行、</li></ul>
+<p>结果体；对外一律 <code>maskToken()</code>（<code>5500…8d30</code>）。测试对每条返回路径断言不含原文。</p>
+<ul><li><strong>绝不 <code>adb pair</code></strong>：argv 构造器只产出 <code>connect</code>；测试对每次 spawn 断言无 <code>pair</code>。</li><li><strong>子进程只用 argv 数组</strong>，永不拼 shell 字符串；杀进程走 <code>safeKill</code></li></ul>
+<p>（<code>src/tools/platformUtils</code>，Windows 上 <code>taskkill /T /F</code>）。</p>
+<ul><li><strong>SSRF 卫兵不适用</strong>：<code>services/urlSafety.js</code> 按设计拒绝回环/私网字面量，而本单元</li></ul>
+<p>打的正是 <code>adb forward</code> 出来的回环地址——刻意不走那条路，理由记在<br>  <code>amooBridgeClient.js</code> 文件头。</p>
+<h3 id="已知边界-不是缺陷-是事实">已知边界（不是缺陷，是事实）<a class="anchor" href="#已知边界-不是缺陷-是事实" aria-label="锚点">#</a></h3>
+<ul><li><strong>lite 桥没有任何 UI 工具</strong>：本单元不提供、也不承诺 UI 自动化。读屏/点击走 PC 侧</li></ul>
+<p>adb；要真正的 <code>ui_dump</code>/<code>shot_b64</code> 需要 2.x 完整版 APK（README 自述「2.0 以后的<br>  还没有压测完」），由人提供后再议。</p>
+<ul><li><strong>方向 2（PC 驱动 Amoo）天生不能无人值守</strong>：Amoo 必须在前台，平台不允许助手打开</li></ul>
+<p>侧载应用（桥服务死了只能用户手点）。日常走方向 1。</p>
+<ul><li><strong><code>exec</code> 的 timeout 基本无效</strong>（先读 stdout 到 EOF 才进退出轮询），且一个卡死的</li></ul>
+<p>exec 会冻结整个文件信箱——所以优先 HTTP <code>/call</code>，信箱只作兜底。</p>
+<ul><li><strong>fanIn=2</strong>：两个 D1 消费方（<code>cli/handlers/amoo.js</code>、<code>src/tools/AmooBridgeTool/index.js</code>）</li></ul>
+<p>都经 index.js 单点进入，未形成第二条装配路径。行为契约尚未经真实使用期检验，<br>  所以单元仍记 <code>staged</code>。</p>
+<ul><li><strong><code>src/tools/**</code> 不在 DOMAIN-DEPS 任何 roots 里</strong>：<code>safeKill</code> 这一条出边守卫</li></ul>
+<p>看不见（remote 单元已第三次撞上同一登记盲区）。登记缺口属人的裁决，本清单不<br>  自抬 <code>mayDependOn</code>。</p>
+<h2 id="命令行面-khy-amoo">命令行面（<code>khy amoo</code>）<a class="anchor" href="#命令行面-khy-amoo" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">node runtime/node/backend/bin/khy.js amoo status              <span class="hljs-comment"># adb/转发/桥/令牌/当前界面</span>
+node runtime/node/backend/bin/khy.js amoo plan &lt;任务文本&gt;      <span class="hljs-comment"># 只出计划，一条 adb 都不发</span>
+node runtime/node/backend/bin/khy.js amoo send &lt;任务文本&gt; --confirm   <span class="hljs-comment"># 真的输入并发送（需确认）</span>
+node runtime/node/backend/bin/khy.js amoo client <span class="hljs-built_in">help</span>         <span class="hljs-comment"># 转发给手机侧客户端</span>
+node runtime/node/backend/bin/khy.js amoo prompts             <span class="hljs-comment"># 提示词包位置</span></code></pre>
+<p><code>send</code> 的 confirm 门在 <code>amooDispatchRunner.dispatchTask</code> 里，命令行只是把它透传；<br><code>--help</code> 会被 <code>bin/khy.js</code> 的快速路径变成命令卡片（这是全仓统一行为），所以手机侧<br>客户端的用法走 <code>khy amoo client help</code>。</p>
+<h2 id="手机侧资产的送达">手机侧资产的送达<a class="anchor" href="#手机侧资产的送达" aria-label="锚点">#</a></h2>
+<p><code>client/amooKhyClient.js</code> 是给 Amoo 的单文件零依赖 CLI（Node 22+）。三条送达路，<br>优先顺序：</p>
+<ol><li><strong><code>adb push</code>（首次，首选）</strong>：推到 <code>/sdcard/Download/</code>，用设备侧 <code>sha256sum</code></li></ol>
+<p>核对字节数与 SHA-256，再从 Amoo 附件入口选文件（附件会原样落盘）。</p>
+<ol><li><strong>附件（日常更新）</strong>：复制成 <code>amoo-khy-client.js.txt</code>（手机文件选择器不显示</li></ol>
+<p><code>.js</code>），经微信/数据线送到手机 Download，Amoo 附件入口选文件。<strong>必须比对<br>   SHA-256</strong>，不一致立即回到 1。</p>
+<ol><li><strong>桥 <code>write</code> / 文件信箱</strong>：桥装好并授权后，PC 可用桥把脚本推到</li></ol>
+<p><code>/sdcard/Download/</code>；服务死时改走 <code>cmd_&lt;id&gt;.json</code> 信箱。</p>
+<p>提示词（K0–K8）、交接记忆模板、连通速查都在 <code>prompts/amooPrompts.md</code>。</p>
+<h2 id="环境变量">环境变量<a class="anchor" href="#环境变量" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>变量</th><th>默认</th><th>说明</th></tr></thead><tbody><tr><td><code>KHY_AMOO_ADB_PATH</code></td><td>走 PATH 找 <code>adb</code></td><td>找不到时报「请设置本变量」，不硬编码任何盘符</td></tr><tr><td><code>KHY_AMOO_DEVICE_SERIAL</code></td><td><code>192.168.2.46:33743</code></td><td>设备序列号（connect 形式）</td></tr><tr><td><code>KHY_AMOO_CONNECT_PORT</code></td><td><code>33743</code></td><td><code>adb connect</code> 用的端口</td></tr><tr><td><code>KHY_AMOO_BRIDGE_PORT</code></td><td><code>8896</code></td><td>桥真实 HTTP 端口</td></tr><tr><td><code>KHY_AMOO_BRIDGE_ALIAS_PORT</code></td><td><code>8898</code></td><td>forward 别名端口（兼容按简报写的脚本）</td></tr><tr><td><code>KHY_AMOO_BRIDGE_TRANSPORT</code></td><td><code>forward</code></td><td><code>forward</code> 走回环，<code>lan</code> 直连设备 IP</td></tr><tr><td><code>KHY_AMOO_BRIDGE_HOST</code></td><td><code>127.0.0.1</code></td><td>forward 模式下的主机</td></tr><tr><td><code>KHY_AMOO_BRIDGE_DIR</code></td><td><code>/sdcard/bridge-amoobridge</code></td><td>令牌 + 信箱目录</td></tr><tr><td><code>KHY_AMOO_INPUT_HINTS</code></td><td><code>发消息或按住说话,发消息</code></td><td>输入框提示语，判空用</td></tr><tr><td><code>KHY_AMOO_POLL_INTERVAL_MS</code> / <code>_MAX_INTERVAL_MS</code> / <code>_MAX_ROUNDS</code></td><td><code>3000</code> / <code>8000</code> / <code>40</code></td><td>轮询策略</td></tr><tr><td><code>KHY_AMOO_REPLY_STABLE_ROUNDS</code></td><td><code>3</code></td><td>连续几轮文本不变判定完成</td></tr><tr><td><code>KHY_AMOO_BRIDGE_ENABLED</code> / <code>KHY_AMOO_MAILBOX_ENABLED</code></td><td>开 / 开</td><td>两层闸门</td></tr></tbody></table>
+<hr>
+<p><em>最后更新：2026-10-21（首版，随 Amoo 协作层落地）</em></p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/services/domain/network/amoo/prompts/amooPrompts.html"><div class="dir">← 上一篇</div><div class="ttl">Amoo 协作提示词包（khy-os 侧）</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/services/domain/network/dependency/README.html"><div class="dir">下一篇 →</div><div class="ttl">dependency — Agent 依赖自愈子系统</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/network/amoo/README.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

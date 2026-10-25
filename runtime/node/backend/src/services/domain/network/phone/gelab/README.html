@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>phone/gelab — GELab-Zero 动作文法接入 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>network<span class="sep">›</span>phone<span class="sep">›</span>gelab<span class="sep">›</span>phone/gelab — GELab-Zero 动作文法接入</div>
+      <header class="hero reveal"><h1>phone/gelab — GELab-Zero 动作文法接入</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#phone-gelab-gelab-zero-动作文法接入">phone/gelab — GELab-Zero 动作文法接入</a></li><li class="lvl-2"><a href="#谁要">谁要</a></li><li class="lvl-2"><a href="#为什么">为什么</a></li><li class="lvl-3"><a href="#为什么执行走桥而不走-pc-侧-adb-argv">为什么执行走桥而不走 PC 侧 adb argv</a></li><li class="lvl-3"><a href="#为什么模型按需拉取-绝不内置">为什么模型按需拉取、绝不内置</a></li><li class="lvl-2"><a href="#裁定记录-2026-10-23-人裁决-ai-提案">裁定记录（2026-10-23，人裁决，AI 提案）</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="phone-gelab-gelab-zero-动作文法接入">phone/gelab — GELab-Zero 动作文法接入<a class="anchor" href="#phone-gelab-gelab-zero-动作文法接入" aria-label="锚点">#</a></h1>
+<h2 id="谁要">谁要<a class="anchor" href="#谁要" aria-label="锚点">#</a></h2>
+<p>想让一个 GUI agent 模型（默认 StepFun GELab-Zero-4B）自己操作这台手机的人。<br>典型触发：<code>PhoneGuiAgent</code> 工具的 <code>start</code> action，或 <code>khy phone gui</code>。</p>
+<h2 id="为什么">为什么<a class="anchor" href="#为什么" aria-label="锚点">#</a></h2>
+<p>上游 <a href="https://github.com/stepfun-ai/gelab-zero" target="_blank" rel="noopener">stepfun-ai/gelab-zero</a>（STEP-GUI）把 GUI<br>agent 的脏活做完了，但它的执行层是 <strong>PC 侧 adb 脚本</strong>：<code>adb shell input tap</code> 那一套。<br>本仓早就有一条更好的执行通道——手机内的 HTTP 桥（8896，39 个工具，含无障碍手势）。<br>这个单元就是把两者的接缝做出来：</p>
+<ul><li>模型说的语言 → <code>gelabActionGrammar</code>（0-1000 归一化坐标 + 11 个动作的文法解析）</li><li>归一化坐标 → 像素 → 桥工具调用 → <code>gelabActionMap</code>（唯一翻译表）</li><li>截图/观测 → <code>gelabScreenSource</code>（桥优先，adb 兜底）</li><li>执行与回报 → <code>gelabActuator</code> / <code>gelabAgentRunner</code></li></ul>
+<p><strong>关键设计：模型的坐标是 0-1000 归一化的</strong>，所以它不需要知道这台机器是 1200×2670。<br>旋屏、换机、折叠都不改 prompt，只改 <code>geometry</code>。</p>
+<h3 id="为什么执行走桥而不走-pc-侧-adb-argv">为什么执行走桥而不走 PC 侧 adb argv<a class="anchor" href="#为什么执行走桥而不走-pc-侧-adb-argv" aria-label="锚点">#</a></h3>
+<p>同一个动作，走桥拿到的比裸 argv 多：参数校验、UI 准入门（<code>ui_tool_unavailable</code>）、<br>confirm 门、mailbox 兜底。在「模型自主点用户手机」这个场景里，这不是洁癖，是安全边界。<br>adb 只作为桥不可用时的后端 B，且 argv 一律经 <code>phoneBridgePolicy.buildAdbArgv</code> 生成。</p>
+<h3 id="为什么模型按需拉取-绝不内置">为什么模型按需拉取、绝不内置<a class="anchor" href="#为什么模型按需拉取-绝不内置" aria-label="锚点">#</a></h3>
+<p>模型 8.88 GB（bf16），内置进服务器或 APK 都荒谬。整条拉取链由<br><code>KHY_LOCAL_MODEL_ON_DEMAND</code> 门控、<strong>默认关</strong>，<code>PhoneGuiAgent</code> 的 <code>plan</code> action 负责把<br>「怎么开、怎么拉」原样告诉用户。本单元因此<strong>不 require</strong> provisioner（D1）——那是<br>enforced 规则 <code>d2-no-reach-into-d1</code> 的要求，也是分层本来的样子。</p>
+<h2 id="裁定记录-2026-10-23-人裁决-ai-提案">裁定记录（2026-10-23，人裁决，AI 提案）<a class="anchor" href="#裁定记录-2026-10-23-人裁决-ai-提案" aria-label="锚点">#</a></h2>
+<p>七条待裁决问题的结论。每条都标了依据，方便日后条件变了重新裁。</p>
+<table><thead><tr><th>#</th><th>问题</th><th>裁定</th><th>依据</th></tr></thead><tbody><tr><td>1</td><td>默认 prompt 按哪代文法</td><td><strong>0920 老文法（9 动作）</strong>，adv 作可切</td><td>出货的 <code>mcp_server_config.yaml</code> 写 <code>task_type: &quot;parser_0922_summary&quot;</code>，而 <code>parser_factory.py</code> 把这个别名映射到 <code>copilot_tools.parser_0920_summary</code>。<strong>别名是陷阱</strong>：名字说 0922，类是 0920。直接后果：<code>ABORT</code> 的原因在 <code>value</code>（不是无必填）、<code>WAIT</code> 的 value 是<strong>秒</strong>（不是毫秒启发式）、<code>TYPE</code> 要求 value+point。</td></tr><tr><td>2</td><td>截图尺寸</td><td><strong>等比缩放，不做 728×728 正方体</strong></td><td>上游 <code>image_preprocess.target_image_size: [728,728]</code> 会把 1200×2670 拉变形；Qwen3-VL 原生动态分辨率，等比大概率不差。且正方体需要给 <code>shot_b64</code> 加 w/h，<strong>要动手机侧</strong>，与「手机侧 0 改动」冲突。上线前跑两轮 A/B 再定。</td></tr><tr><td>3</td><td>full 还是 lite 构建</td><td><strong>full（<code>ui:true</code> 可达）</strong>，后端 A 可达</td><td>真机实测。lite 下 adb-screencap 通道仍可验。</td></tr><tr><td>4</td><td><code>KhyAccessibilityService.kt</code> 2 秒 latch 修不修</td><td><strong>修，但拆成独立批次、排在 gelab 之前</strong></td><td>该 bug 真实且与 gelab 无耦合：<code>latch.await(2, TimeUnit.SECONDS)</code> 与 <code>durationMs</code> 解耦，ms&gt;1900 必误报「手势被系统取消」。但它动手机侧唯一一个文件，会破坏 gelab 批次的「手机侧 0 改动」CI 断言。先修它，gelab 批次才干净。修完 <code>longpressMaxMs</code> 才放开到 10000。</td></tr><tr><td>5</td><td>B6：prompt 放不放仓库</td><td><strong>内置一段自写中文技能文本 + <code>KHY_GELAB_PROMPT_FILE</code> 可一指切到用户自备上游原文</strong></td><td>B6 第 4 条禁的是第三方代码进登记材料；逐字搬上游 prompt 撞这条，自写不撞。留文件逃逸通道，团队若改变主意不用改代码。</td></tr><tr><td>6</td><td>父 <code>phone/khy.module.json</code> 的 <code>tests</code> 数组变旧</td><td><strong>不改父 manifest</strong></td><td><code>check-repo-layout</code> 不校验该数组；嵌套 manifest 已覆盖本目录，<code>_lifecycle_note</code> 里写明了为什么刻意不改（守 B3）。</td></tr><tr><td>7</td><td><code>KHY_GELAB_AGENT_TOOL</code> 走 config 叶子还是 flagRegistry</td><td><strong>只走 config 叶子</strong></td><td>照 <code>AmooBridgeTool/index.js</code> 先例。同一个开关两个真源，正是该先例要避的；<code>unregistered-child</code> 仅可选 warning、默认不进 CI。</td></tr></tbody></table>
+<p><strong>上游参数对齐</strong>（裁定 1 的附带产物，全部来自 <code>mcp_server_config.yaml</code> 实测）：<br><code>temperature 0.1</code>、<code>top_p 0.95</code>、<code>max_tokens 4096</code>、<code>delay_after_capture 2s</code>——<br>本单元默认值逐项对齐。唯一刻意偏离：上游 <code>max_steps: 400</code>，本单元默认 <strong>100</strong><br>（工具 schema 上限 200；400 步是「模型无人看管地点真人手机 400 次」）。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code>cd runtime/node/backend
+node --test src/services/domain/network/phone/gelab/*.test.js</code></pre>
+<p>三个守卫重点：</p>
+<ul><li><code>check-model-list-truth</code> — provisioner 不得直连 <code>ollamaAdapter.listModels()</code>，</li></ul>
+<p>只能用 <code>ollamaModelManager.listModels()</code>。</p>
+<ul><li><code>check-model-hardcoding</code> — 模型名只在 <code>gelabConfig.js</code> 出现一次。</li><li><code>check-agent-rules</code> Rule 3 — deadline 必须是循环内按步检查的墙钟，</li></ul>
+<p>绝不 <code>setTimeout</code> 杀进程。</p>
+<p><strong>手机侧零改动</strong>：<code>delivery/mobile/</code> 下所有文件对本单元只读。<br><code>git diff --stat -- delivery/mobile/</code> 必须为空。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../../../runtime/node/backend/src/services/domain/network/externalApps/README.html"><div class="dir">← 上一篇</div><div class="ttl">network/externalApps — 外部 AI 软件的配置读写适配层（D2 业务上下文单元）</div></a><a class="next" href="../../../../../../../../../runtime/node/backend/src/services/domain/network/phone/README.html"><div class="dir">下一篇 →</div><div class="ttl">phone — 手机桥接单元（khy-os → StepBridge）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/network/phone/gelab/README.html";</script>
+<script src="../../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

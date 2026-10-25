@@ -1,0 +1,17 @@
+{
+  "name": "phone-gelab",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "fanIn": 1,
+  "tests": [
+    "services/backend/src/services/domain/network/phone/gelab/gelabConfig.test.js",
+    "services/backend/src/services/domain/network/phone/gelab/gelabActionGrammar.test.js",
+    "services/backend/src/services/domain/network/phone/gelab/gelabActionMap.test.js"
+  ],
+  "lifecycle": {
+    "stage": "staged",
+    "since": "2026-10-23",
+    "provenance": "recorded-at-creation"
+  },
+  "_lifecycle_note": "staged，不是 stable：唯一消费方 src/tools/PhoneGuiAgentTool 与本单元同批落地，尚未经过真实使用期检验。晋级三判据：README ✓、源文件全部同名同目录测试 ✓、整数 fanIn 声明 ✓。出边：D2 三处（../phoneBridgeCatalog、../phoneBridgePolicy、../amoo/amooUiSnapshot），D3 一处（constants/serviceDefaults）。绝不 require src/services/ 下的任何模块——enforced 规则 d2-no-reach-into-d1 禁止 D2 伸进 D1，所以按需拉模型的 localModelProvisioner 只能由 D1 的工具面 require，本单元只经 env 接收它产出的 base_url/key。嵌套 manifest 只覆盖本目录；父 phone/khy.module.json 的 tests 数组因此不含本单元测试——刻意不改为守 B3（check-repo-layout 不校验该数组）。"
+}
