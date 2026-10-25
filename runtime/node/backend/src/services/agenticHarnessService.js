@@ -430,6 +430,7 @@ function createAgenticHarness(options = {}) {
             try {
               const { saveBoulderState } = require('./boulderState');
               const { detectModes } = require('./intentGate');
+              const { buildDigest } = require('./clueVault');
               saveBoulderState(cwd, {
                 taskId: taskHandle?.id,
                 userMessage,
@@ -440,7 +441,15 @@ function createAgenticHarness(options = {}) {
                 status: 'in_progress',
                 // v2: full conversation context
                 conversationMessages: info.messages || info.conversationMessages || [],
-                contextSummary: info.contextSummary || '',
+                // 线索保全(clueVault):此前 contextSummary 恒为空(声明的写入者不存在,
+                // 中断 checkpoint 载荷也不含该字段)⇒ 断点续跑回灌的摘要永远空。这里用
+                // 确定性线索台账填充(载荷没有 messages 的周期路径 digest 为 '' ,与改前
+                // 逐字节一致;门控 KHY_CLUE_VAULT 关 → 恒 '' 逐字节回退)。S1 只增不改。
+                contextSummary:
+                  info.contextSummary ||
+                  buildDigest(info.messages || info.conversationMessages || [], {
+                    env: process.env,
+                  }),
                 sessionMeta: {
                   model: chatOpts.model || chatOpts.preferredModel || '',
                   adapter: chatOpts.adapter || chatOpts.preferredAdapter || '',
@@ -598,6 +607,7 @@ function createAgenticHarness(options = {}) {
           try {
             const { saveBoulderState } = require('./boulderState');
             const { detectModes } = require('./intentGate');
+            const { buildDigest } = require('./clueVault');
             saveBoulderState(cwd, {
               taskId: taskHandle?.id,
               userMessage,
@@ -608,7 +618,12 @@ function createAgenticHarness(options = {}) {
               status: 'in_progress',
               // v2: full conversation context
               conversationMessages: loopResult?.conversationMessages || [],
-              contextSummary: loopResult?.contextSummary || '',
+              // 线索保全(clueVault):续跑轮之间的断点摘要用确定性线索台账填充
+              // (loopResult 自身若带 contextSummary 则优先透传,行为不变);
+              // 门控 KHY_CLUE_VAULT 关 → '' → 与改前逐字节一致。S1 只增不改。
+              contextSummary:
+                loopResult?.contextSummary ||
+                buildDigest(loopResult?.conversationMessages || [], { env: process.env }),
               sessionMeta: {
                 model: chatOpts.model || chatOpts.preferredModel || '',
                 adapter: chatOpts.adapter || chatOpts.preferredAdapter || '',
@@ -1182,6 +1197,43 @@ function createAgenticHarness(options = {}) {
         clearBoulderState(cwd);
       } catch {
         /* best-effort */
+      }
+
+      // ── 确信度校准 S1 观察器(确信度缺陷;只记录不阻断)──────────────────
+      // 收尾前对最终回复做一次确定性扫描:零工具调用的轮次里,若出现笃定措辞断言
+      // (unbacked_certainty)或自称已核验/读过/跑过(unbacked_verification_claim),
+      // 样本旁路落账供 S1 观察期统计——绝不改写回复、绝不阻断交付。自称核验的判定
+      // 前提是「本轮日志为空且会话历史无工具活动」,故把 loopResult.conversationMessages
+      // 一并传入(跨轮真实引用不误报)。门控 KHY_CONFIDENCE_CALIBRATION 关 → 不扫描、
+      // 不落账、不发事件(require 仍发生;叶子零顶层副作用,接缝逐字节回退)。
+      try {
+        const cc = require('./confidenceCalibration');
+        if (cc.isEnabled(process.env)) {
+          const _ccReport = cc.observe({
+            finalResponse: String(loopResult?.finalResponse || ''),
+            toolCallLog:
+              allToolCallLogs.length > 0 ? allToolCallLogs : loopResult?.toolCallLog || [],
+            conversationMessages: loopResult?.conversationMessages || [],
+            env: process.env,
+          });
+          if (_ccReport && _ccReport.findings.length > 0) {
+            try {
+              require('./confidenceCalibrationLedger').recordObservation(_ccReport);
+            } catch {
+              /* ledger is best-effort */
+            }
+            if (onEvent) {
+              onEvent({
+                type: 'confidence_calibration',
+                stage: _ccReport.stage,
+                toolCalls: _ccReport.toolCalls,
+                findings: _ccReport.findings.map((f) => f.kind),
+              });
+            }
+          }
+        }
+      } catch {
+        /* S1 observer is best-effort — never block the run */
       }
 
       // ── Sub-agent result aggregation ──

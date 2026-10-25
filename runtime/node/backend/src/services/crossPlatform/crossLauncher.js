@@ -17,7 +17,7 @@ const fs = require('fs');
 // crossLauncher.js is the ONLY module that reads these.
 //
 // The mobile entry deliberately does NOT read a port: the live mobile client is
-// `apps/khy-os-client-app` (Flutter), which runs as a native process on a
+// `delivery/mobile/khy-os-client-app` (Flutter), which runs as a native process on a
 // connected device rather than as a port-bound dev server. The old
 // `apps/khy-mobile` Capacitor shell is a dead directory with no tracked source,
 // so claiming `MOBILE_FRONTEND_PORT` for "mobile" would report a port that no
@@ -77,9 +77,9 @@ const PLATFORM_COMMANDS = {
   },
   mobile: {
     cmd: 'cmd.exe',
-    args: ['/c', 'cd', '/d', path.join(getPortableRoot(), 'apps', 'khy-os-client-app'), '&&', 'flutter', 'run'],
-    cwd: () => path.join(getPortableRoot(), 'apps', 'khy-os-client-app'),
-    description: 'Mobile app (Flutter — apps/khy-os-client-app, needs a connected device)',
+    args: ['/c', 'cd', '/d', path.join(getPortableRoot(), 'delivery', 'mobile', 'khy-os-client-app'), '&&', 'flutter', 'run'],
+    cwd: () => path.join(getPortableRoot(), 'delivery', 'mobile', 'khy-os-client-app'),
+    description: 'Mobile app (Flutter — delivery/mobile/khy-os-client-app, needs a connected device)',
   },
 };
 

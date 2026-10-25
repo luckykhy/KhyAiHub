@@ -7,10 +7,10 @@
   "_deviation_note": "有一条边不在名义集合里，如实登记而不是把它写进 mayDependOn 冒充许可：descriptors.js:91 在 unknownProblem 描述符的 isEnabledFn 里惰性 `require('../../../unknownProblemHandler').isEnabled()`（src/services/unknownProblemHandler.js = D1）。它是 module-kind 方言唯一的跨域取数点，也是惰性加载——不在文件头，故 descriptors.js 本体仍符合「data-only」声明。D2 → D1 在 DOMAIN-DEPS.json 里是 declared_not_enforced 条目，owner = archDebtScan R1/R3，真源基线 scripts/arch-debt-baseline.json（即 check:layout 的 cross-layer-require 计数），不在本清单的管辖内，也不得由本清单私自豁免。若要摘掉它，办法是把门控函数改为构造期注入（index.js 已具备 deps 注入口），不是改本字段。",
   "fanIn": 4,
   "fanInEvidence": [
-    "services/backend/src/services/capabilityMatrix/index.js",
-    "services/backend/src/services/tool/toolCalling.js",
-    "services/backend/src/services/tool/toolUseLoopCore.js",
-    "services/backend/src/services/tool/toolUseLoopHelpers.js"
+    "runtime/node/backend/src/services/capabilityMatrix/index.js",
+    "runtime/node/backend/src/services/tool/toolCalling.js",
+    "runtime/node/backend/src/services/tool/toolUseLoopCore.js",
+    "runtime/node/backend/src/services/tool/toolUseLoopHelpers.js"
   ],
   "_fanIn_note": "4 个仓内消费者（实测 2026-09-28 探针 .khyos/tmp/b22-fanin.js：git ls-files 全量扫 require 路径并解析到本单元 7 个成员，去重计数，不含 *.test.js，不含单元内互引）。第一条 services/capabilityMatrix/index.js 是归位后留下的再导出壳——三处 tool/* 消费者走的都是它（require('../capabilityMatrix')），壳按 [DESIGN-LAY-008] 第 0 步约定仍算真实入口，故如实计入。注释里提到本单元的文件（如 syscallGateway/actionContractVerifier.js、utils/envFlagEnabled.js）不计入：探针只认 require 解析结果，不认文本提及。",
   "lifecycle": {
@@ -50,12 +50,12 @@
     "index.test.js"
   ],
   "behaviourTestsOutsideUnit": [
-    "services/backend/tests/services/capabilityMatrix/predicates.test.js",
-    "services/backend/tests/services/capabilityMatrix/composer.test.js",
-    "services/backend/tests/services/capabilityMatrix/route.test.js",
-    "services/backend/tests/services/capabilityMatrix/index.test.js",
-    "services/backend/tests/services/capabilityMatrix/descriptors.contract.test.js",
-    "services/backend/tests/root-level/capabilityMatrixParity.test.js"
+    "runtime/node/backend/tests/services/capabilityMatrix/predicates.test.js",
+    "runtime/node/backend/tests/services/capabilityMatrix/composer.test.js",
+    "runtime/node/backend/tests/services/capabilityMatrix/route.test.js",
+    "runtime/node/backend/tests/services/capabilityMatrix/index.test.js",
+    "runtime/node/backend/tests/services/capabilityMatrix/descriptors.contract.test.js",
+    "runtime/node/backend/tests/root-level/capabilityMatrixParity.test.js"
   ],
   "_test_dialect_note": "仓内两套方言混用：本目录 7 份共置测试一律 node:test（`node --test` 传 7 个显式文件名，目录参数在 Windows 下会当模块路径报错）；tests/ 下 6 份里 capabilityMatrixParity.test.js 用 describe/it（jest 方言），只能经 `node .khyos/tmp/jest-lite.js <文件>` 跑，直接 node --test 会以 ReferenceError: describe is not defined 整文件失败。"
 }

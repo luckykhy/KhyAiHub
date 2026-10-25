@@ -238,8 +238,15 @@ function _discoverDatabases() {
       meta: { error: err.message },
     });
 
-    // Fallback to .khy directory
-    const khyDir = path.join(process.cwd(), '.khy');
+    // Fallback to the data home (was process.cwd() + '.khy', which forked a
+    // second database tree whenever the caller's cwd was the repo root).
+    const khyDir = (() => {
+      try {
+        return require('../utils/dataHome').getDataHome();
+      } catch {
+        return path.join(process.cwd(), '.khy');
+      }
+    })();
     databases.push({
       name: 'sessions.db',
       path: path.join(khyDir, 'sessions.db'),
@@ -965,11 +972,19 @@ function _backupStem(dbName) {
 function _tryRestoreFromBackup(dbPath, dbName) {
   try {
     // Recovery checkpoints and clean-shutdown backups are separate stores. Scan
-    // both so step C honours `.khy/checkpoints` while retaining compatibility
-    // with the shutdown snapshots written beside each database.
+    // both so step C honours the data-home `checkpoints` dir while retaining
+    // compatibility with the shutdown snapshots written beside each database.
+    // The second entry was process.cwd() + '.khy/checkpoints'; resolved through
+    // dataHome now so it does not fork a second tree per cwd.
     const candidateDirs = [
       path.join(path.dirname(dbPath), 'checkpoints'),
-      path.join(process.cwd(), '.khy', 'checkpoints'),
+      (() => {
+        try {
+          return require('../utils/dataHome').getDataDir('db_backup');
+        } catch {
+          return path.join(process.cwd(), '.khy', 'checkpoints');
+        }
+      })(),
       path.join(path.dirname(dbPath), 'db_backup'),
     ].filter((dir, index, dirs) => dirs.indexOf(dir) === index && fs.existsSync(dir));
 
@@ -1489,8 +1504,12 @@ function scanOrphanedWalArtifacts() {
     const { getDataDir, getProjectDataDir } = require('../utils/dataHome');
     dirs.push(getProjectDataDir(), getDataDir());
   } catch {
-    /* fall back to the .khy dir below */
+    /* dataHome unavailable: fall back to the cwd-relative dir below */
   }
+  // Was unconditional. Kept only as a compatibility sweep for installs whose
+  // orphaned WAL artifacts predate the resolver (i.e. were written by the old
+  // cwd-relative path) — it is a read-only forensic scan, so this cannot fork
+  // any new state.
   dirs.push(path.join(process.cwd(), '.khy'));
 
   const seenDirs = new Set();

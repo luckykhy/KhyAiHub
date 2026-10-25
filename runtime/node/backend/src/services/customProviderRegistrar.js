@@ -452,14 +452,24 @@ const BUILTIN_ZEN = Object.freeze({
   defaultModel: 'mimo-v2.6-flash-free',
   // Offline fallback only — remote /v1/models discovery (apiAdapter) and
   // dynamicFreeModelService override this list when reachable.
-  // Only the *-free suffix models pass the free-tier 401 gate without a paid key.
+  // Only the *-free suffix models pass the free-tier 401 gate without a paid key
+  // (`big-pickle` is in the 2026-10-21 catalog but lacks that suffix, so the gate
+  // would reject it here).
+  //
+  // 2026-10-21 实测上游目录。已下架的 id（mimo-v2.5-free / deepseek-v4-flash-free
+  // 上游 401、ling-3.0-flash-fin-free 不可用、jev-1.13-free 已不在目录）不再列出：
+  // 上游把 deepseek-v4 改名成 v4.1 是发布行为，不是可以替用户猜的字符串替换；
+  // 旧 id 的失效判定归 zenRetiredModels 台账，这里只放确认可用的目录项。
   models: [
     'mimo-v2.6-flash-free',
-    'mimo-v2.5-free',
-    'deepseek-v4-flash-free',
-    'jev-1.13-free',
-    'ling-3.0-flash-fin-free',
+    'minimax-m3.1-flash-free',
+    'glm-5.3-flash-free',
+    'deepseek-v4.1-flash-free',
+    'longcat-2.5-preview-free',
     'nemotron-3-ultra-free',
+    'nemotron-3.5-lightning-free',
+    'nemotron-3.5-super-vl-free',
+    'beam-free',
   ],
 });
 
@@ -483,14 +493,28 @@ function ensureBuiltinZen(options = {}) {
   const provider = customRegistry.getProvider(BUILTIN_ZEN.poolKey);
   const existingModels = provider && Array.isArray(provider.models) ? provider.models : [];
   const { isFreeZenModelId } = require('./zenGatekeeper');
-  const existingFree = existingModels.filter((m) => isFreeZenModelId(m));
+  const zenRetired = require('./zenRetiredModels');
+  // 台账里的废弃 id 既不该留在 custom_providers.json，也不该在合并时被带回来：
+  // 旧版本把它们种进过用户配置（deepseek-v4-flash-free 实测残留）。只在列表出口
+  // 过滤不够——配置与 .env 路由会继续指向已下架的模型。
+  const existingFree = existingModels.filter(
+    (m) => isFreeZenModelId(m) && !zenRetired.isRetired(m)
+  );
   const hasPaidJunk = existingFree.length !== existingModels.length;
   const haveAllModels = BUILTIN_ZEN.models.every((m) => existingModels.includes(m));
 
-  // Re-seed when paid junk is present (list must not show unusable models)
-  // even if every builtin free id is already listed.
+  // Re-seed when paid junk or retired ids are present (list must not show
+  // unusable models) even if every builtin free id is already listed.
   if (!force && hasKey && haveAllModels && !hasPaidJunk) {
     return { seeded: false, poolKey: BUILTIN_ZEN.poolKey };
+  }
+
+  // 重种时把旧种子留下的废弃路由一并清掉，否则 .env 里的
+  // PROXY_MODEL_ROUTE_MAP 会永久保留指向已下架 id 的 strict 条目。
+  for (const m of existingModels) {
+    if (zenRetired.isRetired(m)) {
+      removeJsonEnvVarKey('PROXY_MODEL_ROUTE_MAP', m);
+    }
   }
 
   const extraModels = [];

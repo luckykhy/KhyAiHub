@@ -586,25 +586,44 @@ async function handleAiGatewayCustomProvidersList(req, res) {
 async function handleAiGatewayCustomProvidersAdd(req, res) {
   const body = await parseBody(req);
   const registrar = require('./customProviderRegistrar');
+  const draft = {
+    endpoint: String(body.endpoint || body.baseUrl || '').trim().replace(/\/+$/, ''),
+    keyInput:
+      body.keyInput !== undefined
+        ? body.keyInput
+        : body.keys !== undefined
+          ? body.keys
+          : body.key,
+    defaultModel: String(body.defaultModel || '').trim(),
+  };
   try {
+    // 先测绿再落盘：Web 表单以前把中转当「填个地址就能用」的入口，地址少写 /v1、
+    // 模型名手敲猜，都要等到真实对话才炸（2026-10-20 事故：`404 page not found`）。
+    // force:true / verify:false 是人显式点头的跳过，回包里如实标注，不假装测过。
+    const {
+      verifyCustomProviderDraft,
+    } = require('./gateway/customProviderVerify');
+    const verification = await verifyCustomProviderDraft(draft, {
+      force: body.force === true || body.force === 'true',
+      skip: body.verify === false || body.verify === 'false',
+    });
+    if (!verification.ok) {
+      return sendError(res, 502, verification.reason);
+    }
+
     const result = registrar.registerCustomProvider({
       displayName: body.displayName || body.name,
       poolKey: body.poolKey,
       endpoint: body.endpoint || body.baseUrl,
-      keyInput:
-        body.keyInput !== undefined
-          ? body.keyInput
-          : body.keys !== undefined
-            ? body.keys
-            : body.key,
-      defaultModel: body.defaultModel,
+      keyInput: draft.keyInput,
+      defaultModel: draft.defaultModel,
       extraModels: body.extraModels,
       tier: body.tier,
       ensureInit: true,
     });
     // Never echo the raw API key back to the client.
     const { firstKey, ...safe } = result;
-    sendJson(res, 200, { success: true, provider: safe });
+    sendJson(res, 200, { success: true, provider: safe, verification: verification.summary });
   } catch (err) {
     sendError(res, 400, String(err && err.message ? err.message : err));
   }

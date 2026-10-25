@@ -601,15 +601,26 @@ async function _checkGatewayPreferred(result, issues, scoreRef, opts = {}) {
     result.checks.gateway = checkOut;
   } catch (err) {
     scoreRef.value -= 6;
+    // Raw internal string (e.g. "gateway.init timed out after 8s") is NOT user copy:
+    // on a clean start it fires before the first keystroke while the very same
+    // adapter answers fine afterwards, so showing it verbatim reads as "it is
+    // broken" instead of "it is slow". Keep it for logs / --verbose paths only
+    // (checks.gateway.error + issue.detail) and tell the user what is true:
+    // connecting, still retrying, safe to keep typing.
+    const internal = err?.message || String(err);
+    const waitedSec =
+      Number(String(internal).match(/timed out after (\d+(?:\.\d+)?)s/)?.[1]) ||
+      SERVICE_HEALTH_TIMEOUT_MS / 1000;
     result.checks.gateway = {
       ...checkOut,
       healthy: false,
-      error: err?.message || String(err),
+      error: internal,
     };
     issues.push({
       source: 'gateway',
       severity: 'warning',
-      message: `gateway 首选通道自检失败: ${err?.message || err}`,
+      message: `正在连接网关（已等待 ${waitedSec}s，正在重试；不影响先打字，可继续输入）`,
+      detail: internal,
     });
   }
 }

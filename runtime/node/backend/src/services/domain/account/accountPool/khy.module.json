@@ -5,10 +5,10 @@
   "_mayDependOn_note": "按 DOMAIN-DEPS.json 的 D2 名义边界声明。实测出域边 2 处，全在 D1 侧：`candidateDetect.js:608` → `src/config/sqlite-adapter.js`、`poolImporter.js:325` → `services/gateway/adapters/ideDetector.js`。⚠ 其中 `src/config/**` 在 DOMAIN-DEPS 里**没有域根映射**，被路径前缀判成 D1 属误判 —— 这是 [DESIGN-LAY-008] §12.43「建真实 require 方向门前必须先定判据」的又一个活样本（同族还有 `src/tools/**` 与本单元的外部消费者之一）。另如实记一条归位待办：本单元**零条 D3 边**，数据根与路径全部自取，未复用 utils/constants。",
   "fanIn": 4,
   "fanInEvidence": [
-    "services/backend/src/services/accountPool/index.js",
-    "services/backend/src/services/accountPool.js",
-    "services/backend/src/services/localBrainProviderConfig.js",
-    "services/backend/src/tools/ConfigureModelProvider/index.js"
+    "runtime/node/backend/src/services/accountPool/index.js",
+    "runtime/node/backend/src/services/accountPool.js",
+    "runtime/node/backend/src/services/localBrainProviderConfig.js",
+    "runtime/node/backend/src/tools/ConfigureModelProvider/index.js"
   ],
   "_fanIn_note": "外部非测试消费者去重 4 个：D1 再导出壳、D1 门面本体 `services/accountPool.js`（credentialHelpers.js 的头注释明确说自己就是从这个文件逐字抽出的）、`localBrainProviderConfig.js`、以及 `src/tools/ConfigureModelProvider/index.js`（src/tools 无域根映射）。计数排除 *.test.js 与单元内部引用。",
   "lifecycle": {
