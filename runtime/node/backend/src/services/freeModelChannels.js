@@ -17,7 +17,10 @@
  * 逐字节回退今日「不主动列免费渠道」行为。
  *
  * 诚实:各渠道的免费模型 id/额度会随服务商政策变动;下方 freeModels 为**示例**,真正可用
- * 以各控制台为准。智谱一条与 zhipuFreeModels.js 的 7 免费模型对齐(该叶子是权威源)。
+ * 以各控制台为准。智谱一条与 zhipuFreeModels.js 的 7 免费模型对齐(该叶子是权威源);
+ * opencode-zen 一条为 2026-10-24 实测上游目录(日期注明于该条 note,废弃项已按
+ * zenRetiredModels 台账剔除)。目录里"消失"的 id 不写进台账:jev-1.13-free 10-21
+ * 下线、10-24 又回来了 —— 记成永久废弃会把还能用的模型藏起来。
  */
 
 const OFF_VALUES = ['0', 'false', 'off', 'no'];
@@ -74,14 +77,17 @@ const FREE_MODEL_CHANNELS = [
     key: 'opencode-zen',
     name: 'OpenCode Zen(免费免注册)',
     poolKey: 'opencode-zen',
-    note: 'OpenCode 官方免费网关,无需账号 key;khy 启动时自动 seed(opencode-zen 池)',
+    note: 'OpenCode 官方免费网关,无需账号 key;khy 启动时自动 seed(opencode-zen 池);下列为 2026-10-24 实测上游目录,已剔除 zenRetiredModels 台账中的废弃项(mimo-v2.5-free / deepseek-v4-flash-free 上游 401,ling-3.0-flash-fin-free 不可用)。本次相对 10-21 清单:新增 flint-40b-free / jev-1.13-free,剔除 minimax-m3.1-flash-free / longcat-2.5-preview-free / nemotron-3-ultra-free(上游目录已收)。注意 beam-free 上游仍在目录但实测 403 地区封锁 —— 换出口 IP 可解,走本机直连即是用本机 IP',
     freeModels: [
       'mimo-v2.6-flash-free',
-      'mimo-v2.5-free',
-      'deepseek-v4-flash-free',
+      'big-pickle',
+      'glm-5.3-flash-free',
+      'deepseek-v4.1-flash-free',
+      'flint-40b-free',
       'jev-1.13-free',
-      'ling-3.0-flash-fin-free',
-      'nemotron-3-ultra-free',
+      'nemotron-3.5-lightning-free',
+      'nemotron-3.5-super-vl-free',
+      'beam-free',
     ],
     console: 'https://opencode.ai/auth',
     configureHint: '内置通道:模型写 api:opencode-zen:<模型id>,无需粘贴 key',
@@ -179,8 +185,50 @@ function _readEnvOverrides(env = process.env) {
 }
 
 /**
+ * 剔除渠道中已废弃的模型 id(zenRetiredModels 台账:静态名单 + 调用反馈自愈账本)。
+ * 门 KHY_ZEN_RETIRED_FILTER(默认开;显式 0/false/off/no 关 → 逐字节回退不过滤)。
+ * fail-soft:台账 require 失败/查询异常 → 原样返回。
+ *
+ * 例外声明:本叶子整体零 IO,唯独 opencode-zen 渠道的 freeModels 需要台账过滤 ——
+ * 上游目录挂死 id 是实测事实(2026-10-09:401/410/403),发现层把死模型摆给用户会直接
+ * 导致「选中即调用失败」。过滤内聚在 try/catch 内,账本缺失即回退未过滤;单测用
+ * KHY_ZEN_RETIRED_FILE 指向受控账本,保持确定性。
+ */
+function _filterRetiredFreeModels(channel) {
+  if (!channel || channel.key !== 'opencode-zen' || !Array.isArray(channel.freeModels)) {
+    return channel;
+  }
+  try {
+    const v = String((process.env && process.env.KHY_ZEN_RETIRED_FILTER) || '')
+      .trim()
+      .toLowerCase();
+    if (['0', 'false', 'off', 'no'].includes(v)) {
+      return channel;
+    }
+    const retired = require('./zenRetiredModels');
+    if (!retired || typeof retired.isRetired !== 'function') {
+      return channel;
+    }
+    const kept = channel.freeModels.filter((m) => {
+      try {
+        return !retired.isRetired(m);
+      } catch {
+        return true;
+      }
+    });
+    if (kept.length !== channel.freeModels.length) {
+      return { ...channel, freeModels: kept };
+    }
+  } catch {
+    /* fail-soft: 台账不可用 → 不过滤 */
+  }
+  return channel;
+}
+
+/**
  * 合并、规整后的免费渠道清单(内置在前,env 覆盖按 key 合并:覆盖替换、新 key 追加)。
- * 每次返回全新深拷贝。关门 → []。
+ * 每次返回全新深拷贝。opencode-zen 渠道的 freeModels 经废弃台账过滤(见
+ * _filterRetiredFreeModels;门 KHY_ZEN_RETIRED_FILTER)。关门 → []。
  * @param {Record<string,string>} [env]
  * @returns {Array<{key:string,name:string,poolKey:string,note:string,freeModels:string[],console:string,configureHint:string}>}
  */
@@ -208,7 +256,7 @@ function listFreeModelChannels(env = process.env) {
         byKey.set(key, merged);
       }
     }
-    return Array.from(byKey.values());
+    return Array.from(byKey.values()).map(_filterRetiredFreeModels);
   } catch {
     return [];
   }

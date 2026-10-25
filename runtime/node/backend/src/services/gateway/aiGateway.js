@@ -2342,6 +2342,9 @@ class AIGateway {
     }
     // Recent adapter failure cache for fast-fail (prevents repeated stalls on dead channels)
     this._adapterLastError = {};
+    // 外部智能体委派审批闸的会话内批准记忆（'always' 应答回填；实例生命周期，
+    // 重启后重新问——与 safetyGate 会话记忆同界）。
+    this._delegationApprovals = require('./delegationGate').createSessionApprovalStore();
     // Cooldown self-heal probe state (adapterKey -> in-flight promise / meta)
     this._cooldownSelfHealInFlight = new Map();
     this._cooldownSelfHealMeta = {};

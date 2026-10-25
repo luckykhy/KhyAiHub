@@ -4,7 +4,7 @@
  * dynamicFreeModelService — 动态免费模型列表服务。
  *
  * 数据源（优先级从高到低）：
- *   1. 本地文件缓存（TTL 5 分钟）
+ *   1. 本地文件缓存（TTL 见 CACHE_TTL_MS，默认 45 分钟）
  *   2. 在线拉取：https://opencode.ai/zen/v1/models + https://models.dev/api.json
  *
  * 免费模型判定：
@@ -25,7 +25,7 @@ const path = require('path');
 
 // ── 配置 ─────────────────────────────────────────────────────────────────────
 
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 分钟缓存 TTL
+const CACHE_TTL_MS = 45 * 60 * 1000; // 45 分钟缓存 TTL
 const REFRESH_INTERVAL_MS = 60 * 60 * 1000; // 60 分钟后台刷新间隔
 const FETCH_TIMEOUT_MS = parseInt(process.env.KHY_FREE_MODEL_FETCH_TIMEOUT_MS || '10000', 10);
 
@@ -558,8 +558,19 @@ function stopBackgroundRefresh() {
 function warmUp() {
   const cached = loadFromCache();
   if (!cached) {
-    // 无缓存，后台拉取
-    refresh().catch(() => {});
+    // 无缓存首拉延后执行。首个全局 fetch() 会同步触发 undici 惰性初始化
+    // (实测约 500ms 的同步前缀)，在启动关键路径上直接调 refresh() 会把这段时间
+    // 完整计入启动耗时。这里与 startBackgroundRefresh 同一手法延后到启动之后，
+    // 并由 unref() 保证不持有事件循环。回退：KHY_FREE_MODEL_WARMUP_DELAY_MS=0
+    // 可恢复「启动即同步拉取」的旧行为。
+    const delay = parseInt(process.env.KHY_FREE_MODEL_WARMUP_DELAY_MS || '', 10);
+    const warmUpDelayMs = Number.isFinite(delay) && delay >= 0 ? delay : 7500;
+    const timer = setTimeout(() => {
+      refresh().catch(() => {});
+    }, warmUpDelayMs);
+    if (timer.unref) {
+      timer.unref();
+    }
   }
   // 启动后台定时刷新
   startBackgroundRefresh();

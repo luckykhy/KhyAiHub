@@ -5,24 +5,24 @@
   "_mayDependOn_note": "实测出边（8 个源文件全数清点，非抽样）：**D3 仅 1 条** —— traceChain.js:30 `../../../../utils/atomicWriteJson`（链文件原子写：同目录 tmp、0600、fsync 显式 true，因为溯源是 evidence，不跟随 KHY_ATOMIC_FSYNC 的全局默认）。**零 D2→D1 出边**，因此本单元不需要 _deviation_note 来登记反向依赖；DOMAIN-DEPS 里 D2 的 mayDependOn=[\"D2\",\"D3\"] 逐字满足。同域/同目录：provenanceClassifier.js:13、quarantinePolicy.js:19、traceProjection.js:19 取 ./khyTrace，claimReconciler.js:24 取 ./claimNegation，index.js:16-21 取 6 个兄弟。内建：crypto/fs/path（只在 traceChain.js:26-28）。**零第三方出边**。⚠ 反向结构须知：`src/services/trajectoryProvenance/index.js` 是自动迁移生成的 **D1 shim**（`module.exports = require('../domain/trajectory/trajectoryProvenance')`），它把本单元再导出到 D1 命名空间下；shim 自身是 D1→D2 的允许方向入边，但它让 2 个 D1 消费者（aiChatCore.js:4718、ToolLines.js:1055）**在文本上看不见本单元**——按字符串前缀统计扇入会漏掉它们，故 fanIn 只计直连的 7 个文件，间接的 2 个单列在 _fanIn_note。",
   "fanIn": 7,
   "fanInEvidence": [
-    "services/backend/src/cli/aiGatewayGenerateHelpers.js",
-    "services/backend/src/cli/handlers/trace.js",
-    "services/backend/src/services/answerVerifier.js",
-    "services/backend/src/services/domain/trajectory/trajectoryReplay/replayBundle.js",
-    "services/backend/src/services/gateway/adapters/codexAdapter.js",
-    "services/backend/src/services/sessionPersistence.js",
-    "services/backend/src/services/trajectoryProvenance/index.js"
+    "runtime/node/backend/src/cli/aiGatewayGenerateHelpers.js",
+    "runtime/node/backend/src/cli/handlers/trace.js",
+    "runtime/node/backend/src/services/answerVerifier.js",
+    "runtime/node/backend/src/services/domain/trajectory/trajectoryReplay/replayBundle.js",
+    "runtime/node/backend/src/services/gateway/adapters/codexAdapter.js",
+    "runtime/node/backend/src/services/sessionPersistence.js",
+    "runtime/node/backend/src/services/trajectoryProvenance/index.js"
   ],
   "_fanIn_note": "非测试消费者 **7 个文件 / 10 个 require 站点**（按「require 说明符解析后落在本单元目录内」计，排除 *.test.js）：aiGatewayGenerateHelpers.js:649 取 claimReconciler；handlers/trace.js:24/:25 取 khyTrace.js 与 traceProjection.js（带 .js 后缀）；answerVerifier.js:151 取 claimReconciler；trajectoryReplay/replayBundle.js:141 同域取 traceChain（打便携包时顺带拷贝防篡改链）；codexAdapter.js:2221 取 quarantinePolicy（**安全热路径**：执行中转 functionCall 前裁决 allow/gate/quarantine）；sessionPersistence.js:508/:545/:643 取 khyTrace（写消息时盖 _khyTrace 戳）与 traceChain（append + verify 两站）；D1 shim index.js:4 以**目录形态** require 整包。域构成：6 个 D1 + 1 个 D2，全部允许方向。**另 2 个间接消费者**经 shim 抵达：cli/aiChatCore.js:4718、cli/tui/ink-components/ToolLines.js:1055（二者拿桶的 21 个再导出符号）。探针教训登记：本数字经三次修正才可信——(1) 只匹配成员形态会漏 `khyTrace.js` 这种带后缀站点与 `handlers/trace.js`；(2) 按子串分类会把 shim 的消费者算成直连，并把同域兄弟相对路径 `../trajectoryProvenance/traceChain` 误判为间接；(3) 最终判据改为 `path.resolve(dirname, spec)` 是否落进单元目录。桶 index.js **确有生产消费者**（经 D1 shim，而不是直接），与 trajectoryReplay 桶「生产零消费者」的处境不同。",
   "behaviourTestsOutsideUnit": [
-    "services/backend/tests/atomicWriteMigration.test.js",
-    "services/backend/tests/cli/traceProjectionSingleGlyph.test.js",
-    "services/backend/tests/services/sessionPersistence.sidecar.test.js",
-    "services/backend/tests/services/trajectoryProvenance/p1Labels.test.js",
-    "services/backend/tests/services/trajectoryProvenance/p2Chain.test.js",
-    "services/backend/tests/services/trajectoryProvenance/p3Quarantine.test.js",
-    "services/backend/tests/services/trajectoryProvenance/p4Reconcile.test.js",
-    "services/backend/tests/services/trajectoryProvenance/p5Trace.test.js"
+    "runtime/node/backend/tests/atomicWriteMigration.test.js",
+    "runtime/node/backend/tests/cli/traceProjectionSingleGlyph.test.js",
+    "runtime/node/backend/tests/services/sessionPersistence.sidecar.test.js",
+    "runtime/node/backend/tests/services/trajectoryProvenance/p1Labels.test.js",
+    "runtime/node/backend/tests/services/trajectoryProvenance/p2Chain.test.js",
+    "runtime/node/backend/tests/services/trajectoryProvenance/p3Quarantine.test.js",
+    "runtime/node/backend/tests/services/trajectoryProvenance/p4Reconcile.test.js",
+    "runtime/node/backend/tests/services/trajectoryProvenance/p5Trace.test.js"
   ],
   "_outside_test_note": "全仓 grep `trajectoryProvenance` 命中单元外 8 份测试，一次清点即全数（未抽样），全部 node:test 方言可直跑：`# tests 131 / # pass 127 / # fail 0 / # skipped 4`。**4 例 skip 必须如实报**：都在 atomicWriteMigration.test.js，理由「Windows 不适用 POSIX 权限位」（本环境是 win32，属平台不适用，不是本单元的空转）。⚠ 两处同名易混：单元内共置 `traceProjection.test.js`（18 例，测投影函数本身）与单元外 `tests/cli/traceProjectionSingleGlyph.test.js`（3 例，测「单字形契约」——即 replayRow.label 不带字形、inlineLabel 必须带字形），后者是前者的**契约真源**，不是重复件。另 `tests/services/trajectoryProvenance/p*` 五份按阶段编号（P1 标签 / P2 链 / P3 隔离 / P4 核对 / P5 trace CLI），与本单元 8 个成员文件**不是一一对应**，判覆盖时不可按名字配对。跑这些套件时把 KHY_PROJECT_DATA_HOME/KHY_DATA_HOME 钉到空临时目录（p1Labels 与 p5Trace 会经 sessionPersistence 写真数据根）。",
   "lifecycle": {

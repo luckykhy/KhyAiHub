@@ -27,8 +27,10 @@
  *
  * 本叶子补这两处(不重复造执行链):
  *   buildExternalAgentDirective(env)  —— 始终注入的能力指令(镜像 toolTierCatalog.buildTierDirective)。
- *   detectExternalAgentRequest(msg,env) —— 确定性识别「点名某外部 agent + 驱动动词」两命中才接管
- *                                          (镜像 nlExternalAppResolver 的「app 名 + 动作词」零假阳性闸门)。
+ *   detectExternalAgentRequest(msg,env) —— 确定性识别「点名某外部 agent」的**委派意图**:按别名出现
+ *                                          位置的邻域判定(强委派动词同域 / 引导词在前且动作词在后),
+ *                                          否定与征询句式判不成立。全文同现不作判据——那是 2026-10-15
+ *                                          假阳性的成因(「不要用 claude code」曾被判成用户点名)。
  *   buildExternalAgentNudge(msg,env)  —— 命中时产一次性 [SYSTEM] 路由 nudge,逼模型真的用 Agent 工具
  *                                          委派(delegatable)或提示顶层 `khy <name>` 启动(launch-only)。
  *
@@ -44,6 +46,15 @@
  *     `DELEGATION_GATES` 是三闸门(G1 用户点名 / G2 能力缺失 / G3 隔离要求)的单一真源,
  *     `evaluateDelegationAdmission()` 是准入判定的执行点(**默认自做**,缺证据即 deny,异常 fail-closed)。
  *     语义真源 docs/10_规范/其它规范/[DESIGN-PROCESS-001] 委派边界决策矩阵-第六通道外部智能体.md;规则 PROCESS-004。
+ *
+ * 委派边界第二轮(2026-10-15「khyos 总是想把问题向外派送」):
+ *     上一轮把「默认自做」写进了文案与准入判定,但准入的**证据来源**仍由模型掌握,于是三处缺口各自漏气
+ *     (实测原始输出见 works/data/khy/feedback/delegation-self-first-20261015/):
+ *     ① 点名识别假阳性——「不要用 claude code」判成用户点名,nudge 反向命令模型「不要自己内联去做」;
+ *     ② G1 凭据可伪造——工具侧读模型自写的 `[委派闸门 G1]` 即放行,被约束方同时持有证据的书写权;
+ *     ③ 执行面只堵 claude——codex/opencode 直连适配器,不经任何准入。
+ *     本轮:识别改邻域判定(①)、G1 换成运行时按 turn 签发的票券(②,见 services/delegationTicket.js)、
+ *     三条可委派面统一过 decideExternalDelegation(③,见 tools/AgentTool/claudeDelegation.js)。
  *
  * 契约:纯叶子——零 I/O、确定性、绝不抛(fail-soft)。
  *
@@ -138,10 +149,63 @@ const EXTERNAL_AGENTS = Object.freeze([
   }),
 ]);
 
-// 驱动/委派动词(双语)。命中任一即视为「要把任务交出去」的意图,与 agent 点名两命中才接管
-// (零假阳性:单出现 "cursor"/"claude" 而无驱动动词 → 不接管,避免误伤「光标位置」「clause」类噪音)。
-const DRIVE_VERB_RE =
-  /(用|使用|让|叫|请|派|交给|委派|驱动|切到|切换到|调用|喊|找|拉起|启动|跑一下|帮我用|帮我叫|use\b|drive\b|delegate\b|hand[\s-]?off|hand it to|ask\b|have\b|let\b|run (?:it |this |the task )?(?:with|on|through|via)|spawn\b|switch to|kick off|fire up|launch\b)/i;
+// ─── 点名意图识别（2026-10-15 收紧）───────────────────────────────────────────
+// 旧判据是「整条消息里出现驱动动词 + 出现别名」同现即接管。动词面含「用 / 让 / 请 / 叫 /
+// let / have / ask」这类高频字，于是「这个改动**不要用** claude code，你自己做完」也被判成
+// 用户点名 → nudge 反向命令模型「不要自己内联去做」。默认自做被一条正则假阳性顶掉，
+// 这正是「莫名其妙甩活」的第一处成因（实测见 works/data/khy/feedback/delegation-self-first-20261015/）。
+//
+// 新判据三件事，全部是**邻近关系**而非全文同现：
+//   ① 强委派动词（交给/委派/delegate…）落在别名邻域内 ⇒ 意图成立；
+//   ② 弱引导词（用/让/叫/use/let…）只允许出现在别名**之前**，且动作词出现在别名**之后** ⇒ 意图成立；
+//   ③ 别名之前的窗口里出现否定词，或所在句子是征询句式 ⇒ 意图不成立。
+// 否定只看**前窗**：「把问题交给 claude，不要用 opencode」里「不要」约束的是 opencode，
+// 扫后窗会把 claude 这一次合法点名一起误杀。
+
+// 强委派动词：词义本身即「把活交出去」，无需再叠动作词。
+const STRONG_DELEGATE_RE =
+  /(交给|交由|派给|派去|委派|委托|丢给|转给|帮我用|帮我叫|切到|切换到|拉起|调用|delegate|hand[\s-]?off|spawn|kick off|fire up|launch)/i;
+// 弱引导词：必须与动作词分列别名前后才构成委派意图。
+const LEAD_VERB_RE = /(用|使用|让|叫|请|喊|找|\blet\b|\bhave\b|\bask\b|\buse\b|\brun\b)/i;
+// 动作词面必须够宽：「读 / 看 / 跑 / 总结」这类都是常见交付动作，漏一个就把真点名放走
+// （实测 2026-10-15：只列到「查」时，「用 claude code 帮我读取 package.json 并总结」
+// 被判成未点名，nudge 不注入）。防误命中的是**前窗紧贴**（LEAD_WINDOW=8），不是动作词收窄。
+const ACTION_VERB_RE =
+  /(做|改|写|读|看|查|跑|试|建|删|加|实现|开发|搭建|迁移|重构|修复|修|处理|完成|生成|创建|编写|整理|总结|分析|比较|对比|翻译|搜索|搜|执行|运行|测试|测|编译|部署|检查|验证|优化|清理|升级|办|弄|\bbuild\b|\bimplement\b|\bdevelop\b|\bscaffold\b|\bfix\b|\brefactor\b|\btest\b|\bwrite\b|\bread\b|\brun\b|\bhandle\b|\bcheck\b|\banaly[sz]e\b|\bsummariz|\bgenerate\b|\bcreate\b|\bmigrate\b|\breview\b|\bdebug\b)/i;
+// 否定 / 征询：命中即「不是在派活」。
+const NEGATION_RE =
+  /(不要|不用|不需要|无需|不必|别再|别|莫|禁止|不准|不是|而不是|而非|不靠|不想|\bdon'?t\b|\bdo not\b|\bdonot\b|\bnever\b|no need|rather than|instead of|\bwithout\b)/i;
+const OPINION_RE =
+  /(你觉得|你认为|你看|你觉得|怎么样|咋样|好不好|行不行|可不可以|要不要|该不该|是否|建议|\bdo you think\b|\bshould we\b|\bwhat do you\b|\bhow about\b)/i;
+
+// 邻域半径（字符数）：中文委派句的引导词紧贴别名，8/12 足够覆盖「帮我用 claude code 改一下」；
+// 强动词允许更远的语序变化（「把整个模块交给 claude」），取 14。
+const LEAD_WINDOW = 8;
+const ACTION_WINDOW = 12;
+const STRONG_WINDOW = 14;
+
+const SENTENCE_BOUNDARY_RE = /[\n。！？!?；;]/;
+
+/** 取包含 idx 的那一句（征询判定按句不按段——「用 claude 改。你觉得呢？」不该整段作废）。 */
+function _sentenceAt(text, idx) {
+  let s = idx;
+  while (s > 0 && !SENTENCE_BOUNDARY_RE.test(text[s - 1])) s -= 1;
+  let e = idx;
+  while (e < text.length && !SENTENCE_BOUNDARY_RE.test(text[e])) e += 1;
+  return text.slice(s, e);
+}
+
+/** 别名出现在 [idx, idx+aliasLen) 时，判断这一处是否构成委派意图。纯函数，绝不抛。 */
+function _hasDelegationIntent(text, idx, aliasLen) {
+  const end = idx + aliasLen;
+  const lead = text.slice(Math.max(0, idx - LEAD_WINDOW), idx);
+  const action = text.slice(end, end + ACTION_WINDOW);
+  if (NEGATION_RE.test(lead)) return false;
+  if (OPINION_RE.test(_sentenceAt(text, idx))) return false;
+  const strongWin = text.slice(Math.max(0, idx - STRONG_WINDOW), end + STRONG_WINDOW);
+  if (STRONG_DELEGATE_RE.test(strongWin)) return true;
+  return LEAD_VERB_RE.test(lead) && ACTION_VERB_RE.test(action);
+}
 
 // 收敛到 utils/toLowerCaseSafe 单一真源(逐字节委托,调用点不变)
 const _norm = require('../utils/toLowerCaseSafe');
@@ -307,8 +371,8 @@ function evaluateDelegationAdmission(input, env) {
 
 /**
  * 确定性识别用户是否在自然语言里点名要驱动某外部 agent。
- * 两命中闸门(零假阳性):必须同时出现 ①某已知 agent 的别名 ②驱动/委派动词。
- * 多 agent 同现时按注册表顺序取第一个命中者(delegatable 项优先靠前)。
+ * 判据是**邻近关系**（见上「点名意图识别」注释块）：别名每一处出现各自判定一次，
+ * 任一处构成委派意图即接管；多 agent 同现时按注册表顺序取第一个命中者（delegatable 优先靠前）。
  * 纯函数,绝不抛;门关或未命中 → null。
  *
  * @param {string} message 用户消息原文
@@ -324,29 +388,25 @@ function detectExternalAgentRequest(message, env) {
     if (!text) {
       return null;
     }
-    if (!DRIVE_VERB_RE.test(text)) {
-      return null;
-    } // 无驱动动词 → 不接管
     for (const agent of EXTERNAL_AGENTS) {
       for (const alias of agent.aliases) {
-        // 词界匹配:别名两侧非字母数字(中文/标点/空白/首尾均可),避免 "clause"/"discourse" 类子串误命中。
-        const idx = text.indexOf(alias);
-        if (idx < 0) {
-          continue;
+        let idx = text.indexOf(alias);
+        while (idx >= 0) {
+          const before = idx === 0 ? '' : text[idx - 1];
+          const afterChar = idx + alias.length >= text.length ? '' : text[idx + alias.length];
+          const isWordChar = (c) => c !== '' && /[a-z0-9]/.test(c);
+          // 词界匹配:别名两侧非字母数字(中文/标点/空白/首尾均可),避免 "clause"/"discourse" 类子串误命中。
+          if (!isWordChar(before) && !isWordChar(afterChar) && _hasDelegationIntent(text, idx, alias.length)) {
+            return {
+              id: agent.id,
+              name: agent.name,
+              delegatable: agent.delegatable,
+              adapter: agent.adapter,
+              blurb: agent.blurb,
+            };
+          }
+          idx = text.indexOf(alias, idx + alias.length);
         }
-        const before = idx === 0 ? '' : text[idx - 1];
-        const after = idx + alias.length >= text.length ? '' : text[idx + alias.length];
-        const isWordChar = (c) => c !== '' && /[a-z0-9]/.test(c);
-        if (isWordChar(before) || isWordChar(after)) {
-          continue;
-        } // 子串命中(前后仍是字母数字)→ 跳过
-        return {
-          id: agent.id,
-          name: agent.name,
-          delegatable: agent.delegatable,
-          adapter: agent.adapter,
-          blurb: agent.blurb,
-        };
       }
     }
     return null;
@@ -370,16 +430,17 @@ function buildExternalAgentNudge(message, env) {
       return '';
     }
     if (hit.delegatable) {
-      // 点名即 G1 成立——把这一确定性事实**随委派调用一起传下去**:模型必须把
-      // `[委派闸门 G1]` 写进 prompt 首行,工具侧的准入判定据此放行(工具看不到用户原文,
-      // 没有这条标记就无法区分「用户点名」与「模型自己想去外包」)。
+      // 点名即 G1 成立——但**凭据不在你手里**：本轮的点名事实已由运行时按 turn 记入
+      // delegationTicket，工具侧核销的是那条记录，不是你 prompt 里的字样。标记照写，
+      // 它的作用是向用户申报闸门（[DESIGN-PROCESS-001] §6.2），不是换取放行。
       return [
         '[SYSTEM:外部 agent 路由]',
         `用户明确要求用 ${hit.name}(${hit.blurb})完成本任务——委派闸门 **G1 用户点名** 已成立。请立即调用 Agent 工具委派:`,
         `  subagent_type: '${hit.id}'`,
         '  prompt: 写成**自包含**的完整任务描述——外部 agent 看不到本次对话历史,必须把目标、涉及文件的绝对路径、约束、期望产出全部写进 prompt。',
-        '  prompt **首行必须是闸门标记**: `[委派闸门 G1]` ——没有这个标记,委派会被准入判定拒绝并回退 khy 自做。',
+        '  prompt **首行写出闸门标记**: `[委派闸门 G1]` ——这是向用户申报闸门的措辞;真正的准入凭据是运行时按本轮 turn 记录的点名票券,自写标记换不到放行。',
         '不要自己内联去做这件事,也不要只是口头说「交给它」;真的发起这一次 Agent 工具调用,并在回复用户时声明「已交给 X(闸门 G1)」。',
+        '委派回来的结果**由你验收**后才能作为结论交付(§5.1 / §6.3),不得原样转述。',
       ].join('\n');
     }
     return [
@@ -426,7 +487,10 @@ function buildExternalAgentDirective(env) {
       '经 Agent 工具的 `subagent_type` 委派(外部 agent **看不到本次对话历史**,`prompt` 必须自包含:目标 + 涉及文件的绝对路径 + 约束 + 期望产出):',
       delLines,
       '',
-      '委派时必须在 prompt 首行写出闸门标记( `[委派闸门 G1]` / `[委派闸门 G2]` / `[委派闸门 G3]` 之一;没有标记的委派会被准入判定拒绝并回退自做),并在回复用户时显式声明「已交给 X(闸门 Gn)」。',
+      '委派时在 prompt 首行写出闸门标记( `[委派闸门 G1]` / `[委派闸门 G2]` / `[委派闸门 G3]` 之一),并在回复用户时显式声明「已交给 X(闸门 Gn)」。',
+      '',
+      '**G1 不由你书写成立**:用户点名的凭据由运行时按本轮 turn 记录并在工具侧核销;你在 prompt 里自写 `[委派闸门 G1]` 而用户并未点名 ⇒ 判定为无闸门,回退自做。',
+      'G2/G3 的证据必须是**可复查的事实**(缺哪一项能力 / 为什么必须在外部环境),不是你的自评。',
       '',
       `其它可用 agent 作为**顶层会话**运行(不能经 subagent_type 委派):${launchLine}——需要时提示用户用对应命令启动。`,
     ].join('\n');

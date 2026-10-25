@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>trajectoryNarrative — 任务叙事（热奈特话语层） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>trajectory<span class="sep">›</span>trajectoryNarrative<span class="sep">›</span>trajectoryNarrative — 任务叙事（热奈特话语层）</div>
+      <header class="hero reveal"><h1>trajectoryNarrative — 任务叙事（热奈特话语层）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#trajectorynarrative-任务叙事-热奈特话语层">trajectoryNarrative — 任务叙事（热奈特话语层）</a></li><li class="lvl-2"><a href="#流水线">流水线</a></li><li class="lvl-2"><a href="#五范畴速查">五范畴速查</a></li><li class="lvl-2"><a href="#红线">红线</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="trajectorynarrative-任务叙事-热奈特话语层">trajectoryNarrative — 任务叙事（热奈特话语层）<a class="anchor" href="#trajectorynarrative-任务叙事-热奈特话语层" aria-label="锚点">#</a></h1>
+<p>把一次会话的执行记录讲成一个可追溯的故事。设计真源：<br><code>docs/03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-130] 任务叙事-热奈特话语层.md</code>。</p>
+<h2 id="流水线">流水线<a class="anchor" href="#流水线" aria-label="锚点">#</a></h2>
+<pre><code>buildConversationChain(sessionId)
+  → storyCollect.collectStory   故事层：严格时序 StoryEvent[]，每条带 seq
+  → discourse.buildNarrative    话语层：热奈特五范畴算子 → NarrativePlan
+  → render.renderNarrative      成稿：过程叙事 + 结果叙事（预叙）+ 证据锚点表
+  → polish.maybePolish          可选：模型润色（KHY_NARRATIVE_POLISH，默认关）</code></pre>
+<h2 id="五范畴速查">五范畴速查<a class="anchor" href="#五范畴速查" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>范畴</th><th>规则</th></tr></thead><tbody><tr><td>时序</td><td>顺叙；折返修订标「回到第 k 步」（倒叙）；结果前置（预叙）</td></tr><tr><td>时距</td><td>场景=失败/写入/耗时≥10s/用户请求；概要=常规只读；省略=turn 统计；停顿=thinking（仅 <code>--focus reasoning</code>）</td></tr><tr><td>频率</td><td>连续同名同目标工具调用合并为「N 次尝试」</td></tr><tr><td>语式</td><td><code>--focus task</code> 外聚焦 / <code>--focus reasoning</code> 内聚焦</td></tr><tr><td>语态</td><td>外叙述者 · 事后叙述 · 第三人称「KHY」</td></tr></tbody></table>
+<h2 id="红线">红线<a class="anchor" href="#红线" aria-label="锚点">#</a></h2>
+<p>过程段每句以 <code>[#n]</code> 回指故事层事件；润色稿丢锚点 / 造锚点 / 超长 3 倍<br>一律丢弃回退骨架。模型只改文风，不改事实。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash"><span class="hljs-built_in">cd</span> runtime/node/backend
+node --<span class="hljs-built_in">test</span> src/services/domain/trajectory/trajectoryNarrative/trajectoryNarrative.test.js
+node bin/khy.js recap narrative            <span class="hljs-comment"># 当前会话</span>
+node bin/khy.js recap narrative --mode process --focus reasoning</code></pre>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/services/domain/trajectory/README.html"><div class="dir">← 上一篇</div><div class="ttl">trajectory — 录制、回放、双轨与 provenance 判定（D2）</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/services/domain/trajectory/trajectoryProvenance/README.html"><div class="dir">下一篇 →</div><div class="ttl">trajectoryProvenance — 轨迹溯源与防篡改链（D2 业务上下文）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/trajectory/trajectoryNarrative/README.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

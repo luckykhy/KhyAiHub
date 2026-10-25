@@ -6,26 +6,26 @@
   "_deviation_note": "登记而非白名单，四笔：(1) **D2→D1 五条**，逐条实名：artifactHash.js:14 `../../../sourceSnapshotCrypto`（sha256Hex 单一实现，重写它只会造成两套哈希）、replayLedger.js:167 `../../../sessionPersistence`（jsonlPathFor 是会话路径的 SSOT，账本边车必须跟着它）、replayBundle.js:96 `../../../sessionPersistence`（同一理由的第二个站点）、replayEngine.js:46 `../../../toolCalling`（惰性取 executeTool：回放必须走同一个执行漏斗，文件锁/路径归一/注册表校验才继续生效）、replayStepPolicy.js:44 与 :55 `../../../execApproval`（matchCommandPattern 与 EXEC_APPROVED 符号，两处）。D2→D1 在 DOMAIN-DEPS 里是 declared_not_enforced，真源归 archDebtScan R1/R3 与 cross-layer-require 棘轮，本清单如实登记、不写白名单把它合法化（与 reverseEngineer 同一口径）。(2) tierRegistry.js:29 require `../../../../tools/_writeToolNames`，而 `src/tools/**` **不属于 DOMAIN-DEPS.json 的任何域根**——既非 D1 也非 D4，这条边在方向判定上是「未映射」，不能说合规也不能说违规；它是 FILE 档的派生源（删掉它 FILE_TOOLS 就失去唯一真源），域归属缺口的裁决见任务 #17。(3) 桶 index.js 生产零消费者（六个消费者全直连成员文件），桶只作为公开面的机器可读清单存在。(4) 录制热路径的入边来自作者 in-flight 的 `src/services/tool/toolUseLoopCore.js`（两处 recordToolTurn），该文件当前为 ` M`，本批**未触碰**、也未据其临时行为下任何结论。",
   "fanIn": 6,
   "fanInEvidence": [
-    "services/backend/src/cli/handlers/replay.js",
-    "services/backend/src/cli/handlers/guide.js",
-    "services/backend/src/services/tool/toolUseLoopCore.js",
-    "services/backend/src/services/domain/trajectory/trajectoryGuide/mapAuthor.js",
-    "services/backend/src/services/domain/eval/guiEval/recordingCollector.js",
-    "services/backend/src/services/domain/eval/guiEval/checkpointVerifier.js"
+    "runtime/node/backend/src/cli/handlers/replay.js",
+    "runtime/node/backend/src/cli/handlers/guide.js",
+    "runtime/node/backend/src/services/tool/toolUseLoopCore.js",
+    "runtime/node/backend/src/services/domain/trajectory/trajectoryGuide/mapAuthor.js",
+    "runtime/node/backend/src/services/domain/eval/guiEval/recordingCollector.js",
+    "runtime/node/backend/src/services/domain/eval/guiEval/checkpointVerifier.js"
   ],
   "_fanIn_note": "非测试消费者 6 个文件 / 11 个 require 站点（按「直接 require 本单元路径」计，文件形态与成员形态都算，计数排除 *.test.js）：replay.js 取 4 个成员（replayBundle/replayEngine/replayLedger/tierRegistry），guide.js 取 2 个（replayBundle/replayLedger），toolUseLoopCore.js 取 replayLedger 的两个站点，mapAuthor.js 取 2 个（artifactHash/tierRegistry），guiEval 的 recordingCollector.js 与 checkpointVerifier.js 各取 artifactHash 一个（惰性 + try/catch）。域构成：3 个 D1（cli×2 + tool×1）+ 3 个 D2，全部是允许方向入边。注：本单元的扇入统计对目录形态 require 敏感——早期只匹配成员形态的探针会把 `require('.../syscallGateway')` 这类整包引用漏掉，故本数字经一次「文件形态 + 目录形态」双匹配探针复测。",
   "behaviourTestsOutsideUnit": [
-    "services/backend/tests/services/domain/trajectory/trajectoryReplay/tierRegistry.test.js",
-    "services/backend/tests/cli/handlers/replayHandler.test.js",
-    "services/backend/tests/cli/handlers/guideHandler.test.js",
-    "services/backend/tests/cli/handlers/replayHandlerAi.test.js",
-    "services/backend/tests/services/trajectoryReplay/p1Ledger.test.js",
-    "services/backend/tests/services/trajectoryReplay/p2EnvFingerprint.test.js",
-    "services/backend/tests/services/trajectoryReplay/p3Bundle.test.js",
-    "services/backend/tests/services/trajectoryReplay/p4Engine.test.js",
-    "services/backend/tests/services/trajectoryReplay/g2EngineRepairSeam.test.js",
-    "services/backend/tests/services/trajectoryReplay/e2eReplay.test.js",
-    "services/backend/tests/services/trajectoryGuide/aiBridge.test.js"
+    "runtime/node/backend/tests/services/domain/trajectory/trajectoryReplay/tierRegistry.test.js",
+    "runtime/node/backend/tests/cli/handlers/replayHandler.test.js",
+    "runtime/node/backend/tests/cli/handlers/guideHandler.test.js",
+    "runtime/node/backend/tests/cli/handlers/replayHandlerAi.test.js",
+    "runtime/node/backend/tests/services/trajectoryReplay/p1Ledger.test.js",
+    "runtime/node/backend/tests/services/trajectoryReplay/p2EnvFingerprint.test.js",
+    "runtime/node/backend/tests/services/trajectoryReplay/p3Bundle.test.js",
+    "runtime/node/backend/tests/services/trajectoryReplay/p4Engine.test.js",
+    "runtime/node/backend/tests/services/trajectoryReplay/g2EngineRepairSeam.test.js",
+    "runtime/node/backend/tests/services/trajectoryReplay/e2eReplay.test.js",
+    "runtime/node/backend/tests/services/trajectoryGuide/aiBridge.test.js"
   ],
   "_outside_test_note": "全仓 grep `trajectoryReplay` 命中 11 份单元外测试（一次清点即全数，未抽样），逐份按方言实跑：**75 例 / 0 fail / 0 skip**。6 份是 node:test 可直接跑（replayHandler 6、p1Ledger 9、p2EnvFingerprint 7、p3Bundle 6、p4Engine 8、e2eReplay 2）；5 份是 jest 方言，本便携环境未安装 jest（`node_modules/.bin/jest` 是悬空 shim），在 `node --test` 下加载期即失败，都用一次性方言垫片复跑核实（镜像树 tierRegistry 17、guideHandler 6、replayHandlerAi 3、g2EngineRepairSeam 6、trajectoryGuide/aiBridge 5）。「跑不了」不等于「红」，但错误文本必须读，且垫片本身要能给出真判据。⚠ 一处**同名不同物**：`tests/services/domain/trajectory/trajectoryReplay/tierRegistry.test.js`（jest 方言，17 例）与单元内共置的 `tierRegistry.test.js`（node:test，13 例）名字相同、方言不同、用例数不同，两者都是活的，不是重复件的残留——判「哪份是影子」时不可只看文件名。另需注意：本单元的测试覆盖横跨两种方言与两棵树（tests/ 镜像树 + 共置），任何一次「全绿」结论都必须两边都跑，只跑一边会少 75 或 147 例。",
   "lifecycle": {
