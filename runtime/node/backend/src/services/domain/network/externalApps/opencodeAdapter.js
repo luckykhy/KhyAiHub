@@ -23,6 +23,7 @@
  * (NL 现给优先,否则复用 khy 已存)。
  */
 
+const fs = require('fs');
 const path = require('path');
 
 const S = require('./_shared');
@@ -122,15 +123,31 @@ function _healDoc(doc) {
   return { changed };
 }
 
-/** 便携布局探测:由本脚本位置推算 khy-os 根 → 其父目录(通常是 <Portable>)→ Tools/opencode/config/opencode.json。
- *  khy-os 与 Tools 便携同源;在外部 install 环境下回退 XDG 默认,绝不硬编码盘符。 */
+/**
+ * 便携布局探测:上溯 .portable 标记找到 khy-os 仓库根 → 其父目录(<Portable>)
+ * → Tools/opencode/config/opencode.json。
+ * 上溯标记而非硬编码级数:新旧布局(runtime/node/backend/src/services/... 与
+ * services/backend/src/services/...)自本文件上溯的深度不同,硬编码级数在布局
+ * 迁移后会静默错位(曾指向 runtime/node/Tools/... 的无效路径,靠 XDG 兜底才未暴露)。
+ * 外部 install 环境(无 .portable 标记)→ 返回空串,由 XDG 默认兜底。绝不硬编码盘符。
+ */
 function _portableConfigPath() {
-  try {
-    const khyosRoot = path.resolve(__dirname, '..', '..', '..', '..', '..');
-    return path.join(khyosRoot, '..', 'Tools', 'opencode', 'config', 'opencode.json');
-  } catch {
-    return '';
+  let dir = __dirname;
+  for (let i = 0; i < 16; i += 1) {
+    try {
+      if (fs.existsSync(path.join(dir, '.portable'))) {
+        return path.join(path.dirname(dir), 'Tools', 'opencode', 'config', 'opencode.json');
+      }
+    } catch {
+      return '';
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) {
+      break;
+    }
+    dir = parent;
   }
+  return '';
 }
 
 function _existsFile(p) {
@@ -142,12 +159,19 @@ function _existsFile(p) {
 }
 
 /**
- * opencode.json 路径。解析顺序(取**已存在**者,复用真实配置;无则回退默认供写):
+ * opencode.json 路径。解析顺序与 opencode 自身一致(取**已存在**者,复用真实配置;
+ * 无则回退默认供写):
  *   1) OPENCODE_CONFIG           显式指向配置文件
- *   2) OPENCODE_CONFIG_DIR       opencode 官方 env,指向配置目录(opencode.cmd 便携版正是如此)
- *   3) <Portable>\Tools\opencode\config\opencode.json   便携布局
- *   4) XDG:~/.config/opencode/opencode.json             默认
- * 全部不存在时,返回 1) / 2) 的第一个候选,否则返回 XDG 默认(供 add/remove 创建)。
+ *   2) OPENCODE_CONFIG_DIR       opencode 官方 env,指向配置目录
+ *   3) XDG:$XDG_CONFIG_HOME/opencode/opencode.json(未设则 ~/.config/...)
+ *                              —— opencode 进程启动时就按 XDG 读这个位置,
+ *                              khy 必须解析到同一文件,否则读写的是非生效的
+ *                              历史遗留配置(如 ~/.config 下的旧副本)
+ *   4) <Portable>\Tools\opencode\config\opencode.json   便携布局兜底,仅当以上
+ *                              皆不存在时供写;旧布局遗留,**不可排在 XDG 前**
+ *                              (当前用户环境 XDG_CONFIG_HOME 指向便携 xdg,
+ *                              生效配置在那里,Tools/config 是旧布局遗留)
+ * 全部不存在时返回 1) / 2) 的第一个候选,否则返回 XDG 默认(供 add/remove 创建)。
  */
 function configPath(env = process.env) {
   if (env && env.OPENCODE_CONFIG) {
@@ -157,19 +181,18 @@ function configPath(env = process.env) {
   if (env && env.OPENCODE_CONFIG_DIR) {
     candidates.push(path.join(S.expandHome(env.OPENCODE_CONFIG_DIR, env), 'opencode.json'));
   }
+  const xdg = (env && env.XDG_CONFIG_HOME) || S.expandHome('~/.config', env);
+  candidates.push(path.join(xdg, 'opencode', 'opencode.json'));
   const portable = _portableConfigPath();
   if (portable) {
     candidates.push(portable);
   }
-  const xdg = (env && env.XDG_CONFIG_HOME) || S.expandHome('~/.config', env);
-  const xdgPath = path.join(xdg, 'opencode', 'opencode.json');
-  candidates.push(xdgPath);
   for (const c of candidates) {
     if (_existsFile(c)) {
       return c;
     }
   }
-  return candidates[0] || xdgPath;
+  return candidates[0] || path.join(S.expandHome('~/.config', env), 'opencode', 'opencode.json');
 }
 
 /** 原始读取(不自愈):供 repair 侦测损坏用。容忍 UTF-8 BOM(部分 opencode 安装会写入)。 */
