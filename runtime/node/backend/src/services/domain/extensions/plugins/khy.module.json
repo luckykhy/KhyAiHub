@@ -5,10 +5,10 @@
   "_mayDependOn_note": "按 DOMAIN-DEPS.json 的 D2 名义边界申报。实测出边（archDebtScan 解析后的 require 图，本道 2026-09-30 逐条核到行号）：D2 1 条、D3 2 条、**D1 4 条**：pluginContribResolver.js:39 → services/flagRegistry.js、:60 → tools/_baseTool.js、:66 → tools/index.js，pluginInvoker.js:30 → services/urlSafety.js。这 4 条属 d2-no-reach-into-d1 门（S1 观察者档）的在册存量，登记不修：消边方式（注入或目标归位）是 [RESEARCH-018] P2/Q2 的人工裁决面，其中 tools/ 的域归属本身待 Q4。",
   "fanIn": 4,
   "fanInEvidence": [
-    "services/backend/src/services/gateway/adapters/claudeAdapter.js (→ pluginContribResolver)",
-    "services/backend/src/services/gateway/adapters/codexAdapter.js (→ pluginContribResolver)",
+    "runtime/node/backend/src/services/gateway/adapters/claudeAdapter.js (→ pluginContribResolver)",
+    "runtime/node/backend/src/services/gateway/adapters/codexAdapter.js (→ pluginContribResolver)",
     "services/backend/src/services/plugins/index.js (→ resolver/invoker/bridge 三家)",
-    "services/backend/src/services/tool/toolCalling.js (→ resolver/bridge)"
+    "runtime/node/backend/src/services/tool/toolCalling.js (→ resolver/bridge)"
   ],
   "_fanIn_note": "非测试外部消费者去重 4 个（逐文件 fan-in：resolver 4 / invoker 1 / bridge 2），取自解析后的 require 图，与 .khyos/tmp/b54-unit-consumers.js 输出逐条对上。",
   "lifecycle": {

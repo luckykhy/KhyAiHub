@@ -6,12 +6,12 @@
   "_deviation_note": "登记而非白名单：index.js 的 shouldCompact 在 try 内惰性 require('../../../contextProfile') —— 那是 src/services/contextProfile.js，属 D1（src/services 顶层），不在 D2 的名义边界内。它缺失时回退为未钳制的原始 reserve（行为退化但不抛）。另有一条反向事实：D1 再导出壳 src/services/compact/index.js 指回本单元（D1→D2，允许）。本清单如实登记这条 D2→D1 边，交由 archDebtScan R1 与 domain-direction 的既有棘轮管辖，不写白名单把它合法化。",
   "fanIn": 1,
   "fanInEvidence": [
-    "services/backend/src/services/compact/index.js"
+    "runtime/node/backend/src/services/compact/index.js"
   ],
   "_fanIn_note": "非测试消费者 1 个：D1 再导出壳 services/compact/index.js。计数排除 *.test.js。**重要事实（如实记录，不粉饰）**：该壳本身在 src/ 下零消费者，本单元不在活的 /compact 通路上——运行时压缩走的是 services/contextCompressor.js 与 domain/query/query/{compactionStages,compactPipeline}.js；src/cli/compactInstructions.js:30 明确写了「不改道去 services/compact/* 那套 getCompactPrompt 通路」。本单元目前的真实读者只有两份测试。物理去留属规则 7（删除先报部位）与人的裁决，本清单不做删除动作。",
   "behaviourTestsOutsideUnit": [
-    "services/backend/tests/promptLearningRules.test.js",
-    "services/backend/tests/services/compactShouldCompactReserve.test.js"
+    "runtime/node/backend/tests/promptLearningRules.test.js",
+    "runtime/node/backend/tests/services/compactShouldCompactReserve.test.js"
   ],
   "_outside_test_note": "promptLearningRules.test.js 是 node:test 方言、可直接跑（19 例全绿）。compactShouldCompactReserve.test.js 是 jest 方言（describe/expect），本便携环境未安装 jest（node_modules/.bin/jest 是悬空 shim），`node --test` 跑它会因缺 describe 全局而 ReferenceError —— 故该文件在本环境**不可执行**，其 shouldCompact reserve 钳制断言已由共置 index.test.js 以同一算术复现。",
   "lifecycle": {

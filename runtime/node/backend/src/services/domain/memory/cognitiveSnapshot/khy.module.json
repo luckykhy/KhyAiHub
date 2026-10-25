@@ -5,8 +5,8 @@
   "_mayDependOn_note": "按 DOMAIN-DEPS.json 的 D2 名义边界如实声明。实测出域边：D3 共 8 处（utils/ 与 constants/，名义边界内合法，逐条站点由探针 .khyos/tmp/unit-profile.js 输出）；D1 共 3 处且全部指向同一文件 `services/contextWasm.js` —— `compressionEngine.js:42`、`index.js:55`、`workbench.js:34`。这 3 条属 declared_not_enforced 的 D2→D1，交 archDebtScan R1 与 cross-layer-require 棘轮管辖（裁决面见 [DESIGN-LAY-008] §12.43 的 Q2），本清单只登记不合法化。",
   "fanIn": 2,
   "fanInEvidence": [
-    "services/backend/src/services/cognitiveSnapshot/index.js",
-    "services/backend/src/services/tool/toolUseLoopHelpers.js"
+    "runtime/node/backend/src/services/cognitiveSnapshot/index.js",
+    "runtime/node/backend/src/services/tool/toolUseLoopHelpers.js"
   ],
   "_fanIn_note": "非测试外部消费者去重 2 个，逐条核到 require 行号：D1 历史路径再导出壳 `services/cognitiveSnapshot/index.js:4`；工具循环侧 `services/tool/toolUseLoopHelpers.js:1386` 惰性 require 取 CognitiveContextEngine。计数排除 *.test.js 与单元内部引用；同目录内的互相引用（如门面 → 各引擎）不计入对外 fan-in。",
   "lifecycle": {

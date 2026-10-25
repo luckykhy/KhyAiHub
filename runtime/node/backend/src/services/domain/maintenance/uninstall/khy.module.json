@@ -5,12 +5,12 @@
   "_mayDependOn_note": "按 DOMAIN-DEPS.json 的 D2 名义边界申报。实测出边（archDebtScan 解析后的 require 图 + .khyos/tmp/b54-unit-consumers.js，2026-09-30）：D3 1 条，**D1 1 条**：installLedger.js:82 → services/flagRegistry.js（属 d2-no-reach-into-d1 门在册存量，登记不修，消边方式见 [RESEARCH-018] P2/Q2 裁决面）。",
   "fanIn": 6,
   "fanInEvidence": [
-    "services/backend/src/cli/handlers/uninstall.js (→ installLedger/uninstallPlan)",
+    "runtime/node/backend/src/cli/handlers/uninstall.js (→ installLedger/uninstallPlan)",
     "services/backend/src/services/uninstall/index.js (→ 三家)",
-    "services/backend/src/services/domain/data/resources/resourceManager.js (→ ledgerWriter)",
-    "services/backend/src/services/mdEditorRegister.js (→ ledgerWriter)",
-    "services/backend/src/services/payloadProvisioner.js (→ ledgerWriter)",
-    "services/backend/src/services/runtimeProvisioner.js (→ ledgerWriter)"
+    "runtime/node/backend/src/services/domain/data/resources/resourceManager.js (→ ledgerWriter)",
+    "runtime/node/backend/src/services/mdEditorRegister.js (→ ledgerWriter)",
+    "runtime/node/backend/src/services/payloadProvisioner.js (→ ledgerWriter)",
+    "runtime/node/backend/src/services/runtimeProvisioner.js (→ ledgerWriter)"
   ],
   "_fanIn_note": "非测试外部消费者去重 6 个（逐文件：installLedger 2 / ledgerWriter 5 / uninstallPlan 2）。⚠ cli/handlers/uninstall.js 现为并行窗口在飞件（` M`），其引用面若变化此计数须复测。",
   "lifecycle": {
