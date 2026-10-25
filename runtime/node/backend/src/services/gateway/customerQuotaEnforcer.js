@@ -20,8 +20,9 @@
  *   - This module reads the JSON stores directly instead of requiring
  *     customerRegistry, because customerRegistry requires proxyServer and
  *     proxyServer requires this module (avoids a require cycle).
- *   - Enforcement fails OPEN on internal errors (an enforcement bug must
- *     never take the gateway down), but quota verdicts themselves are strict.
+ *   - Enforcement fails CLOSED on internal errors (a broken store must not
+ *     silently bill nobody), unless KHY_QUOTA_FAIL_OPEN=true. Quota verdicts
+ *     themselves are strict in both modes.
  *   - Usage persistence is write-through with atomic tmp+rename, matching
  *     the customerRegistry persistence pattern.
  *
@@ -121,6 +122,59 @@ function readJsonSafe(filePaths, fallback) {
     }
   }
   return fallback;
+}
+
+/**
+ * True when a store file is present but could not be parsed / read.
+ *
+ * This distinction is load-bearing: "no customer resolved" means two very
+ * different things. A missing store is a fresh install with nothing to bill,
+ * but an UNREADABLE store means every managed customer silently falls into the
+ * internal-channel exemption and gets served for free. Without this check the
+ * exemption path is itself the fail-open (repro b).
+ */
+function isStoreUnreadable(filePaths) {
+  for (const filePath of filePaths) {
+    try {
+      if (!filePath || !fs.existsSync(filePath)) {
+        continue;
+      }
+      const stat = fs.statSync(filePath);
+      if (!stat.isFile()) {
+        continue;
+      }
+      JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+      return false; // first existing candidate parsed cleanly
+    } catch {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isFailOpenAllowed() {
+  return String(process.env.KHY_QUOTA_FAIL_OPEN || '').toLowerCase() === 'true';
+}
+
+function buildStoreUnreadableVerdict() {
+  // Paths stay in the operator log, not in the response: DESIGN-API-002 §5
+  // lists internal file paths as not exposable.
+  try {
+    console.warn(
+      `[Proxy] 客户库/令牌库不可读，本次请求已拒绝：${customersFile()} / ${proxyAuthFile()}；` +
+        '若为应急放行可设 KHY_QUOTA_FAIL_OPEN=true'
+    );
+  } catch {
+    /* logging must not affect the verdict */
+  }
+  return {
+    allowed: false,
+    status: 503,
+    code: 'SERVICE_UNAVAILABLE',
+    details: { reason: 'customer_store_unreadable' },
+    message:
+      '服务暂不可用 (503)：配额存储不可读，本次请求未计费也未放行；请稍后重试，持续失败请联系管理员并提供 traceId',
+  };
 }
 
 /**
@@ -304,10 +358,25 @@ function normalizeQuota(input) {
     }
     return Math.max(0, num || 0);
   };
+  // monthlyBudgetCny is a BALANCE, not a ceiling: a refund may legitimately
+  // push it below zero (the customer is then in credit and must be blocked —
+  // see checkQuota). The other two stay clamped because they are usage
+  // ceilings and a negative ceiling has no meaning.
+  const rawBudget = Number(source.monthlyBudgetCny);
+  const budgetFinite = Number.isFinite(rawBudget);
+  if (source.monthlyBudgetCny !== undefined && !budgetFinite) {
+    try {
+      console.warn(
+        `[Proxy] 配额字段 monthlyBudgetCny 的值非法（${String(source.monthlyBudgetCny)}），已按 0 处理，请检查客户配额配置`
+      );
+    } catch {
+      /* logging must not affect the verdict */
+    }
+  }
   return {
     monthlyRequests: clampLimit('monthlyRequests'),
     monthlyTokens: clampLimit('monthlyTokens'),
-    monthlyBudgetCny: clampLimit('monthlyBudgetCny'),
+    monthlyBudgetCny: budgetFinite ? roundFen(rawBudget) : 0,
   };
 }
 
@@ -360,6 +429,11 @@ function toFen(cny) {
   return Math.round((Number(cny) || 0) * 100);
 }
 
+/** CNY rounded to whole fen, keeping the sign (refunds must stay negative). */
+function roundFen(cny) {
+  return toFen(cny) / 100;
+}
+
 /**
  * Pure quota verdict for a customer against current-month usage.
  * Gate semantics: block when already-used >= limit (the last request may
@@ -389,6 +463,19 @@ function checkQuota(customer, date = new Date()) {
     };
   }
   const spentCny = Math.max(usage.costCny || 0, usage.billedCny || 0);
+  // A negative balance means a refund pushed the customer past zero. That is
+  // arrears, not headroom, so it blocks before any spend — otherwise the
+  // legacy "0 means unlimited" reading would hand a fully-refunded customer
+  // unlimited usage.
+  if (quota.monthlyBudgetCny < 0) {
+    return {
+      ok: false,
+      scope: 'arrears',
+      used: spentCny,
+      limit: quota.monthlyBudgetCny,
+      month: usage.month,
+    };
+  }
   // Compare in integer fen so accumulated float error (0.1+0.2 style) can
   // never flip the budget verdict; display values stay 2-decimal CNY.
   if (quota.monthlyBudgetCny > 0 && toFen(spentCny) >= toFen(quota.monthlyBudgetCny)) {
@@ -405,11 +492,25 @@ function checkQuota(customer, date = new Date()) {
 
 function buildRejection(customer, verdict) {
   const id = customer.id;
+  if (verdict.scope === 'arrears') {
+    return {
+      allowed: false,
+      status: 429,
+      code: 'ARREARS',
+      details: { reason: 'refund_exceeds_paid', scope: verdict.scope },
+      scope: verdict.scope,
+      used: verdict.used,
+      limit: verdict.limit,
+      month: verdict.month,
+      message: `客户 ${id} 的月预算余额为负（¥${Number(verdict.limit).toFixed(2)}，退款已超出其已付额度），AI 网关已拒绝本次模型请求；请先为该客户充值补足余额`,
+    };
+  }
   if (verdict.scope === 'requests') {
     return {
       allowed: false,
       status: 429,
-      code: 'monthly_requests_exceeded',
+      code: 'CREDITS_EXHAUSTED',
+      details: { reason: 'monthly_requests_exceeded', scope: 'requests' },
       scope: verdict.scope,
       used: verdict.used,
       limit: verdict.limit,
@@ -421,7 +522,8 @@ function buildRejection(customer, verdict) {
     return {
       allowed: false,
       status: 429,
-      code: 'monthly_tokens_exceeded',
+      code: 'CREDITS_EXHAUSTED',
+      details: { reason: 'monthly_tokens_exceeded', scope: 'tokens' },
       scope: verdict.scope,
       used: verdict.used,
       limit: verdict.limit,
@@ -432,7 +534,8 @@ function buildRejection(customer, verdict) {
   return {
     allowed: false,
     status: 429,
-    code: 'monthly_budget_exceeded',
+    code: 'CREDITS_EXHAUSTED',
+    details: { reason: 'monthly_budget_exceeded', scope: 'budget' },
     scope: verdict.scope,
     used: verdict.used,
     limit: verdict.limit,
@@ -443,7 +546,13 @@ function buildRejection(customer, verdict) {
 
 /**
  * Gateway entry-point enforcement: token → customer → enabled + quota gate.
- * Fails OPEN on internal errors so enforcement can never break availability.
+ *
+ * On an internal error the verdict is now DENY by default: this module is the
+ * enforcement path actually wired into backend/proxyServer.js:2862, so a
+ * fail-open here means a broken store silently bills nobody. Set
+ * KHY_QUOTA_FAIL_OPEN=true to restore the old availability-first behaviour for
+ * deployments that would rather serve the request than check it.
+ *
  * Note: primary-token / PROXY_AUTH_TOKENS callers resolve to no customer and
  * are quota-exempt internal channels (see resolveCustomerByToken above).
  * @returns {{ allowed: true, customer: object|null } |
@@ -451,6 +560,15 @@ function buildRejection(customer, verdict) {
  */
 function enforce(presentedToken, date = new Date()) {
   try {
+    // Read the stores up front: an unreadable one must not degrade into "this
+    // token belongs to no customer", which is the exemption that costs money.
+    if (
+      !isFailOpenAllowed() &&
+      (isStoreUnreadable([customersFile(), legacyCustomersFile()]) ||
+        isStoreUnreadable([proxyAuthFile(), legacyProxyAuthFile()]))
+    ) {
+      return buildStoreUnreadableVerdict();
+    }
     const customer = resolveCustomerByToken(presentedToken);
     if (!customer) {
       return { allowed: true, customer: null };
@@ -459,7 +577,8 @@ function enforce(presentedToken, date = new Date()) {
       return {
         allowed: false,
         status: 403,
-        code: 'customer_disabled',
+        code: 'FORBIDDEN',
+        details: { reason: 'customer_disabled' },
         message: `客户「${customer.name}」(${customer.id}) 已被停用，AI 网关已拒绝本次模型请求（恢复访问需管理员重新启用该客户）`,
       };
     }
@@ -469,12 +588,30 @@ function enforce(presentedToken, date = new Date()) {
     }
     return { allowed: true, customer };
   } catch (err) {
+    if (isFailOpenAllowed()) {
+      try {
+        console.warn(`[Proxy] 客户配额检查内部异常（已放行本次请求，异常: ${err.message}）`);
+      } catch {
+        /* ignore */
+      }
+      return { allowed: true, customer: null };
+    }
     try {
-      console.warn(`[Proxy] 客户配额检查内部异常（已放行本次请求，异常: ${err.message}）`);
+      console.warn(
+        `[Proxy] 客户配额检查内部异常（已拒绝本次请求，异常: ${err.message}）；` +
+          '若为应急放行可设 KHY_QUOTA_FAIL_OPEN=true'
+      );
     } catch {
       /* ignore */
     }
-    return { allowed: true, customer: null };
+    return {
+      allowed: false,
+      status: 503,
+      code: 'SERVICE_UNAVAILABLE',
+      details: { reason: 'quota_check_failed' },
+      message:
+        '服务暂不可用 (503)：配额校验未完成，本次请求未计费也未放行；请稍后重试，持续失败请联系管理员并提供 traceId',
+    };
   }
 }
 

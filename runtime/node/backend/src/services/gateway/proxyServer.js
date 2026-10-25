@@ -2868,7 +2868,10 @@ async function start(portOrOptions) {
             error: {
               message: enforcement.message,
               type:
-                enforcement.code === 'customer_disabled' ? 'customer_disabled' : 'quota_exceeded',
+                enforcement.details && enforcement.details.reason === 'customer_disabled'
+                  ? 'customer_disabled'
+                  : 'quota_exceeded',
+              ...(enforcement.details ? { details: enforcement.details } : {}),
               code: enforcement.code,
               quota: enforcement.scope
                 ? {

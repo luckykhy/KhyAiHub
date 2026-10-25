@@ -31,6 +31,8 @@ const { usageTracker } = require('../usageTracker');
 
 const failureExplainer = require('./failureExplainer');
 const keySelector = require('./keySelector');
+// 外部智能体委派：key 集合与剔除/静默判定的单一真源（RUNTIME-010 A2-5）。
+const delegationGate = require('./delegationGate');
 const { shouldSkipManualRelayInAutoCascade } = require('./manualRelayAutoFallbackPolicy');
 // [DESIGN-ARCH-181] 二期:兜底资格纯叶子(判据单一真源 + 环境级跳过规划/判定/重置)。
 // 回滚面:options.fallbackOwnership=false 时各消费点逐字节回退(见各调用点注释)。
@@ -2120,6 +2122,19 @@ const AIGatewayGenerateMethod = {
         preferredAdapter = matched ? matched.key : preferredAdapterLower;
       }
     }
+    // ── 外部智能体委派审批闸：env 钉选不是人类批准 ────────────────────────────
+    // 此处（以及下方任何 options.preferredAdapter 解析）刻意**不设** delegationApprovedByUser
+    // 批准标记：GATEWAY_PREFERRED_ADAPTER 有三条亲验的无人在环机器写入路径——
+    // ① 预检探测胜者直写 process.env（aiMessageBuilder.js 预检，每轮 chat 触发，
+    //    候选过滤只排 relay/relay_api/clipboard，claude/codex/opencode/cli 全是候选）；
+    // ② 自检自动修复写 .env（baseSelfCheckService.js，跨进程生效）；
+    // ③ setActiveChannel 运行时直写 env（aiGatewayRoutingMethods.js）。
+    // 因此外部 key 的钉选（无论来自 env 还是 options）一律不带批准标记 → 在
+    // _generateWithAdapterIsolation 的审批闸处询问用户——这也机械封死 AgentTool
+    // delegation 判定抛异常后兜底钉 claude 的 fail-open 缝隙。唯一合法的批准标记
+    // 字面值 'user-command' 只由用户亲手敲 `khy <agent>` 的入口写入
+    // （cli/handlers/ide.js startChat）；任何其他值都会被闸当作未批准处理。
+    // GATEWAY_ROUTING_MODE 四档只管模型 tier 选型，与本闸无关。
     // ── GLM 视觉外层请求:强制钉 `api` 适配器(glmVisionApiPin)──────────────
     // 背景/实测根因:模型本身就是 GLM 视觉模型(glm/glm-4.6v-flash、glm-4v-flash)时,
     // decideVisionRouting 走 `keep` 分支 → 不进 describe 级联 → 从不钉 api;且用户常有一个
@@ -2181,6 +2196,17 @@ const AIGatewayGenerateMethod = {
     );
     let firstTriedAdapter = null;
     let failedPreferredReason = null;
+    // 首选通道被委派审批闸拒绝（errorType='delegation_denied'）且**非用户显式钉选**
+    // （userPinnedAdapter=false，即机器直写的 env pin：预检/自检/setActiveChannel）时置位。
+    // 置位后 strict 的两处「只留在钉选通道内」分支放行：拒绝外部委派 ≠ 拒绝任务，
+    // 级联继续尝试原生通道——env 默认 strict 本就保留兜底弹性（见上方 strict 注释），
+    // 用户显式钉选（proxyServer userPinned / 显式 strictPreferred）的「绝不级联」契约不变。
+    let _delegationDeniedOnPreferred = false;
+    // 本轮是否已有外部智能体委派被审批闸拒绝。一次拒绝 = 本轮其余外部 key 静默跳过：
+    // 用户的拒绝是对「把活交给外部智能体」这件事本身的拒绝，不是对某一个 key 的拒绝，
+    // 接着问下一个 key 等于把同一个问题重问一遍。跨 jitter 整轮重试保留（不重置）——
+    // 那一轮会重建 _triedAdapters，若不保留就会把已被拒的 key 再问一次。
+    let _delegationDeniedThisRound = false;
     const defaultTotalAttemptsBudget = isLargeTask ? 12 : isSmallTask ? 3 : 6;
     const baseMaxTotalAttempts = _parsePositiveInt(
       options.maxTotalAttempts ??
@@ -2988,6 +3014,31 @@ const AIGatewayGenerateMethod = {
       strictPreferredOnly,
       emitStatus,
     });
+
+    // ── 外部委派 key 不进自动级联（PROCESS-004「默认自做，委派是例外」）───────────
+    // 组装完成后剔除外部智能体 key，除非用户亲手敲 `khy <agent>`（humanPin）或显式钉选
+    // 了其中一条（userPinnedAdapter）——后者是用户点名的通道。env 钉选的三条机器直写
+    // 路径不构成人类批准（见上方 2124 起的钉选注释），故 env 钉到 codex/claude 时同样剔除：
+    // 否则每轮普通问题都会拿它当首选候选，逐个弹「是否委派」的卡。
+    {
+      const _delegationStrip = delegationGate.stripUnapprovedExternalAdapters(orderedAdapters, {
+        delegationApprovedByUser: options.delegationApprovedByUser,
+        delegationPolicy: delegationGate.resolveDelegationPolicy(process.env),
+        userPinnedAdapter,
+        preferredAdapter,
+      });
+      if (_delegationStrip.removedKeys.length > 0) {
+        orderedAdapters = _delegationStrip.kept;
+        if (_delegationStrip.removedKeys.includes(preferredAdapter)) {
+          // 钉选通道本身就是被剔除的外部 key：strict 的两处「只留在钉选通道内」分支
+          // 与审批闸拒绝后同路放宽，让原生通道接手（拒绝委派 ≠ 拒绝任务）。
+          _delegationDeniedOnPreferred = true;
+        }
+        emitStatus(
+          `外部智能体通道 ${_delegationStrip.removedKeys.join('/')} 未获用户批准，本轮自动级联已跳过（需要该通道请 khy <agent> 显式指定）`
+        );
+      }
+    }
 
     const _verbosity = String(process.env.KHY_STATUS_VERBOSITY || 'auto')
       .trim()
@@ -4043,7 +4094,18 @@ const AIGatewayGenerateMethod = {
       };
     };
 
-    if (strictPreferredOnly && preferredAdapter && preferredAdapter !== 'auto') {
+    // A delegation-stripped preferred adapter is absent from orderedAdapters BY DESIGN
+    // (see the strip block above), so the terminal failure below would report a
+    // registered, available channel as "not registered" and end the round with zero
+    // attempts — leaving the native channels the strip intended to hand over to never
+    // tried. Denying external delegation is not denying the task: relax the pin here
+    // exactly like the two in-loop strict branches, which already gate on the same flag.
+    if (
+      strictPreferredOnly &&
+      preferredAdapter &&
+      preferredAdapter !== 'auto' &&
+      !_delegationDeniedOnPreferred
+    ) {
       const preferredEntry = orderedAdapters.find((a) => a.key === preferredAdapter);
       if (!preferredEntry) {
         const missingMsg = `preferred adapter "${preferredAdapter}" is not registered`;
@@ -4229,7 +4291,11 @@ const AIGatewayGenerateMethod = {
         // (「注册表为空或全部未就绪」的猜测,掩盖了真正的钉选原因)。
         // 记录与既有 virtualSkip 同型(manual-relay :3934 / 冷却 :4090),
         // _pickPrimaryCause 会把 virtualSkip 排在实失败之后,不毒化诊断与熔断。
-        if (strictPreferredOnly && entry.key !== preferredAdapter) {
+        if (
+          strictPreferredOnly &&
+          entry.key !== preferredAdapter &&
+          !_delegationDeniedOnPreferred
+        ) {
           const _skipAlreadyLogged = allAttempts.some(
             (a) => a && a.adapterKey === entry.key && a.errorType === 'strict_pinned_skip'
           );
@@ -4277,6 +4343,26 @@ const AIGatewayGenerateMethod = {
         if (_envStep.arm) _envGuard.armed = true;
         if (_envStep.statusText) { _envGuard.announced = true; emitStatus(_envStep.statusText); }
         if (_envStep.skip) { if (_envStep.skipEntry) allAttempts.push(_envStep.skipEntry); continue; }
+        // 一次外部委派被拒后，本轮其余外部 key 直接跳过（不再弹卡）：用户的拒绝是对
+        // 「把活交给外部智能体」这件事本身的拒绝。留痕走 virtualSkip 同型（不毒化冷却）。
+        if (delegationGate.shouldSilenceExternalOnRoundDenial(entry.key, _delegationDeniedThisRound)) {
+          const _skipAlreadyLogged = allAttempts.some(
+            (a) => a && a.adapterKey === entry.key && a.errorType === 'delegation_denied_skip'
+          );
+          if (!_skipAlreadyLogged) {
+            emitStatus(`外部智能体通道 ${entry.key} 本轮已有委派被拒，已跳过（不再询问）`);
+            allAttempts.push({
+              provider: entry.key,
+              adapterKey: entry.key,
+              success: false,
+              error: `${entry.key} skipped: external delegation already declined this round`,
+              statusCode: 0,
+              errorType: 'delegation_denied_skip',
+              virtualSkip: true,
+            });
+          }
+          continue;
+        }
         if (!firstTriedAdapter) {
           firstTriedAdapter = entry.key;
         }
@@ -5645,7 +5731,24 @@ const AIGatewayGenerateMethod = {
               if (preferredAdapter && entry.key === preferredAdapter && !failedPreferredReason) {
                 failedPreferredReason = result.error || 'preferred adapter skipped';
               }
-              if (strictPreferredOnly && entry.key === preferredAdapter) {
+              // 机器钉选（env 直写，非用户显式钉选 userPinnedAdapter）下首选外部通道被
+              // 审批闸拒绝 → strict 的「留在钉选通道内」两处分支放行，级联继续原生通道：
+              // 拒绝外部委派 ≠ 拒绝任务。外部智能体适配器 poolProvider=null 恰走本
+              // single-key 分支（pooled 分支只有 relay/relay/api，闸不涉）。
+              if (result.errorType === 'delegation_denied') {
+                _delegationDeniedThisRound = true;
+                if (entry.key === preferredAdapter && !userPinnedAdapter) {
+                  _delegationDeniedOnPreferred = true;
+                  emitStatus(
+                    `外部智能体 ${adapterDisplayName} 委派未获批准（1 次拒绝），strict 钉选放宽：继续尝试原生通道`
+                  );
+                }
+              }
+              if (
+                strictPreferredOnly &&
+                entry.key === preferredAdapter &&
+                !_delegationDeniedOnPreferred
+              ) {
                 return finishResult(
                   {
                     success: false,
@@ -6456,6 +6559,10 @@ const AIGatewayGenerateMethod = {
           let shortestRemainingMs = Infinity;
           for (const entry of orderedAdapters) {
             if (!entry.enabled || !entry.available) {
+              continue;
+            }
+            // 本轮外部委派已被拒：紧急放行不得把外部 key 捞回来再弹一次卡。
+            if (delegationGate.shouldSilenceExternalOnRoundDenial(entry.key, _delegationDeniedThisRound)) {
               continue;
             }
             const cached = await this._getRecentFastFail(entry.key);
