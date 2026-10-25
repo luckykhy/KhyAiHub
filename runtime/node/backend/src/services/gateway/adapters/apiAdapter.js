@@ -510,10 +510,61 @@ function _poolMark(poolKey, action, statusCode, errorMsg) {
 }
 
 /**
+ * 决定一次 zen 请求走「本机直连」还是「服务端代理」。见 services/zenLocalRoute.js。
+ * 任何异常都回退代理（绝不因为判据本身出错就让免费渠道不可用）。
+ */
+function _zenRouteDecision(poolKey, resolvedModel, options = {}) {
+  try {
+    const route = require('../../zenLocalRoute');
+    if (!route || typeof route.decide !== 'function') {
+      return { mode: 'proxy', reason: 'leaf-missing', model: resolvedModel };
+    }
+    let available = false;
+    try {
+      const oc = require('./opencodeAdapter');
+      available = typeof oc.detect === 'function' ? !!oc.detect() : false;
+    } catch {
+      available = false;
+    }
+    return route.decide({
+      poolKey,
+      model: resolvedModel,
+      localAvailable: available,
+      env: options.env || process.env,
+    });
+  } catch {
+    return { mode: 'proxy', reason: 'decision-error', model: resolvedModel };
+  }
+}
+
+/**
+ * 把请求交回本机 opencode CLI（用它的机器码与本机 IP 发出）。
+ * 返回 null 表示委派不可用或失败 → 调用方回退代理路。
+ */
+async function _delegateToLocalOpencode(prompt, options, decision) {
+  try {
+    const oc = require('./opencodeAdapter');
+    const route = require('../../zenLocalRoute');
+    const modelArg = route.localModelArg(decision.model);
+    const res = await oc.generate(prompt, { ...options, model: modelArg });
+    if (!res || typeof res !== 'object') {
+      return null;
+    }
+    // 只在**明确失败**时回退代理；空内容也算成功（模型可能合法地返回空）。
+    const failed = res.success === false || !!res.errorType || !!res.error;
+    if (failed) {
+      return null;
+    }
+    return { ...res, adapter: 'opencode', zenRoute: 'local' };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Generate a response through cloud API providers.
  */
-async function generate(prompt, options = {}) {
-  if (process.env.KHY_DEBUG_TOOLS === '1') {
+async function generate(prompt, options = {}) {  if (process.env.KHY_DEBUG_TOOLS === '1') {
     console.error(
       `[DEBUG-ADAPTER] apiAdapter.generate tools=${Array.isArray(options.tools) ? options.tools.length : 0}`
     );
@@ -585,6 +636,23 @@ async function generate(prompt, options = {}) {
     }
   }
   const resolvedProvider = effectiveServiceProvider || null;
+
+  // ── OpenCode Zen 免费模型：本机直连优先 ────────────────────────────────
+  // 上游免费层的配额**按出口 IP 计**（2026-10-24 实测：本机 IP 直连 → 429
+  // FreeUsageLimitError；共享代理 IP → 403 abusive traffic）。故服务端代发时，
+  // 所有用户共用一份配额 —— 一个人吃完全员 429，再全员被封。
+  // 本机有 opencode CLI 时交回本机 opencode 发出：用它自己的机器码 + 本机 IP，
+  // 且免费层的指纹门控与 body 门控由本机 opencode 自己满足，网关不必伪造。
+  // 判据见 services/zenLocalRoute.js（纯叶子，可单测）；显式 KHY_ZEN_ROUTE=proxy
+  // 可随时改回代理，KHY_ZEN_LOCAL_ROUTE 关则整体回退现状。
+  const zenRoute = _zenRouteDecision(poolKey, resolvedModel, options);
+  if (zenRoute.mode === 'local') {
+    const local = await _delegateToLocalOpencode(prompt, options, zenRoute);
+    if (local) {
+      return local;
+    }
+    // 本机委派失败 → 落回代理路（保持现状行为，不让免费渠道整体不可用）
+  }
 
   try {
     const result = await fetchWithTimeout(

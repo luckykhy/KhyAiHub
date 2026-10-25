@@ -7,7 +7,7 @@
   "_deviation_note": "无跨层偏差：本单元源码内没有任何 require 伸进 D1（src/services、src/cli）或 D4/D5，故无需向 cross-layer-require 棘轮登记偏差。唯一的仓外关联是它的消费者方向 —— D1 的兼容别名壳 services/backend/src/services/dualTrack/index.js 以 `module.exports = require('../domain/trajectory/dualTrack')` 再导出本单元，这是 D1→D2 的下行边（D1.mayDependOn 含 D2，合法），不构成本单元的出边，也不计入本清单的 mayDependOn。",
   "fanIn": 1,
   "fanInEvidence": [
-    "services/backend/src/services/dualTrack/index.js"
+    "runtime/node/backend/src/services/dualTrack/index.js"
   ],
   "_fanIn_note": "1 个仓内消费者（实测 2026-09-28）：`git grep` 全仓扫 require 说明符、按 Node 解析规则归一到本单元 9 个成员后去重计数，不含 *.test.js、不含单元内互引。唯一命中是 D1 再导出壳 services/backend/src/services/dualTrack/index.js（require('../domain/trajectory/dualTrack')），按 [DESIGN-LAY-008] 第 0 步约定纯 re-export 壳仍算真实入口，故如实计入。其余文本提及（如 security/adversarial/*、data/reverseEngineer/* 注释里的 'dualTrackForge'）指向的是兄弟单元 trajectory/dualTrackForge/，不是本单元，且均为注释非 require，不计入。本单元当前是「机制已就位、尚未被业务广泛接线」的基座，fanIn=1 是真实读数而非漏测。",
   "lifecycle": {
