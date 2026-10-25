@@ -108,6 +108,68 @@ function _phase(onPhase, stage, pct) {
 }
 
 /**
+ * 压缩期线索台账(clueVault 便捷出口,fail-soft):确定性抽取「丢了会出错」的线索
+ * (约束/决策/锚/未决)。门控 KHY_CLUE_VAULT 关或模块不可用 → '' → 各接缝逐字节回退。
+ * S1 观察者:只增不改 —— 本函数绝不改变 splitIndex 或任何既有字段。
+ *
+ * @param {Array} messages
+ * @returns {string}
+ */
+function _clueVaultDigest(messages) {
+  try {
+    return require('./clueVault').buildDigest(messages, { env: process.env });
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * 增量摘要路径的台账(clueVault 便捷出口,fail-soft):承接上一轮摘要里的结构化台账行
+ * (来源保真)并并入本轮折叠对话的新线索。门控关/模块不可用 → ''。
+ *
+ * @param {string} priorText 上一轮摘要文本(仅其台账行被承接,派生正文不参与)
+ * @param {Array} messages   本轮被折叠的消息
+ * @returns {string}
+ */
+function _clueVaultDigestWithCarry(priorText, messages) {
+  try {
+    return require('./clueVault').buildDigestWithCarry(priorText, messages, { env: process.env });
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * 台账行数(样本计数用:S1 毕业判据的观测面)。格式由 clueVault.renderLedger 锁定。
+ * @param {string} digest
+ * @returns {number}
+ */
+function _clueLedgerLineCount(digest) {
+  return digest ? digest.split('\n').filter((l) => l.startsWith('- [')).length : 0;
+}
+
+/**
+ * 把线索台账并入自动摘要块(而不是追加独立消息:压缩结果的消息**条数**被既有代理断言
+ * 与下游桥接逻辑依赖,独立消息会改变条数)。压缩后模型仍直接看得到早期约束/决策的原文摘录,
+ * 而非只依赖二手摘要。门控关/空 digest → '' → 摘要消息内容逐字节回退。
+ *
+ * @param {string} digest
+ * @returns {string}
+ */
+function _clueLedgerSection(digest) {
+  if (!digest) {
+    return '';
+  }
+  try {
+    const cv = require('./clueVault');
+    const tag = cv.CLUE_LEDGER_TAG;
+    return `\n\n<${tag}>\n[automated] 更早对话「丢了会出错」线索的确定性摘录，压缩后继续有效。\n${digest}\n</${tag}>`;
+  } catch {
+    return '';
+  }
+}
+
+/**
  * Show one line to the user. Returns false only when nobody could be reached.
  *
  * @param {'info'|'success'|'warn'|'error'} level
@@ -799,10 +861,22 @@ async function compress(messages, opts) {
   // 里程碑②：AI 摘要是压缩全程最长的一段（一次模型往返），发牌后条从此处开始
   // 缓慢追赶。此事件必须先于 callModelFn —— 否则长往返期间条是冻住的。
   _phase(onPhase, 'summarizing', 45);
+  // 线索保全(clueVault, S1 只增不改):被折叠的正是「早期决策/约束」——只让摘要模型
+  // 泛泛「保留关键信息」会稀释它们。把确定性抽取的线索作为独立段落置于摘要输入。
+  // 门控 KHY_CLUE_VAULT 关 → clueDigest='' → summaryInput 与改前逐字节一致。
+  const clueDigest = _clueVaultDigest(oldMessages);
   try {
-    const summaryInput = taskAnchorText
-      ? `[Original task to preserve]\n${taskAnchorText}\n\n${oldTextWithTasks}`
-      : oldTextWithTasks;
+    const summaryParts = [];
+    if (taskAnchorText) {
+      summaryParts.push(`[Original task to preserve]\n${taskAnchorText}`);
+    }
+    if (clueDigest) {
+      summaryParts.push(
+        `[Clues that must survive compression — deterministic extract, keep them verbatim in the summary]\n${clueDigest}`
+      );
+    }
+    summaryParts.push(oldTextWithTasks);
+    const summaryInput = summaryParts.join('\n\n');
     const result = await callModelFn(summaryInput, { effort: 'medium', _isFollowUp: true });
     summary = result?.reply || result?.content || result;
     if (typeof summary !== 'string') {
@@ -855,9 +929,10 @@ async function compress(messages, opts) {
   // ── Step 6: Assemble result ────────────────────────────────────────
   // 修复: 用 user 角色存储摘要，避免 system 角色在 messages 数组中
   // 被适配器过滤掉（Anthropic 要求 system 放在顶层参数而非 messages 中）
+  // 线索台账并入摘要块(clueVault, S1 只增不改):门控关 → section='' → 内容逐字节回退。
   const summaryMessage = {
     role: 'user',
-    content: `<compressed_context>\nThis is an automated summary of earlier conversation that was compressed to save context space. It is NOT a user message.\n\n${summary}\n</compressed_context>`,
+    content: `<compressed_context>\nThis is an automated summary of earlier conversation that was compressed to save context space. It is NOT a user message.\n\n${summary}${_clueLedgerSection(clueDigest)}\n</compressed_context>`,
   };
 
   // 确保角色交替：如果 keptMessages 首条也是 user，插入 assistant 桥接
@@ -936,6 +1011,9 @@ async function compress(messages, opts) {
       splitIndex,
       strippedImages: strippedImageCount,
       summarySource,
+      // 线索保全 S1 样本计数(门控关时恒 0):台账行数,供 FEATURE-OWNERSHIP 的
+      // samples.observed 从审计台账统计(clue-vault 机制毕业判据)。
+      clueCount: _clueLedgerLineCount(clueDigest),
       mode: 'full',
     },
     { success: true },
@@ -1098,6 +1176,10 @@ async function _incrementalUpdate(messages, opts) {
   const toCompress = afterSummary.slice(0, compressCount);
   const toKeep = afterSummary.slice(compressCount);
 
+  // 线索保全(clueVault, S1 只增不改):承接上一轮台账 + 本轮折叠对话的新线索。
+  // 在模型调用前算好供两处用(提示词 + 替换摘要时回流);门控关 → '' → 全部逐字节回退。
+  const incClueDigest = _clueVaultDigestWithCarry(existingSummary, toCompress);
+
   // 里程碑②（增量路径同契约）：LLM 更新摘要同样是一次模型往返，进度条不能冻住。
   _phase(onPhase, 'summarizing', 45);
   // 用 LLM 增量更新摘要
@@ -1110,11 +1192,15 @@ async function _incrementalUpdate(messages, opts) {
   let incrementalUpdated = false;
   if (typeof callModelFn === 'function') {
     try {
-      const prompt = `以下是已有的上下文摘要和新增的对话内容。请更新摘要，合并新信息，保留关键决策和上下文。不要重写，只增量追加重要内容。\n\n已有摘要:\n${existingSummary.slice(0, INCREMENTAL_PROMPT_CHARS)}\n\n新增对话:\n${newText}`;
+      const clueSection = incClueDigest
+        ? `\n\n[本轮折叠对话的「丢了会出错」线索(确定性抽取,务必并入摘要,原文保留):]\n${incClueDigest}`
+        : '';
+      const prompt = `以下是已有的上下文摘要和新增的对话内容。请更新摘要，合并新信息，保留关键决策和上下文。不要重写，只增量追加重要内容。${clueSection}\n\n已有摘要:\n${existingSummary.slice(0, INCREMENTAL_PROMPT_CHARS)}\n\n新增对话:\n${newText}`;
       const result = await callModelFn(prompt, { effort: 'medium', _isFollowUp: true });
       const reply = result?.reply || result?.content || result;
       if (typeof reply === 'string' && reply.length > MIN_AI_SUMMARY_CHARS) {
-        updatedSummary = `[Compressed context summary]\n${reply}`;
+        // 替换旧摘要时把台账显式回流(承接+新线索):否则上一轮台账随旧文本一起消失。
+        updatedSummary = `[Compressed context summary]\n${reply}${_clueLedgerSection(incClueDigest)}`;
         incrementalUpdated = true;
       } else {
         _reportDegrade(
@@ -1192,6 +1278,7 @@ async function _incrementalUpdate(messages, opts) {
       newMessageTokens: newMsgTokens,
       compressCount,
       summaryUpdated: incrementalUpdated,
+      clueCount: _clueLedgerLineCount(incClueDigest),
       mode: 'incremental',
     },
     { success: true },
@@ -1354,6 +1441,15 @@ async function triggerCycleBoundary(messages, opts) {
       .filter(Boolean)
       .join('; ')
       .slice(0, budgetChars);
+  }
+
+  // 线索保全(clueVault, S1 只增不改):L2 briefing 在无 callModelFn(aiChatCore 3967 即
+  // 此形)或模型失败时会退化为「最近 3 条 assistant 首句」——决策与约束正是这样丢的。
+  // 确定性台账作为保底追加(两条路径都追加:模型策展是尽力而为,确定性是兜底保证)。
+  // 门控关 → '' → briefing 逐字节回退。
+  const cycleClueDigest = _clueVaultDigest(messages);
+  if (cycleClueDigest) {
+    briefing = briefing ? `${briefing}\n\n${cycleClueDigest}` : cycleClueDigest;
   }
 
   // Layer 3: Archive to disk

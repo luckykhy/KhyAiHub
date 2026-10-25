@@ -38,8 +38,30 @@ const DEFAULTS = {
   maxChildren: 10,
   agentTimeoutMs: 300_000, // 5 minutes
   maxTotalAgents: 50,
-  workspaceBaseDir: path.resolve(process.cwd(), '.khy', 'agent-workspaces'),
+  // workspaceBaseDir is deliberately absent: it used to be
+  // `path.resolve(process.cwd(), '.khy', 'agent-workspaces')` evaluated at
+  // require time, so merely importing this module from the repo root forked a
+  // second workspace tree. Resolved per-instance now (see
+  // _defaultWorkspaceBaseDir) so the location follows the data home.
 };
+
+/**
+ * Default A2A workspace root, resolved lazily.
+ *
+ * Was cwd-relative at require time; now goes through dataHome so KHY_DATA_HOME
+ * and the portable pointer decide it. KHY_A2A_WORKSPACE_DIR still wins.
+ */
+function _defaultWorkspaceBaseDir() {
+  const override = process.env.KHY_A2A_WORKSPACE_DIR;
+  if (override) {
+    return path.resolve(override);
+  }
+  try {
+    return require('../utils/dataHome').getDataDir('agent-workspaces');
+  } catch {
+    return path.resolve(process.cwd(), '.khy', 'agent-workspaces');
+  }
+}
 
 // ── Agent Session ─────────────────────────────────────────────────────────
 
@@ -68,6 +90,9 @@ class A2AAgentLifecycle extends EventEmitter {
   constructor(options = {}) {
     super();
     this._options = { ...DEFAULTS, ...options };
+    if (!this._options.workspaceBaseDir) {
+      this._options.workspaceBaseDir = _defaultWorkspaceBaseDir();
+    }
     this._agents = new Map(); // agentId → AgentSession
     this._rootAgents = new Set(); // Root agent IDs
     this._depthMap = new Map(); // depth → Set<agentId>

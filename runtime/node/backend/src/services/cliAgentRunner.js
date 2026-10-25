@@ -345,6 +345,11 @@ function _dedupeSubtasks(subtasks) {
  */
 async function runAgents(subtasks, opts = {}) {
   const { ai: aiModule, onProgress } = opts;
+  // Host approval channel: external agent roles (claude/codex, AGENT_ROLES) reach
+  // the gateway delegation gate on every subtask chat — without this channel the
+  // gate fails closed with no-interactive-channel and interactive REPL callers
+  // never get asked.
+  const onControlRequest = typeof opts.onControlRequest === 'function' ? opts.onControlRequest : null;
   const results = new Array(subtasks.length).fill(null);
   const preferredAdapterOverride = String(opts.preferredAdapter || '').trim();
   const preferredModelOverride = String(opts.preferredModel || opts.model || '').trim();
@@ -432,6 +437,7 @@ async function runAgents(subtasks, opts = {}) {
         const chatOpts = {
           _isFollowUp: true,
           effort: 'medium',
+          ...(onControlRequest ? { onControlRequest } : {}),
         };
         // Capability-aware adapter selection: infer requirements from task + role
         let capabilityAdapter = '';
@@ -493,13 +499,25 @@ async function runAgents(subtasks, opts = {}) {
         const result = await aiModule.chat(agentPrompt, chatOpts);
 
         const elapsed = Date.now() - startTime;
-        fireAgentEvents(idx, ['task_done']);
-        agentStates[idx].status = 'completed';
-        agentStates[idx].detail = 'Done';
-        agentStates[idx].result = result.reply || '';
-        agentStates[idx].tokens = result.tokenUsage?.totalTokens || 0;
-        agentStates[idx].elapsed = elapsed;
-        agentStates[idx].toolCalls = (result.commands || []).length;
+        // Honest failure envelope handling (same shape as workerAgent): the
+        // gateway reports failures as {success:false, errorType, reply:failure
+        // wall} instead of throwing. A failure wall must not be recorded as the
+        // subtask's result with status 'completed'.
+        if (result && (result.success === false || result.errorType)) {
+          const failureDetail = String(result.reply || result.error || 'AI 请求失败').slice(0, 300);
+          fireAgentEvents(idx, ['fail']);
+          agentStates[idx].status = 'error';
+          agentStates[idx].detail = `${result.errorType || 'unknown'}: ${failureDetail}`;
+          agentStates[idx].elapsed = elapsed;
+        } else {
+          fireAgentEvents(idx, ['task_done']);
+          agentStates[idx].status = 'completed';
+          agentStates[idx].detail = 'Done';
+          agentStates[idx].result = result.reply || '';
+          agentStates[idx].tokens = result.tokenUsage?.totalTokens || 0;
+          agentStates[idx].elapsed = elapsed;
+          agentStates[idx].toolCalls = (result.commands || []).length;
+        }
       } catch (err) {
         fireAgentEvents(idx, ['fail']);
         agentStates[idx].status = 'error';
