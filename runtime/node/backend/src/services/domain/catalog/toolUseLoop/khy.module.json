@@ -1,0 +1,32 @@
+{
+  "_note": "功能单元清单（[RESEARCH-018] §2.3 模板第 3 件 / 5-3-1 §3）。执行器 scripts/ci/check-repo-layout.js 的 entry-buffer 规则读本文件的 domain / mayDependOn / fanIn / lifecycle.stage 四个字段，其余字段是给人读的。",
+  "name": "toolUseLoop",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "按 DOMAIN-DEPS.json 的 D2 名义边界声明（D2→{D2,D3}）。本单元实测到 services/gateway 的 require 在名义边界外（D2→D1），已由 domain-direction 规则单列，不在此处放宽声明——本清单只登记允许面，不登记违规面。",
+  "fanIn": 1,
+  "fanInEvidence": ["runtime/node/backend/src/services/tool/toolUseLoopCore.js"],
+  "_fanIn_note": "1 个运行时非测试消费者（实测 2026-10-14：仓库内 require 本单元叶子的文件数，不含测试）。",
+  "lifecycle": {
+    "stage": "stable",
+    "since": "2026-10-14",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null,
+    "_stage_note": "晋级三判据此刻都在盘上：单元级 README.md、整数 fanIn、13 个源文件全部有同名同目录测试。provenance 如实写明它是机制建立后补记的存量，不是从 scripts/quarantine/ 晋级上来的。"
+  },
+  "tests": [
+    "abortCascade.test.js",
+    "budgets.test.js",
+    "checkpointThrottle.test.js",
+    "dedupLoopState.test.js",
+    "intentGuards.test.js",
+    "iterationJournal.test.js",
+    "iterationSummary.test.js",
+    "loopDetector.test.js",
+    "loopGuardState.test.js",
+    "loopObservability.test.js",
+    "monitorState.test.js",
+    "protocolContext.test.js",
+    "resolveToolCalls.test.js"
+  ]
+}

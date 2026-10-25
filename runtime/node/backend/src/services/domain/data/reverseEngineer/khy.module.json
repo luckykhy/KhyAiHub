@@ -6,14 +6,14 @@
   "_deviation_note": "登记而非白名单，三笔：(1) reconstructionPort 顶层 require `../../../gateway/safeJsonParse` —— 那是 src/services/gateway/，属 D1（src/services 顶层），不在 D2 的名义边界内。它是模型输出解析的既有共享件，缺失即无法解析 brain 的 JSON；D2→D1 在 DOMAIN-DEPS 里是 declared_not_enforced，交由 archDebtScan R1 与 cross-layer-require 棘轮管辖，本清单如实登记，不写白名单把它合法化。(2) genericExtractor 与 toolOrchestrator require `src/tools/platformUtils`（可执行文件探活 / 平台识别），而 `src/tools/**` **不属于 DOMAIN-DEPS.json 的任何域根**——既不是 D1 也不是 D4，因此这条边在方向判定上是「未映射」，既不能说合规也不能说违规；域归属缺口的裁决见任务 #17。(3) 唯一的 D1 入边是再导出壳 src/services/reverseEngineer/index.js（module.exports 直接转发本单元），工具层 src/tools/reverseEngineer.js 走的是这个壳而非 D2 路径。",
   "fanIn": 2,
   "fanInEvidence": [
-    "services/backend/src/services/reverseEngineer/index.js",
-    "services/backend/src/tools/unpackTool.js"
+    "runtime/node/backend/src/services/reverseEngineer/index.js",
+    "runtime/node/backend/src/tools/unpackTool.js"
   ],
   "_fanIn_note": "非测试消费者 2 个（按「直接 require 本单元路径」计）：D1 再导出壳 services/reverseEngineer/index.js、unpackTool.js（直连 genericExtractor.js 与 asarArchive.js 两个成员）。最终消费面 src/tools/reverseEngineer.js 经壳消费，故不计入本单元的直连 fan-in（记为 2 跳）。计数排除 *.test.js。注：src/utils/withTimeout.js 在全文 grep 里也命中本单元名，但命中的是文档注释（说明谁在用它），不是 require——已逐行核实，未计入。",
   "behaviourTestsOutsideUnit": [
-    "services/backend/tests/services/reverseEngineer/reverseEngineer.test.js",
-    "services/backend/tests/services/reverseEngineer/asarArchive.test.js",
-    "services/backend/tests/tools/unpackGeneric.test.js"
+    "runtime/node/backend/tests/services/reverseEngineer/reverseEngineer.test.js",
+    "runtime/node/backend/tests/services/reverseEngineer/asarArchive.test.js",
+    "runtime/node/backend/tests/tools/unpackGeneric.test.js"
   ],
   "_outside_test_note": "三份方言不同，结论按**实测**而非按方言名推断。reverseEngineer.test.js 是 node:test，本环境可跑，45 例全绿。另两份是 jest 方言：asarArchive.test.js 在 `node --test` 下加载期 `ReferenceError: describe is not defined`，unpackGeneric.test.js 是 `ReferenceError: beforeAll is not defined`（都发生在任何被测代码运行之前）——本便携环境未安装 jest，`node_modules/.bin/jest` 是悬空 shim。两份都用一次性方言垫片复跑核实过真实断言结果：asarArchive 6 例全过、unpackGeneric 7 过 1 skip（skip 那条要求本机真有 7z，本机没有，是如实 skip 不是假绿）。「跑不了」不等于「红」，但也不许反过来把「跑不了」当作「不用看」——错误文本必须读。",
   "lifecycle": {

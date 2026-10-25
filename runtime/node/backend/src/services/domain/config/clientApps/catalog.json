@@ -1,0 +1,175 @@
+{
+  "$schemaNote": "「应用中心」客户端应用登记表（唯一真源，DESIGN-ARCH-189 §7.1）。装载校验与探测逻辑见同目录 catalog.js / scan.js；新增一个客户端应用 = 在这里加一条 + 在 scan.js 的 ADAPTER_LOADERS 里登记其写配置器（若无写配置器则 adapter=null + 提供 probe，该卡只读探测）。",
+  "version": 1,
+  "updated": "2026-10-14",
+  "apps": [
+    {
+      "appId": "claude-code",
+      "name": "Claude Code",
+      "pkgName": "claude-code",
+      "desc": "Anthropic 代码智能体 CLI；网关接入写到 ~/.claude/settings.json 的 env 块",
+      "category": "cli",
+      "adapter": "claudeCodeAdapter",
+      "modelSlots": [],
+      "backupKeys": [
+        "claude-code-settings"
+      ]
+    },
+    {
+      "appId": "codex",
+      "name": "Codex CLI",
+      "pkgName": "codex-cli",
+      "desc": "OpenAI 代码智能体 CLI；网关接入写到 ~/.codex/config.toml 的 model_providers 表",
+      "category": "cli",
+      "adapter": null,
+      "probe": {
+        "kind": "home",
+        "segs": [
+          ".codex",
+          "config.toml"
+        ]
+      },
+      "modelSlots": [],
+      "backupKeys": [
+        "codex-config-toml",
+        "codex-auth-json"
+      ]
+    },
+    {
+      "appId": "opencode",
+      "name": "OpenCode CLI",
+      "pkgName": "opencode",
+      "desc": "OpenCode 终端智能体；网关接入写到 opencode.json 的 provider 树",
+      "category": "cli",
+      "adapter": "opencodeAdapter",
+      "modelSlots": [],
+      "backupKeys": [
+        "opencode-json"
+      ]
+    },
+    {
+      "appId": "gemini",
+      "name": "Gemini CLI",
+      "pkgName": "gemini-cli",
+      "desc": "Gemini 终端智能体；网关接入写到 ~/.gemini/settings.json 的 env 块",
+      "category": "cli",
+      "adapter": "geminiCliAdapter",
+      "modelSlots": [],
+      "backupKeys": [
+        "gemini-settings"
+      ]
+    },
+    {
+      "appId": "deepseek",
+      "name": "DeepSeek TUI",
+      "pkgName": "deepseek",
+      "desc": "DeepSeek 终端智能体；网关接入写到 ~/.deepseek/config.toml",
+      "category": "cli",
+      "adapter": "deepseekTuiAdapter",
+      "modelSlots": [],
+      "backupKeys": [
+        "deepseek-config-toml"
+      ]
+    },
+    {
+      "appId": "reasonix",
+      "name": "Reasonix",
+      "pkgName": "reasonix",
+      "desc": "Reasonix 终端智能体；网关接入写到 ~/.reasonix/config.toml 与 .env",
+      "category": "cli",
+      "adapter": "reasonixAdapter",
+      "modelSlots": [],
+      "backupKeys": [
+        "reasonix-config-toml",
+        "reasonix-env"
+      ]
+    },
+    {
+      "appId": "command-code",
+      "name": "Command Code",
+      "pkgName": "command-code",
+      "desc": "Command Code 终端智能体；密钥只写 env 引用，不落裸密钥",
+      "category": "cli",
+      "adapter": "commandCodeAdapter",
+      "modelSlots": [],
+      "backupKeys": [],
+      "backupNote": "只写 env 引用、不落裸密钥，无受管文件可备"
+    },
+    {
+      "appId": "ycode",
+      "name": "YCode",
+      "pkgName": "ycode",
+      "desc": "YCode 终端智能体；密钥只写 api_key_env 引用",
+      "category": "cli",
+      "adapter": "ycodeAdapter",
+      "modelSlots": [],
+      "backupKeys": [],
+      "backupNote": "只写 api_key_env 引用，无受管文件可备"
+    },
+    {
+      "appId": "zcode",
+      "name": "ZCode",
+      "pkgName": "zcode",
+      "desc": "ZCode 终端智能体；网关接入写到 provider.zai 槽位与 model.main/lite 双角色",
+      "category": "cli",
+      "adapter": "zcodeAdapter",
+      "modelSlots": [],
+      "backupKeys": [],
+      "backupNote": "desc 只说明写到 provider.zai 槽位与 model 双角色，未给出具体文件路径——待实测后补，不猜"
+    },
+    {
+      "appId": "openclaw",
+      "name": "OpenClaw",
+      "pkgName": "openclaw",
+      "desc": "OpenClaw 终端智能体；网关接入写到 ~/.openclaw/config.json 的 provider 树",
+      "category": "cli",
+      "adapter": "openclawAdapter",
+      "modelSlots": [],
+      "backupKeys": [
+        "openclaw-config-json"
+      ]
+    },
+    {
+      "appId": "coze",
+      "name": "Coze",
+      "pkgName": "coze",
+      "desc": "Coze 终端智能体；网关接入写到 ~/.coze/models/<model>/config.json",
+      "category": "cli",
+      "adapter": "cozeAdapter",
+      "modelSlots": [],
+      "backupKeys": [],
+      "backupNote": "目标按模型分发（~/.coze/models/<model>/config.json），key 无法静态化——待编排层按实际 model 派生"
+    },
+    {
+      "appId": "trae",
+      "name": "Trae",
+      "pkgName": "trae",
+      "desc": "Trae 桌面 IDE 的智能体；桥接 switch-center 的 profile 存储（无独立 live 配置文件）",
+      "category": "cli",
+      "adapter": "traeAppAdapter",
+      "modelSlots": [],
+      "backupKeys": [],
+      "backupNote": "桥接 switch-center 的 profile 存储，无独立 live 配置；其 configPath() 指向 khy-os 自己的 store，备它等于备自己"
+    },
+    {
+      "appId": "claude-desktop",
+      "name": "Claude Desktop",
+      "pkgName": "claude-desktop",
+      "desc": "Claude 桌面客户端；当前仅探测安装状态，网关接入待裁决（DESIGN-ARCH-189 §8 D2）",
+      "category": "desktop",
+      "adapter": null,
+      "probe": {
+        "kind": "userAppConfig",
+        "segs": [
+          "Claude",
+          "claude_desktop_config.json"
+        ],
+        "evidence": "repo:mcpEcosystemRegistry（仓内既有登记）"
+      },
+      "modelSlots": [],
+      "backupKeys": [],
+      "backupNote": "网关接入待裁决（DESIGN-ARCH-189 §8 D2），当前仅探测安装状态"
+    }
+  ],
+  "backupKeysNote": "backupKeys 是备份文件的命名空间，≠ appId：同一 app 可能有多份受管文件（codex 的 config.toml 与 auth.json、reasonix 的 config.toml 与 .env），两个 app 也可能写同一文件。空数组必须配 backupNote 说明原因。"
+}

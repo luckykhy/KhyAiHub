@@ -5,9 +5,9 @@
   "_mayDependOn_note": "按 DOMAIN-DEPS.json 的 D2 名义边界声明。实测出域边：D3 共 6 处（合法）；被路径前缀判成 D1 的 4 处里，3 处实为 `src/tools/**`（toolCatalog.js:144、toolContract.js:113、toolContract.js:150）—— src/tools 在 DOMAIN-DEPS 里没有域根映射（§12.43 Q4 的归属空洞），另 1 处 `toolContract.js:40` → `services/flagRegistry.js` 是 D3 归位（P2 第 17 批）后留下的兼容壳，语义为 D2→D3。⇒ 本单元同时命中两个「建真实 require 方向门前必须先定判据」的样本，登记而不写白名单。",
   "fanIn": 3,
   "fanInEvidence": [
-    "services/backend/src/cli/handlers/toollist.js",
-    "services/backend/src/cli/handlers/toolcheck.js",
-    "services/backend/src/services/toolCatalog/index.js"
+    "runtime/node/backend/src/cli/handlers/toollist.js",
+    "runtime/node/backend/src/cli/handlers/toolcheck.js",
+    "runtime/node/backend/src/services/toolCatalog/index.js"
   ],
   "_fanIn_note": "已定性的外部非测试消费者 3 个：/toollist 命令面、/toolcheck 命令面、D1 历史路径再导出壳。另有 1 处路径命中 `src/utils/trimIfString.js` **已定性**为其头注释里列举消费者的 JSDoc 行（`:7`），不是 require ⇒ 既不计入 fanIn，也不构成 D3→D2 违令边。",
   "lifecycle": {
