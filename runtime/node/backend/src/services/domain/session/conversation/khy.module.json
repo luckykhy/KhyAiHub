@@ -5,17 +5,17 @@
   "_mayDependOn_note": "实测边：btwNote.js 零 require（纯文本叶子）；btwNoteQueue.js 只 require ./btwNote（单元内，D2）。全单元不碰 fs/net/spawn，也不读 process.env（门控经 isEnabled(env) 入参注入），故不声明 D3。",
   "fanIn": 5,
   "fanInEvidence": [
-    "services/backend/src/cli/handlers/btw.js",
-    "services/backend/src/cli/tui/ink-components/App.js",
-    "services/backend/src/services/conversation/index.js",
-    "services/backend/src/cli/replSession.js",
-    "services/backend/src/services/selfEditWatcher.js"
+    "runtime/node/backend/src/cli/handlers/btw.js",
+    "runtime/node/backend/src/cli/tui/ink-components/App.js",
+    "runtime/node/backend/src/services/conversation/index.js",
+    "runtime/node/backend/src/cli/replSession.js",
+    "runtime/node/backend/src/services/selfEditWatcher.js"
   ],
   "_fanIn_note": "非测试消费者 5 个（去重后）：/btw 处理器、ink TUI 应用壳、D1 再导出壳 services/conversation/index.js、经典 REPL 会话、selfEditWatcher。计数排除 *.test.js。其中 cli/replSession.js 是作者 in-flight 文件，本单元只读它的 require 关系、未做任何改动。",
   "behaviourTestsOutsideUnit": [
-    "services/backend/tests/services/conversation/btwNote.test.js",
-    "services/backend/tests/services/conversation/btwNoteQueue.test.js",
-    "services/backend/tests/cli/handlers/btw.test.js"
+    "runtime/node/backend/tests/services/conversation/btwNote.test.js",
+    "runtime/node/backend/tests/services/conversation/btwNoteQueue.test.js",
+    "runtime/node/backend/tests/cli/handlers/btw.test.js"
   ],
   "lifecycle": {
     "stage": "stable",

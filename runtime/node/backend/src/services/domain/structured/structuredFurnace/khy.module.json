@@ -5,27 +5,27 @@
   "_mayDependOn_note": "实测出边（11 个源文件全数清点，require 说明符 path.resolve 后判定落点，**已剔除注释行**）。⚠ **census 首轮把 index.js:11 的 `const furnace = require('./services/structuredFurnace');` 当成一条边，是错的** —— 它位于 :3-28 的 JSDoc 头部用法示例里，块注释不参与判定，本清单不计它（与 [DESIGN-LAY-008] 反复出现的「注释参与判定就会假红」同型）。真实读数：**D2 3 个站点 / 1 个目标** = domain/project/metaplan/constraintStrategy（anomalyHandler.js:20、dimensionReducer.js:16、forgeSchema.js:21，桥接锁级枚举，方向合法）；**CORE 3 个站点** = crypto（chaosInterceptor.js:18 randomBytes+HMAC、dimensionReducer.js:14 sha1 uid、entityRegistry.js:18 sha1 内容寻址）；**SAME_UNIT 26 个站点**（chaosInterceptor 取 8 个兄弟、index 取 10 个、三个坍缩器互取）。**D2→D1 反向边 0**、**D5 可达 0**、**无域归属出边 0**（本单元没有伸向 src/tools 与 src/agents 的边 —— 这两恰是 mcp 单元 B30-M8 登记的守卫盲区，此处零命中，故 `domain-direction` 在本单元读数完整）。mayDependOn 按口径保持 [D2,D3] 不放宽；**实测 D3 一条边都没用到**（零 env、零 utils 依赖），本单元是全仓最干净的 D2 出边形态之一。",
   "fanIn": 2,
   "fanInEvidence": [
-    "services/backend/src/services/domain/security/adversarial/stressHarness.js",
-    "services/backend/src/services/structuredFurnace/index.js"
+    "runtime/node/backend/src/services/domain/security/adversarial/stressHarness.js",
+    "runtime/node/backend/src/services/structuredFurnace/index.js"
   ],
   "_fanIn_note": "非测试消费者 **2 个文件 / 2 个 require 站点**（判据：磁盘真实存在 + require 解析后落进本目录，排除 *.test.js 与本目录互取；git 对象库已损坏，名单按磁盘走查取）：(1) **D2** domain/security/adversarial/stressHarness.js:199 `require('../../structured/structuredFurnace')`，在 _driveFurnace 里跑高熵敌对 NL 的坍缩与验封（全仓**唯一**调用 assertForged 的生产代码）；(2) **D1** services/structuredFurnace/index.js:4 `module.exports = require('../domain/structured/structuredFurnace')` 整包 shim。域构成 1×D2 + 1×D1，方向均合法。⚠ **扇入 2 / 11 个源文件 = 近孤岛**，这是「这块是不是该退役的重量」的**事实前提**，但**退役与否则是人的裁决**，本清单不自裁。⚠ **同时必须如实记下第三个上游**：D1 shim 的调用方 services/tool/toolUseLoopHelpers.js:1330 `require('../structuredFurnace')` —— 它解析到的是 shim 而不是本目录，所以**不计入 fanIn**，但它是本单元**唯一默认开的生产接线**（maybeForgeStructuredIntent，capabilityMatrix PRE_DISPATCH 缝 + KHY_STRUCTURED_FURNACE，observe 模式）。也就是说：这不是「死代码」，是「活着但几乎没被行使」——该接线收下信封却从不验封（B31-F4）。另附死面读数（磁盘走查，本目录之外 0 个调用者）：hasCausalDependency、unreachableStates、pointerTable、deduplicatedCount、matrix、isAcyclic；isForged 生产侧 0 个调用者。",
   "tests": [
-    "services/backend/src/services/domain/structured/structuredFurnace/anomalyHandler.test.js",
-    "services/backend/src/services/domain/structured/structuredFurnace/chaosInterceptor.test.js",
-    "services/backend/src/services/domain/structured/structuredFurnace/dimensionReducer.test.js",
-    "services/backend/src/services/domain/structured/structuredFurnace/entityRegistry.test.js",
-    "services/backend/src/services/domain/structured/structuredFurnace/entropyAssessor.test.js",
-    "services/backend/src/services/domain/structured/structuredFurnace/forgeSchema.test.js",
-    "services/backend/src/services/domain/structured/structuredFurnace/index.test.js",
-    "services/backend/src/services/domain/structured/structuredFurnace/intentWeaver.test.js",
-    "services/backend/src/services/domain/structured/structuredFurnace/skeletonReconstructor.test.js",
-    "services/backend/src/services/domain/structured/structuredFurnace/stateMachine.test.js",
-    "services/backend/src/services/domain/structured/structuredFurnace/taskGraph.test.js"
+    "runtime/node/backend/src/services/domain/structured/structuredFurnace/anomalyHandler.test.js",
+    "runtime/node/backend/src/services/domain/structured/structuredFurnace/chaosInterceptor.test.js",
+    "runtime/node/backend/src/services/domain/structured/structuredFurnace/dimensionReducer.test.js",
+    "runtime/node/backend/src/services/domain/structured/structuredFurnace/entityRegistry.test.js",
+    "runtime/node/backend/src/services/domain/structured/structuredFurnace/entropyAssessor.test.js",
+    "runtime/node/backend/src/services/domain/structured/structuredFurnace/forgeSchema.test.js",
+    "runtime/node/backend/src/services/domain/structured/structuredFurnace/index.test.js",
+    "runtime/node/backend/src/services/domain/structured/structuredFurnace/intentWeaver.test.js",
+    "runtime/node/backend/src/services/domain/structured/structuredFurnace/skeletonReconstructor.test.js",
+    "runtime/node/backend/src/services/domain/structured/structuredFurnace/stateMachine.test.js",
+    "runtime/node/backend/src/services/domain/structured/structuredFurnace/taskGraph.test.js"
   ],
   "_tests_note": "11 个源文件 / 1591 行（wc -l 口径；census 逐文件值 = 本口径 +1）/ 11 份共置测试，**每个源文件都有同名同目录测试**（逐文件核对，非抽样）。实测（2026-09-29，`node --test` 显式列 11 个路径）：**215 例 / 712 个断言调用点 / 0 fail / 0 skip / 0 todo / duration_ms 1430.8**。逐文件（例/断言）：anomalyHandler 20/72、chaosInterceptor 23/95、dimensionReducer 21/55、entityRegistry 16/45、entropyAssessor 18/61、forgeSchema 27/88、index 12/72、intentWeaver 20/54、skeletonReconstructor 20/63、stateMachine 19/55、taskGraph 19/52；每份单独复跑亦全绿（11/11 fail=0），证明顺序无关。测试是**纯同步零 IO**：不打 fs、不打网络、不改 process.env、不起定时器（实测 grep 全目录 0 命中），因此不需要像 mcp 单元那样把 KHY_DATA_HOME/HOME 钉进 mkdtemp。唯一非确定性来自被测侧的 crypto.randomBytes 封印盐，测试全程同进程铸造并验封，index.test.js:205 反向把「两条 import 路径共用一把盐」钉成断言。**本批一份测试都没改**（11 份文件由上一位同事新增，本批只复跑与计数）。⚠ 大量用例标题带 `current, wrong`，钉的是**当前错误行为**，不许靠翻断言「修绿」（见 _outside_test_note 与 registered_defects）。",
   "behaviourTestsOutsideUnit": [
-    "services/backend/tests/services/structuredFurnace/structuredFurnace.test.js",
-    "services/backend/tests/services/structuredFurnace/intentWeaverConnectorHoist.test.js"
+    "runtime/node/backend/tests/services/structuredFurnace/structuredFurnace.test.js",
+    "runtime/node/backend/tests/services/structuredFurnace/intentWeaverConnectorHoist.test.js"
   ],
   "_outside_test_note": "单元外 2 份 / 4 个 require 站点（structuredFurnace.test.js:19 取 D1 shim 整包，另 3 站点直取 entityRegistry.js / taskGraph.js / forgeSchema.js；intentWeaverConnectorHoist.test.js 直取 intentWeaver.js）。**方言逐份实测：两份都是 `require('node:test')`（前者 describe/test、后者裸 test），不是 jest.mock、也不是裸 describe 无装载** —— 与 mcp 单元「8 份跑不了」的口径**不可照抄**。本机实测复跑（`node --test` 显式列 2 个路径，2026-09-29）：**30 例 / 8 suites / 30 pass / 0 fail / 0 skipped / duration_ms 574.2**，即**两份都可跑、全绿、真实执行**。内容口径：structuredFurnace.test.js 是 [DESIGN-ARCH-036] 的验收测试（§3.1 前置拦截与验封 / §3.2 三级路由 / §3.3 晶格三铁律 / §3.4 拒损与降级 / §5 防呆 / §4.4 场景对比），它是 deduplicatedCount 与 isForged 的**唯一**调用者；intentWeaverConnectorHoist.test.js 守的是 _CONNECTOR_MATCHERS 模块级预编译的字节等价性（Ch2），并**恰好把「首子句 connector 恒为 null」钉成了既有契约**（B31-F20/F18 的行为因此被测试背书为「不可改」，改它要先过这道测试）。本批两份**一份都没修改**。",
   "lifecycle": {

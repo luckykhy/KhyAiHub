@@ -7,11 +7,11 @@
   "_deviation_note": "没有跨层边需要登记：没有任何成员伸进 D1（src/services）或 src/cli——上层是通过 require('../domain/security/resilience') 或再导出壳 src/services/resilience/index.js 反向依赖本单元的，方向合法。本单元登记的内容级偏差三条：① intentTrees.js 的 _textSalvage 在 results[] 含 null/undefined 条目时抛 TypeError，与其 JSDoc「fail-safe，绝不抛错」矛盾（复现 .khy/feedback/b23-resilience/repro-before.txt 缺陷1；生产路径因 budgetExecutor._salvageOf 的 try/catch 兜住而未爆雷）——已修（results[] 只取对象与字符串条目，null/undefined 先过滤），复诊 .khy/feedback/b23-resilience/repro-after.txt；② 同函数的 title/url 取值用 r.link 兜底，字符串条目会命中 String.prototype.link 原生函数、把「function link(){[native code]}」渲染进残料并丢弃真实值——已修（字符串条目原样入线，不再经 r.link 兜底）；③ getIntentTree 曾走原型链裸查找（'valueOf'/'hasOwnProperty' 抛 TypeError、'constructor' 返回 {}，且抛错穿透门面 ResilienceCoordinator.run），复现存证 .khy/feedback/b23-resilience/repro-before.txt 缺陷2 + .khy/feedback/b23-resilience-2/——**已于 2026-09-28 由集中工作流修复**（intentTrees.js 现用 Object.prototype.hasOwnProperty.call 只认自有键），共置测试已翻正为修复后契约（inherited keys → null）。",
   "fanIn": 5,
   "fanInEvidence": [
-    "services/backend/src/services/resilience/index.js",
-    "services/backend/src/services/tool/toolCalling.js",
-    "services/backend/src/services/domain/maintenance/selfHeal/fallbackTree.js",
-    "services/backend/src/services/domain/maintenance/selfHeal/errorDiagnostician.js",
-    "services/backend/src/services/domain/security/adversarial/stressHarness.js"
+    "runtime/node/backend/src/services/resilience/index.js",
+    "runtime/node/backend/src/services/tool/toolCalling.js",
+    "runtime/node/backend/src/services/domain/maintenance/selfHeal/fallbackTree.js",
+    "runtime/node/backend/src/services/domain/maintenance/selfHeal/errorDiagnostician.js",
+    "runtime/node/backend/src/services/domain/security/adversarial/stressHarness.js"
   ],
   "_fanIn_note": "5 个仓内消费者（实测 2026-09-28 探针 .khyos/tmp/b23-fanin.js：git ls-files 全量扫相对 require 路径并解析到本单元目录或其成员，去重计数，不含 *.test.js，不含单元内互引）。第 1 条 src/services/resilience/index.js 是归位后留下的再导出壳（module.exports = require('../domain/security/resilience')），按 [DESIGN-LAY-008] 第 0 步约定仍算真实入口；第 2 条 tool/toolCalling.js 经该壳间接消费（require('../resilience')），如实计入并在此标明「经壳」。其余 3 条是直接边：selfHeal 两件为惰性 require（在函数体内），adversarial/stressHarness.js 两处 require('../resilience')。tests/ 下另有 3 个 *.test.js 消费者按口径不计。注释里提到本单元的文件（如 maintenance/selfHeal/index.js:9）不计入：探针只认 require 解析结果，不认文本提及。",
   "lifecycle": {
@@ -47,9 +47,9 @@
     "salvage.test.js"
   ],
   "behaviourTestsOutsideUnit": [
-    "services/backend/tests/services/resilience/resilience.test.js",
-    "services/backend/tests/services/adversarial/adversarialEngine.test.js",
-    "services/backend/tests/services/selfHeal/selfHeal.test.js"
+    "runtime/node/backend/tests/services/resilience/resilience.test.js",
+    "runtime/node/backend/tests/services/adversarial/adversarialEngine.test.js",
+    "runtime/node/backend/tests/services/selfHeal/selfHeal.test.js"
   ],
   "_test_dialect_note": "本目录 8 份共置测试一律 node:test（`node --test` 在 Windows 下须传显式文件名列表）。tests/ 下 3 份外部行为测试经再导出壳 require('../../../src/services/resilience') 命中本单元，同属 node:test 方言。"
 }

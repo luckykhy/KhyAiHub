@@ -19,11 +19,13 @@ const { getDataHome } = require('../../../../../utils/dataHome');
 let _pool = null;
 let _registrar = null;
 let _registry = null;
+let _verify = null;
 
 function bind(deps) {
   _pool = deps.pool;
   _registrar = deps.registrar;
   _registry = deps.registry;
+  _verify = deps.verify;
 }
 
 function _bound(name, dep) {
@@ -61,6 +63,9 @@ const contract = {
       defaultModel: { type: 'string', required: true },
       extraModels: { type: 'string', required: false },
       tier: { type: 'string', required: false },
+      // 新增中转前默认要过连通性自检；force=true / verify=false 是人显式点头的跳过。
+      force: { type: 'boolean', required: false },
+      verify: { type: 'boolean', required: false },
     },
     remove: {
       poolKey: { type: 'string', required: true },
@@ -81,6 +86,19 @@ const contract = {
       return { providers, presets: _bound('registrar', _registrar).getPresets() };
     },
     async add(args) {
+      // 与 CLI / Web 管理端共用同一道闸：探测不通过就不写任何配置。
+      const verification = await _bound('verify', _verify).verifyCustomProviderDraft(
+        {
+          endpoint: args.endpoint,
+          keyInput: args.keyInput,
+          defaultModel: args.defaultModel,
+        },
+        { force: args.force === true || args.force === 'true', skip: args.verify === false || args.verify === 'false' }
+      );
+      if (!verification.ok) {
+        throw new Error(`${verification.reason}（未写入任何配置）`);
+      }
+
       const result = _bound('registrar', _registrar).registerCustomProvider({
         displayName: args.displayName,
         poolKey: args.poolKey,
@@ -93,7 +111,7 @@ const contract = {
       });
       // Never echo the raw key back to either surface.
       const { firstKey, ...safe } = result;
-      return safe;
+      return { ...safe, verification: verification.summary };
     },
     async remove(args) {
       if (!args || !args.poolKey) {

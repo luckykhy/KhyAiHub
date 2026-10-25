@@ -5,7 +5,7 @@
   "_mayDependOn_note": "按 DOMAIN-DEPS.json 的 D2 名义边界如实申报，不写超出项。实测本单元出域边 0 条：`styleTemplates.js:22-23` 只 require Node 内置 fs/path，`contentSchema.js`、`markdownToAst.js`、`textEmphasisPolicy.js` 零 require。名义边界允许到 D3，实际连 D3 都没碰，是 D2 里的纯叶子单元。",
   "fanIn": 1,
   "fanInEvidence": [
-    "services/backend/src/services/typeset/index.js"
+    "runtime/node/backend/src/services/typeset/index.js"
   ],
   "_fanIn_note": "直接 require 本单元路径的非测试文件去重后 1 个：绞杀者模式留下的再导出壳 `services/typeset/index.js:34-37`（四个文件各一条，头两行自称 `Auto-generated shim - re-export`）。壳的下游 2 个消费者 require 的是壳不是本单元，不计入 fan-in，只记用途：`cli/markdownRenderer.js:59` 取 textEmphasisPolicy 并自带 `{}` 兜底（单元不可用不影响终端渲染）；`src/tools/renderDocument.js:33-35` 取 validateDocument / markdownToAst / resolveTemplate + listTemplates。⚠ 后者所在的 `services/backend/src/tools/**` 在 DOMAIN-DEPS.json 无域根映射（同 §12.31「未映射 7」），属归属空洞而非本单元的出域边。",
   "lifecycle": {
