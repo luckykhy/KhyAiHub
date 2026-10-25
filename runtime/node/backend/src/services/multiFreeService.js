@@ -1,8 +1,6 @@
 const http = require('http');
 const https = require('https');
 
-const jwt = require('jsonwebtoken');
-
 const { PRIMARY: MODELS } = require('../constants/models');
 const { request: nativeRequest, requestStream: nativeRequestStream } = require('../utils/nativeHttp');
 
@@ -558,6 +556,19 @@ function createStreamIdleWatchdog(stream, reject, label) {
   return { touch, clear };
 }
 
+// 内置 Zen 池的可用模型清单必须在构造时就过台账：apiAdapter.listModels 的第一个
+// 循环直接透传 availableModels（不走下方 custom pool 的 filterFreeZenModels），
+// 台账里已判死的 id 否则会重新出现在选择器里。
+function _offerableZenModels() {
+  const ids = BUILTIN_ZEN.models.map((id) => ({ id, name: id, tier: 'free' }));
+  try {
+    const kept = new Set(require('./zenGatekeeper').filterFreeZenModels(BUILTIN_ZEN.models));
+    return ids.filter((m) => kept.has(m.id));
+  } catch {
+    return ids;
+  }
+}
+
 class MultiFreeService {
   constructor() {
     this.baiduToken = null;
@@ -599,11 +610,7 @@ class MultiFreeService {
         priority: 0,
         supportsVision: false,
         baseUrl: BUILTIN_ZEN.endpoint,
-        availableModels: BUILTIN_ZEN.models.map((id) => ({
-          id,
-          name: id,
-          tier: 'free',
-        })),
+        availableModels: _offerableZenModels(),
       },
       google: {
         name: 'Google Gemini',
@@ -2108,6 +2115,10 @@ class MultiFreeService {
   }
 
   generateZhipuJWT(apiKey) {
+    // 本文件唯一 jwt 使用点,改为函数体内懒加载:顶层 require('jsonwebtoken')
+    // 实测 280-301ms / 75 模块,而 `khy status` 这类未命中路径经 ai.js 的
+    // getService→new MultiFreeService 把它整条拖进冷进程。行为不变。
+    const jwt = require('jsonwebtoken');
     const [id, secret] = apiKey.split('.');
     if (!id || !secret) {
       throw new Error('Invalid Zhipu API key format, expected id.secret');

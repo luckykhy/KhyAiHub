@@ -35,14 +35,25 @@ let _logFile = null;
 
 /**
  * Resolve the heal-audit.jsonl file path.
- * .khy/logs/heal-audit.jsonl (created if missing).
+ *
+ * Was `path.join(process.cwd(), '.khy', 'logs')` — a cwd-relative path. Every
+ * process whose working directory happened to be the repo root therefore
+ * created and appended to a SECOND tree at <repoRoot>/.khy, while the canonical
+ * home (works/data/khy) kept its own stale copy. Same class of bug as
+ * autoModelRouting's observe log; it is why "merge .khy and .khyos" had to be
+ * redone six times (housekeeping archives dated 2026-10-05 .. 2026-10-11).
+ *
+ * Now resolved through dataHome like every other store, so the location follows
+ * KHY_DATA_HOME / the portable pointer instead of the caller's cwd.
+ * KHY_HEAL_LOG_DIR still forces an explicit directory (tests, isolated runs).
  */
 function _file() {
   if (_logFile) {
     return _logFile;
   }
-  const khyDir = path.join(process.cwd(), '.khy');
-  const logsDir = path.join(khyDir, 'logs');
+  const logsDir = process.env.KHY_HEAL_LOG_DIR
+    ? path.resolve(process.env.KHY_HEAL_LOG_DIR)
+    : require('../utils/dataHome').getDataDir('logs');
   _logFile = path.join(logsDir, 'heal-audit.jsonl');
   return _logFile;
 }

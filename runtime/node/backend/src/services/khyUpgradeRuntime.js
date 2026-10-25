@@ -2143,11 +2143,13 @@ async function makeSystemPrompt(
             }
           }
           if (unrevealed.length > 0) {
-            deferredToolsHint =
-              `# Additional Tools\n` +
-              `The following tools are available but not currently loaded to save context space. ` +
-              `Use the toolSearch tool to discover and activate them when needed:\n` +
-              unrevealed.join(', ');
+            // 召回词表(自审 #4 残余面):裸名清单没有模型可搜的词——toolSearch 按词命中
+            // (scoreTool 的别名 +8 / searchHint +4),模型却看不到这些词,于是「想到要用的能力
+            // 也召不回该工具」。叶子把每个未揭示延迟工具的别名/hint 一并列出。门控
+            // KHY_TOOL_RECALL_INDEX 关 → 叶子返历史裸名清单(逐字节,接缝无需第二份模板);
+            // 叶子不可用 → 外层 catch → 不注入该块(与 selfProfile 侧各指令块同款 fail-soft)。
+            const { buildDeferredToolsHint } = require('../services/tool/deferredRecallIndex');
+            deferredToolsHint = buildDeferredToolsHint(unrevealed, deferred, { env: process.env });
           }
         }
       } catch {
@@ -2315,12 +2317,12 @@ async function makeSystemPrompt(
           }
         }
         if (unrevealed.length > 0) {
-          sections.push(
-            `# Additional Tools\n` +
-              `The following tools are available but not currently loaded to save context space. ` +
-              `Use the toolSearch tool to discover and activate them when needed:\n` +
-              unrevealed.join(', ')
-          );
+          // 召回词表(同统一路径;见上方 deferredToolsHint 注释与 services/tool/deferredRecallIndex.js)
+          const { buildDeferredToolsHint } = require('../services/tool/deferredRecallIndex');
+          const hint = buildDeferredToolsHint(unrevealed, deferred, { env: process.env });
+          if (hint) {
+            sections.push(hint);
+          }
         }
       }
     } catch {

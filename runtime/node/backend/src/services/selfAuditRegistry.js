@@ -28,6 +28,7 @@
  */
 
 const _FALSY = new Set(['0', 'false', 'off', 'no']);
+const _docVsMeasured = require('./docVsMeasuredPolicy');
 
 /**
  * 门控判定。优先走 flagRegistry(集中优先级 + dogfood),不可用时回退本地 CANON 词表。
@@ -92,10 +93,10 @@ const SELF_AUDIT_ITEMS = Object.freeze([
     severity: 'high',
     status: 'mitigated',
     mitigation:
-      'toolClusterActivation 按用户输入的能力信号确定式预激活对应延迟工具簇(门控 KHY_TOOL_CLUSTER_ACTIVATION)',
+      'toolClusterActivation 按用户输入的能力信号确定式预激活对应延迟工具簇(门控 KHY_TOOL_CLUSTER_ACTIVATION);deferredRecallIndex 把每个未揭示延迟工具的召回词(alias/searchHint,与 toolSearch 打分同源)随名字注入系统提示(门控 KHY_TOOL_RECALL_INDEX)',
     evidenceAnchors: Object.freeze({
-      modules: Object.freeze(['toolClusterActivation']),
-      gates: Object.freeze(['KHY_TOOL_CLUSTER_ACTIVATION']),
+      modules: Object.freeze(['toolClusterActivation', 'tool/deferredRecallIndex']),
+      gates: Object.freeze(['KHY_TOOL_CLUSTER_ACTIVATION', 'KHY_TOOL_RECALL_INDEX']),
     }),
   }),
   Object.freeze({
@@ -145,6 +146,16 @@ const SELF_AUDIT_ITEMS = Object.freeze([
       gates: Object.freeze(['KHY_COMMAND_PRIMARY_PANEL']),
     }),
   }),
+  Object.freeze({
+    id: '#8',
+    area: '回答纪律',
+    title: '回答过分相信文档,不实际用工具调研(引述文档里的说法,而非跑一遍/读一遍源码核实)',
+    severity: 'high',
+    status: 'mitigated',
+    mitigation: 'docVsMeasuredPolicy 注入「文档 vs 实测」三档纪律(实测/读到/引述)+ 三个最便宜取证入口(khy docs check / KhySelf 自审核验动作 / location+Read/Grep,门控 KHY_DOC_VS_MEASURED);toolUseLoopCore 零工具调用收尾时观察「引述未取证路径」(S1 只记录,样本落既有 toolLoopJournal)',
+    // 证据锚点与叶子共用同一份声明(单一真源;叶子删了/模块搬家了,核验即翻红)。
+    evidenceAnchors: _docVsMeasured.EVIDENCE_ANCHORS,
+  }),
 ]);
 
 // 元信息:原报告规模 vs 本 build 追踪到的规模,如实标注编号缺口(模型对自知边界也要自知)。
@@ -152,7 +163,7 @@ const SELF_AUDIT_META = Object.freeze({
   reportedTotal: 7, // 原自审报告条目数(#1..#7)
   trackedInCode: SELF_AUDIT_ITEMS.length,
   untracked: Object.freeze(['#2', '#3']), // 无代码依据、本 build 未追踪(不臆造其内容)
-  note: '原自审报告含 7 项;本代码库仅有 5 项存在可追溯的缓解模块/门控。#2、#3 未在代码库记录,其内容不在此臆造。',
+  note: '原自审报告 7 项(#1..#7);本代码库追踪到其中 5 项有可追溯的缓解模块/门控,#2、#3 未在代码库记录,其内容不在此臆造。#8 为 2026-10-13 新增追踪项(非原报告编号):「文档 vs 实测」纪律注入 + 结论期观察器。',
 });
 
 /** 返回自审项的浅拷贝数组(对外只读;元素本身已冻结)。 */

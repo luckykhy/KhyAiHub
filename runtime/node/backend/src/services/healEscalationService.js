@@ -358,12 +358,22 @@ function _env(opts) {
   return (opts && opts.env) || (typeof process !== 'undefined' ? process.env : {});
 }
 
-/** `.khy` 目录(与 healAuditService 同一约定:项目 cwd 下的 .khy)。 */
+/**
+ * `.khy` 目录——现经 dataHome 解析器取址。
+ *
+ * 曾经是 `path.join(opts.cwd || process.cwd(), '.khy')`：一个 cwd 相对的路径。
+ * 于是「在仓库根敲命令」和「在别处敲命令」会把升级状态写进两棵不同的树，
+ * `.khy/heal_escalation*.json` 与 `works/data/khy/heal_escalation*.json` 各存
+ * 一份且前者更新（实测 10-11 vs 09-29）。改为与 healAuditService 同一约定：
+ * 位置由 KHY_DATA_HOME / 便携指针决定，不再随调用方 cwd 漂移。
+ *
+ * opts.khyDir 仍可显式覆盖（测试与隔离运行用）。
+ */
 function _khyDir(opts = {}) {
   if (opts.khyDir) {
     return path.resolve(opts.khyDir);
   }
-  return path.join(opts.cwd || process.cwd(), '.khy');
+  return require('../utils/dataHome').getDataHome();
 }
 
 /** L3 记录文件位置。 */

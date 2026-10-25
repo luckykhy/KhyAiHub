@@ -186,12 +186,16 @@ const LIFECYCLE = Object.freeze([
     mode: 'khy',
     gate: 'KHY_GATEWAY_WARMUP_ON_BOOT',
     gateInverted: false,
-    delayMs: 300,
+    // 1500ms 一次定死(取值区间 1200-2000)。原 300ms 落在「首帧已现、用户已能
+    // 打字」的窗口里:runner 同步 require aiGateway 实测 642.5ms / 153 模块,
+    // 把事件循环钉死约 0.6s(冻帧)。这是「换位置」不是「砍工作」(PERF-003 §6.0)
+    // —— 收益只算交互窗口,总墙钟不变。
+    delayMs: 1500,
     immediate: false,
     unref: false,
     shutdownHook: true,
     startSymbol: null,
-    note: '轻量模式 +300ms 触发 aiGateway.init() 预热一次(门判定仍在 runner 体内,逐字节保留原 !==false 语义)',
+    note: '轻量模式 +1500ms 触发 aiGateway.init() 预热一次(门判定仍在 runner 体内,逐字节保留原 !==false 语义)',
   }),
   Object.freeze({
     id: 'versionUpdateNotice',

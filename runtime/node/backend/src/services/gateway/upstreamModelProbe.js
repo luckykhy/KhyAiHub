@@ -12,6 +12,10 @@
  * the upstream reported, nothing more. Endpoints are DERIVED from baseUrl +
  * apiFormat — no hardcoded provider URLs.
  *
+ * 两级入口，同一份代码：`fetchUpstreamModels` 只回模型列表（null = 没探成）；
+ * `probeUpstreamModels` 额外回 HTTP 状态码，供「注册前闸门」告诉人到底错在哪
+ * （404 多半是地址少了 /v1，401 是密钥不对）。
+ *
  * @pattern Strategy
  */
 'use strict';
@@ -104,16 +108,32 @@ function buildHeaders(apiKey, apiFormat) {
  *   Reported models, or null when the probe could not be completed.
  */
 async function fetchUpstreamModels({ baseUrl, endpoint, apiKey, apiFormat, proxyUrl } = {}) {
+  const probe = await probeUpstreamModels({ baseUrl, endpoint, apiKey, apiFormat, proxyUrl });
+  // null = 探测没跑成（网络/超时/非 2xx），[] = 跑成了但上游没报模型。两者语义
+  // 不同，故保留区分 —— 零臆造是这个模块的承诺。
+  return probe.ok ? probe.models : null;
+}
+
+/**
+ * 同 fetchUpstreamModels，但**带上诊断**：非 2xx 时把 HTTP 状态码交回调用方。
+ *
+ * 为什么需要：注册新中转时要告诉人「你填的地址返回 404，OpenAI 兼容端点一般
+ * 要带 /v1」——只回一个 null 的话，人只能自己再去猜哪里错了。探测本身与
+ * fetchUpstreamModels 完全同一份代码（URL 构造 / 头 / 代理 / 超时），不存在第二套语义。
+ *
+ * @returns {Promise<{ok:boolean, status:number, models:Array, error:string}>}
+ */
+async function probeUpstreamModels({ baseUrl, endpoint, apiKey, apiFormat, proxyUrl } = {}) {
   const base = endpoint || baseUrl;
   if (!base || !apiKey) {
-    return null;
+    return { ok: false, status: 0, models: [], error: 'missing_endpoint_or_key' };
   }
   const format = String(apiFormat || 'openai')
     .trim()
     .toLowerCase();
   const url = buildModelsUrl(base, format);
   if (!url) {
-    return null;
+    return { ok: false, status: 0, models: [], error: 'invalid_endpoint' };
   }
 
   // per-provider 代理透传：配了 proxyUrl 则经代理探测（如 Agnes），否则直连。
@@ -133,39 +153,52 @@ async function fetchUpstreamModels({ baseUrl, endpoint, apiKey, apiFormat, proxy
         }),
       { timeoutMs: PROBE_TIMEOUT_MS, operation: 'upstreamModelProbe' }
     );
-    if (!resp || !resp.ok) {
-      return null;
+    if (!resp) {
+      return { ok: false, status: 0, models: [], error: 'no_response' };
+    }
+    if (!resp.ok) {
+      return { ok: false, status: resp.status, models: [], error: `http_${resp.status}` };
     }
     const body = await resp.json();
     // OpenAI shape: { data: [{ id, ... }] }. Anthropic (when present) also
     // returns { data: [{ id, ... }] }. Accept either; ignore anything else.
     const data = Array.isArray(body?.data) ? body.data : [];
-    return data
-      .filter((m) => m && m.id)
-      .map((m) => {
-        // API 返回的 context_window/context_length 优先；未返回则为 0（由探测层补全）。
-        // 不做模型名推断——上下文窗口必须来自实际 API 响应。
-        const entry = {
-          id: m.id,
-          contextWindow: m.context_window || m.context_length || m.max_context_length || 0,
-        };
-        // Output token limit — field name varies by provider; fail-soft: absent
-        // → property not set at all (callers treat missing as unknown).
-        const maxOut =
-          m.max_output_tokens ||
-          m.max_completion_tokens ||
-          m.max_output_length ||
-          m.output_token_limit ||
-          m.max_output ||
-          m.max_tokens ||
-          0;
-        if (maxOut > 0) {
-          entry.maxOutputTokens = maxOut;
-        }
-        return entry;
-      });
-  } catch {
-    return null;
+    return {
+      ok: true,
+      status: resp.status,
+      error: '',
+      models: data
+        .filter((m) => m && m.id)
+        .map((m) => {
+          // API 返回的 context_window/context_length 优先；未返回则为 0（由探测层补全）。
+          // 不做模型名推断——上下文窗口必须来自实际 API 响应。
+          const entry = {
+            id: m.id,
+            contextWindow: m.context_window || m.context_length || m.max_context_length || 0,
+          };
+          // Output token limit — field name varies by provider; fail-soft: absent
+          // → property not set at all (callers treat missing as unknown).
+          const maxOut =
+            m.max_output_tokens ||
+            m.max_completion_tokens ||
+            m.max_output_length ||
+            m.output_token_limit ||
+            m.max_output ||
+            m.max_tokens ||
+            0;
+          if (maxOut > 0) {
+            entry.maxOutputTokens = maxOut;
+          }
+          return entry;
+        }),
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      status: 0,
+      models: [],
+      error: err && err.name === 'AbortError' ? 'timeout' : 'network_error',
+    };
   }
 }
 
@@ -311,9 +344,11 @@ async function probeContextWindow({ endpoint, apiKey, modelId, proxyUrl, timeout
 
 module.exports = {
   fetchUpstreamModels,
+  probeUpstreamModels,
   probeContextWindow,
   parseMaxTokensOverflow,
   buildModelsUrl,
+  buildHeaders,
   buildProxyDispatcher,
   ANTHROPIC_VERSION,
 };

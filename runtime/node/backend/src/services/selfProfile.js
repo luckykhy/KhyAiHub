@@ -934,6 +934,45 @@ function formatForSystemPrompt(profile) {
     /* self-audit awareness is best-effort; never break the system prompt */
   }
 
+  // 确信度校准(A 层, 确信度缺陷):生成机制天然倾向「接上一个通顺的回答」,而非先判断
+  // 「我到底知不知道」——一知半解时说得和真确定时一样笃定。注入「确信度自检」协议:断言
+  // 分三档(本轮已验证 / 训练知识 / 未验证),未验证必须明说并给验证路径;禁用笃定措辞包装
+  // 猜测;零工具调用的纯问答同样适用。与既有机制的分工:claimReconciler 六族(delete/write/
+  // edit/test/commit/deploy)的动作声称对账已由 answerVerifier 在同一收尾接缝用户可见地纠错,
+  // 其词库不含「我查了/读了/核对过」这类 read/check 系自称,而工具循环的两道证据门都以
+  // 「已发生过工具调用」为前提 —— 零工具轮的 read/check 系自称是既有机制覆盖不到的盲区。
+  // 运行侧由 harness 收尾 S1 观察器只补盲区并旁路记账(见 agenticHarnessService)。
+  // 门控 KHY_CONFIDENCE_CALIBRATION 关 → formatForSystemPrompt 返 '',不注入(接缝逐字节回退)。
+  // fail-soft:绝不因此打断系统提示。
+  try {
+    const cc = require('./confidenceCalibration');
+    const cdir =
+      typeof cc.formatForSystemPrompt === 'function'
+        ? cc.formatForSystemPrompt({ env: process.env })
+        : '';
+    if (cdir) {
+      lines.push('');
+      lines.push(cdir);
+    }
+  } catch {
+    /* confidence calibration directive is best-effort; never break the system prompt */
+  }
+
+  // 线索保全(A 层):告诉模型 [CLUE-LEDGER] 块的语义与「线索书写纪律」——压缩后看到的
+  // 确定性线索摘录继续有效、抵触要显式说明、自己的持久决策/未决要写成可被抽取的一行。
+  // 门控 KHY_CLUE_VAULT 关 → formatForSystemPrompt 返 '',不注入(接缝逐字节回退)。fail-soft。
+  try {
+    const cv = require('./clueVault');
+    const cdir =
+      typeof cv.formatForSystemPrompt === 'function' ? cv.formatForSystemPrompt({ env: process.env }) : '';
+    if (cdir) {
+      lines.push('');
+      lines.push(cdir);
+    }
+  } catch {
+    /* clue-vault directive is best-effort; never break the system prompt */
+  }
+
   // 20 倍模式(twentyXMode, goal 2026-07-04「cc 有 20 倍模式,khy 没有需要补充」):开启时在系统
   // 提示注入当前满负荷状态,让模型被问「是否在 20x 模式」时如实回答。opt-in 默认关 → describe
   // 返 enabled:false,不注入(字节回退)。fail-soft:绝不因此打断系统提示。
@@ -1016,6 +1055,24 @@ function formatForSystemPrompt(profile) {
     }
   } catch {
     /* self-location is best-effort; never break the system prompt */
+  }
+
+  // 文档 vs 实测（A 层，「已认领的行为缺陷：过分相信文档」）：注入「引述前先自证」三档纪律
+  // （实测＞读到＞引述）+ 三个最便宜的既有取证入口，命令模型引述任何可核实断言前先跑/读；只引述
+  // 不核实必须标注「文档陈述·未实测」。门控 KHY_DOC_VS_MEASURED 关 → formatDisciplineForSystemPrompt
+  // 返 ''，不注入（字节回退）。fail-soft：绝不因此打断系统提示。
+  try {
+    const dvm = require('./docVsMeasuredPolicy');
+    const dblock =
+      typeof dvm.formatDisciplineForSystemPrompt === 'function'
+        ? dvm.formatDisciplineForSystemPrompt({ env: process.env })
+        : '';
+    if (dblock) {
+      lines.push('');
+      lines.push(dblock);
+    }
+  } catch {
+    /* doc-vs-measured discipline is best-effort; never break the system prompt */
   }
 
   // Skill protocol self-knowledge (goal 2026-07-11「工具使用和 skill 格式对 khy
