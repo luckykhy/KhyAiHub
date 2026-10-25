@@ -16,6 +16,9 @@ const os = require('os');
 const path = require('path');
 
 const runtime = require('../services/khyUpgradeRuntime');
+// 外部智能体委派 key 的单一真源（RUNTIME-010 A2-5）：预检的自动候选池必须排除它们，
+// 否则胜者会被直写进 GATEWAY_PREFERRED_ADAPTER，随后级联逐个询问「是否委派」（每 key 一张卡）。
+const { isExternalDelegationAdapter } = require('../services/gateway/delegationGate');
 
 const _chatState = require('./aiChatState');
 
@@ -1086,6 +1089,7 @@ async function _preflightGatewayAvailability(options = {}) {
       .getStatus()
       .filter((s) => s.enabled && s.available)
       .filter((s) => !['relay', 'relay_api', 'clipboard'].includes(s.type))
+      .filter((s) => !isExternalDelegationAdapter(s.type))
       .slice(0, maxAutoCandidates);
     if (statuses.length > 0 && Date.now() - startedAt < maxBudgetMs) {
       if (onProgress) {

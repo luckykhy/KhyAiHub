@@ -32,6 +32,23 @@
  * （唯一的 `plugin.install(` 出现在模板字符串内，非真实顶层调用），故推迟 require
  * 不改变任何可观测行为。
  *
+ * ── Phase-1 prescan result cached on disk (startup perf, P1-2) ─────────────
+ * Phase 1 no longer requires any module, but it still readFileSync()s every
+ * candidate source under handlers/ (measured: 157 files; the
+ * `require('./featureCapabilityMap')` line item alone costs 100-290ms and almost
+ * all of it lands here). Its output is PURELY STATIC (name / aliases /
+ * description / usage / subCommands / category / source file name) and carries
+ * no process state, so it can be reused from disk:
+ *   key    = handlers dir mtimeMs + candidate .js file count;
+ *   where  = <dataHome>/cache/command-registry-prescan.json (resolved through
+ *            utils/dataHome, i.e. env-derived — never a hardcoded drive letter);
+ *   revert = KHY_COMMAND_REGISTRY_CACHE=0 → neither read nor written, a
+ *            byte-for-byte return to "full prescan on every start".
+ * The Windows junction directory mtime is not reliable, so the cache is NOT a
+ * correctness source: when dispatch() misses it force-rescans and rewrites the
+ * cache (see the miss fallback in dispatch()), so a command can never vanish
+ * because the cache went stale.
+ *
  * @module cli/commandAutoRegistry
  */
 
@@ -56,6 +73,262 @@ const _aliases = new Map();
 const _pendingFiles = new Map();
 
 let _initialized = false;
+
+// ── Phase-1 prescan cache (startup performance) ───────────────────
+
+const CACHE_VERSION = 1;
+const CACHE_FILE_NAME = 'command-registry-prescan.json';
+const CACHE_ENV = 'KHY_COMMAND_REGISTRY_CACHE';
+const _CACHE_OFF = new Set(['0', 'false', 'off', 'no']);
+
+/** Cache switch: on by default; only the CANON 4 words ({0,false,off,no}) turn it
+ * off → byte-for-byte fallback to a full prescan. */
+function _cacheEnabled() {
+  const raw = process.env[CACHE_ENV];
+  if (raw === undefined || raw === null || String(raw).trim() === '') {
+    return true;
+  }
+  return !_CACHE_OFF.has(String(raw).trim().toLowerCase());
+}
+
+/**
+ * Cache file path: <dataHome>/cache/command-registry-prescan.json.
+ * dataHome is resolved through utils/dataHome (KHY_DATA_HOME / pinned pointer /
+ * established-wins) — never a hardcoded drive letter or user directory. Required
+ * lazily, so that module load is only paid when the cache is actually used.
+ * Any resolution failure → null (callers treat that as "no cache" and fall back
+ * to a full prescan).
+ * @returns {string|null}
+ */
+function _cachePath() {
+  try {
+    const { getDataHome } = require('../utils/dataHome');
+    const root = getDataHome && getDataHome();
+    if (!root) {
+      return null;
+    }
+    return path.join(String(root), 'cache', CACHE_FILE_NAME);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Candidate files under handlers/ (byte-identical to the historical init()
+ * filter): .js only, and `_`-prefixed private modules skipped.
+ * @returns {string[]} file names (no directory part)
+ */
+function _candidateFiles() {
+  return fs
+    .readdirSync(HANDLERS_DIR)
+    .filter((file) => file.endsWith('.js') && !file.startsWith('_'));
+}
+
+/**
+ * Directory signature = mtimeMs + candidate file count. Neither catches an
+ * in-place content rewrite (on Windows, editing a file does not move the
+ * directory mtime) — that case is covered by the dispatch() miss force-rescan.
+ * @param {string[]} files the return value of _candidateFiles()
+ * @returns {string|null} stat failure → null (callers treat it as "cache unavailable")
+ */
+function _signatureOf(files) {
+  let mtimeMs = 0;
+  try {
+    mtimeMs = fs.statSync(HANDLERS_DIR).mtimeMs || 0;
+  } catch {
+    return null;
+  }
+  return `${Math.round(mtimeMs)}:${files.length}`;
+}
+
+/**
+ * Read the cache. Signature mismatch / version mismatch / parse failure / cache
+ * disabled → null in every case (the caller then runs a full prescan).
+ * @param {string|null} signature
+ * @returns {object|null}
+ */
+function _readCache(signature) {
+  if (!_cacheEnabled() || !signature) {
+    return null;
+  }
+  const file = _cachePath();
+  if (!file) {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (!parsed || parsed.version !== CACHE_VERSION) {
+      return null;
+    }
+    if (String(parsed.signature) !== String(signature)) {
+      return null;
+    }
+    if (!Array.isArray(parsed.commands) || parsed.commands.length === 0) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null; // no cache / corrupt cache → full prescan (historical behaviour)
+  }
+}
+
+/**
+ * Persist the current registry to the cache (temp file + rename, so a half-written
+ * file is never read by the next start). Purely best-effort: any failure only
+ * means the next start pays for one more prescan; this run is never affected.
+ * @param {string|null} signature
+ */
+function _writeCache(signature) {
+  if (!_cacheEnabled() || !signature) {
+    return;
+  }
+  const file = _cachePath();
+  if (!file) {
+    return;
+  }
+  try {
+    const commands = [..._commands.values()].map((e) => ({
+      name: e.name,
+      aliases: e.aliases,
+      description: e.description,
+      usage: e.usage,
+      subCommands: e.subCommands,
+      category: e.category,
+      source: e.source,
+    }));
+    const aliases = {};
+    for (const [alias, canonical] of _aliases) {
+      aliases[alias] = canonical;
+    }
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    const tmp = `${file}.tmp`;
+    fs.writeFileSync(
+      tmp,
+      JSON.stringify({ version: CACHE_VERSION, signature, commands, aliases })
+    );
+    fs.renameSync(tmp, file);
+  } catch {
+    /* cache is best-effort — a failure only costs the next prescan */
+  }
+}
+
+/**
+ * Restore the registry from the cache (equivalent to a full prescan, zero source
+ * reads). The RESOLVED alias map is stored rather than replaying the registration
+ * order, so the result does not depend on the directory enumeration order.
+ * @param {object} parsed the return value of _readCache()
+ */
+function _hydrateFromCache(parsed) {
+  _commands.clear();
+  _aliases.clear();
+  _pendingFiles.clear();
+
+  for (const c of parsed.commands) {
+    if (!c || typeof c.name !== 'string' || !c.name) {
+      continue;
+    }
+    const source = typeof c.source === 'string' ? c.source : '';
+    _commands.set(c.name, {
+      name: c.name,
+      handler: null, // filled in by phase 2
+      aliases: Array.isArray(c.aliases) ? c.aliases.slice() : [],
+      description: typeof c.description === 'string' ? c.description : '',
+      usage: typeof c.usage === 'string' && c.usage ? c.usage : c.name,
+      subCommands: Array.isArray(c.subCommands) ? c.subCommands.slice() : [],
+      category: typeof c.category === 'string' && c.category ? c.category : 'extension',
+      source,
+    });
+    if (source) {
+      _pendingFiles.set(c.name, path.join(HANDLERS_DIR, source));
+    }
+  }
+
+  const aliasMap = parsed.aliases && typeof parsed.aliases === 'object' ? parsed.aliases : {};
+  for (const [alias, canonical] of Object.entries(aliasMap)) {
+    if (_commands.has(canonical)) {
+      _aliases.set(alias, canonical);
+    }
+  }
+}
+
+/**
+ * Read the cache WITHOUT touching registry state: for callers that run during a
+ * consumer's module load (commandSchema.getRouterCommandNames() is called by
+ * featureCapabilityMap while it builds its table). Signature hit → the name
+ * array; otherwise null (the caller decides whether to run a full init).
+ * @returns {string[]|null}
+ */
+function peekCachedCommandNames() {
+  let files;
+  try {
+    files = _candidateFiles();
+  } catch {
+    return null;
+  }
+  const cached = _readCache(_signatureOf(files));
+  if (!cached) {
+    return null;
+  }
+  return cached.commands
+    .map((c) => (c && typeof c.name === 'string' ? c.name : ''))
+    .filter(Boolean)
+    .sort();
+}
+
+/**
+ * The completions twin of `peekCachedCommandNames()`: lets
+ * commandSchema.getRouterSubCommands() read subCommands during MODULE LOAD.
+ * Hit → the completions array; otherwise null (the caller goes through
+ * getCompletions(), i.e. the historical behaviour).
+ * @returns {Array<{name:string,description:string,usage:string,category:string,subCommands:string[]}>|null}
+ */
+function peekCachedCompletions() {
+  let files;
+  try {
+    files = _candidateFiles();
+  } catch {
+    return null;
+  }
+  const cached = _readCache(_signatureOf(files));
+  if (!cached) {
+    return null;
+  }
+  return cached.commands
+    .filter((c) => c && typeof c.name === 'string' && c.name)
+    .map((c) => ({
+      name: c.name,
+      description: typeof c.description === 'string' ? c.description : '',
+      usage: typeof c.usage === 'string' && c.usage ? c.usage : c.name,
+      category: typeof c.category === 'string' && c.category ? c.category : 'extension',
+      subCommands: Array.isArray(c.subCommands) ? c.subCommands.slice() : [],
+    }));
+}
+
+/**
+ * Force a rescan: hot-reload, plus the dispatch-miss fallback (the cache key is
+ * unreliable on Windows junctions, so a command that cannot be found must be
+ * rescanned and the cache refreshed immediately — never return empty).
+ *
+ * Difference from init(): cache validity is ignored, sources are always re-read,
+ * and the fresh result is written back to the cache. Sources only, never a
+ * handler require — so the unknown-command fallback introduces no module load.
+ */
+function refresh() {
+  let files;
+  try {
+    files = _candidateFiles();
+  } catch {
+    return; // handlers/ is unreadable — keep current state, let the router switch handle it
+  }
+  const signature = _signatureOf(files);
+  _commands.clear();
+  _aliases.clear();
+  _pendingFiles.clear();
+  for (const file of files) {
+    _registerFromFile(path.join(HANDLERS_DIR, file));
+  }
+  _writeCache(signature);
+}
 
 /**
  * 静态判据：源码是否「有机会」声明 manifest。
@@ -85,6 +358,10 @@ function _mayDeclareManifest(source) {
  * 只读源码、不执行模块（见文件头「两阶段惰性加载」）。登记进 `_commands` 的条目带
  * `_lazyFile` 标记，表示 `handler` 尚未解析；dispatch 时补上并清除标记。
  *
+ * Cache-first (P1-2): a directory-signature (mtime+count) hit restores the
+ * registry with zero source reads; only a miss runs the full prescan, and the
+ * result is then written back. KHY_COMMAND_REGISTRY_CACHE=0 → byte-for-byte revert.
+ *
  * Idempotent — calling multiple times re-scans (for hot-reload).
  */
 function init() {
@@ -94,22 +371,25 @@ function init() {
 
   let files;
   try {
-    files = fs.readdirSync(HANDLERS_DIR);
+    files = _candidateFiles();
   } catch (err) {
     // handlers/ missing — fail-soft, registry stays empty.
     _initialized = true;
     return;
   }
 
+  const signature = _signatureOf(files);
+  const cached = _readCache(signature);
+  if (cached) {
+    _hydrateFromCache(cached);
+    _initialized = true;
+    return;
+  }
+
   for (const file of files) {
-    if (!file.endsWith('.js')) {
-      continue;
-    }
-    if (file.startsWith('_')) {
-      continue; // private modules (e.g. _portableAutoInstall.js)
-    }
     _registerFromFile(path.join(HANDLERS_DIR, file));
   }
+  _writeCache(signature);
 
   _initialized = true;
 }
@@ -262,9 +542,30 @@ async function dispatch(command, ctx) {
     const lower = String(canonical).toLowerCase();
     if (_commands.has(lower)) canonical = lower;
   }
-  const entry = _commands.get(canonical);
+  let entry = _commands.get(canonical);
   if (!entry) {
-    return { handled: false };
+    // ── Mandatory fallback: dispatch miss → force a rescan + cache refresh ──
+    // The cache key is "directory mtime + file count"; Windows junction mtimes are
+    // unreliable and an in-place content edit does not bump the directory mtime,
+    // so the cache CAN go stale. Staleness surfacing as "the command disappeared"
+    // would be a silent feature loss for the user (worse than being slow). So a
+    // miss never returns empty: rescan immediately (sources only, no handler
+    // require, hence no module load), write the fresh result back to the cache,
+    // then resolve the command once more.
+    try {
+      refresh();
+    } catch {
+      /* rescan failed → keep current state, hand back to the router switch */
+    }
+    canonical = _aliases.has(command) ? _aliases.get(command) : command;
+    if (!_commands.has(canonical)) {
+      const lower = String(canonical).toLowerCase();
+      if (_commands.has(lower)) canonical = lower;
+    }
+    entry = _commands.get(canonical);
+    if (!entry) {
+      return { handled: false };
+    }
   }
 
   // 阶段二：此时才 require 该命令所在的 handler 文件。
@@ -425,6 +726,9 @@ function _extractManifestMeta(source) {
 
 module.exports = {
   init,
+  refresh,
+  peekCachedCommandNames,
+  peekCachedCompletions,
   dispatch,
   getCommandNames,
   getAliases,

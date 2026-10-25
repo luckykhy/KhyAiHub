@@ -248,36 +248,69 @@ function renderMarkdown(content) {
   return output.join('\n');
 }
 
+/**
+ * Probe whether the khyquant app is installed/registered.
+ *
+ * khyquant is an INDEPENDENT project that connects to Khy OS, not a built-in
+ * part of it (CLAUDE.md §四). The quickstart must not advertise quant commands
+ * that cannot run on this machine — advertising a command that dies with a bare
+ * TypeError is worse than not showing it.
+ *
+ * @returns {boolean} true when the quant app resolved to a real directory
+ */
+function isQuantAppInstalled() {
+  try {
+    const { resolveDir } = require('../../services/extensions/quantApp');
+    return typeof resolveDir === 'function' && !!resolveDir();
+  } catch {
+    return false;
+  }
+}
+
 async function handleDocsQuickstart() {
+  const quantReady = isQuantAppInstalled();
+
   console.log('');
   console.log(chalk.cyan.bold('  khy OS 快速开始'));
   console.log("");
   console.log('');
-  console.log('  ' + chalk.bold('5 分钟上手：'));
+  console.log('  ' + chalk.bold('AI 优先 — 5 分钟上手：'));
   console.log('');
-  console.log('  ' + chalk.green('Step 1') + ' — 查询行情:');
-  console.log(chalk.dim('    $ khy hq 茅台'));
-  console.log(chalk.dim('    $ khy hq sh000300'));
-  console.log('');
-  console.log('  ' + chalk.green('Step 2') + ' — 与 AI 对话:');
+  console.log('  ' + chalk.green('Step 1') + ' — 直接开聊（不用先记任何命令）:');
   console.log(chalk.dim('    $ khy'));
-  console.log(chalk.dim('    ◉ khy ❯ 分析一下沪深300最近的走势'));
+  console.log(chalk.dim('    ◉ khy ❯ 帮我看看这个项目该怎么跑起来'));
+  console.log(chalk.dim('    （直接打字描述你想做的事，AI 会理解并执行）'));
   console.log('');
-  console.log('  ' + chalk.green('Step 3') + ' — 策略回测:');
-  console.log(chalk.dim('    $ khy bt sh000300 --strategy 1'));
-  console.log('');
-  console.log('  ' + chalk.green('Step 4') + ' — 网关配置 (选择 AI 通道):');
+  console.log('  ' + chalk.green('Step 2') + ' — 选择 AI 通道:');
   console.log(chalk.dim('    $ khy gateway model'));
   console.log('');
+  console.log('  ' + chalk.green('Step 3') + ' — 环境自检:');
+  console.log(chalk.dim('    $ khy doctor'));
+  console.log('');
+  if (quantReady) {
+    console.log('  ' + chalk.green('Step 4') + ' — 量化行情（已检测到 khyquant 应用）:');
+    console.log(chalk.dim('    $ khy quote 600519'));
+    console.log(chalk.dim('    $ khy backtest sh000300 --strategy ma_cross'));
+    console.log('');
+  } else {
+    console.log('  ' + chalk.green('Step 4') + ' — 量化行情（可选）:');
+    console.log(
+      chalk.dim('    khyquant 是独立项目，连接 Khy OS 使用，并不是 Khy OS 的内置部分。')
+    );
+    console.log(chalk.dim('    未安装时本节命令不可用；装上后即可查询行情 / 回测。'));
+    console.log('');
+  }
   console.log("");
   console.log('');
   console.log('  ' + chalk.bold('常用命令:'));
   console.log('');
-  console.log('  ' + chalk.cyan('hq <代码|名称>') + '  查询实时行情');
-  console.log('  ' + chalk.cyan('bt <代码>') + '       快速回测');
   console.log('  ' + chalk.cyan('menu') + '            打开交互式菜单');
   console.log('  ' + chalk.cyan('gateway model') + '   选择 AI 模型');
   console.log('  ' + chalk.cyan('doctor') + '          环境诊断');
+  if (quantReady) {
+    console.log('  ' + chalk.cyan('quote <代码>') + '     查询实时行情（khyquant）');
+    console.log('  ' + chalk.cyan('backtest <代码>') + '  策略回测（khyquant）');
+  }
   console.log('  ' + chalk.cyan('docs maintainer') + '  查看仓库维护入口');
   console.log('  ' + chalk.cyan('help') + '            查看全部命令');
   console.log('');

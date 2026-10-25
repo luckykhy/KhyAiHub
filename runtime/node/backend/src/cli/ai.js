@@ -228,12 +228,25 @@ function getActiveProvider() {
     const active = gw.getActiveAdapter();
     if (active) {
       const suffix = active.activeModel ? ` · ${active.activeModel}` : '';
-      return `${active.name}${suffix}`;
+      const text = `${active.name}${suffix}`;
+      _rememberActiveProvider(text);
+      return text;
     }
   } catch {}
   const svc = getService();
   const provider = svc.getAvailableProvider();
-  return provider ? provider.name : null;
+  const text = provider ? provider.name : null;
+  if (text) _rememberActiveProvider(text);
+  return text;
+}
+
+// 完整解析的结果顺手落一份跨进程快照，让下一次冷单命令进程（`khy status`）不必
+// 为一行展示装载整个网关。读侧在 routerDispatchSlash 的 status 分支；细节与边界
+// （TTL / env 对账 / 门控）见 ./activeProviderSnapshot。写失败绝不影响返回值。
+function _rememberActiveProvider(text) {
+  try {
+    require('./activeProviderSnapshot').remember(text, process.env);
+  } catch { /* 快照是可选加速，不是语义 */ }
 }
 
 function _getModelInfo() {

@@ -129,7 +129,7 @@ async function askInlineQuestion(question, options, opts = {}) {
     }));
     // Add "Other" choice
     choices.push({
-      label: c().dim('Other (free input)'),
+      label: c().dim('其他（自由输入）'),
       value: '__other__',
       aliases: [String(options.length + 1), 'o', 'other'],
       preview: '',
@@ -192,7 +192,7 @@ async function askInlineQuestion(question, options, opts = {}) {
           // Keep main REPL paused while collecting free input.
           // Resuming it too early causes duplicate key handling.
           const rl2 = readline.createInterface({ input: stdin, output: stdout });
-          rl2.question(c().dim('  Enter custom text: '), (text) => {
+          rl2.question(c().dim('  输入自定义文本: '), (text) => {
             rl2.close();
             try {
               stdin.resume();
@@ -245,9 +245,9 @@ async function askInlineQuestion(question, options, opts = {}) {
             lines.push(`   ${marker} ${num} ${label}`);
           }
           lines.push('');
-          lines.push(`  ${c().dim('\u2191/\u2193 navigate \u00B7 Enter select \u00B7 Esc skip')}`);
+          lines.push(`  ${c().dim(`↑/↓ 选择 · Enter 确认 · Esc 跳过`)}`);
           lines.push('');
-          lines.push(`  ${c().dim('Preview:')}`);
+          lines.push(`  ${c().dim('预览:')}`);
           // Right panel: preview content (simplified - actual side-by-side requires more complex layout)
           const previewLines = preview.split('\n').slice(0, 10); // Limit preview height
           for (const pl of previewLines) {
@@ -264,7 +264,7 @@ async function askInlineQuestion(question, options, opts = {}) {
             lines.push(`   ${marker} ${num} ${label}`);
           }
           lines.push('');
-          lines.push(`  ${c().dim('Use arrow keys to navigate, Enter to select, Esc to skip')}`);
+          lines.push(`  ${c().dim('↑/↓ 选择 · Enter 确认 · Esc 跳过')}`);
         }
         stdout.write(`${lines.join('\n')}\n`);
         renderedLines = lines.length;
@@ -341,8 +341,8 @@ async function askInlineQuestion(question, options, opts = {}) {
     const desc = opt.description ? c().dim(` — ${opt.description}`) : '';
     console.log(`${num} ${label}${desc}`);
   });
-  console.log(c().dim(`  [${options.length + 1}] Other (free input)`));
-  console.log(c().dim(`  [0] Skip`));
+  console.log(c().dim(`  [${options.length + 1}] 其他（自由输入）`));
+  console.log(c().dim(`  [0] 跳过`));
   console.log('');
 
   const rl =
@@ -354,8 +354,8 @@ async function askInlineQuestion(question, options, opts = {}) {
 
   return new Promise((resolve) => {
     const prompt = opts.multiSelect
-      ? c().dim('  Select (comma-separated, e.g. 1,3): ')
-      : c().dim('  Select: ');
+      ? c().dim('  输入序号（可多选，如 1,3）: ')
+      : c().dim('  输入序号: ');
 
     rl.question(prompt, (answer) => {
       if (!opts.rl) {
@@ -371,7 +371,7 @@ async function askInlineQuestion(question, options, opts = {}) {
       const lastIdx = options.length + 1;
       if (trimmed === String(lastIdx)) {
         const rl2 = readline.createInterface({ input: process.stdin, output: process.stdout });
-        rl2.question(c().dim('  Enter: '), (text) => {
+        rl2.question(c().dim('  输入文本: '), (text) => {
           rl2.close();
           resolve(text.trim() || null);
         });

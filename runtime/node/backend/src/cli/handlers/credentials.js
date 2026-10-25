@@ -94,19 +94,39 @@ function credentialExport() {
  * 扫描路径：
  *   - ~/.khyquant/config.json (API keys, tokens)
  *   - ~/.khyquant/token_usage.json
- *   - .khy/ 目录下的 JSON 配置
- *   - .khyos/ 目录下的配置
+ *   - 数据家（dataHome）下的 JSON 配置
+ *   - 生态基座（base home）下的配置
+ *
+ * 最后两项曾经是 `path.join(process.cwd(), '.khy')` / `'.khyos'` —— cwd 相对，
+ * 于是同一台机器上「在仓库根扫」和「在别处扫」覆盖的面不一样，而且会把仓库根
+ * 那两棵影子树算成扫描目标。改成经 dataHome 解析器取址：位置随 KHY_DATA_HOME
+ * 走，与 `khy storage` 的其它消费者一致。
+ *
+ * 作为凭据审计器，这里**故意多扫**：额外保留 ~/.khy 与 ~/.khyos 两个历史位置，
+ * 宁可重复不可漏报。
  */
 function credentialScan() {
   console.log(`\n  ${chalk.cyan.bold('扫描 KhyOS 配置文件中的凭据')}\n`);
+
+  let dataHomeDir;
+  let baseHomeDir;
+  try {
+    const dh = require('../../utils/dataHome');
+    dataHomeDir = dh.getDataHome();
+    baseHomeDir = dh.getBaseHome();
+  } catch {
+    /* dataHome unavailable: fall back to the legacy literal locations */
+  }
 
   const scanPaths = [
     path.join(os.homedir(), '.khyquant', 'config.json'),
     path.join(os.homedir(), '.khyquant', 'token_usage.json'),
     path.join(os.homedir(), '.khyquant', 'conversations'),
-    path.join(process.cwd(), '.khy'),
-    path.join(process.cwd(), '.khyos'),
-  ];
+    dataHomeDir,
+    baseHomeDir,
+    path.join(os.homedir(), '.khy'),
+    path.join(os.homedir(), '.khyos'),
+  ].filter(Boolean);
 
   const { credentialHarvester } = require('../../services/gateway/credential-harvester');
   let totalFound = 0;

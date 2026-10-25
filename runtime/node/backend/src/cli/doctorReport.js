@@ -147,7 +147,7 @@ function buildSummaryLines(counts) {
   } else if (counts.warn > 0) {
     lines.push(chalk.dim('  所有核心功能正常，警告项的处置见上方行动清单'));
   } else {
-    lines.push(`  ${chalk.green('✔ 所有检查通过，系统就绪')}`);
+    lines.push(`  ${chalk.green('✓ 所有检查通过，系统就绪')}`);
   }
   return lines;
 }

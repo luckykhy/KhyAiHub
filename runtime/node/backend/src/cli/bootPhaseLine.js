@@ -26,6 +26,11 @@
  * 逐字节回退到「不显示引导进度行」的行为。
  * 失败软化:stderr 不可写、console 被别处换过等情况一律吞掉 —— 引导本身永远优先。
  *
+ * 卡点说明(门控 KHY_BOOT_STALL_HINT,默认开):任一亮着的一拍超过 STALL_MS(10s),
+ * 就在**同一行**追加 ` (已 Xs · <卡点说明>)`。见 STALL_MS 处的完整判据 ——
+ * 它专治「一行冻住的文字让用户分不清还在跑还是已经死了」,文案面向用户、
+ * 不甩内部错误串,且不改版式/布局/配色(启动屏是软著登记截图素材)。
+ *
  * 三种行形态(按传入参数择一):
  *   write(text, step, totalSteps)   → `text (1/5)`        调用方控制步进节奏,静态
  *   write(text, 0, 0, percentSrc)   → `text ████░░ 42%`   按 PERCENT_TICK_MS 实时重画
@@ -65,6 +70,65 @@ const PERCENT_TICK_MS = 120;
 // 而本模块跑在 Ink 挂载**之前**,那时 ink 还没装载。
 // 条的**画法**则复用单一真源(progressiveProgress.renderBar),宽度与字形在这儿定。
 const PERCENT_BAR_WIDTH = 20;
+
+// ── 卡点说明（P1-9 ③）──────────────────────────────────────────────────────
+// 病症：引导进度行是**一行 \r 覆写**，没有任何自更新的能力时它就是一行冻住的文字。
+// 实测最坑的一拍是 `加载服务 (数据库/网关/会话)`（bin/khy.js 的 4/5）：网关健康探针
+// 的超时是 SERVICE_HEALTH_TIMEOUT_MS=8000（baseSelfCheckService.js:24），叠加数据库
+// 预检查后这一拍可以安静地停十几秒 —— 屏幕上还是那句 `(4/5)`，用户无法区分
+// 「还在跑」和「已经死了」，只能重敲命令。
+//
+// 判据：**任何一拍超过 STALL_MS 就在同一行写明卡点**。三条硬约束：
+//   1. 同一行、同一个 \r 覆写、不新增行 —— 版式/布局/配色零变化（启动屏是软著
+//      登记截图素材，[DESIGN-IP-001]）；
+//   2. 文案面向用户、让人安心，**绝不把内部错误串 / 堆栈甩给用户**；
+//   3. 未超时前逐字节保持原样（含「步骤形态本来就不动」这个既有设计）。
+//
+// 为什么连**步骤形态**（`text (4/5)`，按设计静态、连「已等待」都不显示）也要管：
+// 那一拍正是最长的一拍，而静态在 >10s 时观感等于冻死。故计时表对两种形态都挂，
+// 只是未超时前一步都不重画。
+const STALL_MS = 10000;
+
+// 已知拍 → 人话。按序首个命中生效，所以**具体的要排在泛化的前面**
+// （`加载服务 (数据库/网关/会话)` 必须命中「网关」而不是「服务」）。
+// 匹配的是调用方传进来的 phaseText，因此新增拍只要文案里带关键词就自动覆盖。
+const STALL_HINTS = [
+  { re: /网关|gateway/i, hint: '正在连接网关，正在重试，不影响先打字' },
+  { re: /数据库|sqlite|驱动/i, hint: '正在准备本地数据库，不影响先打字' },
+  { re: /渲染引擎|界面引擎|ink/i, hint: '正在装载界面引擎，不影响先打字' },
+  { re: /初始化界面|界面/i, hint: '正在初始化界面，不影响先打字' },
+  { re: /登录|认证/i, hint: '正在确认登录状态，不影响先打字' },
+  { re: /环境/i, hint: '正在读取环境配置，不影响先打字' },
+  { re: /服务|会话/i, hint: '正在加载服务，不影响先打字' },
+];
+
+// 未命中任何关键词时的兜底：仍然给出「已 Xs」这个硬事实 + 一句安心话。
+const DEFAULT_STALL_HINT = '仍在准备，不影响先打字';
+
+// 门控 KHY_BOOT_STALL_HINT（默认开；仅 0/false/off/no 关）。关 → 卡点说明整段消失，
+// 逐字节回退到「超过 10s 也只是一行冻住的文字」的旧行为。
+function isStallHintEnabled(env = process.env) {
+  try {
+    const raw = env && env.KHY_BOOT_STALL_HINT;
+    if (raw === undefined || raw === null) {
+      return true;
+    }
+    return !OFF_VALUES.includes(String(raw).trim().toLowerCase());
+  } catch {
+    return true;
+  }
+}
+
+/** 当前 phaseText 对应的卡点说明（门关时调用方根本不该走到这里）。 */
+function _stallHintFor(text) {
+  const s = String(text || '');
+  for (const row of STALL_HINTS) {
+    if (row.re.test(s)) {
+      return row.hint;
+    }
+  }
+  return DEFAULT_STALL_HINT;
+}
 
 // 渐进节拍引擎（条的唯一画法真源）。fail-soft require：本模块跑在启动最早期，
 // 任何加载异常都不得拖垮引导 —— 引擎不可用就退回本地那份等价实现。
@@ -144,6 +208,9 @@ function create(options = {}) {
   const stream = options.stream || process.stderr;
   const sink = options.console || console;
   const out = options.stdout || process.stdout;
+  // 卡点说明门控在 create() 时定一次（与 isEnabled 同一时机）：门关时 _stallOn=false，
+  // _renderLine 的 stall 分支整段不出现，逐字节回退旧行为。
+  const _stallOn = isStallHintEnabled(env);
 
   let live = false;
   let ended = false;
@@ -196,6 +263,7 @@ function create(options = {}) {
   //   有 step/totalSteps  →  `text (step/total)`
   //   有实时百分比        →  `text ████░░░░ 42%`
   //   都没有              →  `text` 或 `text (已等待 Xs)`
+  //   任一拍超过 STALL_MS →  追加 ` (已 Xs · <卡点说明>)`（见上方 STALL_MS 注释）
   const _renderLine = (text, step, totalSteps, elapsedMs, pct) => {
     let display = text;
     const hasStep = Number.isInteger(totalSteps) && totalSteps > 0 && Number.isInteger(step) && step > 0;
@@ -205,7 +273,15 @@ function create(options = {}) {
       const rounded = Math.max(0, Math.min(100, Math.round(pct)));
       display = `${text} ${_renderPercentBar(rounded)} ${rounded}%`;
     }
-    const suffix = hasStep ? '' : elapsedMs > 0 ? ` (已等待 ${_elapsedMsToStr(elapsedMs)})` : '';
+    // 未超时：与改前逐字节相同。
+    // 超时（且门没关）：「已等待 Xs」升级成「已 Xs · 卡点说明」—— 同一行覆写，
+    // 不新增行、不改版式。门关时整段跳过 → 逐字节回退旧行为。
+    let suffix = '';
+    if (_stallOn && elapsedMs >= STALL_MS) {
+      suffix = ` (已 ${_elapsedMsToStr(elapsedMs)} · ${_stallHintFor(text)})`;
+    } else if (!hasStep && elapsedMs > 0) {
+      suffix = ` (已等待 ${_elapsedMsToStr(elapsedMs)})`;
+    }
     return `\r  ${display}${suffix}...\x1b[K`;
   };
 
@@ -273,9 +349,14 @@ function create(options = {}) {
       try {
         stream.write(_renderLine(text, lastStep, lastTotalSteps, 0, readPercent()));
         live = true;
-        // 有步骤分母时保持静态(由调用方控制步进节奏);否则按 tick 刷新
-        // (有百分比源 → 250ms,只有 elapsed 时钟 → 1000ms)
-        if (!lastTotalSteps) {
+        // 计时表**对两种形态都挂**（改前只有非步骤形态挂）：
+        //   非步骤形态 → 按 tick 重画（有百分比源 → PERCENT_TICK_MS，只有 elapsed → 1000ms）；
+        //   步骤形态   → 未超 STALL_MS 前一步都不重画（逐字节保持「静态」这个既有设计），
+        //                超了才开口说明卡点（见 STALL_MS 注释）—— 最长的一拍恰恰是步骤形态，
+        //                而静态在 >10s 时观感等于冻死。
+        // 门关时条件逐字节退回改前（`!lastTotalSteps`）：关掉功能不该多出任何一次写。
+        if (!lastTotalSteps || _stallOn) {
+          const cadence = lastPercentSource ? PERCENT_TICK_MS : 1000;
           elapsedTimer = setInterval(() => {
             if (!live || ended) {
               stopElapsedTimer();
@@ -283,11 +364,17 @@ function create(options = {}) {
             }
             try {
               const ms = Number(process.hrtime.bigint() - phaseStartHr) / 1e6;
-              stream.write(_renderLine(lastText, 0, 0, ms, readPercent()));
+              // 步骤形态未超时：保持静态（不写任何字节）。
+              if (lastTotalSteps && ms < STALL_MS) {
+                return;
+              }
+              // 注意 step/totalSteps 必须原样带回：步骤形态超时后仍要显示 `(4/5)`，
+              // 传 0/0 会退化成 elapsed 形态，把「第几步」这个信息弄丢。
+              stream.write(_renderLine(lastText, lastStep, lastTotalSteps, ms, readPercent()));
             } catch {
               /* stderr 不可写 */
             }
-          }, lastPercentSource ? PERCENT_TICK_MS : 1000);
+          }, cadence);
           if (elapsedTimer.unref) {
             elapsedTimer.unref();
           }
@@ -373,8 +460,12 @@ module.exports = {
   create,
   openBootWindow,
   isEnabled,
+  isStallHintEnabled,
   _elapsedMsToStr, // export for tests
   _renderPercentBar, // export for tests
+  _stallHintFor, // export for tests
+  STALL_HINTS, // export for tests
+  STALL_MS,
   METHODS,
   OFF_VALUES,
   CLEAR_LINE,
