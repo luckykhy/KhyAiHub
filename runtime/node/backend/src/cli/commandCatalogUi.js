@@ -81,8 +81,10 @@ const CATEGORY_MAP = [
 ];
 
 // Legacy Windows terminals lack the glyphs used above; fall back to ASCII icons
-// (mirrors the detection printHelp already relies on).
-const _ASCII_ICONS = { '◐': '#', '◆': '+', '▸': '*', '+': '+' };
+// (mirrors the detection printHelp already relies on). The map must stay 1:1 ——
+// 原来 '◆' 与 '+' 都映射成 '+'，量化/AI/系统/应用四类里有两类撞成同一个字符，
+// 图标当场失去区分作用。字母口径与本仓 [S]/[A]/[G] 体系一致。
+const _ASCII_ICONS = { '◐': 'Q', '◆': 'A', '▸': 'S', '+': 'P' };
 
 /**
  * Pick a short, representative alias list for a canonical command.
@@ -144,7 +146,6 @@ function renderCommandCatalog() {
   const boxW = Math.max(32, Math.min(cols - 4, 72));
   const innerW = Math.max(0, boxW - 4); // "│ " + content + " │"
   const dim = chalk.dim;
-  const hr = '─'.repeat(Math.max(0, boxW - 2));
 
   // ANSI- and CJK-safe padding (double-width glyphs counted as 2 columns), so
   // right borders stay aligned for Chinese labels.
@@ -168,15 +169,15 @@ function renderCommandCatalog() {
   );
   console.log(emptyRow());
   console.log(row(dim('输入命令或其别名即可执行，例如: khy hq 茅台 · /menu 重新打开本菜单')));
-  console.log(emptyRow());
 
   // Two-column layout: left = command + aliases, right = Chinese label.
   const cmdColW = Math.min(Math.floor(innerW * 0.62), 44);
 
+  // 每组一条整宽横线原来画在组头之后 —— 一屏 4 条 ──── 比数据抢眼,正是
+  // tableStyle 要消灭的「线条太多」;改空行分组,框线只留外壳。
   catalog.forEach((group) => {
     const colorFn = group.color || chalk.cyan;
     console.log(row(`${colorFn(iconOf(group.icon))} ${colorFn.bold(group.name)}`));
-    console.log(row(dim('─'.repeat(Math.max(0, innerW)))));
     group.items.forEach((item) => {
       const aliasText = item.aliases.length ? dim(` (${item.aliases.join(', ')})`) : '';
       const left = pad(chalk.white(item.command) + aliasText, cmdColW);
@@ -188,8 +189,18 @@ function renderCommandCatalog() {
   console.log(
     row(dim('提示: khy help 速查 · khy help <gateway|quant|ops> 分主题帮助'))
   );
-  console.log(row(dim('全量命令清单（250+ 动词）: khy commands --all')));
-  console.log(dim(`  ╰${hr}╯`));
+  // 动词数从 buildAllCommands() 取真实值 —— 手写的「250+」在 260 个动词时已经在说谎。
+  const total = buildAllCommands().total;
+  console.log(
+    row(
+      dim(
+        total > 0
+          ? `全量命令清单（${total} 个动词）: khy commands --all`
+          : '全量命令清单: khy commands --all'
+      )
+    )
+  );
+  console.log(dim(`  ╰${'─'.repeat(Math.max(0, boxW - 2))}╯`));
   console.log('');
 }
 

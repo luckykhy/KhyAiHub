@@ -259,11 +259,14 @@ const ALIAS_MAP = {
   aiguanli: { command: 'gateway', subCommand: 'manage' },
   ai管理: { command: 'gateway', subCommand: 'manage' },
   管理页: { command: 'gateway', subCommand: 'manage' },
-  // The "manage" surface is really a frontend shell (chat + gateway UI), so the
-  // primary launch verb is `khychat`. Legacy `khyguanli`/`guanli` aliases above
-  // are kept for backward compatibility.
+  // The "manage" surface is really the web frontend (chat + gateway UI), so the
+  // launch verb is `khy web`. It used to be `chat`, which misdescribed it:
+  // what opens is a browser page, not a terminal conversation. Renamed in place
+  // rather than added alongside, because the delivery ratchet
+  // (DESIGN-DELIV-002 §4) counts aliases and only lets them go down. Legacy
+  // `khyguanli`/`guanli` aliases above are kept for backward compatibility.
+  web: { command: 'gateway', subCommand: 'manage' },
   khychat: { command: 'gateway', subCommand: 'manage' },
-  chat: { command: 'gateway', subCommand: 'manage' },
   aichat: { command: 'gateway', subCommand: 'manage' },
   ai对话: { command: 'gateway', subCommand: 'manage' },
   relay: { command: 'gateway', subCommand: 'relay' },

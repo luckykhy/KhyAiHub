@@ -4,7 +4,9 @@
  * entrypoints.js — `khy entry`：Khy 多端入口矩阵的 CLI 正门。
  *
  * 子命令：
- *   khy entry list                 列出全部端（形态 / 状态 / 源目录）
+ *   khy entry list                 列出全部端（形态 / 状态 / 源目录）；默认附带一次 probe，
+ *                                  表定档与磁盘实测不一致的条目标 ⚠（P1-17）
+ *   khy entry list --no-probe      只读表，不跑 probe（脚本要稳定输出时用）
  *   khy entry list --kind=web      只看某一类端
  *   khy entry status               盘点产物：exe / apk / html 在哪、产出来没有、怎么得到
  *   khy entry info <id>            单个端的完整声明（启动/构建命令、平台档、端口、产物坐标）
@@ -102,23 +104,90 @@ function isOn(value) {
 
 // ── list ──────────────────────────────────────────────────────────
 
-function renderList(f, asJson, filters) {
+/**
+ * 端矩阵里「表怎么定档」与「磁盘实际怎样」的对照。
+ *
+ * P1-17: `khy entry list` 过去只读表，于是它说 mobile 就绪，而 `khy entry probe`
+ * 说 mobile 源目录缺失——同一条命令族里两个互相矛盾的结论，用户不知道该信谁。
+ * 现在 list 默认也跑一次 probe（只读、不 spawn 工具链探测，见 skipToolchain），
+ * 把不一致的条目标出来；要纯读表用 `--no-probe`。
+ *
+ * @param {object[]} entries overview 的条目
+ * @param {{ skipProbe?: boolean }} [opts]
+ * @returns {{ byId: Map<string, object>, ran: boolean }}
+ */
+function _probeForList(entries, opts = {}) {
+  const byId = new Map();
+  if (opts.skipProbe) {
+    return { byId, ran: false };
+  }
+  try {
+    // skipToolchain: 工具链是本机事实（CI 机器没装 flutter 不代表声明坏了），
+    // list 只需要仓库级四维来判断「表与磁盘是否不一致」。
+    for (const result of entrypoints.probeAll({ skipToolchain: true })) {
+      byId.set(result.id, result);
+    }
+  } catch {
+    /* probe 失败不该让 list 读不了表 */
+  }
+  return { byId, ran: true };
+}
+
+/**
+ * 表与磁盘是否不一致（probe 定档 ≠ 表定档）。
+ * @param {object} entry
+ * @param {object|null} probe
+ * @returns {{ mismatch: boolean, text: string }}
+ */
+function _entryStatusMismatch(entry, probe) {
+  if (!probe) {
+    return { mismatch: false, text: '' };
+  }
+  if (probe.declaredStatus === probe.status) {
+    return { mismatch: false, text: '' };
+  }
+  const declared = STATUS_LABEL[probe.declaredStatus] || probe.declaredStatus;
+  const actual = STATUS_LABEL[probe.status] || probe.status;
+  // probe 只把「磁盘比表悲观」判为 drift（确证的不一致）；「磁盘比表乐观」只给 note ——
+  // 后者是人工定档用了探测看不到的维度（如缺 electron-builder 配置、签名凭据未配），
+  // 属预期内的说明。共用一个「不一致」标签会让人把预期当故障，故分开。
+  const drift = Boolean(probe.drift);
+  return {
+    mismatch: true,
+    drift,
+    text: drift
+      ? `表定「${declared}」但磁盘实测「${actual}」：${probe.drift}`
+      : `表定「${declared}」比磁盘保守（磁盘实测「${actual}」）：${probe.note || '见 khy entry probe'}`,
+  };
+}
+
+function renderList(f, asJson, filters, opts = {}) {
   const overview = entrypoints.overview(filters);
+  const probeIndex = _probeForList(overview.entries, opts);
 
   if (asJson) {
     console.log(
       JSON.stringify(
         {
           meta: overview.meta,
-          entries: overview.entries.map(e => ({
-            id: e.id,
-            kind: e.kind,
-            title: e.title,
-            artifactKind: e.artifactKind,
-            source: e.source,
-            status: e.status,
-            statusNote: e.statusNote,
-          })),
+          entries: overview.entries.map(e => {
+            const probe = probeIndex.byId.get(e.id) || null;
+            const mismatch = _entryStatusMismatch(e, probe);
+            return {
+              id: e.id,
+              kind: e.kind,
+              title: e.title,
+              artifactKind: e.artifactKind,
+              source: e.source,
+              status: e.status,
+              statusNote: e.statusNote,
+              // 新增字段（纯增量，原有字段一字未改）：把磁盘实测口径一并给出，
+              // 消费方不再需要为了对账额外跑一次 probe。
+              probedStatus: probe ? probe.status : null,
+              mismatch: mismatch.mismatch,
+              mismatchDetail: mismatch.text || null,
+            };
+          }),
           errors: overview.errors,
         },
         null,
@@ -130,13 +199,18 @@ function renderList(f, asJson, filters) {
 
   f.printInfo(`端矩阵 已加载 v${overview.meta.version || '?'}：${overview.path}`, '入口');
 
-  const rows = overview.entries.map(e => [
-    e.id,
-    e.kind,
-    e.artifactKind || '-',
-    STATUS_LABEL[e.status] || e.status,
-    e.source,
-  ]);
+  const rows = overview.entries.map(e => {
+    const probe = probeIndex.byId.get(e.id) || null;
+    const mismatch = _entryStatusMismatch(e, probe);
+    const label = STATUS_LABEL[e.status] || e.status;
+    return [
+      e.id,
+      e.kind,
+      e.artifactKind || '-',
+      mismatch.mismatch ? `⚠ ${label}` : label,
+      e.source,
+    ];
+  });
   f.printTable(['端', '类型', '形态', '状态', '源目录'], rows);
 
   const counts = overview.entries.reduce((acc, e) => {
@@ -150,6 +224,18 @@ function renderList(f, asJson, filters) {
     `端统计 ${overview.entries.length} 个：${breakdown || '（空表）'}`,
     '入口'
   );
+
+  // 表与磁盘对不上时必须说出来，并指名以谁为准（probe 是机器检活，表是人工定档）。
+  // 但 drift（磁盘更悲观）与 note（表比磁盘保守）要分开报：后者不是故障，逼人去改表会改错。
+  for (const e of overview.entries) {
+    const mismatch = _entryStatusMismatch(e, probeIndex.byId.get(e.id) || null);
+    if (mismatch.mismatch) {
+      f.printWarn(`端 ${e.id} ${mismatch.drift ? '定档漂移' : '定档说明'}：${mismatch.text}`);
+      if (mismatch.drift) {
+        f.printWarn(`  以磁盘实测为准 —— 运行 khy entry probe ${e.id} 看明细，并回来修 entries.json 的 status`);
+      }
+    }
+  }
 
   const broken = overview.entries.filter(e => e.status === 'broken');
   for (const e of broken) {
@@ -500,7 +586,10 @@ async function handleEntrypoints(parsed = {}) {
       const filters = {};
       if (flags.options.kind) filters.kind = String(flags.options.kind);
       if (flags.options.status) filters.status = String(flags.options.status);
-      return _rc(renderList(f, asJson, filters));
+      // P1-17: list 默认跑一次 probe 把「表定档 vs 磁盘实测」的不一致标出来；
+      // `--no-probe` 回到纯读表（脚本要稳定输出时用）。
+      const skipProbe = isOn(flags.options['no-probe']) || isOn(flags.options.noProbe);
+      return _rc(renderList(f, asJson, filters, { skipProbe }));
     }
     case 'info':
     case 'show':
@@ -513,9 +602,14 @@ async function handleEntrypoints(parsed = {}) {
       return _rc(renderProbe(f, asJson, id));
     case 'launch':
     case 'start':
-      return _rc(runAction(f, 'launch', id, flags, positionalArgs.slice(1)));
+      // runAction 是 async：必须先 await 再取退出码。直接 `_rc(runAction(...))`
+      // 会把 Promise 赋给 process.exitCode，Node 抛 ERR_INVALID_ARG_TYPE
+      // （"The 'code' argument must be of type number. Received an instance of Promise"），
+      // 自注册命令捕获后报「自注册命令执行失败: entry」并回落成 rc=1——list/info/status/probe
+      // 是同步的故不受影响，只有 launch/build 两条坏。
+      return _rc(await runAction(f, 'launch', id, flags, positionalArgs.slice(1)));
     case 'build':
-      return _rc(runAction(f, 'build', id, flags, positionalArgs.slice(1)));
+      return _rc(await runAction(f, 'build', id, flags, positionalArgs.slice(1)));
     default:
       f.printError(
         `未知子命令 ${sub}：支持 list / info / probe / launch / build —— ` +
@@ -536,7 +630,7 @@ module.exports = {
     description:
       'Khy 多端入口矩阵：列出/盘点产物/探测/启动/构建 终端·桌面·移动·网页 四类端',
     usage:
-      'entry <list|status|info|probe|launch|build> [id] [--kind=] [--status=] [--dry-run] [--json]',
+      'entry <list|status|info|probe|launch|build> [id] [--kind=] [--status=] [--dry-run] [--json] [--no-probe]',
     subCommands: ['list', 'status', 'info', 'probe', 'launch', 'build'],
     category: 'system',
     handler: handleEntrypoints,

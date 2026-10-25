@@ -1065,8 +1065,13 @@ function _probeUrlReachable(url, timeoutMs = 1200) {
           }
         });
         res.on('end', () => {
-          // 检查特征标记：KHY 管理页 HTML 中应包含 khy 或 ai-gateway 关键字
-          const isKhy = /khy|ai-gateway|khyquant|ai.manage/i.test(body);
+          // 特征标记：KHY 管理页 HTML 应包含 khy 或 ai-gateway 关键字，或标准的
+          // Vue SPA 挂载点。生产构建的 index.html 标题是中文产品名、脚本名带内容
+          // 哈希，两者都不含关键字——只认关键字会把一个完全正常的构建产物判成
+          // 「前端不可打开」，于是浏览器永远不会被打开。
+          const isKhy =
+            /khy|ai-gateway|khyquant|ai.manage/i.test(body) ||
+            /<div[^>]+id=["']app["']/i.test(body);
           resolve({ ok: isKhy || !body, statusCode });
         });
         res.on('error', () => resolve({ ok: false, statusCode }));

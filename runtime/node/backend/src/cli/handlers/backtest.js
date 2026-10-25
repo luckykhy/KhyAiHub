@@ -61,6 +61,31 @@ return null;`,
   },
 };
 
+/**
+ * Honest degradation when the khyquant app is absent.
+ *
+ * `services/backtestEngine` is a compatibility shim over
+ * quantApp.loadModule('services/backtestEngine') and resolves to null when
+ * khyquant — an INDEPENDENT project that connects to Khy OS, not a built-in
+ * part of it — is neither installed nor registered. Say what is missing and
+ * how to enable it instead of dying on `engine.run(...)`.
+ */
+function reportQuantAppMissing() {
+  let regFile = '数据目录下的 quant-app.json';
+  try {
+    regFile = path.join(require('../../utils/dataHome').getDataHome(), 'quant-app.json');
+  } catch {
+    /* dataHome unavailable — keep the generic hint */
+  }
+  printError('回测需要量化应用 khyquant，但它当前未安装或未注册');
+  console.log('    khyquant 是独立项目，连接 Khy OS 使用，并不是 Khy OS 的内置部分。');
+  console.log('    下一步（任选其一，完成后重试本命令即可）：');
+  console.log('      1) 设置环境变量 KHY_QUANT_APP_DIR=<khyquant 项目目录>');
+  console.log(`      2) 在 ${regFile} 写入 {"dir":"<khyquant 项目目录>"}`);
+  console.log('    未安装时，对话 / 网关 / 计划模式等其他功能不受影响。');
+  require('../../utils/markProcessFailure')();
+}
+
 async function handleBacktestRun(symbol, options = {}) {
   try {
     await bootstrap({ silent: true });
@@ -81,6 +106,11 @@ async function handleBacktestRun(symbol, options = {}) {
     return;
   }
   restoreDbLogs();
+
+  if (!backtestEngine || typeof backtestEngine.run !== 'function') {
+    reportQuantAppMissing();
+    return;
+  }
 
   // Resolve strategy code
   let signalFn;
@@ -140,9 +170,16 @@ async function handleBacktestRun(symbol, options = {}) {
       { muteOutput: true }
     );
   } catch (runErr) {
-    printError(`回测执行失败: ${runErr.message}`);
-    const chalk = require('chalk').default || require('chalk');
-    console.log(chalk.dim(`  ${runErr.stack?.split('\n')[1]?.trim() || ''}`));
+    // Structured error path (reportKhyError → cliErrorDescriptor): the panel
+    // carries the real reason + remediation suggestions and deliberately drops
+    // the stack, so a raw `at withSpinner.muteOutput (...)` frame never leaks
+    // to the end user.
+    const { reportKhyError } = require('../../services/reportKhyError');
+    reportKhyError(runErr, {
+      action: '回测执行',
+      target: symbol,
+      progress: `${startDate} → ${endDate}`,
+    });
     return;
   }
 

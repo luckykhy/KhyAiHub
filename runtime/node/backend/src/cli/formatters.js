@@ -4,7 +4,8 @@
  */
 const chalkModule = require('chalk');
 const chalk = chalkModule.default || chalkModule;
-const Table = require('cli-table3');
+// cli-table3 只被 printTable 用到,改为函数体内懒加载(实测 21-42ms)。
+// 保留原 try/catch 的 fail-soft 语义,且顺带把「模块加载失败」也纳入其中。
 
 const os = require('os');
 const path = require('path');
@@ -263,6 +264,7 @@ function printTable(headers, rows) {
   const borderless = tableStyle.isBorderless(process.env);
   const padding = tableStyle.tablePadding(process.env);
   try {
+    const Table = require('cli-table3');
     const chars = tableStyle.tableChars(process.env);
     const table = new Table({
       head: headers.map((h) => (plainOutput ? String(h) : chalk.cyan(h))),
@@ -311,19 +313,25 @@ function printTable(headers, rows) {
   // 累加,而不是按字符数 —— 中文单元格占 2 列,按 length 算线会短一截。
   if (borderless) {
     const gap = ' '.repeat(padding.paddingRight);
+    // 补白放在着色**之后**:chalk 会把补齐的空格一起包进颜色 reset 里,
+    // 行尾 `\s+$` 就抹不掉它(表头行因此永远拖着几个空格)。
     const renderRow = (cells, paint) =>
       cells
         .map((cell, i) => {
-          const text = padToWidth(String(cell), colWidths[i]);
-          return paint && !plainOutput ? paint(text) : text;
+          const text = String(cell).trimEnd();
+          const painted = paint && !plainOutput ? paint(text) : text;
+          return padToWidth(painted, colWidths[i]);
         })
         .join(gap)
         .replace(/\s+$/, '');
     const ruleWidth = colWidths.reduce((sum, w) => sum + w, 0) + padding.paddingRight * (colCount - 1);
-    const rule = '  ';
+    // 表头下压一条细线(注释早就这么写,实现里却只吐了两个空格)。
+    // plain 模式(管道/重定向,输出多半被机器消费)保持原样:不加线。
+    const rule = plainOutput ? '  ' : '─'.repeat(ruleWidth);
 
     console.log('  ' + renderRow(headers, (t) => chalk.cyan(t)));
-    console.log(plainOutput ? rule : chalk.dim(rule));
+    // 线与表头同一缩进(否则表头缩进 2 格、线从第 0 列起,看着像另一块内容)。
+    console.log(plainOutput ? rule : chalk.dim('  ' + rule));
     for (const row of normalizedRows) {
       console.log('  ' + renderRow(row, null));
     }
@@ -361,12 +369,27 @@ function printTable(headers, rows) {
 //   3. 抹掉行尾空白 —— 补齐留下的尾随空格在选中复制时会一起带走。
 // 线宽按**去掉 ANSI 后的显示宽度**取各行最大值:中文单元格占 2 列,
 // 按字符串长度算线会短一截,而这种短只有人眼能发现。
+//
+// 行尾空白有两种形态:数据行是裸空格(`\s+$` 能抹),表头行是被 chalk 上过色的,
+// 空格夹在 ANSI reset **之前** —— 直接 `\s+$` 匹配不到,只能摘空格、留下 reset,
+// 否则会留下未闭合的颜色序列把颜色漏到下一行。
+function _trimTableLine(line) {
+  return String(line).replace(/[ \t]+((?:\x1b\[[0-9;]*m)+)$/, '$1').replace(/\s+$/, '');
+}
+
 function _dressBorderlessTable(rendered) {
   const lines = String(rendered).split('\n');
   if (lines.length === 0) {
     return rendered;
   }
-  const trimmed = lines.map((l) => l.replace(/\s+$/, ''));
+  const trimmed = lines.map(_trimTableLine);
+  if (trimmed.length > 1) {
+    let ruleW = 0;
+    for (const l of trimmed) {
+      ruleW = Math.max(ruleW, displayWidth(l));
+    }
+    trimmed.splice(1, 0, chalk.dim('─'.repeat(ruleW)));
+  }
   const out = trimmed.map((l) => '  ' + l);
   return out.join('\n');
 }
@@ -375,8 +398,13 @@ function _dressBorderlessTable(rendered) {
 // 按这个宽度画线。之所以不接受一个数字参数,是因为调用点原本写的都是魔法数(38 个
 // 横杠),行长一变线就要么冒出去、要么缺一截 —— 让线跟着内容走,这类漂移就不存在了。
 // 下限 20 是防退化:数据全空时不要吐出一条一格长的短横。
-function _contentRule(rows) {
-  return '';
+function contentRule(rows) {
+  let w = 0;
+  for (const r of rows || []) {
+    w = Math.max(w, displayWidth(String(r)));
+  }
+  const cols = process.stdout.columns || 80;
+  return chalk.dim('  ' + '─'.repeat(Math.max(20, Math.min(w, cols - 4))));
 }
 
 function printQuote(quote) {
@@ -504,9 +532,14 @@ function printHelp() {
   const cmdColW = Math.min(Math.floor(contentW * 0.65), 46);
 
   console.log('');
-  console.log(`  ${chalk.cyan.bold(`khy OS v${displayVersion}`)} ${dim('命令速查')}`);
-  console.log(dim('  ' + '─'.repeat(Math.min(contentW, 56))));
-  console.log(`  ${dim('用法: khy <命令> [参数] [--选项]    AI: 直接输入自然语言即可对话')}`);
+  const helpHeaderLines = [
+    `  ${chalk.cyan.bold(`khy OS v${displayVersion}`)} ${dim('命令速查')}`,
+    `  ${dim('用法: khy <命令> [参数] [--选项]    AI: 直接输入自然语言即可对话')}`,
+  ];
+  console.log(helpHeaderLines[0]);
+  // 标题细线跟内容走(不再写死 56 —— 宽屏上那种线只占半屏,且与快捷键屏的 40 不一)。
+  console.log(contentRule(helpHeaderLines));
+  console.log(helpHeaderLines[1]);
   console.log('');
 
   // 分类一行流(轮二十六):命令名 curated,行模板与描述全部从 schema/manifest 派生。
@@ -587,17 +620,15 @@ function printKeybindingsTip() {
   const dim = chalk.dim;
   const bold = chalk.bold;
   const label = (s) => chalk.white(bold(s));
+  const rows = [
+    `    ${label('导航')}  ${dim('Ctrl+A/E 或 Home/End(行首/尾) · ↑/↓(历史回放) · Ctrl+R(反向搜索)')}`,
+    `    ${label('编辑')}  ${dim('Ctrl+W(删除单词) · Ctrl+D(删除字符/退出) · Ctrl+L(清屏)')}`,
+    `    ${label('会话')}  ${dim('Ctrl+C ×1(中止请求) · 忙碌 ×3(强制退出) / 空闲 ×2(退出) · Esc(中止/返回) · Tab(自动完成)')}`,
+  ];
   console.log(`  ${chalk.cyan.bold('快捷键')}`);
-  console.log(dim('  ' + '─'.repeat(40)));
-  console.log(
-    `    ${label('导航')}  ${dim('Ctrl+A/E 或 Home/End(行首/尾) · ↑/↓(历史回放) · Ctrl+R(反向搜索)')}`
-  );
-  console.log(
-    `    ${label('编辑')}  ${dim('Ctrl+W(删除单词) · Ctrl+D(删除字符/退出) · Ctrl+L(清屏)')}`
-  );
-  console.log(
-    `    ${label('会话')}  ${dim('Ctrl+C ×1(中止请求) · 忙碌 ×3(强制退出) / 空闲 ×2(退出) · Esc(中止/返回) · Tab(自动完成)')}`
-  );
+  // 与主帮助屏共用同一条「标题 + 细线」节奏(原来这里是写死的 40 列)。
+  console.log(contentRule(rows));
+  rows.forEach((r) => console.log(r));
   console.log('');
 }
 
@@ -643,6 +674,17 @@ function printHelpTopic(topicInput = '') {
   console.log(`  ${MASCOT_MINI} ${chalk.bold('khy help')} ${chalk.cyan(topic)}`);
   console.log('');
 
+  // 命令列按**显示宽度**补齐并取本块最长模板定列宽。原 padEnd(34) 按字符数补,
+  // 中文模板(如 `quote <代码|名称>  (hangqing/行情)`)少补 → 同一块里说明列歪最多 6 列;
+  // 超长模板(>34)更是只剩 1 个空格。列宽上限留出说明列的最低预算。
+  const printTopicRows = (rows) => {
+    const widest = Math.max(...rows.map(([cmd]) => displayWidth(cmd)));
+    const colW = Math.min(widest + 2, Math.max(24, (process.stdout.columns || 80) - 32));
+    rows.forEach(([cmd, desc]) => {
+      console.log(`    ${padToWidth(chalk.white(cmd), colW)}  ${chalk.dim(desc)}`);
+    });
+  };
+
   if (topic === 'gateway') {
     const rows = [
       ['gateway status', '查看通道可用性与实测告警'],
@@ -673,9 +715,7 @@ function printHelpTopic(topicInput = '') {
       ['ai config', '配置 API 密钥'],
       ['proxy quickstart', '一键启动代理并输出接入参数'],
     ];
-    rows.forEach(([cmd, desc]) => {
-      console.log(`    ${chalk.white(cmd.padEnd(34))} ${chalk.dim(desc)}`);
-    });
+    printTopicRows(rows);
     console.log('');
     console.log(chalk.dim('  示例:'));
     console.log(chalk.dim('    khy gateway status'));
@@ -697,9 +737,7 @@ function printHelpTopic(topicInput = '') {
       ['analyze <代码>', 'AI 辅助分析'],
       ['cache clear', '清理缓存'],
     ];
-    rows.forEach(([cmd, desc]) => {
-      console.log(`    ${chalk.white(cmd.padEnd(34))} ${chalk.dim(desc)}`);
-    });
+    printTopicRows(rows);
     console.log('');
     console.log(chalk.dim('  示例:'));
     console.log(chalk.dim('    khy quote 茅台'));
@@ -722,9 +760,7 @@ function printHelpTopic(topicInput = '') {
     ['server status', '后端服务状态'],
     ['db status', '数据库状态'],
   ];
-  rows.forEach(([cmd, desc]) => {
-    console.log(`    ${chalk.white(cmd.padEnd(34))} ${chalk.dim(desc)}`);
-  });
+  printTopicRows(rows);
   console.log('');
   console.log(chalk.dim('  示例:'));
   console.log(chalk.dim('    khy doctor'));
@@ -921,14 +957,25 @@ function printLiteBanner(version, aiProvider) {
       : providerText;
 
   const petLines = getClassicMonsterPetLines(orange);
+  // 每行按统一 sprite 宽度补齐再拼右侧文本:整幅图(7 行)一起画 —— 只取前 3 行
+  // 会把凤凰砍成半只,而不补齐则三行文本起始列各不相同(11/14/14)。
+  const spriteW = petLines.reduce((m, l) => Math.max(m, displayWidth(l)), 0);
 
   // 定位话术单一真源（INIT-PRD-004 的代码化）。
   const { POSITIONING } = require('../constants/positioning');
 
+  const infoLines = [
+    `${chalk.bold('khy OS')} ${d(`v${ver}`)}`,
+    d(POSITIONING.tagline),
+    // 分隔符并入同一段 dim —— 原来 ` · ` 夹在两次 d() 之间,以正常亮度把两段切开。
+    d(`${providerPart} · ${cwdShort}`),
+  ];
+  const infoStart = Math.max(0, Math.floor((petLines.length - infoLines.length) / 2));
+
   console.log('');
-  console.log(`${petLines[0]}  ${chalk.bold('khy OS')} ${d(`v${ver}`)}`);
-  console.log(`${petLines[1]}    ${d(POSITIONING.tagline)}`);
-  console.log(`${petLines[2]}    ${d(providerPart)} · ${d(cwdShort)}`);
+  for (let i = 0; i < petLines.length; i++) {
+    console.log(`${padToWidth(petLines[i], spriteW)}  ${infoLines[i - infoStart] || ''}`);
+  }
   console.log('');
 }
 

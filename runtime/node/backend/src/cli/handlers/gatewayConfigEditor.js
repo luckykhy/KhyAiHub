@@ -86,6 +86,19 @@ const API_POOL_PROVIDER_KEYS = [
   'wenxin',
   'relay',
 ];
+/**
+ * 进阶项是否展开。默认收起——裸环境变量名（GATEWAY_MODEL_ROUTE_MAP 之类）对第一次
+ * 配网关的人只是噪音，还会把「我是不是必须先配代理」的疑问放大。门控
+ * KHY_GATEWAY_CONFIG_ADVANCED=1/true 时恢复旧布局（四项回到主菜单）。
+ * @returns {boolean}
+ */
+function _gatewayConfigAdvancedEnabled() {
+  const raw = String(process.env.KHY_GATEWAY_CONFIG_ADVANCED || '')
+    .trim()
+    .toLowerCase();
+  return raw === '1' || raw === 'true' || raw === 'yes' || raw === 'on';
+}
+
 async function handleGatewayConfig(options = {}) {
   const asJson = !!options.json;
   const isInteractive = !!(
@@ -94,18 +107,52 @@ async function handleGatewayConfig(options = {}) {
     process.stdout &&
     process.stdout.isTTY
   );
+  // P1-12: `actions` stays the FULL catalog (same 12 items, same values, same
+  // order) because it is the machine-facing contract of `--json` — downstream
+  // consumers read it. The interactive menu below is a separate, beginner-first
+  // presentation built from the same values.
   const actions = [
     { label: '配置网络代理 (Clash/HTTP)', value: 'proxy-config' },
     { label: '设置 CLI 工具桥接 (开/关)', value: 'cli-toggle' },
     { label: '配置 Ollama 本地模型', value: 'ollama-config' },
     { label: '配置 API 中转 (Claude/GPT 中转站)', value: 'relay-api' },
     { label: '配置模型厂商 API Key (DeepSeek/Qwen/GLM/豆包等)', value: 'provider-keys' },
-    { label: '高级: 模型路由规则 (GATEWAY_MODEL_ROUTE_MAP)', value: 'routing-policy' },
-    { label: '高级: Key 选择策略 (GATEWAY_KEY_SELECTION_STRATEGY)', value: 'key-strategy' },
-    { label: '高级: API 池默认 provider (GATEWAY_API_POOL_PROVIDER)', value: 'api-pool-default' },
-    { label: '高级: 供应商映射 (alias/service/default-model)', value: 'api-provider-map' },
+    { label: '高级: 模型路由规则（按模型指定走哪条通道）', value: 'routing-policy' },
+    { label: '高级: Key 选择策略（多个 Key 之间怎么轮询）', value: 'key-strategy' },
+    { label: '高级: API 池默认供应商（不指定供应商时用哪个）', value: 'api-pool-default' },
+    { label: '高级: 供应商映射（别名 / 服务 / 默认模型）', value: 'api-provider-map' },
     { label: '设置 Web 中转端口', value: 'relay-port' },
     { label: '设置中转超时时间', value: 'relay-timeout' },
+    { label: '↩  返回', value: 'back' },
+  ];
+
+  // 交互菜单：第一眼只回答「我现在该干什么」。代理/端口/超时/CLI 桥接收进
+  // 「更多设置」二级菜单，四项「高级:」默认收起（门控见上）。
+  const beginnerActions = [
+    { label: '直接用免费的（无需 Key）', value: 'free-tier' },
+    {
+      label: '配置模型厂商 API Key (DeepSeek/Qwen/GLM/豆包等)（推荐，第一次配这个）',
+      value: 'provider-keys',
+    },
+    { label: '配置 Ollama 本地模型', value: 'ollama-config' },
+    { label: '配置 API 中转 (Claude/GPT 中转站)', value: 'relay-api' },
+  ];
+  const moreActions = [
+    { label: '配置网络代理 (Clash/HTTP)', value: 'proxy-config' },
+    { label: '设置 CLI 工具桥接 (开/关)', value: 'cli-toggle' },
+    { label: '设置 Web 中转端口', value: 'relay-port' },
+    { label: '设置中转超时时间', value: 'relay-timeout' },
+  ];
+  const advancedActions = [
+    { label: '高级: 模型路由规则（按模型指定走哪条通道）', value: 'routing-policy' },
+    { label: '高级: Key 选择策略（多个 Key 之间怎么轮询）', value: 'key-strategy' },
+    { label: '高级: API 池默认供应商（不指定供应商时用哪个）', value: 'api-pool-default' },
+    { label: '高级: 供应商映射（别名 / 服务 / 默认模型）', value: 'api-provider-map' },
+  ];
+  const menuActions = [
+    ...beginnerActions,
+    { label: '更多设置（代理 / CLI 桥接 / 端口 / 超时）', value: 'more' },
+    ...(_gatewayConfigAdvancedEnabled() ? advancedActions : []),
     { label: '↩  返回', value: 'back' },
   ];
 
@@ -121,7 +168,16 @@ async function handleGatewayConfig(options = {}) {
             action: 'config',
             interactive: false,
             requiresTTY: true,
+            // menu = 全量目录（12 项，value 与顺序均未变，下游可继续消费）；
+            // menuLayout = 新手视角的呈现顺序（含 JSON 菜单里没有的两个
+            // 呈现级入口 free-tier / more）。
             menu: actions,
+            menuLayout: {
+              beginner: beginnerActions.map((item) => item.value),
+              more: moreActions.map((item) => item.value),
+              advanced: advancedActions.map((item) => item.value),
+              advancedVisible: _gatewayConfigAdvancedEnabled(),
+            },
             message,
           },
           null,
@@ -147,16 +203,54 @@ async function handleGatewayConfig(options = {}) {
   const hadGuard = global.__KHY_INQUIRER_ACTIVE__ === true;
   global.__KHY_INQUIRER_ACTIVE__ = true;
   try {
-    const { action } = await promptWithReplGuard([
-      {
-        type: 'list',
-        name: 'action',
-        message: '网关配置:',
-        choices: actions.map((item) => ({ name: item.label, value: item.value })),
-      },
-    ]);
+    // 主菜单 → 「更多设置」二级菜单：选中呈现级入口（more）时不落盘，只换一层菜单。
+    let level = 'main';
+    let action = null;
+    for (;;) {
+      const picked = await promptWithReplGuard([
+        {
+          type: 'list',
+          name: 'action',
+          message: level === 'main' ? '网关配置:' : '更多设置:',
+          choices: (
+            level === 'main'
+              ? menuActions
+              : [...moreActions, { label: '↩  返回上一级', value: 'back' }]
+          ).map((item) => ({ name: item.label, value: item.value })),
+        },
+      ]);
+      action = picked.action;
+      if (level === 'main') {
+        if (action === 'more') {
+          level = 'more';
+          continue;
+        }
+        break;
+      }
+      // 「更多设置」层：返回上一级 = 回主菜单，不是退出整个配置。
+      if (action === 'back') {
+        level = 'main';
+        continue;
+      }
+      break;
+    }
 
-    if (action === 'back') {
+    if (action === 'back' || action === null) {
+      return;
+    }
+
+    if (action === 'free-tier') {
+      // 「先用起来，不掏 Key」：免费通道 = 已登录的 CLI 桥接 / 本机 Ollama /
+      // 系统默认中转，都不需要模型厂商 Key。这里只负责说清并送进通道选择。
+      printInfo('免费通道（无需任何模型厂商 Key）：');
+      printInfo('  · CLI 工具桥接：复用你已登录的 Claude / Codex 等 CLI（khy gateway config → 更多设置 → CLI 工具桥接）');
+      printInfo('  · Ollama 本地模型：本机下载模型后离线推理');
+      printInfo('  · API 中转：使用服务方提供的免费额度');
+      printInfo('下面进入通道选择，挑一个标注「无需 Key / 免费」的通道即可：');
+      console.log('');
+      if (typeof handleGatewaySelectModel === 'function') {
+        await handleGatewaySelectModel();
+      }
       return;
     }
 

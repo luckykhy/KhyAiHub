@@ -49,6 +49,36 @@ const {
   safeTerminalString,
 } = require('../formatters');
 const { truncateWidth } = require('../truncateDisplayWidthBudget');
+
+// 模型可用性判定 / 可靠性裁剪 / 展示文案的单一真源——桌面端（Electron host）与
+// 终端（CLI / Ink TUI）共用。此前终端在此内联实现、桌面端完全不判可用性，导致
+// 两边「这个模型可不可选」不一致。必须早于下方各叶子的 DI 注入（它们要拿这些符号）。
+const {
+  STRICT_OPERATIONAL_ADAPTERS,
+  shouldTreatGenerationFailureAsWarning,
+  isAdapterOperational,
+  _filterModelsByReliability,
+  _compactReasonText,
+  _isTimeoutLikeReason,
+  _isAuthOrInstallLikeReason,
+  _isTransientProbeLikeReason,
+  _classifyHiddenReason,
+  _shouldRetryProbeByDebounce,
+  isVisionModel,
+  plainSourceTag,
+  plainConnectionTag,
+  plainUpstreamTag,
+} = require('../../services/gateway/modelOperationality');
+
+// 首选通道配置诊断 + 探测时限/深测缓存已随模型采集一并迁入 modelEntryCollection；
+// 本文件的其它路径（handleGatewayPreferRemote 等）与各叶子 DI 仍按原名使用。
+const {
+  resolvePreferredAdapterIssue: _resolvePreferredAdapterIssue,
+  getAdapterProbeTimeoutMs: _getAdapterProbeTimeoutMs,
+  getAdapterModelListTimeoutMs: _getAdapterModelListTimeoutMs,
+  _getDeepProbeCache,
+  _setDeepProbeCache,
+} = require('../../services/gateway/modelEntryCollection');
 // Model-name SSOT: relay default flows from constants/models.js
 // (env RELAY_API_MODEL still overrides first).
 
@@ -146,17 +176,6 @@ setGatewayStatusViewDeps({
   _resolveProtocolLabel,
 });
 
-const STRICT_OPERATIONAL_ADAPTERS = new Set(
-  String(process.env.KHY_MODEL_STRICT_ADAPTERS || 'codex,claude,trae,cursor,relay_api')
-    .split(',')
-    .map((x) =>
-      String(x || '')
-        .trim()
-        .toLowerCase()
-    )
-    .filter(Boolean)
-);
-
 // 一次性注入 model-choices 叶子的宿主回依赖（函数声明均已提升 + STRICT_OPERATIONAL_ADAPTERS 已定义于上）。
 setGatewayModelChoicesDeps({
   promptWithReplGuard,
@@ -185,29 +204,6 @@ setGatewayModelChoicesDeps({
   persistGatewayPreference,
   STRICT_OPERATIONAL_ADAPTERS,
 });
-const MODEL_DEEP_PROBE_CACHE_MS = Math.max(
-  10000,
-  parseInt(process.env.KHY_MODEL_DEEP_PROBE_CACHE_MS || '300000', 10) || 300000
-);
-const KIRO_PROBE_TIMEOUT_MS = Math.max(
-  8000,
-  parseInt(process.env.KHY_MODEL_KIRO_PROBE_TIMEOUT_MS || '20000', 10) || 20000
-);
-const KIRO_MODEL_LIST_TIMEOUT_MS = Math.max(
-  KIRO_PROBE_TIMEOUT_MS,
-  parseInt(process.env.KHY_MODEL_KIRO_LIST_TIMEOUT_MS || '25000', 10) || 25000
-);
-const MODEL_HIDE_UNVERIFIED_ENABLED =
-  String(process.env.KHY_MODEL_HIDE_UNVERIFIED || 'true').toLowerCase() !== 'false';
-const MODEL_HIDE_FALLBACK_MODELS_ENABLED =
-  String(process.env.KHY_MODEL_HIDE_FALLBACK_MODELS || 'false').toLowerCase() !== 'false';
-const MODEL_HIDE_HINT_MODELS_ENABLED =
-  String(process.env.KHY_MODEL_HIDE_HINT_MODELS || 'false').toLowerCase() !== 'false';
-const MODEL_WARN_KEEP_MAX = Math.max(
-  1,
-  parseInt(process.env.KHY_MODEL_WARN_KEEP_MAX || '3', 10) || 3
-);
-const _modelDeepProbeCache = new Map(); // key: adapter type -> { at, test }
 const AI_MANAGE_RUNTIME_FILE = path.join(getDataHome(), 'ai_manage_runtime.json');
 const AI_MANAGE_RUNTIME_FILE_LEGACY = path.join(getLegacyDataHome(), 'ai_manage_runtime.json');
 const AI_MANAGE_READY_TIMEOUT_MS = Math.max(
@@ -281,53 +277,6 @@ async function promptWithReplGuard(questions = []) {
   }
 }
 
-function _getDeepProbeCache(adapterType) {
-  const key = String(adapterType || '').toLowerCase();
-  if (!key) {
-    return null;
-  }
-  const entry = _modelDeepProbeCache.get(key);
-  if (!entry) {
-    return null;
-  }
-  if (Date.now() - entry.at > MODEL_DEEP_PROBE_CACHE_MS) {
-    _modelDeepProbeCache.delete(key);
-    return null;
-  }
-  return entry;
-}
-
-function _setDeepProbeCache(adapterType, test) {
-  const key = String(adapterType || '').toLowerCase();
-  if (!key) {
-    return;
-  }
-  _modelDeepProbeCache.set(key, { at: Date.now(), test });
-}
-
-function _getAdapterProbeTimeoutMs(adapterType, fallbackMs) {
-  const type = String(adapterType || '').toLowerCase();
-  if (type === 'kiro') {
-    return Math.max(fallbackMs, KIRO_PROBE_TIMEOUT_MS);
-  }
-  return fallbackMs;
-}
-
-function _getAdapterModelListTimeoutMs(adapterType, fallbackMs) {
-  const type = String(adapterType || '').toLowerCase();
-  if (type === 'kiro') {
-    return Math.max(fallbackMs, KIRO_MODEL_LIST_TIMEOUT_MS);
-  }
-  return fallbackMs;
-}
-
-function shouldTreatGenerationFailureAsWarning(adapterType) {
-  // CLI-bridge related adapters can be environment-dependent.
-  // Keep them selectable with warning instead of hard-blocking.
-  // Local inference adapters must pass generation probe; otherwise mark unavailable.
-  return ['cli', 'claude', 'codex'].includes(String(adapterType || '').toLowerCase());
-}
-
 function shouldTreatConnectivityFailureAsWarning(adapterType, reasonText = '') {
   const type = String(adapterType || '').toLowerCase();
   const reason = String(reasonText || '').trim();
@@ -346,251 +295,51 @@ function shouldTreatConnectivityFailureAsWarning(adapterType, reasonText = '') {
   return _isTransientProbeLikeReason(reason);
 }
 
-function _compactReasonText(text, maxLen = 140) {
-  const clean = String(text || '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  if (!clean) {
-    return '';
-  }
-  // Width-aware truncation (CJK = 2 columns): result display width <= maxLen.
-  return truncateToWidth(clean, maxLen);
-}
-
-function _isTimeoutLikeReason(reasonText = '') {
-  return /timeout|timed out|stream stalled|reconnecting|channel closed|socket hang up|econnreset|broken pipe|fetch failed|network error/i.test(
-    String(reasonText || '')
-  );
-}
-
-function _isAuthOrInstallLikeReason(reasonText = '') {
-  return /auth|api[_\s-]?key|apikeysource|token|not authenticated|unauthorized|forbidden|login|permission denied|no token|not set|unavailable|command .* not found|not found|enoent/i.test(
-    String(reasonText || '')
-  );
-}
-
-function _isTransientProbeLikeReason(reasonText = '') {
-  return (
-    _isTimeoutLikeReason(reasonText) ||
-    /exited with code|without emitting stream-json output|launch blocked|failed to record rollout items|temporarily unavailable|service unavailable|try again later|overloaded|busy/i.test(
-      String(reasonText || '')
-    )
-  );
-}
-
-function _classifyHiddenReason(status, test, fallbackReason = '') {
-  const preferred =
-    _compactReasonText(fallbackReason) ||
-    _compactReasonText(test?.generation?.error) ||
-    _compactReasonText(test?.models?.error) ||
-    _compactReasonText(test?.connectivity?.error) ||
-    '';
-  const text = preferred.toLowerCase();
-  if (!text) {
-    return '实测失败';
-  }
-  if (_isAuthOrInstallLikeReason(text)) {
-    return `未登录/缺少凭证或未安装: ${preferred}`;
-  }
-  if (_isTimeoutLikeReason(text)) {
-    return `探测超时: ${preferred}`;
-  }
-  if (text.includes('not detected')) {
-    return '未检测到通道可用';
-  }
-  return preferred;
-}
-
-function _extractProbeReasonText(test = {}) {
-  return String(
-    test?.generation?.error || test?.models?.error || test?.connectivity?.error || ''
-  ).trim();
-}
-
-function _shouldRetryProbeByDebounce(status = {}, test = {}) {
-  const reasonText = _extractProbeReasonText(test);
-  if (!reasonText) {
-    return false;
-  }
-  if (_isAuthOrInstallLikeReason(reasonText)) {
-    return false;
-  }
-  return _isTransientProbeLikeReason(reasonText);
-}
-
 function _formatModelSourceTag(model = {}) {
-  const raw = String(model.discoverySource || model.source || '')
-    .trim()
-    .toLowerCase();
-  if (!raw) {
+  const plain = plainSourceTag(model);
+  if (!plain) {
     return '';
   }
-  const map = {
-    remote: '远端发现',
-    local: '本地发现',
-    'remote+local': '远端+本地',
-    builtin: '内置',
-    config: '配置项',
-  };
-  const label = map[raw] || raw;
   // 「未证实」标注(modelListTruth 的 unverified 标记):该通道无上游证据,这条只是本地猜测
   // (静态目录 / 本机扫描 / env 逗号串)。黄标签把「猜测」与「事实」在选择器里一眼分开。
-  if (model.unverified === true) {
-    return chalk.yellow(`[未证实·${label}]`);
-  }
-  return chalk.dim(`[${label}]`);
+  return model.unverified === true ? chalk.yellow(plain) : chalk.dim(plain);
 }
 
 function _formatConnectionTag(model = {}) {
+  const plain = plainConnectionTag(model);
+  if (!plain) {
+    return '';
+  }
   const mode = String(model.connectionMode || '')
     .trim()
     .toLowerCase();
-  if (!mode) {
-    return '';
-  }
   const map = {
-    direct: chalk.cyan('直连'),
-    bridge: chalk.yellow('中转桥接'),
-    proxy: chalk.dim('代理中转'),
-    local: chalk.green('本地推理'),
-    auto: chalk.magenta('自动'),
+    direct: chalk.cyan,
+    bridge: chalk.yellow,
+    proxy: chalk.dim,
+    local: chalk.green,
+    auto: chalk.magenta,
   };
-  return map[mode] || chalk.dim(mode);
+  const paint = map[mode];
+  return paint ? paint(plain) : chalk.dim(plain);
 }
 
 function _formatUpstreamTag(model = {}) {
-  const provider = String(model.upstreamProvider || '').trim();
-  const host = String(model.upstreamHost || '').trim();
-  if (!provider && !host) {
-    return '';
-  }
-  const payload = host ? `${provider || 'unknown'} @ ${host}` : provider;
-  return chalk.dim(`[上游:${payload}]`);
-}
-
-// 视觉徽章门控 KHY_MODEL_VISION_BADGE(默认开;flagRegistry 优先,注册表不可用 → 本地 CANON 回退)。
-const _VISION_BADGE_FALSY = new Set(['0', 'false', 'off', 'no']);
-function _visionBadgeEnabled(env) {
-  const e = env || process.env || {};
-  try {
-    const reg = require('../../services/flagRegistry');
-    if (
-      reg &&
-      typeof reg.isRegistryEnabled === 'function' &&
-      reg.isRegistryEnabled(e) &&
-      typeof reg.isFlagEnabled === 'function'
-    ) {
-      return reg.isFlagEnabled('KHY_MODEL_VISION_BADGE', e);
-    }
-  } catch {
-    /* 注册表不可用 → 本地回退 */
-  }
-  const v = e && e.KHY_MODEL_VISION_BADGE;
-  return !(
-    v !== undefined &&
-    v !== null &&
-    _VISION_BADGE_FALSY.has(String(v).trim().toLowerCase())
-  );
+  const plain = plainUpstreamTag(model);
+  return plain ? chalk.dim(plain) : '';
 }
 
 /**
  * 为具备识图(视觉)能力的模型渲染「👁 视觉」徽章,让用户在 `/model` 列表里一眼认出
- * glm-4.6v-flash 这类视觉理解模型。视觉判定复用单一真源 visionCapability.isVisionCapableModel
- * (覆盖 GLM glm-4.6v 子串 + KHY_VISION_MODELS + modern hints)。门控关 / 判不出 / 异常 → ''
+ * glm-4.6v-flash 这类视觉理解模型。判定复用单一真源 modelOperationality.isVisionModel
+ * (它再复用 visionCapability.isVisionCapableModel，覆盖 GLM glm-4.6v 子串 +
+ * KHY_VISION_MODELS + modern hints)。门控关 / 判不出 / 异常 → ''
  * (逐字节回退:行不含徽章)。绝不抛。
  * @param {object} model 至少含 id;可含 modality
  * @returns {string}
  */
 function _formatVisionTag(model = {}) {
-  try {
-    if (!_visionBadgeEnabled(process.env)) {
-      return '';
-    }
-    const id = String((model && (model.id || model.model || model.name)) || '').trim();
-    let isVision =
-      String((model && model.modality) || '')
-        .trim()
-        .toLowerCase() === 'vision';
-    if (!isVision && id) {
-      const vc = require('../../services/gateway/visionCapability');
-      if (vc && typeof vc.isVisionCapableModel === 'function') {
-        isVision = vc.isVisionCapableModel(id, { env: process.env });
-      }
-    }
-    return isVision ? chalk.magenta('视觉') : '';
-  } catch {
-    return '';
-  }
-}
-
-function _isPreferredAdapterModel(adapterType, modelId) {
-  const preferredAdapter = String(process.env.GATEWAY_PREFERRED_ADAPTER || '')
-    .trim()
-    .toLowerCase();
-  const preferredModel = String(process.env.GATEWAY_PREFERRED_MODEL || '').trim();
-  if (!preferredAdapter || !preferredModel) {
-    return false;
-  }
-  return (
-    preferredAdapter ===
-      String(adapterType || '')
-        .trim()
-        .toLowerCase() && String(modelId || '').trim() === preferredModel
-  );
-}
-
-function _resolvePreferredAdapterIssue(statuses = [], testResults = {}) {
-  const configuredRaw = String(process.env.GATEWAY_PREFERRED_ADAPTER || '').trim();
-  const configured = configuredRaw.toLowerCase();
-  if (!configured || configured === 'auto') {
-    return null;
-  }
-  // STRICT 是**放大器**([DESIGN-ARCH-136] 第 3 期):单通道不可用只损失一个通道,
-  // 但 STRICT 未显式关闭时会抑制回退,把「该通道不可用」升级成「每轮 AI 调用必然硬失败」。
-  // 判据与 aiGatewayGenerateMethod 的 strictPreferredByEnv、baseSelfCheckService 的
-  // strictPinned 同源(未显式 false 即视为开启),此处不另立一套。
-  const strict =
-    String(process.env.GATEWAY_PREFERRED_STRICT || '')
-      .trim()
-      .toLowerCase() !== 'false';
-  const matched = Array.isArray(statuses)
-    ? statuses.find(
-        (s) =>
-          String(s?.type || '')
-            .trim()
-            .toLowerCase() === configured
-      )
-    : null;
-  if (!matched) {
-    return {
-      type: 'invalid',
-      configured: configuredRaw,
-      strict,
-      message: `首选通道配置错误: "${configuredRaw}" 未注册`,
-    };
-  }
-
-  const test = testResults && typeof testResults === 'object' ? testResults[matched.type] : null;
-  const reason = _compactReasonText(
-    test?.generation?.error ||
-      test?.models?.error ||
-      test?.connectivity?.error ||
-      matched.detail ||
-      ''
-  );
-  if (!matched.enabled || !matched.available) {
-    return {
-      type: 'unavailable',
-      configured: configuredRaw,
-      strict,
-      adapterType: matched.type,
-      reason,
-      message: reason
-        ? `首选通道当前不可用: ${matched.type}（${reason}）`
-        : `首选通道当前不可用: ${matched.type}`,
-    };
-  }
-  return null;
+  return isVisionModel(model) ? chalk.magenta('视觉') : '';
 }
 
 function _normalizeGatewayStatusCellText(value) {
@@ -600,16 +349,50 @@ function _normalizeGatewayStatusCellText(value) {
     .trim();
 }
 
+/**
+ * Resolve the terminal width the status table may occupy.
+ *
+ * effectiveCols() is the single source of truth for render width, but it reads
+ * process.stdout.columns and falls back to a fixed 80 when the size is unknown
+ * — which is exactly the case for `khy gateway status | head` (piped stdout,
+ * columns === undefined). The COLUMNS env a user sets in that situation was
+ * silently ignored, so a 200-column request still rendered into an 80-column
+ * budget: every column collapsed to its hard minimum and the 详情 column (the
+ * one carrying the real reason a channel is unusable) was truncated to 4 chars,
+ * hiding it behind 「未检测...」. An explicit reading therefore wins over the
+ * fallback; a real TTY / REPL keeps the rail-narrowed effectiveCols value.
+ *
+ * @returns {number} usable columns, floored at 33
+ */
+function _resolveGatewayStatusTerminalWidth() {
+  const explicitCandidates = [
+    process.stdout && process.stdout.columns,
+    process.env.COLUMNS,
+    process.env.KHY_TERM_FALLBACK_COLS,
+  ];
+  for (const candidate of explicitCandidates) {
+    const n = Number(candidate);
+    if (Number.isFinite(n) && n > 0) {
+      return Math.max(33, Math.floor(n));
+    }
+  }
+  return Math.max(33, Number(require('../tui/effectiveCols').effectiveCols(80)));
+}
+
 function _buildGatewayStatusColumnWidths() {
   // Single source of truth for render width (effectiveCols degrades to full
   // terminal width in the classic REPL where the rail is off).
-  const terminalWidth = Math.max(33, Number(require('../tui/effectiveCols').effectiveCols(80)));
-  const fixedChars = 29; // indent + borders + separators + paddings for 7 columns
+  const terminalWidth = _resolveGatewayStatusTerminalWidth();
+  // 无框版式(与 printTable 的 minimal 默认同节奏)的固定开销 = 缩进 2 + 6 个列距 ×2。
+  // 旧值 29 是按满格网格估的,而且算错了 5 列 —— 表格右边缘比终端窄 5 列。
+  const fixedChars = 2 + (7 - 1) * 2; // = 14: indent + inter-column gaps
   const contentBudget = Math.max(6, terminalWidth - fixedChars);
 
   const preferred = [6, 14, 10, 8, 14, 14, 16];
-  const softMinimum = [4, 10, 6, 6, 10, 8, 10];
-  const hardMinimum = [1, 4, 3, 3, 6, 4, 4];
+  // 优先级列下限取 6(表头「优先级」的显示宽度):下限 4 时表头被截成 '…',
+  // 一列数据顶着 '…' 表头,读者认不出这列是什么。
+  const softMinimum = [6, 10, 6, 6, 10, 8, 10];
+  const hardMinimum = [3, 4, 3, 3, 6, 4, 4];
   const widths = preferred.slice();
   // 详情列（index 6）最后缩减，确保其他列可见。
   // 协议列（index 5）次优先缩减。
@@ -650,7 +433,12 @@ function _buildGatewayStatusColumnWidths() {
   }
 
   if (total < contentBudget) {
-    widths[6] += contentBudget - total;
+    // Absorb the slack into 详情, but cap the column: on a 300+ column terminal
+    // an uncapped grow produces a table so wide the other six columns fall out
+    // of the reading path. Leftover width stays unused instead.
+    const DETAIL_MAX = 80;
+    const grow = Math.min(contentBudget - total, Math.max(0, DETAIL_MAX - widths[6]));
+    widths[6] += grow;
   }
 
   return widths;
@@ -979,16 +767,18 @@ function _resolveProtocolLabel(adapterType) {
 function _printGatewayStatusTable(rows = []) {
   const headers = ['优先级', '适配器', '类型', '状态', '连通', '协议', '详情'];
   const widths = _buildGatewayStatusColumnWidths();
-  const top = `  ╭${widths.map((w) => '─'.repeat(w + 2)).join('┬')}╮`;
-  const mid = `  ├${widths.map((w) => '─'.repeat(w + 2)).join('┼')}┤`;
-  const bot = `  ╰${widths.map((w) => '─'.repeat(w + 2)).join('┴')}╯`;
+  const GAP = '  ';
+  // 无框版式:表头 + 一条细线 + 缩进列 —— 与 printTable 的 minimal 默认同一节奏。
+  // 原实现手画 7 列满格 Unicode 网格,同一条 `khy gateway status` 里上半屏是网格、
+  // 下半屏的 printTable 是空白分栏,眼睛先看到的是线。
+  const rule =
+    '  ' + '─'.repeat(widths.reduce((sum, w) => sum + w, 0) + GAP.length * (headers.length - 1));
+  const rowLine = (cells) =>
+    '  ' +
+    cells.map((cell, i) => padToWidth(String(cell == null ? '' : cell), widths[i])).join(GAP);
 
-  console.log(chalk.dim(top));
-  const headerLine = headers
-    .map((header, i) => ` ${_renderGatewayStatusCell(header, widths[i], chalk.cyan)} `)
-    .join(chalk.dim('│'));
-  console.log(chalk.dim('  │') + headerLine + chalk.dim('│'));
-  console.log(chalk.dim(mid));
+  console.log(rowLine(headers.map((header, i) => _renderGatewayStatusCell(header, widths[i], chalk.cyan))));
+  console.log(chalk.dim(rule));
 
   for (const row of rows) {
     const protocolText = row.protocol || '—';
@@ -1002,10 +792,8 @@ function _printGatewayStatusTable(rows = []) {
       _renderGatewayStatusCell(protocolText, widths[5], protocolColor),
       _renderGatewayStatusCell(row.detail, widths[6]),
     ];
-    const line = cells.map((cell) => ` ${cell} `).join(chalk.dim('│'));
-    console.log(chalk.dim('  │') + line + chalk.dim('│'));
+    console.log(rowLine(cells));
   }
-  console.log(chalk.dim(bot));
 }
 
 function _buildGatewayLanguageConsistencyText(summary = null) {
@@ -1019,32 +807,6 @@ function _buildGatewayLanguageConsistencyText(summary = null) {
 function _buildGatewayTraceCommandHint(requestId = '') {
   const rid = String(requestId || '').trim();
   return rid ? `khy gateway trace ${rid}` : 'khy gateway trace';
-}
-
-function _modelFamilyKey(model = {}) {
-  const base = String(model._baseModelId || '').trim();
-  if (base) {
-    return base;
-  }
-  const raw = String(model.id || model.name || '').trim();
-  if (!raw) {
-    return '';
-  }
-  return raw.includes('::') ? raw.split('::')[0] : raw;
-}
-
-function _isClaudeFamilyModel(model = {}) {
-  const modelId = String(model.id || '')
-    .trim()
-    .toLowerCase();
-  const modelName = String(model.name || '')
-    .trim()
-    .toLowerCase();
-  return (
-    modelId.startsWith('claude-') ||
-    modelId.startsWith('claude_') ||
-    modelName.startsWith('claude ')
-  );
 }
 
 function _printLatencyAutoTuneSnapshot() {
@@ -1117,183 +879,6 @@ function _printLatencyAutoTuneSnapshot() {
   } catch {
     /* best effort */
   }
-}
-
-/**
- * 探活状态查询(供 modelListTruth 的实测律注入)。fail-soft:modelCuration 不可用 /
- * 抛异常 → 恒 'unknown'(即不剔除),绝不因探活层故障影响模型列表。
- */
-function _modelVerifyStatusOf(adapterKey, modelId) {
-  try {
-    const curation = require('../../services/gateway/modelCuration');
-    if (curation && typeof curation.getVerifyStatus === 'function') {
-      return curation.getVerifyStatus(adapterKey, modelId);
-    }
-  } catch {
-    /* fail-soft: 无探活层 → 不剔除 */
-  }
-  return 'unknown';
-}
-
-/**
- * 把一条适配器的候选模型列表送过 modelListTruth(存在性真值收敛)。fail-soft:真值层缺失 /
- * 门控关 / 抛异常 → 原样返回入参(零剔除),绝不因真值层故障影响模型列表。
- * @returns {{models:Array, dropped:number, reasons:string[]}}
- */
-function _applyModelListTruth(adapterStatus = {}, list = []) {
-  const passthrough = { models: Array.isArray(list) ? list : [], dropped: 0, reasons: [] };
-  try {
-    const truth = require('../../services/gateway/modelListTruth');
-    if (!truth.isEnabled()) {
-      return passthrough;
-    }
-    const adapterType = String(adapterStatus.type || '').toLowerCase();
-    const verdict = truth.filterByUpstreamAuthority(passthrough.models, {
-      adapterKey: adapterType,
-      verifyStatusOf: _modelVerifyStatusOf,
-    });
-    if (!verdict || !Array.isArray(verdict.models)) {
-      return passthrough;
-    }
-    return { models: verdict.models, dropped: Number(verdict.dropped) || 0, reasons: verdict.reasons || [] };
-  } catch {
-    return passthrough;
-  }
-}
-
-function _filterModelsByReliability(adapterStatus = {}, test = {}, models = []) {
-  const sourceModels = Array.isArray(models) ? models.filter(Boolean) : [];
-  // 真值律**先**跑,且不受下方「列表太短就跳过」的捷径豁免:单条垃圾模型不该因为列表只有
-  // 一条就免检(那正是「列表里就一个不存在的模型」的成因)。形态律 + 实测律在此全覆盖。
-  const truthVerdict = _applyModelListTruth(adapterStatus, sourceModels);
-  let kept = truthVerdict.models.slice();
-  let filtered = truthVerdict.dropped;
-  const reasons = truthVerdict.reasons.slice();
-  if (sourceModels.length <= 1) {
-    return { models: kept, filtered, reasons };
-  }
-  const adapterType = String(adapterStatus.type || '').toLowerCase();
-  const generationWarn = !!(
-    test?.generation &&
-    !test.generation.success &&
-    shouldTreatGenerationFailureAsWarning(adapterType)
-  );
-  const hideFallbackForAdapter = adapterType === 'codex';
-  const hideHintForAdapter = adapterType === 'codex';
-
-  if (adapterType === 'codex') {
-    const next = kept.filter((m) => !_isClaudeFamilyModel(m));
-    const removed = kept.length - next.length;
-    if (removed > 0) {
-      filtered += removed;
-      reasons.push('cross-provider-claude');
-    }
-    kept = next;
-  }
-
-  if (MODEL_HIDE_HINT_MODELS_ENABLED && hideHintForAdapter) {
-    const next = kept.filter(
-      (m) =>
-        String(m.discoverySource || '')
-          .trim()
-          .toLowerCase() !== 'hint'
-    );
-    const removed = kept.length - next.length;
-    if (removed > 0) {
-      filtered += removed;
-      reasons.push('hint');
-    }
-    kept = next;
-  }
-
-  if (MODEL_HIDE_FALLBACK_MODELS_ENABLED && hideFallbackForAdapter) {
-    const next = kept.filter(
-      (m) =>
-        String(m.discoverySource || '')
-          .trim()
-          .toLowerCase() !== 'builtin'
-    );
-    const removed = kept.length - next.length;
-    if (removed > 0) {
-      filtered += removed;
-      reasons.push('builtin');
-    }
-    kept = next;
-  }
-
-  // ── 存在性真值收敛(modelListTruth)────────────────────────────────────────
-  // 已在函数开头(_applyModelListTruth)跑过一次,这里**必须再跑一次**:上面几步(codex 跨提供商
-  // / hint / builtin 过滤)可能把最后一条 remote 记录剔掉,从而让「上游权威」消失 —— 此时原本
-  // 被权威压制的猜测条目会重新获得豁免。重跑一次保证「裁剪后的集合」仍然自洽。
-  {
-    const again = _applyModelListTruth(adapterStatus, kept);
-    if (again.dropped > 0) {
-      filtered += again.dropped;
-      for (const reason of again.reasons) {
-        reasons.push(reason);
-      }
-    }
-    kept = again.models;
-  }
-
-  if (MODEL_HIDE_UNVERIFIED_ENABLED && generationWarn && kept.length > MODEL_WARN_KEEP_MAX) {
-    const strictKeep = kept.filter(
-      (m) => !!m.isDefault || _isPreferredAdapterModel(adapterType, m.id)
-    );
-    const normalizedKeep = [];
-    const seenIds = new Set();
-    const seenFamilies = new Set();
-    const pushOne = (m) => {
-      if (!m || normalizedKeep.length >= MODEL_WARN_KEEP_MAX) {
-        return;
-      }
-      const id = String(m.id || '');
-      if (id && seenIds.has(id)) {
-        return;
-      }
-      normalizedKeep.push(m);
-      if (id) {
-        seenIds.add(id);
-      }
-      const fam = _modelFamilyKey(m);
-      if (fam) {
-        seenFamilies.add(fam);
-      }
-    };
-    for (const m of strictKeep) {
-      pushOne(m);
-    }
-    for (const m of kept) {
-      if (normalizedKeep.length >= MODEL_WARN_KEEP_MAX) {
-        break;
-      }
-      const fam = _modelFamilyKey(m);
-      if (fam && seenFamilies.has(fam)) {
-        continue;
-      }
-      pushOne(m);
-    }
-    for (const m of kept) {
-      if (normalizedKeep.length >= MODEL_WARN_KEEP_MAX) {
-        break;
-      }
-      pushOne(m);
-    }
-    const removed = kept.length - normalizedKeep.length;
-    if (removed > 0) {
-      filtered += removed;
-      reasons.push('warn-unverified');
-    }
-    kept = normalizedKeep;
-  }
-
-  if (kept.length === 0) {
-    const fallback =
-      sourceModels.find((m) => !!m.isDefault || _isPreferredAdapterModel(adapterType, m.id)) ||
-      sourceModels[0];
-    kept = fallback ? [fallback] : [];
-  }
-  return { models: kept, filtered, reasons };
 }
 
 async function maybeAutoSyncSwitchCenterForGateway(source = 'gateway') {
@@ -1933,45 +1518,6 @@ async function withTimeout(promise, ms, label = 'operation') {
   }
 }
 
-function isAdapterOperational(
-  status,
-  test,
-  strictOperationalAdapters = STRICT_OPERATIONAL_ADAPTERS
-) {
-  if (!status || !status.enabled || !status.available) {
-    return false;
-  }
-  if (!test?.connectivity?.success) {
-    return false;
-  }
-  const adapterType = String(status.type || '').toLowerCase();
-  const strictMode = strictOperationalAdapters.has(adapterType);
-  if (strictMode && test?.models) {
-    if (!test.models.success) {
-      return false;
-    }
-    if (Number(test.models.count || 0) <= 0) {
-      return false;
-    }
-  }
-  if (test?.generation && !test.generation.success) {
-    if (!shouldTreatGenerationFailureAsWarning(adapterType)) {
-      return false;
-    }
-    if (strictMode) {
-      const reasonText = String(test?.generation?.error || '');
-      // For strict adapters, keep auth/install failures blocked.
-      // Timeout/process-like probe failures are treated as warning to avoid false negatives.
-      if (_isAuthOrInstallLikeReason(reasonText)) {
-        return false;
-      }
-      if (!_isTransientProbeLikeReason(reasonText)) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
 
 function _resolveEnvPathsForGateway() {
   return _envFile.resolveEnvPaths();

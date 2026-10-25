@@ -18,6 +18,33 @@ const os = require('os');
 const { isTuiActive } = require('./uiResponse');
 
 /**
+ * Resolve the greeting name shown on the startup banner.
+ *
+ * Extracted so the Ink TUI's WelcomeBanner can greet without calling the full
+ * getBannerData(): that function probes every gateway adapter and spawns git
+ * just to compute fields the component already receives as props, and it used
+ * to run inside React's render path (~1s of synchronous spawnSync freezing the
+ * first frame — [DESIGN-PERF-007] W1-2). Same source, same fallback, byte-equal
+ * outcome; callers that need the rest of the banner still use getBannerData.
+ * @returns {string}
+ */
+function resolveGreetingName() {
+  let greetingName = process.env.USER || process.env.USERNAME || 'user';
+  try {
+    const cliAuth = require('../services/cliAuthService');
+    if (cliAuth && typeof cliAuth.checkSession === 'function') {
+      const session = cliAuth.checkSession();
+      if (session && session.loggedIn && session.username) {
+        greetingName = session.username;
+      }
+    }
+  } catch {
+    /* keep OS-user fallback */
+  }
+  return greetingName;
+}
+
+/**
  * Gather banner data from various sources.
  * @param {object} [opts]
  * @param {string} [opts.version] - Override version string
@@ -121,18 +148,7 @@ function getBannerData(opts = {}) {
   }
 
   // ── Greeting Name ──
-  let greetingName = process.env.USER || process.env.USERNAME || 'user';
-  try {
-    const cliAuth = require('../services/cliAuthService');
-    if (cliAuth && typeof cliAuth.checkSession === 'function') {
-      const session = cliAuth.checkSession();
-      if (session && session.loggedIn && session.username) {
-        greetingName = session.username;
-      }
-    }
-  } catch {
-    /* keep OS-user fallback */
-  }
+  const greetingName = resolveGreetingName();
 
   // ── Working Directory ──
   const cwd = process.cwd();
@@ -304,4 +320,4 @@ function getClassicMonsterPetLines(color) {
   ];
 }
 
-module.exports = { getBannerData, renderBanner };
+module.exports = { getBannerData, renderBanner, resolveGreetingName };
