@@ -7,15 +7,15 @@
   "_deviation_note": "有一条边不在名义集合里，如实登记而不是把它写进 mayDependOn 冒充许可：metaPlanSchema.js:25 在文件头 `require('../../../gateway/safeJsonParse')` 取 extractFirstJson（src/services/gateway/safeJsonParse.js = D1）。它是本单元唯一的跨域取数点，也是唯一的非单元内 require。D2 → D1 在 DOMAIN-DEPS.json 里是 declared_not_enforced 条目，owner = archDebtScan R1/R3，真源基线 scripts/arch-debt-baseline.json（即 check:layout 的 cross-layer-require 计数），不在本清单的管辖内，也不得由本清单私自豁免。摘掉它的办法不是改本字段，而是把 extractFirstJson 这一纯字符串叶子下沉到 D3（src/utils），或由调用方把它作为 dep 注入 parseMetaPlan。另有四项**行为**偏差登记在 README「已登记的缺口」一节，它们归本单元 owner 的修复队列，不由清单豁免：① executorRegistry.getExecutor 与 isRegistered 曾对 Object.prototype 键判定不一致（DEFECT，**已于 2026-09-28 中央应用修复**，复现链 .khy/feedback/b23-metaplan/repro-before.txt → repro-after.txt，测试现钉修复后的一致行为）；② EXECUTORS 只冻数组外壳不冻条目、且 languages 数组按引用外泄（未修）；③ isStrategy 对单元素数组做键强转（未修）；④ _str 对函数值返回 undefined（未修）。",
   "fanIn": 9,
   "fanInEvidence": [
-    "services/backend/src/services/constraintLattice.js",
-    "services/backend/src/services/domain/quality/metaConstraint/constraintMatrix.js",
-    "services/backend/src/services/domain/quality/metaConstraint/index.js",
-    "services/backend/src/services/domain/quality/metaConstraint/riskClassifier.js",
-    "services/backend/src/services/domain/quality/metaConstraint/toolFunnelGuard.js",
-    "services/backend/src/services/domain/structured/structuredFurnace/anomalyHandler.js",
-    "services/backend/src/services/domain/structured/structuredFurnace/dimensionReducer.js",
-    "services/backend/src/services/domain/structured/structuredFurnace/forgeSchema.js",
-    "services/backend/src/services/metaplan/index.js"
+    "runtime/node/backend/src/services/constraintLattice.js",
+    "runtime/node/backend/src/services/domain/quality/metaConstraint/constraintMatrix.js",
+    "runtime/node/backend/src/services/domain/quality/metaConstraint/index.js",
+    "runtime/node/backend/src/services/domain/quality/metaConstraint/riskClassifier.js",
+    "runtime/node/backend/src/services/domain/quality/metaConstraint/toolFunnelGuard.js",
+    "runtime/node/backend/src/services/domain/structured/structuredFurnace/anomalyHandler.js",
+    "runtime/node/backend/src/services/domain/structured/structuredFurnace/dimensionReducer.js",
+    "runtime/node/backend/src/services/domain/structured/structuredFurnace/forgeSchema.js",
+    "runtime/node/backend/src/services/metaplan/index.js"
   ],
   "_fanIn_note": "9 个仓内非测试消费者（实测 2026-09-28 探针 .khyos/tmp/b23-fanin.js：git ls-files 全量扫 require 路径并解析到本单元 9 个成员，去重计数，不含 *.test.js，不含单元内互引）。最后一条 services/metaplan/index.js 是归位后留下的再导出壳（`module.exports = require('../domain/project/metaplan')`），壳按 [DESIGN-LAY-008] 第 0 步约定仍算真实入口，故如实计入——它本身在 D1 里另有一份 entry-buffer 缺件待补，不归本单元。除它以外没有别的文件经壳取数：tests/services/metaplan/metaPlanSubsystem.test.js 是唯一走壳的消费者，因排除 *.test.js 而不计入。把测试算进来的完整读数是 12（另加 constraintLatticeStrategyDuality.test.js、structuredFurnace.test.js、metaPlanSubsystem.test.js）。被解析到但未计入的文本提及不算：irreversibleSignatures.js 头注释里点名的 riskClassifier.js 确实有 require，计入的是它而不是注释。取数面很窄：9 个消费者里 7 个只取 constraintStrategy 的枚举，1 个取 irreversibleSignatures 的签名库，1 个取 constraintInjection——**没有一个消费者取 index.js 那个协调器**，除壳以外。",
   "lifecycle": {
@@ -56,9 +56,9 @@
     "index.test.js"
   ],
   "behaviourTestsOutsideUnit": [
-    "services/backend/tests/services/metaplan/metaPlanSubsystem.test.js",
-    "services/backend/tests/services/constraintLatticeStrategyDuality.test.js",
-    "services/backend/tests/services/structuredFurnace/structuredFurnace.test.js"
+    "runtime/node/backend/tests/services/metaplan/metaPlanSubsystem.test.js",
+    "runtime/node/backend/tests/services/constraintLatticeStrategyDuality.test.js",
+    "runtime/node/backend/tests/services/structuredFurnace/structuredFurnace.test.js"
   ],
   "_test_dialect_note": "本目录 9 份共置测试一律 node:test + node:assert/strict，`node --test` 须传 9 个显式文件名（Windows 下把目录当参数会被当模块路径报错）。tests/services/metaplan/metaPlanSubsystem.test.js 同为 node:test 方言，但它 require 的是 D1 再导出壳 services/metaplan，可直接 node --test 跑。跨域取数纪律：单元内互引一律用 ./<name>，本清单所在目录之外不得再复制一份红线/枚举定义。"
 }

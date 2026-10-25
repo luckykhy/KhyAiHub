@@ -28,6 +28,9 @@ const NON_RESUMABLE_ERROR_TYPES = new Set([
   'permission', // E07 权限拦截
   'permission_denied',
   'approval_denied', // 审批网关拒绝
+  // An approval rejection is a terminal user decision: retrying re-runs the exact
+  // same cascade and re-prompts the approver for nothing.
+  'delegation_denied',
   'blocked', // 通用阻断
   'context_overflow', // E03 上下文溢出，须先压缩
   'context_length_exceeded',

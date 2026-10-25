@@ -6,22 +6,22 @@
   "_deviation_note": "登记而非白名单，三笔：(1) 入边方向：4 个直连消费者里 2 个属 D1（再导出壳 src/services/syscallGateway/index.js 的 :4/:5 两站点、src/services/tool/toolCallingPermissions.js 的 :647/:655 两站点），2 个属 D2（desktop/desktopControl/safetyGate.js:582、messaging/channels/ilinkDispatcher.js:1243）。D1→D2 是 DOMAIN-DEPS 允许方向（D1.mayDependOn 含 D2），不登记为偏差；这里如实记的是**壳的二次分发**：src/cli/sessionClear.js、src/cli/tui/ink-components/PermissionsPrompt.js、src/services/tool/toolCalling.js、src/services/tool/toolSandbox.js 四个 D1 消费者走的是壳而非 D2 路径，因此本单元直连 fan-in 记 4，2 跳消费面另记 4。(2) `src/tools/**` 域归属缺口在本单元**未命中**（零 src/tools 出边），与 reverseEngineer 那笔不同，无需重复登记。(3) 网关与权限模式的耦合方向是「网关在前、requestPermission 在后」：toolCalling.js:2238 用 capabilityMatrix 的 POST_TOOL_GOVERNANCE/syscallGateway 门决定是否进网关，网关判 deny 即 fail-closed，放行才盖 EXEC_APPROVED 戳（戳的所有权在 D1 的 src/services/execApproval.js:494，**不在本单元**，见 B28-S4）。",
   "fanIn": 4,
   "fanInEvidence": [
-    "services/backend/src/services/syscallGateway/index.js",
-    "services/backend/src/services/tool/toolCallingPermissions.js",
-    "services/backend/src/services/domain/desktop/desktopControl/safetyGate.js",
-    "services/backend/src/services/domain/messaging/channels/ilinkDispatcher.js"
+    "runtime/node/backend/src/services/syscallGateway/index.js",
+    "runtime/node/backend/src/services/tool/toolCallingPermissions.js",
+    "runtime/node/backend/src/services/domain/desktop/desktopControl/safetyGate.js",
+    "runtime/node/backend/src/services/domain/messaging/channels/ilinkDispatcher.js"
   ],
   "_fanIn_note": "非测试消费者 4 个文件（按「直接 require 本单元路径」计，文件形态与目录形态都算：safetyGate 与 ilinkDispatcher 用目录形态 require('../../system/syscallGateway')，早期只匹配成员形态的探针把它们漏掉过，入边数因此从 2 修正为 4）。另有 4 个文件经 D1 壳二次消费（cli/sessionClear.js、cli/tui/ink-components/PermissionsPrompt.js、tool/toolCalling.js、tool/toolSandbox.js），记为 2 跳不计入本数。计数排除 *.test.js。",
   "behaviourTestsOutsideUnit": [
-    "services/backend/tests/services/syscallGateway.bypassScope.test.js",
-    "services/backend/tests/services/syscallGateway.redLine.test.js",
-    "services/backend/tests/services/syscallGateway.scenarios.test.js",
-    "services/backend/tests/services/syscallGateway.explanation.test.js",
-    "services/backend/tests/services/denialGuidance.test.js",
-    "services/backend/tests/services/preExecutionExplainer.test.js",
-    "services/backend/tests/services/preExecutionExplainer.gitHazard.test.js",
-    "services/backend/tests/services/permissionModesAndHookFloor.test.js",
-    "services/backend/tests/root-level/capabilityMatrixParity.test.js"
+    "runtime/node/backend/tests/services/syscallGateway.bypassScope.test.js",
+    "runtime/node/backend/tests/services/syscallGateway.redLine.test.js",
+    "runtime/node/backend/tests/services/syscallGateway.scenarios.test.js",
+    "runtime/node/backend/tests/services/syscallGateway.explanation.test.js",
+    "runtime/node/backend/tests/services/denialGuidance.test.js",
+    "runtime/node/backend/tests/services/preExecutionExplainer.test.js",
+    "runtime/node/backend/tests/services/preExecutionExplainer.gitHazard.test.js",
+    "runtime/node/backend/tests/services/permissionModesAndHookFloor.test.js",
+    "runtime/node/backend/tests/root-level/capabilityMatrixParity.test.js"
   ],
   "_outside_test_note": "9 份全是 jest 方言，本便携环境未安装 jest（`node_modules/.bin/jest` 是悬空 shim），在 `node --test` 下**加载期即失败**。逐份用一次性方言垫片复跑核实真实断言结果：**268 例 / 0 fail**（bypassScope 11、redLine 13、scenarios 48、explanation 2、denialGuidance 5、preExecutionExplainer 9、gitHazard 7、permissionModesAndHookFloor 15、capabilityMatrixParity 158）。垫片必须复刻 jest 的 `setupFiles` 隔离，否则读数造假：`KHY_DATA_HOME` 在本会话被 khy 进程导出为真实数据根，permissionModesAndHookFloor 因此在未隔离时**假红 3 例**（permissionPolicy 读到活体 `<dataHome>/permissions.json` 的 `filesystem.pathWhitelist` 判 confirm，把 plan/acceptEdits/bypass 三条自动放行全部压成 deny）；按 tests/jest.taskStoreIsolation.setup.js 的口径把数据根指向空临时目录后 15 例全过。另三处垫片缺口修掉后才拿到真判据：`test.each` 未实现曾让 redLine 整份崩溃（仪器缺陷，不是测试红）、`afterEach` 收了不跑、否定式 `.not.toThrow`/`.not.toBeUndefined` 不生效。「跑不了」不等于「红」，也不等于「不用看」。",
   "lifecycle": {

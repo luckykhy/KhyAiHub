@@ -5,8 +5,8 @@
   "_mayDependOn_note": "按 DOMAIN-DEPS.json 的 D2 名义边界如实声明。实测唯一出域边：`classifierSignals.js:24` require `services/errorClassifier.js`（D1），属 declared_not_enforced 的 D2→D1，交 archDebtScan R1 与 cross-layer-require 棘轮管辖（逐条裁决面见 [DESIGN-LAY-008] §12.43）。本单元零条指向 D3（utils/constants）的 require，也不出仓到 D4/D5。",
   "fanIn": 2,
   "fanInEvidence": [
-    "services/backend/src/services/failsafe/index.js",
-    "services/backend/src/services/domain/maintenance/selfHeal/errorDiagnostician.js"
+    "runtime/node/backend/src/services/failsafe/index.js",
+    "runtime/node/backend/src/services/domain/maintenance/selfHeal/errorDiagnostician.js"
   ],
   "_fanIn_note": "非测试外部消费者去重 2 个，逐条核到 require 行号：D1 历史路径再导出壳 `services/failsafe/index.js:4`；D2 自愈诊断面 `maintenance/selfHeal/errorDiagnostician.js:41`（惰性 require，不可用时自愈诊断降级而不是抛给调用方）。计数排除 *.test.js 与单元自身内部引用。",
   "lifecycle": {
