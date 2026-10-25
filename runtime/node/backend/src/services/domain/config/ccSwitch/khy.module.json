@@ -5,10 +5,10 @@
   "_mayDependOn_note": "按 DOMAIN-DEPS.json 的 D2 名义边界声明，不写超出项 —— 尽管实测有 6 条 D1 出边（见 README 的逐条行号：appWriters.js:355、connectivity.js:15、store.js:41、store.js:44、usageScan.js:382、usageScan.js:449）。这 6 条属 declared_not_enforced 的 D2→D1，交 archDebtScan R1 与 cross-layer-require 棘轮管辖；本单元是仓内 D2→D1 出边最密集的一处，因此也是 [DESIGN-LAY-008] §12.43 Q2 的首要对象。清单如实登记而不用白名单把它合法化。",
   "fanIn": 4,
   "fanInEvidence": [
-    "services/backend/src/cli/handlers/ccSwitch.js",
-    "services/backend/src/routes/ccSwitch.js",
-    "services/backend/src/services/ccSwitch/index.js",
-    "services/backend/src/services/crossAgentTasteLearner.js"
+    "runtime/node/backend/src/cli/handlers/ccSwitch.js",
+    "runtime/node/backend/src/routes/ccSwitch.js",
+    "runtime/node/backend/src/services/ccSwitch/index.js",
+    "runtime/node/backend/src/services/crossAgentTasteLearner.js"
   ],
   "_fanIn_note": "外部非测试消费者去重 4 个：CLI/TUI 主交互面的 handler、HTTP 路由、D1 历史路径再导出壳 `services/ccSwitch/index.js`、以及跨智能体口味学习器。单元内部互相引用（如 store ↔ routeResolver）与 *.test.js 均不计入。",
   "lifecycle": {

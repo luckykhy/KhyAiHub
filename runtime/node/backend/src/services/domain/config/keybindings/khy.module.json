@@ -5,19 +5,19 @@
   "_mayDependOn_note": "实测边：historyReverseSearch.js 零 require（纯搜索叶子，isEnabled 的 env 由入参注入，默认形参是 process.env）；keybindingCatalog.js → ../../../../utils/isOffValue（D3，off 值判定单一真源）。无 D1 边，故无需登记偏差。",
   "fanIn": 6,
   "fanInEvidence": [
-    "services/backend/src/cli/handlers/keybindings.js",
-    "services/backend/src/cli/tui/ink-components/HelpMenu.js",
-    "services/backend/src/cli/tui/ink-components/App.js",
-    "services/backend/src/cli/tui/ink-components/HistorySearchOverlay.js",
-    "services/backend/src/cli/tui/chatChords.js",
-    "services/backend/src/services/keybindings/index.js"
+    "runtime/node/backend/src/cli/handlers/keybindings.js",
+    "runtime/node/backend/src/cli/tui/ink-components/HelpMenu.js",
+    "runtime/node/backend/src/cli/tui/ink-components/App.js",
+    "runtime/node/backend/src/cli/tui/ink-components/HistorySearchOverlay.js",
+    "runtime/node/backend/src/cli/tui/chatChords.js",
+    "runtime/node/backend/src/services/keybindings/index.js"
   ],
   "_fanIn_note": "非测试消费者 6 个（去重）。utils/flagRegistry/index.js 与 utils/isOffValue.js 也在文本里提到本单元，但实测只是注释（旗册登记与收敛来源说明），不构成 require 边，未计入。",
   "behaviourTestsOutsideUnit": [
-    "services/backend/tests/services/keybindings/keybindingCatalog.test.js",
-    "services/backend/tests/services/historyReverseSearch.test.js",
-    "services/backend/tests/cli/tui/chatChordsHelpSync.test.js",
-    "services/backend/tests/tui/helpMenuSize.test.js"
+    "runtime/node/backend/tests/services/keybindings/keybindingCatalog.test.js",
+    "runtime/node/backend/tests/services/historyReverseSearch.test.js",
+    "runtime/node/backend/tests/cli/tui/chatChordsHelpSync.test.js",
+    "runtime/node/backend/tests/tui/helpMenuSize.test.js"
   ],
   "lifecycle": {
     "stage": "stable",

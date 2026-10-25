@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>toolUseLoop — 工具循环守护单元 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>catalog<span class="sep">›</span>toolUseLoop<span class="sep">›</span>toolUseLoop — 工具循环守护单元</div>
+      <header class="hero reveal"><h1>toolUseLoop — 工具循环守护单元</h1></header>
+      
+      <article class="doc-body">
+<h1 id="tooluseloop-工具循环守护单元">toolUseLoop — 工具循环守护单元<a class="anchor" href="#tooluseloop-工具循环守护单元" aria-label="锚点">#</a></h1>
+<p>谁要：<code>services/tool/toolUseLoopCore.js</code>（运行时工具循环内核）需要一组<strong>零 IO、确定性</strong>的<br>判定叶子，把「这一轮该不该继续调工具」的判断从内核里拆出来单独可测。</p>
+<p>为什么：循环失控（重复同一调用、预算耗尽后仍继续、取消信号发出后仍推进）在历史上是<br>工具循环最贵的一类缺陷，而它们都能在纯函数层判掉。本单元因此只放纯判定与纯状态，<br>不含任何 IO / 网络 / 落盘——IO 归 <code>toolUseLoopCore.js</code>。</p>
+<p>怎么验：13 个源文件各有同名同目录测试（<code>*.test.js</code>），<br><code>node --test runtime/node/backend/src/services/domain/catalog/toolUseLoop/*.test.js</code>。<br>生命周期记录见同目录 <code>khy.module.json</code>（domain=D2，stage=stable）。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/services/domain/catalog/toolCatalog/README.html"><div class="dir">← 上一篇</div><div class="ttl">toolCatalog — 工具目录、契约与审计规则</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/services/domain/collab/README.html"><div class="dir">下一篇 →</div><div class="ttl">collab — 协作机会识别、IDE 状态与「伪协作」检测（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/catalog/toolUseLoop/README.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
