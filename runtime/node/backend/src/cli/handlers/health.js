@@ -490,6 +490,97 @@ function _renderTuiHealth(asJson) {
   return true;
 }
 
+// `khy health session` — 会话健康监控族的只读聚合视图（[MGMT-RPT-036] P0-3，
+// pm2 monit / healthchecks dashboard 模式）。三层观察面，按「数据在哪」如实分组：
+//
+//   1. healAudit 持久台账（跨进程可读，主数据源）：watchdog 重启/放弃/恢复
+//      与 daemon 族自愈事件，按时间倒序取最近 8 条 ——「最近发生过什么」；
+//   2. heartbeat 巡检账本（持久）：events.json 的 24h 去重条目数与最近提醒；
+//   3. watchdogService 模块态（**本命令进程内**）：probe 耗时/放弃态等。命令是
+//      一次性进程，daemon 宿主进程的实时模块态不在此 —— 这一行如实标注为
+//      「命令进程内读数」，不冒充守护进程视角（诚实边界，不装作跨进程）。
+function _renderSessionHealth(asJson) {
+  const result = { generatedAt: new Date().toISOString() };
+
+  // ── healAudit: recent watchdog/daemon events (persistent, cross-process) ──
+  let events = [];
+  try {
+    const { queryHealAudit } = require('../../utils/healAudit');
+    const recent = queryHealAudit({ limit: 40 }) || [];
+    events = recent
+      .filter((e) => e && (String(e.action || '').startsWith('watchdog') || String(e.target || '') === 'daemon'))
+      .slice(0, 8);
+  } catch {
+    events = [];
+  }
+  result.healAudit = events.map((e) => ({
+    timestamp: e.timestamp,
+    action: e.action,
+    target: e.target || '',
+    message: String(e.message || '').slice(0, 120),
+  }));
+
+  // ── heartbeat patrol ledger (persistent) ──
+  let heartbeat = { trackedEvents24h: 0, recentKeys: [] };
+  try {
+    const hb = require('../../services/heartbeatService');
+    const ledger = hb.getEvents() || {};
+    const cutoff = Date.now() - 24 * 3600 * 1000;
+    const rows = Object.entries(ledger.events || {})
+      // 字段名与 heartbeatService.recordEvent 实际写入的一致（lastNotified）。
+      // 原写 lastNotifiedAt/lastAt/at 三选一都命中不了 → lastAt 恒 undefined
+      // → 被下一行 filter 全丢，输出恒为「24h 内 0 条」。
+      .map(([key, info]) => ({ key, lastAt: info && (info.lastNotified || info.lastNotifiedAt || info.lastAt || info.at) }))
+      .filter((r) => r.lastAt && new Date(r.lastAt).getTime() >= cutoff)
+      .sort((a, b) => new Date(b.lastAt) - new Date(a.lastAt));
+    heartbeat = {
+      trackedEvents24h: rows.length,
+      recentKeys: rows.slice(0, 5).map((r) => r.key),
+    };
+  } catch {
+    /* ledger unreadable → report zeros, never crash */
+  }
+  result.heartbeat = heartbeat;
+
+  // ── watchdogService module state (THIS command process) ──
+  let watchdog = null;
+  try {
+    watchdog = require('../../services/watchdogService').status();
+  } catch {
+    watchdog = null;
+  }
+  result.watchdogModuleState = watchdog;
+
+  if (asJson) {
+    console.log(JSON.stringify(result, null, 2));
+    return true;
+  }
+
+  console.log('');
+  console.log(chalk.bold('  会话健康监控（只读）'));
+  console.log(chalk.dim(`  时间 ${result.generatedAt}`));
+  console.log('');
+  console.log(`  【自愈台账】最近 ${events.length} 条 watchdog/daemon 事件：`);
+  if (!events.length) {
+    console.log(chalk.dim('    (无记录 —— heal-audit.jsonl 为空或不可读，说明尚未发生过自愈动作)'));
+  }
+  for (const e of events) {
+    console.log(`    ${String(e.timestamp || '').slice(0, 19)}  ${e.action}${e.target ? ` → ${e.target}` : ''}`);
+    console.log(chalk.dim(`      ${e.message}`));
+  }
+  console.log('');
+  console.log(`  【巡检提醒】24h 内去重事件 ${heartbeat.trackedEvents24h} 条${heartbeat.recentKeys.length ? `：${heartbeat.recentKeys.join('、')}` : ''}`);
+  console.log('');
+  if (watchdog) {
+    console.log(`  【看门狗模块态】(命令进程内读数，非守护进程视角)`);
+    console.log(`    enabled=${watchdog.enabled} intervalMs=${watchdog.intervalMs} abandoned=${watchdog.abandoned}${watchdog.lastProbeMs !== null ? ` 最近探测 ${watchdog.lastProbeMs}ms` : ' 尚未探测'}`);
+  } else {
+    console.log(chalk.dim('  【看门狗模块态】不可读（模块加载失败）'));
+  }
+  console.log('');
+  return true;
+}
+
 async function handleHealth(parsed = {}) {
   const f = fmt();
   const opts = parsed.options || {};
@@ -498,10 +589,14 @@ async function handleHealth(parsed = {}) {
     opts.json === 'true' ||
     (Array.isArray(parsed.args) && parsed.args.includes('--json'));
 
-  // 子命令分派：'tui' → TUI 健康记分卡（缺省仍走全系统体检，行为不变）。
+  // 子命令分派：'tui' → TUI 健康记分卡；'session' → 会话监控聚合；
+  // 缺省仍走全系统体检，行为不变。
   const sub = String(parsed.subCommand || (Array.isArray(parsed.args) && parsed.args[0]) || '').toLowerCase();
   if (sub === 'tui') {
     return _renderTuiHealth(asJson);
+  }
+  if (sub === 'session') {
+    return _renderSessionHealth(asJson);
   }
 
   const report = await collectHealth();
@@ -561,9 +656,9 @@ module.exports = {
   [MANIFEST_EXPORT_KEY]: {
     name: 'health',
     aliases: ['jkx', 'healthcheck'],
-    description: '聚合运行时/数据/认证/网络/磁盘/内存/服务注册表健康信号到一份可操作报告；子命令 tui 出终端渲染只读健康记分卡',
-    usage: 'health [tui] [--json]',
-    subCommands: ['tui'],
+    description: '聚合运行时/数据/认证/网络/磁盘/内存/服务注册表健康信号到一份可操作报告；子命令 tui 出终端渲染只读健康记分卡，session 出会话监控聚合（自愈台账/巡检提醒/看门狗态）',
+    usage: 'health [tui|session] [--json]',
+    subCommands: ['tui', 'session'],
     category: 'system',
     handler: handleHealth,
   },

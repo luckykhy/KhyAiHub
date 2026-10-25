@@ -23,6 +23,9 @@ const os = require('os');
 const path = require('path');
 
 const { printSuccess, printError, printInfo, printTable, ICON_GATEWAY } = require('../formatters');
+// 小白摘要块的唯一实现放在共享 HUD 渲染层：REPL 的 HUD 与这条一次性命令从此共用
+// 同一套「能不能对话 / 用哪个通道 / 首字等多久」措辞，不会各说各话。
+const { buildPlainLanguageSummary } = require('../hudRenderer');
 
 // Lazily resolve a file under the app home (portable-aware); fallback to
 // the legacy ~/.khyquant location when the dataHome resolver is unavailable.
@@ -397,19 +400,10 @@ async function handleGatewayStatus(options = {}) {
       khyProtocolRisk: s.khyProtocolRisk,
     };
   });
-  if (!asJson) {
-    _printGatewayStatusTable(tableRows);
-  }
-
-  if (!asJson && importCommands.length > 0) {
-    const uniqueCommands = [...new Set(importCommands)];
-    printInfo('检测到可导入模型格式，可直接执行:');
-    for (const command of uniqueCommands) {
-      printInfo(`  ${command}`);
-    }
-  }
-
   // Keep the "active channel" consistent with effective availability shown above.
+  // Resolved BEFORE the table is printed so the plain-language summary right under
+  // it can name the channel it is talking about (it used to be computed after the
+  // table, which is why the summary could not reuse it).
   const preferredRoute = _resolvePreferredRouteSnapshot();
   const availableStatuses = effectiveStatusesWithRisk.filter((s) => s.enabled && s.available);
   let activeEntry = null;
@@ -445,6 +439,44 @@ async function handleGatewayStatus(options = {}) {
       }
     : null;
   const activeKhyProtocolRisk = activeEntry?.khyProtocolRisk || null;
+
+  if (!asJson) {
+    _printGatewayStatusTable(tableRows);
+    // P1-11: plain-language summary right under the table header. The table
+    // above is engineer-facing (types / protocols / latency); these four lines
+    // answer what a first-time user actually came for. Shape mirrors
+    // doctorReport.buildActionLines (label + summary + ONE actionable command).
+    const activeTest = active ? testResults[active.type] : null;
+    const anyEnabled = statuses.some((s) => s.enabled);
+    const fixCommand = active
+      ? ''
+      : anyEnabled
+        ? 'khy gateway model'
+        : 'khy gateway config';
+    for (const line of buildPlainLanguageSummary({
+      canTalk: !!active,
+      usableCount: availableStatuses.length,
+      enabledCount: statuses.filter((s) => s.enabled).length,
+      channel: active,
+      latencyMs:
+        activeTest && activeTest.connectivity && activeTest.connectivity.success
+          ? activeTest.connectivity.latencyMs
+          : null,
+      fixCommand,
+    })) {
+      console.log(line);
+    }
+    console.log('');
+  }
+
+  if (!asJson && importCommands.length > 0) {
+    const uniqueCommands = [...new Set(importCommands)];
+    printInfo('检测到可导入模型格式，可直接执行:');
+    for (const command of uniqueCommands) {
+      printInfo(`  ${command}`);
+    }
+  }
+
   const homeRisk = _getGatewayHomeRiskSnapshot({ activeAdapterType: active?.type });
   let latestLanguageConsistency = null;
   try {
@@ -456,6 +488,13 @@ async function handleGatewayStatus(options = {}) {
     /* best effort */
   }
   if (!asJson) {
+    // P1-11: everything between here and the preferred-issue block is
+    // engineer-facing internal diagnostics (protocol priority, language
+    // consistency audit, requestId traces). Those printInfo lines used to print
+    // unconditionally and buried the actionable line; they are now folded behind
+    // --verbose. The default surface keeps the active channel, the preferred
+    // issue reasons and their fixes.
+    const verbose = !!options.verbose;
     if (active) {
       console.log('');
       const showRouteHint =
@@ -474,35 +513,40 @@ async function handleGatewayStatus(options = {}) {
       console.log('');
       printInfo('无活跃通道 — 可用 khy gateway relay 启动 Web 中转');
     }
-    if (defaultRouteRecommendation?.summary) {
-      printInfo(`默认推荐通道: ${defaultRouteRecommendation.summary}`);
-    }
-    if (activeKhyProtocolRisk) {
-      printInfo(`KHY 协议优先级: ${activeKhyProtocolRisk.summary}`);
-      if (activeKhyProtocolRisk.risky && activeKhyProtocolRisk.recommendation) {
-        printInfo(`排查建议: ${activeKhyProtocolRisk.recommendation}`);
+    if (verbose) {
+      if (defaultRouteRecommendation?.summary) {
+        printInfo(`默认推荐通道: ${defaultRouteRecommendation.summary}`);
       }
-    }
-    if (homeRisk.isTempHome && homeRisk.activeAdapterAffected) {
-      printInfo(`环境提示: ${homeRisk.hint} ${homeRisk.recommendation}`.trim());
-    }
-    if (latestLanguageConsistency) {
-      printInfo(`语言一致性: ${_buildGatewayLanguageConsistencyText(latestLanguageConsistency)}`);
-      if (latestLanguageConsistency.ok && latestLanguageConsistency.status !== 'aligned') {
+      if (activeKhyProtocolRisk) {
+        printInfo(`KHY 协议优先级: ${activeKhyProtocolRisk.summary}`);
+        if (activeKhyProtocolRisk.risky && activeKhyProtocolRisk.recommendation) {
+          printInfo(`排查建议: ${activeKhyProtocolRisk.recommendation}`);
+        }
+      }
+      if (homeRisk.isTempHome && homeRisk.activeAdapterAffected) {
+        printInfo(`环境提示: ${homeRisk.hint} ${homeRisk.recommendation}`.trim());
+      }
+      if (latestLanguageConsistency) {
+        printInfo(`语言一致性: ${_buildGatewayLanguageConsistencyText(latestLanguageConsistency)}`);
+        if (latestLanguageConsistency.ok && latestLanguageConsistency.status !== 'aligned') {
+          printInfo(
+            '排查建议: 用 `khy gateway status --json` 查看 latestLanguageConsistency / latestDeliveryRequest，并结合 requestId 回查首段正文与最终答复是否偏航'
+          );
+          printInfo(
+            `快速复盘命令: ${_buildGatewayTraceCommandHint(latestLanguageConsistency.requestId)}`
+          );
+        }
+      }
+      if (preferredRoute?.routeLabel) {
+        printInfo(`配置默认路由: ${preferredRoute.routeLabel}`);
+      }
+    } else {
+      // The raw requestId hex is pure internals: say where to look, not the id.
+      if (latestLanguageConsistency && !latestLanguageConsistency.ok) {
         printInfo(
-          '排查建议: 用 `khy gateway status --json` 查看 latestLanguageConsistency / latestDeliveryRequest，并结合 requestId 回查首段正文与最终答复是否偏航'
-        );
-        printInfo(
-          `快速复盘命令: ${_buildGatewayTraceCommandHint(latestLanguageConsistency.requestId)}`
+          '语言一致性未通过：加 --verbose 看结论，或用 khy gateway status --json 查看 latestLanguageConsistency'
         );
       }
-    }
-    const traceRequestId = String(latestLanguageConsistency?.requestId || '').trim();
-    if (traceRequestId) {
-      printInfo(`最近 requestId 复盘: ${_buildGatewayTraceCommandHint(traceRequestId)}`);
-    }
-    if (preferredRoute?.routeLabel) {
-      printInfo(`配置默认路由: ${preferredRoute.routeLabel}`);
     }
     if (preferredIssue) {
       // [DESIGN-ARCH-136] 第 3 期:同一事实在 selfcheck 里被判成 error 级
@@ -538,7 +582,11 @@ async function handleGatewayStatus(options = {}) {
         );
       }
     }
-    _printLatencyAutoTuneSnapshot();
+    // P50/P95 与自动调参档位是内部诊断：默认折叠。首字要等多久已由上方
+    // 「小白摘要」用实测连通延迟答过，这里留给 --verbose。
+    if (options.verbose) {
+      _printLatencyAutoTuneSnapshot();
+    }
   }
   const envPath = _resolveEnvPathForGateway();
   const proxyFile = _appHomeFile('proxy.json');
@@ -548,10 +596,16 @@ async function handleGatewayStatus(options = {}) {
       .trim()
       .toLowerCase() || 'auto';
   if (!asJson) {
-    printInfo(`代理配置位置: ${proxyFile}`);
-    printInfo(`模型/API Key 配置位置: ${envPath}`);
-    printInfo(`多 Key 池位置: ${apiKeysPoolFile}`);
-    printInfo(`智能代理路由: GATEWAY_PROXY_ROUTE_MODE=${routeMode} (auto=国外优先代理, 国内直连)`);
+    if (options.verbose) {
+      printInfo(`代理配置位置: ${proxyFile}`);
+      printInfo(`模型/API Key 配置位置: ${envPath}`);
+      printInfo(`多 Key 池位置: ${apiKeysPoolFile}`);
+      printInfo(`智能代理路由: GATEWAY_PROXY_ROUTE_MODE=${routeMode} (auto=国外优先代理, 国内直连)`);
+    } else {
+      printInfo(
+        `配置文件位置（代理 / Key / 多 Key 池）加 --verbose 显示；智能代理路由 ${routeMode}`
+      );
+    }
   }
 
   const endpointObjects = _filterEndpointObjectsByProvider(

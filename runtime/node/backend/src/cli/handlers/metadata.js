@@ -32,10 +32,58 @@ function fmt() {
   return require('../formatters');
 }
 
+/**
+ * 仓库根自定位 —— 替代「裸用 process.cwd()」。
+ *
+ * 病灶：`resolveRoot()` 过去直接拿 `process.cwd()` 当项目根。任何把 cwd 设在
+ * 子目录的入口都会把元数据写/查到错误的位置——旧版 `bin\khy.cmd` 先
+ * `pushd "%KHY_BACKEND%"` 再启动，于是 `khy metadata refresh` 把一整套幽灵树
+ * 写进了 `runtime/node/backend/works/record/ai/`（本次已清除，另案修了 pushd）。
+ * 同一个 `khy` 在两台机器上因此维护两套元数据，`khy metadata check` 的结论
+ * 也随你从哪个目录敲命令而变。
+ *
+ * 规则：调用方给了显式路径 → 照旧相对 cwd 解析（这是合理用法）；没给 → 从 cwd
+ * 向上走到含 `.git` + `pyproject.toml` 的目录，那才是本仓的根。找不到标记就
+ * 退回 cwd（在非本仓目录里跑时不比今天更糟）。
+ *
+ * 逃生门：`KHYQUANT_CWD` 显式设置时仍然优先（既有契约，测试与脚本依赖它）。
+ * 但有一个陷阱——`bin/khy.js:655` 自己会执行 `process.env.KHYQUANT_CWD =
+ * process.cwd()`，于是这个变量在正常启动路径上**恒等于 cwd**，无差别地尊重它
+ * 就等于继续尊重 cwd。所以只在「它被外部设成了别处」时才当逃生门；等于 cwd
+ * 时按仓库根走（那正是本修复要治的场景）。要强制指定根，用
+ * `KHY_METADATA_ROOT`，它无条件优先。
+ */
+function findRepoRoot(startDir) {
+  let dir = path.resolve(startDir || process.cwd());
+  // 深度上限只是防环；本仓从 backend 到根只有 4 层。
+  for (let depth = 0; depth < 12; depth += 1) {
+    let hasGit = false;
+    let hasPyproject = false;
+    try {
+      hasGit = fs.existsSync(path.join(dir, '.git'));
+      hasPyproject = fs.existsSync(path.join(dir, 'pyproject.toml'));
+    } catch { /* 不可读的目录继续向上找 */ }
+    if (hasGit && hasPyproject) return dir;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return path.resolve(startDir || process.cwd());
+}
+
 function resolveRoot(args) {
   const cand = args && args[0] && !String(args[0]).startsWith('--') ? String(args[0]) : '';
+  // 强制指定根：无条件优先，供脚本与测试钉住目标。
+  if (process.env.KHY_METADATA_ROOT) return path.resolve(process.env.KHY_METADATA_ROOT);
   const base = process.env.KHYQUANT_CWD || process.cwd();
-  return cand ? path.resolve(base, cand) : base;
+  // 显式路径：调用方知道自己在指哪儿，相对 base 解析。
+  if (cand) return path.resolve(base, cand);
+  // KHYQUANT_CWD 被外部设成了**别处** → 尊重它（既有契约）。
+  if (process.env.KHYQUANT_CWD && path.resolve(process.env.KHYQUANT_CWD) !== path.resolve(process.cwd())) {
+    return path.resolve(process.env.KHYQUANT_CWD);
+  }
+  // 否则（未设置，或被 bin/khy.js 自设成 cwd）→ 按仓库根算，不按 cwd 算。
+  return findRepoRoot(base);
 }
 
 const KNOWN_SUBS = new Set(['gen', 'refresh', 'check', 'show', 'hook', 'link']);

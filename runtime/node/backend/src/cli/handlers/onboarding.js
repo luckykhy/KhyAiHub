@@ -81,6 +81,54 @@ async function _route(parsed, options) {
 }
 
 /**
+ * `/onboarding agents`：外部 ACP 智能体四态探测（只读，绝不抛）。
+ *
+ * 四态对应四种用户动作，这是它比 adapter 的布尔 `detect()` 有用的地方：
+ *   ready          → 可直接调度，无需动作
+ *   auth_required  → 已装未登录（**用户唯一能自己修的一态**）
+ *   not_installed  → PATH 上找不到，去装
+ *   unavailable    → 装了但跑不起来，看 detail
+ *
+ * 只探**已登记**的智能体（`KHY_ACPCLIENT_AGENTS`）。种子表式的「扫本机已装但未登记」
+ * 属 T-025 后续一轮——那一步要往仓里加一份已知 agent 清单，是数据决策，不搭本轮的车。
+ */
+async function _agentsProbe(options) {
+  const { printInfo } = require('../formatters');
+  try {
+    const invocation = require('../../services/gateway/adapters/acpAgentInvocation');
+    const probe = require('../../services/gateway/adapters/acpAgentProbe');
+    const registry = invocation.loadAgentRegistry(process.env);
+    const keys = Object.keys(registry);
+
+    if (keys.length === 0) {
+      printInfo('未登记任何外部 ACP 智能体。');
+      printInfo('登记方式（单一真源 KHY_ACPCLIENT_AGENTS，逗号分隔 key=command）：');
+      printInfo('  KHY_ACPCLIENT_AGENTS="claude-acp=npx @zed-industries/claude-code-acp"');
+      printInfo('登记后可用 `khy gateway status` 看它是否进入候选池。');
+      return;
+    }
+
+    printInfo(`已登记 ${keys.length} 个外部 ACP 智能体，开始四态探测…\n`);
+    for (const key of keys) {
+      // eslint-disable-next-line no-await-in-loop
+      const r = await probe.probeAgent(key, { openSession: probe.defaultOpenSession });
+      const state = r.state;
+      const mark = state === 'ready' ? '✓' : state === 'auth_required' ? '!' : state === 'not_installed' ? '✗' : '?';
+      const hint = r.hint ? ` — ${r.hint}` : '';
+      printInfo(`  ${mark} ${key}: ${state}${hint}`);
+      if (state === 'ready') {
+        printInfo(`      命令: ${r.command}`);
+      }
+    }
+    printInfo('\n四态含义：ready 可调度 / auth_required 已装未登录（去登录即可）/ not_installed PATH 上找不到 / unavailable 装了但跑不起来。');
+  } catch (err) {
+    // 探测整体失败也要给用户一句实话，而不是静默成功。
+    printInfo(`外部智能体探测失败：${(err && err.message) || err}`);
+  }
+  void options;
+}
+
+/**
  * `/onboarding [step]` 入口。
  * @param {string} _subCommand
  * @param {string[]} [args]
@@ -265,6 +313,16 @@ async function handleOnboarding(_subCommand, args = [], options = {}) {
         },
         options
       );
+      return true;
+    }
+    case 'agents': {
+      // [MGMT-RPT-035] L4 的消费面：外部 ACP 智能体四态探测（只读）。
+      // probeAgent 此前只有测试在用、**没有任何消费方**——那正是本仓注释反复警告的
+      // 「能力被算出来却无人读」形态。这一步把它接到 /onboarding 上。
+      //
+      // 为什么放这里而不是新开命令：`khy onboard` 的语义就是「探测本机已有什么、
+      // 一键接进网关」（T-025），四态探测是它的第一步；新开顶层命令还要占命令面棘波。
+      await _agentsProbe(options);
       return true;
     }
     default:

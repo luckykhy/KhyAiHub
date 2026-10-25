@@ -191,46 +191,27 @@ function _hasGatewayAddCliInput(input = {}) {
   );
 }
 
-async function _maybeTestGatewayCustomProvider(result, options = {}, asJson = false) {
-  const shouldTest = _parseGatewayBooleanOption(options.test, false);
-  if (!shouldTest) {
-    return {
-      attempted: false,
-      success: null,
-      message: asJson ? 'skipped' : '已跳过连接测试',
-    };
-  }
-
-  try {
-    const apiAdapter = require('../../services/gateway/adapters/apiAdapter');
-    const testResult = await apiAdapter.generate('Say "hello" in one word.', {
-      model: `${result.poolKey}:${result.defaultModel}`,
-      apiPoolProvider: result.poolKey,
-      apiKey: result.firstKey,
-      apiEndpoint: result.endpoint,
-      provider: 'openai',
-      maxTokens: 10,
-    });
-    if (testResult.success) {
-      return {
-        attempted: true,
-        success: true,
-        provider: testResult.provider || 'openai',
-        preview: String(testResult.content || '').slice(0, 50),
-      };
+/**
+ * `khy gateway add` 非交互路径的**落盘前**闸门。
+ *
+ * 默认开：`--test false` 显式关掉、`--force` 连对话自检一起跳过（跳过会在输出里
+ * 明说，不假装测过）。判红一律 return {ok:false, reason}，调用方据此一个字节都不写。
+ * 判定本体在 gateway/customProviderVerify（与 Web 管理端共用同一份口径）。
+ */
+async function _verifyGatewayCustomProviderDraft(cliInput = {}, options = {}) {
+  const { verifyCustomProviderDraft } = require('../../services/gateway/customProviderVerify');
+  const verdict = await verifyCustomProviderDraft(
+    {
+      endpoint: cliInput.endpoint,
+      keyInput: cliInput.keyInput,
+      defaultModel: cliInput.defaultModel,
+    },
+    {
+      force: _parseGatewayBooleanOption(options.force, false),
+      skip: !_parseGatewayBooleanOption(options.test, true),
     }
-    return {
-      attempted: true,
-      success: false,
-      error: testResult.error || 'unknown_error',
-    };
-  } catch (err) {
-    return {
-      attempted: true,
-      success: false,
-      error: err?.message || String(err),
-    };
-  }
+  );
+  return { ok: verdict.ok, reason: verdict.reason, connectionTest: verdict.summary };
 }
 
 /**
@@ -871,12 +852,18 @@ function _safeHost(url) {
   }
 }
 
+// 上游动辄报几百个模型，注册时全写成路由只是噪音；默认只带前若干个。
+const MAX_AUTO_ROUTED_MODELS = 12;
+
 /**
  * khy gateway add — 快捷添加自定义 Provider (endpoint + key + 模型)
  */
 /**
  * 共享函数：交互式添加自定义 Provider (OpenAI 兼容)。
  * 被 handleGatewayAdd 和 handleGatewayConfig -> provider-keys -> __custom__ 两处调用。
+ *
+ * 顺序即契约：**探测 → 选型 → 判绿 → 才落盘**。任何一步红了一律不写 .env，
+ * 原因见 customProviderVerify.js（2026-10-20 事故：存完才炸的 404 中转）。
  */
 async function _addCustomProviderInteractive({ pool, customRegistry }) {
   const registrar = require('../../services/customProviderRegistrar');
@@ -938,55 +925,129 @@ async function _addCustomProviderInteractive({ pool, customRegistry }) {
     },
   ]);
 
-  const { baseUrl } = await promptWithReplGuard([
-    {
-      type: 'input',
-      name: 'baseUrl',
-      message: 'Base URL (如 https://api.siliconflow.cn/v1):',
-      default: preset ? preset.endpoint : undefined,
-      validate: (v) => {
-        try {
-          new URL(v);
-          return true;
-        } catch {
-          return '请输入有效 URL';
-        }
+  const { parseApiKeyEntries } = require('../../services/apiKeyFormat');
+  const {
+    fetchRealModels,
+    verifyCustomProvider,
+  } = require('../../services/gateway/customProviderVerify');
+
+  // ── ① 地址 + 密钥 + 真实模型列表（红则不落盘，重来）──────────────────
+  // 2026-10-20 事故：地址少写 /v1 也照存，运行期才以 `404 page not found` 炸出来。
+  // 模型列表同理 —— 以前靠手敲猜，现在一律以上游自己 /models 报的为准。
+  const MAX_PROBE_ATTEMPTS = 3;
+  let baseUrl = '';
+  let keyInput = '';
+  let probeApiKey = '';
+  let realModels = null;
+
+  for (let attempt = 1; attempt <= MAX_PROBE_ATTEMPTS; attempt += 1) {
+    const answers = await promptWithReplGuard([
+      {
+        type: 'input',
+        name: 'baseUrl',
+        message: 'Base URL (如 https://api.siliconflow.cn/v1):',
+        default: preset ? preset.endpoint : undefined,
+        validate: (v) => {
+          try {
+            new URL(v);
+            return true;
+          } catch {
+            return '请输入有效 URL';
+          }
+        },
       },
-    },
-  ]);
+      {
+        type: 'password',
+        name: 'keyInput',
+        message: 'API Key:',
+        mask: '*',
+        validate: (v) => (v.length > 0 ? true : '请输入 API Key'),
+      },
+    ]);
+    baseUrl = String(answers.baseUrl || '').trim();
+    keyInput = answers.keyInput;
+    const entries = parseApiKeyEntries(keyInput, { endpoint: baseUrl });
+    probeApiKey = entries.length > 0 ? entries[0].key : String(keyInput).trim();
 
-  const { keyInput } = await promptWithReplGuard([
-    {
-      type: 'password',
-      name: 'keyInput',
-      message: 'API Key:',
-      mask: '*',
-      validate: (v) => (v.length > 0 ? true : '请输入 API Key'),
-    },
-  ]);
+    printInfo(`探测 ${baseUrl} (第 ${attempt}/${MAX_PROBE_ATTEMPTS} 次)…`);
+    const fetched = await fetchRealModels({ endpoint: baseUrl, apiKey: probeApiKey });
+    if (fetched.models && fetched.models.length > 0) {
+      realModels = fetched.models;
+      printSuccess(`地址可用：上游报出 ${realModels.length} 个模型`);
+      break;
+    }
+    printError(fetched.reason);
+  }
 
-  const { defaultModel } = await promptWithReplGuard([
-    {
-      type: 'input',
-      name: 'defaultModel',
-      message: '默认模型 ID (如 deepseek-chat):',
-      default: preset ? preset.defaultModel : undefined,
-      validate: (v) => (v.trim().length > 0 ? true : '请输入模型 ID'),
-    },
-  ]);
+  // 上游没实现 /models 是真实存在的形态（少数中转），但「探不到模型」不能直接
+  // 放行 —— 交给下面那次真实对话去判绿判红，那一发才是决定性证据。
+  if (!realModels) {
+    const { useTyped } = await promptWithReplGuard([
+      {
+        type: 'confirm',
+        name: 'useTyped',
+        message: '该地址取不到模型列表，是否改用手填模型 ID 并以真实对话自检?',
+        default: false,
+      },
+    ]);
+    if (!useTyped) {
+      return null;
+    }
+  }
 
-  const extraDefault =
-    preset && Array.isArray(preset.models)
-      ? preset.models.filter((m) => m !== preset.defaultModel).join(', ')
-      : '';
-  const { extraModels } = await promptWithReplGuard([
-    {
-      type: 'input',
-      name: 'extraModels',
-      message: '其他模型 (逗号分隔，可留空):',
-      default: extraDefault,
-    },
-  ]);
+  // ── ② 默认模型：能从上游列表选就选，不猜 ──────────────────────────
+  let defaultModel = '';
+  let extraModels = '';
+  if (realModels) {
+    const { model } = await promptWithReplGuard([
+      {
+        type: 'list',
+        name: 'model',
+        message: `默认模型 (上游共 ${realModels.length} 个，以下均为该中转真实在售):`,
+        choices: realModels,
+      },
+    ]);
+    defaultModel = model;
+    // 注册会把每个模型写成一条路由；上游动辄几百个，全写进去只是噪音。
+    // 只带上前若干个，其余告诉人怎么自己补。
+    const rest = realModels.filter((m) => m !== model);
+    const autoRoutes = rest.slice(0, MAX_AUTO_ROUTED_MODELS);
+    const { extras } = await promptWithReplGuard([
+      {
+        type: 'input',
+        name: 'extras',
+        message: `一并登记为可选的其它模型 (逗号分隔，缺省前 ${MAX_AUTO_ROUTED_MODELS} 个):`,
+        default: autoRoutes.join(', '),
+      },
+    ]);
+    extraModels = extras;
+    if (rest.length > autoRoutes.length) {
+      printInfo(
+        `上游另有 ${rest.length - autoRoutes.length} 个模型未登记，需要时可用 khy gateway models 添加`
+      );
+    }
+  } else {
+    const typed = await promptWithReplGuard([
+      {
+        type: 'input',
+        name: 'defaultModel',
+        message: '默认模型 ID (如 deepseek-chat):',
+        default: preset ? preset.defaultModel : undefined,
+        validate: (v) => (v.trim().length > 0 ? true : '请输入模型 ID'),
+      },
+      {
+        type: 'input',
+        name: 'extraModels',
+        message: '其他模型 (逗号分隔，可留空):',
+        default:
+          preset && Array.isArray(preset.models)
+            ? preset.models.filter((m) => m !== preset.defaultModel).join(', ')
+            : '',
+      },
+    ]);
+    defaultModel = typed.defaultModel.trim();
+    extraModels = typed.extraModels;
+  }
 
   // 可选能力分级覆盖（缺省＝自动判定）。Agnes 等名字含 "flash" 的模型会被
   // 自动判为 T3，这里允许用户显式声明真实 tier。
@@ -1005,6 +1066,20 @@ async function _addCustomProviderInteractive({ pool, customRegistry }) {
       default: preset && preset.tier ? preset.tier : '',
     },
   ]);
+
+  // ── ③ 绿灯闸门：真发一次对话，红的一律不写 .env ───────────────────
+  printInfo(`连通性自检 ${baseUrl} · ${defaultModel} …`);
+  const verdict = await verifyCustomProvider({
+    endpoint: baseUrl,
+    apiKey: probeApiKey,
+    model: defaultModel,
+  });
+  if (!verdict.ok) {
+    printError(`${verdict.reason}`);
+    printInfo('未写入任何配置；请修正地址/密钥/模型后重试');
+    return null;
+  }
+  printSuccess(`自检通过 (${verdict.latencyMs}ms)${verdict.preview ? ` · 响应 "${verdict.preview}"` : ''}`);
 
   // 注册（加 key → 元数据 → env 路由 → 可选 tier），复用共享注册器。
   let result;
@@ -1029,39 +1104,6 @@ async function _addCustomProviderInteractive({ pool, customRegistry }) {
   printInfo(`模型路由: ${result.models.join(', ')} → api adapter`);
   if (result.tier) {
     printInfo(`能力分级覆盖: ${result.models.join(', ')} → ${result.tier}`);
-  }
-
-  // 可选连接测试
-  const { testNow } = await promptWithReplGuard([
-    {
-      type: 'confirm',
-      name: 'testNow',
-      message: '是否测试连接?',
-      default: true,
-    },
-  ]);
-  if (testNow) {
-    printInfo('测试中...');
-    try {
-      const apiAdapter = require('../../services/gateway/adapters/apiAdapter');
-      const testResult = await apiAdapter.generate('Say "hello" in one word.', {
-        model: `${result.poolKey}:${result.defaultModel}`,
-        apiPoolProvider: result.poolKey,
-        apiKey: result.firstKey,
-        apiEndpoint: result.endpoint,
-        provider: 'openai',
-        maxTokens: 10,
-      });
-      if (testResult.success) {
-        printSuccess(
-          `连接成功! 响应: "${(testResult.content || '').slice(0, 50)}" (${testResult.provider})`
-        );
-      } else {
-        printError(`连接失败: ${testResult.error}`);
-      }
-    } catch (e) {
-      printError(`测试错误: ${e.message}`);
-    }
   }
 
   // Agnes：同一把 key 还能开通图像/视频，主动询问是否一并接通。
@@ -1120,6 +1162,17 @@ async function handleGatewayAdd(options = {}) {
     }
 
     try {
+      const verification = await _verifyGatewayCustomProviderDraft(cliInput, options);
+      if (!verification.ok) {
+        if (asJson) {
+          console.log(JSON.stringify({ ok: false, action: 'add', error: 'verify_failed', reason: verification.reason, saved: false }, null, 2));
+        } else {
+          printError(verification.reason);
+          printInfo('未写入任何配置；修正后重试，或显式追加 --force 跳过自检');
+        }
+        return;
+      }
+
       const result = registrar.registerCustomProvider({
         displayName: cliInput.displayName,
         poolKey:
@@ -1135,7 +1188,7 @@ async function handleGatewayAdd(options = {}) {
         tier: cliInput.tier,
         ensureInit: true,
       });
-      const connectionTest = await _maybeTestGatewayCustomProvider(result, options, asJson);
+      const connectionTest = verification.connectionTest;
       const envPath = resolveEnvPaths().canonicalPath;
       // Agnes：默认用同一把 key 一并接通图像/视频；`--media false` 可关闭。非 Agnes 端点忽略。
       const wireMedia = _parseGatewayBooleanOption(options.media, true);
@@ -1173,15 +1226,11 @@ async function handleGatewayAdd(options = {}) {
         printInfo(`能力分级覆盖: ${result.models.join(', ')} → ${result.tier}`);
       }
       if (connectionTest.attempted) {
-        if (connectionTest.success) {
-          printSuccess(
-            `连接成功! 响应: "${connectionTest.preview || ''}" (${connectionTest.provider || 'openai'})`
-          );
-        } else {
-          printError(`测试错误: ${connectionTest.error || 'unknown_error'}`);
-        }
+        printSuccess(
+          `自检通过 (${connectionTest.latencyMs}ms)${connectionTest.preview ? ` · 响应 "${connectionTest.preview}"` : ''}${connectionTest.upstreamModels ? ` · 上游在售 ${connectionTest.upstreamModels} 个模型` : ''}`
+        );
       } else {
-        printInfo('已跳过连接测试；如需验证可追加 `--test true`');
+        printInfo(`已跳过连通性自检（${connectionTest.message}）：该中转未经验证，出问题时按 customProviderVerify 的判据自查`);
       }
       return;
     } catch (err) {
