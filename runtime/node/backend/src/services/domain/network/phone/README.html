@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>phone — 手机桥接单元（khy-os → StepBridge） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>network<span class="sep">›</span>phone<span class="sep">›</span>phone — 手机桥接单元（khy-os → StepBridge）</div>
+      <header class="hero reveal"><h1>phone — 手机桥接单元（khy-os → StepBridge）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#phone-手机桥接单元-khy-os-stepbridge">phone — 手机桥接单元（khy-os → StepBridge）</a></li><li class="lvl-2"><a href="#谁要它">谁要它</a></li><li class="lvl-2"><a href="#为什么这么做">为什么这么做</a></li><li class="lvl-2"><a href="#怎么验">怎么验</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="phone-手机桥接单元-khy-os-stepbridge">phone — 手机桥接单元（khy-os → StepBridge）<a class="anchor" href="#phone-手机桥接单元-khy-os-stepbridge" aria-label="锚点">#</a></h1>
+<blockquote><p>三问格式：谁要它 / 为什么这么做 / 怎么验。</p></blockquote>
+<h2 id="谁要它">谁要它<a class="anchor" href="#谁要它" aria-label="锚点">#</a></h2>
+<p>要把 khy-os 和手机上的 Amoo（阶跃智能体）接起来：khy-os 需要能探活、读状态、<br>调用手机侧能力，并在手机桥服务意外死掉时把它拉回来。使用方（按接入顺序）：</p>
+<ol><li><code>src/tools/PhoneBridgeTool/index.js</code> — AI 可见的工具面（actions: ping/status/probe/call/revive/setup/tools）。</li><li><code>src/cli/handlers/phone.js</code> — <code>khy phone …</code> 人可直接敲的命令面（解析与文案在同目录</li></ol>
+<p><code>phoneCliPlan.js</code> 纯叶子里，IO 仍在本单元）。</p>
+<ol><li>任何需要「手机现在什么状态」的只读消费者 — 走 <code>probe()</code> 而不是自己去拼 adb。</li></ol>
+<h2 id="为什么这么做">为什么这么做<a class="anchor" href="#为什么这么做" aria-label="锚点">#</a></h2>
+<p><strong>方向是 OUTBOUND。</strong> 本单元是 khy-os 主动打给手机，与 <code>src/bridge/*</code>（手机连进 PC、<br>JWT 鉴权）是相反方向。所以代码不挂进 <code>src/bridge/*</code>，只借用它的约定<br>（loopback 优先、token 鉴权、诚实的状态快照）。</p>
+<p><strong>通道顺序是量出来的，不是设计出来的：</strong></p>
+<table><thead><tr><th>顺序</th><th>通道</th><th>为什么在这个位置</th></tr></thead><tbody><tr><td>1</td><td><code>adb connect</code>（仅设备列表为空时）</td><td>33743 是 connect 端口不是 pairing 端口；跑 <code>adb pair</code> 会 protocol fault 且配不上任何东西。配对由用户在仓外一次性完成。</td></tr><tr><td>2</td><td><code>adb forward tcp:&lt;local&gt; tcp:&lt;remote&gt;</code></td><td>幂等，可反复跑。</td></tr><tr><td>3</td><td>HTTP <code>POST /ping</code> <code>/status</code> <code>/call</code></td><td>每连接一线程，一个卡死的调用不影响其他调用。</td></tr><tr><td>4</td><td>文件信箱 <code>/sdcard/bridge-amoobridge/cmd_&lt;id&gt;.json</code></td><td>兜底。worker 是<strong>单线程顺序处理</strong>，一个卡死的 exec 会冻结后面全部 cmd_，所以只在 HTTP 死了才走，且绝不通过它跑可能挂起的命令。</td></tr></tbody></table>
+<p><strong>两个与任务简报不一致、按实机测得值修正的事实</strong>（本单元的默认值以此为据）：</p>
+<ul><li>端口是 <strong>8896</strong>，不是简报写的 8898。<code>HttpBridge.DEFAULT_PORT = 8896</code>，</li></ul>
+<p>MainActivity 帮助文本也写 <code>127.0.0.1:8896</code>。8898 属于未发布的完整版。</p>
+<ul><li>信箱目录是 <strong><code>/sdcard/bridge-amoobridge</code></strong>，不是 <code>/sdcard/bridge</code>。</li></ul>
+<p><code>BridgeService.BRIDGE_DIR</code> 就是前者；往后者写文件会静默什么也不发生。</p>
+<p><strong>装机的是 lite 构建，README 的工具表对这个产物是虚构的。</strong> README 自述<br>「上传的是 1.x 版本，2.0 以后的还没有压测完」。实测：22 个工具、<strong>零个 UI 工具</strong>、<br>manifest 里没有任何 <code>BIND_ACCESSIBILITY_SERVICE</code>，<br><code>res/xml/accessibility_config.xml</code> 指向的 <code>com.step.bridge.MainActivity</code> 在本包不存在。<br>所以 <code>phoneBridgeCatalog</code> 把工具表劈成两半：<code>BRIDGE_TOOLS</code>（lite 真能答的 22 个）<br>与 <code>UI_TOOLS</code>（完整版才会有的 10 个，只为把能力缺口说成「需要无障碍」而不是<br>「unknown tool」）。<strong>UI 自动化这条路在当前 APK 上走不通</strong>，要打通 khy-os↔Amoo<br>的界面操作，必须由用户提供完整的 2.x APK。</p>
+<p><strong>服务自恢复不可依赖。</strong> force-stop 之后服务不会自己回来：WatchdogReceiver 是<br><code>exported=false</code> + <code>setInexactRepeating</code>（Doze 下被批掉），BridgeJobService 周期 15 分钟。<br><code>am start</code> 会被 AMS 过期的 top-most 记录吞掉并给出误导性成功信息，<code>am start-service</code><br>因 <code>exported=false</code> 被拒。唯一实测可行的恢复是<br><code>adb shell monkey -p com.stepx.amoobridge -c android.intent.category.LAUNCHER 1</code>，<br>本单元把它封成 <code>revive()</code>，并在文档里写明「进程其实已经死了」的那种假成功长什么样。</p>
+<p><strong>exec 的超时基本无效。</strong> 桥的实现先把 stdout 读到 EOF 才进退出轮询，<br><code>sleep 300</code> 这类保持 stdout 打开但不输出的命令会让 <code>readLine</code> 永久阻塞，<br>1..120s 超时永不触发。这一条同时是信箱兜底最大的风险源。</p>
+<p><strong>token 是单一精确串。</strong> 服务端比对 <code>(&quot;Bearer &quot; + token).equals(auth)</code>——<br>大小写敏感、恰好一个空格。token 是 16 随机字节的 hex（32 字符），<br>落盘在 <code>/sdcard/bridge-amoobridge/token.txt</code>。实测它在 force-stop + 重启后不变<br>（因为 MANAGE_EXTERNAL_STORAGE 已授权、目录可写），只有重装 APK 才需要重取。<br>R2：token 运行时读取、内存缓存、绝不落仓、绝不进日志、绝不出现在任何返回值里。</p>
+<p><strong>loopback URL 刻意不过 SSRF 守卫。</strong> <code>services/urlSafety.js<br>assertPublicHttpUrlResolved</code> 按设计拒绝 loopback/private 字面量——它保护的是<br>「打向公网主机」的出站调用，而这里是通过 adb 隧道打用户自己的设备。<br>文件头已注明这个例外。</p>
+<h2 id="怎么验">怎么验<a class="anchor" href="#怎么验" aria-label="锚点">#</a></h2>
+<p>从 <code>runtime/node/backend</code> 目录跑，<strong>显式列文件路径</strong>（传目录会得到假读数）：</p>
+<pre><code class="language-bash">node --<span class="hljs-built_in">test</span> src/services/domain/network/phone/phoneBridgeCatalog.test.js \
+            src/services/domain/network/phone/phoneBridgeConfig.test.js \
+            src/services/domain/network/phone/phoneBridgePolicy.test.js \
+            src/services/domain/network/phone/phoneBridgeMailbox.test.js \
+            src/services/domain/network/phone/phoneBridgeClient.test.js \
+            src/services/domain/network/phone/phoneCliPlan.test.js \
+            src/services/domain/network/phone/index.test.js</code></pre>
+<p>全部用 mock：stub 掉 <code>child_process.spawn</code> 与 HTTP transport，<strong>不打真手机</strong>。<br>覆盖 token 获取与形状校验、HTTP 请求拼装、信箱兜底切换、确认门、命令行解析与<br>文案渲染（含令牌回显脱敏）、以及每条错误路径。</p>
+<p>三个 CI 守卫（在仓库根跑，untracked 新叶子要显式传路径）：</p>
+<pre><code class="language-bash">node scripts/ci/check-change-safety.js --changed
+node scripts/ci/check-agent-rules.js --changed
+node scripts/ci/check-repo-layout.js</code></pre>
+<p>命令行面（需要 adb 能找到，<code>KHY_PHONE_BRIDGE_ADB</code> 可指到绝对路径）：</p>
+<pre><code class="language-bash">node runtime/node/backend/bin/khy.js phone status      <span class="hljs-comment"># 设备/转发/桥/令牌一览</span>
+node runtime/node/backend/bin/khy.js phone tools       <span class="hljs-comment"># 22 个可调用工具 + 10 个不可用 UI 工具</span>
+node runtime/node/backend/bin/khy.js phone call battery
+node runtime/node/backend/bin/khy.js phone setup       <span class="hljs-comment"># 装机后授权清单（只列不执行）</span></code></pre>
+<p>真机冒烟（需要手机在线，不属于单测）：</p>
+<pre><code class="language-bash">adb connect 192.168.2.46:33743
+adb -s 192.168.2.46:33743 forward tcp:8896 tcp:8896
+curl -s -X POST http://127.0.0.1:8896/ping -H <span class="hljs-string">&quot;Authorization: Bearer &lt;token&gt;&quot;</span></code></pre>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/services/domain/network/phone/gelab/README.html"><div class="dir">← 上一篇</div><div class="ttl">phone/gelab — GELab-Zero 动作文法接入</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/services/domain/network/README.html"><div class="dir">下一篇 →</div><div class="ttl">network — 远端执行、代理、外部应用接入与依赖装配（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/network/phone/README.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
