@@ -242,7 +242,16 @@ function renderSessionSummaryMarkdown(summary) {
 
 function writeSessionSummary(sessionId, summary, outDir) {
   const safeSessionId = String(sessionId || 'session').replace(/[^a-zA-Z0-9._-]/g, '_');
-  const targetDir = outDir || path.join(process.cwd(), '.khy', 'audit', 'summaries');
+  // Was path.join(process.cwd(), '.khy', 'audit', 'summaries') — cwd-relative,
+  // so the same session produced summaries in two different trees depending on
+  // where the command was run from. Resolved through dataHome now.
+  const targetDir = outDir || (() => {
+    try {
+      return require('../utils/dataHome').getDataDir('audit', 'summaries');
+    } catch {
+      return path.join(process.cwd(), '.khy', 'audit', 'summaries');
+    }
+  })();
   _ensureDir(targetDir);
 
   const jsonPath = path.join(targetDir, `${safeSessionId}.json`);

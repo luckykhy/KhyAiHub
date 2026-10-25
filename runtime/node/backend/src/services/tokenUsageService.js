@@ -9,26 +9,28 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
+// 定价数学的单一真源是纯叶子 ./tokenPricing（「Batch 3 接口恒等」重构的提取物）。
+// 本壳历史上**从未 require 它**，而是各自持有一份 12 键的 TOKEN_PRICING 副本——
+// 重构提取了叶子却没接线，两份表随即漂移：叶子有 DeepSeek / Together AI，副本没有，
+// 于是这两家的用量一直静默落到 default 粗价上（[MGMT-RPT-035] L1 的实证缺口）。
+// 现改为薄委托：表与两个纯函数全部走叶子，本壳只留状态与渲染。
+const tokenPricing = require('./tokenPricing');
+// 纯叶子，按模型归组用（零 IO、不抛）。取不到就退化成「本进程无按模型数据」，
+// 绝不因为一个展示层聚合器缺失而让整页用量读不出来。
+let _costByModel = null;
+try {
+  // eslint-disable-next-line global-require
+  _costByModel = require('./costByModel');
+} catch { _costByModel = null; }
+
 const USAGE_FILE = path.join(os.homedir(), '.khyquant', 'token_usage.json');
 
-// USD to CNY exchange rate (approximate, updated periodically)
-const USD_TO_CNY = 7.25;
+// 汇率与价目表改从叶子取（原来是本文件内的重复字面量）。
+const USD_TO_CNY = tokenPricing.USD_TO_CNY;
 
-// Per-token pricing by provider (USD per 1M tokens)
-const TOKEN_PRICING = {
-  'OpenAI': { input: 0.15, output: 0.60 },       // gpt-4o-mini
-  'Anthropic': { input: 3.00, output: 15.00 },    // claude-3-5-sonnet
-  'Google Gemini': { input: 0.075, output: 0.30 },// gemini-2.5-flash
-  'Groq': { input: 0.05, output: 0.08 },          // llama-3.3
-  'OpenRouter': { input: 0.10, output: 0.30 },    // varies
-  '智谱AI': { input: 0.10, output: 0.10 },        // glm-4
-  '讯飞星火': { input: 0.00, output: 0.00 },       // free tier
-  '百度文心': { input: 0.12, output: 0.12 },       // ERNIE
-  '通义千问': { input: 0.008, output: 0.02 },      // qwen-turbo
-  'HuggingFace': { input: 0.00, output: 0.00 },   // free inference
-  'Ollama': { input: 0.00, output: 0.00 },        // local
-  'default': { input: 0.10, output: 0.30 },
-};
+// Per-token pricing by provider (USD per 1M tokens) — 真源在 ./tokenPricing，
+// 这里只做再导出以保持既有导入面不变（`require('tokenUsageService').TOKEN_PRICING`）。
+const TOKEN_PRICING = tokenPricing.TOKEN_PRICING;
 
 // In-memory session accumulator (resets each REPL start)
 let _sessionUsage = {
@@ -90,6 +92,56 @@ try {
   _persistedMirror = loadUsageData();
 } catch {
   _persistedMirror = { daily: {}, monthlyTotals: {} };
+}
+
+// 盘上文件的 mtime 镜像。长驻进程（host / REPL）加载本模块只发生一次，
+// 之后 _persistedMirror 就停在「加载那一刻」的快照——UI 上的「刷新」按钮
+// 物理上是 no-op。读函数入口比对 mtime，变了才重载。
+let _fileMtimeMs = null;
+
+/**
+ * 盘上文件变了就重载镜像。两个守卫都要：
+ * `_flushAsync` 先 `_dirty = false`、再 `_flushing = true`，到
+ * `finally _flushing = false` 之间隔着两次 await，盘上文件还是旧的。
+ * 这段窗口里 `_dirty === false` 但数据未落盘，只看 `_dirty` 会拿旧文件
+ * 覆盖镜像，把刚记的账整批抹掉。
+ *
+ * statSync 抛错（文件不存在 / 无权限）时**保留旧镜像**，不清空——
+ * 读不出来和读出来是空是两回事。
+ */
+function _reloadIfChanged() {
+  if (_dirty || _flushing) return;
+  let mtime;
+  try {
+    mtime = fs.statSync(USAGE_FILE).mtimeMs;
+  } catch {
+    return;
+  }
+  if (_fileMtimeMs === null) {
+    _fileMtimeMs = mtime;
+    return;
+  }
+  if (mtime === _fileMtimeMs) return;
+  _fileMtimeMs = mtime;
+  let loaded;
+  try {
+    loaded = loadUsageData();
+  } catch {
+    return; /* 坏文件：保留旧镜像，不清空 */
+  }
+  // 老文件 / 半写文件可能只有其中一个键（或都不是）。读函数一律直接索引
+  // _persistedMirror.daily[key]，缺键就会在读路径上抛——补齐形状，不补数据。
+  _persistedMirror = {
+    daily: (loaded && loaded.daily) || {},
+    monthlyTotals: (loaded && loaded.monthlyTotals) || {},
+  };
+}
+
+// 初次播种：模块加载那一刻盘上文件是什么时刻（读函数里第一次比对时不再重复重载）。
+try {
+  _fileMtimeMs = fs.statSync(USAGE_FILE).mtimeMs;
+} catch {
+  _fileMtimeMs = null;
 }
 
 /**
@@ -315,6 +367,7 @@ function getCodeChanges() {
  * Get today's usage from persistent storage.
  */
 function getTodayUsage() {
+  _reloadIfChanged();
   return _persistedMirror.daily[todayKey()] || { inputTokens: 0, outputTokens: 0, totalTokens: 0, requests: 0, costUSD: 0 };
 }
 
@@ -322,6 +375,7 @@ function getTodayUsage() {
  * Get this month's usage.
  */
 function getMonthUsage() {
+  _reloadIfChanged();
   return _persistedMirror.monthlyTotals[monthKey()] || { inputTokens: 0, outputTokens: 0, totalTokens: 0, requests: 0, costUSD: 0 };
 }
 
@@ -357,10 +411,20 @@ function getRemainingQuota() {
 
 /**
  * Get usage history for the past N days.
+ *
+ * 投影 8 键（含缓存两列）供图表按构成画堆叠柱。
+ * **totalTokens 一律沿用日桶原值**（= inputTokens + outputTokens，由 recordUsage
+ * :197 的 `const total = inputTokens + outputTokens` 决定），**不是**四桶之和
+ * ——缓存两列是独立累加器，加进去就成了第三个总量口径。
+ * 只改读函数返回形状，落盘结构与写入路径不动，历史数据零迁移。
+ *
  * @param {number} days
- * @returns {Array<{ date: string, totalTokens: number, requests: number }>}
+ * @returns {Array<{ date: string, inputTokens: number, outputTokens: number,
+ *                   totalTokens: number, requests: number, costUSD: number,
+ *                   cacheReadTokens: number, cacheWriteTokens: number }>}
  */
 function getUsageHistory(days = 30) {
+  _reloadIfChanged();
   const result = [];
   const now = new Date();
 
@@ -371,13 +435,124 @@ function getUsageHistory(days = 30) {
     const dayData = _persistedMirror.daily[key];
     result.push({
       date: key,
+      inputTokens: dayData?.inputTokens || 0,
+      outputTokens: dayData?.outputTokens || 0,
       totalTokens: dayData?.totalTokens || 0,
       requests: dayData?.requests || 0,
       costUSD: dayData?.costUSD || 0,
+      // 老条目早于缓存拆分，缺列 → 0（与 recordUsage :241 的 || 0 同一纪律）
+      cacheReadTokens: dayData?.cacheReadTokens || 0,
+      cacheWriteTokens: dayData?.cacheWriteTokens || 0,
     });
   }
 
   return result;
+}
+
+/**
+ * 用量文件在盘上的最后修改时刻（ISO 字符串）。
+ *
+ * 诚实边界：这是**持久化镜像**的截止时刻，不是「本进程记到的最后一笔」。
+ * recordUsage 记进内存后 flush 还没落盘时，stamp 会落后于内存里的数——
+ * 这正是 mtime 重载存在的理由（读到旧值宁可显示旧账，不丢新账）。
+ * 文件不存在返回 null（**不抛**：statSync 对缺失文件抛 ENOENT，让它把错误
+ * 抛给调用方等于把本函数要修的那类 bug 原样装回来）。调用方拿 null 时
+ * 应当整行不渲染「数据截至」，而不是打印 "undefined"。
+ *
+ * @returns {string|null}
+ */
+function getUsageFileStamp() {
+  try {
+    const mtimeMs = fs.statSync(USAGE_FILE).mtimeMs;
+    return Number.isFinite(mtimeMs) ? new Date(mtimeMs).toISOString() : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 按模型归组的**本进程**用量（进程内 records 的聚合，不落盘）。
+ *
+ * 诚实边界三条，逐条都写在这里而不是让消费方自己猜：
+ * ① 内存态 —— records 随 REPL / host 进程退出即失，**退出即失**；
+ * ② 无 sessionId —— 按对话下钻无从谈起，本函数只到模型粒度；
+ * ③ 90 天历史里**没有**模型维度 —— 落盘的日桶结构里根本没有 model 字段，
+ *    模型归属在写入那一刻就没有，别把它当历史数据缺失。
+ *
+ * costUSD 主路径恒为 0（adapters 不产 cost），所以排序实际落到 total 降序，
+ * 恰好就是「哪台模型吃得多」要的口径。
+ *
+ * 空 records 返回 `[]` 而不是 null（调用方按数组真值判定，null 会整页落空态）。
+ *
+ * @returns {Array<{ model:string, inputTokens:number, outputTokens:number,
+ *                   totalTokens:number, requests:number, costUSD:number,
+ *                   percentage:number, scope:'process' }>}
+ */
+function getModelUsage() {
+  if (!_costByModel) return [];
+  const rows = _costByModel.aggregateSessionUsageByModel(_sessionUsage.records);
+  const grandTotal = rows.reduce((sum, r) => sum + (Number(r.total) || 0), 0);
+  return rows.map((r) => {
+    const totalTokens = Number(r.total) || 0;
+    return {
+      model: r.label,
+      inputTokens: Number(r.input) || 0,
+      outputTokens: Number(r.output) || 0,
+      totalTokens,
+      requests: Number(r.requests) || 0,
+      costUSD: Number(r.cost) || 0,
+      percentage: grandTotal > 0 ? Math.round((totalTokens / grandTotal) * 1000) / 10 : 0,
+      scope: 'process',
+    };
+  });
+}
+
+/**
+ * 计价覆盖率体检——「这些用量到底有没有算出钱」。
+ *
+ * 返回体两个字段名**各自自带时间轴口径**，渲染层不得把它们当同一维度相加：
+ * - `byDay`：**日级**，跨近 N 天，只回答「那几天跑过 ccSwitch 扫描」。
+ *   分母 = 有请求的天数，分子 = 其中 costUSD > 0 的天数。日桶结构下拿不到
+ *   「部分计价的日子」，所以**不返回** pricedRequests / totalRequests——
+ *   把部分计价的日子说成全计价比不报更糟。
+ * - `flatThisProcess`：**进程级**，只覆盖本次 REPL/host 进程内的 records，
+ *   是 auditFlatChannels 的原样透出（含 degraded 标志，不另造口径）。
+ *   `degraded:true` 表示审计没跑成（价目表不可用），调用方必须显示第三种
+ *   说法「flat 通道审计未跑成」，**不得**显示成「本进程无订阅制通道」。
+ *
+ * @param {number} days
+ * @returns {{ byDay: {daysWithRequests:number, pricedDays:number,
+ *                     unpricedDays:number, unpricedDayDates:string[]},
+ *             flatThisProcess: {requests:number, providers:string[],
+ *                     tokens:number, recalculatedUSD:number, degraded:boolean} }}
+ */
+function getCostCoverage(days = 30) {
+  _reloadIfChanged();
+  const now = new Date();
+  const unpricedDayDates = [];
+  let daysWithRequests = 0;
+  let pricedDays = 0;
+
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const dayData = _persistedMirror.daily[key];
+    if (!dayData || !(Number(dayData.requests) > 0)) continue;
+    daysWithRequests += 1;
+    if (Number(dayData.costUSD) > 0) pricedDays += 1;
+    else unpricedDayDates.push(key);
+  }
+
+  return {
+    byDay: {
+      daysWithRequests,
+      pricedDays,
+      unpricedDays: daysWithRequests - pricedDays,
+      unpricedDayDates,
+    },
+    flatThisProcess: auditFlatChannels(),
+  };
 }
 
 /**
@@ -517,16 +692,26 @@ function estimateTokens(text) {
  * @param {number} outputTokens
  * @returns {{ costUSD: number, costCNY: number }}
  */
+/**
+ * 单次调用计价。**薄委托 ./tokenPricing.calculateCost**（接口恒等：叶子多出的
+ * pricingTable/usdToCny 两个参数走默认值，与本壳原三参版逐字节同结果）。
+ * 委托的净收益：表从 12 键变 14 键，DeepSeek / Together AI 不再落 default 粗价。
+ */
 function calculateCost(provider, inputTokens, outputTokens) {
-  const pricing = TOKEN_PRICING[provider] || TOKEN_PRICING['default'];
-  const costUSD = (inputTokens * pricing.input + outputTokens * pricing.output) / 1000000;
-  const costCNY = costUSD * USD_TO_CNY;
-  return { costUSD, costCNY };
+  return tokenPricing.calculateCost(provider, inputTokens, outputTokens);
 }
 
 /**
  * Convenience: estimate cost from model/provider name + token counts.
  * Tries model name first, then provider name, then default.
+ *
+ * ⚠ **刻意不委托 ./tokenPricing.estimateCost**：那份叶子按 [DESIGN-ARCH-185] §3.4
+ * （判据 A8）改过语义——改为查 modelPricing 显式表，价格不可知时返回 0 而**不是**
+ * 编造的 default。本函数的历史语义是「provider 关键字子串匹配 + 静默落 default」，
+ * 两者对同一输入会给出不同数字。委托它是一次**行为变更**，须单独评估消费方后再做，
+ * 不该搭本次「接口恒等」的车混进去。需要区分价格状态的消费方应改用
+ * modelPricing.estimateCostDetailed（flat/unknown 返回 null，不造假数字）。
+ *
  * @param {number} inputTokens
  * @param {number} outputTokens
  * @param {string} modelOrProvider - model name or provider key
@@ -547,14 +732,13 @@ function estimateCost(inputTokens, outputTokens, modelOrProvider) {
 
 /**
  * Get total cost for session in both currencies.
+ * 求和内核**薄委托 ./tokenPricing.sumRecordsCost**（该叶子正是当年从本函数提取的，
+ * 注释里写着「getSessionCost 的求和内核」——但提取后本壳从未接线，一直跑自己的副本）。
+ * 行为恒等：`resolveProviderPricing` 只比本壳原写法多一层 `|| _ZERO_PRICING`，
+ * 而内置表恒有 default，该分支不可达；`/1000000` 与 `/1e6` 数值相同。
  */
 function getSessionCost() {
-  let totalUSD = 0;
-  for (const rec of _sessionUsage.records) {
-    const pricing = TOKEN_PRICING[rec.provider] || TOKEN_PRICING['default'];
-    totalUSD += (rec.inputTokens * pricing.input + rec.outputTokens * pricing.output) / 1e6;
-  }
-  return { costUSD: totalUSD, costCNY: totalUSD * USD_TO_CNY };
+  return tokenPricing.sumRecordsCost(_sessionUsage.records);
 }
 
 /**
@@ -579,7 +763,8 @@ function getSessionCost() {
  * @param {Array<{provider?:string,model?:string,inputTokens?:number,outputTokens?:number,
  *                costUSD?:number,cacheReadTokens?:number,cacheWriteTokens?:number}>} [records]
  * @returns {{records:number, upstreamUSD:number, recalculatedUSD:number, driftUSD:number,
- *            driftPct:number|null, cacheUncostedRequests:number, cacheUncostedTokens:number,
+ *            driftPct:number|null, driftKind:string, upstreamReported:number,
+ *            cacheUncostedRequests:number, cacheUncostedTokens:number,
  *            unpricedProviders:string[]}}
  */
 function reconcileCost(records) {
@@ -618,12 +803,37 @@ function reconcileCost(records) {
   // （而不是 0 或 Infinity——拿 0 假装算过比不算更糟）。
   const driftPct = recalculatedUSD > 0 ? (driftUSD / recalculatedUSD) * 100 : null;
 
+  // 「上游侧到底有没有值可比」—— 见下方 driftKind 注释。这是 2026-10-10 第七批补的：
+  // 没有它时，主路径（recordUsage 的 costUSD 恒为字面量 0，aiChatCore.js:4968）会让
+  // driftPct 稳定落在 -100%，读起来像「重算值错得离谱」，而真相是「没有上游值可比」。
+  let upstreamReported = 0;
+  for (const rec of list) {
+    if (rec && typeof rec === 'object' && (Number(rec.costUSD) || 0) > 0) upstreamReported += 1;
+  }
+
+  // driftKind 把「不可比」与「不一致」分开，供展示层说不同的实话。**判定有序**，
+  // 前者优先（先说更要紧的那个）：
+  //   empty       无记录 —— 什么都不该显示
+  //   no-upstream 上游侧一条都没给成本 ⇒ **对账不成立**，不是漂移（优先于 no-recalc：
+  //               连可比的对象都没有时，「百分比无定义」是次要问题）
+  //   no-recalc   重算侧为 0（全免费/零 token）⇒ 百分比无定义
+  //   agree       两侧相等
+  //   over/under  两侧不等，且说得出谁高谁低
+  let driftKind;
+  if (list.length === 0) driftKind = 'empty';
+  else if (upstreamReported === 0) driftKind = 'no-upstream';
+  else if (recalculatedUSD === 0) driftKind = 'no-recalc';
+  else if (driftUSD === 0) driftKind = 'agree';
+  else driftKind = driftUSD > 0 ? 'over' : 'under';
+
   return {
     records: list.length,
     upstreamUSD,
     recalculatedUSD,
     driftUSD,
     driftPct,
+    driftKind,
+    upstreamReported,
     cacheUncostedRequests,
     cacheUncostedTokens,
     unpricedProviders: [...unpriced].sort(),
@@ -634,28 +844,102 @@ function reconcileCost(records) {
  * 把对账结果格式化成一行人类可读摘要（只读，不触盘）。
  * 漂移超过 `warnPct` 时加 ⚠ 前缀——这是「两条成本路径不一致」的唯一告警面。
  *
+ * **`no-upstream` 是独立的一档，不是漂移的一种**（2026-10-10 第七批）：主路径
+ * `aiChatCore.js:4968` 传给 `recordUsage` 的 `costUSD` 是字面量 `0`，adapters 也不产
+ * cost（`_responseBuilder.js` 无 `costUSD` 字段）⇒ 实时会话里上游侧**一条记录都没有值**。
+ * 此时若照常打「漂移 -100.0%」，用户会读成「重算值错得离谱」，而真相是「没有上游值可比」。
+ * 拿一个算得出来但没有意义的数字冒充诊断，正是本仓注释反复警告的那类事。
+ *
  * @param {ReturnType<typeof reconcileCost>} r
  * @param {number} [warnPct=10]
  * @returns {string}
  */
 function formatReconcileSummary(r, warnPct = 10) {
   if (!r || typeof r !== 'object') return '  成本对账: 无数据';
-  const pct = r.driftPct === null ? 'n/a' : `${r.driftPct >= 0 ? '+' : ''}${r.driftPct.toFixed(1)}%`;
-  const flag = r.driftPct !== null && Math.abs(r.driftPct) >= warnPct ? '⚠ ' : '  ';
-  let out = `${flag}成本对账: 上游 $${r.upstreamUSD.toFixed(4)} / 重算 $${r.recalculatedUSD.toFixed(4)} / 漂移 ${pct}（${r.records} 条）`;
+
+  const tailLines = [];
   if (r.cacheUncostedRequests > 0) {
-    out += `\n     ⚠ ${r.cacheUncostedRequests} 条请求含缓存 token（共 ${r.cacheUncostedTokens}）但价目表无缓存档，重算值系统性偏低`;
+    tailLines.push(`     ⚠ ${r.cacheUncostedRequests} 条请求含缓存 token（共 ${r.cacheUncostedTokens}）但价目表无缓存档，重算值系统性偏低`);
   }
   if (r.unpricedProviders.length > 0) {
-    out += `\n     ⚠ provider 无专属价目、已回落 default：${r.unpricedProviders.join('、')}`;
+    tailLines.push(`     ⚠ provider 无专属价目、已回落 default：${r.unpricedProviders.join('、')}`);
   }
-  return out;
+  const tail = tailLines.length ? `\n${tailLines.join('\n')}` : '';
+
+  if (r.driftKind === 'no-upstream') {
+    // 说清楚「不可比」以及唯一可读的口径是哪一侧，而不是给一个 -100%。
+    return `  成本对账: 上游未提供成本（0/${r.records} 条带 costUSD）——无法对账`
+      + `\n     实时会话的上游成本尚未接线（adapters 不产 cost，主路径传字面量 0）；`
+      + `可读口径只有重算侧 $${Number(r.recalculatedUSD || 0).toFixed(4)}。${tail}`;
+  }
+
+  const pct = r.driftPct === null ? 'n/a' : `${r.driftPct >= 0 ? '+' : ''}${r.driftPct.toFixed(1)}%`;
+  const flag = r.driftPct !== null && Math.abs(r.driftPct) >= warnPct ? '⚠ ' : '  ';
+  return `${flag}成本对账: 上游 $${r.upstreamUSD.toFixed(4)} / 重算 $${r.recalculatedUSD.toFixed(4)} / 漂移 ${pct}（${r.records} 条）${tail}`;
+}
+
+/**
+ * 订阅制通道审计（[MGMT-RPT-035] L1 第二半，只读）。
+ *
+ * 为什么单列而不并进 `reconcileCost`：`reconcileCost` 的立身契约是**零 IO**
+ * （对标 ccusage 的只读性，第二批有测试直接断言 fs 零调用）。本函数要问
+ * modelPricing「这个通道该不该按 token 计价」，会触发价目表读取（有缓存）——
+ * 并进去就把那条契约破了。两者分工：reconcileCost 答「两条成本路径差多少」，
+ * 本函数答「有多少记录压根不该有 token 价」。
+ *
+ * 判据来自仓内既有裁定，不是本函数发明的：`config/models/pricing.json` 的
+ * `flat-subscription-relays` 家族明确写着「这些是订阅制 IDE 通道的反向接入，
+ * 账单是包月，按 token 计价本身不成立」。而 `TOKEN_PRICING` 里没有这些 provider，
+ * 历史上它们一直静默落 `default` 粗价——**给一条已裁定不该计价的通道发明了价格**。
+ *
+ * @param {Array<{provider?:string, model?:string}>} [records] 缺省取会话 records
+ * @param {{table?:object}} [opts] table 由调用方注入（测试/覆盖价目用；缺省走 modelPricing 自己的加载链）
+ * @returns {{requests:number, providers:string[], tokens:number, recalculatedUSD:number,
+ *            degraded:boolean}}
+ */
+function auditFlatChannels(records, opts = {}) {
+  const list = Array.isArray(records) ? records : _sessionUsage.records;
+  const providers = new Set();
+  let requests = 0;
+  let tokens = 0;
+  let recalculatedUSD = 0;
+  let degraded = false;
+  try {
+    // eslint-disable-next-line global-require
+    const mp = require('./modelPricing');
+    const tableOpts = opts && opts.table && typeof opts.table === 'object' ? { table: opts.table } : {};
+    for (const rec of list) {
+      if (!rec || typeof rec !== 'object') continue;
+      // 先按 provider（= adapter 键）判：flat 家族正则匹配的就是 kiro/trae 这类键；
+      // provider 判不出来再试 model。两者都非 flat 才跳过。
+      const byProvider = mp.resolvePrice(String(rec.provider || ''), tableOpts);
+      const state = byProvider.state === 'flat'
+        ? 'flat'
+        : mp.resolvePrice(String(rec.model || ''), tableOpts).state;
+      if (state !== 'flat') continue;
+      requests += 1;
+      if (rec.provider) providers.add(String(rec.provider));
+      const inTok = Number(rec.inputTokens) || 0;
+      const outTok = Number(rec.outputTokens) || 0;
+      tokens += inTok + outTok;
+      const pricing = TOKEN_PRICING[rec.provider] || TOKEN_PRICING['default'];
+      recalculatedUSD += (inTok * pricing.input + outTok * pricing.output) / 1e6;
+    }
+  } catch (err) {
+    // 价目表不可用 → **必须让调用方知道审计没跑成**。最初一版在这里静默返回全 0，
+    // 于是「审计坏了」和「没有 flat 通道」长得一模一样——那等于给一个已经存在的
+    // 错误计价发一张无问题的健康证明，比不审计更糟。本模块无日志设施，
+    // 故用 degraded 标志把失败交给调用方，而不是吞掉。
+    degraded = true;
+    void err;
+  }
+  return { requests, providers: [...providers].sort(), tokens, recalculatedUSD, degraded };
 }
 
 /**
  * Format cost report (Claude-like /cost command output, RMB primary).
  */
-function formatCostReport() {
+function formatCostReport(opts = {}) {
   const chalk = require('chalk').default || require('chalk');
   const session = getSessionUsage();
   const today = getTodayUsage();
@@ -752,6 +1036,61 @@ function formatCostReport() {
   }
 
   out += '\n';
+
+  // [MGMT-RPT-035] L2/L1 的消费面：把「两条成本路径的漂移」与「订阅制通道被发明了
+  // token 价」接进 /cost。此前 reconcileCost / auditFlatChannels 只有测试在用，
+  // **没有任何消费方**——那正是本仓注释反复警告的形态（能力被算出来却无人读）。
+  //
+  // 只在**有发现时**才追加这一段：漂移超阈值、存在未计价缓存 token、存在无专属价目的
+  // provider、或存在订阅制通道。四种都没有 ⇒ 输出与今日逐字节一致，不给安静的用户
+  // 添噪音。
+  try {
+    const rec = reconcileCost(_sessionUsage.records);
+    const flat = auditFlatChannels(_sessionUsage.records, opts && opts.pricingTable
+      ? { table: opts.pricingTable }
+      : {});
+    const driftPct = rec.driftPct;
+    // driftLoud 只在**两侧真的可比**时才算数：上游侧一条都没给成本时，driftPct 会稳定
+    // 落在 -100%（见 reconcileCost 的 driftKind 注释），那不是「两条路径不一致」，
+    // 是「只有一条路径有数据」。此时该提示的是接线缺口，不是价目问题。
+    const driftLoud = driftPct !== null
+      && rec.driftKind !== 'no-upstream'
+      && Math.abs(driftPct) >= 10;
+    const hasFinding = driftLoud
+      || rec.driftKind === 'no-upstream'
+      || rec.cacheUncostedRequests > 0
+      || rec.unpricedProviders.length > 0
+      || flat.requests > 0;
+    if (hasFinding) {
+      out += b('  ⚠ 计价体检\n');
+      if (rec.driftKind === 'no-upstream') {
+        out += d('    · 上游未提供成本，无法对账 ') + y(`0/${rec.records} 条带 costUSD`) + '\n';
+        out += d('      实时会话的上游成本尚未接线（adapters 不产 cost、主路径传字面量 0）；可读口径只有重算值。') + '\n';
+      } else if (driftLoud) {
+        out += d('    · 成本口径漂移 ') + y(
+          `${driftPct >= 0 ? '+' : ''}${driftPct.toFixed(1)}%`
+        ) + d(`（上游 $${rec.upstreamUSD.toFixed(4)} / 重算 $${rec.recalculatedUSD.toFixed(4)}）`) + '\n';
+        out += d('      两条路径不一致通常是价目过期或 provider 归类错，不是算错。') + '\n';
+      }
+      if (rec.cacheUncostedRequests > 0) {
+        out += d('    · 缓存 token 未计价 ') + y(`${rec.cacheUncostedRequests} 条请求 / ${rec.cacheUncostedTokens} tokens`) + '\n';
+        out += d('      价目表无缓存档 ⇒ 重算值系统性偏低，缓存命中越多偏得越多。') + '\n';
+      }
+      if (rec.unpricedProviders.length > 0) {
+        out += d('    · 无专属价目、已回落 default：') + y(rec.unpricedProviders.join('、')) + '\n';
+      }
+      if (flat.requests > 0) {
+        out += d('    · 订阅制通道按 token 计价不成立 ') + y(
+          `${flat.providers.join('、')}（${flat.requests} 条 / ${flat.tokens} tokens）`
+        ) + '\n';
+        out += d(`      这些通道账单是包月；上表 $${flat.recalculatedUSD.toFixed(4)} 是按 default 粗价倒挤的，不是真实花费。`) + '\n';
+      }
+      out += '\n';
+    }
+  } catch {
+    /* 体检失败不影响主报表 —— /cost 永远出得来 */
+  }
+
   return out;
 }
 
@@ -827,6 +1166,11 @@ module.exports = {
   getMonthUsage,
   getRemainingQuota,
   getUsageHistory,
+  // ── 使用统计页的新增导出（KhyOS Desktop 消费）──
+  // 宿主侧对这三者各有 typeof 兜底：后端版本落后时页面照常出数，只是少那几块。
+  getModelUsage,
+  getCostCoverage,
+  getUsageFileStamp,
   formatInlineSummary,
   formatUsageReport,
   formatCostReport,
@@ -835,6 +1179,7 @@ module.exports = {
   getSessionCost,
   reconcileCost,
   formatReconcileSummary,
+  auditFlatChannels,
   estimateTokens,
   resetUsage,
   recordCompressionSavings,
