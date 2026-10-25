@@ -1952,6 +1952,25 @@ async function runToolUseLoop(userMessage, options = {}) {
     let _lastCapabilityRoute = null; // 最近一轮组合的能力路线（KHY_CAPABILITY_ROUTE_DEBUG 下填充，附到结果供观测）
     const budget = new IterationBudget(effectiveMaxIterations);
 
+    // [DESIGN-ARCH-191] L1/L2/L3 closed-loop reasoning arbiter state. Three tiers,
+    // three independent env gates — KHY_COT_L1 / KHY_COT_L2 / KHY_COT_L3 — ALL
+    // defaulting to OFF. With every gate off, every site below is a no-op and
+    // effectiveChatOpts / currentMessage stay byte-identical to pre-L1 behavior.
+    // Same shape as the tokenBudget governor below: the leaf decides, this shell
+    // accumulates the rounds and applies the verdict.
+    let _cotArbiter = null;
+    try {
+      _cotArbiter = require('../reasoning/cotArbiter');
+    } catch {
+      _cotArbiter = null; // leaf unavailable ⇒ all tiers silently off, never a spurious change
+    }
+    const _cotL1Cfg = _cotArbiter ? _cotArbiter.resolveGate(process.env) : null;
+    const _cotL2Cfg = _cotArbiter ? _cotArbiter.resolveGateL2(process.env) : null;
+    const _cotL3Cfg = _cotArbiter ? _cotArbiter.resolveGateL3(process.env) : null;
+    let _cotL1BaseTier = null; // auto-reasoning's round-1 tier = what L1 adjusts FROM
+    let _cotL1Adjusted = 0; // adjustments applied this turn (anti-oscillation)
+    const _cotL1History = []; // per-round {thinkingTokens, toolCount, stopReason, derailed}
+
     // 系统层 D2 — token-budget governor state. ceiling 0 ⇒ disabled (byte-fallback:
     // no accumulation effect, assessBudget always 'ok', loop never stops on spend).
     const _tokenBudgetCfg = _tokenBudget
@@ -2486,10 +2505,46 @@ async function runToolUseLoop(userMessage, options = {}) {
             }
           }
           const provider = effectiveChatOpts.provider || effectiveChatOpts.adapter || 'anthropic';
+          // [DESIGN-ARCH-191] L1 adjusts FROM this tier. Gate-guarded: _cotL1Cfg null
+          // ⇒ no-op ⇒ the tier flow above is untouched in the disabled path.
+          if (_cotL1Cfg) {
+            _cotL1BaseTier = tier;
+          }
           const reasoningParams = _autoReasoning.effortToParams(tier, provider);
           Object.assign(effectiveChatOpts, reasoningParams);
         } catch {
           /* auto-reasoning is best-effort */
+        }
+      }
+
+      // [DESIGN-ARCH-191] L1 — closed-loop reasoning budget, rounds 2..N.
+      // Round 1's tier is auto-reasoning's alone (block above). This block only
+      // re-reads what the rounds ALREADY cost and re-decides the tier for this one.
+      // Budget only: thinking content is never modified here — content rewriting is
+      // L3 and separately gated (DESIGN-ARCH-191 §6).
+      if (_cotL1Cfg && _cotL1Cfg.enabled && iteration > 1 && _cotL1History.length > 0) {
+        try {
+          const _cotArbiter = require('../reasoning/cotArbiter');
+          const _verdict = _cotArbiter.nextTier({
+            baseTier: _cotL1BaseTier || 'high',
+            history: _cotL1History,
+            cfg: _cotL1Cfg,
+            adjustUsed: _cotL1Adjusted,
+          });
+          if (_verdict.action !== 'hold') {
+            const _provider = effectiveChatOpts.provider || effectiveChatOpts.adapter || 'anthropic';
+            const _autoReasoning = require('../autoReasoning');
+            Object.assign(effectiveChatOpts, _autoReasoning.effortToParams(_verdict.tier, _provider));
+            _cotL1Adjusted++;
+          }
+          _loopBreadcrumb('cot-l1-arbitration', {
+            iteration,
+            tier: _verdict.tier,
+            action: _verdict.action,
+            reason: _verdict.reason,
+          });
+        } catch {
+          /* L1 is best-effort: any failure holds the current tier */
         }
       }
 
@@ -2665,16 +2720,25 @@ async function runToolUseLoop(userMessage, options = {}) {
           // 用 originalUserMessage(1188 行声明的原始用户消息)——不能用 sanitizedUser,
           // 后者在本函数 4005 行才 const 声明,此处(2467)引用会触发 TDZ ReferenceError
           // 被下面 catch 静默吞掉,使 nudge 永不注入(实测:点名「用 claude code」也从不委派)。
-          const _nudge = _ead.buildExternalAgentNudge(
-            originalUserMessage || userMessage || '',
-            process.env
-          );
-          if (_nudge) {
-            currentMessage = `${_nudge}\n\n${currentMessage || ''}`;
+          const _userMsg = originalUserMessage || userMessage || '';
+          const _hit = _ead.detectExternalAgentRequest(_userMsg, process.env);
+          if (_hit) {
+            // G1 凭据：把「用户本轮确实点名」这一确定性事实按 turn 记入票券，工具侧核销。
+            // 凭据必须由这里签发——工具侧看不到用户原文，模型自写标记换不到放行（2026-10-15）。
+            // turnId 为空（traceSession 未就绪）时不签发：宁可不委派，也不给一张跨轮有效的票。
             try {
-              _loopBreadcrumb('external-agent-route', { iteration });
+              require('../delegationTicket').issueDelegationTicket(_turnId, _hit.id);
             } catch {
-              /* breadcrumb best-effort */
+              /* 签发失败 ⇒ G1 不成立 ⇒ 工具侧 fail-closed 回自做，不会误放行 */
+            }
+            const _nudge = _ead.buildExternalAgentNudge(_userMsg, process.env);
+            if (_nudge) {
+              currentMessage = `${_nudge}\n\n${currentMessage || ''}`;
+              try {
+                _loopBreadcrumb('external-agent-route', { iteration, agent: _hit.id, ticketed: !!_turnId });
+              } catch {
+                /* breadcrumb best-effort */
+              }
             }
           }
         } catch {
@@ -4072,6 +4136,29 @@ async function runToolUseLoop(userMessage, options = {}) {
       // are authoritative (see `hasStructuredToolUse` gate below). stop_reason
       // is only consulted as a secondary hint for the degraded text-parse path.
       // Text-based <tool_call> parsing is a fallback for non-native adapters.
+      // [DESIGN-ARCH-191] L1 — record what THIS round spent, for the next round's
+      // verdict (the decision block at the top of the loop reads it back).
+      // Deliberately reads aiResult, NOT the loop-local `toolCalls`: that array is
+      // rewritten later by shell rewrites and tool auto-injection (web_search /
+      // scaffold / collaboration), so it is not a stable snapshot of what the MODEL
+      // did. aiResult.toolUseBlocks is the model's own structured calls — final at
+      // this point and semantically the right signal for "is it making progress".
+      if (_cotL1Cfg && _cotL1Cfg.enabled && aiResult) {
+        try {
+          const _cotArbiter = require('../reasoning/cotArbiter');
+          _cotL1History.push(
+            _cotArbiter.observeRound({
+              thinking: aiResult.thinking,
+              thinkingBlocks: aiResult.thinkingBlocks,
+              stopReason: aiResult.stopReason,
+              toolCount: Array.isArray(aiResult.toolUseBlocks) ? aiResult.toolUseBlocks.length : 0,
+            })
+          );
+        } catch {
+          /* best-effort observation */
+        }
+      }
+
       // 2. Parse tool calls from AI response — decision chain extracted to
       // services/toolUseLoop/resolveToolCalls.js (T-021 C3-P7 first slice).
       // Behavior-preserving: s20 signal semantics + breadcrumbs byte-identical.
@@ -4868,6 +4955,50 @@ async function runToolUseLoop(userMessage, options = {}) {
         }
       }
 
+      // ── [P6.5] 文档引述观察（S1 观察者，docVsMeasuredPolicy）────────────
+      // 「文档 vs 实测」的粒度缺口：上面的 P6 证据门只在已发生 ≥2 次实质工具调用时启动，
+      // 不覆盖「零工具调用、直接引述仓内文档/源码路径收尾」的情形。本块补上该收尾观察：
+      // 草稿引述的仓内路径本回合没有任何工具调用碰过 → 落一条观察记录。S1 语义：只记录、
+      // 绝不改变流程（无 nudge、无 continue、不改写输出）。门控 KHY_DOC_VS_MEASURED 关 →
+      // observed:false → 逐字节回退。
+      //
+      // 落盘走两条既有通道，缺一不可：
+      //   ① toolLoopJournal（默认开，best-effort，绝不落 stdout）——S1 攒样本的主通道。
+      //      只走 ② 会零样本：_loopBreadcrumb 在 KHY_LOOP_DEBUG 未设时第一行就 return
+      //      （./loop/diagnostics.js），默认运行下结论被直接丢弃,与 FEATURE-OWNERSHIP 里
+      //      「累计 ≥200 条样本」的承诺不符（2026-10-13 复核判定 mustFix）。
+      //   ② _loopBreadcrumb（KHY_LOOP_DEBUG 开时才落文件）——诊断叠加，不替代 ①。
+      if (toolCalls.length === 0) {
+        try {
+          const _dvm = require('../docVsMeasuredPolicy');
+          const _obs = _dvm.observeConclusion(
+            { draft: _stripToolCalls(_stripExecutionPlan(aiResult.reply)), toolCallLog },
+            { env: process.env }
+          );
+          if (_obs && _obs.observed) {
+            _loopBreadcrumb('doc-grounding', {
+              iteration,
+              unopened: _obs.unopened,
+              evidenceCalls: _obs.evidenceCalls,
+            });
+            try {
+              const _jl = require('./toolLoopJournal');
+              _jl.appendJournal(_loopRunId, {
+                event: 'doc-grounding',
+                iteration,
+                unopened: _obs.unopened,
+                evidenceCalls: _obs.evidenceCalls,
+                at: new Date().toISOString(),
+              });
+            } catch {
+              /* journal is best-effort — never break the loop */
+            }
+          }
+        } catch {
+          /* S1 observer is best-effort; never break the loop */
+        }
+      }
+
       // ── 项目整体一致性门 ([DESIGN-ARCH-050]) ─────────────────────────
       // 用户痛点：单个文件没问题，聚成项目后导入断链 / 入口失配 / 清单指空，一跑就崩。
       // 当模型在写过多文件后想收尾时，对「本会话产物 + 磁盘」做整体静态体检；发现高置信度
@@ -5108,8 +5239,66 @@ async function runToolUseLoop(userMessage, options = {}) {
             max: _LENGTH_AUTO_CONTINUE_MAX,
             replyChars: strippedReply.length,
           });
-          currentMessage =
+          const _lengthBaseMessage =
             '[System] Your previous reply was cut off by the output token limit (finish_reason=length). Continue EXACTLY from where you stopped — do not repeat text you already produced and do not restart the answer.';
+
+          // ── [DESIGN-ARCH-191] L2/L3 at the truncation continuation ──────────
+          // The block above is BLIND: every truncation gets the same re-prompt.
+          // Running out of tokens has two causes needing opposite responses, so
+          // the judge runs here (aiResult is in scope) and both tiers are
+          // additive — with either gate off this leaves _lengthBaseMessage intact.
+          let _lengthMessage = _lengthBaseMessage;
+          let _cotVerdict = null;
+          if (_cotArbiter && _cotL2Cfg && _cotL2Cfg.enabled) {
+            try {
+              _cotVerdict = _cotArbiter.judgeTruncation(
+                { thinking: aiResult.thinking, reply: aiResult.reply, thinkingBlocks: aiResult.thinkingBlocks },
+                _cotL2Cfg
+              );
+              // Hand the verdict to L1 through the signal it already reads. A
+              // derailed trace must NOT get the budget step-up that plain
+              // truncation earns (see cotArbiter.nextTier).
+              if (_cotVerdict.verdict === 'derailed' && _cotL1Cfg && _cotL1Cfg.enabled) {
+                for (let _i = _cotL1History.length - 1; _i >= 0; _i--) {
+                  if (_cotL1History[_i].stopReason === 'length') {
+                    _cotL1History[_i].derailed = true;
+                    break;
+                  }
+                }
+              }
+            } catch {
+              _cotVerdict = null;
+            }
+          }
+          if (_cotArbiter && _cotL3Cfg) {
+            try {
+              const _provider3 = effectiveChatOpts.provider || effectiveChatOpts.adapter || 'anthropic';
+              const _built = _cotArbiter.buildContinuation({
+                base: _lengthBaseMessage,
+                provider: _provider3,
+                verdict: _cotVerdict,
+                cfgL3: _cotL3Cfg,
+              });
+              _lengthMessage = _built.message;
+              if (_built.applied) {
+                _loopBreadcrumb('cot-l3-nudge', {
+                  iteration,
+                  provider: _provider3,
+                  nudge: _built.nudge,
+                });
+              }
+            } catch {
+              /* L3 is best-effort: fall back to the untouched base message */
+            }
+          }
+          if (_cotVerdict) {
+            _loopBreadcrumb('cot-l2-truncation-verdict', {
+              iteration,
+              verdict: _cotVerdict.verdict,
+              reason: _cotVerdict.reason,
+            });
+          }
+          currentMessage = _lengthMessage;
           lastActivityTime = Date.now();
           continue;
         }

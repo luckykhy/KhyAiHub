@@ -39,6 +39,15 @@ let _consecutiveRestartFailures = 0;
 let _lastRestartAt = 0;
 let _currentBackoffMs = INITIAL_BACKOFF_MS;
 let _abandonedAt = null;
+// In-flight latch: _checkHealth is async and can be slow; an interval that does
+// not wait for it stacks concurrent ticks and can double-book _attemptRestart —
+// the restart storm the exponential backoff exists to prevent (pm2 God daemon
+// pattern: one probe at a time).
+let _tickRunning = false;
+// Last probe duration/reading time — a probe that is getting slower without
+// failing is the only visible precursor of a half-dead daemon.
+let _lastProbeMs = null;
+let _lastProbeAt = null;
 // Daemon control plane handed in by the starter: { daemonStatus, daemonRestart }.
 // null ⇒ this process never bound a daemon to watch (see _checkHealth's null claim).
 let _daemon = null;
@@ -63,10 +72,15 @@ async function _checkHealth() {
   if (!_daemon) {
     return null;
   }
+  const startedAt = Date.now();
   try {
     const status = await _daemon.daemonStatus();
+    _lastProbeMs = Date.now() - startedAt;
+    _lastProbeAt = Date.now();
     return status.running === true;
   } catch {
+    _lastProbeMs = Date.now() - startedAt;
+    _lastProbeAt = Date.now();
     return false;
   }
 }
@@ -229,30 +243,73 @@ async function _tick() {
   if (!_enabled) {
     return;
   }
-
-  // Skip if we've abandoned restart attempts
-  if (_abandonedAt) {
+  // Re-entrancy latch: a slow _checkHealth must not stack concurrent ticks.
+  if (_tickRunning) {
     return;
   }
+  _tickRunning = true;
+  try {
+    const healthy = await _checkHealth();
 
-  const healthy = await _checkHealth();
-
-  // Unbound (nobody handed us a daemon): make no claim, touch no counter.
-  if (healthy === null) {
-    return;
-  }
-
-  if (healthy) {
-    // Reset failure counter on successful heartbeat
-    _consecutiveFailures = 0;
-  } else {
-    // Increment failure counter
-    _consecutiveFailures++;
-
-    // Trigger restart after threshold
-    if (_consecutiveFailures >= HEARTBEAT_FAILURE_THRESHOLD) {
-      await _attemptRestart();
+    // Unbound (nobody handed us a daemon): make no claim, touch no counter.
+    if (healthy === null) {
+      return;
     }
+
+    // Abandonment is the abandonment of RESTARTING, not of WATCHING (k8s
+    // liveness-probe semantics: the probe never stops). Before this, a
+    // watchdog that gave up kept skipping _checkHealth forever, so after the
+    // operator manually revived the daemon (the remedy our own message
+    // suggests), monitoring stayed silently dead until process restart.
+    // reset() existed but had zero callers anywhere in the repo.
+    if (_abandonedAt && healthy) {
+      const silentMs = Date.now() - _abandonedAt;
+      _abandonedAt = null;
+      _consecutiveFailures = 0;
+      _consecutiveRestartFailures = 0;
+      _currentBackoffMs = INITIAL_BACKOFF_MS;
+      try {
+        const msg = `watchdog 恢复监控：daemon 探测成功（放弃态持续 ${Math.round(silentMs / 1000)}s 后自愈），重启计数与退避已归零`;
+        await writeHealAudit({
+          action: 'watchdog_recovered',
+          target: 'daemon',
+          reason: 'probe_succeeded_after_abandon',
+          details: { silentMs, consecutiveFailures: 0 },
+          message: msg,
+        });
+        healAuditService.logHealEvent({
+          component: 'watchdog',
+          action: 'recovered',
+          target: 'daemon',
+          result: 'success',
+          details: { silentMs },
+        });
+      } catch {
+        /* audit write must never break the tick */
+      }
+      return;
+    }
+
+    // Still abandoned and still unhealthy: keep observing, never restart again
+    // (the manual remedy stays the only path — that contract is unchanged).
+    if (_abandonedAt) {
+      return;
+    }
+
+    if (healthy) {
+      // Reset failure counter on successful heartbeat
+      _consecutiveFailures = 0;
+    } else {
+      // Increment failure counter
+      _consecutiveFailures++;
+
+      // Trigger restart after threshold
+      if (_consecutiveFailures >= HEARTBEAT_FAILURE_THRESHOLD) {
+        await _attemptRestart();
+      }
+    }
+  } finally {
+    _tickRunning = false;
   }
 }
 
@@ -323,6 +380,10 @@ function status() {
     abandoned: !!_abandonedAt,
     abandonedAt: _abandonedAt ? new Date(_abandonedAt).toISOString() : null,
     lastRestartAt: _lastRestartAt ? new Date(_lastRestartAt).toISOString() : null,
+    // Probe telemetry: a slowing probe is the visible precursor of a half-dead
+    // daemon (single-bit running judgment hides it otherwise).
+    lastProbeMs: _lastProbeMs,
+    lastProbeAt: _lastProbeAt ? new Date(_lastProbeAt).toISOString() : null,
   };
 }
 
@@ -336,7 +397,11 @@ async function triggerRecovery() {
     return false;
   }
 
+  // Abandoned: reuse _tick's probe — it self-heals (and audits) when the
+  // daemon recovered, and keeps the manual-restart-only contract when not.
+  // No restart happens on this path either way.
   if (_abandonedAt) {
+    await _tick();
     return false;
   }
 
@@ -361,6 +426,8 @@ function reset() {
   _currentBackoffMs = INITIAL_BACKOFF_MS;
   _abandonedAt = null;
   _lastRestartAt = 0;
+  _lastProbeMs = null;
+  _lastProbeAt = null;
 }
 
 module.exports = {

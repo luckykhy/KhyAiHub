@@ -1,0 +1,38 @@
+{
+  "_note": "功能单元清单（[RESEARCH-018] §2.3 模板第 3 件 / 5-3-1 §3）。执行器 scripts/ci/check-repo-layout.js 的 entry-buffer 规则读本文件的 domain / mayDependOn / fanIn / lifecycle.stage 四个字段，其余字段是给人读的。字段真源与判据枚举见 docs/10_规范/registry/DOMAIN-DEPS.json 的 _entry_buffer 块。",
+  "name": "servicesTool",
+  "domain": "D1",
+  "mayDependOn": [
+    "D1",
+    "D2",
+    "D3"
+  ],
+  "_mayDependOn_note": "本单元声明的依赖面 = [\"D1\",\"D2\",\"D3\"]，与 DOMAIN-DEPS.json 里 D1 的名义边界一致（不宽于它）。",
+  "fanIn": 57,
+  "fanInEvidence": [
+    "runtime/node/backend/src/cli/aiChatCore.js",
+    "runtime/node/backend/src/cli/toolDisplay.js",
+    "runtime/node/backend/src/services/tool/toolUseLoopCore.js"
+  ],
+  "_fanIn_note": "fanIn=57 为实测（2026-10-25）：以 require 解析出「落在本单元内的目标文件」为准，统计单元**外部**的非测试消费者文件并去重；单元内部互引与 *.test.js 均不计入。",
+  "lifecycle": {
+    "stage": "staged",
+    "since": "2026-10-25",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null,
+    "_stage_note": "stage=staged 的依据：本单元**没有**经过 scripts/quarantine/ 晋级（那要求新单元先落缓冲区，而本目录下的代码是直接写进核心域的），故 provenance 如实写 recorded-after-the-fact、enteredVia 写 null —— 不假装它走过缓冲。同时单元内仍有源文件缺同名同目录测试，晋级三判据未齐，故不签 stable（stable 是「已签字的假合格证」，守卫对两个阶段一视同仁地判）。"
+  },
+  "contract": {
+    "purpose": "工具执行单元：工具循环内核（toolUseLoopCore.js / toolUseLoopHelpers.js）、调用解析、权限判定、循环内的审批与中断，以及延迟召回索引（deferredRecallIndex.js）。",
+    "ioOwner": "工具执行会真的动文件与进程（经 src/tools/ 下的具体工具）；本单元只负责编排与判定。",
+    "gates": "写类工具必须过权限判定（toolCallingPermissions）；路径类工具受各自围栏约束（如 apply_patch 的项目根围栏）。",
+    "coverage_note": "本文件记录的是单元级契约与生命周期状态，不是逐文件审计结论；逐条行为以单元内各源文件的注释与测试为准。"
+  },
+  "knownDefectsPinned": [
+    "本单元自身的已知缺陷不在此登记（各有其所属处的注释与测试钉住）；登记不修的是上游缺陷，改动面超出本单元。"
+  ],
+  "_known_defects_note": "按单元级约定只登记不修；改上游缺陷要单独立项。",
+  "tests": [
+    "本目录下的同名同目录测试（*.test.js）随源文件共置；尚有源文件缺同名同目录测试，故 lifecycle.stage 保持 staged。"
+  ]
+}

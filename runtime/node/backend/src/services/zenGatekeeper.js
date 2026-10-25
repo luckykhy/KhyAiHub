@@ -48,21 +48,51 @@ function newUuid() {
   return crypto.randomUUID();
 }
 
-// ── Process-stable identity (local generation only; no cross-machine sync) ──
+// ── Identity: 每机一份、跨重启稳定（zenIdentity） ────────────────────────
+// 旧行为是「进程级随机」：每重启一次就是一个"新设备"，与固定 IP 组合正是上游
+// 反滥用模型里最像批量刷量的形态；多用户共用一个服务端 IP 时更糟——一个 IP 的免费
+// 配额被所有人吃干 → 全员 429 → 再全员被封。
+// 现在改为「每机一份、跨重启稳定」：**在哪台机器上允许，就在那台机器上用它的机器码**。
+// env 显式覆盖优先；主门 KHY_ZEN_IDENTITY 关或叶子不可用 → 逐字节回退旧行为。
 let _sessionId = null;
 let _projectUuid = null;
 
-function getSessionId() {
-  if (!_sessionId) {
-    _sessionId = process.env.KHY_ZEN_SESSION_ID || newSessionId();
+/** 取每机持久身份；叶子缺失/异常/门关 → null（调用方回退进程级随机）。 */
+function _persistedIdentity() {
+  try {
+    const id = require('./zenIdentity');
+    if (!id || typeof id.getIdentity !== 'function') {
+      return null;
+    }
+    return id.getIdentity(process.env);
+  } catch {
+    return null;
   }
+}
+
+function getSessionId() {
+  if (_sessionId) {
+    return _sessionId;
+  }
+  const persisted = _persistedIdentity();
+  if (persisted && persisted.sessionId) {
+    _sessionId = persisted.sessionId;
+    return _sessionId;
+  }
+  _sessionId = process.env.KHY_ZEN_SESSION_ID || newSessionId();
   return _sessionId;
 }
 
 function getProjectUuid() {
-  if (!_projectUuid) {
-    _projectUuid = process.env.KHY_ZEN_PROJECT_ID || newUuid();
+  if (_projectUuid) {
+    return _projectUuid;
   }
+  const persisted = _persistedIdentity();
+  if (persisted && persisted.projectUuid) {
+    _projectUuid = persisted.projectUuid;
+    return _projectUuid;
+  }
+  _projectUuid = process.env.KHY_ZEN_PROJECT_ID || newUuid();
   return _projectUuid;
 }
 
@@ -70,6 +100,14 @@ function getProjectUuid() {
 function _reset() {
   _sessionId = null;
   _projectUuid = null;
+  try {
+    const id = require('./zenIdentity');
+    if (id && typeof id._reset === 'function') {
+      id._reset(false); // 只清内存态，不动落盘文件（落盘由叶子自己的 _reset(true) 管）
+    }
+  } catch {
+    /* 叶子缺失 → 无需清 */
+  }
 }
 
 function getClient() {
