@@ -133,11 +133,19 @@ describe('portableAdapter — _resolveIndexUrl', () => {
     assert.equal(await pa._resolveIndexUrl('stable', { indexUrl: 'https://x/i.json' }), 'https://x/i.json');
     await assert.rejects(() => pa._resolveIndexUrl('stable', { indexUrl: 'http://x/i.json' }), /HTTPS/);
   });
-  test('stable/dev 用 releases 派生默认（无字面量硬编码）', async () => {
-    const s = await pa._resolveIndexUrl('stable', {});
+  test('stable/dev 由 env 仓库派生 releases 地址（无字面量硬编码）', async () => {
+    const env = { KHY_UPDATE_GITHUB_REPOSITORY: 'me/repo' };
+    const s = await pa._resolveIndexUrl('stable', { env });
     assert.match(s, /releases\/latest\/download\/update-index-stable\.json$/);
-    const d = await pa._resolveIndexUrl('dev', {});
+    const d = await pa._resolveIndexUrl('dev', { env });
     assert.match(d, /releases\/download\/dev-channel\/update-index-dev\.json$/);
+    // 无字面量硬编码：地址随 env 变，不含任何写死的第一方仓名。
+    assert.ok(s.startsWith('https://github.com/me/repo/releases/'));
+  });
+  test('未配置仓库 → 明确报错，不拼坏地址', async () => {
+    // 原默认公共仓已于 2026-10-10 删除；未配 env 时必须报错而非拼出 https://github.com//releases 。
+    await assert.rejects(() => pa._resolveIndexUrl('stable', { env: {} }), /未配置更新源/);
+    await assert.rejects(() => pa._resolveIndexUrl('dev', { env: {} }), /未配置更新源/);
   });
   test('env 覆盖仓库地址', async () => {
     const r = await pa._resolveIndexUrl('stable', { env: { KHY_UPDATE_GITHUB_REPOSITORY: 'me/repo' } });
@@ -153,12 +161,14 @@ describe('portableAdapter — _resolveIndexUrl', () => {
       },
     ];
     const fetchImpl = async () => ({ ok: true, status: 200, json: async () => releases });
-    const picked = await pa._resolveIndexUrl('preview', { fetch: fetchImpl });
+    const env = { KHY_UPDATE_GITHUB_REPOSITORY: 'me/repo' };
+    const picked = await pa._resolveIndexUrl('preview', { fetch: fetchImpl, env });
     assert.equal(picked, 'https://gh/preview.json');
   });
   test('preview 无可用资产 → 抛', async () => {
     const fetchImpl = async () => ({ ok: true, status: 200, json: async () => [] });
-    await assert.rejects(() => pa._resolveIndexUrl('preview', { fetch: fetchImpl }), /unavailable/);
+    const env = { KHY_UPDATE_GITHUB_REPOSITORY: 'me/repo' };
+    await assert.rejects(() => pa._resolveIndexUrl('preview', { fetch: fetchImpl, env }), /unavailable/);
   });
 });
 

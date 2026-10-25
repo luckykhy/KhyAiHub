@@ -56,7 +56,7 @@
 <p>源文件实际住在 <code>onboarding/onboarding/</code>——目录名重复了一层，违反 5-3-1 §1<br>「任何目录直接子项 5±2」背后的认知负载意图，也让路径读起来像笔误。修法是把内层<br><code>onboarding/</code> 的内容上提一层，但那是一次 <code>git mv</code>，在本篇第 0 步（<code>.git</code> 重建）<br>闭合前禁止执行，故先登记。</p>
 <p>另有 160 + 67 行行为测试住在 <code>services/backend/tests/services/onboarding/</code>。<br>它们与本目录的共置测试<strong>不重复</strong>：那边测的是逐条解析行为与别名表覆盖，<br>这边测的是单元契约（导出面、纯度、绝不抛、确定性、门控以注入 env 为准）。<br>两份合并同样卡在 <code>git mv</code> 禁令上。</p>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/services/domain/network/remote/README.html"><div class="dir">← 上一篇</div><div class="ttl">domain/network/remote —— 远端 SSH 执行/上传的可注入原语簇（12 文件，星形装配）</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/services/domain/project/issue/README.html"><div class="dir">下一篇 →</div><div class="ttl">issueReport</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../../../../runtime/node/backend/src/services/domain/network/stepneoCloud/README.html"><div class="dir">← 上一篇</div><div class="ttl">stepneoCloud — 手机当执行器，模型走云端网关</div></a><a class="next" href="../../../../../../../runtime/node/backend/src/services/domain/project/issue/README.html"><div class="dir">下一篇 →</div><div class="ttl">issueReport</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>

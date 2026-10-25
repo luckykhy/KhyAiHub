@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: README.md -->
+<title>stepneoCloud — 手机当执行器，模型走云端网关 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../../../../docs/index.html">首页</a><span class="sep">›</span>runtime<span class="sep">›</span>node<span class="sep">›</span>backend<span class="sep">›</span>src<span class="sep">›</span>services<span class="sep">›</span>domain<span class="sep">›</span>network<span class="sep">›</span>stepneoCloud<span class="sep">›</span>stepneoCloud — 手机当执行器，模型走云端网关</div>
+      <header class="hero reveal"><h1>stepneoCloud — 手机当执行器，模型走云端网关</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#stepneocloud-手机当执行器-模型走云端网关">stepneoCloud — 手机当执行器，模型走云端网关</a></li><li class="lvl-2"><a href="#为什么有这一个单元">为什么有这一个单元</a></li><li class="lvl-2"><a href="#文件">文件</a></li><li class="lvl-2"><a href="#签名协议">签名协议</a></li><li class="lvl-2"><a href="#凭据-r2-只走-env-绝不落盘">凭据（R2：只走 env，绝不落盘）</a></li><li class="lvl-2"><a href="#安全契约">安全契约</a></li><li class="lvl-2"><a href="#用法">用法</a></li><li class="lvl-2"><a href="#未验证项">未验证项</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="stepneocloud-手机当执行器-模型走云端网关">stepneoCloud — 手机当执行器，模型走云端网关<a class="anchor" href="#stepneocloud-手机当执行器-模型走云端网关" aria-label="锚点">#</a></h1>
+<p>把 <strong>StepOS 云端模型</strong>（<code>biz-gw.stepaos.com/stepfun-proxy</code>，<code>step-5-preview</code>）接成本地可调用的<br>OpenAI 兼容能力，并把<strong>手机桥的设备工具</strong>（<code>exec</code> / <code>ls</code> / <code>read</code> / <code>write</code> / <code>ui_*</code>）作为<br>function calling 交给模型。</p>
+<p>一句话分工：<strong>模型在云端，执行器在手机，策略在桥里。</strong></p>
+<hr>
+<h2 id="为什么有这一个单元">为什么有这一个单元<a class="anchor" href="#为什么有这一个单元" aria-label="锚点">#</a></h2>
+<p>手机侧原本的反代是 <code>delivery/mobile/khy-os-client-app</code> 里的 <code>AmooLoop</code>：它通过无障碍服务<br><strong> scraping Amoo 的聊天气泡</strong>来驱动。实测代价（2026-10-25，PZ261A / StepOS / Android 16）：</p>
+<table><thead><tr><th>问题</th><th>实测</th></tr></thead><tbody><tr><td>单轮延迟</td><td>约 6 分钟（Amoo 流式输出 + 两次稳定采样）</td></tr><tr><td>前置条件</td><td>无障碍服务必须开启，否则空转到超时</td></tr><tr><td>进程生命周期</td><td>StepOS 会在 App 退后台时冻结它（<code>Became not working FGS</code>），桥的 LISTEN 套接字还在但无人应答</td></tr><tr><td>截止时间</td><td>单任务上限被提到 3 小时</td></tr></tbody></table>
+<p>云端网关这条路把这些全绕开了：工具调用就是工具调用，不需要读屏、不需要前台、没有分钟级延迟。<br><strong>实测一次签名请求即通</strong>：<code>HTTP 200</code>，<code>content: &quot;47&quot;</code>，<code>usage</code> 正常。</p>
+<p>设备工具那一半不变——仍然走 <code>domain/network/phone</code> 的桥客户端。</p>
+<hr>
+<h2 id="文件">文件<a class="anchor" href="#文件" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>文件</th><th>职责</th><th>IO</th></tr></thead><tbody><tr><td><code>signing.js</code></td><td><code>zy-sign</code> 计算与请求头组装</td><td>无</td></tr><tr><td><code>accountToken.js</code></td><td>从手机账号服务日志取 token；解码自描述 JSON</td><td>adb logcat（只读）</td></tr><tr><td><code>upstream.js</code></td><td>签名转发 + 失败映射</td><td>HTTPS</td></tr><tr><td><code>toolSchemas.js</code></td><td>桥工具表 → OpenAI function schema</td><td>无</td></tr><tr><td><code>agentLoop.js</code></td><td>工具调用循环</td><td>委托上两者</td></tr><tr><td><code>index.js</code></td><td>facade + <code>createStepneoSession</code></td><td>无</td></tr></tbody></table>
+<p>每个源文件都有同名同目录的 <code>*.test.js</code>，共 83 个用例，<code>node --test</code> 全绿，<strong>不需要手机和网络</strong>。</p>
+<hr>
+<h2 id="签名协议">签名协议<a class="anchor" href="#签名协议" aria-label="锚点">#</a></h2>
+<pre><code>sign = HMAC_SHA256(key = appSecret,
+                   message = appId + nonce + timestamp + appSecret)</code></pre>
+<p>四段直接拼接，<strong>无分隔符</strong>，小写十六进制。路径、请求体、token、设备号都不参与签名，<br>所以换模型、换内容不需要改签名逻辑，但每次请求仍要新的 <code>nonce</code> / <code>timestamp</code><br>（服务端校验时间戳，本机时钟偏差过大会失败）。</p>
+<p>请求头：<code>Authorization</code>、<code>zy-app-id</code>、<code>zy-app-package</code>、<code>zy-client-type</code>、<br><code>zy-scene-type</code>、<code>zy-device-id</code>、<code>zy-nonce</code>、<code>zy-timestamp</code>、<code>zy-sign</code>、<code>zy-trace-id</code>。</p>
+<p>生产与测试两套配对（均在 <code>com.stepos.aiengine</code> 的 dex 里，<code>BffGatewayBootstrap$Params</code><br>与 <code>FileStorageBootstrap$Params</code> 各存一份，值相同）：</p>
+<table><thead><tr><th>环境</th><th>appId</th><th>网关</th></tr></thead><tbody><tr><td>prod</td><td><code>ai-engine-prod</code></td><td><code>biz-gw.stepaos.com</code></td></tr><tr><td>test</td><td><code>ai-engine-test</code></td><td><code>biz-gw-in.zyql.com</code></td></tr></tbody></table>
+<p><strong>签名密钥不在本仓，也不进任何文件</strong>，只从 <code>STEPNEO_APP_SECRET</code> 读（见下）。</p>
+<hr>
+<h2 id="凭据-r2-只走-env-绝不落盘">凭据（R2：只走 env，绝不落盘）<a class="anchor" href="#凭据-r2-只走-env-绝不落盘" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>名称</th><th>用途</th><th>来源</th><th>环境变量</th></tr></thead><tbody><tr><td>应用签名密钥</td><td>算 <code>zy-sign</code></td><td>StepOS 客户端静态制品（APK 内）</td><td><code>STEPNEO_APP_SECRET</code></td></tr><tr><td>账号 token</td><td>证明是哪个账号</td><td>手机账号服务日志（一次性读取）</td><td><code>STEPNEO_TOKEN</code>（可选，缺则现场取）</td></tr><tr><td>设备号</td><td><code>zy-device-id</code></td><td>token 的 <code>a</code> 字段，不需要单独配</td><td>—</td></tr></tbody></table>
+<p>token <strong>没有 <code>exp</code> 字段</strong>，客户端看不到服务端有效期，只能观测。实测一份用到约 19.7 小时、<br>另一份 47 小时仍正常。所以续期做成「需要时重新读一次」，不做无据的过期判断。</p>
+<p><code>accountToken.js</code> 只读手机账号服务<strong>已经为 AIEngine / Ability 打印出来</strong>的诊断日志行<br>（<code>[getAuthToken] ... basic, package = &lt;pkg&gt;</code> 与同线程的 <code>local db token:</code>），<br>不读账号密码、不写手机、值只进内存。刻意排除 <code>fullAuth</code> 形态——那不属于本服务的持握范围。</p>
+<hr>
+<h2 id="安全契约">安全契约<a class="anchor" href="#安全契约" aria-label="锚点">#</a></h2>
+<p>这一单元<strong>自己不设策略</strong>。所有设备调用都经过<br><code>domain/network/phone</code> 的 <code>phoneBridgeClient.call()</code>，由桥做判定：</p>
+<ol><li><strong><code>classifyBridgeCall()</code> + <code>planBridgeCall()</code></strong> —— 会改变手机状态的工具</li></ol>
+<p>（<code>write</code> / <code>exec</code> / <code>rm</code> / <code>ui_*</code> actuate 等）没有 <code>confirm:true</code> 就<strong>拒绝执行</strong>，<br>   只返回将要做什么。<code>agentLoop</code> <strong>从不代替模型注入 <code>confirm:true</code></strong>，<br>   有专门用例钉住这一点。</p>
+<ol><li><strong>会话预算</strong>（字节 / 条目 / 复制次数）在桥内累计，本循环<strong>不按轮重置</strong>，</li></ol>
+<p>所以「同一个文件要 200 次」绕不过去。</p>
+<ol><li><strong>轮数上限</strong> <code>DEFAULT_MAX_ROUNDS</code>（默认 24，可用 <code>STEPNEO_MAX_ROUNDS</code> 覆盖），</li></ol>
+<p>撞上限报 <code>max_rounds</code>，与正常收尾区分开——模型没做完不是 crashed turn。</p>
+<p><code>upstream.js</code> 的失败映射也按这个思路写：<strong>HTTP 200 但正文为空算失败</strong><br>（模型先思考后产出正文，<code>max_tokens</code> 太小会在思考阶段用尽，<code>finish_reason=length</code>），<br>并提示把 <code>max_tokens</code> 设到 128 以上；401 同时点名「签名密钥不对」和「token 过期」<br>两个相反方向的原因，不把人送去续一个本来没坏的 token。</p>
+<hr>
+<h2 id="用法">用法<a class="anchor" href="#用法" aria-label="锚点">#</a></h2>
+<pre><code class="language-js"><span class="hljs-keyword">const</span> {
+  readAccountTokenFromDevice, createStepneoSession,
+} = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;./index&#x27;</span>);   <span class="hljs-comment">// 或 require(&#x27;../domain/network/phone&#x27;) 拿桥客户端</span>
+
+<span class="hljs-comment">// 1. 取凭据（一次性；之后请求不再需要手机）</span>
+<span class="hljs-keyword">const</span> acct = <span class="hljs-keyword">await</span> <span class="hljs-title function_">readAccountTokenFromDevice</span>({ <span class="hljs-attr">serial</span>: <span class="hljs-string">&#x27;SERIAL&#x27;</span> });
+<span class="hljs-keyword">if</span> (!acct.<span class="hljs-property">ok</span>) <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Error</span>(<span class="hljs-string">`<span class="hljs-subst">${acct.code}</span>: <span class="hljs-subst">${acct.error}</span>`</span>);
+
+<span class="hljs-comment">// 2. 组装一次会话</span>
+<span class="hljs-keyword">const</span> session = <span class="hljs-title function_">createStepneoSession</span>({
+  <span class="hljs-attr">token</span>: acct.<span class="hljs-property">token</span>,          <span class="hljs-comment">// 仅内存</span>
+  <span class="hljs-attr">deviceId</span>: acct.<span class="hljs-property">deviceId</span>,    <span class="hljs-comment">// 取自 token.a</span>
+  <span class="hljs-attr">appSecret</span>: process.<span class="hljs-property">env</span>.<span class="hljs-property">STEPNEO_APP_SECRET</span>,
+  <span class="hljs-attr">bridge</span>: <span class="hljs-title function_">getPhoneBridgeClient</span>(),
+});
+
+<span class="hljs-comment">// 3. 跑一轮</span>
+<span class="hljs-keyword">const</span> messages = [{ <span class="hljs-attr">role</span>: <span class="hljs-string">&#x27;user&#x27;</span>, <span class="hljs-attr">content</span>: <span class="hljs-string">&#x27;在 /sdcard/khy-os/workspace 写个贪吃蛇&#x27;</span> }];
+<span class="hljs-keyword">const</span> out = <span class="hljs-keyword">await</span> session.<span class="hljs-title function_">run</span>(messages, { <span class="hljs-attr">onProgress</span>: <span class="hljs-function">(<span class="hljs-params">s</span>) =&gt;</span> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(s) });
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(out.<span class="hljs-property">message</span>.<span class="hljs-property">content</span>);</code></pre>
+<p><code>messages</code> 会被就地追加（assistant 轮 + tool 结果），调用方可以自行持久化整段对话。</p>
+<hr>
+<h2 id="未验证项">未验证项<a class="anchor" href="#未验证项" aria-label="锚点">#</a></h2>
+<ul><li>token 的服务端有效期，以及是否与手机会话绑定。</li><li>图片 / 音频等多模态输入（上游遇到图片输入会明确报错）。</li><li><code>usage</code> 与套餐扣量的对应关系；一切以服务端为准。</li><li>本单元尚无 D1 消费方（工具 / CLI 都还没接），所以 <code>khy.module.json</code> 里 <code>fanIn: 0</code>、</li></ul>
+<p>lifecycle 记 <code>staged</code>。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../../../../runtime/node/backend/src/services/domain/network/remote/README.html"><div class="dir">← 上一篇</div><div class="ttl">domain/network/remote —— 远端 SSH 执行/上传的可注入原语簇（12 文件，星形装配）</div></a><a class="next" href="../../../../../../../../runtime/node/backend/src/services/domain/onboarding/README.html"><div class="dir">下一篇 →</div><div class="ttl">onboarding — 首次引导的纯逻辑单元（D2）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../../../../";window.__KHY_CUR__="runtime/node/backend/src/services/domain/network/stepneoCloud/README.html";</script>
+<script src="../../../../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

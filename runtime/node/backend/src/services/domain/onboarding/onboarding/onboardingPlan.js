@@ -37,6 +37,10 @@ const STEP_ALIASES = {
   供应商: 'model',
   mcp: 'mcp',
   工具服务: 'mcp',
+  agents: 'agents',
+  agent: 'agents',
+  acp: 'agents',
+  智能体: 'agents',
   status: 'status',
   state: 'status',
   状态: 'status',
@@ -54,9 +58,10 @@ const STEP_META = {
   model: { available: true, runnable: true, title: '模型 / 供应商选择' },
   mcp: { available: true, runnable: false, title: 'MCP 工具服务治理(只读)' },
   status: { available: true, runnable: false, title: '引导状态(只读)' },
+  agents: { available: true, runnable: false, title: '外部 ACP 智能体四态探测(只读)' },
 };
 
-const STEP_ORDER = ['full', 'theme', 'trust', 'model', 'mcp', 'status'];
+const STEP_ORDER = ['full', 'theme', 'trust', 'model', 'mcp', 'agents', 'status'];
 
 /**
  * 解析 `/onboarding [step]` 参数。

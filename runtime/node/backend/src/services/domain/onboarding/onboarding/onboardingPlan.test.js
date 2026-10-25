@@ -96,7 +96,7 @@ test('契约 6 步骤表自洽：STEP_ORDER 与元数据一一对应，且 help 
     assert.strictEqual(leaf.isStepAvailable(step), true, `${step} 应可委托真实 SSOT`);
     assert.ok(help.includes(`/onboarding ${step}`), `help 文本漏了 ${step}`);
   }
-  assert.strictEqual(leaf.STEP_ORDER.length, 6);
+  assert.strictEqual(leaf.STEP_ORDER.length, 7, '加了 agents 步骤后应从 6 变 7；若你又加/删步骤，同步改这里');
 });
 
 test('契约 7 诚实留白：缺面不得编造成「是/否」', () => {
