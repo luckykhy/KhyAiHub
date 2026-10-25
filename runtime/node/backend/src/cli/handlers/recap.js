@@ -28,10 +28,132 @@ function _recapEnabled(env) {
   return !['0', 'false', 'off', 'no'].includes(v);
 }
 
-async function handleRecap(_subCommand, _args = [], _options = {}) {
+function _narrativeEnabled(env) {
+  const raw = env && env.KHY_NARRATIVE;
+  const v = String(raw == null ? '' : raw)
+    .trim()
+    .toLowerCase();
+  return !['0', 'false', 'off', 'no'].includes(v);
+}
+
+// narrative 子命令参数：[sessionId] [--mode process|result|both] [--focus task|reasoning]
+// [--polish] [--out <file>]。与 hq.js 的 parseArgs 同形：--k v / --k=v 都收。
+function _parseNarrativeArgs(args) {
+  const out = { sessionId: null, mode: 'both', focus: 'task', polish: false, out: null };
+  const list = Array.isArray(args) ? args : [];
+  for (let i = 0; i < list.length; i++) {
+    const a = String(list[i] || '');
+    if (a === '--polish') {
+      out.polish = true;
+      continue;
+    }
+    const m = a.match(/^--?(mode|focus|out|m|f|o)(?:=(.+))?$/);
+    if (m) {
+      let val = m[2];
+      if (val == null && i + 1 < list.length && !String(list[i + 1]).startsWith('-')) {
+        val = list[++i];
+      }
+      const key = { m: 'mode', mode: 'mode', f: 'focus', focus: 'focus', o: 'out', out: 'out' }[m[1]];
+      if (key === 'mode' && ['process', 'result', 'both'].includes(val)) {
+        out.mode = val;
+      } else if (key === 'focus' && ['task', 'reasoning'].includes(val)) {
+        out.focus = val;
+      } else if (key === 'out' && val) {
+        out.out = val;
+      }
+      continue;
+    }
+    if (!a.startsWith('-') && !out.sessionId) {
+      out.sessionId = a;
+    }
+  }
+  return out;
+}
+
+/**
+ * `/recap narrative` —— 任务叙事（DESIGN-ARCH-130，热奈特话语层）。
+ * 故事层 collectStory → 话语层 buildNarrative → renderNarrative 成稿；
+ * --polish 走 maybePolish（KHY_NARRATIVE_POLISH 默认关），润色失守锚点契约
+ * 一律回退确定性骨架。全程只读 transcript，绝不写会话数据。
+ */
+async function _handleNarrative(args) {
+  if (!_narrativeEnabled(process.env)) {
+    printInfo('narrative 子命令未启用(KHY_NARRATIVE=off)。');
+    return true;
+  }
+  const opts = _parseNarrativeArgs(args);
+
+  let sessionId = opts.sessionId;
+  if (!sessionId) {
+    try {
+      sessionId = require('../../services/domain/session/session/sessionForestService.js').getCurrentSessionId();
+    } catch {
+      /* best-effort */
+    }
+  }
+  if (!sessionId) {
+    printInfo('暂无活动会话 —— 先开始一段对话，或显式给出 sessionId：khy recap narrative <sessionId>。');
+    return true;
+  }
+
+  let messages = [];
+  try {
+    messages = require('../../services/sessionPersistence').buildConversationChain(sessionId);
+  } catch (e) {
+    printError(`读取会话 ${sessionId} 的 transcript 失败:` + (e && e.message ? e.message : String(e)));
+    return true;
+  }
+  if (!messages || messages.length === 0) {
+    printInfo(`会话 ${sessionId} 没有可叙事的记录。`);
+    return true;
+  }
+
+  const narrative = require('../../services/domain/trajectory/trajectoryNarrative');
+  const { events } = narrative.collectStory(messages);
+  if (events.length === 0) {
+    printInfo(`会话 ${sessionId} 共 ${messages.length} 条消息，但无可叙事事件（全是元信息）。`);
+    return true;
+  }
+
+  const plan = narrative.buildNarrative(events, { focus: opts.focus });
+  let recap = null;
+  if (opts.mode !== 'process') {
+    recap = require('../../services/sessionRecapService').generateRecap(messages);
+  }
+
+  let { markdown } = narrative.renderNarrative({ plan, events, recap, sessionId, mode: opts.mode });
+
+  if (opts.polish) {
+    const polished = await narrative.maybePolish(markdown);
+    if (polished.polished) {
+      markdown = polished.text;
+      printInfo('润色完成（模型仅改文风，证据锚点逐条校验通过）。');
+    } else if (polished.reason !== 'gate-off') {
+      printInfo(`润色未生效（${polished.reason}），已回退确定性骨架。`);
+    }
+  }
+
+  console.log(markdown);
+
+  if (opts.out) {
+    try {
+      require('fs').writeFileSync(opts.out, markdown, 'utf-8');
+      printInfo(`叙事已写入 ${opts.out}（${markdown.length} 字符）。`);
+    } catch (e) {
+      printError(`写入 ${opts.out} 失败:` + (e && e.message ? e.message : String(e)));
+    }
+  }
+  return true;
+}
+
+async function handleRecap(subCommand, _args = [], _options = {}) {
   if (!_recapEnabled(process.env)) {
     printInfo('recap 命令未启用(KHY_RECAP=off)。');
     return false;
+  }
+
+  if (subCommand === 'narrative') {
+    return _handleNarrative(_args);
   }
 
   let sessionId = null;

@@ -34,6 +34,32 @@ const {
   ICON_GEAR,
 } = require('../formatters');
 
+// ── Doctor 探测底座（工具链缓存 / 进程内探针 / 修复命令守卫 / AI key pool）──
+// 2026-10-25 按 R4（上帝文件门）从本文件拆出：init.js 一度涨到 3106 行，超 2500 上限。
+// 函数体在 initDoctorProbes.js 里逐字节不变，调用点靠同名导入保持不变。
+const {
+  DOCTOR_LOOPBACK_PROBE_SCRIPT,
+  _resolveDoctorProbeMode,
+  _createToolchainCacheContext,
+  _cachedProbe,
+  _prefetchDoctorAsyncProbes,
+  _collectUnregisteredFixCommands,
+  _apiKeyPoolHasKeys,
+  _buildAiKeyFixText,
+  getActiveToolchainCache,
+  setActiveToolchainCache,
+  getDoctorAsyncProbeCache,
+} = require('./initDoctorProbes');
+
+// ── Claude settings 冲突检查/修复（2026-10-25 按 R4 上帝文件门拆出）─────────
+// 同名 import：调用点与 module.exports 均保持不变。
+const {
+  isTruthyFlag,
+  isLoopbackUrl,
+  inspectClaudeSettingsConflict,
+  fixClaudeSettingsConflict,
+} = require('./initClaudeSettings');
+
 // ── Constants ──
 
 const ROOT = path.resolve(__dirname, '../../../');
@@ -142,6 +168,7 @@ function probeFailureDetail(probe, fallback = '未安装') {
   return probe.message ? String(probe.message).slice(0, 160) : fallback;
 }
 
+
 function formatLocalTime(ts) {
   const n = Number(ts || 0);
   if (!Number.isFinite(n) || n <= 0) {
@@ -162,26 +189,6 @@ function isLocalAdapterName(name = '') {
   return ['local', 'ollama', 'llama'].some((token) => lower.includes(token));
 }
 
-function isTruthyFlag(raw = '') {
-  // 布尔解析走 parseBoolean 单一真源（base tier）。
-  return require('../../utils/parseBoolean')(raw, false, { extended: false });
-}
-
-function isLoopbackUrl(raw = '') {
-  const input = String(raw || '').trim();
-  if (!input) {
-    return false;
-  }
-  try {
-    const parsed = new URL(input);
-    const host = String(parsed.hostname || '')
-      .trim()
-      .toLowerCase();
-    return host === '127.0.0.1' || host === 'localhost' || host === '::1';
-  } catch {
-    return false;
-  }
-}
 
 function _buildCodexHomeEnvironmentCheck(activeAdapter = null, preferredAdapter = '') {
   const activeType = String(activeAdapter?.type || '')
@@ -560,209 +567,6 @@ function _buildCodingAgentSmokeCheck(activeAdapter = null) {
   };
 }
 
-function readClaudeSettingsSnapshot() {
-  const os = require('os');
-  const settingsPath = path.join(os.homedir(), '.claude', 'settings.json');
-
-  if (!fs.existsSync(settingsPath)) {
-    return {
-      settingsPath,
-      exists: false,
-      parseError: null,
-      settings: null,
-      env: {},
-    };
-  }
-
-  try {
-    const parsed = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
-    const settings = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
-    const env = settings.env && typeof settings.env === 'object' ? settings.env : {};
-    return {
-      settingsPath,
-      exists: true,
-      parseError: null,
-      settings,
-      env: { ...env },
-    };
-  } catch (err) {
-    return {
-      settingsPath,
-      exists: true,
-      parseError: err,
-      settings: null,
-      env: {},
-    };
-  }
-}
-
-function writeClaudeSettingsSnapshot(settingsPath, settings) {
-  const dir = path.dirname(settingsPath);
-  fs.mkdirSync(dir, { recursive: true });
-  const tmpPath = `${settingsPath}.tmp`;
-  fs.writeFileSync(tmpPath, JSON.stringify(settings, null, 2) + '\n', 'utf-8');
-  fs.renameSync(tmpPath, settingsPath);
-}
-
-function inspectClaudeSettingsConflict() {
-  const snapshot = readClaudeSettingsSnapshot();
-
-  if (!snapshot.exists) {
-    return {
-      ok: true,
-      level: 'info',
-      detail: '未发现 ~/.claude/settings.json（未检测到冲突项）',
-      summary: '未发现 Claude 配置文件，无冲突',
-    };
-  }
-
-  if (snapshot.parseError) {
-    return {
-      ok: false,
-      level: 'warn',
-      detail: `~/.claude/settings.json 解析失败：${String(snapshot.parseError?.message || 'invalid json').slice(0, 120)}`,
-      summary: 'Claude 配置文件 JSON 解析失败',
-      fix: '修复 ~/.claude/settings.json 的 JSON 语法（当前无法解析，Claude Code 会忽略它）',
-    };
-  }
-
-  const env = snapshot.env;
-  const authToken = String(env.ANTHROPIC_AUTH_TOKEN || '').trim();
-  const apiKey = String(env.ANTHROPIC_API_KEY || '').trim();
-  const baseUrl = String(env.ANTHROPIC_BASE_URL || '').trim();
-  const hasAnyAuth = !!authToken || !!apiKey;
-  const hasDualAuth = !!authToken && !!apiKey;
-  const hasKhyApiKey = apiKey.startsWith('khy-');
-  const hasExternalBaseUrl = !!baseUrl && !isLoopbackUrl(baseUrl);
-  const writeSettingsEnabled =
-    isTruthyFlag(process.env.KHY_ALLOW_WRITE_CLAUDE_SETTINGS) ||
-    isTruthyFlag(process.env.KHY_MANAGE_CLAUDE_SETTINGS);
-
-  const fixClaudeConflict =
-    '运行 khy doctor --fix-claude-conflict 自动修复，或手工清理 ~/.claude/settings.json 中冲突认证项';
-
-  if (hasDualAuth && hasKhyApiKey && hasExternalBaseUrl) {
-    return {
-      ok: false,
-      level: 'warn',
-      detail:
-        '检测到外部 AUTH_TOKEN + khy-* API_KEY + 外部 BASE_URL，存在高风险冲突（建议删除 settings.json 中 ANTHROPIC_API_KEY）',
-      summary: '外部 AUTH_TOKEN 与 khy API_KEY 高风险共存',
-      fix: fixClaudeConflict,
-    };
-  }
-
-  if (hasDualAuth && hasKhyApiKey) {
-    return {
-      ok: false,
-      level: 'warn',
-      detail: '检测到同时存在 AUTH_TOKEN 与 khy-* API_KEY（建议仅保留一种认证方式）',
-      summary: 'AUTH_TOKEN 与 khy API_KEY 同时存在',
-      fix: fixClaudeConflict,
-    };
-  }
-
-  if (hasDualAuth) {
-    return {
-      ok: false,
-      level: 'warn',
-      detail: '检测到同时配置 AUTH_TOKEN 与 API_KEY（Claude Code 可能拒绝请求，建议只保留一种）',
-      summary: 'Claude 认证项双重配置，请求可能被拒',
-      fix: fixClaudeConflict,
-    };
-  }
-
-  if (!hasAnyAuth) {
-    return {
-      ok: true,
-      level: 'info',
-      detail: '未检测到 Claude 认证项（若使用直连 Claude，请配置 AUTH_TOKEN 或 API_KEY）',
-      summary: '未发现 KHY 与 Claude 的配置冲突',
-    };
-  }
-
-  if (writeSettingsEnabled && hasExternalBaseUrl) {
-    return {
-      ok: false,
-      level: 'warn',
-      detail:
-        '检测到已开启 Claude settings 写入开关且使用外部 BASE_URL（建议关闭 KHY_ALLOW_WRITE_CLAUDE_SETTINGS）',
-      summary: 'Claude 写入开关与外部 BASE_URL 共存',
-      fix: '关闭 KHY_ALLOW_WRITE_CLAUDE_SETTINGS / KHY_MANAGE_CLAUDE_SETTINGS 环境变量',
-    };
-  }
-
-  return {
-    ok: true,
-    level: 'info',
-    detail: '未发现 KHY 与 Claude 的配置冲突',
-    summary: '未发现 KHY 与 Claude 的配置冲突',
-  };
-}
-
-function fixClaudeSettingsConflict() {
-  const snapshot = readClaudeSettingsSnapshot();
-  if (!snapshot.exists) {
-    return { ok: true, changed: false, detail: '未发现 ~/.claude/settings.json，无需修复' };
-  }
-  if (snapshot.parseError || !snapshot.settings) {
-    return {
-      ok: false,
-      changed: false,
-      detail: `无法修复：settings.json 解析失败（${String(snapshot.parseError?.message || 'invalid json').slice(0, 120)}）`,
-    };
-  }
-
-  const env = { ...(snapshot.env || {}) };
-  const authToken = String(env.ANTHROPIC_AUTH_TOKEN || '').trim();
-  const apiKey = String(env.ANTHROPIC_API_KEY || '').trim();
-  const baseUrl = String(env.ANTHROPIC_BASE_URL || '').trim();
-  const hasAuthToken = !!authToken;
-  const hasApiKey = !!apiKey;
-  const hasKhyApiKey = apiKey.startsWith('khy-');
-  const hasExternalBaseUrl = !!baseUrl && !isLoopbackUrl(baseUrl);
-  const actions = [];
-
-  if (hasKhyApiKey && (hasAuthToken || hasExternalBaseUrl)) {
-    delete env.ANTHROPIC_API_KEY;
-    actions.push('移除冲突的 ANTHROPIC_API_KEY (khy-*)');
-  }
-
-  if (hasAuthToken && isLoopbackUrl(baseUrl)) {
-    delete env.ANTHROPIC_BASE_URL;
-    actions.push('移除本地代理 ANTHROPIC_BASE_URL，保留外部 AUTH_TOKEN');
-  }
-
-  if (actions.length === 0) {
-    if (hasAuthToken && hasApiKey) {
-      return {
-        ok: false,
-        changed: false,
-        detail: '检测到双认证但 API_KEY 非 khy-*，请手动决定保留 AUTH_TOKEN 或 API_KEY',
-      };
-    }
-    return { ok: true, changed: false, detail: '未发现可自动修复的冲突项' };
-  }
-
-  try {
-    const nextSettings = {
-      ...snapshot.settings,
-      env,
-    };
-    writeClaudeSettingsSnapshot(snapshot.settingsPath, nextSettings);
-    return {
-      ok: true,
-      changed: true,
-      detail: actions.join('；'),
-    };
-  } catch (err) {
-    return {
-      ok: false,
-      changed: false,
-      detail: `写入失败：${String(err?.message || err).slice(0, 160)}`,
-    };
-  }
-}
 
 function ensureBuiltinSenseNovaProvider(options = {}) {
   // Single source: delegate to the shared registrar so the built-in SenseNova
@@ -793,8 +597,17 @@ async function handleInit(options = {}) {
   console.log(chalk.dim('     快速配置环境，让系统正常运行'));
   console.log('');
 
-  // Check what needs initialization
-  const checks = runDoctorChecks();
+  // Check what needs initialization. Same pre-fetch as handleDoctor so the
+  // wizard pays no `node -e` child for the loopback / Ollama probes.
+  const probeMode = _resolveDoctorProbeMode(options, []);
+  if (!probeMode.quick) {
+    try {
+      await _prefetchDoctorAsyncProbes();
+    } catch {
+      /* best-effort: runDoctorChecks() falls back to the child-process probe */
+    }
+  }
+  const checks = runDoctorChecks(probeMode.quick ? { quick: true } : {});
   const issues = checks.filter((c) => !c.ok);
 
   if (issues.length === 0 && !options.force) {
@@ -1023,10 +836,30 @@ async function handleInit(options = {}) {
  */
 async function handleDoctor(options = {}, args = []) {
   const asJson = !!options.json;
+  // P1-13: 默认走「本地快检」（<2s），`--deep` 才是全量。旧行为（默认全量，
+  // 38-63s）可用 KHY_DOCTOR_DEEP_DEFAULT=1 恢复，给脚本一个不改命令的逃生门。
+  const deepDefault = _isDoctorDeepDefault();
+  // 位置参数里出现 deep 也算（与 _resolveDoctorProbeMode 的 argv 判定同形），
+  // 这样 `khy preflight deep` 这类写法不会静默落回快检。
+  const deepArg =
+    Array.isArray(args) &&
+    args.some(
+      (arg) =>
+        String(arg || '')
+          .trim()
+          .toLowerCase() === 'deep'
+    );
+  const deep = isTruthyFlag(options.deep) || deepArg || (deepDefault && !isTruthyFlag(options.fast));
   if (!asJson) {
     console.log('');
     console.log(`  ${ICON_HEART} ${chalk.cyan.bold('khy OS 环境诊断')}`);
-    console.log(chalk.dim('     检查系统环境是否满足运行要求'));
+    console.log(
+      chalk.dim(
+        deep
+          ? '     全量检查：本地环境 + 网络连通 + 网关通道 + 烟雾测试'
+          : '     本地快检：只看这台机器能不能跑（约 1 秒）'
+      )
+    );
     console.log('');
   }
 
@@ -1092,8 +925,28 @@ async function handleDoctor(options = {}, args = []) {
     }
   }
 
-  const checks = runDoctorChecks();
+  // P0-6: resolve the probe mode BEFORE runDoctorChecks() (that is the cut point
+  // for `--quick`), then pre-fetch the two inherently-async probes in THIS
+  // process so runDoctorChecks() never has to spawn a `node -e` child for them.
+  const probeMode = _resolveDoctorProbeMode(options, args);
+  if (!probeMode.quick) {
+    try {
+      await _prefetchDoctorAsyncProbes();
+    } catch {
+      /* async probes are best-effort: runDoctorChecks() falls back to the
+         child-process path, which is exactly the pre-change behaviour */
+    }
+  }
 
+  const checks = runDoctorChecks({
+    ...(deep ? {} : { fast: true }),
+    ...(probeMode.quick ? { quick: true } : {}),
+    ...(probeMode.full ? { full: true } : {}),
+  });
+
+  // 深检专属的两组（连接诊断 / 驻留资源普查）只在 --deep 跑：它们是 38-63s 的
+  // 主要来源，且都属于「网络与运行态」而非「这台机器能不能跑」。
+  if (deep) {
   // Connectivity checks are async (WS handshake / TCP probe, ≤10s connect
   // exemption) so they run outside the synchronous runDoctorChecks() and are
   // merged into the same report. Fail-soft: a probe crash never blocks doctor.
@@ -1136,15 +989,42 @@ async function handleDoctor(options = {}, args = []) {
       fix: '重跑 khy doctor；持续异常时用 khy doctor --json 查看本项 detail 定位',
     });
   }
+  } else {
+    // 快检模式：把深检丢到后台异步跑，结果落 cache/preflight.json。
+    _spawnBackgroundDeepDoctor({ asJson });
+  }
 
   // Two-tier report (轮二十八): per-item summary/fix/note are produced by the
   // check sources; this handler only decorates, counts, and renders.
   const decorated = doctorReport.decorateChecks(checks);
   const counts = doctorReport.countChecks(decorated);
   const totalFail = counts.fail;
+  const status = totalFail > 0 ? 'fail' : counts.warn > 0 ? 'warn' : 'ok';
+
+  // P1-6a guard: every fix string this report tells the user to run is checked
+  // against the real command registry. `khy ai config` was printed as the fix
+  // for a missing AI key while refusing to serve in non-interactive mode — the
+  // user followed the printed instruction and got a second error. Local check
+  // only: it prints a note and NEVER blocks the run (and stays silent in --json
+  // so the machine-readable payload is not polluted).
+  if (!asJson) {
+    try {
+      const unregistered = _collectUnregisteredFixCommands(decorated);
+      if (unregistered.length > 0) {
+        printWarn(`发现 ${unregistered.length} 条修复命令未在命令注册表中登记（仅提示，不影响本次诊断）`);
+        for (const entry of unregistered) {
+          console.log(
+            chalk.dim(`    ${entry.label}: khy ${entry.command} 未注册 — 请改用 khy help 查看可用命令`)
+          );
+        }
+        console.log('');
+      }
+    } catch {
+      /* the guard must never be the thing that breaks doctor */
+    }
+  }
 
   if (asJson) {
-    const status = totalFail > 0 ? 'fail' : counts.warn > 0 ? 'warn' : 'ok';
     const categories = {};
     decorated.forEach((check) => {
       if (!categories[check.category]) {
@@ -1160,6 +1040,12 @@ async function handleDoctor(options = {}, args = []) {
       JSON.stringify(
         {
           generatedAt: Date.now(),
+          // P1-13: scope 让脚本能分辨「这次到底查了多少」。快检只覆盖本地项，
+          // 全量判定请用 --deep（见 exitCodeContract）。
+          scope: deep ? 'deep' : 'fast',
+          exitCodeContract: deep
+            ? '全量检查：exit 0 = 全部检查通过（与改动前一致）'
+            : '本地快检：exit 0 仅代表本地项通过；要「全量通过才 exit 0」请用 khy doctor --deep',
           status,
           counts: {
             ok: counts.ok,
@@ -1175,6 +1061,12 @@ async function handleDoctor(options = {}, args = []) {
                 detail: String(fixResult?.detail || ''),
               }
             : null,
+          cacheFile: _writePreflightCache({
+            scope: deep ? 'deep' : 'fast',
+            decorated,
+            counts,
+            status,
+          }),
           checks: decorated,
           categories: groupedCategories,
           maintenance: [
@@ -1198,6 +1090,21 @@ async function handleDoctor(options = {}, args = []) {
   }
   console.log('');
 
+  // 快检与深检都落缓存（scope 区分口径）：深检的结论是「全量通过」的唯一凭证，
+  // 快检的结论给「这台机器现在能不能跑」用。
+  const cacheFile = _writePreflightCache({
+    scope: deep ? 'deep' : 'fast',
+    decorated,
+    counts,
+    status,
+  });
+  if (!deep) {
+    printInfo(
+      `本地快检完成（${counts.total} 项，约 1 秒）：exit 0 只代表本地项通过；要「全量通过才 exit 0」请用 khy doctor --deep`
+    );
+    printInfo(`深检（网络 / 网关 / 烟雾）已在后台跑，结果写 ${cacheFile}`);
+  }
+
   console.log(chalk.cyan('  维护入口'));
   console.log(chalk.dim('    khy docs maintainer              查看维护地图、入口文档、分层验证'));
   console.log(chalk.dim('    npm run maintainer:map           输出维护领域地图'));
@@ -1206,6 +1113,148 @@ async function handleDoctor(options = {}, args = []) {
 
   // rc semantics: hard failures must be machine-visible (P5, 轮二十八).
   if (totalFail > 0) _markFailure();
+}
+
+/**
+ * 默认是否走全量（旧行为）。KHY_DOCTOR_DEEP_DEFAULT=1 → `khy doctor` 不带
+ * --deep 也跑全量，给「脚本不能改、但需要旧语义」的调用方一个逃生门。
+ * @returns {boolean}
+ */
+function _isDoctorDeepDefault() {
+  const raw = String(process.env.KHY_DOCTOR_DEEP_DEFAULT || '')
+    .trim()
+    .toLowerCase();
+  return raw === '1' || raw === 'true' || raw === 'yes' || raw === 'on';
+}
+
+/**
+ * 深检结果缓存文件路径：`<dataHome>/cache/preflight.json`。
+ *
+ * 路径由 dataHome 推导（KHY_DATA_HOME / 指针文件 / 便携根），**不硬编码**盘符或
+ * 仓库绝对路径——便携安装的数据目录可以整体搬到别处。
+ * @returns {string}
+ */
+function _preflightCacheFile() {
+  try {
+    const { getDataHome } = require('../../utils/dataHome');
+    return path.join(getDataHome(), 'cache', 'preflight.json');
+  } catch {
+    return path.join(ROOT, 'works', 'data', 'khy', 'cache', 'preflight.json');
+  }
+}
+
+/**
+ * 把本次诊断结果落盘，供「深检异步化」后的读取方（以及下一个快检）使用。
+ * 写盘失败绝不阻断诊断本身。
+ * @param {{ scope: string, decorated: object[], counts: object, status: string }} payload
+ * @returns {string} 缓存文件路径
+ */
+function _writePreflightCache(payload) {
+  const file = _preflightCacheFile();
+  try {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    // 深检结论不能被随后一次快检抹掉：快检写盘时把上一次深检摘要搬进 lastDeep，
+    // 深检写盘时把自身摘要放进 lastDeep。读缓存的人因此总能看到两份口径。
+    let lastDeep = null;
+    try {
+      const prev = JSON.parse(fs.readFileSync(file, 'utf-8'));
+      if (prev && prev.scope === 'deep') {
+        lastDeep = {
+          generatedAt: prev.generatedAt,
+          status: prev.status,
+          counts: prev.counts,
+        };
+      } else if (prev && prev.lastDeep) {
+        lastDeep = prev.lastDeep;
+      }
+    } catch {
+      /* first write — nothing to carry over */
+    }
+    if (payload.scope === 'deep') {
+      lastDeep = {
+        generatedAt: Date.now(),
+        status: payload.status,
+        counts: payload.counts,
+      };
+    }
+    fs.writeFileSync(
+      file,
+      JSON.stringify(
+        {
+          generatedAt: Date.now(),
+          scope: payload.scope,
+          status: payload.status,
+          counts: payload.counts,
+          lastDeep,
+          checks: payload.decorated,
+        },
+        null,
+        2
+      ),
+      'utf-8'
+    );
+  } catch {
+    /* cache is best-effort: never break the report for it */
+  }
+  return file;
+}
+
+/**
+ * 快检模式下把深检丢到后台异步执行（detached，不继承 stdio），结果由子进程自己
+ * 写进 cache/preflight.json。三道闸门保证它不会变成麻烦：
+ *   1. 缓存足够新（默认 30 分钟内）就不再起——连跑 `khy doctor` 不会刷进程风暴；
+ *   2. 找不到入口脚本就不起（bundle 形态下 argv[1] 不可靠）；
+ *   3. spawn 抛错只吞掉，快检的结论与退出码不受影响。
+ * @param {{ asJson?: boolean }} [opts]
+ */
+function _spawnBackgroundDeepDoctor(opts = {}) {
+  try {
+    // 只在人类交互场景起后台进程：CI / 管道里没有「等一会儿再看」的人，起一个
+    // detached 全量诊断只会留下没人读的孤儿进程。
+    if (!process.stdout || !process.stdout.isTTY) {
+      return;
+    }
+    if (String(process.env.KHY_DOCTOR_BACKGROUND || '').trim() === '0') {
+      return;
+    }
+    if (String(process.env.KHY_DOCTOR_NO_BACKGROUND || '').trim() === '1') {
+      return;
+    }
+    const ttlMs =
+      parseInt(process.env.KHY_DOCTOR_DEEP_CACHE_TTL_MS || String(30 * 60 * 1000), 10) ||
+      30 * 60 * 1000;
+    const cacheFile = _preflightCacheFile();
+    // 只有「足够新的深检结果」才算数：快检自己也会写同一个文件，若按 mtime 判断，
+    // 下一次快检会把刚写的 fast 结果当成深检缓存，后台深检永远不再起。
+    let fresh = false;
+    try {
+      const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf-8'));
+      const stat = fs.statSync(cacheFile);
+      fresh = cached && cached.scope === 'deep' && Date.now() - stat.mtimeMs < ttlMs;
+    } catch {
+      fresh = false;
+    }
+    if (fresh) {
+      return;
+    }
+    const entry = process.argv && process.argv[1];
+    if (!entry || !fs.existsSync(entry)) {
+      return;
+    }
+    const { spawn } = require('child_process');
+    const child = spawn(process.execPath, [entry, 'doctor', '--deep'], {
+      detached: true,
+      stdio: 'ignore',
+      windowsHide: true,
+      env: { ...process.env, KHY_DOCTOR_NO_BACKGROUND: '1' },
+    });
+    child.on('error', () => {
+      /* background deep run is an optimization, never a requirement */
+    });
+    child.unref();
+  } catch {
+    /* never let the background helper break a fast check */
+  }
 }
 
 /**
@@ -1228,12 +1277,24 @@ function _residentResourceChecks(opts = {}) {
 }
 
 /**
- * Run all diagnostic checks, return array of { category, label, ok, detail, level }.
+ * 本地快检：只看本机磁盘与 PATH，不联网、不探测网关、不跑烟雾测试。
+ *
+ * P1-13: `khy preflight`（README 承诺的新用户第一条命令）实测 38.4-63.6s，因为
+ * 它过去等价于 `khy doctor` 全量——连接诊断、网关适配器探测、驻留资源树扫描全
+ * 排在同一个同步调用里。新用户问的第一个问题只是「这机器能不能跑」，那只需要
+ * Node / Python / Git / node_modules / .env / SQLite 六项，全部 <2s。
+ *
+ * 深检（网络 / 网关 / 烟雾）仍由 runDoctorChecks() 的全量路径负责，`--deep` 必
+ * 须保持全量语义（脚本与 CI 依赖「全量通过才 exit 0」）。
+ *
+ * @param {{ skipToolchain?: boolean }} [options] `skipToolchain: true`（`khy
+ *   doctor --quick`）→ Python / Git 两项不 spawn 探针，只报「已跳过」。默认
+ *   `false`，行为与改动前逐字节一致。
+ * @returns {Array<{ category: string, label: string, ok: boolean, detail: string, level: string }>}
  */
-function runDoctorChecks() {
+function _runLocalFastChecks(options = {}) {
   const results = [];
-  let activeAdapter = null;
-  let activeAdapterName = '';
+  const skipToolchain = !!options.skipToolchain;
 
   // ── Runtime ──────────────────────────────────────────────────────────────
   const nodeVer = process.version;
@@ -1251,8 +1312,19 @@ function runDoctorChecks() {
   // Python
   let pythonCmd = null;
   let pythonBlocked = false;
+  if (skipToolchain) {
+    results.push({
+      category: '运行环境',
+      label: 'Python',
+      ok: true,
+      detail: '已跳过（--quick）',
+      level: 'info',
+      summary: '快速模式已跳过 Python 探测',
+      note: '完整探测请运行 khy doctor（或 khy doctor --no-cache 忽略缓存重跑）',
+    });
+  } else {
   for (const cmd of ['python3', 'python', 'py']) {
-    const probe = runProbe(cmd, ['--version']);
+    const probe = _cachedProbe(`python:${cmd}`, () => runProbe(cmd, ['--version']));
     if (!probe.ok) {
       if (probe.reason === 'blocked') {
         pythonBlocked = true;
@@ -1287,9 +1359,21 @@ function runDoctorChecks() {
         : '安装 Python 3；仅影响数据获取与 python 后端本地模型，khy 核心不依赖它',
     });
   }
+  }
 
   // Git
-  const gitProbe = runProbe('git', ['--version']);
+  if (skipToolchain) {
+    results.push({
+      category: '运行环境',
+      label: 'Git',
+      ok: true,
+      detail: '已跳过（--quick）',
+      level: 'info',
+      summary: '快速模式已跳过 Git 探测',
+      note: '完整探测请运行 khy doctor（或 khy doctor --no-cache 忽略缓存重跑）',
+    });
+  } else {
+  const gitProbe = _cachedProbe('git:--version', () => runProbe('git', ['--version']));
   results.push({
     category: '运行环境',
     label: 'Git',
@@ -1315,6 +1399,7 @@ function runDoctorChecks() {
         fix: installed ? undefined : `运行 ${pipCmd} install ${pkg} 安装数据源`,
       });
     }
+  }
   }
 
   // ── Configuration ────────────────────────────────────────────────────────
@@ -1415,9 +1500,58 @@ function runDoctorChecks() {
     }
   }
 
+  return results;
+}
+
+/**
+ * Run all diagnostic checks, return array of { category, label, ok, detail, level }.
+ *
+ * @param {{ fast?: boolean, quick?: boolean, full?: boolean, deep?: boolean }} [options]
+ *   `fast: true` → 只跑本地快检（见 _runLocalFastChecks），用于 `khy doctor` /
+ *   `khy preflight` 的默认路径；省略或 `fast: false` → 全量（本地 + 网络 + 网关 +
+ *   烟雾 + 驻留资源），`--deep` 走这一条，语义与改动前逐字节一致。
+ *   `quick: true` → `--quick`：连本地快检里的工具链探针（Python / Git）也不 spawn。
+ *   `full: true` / `deep: true` → 忽略工具链可用性缓存，重新探测（旧路径）。
+ */
+function runDoctorChecks(options = {}) {
+  // P0-6: activate the toolchain availability cache for the whole run and flush
+  // it exactly once on the way out (including the early `fast` return).
+  const probeMode = _resolveDoctorProbeMode(options, []);
+  const _outerToolchainCache = getActiveToolchainCache();
+  setActiveToolchainCache(_createToolchainCacheContext(probeMode));
+  try {
+    return _runDoctorChecksInner(options, probeMode);
+  } finally {
+    getActiveToolchainCache().flush();
+    setActiveToolchainCache(_outerToolchainCache);
+  }
+}
+
+function _runDoctorChecksInner(options, probeMode) {
+  const results = [];
+  let activeAdapter = null;
+  let activeAdapterName = '';
+
+  // 本地快检永远先跑：它既是快检模式的全部内容，也是全量模式的头六项。
+  results.push(..._runLocalFastChecks({ skipToolchain: probeMode.quick }));
+  if (probeMode.quick || (options && options.fast)) {
+    if (probeMode.quick) {
+      results.push({
+        category: '运行环境',
+        label: '工具链探测',
+        ok: true,
+        detail: '已跳过（--quick）：Python / Git / Redis / 默认通道探测未执行',
+        level: 'info',
+        summary: '快速模式已跳过工具链可用性探测',
+        note: '完整探测：khy doctor；忽略缓存重跑：khy doctor --no-cache',
+      });
+    }
+    return results;
+  }
+
   // ── Network services ─────────────────────────────────────────────────────
   // Redis check
-  const redisProbe = runProbe('redis-cli', ['ping']);
+  const redisProbe = _cachedProbe('redis-cli:ping', () => runProbe('redis-cli', ['ping']));
   const redisOk = redisProbe.ok && /pong/i.test(String(redisProbe.output || ''));
   const redisOptional = redisProbe.reason === 'missing' || redisProbe.reason === 'blocked';
   let redisDetail = '未运行 — 将使用内存缓存';
@@ -1461,18 +1595,35 @@ function runDoctorChecks() {
       'OPENAI_API_KEY',
       'ANTHROPIC_API_KEY',
     ];
-    const hasAiKey = aiKeys.some((key) => {
+    const hasEnvAiKey = aiKeys.some((key) => {
       const match = envContent.match(new RegExp(`^${key}=(.+)$`, 'm'));
       return match && match[1] && !match[1].startsWith('#');
     });
+    // P1-6a: the .env grep above used to be the ONLY source, so a machine whose
+    // keys live in the apiKeyPool (`<dataHome>/api_keys.json` — where the built-in
+    // OpenCode Zen free key sits) was told "未配置任何 AI 供应商密钥" while the
+    // very same report said the gateway was ready on opencode-zen. Contradicting
+    // itself in one output is worse than either message alone, so the pool is now
+    // a first-class source.
+    const pool = _apiKeyPoolHasKeys();
+    const hasAiKey = hasEnvAiKey || pool.ok;
+    const keySources = [];
+    if (hasEnvAiKey) {
+      keySources.push('backend/.env');
+    }
+    if (pool.ok) {
+      keySources.push(`apiKeyPool (${pool.providers.slice(0, 3).join(', ')})`);
+    }
     results.push({
       category: '可选服务',
       label: 'AI 密钥',
       ok: hasAiKey,
-      detail: hasAiKey ? '已配置' : '未配置 — 运行 khy ai config',
+      detail: hasAiKey ? `已配置（${keySources.join(' + ')}）` : '未配置 — 运行 khy gateway guide 查看配置指引',
       level: 'warn',
+      // summary stays ≤40 display columns (doctorReport invariant); the
+      // per-source breakdown lives in detail.
       summary: hasAiKey ? '至少一个 AI 供应商密钥已配置' : '未配置任何 AI 供应商密钥',
-      fix: hasAiKey ? undefined : '运行 khy ai config 配置密钥，或 khy gateway model 选择本地/桥接通道',
+      fix: hasAiKey ? undefined : _buildAiKeyFixText(),
     });
   }
 
@@ -1489,9 +1640,17 @@ function runDoctorChecks() {
     const active = aiGateway.getActiveAdapter();
     activeAdapter = active || null;
     activeAdapterName = String(active?.name || '');
+    // P0-6: `getDefaultRouteRecommendation()` ranks EVERY registered adapter,
+    // which drags each adapter's detect()/getStatus() into this call — that is
+    // where the 3x `reg query .../Uninstall /s` (up to 5s each), `opencode
+    // --version` (2.7-5.3s), `claude/codex --version` and `where pwsh|powershell|
+    // aider` all came from. Its result is plain data describing a toolchain
+    // availability question, so it goes through the toolchain cache.
     const defaultRouteRecommendation =
       typeof aiGateway.getDefaultRouteRecommendation === 'function'
-        ? aiGateway.getDefaultRouteRecommendation()
+        ? _cachedProbe('gateway:defaultRouteRecommendation', () =>
+            aiGateway.getDefaultRouteRecommendation()
+          )
         : null;
     results.push({
       category: 'AI 能力',
@@ -1506,7 +1665,7 @@ function runDoctorChecks() {
         : 'AI 网关无可用适配器',
       fix: active
         ? undefined
-        : '运行 khy gateway model 选择通道，或 khy ai config 配置供应商密钥',
+        : '运行 khy gateway model 选择通道，或 khy gateway config 配置供应商密钥',
     });
     results.push({
       category: 'AI 能力',
@@ -1744,10 +1903,14 @@ function runDoctorChecks() {
   }
 
   // Local loopback listen capability (required by local runner/python/http backends)
-  const loopbackProbe = runProbe(process.execPath, [
-    '-e',
-    'const n=require("net");const s=n.createServer();s.once("error",e=>{console.log("ERR:"+((e&&e.message)||e));process.exit(2)});s.listen(0,"127.0.0.1",()=>{s.close(()=>{console.log("OK");process.exit(0)})});setTimeout(()=>{console.log("ERR:loopback listen probe timed out (1.2s)");process.exit(3)},1200)',
-  ]);
+  // P0-6: pre-fetched in-process (see _probeLoopbackListenInProcess) — this used
+  // to spawn a whole `node -e` child that re-loaded the module graph just to ask
+  // "can I bind 127.0.0.1?". With no pre-fetch (a direct runDoctorChecks() call)
+  // the original child-process probe is used, byte-for-byte.
+  const _doctorAsyncProbeCache = getDoctorAsyncProbeCache();
+  const loopbackProbe = _doctorAsyncProbeCache
+    ? _doctorAsyncProbeCache.loopback
+    : runProbe(process.execPath, ['-e', DOCTOR_LOOPBACK_PROBE_SCRIPT]);
   const loopbackBlocked = !loopbackProbe.ok;
   const loopbackDetail = loopbackProbe.ok
     ? '可监听 127.0.0.1（本地模型后端可启动）'
@@ -1862,10 +2025,23 @@ function runDoctorChecks() {
   });
 
   // node-llama-cpp direct backend availability
-  const llamaCppProbe = runProbe(process.execPath, [
-    '-e',
-    `require.resolve("node-llama-cpp",{paths:[${JSON.stringify(path.join(ROOT, 'backend'))}]});console.log("OK")`,
-  ]);
+  // P0-6: resolved in-process (`require.resolve`) instead of spawning a
+  // `node -e` child that re-loaded the whole module graph for one lookup.
+  const llamaCppProbe = (() => {
+    try {
+      require.resolve('node-llama-cpp', {
+        paths: [ROOT, path.join(ROOT, 'backend')],
+      });
+      return { ok: true, output: 'OK' };
+    } catch (err) {
+      const code = String((err && err.code) || '');
+      return {
+        ok: false,
+        reason: code === 'MODULE_NOT_FOUND' || code === 'ENOENT' ? 'missing' : 'error',
+        message: String((err && err.message) || err),
+      };
+    }
+  })();
   const hasBundledLocalBackend = runnerProbe.ok || bundledLlamaProbe.ok;
   const nodeLlamaDetail = llamaCppProbe.ok
     ? '已安装（可用进程内本地推理）'
@@ -1910,18 +2086,29 @@ function runDoctorChecks() {
     const localLLM = require('../../services/localLLMService');
     // Ollama 默认主机统一从 serviceDefaults 取，避免与常量模块的默认值漂移。
     const { OLLAMA_HOST } = require('../../constants/serviceDefaults');
-    const tagsProbe = runProbe(process.execPath, [
-      '-e',
-      `const http=require("http");const u=new URL((process.env.OLLAMA_HOST||"${OLLAMA_HOST}").replace(/\\/+$/,"")+"/api/tags");const req=http.get(u,{timeout:1500},res=>{let b="";res.on("data",d=>b+=d);res.on("end",()=>{try{const j=JSON.parse(b);const names=(j.models||[]).map(m=>m&&m.name).filter(Boolean);console.log("TAGS:"+JSON.stringify(names));process.exit(0)}catch(e){console.log("ERR:parse "+(e&&e.message));process.exit(2)}})});req.on("error",e=>{console.log("ERR:"+((e&&e.message)||e));process.exit(3)});req.on("timeout",()=>{req.destroy();console.log("ERR:timeout");process.exit(4)});`,
-    ]);
+    // P0-6: pre-fetched in-process (`http.get`, see _probeOllamaTagsInProcess).
+    // The child-process form is kept as the no-prefetch fallback so a direct
+    // runDoctorChecks() call behaves exactly as before.
+    const _doctorAsyncProbeCache = getDoctorAsyncProbeCache();
+    const tagsProbe = _doctorAsyncProbeCache
+      ? _doctorAsyncProbeCache.ollama
+      : runProbe(process.execPath, [
+          '-e',
+          `const http=require("http");const u=new URL((process.env.OLLAMA_HOST||"${OLLAMA_HOST}").replace(/\\/+$/,"")+"/api/tags");const req=http.get(u,{timeout:1500},res=>{let b="";res.on("data",d=>b+=d);res.on("end",()=>{try{const j=JSON.parse(b);const names=(j.models||[]).map(m=>m&&m.name).filter(Boolean);console.log("TAGS:"+JSON.stringify(names));process.exit(0)}catch(e){console.log("ERR:parse "+(e&&e.message));process.exit(2)}})});req.on("error",e=>{console.log("ERR:"+((e&&e.message)||e));process.exit(3)});req.on("timeout",()=>{req.destroy();console.log("ERR:timeout");process.exit(4)});`,
+        ]);
     let tags = [];
     if (tagsProbe.ok) {
-      const m = String(tagsProbe.output || '').match(/TAGS:(\[.*\])/);
-      if (m) {
-        try {
-          tags = JSON.parse(m[1]);
-        } catch {
-          tags = [];
+      if (Array.isArray(tagsProbe.tags)) {
+        // In-process probe already parsed the list.
+        tags = tagsProbe.tags;
+      } else {
+        const m = String(tagsProbe.output || '').match(/TAGS:(\[.*\])/);
+        if (m) {
+          try {
+            tags = JSON.parse(m[1]);
+          } catch {
+            tags = [];
+          }
         }
       }
     }

@@ -420,13 +420,71 @@ function getState() {
   return { ...hudState };
 }
 
+/**
+ * Build the plain-language ("小白") summary block for `khy gateway status`.
+ *
+ * The status table speaks engineer: adapter types, protocol labels, latency
+ * columns. A first-time user only needs four answers — can I talk to it, which
+ * channel is used, how long until the first token, and if it is broken, ONE
+ * command that fixes it. Shape mirrors doctorReport.buildActionLines
+ * (label + summary + one actionable line); this is a sibling renderer, not a
+ * copy of it, because the inputs here are live probe results rather than
+ * doctor checks.
+ *
+ * @param {{
+ *   canTalk?: boolean, usableCount?: number, enabledCount?: number,
+ *   channel?: { name?: string, type?: string, protocol?: string } | null,
+ *   latencyMs?: number | null, fixCommand?: string
+ * }} [parts]
+ * @returns {string[]} console lines (no trailing blank line)
+ */
+function buildPlainLanguageSummary(parts = {}) {
+  const chalk = c();
+  const canTalk = !!parts.canTalk;
+  const usable = Number(parts.usableCount) || 0;
+  const enabled = Number(parts.enabledCount) || 0;
+  const channel = parts.channel || null;
+  const latencyMs = Number(parts.latencyMs);
+  const fixCommand = String(parts.fixCommand || '').trim();
+
+  const lines = [];
+  lines.push(chalk.cyan.bold('  小白摘要') + chalk.dim('（不看技术细节，只看这四行）'));
+
+  const talkText = canTalk
+    ? chalk.green('可以') + chalk.dim(`（${usable} 个通道实测可用）`)
+    : chalk.red('暂时不行') +
+      chalk.dim(enabled > 0 ? `（${enabled} 个通道已启用，实测都不可用）` : '（还没有已启用的通道）');
+  lines.push(`    能不能对话   ${talkText}`);
+
+  const channelText = channel
+    ? `${channel.name || channel.type || '未知通道'}${channel.type ? ` (${channel.type})` : ''}${
+        channel.protocol ? ` · ${channel.protocol}` : ''
+      }`
+    : chalk.dim('暂无可用通道');
+  lines.push(`    用哪个通道   ${channelText}`);
+
+  const latencyText =
+    Number.isFinite(latencyMs) && latencyMs > 0
+      ? `约 ${(latencyMs / 1000).toFixed(1)} 秒（本次实测连通延迟，仅供参考）`
+      : chalk.dim('未实测（本机没有跑通连通探测）');
+  lines.push(`    首字等多久   ${latencyText}`);
+
+  const nextText = canTalk
+    ? chalk.dim('无需处理，直接开始对话即可')
+    : fixCommand
+      ? chalk.cyan(fixCommand) + chalk.dim(' —— 先跑这一条')
+      : chalk.dim('运行 khy gateway status --verbose 查看内部诊断');
+  lines.push(`    下一步       ${nextText}`);
+
+  return lines;
+}
+
 // ── Rendering helpers ────────────────────────────────────────────────
 
-/**
- * Strip ANSI escape codes for width calculation.
- */
-// 收敛到 utils/stripAnsi 单一真源(逐字节委托,调用点不变)
-const stripAnsi = require('../utils/stripAnsi');
+// 宽度/截断收敛到 utils/text/width 单一真源(displayWidth 按双宽码点计宽、
+// stripAnsi 同源)。HUD 的补白与截断必须按**显示宽度**算 —— 账号/模型/分支/预算
+// 都是用户可控文本,中文占 2 列,按 .length 算会让整行溢出并折行。
+const { displayWidth, padToWidth, truncateToWidth } = require('../utils/text/width');
 
 /**
  * Format token count for the HUD.
@@ -641,12 +699,17 @@ function renderStatusBar(cols, opts = {}) {
 
   const rightText = rightParts.join(chalk.dim(' · '));
 
-  // Compose full line with padding
-  const leftLen = stripAnsi(leftText).length;
-  const rightLen = stripAnsi(rightText).length;
+  // Compose full line with padding. 补白按**显示宽度**算而不是字符数:右段
+  // (账号/模型/分支/预算)是用户可控文本,中文占 2 列,按 length 算会画进下一列;
+  // 这一行锚在终端末行(\x1B7…\x1B[rows;1H…\x1B8),折行会把右对齐段挤到下一行
+  // 并在屏幕底部留下残影。仍超预算时收缩右段 —— 截断,不是折行。
+  const leftLen = displayWidth(leftText);
+  const availRight = Math.max(1, cols - leftLen - 3);
+  const rightText2 = displayWidth(rightText) > availRight ? truncateToWidth(rightText, availRight) : rightText;
+  const rightLen = displayWidth(rightText2);
   const pad = Math.max(1, cols - leftLen - rightLen - 3);
 
-  return chalk.bgBlack(' ' + leftText + ' '.repeat(pad) + rightText + ' ');
+  return chalk.bgBlack(' ' + leftText + ' '.repeat(pad) + rightText2 + ' ');
 }
 
 // ── HUD expanded panel (/hud command) ────────────────────────────────
@@ -658,40 +721,66 @@ function renderStatusBar(cols, opts = {}) {
  */
 function renderHudPanel(cols) {
   const chalk = c();
-  const w = Math.min(cols - 4, 60);
+  // 三条边取同一总宽 W:原顶边 hr 按 w-6、底边按 w-4 各算一套,右上/右下角
+  // 差 4 列不在同一竖线;内容行只有左边框没有右边框 —— 合起来是个三面漏风的框。
+  const W = Math.min(cols - 4, 64);
+  const innerW = W - 6; // "  │  " + content + "│"
   const lines = [];
 
-  const hr = '\u2500'.repeat(w - 6);
+  // 每行内容补齐到 innerW 再补右边框;CJK 双宽必须按显示宽度算,否则中文行顶穿右边界。
+  const line = (content = '') => {
+    const text = displayWidth(content) > innerW ? truncateToWidth(content, innerW) : content;
+    return (
+      chalk.dim('  \u2502  ') +
+      text +
+      ' '.repeat(Math.max(0, innerW - displayWidth(text))) +
+      chalk.dim('\u2502')
+    );
+  };
+  // 字段名统一按显示宽度补齐(原实现手写 'Context   ' 这类固定 10 字符补白,
+  // 加字段/改字宽就要重新数空格)。名称保持英文:renderHudPanel 的字段名是
+  // hudDurationSsot / hudTokensSsot 两个契约测试的定位正则(如 /Context/、
+  // /Session\s+1m/),改成中文会红这两套用例,而测试文件不在本次可改范围内。
+  const field = (label) => chalk.white(padToWidth(label, 10));
+
   lines.push('');
-  lines.push(chalk.cyan(`  \u250c\u2500 HUD ${hr}\u2510`));
+  lines.push(chalk.cyan(`  \u250c\u2500 HUD ${'\u2500'.repeat(Math.max(0, W - 10))}\u2510`));
 
   // ── Context ──
   const ctx = hudState.contextWindow;
-  const ctxPct = ctx.limit > 0 ? Math.min(100, Math.round((ctx.used / ctx.limit) * 100)) : 0;
   const ctxBarLen = 20;
-  const ctxFilled = Math.round((ctxBarLen * ctxPct) / 100);
-  const ctxColor = ctxPct > 80 ? 'red' : ctxPct > 50 ? 'yellow' : 'green';
-  const ctxBar =
-    chalk[ctxColor]('\u2588'.repeat(ctxFilled)) + chalk.dim('\u2591'.repeat(ctxBarLen - ctxFilled));
-  lines.push(chalk.dim('  \u2502'));
-  lines.push(
-    chalk.dim('  \u2502  ') +
-      chalk.white('Context   ') +
-      ctxBar +
-      ` ${chalk[ctxColor](ctxPct + '%')}  ${fmtTokens(ctx.used)} / ${fmtTokens(ctx.limit)}`
-  );
+  lines.push(line());
+  if (ctx.limit > 0) {
+    const ctxPct = Math.min(100, Math.round((ctx.used / ctx.limit) * 100));
+    const ctxFilled = Math.round((ctxBarLen * ctxPct) / 100);
+    const ctxColor = ctxPct > 80 ? 'red' : ctxPct > 50 ? 'yellow' : 'green';
+    const ctxBar =
+      chalk[ctxColor]('\u2588'.repeat(ctxFilled)) +
+      chalk.dim('\u2591'.repeat(ctxBarLen - ctxFilled));
+    lines.push(
+      line(
+        field('Context') +
+          ctxBar +
+          ` ${chalk[ctxColor](ctxPct + '%')}  ${fmtTokens(ctx.used)} / ${fmtTokens(ctx.limit)}`
+      )
+    );
+  } else {
+    // 上限未上报时不给 0% 0 / 0 这种不可能的数字,如实说未知。
+    lines.push(line(field('Context') + chalk.dim(`已用 ${fmtTokens(ctx.used)} · 上限未知`)));
+  }
 
   // ── Tokens ──
   const tok = hudState.sessionTokens;
   lines.push(
-    chalk.dim('  \u2502  ') +
-      chalk.white('Tokens    ') +
-      chalk.dim('\u2191 ') +
-      chalk.white(tok.input.toLocaleString()) +
-      chalk.dim('  \u2193 ') +
-      chalk.white(tok.output.toLocaleString()) +
-      chalk.dim('  \u5408\u8ba1 ') +
-      chalk.bold(tok.total.toLocaleString())
+    line(
+      field('Tokens') +
+        chalk.dim('\u2191 ') +
+        chalk.white(tok.input.toLocaleString()) +
+        chalk.dim('  \u2193 ') +
+        chalk.white(tok.output.toLocaleString()) +
+        chalk.dim('  \u5408\u8ba1 ') +
+        chalk.bold(tok.total.toLocaleString())
+    )
   );
 
   // ── Cost ──
@@ -706,25 +795,22 @@ function renderHudPanel(cols) {
     const sessNum = ccf.ccFormatCostOr(sessCNY, sessCNY.toFixed(4), process.env);
     const monthNum = ccf.ccFormatCostOr(monthCNY, monthCNY.toFixed(2), process.env);
     lines.push(
-      chalk.dim('  \u2502  ') +
-        chalk.white('Cost      ') +
-        chalk.yellow(`\uffe5${sessNum}`) +
-        chalk.dim(`  \u672c\u6708 `) +
-        chalk.yellow(`\uffe5${monthNum}`)
+      line(
+        field('Cost') +
+          chalk.yellow(`\uffe5${sessNum}`) +
+          chalk.dim(`  \u672c\u6708 `) +
+          chalk.yellow(`\uffe5${monthNum}`)
+      )
     );
   } catch {
-    lines.push(chalk.dim('  \u2502  ') + chalk.white('Cost      ') + chalk.dim('N/A'));
+    lines.push(line(field('Cost') + chalk.dim('N/A')));
   }
 
-  lines.push(chalk.dim('  \u2502'));
+  lines.push(line());
 
   // ── Account ──
   if (hudState.accountEmail) {
-    lines.push(
-      chalk.dim('  \u2502  ') +
-        chalk.white('Account   ') +
-        chalk.hex('#98FB98')(hudState.accountEmail)
-    );
+    lines.push(line(field('Account') + chalk.hex('#98FB98')(hudState.accountEmail)));
   }
 
   // ── Git ──
@@ -735,31 +821,28 @@ function renderHudPanel(cols) {
       gitLine += chalk.yellow(`*`);
     }
     if (git.ahead > 0) {
-      gitLine += chalk.green(` +${git.ahead} ahead`);
+      gitLine += chalk.green(` 领先 ${git.ahead}`);
     }
     if (git.behind > 0) {
-      gitLine += chalk.red(` -${git.behind} behind`);
+      gitLine += chalk.red(` 落后 ${git.behind}`);
     }
     if (git.dirtyCount > 0) {
-      gitLine += chalk.dim(`  ${git.dirtyCount} files dirty`);
+      gitLine += chalk.dim(`  ${git.dirtyCount} 个文件改动`);
     }
-    lines.push(chalk.dim('  \u2502  ') + chalk.white('Git       ') + gitLine);
+    lines.push(line(field('Git') + gitLine));
   }
 
   // ── Session ──
   const dur = fmtDuration(Date.now() - hudState.sessionStart);
   lines.push(
-    chalk.dim('  \u2502  ') +
-      chalk.white('Session   ') +
-      chalk.white(dur) +
-      chalk.dim(` \u00b7 ${hudState.requestCount} requests`)
+    line(field('Session') + chalk.white(dur) + chalk.dim(` \u00b7 ${hudState.requestCount} 次请求`))
   );
 
-  lines.push(chalk.dim('  \u2502'));
+  lines.push(line());
 
   // ── Tool history ──
   if (hudState.toolHistory.length > 0) {
-    lines.push(chalk.dim('  \u2502  ') + chalk.white('Tools'));
+    lines.push(line(field('Tools')));
     for (const t of hudState.toolHistory.slice(-5)) {
       const icon =
         t.status === 'success'
@@ -769,21 +852,25 @@ function renderHudPanel(cols) {
             : chalk.dim('\u2713');
       const elStr = t.elapsed > 0 ? chalk.dim(` ${fmtElapsedItem(t.elapsed)}`) : '';
       const target = t.target ? chalk.dim(` ${t.target}`) : '';
-      lines.push(chalk.dim('  \u2502  ') + `  ${icon} ${chalk.white(t.name)}${target}${elStr}`);
+      lines.push(line(`  ${icon} ${chalk.white(t.name)}${target}${elStr}`));
     }
     if (hudState.activeTool) {
       const elapsed = Date.now() - hudState.activeTool.startTime;
+      // 运行中是品牌橙(与状态条里的活动工具、子代理同一语义,颜色取自同一主题),
+      // 红色留给 error 行;时长写「已 3.2s」而不是裸 '...' —— 进度要说清。
+      const runningColor = require('./renderTheme').THEME.claude;
       lines.push(
-        chalk.dim('  \u2502  ') +
-          `  ${chalk.redBright('\u2733')} ${chalk.white(hudState.activeTool.name)} ${chalk.dim(hudState.activeTool.target || '')} ${chalk.dim(fmtDuration(elapsed) + '...')}`
+        line(
+          `  ${chalk.hex(runningColor)('\u2733')} ${chalk.white(hudState.activeTool.name)} ${chalk.dim(hudState.activeTool.target || '')} ${chalk.dim(`已 ${fmtDuration(elapsed)}`)}`
+        )
       );
     }
-    lines.push(chalk.dim('  \u2502'));
+    lines.push(line());
   }
 
   // ── Agents ──
   if (hudState.activeAgents.length > 0) {
-    lines.push(chalk.dim('  \u2502  ') + chalk.white('Agents'));
+    lines.push(line(field('Agents')));
     for (const a of hudState.activeAgents) {
       const icon =
         a.status === 'completed'
@@ -791,16 +878,14 @@ function renderHudPanel(cols) {
           : a.status === 'error'
             ? chalk.red('\u25cf')
             : a.status === 'running'
-              ? chalk.redBright('\u2733')
+              ? chalk.hex(require('./renderTheme').THEME.claude)('\u2733')
               : chalk.dim('\u25cb');
       const detail = a.detail ? chalk.dim(`  ${a.detail}`) : '';
       const elapsed = a.elapsed > 0 ? chalk.dim(`  ${fmtElapsedItem(a.elapsed)}`) : '';
       const tokens = a.tokens > 0 ? chalk.dim(`  ${fmtTokens(a.tokens)}`) : '';
-      lines.push(
-        chalk.dim('  \u2502  ') + `  ${icon} ${chalk.white(a.name)}${detail}${elapsed}${tokens}`
-      );
+      lines.push(line(`  ${icon} ${chalk.white(a.name)}${detail}${elapsed}${tokens}`));
     }
-    lines.push(chalk.dim('  \u2502'));
+    lines.push(line());
   }
 
   // ── Todos ──
@@ -808,46 +893,42 @@ function renderHudPanel(cols) {
     const done = hudState.todos.filter((t) => t.done).length;
     const total = hudState.todos.length;
     const todoBar = '\u25a0'.repeat(done) + '\u25a1'.repeat(total - done);
-    lines.push(
-      chalk.dim('  \u2502  ') +
-        chalk.white('Todo      ') +
-        chalk.green(todoBar) +
-        chalk.dim(` ${done}/${total}`)
-    );
+    lines.push(line(field('Todo') + chalk.green(todoBar) + chalk.dim(` ${done}/${total}`)));
     for (const t of hudState.todos) {
       const icon = t.done ? chalk.green('\u2714') : chalk.dim('\u2610');
-      lines.push(
-        chalk.dim('  \u2502  ') + `  ${icon} ${t.done ? chalk.dim(t.text) : chalk.white(t.text)}`
-      );
+      lines.push(line(`  ${icon} ${t.done ? chalk.dim(t.text) : chalk.white(t.text)}`));
     }
-    lines.push(chalk.dim('  \u2502'));
+    lines.push(line());
   }
 
   // ── Quota ──
   try {
     const tokenSvc = require('../services/tokenUsageService');
     const quota = tokenSvc.getRemainingQuota();
-    if (quota.limit !== -1) {
-      const qPct = Math.round((quota.used / quota.limit) * 100);
+    if (quota.limit > 0) {
+      // 条与数字同口径:原来条做了 min(100)、数字直接 round,出现过「满条 + 9544%」。
+      const qPct = Math.min(100, Math.round((quota.used / quota.limit) * 100));
+      const over = quota.used > quota.limit;
       const qColor = qPct > 90 ? 'red' : qPct > 70 ? 'yellow' : 'green';
       const qBarLen = 15;
-      const qFilled = Math.round((qBarLen * Math.min(qPct, 100)) / 100);
+      const qFilled = Math.round((qBarLen * qPct) / 100);
       const qBar =
         chalk[qColor]('\u2588'.repeat(qFilled)) + chalk.dim('\u2591'.repeat(qBarLen - qFilled));
-      lines.push(
-        chalk.dim('  \u2502  ') +
-          chalk.white('Quota     ') +
-          qBar +
-          ` ${chalk[qColor](qPct + '%')} ` +
-          chalk.dim(`(${quota.used.toLocaleString()}/${quota.limit.toLocaleString()})`)
-      );
-      lines.push(chalk.dim('  \u2502'));
+      const detail = over
+        ? `超额 ${fmtTokens(quota.used)} / ${fmtTokens(quota.limit)}`
+        : `${qPct}%  (${quota.used.toLocaleString()}/${quota.limit.toLocaleString()})`;
+      lines.push(line(field('Quota') + qBar + ` ${chalk[qColor](detail)}`));
+      lines.push(line());
+    } else if (quota.limit === 0) {
+      // limit 为 0 = 未配置上限,如实说未知,不渲染 0% / 0 / 0 这种不可能的数字。
+      lines.push(line(field('Quota') + chalk.dim('未知（未配置额度上限）')));
+      lines.push(line());
     }
   } catch {
     /* ignore */
   }
 
-  lines.push(chalk.cyan(`  \u2514${'\u2500'.repeat(w - 4)}\u2518`));
+  lines.push(chalk.cyan(`  \u2514${'\u2500'.repeat(Math.max(0, W - 4))}\u2518`));
   lines.push('');
 
   return lines.join('\n');
@@ -951,6 +1032,7 @@ module.exports = {
   // Rendering
   renderStatusBar,
   renderHudPanel,
+  buildPlainLanguageSummary,
 
   // Live status bar
   startLiveStatusBar,

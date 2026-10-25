@@ -290,33 +290,10 @@ function isValidState(kind, state) {
 }
 
 // ── 机器身份与租约（多机协作核心）───────────────────────────────
-
-/**
- * 本机稳定标识：`KHY_MACHINE_ID` 优先，否则 hostname。
- * 同一台机器上二者常只差大小写，故所有比较一律走 `sameMachine`。
- */
-function machineId(env = process.env) {
-  const override = env && env.KHY_MACHINE_ID;
-  if (override && String(override).trim()) {
-    return String(override).trim();
-  }
-  try {
-    return os.hostname() || 'unknown-machine';
-  } catch {
-    return 'unknown-machine';
-  }
-}
-
-/**
- * 机器名大小写不敏感比较。
- *
- * 为什么必须如此：同一台 Windows 机器的 hostname 与显式设置的 `KHY_MACHINE_ID`
- * 常常只差大小写（`2541UGH10NVUR7S` vs `2541ugh10nvur7s`）。字面比较会让这台机器
- * 把自己持有的租约误判成「他机占用」，从而把自己锁死到租约到期为止。
- */
-function sameMachine(a, b) {
-  return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
-}
+// 机器身份原语已下沉到共享底座 utils/machineIdentity.js（services/zenIdentity 也用它，
+// 真源留在 cli/ 会逼 services 反向 require cli/ —— R1 分层倒置）。
+// 本文件从叶子再导出，公开面不变；真身只有一份（R4 抽取漂移）。
+const { machineId, sameMachine } = require('../utils/machineIdentity');
 
 /** 条目是否被**他机**以**存活租约**占用。 */
 function heldByOther(item, me, now = new Date()) {

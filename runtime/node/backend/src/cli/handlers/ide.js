@@ -234,6 +234,10 @@ async function startChat(adapterKey, model, context) {
         // model; direct launchers (model === null) let the external agent
         // choose, so we omit the model option.
         const genOptions = {
+          // 外部智能体委派审批闸：用户亲手敲 `khy <agent>` 进入会话，命令本身即
+          // 批准证据。这是全仓唯一合法的 'user-command' 批准标记写入点——其他任何
+          // 来源（env 钉选、options 钉选、机器直写）都不带标记，闸会照常询问。
+          delegationApprovedByUser: 'user-command',
           onChunk: (chunk) => {
             if (chunk.type === 'text') {
               process.stdout.write(chunk.text);
@@ -253,7 +257,9 @@ async function startChat(adapterKey, model, context) {
             console.log('\n' + result.content);
           }
         } else {
-          printError('请求失败: ' + (result.attempts?.[0]?.error || '未知错误'));
+          // 失败信封顶层 error 优先（如委派拒绝信封 attempts 为空），
+          // 不再落到「未知错误」——规则 2.2 要求可行动的具体原因。
+          printError('请求失败: ' + (result.error || result.attempts?.[0]?.error || '未知错误'));
         }
       } catch (err) {
         printError(err.message);

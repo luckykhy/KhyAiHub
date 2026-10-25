@@ -16,6 +16,11 @@
  *   - 完成标记 flag 落到 dataHome(getDataHome),并兼容旧 ~/.khyquant 位置的 flag,
  *     已配置或已完成的老用户绝不被再次打扰。
  *   - 门控 KHY_ONBOARDING(默认开,{0,false,off,no} 回退)。
+ *   - 免费通道:系统内置免注册的 OpenCode Zen(gateway.init 会播种它)。跑向导前先
+ *     幂等 ensureBuiltinZen() 一次(只 await 它,绝不 await gateway.init()),于是
+ *     「已配好免费通道的机器」直接进 TUI,零提问。
+ *   - 引导文本按需展开:默认只打印 3 行摘要,完整引导(全部供应商 + 申请入口)仅在
+ *     用户在菜单里显式选择「查看完整引导」时才渲染。
  */
 const fs = require('fs');
 const os = require('os');
@@ -25,6 +30,10 @@ const guide = require('../services/gateway/gatewayGuide');
 
 // 旧版 flag 位置(向后兼容:存在即视为已完成,不再打扰)。
 const LEGACY_FLAG = path.join(os.homedir(), '.khyquant', '.onboarding-done');
+
+// Built-in free channel (OpenCode Zen, no registration): poolKey mirrors
+// customProviderRegistrar.BUILTIN_ZEN, the SSOT for that channel.
+const ZEN_POOL_KEY = 'opencode-zen';
 
 /** 规范 flag 路径:落到 dataHome;解析失败回退 legacy。 */
 function flagPath() {
@@ -140,6 +149,77 @@ function defaultApplyKey(input) {
   return require('../services/gateway/builtinProviderConfig').applyBuiltinProviderKey(input);
 }
 
+/**
+ * Seed the built-in free channel (OpenCode Zen, no registration). Idempotent and
+ * cheap: it only touches the key pool / custom registry, never the 20s+ gateway
+ * init. Never throws — a failure just means "free channel not available yet".
+ * @returns {{seeded:boolean, poolKey:string}}
+ */
+function defaultEnsureZen() {
+  try {
+    const mod = require('../services/customProviderRegistrar');
+    const fn = mod && typeof mod.ensureBuiltinZen === 'function' ? mod.ensureBuiltinZen : null;
+    if (!fn) {
+      return { seeded: false, poolKey: ZEN_POOL_KEY };
+    }
+    return fn() || { seeded: false, poolKey: ZEN_POOL_KEY };
+  } catch {
+    return { seeded: false, poolKey: ZEN_POOL_KEY };
+  }
+}
+
+/** True when the free channel already holds a usable key in the pool. */
+function defaultHasFreeChannel() {
+  try {
+    const pool = require('../services/apiKeyPool');
+    try {
+      pool.init();
+    } catch {
+      /* already initialised */
+    }
+    return (pool.getPoolStatus(ZEN_POOL_KEY) || []).length > 0;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Providers that need no API key (free tier). Mirrors the freeNoKey rule in
+ * services/gateway/providerConnectivitySpec so both surfaces agree.
+ * @param {object} provider builtin provider descriptor
+ * @returns {boolean}
+ */
+function isFreeNoKeyProvider(provider) {
+  if (!provider || typeof provider !== 'object') {
+    return false;
+  }
+  if (provider.freeNoKey) {
+    return true;
+  }
+  return /OpenCode Zen/i.test(String(provider.name || ''));
+}
+
+/**
+ * Collapsed first-run banner: a 3-line summary plus a pointer to the full guide.
+ * The full text (every provider + where to get a key) stays behind an explicit
+ * menu choice, so a fresh start is no longer an 80-line wall.
+ * @param {object|null} c chalk-like painter
+ * @returns {string[]}
+ */
+function renderGuideSummary(c) {
+  const paint = (fn, s) => (c && typeof c[fn] === 'function' ? c[fn](s) : s);
+  return [
+    '',
+    paint('bold', '模型网关 · 从这里开始'),
+    paint('dim', '  模型网关 = 让 khy 连上某个 AI 模型。三步:选供应商 → 填 Key → 选模型。'),
+    paint('dim', '  已内置免费通道 OpenCode Zen(无需注册),也可以换成自己的 API Key。'),
+    paint('dim', '  想看全部供应商与申请入口,运行 ') +
+      paint('yellow', 'khy gateway guide') +
+      paint('dim', '。'),
+    '',
+  ];
+}
+
 /** 是否已配置过任意模型供应商(密钥池有 Key,或任一内置 env Key 已设)。 */
 function defaultHasConfiguredProvider() {
   try {
@@ -171,6 +251,12 @@ function defaultHasConfiguredProvider() {
   } catch {
     /* ignore */
   }
+  // The auto-seeded free channel counts as configured: it is seeded (idempotently)
+  // right before this probe, so a fresh machine goes straight to the TUI with
+  // zero questions instead of being nagged about a model it can already use.
+  if (defaultHasFreeChannel()) {
+    return true;
+  }
   return false;
 }
 
@@ -182,7 +268,7 @@ function defaultHasConfiguredProvider() {
  * @param {object} [opts.inquirer] inquirer 实例(prompt(questions)=>answers)
  * @param {object} [opts.io] { log, error }
  * @param {object} [opts.c]  chalk 实例(可选着色)
- * @param {object} [opts.deps] { listProviders, getPresets, applyKey, hasConfiguredProvider, markDone, needs }
+ * @param {object} [opts.deps] { listProviders, getPresets, applyKey, hasConfiguredProvider, ensureZen, markDone, needs }
  * @returns {Promise<object>}
  */
 async function runOnboarding(opts = {}) {
@@ -202,6 +288,7 @@ async function runOnboarding(opts = {}) {
   const getPresets = deps.getPresets || defaultGetPresets;
   const applyKey = deps.applyKey || defaultApplyKey;
   const hasConfigured = deps.hasConfiguredProvider || defaultHasConfiguredProvider;
+  const ensureZen = deps.ensureZen || defaultEnsureZen;
   const markDone = deps.markDone || markOnboardingDone;
   const needs = deps.needs || needsOnboarding;
 
@@ -211,10 +298,32 @@ async function runOnboarding(opts = {}) {
   if (!needs()) {
     return { skipped: 'done' };
   }
-  // 老用户升级:已经配过模型 → 静默标记完成,绝不打扰。
+  // Seed the built-in free channel (idempotent) BEFORE probing, so a fresh
+  // machine already owns a working model. Only this is awaited — never
+  // gateway.init(): that would put 20s+ on the startup critical path. Skipped
+  // when the caller injected its own probe (it owns that decision, and unit
+  // tests must stay free of real key-pool writes).
+  if (typeof deps.hasConfiguredProvider !== 'function') {
+    try {
+      await ensureZen();
+    } catch {
+      /* seeding is best-effort; never blocks startup */
+    }
+  }
+  // Already usable (a real key, or the seeded free channel): mark done and get
+  // out of the way. One short note, so a forced re-run (`/onboarding full`)
+  // still tells the user why nothing was asked.
   try {
     if (hasConfigured()) {
       markDone();
+      log(
+        paint('dim', '  已就绪:内置免费通道 OpenCode Zen(无需注册)随时可用,可直接开始对话。')
+      );
+      log(
+        paint('dim', '  想用自己的供应商?运行 ') +
+          paint('yellow', 'khy gateway config') +
+          paint('dim', '。')
+      );
       return { skipped: 'configured' };
     }
   } catch {
@@ -233,16 +342,16 @@ async function runOnboarding(opts = {}) {
           }
         })();
   if (!inquirer || typeof inquirer.prompt !== 'function') {
-    // 无法交互:打印引导文字后标记完成,不阻塞。
-    for (const line of guide.renderGuide(guide.buildGuide(), { c })) {
+    // Non-interactive: print the collapsed banner, mark done, never block.
+    for (const line of renderGuideSummary(c)) {
       log(line);
     }
     markDone();
     return { skipped: 'non-interactive' };
   }
 
-  // ── 欢迎 + 引导全文 ──
-  for (const line of guide.renderGuide(guide.buildGuide(), { c })) {
+  // ── 欢迎:默认只给摘要,完整引导留给菜单里的显式选项 ──
+  for (const line of renderGuideSummary(c)) {
     log(line);
   }
 
@@ -262,22 +371,71 @@ async function runOnboarding(opts = {}) {
     /* 安全须知非关键:任何异常静默跳过,继续引导 */
   }
 
-  let action;
-  try {
-    ({ action } = await inquirer.prompt([
-      {
-        type: 'list',
-        name: 'action',
-        message: '现在配置一个模型吗?',
-        choices: [
-          { name: '现在配置(选供应商 + 填 API Key)', value: 'configure' },
-          { name: '稍后再说(可随时运行 khy gateway guide / khy gateway config)', value: 'skip' },
-        ],
-      },
-    ]));
-  } catch {
+  // Free-channel finisher: seeding (pool + registry + model list) is the SSOT
+  // path, so there is no key prompt and no applyKey call here.
+  const finishFree = async (provider) => {
+    try {
+      await ensureZen();
+    } catch {
+      /* best-effort */
+    }
+    const models =
+      provider && Array.isArray(provider.models) ? provider.models.filter(Boolean) : [];
+    const model = models.length ? models[0] : '';
     markDone();
-    return { skipped: 'aborted' };
+    log('');
+    log(
+      paint('green', '  ✓ 免费通道已就绪(OpenCode Zen,无需注册)') +
+        (model ? paint('dim', ` · 默认模型 ${model}`) : '')
+    );
+    log(
+      paint('dim', '  想换模型或加自己的供应商,运行 ') +
+        paint('yellow', 'khy gateway config') +
+        paint('dim', '。')
+    );
+    log('');
+    return { ok: true, provider: ZEN_POOL_KEY, free: true, model };
+  };
+
+  let action;
+  for (;;) {
+    try {
+      ({ action } = await inquirer.prompt([
+        {
+          type: 'list',
+          name: 'action',
+          message: '现在配置一个模型吗?',
+          choices: [
+            { name: '先用免费的(OpenCode Zen,无需注册) — 推荐', value: 'free' },
+            { name: '现在配置我自己的(选供应商 + 填 API Key)', value: 'configure' },
+            { name: '查看完整引导(全部供应商 + 去哪申请 Key)', value: 'guide' },
+            {
+              name: '稍后再说(可随时运行 khy gateway guide / khy gateway config)',
+              value: 'skip',
+            },
+          ],
+        },
+      ]));
+    } catch {
+      markDone();
+      return { skipped: 'aborted' };
+    }
+    if (action === 'guide') {
+      // On-demand full guide: rendered only because the user asked for it.
+      for (const line of guide.renderGuide(guide.buildGuide(), { c })) {
+        log(line);
+      }
+      continue;
+    }
+    break;
+  }
+
+  if (action === 'free') {
+    const all = listProviders();
+    const zen = (Array.isArray(all) ? all : []).find(
+      (p) => p && String(p.poolKey || '').toLowerCase() === ZEN_POOL_KEY
+    );
+    return await finishFree(zen || null);
   }
 
   if (action !== 'configure') {
@@ -322,6 +480,11 @@ async function runOnboarding(opts = {}) {
   }
 
   const { provider, links } = picked;
+
+  // Free-tier provider (OpenCode Zen): nothing to type in — seeding is enough.
+  if (isFreeNoKeyProvider(provider)) {
+    return await finishFree(provider);
+  }
 
   // 展示「去哪申请 Key」
   if (links && links.console) {
@@ -417,6 +580,8 @@ module.exports = {
   // 纯helper(供测试/复用)
   buildProviderChoices,
   linkForProvider,
+  renderGuideSummary,
+  isFreeNoKeyProvider,
   flagPath,
   LEGACY_FLAG,
 };
