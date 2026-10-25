@@ -107,9 +107,12 @@ function getStage(env = process.env) {
 
 // relay 系渠道沿旧 auto 语义恒为最后手段,不进全局池参与排序。
 const _POOL_EXCLUDED_KEYS = new Set(['relay', 'webrelay', 'web-relay']);
-// 观察样本落点:works/data/khy/ruleguard/auto-route.jsonl(与 authzFailureLedger 同档惯例;
-// env KHY_AUTO_MODEL_OBSERVE_FILE 可覆盖,测试注入用)。
-const _OBSERVE_REL = path.join('works', 'data', 'khy', 'ruleguard', 'auto-route.jsonl');
+// 观察样本落点:<dataHome>/T1-domains/telemetry/ruleguard/auto-route.jsonl
+// (与 authzFailureLedger 同档惯例;env KHY_AUTO_MODEL_OBSERVE_FILE 可覆盖,测试注入用)。
+// 曾经这里是 path.resolve(process.cwd(), 'works/data/khy/ruleguard/...') —— 一个相对
+// cwd 的路径。任何把 cwd 设在 backend 目录的入口(旧版 bin/khy.cmd 的 pushd 就是)都会把
+// 台账写进 runtime/node/backend/works/data/khy/,在磁盘上养出第二棵状态树。改走 dataHome
+// 解析器后,落点只由 KHY_DATA_HOME 决定,与调用方从哪个目录敲命令无关。
 const _OBSERVE_MAX_BYTES = 2 * 1024 * 1024; // 与 ruleguard 台账同档:超限裁留后半
 
 function _observePath(env = process.env) {
@@ -117,7 +120,16 @@ function _observePath(env = process.env) {
   if (override && typeof override === 'string') {
     return override;
   }
-  return path.resolve(process.cwd(), _OBSERVE_REL);
+  // Lazy require: dataHome resolves the portable root and the .location.json
+  // pointer, which must not be pulled into the module top level.
+  try {
+    const { getDataDir } = require('../../utils/dataHome');
+    return getDataDir('ruleguard', 'auto-route.jsonl');
+  } catch {
+    // dataHome unavailable (e.g. a stripped test harness): fall back to the
+    // portable root derived from this file rather than to cwd.
+    return path.resolve(__dirname, '..', '..', '..', '..', 'works', 'data', 'khy', 'ruleguard', 'auto-route.jsonl');
+  }
 }
 
 // ── 内存态(模块级单例;gateway 实例由调用方逐次注入)───────────────────────────

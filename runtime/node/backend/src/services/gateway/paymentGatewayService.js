@@ -151,17 +151,28 @@ function normalizePositiveInt(value) {
 
 function normalizeGrant(input = {}, fallbackAmountCny = 0) {
   const src = isPlainObject(input) ? input : {};
+  // monthlyBudgetCny is a balance delta and keeps its sign: a refund is a
+  // negative grant. It used to be Math.max(0, …), which made a reversal
+  // indistinguishable from "no grant" — the reason refunds were not
+  // constructible at all. monthlyRequests / monthlyTokens stay clamped because
+  // they are usage ceilings and a refund must not hand anyone headroom.
   const normalized = {
     monthlyRequests: normalizePositiveInt(src.monthlyRequests),
     monthlyTokens: normalizePositiveInt(src.monthlyTokens),
-    monthlyBudgetCny: Math.max(0, roundCny(src.monthlyBudgetCny)),
+    monthlyBudgetCny: roundCny(src.monthlyBudgetCny),
   };
+  // Fall back to the order amount only when the caller passed nothing usable.
+  // An explicit all-zero grant means "credit nothing", not "use the amount".
+  const hasAnyField = ['monthlyRequests', 'monthlyTokens', 'monthlyBudgetCny'].some(
+    (k) => src[k] !== undefined && src[k] !== null && src[k] !== ''
+  );
   if (
+    !hasAnyField &&
     normalized.monthlyRequests === 0 &&
     normalized.monthlyTokens === 0 &&
     normalized.monthlyBudgetCny === 0
   ) {
-    normalized.monthlyBudgetCny = Math.max(0, roundCny(fallbackAmountCny));
+    normalized.monthlyBudgetCny = roundCny(fallbackAmountCny);
   }
   return normalized;
 }
@@ -369,6 +380,18 @@ function timingSafeEqualHex(a, b) {
   return crypto.timingSafeEqual(left, right);
 }
 
+/**
+ * Unsigned webhooks are accepted only when this is explicitly turned on, which
+ * exists for local mock development. It is off by default: a missing secret must
+ * never mean "accept anything", because every caller reaching this path is a
+ * quota top-up. The previous rule was `NODE_ENV !== 'production'`, which turned
+ * staging / an unset NODE_ENV into an unauthenticated way to grant yourself
+ * budget (see works/data/khy/feedback/190-saas-p0-stopbleed/repro-before.txt).
+ */
+function isUnsignedWebhookAllowed() {
+  return String(process.env.KHY_WEBHOOK_ALLOW_UNSIGNED || '').toLowerCase() === 'true';
+}
+
 function verifyMockWebhookSignature(payload, signature = '') {
   const rawSecret = String(
     process.env.AI_PAYMENT_WEBHOOK_SECRET || process.env.KHY_PAYMENT_WEBHOOK_SECRET || ''
@@ -378,7 +401,7 @@ function verifyMockWebhookSignature(payload, signature = '') {
     .replace(/^sha256=/i, '');
 
   if (!rawSecret) {
-    return process.env.NODE_ENV !== 'production';
+    return isUnsignedWebhookAllowed();
   }
   if (!normalizedSignature) {
     return false;
@@ -519,7 +542,13 @@ async function createPayment(input = {}, options = {}) {
 
   const store = loadStore();
   if (idempotencyKey) {
-    const existing = store.payments.find((item) => item.idempotencyKey === idempotencyKey);
+    // Scoped to this customer: the key is the caller's own retry token, so a
+    // whole-table match let one customer claim another's order (and its
+    // idempotency slot) just by guessing the string. Two customers using the
+    // same key is not a collision.
+    const existing = store.payments.find(
+      (item) => item.idempotencyKey === idempotencyKey && item.customerId === customer.id
+    );
     if (existing) {
       return decoratePaymentView(existing, store, {
         includeCheckout: true,
@@ -737,7 +766,15 @@ async function processWebhook(providerRaw, payload = {}, options = {}) {
   }
 
   const amountCny = body.amountCny == null ? null : roundCny(body.amountCny);
-  if (amountCny != null && amountCny > 0 && amountCny !== order.amountCny) {
+  if (amountCny == null) {
+    // A paid callback without an amount is indistinguishable from "credit me
+    // whatever the order happens to be worth", so it is refused outright rather
+    // than skipping the comparison. Non-paid callbacks carry no money and keep
+    // their old behaviour.
+    if (status === 'paid') {
+      throw new Error('amountCny is required for a paid webhook');
+    }
+  } else if (amountCny > 0 && amountCny !== order.amountCny) {
     throw new Error(
       `amount mismatch: expected ${order.amountCny.toFixed(2)}, got ${amountCny.toFixed(2)}`
     );

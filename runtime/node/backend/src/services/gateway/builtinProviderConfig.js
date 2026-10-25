@@ -114,13 +114,27 @@ const BUILTIN_PROVIDERS = [
   },
   // Free-tier OpenCode Zen: no account key (gate is client fingerprint via
   // zenGatekeeper). endpoint comes from serviceDefaults.ZEN_BASE_URL (SSOT).
+  // models = 2026-10-21 实测上游目录(opencode models 的 opencode/* 免费项),
+  // 用于 applyBuiltinProviderKey 的 PROXY_MODEL_ROUTE_MAP 路由条目;
+  // 上游目录由 apiAdapter.listModels() 动态刷新,本静态清单只作种子,
+  // 废弃项以 zenRetiredModels 台账为准。
   {
     name: 'OpenCode Zen',
     poolKey: 'opencode-zen',
     envKey: null,
     envEndpoint: null,
     defaultEndpoint: require('../../constants/serviceDefaults').ZEN_BASE_URL,
-    models: ['mimo-v2.6-flash-free'],
+    models: [
+      'mimo-v2.6-flash-free',
+      'big-pickle',
+      'glm-5.3-flash-free',
+      'deepseek-v4.1-flash-free',
+      'flint-40b-free',
+      'jev-1.13-free',
+      'nemotron-3.5-lightning-free',
+      'nemotron-3.5-super-vl-free',
+      'beam-free',
+    ],
     freeNoKey: true,
   },
 ];
@@ -148,9 +162,49 @@ function _withGlmLatest(p) {
   return p;
 }
 
+/**
+ * 剔除描述符 models 中的已废弃模型(zenRetiredModels 台账:静态名单 + 调用反馈
+ * 自愈账本)。门 KHY_ZEN_RETIRED_FILTER(默认开;显式 0/false/off/no 关 → 不过滤)。
+ * fail-soft:台账 require 失败/查询异常 → 原样返回。
+ * 与 _withGlmLatest 同模式:在调用方拿到的新副本上叠加,不改共享描述符。
+ * 防止 Key 池视图与 PROXY_MODEL_ROUTE_MAP 路由种子继续把死模型(上游 401/410)
+ * 摆给用户;上游目录由 apiAdapter.listModels() 动态刷新,本静态清单是种子,
+ * 长期正确性靠台账自愈(markRetired 撞一次即永久隐藏)。
+ */
+function _filterRetiredModels(p) {
+  if (!p || !Array.isArray(p.models) || p.models.length === 0) {
+    return p;
+  }
+  try {
+    const v = String((process.env && process.env.KHY_ZEN_RETIRED_FILTER) || '')
+      .trim()
+      .toLowerCase();
+    if (['0', 'false', 'off', 'no'].includes(v)) {
+      return p;
+    }
+    const retired = require('../zenRetiredModels');
+    if (!retired || typeof retired.isRetired !== 'function') {
+      return p;
+    }
+    const kept = p.models.filter((m) => {
+      try {
+        return !retired.isRetired(m);
+      } catch {
+        return true;
+      }
+    });
+    if (kept.length !== p.models.length) {
+      p.models = kept;
+    }
+  } catch {
+    /* fail-soft: 台账不可用 → 不过滤 */
+  }
+  return p;
+}
+
 /** Fresh shallow copies so callers can never mutate the shared descriptors. */
 function listBuiltinProviders() {
-  return BUILTIN_PROVIDERS.map((p) => _withGlmLatest({ ...p }));
+  return BUILTIN_PROVIDERS.map((p) => _filterRetiredModels(_withGlmLatest({ ...p })));
 }
 
 /**
@@ -171,11 +225,11 @@ function findBuiltinProvider(nameOrPoolKey) {
   }
   for (const p of BUILTIN_PROVIDERS) {
     if (p.poolKey && p.poolKey.toLowerCase() === needle) {
-      return _withGlmLatest({ ...p });
+      return _filterRetiredModels(_withGlmLatest({ ...p }));
     }
     const name = String(p.name || '').toLowerCase();
     if (name === needle) {
-      return _withGlmLatest({ ...p });
+      return _filterRetiredModels(_withGlmLatest({ ...p }));
     }
     // Match any alias token inside the name: "anthropic (claude)" → {anthropic, claude}.
     const tokens = name
@@ -183,7 +237,7 @@ function findBuiltinProvider(nameOrPoolKey) {
       .map((t) => t.trim())
       .filter(Boolean);
     if (tokens.includes(needle)) {
-      return _withGlmLatest({ ...p });
+      return _filterRetiredModels(_withGlmLatest({ ...p }));
     }
   }
   return null;

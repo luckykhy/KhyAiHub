@@ -23,6 +23,9 @@ const path = require('path');
 
 const adaptiveOutput = require('../adaptiveOutput');
 
+// 外部智能体委派审批闸（纯叶子，无网关反向依赖，无 require 环）。
+const delegationGate = require('./delegationGate');
+
 // Module-scope deps from aiGateway.js, injected once at host load (see setter). The 11 functions are
 // hoisted declarations on the host; the value deps (route-tuning tables, adapters, localLLMService) are
 // set once at host load. localLLMService can legitimately be null, so it uses a `!== undefined` guard.
@@ -1125,6 +1128,46 @@ const AIGatewayRoutingMethods = {
       );
     } catch {
       /* protocol registry unavailable — adapters use their defaults */
+    }
+    // ── 外部智能体委派审批闸（fail-closed，用户要求的产品运行时闸）────────────
+    // 本方法是全仓唯一的 entry.adapter.generate 内容生成执行点（探活 ping 直调
+    // entry.adapter.generate 的三处不承载用户内容，刻意不过闸）。凡外部智能体 key
+    // （claude/codex/opencode/openclaw/acp/commandcode/cli）在此先过审批：
+    // 未批准 → 返回与 beforeRun-skip 同型的拒绝信封（gatewaySkipFastFail:true），
+    // 级联按既有 virtualSkip 路径留痕、释放尝试预算（不毒化冷却）并继续下一通道；
+    // 严格钉选则由级联走 finishResult 终局诚实失败。auto 档不豁免本闸。
+    if (delegationGate.isExternalDelegationAdapter(entry.key)) {
+      const _adapterName = (() => {
+        try {
+          return entry.adapter.getStatus().name || entry.key;
+        } catch {
+          return entry.key;
+        }
+      })();
+      const _verdict = await delegationGate.decideExternalDelegation({
+        adapterKey: entry.key,
+        adapterName: _adapterName,
+        policy: delegationGate.resolveDelegationPolicy(process.env),
+        humanPin: generateOptions.delegationApprovedByUser,
+        sessionApproved: this._delegationApprovals
+          ? this._delegationApprovals.has(entry.key)
+          : false,
+        sessionStore: this._delegationApprovals || null,
+        ask: delegationGate.buildDelegationAsk(generateOptions.onControlRequest),
+      });
+      delegationGate.observeDelegationSample(
+        {
+          adapterKey: entry.key,
+          adapterName: _adapterName,
+          decision: _verdict.allowed ? 'allow' : 'deny',
+          cause: _verdict.cause || '',
+          asked: !!_verdict.asked,
+        },
+        process.env
+      );
+      if (!_verdict.allowed) {
+        return delegationGate.buildDelegationDeniedResult(entry, _verdict.reason);
+      }
     }
     const effectivePrompt = _injectKhyProtocolPrompt(prompt, generateOptions);
     const shouldEmitPromptDebug = String(process.env.KHY_GATEWAY_DEBUG_PROMPT || '').trim() === '1';

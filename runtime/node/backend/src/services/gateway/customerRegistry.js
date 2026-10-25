@@ -50,7 +50,10 @@ function readJsonWithFallback(filePaths = [], fallback = {}) {
 
 function writeJsonAtomic(filePath, payload) {
   ensureDir(path.dirname(filePath));
-  const tmp = `${filePath}.tmp.${Date.now()}`;
+  // The pid is load-bearing: without it two processes writing in the same
+  // millisecond pick the SAME tmp path, one renames it away and the other's
+  // renameSync dies with ENOENT. Matches paymentGatewayService's writer.
+  const tmp = `${filePath}.tmp.${process.pid}.${Date.now()}`;
   fs.writeFileSync(tmp, JSON.stringify(payload, null, 2), 'utf-8');
   fs.renameSync(tmp, filePath);
 }
@@ -62,6 +65,11 @@ function normalizeStringArray(input) {
   return [...new Set(input.map((item) => String(item || '').trim()).filter(Boolean))];
 }
 
+/** CNY rounded to whole fen, keeping the sign (refunds must stay negative). */
+function roundFen(cny) {
+  return Math.round((Number(cny) || 0) * 100) / 100;
+}
+
 function normalizeQuota(input) {
   const source = input && typeof input === 'object' ? input : {};
   const monthlyRequests = Number(source.monthlyRequests) || 0;
@@ -70,7 +78,10 @@ function normalizeQuota(input) {
   return {
     monthlyRequests: Math.max(0, monthlyRequests),
     monthlyTokens: Math.max(0, monthlyTokens),
-    monthlyBudgetCny: Math.max(0, monthlyBudgetCny),
+    // Signed on purpose: monthlyBudgetCny is a balance, and a refund must be
+    // able to push it below zero (arrears). The two fields above stay clamped
+    // because they are usage ceilings, where a negative value means nothing.
+    monthlyBudgetCny: Math.round(monthlyBudgetCny * 100) / 100,
   };
 }
 
@@ -424,28 +435,138 @@ function getCustomer(customerId, options = {}) {
   );
 }
 
-function adjustCustomerQuota(customerId, delta = {}, options = {}) {
-  const store = loadStore();
-  const customer = getCustomerById(store, customerId);
-  if (!customer) {
-    throw new Error(`customer not found: ${customerId}`);
+/** How many times adjustCustomerQuota re-reads and re-applies on a lost race. */
+const QUOTA_CAS_MAX_ATTEMPTS = 8;
+/** A lock older than this is assumed to belong to a crashed process. */
+const STORE_LOCK_STALE_MS = 10_000;
+/** Give up acquiring the store lock after this long. */
+const STORE_LOCK_TIMEOUT_MS = 5_000;
+
+/** Synchronous sleep — this module is sync by contract, so Atomics.wait. */
+function sleepSync(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+/**
+ * Run `fn` with exclusive cross-process access to the customer store.
+ *
+ * A compare-and-swap alone is not enough here, and the measurement is worth
+ * recording: the CAS check and the write are not atomic, so two processes can
+ * both pass the version check before either writes. Worse, the tmp+rename
+ * "atomic write" is not concurrency-safe on Windows at all — two renames onto
+ * the same destination fail with EPERM, which is how a payment callback could
+ * die mid-update. Serializing the whole read-modify-write fixes both.
+ */
+function withStoreLock(fn) {
+  ensureDir(KHY_DIR);
+  const lockPath = path.join(KHY_DIR, `${path.basename(CUSTOMER_FILE)}.lock`);
+  const deadline = Date.now() + STORE_LOCK_TIMEOUT_MS;
+  let fd = null;
+
+  while (fd === null) {
+    try {
+      fd = fs.openSync(lockPath, 'wx');
+    } catch (err) {
+      // Contention surfaces as EEXIST on POSIX but as EPERM/EACCIS on Windows,
+      // where a file another process holds open cannot be opened at all. Both
+      // mean "someone else has it" — treat them as contention rather than
+      // letting the loser die mid-payment.
+      const contention = err.code === 'EEXIST' || err.code === 'EPERM' || err.code === 'EACCES';
+      if (!contention) throw err;
+      try {
+        const age = Date.now() - fs.statSync(lockPath).mtimeMs;
+        if (age > STORE_LOCK_STALE_MS) {
+          fs.unlinkSync(lockPath);
+          continue;
+        }
+      } catch {
+        continue; // lock vanished under us — retry the acquire
+      }
+      if (Date.now() > deadline) {
+        throw new Error(
+          `customer store is locked by another process for more than ${STORE_LOCK_TIMEOUT_MS}ms; ` +
+            `if no writer is running, delete the stale lock file ${lockPath}`
+        );
+      }
+      sleepSync(5);
+    }
   }
 
-  const current = normalizeQuota(customer.quota || DEFAULT_QUOTA);
-  const patch = normalizeQuota(delta || DEFAULT_QUOTA);
-  customer.quota = normalizeQuota({
-    monthlyRequests: current.monthlyRequests + patch.monthlyRequests,
-    monthlyTokens: current.monthlyTokens + patch.monthlyTokens,
-    monthlyBudgetCny: current.monthlyBudgetCny + patch.monthlyBudgetCny,
-  });
-  customer.updatedAt = new Date().toISOString();
-  saveStore(store);
+  try {
+    return fn();
+  } finally {
+    try {
+      fs.closeSync(fd);
+    } catch {
+      /* already gone */
+    }
+    try {
+      fs.unlinkSync(lockPath);
+    } catch {
+      /* another process already broke it as stale */
+    }
+  }
+}
 
-  return (
-    buildCustomerViews([customer], {
-      includeSecrets: options.includeSecrets === true,
-    })[0] || null
-  );
+/**
+ * Apply a quota delta without losing a concurrent writer's update.
+ *
+ * This is a read-modify-write over a JSON file that both the gateway process
+ * and the ai-backend process write, so two payment callbacks landing together
+ * used to race: both read the same balance, both wrote, and the second silently
+ * erased the first one's credit. The store lock serializes the section and
+ * saveStore's compare-and-swap is the belt-and-braces check inside it.
+ */
+function adjustCustomerQuota(customerId, delta = {}, options = {}) {
+  const patch = normalizeQuota(delta || DEFAULT_QUOTA);
+
+  return withStoreLock(() => {
+    for (let attempt = 1; attempt <= QUOTA_CAS_MAX_ATTEMPTS; attempt += 1) {
+      const store = loadStore();
+      const customer = getCustomerById(store, customerId);
+      if (!customer) {
+        throw new Error(`customer not found: ${customerId}`);
+      }
+
+      const current = normalizeQuota(customer.quota || DEFAULT_QUOTA);
+      const nextBudget = roundFen(current.monthlyBudgetCny + patch.monthlyBudgetCny);
+
+      // 0 has always meant "no limit" for this field, so a reversal that lands the
+      // balance exactly on 0 would silently convert a paying customer into an
+      // unlimited one. Revocation is a different operation with its own primitive
+      // (setCustomerEnabled(false) → 403 customer_disabled); refuse the ambiguous
+      // case here instead of guessing which one the caller meant.
+      if (patch.monthlyBudgetCny < 0 && nextBudget === 0) {
+        throw new Error(
+          `refund would leave customer ${customerId} with a zero balance, which this system reads as unlimited; ` +
+            `revoke access with setCustomerEnabled(${customerId}, false) instead, or refund a smaller amount to keep a positive balance`
+        );
+      }
+
+      customer.quota = normalizeQuota({
+        monthlyRequests: current.monthlyRequests + patch.monthlyRequests,
+        monthlyTokens: current.monthlyTokens + patch.monthlyTokens,
+        monthlyBudgetCny: nextBudget,
+      });
+      customer.updatedAt = new Date().toISOString();
+
+      const saved = saveStore(store, store.version);
+      if (saved.ok) {
+        return (
+          buildCustomerViews([customer], {
+            includeSecrets: options.includeSecrets === true,
+          })[0] || null
+        );
+      }
+      // Conflict: another writer advanced the store. Re-read so the delta is
+      // applied on top of their result, not over it.
+    }
+
+    throw new Error(
+      `quota update for ${customerId} lost ${QUOTA_CAS_MAX_ATTEMPTS} consecutive races against concurrent writers; ` +
+        'retry the operation'
+    );
+  });
 }
 
 function listCustomers(options = {}) {

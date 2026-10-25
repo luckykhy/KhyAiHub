@@ -194,6 +194,11 @@ const HINTS = {
   MODEL_NOT_FOUND: ['运行 `/model` 查看可用模型并切换', '或在厂商控制台领取/开通该模型'],
   CONTEXT_TOO_LONG: ['运行 `/compact` 压缩上下文', '或新建会话后重试'],
   CHANNEL_UNAVAILABLE: ['运行 `khy gateway status` 查看各通道实测状态', '运行 `khy gateway model` 改选可用通道'],
+  DELEGATION_DENIED: [
+    '外部智能体委派未获批准：在审批询问中选「允许」即可放行（本会话内同一渠道不再询问），或设 KHY_DELEGATION_APPROVAL=allow 常开、=deny 一律拒绝',
+    '若该渠道是被 GATEWAY_PREFERRED_ADAPTER 钉死的：设 GATEWAY_PREFERRED_STRICT=false 或清空 GATEWAY_PREFERRED_ADAPTER，拒绝后网关会继续尝试原生通道',
+    '非严格钉选时网关已跳过该渠道并继续尝试原生通道，无需额外操作',
+  ],
   CANCELLED: [],
   CHANNEL_EXHAUSTED: [
     '运行 `khy gateway status` 查看各通道实测状态',
@@ -222,6 +227,7 @@ const TITLES = {
   CANCELLED: '请求已取消',
   CHANNEL_EXHAUSTED: '本次请求未能完成 —— 所有 AI 通道均不可用',
   NO_ATTEMPT: '本次请求未能完成 —— 本轮未尝试任何通道',
+  DELEGATION_DENIED: '本次请求未能完成 —— 外部智能体委派未获批准',
   NONE: '本次请求未能完成',
 };
 
@@ -335,6 +341,11 @@ function _resolveCode(ctx) {
     const msg = _normType(primaryCause && primaryCause.detail);
     const pinned = !!(routing && routing.pinned && routing.fallbackSuppressed);
 
+    // ⓪ 外部智能体委派未获批准（委派审批闸的 errorType）——审批事实优先于钉选
+    //    元原因：即便 strict 钉死了外部渠道，「未获批准」才是用户可行动的真相。
+    if (t === 'delegation_denied') {
+      return 'DELEGATION_DENIED';
+    }
     // ① 钉选 + 通道确实不存在 → 元原因是钉选,报可解钉的专项码。
     if (pinned && _isChannelAbsent(primaryCause)) {
       return 'CHANNEL_ABSENT_PINNED';
