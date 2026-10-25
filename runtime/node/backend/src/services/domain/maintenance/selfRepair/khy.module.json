@@ -6,14 +6,14 @@
   "_deviation_note": "登记而非白名单：两个成员都伸进 D1（src/services 顶层）——primitives.js → ../../../evolutionSafety；transactionRunner.js → ../../../evolutionPolicy、../../../evolutionSafety、../../../selfRepairTransaction，以及回滚未净时的 ../../../healEscalationService（惰性 require，在 try 内）。另 primitives.js 从仓库根 ../../../../../../../scripts/lib/{leafContractGuard,modelHardcodingGuard} 深伸进 D5 工程档案区（缺失时 best-effort 置 null 跳过）。D2→D1 与 D2→D5 都不在名义边界内，交由 archDebtScan R1/R3 与 domain-direction 的既有棘轮管辖，本清单如实登记，不写白名单把它合法化。",
   "fanIn": 3,
   "fanInEvidence": [
-    "services/backend/src/services/changeWatchService.js",
-    "services/backend/src/services/selfRepair/index.js",
-    "services/backend/src/services/tool/toolUseLoopCore.js"
+    "runtime/node/backend/src/services/changeWatchService.js",
+    "runtime/node/backend/src/services/selfRepair/index.js",
+    "runtime/node/backend/src/services/tool/toolUseLoopCore.js"
   ],
   "_fanIn_note": "非测试消费者 3 个：changeWatchService（每回合开始跑校验）、D1 再导出壳 services/selfRepair/index.js、toolUseLoopCore（fix 派发处）。evolutionPolicy.js / evolutionSafety.js / selfRepairTransaction.js 的文本命中经核为注释，不构成 require 边。注：toolUseLoopCore.js 是作者 in-flight 文件，本单元只读其引用关系、未作任何改动。",
   "behaviourTestsOutsideUnit": [
-    "services/backend/tests/selfRepairTransactionRunner.test.js",
-    "services/backend/tests/evolutionPolicy.test.js"
+    "runtime/node/backend/tests/selfRepairTransactionRunner.test.js",
+    "runtime/node/backend/tests/evolutionPolicy.test.js"
   ],
   "lifecycle": {
     "stage": "stable",

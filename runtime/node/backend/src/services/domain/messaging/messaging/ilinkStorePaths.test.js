@@ -44,7 +44,7 @@ after(() => {
 });
 
 describe('ilinkStorePaths —— 路径与校验叶子', () => {
-  it('导出面收齐 8 个成员', () => {
+  it('导出面收齐 11 个成员', () => {
     installStub(() => tmpRoot);
     delete require.cache[require.resolve('./ilinkStorePaths')];
     const m = require('./ilinkStorePaths');
@@ -57,6 +57,8 @@ describe('ilinkStorePaths —— 路径与校验叶子', () => {
       '_cursorFile',
       '_dir',
       '_isValidAccountId',
+      '_peersBak',
+      '_peersFile',
       '_stateFile',
     ]);
   });
