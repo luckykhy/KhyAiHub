@@ -1,0 +1,21 @@
+{
+  "name": "phone",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "fanIn": 2,
+  "tests": [
+    "services/backend/src/services/domain/network/phone/phoneBridgeCatalog.test.js",
+    "services/backend/src/services/domain/network/phone/phoneBridgeConfig.test.js",
+    "services/backend/src/services/domain/network/phone/phoneBridgePolicy.test.js",
+    "services/backend/src/services/domain/network/phone/phoneBridgeMailbox.test.js",
+    "services/backend/src/services/domain/network/phone/phoneBridgeClient.test.js",
+    "services/backend/src/services/domain/network/phone/phoneCliPlan.test.js",
+    "services/backend/src/services/domain/network/phone/index.test.js"
+  ],
+  "lifecycle": {
+    "stage": "staged",
+    "since": "2026-10-21",
+    "provenance": "recorded-at-creation"
+  },
+  "_lifecycle_note": "staged，不是 stable：两个非测试消费者（src/tools/PhoneBridgeTool 与 src/cli/handlers/phone.js）都是本批同时落地的 D1 消费方，尚未经过真实使用期的检验，所以 fanIn 记 2 但仍留 staged。晋级三判据：单元 README ✓、7 个源文件全部同名同目录测试 ✓、整数 fanIn 声明 ✓。出边全部向下合法：D3 两处（constants/serviceDefaults、utils/flagRegistry 经惰性 require），CORE 若干（node:http / child_process / fs / os / path / crypto，标准库不计域）。同 network/remote 一样有两条伸向 services/backend/src/tools/platformUtils 取 safeKill 的出边——该目录不在 DOMAIN-DEPS 任何 roots/overrides 里，守卫静默跳过；沿用邻居的既有形状，不因此放宽 mayDependOn。"
+}

@@ -5,32 +5,32 @@
   "_mayDependOn_note": "实测出边（12 个源文件全数清点，require 说明符 path.resolve 后判定落点，磁盘遍历非 git ls-files——本工作区对象库已损坏，git 侧名单不可信）。**D3 5 站点**：utils/envFlagByName ×4（deployOrchestrator.js:34、remoteExecService.js:15、remoteFileTransferService.js:30、remoteStatePersistence.js:11）、utils/dataHome ×1（remoteStatePersistence.js:6）——全部合法方向。**D2 2 站点**：index.js:437 取 ../../deploy/publish/projectState、:438 取 ../../deploy/publish/dockerBundleBuilder，且都在 buildDockerBundle 回调内**惰性 require**（注释自陈「把 builder 挡在 module-load 路径之外」），D2→D2 横向合法。**同目录 11 站点**：index.js:3-16 取全部 11 个兄弟，兄弟之间零互引——本单元是干净的星形。**CORE 14 站点**：fs/os/path/crypto/child_process（标准库不计域）。⚠ **2 条 UNMAPPED 出边**：remoteExecService.js:6 与 remoteFileTransferService.js:22 各自 `require('../../../../tools/platformUtils')` 取 safeKill——`services/backend/src/tools/**` **不在 DOMAIN-DEPS 任何 roots/overrides 里**，守卫对这两条既不计合法也不计违规，静默跳过。这是继 messaging/mcp（B30-M8）与 network/externalApps 之后**第三个撞上同一登记盲区的批次**。mayDependOn **不因此放宽**：放宽等于把登记缺口做实，属人的裁决（[RESEARCH-018] C-7）。**D2→D1 反向边：0**（本单元没有任何一条边伸向 D1；D1 侧对它的唯一入口是 shim）。",
   "fanIn": 1,
   "fanInEvidence": [
-    "services/backend/src/services/remote/index.js"
+    "runtime/node/backend/src/services/remote/index.js"
   ],
   "_fanIn_note": "非测试消费者 **1 个文件 / 1 个 require 站点**（判据：磁盘全量 grep `domain/network/remote`，排除 *.test.js 与本目录内部互取）：`services/backend/src/services/remote/index.js:4` `module.exports = require('../domain/network/remote');` —— D1 侧整包 shim（文件头自陈 Auto-generated shim, Do not edit）。**扇入经由这一根针**：shim 自己的消费方实测 4 处 —— routes/remoteSsh.js:20（目录整包解构）、routes/largeTasks.js:10（取 remoteStateSyncService）、cli/handlers/remote.js:46（惰性整包）、tools/deploy.js:111（取 deployOrchestrator；注意 tools/deploy.js 自身也坐在无域归属的 src/tools 根上）。域构成：直接消费者 1 个，是 D1，方向合法（D1→D2）。另有 7 份单元外测试引用本目录（见 behaviourTestsOutsideUnit）。",
   "tests": [
-    "services/backend/src/services/domain/network/remote/deployOrchestrator.test.js",
-    "services/backend/src/services/domain/network/remote/index.test.js",
-    "services/backend/src/services/domain/network/remote/remoteApprovalBridge.test.js",
-    "services/backend/src/services/domain/network/remote/remoteExecService.test.js",
-    "services/backend/src/services/domain/network/remote/remoteExecStreamStore.test.js",
-    "services/backend/src/services/domain/network/remote/remoteFileTransferService.test.js",
-    "services/backend/src/services/domain/network/remote/remoteStatePersistence.test.js",
-    "services/backend/src/services/domain/network/remote/remoteStateSyncService.test.js",
-    "services/backend/src/services/domain/network/remote/remoteWorkspaceResolver.test.js",
-    "services/backend/src/services/domain/network/remote/sshConfigService.test.js",
-    "services/backend/src/services/domain/network/remote/sshConnectionManager.test.js",
-    "services/backend/src/services/domain/network/remote/sshCredentialGuard.test.js"
+    "runtime/node/backend/src/services/domain/network/remote/deployOrchestrator.test.js",
+    "runtime/node/backend/src/services/domain/network/remote/index.test.js",
+    "runtime/node/backend/src/services/domain/network/remote/remoteApprovalBridge.test.js",
+    "runtime/node/backend/src/services/domain/network/remote/remoteExecService.test.js",
+    "runtime/node/backend/src/services/domain/network/remote/remoteExecStreamStore.test.js",
+    "runtime/node/backend/src/services/domain/network/remote/remoteFileTransferService.test.js",
+    "runtime/node/backend/src/services/domain/network/remote/remoteStatePersistence.test.js",
+    "runtime/node/backend/src/services/domain/network/remote/remoteStateSyncService.test.js",
+    "runtime/node/backend/src/services/domain/network/remote/remoteWorkspaceResolver.test.js",
+    "runtime/node/backend/src/services/domain/network/remote/sshConfigService.test.js",
+    "runtime/node/backend/src/services/domain/network/remote/sshConnectionManager.test.js",
+    "runtime/node/backend/src/services/domain/network/remote/sshCredentialGuard.test.js"
   ],
   "_tests_note": "12 个源文件（wc 口径 3317 行；census 的 lines 字段按 split('\\n') 计数，逐文件恰 +1、合计 3329——是口径差不是数据错）/ 12 份共置测试，**每个源文件都有同名同目录测试**（逐文件核对，非抽样）。实测（2026-09-29，`node --test` 显式列 12 个路径）：**170 例 / 874 个断言调用点 / 0 fail / 0 skip / duration ≈ 1.5s**。本批收尾时修掉了前任留下的 6 例红，**六例全部判为测试侧错误**（断言了源码从未有过的形状/计数，源码无任何相反宣称），逐条改断言不改源码：① index.test.js:334 在 getSession 的克隆上取 `.events`——_cloneSession（remoteExecStreamStore.js:138-154）的形状里从来没有 events，改钉 getEventsSince(:367-394) 这条真回放面；② index.test.js:510 期望 alert_subscriber_total=1，实注册了两个函数监听器（index.js:179-187 对每个函数都 add），改为 2；③ remoteExecStreamStore.test.js:164 两次 appendEvent 后 seen 实为 [[1,1],[2,2]]，前任只写了一对，改为两对（throwing subscriber 被逐个 try/catch 吞掉的强度不减）；④ remoteExecStreamStore.test.js:329 把 create_session 的 payload（:261，无 done 字段）当成了第一条 append_event，改为按 reason 过滤后再钉 done false/true；⑤ remoteStateSyncService.test.js:48 assert.throws 与它自己的 message「surfaces on use, not on construction」自相矛盾——`{}` 解构成功、构造不抛，改为 doesNotThrow + 断言 getSnapshot() 使用时才炸 TypeError；⑥ sshConfigService.test.js:75 期望 `~` 展开落在 `<沙箱>\\ssh\\`，而配置值是 `~/.ssh/id_deploy`（有点号），且**委派前提「os.homedir() 无视注入的 HOME」经探针证伪**——本机 libuv 按 HOME→USERPROFILE 顺序在调用时解析，两者同钉即沙箱封闭；断言改为 strictEqual 全路径 `<沙箱>\\.ssh\\id_deploy`（比原 startsWith 更强）。所有测试先把 HOME/USERPROFILE/KHY_DATA_HOME/KHY_PROJECT_DATA_HOME/XDG_CONFIG_HOME 钉到 mkdtemp 临时目录**再 require**；index.test.js 与 exec/transfer 两份还在 require 前把 child_process.spawn 换成抛错 stub（B31-R17：spawn 在各自模块装载时绑定，后 patch 无效）。实测跑完 `git status --porcelain -- <本目录>` 仍只有 12+2 项 `??`、零 ` M`。",
   "behaviourTestsOutsideUnit": [
-    "services/backend/tests/services/deployOrchestrator.test.js",
-    "services/backend/tests/services/remoteApprovalBridge.test.js",
-    "services/backend/tests/services/remoteExecService.liveExec.test.js",
-    "services/backend/tests/services/remoteExecStreamStore.test.js",
-    "services/backend/tests/services/remoteFileTransferService.test.js",
-    "services/backend/tests/services/remoteStatePersistence.test.js",
-    "services/backend/tests/routes/largeTasks.errorPathsAndWatch.test.js"
+    "runtime/node/backend/tests/services/deployOrchestrator.test.js",
+    "runtime/node/backend/tests/services/remoteApprovalBridge.test.js",
+    "runtime/node/backend/tests/services/remoteExecService.liveExec.test.js",
+    "runtime/node/backend/tests/services/remoteExecStreamStore.test.js",
+    "runtime/node/backend/tests/services/remoteFileTransferService.test.js",
+    "runtime/node/backend/tests/services/remoteStatePersistence.test.js",
+    "runtime/node/backend/tests/routes/largeTasks.errorPathsAndWatch.test.js"
   ],
   "_outside_test_note": "单元外 7 份 / 9 个 require 站点（census 名单，逐名对磁盘核实存在）。方言实测：7 份**全部是 jest 方言**——6 份裸 `describe(...)/expect(...).toBe(...)`（其中 deployOrchestrator.test.js 与 remoteExecService.liveExec.test.js、remoteFileTransferService.test.js 还用 `jest.mock('child_process')`），第 7 份 largeTasks.errorPathsAndWatch.test.js 文件头自注「runner：jest」。**本环境未安装 jest，7 份 0 份可跑**；`node --test` 会把它们报成文件级装载失败（1 例 fail、名字就是文件路径）——那是方言错配不是产品缺陷，**绝不可据此判红**，也不可在本机改运行它们（改=修改跟踪文件，越权）。本批 7 份零修改。",
   "lifecycle": {
