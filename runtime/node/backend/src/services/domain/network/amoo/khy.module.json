@@ -1,0 +1,63 @@
+{
+  "name": "amoo",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "_mayDependOn_note": "实测出边（14 个非测试源文件全数清点，require 说明符 path.resolve 后判定落点，磁盘遍历而非 git ls-files）。**D3 4 站点**：utils/envFlagByName ×1（amooBridgeConfig.js:41，只取其 on-set 语义——该 helper 只读 process.env 不接 env 对象，故本单元自带等价的 _readFlag 并注释说明）、utils/dataHome ×2（index.js:23 装配期注入、index.test.js 断言用）、utils/platformUtils ×1（amooBridgeClient.js:22 取 safeKill + searchExecutable）。**同目录 11 站点**：amooDispatchRunner.js 取 policy/uiSnapshot/dispatchPlan 三个叶子，amooMailbox.js 取 policy，index.js 取四个兄弟 + config，amooCliPlan.js 取 dispatchPlan 一个叶子，amooPanelViewModel.js 取 dispatchPlan 一个叶子（describeStopReason 的单一真源，避免与 runner 重抄那 3 条中文），amooStatusProvider.js 取 amooPanelViewModel 一个叶子（provider 只向下取，不 import 任何 shell），amooWorkspaceClient.js 取 amooWorkspacePlan 一个叶子（IO 壳只向下取纯计划叶，与 amooBridgeClient→amooBridgePolicy 同构），测试文件取各自被测模块——兄弟之间零互引（叶子互相不 require，shell 只向下取），本单元是干净的分层。**CORE 6 站点**：node:child_process / node:http / node:fs / node:path / node:os / node:crypto（标准库不计域）。⚠ **1 条 UNMAPPED 出边**：amooBridgeClient.js:22 的 `require('../../../../tools/platformUtils')`——`services/backend/src/tools/**` 不在 DOMAIN-DEPS 任何 roots/overrides 里，守卫对这条既不计合法也不计违规，静默跳过。这是继 messaging/mcp（B30-M8）、network/externalApps 之后同一登记盲区的又一次撞击（remote 单元的 khy.module.json 记为第三次）。mayDependOn **不因此放宽**：放宽等于把登记缺口做实，属人的裁决（[RESEARCH-018] C-7）。**D2→D1 反向边：0**（fanIn 是入边不是出边：两个 D1 消费方 cli/handlers/amoo.js 与 src/tools/AmooBridgeTool/index.js 都只经 index.js 单点进入，本单元自身没有任何一条边伸向 D1）。",
+  "fanIn": 2,
+  "fanInEvidence": [
+    "runtime/node/backend/src/cli/handlers/amoo.js（`khy amoo` 命令面：require index 取 runner/config，另直接取 amooCliPlan 纯叶子与 client/amooKhyClient.js 两个本目录文件）",
+    "runtime/node/backend/src/tools/AmooBridgeTool/index.js（AI 工具面：execute 里经 index 取 runner，另直接取 amooBridgeConfig 判门与 client/amooKhyClient.js 取 usage）"
+  ],
+  "_fanIn_note": "非测试消费者 **2 个文件 / 均为 D1**（判据：磁盘全量 grep `domain/network/amoo`，排除 *.test.js 与本目录内部互取）：`src/cli/handlers/amoo.js` 与 `src/tools/AmooBridgeTool/index.js`，二者都只在被调用时经 index.js 单点进入（门控判定额外直取 amooBridgeConfig 纯叶子，不构成第二条装配路径）。这一批（2026-10-21 晚间）补的就是上一轮 _fanIn_note 里预告的形态。仍记 **staged** 不记 stable：消费方刚接线、尚未经真实使用期检验，且方向 2 的真机全流程（点发送→回收答复）仍未跑通。",
+  "tests": [
+    "services/backend/src/services/domain/network/amoo/amooBridgeConfig.test.js",
+    "services/backend/src/services/domain/network/amoo/amooBridgePolicy.test.js",
+    "services/backend/src/services/domain/network/amoo/amooUiSnapshot.test.js",
+    "services/backend/src/services/domain/network/amoo/amooDispatchPlan.test.js",
+    "services/backend/src/services/domain/network/amoo/amooBridgeClient.test.js",
+    "services/backend/src/services/domain/network/amoo/amooMailbox.test.js",
+    "services/backend/src/services/domain/network/amoo/amooDispatchRunner.test.js",
+    "services/backend/src/services/domain/network/amoo/index.test.js",
+    "services/backend/src/services/domain/network/amoo/amooCliPlan.test.js",
+    "services/backend/src/services/domain/network/amoo/amooPanelViewModel.test.js",
+    "services/backend/src/services/domain/network/amoo/amooStatusProvider.test.js",
+    "services/backend/src/services/domain/network/amoo/amooWorkspacePlan.test.js",
+    "services/backend/src/services/domain/network/amoo/amooWorkspaceClient.test.js",
+    "services/backend/src/services/domain/network/amoo/client/amooKhyClient.test.js"
+  ],
+  "_tests_note": "14 个源文件 / 14 份共置测试，**每个源文件都有同名同目录测试**（逐文件核对，非抽样；第 11-14 个是 2026-10-21 深夜至 10-22 为面板供数与双向同步工作区新增的：amooPanelViewModel.js 纯叶子、amooStatusProvider.js 薄 IO 外壳、amooWorkspacePlan.js 纯叶子、amooWorkspaceClient.js 薄 IO 外壳）。实测（2026-10-22，`node --test` 显式列 14 个路径）：**186 例 / 0 fail / 0 skip**（比上一轮 169 例多出的 17 例 = 工作区计划 8 + 工作区客户端 9）。方言全部 node:test（`require('node:test').test` + `node:assert/strict`），jest.config.js 对本目录无入口也不冲突。隔离方式：① HOME / USERPROFILE / KHY_DATA_HOME / KHY_PROJECT_DATA_HOME / XDG_CONFIG_HOME 全部钉进 mkdtemp 临时目录**再 require**；② child_process.spawn 在 require **之前**换成 argv 路由器（B31-R17 同款：spawn 在模块装载时绑定，后 patch 无效），路由器对 `pair` 直接判失败、对未识别 argv 返回 127，从而『没有一条命令被静默放过』；③ 桥的 HTTP 端口用**真实 loopback 临时服务器**（ephemeral port）而不是 stub，因此超时、401、404、JSON 解析都是真路径；④ uiautomator dump 用**脚本化的 XML 序列**应答，夹具是真实 dump 的裁剪件（含键盘抬起导致输入框位移、空会话时 chat_list 铺满内容区两条）；⑤ provider 测试的 runner / liveness / 时钟**全注入假件**（可控时钟 + 可控 promise），因此 TTL 从完成时刻起算、单飞、deadline 序号判废、忙位停读屏、401 自愈都能在毫秒级断言；⑥ 工作区客户端测试的 adb 是**录制成的假件**（记录 argv、按 verb 应答），本地目录是真实 mkdtemp，哈希用真 sha256——manifest 增量、坏 manifest 全量重算、部分失败不写 manifest 都是被测代码本身。**全程不打真手机、不向 Amoo 发任何消息。**\n\n   历史批次的测试抓出并修掉 **5 个真缺陷**（全部在源码侧，不是测试侧）：① `envFlagByName` 只读 process.env 不接 env 对象，导致 `resolveAmooConfig(env)` 的门控与其余字段行为不一致（改出自带等价的 `_readFlag` 并注释说明）；② `runAdb` 把 `stdout.on('data')` 嵌套在 `setEncoding` 守卫里，任何没有 `setEncoding` 的流都被读成『命令无输出』；③ `dispatchTask` 用「输入框字数 > 0」判断填充成功，而空框的 `text` 是提示语——长度判断同时会把空框读成已填、已填框读成空（改为「是否含载荷前缀」）；④ `_scratchFile` 不建目录，`adb pull` 的目标父目录不存在，报错形态是『读不到界面』而不是『缺临时目录』；⑤ `buildRecoverBridgeArgv` 漏了 `-s <serial>`，在一台手环出现两条 adb 记录时必报 `more than one device/emulator`。后两条是**真机联验时暴露的**，单测里对应的夹具已按真实几何补钉。\n\n   本批（视图模型 + provider）测试抓出并修掉 **3 个真缺陷**（全部在新源码侧）：① `_num(null)` 经 `Number(null)===0` 把「桥没探活所以没问工具数」画成『0 个工具』、把 latencyMs 缺席画成『在线 0ms』——把没测显示成了测了；② 快照存在但一个字段都没测到时，headline 走进了『链路正常』分支（overclaim），补了 measured 判定与『快照没有可读字段』idle 档；③ screen 键缺席（心跳快照 / 畸形输入）与 screen:null（collectStatus 明确回报没读到）被画成同一行，补了 hasOwnProperty 判据把『没测』和『测了没读到』分开。",
+  "behaviourTestsOutsideUnit": [],
+  "_outside_test_note": "单元外行为测试 **0 份**：两个 D1 消费方（cli/handlers/amoo.js、src/tools/AmooBridgeTool/index.js）都是**薄壳**——解析与文案已下沉到本单元的 amooCliPlan.js 纯叶子并有同名同目录测试，壳里只剩门控/委托/打印，没有可断言的业务判断。真机联验（`khy amoo status` / `khy amoo plan`）2026-10-21 晚间跑通，属冒烟不属于单测，因此此处仍记 0 而不是为了凑数造壳测试。",
+  "lifecycle": {
+    "stage": "staged",
+    "since": "2026-10-21",
+    "provenance": "recorded-after-the-fact",
+    "enteredVia": null
+  },
+  "_lifecycle_note": "**为什么是 staged 而不是 stable**：晋级三判据形式上齐（单元 README.md ✓、整数 fanIn=2 可逐名查证 ✓、10 个源文件全部同名同目录测试 ✓），但稳定档的语义是『行为契约已被人签字』，而本单元有一条**未闭合的实测缺口**：lite 桥无 UI 工具，方向 2 的「发送」整条链路（粘贴→点发送→答复回收）在真机上只验证到「粘贴进输入框」与「计划渲染」为止，**没有真的点过发送、没有真的回收过 Amoo 答复**——那是用户自己的手机和对话，未获明示授权前不做。2026-10-21 晚间接入 D1（`khy amoo` CLI + AmooBridgeTool）只闭合了「有消费方」这一条，没有闭合这一条。闭合口径转人裁决：真机跑通一次 K3 全流程。",
+  "contract": {
+    "surface": "index.js（约 110 行，星形装配）导出 **13 个键**：4 个装配好的单例（config / client / mailbox / runner，index.test.js 逐一对类型与共享 config 断言）+ 工厂 createAmooStack({env,config,spawnImpl,sleep,now,getAppDataDir}) + 复位 resetAmooForTests() + 三个类（AmooBridgeClient / AmooBridgeMailbox / AmooDispatchRunner）+ 面板供数线的两个引用（AmooStatusProvider 类、buildAmooPanelModel 纯函数——**刻意不建单例**：没打开过的面板不该有轮询定时器）+ resolveAmooConfig + dataHome。其余 11 个文件各自独立导出（纯叶子导出纯函数，shell 导出类 + withDeadline/defaultSleep 两个可测辅助）。",
+    "fileRoles": "四种角色，改法不同。**纯叶子**（零 IO、确定性、不抛）：amooBridgeConfig.js（env 解析 + 来源记账，读 process.env 但不碰 fs/spawn/net）、amooBridgePolicy.js（允许清单/参数校验/confirm 门/argv 构造器）、amooUiSnapshot.js（XML 解析/坐标现算/回复抽取/稳定判据/判空）、amooDispatchPlan.js（步骤序/退避/停止条件/中文渲染 + describeStopReason 的单一真源）、amooCliPlan.js（`khy amoo` 的 argv 解析与中文文案，只取 dispatchPlan 一个兄弟）、amooPanelViewModel.js（collectStatus 快照 + dispatch 结果 → 面板行模型，固定 7 行/固定 key/值截断，零 require 副作用）。**薄 IO**：amooBridgeClient.js（spawn adb + http.request + 令牌缓存 + safeKill）、amooMailbox.js（fs 写 cmd + push/pull + 轮询清理）、amooDispatchRunner.js（编排 + 屏幕 dump/点击 + 轮询回收 + 可选 onStep/onPoll 进度钩子）、amooStatusProvider.js（状态 TTL 缓存供数器：单飞 + 完成时刻起算 TTL + outer deadline + 序号判废 + 忙位停读屏 + 401 自愈；runner/liveness 全注入，不 import 任何兄弟 shell）。**装配**：index.js（唯一的接线点，模块装载不碰磁盘不碰手机）。**新逻辑一律进纯叶子。**",
+    "gates": "本目录源文件读取的门全数清点（3 个，非抽样）：总闸 `KHY_AMOO_BRIDGE_ENABLED`（默认开，amooBridgeConfig.js:_readFlag，dispatchTask 第一道判断）、信箱闸 `KHY_AMOO_MAILBOX_ENABLED`（默认开，同址）。另有 20 个非布尔配置项全走 `KHY_AMOO_*` env 且有 default/default-invalid 两种来源记账（config.sources）。读取姿态：布尔门的 on-set 与 utils/envFlagByName 逐字一致（未知值返 false、只有 null/空串走 fallback），差异只在『该 helper 不接 env 对象』，注释已说明。RUNTIME-001 零硬编码命中：无（主机名/端口/绝对路径字面量为零；回环 URL 由 buildLoopbackUrl(host, port) 现拼；唯一的设备 IP 来自 env 默认值 192.168.2.46:33743，是私网地址不在守卫的 loopback/first-party 模式内）。",
+    "credentialHandling": "本单元**不在磁盘上存任何凭据**。桥令牌从设备现读（`adb shell cat /sdcard/bridge-amoobridge/token.txt`）、内存缓存 6 小时、`invalidateToken()` 可弃；对外一律 maskToken()（`5500…8d30`）。手机侧 CLI 的 KHY_A2A_API_KEY 只经 env 或 0600 配置文件（`~/.config/amoo-khy/config.json`，init 时 chmod 0600），config/self 输出一律 maskSecret()，永不进日志。测试对 status.summary、ping、status、collectStatus 的 JSON 串逐条断言不含令牌原文。",
+    "execWriteChannels": "对外产生副作用的通道有四条，全部有闸：(1) **adb 子进程** amooBridgeClient.runAdb → spawn(adbPath, argv)（argv 扁平、无 shell 字符串），超时走 safeKill 升级 SIGTERM→SIGKILL；(2) **桥 HTTP** bridgeRequest → http.request(回环, Bearer)，socket 超时即 destroy；(3) **文件信箱** amooMailbox.call → fs 写 cmd + push/pull + rm；(4) **真机动作** dispatchTask 的点按/粘贴/发送——**只有 confirm===true 才走到这里**，缺 confirm 一条 adb 都不发。containment 现状：(4) 之上有 confirm 闸 + 计划预览；(1)(2)(3) 之上有总闸 KHY_AMOO_BRIDGE_ENABLED。已知破口一条：exec/rm 的 confirm 只在 evaluateBridgeCall 判，dispatchTask 内部的 clipboard 调用不重复问（它不销毁状态，且是中文唯一通道）——这是取舍不是漏洞，但改动 confirm 语义时必须连它一起看。",
+    "injectionPoints": [
+      "createAmooStack({env, config, spawnImpl, sleep, now, getAppDataDir}) —— 五个依赖全注入，测试用假件跑通了 plan/apply 两条路径与全部失败分支",
+      "AmooBridgeClient 构造子({config, spawnImpl, sleep, now, resolveAdbPath}) —— spawn/sleep/now/adb 解析四件可换，runAdb 因此可在无 adb 的机器上全路径测试",
+      "AmooDispatchRunner 构造子({config, client, mailbox, getAppDataDir, sleep, now}) —— client 可整体替换（测试用它注入『dump 全失败』）",
+      "amooKhyClient.requestJson({url, method, body, apiKey, timeoutMs, retries, fetchImpl}) —— fetch 可注入，因此 429/5xx 重试、超时、网络错误全部无需真 socket"
+    ],
+    "injectionPromiseBreaks": "两种姿态并存且**不可调和**：amooBridgeClient 在模块装载时 `const { spawn } = require('child_process')` 与 `const http = require('http')` 直接绑定传输，无 opts 注入位——B31-R17 同族。测试唯一的隔离手段是在 require 目标模块**之前**替换 child_process.spawn 为 argv 路由器（三份测试文件如实复刻了这一装载顺序并在注释里说明『后 patch 无效』）。amooDispatchRunner.test.js 的『屏幕不可读』一例改用 stack.client._spawn = failing 打点（runner 每次 runAdb 都经 client._spawn，故该例有效）——这是 runner 层唯一的注入缝，不要以为 client 层也有。",
+    "knownBoundaries": [
+      "**lite 桥无 UI 工具**：本单元不提供也不承诺 UI 自动化。ui_dump/ui_tap/ui_swipe/ui_click/ui_back/ui_home/shot/shot_b64 在这台机器上全部 `unknown tool`，源码 manifest 连 <service BIND_ACCESSIBILITY_SERVICE> 都没声明，res/xml/accessibility_config.xml 是孤儿且指向不存在的 com.step.bridge.MainActivity。读屏/点击走 PC 侧 adb（shell uid 可用，已验证）。要真 UI 自动化需 2.x 完整版 APK，由人提供后再议。",
+      "**方向 2 不能无人值守**：Amoo 必须在前台；平台不允许助手打开侧载应用，桥服务死了只能用户手点（monkey 是 PC 侧的恢复键）。所以 dispatchTask 的定位是『人盯着的一次性交接』，不是常驻任务。",
+      "**回复抽取依赖两条未保证假设**：① 用户的 bubble 回显所发文本（sliceReply 的 echoStripped 标记让它可核对）；② 聊天列表里新文本就是答复。两者都在结果里留了 full 文本供审计，不要只信 reply.text。",
+      "**exec 的 timeout 基本无效**（代码先把 stdout 读到 EOF 才进退出轮询，`sleep 300` 永不触发 1..120s 超时），且一个卡死的 exec 会冻结整个文件信箱（BridgeService.loop() 单线程顺序处理 cmd_ 文件）。HTTP /call 不受影响（每连接一线程）。所以优先 HTTP，信箱只作兜底，且绝不通过信箱跑可能挂起的命令。",
+      "**桥的 HTTP 服务会自己卡死**（本轮实测 3 次：两次由我方的 clipboard 实验诱发，一次自发）：进程活着、`status.json` 心跳照写，但 `/ping` 与 LAN 直连都超时。恢复路只有 `monkey -p com.stepx.amoobridge -c android.intent.category.LAUNCHER 1`（**实测有效，且进程没死时也有效**，pid 不变）。`am force-stop` 不是必需的。请求体必须走文件/UTF-8（经 shell 重引号会把中文搅成非法字节，那是最初的诱因）。client 把卡死当『桥需要重启』处理并如实回报，但根因未定位——lite 版源码里 `HttpBridge.handle()` 每连接一线程、`ensureToken()` 是类级 synchronized，怀疑是某条线程持锁不释放，未证实。",
+      "**一台手环在 `adb devices` 里是两条记录**：Android 11+ 无线调试会额外注册 mDNS/TLS 条目（`adb-<序列号>._adb-tls-connect._tcp`），指向同一台设备。所以除 `connect`/`devices` 外每条命令都必须带 `-s <serial>`；`buildRecoverBridgeArgv` 曾漏掉它，真机一跑就报 `more than one device/emulator`。测试已加『每个设备级构造器都带 -s』一条防回归。",
+      "**空会话时 `chat_list` 铺满整个内容区**（实测 `[0,196][1200,2660]`），输入框在几何上落在它里面。所以抽聊天文本必须按 resource-id 排除输入框/发送按钮，否则输入框的提示语会被当成一条聊天气泡，同时污染回复抽取和稳定判据。`_chatText()` 是唯一入口，测试用真实几何钉了这条。",
+      "**`adb reverse` 未在本单元验证**：连通首选路（手机访问 127.0.0.1:<port>）在简报里推荐但本轮未实测；本轮实测通的是 PC→手机的 adb forward 与 PC→手机 LAN 直连（192.168.2.46:8896，桥绑 0.0.0.0）。config 的 transport 两种都支持，但 reverse 的真实可达性待人在手机上确认。",
+      "**手机→PC 方向当前被 PC 防火墙挡着**（WLAN 处于 Public 配置，入站默认拒；ICMP 100% 丢、445 超时）。路 1 的 Wi-Fi 直连变体需要先把 WLAN 改 Private 或加端口入站规则；adb reverse 变体不受此影响。这是环境事实不是代码缺陷，但告诉用户选哪种连通前必须先说清。"
+    ]
+  }
+}
