@@ -12,6 +12,8 @@
 
 const { execSync, spawnSync } = require('child_process');
 
+const { GIT_DISK_CACHE_TTL_MS } = require('./gitExecutableDetector');
+
 const DEFAULT_TTL_MS = 60_000;
 const MAX_DIFF_CHARS = 4000;
 const MAX_LOG_ENTRIES = 15;
@@ -61,6 +63,9 @@ function _asyncRefreshEnabled() {
  *
  * Enhanced (2026-07-08): Windows 优先使用 Git Bash 的 git.exe（通过 gitExecutableDetector），
  * 回退到系统 PATH。无可用 git 时返回 null（fail-soft）。
+ * Enhanced (P0-4): 该解析结果由 detector 以长 TTL（GIT_DISK_CACHE_TTL_MS，默认 5 分钟，
+ * 上限 10 分钟）做跨进程磁盘缓存，key 为 git 二进制自身的 mtime+size，故冷进程不再
+ * 每次 spawn `git --version`。
  *
  * @param {string} cmd
  * @param {string} cwd
@@ -374,7 +379,12 @@ module.exports = {
   collectGitContext,
   formatForSystemPrompt,
   invalidateCache,
+  refreshGitContextInBackground: _refreshInBackground,
   DEFAULT_TTL_MS,
+  // Re-exported from gitExecutableDetector: the long-TTL cross-process cache that
+  // backs the git executable this service spawns. Single source of truth — do not
+  // re-declare a per-file literal here.
+  GIT_DISK_CACHE_TTL_MS,
   // internal — exported for unit tests only.
   _assembleContext,
   _emptyContext,

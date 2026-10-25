@@ -8,6 +8,7 @@ customProvidersResource.bind({
   pool: require('../apiKeyPool'),
   registrar: require('../customProviderRegistrar'),
   registry: require('../customProviderRegistry'),
+  verify: require('../gateway/customProviderVerify'),
 });
 
 module.exports = require('../domain/project/management');

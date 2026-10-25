@@ -1,11 +1,11 @@
 /**
- * Getting Started Service — generates first-run guide with promotional content.
+ * Getting Started Service — generates the first-run guide and welcome banner.
  *
- * Creates ~/.khyquant/GETTING_STARTED.md on first run after pip install,
- * and displays a welcome banner in the REPL.
+ * The guide lives in the resolved data home (getAppHome(), which honours
+ * KHY_DATA_HOME / KHY_APP_HOME and the portable deployment probe) — never at a
+ * hardcoded ~/.khyquant.
  */
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 
 // Portable-aware app home resolved at load (legacy const semantics preserved).
@@ -14,7 +14,7 @@ function _appHome() {
     const { getAppHome } = require('../utils/dataHome');
     return getAppHome();
   } catch {
-    return path.join(os.homedir(), '.khyquant');
+    return path.join(require('os').homedir(), '.khy');
   }
 }
 const KHY_DIR = _appHome();
@@ -35,39 +35,35 @@ function generateGettingStarted() {
 
   const content = `# khy OS v${version} — AI Platform Operating System Terminal
 
-## 国内首个 Claude Code 风格 AI 量化分析框架终端
+## AI 平台操作系统 · 可扩展应用运行时
 
-khy OS 是面向中文开发者的 AI 平台操作系统，内置默认应用 khyquant（量化能力），
-并集成多模型 AI 网关、Agentic 工作流、策略引擎与专业级回测系统。
+khy OS 是一个 AI 平台操作系统：它启动一个可扩展的应用运行时，经多模型 AI 网关
+接入各种模型，用计划模式与 Agentic 工具把任务做完。
+
+khyquant（量化交易终端）是**独立项目**，连接 Khy OS 使用，**不是** Khy OS 的内置
+部分 —— 量化能力的有无不影响平台本身的对话、网关与工具链。
 
 ### 核心特性
 
 | 特性 | 说明 |
 |------|------|
+| 可扩展应用运行时 | 平台负责启动与托管应用；khyquant 等独立应用连接它使用 |
 | 多模型 AI 网关 | Kiro / Cursor / Claude / Codex / VSCode / Ollama / 云 API |
-| 实时数据 | AkShare + TuShare A 股实时行情、资金流、基本面 |
-| 专业回测 | 多策略对比、滑点模拟、佣金计算、最大回撤分析 |
-| 多智能体 | 基本面/技术面/新闻/风控/策略 5 角色协作分析 |
-| 图片分析 | 终端内粘贴图片，AI 视觉分析走势图 |
 | 计划模式 | 复杂任务自动分解 → 用户审批 → 逐步执行 |
-| Agentic 工具 | Search / Read / Bash 等工具实时展示 (Claude Code 风格) |
+| Agentic 工具 | Search / Read / Bash 等工具调用实时展示 |
 | IDE 反向代理 | khy --kiro/--cursor/--claude/--codex 一键切换 IDE 模型源 |
 | IP 匿名化 | 反向代理自动隐藏真实 IP，防止封禁 |
 
-## 快速上手 — 10 条必备命令
+## 快速上手 — 6 条必备命令
 
 | 命令 | 说明 |
 |------|------|
-| \`khy\` | 启动终端 (自动启动后端服务) |
-| \`行情 600519\` | 查看贵州茅台实时行情 |
-| \`k线 600519\` | 查看 K 线数据 |
-| \`分析 600519\` | AI 综合分析 (自动调用最佳可用 AI) |
-| \`回测 ma均线交叉 600519\` | 回测策略 |
-| \`gateway status\` | 查看 AI 网关状态 |
-| \`proxy quickstart\` | 一键启动 OpenAI 兼容反向代理并查看接入参数 |
-| \`/plan\` | 进入计划模式 |
-| \`/image test.png 分析走势\` | 图片分析 |
-| \`综合分析 贵州茅台\` | 多智能体协作分析 |
+| \`khy\` | 启动终端，直接打字描述你想做的事 |
+| \`khy gateway model\` | 选择 AI 模型 / 通道 |
+| \`khy gateway config\` | 配置 AI 通道与密钥 |
+| \`khy doctor\` | 环境自检 |
+| \`/plan\` | 进入计划模式（复杂任务先拆解再执行） |
+| \`khy help\` | 查看全部命令 |
 
 ## AI 配置
 
@@ -79,7 +75,7 @@ khy OS 自动检测以下 AI 来源 (按优先级):
 4. **云 API** — Gemini / Groq / OpenRouter / 智谱 (需配置 key)
 5. **Web 中转** — 手动浏览器中转 (备用)
 
-设置 API Key: 编辑 \`~/.khyquant/.env\` 或使用 \`settings\` 命令。
+配置 AI 通道与密钥: 运行 \`khy gateway config\`。
 
 ## IDE 反向代理
 
@@ -142,15 +138,14 @@ function displayGettingStarted() {
       chalk.cyan('  ━━━ khy OS v' + version + ' — AI Platform Operating System Terminal ━━━')
     );
     console.log('');
-    console.log(chalk.bold('  国内首个 Claude Code 风格 AI 量化分析框架终端'));
+    console.log(chalk.bold('  AI 平台操作系统 · 可扩展应用运行时'));
     console.log('');
     console.log(chalk.yellow('  快速上手:'));
-    console.log(chalk.dim('    行情 600519       查看实时行情'));
-    console.log(chalk.dim('    分析 600519       AI 综合分析'));
-    console.log(chalk.dim('    综合分析 贵州茅台 多智能体协作'));
-    console.log(chalk.dim('    gateway status    查看 AI 状态'));
-    console.log(chalk.dim('    proxy quickstart  一键启动反代并显示客户接入参数'));
-    console.log(chalk.dim('    help             查看全部命令'));
+    console.log(chalk.dim('    khy                 启动终端，直接打字描述任务'));
+    console.log(chalk.dim('    khy gateway model   选择 AI 模型 / 通道'));
+    console.log(chalk.dim('    khy gateway config  配置 AI 通道与密钥'));
+    console.log(chalk.dim('    khy doctor          环境自检'));
+    console.log(chalk.dim('    help                查看全部命令'));
     console.log('');
     console.log(chalk.dim(`  详细指南: ${GUIDE_PATH}`));
     console.log('');
