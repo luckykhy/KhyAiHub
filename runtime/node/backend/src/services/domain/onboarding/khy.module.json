@@ -6,9 +6,9 @@
   "_mayDependOn_note": "刻意声明空集：本单元两个源文件都是零 require 的纯叶子（外部事实全部由薄壳注入）。名义上 D2 允许依赖 D2/D3，这里把上界收窄到「实际为零」，于是将来真出现 require 时守卫会判 overstates-edge，逼一次显式改声明，而不是让依赖悄悄长出来。",
   "fanIn": 3,
   "fanInEvidence": [
-    "services/backend/src/services/onboarding/index.js",
-    "services/backend/src/cli/onboarding.js",
-    "services/backend/src/cli/handlers/onboarding.js"
+    "runtime/node/backend/src/services/onboarding/index.js",
+    "runtime/node/backend/src/cli/onboarding.js",
+    "runtime/node/backend/src/cli/handlers/onboarding.js"
   ],
   "_fanIn_note": "3 个运行时消费者（实测 2026-09-28：仓库内 require 本单元两个叶子的文件数，不含测试）。",
   "lifecycle": {
@@ -34,8 +34,8 @@
     "onboarding/safetyNotice.test.js"
   ],
   "behaviourTestsOutsideUnit": [
-    "services/backend/tests/services/onboarding/onboardingPlan.test.js",
-    "services/backend/tests/services/onboarding/safetyNotice.test.js"
+    "runtime/node/backend/tests/services/onboarding/onboardingPlan.test.js",
+    "runtime/node/backend/tests/services/onboarding/safetyNotice.test.js"
   ],
   "_merge_note": "行为测试与契约测试分两处住是已知缺件，合并需要一次 git mv（本篇第 0 步未闭合，禁令见 scripts/quarantine/README.md）。"
 }

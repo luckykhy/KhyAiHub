@@ -1,0 +1,25 @@
+{
+  "name": "stepneoCloud",
+  "domain": "D2",
+  "mayDependOn": ["D2", "D3"],
+  "fanIn": 2,
+  "fanInEvidence": [
+    "runtime/node/backend/src/tools/StepneoCloudTool/index.js",
+    "runtime/node/backend/src/cli/handlers/stepneo.js"
+  ],
+  "tests": [
+    "services/backend/src/services/domain/network/stepneoCloud/signing.test.js",
+    "services/backend/src/services/domain/network/stepneoCloud/accountToken.test.js",
+    "services/backend/src/services/domain/network/stepneoCloud/toolSchemas.test.js",
+    "services/backend/src/services/domain/network/stepneoCloud/upstream.test.js",
+    "services/backend/src/services/domain/network/stepneoCloud/agentLoop.test.js",
+    "services/backend/src/services/domain/network/stepneoCloud/config.test.js",
+    "services/backend/src/services/domain/network/stepneoCloud/index.test.js"
+  ],
+  "lifecycle": {
+    "stage": "staged",
+    "since": "2026-10-25",
+    "provenance": "recorded-at-creation"
+  },
+  "_lifecycle_note": "staged，不是 stable：两个消费方（src/tools/StepneoCloudTool 与 src/cli/handlers/stepneo.js）都是本批同时落地的 D1 消费方，尚未经过真实使用期的检验，所以 fanIn 记 2 但仍留 staged。晋级三判据：单元 README ✓、7 个源文件全部同名同目录测试 ✓、整数 fanIn 声明 ✓。出边全部向下合法：唯一的仓内出边是 toolSchemas/config -> ../phone/{phoneBridgeCatalog,phoneBridgeConfig}（D2 同域），其余是 node:crypto / node:child_process / node:util / node:fs 标准库（不计域）。没有反向 require 运行时，没有伸进工程档案区。不带第三方依赖。"
+}
