@@ -3,7 +3,7 @@
 generated:
   mode: auto                # auto = 机器自有，可被 refresh 覆盖；改为 manual 则人工接管
   tool: "khy-metadata/4"
-  fingerprint: 8329e3a94e7d7a38
+  fingerprint: a16aa572854940ba
 project: "khy-os"
 stack: [node, monorepo, python, docker, "docker-compose"]
 entry_points:
@@ -318,6 +318,38 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
       - { kind: fn, name: check }
       - { kind: const, name: add }
       - { kind: fn, name: main }
+  "scripts/ci/check-agent-rules.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: makeVueTemplateContext }
+      - { kind: const, name: textNodes }
+      - { kind: const, name: attrValues }
+      - { kind: const, name: templateCloses }
+      - { kind: fn, name: run }
+      - { kind: fn, name: gitUsable }
+      - { kind: fn, name: listChangedFiles }
+      - { kind: fn, name: shouldIgnore }
+      - { kind: fn, name: isSubmoduleGitlink }
+      - { kind: fn, name: collectFilesFromTarget }
+      - { kind: fn, name: gatherFiles }
+      - { kind: fn, name: pushFinding }
+      - { kind: fn, name: quotedLiteralsInLine }
+      - { kind: fn, name: hasStatusDetail }
+      - { kind: fn, name: isTestLikePath }
+      - { kind: fn, name: makePowerShellBlockCommentLines }
+      - { kind: fn, name: isExampleConfigPath }
+      - { kind: fn, name: isLikelyUserFacingStatusLine }
+      - { kind: fn, name: isSelfScript }
+      - { kind: fn, name: _skipJsString }
+      - { kind: fn, name: _findJsBlockEnd }
+      - { kind: fn, name: checkFile }
+      - { kind: const, name: textNodes }
+      - { kind: const, name: attrValues }
+      - { kind: const, name: baseIndent }
+      - { kind: const, name: indent }
+      - { kind: fn, name: printFindings }
+      - { kind: fn, name: printFindingsJson }
+      - { kind: fn, name: main }
   "apps/khyos-desktop/dist-ts/electron.vite.config.d.ts":
     lang: typescript
     decls: []
@@ -359,6 +391,9 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
     lang: python
     decls: []
   "apps/khyos-desktop/docs/search_main_js.py":
+    lang: python
+    decls: []
+  "apps/khyos-desktop/docs/search_mention_ui.py":
     lang: python
     decls: []
   delivery/channel/khyquant/setup.py:
@@ -653,84 +688,17 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
     lang: javascript
     decls:
       - { kind: fn, name: main }
-  works/data/khy/_probe10.cjs:
-    lang: javascript
-    decls: []
-  works/data/khy/_probe11.cjs:
+  works/ship/installer/build_installer.js:
     lang: javascript
     decls:
-      - { kind: const, name: walk }
-  works/data/khy/_probe12.cjs:
-    lang: javascript
-    decls:
-      - { kind: fn, name: resolveKhyOsDir }
-      - { kind: fn, name: resolveKhyOsDir }
-  works/data/khy/_probe13.cjs:
-    lang: javascript
-    decls:
-      - { kind: fn, name: scanTree }
-      - { kind: fn, name: walk }
-  works/data/khy/_probe14.cjs:
-    lang: javascript
-    decls: []
-  works/data/khy/_probe15.cjs:
-    lang: javascript
-    decls:
-      - { kind: const, name: k }
-  works/data/khy/_probe16.cjs:
-    lang: javascript
-    decls:
-      - { kind: const, name: walk }
-  works/data/khy/_probe17.cjs:
-    lang: javascript
-    decls: []
-  works/data/khy/_probe18.cjs:
-    lang: javascript
-    decls:
-      - { kind: fn, name: walk }
-      - { kind: fn, name: walk2 }
-  works/data/khy/_probe19.cjs:
-    lang: javascript
-    decls: []
-  works/data/khy/_probe2.cjs:
-    lang: javascript
-    decls: []
-  works/data/khy/_probe20.cjs:
-    lang: javascript
-    decls:
-      - { kind: const, name: h }
-      - { kind: fn, name: grepRepo }
-  works/data/khy/_probe21.cjs:
-    lang: javascript
-    decls:
-      - { kind: fn, name: walk }
-  works/data/khy/_probe22.cjs:
-    lang: javascript
-    decls: []
-  works/data/khy/_probe23.cjs:
-    lang: javascript
-    decls:
-      - { kind: const, name: walk }
-  works/data/khy/_probe24.cjs:
-    lang: javascript
-    decls:
-      - { kind: fn, name: walk }
-  works/data/khy/_probe25.cjs:
-    lang: javascript
-    decls:
-      - { kind: const, name: h }
-  works/data/khy/_probe26.cjs:
-    lang: javascript
-    decls: []
-  works/data/khy/_probe27.cjs:
-    lang: javascript
-    decls:
-      - { kind: fn, name: jsonlPathFor }
-      - { kind: const, name: h }
-  works/data/khy/_probe28.cjs:
-    lang: javascript
-    decls:
-      - { kind: const, name: h }
+      - { kind: fn, name: getVersion }
+      - { kind: fn, name: findKhyExecutable }
+      - { kind: fn, name: buildPayload }
+      - { kind: const, name: zipSize }
+      - { kind: fn, name: checkNsis }
+      - { kind: fn, name: compileNsi }
+      - { kind: fn, name: main }
+      - { kind: const, name: size }
   delivery/channel/khyquant/config/database.js:
     lang: javascript
     decls: []
@@ -772,6 +740,9 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
     decls:
       - { kind: fn, name: renderPng }
       - { kind: const, name: kb }
+  delivery/channel/khyquant/frontend/vite.config.js:
+    lang: javascript
+    decls: []
   "entries/tools/deepseek-eyes/deepseek_eyes/__init__.py":
     lang: python
     decls: []
@@ -803,3 +774,103 @@ symbols:   # 逐文件符号清单 (kind + name, 仅声明非语义)
   runtime/boot/kernel/bridge/index.js:
     lang: javascript
     decls: []
+  "runtime/boot/kernel/bridge/khy-agent-run.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: log }
+      - { kind: fn, name: main }
+      - { kind: const, name: shutdown }
+  "works/ship/modules/entries/khy-ai-entry.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: bootstrap }
+      - { kind: fn, name: main }
+  "works/ship/modules/entries/khy-full-entry.js":
+    lang: javascript
+    decls: []
+  "works/ship/modules/entries/khy-gateway-entry.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: bootstrap }
+      - { kind: fn, name: main }
+  "works/ship/modules/entries/khy-quant-entry.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: bootstrap }
+      - { kind: fn, name: main }
+  "works/ship/modules/entries/khy-server-entry.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: bootstrap }
+      - { kind: fn, name: main }
+  "works/ship/modules/entries/khy-tools-entry.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: bootstrap }
+      - { kind: fn, name: main }
+  "works/ship/modules/entries/standalone-info.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: handleStandaloneInfo }
+  works/ship/modules/runtime/modeDetector.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: getCurrentModule }
+      - { kind: fn, name: getMode }
+      - { kind: fn, name: isStandalone }
+      - { kind: fn, name: isCombined }
+      - { kind: fn, name: isModuleActive }
+      - { kind: fn, name: validateModule }
+  works/ship/modules/runtime/moduleProxy.js:
+    lang: javascript
+    decls:
+      - { kind: fn, name: findExecutable }
+      - { kind: fn, name: on }
+      - { kind: fn, name: call }
+      - { kind: fn, name: callDirect }
+      - { kind: fn, name: callViaExec }
+  works/ship/npm/scripts/assemble.js:
+    lang: javascript
+    decls: []
+  "works/ship/npm/scripts/audit-purity.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: parseArgs }
+      - { kind: const, name: distDir }
+      - { kind: const, name: platformFilter }
+      - { kind: const, name: packageRoot }
+      - { kind: fn, name: log }
+      - { kind: fn, name: fail }
+      - { kind: fn, name: fnmatch }
+      - { kind: fn, name: isForbiddenFile }
+      - { kind: fn, name: checkDir }
+      - { kind: fn, name: assertNoResourceStore }
+      - { kind: fn, name: walk }
+      - { kind: fn, name: auditPlatform }
+      - { kind: fn, name: walk }
+      - { kind: fn, name: auditPackage }
+      - { kind: fn, name: walk }
+      - { kind: fn, name: main }
+  "works/ship/npm/scripts/postinstall-compress.js":
+    lang: javascript
+    decls:
+      - { kind: fn, name: spawnDetached }
+  "works/ship/npm/test/manifest-contract.test.js":
+    lang: javascript
+    decls:
+      - { kind: const, name: declared }
+  "works/deploy/free-test/supabase/functions/khyos-ai/index.ts":
+    lang: typescript
+    decls: []
+  "works/deploy/free-test/supabase/functions/khyos-api/index.ts":
+    lang: typescript
+    decls:
+      - { kind: fn, name: corsHeaders }
+      - { kind: fn, name: json }
+      - { kind: fn, name: extractAuth }
+      - { kind: fn, name: handleInstruments }
+      - { kind: fn, name: handleWatchlist }
+      - { kind: fn, name: handleStrategies }
+      - { kind: fn, name: handleBacktests }
+      - { kind: fn, name: handleSettings }
+      - { kind: fn, name: handleDashboard }
