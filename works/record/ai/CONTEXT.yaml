@@ -3,7 +3,7 @@
 generated:
   mode: auto                # auto = 机器自有，可被 refresh 覆盖；改为 manual 则人工接管
   tool: "khy-metadata/4"
-  fingerprint: fc78faabdfbcf54a
+  fingerprint: 8329e3a94e7d7a38
 project: "khy-os"
 stack: [node, monorepo, python, docker, "docker-compose"]
 entry_points:

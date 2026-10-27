@@ -3,6 +3,9 @@
  * (shingle dedup + DEITA scoring + train/val split + response similarity)
  * used by exportDataset and the multi-teacher distill path.
  */
+const { describe, it } = require('node:test');
+const { expect } = require('../../../tests/helpers/jestCompat');
+
 const dc = require('../dataCuration');
 
 const rec = (instruction, output) => ({ instruction, output, type: 'conversation' });

@@ -150,7 +150,14 @@ describe('主流水线 detect→sync→install→build→start', () => {
     assert.equal(h.calls.runStep.length, 2);
     assert.equal(h.calls.runStep[0][1].cwd, path.resolve('/deploy/myapp'));
     assert.equal(h.calls.runStep[0][1].env.KHY_DEPLOY_TEST, '1');
-    assert.equal(h.calls.runStep[0][1].env.PATH, process.env.PATH);
+    // Windows stores the variable as `Path`; `process.env.PATH` only resolves
+    // through the env proxy's case-insensitive lookup, which object spread does
+    // not preserve. Resolve the real key so this checks "ambient env inherited"
+    // on every platform instead of pinning a Windows-specific spelling.
+    const env = h.calls.runStep[0][1].env;
+    const pathKey = Object.keys(env).find((k) => k.toUpperCase() === 'PATH');
+    assert.ok(pathKey, 'child env must inherit the ambient PATH');
+    assert.equal(env[pathKey], process.env[pathKey]);
     assert.equal(h.calls.runStep[1][0].display, 'npm.cmd run build');
   });
 

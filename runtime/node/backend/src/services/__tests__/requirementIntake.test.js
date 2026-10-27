@@ -5,6 +5,9 @@
  */
 process.env.KHY_DATA_HOME = require('os').tmpdir() + '/khy-req-test-' + process.pid;
 
+const { describe, it } = require('node:test');
+const { expect } = require('../../../tests/helpers/jestCompat');
+
 const intake = require('../requirementIntakeService');
 const artifact = require('../requirementArtifact');
 
