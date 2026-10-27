@@ -149,7 +149,10 @@ ok('sessionPersistence.js source wires sessionFileRepair under the gate', () => 
 
 // ---- 7) 门控已在 flagRegistry 登记为 default-on ----
 ok('KHY_SESSION_FILE_REPAIR registered default-on in flagRegistry', () => {
-  const reg = fs.readFileSync(path.join(__dirname, '../../src/services/flagRegistry.js'), 'utf-8');
+  // SSOT lives in src/utils/flagRegistry/index.js; src/services/flagRegistry.js
+  // is only a compatibility shim that re-exports the API (it does not carry the
+  // flag table). Reading the shim made this guard fail after the registry moved.
+  const reg = fs.readFileSync(path.join(__dirname, '../../src/utils/flagRegistry/index.js'), 'utf-8');
   const idx = reg.indexOf('KHY_SESSION_FILE_REPAIR');
   assert.ok(idx >= 0, 'flag present in registry');
   const slice = reg.slice(idx, idx + 120);

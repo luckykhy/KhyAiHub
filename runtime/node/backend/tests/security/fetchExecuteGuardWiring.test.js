@@ -141,7 +141,7 @@ test('SOURCE: shellSafetyValidator 源码 require 了 fetchExecuteGuard 并调�
 
 test('FLAG: KHY_FETCH_EXEC_GUARD 在 flagRegistry 登记为 default-on', () => {
   const reg = fs.readFileSync(
-    path.join(__dirname, '../../src/services/flagRegistry.js'), 'utf-8');
+    path.join(__dirname, '../../src/utils/flagRegistry/index.js'), 'utf-8');
   assert.ok(reg.includes('KHY_FETCH_EXEC_GUARD'), 'gate must be registered');
   const line = reg.split('\n').find((l) => l.includes('KHY_FETCH_EXEC_GUARD:'));
   assert.ok(line && /default:\s*true/.test(line), 'gate must be default-on');

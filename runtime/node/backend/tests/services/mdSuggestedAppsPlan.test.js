@@ -81,8 +81,11 @@ test('suggestedAppsUninstallKeys: returns the Applications base key to remove', 
 
 // ── PS1 静态契约：register-windows.ps1 不得与 plan 漂移 ──────────────────────
 function readTool(name) {
+  // The extension moved: runtime/tools/khyos-markdown -> delivery/extension/tools/khy-markdown.
+  // Resolve from the repo root (tests/services -> ... -> khy-os) so the contract
+  // test keeps checking the script that `khy md` actually invokes.
   return fs.readFileSync(
-    path.join(__dirname, '..', '..', '..', '..', 'tools', 'khyos-markdown', name),
+    path.join(__dirname, '..', '..', '..', '..', '..', 'delivery', 'extension', 'tools', 'khy-markdown', name),
     'utf8',
   );
 }
