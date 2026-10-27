@@ -18,7 +18,11 @@ const path = require('path');
 const audit = require('../src/services/directiveRegistryAudit');
 const { DIRECTIVE_REGISTRY } = require('../src/services/directiveComposer');
 
-const AI_JS = path.join(__dirname, '..', 'src', 'cli', 'ai.js');
+// The composer call moved out of cli/ai.js into cli/aiChatCore.js during the
+// CLI split. Reading the old file yielded 0 keys, so this guard silently passed
+// for years (assert >= 10 was the only thing that noticed). Point at the file
+// that actually calls composeDirectives.
+const AI_JS = path.join(__dirname, '..', 'src', 'cli', 'aiChatCore.js');
 
 // ── 单元:auditDirectiveRegistry 语义 ─────────────────────────────────
 test('auditDirectiveRegistry: 一致 → ok', () => {

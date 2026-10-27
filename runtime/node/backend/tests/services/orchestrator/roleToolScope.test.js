@@ -1,4 +1,25 @@
 'use strict';
+// This suite was written with jest globals (test/describe/expect) but lives in
+// tests/, which is executed by `node --test`. Without this shim the whole file
+// died with "test is not defined" and verified nothing. Keep the matcher
+// surface minimal: the file only uses the five forms implemented below.
+const { test, describe } = require('node:test');
+const assert = require('node:assert');
+
+function expect(actual) {
+  const api = {
+    toBe: (v, msg) => assert.strictEqual(actual, v, msg),
+    toEqual: (v) => assert.deepStrictEqual(actual, v),
+    toContain: (v) =>
+      assert.ok(actual.includes(v), `expected ${JSON.stringify(actual)} to contain ${v}`),
+    toBeTruthy: () => assert.ok(actual),
+  };
+  api.not = {
+    toContain: (v) =>
+      assert.ok(!actual.includes(v), `expected ${JSON.stringify(actual)} not to contain ${v}`),
+  };
+  return api;
+}
 /**
  * roleToolScope.test.js — 角色→工具作用域策略纯叶的 node:test。
  *

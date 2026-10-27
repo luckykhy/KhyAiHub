@@ -237,7 +237,12 @@ const PY_CANDIDATES = process.platform === 'win32'
 
 function pythonCommand() {
   for (const candidate of PY_CANDIDATES) {
-    if (searchExecutable(candidate)) return candidate;
+    if (!searchExecutable(candidate)) continue;
+    // A PATH hit is not proof of a usable interpreter: Windows ships a Store
+    // alias named python.exe that exits 9009 ("command not found"). Probe once
+    // so the suite skips cleanly instead of reporting a bogus probe failure.
+    const probe = spawnSync(candidate, ['--version'], { stdio: 'ignore' });
+    if (probe.status === 0) return candidate;
   }
   return null;
 }
