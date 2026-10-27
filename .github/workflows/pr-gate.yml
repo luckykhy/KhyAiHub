@@ -642,6 +642,63 @@ jobs:
   #   - CodeQL 全量扫描
   #   - trivy 容器扫描
   # ───────────────────────────────────────────────────────────────────────────
+  # 送别礼守卫收口（2026-10-27）：这些测试此前要么只跑在 report-only 的
+  # test:node 里，要么根本不在任何 CI 入口（scripts/tests）。它们验证的是
+  # 「能力是否真的接线」，一旦漂移必须红，而不是躺在日志里。
+  gift-guards:
+    name: Gift guards (orphan wiring + restore)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install backend dependencies
+        run: npm run install:core
+
+      - name: Backend gift guards (orphan wiring)
+        working-directory: runtime/node/backend
+        run: |
+          node --test \
+            tests/directiveComposer.test.js \
+            tests/directiveRegistryGuard.test.js \
+            tests/services/orchestrator/dependencyWaveScheduler.test.js \
+            tests/services/orchestrator/roleToolScope.test.js \
+            tests/services/management/parityGuardWiring.test.js \
+            tests/services/sessionFileRepairWiring.test.js \
+            tests/services/taskTemplateHintWiring.test.js \
+            tests/services/directiveRegistryAudit.guard.test.js \
+            tests/security/fetchExecuteGuardWiring.test.js \
+            tests/services/mdSuggestedAppsPlan.test.js \
+            tests/services/orchestrator/mergeFileConflicts.test.js \
+            tests/bootstrap/startupFailureExplain.test.js
+
+      - name: Restore + channel contract guards
+        run: |
+          node --test \
+            scripts/tests/restoreReadiness.test.js \
+            scripts/tests/installIntegrity.test.js \
+            scripts/tests/hydrationHealth.test.js \
+            scripts/tests/agentRestorePlan.test.js \
+            scripts/tests/restoreConflictDetector.test.js \
+            scripts/tests/restoreConflictResolver.test.js \
+            scripts/tests/restoreConvergenceVerifier.test.js \
+            scripts/tests/bundleLaunchContract.test.js \
+            scripts/tests/duplicationGuard.test.js \
+            scripts/tests/check-duplication.test.js \
+            scripts/tests/maintainerTriage.test.js
+
   security-scan:
     name: Security scan (PR gate)
     runs-on: ubuntu-latest
