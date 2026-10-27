@@ -128,7 +128,10 @@ function injectPredecessorContext(promptText, contextBlock) {
   if (typeof contextBlock !== 'string' || contextBlock.length === 0) {
     return p;
   }
-  return `${contextBlock}\n\n${p}`;
+  // OPS-MAN-091: the block is separated from the prompt by a horizontal rule.
+  // The rule is part of the contract (the scheduler test asserts it) and keeps
+  // predecessor output from reading as instructions to the downstream agent.
+  return `${contextBlock}\n\n---\n\n${p}`;
 }
 
 module.exports = {
