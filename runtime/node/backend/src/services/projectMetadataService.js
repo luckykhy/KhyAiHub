@@ -71,7 +71,7 @@ const LIMITS = () => ({
   // monorepo 友好默认：扫描天花板需足够高，否则 BFS 在抵达深层模块（platform/、
   // software/）前就被 maxFiles 截断，那些模块的变更将对指纹完全不可见。
   maxDepth: _intEnv('KHY_META_MAX_DEPTH', 6, 1, 12),
-  maxFiles: _intEnv('KHY_META_MAX_FILES', 4000, 10, 20000),
+  maxFiles: _intEnv('KHY_META_MAX_FILES', 20000, 10, 20000),
   maxSymbolFiles: _intEnv('KHY_META_MAX_SYMBOL_FILES', 120, 1, 800),
   maxSymbolsPerFile: _intEnv('KHY_META_MAX_SYMBOLS_PER_FILE', 30, 1, 200),
   maxFileBytes: _intEnv('KHY_META_MAX_FILE_BYTES', 256 * 1024, 1024, 8 * 1024 * 1024),
@@ -137,6 +137,12 @@ const SKIP_DIRS = new Set([
   '.tox',
   'site-packages',
 ]);
+
+// 路径级跳过（只在扫描仓库根时命中）：运行时数据树是 gitignored 且持续被
+// CLI / 设备桥写入，把它的文件数算进指纹会让 `metadata check` 在「跑过测试或
+// 用过 CLI」之后必然假红，也让干净克隆与使用中的机器永远算不出同一个值。
+// 结构指纹只应反映可复现的仓库结构（与 `record` 同理，那是名字级跳过）。
+const SKIP_REL_PATHS = new Set(['works/data']);
 
 // 视为源码、参与符号抽取的扩展名 → 语言标签。
 const SOURCE_LANG = {
@@ -223,7 +229,7 @@ function _scanTree(root, limits) {
       const childRel = cur.rel ? `${cur.rel}/${ent.name}` : ent.name;
       const childAbs = path.join(cur.abs, ent.name);
       if (ent.isDirectory()) {
-        if (SKIP_DIRS.has(ent.name)) {
+        if (SKIP_DIRS.has(ent.name) || SKIP_REL_PATHS.has(childRel)) {
           continue;
         }
         if (cur.depth + 1 <= limits.maxDepth) {
@@ -733,16 +739,127 @@ const DIR_ROLES = {
   dist: '发行物',
   vendor: '第三方',
   deploy: '部署',
+  // 2026-10 方案 P 物理化后的分层名（L0–L6 落点见 check-repo-layout.js 的 LAYERS）。
+  // 不加这些，MAP.md 里 runtime/ 与 delivery/ 会是没有任何职责说明的空节点。
+  runtime: '运行时层（L0–L2：内核 / Python 启动 / Node 业务）',
+  substrate: 'Python 启动层（L1）',
+  platform: '平台包（共享库 / UI / 插件 SDK）',
+  node: 'Node 运行时（L2）',
+  delivery: '交付层（L4–L6：垂直应用 / 扩展 / 扩展工具）',
+  channel: '垂直应用载体（L4）',
+  extension: '扩展与交付工具（L5）',
+  entries: '构建产物单一根（LAYOUT-005）',
+  works: '工作区（数据 / 记录 / 打包 / 门禁）',
+  ship: '发布物与打包清单',
+  modules: '模块化打包清单',
+  mobile: '移动端客户端',
+  desktop: '桌面端',
+  web: 'Web 前端',
+  boot: '引导层（L0）',
 };
 function _dirRole(name) {
   return DIR_ROLES[name.toLowerCase()] || '';
 }
 
+// L0–L6 层级名册。真源是 scripts/ci/check-repo-layout.js 的 LAYERS；本文件只做展示映射，
+// 不在运行时 require scripts/（那会形成跨层依赖）。两份 key 的一致性由
+// tests/projectMetadata.test.js 的对账断言锁死，任何一边新增层级另一边漏改都会红。
+const LAYER_MAP = {
+  'runtime/boot/kernel': 'L0 内核',
+  'runtime/substrate/platform': 'L1 Python 启动层',
+  'runtime/node': 'L2 Node 运行时',
+  apps: 'L3 平台应用',
+  'delivery/channel': 'L4 垂直应用',
+  'delivery/extension': 'L5 扩展',
+  'delivery/extension/tools': 'L6 扩展工具',
+  // 下面两项是 LAYERS 里的聚合节点（不是独立层级），只为与守卫名册逐 key 对齐；
+  // 画图时跳过，避免给同一条链路画出父子重复节点。
+  runtime: 'L0–L2 聚合层',
+  delivery: 'L4–L6 聚合层',
+};
+
+// 画图只取真正的层级叶子节点。
+const LAYER_DIAGRAM_KEYS = [
+  'runtime/boot/kernel',
+  'runtime/substrate/platform',
+  'runtime/node',
+  'apps',
+  'delivery/channel',
+  'delivery/extension',
+  'delivery/extension/tools',
+];
+
+// 只画应用依赖链：L1 → L2 → {L3, L4, L5}，L5 → L6。L0 是独立内核，不在链上。
+const LAYER_EDGES = [
+  ['runtime/substrate/platform', 'runtime/node'],
+  ['runtime/node', 'apps'],
+  ['runtime/node', 'delivery/channel'],
+  ['runtime/node', 'delivery/extension'],
+  ['delivery/extension', 'delivery/extension/tools'],
+];
+
+function _renderLayerDiagram(projectRoot) {
+  const present = LAYER_DIAGRAM_KEYS.filter((rel) => {
+    try {
+      return fs.existsSync(path.join(projectRoot, rel));
+    } catch {
+      return false;
+    }
+  });
+  if (!present.length) {
+    return '';
+  }
+  const idOf = new Map(present.map((rel, i) => [rel, `N${i}`]));
+  const lines = ['```mermaid', 'flowchart LR'];
+  for (const rel of present) {
+    lines.push(`  ${idOf.get(rel)}["${LAYER_MAP[rel]}<br/>${rel}"]`);
+  }
+  for (const [from, to] of LAYER_EDGES) {
+    if (idOf.has(from) && idOf.has(to)) {
+      lines.push(`  ${idOf.get(from)} --> ${idOf.get(to)}`);
+    }
+  }
+  lines.push('```');
+  lines.push('> 依赖方向自上而下；L0 内核独立于应用依赖链。名册真源 `scripts/ci/check-repo-layout.js` 的 `LAYERS`。');
+  return lines.join('\n');
+}
+
 // ── 渲染：目录树（有界，缩进） ──
+function _fmtBytes(n) {
+  if (!n) {
+    return '0 B';
+  }
+  if (n < 1024) {
+    return `${n} B`;
+  }
+  if (n < 1024 * 1024) {
+    return `${(n / 1024).toFixed(1)} KB`;
+  }
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 function _renderTree(root, files, dirs, limits) {
   // 仅渲染 top 2 层，避免噪音。
   const lines = [];
   const topDirs = [...new Set(dirs.map((d) => d.split('/')[0]))].sort();
+  // 顶层目录规模（文件数 + 体积）。只统计已扫描到的文件，size 在扫描期已 statSync，
+  // 这里零额外 I/O —— 本函数每次 pre-commit 都会被 metadata hook 调用，不能加磁盘遍历。
+  const topStats = new Map();
+  for (const f of files) {
+    const slash = f.rel.indexOf('/');
+    if (slash < 0) {
+      continue;
+    }
+    const top = f.rel.slice(0, slash);
+    const s = topStats.get(top) || { files: 0, bytes: 0 };
+    s.files += 1;
+    s.bytes += f.size || 0;
+    topStats.set(top, s);
+  }
+  const statSuffix = (d) => {
+    const s = topStats.get(d);
+    return s ? `（${s.files} 文件 / ${_fmtBytes(s.bytes)}）` : '';
+  };
   const rootFiles = files
     .filter((f) => !f.rel.includes('/'))
     .map((f) => f.rel)
@@ -753,7 +870,9 @@ function _renderTree(root, files, dirs, limits) {
       break;
     }
     const role = _dirRole(d);
-    lines.push(`- \`${d}/\`${role ? ` — ${role}` : ''}`);
+    lines.push(
+      `- \`${d}/\`${role ? ` — ${role}` : ' — TODO(人工): 补全顶层目录职责'}${statSuffix(d)}`
+    );
     // 二级目录（数量按详略档位裁剪）
     const subs = [
       ...new Set(
@@ -822,8 +941,20 @@ function _renderMap(ctx, fingerprint) {
   L.push(
     '> 由 khy 自动生成的可维护性种子文档（无需 AI 即可据此维护）。配套 `works/record/ai/CONTEXT.yaml`（契约/符号）`works/record/ai/GUARDS.md`（红线/无AI维护指南）。'
   );
+  if (ctx.hasReadingGuide) {
+    L.push(
+      '> 人工语义层：`works/record/ai/READING-GUIDE.md`（分层图 / 三条链路 / 阅读路线 / 任务反查表）。本文件回答「有什么」，它回答「为什么、读哪个」。'
+    );
+  }
   L.push(
     '> 本文为确定性扫描产物：目录职责按约定推断，入口/构建命令来自 manifest，符号清单来自轻量正则。带 `TODO(人工)` 处需维护者补全意图。'
+  );
+  const scanned = Number(ctx.scannedFiles) || 0;
+  const cap = ctx.limits && Number(ctx.limits.maxFiles);
+  L.push(
+    `> 扫描窗口：${scanned} 个文件${cap ? `（上限 ${cap}）` : ''}${
+      cap && scanned >= cap ? '——**已达上限，下列目录规模是下界而非全量**' : ''
+    }。`
   );
   L.push('');
   L.push('## 技术栈');
@@ -842,6 +973,10 @@ function _renderMap(ctx, fingerprint) {
   } else {
     L.push('- _未识别明确入口 — TODO(人工): 指明程序从哪个文件开始执行_');
   }
+  L.push('');
+  L.push('## 分层视图（L0–L6）');
+  L.push('');
+  L.push(ctx.layerDiagram || '_未识别到 L0–L6 目录（非 khy-os 布局的项目可忽略本节）_');
   L.push('');
   L.push('## 目录结构与职责');
   L.push(tree || '_（空项目）_');
@@ -1237,11 +1372,23 @@ function _collectContext(projectRoot, limits) {
 
   const projectName = path.basename(projectRoot) || 'project';
   const tree = _renderTree(projectRoot, files, dirs, limits);
+  const layerDiagram = _renderLayerDiagram(projectRoot);
   // limits 随 ctx 传入渲染层（供符号 teaser / 树密度按详略档位裁剪）。注意：指纹只哈希
   // det + symbolFiles（见 _computeFingerprint），不含 limits，故详略档位变化不动指纹。
   return {
     ok: true,
-    ctx: { projectName, det, tree, symbolFiles, srcTree, limits },
+    ctx: {
+      projectName,
+      det,
+      tree,
+      layerDiagram,
+      symbolFiles,
+      srcTree,
+      limits,
+      scannedFiles: files.length,
+      // 手写语义层是否存在：存在才在 MAP.md 头部指路，避免给普通项目留死指针。
+      hasReadingGuide: fs.existsSync(path.join(projectRoot, 'works', 'record', 'ai', 'READING-GUIDE.md')),
+    },
     fileCount: files.length,
   };
 }
@@ -1286,7 +1433,11 @@ async function _writeAutoDocs(aiDir, ctx, fingerprint, opts, log) {
   fs.writeFileSync(path.join(aiDir, 'GUARDS.md'), docs.guards, 'utf8');
   _writeMetahash(aiDir, fingerprint, 'auto');
   const files = ['works/record/ai/MAP.md', 'works/record/ai/CONTEXT.yaml', 'works/record/ai/GUARDS.md', `works/record/ai/${METAHASH_FILE}`];
-  return files.concat(_linkPointers(path.dirname(aiDir), log));
+  // 指针必须落在项目根（AGENTS.md / CLAUDE.md 的位置），不是 works/record/。
+  // 早先写成 dirname(aiDir) 会把指针写进 works/record，导致每次 refresh 都判定
+  // “指针有变化”而永远不幂等，并在仓库里留下 works/record/AGENTS.md 这类碎屑。
+  const projectRoot = path.resolve(aiDir, '..', '..', '..');
+  return files.concat(_linkPointers(projectRoot, log));
 }
 
 // 让各 AI 工具的入口文件指向 .ai/（fail-soft）。返回新写/更新的文件相对路径列表。
@@ -1451,14 +1602,14 @@ async function refreshProjectMetadata(projectRoot, opts = {}) {
     fs.writeFileSync(skelPath, _renderSkeletonAuto(ctx, fingerprint), 'utf8');
     _writeMetahash(aiDir, fingerprint, 'skeleton');
     const linked = _linkPointers(projectRoot, log);
-    log(`metadata: 人工 .ai/ 受保护，已刷新机器派生骨架（.ai/${SKELETON_AUTO}）`);
+    log(`metadata: 人工 works/record/ai/ 受保护，已刷新机器派生骨架（works/record/ai/${SKELETON_AUTO}）`);
     return {
       generated: true,
       changed: true,
       reason: 'skeleton_refreshed',
       mode: 'skeleton',
       root: projectRoot,
-      files: [`.ai/${SKELETON_AUTO}`, `.ai/${METAHASH_FILE}`, ...linked],
+      files: [`works/record/ai/${SKELETON_AUTO}`, `works/record/ai/${METAHASH_FILE}`, ...linked],
       fingerprint,
     };
   } catch (err) {
@@ -1686,5 +1837,6 @@ module.exports = {
     SKELETON_AUTO,
     METAHASH_FILE,
     TOOL_VERSION,
+    LAYER_MAP,
   },
 };

@@ -25,7 +25,7 @@ describe('projectMetadataService — deterministic seed docs', () => {
     try { fs.rmSync(tmp, { recursive: true, force: true }); } catch {}
   });
 
-  test('generates .ai/ for a Node project with stack, entry point and symbols', async () => {
+  test('generates works/record/ai/ for a Node project with stack, entry point and symbols', async () => {
     write(tmp, 'package.json', JSON.stringify({
       name: 'demo-app',
       main: 'src/index.js',
@@ -41,25 +41,25 @@ describe('projectMetadataService — deterministic seed docs', () => {
 
     const res = await svc.generateProjectMetadata(tmp);
     assert.equal(res.generated, true, res.reason);
-    // The .ai/ seed docs come first; generate also links AI entry-point pointers
-    // (AGENTS.md, CLAUDE.md, …) so other tools discover .ai/ automatically.
-    assert.deepEqual(res.files.slice(0, 4), ['.ai/MAP.md', '.ai/CONTEXT.yaml', '.ai/GUARDS.md', '.ai/.metahash.json']);
+    // The works/record/ai/ seed docs come first; generate also links AI entry-point pointers
+    // (AGENTS.md, CLAUDE.md, …) so other tools discover works/record/ai/ automatically.
+    assert.deepEqual(res.files.slice(0, 4), ['works/record/ai/MAP.md', 'works/record/ai/CONTEXT.yaml', 'works/record/ai/GUARDS.md', 'works/record/ai/.metahash.json']);
     assert.ok(res.files.includes('AGENTS.md'), 'should link AGENTS.md pointer');
     assert.ok(res.files.includes('CLAUDE.md'), 'should link CLAUDE.md pointer');
 
-    const map = fs.readFileSync(path.join(tmp, '.ai/MAP.md'), 'utf8');
+    const map = fs.readFileSync(path.join(tmp, 'works/record/ai/MAP.md'), 'utf8');
     assert.match(map, /node/);
     assert.match(map, /src\/index\.js/);
     assert.match(map, /npm start/);
     assert.match(map, /startServer/);
 
-    const ctx = fs.readFileSync(path.join(tmp, '.ai/CONTEXT.yaml'), 'utf8');
+    const ctx = fs.readFileSync(path.join(tmp, 'works/record/ai/CONTEXT.yaml'), 'utf8');
     assert.match(ctx, /stack: \[/);
     assert.match(ctx, /express/);
     assert.match(ctx, /startServer/);
     assert.match(ctx, /Router/);
 
-    const guards = fs.readFileSync(path.join(tmp, '.ai/GUARDS.md'), 'utf8');
+    const guards = fs.readFileSync(path.join(tmp, 'works/record/ai/GUARDS.md'), 'utf8');
     assert.match(guards, /没有 AI/);
     assert.match(guards, /npm test/);
     assert.match(guards, /TODO\(人工\)/);
@@ -73,7 +73,7 @@ describe('projectMetadataService — deterministic seed docs', () => {
     assert.equal(first.generated, true);
 
     // Tamper with the generated file to prove a no-op skip leaves it intact.
-    const mapPath = path.join(tmp, '.ai/MAP.md');
+    const mapPath = path.join(tmp, 'works/record/ai/MAP.md');
     fs.writeFileSync(mapPath, 'HAND EDITED', 'utf8');
 
     const second = await svc.generateProjectMetadata(tmp);
@@ -92,7 +92,7 @@ describe('projectMetadataService — deterministic seed docs', () => {
 
     const res = await svc.generateProjectMetadata(tmp);
     assert.equal(res.generated, true, res.reason);
-    const ctx = fs.readFileSync(path.join(tmp, '.ai/CONTEXT.yaml'), 'utf8');
+    const ctx = fs.readFileSync(path.join(tmp, 'works/record/ai/CONTEXT.yaml'), 'utf8');
     assert.match(ctx, /python/);
     assert.match(ctx, /main\.py/);
     assert.match(ctx, /run/);
@@ -125,7 +125,7 @@ describe('projectMetadataService — maybeGenerateAfterRun trigger logic', () =>
     ];
     const res = await svc.maybeGenerateAfterRun(tmp, log, {});
     assert.equal(res.generated, true, res.reason);
-    assert.ok(fs.existsSync(path.join(tmp, '.ai/MAP.md')));
+    assert.ok(fs.existsSync(path.join(tmp, 'works/record/ai/MAP.md')));
   });
 
   test('triggers when >= KHY_META_MIN_FILES files written', async () => {
@@ -193,9 +193,9 @@ describe('projectMetadataService — fingerprint + non-destructive refresh', () 
     assert.equal(first.reason, 'generated');
     assert.equal(first.mode, 'auto');
     assert.ok(first.fingerprint);
-    assert.ok(fs.existsSync(path.join(tmp, '.ai/.metahash.json')));
+    assert.ok(fs.existsSync(path.join(tmp, 'works/record/ai/.metahash.json')));
 
-    const meta = JSON.parse(fs.readFileSync(path.join(tmp, '.ai/.metahash.json'), 'utf8'));
+    const meta = JSON.parse(fs.readFileSync(path.join(tmp, 'works/record/ai/.metahash.json'), 'utf8'));
     assert.equal(meta.fingerprint, first.fingerprint);
     assert.equal(meta.kind, 'auto');
 
@@ -217,19 +217,19 @@ describe('projectMetadataService — fingerprint + non-destructive refresh', () 
     assert.equal(second.reason, 'refreshed');
     assert.notEqual(second.fingerprint, first.fingerprint);
 
-    const ctxDoc = fs.readFileSync(path.join(tmp, '.ai/CONTEXT.yaml'), 'utf8');
+    const ctxDoc = fs.readFileSync(path.join(tmp, 'works/record/ai/CONTEXT.yaml'), 'utf8');
     assert.match(ctxDoc, /brandNewSymbol/);
     // metahash advanced to the new fingerprint.
-    const meta = JSON.parse(fs.readFileSync(path.join(tmp, '.ai/.metahash.json'), 'utf8'));
+    const meta = JSON.parse(fs.readFileSync(path.join(tmp, 'works/record/ai/.metahash.json'), 'utf8'));
     assert.equal(meta.fingerprint, second.fingerprint);
   });
 
-  test('refresh never overwrites a hand-authored .ai/, writes SKELETON.auto instead', async () => {
+  test('refresh never overwrites a hand-authored works/record/ai/, writes SKELETON.auto instead', async () => {
     write(tmp, 'package.json', JSON.stringify({ name: 'curated', main: 'index.js' }));
     write(tmp, 'index.js', 'function a(){}');
     // Hand-authored MAP.md WITHOUT the auto marker.
     const curated = '# Curated MAP\n\nHand-written by a human. Do not touch.\n';
-    write(tmp, '.ai/MAP.md', curated);
+    write(tmp, 'works/record/ai/MAP.md', curated);
 
     const res = await svc.refreshProjectMetadata(tmp);
     assert.equal(res.generated, true);
@@ -237,13 +237,13 @@ describe('projectMetadataService — fingerprint + non-destructive refresh', () 
     assert.equal(res.mode, 'skeleton');
 
     // Curated MAP untouched.
-    assert.equal(fs.readFileSync(path.join(tmp, '.ai/MAP.md'), 'utf8'), curated);
+    assert.equal(fs.readFileSync(path.join(tmp, 'works/record/ai/MAP.md'), 'utf8'), curated);
     // Machine-derived skeleton written and marked.
-    const skel = fs.readFileSync(path.join(tmp, '.ai/SKELETON.auto.md'), 'utf8');
+    const skel = fs.readFileSync(path.join(tmp, 'works/record/ai/SKELETON.auto.md'), 'utf8');
     assert.match(skel, /khy-metadata:auto/);
     assert.match(skel, /index\.js/);
 
-    const meta = JSON.parse(fs.readFileSync(path.join(tmp, '.ai/.metahash.json'), 'utf8'));
+    const meta = JSON.parse(fs.readFileSync(path.join(tmp, 'works/record/ai/.metahash.json'), 'utf8'));
     assert.equal(meta.kind, 'skeleton');
 
     // Second pass with no structural change → skeleton no-op.
@@ -256,7 +256,7 @@ describe('projectMetadataService — fingerprint + non-destructive refresh', () 
     write(tmp, 'package.json', JSON.stringify({ name: 'owned' }));
     write(tmp, 'index.js', 'function a(){}');
     await svc.generateProjectMetadata(tmp);
-    const map = fs.readFileSync(path.join(tmp, '.ai/MAP.md'), 'utf8');
+    const map = fs.readFileSync(path.join(tmp, 'works/record/ai/MAP.md'), 'utf8');
     assert.ok(svc._internal._isAutoOwned(map));
   });
 
@@ -270,6 +270,21 @@ describe('projectMetadataService — fingerprint + non-destructive refresh', () 
       svc._internal._computeFingerprint(c1.ctx),
       svc._internal._computeFingerprint(c2.ctx),
     );
+  });
+
+  test('fingerprint ignores the runtime data tree (works/data), which changes on every run', () => {
+    write(tmp, 'package.json', JSON.stringify({ name: 'data-tree' }));
+    write(tmp, 'works/ship/app.js', 'function ship(){}');
+    write(tmp, 'works/data/khy/state.json', '{"a":1}');
+    const limits = svc._internal.LIMITS();
+    const before = svc._internal._scanTree(tmp, limits);
+    assert.ok(before.files.some((f) => f.rel === 'works/ship/app.js'), 'real source still scanned');
+    assert.ok(!before.files.some((f) => f.rel.startsWith('works/data/')), 'data tree skipped');
+
+    // A CLI run writing another state file must not move the structural fingerprint.
+    write(tmp, 'works/data/khy/state-2.json', '{"b":2}');
+    const after = svc._internal._scanTree(tmp, limits);
+    assert.equal(after.files.length, before.files.length);
   });
 });
 
@@ -389,12 +404,12 @@ describe('projectMetadataService — 详略得当 detail calibration', () => {
     const res = await svc.generateProjectMetadata(tmp);
     assert.equal(res.generated, true, res.reason);
 
-    const map = fs.readFileSync(path.join(tmp, '.ai/MAP.md'), 'utf8');
+    const map = fs.readFileSync(path.join(tmp, 'works/record/ai/MAP.md'), 'utf8');
     assert.match(map, /…\(\+7\)/, 'MAP should show a +N overflow marker');
     assert.ok(!map.includes('fn9'), 'MAP teaser must not list the truncated tail symbol');
     assert.match(map, /CONTEXT\.yaml/, 'MAP should point to CONTEXT.yaml for the full list');
 
-    const ctx = fs.readFileSync(path.join(tmp, '.ai/CONTEXT.yaml'), 'utf8');
+    const ctx = fs.readFileSync(path.join(tmp, 'works/record/ai/CONTEXT.yaml'), 'utf8');
     assert.match(ctx, /fn0/);
     assert.match(ctx, /fn9/, 'CONTEXT must carry the complete symbol list');
     assert.ok(!ctx.includes('…(+'), 'CONTEXT must never truncate symbols');
@@ -410,10 +425,10 @@ describe('projectMetadataService — 详略得当 detail calibration', () => {
     const res = await svc.generateProjectMetadata(tmp);
     assert.equal(res.generated, true, res.reason);
 
-    const map = fs.readFileSync(path.join(tmp, '.ai/MAP.md'), 'utf8');
+    const map = fs.readFileSync(path.join(tmp, 'works/record/ai/MAP.md'), 'utf8');
     assert.match(map, /其余 2 个文件的符号见 `CONTEXT\.yaml`/);
 
-    const ctx = fs.readFileSync(path.join(tmp, '.ai/CONTEXT.yaml'), 'utf8');
+    const ctx = fs.readFileSync(path.join(tmp, 'works/record/ai/CONTEXT.yaml'), 'utf8');
     for (const n of ['alpha', 'bravo', 'charlie', 'delta']) {
       assert.match(ctx, new RegExp(`${n}\\.js`), `CONTEXT must list every file (${n})`);
     }
@@ -432,5 +447,54 @@ describe('projectMetadataService — 详略得当 detail calibration', () => {
     const fpFull = svc._internal._computeFingerprint(full.ctx);
 
     assert.equal(fpBrief, fpFull, 'detail profile must not perturb the structural fingerprint');
+  });
+
+  test('LAYER_MAP stays in sync with check-repo-layout LAYERS (L0-L6 roster)', () => {
+    // 两份层级名册：展示用的 LAYER_MAP 与守卫用的 LAYERS。任一边增删层级而另一边漏改，
+    // MAP.md 的分层视图就会与 check:layout 的判断分叉——所以用断言锁死。
+    const { LAYERS } = require('../../../../scripts/ci/check-repo-layout.js');
+    assert.deepEqual(
+      Object.keys(svc._internal.LAYER_MAP).sort(),
+      Object.keys(LAYERS).sort(),
+      'projectMetadataService 的层级映射必须与 check-repo-layout 的 LAYERS 名册一致'
+    );
+  });
+
+  test('renders a Mermaid layer diagram when L0-L6 directories exist', async () => {
+    write(tmp, 'package.json', JSON.stringify({ name: 'layered' }));
+    write(tmp, 'runtime/node/backend/index.js', 'function boot(){}');
+
+    const res = await svc.generateProjectMetadata(tmp);
+    assert.equal(res.generated, true, res.reason);
+
+    const map = fs.readFileSync(path.join(tmp, 'works/record/ai/MAP.md'), 'utf8');
+    assert.match(map, /## 分层视图（L0–L6）/);
+    assert.match(map, /```mermaid/);
+    assert.match(map, /flowchart LR/);
+    assert.match(map, /L2 Node 运行时/);
+    assert.match(map, /runtime\/node/);
+  });
+
+  test('marks unknown top-level directories with TODO instead of leaving them blank', async () => {
+    write(tmp, 'package.json', JSON.stringify({ name: 'gappy' }));
+    write(tmp, 'weirdplace/thing.js', 'function x(){}');
+
+    await svc.generateProjectMetadata(tmp);
+    const map = fs.readFileSync(path.join(tmp, 'works/record/ai/MAP.md'), 'utf8');
+    assert.match(map, /weirdplace\/.*TODO\(人工\): 补全顶层目录职责/);
+  });
+
+  test('points to READING-GUIDE.md only when the hand-authored guide actually exists', async () => {
+    write(tmp, 'package.json', JSON.stringify({ name: 'guided' }));
+    write(tmp, 'index.js', 'function a(){}');
+
+    await svc.generateProjectMetadata(tmp);
+    let map = fs.readFileSync(path.join(tmp, 'works/record/ai/MAP.md'), 'utf8');
+    assert.ok(!map.includes('READING-GUIDE.md'), 'absent guide must not leave a dead pointer');
+
+    write(tmp, 'works/record/ai/READING-GUIDE.md', '# hand-authored guide\n');
+    await svc.refreshProjectMetadata(tmp, { force: true });
+    map = fs.readFileSync(path.join(tmp, 'works/record/ai/MAP.md'), 'utf8');
+    assert.match(map, /READING-GUIDE\.md/);
   });
 });

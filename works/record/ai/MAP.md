@@ -1,11 +1,11 @@
-<!-- khy-metadata:auto khy-metadata/4 fingerprint=8329e3a94e7d7a38 -->
+<!-- khy-metadata:auto khy-metadata/4 fingerprint=a16aa572854940ba -->
 <!-- 本文件由 khy 机械生成，可被 `khy metadata refresh` 安全覆盖。删除上面这行标记即视为人工接管，刷新将不再覆盖本文件。 -->
 # MAP — khy-os 骨架与导航
 
 > 由 khy 自动生成的可维护性种子文档（无需 AI 即可据此维护）。配套 `works/record/ai/CONTEXT.yaml`（契约/符号）`works/record/ai/GUARDS.md`（红线/无AI维护指南）。
 > 人工语义层：`works/record/ai/READING-GUIDE.md`（分层图 / 三条链路 / 阅读路线 / 任务反查表）。本文件回答「有什么」，它回答「为什么、读哪个」。
 > 本文为确定性扫描产物：目录职责按约定推断，入口/构建命令来自 manifest，符号清单来自轻量正则。带 `TODO(人工)` 处需维护者补全意图。
-> 扫描窗口：15573 个文件（上限 20000）。
+> 扫描窗口：10464 个文件（上限 20000）。
 
 ## 技术栈
 `node` · `monorepo` · `python` · `docker` · `docker-compose`
@@ -87,8 +87,7 @@ flowchart LR
   - `scripts/install/`
   - `scripts/lib/` — 库代码
   - `scripts/maintenance/`
-- `works/` — 工作区（数据 / 记录 / 打包 / 门禁）（5138 文件 / 176.4 MB）
-  - `works/data/`
+- `works/` — 工作区（数据 / 记录 / 打包 / 门禁）（29 文件 / 16.9 MB）
   - `works/deploy/` — 部署
   - `works/patches/`
   - `works/ship/` — 发布物与打包清单
@@ -131,6 +130,7 @@ flowchart LR
 - `scripts/ci/check-agent-authz.js` (javascript): add, readText, readJson, checkA2_2_readOnlyProfileHasNoShell, checkA2_2_readOnlyAgentsDenyShell, checkA2_3_noFailOpen, checkA2_1_undeclaredIsNotAllTools, checkA2_4_executionBoundaryEnforcesScope, checkA2_5_singleRoleSet, checkA2_7_noSilentDegradation, …(+1)
 - `scripts/ci/check-agent-docs.js` (javascript): findRepoRoot, readBudgets, read, pick, readFilenameTruth, arr, readRootWhitelist, readRootDocExt, readCliTruth, walk, …(+20)
 - `scripts/ci/check-agent-feedback.js` (javascript): labelOf, degradeForStage, argValue, detectMode, add, readEvidence, evidenceElsewhere, auditFiveQuestions, isCodePath, isDesignDoc, …(+10)
+- `scripts/ci/check-agent-rules.js` (javascript): makeVueTemplateContext, textNodes, attrValues, templateCloses, run, gitUsable, listChangedFiles, shouldIgnore, isSubmoduleGitlink, collectFilesFromTarget, …(+19)
 - `apps/khyos-desktop/dist-ts/electron.vite.config.d.ts` (typescript): _无导出符号_
 - `apps/khyos-desktop/dist-ts/electron.vite.config.js` (javascript): _无导出符号_
 - `apps/khyos-desktop/docs/extract_asar.py` (python): extract_dir
@@ -145,8 +145,7 @@ flowchart LR
 - `apps/khyos-desktop/docs/search_intl.py` (python): _无导出符号_
 - `apps/khyos-desktop/docs/search_js.py` (python): _无导出符号_
 - `apps/khyos-desktop/docs/search_main_js.py` (python): _无导出符号_
+- `apps/khyos-desktop/docs/search_mention_ui.py` (python): _无导出符号_
 - `delivery/channel/khyquant/setup.py` (python): BuildWithBundle, run, _prune
-- `delivery/web/ai-frontend/.eslintrc.cjs` (javascript): _无导出符号_
-- `delivery/web/ai-frontend/backendDiscovery.mjs` (javascript): isPidAlive, portOf, isTargetReachable, done, readApiPortCandidates, readPointerDataHomes, resolvePortable, resolveDataHomes, resolveBackendTarget, resolveWebBackendTarget
 - …其余 72 个文件的符号见 `CONTEXT.yaml`（完整逐文件清单）。
 
