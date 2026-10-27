@@ -45,6 +45,14 @@ const DIRECTIVE_REGISTRY = Object.freeze({
   },
   groundTruth: { tier: 'guard', label: '地面真值(算术/进制已精确算出,直接采用勿重算)' },
   deterministicFacts: { tier: 'guard', label: '确定性真值(单位/常数/定理权威值,直接采用)' },
+  // 需求单上下文:已登记需求的当前事实,直接采用、勿重复追问。
+  // 2026-10-27 补登记:aiChatCore 早已 compose requirementArtifact,但本表漏登,
+  // 导致它按 protocol 兜底参与仲裁(directiveRegistryAudit.guard 报红)。归 guard
+  // (事实类)使其在协议指令之前注入,且不被协议仲裁压掉。
+  requirementArtifact: {
+    tier: 'guard',
+    label: '需求单上下文(已登记需求的当前事实,直接采用,勿重复追问)',
+  },
   inlineImageOcrGuard: { tier: 'guard', label: '内联图片路径护栏(禁 DIY-OCR / 反复 Read)' },
   searchNecessity: { tier: 'guard', label: '联网搜索必要性(该搜/不该搜)' },
   changeWatch: { tier: 'guard', label: 'khy 自身改动回核(对/不对/无法判断)' },

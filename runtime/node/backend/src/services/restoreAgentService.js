@@ -3,6 +3,13 @@
 /**
  * restoreAgentService.js — 还原收敛闭环 agent（OPS-MAN-082）
  *
+ * DORMANT (2026-10-27 audit): this service composes the five restore layers,
+ * but the whole repo has zero production consumers — only selfCapabilityRegistry
+ * lists it as data. Its seven leaf modules are still exercised directly by
+ * verify-install / doctor-hydration, so the parts that matter at install time
+ * are live; this convergence loop is not. Ruling: keep the code, do NOT claim
+ * it is wired. Wire it to a CLI/route before advertising the closed loop.
+ *
  * 设计：编排还原家族 5 层架构的最外层闭环——
  *   ① 三面镜子（restore-check / verify-install / hydration-doctor）→ snapshot
  *   ② agentRestorePlan（OPS-MAN-075）→ 合成有序方案
