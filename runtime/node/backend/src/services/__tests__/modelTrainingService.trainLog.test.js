@@ -2,6 +2,8 @@
  * Unit tests for the khy-trainlog/v1 structured training-log protocol and
  * the post-training eval-gate helpers added to modelTrainingService.
  */
+const { describe, it } = require('node:test');
+
 const path = require('path');
 const os = require('os');
 const fs = require('fs');

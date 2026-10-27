@@ -78,9 +78,11 @@ test('单例的状态可查，且不含 token', () => {
 test('facade 上的纯判定函数不依赖手机就能用', () => {
   assert.equal(facade.classifyBridgeCall('battery', {}).requiresConfirm, false);
   assert.equal(facade.classifyBridgeCall('exec', { cmd: 'id' }).requiresConfirm, true);
-  // 28 = 22 个既有桥工具 + 3 个循环控制 + 3 个反代与共享记忆。
+  // 31 = 25 基础桥工具 + 3 个循环控制 + 3 个反代与共享记忆。
+  // 25 里含 2026 新增的设备控制三件套 volume / brightness / vibrate——Android 侧
+  // Tools.java 已按同名 tool 分派实现，故 31 是真实基线，不是超前声明。
   // 这条是道闸：桥的工具面长胖了而目录没跟上，调用侧就会拿旧清单做准入判断。
-  assert.equal(facade.listKhyToolDefinitions().length, 28);
+  assert.equal(facade.listKhyToolDefinitions().length, 31);
   assert.equal(facade.resolvePhoneBridgeConfig({}).mailboxDir, '/sdcard/bridge-amoobridge');
 });
 

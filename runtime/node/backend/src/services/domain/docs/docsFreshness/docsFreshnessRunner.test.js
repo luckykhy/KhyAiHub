@@ -20,6 +20,10 @@ const TMP_BASE = path.join(REPO_ROOT, '.khyos', 'tmp');
 const MAX_DOC_BYTES = 512 * 1024; // 与 runner 内部上限同值，仅用于边界测试
 
 function makeFixture(prefix, files) {
+  // mkdtempSync does not create parents, and .khyos/tmp is gitignored — it is
+  // absent on a fresh clone / after a clean, so relying on it made every case
+  // here die with ENOENT instead of testing the runner.
+  fs.mkdirSync(TMP_BASE, { recursive: true });
   const root = fs.mkdtempSync(path.join(TMP_BASE, `${prefix}-`));
   for (const rel of Object.keys(files)) {
     const abs = path.join(root, rel);
