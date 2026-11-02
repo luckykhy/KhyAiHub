@@ -80,6 +80,15 @@ node
 # 没有任何 Dockerfile COPY 这个路径，上下文里放一份纯属白传。
 runtime/substrate/platform/khy_platform/bundled
 
+# ── 被整树 COPY 的前端构建输出 ────────────────────────────────────────────────
+# delivery/web/ai-frontend/ 被 ai-frontend Dockerfile 整树 COPY，其 dist 是
+# `pnpm --filter khy-ai-frontend run build` 的产物（14 MB，2026-11-02 实测）。
+# 根级 `dist` 模式匹配不到它 —— Docker 的 `*` 不跨 `/`。
+# 排除是安全的：stage 2 取的是 builder 阶段里**重新生成**的那份 dist，
+# 不是宿主机这份。（这一条是 check-docker-context.js 的「目录型 COPY」检查
+# 抓出来的 —— 2026-11-02 它开火第一轮就指出我这份 .dockerignore 漏了这里。）
+delivery/web/ai-frontend/dist
+
 # ── 文档：只排除上下文根的散落 md 与文档站，**不动 src/ 下的技能 md** ──────────
 # ⚠ 这里刻意不用 `**/*.md`：runtime/node/backend/src/ 下有 109 个 SKILL.md /
 #   prompt.md（cliAnythingRegistry/skills/、src/skills/、src/services/skills/），

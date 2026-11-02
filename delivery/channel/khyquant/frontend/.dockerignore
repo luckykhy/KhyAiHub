@@ -1,0 +1,33 @@
+# .dockerignore —— delivery/channel/khyquant/frontend 的构建上下文
+#
+# 为什么这个目录需要自己一份 .dockerignore：
+#
+# `.dockerignore` 只作用于**构建上下文的根**。本镜像的上下文就是这个目录自己
+# （Dockerfile 里是 `COPY . .`），仓库根那份 .dockerignore 管不到这里。
+#
+# 在补这份文件之前，`COPY . .` 会把宿主机上的 node_modules 与 dist 一起拷进
+# builder 阶段。node_modules 是安装产物（实测 28 项里 20 项是指向
+# /d/Portable/khy-os/node_modules/.pnpm/... 的绝对软链），dist 是构建输出
+# （3.5M，`npm run build` 会重新生成）——两者都不该进上下文。
+# 合计约 3.6M，占原上下文 6.8M 的一半以上。
+#
+# ⚠ 体积只是次要的，**真正的问题是构建会断**：
+#   Dockerfile 的顺序是 `npm install` 先、`COPY . .` 后。宿主机那 20 个绝对软链
+#   的名字与前一步装出来的包完全重叠（axios / vue / element-plus / eslint …），
+#   COPY 会把容器内的真实目录覆盖成指向宿主的断链 ⇒ `npm run build` 直接
+#   MODULE_NOT_FOUND。CI 用干净 checkout、没有 node_modules，所以全绿。
+#   这与主镜像的 ④ 号缺陷是同一条机制，只是被 nginx:alpine 最终阶段洗掉了。
+#
+# 守卫：scripts/ci/check-docker-context.js 的「目录型 COPY」检查盯着这两项。
+
+# 安装产物：宿主机的 node_modules（pnpm 符号链接农场，指向宿主 .pnpm）
+node_modules
+
+# 构建输出：`npm run build` 会重新生成，且 vite 默认清空 outDir
+dist
+
+# 版本控制与临时文件
+.git
+*.log
+.env
+_md_test_out.txt
