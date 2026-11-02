@@ -43,7 +43,9 @@ function HistorySearchOverlay({ state }) {
       { dimColor: true },
       noMatch
         ? '  无匹配 · Backspace 改词 · Esc 取消'
-        : '  Ctrl+R 上一条 · Enter/Tab 采用 · Esc 取消'
+        // Arrows accept too (App.js revSearch arrow branch) — listing only Enter/Tab teaches
+        // the user one chord the overlay happens to render and hides three it also honours.
+        : '  Ctrl+R 上一条 · Enter/Tab/↑↓ 采用 · Esc 取消'
     )
   );
 }
