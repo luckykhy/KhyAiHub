@@ -64,6 +64,19 @@ runtime/node/backend/*.html
 # ── 整个不进镜像的树（无任何 Dockerfile COPY 它们）────────────────────────────
 # apps/khyos-desktop 是独立 Electron 工程（delivery/desktop/khyos-desktop 迁址后的
 # 新位置），根 Dockerfile 与 ai-frontend Dockerfile 都不 COPY 它。
+#
+# ⚠ delivery/mobile/ 是本次补的最大一项（2026-11-02 才发现，前两轮都漏了）：
+#   delivery/mobile/khy-os-client-app/build      3.9 GB（Flutter Android 构建产物）
+#   delivery/mobile/khy-os-client-app/.dart_tool 479 MB（Dart 工具链缓存）
+#   两者都是 `flutter build apk` / `flutter pub get` 的产物，可重建，且**没有任何
+#   Dockerfile 从 delivery/mobile/ COPY 任何东西**（已 grep 全部 Dockerfile 确认）。
+#   它们此前一直在构建上下文里 —— 单这一项就比前几轮所有优化加起来还大。
+#   注意：这里只排除 mobile 的构建产物，**不排 delivery/mobile/khy-os-client-app
+#   源码**——那是 L4 渠道的随身 App 源码，将来若要做移动端镜像还要用。
+#   （仓库自带的 scripts/maintenance/clean.js 也把这两项目标列为可清理项，
+#    但那会真删文件、下次要重新构建；.dockerignore 是非破坏性做法，两者不冲突。）
+delivery/mobile/khy-os-client-app/build
+delivery/mobile/khy-os-client-app/.dart_tool
 apps
 delivery/desktop
 khy-Trajectory
@@ -116,6 +129,22 @@ services
 software
 kernel
 tools
+
+# ── 工程产物区：只有 works/patches 被 Dockerfile COPY ─────────────────────────
+# 根 Dockerfile 与 ai-frontend Dockerfile 从 works/ 下只 COPY 一个目录：
+# works/patches/（patchedDependencies 求 hash 的输入）。其余全部是工程产物。
+#
+# 这里排除两大类。判据是「无 Dockerfile COPY」而非「量过大小」——本机 du/find
+# 在 works/ 上跑好几分钟都出不了结果（树太深），所以不假装量过。
+# 排错的风险由 scripts/ci/check-docker-context.js 的 copy-source-excluded 检查
+# 兜底：真有 Dockerfile 要 COPY 被排掉的路径，它当场报 error。
+#
+#   works/data    运行态数据（会话/轨迹/heal 审计）。其中的 *.db 已被 **/*.db
+#                 兜住，但缓存与日志不是 .db 形态；整目录排除更彻底也更诚实。
+#   works/record  软著登记底档（evidence/ 下是截图与说明文档，图片多）。
+#                 与镜像运行无关。
+works/data
+works/record
 
 # ── 凭据与状态（永不进镜像）──────────────────────────────────────────────────
 # **/.env：本机 runtime/node/backend/.env 是未跟踪的开发配置（可能含真密钥），
