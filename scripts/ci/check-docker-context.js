@@ -143,20 +143,16 @@ function findDockerfiles(dir, depth, out) {
 }
 
 /**
- * 推导「构建上下文 = 仓库根」的 Dockerfile 集合 —— 也只有这一集合受仓库根的
- * `.dockerignore` 管辖。
- *
- * 为什么不遍历全部 Dockerfile：不同 Dockerfile 的上下文不同。
- *   · runtime/boot/kernel/Dockerfile.kernel-build 的上下文是 runtime/boot/kernel；
- *   · delivery/extension/scripts/khy-alpine-iso/Dockerfile.iso-builder 同理；
- *   · third_party/ 下 llama.cpp 的那批用自己的上下文。
- * 拿仓库根去解析它们的 COPY 源，会得到一片假红（本次实测 40 项 error，其中 22 项
- * 来自 third_party，正是这个原因）。
+ * 推导「构建上下文 = 仓库根」的 Dockerfile 集合。
  *
  * 真源 = docker-compose.yml 的 `dockerfile:` 项 + .github/workflows/docker.yml 的
- * `file: ./...` 项。这样新 Dockerfile 一旦接进 compose/CI 就自动进入判据，
- * 不需要回来改本文件。解析用正则而非 YAML 库：scripts/ 下守卫约定零依赖
- * （见 check-dependency-size.js 头部）。
+ * `file: ./...` 项。这两处引用的 Dockerfile 用仓库根作上下文，受仓库根的
+ * `.dockerignore` 管辖；B 组策略判据（MUST_EXCLUDE / MUST_NOT_EXCLUDE）也只对
+ * 它们成立——那些表是按主镜像的目录形状写的。
+ *
+ * 为什么不能「遍历全部 Dockerfile 都按仓库根判」：不同 Dockerfile 的上下文不同。
+ * 实测（2026-11-02 第一版）那样会得到 40 项 error，其中 22 项来自 third_party
+ * 下 llama.cpp 的 .devops 批次——它们用自己的上下文，源路径本就不该相对仓库根解析。
  */
 function resolveRootContextDockerfiles() {
   const found = new Set();
@@ -179,7 +175,141 @@ function resolveRootContextDockerfiles() {
   // 仓库根 Dockerfile 是主镜像，compose 与 CI 都以 `dockerfile: Dockerfile` 引用，
   // 但若两者都漏写，它仍必须是判据对象。
   if (fs.existsSync(path.join(REPO_ROOT, 'Dockerfile'))) found.add('Dockerfile');
-  return [...found].sort();
+  return found;
+}
+
+/** 单段 glob → 正则（用于展开 `COPY package*.json` 这类源）。 */
+function globToRegex(pat) {
+  let out = '';
+  for (let i = 0; i < pat.length; i++) {
+    const c = pat[i];
+    if (c === '*') out += '[^/]*';
+    else if (c === '?') out += '[^/]';
+    else if ('\\^$.|+()[]{}'.includes(c)) out += '\\' + c;
+    else out += c;
+  }
+  return new RegExp('^' + out + '$');
+}
+
+/**
+ * 判定一个 COPY 源在上下文内是否可解析。
+ * Docker 的 COPY 支持 glob（`COPY package*.json ./`），字面量判存在会假红
+ * （第一版扩展上下文时就踩到：把 `package*.json` 当成不存在的文件报了 error）。
+ * 目录段带 glob 的情况本守卫不展开，返回 'skip' —— 宁可少判，不可假红。
+ */
+function resolveCopySource(ctxDir, srcRel) {
+  if (!/[*?[]/.test(srcRel)) {
+    return fs.existsSync(path.join(ctxDir, srcRel)) ? 'ok' : 'missing';
+  }
+  const parts = srcRel.split('/');
+  let dir = ctxDir;
+  for (const d of parts.slice(0, -1)) {
+    if (/[*?[]/.test(d)) return 'skip';
+    dir = path.join(dir, d);
+  }
+  let entries;
+  try {
+    entries = fs.readdirSync(dir);
+  } catch {
+    return 'missing';
+  }
+  const re = globToRegex(parts[parts.length - 1]);
+  return entries.some(e => re.test(e)) ? 'ok' : 'missing';
+}
+
+/**
+ * 目录型 COPY 的泄漏检查。
+ *
+ * 为什么必须有这一条：`copy-source-excluded` 只覆盖**具名** COPY 源
+ * （`COPY package.json ./`）。而 `COPY . .` / `COPY src/ ./src/` 的源是目录，
+ * 永远"存在"也永远不会被"排除"——于是「上下文里有 node_modules，而 .dockerignore
+ * 忘了排它」这种最要命的形态，前两版守卫**一条都抓不到**。
+ *
+ * 实测教训（2026-11-02）：delivery/channel/khyquant/frontend 正是这个形态。
+ * 它的 Dockerfile 是 `npm install` 先、`COPY . .` 后，宿主机 node_modules 里
+ * 20 个指向 /d/Portable/... 的绝对软链被合并进 builder 阶段，覆盖前一步装好的
+ * 同名真实目录 ⇒ npm run build 直接 MODULE_NOT_FOUND。第一版守卫反向测试
+ * 「删掉该目录 .dockerignore 里的 node_modules」时全绿，才暴露出这个盲区。
+ *
+ * 判据：目录型 COPY 的源目录下，若磁盘上存在 MUST_NOT_ENTER_DIR_COPY 里的条目，
+ * 而该上下文又没有把它排除掉 ⇒ error。
+ */
+const MUST_NOT_ENTER_DIR_COPY = [
+  ['node_modules', '安装产物；pnpm/npm 布局下是指向宿主 .pnpm 的软链农场，'
+    + '进镜像会覆盖前一步刚装好的同名真实目录'],
+  ['dist', '构建输出，由构建步骤重新生成'],
+];
+
+function checkDirCopy(ctx, srcRel, df) {
+  const abs = path.join(ctx.ctxDir, srcRel);
+  let entries;
+  try {
+    entries = fs.readdirSync(abs, { withFileTypes: true });
+  } catch {
+    return; // 不是目录（或读不到）—— 由具名 COPY 检查负责
+  }
+  for (const [name, why] of MUST_NOT_ENTER_DIR_COPY) {
+    const present = entries.some(e => e.name === name);
+    if (!present) continue;
+    // 子条目相对**上下文根**的完整路径。这里不能用裸 name：
+    // .dockerignore 的模式是相对上下文根的，而 COPY 的源目录可能只是上下文的
+    // 一个子树（如 `COPY delivery/web/ai-frontend/ ...`，其 dist 的完整路径是
+    // `delivery/web/ai-frontend/dist`）。第一版用裸 name，导致明明排除了还报错。
+    const childRel = srcRel === '.' || srcRel === '' ? name : srcRel + '/' + name;
+    if (ctx.patterns && isExcluded(ctx.patterns, childRel)) continue;
+    findings.push({
+      id: 'dir-copy-leaks-build-artifact',
+      severity: 'error',
+      file: df,
+      detail: `目录型 COPY（${srcRel}）会把 ${name} 一起带进镜像，而上下文 `
+        + `${ctx.useRepoRoot ? '.' : './' + path.relative(REPO_ROOT, ctx.ctxDir)
+          .split(path.sep).join('/')}`
+        + ' 的 .dockerignore 没有排除它 —— ' + why,
+    });
+  }
+}
+
+/**
+ * Dockerfile 是否声明自己「不参与本守卫判据」。
+ *
+ * 用法：在文件头部注释里写一行 `# docker-context: skip <理由>`。
+ *
+ * 为什么需要：runtime/node/backend/Dockerfile 是 2026-11-02 标记为死文件的
+ * 旧版 Dockerfile（所有 COPY 路径都是 forest layout 迁移前的形状，构建必然失败）。
+ * 它的存在本身是历史证据（PROCESS-013 规则卡引用它），但让守卫对它恒红只会
+ * 教人忽视守卫。显式跳过 + 理由，比悄悄漏掉它诚实。
+ */
+function isSkipped(text) {
+  return /^#\s*docker-context:\s*skip\b/m.test(text);
+}
+
+/**
+ * 判定一份 Dockerfile 的构建上下文根，以及该上下文的 .dockerignore。
+ *
+ * 规则（2026-11-02 扩充）：compose/CI 引用的用仓库根；**其余用它自己所在目录**。
+ *
+ * 为什么必须补第二条：`delivery/channel/khyquant/frontend/Dockerfile` 的上下文
+ * 就是那个目录自己（Dockerfile 里是 `COPY . .`），仓库根那份 .dockerignore 管不到。
+ * 而它缺一份自己的 .dockerignore 时，实测宿主机 node_modules 里 20 个指向
+ * `/d/Portable/...` 的绝对软链会被 `COPY . .` 合并进 builder 阶段，**覆盖**
+ * 前一步 `npm install` 刚装好的同名真实目录 ⇒ `npm run build` 直接
+ * MODULE_NOT_FOUND。CI 用干净 checkout、没有 node_modules，所以全绿。
+ * 这与主镜像的 ④ 号缺陷是同一条机制，只是被 nginx:alpine 最终阶段洗掉了。
+ *
+ * 反向也要防：不能因为「不在 compose 里」就跳过。跳过等于把这类文件设为盲区。
+ */
+function resolveContext(dfRel) {
+  const rootCtx = resolveRootContextDockerfiles();
+  const useRepoRoot = rootCtx.has(dfRel);
+  const ctxDir = useRepoRoot ? REPO_ROOT : path.join(REPO_ROOT, path.dirname(dfRel));
+  const ignorePath = path.join(ctxDir, '.dockerignore');
+  let patterns = null;
+  try {
+    patterns = parseDockerignore(fs.readFileSync(ignorePath, 'utf8'));
+  } catch {
+    patterns = null;
+  }
+  return { ctxDir, useRepoRoot, patterns, ignorePath };
 }
 
 /** 把反斜杠接续的 Dockerfile 折成逻辑行。 */
@@ -223,13 +353,8 @@ function copySources(logicalLines) {
 
 // ── .dockerignore 匹配（保守复现）────────────────────────────────────────────
 
-function loadPatterns() {
-  let text;
-  try {
-    text = fs.readFileSync(path.join(REPO_ROOT, '.dockerignore'), 'utf8');
-  } catch {
-    return null; // 没有 .dockerignore ⇒ 整个上下文都进镜像，本身就该报
-  }
+/** 解析 .dockerignore 文本为模式表。文本不存在/读不到由调用方决定返回什么。 */
+function parseDockerignore(text) {
   const pats = [];
   for (const raw of text.split(/\r?\n/)) {
     let line = raw.trim();
@@ -275,12 +400,18 @@ function isExcluded(patterns, rel) {
 
 // ── 主流程 ──────────────────────────────────────────────────────────────────
 
-const patterns = loadPatterns();
 const findings = [];
 const allDockerfiles = findDockerfiles(REPO_ROOT, 0, []);
-const dockerfiles = resolveRootContextDockerfiles().filter(df => allDockerfiles.includes(df));
 
-if (!patterns) {
+// 仓库根上下文必须有一份 .dockerignore（B 组判据的前提）
+let rootPatterns = null;
+try {
+  rootPatterns = parseDockerignore(
+    fs.readFileSync(path.join(REPO_ROOT, '.dockerignore'), 'utf8'));
+} catch {
+  rootPatterns = null;
+}
+if (!rootPatterns) {
   findings.push({
     id: 'dockerignore-missing',
     severity: 'error',
@@ -288,52 +419,87 @@ if (!patterns) {
   });
 }
 
-if (dockerfiles.length === 0) {
+if (allDockerfiles.length === 0) {
   findings.push({
-    id: 'no-root-context-dockerfile',
+    id: 'no-dockerfile',
     severity: 'error',
-    detail: '推导不出「上下文 = 仓库根」的 Dockerfile（compose / docker.yml 都没引用）—— 判据失效',
+    detail: '一个 Dockerfile 都没找到（遍历深度 6）—— 遍历逻辑或仓库结构有问题，判据失效',
   });
 }
 
-const unchecked = allDockerfiles.filter(df => !dockerfiles.includes(df));
-
-// A 组：COPY 源存在性 + 不被 .dockerignore 排除
+// ── A 组：逐份 Dockerfile，按它自己的上下文判 COPY 源 ────────────────────────
 let copySourceCount = 0;
-for (const df of dockerfiles) {
+const contextSummary = [];
+
+for (const df of allDockerfiles) {
+  const ctx = resolveContext(df);
   let text;
   try {
     text = fs.readFileSync(path.join(REPO_ROOT, df), 'utf8');
   } catch {
     continue;
   }
+  if (isSkipped(text)) {
+    contextSummary.push({ df, ctxLabel: '(skip)', hasIgnore: !!ctx.patterns, skipped: true });
+    continue;
+  }
+  // 上下文目录相对仓库根的路径（用于报错信息）。注意方向：from=REPO_ROOT, to=ctxDir。
+  const ctxLabel = ctx.useRepoRoot
+    ? '.'
+    : './' + path.relative(REPO_ROOT, ctx.ctxDir).split(path.sep).join('/');
+  contextSummary.push({ df, ctxLabel, hasIgnore: !!ctx.patterns });
+
+  // 缺 .dockerignore 与 COPY 源是否存在是两件独立的事：前者不阻断后者的检查。
+  // （第一版在这里 `continue`，导致所有非仓库根上下文的 Dockerfile 的 COPY 检查
+  //   全被跳过 —— 那正好把最需要查的那类文件变成了盲区。）
+  if (!ctx.patterns) {
+    findings.push({
+      id: 'context-dockerignore-missing',
+      severity: 'warning',
+      file: df,
+      detail: `上下文 ${ctxLabel} 没有 .dockerignore —— 该上下文内的一切（含 node_modules、dist）`
+        + ' 都会被 COPY 进去；若 Dockerfile 里有 `COPY . .`，宿主机 node_modules 会覆盖'
+        + ' 前一步刚装好的依赖（khyquant 前端 2026-11-02 实测到这条）',
+    });
+  }
+
   for (const srcs of copySources(toLogicalLines(text))) {
     for (const src of srcs) {
-      const rel = src.replace(/^\.\//, '').replace(/\/+$/, '');
+      const srcRel = src.replace(/^\.\//, '').replace(/\/+$/, '');
       copySourceCount++;
-      if (!fs.existsSync(path.join(REPO_ROOT, rel))) {
+      // COPY 源相对**上下文根**解析
+      const verdict = resolveCopySource(ctx.ctxDir, srcRel);
+      if (verdict === 'skip') continue;
+      if (verdict === 'missing') {
         findings.push({
           id: 'copy-source-missing',
           severity: 'error',
           file: df,
-          detail: `COPY 源在磁盘上不存在：${rel} —— docker build 会当场 file not found`,
+          detail: `COPY 源在上下文 ${ctxLabel} 下不存在：${srcRel} —— docker build 会当场 file not found`,
         });
-      } else if (patterns && isExcluded(patterns, rel)) {
+        continue;
+      }
+      if (ctx.patterns && isExcluded(ctx.patterns, srcRel)) {
         findings.push({
           id: 'copy-source-excluded',
           severity: 'error',
           file: df,
-          detail: `COPY 源被 .dockerignore 排除：${rel} —— 构建失败，或更坏：构建绿但容器起来才 MODULE_NOT_FOUND`,
+          detail: `COPY 源被 ${ctxLabel}/.dockerignore 排除：${srcRel} —— 构建失败，`
+            + '或更坏：构建绿但容器起来才 MODULE_NOT_FOUND',
         });
+        continue;
       }
+      // 目录型 COPY：查它会不会把 node_modules / dist 一起带进去。
+      // `COPY . .` 的 srcRel 是 `.`，resolveCopySource 判它存在，落到这里。
+      checkDirCopy(ctx, srcRel === '' ? '.' : srcRel, df);
     }
   }
 }
 
-// B 组：排除策略
-if (patterns) {
+// ── B 组：排除策略（只对仓库根上下文成立，那些表是按主镜像形状写的）──────────
+if (rootPatterns) {
   for (const [rel, why] of MUST_EXCLUDE) {
-    if (!isExcluded(patterns, rel)) {
+    if (!isExcluded(rootPatterns, rel)) {
       findings.push({
         id: 'should-be-excluded',
         severity: 'warning',
@@ -342,7 +508,7 @@ if (patterns) {
     }
   }
   for (const [rel, why] of MUST_NOT_EXCLUDE) {
-    if (isExcluded(patterns, rel)) {
+    if (isExcluded(rootPatterns, rel)) {
       findings.push({
         id: 'must-not-be-excluded',
         severity: 'error',
@@ -359,25 +525,27 @@ const warnings = findings.filter(f => f.severity === 'warning');
 
 if (jsonMode) {
   console.log(JSON.stringify({
-    checkedDockerfiles: dockerfiles,
-    uncheckedDockerfiles: unchecked,
+    dockerfiles: allDockerfiles,
+    contexts: contextSummary,
     copySourceCount,
     errors: errors.length,
     warnings: warnings.length,
     findings,
   }, null, 2));
 } else {
-  console.log(`[docker-context] 判据对象 ${dockerfiles.length} 份（上下文 = 仓库根）：`
-    + dockerfiles.join(', '));
-  if (unchecked.length) {
-    console.log(`[docker-context] 另有 ${unchecked.length} 份 Dockerfile 不用仓库根作上下文，不判：`
-      + unchecked.join(', '));
+  console.log(`[docker-context] Dockerfile ${allDockerfiles.length} 份，COPY 源 ${copySourceCount} 条`
+    + `，策略判据 ${MUST_EXCLUDE.length + MUST_NOT_EXCLUDE.length} 条`);
+  for (const c of contextSummary) {
+    if (c.skipped) {
+      console.log(`[docker-context]   ${pad(c.df, 56)} 上下文 (skip，已声明不参与判据)`);
+      continue;
+    }
+    console.log(`[docker-context]   ${pad(c.df, 56)} 上下文 ${c.ctxLabel}`
+      + `${c.hasIgnore ? '' : '  ⚠ 无 .dockerignore'}`);
   }
-  console.log(`[docker-context] COPY 源 ${copySourceCount} 条，策略判据 `
-    + `${MUST_EXCLUDE.length + MUST_NOT_EXCLUDE.length} 条`);
   for (const f of findings) {
     const head = f.severity === 'error' ? '[error]' : '[warn ]';
-    const where = f.file ? pad(f.file, 30) + ' ' : '';
+    const where = f.file ? pad(f.file, 56) + ' ' : '';
     console.log(head + ' ' + where + f.detail);
   }
   if (!findings.length) console.log('[docker-context] 全部通过。');
