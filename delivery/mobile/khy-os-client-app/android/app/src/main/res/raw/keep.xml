@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Keeps the zero-reference canary resValue alive through resource shrinking
+     (on by default in AGP 9 release builds): the shrinker removes resources no
+     code reaches, and @string/khy_canary is referenced only from here by
+     design — its whole point is to sit in resources.arsc as forensic record. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@string/khy_canary" />

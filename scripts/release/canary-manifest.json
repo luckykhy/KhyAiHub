@@ -1,0 +1,2881 @@
+{
+  "schema": "khy-canary-manifest/1",
+  "marker": {
+    "prefix": "Khy-",
+    "envelope": "khy-canary",
+    "randLen": 8,
+    "randCharset": "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
+  },
+  "batches": [
+    {
+      "release": "20261101",
+      "stampedAt": "2026-11-01T14:44:10.816Z",
+      "by": "canary-mark.js stamp",
+      "entries": [
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/AccessibilitySetup.java",
+          "marker": "Khy-20261101-001-RZDZWPTA",
+          "beforeSha256": "9b76ea211ddc2037275b46dc3d06be560cf9a904cbee85fc072fe520da1cecb1",
+          "afterSha256": "2deb164d19ae8a839d7510bd1b7e4c19321c3cf0f5231579f7d65605b50c7756",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/AmooChatText.java",
+          "marker": "Khy-20261101-002-X0RM5F2J",
+          "beforeSha256": "33633e99faca17f0aaad49130b9535ce700b27c165d4b8760876d6c887957030",
+          "afterSha256": "9b9fec030aa573e85931150297c7f1ceb22dfd3fca28efb2f19ff5b9535e82b6",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/AmooLoop.java",
+          "marker": "Khy-20261101-003-BPVF1EBV",
+          "beforeSha256": "2f13cc683aa2737a7fa52a481b892150dde22ef3a14bcfdbc12a471485d735cc",
+          "afterSha256": "a845dadcac2f578614da6d1970c077b2eba75c57c1a7d2f4253ccf1c726f8b86",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/AmooMemory.java",
+          "marker": "Khy-20261101-004-B44QKJHD",
+          "beforeSha256": "6dc43d4fc73be823f38a7fc7b1ccd1fa26ec0d465b2478fa603243d63e6c7b66",
+          "afterSha256": "ed5c58ac714e6286fb3193c76ee3df6bfcd568838ea3de18585fb4d5f2ef7d0a",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/AmooProtocol.java",
+          "marker": "Khy-20261101-005-3R6RFQFY",
+          "beforeSha256": "5b071d76888626a66dbc9964e07f1174f4568f50de6733ce21d96271fb2a6fa3",
+          "afterSha256": "8ad83d2798c775f3c4d789c1340a5aec3b7fc1843cea53166e9fbda13fe376e8",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/AmooSafe.java",
+          "marker": "Khy-20261101-006-N7Q9VFWP",
+          "beforeSha256": "2f15c2b042414d65e9b93576b3da5af68a2762f2af8112e5324cdfc35e9ec152",
+          "afterSha256": "9ea4c0330dec103e2e6f279b1e8f4c3fccb2591d1e8c0971646346c6183f582d",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/AmooSelfDesc.java",
+          "marker": "Khy-20261101-007-PHA8XKMZ",
+          "beforeSha256": "ff301d89b466b34b631b34d1edd56315cfd3a33a8e3632527ba48e8644b52b24",
+          "afterSha256": "925d3a88aeb9ec350da197a412ae919f1a1b27ca28868044697b65aec5b54312",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/AssistantProfile.java",
+          "marker": "Khy-20261101-008-KE2DMKKX",
+          "beforeSha256": "9d8cf2e12ad7fc13c063872b0140e2f649c22e41ac7a740da100f4a8e04a10f6",
+          "afterSha256": "3cd33ee32da01547b7585ff0128454490ce893879a5e44a1284e86056a3cf01c",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/BootReceiver.java",
+          "marker": "Khy-20261101-009-TKNBDH37",
+          "beforeSha256": "e785f2bc780d3e0d8de606f0ced3b72dfd5f0492d7d68c09505eb3f351378eb9",
+          "afterSha256": "2f7a83bc28aa2b24a33edbcd5a6ae66d05cbe2fdeef7644b357f72a123a9a871",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/BridgeOverlayService.java",
+          "marker": "Khy-20261101-010-EH750FJZ",
+          "beforeSha256": "848fafc296aff8f7f8a7ebe761b74e5d7f740960663f053f8b1b079baae9b34b",
+          "afterSha256": "3e0a582e368ba52e45410d2bf680413b5df8ef639f95eb893789e4670cdb8d88",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/BridgeToken.java",
+          "marker": "Khy-20261101-011-TNY53FYF",
+          "beforeSha256": "0d92ce4e28595a8345b9e8b2841832701d030821fefb6c29e7826b2d37e8ece3",
+          "afterSha256": "6db25f43f935a241a0aa5ac09f1b6891379d2f82b3ff878cc69219df61ae920b",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/CapabilitySnapshot.java",
+          "marker": "Khy-20261101-012-QYZ0A2BT",
+          "beforeSha256": "1e098242dba56cf530f2c3861b27b3f576288cd7eb1d8e1bf956747da0505aae",
+          "afterSha256": "575ac27ca4aa03c9ad4a20e699014384d097089061c80f3bf1c2b4fd58b4f8b3",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/KhyUi.java",
+          "marker": "Khy-20261101-013-99ZJHZKA",
+          "beforeSha256": "f60cc4d999422d37cb5387293a6bfa445986971fc59ed2d22c303e8f638fa59f",
+          "afterSha256": "92b3c5cc56d07e31cd53b666169ee8020b14afa294bc63c25495a667b62d6325",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/LoopModes.java",
+          "marker": "Khy-20261101-014-9X7AXKSJ",
+          "beforeSha256": "c4e04a6a9b5990b5d88a7300bc200d159115e8548c3e352ddfd9fdbb4f85f315",
+          "afterSha256": "880489913eb48600463f1b619a2a5264ae969226111c963b968b0376eb669ecb",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/LoopState.java",
+          "marker": "Khy-20261101-015-11AQZQ2Z",
+          "beforeSha256": "d4cd45453577e5852f466e90c1d514951a58af7dcf52e1da0f5ab4eeee9ba229",
+          "afterSha256": "7fb622ca03060eb164970e82affc94ea1ff3ed14e651f9ed7273297b6f083f30",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/LoopVerify.java",
+          "marker": "Khy-20261101-016-ASPSA0RZ",
+          "beforeSha256": "9e042cd891ba7f97acf46e3aa9ccb19df0b384b927b0f0a0a43886e77a80c179",
+          "afterSha256": "51cac2b73fac890eb4e4f9cadac2833349c253537a9ccc5607a5d2fd585c1ecd",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/ReviveReceiver.java",
+          "marker": "Khy-20261101-017-NMEMV9V2",
+          "beforeSha256": "6ffd367a33a3fc1be4e2ddc833df22842595008758b88cb9def5f9285b8db00b",
+          "afterSha256": "7e9f5baca60ae62584d2da5b1557cc3e910081c01354e8127948dbf55d3a7daf",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/SelfDesc.java",
+          "marker": "Khy-20261101-018-VQ2YFS5H",
+          "beforeSha256": "1425afacc79251cfdc7ad72cb201cd1b8e79fdb6b3d46e3dde1a2bcbf36c53a4",
+          "afterSha256": "73f63745bf4f57c745f50af8471800af2c08acfa274684857d2bfda0d62d45a1",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/ShellSidecarClient.java",
+          "marker": "Khy-20261101-019-RHYC1GSF",
+          "beforeSha256": "2bd882e3548fbc309c368ecfbd7ecc51c2b38c8684674bc5ff7f9f6841fe868a",
+          "afterSha256": "036f21960049d4a0a706c4f9702ad0f77e21cecdd47d5c7d6f92e848bf9d95a7",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java",
+          "marker": "Khy-20261101-020-ABHRWYEJ",
+          "beforeSha256": "ba321454c10496f93573d4639e5e5f997d6285b5a51d7c91db32526b23ccd7db",
+          "afterSha256": "1376524cd34a3a603ca62b3ebfc4e3f1210f6021fbc0fa880973997289d92086",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/shell/ShellSidecar.java",
+          "marker": "Khy-20261101-021-41M0VCAV",
+          "beforeSha256": "3b981ad77831d531fc5c6266cf8ce8d6c56e12fc3fdca669b18e9c31afe179e1",
+          "afterSha256": "0cc381e0f71cc20ac597d64c944d1a4c16799e1268831b7456df9d71ce5c662e",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/kotlin/com/khyos/khy_os_client/KhyAccessibilityService.kt",
+          "marker": "Khy-20261101-022-1AVQKFT2",
+          "beforeSha256": "08c6f3fdec61158ef99b0fba8c43293438fa223349a4ab4239f1290048c7a5ce",
+          "afterSha256": "8553d08b92b118949560c2a97a08786c20302d4f9c0f360441c49bce339ab3da",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/kotlin/com/khyos/khy_os_client/ScreenCaptureService.kt",
+          "marker": "Khy-20261101-023-STRGYYY5",
+          "beforeSha256": "141471f6e4c078b8f72abe943517705cde219ba6e0f8c695dd15be5eb50b3811",
+          "afterSha256": "bda12dec938ff8e4877cd66c8809304dfa3c96a31155a86942085b0eadbba392",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/kotlin/com/khyos/khy_os_client/ShizukuServiceManager.kt",
+          "marker": "Khy-20261101-024-ZG5TSYAC",
+          "beforeSha256": "8e7a8314848a96b6a75b11ec8c2ffda0a016e932c505a7dee3cce6ba77a7202d",
+          "afterSha256": "90da34d08ee7106b8f757ad925a4799049e2e67ab4a877dada6a90326c6fc4d1",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/res/drawable-v21/launch_background.xml",
+          "marker": "Khy-20261101-025-8Y75N3RB",
+          "beforeSha256": "dca312ec77de83e43ef70a825c299b51451247286c29167d62f19165750b8793",
+          "afterSha256": "19592564e4854743bd1fc31b915fb6d5b2dc844cab37dde4755d536c03ef8064",
+          "lang": "<!--",
+          "line": 2
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/res/drawable/launch_background.xml",
+          "marker": "Khy-20261101-026-91RXPDEF",
+          "beforeSha256": "2df60e2cfbee873ce2858088cf003e6b93498f2f568476da437610467ea1a9d7",
+          "afterSha256": "64a2495515dff04b87613ec87dd6f08011969372f64e016ba44804ee4009d544",
+          "lang": "<!--",
+          "line": 2
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/res/values-night/styles.xml",
+          "marker": "Khy-20261101-027-D12FPJE6",
+          "beforeSha256": "ea763597dc1a84c8034251caee98d7753e0fbf57340ffc94677427de4b537516",
+          "afterSha256": "7decf4d3dd8e6e4ae2173c3077f5590c1acf3ee471790067125fd802dc2d87ae",
+          "lang": "<!--",
+          "line": 2
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/res/values/strings.xml",
+          "marker": "Khy-20261101-028-H29CW2JE",
+          "beforeSha256": "d371e5b9d019583d2815f993b4f29c29789b0944eab7e129cc2badd527c26596",
+          "afterSha256": "cfaf076798489d299f1c378ba98186357da9318970c86c0a67cf9a87057b7516",
+          "lang": "<!--",
+          "line": 2
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/res/values/styles.xml",
+          "marker": "Khy-20261101-029-QZ6REPRA",
+          "beforeSha256": "cca15a99b59380a548bf6a890f7ca5380ee509b1f9bbb2f5f9ec3589fa25c2f7",
+          "afterSha256": "819abd0f77b7059c4a1c8eadbd2a378638f48631b72be7cc1e29a22d0f0f1c36",
+          "lang": "<!--",
+          "line": 2
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/res/xml/accessibility_service_config.xml",
+          "marker": "Khy-20261101-030-63GP8166",
+          "beforeSha256": "13625b9f6f2dbd499c610c7f761ffb1b2d075f211ac5a2f0ebd7d9b6e87fa01a",
+          "afterSha256": "d67b727572882761ddb61264e4290c2049c653fae6f7f7803566a1bc9ab3cc04",
+          "lang": "<!--",
+          "line": 2
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/main/res/xml/file_paths.xml",
+          "marker": "Khy-20261101-031-PGMEKMXN",
+          "beforeSha256": "842aa8ddea7c453854b1d2212f33b12d883ec0e1e1d78fb9dd2de9b0be61701e",
+          "afterSha256": "53e6d5bc776950ae6478d103973cfeb18585a714824473833e8907f08823e733",
+          "lang": "<!--",
+          "line": 2
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/AccessibilitySetupTest.java",
+          "marker": "Khy-20261101-032-P8185SHY",
+          "beforeSha256": "0329d08d037443b417855a4773397ee6c9faff6fedd693eb151bb900b8697d8d",
+          "afterSha256": "6cc0d19c31b9161d37d2fbf8e414b778f3466b09abddc077516f9d9ce75e40e3",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/AmooAskPreambleTest.java",
+          "marker": "Khy-20261101-033-2J2M93M7",
+          "beforeSha256": "b8376bcbcf991002fa4baad25af8834cbe8777be3cac7f10a4908d92679af2c4",
+          "afterSha256": "8192adb269ff89ae5a615595c63fff7a33a83d81742baee191ddcc93c144a0b8",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/AmooChatTextTest.java",
+          "marker": "Khy-20261101-034-91FVX0Q4",
+          "beforeSha256": "eeda2bd95b47e05c2585ba90391196fc292cc08e31b4f5a243b225c9166afd8f",
+          "afterSha256": "c94c4691846888a33a1f58ddf0e8fec3758566425b9e2a746cc31f59aed3033b",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/AmooLoopChannelTest.java",
+          "marker": "Khy-20261101-035-KKN3RJEG",
+          "beforeSha256": "5564f43d87f84ab94d0343dee577310676187d831897133b981cc2410a45f59e",
+          "afterSha256": "6b10a55ad791947cf646c2f3e10a5c9639114396b69f51ca64da4385b6f1af68",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/AmooLoopDeadlineDefaultTest.java",
+          "marker": "Khy-20261101-036-DGYS25R2",
+          "beforeSha256": "b405cafcbc8e0a66747ff06376a4335b534152e6ad6b6348d09ffee6d6181bdb",
+          "afterSha256": "ef69c0e1464ce468e2a51c40a0dd62e31e659b63f69ad76d75d361d1b4cf8e5e",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/AmooLoopHonestyTest.java",
+          "marker": "Khy-20261101-037-5XEJNJJS",
+          "beforeSha256": "c336107681ce035df9c5c3e0b9e826e9a65eca4c4f33b56e6299440fb4ee0406",
+          "afterSha256": "fcb7c3709e9800974b73c989f262b6f555843a8395173b25a3ba0dd5035d3bc3",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/AmooLoopPipelineTest.java",
+          "marker": "Khy-20261101-038-E8FA2HJW",
+          "beforeSha256": "067c2f807d848a5a5302405119d70e184a4f9bc798182fd889e7590a4a17a04c",
+          "afterSha256": "b2dd8919323b0306ce6cba2360d7bb7a2130b581ab335dea38e4e3b7e3e3464d",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/AmooMemoryTest.java",
+          "marker": "Khy-20261101-039-42F2XM3W",
+          "beforeSha256": "b58290917cdfc06b9ad88247abd12db1fdbadde3d16721c0408f24a0107224d9",
+          "afterSha256": "c3f514331af237816c44121850caa0be07ee50ae5a7e011f7ba3f5f654657053",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/AmooProtocolTest.java",
+          "marker": "Khy-20261101-040-1NF2HAE9",
+          "beforeSha256": "9a6f577d594fb3b8c9fe6133ca74eb065c8734e5722a98732e2a5afa66ceb87c",
+          "afterSha256": "4e5e57006f861dba37944b60da85d15b6fe0e9f5445b37f143106a8c2c34708b",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/AmooSafeHostAuditTest.java",
+          "marker": "Khy-20261101-041-W8CFZ6K4",
+          "beforeSha256": "c23143b588817bb749522ee33d1b8095c39f67b9bde33e83f36dfedfb74c6161",
+          "afterSha256": "48dce5312dc0e5af9dc3002bfe30b74ef2ae31be1ab4fc26dcb0278d2d4ec023",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/AmooSafeTest.java",
+          "marker": "Khy-20261101-042-NW55MEQK",
+          "beforeSha256": "025ade18647247a7be10c12514e24b0f62dc76ccd39655e7b7034aa8a435dd24",
+          "afterSha256": "cce03159d9e1ffa901b448efd7cb2a74d6ded5b19b00eb42fc3c2d37e4c48f93",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/AmooSelfDescTest.java",
+          "marker": "Khy-20261101-043-5XNGWTB1",
+          "beforeSha256": "421afe08890bfc2dc0bfd1b2abe31160a7207537ac4a9901e7d1f04210070bb4",
+          "afterSha256": "b67f88f27e14523835e5435ef59e759e44b6730c83ec2bf159787cfbc16ff805",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/BridgeTokenTest.java",
+          "marker": "Khy-20261101-044-30YPBK1K",
+          "beforeSha256": "eb2f62b9f53c9128070ce9b5a5ea78941912a9b11015b35b99aa23eec7a3d01f",
+          "afterSha256": "cd47bace83afb1969c9ca75190e53e3364e22de9f8296d2f968d14775df206b7",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/CapabilitySnapshotTest.java",
+          "marker": "Khy-20261101-045-VDFH64QH",
+          "beforeSha256": "cb0a1775081ecef266bb85933e71a359f8206d7c2b003468dededd6ccf00e7ba",
+          "afterSha256": "a464b9182c1a4f52d9939d4800455cbc3f9a205893174ef9c5b24e4522600dbf",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/ElevationAdviceTest.java",
+          "marker": "Khy-20261101-046-WF9A93XM",
+          "beforeSha256": "2df164865b5b9e0b4a5556bd7b8e4d6adb733cdc6940ee1f2931e59edb289e1d",
+          "afterSha256": "cc1e66bc39518db5465f0dc1abe11a55763fc34d4eec8fda4298757087985d79",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/LoopModesBulkReadTest.java",
+          "marker": "Khy-20261101-047-NG174R6S",
+          "beforeSha256": "d7a9cc27e019eb3c618646dd124ea2638b39c38cbfb9f50718e8d34506ed065b",
+          "afterSha256": "23f647446865cd38883e73e9af85d31d1aba1f32e27126e1f466a07fad0c7b47",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/LoopModesTest.java",
+          "marker": "Khy-20261101-048-KCG16QJ9",
+          "beforeSha256": "c81756aada9120268a3c57ccfac3dbe201a3af39487da8215bcbb7a602ccb83c",
+          "afterSha256": "62284e07cd13a0308e932d4ba42ec19188e918d0eb96a739165d039af93e0eb4",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/LoopStateDoneSignalTest.java",
+          "marker": "Khy-20261101-049-8Y70JGQZ",
+          "beforeSha256": "3a26add58ed396ea3e089486019ebaf89d22180895c59ffe20868c890326e952",
+          "afterSha256": "88ea2f260a594c69e95bb5d62e8dd6bc81bcbb03b7d242a2be6234ce18214aaf",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/LoopStateTest.java",
+          "marker": "Khy-20261101-050-Y9NH0GJX",
+          "beforeSha256": "200cfc7f3bcf9d4b2e5936a5fc0439d1642fcd982ec41a2b567cb72249a3e68d",
+          "afterSha256": "84a95fbea37c83729a5750a7f58ceabee4828eac20fc86cce7ae1472d61c51f8",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/LoopVerifyTest.java",
+          "marker": "Khy-20261101-051-G7J8Y3XT",
+          "beforeSha256": "5426fa22b81cfbe7dff0fa9892d61be964e0e691f3781fcccf1b7c4e8ae9b75e",
+          "afterSha256": "451ff01ed2b87245010c1dc8ed5d91a13167c0cacec0cba58f2f3f1907632993",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/ShellSidecarProtocolTest.java",
+          "marker": "Khy-20261101-052-73NYMVKN",
+          "beforeSha256": "55acc3d957fcf06697e9f3abcb7a5c5a5459ecf9a1124d84a3e4366eced9223b",
+          "afterSha256": "d42b5890f4eacad955cc5c16900219f6a35c37bb0ba00c1dc1196344a2a5aff2",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/ToolCatalogTest.java",
+          "marker": "Khy-20261101-053-W7R3AEQK",
+          "beforeSha256": "310a3f274684a9c1b5a3430b3bc1a9c9ed50ae7703ce6bd67531d8026a56456d",
+          "afterSha256": "97539e0f8714d81647193c67420a7b513d8d4b0aa20929409f491a3b231d76f5",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/ToolsBudgetTest.java",
+          "marker": "Khy-20261101-054-1VSF2FV3",
+          "beforeSha256": "2c100a60c25424a5aac4deb66ad36b8bb6f4909571638c6f96ed772ec28dc5f8",
+          "afterSha256": "4ec5b92127574bc3de3c9ab35032c25a51ee4d8ea23ad85d7f4c7bafde07293c",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/UiAdviceTest.java",
+          "marker": "Khy-20261101-055-CRT866M6",
+          "beforeSha256": "8d5836a24641690c90b220fb7e2da4ba357a35879b7b0da8d0225895b3bdaefa",
+          "afterSha256": "a3280b79e1e98a5b80e1adb8790b95116272e9d2c2e394f2fe1d31cacbd59594",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/android/app/src/test/java/com/khyos/khy_os_client/bridge/ZipToolsTest.java",
+          "marker": "Khy-20261101-056-PS2GTE58",
+          "beforeSha256": "56bd7f72981477a9c3fa3a361281359579feebf79e355ef988dcd48c7e94e5a0",
+          "afterSha256": "36934d51adbad2410468bd449d8cfc5406e55c95c23edf855b2b3e16ade60c7f",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/agent/agent_loop.dart",
+          "marker": "Khy-20261101-057-72W81KS7",
+          "beforeSha256": "d3bb812f588386f3b1a466928c39cf1e2b2a5a1ef20ea598ed92197744ee16cc",
+          "afterSha256": "3944b4863285f3d962e88a5d6f350d38373b246c48fbfde842a8ee0e7642144e",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/agent/checker_agent.dart",
+          "marker": "Khy-20261101-058-DNE3XK6M",
+          "beforeSha256": "471f82cdaa0a6db7022c6ef0aa6aad2e32861f9025d90d6d8b918ba72325d4a0",
+          "afterSha256": "673c80d2da262fbd5a66a014d9b5227ab8e98b9655d5a6cac4ea785fc475d65f",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/agent/execution_log.dart",
+          "marker": "Khy-20261101-059-75F4CFYF",
+          "beforeSha256": "34e55fe3203482a6b7bc55fe6f3b132bae6cd490891a2c7f0e9518d27608968c",
+          "afterSha256": "9ba431a2345e1168ba699482ffe205dbada5a61626e92f31f4e199001565eb6d",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/agent/planner_agent.dart",
+          "marker": "Khy-20261101-060-DX80P494",
+          "beforeSha256": "d4d38749d77fdb3520567cf2509ce4018fded37f3c5b4ede83b7013d5a64643e",
+          "afterSha256": "804af62cce92ea3eba1ccf8bae287dd65b08af4e0a56a8124221e7678653238b",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/agent/reader_agent.dart",
+          "marker": "Khy-20261101-061-CVQY184E",
+          "beforeSha256": "c0a18f27cd2d992eca110c0486f04f9653c70a047a9e6776ffb6d0a0bf3e70b8",
+          "afterSha256": "3e6fc446d8f1c90007e2ce8339e52588f9835706df5d4bd98db0266a88b977b3",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/agent/semantic_state.dart",
+          "marker": "Khy-20261101-062-1GECS5N3",
+          "beforeSha256": "29e8e9a2e39efa5f5109be785c6fec6403f66e04bdf7202905f6170547096789",
+          "afterSha256": "dd5f357db2cb8f36ae144799fd53207a8e5ed40836317b4d9a2e8c77047c6891",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/agent/subagent_report.dart",
+          "marker": "Khy-20261101-063-SFNCSPAA",
+          "beforeSha256": "1e1ebfc9e62a47c52e009a0987f0617fcf52273d9d7d0d2462bae0d6e8154bab",
+          "afterSha256": "2d7b75839a0bbe84e7a3bc0b19f461ef9dc0260bc895967b79366635fe01a59b",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/agent/tool_verdict.dart",
+          "marker": "Khy-20261101-064-FPGKCB8H",
+          "beforeSha256": "51c126a651975edccd768b25e40e3224dfe69e00c12d21d8adbcabcd92d46379",
+          "afterSha256": "a7327448a3a0b7925541c49854d6221c953898d8925b8e957d41ec76d8d0dc83",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/agent/writer_agent.dart",
+          "marker": "Khy-20261101-065-6Y0N9SV7",
+          "beforeSha256": "625048811b256ea8838f2f7498f9a325a845e74955b8ee6fc10050971fcbc1bc",
+          "afterSha256": "92339fc9bbf6bba5f739bdec1ce0716605600624aac3078d43ccd09d5c73827b",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/config/app_config.dart",
+          "marker": "Khy-20261101-066-KZ7C8AWE",
+          "beforeSha256": "a07f199b2acaee928d160b29baaf43a7aac3872e0d883eccb9c18b12d58df2bd",
+          "afterSha256": "33481566340ef2e84e0f9c86952e660242d39bdd392243ca8c20aa8284edd8cf",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/config/built_in_keys.dart",
+          "marker": "Khy-20261101-067-6F88WVEV",
+          "beforeSha256": "aee288af1dbb45fedda2bdc2e700843ca165a619c69f1eb8a039afa42ae44fd4",
+          "afterSha256": "12dab438f3c3198f8097498d569a59d46343c19afb3fea1c287a5acb3ac7044a",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/config/endpoint_defaults.dart",
+          "marker": "Khy-20261101-068-TYFD6SE2",
+          "beforeSha256": "96f8f54a910602007a41751fb4b583b32b42c1f4dd541d28733822c3fd5b6949",
+          "afterSha256": "70d992ca0f2169e7172e30cf224002242a6bbcfef7427d52df8c5b12a61ce23b",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/config/model_registry.dart",
+          "marker": "Khy-20261101-069-BTPTFW0P",
+          "beforeSha256": "2a6a8df160519b92cb9fdcb965c46610ffa92c97bcb2c0e59715290eb3943f81",
+          "afterSha256": "6668c599b7f0ebb42b51787acdaaab22e392b5ffcfa4b1e923ca6197ca31753d",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/config/provider_presets.dart",
+          "marker": "Khy-20261101-070-8WQ9A9R5",
+          "beforeSha256": "2a3688f2810e7ccad148137caf0c87097e5a63bb9c8c604a48ca0ab4e529e47a",
+          "afterSha256": "31971d87d1cae6cb0426820abb17929fd4cea9e68ba2a3f06b6f80c37cb2914c",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/db/amoo_turn.dart",
+          "marker": "Khy-20261101-071-BAV740DY",
+          "beforeSha256": "b3104a6ba97caa304bb513494449ae2f688fb8ba9fea27af35912311d3d0885f",
+          "afterSha256": "e1d2e17405cd0f46255a03a4aab8f1ca7b66beca116ebcd12bd33e61435ef55e",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/db/amoo_turn_store.dart",
+          "marker": "Khy-20261101-072-AE27SFZP",
+          "beforeSha256": "314c73a274e325c6493c0607e9dd1b7171a7af8c7d940f6dbf5476bcbda92352",
+          "afterSha256": "03554e0fa157f1c5fe0a49c17487a36c5566ca9eb927cc96cced97c8b2068416",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/gateway/ai_gateway.dart",
+          "marker": "Khy-20261101-073-EM0FMMSD",
+          "beforeSha256": "7f77493b6b3a86fd966b30968922e6412bda21f75fd3c46a81db4cd7051968e3",
+          "afterSha256": "7ce8fadf26efa89736515785ef8d766c672aadea06c0074a652453129158e127",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/gateway/khyos_api.dart",
+          "marker": "Khy-20261101-074-5VWTWB50",
+          "beforeSha256": "cbe411245861c35d2d34f293a48749a0561897f89c4ea0ecb10a3579febaba18",
+          "afterSha256": "4b178df8c289b89a226b02b3958b5cbec6f7972bb2f4fcce29a0648804ff8917",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/gateway/pairing.dart",
+          "marker": "Khy-20261101-075-HMAN1HE8",
+          "beforeSha256": "6a88b91435d5f6d3f9c4101f6f5346ddd298fa29f075d6bfef6361d23c397a71",
+          "afterSha256": "4d17a5bccc79055b46392232b4f719b8dbb0c3a1713a5cfe454da29d5b7266e2",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/gateway/provider_adapter.dart",
+          "marker": "Khy-20261101-076-6PEXK67M",
+          "beforeSha256": "e6c4286cd2711dbabe5f3a843bce37e702f148d0f92b2286132439436a3d258f",
+          "afterSha256": "0b942543d6252c468a537318a7ea74dacd9bb833dcf5aa58a49086529666fad9",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/network/dns_resolver.dart",
+          "marker": "Khy-20261101-077-P9ERGSGT",
+          "beforeSha256": "a98f904ed4add30554168b5549e9f35ee6b5864927cbb7e9ccb7c8cfb1621810",
+          "afterSha256": "de0bfb37c533a5ffe613a25ea82aab1f5b3e0461ab5717b94f55f8f6a808447b",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/network/network_autofix.dart",
+          "marker": "Khy-20261101-078-3YSR0T6P",
+          "beforeSha256": "27dd10bb2e4690da43351e93f836f80fab3cb3e2b66ad1dbf32be133f39368c0",
+          "afterSha256": "2afe751048b722d89106b10fa17e77bc88405a8abd575bcbeb8511d3bb5c4314",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/network/smart_dns.dart",
+          "marker": "Khy-20261101-079-PJ8Z4S9T",
+          "beforeSha256": "0c4ea439ea0952036bfedb3e550514009e13586f3efa2030eb380a7cb527c16a",
+          "afterSha256": "7ec244233737fc8389d9db0b7ca0ab40a557ce2455d73d1bb200914bed77b90e",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/router.dart",
+          "marker": "Khy-20261101-080-12M9ZB1A",
+          "beforeSha256": "2e43c79a0f366287257959e24ccc7852a37a7338b16bfd5d8fb81ef9bd96708b",
+          "afterSha256": "d95d79d0a1d886433790c5eabac7403acdcab46f542d0ab8f121a25211ee7101",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/services/amoo_chat_service.dart",
+          "marker": "Khy-20261101-081-NPMK6T63",
+          "beforeSha256": "c28e0f0a3873caf2ff94107a6f91972e0b77308d7d607fdcf39b4eed3ced2aee",
+          "afterSha256": "decb40a3bc0a60f772ef152462bd47c2a504bf3c2b4d83241bd3081c0eebb5df",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/services/amoo_service.dart",
+          "marker": "Khy-20261101-082-8HRS60RW",
+          "beforeSha256": "c202373d70e370c22bf77f42ddb0b46817b98f2ce19fd5347d6286c857be1187",
+          "afterSha256": "ba72c679be620e34dbafbe59c7b0e53114d68a2dec1e353103ed9dc0b908d53a",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/services/chat_target.dart",
+          "marker": "Khy-20261101-083-F8AF8X14",
+          "beforeSha256": "a3f6b3d984ad66c6260572261daf9abeec4c1483b2c847d9300cd5a256fece23",
+          "afterSha256": "63dcc8668acc742a30ef51ac0be35bdb287b1d04edc2186ebfccf1323ef4679c",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/services/conversation_db.dart",
+          "marker": "Khy-20261101-084-GP167GZS",
+          "beforeSha256": "123a0e9028d2c9b974abd5d4a54bdaf601f3880d88afcf2f828642cce01561f3",
+          "afterSha256": "b40dca704bbbf3fa85ad2ca8228a811c955c056f0deef24c0d8fa8d055ae453c",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/services/device_control.dart",
+          "marker": "Khy-20261101-085-048B50CF",
+          "beforeSha256": "b39ee9312d3568eae2855ac47d327a6c8fbd4e62fa9dc66a11a4cea094eaa0e5",
+          "afterSha256": "a3a35fa5371a6b3c1b1edd72a25f316df0f7a74181db336335be0bc060145fa4",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/services/file_service.dart",
+          "marker": "Khy-20261101-086-6F52FYG3",
+          "beforeSha256": "6bb5e8dff49832c96d6d1737abaf277660db67599b819b5dc0f4036d199fbea1",
+          "afterSha256": "a3b2d0b1f85ee35dc3613482bd7f6f1d8e9c516a5af1b50354b33b1b96319f30",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/services/keep_awake.dart",
+          "marker": "Khy-20261101-087-W4CCHJTP",
+          "beforeSha256": "59f96855f254e5f3a53a9e99ec52b607dff7ea6cf7af98ee98b28a78951312a3",
+          "afterSha256": "4001826da75fda949b6304dcf35783e8591e577a5e81350ffe7cbe59a1163418",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/services/log_store.dart",
+          "marker": "Khy-20261101-088-BJRHPH6S",
+          "beforeSha256": "2093514bb8dabf466dd588fe6cb31e008d4f070bb872e0eda2deddc273321cb1",
+          "afterSha256": "8fb4d10ffcdd6a2152ccd104947542da141b70f847f7ac19f9d7df5ca59ff459",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/services/screen_metrics.dart",
+          "marker": "Khy-20261101-089-PSN7EHKB",
+          "beforeSha256": "4b8fa3301cc9e5b2eebc98b16a3622c8ce73833ea0fa5047b6833c8bce60169d",
+          "afterSha256": "878b3f257ebf5b1e4cb6a07ff8f6bf6d3854b9db1204f018c6d0525bb3c33d9d",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/services/shell_executor.dart",
+          "marker": "Khy-20261101-090-9S72G7V6",
+          "beforeSha256": "93f9265f87916fe189c000961e7275a2f1a7d3b8e770499ecfbcd71557aff7c1",
+          "afterSha256": "a7dd2c68cfc950a82434a2924331558116041976a3f015aa879650c3e74ab9fb",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/services/vision_service.dart",
+          "marker": "Khy-20261101-091-1471APCK",
+          "beforeSha256": "c40ee2a80844dd77a78661f09236d9584125c7aaddff057665ff6b763a8a6e0c",
+          "afterSha256": "3e52405532a22d5ea9e6de3a9561091e62935403667bf898676890084ad870be",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/tools/android_tool.dart",
+          "marker": "Khy-20261101-092-78P22W4X",
+          "beforeSha256": "041dda6d724f4e70a765900d44c6f6b3485e44ed1acd5ecf7ddf8aafbd44a55c",
+          "afterSha256": "6d51ea37dde25a5d0549e4b5a460ad9b0e348d36b9caef83ed586d92ad0da6de",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/tools/builtin_tools.dart",
+          "marker": "Khy-20261101-093-7KZJZ8KY",
+          "beforeSha256": "0b64d1c47ba33e093fc9bb68fbb245c77512c771c91b9d4dd362e34e7ab1ad60",
+          "afterSha256": "26d353526c838b13106e179105f59adeb99f83d30ad420a20aeac8311457bb22",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/tools/retry_engine.dart",
+          "marker": "Khy-20261101-094-JX7RVXF8",
+          "beforeSha256": "97669996be419771e5fc469f88168eb38c21bdee3356da3f55bfe809f018f82d",
+          "afterSha256": "d320505d20c36572d8b25f36073bb76a7f10022dc9247941708eacd18df66843",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/tools/skills.dart",
+          "marker": "Khy-20261101-095-QVQXJTZ7",
+          "beforeSha256": "ba278f8bacaa5e11384c44850b50ac4a3d0bd981ea51811e1e1d00454a4f4ddc",
+          "afterSha256": "fdedd86b57d2ddf6532772ce571dec415ec3de150d243b33ad7a6ea06b05ed51",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/tools/tool_engine.dart",
+          "marker": "Khy-20261101-096-E23HSRAS",
+          "beforeSha256": "53f0be9fbc01030115d2ec67bea1274f8f428393a92b6ff9d712b7f90d383132",
+          "afterSha256": "ad591f0ae6ad7d1c413cb9331c5e71eef44905c90780a489e5a9d80732b35420",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/tools/tool_protocol.dart",
+          "marker": "Khy-20261101-097-H8PZ63A7",
+          "beforeSha256": "bf1a82dd596d9d39a6569a77ca02aa0c8cda71591f46a8aad0bf13093cc7a8f9",
+          "afterSha256": "2a47f038b8081b325d96ff80bd16512701bc14845d6aae61ffd14ad189bc1cc6",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/tools/vision_tools.dart",
+          "marker": "Khy-20261101-098-SDMVDFS3",
+          "beforeSha256": "9912595cd8d6cceb5f7ac62f92ebc0070aaa7282dae9a4a2649c046930289a53",
+          "afterSha256": "ec7567d81a1d284b48559971672d8a09bac2e6e29e2dee5a80488495231845e9",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/vision/locate_response.dart",
+          "marker": "Khy-20261101-099-R96CCS5T",
+          "beforeSha256": "4ebcc395caf5f538acaab640fc6dcdfb6b66bac46265a7bfd6e91264381a4971",
+          "afterSha256": "aa1ff96878660f2ff5b6449dbd5f5f0074ef2736c76d02fabc1670cd49c1baca",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/workspace/conversation_workspace.dart",
+          "marker": "Khy-20261101-100-88XAVMND",
+          "beforeSha256": "bb4d0bf3e38f87fce7e4f93c22c464c6ef2f8e57ff587aa167e1d0111bcb4ef9",
+          "afterSha256": "a252a592f98973074c1c5cf1fbc07bae6d49336dfb066f4eda2e9ff7a41adfa5",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/workspace/workspace_choices.dart",
+          "marker": "Khy-20261101-101-2CXRQ7GP",
+          "beforeSha256": "c69c3d4916d9a888fdf30344247328ea7d032a413df20c7bd1ad2e6ef3a31ced",
+          "afterSha256": "1666cf8ac0dfcba971064e4c72caa799430a1e6c3152fac0ec0e2e24bf8c54dd",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/workspace/workspace_paths.dart",
+          "marker": "Khy-20261101-102-2KPZ8ZBN",
+          "beforeSha256": "17bf0f6b29712134559c776840a22b4b64d9e4531032824f156efaf5a5d0421c",
+          "afterSha256": "46962e982d30230545badcb6614ae003d7bd94fdc96386525efc19e925346f5e",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/core/workspace/workspace_store.dart",
+          "marker": "Khy-20261101-103-Z0CG1RE6",
+          "beforeSha256": "0678859f0e8b41551b1986f603f2387595f405b9b6de5349a96dd0b39043760b",
+          "afterSha256": "cfa98be4b5f6033ff2c92dac9c5fb8fc96ec5abad96d80d6f279f3dc0f9dcba7",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/data/models/models.dart",
+          "marker": "Khy-20261101-104-RDZMHK4E",
+          "beforeSha256": "eb175c977312474824e1dd6075b6cde7f294b1df80dbbd842f45526efc8523f4",
+          "afterSha256": "aa364898cd08ccd3237816f0b06cdab9f999d7fb73930e994d01eb6bd61dcd04",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/main.dart",
+          "marker": "Khy-20261101-105-PX5NXGAP",
+          "beforeSha256": "35a89157f47ec4236555100d8e59e4aed24028b9f48a0ce16a9a9d8c102ac80f",
+          "afterSha256": "317961d6b1073ef2109162179926534498962040425edb0d9dd431b18d2a7287",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/screens/agent_screen.dart",
+          "marker": "Khy-20261101-106-1SHP1S1R",
+          "beforeSha256": "3b5fa4965fa6418ed7be63cd4164828f55f8920caa980e722c83789d518c9a8a",
+          "afterSha256": "eeccaaeff0344a97f1960be473c401844887edec0685a27a0d692075554ebe24",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/screens/agent_screen_new.dart",
+          "marker": "Khy-20261101-107-W8W13062",
+          "beforeSha256": "02db19789831d8a690d44c5c035f9e3879681d211390cd56f558fd9adb9d75f0",
+          "afterSha256": "09ddbc5c6813d6c4f34a9260546cb2ae37e0315581d0ece344cca4c63fd30efc",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/screens/chat_screen.dart",
+          "marker": "Khy-20261101-108-QYY2G82Q",
+          "beforeSha256": "6af1104e4a1c4a865edc5f1412bc3a6907f3b11178130f0f80bf7fa92b05e672",
+          "afterSha256": "e6a9b52710a1530cea51886b92e19b63aaa5328fcebc5fe1a25130a6316916a0",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/screens/chat_screen_new.dart",
+          "marker": "Khy-20261101-109-637JY477",
+          "beforeSha256": "5a6807fcaf3dba6440f5f8653708c0e40938e650d98f4747327a2b90c8dccc6e",
+          "afterSha256": "08e22eac28bccd01e9bcfb3a299bc9569a623a7fde2fcc37386271abbebae84e",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/screens/connection_screen.dart",
+          "marker": "Khy-20261101-110-C54CY3NF",
+          "beforeSha256": "f5bf1cbfa4b624505348591363166f98771d509bb15d37199191b61d1079cf6d",
+          "afterSha256": "0b409c69a0d2bff851dece18585e97aef5b9c839416e97f653cc0fc439cc8d71",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/screens/device_screen_new.dart",
+          "marker": "Khy-20261101-111-ED62BGK3",
+          "beforeSha256": "c504d514806d7e9c81133713b10c032b1e91a607b0241c1046eae1650909a298",
+          "afterSha256": "8f34c230a0a37ebe67f562ae9c171cd16e17788ceedaa57ec89ec71338e62ca2",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/screens/home_shell.dart",
+          "marker": "Khy-20261101-112-QS0PR9FA",
+          "beforeSha256": "98a285670551bb2b553c27fa05bd92d18de134c3e4d13f85f2985faf666b4572",
+          "afterSha256": "bf6ec209d672c811dd058383d4da90026292f944bead78ff6ef2d9bdc3685986",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/screens/independent_screen.dart",
+          "marker": "Khy-20261101-113-J3CZ1K11",
+          "beforeSha256": "58b2bd9b17d0328c68fcd77b916327bd7862e69f5b7fb17e4fddb4b935cfe6c3",
+          "afterSha256": "4e6da946cc076337435613b949d09727d34a969807e931cdba6ac89a1198afdc",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/screens/log_viewer_screen.dart",
+          "marker": "Khy-20261101-114-JDGQ3WZC",
+          "beforeSha256": "fcb2d81379ce1f32c378cd0100433f7ae4889d15d46511d2136aada01a2bf20d",
+          "afterSha256": "47faa6a3c75060a52570a84fade5d6a8d664635925428f3303c7bd71357b2a7a",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/screens/longcat_chat_screen.dart",
+          "marker": "Khy-20261101-115-RFQ96Z25",
+          "beforeSha256": "15be0cad03c96501f4b6e04b0edaea4b2ca9ecb28d18e040c3c243315442bac8",
+          "afterSha256": "308e1776a49b864becef01330344795684fc93a934aa8684fb2483a36d707229",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/screens/network_diagnostic_screen.dart",
+          "marker": "Khy-20261101-116-SEP4Z79D",
+          "beforeSha256": "f69cd7e665a8957d0b2be2aa4963e2541313838438aac62809a45470fc1385b9",
+          "afterSha256": "58ebd76d5e97efd16f7cc677d2189b4ed15cf4856e5cc251976c50ead8676809",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/screens/qr_scan_screen.dart",
+          "marker": "Khy-20261101-117-J2X25VQ7",
+          "beforeSha256": "15ab614b3430de5bab76f8de7a2e7334d8af45af7e85fbaccd88f164afa66768",
+          "afterSha256": "71792fdadb6502555b7b10ae818415b3b75fe470efb382000355667601b22391",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/screens/settings_screen.dart",
+          "marker": "Khy-20261101-118-1HFCCV2E",
+          "beforeSha256": "ac17d2bc4633025b853055621b9c45f1b3e4c450cd94e8f2598a74d9929902c6",
+          "afterSha256": "58ba245176ea211e0cde01e44acf7b257e8645d46c7bec1dcb6e517a87fa68e7",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/screens/settings_screen_new.dart",
+          "marker": "Khy-20261101-119-QHHJQ2R2",
+          "beforeSha256": "9c8f75dfcce373c2df73536fef122e3470280652a68f0aeb81e2b490ff63f211",
+          "afterSha256": "6b818abf01265fc96f2824487997d5e6143dd6c75ad2117b240fbf7ae69dd3ec",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/screens/skills_screen.dart",
+          "marker": "Khy-20261101-120-A9HP3X72",
+          "beforeSha256": "84fd0bda45e6f62fd231d42b1706262f8cd909397b0e5c432c8fa7c0ed9a0abd",
+          "afterSha256": "cbb38522076c600a342a68908bc99fd484737e277e1d4d12c1febf339e3698cb",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/screens/skills_screen_new.dart",
+          "marker": "Khy-20261101-121-DWDDZ5A2",
+          "beforeSha256": "8e62a9a1e1bff337fe79c70d0c59d94c424d1fdef648de1b738c92d862b84519",
+          "afterSha256": "d33a290e33d312f9f3d565234b9f9eab79d1043e9c9080c94cb4c92a7f0d09b5",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/screens/tools_hub_screen.dart",
+          "marker": "Khy-20261101-122-T09CZB5Y",
+          "beforeSha256": "24c27e3cb93bd7ba5fa79c8428a82ce462382900860e48dbdd042b978cf1ea48",
+          "afterSha256": "7c2c09f5f148025f6bb50fd0aad64f606688feb92f7bc0fc13c5fc4622e91a36",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/theme/app_colors.dart",
+          "marker": "Khy-20261101-123-KRDTD58B",
+          "beforeSha256": "36d17d230ff95720667886e7c7b8a5cc0ee22205a23d308f6a77111673f305c4",
+          "afterSha256": "92992518f8d7e5f3fbd61772944ec66128f03970ceaae47b4cebc8fc97e85f52",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/theme/app_theme.dart",
+          "marker": "Khy-20261101-124-ZTHCC6KM",
+          "beforeSha256": "7684990405aa7d1c632b5dc64fedf11627c19da5f74b373332bc121e32f02a46",
+          "afterSha256": "0f1d520995b697e946a352de20be3071f0825e4b73db0fa5db8f148fedf668df",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/theme/design_tokens.dart",
+          "marker": "Khy-20261101-125-8Y73HMJZ",
+          "beforeSha256": "831d054322060bfea0ee8a3325f165e8d2d2cb681382880f72591eb817ca7836",
+          "afterSha256": "78e888dc960e89e7b1e73814f184116f9d3dc95ae2ab280f6ae9cb5f19a8f88b",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/widgets/amoo_composer.dart",
+          "marker": "Khy-20261101-126-2DZ4GHQP",
+          "beforeSha256": "e0c939cfe9634ccddacbf50fd147acb17f25c7b78224dfef73a90b9b8bee897e",
+          "afterSha256": "bdcb3694fe5ba540a63b33a39f1f2d50e881fcc18a741be0430b13c7deb797ee",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/widgets/amoo_task_card.dart",
+          "marker": "Khy-20261101-127-5CMTWE5S",
+          "beforeSha256": "1cfa6087a625bd2757032cebf1ad929746c4bc4cb62c7e2cd9ce740da8a5873a",
+          "afterSha256": "0d1f4528eecad8e7ed23631e955c9b330d55053c41fa4360b0840ddc422c7bed",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/widgets/aurora.dart",
+          "marker": "Khy-20261101-128-D9K5B9WY",
+          "beforeSha256": "6983aae20219105ed4455d9cfdff52523d24303f4af6b8f7e1bd51d9e49703e3",
+          "afterSha256": "2e558e11957feb55b4e0ab02f41218ef6a4679add1aaf3a78e5d92e0435549c4",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/widgets/khy_brand_mark.dart",
+          "marker": "Khy-20261101-129-5TZCS1HH",
+          "beforeSha256": "47069d5efdefa487630548b2cea9747f0ce8d15e9dcdfe22f2a0b35156dbeaf0",
+          "afterSha256": "75484fe88eaf85b8cb97090c356d9e7b434174bc07b7c9d9a40facba3bcf381e",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/widgets/model_picker_sheet.dart",
+          "marker": "Khy-20261101-130-P1C5QM8P",
+          "beforeSha256": "5fb2351f6c31e238973ecb14c16d26af31de1d05b927d8a1faddae7f8add310d",
+          "afterSha256": "ee99164896c9637a1e303fa40da0efc27ff52e69a3bf1356d97b6ce20da15642",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/widgets/project_info_card.dart",
+          "marker": "Khy-20261101-131-6PES8C69",
+          "beforeSha256": "b6006ef0cc607c7b22d0d7a4a9299deb1333285b210209540597a648beab5e04",
+          "afterSha256": "3a64155a55fb93cbb24fa2a07b205f64e1daebb883b7c82b277af20ff6c1bf7b",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/widgets/tool_card.dart",
+          "marker": "Khy-20261101-132-VPGJTW20",
+          "beforeSha256": "1ac56999e8adf3e78addea361d47fccdb8d35f85ce037cbc5ec5cde38e827940",
+          "afterSha256": "738482b38649ff046d87aa5485dfd575c9674b14fea34b7c3b5bc3b5792e4ea6",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/widgets/vision_config_section.dart",
+          "marker": "Khy-20261101-133-Z1VTPCX1",
+          "beforeSha256": "814d81b08f580ec50d0ce6f053550742a92f0ee4d223f2711e924d5f87e3a4e3",
+          "afterSha256": "43a2c085be4ab5360ab80465a19300002f68546637c5eeefda83f2d46965461a",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "delivery/mobile/khy-os-client-app/lib/ui/widgets/workspace_pickers.dart",
+          "marker": "Khy-20261101-134-KBVE8YTS",
+          "beforeSha256": "04262677bb4f9b3debb649efecb87278766416a850d9971819ddc22ae009e6c8",
+          "afterSha256": "aab098edaca0220e0b1ac8851cd04f5d498c51f54027920bd7ee680f25211f4e",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/cli/aliases.js",
+          "marker": "Khy-20261101-135-MKYGPSW2",
+          "beforeSha256": "485ba6cf4ae9a8e8945dafecef5576c39ac85031ece42ff2f48d0be329f1f8ae",
+          "afterSha256": "6588bbc57a4061a12e3bd2e519c1922d2387f6908ca720c8aa9eb9a1b84885c4",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/cli/repl.js",
+          "marker": "Khy-20261101-136-91NP1HAE",
+          "beforeSha256": "92c696197078a7dcc736bce7cfe34395dc0bbe718b73c9bd788eb0a3f9ba9cb6",
+          "afterSha256": "78cdf939e9dcf9401dd031136c80660f0c5b5f28c58d7616504493d01b5e9340",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/cli/router.js",
+          "marker": "Khy-20261101-137-QXKNBW7T",
+          "beforeSha256": "3b54d89d79f343c0dbbea81bf0149a4dfebe9708bdb866b8c1aabb75e64fe507",
+          "afterSha256": "d5e3a1fec47bf39c642df02725e213c9e68805ce4e63f8cd4e66099f6506ceba",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/backtestEngine.js",
+          "marker": "Khy-20261101-138-6JYMD72B",
+          "beforeSha256": "cffeeae7a643605c3701c7911b5447b4754c1462ccfe7e9fbc0f50a96a5cbf6a",
+          "afterSha256": "907ad5158daba8cf2718419a4de2f575cb0bf8c9f1f3653ebdbd4a0042fcf155",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/gateway/aiGateway.js",
+          "marker": "Khy-20261101-139-DQ0B9TGP",
+          "beforeSha256": "485699061cf468a8f7d87f345dcc135b9e083f6815542ebe2e8194fcd875d60e",
+          "afterSha256": "776e4521099cd289e5892466366243ccda8df53acb4250428066f65c50705865",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/modelTrainingService.js",
+          "marker": "Khy-20261101-140-QEC4RXPK",
+          "beforeSha256": "3724f9c63577f3eae748c6178bc6ac8cfcc387367ea4ede6bcd3d90ea7b33f43",
+          "afterSha256": "2dd10b075f41454e79e1f77897e5640be17a51265896cd62cfc4c90648c2b262",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/tokenUsageService.js",
+          "marker": "Khy-20261101-141-A91127VJ",
+          "beforeSha256": "4825c806105a7423bcb262cf7cffe85256feff729e0cde2ef908fe1d4c5cd3ac",
+          "afterSha256": "ec73f28ea390d955e819ab201b0cc374ddd5653ea7639d09a581cb05c12cd15f",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/_llmDecomposer.js",
+          "marker": "Khy-20261101-142-9P5PEW6C",
+          "beforeSha256": "7003408ee18143d8a33a97b84b8dccef7f2ba2d275dd34ede53a00666e0ce19d",
+          "afterSha256": "d903fbe61b44b4dcac925f8b886f5a5638f75c11f4e565d0824c154412c91eee",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/a2aAgentLifecycle.js",
+          "marker": "Khy-20261101-143-XCPQ5MRY",
+          "beforeSha256": "90f3de86fdcea960b924a7d589f926eeae0c681c26505355b28a7d942dddc929",
+          "afterSha256": "5b618d70d494d4163ae8bc9ce9f682415f9de23871082964dac94f6be2fd7fdf",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/a2aFacade.js",
+          "marker": "Khy-20261101-144-N5646F3A",
+          "beforeSha256": "ebe9a3d41cc5afe961a2876dbc154a4270628f30479479f36779ae90bb4b3082",
+          "afterSha256": "90585d3063c8a5baf0173dcf1d1a30bb9d578fea741f2a06e2968bef3c411a20",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/a2aMessageRouter.js",
+          "marker": "Khy-20261101-145-64256MHC",
+          "beforeSha256": "2f8e0391af05cea592b1a1fa06acbc0446bc7598e5ab98af23a352ddb80bd826",
+          "afterSha256": "5569bf5b32b81ccba1f09593a63c3a9c87c6436ffbb77282e57cd11bdeb27d0c",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/a2aRegistry.js",
+          "marker": "Khy-20261101-146-WQMW43W1",
+          "beforeSha256": "1fee8a507b35a3216160951f0bed93b8c8213c2fc9a30bc899d7d1378f5d0a4e",
+          "afterSha256": "44a68383b8318d14bcdea503088e0e66a7835e8ab13dc571e6aaa0d75f0b9ab0",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/acceptanceCriteria.js",
+          "marker": "Khy-20261101-147-ZKYGAJ9A",
+          "beforeSha256": "1a30aa3a8c53f99a733388c80998d4a0ad79b625e8de261aef8ab977d3d47005",
+          "afterSha256": "dcdd0f4c7afb1d307dc32671f10269aef832760164c731844cbf158932589599",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/accountPool.js",
+          "marker": "Khy-20261101-148-HHGCH9GT",
+          "beforeSha256": "1e712840e9e28d50ee1347dd36a8b0817e917df5b74ba0c4f94d96223471edab",
+          "afterSha256": "e521a8464a534b65ff55d1a095f686d32e379b197e43428d8f8e6bbf143bac5f",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/accountSelector.js",
+          "marker": "Khy-20261101-149-0X5CME0Y",
+          "beforeSha256": "745f9b8a89af9b5df12dd192d116beefe22a5d0c6ddb58c8d8fc1d5bdf3897ae",
+          "afterSha256": "457110fb6e478972af66a24f8b70fe248801902c748bedddbeb8a7f6e8b4835a",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/acpTransport.js",
+          "marker": "Khy-20261101-150-7XP6T5ZR",
+          "beforeSha256": "e7a568a88c1c3692b619588bf7396acb48d97c81c359312a0f601bfab66d43a3",
+          "afterSha256": "d4087b9940df828880f0b4541370e935c6863ee5055fbbf69366b4a707555f1f",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/actionAttribution.js",
+          "marker": "Khy-20261101-151-6F3FGDCS",
+          "beforeSha256": "f188d21f8f2a5dcd45191de5a33a56127cb6e9f2b55c8f0a14d49dda641509c1",
+          "afterSha256": "b50c476a87b9fa3d008dc3254c6a6dbc2108222111b145871b1dd7445654421a",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/activeSkillContext.js",
+          "marker": "Khy-20261101-152-K9W1A8KY",
+          "beforeSha256": "09e8c70a7667c6368afce8365c9a3dd1a6d79657fc7c22442e0ac6851291e027",
+          "afterSha256": "8df29a0734b6a66c16593d9050e8f4a0da32ad2b2dd8128d63d3c9780036f264",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/adaptiveConfig.js",
+          "marker": "Khy-20261101-153-PCMVX0Z0",
+          "beforeSha256": "c6cd5b021491c14db4037ed729d73bc2b76576b9fd0e124e08ea81a27eb481cd",
+          "afterSha256": "d6beca8452b68abb497272888edf367f7730ee18eabe583a01b2ec282867162b",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/adaptiveExecution.js",
+          "marker": "Khy-20261101-154-XHQ9ABTS",
+          "beforeSha256": "84a2620f59b0c9bc7f163791358e22b798ba732917da4066acf91318f9d2b436",
+          "afterSha256": "4421c9ebf3c46e112eb0ffb1270936f6bb6eff782cb3b47aef864f1827bff08a",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/adaptiveOutput.js",
+          "marker": "Khy-20261101-155-HSZMCB33",
+          "beforeSha256": "3f1292f105fb305047eb0a21343bcb44b9c757f0ee78781e6e5b1c87d64ee17d",
+          "afterSha256": "1f43b59be925d57a4aee3af82871b9b39114c5c2f9d78d8ee587531c75ad521c",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/additionalDirectories.js",
+          "marker": "Khy-20261101-156-ZSKWQDF9",
+          "beforeSha256": "4b56169d92f8556cb7fcd38b9bd1e1eb5de1ea056a3418e136e549d24e3bc152",
+          "afterSha256": "384844d974d57a5756bd1097667798924f57dcd09a77949a14b89688ff735124",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/adminService.js",
+          "marker": "Khy-20261101-157-405ADZWF",
+          "beforeSha256": "9661b0c0f40d87da8250689524213456114fef624ee595ba4ce4b711fbf941af",
+          "afterSha256": "f75ef139c5a35e9cb8ca642bcc2e7ef467580bbec0de076e8517b648b844500e",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/advancedDiagnostics.js",
+          "marker": "Khy-20261101-158-MDEB2QB6",
+          "beforeSha256": "f706d5d1913e1e4beb89e593c0fd0677370b1fd1b916bd02445dd33fc4b5f4ee",
+          "afterSha256": "33f9a4b4b6a60314c73da3a4c19278e0df4ee66b482085cbea93697b7c573b7f",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/agentCommunicationService.js",
+          "marker": "Khy-20261101-159-PK9Z8RBM",
+          "beforeSha256": "ccbdf68bd235b3e313cf7e0859b3afd547c231b336f7d2ee37803fe98744c1ed",
+          "afterSha256": "532234a31519461425963d506ba6bd846a30e639c36c1bfcb95aff5e1d99c54b",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/agentContext.js",
+          "marker": "Khy-20261101-160-HX2Q962M",
+          "beforeSha256": "550eb6bc4de5c10d7b79026a3b490c3dad59d46366ded41e6c539d1a5f79a4e8",
+          "afterSha256": "f08520dc13bd2bbaae7d0c1026d0c2b94b7cd19aee3e95a1d755ab83488dae04",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/agentDevLog.js",
+          "marker": "Khy-20261101-161-QCB4RSN5",
+          "beforeSha256": "6521789367930edb51929ffb9bb92df8f70ae153253de30f0bffc6f5657fbaf3",
+          "afterSha256": "4936771b102dff26c109d6896221840b1c384e496bd2c42da9092826365a895d",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/agentFeedbackService.js",
+          "marker": "Khy-20261101-162-PJ5MG9D6",
+          "beforeSha256": "da0e499379f3657d6744e640fd652f335aba9462fec5ce292c87f58627b6f364",
+          "afterSha256": "3d66ac4295bfa25ee656756a1d95b38f050bbe888b9c1ad4b4bf3e2d66c200ef",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/agentLauncherRegistry.js",
+          "marker": "Khy-20261101-163-7ZVPX2BV",
+          "beforeSha256": "93d7696cfcbf85ae4b277a538df2e55851537217762d19bc7a89eabc3acd7371",
+          "afterSha256": "cb4b8958187d50779cef9d38da4bf3345755dc736d1580093c544b59d0acae2d",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/agentStatsService.js",
+          "marker": "Khy-20261101-164-8G3T5C1D",
+          "beforeSha256": "756ee5948f47084b64f2d096a952c80564e6a7b372e05ff095560cdcfc449116",
+          "afterSha256": "2ffcb24e1f2b61836ebd445e982fefd7869677b50693b10c9a96f562bd7b418f",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/agenticHarnessService.js",
+          "marker": "Khy-20261101-165-QDS6PFAC",
+          "beforeSha256": "7556c464dd215ee800794853f0b60a2577416c35ea809f113ecd88b27e2b8b04",
+          "afterSha256": "fe9e94bc1d42f0f2695782d68b9d404fe595d83705c570d4ed1dbe092afd02b2",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/agnesImageModel.js",
+          "marker": "Khy-20261101-166-KF1E0MEP",
+          "beforeSha256": "c5e1c4aac78bba2e85f3347ad2a2a00b3881acb3fbf3143bdea889a9f00bc03c",
+          "afterSha256": "579ba282b2f2ba7440250535b172ca37ee973f5f08583747474bb782ad633811",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/agnesProvisioner.js",
+          "marker": "Khy-20261101-167-TYZ14050",
+          "beforeSha256": "709074d6e39cb695105212cd87c44eae53943dda9b0f95958c8fb6efec4bbd7e",
+          "afterSha256": "8e9eac14569c8741f14a7201fddcdebdffbcfe376951c87663f3d97dcf163323",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/aiChatPort.js",
+          "marker": "Khy-20261101-168-ZK96MG5P",
+          "beforeSha256": "127a5176bfa96eb1bf28f818f83bdf0d1324e9a4ff6e6d6c78236dc5acdf0ab1",
+          "afterSha256": "a1e76e1e644709cc9818b73ebdc953056def8646d61ec0768c04cb5fa2dd0a26",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/aiConversationPort.js",
+          "marker": "Khy-20261101-169-8Z0FA247",
+          "beforeSha256": "cdf156db884d264f1e77c0dbae927d23b67630d464006359dd5264df6604bb99",
+          "afterSha256": "02176e495fe790364be3336e58e050a94cfbdb60eb909514c8044137cfadafab",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/aiFrontendLocator.js",
+          "marker": "Khy-20261101-170-D1S7VFJT",
+          "beforeSha256": "89c36e63d378ee6ac8bcc4f4ae9ce935ca28fedce45bd3dbb6e1a442572c1d60",
+          "afterSha256": "179d6cde3e33485b76d3916b203348d015b2526b5e6c6de027736f7a3cb9cedd",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/aiLocalState.js",
+          "marker": "Khy-20261101-171-S4K5933S",
+          "beforeSha256": "1fb9d9f28b42082a7aa256de6b3f79c96bc6a9dd87e5d27af81dcef4e2186bd8",
+          "afterSha256": "475a9ad474cfd78f6e233fd2ce21d4993aed60bc68fe463cda90ea6041932d0a",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/aiManageDaemonLifecycle.js",
+          "marker": "Khy-20261101-172-EWTWXAER",
+          "beforeSha256": "dcdcf55782141aff01587f495e09ccb7712f0407e48191955398f80d706c913b",
+          "afterSha256": "d5fbf79dfb15cb0e4f0f2476369c2b4e92dc43962f2114e2a6244c4f0127adf4",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/aiManagementChatHttp.js",
+          "marker": "Khy-20261101-173-RZ6QRMTV",
+          "beforeSha256": "968d3e2ac852e6443aa2479595e6c76fc68b6bae08c40571d2410532fcc0a229",
+          "afterSha256": "8171be6500c7e8e64d8dd4518853b3491df4d7413255f5a0b736846ceeac4c0a",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/aiManagementConversationsPrompts.js",
+          "marker": "Khy-20261101-174-142JGSJ9",
+          "beforeSha256": "204b7573118b2e79889b2ecb788525b4f99b82a864aaf6bf34a98b35612c940f",
+          "afterSha256": "a4a139c491304b2898eb3618732895c330a9537b40660fd2930d326d85f74f46",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/aiManagementGatewayAdmin.js",
+          "marker": "Khy-20261101-175-N3PRB48M",
+          "beforeSha256": "bb00fe7a363946efd2800f2c1126859b33b0675a050ce0aeba4458414ebf4d11",
+          "afterSha256": "8287b7d704551bd56233a3ba503ad124ee3a37040abd1c91a71131ca3a30c4c3",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/aiManagementKhyosWs.js",
+          "marker": "Khy-20261101-176-FAMCV9KF",
+          "beforeSha256": "cb4b8927c085dbbb7fd05b78421f1c627ddb0b2e442c1ce3e5cb24f10471fe5b",
+          "afterSha256": "4bc6befcea083d3124036173b2328e9c05ced3107b4697a6e154ee1e8a652855",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/aiManagementOpenaiCompat.js",
+          "marker": "Khy-20261101-177-6DXGHDJ9",
+          "beforeSha256": "8b21a5f7e81f929dde226907c0d0abcdefd9c5f96d3b6d25eda33621bfba6866",
+          "afterSha256": "0c4b85ca219a8543d3c544b0780239759ec367e0db9bf89b74e573add2316200",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/aiManagementProjects.js",
+          "marker": "Khy-20261101-178-WM5W348D",
+          "beforeSha256": "64833b280bfad226db150f3c4bd3f34bac509b1664629c0c54cad990cc16cc06",
+          "afterSha256": "4baeb4f82f2658a0e628f5c3aab8d38f2a3b0496c956414667211ee57ed80a70",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/aiManagementProxyEgress.js",
+          "marker": "Khy-20261101-179-YQGWKYK5",
+          "beforeSha256": "97b95a5f2e95610161d8a68c54b82d6a7c45bff10ad3211d8b1593ec27beb74b",
+          "afterSha256": "cb98ad4798320127da758664129772347bcea4b141ebee9bff2a8d16d05fde4b",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/aiManagementServer.js",
+          "marker": "Khy-20261101-180-X61JKFQ6",
+          "beforeSha256": "29b138543d072c27b508c9b9f2c5cfb6c5c1c4c5de5f918a90ed8ab228e51c92",
+          "afterSha256": "4939b6628f240ef96a1bd523430f7e92855499a3cbbb6d9baedc4aa80816f76b",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/aiMonitor.js",
+          "marker": "Khy-20261101-181-EDE2Q0FC",
+          "beforeSha256": "32d7336b984a7a65c6bd80a7e8741cace37ce085bc59b4b59a8797e5cf4956ea",
+          "afterSha256": "bde7b9cecfb12b4e24289f34be62e57ef4629e220a94a5577f049952cd027a38",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/aiSessionPort.js",
+          "marker": "Khy-20261101-182-V4H8N363",
+          "beforeSha256": "480c430661052472e5250c2ff88263901b2c9f469eec380f4016dc572e766d46",
+          "afterSha256": "dcd9d34ab00ef20d1df079c2bc9617fd21f2b35254f0a48323abcb8392c7e608",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/aiUploadStore.js",
+          "marker": "Khy-20261101-183-9CXPQA2Q",
+          "beforeSha256": "108039be210af52bd07b89167b8853fe278e446beac61b08fea8e2cfac29598d",
+          "afterSha256": "dd8f77ad532b8fdacb52e16c938dcfd1e83f04a5d764bf9b3c678bfe35d0bc10",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/akshareDataService.js",
+          "marker": "Khy-20261101-184-2QCTKYD7",
+          "beforeSha256": "b4bbfef5086e2765035712a44afbc874a1884c13e5a141c18189e34820799f6e",
+          "afterSha256": "42489994097d0c7bbb81ce83b70f72a483b96c4812e824b098ea570e4170ffda",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/akshareUpdater.js",
+          "marker": "Khy-20261101-185-YZ39F5MR",
+          "beforeSha256": "afa9560964bc78c4decce420af023a704f50bcc4f573313bc708b30563420bc3",
+          "afterSha256": "749467bc28becf2e903ae19d3af76b7bc5338d6309f37edf8c56225e0faceef6",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/alternativeDataService.js",
+          "marker": "Khy-20261101-186-Y4JDYHH3",
+          "beforeSha256": "b391cb3dfcd99e1fecef59df6b92b505377d8c9b22cd5e57320f5d9bcdd97d02",
+          "afterSha256": "66d3e5dc28fc2525f404fa1a0853555281419baab1735fce94f16a4910f17f2e",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/answerDirectionSynthesis.js",
+          "marker": "Khy-20261101-187-DECXBBKA",
+          "beforeSha256": "1341d5ed7431c6df2014d58211618f42b96783f4cee96d53375766feda322ad4",
+          "afterSha256": "81519ef145cf523639380c29e462b7803640f984d0fb6d62138a9cb4b8f647e2",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/answerEchoGuard.js",
+          "marker": "Khy-20261101-188-G16RX815",
+          "beforeSha256": "bea7906fcfe2c10f579bc808da9e3a66717eef884d0a5b6fe1ed1587c25ba86e",
+          "afterSha256": "3f3d1bc070a1a5c98a727abbfebfd1bea96afacca317a362be3ad94015c50db8",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/answerVerifier.js",
+          "marker": "Khy-20261101-189-777M2MWN",
+          "beforeSha256": "e3658d6b6e3216b0687f9c3e82dcc4a529d093d4289577f23202aebd965b46cb",
+          "afterSha256": "3c23bec468667b78b70dbb19796d7cc17184090786c29edce1740043f0b2d87c",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/anthropicProxyService.js",
+          "marker": "Khy-20261101-190-7ZZGNQG4",
+          "beforeSha256": "41c18db2243b70cf79a6c90980d2dec19866824bf1e31a89fb18c1aa7c75a350",
+          "afterSha256": "0339cecad677940574671acfcc005d34329c2dbbaf3cfae59f25d8c8c288b958",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/antivirusService.js",
+          "marker": "Khy-20261101-191-GVHBS56N",
+          "beforeSha256": "1b4ef45d1b75506c1a5891a86f56c931eb4e0a0481fd9fb70ad9875a81c9bcf3",
+          "afterSha256": "0c493ffbcbcc63626c1994893aca1d90447e9651608d0ea8c4e5706e4265264f",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/apiErrorFormatter.js",
+          "marker": "Khy-20261101-192-CA2D27X3",
+          "beforeSha256": "7da6489b304c9701b82d7d4dc359e69ea89aede3d796d1143ec8371fb60bca05",
+          "afterSha256": "a65276266da9e60ce95f936dafb476e0c00cca84d78e14bf5214df88f5bc149c",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/apiKeyFormat.js",
+          "marker": "Khy-20261101-193-RHMQGADC",
+          "beforeSha256": "d8015c1030e501493aca47c756fcc9da4e15ab36bc3ff7ba490fb994b6e7d24c",
+          "afterSha256": "f23ca3725aa589d86df36d5c112c4ffe663fa030526c5d270da5f4e380cb1912",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/apiKeyPool.js",
+          "marker": "Khy-20261101-194-GSRH5F6E",
+          "beforeSha256": "924e99ccb6b1cf13b358ef362bf344f4441511add4e0231e181b57fa883275a2",
+          "afterSha256": "a41c76df4420a240ca84ac96f8d441fb993b7103fe0fca783e5c9868950db133",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/apiKeyPoolWatcher.js",
+          "marker": "Khy-20261101-195-HJ7VSGW0",
+          "beforeSha256": "f8b19a132826a5507950fd8e7247bf99e4da1716bb68eaeebb6ca2d8f80f8ca7",
+          "afterSha256": "0413a7bda7421622facf4cb03f56305bc603bf33f90745a4a487b182383bb8ac",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/appLaunchRecovery.js",
+          "marker": "Khy-20261101-196-G5JKVQ9H",
+          "beforeSha256": "de1c0f492d75c3292843526ef847bdbc498c95a0d325416693548dea28d253a5",
+          "afterSha256": "916a48b2962e7af25bbddf20e349a9072732631c65cbdb5b533a9a22f2fc9906",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/appRegistry.js",
+          "marker": "Khy-20261101-197-RRJB69HB",
+          "beforeSha256": "1cb07ee64c7e83a962081d13c62be9e82efffe499691015957abdf91a8076cd0",
+          "afterSha256": "0479e737f518b7995dc72a6f6e0f8cc588df791ea91aec1d485f095a35e4c57a",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/approvalLedger.js",
+          "marker": "Khy-20261101-198-H6DP7PHC",
+          "beforeSha256": "9a69ab229af23f806ec2806b8a9db1938a4460eb8ca01dcb0bee5cbf623899e3",
+          "afterSha256": "ff156198d57a18679bbe3ad3fb9894ce914d81614e612af0d94d2b92b6099295",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/archiveInspectService.js",
+          "marker": "Khy-20261101-199-R3G73JED",
+          "beforeSha256": "72b40273116cff237d529f62ff490934485dc54b3699a3c393117e02dfe0470d",
+          "afterSha256": "4b4a85f6d73815cba8a42b695b9e5615f852f0cf8879031ba804e9ea86f3c836",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/archiveManifestPolicy.js",
+          "marker": "Khy-20261101-200-8DH3SW7F",
+          "beforeSha256": "8f6b138461aa8a96939b81693451c1d102b18895776dcd9332677a32bab76b31",
+          "afterSha256": "f33c1a8a7e42e9683425b4b440c2c461424ac76cde0585f3dd34c2916043b227",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/arenaManager.js",
+          "marker": "Khy-20261101-201-254NS5PS",
+          "beforeSha256": "7fa71149eb60028a4d3801b9e75df42a312be5985ce32511cab4f2fb838b170b",
+          "afterSha256": "213d403d6ee67bb06a1667af28da14d87bd554cf2a738bf4a8d96a6247a5d5a9",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/arenaResultStore.js",
+          "marker": "Khy-20261101-202-D428PBQM",
+          "beforeSha256": "fa46021a6af4e0a8caebba1bc977bcfb10d9d67cffa45fcde3244abc977abe68",
+          "afterSha256": "072e31c184bad34381d38e8a355ac2d8e9ab6061ce460b7a0e723dd5b63dd528",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/asciiBox.js",
+          "marker": "Khy-20261101-203-H6R90PE3",
+          "beforeSha256": "7e0eb0f09aea2356b5f43387b2c9810de7cbb426f033222f5059824c7ec06ebe",
+          "afterSha256": "de99b560e0f819fc85fd01b59c3a9938d710f82fd5e2091f9d6d1af5bc2b9b31",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/auditLog.js",
+          "marker": "Khy-20261101-204-N8MQR0BN",
+          "beforeSha256": "9f0e4a204cdb2b2621d75575dbeff87b2d07393b91cff841dbc1fb3df41a3597",
+          "afterSha256": "44bba468f561e39c79ce020ff795cd7735e3b529dcc1a50898ae5ae3ef470785",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/authGuard.js",
+          "marker": "Khy-20261101-205-FNT2XT71",
+          "beforeSha256": "bb7d886338b4dbc16c1187f1ae886f73cb30d769cd2f66c65f44461090e89a6a",
+          "afterSha256": "3b2943561117a9508f2ea1fafae5696b302d9a697a5e07898fe6a033bfb32a3b",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/authPolicy.js",
+          "marker": "Khy-20261101-206-G3BCDQ6G",
+          "beforeSha256": "448b11fb55984b5904a7c61d602f06313caf9eec3dbe56bde12ca7e0d7b4969f",
+          "afterSha256": "5c8985f05671aaaaf90c02f85c932ae6fa85ae892c0bf615cf1054fdf68e75af",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/authSessionService.js",
+          "marker": "Khy-20261101-207-RQK9DZXK",
+          "beforeSha256": "1d09434106a190fff11aa356625e2d3bed410f0ce24e61ee8690c1a974e61442",
+          "afterSha256": "3d9c8aed0a9201ba009bacb3f8cd62865d37ec4ab3661e9fa225329852ae2765",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/authTimeFormat.js",
+          "marker": "Khy-20261101-208-VTWVSWH9",
+          "beforeSha256": "2e800d20a53118d9d2b39bff5295efe442049e3b73824c951d9813827c6326d8",
+          "afterSha256": "cbceb173de1dc077bcb4a04eea163afc2cc27a0a63a15ed5f6e745c03d2eb005",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/autoAnswerIntentGuard.js",
+          "marker": "Khy-20261101-209-DYW9W2HV",
+          "beforeSha256": "9991a62f2b8384f1568afb7b93f43509b543d00b7714f76bead2987dc11f1098",
+          "afterSha256": "fa34b66706589369d779f2021f78a1dc9d1cac7fb3ea767dd10ae48a6230b604",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/autoReasoning.js",
+          "marker": "Khy-20261101-210-GPZRZ88C",
+          "beforeSha256": "5406db12cbd03278b683994bd2fc30bda18bc56b039c740e817f661107ea2879",
+          "afterSha256": "a101c5d3f7cd3f23e1085cdc67f551aecb802acc0eb75b86fcdbacd66a188395",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/backgroundTaskLauncher.js",
+          "marker": "Khy-20261101-211-BW1YJTSD",
+          "beforeSha256": "fb112d360d8f188700e0b2c6a8ef0e0da76134975275616a661215b6bdc616f1",
+          "afterSha256": "808391da9ed6a91300b5b2ddba204726d21d21d106a865cd7d05486af77d677b",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/backgroundTaskManager.js",
+          "marker": "Khy-20261101-212-HA6XW9P8",
+          "beforeSha256": "a95cb481b4498610ea99d84352780eb0236b7e61917bcb3daa58b444ed09ee28",
+          "afterSha256": "acbb0d386ba8af977dbbb3ff9b6c9529ec6977883de770b3952f423217252fa8",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/backgroundTaskSpec.js",
+          "marker": "Khy-20261101-213-TK34HQW4",
+          "beforeSha256": "e4db932b038722cc188111477322144fe995620451790fc07b9f7a0406bca97e",
+          "afterSha256": "e43e82a0d540791033ef0a0c3911cb8bf82994eb5b0481b7abedbc08a132bf05",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/backslashContinuation.js",
+          "marker": "Khy-20261101-214-G728M3FV",
+          "beforeSha256": "39afa811f2a252d2a9ae8d524c2b3e2f7bd1c69e22d562db4c7756e3be08689d",
+          "afterSha256": "2c8e785b817aeaa170507afc110161a2df9ab870102691396aa605551c73ae37",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/baseSelfCheckService.js",
+          "marker": "Khy-20261101-215-SRVSP64E",
+          "beforeSha256": "19c6a222ef19c245615d56ba8ace4055aa3ab08f1127acbd6fa4a08287a99d83",
+          "afterSha256": "6f542d57c1610bc19147b046ee89265c45256ffb2cdebc21d9ab81f7c01d62fa",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/bashListingSummary.js",
+          "marker": "Khy-20261101-216-5PFF1ZNY",
+          "beforeSha256": "7719f640d9d0009179ead3884ee5e2c858f597dfb3e8aae72e308d580cbdda95",
+          "afterSha256": "4f1251a198467b557771d0a66182da3c3d461cd53c226f5b79dfc29cce651e97",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/benchmarkSuite.js",
+          "marker": "Khy-20261101-217-37G79JG7",
+          "beforeSha256": "fa29cd41c01f780643c5c92714415bbab02232c559d733b12c454a917d1456f8",
+          "afterSha256": "a0649dc0d8e8953cef82a18222f6c764278d9f910bc018440b03783c7f3d1fd0",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/binaryAnalyzer.js",
+          "marker": "Khy-20261101-218-5D6W972R",
+          "beforeSha256": "ba6c5a503536e969830a98768ae44b14cc6b5db53d18e1c5aaaec10d1e927cc7",
+          "afterSha256": "aeeceab7dbfee78ad7c58285fac85d5563b4f383e9d5ad566b973535a5b222f5",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/bootstrapBudget.js",
+          "marker": "Khy-20261101-219-3AJG5JNG",
+          "beforeSha256": "e3f5478bb69171ee637833244144b7a2ffc4efd377483ddd459ea6b979f9e531",
+          "afterSha256": "fd13bb7d9f9f7a4aaf9f3bf690b78079bda3b1b5229080eccd67c4be40ab77e2",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/boulderState.js",
+          "marker": "Khy-20261101-220-4QCKRRPG",
+          "beforeSha256": "1411e6b67b6783ed0bc96463ca91b87f12059782e55f0b4b5aa73a2a13dd752e",
+          "afterSha256": "30fea5a1832bb27c48ba2f455545fbd394fc4b7157beaed7bd0607f72b3fbd93",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/bugSentinel.js",
+          "marker": "Khy-20261101-221-HSA506H9",
+          "beforeSha256": "d009743b52ea632981854525a702612d56f5e34424be36c4257048c0b6c2a729",
+          "afterSha256": "45a43f299ccbceb954461579f61b6bd49bebf376bf434fb4a4184e4897082432",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/bugfixRegressionGate.js",
+          "marker": "Khy-20261101-222-F0GQRJ32",
+          "beforeSha256": "fd304c4a0e9b733bcc45cc222deebb34eabc90fbeef965e3f33dab8afc423ce3",
+          "afterSha256": "18d1ebbc0495b111d1cf34aab90bc66f16c1f874262d7805df7a97cac9cd7f3b",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/builtinGlmKey.js",
+          "marker": "Khy-20261101-223-41CQ7GAM",
+          "beforeSha256": "6a9d885a8df18ba60fd941742f16cfbfa1f8881d14c7677f76be4b45434f4e64",
+          "afterSha256": "c794a98763f5dc95ea49a25a87450de0be26458c590bef5bb5c4d8bf79fa9e85",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/byteFormat.js",
+          "marker": "Khy-20261101-224-0CERWBV7",
+          "beforeSha256": "30427ed3dd1226b8ebfcaade1ccdc5cc04ee2605702710787fb742738c537c41",
+          "afterSha256": "bbada4ac7c50759bfe4035b88700a8fa28a45c938bd3156b5db2aa3c592f4d1b",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/cacheMetricsTruth.js",
+          "marker": "Khy-20261101-225-MF7DTQ6R",
+          "beforeSha256": "5bfca7d8505e63763eeb6b2fa6f2ae9c2156a5845d2acd1a90426d9a4ac4b450",
+          "afterSha256": "73b496eea1647fd5b1f35c90f6b957ec2c70aaec6ba94ce8ae9a7db12c09461f",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/cacheService.js",
+          "marker": "Khy-20261101-226-6E1RVWBR",
+          "beforeSha256": "b973d58e210819ac953451343e9d82f48271133a46b65706e6fb75b98381c35f",
+          "afterSha256": "a2028d9f3f74e8a6426912a9a73abaa5cae3a929151c3401d7ba61ddfab1c98d",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/canonicalState.js",
+          "marker": "Khy-20261101-227-3V3JHHX7",
+          "beforeSha256": "915ee8328e28c3013ed69029ff198e17af9e0c69033f6f796716f2ac2d30805e",
+          "afterSha256": "e7db6e1e9152f6997e73b8f58eee1adcef719bb7b4cdb8ec619e59fe909405f7",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/capabilityAssessment.js",
+          "marker": "Khy-20261101-228-Q2TG81ZC",
+          "beforeSha256": "1a360a6340141092b3f4723b501f3c87776652b6f6b7951d96b9895f7330cdfb",
+          "afterSha256": "883e2b4211c1fd80d0e98ee99fb4f68670a58e954d376d06f3e07f1c46e33ecb",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/capabilityRegistry.js",
+          "marker": "Khy-20261101-229-6F3GFE6J",
+          "beforeSha256": "cae779357a56d3b57878ddfec8f89164310f2074a756b236cbef94e9bf9bb163",
+          "afterSha256": "3363be6f4da7d5fb2e88483981e7c0349fbc637c3c61b54ff479ea2cb882edcb",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/capacityFlow.js",
+          "marker": "Khy-20261101-230-89G5B5E4",
+          "beforeSha256": "e3194845297a2fb1046d345b5e35fa069b73bd4b2102d789bb411ebfc19831f6",
+          "afterSha256": "998f1d8a4798dfe56cd10c28234716d4826e9c092cd955e44bd0fc37503c3828",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/chainWasm.js",
+          "marker": "Khy-20261101-231-B9CZDW9R",
+          "beforeSha256": "22eb04227af3fcef618d66e5bb58e69091c7ab746ba90f43a7fa8b48929031d5",
+          "afterSha256": "06704d769a569f8297248a76184d4d46cbd64802548cbd428d444dd800755a2e",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/changeRegressionGate.js",
+          "marker": "Khy-20261101-232-G3CNXE83",
+          "beforeSha256": "49eae9103431068aa4471110ddefcd5326ba19fbd7f1e2fd9dd2d3e19316c84a",
+          "afterSha256": "4d36e43c5fc47efdf208633e3a168584f0a461239b45861f6d062f18fc267342",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/changeWatchService.js",
+          "marker": "Khy-20261101-233-ZHS1KB8W",
+          "beforeSha256": "04594ee288a605fbe3fb47aaa7aa1d7baeef94b84071776ae71138040adcfb93",
+          "afterSha256": "a5b7de3daf89dc9d5fbae590d7d5626f42024b48f81176cc47908a35bd75ac6e",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/changeWatchVerdict.js",
+          "marker": "Khy-20261101-234-KE5FF3JY",
+          "beforeSha256": "65ac64628de8d2d4d9e136c113c26e1d8cd7e08bdeb77f50718a218625d16a3b",
+          "afterSha256": "dfbd4d456bc7bd7b64f25dc057d168be97607fbc3461dd12c2c44475c88a0dcb",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/channelApiCrypto.js",
+          "marker": "Khy-20261101-235-CRWJH6KA",
+          "beforeSha256": "467b54bcdcaa5e841b03fc144e846248bf4caeaf0d90272a3d93ee8fdfc05b7d",
+          "afterSha256": "2d2931505ab7aeba89383b770e423d7a795d7e7ca561f9051c30526d5b03b5b1",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/channelApiService.js",
+          "marker": "Khy-20261101-236-0CXKHMET",
+          "beforeSha256": "002d5a4651a7ae8602e6bbca0d3ce2d67803181448b61d400297acb919bb8e63",
+          "afterSha256": "f8def46076445d3e377b1fbba63fc9e82855b88fe3b2ef74ca23b70ceda80dc7",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/characterizationSnapshot.js",
+          "marker": "Khy-20261101-237-MCDJ6CXJ",
+          "beforeSha256": "506186a33bdb5f80a4e5b7131cafc4067fb6f29f742d50e599d424147ed76457",
+          "afterSha256": "eef6e9d4a382bd0a58ff98058dc85d00a1ac899613c910de5a109fe66c13a35f",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/chatErrorGuard.js",
+          "marker": "Khy-20261101-238-39G6EF3K",
+          "beforeSha256": "b02ea7cb0c9d9f0a51768a2f22111d749a64ef98050d5a94e65920952c5ab2da",
+          "afterSha256": "46ddaedfb7f3b54c4036aa06343da1aa1585eb5983e2e860af2821055d8138db",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/chatLatencyAutoTuner.js",
+          "marker": "Khy-20261101-239-ERHW5100",
+          "beforeSha256": "032a0c362de3860061c92e609d0066e78908abd73c50ef64b055511bcaad7469",
+          "afterSha256": "3972d7923863f08566f552d4c0da5188fae8c86e11d3883500fd0ced2ef810c7",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/childEnvPolicy.js",
+          "marker": "Khy-20261101-240-JYVJTQKH",
+          "beforeSha256": "01da6ea8f226bf363e637ae36c17852e621677686b1384cd573d80f38055b710",
+          "afterSha256": "61f4839c9f3a1acc2c66fbae7d1de14fde47ce8895dacb3b32221ce5eb967368",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/chunk_diff.js",
+          "marker": "Khy-20261101-241-HJXEBXHX",
+          "beforeSha256": "d06da1e78085f88adec4703fc122fe978128bf89cdf7ed6cdea33806ae8a8186",
+          "afterSha256": "4b6a88c8c4f3781ecb17652549b23e5672973c87f26a3271bd0985aa86ee6358",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/ciStatusService.js",
+          "marker": "Khy-20261101-242-HK60GXFE",
+          "beforeSha256": "11600823e5abb546f3f90cd05f6efb51a92758c50bec09c250fb995425e32916",
+          "afterSha256": "47abf32582ba1acc886e9001a8f9518275fa4a515dcc560eefb0181ec428c61f",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/circuitBreaker.js",
+          "marker": "Khy-20261101-243-VP7Q9KRN",
+          "beforeSha256": "a48c72229eaaa9935eb8cece0435125a4570c796119bca290851a676f9ea1963",
+          "afterSha256": "cf7dc370460e87635fc3104550560e29ae8ed9e29a6132b3a1a4699ed00aa0e3",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/clarificationCards.js",
+          "marker": "Khy-20261101-244-EYJDN6F3",
+          "beforeSha256": "ad5d7ff17370b2a65ff83a8ef937115d8a6f8a073f0fb86908aacc63d6fc600d",
+          "afterSha256": "e0c1ceceb42ca368d3e138dbbe252f348d252de325dddedbff5ffd27f4306e54",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/claudeCompat.js",
+          "marker": "Khy-20261101-245-EESZ9F0W",
+          "beforeSha256": "5e0ef7d294aa43ca6174778082286c9f428cd3c2d498a224b7953c9f77a09447",
+          "afterSha256": "355b0f5409c62873cc56625581b6b2bee97240355a0670b108cda6bc0b6a2641",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/cleanupService.js",
+          "marker": "Khy-20261101-246-H8BDTKGN",
+          "beforeSha256": "3a9ec31ec2676f242a33386972219546c39b58a76d0006f09630cf58f9d88309",
+          "afterSha256": "93ea374c524cf44c1d9946c4c4dd1031f1da186b58edad61a439a51963698fe1",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/cliAgentRunner.js",
+          "marker": "Khy-20261101-247-S6V90PS8",
+          "beforeSha256": "6f5cef926788f9d22f1671571b1f1b3dc489267dbc3657d27d7e45560a185a11",
+          "afterSha256": "33611e9a5a09d460ad2320d028011fb43e8dd74368c76c2721b7b2bf40c3d944",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/cliAnythingGenerator.js",
+          "marker": "Khy-20261101-248-20BYEAQM",
+          "beforeSha256": "233ccb0c69f7d3a5c817de8cde9a14876ed332997da6f515c8f6c9ef6d744cec",
+          "afterSha256": "d39bb5fd544cedfd79d51764af1e1f19b3c740f3c45baa8143a18fca65a01884",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/cliAnythingService.js",
+          "marker": "Khy-20261101-249-SN46Q881",
+          "beforeSha256": "d75579efb9a10aa6b22664c6a8a15f1195ab50dcbc117f867b8400012afe9a20",
+          "afterSha256": "3649a6cb862623a472ef24af88f53495f46e899b2e2eb40d7e1c199ebe3f6d4c",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/cliAuthService.js",
+          "marker": "Khy-20261101-250-1K601CPP",
+          "beforeSha256": "8028f9cd2b33dc83233b56344cf0993bfff21bcfac14dc9bd837ec6805910c20",
+          "afterSha256": "3514e70a6a8d5030ec4dbb6a94972adf7d9ff98a2630af04e270813dc287edd4",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/cliErrorDescriptor.js",
+          "marker": "Khy-20261101-251-BVYQMY5A",
+          "beforeSha256": "ef64d83e4727eea9627942a36d80c9b5f417bc7e21b4c9c1fc40e463304cb933",
+          "afterSha256": "cae2af7678a02a631c519782cfb74735f4d0f0321facb712bd547f7672beec36",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/cliToolSelfHeal.js",
+          "marker": "Khy-20261101-252-NJB09R26",
+          "beforeSha256": "1bf11c6aa0c1e233d76b31ba67df29e61dc817faa0e0da3cc4b829a6793acf3f",
+          "afterSha256": "ff35ef3e69ce7a2bd5e4690cede31855d2e5cce9a330072b550bfb151aeca1a0",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/cloudSync.js",
+          "marker": "Khy-20261101-253-7SP3MDG0",
+          "beforeSha256": "abaf1044d0841f37118eb0016b571922013461d265a350d7cf60406439202fc3",
+          "afterSha256": "9f4422af1ed9bc67aeb5936ee03ad3e19a461ad697eda28e460afe34a9e98121",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "runtime/node/backend/src/services/clueVault.js",
+          "marker": "Khy-20261101-254-M74BNE7V",
+          "beforeSha256": "8e74e07dc2952b508cd428992fb6668fea55541d21109fdf0f966bc351736fc0",
+          "afterSha256": "51b1d8f2a70be6291248f6eb2abd2a2f56fb7f3acbfda5da94c396b79170fcec",
+          "lang": "//",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "release": "20261102",
+      "stampedAt": "2026-11-01T23:11:51.435Z",
+      "by": "canary-mark.js stamp",
+      "entries": [
+        {
+          "file": "apps/khyos-desktop/src/host/index.ts",
+          "marker": "Khy-20261102-255-9N6M6NCW",
+          "beforeSha256": "8c58a8852fa630ad70cf75ad54d87161db4603c1661da43489c71ff773d4ce55",
+          "afterSha256": "20dc89e2597bb532b5f3b1e31b8b7db82258375774069a5502e81c8aa17d74ee",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/main/agentItemStore.ts",
+          "marker": "Khy-20261102-256-G8V3V94G",
+          "beforeSha256": "bb350a4af806a36e0342a6342025d3b1738c81758b3d90106e149511e023bff6",
+          "afterSha256": "6314926b1eb62f6af992cd1e62dae597b5e50bf206695cc1b4f537a2f36aefdc",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/main/amoon/index.ts",
+          "marker": "Khy-20261102-257-DK2Y0Q7G",
+          "beforeSha256": "eaf3b82232b89116c8ec865c2d23f51ea0a19166fd1c88e823bbfb14396df223",
+          "afterSha256": "06551c5770e9020003438923e77acd0aad62686bed591378189c3407e22f1434",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/main/automationStore.ts",
+          "marker": "Khy-20261102-258-ZFAZHYHK",
+          "beforeSha256": "ad7698b306ea56402b4d67528dcf019a4e5873a0310b5a1d57fd6c792d4c911f",
+          "afterSha256": "6641c5a29b032617fff48ca30523c5a16995ba709b1488207c2d44b3d15d1b93",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/main/index.ts",
+          "marker": "Khy-20261102-259-GYN5NSGG",
+          "beforeSha256": "28f269588c31bcb3b43ed8669a755b425bba27ef94cd529f664887b68326d05b",
+          "afterSha256": "39f0bc69bc40406fd26dcda039de03c484bb30b6cb64f65c9f8e2490237de0cd",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/main/indexStore.ts",
+          "marker": "Khy-20261102-260-N6R8BRGW",
+          "beforeSha256": "b2c68759c4bb34dbb1a69a43f7b8673ca79e906139df8609b9f8bd85f53bf1ca",
+          "afterSha256": "faa3b299904576d3437fd589de846a99d470e9d61cbf6349fa9eb532fba930c3",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/main/keyManager/agentWriters.ts",
+          "marker": "Khy-20261102-261-2JX3QN22",
+          "beforeSha256": "0278a3a368907b53137424cb0b98ff9b482c84e44b7eaef9db80684b51040965",
+          "afterSha256": "bedd4175f1b5fe8378f9ae758a1b8aa8a1e2eb7bde7f7412eca0b4926f73f52f",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/main/keyManager/audit.ts",
+          "marker": "Khy-20261102-262-DYSKWS87",
+          "beforeSha256": "0eabc61d35a00c81b458920d1fdf0a6ff8b7951ee733c576128bdc955138a727",
+          "afterSha256": "c347444df6a73bd34c6ef2e766ebc93f54ea5ab8beea285605ce90c7dc4f2b12",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/main/keyManager/health.ts",
+          "marker": "Khy-20261102-263-BJFJGQJB",
+          "beforeSha256": "fe0448af91237ff84838df663e38299911455e7b1c867ec1482e3426d16b968c",
+          "afterSha256": "37d30e25c507fda7df52fcde95c63205f1821fae7838058c0e489b5c2a7e2302",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/main/keyManager/ipc.ts",
+          "marker": "Khy-20261102-264-YT8Z1FMK",
+          "beforeSha256": "f66dfdd99643ef1456f2bbead62d208172e9722b39929801586f7a59d328d107",
+          "afterSha256": "8b02409517a0525905a340e69a9600b17dc383870fd60cb36727651734bf6ec0",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/main/keyManager/keyStore.ts",
+          "marker": "Khy-20261102-265-YXTPBJBP",
+          "beforeSha256": "368c6c5e848a6a31f2f3bed4e03dc2e8ded48be7164bbc42592a17ec95cd30f8",
+          "afterSha256": "c5c8f4f7ae461e186e4e90c22a5cc83ca86ad331bc9d7a94b7247ce46814b551",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/main/keyManager/proxyStatus.ts",
+          "marker": "Khy-20261102-266-H0XXY4Z9",
+          "beforeSha256": "b6cd3ecd3e0d0bee7b0b0153cc093f8f790fa5b74f98fea8e946fc81f2e5de46",
+          "afterSha256": "25e2cee9fdee7b50379aea921db062310e1a60e0fd53439558221f81057be2de",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/main/keyManager/types.ts",
+          "marker": "Khy-20261102-267-AWGME5N9",
+          "beforeSha256": "0afd097bf77af09189d89cd922f5e6c31e1d1d78c3db82f9f18a02ef9f617492",
+          "afterSha256": "770f4151206cdcd88671c435eb0e9a1a8aca5065cefebaf8361c436bcb88d374",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/main/keyManagerWindow.ts",
+          "marker": "Khy-20261102-268-D4R7AWQG",
+          "beforeSha256": "c544c0fb4e6d4265a005ddc7e410782d15f1a0e48bc64aa7526bcd5446ca45de",
+          "afterSha256": "696e5c44d7a3aa798a4ed8bc2a5edc4da9e22e44a3e2c272d56e39b66ab54961",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/main/mcpStore.ts",
+          "marker": "Khy-20261102-269-KG2B71C8",
+          "beforeSha256": "8d47bde8abac0a116fe30f5696c3fc47d4c02e83622305184b4ab37276ff1996",
+          "afterSha256": "304583c6b2981d1ba4ca3dd397cbb93170eef33e22473f55f7fc76c9a27665c9",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/main/pluginStore.ts",
+          "marker": "Khy-20261102-270-NN1R2AR4",
+          "beforeSha256": "59b817332ef28aae328008f8b047b32543ace2a1171dc4e03cd2f64002b8ac70",
+          "afterSha256": "e2ecd046a60f33ae6b6ffe579f620570f9137cb7f1bb7828ccfbcaff315e2daf",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/main/ptyHost.ts",
+          "marker": "Khy-20261102-271-CQN8DEJD",
+          "beforeSha256": "8b93379d988e0716afa9e76a9ca16e3b02e61c15447ac22f40c4ec84597f2e89",
+          "afterSha256": "d9e920a282e03e2ae6f8a51c40bedfdacdfc90eaade046e7dc7d11e55caea259",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/main/remote/index.ts",
+          "marker": "Khy-20261102-272-E952F4T5",
+          "beforeSha256": "b5436d349625c7edb8b322da5428309614f39c8b75d265f69a5371a81cf4ecb2",
+          "afterSha256": "d7fb4f56290afbe7cb9e3c931813d508cd934005807b29a1b4ade68e5b0cedeb",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/main/settingsStore.ts",
+          "marker": "Khy-20261102-273-JS10BV0E",
+          "beforeSha256": "23c308438230e39eb6281adfc63ae6ec4cce33fd3f3a9ea1c642b247a5ea6d4d",
+          "afterSha256": "85a269f209584eb9942411ab3237271bb72f940f8eedb1b27e6b16500dd33bc5",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/preload/index.ts",
+          "marker": "Khy-20261102-274-2KNQ50Q7",
+          "beforeSha256": "57c939e27e8916ca5b5e8c2d4dcaa26d6a9afd708218204c3d64bf4826f09305",
+          "afterSha256": "226157b065dddc3153193eb5a41d7479825bcc4469e52438a88699ac60c6108d",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/App.tsx",
+          "marker": "Khy-20261102-275-8ES7T4ZF",
+          "beforeSha256": "61c134b5cc6e6a86f086b67d767e28c2f9255d05698e505c9cd152fc927ab734",
+          "afterSha256": "c0d9ee366ed08e8491997f3b0085882bb2951e7e776c3ef12d82a5fe8c0168f1",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/amoon/AmoonPane.tsx",
+          "marker": "Khy-20261102-276-A1QSV8Y6",
+          "beforeSha256": "29ba817add339cab815d3e5d7524b7218b1144396cb98730c6a4eed8ed1a6123",
+          "afterSha256": "edd4689ebce449330293c2f7648f14c4c234108722188d9504655b8c61ec2ac0",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/auth/LoginPage.tsx",
+          "marker": "Khy-20261102-277-WYVZBW7X",
+          "beforeSha256": "ef879cdaae4f6201cca433bdc0aa1579bb1c8698827711ddf0d586d67d7919a2",
+          "afterSha256": "03af898bc5e9098f1b4f92bd69169706c806e0d627914cb59927ef26cb521967",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/automations/AutomationsPage.tsx",
+          "marker": "Khy-20261102-278-30P8P1CK",
+          "beforeSha256": "bd271aa8f3a8cc3fd32b589aea60ef8d8c596acbab1efbd24bcb5874f7dad045",
+          "afterSha256": "59de752f93c6c71ab761bbb933ec0c06d0d1ed5cb36c62e9c829b988e381feb4",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/browser/BrowserPane.tsx",
+          "marker": "Khy-20261102-279-0PJJ21XZ",
+          "beforeSha256": "acaa56913c6cbefd4c21169416dc1f646472a3a8b34b86ea2f93d4383d9575fb",
+          "afterSha256": "58134b45775f0f4927323f0acd8f3b45b47a807b005b62ddf2dae77952751119",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/composer/AttachmentList.tsx",
+          "marker": "Khy-20261102-280-W2HPHMPT",
+          "beforeSha256": "a799392be664cbf1b8de835acd0d73d3e82c776726f822bd99aa55e1be4be4c6",
+          "afterSha256": "9b085512f9302396ceeaaefe6c92a8893cbd1dcf1935a10f586af3b67448ae0b",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/composer/Composer.tsx",
+          "marker": "Khy-20261102-281-3FDNJAHB",
+          "beforeSha256": "039b344a742265ae5436559db9e89fa047f3e4b0a42f402c99caa45682f15d0a",
+          "afterSha256": "2c9d7b5db606d5f9ed7ff9ada731999f6c249c5a3df3d360608dfa2bfb11c743",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/composer/ModeSelector.tsx",
+          "marker": "Khy-20261102-282-PAQZ668H",
+          "beforeSha256": "01831a833a6c2fca93ef1370c5f9f79f423c56c9dddf9469d378b0da6973b38c",
+          "afterSha256": "2d57360e26a0a36017891e39c548494fda0796ef1a00eed84a3737186dea0371",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/filetree/FileTree.tsx",
+          "marker": "Khy-20261102-283-DYW8FWYR",
+          "beforeSha256": "4ae722b672e4aff76b860a25beace17d222b6b63daf06889a48f01f79d2a601c",
+          "afterSha256": "bf598cfe42af87198985701cb2987cb8203450a14384879ccf885071d89d61b1",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/git/GitPanel.tsx",
+          "marker": "Khy-20261102-284-F23HRJ25",
+          "beforeSha256": "8c94cb930b510ce96199ba4d20e468e06bd4759907c5e01746bf416b8c8ee702",
+          "afterSha256": "3dc09b07778aa7064c4db95705d1b4799388a52d3492f652b71cf7d180e88128",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/keyManager/KeyManagerPage.tsx",
+          "marker": "Khy-20261102-285-PFNN80J9",
+          "beforeSha256": "b6228eb599321e30dbdbbbbd3a425394221bc176dd39e8449d994ebaabdf1072",
+          "afterSha256": "a35e6021083b0385c841e310c85d8c69fd4e700605a6d1b53de608efb3a46480",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/layout/AppLayout.tsx",
+          "marker": "Khy-20261102-286-HRB86W5S",
+          "beforeSha256": "f6709f6590ede9698238dcad503633f0d679d0c959786610a68a70257d61ef1a",
+          "afterSha256": "6b1b4cc94047ca166331bb6d5e137d7a8b53cd4ffe7e337392b835aa3df0b2e7",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/layout/ProcessMonitorDialog.tsx",
+          "marker": "Khy-20261102-287-33K8PPXC",
+          "beforeSha256": "79ef7b87c933dc152c8a852ad1c6d003978ee610da875c05228c75b7c70a9f06",
+          "afterSha256": "293d027aae90b08faef9ba75dcfaa6d69fa12ed3ad0d2612fc1005401d50e2da",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/layout/SidePane.tsx",
+          "marker": "Khy-20261102-288-BGYYENEM",
+          "beforeSha256": "17b8be8d0469af52a587ee4c4b2ca0f896fa8697ed63827ae930c1ed57499770",
+          "afterSha256": "d7be83bc83293110ea3b4e8e3ca0d79273010e9cebebb75f34308bc068b26263",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/layout/TitleBar.tsx",
+          "marker": "Khy-20261102-289-ESA2GVH8",
+          "beforeSha256": "db8649f0adb0591d45cc639ff9c85dc1ec022b7e86273349a4f48396b015bd75",
+          "afterSha256": "18f0231b9544f5cbee46f7bc6b0e8c4ac4e5367174357db867223a24e341b9a4",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/layout/WorkspaceSidebar.tsx",
+          "marker": "Khy-20261102-290-Y9S14WM0",
+          "beforeSha256": "1a0ccfb8b025a51234cf57dfdb586eadb81d7534efabe38bab81f96b27e6a4f9",
+          "afterSha256": "0ed00e09cb4977c7c6651b8a49ee6539c7657e8ad6d88c286762e10f1389c507",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/layout/sessionListLoad.ts",
+          "marker": "Khy-20261102-291-AZEEYHH3",
+          "beforeSha256": "be5b088147870a2b8592c92c19b763e6040dd5f35980d397774310a7f368bc68",
+          "afterSha256": "4847ea1fca8b65c3973a289b3671a70ff9c2845df7e5cba1ef9289fed1fd8f97",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/layout/usePanelWidth.ts",
+          "marker": "Khy-20261102-292-FVSP9JEH",
+          "beforeSha256": "726cbbaf787cc28a62015a085e21ce23f2baa3d94f508b7329f8f1fa33973362",
+          "afterSha256": "42fc3117889389b85a0672cb5ed26f8ff4bbdd9bfab23241476b60e565fed02f",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/message/AppHeader.tsx",
+          "marker": "Khy-20261102-293-13PMERCA",
+          "beforeSha256": "a4da5fc30d12ca583dbf53ecd997912e2ebf36a8abaf69bd71c29a89d5e0eb19",
+          "afterSha256": "d7b459dec1765c69035aa8d8fe27c565c1efc86ab0b48c4c66a1e2f7a7edabd5",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/message/CommandCenter.tsx",
+          "marker": "Khy-20261102-294-KAY2E9N6",
+          "beforeSha256": "07fa05e5e7d32f6330eeaefb2365a0d4137d5108b5e0f354260af7f7e5269c19",
+          "afterSha256": "d5170ebe850a9d509b14634396502583cf2a8a194291f260316e84cde416f21a",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/message/DiffViewer.tsx",
+          "marker": "Khy-20261102-295-19R4SMNY",
+          "beforeSha256": "99c30e42e14a00c204d8241e61c7c9a0c7fd4b0e67a5ddf9ffc32917a9a0b133",
+          "afterSha256": "9a9a4644f8c67d64910381ed125ba81496e72c81343c26bf92508940b1629229",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/message/ElicitationPanel.tsx",
+          "marker": "Khy-20261102-296-79MZ89V2",
+          "beforeSha256": "b5354eb74d4767f49a71c0d43dd4b220c811d2467ebf8025743921b554959042",
+          "afterSha256": "bf146602e5b98fce74a5557193e52cba70ddb71af7b4a1824e007f522bf64284",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/message/GoalBanner.tsx",
+          "marker": "Khy-20261102-297-KVG3GGYR",
+          "beforeSha256": "073165f9f56cb154446871b046ad6d42ef9e0e778514991ba3e72714d41741b6",
+          "afterSha256": "c5571d66b2a34b53ed8bec7829d8ad9d6a01440818e70cf60a24857d8e74a6b1",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/message/MarkdownRenderer.tsx",
+          "marker": "Khy-20261102-298-1H8SDCX4",
+          "beforeSha256": "c7fe48b9058c8ff1ccbc578c52114d32274a4d2044c00ef0e79d1783624fafb8",
+          "afterSha256": "ca71bc423fdb17206d84c8c9101d4ef2c664d3193cac8df31dec6210bca54443",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/message/MessageBubble.tsx",
+          "marker": "Khy-20261102-299-VS1CK7JM",
+          "beforeSha256": "7acad7a611f1ec83129f474ee077645e2c85d3c2896a1b6a7f8d94663f41741e",
+          "afterSha256": "6427f284090c667d890a2968a192f81178324f7e9318b5abb42dd58fd7cfb37b",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/message/ToolExecutionPanel.tsx",
+          "marker": "Khy-20261102-300-PCANHZRT",
+          "beforeSha256": "f84306693e69deaf990c3fdb9ea5cea7b5528e8660606cdfd2963f44d1b8af3a",
+          "afterSha256": "11d09b60166f39b4c4a7734df878300a0b76afe029db4d258d089838f85333ac",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/message/markdown/parser.ts",
+          "marker": "Khy-20261102-301-9RQYDWD5",
+          "beforeSha256": "da6d5723fe2417e3dd93cbe47a0c0de754b1c25d4276b1768da40ae89851d797",
+          "afterSha256": "b9755111b94a1514deb26f7e43624a12218b7a4076df4d99a1ceaca05f3788b4",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/message/sessionLoad.ts",
+          "marker": "Khy-20261102-302-GHYJTB3Y",
+          "beforeSha256": "d2cd84aca59f97a78d473a0e56ce367c47569b5fdcfa5624255474be0a7f7174",
+          "afterSha256": "802608c73e12a10a1b2d74589c9cd8d017ea7f363dd47717e9fbf553613fc14d",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/message/useCodeDisplaySettings.ts",
+          "marker": "Khy-20261102-303-AZTX4PBT",
+          "beforeSha256": "a1513a30ab2d428c74dd5fe33844913c7fa0a1c42e4d72f4e978fcdd237a642b",
+          "afterSha256": "5b9cc173ced0131bcbd539c4cf7e491ca0696664ddb0ec91144d95cc535aedd6",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/remote/WebRemoteControlPanel.tsx",
+          "marker": "Khy-20261102-304-16Y4PQ8N",
+          "beforeSha256": "49b96c6fabaa025f0ea359f39e07936ceea625caaec76a37dfd97a16592115a3",
+          "afterSha256": "5ca20a0c589b019a4c88e792fd7f3ccfda31445fd64b6ccd6e3fbab578765617",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/selection/SelectionChatPane.tsx",
+          "marker": "Khy-20261102-305-B9XYSFJD",
+          "beforeSha256": "a841c8d064f535ae9fec9571fb7e535bde217d5fa77ab2a0cec401e60532c7b1",
+          "afterSha256": "d25b5c4c793dfb9a6ab227731cd0d84dd55e2206c1cc98b1f10d70a161bd9e84",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/settings/AppearanceSettings.tsx",
+          "marker": "Khy-20261102-306-RV9NYXWT",
+          "beforeSha256": "f9bf16bf4d98120170752c8f66798c4fdbd56e8e11b74acf5e988be6f23f1431",
+          "afterSha256": "5f75fbf3d87988d80233da1ca06addf6e1ab186fd1bee91be8afb0bb733962f4",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/settings/BrowserCuaSettings.tsx",
+          "marker": "Khy-20261102-307-PGXTQKAV",
+          "beforeSha256": "47ccc3d6b1b343af45d421a164b4b115909af267f821d8c10f2bcf406ec0dbaf",
+          "afterSha256": "4f9c33035dbea9625d3b770e918f280eee1a06d34aa04c4ef21b52f3a0581541",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/settings/GeneralSettings.tsx",
+          "marker": "Khy-20261102-308-JQHNPKAN",
+          "beforeSha256": "63dc1107a3cd0d021836ea19a36b93f38afd466a04fb413d5f7392a15c43bf75",
+          "afterSha256": "6847ff1610b28e268d0e1ea3e12f3a2a0cb6a7203b1100823ce031182d029b97",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/settings/IndexSettingsPage.tsx",
+          "marker": "Khy-20261102-309-0X0B0W02",
+          "beforeSha256": "63d17890454e91843d7649962bd6486329b54c9e3c4232038cce40ad38d690bc",
+          "afterSha256": "0cb67747af26d474f8b8032d8aec22d4050b85fe1fc444e7427cf64ab43cf619",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/settings/ListSettingsPage.tsx",
+          "marker": "Khy-20261102-310-19HAS183",
+          "beforeSha256": "e4ffc3dbeabb1c0e0d4f905831cd4ee51df18201b0665cd6488b3398f2aa5fc1",
+          "afterSha256": "f8e191f07d9fdac78153faf4fbb9b5816341d112778ae8a46888d96749629d87",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/settings/McpSettings.tsx",
+          "marker": "Khy-20261102-311-XZZZ9X5D",
+          "beforeSha256": "e8728d9dba38e366c3cfeb0f485ff08b9993b62f356ae9f8f92fd767b0333017",
+          "afterSha256": "9a40f5623d904842b7cd3c56ecb389a59260025e656b7a558687c581cd5ecf26",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/settings/OnboardingDialog.tsx",
+          "marker": "Khy-20261102-312-MFQP71BJ",
+          "beforeSha256": "95e0beb005d2ebc77a838c7569fa3d928146e53e49017ba3445812d7b6a7d841",
+          "afterSha256": "90789fdbbda7823137622e7a07fed1923908f853b7a01a89fb84ec52a221a2a3",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/settings/OnboardingSettings.tsx",
+          "marker": "Khy-20261102-313-3ZF1991S",
+          "beforeSha256": "6144d39cc7aa9fd1e7944a428d229686ae91580ff11f04c2a58f25c989671914",
+          "afterSha256": "8ada62f53bfc1821a2911b90676ed3cdc3a22c044059f62506a80cfbe025e5b8",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/settings/PluginSettings.tsx",
+          "marker": "Khy-20261102-314-5D4X59VA",
+          "beforeSha256": "745300c6c22d4c1d72de99adc98deee1bc3baf0ea229efc4230c1d3fa5f6c617",
+          "afterSha256": "e45c87f53d7335060725ec75d05327b28fec192163b3191c36099f2daccfa1c1",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/settings/SettingsPage.tsx",
+          "marker": "Khy-20261102-315-SY2FKXXC",
+          "beforeSha256": "d75272ef13e6196b67537a9537845e4e1b581d73ccd8eedc9f7a9ee4277cafcd",
+          "afterSha256": "38113a39eeeafb0667dd22873d264465a6dae562dd6ed4b8e7e473854721a380",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/settings/UsageSettings.tsx",
+          "marker": "Khy-20261102-316-6JAGRA29",
+          "beforeSha256": "498cf860689ba1ce17239537488e5eea1fef195cf465b8c7b0fb6a58e106cd0f",
+          "afterSha256": "aff50f42b7927a775604a360bf441739535f265c5af09e71e69d4b94a0ba23fb",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/settings/fields.tsx",
+          "marker": "Khy-20261102-317-0R8KGCDZ",
+          "beforeSha256": "4a7b1792a1083b90d1cfa9da0702dc7c653a5eb15f09c6d16a3b6527d79f6ef6",
+          "afterSha256": "dd31f007a8d6e824ab9084c9e8396f97c7b83e4300e476adac1b2c7319a39956",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/settings/usageCharts.tsx",
+          "marker": "Khy-20261102-318-N9YVCZGC",
+          "beforeSha256": "e5e369885b628a922d2348d048f2c0b9746b5765d347b90823ce0923e96ad8f0",
+          "afterSha256": "c36c9c86b9ec78ee01da24d7dec1ef467dad3f0a383dbc844df3bcb485b29019",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/terminal/Terminal.tsx",
+          "marker": "Khy-20261102-319-SB3H1XB8",
+          "beforeSha256": "89a45239e866c094dbb07286e969ed43ff154515db12f8e83ffcb788682c05c5",
+          "afterSha256": "99d3d2052b3e67d59da7342d0f249fefb600b573c2eccd962b5eead018a35f3e",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/ui/BrandMark.tsx",
+          "marker": "Khy-20261102-320-VZ4YP7V5",
+          "beforeSha256": "da0fd22b1552eca9652806e8351d89664f6704307e5e56d169e94634e1bae1c1",
+          "afterSha256": "4b2d376197378a51fd6d018155371572efa9c7c8a977563e75938edecbc92931",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/ui/EmptyState.tsx",
+          "marker": "Khy-20261102-321-54JC3FPS",
+          "beforeSha256": "b17a1316a564e303f6ae65ac81b2b84e8d3c7e26d900d9650190aa400e44243a",
+          "afterSha256": "f7b94ba1b899c1845987c523650fb11dde7855f586f44f80a6a6ca6b17476d08",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/ui/ErrorBoundary.tsx",
+          "marker": "Khy-20261102-322-BBGN6H0Q",
+          "beforeSha256": "3d9375bf9634b33c1e5b45084a469c4b6c404e4857e6c876b6783baade51668d",
+          "afterSha256": "9e0c9824193de29ccdb91d3c6c187cf81337f1282031d519b99095b9ef746a53",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/ui/Icon.tsx",
+          "marker": "Khy-20261102-323-9XAT3F4T",
+          "beforeSha256": "dd0bcdf14628e8e75ec4122d65e8334adb86009bec1740e91f02ad991248c6d6",
+          "afterSha256": "3eae3e74103639b338377c9e8413bd8fa5533a3185691d51bc2580924fd055c5",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/ui/ProgressBar.tsx",
+          "marker": "Khy-20261102-324-CA0SS9NW",
+          "beforeSha256": "96ad701a378a8d3c09f5d24c9b7c8a6aa643c7cad7f4f074b82ae7b1dea644c7",
+          "afterSha256": "232eb797c48e595f6b019d4e1263e0451389a9d729fe0e26e25304d294c6ea21",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/ui/Skeleton.tsx",
+          "marker": "Khy-20261102-325-4V24DKNZ",
+          "beforeSha256": "6003b37f4a794acefd700037d50866f369b93b3f6b692f268c457c0116cb75ce",
+          "afterSha256": "0e8dd9d0794e2cab91b0b1c69a5ef7b40cd1a25874f5f08f4d5bfbaa51ad0857",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/ui/Spinner.tsx",
+          "marker": "Khy-20261102-326-989MKJBM",
+          "beforeSha256": "f68048e3c00f91fc4fcff051415ec7c374eb4f0c280d1b34b735d0a802b6a27a",
+          "afterSha256": "de57f76bdd3f350241f267d8abcccba21ff2599b8a0dad94732859ad7c5e2c66",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/ui/Toast.tsx",
+          "marker": "Khy-20261102-327-MM3WCF1V",
+          "beforeSha256": "6042456ca8a2a87fc638e49516873fb4c44bf53c6a05af4c6806a397e3ba9a74",
+          "afterSha256": "daae3d61bc6aa41f4e434ad66aa86dbdf8474478477a7f937ef47ef406716053",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/ui/ToastContainer.tsx",
+          "marker": "Khy-20261102-328-TVSQHVR0",
+          "beforeSha256": "f6d2058f8b357e9826f866a92b86dfcaac120f8d0e109c36452f80b5ee8e3d85",
+          "afterSha256": "c0e774e7ed4d06f49309e0d4d64e8133a8d01113ecb563c9e07ba5e0750265db",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/ui/pacedProgress.ts",
+          "marker": "Khy-20261102-329-CRHKNRT3",
+          "beforeSha256": "c1fbb14868772265c5085ae3cf302de541c83c0831939b6f53826b1e456c073c",
+          "afterSha256": "96d81bb43ff2b19e771b95152d9b344b1ae02899a61f2b16d184e16a5e45e722",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/ui/usePacedPercent.ts",
+          "marker": "Khy-20261102-330-82258HB2",
+          "beforeSha256": "9e033826191a55f90e1415c7d2960dfc03d6a35de36600c9ae09d6557ab2a2b1",
+          "afterSha256": "a2fc884be4bd454b1849a7ea5a025e84b9288a9158699675e2006325dbf8558d",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/viewer/CodeTokens.tsx",
+          "marker": "Khy-20261102-331-J6SYY3ZC",
+          "beforeSha256": "139c321b5d4c8ce6f4eaaac022dd045c97d761675be4bfadd6a00d4ee7dd9049",
+          "afterSha256": "296fa5087bd8f9798b083be642e052d469b5029104d9fc84c0f26bfc68043360",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/viewer/CodeViewerPane.tsx",
+          "marker": "Khy-20261102-332-6BDQ3FQ6",
+          "beforeSha256": "99e4479e2ba71378d6a8d4d00957fedf04920c9c0cd5c5fe45e8e18773c2bc4b",
+          "afterSha256": "6528d600faca3fd994c74b42b2c068aca8e59db37f0825d8eb77b4ec9c377c71",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/viewer/MarkdownPreview.tsx",
+          "marker": "Khy-20261102-333-7ENECMTZ",
+          "beforeSha256": "f2dacd08a68eb57cdaa9eece80fc6adb9e4a8792e624cd7f66c67daddad4c15e",
+          "afterSha256": "cc7aa16b1494ff1803168613c8c0abe664d3fe56fe9018b5f80e50d0041b2c69",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/viewer/OpenFilePane.tsx",
+          "marker": "Khy-20261102-334-C4YKFDFW",
+          "beforeSha256": "e0d59f90b0047f507eeb1b0288c31e27b36798b493a7982658090a8cea8e5186",
+          "afterSha256": "6c87b517cf96aabbef3e94f1ce9ecca8862bd1be37faad7d3907314dd07faa16",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/viewer/SourceView.tsx",
+          "marker": "Khy-20261102-335-6QJZWPZV",
+          "beforeSha256": "bfc482c7f7c88d6b62bb7a3c709dbb76ee02ec0a5b1f65c2b15a6a8585edb408",
+          "afterSha256": "29c3470c8a0ddfbc65de5aa9e06105801391f68cfc667ce28386eecb6ee01040",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/viewer/highlight.ts",
+          "marker": "Khy-20261102-336-7MKRARA1",
+          "beforeSha256": "2f7aef7d2dbfa7fbc0b2e0bad32ce3a88159239055812c1b92432ddd87fcda4f",
+          "afterSha256": "9ff0b89df3ef50c4946c9df5361082122b101fdb2f45f25b0641a178473e2217",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/components/workspace/WorkspacePicker.tsx",
+          "marker": "Khy-20261102-337-8GGWT1XR",
+          "beforeSha256": "2d4d8ae044e205fe40025e41cb01d6e4398d33e4564bc50e0e7aeca3ef811ed4",
+          "afterSha256": "50ce43d2546135ab210a7acfde8efe8a07719515a6270bc385f50cc7481bc6c4",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/i18n/index.ts",
+          "marker": "Khy-20261102-338-NY0PA951",
+          "beforeSha256": "cf1e684c8cee8cf397521b631df33cc628b50c4644d930d4fc183472dd2f9403",
+          "afterSha256": "0684d1785fc9e1c50fd683ec7ab3af58277ab9ef8aa37c0c20272c91b30a1b9a",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/keyManager/api.ts",
+          "marker": "Khy-20261102-339-R7ZWCS5P",
+          "beforeSha256": "81d1808b628b5e2ed8b93ef2cc4d4f90777331b4ec7331df29e92d3338042920",
+          "afterSha256": "30a73a97fe0bac10ba3970c441877b15439936f165f4c7df1a56b5660afb3115",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/main.tsx",
+          "marker": "Khy-20261102-340-4RMGVCJV",
+          "beforeSha256": "56447d9e6082cfd031ab5b6c8d4037b7d5e6250832df98f12d7b52716bf1847d",
+          "afterSha256": "8da2067c366b7d6763270d94cc04737080ebe369a45b453e27081dc99b017806",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/shared/keymap.ts",
+          "marker": "Khy-20261102-341-AS10456F",
+          "beforeSha256": "f67b92d7d65685dbbf0ed204a0a9e5e1df21c521cd49a3e47b522776d5321f76",
+          "afterSha256": "d385d06267a05e2543a101d657796a9e2adeb3ee54f8996dd2c0cd48a008974d",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/shared/sidebarProjectClassify.ts",
+          "marker": "Khy-20261102-342-11MRNM3C",
+          "beforeSha256": "f61e25b7e1fc45dd3b0ef450dd8d9db37c00ba656eb0ef79a8e977ad94d2235e",
+          "afterSha256": "eecc906875ab332445792a3145f855dee17b9e7de74bd1b737adb99e4bc8ca59",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/shared/usageChartMath.ts",
+          "marker": "Khy-20261102-343-BG5G8YJT",
+          "beforeSha256": "ed40bf8aa9cb21b6788045cb5f4b374a2f25778e7885cd3d117cf0da9e8c06d9",
+          "afterSha256": "8922a6900a6d8f78186f0aa2397f9d3f2c724722d3a4a266ac515675e4f819da",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/state/messageSlice.ts",
+          "marker": "Khy-20261102-344-YW3R43FS",
+          "beforeSha256": "e1b2190f32a8dab8fd395ca461a5f61fb2b81c5eb815160df047994668b572eb",
+          "afterSha256": "aaae1522c33c92555249c436542394066da3098842253b3ebb769908cf201499",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/state/permissionSlice.ts",
+          "marker": "Khy-20261102-345-VR9A0TF6",
+          "beforeSha256": "fa1255bec54781ea283daff4ffbec2eb010cbac9fec25f217b31efaab8718538",
+          "afterSha256": "22a18884a432710ed4cb150971c51910f052014328115e402837adf35dcf1450",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/state/store.ts",
+          "marker": "Khy-20261102-346-ER2SFCEE",
+          "beforeSha256": "10de0d521119cf27d23ed583188874e2cf2a174f1e547db1bc275ac526cd98f7",
+          "afterSha256": "35d8c7a9b9de69ecd8134db50a18d07d30337724899e21b5348a87c4de44511a",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/state/toastSlice.ts",
+          "marker": "Khy-20261102-347-VS6P4QYD",
+          "beforeSha256": "ed4d253348e9ac706b2adee4315fcf0137a5a5a05d27d160b72d19e19437f759",
+          "afterSha256": "a909f46fbf6f9102dd5cc49407f2f3831ec6c9d69580eb398be430305a0bc6c4",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/state/toolExecutionSlice.ts",
+          "marker": "Khy-20261102-348-RN0J6RNZ",
+          "beforeSha256": "9e19a5a6097ad3ed8143e9bf3172c74336f1b791a9567d863ee8d2a31240e25a",
+          "afterSha256": "37d27b3e70931b07eaf66f6efbd6e39695b3332756d8a266f0dd916124f3ebf4",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/state/workspaceSlice.ts",
+          "marker": "Khy-20261102-349-MP472H51",
+          "beforeSha256": "f790e87f2797ed32da20227a2e1a497b86f27186c92e62235af0785576d32e4f",
+          "afterSha256": "ea3f3b8a7b703f02ff4013b8f97f9ff214470eeb0b9891a1aac812a36a5dab9a",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/theme/theme.ts",
+          "marker": "Khy-20261102-350-M58K00MH",
+          "beforeSha256": "3ef5dc1b2f640f4f8675f9a7e8a62adc7137bb5cd9d3c596292068ee44367a24",
+          "afterSha256": "aa6409893fbbd5d5381412d1a64ee817691a95a14b7f1cc72d9f204543ed2648",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/utils/openWorkspace.ts",
+          "marker": "Khy-20261102-351-ZTE2ER7C",
+          "beforeSha256": "73fa0d9dd20a8bd65d4508849371167a2bba6f88d270bc7ad437b776772a0818",
+          "afterSha256": "97a941ddb2a7bf800d12328c502afdee112d716e8294c8a36df83528bea77780",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/utils/settingsMigration.ts",
+          "marker": "Khy-20261102-352-5XN3H9EF",
+          "beforeSha256": "ce90705b84ca0299f8aecfcc1cc1e31f108aee88ba360c7af550593ff8c147d2",
+          "afterSha256": "d4fad1a1d6743f89daff43adddcf5e9b955ffca2cfc10c4685eeb4766043413a",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/utils/stripSystemInjects.ts",
+          "marker": "Khy-20261102-353-CFRCD8VP",
+          "beforeSha256": "473457e8fd59c38a9cbe003cffd3d3710c0c151d8d4f0945e23e1b6862815a09",
+          "afterSha256": "6fa9ce38e03802d387c412787bac8a26ce32db4cd791c9721c00b270a079d575",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/utils/useKeyboard.ts",
+          "marker": "Khy-20261102-354-21R44BRW",
+          "beforeSha256": "96991fac51123d953e0db3c263e4ebb18f79ac832b6fe8f07c82b06a2ae74f8b",
+          "afterSha256": "c36ddc55502c22d75692c6cb2c03a4872edfef6b7920b8f52273b4e58b9f32d6",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/renderer/utils/useModelCatalog.ts",
+          "marker": "Khy-20261102-355-HKC1P7TG",
+          "beforeSha256": "e1ee3a063b48030ff2653d28060907218f90aa092a9342edca5f5b646359fe44",
+          "afterSha256": "6a8142cf7d06f12dee67540ab68d1c6f18c4ce17950c6e5e83d182d056be3009",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/scheduler/index.ts",
+          "marker": "Khy-20261102-356-0XB937VW",
+          "beforeSha256": "b0bb925285d28c5c48b1f826625788801f11e6ad1362455dfbd758aa12f9f281",
+          "afterSha256": "dc17fa46a99bd35d82d3588c1241d68138ef4bb5d55feb693cc2c688f60cf934",
+          "lang": "//",
+          "line": 1
+        },
+        {
+          "file": "apps/khyos-desktop/src/shared/rpc/channels.ts",
+          "marker": "Khy-20261102-357-9MFVRPAE",
+          "beforeSha256": "138b4ea5eeec883e7abb124695f8aecd6f1cc65efeb9cd8a0a7bfa56afd10070",
+          "afterSha256": "67c75074cc8337f291b548862c90319f0d70c3cb0641c081ba34afdcbaddd837",
+          "lang": "//",
+          "line": 1
+        }
+      ]
+    }
+  ]
+}
