@@ -1,61 +1,118 @@
-# .dockerignore — keep the Docker build context small and fast.
-# These files/folders are irrelevant to the khy-os CLI container.
+# .dockerignore — keep the Docker build context small, fast and reproducible.
+#
+# ── 为什么这份文件在 2026-11-02 被重写 ────────────────────────────────────────
+#
+# 旧版把所有模式写在「根级」：`node_modules` / `tests` / `*.db` / `*.log` / `.khy`。
+# Docker 的 .dockerignore 用 Go filepath.Match 语义，`*` **不跨 `/`** —— 未加 `**/`
+# 前缀的模式只匹配构建上下文的根。官方文档对递归的表述是「**/*.go 会排除所有目录下
+# 的 .go，包括上下文根」。
+#
+# 实测后果（find，2026-11-02）：
+#   · 1678 个**嵌套** node_modules 目录逃过排除，其中 apps/khyos-desktop/node_modules
+#     装着依赖体积 Top 2 的两族 —— electron 381 MB + app-builder-bin 207 MB。
+#     构建上下文被推到 GB 级，而 GHCR 流水线是 amd64 + arm64 QEMU 双架构，
+#     每次 push 都要把这份上下文传两遍。
+#   · runtime/node/backend/tests（25 MB / 2890 个 git 跟踪文件）、
+#     src/**/*.test.js（437 个 / 4.5 MB）、src/**/*.html（241 个 / 2.8 MB）、
+#     .khy/khyquant/data/khy-quant.db（647 KB）与散落的 *.log / test-data-criterion-*
+#     全部进镜像。
+#   · 更严重的一条：`COPY runtime/node/backend/` 会把宿主机那份 pnpm 符号链接农场
+#     （84 KB）原样搬进镜像，**覆盖**容器内 `--prod` 刚装好的依赖。CI 用干净
+#     checkout、没有这个目录，所以全绿；本机构建则镜像内容取决于开发机装了什么。
+#     Dockerfile 里那条 `find /app -xtype l` 断言就是守这个的。
+#
+# 判据来源：docs.docker.com/build/concepts/contexts 的 .dockerignore 匹配规则。
 
-# Git
-.git
-.gitignore
+# ── 本机残留：git 已 ignore，但 Docker 不读 .gitignore ────────────────────────
+# 这些目录/文件在本机跑出来过，未被 git 跟踪，却会被 COPY 带进镜像。
+# .gitignore 第 19-21 行已 ignore *.db / *.db-shm / *.db-wal、第 100-101 行 ignore
+# logs/ 与 *.log，故递归排除它们不会碰到任何被跟踪的文件。
+**/node_modules
+**/__pycache__
+**/*.pyc
+**/.git
+**/.khy
+**/.khyos
+**/.khy-runtime
+**/*.log
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/*.sqlite
+**/*.sqlite3
+**/*.cpuprofile
+**/*.swp
+**/*.swo
+**/.DS_Store
+**/*.pem
+**/*.key
+runtime/node/backend/test-data-*
 
-# Node / Python junk (pip wheel bundles everything itself)
-node_modules
-__pycache__
-*.pyc
+# ── 测试与文档副本：生产代码零引用 ────────────────────────────────────────────
+# 已全仓 grep 确认：只有两个 *.test.js 反向 require('../tests')，src/ 下生产代码
+# 对 tests/ 零引用。注意**不要**泛化成 `**/tests` —— vendor/shared/tests 与
+# runtime/substrate/platform/packages/shared/tests 是 link:/workspace 目标的组成部分，
+# 一刀切有风险，故用精确路径。
+runtime/node/backend/tests
+runtime/node/backend/**/*.test.js
+runtime/node/backend/**/*.spec.js
+runtime/node/backend/src/**/*.html
+runtime/node/backend/*.html
+# 同理不能用 `**/*.html`：delivery/web/ai-frontend/index.html 是 Vite 的构建入口，
+# 排除它会让 `pnpm --filter khy-ai-frontend run build` 直接失败。
 
-# CI / docs (not needed in the image)
-.github
-docs
+# ── 整个不进镜像的树（无任何 Dockerfile COPY 它们）────────────────────────────
+# apps/khyos-desktop 是独立 Electron 工程（delivery/desktop/khyos-desktop 迁址后的
+# 新位置），根 Dockerfile 与 ai-frontend Dockerfile 都不 COPY 它。
+apps
+delivery/desktop
+khy-Trajectory
+4-output
+venvs
+.khyos
+tmp
+Temp
+node
+
+# ── pip wheel 的兜底 bundle ───────────────────────────────────────────────────
+# 17.9 MB 的 bundle.mjs。它**会**进镜像（pip install khy-os 装上，容器内 `khy`
+# 命令依赖它，见 Dockerfile 里关于「为什么不删」的注释），但**不必进构建上下文** ——
+# 没有任何 Dockerfile COPY 这个路径，上下文里放一份纯属白传。
+runtime/substrate/platform/khy_platform/bundled
+
+# ── 文档：只排除上下文根的散落 md 与文档站，**不动 src/ 下的技能 md** ──────────
+# ⚠ 这里刻意不用 `**/*.md`：runtime/node/backend/src/ 下有 109 个 SKILL.md /
+#   prompt.md（cliAnythingRegistry/skills/、src/skills/、src/services/skills/），
+#   技能加载器运行时逐个读（backend/package.json 的 //files 注释第 ③ 条、
+#   src/cli/repl/userSkillCommands.js:147）。全排除 = 容器内技能全灭。
+#   同理不能用 `**/*.html`：delivery/web/ai-frontend/index.html 是 Vite 的构建入口，
+#   排除它会让 `pnpm --filter khy-ai-frontend run build` 直接失败。
+# `*.md`（无 `**/`）因 `*` 不跨 `/` 而只命中上下文根的 4 个 md，
+# 正是想要的效果；写成 `/*.md` 则依赖 Docker 对前导斜杠的清理，不必要地绕。
 *.md
+docs
+.github
 
-# Build outputs
-dist
-build
-*.egg-info
-# 构建产物单一根 entries/（LAYOUT-005）：只排除产物子目录，保留入口真源 json/壳
+# ── 构建产物单一根 entries/（LAYOUT-005）：只排除产物子目录，保留入口真源 ────
 entries/*
 !entries/entries.json
 !entries/launch.js
 
-# Dev / IDE files
-.vscode
-.idea
-*.swp
-*.swo
-.DS_Store
-
-# Test fixtures / data
-test
-tests
-.khy
-.khyos
-.khy-runtime
-.runtime
-.khyquant-data
-cache
-data
-khy-Trajectory
-works/data
-*.db
-*.sqlite
-*.sqlite3
-*.log
-
-# Vendored MCP server & reference material (not part of the image)
-tools/deepseek-eyes
-docs/_ref
-
-# Kernel ISO build artifacts (built separately via kernel/Dockerfile.kernel-build)
+# ── 迁移前的旧布局残留（对应路径已不存在，排除只是防呆）─────────────────────
+# runtime/node/backend/Dockerfile 与 runtime/node/ai-backend/Dockerfile 里的
+# platform/ / services/ / software/ / kernel/ / tools/ 全是 2026 年 forest layout
+# 迁移前的路径，现已不存在。这两份 Dockerfile 一份已归档、一份已对齐新布局。
+platform
+services
+software
 kernel
-platform/khy_platform/bundled
+tools
 
-# Platform packages — only exclude moonbit-plugin-sdk (large binaries);
-# shared/ must remain available for Dockerfile COPY commands.
-platform/packages/moonbit-plugin-sdk
+# ── 凭据与状态（永不进镜像）──────────────────────────────────────────────────
+# **/.env：本机 runtime/node/backend/.env 是未跟踪的开发配置（可能含真密钥），
+#   进镜像既是 R2 红线也与 Dockerfile「容器内不要写 .env，用注入的环境变量」相悖。
+#   .env.example / .env.production 是 git 跟踪的配置样本 —— 它们不以 `/.env` 结尾，
+#   本就不被 **/.env 命中，故**不需要**写否定式 `!` 救回（写了也是死规则）。
+**/.env
+Credentials
+UserProfile
