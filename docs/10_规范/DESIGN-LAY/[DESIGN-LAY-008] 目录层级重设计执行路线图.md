@@ -4897,6 +4897,19 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 
 ### 16.6 施工执行状态（点头后逐批登记）
 
+> **2026-11-03 03:2x 节（第 32 节）**：**零施工**。四项读数与第 31 节逐项持平（03:21 同批重取）：J1 **exit 1**、`counts` 逐字同（root-uncatalogued 14 / entry-buffer 2385 / domain-direction 196 / unresolved-require 0 / extension-id-hardcode 0），4 error 仍是 root-whitelist 4 + root-shadow-dir 2 + root-junk 9 + layer-registry 1；J2 **exit 0，读数 10**；J3 **exit 1 = 2 error / 5 warning**；根项 **66**、百度件 **0**、无锁。
+>
+> **porcelain 1432 → 1433 的 +1 已逐名归因**（脏件 mtime 排序 + 提交窗两把尺）：新增的三件写于 19:03——`runtime/node/backend/src/cli/handlers/phone.js`（` M`）、`.../network/phone/phoneBridgeClient.test.js`（` M`）、`.../phone/phoneCollect.test.js`（`??`）。**这正是第 30 节那两条棘轮红的同一条车道**（amoon/phone），它仍在写盘；而提交窗内无新 commit（HEAD 仍是本道 `03fc77be`）⇒「有人在改、没人提交」。
+>
+> **新事实 M（第二把尺在本机是「零输出的失败」）**：LAYOUT-004 的巡检 `scripts/maintenance/organize.py --report` 本机**跑不起来且不给任何解释**。两次实测 `python scripts/maintenance/organize.py --report` → **exit 49，stdout 与 stderr 均 0 字节**。根因不在脚本：本机**没有任何 Python**——`python` / `python3` 都是 `WindowsApps/…/AppInstallerPythonRedirector.exe`（商店占位桩），`py` 不存在，`D:\Portable` 下 maxdepth 4 无 `python.exe`。对照实验：把一件只打印版本的最小脚本 `.khyos/tmp/s32-probe.py` 交给仓内包装器 `scripts/ci/run-python.js` 跑 → 同样 exit 49，但**包装器把返回码透出**（响亮失败，不是假绿）；差别在于 `package.json:254` 的 `maintenance:organize` 用的是**裸 `python`**，绕过了 run-python.js 的候选解析与「Python not found」文案，于是什么都不说就退码 49。
+> ⇒ 三条后果要分开读：① 凡依赖 `organize.py` 的巡检读数，在本机**一律不可信**，本道不再拿它当尺；② `RULES-REGISTRY.json` 里 **LAYOUT-004 的 `exec.script` 就是 `organize.py`（gate=pr）**——本机跑 `npm run rules:gate` 得到的是 RC 49 而不是判据结果，「守卫全绿」这一句在本机对 LAYOUT-004 不成立；③ 修法落在别人名下（要么给 `maintenance:organize` 也套 `run-python.js`，要么本机装 Python），**本道不改别人的模块**，只登记。
+>
+> **新事实 N（§16.6 自己的指针体检）**：块内 `file:NNN` 型指针共 **53** 处，其中 **31** 处按仓根路径解析不出来（探针 `.khyos/tmp/s32-pointer-audit.js`；多数是裸文件名与 `services/backend/.../x.js` 这种省略写法，属**歧义**而非死路径），逐条人工定夺超出一节带宽。本节只钉死并修了其中**唯一 1 处真死路径**：`.ai/MAP.md:99` —— 实测 `.ai/` 今天只剩 `__scope_probe/`，真源在 `works/record/ai/MAP.md`（存在，10-27 更新）。修法是**保留原叙述 + 括注现址**，不改写历史观察；同族第 30 节已登记的 `docs/00_INDEX_仓库根.md:37` 本节再证一次：今天第 37 行是「`.env.example` 与 `fly.staging.toml` 属 D9 迁出候选」，被引句实际在第 **48** 行。
+>
+> **待人（不变，本道不动他人件）**：J3 两条逾期债务归零还是 `slipped` 由 owner 定；根上 12 个未跟踪可见残件（含三个 shell 引号事故文件）由物主或你处置；origin 补推队列仍全部凭据被拒。
+>
+> **回滚**：本节一个提交、只动本文件——纯追加本块 + 上表所述那一处括注（`.ai/MAP.md:99` → 括注真源现址）；无文件移动、无基线与台账数值改动、无 html 再生、本道未发起 push / tag / force / prune。
+
 > **2026-11-03 02:2x 节（第 31 节）**：**零施工——六批全部仍门控**。与第 30 节相隔 55 分钟，**没有任何车道提交过**（HEAD 仍是本道上节那笔 `1c0def60`），四项读数逐项持平：J1 **exit 1**（4 error：root-whitelist 4 / root-shadow-dir 2 / root-junk 9 / layer-registry 1；`counts` 与上节逐字相同，含 root-uncatalogued **14**、entry-buffer **2385**、domain-direction **196**、unresolved-require 与 extension-id-hardcode 仍 **0**）；J2 **exit 0，读数 10**；J3 **exit 1 = 2 error / 5 warning**；根项 **66**、百度件 **0**、无锁、porcelain 默认口径 **1432**。
 >
 > **本节实物活：把「新事实 J」（10-02 的跨批次最小解锁集）按今天的在飞集合整表重算**。探针 `.khyos/tmp/s31-batch-gate-scan.js`；口径 = 只认「引号包裹的路径串 / `path.join` / 行尾裸名配置键」为真路径消费，**排除** `docs/10_规范/DESIGN-LAY/**` 的散文引用与守卫里的 basename 正则；在飞集合取 `git status --porcelain -uall` = **6233** 件（比默认口径 1432 细在未跟踪按文件展开，两把尺不可混用）。
@@ -5673,7 +5686,7 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 > ① `docs/08_MGMT_项目管理/00_INDEX_项目管理-分类索引.md:88` 的 `](../../CONTRIBUTING.md)`
 > —— **这是我上节搬家亲手造出的真死链**（解析到已不存在的根路径）；② 同文件 92 行「根目录为唯一权威」
 > 的表述；③ `.github/CONTRIBUTING.md:4` 自称「因此它放在根目录」；④ `docs/00_INDEX_仓库根.md:37`
-> 的根文件枚举仍列 `CONTRIBUTING.md`。另 `.ai/MAP.md:99` 同样列了它，但该文件头部标
+> 的根文件枚举仍列 `CONTRIBUTING.md`。另 `.ai/MAP.md:99`（真源现址 `works/record/ai/MAP.md`；`.ai/` 今天只剩 `__scope_probe/`——第 32 节实测）同样列了它，但该文件头部标
 > `khy-metadata:auto`、由 `khy metadata refresh` 覆盖，**不手改**。
 >
 > **更正三（最重要，关于我自己的判据）**：上节我拿 `verify_docs_site.js`「15240 条本地链接全可达」
