@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
+import '../services/app_logger.dart' show kKhyCanary;
 import 'smart_dns.dart';
 
 class DiagnosticResult {
@@ -179,7 +180,9 @@ class NetworkDiagnostic {
           connectTimeout: const Duration(seconds: 8),
           receiveTimeout: const Duration(seconds: 8),
           headers: {
-            'User-Agent': 'khy-os/1.0',
+            // The delivery stamp rides along only on stamped builds; plain
+            // builds keep the historic UA byte-identical.
+            'User-Agent': kKhyCanary.isEmpty ? 'khy-os/1.0' : 'khy-os/1.0 (Khy-$kKhyCanary)',
             'Accept': 'application/json',
           },
         ));

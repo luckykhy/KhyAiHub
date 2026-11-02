@@ -1,241 +1,126 @@
-﻿import 'dart:io';
-import 'dart:convert';
-import 'package:path_provider/path_provider.dart';
+import 'dart:async';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+
+import 'log_store.dart';
+
+export 'log_store.dart'
+    show
+        ErrorCode,
+        LogCategory,
+        LogDay,
+        LogEntry,
+        LogLevel,
+        LogStore,
+        buildAnalysisBundle,
+        formatLogTime,
+        logCategoryLabel,
+        logDayKey,
+        logLevelLabel;
+
+/// 应用版本（Flutter 编译期注入）
+const String kAppVersion = String.fromEnvironment(
+  'FLUTTER_BUILD_NAME',
+  defaultValue: 'unknown',
+);
+
+/// 构建号（Flutter 编译期注入）
+const String kAppBuild = String.fromEnvironment(
+  'FLUTTER_BUILD_NUMBER',
+  defaultValue: 'unknown',
+);
+
+/// Delivery canary stamp injected by --dart-define=KHY_CANARY=... at build
+/// time; empty for plain `flutter run`. Const keeps the value in the AOT
+/// constant pool, so it stays in the shipped snapshot even when nothing logs
+/// it.
+const String kKhyCanary = String.fromEnvironment('KHY_CANARY');
 
 /// ───────────────────────────────────────────────
-/// khy-os 日志规范 v2
+/// khy-os 手机端日志服务 v3
 ///
-/// 错误码体系（3 位数字）：
-///   E1xx  网络类  E101 DNS / E102 连接 / E103 超时 / E104 HTTP 4xx / E105 HTTP 5xx
-///   E2xx  API 类  E201 认证 / E202 参数 / E203 模型 / E204 限流
-///   E3xx  工具类  E301 工具执行 / E302 无障碍 / E303 截屏 / E304 Shell
-///   E4xx  系统类  E401 权限 / E402 配置 / E403 存储
-///   E5xx  未知    E500
+/// 规范真源：docs/10_规范/其它规范/[DESIGN-LOG-002] 手机端日志规范.md
 ///
-/// 日志级别：
-///   DEBUG  开发调试，Release 不输出
-///   INFO   正常操作记录
-///   WARN   可恢复的异常（自动重试、降级）
-///   ERROR  需关注的错误（用户可见）
-///   FATAL  致命错误（无法恢复，需人工介入）
-///
-/// 日志格式：
-///   [时间戳][级别][分类] 消息
-///     code: E101
-///     context: {...}
-///     error: ...
-///     stack: ...（最多 5 帧）
+/// v3 相对 v2 的三处变化：
+///   1. 按天分文件（原来单文件无限增长），保留 14 天；
+///   2. 错误双写主文件与错误投影文件，跨天可检索；
+///   3. 未捕获异常（FlutterError / 异步错误 / Zone 错误）必须落盘。
 /// ───────────────────────────────────────────────
 
-/// 日志级别
-enum LogLevel { debug, info, warn, error, fatal }
-
-/// 日志分类
-enum LogCategory {
-  network, // 网络请求
-  dns,     // DNS 解析
-  auth,    // 认证
-  ui,      // 界面操作
-  config,  // 配置
-  api,     // API 调用
-  tool,    // 工具执行
-  device,  // 设备操作
-  system,  // 系统
-  unknown, // 未分类
-}
-
-/// 错误码常量
-class ErrorCode {
-  // ── E1xx 网络 ──
-  static const String dns = 'E101';
-  static const String connection = 'E102';
-  static const String timeout = 'E103';
-  static const String http4xx = 'E104';
-  static const String http5xx = 'E105';
-
-  // ── E2xx API ──
-  static const String auth = 'E201';
-  static const String param = 'E202';
-  static const String model = 'E203';
-  static const String rateLimit = 'E204';
-
-  // ── E3xx 工具 ──
-  static const String toolExec = 'E301';
-  static const String accessibility = 'E302';
-  static const String screenCapture = 'E303';
-  static const String shell = 'E304';
-
-  // ── E4xx 系统 ──
-  static const String permission = 'E401';
-  static const String configMissing = 'E402';
-  static const String storage = 'E403';
-
-  // ── E5xx 未知 ──
-  static const String unknown = 'E500';
-
-  /// 根据 HTTP 状态码返回错误码
-  static String forHttpStatus(int code) {
-    if (code >= 400 && code < 500) return http4xx;
-    if (code >= 500) return http5xx;
-    return unknown;
-  }
-}
-
-/// 结构化错误记录
-class ErrorRecord {
-  final String code;
-  final String message;
-  final LogCategory category;
-  final Map<String, dynamic> context;
-  final Object? exception;
-  final StackTrace? stack;
-  final DateTime timestamp;
-  final LogLevel severity;
-
-  const ErrorRecord({
-    required this.code,
-    required this.message,
-    required this.category,
-    required this.context,
-    this.exception,
-    this.stack,
-    required this.timestamp,
-    this.severity = LogLevel.error,
-  });
-
-  /// 生成人类可读摘要
-  String get summary => '[$code] $message (${category.name})';
-
-  /// 生成日志行
-  String toLogLine() {
-    final ts = '${timestamp.year}-${timestamp.month.toString().padLeft(2, '0')}-${timestamp.day.toString().padLeft(2, '0')} '
-        '${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}:${timestamp.second.toString().padLeft(2, '0')}';
-    final sev = severity == LogLevel.fatal ? 'FTL' : (severity == LogLevel.error ? 'ERR' : (severity == LogLevel.warn ? 'WRN' : 'INF'));
-    final cat = category.name.toUpperCase().substring(0, 3);
-    final sb = StringBuffer();
-    sb.writeln('$ts[$sev][$cat] $message');
-    sb.writeln('    code: $code');
-    if (context.isNotEmpty) {
-      sb.writeln('    context: ${jsonEncode(context)}');
-    }
-    if (exception != null) {
-      sb.writeln('    error: $exception');
-    }
-    if (stack != null) {
-      final lines = stack!.toString().split('\n').take(5);
-      for (final line in lines) {
-        if (line.trim().isNotEmpty) {
-          sb.writeln('    ${line.trim()}');
-        }
-      }
-    }
-    return sb.toString();
-  }
-}
-
-/// 结构化日志服务
+/// 结构化日志服务（单例）
 class AppLogger {
   static final AppLogger _instance = AppLogger._internal();
   factory AppLogger() => _instance;
   AppLogger._internal();
 
-  File? _logFile;
-  bool _initialized = false;
-  final List<String> _buffer = [];
+  final LogStore _store = LogStore();
+
+  /// 当前界面（写进每条日志，便于定位问题发生在哪个界面）
+  String? _screen;
+
+  /// 会话内序号
+  int _seq = 0;
 
   // 错误去重：code + message 的组合，10 秒内不重复记录
   final Map<String, DateTime> _errorDedup = {};
-  static const _dedupWindow = Duration(seconds: 10);
+  static const Duration _dedupWindow = Duration(seconds: 10);
 
-  // 错误记录（内存中保留最近 100 条）
-  final List<ErrorRecord> _errorRecords = [];
-  static const _maxErrorRecords = 100;
+  // 错误记录（内存中保留最近 100 条；跨天查询走磁盘上的错误投影文件）
+  final List<LogEntry> _recentErrors = [];
+  static const int _maxErrorRecords = 100;
 
+  /// 初始化：建目录、清过期文件、写下会话起点
   Future<void> init() async {
-    if (_initialized) return;
-    try {
-      final dir = await getApplicationDocumentsDirectory();
-      _logFile = File('${dir.path}/khy-os.log');
-      _initialized = true;
-      _writeHeader();
-    } catch (_) {
-      _initialized = true;
-    }
-  }
-
-  void _writeHeader() {
-    final now = DateTime.now();
-    final header = [
-      '',
-      '=' * 60,
+    await _store.init();
+    await _write(
+      LogLevel.info,
+      LogCategory.system,
       'khy-os 日志会话开始',
-      '时间: ${_formatDateTime(now)}',
-      '平台: ${Platform.operatingSystem} ${Platform.operatingSystemVersion}',
-      '日志规范: v2（错误码 + 上下文 + 自动堆栈）',
-      '=' * 60,
-      '',
-    ];
-    for (final line in header) {
-      _writeLine(line);
-    }
+      details: <String, dynamic>{
+        'platform':
+            '${Platform.operatingSystem} ${Platform.operatingSystemVersion}',
+        'version': kAppVersion,
+        'build': kAppBuild,
+        'canary': kKhyCanary,
+        'spec': 'v3',
+      },
+    );
   }
 
-  void _writeLine(String line) {
-    try {
-      _logFile?.writeAsStringSync('$line\n', mode: FileMode.append);
-    } catch (_) {}
-  }
-
-  String _formatDateTime(DateTime dt) {
-    return '${dt.year}-${_pad(dt.month)}-${_pad(dt.day)} '
-        '${_pad(dt.hour)}:${_pad(dt.minute)}:${_pad(dt.second)}.${_pad(dt.millisecond, 3)}';
-  }
-
-  String _pad(int n, [int width = 2]) => n.toString().padLeft(width, '0');
-
-  String _levelLabel(LogLevel level) {
-    switch (level) {
-      case LogLevel.debug:
-        return 'DBG';
-      case LogLevel.info:
-        return 'INF';
-      case LogLevel.warn:
-        return 'WRN';
-      case LogLevel.error:
-        return 'ERR';
-      case LogLevel.fatal:
-        return 'FTL';
-    }
-  }
-
-  String _catLabel(LogCategory cat) {
-    switch (cat) {
-      case LogCategory.network:
-        return 'NET';
-      case LogCategory.dns:
-        return 'DNS';
-      case LogCategory.auth:
-        return 'ATH';
-      case LogCategory.ui:
-        return 'UI ';
-      case LogCategory.config:
-        return 'CFG';
-      case LogCategory.api:
-        return 'API';
-      case LogCategory.tool:
-        return 'TOL';
-      case LogCategory.device:
-        return 'DEV';
-      case LogCategory.system:
-        return 'SYS';
-      case LogCategory.unknown:
-        return 'UNK';
-    }
+  /// 记录当前所在界面
+  void setScreen(String? screen) {
+    _screen = screen;
   }
 
   // ─────────────────────────────────────────────
-  // 核心日志方法
+  // 核心写入
   // ─────────────────────────────────────────────
+
+  Future<void> _write(
+    LogLevel level,
+    LogCategory category,
+    String message, {
+    Map<String, dynamic>? details,
+    Object? error,
+    StackTrace? stackTrace,
+    String? code,
+  }) async {
+    if (level == LogLevel.debug && kReleaseMode) return;
+    final entry = LogEntry(
+      ts: DateTime.now(),
+      seq: ++_seq,
+      level: level,
+      category: category,
+      message: message,
+      code: code,
+      context: details ?? const <String, dynamic>{},
+      error: error?.toString(),
+      stack: stackTrace?.toString(),
+      screen: _screen,
+    );
+    await _store.append(entry);
+  }
 
   /// 通用日志
   void log(
@@ -247,40 +132,15 @@ class AppLogger {
     StackTrace? stackTrace,
     String? code,
   }) {
-    final timestamp = _formatDateTime(DateTime.now());
-    final levelStr = _levelLabel(level);
-    final catStr = _catLabel(category);
-
-    final buffer = StringBuffer();
-    final codeStr = code != null ? ' $code' : '';
-    buffer.writeln('[$timestamp][$levelStr][$catStr]$codeStr $message');
-
-    if (details != null && details.isNotEmpty) {
-      for (final entry in details.entries) {
-        buffer.writeln('    ${entry.key}: ${entry.value}');
-      }
-    }
-
-    if (error != null) {
-      buffer.writeln('    ERROR: $error');
-    }
-
-    if (stackTrace != null) {
-      final lines = stackTrace.toString().split('\n').take(5);
-      for (final line in lines) {
-        if (line.trim().isNotEmpty) {
-          buffer.writeln('    ${line.trim()}');
-        }
-      }
-    }
-
-    final logText = buffer.toString();
-    _buffer.add(logText);
-    _writeLine(logText);
-
-    if (_buffer.length > 1000) {
-      _buffer.removeRange(0, _buffer.length - 500);
-    }
+    unawaited(_write(
+      level,
+      category,
+      message,
+      details: details,
+      error: error,
+      stackTrace: stackTrace,
+      code: code,
+    ));
   }
 
   // ── 快捷方法 ──
@@ -288,27 +148,53 @@ class AppLogger {
   void d(LogCategory cat, String msg, {Map<String, dynamic>? details}) =>
       log(LogLevel.debug, cat, msg, details: details);
 
+  /// 日志目录的绝对路径。
+  ///
+  /// 为什么要暴露它：用户说"日志在哪"是高频问题，而答案此前只能靠翻
+  /// LogStore 源码。位置面板（长按会话项）直接把它显示出来，省掉这一步。
+  ///
+  /// 读不到时返回空串而不是抛：这个方法的调用方是 UI，一次取址失败不该
+  /// 把整个面板打穿。
+  Future<String> logDirectoryPath() async {
+    try {
+      return await _store.logDirectoryPath();
+    } catch (_) {
+      return '';
+    }
+  }
+
   void i(LogCategory cat, String msg, {Map<String, dynamic>? details}) =>
       log(LogLevel.info, cat, msg, details: details);
 
   void w(LogCategory cat, String msg,
           {Map<String, dynamic>? details,
           Object? error,
+          StackTrace? stackTrace,
           String? code}) =>
       log(LogLevel.warn, cat, msg,
-          details: details, error: error, code: code);
+          details: details,
+          error: error,
+          stackTrace: stackTrace,
+          code: code);
 
+  /// 记一条错误。[severity] 决定最终级别（error / fatal），默认 error
   void e(LogCategory cat, String msg,
           {Map<String, dynamic>? details,
           Object? error,
           StackTrace? stackTrace,
           String? code,
-          LogLevel severity = LogLevel.error}) =>
-      log(LogLevel.error, cat, msg,
-          details: details,
-          error: error,
-          stackTrace: stackTrace,
-          code: code);
+          LogLevel severity = LogLevel.error}) {
+    final level = switch (severity) {
+      LogLevel.fatal => LogLevel.fatal,
+      LogLevel.warn => LogLevel.warn,
+      _ => LogLevel.error,
+    };
+    log(level, cat, msg,
+        details: details,
+        error: error,
+        stackTrace: stackTrace,
+        code: code);
+  }
 
   void f(LogCategory cat, String msg,
           {Map<String, dynamic>? details,
@@ -316,10 +202,13 @@ class AppLogger {
           StackTrace? stackTrace,
           String? code}) =>
       log(LogLevel.fatal, cat, msg,
-          details: details, error: error, stackTrace: stackTrace, code: code);
+          details: details,
+          error: error,
+          stackTrace: stackTrace,
+          code: code);
 
   // ─────────────────────────────────────────────
-  // 错误记录方法（带去重 + 自动堆栈 + 上下文）
+  // 错误记录（去重 + 自动堆栈 + 上下文）
   // ─────────────────────────────────────────────
 
   /// 记录一个结构化错误（带去重、自动堆栈）
@@ -327,7 +216,7 @@ class AppLogger {
   /// [code]    错误码，如 ErrorCode.dns
   /// [message] 人类可读描述
   /// [category] 日志分类
-  /// [context]  上下文（屏幕、模式、操作等）
+  /// [context]  上下文（界面、模式、操作等）
   /// [exception] 原始异常对象
   /// [stack]   堆栈（null 则自动捕获）
   void recordError({
@@ -351,32 +240,29 @@ class AppLogger {
     // 自动捕获堆栈
     final autoStack = stack ?? StackTrace.current;
 
-    final record = ErrorRecord(
-      code: code,
-      message: message,
+    final record = LogEntry(
+      ts: now,
+      seq: ++_seq,
+      level: switch (severity) {
+        LogLevel.fatal => LogLevel.fatal,
+        LogLevel.warn => LogLevel.warn,
+        _ => LogLevel.error,
+      },
       category: category,
-      context: context ?? {},
-      exception: exception,
-      stack: autoStack,
-      timestamp: now,
-      severity: severity,
+      message: message,
+      code: code,
+      context: context ?? const <String, dynamic>{},
+      error: exception?.toString(),
+      stack: autoStack.toString(),
+      screen: _screen,
     );
 
-    _errorRecords.add(record);
-    if (_errorRecords.length > _maxErrorRecords) {
-      _errorRecords.removeRange(0, _errorRecords.length - _maxErrorRecords);
+    _recentErrors.add(record);
+    if (_recentErrors.length > _maxErrorRecords) {
+      _recentErrors.removeRange(0, _recentErrors.length - _maxErrorRecords);
     }
 
-    // 写入日志
-    e(
-      category,
-      message,
-      details: context,
-      error: exception,
-      stackTrace: autoStack,
-      code: code,
-      severity: severity,
-    );
+    unawaited(_store.append(record));
   }
 
   /// 便捷：网络错误
@@ -573,100 +459,123 @@ class AppLogger {
   // 查询与导出
   // ─────────────────────────────────────────────
 
-  String? get logFilePath => _logFile?.path;
+  /// 当天日志文件路径
+  Future<String> get logFilePath async => _store.currentFilePath();
 
+  /// 按天列出日志（有日志的日期，最新在前）
+  Future<List<LogDay>> listDays() => _store.listDays();
+
+  /// 读某天的全部条目
+  Future<List<LogEntry>> readDay(DateTime day) => _store.readDay(day);
+
+  /// 读某天的错误条目
+  Future<List<LogEntry>> readDayErrors(DateTime day) => _store.readErrors(day);
+
+  /// 读当天日志文本
   Future<String> readLogs() async {
-    try {
-      if (_logFile != null && await _logFile!.exists()) {
-        return await _logFile!.readAsString();
-      }
-      return '暂无日志';
-    } catch (e) {
-      return '读取日志失败: $e';
-    }
+    final entries = await _store.readDay(DateTime.now());
+    if (entries.isEmpty) return '暂无日志';
+    return entries.map((e) => e.toLine()).join('\n');
   }
 
+  /// 读最近若干条日志
   Future<String> readRecentLogs([int lines = 100]) async {
-    try {
-      final all = await readLogs();
-      final allLines = all.split('\n');
-      if (allLines.length <= lines) return all;
-      return allLines.sublist(allLines.length - lines).join('\n');
-    } catch (e) {
-      return '读取失败: $e';
+    final entries = await _store.readDay(DateTime.now());
+    if (entries.isEmpty) return '暂无日志';
+    final start = entries.length > lines ? entries.length - lines : 0;
+    return entries.sublist(start).map((e) => e.toLine()).join('\n');
+  }
+
+  /// 导出分析包（给智能体 / 维护者看的自足文本）
+  Future<String> exportLogs({int days = 1}) async {
+    final all = await _store.listDays();
+    final picked = all.where((d) => !d.legacy).take(days).toList();
+    final entriesByDay = <DateTime, List<LogEntry>>{};
+    final errorsByDay = <DateTime, List<LogEntry>>{};
+    for (final day in picked) {
+      entriesByDay[day.date] = await _store.readDay(day.date);
+      errorsByDay[day.date] = await _store.readErrors(day.date);
     }
+    return _bundle(
+      picked.map((d) => d.date).toList(),
+      entriesByDay,
+      errorsByDay,
+    );
   }
 
-  Future<String> exportLogs() async {
-    final logs = await readLogs();
-    final now = _formatDateTime(DateTime.now());
-    final errors = _errorRecords.toList();
-    final summary = [
-      '# khy-os 日志导出',
-      '# 导出时间: $now',
-      '# 日志行数: ${logs.split("\n").length}',
-      '# 错误记录: ${errors.length} 条',
-      '#',
-      if (errors.isNotEmpty) ...[
-        '#',
-        '# 错误摘要',
-        ...errors.map((e) => '#   ${e.summary} @ ${_formatDateTime(e.timestamp)}'),
-        '#',
-      ],
-      '',
-    ];
-    return summary.join('\n') + logs;
+  /// 导出某一天的分析包（详情页「复制分析包」用）
+  Future<String> exportDay(DateTime day) async {
+    final entries = await _store.readDay(day);
+    final errors = await _store.readErrors(day);
+    return _bundle(
+      [day],
+      {day: entries},
+      {day: errors},
+    );
   }
 
+  String _bundle(
+    List<DateTime> days,
+    Map<DateTime, List<LogEntry>> entriesByDay,
+    Map<DateTime, List<LogEntry>> errorsByDay,
+  ) {
+    return buildAnalysisBundle(
+      generatedAt: DateTime.now(),
+      appVersion: '$kAppVersion+$kAppBuild',
+      platform:
+          '${Platform.operatingSystem} ${Platform.operatingSystemVersion}',
+      device: Platform.version,
+      days: days,
+      entriesByDay: entriesByDay,
+      errorsByDay: errorsByDay,
+    );
+  }
+
+  /// 清空全部日志
   Future<void> clearLogs() async {
-    try {
-      if (_logFile != null && await _logFile!.exists()) {
-        await _logFile!.writeAsString('');
-        _writeHeader();
-      }
-      _buffer.clear();
-      _errorRecords.clear();
-    } catch (_) {}
+    await _store.clearAll();
+    _recentErrors.clear();
+    _errorDedup.clear();
   }
 
+  /// 清空某天
+  Future<void> clearDay(DateTime day) async {
+    await _store.clearDay(day);
+  }
+
+  /// 全部日志占用
   Future<String> getLogSize() async {
-    try {
-      if (_logFile != null && await _logFile!.exists()) {
-        final size = await _logFile!.length();
-        if (size < 1024) return '$size B';
-        if (size < 1024 * 1024) {
-          return '${(size / 1024).toStringAsFixed(1)} KB';
-        }
-        return '${(size / (1024 * 1024)).toStringAsFixed(1)} MB';
-      }
-      return '0 B';
-    } catch (_) {
-      return '未知';
+    final bytes = await _store.totalBytes();
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) {
+      return '${(bytes / 1024).toStringAsFixed(1)} KB';
     }
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
   /// 获取最近的错误记录
-  List<ErrorRecord> get recentErrors => List.unmodifiable(_errorRecords);
+  List<LogEntry> get recentErrors => List.unmodifiable(_recentErrors);
 
-  /// 按错误码统计
-  Map<String, int> get errorCodeStats {
+  /// 全部保留期内日志的错误码分布（按天可查，跨重启不丢）
+  Future<Map<String, int>> errorCodeStats() => _store.errorCodeStats();
+
+  /// 迁移前的旧版日志文本
+  Future<String?> readLegacyText() => _store.readLegacyText();
+
+  /// 本次会话内最近错误的错误码分布
+  Map<String, int> get recentErrorCodeStats {
     final stats = <String, int>{};
-    for (final e in _errorRecords) {
-      stats[e.code] = (stats[e.code] ?? 0) + 1;
+    for (final e in _recentErrors) {
+      final code = e.code ?? '未标注';
+      stats[code] = (stats[code] ?? 0) + 1;
     }
     return stats;
   }
 
   /// 获取错误统计（兼容旧接口）
   Future<Map<String, int>> getErrorStats() async {
-    return errorCodeStats;
+    return recentErrorCodeStats;
   }
-
-  // ─────────────────────────────────────────────
-  // 私有辅助
-  // ─────────────────────────────────────────────
-
-  String _sevLabel(LogLevel level) => _levelLabel(level);
 }
 
 /// 兼容旧接口

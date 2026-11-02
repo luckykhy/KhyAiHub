@@ -1,4 +1,4 @@
-#!/usr/bin/env pwsh
+﻿#!/usr/bin/env pwsh
 # khy-os Android signed-release builder (PowerShell, cross-platform).
 #
 # Builds the khy-os mobile app (delivery/mobile/khy-os-client-app, Flutter) into a signed
@@ -44,7 +44,7 @@ param(
 $ErrorActionPreference = 'Stop'
 # scripts/release/ -> up two levels = repo root.
 $root = (Get-Item $PSScriptRoot).Parent.Parent.FullName
-$appDir = Join-Path $root 'apps\khy-os-client-app'
+$appDir = Join-Path $root 'delivery\mobile\khy-os-client-app'
 $androidDir = Join-Path $appDir 'android'
 $keyProps = Join-Path $androidDir 'key.properties'
 
@@ -99,17 +99,26 @@ function Invoke-Tool([string[]]$cmd, [string]$workDir = '') {
 $ErrorActionPreference = 'Stop'
 
 # ── Flutter ───────────────────────────────────────────────────────────────────
+function Read-FlutterSdkFromLocalProps {
+  # local.properties is the Flutter-managed, machine-local truth for the SDK path
+  # (gitignored; settings.gradle.kts already loads flutter.sdk from it). Reading it
+  # here keeps the build working after the SDK moves, without a repo-wide hardcode.
+  $props = Join-Path $androidDir 'local.properties'
+  if (-not (Test-Path $props)) { return '' }
+  $line = Select-String -Path $props -Pattern '^flutter\.sdk=' | Select-Object -First 1
+  if (-not $line) { return '' }
+  # .properties escapes backslashes (D:\\a\\b), so unescape before Test-Path sees it.
+  return ($line.Line -replace '^flutter\.sdk=', '').Trim().Replace('\\', '\')
+}
+
 $flutter = $env:FLUTTER
-if (-not $flutter) {
-  $cands = @(
-    'D:\Portable\Tools\flutter\bin\flutter.bat',
-    (Join-Path $HOME 'flutter\bin\flutter.bat')
-  )
+if (-not $flutter -or -not (Test-Path $flutter)) {
+  $sdk = Read-FlutterSdkFromLocalProps
+  if ($sdk) { $flutter = Join-Path $sdk 'bin\flutter.bat' }
+}
+if (-not $flutter -or -not (Test-Path $flutter)) {
   $cmd = Get-Command flutter -ErrorAction SilentlyContinue
-  if ($cmd) { $cands += $cmd.Source }
-  foreach ($c in $cands) {
-    if ($c -and (Test-Path $c)) { $flutter = $c; break }
-  }
+  if ($cmd) { $flutter = $cmd.Source }
 }
 if (-not $flutter -or -not (Test-Path $flutter)) {
   Say-Fail "flutter not found. Set \$FLUTTER to the flutter executable, or add it to PATH."
@@ -117,9 +126,11 @@ if (-not $flutter -or -not (Test-Path $flutter)) {
 Say-Ok "flutter: $flutter"
 
 # ── JAVA_HOME ────────────────────────────────────────────────────────────────
+# 找不到就报错——**不猜本机盘符**。写死 'D:\Portable\Tools\jdk-…' 这类机器本地路径会让
+# 本仓自己的 no-hardcoded-abs-path 守卫（scripts/ci/check-agent-rules.js）对本文件报红，
+# 提交即 CI 红。开发机上把 JAVA_HOME / ANDROID_SDK_ROOT 指到自己的安装位即可。
 if (-not $env:JAVA_HOME) {
   $jks = @(
-    'D:\Portable\Tools\jdk-21.0.12.1+1',
     (Join-Path $HOME 'jdk-21')
   )
   foreach ($j in $jks) { if (Test-Path $j) { $env:JAVA_HOME = $j; break } }
@@ -134,7 +145,6 @@ $sdk = $env:ANDROID_SDK_ROOT
 if (-not $sdk) { $sdk = $env:ANDROID_HOME }
 if (-not $sdk) {
   $sdkCands = @(
-    'D:\Portable\Tools\android-sdk',
     (Join-Path $HOME '.khyos\android_sdk')
   )
   foreach ($s in $sdkCands) { if (Test-Path $s) { $sdk = $s; break } }
@@ -181,17 +191,45 @@ if ($relStoreFile) {
   Say-Warn "no release signing credentials (env or key.properties) — output will be DEBUG-signed, NOT Play-store-ready."
 }
 
+# ── Canary stamp (per-delivery) ──────────────────────────────────────────────
+# One unique marker per build run: "Khy-<version>-<yyyyMMddHHmm>-<8 rand>".
+# Three routes into the artifact — android/canary.properties (primary; see
+# build.gradle for why it beats the env var: a Gradle daemon pins env at
+# daemon start), KHY_CANARY env (secondary), --dart-define (Dart side).
+# Charset is digits + Crockford Base32 minus I/L/O/U, so the value crosses
+# HTTP headers, XML attributes and an unquoted -D compiler flag unharmed.
+# Skipped under -SkipBuild: a stamp generated without a build would end up in
+# the ledger next to hashes of an artifact it is not baked into.
+if (-not $SkipBuild) {
+  $pubspec = Join-Path $appDir 'pubspec.yaml'
+  $verLine = Select-String -Path $pubspec -Pattern '^version:\s*(\S+)' | Select-Object -First 1
+  if (-not $verLine) { Say-Fail "cannot read version from $pubspec" }
+  $appVersion = $verLine.Matches[0].Groups[1].Value
+  $canaryTs = Get-Date -Format 'yyyyMMddHHmm'
+  $rnd = New-Object byte[] 8
+  $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+  try { $rng.GetBytes($rnd) } finally { $rng.Dispose() }
+  # One byte per character; 256 = 8 * 32, so the mask keeps every index uniform.
+  $canaryRand = -join ($rnd | ForEach-Object { '0123456789ABCDEFGHJKMNPQRSTVWXYZ'[$_ -band 31] })
+  $khyCanary = "Khy-$appVersion-$canaryTs-$canaryRand"
+  # Overwrite every run: the stamp is per-delivery, a stale value must never
+  # survive into the next build.
+  Set-Content -Path (Join-Path $androidDir 'canary.properties') -Value "khy.canary=$khyCanary" -Encoding ascii
+  $env:KHY_CANARY = $khyCanary
+  Say-Ok "canary: $khyCanary"
+}
+
 # ── Build ─────────────────────────────────────────────────────────────────────
 if (-not $SkipBuild) {
   Write-Host ""
   $buildLabel = if ($ApkOnly) { 'Building release APK' } elseif ($AabOnly) { 'Building release AAB' } else { 'Building release APK + AAB' }
   Write-Host "=== $buildLabel ==="
   if (-not $AabOnly) {
-    $code = Invoke-Tool @($flutter, 'build', 'apk', '--release') $appDir
+    $code = Invoke-Tool @($flutter, 'build', 'apk', '--release', "--dart-define=KHY_CANARY=$khyCanary") $appDir
     if ($code -ne 0) { Say-Fail "flutter build apk --release failed (exit $code)" }
   }
   if (-not $ApkOnly) {
-    $code = Invoke-Tool @($flutter, 'build', 'appbundle', '--release') $appDir
+    $code = Invoke-Tool @($flutter, 'build', 'appbundle', '--release', "--dart-define=KHY_CANARY=$khyCanary") $appDir
     if ($code -ne 0) { Say-Fail "flutter build appbundle --release failed (exit $code)" }
   }
   Say-Ok "gradle build complete"
@@ -218,11 +256,11 @@ $aabCandidates = @(
   (Join-Path $appDir 'build\app\outputs\bundle\release\app-release.aab')
 )
 
-if (-not $ApkOnly) {
+if (-not $AabOnly) {
   $apkPath = Find-First $apkCandidates
   if (-not $apkPath) { Say-Fail ("release APK not found in: {0}" -f ($apkCandidates -join ', ')) }
 }
-if (-not $AabOnly) {
+if (-not $ApkOnly) {
   $aabPath = Find-First $aabCandidates
   if (-not $aabPath) { Say-Fail ("release AAB not found in: {0}" -f ($aabCandidates -join ', ')) }
 }
@@ -298,6 +336,24 @@ if ($aabPath) {
   Add-Content -Path $manifest -Value ("{0}  app-release.aab" -f $h)
   $artifacts += $dest
   Say-Ok "AAB -> $dest"
+}
+# Canary faces in the receipt: the stamp line inside SHA256SUMS.txt witnesses
+# which delivery the hashes belong to; ledger.jsonl (gitignored, works/data) is
+# the per-delivery map and never enters the repo. Ledger write is fail-soft —
+# a bookkeeping failure must not discard the artifacts above.
+if ($khyCanary) {
+  Add-Content -Path $manifest -Value "# khy-canary: $khyCanary" -Encoding ascii
+  $apkShaForLedger = if ($apkPath) { (Get-FileHash -Algorithm SHA256 (Join-Path $OutputDir 'app-release.apk')).Hash } else { '' }
+  $aabShaForLedger = if ($aabPath) { (Get-FileHash -Algorithm SHA256 (Join-Path $OutputDir 'app-release.aab')).Hash } else { '' }
+  try {
+    $ledgerDir = Join-Path $root 'works\data\khy\canary'
+    if (-not (Test-Path $ledgerDir)) { New-Item -ItemType Directory -Force -Path $ledgerDir | Out-Null }
+    $ledgerLine = [ordered]@{ ts = $canaryTs; canary = $khyCanary; apkSha256 = $apkShaForLedger; aabSha256 = $aabShaForLedger } | ConvertTo-Json -Compress
+    Add-Content -Path (Join-Path $ledgerDir 'ledger.jsonl') -Value $ledgerLine -Encoding ascii
+    Say-Ok "canary ledger: $khyCanary"
+  } catch {
+    Say-Warn "canary ledger write failed ($($_.Exception.Message)) — artifacts above are unaffected."
+  }
 }
 Say-Ok "SHA-256 manifest: $manifest"
 
