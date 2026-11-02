@@ -1,3 +1,34 @@
+# ⛔ ⛔ ⛔ 死文件 —— 不要用它构建，它构建不出来 ⛔ ⛔ ⛔
+#
+# 状态（2026-11-02 复核）：**已废弃，保留仅为历史证据，不是可用的构建入口。**
+#
+# 为什么废弃：
+#   本文件所有 COPY 路径都是 2026 年 forest layout 迁移**之前**的形状 ——
+#   `software/khyquant/ml/requirements.txt`、`services/backend/`、
+#   `platform/packages/shared`。这三个前缀在仓库里均已不存在
+#   （LAYERS 表：顶层 services/ → runtime/node、software/ → delivery/channel、
+#   platform/ → runtime/substrate/platform），因此 `docker build -f 本文件 .`
+#   第一步 COPY 就 file not found。
+#
+# 为什么不删：
+#   PROCESS-013 规则卡与 RULES-REGISTRY.json 把「本文件 3 处 -i mirrors.aliyun.com」
+#   当作 2026-09-23 那次依赖来源纪律整改的实测起点引用，删掉会让那些记录指向空。
+#   也不迁进 _deprecated/：新增顶层目录会踩 check-repo-layout 的 layer-registry
+#   判据（须先改 [DESIGN-LAY-005] 第一节）。
+#
+# 该用哪个：
+#   · HTTP 服务镜像（唯一活着的入口）  → 仓库根 `Dockerfile`
+#   · AI 后端镜像（compose --profile ai）→ `runtime/node/ai-backend/Dockerfile`
+#   · 前端静态站（compose --profile web）→ `delivery/web/ai-frontend/Dockerfile`
+#   docker-compose.yml 与 .github/workflows/docker.yml 只引用上述三个，不引用本文件。
+#
+# 迁移映射（本文件路径 → 新路径）：
+#   software/khyquant/ml/requirements.txt → 已随 L4 迁入 delivery/channel/khyquant/
+#   services/backend/                      → runtime/node/backend/
+#   platform/packages/shared               → runtime/substrate/platform/packages/shared/
+#
+# ── 以下为原文，未作修改 ──────────────────────────────────────────────────────
+
 FROM node:20-slim
 
 WORKDIR /app

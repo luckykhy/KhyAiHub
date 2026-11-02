@@ -84,6 +84,48 @@ jobs:
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-${{ env.PLATFORM_PAIR }}
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-${{ env.PLATFORM_PAIR }},mode=max
 
+      # ── 镜像体积门禁（2026-11-02 新增）──────────────────────────────────────
+      # 为什么需要它：体积回归此前**没有任何守卫会报**。构建照样成功、测试照样全绿、
+      # 部署照样成功，只是镜像悄悄变大 —— 拉取变慢、Fly 冷启动变慢、GHCR 存储变贵。
+      # 这与 PROCESS-013 记录的是同一类事故形态：「无人知晓的那一半」。
+      #
+      # 判据：单平台 manifest 的全部 layer 字节数之和（不含 manifest/config 本身），
+      # 即 `docker pull` 实际要搬的字节。多架构清单是两个平台各自报数，不是相加。
+      #
+      # ⚠ KHY_IMAGE_MAX_MB 的默认值是**占位**，不是实测值：本机没有 Docker，
+      #   无法在改这条流程前量出当前体积。第一次跑完后请看本步骤 Echo 出的实测值，
+      #   把它改成「略高于当前」的数，此后只许减不许增（与 check:dep-size 的
+      #   「包数硬预算 + 字节棘轮」同一哲学）。改默认值不算放宽红线 —— 红线是
+      #   「超预算即红」，不是「预算必须是某个特定数」。
+      - name: Assert image size budget
+        env:
+          REF: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+          KHY_IMAGE_MAX_MB: ${{ vars.KHY_IMAGE_MAX_MB || '1200' }}
+        run: |
+          set -euo pipefail
+          max_bytes=$(( KHY_IMAGE_MAX_MB * 1024 * 1024 ))
+          raw=$(docker buildx imagetools inspect --format '{{json .Manifest}}' "$REF")
+          bytes=$(printf '%s' "$raw" | jq '[.layers[]?.size] | add // 0')
+          [ "$bytes" -gt 0 ] || { echo "::error::取不到 layer 体积（manifest 解析失败）"; exit 1; }
+          mb=$(( bytes / 1024 / 1024 ))
+          echo "镜像体积（${{ env.PLATFORM_PAIR }}）：${mb} MB（${bytes} bytes）"
+          echo "预算：${KHY_IMAGE_MAX_MB} MB"
+          {
+            echo "### khy-os 镜像体积 (${{ env.PLATFORM_PAIR }})"
+            echo ""
+            echo "| 指标 | 值 |"
+            echo "| --- | --- |"
+            echo "| 实测 | **${mb} MB** |"
+            echo "| 预算 | ${KHY_IMAGE_MAX_MB} MB |"
+            echo "| 余量 | $(( (max_bytes - bytes) / 1024 / 1024 )) MB |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$bytes" -gt "$max_bytes" ]; then
+            echo "::error::镜像 ${mb} MB 超出预算 ${KHY_IMAGE_MAX_MB} MB。"
+            echo "::error::先定位是哪一层变大：docker history <image> --no-trunc --format '{{.Size}}\t{{.CreatedBy}}' | sort -rh | head -15"
+            exit 1
+          fi
+          echo "体积在预算内。"
+
       - name: Export digest
         run: |
           mkdir -p /tmp/digests
