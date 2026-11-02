@@ -4897,6 +4897,28 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 
 ### 16.6 施工执行状态（点头后逐批登记）
 
+> **2026-11-03 02:2x 节（第 31 节）**：**零施工——六批全部仍门控**。与第 30 节相隔 55 分钟，**没有任何车道提交过**（HEAD 仍是本道上节那笔 `1c0def60`），四项读数逐项持平：J1 **exit 1**（4 error：root-whitelist 4 / root-shadow-dir 2 / root-junk 9 / layer-registry 1；`counts` 与上节逐字相同，含 root-uncatalogued **14**、entry-buffer **2385**、domain-direction **196**、unresolved-require 与 extension-id-hardcode 仍 **0**）；J2 **exit 0，读数 10**；J3 **exit 1 = 2 error / 5 warning**；根项 **66**、百度件 **0**、无锁、porcelain 默认口径 **1432**。
+>
+> **本节实物活：把「新事实 J」（10-02 的跨批次最小解锁集）按今天的在飞集合整表重算**。探针 `.khyos/tmp/s31-batch-gate-scan.js`；口径 = 只认「引号包裹的路径串 / `path.join` / 行尾裸名配置键」为真路径消费，**排除** `docs/10_规范/DESIGN-LAY/**` 的散文引用与守卫里的 basename 正则；在飞集合取 `git status --porcelain -uall` = **6233** 件（比默认口径 1432 细在未跟踪按文件展开，两把尺不可混用）。
+>
+> | 批 | 消费方（今日） | 新事实 J（10-02） | 今日在飞 | 今日干净 |
+> |---|---|---|---|---|
+> | W2 余量（`.env.example` + `CHANGELOG.md`） | 40 | 44 | **8** | 32 |
+> | W4 pip（`pyproject.toml` + `MANIFEST.in`） | 90 | 87 | **14** | 76 |
+> | W5 docker 族（4 件） | 51 | 52 | **10** | 41 |
+> | W9′ 点目录（6 项） | 336 | 369 | **50** | 286 |
+> | P3 `apps/` | 95 | 未测 | **21** | 74 |
+> | P5 `docs/` + `scripts/` | 438 | 未测 | **63** | 375 |
+>
+> **三条表外的事实**：
+> ① **六批的搬迁本体今天逐条实测全 clean**（`.env.example` `CHANGELOG.md` `pyproject.toml` `MANIFEST.in` `Dockerfile` `docker-compose.yml` `fly.staging.toml` `.dockerignore` 的 `git status -uall` 均空输出）——10-02 版台账里「本体在飞即不可动」这一路闸**已全部自行解除**，现在卡住每批的只剩消费方。
+> ② W2 的真闸与 10-02 新事实 D 点名的**是同一条、同一个文件**：`scripts/ci/check-repo-layout.js`（根文档白名单数组）今天 ` M`——24 天后它还在被改。W2 的 8 个在飞消费方里有 1 个是生成物（`works/ship/npm/bundled/runtime/khy/bundle.mjs`，19.5MB 打包件），压到 7 才是真人闸。
+> ③ **本道差点把这张表写成假的**：探针首版把 `git status` 返回的字符串当数组迭代，`inflight` 集合里存进去的是**单个字符**，于是六批「在飞」齐刷刷报 **0**——读起来恰好像「六批同时开闸、可以搬家了」。修掉才有上面的数。⇒ 记法固化：**任何「在飞 = 0 / 零命中」的结论，必须先在同一份输出里证明那个集合非空**（本探针尾行的 `porcelain=6233` 就是这道自证；与「空注册表上的绿测试」同族）。
+>
+> **待人（本道不放宽、不动他人件）**：J3 两条逾期债务（`cross-layer-require` 37 / `dangling-task` 101，due 2026-10-31）归零还是置 `slipped` 顺延，由 owner 定；根上 12 个未跟踪可见残件（含三个 shell 引号事故文件 `x[1])`、`{clearTimeout(timer)`、`{process.exit(code`）由物主或你处置；origin 补推队列已计到第 250 次失败（凭据）。
+>
+> **回滚**：本节一个提交、只动本文件——纯追加本块，无文件移动、无 `git mv`、无基线与台账数值改动、无 html 再生（孪生仍是 ` M` 他道在飞件）、本道未发起 push / tag / force / prune。
+
 > **2026-11-03 01:2x 节（第 30 节）**：**零施工，但这是本道 24 天来第一节能提交的节**——本节只落两样：这条台账 + 三处已腐行号指针的订正。
 >
 > **读数（01:22–01:27 同批重取，非抄写）**：分支 `chore/docker-image-slim-20261102`，HEAD `78b68167`（01:17 由并行车道提交）；`.git/index.lock` **不存在**；在飞 porcelain **1432**（暂存 **0** / 未跟踪 **440**）；根项 `ls -1A` = **66**（第 29 节 49，**+17**）；百度件 **0**。J1 `check-repo-layout` **exit 1 = 4 error / 6 warning**；J2 `check-roots-isomorphic` **exit 0，读数 10**（第 29 节 15 ⇒ −5，达标但**不是本道所为，不进基线**）；J3 `check-debt-ledger` **exit 1 = 2 error / 5 warning**。
