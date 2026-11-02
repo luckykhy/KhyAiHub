@@ -4897,6 +4897,16 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 
 ### 16.6 施工执行状态（点头后逐批登记）
 
+> **2026-11-03 04:2x 节（第 33 节）**：**本节无未门控批次**——判据①②③与第 32 节**整文件逐字节相同**（不是抄写：三份守卫输出各跑一次后用 `cmp` 对拍，J1 同为 **6431 字节**、J2 读数同为 **10**、J3 同为 **2 error / 5 warning**；判据④无发布链改动，两节同为不适用）。外部状态同样原地：HEAD 仍是本道 `878de543`（03:25 我上节那笔），55 分钟内**无车道提交**；porcelain **1433**（与上节同值）、暂存 **0**、根项 **66**、百度件 **0**、无锁。
+>
+> **14 个 `root-uncatalogued` offender 逐名复在（第 32 节名册原样重测，`existsSync` 14/14、缺失 0）**：`.qoder`、`.tmp-bridgeservice-staged.java`、`.tmp-docs.txt`、`.tmp-tools-diff.txt`、`.tmp-tools-staged.java`、`.tmp-wr.txt`、`4-output`、`SelfDesc.index.java.tmp`、`atomic-out.tmp`、`head_amoo_tmp.js`、`tmp_log_mobile_err.txt`，以及三个 shell 引号事故文件 `x[1])` / `{clearTimeout(timer)` / `{process.exit(code`。全部仍是**未跟踪**——本道删不了（不可恢复）、也不能登记进 `ROOT_CATALOG`（把临时件喂给闸门正是第 30 节拒绝过的那件事）。
+>
+> **本节新增的一把尺（值得固化）**：把「读数没变」从**目测**升级成**可证**——只要把上一节守卫的原始输出留在盘上（`/tmp/s32-J1.txt` 这类），一条 `diff` + 字节数就能一票定论，不依赖任何人抄写时的诚实。后续各节沿用：守卫原始输出按节命名留在**仓内可寻址处**（`.khyos/tmp/sNN-J1.txt`，会话级 `/tmp` 会被清），判据①②③一律 `cmp` 对上一节那份，而不是引用上节台账里的数字。本节已把三份存到 `.khyos/tmp/s33-J{1,2,3}.txt`，第 34 节直接可拍。
+>
+> **待人（与第 30/31/32 节完全相同，未推进）**：① J3 两条逾期债务归零还是 `slipped`；② 根上 14 个未跟踪残件（含三个事故文件）由物主或你处置；③ origin 补推凭据。本道连四节的判断没变，**继续每夜跑就是零产出等待**——真正的开关仍是那一次人工处置。
+>
+> **回滚**：本节一个提交、只动本文件，纯追加本块；无文件移动、无基线与台账数值改动、无 html 再生、本道未发起 push / tag / force / prune。
+
 > **2026-11-03 03:2x 节（第 32 节）**：**零施工**。四项读数与第 31 节逐项持平（03:21 同批重取）：J1 **exit 1**、`counts` 逐字同（root-uncatalogued 14 / entry-buffer 2385 / domain-direction 196 / unresolved-require 0 / extension-id-hardcode 0），4 error 仍是 root-whitelist 4 + root-shadow-dir 2 + root-junk 9 + layer-registry 1；J2 **exit 0，读数 10**；J3 **exit 1 = 2 error / 5 warning**；根项 **66**、百度件 **0**、无锁。
 >
 > **porcelain 1432 → 1433 的 +1 已逐名归因**（脏件 mtime 排序 + 提交窗两把尺）：新增的三件写于 19:03——`runtime/node/backend/src/cli/handlers/phone.js`（` M`）、`.../network/phone/phoneBridgeClient.test.js`（` M`）、`.../phone/phoneCollect.test.js`（`??`）。**这正是第 30 节那两条棘轮红的同一条车道**（amoon/phone），它仍在写盘；而提交窗内无新 commit（HEAD 仍是本道 `03fc77be`）⇒「有人在改、没人提交」。
