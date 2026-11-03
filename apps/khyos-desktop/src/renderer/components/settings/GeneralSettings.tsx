@@ -1,8 +1,19 @@
-import { useState, useCallback, useEffect } from 'react'
-
+// khy-canary: Khy-20261102-308-JQHNPKAN
 // ── General settings page (ZC-ALIGN-003 §3, a11y s-7 全 28 项) ──
 // All item labels/descriptions match ZCode v3.11.2 a11y text exactly.
 // State persists via parent's settings/onChange → preload IPC settings:set.
+// 字段组件统一来自 ./fields.tsx（本页不再自带副本），文案与设置键一律不动。
+import {
+  SettingSection,
+  ToggleField,
+  SelectField,
+  RadioField,
+  ActionField,
+  SaveField,
+  PathField,
+} from './fields'
+import femaleIdle from '@/assets/pet/khy-pet-female-idle.png'
+import maleIdle from '@/assets/pet/khy-pet-male-idle.png'
 
 interface GeneralSettingsProps {
   settings: Record<string, unknown>
@@ -28,6 +39,26 @@ export function GeneralSettings({ settings, onChange }: GeneralSettingsProps) {
             // Same OnboardingDialog event as the 引导 page (D5/s-8 spec).
             window.dispatchEvent(new Event('khy:open-onboarding'))
           }}
+        />
+      </SettingSection>
+
+      {/* ── 桌宠 ── */}
+      {/* 角色真源是 settings.json 的 desktopPetCharacter（见 main/settingsStore.ts
+          的 DEFAULTS），渲染层不再另存一份。选完顺手广播一个窗口事件，
+          万一桌宠此刻挂在工作区里，它能立刻换人，不必等重挂载。 */}
+      <SettingSection title="桌宠">
+        <RadioField
+          label="桌宠角色"
+          description="选择悬浮在工作区左下角的桌宠形象。两位角色的性格不同：澪负责引导和陪伴，凯负责疑难和兜底。随时可以在桌宠卡片上直接切换。"
+          value={(settings.desktopPetCharacter as string) || 'female'}
+          onChange={(v) => {
+            onChange('desktopPetCharacter', v)
+            window.dispatchEvent(new CustomEvent('khy:pet-character', { detail: v }))
+          }}
+          options={[
+            { value: 'female', label: '澪 · 引导者', preview: femaleIdle },
+            { value: 'male', label: '凯 · 首席工程师', preview: maleIdle },
+          ]}
         />
       </SettingSection>
 
@@ -91,7 +122,7 @@ export function GeneralSettings({ settings, onChange }: GeneralSettingsProps) {
         />
         <ToggleField
           label="显示思考过程"
-          description="在消息流中展示完整的模型思考内容；关闭时每轮仍展示第一次思考。"
+          description="在消息流中展示模型的思考内容；关闭后思考块不再显示。"
           enabled={settings.showReasoning !== false}
           onChange={(v) => onChange('showReasoning', v)}
         />
@@ -228,6 +259,21 @@ export function GeneralSettings({ settings, onChange }: GeneralSettingsProps) {
         />
       </SettingSection>
 
+      {/* ── 编辑器 ── */}
+      {/* desktopEditor 是「在编辑器中打开」用的外部编辑器命令。此前只有
+          settingsStore 默认值与主进程消费方、设置页没有入口，而报错文案
+          一直让人「到设置 → 常规填写」—— 补上这个缺口，文案指的路走得通。
+          留空时该动作回落到内置编辑器（侧边面板的文件选择器）。 */}
+      <SettingSection title="编辑器">
+        <SaveField
+          label="外部编辑器命令"
+          description="「在编辑器中打开」使用的编辑器可执行命令（需在 PATH 中，例如 code、cursor、subl）。留空时改用内置编辑器：在侧边面板中直接编辑并保存工作区文件。"
+          value={(settings.desktopEditor as string) || ''}
+          placeholder="例如 code"
+          onChange={(v) => onChange('desktopEditor', v)}
+        />
+      </SettingSection>
+
       {/* ── 语言 ── */}
       <SettingSection title="语言">
         <SelectField
@@ -244,223 +290,6 @@ export function GeneralSettings({ settings, onChange }: GeneralSettingsProps) {
           ]}
         />
       </SettingSection>
-    </div>
-  )
-}
-
-// ── Reusable field components (match ZCode settings row layout) ──
-
-function SettingSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="mb-8">
-      <h3 className="text-sm font-medium text-foreground mb-3 px-1">{title}</h3>
-      <div className="bg-card border border-card-border rounded-xl px-5 divide-y divide-card-border">
-        {children}
-      </div>
-    </div>
-  )
-}
-
-function ToggleField({ label, description, enabled, onChange }: {
-  label: string
-  description: string
-  enabled: boolean
-  onChange: (v: boolean) => void
-}) {
-  return (
-    <div className="flex items-center justify-between py-4 gap-4">
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-foreground">{label}</div>
-        <div className="text-xs text-foreground/50 mt-1 leading-relaxed">{description}</div>
-      </div>
-      <button
-        onClick={() => onChange(!enabled)}
-        className={`relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ${
-          enabled ? 'bg-brand' : 'bg-foreground/20'
-        }`}
-        role="switch"
-        aria-checked={enabled}
-      >
-        <span
-          className={`absolute left-1 top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-            enabled ? 'translate-x-5' : 'translate-x-0'
-          }`}
-        />
-      </button>
-    </div>
-  )
-}
-
-function SelectField({ label, description, value, onChange, options, disabled }: {
-  label: string
-  description: string
-  value: string
-  onChange?: (v: string) => void
-  options: { value: string; label: string }[]
-  disabled?: boolean
-}) {
-  return (
-    <div className="flex items-center justify-between py-4 gap-4">
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-foreground">{label}</div>
-        <div className="text-xs text-foreground/50 mt-1 leading-relaxed">{description}</div>
-      </div>
-      <select
-        value={value}
-        onChange={disabled ? undefined : (e) => onChange?.(e.target.value)}
-        disabled={disabled}
-        className="bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-input-border-focused min-w-[140px] flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>{opt.label}</option>
-        ))}
-      </select>
-    </div>
-  )
-}
-
-function SaveField({ label, description, value, placeholder, onChange }: {
-  label: string
-  description: string
-  value: string
-  placeholder: string
-  onChange: (v: string) => void
-}) {
-  const [localValue, setLocalValue] = useState(value)
-  const [dirty, setDirty] = useState(false)
-
-  const handleChange = (v: string) => {
-    setLocalValue(v)
-    setDirty(v !== value)
-  }
-
-  const handleSave = () => {
-    onChange(localValue)
-    setDirty(false)
-  }
-
-  return (
-    <div className="py-4">
-      <div className="text-sm font-medium text-foreground mb-1">{label}</div>
-      <div className="text-xs text-foreground/50 mb-3 leading-relaxed">{description}</div>
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={localValue}
-          placeholder={placeholder}
-          onChange={(e) => handleChange(e.target.value)}
-          className="flex-1 bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-input-border-focused"
-        />
-        <button
-          onClick={handleSave}
-          disabled={!dirty}
-          className="px-4 py-2 text-sm font-medium rounded-lg transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed bg-brand/10 text-brand hover:bg-brand/20"
-        >
-          保存
-        </button>
-      </div>
-    </div>
-  )
-}
-
-function PathField({ label, description, value, placeholder, onChange }: {
-  label: string
-  description: string
-  value: string
-  placeholder: string
-  onChange: (v: string) => void
-}) {
-  const [localValue, setLocalValue] = useState(value)
-  const [dirty, setDirty] = useState(false)
-
-  // Sync when the persisted value changes from outside (e.g. parent reload)
-  useEffect(() => {
-    setLocalValue(value)
-    setDirty(false)
-  }, [value])
-
-  const handlePick = useCallback(() => {
-    const api = (window as unknown as {
-      __KHYOS__?: { openDirectoryPicker?: () => Promise<string> }
-    }).__KHYOS__
-    api?.openDirectoryPicker?.().then((dir) => {
-      if (dir) {
-        setLocalValue(dir)
-        setDirty(dir !== value)
-      }
-    }).catch(() => {})
-  }, [value])
-
-  const handleSave = () => {
-    // Data-path changes go through the migration IPC (copy data + write
-    // pointer), not the plain settings:set — see main settings:setDataPath.
-    const api = (window as unknown as {
-      __KHYOS__?: { setDataPath?: (p: string) => Promise<{ ok: boolean; error?: string }> }
-    }).__KHYOS__
-    api?.setDataPath?.(localValue).then((res) => {
-      if (res?.ok) {
-        onChange(localValue)
-        setDirty(false)
-      } else {
-        // Migration failed: keep dirty so the 保存 button stays retryable
-        setDirty(true)
-      }
-    }).catch(() => {
-      setDirty(true)
-    })
-  }
-
-  return (
-    <div className="py-4">
-      <div className="text-sm font-medium text-foreground mb-1">{label}</div>
-      <div className="text-xs text-foreground/50 mb-3 leading-relaxed">{description}</div>
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={localValue}
-          placeholder={placeholder}
-          onChange={(e) => {
-            setLocalValue(e.target.value)
-            setDirty(e.target.value !== value)
-          }}
-          className="flex-1 bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-input-border-focused"
-        />
-        <button
-          onClick={handlePick}
-          className="px-4 py-2 text-sm font-medium rounded-lg transition-colors flex-shrink-0 border border-card-border text-foreground/70 hover:text-foreground hover:bg-surface-hover"
-        >
-          选择文件夹
-        </button>
-        <button
-          onClick={handleSave}
-          disabled={!dirty}
-          className="px-4 py-2 text-sm font-medium rounded-lg transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed bg-brand/10 text-brand hover:bg-brand/20"
-        >
-          保存
-        </button>
-      </div>
-    </div>
-  )
-}
-
-function ActionField({ label, description, buttonText, onClick }: {
-  label: string
-  description: string
-  buttonText: string
-  onClick: () => void
-}) {
-  return (
-    <div className="flex items-center justify-between py-4 gap-4">
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-foreground">{label}</div>
-        <div className="text-xs text-foreground/50 mt-1 leading-relaxed">{description}</div>
-      </div>
-      <button
-        onClick={onClick}
-        className="px-4 py-2 text-sm font-medium rounded-lg transition-colors flex-shrink-0 border border-card-border text-foreground/70 hover:text-foreground hover:bg-surface-hover"
-      >
-        {buttonText}
-      </button>
     </div>
   )
 }

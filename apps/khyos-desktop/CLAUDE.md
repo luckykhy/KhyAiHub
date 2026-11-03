@@ -66,9 +66,14 @@ npm run electron:build
 
 # 校验
 node scripts/ci/check-agent-rules.js --changed
-node scripts/ci/check-i18n-fidelity.js
 node scripts/ci/check-version-sync.js
 ```
+
+> **2026-11-02 更正**：本条原先列有 `node scripts/ci/check-i18n-fidelity.js`，
+> 该脚本**在本仓不存在**（`scripts/ci/` 下无此文件），照抄会直接报 MODULE_NOT_FOUND。
+> 仓内没有任何守卫比对 `zh-CN.json` 与 `zcode-analysis/i18n-zh.json` 的文案一致性
+> （`check-zcode-baseline.js` 是架构代理指标记分板，S1 观察者，不碰文案）。
+> **i18n 与 ZCode 真源的分歧靠人工核对**，见下节。
 
 ## 真源资产
 
@@ -83,6 +88,15 @@ node scripts/ci/check-version-sync.js
 | `unpacked/` | ZCode 解包产物（只读参考） |
 
 **禁止凭记忆改数值。一切以真源文件为准。**
+
+### 与真源的有意分歧登记（2026-11-02）
+
+`zcode-analysis/` 是**只读参考真源**，不是可执行契约。凡实现刻意偏离真源文案的，
+在此登记理由；没有登记的偏离视为漂移，应修。
+
+| 键 | 真源原文（`i18n-zh.json`） | KhyOS 现值（`src/renderer/i18n/zh-CN.json`） | 分歧理由 |
+|---|---|---|---|
+| `settings.messageStreamShowReasoningDescription` | 「在消息流中展示完整的模型思考内容；**关闭时每轮仍展示第一次思考**。」 | 「在消息流中展示模型的思考内容；**关闭后思考块不再显示**。」 | 真源描述的「仍展示第一次思考」这个语义在 khy-os 任何一层都不存在（全仓 grep `第一次思考\|首次思考\|firstThinking` = 0 命中）。照抄等于对用户作无法兑现的承诺，故按实现改写。 |
 
 ## 品牌规则
 

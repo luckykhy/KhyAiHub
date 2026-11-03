@@ -1,4 +1,15 @@
-/* ===== KhyOS Desktop — Tailwind 4 + CSS variables ===== */
+/* ===== KhyOS Desktop — Tailwind 4 + CSS variables =====
+ *
+ * 美学标准落地载体：[DESIGN-FE-012] khy-os 软件美学标准
+ * （docs/10_规范/DESIGN-FE/[DESIGN-FE-012] khy-os 软件美学标准.md）。
+ * 本文件是桌面端的美学语义令牌真源，对应机器可读清单
+ * docs/10_规范/registry/AESTHETICS-TOKENS.json 的 desktop 面
+ * （Tailwind @theme 的 --color-*）。canonical 语义名对齐见标准 §3.1：desktop 的
+ * canonical `accent` 对应 --color-brand —— 它是**唯一**的彩色强调令牌（工程蓝），
+ * 焦点环 / 选中指示 / 进度填充 / 激活态文字都走它；--color-primary 则是实心主按钮
+ * 的底色（白字）。此前这两个令牌是「亮暗翻转的主前景色」（暗色纯白 / 浅色纯黑），
+ * 全应用没有真正的强调色，层级只能靠 text-foreground/25~80 堆叠。
+ * 取值以本文件为准，标准不固化桌面端取值。 */
 
 /* Tailwind 4 entry. Utilities like bg-card / text-foreground/70 / border-border
    are generated against the semantic tokens registered in @theme below; the
@@ -7,42 +18,127 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #161616;
-  --color-header: #202020;
-  --color-panel: #202020;
-  --color-sidebar: #161616;
+  --color-background: #171920;
+  --color-header: #1f222a;
+  --color-panel: #1f222a;
+  --color-sidebar: #131418;
   --color-surface: #ffffff0d;
-  --color-surface-hover: #ffffff1a;
-  --color-card: #2b2b2b;
-  --color-card-selected: #262626;
+  /* 交互态的区分靠「叠加更重」，不靠「更暗 / 更亮」的方向：
+     hover 与 selected 是同一个前景色的半透明叠加，selected 的 alpha 更高，
+     与底色的对比更强。暗色主题叠白（selected #ffffff24 > hover #ffffff0d），
+     浅色主题叠黑（selected #0d0d0d24 > hover #0d0d0d08）—— 两套主题语义一致，
+     只是叠加上去的是白还是黑。
+     （历史问题：hover 与 selected 曾同为 #ffffff1a，选中行与悬停行分不开。） */
+  --color-surface-hover: #ffffff0d;
+  --color-card: #282c36;
+  --color-card-selected: #21252e;
   --color-card-border: #ffffff1a;
-  --color-popover: #2b2b2b;
+  --color-popover: #262a34;
   --color-popover-foreground: #e5e5e5;
   --color-popover-header: #a3a3a3;
-  --color-input: #262626;
+  /* border-popover-border 被多处弹层引用，而 Tailwind 4 只为 @theme 里注册的
+     令牌生成工具类 —— 缺这一行时弹层边框退回 currentColor（近全亮文字色）。 */
+  --color-popover-border: #ffffff1a;
+  --color-input: #21252e;
   --color-input-border: #ffffff1a;
   --color-input-border-hover: #ffffff26;
   --color-input-border-focused: #ffffff;
-  --color-tab: #202020;
-  --color-tab-active: #161616;
+  --color-tab: #1f222a;
+  --color-tab-active: #171920;
   --color-tab-border: #ffffff1a;
-  --color-menu: #2b2b2b;
-  --color-menu-hover: #363636;
-  --color-brand: #ffffff;
-  --color-primary: #ffffff;
-  --color-primary-foreground: #000000;
+  --color-menu: #262a34;
+  --color-menu-hover: #313643;
+  /* 品牌强调色（Khy OS 品牌琥珀族）：此前是「亮暗翻转的主前景色」（暗色纯白 / 浅色纯黑），
+     全应用没有真正的彩色强调件，层级只能靠 text-foreground/25~80 堆叠。
+     焦点环、选中指示、进度填充、激活态文字都走这一个令牌，改一处全仓生效。
+     真源：delivery/brand/khy-brand-geometry.js 的 PALETTE。
+     暗色 #f0a868 于 #1f222a 面板上对比度约 7.96:1；浅色 #9c4116 于白底约 6.60:1。 */
+  --color-brand: #f0a868;
+  /* 实心主按钮底色：白字对比度 ≥4.5:1（AA，对 #9c4116 = 6.60:1）。hover / active 另立令牌，
+     替代此前的 hover:opacity-90（那会让整块按钮一起变淡）。 */
+  --color-primary: #9c4116;
+  --color-primary-foreground: #ffffff;
+  --color-primary-hover: #7a3310;
+  --color-primary-active: #5f260c;
+  /* 品牌色的低透明度表面：设置页头像圈、选中导航底等。 */
+  --color-brand-subtle: #f0a86824;
+  /* 品牌主标的渐变端点（亮暗两端同值 —— 它是**品牌身份**，不是主题强调）。
+     真源：delivery/brand/khy-brand-geometry.js 的 PALETTE.amber300 / amber500。 */
+  --brand-from: #ffc078;
+  --brand-to: #e2703a;
   --color-secondary: #363636;
   --color-foreground: #e5e5e5;
   --color-foreground-inverse: #000000;
+  /* ===== 文字阶梯（语义化文字令牌）=====
+     此前层级只能靠 text-foreground/25~80 的透明度堆叠，而同一个 alpha 档位在
+     暗色与浅色两套主题下落在完全不同的对比度上：
+       #e5e5e5 /40 叠 card #282c36 ≈ 3.08:1，/50 ≈ 3.99:1，/55 ≈ 4.48:1，/60 ≈ 5.02:1
+       #171717 /40 叠 card #ffffff ≈ 2.55:1，/50 ≈ 3.41:1，/55 ≈ 4.00:1，/60 ≈ 4.67:1
+     而且**没有任何一个 alpha 档位能在浅色主题的全部底色上过 4.5:1**：
+     #171717/60 在 card / panel 是 4.67，在 background #f6f7f9 掉到 4.58，
+     在 sidebar #eef0f4 与 tab / menu-hover #f0f0f0 只剩 4.49/4.49 —— 都低于 4.5。
+     （暗色 #e5e5e5/60 最低也有 4.83，问题出在浅色这一侧。）
+     所以「小节标题用 /50、说明段用 /40、分组标题用 /55、节标题用 /60」这类差异不是
+     设计选择，而是同一语义在两套主题、不同底色下对比度不一致的副作用。
+     故把三档阶梯固化成**不透明**令牌（具体取值见下方暗色 / 浅色主题块）：
+       foreground          标题级、正文主色
+       foreground-muted    次级说明级（信息性，门槛 4.5:1）
+       foreground-subtle   装饰级（纯图形 / 纯标点，门槛 3:1）
+     取值均为不透明色，工具类不带 /NN 透明度修饰符使用。
+     占位符不在此列：占位符是文字，按 4.5:1 走 muted，不给豁免。 */
+  --color-foreground-muted: #a8a8b2;
+  --color-foreground-subtle: #82828c;
   --color-accent: #001d3d;
   --color-hover: #ffffff0d;
-  --color-selected: #ffffff1a;
+  --color-selected: #ffffff24;
   --color-border: #ffffff1a;
   --color-border-hover: #ffffff26;
+  /* 需要更强存在感的分隔：面板分界、拖拽条常态。--color-border 留给行内分隔。 */
+  --color-border-strong: #ffffff2e;
   --color-success: #46bf72;
   --color-warning: #ff8a30;
-  --color-destructive: #ff5c5c;
-  --color-toast: #2b2b2b;
+  /* destructive 调整为 #ff7a7a（授权记录见 text-contrast-spec.md §6）：
+     #ff5c5c 在暗色 menu-hover #313643 上实算 3.99:1 < 4.5，作为信息性文字色不达标；
+     #ff7a7a 最差底色 menu-hover 4.78:1，12 种底色全部 ≥ 4.5。 */
+  --color-destructive: #ff7a7a;
+  --color-toast: #262a34;
+  /* 轨迹角色色：工具类（text-trajectory-user 等）必须由 @theme 注册才会生成 ——
+     此前消息头的 ❯/● 因此回退成继承前景色。取暗色值为默认，与下方 :root 块一致。 */
+  --color-trajectory-user: #60a5fa;
+  --color-trajectory-assistant: #2dd4bf;
+  --color-trajectory-reasoning: #a78bfa;
+  --color-trajectory-tool-call: #f59e0b;
+  --color-trajectory-tool-result: #38bdf8;
+  /* 思维链块底色：violet 族，与上方 trajectory-reasoning 同族，且明显区别于
+     background / card；缺这层 Tailwind 4 不生成 bg-reasoning-surface。
+     三层（@theme / :root 暗色 / .theme-zai-light 浅色）必须同值，漏一层
+     Tailwind 不生成该工具类且不报错。 */
+  --color-reasoning-surface: #1f1a30;
+  /* 交互反馈色与图表分类色同样必须在 @theme 注册，否则 Tailwind 4 不生成
+     bg-interaction-ask-fill / text-interaction-ask-foreground / bg-chart-* 工具类
+     —— 缺工具类时按钮渲染成透明底、图例方块不显形，且不报任何错。
+     暗色值即默认值，与下方 :root 块一致。 */
+  --color-interaction-ask-surface: #001d3d;
+  --color-interaction-ask-foreground: #80beff;
+  --color-interaction-ask-fill: #46bf723d;
+  --color-interaction-confirmation-surface: #46bf7229;
+  --color-interaction-confirmation-foreground: #87d9a4;
+  --color-chart-1: #58a6ff;
+  --color-chart-2: #d2a8ff;
+  --color-chart-3: #facc15;
+  --color-chart-4: #46bf72;
+  --color-chart-5: #f778ba;
+  /* 滚动条滑块：取 --color-border（#ffffff1a）时与面板同色，
+     滚动位置完全不可见，故单列一对更亮的令牌。 */
+  --color-scrollbar-thumb: #ffffff2e;
+  --color-scrollbar-thumb-hover: #ffffff45;
+  /* 等宽字体栈：真终端（Terminal.tsx 的 var(--font-mono)）与消息区 .khy-tui
+     此前各写一份，栈不一致时同屏两种等宽字形。现在同源。 */
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
+  /* 浮起层级：卡片 / 弹层的阴影。层级表达顺序是 间距 > 明度 > 边框 > 阴影，
+     阴影只负责最后那一点「浮起感」，故只有两档。 */
+  --shadow-elevated: 0 1px 2px rgb(0 0 0 / 0.24), 0 8px 24px rgb(0 0 0 / 0.28);
+  --shadow-overlay: 0 4px 12px rgb(0 0 0 / 0.32), 0 16px 40px rgb(0 0 0 / 0.36);
 }
 
 /* 基础重置
@@ -70,59 +166,86 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ===== 暗色主题（默认） ===== */
+/* ===== 暗色主题（默认） =====
+   三级面板明度阶梯：sidebar #131418 < background #171920 < panel #1f222a，
+   卡片再抬到 #282c36（与 panel 差约 11%），浮起靠明度差 + 边框，不靠色相。 */
 :root, .dark, .theme-zai-dark {
-  --color-background: #161616;
-  --color-header: #202020;
-  --color-panel: #202020;
-  --color-sidebar: #161616;
+  /* 原生控件（<select> 展开层、滚动条、日期选择器）跟随页面的配色方案，
+     否则暗色主题里它们仍按系统浅色绘制，在深色面板上是一块白斑。 */
+  color-scheme: dark;
+  --color-background: #171920;
+  --color-header: #1f222a;
+  --color-panel: #1f222a;
+  --color-sidebar: #131418;
   --color-surface: #ffffff0d;
   --color-surface-hover: #ffffff1a;
-  --color-card: #2b2b2b;
+  --color-card: #282c36;
   --color-card-selected: var(--color-input);
   --color-card-border: var(--color-border);
-  --color-popover: #2b2b2b;
+  --color-popover: #262a34;
   --color-popover-foreground: var(--color-foreground);
-  --color-input: #262626;
-  --color-input-focused: #1a1a1a;
+  --color-popover-border: var(--color-border);
+  --color-input: #21252e;
+  --color-input-focused: #1a1d26;
   --color-input-border: var(--color-border);
   --color-input-border-hover: var(--color-border-hover);
   --color-input-border-focused: var(--color-brand);
-  --color-tab: #202020;
-  --color-tab-active: #161616;
+  --color-tab: #1f222a;
+  --color-tab-active: #171920;
   --color-tab-border: var(--color-border);
-  --color-menu: #2b2b2b;
-  --color-menu-hover: #363636;
-  --color-brand: #ffffff;
-  --color-primary: #ffffff;
-  --color-primary-foreground: #000000;
+  --color-menu: #262a34;
+  --color-menu-hover: #313643;
+  --color-brand: #f0a868;
+  --color-primary: #9c4116;
+  --color-primary-foreground: #ffffff;
+  --color-primary-hover: #7a3310;
+  --color-primary-active: #5f260c;
+  --color-brand-subtle: #f0a86824;
   --color-secondary: #363636;
   --color-foreground: #e5e5e5;
   --color-foreground-inverse: #000000;
+  /* 文字阶梯（暗色取值）：
+     muted #a8a8b2 —— card 5.92:1 / panel 6.75 / background 7.45 / popover 6.09，
+     12 种底色（check-contrast.mjs 的 SURFACES 清单）全部 ≥ 4.5。
+     subtle #82828c —— card 3.67 / panel 4.18 / background 4.61 / input 4.03，
+     最差 3.17:1（menu-hover）≥ 3（装饰级门槛）。 */
+  --color-foreground-muted: #a8a8b2;
+  --color-foreground-subtle: #82828c;
   --color-accent: #001d3d;
   --color-hover: #ffffff0d;
-  --color-selected: #ffffff1a;
+  /* 暗色主题：选定态 = 比 hover（#ffffff1a）更重的一层白叠加。注意方向 ——
+     叠白是「更亮」而不是「更暗」，选中与悬停的区分完全来自叠加更重。 */
+  --color-selected: #ffffff24;
   --color-border: #ffffff1a;
   --color-border-hover: #ffffff26;
+  --color-border-strong: #ffffff2e;
   --color-success: #46bf72;
   --color-success-foreground: #000000;
   --color-warning: #ff8a30;
   --color-warning-foreground: #000000;
-  --color-destructive: #ff5c5c;
+  --color-destructive: #ff7a7a; /* 调整记录与实算见 @theme 块与 spec §6（授权）；diff-removed / git-deleted 未随之改，非本轮令牌 */
   --color-destructive-foreground: #ffffff;
+  --color-chart-1: #58a6ff;
+  --color-chart-2: #d2a8ff;
+  --color-chart-3: #facc15;
+  --color-chart-4: #46bf72;
+  --color-chart-5: #f778ba;
+  --color-scrollbar-thumb: #ffffff2e;
+  --color-scrollbar-thumb-hover: #ffffff45;
   --color-idle-task: #7b5ce5;
   --color-idle-task-surface: #160d38;
   --color-find-highlight: #542500;
   --color-find-highlight-active: #ff8a30;
   --animated-gradient-text-strong: #ffffff;
   --animated-gradient-text-soft: #ffffff38;
-  --color-toast: #2b2b2b;
+  --color-toast: #262a34;
 
   --color-trajectory-user: #60a5fa;
   --color-trajectory-assistant: #2dd4bf;
   --color-trajectory-reasoning: #a78bfa;
   --color-trajectory-tool-call: #f59e0b;
   --color-trajectory-tool-result: #38bdf8;
+  --color-reasoning-surface: #1f1a30;
   --color-diff-added: #46bf72;
   --color-diff-added-foreground: #000000;
   --color-diff-removed: #ff5c5c;
@@ -140,6 +263,19 @@ body {
   --color-interaction-ask-fill: #46bf723d;
   --color-interaction-confirmation-surface: #46bf7229;
   --color-interaction-confirmation-foreground: #87d9a4;
+
+  /* 代码语法高亮色：原先定义在 .khy-tui 作用域内（暖色终端面板），
+     消息区改为继承外壳中性色后，高亮色随之上提到这里，亮/暗各一套。
+     全仓仅 MarkdownRenderer 的 text-green-400 / yellow-400 / fuchsia-400 /
+     cyan-400 引用这四个色（其余位置没有同名类的使用）。 */
+  --color-green-400: #4ade80;
+  --color-yellow-400: #facc15;
+  --color-fuchsia-400: #c084fc;
+  --color-cyan-400: #22d3ee;
+
+  /* 浮起层级（暗色）：卡片 / 弹层阴影。 */
+  --shadow-elevated: 0 1px 2px rgb(0 0 0 / 0.24), 0 8px 24px rgb(0 0 0 / 0.28);
+  --shadow-overlay: 0 4px 12px rgb(0 0 0 / 0.32), 0 16px 40px rgb(0 0 0 / 0.36);
 
   --color-terminal-bg: #0a0a0a;
   --color-terminal-fg: #fafafa;
@@ -163,20 +299,29 @@ body {
   --color-terminal-bright-white: #fafafa;
 }
 
-/* ===== 浅色主题 ===== */
+/* ===== 浅色主题 =====
+   浅色下 background / sidebar 用极轻的冷调（#f6f7f9 / #eef0f4），panel 与
+   card 保持纯白 —— 白面板在白底上靠阴影（--shadow-elevated）浮起。 */
 .theme-zai-light {
-  --color-background: #f8f8f8;
+  color-scheme: light;
+  --color-background: #f6f7f9;
   --color-header: #ffffff;
   --color-panel: #ffffff;
-  --color-sidebar: #f0f0f0;
+  --color-sidebar: #eef0f4;
   --color-surface: #0d0d0d08;
-  --color-surface-hover: #0d0d0d0d;
+  --color-surface-hover: #0d0d0d08;
   --color-card: #ffffff;
   --color-card-selected: var(--color-input);
   --color-card-border: var(--color-border);
   --color-popover: #ffffff;
   --color-popover-foreground: var(--color-foreground);
-  --color-input: #f5f5f5;
+  --color-popover-border: var(--color-border);
+  /* popover-header 此前浅色块没有覆盖，落到 @theme 的 #a3a3a3 —— 在弹层白底上实算
+     2.52:1，作为弹层分组标题（信息性）远低于 4.5:1。授权修复（spec §6）：
+     #5c5c63 最差底色 menu-hover / tab 5.82:1，12 种浅色底色全部 ≥ 4.5。
+     暗色沿用 @theme #a3a3a3（最差 menu-hover 4.79:1，达标，不动）。 */
+  --color-popover-header: #5c5c63;
+  --color-input: #f1f3f6;
   --color-input-focused: #ffffff;
   --color-input-border: var(--color-border);
   --color-input-border-hover: var(--color-border-hover);
@@ -186,23 +331,47 @@ body {
   --color-tab-border: var(--color-border);
   --color-menu: #ffffff;
   --color-menu-hover: #f0f0f0;
-  --color-brand: #000000;
-  --color-primary: #000000;
+  --color-brand: #9c4116;
+  --color-primary: #9c4116;
   --color-primary-foreground: #ffffff;
+  --color-primary-hover: #7a3310;
+  --color-primary-active: #5f260c;
+  --color-brand-subtle: #9c411614;
   --color-secondary: #e6e6e6;
   --color-foreground: #171717;
   --color-foreground-inverse: #ffffff;
+  /* 文字阶梯（浅色取值）：
+     muted #5c5c63 —— card 6.63:1 / panel 6.63 / background 6.19 / input 5.97，
+     12 种底色全部 ≥ 4.5（最差 sidebar 5.81）。注意浅色的 card 是纯白，所以 muted
+     必须比暗色档更深：#171717/60 在白底只有 4.67，在 sidebar / tab 上更掉到 4.49。
+     subtle #7e7e85 —— card 4.03 / background 3.76 / sidebar 3.53 / input 3.63，
+     最差 3.53:1 ≥ 3（装饰级门槛）。subtle 与 muted 仍分得开（3.53 vs 5.81）。 */
+  --color-foreground-muted: #5c5c63;
+  --color-foreground-subtle: #7e7e85;
   --color-accent: #ebf4ff;
   --color-hover: #0d0d0d0d;
-  --color-selected: #0d0d0d0d;
+  /* 浅色主题：选定态 = 比 hover（#0d0d0d08）更重的一层黑叠加。物理方向与暗色
+     主题相反（叠黑确实更暗），但策略相同：靠叠加更重与悬停区分。 */
+  --color-selected: #0d0d0d24;
   --color-border: #0d0d0d1a;
   --color-border-hover: #0d0d0d26;
+  --color-border-strong: #0d0d0d2e;
   --color-success: #1e8a3e;
   --color-success-foreground: #ffffff;
   --color-warning: #e07b00;
   --color-warning-foreground: #000000;
-  --color-destructive: #e03131;
+  /* destructive 浅色取值调整（授权记录见 spec §6）：#e03131 在 12 种浅色底色里 6 种
+     低于 4.5:1（最差 sidebar / menu-hover / tab 3.96），作为信息性错误文字不达标；
+     #c92a2a 最差底色 sidebar 4.78:1，全部 ≥ 4.5。 */
+  --color-destructive: #c92a2a;
   --color-destructive-foreground: #ffffff;
+  --color-chart-1: #2563eb;
+  --color-chart-2: #a3268a;
+  --color-chart-3: #92670a;
+  --color-chart-4: #1e8a3e;
+  --color-chart-5: #c2255c;
+  --color-scrollbar-thumb: #0d0d0d2e;
+  --color-scrollbar-thumb-hover: #0d0d0d45;
   --color-idle-task: #9e77ed;
   --color-idle-task-surface: #f5f3ff;
   --color-find-highlight: #fff4eb;
@@ -216,6 +385,7 @@ body {
   --color-trajectory-reasoning: #7c3aed;
   --color-trajectory-tool-call: #d97706;
   --color-trajectory-tool-result: #0284c7;
+  --color-reasoning-surface: #ede9fe;
   --color-diff-added: #1e8a3e;
   --color-diff-added-foreground: #ffffff;
   --color-diff-removed: #e03131;
@@ -233,6 +403,16 @@ body {
   --color-interaction-ask-fill: #46bf7233;
   --color-interaction-confirmation-surface: #eaf7ee;
   --color-interaction-confirmation-foreground: #166b32;
+
+  /* 代码语法高亮色（浅色）：浅底上要深一档的色，故与暗色不同值。 */
+  --color-green-400: #1a7a37;
+  --color-yellow-400: #92670a;
+  --color-fuchsia-400: #a3268a;
+  --color-cyan-400: #0e7490;
+
+  /* 浮起层级（浅色）：白面板在白底上靠阴影分层，阴影比暗色轻得多。 */
+  --shadow-elevated: 0 1px 2px rgb(0 0 0 / 0.06), 0 6px 16px rgb(0 0 0 / 0.08);
+  --shadow-overlay: 0 4px 10px rgb(0 0 0 / 0.08), 0 16px 32px rgb(0 0 0 / 0.10);
 
   --color-terminal-bg: #0a0a0a;
   --color-terminal-fg: #fafafa;
@@ -283,11 +463,21 @@ body {
 .bg-diff-added { background-color: var(--color-diff-added); }
 .bg-diff-removed { background-color: var(--color-diff-removed); }
 .bg-interaction-ask-surface { background-color: var(--color-interaction-ask-surface); }
+.bg-interaction-ask-fill { background-color: var(--color-interaction-ask-fill); }
 .bg-interaction-confirmation-surface { background-color: var(--color-interaction-confirmation-surface); }
+.bg-chart-1 { background-color: var(--color-chart-1); }
+.bg-chart-2 { background-color: var(--color-chart-2); }
+.bg-chart-3 { background-color: var(--color-chart-3); }
+.bg-chart-4 { background-color: var(--color-chart-4); }
+.bg-chart-5 { background-color: var(--color-chart-5); }
+.text-interaction-ask-foreground { color: var(--color-interaction-ask-foreground); }
+.text-interaction-confirmation-foreground { color: var(--color-interaction-confirmation-foreground); }
 .border-sidebar { border-color: var(--color-sidebar); }
 .border-border { border-color: var(--color-border); }
 .border-input-border { border-color: var(--color-input-border); }
 .text-foreground { color: var(--color-foreground); }
+.text-foreground-muted { color: var(--color-foreground-muted); }
+.text-foreground-subtle { color: var(--color-foreground-subtle); }
 .text-foreground-inverse { color: var(--color-foreground-inverse); }
 
 /* ===== 布局工具类 ===== */
@@ -356,6 +546,12 @@ body {
 .border-r { border-right-width: 1px; border-right-style: solid; }
 .border-b { border-bottom-width: 1px; border-bottom-style: solid; }
 .border-l { border-left-width: 1px; border-left-style: solid; }
+/* border-left-* 变体必须在这里补手写伴生：上面的 .border 与 .border-border 都是
+   unlayered，会压过 Tailwind 在 @layer utilities 里生成的同名规则。缺了这两条，
+   ThinkingBlock 的 border-l-2 + border-l-trajectory-reasoning 就是静默 no-op
+   （左边仍是 1px 的 --color-border，紫强调边根本不渲染）。 */
+.border-l-2 { border-left-width: 2px; }
+.border-l-trajectory-reasoning { border-left-color: var(--color-trajectory-reasoning); }
 .rounded-md { border-radius: 0.375rem; }
 .rounded-lg { border-radius: 0.5rem; }
 .rounded-full { border-radius: 9999px; }
@@ -368,12 +564,27 @@ body {
 .opacity-0 { opacity: 0; }
 .opacity-50 { opacity: 0.5; }
 .group:hover .group-hover\:opacity-100 { opacity: 1; }
+/* 本文件这段手写工具块是 unlayered，按 CSS 层叠会压过 Tailwind 在
+   @layer utilities 里生成的同名规则（:60 的重置注释记的是同一机制）。
+   所以「挂在同一个元素上的变体类」若没有下面的手写伴生就是静默 no-op。
+   需要伴生的变体族：focus: / focus-visible: / focus-within: / group-hover 命名组
+   （group/f: 这类）——只要 plain 类是上面手写的（border-input-border、opacity-0 等），
+   新增同属性变体时必须在这里补一条同款。 */
+.group\/f:hover .group-hover\/f\:opacity-100 { opacity: 1; }
+.focus-visible\:opacity-100:focus-visible { opacity: 1; }
+.focus\:border-input-border-focused:focus { border-color: var(--color-input-border-focused); }
+.focus-within\:border-input-border-focused:focus-within { border-color: var(--color-input-border-focused); }
 .transition-colors { transition-property: color, background-color, border-color; transition-duration: 0.15s; }
 .disabled\:opacity-50:disabled { opacity: 0.5; }
 .hover\:bg-surface-hover:hover { background-color: var(--color-surface-hover); }
 .hover\:text-foreground:hover { color: var(--color-foreground); }
 
-/* ===== 动效 ===== */
+/* ===== 动效 =====
+   时长口径统一为三档（全仓只有这一处口径，不另立令牌）：
+     · 微反馈 120–150ms —— hover / 按下（.transition-colors 0.15s）
+     · 入场   150–200ms —— 菜单、消息淡入（.animate-fade-in / slide-* 0.2s）
+     · 进度填充 150–500ms —— ProgressBar 0.15s ~ ContextUsageBar 0.5s
+   统一用 transform/opacity，不动 width/height/top/left。 */
 .animate-fade-in { animation: fadeIn 0.2s ease-out; }
 .animate-slide-down { animation: slideDown 0.2s ease-out; }
 .animate-slide-up { animation: slideUp 0.2s ease-out; }
@@ -399,98 +610,99 @@ body {
   to { opacity: 1; transform: scale(1); }
 }
 
+/* ===== 减少动态效果（全局降级） =====
+   全仓此前只有 pacedProgress.ts / usePacedPercent.ts 两处处理过这个偏好，
+   消息淡入、菜单入场、toast 滑入、骨架 pulse 都不降级。这里一次性收口：
+   动画/过渡时长压到 0.01ms（保留终态，不闪、不跳），循环次数压到 1。
+   注意 animate-pulse（骨架）也在这条规则内 —— 系统开了「减少动态效果」时
+   骨架保持静止的灰块，而不是持续呼吸。 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== 内容列 =====
+   消息流与其中夹着的面板（目标条 / 工具执行 / 人工确认 / Token 用量 / 改动摘要）
+   此前口径不一：正文铺满整行（宽屏下一行 90–120 字符），面板有的贴窗口边、
+   有的留 mx-4。统一到一列：宽屏限宽 860px 居中（与空态卡片同一档口），窄屏
+   保留 16px 边距。垂直节奏由调用方自己的 mt-*/my-* 决定，本类只管横向。 */
+.khy-content-col {
+  width: calc(100% - 2rem);
+  max-width: 860px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ===== 原生 select 的外观接管 =====
+   渲染层还留着若干原生 <select>（枚举项）。默认外观由系统绘制：Windows 下
+   展开面板是浅色系统色，与自绘 popover 菜单割裂。appearance:none 去掉系统
+   箭头与底色，改用 popover 令牌 + 内联 chevron 回到暗色体系。 */
+.khy-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3E%3Cpath d='M1.5 3L4 5.5 6.5 3' fill='none' stroke='%23888' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 26px;
+}
+
+.khy-select option {
+  background-color: var(--color-popover);
+  color: var(--color-popover-foreground);
+}
+
 /* ===== 滚动条 ===== */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 3px;
+  /* 2px transparent border + content-box clip: the visible thumb is 4px and its
+     rounded ends stay off the track ends. Without the clip the background paints
+     under the border and the bar reads as a full-height divider. */
+  background: var(--color-scrollbar-thumb);
+  background-clip: content-box;
+  border: 2px solid transparent;
+  border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-border-hover);
+  background: var(--color-scrollbar-thumb-hover);
+  background-clip: content-box;
 }
 
 /* ===== 焦点环 ===== */
+/* 兜底：本仓此前没有任何元素挂 .focus-ring，键盘 Tab 全程无可见焦点。
+   放在 base 层，于是组件上刻意写的 focus:outline-none 仍能覆盖它。 */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+}
+
 .focus-ring:focus-visible {
   outline: 2px solid var(--color-brand);
   outline-offset: 2px;
 }
 
 /* ===== 内嵌终端 TUI（消息输出区域） =====
-   Scope-override：MessageList 容器挂 .khy-tui，其内部所有 Tailwind 语义
-   工具类（text-foreground / bg-card / border-border / bg-terminal-bg …）
-   都引用 var(--color-*)，在此作用域内重定义这些 token，子组件
-   （MessageBubble / MarkdownRenderer / CodeBlock）零改动即整体换肤。
-   配色随主题翻转（用户 09-24 拍板）：暗色主题 = 黑色终端面板，
-   亮色主题 = 淡米白 #faf7ef。弹窗/输入法候选不入此作用域，保持桌面
-   原生。terminal-* 变量的语义真源仍是黑色真终端面板
-   （components/terminal/Terminal.tsx），这里的覆盖仅限于 .khy-tui 内部。
-   注意顺序：暗/亮两块选择器同优先级，亮色块必须排在暗色块之后。 */
+   这里曾经是「作用域换肤」：在 .khy-tui 内重定义一整套 --color-*，把消息区
+   刷成暖棕底 + 橙强调（暗色 #121110/#e0955c，浅色米白 #faf7ef/#a3541c）。
+   后果是同一个窗口里外壳是冷灰、消息区是暖棕，两套色温撞在一起；等宽
+   字形与轨迹五色是产品形态（保留），暖色覆盖不是（撤除）。
+
+   现在消息区直接继承外壳令牌：区域区分靠**明度阶梯 + 边框**（VS Code 式），
+   不靠色相。子组件（MessageBubble / MarkdownRenderer / CodeBlock）零改动即
+   整体换肤 —— 工具类本来就引用 var(--color-*)，继承即生效。
+   真终端面板（components/terminal/Terminal.tsx）仍是独立的深色控制台，
+   语义真源是 --color-terminal-*，与消息区无关。 */
 .khy-tui {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
-}
-
-/* 暗色主题（默认）：黑色终端面板 */
-:root .khy-tui, .dark .khy-tui, .theme-zai-dark .khy-tui {
-  background-color: #121110;
-  --color-foreground: #e8e4d8;
-  --color-foreground-inverse: #121110;
-  --color-brand: #e0955c;
-  --color-border: #ffffff1a;
-  --color-border-hover: #ffffff26;
-  --color-surface: #ffffff0d;
-  --color-surface-hover: #ffffff1a;
-  --color-card: #1c1a17;
-  --color-card-border: #ffffff1a;
-  --color-input: #1c1a17;
-  --color-terminal-bg: #1c1a17;
-  --color-terminal-fg: #e8e4d8;
-  --color-success: #4ade80;
-  --color-warning: #ff8a30;
-  --color-destructive: #ff5c5c;
-  --color-trajectory-user: #e0955c;
-  --color-trajectory-assistant: #2dd4bf;
-  --color-trajectory-reasoning: #a78bfa;
-  --color-trajectory-tool-call: #f59e0b;
-  --color-trajectory-tool-result: #38bdf8;
-  /* 语法高亮：黑底亮色系（与暗色主题 terminal 配色同源） */
-  --color-green-400: #4ade80;
-  --color-yellow-400: #facc15;
-  --color-fuchsia-400: #c084fc;
-  --color-cyan-400: #22d3ee;
-}
-
-/* 亮色主题：淡米白终端面板 */
-.theme-zai-light .khy-tui {
-  background-color: #faf7ef;
-  --color-foreground: #3b3425;
-  --color-foreground-inverse: #faf7ef;
-  --color-brand: #a3541c;
-  --color-border: #5a4b2822;
-  --color-border-hover: #5a4b2844;
-  --color-surface: #5a4b280d;
-  --color-surface-hover: #5a4b2812;
-  --color-card: #f2ecdc;
-  --color-card-border: #5a4b2822;
-  --color-input: #f2ecdc;
-  --color-terminal-bg: #f2ecdc;
-  --color-terminal-fg: #3b3425;
-  --color-success: #0f6e56;
-  --color-warning: #a3541c;
-  --color-destructive: #a32d2d;
-  --color-trajectory-user: #a3541c;
-  --color-trajectory-assistant: #0f6e56;
-  --color-trajectory-reasoning: #6d28d9;
-  --color-trajectory-tool-call: #92400e;
-  --color-trajectory-tool-result: #0369a1;
-  /* 语法高亮：米白底深色系 */
-  --color-green-400: #1a7a37;
-  --color-yellow-400: #92670a;
-  --color-fuchsia-400: #a3268a;
-  --color-cyan-400: #0e7490;
+  /* 与真终端同源：--font-mono 在 @theme 注册（终端的 var(--font-mono) 用同一栈） */
+  font-family: var(--font-mono);
 }

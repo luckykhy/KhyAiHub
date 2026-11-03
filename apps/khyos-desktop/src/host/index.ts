@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-255-9N6M6NCW
 // host 进程：Agent 运行时适配 — 桥接 KhyOS 后端
 // 通道选择（AGENTS.md 五通道决策矩阵）：host 与 backend 同为 Node 进程语义，
 // 用 CH-2 服务直调（运行时 require aiGateway）；main↔host 用 Electron fork IPC。
@@ -12,13 +13,15 @@
 //   → { type: 'session.createResult', id, ok, sessionId?, error? }
 //   ← { type: 'session.messages', id, sessionId }
 //   → { type: 'session.messagesResult', id, ok, sessionId?, title?, model?, messages?, error? }
+//   ← { type: 'sessionGroup.request', id, op: 'list'|'create'|'update'|'delete'|'move'|'reorder'|'import', ... }
+//   → { type: 'sessionGroup.result', id, ok, result?, error? }
 //   ← { type: 'token.usage', id }
 //   → { type: 'token.usageResult', id, ok, usage?, error? }
 //   ← { type: 'usage.history', id, days? }
 //   → { type: 'usage.historyResult', id, ok, history?, models?, error? }
 //   ← { type: 'context.size', id, contentChars }
 //   → { type: 'context.sizeResult', id, ok, estimate?, error? }
-//   ← { type: 'models.list', id, adapterKey? }
+//   ← { type: 'models.list', id }
 //   → { type: 'models.listResult', id, ok, models?, presets?, error? }
 //   ← { type: 'gateway.status', id }
 //   → { type: 'gateway.statusResult', id, ok, status?, error? }
@@ -35,6 +38,8 @@
 import path from 'node:path'
 import { createRequire } from 'node:module'
 import fs from 'node:fs'
+import { createAmooSecretary } from './amooSecretary'
+import { createAmooSecretaryIpc } from './amooSecretaryIpc'
 
 const nodeRequire = createRequire(import.meta.url)
 
@@ -83,17 +88,22 @@ type PersistedSession = {
   firstUserMessage: string
 }
 
-type HostMsg = { type: string; id?: string; prompt?: string; limit?: number; cwd?: string; text?: string; days?: number; mode?: string; budget?: string; allowedApps?: string; options?: Record<string, unknown>; requestId?: string; response?: unknown }
+// 主进程 → host 的请求信封。sessionId / contentChars 是既有处理分支一直在读的
+// 两个字段，此前没在类型里声明（TS2339 全是这一条）。
+type HostMsg = { type: string; id?: string; prompt?: string; limit?: number; cwd?: string; text?: string; days?: number; mode?: string; budget?: string; allowedApps?: string; options?: Record<string, unknown>; requestId?: string; response?: unknown; sessionId?: string; contentChars?: number; timeoutMs?: number; op?: string; entryId?: string; verified?: boolean; provenance?: string }
 
 let gateway: { generate: (prompt: string, options?: Record<string, unknown>) => Promise<{ text?: string; model?: string; tokenUsage?: unknown }> } | null = null
 
-function loadGateway(): { generate: (prompt: string, options?: Record<string, unknown>) => Promise<{ text?: string; model?: string; tokenUsage?: unknown }> } {
+type GatewayModule = { generate: (prompt: string, options?: Record<string, unknown>) => Promise<{ text?: string; model?: string; tokenUsage?: unknown }> }
+
+function loadGateway(): GatewayModule {
   if (gateway) return gateway
   const gwPath = path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'services', 'gateway', 'aiGateway.js')
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  gateway = nodeRequire(gwPath)
+  const loaded = nodeRequire(gwPath) as GatewayModule
+  gateway = loaded
   console.log('[host] aiGateway 已加载:', gwPath)
-  return gateway
+  return loaded
 }
 
 // ── 智能体工具循环（CH-2 服务直调）──────────────────────────────────
@@ -121,12 +131,49 @@ type ToolLoopFn = (userMessage: string, options?: Record<string, unknown>) => Pr
 let aiChat: AiChatFn | null = null
 let toolLoop: { runToolUseLoop: ToolLoopFn } | null = null
 
-function loadAiChat(): AiChatFn {
-  if (aiChat) return aiChat
+// cli/ai.js 的模块句柄（chat + 来源标记 setter）。整个模块只 require 一次。
+type AiModule = {
+  chat: AiChatFn
+  setPendingSessionSource?: (source: { type: string; id?: string } | null) => void
+  clearPendingSessionSource?: () => void
+}
+
+let aiModule: AiModule | null = null
+
+function loadAiModule(): AiModule {
+  if (aiModule) return aiModule
   const chatPath = path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'cli', 'ai.js')
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  aiChat = nodeRequire(chatPath).chat as AiChatFn
+  aiModule = nodeRequire(chatPath) as AiModule
+  return aiModule
+}
+
+function loadAiChat(): AiChatFn {
+  if (aiChat) return aiChat
+  aiChat = loadAiModule().chat
   return aiChat
+}
+
+/**
+ * 会话来源标记（[DESIGN-ARCH-183] §4）：定时任务 → automation，其余 → manual。
+ *
+ * 来源在会话落盘那一刻写进 metadata.source，侧栏「分组」视图据此自动归组，
+ * 不再靠标题前缀辨认（「[Scheduled] …」只是显示层提示，不是判据）。
+ */
+function normalizeSessionSource(raw: unknown): { type: string; id: string } | null {
+  if (!raw) return null
+  if (typeof raw === 'string') {
+    const type = raw.trim()
+    return type ? { type, id: '' } : null
+  }
+  if (typeof raw === 'object') {
+    const o = raw as Record<string, unknown>
+    const type = typeof o.type === 'string' ? o.type.trim() : ''
+    if (!type) return null
+    const id = o.id === undefined || o.id === null ? '' : String(o.id)
+    return { type, id }
+  }
+  return null
 }
 
 function loadToolLoop(): { runToolUseLoop: ToolLoopFn } {
@@ -137,45 +184,128 @@ function loadToolLoop(): { runToolUseLoop: ToolLoopFn } {
   return toolLoop
 }
 
-let sessionPersistence: {
-  listPersistedSessions: (opts?: { limit?: number }) => PersistedSession[]
-  persistSession: (sessionId: string | undefined, state: { messages: unknown[]; metadata?: { cwd?: string; projectDir?: string }; title?: string }) => string
-} | null = null
+/**
+ * 落库 content 数组 → 思维链全文（host 侧纯函数）。
+ *
+ * 持久化块的字段名是 `.thinking` 而不是 `.text`（见后端 contentBlockUtils），
+ * 因此下面把 content 拍平成字符串时，thinking 块只贡献空串 —— 思维链必须走
+ * 独立的 reasoning 字段，绝不能并进 content 字符串：那会被 MarkdownRenderer
+ * 当正文渲染，也会被 Composer 的 `updateMessage({ content: res.text })` 整体覆盖。
+ */
+function extractReasoningFromContent(content: unknown): string {
+  if (!Array.isArray(content)) return ''
+  return content
+    .map((block) => {
+      const b = block as { type?: string; thinking?: string }
+      return b && b.type === 'thinking' && typeof b.thinking === 'string' ? b.thinking : ''
+    })
+    .join('')
+}
 
-function loadSessionPersistence(): { listPersistedSessions: (opts?: { limit?: number }) => PersistedSession[]; persistSession: (sessionId: string | undefined, state: { messages: unknown[]; metadata?: { cwd?: string; projectDir?: string }; title?: string }) => string } {
+type SessionPersistenceModule = {
+  listPersistedSessions: (opts?: { limit?: number }) => PersistedSession[]
+  persistSession: (sessionId: string | undefined, state: { messages: unknown[]; metadata?: { cwd?: string; projectDir?: string; source?: { type: string; id?: string } }; title?: string }) => string
+}
+
+let sessionPersistence: SessionPersistenceModule | null = null
+
+function loadSessionPersistence(): SessionPersistenceModule {
   if (sessionPersistence) return sessionPersistence
   const spPath = path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'services', 'sessionPersistence.js')
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  sessionPersistence = nodeRequire(spPath)
+  const loaded = nodeRequire(spPath) as SessionPersistenceModule
+  sessionPersistence = loaded
   console.log('[host] sessionPersistence 已加载:', spPath)
-  return sessionPersistence
+  return loaded
+}
+
+// ── 会话分组服务（[DESIGN-ARCH-183]）────────────────────────────────
+// 分组的唯一所有者是后端 SQLite；host 只做转发，不缓存第二份真源。
+type SessionGroupServiceModule = {
+  listSessionsWithGroups: (opts?: { limit?: number }) => {
+    ok: boolean
+    groups?: Array<{ id: string; title: string; color: string; kind: string; rule: string | null; sortOrder: number }>
+    assignment?: Record<string, string>
+    counts?: Record<string, number>
+    ungrouped?: string[]
+    error?: string
+  }
+  createGroup: (input: { title: string; color?: string }) => { ok: boolean; group?: unknown; error?: string }
+  updateGroup: (groupId: string, patch: { title?: string; color?: string }) => { ok: boolean; group?: unknown; error?: string }
+  deleteGroup: (groupId: string) => { ok: boolean; error?: string }
+  moveSession: (sessionId: string, groupId: string | null, projectKey?: string) => { ok: boolean; error?: string }
+  reorderGroups: (order: string[]) => { ok: boolean; error?: string }
+  importLegacyGroups: (payload: { groups?: unknown[]; assignments?: Record<string, string> }) => { ok: boolean; error?: string }
+}
+
+let sessionGroupService: SessionGroupServiceModule | null = null
+
+function loadSessionGroupService(): SessionGroupServiceModule {
+  if (sessionGroupService) return sessionGroupService
+  const svcPath = path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'services', 'sessionGroupService.js')
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const loaded = nodeRequire(svcPath) as SessionGroupServiceModule
+  sessionGroupService = loaded
+  console.log('[host] sessionGroupService 已加载:', svcPath)
+  return loaded
 }
 
 type UsageBucket = { inputTokens: number; outputTokens: number; totalTokens: number; requests: number; costUSD: number }
 
-let tokenUsageService: {
-  getTodayUsage: () => UsageBucket
-  getMonthUsage: () => UsageBucket
-  getSessionUsage: () => UsageBucket & { records?: unknown[] }
-  getRemainingQuota: () => { allowed: boolean; remaining: number; limit: number; used: number }
-  estimateTokens: (text: string) => number
-  getUsageHistory: (days?: number) => Array<{ date: string; totalTokens: number; requests: number; costUSD: number }>
-  getModelUsage: () => Array<{ model: string; inputTokens: number; outputTokens: number; totalTokens: number; requests: number; costUSD: number; percentage: number }>
-} | null = null
+/** 日桶投影（后端 getUsageHistory 的返回形状，8 键）。 */
+export interface UsageHistoryDay {
+  date: string
+  inputTokens: number
+  outputTokens: number
+  /** 沿用日桶原值 = inputTokens + outputTokens，**不是**含缓存的四桶之和。 */
+  totalTokens: number
+  requests: number
+  costUSD: number
+  cacheReadTokens: number
+  cacheWriteTokens: number
+}
 
-function loadTokenUsageService(): {
+export interface ModelUsageRow {
+  model: string
+  inputTokens: number
+  outputTokens: number
+  totalTokens: number
+  requests: number
+  costUSD: number
+  percentage: number
+  /** 仅本次进程，退出即失（后端 records 不落盘）。 */
+  scope?: string
+}
+
+/** 计价覆盖率。两个字段的时间轴口径不同，渲染层不得当同一维度相加。 */
+export interface UsageCostCoverage {
+  /** 日级：跨近 N 天，测「那几天跑过 ccSwitch 扫描」。 */
+  byDay: { daysWithRequests: number; pricedDays: number; unpricedDays: number; unpricedDayDates: string[] }
+  /** 进程级：本次 REPL/host 进程内的订阅制通道审计，原样透出 degraded。 */
+  flatThisProcess: { requests: number; providers: string[]; tokens: number; recalculatedUSD: number; degraded: boolean }
+}
+
+// 三个新导出全部标可选：宿主承认后端可能还是旧版（该模块在 apps/ 之外独立演进，
+// 桌面端不重新构建 host 就跑得起来），兜底才合法。
+type TokenUsageService = {
   getTodayUsage: () => UsageBucket
   getMonthUsage: () => UsageBucket
   getSessionUsage: () => UsageBucket & { records?: unknown[] }
   getRemainingQuota: () => { allowed: boolean; remaining: number; limit: number; used: number }
   estimateTokens: (text: string) => number
-  getUsageHistory: (days?: number) => Array<{ date: string; totalTokens: number; requests: number; costUSD: number }>
-  getModelUsage: () => Array<{ model: string; inputTokens: number; outputTokens: number; totalTokens: number; requests: number; costUSD: number; percentage: number }>
-} {
+  getUsageHistory: (days?: number) => UsageHistoryDay[]
+  getModelUsage?: () => ModelUsageRow[]
+  getCostCoverage?: (days?: number) => UsageCostCoverage
+  getUsageFileStamp?: () => string | null
+}
+
+let tokenUsageService: TokenUsageService | null = null
+
+function loadTokenUsageService(): TokenUsageService {
   if (tokenUsageService) return tokenUsageService
   const tuPath = path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'services', 'tokenUsageService.js')
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  tokenUsageService = nodeRequire(tuPath)
+  tokenUsageService = nodeRequire(tuPath) as TokenUsageService
   console.log('[host] tokenUsageService 已加载:', tuPath)
   return tokenUsageService
 }
@@ -212,8 +342,8 @@ function contextWindowLimit(model?: string): number {
       const gw = loadGateway() as unknown as { getModelContextWindow?: (id: string) => number } | null
       // 同步 getter 自身已在 miss 时 fire-and-forget 触发后台解析（网关路由层
       // getModelContextWindow 内部如此），故这里不必也不应再 await 一次。
-      const live = gw?.getModelContextWindow?.(modelId)
-      if (Number.isFinite(live) && live > 0) return Math.floor(live)
+      const live: number | undefined = gw?.getModelContextWindow?.(modelId)
+      if (typeof live === 'number' && Number.isFinite(live) && live > 0) return Math.floor(live)
     } catch {
       /* 真值不可得（网关未部署/后端缺文件）：落到下面的静态表 */
     }
@@ -238,21 +368,45 @@ type ModelOption = {
   format: string
   channel?: string
   channelKnown?: boolean
+  // 网关适配器类型（'api' / 'claude' / …）与模型 id —— 与终端选中后传给网关的
+  // 是同一对值（collectModelEntries 的 entry.value）。没有它们，桌面选了模型
+  // 也只能换通道、换不了模型。
+  adapter?: string
+  model?: string
+  // 分组依据 = 上游提供商名（终端 composeModelDisplay().group，同一口径）。
+  // 用它而不是 id 前缀：所有中转站走的都是 api 适配器，按前缀分会塌成一组。
+  group?: string
+  // 该条目来自上游真实 /models。false = 来自 providerPresets 静态目录兜底，
+  // 那是一份「可能卖过」的猜测，UI 据此调暗显示。
+  fromUpstream?: boolean
+  // 能力徽章（视觉 / 图像 / 视频 / 音频），判定在采集叶里做。
+  tags?: string[]
 }
 
-let providerPresets: {
-  getProviderPresets: () => Array<{ id: string; label?: string; name?: string; apiFormat?: string; format?: string; models?: unknown[] }>
-} | null = null
+// providerPresets 的条目形状（后端 providerPresets.js 的对外投影）。defaultModel
+// 是真源里带的字段，listModelOptions 读它拼 provider 行的标签。
+type ProviderPreset = {
+  id: string
+  label?: string
+  name?: string
+  apiFormat?: string
+  format?: string
+  models?: unknown[]
+  defaultModel?: string
+}
 
-function loadProviderPresets(): {
-  getProviderPresets: () => Array<{ id: string; label?: string; name?: string; apiFormat?: string; format?: string; models?: unknown[] }>
-} {
+type ProviderPresetSource = { getProviderPresets: () => ProviderPreset[] }
+
+let providerPresets: ProviderPresetSource | null = null
+
+function loadProviderPresets(): ProviderPresetSource {
   if (providerPresets) return providerPresets
   const ppPath = path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'services', 'gateway', 'providerPresets.js')
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  providerPresets = nodeRequire(ppPath)
+  const loaded = nodeRequire(ppPath) as ProviderPresetSource
+  providerPresets = loaded
   console.log('[host] providerPresets 已加载:', ppPath)
-  return providerPresets
+  return loaded
 }
 
 // 把 providerPresets 真源投影成模型选择器的选项列表（provider 一级 + 模型二级）。
@@ -262,7 +416,7 @@ function loadProviderPresets(): {
 // poolKey 映射时（聚合网关/第三方，如 openrouter/groq），channel 回退 preset
 // id 并标记 channelKnown=false，UI 端据此不传 preferredAdapter（走网关默认
 // 通道级联），避免钉死未注册通道。
-async function listModelOptions(adapterKey?: string): Promise<ModelOption[]> {
+async function listModelOptions(): Promise<ModelOption[]> {
   const pp = loadProviderPresets()
   const presets = pp.getProviderPresets()
   // 池 key 映射：built-in providerConfig.js 的 poolKey 真源（CH-2 同进程可直调）
@@ -292,19 +446,37 @@ async function listModelOptions(adapterKey?: string): Promise<ModelOption[]> {
   } catch {
     /* fail-soft：映射加载失败时回退 preset id（channelKnown=false） */
   }
+  // 运行时选项一律走**终端同一个采集真源** modelEntryCollection.collectModelEntries。
+  //
+  // 为什么不是自己调 listModels：那份「哪些模型可选、归哪组、叫什么」的判定
+  // （modelListTruth 真值收敛 / 可靠性过滤 / provider 分组 / 视觉标记）全在采集叶
+  // 里，桌面另起一套必然与终端漂移 —— 终端里选得到的模型桌面选不到，反之亦然。
+  // presets 静态目录只作**兜底**：采集为空（网关未起 / 一个 key 都没有）时才用，
+  // 且标 fromUpstream=false 让 UI 调暗。两套 id 命名空间不相交（采集叶
+  // `api/<pool>:<model>` vs presets `<presetId>/<model>`），并屏会让同一模型出现
+  // 两条看着一样的条目、一级栏计数虚高 —— 终端 /model 同样只列采集结果。
+  const collected = await collectModelEntriesFromGateway()
+  return collected.length > 0 ? collected : presetOptions(poolKeyByPreset, presets)
+}
+
+// presets 静态目录 → 选项（兜底基线，非真实上游）。
+function presetOptions(poolKeyByPreset: Record<string, string>, presets: ProviderPreset[]): ModelOption[] {
   const out: ModelOption[] = []
   for (const p of presets) {
     const label = p.label || p.name || p.id
     const mapped = poolKeyByPreset[p.id]
     const channelId = mapped || p.id
-    const channelKnown = Boolean(mapped)
-    const defaultModel = typeof p.defaultModel === 'string' && p.defaultModel ? p.defaultModel : ''
+    const format = p.apiFormat || p.format || 'openai'
     out.push({
       id: p.id,
       channel: channelId,
-      channelKnown,
-      label: defaultModel ? `${label} · ${defaultModel}` : label,
-      format: p.apiFormat || p.format || 'openai',
+      channelKnown: Boolean(mapped),
+      adapter: channelId,
+      model: '',
+      group: label,
+      label: p.defaultModel ? `${label} · ${p.defaultModel}` : label,
+      format,
+      fromUpstream: false,
     })
     if (Array.isArray(p.models) && p.models.length > 0) {
       for (const m of p.models) {
@@ -312,44 +484,71 @@ async function listModelOptions(adapterKey?: string): Promise<ModelOption[]> {
         out.push({
           id: `${p.id}/${mid}`,
           channel: channelId,
-          channelKnown,
+          channelKnown: Boolean(mapped),
+          adapter: channelId,
+          model: mid,
+          group: label,
           label: mid,
-          format: p.apiFormat || p.format || 'openai',
+          format,
+          fromUpstream: false,
         })
       }
-    }
-  }
-  // 若指定 adapter 且有 listModels 能力，追加运行时模型（best-effort，
-  // 无凭据/无网络时 adapter.listModels() 返回空数组，不抛错）。
-  // P3-7③：动态模型以 preset id 前缀（与静态二级选项同键形），
-  // 避免 adapterKey != preset id 时（如 preset `zhipu` ↔ 池 key `glm`）
-  // 前端按 id 前缀归组时动态结果挂到不存在的 provider 下。
-  if (adapterKey && gateway) {
-    try {
-      const gw = gateway as unknown as { listModels?: (k: string) => Promise<unknown[]> }
-      if (typeof gw.listModels === 'function') {
-        // 用 adapterKey 匹配的 preset（poolKey 或 id 相等）做前缀，找不到
-        // 时回退 adapterKey 本身（group by provider 会补占位 provider）。
-        const prefixPreset = presets.find((p) => {
-          const key = poolKeyByPreset[p.id] || p.id
-          return key === adapterKey
-        })
-        const prefix = prefixPreset?.id || adapterKey
-        const models = await gw.listModels(adapterKey)
-        const seen = new Set(out.map((o) => o.id))
-        for (const m of Array.isArray(models) ? models : []) {
-          const mid = typeof m === 'string' ? m : String((m as { id?: string }).id || m)
-          const optId = `${prefix}/${mid}`
-          if (seen.has(optId)) continue
-          seen.add(optId)
-          out.push({ id: optId, channel: adapterKey, channelKnown: true, label: mid, format: 'openai' })
-        }
-      }
-    } catch {
-      /* fail-soft：listModels 失败不影响 provider 预设列表 */
     }
   }
   return out
+}
+
+// 采集叶（终端同源）→ 选项。
+//
+// entry.value 是 {adapter, model} —— 与终端选中后传给网关的完全同一对值，桌面
+// 因此能真正把「选中的模型」钉进请求，而不是只换一个通道。
+async function collectModelEntriesFromGateway(): Promise<ModelOption[]> {
+  try {
+    const gw = loadGateway() as unknown as Record<string, unknown>
+    const collectedPath = path.join(
+      resolveKhyOsDir(),
+      'runtime', 'node', 'backend', 'src', 'services', 'gateway', 'modelEntryCollection.js'
+    )
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { collectModelEntries } = nodeRequire(collectedPath) as {
+      collectModelEntries: (opts: { gateway: unknown }) => Promise<{ entries: unknown[] }>
+    }
+    const result = await collectModelEntries({ gateway: gw })
+    const out: ModelOption[] = []
+    for (const raw of Array.isArray(result?.entries) ? result.entries : []) {
+      const entry = raw as {
+        kind?: string
+        group?: string
+        display?: { primary?: string; secondary?: string }
+        value?: { adapter?: string; model?: string | null }
+        model?: { isDefault?: boolean } | null
+      }
+      const adapter = String(entry.value?.adapter || '')
+      const model = String(entry.value?.model || '')
+      if (!adapter) continue
+      const primary = String(entry.display?.primary || model || adapter)
+      // 采集叶的 secondary 已把「视觉 / 来源 / 连接 / ✓ 当前」拼好；桌面只取
+      // 能力标签，来源与连接态各有各的呈现口径，不在这里复述。
+      const secondary = String(entry.display?.secondary || '')
+      const tags = ['视觉', '图像', '视频', '音频'].filter((t) => secondary.includes(t))
+      out.push({
+        id: model ? `${adapter}/${model}` : adapter,
+        label: primary,
+        format: 'openai',
+        adapter,
+        model,
+        channel: adapter,
+        channelKnown: true,
+        group: String(entry.group || adapter),
+        fromUpstream: entry.kind === 'model',
+        ...(tags.length > 0 ? { tags } : {}),
+      })
+    }
+    return out
+  } catch (err) {
+    console.log('[host] collectModelEntries 失败，回落 presets 静态目录:', String((err as Error)?.message || err))
+    return []
+  }
 }
 
 // In-flight ai.generate ids → start time; a background task, per the i18n
@@ -449,6 +648,13 @@ async function handleAiGenerate(id: string, prompt: string, options: Record<stri
   try {
     loadGatewayEnvFile()
     const chat = loadAiChat()
+    // 来源标记（[DESIGN-ARCH-183] §4）：落盘那一刻写进会话，后续分组读它。
+    // 桌面端自动化传 {type:'automation', id}；普通对话没有 source → 记 manual。
+    const source = normalizeSessionSource(options.source) || { type: 'manual', id: '' }
+    const ai = loadAiModule()
+    if (typeof ai.setPendingSessionSource === 'function') {
+      ai.setPendingSessionSource(source)
+    }
     const loop = loadToolLoop()
     // 工作区根：main 侧 getWorkspaceRoot() 注入（工作区单一真源）；缺省回退 host 进程 cwd。
     const cwd = typeof options.cwd === 'string' && options.cwd.trim() ? options.cwd.trim() : process.cwd()
@@ -567,6 +773,13 @@ function desktopGateState(): { mode: string; budget: string | null; allowedApps:
   }
 }
 
+// ── Amoo 秘书车道（桌面端「问 Amoo 一句」+ 中止 + 共享记忆）─────────────────
+// 客户端经后端 phoneBridgeClient 的工厂创建（CH-2 服务直调，与上面 10+ 个
+// nodeRequire 同一先例，不开新进程、不起 HTTP 服务器）；Amoo 完全缺席时车道
+// 零 IO（客户端懒加载），host 启动与其它车道不受影响。release 与六个 RPC 的
+// 分派都在 ./amooSecretaryIpc，本文件只留这一处装配挂钩。
+const amooSecretaryIpc = createAmooSecretaryIpc(createAmooSecretary())
+
 function handleMessage(msg: HostMsg): void {
   if (!msg || typeof msg !== 'object') return
   if (msg.type === 'ping') {
@@ -614,6 +827,94 @@ function handleMessage(msg: HostMsg): void {
     }
     return
   }
+  if (msg.type === 'sessionGroup.request' && msg.id) {
+    const send = (m: unknown) => {
+      if (process.send) process.send(m)
+      else console.log('[host]', JSON.stringify(m))
+    }
+    const op = String((msg as { op?: string }).op || '')
+    const reply = (payload: Record<string, unknown>) =>
+      send({ type: 'sessionGroup.result', id: msg.id, ok: true, result: payload })
+    const fail = (error: string) =>
+      send({ type: 'sessionGroup.result', id: msg.id, ok: false, error })
+    try {
+      const svc = loadSessionGroupService()
+      switch (op) {
+        case 'list': {
+          const limit = typeof msg.limit === 'number' && msg.limit > 0 ? Math.min(msg.limit, 500) : 50
+          const res = svc.listSessionsWithGroups({ limit })
+          if (!res.ok) { fail(res.error || '读取会话分组失败：请查看导出日志排查 host 状态'); return }
+          reply({
+            groups: res.groups || [],
+            assignment: res.assignment || {},
+            counts: res.counts || {},
+            ungrouped: res.ungrouped || [],
+          })
+          return
+        }
+        case 'create': {
+          const res = svc.createGroup({
+            title: String((msg as { title?: string }).title || ''),
+            color: String((msg as { color?: string }).color || ''),
+          })
+          if (!res.ok) { fail(res.error || '创建分组失败'); return }
+          reply({ group: res.group })
+          return
+        }
+        case 'update': {
+          const patch = ((msg as { patch?: unknown }).patch || {}) as { title?: string; color?: string }
+          const res = svc.updateGroup(String((msg as { groupId?: string }).groupId || ''), patch)
+          if (!res.ok) { fail(res.error || '修改分组失败'); return }
+          reply({ group: res.group })
+          return
+        }
+        case 'delete': {
+          const res = svc.deleteGroup(String((msg as { groupId?: string }).groupId || ''))
+          if (!res.ok) { fail(res.error || '删除分组失败'); return }
+          reply({})
+          return
+        }
+        case 'move': {
+          const raw = (msg as { groupId?: string | null }).groupId
+          const res = svc.moveSession(
+            String((msg as { sessionId?: string }).sessionId || ''),
+            raw === null || raw === undefined ? null : String(raw),
+            String((msg as { projectKey?: string }).projectKey || ''),
+          )
+          if (!res.ok) { fail(res.error || '归组失败'); return }
+          reply({ sessionId: (msg as { sessionId?: string }).sessionId, groupId: raw ?? null })
+          return
+        }
+        case 'reorder': {
+          const order = Array.isArray((msg as { order?: unknown }).order)
+            ? ((msg as { order?: unknown[] }).order || []).map((x) => String(x))
+            : []
+          const res = svc.reorderGroups(order)
+          if (!res.ok) { fail(res.error || '排序保存失败'); return }
+          reply({})
+          return
+        }
+        case 'import': {
+          const payload = {
+            groups: Array.isArray((msg as { groups?: unknown }).groups)
+              ? ((msg as { groups?: unknown[] }).groups || [])
+              : [],
+            assignments: ((msg as { assignments?: unknown }).assignments || {}) as Record<string, string>,
+          }
+          const res = svc.importLegacyGroups(payload)
+          if (!res.ok) { fail(res.error || '导入旧分组失败'); return }
+          reply({ imported: true })
+          return
+        }
+        default:
+          fail(`未知的分组操作：${op || '(空)'}`)
+          return
+      }
+    } catch (error) {
+      fail(`会话分组操作失败：${String((error as Error)?.message || error)}，请查看导出日志排查 host 状态`)
+    }
+    return
+  }
   if (msg.type === 'session.create' && msg.id && typeof msg.cwd === 'string') {
     const send = (m: unknown) => {
       if (process.send) process.send(m)
@@ -648,7 +949,10 @@ function handleMessage(msg: HostMsg): void {
       else console.log('[host]', JSON.stringify(m))
     }
     try {
-      const sp = loadSessionPersistence() as {
+      // 经 unknown 中转：sessionPersistence 真实实现同时带 restoreSession 与
+      // listPersistedSessions/persistSession，这里只声明本分支用到的那半个面，
+      // 直接 as 会因「两侧都不充分重叠」被 TS2352 拒掉。
+      const sp = loadSessionPersistence() as unknown as {
         restoreSession: (sessionId: string) => {
           sessionId: string
           title?: string
@@ -672,6 +976,8 @@ function handleMessage(msg: HostMsg): void {
                 ? String((m.content as { text?: string }).text || '')
                 : '',
         timestamp: typeof m.timestamp === 'number' ? m.timestamp : Date.now(),
+        // 思维链独立字段：content 拍平只看 .text，thinking 块的文本只在这里产出。
+        reasoning: extractReasoningFromContent(m.content),
       }))
       console.log('[host] session.messagesResult:', msg.sessionId, messages.length, 'messages')
       // 会话落盘路径（复制路径/复制 JSONL 路径用）：来自后端 jsonlPathFor 的
@@ -735,23 +1041,70 @@ function handleMessage(msg: HostMsg): void {
       if (process.send) process.send(m)
       else console.log('[host]', JSON.stringify(m))
     }
-    // Clamp to the persistence horizon (recordUsage prunes days > 90).
+// Clamp to the persistence horizon (recordUsage prunes days > 90).
     const days = typeof msg.days === 'number' && msg.days > 0 ? Math.min(Math.floor(msg.days), 90) : 30
+    // 两类失败必须分开说：require 失败（KHY_OS_DIR 指错，后端文件找不到）与
+    // 后端版本落后（模块在、导出缺）修法完全相反，混成一句话会把用户引向错的方向。
+    const usageErrorMessage = (error: unknown): string => {
+      const raw = String((error as Error)?.message || error)
+      const code = (error as { code?: string })?.code
+      if (code === 'MODULE_NOT_FOUND' || raw.includes('Cannot find module')) {
+        return `读取用量历史失败：后端服务模块未找到（${raw}），请确认 KHY_OS_DIR 指向仓库根目录后重启应用`
+      }
+      return `读取用量历史失败：后端服务版本不匹配（${raw}），请重新构建 host 后重试`
+    }
+    let tu: TokenUsageService
+    let history: UsageHistoryDay[]
     try {
-      const tu = loadTokenUsageService()
-      const history = tu.getUsageHistory(days)
-      const models = tu.getModelUsage()
-      console.log('[host] usage.historyResult: days=', days, '| history=', history.length, '| models=', models.length)
-      send({ type: 'usage.historyResult', id: msg.id, ok: true, history, models })
+      tu = loadTokenUsageService()
+      history = tu.getUsageHistory(days)
     } catch (error) {
       // 规则 2.2：错误消息 = 问题 + 原因 + 修复建议
       send({
         type: 'usage.historyResult',
         id: msg.id,
         ok: false,
-        error: `读取用量历史失败：${String((error as Error)?.message || error)}，请确认 KHY_OS_DIR 指向仓库根目录后重启应用`,
+        error: usageErrorMessage(error),
       })
+      return
     }
+    // 下面三个是**可选**导出，各自独立兜底 —— 写在这个 try 之外是刻意的：
+    // 把它们塞进同一个 try，任一缺失/抛错都会把已经取到的 history 连坐掉，
+    // 渲染层因 models 为空而整页落空态（症状：总用量 0 + 每日暂无记录）。
+    let models: ModelUsageRow[] = []
+    let coverage: UsageCostCoverage | null = null
+    let stamp: string | null = null
+    if (typeof tu.getModelUsage === 'function') {
+      try {
+        models = tu.getModelUsage() || []
+      } catch (error) {
+        console.log('[host] usage.history: getModelUsage 失败，模型维度留空:', String((error as Error)?.message || error))
+      }
+    } else {
+      console.log('[host] usage.history: 后端无 getModelUsage 导出（服务版本落后），模型维度留空')
+    }
+    if (typeof tu.getCostCoverage === 'function') {
+      try {
+        coverage = tu.getCostCoverage(days)
+      } catch (error) {
+        console.log('[host] usage.history: getCostCoverage 失败:', String((error as Error)?.message || error))
+      }
+    }
+    if (typeof tu.getUsageFileStamp === 'function') {
+      try {
+        stamp = tu.getUsageFileStamp()
+      } catch (error) {
+        console.log('[host] usage.history: getUsageFileStamp 失败:', String((error as Error)?.message || error))
+      }
+    }
+    console.log(
+      '[host] usage.historyResult: days=', days,
+      '| history=', history.length,
+      '| models=', models.length,
+      '| coverage=', coverage ? `计价 ${coverage.byDay.pricedDays}/${coverage.byDay.daysWithRequests} 天` : '不可用',
+      '| stamp=', stamp || '未知',
+    )
+    send({ type: 'usage.historyResult', id: msg.id, ok: true, history, models, coverage, stamp })
     return
   }
   if (msg.type === 'context.size' && msg.id) {
@@ -788,10 +1141,7 @@ function handleMessage(msg: HostMsg): void {
       if (process.send) process.send(m)
       else console.log('[host]', JSON.stringify(m))
     }
-    const adapterKey = typeof (msg as { adapterKey?: string }).adapterKey === 'string'
-      ? (msg as { adapterKey?: string }).adapterKey
-      : undefined
-    listModelOptions(adapterKey).then((models) => {
+    listModelOptions().then((models) => {
       console.log('[host] models.listResult:', models.length, 'options')
       send({ type: 'models.listResult', id: msg.id, ok: true, models })
     }).catch((error) => {
@@ -840,6 +1190,8 @@ function handleMessage(msg: HostMsg): void {
     send({ type: 'desktopGate.getResult', id: msg.id, ok: true, gate: desktopGateState() })
     return
   }
+  // Amoo 秘书的 release 与六个 RPC 分派都在 ./amooSecretaryIpc，这里只留挂钩。
+  if (amooSecretaryIpc.handleMessage(msg)) return
 }
 
 process.on('message', handleMessage)
@@ -858,3 +1210,43 @@ process.stdin.on('data', (data) => {
 
 console.log('[host] 进程启动, pid:', process.pid)
 if (process.send) process.send({ type: 'ready', pid: process.pid })
+
+// ── 启动热身 ────────────────────────────────────────────────────────────
+// 首次 session.list 要**同步**读全部会话快照（实测 714 个 .json / 约 12MB），
+// 冷盘上这一趟要几秒。这笔成本原本算在用户的第一次请求头上：侧栏在应用刚启动
+// 时立刻拉会话列表，正好撞上它 —— 碰上慢盘/冷缓存就超时，用户看到
+// 「会话列表读取失败」，而侧栏没有重试，只能重启应用（用户实测：总是加载失败）。
+//
+// 现在把成本挪到启动后的空闲时刻：host 先报 ready（窗口立刻可用），再在
+// setTimeout 里热身 —— 模块加载 + **会话清单读一遍**（把元数据缓存焐热）。
+// 用户的第一笔请求到来时，缓存已经是热的，列表读回是毫秒级。
+function warmUpHostModules(): void {
+  const timer = setTimeout(() => {
+    try {
+      loadSessionPersistence()
+      console.log('[host] 会话模块热身完成')
+    } catch (error) {
+      console.log('[host] 会话模块热身失败:', String((error as Error)?.message || error))
+    }
+    // 焐热会话元数据缓存：这一趟是全量读，冷盘上要几秒；读完之后
+    // 用户的第一次列表请求就是毫秒级（否则那几秒算在他的请求头上）。
+    try {
+      const sp = loadSessionPersistence()
+      const list = sp.listPersistedSessions({ limit: 50 })
+      console.log('[host] 会话清单缓存已预热:', list.length, 'sessions')
+    } catch (error) {
+      console.log('[host] 会话清单预热失败:', String((error as Error)?.message || error))
+    }
+    try {
+      const svcPath = path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'services', 'sessionGroupService.js')
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const svc = nodeRequire(svcPath) as { ensureSystemGroups?: () => boolean }
+      svc.ensureSystemGroups?.()
+      console.log('[host] 会话分组模块热身完成')
+    } catch (error) {
+      console.log('[host] 会话分组模块热身失败:', String((error as Error)?.message || error))
+    }
+  }, 0)
+  timer.unref?.()
+}
+warmUpHostModules()
