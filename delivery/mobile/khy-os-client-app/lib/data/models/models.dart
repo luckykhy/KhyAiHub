@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-104-RDZMHK4E
 import 'package:collection/collection.dart';
 
 /// AI 消息角色
@@ -20,6 +21,15 @@ class ChatMessage {
   final String conversationId;
   final MessageRole role;
   final String content;
+
+  /// 思维链正文（reasoning / chain-of-thought）。null 或空 = 上游没给思维链，
+  /// 界面就不渲染思维链块。
+  ///
+  /// 刻意是独立字段而不是拼进 [content]：混进正文的思维链会被当回答渲染出来，
+  /// 还会随对话历史上传给下一轮请求，等于把"怎么想的"固化成"说过什么"。
+  /// 两条内容在协议里本来就是两个键（content / reasoning_content），拆开只是
+  /// 照原样保留。
+  final String? reasoning;
   final List<MessageAttachment>? attachments;
   final List<ToolCall>? toolCalls;
   final TokenUsage? usage;
@@ -30,6 +40,7 @@ class ChatMessage {
     required this.conversationId,
     required this.role,
     required this.content,
+    this.reasoning,
     this.attachments,
     this.toolCalls,
     this.usage,
@@ -41,6 +52,7 @@ class ChatMessage {
         'conversationId': conversationId,
         'role': role.value,
         'content': content,
+        'reasoning': reasoning,
         'attachments': attachments?.map((e) => e.toJson()).toList(),
         'toolCalls': toolCalls?.map((e) => e.toJson()).toList(),
         'usage': usage?.toJson(),
@@ -52,6 +64,11 @@ class ChatMessage {
         conversationId: json['conversationId'] as String,
         role: MessageRole.fromString(json['role'] as String),
         content: json['content'] as String,
+        // 这一个字段用类型检查而不是硬转，与同文件其余字段不一致是故意的：
+        // 它是后加的，读到的 JSON 可能来自更早的版本、也可能被手改坏，而
+        // `as String?` 遇到 int 会抛——异常会一路打到界面上。缺键 → null，
+        // 与"从来没有思维链"是同一件事，老消息行为一字不变。
+        reasoning: json['reasoning'] is String ? json['reasoning'] as String : null,
         attachments: (json['attachments'] as List?)
             ?.map((e) => MessageAttachment.fromJson(e as Map<String, dynamic>))
             .toList(),
@@ -69,6 +86,7 @@ class ChatMessage {
     String? conversationId,
     MessageRole? role,
     String? content,
+    String? reasoning,
     List<MessageAttachment>? attachments,
     List<ToolCall>? toolCalls,
     TokenUsage? usage,
@@ -79,6 +97,7 @@ class ChatMessage {
       conversationId: conversationId ?? this.conversationId,
       role: role ?? this.role,
       content: content ?? this.content,
+      reasoning: reasoning ?? this.reasoning,
       attachments: attachments ?? this.attachments,
       toolCalls: toolCalls ?? this.toolCalls,
       usage: usage ?? this.usage,

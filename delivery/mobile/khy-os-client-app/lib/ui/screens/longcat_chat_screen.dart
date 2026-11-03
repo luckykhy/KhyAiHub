@@ -1,4 +1,5 @@
-﻿import 'dart:async';
+﻿// khy-canary: Khy-20261101-115-RFQ96Z25
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,10 +14,12 @@ import '../../data/models/models.dart' hide Conversation;
 import '../screens/settings_screen.dart';
 import '../screens/log_viewer_screen.dart';
 import '../screens/network_diagnostic_screen.dart';
+import '../../core/agent/tool_verdict.dart';
 import '../../core/tools/tool_engine.dart';
 import '../../core/tools/builtin_tools.dart';
 import '../../core/tools/skills.dart';
 import '../../core/services/conversation_db.dart';
+import '../widgets/thinking_block.dart';
 
 enum AppMode { remote, standalone }
 
@@ -33,6 +36,14 @@ class _KhyOsChatScreenState extends ConsumerState<KhyOsChatScreen>
   final _scroll = ScrollController();
   final List<ChatMessage> _msgs = [];
   bool _busy = false;
+
+  /// 思维链正文，按消息 id 存。与 ChatScreenNew 同源同构：那一屏是局部重建
+  /// （notifier），本屏整屏 setState 就够，所以只留这一份存档。
+  ///
+  /// 本文件在 lib/ 内已无任何引用（死代码，见 tool_protocol.dart 的模型名匹配
+  /// 是唯一提到 longcat 的地方）。仍接线，是为了两屏不漂移：哪一天它被重新挂上
+  /// 路由，思维链不会因为是"旧屏"而 silently 缺席。
+  final Map<String, String> _reasoningById = {};
   AppConfigData? _cfg;
   KhyOsApi? _api;
   AppMode _mode = AppMode.standalone;
@@ -233,6 +244,7 @@ class _KhyOsChatScreenState extends ConsumerState<KhyOsChatScreen>
       await for (final ev in _api!.streamChat(question: text, history: h)) {
         final t = ev['type'];
         if (t == 'chunk') { _appendContent(id, (ev['content'] ?? '').toString()); }
+        else if (t == 'thinking_content') { _appendReasoning(id, (ev['text'] ?? '').toString()); }
         else if (t == 'done') { final c = ev['content']; if (c != null) _setContent(id, c.toString()); }
         else if (t == 'error') { _setError(id, (ev['message'] ?? 'AI 响应失败').toString()); return; }
       }
@@ -285,6 +297,11 @@ class _KhyOsChatScreenState extends ConsumerState<KhyOsChatScreen>
         final content = msg?['content'] ?? '';
         final toolCalls = msg?['tool_calls'] as List?;
 
+        // 本地（非流式）分支的思维链来源：reasoning_content / reasoning。原来只读
+        // content，这一段被静默丢弃——DeepSeek / GLM 这类模型默认就吐。
+        final reasoningRaw = msg?['reasoning_content'] ?? msg?['reasoning'];
+        if (reasoningRaw != null) _setReasoning(id, reasoningRaw.toString());
+
         // Update display with text content
         if (content.isNotEmpty) {
           _setContent(id, content);
@@ -325,15 +342,16 @@ class _KhyOsChatScreenState extends ConsumerState<KhyOsChatScreen>
           final result = await _toolEngine.execute(toolName, args);
 
           // Show result
-          final resultIcon = result.success ? '成功' : '失败';
-          _setContent(id, '$content\n\n$resultIcon $toolLabel: ${result.output}');
+          final verdict = ToolVerdictFactory.of(toolName, result);
+          _setContent(id, '$content\n\n${verdict.userLabel} $toolLabel: ${result.output}');
 
-          // Add tool result to messages
-          messages.add({
-            'tool_call_id': tc['id'] ?? '',
-            'role': 'tool',
-            'content': result.jsonOutput,
-          });
+          // Add tool result to messages — 同一条核对收口，见 tool_verdict.dart。
+          messages.add(ToolVerdictFactory.toolMessage(
+            tool: toolName,
+            result: result,
+            useTextProtocol: false,
+            callId: tc['id']?.toString() ?? '',
+          ));
         }
       }
 
@@ -473,10 +491,15 @@ class _KhyOsChatScreenState extends ConsumerState<KhyOsChatScreen>
           _setContent(id, '$content\n\n执行中：$toolLabel');
 
           final result = await _toolEngine.execute(toolName, args);
-          final resultIcon = result.success ? '成功' : '失败';
-          _setContent(id, '$content\n\n$resultIcon $toolLabel: ${result.output}');
+          final verdict = ToolVerdictFactory.of(toolName, result);
+          _setContent(id, '$content\n\n${verdict.userLabel} $toolLabel: ${result.output}');
 
-          messages.add({'tool_call_id': tc['id'] ?? '', 'role': 'tool', 'content': result.jsonOutput});
+          messages.add(ToolVerdictFactory.toolMessage(
+            tool: toolName,
+            result: result,
+            useTextProtocol: false,
+            callId: tc['id']?.toString() ?? '',
+          ));
         }
       }
     } catch (e) {
@@ -488,6 +511,19 @@ class _KhyOsChatScreenState extends ConsumerState<KhyOsChatScreen>
   void _appendContent(String id, String chunk) { setState(() { final i = _msgs.indexWhere((m) => m.id == id); if (i >= 0) _msgs[i] = _msgs[i].copyWith(content: _msgs[i].content + chunk); }); _scrollToBottom(); }
   void _setContent(String id, String c) { setState(() { final i = _msgs.indexWhere((m) => m.id == id); if (i >= 0) _msgs[i] = _msgs[i].copyWith(content: c); }); _scrollToBottom(); }
   void _setError(String id, String e) { setState(() { final i = _msgs.indexWhere((m) => m.id == id); if (i >= 0) _msgs[i] = _msgs[i].copyWith(content: '错误: $e'); _busy = false; }); }
+
+  /// 思维链增量（远程模式每个 thinking_content chunk）。
+  void _appendReasoning(String id, String chunk) {
+    if (chunk.isEmpty) return;
+    setState(() => _reasoningById[id] = (_reasoningById[id] ?? '') + chunk);
+    _scrollToBottom();
+  }
+
+  /// 思维链整段替换（本地非流式模式：随整个响应一起回来）。
+  void _setReasoning(String id, String text) {
+    if (text.trim().isEmpty) return;
+    setState(() => _reasoningById[id] = text);
+  }
 
   void _handleDioErr(DioException e, String id) {
     _logger.e(LogCategory.network, 'Dio 请求异常', error: e, details: {'error_type': e.type.toString()});
@@ -705,13 +741,26 @@ class _KhyOsChatScreenState extends ConsumerState<KhyOsChatScreen>
 
   Widget _bubble(ChatMessage msg, ColorScheme cs) {
     final isUser = msg.role == MessageRole.user;
+    // 思维 → 动作 → 答复 的阅读序：块在气泡之上，只对 assistant 生效。
+    final reasoning = !isUser ? (_reasoningById[msg.id] ?? '') : '';
+    final thinking = reasoning.trim().isNotEmpty
+        ? ThinkingBlock(reasoning: reasoning, streaming: _busy)
+        : null;
+    final bubble = Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(color: isUser ? cs.primary : cs.surface, borderRadius: BorderRadius.circular(16).copyWith(bottomLeft: isUser ? const Radius.circular(16) : const Radius.circular(4), bottomRight: isUser ? const Radius.circular(4) : const Radius.circular(16))),
+      child: msg.content.isEmpty && _busy && !isUser
+          ? Row(mainAxisSize: MainAxisSize.min, children: [SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: cs.primary)), const SizedBox(width: 8), Text('思考中...', style: TextStyle(color: cs.onSurface.withValues(alpha: 0.5), fontSize: 13))])
+          : SelectableText(msg.content, style: TextStyle(color: isUser ? Colors.white : cs.onSurface, fontSize: 14, height: 1.5)));
+    // 有思维链时套一层 Column：块在气泡之上。没有时把气泡直接交给 Flexible，
+    // 布局与本屏原有逐字节一致。注意 Flexible 只能是 Flex 的直接子节点——所以
+    // 包在外面这一层，而不是把气泡本身先包成 Flexible 再塞进 Column（那样
+    // mainAxisSize.min 的 Column 会分给它 0 高度）。
+    final content = thinking == null
+        ? bubble
+        : Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [thinking, bubble]);
     return Padding(padding: const EdgeInsets.only(bottom: 12), child: Row(mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start, crossAxisAlignment: CrossAxisAlignment.start, children: [
       if (!isUser) ...[Container(width: 32, height: 32, decoration: BoxDecoration(color: cs.primary.withValues(alpha: 0.1), shape: BoxShape.circle), child: Icon(Icons.android, size: 18, color: cs.primary)), const SizedBox(width: 8)],
-      Flexible(child: Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(color: isUser ? cs.primary : cs.surface, borderRadius: BorderRadius.circular(16).copyWith(bottomLeft: isUser ? const Radius.circular(16) : const Radius.circular(4), bottomRight: isUser ? const Radius.circular(4) : const Radius.circular(16))),
-        child: msg.content.isEmpty && _busy && !isUser
-            ? Row(mainAxisSize: MainAxisSize.min, children: [SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: cs.primary)), const SizedBox(width: 8), Text('思考中...', style: TextStyle(color: cs.onSurface.withValues(alpha: 0.5), fontSize: 13))])
-            : SelectableText(msg.content, style: TextStyle(color: isUser ? Colors.white : cs.onSurface, fontSize: 14, height: 1.5)))),
+      Flexible(child: content),
       if (isUser) ...[const SizedBox(width: 8), Container(width: 32, height: 32, decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle), child: const Icon(Icons.person, size: 18, color: Colors.white))],
     ]));
   }
