@@ -502,6 +502,14 @@ function useQueryBridge(hostHandlers = {}) {
   useEffect(() => {
     hostOnExitPlanModeRef.current = (hostHandlers && hostHandlers.onExitPlanMode) || null;
   }, [(hostHandlers && hostHandlers.onExitPlanMode) || null]);
+  // 结构化工具执行输出（生产者 S5）：宿主登记的 onToolGroups 接收本回合
+  // tools[]/timeline 的结构化投影（cli/toolExecutionTimeline.js → D2 数据模型）。
+  // 与 onExitPlanMode 同一套路（ref + 一次性 effect），门 KHY_TUI_TOOL_GROUPS=1
+  // 且宿主真传了句柄才发射；两者缺一即 no-op，默认路径一个字节都不改。
+  const hostOnToolGroupsRef = useRef(null);
+  useEffect(() => {
+    hostOnToolGroupsRef.current = (hostHandlers && hostHandlers.onToolGroups) || null;
+  }, [(hostHandlers && hostHandlers.onToolGroups) || null]);
   const [messages, setMessages] = useState([]);
   const [streaming, setStreaming] = useState(null);
   const [status, setStatus] = useState('idle'); // idle | thinking | streaming | tool | compacting | done
@@ -1124,6 +1132,45 @@ function useQueryBridge(hostHandlers = {}) {
     [projectStreaming]
   );
 
+  // ── Structured tool-execution projection (producer S5) ─────────────────────
+  // Every tool event this loop consumes (adapter-native tool_use/tool_result chunks
+  // AND the native loop's onToolCall/onToolResult) funnels through
+  // flushCompletedStages, which is also the one place that reads the turn's
+  // `tools[]` / `timeline` as a whole. So the projection is emitted from THERE
+  // (one call site, all paths covered) rather than from four chunk branches.
+  //
+  // Whole-turn view = already-drained accumulator + the still-live tail, read
+  // BEFORE the drain so no segment is counted twice. Gate off (default) is one
+  // string compare: no require, no work, no behavioural difference.
+  //
+  // Recomputed per flush (O(n) each) rather than incrementally maintained: a
+  // turn's timeline is tens of entries, and an incremental cursor would be a
+  // second state machine to keep correct — exactly the identity-stable-row-reuse
+  // maintenance trap D2's own docstring warns about.
+  // useCallback (same shape as bcast below): the body only reads refs, so the
+  // identity is stable across renders and the deps stay empty.
+  const emitToolGroups = useCallback(() => {
+    // 门控判定**必须**用生产者的 isToolGroupsEnabled，不自己写 `!== '1'`：
+    // sink 侧用的就是那个函数（trim 容忍 '1 '），两端各写一套就会出现「env 是 '1 ' 时
+    // 桥不发射、sink 却认」的静默分叉。同一个 env、同一套判定，这是设计承诺而非巧合。
+    const { isToolGroupsEnabled, TOOL_GROUPS_ENV } = require('../../toolExecutionTimeline');
+    if (!isToolGroupsEnabled(process.env[TOOL_GROUPS_ENV])) return;
+    const sink = hostOnToolGroupsRef.current;
+    if (typeof sink !== 'function') return;
+    try {
+      const live = liveRef.current;
+      const whole = [
+        ...turnTimelineRef.current,
+        ...((live && Array.isArray(live.timeline) ? live.timeline : []) || []),
+      ];
+      if (whole.length === 0) return;
+      const { projectTurnTimeline } = require('../../toolExecutionTimeline');
+      sink(projectTurnTimeline(whole));
+    } catch {
+      /* display-only channel: a projection failure must never disturb a turn */
+    }
+  }, []);
+
   // ── Incremental stage commit ──────────────────────────────────────────────
   // Reference-doc principle: "过程步骤完成即作为持久行保留" — a completed step is
   // committed to the persistent layer immediately, not held in the transient
@@ -1142,6 +1189,9 @@ function useQueryBridge(hostHandlers = {}) {
     (force, meta, sealTrailing) => {
       const live = liveRef.current;
       const tl = live && Array.isArray(live.timeline) ? live.timeline : null;
+      // S5 producer: project what has been consumed so far (whole-turn view, read
+      // before anything is drained). Gated + fail-soft; a no-op by default.
+      emitToolGroups();
       if (!tl || tl.length === 0) {
         // Nothing in the timeline. On force, still attach metadata to a final
         // message only when the caller provides text (handled by the caller).
@@ -1628,13 +1678,20 @@ ${history}
       );
       turnTimelineRef.current = []; // new turn → fresh whole-turn timeline accumulator
       const imageCount = Array.isArray(options.images) ? options.images.length : 0;
+      // 显示用附件描述（名字/桶/字节数），由 App 在提交时从同一份暂存列表投影而来。
+      // 与 `_echoed` 同一条约定：下划线前缀 = UI-only，不参与网关载荷 —— 载荷仍是
+      // options.images（base64 + mimeType），逐字节不变。缺失时回显退回 `×N`。
+      const attachments =
+        Array.isArray(options._attachments) && options._attachments.length > 0
+          ? options._attachments
+          : undefined;
       // Skip the echo only when this text was ALREADY committed as a user line at
       // busy-submit time (steer/urgent leftovers requeued by the turn-end safety
       // net below) — echoing again would duplicate the message in the transcript.
       if (!options._echoed) {
         setMessages((m) => [
           ...m,
-          { role: 'user', content: text, imageCount, timestamp: startTime },
+          { role: 'user', content: text, imageCount, attachments, timestamp: startTime },
         ]);
       }
 
@@ -1873,9 +1930,11 @@ ${history}
         }
         return { emit: full, pending: '' };
       };
-      // Flush the held tail at a stream boundary (tool_use arrival / finalize):
-      // strip tag noise from it and render only surviving non-tag prose; a tail
-      // still looking like a truncated tag at end-of-stream is dead noise.
+      // Flush the held tail at a stream boundary (tool_use arrival / finalize).
+      // settlePendingToolTag drops ONLY a tail provably complete as a one-line
+      // marker; a truncated head comes back byte-identical and goes on screen
+      // (丢字优先于不好看 — the full stripper used to return '' here and the
+      // line was lost for good).
       const flushPendingTag = () => {
         if (!pendingTagBuf) {
           return;
@@ -1884,13 +1943,17 @@ ${history}
         pendingTagBuf = '';
         let cleaned = held;
         try {
-          if (_tcNoise) {
+          if (_tcNoise && typeof _tcNoise.settlePendingToolTag === 'function') {
+            cleaned = _tcNoise.settlePendingToolTag(held, process.env);
+          } else if (_tcNoise) {
+            // Older leaf build without the settle predicate: fall back to the
+            // full stripper, whose behavior was lossy but never worse than
+            // holding the tail forever.
             cleaned = _tcNoise.stripInlineToolCallNoise(held, process.env);
           }
         } catch {
           cleaned = held;
         }
-        cleaned = _splitPendingTag(String(cleaned == null ? '' : cleaned)).emit;
         if (!cleaned || !cleaned.trim()) {
           return;
         }
