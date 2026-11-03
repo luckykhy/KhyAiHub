@@ -21,8 +21,9 @@
  *   renderMarkdown(text, cols) → 已按 cols 排好版的字符串(缺省恒等)
  *   summarizeTool(tool)        → 工具参数摘要字符串(缺省内置保守实现)
  *
- * 上限是硬的(TOTAL_LINE_CAP / TOOL_BODY_LINE_CAP):长会话不能让视图把整段历史
- * 铺进内存再切片。超限时保留尾部并在首行注明丢了多少,绝不静默丢内容。
+ * 上限是硬的(TOTAL_LINE_CAP / TOOL_BODY_LINE_CAP / STREAM_THINKING_BODY_CAP):
+ * 长会话不能让视图把整段历史铺进内存再切片。超限时保留尾部并在首行注明丢了多少,
+ * 绝不静默丢内容。
  */
 
 // 总行数上限:超过后从**尾部**保留(用户要看的永远是最近的对话),头部截断并注明。
@@ -30,6 +31,8 @@ const TOTAL_LINE_CAP = 20000;
 
 // 唯一的例外依赖:折行/行计费的单一真源(纯叶子、零 IO、fail-soft 自带兜底)。
 const { wrapCell } = require('./wrapCell');
+// 附件 chip 的纯文本形态(与 Ink 侧的 AttachmentChips 同一个叶子,避免两个面各拼一遍)。
+const attachmentFormat = require('../attachmentFormat');
 // 授权决定判词的单一真源(与 committed 侧 Transcript.MessageBlock 共用同一份判词)。
 const _permissionNotice = require('./permissionNotice');
 // 折叠/展开思考行的文案单一真源(与 committed 全屏浮层的 Transcript.js 共用同一份
@@ -40,6 +43,13 @@ const { buildThinkingSummary, buildThinkingHeader } = require('../thinkingDurati
 const TOOL_BODY_LINE_CAP = 200;
 // 单行硬截断宽度兜底(cols 非法时用)。
 const DEFAULT_COLS = 80;
+// 「不裁剪」预算:传给 summarizeTool 的 capOverride。用 MAX_SAFE_INTEGER 而不是
+// Infinity —— 下游 truncateToWidth / truncatePathMiddle 都对**非有限数**另有分支
+// (前者可能返回空串),有限大数才保证「原样返回」。
+const _UNCAPPED = Number.MAX_SAFE_INTEGER;
+// 流式思考段展开态的正文行数硬上限。见 buildStreamThinkingExpansion 的注释:
+// 它同时压住帧成本与 App.js 的 CAP=5000(越顶会让整个 folds 数组丢失)。
+const STREAM_THINKING_BODY_CAP = 40;
 
 function _cols(cols) {
   const n = Number(cols);
@@ -79,12 +89,15 @@ function _truncate(s, max) {
 
 // 内置保守摘要:优先常见描述性键,否则整体截断。调用方可用 summarizeTool 覆盖
 // (TranscriptView 传 ToolLines.summarizeArgs,与 committed 区文案一致)。
+// capOverride:传一个足够大的预算 → 返回**未裁剪**摘要原文(行内点击展开用)。
+// 不传 = 历史行为(60),所有既有调用方逐字节不变。
 const _ARG_KEYS = ['file_path', 'path', 'command', 'pattern', 'query', 'url', 'name', 'prompt'];
 
-function defaultSummarizeTool(tool) {
+function defaultSummarizeTool(tool, capOverride) {
   if (!tool || typeof tool !== 'object') {
     return '';
   }
+  const cap = Number.isFinite(capOverride) ? Math.max(1, capOverride) : 60;
   const raw = tool.input ?? tool.args ?? tool.parameters;
   if (raw === null || raw === undefined) {
     return '';
@@ -94,18 +107,18 @@ function defaultSummarizeTool(tool) {
     try {
       obj = JSON.parse(raw);
     } catch {
-      return _truncate(raw, 60);
+      return _truncate(raw, cap);
     }
   }
   if (!obj || typeof obj !== 'object') {
-    return _truncate(obj, 60);
+    return _truncate(obj, cap);
   }
   for (const k of _ARG_KEYS) {
     if (obj[k]) {
-      return _truncate(obj[k], 60);
+      return _truncate(obj[k], cap);
     }
   }
-  return _truncate(_str(obj), 60);
+  return _truncate(_str(obj), cap);
 }
 
 function _toolStatus(tool) {
@@ -145,15 +158,31 @@ function _toolBody(result) {
   return '';
 }
 
-function _toolLines(tools, ctx) {
+// 工具摘要行。返回 `{ lines, marks }`(与 `_timelineLines` 同口径):摘要被
+// `_truncate(…, 60)` 裁掉时,head 的**首行**带 `{ kind:'overflow', key, full }`,
+// 其余行为 null —— 点击该行就地展开完整参数(不再靠「文本以 … 结尾」去猜,
+// 那是第二份判据,改文案就静默失效)。
+//
+// keyBase 由调用方给(消息 uuid + 段号),同一工具在整场会话里因此唯一。
+function _toolLines(tools, ctx, keyBase) {
   const out = [];
+  const marks = [];
   const list = Array.isArray(tools) ? tools : [];
-  for (const tool of list) {
+  const base = _str(keyBase) || 'i0';
+  for (let ti = 0; ti < list.length; ti++) {
+    const tool = list[ti];
     if (!tool || typeof tool !== 'object') {
       continue;
     }
     const name = _str(tool.name || tool.toolName || tool.tool || 'tool');
-    const args = _truncate(ctx.summarizeTool(tool), 60);
+    // 摘要原文先单行化(与 _truncate 同一口径),再决定裁不裁 —— 这样「裁没裁」
+    // 的比较用的是同一份空白规整后的文本,不会因换行差异误判。
+    // fullArgs 走「不裁剪」的同一真源(summarizeTool 的 capOverride),展开层不另写一份。
+    const fullArgs = _str(ctx.summarizeTool(tool, _UNCAPPED)).replace(/\s+/g, ' ').trim();
+    const key = `${base}:tool:${ti}`;
+    const open = ctx.showAll || (ctx.expandedOverflow && ctx.expandedOverflow.has(key));
+    const args = open ? fullArgs : _truncate(ctx.summarizeTool(tool), 60);
+    const truncated = !!fullArgs && !open && _truncate(fullArgs, 60) !== fullArgs;
     const st = _toolStatus(tool);
     let head = '  ' + st.icon + ' ' + name;
     if (args) {
@@ -162,7 +191,11 @@ function _toolLines(tools, ctx) {
     if (st.label) {
       head += ' — ' + st.label;
     }
-    out.push(..._wrap(head, ctx.cols));
+    const headLines = _wrap(head, ctx.cols);
+    headLines.forEach((ln, i) => {
+      out.push(ln);
+      marks.push(i === 0 && truncated ? { kind: 'overflow', key, full: fullArgs } : null);
+    });
     if (!ctx.showAll) {
       continue;
     }
@@ -174,28 +207,35 @@ function _toolLines(tools, ctx) {
     const shown = bodyLines.slice(0, TOOL_BODY_LINE_CAP);
     for (const ln of shown) {
       out.push('    ' + ln);
+      marks.push(null);
     }
     const hidden = bodyLines.length - shown.length;
     if (hidden > 0) {
       out.push('    … 该工具输出还有 ' + hidden + ' 行未展开(单工具上限 ' + TOOL_BODY_LINE_CAP + ' 行)');
+      marks.push(null);
     }
   }
-  return out;
+  return { lines: out, marks };
 }
 
 // 助手消息的 timeline 条目(text / thinking / tools)。这里逐条投影,连续 tools
 // 条目自然相邻,视觉上仍读作一个过程组。
 //
-// 返回 `{ lines, marks }`:marks 与 lines **同长**,只有思维链的那一行带
-// `{ kind:'thinking', key }`(其余一律 null)。它是「折叠行 → 条目」的唯一映射真源 ——
+// 返回 `{ lines, marks }`:marks 与 lines **同长**,思维链行带
+// `{ kind:'thinking', key, body }`(其余一律 null)。`body` 为真表示这是展开后的**正文
+// 行**(带底色、但不可点),省略/为假表示这是**折叠摘要行 / 展开头行**(可点切换)。
+// marks 是「折叠行 → 条目」的唯一映射真源 ——
 // 逐条点击展开要靠它把**屏幕行下标**换回「哪条消息的第几段思考」,绝不允许反过来
 // 用文本前缀去猜(那是第二份折叠判据,改文案就静默失效)。
 function _timelineLines(timeline, ctx, keyBase) {
   const out = [];
   const marks = [];
-  const _mark = (line, key) => {
+  const _mark = (line, key, isAnchor = true) => {
     out.push(line);
-    marks.push(key ? { kind: 'thinking', key } : null);
+    // `body` 区分「可点的折叠/展开头行」与「展开后的思维链正文行」:正文行同样带
+    // 锚点信息(供 Viewport 画整块底色),但 App.js 的 lineClickAt 会跳过它们 ——
+    // 否则展开态下每一行都变成折叠按钮,点正文会误收起。
+    marks.push(key ? { kind: 'thinking', key, body: !isAnchor } : null);
   };
   let seg = -1;
   for (const e of timeline) {
@@ -229,29 +269,39 @@ function _timelineLines(timeline, ctx, keyBase) {
       if (open) {
         _mark(buildThinkingHeader({ durationMs: e.durationMs }), key);
         for (const ln of _wrap(_str(e.text).trim(), ctx.cols)) {
-          out.push(ln);
-          marks.push(null);
+          _mark(ln, key, false);
         }
       } else {
         const chars = _str(e.text).replace(/\s+/g, '').length;
         _mark(buildThinkingSummary({ chars, durationMs: e.durationMs, hint: ctx.thinkingHint }), key);
       }
     } else if (e.type === 'tools') {
-      const lines = _toolLines(e.tools, ctx);
-      if (lines.length === 0) {
+      const rec = _toolLines(e.tools, ctx, `${keyBase}:${seg}`);
+      if (rec.lines.length === 0) {
         continue;
       }
       if (out.length > 0) {
         out.push('');
         marks.push(null);
       }
-      for (const ln of lines) {
-        out.push(ln);
-        marks.push(null);
+      for (let i = 0; i < rec.lines.length; i++) {
+        out.push(rec.lines[i]);
+        marks.push(rec.marks[i] || null);
       }
     }
   }
   return { lines: out, marks };
+}
+
+// 附件 chip 行的纯文本形态。空串 = 本条消息没有 chip 行(调用方退回 `×N`)。
+// 与 Ink 侧 AttachmentChips 同一套标签/名字口径,只是不带颜色;不带大小 —— 屏幕上
+// 两行 chip 里塞字节数会把 80 列终端挤满,大小在 REPL 的逐文件行里另有位置。
+function _attachmentChipsLine(msg) {
+  const list = Array.isArray(msg && msg.attachments) ? msg.attachments : [];
+  if (list.length === 0) {
+    return '';
+  }
+  return list.map((att) => attachmentFormat.formatChipText(att, { withSize: false })).join('   ');
 }
 
 // 与 _timelineLines 同口径:返回 { lines, marks };marks 为 null 表示「本消息没有
@@ -267,7 +317,14 @@ function _messageLines(msg, ctx, keyBase) {
       const lines = _wrap(_str(msg.content), Math.max(20, cols - 2)).map(
         (ln, i) => (i === 0 ? '❯ ' : '  ') + ln
       );
-      if (Number(msg.imageCount) > 0) {
+      // 有 attachments → 出 chip 行（`[PDF] 报告.pdf   [MD] 说明.md`），用户能对上号；
+      // 只有 imageCount 的旧记录 → 退回 `×N`，与改动前逐字节一致。
+      const chips = _attachmentChipsLine(msg);
+      if (chips) {
+        for (const ln of _wrap(chips, Math.max(20, cols - 2))) {
+          lines.push('  ' + ln);
+        }
+      } else if (Number(msg.imageCount) > 0) {
         lines.push('  ×' + Number(msg.imageCount));
       }
       return plain(lines);
@@ -293,7 +350,10 @@ function _messageLines(msg, ctx, keyBase) {
         lines.push(..._wrap(ctx.renderMarkdown(_str(msg.content), cols), cols));
       }
       if (Array.isArray(msg.tools) && msg.tools.length > 0) {
-        lines.push(..._toolLines(msg.tools, ctx));
+        const rec = _toolLines(msg.tools, ctx, `${keyBase}:plain`);
+        // 正文行没有可展开锚点,摘要行才有 → 前面补齐 null 保持同长。
+        const pad = new Array(lines.length).fill(null);
+        return { lines: lines.concat(rec.lines), marks: pad.concat(rec.marks) };
       }
       return plain(lines);
     }
@@ -364,7 +424,9 @@ function _messageLines(msg, ctx, keyBase) {
  * 空行与「更早的 N 行未载入」那行取 `''`(= 不着色)。
  *
  * `folds[i]` 是第三个同长同序数组 —— **行 → 可折叠条目**的锚点:思维链行带
- * `{ kind:'thinking', key }`,其余行为 `null`。它存在的唯一理由是「屏幕行 == lines
+ * `{ kind:'thinking', key, body }`(`body` 为真 = 展开后的正文行:带底色但不可点),
+ * 工具摘要的溢出行带 `{ kind:'overflow', key, full }`,其余行为 `null`。
+ * 它存在的唯一理由是「屏幕行 == lines
  * 下标」这条不变量不许被破坏:要逐条展开就只能再挂一个平行数组,绝不把元数据混进
  * `lines[i]`,也绝不靠文本前缀反推是哪一条(那是第二份折叠判据)。
  *
@@ -385,6 +447,12 @@ function buildTranscriptLineRecords(messages, opts) {
       expandedThinking:
         o.expandedThinking && typeof o.expandedThinking.has === 'function'
           ? o.expandedThinking
+          : null,
+      // 逐条展开的**工具摘要** key 集合(点击被裁成 `…` 的摘要行)。与
+      // expandedThinking 同一契约:Set 或任何带 .has 的对象;null → 全部折叠。
+      expandedOverflow:
+        o.expandedOverflow && typeof o.expandedOverflow.has === 'function'
+          ? o.expandedOverflow
           : null,
       renderMarkdown: typeof o.renderMarkdown === 'function' ? o.renderMarkdown : (t) => _str(t),
       summarizeTool:
@@ -440,6 +508,56 @@ function buildTranscriptLineRecords(messages, opts) {
 }
 
 /**
+ * 流式(尚未 commit)思考段的**展开态**行投影。
+ *
+ * 为什么需要一个新函数而不是复用 `_timelineLines`:那一支吃的是 committed 的
+ * `timeline` 数组(带 `durationMs` 结构字段),而流式侧只有一坨累积字符串
+ * (`query.streaming.thinking`),拿不到真实时长 —— `tlStampThinkingDuration` 要等本轮
+ * 结束才盖戳。所以头行只能是裸「思考」(`buildThinkingHeader({ durationMs: undefined })`),
+ * 诚实,不编造。
+ *
+ * 折叠态**不在这里做**:App.js 的 `_thinkingTailWindow` 单行预览保持原样(逐字节不变),
+ * 本函数只在用户点过之后被调用,产出「头行 + 折行正文」,与 committed 展开态同形态。
+ * 折行本身也**不在这里做**:`wrapCell` 每个码点都要走一次 visWidth(内部还有一次
+ * require),整段重折在流式场景下是 O(N²) 帧成本 ⇒ 调用方用 `wrapCellIncremental` 续扫,
+ * 把已折好的 `bodyLines` 传进来。本函数因此是纯装配:加前缀、记下标、行数封顶。
+ *
+ * 行数上限是硬的:展开态的行数暴涨会顶破 App.js 的 CAP=5000 —— 那时 committed 段被
+ * 整段从前切掉,前缀核对必然失败,整个 folds 数组(committed 折叠底色 + 逐条点击 +
+ * 流式点击)一起消失。与 `TOOL_BODY_LINE_CAP` 同一范式,只是量级小得多。
+ *
+ * @param {{bodyLines:string[], durationMs?:number, truncated?:boolean}} opts
+ *   `truncated` = 调用方已知输入被预算切短(还有更多文本没折进来),此时即使折出的行数
+ *   没到上限也要打省略标记 —— 行数是下界,不是精确值。
+ * @returns {{rows:string[], anchorRows:number[], bodyRows:number[]}}
+ *   `rows` 是本块全部行;`anchorRows` / `bodyRows` 是**相对本块第 0 行**的偏移,
+ *   由调用方加成绝对行下标。除头行外每一行(含截断标记)都在 `bodyRows` 里。
+ */
+function buildStreamThinkingExpansion({ bodyLines, durationMs, truncated } = {}) {
+  const rows = [];
+  // 头行:与 committed 展开态同一文案真源。流式期间 durationMs 恒缺省 ⇒ 裸「思考」。
+  rows.push('  ' + buildThinkingHeader({ durationMs }));
+  const bodyRows = [];
+  const src = Array.isArray(bodyLines) ? bodyLines : [];
+  const shown = src.slice(0, STREAM_THINKING_BODY_CAP);
+  for (const ln of shown) {
+    bodyRows.push(rows.length);
+    rows.push('  ' + _str(ln));
+  }
+  const dropped = Math.max(src.length - shown.length, truncated ? 1 : 0);
+  // 截断标记刻意用 `⋯` 而不是一句中文提示:新增用户可见中文文案必须走
+  // thinkingDuration.js 的既有 builder,这里不新造第二份折叠判据。
+  if (dropped > 0) {
+    // 截断行同样属于这个思维链块:它的下标必须进 bodyRows,否则 App.js 的
+    // `_streamThinkingBodyRowsRef` 不会给它上 thinking 锚点 ⇒ 展开态被截断时
+    // 紫底块最后一行透明(底色断一格)。body:true ⇒ 带底色但 lineClickAt 跳过。
+    bodyRows.push(rows.length);
+    rows.push('  ⋯');
+  }
+  return { rows, anchorRows: [0], bodyRows };
+}
+
+/**
  * messages → 文本行数组。空/非法输入 → []。绝不抛。
  *
  * 是 `buildTranscriptLineRecords` 的**行视图**:逐字节等于它出现之前的实现(同一份
@@ -456,7 +574,9 @@ function buildTranscriptLines(messages, opts) {
 module.exports = {
   buildTranscriptLines,
   buildTranscriptLineRecords,
+  buildStreamThinkingExpansion,
   defaultSummarizeTool,
   TOTAL_LINE_CAP,
   TOOL_BODY_LINE_CAP,
+  STREAM_THINKING_BODY_CAP,
 };

@@ -26,6 +26,7 @@ const {
   userMsgBgColor,
   userMsgFgColor,
   userLineTextProps,
+  thinkingLineBgColor,
 } = require('../../../src/cli/tui/userMessageStyle');
 
 const COLS = 80;
@@ -107,12 +108,19 @@ test('buildTranscriptLineRecords: 上限截断时两个数组仍同长,提示行
   assert.equal(rec.roles[rec.roles.length - 1], 'user', '最新那行仍带 user');
 });
 
-test('buildTranscriptLineRecords: 非法输入 → 两个空数组而不是抛', () => {
-  assert.deepStrictEqual(buildTranscriptLineRecords(), { lines: [], roles: [] });
-  assert.deepStrictEqual(buildTranscriptLineRecords(null, null), { lines: [], roles: [] });
+test('buildTranscriptLineRecords: 非法输入 → 三个空数组而不是抛', () => {
+  // folds 是第三个同长同序数组（行 → 可折叠条目锚点），非法输入下同样恒空；
+  // 这条断言在 folds 落地时漏改，长期红着，2026-11-01 补上。
+  assert.deepStrictEqual(buildTranscriptLineRecords(), { lines: [], roles: [], folds: [] });
+  assert.deepStrictEqual(buildTranscriptLineRecords(null, null), {
+    lines: [],
+    roles: [],
+    folds: [],
+  });
   assert.deepStrictEqual(buildTranscriptLineRecords([null, undefined, 7, 'x']), {
     lines: [],
     roles: [],
+    folds: [],
   });
 });
 
@@ -134,6 +142,54 @@ test('linePropsAt: 不传 / 非数组 lineRoles → 恒 null(逐字节回退的�
     assert.equal(linePropsAt(absent, 0), null);
     assert.equal(linePropsAt(absent, 7), null);
   }
+});
+
+// 思维链折叠块的底色:fold 锚点是第四条(可缺省)实参。这里钉住三件事 ——
+//   ① 思维链行(含展开后的正文行)拿到底色;
+//   ② 不传 folds(第四个实参缺省)时逐字节回退,连思维链锚点都不上色;
+//   ③ 非思维链锚点(overflow)不拿思维链底色。
+test('linePropsAt: 思维链行(含展开正文行)拿到暗紫底色', () => {
+  const bg = thinkingLineBgColor();
+  const bodyRow = { kind: 'thinking', key: 'k', body: true };
+  assert.deepStrictEqual(linePropsAt(['assistant'], 0, process.env, [bodyRow]), {
+    backgroundColor: bg,
+  });
+  // 折叠摘要行 / 展开头行(不带 body)同样带底色 —— 收起来的那一小块也要看得见。
+  assert.deepStrictEqual(linePropsAt(['assistant'], 0, process.env, [{ kind: 'thinking', key: 'k' }]), {
+    backgroundColor: bg,
+  });
+  // 只给底色,不覆盖字色/加粗:思维链正文仍走既有的 dimColor / cyan 外观。
+  assert.deepStrictEqual(Object.keys(linePropsAt(['assistant'], 0, process.env, [bodyRow])), [
+    'backgroundColor',
+  ]);
+});
+
+test('linePropsAt: 不传 folds → 思维链锚点也不上色(逐字节回退)', () => {
+  assert.equal(linePropsAt(['assistant'], 0, process.env, null), null);
+  assert.equal(linePropsAt(['assistant'], 0, process.env, undefined), null);
+  // 用户行仍拿米白盒(role 路径不受 folds 缺省影响)。
+  assert.deepStrictEqual(linePropsAt(['user'], 0, process.env, null), {
+    backgroundColor: userMsgBgColor(),
+    color: userMsgFgColor(),
+    bold: true,
+  });
+});
+
+test('linePropsAt: 非思维链锚点(overflow / null)不拿思维链底色', () => {
+  assert.equal(
+    linePropsAt(['assistant'], 0, process.env, [{ kind: 'overflow', key: 'k', full: 'x' }]),
+    null
+  );
+  assert.equal(linePropsAt(['assistant'], 0, process.env, [null]), null);
+});
+
+test('linePropsAt: 下标越界 / 非数组 folds → 不抛,回退到 role 路径', () => {
+  assert.equal(linePropsAt(['user'], 5, process.env, []), null);
+  assert.deepStrictEqual(linePropsAt(['user'], 0, process.env, 'nope'), {
+    backgroundColor: userMsgBgColor(),
+    color: userMsgFgColor(),
+    bold: true,
+  });
 });
 
 test('linePropsAt: 下标越界 / 角色为空 → null,绝不抛', () => {
