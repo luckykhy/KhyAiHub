@@ -1,6 +1,8 @@
+// khy-canary: Khy-20261101-076-6PEXK67M
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../../data/models/models.dart';
+import '../config/endpoint_defaults.dart';
 
 /// AI Provider 能力
 enum Capability {
@@ -48,6 +50,12 @@ class ChatRequest {
 class ChatResponse {
   final String id;
   final String content;
+
+  /// 思维链增量（reasoning / chain-of-thought）。null = 这个 chunk 不带思维链。
+  ///
+  /// 与 [content] 同语义：都是**单个 delta**，不是累计值。调用方要各自累加，
+  /// 且必须分开累加——把 reasoning 拼进 content 会让思维链被当回答渲染。
+  final String? reasoning;
   final MessageRole role;
   final TokenUsage? usage;
   final String? model;
@@ -56,11 +64,28 @@ class ChatResponse {
   const ChatResponse({
     required this.id,
     required this.content,
+    this.reasoning,
     this.role = MessageRole.assistant,
     this.usage,
     this.model,
     this.done = true,
   });
+}
+
+/// 从一份上游 JSON 里取思维链正文。
+///
+/// 认不出返回 null 而不是空串：空串会被上层理解成"有思维链但内容为空"，
+/// 于是渲染出一个空块——比不渲染更难解释。
+///
+/// 三个键名都认是因为各家叫法不同：OpenAI 兼容系（DeepSeek / GLM /
+/// OpenRouter）发 `reasoning_content`，另一些发 `reasoning`，Ollama 的
+/// /api/chat 与 Anthropic 的 thinking_delta 发 `thinking`。
+String? reasoningTextOf(Map<String, dynamic> source) {
+  for (final key in const ['reasoning_content', 'reasoning', 'thinking']) {
+    final value = source[key];
+    if (value is String && value.isNotEmpty) return value;
+  }
+  return null;
 }
 
 /// Provider 适配器接口
@@ -129,6 +154,9 @@ class OpenAIAdapter implements ProviderAdapter {
     return ChatResponse(
       id: data['id'] ?? '',
       content: message['content'] ?? '',
+      // 非流式路径同样有思维链：DeepSeek/GLM 这类在 message 里一并给
+      // reasoning_content。不读的话，接一个会吐思维链的模型也永远看不到。
+      reasoning: reasoningTextOf(message),
       role: MessageRole.assistant,
       usage: data['usage'] != null
           ? TokenUsage(
@@ -162,7 +190,19 @@ class OpenAIAdapter implements ProviderAdapter {
       ),
     );
 
-    return response.data.stream
+    // 两处都是修这条链上真实存在的类型错误：`response.data` 是 dynamic，于是
+    // `.stream` 拿到 `Stream<Uint8List>`，而 `utf8.decoder` 的类型是
+    // `StreamTransformer<List<int>, String>`——invariance 让它不是
+    // `StreamTransformer<Uint8List, …>` 的子类型。静态检查被 dynamic 一路绕过，
+    // 于是一 listen 就抛 TypeError：这三个 streamChat 从来没被真正跑通过。
+    //
+    // `.cast` 之后必须落进一个有标注的局部变量：整条链都是 dynamic 的话，
+    // 末尾 `.map(...)` 的运行时类型是 `Stream<dynamic>`，从
+    // `Future<Stream<ChatResponse>>` 里 return 它还要再抛一次。
+    //
+    // 顺带它也挡住了思维链：chunk 解析就在这条链的末端。
+    final Stream<List<int>> bytes = response.data.stream.cast<List<int>>();
+    return bytes
         .transform(utf8.decoder)
         .transform(const LineSplitter())
         .where((line) => line.startsWith('data: ') && line != 'data: [DONE]')
@@ -174,6 +214,10 @@ class OpenAIAdapter implements ProviderAdapter {
       return ChatResponse(
         id: json['id'] ?? '',
         content: delta['content'] ?? '',
+        // 思维链走的是 delta 里的另一个键，不是一个带 type 标签的 chunk 类型。
+        // 老写法只读 delta['content']，于是 reasoning_content / thinking
+        // 被静默丢掉——上游明明发了，屏幕上什么都没有。
+        reasoning: reasoningTextOf(delta),
         role: MessageRole.assistant,
         done: choice['finish_reason'] != null,
         model: json['model'],
@@ -290,20 +334,41 @@ class AnthropicAdapter implements ProviderAdapter {
       ),
     );
 
-    return response.data.stream
+    // .cast 的原因见 OpenAIAdapter.streamChat 里的同一段注释。
+    final Stream<List<int>> bytes = response.data.stream.cast<List<int>>();
+    return bytes
         .transform(utf8.decoder)
         .transform(const LineSplitter())
         .where((line) => line.startsWith('data: '))
         .map((line) {
       final json = jsonDecode(line.substring(6));
+      // 思维链在 Anthropic 协议里是**另一种 block**，不是 content 的另一种
+      // 形状：content_block_start 先报一个 type=thinking 的块，随后每个
+      // content_block_delta 带 type=thinking_delta 与 delta.thinking。
+      //
+      // 所以这里必须按 delta 自己的 type 分派，而不能像老写法那样对每个
+      // content_block_delta 都读 json['delta']['text']——thinking_delta 的
+      // delta 里没有 text 键，且 message_start / content_block_start /
+      // message_stop 这些事件根本没有 delta，老写法在它们上面会抛。
       String content = '';
-      if (json['type'] == 'content_block_delta') {
-        content = json['delta']['text'] ?? '';
+      String? reasoning;
+      final type = json['type'];
+      final delta = json['delta'];
+      if (type == 'content_block_delta' && delta is Map) {
+        if (delta['type'] == 'thinking_delta') {
+          reasoning = reasoningTextOf(delta.cast<String, dynamic>());
+        } else {
+          content = delta['text'] ?? '';
+        }
       }
       return ChatResponse(
-        id: json['message?']['id'] ?? '',
+        // 老写法是 json['message?']['id'] —— 键名多个问号，永远取不到值，
+        // 取到 null 后再下标还会抛。改成安全取法：message 段只在
+        // message_start / message_delta 上有，其余事件本来就没有 id。
+        id: (json['message'] as Map?)?['id'] ?? '',
         content: content,
-        done: json['type'] == 'message_stop',
+        reasoning: reasoning,
+        done: type == 'message_stop',
       );
     });
   }
@@ -325,8 +390,8 @@ class OllamaAdapter implements ProviderAdapter {
   OllamaAdapter({
     required this.id,
     required this.name,
-    this.baseUrl = 'http://localhost:11434',
-    this.model = 'llama3.2',
+    this.baseUrl = kDefaultOllamaBaseUrl,
+    this.model = kDefaultOllamaModel,
     Dio? dio,
   }) : _dio = dio ?? Dio(BaseOptions(
           connectTimeout: const Duration(seconds: 10),
@@ -363,6 +428,9 @@ class OllamaAdapter implements ProviderAdapter {
     return ChatResponse(
       id: '',
       content: data['message']['content'] ?? '',
+      // Ollama 的 /api/chat 对 thinking 模型在 message.thinking 里给思维链，
+      // 与 content 同级。不读的话本地模型吐了思维链也看不见。
+      reasoning: reasoningTextOf(data['message']),
       model: data['model'],
       done: true,
     );
@@ -391,7 +459,9 @@ class OllamaAdapter implements ProviderAdapter {
       ),
     );
 
-    return response.data.stream
+    // .cast 的原因见 OpenAIAdapter.streamChat 里的同一段注释。
+    final Stream<List<int>> bytes = response.data.stream.cast<List<int>>();
+    return bytes
         .transform(utf8.decoder)
         .transform(const LineSplitter())
         .where((line) => line.isNotEmpty)
@@ -400,6 +470,7 @@ class OllamaAdapter implements ProviderAdapter {
       return ChatResponse(
         id: '',
         content: json['message']['content'] ?? '',
+        reasoning: reasoningTextOf(json['message']),
         done: json['done'] ?? false,
         model: json['model'],
       );

@@ -1,26 +1,48 @@
+// khy-canary: Khy-20261101-109-637JY477
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../../core/config/app_config.dart';
+import '../../core/config/permission_mode.dart';
 import '../../core/gateway/khyos_api.dart';
 import '../../core/network/dns_resolver.dart';
 import '../../core/network/network_autofix.dart';
 import '../../core/network/smart_dns.dart';
 import '../../core/services/app_logger.dart';
+import '../../core/services/amoo_service.dart';
+import '../../core/services/chat_target.dart';
+import '../../core/services/keep_awake.dart';
+import '../widgets/khy_brand_mark.dart';
 import '../../core/config/built_in_keys.dart';
 import '../../data/models/models.dart' hide Conversation;
+import '../../core/agent/tool_verdict.dart';
 import '../../core/tools/tool_engine.dart';
 import '../../core/tools/builtin_tools.dart';
 import '../../core/tools/tool_protocol.dart';
 import '../../core/tools/skills.dart';
 import '../../core/services/conversation_db.dart';
+import '../../core/config/project_profile.g.dart';
+import '../../core/workspace/conversation_workspace.dart';
+import '../../core/workspace/workspace_choices.dart';
+import '../widgets/workspace_pickers.dart';
 import '../../core/services/device_control.dart';
+import '../../core/services/file_service.dart';
 import '../../core/config/built_in_keys.dart';
 import '../../core/agent/execution_log.dart';
 import '../../ui/theme/app_colors.dart';
+import '../../ui/theme/design_tokens.dart';
+import '../../ui/widgets/aurora.dart';
 import '../../ui/widgets/tool_card.dart';
+import '../../ui/widgets/chat_message_row.dart';
+import '../../ui/widgets/thinking_block.dart';
+import '../../ui/widgets/amoo_task_card.dart';
+import '../../ui/widgets/amoo_composer.dart';
+import '../../ui/widgets/model_picker_sheet.dart';
+import '../../core/config/model_registry.dart';
 import 'settings_screen_new.dart';
 
 /// App mode: standalone (direct API) or remote (via khy-os backend)
@@ -36,19 +58,50 @@ class ChatScreenNew extends ConsumerStatefulWidget {
 }
 
 class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   final _input = TextEditingController();
   final _inputFocus = FocusNode();
   final _scroll = ScrollController();
   final List<ChatMessage> _msgs = [];
-  final List<ToolCardData> _toolCards = [];
   bool _busy = false;
   String _currentAction = '';
+
+  /// 消息行的局部重建通路。见 [ChatRowStore]：正文/思维链/工具卡的每一次改动都
+  /// 只通知受影响的那一行（那一组），不走整屏 setState——流式期间每个 chunk 的
+  /// 重建范围因此从「整个聊天屏」缩到「ListView 里那一行」。
+  ///
+  /// 在 initState 里建而不是字段初始化式：要把 [_msgs] 这个列表交给它托管，
+  /// 而字段初始化式拿不到 this。
+  late final ChatRowStore _rows;
   AppConfigData? _cfg;
+
+  /// 底部输入框发给谁。见 [ChatTargetNotifier]：为的是消掉"两个输入框"。
+  final ChatTargetNotifier _chatTarget = ChatTargetNotifier();
+
+  /// amoo 这台设备上到底在不在。false = 反代那一整套一律不挂载。
+  ///
+  /// 为什么需要一个字段而不是每次 build 去问：探测要走 MethodChannel
+  /// （异步、且要碰原生壳），build 里不能做；而四个入口（消息列表头卡、
+  /// 欢迎页卡、快捷栏 chip、目标切换）必须按**同一个**判据决定显不显——
+  /// 各问各的必然漂移，漂移的形态是"输入框多一个永失败的目标"。
+  ///
+  /// 默认 false 而不是 true：没探测完之前不挂，比挂一张死卡再撤掉好。
+  /// 旧原生壳上 amooStatus 会抛 MissingPluginException，[AmooService.status]
+  /// 把它转成 unknown，这里同样按 false 处理——那种壳下卡片同样是死卡。
+  bool _amooAvailable = false;
+
+  /// 能力探测结果，整个 State 生命周期只各探测一次。见 _capabilityStrip。
+  late final Future<bool> _a11yReady = DeviceControl.isAccessibilityReady();
+  late final Future<bool> _screenReady = DeviceControl.isScreenCaptureReady();
+
+  /// 反代卡的 State 句柄。主输入框对着 amoo 时，靠它把话递进去。
+  final GlobalKey<AmooTaskCardState> _amooCardKey =
+      GlobalKey<AmooTaskCardState>();
   KhyOsApi? _api;
   AppMode _mode = AppMode.standalone;
   String? _connStatus;
-  late AnimationController _pulseAnim;
+  // 规范 §6.1.3：_pulseAnim 常驻缩放循环删除，改 enter 一次性进场。
+  late AnimationController _enterAnim;
   final _logger = AppLogger();
   final _autoFix = NetworkAutoFix();
   final _smartDns = SmartDns();
@@ -57,8 +110,27 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
   // Session
   String _currentConvId = 'default';
   String _currentTitle = '新对话';
+
+  /// 当前对话挑的工作空间根。null = 没挑 = 用 App 既有默认。
+  ///
+  /// 跟着会话走而不是全局：一个对话在写游戏、另一个在整理下载目录时，
+  /// 共用一个根会让两者的成果和临时文件混在一起，于是谁都不敢删。
+  String? _currentWorkspaceRoot;
   List<ConversationSummary> _conversations = [];
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  /// 工具许可模式。与桌面/终端同一套词汇，见 PermissionMode。
+  ///
+  /// 存在 AppConfig 里而不是本地字段：换对话、杀进程都不该把它重置——
+  /// 用户选「一律不问」是一次决定，不是一次会话的心情。
+  PermissionMode _permissionMode = PermissionMode.prompt;
+
+  /// auto 档下，本次会话已经批准过的工具名。
+  ///
+  /// 故意不做成持久化的：auto 的语义是「这次别再问我」，不是「以后也别问」。
+  /// 后者是 bypass，两件事必须能分开表达，混成一个就让「别再烦我」和
+  /// 「永远别问」变成同一个开关。
+  final Set<String> _approvedThisSession = <String>{};
 
   // Debounce: last connection test time
   DateTime _lastTestTime = DateTime.fromMillisecondsSinceEpoch(0);
@@ -72,27 +144,112 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
   @override
   void initState() {
     super.initState();
-    _pulseAnim = AnimationController(duration: const Duration(seconds: 2), vsync: this)..repeat(reverse: true);
-    _input.addListener(() => setState(() {}));
+    // 欢迎页进场只播一次；系统减弱动效时直接落在终帧。取 platformDispatcher
+    // 而非 MediaQuery，是因为 initState 里不允许依赖 inherited widget。
+    _enterAnim = AnimationController(duration: AppDuration.enter, vsync: this);
+    if (WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations) {
+      _enterAnim.value = 1;
+    } else {
+      _enterAnim.forward();
+    }
+    // _input / _inputFocus 不再整屏 setState。原来两个监听器都是
+    // `() => setState(() {})`：每敲一个键就重建整个聊天屏（头部 slab、能力条、
+    // 全部消息、输入坞），而那次重建里真正变的只有发送按钮的禁用态和输入框的
+    // 聚焦描边。改成 _sendButton / 输入框容器里的局部订阅，见那两处。
     _api = widget.api;
     if (_api != null && _api!.isConnected) _mode = AppMode.remote;
+    _rows = ChatRowStore(_msgs);
     _loadConfig();
     _toolEngine = ToolEngine();
     _toolEngine.registerAll(createBuiltinTools());
     _loadConversations();
+    // 系统分享／「选中文字后」送进来的文字。放在最后：它可能新建一个对话，
+    // 而那不该抢在 _loadConversations 之前把列表状态搅乱。
+    _drainSharedText();
+    // onResume 也要排一次：用户从别的 App 分享完回到这里时，文字是那次
+    // onNewIntent 送到的，而 initState 早跑完了。没有这一条，第二次起的分享
+    // 会静默丢掉——症状是"我分享了但什么都没发生"。
+    WidgetsBinding.instance.addObserver(this);
+    _probeAmoo();
+  }
+
+  /// 探测 amoo 在不在，并据此决定反代那四个入口显不显。
+  ///
+  /// unknown 按 false：原生壳太旧时卡片同样是死卡（问不出去、也拿不到回复），
+  /// 而 AI 页第一行就是它——用户第一眼看到的是一个永远停着的东西。
+  ///
+  /// 为什么把「切回助手」放在探测回调的 setState 里，而不是放在 build：
+  /// build 内改 notifier 是 Flutter 反模式（每次构建都可能有副作用，且
+  /// ListenableBuilder 会立刻再触发一次构建）。而"先切到 amoo、再复探失败"
+  /// 是真实顺序——用户可能装过 amoo、用完卸载，或从别的页面回来时探测重跑。
+  /// 不切回去的话，主输入框还对着一个此刻不存在的目标，_askAmooFromMainInput
+  /// 会静默空转：卡不在，_amooCardKey.currentState 是 null，刚打的那句话
+  /// 就这么消失了，连一句"没发出去"都没有。
+  Future<void> _probeAmoo() async {
+    final st = await AmooService.status();
+    if (!mounted) return;
+    setState(() {
+      _amooAvailable = st.installed;
+      if (!_amooAvailable && _chatTarget.isAmoo) {
+        _chatTarget.value = ChatTarget.assistant;
+      }
+    });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _input.dispose();
+    _inputFocus.dispose();
     _scroll.dispose();
-    _pulseAnim.dispose();
+    _enterAnim.dispose();
+    _autoScrollTimer?.cancel();
+    _rows.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _drainSharedText();
+      // 复探一次：本页活着没重建（底部导航让四个页同时活着），而 amoo 的
+      // 安装态是这期间少数真的会变的东西之一——用户可能刚在设置里装好，
+      // 也可能刚卸掉。不复探的话，装好的人看不到入口，卸掉的人看到死卡。
+      _probeAmoo();
+    }
+  }
+
+  /// 把系统分享进来的文字开成一个新对话。
+  ///
+  /// 为什么是"新对话"而不是塞进当前对话：分享是一个独立的意图，用户此刻在
+  /// 看的话题跟它通常无关。塞进当前会话会让模型拿一段没头没尾的文字去接上文，
+  /// 而那段上文它并没看到。
+  ///
+  /// 文字**只是放进输入框**，不自动发送。自动发送会在用户没打算问的时候
+  /// 花掉一次模型调用，而且屏幕上刚出现一段他没打过的字就被发出去了——
+  /// 那是把人从自己的设备上挤下去。
+  Future<void> _drainSharedText() async {
+    final text = await DeviceControl.consumeSharedText();
+    if (text.trim().isEmpty) return;
+    if (!mounted) return;
+    setState(() {
+      _rows.clear();
+      _rows.clearToolCards();
+      _currentConvId = 'conv_${DateTime.now().millisecondsSinceEpoch}';
+      _currentTitle = '分享的内容';
+      _currentWorkspaceRoot = null;
+      _input.text = text;
+    });
   }
 
   Future<void> _loadConfig() async {
     final c = await AppConfig.loadEffective();
-    if (mounted) setState(() => _cfg = c);
+    if (mounted) {
+      setState(() {
+        _cfg = c;
+        _permissionMode = PermissionMode.fromWire(c.permissionMode);
+      });
+    }
   }
 
   Future<void> _loadConversations() async {
@@ -105,7 +262,46 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
   void _sendMessage() {
     final text = _input.text.trim();
     if (text.isEmpty || _busy) return;
-    
+
+    // 对着 amoo 时，主输入框就是反代卡的输入框（卡把自己的收起来了）。
+    if (_chatTarget.isAmoo) {
+      _askAmooFromMainInput();
+      return;
+    }
+
+    // 发送前重新读一次配置。
+    //
+    // 为什么必须有：底部导航把本页的 State 一直活着，而 _loadConfig() 原来只在
+    // initState 里跑过一次。于是用户在设置页填好 key、显示"连接成功"、回到 AI 页
+    // 发消息，这里的 _cfg 还是应用启动时那个 null——报一句"API 未配置"，
+    // 而配置其实是好的。
+    //
+    // 放在这里而不是靠路由回调刷新：底部导航切换不产生路由事件，没有可靠的
+    // "本页又可见了"信号；而每次发送前读一次是确定正确的，代价是一次
+    // keystore 读取（毫秒级），且只发生在用户明确要发送的时刻。
+    _reloadConfigThenSend(text);
+  }
+
+  Future<void> _reloadConfigThenSend(String text) async {
+    await _loadConfig();
+    if (!mounted) return;
+    _dispatchSend(text);
+  }
+
+  /// 主输入框对着 amoo 时，把这句话交给反代卡去发。
+  ///
+  /// 清空输入框放在这里而不是卡片里：卡不知道主输入框的存在（它被列表头、
+  /// 欢迎页两处复用，只有一处配了 GlobalKey）。各清各的，才不会有一头
+  /// 清了另一头没清。
+  void _askAmooFromMainInput() {
+    final text = _input.text.trim();
+    if (text.isEmpty) return;
+    _input.clear();
+    setState(() {});
+    _amooCardKey.currentState?.sendWith(text);
+  }
+
+  void _dispatchSend(String text) {
     // 远程模式：检查后端连接
     if (_mode == AppMode.remote) {
       if (_api == null || !_api!.isConnected) {
@@ -121,26 +317,34 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
     }
     
     _updateTitleFromFirstMessage(text);
+    // 用户消息 + 空 assistant 占位合并成一次 setState。原来是两次（中间还夹着
+    // 一次 _scrollToBottom），同帧两次全屏重建没有任何收益；而且旧写法里第二次
+    // setState 之后没有再贴底，刚追加的占位符可能落在视口外。
+    final userMsg = ChatMessage(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      conversationId: _currentConvId,
+      role: MessageRole.user,
+      content: text,
+      timestamp: DateTime.now(),
+    );
+    final aid = 'a_${DateTime.now().millisecondsSinceEpoch}';
+    final placeholder = ChatMessage(
+      id: aid,
+      conversationId: _currentConvId,
+      role: MessageRole.assistant,
+      content: '',
+      timestamp: DateTime.now(),
+    );
     setState(() {
-      _msgs.add(ChatMessage(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        conversationId: _currentConvId,
-        role: MessageRole.user, content: text,
-        timestamp: DateTime.now(),
-      ));
-    _toolCards.clear();
-    _currentAction = '';
-    _busy = true;
+      _msgs.add(userMsg);
+      _rows.clearToolCards();
+      _currentAction = '';
+      _busy = true;
+      _msgs.add(placeholder);
     });
     _input.clear();
     _scrollToBottom();
-    final aid = 'a_${DateTime.now().millisecondsSinceEpoch}';
-    setState(() => _msgs.add(ChatMessage(
-      id: aid, conversationId: _currentConvId,
-      role: MessageRole.assistant, content: '',
-      timestamp: DateTime.now(),
-    )));
-    
+
     if (_mode == AppMode.remote) {
       _sendRemote(text, aid);
     } else {
@@ -162,11 +366,30 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
                 'content': m.content,
               })
           .toList();
-      final basePrompt = _cfg!.systemPrompt.isNotEmpty
-          ? _cfg!.systemPrompt
-          : '你是 khy-os AI 助手，运行在用户的 Android 手机上。你可以帮用户打开应用、管理剪贴板、计算数学表达式、执行无障碍操作等。使用工具完成用户请求。';
-      final sysPrompt = '$basePrompt\n\n${_buildSkillsSummary()}\n\n'
-          '${ToolProtocol.textProtocolInstructions}';
+      // 系统提示分三段拼：身份 → 项目画像 → 技能与协议。
+      //
+      // 画像只在**用户没自己写系统提示**时才接。用户写了就整段照用，不把画像偷偷
+      // 续在后面——那会让他写的"只准用中文"变成一句假话。PC 侧
+      // stepneoCloud/agentLoop.js 是同一条规则，两边必须一致。
+      //
+      // 画像带上了这个对话绑定的工作目录：不带上，模型就只知道"能操作手机"，
+      // 不知道自己在维护 khy-os、也不知道文件会落到哪——那种 agent 下次就可能
+      // 自动 commit 或把密钥写进源码，不是它坏，是没人告诉它不许。
+      final blocks = <String>[];
+      if (_cfg!.systemPrompt.isNotEmpty) {
+        blocks.add(_cfg!.systemPrompt);
+      } else {
+        blocks.add('你是 khy-os AI 助手，运行在用户的 Android 手机上。'
+            '你可以帮用户打开应用、管理剪贴板、计算数学表达式、执行无障碍操作等。'
+            '使用工具完成用户请求。');
+        blocks.add(ProjectProfileText.section(
+          workspaceRoot: _currentWorkspaceRoot,
+        ));
+      }
+      blocks.add(_buildSkillsSummary());
+      blocks.add(ToolProtocol.textProtocolInstructions);
+      final sysPrompt =
+          blocks.where((b) => b.trim().isNotEmpty).join('\n\n');
       final tools = _toolEngine.toFunctionSchemas();
       final dio = Dio(BaseOptions(
         connectTimeout: const Duration(seconds: 30),
@@ -205,6 +428,12 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
         final msg = choice?['message'];
         final content = msg?['content'] ?? '';
         final nativeToolCalls = msg?['tool_calls'] as List?;
+
+        // 本地（非流式）分支的思维链来源：reasoning_content / reasoning。
+        // 原来只读 content，这一段被静默丢弃——DeepSeek / GLM 这类模型默认就吐。
+        // 走整段替换而不是累加：非流式一次拿完，没有增量可言。
+        final reasoningRaw = msg?['reasoning_content'] ?? msg?['reasoning'];
+        if (reasoningRaw != null) _rows.setReasoning(id, reasoningRaw.toString());
 
         // 检测是否需要文本协议（模型不支持原生 function calling）
         final useTextProtocol = ToolProtocol.needsTextProtocol(_cfg!.model);
@@ -268,9 +497,12 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
             label: label,
             args: args,
           );
-          _toolCards.add(cardData);
+          _rows.toolCards.add(cardData);
           _setContent(id, '$content\n\n$label');
           _currentAction = label;
+          // 卡数 0→1：itemCount 变了，ListView 必须整屏重建一次才多得出这一格。
+          // 同一组内后续的更新走 notifier 局部重建（见下面 _notifyToolCards）。
+          _rows.notifyToolCards();
           if (mounted) setState(() {});
 
           // 执行工具（危险命令需用户批准）
@@ -279,13 +511,16 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
             final approved = await _showApprovalDialog(toolName, args, label);
             if (!approved) {
               result = ToolResult.fail('用户拒绝了该操作');
-              _toolCards.last = ToolCardData.failed(
+              _rows.toolCards.last = ToolCardData.failed(
                 index: step.index, toolName: toolName, label: label,
                 args: args, error: '用户拒绝', durationMs: 0);
-              if (mounted) setState(() {});
-              _feedBack(messages, result, useTextProtocol);
+              _rows.notifyToolCards();
+              _feedBack(messages, toolName, result, useTextProtocol);
               continue;
             }
+            // auto 档的"记住"只在这里生效，而且只记**批准过**的。
+            // 拒绝不记：用户这次不想让它跑，不等于下次也不想问。
+            _approvedThisSession.add(toolName);
           }
           final startT = DateTime.now();
           result = await _toolEngine.execute(toolName, args);
@@ -316,28 +551,23 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
                   error: result.output,
                   durationMs: elapsed,
                 );
-          _toolCards.last = updatedCard;
-          if (mounted) setState(() {});
+          _rows.toolCards.last = updatedCard;
+          // 卡数没变（running → success/failed 是原地替换），只有工具卡那一组
+          // 要重画：不再整屏 setState。这是每个工具步骤第二次全屏重建的收敛点。
+          _rows.notifyToolCards();
 
           // 更新消息内容
-          final statusText = result.success ? '成功' : '失败';
-          _setContent(id, '$content\n\n$statusText: $label');
-
-          // 喂回 LLM
-          if (useTextProtocol) {
-            // 文本协议：用 [TOOL_RESULT:...] 格式回传
-            messages.add({
-              'role': 'user',
-              'content': ToolProtocol.formatToolResult(result),
-            });
-          } else {
-            // 原生协议：用 role:tool 回传
-            messages.add({
-              'tool_call_id': '${DateTime.now().millisecondsSinceEpoch}',
-              'role': 'tool',
-              'content': result.jsonOutput,
-            });
-          }
+          // 喂回 LLM。走 ToolVerdictFactory：核对结论追加在结果后面，
+          // 模型没法把一次失败读成一次成功。五处回喂点都用它，理由见
+          // tool_verdict.dart 的库注释。
+          final verdict = ToolVerdictFactory.of(toolName, result);
+          _setContent(id, '$content\n\n${verdict.userLabel}: $label');
+          messages.add(ToolVerdictFactory.toolMessage(
+            tool: toolName,
+            result: result,
+            useTextProtocol: useTextProtocol,
+            callId: '${DateTime.now().millisecondsSinceEpoch}',
+          ));
         }
       }
 
@@ -417,6 +647,10 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
         final t = ev['type'];
         if (t == 'chunk') {
           _appendContent(id, (ev['content'] ?? '').toString());
+        } else if (t == 'thinking_content') {
+          // 后端早就把网关的 thinking chunk 转成这个事件下发（routes/ai.js 的
+          // thinking 分支），Dart 侧原来只认 chunk/done/error，它落在无形。
+          _rows.appendReasoning(id, (ev['text'] ?? '').toString());
         } else if (t == 'done') {
           final c = ev['content'];
           if (c != null) _setContent(id, c.toString());
@@ -442,6 +676,17 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
     }
   }
 
+  /// 把当前对话的工作空间根同步给原生侧。
+  ///
+  /// 为什么必须显式同步：原生侧持有"文件工具的根"这个设备级状态，而 Dart 侧
+  /// 持有"这个对话挑了哪个根"。两边不一致时，症状是"我明明选了这个目录，
+  /// 文件却不在这"——没有任何一方会报错。所以每次切换对话都推一次，
+  /// 包括 null（没挑），那意味着恢复 App 私有目录。
+  Future<void> _applyWorkspaceRoot(String? root) async {
+    await FileService.setWorkRoot(
+        ConversationWorkspace.effectiveRoot(root));
+  }
+
   Future<void> _saveConversation() async {
     if (_msgs.isEmpty) return;
     final conv = Conversation(
@@ -450,8 +695,14 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
       messages: _msgs.map((m) => ChatMsg(
         role: m.role == MessageRole.user ? 'user' : 'assistant',
         content: m.content,
+        // 思维链必须跟着存，否则切会话再切回那段"先想"就没了。取消息自己的
+        // 字段而不是行 store 的存档——前者是唯一真源（见 ChatRowStore）。
+        reasoning: m.reasoning,
         timestamp: m.timestamp,
       )).toList(),
+      // 少了这一行，用户挑的工作目录会在下一次保存时静默消失——而界面
+      // 上什么都不会提示。
+      workspaceRoot: _currentWorkspaceRoot,
     );
     await ConversationDB.save(conv);
     await _loadConversations();
@@ -459,10 +710,11 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
 
   void _newConversation() {
     setState(() {
-      _msgs.clear();
-      _toolCards.clear();
+      _rows.clear();
+      _rows.clearToolCards();
       _currentConvId = 'conv_${DateTime.now().millisecondsSinceEpoch}';
       _currentTitle = '新对话';
+      _currentWorkspaceRoot = null;
     });
     if (mounted) Navigator.pop(context);
   }
@@ -471,18 +723,27 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
     final conv = await ConversationDB.load(id);
     if (conv == null) return;
     setState(() {
-      _msgs.clear();
-      _toolCards.clear();
+      _rows.clear();
+      _rows.clearToolCards();
       _currentConvId = conv.id;
       _currentTitle = conv.title;
+      _currentWorkspaceRoot = conv.workspaceRoot;
+      _applyWorkspaceRoot(conv.workspaceRoot);
       for (final msg in conv.messages) {
+        // 不叫 id：那会盖住本方法的入参（会话 id），而下面还要用 conv.id。
+        final msgId = '${msg.timestamp.millisecondsSinceEpoch}';
         _msgs.add(ChatMessage(
-          id: '${msg.timestamp.millisecondsSinceEpoch}',
+          id: msgId,
           conversationId: conv.id,
           role: msg.role == 'user' ? MessageRole.user : MessageRole.assistant,
           content: msg.content,
+          // 老会话没有这个键 → null → 不渲染思维链块，行为一字不变。
+          reasoning: msg.reasoning,
           timestamp: msg.timestamp,
         ));
+        // 还要灌进行 store：行 notifier 首建时读的是 store 的思维链存档，
+        // 只写 ChatMessage 的话那一行永远渲染不出块来——这正是本 bug 的读侧。
+        _rows.setReasoning(msgId, msg.reasoning ?? '');
       }
     });
     if (mounted) Navigator.pop(context);
@@ -501,112 +762,169 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final palette = AppPalette.of(context);
     return Scaffold(
       key: _scaffoldKey,
-      drawer: _buildDrawer(cs),
-      body: SafeArea(
-        child: Column(
-          children: [
-            _topBar(cs),
-            _capabilityStrip(cs),
-            Expanded(child: _msgs.isEmpty ? _welcome(cs) : _msgList(cs)),
-            _quickActionBar(cs),
-            _inputArea(cs),
-          ],
+      drawer: _buildDrawer(Theme.of(context).colorScheme),
+      body: AuroraBackground(
+        child: SafeArea(
+          child: Column(
+            children: [
+              _header(palette),
+              Expanded(child: _msgs.isEmpty ? _welcome(palette) : _msgList()),
+              _inputDock(palette),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  /// Clean top bar: hamburger + khy-os logo + settings
-  Widget _topBar(ColorScheme cs) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0, 2)),
-        ],
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.menu_rounded, size: 20),
-            onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-            tooltip: '会话列表',
-          ),
-          const SizedBox(width: 4),
-          // Logo
-          Container(
-            width: 32,
-            height: 32,
+  /// 本屏仅有的两处玻璃面（规范 §4）：头部 slab 与输入 dock，共用这套配方。
+  /// 正文卡与气泡禁止 blur，所以 blur 层数恒为 2，不随内容增长。
+  Widget _glassSlab(
+    AppPalette palette, {
+    required Widget child,
+    required double tint,
+    EdgeInsetsGeometry padding = EdgeInsets.zero,
+    EdgeInsetsGeometry margin = EdgeInsets.zero,
+    BorderRadius borderRadius =
+        const BorderRadius.all(Radius.circular(AppRadius.large)),
+  }) {
+    return Padding(
+      padding: margin,
+      child: ClipRRect(
+        borderRadius: borderRadius,
+        child: BackdropFilter(
+          filter:
+              ui.ImageFilter.blur(sigmaX: AppGlass.sigma, sigmaY: AppGlass.sigma),
+          child: Container(
+            padding: padding,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [cs.primary, cs.tertiary],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+              color: palette.surface.withValues(alpha: tint),
+              borderRadius: borderRadius,
+              border: Border.all(
+                  color: palette.glassStroke, width: AppStroke.thin),
+            ),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Duration _animDur(Duration base) =>
+      MediaQuery.maybeOf(context)?.disableAnimations ?? false
+          ? Duration.zero
+          : base;
+
+  /// 头部 slab：60dp 顶栏 + 能力条共用一层 blur。五件套从顶栏移走后，
+  /// 标题列拿到整行宽度，不再把「khy-os」挤成两行。
+  Widget _header(AppPalette palette) {
+    return _glassSlab(
+      palette,
+      tint: AppGlass.bar,
+      borderRadius: BorderRadius.zero,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: 60,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.cardPadNarrow),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.menu_rounded,
+                        size: 22, color: palette.textSecondary),
+                    onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                    tooltip: '会话列表',
+                    constraints:
+                        const BoxConstraints(minWidth: 40, minHeight: 40),
+                    padding: EdgeInsets.zero,
+                  ),
+                  const SizedBox(width: AppSpacing.dense),
+                  // 品牌块：墨黑底 + 琥珀主标。
+                  const KhyBrandTile(size: 36, radius: AppRadius.small),
+                  const SizedBox(width: AppSpacing.inner),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text('khy-os',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppText.title
+                                    .copyWith(color: palette.textPrimary)),
+                            ),
+                            const SizedBox(width: AppSpacing.dense),
+                            _statusDot(palette),
+                          ],
+                        ),
+                        Text(
+                          _currentModelLabel(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppText.secondary
+                              .copyWith(color: palette.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.settings_rounded,
+                        size: 22, color: palette.textSecondary),
+                    onPressed: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const SettingsScreenNew())),
+                    tooltip: '设置',
+                    constraints:
+                        const BoxConstraints(minWidth: 40, minHeight: 40),
+                    padding: EdgeInsets.zero,
+                  ),
+                ],
               ),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Center(
-              child: Text('K', style: TextStyle(
-                fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white,
-              )),
             ),
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('khy-os', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                Text(
-                  _currentModelLabel(),
-                  style: TextStyle(fontSize: 10, color: cs.onSurface.withValues(alpha: 0.5)),
-                ),
-              ],
-            ),
-          ),
-          // Status dot
-          _statusDot(cs),
-          const SizedBox(width: 4),
-          // Mode toggle
-          _modeToggle(cs),
-          const SizedBox(width: 4),
-          IconButton(
-            icon: const Icon(Icons.settings_rounded, size: 20),
-            onPressed: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const SettingsScreenNew())),
-            tooltip: '设置',
-          ),
+          Container(height: AppStroke.thin, color: palette.glassStroke),
+          _capabilityStrip(palette),
         ],
       ),
     );
   }
 
-  /// Mode toggle: 独立 ↔ 远程
-  Widget _modeToggle(ColorScheme cs) {
+  /// Mode toggle: 独立 ↔ 远程。落在能力条右端（28dp 分段控件），
+  /// 不再占顶栏宽度。
+  Widget _modeToggle(AppPalette palette) {
     return Container(
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(14),
+        color: palette.surfaceHigh,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: palette.strokeStrong, width: AppStroke.thin),
       ),
       padding: const EdgeInsets.all(2),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _modeChip('独立', AppMode.standalone, Icons.phone_android, cs),
-          _modeChip('远程', AppMode.remote, Icons.dns, cs),
+          _modeChip('独立', AppMode.standalone, Icons.phone_android, palette),
+          _modeChip('远程', AppMode.remote, Icons.dns, palette),
         ],
       ),
     );
   }
 
-  Widget _modeChip(String label, AppMode mode, IconData icon, ColorScheme cs) {
+  Widget _modeChip(String label, AppMode mode, IconData icon, AppPalette palette) {
     final sel = _mode == mode;
     final canUse = mode == AppMode.standalone || (_api != null && _api!.isConnected);
-    return GestureDetector(
+    final fg = sel
+        ? Colors.white
+        : palette.textSecondary.withValues(alpha: canUse ? 1 : 0.45);
+    return PressableScale(
       onTap: canUse
           ? () {
               setState(() => _mode = mode);
@@ -614,23 +932,24 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
             }
           : null,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        duration: _animDur(AppDuration.spring),
+        curve: AppCurves.spring,
+        padding:
+            const EdgeInsets.symmetric(horizontal: AppSpacing.dense, vertical: 3),
         decoration: BoxDecoration(
-          color: sel ? cs.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          gradient: sel ? AppGradients.brand2 : null,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 12, color: sel ? Colors.white : cs.onSurface.withValues(alpha: canUse ? 0.6 : 0.3)),
+            Icon(icon, size: 12, color: fg),
             const SizedBox(width: 3),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 11,
-                color: sel ? Colors.white : cs.onSurface.withValues(alpha: canUse ? 0.6 : 0.3),
-                fontWeight: sel ? FontWeight.w600 : FontWeight.normal,
+              style: AppText.label.copyWith(
+                color: fg,
+                fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
           ],
@@ -639,76 +958,163 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
     );
   }
 
-  Widget _statusDot(ColorScheme cs) {
-    final color = _statusColor();
-    return GestureDetector(
+  /// 状态点 + 状态文字并入标题行尾；点击仍是复测连接（行为不变）。
+  Widget _statusDot(AppPalette palette) {
+    final color = _statusColor(palette);
+    return PressableScale(
       onTap: _busy ? null : _testConn,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 7,
-            height: 7,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            width: 14,
+            height: 14,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.3),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration:
+                    BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
+            ),
           ),
-          const SizedBox(width: 5),
-          Text(
-            _statusText(),
-            style: TextStyle(fontSize: 10, color: cs.onSurface.withValues(alpha: 0.5)),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              _statusText(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.label.copyWith(color: palette.textSecondary),
+            ),
           ),
         ],
       ),
     );
   }
 
-  /// Thin capability strip showing active services
-  Widget _capabilityStrip(ColorScheme cs) {
+  /// 能力条：就绪 chip 横滚在左、模式切换在右，各占各的层级。
+  /// 窄屏（320dp）下 chip 区滚动而不溢出。版本号按规范只在设置页页脚出现。
+  Widget _capabilityStrip(AppPalette palette) {
     return Container(
-      height: 32,
-      color: cs.surfaceVariant.withValues(alpha: 0.5),
+      height: 40,
+      padding:
+          const EdgeInsets.symmetric(horizontal: AppSpacing.cardPadNarrow),
       child: Row(
         children: [
-          const SizedBox(width: 16),
-          _capChip(Icons.accessibility_new, '无障碍', DeviceControl.isAccessibilityReady),
-          const SizedBox(width: 8),
-          _capChip(Icons.screenshot, '截屏', DeviceControl.isScreenCaptureReady),
-          const SizedBox(width: 8),
-          _capChip(Icons.terminal, 'Shell', () async => true),
-          const Spacer(),
-          Text('v1.1', style: TextStyle(fontSize: 10, color: cs.onSurface.withValues(alpha: 0.3))),
-          const SizedBox(width: 12),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // future 缓存在 State 字段里，不在 build 里现调：check() 走
+                  // MethodChannel（异步、碰原生壳），原来每次父级重建——包括每次
+                  // 按键、每个流式 chunk——都重新探测一次。能力态本来就不会
+                  // 随消息变化，探测一次就够。
+                  _capChip(Icons.accessibility_new, '无障碍',
+                      () => _a11yReady, palette),
+                  const SizedBox(width: AppSpacing.dense),
+                  _capChip(Icons.screenshot, '截屏', () => _screenReady,
+                      palette),
+                  const SizedBox(width: AppSpacing.dense),
+                  _capChip(Icons.terminal, 'Shell', () async => true, palette),
+                  const SizedBox(width: AppSpacing.dense),
+                  _keepAwakeChip(palette),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.dense),
+          _modeToggle(palette),
         ],
       ),
     );
   }
 
-  Widget _capChip(IconData icon, String label, Future<bool> Function() check) {
+  /// 屏幕常亮开关。
+  ///
+  /// 为什么单独给一个按钮，而不是只在反代提问期间自动亮：自动那份（MainActivity
+  /// 的 FLAG_KEEP_SCREEN_ON）只覆盖"正在等 amoo"这几分钟。但读气泡、逐级点目录、
+  /// 长任务同样不该中途熄屏——熄一次，无障碍树过期，接着的操作全建立在旧状态上。
+  /// 那种场景下用户要的是"我说别熄就别熄"，不是一个猜他意图的自动策略。
+  ///
+  /// 用 _KeepAwake 而不是直接调平台通道：熄屏是窗口级状态，App 内有单一事实来源
+  /// 比每个页面各自 addFlags 可靠——否则两个页面同时开关会互相抵消。
+  Widget _keepAwakeChip(AppPalette palette) {
+    return ListenableBuilder(
+      listenable: KeepAwake.instance,
+      builder: (ctx, _) {
+        final on = KeepAwake.instance.on;
+        return GestureDetector(
+          onTap: () => KeepAwake.instance.toggle(),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.dense, vertical: 5),
+            decoration: BoxDecoration(
+              color: on
+                  ? palette.warning.withValues(alpha: 0.16)
+                  : palette.surfaceHigh,
+              borderRadius: BorderRadius.circular(AppRadius.small),
+              border: Border.all(
+                color: on
+                    ? palette.warning.withValues(alpha: 0.5)
+                    : palette.stroke,
+                width: AppStroke.thin,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(on ? Icons.light_mode : Icons.light_mode_outlined,
+                    size: 12, color: on ? palette.warning : palette.textSecondary),
+                const SizedBox(width: 4),
+                Text(on ? '常亮中' : '常亮',
+                    style: AppText.label.copyWith(
+                        color: on ? palette.warning : palette.textSecondary)),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _capChip(
+      IconData icon, String label, Future<bool> Function() check, AppPalette palette) {
     return FutureBuilder<bool>(
       future: check(),
       builder: (ctx, snap) {
         final active = snap.data ?? false;
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.dense, vertical: 5),
           decoration: BoxDecoration(
             color: active
-                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.15)
-                : Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
+                ? palette.primary.withValues(alpha: 0.14)
+                : palette.surfaceHigh,
+            borderRadius: BorderRadius.circular(AppRadius.small),
             border: Border.all(
               color: active
-                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)
-                  : Theme.of(context).colorScheme.outlineVariant,
+                  ? palette.primary.withValues(alpha: 0.42)
+                  : palette.stroke,
+              width: AppStroke.thin,
             ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 12, color: active ? AppColors.primary : Colors.grey),
+              Icon(icon,
+                  size: 12,
+                  color: active ? palette.primary : palette.textSecondary),
               const SizedBox(width: 4),
               Text(label,
-                  style: TextStyle(
-                      fontSize: 10,
-                      color: active ? AppColors.primary : Colors.grey)),
+                  style: AppText.label.copyWith(
+                      color:
+                          active ? palette.primary : palette.textSecondary)),
             ],
           ),
         );
@@ -718,129 +1124,123 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
 
   // ==================== Messages ====================
 
-  Widget _msgList(ColorScheme cs) {
+  /// 一条消息行。局部重建的挂载点。
+  ///
+  /// `ValueListenableBuilder` 只包住这一行：chunk 到达时重建范围是这一个子树，
+  /// 不是整个 Scaffold。思维链块在**这个 builder 里**构造，所以它拿到的永远是
+  /// 最新正文——在外面构造会留下上一次的 reasoning。
+  Widget _rowFor(ChatMessage msg) {
+    final n = _rows.notifierFor(msg);
+    return ValueListenableBuilder<ChatRowState>(
+      key: ValueKey(msg.id),
+      valueListenable: n,
+      builder: (ctx, state, _) {
+        final reasoning = state.reasoning;
+        // 门控：assistant 且有思维链。用户消息不可能有；空思维链不渲染空壳
+        // （远程模式下 thinking_content 可能永不到达，见 ThinkingBlock 注释）。
+        final thinking = msg.role == MessageRole.assistant &&
+                reasoning.trim().isNotEmpty
+            ? ThinkingBlock(reasoning: reasoning, streaming: _busy)
+            : null;
+        return ChatBubbleRow(
+          message: state.message,
+          thinking: thinking,
+          busy: _busy,
+          action: _currentAction,
+        );
+      },
+    );
+  }
+
+  Widget _msgList() {
     return ListView.builder(
       controller: _scroll,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      itemCount: _msgs.length + (_toolCards.isNotEmpty ? 1 : 0),
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.page, vertical: AppSpacing.cardGap),
+      // +1 = 头部那张 amoo 反代卡（仅 amoo 在场时）。它必须常驻：一轮提问
+      // 约 6 分钟，卡片滚出视野的话用户看不到进度，也点不到「停止」。
+      //
+      // 缺席时不加这一格。理由不是省地方：那张卡问不出去（前台预检必失败），
+      // 而 AI 页第一行就是它——用户第一眼看到的是一个永远停着的东西。
+      itemCount: _msgs.length +
+          (_rows.toolCards.isNotEmpty ? 1 : 0) +
+          (_amooAvailable ? 1 : 0),
       itemBuilder: (_, i) {
+        if (_amooAvailable && i == 0) {
+          return AmooTaskCard(
+            key: _amooCardKey,
+            target: _chatTarget,
+          );
+        }
+        // 索引基准必须和 itemCount 那个条件同步改。漏改的后果不是"少一条"，
+        // 是 RangeError：缺席时 i==0 直接取 _msgs[-1]，而那是每次构建都走的
+        // 路径——整块 AI 页布不出来，正是本轮要修的那块屏。
+        final j = i - (_amooAvailable ? 1 : 0);
         // Interleave tool cards before the last assistant message
-        if (i < _msgs.length) {
-          final msg = _msgs[i];
+        if (j < _msgs.length) {
+          final msg = _msgs[j];
           final isLastAssistant =
-              msg.role == MessageRole.assistant && i == _msgs.length - 1;
-          if (isLastAssistant && _toolCards.isNotEmpty) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ToolExecutionSummary(cards: _toolCards),
-                for (final card in _toolCards)
-                  ToolCard(data: card),
-                _bubble(msg, cs),
-              ],
+              msg.role == MessageRole.assistant && j == _msgs.length - 1;
+          if (isLastAssistant && _rows.toolCards.isNotEmpty) {
+            // 工具卡整组与末条气泡挤在同一个 item 里。整组自己订阅
+            // _rows.toolCardsListenable：卡数 0→1 那次仍走整屏 setState（itemCount
+            // 变了，必须），之后的「建卡 / 完成」只重建这一组。
+            return ListenableBuilder(
+              key: ValueKey('tools_${msg.id}'),
+              listenable: _rows.toolCardsListenable,
+              builder: (_, _) => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ToolExecutionSummary(cards: _rows.toolCardsListenable.value),
+                  for (final card in _rows.toolCardsListenable.value)
+                    ToolCard(data: card),
+                  _rowFor(msg),
+                ],
+              ),
             );
           }
-          return _bubble(msg, cs);
+          return _rowFor(msg);
         }
         return SizedBox.shrink();
       },
     );
   }
 
-  Widget _bubble(ChatMessage msg, ColorScheme cs) {
-    final isUser = msg.role == MessageRole.user;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
+
+  // ==================== Input dock ====================
+
+  /// 快捷条 + 输入区共用一只玻璃容器（规范 §6.1.5 第 2 处 blur）；
+  /// 头部 slab 是第 1 处，本屏 blur 层数就此封顶。
+  Widget _inputDock(AppPalette palette) {
+    // 底部 margin 要从 AppSpacing.dense 抬到底栏之上：宿主 Scaffold 用了
+    // extendBody: true，body 伸到玻璃底栏之下，而这个坞是**固定**的底部元素，
+    // 被压住的正是发送按钮和输入框——比列表划不到底更严重。
+    //
+    // 只抬 margin、不动 padding：玻璃板自己的观感不变，只是整体上移让开底栏。
+    // 消息列表那一侧仍然保持原样（本页底部被坞占满，没有可透出的滚动内容）。
+    return _glassSlab(
+      palette,
+      tint: AppGlass.dock,
+      margin: const EdgeInsets.fromLTRB(
+          AppSpacing.page, 0, AppSpacing.page, AppSpacing.dense),
+      padding: const EdgeInsets.all(AppSpacing.cardPadNarrow),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          if (!isUser) ...[
-            Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [cs.primary, cs.tertiary],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: cs.primary.withValues(alpha: 0.2),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: const Center(
-                child: Icon(Icons.hub, size: 18, color: Colors.white),
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: isUser ? cs.primary : cs.surface,
-                borderRadius: BorderRadius.circular(16).copyWith(
-                  bottomLeft: isUser
-                      ? const Radius.circular(4)
-                      : const Radius.circular(16),
-                  bottomRight: isUser
-                      ? const Radius.circular(16)
-                      : const Radius.circular(4),
-                ),
-                border: Border.all(
-                  color: isUser
-                      ? Colors.transparent
-                      : cs.outlineVariant.withValues(alpha: 0.4),
-                ),
-              ),
-              child: msg.content.isEmpty && _busy && !isUser
-                  ? Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: cs.primary),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _currentAction.isNotEmpty ? _currentAction : '思考中',
-                          style: TextStyle(
-                              color: cs.onSurface.withValues(alpha: 0.5),
-                              fontSize: 13),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    )
-                  : SelectableText(
-                      msg.content,
-                      style: TextStyle(
-                          color: isUser ? Colors.white : cs.onSurface,
-                          fontSize: 14,
-                          height: 1.5)),
-            ),
-          ),
+          _quickBar(palette),
+          const SizedBox(height: AppSpacing.dense),
+          _inputRow(palette),
         ],
       ),
     );
   }
 
-
-  // ==================== Quick Actions ====================
-
-  Widget _quickActionBar(ColorScheme cs) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      color: cs.surface,
+  Widget _quickBar(AppPalette palette) {
+    // 横向滚动：窄屏（360dp）下加第 6 个 chip 也不会 RenderFlex overflow
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           _quickBtn(Icons.screenshot, '截屏', () async {
             final ok = await DeviceControl.startScreenCapture();
@@ -851,125 +1251,284 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
                 _addSystemMsg('已截屏');
               }
             }
-          }, cs),
+          }, palette),
           _quickBtn(Icons.accessibility_new, '无障碍', () {
             DeviceControl.openAccessibilitySettings();
-          }, cs),
+          }, palette),
           _quickBtn(Icons.home, '主页', () async {
             await DeviceControl.a11yGlobalAction(DeviceControl.globalActionHome);
-          }, cs),
+          }, palette),
           _quickBtn(Icons.arrow_back, '返回', () async {
             await DeviceControl.a11yGlobalAction(DeviceControl.globalActionBack);
-          }, cs),
+          }, palette),
           _quickBtn(Icons.calculate, '计算', () {
             _input.text = '帮我计算: ';
             _inputFocus.requestFocus();
-          }, cs),
-          const Spacer(),
+          }, palette),
+          // amoo：把输入框现有内容带进发送面板，用户仍需再点一次「分享到 amoo」。
+          //
+          // 条件渲染而不是置灰：置灰的 chip 照样占一格、照样被点到，而它背后
+          // 的 sheet 在 amoo 缺席时只会说「未安装」——那已经是设备页那张卡的
+          // 职责了，快捷栏再重复一遍没有信息量。
+          if (_amooAvailable)
+            _quickBtn(Icons.forum_outlined, 'amoo', () {
+              showAmooComposer(context, initialText: _input.text);
+            }, palette),
+          // 模型切换：放在这里而不是只放在设置页，是因为「换个模型试试」
+          // 是在对话过程中冒出来的念头——为了切个模型退出对话、进设置、
+          // 翻到 API 配置、选完再回来，中间还大概率被底部导航搞混。
+          _quickBtn(Icons.swap_horiz, _modelLabel(), () {
+            _pickModel(palette);
+          }, palette),
         ],
       ),
     );
   }
 
-  Widget _quickBtn(IconData icon, String label, VoidCallback onTap, ColorScheme cs) {
-    return GestureDetector(
+  /// 快捷条上显示的模型名。空配置时说「选模型」，别显示一个空 chip。
+  String _modelLabel() {
+    final m = _cfg?.model.trim() ?? '';
+    if (m.isEmpty) return '选模型';
+    // 模型名动辄 40+ 字符（vendor/model:free），chip 宽度有限。
+    // 保留头尾、中间省略：尾部常是版本/免费标记，是区分不同档位的依据。
+    if (m.length <= 18) return m;
+    return '${m.substring(0, 11)}…${m.substring(m.length - 6)}';
+  }
+
+  /// 随时换模型。选中即落盘并立即生效——下一次发送就用它。
+  ///
+  /// 为什么落盘：只改内存的话，切到别的 tab 再回来（或重启 App）就丢，
+  /// 而用户以为选过了。那正是「选了没生效」最常见的来路。
+  Future<void> _pickModel(AppPalette palette) async {
+    final current = _cfg?.model.trim() ?? '';
+    final cfg = _cfg;
+    if (cfg == null || cfg.baseUrl.isEmpty) {
+      _addSystemMsg('还没配 API：先去设置页选一个提供商、填好 Key。');
+      return;
+    }
+
+    // 拉一次模型列表。拉不到就退回内置默认列表——离线时也要能换，
+    // 否则「随时切换」在有网时才成立。
+    List<ModelInfo> models = const [];
+    try {
+      models = await ModelRegistry.fetchModels(cfg.baseUrl, cfg.effectiveApiKey);
+    } catch (_) {
+      models = const [];
+    }
+    if (models.isEmpty) {
+      final provider = BuiltInKeys.matchBaseUrl(cfg.baseUrl);
+      models = ModelRegistry.getDefaultModels(provider ?? '');
+    }
+    if (!mounted) return;
+
+    final picked = await showModalBottomSheet<ModelInfo>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => ModelPickerSheet(
+        models: models,
+        currentId: current,
+        palette: palette,
+      ),
+    );
+    if (picked == null || !mounted) return;
+    if (picked.id == current) return;
+
+    await AppConfig.save(model: picked.id);
+    if (!mounted) return;
+    setState(() => _cfg = _cfg!.copyWith(model: picked.id));
+    _addSystemMsg('已切换到模型：${picked.name}');
+  }
+
+  Widget _quickBtn(
+      IconData icon, String label, VoidCallback onTap, AppPalette palette) {
+    return PressableScale(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(right: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        height: 32,
+        margin: const EdgeInsets.only(right: AppSpacing.dense),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.inner),
+        alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: cs.surfaceVariant.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
+          color: palette.surfaceHigh,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          border: Border.all(color: palette.stroke, width: AppStroke.thin),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: cs.primary),
+            Icon(icon, size: 14, color: palette.primary),
             const SizedBox(width: 4),
             Text(label,
-                style: TextStyle(
-                    fontSize: 11,
-                    color: cs.onSurface.withValues(alpha: 0.7))),
+                style: AppText.label.copyWith(color: palette.textPrimary)),
           ],
         ),
       ),
     );
   }
 
-  // ==================== Input ====================
-
-  Widget _inputArea(ColorScheme cs) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 4,
-              offset: const Offset(0, -2)),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(
-              child: Container(
-                constraints: const BoxConstraints(minHeight: 44, maxHeight: 120),
+  Widget _inputRow(AppPalette palette) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          // 聚焦描边只由 _inputFocus 驱动，不再靠整屏 setState（原 initState 里
+          // 那个 `_inputFocus.addListener(() => setState(() {}))`）。TextField
+          // 连同 hintText 一起在这棵子树里，重建范围就是输入坞本身。
+          child: ListenableBuilder(
+            listenable: _inputFocus,
+            builder: (ctx, _) {
+              final focused = _inputFocus.hasFocus;
+              return AnimatedContainer(
+                duration: _animDur(AppDuration.micro),
+                curve: AppCurves.standard,
+                constraints:
+                    const BoxConstraints(minHeight: 48, maxHeight: 120),
                 decoration: BoxDecoration(
-                  color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
+                  color: palette.surfaceHigh,
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
+                  border: Border.all(
+                    color: focused ? palette.primary : palette.stroke,
+                    width: focused ? AppStroke.focus : AppStroke.thin,
+                  ),
+                  boxShadow: focused ? AppShadows.glowSoft : null,
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: AppSpacing.page),
                 child: TextField(
                   controller: _input,
                   focusNode: _inputFocus,
                   maxLines: null,
                   keyboardType: TextInputType.multiline,
                   textInputAction: TextInputAction.send,
-                  style: TextStyle(color: cs.onSurface, fontSize: 15),
+                  style: AppText.body.copyWith(color: palette.textPrimary),
                   decoration: InputDecoration(
-                    hintText: '输入消息...',
-                    hintStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.35)),
+                    // 目标切换：本机助手秒回，amoo 约 6 分钟且期间它必须留在前台。
+                    // 提示词要说出这个差别，否则用户对着 amoo 敲一句长问题，
+                    // 等半天以为卡死了。
+                    hintText: _chatTarget.isAmoo
+                        ? '问 amoo（约 6 分钟，期间别切走）...'
+                        : '输入消息...',
+                    hintStyle: AppText.body.copyWith(color: palette.textFaint),
                     border: InputBorder.none,
                     contentPadding:
                         const EdgeInsets.symmetric(vertical: 12),
                   ),
-                  onSubmitted: (_) => _sendMessage(),
+                  onSubmitted: (_) {
+                    if (_chatTarget.isAmoo) {
+                      _askAmooFromMainInput();
+                    } else {
+                      _sendMessage();
+                    }
+                  },
                 ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: _canSend ? _sendMessage : null,
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: _canSend ? cs.primary : cs.surfaceContainerHighest,
-                  shape: BoxShape.circle,
-                  boxShadow: _canSend
-                      ? [
-                          BoxShadow(
-                              color: cs.primary.withValues(alpha: 0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3)),
-                        ]
-                      : null,
-                ),
-                child: Icon(
-                  _busy ? Icons.stop : Icons.send_rounded,
-                  color: _canSend ? Colors.white : cs.onSurface.withValues(alpha: 0.3),
-                ),
-              ),
-            ),
-          ],
+              );
+            },
+          ),
         ),
-      ),
+        const SizedBox(width: AppSpacing.dense),
+        _targetToggle(palette),
+        const SizedBox(width: AppSpacing.dense),
+        _sendButton(palette),
+      ],
+    );
+  }
+
+  /// 目标切换：本机助手 ↔ amoo。放在输入框左边，一眼能看到"我这句是发给谁的"。
+  ///
+  /// 为什么值得占这一格地方：两个目标的延迟差 60 倍（秒回 vs 约 6 分钟），
+  /// 而且问 amoo 期间不能切走。不说明白，用户会对着一顿等还以为卡死。
+  ///
+  /// amoo 缺席时仍然渲染，只是不能切：一个永远发不出去的目标比没有这个
+  /// 目标更糟，但为了它把布局改掉又是另一笔代价——toggle 的宽度会变，
+  /// 输入框跟着抖。所以占位保留、onTap 置 null。
+  Widget _targetToggle(AppPalette palette) {
+    return ListenableBuilder(
+      listenable: _chatTarget,
+      builder: (ctx, _) {
+        // amoo 不在时永远显示「助手」态：探测回调已经把 value 切回来了，
+        // 这里再并一次是防"切过去之后才探测失败"的那个瞬间。
+        final amoo = _amooAvailable && _chatTarget.isAmoo;
+        return GestureDetector(
+          onTap: _amooAvailable
+              ? () {
+                  _chatTarget.toggle();
+                  setState(() {});
+                }
+              : null,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: amoo
+                  ? palette.primary.withValues(alpha: 0.16)
+                  : palette.surfaceHigh,
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              border: Border.all(
+                color: amoo ? palette.primary : palette.stroke,
+                width: AppStroke.thin,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(amoo ? Icons.forum : Icons.assistant,
+                    size: 13,
+                    color: amoo ? palette.primary : palette.textSecondary),
+                const SizedBox(width: 4),
+                Text(amoo ? 'amoo' : '助手',
+                    style: AppText.label.copyWith(
+                        color:
+                            amoo ? palette.primary : palette.textSecondary)),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _sendButton(AppPalette palette) {
+    // 只订阅 _input：_canSend 里的 _busy 每次改动都发生在 setState 里
+    // （_dispatchSend / _sendRemote 的 finally），整屏重建会把它带下来。
+    // 原来靠 initState 里那个 `_input.addListener(() => setState(() {}))`
+    // 撑住禁用态——那是每敲一个键重建整个聊天屏，代价与收益差太远。
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: _input,
+      builder: (ctx, _, _) {
+        final ready = _canSend;
+        return PressableScale(
+          // 对着 amoo 时不复用 _sendMessage：那一条要走「配没配 API」的本机助手
+          // 前置检查，而问 amoo 根本不需要 API key——用户的 key 是给本机助手用的。
+          // 复用的话，没配 key 的人会被一句"API 未配置"挡住，而他明明能问 amoo。
+          onTap: ready
+              ? () {
+                  if (_chatTarget.isAmoo) {
+                    _askAmooFromMainInput();
+                  } else {
+                    _sendMessage();
+                  }
+                }
+              : null,
+          child: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: !_busy && ready ? AppGradients.brand : null,
+              color: _busy
+                  ? palette.error
+                  : ready
+                      ? null
+                      : palette.surfaceHigh,
+              boxShadow: !_busy && ready ? AppShadows.glowPrimary : null,
+            ),
+            child: Icon(
+              _busy ? Icons.stop : Icons.send_rounded,
+              size: 22,
+              color: _busy || ready ? Colors.white : palette.textFaint,
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -977,107 +1536,283 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
 
   // ==================== Welcome ====================
 
-  Widget _welcome(ColorScheme cs) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedBuilder(
-              animation: _pulseAnim,
-              builder: (_, __) => Transform.scale(
-                scale: 1.0 + _pulseAnim.value * 0.05,
-                child: Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [cs.primary, cs.tertiary],
-                    ),
-                    borderRadius: BorderRadius.circular(20),
+  Widget _welcome(AppPalette palette) {
+    // ConstrainedBox 兜底：内容矮于视口时居中，高于视口时可完整滚动，
+    // 不会像 mainAxisAlignment.center 那样把顶部裁进不可滚动区。
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.page, vertical: AppSpacing.section),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _enterItem(0, _heroLogo()),
+              const SizedBox(height: AppSpacing.page),
+              _enterItem(1, Text('khy-os 助手',
+                  style:
+                      AppText.display.copyWith(color: palette.textPrimary))),
+              const SizedBox(height: AppSpacing.dense),
+              _enterItem(2, Text(
+                _mode == AppMode.standalone
+                    ? '独立模式 · 直连 API'
+                    : '远程模式 · khy-os 后端',
+                style:
+                    AppText.secondary.copyWith(color: palette.textSecondary),
+              )),
+              const SizedBox(height: AppSpacing.page),
+              _enterItem(3, _exampleChips(palette)),
+              const SizedBox(height: AppSpacing.section),
+              _enterItem(4, _welcomeGrid(palette)),
+              const SizedBox(height: AppSpacing.cardGap),
+              // 反代 amoo：空会话时它是唯一的入口，所以放在能力卡片之后。
+              // 有会话后同一张卡改到 _msgList 的头部（那里不会随清空消失），
+              // 两处不会同时构建——`_msgs.isEmpty ? _welcome : _msgList` 只走一支。
+              //
+              // amoo 缺席时整张卡不渲染：空会话页用户第一眼看到的就是它，
+              // 而一张问不出去的卡比没有卡更糟。设备页那张状态卡照旧显示
+              // （它说的是"装没装"，不是"问一句"），两处分工不重叠。
+              if (_amooAvailable)
+                _enterItem(
+                  5,
+                  AmooTaskCard(
+                    key: _amooCardKey,
+                    target: _chatTarget,
                   ),
-                  child: const Center(
-                    child: Text('K',
-                        style: TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white)),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 进场错峰一步：fade 0→1 + 12dp 上移，随元素序号推迟起拍。
+  Widget _enterItem(int index, Widget child) {
+    final raw = index * 0.18;
+    final start = raw > 0.8 ? 0.8 : raw;
+    return AnimatedBuilder(
+      animation: _enterAnim,
+      builder: (context, _) {
+        final t = CurvedAnimation(
+          parent: _enterAnim,
+          curve: Interval(start, 1, curve: AppCurves.standard),
+        ).value;
+        return Opacity(
+          opacity: t,
+          child: Transform.translate(
+            offset: Offset(0, 12 * (1 - t)),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _heroLogo() {
+    // 首屏品牌块：墨黑底 + 琥珀主标。
+    return const KhyBrandTile(size: 96, radius: AppRadius.xLarge, markScale: 0.66);
+  }
+
+  /// 示例问题补上「能做什么」的表达；点击直接填入输入框并聚焦。
+  Widget _exampleChips(AppPalette palette) {
+    const examples = <String>['帮我打开微信', '截屏看看这页', '帮我算 358×27'];
+    return SizedBox(
+      width: double.infinity,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < examples.length; i++)
+              Padding(
+                padding: EdgeInsets.only(
+                    right:
+                        i == examples.length - 1 ? 0 : AppSpacing.dense),
+                child: PressableScale(
+                  onTap: () {
+                    _input.text = examples[i];
+                    _inputFocus.requestFocus();
+                  },
+                  child: Container(
+                    height: 32,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.inner),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: palette.surfaceHigh,
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                      border: Border.all(
+                          color: palette.stroke, width: AppStroke.thin),
+                    ),
+                    child: Text(examples[i],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.label
+                            .copyWith(color: palette.textPrimary)),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Text('khy-os 助手',
-                style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: cs.onSurface)),
-            const SizedBox(height: 4),
-            Text(
-              _mode == AppMode.standalone
-                  ? '独立模式 · 直连 API'
-                  : '远程模式 · khy-os 后端',
-              style: TextStyle(
-                  fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5)),
-            ),
-            const SizedBox(height: 24),
-            _welcomeCard(Icons.open_in_new, '打开应用', '打开微信、浏览器、设置等', cs),
-            const SizedBox(height: 8),
-            _welcomeCard(Icons.screenshot, '截屏分析', '截取屏幕并理解内容', cs),
-            const SizedBox(height: 8),
-            _welcomeCard(Icons.calculate, '快速计算', '数学表达式计算', cs),
-            const SizedBox(height: 8),
-            _welcomeCard(Icons.settings, '配置', '设置 API Key 和模型', cs,
-                onTap: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const SettingsScreenNew()))),
           ],
         ),
       ),
     );
   }
 
-  Widget _welcomeCard(IconData icon, String title, String sub, ColorScheme cs,
-      {VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-              color: cs.outlineVariant.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: cs.primary, size: 22),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 14)),
-                  Text(sub,
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: cs.onSurface.withValues(alpha: 0.45))),
-                ],
+  /// 2×2 等高网格：第四张卡不再被裁出视口。行内 stretch 保证同排卡片等高。
+  ///
+  /// IntrinsicHeight 不能省：Column 给 Row 的是无界高度，stretch 在没有有界
+  /// 高度时直接抛 "BoxConstraints forces an infinite height"，整屏布不出来。
+  Widget _welcomeGrid(AppPalette palette) {
+    return Column(
+      children: [
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _welcomeCard(Icons.open_in_new, '打开应用',
+                    '打开微信、浏览器、设置等', palette.primary, palette),
               ),
-            ),
-            if (onTap != null)
-              Icon(Icons.chevron_right,
-                  color: cs.onSurface.withValues(alpha: 0.25)),
-          ],
+              const SizedBox(width: AppSpacing.cardGap),
+              Expanded(
+                child: _welcomeCard(Icons.screenshot, '截屏分析',
+                    '截取屏幕并理解内容', palette.accent, palette),
+              ),
+            ],
+          ),
         ),
-      ),
+        const SizedBox(height: AppSpacing.cardGap),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _welcomeCard(Icons.calculate, '快速计算',
+                    '数学表达式计算', palette.hot, palette),
+              ),
+              const SizedBox(width: AppSpacing.cardGap),
+              Expanded(
+                child: _welcomeCard(Icons.settings, '配置',
+                    '设置 API Key 和模型', palette.cyan, palette,
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const SettingsScreenNew()))),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
-  // ==================== Drawer ====================
+  Widget _welcomeCard(IconData icon, String title, String sub, Color tone,
+      AppPalette palette,
+      {VoidCallback? onTap}) {
+    final card = Container(
+      padding: const EdgeInsets.all(AppSpacing.cardPadNarrow),
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: palette.stroke, width: AppStroke.thin),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: tone.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
+                ),
+                child: Icon(icon, size: 22, color: tone),
+              ),
+              const Spacer(),
+              if (onTap != null)
+                Icon(Icons.chevron_right, size: 18, color: palette.textFaint),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.inner),
+          Text(title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.cardTitle.copyWith(color: palette.textPrimary)),
+          const SizedBox(height: 2),
+          Text(sub,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.secondary.copyWith(color: palette.textSecondary)),
+        ],
+      ),
+    );
+    if (onTap == null) return card;
+    return PressableScale(onTap: onTap, child: card);
+  }
+
+  // ==================== 工作空间选择 ====================
+
+  /// 新建对话时挑工作目录。返回挑中的根，或 null（没挑 / 取消）。
+  ///
+  /// 取消与"没挑"给同一个值是有意的：两者都意味着用 App 既有默认，
+  /// 行为一字不变。区分它们只会让调用方多一个没有后果的分支。
+  Future<String?> _pickWorkspaceRoot() async {
+    final choices = await WorkspaceChoices.load();
+    if (!mounted) return null;
+    return showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => WorkspacePickerSheet(choices: choices),
+    );
+  }
+
+  /// 长按会话项：显示这个对话的文件落在哪，可复制，可尝试跳转。
+  Future<void> _showConversationLocations(ConversationSummary conv) async {
+    final workDir = await FileService.getWorkDir();
+    if (!mounted) return;
+    final logDir = await AppLogger().logDirectoryPath();
+    if (!mounted) return;
+
+    final effective = ConversationWorkspace.effectiveRoot(conv.workspaceRoot);
+    final rows = <LocRow>[
+      LocRow(
+        label: '工作目录',
+        value: ConversationWorkspace.describeRoot(conv.workspaceRoot),
+        copyable: effective ?? '',
+        copyHint: effective == null ? '没挑根，没有可复制的路径' : null,
+      ),
+      LocRow(
+        label: 'App 文件工具根目录',
+        value: workDir['path']?.toString() ?? '(读不到)',
+        copyable: workDir['path']?.toString() ?? '',
+        // isAppPrivate 由原生侧说，不用 Dart 猜：猜错的后果是告诉用户
+        // "看得见"而实际在私有目录，比不提示更糟。
+        copyHint: workDir['isAppPrivate'] == true
+            ? 'list_files / read_file / write_file 实际生效的根（App 私有目录，文件管理器看不到）'
+            : 'list_files / read_file / write_file 实际生效的根',
+      ),
+      LocRow(
+        label: '日志目录',
+        value: logDir,
+        copyable: logDir,
+      ),
+      const LocRow(
+        label: '对话库',
+        value: 'FlutterSecureStorage（系统安全存储，无文件路径）',
+        copyHint: '加密存储，没有可直接跳转的路径',
+      ),
+    ];
+
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => LocationsSheet(rows: rows),
+    );
+  }
 
   Widget _buildDrawer(ColorScheme cs) {
     return Drawer(
@@ -1089,21 +1824,7 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                          colors: [cs.primary, cs.tertiary]),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Center(
-                        child: Text('K',
-                            style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white))),
-                  ),
+                  const KhyBrandTile(size: 28, radius: 6),
                   const SizedBox(width: 8),
                   Text('会话列表',
                       style: TextStyle(
@@ -1118,7 +1839,25 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
               leading:
                   Icon(Icons.add_comment, color: cs.primary, size: 22),
               title: const Text('新对话'),
-              onTap: _newConversation,
+              onTap: () async {
+                Navigator.pop(context);
+                // 先清状态再挑目录：取消也要得到一个干净的新对话，
+                // 而不是把上一个对话的工作目录带过来。
+                setState(() {
+                  _rows.clear();
+                  _rows.clearToolCards();
+                  _currentConvId =
+                      'conv_${DateTime.now().millisecondsSinceEpoch}';
+                  _currentTitle = '新对话';
+                  _currentWorkspaceRoot = null;
+                });
+                final picked = await _pickWorkspaceRoot();
+                if (!mounted) return;
+                setState(() => _currentWorkspaceRoot = picked);
+                // 挑了才同步。取消 = picked 为 null = 恢复 App 私有目录，
+                // 这正是新对话该有的状态。
+                await _applyWorkspaceRoot(picked);
+              },
             ),
             const Divider(height: 1),
             Expanded(
@@ -1148,7 +1887,7 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
                                 ? Icons.chat_bubble
                                 : Icons.chat_bubble_outline,
                             size: 18,
-                            color: isActive ? cs.primary : Colors.grey,
+                            color: isActive ? cs.primary : cs.onSurfaceVariant,
                           ),
                           title: Text(
                             conv.title.isEmpty ? '新对话' : conv.title,
@@ -1163,14 +1902,18 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
                           subtitle: Text(
                             '${conv.messageCount} 条消息',
                             style: TextStyle(
-                                fontSize: 11, color: Colors.grey[500]),
+                                fontSize: 11, color: cs.onSurfaceVariant),
                           ),
                           trailing: IconButton(
                             icon: Icon(Icons.delete,
-                                size: 16, color: Colors.grey[400]),
+                                size: 16, color: cs.onSurfaceVariant),
                             onPressed: () => _deleteConversation(conv.id),
                           ),
                           onTap: () => _loadConversation(conv.id),
+                          // 长按看这个对话的文件落在哪。短按仍然是加载——
+                          // 两个手势分开，不会因为加了长按就改变最常用的那个。
+                          onLongPress: () =>
+                              _showConversationLocations(conv),
                         );
                       },
                     ),
@@ -1181,7 +1924,7 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
               child: Text(
                 '${_conversations.length} 个会话',
                 style: TextStyle(
-                    fontSize: 11, color: Colors.grey[500]),
+                    fontSize: 11, color: cs.onSurfaceVariant),
               ),
             ),
           ],
@@ -1206,30 +1949,22 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
   }
 
   void _setContent(String id, String c) {
-    setState(() {
-      final i = _msgs.indexWhere((m) => m.id == id);
-      if (i >= 0) _msgs[i] = _msgs[i].copyWith(content: c);
-    });
+    _rows.setContent(id, c);
     _scrollToBottom();
   }
 
   void _appendContent(String id, String chunk) {
-    setState(() {
-      final i = _msgs.indexWhere((m) => m.id == id);
-      if (i >= 0) {
-        _msgs[i] = _msgs[i].copyWith(content: _msgs[i].content + chunk);
-      }
-    });
+    _rows.appendContent(id, chunk);
     _scrollToBottom();
   }
 
   void _setError(String id, String e) {
     _logger.e(LogCategory.api, '对话出错', details: {'message': e});
-    setState(() {
-      final i = _msgs.indexWhere((m) => m.id == id);
-      if (i >= 0) _msgs[i] = _msgs[i].copyWith(content: '错误：$e');
-      _busy = false;
-    });
+    // 正文必须走 [_rows.setContent]：那条通路同时改 _msgs 和行 notifier。
+    // 直接在 setState 里改 _msgs 的话，ListView 重建时会把**旧的** notifier 传给
+    // 那一行，屏幕上留着上一段正文——正是这个文件里最容易犯的错。
+    _rows.setContent(id, '错误：$e');
+    if (mounted) setState(() => _busy = false);
   }
 
   void _showError(String title, String msg) {
@@ -1237,7 +1972,34 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
     _addSystemMsg('$title\n$msg');
   }
 
+  /// 自动贴底的最小间隔。
+  ///
+  /// 原来每个 chunk 都调一次 animateTo(200ms)：上一次动画还没走到底就被取消重来，
+  /// 于是流式期间滚动**永远**落后于内容——这就是流式滚动抖动/发涩的直接来源。
+  /// 改成「至多每 200ms 起一次 + 尾部补一次」：动画能走完，chunk 停了之后仍然
+  /// 保证落在最后一格。贴底本身的行为不变（仍然不判断用户是否在上滚，那是个
+  /// 独立的既有问题，本轮不动）。
+  static const _autoScrollInterval = Duration(milliseconds: 200);
+  DateTime _lastAutoScroll = DateTime.fromMillisecondsSinceEpoch(0);
+  Timer? _autoScrollTimer;
+
   void _scrollToBottom() {
+    final since = DateTime.now().difference(_lastAutoScroll);
+    if (since >= _autoScrollInterval) {
+      _lastAutoScroll = DateTime.now();
+      _runScrollToBottom();
+      return;
+    }
+    // 尾部补一次：chunk 流停了之后必须落到最后一格，不能停在半路。
+    _autoScrollTimer ??=
+        Timer(_autoScrollInterval - since, () {
+      _autoScrollTimer = null;
+      _lastAutoScroll = DateTime.now();
+      _runScrollToBottom();
+    });
+  }
+
+  void _runScrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scroll.hasClients) {
         _scroll.animateTo(
@@ -1429,7 +2191,7 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
     _addSystemMsg('已自动切换到备用 provider（${next.baseUrl}），请重试。');
   }
 
-  Color _statusColor() {
+  Color _statusColor(AppPalette palette) {
     switch (_connStatus) {
       case 'connected':
         return AppColors.success;
@@ -1439,7 +2201,7 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
       case 'network_error':
         return AppColors.error;
       default:
-        return Colors.grey;
+        return palette.textFaint;
     }
   }
 
@@ -1498,7 +2260,30 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
     return false;
   }
 
+  /// 这个工具这次要不要问用户。
+  ///
+  /// 以前这里是硬编码的 `toolName == 'exec_shell' || toolName == 'android'`，
+  /// 于是两件事同时坏掉：工具自己声明的 `PermissionLevel.ask` 从来没被看过
+  /// （`vision_tap` 声明了 ask，实际一次都没问过），而模式层根本不存在。
+  ///
+  /// 现在顺序是：模式 → 声明 → 危险命令清单。
+  ///   · bypass 一律不问，这是用户显式选的；
+  ///   · 工具声明了 ask 就问——声明是工具作者对这个工具说的话，本该是默认值；
+  ///   · 剩下的按危险命令清单走，那是原来就有的行为，不改。
+  ///
+  /// 注意这里问的都是 **khy-os 自己的提示**。安卓系统那种同意框（例如
+  /// MediaProjection）不归这个模式管——那不是我们的闸门，而且那条路已经改成
+  /// 走无障碍服务，弹窗压根不再出现。
   Future<bool> _needsApproval(String toolName, Map<String, dynamic> args) async {
+    if (_permissionMode == PermissionMode.bypass) return false;
+    if (_toolEngine.getPermission(toolName) == PermissionLevel.ask) {
+      // auto 档：同一个工具本次会话只问一次，记住了就不再问。
+      if (_permissionMode == PermissionMode.auto &&
+          _approvedThisSession.contains(toolName)) {
+        return false;
+      }
+      return true;
+    }
     if (toolName == 'exec_shell' || toolName == 'android') {
       return _isDangerousCommand(args);
     }
@@ -1531,8 +2316,9 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: cs.error.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: cs.error.withValues(alpha: 0.3)),
+                borderRadius: BorderRadius.circular(AppRadius.small),
+                // 状态描边取状态色 35%（DESIGN-UI §4），不再用淡灰描边。
+                border: Border.all(color: cs.error.withValues(alpha: 0.35)),
               ),
               child: Text(
                 cmd.length > 200 ? cmd.substring(0, 200) + '...' : cmd,
@@ -1547,7 +2333,7 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消', style: TextStyle(color: Colors.grey)),
+            child: Text('取消', style: TextStyle(color: cs.onSurfaceVariant)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -1559,16 +2345,15 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
     ).then((v) => v ?? false);
   }
 
-  void _feedBack(List<Map<String, dynamic>> messages, ToolResult result, bool useTextProtocol) {
-    if (useTextProtocol) {
-      messages.add({'role': 'user', 'content': ToolProtocol.formatToolResult(result)});
-    } else {
-      messages.add({
-        'tool_call_id': '${DateTime.now().millisecondsSinceEpoch}',
-        'role': 'tool',
-        'content': result.jsonOutput,
-      });
-    }
+  void _feedBack(List<Map<String, dynamic>> messages, String tool, ToolResult result, bool useTextProtocol) {
+    // 用户拒绝也会走同一条收口：那句「用户拒绝了该操作」同样要让模型知道
+    // 事情没发生，否则它会当成失败重试，或者当成成功继续往下说。
+    messages.add(ToolVerdictFactory.toolMessage(
+      tool: tool,
+      result: result,
+      useTextProtocol: useTextProtocol,
+      callId: '${DateTime.now().millisecondsSinceEpoch}',
+    ));
   }
 
   String _getToolLabel(String toolName, Map<String, dynamic> args) {
@@ -1655,7 +2440,17 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
     buf.writeln('### 屏幕/输入');
     buf.writeln('- capture_screen: 截屏（返回 base64 图片）');
     buf.writeln('- a11y_dump_ui: 获取当前屏幕 UI 树');
-    buf.writeln('- a11y_tap / a11y_swipe / a11y_type_text: 模拟操作');
+    buf.writeln('- a11y_tap: 点击坐标');
+    buf.writeln('- a11y_swipe: 滑动（起点别靠屏幕底部，那一段是系统返回手势）');
+    buf.writeln('- a11y_type_text: 向焦点输入框输入文字');
+    buf.writeln('- a11y_find_and_click: 按 text/id/class 查找并点击');
+    buf.writeln('- a11y_global_action: 系统级动作（返回/主页/最近任务/通知栏）');
+    buf.writeln('- a11y_list_clickable: 列出当前屏幕上所有可点击元素');
+    buf.writeln('');
+    buf.writeln('### 视觉定位（文字模型读不了屏幕时用）');
+    buf.writeln('- vision_locate: 截图并让视觉模型找出某个元素，返回 0-1000 归一化坐标');
+    buf.writeln('- vision_tap: 截图 + 定位 + 点击，一步完成');
+    buf.writeln('  适用于无障碍树里看不到目标的情况（如微信等第三方 App 的界面）');
     buf.writeln('');
     buf.writeln('### 系统/网络');
     buf.writeln('- device_info: 设备信息');
