@@ -48,12 +48,19 @@
  *
  *   已知偏差(诚实边界):`lines` 里已含 `buildTranscriptLines` 按列宽折好的**软换行**,
  *   视觉行 ≠ 逻辑行,跨软换行复制会在折行处带一个硬 `\n`(见 `selection.js` 头部)。
+ *
+ * ── lineFolds prop(思维链折叠块底色,可选)────────────────────────────────────
+ *   传 `lineFolds`(与 `lines` **同长同序**,来自 `…Records` 的 `folds`)时,思维链的
+ *   折叠摘要行 / 展开头行 / 展开正文行都带同一块暗紫底色 —— 于是「被收起来的思考」
+ *   在屏幕上是一小块有边界的区域,而不是几条和答复混在一起的 dim 文字。
+ *   **不传 / 传 null 时逐字节不变**:`linePropsAt` 的第四参缺省即走回 `base`,
+ *   节点数、prop 数都不变(与 lineRoles 同一条硬承诺)。
  */
 
 const React = require('react');
 
 const inkRuntime = require('../inkRuntime');
-const { userLineTextProps } = require('../userMessageStyle');
+const { userLineTextProps, thinkingLineTextProps } = require('../userMessageStyle');
 
 /**
  * 一行该带的 ink `<Text>` props(纯函数,供单测与渲染两侧共用)。
@@ -63,13 +70,20 @@ const { userLineTextProps } = require('../userMessageStyle');
  *   恒 `null` → 调用方走「不传任何 prop」的老分支,**逐字节不变**。
  * @param {number} rowIdx
  * @param {object} [env]
+ * @param {Array|null} [lineFolds] 与 `lines` **同长同序**的折叠锚点数组
+ *   (`…Records` 的 `folds`)。不传 / null → 不加任何思维链底色(与 lineRoles 同一条
+ *   逐字节回退承诺)。
  * @returns {{backgroundColor:string,color:string,bold:boolean}|null}
  */
-function linePropsAt(lineRoles, rowIdx, env = process.env) {
-  if (!Array.isArray(lineRoles)) {
-    return null;
+function linePropsAt(lineRoles, rowIdx, env = process.env, lineFolds = null) {
+  const base = Array.isArray(lineRoles) ? userLineTextProps(lineRoles[rowIdx], env) : null;
+  if (!Array.isArray(lineFolds)) {
+    return base;
   }
-  return userLineTextProps(lineRoles[rowIdx], env);
+  const think = thinkingLineTextProps(lineFolds[rowIdx], env);
+  // 合并而不是替换:思维链行恒非 user 行(两者判据不相交),但保持 `base` 在前可让
+  // 将来的行类型既带角色样式又带底色时,底色后到并覆盖 —— 与直觉一致。
+  return think ? { ...(base || {}), ...think } : base;
 }
 
 function Viewport({
@@ -86,6 +100,9 @@ function Viewport({
   grow = false,
   lines = null,
   lineRoles = null,
+  // 与 `lines` 同长同序的折叠锚点数组(`…Records` 的 `folds`);null → 不加思维链
+  // 底色(与 lineRoles 同一条逐字节回退承诺)。
+  lineFolds = null,
   // 逐行点击命中(可选)。**唯一**用途是给「折叠成一行、点击可展开」的行挂 handler:
   // `lineClickAt(rowIdx)` 返回函数 → 该行 Box 带 onClick;返回 null → 该行**完全不挂**
   // 任何 handler,collectLayout 不会把它收进命中区。rowIdx 是 `lines` 的**绝对下标**,
@@ -145,7 +162,7 @@ function Viewport({
       const rowIdx = start + i;
       // 本行的角色样式。`lineRoles` 不传 → 恒 null → 下面的 `h(Text, null, …)` /
       // `{ inverse: true }` 与改动前**逐字节一致**(硬承诺,见文件头)。
-      const lineProps = linePropsAt(lineRoles, rowIdx);
+      const lineProps = linePropsAt(lineRoles, rowIdx, process.env, lineFolds);
       // 点击 handler:不传 lineClickAt / 该行不可点 → `null` → 下面三处 Box 的 props
       // 与改动前**逐字节一致**(硬承诺,同 lineRoles)。
       const clickFn = lineClickAt ? lineClickAt(rowIdx) : null;

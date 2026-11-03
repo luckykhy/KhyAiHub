@@ -78,11 +78,51 @@ function userLineTextProps(role, env = process.env) {
   return { backgroundColor: userMsgBgColor(env), color: userMsgFgColor(env), bold: true };
 }
 
+// 思维链折叠块的底色(dark violet),与用户消息的米白盒**同一处真源、不同色**:
+// 把「思维链被收成一坨可点开的小块」在视觉上钉出来,是用户回报「思维链没有单独用
+// 一块底色整理起来」的直接缺口。刻意**只给底色**,不覆盖 color/bold —— 思维链正文
+// 仍走既有的 dimColor / cyan 外观,免得与米白盒的近黑字色口径混在一起(两套底色
+// 各自的字色由各自路径决定)。
+//
+// 为什么和用户消息底色分叉而不是复用:两者服务的对比方向相反 —— 米白盒要把用户的话
+// 从深色背景里**提亮**,思维链块要把思考从正文里**压暗**(它是附属物,不该抢答复的
+// 注意力)。共用一个常量会让其中一侧必然失衡。
+const DEFAULT_THINKING_BG = '#241f38';
+
+/**
+ * 思维链块的底色。签名带 `env` 只为与 userMsgBgColor 对称;**刻意不读任何新的
+ * `KHY_` 前缀思维链环境变量** —— TUI 的 env 门预算已透支(check-tui-gates 实测
+ * 232 > 227),任何新门都不许再加;要改底色请直接改上面的常量。
+ * @param {object} [env]
+ * @returns {string} ink `<Text>` 可接受的 backgroundColor
+ */
+function thinkingLineBgColor(env = process.env) {
+  return DEFAULT_THINKING_BG;
+}
+
+/**
+ * 一行思维链行该带的 ink `<Text>` props。与 `userLineTextProps` 同源同职责,只是
+ * 判据从「行的角色」换成「折叠锚点」(`transcriptLines` 的 folds 元素)。
+ *
+ * @param {{kind?:string}|null|undefined} anchor `folds[i]`
+ * @param {object} [env]
+ * @returns {{backgroundColor:string}|null} 非思维链行恒 `null`(不加任何 prop)
+ */
+function thinkingLineTextProps(anchor, env = process.env) {
+  if (!anchor || typeof anchor !== 'object' || anchor.kind !== 'thinking') {
+    return null;
+  }
+  return { backgroundColor: thinkingLineBgColor(env) };
+}
+
 module.exports = {
   DEFAULT_USER_MSG_BG,
   DEFAULT_USER_MSG_FG,
+  DEFAULT_THINKING_BG,
   userMsgBgColor,
   userMsgFgColor,
   userMsgWhiteBgEnabled,
   userLineTextProps,
+  thinkingLineBgColor,
+  thinkingLineTextProps,
 };
