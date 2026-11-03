@@ -41,6 +41,9 @@ const PromptFrame = require('./PromptFrame');
 const FooterBar = require('./FooterBar');
 const Viewport = require('./Viewport');
 const MemoMessageBlock = Transcript.MessageBlock;
+// 行宽截断复用 legacy 看板的导出叶子 —— 截断规则（CJK 感知 + 尾部 '…'）只有一份，
+// 右栏两个分支不各造一套。
+const { truncateToWidth } = require('./SidebarPanel');
 
 function PreviewLayout(props) {
   const { Box, Text } = inkRuntime.get();
@@ -61,6 +64,12 @@ function PreviewLayout(props) {
     onToolErrorClick,
     taskProps = {},
     tasksHidden = false,
+    // 结构化工具执行输出面板([DESIGN-ARCH-157] 区域④b,三级区域)。**元素由 App 造好再递
+    // 进来**——与 `bannerElement` 同款约定:本组件不 require sink、不自己判门控,宽/窄两条
+    // 布局分支因此不可能在「门开没开」上分叉。null → 不画、不加行。
+    // 行数已由 App 的**同一本** chrome 账本从 viewportHeight 里扣掉(见 App.js 的
+    // `_toolExecRows`),不会把 live 区顶过 rows。
+    toolExecutionPanel = null,
     nowTick = 0,
     value = '',
     offset = 0,
@@ -78,6 +87,11 @@ function PreviewLayout(props) {
     // 补全框可用列数 —— 与 legacy 区域⑤ 同一口径(`_overlayCols`):rail 激活时
     // 是收窄后的宽度,否则全宽。undefined → 组件走 legacy 不钳列。
     completionCols,
+    // 过滤词 + 鼠标回调（2026-10-10 与 legacy 区域⑤ 同形转发）：缺省 = 不加粗、
+    // 不挂命中区，组件逐字节回退旧渲染。
+    completionQuery = '',
+    onCompletionItemPress,
+    onCompletionItemHover,
     hint = '',
     footer = {},
     sidebar = {},
@@ -93,6 +107,8 @@ function PreviewLayout(props) {
     lines = null,
     // 与 `lines` 同长同序的角色数组(供逐行着色);null → 不着色(逐字节回退)。
     lineRoles = null,
+    // 与 `lines` 同长同序的折叠锚点数组(给思维链块上底色);null → 不着色(逐字节回退)。
+    lineFolds = null,
     // 折叠行逐条点击的命中回调(与 lineRoles 同源同帧);null → 不挂任何 handler。
     lineClickAt = null,
     emptyText = '',
@@ -112,6 +128,9 @@ function PreviewLayout(props) {
           marginLeft: completionMarginLeft,
           cols: completionCols,
           maxRows: completionMaxRows,
+          query: completionQuery,
+          onItemPress: onCompletionItemPress,
+          onItemHover: onCompletionItemHover,
         }
       : null;
 
@@ -166,6 +185,8 @@ function PreviewLayout(props) {
               // 逐行角色(与 lines 同长同序),让用户自己那几行与 AI 答复在形态上分开。
               // 不传 → Viewport 逐字节回退(见 Viewport.js 的硬承诺)。
               lineRoles,
+              // 思维链折叠块底色(与 lineRoles 同源同帧)。不传 → Viewport 逐字节回退。
+              lineFolds,
               // 折叠行逐条点击(与 lineRoles 同源同帧)。不传 → 一行 handler 都不挂。
               lineClickAt,
               scroll: viewportScroll,
@@ -198,7 +219,10 @@ function PreviewLayout(props) {
                 tick: nowTick,
                 ...taskProps,
                 ...(tasksHidden ? { lines: [], hidden: 0, hiddenLines: [] } : {}),
-              })
+              }),
+              // 区域④b 结构化工具执行面板 —— 与任务面板同在视口内容里(可滚),
+              // 位置/算法与内联分支对齐(见下方 inlineTranscript 处的同款注释)。
+              toolExecutionPanel
             ),
         // 任务面板:内联转录模式下移到视口**之外**(全宽常驻,与 legacy 布局同款)。
         // 高度已由 App 的 chrome 账本从 viewportHeight 里扣掉,不会把 live 区顶过 rows。
@@ -209,7 +233,13 @@ function PreviewLayout(props) {
               ...taskProps,
               ...(tasksHidden ? { lines: [], hidden: 0, hiddenLines: [] } : {}),
             })
-          : null
+          : null,
+        // 区域④b 结构化工具执行面板([DESIGN-ARCH-157])。位置**跟随任务面板**:内联分支
+        // 两者都在 Viewport 外(全宽常驻),回退分支两者都在 Viewport 内(可滚内容)。
+        // 刻意不搞「面板恒在 Viewport 外」——那样回退分支会出现「任务面板在视口内、工具
+        // 面板在视口外」,同一本账本两种算法。行数由 App 的同一本账本从 viewportHeight
+        // 扣掉(_toolExecRows),两个分支都不重复扣。
+        inlineTranscript ? toolExecutionPanel : null,
       ),
       // 右侧 SIDEBAR (可滚动)
       h(Sidebar, {

@@ -311,6 +311,10 @@ function loopStateToObj(map) {
  * @param {object} [options.primitives]  injectable side-effect fns (see defaults)
  * @param {object} [options.vars]        initial variable bag
  * @param {(entry)=>void} [options.onLog]  called after each node (live progress)
+ * @param {(projection:object)=>void} [options.onToolGroups]  S4 producer sink: receives the
+ *   structured tool-execution projection of the log so far. Only ever called when
+ *   `KHY_WORKFLOW_TOOL_GROUPS=1`; with the gate off (default) the callback is never invoked and
+ *   the run is byte-identical to the pre-hook behaviour.
  * @param {number} [options.maxSteps]
  * @param {number} [options.quantum]  when > 0, preemptive time-slicing: after
  *   executing this many nodes in a segment, the interpreter yields control with a
@@ -334,6 +338,29 @@ async function runGraph(graph, options = {}) {
   // Quantum preemption: > 0 ⇒ yield after this many nodes in the current segment.
   const quantum = Number(options.quantum) > 0 ? Math.floor(Number(options.quantum)) : 0;
   const log = [];
+
+  // S4 producer hook (structured tool-execution output): when
+  // KHY_WORKFLOW_TOOL_GROUPS=1 AND the caller registered `options.onToolGroups`,
+  // project the log accumulated so far into the D2 data model
+  // (catalog/toolUseLoop/toolExecutionGroups.js) and hand it over.
+  //
+  // Gate OFF (the default) is ONE string compare and a return: the run's bytes,
+  // its timing and its return value are untouched, so the legacy path is exactly
+  // what it was before this hook existed. The projection itself lives in a pure
+  // leaf (zero IO, never throws) and is required LAZILY, so the module graph does
+  // not change for callers that never open the gate (same shape as catalogCaps()
+  // above — the node catalog is only pulled in when a graphPatch node runs).
+  const emitToolGroups = () => {
+    if (process.env.KHY_WORKFLOW_TOOL_GROUPS !== '1') return;
+    const sink = options.onToolGroups;
+    if (typeof sink !== 'function') return;
+    try {
+      const { projectWorkflowLog } = require('./workflowToolLogGroups');
+      sink(projectWorkflowLog(log));
+    } catch {
+      // Display-only channel: a projection failure must never fail a run.
+    }
+  };
 
   // Runtime self-evolution budgets (D1): a graphPatch node may add nodes and
   // accumulate revisions, but never without bound.
@@ -422,6 +449,7 @@ async function runGraph(graph, options = {}) {
           entry.status = 'succeeded';
           log.push(entry);
           onLog(entry);
+          emitToolGroups();
           return { status: 'completed', vars, log };
 
         case 'prompt': {
@@ -548,6 +576,7 @@ async function runGraph(graph, options = {}) {
             entry.summary = '等待用户回答';
             log.push(entry);
             onLog(entry);
+            emitToolGroups();
             return {
               status: 'paused',
               vars,
@@ -727,6 +756,7 @@ async function runGraph(graph, options = {}) {
       entry.error = err && err.message ? err.message : String(err);
       log.push(entry);
       onLog(entry);
+      emitToolGroups();
       const wrapped = new Error(`节点 ${node.id} (${node.type}) 执行失败: ${entry.error}`);
       wrapped.vars = vars;
       wrapped.log = log;
@@ -735,6 +765,7 @@ async function runGraph(graph, options = {}) {
 
     log.push(entry);
     onLog(entry);
+    emitToolGroups();
     cur = nextNode(node.id, port);
 
     // Quantum preemption: after executing `quantum` nodes in this segment, yield

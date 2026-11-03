@@ -34,16 +34,26 @@ const Spinner = require('./Spinner');
 const CompactionProgress = require('./CompactionProgress');
 const ProgressBar = require('./ProgressBar');
 const CompletionMenu = require('./CompletionMenu');
-const { wrapCell } = require('../wrapCell');
+const { wrapCellIncremental } = require('../wrapCell');
 // 流式思维链预览行的跟随尾部窗口(纯叶子,与 wrapCell 同族)。
 const { tailWindow: _thinkingTailWindow } = require('../thinkingMarquee');
 // 逐条点击展开的提示文案。刻意与 SSOT 默认值(浮层侧的 Ctrl+O)不同:内联转录区
 // 上鼠标可直接点这一行,提示就必须说「点它」而不是「按 Ctrl+O」。
 const _THINKING_CLICK_HINT = '（点击展开）';
+// 流式(尚未 commit)思考段的折叠锚点 key。committed 侧的 key 域是
+// `${msg.uuid}:${seg}` 或 `i{mi}:${seg}`(见 transcriptLines.js 的 keyBase),而
+// `expandedThinking` 是与 committed **共用同一个 Set** ⇒ key 一旦碰撞,「点流式
+// 思考行」就会顺手展开某条已提交的思考。`__stream__:` 前缀落在该取值域之外。
+const _STREAM_THINKING_KEY = '__stream__:thinking';
 const HelpMenu = require('./HelpMenu');
 const ShellView = require('./ShellView');
 const TranscriptView = require('./TranscriptView');
 const TaskListPanel = require('./TaskListPanel');
+// 结构化工具执行输出（[DESIGN-ARCH-157]）的显示端：sink 持有最新投影、面板画三级区域。
+// 门控 KHY_TUI_TOOL_GROUPS（与 S4/S5 两个生产者同一个 env），门关时 ingest no-op /
+// snapshot null / panelRows 0 ⇒ 本文件渲染树与高度账本逐字节回退。
+const toolExecutionSink = require('../toolExecutionSink');
+const ToolExecutionPanel = require('./ToolExecutionPanel');
 // Boot screen — first-frame loading animation (gated KHY_BOOT_SCREEN, default on).
 // Fail-soft require; missing module → _BootScreen stays null → main UI renders directly.
 const BootScreen = require('./BootScreen');
@@ -297,6 +307,31 @@ function _selectEnabled(env) {
   }
 }
 
+// 菜单悬停预览闸(KHY_MENU_HOVER,默认开):补全菜单/参数面板挂载期追加 1003,
+// 让 onMouseOver 能触发 —— 没有它鼠标与界面没有任何对照(2026-10-10 用户报)。
+let _menuHoverLeaf = null;
+function _menuHoverEnabled(env) {
+  if (_menuHoverLeaf === null) {
+    try {
+      _menuHoverLeaf = require('../menuHover');
+    } catch {
+      _menuHoverLeaf = false;
+    }
+  }
+  if (_menuHoverLeaf && typeof _menuHoverLeaf.menuHoverEnabled === 'function') {
+    return _menuHoverLeaf.menuHoverEnabled(env);
+  }
+  return true; // 叶子缺失时的保守默认:开(与门控默认一致)
+}
+
+// SGR 鼠标序列的不完整前缀判定(ConPTY 会把一次上报拆成两次读,碎片会掉进输入框)。
+let _sgrHold = null;
+try {
+  _sgrHold = require('../sgrHold');
+} catch {
+  _sgrHold = null;
+}
+
 /**
  * 松手自动写剪贴板(默认开)。关掉 → 只画反色不复制。
  * @param {NodeJS.ProcessEnv} [env]
@@ -338,6 +373,39 @@ function _selectDragEnabled(env) {
   } catch {
     return true;
   }
+}
+
+// ── 选区锚点的内容指纹（[DESIGN-ARCH-132] 第二期接线）──────────────────────
+//
+// 为什么需要：锚点存的是**行号**，而取文发生在**松手那一帧** —— 一个数字、两个时刻。
+// 手势期间只要行数组重排（流式插入 / 折行重排），同一行号就指向别的内容，
+// 表现为「复制出来的比选中的少一截 / 整段错位」。
+//
+// 修法（第一期已落地 `selection.js` 的 `relocateLine` / `relocateSelection` /
+// `extractTextRelocated`）：锚点与活动端各带一份**行原文指纹**，松手时按指纹在当帧
+// 行数组里重定位，再切片 ⇒「用户看到什么就复制到什么」。
+//
+// 本文件（调用方）负责算出指纹 —— 叶子 `selection.js` 零 IO、不自己读 lines
+// （[DESIGN-ARCH-132] §3.1 契约要点 1）。
+//
+// 不传指纹 → 行为与改造前**逐字节相同**（第一期的向后兼容承诺），
+// 故本次接线是纯增量：回滚 = 把下面三处调用改回不传 fp，无需新 env 门。
+
+/**
+ * 取某一行在**指定行数组**里的原文（指纹来源）。
+ *
+ * 越界 / 不是数组 → `undefined`（=「无指纹」→ 重定位诚实降级为纯行号）。
+ * 注意这里取的是 **T0（按下那一帧）** 的行数组 —— 指纹的意义就是「用户当时看到的那行」。
+ *
+ * @param {string[]} lines
+ * @param {number} line
+ * @returns {string|undefined}
+ */
+function _lineFpAt(lines, line) {
+  if (!Array.isArray(lines)) return undefined;
+  const i = Number(line);
+  if (!Number.isFinite(i) || i < 0 || i >= lines.length) return undefined;
+  return lines[i];
 }
 
 // ── 视口偏移的「贴底」语义 ────────────────────────────────────────────────────
@@ -448,6 +516,8 @@ const {
 const caretGeometry = require('./caretGeometry');
 const FooterBar = require('./FooterBar');
 const FormFlow = require('./FormFlow');
+// /命令的参数面板(2026-10-10):规格真源同目录 commandParamSpecs.js。
+const ParamPanel = require('./ParamPanel');
 const ModelPicker = require('./ModelPicker');
 const PermissionsPrompt = require('./PermissionsPrompt');
 const QuestionPrompt = require('./QuestionPrompt');
@@ -697,6 +767,10 @@ function App({ options = {} }) {
         fn(p);
       }
     },
+    // 结构化工具执行输出（生产者 S5）的宿主侧 sink 登记：useQueryBridge 在回合中途把
+    // 整个回合的 timeline 投影发射到这里，sink 收下后由 <ToolExecutionPanel> 画三级区域。
+    // 门关时 useQueryBridge 自己就不发射（同一个 env），此处登记与否都是 no-op。
+    onToolGroups: (proj) => toolExecutionSink.ingest(proj),
   });
   const [footer, setFooter] = React.useState({});
   // 启动横幅的「更新时间 + 来源」行。由 mount 后的一次性 effect 异步取回，
@@ -1023,6 +1097,10 @@ function App({ options = {} }) {
   // 与 `expanded`(Ctrl+O 全局展开)**互不干涉**:全局态展开一切,这里只放开点中的那一条。
   // 只存 key、不存内容 —— 内容由投影函数从 messages 现算,展开态因此不可能与正文漂移。
   const [expandedThinking, setExpandedThinking] = React.useState(() => new Set());
+  // 逐条展开的**工具摘要** key 集合(`transcriptLines` folds 的 `kind:'overflow'` 锚点)。
+  // 摘要被裁成 `…` 时那一行可点,展开态换成不裁剪的同一份摘要真源 —— 与
+  // expandedThinking 完全同构(只存 key、内容现算),两条互不干涉。
+  const [expandedOverflow, setExpandedOverflow] = React.useState(() => new Set());
   // A committed <Static> row cannot re-render, so its Ctrl+O detail lives in the
   // removable live region. null = folded; an expansion view model = open.
   const [committedExpansion, setCommittedExpansion] = React.useState(null);
@@ -1037,6 +1115,36 @@ function App({ options = {} }) {
     // 不可错展开。代价:新一轮 commit 会把你上一轮点开的收回去,这是有意的。
     setExpandedThinking((prev) => (prev.size === 0 ? prev : new Set()));
   }, [query.messages]);
+  // 流式思考合成 key 的清空点。上面那条 effect 的 dep 是 `query.messages`,而中断 /
+  // 报错收尾的那一轮**不产生新 message**(useQueryBridge 的 interrupt 路径只
+  // `setStreamingBoth(null)`)⇒ 合成 key 残留 ⇒ 下一轮流式思考一出现就是展开态。
+  // 这里改守「本段思考由空转非空的那一跳」:只在跳变帧检查并清,跳变之外每帧都是
+  // 两次布尔读取,不触发 setState(否则点完展开会被下一个 chunk 立刻收起)。
+  React.useEffect(() => {
+    const live = !!(query.streaming && query.streaming.thinking);
+    if (live === _streamThinkingSeenRef.current) {
+      return;
+    }
+    _streamThinkingSeenRef.current = live;
+    if (!live) {
+      // 段已空 ⇒ 思考块本帧不渲染 ⇒ 此刻收 key 零视觉代价,而且必须在下一段思考
+      // 出现前收完。旧实现在非空那一跳才收,而 render 先于 effect,于是被中断轮次
+      // 残留的 key 会让下一轮第一帧仍按展开态渲染(闪一帧)。
+      setExpandedThinking((prev) =>
+        prev.has(_STREAM_THINKING_KEY)
+          ? new Set([...prev].filter((k) => k !== _STREAM_THINKING_KEY))
+          : prev
+      );
+      return;
+    }
+    // 兜底:空帧从未渲染过(首轮就直接有思考)时上面收不到,这里补收。key 已不在 ⇒
+    // 返回 prev,React bail out,零重渲。
+    setExpandedThinking((prev) =>
+      prev.has(_STREAM_THINKING_KEY)
+        ? new Set([...prev].filter((k) => k !== _STREAM_THINKING_KEY))
+        : prev
+    );
+  }, [query.streaming]);
   // Ctrl+T (CC app:toggleTodos) toggles the task checklist panel's visibility.
   // When hidden, the coordination block forces zero task lines so the live region
   // shrinks and StreamingBlock reclaims the rows.
@@ -1094,6 +1202,9 @@ function App({ options = {} }) {
   // 设为 { forest, currentId, degraded } 时挂 TopologyPanel 覆盖层;Esc/Enter 关闭。
   // 只读、不拥有导航,故主 useInput 仅在面板挂载时拦 Esc/Enter 关闭即可(无双重处理)。
   const [topologyView, setTopologyView] = React.useState(null);
+// /命令的参数面板(2026-10-10):{ cmd, specs, resolve }。挂载期间自管 useInput,
+// App 顶层 yield(与 formFlow 同档,见 regionLayout.OWNING_OVERLAYS)。
+const [paramPanel, setParamPanel] = React.useState(null);
   // Transient affordance line ("再按一次 Ctrl-C 退出" / "Esc again to clear"),
   // mirroring Claude Code's double-press hints.
   const [hint, setHint] = React.useState('');
@@ -1169,6 +1280,20 @@ function App({ options = {} }) {
     beats.done('render');
   }, [beats]);
 
+  // ── 首帧后分帧填充任务面板/侧栏（[DESIGN-PERF-007] B4）─────────────────────────
+  // _readMergedTaskLines（taskStore.snapshot 扫盘，历史 profile 占一帧 45%）与
+  // buildSidebar* 四连调原本每帧同步跑在 render 体内 —— App 首帧（冷机 10s+，主线程
+  // 被占死、BootScreen spinner 拿不到调度）与启动屏期都在白付这笔钱，而那两段里任务
+  // 面板/侧栏根本不显示。改为：启动就绪（_bootComplete）后的下一个事件循环分帧填充
+  // 一次，此后每帧照旧（TTL memo / streaming 依赖语义不变）。首帧到填充帧之间面板
+  // 数据为空 —— chrome 行数会二次变化，帧账比对走 KHY_DIAG_H。
+  const [_panelsFilled, setPanelsFilled] = React.useState(false);
+  React.useEffect(() => {
+    if (_panelsFilled || !_bootComplete) return undefined;
+    const id = setImmediate(() => setPanelsFilled(true));
+    return () => clearImmediate(id);
+  }, [_panelsFilled, _bootComplete]);
+
   // 拍 5 `gateway`：真实完成信号 = 页脚解析出活动模型（refreshFooter 在 mount 时即执行，
   // 网关就绪才会写出 footer.model），或 query bridge 离开初始 idle。
   // ⚠️ 不能用 `query.status !== 'idle'` 单独判定：无 turn 时它会一直停在 'idle'，
@@ -1242,6 +1367,36 @@ function App({ options = {} }) {
   // 上一帧的值 —— 而 extractText 必须用**松手那一帧**的行数组,否则刚流式进来的一行
   // 会被漏掉。与 _viewportTotalLinesRef 同一范式(见下方同步点)。
   const _mainContentLinesRef = React.useRef([]);
+  // **按下那一帧**的行数组快照（[DESIGN-ARCH-132] 第二期接线）。
+  // 用途：算出锚点/活动端的**内容指纹**，松手时按指纹在当帧行数组里重定位锚点 ——
+  // 「用户看到什么就复制到什么」。没有它就退化成纯行号 → 手势期间一有行插入就整段错位。
+  // 不传指纹时行为与改造前逐字节相同，故这个 ref 只是**多存一份引用**，不改既有语义。
+  const _selectFromLinesRef = React.useRef(null);
+  // 流式正文增量折行的续扫状态(上一次折到哪、跨行 SGR 开着什么)。放 ref:它是**缓存**
+  // 而不是 UI 状态,进 state 会让每帧多一次无谓 re-render。换 turn / rewind / 缩窗时
+  // 前缀校验不过,wrapCellIncremental 自己退回全量,不需要在这里手动清理。
+  const _streamWrapRef = React.useRef(null);
+  // 流式思考段**展开态**的增量折行续扫状态。与上面那份分开存:wrapCellIncremental 的
+  // state 是一次性的(原地消费),两支推演共用一份会互相污染。折叠态根本不折行,所以
+  // 这个 ref 只在用户点开之后推进;再收起 → 停下 → 再点开继续续扫,前缀校验自动兜住
+  // 换 turn / 缩窗 / rewind。
+  const _streamThinkWrapRef = React.useRef(null);
+  // 流式思考段各行的**最终**(CAP 之后)行下标数组,无流式思考 → []。
+  // `_mainContentRecords` 靠它给「还没 commit 的思考行」补 thinking 锚点(底色 +
+  // 可点),与 committed 侧的 folds 汇合进同一个平行数组。范式与
+  // `_mainContentFoldsRef` 一致:由 `_mainContentLines` 同帧写入、同帧被读。
+  // **必须在 CAP 之后才算下标** —— CAP 把最老的行从前面切掉,提前记的下标会整体
+  // 错位,那正是本文件反复强调的「按错位下标涂错行」(给别的行涂上紫底)。
+  const _streamThinkingRowsRef = React.useRef([]);
+  // 展开态下流式思考段的**正文行**下标数组(同样 CAP 之后)。与上面那个 ref 一对:
+  // anchor 行可点(切换折叠),正文行不可点但同样带底色 —— `lineClickAt` 靠
+  // `anchor.body` 区分两者,所以两套下标必须分开记、分开平移,漏记任一套都会让
+  // 展开态的底色涂到别的行上,或让正文行变成收起按钮。
+  const _streamThinkingBodyRowsRef = React.useRef([]);
+  // 本轮流式思考段是否已经出现过(`query.streaming.thinking` 由空转非空的**一次**跳变)。
+  // 用途见下面的清空 effect:中断/报错未产生新 message 的那轮不会触发 messages 清空,
+  // 合成 key 会残留到下一轮,于是下一轮的流式思考一出现就是展开态(sticky)。
+  const _streamThinkingSeenRef = React.useRef(false);
   // 折叠行 → 思维链锚点的 ref 镜像(与行投影同一帧)。点击 handler 是长生命周期闭包,
   // 读 state 会拿到上一帧的投影 —— 而锚点数组必须与**被点那一帧**的行数组严格同下标,
   // 差一帧就是「点这条展开那条」。范式与 _mainContentLinesRef 完全一致。
@@ -1636,7 +1791,14 @@ function App({ options = {} }) {
       return null;
     }
     const anchor = folds[rowIdx];
-    if (!anchor || anchor.kind !== 'thinking' || !anchor.key) {
+    // 两类可点行:思维链折叠行(thinking)、被裁成 `…` 的工具摘要行(overflow)。
+    // `anchor.body` 是展开后的**思维链正文行** —— 它同样带底色,但**不可点**:
+    // 否则展开态下每一行都变成折叠按钮,用户点正文会误收起,那是行为回退而不是新增。
+    const kind =
+      anchor && (anchor.kind === 'thinking' || anchor.kind === 'overflow') && !anchor.body
+        ? anchor.kind
+        : '';
+    if (!kind || !anchor.key) {
       return null;
     }
     // 复用卡片点击的总闸(含「鼠标档位是否允许按键」那条),不新开环境变量:
@@ -1645,8 +1807,9 @@ function App({ options = {} }) {
       return null;
     }
     const key = anchor.key;
+    const toggle = kind === 'thinking' ? setExpandedThinking : setExpandedOverflow;
     return () => {
-      setExpandedThinking((prev) => {
+      toggle((prev) => {
         const next = new Set(prev);
         if (next.has(key)) {
           next.delete(key);
@@ -1667,6 +1830,23 @@ function App({ options = {} }) {
   // 为什么不用 `hitTest` 做坐标反查:那是 yoga 树的**实时**几何,而这里的行数组是
   // 按列宽预折好的**视觉行**投影。两者在软换行处不一致,拿 hitTest 的结果去索引
   // lines 数组会整体错位。所以选择层走「视口偏移」这条算术路径,与滚轮同源。
+  //
+  // ── 选区锚点的内容指纹（[DESIGN-ARCH-132] 第二期接线）────────────────────────
+  // 锚点存的是**行号**,而取文发生在**松手那一帧** —— 一个数字、两个时刻。手势期间
+  // 只要行数组重排(流式插入 / 折行重排),同一行号就指向别的内容,表现为「复制出来的
+  // 比选中的少一截 / 整段错位」。
+  // 修法:锚点与活动端各带一份**行原文指纹**,松手时按指纹在当帧行数组里重定位再切片
+  // ⇒「用户看到什么就复制到什么」。第一期已在 `selection.js` 落地
+  // `relocateLine` / `relocateSelection` / `extractTextRelocated`(纯函数、零 IO)；
+  // 本文件(调用方)只负责**算出指纹**并把 T0 快照留下来 —— 叶子不自己读 lines
+  // ([DESIGN-ARCH-132] §3.1 契约要点 1)。
+  // 不传指纹 → 行为与改造前**逐字节相同**(第一期的向后兼容承诺),故本次接线是纯增量:
+  // 回滚 = 把下面三处调用改回不传 fp,无需新 env 门。
+  //
+  // ⚠ 本段说明刻意放在**守卫窗口之外**:`viewportDragEdgeScroll.test.js` 的 T6 会刮
+  //   `onSelectEvent` 起的 6000 字符窗口,并要求 `kind === 'move'` 与 `dragAutoScroll`
+  //   的间距 ≤900 字符。把大段注释写进窗口内部会挤掉那条间距断言 —— 那条守卫的
+  //   本意是抓**接线错误**,不是限制注释长度,故说明放这里(窗口之前)。
   const onSelectEvent = React.useCallback((kind, ev) => {
     const sel = _selectMod;
     if (!sel || !ev) {
@@ -1745,11 +1925,20 @@ function App({ options = {} }) {
       // 不是传一个点对象。这里曾经写成 `beginSelection(sel, pt)`(传点),于是
       // `col` 是 undefined → `_point` 归零 → 选区永远从第 0 列开始。三层单测全绿,
       // 因为各层都自洽;是端到端探针把这条缝抓出来的。
-      setSelectRegion(sel.beginSelection(_selectRegionRef.current, pt.line, pt.col));
+      // 第四参 fp = T0(按下那一帧)的行原文(见本函数上方的指纹说明)。
+      const t0 = _mainContentLinesRef.current;
+      _selectFromLinesRef.current = Array.isArray(t0) ? t0 : null;
+      setSelectRegion(
+        sel.beginSelection(_selectRegionRef.current, pt.line, pt.col, _lineFpAt(t0, pt.line))
+      );
       return;
     }
     if (kind === 'move') {
       if (!_selectingRef.current) {
+        // 没有拖选手势：这一「位移」只是鼠标移过。返回 undefined（未消费）让
+        // dispatcher 把它交给悬停层 —— 菜单开着时要靠它给行高亮（2026-10-10
+        // 用户报「悬停和点击对照不清晰」的根因：旧代码在这里之后仍被
+        // `selectEnabled` 无条件吞掉，onMouseOver 一次都不触发）。
         return;
       }
       // 拖动位移**必到**:1002 每一点都上报(dispatcher 侧不限流)。
@@ -1784,8 +1973,18 @@ function App({ options = {} }) {
         }
         pt = toPoint(drag.line);
       }
-      setSelectRegion(sel.extendSelection(_selectRegionRef.current, pt.line, pt.col));
-      return;
+      // 活动端也带指纹(见上方说明):两端**各自**重定位;指纹取 T0 快照的同一行号。
+      setSelectRegion(
+        sel.extendSelection(
+          _selectRegionRef.current,
+          pt.line,
+          pt.col,
+          _lineFpAt(_selectFromLinesRef.current, pt.line)
+        )
+      );
+      // 拖动进行中 = 这一位移已被选择层消费。dispatcher 靠这个返回值决定是否还要
+      // 把它交给悬停层（菜单期的高亮预览）—— 返回 true 就不会。
+      return true;
     }
     if (kind === 'up') {
       if (!_selectingRef.current) {
@@ -1799,7 +1998,12 @@ function App({ options = {} }) {
       // 「尽力而为」,快速小拖动可能一个 `move` 都没到 —— 那样 head 还停在按下点,
       // 选区零宽,用户看到反色画出来了却复制不出东西(最迷惑的一种「复制失灵」)。
       // 按下点→松手点才是用户的真实意图。
-      const dragged = sel.extendSelection(_selectRegionRef.current, pt.line, pt.col);
+      const dragged = sel.extendSelection(
+        _selectRegionRef.current,
+        pt.line,
+        pt.col,
+        _lineFpAt(_selectFromLinesRef.current, pt.line)
+      );
       const finished = sel.endSelection(dragged);
       // 零宽 = 一次普通点击,不当作选区(否则每次点空白都会留下一个闪烁空选区)。
       // `normalizeSelection` 对零宽返回 null,所以这里用 normalize 的结果做判据 ——
@@ -1825,7 +2029,12 @@ function App({ options = {} }) {
       _selectRegionRef.current = finished;
       // 松手即定稿:提取文本 + 写剪贴板。**这是整条链路唯一的产出点** ——
       // 少了这一步就是「能拖不能复制」,正是用户报的症状。
-      const text = sel.extractText(_mainContentLinesRef.current, finished);
+      // `extractTextRelocated` = 先按内容指纹重定位再切片(见上方说明)。
+      const text = sel.extractTextRelocated(
+        _mainContentLinesRef.current,
+        _selectFromLinesRef.current,
+        finished
+      );
       _selectTextRef.current = text || '';
       if (_selectClipEnabled(process.env) && text) {
         try {
@@ -1892,6 +2101,10 @@ function App({ options = {} }) {
       onSelectEvent: _selectEnabled(process.env) ? onSelectEvent : undefined,
     });
   }
+
+
+
+
 
   // G-A: reflect the TRUE context-window fill in the footer. contextTokens is
   // the latest turn's reported usage (≈ current occupancy); contextLimit is the
@@ -1977,6 +2190,25 @@ function App({ options = {} }) {
     const push = (entry) => {
       if (!entry || typeof entry !== 'object') {
         return;
+      }
+      // B5：驻留/体积自检合并通知（type 'residency'，settleTimer 一次性发射）。
+      // 低档机（~/.khyquant/tui.json perf.tier 覆盖，否则静态定档 lean/minimal）
+      // 降级为页脚单槽瞬显（showHint，1.5s 自清），不占常驻通知槽；高档机进
+      // 侧栏通知槽（渲染时按 TTL 过期淡出）。两者都不落 transcript —— 消除
+      // 随 nowTick 心跳重绘的常驻百分比样行（被探针读成伪进度）。
+      if (entry.type === 'residency') {
+        try {
+          const cfg = require('../tuiConfig').loadTuiConfig();
+          const tier = require('../../../services/perfTier').detectTier({
+            override: cfg && cfg.perf ? cfg.perf.tier : undefined,
+          });
+          if (tier && tier.tier && tier.tier !== 'full') {
+            showHint(entry.detail ? `${entry.title} ${entry.detail}` : entry.title);
+            return;
+          }
+        } catch {
+          /* 定档失败 → 按高档进通知槽 */
+        }
       }
       setNotifications((prev) => {
         // Mirror the port's adjacent same-type merge: a merged emit REPLACES
@@ -4046,8 +4278,9 @@ function App({ options = {} }) {
         // images with a default prompt.
         if (pendingImages.length > 0) {
           const imgs = pendingImageAttachments.toPayload(pendingImages);
+          const attached = pendingImageAttachments.toDisplay(pendingImages);
           setPendingImages([]);
-          query.submit('请描述这张图片', { permissionMode, images: imgs });
+          query.submit('请描述这张图片', { permissionMode, images: imgs, _attachments: attached });
         }
         return;
       }
@@ -4172,11 +4405,13 @@ function App({ options = {} }) {
       // plain text. Reuses cli/repl/imageIntent + imageService; never throws (failure
       // → original text, no image). Gated KHY_TUI_INLINE_IMAGE_PATH (default on).
       let inlineImages = [];
+      let inlineDisplay = [];
       try {
         const r = _submitModules.inlineImageSubmit?.resolveInlineImageSubmit(submitText);
         if (r) {
           submitText = r.text;
           inlineImages = r.images || [];
+          inlineDisplay = r.display || [];
         }
       } catch {
         /* best-effort; fall through to plain text */
@@ -4187,10 +4422,18 @@ function App({ options = {} }) {
       const stagedImages = pendingImageAttachments.toPayload(pendingImages);
       const mergedImages = stagedImages.concat(inlineImages);
       if (mergedImages.length > 0) {
+        // 显示面描述与载荷同源但分开构造：`_attachments` 只喂 chip 行/回显，
+        // 不参与网关载荷（与 `_echoed` 同一条 UI-only 约定）。
+        const attached = pendingImageAttachments.toDisplay(pendingImages).concat(inlineDisplay);
         if (stagedImages.length > 0) {
           setPendingImages([]);
         }
-        query.submit(submitText, { permissionMode, images: mergedImages, forceLocal: localMode });
+        query.submit(submitText, {
+          permissionMode,
+          images: mergedImages,
+          forceLocal: localMode,
+          _attachments: attached,
+        });
         return;
       }
       // Bare image-recognition intent with NO attached image (e.g. 裸「图片识别」): give it a
@@ -4207,6 +4450,7 @@ function App({ options = {} }) {
                 permissionMode,
                 images: assist.images,
                 forceLocal: localMode,
+                _attachments: pendingImageAttachments.toDisplay(assist.images),
               });
               return;
             }
@@ -4252,6 +4496,69 @@ function App({ options = {} }) {
     },
   });
   const { value, offset } = textInput;
+
+  // ── 补全菜单条目的「接受」单一口径（回车与鼠标点击共用）────────────────────
+  // 2026-10-10 鼠标层接入时抽出：此前只有 Enter 分支内联这份逻辑，点击若另写一份
+  // 必然漂移（菜单两种 kind 的分支不一样）。斜杠命令 → 清空输入并直接执行；
+  // 文件/子命令 → 补全进缓冲区继续编辑（与 Tab 同语义）。
+  const acceptCompletionItem = React.useCallback(
+    (comp, item, menuValue) => {
+      if (!item) return;
+      if (comp && comp.kind === 'slash') {
+        textInput.setText('', 0);
+        setDismissedFor(null);
+        handleSubmit(item.value);
+        return;
+      }
+      const { applyCompletion } = require('../hooks/useCompletions');
+      const { text, offset: off } = applyCompletion(menuValue, comp, item);
+      textInput.setText(text, off);
+      setDismissedFor(null);
+    },
+    [textInput, handleSubmit]
+  );
+
+  // ── /命令的参数面板(2026-10-10)───────────────────────────────────────────
+  // 必须放在 handleSubmit/textInput **之后**：useCallback 的依赖数组在渲染时
+  //  eager 求值，写在它们之前就是一次 TDZ，整个 Ink 树每次都挂（实测
+  //  react-reconciler: Cannot access 'handleSubmit' before initialization）。
+  // openParamPanel(cmd, restoreText) → 有规格就开面板、由调用方清空输入并返回
+  // true（不清就会把 `/gateway` 留在框里，下一条命令接上去变成
+  // `/gateway/instructions` —— 2026-10-10 PTY 实测到的形态）；无规格返回 false，
+  // 调用方按今天的样子直接执行(逐字节回退)。Esc 返回时把 restoreText 放回输入框。
+  const _paramRestoreRef = React.useRef('');
+  const openParamPanel = React.useCallback(
+    (cmd, restoreText) => {
+      let specs = [];
+      try {
+        specs = require('../commandParamSpecs').specsFor(cmd, process.env);
+      } catch {
+        specs = [];
+      }
+      if (!Array.isArray(specs) || specs.length === 0) return false;
+      _paramRestoreRef.current = String(restoreText == null ? '' : restoreText);
+      setParamPanel({ cmd, specs });
+      return true;
+    },
+    []
+  );
+
+  const resolveParamPanel = React.useCallback(
+    (line) => {
+      setParamPanel(null);
+      if (line && String(line).trim()) {
+        // 组装行交回既有提交正门（handleSubmit → route()，与手敲同一条路）。
+        _paramRestoreRef.current = '';
+        handleSubmit(String(line).trim());
+        return;
+      }
+      // Esc 返回：把原命令文本放回输入框（菜单随之重新弹出），不执行。
+      const back = _paramRestoreRef.current;
+      _paramRestoreRef.current = '';
+      if (back) textInput.setText(back, back.length);
+    },
+    [handleSubmit, textInput]
+  );
 
   // ── Conversation+code rewind (double-ESC, Claude Code alignment) ───────
   // Declared here (after `textInput`) so the callbacks can reference it without
@@ -4488,7 +4795,7 @@ function App({ options = {} }) {
   // underneath the overlay, which the terminal shows as flicker. A "thinking"
   // spinner is also misleading here — we are blocked waiting for the user, not
   // computing. The spinner returns automatically once the choice resolves.
-  const awaitingUserChoice = !!query.controlRequest || !!modelPicker || !!formFlow || khyosOpen;
+  const awaitingUserChoice = !!query.controlRequest || !!modelPicker || !!formFlow || khyosOpen || !!paramPanel;
 
   // ── Resize handling (缩放时的线条残留) ──────────────────────────────────
   // On terminal resize/zoom the emulator reflows wrapped lines, but two things
@@ -4905,11 +5212,43 @@ function App({ options = {} }) {
   // 修法：订阅身份稳定的转发器，真正的处理器每次渲染换进 ref —— 转发器读的是
   // 「最近一次渲染」的闭包，与订阅何时刷新无关。
   const _keyHandlerRef = React.useRef(null);
+  // SGR 鼠标序列重组（2026-10-10）：ConPTY 会把一次鼠标上报拆成两次读
+  // （`[<` 与 `32;10;28M`），ink 的 pending-escape 刷新把前半段当成独立按键
+  // 发出，后半段就落进输入框（用户报「鼠标一动，输入框多出一串 32;10;28M」，
+  // 悬停/拖拽的连续上报必中、短点击序列碰不到）。这里在按键处理器最前面把
+  // 不完整前缀按住，拼回完整序列再走鼠标分发；60ms 兜底放行（终端半途消失
+  // 也不永久吞字节，放行逐字节落回旧行为）。判定见 ../sgrHold.js。
+  const _sgrHoldRef = React.useRef({ buf: '', timer: null });
   const _keyDispatch = React.useCallback((input, key) => {
     const latest = _keyHandlerRef.current;
     if (latest) latest(input, key);
   }, []);
   _keyHandlerRef.current = function khyKeyHandler(input, key) {
+      // 0) SGR 重组：不完整前缀先拼装（必须在鼠标分发之前，否则碎片会掉进文本编辑）
+      {
+        const _hold = _sgrHoldRef.current;
+        let _in = input;
+        if (_hold.buf) {
+          _in = _hold.buf + _in;
+          _hold.buf = '';
+          if (_hold.timer) {
+            clearTimeout(_hold.timer);
+            _hold.timer = null;
+          }
+        }
+        if (_sgrHold.isPartialSgr(_in)) {
+          _hold.buf = _in;
+          _hold.timer = setTimeout(() => {
+            _hold.timer = null;
+            const _stuck = _hold.buf;
+            _hold.buf = '';
+            // 兜底放行：按旧行为当普通输入处理（绝不永久吞用户的键）。
+            if (_stuck) _keyDispatch(_stuck, key || {});
+          }, _sgrHold.HOLD_MS);
+          return;
+        }
+        input = _in;
+      }
       // 0) Mouse events own the top slot: dispatch clicks/hovers to <Box
       //    onClick/onMouseUp/…> buttons (e.g. the mic voice button) and consume
       //    the sequence so it can NEVER fall through to text editing as literal
@@ -5013,6 +5352,12 @@ function App({ options = {} }) {
         if (key.escape || key.return) {
           setTopologyView(null);
         }
+        return;
+      }
+
+      // 0e) 参数面板(/gateway status、/color blue… 的参数调整)挂载期间自管按键:
+      //     ↑↓ 选参数、←→ 调值、回车执行、Esc 返回。这里整段 yield,绝不双重处理。
+      if (paramPanel) {
         return;
       }
 
@@ -5533,6 +5878,55 @@ function App({ options = {} }) {
           ) * ITEMS_PER_PAGE);
           return;
         }
+        // 左右键（2026-10-10 用户要的「左右键选择」）：
+        //   · 斜杠菜单：多页时 = 上一页/下一页（与 PageUp/PageDown 同落点）；
+        //     单页时不拦 —— 左右键留给光标在命令 token 内移动，逐字节回退旧行为。
+        //   · @文件菜单：左 = 退回上级目录，右 = 进入高亮目录（文件浏览器直觉），
+        //     改的是缓冲区里的 @token，菜单据此重算。
+        if (key.leftArrow || key.rightArrow) {
+          if (menu.kind === 'file') {
+            const item = menu.items[selectedIndex] || menu.items[0];
+            const before = String(menuValue).slice(0, Math.max(0, Number(menu.start) || 0));
+            const token = String(menuValue).slice(
+              Math.max(0, Number(menu.start) || 0),
+              Math.max(0, Number(menu.end) || 0)
+            );
+            if (key.leftArrow) {
+              // `@a/b/` → `@a/`；`@a/b` → `@a/`；`@a` → `@`（回到别名根）。
+              const stripped = token.endsWith('/') ? token.slice(0, -1) : token;
+              const cut = stripped.lastIndexOf('/');
+              const parent = cut <= 0 ? '@' : `${stripped.slice(0, cut)}/`;
+              textInput.setText(before + parent, (before + parent).length);
+              setDismissedFor(null);
+              return;
+            }
+            if (item && item.isDir) {
+              const next = `${token}${item.label || item.value || ''}`;
+              textInput.setText(before + next, (before + next).length);
+              setDismissedFor(null);
+              return;
+            }
+            // 高亮的是文件：右键不拦，落下去让光标右移。
+          } else if (totalPages > 1) {
+            const dir = key.leftArrow ? -1 : 1;
+            setSelectedIndex((i) => {
+              const cur = Math.floor(i / ITEMS_PER_PAGE);
+              const nextPage = Math.max(0, Math.min(totalPages - 1, cur + dir));
+              return nextPage * ITEMS_PER_PAGE;
+            });
+            return;
+          }
+        }
+        // Home/End — 直接跳首/末条。212 条命令一页 10 条时，翻到第一/最后一条
+        // 不再靠 21 次 PageDown；菜单开着时行首/行尾的光标移动让位给这条。
+        if (key.home) {
+          setSelectedIndex(0);
+          return;
+        }
+        if (key.end) {
+          setSelectedIndex(menu.items.length - 1);
+          return;
+        }
         // Tab → complete the highlighted item into the buffer (keep editing).
         if (key.tab) {
           const item = menu.items[selectedIndex] || menu.items[0];
@@ -5551,16 +5945,17 @@ function App({ options = {} }) {
           if (!key.shift && !key.ctrl && !key.meta && imeCommitGuard.shouldSwallowBareEnter()) {
             return;
           }
+          // 与鼠标点击共用同一口径（acceptCompletionItem），两条入口不分叉。
           const item = menu.items[selectedIndex] || menu.items[0];
-          if (menu.kind === 'slash') {
+          // 带可调参数的斜杠命令(规格真源 commandParamSpecs)：先开参数面板，
+          // 让用户 ↑↓ 选参数、←→ 调值后再执行；无规格的命令行为逐字节不变。
+          // 开面板前清空输入：否则 `/gateway` 留在框里，下一条命令会接成
+          // `/gateway/instructions`（PTY 实测形态）；Esc 会把它放回来。
+          if (menu.kind === 'slash' && item && openParamPanel(item.value, menuValue)) {
             textInput.setText('', 0);
-            setDismissedFor(null);
-            handleSubmit(item.value);
             return;
           }
-          const { text, offset: off } = applyCompletion(menuValue, menu, item);
-          textInput.setText(text, off);
-          setDismissedFor(null);
+          acceptCompletionItem(menu, item, menuValue);
           return;
         }
         if (key.escape) {
@@ -6108,6 +6503,32 @@ function App({ options = {} }) {
     [_sidebarOn, _railOut, _mainColsV, _resCols]
   );
 
+  // committed 块的**唯一一次**投影:下面两个 memo(行数组 / 角色+折叠锚点)都从它取。
+  // 此前两个 memo 各自调一次投影函数,于是每帧把整场会话的折行**做两遍**(roles 的
+  // 投影与 lines 逐字节相同,不是两种口径)。折行是这里唯一的大头,重复一遍就是白白
+  // 翻倍的帧预算,所以改成「先投影一次,两边共用」——这也让下面那条「前缀逐行核对」
+  // 从「两个 memo 的 deps 恰好对齐」变成「同一个数组对象」,对齐不再是巧合。
+  const _committedRecords = React.useMemo(() => {
+    if (transcriptOpen || !_transcriptLines) return null;
+    if (typeof _transcriptLines.buildTranscriptLineRecords !== 'function') return null;
+    if (!query.messages || query.messages.length === 0) return null;
+    try {
+      const rec = _transcriptLines.buildTranscriptLineRecords(query.messages, {
+        cols: _mainContentCols,
+        showAll: expanded,
+        renderMarkdown: Transcript.renderMarkdown,
+        summarizeTool: ToolLines.summarizeArgs,
+        expandedThinking,
+        expandedOverflow,
+        thinkingHint: _THINKING_CLICK_HINT,
+      });
+      if (!rec || !Array.isArray(rec.lines) || !Array.isArray(rec.roles)) return null;
+      return rec;
+    } catch {
+      return null; // 投影失败不该拖垮转录;退化到下面的行路径(无 roles/folds)
+    }
+  }, [transcriptOpen, query.messages, expanded, expandedThinking, expandedOverflow, _mainContentCols]);
+
   const _mainContentLines = React.useMemo(() => {
     if (transcriptOpen) return [];
     // 排版宽度必须等于**实际渲染列宽**,否则行会在视口里二次软换行:按全宽折好的行落进
@@ -6115,17 +6536,29 @@ function App({ options = {} }) {
     // 即「转录被整片抹掉」)。树内看板存在时用 sidebarLayout.mainColumnCols 的口径。
     const cols = _mainContentCols;
     const lines = [];
+    // 流式思考段的行下标(**平移前**,CAP 在下面统一平移)。只在本 memo 内存活,
+    // 算完即写进 `_streamThinkingRowsRef`。
+    const _streamThinkingRows = [];
+    // 展开态下流式思考**正文行**的下标(同样只在本 memo 内存活)。与上面那个数组
+    // 一对:anchor 行可点切换折叠,正文行不可点但带底色 —— 两套下标必须分开记。
+    const _streamThinkingBodyRows = [];
 
-    // 1) committed messages 投影为行(复用 transcriptLines 的渲染逻辑)
-    if (_transcriptLines && query.messages.length > 0) {
+    // 1) committed messages 投影为行(复用 transcriptLines 的渲染逻辑)。
+    //    正常路径直接复用 _committedRecords.lines —— buildTranscriptLines 本就是
+    //    buildTranscriptLineRecords(...).lines,同一份投影、逐字节相同。
+    if (_committedRecords) {
+      for (const ln of _committedRecords.lines) {
+        lines.push(ln);
+      }
+    } else if (_transcriptLines && query.messages.length > 0) {
+      // 兜底:投影函数缺失/抛错时退回行投影,行照常出,只是没有 roles/folds。
       const committedLines = _transcriptLines.buildTranscriptLines(query.messages, {
         cols,
         showAll: expanded,
         renderMarkdown: Transcript.renderMarkdown,
         summarizeTool: ToolLines.summarizeArgs,
-        // ⚠ 这两个 opts 必须与下面 _mainContentRecords 里的**完全同一份**,否则
-        // 「前缀逐行相等」的对齐核对必然失败 → 着色与点击锚点一起静默失效。
         expandedThinking,
+        expandedOverflow,
         thinkingHint: _THINKING_CLICK_HINT,
       });
       for (const ln of committedLines) {
@@ -6140,19 +6573,93 @@ function App({ options = {} }) {
         // 按**显示宽度**折行(与 committed 区 buildTranscriptLines 的 cols 口径一致)。
         // 旧实现按 `tl.length`(字符数)切块,而 Viewport 用 overflow:hidden 截断而非
         // 再折行 ⇒ 中文每字≈2 列,切出的块实际≈2×cols 宽,右半被裁掉、看着像丢字。
-        for (const seg of wrapCell(String(query.streaming.text), cols)) {
+        //
+        // **增量折行**:memo 的 deps 含 query.streaming,而 useQueryBridge 每帧给
+        // 新对象 ⇒ 每帧都对本轮**累积全文**重跑一次全量折行,一轮答复因此是 O(N²)。
+        // 这里只扫新增尾巴,已折好的行与跨行 SGR 状态原地续用;换 turn / rewind /
+        // 缩窗时 wrapCellIncremental 的 prefix 校验不过,自动退回全量。
+        // 结果与全量逐字节相同(同一个 _scan),见 wrapCell.test.js 的等价性用例。
+        // state 是一次性的:_streamWrapRef 里那份会被本次调用原地消费掉,取用后立刻
+        // 换成新 state;同一份 state 不可复用于第二个推演。
+        const _sw = wrapCellIncremental(
+          _streamWrapRef.current,
+          String(query.streaming.text),
+          cols
+        );
+        _streamWrapRef.current = _sw.state;
+        for (const seg of _sw.lines) {
           lines.push(seg);
         }
       }
       // 思考段
       if (query.streaming.thinking) {
-        // 单行预览:换行压成空格后按**显示宽度**取窗口(旧 slice 按字符数,中文会超宽被裁)。
-        // 窗口是**跟随尾部**的:每来一个 chunk,起点向右推进一格 ⇒ 读者看到的位置从左往右
-        // 移动、旧字符从左侧移出。相位来自已累积的字符数,不是计时器 —— chunk 到达本身就
-        // 让本 memo 重算(deps 含 query.streaming),所以推进免费、定格后自动静止。
-        const _budget = Math.max(1, cols - 5); // 预留 '  ' 2 列 + '⋯ ' 2 列 + 1 列余量
-        const _win = _thinkingTailWindow(query.streaming.thinking, _budget);
-        lines.push('  ' + (_win.headCut ? '⋯ ' : '') + _win.text);
+        // 展开态由 `expandedThinking` 驱动(lineClickAt 点这一行时写入同一个 Set),
+        // 合成 key 见 `_STREAM_THINKING_KEY`。它是本 memo 的 dep,所以点一下就会
+        // 重算本块 —— 这正是「点击流式思考行画面真的切换」的那根线。
+        // 零新 env 门:门预算已透支(check-tui-gates 223/242),展开态只能由这个 Set 驱动。
+        const _stOpen = !!(
+          expandedThinking &&
+          typeof expandedThinking.has === 'function' &&
+          expandedThinking.has(_STREAM_THINKING_KEY)
+        );
+        const _stBuild =
+          _stOpen && _transcriptLines && typeof _transcriptLines.buildStreamThinkingExpansion === 'function'
+            ? _transcriptLines.buildStreamThinkingExpansion
+            : null;
+        if (_stBuild) {
+          // 展开态:头行 + 折行正文。折行走**增量**单一真源(wrapCellIncremental),
+          // 与上面的流式正文段同一个范式:每帧只扫新增尾巴,已折好的行原地续用 ——
+          // 全量重折会让「一边展开一边思考」变成 O(N²),而 wrapCell 每个码点都要走
+          // 一次 visWidth(内部还有一次 require),全量的代价在这条路上被放得更大。
+          // state 专用一份(`_streamThinkWrapRef`),与正文段的 `_streamWrapRef` 不共用。
+          const _stRaw = String(query.streaming.thinking).trim();
+          // 冷折行的预算封顶:只折「必然填满 body 上限」的那一段前缀 —— 每行最多
+          // `cols` 列、每字符至少 1 列 ⇒ `上限行数 × cols` 个字符一定折得出上限行数。
+          // 没有它,点开一个已经积累了几万字的思考段就要先全量折一遍,那一下卡顿随轮次
+          // 长度线性增长。**取前缀**是关键:文本继续增长时切片不变,增量续扫的前缀校验
+          // 照样通过(取的若是尾部,每帧切片都会变,增量就废了)。
+          const _stBudget =
+            (Number(_transcriptLines.STREAM_THINKING_BODY_CAP) || 40) * Math.max(20, cols || 80);
+          let _stText = _stRaw;
+          let _stCut = false;
+          if (_stRaw.length > _stBudget) {
+            _stCut = true;
+            _stText = _stRaw.slice(0, _stBudget + 2);
+            // 别把代理对劈开:wrapCell 按码点走,半个代理对会被当成一个字符打出乱码。
+            if (/[\uD800-\uDBFF]$/.test(_stText)) {
+              _stText = _stText.slice(0, -1);
+            }
+          }
+          const _stw = wrapCellIncremental(_streamThinkWrapRef.current, _stText, cols);
+          _streamThinkWrapRef.current = _stw.state;
+          // 文案与行数封顶在 transcriptLines 的单一真源里;这里只做「记下标 + 拼进行数组」。
+          // helper 缺失(投影模块没加载上)时上面 `_stBuild` 为 null ⇒ 落回折叠态,
+          // 逐字节回退,不会因为少个函数就把思考段整块吞掉。
+          const _st = _stBuild({ bodyLines: _stw.lines, truncated: _stCut });
+          for (const off of _st.anchorRows) {
+            _streamThinkingRows.push(lines.length + off);
+          }
+          for (const off of _st.bodyRows) {
+            _streamThinkingBodyRows.push(lines.length + off);
+          }
+          for (const r of _st.rows) {
+            lines.push(r);
+          }
+        } else {
+          // 单行预览:换行压成空格后按**显示宽度**取窗口(旧 slice 按字符数,中文会超宽被裁)。
+          // 窗口是**跟随尾部**的:每来一个 chunk,起点向右推进一格 ⇒ 读者看到的位置从左往右
+          // 移动、旧字符从左侧移出。相位来自已累积的字符数,不是计时器 —— chunk 到达本身就
+          // 让本 memo 重算(deps 含 query.streaming),所以推进免费、定格后自动静止。
+          const _budget = Math.max(1, cols - 5); // 预留 '  ' 2 列 + '⋯ ' 2 列 + 1 列余量
+          const _win = _thinkingTailWindow(query.streaming.thinking, _budget);
+          // 记下这一行的下标。有了它,`_mainContentRecords` 才能给流式思考行补
+          // thinking 锚点:底色与 committed 折叠行同一真源
+          // (userMessageStyle.thinkingLineTextProps),可点性复用 lineClickAt 的既有
+          // 判据(`body` 缺省 = 可点的头行)。**折叠态刻意不加「点击展开」后缀** ——
+          // 本行是思考原文的跟随尾部窗口而不是摘要,加后缀只会挤占窗口预算。
+          _streamThinkingRows.push(lines.length);
+          lines.push('  ' + (_win.headCut ? '⋯ ' : '') + _win.text);
+        }
       }
       // 工具调用
       if (query.streaming.tools && query.streaming.tools.length > 0) {
@@ -6191,16 +6698,40 @@ function App({ options = {} }) {
       const dropped = lines.length - CAP;
       const tail = lines.slice(lines.length - CAP);
       tail.unshift(`  ⋯ (已省略最早 ${dropped} 行)`);
+      // 下标平移:前切掉 `dropped` 行 ⇒ +dropped;unshift 插一行 ⇒ −1。
+      // 即 `新下标 = 旧下标 − dropped + 1`(CAP 分支的行数因此是 CAP+1)。
+      // 平移后为负的行已被整段切掉,一律丢弃 —— 越界下标等于给别的行涂底色。
+      // **过滤线是 `>= 1` 而不是 `>= 0`**:下标 0 被 unshift 的省略横幅占着,而
+      // 「旧下标恰好 = dropped − 1」(即被切掉的最后一行)平移后正是 0 —— 放它过去
+      // 就是给横幅涂上思考底色、还让它变成可点行。实测:一行思考 + 5000 行工具 ⇒
+      // 平移出 0,横幅被误涂(见 works/data/khy/T4-transient/tmp/rev_cap_boundary.cjs)。
+      _streamThinkingRowsRef.current = _streamThinkingRows
+        .map((r) => r - dropped + 1)
+        .filter((r) => r >= 1);
+      // 正文行走同一条平移/过滤线。**漏写这一处 = 展开态涂错行**:CAP 之后 anchor 与
+      // 正文两套下标必须仍然互相对应,少平移一套就会把底色盖到无关行上。
+      _streamThinkingBodyRowsRef.current = _streamThinkingBodyRows
+        .map((r) => r - dropped + 1)
+        .filter((r) => r >= 1);
       return tail;
     }
+    _streamThinkingRowsRef.current = _streamThinkingRows;
+    _streamThinkingBodyRowsRef.current = _streamThinkingBodyRows;
     return lines;
   }, [
     transcriptOpen,
     previewLayoutActiveRef.current,
+    // committed 块取 _committedRecords.lines(省掉一次重复投影),但**兜底分支仍然
+    // 直接读** query.messages / expanded / expandedThinking —— 上面 :6460 的
+    // 「buildTranscriptLineRecords 不存在」与 :6475 的「投影抛错」都与 messages
+    // 内容无关,那时 _committedRecords 恒为 null(引用不变),光靠它当 dep 会让
+    // messages 变了也不重算、兜底分支一直吐旧投影。三项因此照旧留在 deps 里。
+    _committedRecords,
     query.messages,
-    query.streaming,
     expanded,
     expandedThinking,
+    expandedOverflow,
+    query.streaming,
     busy,
     awaitingUserChoice,
     query.status,
@@ -6222,31 +6753,30 @@ function App({ options = {} }) {
   // 投影算出:再调一次投影就是第三份折叠判据,两次结果在边界上必然分叉。
   //
   // **对齐策略:前缀核对,不等即弃。** committed 块恒在 `_mainContentLines` 的**头部**
-  // (上面 §1),所以拿同一份投影再算一次、逐行核对前缀即可;任一行不等(未来改动重排、
-  // CAP 截断把头部丢掉、transcriptOpen 早退、投影函数缺失)就整份返回 null,Viewport
-  // 于是不着色 —— **绝不按错位下标涂错行**。着色失败只是少了个视觉提示,涂错行才是事故。
+  // (上面 §1),而 `_mainContentLines` 的头部就是 `_committedRecords.lines` 本身 ——
+  // 所以这轮核对守的是「头部有没有被 CAP 截断改写」这一种形态(CAP 会把最老的行从
+  // 前面切掉,那时 rec.lines 与总行数组不再同起点);任一行不等就整份返回 null,
+  // Viewport 于是不着色 —— **绝不按错位下标涂错行**。着色失败只是少了个视觉提示,
+  // 涂错行才是事故。
   const _mainContentRecords = React.useMemo(() => {
     if (transcriptOpen || !_transcriptLines) {
       return null;
     }
-    if (typeof _transcriptLines.buildTranscriptLineRecords !== 'function') {
-      return null;
+    const rec = _committedRecords;
+    // 流式思考段的行下标(CAP 之后,由 `_mainContentLines` 同帧写进 ref)。
+    // **首轮** `_committedRecords` 恒为 null(`query.messages` 还是空的),而那时
+    // 流式思考行正是唯一需要底色的行 ⇒ 早退条件必须把它算进去,否则第一轮思考
+    // 依旧没有底色块。
+    const stRows = _streamThinkingRowsRef.current;
+    const hasSt = Array.isArray(stRows) && stRows.length > 0;
+    if (!rec && !hasSt) {
+      return null; // 既无 committed 投影、也无流式思考 ⇒ 不着色(与改动前一致)
     }
-    try {
-      const rec = _transcriptLines.buildTranscriptLineRecords(query.messages, {
-        cols: _mainContentCols,
-        showAll: expanded,
-        renderMarkdown: Transcript.renderMarkdown,
-        summarizeTool: ToolLines.summarizeArgs,
-        expandedThinking,
-        thinkingHint: _THINKING_CLICK_HINT,
-      });
-      if (!rec || !Array.isArray(rec.lines) || !Array.isArray(rec.roles)) {
-        return null;
-      }
-      // `n !== rec.lines.length` 一并挡住「committed 块比总行数还长」和「两个数组不同长」
-      // 两种错位形态。
-      const n = Math.min(rec.lines.length, rec.roles.length, _mainContentLines.length);
+    // `n !== rec.lines.length` 一并挡住「committed 块比总行数还长」和「两个数组不同长」
+    // 两种错位形态。
+    let n = 0;
+    if (rec) {
+      n = Math.min(rec.lines.length, rec.roles.length, _mainContentLines.length);
       if (n !== rec.lines.length) {
         return null;
       }
@@ -6255,17 +6785,38 @@ function App({ options = {} }) {
           return null;
         }
       }
-      const out = new Array(_mainContentLines.length).fill('');
-      const folds = new Array(_mainContentLines.length).fill(null);
-      for (let i = 0; i < n; i++) {
-        out[i] = rec.roles[i];
-        folds[i] = Array.isArray(rec.folds) ? rec.folds[i] || null : null;
-      }
-      return { roles: out, folds };
-    } catch {
-      return null; // 着色与点击锚点都是装饰,绝不拖垮转录
     }
-  }, [transcriptOpen, query.messages, expanded, expandedThinking, _mainContentCols, _mainContentLines]);
+    // 没有 committed 投影时 roles 恒为 null(首轮没有任何 user 行要上米白底)——
+    // Viewport 的 `linePropsAt` 对 null 走 base 分支,逐字节不变。
+    const out = rec ? new Array(_mainContentLines.length).fill('') : null;
+    const folds = new Array(_mainContentLines.length).fill(null);
+    // n > 0 ⇒ rec 必然存在(核对在上面 `if (rec)` 里),所以 out 不会被索引成 null。
+    for (let i = 0; i < n; i++) {
+      out[i] = rec.roles[i];
+      folds[i] = Array.isArray(rec.folds) ? rec.folds[i] || null : null;
+    }
+    // 流式思考行 → thinking 锚点。`body` 缺省(false)= 可点的头行,与 committed
+    // 折叠行同一口径,`lineClickAt` 因此直接放行;合成 key 见 `_STREAM_THINKING_KEY`。
+    if (hasSt) {
+      for (const r of stRows) {
+        if (r >= 0 && r < folds.length) {
+          folds[r] = { kind: 'thinking', key: _STREAM_THINKING_KEY, body: false };
+        }
+      }
+      // 展开态的**正文行**:同样带底色(`thinkingLineTextProps` 只判 kind),但
+      // `body: true` 让 `lineClickAt` 跳过它们 —— 否则展开态每一行都变成收起按钮。
+      // 与 committed 侧 `_timelineLines` 的 `_mark(ln, key, false)` 同一语义。
+      const stBody = _streamThinkingBodyRowsRef.current;
+      if (Array.isArray(stBody)) {
+        for (const r of stBody) {
+          if (r >= 0 && r < folds.length) {
+            folds[r] = { kind: 'thinking', key: _STREAM_THINKING_KEY, body: true };
+          }
+        }
+      }
+    }
+    return { roles: out, folds };
+  }, [transcriptOpen, _committedRecords, _mainContentLines]);
   const _mainContentRoles = _mainContentRecords ? _mainContentRecords.roles : null;
   const _mainContentFolds = _mainContentRecords ? _mainContentRecords.folds : null;
 
@@ -6316,7 +6867,7 @@ function App({ options = {} }) {
   }
   const _bannerInLive = _bannerInLiveRef.current === true && query.messages.length === 0;
   const _showStartupBanner = query.messages.length === 0;
-  // Lucky-clover art gate: the banner's right-column art renders only when the
+  // Brand-mark art gate: the banner's right-column art renders only when the
   // banner's OWN column is wide enough. Width inputs reuse THIS frame's
   // sticky-resolved values (_resCols / _mainColsV / _railContentCols) — the
   // banner never self-reads process.stdout (effectiveCols leaf contract).
@@ -6389,6 +6940,9 @@ function App({ options = {} }) {
   // The full-width inline TaskListPanel is the sole task renderer. It remains
   // independent of sidebar/wide-terminal gates and is height-capped through the
   // same liveRegionBudget ledger used by StreamingBlock.
+  // 结构化工具执行面板（<ToolExecutionPanel>）的行数**不在这里算**：它要按「这个屏除它以外
+  // 还有多少 chrome」定预算，而那只有下方 _viewportHeight 账本里才知道（与补全框的
+  // _cmBudget 同一手法）。权威值在账本内部算，本文件其余地方一律读那个值。
   let _streamReserve = null;
   if (_liveBudget) {
     // Same sticky-resolved rows as the dims block above (根因 B): a phantom
@@ -6397,7 +6951,9 @@ function App({ options = {} }) {
       Number(_resRows) > 0 ? Number(_resRows) : sidebarLayout.fallbackRows(process.env);
     // Ctrl+T hides the checklist. The inline panel is available at every width;
     // sidebar visibility never suppresses the canonical task data read.
-    const _mergedTaskLines = tasksHidden ? [] : _readMergedTaskLines();
+    // !_panelsFilled → 首帧/启动屏期不读（B4 分帧填充，见上方 effect 注释）。
+    const _mergedTaskLines =
+      tasksHidden || !_panelsFilled ? [] : _readMergedTaskLines();
     const _rawTaskLines = tasksHidden ? [] : _mergedTaskLines;
     if (process.env.KHY_DEBUG_TASK_PANEL === '1') {
       try {
@@ -6556,6 +7112,9 @@ function App({ options = {} }) {
   // 因此这里必须把 live 区**每一个**兄弟节点的高度都算进 chrome:输入框、页脚、任务清单、
   // 补全菜单、忙态 spinner、提示行、历史搜索行 —— 漏一个就多一份触顶概率。
   // 高度算法对齐 Bubble Tea chat example: viewport.Height = rows − textarea − footer − …
+  // 面板（结构化工具执行输出）的 opts：由账本内部填（那里才知道这个屏能给面板几行），
+  // 渲染处的 <ToolExecutionPanel> 与账本读**同一份**，两边不会漂移。
+  let _toolExecOpts = null;
   const _viewportHeight = (() => {
     const termRows = Number(_resRows) > 0 ? Number(_resRows) : 24;
     // PromptFrame 高度：向 PromptFrame 的帧高真源要行数（上边框 + 折行后的输入行
@@ -6610,6 +7169,10 @@ function App({ options = {} }) {
     const sepH = previewLayoutMode ? 1 : 0;
     const slack = 1;
     // 除补全框以外的全部 chrome —— 下面的高度预算要它，`_otherChrome` 也要它。
+    // ⚠ 这里**不含**面板行数：面板预算要扣 completionH 的真实值，而 completionH 到下方
+    //   （menuRowCount 定稿处）才知道，那已经在 _cmBudget 之后 —— 在这里扣会成环。
+    //   故 _chromeNoMenu 保持原样（门关时与改动前逐字节相同），面板预算在 completionH
+    //   定稿后单独算（见下方「面板预算」块）。
     const _chromeNoMenu =
       footerH + spinnerH + taskH + hintH + revSearchH + topbarH + sepH + slack + 1 + _approvalRows;
     // CompletionMenu 高度：一页最多 `ITEMS_PER_PAGE = 10` 条 + 页脚 1 + 圆角边框 2
@@ -6650,6 +7213,30 @@ function App({ options = {} }) {
     _completionPage = completion.active
       ? Math.floor(Math.max(0, Number(selectedIndex) || 0) / _cmPerPage)
       : 0;
+  // ── 菜单/面板挂载期开悬停追踪（2026-10-10 用户报「悬停和点击对照不清晰」）────
+  // 默认档只开 1000/1002：1003(any-motion)是 60~120Hz 洪流，常开必然吞掉拖选。
+  // 但补全菜单/参数面板开着的那几秒里，「鼠标悬在哪一行」比「在菜单上拖选文字」
+  // 重要得多 —— 不开 1003 的话 onMouseOver 一次都不触发，用户完全无法预览会选中
+  // 谁，点击自然「对不上」。所以这期间**追加** 1003（与 select 档正交，
+  // tui/AGENTS.md §0.9.4），关闭时只撤 1003，不动 1000/1002。
+  // 门控 KHY_MENU_HOVER 默认开；显式 0/false/off/no → 一个字节都不写。
+  const _menuHoverOn = !!completion.active || !!paramPanel;
+  const _menuHoverWanted = _menuHoverOn && _menuHoverEnabled(process.env);
+  React.useEffect(() => {
+    const disp = mouseDispatcherRef.current;
+    if (!disp || typeof disp.setHover !== 'function') return undefined;
+    if (!process.stdout || !process.stdout.isTTY) return undefined;
+    disp.setHover(_menuHoverWanted);
+    if (!_menuHoverOn) return undefined; // 没开过就不写字节（保持初始档）
+    try {
+      // 只追加/撤销 1003：enableBytes({hover}) 会重写整组，这里要的是「正交追加」。
+      process.stdout.write(_menuHoverWanted ? '\x1b[?1003h' : '\x1b[?1003l');
+    } catch {
+      /* fail-soft — 终端已消失时不该让渲染崩 */
+    }
+    return undefined;
+  }, [_menuHoverOn, _menuHoverWanted]);
+
     _completionMenuProps = completion.active
       ? {
           completion,
@@ -6658,6 +7245,44 @@ function App({ options = {} }) {
           page: _completionPage,
           cols: _overlayCols,
           maxRows: _cmBudget,
+          // 过滤词（触发符到光标处的那一段）→ 菜单按它把标签里的命中段加粗，
+          // 「为什么列出这几条」一眼可见。取不到区间时退化为空串 = 不加粗。
+          query: (() => {
+            try {
+              const s = Math.max(0, Number(completion.start) || 0);
+              const e = Math.max(s, Number(completion.end) || 0);
+              return value.slice(s, e);
+            } catch {
+              return '';
+            }
+          })(),
+          // 右对齐徽标：这条命令带参数面板就挂「⚙ 可调」——用户在按回车前就知道
+          // 会开面板而不是直接执行。hasSpecs 内部带缓存，逐帧问不贵。
+          badgeOf: (it) => {
+            try {
+              const cmd = String((it && (it.value || it.label)) || '').replace(/^\//, '');
+              if (!cmd || completion.kind !== 'slash') return '';
+              return require('../commandParamSpecs').hasSpecs(cmd, process.env)
+                ? require('./CompletionMenu').BADGE
+                : '';
+            } catch {
+              return '';
+            }
+          },
+          // 鼠标层：单击条目 = 对该条目走回车那套接受逻辑；悬停只在高亮（1003
+          // 全开时才有事件）。两个 handler 都不挂时组件逐字节回退旧渲染。
+          onItemPress: (idx) => {
+            const item = completion.items[idx];
+            // 与回车同一道闸：带可调参数的斜杠命令先开参数面板（openParamPanel
+            // 无规格时返回 false，这里就逐字节落回 acceptCompletionItem）。
+            // 同样先清空输入，Esc 会在面板里放回原文。
+            if (completion.kind === 'slash' && item && openParamPanel(item.value, value)) {
+              textInput.setText('', 0);
+              return;
+            }
+            acceptCompletionItem(completion, item, value);
+          },
+          onItemHover: (idx) => setSelectedIndex(idx),
         }
       : null;
     if (completion.active) {
@@ -6677,11 +7302,81 @@ function App({ options = {} }) {
     // `live < rows` 这条硬约束。
     const _otherChrome = _chromeNoMenu + completionH;
     promptH = Math.min(promptH, Math.max(3, termRows - _otherChrome - 3));
+
+    // ── 面板预算（与 _cmBudget 同一手法，见其注释）──────────────────────────
+    // 补全框「13 行的框在 10 行分屏里比整屏还高」的教训同样适用于结构化工具执行面板：
+    // 按「它想要几行」如实记账，会把 live 区推过 rows（40×10 实测 `viewport=3 extra=13
+    // ESC[2J ×1`）。故这里算「这个屏能给面板几行」= 屏高 − 账本里除面板以外的**全部**行
+    // − 视口下限 − 1，再交给 sink；画不下则整块让位、账本归零。
+    //
+    // 为什么必须放在这里（completionH 定稿之后）：面板预算要扣 completionH 的**真实值**。
+    // completionH 最终来自 `CompletionMenu.menuRowCount()`（可到 14 行，不是
+    // `Math.min(4, items+1)` 的 4 行）—— 曾按 4 行预留，实测 35/360 种几何下帧行数 > rows。
+    // 而 completionH 又依赖 _cmBudget，_cmBudget 依赖 _chromeNoMenu ⇒ 顺序只能是
+    //   _chromeNoMenu → _cmBudget → completionH → 面板预算
+    // 在 _chromeNoMenu 处一起算会成环，故面板那一项刻意不在 _chromeNoMenu 里。
+    //
+    // `_chromeExact` 与 `chromeRows(shares)` 逐项对应（**不含** _chromeNoMenu 里那个 +1：
+    // 那是给 promptH 封顶用的保守余量，不是 chromeRows 的成员；多扣一行面板就少一行）。
+    // 有了它，尾行纪律才是精确的：
+    //   chromeRows(shares) = _chromeExact + completionH + _toolExecRows ≤ rows − LIVE_MIN − 1
+    // ⇒ LIVE_MIN 地板永不被顶住 ⇒ painted = chrome + liveBudget 恒 < rows。
+    // 门关 → sink 的 panelRows 返 0 ⇒ 面板一项恒 0，本预算算出来也无消费者画出行。
+    const _chromeExact =
+      promptH + footerH + spinnerH + taskH + completionH + hintH + revSearchH + _approvalRows + slack + topbarH + sepH;
+    let _panelBudget = 0; // 0 = 一块都不给（= 面板整块让位）
+    try {
+      const _liveMin = require('../chromeBudget').LIVE_MIN;
+      _panelBudget = Number.isFinite(_liveMin)
+        ? Math.max(0, termRows - _chromeExact - _liveMin - 1)
+        : 0;
+    } catch {
+      /* 叶子不可用 → 不设预算，保持今日形态 */
+    }
+    // 面板的可用显示列数。**必须给**：Ink 的 <Text> 默认 wrap='wrap'，一行超宽就折成多行，
+    // 于是「账本记 7 行、终端画 13 行」——少算的那几行又把 live 区顶过 rows，正是本账本要防的
+    // 那类 fullscreen 清屏（本仓同一坑的明文记载见上方转录路径按 _mainContentCols 预折行）。
+    //
+    // 基准是 `_overlayCols` 而不是裸 `_resCols`：右栏 rail（KHY_SIDEBAR_RAIL，默认开）会把最右
+    // 几列预留给带外画的看板，`_overlayCols` 就是仓里「全宽元素的可用列宽」真源（其注释与这里
+    // 是同一条坑：「按全宽排版 → 软换行成没被高度账本数过的视觉行」）。漏算 rail 会欠钳十几列，
+    // 宽字段在 ink 里折行、续行落到盒子左沿。
+    // 宽屏(previewLayoutMode)分支还要再减掉固定侧栏 45 列（见下方 PreviewLayout 的 sidebar.width），
+    // 再减 2 是面板 Box 自己的 paddingX:1x2。
+    //
+    // 判据用 `previewLayoutMode` 单独一项，**不是**渲染分支的完整条件
+    // （previewLayoutMode && inputActive && !_overlayOwnsLive）：后者里的 inputActive /
+    // _overlayOwnsLive 在本函数此处还读不到（_overlayOwnsLive 到 :7555 才声明，TDZ）。
+    // 这与账本既有口径一致——topbarH/sepH 同样只按 previewLayoutMode 记，不叠那两个条件。
+    // 代价仅是「宽终端 + 输入不活跃」时 legacy 分支多钳 45 列（ cosmetic：不折行、不溢出），
+    // 换来的是不为列宽单开第三套布局判据。
+    // 列宽只影响文本、不影响行数（sink 的 _clip 保证一行钳完还是一行），故高度账本不受影响。
+    const _panelCols = Math.max(
+      0,
+      (Number(_overlayCols) > 0 ? Number(_overlayCols) : 80) - 2 - (previewLayoutMode ? 45 : 0)
+    );
+    // 权威面板行数：**只在这里算一次**。同一份 opts 也存到外层 _toolExecOpts，渲染处的
+    // <ToolExecutionPanel> 读它 —— 否则「账本记的行数」与「面板画的行数」会漂移。
+    // cols 与 maxRows/rows 同在同一个键里：sink 的报告缓存按 (投影, 指令, cap, cols) 缓存，
+    // 账本与面板传不同的 cols 会每帧互相驱逐缓存（§0.3 渲染 < 16ms）。
+    _toolExecOpts = {
+      messages: query.messages,
+      rows: termRows,
+      maxRows: _panelBudget,
+      cols: _panelCols,
+    };
+    const _toolExecRows = toolExecutionSink.panelRows(_toolExecOpts);
+    // 结构化工具执行面板（[DESIGN-ARCH-157]）占的行数**必须进这个账本**，而不是只进
+    // taskLineCount：taskLineCount 喂的是 resolveStreamReserve，而 _streamReserve  downstream
+    // 没有读者（<StreamingBlock> 是死导入）——加在那儿等于没加。真正决定 live 区高度的是
+    // 下面这个 shares → chromeBudget.liveBudget。少算一行，live 区就可能顶过 termRows，
+    // 触发 ink 的 fullscreen `\x1B[2J`（会擦掉转录）。门关时 _toolExecRows 恒 0（sink 的
+    // panelRows 门控返 0），故本行在默认行为下逐字节等价。
     const shares = {
       inputRows: promptH,
       statusRows: footerH,
       streamingRows: spinnerH,
-      extraRows: taskH + completionH + hintH + revSearchH + _approvalRows,
+      extraRows: taskH + completionH + hintH + revSearchH + _approvalRows + _toolExecRows,
       slack,
     };
     _viewportHeightShares = {
@@ -6713,6 +7408,7 @@ function App({ options = {} }) {
         sepH -
         slack -
         _approvalRows -
+        _toolExecRows -
         1
     );
   })();
@@ -6886,6 +7582,7 @@ function App({ options = {} }) {
         rollbackPicker: !!rollbackPicker,
         formFlow: !!formFlow,
         topologyView: !!topologyView,
+        paramPanel: !!paramPanel,
       },
       process.env
     );
@@ -6969,6 +7666,14 @@ function App({ options = {} }) {
           onResolve: resolveFormFlow,
         })
       : null,
+    // /命令的参数面板(↑↓ 选参数 · ←→ 调值 · 回车执行 · Esc 返回)。
+    paramPanel
+      ? h(ParamPanel, {
+          cmd: paramPanel.cmd,
+          specs: paramPanel.specs,
+          onResolve: resolveParamPanel,
+        })
+      : null,
     khyosOpen ? h(KhyOsView, { onExit: () => setKhyosOpen(false) }) : null,
     topologyView
       ? h(
@@ -7010,7 +7715,8 @@ function App({ options = {} }) {
           ` input=${_viewportHeightShares.inputRows} status=${_viewportHeightShares.statusRows}` +
           ` spinner=${_viewportHeightShares.streamingRows} extra=${_viewportHeightShares.extraRows}` +
           ` slack=${_viewportHeightShares.slack}` +
-          ` topbar=${_viewportHeightShares.topbarRows} sep=${_viewportHeightShares.sepRows}\n`
+          ` topbar=${_viewportHeightShares.topbarRows} sep=${_viewportHeightShares.sepRows}` +
+          ` panel=${_toolExecRows}\n`
       );
     } catch {
       /* diag only */
@@ -7097,6 +7803,9 @@ function App({ options = {} }) {
                         lines: _mainContentLines,
                         // 逐行角色(与 lines 同长同序);null → 不着色,逐字节回退。
                         lineRoles: _mainContentRoles,
+                        // 思维链折叠块底色(与 lineRoles 同长同帧的 folds 数组);
+                        // null → 不加底色,逐字节回退。
+                        lineFolds: _mainContentFolds,
                         // 折叠行逐条点击;null → 一行 handler 都不挂,逐字节回退。
                         lineClickAt,
                         scroll: mainViewportScroll,
@@ -7162,6 +7871,13 @@ function App({ options = {} }) {
           ..._taskProps,
           ...(tasksHidden ? { lines: [], hidden: 0, hiddenLines: [] } : {}),
         }),
+
+        // ── 区域④b TOOL_EXECUTION_PANEL(结构化工具执行输出·三级区域)─────────
+        // 第 1 区用户指令 / 第 2 区过程 / 第 3 区总结,次序由 toolExecutionReport 的
+        // REPORT_ZONES 决定(组件只按 zones 下标画)。opts 与账本**同一份**
+        // （_toolExecOpts，含 maxRows 预算）——各写一份就会「账本记 7 行、面板画 12 行」。
+        // 门关 → sink 返 null → 此处不画、账本加 0。
+        h(ToolExecutionPanel, { key: 'tool-exec-panel', ..._toolExecOpts }),
 
         // ── 区域⑤ COMPLETION_MENU(斜杠命令补全菜单)────────────────────────
         // props 来自账本（`_completionMenuProps`）：`maxRows` 决定一页画几条，
@@ -7281,6 +7997,15 @@ function App({ options = {} }) {
             })
           : null,
 
+        // /命令的参数面板(与 legacy 区域同一对 props,宽窄终端不分叉)。
+        paramPanel
+          ? h(ParamPanel, {
+              cmd: paramPanel.cmd,
+              specs: paramPanel.specs,
+              onResolve: resolveParamPanel,
+            })
+          : null,
+
         khyosOpen ? h(KhyOsView, { onExit: () => setKhyosOpen(false) }) : null,
 
         _topologyViewEl,
@@ -7301,6 +8026,9 @@ function App({ options = {} }) {
       lines: _inlineTranscript ? _mainContentLines : null,
       // 逐行角色,随 lines 一起进应用内 Viewport(见 PreviewLayout 的 lineRoles)。
       lineRoles: _inlineTranscript ? _mainContentRoles : null,
+      // 思维链折叠块底色,与 lineRoles 同生死(同一份行投影、同一帧)——
+      // 两侧必须同进同退,否则会出现「窄屏有底色、宽屏没有」的分叉。
+      lineFolds: _inlineTranscript ? _mainContentFolds : null,
       // 折叠行逐条点击的命中回调,与 lineRoles 同生死(同一份行投影、同一帧)。
       lineClickAt: _inlineTranscript ? lineClickAt : null,
       emptyText: '  暂无对话，输入消息开始……',
@@ -7312,6 +8040,13 @@ function App({ options = {} }) {
       onToolErrorClick: handleToolErrorClick,
       taskProps: { ..._taskProps, ...(tasksHidden ? { lines: [], hidden: 0, hiddenLines: [] } : {}) },
       tasksHidden,
+      // 区域④b 结构化工具执行面板（[DESIGN-ARCH-157]）。此前这里**漏了**：宽终端
+      // （previewLayoutMode，≥122 列）在这段早退里 return，而面板的渲染点在下方 legacy
+      // 分支 —— 于是宽终端上门开着、投影收着、账本扣着行，用户却一个字节都看不到。
+      // 元素由本文件造好递进去（PreviewLayout 不 require sink，与 bannerElement 同款约定）。
+      // opts 与账本同一份（_toolExecOpts，含 maxRows）⇒ 面板画几行，账本就是几行；
+      // 行数也已前馈进 liveRegionBudget，viewportHeight 已扣掉它，PreviewLayout 不重复扣。
+      toolExecutionPanel: h(ToolExecutionPanel, { key: 'tool-exec-panel', ..._toolExecOpts }),
       nowTick,
       value,
       offset,
@@ -7331,6 +8066,11 @@ function App({ options = {} }) {
       // 渲染它,宽终端(>=122 列)下 /菜单整棵不挂载(用户报「最大化后 / 菜单失效」)。
       completionMaxRows: _completionMaxRowsRef.current,
       completionCols: _overlayCols,
+      // 过滤词 + 鼠标回调：与 legacy 区域⑤ 的 `_completionMenuProps` 同一对值
+      // （ PreviewLayout 只转发，不自己造），宽终端与窄终端的菜单交互不分叉。
+      completionQuery: _completionMenuProps ? _completionMenuProps.query : '',
+      onCompletionItemPress: _completionMenuProps ? _completionMenuProps.onItemPress : undefined,
+      onCompletionItemHover: _completionMenuProps ? _completionMenuProps.onItemHover : undefined,
       hint,
       footer: {
         ...footer,
@@ -7348,10 +8088,12 @@ function App({ options = {} }) {
       sidebar: {
         width: 45,
         workDir: process.cwd(),
-        todos: buildSidebarTodos(),
-        mcp: buildSidebarMcp(),
-        lsp: buildSidebarLsp(),
-        tools: buildSidebarTools(query.streaming),
+        // 首帧后分帧填充（B4）：启动屏期/首帧不构建侧栏数据（buildSidebarTodos 走
+        // taskStore.snapshot 扫盘），填充帧起每帧照旧 —— 见 _panelsFilled effect 注释。
+        todos: _panelsFilled ? buildSidebarTodos() : [],
+        mcp: _panelsFilled ? buildSidebarMcp() : [],
+        lsp: _panelsFilled ? buildSidebarLsp() : [],
+        tools: _panelsFilled ? buildSidebarTools(query.streaming) : [],
         queueLen: query.queueLen || 0,
         notifications,
         inputEcho: value || '',
@@ -7429,3 +8171,5 @@ module.exports._liveActivity = _liveActivity;
 module.exports._spinnerProgress = _spinnerProgress;
 module.exports._queuePanelLines = _queuePanelLines;
 module.exports._liveClampBoundaryDecision = _liveClampBoundaryDecision;
+// Exported for unit tests: slash-command output capture (2026-10-10「一闪即过」修复）。
+module.exports._runRoutedCaptured = _runRoutedCaptured;
