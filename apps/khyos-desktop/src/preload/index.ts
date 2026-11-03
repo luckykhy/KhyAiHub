@@ -1,4 +1,6 @@
-﻿import { contextBridge, ipcRenderer } from 'electron'
+﻿// khy-canary: Khy-20261102-274-2KNQ50Q7
+import { contextBridge, ipcRenderer } from 'electron'
+import { createAmooSecretaryApi } from './amooSecretary'
 
 // Phase 0b: 暴露首批 20 个高频 RPC 方法（stub 实现）
 
@@ -31,13 +33,30 @@ const api = {
 
   // 文件系统
   openDirectoryPicker: () => ipcRenderer.invoke('fs:openDirectory'),
-  // 附件/图片选择（Composer 添加上下文 → 添加附件 / 上传图片）：真实路径数组
-  selectFiles: (filters?: { name: string; extensions: string[] }[]) => ipcRenderer.invoke('fs:selectFiles', filters),
+  // 附件/图片选择（Composer 添加上下文 → 添加附件 / 上传图片）：真实路径 + 字节数
+  // （大小在 main 侧 stat 后带回，渲染层不碰文件系统）
+  selectFiles: (filters?: { name: string; extensions: string[] }[]): Promise<{ path: string; size: number }[]> =>
+    ipcRenderer.invoke('fs:selectFiles', filters),
   readFile: (path: string) => ipcRenderer.invoke('fs:readFile', path),
   writeFile: (path: string, content: string) => ipcRenderer.invoke('fs:writeFile', path, content),
+  // 粘贴附件落盘（Composer Ctrl+V）：剪贴板里的文件/图片 → 临时文件 → 真实路径
+  saveClipboardFile: (name: string, base64: string): Promise<{ ok: boolean; path?: string; size?: number; error?: string }> =>
+    ipcRenderer.invoke('fs:saveClipboardFile', name, base64),
+  // 附件图片放大预览：main 读字节并编码为 data URL（渲染层不碰文件系统）
+  readImageDataUrl: (path: string): Promise<{ ok: boolean; dataUrl?: string; error?: string }> =>
+    ipcRenderer.invoke('fs:readImageDataUrl', path),
 
   // ── 代码查看（codeViewer.*）：四态只读预览 + workspace 文件索引 ──
   codeViewerRead: (filePath: string) => ipcRenderer.invoke('codeViewer:read', filePath),
+  // 内置编辑器写通道（viewer 编辑态 Ctrl+S）。main 侧三重约束：文件须已存在、
+  // 须在已登记/已展开的工作区内、mtime 基线不符拒写；成功带回新 mtime 作
+  // 下一次冲突基线。返回四态：ok / conflict / outsideWorkspace / missing / error。
+  codeEditorWrite: (
+    filePath: string,
+    content: string,
+    baseMtimeMs?: number,
+  ): Promise<{ ok: boolean; mtimeMs?: number; diskMtimeMs?: number; state?: string; error?: string }> =>
+    ipcRenderer.invoke('codeEditor:write', filePath, content, baseMtimeMs),
   workspaceListFiles: (query?: string) => ipcRenderer.invoke('workspace:listFiles', query || ''),
   // 工作区文件树（侧栏 fileTree 视图）：单目录懒加载
   workspaceReadTree: (dirPath?: string, query?: string) =>
@@ -95,7 +114,22 @@ const api = {
   createSession: (workspacePath: string) => ipcRenderer.invoke('session:create', workspacePath),
   listSessions: (limit?: number) => ipcRenderer.invoke('session:list', limit),
   // 会话真实消息流（点侧栏任务 / 重载会话）
+  // 返回的 messages 元素含 reasoning（思维链全文字符串，host 侧独立字段，
+  // 与拍平后的 content 正文分开）；这里 ipcRenderer.invoke 原样透传不裁剪。
   loadSession: (sessionId: string) => ipcRenderer.invoke('session:messages', sessionId),
+
+  // ── 会话分组（[DESIGN-ARCH-183]）────────────────────────────────
+  // 分组真源在后端 SQLite；渲染层不缓存第二份，读时 join。
+  listSessionGroups: (limit?: number) => ipcRenderer.invoke('sessionGroup:list', limit),
+  createSessionGroup: (title: string, color?: string) => ipcRenderer.invoke('sessionGroup:create', title, color),
+  updateSessionGroup: (groupId: string, patch: { title?: string; color?: string }) =>
+    ipcRenderer.invoke('sessionGroup:update', groupId, patch),
+  deleteSessionGroup: (groupId: string) => ipcRenderer.invoke('sessionGroup:delete', groupId),
+  moveSessionToGroup: (sessionId: string, groupId: string | null, projectKey?: string) =>
+    ipcRenderer.invoke('sessionGroup:move', sessionId, groupId, projectKey),
+  reorderSessionGroups: (order: string[]) => ipcRenderer.invoke('sessionGroup:reorder', order),
+  importSessionGroups: (groups: unknown[], assignments: Record<string, string>) =>
+    ipcRenderer.invoke('sessionGroup:import', groups, assignments),
 
   // ── 自动化（定时任务）：store 落盘 + 调度 tick + host ai.generate 执行 ──
   automationsList: () => ipcRenderer.invoke('automation:list'),
@@ -110,6 +144,14 @@ const api = {
   pluginsSetEnabled: (id: string, enabled: boolean) => ipcRenderer.invoke('plugin:setEnabled', id, enabled),
   pluginsUninstall: (id: string) => ipcRenderer.invoke('plugin:uninstall', id),
   pluginsCheckUpdates: () => ipcRenderer.invoke('plugin:checkUpdates'),
+  // 发现 tab：多生态勘察编目（只读）；force=true 跳过服务端 30 分钟缓存。
+  pluginsEcoMarket: (force?: boolean) => ipcRenderer.invoke('plugin:ecoMarket', !!force),
+  // 发现 tab：按条目的 khy-market/1 安装规格安装/卸载；values 是详情页填的
+  // env/header（密钥只在本次调用里传给主进程，不落台账）。
+  pluginsMarketInstall: (entry: Record<string, unknown>, values?: Record<string, unknown>) =>
+    ipcRenderer.invoke('plugin:marketInstall', entry, values),
+  pluginsMarketUninstall: (entry: Record<string, unknown>) =>
+    ipcRenderer.invoke('plugin:marketUninstall', entry),
 
   // ── MCP 设置页：mcpStore 落盘（用户自建服务器）+ plugin:list 宿主区（只读派生）──
   mcpList: () => ipcRenderer.invoke('mcp:list'),
@@ -146,11 +188,12 @@ const api = {
   getTokenUsage: () => ipcRenderer.invoke('token:usage'),
   // 用量历史：近 N 日曲线 + 按模型分桶（使用统计页，ZC-ALIGN-001 P13）
   getUsageHistory: (days?: number) => ipcRenderer.invoke('usage:history', days),
+  // 用量历史导出 CSV：只传 CSV 字符串，文件名由 main 自拼（渲染层不给路径）。
+  exportUsageCsv: (csv: string) => ipcRenderer.invoke('usage:exportCsv', csv),
   // 上下文窗口估算（estimateTokens 真源启发式 + 模型上下文窗口真源，P3-5/P3-6）
   estimateContextSize: (text?: string, model?: string) => ipcRenderer.invoke('context:size', text, model),
-  // 模型/provider 列表（providerPresets 真源，P3-7；adapterKey 传入时叠加
-  // 该 adapter 的运行时动态模型，P3-7③）
-  listModels: (adapterKey?: string) => ipcRenderer.invoke('models:list', adapterKey),
+  // 模型/provider 列表（终端同源采集叶 + presets 静态兜底，P3-7）
+  listModels: () => ipcRenderer.invoke('models:list'),
   // 运行中后台任务计数（P3-6①：host 在途 ai.generate 集合，Composer 按钮数据源）
   backgroundStatus: () => ipcRenderer.invoke('background:status'),
   // 电脑控制安全闸生效状态（host env 实读，ZC-ALIGN-002 I11）
@@ -201,6 +244,18 @@ const api = {
     ipcRenderer.on('remote:event', listener)
     return () => ipcRenderer.removeListener('remote:event', listener)
   },
+
+  // ── amoo 桥接（桌面端主入口：SidePane 的 amoo 标签）──
+  // 只有通道映射：token/端口/HTTP 全在 main（bridge 403 任何带 Origin 的请求）。
+  amoonStatus: () => ipcRenderer.invoke('amoon:status'),
+  amoonSend: (input: { text: string; openChat?: boolean }) => ipcRenderer.invoke('amoon:send', input),
+  amoonInbox: (limit?: number) => ipcRenderer.invoke('amoon:inbox', limit),
+  amoonStart: () => ipcRenderer.invoke('amoon:start'),
+  amoonStop: () => ipcRenderer.invoke('amoon:stop'),
+
+  // ── Amoo 秘书（问一句 + 中止 + 共享记忆 + 循环状态）：API 片段在 ./amooSecretary，
+  // 通道名与 main 的 amooSecretary:* 配对随片段走；这里只留一次 spread。
+  ...createAmooSecretaryApi(ipcRenderer),
 
   // ── 密钥与端点管理 (DESIGN-ARCH-091 §6, P1) ──
   // 入口①（§5.1）：主窗窗口菜单 / Ctrl+Shift+K 打开独立管理窗口

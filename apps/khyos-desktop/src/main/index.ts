@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-259-GYN5NSGG
 import { app, BrowserWindow, ipcMain, dialog, Menu, shell } from 'electron'
 import path from 'node:path'
 import os from 'node:os'
@@ -8,6 +9,8 @@ import { openKeyManagerWindow } from './keyManagerWindow'
 import { registerKeyManagerIpc } from './keyManager/ipc'
 import { ptyCreate, ptyWrite, ptyResize, ptyKill, disposeAllPtys } from './ptyHost'
 import { createRemoteHub, type RemoteHub } from './remote/index'
+import { createAmoonHub, resolveBridgeRoot, type AmoonHub } from './amoon/index'
+import { handleAmooSecretaryHostMessage, installAmooSecretaryBridge, releaseAmooSecretary } from './amooSecretaryBridge'
 import { getSettingsStore, setSetting, getTheme, setTheme } from './settingsStore'
 import { getDataHome, baseHomeFile, _resetDataHomeCache } from './keyManager/keyStore'
 import {
@@ -26,6 +29,9 @@ import {
   setPluginEnabled,
   uninstallPlugin,
   checkPluginUpdates,
+  getEcoMarketCatalog,
+  installEcoMarketEntry,
+  uninstallEcoMarketEntry,
 } from './pluginStore'
 import {
   getMcpServers,
@@ -98,6 +104,8 @@ let schedulerProcess: ReturnType<typeof fork> | null = null
 // 移动端远程控制（ZC-ALIGN-002 M3）：协议与监听都在后端 src/webRemoteControl/，
 // 这里只持有接线实例，退出时显式 stop。
 let remoteHub: RemoteHub | null = null
+// amoo 桥接：HTTP/operator token 全在主进程，渲染层只经 amoon:* 通道拿脱敏状态。
+let amoonHub: AmoonHub | null = null
 // 主窗引用。second-instance（用户重复点图标）要把它恢复/置前，而不是新建一个 ——
 // createWindow 返回的 win 原先没人保存，所以重复启动除了再建一个窗口别无选择。
 let mainWindow: BrowserWindow | null = null
@@ -119,6 +127,35 @@ async function getWorkspaceRoot(): Promise<string> {
     /* fail-soft: settings unreadable → cwd */
   }
   return process.cwd()
+}
+
+// 编辑器写通道的根白名单 = 已登记工作区（当前 / MRU / 项目登记）∪ 本会话
+// 文件树合法展开过的根。会话级工作区（task.workspacePath）可能落在登记集合
+// 之外，但用户要能在文件树里看到它才打得开 —— readTree 顺手登记，写通道据此
+// 放行；消息引用一个从没展开过的仓外路径，仍然只读、不可写。
+const browsedTreeRoots = new Set<string>()
+
+async function editorWritableRoots(): Promise<Set<string>> {
+  const roots = new Set<string>([await getWorkspaceRoot(), ...browsedTreeRoots])
+  try {
+    const settings = await getSettingsStore()
+    const recent = settings.desktopRecentWorkspaces
+    if (Array.isArray(recent)) {
+      for (const entry of recent) {
+        if (typeof entry === 'string' && entry.trim()) roots.add(path.resolve(entry.trim()))
+      }
+    }
+    const projects = settings.desktopProjects
+    if (Array.isArray(projects)) {
+      for (const entry of projects) {
+        const p = (entry as { path?: unknown } | null)?.path
+        if (typeof p === 'string' && p.trim()) roots.add(path.resolve(p.trim()))
+      }
+    }
+  } catch {
+    /* fail-soft: 至少还有当前工作区与本会话展开过的根 */
+  }
+  return roots
 }
 
 // ── 工作空间候选集（[DESIGN-ARCH-125] P-02）──
@@ -177,6 +214,16 @@ async function switchWorkspace(rawPath: string): Promise<{ ok: boolean; path?: s
 const pendingAi = new Map<string, { resolve: (v: unknown) => void; win: BrowserWindow }>()
 // Pending session.list requests: id → resolver.
 const pendingSessionList = new Map<string, { resolve: (v: unknown) => void }>()
+// Pending sessionGroup.* requests: id → resolver（分组操作共用一张表）。
+const pendingSessionGroup = new Map<string, { resolve: (v: unknown) => void }>()
+
+// 会话列表的 host 往返超时。15s 是从「host 冷启动要同步 require 一堆后端模块」
+// 的年代留下来的：首次请求要付这笔冷启动成本，容易踩线。现在 host 在启动后
+// 主动热身（见 host/index.ts 的 warmUpHostModules），这里的超时只兜真正的
+// 卡死，所以给到 20s；超时后 main 还会自动重试一次。
+const SESSION_LIST_TIMEOUT_MS = 20_000
+// 分组是纯本地 SQLite 操作，应当毫秒级返回 —— 10s 超时足够宽松。
+const SESSION_GROUP_TIMEOUT_MS = 10_000
 // Pending session.create requests: id → resolver.
 const pendingSessionCreate = new Map<string, { resolve: (v: unknown) => void }>()
 // Pending session.messages requests: id → resolver.
@@ -189,6 +236,12 @@ const pendingUsageHistory = new Map<string, { resolve: (v: unknown) => void }>()
 const pendingContextSize = new Map<string, { resolve: (v: unknown) => void }>()
 // Pending models.list requests: id → resolver.
 const pendingModelList = new Map<string, { resolve: (v: unknown) => void }>()
+// models.list 的 IPC 超时。host 侧这条链路走的是「全量采集 + 逐适配器探测」
+// （collectModelEntries）：gateway.init() 最长 15s + 探测 30s + 抖动重试 + 逐适配器
+// listModels，最坏合计约 60s。原来的 15s 远小于它 → 采集还在跑，IPC 先超时，
+// host 回 {ok:false}，模型选择器于是永远空（useModelCatalog 走 error 分支）。
+// 终端侧对同一采集有 45s 的构建预算（KHY_MODEL_BUILD_TIMEOUT_MS），桌面侧与之对齐。
+const MODELS_LIST_TIMEOUT_MS = 45000
 // Pending desktopGate requests: id → resolver.
 const pendingDesktopGate = new Map<string, { resolve: (v: unknown) => void }>()
 // Pending background.status requests: id → resolver.
@@ -212,6 +265,8 @@ const HOST_EVENT_TO_RENDERER_CHANNEL: Record<string, string> = {
   'ai.toolResult': 'ai:toolResult',
   'ai.controlRequest': 'ai:controlRequest',
   'ai.result': 'ai:result',
+  // amooSecretary.event 不在此表：秘书接线（含它的无主事件广播）整体在
+  // ./amooSecretaryBridge，通道映射随接线走。
 }
 
 // Parse `git status --porcelain=v1 -z --branch` output into the review panel's
@@ -303,6 +358,16 @@ function handleHostMessage(msg: unknown): void {
     }
     return
   }
+  // 会话分组（[DESIGN-ARCH-183]）：所有分组操作共用一个 result 类型 + 一张
+  // pending 表 —— 分组有 7 个操作，逐个开 result 类型只会让路由表变成噪音。
+  if (m.type === 'sessionGroup.result' && m.id) {
+    const entry = pendingSessionGroup.get(m.id)
+    if (entry) {
+      pendingSessionGroup.delete(m.id)
+      entry.resolve(m)
+    }
+    return
+  }
   if (m.type === 'session.createResult' && m.id) {
     const entry = pendingSessionCreate.get(m.id)
     if (entry) {
@@ -370,6 +435,8 @@ function handleHostMessage(msg: unknown): void {
     }
     return
   }
+  // amooSecretary 的 result 认领与 event 广播都在 ./amooSecretaryBridge，这里只留挂钩。
+  if (handleAmooSecretaryHostMessage(m)) return
   // Automation runs ride the same host ai.generate channel; results settle the
   // run history entry instead of being forwarded to a renderer window.
   if (m.type === 'ai.result' && m.id && String(m.id).startsWith(AUTOMATION_HOST_PREFIX)) {
@@ -489,7 +556,14 @@ async function fireAutomation(id: string, trigger: 'manual' | 'schedule'): Promi
   const hostReqId = `${AUTOMATION_HOST_PREFIX}${Date.now().toString(36)}_${++aiSeq}`
   runningAutomationIds.add(id)
   pendingAutomationRuns.set(hostReqId, { automationId: id, startedAt: Date.now() })
-  hostProcess.send({ type: 'ai.generate', id: hostReqId, prompt: a.prompt, options: {} })
+  // 来源标记（[DESIGN-ARCH-183] §4）：定时任务产生的会话落盘时带 source，
+  // 侧栏「分组」视图自动归入「定时任务」组 —— 不靠标题前缀辨认。
+  hostProcess.send({
+    type: 'ai.generate',
+    id: hostReqId,
+    prompt: a.prompt,
+    options: { source: { type: 'automation', id } },
+  })
   return { ok: true }
 }
 
@@ -558,8 +632,16 @@ function settleAutomationRunsOnQuit(): void {
 }
 
 function startHostProcess() {
+  // 打包态：host 落在 app.asar 里，而 fork 出来的子进程是 Electron-as-Node ——
+  // asar 支持只在主/渲染进程生效，子进程读不到 asar 里的文件（报 Cannot find module）。
+  // 所以优先指向 asar.unpacked 里的实体副本（package.json 的 asarUnpack 已包含 out/host/**）。
   const hostPath = path.join(__dirname, '../host/index.js')
-  hostProcess = fork(hostPath, [], { stdio: ['pipe', 'pipe', 'pipe', 'ipc'] })
+  const unpackedHostPath = hostPath.replace(
+    `${path.sep}app.asar${path.sep}`,
+    `${path.sep}app.asar.unpacked${path.sep}`,
+  )
+  const finalHostPath = fs.existsSync(unpackedHostPath) ? unpackedHostPath : hostPath
+  hostProcess = fork(finalHostPath, [], { stdio: ['pipe', 'pipe', 'pipe', 'ipc'] })
   // EPIPE guard: writing to a closed stdout/stderr pipe throws EPIPE
   // (uncaught in the main process = crash). Wrap every relayed line so a
   // host exit mid-stream degrades to a logged note instead of a kill.
@@ -674,6 +756,9 @@ async function createWindow() {
   mainWindow = win
   win.on('closed', () => {
     if (mainWindow === win) mainWindow = null
+    // 最后一个窗口也没了：没有人再看 Amoo 的轮询进度，车道停推（手机侧任务
+    // 不动——中止是用户显式那一下，这里不代劳）。还有窗口开着时照常轮询。
+    if (BrowserWindow.getAllWindows().length === 0) releaseAmooSecretary(hostProcess)
   })
 
   // Persist window geometry on close so the next launch restores it.
@@ -761,6 +846,41 @@ async function createWindow() {
   ipcMain.handle('remote:revoke', (_e, deviceId: string) => remoteHub!.revoke(String(deviceId || '')))
   ipcMain.handle('remote:probeBridge', () => remoteHub!.probeBridge())
 
+  // ── amoo 桥接（桌面端主入口：SidePane 的 amoo 标签）──
+  // 与 remote 同一注册点。状态/发送/回执全部在主进程完成：渲染层拿不到 token，
+  // 也不自己 fetch（bridge 会 403 任何带 Origin 的请求）。
+  // 注意：桌面端退出不 stop daemon —— daemon 是 detached 的，CLI 与桌面端共用。
+  // 从 out/main 上溯到仓库根找桥源码；打包后找不到时 cliFound=false，UI 给提示。
+  amoonHub = createAmoonHub({
+    bridgeRoot: resolveBridgeRoot(process.env, __dirname),
+    logger: (line) => console.log(line),
+  })
+  const amoonSafe = async (fn: () => Promise<unknown>): Promise<unknown> => {
+    try {
+      return await fn()
+    } catch (err) {
+      const message = String((err as Error)?.message || err)
+      console.log('[amoon] 未处理错误:', message)
+      return { ok: false, error: { code: 'internal_error', message } }
+    }
+  }
+  ipcMain.handle('amoon:status', () => amoonSafe(() => amoonHub!.status()))
+  ipcMain.handle('amoon:send', (_e, input?: { text?: unknown; openChat?: unknown }) =>
+    amoonSafe(() => amoonHub!.send({ text: String(input?.text ?? ''), openChat: input?.openChat === true })),
+  )
+  ipcMain.handle('amoon:inbox', (_e, limit?: unknown) =>
+    amoonSafe(() => amoonHub!.inbox(typeof limit === 'number' ? limit : 20)),
+  )
+  ipcMain.handle('amoon:start', () => amoonSafe(() => amoonHub!.start()))
+  ipcMain.handle('amoon:stop', () => amoonSafe(() => amoonHub!.stop()))
+
+  // ── Amoo 秘书（桌面端问 Amoo 一句 + 中止 + 共享记忆 + 循环状态）─────────
+  // 六个渲染层通道、pending 表与无主事件广播整体在 ./amooSecretaryBridge
+  // （错误形状的归一也在那里：normalizeAmooReply 只在 pending 认领这一处包）。
+  // 这里只留一次安装；host fork 句柄每次调用现取——这些通道在 startHostProcess
+  // 之前就已注册，安装时快照会拿到 null。
+  installAmooSecretaryBridge(ipcMain, () => hostProcess)
+
   // ── 工作空间选择（[DESIGN-ARCH-125] P-01/P-02）──
   // 读：当前根 + 最近打开候选集 + 项目登记。当前值一律经 getWorkspaceRoot() 的唯一真源
   // 给出；desktopRecentWorkspaces 只回答「可切到哪几个」，不参与「当前是谁」。
@@ -773,6 +893,10 @@ async function createWindow() {
       current: await getWorkspaceRoot(),
       recents: await readRecentWorkspaces(),
       projects: Array.isArray(settings.desktopProjects) ? settings.desktopProjects : [],
+      // 系统临时目录根：侧栏判定层据此把 Temp 下的会话归入「未归属」。
+      // 这是**环境事实**（不是按目录名猜形状），所以不违反 177 §3.2 的反模式。
+      // 主进程唯一一处知道 os.tmpdir()，渲染层不自己拼路径。
+      tempRoots: [os.tmpdir()],
     }
   })
   // 切：带 target 就切到它（选择器点「最近打开」），不带就弹系统目录框
@@ -869,23 +993,106 @@ async function createWindow() {
       return result.canceled ? null : result.filePaths[0]
   })
   // 附件/图片选择（Composer 添加上下文 → 添加附件 / 上传图片）。filters 由
-  // 调用方给出（附件：文本类扩展名；图片：image/*），multiSelections 允许一次
-  // 多个 —— 返回值是真实路径数组，取消返回空数组（不再自造 file_N.tsx 假名）。
+  // 调用方给出（按格式桶分组），multiSelections 允许一次多个 —— 返回值是真实
+  // 路径 + 字节数，取消返回空数组（不再自造 file_N.tsx 假名）。
+  // 大小一并带回来是因为附件列表要显示它；在 main 侧 stat 比让渲染层再开一条
+  // 通道省一次 IPC 往返，渲染层也不必碰文件系统。stat 失败按 0 处理（文件可能
+  // 在选中后立刻被移走，不该因此让整个选择失败）。
   ipcMain.handle('fs:selectFiles', async (_e, filters?: { name: string; extensions: string[] }[]) => {
     const result = await dialog.showOpenDialog(win, {
       properties: ['openFile', 'multiSelections'],
       filters: Array.isArray(filters) && filters.length > 0 ? filters : undefined,
     })
-    return result.canceled ? [] : result.filePaths
+    if (result.canceled) return []
+    return Promise.all(
+      result.filePaths.map(async (filePath) => {
+        let size = 0
+        try {
+          size = (await fs.promises.stat(filePath)).size
+        } catch {
+          size = 0
+        }
+        return { path: filePath, size }
+      })
+    )
   })
   ipcMain.handle('fs:readFile', async (e, filePath: string) => {
     const fs = await import('fs/promises')
     return fs.readFile(filePath, 'utf-8')
   })
+  // 附件图片放大预览（AttachmentList 的灯箱）。不能复用 fs:readFile —— 那条通道
+  // 是 utf-8，二进制图片会被解码破坏；也不注册 file:// 协议，dev 下渲染层是
+  // http://localhost，file:// 会被当成跨源。这里按扩展名定 MIME、整体编码成
+  // data URL，20MB 上限防止一张大图把渲染进程的内存打满。
+  ipcMain.handle('fs:readImageDataUrl', async (_e, filePath: string) => {
+    const IMAGE_PREVIEW_LIMIT = 20 * 1024 * 1024
+    const MIME_BY_EXT: Record<string, string> = {
+      png: 'image/png',
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      gif: 'image/gif',
+      webp: 'image/webp',
+      bmp: 'image/bmp',
+      svg: 'image/svg+xml',
+      ico: 'image/x-icon',
+      avif: 'image/avif',
+      heic: 'image/heic',
+    }
+    try {
+      if (typeof filePath !== 'string' || !filePath.trim()) {
+        return { ok: false, error: '缺少文件路径' }
+      }
+      const ext = path.extname(filePath).slice(1).toLowerCase()
+      const mime = MIME_BY_EXT[ext]
+      if (!mime) {
+        return { ok: false, error: `不是可预览的图片格式（.${ext || '无扩展名'}）：请用系统看图工具打开 ${filePath}` }
+      }
+      const stat = await fs.promises.stat(filePath)
+      if (!stat.isFile()) {
+        return { ok: false, error: `${filePath} 不是文件，无法预览` }
+      }
+      if (stat.size > IMAGE_PREVIEW_LIMIT) {
+        return {
+          ok: false,
+          error: `图片 ${(stat.size / (1024 * 1024)).toFixed(1)} MB，超过 20 MB 预览上限：请用系统看图工具打开 ${filePath}`,
+        }
+      }
+      const buf = await fs.promises.readFile(filePath)
+      return { ok: true, dataUrl: `data:${mime};base64,${buf.toString('base64')}` }
+    } catch (err) {
+      return { ok: false, error: `读取图片 ${filePath} 失败：${String(err)}，请确认文件仍存在` }
+    }
+  })
   ipcMain.handle('fs:writeFile', async (e, filePath: string, content: string) => {
     const fs = await import('fs/promises')
     await fs.writeFile(filePath, content, 'utf-8')
     return true
+  })
+  // ── 粘贴附件落盘（Composer 的 Ctrl+V）────────────────────────────────
+  // 渲染层把剪贴板里的文件/图片读成 base64 送过来，这里落盘成临时文件并返回
+  // 真实路径 —— 附件要的是路径（后续由后端按路径读），不是 dataURL。
+  // 落点：系统临时目录下的 KhyOS-Desktop/clipboard（与 GPUCache 同族目录，
+  // 见文件头「缓存目录」注释：放系统临时目录，避免锁与权限问题）。
+  // 文件名做净化（只保留 [A-Za-z0-9._-]），防路径穿越。
+  ipcMain.handle('fs:saveClipboardFile', async (_e, fileName: string, base64: string) => {
+    try {
+      if (typeof fileName !== 'string' || !fileName.trim()) {
+        return { ok: false, error: '缺少文件名' }
+      }
+      if (typeof base64 !== 'string' || !base64.length) {
+        return { ok: false, error: '内容为空' }
+      }
+      const dir = path.join(os.tmpdir(), 'KhyOS-Desktop', 'clipboard')
+      await fs.promises.mkdir(dir, { recursive: true })
+      const safe = path.basename(fileName).replace(/[^\w.\-]+/g, '_').slice(0, 80) || 'pasted'
+      const target = path.join(dir, `${Date.now()}-${safe}`)
+      const bytes = Buffer.from(base64, 'base64')
+      await fs.promises.writeFile(target, bytes)
+      // size 直接取写入的字节数，不用再 stat 一次。
+      return { ok: true, path: target, size: bytes.length }
+    } catch (err) {
+      return { ok: false, error: String(err) }
+    }
   })
 
   // ── 代码查看（codeViewer.* 文案）— 只读预览通道，四态契约 ──
@@ -913,9 +1120,59 @@ async function createWindow() {
       if (probe.includes(0)) {
         return { ok: false, state: 'binary' as const }
       }
-      return { ok: true, state: 'ok' as const, content: buf.toString('utf-8'), size: buf.length }
+      return { ok: true, state: 'ok' as const, content: buf.toString('utf-8'), size: buf.length, mtimeMs: Math.round(stat.mtimeMs) }
     } catch {
       return { ok: false, state: 'missing' as const }
+    }
+  })
+
+  // ── 内置代码编辑器写通道（viewer 编辑态 Ctrl+S）────────────────────
+  // 与 fs:writeFile（渲染层任意路径直写的孤儿 stub，usage:exportCsv 注释
+  // 点名的反面先例）划清界限，三重约束：
+  //   1. 目标必须是**已存在**的常规文件（v1 只改不建）；
+  //   2. 路径必须落在已登记工作区根（当前/MRU/项目）或本会话用文件树合法
+  //      展开过的目录内 —— 消息引用一个仓外路径就能盲写是不被允许的；
+  //   3. 渲染层带打开时的 mtime 作基线，磁盘上已被外部改动就拒写（conflict），
+  //      由用户明示覆盖还是重载，不静默丢对方的改动。
+  // 写入走 tmp + rename 原子替换（同 settingsStore.setSetting 模式），半截
+  // 文件不会留在原路径上。
+  ipcMain.handle('codeEditor:write', async (_e, filePath: string, content: string, baseMtimeMs?: number) => {
+    try {
+      if (typeof filePath !== 'string' || !filePath.trim()) {
+        return { ok: false, state: 'missing' as const, error: '文件路径为空：请先打开一个文件再保存' }
+      }
+      if (typeof content !== 'string') {
+        return { ok: false, state: 'error' as const, error: '保存内容不是文本：已拒绝写入' }
+      }
+      const resolved = path.resolve(filePath.trim())
+      const roots = await editorWritableRoots()
+      const inside = [...roots].some((root) => resolved === root || resolved.startsWith(root + path.sep))
+      if (!inside) {
+        return {
+          ok: false,
+          state: 'outsideWorkspace' as const,
+          error: `拒绝写入 ${resolved}：该文件不在已登记的工作区或本会话打开过的文件树内，请先用「打开工作区」登记它的目录`,
+        }
+      }
+      const stat = await fs.promises.stat(resolved)
+      if (!stat.isFile()) {
+        return { ok: false, state: 'missing' as const, error: `目标不是已存在的文件：${resolved}` }
+      }
+      if (typeof baseMtimeMs === 'number' && Number.isFinite(baseMtimeMs) && Math.round(stat.mtimeMs) !== Math.round(baseMtimeMs)) {
+        return {
+          ok: false,
+          state: 'conflict' as const,
+          diskMtimeMs: Math.round(stat.mtimeMs),
+          error: `文件已在磁盘上被修改（打开后磁盘又变了）：直接覆盖会丢掉对方的改动，请选择「覆盖写入」或「重新加载」`,
+        }
+      }
+      const tmp = `${resolved}.khyos-editor-tmp`
+      await fs.promises.writeFile(tmp, content, 'utf-8')
+      await fs.promises.rename(tmp, resolved)
+      const after = await fs.promises.stat(resolved)
+      return { ok: true, mtimeMs: Math.round(after.mtimeMs) }
+    } catch (err) {
+      return { ok: false, state: 'error' as const, error: `保存失败：${String((err as Error)?.message || err)}，请检查文件是否被其他程序占用` }
     }
   })
 
@@ -971,6 +1228,8 @@ async function createWindow() {
   // 为 "pruned" 条目并计入，由渲染层按需懒加载展开。query 提供子串过滤。
   ipcMain.handle('workspace:readTree', async (_e, dirPath: string, query: string) => {
     const root = (typeof dirPath === 'string' && dirPath.trim()) ? path.resolve(dirPath.trim()) : await getWorkspaceRoot()
+    // 登记合法展开过的根：编辑器写通道的白名单据此纳入会话级工作区
+    browsedTreeRoots.add(root)
     const SKIP_DIRS = new Set([
       'node_modules', '.git', 'dist', 'out', 'build', '.khy', 'coverage', '.next', '.turbo',
     ])
@@ -1039,23 +1298,78 @@ async function createWindow() {
 
   // 会话 — 转发给 host 进程，host 动态 require KhyOS 后端 sessionPersistence（CH-2），
   // 读本地 .khy/sessions 真源（与 `khy` CLI 同源），替代旧的静态 [] stub。
+  //
+  // **一次超时不等于会话读不到**：host 可能正卡在一次冷启动的模块加载（首次
+  // session.list 会同步 require sessionPersistence + 搜索索引）上，或被别的请求
+  // 排在后面。旧实现超时即失败，渲染层又没有重试 —— 一次丢包就把整个侧栏变成
+  // 「会话列表读取失败」，必须重启应用才恢复（用户实测：总是加载失败）。
+  // 现在：超时后自动重试一次（host 已热身时第二次必然秒回），仍失败才报失败。
   ipcMain.handle('session:list', async (e, limit?: number) => {
     if (!hostProcess || !hostProcess.connected) {
       return { ok: false, sessions: [], error: 'host 进程未启动：请重启 KhyOS Desktop 后重试' }
     }
-    const id = `sess_list_${Date.now()}_${++aiSeq}`
-    const senderWin = BrowserWindow.fromWebContents(e.sender)
+    const runOnce = (): Promise<{ ok: boolean; sessions?: unknown[]; error?: string }> => {
+      const id = `sess_list_${Date.now()}_${++aiSeq}`
+      return new Promise((resolve) => {
+        const timer = setTimeout(() => {
+          pendingSessionList.delete(id)
+          resolve({ ok: false, sessions: [], error: '会话列表读取超时：请查看导出日志排查 host 状态' })
+        }, SESSION_LIST_TIMEOUT_MS)
+        pendingSessionList.set(id, {
+          resolve: (v: unknown) => { clearTimeout(timer); resolve(v as { ok: boolean; sessions?: unknown[]; error?: string }) },
+        })
+        hostProcess!.send({ type: 'session.list', id, limit: typeof limit === 'number' ? limit : 50 })
+      })
+    }
+    const first = await runOnce()
+    if (first.ok || first.error !== '会话列表读取超时：请查看导出日志排查 host 状态') return first
+    // 第一次超时 → 重试一次（host 这时通常已完成热身）
+    console.log('[session] 会话列表读取超时，自动重试一次')
+    const second = await runOnce()
+    if (second.ok) return second
+    return {
+      ...second,
+      error: '会话列表读取失败：host 进程连续两次无响应，请重启 KhyOS Desktop 后重试',
+    }
+  })
+
+  // ── 会话分组（[DESIGN-ARCH-183]）────────────────────────────────────
+  // 分组的唯一所有者是后端 SQLite（sessionGroupService）；main 只做转发，
+  // 不缓存第二份真源。超时比会话列表短：分组是纯本地 DB 操作，应当毫秒级返回。
+  const askSessionGroup = async (
+    payload: Record<string, unknown>,
+    timeoutMs = SESSION_GROUP_TIMEOUT_MS,
+  ): Promise<{ ok: boolean; result?: unknown; error?: string }> => {
+    if (!hostProcess || !hostProcess.connected) {
+      return { ok: false, error: 'host 进程未启动：请重启 KhyOS Desktop 后重试' }
+    }
+    const id = `sess_group_${Date.now()}_${++aiSeq}`
     return new Promise((resolve) => {
       const timer = setTimeout(() => {
-        pendingSessionList.delete(id)
-        resolve({ ok: false, sessions: [], error: '会话列表读取超时：请查看导出日志排查 host 状态' })
-      }, 15000)
-      pendingSessionList.set(id, {
-        resolve: (v: unknown) => { clearTimeout(timer); resolve(v) },
+        pendingSessionGroup.delete(id)
+        resolve({ ok: false, error: '会话分组读取超时：请查看导出日志排查 host 状态' })
+      }, timeoutMs)
+      pendingSessionGroup.set(id, {
+        resolve: (v: unknown) => { clearTimeout(timer); resolve(v as { ok: boolean; result?: unknown; error?: string }) },
       })
-      hostProcess!.send({ type: 'session.list', id, limit: typeof limit === 'number' ? limit : 50 })
+      hostProcess!.send({ type: 'sessionGroup.request', id, ...payload })
     })
-  })
+  }
+
+  ipcMain.handle('sessionGroup:list', async (_e, limit?: number) =>
+    askSessionGroup({ op: 'list', limit: typeof limit === 'number' ? limit : 50 }))
+  ipcMain.handle('sessionGroup:create', async (_e, title: string, color?: string) =>
+    askSessionGroup({ op: 'create', title, color }))
+  ipcMain.handle('sessionGroup:update', async (_e, groupId: string, patch: { title?: string; color?: string }) =>
+    askSessionGroup({ op: 'update', groupId, patch }))
+  ipcMain.handle('sessionGroup:delete', async (_e, groupId: string) =>
+    askSessionGroup({ op: 'delete', groupId }))
+  ipcMain.handle('sessionGroup:move', async (_e, sessionId: string, groupId: string | null, projectKey?: string) =>
+    askSessionGroup({ op: 'move', sessionId, groupId, projectKey }))
+  ipcMain.handle('sessionGroup:reorder', async (_e, order: string[]) =>
+    askSessionGroup({ op: 'reorder', order }))
+  ipcMain.handle('sessionGroup:import', async (_e, groups: unknown[], assignments: Record<string, string>) =>
+    askSessionGroup({ op: 'import', groups, assignments }))
 
   // 新建会话 — 同 session:list 链路：host 直调 sessionPersistence.persistSession
   // （CH-2），空消息 + cwd/projectDir 元数据落盘，返回新 sessionId。
@@ -1081,6 +1395,9 @@ async function createWindow() {
   // 同 session:list 链路：host 直调 sessionPersistence.restoreSession（CH-2），
   // 返回 { sessionId, title, model, messages[] }。没有这条通道时点会话只换高亮
   // 不换内容（复刻端侧栏「跳转」形同虚设）。
+  // messages 元素形如 { role, content, timestamp, reasoning }：content 是拍平后的
+  // 正文字符串，reasoning 是思维链全文字符串（host 侧独立字段，不并进 content）。
+  // 这里 resolve 的是整个 host 消息对象，不做字段裁剪，renderer 原样收到。
   ipcMain.handle('session:messages', async (e, sessionId: string) => {
     if (typeof sessionId !== 'string' || !sessionId.trim()) {
       return { ok: false, messages: [], error: '会话 ID 为空：请先在左侧任务列表中选择一个会话' }
@@ -1125,9 +1442,10 @@ async function createWindow() {
     })
   })
 
-  // 用量历史（近 N 日 + 按模型分桶）— 转发给 host，host 读后端
-  // tokenUsageService.getUsageHistory/getModelUsage（CH-2），替代使用统计页的
-  // 自造假数据（ZC-ALIGN-001 P13）。
+  // 用量历史（近 N 日 + 按模型分桶）—转发给 host，host 读后端
+  // tokenUsageService.getUsageHistory/getModelUsage/getCostCoverage/getUsageFileStamp（CH-2）。
+  // 后端真源已兑现这四个导出；host 侧对后端新增导出一律有 typeof 兜底，
+  // 所以本 handler 不做字段白名单（entry.resolve(m) 是整条原样透传）。
   ipcMain.handle('usage:history', async (_e, days?: number) => {
     if (!hostProcess || !hostProcess.connected) {
       return { ok: false, history: null, models: null, error: 'host 进程未启动：请重启 KhyOS Desktop 后重试' }
@@ -1143,6 +1461,30 @@ async function createWindow() {
       })
       hostProcess!.send({ type: 'usage.history', id, days: typeof days === 'number' && days > 0 ? Math.floor(days) : 30 })
     })
+  })
+
+  // 用量历史导出 CSV。CSV 字符串由渲染层拼（数据已在它内存里），本侧只负责落盘。
+  //
+  // **文件名完全由 main 自拼**（usage-YYYYMMDD-HHmm.csv），忽略渲染层传来的任何内容：
+  // 渲染层能给的只是路径，而 dataHomeFile(name) 只是 path.join(getDataHome(), name)
+  // —— '../../' 会原样出去。health:audit-export(dest) 更宽（path.resolve + mkdir -p
+  // + writeFile 的任意路径写入，见 keyManager/audit.ts:55-64），那是反面先例：
+  // 只抄「main 落盘」这个形状，不抄「渲染层给路径」。
+  ipcMain.handle('usage:exportCsv', async (_e, csv: string) => {
+    if (typeof csv !== 'string' || !csv.trim()) {
+      return { ok: false, error: '导出失败：CSV 内容为空，请先加载用量数据后重试' }
+    }
+    const now = new Date()
+    const pad = (n: number) => String(n).padStart(2, '0')
+    const fileName = `usage-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}.csv`
+    const dest = path.join(getDataHome(), fileName)
+    try {
+      await fs.promises.mkdir(getDataHome(), { recursive: true })
+      await fs.promises.writeFile(dest, csv, 'utf-8')
+      return { ok: true, fileName, path: dest }
+    } catch (e) {
+      return { ok: false, error: `导出失败（${e instanceof Error ? e.message : String(e)}）：请检查数据目录 ${getDataHome()} 是否可写` }
+    }
   })
 
   // 运行中后台任务计数（P3-6①）— 转发给 host，host 统计在途 ai.generate
@@ -1206,7 +1548,7 @@ async function createWindow() {
 
   // 模型/provider 列表 — 转发给 host，host 用后端 providerPresets.getProviderPresets()
   // （模型选择器真源，CH-2，ZC-ALIGN-001 P3-7）。
-  ipcMain.handle('models:list', async (_e, adapterKey?: string) => {
+  ipcMain.handle('models:list', async () => {
     if (!hostProcess || !hostProcess.connected) {
       return { ok: false, models: [], error: 'host 进程未启动：请重启 KhyOS Desktop 后重试' }
     }
@@ -1215,11 +1557,11 @@ async function createWindow() {
       const timer = setTimeout(() => {
         pendingModelList.delete(id)
         resolve({ ok: false, models: [], error: '模型列表读取超时：请查看导出日志排查 host 状态' })
-      }, 15000)
+      }, MODELS_LIST_TIMEOUT_MS)
       pendingModelList.set(id, {
         resolve: (v: unknown) => { clearTimeout(timer); resolve(v) },
       })
-      hostProcess!.send({ type: 'models.list', id, adapterKey: typeof adapterKey === 'string' ? adapterKey : undefined })
+      hostProcess!.send({ type: 'models.list', id })
     })
   })
 
@@ -1244,6 +1586,15 @@ async function createWindow() {
   ipcMain.handle('plugin:setEnabled', (_e, id: string, enabled: boolean) => setPluginEnabled(id, enabled))
   ipcMain.handle('plugin:uninstall', (_e, id: string) => uninstallPlugin(id))
   ipcMain.handle('plugin:checkUpdates', async () => checkPluginUpdates())
+  // 发现 tab — 多生态勘察编目（delivery/market，只读）。force 跳过服务端 TTL。
+  ipcMain.handle('plugin:ecoMarket', async (_e, force?: boolean) => getEcoMarketCatalog(!!force))
+  // 发现 tab — 条目安装/卸载（技能目录与 mcp.json 由后端服务写入，台账记住产物）
+  ipcMain.handle('plugin:marketInstall', async (_e, entry: Record<string, unknown>, values?: Record<string, unknown>) =>
+    installEcoMarketEntry(entry || {}, values)
+  )
+  ipcMain.handle('plugin:marketUninstall', async (_e, entry: Record<string, unknown>) =>
+    uninstallEcoMarketEntry(entry || {})
+  )
 
   // ── MCP 设置页 — mcpStore 落盘（用户自建服务器：新建/启用/删除/导入）──
   // 插件宿主区不在此列：宿主服务器由 plugin:list 按 components.mcp>0 派生（只读）。
@@ -1340,6 +1691,7 @@ async function createWindow() {
     if (!editor) {
       return {
         ok: false,
+        state: 'unconfigured' as const,
         error: '未配置编辑器：请在「设置 → 常规」填写编辑器命令，或设置 KHY_EDITOR 环境变量（例如 code），然后重试',
       }
     }

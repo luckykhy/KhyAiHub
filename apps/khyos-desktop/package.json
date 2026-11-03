@@ -13,10 +13,13 @@
     "electron:dev": "node node_modules/electron-vite/bin/electron-vite.js dev",
     "electron:build": "npm run build && electron-builder",
     "start": "electron-vite preview",
-    "test": "node --experimental-strip-types --test tests/keyStore.test.mjs tests/agentWriters.test.mjs tests/health.test.mjs tests/pacedProgress.test.mjs tests/keymapContract.test.mjs tests/wiringRuntime.test.mjs tests/webRemoteHub.test.mjs && node --test tests/keyManagerContract.test.cjs tests/desktopUiContract.test.cjs tests/sidebarProjectClassify.test.cjs tests/webRemotePanel.test.cjs"
+    "typecheck": "node scripts/typecheck-baseline.cjs",
+    "typecheck:baseline": "node scripts/gen-typecheck-baseline.cjs",
+    "test": "node --experimental-strip-types --test tests/keyStore.test.mjs tests/attachmentKind.test.mjs tests/agentWriters.test.mjs tests/health.test.mjs tests/pacedProgress.test.mjs tests/keymapContract.test.mjs tests/wiringRuntime.test.mjs tests/webRemoteHub.test.mjs tests/amooBridge.test.mjs tests/amooSecretary.test.mjs tests/amooSecretaryLedger.test.mjs tests/petFortune.test.mjs tests/glbLoader.test.mjs && node --test tests/keyManagerContract.test.cjs tests/desktopUiContract.test.cjs tests/composerInputFrame.test.cjs tests/sidebarProjectClassify.test.cjs tests/webRemotePanel.test.cjs tests/amooPanel.test.cjs tests/amooUiContract.test.cjs tests/amooSecretaryUiContract.test.cjs tests/usageChartMath.test.cjs tests/compactNumber.test.cjs tests/sessionLoadState.test.cjs tests/thinkingBlockState.test.cjs tests/sessionListLoad.test.cjs tests/brandMark.test.cjs tests/markdownEmphasis.test.cjs tests/khyPet.test.cjs tests/khyPetModel.contract.test.cjs"
   },
   "dependencies": {
     "@lydell/node-pty": "1.2.0-beta.15",
+    "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-dialog": "^1.1.23",
     "@radix-ui/react-dropdown-menu": "^2.1.24",
     "@radix-ui/react-popover": "^1.1.23",
@@ -36,6 +39,7 @@
     "electron-updater": "6.8.9",
     "i18next": "^26.4.2",
     "lucide-react": "^1.43.0",
+    "monaco-editor": "^0.52.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-i18next": "^17.0.13",
@@ -60,7 +64,8 @@
     "asar": true,
     "asarUnpack": [
       "**/*.node",
-      "**/*.wasm"
+      "**/*.wasm",
+      "out/host/**"
     ],
     "directories": {
       "output": "dist-electron"
