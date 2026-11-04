@@ -161,7 +161,7 @@ const KEYBINDING_CATALOG = Object.freeze([
       { keys: '@', desc: '引用文件路径' },
       { keys: '!', desc: '执行 shell 命令' },
       { keys: '#', desc: '写入记忆' },
-      { keys: '?', desc: '键盘快捷键' },
+      { keys: '?', desc: '键盘快捷键浮层(Esc 关闭;空输入框再按 ? 收起)' },
     ]),
   },
   {
