@@ -210,6 +210,30 @@ describe('formatCatalog 确定性渲染', () => {
     // 每条形如 "  <keys><padding><desc>";键列对齐到最长键宽。
     assert.ok(out.split('\n').some((l) => /^ {2}\S.* {2,}\S/.test(l) || /^ {2}.+  .+/.test(l)));
   });
+  test('键列按显示宽度对齐:含宽字符(CJK)的键格不右移一格', () => {
+    const { displayWidth } = require('../../../src/utils/text/width.js');
+    const out = formatCatalog([{
+      context: 'wide',
+      label: '宽字符组',
+      bindings: [
+        // 「或」占 2 列却只算 1 个 UTF-16 单元:长度 13、显示宽 14
+        { keys: '↑ / ↓ 或 j / k', desc: '上下滚动一行' },
+        { keys: '0123456789abcdefg', desc: 'B' },
+      ],
+    }]);
+    const descColOf = (line) => {
+      const rest = line.slice(2);
+      const key = rest.match(/^(.+?) {2,}/)[1];
+      return 2 + displayWidth(key) + rest.slice(key.length).match(/^ +/)[0].length;
+    };
+    const rows = out.split('\n').slice(1);
+    assert.equal(descColOf(rows[0]), descColOf(rows[1]), 'two rows must share one column');
+    // 正对照:纯 ASCII 组与按字符数填充逐字节相同 —— 钉子锁的是「宽字符不再独占错位」,不是把整表推歪
+    assert.equal(
+      formatCatalog([{ context: 'a', label: '甲', bindings: [{ keys: 'K1', desc: 'd1' }, { keys: 'K23', desc: 'd2' }] }]),
+      '【甲】\n  K1   d1\n  K23  d2'
+    );
+  });
   test('空 groups → 空串', () => {
     assert.equal(formatCatalog([]), '');
     assert.equal(formatCatalog(null), '');
