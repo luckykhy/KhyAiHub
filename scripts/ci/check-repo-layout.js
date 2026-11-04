@@ -388,7 +388,14 @@ const ROOT_CATALOG = {
   '.ai': { category: 'localdata', reason: '本机智能体探测残留（.gitignore 忽略，自愈型；受跟踪内容已迁 works/record/ai）', reviewBy: '2026-12-31' },
   '.portable': { category: 'localdata', reason: '便携版标记（本机态）', reviewBy: '2026-12-31' },
   '.khy': { category: 'localdata', reason: '运行时数据目录（.gitignore）', reviewBy: '2026-12-31' },
-  '.khyos': { category: 'localdata', reason: 'OS 本机态/巡检暂存（.gitignore）', reviewBy: '2026-12-31' },
+  // 2026-11-04 降级：`pending-retire`，不再是 localdata。CLAUDE.md §二 B8 明令
+  // 「禁止在仓库根（或任何子目录）造 .khy / .khyos / .khy-runtime」——此前登记为
+  // localdata 等于在守卫里给它背书，与红线直接矛盾，会让下一个人以为它合法。
+  // 本条目保留只为兜住 root-shadow-dir 亮红后的排查路径；磁盘上该目录已于
+  // 2026-11-04 清空（内含 renGongBuZhiNeng.pdf，按 HK 隔离原则搬至
+  // works/data/khy/T4-transient/tmp/book/，未删）。若日后真的不再需要兜底，
+  // 应连同 root-shadow-dir 规则一起删，而不是把它改回 localdata。
+  '.khyos': { category: 'pending-retire', reason: 'B8 红线禁止的影子数据家（曾 7 次复发）；2026-11-04 已清空，登记仅为兜底排查，不得改回 localdata', reviewBy: '2026-12-31' },
   'khy-Trajectory': { category: 'tool-retained', reason: '轨迹子系统留档（裁决保留）', reviewBy: '2026-12-31' },
   'Dockerfile': { category: 'contract', reason: '镜像构建入口', reviewBy: '2026-12-31' },
   'docker-compose.yml': { category: 'contract', reason: '一键部署编排', reviewBy: '2026-12-31' },
@@ -421,6 +428,11 @@ const ROOT_CATALOG = {
   // Windows 资源管理器快捷方式（827 B，指向本仓自身 D:\Portable\khy-os），
   // 未跟踪也未忽略——纯本机产物，无仓库语义。D9 批拟删除或改 gitignore。
   'khy-os.lnk': { category: 'localdata', reason: 'Windows 快捷方式（未跟踪，指向本仓自身；纯本机产物，无仓库语义）', reviewBy: '2026-12-31' },
+  // 2026-11-04 补登：Qoder 工具本机态（tmp/acc-e2e/ 验收证据 + tmp/probe-*.cjs 探针）。
+  // 与 .opencode/.zcode/.workbuddy 同性质——工具按根路径读写，搬走即断工具链。
+  // 全部 31 个文件都在 .qoder/tmp/ 下，由 .gitignore:102 的 `tmp/` 规则覆盖，
+  // 0 跟踪件；此前 Q-1（root-uncatalogued）一直报它。
+  '.qoder': { category: 'tool-retained', reason: 'Qoder 工具本机态（tmp/acc-e2e 验收证据 + tmp/probe-*.cjs 探针；工具按根路径读写，未跟踪面由 .gitignore tmp/ 规则覆盖，同 .opencode 先例）', reviewBy: '2026-12-31' },
 };
 const ROOT_ALWAYS_OK = new Set(['.git', 'node_modules']);
 
