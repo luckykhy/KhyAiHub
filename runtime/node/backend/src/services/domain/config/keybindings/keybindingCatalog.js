@@ -203,6 +203,7 @@ const ESSENTIAL_SHORTCUTS = Object.freeze([
 
 // 收敛到 utils/isOffValue 单一真源(逐字节委托,调用点不变)
 const _falsy = require('../../../../utils/isOffValue');
+const { displayWidth, padToWidth } = require('../../../../utils/text/width');
 
 /** `?` 浮层取数(SSOT)。返回不可变的 [keys, desc] 元组数组。 */
 function getEssentialShortcuts() {
@@ -270,9 +271,11 @@ function formatCatalog(groups) {
       lines.push('');
     }
     lines.push(`【${g.label}】`);
-    const keyWidth = g.bindings.reduce((w, b) => Math.max(w, String(b.keys).length), 0);
+    // Cells, not UTF-16 units: "↑ / ↓ 或 j / k" has length 13 but display width 14, so a
+    // length-based column shifts that one row right by one cell (HelpMenu fixed this already).
+    const keyWidth = g.bindings.reduce((w, b) => Math.max(w, displayWidth(String(b.keys))), 0);
     for (const b of g.bindings) {
-      lines.push(`  ${String(b.keys).padEnd(keyWidth + 2)}${b.desc}`);
+      lines.push(`  ${padToWidth(String(b.keys), keyWidth + 2)}${b.desc}`);
     }
   }
   return lines.join('\n');
