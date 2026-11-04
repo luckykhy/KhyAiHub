@@ -70,14 +70,19 @@ function ToolExecutionItem({ execution }: { execution: ToolExecution }) {
   )
 }
 
-export function ToolExecutionPanel() {
-  const executions = useAppSelector(state => state.toolExecution.executions)
+export function ToolExecutionPanel({ messageId }: { messageId: string }) {
+  const all = useAppSelector(state => state.toolExecution.executions)
   const activeIds = useAppSelector(state => state.toolExecution.activeIds)
   const [collapsed, setCollapsed] = useState(false)
 
+  // 只渲染属于本条消息（= 本轮提问）的执行。归属由 Composer 在发送时登记、
+  // slice 在 startToolExecution 时盖章；迟到且没有归属的执行（messageId 为空）
+  // 任何消息都不认领。
+  const executions = all.filter(e => e.messageId === messageId)
+
   // 显示本轮全部工具执行（含已完成）。只显示「进行中」会让卡片在几十毫秒内
   // 一闪而过——用户看不到 agent 到底干过什么，而「看得见在干活」正是本面板的
-  // 存在理由。清空交给下一次发送（Composer 发新请求时 clearExecutions）。
+  // 存在理由。清空交给下一轮提问（Composer 的 beginToolTurn）与切换会话。
   const running = executions.filter(e => activeIds.includes(e.id)).length
 
   if (executions.length === 0) return null

@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { useAppDispatch, useAppSelector } from '../../state/store'
 import { store } from '../../state/store'
 import { addMessage, updateMessage, setMessageStatus, setStreaming, setAgentWorking, recordLastPrompt } from '../../state/messageSlice'
-import { clearExecutions } from '../../state/toolExecutionSlice'
+import { beginToolTurn } from '../../state/toolExecutionSlice'
 import { addToast } from '../../state/toastSlice'
 import { useModelCatalog, groupByProvider, getModelOptionLabel, type ModelOption } from '../../utils/useModelCatalog'
 import { ModeSelector, DEFAULT_AGENT_MODE } from './ModeSelector'
@@ -689,9 +689,10 @@ export function Composer({
       timestamp: Date.now(),
       status: 'complete' as const,
     }
-    dispatch(clearExecutions())
     dispatch(addMessage(userMsg))
     const assistantId = `a_${Date.now()}`
+    // 工具执行归属这条助手消息（= 本轮提问）：过程挂在对应提问下面，切会话时整批丢弃。
+    dispatch(beginToolTurn({ messageId: assistantId }))
     dispatch(addMessage({ id: assistantId, role: 'assistant', content: '', timestamp: Date.now(), status: 'streaming' }))
     dispatch(setStreaming(true))
     dispatch(setAgentWorking(true))

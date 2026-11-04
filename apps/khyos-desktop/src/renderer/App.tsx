@@ -16,7 +16,7 @@ import {
 } from './state/messageSlice'
 import { sanitizeUserContent } from './utils/stripSystemInjects'
 import { addToast } from './state/toastSlice'
-import { startToolExecution, updateToolExecution, recordAffectedFiles } from './state/toolExecutionSlice'
+import { startToolExecution, updateToolExecution, recordAffectedFiles, cancelToolExecution, clearExecutions } from './state/toolExecutionSlice'
 import { loadTheme, subscribeToTheme, loadMessageFontSize } from './theme/theme'
 import { getModelOptionLabel, loadPersistedModelSelection, persistModelSelection, useModelCatalog } from './utils/useModelCatalog'
 import { AGENT_MODES, DEFAULT_AGENT_MODE } from './components/composer/ModeSelector'
@@ -47,29 +47,15 @@ const AutomationsPage = lazy(() =>
   import('./components/automations/AutomationsPage').then((m) => ({ default: m.AutomationsPage }))
 )
 
-// 剥洋葱 · 视觉侧第四刀：「平时不显示」的浮层按需加载。
-//
-// 归因实测（守卫报告段的「下一刀候选」）：
-//   ToolExecutionPanel 可达 8 模块 / 910 行。
-//
-// 共同形状：**没有内容时返回 null**（ToolExecutionPanel 在
-// `executions.length === 0` 时 return null），即「不显示时不渲染任何东西」——
-// 与 CommandCenter 同型，可以安全条件挂载。
-//
-// ⚠ 对照反例：**SidePane 不可这样改** —— 它的快捷键注册在 visible 闸门之前，
-// 条件挂载会让隐藏态丢快捷键（AppLayout.tsx 里的注释明确写了这一点）。
-// 「返回 null」与「常驻副作用」是两类，不能只看它平时显不显示。
-//
-// ⚠ 另一个前提：**无订阅型副作用**（ToolExecutionPanel 只有一个复制提示的
-// setTimeout），条件挂载不会漏掉事件订阅。
+// 剥洋葱 · 视觉侧第四刀：ToolExecutionPanel 曾在本层按需加载。
+// 2026-11-04 挪进 MessageBubble —— 它此前是挂在消息列表上方的全局块，与提问
+// 不对应、切换会话还会跟着显示；现在按归属消息渲染在对应回复内部，仍由
+// MessageBubble 动态 import（不在首屏冷闭包内）。
 //
 // 2026-11-01：同刀切过的 ContextUsagePanel（月配额「Token 用量（本月配额）」
 // 面板）已按用户要求**整体删除** —— 该面板是复刻端自造的展示件（ZCode 原版
 // 没有独立的月配额面板，用量只在 Composer「上下文已用/总量」按钮与设置页
 // 「使用统计」里），长期挂在消息流底部纯属视觉噪音。
-const ToolExecutionPanel = lazy(() =>
-  import('./components/message/ToolExecutionPanel').then((m) => ({ default: m.ToolExecutionPanel }))
-)
 
 // 剥洋葱 · 视觉侧第五刀：两个「有内容才显示」的浮层按需加载。
 //
@@ -252,6 +238,9 @@ export default function App() {
       __KHYOS__?: { loadSession?: (id: string) => Promise<{ ok: boolean; title?: string; jsonlPath?: string; messages?: { role?: string; content?: string; timestamp?: number; reasoning?: string }[]; error?: string }> }
     }).__KHYOS__
     const token = ++loadTokenRef.current
+    // 工具执行 / 文件改动属于会话，不属于屏幕：换会话必须一起清掉，否则
+    // 上一个会话的过程块会挂在新会话的消息区下面。
+    store.dispatch(clearExecutions())
     store.dispatch(sessionLoadStarted())
 
     // 安全网（正常路径不依赖）：preload 的 IPC 没有自带超时，host 挂死时
@@ -416,6 +405,8 @@ export default function App() {
     // 作废在途的会话加载：旧会话的迟到响应不能掉进新任务首页
     loadTokenRef.current++
     store.dispatch(clearMessages())
+    // 新任务不留上一个会话的工具过程与改动文件（它们没有归属消息可挂）
+    store.dispatch(clearExecutions())
     setGoal(undefined)
     setSessionTitle('')
   }, [])
@@ -535,6 +526,7 @@ export default function App() {
       __KHYOS__?: {
         onAiToolCall?: (cb: (d: unknown) => void) => () => void
         onAiToolResult?: (cb: (d: unknown) => void) => () => void
+        onAiResult?: (cb: (d: unknown) => void) => () => void
       }
     }).__KHYOS__
     if (!api?.onAiToolCall || !api?.onAiToolResult) return
@@ -589,9 +581,20 @@ export default function App() {
       }
     })
 
+    // 本轮收尾（正常结束 / 用户中断 / 出错都会发 ai.result）：仍在「运行中」的
+    // 卡片收敛成已取消。中断发生在流式预执行已经播报之后时，循环可能永远不会
+    // 再回结果——不收敛的话那张卡片会一直转圈到下一次发送。
+    const offEnd = api.onAiResult
+      ? api.onAiResult(() => {
+          const { activeIds } = store.getState().toolExecution
+          for (const id of activeIds) store.dispatch(cancelToolExecution(id))
+        })
+      : () => {}
+
     return () => {
       offCall()
       offResult()
+      offEnd()
     }
   }, [])
 
@@ -705,13 +708,6 @@ export default function App() {
           onSetGoal={setGoal}
           onCancel={() => setGoal(undefined)}
         />
-
-        {/* 正在执行的工具
-            剥洋葱 · 视觉侧第四刀：按需加载 —— 无执行中工具时组件自身 return null，
-            故条件挂载语义等价（无订阅型副作用）。 */}
-        <Suspense fallback={null}>
-          <ToolExecutionPanel />
-        </Suspense>
 
         {/* 人在环：审批 / 提问（阻塞工具循环 —— 必须应答，或等 5 分钟超时 fail-closed）
             剥洋葱 · 视觉侧第五刀：按需加载（lazy + 条件挂载）。 */}
