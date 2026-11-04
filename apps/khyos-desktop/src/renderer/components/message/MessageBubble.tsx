@@ -1,5 +1,5 @@
 // khy-canary: Khy-20261102-299-VS1CK7JM
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import type { ReactNode } from 'react'
 import { MarkdownRenderer } from './MarkdownRenderer'
 import { ThinkingBlock } from './ThinkingBlock'
@@ -25,6 +25,13 @@ interface ToolCall {
   status: 'pending' | 'running' | 'success' | 'error'
   result?: string
 }
+
+// 工具执行块按归属消息渲染在消息内部：它是本轮提问的过程证据，不能做成
+// 挂在消息列表上方的全局块 —— 那样它既不在对应提问下面，切换会话后还会
+// 跟着显示。仍走动态 import：没有工具执行的消息不渲染它。
+const ToolExecutionPanel = lazy(() =>
+  import('./ToolExecutionPanel').then((m) => ({ default: m.ToolExecutionPanel }))
+)
 
 interface TrajectoryStep {
   type: 'user' | 'assistant' | 'reasoning' | 'tool-call' | 'tool-result'
@@ -262,6 +269,11 @@ function ToolCallCard({ tool }: { tool: ToolCall }) {
 export function MessageBubble({ message }: { message: Message }) {
   const [expanded, setExpanded] = useState(true)
   const [copied, setCopied] = useState(false)
+  // 只订阅「本条消息有没有工具执行」这个布尔量：若直接订阅 executions 数组，
+  // 任何一条消息的工具事件都会让整串消息重渲染。
+  const hasToolExecutions = useAppSelector((s) =>
+    s.toolExecution.executions.some((e) => e.messageId === message.id)
+  )
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(message.content)
@@ -317,6 +329,13 @@ export function MessageBubble({ message }: { message: Message }) {
           enabled={message.showReasoning !== false}
         />
       ) : null}
+
+      {/* 工具执行（思考 → 动作 → 答复，与轨迹/调用的阅读序一致） */}
+      {hasToolExecutions && (
+        <Suspense fallback={null}>
+          <ToolExecutionPanel messageId={message.id} />
+        </Suspense>
+      )}
 
       {/* 思考轨迹 */}
       {message.trajectory && message.trajectory.length > 0 && (
