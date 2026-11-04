@@ -6622,6 +6622,26 @@ async function runToolUseLoop(userMessage, options = {}) {
             }
           }
         }
+        // 非流式适配器（IDE-token 类）跑过工具后，最终答复一次性出现在 aiResult.reply 里，
+        // 本轮从未发过 text chunk。只按 chunk 建转录的消费端（TUI 的 timeline、桌面面板）
+        // 于是停在「工具调用前的说明 + 工具卡」，整段答案消失 —— 而会话 JSON 的 content
+        // 是完整的（eca57528 复现）。这里与上方「工具调用前前言补发」同一机制补发整段
+        // finalText：经典 REPL 的 _markStreamedReplyDelivered 会认成已流式而不再重复打印
+        // （terminalNotice 已包含在流内，其去重判据按包含关系放行）。
+        // 只在真的执行过工具时补发：单轮无工具的旧路径交给消费端既有的 reply 兜底，
+        // 保持逐字节不变。
+        if (
+          totalToolCalls > 0 &&
+          !_sawStreamedText &&
+          _callerOnChunk &&
+          String(finalText || '').trim()
+        ) {
+          try {
+            _callerOnChunk({ type: 'text', text: finalText });
+          } catch {
+            /* non-critical final-answer replay */
+          }
+        }
         if (_loopFsm) {
           _loopFsm.fire('finish', { iteration, finalLength: String(finalText || '').length });
         }
