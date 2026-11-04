@@ -28,9 +28,9 @@ async function runCaptured(handleKeybindings, sub, args) {
   return handleKeybindings(sub, args, {}, (m) => calls.raw.push(String(m)));
 }
 
-/** Whole panel as the user sees it: notice lines + bare content lines. */
+/** Whole panel as the user sees it: notices + dim captions + bare content lines. */
 function panel() {
-  return calls.info.concat(calls.raw).join('\n');
+  return calls.info.concat(calls.divider, calls.raw).join('\n');
 }
 
 function stubFormatters() {
@@ -40,6 +40,7 @@ function stubFormatters() {
     loaded: true,
     exports: {
       printInfo: (m) => calls.info.push(String(m)),
+      printDivider: (m) => calls.divider.push(String(m)),
       printSuccess: (m) => calls.success.push(String(m)),
       printWarn: (m) => calls.warn.push(String(m)),
       printError: (m) => calls.error.push(String(m)),
@@ -53,7 +54,7 @@ function freshHandler() {
 }
 
 beforeEach(() => {
-  calls = { info: [], raw: [], success: [], warn: [], error: [] };
+  calls = { info: [], divider: [], raw: [], success: [], warn: [], error: [] };
   stubFormatters();
 });
 
@@ -73,9 +74,9 @@ describe('门控关 → 不接管', () => {
   });
 });
 
-// Group headers are panel CONTENT, never notices: only the title/hint lines may
-// come through the printInfo channel. Pinned once here so the panel-body
-// decision in the handler cannot silently regress to a decorated first line.
+// Group headers are panel CONTENT, never notices. The title/hint captions go through the plain
+// dim line instead: printInfo's marker is `  i `, which inside this two-column key table reads as
+// a binding for the key `i` — a key the Vim group really does list two rows above the hint.
 describe('无参 → 全部分组', () => {
   test('打印含多组标题与关键键位', async () => {
     const { handleKeybindings } = freshHandler();
@@ -86,6 +87,13 @@ describe('无参 → 全部分组', () => {
     assert.match(all, /【编辑】/);
     assert.match(all, /Shift \+ Tab/);
     assert.doesNotMatch(calls.info.join('\n'), /【/);
+  });
+  test('面板内不留通知行:标题与提示走普通标注道', async () => {
+    const { handleKeybindings } = freshHandler();
+    await runCaptured(handleKeybindings, '', []);
+    assert.deepEqual(calls.info, [], '表里出现的 `  i ` 标记会被读成键位');
+    assert.ok(calls.divider.some((m) => /键盘快捷键/.test(m)), '标题仍在,只是不再是通知形状');
+    assert.ok(calls.divider.some((m) => /精简浮层/.test(m)), '提示仍在,只是不再是通知形状');
   });
 });
 
