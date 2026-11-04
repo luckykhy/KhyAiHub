@@ -74,12 +74,17 @@ function HelpMenu({ cols, rows } = {}) {
     for (const t of cands) if (visWidth(t) <= innerCols) return t;
     return clipCell(cands[cands.length - 1], innerCols);
   };
+  // 标题同时携带「怎么离开这个面板」：两个键实测都能关（?/Esc 各自触发一次真实重绘）。
+  // 它必须是同一个字符串常量 —— 下面的行预算一直按字面量 '键盘快捷键' 计数，
+  // 一旦渲染文案比预算长，窄屏上就会重新踩进 BUG-58 同一形态（框顶被整屏重画推走）。
+  const title = '键盘快捷键 · ?/Esc 关闭';
+
   // 上下边框 2 + 标题行 + 清单 + 可选的「还有 N 条」。行高一律按同一把尺折行计数，
   // 不假设「一条 = 一行」——那个假设正是本缺陷的成因。
   function projectedRows(n, withHint) {
     if (!hasR || !innerCols) return 0;
     const list = items.slice(0, n).reduce((a, it) => a + visualRows(`${it.key}${it.desc}`, innerCols), 0);
-    return 2 + visualRows('键盘快捷键', innerCols) + list + (withHint ? visualRows(hintOf(SHORTCUTS.length - n), innerCols) : 0);
+    return 2 + visualRows(title, innerCols) + list + (withHint ? visualRows(hintOf(SHORTCUTS.length - n), innerCols) : 0);
   }
 
   let shown = items.length;
@@ -92,7 +97,7 @@ function HelpMenu({ cols, rows } = {}) {
   return h(
     Box,
     { flexDirection: 'column', borderStyle: 'round', borderColor: 'gray', paddingX: 1 },
-    h(Text, { bold: true }, '键盘快捷键'),
+    h(Text, { bold: true }, title),
     ...items.slice(0, shown).map((it, i) => h(
       Box,
       { key: i },
