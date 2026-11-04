@@ -4897,6 +4897,26 @@ W3→W10→W2→W4→W5→W9→W6→W7→P1→P2(+壳退役)→P3→P4→P5→D-
 
 ### 16.6 施工执行状态（点头后逐批登记）
 
+> **2026-11-05 03:2x 节（第 37 节）**：**本节无未门控批次**——三份守卫输出与第 36 节 **`cmp` 逐字节相同**（J1 仍 exit 1 / 1 error、J2 仍 10、J3 仍 2 error / 5 warning）。外部：自本道 `649b7019`（02:24）起**零笔别道提交**，但索引里出现了 **1 件他道暂存件**（`runtime/node/backend/src/cli/tui/ink-components/HelpMenu.js` `M `，+7/−2）⇒ 本道继续只用显式 pathspec 提交（本节即是），且要知道 pre-commit 的暂存扫描跑的是**整个索引**，别人暂存什么都可能染红我的提交。porcelain **1499**、未跟踪 501、根项 **52**、百度件 0、无锁。
+>
+> **新事实 R（判据① 那条唯一残留红的「再生产机制」找到了，是两处测试的 scratch 常量）**：
+>
+> | 写者（都是**已跟踪且 clean**，非在飞） | 写法 | 头注把这事说成什么 |
+> |---|---|---|
+> | `runtime/node/backend/src/services/domain/docs/docsFreshness/docsFreshnessRunner.test.js:19` | `const TMP_BASE = path.join(REPO_ROOT, '.khyos', 'tmp')` | 「`.khyos/tmp/` — never the repo's real docs/」 |
+> | `runtime/node/backend/src/services/domain/maintenance/selfRepair/primitives.test.js:17` | `const TMP = path.join(process.cwd(), '.khyos', 'tmp', 'b25-selfrepair-primitives')` | 「under .khyos/tmp (never the repo's own sources)」 |
+>
+> ⇒ **只要跑这两套测试，就重建 `root-shadow-dir` 的 offender**——这就是守卫注释里「2026-10-05 ~ 10-11 清理过六次，每次都复发」的同型机制：那 10 处 `path.join(process.cwd(), '.khy')` 在 10-12 被修掉了，**测试侧这两处至今还在**，而且被写成「刻意不碰真实源树」的正确做法。判据① 不删根 `.khyos` 就永远红，而删了也会被下一次测试跑回来——**这是一条「清理不可能收敛」的确证，不是又一次没打扫干净**。
+> 修法本道不代做：改这两处常量要动别人写的测试，且其隔离前提（「绝不写真实 docs/ 与源树」）必须在新落点上重新成立，属规则 5「先复现再开药」的活——列待人。
+>
+> **本节把本道自己从 offender 里撤出来**：s35/s36 我把对拍基准、提交信息、commit log 都写进了 `.khyos/tmp/`（当时只为「别放会话级 /tmp」），也就是**我自己成了这个被判红目录的住户**。现已 8 份逐份 `cmp` 验等后迁入 `works/data/khy/T4-transient/tmp/lay008-ruler/`（现居 13 份：s35/s36/s37 三节 × J1/J2/J3 ＋ 两份 msg ＋ 两份 commit log），`.khyos/tmp` 删除原件后**为空**。**根 `.khyos` 本体我一个都没删**——守卫自己写着「清理前先确认内容是否需要合并，影子树里可能存着唯一的状态」，那是 W9′/B8 的裁决，不是本节的活。
+>
+> **仍未解的一件**：`.khyos/housekeeping/`（11-05 00:15 建、空）的造者不是上面两个——JS/PS1 全文里没有任何 `.khyos/housekeeping` 写点，`organize.py` 的 `OUT_ROOT` 也早在 10-24 改址。00:15 那次仍有已知写者解释不了的来源，留给下节或车道自查（本节的尺：`ls -la --time-style` ＋ `git grep "\.khyos"` 交集，可复现）。
+>
+> **待人（本轮把「裁 housekeeping 落点」换成更硬的一条）**：① J3 两条逾期债务；② 根 `.khyos` 空壳删不删（判据① 唯一残留，且不删永远不可施工）；③ origin 补推凭据；④ 附录A 生成器收编；⑤ manifest 落点矛盾（第 36 节新事实 P 末段）；⑥ **【新】裁决这两处测试 scratch 常量改指何处**——不改则任何一次测试运行都把判据① 打回红。
+>
+> **回滚**：本节一个提交、只动本文件，纯追加本块；本道的文件搬迁全部发生在全忽略目录（`git status` 无痕迹），无基线与台账数值改动、无 html 再生；本道未发起 push / tag / force / prune。
+
 > **2026-11-05 02:2x 节（第 36 节）**：**本节无未门控批次**——三份守卫输出与第 35 节 **`cmp` 逐字节相同**（这次基准文件活了下来，用的是强尺）：J1 仍 exit 1 / 1 error、J2 仍 10、J3 仍 2 error / 5 warning。外部：自本道上节 `5eca183f` 起 **1 笔**别道提交（`44fa8216`，02:03）；porcelain **1498**、暂存 **0**、未跟踪 **501**、根项 **52**、百度件 **0**、无锁。
 >
 > **新事实 P（更正第 35 节新事实 O 的定性——我把已裁的事写成了待裁）**：s35 说「两条判据打架，出路二选一，待人裁决」。实测**出路早在 2026-10-24 就由 `organize.py` 选定并落地**：`OUT_ROOT = works/data/khy/T4-transient/tmp/housekeeping`，其注释自带事故编号「2026-10-18 的『根临时文件收容』批次又造出一棵 `.khyos/housekeeping/`，是 B8 的第 **8** 次复发」，理由正是 s35 复述的那条根禁令；新落点在盘上确有实物（`2026-10-18-root-tmp/`、`20261027/` 两批）。⇒ 准确形态不是「没人裁」，而是**执行面 10-24 改了址、声明面没跟**。仍写着旧根落点的 **6 处**，按在飞状态分档：
