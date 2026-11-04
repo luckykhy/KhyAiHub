@@ -17,7 +17,7 @@
  */
 
 const catalog = require('../../services/keybindings').keybindingCatalog;
-const { printInfo } = require('../formatters');
+const { printInfo, printDivider } = require('../formatters');
 
 /**
  * Emit the multi-line catalog body as bare content.
@@ -67,9 +67,12 @@ async function handleKeybindings(_subCommand, args = [], _options = {}, writeLin
     return true;
   }
 
-  printInfo('键盘快捷键' + (term ? `(过滤:${term})` : ''));
+  // printInfo's marker is `  i `, which inside this two-column key table reads as a binding
+  // for the key `i` — and the Vim group below really lists one. Title/hint are captions, not
+  // notices, so they go through the plain dim line; the 未找到 / 门控关 paths keep printInfo.
+  printDivider('键盘快捷键' + (term ? `(过滤:${term})` : ''));
   writeCatalogBody(groups, writeLine);
-  printInfo('提示:在空输入框按 ? 可随时唤出精简浮层;Vim 键位需 /vim 开启。');
+  printDivider('提示:在空输入框按 ? 可随时唤出精简浮层;Vim 键位需 /vim 开启。');
   return true;
 }
 
