@@ -28,6 +28,11 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
+// 完成裁决：判据计算在纯叶子（acceptanceVerdict），运行记录读取在执行面（acceptanceRunner）。
+// 本文件只在 review→done 的写入路径上把它们拼起来，不复制判定逻辑。
+const acceptanceVerdict = require('./acceptanceVerdict');
+const acceptanceRunner = require('./acceptanceRunner');
+
 // ── 路径解析 ──────────────────────────────────────────────────────
 
 /** 仓库根：src/cli → src → backend → node → runtime → <repo> */
@@ -681,6 +686,69 @@ function validateBug(bug) {
   return errs;
 }
 
+/**
+ * 校验 `criteria[]` 的形状（可选字段，出现即校验）。
+ *
+ * 刻意不要求「必须有 cmd」：纯人工验收（看界面、听音质）真实存在，
+ * 强行逼成 cmd 只会逼人写假命令。人工项的约束在下游 —— 没有签名就只能是
+ * `unknown`，最多到 `partial`，进不了 `done`。
+ */
+function validateCriteria(criteria) {
+  const errs = [];
+  if (!Array.isArray(criteria)) {
+    return ['criteria 应为数组（每条一条可验收判据）'];
+  }
+  if (!criteria.length) {
+    return ['criteria 不应为空数组（要么不写，要么至少一条判据）'];
+  }
+  const ids = new Set();
+  criteria.forEach((raw, i) => {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+      errs.push(`criteria[${i}] 应为对象`);
+      return;
+    }
+    const id = String(raw.id || '').trim();
+    if (!id) {
+      errs.push(`criteria[${i}] 缺 id —— 运行记录靠它对应判据`);
+    } else if (ids.has(id)) {
+      errs.push(`criteria[${i}] id 重复: ${id}`);
+    } else {
+      ids.add(id);
+    }
+    if (!String(raw.desc || raw.description || '').trim()) {
+      errs.push(`criteria[${i}] 缺 desc —— 人看不懂的判据没法验收`);
+    }
+    const check = raw.check;
+    if (!check || typeof check !== 'object' || Array.isArray(check)) {
+      errs.push(`criteria[${i}] 缺 check（{"kind":"cmd"|"manual", …}）`);
+      return;
+    }
+    const kind = check.kind || 'manual';
+    if (kind !== 'cmd' && kind !== 'manual') {
+      errs.push(`criteria[${i}] check.kind 只能是 cmd|manual: ${JSON.stringify(kind)}`);
+      return;
+    }
+    if (kind === 'cmd' && !String(check.cmd || check.command || '').trim()) {
+      errs.push(`criteria[${i}] 是 cmd 判据但缺 check.cmd`);
+    }
+    const exp = check.expect;
+    if (exp !== undefined) {
+      if (!exp || typeof exp !== 'object' || Array.isArray(exp)) {
+        errs.push(`criteria[${i}] check.expect 应为对象`);
+        return;
+      }
+      const expKind = exp.kind || 'exit';
+      if (!['exit', 'stdout-match', 'stdout-not-match'].includes(expKind)) {
+        errs.push(`criteria[${i}] check.expect.kind 只能是 exit|stdout-match|stdout-not-match`);
+      }
+      if (expKind !== 'exit' && !String(exp.re || exp.pattern || '').trim()) {
+        errs.push(`criteria[${i}] check.expect.re 不可为空`);
+      }
+    }
+  });
+  return errs;
+}
+
 /** 校验任务记录形状，返回 error 数组。 */
 function validateTask(task) {
   const errs = [];
@@ -748,6 +816,11 @@ function validateTask(task) {
         }
       });
     }
+  }
+  // 可执行验收判据：可选，出现即校验（存量任务没有 criteria，照样 readable，
+  // 但永远到不了 done —— 见 reviewDoneBlockers 的 legacy 分支）。
+  if (task.criteria !== undefined) {
+    errs.push(...validateCriteria(task.criteria));
   }
   return errs;
 }
@@ -1022,98 +1095,96 @@ function parseAcceptanceLedger(text) {
 /**
  * `review → done` 的**阻断条件**（返回非空 = 拒绝写入）。
  *
- * 这是本机制的核心：`khy hq task set <ID> done` 在 `saveJson` 之前调用它，
- * 返回非空数组即当场拒绝、磁盘保持原状。
+ * 判定链：`criteria[]` → 系统执行 → `acceptance.jsonl` → 四值裁决。
+ * 「模型说完成」不在链上；`acceptance.md` 只是渲染视图，不再是真相
+ * （旧口径允许「一句话证据」，于是「说通过」与「跑过并通过」不可区分）。
  *
- * 阻断项刻意只留**最少**四条 —— 每一条都对应一个实测到的失败：
- *   1. 无 `evidence` 声明 → 实测 52 个存证目录零个被引用；
- *   2. `evidence` 目录不存在或为空 → 沿用 `check-agent-feedback.js` 的 readEvidence 语义（trim 后非空才算数）；
- *   3. 验收清算文件缺失或有 error → 实测 3 条 `pending_verify` Bug 的 notes = 0，进入验证时零留痕；
- *   4. 勾选条数少于 acceptance 判据条数 → 漏勾的判据不算通过。
+ * 阻断项按「先证据、后判据」排列：
+ *   1. 缺 evidence 声明 / 目录不存在或为空 —— 运行记录无处落；
+ *   2. 没有可机器核对的判据（纯散文或全空）；
+ *   3. 任一 required 判据 fail / skip / unknown（未跑、过期、路径改动、缺签名）。
  *
- * **刻意不阻断的**（避免误报率失控，`[DESIGN-PROCESS-002]` §2 的 10% 阈值）：
- *   - `acceptance` 质量不佳（无命令/无数字）→ 只 warning；
- *   - 引用的路径失效 → 只 warning；
- *   - 数字阈值未逐条机器核对 → 只回显，不做判定。
+ * 只 warning 不阻断：acceptance 质量、引用路径失效、可选判据失败。
  *
  * @param {object} task
  * @param {string} repoRoot
- * @param {string} [fbRoot] 存证根；缺省 `path.join(repoRoot, '.khy', 'feedback')`
- * @returns {{blockers: string[], warnings: string[], verdicts: object[]}}
+ * @param {string} [fbRoot] 存证根；缺省 `works/data/khy/feedback`
+ * @param {{now?: number, maxAgeMs?: number}} [opts]
+ * @returns {{blockers: string[], warnings: string[], verdicts: object[],
+ *            verdict: string, acceptance: object|null}}
  */
-function reviewDoneBlockers(task, repoRoot, fbRoot) {
+function reviewDoneBlockers(task, repoRoot, fbRoot, opts) {
+  const o = opts && typeof opts === 'object' ? opts : {};
   const blockers = [];
   const warnings = [];
   let verdicts = [];
+  const undecided = { blockers, warnings, verdicts, verdict: 'unknown', acceptance: null };
   if (!task || typeof task !== 'object') {
-    return { blockers: ['任务对象为空'], warnings, verdicts };
+    blockers.push('任务对象为空');
+    return undecided;
   }
   const evidenceRoot = fbRoot || path.join(repoRoot, 'works', 'data', 'khy', 'feedback');
 
-  warnings.push(...auditAcceptanceQuality(task));
+  // 散文审计只对没有 criteria[] 的任务有意义 —— 有了可执行判据，散文就不再是判据。
+  if (!Array.isArray(task.criteria) || !task.criteria.length) {
+    warnings.push(...auditAcceptanceQuality(task));
+  }
   warnings.push(...auditAcceptancePaths(task, repoRoot));
 
   // ① evidence 声明
   const ev = task.evidence;
   if (!ev || !String(ev).trim()) {
     blockers.push(
-      `${task.id}: 缺 evidence 字段 —— 没有声明验收证据目录，无法核对。` +
-        '请先在 `works/data/khy/feedback/` 下建 `<task-id>-<slug>/` 并写入 acceptance.md，' +
+      `${task.id}: 缺 evidence 字段 —— 没有声明验收证据目录，运行记录无处落。` +
+        '请先在 `works/data/khy/feedback/` 下建 `<task-id>-<slug>/`，' +
         `再执行：khy hq task set ${task.id} review --evidence <名称>`
     );
-    return { blockers, warnings, verdicts };
+    return undecided;
   }
   const name = String(ev).trim();
   if (!EVIDENCE_NAME_RE.test(name)) {
     blockers.push(
       `${task.id}: evidence 名称非法（${JSON.stringify(name)}）—— 只允许字母/数字/./_/-，且不以符号开头`
     );
-    return { blockers, warnings, verdicts };
+    return undecided;
   }
 
   // ② 证据目录存在且非空
   const dir = path.join(evidenceRoot, name);
   if (!fs.existsSync(dir)) {
     blockers.push(`${task.id}: evidence 目录不存在：works/data/khy/feedback/${name}/`);
-    return { blockers, warnings, verdicts };
+    return undecided;
   }
   let entries = [];
   try {
     entries = fs.readdirSync(dir).filter((f) => !f.startsWith('.'));
   } catch (e) {
     blockers.push(`${task.id}: evidence 目录不可读：works/data/khy/feedback/${name}/（${e.message}）`);
-    return { blockers, warnings, verdicts };
+    return undecided;
   }
   if (!entries.length) {
     blockers.push(`${task.id}: evidence 目录为空：works/data/khy/feedback/${name}/ —— 空目录不算存证`);
-    return { blockers, warnings, verdicts };
+    return undecided;
   }
 
-  // ③ 验收清算文件
-  const ledgerPath = path.join(dir, 'acceptance.md');
-  let ledgerText = '';
-  try {
-    ledgerText = fs.readFileSync(ledgerPath, 'utf8');
-  } catch {
-    blockers.push(
-      `${task.id}: 缺验收清算文件 works/data/khy/feedback/${name}/acceptance.md —— ` +
-        `请按 acceptance 的 ${splitAcceptance(task.acceptance).length} 条判据逐条给出 结果/证据`
-    );
-    return { blockers, warnings, verdicts };
+  // ③ 判据 + 运行记录 → 四值裁决
+  const records = acceptanceRunner.readRunRecords(dir);
+  const head = acceptanceRunner.currentHead(repoRoot);
+  for (const rec of records) {
+    if (rec && rec.head) {
+      rec.headStillAncestor = acceptanceRunner.headStillAncestor(repoRoot, rec.head, head);
+    }
   }
-  const parsed = parseAcceptanceLedger(ledgerText);
-  verdicts = parsed.verdicts;
-  blockers.push(...parsed.errors.map((e) => `${task.id}: ${e}`));
-
-  // ④ 条目数是否覆盖 acceptance 的判据条数（少勾 = 漏验收）
-  const expected = splitAcceptance(task.acceptance).length;
-  if (expected > 0 && verdicts.length < expected) {
-    blockers.push(
-      `${task.id}: 验收清算只覆盖 ${verdicts.length} 条，而 acceptance 有 ${expected} 条判据 —— 漏勾的判据不算通过`
-    );
-  }
-
-  return { blockers, warnings, verdicts };
+  const ctx = {
+    now: Number.isFinite(Number(o.now)) ? Number(o.now) : Date.now(),
+    maxAgeMs: o.maxAgeMs,
+    fingerprintFor: (rec) => acceptanceRunner.pathsFingerprint(repoRoot, rec && rec.paths),
+  };
+  const acceptance = acceptanceVerdict.evaluateAcceptance(task, records, ctx, splitAcceptance);
+  blockers.push(...acceptance.blockers);
+  warnings.push(...acceptance.warnings);
+  verdicts = acceptanceVerdict.toLegacyVerdicts(acceptance);
+  return { blockers, warnings, verdicts, verdict: acceptance.verdict, acceptance };
 }
 
 // ── scope_guard：入口锁边界 + 越界可见 ────────────────────────────
@@ -1539,6 +1610,7 @@ module.exports = {
   taskMapping,
   // 校验
   validateBug,
+  validateCriteria,
   validateTask,
   validateDataset,
   validatePrompts,

@@ -33,6 +33,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { spawnSync } = require('child_process');
 
 const { MANIFEST_EXPORT_KEY } = require('../commandManifest');
 const H = require('../hqStore');
@@ -718,7 +719,11 @@ async function cmdBugNew(ctx, positional, flags) {
  */
 function _gateReviewToDone(task, flags) {
   const repoRoot = H.REPO_ROOT;
-  const { blockers, warnings, verdicts } = H.reviewDoneBlockers(task, repoRoot, H.feedbackDir());
+  const maxAgeHours = Number(flags['max-age-hours']);
+  const opts = Number.isFinite(maxAgeHours) && maxAgeHours > 0
+    ? { maxAgeMs: maxAgeHours * 3600 * 1000 }
+    : {};
+  const { blockers, warnings, verdicts, verdict, acceptance } = H.reviewDoneBlockers(task, repoRoot, H.feedbackDir(), opts);
 
   if (blockers.length) {
     const c = _chalk();
@@ -731,19 +736,22 @@ function _gateReviewToDone(task, flags) {
       warnings.forEach((w) => lines.push(`  ! ${w}`));
     }
     lines.push('');
-    lines.push(c.dim(`  acceptance 共 ${H.splitAcceptance(task.acceptance).length} 条判据，` +
-      `已清算 ${verdicts.length} 条`));
-    lines.push(c.dim(`  生成清算模板：khy hq accept ${task.id}`));
-    return { ok: false, error: lines.join('\n'), blockers, warnings, verdicts };
+    lines.push(c.dim(`  当前裁决: ${verdict}`));
+    lines.push(c.dim(`  执行判据：khy hq accept ${task.id} --run   （缺 criteria[] 先 --scaffold）`));
+    lines.push(c.dim(`  生成人工清算模板：khy hq accept ${task.id}`));
+    return { ok: false, error: lines.join('\n'), blockers, warnings, verdicts, verdict };
   }
 
-  // 通过：把清算结果写回任务，供后续复核（不写证据全文，只写摘要）
+  // 通过：把裁决写回任务，供后续复核（不写证据全文，只写摘要）
   task.acceptance_audit = {
     at: H.today(),
+    verdict,
+    source: acceptance ? acceptance.source : null,
+    counts: acceptance ? acceptance.counts : null,
     total: verdicts.length,
     verdicts: verdicts.map((v) => `${v.result}:${v.title}`.slice(0, 80)),
   };
-  return { ok: true, warnings, verdicts };
+  return { ok: true, warnings, verdicts, verdict };
 }
 
 /** 状态迁移的公共实现（Bug 与任务共用）。 */
@@ -959,7 +967,12 @@ async function cmdTaskSet(ctx, positional, flags) {
         : '';
   console.log(c.green(`[OK] ${itemId} ${r.from} -> ${r.to}`) + tail);
   if (r.to === 'done' && r.item && r.item.acceptance_audit) {
-    console.log(c.dim(`  验收清算已入账：${r.item.acceptance_audit.total} 条判据全部有结果`));
+    const au = r.item.acceptance_audit;
+    const cnt = au.counts || {};
+    console.log(c.dim(
+      `  验收裁决已入账: ${au.verdict} · required ${cnt.passed || 0}/${cnt.required || 0} 通过` +
+        `${cnt.unresolved ? ` · 未验证 ${cnt.unresolved}` : ''}（来源 ${au.source || '未知'}）`
+    ));
   }
   return true;
 }
@@ -1053,13 +1066,228 @@ async function cmdNote(ctx, kind, positional, flags) {
   return true;
 }
 
-// ── accept（生成验收清算模板）────────────────────────────────────
+// ── accept（判据脚手架 / 执行 / 清算模板）─────────────────────
+
+const ACCEPT_CMD_RE = /^(khy|node|npm|npx|pnpm|yarn|python|py|git|bash|sh|docker)\b/;
+const ACCEPT_MANUAL_RESULTS = new Set(['pass', 'fail', 'skip']);
+
+function _looksLikeAcceptCmd(s) {
+  return ACCEPT_CMD_RE.test(String(s || '').trim());
+}
+
+/** 只收仓内真实存在的路径 —— 脚手架绑定一个已改名的路径，等于给未来埋假绿。 */
+function _acceptPathsIn(text) {
+  const re = /([A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)+)/g;
+  const out = [];
+  let m;
+  while ((m = re.exec(String(text || ''))) !== null) {
+    const rel = m[1].replace(/^\.\//, '').replace(/[.,;:]+$/, '');
+    if (out.includes(rel)) {
+      continue;
+    }
+    try {
+      if (fs.existsSync(path.join(H.REPO_ROOT, rel))) {
+        out.push(rel);
+      }
+    } catch {
+      /* 非法路径字符 → 不绑定 */
+    }
+  }
+  return out;
+}
 
 /**
- * `khy hq accept <T-ID> [--evidence <名称>]` —— 生成验收清算模板到
- * `.khy/feedback/<名称>/acceptance.md`，**按 `acceptance` 的实际判据逐条预填骨架**。
+ * 把散文 acceptance 逐句转成 criteria[] 骨架。
  *
- * 为什么要生成而不是让人手写：`acceptance` 的分句是机器可解析的（实测 23 条
+ * 分句里的反引号命令直接成为 cmd 判据（期望 exit 0）；其余一律 manual ——
+ * 猜成 cmd 会把「没跑」记成「跑了且通过」，正是要消灭的失败模式。
+ */
+function _criteriaFromProse(task) {
+  const items = H.splitAcceptance(task && task.acceptance);
+  return items.map((raw, i) => {
+    const desc = String(raw || '').replace(/`/g, '').replace(/\s+/g, ' ').trim();
+    const ticks = [...String(raw || '').matchAll(/`([^`]+)`/g)].map((x) => x[1].trim());
+    const cmd = ticks.find(_looksLikeAcceptCmd) || '';
+    const check = { kind: cmd ? 'cmd' : 'manual' };
+    if (cmd) {
+      check.cmd = cmd;
+      check.expect = { kind: 'exit', value: 0 };
+    }
+    const out = { id: `C${i + 1}`, desc, required: true, check };
+    if (cmd) {
+      const paths = _acceptPathsIn(raw);
+      if (paths.length) {
+        out.paths = paths;
+      }
+    }
+    return out;
+  });
+}
+
+/** `--manual "C1=pass,C3=skip"`（重复 flag 会被 router 折叠，故用逗号分隔）。 */
+function _parseManualSpec(raw) {
+  const out = {};
+  const text = String(raw || '').trim();
+  if (!text) {
+    return out;
+  }
+  for (const part of text.split(',')) {
+    const m = /^([A-Za-z0-9_-]+)\s*[=:]\s*(pass|fail|skip)$/i.exec(part.trim());
+    if (!m) {
+      return null;
+    }
+    out[m[1]] = m[2].toLowerCase();
+  }
+  return out;
+}
+
+function _acceptEvidenceName(task, flags) {
+  return String(flags.evidence || (task && task.evidence) || '').trim();
+}
+
+async function _acceptScaffold(ctx, itemId, task, doc, p, flags) {
+  const c = _chalk();
+  if (Array.isArray(task.criteria) && task.criteria.length && !flags.force) {
+    _say(ctx, 'err', `[ERROR] ${itemId} 已有 criteria[]（${task.criteria.length} 条）—— 不覆盖`);
+    console.log(c.dim('  要重生成：先删掉 criteria[]，或加 --force（会覆盖现有判据定义）'));
+    process.exitCode = 1;
+    return true;
+  }
+  const criteria = _criteriaFromProse(task);
+  if (!criteria.length) {
+    _say(ctx, 'err', `[ERROR] ${itemId} 的 acceptance 为空 —— 没有可拆的判据`);
+    process.exitCode = 1;
+    return true;
+  }
+  task.criteria = criteria;
+  if (flags.evidence) {
+    task.evidence = String(flags.evidence).trim();
+  }
+  task.updated = H.today();
+  H.saveJson(p.progress, doc.data);
+  const cmdCount = criteria.filter((x) => x.check.kind === 'cmd').length;
+  console.log(c.green(`[OK] ${itemId} 已写入 ${criteria.length} 条判据（可执行 ${cmdCount} · 人工 ${criteria.length - cmdCount}）`));
+  for (const x of criteria) {
+    const mark = x.check.kind === 'cmd' ? c.cyan('[cmd]') : c.dim('[manual]');
+    console.log(`  ${x.id} ${mark} ${x.check.kind === 'cmd' ? `\`${x.check.cmd}\`` : x.desc.slice(0, 70)}`);
+    if (x.paths && x.paths.length) {
+      console.log(c.dim(`       paths: ${x.paths.join(', ')}`));
+    }
+  }
+  console.log('');
+  console.log(c.dim('  脚手架是起点不是结论：逐条核对 cmd/expect/paths，别让默认 exit 0 冒充验收。'));
+  console.log(`  下一步：khy hq accept ${itemId} --run --evidence <名称> [--manual "C2=pass" --by <签名人>]`);
+  return true;
+}
+
+async function _acceptRun(ctx, itemId, task, flags) {
+  const c = _chalk();
+  const runner = require('../acceptanceRunner');
+  const verdictMod = require('../acceptanceVerdict');
+  if (!Array.isArray(task.criteria) || !task.criteria.length) {
+    _say(ctx, 'err', `[ERROR] ${itemId} 没有 criteria[] —— 机器无从执行散文判据`);
+    console.log(c.dim(`  先拆判据：khy hq accept ${itemId} --scaffold`));
+    process.exitCode = 1;
+    return true;
+  }
+  const name = _acceptEvidenceName(task, flags);
+  if (!name) {
+    _say(ctx, 'err', `[ERROR] 缺 --evidence <名称>（且 ${itemId} 上也没存过 evidence 字段）`);
+    process.exitCode = 1;
+    return true;
+  }
+  if (!H.EVIDENCE_NAME_RE.test(name)) {
+    _say(ctx, 'err', `[ERROR] evidence 名称非法: ${JSON.stringify(name)}（只允许字母/数字/./_/-）`);
+    process.exitCode = 1;
+    return true;
+  }
+
+  let manual = {};
+  if (flags.manual !== undefined) {
+    const parsed = _parseManualSpec(flags.manual);
+    if (parsed === null) {
+      _say(ctx, 'err', '[ERROR] --manual 格式: "C1=pass,C3=skip"（取值 pass|fail|skip）');
+      process.exitCode = 1;
+      return true;
+    }
+    const byId = new Map(task.criteria.map((x) => [String(x && x.id), x]));
+    for (const id of Object.keys(parsed)) {
+      const crit = byId.get(id);
+      if (!crit) {
+        _say(ctx, 'err', `[ERROR] --manual 指定了不存在的判据 id: ${id}`);
+        process.exitCode = 1;
+        return true;
+      }
+      if (crit.check && crit.check.kind === 'cmd') {
+        _say(ctx, 'err', `[ERROR] ${id} 是 cmd 判据 —— 结果必须由系统执行得出，不接受手写`);
+        process.exitCode = 1;
+        return true;
+      }
+    }
+    if (Object.keys(parsed).length && !String(flags.by || '').trim()) {
+      _say(ctx, 'err', '[ERROR] 人工判据必须带 --by <签名人> —— 无签名的人工结论机器不认');
+      process.exitCode = 1;
+      return true;
+    }
+    manual = Object.fromEntries(
+      Object.entries(parsed).map(([id, result]) => [id, { result, signedBy: String(flags.by || '').trim(), note: String(flags.note || '').trim() }])
+    );
+  }
+
+  const maxAgeHours = Number(flags['max-age-hours']);
+  const timeoutMs = Number(flags['timeout-ms']);
+  const run = runner.runAcceptance(task, {
+    repoRoot: H.REPO_ROOT,
+    evidenceDir: path.join(H.feedbackDir(), name),
+    manual,
+    maxAgeMs: Number.isFinite(maxAgeHours) && maxAgeHours > 0 ? maxAgeHours * 3600 * 1000 : undefined,
+    timeoutMs: Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : undefined,
+    splitAcceptance: H.splitAcceptance,
+  });
+  const r = run.result;
+
+  if (_truthy(flags.json)) {
+    console.log(JSON.stringify({
+      task: itemId,
+      verdict: r.verdict,
+      source: r.source,
+      counts: r.counts,
+      criteria: r.criteria,
+      newRecords: run.newRecords.length,
+      snapshot: run.snapshot,
+      blockers: r.blockers,
+      warnings: r.warnings,
+    }, null, 2));
+  } else {
+    for (const crit of r.criteria) {
+      const icon = crit.state === 'pass' ? c.green('[PASS]')
+        : crit.state === 'fail' ? c.red('[FAIL]')
+          : crit.state === 'skip' ? c.yellow('[SKIP]') : c.dim('[ ?  ]');
+      const tail = crit.state === 'pass' ? '' : ` · ${crit.reason || verdictMod.reasonText(crit.reason)}`;
+      console.log(`  ${icon} ${crit.id} ${crit.desc.slice(0, 70)}${tail}`);
+    }
+    const color = r.verdict === 'done' ? c.green : r.verdict === 'failed' ? c.red : c.yellow;
+    console.log('');
+    console.log(color(`  裁决 ${r.verdict}  ${r.counts.passed}/${r.counts.required} required 通过 · 执行记录 +${run.newRecords.length}`));
+    if (r.verdict !== 'done') {
+      const evRel = path.relative(H.REPO_ROOT, path.join(H.feedbackDir(), name)).split(path.sep).join('/');
+      console.log(c.dim(`  证据：${evRel}/acceptance.jsonl`));
+    }
+  }
+  if (r.verdict !== 'done') {
+    process.exitCode = 1;
+  }
+  return true;
+}
+
+/**
+ * `khy hq accept <T-ID>` —— 三种动作，按 flag 择一：
+ *
+ *   --scaffold   把散文 acceptance 拆成 criteria[]（可执行命令 → cmd 判据）
+ *   --run        系统执行 cmd 判据、把运行记录写进证据目录，给出四值裁决
+ *   （默认）     生成 acceptance.md 人工清算模板（旧行为，保留兼容）
+ *
+ * 为什么要生成模板而不是让人手写：`acceptance` 的分句是机器可解析的（实测 23 条
  * 分句数 1~7 不等），预填骨架能把「逐条勾选」变成填空而不是回忆 ——
  * 回忆会漏，填空不会。且骨架里已经含 `结果:` 占位，`reviewDoneBlockers`
  * 会因取值非法而拒收未填的模板，**不会出现「生成了模板就算完成」**。
@@ -1070,7 +1298,7 @@ async function cmdAccept(ctx, positional, flags) {
   const c = _chalk();
   const itemId = positional[0];
   if (!itemId) {
-    _say(ctx, 'err', '[ERROR] 用法: khy hq accept <T-ID> [--evidence <名称>]');
+    _say(ctx, 'err', '[ERROR] 用法: khy hq accept <T-ID> [--scaffold] [--run] [--evidence <名称>] [--manual "C1=pass" --by <人>]');
     process.exitCode = 1;
     return true;
   }
@@ -1086,6 +1314,13 @@ async function cmdAccept(ctx, positional, flags) {
     _say(ctx, 'err', `[ERROR] 未找到 ${itemId}`);
     process.exitCode = 1;
     return true;
+  }
+
+  if (_truthy(flags.scaffold)) {
+    return _acceptScaffold(ctx, itemId, task, doc, p, flags);
+  }
+  if (_truthy(flags.run)) {
+    return _acceptRun(ctx, itemId, task, flags);
   }
 
   const items = H.splitAcceptance(task.acceptance);
@@ -1149,6 +1384,246 @@ async function cmdAccept(ctx, positional, flags) {
   console.log(`    1. 逐条填 结果/证据`);
   console.log(`    2. khy hq task set ${itemId} review --evidence ${name}   # 记下绑定`);
   console.log(`    3. khy hq task set ${itemId} done                        # 清算通过才放行`);
+  return true;
+}
+
+// ── close（项目级收盘）──────────────────────────────────────────
+
+const DELIVERY_REPORT_REL = 'works/data/khy/reports/delivery-baseline.json';
+
+/**
+ * 交付基线报告：默认只读缓存，`--run-delivery` 才现跑。
+ *
+ * 为什么不默认现跑：`check-delivery-baseline.js --json` 在本机要 100~300 秒
+ * （全仓扫描），把它塞进一条「看项目状态」的命令里，人就会开始绕过这条命令。
+ * 缓存的代价是可能过期 —— 所以报告里必须带 `at` 供人判断，不能假装新鲜。
+ */
+function _deliveryReport(flags) {
+  const file = path.join(H.REPO_ROOT, DELIVERY_REPORT_REL);
+  if (_truthy(flags['run-delivery'])) {
+    const timeoutMs = Number(flags['delivery-timeout-ms']) || 300000;
+    const run = spawnSync(process.execPath, [path.join(H.REPO_ROOT, 'scripts', 'ci', 'check-delivery-baseline.js'), '--json'], {
+      cwd: H.REPO_ROOT,
+      encoding: 'utf8',
+      timeout: timeoutMs,
+      windowsHide: true,
+      maxBuffer: 32 * 1024 * 1024,
+    });
+    if (run.error || typeof run.stdout !== 'string' || !run.stdout.trim()) {
+      return { ok: false, reason: run.error ? run.error.message : `退出码 ${run.status} 且无输出` };
+    }
+    try {
+      const report = JSON.parse(run.stdout);
+      report.at = new Date().toISOString();
+      report.source = 'run';
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      fs.writeFileSync(file, JSON.stringify(report, null, 2) + '\n', 'utf8');
+      return { ok: true, report };
+    } catch (e) {
+      return { ok: false, reason: `输出无法解析为 JSON: ${e.message}` };
+    }
+  }
+  try {
+    const report = JSON.parse(fs.readFileSync(file, 'utf8'));
+    report.source = 'cache';
+    return { ok: true, report };
+  } catch (e) {
+    return { ok: false, reason: fs.existsSync(file) ? `缓存损坏: ${e.message}` : '无缓存报告（加 --run-delivery 现跑）' };
+  }
+}
+
+function _deliveryVerdict(delivery) {
+  if (!delivery.ok) {
+    return { status: 'unknown', reason: delivery.reason, gaps: [] };
+  }
+  const rep = delivery.report || {};
+  const counts = rep.counts || {};
+  const gaps = (Array.isArray(rep.results) ? rep.results : [])
+    .filter((r) => r && r.status === 'GAP')
+    .map((r) => `${r.id} ${r.title}`);
+  const gap = Number(counts.GAP) || 0;
+  const unk = Number(counts.UNKNOWN) || 0;
+  return {
+    status: gap ? 'gap' : (unk ? 'unknown' : 'pass'),
+    at: rep.at || null,
+    source: rep.source || null,
+    counts: { PASS: counts.PASS || 0, PARTIAL: counts.PARTIAL || 0, GAP: gap, UNKNOWN: unk },
+    gaps,
+    reason: gap ? `${gap} 项 GAP` : (unk ? `${unk} 项未测` : ''),
+  };
+}
+
+function _combineVerdict(taskVerdict, deliveryVerdict, withDelivery) {
+  if (!withDelivery) {
+    return taskVerdict;
+  }
+  if (taskVerdict === 'failed' || deliveryVerdict === 'failed' || deliveryVerdict === 'gap') {
+    return 'failed';
+  }
+  if (taskVerdict === 'unknown' || deliveryVerdict === 'unknown') {
+    return taskVerdict === 'done' ? 'partial' : (taskVerdict === 'unknown' ? 'unknown' : taskVerdict);
+  }
+  if (taskVerdict === 'done' && deliveryVerdict !== 'pass') {
+    return 'partial';
+  }
+  return taskVerdict;
+}
+
+/**
+ * `khy hq close` —— 把「项目结束了吗」变成一个可复算的读数。
+ *
+ * 两条轴分开报，绝不合并成一个布尔：
+ *   任务面：板面上每条 review/done 任务按判据 + 运行记录算四值；其余算未结。
+ *   交付面：D1–D10 记分板（缓存或现跑），GAP 不许被「任务全绿」遮住。
+ *
+ * 输出同时落 `works/data/khy/reports/PROJECT-STATUS.json`，供后续复核，
+ * 而不是只活在这一次终端输出里。
+ */
+async function cmdClose(ctx, positional, flags) {
+  const c = _chalk();
+  const runner = require('../acceptanceRunner');
+  const verdictMod = require('../acceptanceVerdict');
+  const p = H.paths(null);
+  const doc = H.readJsonSafe(p.progress);
+  if (!doc.ok) {
+    _say(ctx, 'err', `[ERROR] PROGRESS.json 无法读取: ${doc.error}`);
+    process.exitCode = 1;
+    return true;
+  }
+  const tasks = Array.isArray(doc.data.tasks) ? doc.data.tasks : [];
+  const snap = runner.gitSnapshot(H.REPO_ROOT);
+  const headAncestorCache = new Map();
+  const fpCache = new Map();
+  const recordsCache = new Map();
+  const fpFor = (rec) => {
+    const key = Array.isArray(rec && rec.paths) ? rec.paths.join('\n') : '';
+    if (!fpCache.has(key)) {
+      fpCache.set(key, runner.pathsFingerprint(H.REPO_ROOT, rec && rec.paths));
+    }
+    return fpCache.get(key);
+  };
+  const ctxFor = { now: Date.now(), fingerprintFor: fpFor };
+
+  const rows = [];
+  const blockers = [];
+  for (const t of tasks) {
+    const status = String((t && t.status) || '');
+    if (status !== 'done' && status !== 'review') {
+      rows.push({ id: t && t.id, status, verdict: 'open' });
+      continue;
+    }
+    const name = String((t && t.evidence) || '').trim();
+    let records = [];
+    if (name && H.EVIDENCE_NAME_RE.test(name)) {
+      if (!recordsCache.has(name)) {
+        recordsCache.set(name, runner.readRunRecords(path.join(H.feedbackDir(), name)));
+      }
+      records = recordsCache.get(name);
+    }
+    for (const rec of records) {
+      if (!rec || !rec.head) {
+        continue;
+      }
+      if (!headAncestorCache.has(rec.head)) {
+        headAncestorCache.set(rec.head, runner.headStillAncestor(H.REPO_ROOT, rec.head, snap.head));
+      }
+      rec.headStillAncestor = headAncestorCache.get(rec.head);
+    }
+    // done 是**已作出的决定**（当时过的门），不是「证据永远新鲜」：
+    // 项目收盘若按 24h 保鲜重算，任何做完一天的项目都会自动退回 unknown。
+    // 仍按判据定义（checkHash）与路径漂移校验，但不再按时间让它过期。
+    const acc = status === 'done' && t.acceptance_audit && t.acceptance_audit.verdict
+      ? {
+        verdict: t.acceptance_audit.verdict,
+        source: t.acceptance_audit.source || 'audit',
+        counts: t.acceptance_audit.counts || null,
+        blockers: [],
+      }
+      : verdictMod.evaluateAcceptance(
+        t,
+        records,
+        status === 'done' ? Object.assign({}, ctxFor, { maxAgeMs: Infinity }) : ctxFor,
+        H.splitAcceptance
+      );
+    rows.push({ id: t && t.id, status, verdict: acc.verdict, source: acc.source, counts: acc.counts });
+    if (acc.verdict === 'failed') {
+      for (const b of acc.blockers) {
+        blockers.push(`${t && t.id}: ${b}`);
+      }
+    }
+  }
+
+  const rollup = verdictMod.rollupTasks(rows);
+  const taskVerdict = rollup.verdict;
+  const counts = rollup.counts;
+  if (counts.unknown) {
+    blockers.push(
+      `任务面 ${counts.unknown} 条任务缺可复算判据或证据已失效 —— 没有判据就没有完成判定` +
+        '（khy hq accept <ID> --scaffold / --run）'
+    );
+  }
+
+  const withDelivery = _truthy(flags['with-delivery']) || _truthy(flags['run-delivery']);
+  const delivery = _deliveryVerdict(_deliveryReport(flags));
+  const verdict = _combineVerdict(taskVerdict, delivery.status, withDelivery);
+
+  const report = {
+    at: new Date().toISOString(),
+    head: snap.head,
+    dirtyCount: snap.dirtyCount,
+    scope: withDelivery ? 'project' : 'tasks',
+    verdict,
+    taskVerdict,
+    deliveryVerdict: delivery.status,
+    delivery,
+    counts,
+    blockers,
+    tasks: rows,
+  };
+  const reportsDir = process.env.KHY_REPORTS_DIR && String(process.env.KHY_REPORTS_DIR).trim()
+    ? path.resolve(String(process.env.KHY_REPORTS_DIR).trim())
+    : path.join(H.REPO_ROOT, 'works', 'data', 'khy', 'reports');
+  const outFile = path.join(reportsDir, 'PROJECT-STATUS.json');
+  try {
+    fs.mkdirSync(path.dirname(outFile), { recursive: true });
+    fs.writeFileSync(outFile, JSON.stringify(report, null, 2) + '\n', 'utf8');
+  } catch (e) {
+    _say(ctx, 'err', `[ERROR] 项目状态写入失败: ${e.message}`);
+    process.exitCode = 1;
+    return true;
+  }
+
+  if (_truthy(flags.json)) {
+    console.log(JSON.stringify(report, null, 2));
+  } else {
+    const color = (v) => (v === 'done' ? c.green(v) : v === 'failed' || v === 'gap' ? c.red(v) : c.yellow(v));
+    console.log(c.bold(`\n  项目收盘 · HEAD ${snap.head ? snap.head.slice(0, 8) : '未知'} · 脏 ${snap.dirtyCount == null ? '未知' : snap.dirtyCount}\n`));
+    console.log(`  任务面   ${color(taskVerdict)}  done ${counts.done} · partial ${counts.partial} · unknown ${counts.unknown} · failed ${counts.failed} · 未结 ${counts.open} / 共 ${counts.total}`);
+    const dline = delivery.ok
+      ? `${delivery.status}${delivery.reason ? `（${delivery.reason}）` : ''} · 来源 ${delivery.source}${delivery.at ? ` · ${delivery.at}` : ''}`
+      : `unknown（${delivery.reason}）`;
+    console.log(`  交付面   ${color(delivery.status)}  ${dline}${withDelivery ? '' : '  [未计入总裁决]'}`);
+    console.log(`  总裁决   ${color(verdict)}  （范围 ${report.scope}）`);
+    const notable = rows.filter((r) => r.status !== 'open' && r.verdict !== 'done');
+    if (notable.length) {
+      console.log('');
+      for (const r of notable) {
+        console.log(c.dim(`  - ${r.id} ${r.status} → ${r.verdict}${r.source ? `（${r.source}）` : ''}`));
+      }
+    }
+    if (delivery.gaps && delivery.gaps.length) {
+      console.log('');
+      console.log(c.red(`  交付 GAP ${delivery.gaps.length} 项：`));
+      for (const g of delivery.gaps) {
+        console.log(c.dim(`    - ${g}`));
+      }
+    }
+    console.log('');
+    console.log(c.dim(`  机读：${path.relative(H.REPO_ROOT, outFile).split(path.sep).join('/')}`));
+  }
+  if (verdict !== 'done' && verdict !== 'partial') {
+    process.exitCode = 1;
+  }
   return true;
 }
 
@@ -1401,7 +1876,10 @@ function _help(c) {
   console.log(c.dim('    khy hq next --task T-002          指定任务渲染提示词'));
   console.log(c.dim('    khy hq next --kind distill        手动渲染模板（不绑定条目）'));
   console.log(c.dim('    khy hq verify [BUG-001]           只读体检（数据一致性 + 提示词结构）'));
-  console.log(c.dim('    khy hq accept T-002 [--evidence <名称>]  生成验收清算模板（review→done 前置）'));
+  console.log(c.dim('    khy hq accept T-002 --scaffold            把散文 acceptance 拆成可执行判据'));
+  console.log(c.dim('    khy hq accept T-002 --run [--manual "C2=pass" --by 人]  系统执行判据并记账'));
+  console.log(c.dim('    khy hq accept T-002 [--evidence <名称>]  生成人工清算模板（旧路径）'));
+  console.log(c.dim('    khy hq close [--run-delivery]             项目级收盘：任务面 + 交付面四值裁决'));
   console.log(c.dim('    khy hq scope T-002                边界核对（越界可见，不拦）'));
   console.log(c.dim('    khy hq bug new "标题" [--severity P1] [--domain cli]'));
   console.log(c.dim('    khy hq bug set BUG-001 pending_verify [--root-cause "…"] [--fix "…"]'));
@@ -1452,6 +1930,8 @@ async function handleHq(parsed = {}, ctx = {}) {
       return cmdVerify(ctx, positional, flags);
     case 'accept':
       return cmdAccept(ctx, positional, flags);
+    case 'close':
+      return cmdClose(ctx, positional, flags);
     case 'scope':
       return cmdScope(ctx, positional);
     case 'bug': {
@@ -1509,8 +1989,8 @@ module.exports = {
   [MANIFEST_EXPORT_KEY]: {
     name: 'hq',
     description: '任务/Bug 状态真源操作面（works/record/ai/hq/）：状态总览、下一步提示词、状态机迁移',
-    usage: 'hq [status|next|verify|accept|scope|bug new|bug set|bug note|task set|task note|release|renew|states]',
-    subCommands: ['status', 'next', 'verify', 'accept', 'scope', 'bug', 'task', 'release', 'renew', 'states'],
+    usage: 'hq [status|next|verify|accept|close|scope|bug new|bug set|bug note|task set|task note|release|renew|states]',
+    subCommands: ['status', 'next', 'verify', 'accept', 'close', 'scope', 'bug', 'task', 'release', 'renew', 'states'],
     category: 'workflow',
     handler: handleHq,
   },

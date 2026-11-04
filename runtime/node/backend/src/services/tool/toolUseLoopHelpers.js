@@ -735,15 +735,26 @@ function _emitDeliveryFinalEvent(traceAudit, traceSessionId, diagTraceId, reques
   // all three loop exits (hook-stop / normal / max-iter), so the receipt is
   // written exactly once per turn regardless of which path concluded it.
   const _replyLen = Number(payload.finalReplyLength) || 0;
+  const _zeroTool = Number(payload.totalToolCalls) === 0;
   // status 表达的是「这次收尾可不可信」，不是「有没有工具报错」——达成率的分子用它。
   // hasConclusion 是启发式（_looksLikeDeliveryConclusion），聚合面必须把它当启发式报出。
+  // 零工具回合的「完成」只是**宣告**：没有一个可复算的副作用，不能记成达成。
+  // 实测：2026-10-20 起的 574 个有终点回合里 346 个零工具，旧算法把这些全算达成。
   const _achieved = payload.success === true
     && payload.stoppedByLimit !== true
     && payload.placeholderOnly !== true
     && _replyLen > 0
-    && payload.hasConclusion === true;
+    && payload.hasConclusion === true
+    && !_zeroTool;
+  // 收尾可信度四值：executed=有工具且收敛；declared=零工具只宣告；
+  // unverified=被截断/占位；failed=本回合失败。
+  const _completion = payload.success !== true
+    ? 'failed'
+    : (payload.stoppedByLimit === true || payload.placeholderOnly === true
+      ? 'unverified'
+      : (_zeroTool ? 'declared' : (payload.hasConclusion === true ? 'executed' : 'unverified')));
   // 轻档：命中「宣告未兑现」只改判定与记账，不改控制流。
-  const _intentUnfulfilled = Number(payload.totalToolCalls) === 0
+  const _intentUnfulfilled = _zeroTool
     && payload.success === true
     && payload.stoppedByLimit !== true
     && payload.hasConclusion !== true
@@ -752,16 +763,23 @@ function _emitDeliveryFinalEvent(traceAudit, traceSessionId, diagTraceId, reques
     require('../receiptService').finalizeReceipt({
       sessionId: traceSessionId,
       requestId,
-      status: payload.success ? (payload.hookStopped ? 'partial' : 'completed') : 'failed',
+      // zero-tool / 截断 / 占位都只是「宣告」或「未完成」，不写成 completed。
+      status: payload.success
+        ? (payload.hookStopped || _completion !== 'executed' ? 'partial' : 'completed')
+        : 'failed',
       error: payload.success ? null : payload.error || null,
       finalizeReason: 'delivery',
       outcome: {
         verdict: payload.success
           ? (_intentUnfulfilled
             ? 'intent-unfulfilled'
-            : (payload.stoppedByLimit ? 'max-iterations' : (payload.hasConclusion ? 'concluded' : 'no-conclusion')))
+            : (payload.stoppedByLimit
+              ? 'max-iterations'
+              : (_zeroTool && payload.hasConclusion ? 'declared-unverified' : (payload.hasConclusion ? 'concluded' : 'no-conclusion'))))
           : 'failed',
         achieved: _achieved,
+        completion: _completion,
+        zeroTool: _zeroTool,
         intentUnfulfilled: _intentUnfulfilled,
         hasConclusion: payload.hasConclusion,
         stoppedByLimit: payload.stoppedByLimit,
@@ -778,7 +796,7 @@ function _emitDeliveryFinalEvent(traceAudit, traceSessionId, diagTraceId, reques
     return;
   }
   try {
-    traceAudit.logEvent('agent.delivery.final', payload, {
+    traceAudit.logEvent('agent.delivery.final', Object.assign({}, payload, { completion: _completion }), {
       sessionId: traceSessionId,
       traceId: diagTraceId,
       requestId,

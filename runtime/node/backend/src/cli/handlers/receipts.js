@@ -311,12 +311,19 @@ async function handleReceipts(subCommand, args, options) {
     // 可度量 = 同一回合既有终点记录、又有裁决。这是达成率唯一的合法分母。
     let measurable = 0;
     let achieved = 0;
+    let joinedZeroTool = 0;
+    let zeroToolAchieved = 0;
     for (const [reqId, run] of runById) {
       if (!run.end) continue;
       const rc = receiptByReq.get(reqId);
       if (!rc || !rc.outcome || typeof rc.outcome.achieved !== 'boolean') continue;
       measurable += 1;
       if (rc.outcome.achieved) achieved += 1;
+      // 零工具回合的「达成」是旧口径的虚高：没有副作用可复算。单列出来才看得见。
+      if ((Number(run.end.totalToolCalls) || 0) === 0) {
+        joinedZeroTool += 1;
+        if (rc.outcome.achieved) zeroToolAchieved += 1;
+      }
       // 出处切分：夹具/测试流量必须能被单列出去，否则比率是对着一堆探针算的。
       const src = String(run.start.source || rc.source || '未标注');
       bySource.set(src, (bySource.get(src) || 0) + 1);
@@ -329,9 +336,12 @@ async function handleReceipts(subCommand, args, options) {
     const superseded = all.filter((r) => r.finalizeReason === 'superseded').length;
     // 裁决族分布：intent-unfulfilled 是「模型宣告要做、本轮零工具却按完成收口」那一族。
     const verdicts = new Map();
+    const completions = new Map();
     for (const r of all) {
       const v = (r.outcome && r.outcome.verdict) || 'no-outcome';
       verdicts.set(v, (verdicts.get(v) || 0) + 1);
+      const cm = (r.outcome && r.outcome.completion) || 'no-completion';
+      completions.set(cm, (completions.get(cm) || 0) + 1);
     }
     const tagged = all.filter((r) => r.source).length;
     const pct = (n, d) => (d > 0 ? `${((n / d) * 100).toFixed(1)}%` : '—');
@@ -344,6 +354,12 @@ async function handleReceipts(subCommand, args, options) {
       console.log(chalk.green(`    达成率        ${achieved}/${measurable}  ${pct(achieved, measurable)}`));
       console.log(`    截断率        ${truncated}/${withEnd}  ${pct(truncated, withEnd)}`);
       console.log(`    零工具直答    ${zeroTool}/${withEnd}  ${pct(zeroTool, withEnd)}`);
+      if (joinedZeroTool > 0) {
+        console.log(chalk.yellow(
+          `    零工具记达成  ${zeroToolAchieved}/${joinedZeroTool}  ${pct(zeroToolAchieved, joinedZeroTool)}`
+          + (zeroToolAchieved > 0 ? '  ← 旧口径虚高：没有可复算副作用的回合被记成达成' : '')
+        ));
+      }
     } else {
       printInfo('    达成率        不可计算：没有同时具备「终点记录 + 裁决」的回合');
     }
@@ -373,6 +389,10 @@ async function handleReceipts(subCommand, args, options) {
     const vrows = [...verdicts.entries()].sort((a, b) => b[1] - a[1]);
     if (vrows.length) {
       console.log(chalk.dim(`    裁决族        ${vrows.map(([k, v]) => `${k}:${v}`).join(' · ')}`));
+    }
+    const crows = [...completions.entries()].sort((a, b) => b[1] - a[1]);
+    if (crows.some(([k]) => k !== 'no-completion')) {
+      console.log(chalk.dim(`    收尾可信度    ${crows.map(([k, v]) => `${k}:${v}`).join(' · ')}`));
     }
     // 分母纯度：回执里没有任何出处标记时，测试/自动化流量与真人请求混在同一分母内。
     console.log(chalk.dim(

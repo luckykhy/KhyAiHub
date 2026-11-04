@@ -1,10 +1,15 @@
 'use strict';
 
 /**
- * hqReviewGate.test.js — `review -> done` 验收清算门 + `todo -> doing` 边界锁的行为锁。
+ * hqReviewGate.test.js — `review -> done` 完成裁决门 + `todo -> doing` 边界锁的行为锁。
  *
- * 关联设计：`.ai/hq/PROGRESS.json` 的 `review_done_rule` 段；机制说明见
- * `hqStore.js` 的「验收清算」与「scope_guard」两节。
+ * 关联设计：`works/record/ai/hq/PROGRESS.json` 的 `review_done_rule` 段；机制说明见
+ * `hqStore.js` 的「验收清算」与 `scope_guard` 两节。
+ *
+ * 2026-11-04 起，门读的不是 `acceptance.md` 里手写的 PASS，而是
+ * `criteria[]` → 系统执行 → `acceptance.jsonl` 运行记录 → 四值裁决
+ * （`acceptanceVerdict.js`）。所以本文件的「好数据」夹具是**结构化判据 + 运行记录**，
+ * 不再是一份全勾的清算文件 —— 后者现在属于 legacy，最多判 partial。
  *
  * ⚠ **必须是 node:test 而不是 jest**：`services/backend/package.json` 里
  * `test:all = npm test && npm run test:node` —— 两套 runner 都扫全部 `*.test.js`，
@@ -22,6 +27,7 @@
  *   - **E2E 只留 5 个 spawn**，各证明一件纯逻辑证明不了的事：
  *     接线真实存在（拒绝非零退出码 + 状态不变 / 放行真的落盘 done /
  *     未填模板过不了门）。
+ *   判据逻辑本身的回归锁在 `tests/cli/acceptanceVerdict.test.js`。
  *
  * ## 为什么这个文件存在
  *
@@ -40,10 +46,14 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 
 const H = require('../../src/cli/hqStore');
+const V = require('../../src/cli/acceptanceVerdict');
+const R = require('../../src/cli/acceptanceRunner');
 
 const CLI = path.resolve(__dirname, '..', '..', 'bin', 'khy.js');
-const REPO = path.resolve(__dirname, '..', '..', '..', '..');
-const REAL_HQ = path.join(REPO, '.ai', 'hq');
+// tests/cli → tests → backend → node → runtime → <repo>：五级
+const REPO = path.resolve(__dirname, '..', '..', '..', '..', '..');
+// HQ 状态真源 2026-09-17 从 `.ai/hq/` 迁到 `works/record/ai/hq/`，这里跟着走。
+const REAL_HQ = path.join(REPO, 'works', 'record', 'ai', 'hq');
 
 // ── 夹具 ─────────────────────────────────────────────────────────
 
@@ -54,6 +64,58 @@ const TASK5 = () => ({
   acceptance: '1) 甲：npx jest 全绿；2) 乙：接口契约不变；3) 丙：新文件 eslint 零告警；4) 丁：行数 ≤800；5) 戊：文档同步',
   evidence: 'T-999-fixture',
 });
+
+/** 新契约的形状：5 条可执行判据。 */
+const STRUCT5 = (overrides) => Object.assign({
+  id: 'T-999',
+  status: 'review',
+  evidence: 'T-999-fixture',
+  criteria: [1, 2, 3, 4, 5].map((n) => ({
+    id: `C${n}`,
+    desc: `判据 ${n}`,
+    check: { kind: 'cmd', cmd: 'node -e "process.exit(0)"', expect: { kind: 'exit', value: 0 } },
+    paths: [],
+  })),
+}, overrides);
+
+/**
+ * 按任务判据造运行记录并落盘（与 `khy hq accept --run` 同源写入）。
+ * mutate 返回假值即丢弃该条记录（模拟「这条没跑」）。
+ */
+function writeRecords(fbRoot, name, task, mutate) {
+  const dir = mkEvidence(fbRoot, name, {});
+  const now = Date.now();
+  const head = R.currentHead(REPO);
+  for (const raw of task.criteria) {
+    const c = V.normalizeCriterion(raw, 0);
+    let rec = {
+      id: c.id,
+      kind: c.kind,
+      checkHash: V.checkHash(c),
+      at: new Date(now).toISOString(),
+      atMs: now,
+      head,
+      dirtyCount: 0,
+      paths: c.paths,
+      pathsFingerprint: null,
+      result: 'pass',
+      reason: '',
+      exit: 0,
+      timedOut: false,
+      durationMs: 1,
+      stdoutTail: '',
+      stderrTail: '',
+      source: 'system',
+    };
+    if (mutate) {
+      rec = mutate(rec, c);
+    }
+    if (rec) {
+      R.appendRunRecord(dir, rec);
+    }
+  }
+  return dir;
+}
 
 /** 独立临时目录（每用例新建，绝不碰真实 `.khy/feedback/`）。 */
 function tmpDir() {
@@ -159,76 +221,99 @@ test('矩阵 C：evidence 目录为空 → 阻断', () => {
   }
 });
 
-test('矩阵 D：有文件但缺 acceptance.md → 阻断', () => {
-  const fb = tmpDir();
-  try {
-    mkEvidence(fb, 'T-999-fixture', { 'complaint.md': '主诉\n' });
-    const { blockers } = H.reviewDoneBlockers(TASK5(), REPO, fb);
-    assert.ok(blockers.some((b) => /acceptance\.md/.test(b)), JSON.stringify(blockers));
-  } finally {
-    fs.rmSync(fb, { recursive: true, force: true });
-  }
-});
-
-test('矩阵 E/F/G：SKIP 缺理由 / PASS 缺证据 / FAIL 存在 → 都阻断', () => {
-  const cases = [
-    ['skip-no-reason', /理由/],
-    ['pass-no-evidence', /证据/],
-    ['fail', /FAIL/],
-  ];
-  for (const [bad, re] of cases) {
-    const fb = tmpDir();
-    try {
-      mkEvidence(fb, 'T-999-fixture', { 'acceptance.md': goodLedger(5, { 2: bad }) });
-      const { blockers } = H.reviewDoneBlockers(TASK5(), REPO, fb);
-      assert.ok(
-        blockers.some((b) => re.test(b)),
-        `breaks=${bad} 应命中 ${re}；实际：${JSON.stringify(blockers)}`
-      );
-    } finally {
-      fs.rmSync(fb, { recursive: true, force: true });
-    }
-  }
-});
-
-test('矩阵 H：清算条数少于判据条数（漏勾）→ 阻断', () => {
-  const fb = tmpDir();
-  try {
-    mkEvidence(fb, 'T-999-fixture', { 'acceptance.md': goodLedger(2) });
-    const { blockers } = H.reviewDoneBlockers(TASK5(), REPO, fb);
-    assert.ok(blockers.some((b) => /漏勾/.test(b)), JSON.stringify(blockers));
-  } finally {
-    fs.rmSync(fb, { recursive: true, force: true });
-  }
-});
-
-test('矩阵 I：全条清算且带证据 → 零阻断（防「一律拒绝的 stub」）', () => {
+test('矩阵 D：只有散文、无可执行判据 → 阻断（acceptance.md 不再是真相）', () => {
   const fb = tmpDir();
   try {
     mkEvidence(fb, 'T-999-fixture', { 'acceptance.md': goodLedger(5) });
-    const { blockers, verdicts } = H.reviewDoneBlockers(TASK5(), REPO, fb);
-    assert.deepStrictEqual(blockers, [], JSON.stringify(blockers));
-    assert.strictEqual(verdicts.length, 5);
+    const { blockers } = H.reviewDoneBlockers(TASK5(), REPO, fb);
+    assert.ok(blockers.some((b) => /legacy-markdown-acceptance/.test(b)), JSON.stringify(blockers));
   } finally {
     fs.rmSync(fb, { recursive: true, force: true });
   }
 });
 
-test('矩阵 附：acceptance 质量与路径问题只 warning 不阻断（防误报率失控）', () => {
+test('矩阵 E/F/G：FAIL / SKIP 缺理由 / 人工项缺签名 → 都阻断', () => {
   const fb = tmpDir();
   try {
-    // 纯描述性 acceptance（无命令无数字）+ 引用不存在的路径，但清算全勾
-    const t = {
-      id: 'T-999',
-      status: 'review',
-      acceptance: '按 _meta/SPLIT-PLAN.md 执行；界面好看；用户满意',
-      evidence: 'T-999-fixture',
-    };
-    mkEvidence(fb, 'T-999-fixture', { 'acceptance.md': goodLedger(3) });
+    const failTask = STRUCT5();
+    writeRecords(fb, 'T-999-fixture', failTask, (rec) =>
+      (rec.id === 'C2' ? Object.assign({}, rec, { result: 'fail', reason: 'exit=1（期望 0）' }) : rec)
+    );
+    const fail = H.reviewDoneBlockers(failTask, REPO, fb);
+    assert.ok(fail.blockers.some((b) => /C2.*FAIL/.test(b)), JSON.stringify(fail.blockers));
+
+    fs.rmSync(path.join(fb, 'T-999-fixture'), { recursive: true, force: true });
+    const manualTask = STRUCT5({
+      criteria: [{ id: 'C1', desc: '手测界面', check: { kind: 'manual' } }],
+    });
+    writeRecords(fb, 'T-999-fixture', manualTask, (rec) =>
+      Object.assign({}, rec, { kind: 'manual', result: 'skip', signedBy: '孔浩原', note: '' })
+    );
+    const skip = H.reviewDoneBlockers(manualTask, REPO, fb);
+    assert.ok(skip.blockers.some((b) => /C1.*SKIP/.test(b)), JSON.stringify(skip.blockers));
+
+    fs.rmSync(path.join(fb, 'T-999-fixture'), { recursive: true, force: true });
+    writeRecords(fb, 'T-999-fixture', manualTask, (rec) =>
+      Object.assign({}, rec, { kind: 'manual', result: 'pass', signedBy: '' })
+    );
+    const unsigned = H.reviewDoneBlockers(manualTask, REPO, fb);
+    assert.ok(unsigned.blockers.some((b) => /缺签名/.test(b)), JSON.stringify(unsigned.blockers));
+  } finally {
+    fs.rmSync(fb, { recursive: true, force: true });
+  }
+});
+
+test('矩阵 H：只跑了部分判据（其余无运行记录）→ 阻断', () => {
+  const fb = tmpDir();
+  try {
+    const task = STRUCT5();
+    writeRecords(fb, 'T-999-fixture', task, (rec) => (rec.id === 'C1' || rec.id === 'C2' ? rec : null));
+    const { blockers } = H.reviewDoneBlockers(task, REPO, fb);
+    assert.ok(blockers.some((b) => /C3.*没有运行记录/.test(b)), JSON.stringify(blockers));
+  } finally {
+    fs.rmSync(fb, { recursive: true, force: true });
+  }
+});
+
+test('矩阵 I：全条判据都有通过记录 → 零阻断（防「一律拒绝的 stub」）', () => {
+  const fb = tmpDir();
+  try {
+    const task = STRUCT5();
+    writeRecords(fb, 'T-999-fixture', task);
+    const { blockers, verdicts, verdict } = H.reviewDoneBlockers(task, REPO, fb);
+    assert.deepStrictEqual(blockers, [], JSON.stringify(blockers));
+    assert.strictEqual(verdicts.length, 5);
+    assert.strictEqual(verdict, 'done');
+  } finally {
+    fs.rmSync(fb, { recursive: true, force: true });
+  }
+});
+
+test('矩阵 附：路径失效只 warning 不阻断（防误报率失控）', () => {
+  const fb = tmpDir();
+  try {
+    // 可执行判据全过，但散文里引用了不存在的路径
+    const t = STRUCT5({ acceptance: '按 _meta/SPLIT-PLAN.md 执行；界面好看；用户满意' });
+    writeRecords(fb, 'T-999-fixture', t);
     const { blockers, warnings } = H.reviewDoneBlockers(t, REPO, fb);
     assert.deepStrictEqual(blockers, [], '形式问题不得阻断');
-    assert.ok(warnings.some((w) => /无.*命令|数字/.test(w)), JSON.stringify(warnings));
     assert.ok(warnings.some((w) => /SPLIT-PLAN/.test(w)), JSON.stringify(warnings));
+  } finally {
+    fs.rmSync(fb, { recursive: true, force: true });
+  }
+});
+
+test('矩阵 附2：legacy 任务的散文质量审计仍只 warning，阻断来自「没有可执行判据」', () => {
+  const fb = tmpDir();
+  try {
+    mkEvidence(fb, 'T-999-fixture', { 'acceptance.md': goodLedger(3) });
+    const { blockers, warnings } = H.reviewDoneBlockers(
+      { ...TASK5(), acceptance: '界面好看；用户满意' },
+      REPO,
+      fb
+    );
+    assert.ok(warnings.some((w) => /无.*命令|数字/.test(w)), JSON.stringify(warnings));
+    assert.ok(blockers.every((b) => /legacy-markdown-acceptance/.test(b)), JSON.stringify(blockers));
   } finally {
     fs.rmSync(fb, { recursive: true, force: true });
   }
@@ -336,6 +421,14 @@ function sandboxStatus(env, id) {
 test('E2E 缺 evidence → 非零退出码且状态不变（接线真实存在的证明）', () => {
   const env = newSandboxEnv();
   try {
+    // 真实盘上的 T-023 早已 done —— 先摆成 review 且抹掉 evidence，才测得到这条分支
+    const p = path.join(env.hq, 'PROGRESS.json');
+    const d = JSON.parse(fs.readFileSync(p, 'utf8'));
+    const t = d.tasks.find((x) => x.id === 'T-023');
+    t.status = 'review';
+    delete t.evidence;
+    fs.writeFileSync(p, JSON.stringify(d, null, 2) + '\n', 'utf8');
+
     const r = runCli(['hq', 'task', 'set', 'T-023', 'done'], env.env, env.root);
     assert.notStrictEqual(r.code, 0, `应被拒但退出码 ${r.code}；输出：\n${r.output}`);
     assert.strictEqual(sandboxStatus(env, 'T-023'), 'review', '被拒时状态必须不变');
@@ -345,18 +438,19 @@ test('E2E 缺 evidence → 非零退出码且状态不变（接线真实存在�
   }
 });
 
-test('E2E 存在 FAIL 的清算 → 拒（清算内容真的被读，不是只查目录存在）', () => {
+test('E2E 存在 FAIL 的运行记录 → 拒（记录内容真的被读，不是只查目录存在）', () => {
   const env = newSandboxEnv();
   try {
-    mkEvidence(env.fb, 'T-023-e2e', {
-      'acceptance.md': goodLedger(5, { 3: 'fail' }),
-    });
     const p = path.join(env.hq, 'PROGRESS.json');
     const d = JSON.parse(fs.readFileSync(p, 'utf8'));
     const t = d.tasks.find((x) => x.id === 'T-023');
     t.status = 'review';
     t.evidence = 'T-023-e2e';
+    t.criteria = STRUCT5().criteria.slice(0, 2);
     fs.writeFileSync(p, JSON.stringify(d, null, 2) + '\n', 'utf8');
+    writeRecords(env.fb, 'T-023-e2e', t, (rec) =>
+      (rec.id === 'C2' ? Object.assign({}, rec, { result: 'fail', reason: 'exit=1（期望 0）' }) : rec)
+    );
 
     const r = runCli(['hq', 'task', 'set', 'T-023', 'done'], env.env, env.root);
     assert.notStrictEqual(r.code, 0, `应被拒；输出：\n${r.output}`);
@@ -366,7 +460,7 @@ test('E2E 存在 FAIL 的清算 → 拒（清算内容真的被读，不是只�
   }
 });
 
-test('E2E 全条清算 → 放行落盘 done 且清算入账（防「一律拒绝的 stub」）', () => {
+test('E2E 全部判据通过 → 放行落盘 done 且裁决入账（防「一律拒绝的 stub」）', () => {
   const env = newSandboxEnv();
   try {
     const p = path.join(env.hq, 'PROGRESS.json');
@@ -374,9 +468,9 @@ test('E2E 全条清算 → 放行落盘 done 且清算入账（防「一律拒�
     const t = d.tasks.find((x) => x.id === 'T-023');
     t.status = 'review';
     t.evidence = 'T-023-e2e';
+    t.criteria = STRUCT5().criteria;
     fs.writeFileSync(p, JSON.stringify(d, null, 2) + '\n', 'utf8');
-    const expected = H.splitAcceptance(t.acceptance).length;
-    mkEvidence(env.fb, 'T-023-e2e', { 'acceptance.md': goodLedger(expected) });
+    writeRecords(env.fb, 'T-023-e2e', t);
 
     const r = runCli(['hq', 'task', 'set', 'T-023', 'done'], env.env, env.root);
     assert.strictEqual(r.code, 0, `应放行；输出：\n${r.output}`);
@@ -385,7 +479,8 @@ test('E2E 全条清算 → 放行落盘 done 且清算入账（防「一律拒�
     const d2 = JSON.parse(fs.readFileSync(p, 'utf8'));
     const t2 = d2.tasks.find((x) => x.id === 'T-023');
     assert.ok(t2.acceptance_audit, '放行后应写入 acceptance_audit');
-    assert.strictEqual(t2.acceptance_audit.total, expected);
+    assert.strictEqual(t2.acceptance_audit.verdict, 'done');
+    assert.strictEqual(t2.acceptance_audit.total, 5);
   } finally {
     fs.rmSync(env.root, { recursive: true, force: true });
   }
@@ -436,14 +531,14 @@ test('auditAcceptancePaths 抓不存在路径、放过真实路径、不被中�
   assert.strictEqual(bad.length, 1, JSON.stringify(bad));
 
   const ok = H.auditAcceptancePaths(
-    { id: 'T-998', acceptance: '改 services/backend/src/cli/hqStore.js' },
+    { id: 'T-998', acceptance: '改 runtime/node/backend/src/cli/hqStore.js' },
     REPO
   );
   assert.deepStrictEqual(ok, []);
 
   // 曾把「终点：services/…」的中文前缀吞进路径 → 真实文件被误报（2026-09-23 修复）
   const cn = H.auditAcceptancePaths(
-    { id: 'T-998', acceptance: '4) 终点：services/backend/src/cli/hqStore.js ≤800 行' },
+    { id: 'T-998', acceptance: '4) 终点：runtime/node/backend/src/cli/hqStore.js ≤800 行' },
     REPO
   );
   assert.deepStrictEqual(cn, [], JSON.stringify(cn));
