@@ -5,6 +5,27 @@ All notable changes to khy OS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.2.2
+
+khy OS 1.2.2:开发态批次收口——思维链与工具执行在三端成块可读、分发仓迁到 KhyAiHub、文档主张首次变成可机检的事实。
+
+### Highlights
+
+- **思维链从拍平正文里分离出来单独折叠**（TUI / 桌面 / 安卓三端）：此前 `thinking` 混在拍平后的 `content` 字符串里，读起来是一段没有归属的正文；现走独立字段与独立折叠块，流式段可收展（`apps/khyos-desktop` 的 `ThinkingBlock` + 渲染层数据链路）。
+- **工具执行按提问归属，不再浮在会话顶端**（`apps/khyos-desktop/src/renderer/`）：执行面板挂到产生它的那条回复下面，切会话即清；顺带修掉 `.khy-content-col` 注释里 `mt-*/my-*` 的 `*/` 提前闭合——lightningcss 只报一条 `Delim('*')` 警告，整条 860px 居中列被静默丢弃。
+- **结构化工具执行输出**（后端 sink + Ink 面板）：单例 sink、面板与高度账本接线；D2 数据模型与 S3 渲染层以封闭集合取代 `satisfies`，三区次序成闸。
+- **分发仓迁到 KhyAiHub**：`luckykhy/khy_os` 删除后，新增 `scripts/release/sync-dist.js` 逐笔追加本地提交并校验出链树的树哈希，同步点记 `DIST-SYNC.json`；`sync-gitee` 改用 `checkout`，此前写法只对公开仓成立、私有仓从未走到推送。
+- **文档主张可机检**（DOCS-005 / DOCS-006 / DOCS-007）：漂移观察者、内容级主张校验、数值主张校验三条守卫落地，DOCS-006 扫描提速 16 倍；另修 7 处守卫假绿（SSOT 路径 / 缺失 `node:test` / 迁移路径 / Python 实探）与两处失效守卫（恒红的 must 级发布门、零覆盖的索引检查），`pr-gate` 接入 gift-guards 硬门（后端 164 例 + 脚本 206 例）。
+- **后端实现补齐**：backend-services 12 批、backend-cli 2 批回归主线；收掉 `src` 套件既有红（jest 全局桥 / Windows PATH / 手机工具基线 / 文档夹具），补回送别礼收口的三处实现漂移（波次分隔符 / 指令登记 / 休眠标注）。
+- **安全收敛**：微信通道三处外发与准入收紧（事故根因修复）；移除入库的 `.env.tmp`，补生产弱密钥守卫与暂存密钥扫描。
+- **便携与构建**：`repair-junctions.ps1` 修根目录 7 个受控目录联接；Docker 构建上下文再排 4.4G Flutter 产物并新增 dockerignore 契约守卫；桌面端加单实例锁，重复点图标不再起第二个实例。
+- **仓库卫生**：16 个一次性残留解除跟踪并接入卫生守卫；布局巡检第 30–39 节把根 census 从 66 压到 52，并逐名归因。
+
+### Compatibility
+
+- 安装 / 升级:`pip install -U khy-os` 或 `npm install -g @khy-os/khy-os`;`khy --version` 应报告 `1.2.2`。
+
+---
 ## Unreleased
 
 ### Fixed
