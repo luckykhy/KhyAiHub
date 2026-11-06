@@ -90,5 +90,13 @@ descFn('LiveModelSwitch', () => {
     expect(state.pendingSwitch).toBeNull();
     expect(state.generating).toBe(false);
   });
+
+  test('clearOverride drops the in-memory model but keeps the generation lock', () => {
+    switcher.switchModel('claude-3');
+    switcher.generationStarted();
+    switcher.clearOverride();
+    expect(switcher.getActiveModel()).toBe('gpt-4o');
+    expect(switcher.getState().generating).toBe(true);
+  });
 });
 
