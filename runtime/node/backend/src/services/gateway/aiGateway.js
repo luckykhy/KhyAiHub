@@ -2618,16 +2618,29 @@ gateway.classifyError = classifyError;
  * and overrides process.env.GATEWAY_PREFERRED_MODEL on the next generate().
  */
 gateway.syncModelSwitch = function syncModelSwitch(model) {
-  if (_modelSwitch && model) {
+  if (!_modelSwitch) {
+    return;
+  }
+  const next = String(model || '').trim();
+  // Auto / channel-only selections carry no model name. switchModel(null) is a
+  // no-op, so the previous override used to survive and be sent to the newly
+  // picked channel (model_not_found). Clear it instead.
+  if (!next || next.toLowerCase() === 'auto') {
     try {
-      _modelSwitch.switchModel(model, {
-        reason: 'gateway_preference',
-        persist: false,
-        force: true,
-      });
+      _modelSwitch.clearOverride('gateway_preference_cleared');
     } catch {
       /* best effort */
     }
+    return;
+  }
+  try {
+    _modelSwitch.switchModel(next, {
+      reason: 'gateway_preference',
+      persist: false,
+      force: true,
+    });
+  } catch {
+    /* best effort */
   }
 };
 

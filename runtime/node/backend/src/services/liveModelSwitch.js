@@ -150,6 +150,21 @@ class LiveModelSwitch {
   }
 
   /**
+   * Drop the in-memory override without touching the generation lock or the
+   * persisted preference. Used when the user picks Auto / a channel-only entry:
+   * switchModel(null) is a no-op, so the previous model used to stay in force
+   * and hijack the next request even though the selection had been cleared.
+   */
+  clearOverride(reason = 'cleared') {
+    const from = this._currentModel;
+    this._currentModel = null;
+    this._pendingSwitch = null;
+    if (from) {
+      this._recordEvent(from, this._defaultModel, reason, false);
+    }
+  }
+
+  /**
    * Reset to default model.
    */
   reset() {

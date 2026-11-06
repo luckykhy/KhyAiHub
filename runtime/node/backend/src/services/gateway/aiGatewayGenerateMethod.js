@@ -1351,8 +1351,21 @@ const AIGatewayGenerateMethod = {
       return buildEarlyCancelledResult(getAbortReason());
     }
 
-    // Live model switching: apply active model if no explicit model specified
-    if (_modelSwitch && !options.model) {
+    // Live model switching: apply the active model only when the caller did not
+    // pin one. Web/desktop send the selected {preferredAdapter, preferredModel}
+    // on every request; the CLI passes the persisted pair. The live override is
+    // process-wide, so an auto-escalation or an earlier /model pick would
+    // otherwise replace the newly selected model with one that belongs to
+    // another channel (model_not_found) — the "selection jumps to an
+    // unavailable model" report.
+    const _pinnedModel = String(options.preferredModel || '').trim();
+    const _pinnedAdapter = String(options.preferredAdapter || '')
+      .trim()
+      .toLowerCase();
+    const _hasPinnedSelection =
+      (!!_pinnedModel && _pinnedModel.toLowerCase() !== 'auto') ||
+      (!!_pinnedAdapter && _pinnedAdapter !== 'auto');
+    if (_modelSwitch && !options.model && !_hasPinnedSelection) {
       const activeModel = _modelSwitch.getActiveModel();
       if (activeModel && activeModel !== 'auto') {
         options.model = activeModel;
