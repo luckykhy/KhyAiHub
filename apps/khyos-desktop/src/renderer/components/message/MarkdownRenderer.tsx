@@ -299,7 +299,9 @@ function renderInline(text: string): React.ReactNode {
     if (match[1]) {
       parts.push(<InlineCode key={key++}>{match[1].slice(1, -1)}</InlineCode>)
     } else if (match[2]) {
-      parts.push(<strong key={key++} className="font-semibold text-foreground">{match[2].slice(2, -2)}</strong>)
+      // 消息区是等宽栈，CJK 回退 NSimSun 只有一个字面 —— 600 与 400 同形，
+      // 加粗只能靠颜色：品牌强调令牌（[DESIGN-FE-012] 唯一彩色强调）。
+      parts.push(<strong key={key++} className="font-semibold text-brand">{match[2].slice(2, -2)}</strong>)
     } else if (match[3]) {
       parts.push(<em key={key++} className="italic">{match[3].slice(1, -1)}</em>)
     } else if (match[4]) {
