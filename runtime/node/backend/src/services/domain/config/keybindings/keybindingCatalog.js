@@ -56,7 +56,7 @@ const KEYBINDING_CATALOG = Object.freeze([
       { keys: 'Ctrl + G', desc: '折叠/展开网关提示(反向历史搜索浮层打开时改为取消搜索)' },
       { keys: 'Ctrl + L', desc: '清屏(清除已提交的对话记录)' },
       { keys: 'Ctrl + O', desc: '打开/关闭会话记录视图(可滚动回看整段会话并展开任意段落)' },
-      { keys: 'Ctrl + T', desc: '显示/隐藏任务清单面板(仅宽屏终端，默认 ≥120 列)' },
+      { keys: 'Ctrl + T', desc: '显示/隐藏任务清单面板(任意终端宽度可切)' },
       { keys: 'Ctrl + Y', desc: '复制上一条 AI 回复到剪贴板(仅 CC 模式;默认 TUI 里 Ctrl+Y 是「粘回删除内容」,见编辑组)' },
       { keys: 'Ctrl + V', desc: '粘贴/暂存剪贴板图片到下一回合(Windows 为 Alt + V;此处 Ctrl+V 会被终端自用为文本粘贴)' },
       { keys: 'Alt + M', desc: '语音输入：触发 Win+H 听写，识别文字落入输入框(仅 Windows)' },
