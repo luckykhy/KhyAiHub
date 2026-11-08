@@ -13,9 +13,10 @@
  *   ② 目录侧 → 实现侧：ESSENTIAL 精简表中每个「Meta + X」条目经 resolveChatChord
  *      实测解析出非空动作名（防「目录有字、按了没反应」——假承诺比没承诺更糟）。
  *
- * 另钉一条**决策**而非实现：Ctrl+T（任务清单，仅宽屏 ≥120 列可用）刻意不进精简表，
- * 防速查层向窄屏用户承诺按了没反应的键（[DESIGN-ARCH-147] §「实施记录」登记的理由）。
- * 未来若想把它加回精简表，应先改这条测试并写明窄屏语义如何呈现——不要静默加。
+ * 另钉一条**决策**而非实现：Ctrl+T（任务清单开关）刻意不进精简表。
+ * 原登记理由写的是「仅宽屏 ≥120 列可用，防向窄屏用户做假承诺」——2026-11-08 pty 实测否证了
+ * 这个前提（100 列与 130 列都生效，见 ⑤），决策本身未撤，但**真实理由待维护者补写**；
+ * 未来若想把它加回精简表，应先改这条测试并写明理由——不要静默加。
  */
 
 const { describe, test } = require('node:test');
@@ -90,11 +91,29 @@ describe('chatChords ↔ 键位目录 双向一致([DESIGN-ARCH-147] G-02)', () 
     const essential = getEssentialShortcuts().map(([k]) => k);
     assert.ok(
       !essential.includes('Ctrl + T'),
-      'Ctrl+T 仅宽屏(≥120 列)可用，进速查表会向窄屏用户做假承诺；' +
-        '要加回请先修订本测试与 [DESIGN-ARCH-147] 实施记录'
+      'Ctrl+T 刻意不进速查表（原登记的「仅宽屏才有反应」已被 pty 否证，见 ⑤；' +
+        '要加回请先修订本测试与 [DESIGN-ARCH-147] 实施记录，并写明真实理由）'
     );
     // 但它在完整目录里必须存在(①的补充面：全局用户用 /keybindings 能查到)。
     const global = KEYBINDING_CATALOG.find((g) => g.context === 'global');
     assert.ok(global.bindings.some((b) => b.keys === 'Ctrl + T'));
+  });
+
+  test('⑤ Ctrl+T 的目录描述不得宣称宽度门(2026-11-08 pty 实测否证)', () => {
+    // 实测：100 列与 130 列各连按四轮，「已隐藏 / 已显示」交替全部生效
+    // （works/data/khy/tmp/drive_input_live.js 的 ctrlt 臂；读数存证
+    //   works/data/khy/feedback/ctrlt-width-20261108/repro-before.txt）。
+    // App.js:6953 的注释同口径："the inline panel is available at every width"。
+    // ≥120 那个数属于 threeColumnMode 的**自动开启宽度**（App.js:7614），
+    // 与「按 Ctrl+T 有没有反应」是两件事——把它写成键位的条件是假承诺的另一种形态。
+    const row = KEYBINDING_CATALOG.flatMap((g) => g.bindings).find(
+      (b) => b.keys === 'Ctrl + T'
+    );
+    assert.ok(row, '缺 Ctrl+T 条目');
+    assert.doesNotMatch(
+      row.desc,
+      /宽屏|≥\s*\d+\s*列/,
+      `「${row.desc}」又写回了没有实测支撑的宽度条件`
+    );
   });
 });
