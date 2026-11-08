@@ -610,6 +610,30 @@ body {
   to { opacity: 1; transform: scale(1); }
 }
 
+/* 不定长进度条：工具 / 等待首字这类「没有真实百分比」的场景只用它 ——
+   滑过去的一小段表示仍在推进，不冒充「完成了多少」。 */
+.khy-indeterminate { animation: khyIndeterminate 1.2s ease-in-out infinite; }
+
+@keyframes khyIndeterminate {
+  from { transform: translateX(-110%); }
+  to { transform: translateX(320%); }
+}
+
+/* 流式光标：只在展开的思考正文末尾出现，随内容增长贴在最后一行。 */
+.khy-stream-caret {
+  display: inline-block;
+  width: 0.5em;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  background: currentColor;
+  animation: khyCaret 1s steps(2, start) infinite;
+}
+
+@keyframes khyCaret {
+  50% { opacity: 0; }
+}
+
 /* ===== 减少动态效果（全局降级） =====
    全仓此前只有 pacedProgress.ts / usePacedPercent.ts 两处处理过这个偏好，
    消息淡入、菜单入场、toast 滑入、骨架 pulse 都不降级。这里一次性收口：

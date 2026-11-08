@@ -274,6 +274,18 @@ export function GeneralSettings({ settings, onChange }: GeneralSettingsProps) {
         />
       </SettingSection>
 
+      {/* 四端互跳：窗口菜单的「打开网页版」按这里填的地址打开。留空 = 本机
+          后端同源地址（端口取自 serviceDefaults，与后端同一份默认值）。 */}
+      <SettingSection title="多端">
+        <SaveField
+          label="网页版地址"
+          description="窗口菜单 →「打开网页版」使用。留空时用本机后端同源地址（默认 http://127.0.0.1:<后端端口>）。部署了独立网页版时填该地址。"
+          value={(settings.webVersionUrl as string) || ''}
+          placeholder="留空使用本机后端地址，例如 https://khy.example.com"
+          onChange={(v) => onChange('webVersionUrl', v)}
+        />
+      </SettingSection>
+
       {/* ── 语言 ── */}
       <SettingSection title="语言">
         <SelectField

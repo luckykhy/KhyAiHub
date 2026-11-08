@@ -40,6 +40,7 @@ import { createRequire } from 'node:module'
 import fs from 'node:fs'
 import { createAmooSecretary } from './amooSecretary'
 import { createAmooSecretaryIpc } from './amooSecretaryIpc'
+import { MAX_DIFF_ROWS, type DiffRow, type ToolDiff } from '../shared/toolDiff'
 
 const nodeRequire = createRequire(import.meta.url)
 
@@ -625,9 +626,83 @@ function failAllControls(generationId: string): void {
 
 // 编辑类工具（小写归一）：其参数指明要改的目标文件，用于「本轮文件改动」列表。
 // 参数键口径与 guardApproval._rememberApprovedDirectory 相同（file_path / filePath / path）。
-// 只在 tool_result 里附带文件名，不解析行数 —— 行数要么造假要么脆弱，DiffSummary
-// 对 0 不渲染数字，诚实留空。
 const EDITING_TOOL_NAMES = new Set(['edit', 'write', 'multiedit', 'applypatch', 'notebookedit'])
+
+// ── 工具改动的红绿 ±行（桌面端）──────────────────────────────────
+// 后端在写入类工具的 result 上附带 `_khyWriteDiff{beforeContent,afterContent}`
+// （toolUseLoopCore 写盘后回读）。行模型不在这里重算 —— 直接调用终端端同一个
+// 生产者 `cli/writeDiffRows.buildWriteDiffRows`，四端看到的是同一份「改了什么」。
+// 加载失败（KHY_OS_DIR 指错 / 后端旧版）→ 返回 null，卡片退回纯文本结果，
+// 不抛、不假装有 diff。
+type DiffRowsModule = {
+  buildWriteDiffRows: (ctx: unknown, expanded?: boolean) => DiffRow[] | null
+}
+
+let diffRowsModule: DiffRowsModule | null | undefined
+
+function loadDiffRows(): DiffRowsModule | null {
+  if (diffRowsModule !== undefined) return diffRowsModule
+  try {
+    const mod = nodeRequire(
+      path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'cli', 'writeDiffRows.js')
+    ) as Partial<DiffRowsModule>
+    diffRowsModule = typeof mod?.buildWriteDiffRows === 'function' ? (mod as DiffRowsModule) : null
+    if (!diffRowsModule) console.log('[host] 后端 writeDiffRows 缺少 buildWriteDiffRows，红绿 diff 不可用')
+  } catch (err) {
+    console.log('[host] 后端 writeDiffRows 加载失败，红绿 diff 不可用:', String(err))
+    diffRowsModule = null
+  }
+  return diffRowsModule
+}
+
+// 后端行模型顺着终端口径给的是英文（stat 行 / "⋯ N unchanged lines"）。桌面卡片
+// 面向用户用中文：统计行直接丢掉（卡片头已经显示 +N/-N，不重复），gap 文案翻成中文；
+// 认不出的文案原样透传，不猜。
+function localizeDiffRows(rows: DiffRow[]): DiffRow[] {
+  const out: DiffRow[] = []
+  for (const row of rows) {
+    if (row.kind === 'stat') continue
+    if (row.kind === 'gap') {
+      const gap = /^⋯\s*(\d+)\s+unchanged lines?$/.exec(row.text)
+      if (gap) {
+        out.push({ ...row, text: `⋯ ${gap[1]} 行未改动` })
+        continue
+      }
+    }
+    out.push(row)
+  }
+  return out
+}
+
+function buildToolDiff(toolResult: unknown): ToolDiff | null {
+  const ctx = (toolResult as { _khyWriteDiff?: { filePath?: unknown } } | null)?._khyWriteDiff
+  if (!ctx || typeof ctx !== 'object') return null
+  const mod = loadDiffRows()
+  if (!mod) return null
+  let rows: DiffRow[] | null
+  try {
+    // expanded=true：折叠由渲染层决定（界面有自己的展开/收起），这里先给全量。
+    rows = mod.buildWriteDiffRows(ctx, true)
+  } catch {
+    return null
+  }
+  if (!Array.isArray(rows) || rows.length === 0) return null
+  let added = 0
+  let removed = 0
+  for (const row of rows) {
+    if (row.kind === 'add') added++
+    else if (row.kind === 'del') removed++
+  }
+  const localized = localizeDiffRows(rows)
+  const truncated = localized.length > MAX_DIFF_ROWS
+  return {
+    filePath: typeof ctx.filePath === 'string' ? ctx.filePath : '',
+    rows: truncated ? localized.slice(0, MAX_DIFF_ROWS) : localized,
+    added,
+    removed,
+    truncated,
+  }
+}
 
 function affectedFilesOf(toolName: string, params: unknown): string[] {
   if (!EDITING_TOOL_NAMES.has(String(toolName).toLowerCase())) return []
@@ -677,7 +752,11 @@ async function handleAiGenerate(id: string, prompt: string, options: Record<stri
       },
       onToolCall: (name: string, params: unknown) =>
         send({ type: 'ai.toolCall', id, callId: registerToolCall(id, name), tool: name, input: params || {} }),
-      onToolResult: (name: string, params: unknown, toolResult: unknown, iteration: number, elapsed: number) =>
+      onToolResult: (name: string, params: unknown, toolResult: unknown, iteration: number, elapsed: number) => {
+        const diff = buildToolDiff(toolResult)
+        // 有 diff 时以回读到的真实路径登记改动文件 —— 它已解析成绝对路径，
+        // 与「本轮改动」面板匹配得上；参数里的相对路径只作没有 diff 时的回退。
+        const affectedFiles = diff?.filePath ? [diff.filePath] : affectedFilesOf(name, params)
         send({
           type: 'ai.toolResult',
           id,
@@ -685,10 +764,12 @@ async function handleAiGenerate(id: string, prompt: string, options: Record<stri
           tool: name,
           input: params || {},
           result: toolResult,
+          diff: diff || undefined,
           iteration,
           elapsed,
-          affectedFiles: affectedFilesOf(name, params),
-        }),
+          affectedFiles,
+        })
+      },
       // 人在环（P1）：审批 / 提问。同一通道承载多条产生路径（guardApproval 的软守卫审批、
       // Stage 7 requestPermission、shell 命令审批、AskUserQuestion），request 统一为
       // { subtype:'can_use_tool', tool_name, input }，响应按 { behavior } 三态解码

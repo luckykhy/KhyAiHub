@@ -4214,6 +4214,15 @@ async function chat(userMessage, opts = {}) {
           toolResult = `[Tool:${call.action}] ${executed.text}`;
           toolSuccess = true;
           consecutiveErrors = 0;
+          // 结构化 diff 原件（Write/Edit 的 before/after）在这个执行点之后就被拍平
+          // 进 toolResult 文本了；传输层要渲染红绿 ± 行，必须在这里取走。
+          if (executed._khyWriteDiff && typeof opts.onToolDiff === 'function') {
+            try {
+              opts.onToolDiff({ tool: call.action, input: call.arg, diff: executed._khyWriteDiff });
+            } catch {
+              /* best effort */
+            }
+          }
           // 执行计划步骤进度：把本次工具调用匹配到拆解出的步骤，更新「步骤 X/Y」。
           let stepProgressMsg = `[${loopCount}/${TOOL_LOOP_MAX}] ${call.action} ✓`;
           if (executionPlan && executionPlan.steps && executionPlan.steps.length > 0) {

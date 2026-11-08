@@ -93,6 +93,9 @@ const DEFAULTS: Record<string, unknown> = {
   // Editor binary for 在编辑器中打开 (e.g. "code"). Empty = fall back to
   // KHY_EDITOR env; both empty → the action reports how to configure it.
   desktopEditor: '',
+  // 网页版地址（窗口菜单 → 打开网页版）。空 = 本机后端同源地址，端口取自
+  // backend serviceDefaults，不在渲染层写死。
+  webVersionUrl: '',
   // Window geometry
   desktopWindowSize: { width: 1216, height: 808, maximized: false },
 }

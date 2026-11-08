@@ -1,4 +1,5 @@
 ﻿import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import type { ToolDiff } from '../../shared/toolDiff'
 
 export type ToolExecutionStatus = 'pending' | 'running' | 'success' | 'error' | 'cancelled'
 
@@ -9,6 +10,8 @@ export interface ToolExecution {
   status: ToolExecutionStatus
   result?: string
   error?: string
+  /** 写入类工具的红绿 ±行（host 从后端 `_khyWriteDiff` 生产）；无改动/读类工具为空。 */
+  diff?: ToolDiff
   startedAt: number
   completedAt?: number
   affectedFiles?: string[]
@@ -81,13 +84,14 @@ const toolExecutionSlice = createSlice({
       state.executions.push(execution)
       state.activeIds.push(execution.id)
     },
-    updateToolExecution: (state, action: PayloadAction<{ id: string; status: ToolExecutionStatus; result?: string; error?: string }>) => {
-      const { id, status, result, error } = action.payload
+    updateToolExecution: (state, action: PayloadAction<{ id: string; status: ToolExecutionStatus; result?: string; error?: string; diff?: ToolDiff }>) => {
+      const { id, status, result, error, diff } = action.payload
       const execution = state.executions.find(e => e.id === id)
       if (execution) {
         execution.status = status
         if (result !== undefined) execution.result = result
         if (error !== undefined) execution.error = error
+        if (diff !== undefined) execution.diff = diff
         if (status === 'success' || status === 'error' || status === 'cancelled') {
           execution.completedAt = Date.now()
           state.activeIds = state.activeIds.filter(aid => aid !== id)

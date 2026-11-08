@@ -22,6 +22,7 @@ import '../../data/models/models.dart' hide Conversation;
 import '../../core/agent/tool_verdict.dart';
 import '../../core/tools/tool_engine.dart';
 import '../../core/tools/builtin_tools.dart';
+import '../../core/tools/write_diff.dart';
 import '../../core/tools/tool_protocol.dart';
 import '../../core/tools/skills.dart';
 import '../../core/services/conversation_db.dart';
@@ -542,6 +543,7 @@ class _ChatScreenNewState extends ConsumerState<ChatScreenNew>
                   args: args,
                   output: result.output,
                   durationMs: elapsed,
+                  diff: WriteDiffBuilder.fromMetadata(result.metadata),
                 )
               : ToolCardData.failed(
                   index: step.index,

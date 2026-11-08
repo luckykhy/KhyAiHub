@@ -23,6 +23,18 @@ import { AGENT_MODES, DEFAULT_AGENT_MODE } from './components/composer/ModeSelec
 import { openWorkspace } from './utils/openWorkspace'
 import { resolveDesktopAction } from './shared/keymap'
 import { SESSION_LOAD_TIMEOUT_MS, loadedMessageReasoning } from './components/message/sessionLoad'
+import type { ToolDiff } from '../shared/toolDiff'
+
+// 文件路径比对：host 给的是写盘后回读的绝对路径，工具参数里可能是相对路径。
+// 统一分隔符后按「完全相等或后缀相等」认同一文件 —— 不做 basename 模糊匹配，
+// 同名不同目录的文件不能互相顶替。
+function samePath(a: string, b: string): boolean {
+  const norm = (p: string) => p.replace(/\\/g, '/').replace(/\/+$/, '')
+  const x = norm(a)
+  const y = norm(b)
+  if (!x || !y) return false
+  return x === y || x.endsWith('/' + y) || y.endsWith('/' + x)
+}
 
 // 剥洋葱 · 视觉侧第一刀：低频全屏页面按需加载。
 //
@@ -547,7 +559,7 @@ export default function App() {
     })
 
     const offResult = api.onAiToolResult((data: unknown) => {
-      const d = data as { callId?: string; tool?: string; result?: unknown }
+      const d = data as { callId?: string; tool?: string; result?: unknown; diff?: ToolDiff }
       const callId = String(d?.callId || '').trim()
       if (!callId) return
       const raw = d?.result
@@ -557,22 +569,32 @@ export default function App() {
         (raw && typeof raw === 'object' && ((raw as { isError?: boolean }).isError === true ||
           (raw as { success?: boolean }).success === false)) ||
         (typeof raw === 'string' && /^\s*error[:：]/i.test(raw))
+      // _khyWriteDiff 带着整份文件前后内容，只用于红绿视图；混进结果文本会把
+      // 卡片里的纯文本结果挤掉（4000 字上限内全是文件正文）。
+      let viewable = raw
+      if (raw && typeof raw === 'object' && '_khyWriteDiff' in (raw as Record<string, unknown>)) {
+        const copy = { ...(raw as Record<string, unknown>) }
+        delete copy._khyWriteDiff
+        viewable = copy
+      }
       let resultText: string
-      if (typeof raw === 'string') {
-        resultText = raw
+      if (typeof viewable === 'string') {
+        resultText = viewable
       } else {
         try {
-          resultText = JSON.stringify(raw ?? '', null, 2)
+          resultText = JSON.stringify(viewable ?? '', null, 2)
         } catch {
-          resultText = String(raw ?? '')
+          resultText = String(viewable ?? '')
         }
       }
+      const diff = d?.diff
       store.dispatch(
         updateToolExecution({
           id: callId,
           status: failed ? 'error' : 'success',
           result: resultText.slice(0, 4000),
           error: failed ? resultText.slice(0, 600) : undefined,
+          diff: diff && Array.isArray(diff.rows) && diff.rows.length > 0 ? diff : undefined,
         })
       )
       const affected = (data as { affectedFiles?: string[] }).affectedFiles
@@ -634,9 +656,20 @@ export default function App() {
 
   // 本轮文件改动（P2）：host 在 tool_result 事件里对编辑类工具附带目标文件，
   // 落在 toolExecutionSlice.affectedFiles（与 clearExecutions 同生命周期——发新消息即清）。
-  // additions/deletions 恒 0：工具结果不携带行数，DiffSummary 对 0 不渲染数字，不造假数据。
+  // 行数与红绿行来自同一条执行记录上的 diff；拿不到 diff 的文件显示 0（不渲染数字），
+  // 不按「改了文件」猜行数。
   const affectedFiles = useAppSelector((state) => state.toolExecution.affectedFiles)
-  const changedFiles = affectedFiles.map((path) => ({ path, status: 'modified', additions: 0, deletions: 0 }))
+  const executions = useAppSelector((state) => state.toolExecution.executions)
+  const changedFiles = affectedFiles.map((path) => {
+    const owner = [...executions].reverse().find((e) => e.diff && samePath(e.diff.filePath, path))
+    return {
+      path,
+      status: 'modified' as const,
+      additions: owner?.diff?.added ?? 0,
+      deletions: owner?.diff?.removed ?? 0,
+      diff: owner?.diff,
+    }
+  })
 
   if (keyManager) {
     return (

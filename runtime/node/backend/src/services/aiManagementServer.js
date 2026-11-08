@@ -1555,6 +1555,7 @@ const {
   _resolveChatAttachments,
   _isWebInlineImagePathEnabled,
   _summarizeToolResultForStream,
+  _buildToolDiffEvent,
 } = require('./aiManagementChatHttp');
 require('./aiManagementChatHttp').setChatHttpDeps({
   _genChatRequestId,
@@ -3019,6 +3020,13 @@ async function handleWsChat(session, msg) {
         } else if (chunk.type === 'cost') {
           wsSend(session, { type: 'cost', data: chunk });
         }
+      },
+      onToolDiff: (payload) => {
+        if (!session.isGenerating) {
+          return;
+        }
+        const ev = _buildToolDiffEvent(payload);
+        if (ev) wsSend(session, ev);
       },
       onControlRequest: ({ requestId, request } = {}) => {
         if (!session.isGenerating) {

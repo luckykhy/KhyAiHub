@@ -11,15 +11,23 @@
 // 颜色一律 currentColor，深浅主题随文字色自动走。
 import {
   Bug,
+  ChevronDown,
+  ChevronRight,
+  CircleCheck,
   ChartColumn,
   CodeXml,
+  Globe,
   FileText,
+  Info,
   MoonStar,
   Presentation,
   Puzzle,
   Search,
   Settings,
+  RotateCcw,
   SquarePen,
+  Terminal,
+  TriangleAlert,
 } from 'lucide-react'
 
 const STROKE = 1.6
@@ -40,6 +48,18 @@ export type IconName =
   | 'review'
   | 'doc'
   | 'idle'
+  // 工具卡 / diff 卡
+  | 'terminal'
+  | 'file-text'
+  | 'code'
+  | 'browser'
+  | 'info'
+  | 'check'
+  | 'chevron-right'
+  | 'chevron-down'
+  // HEAD 的 MessageBubble 已在引用、本表此前漏登的两个
+  | 'warning'
+  | 'rotate-ccw'
 
 interface IconProps {
   name: IconName
@@ -123,5 +143,25 @@ export function Icon({ name, size = 15, className }: IconProps) {
       return <FileText size={size} strokeWidth={STROKE} className={className} aria-hidden="true" />
     case 'idle':
       return <MoonStar size={size} strokeWidth={STROKE} className={className} aria-hidden="true" />
+    case 'terminal':
+      return <Terminal size={size} strokeWidth={STROKE} className={className} aria-hidden="true" />
+    case 'file-text':
+      return <FileText size={size} strokeWidth={STROKE} className={className} aria-hidden="true" />
+    case 'code':
+      return <CodeXml size={size} strokeWidth={STROKE} className={className} aria-hidden="true" />
+    case 'browser':
+      return <Globe size={size} strokeWidth={STROKE} className={className} aria-hidden="true" />
+    case 'info':
+      return <Info size={size} strokeWidth={STROKE} className={className} aria-hidden="true" />
+    case 'check':
+      return <CircleCheck size={size} strokeWidth={STROKE} className={className} aria-hidden="true" />
+    case 'chevron-right':
+      return <ChevronRight size={size} strokeWidth={STROKE} className={className} aria-hidden="true" />
+    case 'chevron-down':
+      return <ChevronDown size={size} strokeWidth={STROKE} className={className} aria-hidden="true" />
+    case 'warning':
+      return <TriangleAlert size={size} strokeWidth={STROKE} className={className} aria-hidden="true" />
+    case 'rotate-ccw':
+      return <RotateCcw size={size} strokeWidth={STROKE} className={className} aria-hidden="true" />
   }
 }

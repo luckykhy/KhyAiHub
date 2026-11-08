@@ -723,7 +723,20 @@ List<ToolDef> createBuiltinTools() => [
       if (path.isEmpty) return ToolResult.fail('请提供文件路径');
       final result = await FileService.writeFile(path, content);
       if (result['success'] == true) {
-        return ToolResult.ok('已写入 $path (${content.length} 字符)');
+        // 新文件 before 就是空串；已存在却没拿到原文 = 文件超过读取上限，
+        // 这时不猜内容，卡片只说结果。
+        final existed = result['existed'] == true;
+        final before = result['before'] as String?;
+        final Map<String, dynamic>? metadata = (!existed || before != null)
+            ? {
+                'writeDiff': {
+                  'filePath': path,
+                  'before': before ?? '',
+                  'after': content,
+                }
+              }
+            : null;
+        return ToolResult.ok('已写入 $path (${content.length} 字符)', metadata: metadata);
       }
       return ToolResult.fail(result['error'] ?? 'write failed');
     },
@@ -770,7 +783,18 @@ List<ToolDef> createBuiltinTools() => [
       final r = await FileService.editFile(path, oldText, newText, replaceAll: replaceAll);
       if (r['success'] == true) {
         final count = (r['replacements'] as int?) ?? (replaceAll ? 0 : 1);
-        return ToolResult.ok('已在 $path 替换 $count 处');
+        final before = r['before'] as String?;
+        final after = r['after'] as String?;
+        final Map<String, dynamic>? metadata = (before != null && after != null)
+            ? {
+                'writeDiff': {
+                  'filePath': path,
+                  'before': before,
+                  'after': after,
+                }
+              }
+            : null;
+        return ToolResult.ok('已在 $path 替换 $count 处', metadata: metadata);
       }
       return ToolResult.fail(r['error']?.toString() ?? 'edit failed');
     },

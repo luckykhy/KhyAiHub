@@ -1,49 +1,15 @@
 const fs = require('fs');
-const path = require('path');
 
 const express = require('express');
 
+const catalog = require('../services/downloadsCatalog');
+
 const router = express.Router();
 
-const DIST_DIR = path.resolve(__dirname, '../../../../dist');
-
-const ARTIFACT_PATTERNS = {
-  windows: [/\.exe$/i, /setup/i],
-  android: [/\.apk$/i],
+const PLATFORM_LABELS = {
+  windows: 'Windows 安装包',
+  android: 'Android 安装包',
 };
-
-function listArtifacts(platform) {
-  if (!fs.existsSync(DIST_DIR)) {
-    return [];
-  }
-  const patterns = ARTIFACT_PATTERNS[platform];
-  if (!patterns) {
-    return [];
-  }
-
-  const fileNames = fs.readdirSync(DIST_DIR);
-  return fileNames
-    .filter((fileName) => {
-      if (fileName.startsWith('.')) {
-        return false;
-      }
-      if (fileName.endsWith('.blockmap')) {
-        return false;
-      }
-      return patterns.every((pattern) => pattern.test(fileName));
-    })
-    .map((fileName) => {
-      const fullPath = path.join(DIST_DIR, fileName);
-      const stat = fs.statSync(fullPath);
-      return {
-        fileName,
-        fullPath,
-        size: stat.size,
-        mtimeMs: stat.mtimeMs,
-      };
-    })
-    .sort((a, b) => b.mtimeMs - a.mtimeMs);
-}
 
 function sendArtifact(res, artifact) {
   res.setHeader('Content-Type', 'application/octet-stream');
@@ -57,7 +23,7 @@ function sendArtifact(res, artifact) {
   const stream = fs.createReadStream(artifact.fullPath);
   stream.on('error', () => {
     if (!res.headersSent) {
-      res.status(500).json({ success: false, message: '文件读取失败' });
+      res.status(500).json({ success: false, message: '文件读取失败：产物在清单里有、读不出来，检查文件权限后重试' });
     } else {
       res.end();
     }
@@ -66,46 +32,32 @@ function sendArtifact(res, artifact) {
 }
 
 router.get('/list', (req, res) => {
-  const windows = listArtifacts('windows')[0] || null;
-  const android = listArtifacts('android')[0] || null;
-
+  const data = catalog.listDownloads(process.env);
+  // filePath 只在本机后端有意义（桌面端据此定位本地产物），不往外发。
+  const strip = (item) => (item ? { fileName: item.fileName, size: item.size, updatedAt: item.updatedAt, url: item.url } : null);
   res.json({
     success: true,
     data: {
-      windows: windows
-        ? {
-            fileName: windows.fileName,
-            size: windows.size,
-            updatedAt: new Date(windows.mtimeMs).toISOString(),
-            url: '/api/downloads/windows',
-          }
-        : null,
-      android: android
-        ? {
-            fileName: android.fileName,
-            size: android.size,
-            updatedAt: new Date(android.mtimeMs).toISOString(),
-            url: '/api/downloads/android',
-          }
-        : null,
+      web: data.web,
+      windows: strip(data.windows),
+      android: strip(data.android),
+      fallback: data.fallback,
     },
   });
 });
 
-router.get('/windows', (req, res) => {
-  const artifact = listArtifacts('windows')[0];
-  if (!artifact) {
-    return res.status(404).json({ success: false, message: 'Windows 安装包不存在' });
-  }
-  return sendArtifact(res, artifact);
-});
-
-router.get('/android', (req, res) => {
-  const artifact = listArtifacts('android')[0];
-  if (!artifact) {
-    return res.status(404).json({ success: false, message: 'Android 安装包不存在' });
-  }
-  return sendArtifact(res, artifact);
-});
+for (const platform of Object.keys(PLATFORM_LABELS)) {
+  router.get(`/${platform}`, (req, res) => {
+    const artifact = catalog.latestArtifact(platform);
+    if (!artifact) {
+      // 「不存在」与「读不出来」是两件事，分开说，并给出下一步。
+      return res.status(404).json({
+        success: false,
+        message: `${PLATFORM_LABELS[platform]}不存在：产物目录里没有匹配文件。先构建该端（见 docs 的打包说明），或配置 KHY_DOWNLOAD_${platform.toUpperCase()}_DIR 指向已构建的产物目录。`,
+      });
+    }
+    return sendArtifact(res, artifact);
+  });
+}
 
 module.exports = router;

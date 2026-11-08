@@ -78,6 +78,9 @@ export function TitleBar({
         openDirectoryPicker?: () => Promise<string | null>
         setSetting?: (k: string, v: unknown) => Promise<void>
         getBrandingLinks?: () => Promise<{ ok: boolean; feedback?: string; docs?: string; community?: string; issues?: string; error?: string }>
+        webVersion?: () => Promise<{ ok: boolean; url?: string; source?: 'settings' | 'default'; error?: string }>
+        downloadArtifact?: (platform: 'android' | 'windows') =>
+          Promise<{ ok: boolean; state?: 'local' | 'release' | 'missing'; fileName?: string; url?: string; error?: string }>
         closeWindow?: () => void
         openKeyManagerWindow?: () => Promise<void>
         getWorkspacePath?: () => Promise<string>
@@ -96,6 +99,26 @@ export function TitleBar({
     }
     const res = await api?.openExternal?.(url)
     if (res && !res.ok) toast(res.error || '外部链接打开失败', 'error')
+  }
+
+  // 四端互跳：桌面 → 网页版 / APK / 桌面安装包。地址与产物位置全在 main 侧解析
+  // （设置 + serviceDefaults + downloadsCatalog），渲染层只负责把结果如实说出来。
+  const openWebVersion = async () => {
+    const w = await api?.webVersion?.()
+    if (!w?.ok || !w.url) {
+      toast(w?.error || '网页版地址不可用', 'error')
+      return
+    }
+    const res = await api?.openExternal?.(w.url)
+    if (res && !res.ok) { toast(res.error || '网页版打开失败', 'error'); return }
+    toast(`已打开网页版：${w.url}${w.source === 'default' ? '（本机网页版端口，可在设置里改）' : ''}`)
+  }
+  const download = async (platform: 'android' | 'windows') => {
+    const label = platform === 'android' ? 'Android 安装包' : 'Windows 安装包'
+    const r = await api?.downloadArtifact?.(platform)
+    if (!r?.ok) { toast(r?.error || `${label}下载入口不可用`, 'error'); return }
+    if (r.state === 'local') toast(`已在资源管理器中定位 ${r.fileName || label}`)
+    else toast(`本机没有${label}，已打开发布页：${r.url || ''}`)
   }
 
   // 打开工作区（窗口菜单 Ctrl+O）：收敛为 utils/openWorkspace.ts 的唯一入口
@@ -136,6 +159,11 @@ export function TitleBar({
       })
     } },
     { kind: 'separator' },
+    // 四端互跳：网页版地址与安装包位置由 main 解析（设置 / serviceDefaults /
+    // downloadsCatalog 单一真源），这里只做入口，不在渲染层拼地址。
+    { kind: 'action', label: '打开网页版', run: () => { void openWebVersion() } },
+    { kind: 'action', label: '下载 Android 版', run: () => { void download('android') } },
+    { kind: 'action', label: '下载桌面版', run: () => { void download('windows') } },
     { kind: 'action', label: '关于 KhyOS', run: () => toast('KhyOS Desktop（开发构建）') },
     { kind: 'action', label: '检查更新', run: () => toast('当前为开发构建：自动更新通道未配置，跳过检查') },
     { kind: 'action', label: '进程监视器', run: () => setProcessOpen(true) },

@@ -33,6 +33,7 @@ export const viewLoaders = {
   '/chat': () => import('@/views/AIChat.vue'),
   '/prompts': () => import('@/views/PromptLibrary.vue'),
   '/features': () => import('@/views/FeatureCatalog.vue'),
+  '/downloads': () => import('@/views/Downloads.vue'),
   '/khyos': () => import('@/views/KhyOsTerminal.vue'),
   '/khyos/desktop': () => import('@/views/KhyOsDesktop.vue'),
   '/keys': () => import('@/views/MyGateway.vue'),
