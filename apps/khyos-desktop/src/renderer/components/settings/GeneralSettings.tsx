@@ -11,9 +11,19 @@ import {
   ActionField,
   SaveField,
   PathField,
+  TextField,
 } from './fields'
-import femaleIdle from '@/assets/pet/khy-pet-female-idle.png'
-import maleIdle from '@/assets/pet/khy-pet-male-idle.png'
+import femaleIdle from '@/assets/pet/khy-pet-female-idle-cutout.png'
+import maleIdle from '@/assets/pet/khy-pet-male-idle-cutout.png'
+import koiIdle from '@/assets/pet/khy-pet-koi-idle-cutout.png'
+import { PET_FORMS, PET_FORM_LONG_LABELS } from '../pet/petForms'
+import { hasRealisticAssets } from '../pet/petRealisticAssets'
+import {
+  ACCOUNT_NAME_SETTING,
+  PET_NAME_SETTING,
+  DEFAULT_ACCOUNT_NAME,
+  broadcastIdentity,
+} from '../../shared/chatIdentity'
 
 interface GeneralSettingsProps {
   settings: Record<string, unknown>
@@ -42,6 +52,22 @@ export function GeneralSettings({ settings, onChange }: GeneralSettingsProps) {
         />
       </SettingSection>
 
+      {/* ── 账号 ── */}
+      {/* 本地模式没有登录账号，用户名是用户自报的显示名（真源 settings.desktopAccountName，
+          空 = 渲染层默认「本地用户」）。消息头用户轮的标签、侧栏与设置页的账号块都读它。 */}
+      <SettingSection title="账号">
+        <TextField
+          label="用户名"
+          description="消息头里你这一侧显示的名字。随时可以改，改完已渲染的对话立刻跟着换，不必重开应用。"
+          value={(settings[ACCOUNT_NAME_SETTING] as string) || ''}
+          placeholder={DEFAULT_ACCOUNT_NAME}
+          onChange={(v) => {
+            onChange(ACCOUNT_NAME_SETTING, v)
+            broadcastIdentity(settings, ACCOUNT_NAME_SETTING, v)
+          }}
+        />
+      </SettingSection>
+
       {/* ── 桌宠 ── */}
       {/* 角色真源是 settings.json 的 desktopPetCharacter（见 main/settingsStore.ts
           的 DEFAULTS），渲染层不再另存一份。选完顺手广播一个窗口事件，
@@ -49,7 +75,7 @@ export function GeneralSettings({ settings, onChange }: GeneralSettingsProps) {
       <SettingSection title="桌宠">
         <RadioField
           label="桌宠角色"
-          description="选择悬浮在工作区左下角的桌宠形象。两位角色的性格不同：澪负责引导和陪伴，凯负责疑难和兜底。随时可以在桌宠卡片上直接切换。"
+          description="选择悬浮在工作区左下角的桌宠形象。三位角色的性格不同：澪负责引导和陪伴，凯负责疑难和兜底，锦鲤负责好运和每日抽签。随时可以在桌宠卡片上直接切换。"
           value={(settings.desktopPetCharacter as string) || 'female'}
           onChange={(v) => {
             onChange('desktopPetCharacter', v)
@@ -58,7 +84,41 @@ export function GeneralSettings({ settings, onChange }: GeneralSettingsProps) {
           options={[
             { value: 'female', label: '澪 · 引导者', preview: femaleIdle },
             { value: 'male', label: '凯 · 首席工程师', preview: maleIdle },
+            { value: 'koi', label: '锦鲤 · 好运使者', preview: koiIdle },
           ]}
+        />
+        {/* 助手名字：留空则跟随上面的角色自动取名（khy · 名 · 称号）。自建 DIY
+            桌宠直接用它的名字填这里，消息头就不再出现「助手」这个产品角色词。 */}
+        <TextField
+          label="助手名字"
+          description="消息头里 AI 这一侧显示的名字。留空则跟随桌宠角色自动取名；自建桌宠或想换个称呼，填什么就显示什么。"
+          value={(settings[PET_NAME_SETTING] as string) || ''}
+          placeholder="留空则跟随桌宠角色"
+          onChange={(v) => {
+            onChange(PET_NAME_SETTING, v)
+            broadcastIdentity(settings, PET_NAME_SETTING, v)
+          }}
+        />
+        {/* 形态真源同样是 settings.json 的 desktopPetForm（见 main/settingsStore.ts
+            的 DEFAULTS）。选完广播 khy:pet-form，工作区里挂着的桌宠立刻换身体。 */}
+        <RadioField
+          label="桌宠形态"
+          description="同一只桌宠的三种身体：立绘浮雕是把定妆照烘成的带厚度浮雕，像素级最像本人（默认）；3D 模型是 Q 版造型，能整圈转；写实真人 3D 是真人比例的模型，需要先生成对应的模型资产。"
+          value={(settings.desktopPetForm as string) || 'relief'}
+          onChange={(v) => {
+            onChange('desktopPetForm', v)
+            window.dispatchEvent(new CustomEvent('khy:pet-form', { detail: v }))
+          }}
+          options={PET_FORMS.map((form) => ({
+            value: form,
+            label:
+              PET_FORM_LONG_LABELS[form] +
+              (form === 'realistic' &&
+              !hasRealisticAssets('female') &&
+              !hasRealisticAssets('male')
+                ? '（模型待生成）'
+                : ''),
+          }))}
         />
       </SettingSection>
 
@@ -279,7 +339,7 @@ export function GeneralSettings({ settings, onChange }: GeneralSettingsProps) {
       <SettingSection title="多端">
         <SaveField
           label="网页版地址"
-          description="窗口菜单 →「打开网页版」使用。留空时用本机后端同源地址（默认 http://127.0.0.1:<后端端口>）。部署了独立网页版时填该地址。"
+          description="窗口菜单 →「打开网页版」使用。留空时用本机后端同源地址（端口取后端配置）。部署了独立网页版时填该地址。"
           value={(settings.webVersionUrl as string) || ''}
           placeholder="留空使用本机后端地址，例如 https://khy.example.com"
           onChange={(v) => onChange('webVersionUrl', v)}

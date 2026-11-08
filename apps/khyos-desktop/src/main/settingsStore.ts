@@ -90,6 +90,27 @@ const DEFAULTS: Record<string, unknown> = {
   // P3-9①：默认对齐 ZCode 实测「完全访问」（mode.label.glm.yolo）；
   // 用户显式切换后经 setSetting 落盘覆盖此默认值。
   desktopAgentMode: 'fullAccess',
+  // 桌宠角色（设置 → 常规 → 桌宠 的三选一）：'female' | 'male' | 'koi'。
+  // 真源在这里，不在渲染层的 localStorage —— 否则设置页与桌宠各存一份，
+  // 就是 settingsStore 文件头警告的「第二个真源」。
+  // 消费方：renderer/components/pet/KhyPet.tsx（角色图、台词、抽签内容）。
+  desktopPetCharacter: 'female',
+  // 账号用户名（本地模式下没有登录，就是用户自报的名字）。空串 = 用渲染层
+  // 的默认名「本地用户」。消费方：消息头用户轮、侧栏与设置页的账号块
+  // （renderer/shared/chatIdentity.ts 是唯一的读取层）。
+  desktopAccountName: '',
+  // 账号头像：原文件的绝对路径（空串 = 回落到桌宠立绘的默认头像）。
+  // 渲染层不存副本，只按路径经 fs:readImageDataUrl 取 data URL —— 换头像
+  // 只改这一个文件即可；文件被移走时回落到桌宠立绘，不静默空白。
+  // 消费方：renderer/shared/accountAvatar.ts（唯一的读取层）。
+  desktopAccountAvatar: '',
+  // 自定义桌宠名：填了就用它当消息头里的助手名字（自建桌宠/DIY 命名），
+  // 空串 = 按 desktopPetCharacter 从角色表派生「khy · 澪 · 引导者」。
+  desktopPetName: '',
+  // 桌宠形态：'relief' = 立绘浮雕（定妆照烘出的带厚度浮雕，最像，默认）
+  // / 'model' = 真 3D Q 版模型 / 'realistic' = 写实真人 3D 模型（外部 AI 3D 服务出模）。
+  // 消费方：renderer/components/pet/KhyPet.tsx（卡片上的形态切换按钮）。
+  desktopPetForm: 'relief',
   // Editor binary for 在编辑器中打开 (e.g. "code"). Empty = fall back to
   // KHY_EDITOR env; both empty → the action reports how to configure it.
   desktopEditor: '',

@@ -9,6 +9,7 @@ import { SkeletonBubble } from '../ui/Skeleton'
 import { useAppDispatch, useAppSelector } from '../../state/store'
 import { requestRetry, selectMessageReasoning } from '../../state/messageSlice'
 import type { Message as StoreMessage } from '../../state/messageSlice'
+import { useChatIdentity } from '../../shared/chatIdentity'
 import {
   useSessionLoadSignal,
   useSessionLoadError,
@@ -142,14 +143,18 @@ function ErrorCard({ message }: { message: Message }) {
   )
 }
 
-function TrajectoryTimeline({ steps }: { steps: TrajectoryStep[] }) {
+function TrajectoryTimeline({ steps, userName, assistantName }: {
+  steps: TrajectoryStep[]
+  userName: string
+  assistantName: string
+}) {
   const [expanded, setExpanded] = useState(false)
   const [selectedStep, setSelectedStep] = useState<number | null>(null)
 
   // 只有颜色与文案被渲染消费，图标字段是死配置（不保留装饰字符）
   const typeConfig = {
-    user: { color: 'var(--color-trajectory-user)', label: '用户' },
-    assistant: { color: 'var(--color-trajectory-assistant)', label: '助手' },
+    user: { color: 'var(--color-trajectory-user)', label: userName },
+    assistant: { color: 'var(--color-trajectory-assistant)', label: assistantName },
     reasoning: { color: 'var(--color-trajectory-reasoning)', label: '思考' },
     'tool-call': { color: 'var(--color-trajectory-tool-call)', label: '工具调用' },
     'tool-result': { color: 'var(--color-trajectory-tool-result)', label: '工具结果' },
@@ -282,6 +287,9 @@ export function MessageBubble({ message }: { message: Message }) {
   }
 
   const isUser = message.role === 'user'
+  // 两个名字都来自 settings.json（见 shared/chatIdentity）：用户轮显示账号名，
+  // 助手轮显示桌宠名 —— 「助手」是产品内角色词，用户认的是他自己那只桌宠。
+  const { userName, assistantName } = useChatIdentity()
 
   return (
     // 消息流去表格化：此前每条消息一条通栏分隔线（border-b），读感像表格行
@@ -298,7 +306,7 @@ export function MessageBubble({ message }: { message: Message }) {
           {isUser ? '❯' : '●'}
         </span>
         <span className="text-sm font-semibold text-foreground">
-          {isUser ? '你' : '助手'}
+          {isUser ? userName : assistantName}
         </span>
         <span className="text-xs text-foreground-muted">
           {new Date(message.timestamp).toLocaleTimeString()}
@@ -339,7 +347,7 @@ export function MessageBubble({ message }: { message: Message }) {
 
       {/* 思考轨迹 */}
       {message.trajectory && message.trajectory.length > 0 && (
-        <TrajectoryTimeline steps={message.trajectory} />
+        <TrajectoryTimeline steps={message.trajectory} userName={userName} assistantName={assistantName} />
       )}
 
       {/* 工具调用 */}
