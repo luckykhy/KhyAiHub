@@ -11,6 +11,7 @@ import {
   type ProjectIconName,
   type ProjectRegistration,
 } from '../../shared/sidebarProjectClassify'
+import { useAccountAvatar } from '../../shared/accountAvatar'
 
 // 设置里读回的登记项做形状校验：设置文件是用户可手改的 JSON，形状不对时
 // 丢弃该条而不是把 undefined 灌进判定层（那是崩溃而非降级）。
@@ -121,6 +122,7 @@ export function WorkspaceSidebar({
   // 文件树根目录：null = 主进程 cwd 工作区（顶部导航「查看文件」行为）；
   // 会话级目录 = 会话三点菜单「查看文件」触发时该 session 的 workspacePath
   const [fileTreeRoot, setFileTreeRoot] = useState<string | null>(null)
+  const accountAvatar = useAccountAvatar()
   const dispatch = useAppDispatch()
 
   // ── Manual sidebar order (long-press left-drag reorder) ───────────────────
@@ -1054,8 +1056,14 @@ export function WorkspaceSidebar({
             aria-haspopup="menu"
             aria-expanded={accountMenuOpen}
           >
-            <span className="w-7 h-7 rounded-full bg-brand/20 flex items-center justify-center text-xs font-semibold text-brand flex-shrink-0">
-              {ACCOUNT_NAME.slice(0, 1).toUpperCase()}
+            {/* 默认头像是桌宠抠图立绘：原图四周留白多，放大 1.4 倍才在 28px 圈里看得清脸；
+                外圈 overflow-hidden 兜住，免得画到名字上。自选头像按原图铺满，不缩放。 */}
+            <span className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
+              {accountAvatar.dataUrl ? (
+                <img src={accountAvatar.dataUrl} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <img src={accountAvatar.defaultUrl} alt="" className="w-full h-full object-cover scale-[1.4]" />
+              )}
             </span>
             <span className="text-sm font-medium text-foreground truncate">{ACCOUNT_NAME}</span>
             <svg width="8" height="8" viewBox="0 0 8 8" fill="none" className="text-foreground/40 flex-shrink-0">

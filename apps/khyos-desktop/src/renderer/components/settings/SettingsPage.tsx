@@ -11,6 +11,7 @@ import { IndexSettingsPage } from './IndexSettingsPage'
 import { PluginSettings } from './PluginSettings'
 import { KeyManagerPage } from '../keyManager/KeyManagerPage'
 import { WebRemoteControlPanel } from '../remote/WebRemoteControlPanel'
+import { useAccountAvatar } from '../../shared/accountAvatar'
 
 // ── Nav structure (mirrors ZCode v3.11.2 a11y s-30/s-42, ZC-ALIGN-003 §1-4) ──
 // Full-screen replacement layout: left nav (~240px) + right content scroll area.
@@ -92,6 +93,7 @@ export function SettingsPage() {
   // value was the ZCode account observed in the audit screenshots (another
   // product's user data, not ours).
   const [accountName] = useState('本地用户')
+  const accountAvatar = useAccountAvatar()
   const [settings, setSettings] = useState<Record<string, unknown>>({})
 
   // Load persisted settings on mount (preload IPC: settings:get)
@@ -181,8 +183,14 @@ export function SettingsPage() {
 
           {/* Bottom: account chip + 返回工作区 */}
           <div className="border-t border-border p-3 flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-brand/20 flex items-center justify-center text-xs font-semibold text-brand flex-shrink-0">
-              {accountName.slice(0, 1).toUpperCase()}
+            {/* 默认头像就是桌宠立绘（与侧栏同一套取景：默认立绘放大 1.4 倍，
+                自选头像不缩放）；底色留着当加载垫。 */}
+            <div className="w-7 h-7 rounded-full bg-brand/20 flex items-center justify-center text-xs font-semibold text-brand flex-shrink-0 overflow-hidden">
+              {accountAvatar.dataUrl ? (
+                <img src={accountAvatar.dataUrl} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <img src={accountAvatar.defaultUrl} alt="" className="w-full h-full object-cover scale-[1.4]" />
+              )}
             </div>
             <span className="text-sm font-medium text-foreground truncate flex-1">{accountName}</span>
             <button

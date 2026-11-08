@@ -5,6 +5,7 @@ import { ProcessMonitorDialog } from './ProcessMonitorDialog'
 import { WorkspacePicker } from '../workspace/WorkspacePicker'
 import { openWorkspace } from '../../utils/openWorkspace'
 import { keyLabelFor } from '../../shared/keymap'
+import { BrandMark } from '../ui/BrandMark'
 
 const TITLEBAR_HEIGHT = 48
 const CAPTION_BUTTON_WIDTH = 46
@@ -228,6 +229,15 @@ export function TitleBar({
         className="flex-1 flex items-center gap-2 text-sm select-none min-w-0"
         style={{ paddingLeft: isMac ? 76 : 8 }}
       >
+        {/* 品牌标：墨黑底 + 琥珀主标。此前标题栏没有任何品牌标识，
+            整个桌面端看上去像「没有自己风格」的通用 Electron 壳。 */}
+        <span
+          className="flex items-center justify-center rounded-md bg-[#14110E] ring-1 ring-white/10 flex-shrink-0"
+          style={{ width: 22, height: 22 }}
+          aria-hidden="true"
+        >
+          <BrandMark size={14} />
+        </span>
         {/* Session title + workspace chip — mirrors ZCode appHeader row
             (ZC-ALIGN-002 D5). Title reflects the selected session (host truth). */}
         <span className="text-foreground font-medium truncate max-w-[280px]" title={sessionTitle || '新任务'}>

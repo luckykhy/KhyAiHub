@@ -72,16 +72,26 @@ const resolveKhyOsRoot = (): string =>
 // 允许从桌面端用 http 打开的主机名（只放回环）。URL#hostname 对 IPv6 带方括号。
 const LOOPBACK_HOSTNAMES = new Set(['127.0.0.1', 'localhost', '[::1]', '::1'])
 
-// Suppress GPU disk-cache errors on Windows (ACCESS_DENIED when cache dir is
-// read-only or locked).  These flags are also passed via CLI args in package.json
-// to ensure they take effect before Chromium spawns the GPU process.
-// `disable-gpu` alone does NOT fully silence the shared-context warnings
-// (gpu_channel_manager "Failed to create shared context for virtualization"),
-// so we add `disable-gpu-sandbox` + `disable-gpu-compositing` and point the
-// disk-cache to a writable, per-app directory to avoid the ACCESS_DENIED lock.
-app.disableHardwareAcceleration()
-app.commandLine.appendSwitch('disable-gpu')
-app.commandLine.appendSwitch('disable-software-rasterizer')
+// ── GPU / WebGL ────────────────────────────────────────────────────────────
+//
+// 桌宠的 3D 形态（真 3D Q 版模型、立绘浮雕、写实真人模型）需要 **WebGL 上下文**。
+// 这里原先显式关掉了 `disableHardwareAcceleration` + `disable-gpu` +
+// `disable-software-rasterizer`，代价是**整个进程没有任何 WebGL**：3D 桌宠
+// 只能退回 PNG 或转盘序列，「立绘浮雕」也只剩一张平面图（没有厚度、没有转角）。
+//
+// 现在的口径：**有显卡走硬件，没显卡走 SwiftShader 软件渲染**，WebGL 至少能用。
+//   · `enable-unsafe-swiftshader` —— 允许用软件光栅化兜底。较新的 Chromium
+//     默认禁用 SwiftShader，没有这条，没显卡的机器直接没有 WebGL。
+//   · `ignore-gpu-blocklist` —— 允许在驱动被列入黑名单的机器上启用 GPU。
+//   · `in-process-gpu` —— GPU 进程并入主进程，少一层 IPC，Windows 上更稳。
+//   · `disable-gpu-sandbox` + `disable-gpu-compositing` —— **保留**：这两个是
+//     为了消掉 gpu_channel_manager 的 "Failed to create shared context" 噪音，
+//     去掉会刷屏。
+//   · `disk-cache-dir` —— 指向可写的临时目录，避免 GPUCache ACCESS_DENIED。
+//
+// ⚠ 不要加 `use-angle=swiftshader`：那会把**所有**渲染强行拉到软件光栅化，
+// 有显卡的机器也要走 SwiftShader，白白慢一截。这里只放开兜底，不强制降级。
+app.commandLine.appendSwitch('enable-unsafe-swiftshader')
 app.commandLine.appendSwitch('ignore-gpu-blocklist')
 app.commandLine.appendSwitch('in-process-gpu')
 app.commandLine.appendSwitch('disable-gpu-sandbox')

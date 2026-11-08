@@ -8,6 +8,7 @@ import { usePanelWidth } from './usePanelWidth'
 import { useAppDispatch } from '../../state/store'
 import { setCurrentSession } from '../../state/messageSlice'
 import { resolveDesktopAction } from '../../shared/keymap'
+import { KhyPet } from '../pet/KhyPet'
 
 // Shape of a persisted REPL session as returned by the host bridge
 // (sessionPersistence.listPersistedSessions, CH-2).
@@ -412,6 +413,9 @@ export function AppLayout({ children, commandCenterOpen, onCommandCenterClose, o
         onNewTask={handleNewTask}
         onReloadSession={onReloadSession}
       />
+      {/* 桌宠：悬浮卡片。左下角、可拖拽、可收起；z-40 在正文之上、
+          弹层（z-50）之下；卡片本身是唯一命中区，不抢工作区的任何点击。 */}
+      <KhyPet />
     </div>
   )
 }
