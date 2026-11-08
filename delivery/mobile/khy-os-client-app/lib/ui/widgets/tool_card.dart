@@ -1,7 +1,10 @@
+// khy-canary: Khy-20261101-132-VPGJTW20
 import 'package:flutter/material.dart';
 import '../../core/tools/tool_engine.dart';
+import '../../core/tools/write_diff.dart';
 import '../../core/agent/execution_log.dart';
 import '../theme/app_colors.dart';
+import '../theme/design_tokens.dart';
 
 /// Structured data for a single tool execution card.
 /// Immutable value object — create a new instance on every state transition.
@@ -33,6 +36,9 @@ class ToolCardData {
   /// When this step started
   final DateTime timestamp;
 
+  /// 写入/编辑类工具的红绿 ± 行；拿不到改动原文时为 null（卡片只说结果）。
+  final WriteDiff? diff;
+
   const ToolCardData({
     required this.index,
     required this.toolName,
@@ -43,6 +49,7 @@ class ToolCardData {
     this.error,
     this.durationMs,
     required this.timestamp,
+    this.diff,
   });
 
   // ─── Factories ─────────────────────────────────────────────────────
@@ -73,6 +80,7 @@ class ToolCardData {
     required Map<String, dynamic> args,
     required String output,
     required int durationMs,
+    WriteDiff? diff,
     DateTime? at,
   }) {
     return ToolCardData(
@@ -84,6 +92,7 @@ class ToolCardData {
       output: output,
       durationMs: durationMs,
       timestamp: at ?? DateTime.now(),
+      diff: diff,
     );
   }
 
@@ -157,6 +166,7 @@ class ToolCardData {
     String? error,
     int? durationMs,
     DateTime? timestamp,
+    WriteDiff? diff,
   }) {
     return ToolCardData(
       index: index ?? this.index,
@@ -168,6 +178,7 @@ class ToolCardData {
       error: error ?? this.error,
       durationMs: durationMs ?? this.durationMs,
       timestamp: timestamp ?? this.timestamp,
+      diff: diff ?? this.diff,
     );
   }
 
@@ -255,19 +266,19 @@ class ToolCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final palette = AppPalette.of(context);
     final body = data.isCompleted;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
+    final card = AnimatedContainer(
+      duration: AppDuration.micro,
+      curve: AppCurves.standard,
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(10),
+        color: palette.surface,
+        borderRadius: BorderRadius.circular(AppRadius.medium),
         border: Border.all(
-          color: _borderColor(cs),
-          width: 1.2,
+          color: _borderColor(palette),
+          width: AppStroke.thin,
         ),
       ),
       child: Column(
@@ -276,43 +287,48 @@ class ToolCard extends StatelessWidget {
         children: [
           // ── Header row ──
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.cardPadNarrow,
+              vertical: AppSpacing.inner,
+            ),
             child: Row(
               children: [
-                _statusIcon(data.state, cs),
-                const SizedBox(width: 8),
+                _statusIcon(data.state, palette),
+                const SizedBox(width: AppSpacing.dense),
                 Expanded(
                   child: Text(
                     data.label,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: cs.onSurface,
+                      color: palette.textPrimary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                const SizedBox(width: AppSpacing.dense),
                 // Duration / status badge
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.dense,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
-                    color: _badgeColor(data.state, cs).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(4),
+                    color: _badgeColor(data.state, palette)
+                        .withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: Text(
                     data.statusText,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                      color: _badgeColor(data.state, cs),
+                    style: AppText.label.copyWith(
+                      color: _badgeColor(data.state, palette),
                     ),
                   ),
                 ),
                 if (expandable && body) ...[
                   const SizedBox(width: 4),
-                  Icon(Icons.expand_more, size: 16, color: cs.outline),
+                  Icon(Icons.expand_more, size: 16, color: palette.textFaint),
                 ],
               ],
             ),
@@ -320,53 +336,64 @@ class ToolCard extends StatelessWidget {
 
           // ── Body (args + output/error) ──
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.cardPadNarrow,
+              0,
+              AppSpacing.cardPadNarrow,
+              AppSpacing.inner,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (data.args.isNotEmpty)
-                  _argsRow(data.args, cs),
+                if (data.args.isNotEmpty) _argsRow(data.args, palette),
+                // 红绿 ± 行：写入/编辑类工具把改了什么直接摊开，不再只剩一句
+                // 「已写入 x」。拿不到改动原文时这里是空的，卡片照常显示结果。
+                if (data.diff != null) _diffSection(data.diff!, palette),
                 if (data.output != null && data.state == ExecState.success)
-                  _outputSection(data.output!, cs),
-                if (data.error != null)
-                  _errorSection(data.error!, cs),
-                if (data.isRunning)
-                  _runningIndicator(cs),
+                  _outputSection(data.output!, palette),
+                if (data.error != null) _errorSection(data.error!, palette),
+                if (data.isRunning) _runningIndicator(palette),
               ],
             ),
           ),
         ],
       ),
     );
+
+    // 运行态是全 app 唯一发光的卡：光晕只在 running 挂载，节奏在 _BreatheHalo。
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.dense),
+      child: data.isRunning ? _BreatheHalo(child: card) : card,
+    );
   }
 
   // ── Status icon ───────────────────────────────────────────────────
 
-  Widget _statusIcon(ExecState state, ColorScheme cs) {
+  Widget _statusIcon(ExecState state, AppPalette palette) {
     switch (state) {
       case ExecState.queued:
-        return Icon(Icons.schedule, size: 18, color: cs.outline);
+        return Icon(Icons.schedule, size: 18, color: palette.textFaint);
       case ExecState.running:
         return SizedBox(
           width: 18,
           height: 18,
           child: CircularProgressIndicator(
             strokeWidth: 2,
-            color: cs.primary,
+            color: palette.primary,
           ),
         );
       case ExecState.success:
-        return Icon(Icons.check_circle, size: 18, color: AppColors.success);
+        return Icon(Icons.check_circle, size: 18, color: palette.success);
       case ExecState.failed:
-        return Icon(Icons.error, size: 18, color: AppColors.error);
+        return Icon(Icons.error, size: 18, color: palette.error);
       case ExecState.timeout:
-        return Icon(Icons.timer_off, size: 18, color: AppColors.warning);
+        return Icon(Icons.timer_off, size: 18, color: palette.warning);
     }
   }
 
   // ── Args row ──────────────────────────────────────────────────────
 
-  Widget _argsRow(Map<String, dynamic> args, ColorScheme cs) {
+  Widget _argsRow(Map<String, dynamic> args, AppPalette palette) {
     final text = args.entries
         .map((e) => '${e.key}: ${e.value}')
         .join('  ');
@@ -374,23 +401,125 @@ class ToolCard extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 4),
       child: Text(
         text.length > 80 ? '${text.substring(0, 80)}...' : text,
-        style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.45)),
+        style: AppText.secondary.copyWith(color: palette.textSecondary),
       ),
+    );
+  }
+
+  // ── Diff section ──────────────────────────────────────────────────
+
+  Widget _diffSection(WriteDiff diff, AppPalette palette) {
+    final mono = AppText.secondary.copyWith(
+      fontFamily: 'monospace',
+      fontSize: 11,
+      height: 1.45,
+    );
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: palette.surface,
+        border: Border.all(color: palette.stroke, width: AppStroke.thin),
+        borderRadius: BorderRadius.circular(AppRadius.small),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            color: palette.surfaceHigh,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    diff.filePath.isEmpty ? '改动' : diff.filePath,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.label.copyWith(color: palette.textSecondary),
+                  ),
+                ),
+                if (diff.added > 0)
+                  Text(
+                    '+${diff.added}',
+                    style: AppText.label.copyWith(color: palette.success),
+                  ),
+                if (diff.added > 0 && diff.removed > 0) const SizedBox(width: 6),
+                if (diff.removed > 0)
+                  Text(
+                    '-${diff.removed}',
+                    style: AppText.label.copyWith(color: palette.error),
+                  ),
+              ],
+            ),
+          ),
+          for (final row in diff.rows) _diffRow(row, mono, palette),
+        ],
+      ),
+    );
+  }
+
+  Widget _diffRow(WriteDiffRow row, TextStyle mono, AppPalette palette) {
+    if (row.kind == 'add' || row.kind == 'del' || row.kind == 'ctx') {
+      final isAdd = row.kind == 'add';
+      final isDel = row.kind == 'del';
+      final num = isAdd ? (row.numNew ?? row.num) : row.num;
+      return Container(
+        color: isAdd
+            ? palette.success.withValues(alpha: 0.10)
+            : isDel
+                ? palette.error.withValues(alpha: 0.10)
+                : null,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 34,
+              child: Text(
+                num == null ? '' : '$num',
+                textAlign: TextAlign.right,
+                style: mono.copyWith(color: palette.textFaint),
+              ),
+            ),
+            SizedBox(
+              width: 12,
+              child: Text(
+                isAdd ? '+' : (isDel ? '-' : ' '),
+                style: mono.copyWith(
+                  color: isAdd
+                      ? palette.success
+                      : (isDel ? palette.error : palette.textFaint),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                row.text.isEmpty ? ' ' : row.text,
+                style: mono.copyWith(color: palette.textPrimary),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    // gap / more / meta：不参与红绿，灰字一行。
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+      child: Text(row.text, style: mono.copyWith(color: palette.textFaint)),
     );
   }
 
   // ── Output section ────────────────────────────────────────────────
 
-  Widget _outputSection(String output, ColorScheme cs) {
+  Widget _outputSection(String output, AppPalette palette) {
     final truncated =
         output.length > 200 ? output.substring(0, 200) + '…' : output;
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: double.infinity),
       child: Text(
         truncated,
-        style: TextStyle(
-          fontSize: 12,
-          color: cs.onSurface.withValues(alpha: 0.7),
+        style: AppText.secondary.copyWith(
+          color: palette.textPrimary.withValues(alpha: 0.75),
           height: 1.4,
           fontFamily: 'monospace',
         ),
@@ -402,19 +531,18 @@ class ToolCard extends StatelessWidget {
 
   // ── Error section ─────────────────────────────────────────────────
 
-  Widget _errorSection(String error, ColorScheme cs) {
+  Widget _errorSection(String error, AppPalette palette) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      padding: const EdgeInsets.all(AppSpacing.dense),
       margin: const EdgeInsets.only(top: 4),
       decoration: BoxDecoration(
-        color: AppColors.error.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(6),
+        color: palette.error.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppRadius.small),
       ),
       child: Text(
         error.length > 200 ? '${error.substring(0, 200)}…' : error,
-        style: const TextStyle(
-          fontSize: 12,
-          color: AppColors.error,
+        style: AppText.secondary.copyWith(
+          color: palette.error,
           height: 1.4,
         ),
         maxLines: 3,
@@ -425,18 +553,19 @@ class ToolCard extends StatelessWidget {
 
   // ── Running indicator ─────────────────────────────────────────────
 
-  Widget _runningIndicator(ColorScheme cs) {
+  Widget _runningIndicator(AppPalette palette) {
     return Row(
       children: [
         SizedBox(
           width: 12,
           height: 12,
-          child: CircularProgressIndicator(strokeWidth: 2, color: cs.primary),
+          child:
+              CircularProgressIndicator(strokeWidth: 2, color: palette.primary),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppSpacing.inner),
         Text(
-          '执行中...',
-          style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5)),
+          '执行中 · 第 ${data.index} 步',
+          style: AppText.label.copyWith(color: palette.textSecondary),
         ),
       ],
     );
@@ -444,32 +573,82 @@ class ToolCard extends StatelessWidget {
 
   // ── Colors ────────────────────────────────────────────────────────
 
-  Color _borderColor(ColorScheme cs) {
+  Color _borderColor(AppPalette palette) {
     switch (data.state) {
+      case ExecState.running:
+        // 运行中是唯一实色描边 + 呼吸光晕的卡，其余态走状态色 35%。
+        return palette.primary;
       case ExecState.success:
-        return AppColors.success.withValues(alpha: 0.3);
+        return palette.success.withValues(alpha: 0.35);
       case ExecState.failed:
-        return AppColors.error.withValues(alpha: 0.3);
+        return palette.error.withValues(alpha: 0.35);
       case ExecState.timeout:
-        return AppColors.warning.withValues(alpha: 0.3);
-      default:
-        return cs.outlineVariant.withValues(alpha: 0.3);
+        return palette.warning.withValues(alpha: 0.35);
+      case ExecState.queued:
+        return palette.stroke;
     }
   }
 
-  Color _badgeColor(ExecState state, ColorScheme cs) {
+  Color _badgeColor(ExecState state, AppPalette palette) {
     switch (state) {
       case ExecState.success:
-        return AppColors.success;
+        return palette.success;
       case ExecState.failed:
-        return AppColors.error;
+        return palette.error;
       case ExecState.timeout:
-        return AppColors.warning;
+        return palette.warning;
       case ExecState.running:
-        return cs.primary;
+        return palette.primary;
       case ExecState.queued:
-        return cs.outline;
+        return palette.textSecondary;
     }
+  }
+}
+
+/// 运行态呼吸光晕：primary 0.18↔0.38，半程 [AppDuration.breathe]；
+/// 系统减弱动效时停在中点，保留「运行中」的静态信号不闪动。
+class _BreatheHalo extends StatefulWidget {
+  const _BreatheHalo({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_BreatheHalo> createState() => _BreatheHaloState();
+}
+
+class _BreatheHaloState extends State<_BreatheHalo>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _breathe =
+      AnimationController(vsync: this, duration: AppDuration.breathe);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduced = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    if (reduced) {
+      _breathe.stop();
+      _breathe.value = 0.5;
+    } else if (!_breathe.isAnimating) {
+      _breathe.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _breathe.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppCurves.loop.transform(_breathe.value);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        boxShadow: AppShadows.breathe(t),
+      ),
+      child: widget.child,
+    );
   }
 }
 
@@ -482,7 +661,7 @@ class ToolExecutionSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final palette = AppPalette.of(context);
     if (cards.isEmpty) return const SizedBox.shrink();
 
     final total = cards.length;
@@ -490,16 +669,28 @@ class ToolExecutionSummary extends StatelessWidget {
     final failed = cards.where((c) => c.state == ExecState.failed).length;
     final running = cards.any((c) => c.isRunning);
 
-        final totalMs =
+    final totalMs =
         cards.map((c) => c.durationMs ?? 0).fold<int>(0, (a, b) => a + b);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      margin: const EdgeInsets.only(bottom: 8),
+    // 底色随整体态势走，跟单卡（surface 底 + 状态描边）拉开层次。
+    final Color tone = running
+        ? palette.primary
+        : failed > 0
+            ? palette.error
+            : palette.success;
+
+    return AnimatedContainer(
+      duration: AppDuration.micro,
+      curve: AppCurves.standard,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.cardPadNarrow,
+        vertical: AppSpacing.dense,
+      ),
+      margin: const EdgeInsets.only(bottom: AppSpacing.dense),
       decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.2)),
+        color: tone.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(AppRadius.small),
+        border: Border.all(color: palette.stroke, width: AppStroke.thin),
       ),
       child: Row(
         children: [
@@ -507,28 +698,35 @@ class ToolExecutionSummary extends StatelessWidget {
             SizedBox(
               width: 14,
               height: 14,
-              child: CircularProgressIndicator(strokeWidth: 2, color: cs.primary),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: palette.primary,
+              ),
             )
           else
             Icon(
               failed > 0 ? Icons.error_outline : Icons.check_circle_outline,
               size: 14,
-              color: failed > 0 ? AppColors.error : AppColors.success,
-            ),          const SizedBox(width: 8),
+              color: tone,
+            ),
+          const SizedBox(width: AppSpacing.dense),
           Expanded(
             child: Text(
-              '工具执行 $done/$total'
-              '${failed > 0 ? " · ${failed} 失败" : ""}',
-              style:
-                  TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.6)),
+              '工具执行 $done/$total${failed > 0 ? ' · $failed 失败' : ''}',
+              style: AppText.secondary.copyWith(
+                color: palette.textPrimary.withValues(alpha: 0.85),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (!running && total > 0)
+          if (!running && total > 0) ...[
+            const SizedBox(width: AppSpacing.dense),
             Text(
               '${totalMs ~/ 1000}.${(totalMs % 1000) ~/ 100}s',
-              style:
-                  TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4)),
+              style: AppText.micro.copyWith(color: palette.textFaint),
             ),
+          ],
         ],
       ),
     );

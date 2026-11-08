@@ -1579,7 +1579,13 @@ function normalizeToolResult(r, maxLen = 2200) {
     } else {
       body = String(body);
     }
-    return { success: true, text: summarizeText(body, maxLen) };
+    // Write/Edit 的 before/after 原件只在这个返回对象上存在——下游把 toolResult
+    // 拍平成 "[Tool:x] 文本" 之后就没有了。原样带上，交给传输层用行模型渲染红绿。
+    const out = { success: true, text: summarizeText(body, maxLen) };
+    if (r._khyWriteDiff && typeof r._khyWriteDiff === 'object') {
+      out._khyWriteDiff = r._khyWriteDiff;
+    }
+    return out;
   }
   // Error case: also handle object errors
   let errText = r.error;

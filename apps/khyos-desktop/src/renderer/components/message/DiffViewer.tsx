@@ -1,124 +1,172 @@
+// khy-canary: Khy-20261102-295-19R4SMNY
 import { useState } from 'react'
+import { Icon } from '../ui/Icon'
+import { MAX_DIFF_ROWS, type DiffRow, type ToolDiff } from '../../../shared/toolDiff'
 
-interface DiffLine {
-  type: 'added' | 'removed' | 'unchanged' | 'header'
-  content: string
-  oldLineNum?: number
-  newLineNum?: number
-}
-
-interface DiffFile {
+export interface ChangedFile {
   path: string
-  status: 'modified' | 'added' | 'deleted'
+  status: string
   additions: number
   deletions: number
-  lines: DiffLine[]
+  /** host 从后端 `_khyWriteDiff` 产出的红绿行；拿不到时为 undefined（只显示文件名）。 */
+  diff?: ToolDiff
 }
 
-const mockDiff: DiffFile = {
-  path: 'src/sort/quicksort.ts',
-  status: 'modified',
-  additions: 8,
-  deletions: 2,
-  lines: [
-    { type: 'header', content: '@@ -1,5 +1,11 @@' },
-    { type: 'unchanged', content: ' function quicksort(arr: number[]): number[] {', oldLineNum: 1, newLineNum: 1 },
-    { type: 'removed', content: '   if (arr.length === 0) return [];', oldLineNum: 2 },
-    { type: 'added', content: '   if (arr.length <= 1) return arr;', newLineNum: 2 },
-    { type: 'unchanged', content: '   const pivot = arr[Math.floor(arr.length / 2)];', oldLineNum: 3, newLineNum: 3 },
-    { type: 'removed', content: '   const left = arr.filter(x => x < pivot);', oldLineNum: 4 },
-    { type: 'added', content: '   const left = arr.filter(x => x < pivot);', newLineNum: 4 },
-    { type: 'added', content: '   const middle = arr.filter(x => x === pivot);', newLineNum: 5 },
-    { type: 'unchanged', content: '   const right = arr.filter(x => x > pivot);', oldLineNum: 5, newLineNum: 6 },
-    { type: 'unchanged', content: '   return [...quicksort(left), ...middle, ...quicksort(right)];', oldLineNum: 6, newLineNum: 7 },
-    { type: 'unchanged', content: ' }', oldLineNum: 7, newLineNum: 8 },
-  ],
+const COLLAPSED_ROWS = 60
+
+const STATUS_DOT: Record<string, string> = {
+  added: 'bg-success',
+  deleted: 'bg-destructive',
+  modified: 'bg-warning',
 }
 
-export function DiffViewer({ file = mockDiff, onClose }: { file?: DiffFile; onClose?: () => void }) {
-  const [expanded, setExpanded] = useState(true)
+function DiffRowView({ row, dual }: { row: DiffRow; dual: boolean }) {
+  if (row.kind === 'gap' || row.kind === 'meta') {
+    return <div data-kind={row.kind} className="px-3 py-0.5 text-foreground-muted/70 select-none">{row.text}</div>
+  }
+  if (row.kind === 'more') {
+    return <div data-kind={row.kind} className="px-3 py-0.5 text-brand">{row.text}</div>
+  }
+  if (row.kind === 'stat') {
+    return (
+      <div data-kind={row.kind} className="mt-1 border-t border-card-border/60 px-3 py-1 text-foreground-muted select-none">
+        {row.text}
+      </div>
+    )
+  }
+
+  const isAdd = row.kind === 'add'
+  const isDel = row.kind === 'del'
+  // 双列 gutter：旧号列只给 del/ctx，新号列只给 add/ctx；单列时每行用自己那份文件的号
+  // （add=新号、del=旧号），与终端端的行号口径一致。
+  const oldNum = isAdd ? '' : row.num ?? ''
+  const newNum = isAdd ? row.numNew ?? row.num ?? '' : row.kind === 'ctx' ? row.numNew ?? '' : ''
+  return (
+    <div data-kind={row.kind} className={`flex ${isAdd ? 'bg-success/10' : isDel ? 'bg-destructive/10' : ''}`}>
+      {dual ? (
+        <>
+          <span className="w-10 shrink-0 select-none px-2 text-right text-foreground-muted">{oldNum}</span>
+          <span className="w-10 shrink-0 select-none px-2 text-right text-foreground-muted">{newNum}</span>
+        </>
+      ) : (
+        <span className="w-10 shrink-0 select-none px-2 text-right text-foreground-muted">{row.num ?? ''}</span>
+      )}
+      <span
+        className={`w-5 shrink-0 select-none text-center ${
+          isAdd ? 'text-success' : isDel ? 'text-destructive' : 'text-foreground-muted/50'
+        }`}
+      >
+        {isAdd ? '+' : isDel ? '-' : ' '}
+      </span>
+      <span
+        className={`whitespace-pre pr-3 ${
+          isAdd ? 'text-foreground' : isDel ? 'text-foreground/80' : 'text-foreground-muted'
+        }`}
+      >
+        {row.text || ' '}
+      </span>
+    </div>
+  )
+}
+
+export function DiffViewer({
+  diff,
+  embedded = false,
+  defaultExpanded = true,
+}: {
+  diff: ToolDiff
+  /** 嵌在别的卡片里（工具卡 / 汇总面板）时去掉外框，避免卡片套卡片。 */
+  embedded?: boolean
+  defaultExpanded?: boolean
+}) {
+  const [expanded, setExpanded] = useState(defaultExpanded)
+  const [showAll, setShowAll] = useState(false)
+  const dual = diff.rows.some((row) => typeof row.numNew === 'number')
+  const shown = showAll ? diff.rows : diff.rows.slice(0, COLLAPSED_ROWS)
+  const hidden = diff.rows.length - shown.length
 
   return (
-    <div className="my-3 rounded-xl border border-card-border overflow-hidden bg-card">
-      {/* 头部 */}
-      <div className="flex items-center gap-2 px-4 py-2.5 bg-surface border-b border-card-border">
-        <span className={`w-2.5 h-2.5 rounded-full ${
-          file.status === 'added' ? 'bg-success' : file.status === 'deleted' ? 'bg-destructive' : 'bg-warning'
-        }`} />
-        <span className="text-sm font-medium text-foreground flex-1 truncate">{file.path}</span>
-        <span className="text-xs text-success font-medium">+{file.additions}</span>
-        <span className="text-xs text-destructive font-medium">-{file.deletions}</span>
+    <div className={embedded ? 'overflow-hidden rounded-lg border border-card-border' : 'khy-content-col my-3 overflow-hidden rounded-xl border border-card-border bg-card'}>
+      <div className="flex items-center gap-2 border-b border-card-border bg-surface px-3 py-1.5">
+        <Icon name="code" size={12} />
+        <span className="flex-1 truncate text-xs text-foreground" title={diff.filePath}>
+          {diff.filePath || '改动'}
+        </span>
+        {diff.added > 0 && <span className="text-xs font-medium text-success">+{diff.added}</span>}
+        {diff.removed > 0 && <span className="text-xs font-medium text-destructive">-{diff.removed}</span>}
         <button
-          onClick={() => setExpanded(!expanded)}
-          className="p-1 rounded text-foreground/40 hover:text-foreground hover:bg-surface-hover text-xs ml-2"
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+          className="rounded px-1.5 py-0.5 text-xs text-foreground-muted hover:bg-surface-hover hover:text-foreground"
         >
           {expanded ? '收起' : '展开'}
         </button>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="p-1 rounded text-foreground/40 hover:text-foreground hover:bg-surface-hover text-xs"
-          >
-            ✕
-          </button>
-        )}
       </div>
 
-      {/* Diff 内容 */}
       {expanded && (
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs font-mono">
-            <tbody>
-              {file.lines.map((line, i) => (
-                <tr key={i} className={
-                  line.type === 'added' ? 'bg-success/10' :
-                  line.type === 'removed' ? 'bg-destructive/10' :
-                  line.type === 'header' ? 'bg-accent' : ''
-                }>
-                  <td className="px-2 py-0.5 text-right text-foreground/30 select-none w-10 border-r border-card-border/50">
-                    {line.oldLineNum || ''}
-                  </td>
-                  <td className="px-2 py-0.5 text-right text-foreground/30 select-none w-10 border-r border-card-border/50">
-                    {line.newLineNum || ''}
-                  </td>
-                  <td className="px-3 py-0.5 whitespace-pre text-foreground/80">
-                    {line.type === 'added' && <span className="text-success mr-2">+</span>}
-                    {line.type === 'removed' && <span className="text-destructive mr-2">-</span>}
-                    {line.type === 'header' && <span className="text-brand mr-2">@@</span>}
-                    {line.content}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="overflow-x-auto bg-card">
+          <div className="min-w-max py-1 font-mono text-xs leading-5">
+            {shown.map((row, i) => (
+              <DiffRowView key={i} row={row} dual={dual} />
+            ))}
+            {hidden > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowAll(true)}
+                className="mt-1 px-3 py-0.5 text-brand hover:underline"
+              >
+                还有 {hidden} 行未显示，点击展开
+              </button>
+            )}
+            {diff.truncated && (
+              <div className="px-3 py-0.5 text-warning">
+                改动过大，仅传输前 {MAX_DIFF_ROWS} 行（其余未显示）
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
   )
 }
 
-export function DiffSummary({ files, onViewDiff, onUndo }: { files: { path: string; status: string; additions: number; deletions: number }[]; onViewDiff?: (path: string) => void; onUndo?: () => void }) {
+export function DiffSummary({
+  files,
+  onViewDiff,
+  onUndo,
+}: {
+  files: ChangedFile[]
+  onViewDiff?: (path: string) => void
+  onUndo?: () => void
+}) {
   const [expanded, setExpanded] = useState(true)
+  const [openPath, setOpenPath] = useState<string | null>(null)
   const totalAdditions = files.reduce((sum, f) => sum + f.additions, 0)
   const totalDeletions = files.reduce((sum, f) => sum + f.deletions, 0)
 
   return (
-    <div className="my-3 khy-tui bg-card border border-card-border rounded-xl overflow-hidden">
-      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-card-border">
+    <div className="khy-content-col my-3 khy-tui overflow-hidden rounded-xl border border-card-border bg-card">
+      <div className="flex items-center gap-2 border-b border-card-border px-4 py-2.5">
         <button
+          type="button"
           onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-2 text-sm text-foreground/70 hover:text-foreground transition-colors flex-1"
+          aria-expanded={expanded}
+          className="flex flex-1 items-center gap-2 text-sm text-foreground/70 transition-colors hover:text-foreground"
         >
-          <span className={`transition-transform duration-200 text-xs ${expanded ? 'rotate-90' : ''}`}>▶</span>
-          <span className="font-medium">已更改文件</span>
-          <span className="text-xs text-foreground/40">{files.length} 个文件</span>
-          <span className="text-xs text-success">+{totalAdditions}</span>
-          <span className="text-xs text-destructive">-{totalDeletions}</span>
+          <span className={`text-xs transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`}>
+            <Icon name="chevron-right" size={12} />
+          </span>
+          <span className="font-medium">本轮文件改动</span>
+          <span className="text-xs text-foreground-muted">{files.length} 个文件</span>
+          {totalAdditions > 0 && <span className="text-xs text-success">+{totalAdditions}</span>}
+          {totalDeletions > 0 && <span className="text-xs text-destructive">-{totalDeletions}</span>}
         </button>
         {onUndo && (
           <button
+            type="button"
             onClick={onUndo}
-            className="px-3 py-1 rounded-md text-xs text-foreground/60 hover:text-foreground hover:bg-surface-hover border border-card-border transition-colors"
+            className="rounded-md border border-card-border px-3 py-1 text-xs text-foreground-muted transition-colors hover:bg-surface-hover hover:text-foreground"
           >
             撤销文件改动
           </button>
@@ -127,32 +175,52 @@ export function DiffSummary({ files, onViewDiff, onUndo }: { files: { path: stri
 
       {expanded && (
         <div className="py-1">
-          {files.map((file, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-2 px-4 py-2 hover:bg-surface-hover cursor-pointer transition-colors"
-              onClick={() => onViewDiff?.(file.path)}
-            >
-              <span className={`w-2 h-2 rounded-full ${
-                file.status === 'added' ? 'bg-success' : file.status === 'deleted' ? 'bg-destructive' : 'bg-warning'
-              }`} />
-              <span className="text-sm text-foreground flex-1 truncate">{file.path}</span>
-              {file.additions > 0 && <span className="text-xs text-success">+{file.additions}</span>}
-              {file.deletions > 0 && <span className="text-xs text-destructive">-{file.deletions}</span>}
-              <button
-                disabled={!onViewDiff}
-                onClick={(e) => {
-                  // 行本身也可点；显式 stopPropagation 避免「查看」被行点击吞掉
-                  e.stopPropagation()
-                  onViewDiff?.(file.path)
-                }}
-                className={`text-xs ml-2 ${onViewDiff ? 'text-brand hover:underline' : 'text-foreground/30 cursor-default'}`}
-                title={onViewDiff ? `查看 ${file.path} 的改动` : '查看不可用：未接线 diff 查看器'}
-              >
-                查看
-              </button>
-            </div>
-          ))}
+          {files.map((file) => {
+            const open = openPath === file.path
+            return (
+              <div key={file.path}>
+                <div className="flex items-center gap-2 px-4 py-2 transition-colors hover:bg-surface-hover">
+                  <span className={`h-2 w-2 rounded-full ${STATUS_DOT[file.status] || 'bg-warning'}`} />
+                  <button
+                    type="button"
+                    disabled={!file.diff}
+                    onClick={() => setOpenPath(open ? null : file.path)}
+                    className={`flex-1 truncate text-left text-sm ${
+                      file.diff ? 'text-foreground hover:underline' : 'cursor-default text-foreground'
+                    }`}
+                    title={file.diff ? '展开这次改动的红绿行' : '这次改动没有可显示的 diff'}
+                  >
+                    {file.path}
+                  </button>
+                  {file.additions > 0 && <span className="text-xs text-success">+{file.additions}</span>}
+                  {file.deletions > 0 && <span className="text-xs text-destructive">-{file.deletions}</span>}
+                  {file.diff && (
+                    <button
+                      type="button"
+                      onClick={() => setOpenPath(open ? null : file.path)}
+                      className="ml-2 text-xs text-brand hover:underline"
+                    >
+                      {open ? '收起改动' : '查看改动'}
+                    </button>
+                  )}
+                  {onViewDiff && (
+                    <button
+                      type="button"
+                      onClick={() => onViewDiff(file.path)}
+                      className="text-xs text-foreground-muted hover:text-foreground hover:underline"
+                    >
+                      打开文件
+                    </button>
+                  )}
+                </div>
+                {open && file.diff && (
+                  <div className="px-4 pb-3 pt-1">
+                    <DiffViewer diff={file.diff} embedded defaultExpanded />
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
     </div>

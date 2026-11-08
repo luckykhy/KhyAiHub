@@ -1913,9 +1913,19 @@ class MainActivity : FlutterActivity() {
             try {
                 val f = resolvePath(relative)
                 f.parentFile?.mkdirs()
+                // 卡片要画红绿 ± 行，需要改前的原文。超过读取上限就不回传 ——
+                // 把截断的一半当原文去比对，画出来的红绿是错的，比没有更糟。
+                val existed = f.exists() && f.isFile
+                val before = if (existed && f.length() <= FILE_READ_MAX) f.readText() else null
                 f.writeText(content)
                 runOnUiThread {
-                    result.success(mapOf("success" to true, "path" to relative, "size" to content.length))
+                    result.success(mapOf(
+                        "success" to true,
+                        "path" to relative,
+                        "size" to content.length,
+                        "existed" to existed,
+                        "before" to before,
+                    ))
                 }
             } catch (e: Exception) {
                 runOnUiThread {
@@ -1952,8 +1962,16 @@ class MainActivity : FlutterActivity() {
                 val updated = if (replaceAll) content.replace(oldText, newText)
                 else content.replaceFirst(oldText, newText)
                 f.writeText(updated)
+                // 同 fileWrite：超限的原文不回传，宁可没有 diff 也不画一份错的。
+                val snapshot = content.length <= FILE_READ_MAX && updated.length <= FILE_READ_MAX
                 runOnUiThread {
-                    result.success(mapOf("success" to true, "replacements" to (if (replaceAll) count else 1), "size" to updated.length))
+                    result.success(mapOf(
+                        "success" to true,
+                        "replacements" to (if (replaceAll) count else 1),
+                        "size" to updated.length,
+                        "before" to (if (snapshot) content else null),
+                        "after" to (if (snapshot) updated else null),
+                    ))
                 }
             } catch (e: Exception) {
                 runOnUiThread { result.success(mapOf("success" to false, "error" to (e.message ?: "unknown"))) }

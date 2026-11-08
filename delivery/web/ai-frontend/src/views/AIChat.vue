@@ -528,6 +528,7 @@
                         {{ step.expanded ? '收起 ▲' : '详情 ▼' }}
                       </button>
                     </div>
+                    <ToolDiffView v-if="step.diff" :diff="step.diff" embedded />
                     <div
                       v-if="step.expanded"
                       class="chat-tool-step-detail"
@@ -692,6 +693,11 @@
                 </div>
                 </template>
                 <!-- /经典视图 -->
+                <!-- 每轮汇总：两种视图共用，避免用户逐张工具卡翻红绿行。 -->
+                <ToolDiffSummary
+                  v-if="msg.role === 'assistant' && collectRoundDiffs(msg).length"
+                  :files="collectRoundDiffs(msg)"
+                />
               </div>
             </div>
             <div v-if="loading" class="chat-loading-row" role="status">
@@ -981,6 +987,8 @@ import ChatInputBar from './components/ChatInputBar.vue';
 // [DESIGN-ARCH-163] D9 —— 已发送附件回显走认证 blob 通道（GET /api/ai/upload/:id
 // 只认 Bearer 头，裸 <img src>/<a href> 必然 401），并把缩略图/预览收进子组件。
 import MessageAttachment from './components/MessageAttachment.vue';
+import ToolDiffView from './components/ToolDiffView.vue';
+import ToolDiffSummary from './components/ToolDiffSummary.vue';
 import { readThumbsFlag, attachmentBadge } from '@/utils/attachmentView';
 // Lazy-loaded: AgentStatePanel is a heavy side panel (orb animation, tool call
 // timeline, activity feed). Deferring its chunk reduces the initial chat page
@@ -2592,6 +2600,70 @@ function appendToolStep(assistantMessage, payload) {
   }
 }
 
+// Write/Edit 的 before/after 原件由后端单独发一条 tool_diff（tool_result 文本里
+// 已经被拍平，红绿行无从还原）。挂到对应的工具步骤上，让详情里既有参数/结果也有 ± 行。
+function appendToolDiff(assistantMessage, payload) {
+  if (!assistantMessage) return false;
+  const rows = Array.isArray(payload?.rows) ? payload.rows : [];
+  if (!rows.length) return false;
+  if (!Array.isArray(assistantMessage.steps)) assistantMessage.steps = [];
+  const steps = assistantMessage.steps;
+  const tool = String(payload?.tool || '').trim();
+  const diff = {
+    filePath: String(payload?.filePath || ''),
+    rows,
+    added: Number(payload?.added) || 0,
+    removed: Number(payload?.removed) || 0,
+    truncated: Boolean(payload?.truncated),
+  };
+  // onToolDiff 在工具执行完成、tool_result 事件之前发出，所以正常能配到那个还
+  // 在 running 的步骤；同一工具连续跑多次时取「最近且尚未挂过 diff」的那个。
+  let target = null;
+  for (let i = steps.length - 1; i >= 0; i -= 1) {
+    const s = steps[i];
+    if (!s || s.diff) continue;
+    if (tool && s.tool !== tool) continue;
+    target = s;
+    if (s.status === 'running') break;
+  }
+  if (target) {
+    target.diff = diff;
+  } else {
+    steps.push({
+      key: `${tool || 'diff'}-${steps.length}`,
+      id: '',
+      tool: tool || 'diff',
+      input: '',
+      inputFull: '',
+      expanded: false,
+      status: 'ok',
+      result: '',
+      startedAt: null,
+      endedAt: Date.now(),
+      durationMs: null,
+      diff,
+    });
+  }
+  _toolProgressCache.delete(steps);
+  return true;
+}
+
+// 本轮汇总：一条消息里所有带 diff 的步骤，喂给 ToolDiffSummary。
+function collectRoundDiffs(msg) {
+  if (!msg || !Array.isArray(msg.steps)) return [];
+  const out = [];
+  for (const step of msg.steps) {
+    if (!step || !step.diff) continue;
+    out.push({
+      filePath: step.diff.filePath || step.tool,
+      added: step.diff.added || 0,
+      removed: step.diff.removed || 0,
+      diff: step.diff,
+    });
+  }
+  return out;
+}
+
 // #7 展开/收起某条工具步骤的完整参数与结果面板。
 function toggleStepExpand(step) {
   if (!step) return;
@@ -2653,6 +2725,10 @@ function deriveParts(msg) {
           result: step.result || step.error,
           error: step.status === 'error',
         });
+      }
+      // 红绿 ± 行（Write/Edit）跟在对应结果之后，结构化视图里也能看到改了什么。
+      if (step.diff) {
+        parts.push({ type: 'tool-diff', toolName: step.tool, diff: step.diff });
       }
     }
   }
@@ -2849,6 +2925,12 @@ function handleStreamEvent(rawEvent, assistantMessage) {
     _bumpMsgContentVersion();
   }
 
+  // 红绿 ± 行：后端在工具执行完成时单独下发，落到对应步骤上。
+  if (type === 'tool_diff') {
+    if (appendToolDiff(assistantMessage, payload)) _bumpMsgContentVersion();
+    return;
+  }
+
   // 思考链内容：直接展示 AI 推理过程文本（通过 onChunk 从 gateway 透传的 thinking 增量）
   // 不走 resolveAiChatThinkingEvent 的通用映射，保留原始文本。
   if (type === 'thinking_content') {
@@ -2999,6 +3081,11 @@ function handleWsEvent(payload, assistantMessage, done) {
   if (type === 'tool_use' || type === 'tool_result') {
     appendToolStep(assistantMessage, payload);
     _bumpMsgContentVersion();
+  }
+  // 红绿 ± 行（WS 与 SSE 同一份事件契约）。
+  if (type === 'tool_diff') {
+    if (appendToolDiff(assistantMessage, payload)) _bumpMsgContentVersion();
+    return;
   }
   // 思考链内容：WS 路径同样透传 thinking 增量文本
   if (type === 'thinking_content') {

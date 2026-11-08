@@ -53,6 +53,9 @@
         }}</pre>
       </div>
 
+      <!-- 红绿 ± 行（Write/Edit 的红绿 diff） -->
+      <ToolDiffView v-else-if="part.type === 'tool-diff'" :diff="part.diff" embedded />
+
       <!-- 思考过程 -->
       <div v-else-if="part.type === 'thinking'" class="chat-part-thinking">
         <button
@@ -145,6 +148,7 @@
 
 <script setup>
 import { Tools, CircleClose, Select, Document } from '@element-plus/icons-vue';
+import ToolDiffView from './ToolDiffView.vue';
 
 /**
  * 命令摘要（截断到 60 字符）

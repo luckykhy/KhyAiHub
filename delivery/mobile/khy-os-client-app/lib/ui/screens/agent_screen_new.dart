@@ -10,6 +10,7 @@ import '../../core/services/app_logger.dart';
 import '../../core/config/built_in_keys.dart';
 import '../../core/tools/tool_engine.dart';
 import '../../core/tools/builtin_tools.dart';
+import '../../core/tools/write_diff.dart';
 import '../../core/tools/tool_protocol.dart';
 import '../../core/agent/execution_log.dart';
 import '../../ui/theme/app_colors.dart';
@@ -432,6 +433,7 @@ class _AgentScreenNewState extends ConsumerState<AgentScreenNew> {
                   args: args,
                   output: result.output,
                   durationMs: elapsed,
+                  diff: WriteDiffBuilder.fromMetadata(result.metadata),
                 )
               : ToolCardData.failed(
                   index: step.index,

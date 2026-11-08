@@ -211,6 +211,68 @@ function _summarizeToolResultForStream(chunk) {
   return s.length > 240 ? `${s.slice(0, 240)}…` : s;
 }
 
+// Red/green ±diff payload for one write/edit tool result. Rows come from the ONE
+// row-model producer (`cli/writeDiffRows`, the same module the terminal / desktop
+// / TUI render), so all four ends show identical ± rows instead of the web
+// inventing its own. `expanded=true`: folding is a client render decision.
+const TOOL_DIFF_MAX_ROWS = 2000;
+function _buildToolDiffEvent(payload) {
+  const ctx = payload && typeof payload === 'object' ? payload.diff : null;
+  if (!ctx || typeof ctx !== 'object') {
+    return null;
+  }
+  let rows = null;
+  try {
+    rows = require('../cli/writeDiffRows').buildWriteDiffRows(ctx, true);
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return null;
+  }
+  let added = 0;
+  let removed = 0;
+  const localized = [];
+  for (const row of rows) {
+    if (!row || typeof row !== 'object') {
+      continue;
+    }
+    if (row.kind === 'add') {
+      added += 1;
+    } else if (row.kind === 'del') {
+      removed += 1;
+    } else if (row.kind === 'stat') {
+      // 卡片头已经显示 +N/-M，统计行是重复信息。
+      continue;
+    } else if (row.kind === 'gap') {
+      // 行模型给的是英文（"⋯ N unchanged lines"）；面向用户的中文口径与桌面端一致。
+      const gap = /^⋯\s*(\d+)\s+unchanged lines?$/.exec(String(row.text || ''));
+      if (gap) {
+        localized.push({ ...row, text: `⋯ ${gap[1]} 行未改动` });
+        continue;
+      }
+    } else if (row.kind === 'more') {
+      // 溢出标记原文是终端口径（"... +N lines (capped)" / "ctrl+o to expand"），
+      // 浏览器里既没有 Ctrl+O 也不该说英文。
+      const hidden = /(\d+)/.exec(String(row.text || ''));
+      localized.push({ ...row, text: hidden ? `…… 还有 ${hidden[1]} 行未显示` : '…… 更多内容未显示' });
+      continue;
+    }
+    localized.push(row);
+  }
+  const truncated = localized.length > TOOL_DIFF_MAX_ROWS;
+  return {
+    type: 'tool_diff',
+    tool: String(payload.tool || ''),
+    filePath: typeof ctx.filePath === 'string' ? ctx.filePath : '',
+    rows: truncated ? localized.slice(0, TOOL_DIFF_MAX_ROWS) : localized,
+    added,
+    removed,
+    truncated,
+    timestamp: Date.now(),
+  };
+}
+
 // SSE streaming chat. The AIChat frontend's default transport POSTs here and
 // reads Server-Sent Events (start | status | thinking | tool_use | tool_result
 // | control_request | chunk | done | error).
@@ -400,6 +462,18 @@ async function handleChatStreamHttp(req, res) {
           });
         }
       },
+      // 红绿 ±diff：自然工具回路在 aiChatCore 里把写/编辑结果拍平成文本，结构化
+      // before/after 经这个专用回调送出来（与 onChunk 分开，免得新 chunk 类型
+      // 落进终端渲染器）。
+      onToolDiff: (payload) => {
+        if (clientGone) {
+          return;
+        }
+        const ev = _buildToolDiffEvent(payload);
+        if (ev) {
+          sendEvent(ev);
+        }
+      },
       onControlRequest: ({ requestId, request } = {}) => {
         if (clientGone) {
           return undefined;
@@ -542,6 +616,7 @@ module.exports = {
   _resolveChatAttachments,
   _isWebInlineImagePathEnabled,
   _summarizeToolResultForStream,
+  _buildToolDiffEvent,
   // 依赖注入
   setChatHttpDeps,
 };

@@ -18,11 +18,23 @@ class ToolResult {
   factory ToolResult.fail(String error) =>
       ToolResult(success: false, output: error);
 
-  String get jsonOutput => jsonEncode({
-    'success': success,
-    'output': output,
-    if (metadata != null) 'metadata': metadata,
-  });
+  /// 这条结果被当成 tool 消息回灌给模型时用的正文。
+  ///
+  /// `writeDiff` 是给卡片画红绿 ± 行用的前后原文，一整份文件跟着每一次写盘
+  /// 回灌就等于把同一份文件多发一遍（还占上下文）。卡片要它，模型不要它。
+  String get jsonOutput {
+    final meta = metadata;
+    Map<String, dynamic>? sendable;
+    if (meta != null) {
+      sendable = Map<String, dynamic>.from(meta)..remove('writeDiff');
+      if (sendable.isEmpty) sendable = null;
+    }
+    return jsonEncode({
+      'success': success,
+      'output': output,
+      if (sendable != null) 'metadata': sendable,
+    });
+  }
 }
 
 /// Tool definition

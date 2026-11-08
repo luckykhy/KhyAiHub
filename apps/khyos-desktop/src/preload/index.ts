@@ -109,6 +109,14 @@ const api = {
   // 进程监视器数据（窗口菜单 → 进程监视器）
   processInfo: () => ipcRenderer.invoke('app:processInfo'),
   getBrandingLinks: () => ipcRenderer.invoke('app:brandingLinks'),
+  // 网页版地址（设置优先，默认本机后端同源地址）与安装包入口（本机产物亮出文件，
+  // 没有产物则开发布页）。四端互跳都走这两条，渲染层不拼地址、不读文件系统。
+  webVersion: (): Promise<{ ok: boolean; url?: string; source?: 'settings' | 'default'; error?: string }> =>
+    ipcRenderer.invoke('app:webVersion'),
+  downloadArtifact: (
+    platform: 'android' | 'windows'
+  ): Promise<{ ok: boolean; state?: 'local' | 'release' | 'missing'; fileName?: string; filePath?: string; url?: string; error?: string }> =>
+    ipcRenderer.invoke('app:downloadArtifact', platform),
 
   // 会话
   createSession: (workspacePath: string) => ipcRenderer.invoke('session:create', workspacePath),

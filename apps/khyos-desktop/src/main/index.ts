@@ -63,6 +63,15 @@ import {
 // application menu is therefore unset; accelerators (Ctrl+N/O) move to renderer.
 const nodeRequire = createRequire(import.meta.url)
 
+// 桌面端调后端模块（serviceDefaults / downloadsCatalog）时的仓库根。开发态从
+// out/main 上溯四级（out/main → out → khyos-desktop → apps → <repo>），装着
+// 环境由 KHY_OS_DIR 指定 —— 与 app:brandingLinks 同一基准，别再各写一份。
+const resolveKhyOsRoot = (): string =>
+  process.env.KHY_OS_DIR ? path.resolve(process.env.KHY_OS_DIR) : path.resolve(__dirname, '..', '..', '..', '..')
+
+// 允许从桌面端用 http 打开的主机名（只放回环）。URL#hostname 对 IPv6 带方括号。
+const LOOPBACK_HOSTNAMES = new Set(['127.0.0.1', 'localhost', '[::1]', '::1'])
+
 // Suppress GPU disk-cache errors on Windows (ACCESS_DENIED when cache dir is
 // read-only or locked).  These flags are also passed via CLI args in package.json
 // to ensure they take effect before Chromium spawns the GPU process.
@@ -1662,12 +1671,81 @@ async function createWindow() {
   })
 
   // ── 窗口菜单动作（L 区对齐：自绘下拉，替代原生菜单栏）──
+  // https 一律放行；http 只放回环（网页版默认同源后端地址就是 http://127.0.0.1）。
+  // 放开整个 http 等于给任意 http 页面一个从桌面端被打开的入口，仍然只放回环。
+  const isAllowedExternalUrl = (raw: string): boolean => {
+    let parsed: URL
+    try {
+      parsed = new URL(raw)
+    } catch {
+      return false
+    }
+    if (parsed.protocol === 'https:') return true
+    if (parsed.protocol === 'http:') return LOOPBACK_HOSTNAMES.has(parsed.hostname)
+    return false
+  }
   ipcMain.handle('app:openExternal', async (_e, url: string) => {
-    if (typeof url !== 'string' || !/^https:\/\//.test(url)) {
-      return { ok: false, error: '仅允许 https 链接：已拒绝非 https 的外部打开请求' }
+    if (typeof url !== 'string' || !isAllowedExternalUrl(url)) {
+      return {
+        ok: false,
+        error: '仅允许 https 链接与本机回环 http：已拒绝其它协议的打开请求',
+      }
     }
     await shell.openExternal(url)
     return { ok: true }
+  })
+  // 网页版地址：设置里填了就用设置，否则用本机网页版端口。网页 UI 不在后端
+  // 端口上 —— 它由 `khy gateway manage start` 的 daemon 在 WEB_FRONTEND_PORT
+  // 托管 delivery/web/ai-frontend/dist 并反代 API；后端 3000 只服务 API 与
+  // （已不存在的）runtime/node/frontend/dist。端口读 serviceDefaults，不写死。
+  ipcMain.handle('app:webVersion', async () => {
+    let configured = ''
+    try {
+      const settings = (await getSettingsStore()) as unknown as Record<string, unknown>
+      if (typeof settings.webVersionUrl === 'string') configured = settings.webVersionUrl.trim()
+    } catch {
+      /* fail-soft：读不到设置就退默认地址 */
+    }
+    if (configured) return { ok: true, url: configured, source: 'settings' as const }
+    try {
+      const sd = nodeRequire(
+        path.join(resolveKhyOsRoot(), 'runtime', 'node', 'backend', 'src', 'constants', 'serviceDefaults.js')
+      )
+      return { ok: true, url: `http://127.0.0.1:${sd.WEB_FRONTEND_PORT}`, source: 'default' as const }
+    } catch (err) {
+      return { ok: false, error: `网页版地址不可用：serviceDefaults 加载失败（${String((err as Error)?.message || err)}）` }
+    }
+  })
+  // 下载入口：本机有产物就直接把文件亮出来（不执行安装器），没有产物就打开
+  // 发布页；两样都没有就如实说清楚缺什么、怎么补。绝不打开一个假地址。
+  ipcMain.handle('app:downloadArtifact', async (_e, platform: string) => {
+    if (platform !== 'android' && platform !== 'windows') {
+      return { ok: false, error: `未知下载目标「${String(platform)}」：只支持 android / windows` }
+    }
+    const label = platform === 'android' ? 'Android 安装包（APK）' : 'Windows 安装包'
+    let catalog: { latestArtifact: (p: string) => { fileName: string; fullPath: string } | null; releasePageUrl: (env: unknown) => string | null }
+    try {
+      catalog = nodeRequire(
+        path.join(resolveKhyOsRoot(), 'runtime', 'node', 'backend', 'src', 'services', 'downloadsCatalog.js')
+      )
+    } catch (err) {
+      return { ok: false, error: `下载清单不可用：${String((err as Error)?.message || err)}` }
+    }
+    const artifact = catalog.latestArtifact(platform)
+    if (artifact) {
+      shell.showItemInFolder(artifact.fullPath)
+      return { ok: true, state: 'local' as const, fileName: artifact.fileName, filePath: artifact.fullPath }
+    }
+    const releasePage = catalog.releasePageUrl(process.env)
+    if (releasePage) {
+      await shell.openExternal(releasePage)
+      return { ok: true, state: 'release' as const, url: releasePage }
+    }
+    return {
+      ok: false,
+      state: 'missing' as const,
+      error: `本机没有${label}，也没有配置发布页：先构建该端，或设置 KHY_DOWNLOAD_GITHUB_REPOSITORY / KHY_DOWNLOAD_${platform.toUpperCase()}_DIR 后重试`,
+    }
   })
   ipcMain.handle('app:openPath', async (_e, dir: string) => {
     if (typeof dir !== 'string' || !dir.trim()) {
@@ -1731,10 +1809,7 @@ async function createWindow() {
   // `<repo>/apps`，叠加迁移前的旧路径段后整行恒不可达。
   ipcMain.handle('app:brandingLinks', async () => {
     try {
-      const root = process.env.KHY_OS_DIR
-        ? path.resolve(process.env.KHY_OS_DIR)
-        : path.resolve(__dirname, '..', '..', '..', '..')
-      const sd = nodeRequire(path.join(root, 'runtime', 'node', 'backend', 'src', 'constants', 'serviceDefaults.js'))
+      const sd = nodeRequire(path.join(resolveKhyOsRoot(), 'runtime', 'node', 'backend', 'src', 'constants', 'serviceDefaults.js'))
       const host = sd.CLOUD_DEFAULT_HOST || ''
       return {
         ok: true,

@@ -199,6 +199,13 @@ const routes = [
         component: viewLoaders['/features'],
       },
       {
+        // 四端下载入口：清单由 GET /api/downloads/list 提供（产物目录与发布页
+        // 兜底都在后端解析），页面只渲染结果。auth only，NO requiresAdmin。
+        path: 'downloads',
+        name: 'Downloads',
+        component: viewLoaders['/downloads'],
+      },
+      {
         // KHY OS bare-metal kernel terminal — auth only, NO requiresAdmin.
         path: 'khyos',
         name: 'KhyOsTerminal',
