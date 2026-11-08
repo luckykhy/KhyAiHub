@@ -87,18 +87,30 @@ function runGit(cmd) {
   }
 }
 
+// 无上游可用时的显式基准候选（按优先级）。前两个引用指向同一提交，是主线的历史标记；
+// origin/main 自 2026-11-08 改指 KhyAiHub（无关历史，merge-base 为空，会被跳过），
+// 保留它只为旧拓扑的机器。本地 main 不入选：refs/replace 会扭曲它的 merge-base。
+const LOCAL_BASE_CANDIDATES = [
+  'refs/remotes/khy-mirror/main',
+  'refs/remotes/origin/archive/full-history',
+  'origin/main',
+];
+
 function resolveBaseRef(cliBase) {
   if (cliBase) return cliBase.trim();
   const env = String(process.env.GIT_BASE_REF || '').trim();
   if (env) return env;
   // 本地回退：动态取上游（本仓库 main 实际上游可能是 khy-mirror/main，勿硬编码）。
-  const upstream = runGit('git rev-parse --abbrev-ref @{upstream} 2>/dev/null');
+  // 不写 2>/dev/null：execSync 在 Windows 走 cmd.exe，该重定向非法会让每条查询恒失败，
+  // 静默退到 HEAD~1。stderr 已被 stdio 捕获，失败由 runGit 返回空串表示。
+  const upstream = runGit('git rev-parse --abbrev-ref @{upstream}');
   if (upstream) {
-    const mb = runGit(`git merge-base HEAD ${upstream} 2>/dev/null`);
+    const mb = runGit(`git merge-base HEAD ${upstream}`);
     if (mb) return mb;
   }
-  if (runGit('git rev-parse --verify origin/main 2>/dev/null')) {
-    const mb = runGit('git merge-base HEAD origin/main 2>/dev/null');
+  for (const ref of LOCAL_BASE_CANDIDATES) {
+    if (!runGit(`git rev-parse --verify ${ref}`)) continue;
+    const mb = runGit(`git merge-base HEAD ${ref}`);
     if (mb) return mb;
   }
   return 'HEAD~1'; // 最后兜底：比上一提交
@@ -132,14 +144,16 @@ function parseNameStatus(output) {
 
 function listChangedFiles(baseRef) {
   const threeDot = runGit(
-    `git diff --name-status --find-renames --diff-filter=ACMRD ${baseRef}...HEAD`
+    // 不含 D：已删除的文件没有「改后」内容；而它可能还躺在工作树里
+    // （例如 out/ 构建产物从 git 删了跟踪但没删文件），否则会被当作修改误报。
+    `git diff --name-status --find-renames --diff-filter=ACMR ${baseRef}...HEAD`
   );
   if (threeDot) return parseNameStatus(threeDot);
 
-  const cached = runGit('git diff --name-status --find-renames --cached --diff-filter=ACMRD');
+  const cached = runGit('git diff --name-status --find-renames --cached --diff-filter=ACMR');
   if (cached) return parseNameStatus(cached);
 
-  const head = runGit('git diff --name-status --find-renames --diff-filter=ACMRD HEAD');
+  const head = runGit('git diff --name-status --find-renames --diff-filter=ACMR HEAD');
   return parseNameStatus(head);
 }
 
