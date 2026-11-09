@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-273-JS10BV0E
 // settingsStore — file-backed settings persistence for the main process.
 //
 // Stores all app settings (locale, theme, data path, toggles, proxy, terminal,
@@ -61,6 +62,13 @@ const DEFAULTS: Record<string, unknown> = {
   // CSS var on <html> (MarkdownRenderer); CUA dispatch interval in ms.
   messageFontSize: '14',
   cuaActionInterval: '500',
+  // 品牌背景（外观 → 背景）：内置预设 id / 自定义图片或 GIF 的绝对路径。
+  // 渲染层 theme/background.ts 是唯一的读取与写入 DOM 变量处；这里只存选择。
+  // 深浅各一套选中项（浅色默认「素笺」），切主题不会把另一套顶掉；
+  // 自定义图两套共用同一个路径。
+  desktopBackground: 'brand-ring',
+  desktopBackgroundLight: 'light-paper',
+  desktopBackgroundImage: '',
   // Model selection (P3-7②): option id (`<provider>` or `<provider>/<model>`)
   // persisted by the renderer via setSetting; empty string = no selection yet.
   selectedModel: '',
@@ -90,7 +98,7 @@ const DEFAULTS: Record<string, unknown> = {
   // P3-9①：默认对齐 ZCode 实测「完全访问」（mode.label.glm.yolo）；
   // 用户显式切换后经 setSetting 落盘覆盖此默认值。
   desktopAgentMode: 'fullAccess',
-  // 桌宠角色（设置 → 常规 → 桌宠 的三选一）：'female' | 'male' | 'koi'。
+  // 桌宠角色（设置 → 常规 → 桌宠 的二选一）：'female' | 'male'。
   // 真源在这里，不在渲染层的 localStorage —— 否则设置页与桌宠各存一份，
   // 就是 settingsStore 文件头警告的「第二个真源」。
   // 消费方：renderer/components/pet/KhyPet.tsx（角色图、台词、抽签内容）。
@@ -99,9 +107,9 @@ const DEFAULTS: Record<string, unknown> = {
   // 的默认名「本地用户」。消费方：消息头用户轮、侧栏与设置页的账号块
   // （renderer/shared/chatIdentity.ts 是唯一的读取层）。
   desktopAccountName: '',
-  // 账号头像：原文件的绝对路径（空串 = 回落到桌宠立绘的默认头像）。
+  // 账号头像：原文件的绝对路径（空串 = 侧栏用名字首字母的默认圈）。
   // 渲染层不存副本，只按路径经 fs:readImageDataUrl 取 data URL —— 换头像
-  // 只改这一个文件即可；文件被移走时回落到桌宠立绘，不静默空白。
+  // 只改这一个文件即可；文件被移走时回落到首字母圈，不静默空白。
   // 消费方：renderer/shared/accountAvatar.ts（唯一的读取层）。
   desktopAccountAvatar: '',
   // 自定义桌宠名：填了就用它当消息头里的助手名字（自建桌宠/DIY 命名），

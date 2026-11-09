@@ -16,14 +16,16 @@ import {
 } from './state/messageSlice'
 import { sanitizeUserContent } from './utils/stripSystemInjects'
 import { addToast } from './state/toastSlice'
-import { startToolExecution, updateToolExecution, recordAffectedFiles, cancelToolExecution, clearExecutions } from './state/toolExecutionSlice'
+import { startToolExecution, updateToolExecution, recordAffectedFiles, cancelToolExecution, clearExecutions, hydrateToolExecutions } from './state/toolExecutionSlice'
+import type { ToolExecution } from './state/toolExecutionSlice'
+import type { ToolDiff } from '../shared/toolDiff'
 import { loadTheme, subscribeToTheme, loadMessageFontSize } from './theme/theme'
+import { loadBackground } from './theme/background'
 import { getModelOptionLabel, loadPersistedModelSelection, persistModelSelection, useModelCatalog } from './utils/useModelCatalog'
 import { AGENT_MODES, DEFAULT_AGENT_MODE } from './components/composer/ModeSelector'
 import { openWorkspace } from './utils/openWorkspace'
 import { resolveDesktopAction } from './shared/keymap'
 import { SESSION_LOAD_TIMEOUT_MS, loadedMessageReasoning } from './components/message/sessionLoad'
-import type { ToolDiff } from '../shared/toolDiff'
 
 // 文件路径比对：host 给的是写盘后回读的绝对路径，工具参数里可能是相对路径。
 // 统一分隔符后按「完全相等或后缀相等」认同一文件 —— 不做 basename 模糊匹配，
@@ -57,6 +59,9 @@ const SettingsPage = lazy(() =>
 )
 const AutomationsPage = lazy(() =>
   import('./components/automations/AutomationsPage').then((m) => ({ default: m.AutomationsPage }))
+)
+const EnvironmentsPage = lazy(() =>
+  import('./components/environments/EnvironmentsPage').then((m) => ({ default: m.EnvironmentsPage }))
 )
 
 // 剥洋葱 · 视觉侧第四刀：ToolExecutionPanel 曾在本层按需加载。
@@ -247,7 +252,7 @@ export default function App() {
   // 失败必须留下可见痕迹（错误态 + toast），不能只剩空态。
   const loadSessionMessages = useCallback((sessionId: string) => {
     const api = (window as unknown as {
-      __KHYOS__?: { loadSession?: (id: string) => Promise<{ ok: boolean; title?: string; jsonlPath?: string; messages?: { role?: string; content?: string; timestamp?: number; reasoning?: string }[]; error?: string }> }
+      __KHYOS__?: { loadSession?: (id: string) => Promise<{ ok: boolean; title?: string; jsonlPath?: string; messages?: { role?: string; content?: string; timestamp?: number; reasoning?: string; tools?: { name?: string; input?: Record<string, unknown>; status?: string; result?: string; error?: string }[] }[]; error?: string }> }
     }).__KHYOS__
     const token = ++loadTokenRef.current
     // 工具执行 / 文件改动属于会话，不属于屏幕：换会话必须一起清掉，否则
@@ -293,28 +298,49 @@ export default function App() {
       // `currentMessage`(工具循环把 [SYSTEM: …] 转向块拼进去后才入历史)。
       // 渲染层只应显示用户真正说的话 —— 剥掉注入块;整条都是注入的合成用户轮
       // (如任务收尾催办)直接丢弃,不留空泡。模型上下文不受影响(那只读原始历史)。
+
+      // 存档里的工具过程（host 按 tool_use/tool_result 配对后随消息返回）灌回
+      // 执行面板：重开旧会话时，动作过程仍挂在产生它的那条助手消息下面。
+      const restoredTools: ToolExecution[] = []
       const loaded: Message[] = (res.messages || [])
-        .map((m, i): Message => ({
-          id: `h_${sessionId}_${i}`,
-          role: m.role === 'assistant' || m.role === 'system' ? m.role : 'user',
-          content:
-            m.role === 'assistant' || m.role === 'system'
-              ? typeof m.content === 'string'
-                ? m.content
-                : ''
-              : sanitizeUserContent(typeof m.content === 'string' ? m.content : ''),
-          timestamp: typeof m.timestamp === 'number' ? m.timestamp : Date.now(),
-          status: 'complete' as const,
-          // 思维链优先读 host 的独立 reasoning 字段（持久化块的字段名是 .thinking，
-          // 拍平后的 content 字符串里没有思维链）；为空时回退从 content 数组里解析，
-          // 兼容老会话 / host 未升级 / JSON 序列化丢键的形态。
-          reasoning:
-            typeof m.reasoning === 'string' && m.reasoning
-              ? m.reasoning
-              : loadedMessageReasoning(m.content),
-        }))
+        .map((m, i): Message => {
+          for (const [k, t] of (m.tools || []).entries()) {
+            restoredTools.push({
+              id: `h_${sessionId}_${i}_tool_${k}`,
+              name: t.name || '工具',
+              input: t.input && typeof t.input === 'object' ? t.input : {},
+              status: t.status === 'error' ? 'error' : t.status === 'cancelled' ? 'cancelled' : 'success',
+              result: t.result,
+              error: t.error,
+              // 存档只留消息时刻：不给 completedAt，面板就不会显示一个假的 0.0s
+              startedAt: typeof m.timestamp === 'number' ? m.timestamp : Date.now(),
+              requiresConfirmation: false,
+              messageId: `h_${sessionId}_${i}`,
+            })
+          }
+          return {
+            id: `h_${sessionId}_${i}`,
+            role: m.role === 'assistant' || m.role === 'system' ? m.role : 'user',
+            content:
+              m.role === 'assistant' || m.role === 'system'
+                ? typeof m.content === 'string'
+                  ? m.content
+                  : ''
+                : sanitizeUserContent(typeof m.content === 'string' ? m.content : ''),
+            timestamp: typeof m.timestamp === 'number' ? m.timestamp : Date.now(),
+            status: 'complete' as const,
+            // 思维链优先读 host 的独立 reasoning 字段（持久化块的字段名是 .thinking，
+            // 拍平后的 content 字符串里没有思维链）；为空时回退从 content 数组里解析，
+            // 兼容老会话 / host 未升级 / JSON 序列化丢键的形态。
+            reasoning:
+              typeof m.reasoning === 'string' && m.reasoning
+                ? m.reasoning
+                : loadedMessageReasoning(m.content),
+          }
+        })
         .filter((m) => m.role !== 'user' || m.content !== '')
       store.dispatch(setMessages({ sessionId, messages: loaded }))
+      store.dispatch(hydrateToolExecutions(restoredTools))
       store.dispatch(sessionLoadSucceeded())
       setSessionTitle(res.title || '')
       setSessionJsonlPath(res.jsonlPath || '')
@@ -344,6 +370,7 @@ export default function App() {
   // workspace, so the button looked dead (ZC-ALIGN-001 §2 A2).
   const settings = route === 'settings' || route.startsWith('settings/')
   const automations = route === 'automations'
+  const environments = route === 'environments'
 
   // 侧栏「搜索」按钮派发的事件 → 打开命令中心（与 Ctrl+K 同一入口）
   useEffect(() => {
@@ -352,10 +379,11 @@ export default function App() {
     return () => window.removeEventListener('khy:open-command-center', onOpen)
   }, [])
 
-  // 主题 + 消息字体大小：启动时从主进程加载持久化值并应用到 <html>
+  // 主题 + 消息字体大小 + 品牌背景：启动时从主进程加载持久化值并应用到 <html>
   useEffect(() => {
     loadTheme()
     void loadMessageFontSize()
+    void loadBackground()
     return subscribeToTheme()
   }, [])
 
@@ -705,6 +733,20 @@ export default function App() {
         <ErrorBoundary>
           <Suspense fallback={<div style={{ padding: 24 }} />}>
             <AutomationsPage />
+          </Suspense>
+        </ErrorBoundary>
+        <ToastContainer />
+      </>
+    )
+  }
+
+  // 开发环境页（盘点 / 一键安装 / 清单导出导入，数据经 host 桥走后端 dependency 门面）
+  if (environments) {
+    return (
+      <>
+        <ErrorBoundary>
+          <Suspense fallback={<div style={{ padding: 24 }} />}>
+            <EnvironmentsPage />
           </Suspense>
         </ErrorBoundary>
         <ToastContainer />
