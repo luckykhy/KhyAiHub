@@ -8,6 +8,11 @@
     </KhyPageHeader>
 
     <el-card shadow="never" class="marketplace-card">
+      <LoadErrorBanner :message="mp.loadError.value">
+        <template #action>
+          <el-button :icon="Refresh" size="small" @click="reload">重试</el-button>
+        </template>
+      </LoadErrorBanner>
       <el-tabs v-model="activeTab">
         <!-- ── Browse catalog ──────────────────────────────────────────── -->
         <el-tab-pane label="浏览市场" name="browse">
@@ -34,7 +39,7 @@
 
           <div v-loading="loading" class="catalog-grid">
             <KhyEmpty
-              v-if="!catalog.length"
+              v-if="!catalog.length && !mp.loadError.value"
               :icon="ShoppingCart"
               title="插件市场还空着"
               description="点右上角「导入」上传一个 OpenAPI 规范，就能把外部能力接入并在对话中直接调用。"
@@ -59,7 +64,25 @@
 
         <!-- ── Installed ───────────────────────────────────────────────── -->
         <el-tab-pane label="已安装" name="installed">
-          <el-table v-loading="loading" :data="installed" empty-text="还没有安装插件">
+          <el-table v-loading="loading" :data="installed">
+            <template #empty>
+              <!-- 读取失败时表格自己的 empty-text 会兜回 EP 的「暂无数据」,
+                   与上方「加载失败」横幅一屏两个相反结论;改走 KhyEmpty 二分。
+                   失败态只给标题:错误正文已由上方的 LoadErrorBanner 承担。 -->
+              <KhyEmpty
+                v-if="mp.loadError.value"
+                compact
+                icon-props="{ kind: 'warning' }"
+                title="读取已安装列表失败"
+              />
+              <KhyEmpty
+                v-else
+                compact
+                :icon="ShoppingCart"
+                title="还没有安装插件"
+                description="到「浏览市场」选一个插件安装，安装后在这里配置鉴权与试调。"
+              />
+            </template>
             <el-table-column prop="name" label="名称" min-width="160">
               <template #default="{ row }">
                 <span class="wf-name">{{ row.name }}</span>
@@ -274,7 +297,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import {
   Upload,
@@ -286,12 +309,17 @@ import {
   ShoppingCart,
 } from '@element-plus/icons-vue';
 import { useMarketplace } from '@/composables/useMarketplace';
+import { useBehaviorTracking } from '@/composables/useBehaviorTracking';
 import KhyEmpty from '@/components/KhyEmpty.vue';
 import KhyPageHeader from '@/components/KhyPageHeader.vue';
+import LoadErrorBanner from '@/components/LoadErrorBanner.vue';
 
 import { showSuccess, showError, showWarning, showInfo } from '@/api/notify';
 const mp = useMarketplace();
 const { catalog, categories, installed, loading, busy } = mp;
+
+// 行为埋点(A5):安装/卸载是最强的意图信号,只埋这两个显性动作 + 停留/滚动。
+const behavior = useBehaviorTracking({ source: 'web:marketplace' });
 
 const activeTab = ref('browse');
 const search = ref('');
@@ -308,7 +336,12 @@ async function reload() {
   await Promise.all([reloadCatalog(), mp.listInstalled(), mp.fetchCategories()]);
 }
 
-onMounted(reload);
+onMounted(() => {
+  reload();
+  behavior.observeDwell();
+  behavior.observeScroll();
+});
+onBeforeUnmount(() => behavior.stop());
 
 // ── Import ────────────────────────────────────────────────────────────────
 const importVisible = ref(false);
@@ -368,6 +401,7 @@ async function openDetail(id) {
 
 async function quickInstall(p) {
   if (!p) return;
+  behavior.track('click', { pluginId: p.id, action: 'install' });
   try {
     await mp.install(p.id);
     showSuccess(`已安装「${p.name}」，可在「已安装」中配置鉴权`);
@@ -392,6 +426,7 @@ async function confirmUninstall(row) {
   try {
     await ElMessageBox.confirm(`确定卸载「${row.name}」？`, '卸载插件', { type: 'warning' });
     await mp.uninstall(row.id);
+    behavior.track('click', { pluginId: row.id, action: 'uninstall' });
     showSuccess('已卸载');
   } catch (e) {
     if (e !== 'cancel') showError(e.message || '卸载失败');

@@ -1,9 +1,14 @@
 <template>
-  <div class="khy-page user-home-page">
-    <KhyPageHeader
-      subtitle="账户概览、API Key、账单与代理订阅"
-      title="我的工作台"
-    />
+  <div class="khy-page khy-page--narrow user-home-page">
+    <KhyPageHeader subtitle="账户概览、API Key、账单与代理订阅" title="我的工作台">
+      <template #actions>
+        <!-- 文案说「刷新本页」，就得真有一个刷新可点。否则四个错误 alert 全在
+             指示一个页面上不存在的动作。 -->
+        <el-button :icon="Refresh" :loading="overviewLoading" @click="loadOverview"
+          >刷新</el-button
+        >
+      </template>
+    </KhyPageHeader>
 
     <!-- 首访轻量引导：仅第一次进入时出现，可关闭且记忆到 localStorage。
          指向「功能索引」，解决"有功能却不知去哪用"。DESIGN-ARCH-080 §5.3 明确保留它。 -->
@@ -32,7 +37,11 @@
       show-icon
       :title="overviewError"
       type="warning"
-    />
+    >
+      <template #action>
+        <el-button size="small" @click="retryOverview">重试</el-button>
+      </template>
+    </el-alert>
 
     <!-- ── 概览条 ── -->
     <el-card class="home-card home-overview" :loading="overviewLoading" shadow="never">
@@ -75,7 +84,11 @@
             show-icon
             :title="keyError"
             type="error"
-          />
+          >
+            <template #action>
+              <el-button size="small" @click="retryKey">重试</el-button>
+            </template>
+          </el-alert>
 
           <template v-if="freshKey">
             <el-alert
@@ -95,7 +108,7 @@
             v-else-if="!keyInfo"
             icon-props="{ kind: 'key' }"
             title="还没有 API Key"
-            description="创建一把专属 Key,即可在本地终端与第三方工具里调用网关。"
+            description="创建一把专属 Key，即可在本地终端与第三方工具里调用网关。"
           >
             <el-button :loading="keyBusy" type="primary" @click="generateKey">
               <KhyIcon class="btn-icon" kind="key" size="sm" />
@@ -162,7 +175,11 @@
             show-icon
             :title="paymentsError"
             type="warning"
-          />
+          >
+            <template #action>
+              <el-button size="small" @click="retryPayments">重试</el-button>
+            </template>
+          </el-alert>
 
           <!-- 普通用户的空态：创建订单是管理员权限（/admin/payments 对非管理员
                是 403），所以按钮按角色显示。绑定了客户的用户在此自助下单；
@@ -174,10 +191,10 @@
             title="还没有充值订单"
             :description="
               userStore.isAdmin
-                ? '创建订单后,用户即可自助充值消费。'
+                ? '创建订单后，用户即可自助充值消费。'
                 : myCustomer
                   ? '点击右上角「充值」创建首笔订单。'
-                  : '充值订单由管理员创建,如需充值请联系管理员。'
+                  : '充值订单由管理员创建，如需充值请联系管理员。'
             "
           >
             <el-button v-if="userStore.isAdmin" plain type="primary" @click="goBilling">
@@ -266,7 +283,11 @@
             show-icon
             :title="groupsError"
             type="warning"
-          />
+          >
+            <template #action>
+              <el-button size="small" @click="retryGroups">重试</el-button>
+            </template>
+          </el-alert>
 
           <KhyEmpty
             v-else-if="!groups.length"
@@ -353,6 +374,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessageBox } from 'element-plus';
+import { Refresh } from '@element-plus/icons-vue';
 import { useUserStore } from '@/stores/user';
 import { safeSet } from '@/utils/safeStorage';
 import KhyIcon from '@/components/KhyIcon.vue';
@@ -484,7 +506,7 @@ async function loadOverview() {
 
   const jobs = [
     loadSessions().catch((err) => {
-      overviewError.value = describeFailure(err, '确认后端已启动后刷新本页');
+      overviewError.value = describeFailure(err, '请点右上角「刷新」或本条下方的「重试」');
     }),
     loadKey().catch((err) => {
       keyError.value = describeFailure(err, '可先尝试新建一个 Key');
@@ -503,6 +525,56 @@ async function loadOverview() {
   keyLoading.value = false;
   paymentsLoading.value = false;
   groupsLoading.value = false;
+}
+
+// 四个区块各自的重试：一个区块读失败不该让用户把整页四个请求重跑一遍（其中三个
+// 可能是好的）。每次重试前先清掉自己的错误位，否则成功之后横幅还挂着。
+async function retryOverview() {
+  overviewLoading.value = true;
+  overviewError.value = '';
+  try {
+    await loadSessions();
+  } catch (err) {
+    overviewError.value = describeFailure(err, '请点右上角「刷新」或本条下方的「重试」');
+  } finally {
+    overviewLoading.value = false;
+  }
+}
+
+async function retryKey() {
+  keyLoading.value = true;
+  keyError.value = '';
+  try {
+    await loadKey();
+  } catch (err) {
+    keyError.value = describeFailure(err, '可先尝试新建一个 Key');
+  } finally {
+    keyLoading.value = false;
+  }
+}
+
+async function retryPayments() {
+  paymentsLoading.value = true;
+  paymentsError.value = '';
+  try {
+    await loadPayments();
+  } catch (err) {
+    paymentsError.value = describeFailure(err, '不影响其它区块，可稍后重试');
+  } finally {
+    paymentsLoading.value = false;
+  }
+}
+
+async function retryGroups() {
+  groupsLoading.value = true;
+  groupsError.value = '';
+  try {
+    await loadGroups();
+  } catch (err) {
+    groupsError.value = describeFailure(err, '不影响其它区块，可稍后重试');
+  } finally {
+    groupsLoading.value = false;
+  }
 }
 
 // ── 派生展示 ────────────────────────────────────────────────────────────
@@ -674,11 +746,7 @@ onMounted(loadOverview);
 </script>
 
 <style scoped>
-.user-home-page {
-  max-width: 1120px;
-  margin: 0 auto;
-}
-
+/* 首页信息密度低,内容栏走 .khy-page--narrow 修饰类(宽度真源在主题),不再自写 1120px。 */
 .home-onboarding {
   margin-bottom: 12px;
   border-radius: var(--khy-radius);
@@ -694,7 +762,8 @@ onMounted(loadOverview);
 }
 
 .home-card {
-  margin-bottom: 16px;
+  /* 卡片藏在 el-col 里,躲过了 .khy-page > * 的 margin 重置;再留 margin-bottom
+     就与 .khy-page 的 gap 叠加成 36px,比同页其它区块多出一截。间距交给 gap。 */
   border-radius: var(--khy-radius-lg);
 }
 

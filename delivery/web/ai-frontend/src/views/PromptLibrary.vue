@@ -14,6 +14,12 @@
       </template>
     </KhyPageHeader>
 
+    <LoadErrorBanner :message="loadError">
+      <template #action>
+        <el-button size="small" @click="fetchAll">重试</el-button>
+      </template>
+    </LoadErrorBanner>
+
     <!-- 提示词模板 · 内置多角度起步库 -->
     <el-card class="section-card template-card" shadow="hover">
       <template #header>
@@ -90,7 +96,7 @@
         </div>
       </template>
       <KhyEmpty
-        v-if="!filteredPrompts.length"
+        v-if="!filteredPrompts.length && !loadError"
         compact
         icon-props="{ kind: 'guide' }"
         title="还没有保存的提示词"
@@ -166,11 +172,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { usePromptLibrary } from '@/composables/usePromptLibrary';
+import { useBehaviorTracking } from '@/composables/useBehaviorTracking';
 import KhyPageHeader from '@/components/KhyPageHeader.vue';
 import KhyEmpty from '@/components/KhyEmpty.vue';
+import LoadErrorBanner from '@/components/LoadErrorBanner.vue';
 
 import { showSuccess, showError, showWarning, showInfo } from '@/api/notify';
 const {
@@ -178,6 +186,7 @@ const {
   pending,
   builtinTemplates,
   loading,
+  loadError,
   fetchAll,
   createPrompt,
   updatePrompt,
@@ -185,6 +194,10 @@ const {
   usePrompt,
   approvePrompt,
 } = usePromptLibrary();
+
+// 行为埋点(A5):本页是"AI 发现提示词→人裁定"的现场,留存/丢弃/编辑/再用
+// 四种裁定正好对应 like/dislike/correct/click 四个显性 kind。
+const behavior = useBehaviorTracking({ source: 'web:prompt-library' });
 
 // Local mirror of the backend built-in catalog so the template section is NEVER
 // blank even when the backend is unreachable / gated off. Intentionally a small
@@ -299,6 +312,7 @@ function openCreate() {
 }
 
 function openEdit(row) {
+  behavior.track('correct', { promptId: row.id });
   editing.value = row;
   form.value = {
     title: row.title || '',
@@ -373,6 +387,7 @@ async function handleSaveTemplate(t) {
 }
 
 async function handleUse(row) {
+  behavior.track('click', { promptId: row.id, action: 'use' });
   try {
     await usePrompt(row.id);
     await handleCopy(row);
@@ -382,6 +397,7 @@ async function handleUse(row) {
 }
 
 async function handleApprove(row) {
+  behavior.track('like', { promptId: row.id });
   try {
     await approvePrompt(row.id);
     showSuccess('已留存到提示词库');
@@ -398,13 +414,20 @@ async function handleDelete(row, verb) {
   }
   try {
     await removePrompt(row.id);
+    // "丢弃"丢的是 AI 发现的那条建议(点踩);删自己存下的提示词只是普通点击。
+    behavior.track(verb === '丢弃' ? 'dislike' : 'click', { promptId: row.id, verb });
     showSuccess(`已${verb}`);
   } catch {
     showError('操作失败');
   }
 }
 
-onMounted(fetchAll);
+onMounted(() => {
+  fetchAll();
+  behavior.observeDwell();
+  behavior.observeScroll();
+});
+onBeforeUnmount(() => behavior.stop());
 </script>
 
 <style scoped>

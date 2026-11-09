@@ -17,10 +17,15 @@
     </KhyPageHeader>
 
     <el-card shadow="never" class="projects-card">
+      <LoadErrorBanner :message="loadError">
+        <template #action>
+          <el-button :icon="RefreshLeft" size="small" @click="refresh">重试</el-button>
+        </template>
+      </LoadErrorBanner>
       <el-table
         v-loading="loading"
         :data="projects"
-        empty-text="还没有项目，点击右上角新建"
+        :empty-text="loadError ? '' : '还没有项目，点击右上角新建'"
         style="width: 100%"
       >
         <el-table-column label="项目" min-width="220">
@@ -123,12 +128,14 @@ import { Plus, Edit, Delete, Box, RefreshLeft, Aim, Select } from '@element-plus
 import { useProjects } from '@/composables/useProjects';
 import { formatTime } from '../utils/formatTimestamp';
 import KhyPageHeader from '@/components/KhyPageHeader.vue';
+import LoadErrorBanner from '@/components/LoadErrorBanner.vue';
 
 import { showSuccess, showError, showWarning, showInfo } from '@/api/notify';
 const {
   projects,
   loading,
   busy,
+  loadError,
   activeProjectId,
   list,
   create,
