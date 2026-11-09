@@ -100,7 +100,9 @@ function _runtimeFiles() {
   return [RUNTIME_FILE, LEGACY_RUNTIME_FILE];
 }
 
-const DEFAULT_API_PORT = 9090;
+// API 端口真源：serviceDefaults.AI_BACKEND_DEFAULT_PORT（LAYOUT-008）。
+// 此前此处另写一份 9090，改端口时只改一边就会让守护进程与启动器对不上。
+const DEFAULT_API_PORT = require('../src/constants/serviceDefaults').AI_BACKEND_DEFAULT_PORT;
 // 单一真源：serviceDefaults.WEB_FRONTEND_PORT（同一 env AI_FRONTEND_PORT、同一默认值）。
 // 它是**基准端口**，不是「前端一定在这个端口」——实际端口由「复用探测」或「空闲探测」决定，
 // 并随 ai_manage_runtime.json 广播给所有消费者。
@@ -1328,6 +1330,7 @@ async function main() {
 
   // 回退：dev server 不可用时，用 API 端口托管预构建 dist/。
   // 显式 --no-frontend 时必须保持无前端，不得被预构建 dist 复活。
+  let frontendEntryPath = '';
   if (!noFrontend && !frontend.available && frontendDistDir) {
     const staticResult = aiManagementServer.configureFrontendStatic({
       distDir: frontendDistDir,
@@ -1337,6 +1340,7 @@ async function main() {
       frontend.managed = true;
       frontend.port = apiPort;
       frontend.reason = 'static-dist';
+      frontendEntryPath = String(staticResult.entryPath || '').trim();
     }
   }
 
@@ -1348,7 +1352,9 @@ async function main() {
   if (frontend.host) {
     frontendHost = frontend.host;
   }
-  frontendUrl = `http://${frontendHost}:${frontendPort}`;
+  frontendUrl = frontendEntryPath
+    ? `http://${frontendHost}:${frontendPort}${frontendEntryPath}`
+    : `http://${frontendHost}:${frontendPort}`;
   if (frontend.reason === 'reused' || frontend.reason === 'reused-runtime') {
     _log(
       `[ai-manage-daemon] 复用已在运行的 KHY 前端（${frontendUrl}，来源 ${frontend.reason}）——未新起前端进程`
