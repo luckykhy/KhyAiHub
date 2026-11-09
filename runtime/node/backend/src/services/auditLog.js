@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-204-N8MQR0BN
 /**
  * Audit Log — JSONL-based tool execution audit trail.
  *

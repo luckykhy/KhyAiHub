@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-205-FNT2XT71
 /**
  * Auth Guard — lightweight shared gate for login-required features.
  */

@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-200-8DH3SW7F
 'use strict';
 
 /**
