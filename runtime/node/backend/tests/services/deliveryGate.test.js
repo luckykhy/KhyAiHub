@@ -299,5 +299,78 @@ describe('deliveryGate', () => {
       expect(verdict.verdict).toBe('pass');
       expect(verdict.warningSources).not.toContain('verification_gate_no_steps');
     });
+
+    // Regression lock for the "ran out of room" face of the tool loop: a loop
+    // that reports it did not finish is an unfinished delivery, so the harness
+    // must not read it as success. Keys are the real return-face fields of
+    // toolUseLoopCore; the throw class (errorType/stopped) was already locked by
+    // the cases above. cancelled/interrupted/recoveredFromInterruptedChannel are
+    // deliberately NOT failures — user abort, or an answer delivered after
+    // recovery — and must stay pass so a stopped-by-user run is not reported as
+    // a broken delivery.
+    const UNFINISHED_SIGNALS = [
+      'maxIterationsReached',
+      'timeLimitReached',
+      'truncated',
+      'consecutiveFailureBailout',
+      'graceFallback',
+      'budgetStopped',
+      'loopDetected',
+    ];
+    const NOT_FAILURE_FLAGS = [
+      'cancelled',
+      'interrupted',
+      'recoveredFromInterruptedChannel',
+    ];
+
+    for (const signal of UNFINISHED_SIGNALS) {
+      test(`fails when the loop reports ${signal}`, () => {
+        const verdict = buildHarnessDeliveryVerdict({
+          loopResult: { iterations: 3, [signal]: true, finalResponse: 'partial work' },
+          toolCallLog: [],
+        });
+
+        expect(verdict.verdict).toBe('fail');
+        expect(verdict.blockedBy).toContain('runtime');
+        expect(verdict.gates.runtime.passed).toBe(false);
+        expect(verdict.summary).toContain(signal);
+      });
+    }
+
+    for (const flag of NOT_FAILURE_FLAGS) {
+      test(`passes when the loop reports ${flag}`, () => {
+        const verdict = buildHarnessDeliveryVerdict({
+          loopResult: { iterations: 3, [flag]: true, finalResponse: 'stopped by user' },
+          toolCallLog: [],
+        });
+
+        expect(verdict.verdict).toBe('pass');
+        expect(verdict.blockedBy).not.toContain('runtime');
+        expect(verdict.gates.runtime.passed).toBe(true);
+      });
+    }
+
+    test('fails on the thrown-error class and names the error type', () => {
+      const verdict = buildHarnessDeliveryVerdict({
+        loopResult: { iterations: 3, errorType: 'network', finalResponse: 'boom' },
+        toolCallLog: [],
+      });
+
+      expect(verdict.verdict).toBe('fail');
+      expect(verdict.blockedBy).toContain('runtime');
+      expect(verdict.gates.runtime.errorType).toBe('network');
+      expect(verdict.summary).toContain('network');
+    });
+
+    test('passes a clean loop with no terminal signal', () => {
+      const verdict = buildHarnessDeliveryVerdict({
+        loopResult: { iterations: 4, finalResponse: 'done', toolCallLog: [] },
+        toolCallLog: [],
+      });
+
+      expect(verdict.verdict).toBe('pass');
+      expect(verdict.blockedBy).toEqual([]);
+      expect(verdict.gates.runtime.passed).toBe(true);
+    });
   });
 });

@@ -7,7 +7,9 @@
  *   - 三闸门 G1/G2/G3 各自的证据要求；
  *   - 缺证据 / 理由含糊 / 本地已覆盖 ⇒ deny；
  *   - 异常 ⇒ fail-closed 到 deny（绝不因为判定崩了就放行委派）；
- *   - 注入文案必须同时教「默认自做 + 三闸门 + 禁止项」，且不得复活开放式授权句式。
+ *   - 注入文案必须同时教「默认自做 + 三闸门 + 禁止项」，且不得复活开放式授权句式；
+ *   - 点名识别不得把「否定 / 征询」判成用户点名，也不得把真的派活漏掉（2026-10-15）；
+ *   - G1 的凭据是运行时按 turn 签发的票券（delegationTicket），不是模型自述文本。
  */
 
 const test = require('node:test');
@@ -19,10 +21,12 @@ const {
   SELF_FIRST_MARKER,
   getDelegationGate,
   detectDelegationGateInText,
+  detectExternalAgentRequest,
   evaluateDelegationAdmission,
   buildExternalAgentDirective,
   buildExternalAgentNudge,
 } = require('../../src/services/externalAgentDirective');
+const ticket = require('../../src/services/delegationTicket');
 
 const ON = { KHY_WEAK_MODEL_GUIDANCE: '1', KHY_EXTERNAL_AGENT_DIRECTIVE: '1' };
 
@@ -176,4 +180,68 @@ test('点名 nudge：必须带闸门 G1 标记指令（工具侧靠它区分点�
 
 test('只提到不驱动（「claude code 的架构是怎样的」）→ 不产生 nudge', () => {
   assert.strictEqual(buildExternalAgentNudge('claude code 的架构是怎样的', ON), '');
+});
+
+// ── 点名识别的假阳性边界（2026-10-15）──────────────────────────────────────
+// 旧判据「整条消息里出现驱动动词 + 出现别名」把「用 / 让 / 请 / 叫 / let / have / ask」这类
+// 高频字都算驱动动词，于是「这个改动**不要用** claude code」被判成用户点名，
+// nudge 反过来命令模型「不要自己内联去做」——默认自做被一条正则假阳性顶掉。
+
+test('点名识别：否定 / 征询 / 无关提及都不算点名', () => {
+  const shouldMiss = [
+    '这个改动不要用 claude code，你自己做完',
+    '别叫 codex 了，我们自己改',
+    '你觉得用 claude code 改这个怎么样？',
+    'let me explain what claude is',
+    '这段逻辑用递归实现，另外 claude 的插件机制是什么',
+  ];
+  for (const msg of shouldMiss) {
+    assert.strictEqual(detectExternalAgentRequest(msg, ON), null, `不应把「${msg}」判成用户点名`);
+  }
+});
+
+test('点名识别：真的派活仍然命中（收紧不得把真信号一起收掉）', () => {
+  const shouldHit = [
+    ['用 claude code 帮我重构这个模块', 'claude'],
+    ['把这个任务交给 codex 处理', 'codex'],
+    ['让 opencode 跑一下测试', 'opencode'],
+    ['把问题交给 claude，不要用 opencode', 'claude'],
+  ];
+  for (const [msg, id] of shouldHit) {
+    const hit = detectExternalAgentRequest(msg, ON);
+    assert.ok(hit && hit.id === id, `「${msg}」应判成点名 ${id}，实得 ${hit && hit.id}`);
+  }
+});
+
+test('点名识别：门关 → 不接管（逐字节回退）', () => {
+  assert.strictEqual(detectExternalAgentRequest('用 claude code 帮我重构', { KHY_EXTERNAL_AGENT_NUDGE: '0' }), null);
+});
+
+// ── G1 凭据：运行时票券 ─────────────────────────────────────────────────────
+
+test('票券：按 turn 签发与核销，跨轮不通用，参数为空不签发', () => {
+  ticket.resetDelegationTickets();
+  assert.strictEqual(ticket.redeemDelegationTicket('t1', 'claude'), false, '未签发的票不得核销');
+  assert.strictEqual(ticket.issueDelegationTicket('t1', 'claude'), true);
+  assert.strictEqual(ticket.redeemDelegationTicket('t1', 'claude'), true);
+  assert.strictEqual(ticket.redeemDelegationTicket('t1', 'codex'), false, '别的 agent 不共享票');
+  assert.strictEqual(ticket.redeemDelegationTicket('t2', 'claude'), false, '别的轮次不共享票');
+  assert.deepStrictEqual(ticket.peekDelegationTickets('t1'), ['claude']);
+  assert.strictEqual(ticket.issueDelegationTicket('', 'claude'), false);
+  assert.strictEqual(ticket.issueDelegationTicket('t1', ''), false);
+  ticket.resetDelegationTickets();
+});
+
+test('票券：容量上限内淘汰最旧一轮（不用时钟，避免硬超时形态）', () => {
+  ticket.resetDelegationTickets();
+  assert.strictEqual(ticket.issueDelegationTicket('oldest', 'claude'), true);
+  for (let i = 0; i < 40; i += 1) ticket.issueDelegationTicket(`t-${i}`, 'claude');
+  assert.strictEqual(ticket.redeemDelegationTicket('oldest', 'claude'), false, '超界后最旧一轮应被淘汰');
+  assert.strictEqual(ticket.redeemDelegationTicket('t-39', 'claude'), true, '最近一轮必须仍在');
+  ticket.resetDelegationTickets();
+});
+
+test('注入文案：必须写明 G1 凭据不由模型书写', () => {
+  const text = buildExternalAgentDirective(ON);
+  assert.ok(/G1 不由你书写成立|运行时/.test(text), '文案未说明 G1 凭据来自运行时，模型会以为自己写标记就能换放行');
 });

@@ -8,7 +8,9 @@
  *  ② classifyScene 判据优先级与 unknown 兜底;
  *  ③ buildContextCard 的说明书结构（含低置信 ⚠、长图建议、无 OCR 如实标注）;
  *  ④ attachContextCard 门控关/无图 → prompt 逐字节不变;
- *  ⑤ readImageFromFile 超限:门控关 → 旧错误逐字节;门开且不可压缩 → 新错误含修复建议。
+ *  ⑤ readImageFromFile 超限:门控关 → 旧错误逐字节;门开且不可压缩 → 新错误含修复建议;
+ *  ⑥ buildImageCard 预处理行报全事实(原尺寸→末态/输出格式/估算 token+限定语,缺项不编造),
+ *     且面积启发与 glmVisionImageDownscale.estimateVisionTokens 同源(对账防漂移)。
  */
 
 const { test } = require('node:test');
@@ -97,6 +99,47 @@ test('buildContextCard: 结构完整,低置信出 ⚠,无 OCR 如实标注', () 
   assert.match(noOcr, /【建议】长图/);
   assert.doesNotMatch(noOcr, /【待确认】/); // unknown 不出待确认
   assert.strictEqual(leaf.buildContextCard([]), '');
+});
+
+test('buildImageCard: 预处理行报全事实(原尺寸→末态/输出格式/估算 token+限定语)', () => {
+  // 复现实测的 4K 大字节图: 23.7MB 经字节闸+归一化两站后 1343x756 PNG。
+  const card = leaf.buildImageCard({
+    index: 1,
+    total: 1,
+    source: '文件',
+    sizeBytes: 50835,
+    width: 1343,
+    height: 756,
+    format: 'png',
+    downscaledFrom: { sizeBytes: 24889218, width: 3840, height: 2160 },
+  });
+  assert.match(card, /- 预处理: 已由 23\.7MB 自动压缩至 50KB/);
+  assert.match(card, /3840x2160→1343x756/);
+  assert.match(card, /输出 PNG/);
+  // 面积启发与 GLM 降采样叶子同源: 对账防两处系数漂移。
+  const { estimateVisionTokens } = require('../../src/services/gateway/glmVisionImageDownscale');
+  assert.match(card, new RegExp(`估算 ~${estimateVisionTokens(1343, 756)} tokens`));
+  assert.match(card, /（面积启发估算，非计费口径，与上游真实 inputs tokens 不同口径）/);
+
+  // 缺原尺寸 → 只报末态, 不编造原尺寸。
+  const noOrigin = leaf.buildImageCard({
+    sizeBytes: 50835,
+    width: 1343,
+    height: 756,
+    format: 'png',
+    downscaledFrom: { sizeBytes: 24889218 },
+  });
+  assert.match(noOrigin, /自动压缩至 50KB，1343x756，输出 PNG/);
+  assert.doesNotMatch(noOrigin, /3840x2160/);
+
+  // 末态尺寸也缺 → 尺寸未知且不出 token 估算(估不出就不估)。
+  const noDims = leaf.buildImageCard({
+    sizeBytes: 50835,
+    format: 'png',
+    downscaledFrom: { sizeBytes: 24889218, width: 3840, height: 2160 },
+  });
+  assert.match(noDims, /尺寸未知，输出 PNG/);
+  assert.doesNotMatch(noDims, /估算/);
 });
 
 test('cardEnabled: 默认开,显式 falsy 关', () => {

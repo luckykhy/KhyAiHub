@@ -171,6 +171,54 @@ describe('honestFailureReason', () => {
     });
   });
 
+  // [DESIGN-ARCH-198] W8 散文层顺序修复：cause 自带「真实失败原因:」标签时，去重判定必须
+  // **早于**类别前缀分支，否则 prefix 存在时会先命中 `${prefix}。具体原因：${body}`，
+  // 双标签照旧出现。
+  describe('W8 · 自带「真实失败原因:」标签时不叠「具体原因：」', () => {
+    const TAGGED = ['真实失败原因:', '- kiro [unavailable]: Kiro IDE unavailable'].join('\n');
+    const ENV = { env: { KHY_HONEST_FAILURE: '1', KHY_FAILURE_CAUSE_DEDUP: '1' } };
+
+    test.each([
+      ['auth', '认证失败'],
+      ['network', '网络请求未能完成'],
+      ['rate_limit', '请求被限流'],
+      ['timeout', '请求超时'],
+      ['process', '服务进程异常'],
+    ])('prefix 存在（%s）→ 含类别前缀、不含「具体原因：真实失败原因」', (errorType, prefix) => {
+      const out = resolveFriendlyFailureMessage({
+        errorType,
+        cause: TAGGED,
+        legacyFriendly: 'legacy',
+        options: ENV,
+      });
+      expect(out.startsWith(`${prefix}。`)).toBe(true);
+      expect(out).toContain('真实失败原因:');
+      expect(out).not.toContain('具体原因：真实失败原因');
+    });
+
+    test('prefix 缺省（errorType=unknown）→ 原样返回 body（与今日 :218 逐字节一致）', () => {
+      // 防 `${prefix}。${body}` 的字面实现产出 `undefined。…`
+      const out = resolveFriendlyFailureMessage({
+        errorType: 'unknown',
+        cause: TAGGED,
+        legacyFriendly: 'legacy',
+        options: ENV,
+      });
+      expect(out).toBe(TAGGED);
+      expect(out.startsWith('undefined')).toBe(false);
+    });
+
+    test('去重门关（KHY_FAILURE_CAUSE_DEDUP=0）→ 逐字节回退叠标签行为', () => {
+      const out = resolveFriendlyFailureMessage({
+        errorType: 'network',
+        cause: TAGGED,
+        legacyFriendly: 'legacy',
+        options: { env: { KHY_HONEST_FAILURE: '1', KHY_FAILURE_CAUSE_DEDUP: '0' } },
+      });
+      expect(out).toContain('网络请求未能完成。具体原因：真实失败原因:');
+    });
+  });
+
   describe('extractToolFailureReason', () => {
     test('returns empty when disabled', () => {
       const result = extractToolFailureReason(
