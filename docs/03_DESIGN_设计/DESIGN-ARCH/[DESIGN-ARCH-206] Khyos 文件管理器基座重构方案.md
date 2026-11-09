@@ -483,14 +483,76 @@ AES 封装那套字节级格式，`java.util.zip` 不支持；而引入 zip4j �
 最后这条是整轮最关键的证据：目标里描述的「AI 产计划 → 人逐项确认 → 才执行」
 在真机上一字不差地跑通了。
 
-### 9.11 自证
+### 9.11 终端抽屉：通道拆分与 cwd 的表达方式
 
-- 新增 Dart 单测 15 个文件、172 例全绿：路由与路径文法、权限降级与只读语义、
+真机验证终端抽屉时抓到**一个只有真机能暴露的设计级缺陷**：终端里敲 `ls`，回的是
+「命令不在允许清单内」——**终端一条命令都发不出去**。
+
+**根因不是配置，是表达方式与护栏打架**：
+
+| 层 | 做法 | 后果 |
+|---|---|---|
+| Dart 侧 | 把 cwd 拼进命令体：`cd '<cwd>' && ls` | 命令体里带上了 `&&` |
+| 原生侧 | `shell` 通道禁一切 shell 控制符（`; & \| \` > <` 换行），且白名单是**前缀匹配** | `&&` 命中禁令 → **整条命令被拒**，连 `ls` 都发不出去 |
+
+也就是说：cwd 靠字符串拼接表达，与「一条命令里不许串联」这条护栏**结构性冲突**。
+只要 cwd 用拼接表达，终端就必然是摆设——这不是漏配白名单能修的。
+
+**修法三条**（缺一条都不成立）：
+
+1. **cwd 不再用字符串表达，改成独立参数。** 原生新增 `terminalShell` 通道，`cwd`
+   单独传，执行时用 `ProcessBuilder.directory()` 设工作目录。命令体不再含 `&&`，
+   护栏与 cwd 表达彻底解耦。附带好处：路径不再需要自己拼引号转义。
+2. **通道拆分，人工命令区与 AI 通道各用各的白名单。**
+   - `shell`（AI 与设备控制）：原严白名单**原样不动**。Agent 会编命令
+     （实测它发明过 `pkg manager install <url>`），收得紧是刻意的。
+   - `terminalShell`（人手动敲）：新增 `TerminalShell` 策略，允许 `ls`/`df`/`du`/
+     `find`/`grep`/`cat`/`stat`/`ps`/`mkdir`/`cp`/`mv`/`rm` 等日常命令。
+
+   共用一份白名单只有两种结局：终端像摆设，或者把 AI 通道一起放宽。两边都不接受，
+   所以拆开——**这也正是「人工路径完整自洽」在权限层的落地**：人敲的命令和人走的
+   目录，本来就不该与 Agent 共用同一道闸门。
+3. **`cd` 在 Dart 侧就地处理成「换 cwd」。** `cd` 是 shell 内建，交给原生会被准入
+   策略拒掉。改由 Dart 侧解析，同时做两件事：路径归一化（消 `.` 与 `..`）、
+   目标存在性校验（`VfsService.stat`）。顶栏显示的 cwd 与命令实际落点必须是同一个
+   字符串——否则用户看到「目录不对」，却查不出错在哪。
+
+**人工终端仍然保留的硬边界**（放宽的是命令**种类**，不是护栏**强度**）：
+
+- shell 控制符一律禁（`; & | \` > <` 换行）、命令替换禁（`` `…` `` 与 `$(…)`）；
+- deny 清单：解释器（`sh`/`python`/`perl`/`awk`/`sed`/`ruby`/`node`…）、提权
+  （`su`/`chmod`/`chown`/`setprop`）、系统动作（`reboot`/`mount`/`dd`/`mkfs`…）全禁——
+  它们能把「一条白名单命令」变成「任意程序」；
+- `find -exec`/`-execdir` 单独禁：它同样能执行任意程序，且**不带任何控制符**，
+  光靠前两条挡不住；
+- deny 拒绝时必须说清「允许什么」——一句不带允许清单的拒绝，等于让人挨个猜命令名。
+
+**新增/改动文件**：
+
+| 文件 | 作用 |
+|---|---|
+| `terminal/TerminalShell.kt`（新） | 人工终端的准入策略：允许清单、deny 清单、`find -exec` 禁令 |
+| `terminal/ShellRunner.kt`（新） | 命令执行：`ProcessBuilder` 设工作目录 + stdout/stderr **并发**抽干 |
+| `MainActivity.kt` | 新增 `terminalShell` 通道；`shell` 改为复用 `ShellRunner`（执行逻辑只有一份） |
+| `lib/core/services/shell_executor.dart` | 新增 `execTerminal(command, {cwd})` |
+| `lib/core/vfs/vfs_terminal_command.dart`（新） | 纯函数：命令解析（`cd` 识别）+ 路径归一化 |
+| `lib/ui/widgets/vfs/vfs_terminal_drawer.dart` | 改走新通道；`cd` 就地换 cwd；目标目录先校验再进 |
+
+**顺带定位了一条真机偶发报错**：「无权限读取目录：/storage/emulated/0/Android/obb」
+出现过一次，冷启动与手动重进都正常，全仓 grep 无任何路径能拼出 `Android/obb`。
+唯一的产生点是原生 `File.listFiles()` 返回 `null`（FUSE 层对刚被媒体扫描碰过的目录
+瞬时返回 null）。修法是**重试一次**：仍为 null 才是真的读不动，那时报 denied 才是
+诚实的。查无实据的偶发不硬编一个原因，但也不能让它再冒出来。
+
+### 9.12 自证
+
+- 新增 Dart 单测 16 个文件、185 例全绿：路由与路径文法、权限降级与只读语义、
   AI 计划白名单与风险分级、危险命令拒绝、审计来源标记、批量重命名算式、
   归档与存储分析契约、组织功能降级、脚本执行器路径护栏、
   应用数据解析（SharedPreferences / JSON）、目录事件分发、私有目录包名解析与
   访问确认策略、事件总线与复制任务控制、离线意图解析与离线兜底、
-  定时规格与逐步执行、AI 脚本校验、shell 输出解析、主动建议启发式。
+  定时规格与逐步执行、AI 脚本校验、shell 输出解析、主动建议启发式、
+  终端命令解析与路径归一化（`cd` 识别、引号剥离、`..`/`.` 消解、越过根目录不越界）。
 - `flutter analyze`（本次涉及的全部 Dart 文件）：**No issues found**。
 - `gradlew :app:compileDebugKotlin`：**BUILD SUCCESSFUL**（产物
   `VfsBridge/VfsShell/VfsArchive/VfsAnalyze/VfsWatcher/VfsCopier/VfsCrypto.class`
@@ -504,7 +566,7 @@ AES 封装那套字节级格式，`java.util.zip` 不支持；而引入 zip4j �
 - 护栏只有一份：`VfsBridge` 的三个护栏方法改为 `internal`，
   `VfsArchive` 不再复刻。
 
-### 9.12 还没做的（下一轮）
+### 9.13 还没做的（下一轮）
 
 - **容器运行时**：容器应用分区目前只列容器目录里的应用；「启动」「内存扫描」
   需要 proot/chroot 运行时插件，本轮明确按「做不到就如实说」处理。
