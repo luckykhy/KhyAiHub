@@ -104,6 +104,18 @@ class ChatMessage {
       timestamp: timestamp ?? this.timestamp,
     );
   }
+
+  /// 图片附件；没有（字段本身可空）时是空列表。
+  ///
+  /// 发送链（`provider_adapter` 的多模态 content block）与消息行缩略图共用这
+  /// 一个定义。两边各写一个 where 条件，就会出现「图上送了、行里不显示」或
+  /// 反过来——而这种分叉没有任何症状，只是用户以为自己发出去的图模型没看到。
+  ///
+  /// 只收 [AttachmentType.image]：视频抽帧要原生工（Android 无 ffmpeg），
+  /// 音频/文件当前也没有多模态通道，混进来只会造出发过去也没人读的块。
+  List<MessageAttachment> get imageAttachments =>
+      attachments?.where((a) => a.type == AttachmentType.image).toList() ??
+      const [];
 }
 
 /// 消息附件
