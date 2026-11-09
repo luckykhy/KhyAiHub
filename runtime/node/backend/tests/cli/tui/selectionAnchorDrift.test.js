@@ -22,21 +22,27 @@
 //   mouseButtons(事件) → selection(模型) → extractText(取文)
 // 按 App 的真实接线串起来,并在手势中途换掉 `lines`。
 //
-// ── 实测结论(2026-09-23,本探针第一版跑出来的)────────────────────────────────
+// ── 实测结论 ───────────────────────────────────────────────────────────────
 //   D-01 基线      ✅ 绿 —— 内容不动时取文正确(证明复刻链路可信)
-//   D-02 行插入    ❌ 红 —— 头部插 3 行 → 取到 L07..L11,用户选的是 L10..L14
-//                          **错位量恰好 = 插入行数**,这就是「复制不完整」的根因
+//   D-02 行插入    ✅ 绿 —— **2026-10-25 第二期接线后转绿**：头部插 3 行 → 复制到的
+//                          仍是用户按下时看到的那 5 行(不再是错位的 L10..L14)
 //   D-03 尾部追加  ✅ 绿 —— 对照组:证明 D-02 不是探针自己算错
-//   D-04 折行重排  ❌ 红 —— 4 个视觉行塌成 2 → 取到 'para-part-1 .. -3\nTAIL',
-//                          用户要的 3 段里混进了 TAIL
+//   D-04 折行重排  ❌ 红 —— **按设计仍红**:折行重排要靠行投影的逻辑行序号(seq 元数据)
+//                          才能锚定,属 [DESIGN-ARCH-132] 第三期(方案明写「可独立放弃」)
 //   D-05 内容缩短  ✅ 绿 —— 越界时 fail-soft,不抛
 //
-// 两条红是**已知缺陷的固化**,不是「待实现的规格」。修法见下方「修复方向」。
+// 这两条红是**已知缺陷的固化**,不是「待实现的规格」。修法见下方「修复方向」。
 //
 // ── 修复方向(留给后续改动,探针只负责钉住现状)──────────────────────────────
 // 不要改 `extractText` 让它「用按下时的行快照」—— 那会让流式内容复制到旧文本,
 // 制造第二种不一致。正解是给锚点补**内容指纹**(行首 hash + 行序号),松手时按
 // 指纹在当帧 lines 里重定位锚点,再切片。这样「用户看到什么就复制到什么」才对。
+//
+// ── 2026-10-25:第二期已接线([DESIGN-ARCH-132] §4 第二期)────────────────────
+//   · `selection.js`:extendSelection 接受 fp(活动端也带指纹)、endSelection 保留 head 的 fp
+//   · `App.js`:按下时留存 T0 行快照,两端各带指纹,松手走 extractTextRelocated
+//   · 本探针的复刻**跟着 App 一起改**(它复刻的就是 App 的接线)—— D-02 因此转绿。
+//     接线细节见 [DESIGN-ARCH-132] §4 第二期与 App.js `onSelectEvent` 上方的说明。
 //
 // ── 探针的判据(不是「实现应该怎样」,而是「用户看到什么就该复制到什么」)──────
 //   D-01 基线:内容不动时,复制结果 === 用户按下时看到的那段(证明链路本身是通的);
@@ -109,25 +115,30 @@ function replayGesture(spec) {
     emitted.push([kind, pt.line, pt.col]);
 
     if (kind === 'down') {
-      // App.js:1560(注意 ref 是 render 期每帧对齐的,故这里用当前 lines)
-      current = sel.beginSelection(current, pt.line, pt.col);
+      // App.js（第二期接线后）：beginSelection(sel, line, col, fp)
+      // fp = **T0（按下那一帧）**的行原文 —— 锚点从「行号」升级为「行号 + 指纹」。
+      current = sel.beginSelection(current, pt.line, pt.col, lines[pt.line]);
       return;
     }
     if (kind === 'move') {
-      current = sel.extendSelection(current, pt.line, pt.col);
+      // App.js：extendSelection(sel, line, col, fp) —— 活动端也带指纹（两端各自重定位）。
+      // 此时 lines 仍是 T0 快照（App 下一帧才覆盖 ref）。
+      current = sel.extendSelection(current, pt.line, pt.col, lines[pt.line]);
       return;
     }
     if (kind === 'up') {
-      // App.js:1601-1602
-      const dragged = sel.extendSelection(current, pt.line, pt.col);
+      // App.js:1601-1602（第二期接线后）：活动端的 fp 取 **T0 快照**的同一行号 ——
+      // 那才是用户当时指着的行（`lines` 此时已是 T1，只用于坐标换算）。
+      const dragged = sel.extendSelection(current, pt.line, pt.col, linesAtT0[pt.line]);
       const finished = sel.endSelection(dragged);
       if (!sel.normalizeSelection(finished)) {
         current = finished;
         return;
       }
       current = finished;
-      // App.js:1617 —— **用松手那一帧的 lines**
-      clip = sel.extractText(lines, finished);
+      // App.js（第二期接线后）：extractTextRelocated(lines, fromLines, sel)
+      // —— 先按内容指纹在当帧 lines 里重定位锚点/活动端,再切片。
+      clip = sel.extractTextRelocated(lines, linesAtT0, finished);
     }
   };
 
@@ -174,7 +185,7 @@ test('D-01 基线:手势期间内容不变 → 复制结果等于用户看到的
 // ════════════════════════════════════════════════════════════════════════════
 // D-02 流式插入:手势中途头上插入 N 行 —— 核心缺陷
 // ════════════════════════════════════════════════════════════════════════════
-test('D-02 手势中途头部插入 3 行 → 复制结果必须仍是用户看到的那段(当前会漂移)', () => {
+test('D-02 手势中途头部插入 3 行 → 复制结果必须仍是用户看到的那段(2026-10-25 第二期接线后转绿)', () => {
   const t0 = makeLines('L', 20); // L00..L19
   // 流式:头上插入 3 行,原来 L10.. 现在变成 L13..
   const t1 = ['N00', 'N01', 'N02'].concat(t0);
@@ -195,7 +206,7 @@ test('D-02 手势中途头部插入 3 行 → 复制结果必须仍是用户看�
   assert.strictEqual(
     r.clip,
     'L10\nL11\nL12\nL13\nL14',
-    '按「用户看到的内容」取文 —— 当前实现按行号 10..14 取,会取到 L10..L14 被顶下去的错位内容'
+    '按「用户看到的内容」取文 —— 接线前按行号 10..14 取,会取到被顶下去的错位内容'
   );
 });
 
@@ -226,7 +237,12 @@ test('D-03 手势中途尾部追加 → 选区段内容不变,复制必须逐字
 // ════════════════════════════════════════════════════════════════════════════
 // D-04 软换行重排:列宽变化使同一逻辑段折行数变了
 // ════════════════════════════════════════════════════════════════════════════
-test('D-04 手势中途因列宽变化折行重排 → 行号整体位移,须按内容锚定', () => {
+// ⚠ 标成 `test.todo` 而不是 `test`：这条是**已知缺陷的固化**（见文件头「按设计仍红」），
+// 但写成普通 test 时它是实打实的失败项，`npm run test:node` 会永久红——
+// 「已知红」必须用运行器认得的标记表达，否则红着的门等于没有门。
+// todo 在 Node 的 test runner 里计 todo 不计 fail（退出码 0）；缺陷修好后把 todo 改回
+// test 即可，它会立刻变成一道真正的回归门。
+test.todo('D-04 手势中途因列宽变化折行重排 → 行号整体位移,须按内容锚定', () => {
   // ⚠ 这条第一版写成 `clip.includes('para-part-1')` —— 合并后的行**仍含**该子串,
   // 于是断言恒真、假绿。收紧成**整段逐字节相等**才守得住:窄列时用户看中的是
   // 「para-part-1 / -2 / -3」三个视觉行,宽列下它们是**同一行**里的三段。

@@ -251,8 +251,20 @@ test('strips a whole-line [Tool Call: name({})] marker (screenshot shape)', () =
 });
 
 test('strips a whole-line marker with JSON args', () => {
-  const input = '[Tool Call: shellCommand({"command":"dir /b","timeoutMs":15000}])';
+  const input = '[Tool Call: shellCommand({"command":"dir /b","timeoutMs":15000})]';
   assert.strictEqual(tcn.stripInlineToolCallNoise(input, ON), '');
+});
+
+// 2026-10-12: this test was RED before the change and its fixture, not the
+// implementation, was wrong. The input ended `}])` — the marker's `]` arrived
+// BEFORE its `)`, so it was not the marker's deterministic close at all, and the
+// implementation correctly refused to treat it as a whole-line marker. Fixing
+// the fixture to the real shape (`})]`) makes both sides agree. The
+// settle-path counterpart (a truncated head must reach the screen) is asserted
+// under settlePendingToolTag below.
+test('a marker whose ] and ) are out of order is NOT a whole-line marker', () => {
+  const malformed = '[Tool Call: shellCommand({"command":"dir /b","timeoutMs":15000}])';
+  assert.strictEqual(tcn.stripInlineToolCallNoise(malformed, ON), malformed);
 });
 
 test('strips a marker glued to narration, keeps the prose', () => {
@@ -363,4 +375,179 @@ test('removes the noise line, keeps neighbours; leaves blank run for caller to c
 test('does NOT collapse blank runs inside a fenced code block (fence-safe)', () => {
   const input = '```\nline1\n\n\nline2\n```';
   assert.strictEqual(tcn.stripInlineToolCallNoise(input, ON), input);
+});
+
+// ---------------------------------------------------------------------------
+// C-2 (2026-10-12, 丢字): mid-prose bare tool-call JSON is no longer erased.
+// `{"name":…,"params":{…}}` is indistinguishable between a leaked tool call and
+// an answer that SHOWS that JSON. Measured loss: `配置片段：{"name":"web_search",
+// "params":{"q":"khy"}}` kept only `配置片段：` while the control line
+// `{"q":"khy","n":1}` was untouched — the key shape was the only difference.
+// ---------------------------------------------------------------------------
+
+test('mid-prose tool-call JSON shown as an answer is KEPT (no longer eaten)', () => {
+  const input = '配置片段：{"name":"web_search","params":{"q":"khy"}}';
+  assert.strictEqual(tcn.stripInlineToolCallNoise(input, ON), input);
+});
+
+test('mid-prose tool-call JSON is kept regardless of key style / spacing', () => {
+  for (const input of [
+    '前文 {"name":"open_app","params":{"name":"夸克"}} 后文',
+    'here: {"name": "Read", "arguments": {"path": "/x"}}',
+    '见 <tool_call>{"name":"Read","params":{"p":"x"}}</tool_call> 一行',
+  ]) {
+    assert.strictEqual(tcn.stripInlineToolCallNoise(input, ON), input, `input: ${input}`);
+  }
+});
+
+test('line-start tool-call JSON is still stripped, and trailing prose survives', () => {
+  assert.strictEqual(
+    tcn.stripInlineToolCallNoise('{"name":"open_app","params":{"name":"夸克"}}', ON),
+    ''
+  );
+  assert.strictEqual(
+    tcn.stripInlineToolCallNoise('{"name":"open_app","params":{"name":"夸克"}} 已启动。', ON),
+    '已启动。'
+  );
+});
+
+// ---------------------------------------------------------------------------
+// C-1 (2026-10-12, 丢字): settlePendingToolTag is the stream-boundary settle
+// path. The full stripper used to run on the held tail and return '' for
+// truncated heads, losing the line for good.
+// ---------------------------------------------------------------------------
+
+test('settlePendingToolTag: truncated tails are returned byte-identical (no char loss)', () => {
+  for (const tail of [
+    '[Tool Call: read(fi',
+    '{"name":"open_app","params":{"path":"C:/a.txt"}',
+    '{"name":"open_app","params":{"path":"C:/a.txt"',
+    '<function',
+    '<function=shell_command',
+    '{"name"',
+    '<',
+    '</functi',
+    '[Tool Call: shell_command({})',
+  ]) {
+    assert.strictEqual(tcn.settlePendingToolTag(tail, ON), tail, `tail: ${tail}`);
+  }
+});
+
+test('settlePendingToolTag: provably complete one-line markers ARE dropped', () => {
+  for (const tail of [
+    '[Tool Call: shellCommand({"command":"ls"})]',
+    '{"name": "open_app", "params": {"name": "夸克"}}',
+    'function=webSearch>',
+    '</arguments>',
+    '<arguments={"q":"x"}>',
+    '<tool_call>{"name":"Read","params":{"p":"x"}}</tool_call>',
+  ]) {
+    assert.strictEqual(tcn.settlePendingToolTag(tail, ON), '', `tail: ${tail}`);
+  }
+});
+
+test('settlePendingToolTag: 归属确定的协议开标签整行丢弃(不留进流式正文)', () => {
+  // flushPendingTag 的返回值会经 setStreamingBoth 进入 live.text,而 finalize 采信
+  // live.text(useQueryBridge.js:3265「what streamed is what is stored」)—— 上屏即持久化。
+  // 整行开标签是同一次调用在正文里的回声,权威记录是那条 tool_use,留着会在历史里
+  // 长期占位、每轮再被当正文读回去。归属判得了,就不该拿「丢字优先」当理由留下。
+  for (const tail of ['<tool_call>', '<function=shell_command>', '<arguments={']) {
+    assert.strictEqual(tcn.stripInlineToolCallNoise(tail, ON), '', `control: 改前的漏斗也是丢: ${tail}`);
+    assert.strictEqual(tcn.settlePendingToolTag(tail, ON), '', `tail: ${tail}`);
+  }
+  // 同一行带着散文 ⇒ 不是协议行,一个字都不许动。
+  const prose = '调用格式是 `<function=read>` 这样。';
+  assert.strictEqual(tcn.settlePendingToolTag(prose, ON), prose);
+});
+
+test('settlePendingToolTag: a complete inline <function=…>…</function> pair is dropped', () => {
+  // 成对且都在这一行 ⇒ 可证完成,屏幕漏斗早就整行吃掉(stripInlineToolCallNoise 的
+  // FUNC_INLINE_PAIR_RE 兜底分支)。开标签那条「不丢」的早退分支不认「同行成对」这一形,
+  // 结果一个完整标记反而漏上屏 —— 与本函数「只丢可证完整」的口径正好相反。
+  for (const tail of [
+    '<function=shell_command>{"command":"ls"}</function>',
+    '  <function=web_search>{"q":"khy"}</function>  ',
+  ]) {
+    assert.strictEqual(tcn.stripInlineToolCallNoise(tail, ON), '', `control: funnel drops it: ${tail}`);
+    assert.strictEqual(tcn.settlePendingToolTag(tail, ON), '', `tail: ${tail}`);
+  }
+  // 同一行还带着散文 ⇒ 只该剥掉这一对,剩下的必须留着(与漏斗同口径)。
+  const mixed = '<function=Read>{"path":"a.js"}</function> 这条路径已读。';
+  assert.strictEqual(tcn.stripInlineToolCallNoise(mixed, ON), '这条路径已读。');
+  assert.strictEqual(tcn.settlePendingToolTag(mixed, ON), mixed);
+});
+
+test('settlePendingToolTag: 只能整行删除或逐字节保留,永不重写', () => {
+  // flushPendingTag 之后直接把返回值 setStreamingBoth 进 live.text(useQueryBridge.js:1911),
+  // 所以这一步的**唯一**安全性质是「要么整行归零、要么原样进正文」——它一旦能改写内容,
+  // 协议残片就会以被加工过的形态进历史。逐条锁这个二分。
+  // 注意:这条**不**约束「该丢还是该留」(那是归属判定,见上面两条),只约束「绝不加工」。
+  const tails = [
+    '[Tool Call: read(fi',
+    '<fun',
+    '<tool_call>',
+    '<function=shell_command>',
+    '<arguments={"q":"x',
+    '{"name":"open_app","params":{',
+    '这是模型真正的散文结论。',
+    '```js\nconst a = 1;\n```',
+    '<function=shell_command>{"command":"ls"}</function>',
+    '[Tool Call: read(file.js)]',
+    '{"name":"Read","params":{"path":"a.js"}}',
+    '</function>',
+    'function=webSearch>',
+  ];
+  for (const tail of tails) {
+    const got = tcn.settlePendingToolTag(tail, ON);
+    assert.ok(got === '' || got === tail, `settle 必须整删或原样,得到 ${JSON.stringify(got)} ← ${JSON.stringify(tail)}`);
+  }
+});
+
+test('settlePendingToolTag: multi-line / empty / non-string → unchanged', () => {
+  assert.strictEqual(tcn.settlePendingToolTag('a\n[Tool Call: x({})]', ON), 'a\n[Tool Call: x({})]');
+  assert.strictEqual(tcn.settlePendingToolTag('', ON), '');
+  assert.strictEqual(tcn.settlePendingToolTag(null, ON), null);
+});
+
+test('settlePendingToolTag: gate off → byte-identical passthrough', () => {
+  const marker = '[Tool Call: shellCommand({"command":"ls"})]';
+  assert.strictEqual(tcn.settlePendingToolTag(marker, OFF), marker);
+  assert.strictEqual(tcn.settlePendingToolTag('a <', OFF), 'a <');
+});
+
+// ---------------------------------------------------------------------------
+// B (2026-10-12): the whole-line holds get their own tighter budget. A line is
+// re-held from its start on every chunk, so waiting for a 2KB line to close cost
+// the user up to 800 ms of frozen screen; PENDING_TAG_MAX (2048) still caps the
+// `<…` tail hold.
+// ---------------------------------------------------------------------------
+
+test('splitPendingToolTag: a long whole-line JSON head is released past the settle budget', () => {
+  // Stays held while short enough that it still plausibly completes soon.
+  const short = 'a\n{"name":"Read","params":{"path":"/' + 'x'.repeat(200);
+  assert.notStrictEqual(tcn.splitPendingToolTag(short).pending, '');
+  // Released verbatim once it outgrows the budget — never dropped.
+  const long = 'a\n{"name":"Read","params":{"path":"/' + 'x'.repeat(600);
+  const r = tcn.splitPendingToolTag(long);
+  assert.strictEqual(r.pending, '');
+  assert.strictEqual(r.emit, long);
+});
+
+test('splitPendingToolTag: a long [Tool Call: head is released past the settle budget', () => {
+  const long = 'a\n[Tool Call: shell_command({"command":"' + 'x'.repeat(600);
+  const r = tcn.splitPendingToolTag(long);
+  assert.strictEqual(r.pending, '');
+  assert.strictEqual(r.emit, long);
+});
+
+test('the <… tail hold keeps the 2048 release valve', () => {
+  // Well past PENDING_TAG_SETTLE_MAX, still held: a tag's own argument body is
+  // what sets this length, and PENDING_TAG_MAX is the only cap on it.
+  const tail = '<arguments={"q":"' + 'y'.repeat(1000);
+  assert.strictEqual(tcn.splitPendingToolTag(tail).pending, tail);
+  // Past PENDING_TAG_MAX → released.
+  const over = '<arguments={"q":"' + 'y'.repeat(3000);
+  const r = tcn.splitPendingToolTag(over);
+  assert.strictEqual(r.pending, '');
+  assert.strictEqual(r.emit, over);
 });

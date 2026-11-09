@@ -56,3 +56,30 @@ test('computeSlash: 非斜杠输入返回 null(不误触发)', () => {
   assert.equal(computeSlash('hello'), null);
   assert.equal(computeSlash('/study x'), null); // 已有空格 → 不再是命令 token
 });
+
+// 类目穿透(2026-10-11):一级斜杠命令带 category 供菜单按类着色。
+// 真源 = commandSchema.getBuiltinSlashCommands;extras/用户技能等未登记命令落 'default';
+// 二级(slash-sub)与 @file 的 items 一概不加 category 键 → 渲染层走旧色。
+
+test('computeSlash: 命中真源命令时 category 穿透(/model → model)', () => {
+  const res = computeSlash('/mo');
+  const item = res.items.find((i) => i.value === '/model');
+  assert.ok(item, '/model 项存在');
+  assert.equal(item.category, 'model');
+});
+
+test('computeSlash: 未登记命令(extras)落 default(/study 首项)', () => {
+  const res = computeSlash('/study');
+  assert.equal(res.items[0].value, '/study');
+  assert.equal(res.items[0].category, 'default');
+});
+
+test('computeSlash: 二级 slash-sub 的 items 不带 category 键(渲染层保持旧色)', () => {
+  const res = computeSlash('/lang ');
+  assert.equal(res.kind, 'slash-sub');
+  assert.ok(res.items.length > 0, '二级候选非空');
+  assert.ok(
+    !Object.prototype.hasOwnProperty.call(res.items[0], 'category'),
+    '二级首项不应有自有 category 键'
+  );
+});

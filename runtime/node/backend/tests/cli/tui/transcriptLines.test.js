@@ -27,10 +27,13 @@ const test = require('node:test');
 
 const {
   buildTranscriptLines,
+  buildStreamThinkingExpansion,
   defaultSummarizeTool,
   TOTAL_LINE_CAP,
   TOOL_BODY_LINE_CAP,
+  STREAM_THINKING_BODY_CAP,
 } = require('../../../src/cli/tui/transcriptLines');
+const { buildThinkingHeader } = require('../../../src/cli/thinkingDuration');
 const { visWidth } = require('../../../src/cli/tui/wrapCell');
 
 const COLS = 40;
@@ -129,9 +132,25 @@ test('plain notice', () => {
 });
 
 test('unknown roles degrade to a text projection and are skipped when empty', () => {
-  assert.deepStrictEqual(build([{ role: 'decision', content: '已批准' }]), ['已批准']);
   assert.deepStrictEqual(build([{ role: 'qa', content: { text: '问答' } }]), ['问答']);
+  assert.deepStrictEqual(build([{ role: 'expansion', content: '展开的旧段落' }]), ['展开的旧段落']);
   assert.deepStrictEqual(build([{ role: 'brand-new-role-2099' }]), []);
+});
+
+// 'decision' 曾经落在上面的 default 分支里(所以本文件早年的版本拿它当「未知角色」
+// 的样本)。现在它是**一等角色**:transcriptLines.js 有专门的 `case 'decision'`,走
+// permissionNotice.decisionVerdict 这份与 committed 侧共用的判词 —— 改前它对决定
+// 记录什么都不画,那条决定在应用内 Viewport 里是隐形的,与 buildDecisionRecord 自己
+// 「让决定在浮层消失后仍可见」的意图正好相反。判词口径属 SSOT,不在这里另写一份。
+test('decision role renders the shared verdict, not the unknown-role fallback', () => {
+  assert.deepStrictEqual(build([{ role: 'decision', decision: 'allow', tool: 'bash' }]), [
+    '  ✓ 已批准：bash',
+  ]);
+  assert.deepStrictEqual(build([{ role: 'decision', decision: 'deny', tool: 'rm' }]), [
+    '  ✗ 已拒绝：rm',
+  ]);
+  // 判词缺失时如实回显「未记录」,绝不假装「已批准」。
+  assert.deepStrictEqual(build([{ role: 'decision', content: '已批准' }]), ['  • 决定 未记录']);
 });
 
 // ── showAll ───────────────────────────────────────────────────────────────
@@ -313,4 +332,115 @@ test('回归锚点: 投影粒度是「行」而非「消息」(Viewport 半页�
   const out = build([{ role: 'user', content: 'a' }, { role: 'user', content: 'b' }]);
   assert.ok(out.includes(''), '消息之间有空行 → 行数 > 消息数');
   assert.equal(out.length, 3, '两条消息 → 3 行(含分隔空行)');
+});
+
+// ── 流式思考展开态(buildStreamThinkingExpansion) ────────────────────────────
+// 这块上一轮只交付了实现、没交付测试:40 行硬上限、`⋯` 截断标记、两套下标簿记
+// (anchorRows / bodyRows)全部无背书。下面十条把它们连同两个已修欠账一起锁住。
+
+test('流式思考展开态: 基本装配(头行 + 正文行, 两套下标)', () => {
+  const out = buildStreamThinkingExpansion({ bodyLines: ['a', 'b'] });
+  assert.deepStrictEqual(out, {
+    rows: ['  思考', '  a', '  b'],
+    anchorRows: [0],
+    bodyRows: [1, 2],
+  });
+});
+
+test('流式思考展开态: 头行走 thinkingDuration 的既有 builder(不另造第二份文案)', () => {
+  // 头行文案的真源是 cli/thinkingDuration.js;这里对拍而不是写死第二份字面量。
+  const expected = '  ' + buildThinkingHeader({ durationMs: undefined });
+  assert.equal(buildStreamThinkingExpansion({ bodyLines: [] }).rows[0], expected);
+  assert.equal(expected, '  思考', '流式期间 durationMs 恒缺省 ⇒ 裸「思考」, 不编造时长');
+});
+
+test('流式思考展开态: 行数封顶是硬的, 超限打截断标记', () => {
+  const src = Array.from({ length: STREAM_THINKING_BODY_CAP + 5 }, (_, i) => 'L' + i);
+  const out = buildStreamThinkingExpansion({ bodyLines: src });
+  assert.equal(out.rows.length, 1 + STREAM_THINKING_BODY_CAP + 1, '头行 + 上限行 + 1 行截断标记');
+  assert.equal(out.rows[out.rows.length - 1], '  ⋯');
+  assert.deepStrictEqual(
+    out.bodyRows,
+    // [1..上限] + 截断标记行那一格（见下面那条「除头行外每一行」的回归锚点）。
+    Array.from({ length: STREAM_THINKING_BODY_CAP + 1 }, (_, i) => i + 1),
+    'bodyRows 是 [1..上限+1], 最后一格是截断标记行'
+  );
+});
+
+test('流式思考展开态: truncated 为真时即使没到上限也打截断标记', () => {
+  const out = buildStreamThinkingExpansion({ bodyLines: ['a', 'b'], truncated: true });
+  assert.equal(out.rows.length, 4);
+  assert.equal(out.rows[out.rows.length - 1], '  ⋯');
+});
+
+test('流式思考展开态: 未截断时既无标记也不多占行', () => {
+  const out = buildStreamThinkingExpansion({ bodyLines: ['a', 'b'] });
+  assert.equal(out.rows.length, 3);
+  assert.ok(!out.rows.includes('  ⋯'));
+});
+
+// 回归锚点(欠账 2):`⋯` 截断行的下标曾经没进 bodyRows ⇒ App.js 的
+// `_streamThinkingBodyRowsRef` 不给它上 thinking 锚点 ⇒ Viewport 的
+// `thinkingLineTextProps` 只判 anchor.kind,于是展开态被截断时紫底块最后一行透明。
+// 摘掉 transcriptLines.js 里那一行 `bodyRows.push(rows.length)` 立刻红。
+test('回归锚点: 除头行外每一行(含截断标记)都在 bodyRows 里', () => {
+  const src = Array.from({ length: STREAM_THINKING_BODY_CAP + 5 }, (_, i) => 'L' + i);
+  for (const opts of [
+    { bodyLines: src },
+    { bodyLines: src, truncated: true },
+    { bodyLines: ['a'], truncated: true },
+  ]) {
+    const out = buildStreamThinkingExpansion(opts);
+    assert.deepStrictEqual(
+      out.bodyRows,
+      out.rows.map((_, i) => i).slice(1),
+      `截断标记行必须带底色: ${JSON.stringify(opts)}`
+    );
+  }
+});
+
+test('流式思考展开态: 两套下标不重叠、严格升序、全部落在 rows 内', () => {
+  const src = Array.from({ length: STREAM_THINKING_BODY_CAP + 5 }, (_, i) => 'L' + i);
+  const out = buildStreamThinkingExpansion({ bodyLines: src });
+  assert.deepStrictEqual(out.anchorRows, [0], '头行是唯一锚点');
+  assert.ok(!out.bodyRows.includes(0), '头行不得同时是正文行');
+  for (let i = 1; i < out.bodyRows.length; i++) {
+    assert.ok(out.bodyRows[i] > out.bodyRows[i - 1], 'bodyRows 严格升序且无重复');
+  }
+  for (const r of [...out.anchorRows, ...out.bodyRows]) {
+    assert.ok(r >= 0 && r < out.rows.length, `下标 ${r} 必须落在 rows 内`);
+  }
+});
+
+test('流式思考展开态: 垃圾输入不抛, 只可能多一行截断标记', () => {
+  const cases = [
+    undefined,
+    {},
+    { bodyLines: null, truncated: true },
+    { bodyLines: 'not an array' },
+    { bodyLines: [undefined, null, 7, true] },
+    {
+      bodyLines: [
+        {
+          get boom() {
+            throw new Error('boom');
+          },
+        },
+      ],
+    },
+  ];
+  for (const c of cases) {
+    const out = buildStreamThinkingExpansion(c);
+    assert.ok(Array.isArray(out.rows) && out.rows.length >= 1, '至少保住了头行');
+    assert.equal(out.rows[0], '  思考');
+  }
+});
+
+// 回归锚点(欠账 4):`hidden` 曾是返回值里的死字段 —— JSDoc 承诺它是「给调用方的
+// 预算回执」,但全仓没有任何读者(App.js 只取 rows/anchorRows/bodyRows)。
+// 已删除:谁要显示「还有 N 行未展开」就必须重新加回字段**并**配 SSOT 文案。
+test('回归锚点: 返回值不含 hidden 死字段', () => {
+  const out = buildStreamThinkingExpansion({ bodyLines: ['a', 'b'], truncated: true });
+  assert.ok(!('hidden' in out), 'hidden 已删除, 不得以任何形态复活');
+  assert.deepStrictEqual(Object.keys(out).sort(), ['anchorRows', 'bodyRows', 'rows']);
 });
