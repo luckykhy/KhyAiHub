@@ -1,5 +1,7 @@
+// khy-canary: Khy-20261102-305-B9XYSFJD
 import { useState } from 'react'
 import { MarkdownRenderer } from '../message/MarkdownRenderer'
+import { Icon } from '../ui/Icon'
 
 // 辅助对话 tab body (sidePane.selectionChat, ZC-ALIGN-003). A compact chat
 // surface riding the same ai:send host bridge as the main Composer — typed
@@ -83,8 +85,8 @@ export function SelectionChatPane() {
       <div className="flex-1 overflow-auto px-3 py-3">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-6 animate-fade-in">
-            <span className="text-3xl mb-3">✎</span>
-            <p className="text-sm text-foreground/50">
+            <Icon name="new-task" size={28} className="mb-3 text-foreground-muted" />
+            <p className="text-sm text-foreground-muted">
               辅助对话与主会话共用同一网关；发送的内容不会进入主对话上下文。
             </p>
           </div>
@@ -107,7 +109,7 @@ export function SelectionChatPane() {
               <div className="flex justify-start">
                 <div className="flex items-center gap-2 rounded-xl bg-card border border-card-border px-3 py-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
-                  <span className="text-xs text-foreground/50">正在等待 KhyOS 网关回复（host 已加载 aiGateway，多通道重试中）…</span>
+                  <span className="text-xs text-foreground-muted">正在等待 KhyOS 网关回复（host 已加载 aiGateway，多通道重试中）…</span>
                 </div>
               </div>
             )}
@@ -130,7 +132,7 @@ export function SelectionChatPane() {
             placeholder="提出后续修改要求"
             rows={2}
             disabled={sending}
-            className="flex-1 resize-none bg-input border border-input-border rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-input-border-focused transition-colors disabled:opacity-50"
+            className="flex-1 resize-none bg-input border border-input-border rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-input-border-focused transition-colors disabled:opacity-50"
           />
           {sending ? (
             <button

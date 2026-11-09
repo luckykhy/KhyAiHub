@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-310-19HAS183
 import { useCallback, useEffect, useState } from 'react'
 
 // ── Reusable list settings page (Pattern B, ZC-ALIGN-003 §2 → P13 真实化) ──
@@ -14,8 +15,14 @@ interface AgentItem {
   content: string
   enabled: boolean
   source: string
+  sourceLabel?: string
   createdAt: number
   updatedAt: number
+  // Terminal-discovered rows may be read-only (built-in / bridged) or not
+  // support per-row toggling at all — hide controls instead of failing later.
+  readOnly?: boolean
+  toggleable?: boolean
+  deletable?: boolean
 }
 
 interface KhyosAgentApi {
@@ -39,6 +46,9 @@ interface ListSettingsPageProps {
   // Field labels for the 新建 form (e.g. 命令内容 / 钩子脚本 / 记忆内容)
   contentLabel: string
   contentPlaceholder?: string
+  // Section heading + empty title (记忆库 reads better than 已安装记忆)
+  installedLabel?: string
+  emptyLabel?: string
 }
 
 export function ListSettingsPage({
@@ -48,6 +58,8 @@ export function ListSettingsPage({
   importable = true,
   contentLabel,
   contentPlaceholder,
+  installedLabel = '已安装',
+  emptyLabel,
 }: ListSettingsPageProps) {
   const [items, setItems] = useState<AgentItem[] | null>(null)
   const [loadError, setLoadError] = useState('')
@@ -178,7 +190,7 @@ export function ListSettingsPage({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={`搜索${noun}…`}
-          className="bg-input border border-input-border rounded-lg px-3 py-1.5 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-input-border-focused w-56"
+          className="bg-input border border-input-border rounded-lg px-3 py-1.5 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-input-border-focused w-56"
         />
       </div>
 
@@ -201,7 +213,7 @@ export function ListSettingsPage({
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm font-medium text-foreground/70">
-            已安装 <span className="text-foreground/40">{items ? items.length : '…'}</span>
+            {installedLabel} <span className="text-foreground-muted">{items ? items.length : '…'}</span>
           </span>
           <div className="flex items-center gap-2">
             <button
@@ -227,15 +239,15 @@ export function ListSettingsPage({
           </div>
         </div>
         {items === null && !loadError ? (
-          <div className="bg-card border border-card-border rounded-xl p-8 text-center text-sm text-foreground/50">
+          <div className="bg-card border border-card-border rounded-xl p-8 text-center text-sm text-foreground-muted">
             读取{noun}列表中…
           </div>
         ) : rows.length === 0 ? (
           <div className="bg-card border border-card-border rounded-xl p-8 text-center">
-            <p className="text-sm text-foreground/50 mb-2">
-              {search ? `没有匹配搜索的${noun}` : `尚未安装${noun}`}
+            <p className="text-sm text-foreground-muted mb-2">
+              {search ? `没有匹配搜索的${noun}` : emptyLabel || `尚未安装${noun}`}
             </p>
-            <p className="text-xs text-foreground/40">{description}</p>
+            <p className="text-xs text-foreground-muted">{description}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -271,7 +283,7 @@ export function ListSettingsPage({
           </button>
         )}
         {pendingAction && (
-          <span className="text-xs text-foreground/50">{pendingAction}</span>
+          <span className="text-xs text-foreground-muted">{pendingAction}</span>
         )}
       </div>
 
@@ -307,19 +319,29 @@ function ItemCard({ item, noun, expanded, onDetail, onToggle, onDelete }: {
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const imported = item.source.startsWith('imported:')
+  const showToggle = item.toggleable !== false && !item.readOnly
+  const showDelete = item.deletable !== false && !item.readOnly
   return (
     <div className="bg-card border border-card-border rounded-xl p-4">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${item.enabled ? 'bg-success' : 'bg-foreground/30'}`} />
+            {showToggle && (
+              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${item.enabled ? 'bg-success' : 'bg-foreground/30'}`} />
+            )}
             <span className="text-sm font-mono font-medium text-foreground">{item.name}</span>
+            {item.sourceLabel && (
+              <span className="px-1.5 py-0.5 text-xs rounded bg-surface text-foreground-muted">{item.sourceLabel}</span>
+            )}
             {imported && (
-              <span className="px-1.5 py-0.5 text-xs rounded bg-surface text-foreground/50">已导入</span>
+              <span className="px-1.5 py-0.5 text-xs rounded bg-surface text-foreground-muted">已导入</span>
+            )}
+            {item.readOnly && (
+              <span className="px-1.5 py-0.5 text-xs rounded bg-surface text-foreground-muted">只读</span>
             )}
           </div>
           {item.description && (
-            <p className="text-xs text-foreground/50">{item.description}</p>
+            <p className="text-xs text-foreground-muted">{item.description}</p>
           )}
           {expanded && item.content && (
             <pre className="mt-2 p-3 bg-surface border border-card-border rounded-lg text-xs text-foreground/70 whitespace-pre-wrap break-words max-h-64 overflow-y-auto">
@@ -328,7 +350,7 @@ function ItemCard({ item, noun, expanded, onDetail, onToggle, onDelete }: {
           )}
           {confirmDelete && (
             <div className="mt-2 flex items-center gap-2 text-xs">
-              <span className="text-foreground/60">删除后不可恢复，确认删除？</span>
+              <span className="text-foreground-muted">删除后不可恢复，确认删除？</span>
               <button
                 onClick={() => onDelete(item.id, item.name)}
                 className="px-2 py-1 rounded bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
@@ -337,7 +359,7 @@ function ItemCard({ item, noun, expanded, onDetail, onToggle, onDelete }: {
               </button>
               <button
                 onClick={() => setConfirmDelete(false)}
-                className="px-2 py-1 rounded text-foreground/60 hover:text-foreground transition-colors"
+                className="px-2 py-1 rounded text-foreground-muted hover:text-foreground transition-colors"
               >
                 取消
               </button>
@@ -347,31 +369,35 @@ function ItemCard({ item, noun, expanded, onDetail, onToggle, onDelete }: {
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={onDetail}
-            className="px-2 py-1 text-xs text-foreground/60 hover:text-foreground hover:bg-surface-hover rounded transition-colors"
+            className="px-2 py-1 text-xs text-foreground-muted hover:text-foreground hover:bg-surface-hover rounded transition-colors"
           >
             {expanded ? '收起' : '详情'}
           </button>
-          <button
-            onClick={() => onToggle(item.id, !item.enabled)}
-            className={`relative w-9 h-5 rounded-full transition-colors ${
-              item.enabled ? 'bg-brand' : 'bg-foreground/20'
-            }`}
-            role="switch"
-            aria-checked={item.enabled}
-            aria-label={`${item.enabled ? '停用' : '启用'}${noun} ${item.name}`}
-          >
-            <span
-              className={`absolute left-0.5 top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
-                item.enabled ? 'translate-x-4' : 'translate-x-0'
+          {showToggle && (
+            <button
+              onClick={() => onToggle(item.id, !item.enabled)}
+              className={`relative w-9 h-5 rounded-full transition-colors ${
+                item.enabled ? 'bg-brand' : 'bg-foreground/20'
               }`}
-            />
-          </button>
-          <button
-            onClick={() => setConfirmDelete(true)}
-            className="px-2 py-1 text-xs text-foreground/60 hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
-          >
-            删除
-          </button>
+              role="switch"
+              aria-checked={item.enabled}
+              aria-label={`${item.enabled ? '停用' : '启用'}${noun} ${item.name}`}
+            >
+              <span
+                className={`absolute left-0.5 top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
+                  item.enabled ? 'translate-x-4' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          )}
+          {showDelete && (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="px-2 py-1 text-xs text-foreground-muted hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
+            >
+              删除
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -397,7 +423,7 @@ function CreateItemDialog({ noun, contentLabel, contentPlaceholder, onClose, onS
       <div className="relative w-full max-w-md bg-popover border border-popover-border rounded-2xl shadow-2xl overflow-hidden animate-slide-down">
         <div className="px-6 py-4 border-b border-popover-border">
           <h3 className="text-base font-semibold text-popover-foreground">新建{noun}</h3>
-          <p className="text-xs text-foreground/50 mt-1">名称必填，保存后在本页管理</p>
+          <p className="text-xs text-foreground-muted mt-1">名称必填，保存后在本页管理</p>
         </div>
         <div className="px-6 py-4 space-y-4">
           <div>
@@ -406,7 +432,7 @@ function CreateItemDialog({ noun, contentLabel, contentPlaceholder, onClose, onS
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={`例如 my-${noun}`}
-              className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-input-border-focused"
+              className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-input-border-focused"
             />
           </div>
           <div>
@@ -415,7 +441,7 @@ function CreateItemDialog({ noun, contentLabel, contentPlaceholder, onClose, onS
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="一句话说明用途"
-              className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-input-border-focused"
+              className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-input-border-focused"
             />
           </div>
           <div>
@@ -425,21 +451,21 @@ function CreateItemDialog({ noun, contentLabel, contentPlaceholder, onClose, onS
               onChange={(e) => setContent(e.target.value)}
               rows={5}
               placeholder={contentPlaceholder || `在此填写${noun}内容`}
-              className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm font-mono text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-input-border-focused resize-none"
+              className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm font-mono text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-input-border-focused resize-none"
             />
           </div>
         </div>
         <div className="px-6 py-4 border-t border-popover-border flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-foreground/60 hover:text-foreground rounded-lg hover:bg-surface-hover transition-colors"
+            className="px-4 py-2 text-sm text-foreground-muted hover:text-foreground rounded-lg hover:bg-surface-hover transition-colors"
           >
             取消
           </button>
           <button
             onClick={() => onSubmit(name, description, content)}
             disabled={!valid}
-            className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium disabled:opacity-50 hover:opacity-90 transition-opacity"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium disabled:opacity-50 hover:opacity-90 transition-opacity"
           >
             保存
           </button>
@@ -463,7 +489,7 @@ function ImportTextDialog({ noun, contentLabel, onClose, onSubmit }: {
       <div className="relative w-full max-w-md bg-popover border border-popover-border rounded-2xl shadow-2xl overflow-hidden animate-slide-down">
         <div className="px-6 py-4 border-b border-popover-border">
           <h3 className="text-base font-semibold text-popover-foreground">导入{noun}</h3>
-          <p className="text-xs text-foreground/50 mt-1">粘贴 JSON 数组，形如 [{`{ "name": "…", "content": "…" }`}]</p>
+          <p className="text-xs text-foreground-muted mt-1">粘贴 JSON 数组，形如 [{`{ "name": "…", "content": "…" }`}]</p>
         </div>
         <div className="px-6 py-4">
           <textarea
@@ -471,20 +497,20 @@ function ImportTextDialog({ noun, contentLabel, onClose, onSubmit }: {
             onChange={(e) => setText(e.target.value)}
             rows={6}
             placeholder={`[{"name":"my-item","content":"${contentLabel}内容"}]`}
-            className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm font-mono text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-input-border-focused resize-none"
+            className="w-full bg-input border border-input-border rounded-lg px-3 py-2 text-sm font-mono text-foreground placeholder:text-foreground-muted focus:outline-none focus:border-input-border-focused resize-none"
           />
         </div>
         <div className="px-6 py-4 border-t border-popover-border flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-foreground/60 hover:text-foreground rounded-lg hover:bg-surface-hover transition-colors"
+            className="px-4 py-2 text-sm text-foreground-muted hover:text-foreground rounded-lg hover:bg-surface-hover transition-colors"
           >
             取消
           </button>
           <button
             onClick={() => onSubmit(text)}
             disabled={!text.trim()}
-            className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium disabled:opacity-50 hover:opacity-90 transition-opacity"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium disabled:opacity-50 hover:opacity-90 transition-opacity"
           >
             导入
           </button>

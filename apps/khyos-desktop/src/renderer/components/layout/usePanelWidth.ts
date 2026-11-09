@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-292-FVSP9JEH
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 // Panel width persistence + drag-resize (workspaceSidebar.resizeSidebar /

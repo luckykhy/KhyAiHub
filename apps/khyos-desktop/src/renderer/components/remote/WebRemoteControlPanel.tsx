@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-304-16Y4PQ8N
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { addToast } from '../../state/toastSlice'
@@ -176,13 +177,13 @@ export function WebRemoteControlPanel() {
     <div className="space-y-5">
       {/* 控制对象：桌面窗口自己的工作区 vs 本机 CLI 会话（bridge） */}
       <div className="flex items-center gap-2 text-sm">
-        <span className="text-foreground/50">控制对象</span>
+        <span className="text-foreground-muted">控制对象</span>
         {(['workspace', 'cli'] as const).map((k) => (
           <button
             key={k}
             onClick={() => setTarget(k)}
             className={`px-3 py-1.5 rounded-lg transition-colors ${
-              target === k ? 'bg-selected text-foreground' : 'text-foreground/60 hover:bg-surface-hover'
+              target === k ? 'bg-selected text-foreground' : 'text-foreground-muted hover:text-foreground hover:bg-surface-hover'
             }`}
           >
             {k === 'workspace' ? '桌面工作区' : '后端 CLI 会话'}
@@ -192,7 +193,7 @@ export function WebRemoteControlPanel() {
 
       {target === 'cli' ? (
         <div className="space-y-3">
-          <p className="text-xs text-foreground/50">
+          <p className="text-xs text-foreground-muted">
             CLI 档由本机 <code>khy bridge</code> 服务承载：桌面端不代它启动，也拿不到它打印在终端里的 PIN。
           </p>
           <button
@@ -205,13 +206,13 @@ export function WebRemoteControlPanel() {
           {bridge?.found && (
             <div className="text-sm text-foreground/80">
               <div>bridge 可达 · {bridge.url}</div>
-              <div className="text-xs text-foreground/50 mt-1">
+              <div className="text-xs text-foreground-muted mt-1">
                 在手机上打开上面的地址；PIN 由终端侧签发，请在 CLI 窗口查看。
               </div>
             </div>
           )}
           {bridge && !bridge.found && (
-            <div className="text-sm text-foreground/60">{bridge.error}</div>
+            <div className="text-sm text-foreground-muted">{bridge.error}</div>
           )}
         </div>
       ) : (
@@ -243,7 +244,7 @@ export function WebRemoteControlPanel() {
                 <span className="px-2 py-0.5 rounded-full bg-brand/15 text-brand text-xs">手机 · {status.role}</span>
               )}
               {status.forwardedEvents ? (
-                <span className="text-xs text-foreground/40">已转发 {status.forwardedEvents} 条事件</span>
+                <span className="text-xs text-foreground-muted">已转发 {status.forwardedEvents} 条事件</span>
               ) : null}
             </div>
             <div className="text-sm text-foreground/70">{status.detail}</div>
@@ -257,12 +258,12 @@ export function WebRemoteControlPanel() {
                     className="w-40 h-40 rounded-lg bg-white p-2"
                   />
                 ) : (
-                  <div className="w-40 h-40 rounded-lg bg-surface-hover flex items-center justify-center text-xs text-foreground/40">
+                  <div className="w-40 h-40 rounded-lg bg-surface-hover flex items-center justify-center text-xs text-foreground">
                     正在准备二维码…
                   </div>
                 )}
                 <div className="flex-1 min-w-0 space-y-2">
-                  <div className="text-xs text-foreground/50">远程控制链接</div>
+                  <div className="text-xs text-foreground-muted">远程控制链接</div>
                   <div className="text-sm break-all text-foreground/80">
                     {status.url || '远程控制链接就绪后会显示在这里。'}
                   </div>
@@ -277,7 +278,7 @@ export function WebRemoteControlPanel() {
                       刷新二维码
                     </button>
                   </div>
-                  <p className="text-xs text-foreground/40">
+                  <p className="text-xs text-foreground-muted">
                     无法扫码？可以在手机上打开链接。同一时间只支持一个手机页面；如果已经在别的页面打开，请先关闭旧页面。
                   </p>
                 </div>
@@ -287,7 +288,7 @@ export function WebRemoteControlPanel() {
             {confirmRefresh && (
               <div className="border border-card-border rounded-lg p-3 text-sm space-y-2">
                 <div className="font-medium">刷新二维码？</div>
-                <div className="text-xs text-foreground/50">
+                <div className="text-xs text-foreground-muted">
                   刷新后，之前复制或扫码得到的远程控制链接将失效，已连接的手机需要重新扫码。
                 </div>
                 <div className="flex gap-2">
@@ -320,7 +321,7 @@ export function WebRemoteControlPanel() {
                   </button>
                   <button
                     onClick={() => decide(p.pairingId, 'reject')}
-                    className="px-2 py-1 rounded-lg border border-card-border text-xs text-foreground/60"
+                    className="px-2 py-1 rounded-lg border border-card-border text-xs text-foreground-muted"
                   >
                     拒绝
                   </button>
@@ -339,7 +340,7 @@ export function WebRemoteControlPanel() {
                   </span>
                   <button
                     onClick={() => void api()?.remoteRevoke(d.deviceId).then(pull)}
-                    className="px-2 py-1 rounded-lg border border-card-border text-xs text-foreground/60"
+                    className="px-2 py-1 rounded-lg border border-card-border text-xs text-foreground-muted"
                   >
                     撤销
                   </button>
@@ -348,7 +349,7 @@ export function WebRemoteControlPanel() {
             </div>
           )}
 
-          <p className="text-xs text-foreground/40">
+          <p className="text-xs text-foreground-muted">
             工具执行权限始终由桌面端判定，手机只能转达同意或拒绝。外网 relay 档未实现，见 ZC-ALIGN-002 M3 回填。
           </p>
         </>
