@@ -87,8 +87,14 @@ function fixPointer(issue) {
       continue;
     }
     if (m.key === 'projectDataHome') {
-      // 项目数据家随便携目录走：兜底指回当前便携根下的 .khy。
-      const fallback = path.join(ROOT, '.khy');
+      // 项目数据家随便携目录走：兜底指回**当前**便携根下的项目数据家。
+      // ⚠ 2026-10-24 修 BUG-018：原兜底是 `path.join(ROOT, '.khy')` ——
+      //   那是 B 档 W9′（2026-10-02）**之前**的旧落点，迁移后解析器已不再用它。
+      //   继续指过去 = 写出一个解析器不认的空指针，把真实数据家架空
+      //   （症状：指针钉在空壳，真实数据脱离指针引用）。
+      //   现落点与 dataHome.getProjectDataHome() 的 appDefault 保持一致：
+      //   <root>/works/data/khy（utils → src → backend → node → runtime → root）。
+      const fallback = path.join(ROOT, 'works', 'data', 'khy');
       try {
         fs.mkdirSync(fallback, { recursive: true });
         dh._writePointer({ projectDataHome: fallback, projectSource: 'repair', projectPinnedReason: 'repair-recalibrate' });
@@ -110,7 +116,11 @@ function fixPointer(issue) {
 /** 冷启动提速：Defender 排除提示（只提示，绝不代改——改杀软排除是用户安全决策）
  *  + 一次性预热（跑一遍完整 require 链，让 V8 编译缓存与 OS 文件缓存就位）。
  *  实测（2026-10-04，DESIGN-PERF-006）：同一命令冷启动 ~13.8s vs 热启动 ~0.8s，
- *  差值主体是实时扫描；预热把「第一次 13.8s」摊到装机/修复时刻。 */
+ *  差值主体是实时扫描；预热把「第一次 13.8s」摊到装机/修复时刻。
+ *  2026-10-10（DESIGN-PERF-007 §2.4）补 TUI 装载链：`khy status` 只走 CJS 图，
+ *  **不装载 ink**——而 ink ESM 冷装载实测 16.4s（OS 文件缓存冷时）/ 1.2s（编译
+ *  缓存冷、文件缓存热），是交互启动最大的单项。只预热 status 等于把这一项
+ *  原样留给用户的第一次 `khy`。 */
 function warmupAndHint() {
   _log('');
   _log('── 启动提速（可选）──');
@@ -122,15 +132,26 @@ function warmupAndHint() {
     if (!fs.existsSync(entry)) {
       return; // 入口缺失（老版本布局）→ 跳过预热，不影响修复结果
     }
-    _log('正在预热（跑一遍完整加载链，写编译缓存）...');
-    const r = spawnSync(process.execPath, [entry, 'status'], {
-      stdio: 'ignore',
-      timeout: 60000,
-      windowsHide: true,
-    });
-    if (!r.error) {
-      _log('预热完成，下次启动更快。');
+    const backendDir = path.dirname(entry);
+    const warmups = [
+      { label: '命令图', args: [entry, 'status'] },
+      // 与 bin/khy.js 同条件开编译缓存再 import('ink')：否则预热带写不进字节码缓存，
+      // 只热了文件缓存，编译那一段第一次启动照样付。
+      { label: 'TUI 渲染引擎', args: ['-e', "require('module').enableCompileCache(); import('ink')"], cwd: backendDir },
+    ];
+    for (const w of warmups) {
+      _log(`正在预热 ${w.label}（跑一遍完整加载链，写编译缓存）...`);
+      const r = spawnSync(process.execPath, w.args, {
+        stdio: 'ignore',
+        timeout: 60000,
+        windowsHide: true,
+        cwd: w.cwd,
+      });
+      if (r.error && r.error.code !== 'ETIMEDOUT') {
+        _log(`${w.label} 预热跳过（${r.error.code || r.error.message}），不影响修复结果。`);
+      }
     }
+    _log('预热完成，下次启动更快。');
   } catch { /* 预热失败不影响修复结果 */ }
 }
 

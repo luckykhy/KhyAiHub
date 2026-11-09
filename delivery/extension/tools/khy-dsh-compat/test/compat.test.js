@@ -67,3 +67,37 @@ test('rejects unsupported services and direct model access', () => {
   assert.throws(() => scanSource(['const key = process.env.DEMO_API_KEY'], { inject: ['tools'] }), /模型密钥/);
   assert.throws(() => scanSource(['fetch("https://example.invalid")'], { inject: ['tools'] }), /直接网络访问/);
 });
+
+test('reads host inject from the DSH bundle patch, not only package.json', () => {
+  const { declaredInject, scanSource } = require('../lib/importPlugin');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'khy-dsh-patch-'));
+  tempDirs.push(dir);
+  fs.writeFileSync(path.join(dir, 'cordis.patch.yml'), [
+    '- id: demo',
+    '  name: demo',
+    '  inject: [systemPrompt, tools]',
+    '- id: other',
+    '  inject:',
+    '    - logger',
+  ].join('\n'));
+  const pkg = { dsh: { bundle: { patch: './cordis.patch.yml' } } };
+  const inject = declaredInject(pkg, dir);
+  assert.deepEqual([...inject.host].sort(), ['logger', 'systemPrompt', 'tools']);
+  assert.throws(() => scanSource(['export function apply(ctx) {}'], pkg, { root: dir }), /systemPrompt/);
+});
+
+test('network access needs an explicit --allow-network approval and is recorded', () => {
+  const { scanSource } = require('../lib/importPlugin');
+  const pkg = { inject: ['tools'] };
+  assert.throws(() => scanSource(['fetch("https://example.invalid")'], pkg), /--allow-network/);
+  const scan = scanSource(['fetch("https://example.invalid")'], pkg, { allowNetwork: true });
+  assert.equal(scan.network, true);
+});
+
+test('model-key access is never waived by --allow-network', () => {
+  const { scanSource } = require('../lib/importPlugin');
+  assert.throws(
+    () => scanSource(['const key = process.env.DEMO_API_KEY'], { inject: ['tools'] }, { allowNetwork: true }),
+    /模型密钥/,
+  );
+});

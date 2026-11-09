@@ -28,5 +28,5 @@
       "entry": "start_qoder_bridge.ps1"
     }
   ],
-  "_note": "两个 PowerShell 脚本，commands 字段列出这些入口脚本。保留 manifest 是为了让这个目录「说得清自己是什么」（§2.3 的「既不是拓展也不是分类目录」会报没有 manifest 的目录）。\n\n2026-09-08 补齐 v2.0 契约的 commands[].script（toolchain 入口真源，check-repo-layout 核对磁盘存在性）。命令此前只写 entry 没写 script —— 与 khy-alpine-iso 同一批漏项，说明这批 manifest 是 2026-08-19 迁目录时按 v1 习惯写的。entry 保留为冗余别名。"
+  "_note": "两个 PowerShell 入口脚本（start_qoder_bridge.ps1 / install_autostart.ps1）+ 一个 Python HTTP 服务（qoder_bridge.py，被 start-bridge 命令通过 pythonw 拉起监听本机回环端口，默认 3000、由 QODER_BRIDGE_PORT 覆盖，把 OpenAI /v1/chat/completions 翻译为 qodercli 子进程调用）。commands 字段只列出 ps1 入口。保留 manifest 是为了让这个目录「说得清自己是什么」（§2.3 的「既不是拓展也不是分类目录」会报没有 manifest 的目录）。\n\n2026-09-08 补齐 v2.0 契约的 commands[].script（toolchain 入口真源，check-repo-layout 核对磁盘存在性）。命令此前只写 entry 没写 script —— 与 khy-alpine-iso 同一批漏项，说明这批 manifest 是 2026-08-19 迁目录时按 v1 习惯写的。entry 保留为冗余别名。\n\n2026-10-20 补回 qoder_bridge.py（此前缺失，导致 start 脚本能拉起 pythonw 但默认端口没人监听；本批更新与 IMPL-RPT-041 §4.1 对齐：12 模型目录、auto 默认透传、300s 超时、QODERCLI_PATH / QODER_BRIDGE_PORT 双 env 覆盖）。_note 第一句从「两个 PowerShell 脚本」改为本条三件套清单。"
 }

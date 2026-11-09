@@ -38,6 +38,11 @@ const { spawn, spawnSync } = require('child_process');
 
 const HTML_NAME = 'khyosMarkdown.html';
 const VENDOR_DIR_NAME = 'vendor';
+// Ollama 默认端口 —— **授权镜像**：delivery/extension 是独立交付层，不能跨层
+// require 后端常量（LAYOUT 跨层 require 红线）。故此处具名声明并登记到
+// docs/10_规范/registry/DATA-SSOT.json，由守卫强制与后端真源锁步 ——
+// 端口一变就会红，而不是让用户对着一个连不上的地址发问。
+const OLLAMA_DEFAULT_PORT = 11434;
 const READABLE_EXT = new Set(['.md', '.markdown', '.mdown', '.mkd', '.txt', '.text']);
 
 // 静态资产的 content-type（muya 自打包产物：JS/CSS + 内联的字体/图，通常只有 .js/.css/.json，
@@ -515,7 +520,7 @@ function _callGateway(prompt, port) {
 function _callOllama(prompt) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify({ model: 'qwen2.5', prompt, stream: false });
-    const req = http.request({ hostname: '127.0.0.1', port: 11434, path: '/api/generate', method: 'POST',
+    const req = http.request({ hostname: '127.0.0.1', port: OLLAMA_DEFAULT_PORT, path: '/api/generate', method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) } }, (res) => {
       let body = '';
       res.on('data', (c) => body += c);

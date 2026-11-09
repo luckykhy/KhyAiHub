@@ -1,0 +1,298 @@
+{
+  "$schemaVersion": "1.0.0",
+  "$artifact": "khyos 外部生态市场编目 · Claude Code 生态",
+  "$source": "2026-10-29 六生态勘察与映射收敛（市场设计工作流产物，未入仓）；逐条上游出处以各 entry.upstreamUrl 为准",
+  "$status": "active",
+  "eco": "claude-code",
+  "surveyedAt": "2026-10-29",
+  "_note": "Claude Code 生态编目：18 条、0 blocked，收敛自 claude-code 映射 entries 数组（映射 blocked 为空）。要点：三条 CC 专用桥（ccSkillBridge/ccMcpBridge/ccAgentBridge，均 default-on）使 CC 本机态资产可被 khyos 直接发现，但那条路不落在三个市场内；marketplace.json/plugin.json/hooks 配置属 Claude 专有形态判 adapter-needed；anthropics/skills 与 playwright/serena/skill-creator 等 license 为 unknown，只作 reference 或本机态安装。另：映射材料中七条市场清单条目的 targetPath 原写 delivery/extension/market/，已按本批落点裁决改为 delivery/market/catalogs/claude-code.json 内本条目。",
+  "marketplaces": [
+    {
+      "name": "anthropics/claude-plugins-official",
+      "url": "https://github.com/anthropics/claude-plugins-official",
+      "kind": "marketplace.json 清单（顶层 name/owner/plugins[]、7 种 source 形态、renames 旧名迁移映射）",
+      "note": "清单 JSON 两次抓取均被截断，真实总数未查实（站点口径 527 未逐条核）"
+    },
+    {
+      "name": "anthropics/claude-plugins-community",
+      "url": "https://github.com/anthropics/claude-plugins-community",
+      "kind": "marketplace.json 清单（只读镜像、提交走网页表单）",
+      "note": "清单抓取在字母 a 段被截断，条目总数未查实"
+    },
+    {
+      "name": "obra/superpowers-marketplace",
+      "url": "https://github.com/obra/superpowers-marketplace",
+      "kind": "市场清单（10 个条目全带 version 与 strict 字段）",
+      "note": "各插件许可证自理"
+    },
+    {
+      "name": "davepoon/buildwithclaude",
+      "url": "https://github.com/davepoon/buildwithclaude",
+      "kind": "聚合 hub 市场清单（source 三形态：仓内相对路径 / git-subdir / github）",
+      "note": "README 计数（51 plugins/117 agents/175 commands/28 hooks/26 skills）与清单条目数口径不一，以清单为准；清单抓取在 auten 处截断"
+    },
+    {
+      "name": "ananddtyagi/cc-marketplace",
+      "url": "https://github.com/ananddtyagi/cc-marketplace",
+      "kind": "市场清单 + PLUGIN_SCHEMA.md + 两个 Python 校验器",
+      "note": "README 计数（10 命令 + 5 agent）与市场总条目数口径不一（unknown）"
+    },
+    {
+      "name": "wshobson/agents",
+      "url": "https://github.com/wshobson/agents",
+      "kind": "多 harness 市场清单（94 插件 / 202 agents / 185 skills / 105 commands）",
+      "note": "同时被 opencode 与 aggregators 两生态收录，跨生态去重关系见 index.json crossEco"
+    },
+    {
+      "name": "davila7/claude-code-templates",
+      "url": "https://github.com/davila7/claude-code-templates",
+      "kind": "npx 配置类 CLI（站 aitmpl.com）",
+      "note": "模板索引自称覆盖 100+ agents/commands/settings/hooks/MCPs，未逐条核"
+    }
+  ],
+  "entries": [
+    {
+      "name": "anthropics/claude-plugins-official",
+      "upstreamUrl": "https://github.com/anthropics/claude-plugins-official",
+      "type": "plugin",
+      "khyosMarket": "none",
+      "targetPath": "delivery/market/catalogs/claude-code.json 内本条目（扁平纯 JSON 编目记录；不得为每个插件建子目录）",
+      "compat": "adapter-needed",
+      "compatNote": "marketplace.json 是 Claude 专有格式（顶层 name/owner/plugins[]、7 种 source 形态、renames 旧名迁移映射），khyos 无对应加载器，需写转换器把每个条目分发到三个市场：plugins/<名>/skills/ 里的 SKILL.md 落 skill 市场（装在 CC 侧还会被 ccSkillBridge 直接发现，runtime/node/backend/src/skills/ccSkillBridge.js:58-85）；.mcp.json 与 khyos mcp.json 的 mcpServers 映射逐字节同形（runtime/node/backend/src/services/domain/messaging/mcp/ccMcpBridge.js:78）可直接搬；其余插件目录要被 extensionRoots.discover() 认，必须补 khy.extension.json / openclaw.plugin.json / package.json#khy 三种 manifest 之一（runtime/node/backend/src/services/domain/extensions/extensions/extensionManifest.js:19-22,112-118），.claude-plugin/plugin.json 不在其列。另：条目 slug 与 khyos 拓展 id=叶子目录名的规则不同（check-repo-layout.js:891），需一张名称映射表；编目自身 ≥170 条可见但清单 JSON 两次抓取均被截断，真实总数未查实（站点口径 527 未逐条核）。",
+      "license": "Apache-2.0",
+      "relationship": "reference",
+      "agentScope": ["claude-code"],
+      "what": "Claude 官方插件市场（marketplace.json，7 种 source 形态）：需转换器才能进 khyos，条目总数抓取被截断未查实。"
+    },
+    {
+      "name": "anthropics/skills",
+      "upstreamUrl": "https://github.com/anthropics/skills",
+      "type": "skill",
+      "khyosMarket": "skill",
+      "targetPath": "works/data/khy/skills/<skill-name>/SKILL.md（项目态；用户态 ~/.khy/skills/，发现链见 skillLoader.js:162-181）；装法 khy skill add anthropics/skills --skill skills/<name>",
+      "compat": "direct",
+      "compatNote": "SKILL.md + YAML frontmatter 是跨智能体通用形态，khyos 解析器与 CC 逐字节兼容（ccSkillBridge.js:16-19 原话 ALREADY byte-compatible），frontmatter 缺 version/layer/lifecycle 等不阻断解析——无 frontmatter 时退回目录名（skillLoader.js:44-52），有则原样收任意键（skillLoader.js:65-151）；khyos 自己的标准头注释就把 claude-code 列为 platforms 合法值（skillLoader.js:13）。两个坑：① 19 个 skill 目录全部在 skills/ 子目录下（仓库根层只有 .claude-plugin/skills/spec/template/.gitignore/README.md/THIRD_PARTY_NOTICES.md，github.com 页面与 API contents 双证），khy skill add 的容器目录候选序为 ['', 'skill', 'skills', '.skills'] 四个、含克隆根本身（skillSourceSpec.js:248），不带 --skill 会报「仓库含多个 skill」并列候选（skillInstallService.js:148-154），必须逐技能以 --skill skills/<name> 指定；② 许可证是硬伤：仓库整体 unknown，docx/pdf/pptx/xlsx 四个技能实测 frontmatter 写 license: Proprietary（B 档 source-available，check-license-tiers.js 判 warning 需提案复核），不能 vendored 进仓，只能装进被 gitignore 的本机态目录或作参考。",
+      "license": "unknown",
+      "relationship": "reference",
+      "agentScope": ["claude-code", "aggregators"],
+      "what": "Anthropic 官方技能仓（19 个 SKILL.md）：与 khyos 逐字节兼容，但 license unknown，四技能 Proprietary。"
+    },
+    {
+      "name": "anthropics/knowledge-work-plugins",
+      "upstreamUrl": "https://github.com/anthropics/knowledge-work-plugins",
+      "type": "plugin",
+      "khyosMarket": "extension",
+      "targetPath": "delivery/extension/software/<plugin-name>/（manifest 改写为 khy.extension.json）+ 其 skills/ 拆至 works/data/khy/skills/、.mcp.json 拆至 works/data/khy/mcp.json",
+      "compat": "adapter-needed",
+      "compatNote": "每插件是混合包（.claude-plugin/plugin.json + .mcp.json + commands/ + skills/），khyos 没有「一目录全吃」的形态：三种 manifest 文件名都不含 .claude-plugin/plugin.json（extensionManifest.js:19-22）；拓展 manifest 虽有 skills/commands/mcp 声明位（extensionManifest.js:67-69）但本次只核实到 tools 字段被 pluginContribResolver 消费（pluginContribResolver.js:56,104-110），skills 声明位没有核实到运行时消费者，所以 skills/ 必须真落到 skill 发现链的根才能生效。commands/ 斜杠命令在三个市场里没有对应物（khyos CLI 命令是 handler 模式手工注册），只能降级改写为 skill 或丢弃。.mcp.json 可直接搬（mcpServers 映射同形）。Apache-2.0 无许可证障碍。",
+      "license": "Apache-2.0",
+      "relationship": "adapter",
+      "agentScope": ["claude-code"],
+      "what": "混合包（plugin.json + .mcp.json + commands + skills）：须拆开分头落三个市场，一个 manifest 带不全。"
+    },
+    {
+      "name": "anthropics/claude-plugins-community",
+      "upstreamUrl": "https://github.com/anthropics/claude-plugins-community",
+      "type": "plugin",
+      "khyosMarket": "none",
+      "targetPath": "delivery/market/catalogs/claude-code.json 内本条目",
+      "compat": "adapter-needed",
+      "compatNote": "同官方目录：marketplace.json 需转换器才能进 khyos 编目。条目以外部 git url / git-subdir 为主，正好对上 khy ext install 的 <http|/|.> 前缀本地/git 装法（runtime/node/backend/src/cli/handlers/extension.js:140-145）与 khy skill add 的任意 .git URL 透传（skillSourceSpec.js:18）。renames（qodo-skills→qodo 等旧名迁移映射）在编目中要保留，否则存量引用断。只读镜像、提交走网页表单，khyos 侧只读引用。清单抓取在字母 a 段被截断，条目总数未查实。",
+      "license": "Apache-2.0",
+      "relationship": "reference",
+      "agentScope": ["claude-code"],
+      "what": "社区插件市场镜像：条目以外部 git url/subdir 为主，正好对上 khy ext install 与 khy skill add 的 git 装法。"
+    },
+    {
+      "name": "pr-review-toolkit",
+      "upstreamUrl": "https://github.com/anthropics/claude-plugins-official/tree/main/plugins/pr-review-toolkit",
+      "type": "agent",
+      "khyosMarket": "skill",
+      "targetPath": "works/data/khy/skills/pr-review-toolkit/<agent-slug>/SKILL.md（6 个 agent 各转一个 skill）",
+      "compat": "adapter-needed",
+      "compatNote": "khyos 三个市场里没有 agent 位，但 khyos 有内置 agent 体系且 CC agent 桥已 default-on（ccAgentBridge.js:56-77，读 ~/.claude/agents 与插件缓存内嵌套 agents/；ccAgentBridge.js:15 记 khy 的 parseAgentFromMarkdown 已接受 CC frontmatter）——装在 CC 侧可原形发现，但那条路不落在三个市场内。要在 skill 市场落地需适配：agent frontmatter 的 model 别名（opus/sonnet/haiku）与工具权限表在 khyos skill 标准头（name/version/description/layer/lifecycle/tags/platforms/dependencies，skillLoader.js:4-18）里没有对应字段，解析器不报错但也没有消费者，model 绑定会丢，需把约束写进 SKILL.md 正文。MIT 无许可证障碍。star 记 0 是官方仓子目录无独立仓库之故，非数据缺失。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["claude-code"],
+      "what": "6 个 agent 的 PR 评审插件：khyos 无 agent 市场位，需逐条转 SKILL.md 并处理 model 绑定丢失。"
+    },
+    {
+      "name": "playwright",
+      "upstreamUrl": "https://github.com/anthropics/claude-plugins-official/tree/main/external_plugins/playwright",
+      "type": "mcp",
+      "khyosMarket": "mcp",
+      "targetPath": "works/data/khy/mcp.json 的 mcpServers.playwright（khy mcp add playwright -- npx @playwright/mcp@latest）；要常驻可补进 runtime/node/backend/src/services/domain/messaging/mcp/mcpServerPresets.js 的 _PRESETS",
+      "compat": "direct",
+      "compatNote": "标准 MCP server，协议层直连；CC 的 .mcp.json 条目与 khyos mcp.json 的 mcpServers 映射同形（ccMcpBridge.js:78），type 缺省按 stdio 校验（types.js:95），无需改写。现有预设表 19 个里只有 puppeteer、没有 playwright/serena（mcpServerPresets.js:55-227），补预设照 _PRESETS 形状（description/transport/command/args/requiresEnv/argHint/homepage）。许可证未查实（插件目录无 LICENSE、上游微软仓库未核）→ 配置指针可以，vendored 进仓不行。装在 CC 侧后经 ccMcpBridge 直接被发现（~/.claude.json 的 mcpServers，ccMcpBridge.js:13-15）。",
+      "license": "unknown",
+      "relationship": "reference",
+      "agentScope": ["claude-code"],
+      "what": "标准 MCP server（playwright）：协议层直连，khyos 预设表只有 puppeteer，license 未查实。"
+    },
+    {
+      "name": "serena",
+      "upstreamUrl": "https://github.com/anthropics/claude-plugins-official/tree/main/external_plugins/serena",
+      "type": "mcp",
+      "khyosMarket": "mcp",
+      "targetPath": "works/data/khy/mcp.json 的 mcpServers.serena（khy mcp add serena -- <uvx/npx 命令>）；要常驻可补进 mcpServerPresets.js 的 _PRESETS",
+      "compat": "direct",
+      "compatNote": "标准 MCP server，协议层直连；.mcp.json 条目与 khyos mcp.json 映射同形（ccMcpBridge.js:78）、type 缺省 stdio（types.js:95），无需改写。它经 LSP 做语义代码分析，落地前需确认本机有对应语言服务器运行环境（uvx 拉取属官方源，符合 PROCESS-013）。许可证未查实（插件目录无 LICENSE、上游 Oraios 仓库未核）→ 只落配置指针，不进仓。装在 CC 侧后经 ccMcpBridge 直接被发现（ccMcpBridge.js:13-15）。",
+      "license": "unknown",
+      "relationship": "reference",
+      "agentScope": ["claude-code"],
+      "what": "经 LSP 做语义代码分析的标准 MCP server：协议层直连，需本机语言服务器环境，license 未查实。"
+    },
+    {
+      "name": "hookify",
+      "upstreamUrl": "https://github.com/anthropics/claude-plugins-official/tree/main/plugins/hookify",
+      "type": "hook",
+      "khyosMarket": "extension",
+      "targetPath": "delivery/extension/scripts/hookify/（khy.extension.json，kind=toolchain，脚本经 manifest commands[].script 起子进程，extensionManifest.js:28-31）+ 注册条目写 .khy/hooks.json（或 <appHome>/hooks.json，hookConfigSchema.js:4）",
+      "compat": "adapter-needed",
+      "compatNote": "khyos 有 hook 宿主但事件名不同：khyos HOOK_EVENTS = PreToolUse/PostToolUse/PrePrompt/PostResponse/PreCompact/PostCompact/Stop/SubAgentStart/SubAgentEnd/ToolPermission/PromptSection（hookConfigSchema.js:22-34，真源 hookRegistry.js），Claude 侧是 SessionStart/UserPromptSubmit/PreToolUse/PostToolUse/Stop/SubagentStop/SessionEnd/Notification/ConfigChange——只有 PreToolUse/PostToolUse/Stop 三个同名；UserPromptSubmit→PrePrompt、SubagentStop→SubAgentEnd 需改名；SessionStart/SessionEnd/Notification/ConfigChange 在 khyos 无对应事件只能丢弃。配置形状也要改：Claude 注册在 .claude/settings.json（event+matcher+command），khyos 是 .khy/hooks.json 的裸数组或 {version,hooks[],disabled[]}、每项 {event,command,pattern?,timeout?,priority?,enabled?} 且 JSON 只收 command 型（hookConfigSchema.js:39-49,153-169），matcher→pattern 且必须可编译为 RegExp（hookConfigSchema.js:106-112）。hookify 的 markdown 规则（frontmatter event/pattern/action/conditions）需要一个生成器改写成 hooks.json。仅依赖 Python 3.7+ 标准库，Apache-2.0 无障碍。",
+      "license": "Apache-2.0",
+      "relationship": "adapter",
+      "agentScope": ["claude-code"],
+      "what": "把 markdown 规则生成为 Claude hooks 的插件：khyos 有 hook 宿主但事件名只交叠 3 个、配置形状也要改。"
+    },
+    {
+      "name": "skill-creator",
+      "upstreamUrl": "https://github.com/anthropics/claude-plugins-official/tree/main/plugins/skill-creator",
+      "type": "skill",
+      "khyosMarket": "skill",
+      "targetPath": "works/data/khy/skills/skill-creator/SKILL.md；若要进仓内置则 runtime/node/backend/src/skills/<group>/skill-creator/",
+      "compat": "direct",
+      "compatNote": "SKILL.md 类 skill，格式 khyos 已认识且解析容错（skillLoader.js:44-52,65-151）。许可证未查实（官方仓子目录、未读到独立 LICENSE）→ 只能装进被 gitignore 的本机态目录或作参考，不能 vendored 进仓。它是「创作技能」的元技能，落在 khyos 后若要进内置目录，需按 khyos 标准头补 version/layer/lifecycle 等字段（skillLoader.js:4-18）。star 记 0 是官方仓子目录无独立仓库之故。",
+      "license": "unknown",
+      "relationship": "reference",
+      "agentScope": ["claude-code"],
+      "what": "「创作技能」的元技能：SKILL.md 格式 khyos 已认识，license 未查实只能本机态或参考。"
+    },
+    {
+      "name": "obra/superpowers",
+      "upstreamUrl": "https://github.com/obra/superpowers",
+      "type": "skill",
+      "khyosMarket": "skill",
+      "targetPath": "works/data/khy/skills/<skill-name>/SKILL.md（khy skill add obra/superpowers --skill <name>，15 个技能分四组）",
+      "compat": "direct",
+      "compatNote": "MIT（A 档）+ SKILL.md 跨智能体通用形态，是整批最干净的可直装条目；khyos 解析器与 CC 格式逐字节兼容（ccSkillBridge.js:16-19）。三个注意：① 307,533 stars 数量级异常高于所有官方仓，入库前再复核一次；② 同一技能同时登记在官方目录（/plugin install superpowers@claude-plugins-official），编目按 <market>@<entry> 三元组去重，别记两份；③ 多技能仓库不带 --skill 会因「仓库含多个 skill」报错（skillInstallService.js:148-154），必须逐技能装。其技能内容（test-driven-development / systematic-debugging 等）与 khyos 工程规则 5-7（修复先复现/新增先提问/删除先报部位）概念相邻，落地时注意语义对齐而非照搬。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["claude-code"],
+      "what": "15 个 SKILL.md 技能（MIT，A 档）：整批最干净的可直装条目，star 数异常高入库前需复核。"
+    },
+    {
+      "name": "obra/superpowers-marketplace",
+      "upstreamUrl": "https://github.com/obra/superpowers-marketplace",
+      "type": "plugin",
+      "khyosMarket": "none",
+      "targetPath": "delivery/market/catalogs/claude-code.json 内本条目",
+      "compat": "adapter-needed",
+      "compatNote": "市场清单形态，需转换器才能进 khyos 编目。10 个条目全带 version 与 strict 字段，source 形如 {source:'url'}；其中 superpowers-dev 是 dev 分支条目（版本号 0.0.2026021001 形态），其 ref 锚定语义与 khy skill add 的 owner/repo#ref 写法对齐（skillSourceSpec.js:16）。MIT（市场元数据），各插件许可证自理。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["claude-code"],
+      "what": "superpowers 的市场清单（10 条目全带 version 与 strict）：需转换器，各插件许可证自理。"
+    },
+    {
+      "name": "obra/private-journal-mcp",
+      "upstreamUrl": "https://github.com/obra/private-journal-mcp",
+      "type": "mcp",
+      "khyosMarket": "mcp",
+      "targetPath": "works/data/khy/mcp.json 的 mcpServers.private-journal（khy mcp add private-journal --env K=V … -- <命令>）",
+      "compat": "direct",
+      "compatNote": "标准 MCP server（MIT，A 档），协议层直连；本地 embedding 模型路径等经 --env K=V 与 cwd 传入（mcpAddSpec 支持）。只落一条配置指针即可，无需进仓；装在 CC 侧后经 ccMcpBridge 直接被发现（ccMcpBridge.js:13-15）。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["claude-code"],
+      "what": "标准 MCP server（本地 embedding + journal，MIT）：协议层直连，只落一条配置指针。"
+    },
+    {
+      "name": "davepoon/buildwithclaude",
+      "upstreamUrl": "https://github.com/davepoon/buildwithclaude",
+      "type": "plugin",
+      "khyosMarket": "none",
+      "targetPath": "delivery/market/catalogs/claude-code.json 内本条目",
+      "compat": "adapter-needed",
+      "compatNote": "聚合 hub 的市场清单，需转换器。条目字段最全（license/keywords/category/repository），可直接抄进 khyos 编目字段；source 三形态（仓内相对路径 / git-subdir / github）需转换器分发到三个市场。README 自述的 51 plugins/117 agents/175 commands/28 hooks/26 skills 与清单条目数口径不一致（清单含索引来的外部条目），以清单为准；其索引的 20k+ 外部插件 / 4,500+ MCP server / 1,100+ 社区市场只作线索，不逐条采信。清单抓取在 auten 处截断，只数到 118 个完整条目。MIT。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["claude-code"],
+      "what": "聚合 hub 的市场清单：条目字段最全可抄进 khyos 编目，README 计数与清单口径不一。"
+    },
+    {
+      "name": "ananddtyagi/cc-marketplace",
+      "upstreamUrl": "https://github.com/ananddtyagi/cc-marketplace",
+      "type": "plugin",
+      "khyosMarket": "none",
+      "targetPath": "delivery/market/catalogs/claude-code.json 内本条目",
+      "compat": "adapter-needed",
+      "compatNote": "市场清单需转换器。仓库无许可证（api.github.com license 字段为 null → unknown，README 称「各命令许可证自理」）→ 编目可以、vendored 不可。其 PLUGIN_SCHEMA.md 与两个 Python 校验器（scripts/validate-plugin-schema.py 卡 schema+目录布局、scripts/validate-marketplace-sync.py 卡 README 与实际插件一致，失败即阻断 PR）可作 khyos 市场编目守卫的参考实现。README 计数（10 命令 + 5 agent）与市场总条目数口径不一（unknown）。",
+      "license": "unknown",
+      "relationship": "reference",
+      "agentScope": ["claude-code"],
+      "what": "市场清单 + 两个 Python 校验器：仓库无许可证（unknown），其校验器可作 khyos 编目守卫参考。"
+    },
+    {
+      "name": "karanb192/claude-code-hooks",
+      "upstreamUrl": "https://github.com/karanb192/claude-code-hooks",
+      "type": "hook",
+      "khyosMarket": "extension",
+      "targetPath": "delivery/extension/scripts/<name>/（khy.extension.json，kind=toolchain，extensionManifest.js:28-31）+ 注册条目写 .khy/hooks.json（或 <appHome>/hooks.json，hookConfigSchema.js:4）",
+      "compat": "adapter-needed",
+      "compatNote": "同 hookify 的事件名与配置形状适配：khyos 11 事件与 Claude 9 事件只交叠 PreToolUse/PostToolUse/Stop 三个（hookConfigSchema.js:22-34），UserPromptSubmit→PrePrompt、SubagentStop→SubAgentEnd 需改名，SessionStart/SessionEnd/Notification/ConfigChange 无对应只能丢；settings.json 的 {event,matcher,command} → .khy/hooks.json 的 {event,command,pattern?,timeout?,priority?}（hookConfigSchema.js:39-49,153-169），matcher→pattern 须可编译 RegExp。22 个脚本自包含零依赖、MIT 无障碍。适配前先对照 khyos 既有守卫，避免重复造：block-dangerous-commands/protect-secrets/instructions-audit 与 check-agent-rules.js / check-agent-docs.js 概念重合；guard-pack（7 个守卫合单进程降启动开销）对应 ruleguard 批量检查思路。经典态（拷到 ~/.claude/hooks/ + settings.json 注册）正是 khyos .khy/hooks.json 的对岸形态。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["claude-code"],
+      "what": "22 个自包含 hook 脚本（MIT）：事件名与配置形状都要适配，适配前先对照 khyos 既有守卫避免重复造。"
+    },
+    {
+      "name": "wshobson/agents",
+      "upstreamUrl": "https://github.com/wshobson/agents",
+      "type": "agent",
+      "khyosMarket": "none",
+      "targetPath": "delivery/market/catalogs/claude-code.json 内本条目",
+      "compat": "adapter-needed",
+      "compatNote": "多 harness 市场清单（94 插件 / 202 agents / 185 skills / 105 commands），需转换器。185 skills 可走 khy skill add wshobson/agents --skill <name>（上游亦支持 gh skill install / npx skills add 单技能装，与 khyos 装法同构，属 direct 路径）；202 agents 的 frontmatter 用 model 别名（opus/sonnet/haiku/fable/inherit），装在 ~/.claude 下由 ccAgentBridge 原形发现（ccAgentBridge.js:15 记 parseAgentFromMarkdown 已接受 CC frontmatter），但要在三个市场内落地需逐条转 SKILL.md 并处理 model/工具绑定丢失；commands 无市场对应物。其多 harness 适配器（Codex/Cursor/OpenCode/Copilot/Pi）对 khyos 的启示是「同一产物多前端」的分发思路，不是可复用代码。MIT。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["claude-code", "opencode", "aggregators"],
+      "what": "多 harness 市场清单（94 插件/202 agents/185 skills）：skills 可直装，agents 需逐条转 SKILL.md。"
+    },
+    {
+      "name": "davila7/claude-code-templates",
+      "upstreamUrl": "https://github.com/davila7/claude-code-templates",
+      "type": "command",
+      "khyosMarket": "none",
+      "targetPath": "delivery/market/catalogs/claude-code.json 内本条目（作上游源参考；不经其 npx CLI）",
+      "compat": "adapter-needed",
+      "compatNote": "npx 配置类 CLI（站 aitmpl.com），khyos 无从「安装」一个 CLI，只能把仓库当上游源编目。价值在模板索引（自称覆盖 100+ agents/commands/settings/hooks/MCPs，未逐条核）。其 --mcp 装法最终也是写 mcp.json，与 khy mcp add 同归处；经它装的模板落进 CC 目录后再被 khyos 三条 CC 桥发现——「蹭装」路径成立但不受 khyos 管控（本机态、不跨机器）。MIT。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["claude-code"],
+      "what": "npx 配置类 CLI（aitmpl.com）：khyos 无从安装一个 CLI，只能把仓库当上游源编目。"
+    },
+    {
+      "name": "modelcontextprotocol/servers",
+      "upstreamUrl": "https://github.com/modelcontextprotocol/servers",
+      "type": "mcp",
+      "khyosMarket": "mcp",
+      "targetPath": "works/data/khy/mcp.json 逐服务器条目；常用者可补进 runtime/node/backend/src/services/domain/messaging/mcp/mcpServerPresets.js 的 _PRESETS（现表多数正出自该仓，homepage 均指回，mcpServerPresets.js:56-226）",
+      "compat": "direct",
+      "compatNote": "MCP 协议官方参考服务器集合，标准 MCP 协议直连；是「Claude 专用形态 vs 跨智能体通用形态」的分界线（编目 formatNotes【8】）。khyos 预设表已收该仓 19 个中的大部分（github/gitlab/git/filesystem/fetch/memory/sequential-thinking/everything/puppeteer/brave-search/slack/postgres/sqlite/time，mcpServerPresets.js:55-227），新增条目照 _PRESETS 形状补（description/transport/command/args/requiresEnv/argHint/homepage，mcpServerPresets.js:55-64）。许可证 API 返回 NOASSERTION → 逐服务器自理；仓内部分参考服务器已归档/迁出，采信前以仓内现状为准。",
+      "license": "unknown",
+      "relationship": "reference",
+      "agentScope": ["claude-code", "aggregators"],
+      "what": "MCP 协议官方参考服务器集合：是「Claude 专用形态 vs 跨智能体通用形态」的分界线，多数已在 khyos 预设表内。"
+    }
+  ],
+  "blocked": [],
+  "uncertainties": [
+    "claude-plugins-official 清单 ≥170 条可见但两次抓取均被截断，真实总数未查实（站点口径 527 未逐条核）。",
+    "claude-plugins-community 与 buildwithclaude 清单同样截断；cc-marketplace 的 README 计数与市场总条目数口径不一（unknown）。",
+    "obra/superpowers 的 307,533 stars 数量级异常高于所有官方仓，入库前需复核。",
+    "playwright/serena/skill-creator/ananddtyagi-cc-marketplace/anthropics-skills 许可证 unknown；后者含四个 Proprietary 子技能（docx/pdf/pptx/xlsx）。",
+    "官方仓子目录条目的 star 记 0 是无独立仓库之故，非数据缺失。",
+    "本批未实际安装运行任何上游条目；compat 判定基于格式核对与代码路径阅读。"
+  ]
+}

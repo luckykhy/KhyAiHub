@@ -237,8 +237,10 @@ function createStages(options, runtimeInputs) {
   }
   stages.push(
     { name: 'Assemble portable artifact', command: node, args: buildArgs },
-    { name: 'Verify portable artifact', command: node, args: ['extensions/scripts/khy-portable/portable-health-check.js', '--artifact', paths.artifactDir] },
-    { name: 'Create zip archive', command: node, args: ['extensions/scripts/khy-portable/pack-portable.js', '--artifact', paths.artifactDir, '--out', options.out] },
+    // 方案 P 后拓展搬到 delivery/extension/scripts/；这两个路径曾写 extensions/
+    // （仓库根旧位），走到这里整条打包链才炸。
+    { name: 'Verify portable artifact', command: node, args: ['delivery/extension/scripts/khy-portable/portable-health-check.js', '--artifact', paths.artifactDir] },
+    { name: 'Create zip archive', command: node, args: ['delivery/extension/scripts/khy-portable/pack-portable.js', '--artifact', paths.artifactDir, '--out', options.out] },
   );
   return stages;
 }
