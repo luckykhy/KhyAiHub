@@ -48,13 +48,13 @@ const ROOT = path.resolve(__dirname, '..', '..');
  */
 const TARGETS = [
   {
-    rel: 'apps/khy-os-client-app/build',
+    rel: 'delivery/mobile/khy-os-client-app/build',
     group: 'build',
     what: 'Flutter Android 构建缓存（~3.2 GB：native libs、DEX、APK 中间产物）',
     rebuild: 'flutter build apk / flutter run（自动重建，首次 ~5 分钟）',
   },
   {
-    rel: 'apps/khy-os-client-app/.dart_tool',
+    rel: 'delivery/mobile/khy-os-client-app/.dart_tool',
     group: 'build',
     what: 'Flutter/Dart 工具链缓存（~325 MB：build_runner、hooks）',
     rebuild: 'flutter pub get（自动重建）',

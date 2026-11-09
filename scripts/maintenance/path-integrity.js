@@ -445,12 +445,31 @@ function scanStaleRefs() {
         }
       }
       if (!/services|platform|extensions|software|packaging|apps/.test(line)) continue;
+      // 同一行内**已记录**的命中区间（[start, end)）。别名表里长前缀与短前缀会命中同一段文本
+      // （如 `services/backend/src/x` 同时命中 `services/backend/` 与 `services/`），
+      // 而每个别名正则都是独立跑的 —— 同一处就会被登记两遍：
+      //   · 报表把 1 处算成 2 处（计数虚高）；
+      //   · 修复器按 span 落刀时第二遍的 span 已不匹配 → 误判「实改数 ≠ 命中数」而整份回滚。
+      // 实测（2026-10-24）：khy.module.json 的 fanInEvidence 每个路径被记两次，
+      // 1199 条 actionable 实际只有约一半是真实命中点。
+      // 修法：别名按长度降序（ALIASES_SORTED 已排），长前缀先命中；短前缀若与已记录区间重叠则跳过。
+      const lineSpans = [];
+      // 记录级去重键：同一行里「落刀区间」相同即同一处。
+      // 为什么还需要这一层（2026-10-24 实测）：`extractPathToken` 会把命中处**向前扩成完整
+      // token**，于是路径里的第二段同前缀（如 `services/backend/src/services/x.js` 里的
+      // 第二个 `services/`）会扩成**同一个完整 token** → 产出 file/line/spanCol/span
+      // 四项全同的重复记录。raw 区间不重叠 ⇒ 上面那道重叠守卫拦不住。
+      const lineKeys = new Set();
       for (const re of regexes) {
         re.lastIndex = 0;
         let m;
         while ((m = re.exec(line))) {
           const s = m.index;
           const e = s + m[0].length;
+          if (lineSpans.some(([a, b]) => s < b && e > a)) {
+            if (m[0].length === 0) re.lastIndex++;
+            continue; // 与本行已记录的命中重叠 → 同一处，不重复登记
+          }
           const { token, start } = extractPathToken(line, s, e);
           const ref = normalizeRef(token);
           const remapped = ref ? remapPath(ref) : null;
@@ -502,7 +521,14 @@ function scanStaleRefs() {
               : usage === 'prose' || looksLikeMessage(line)
                 ? proseHits
                 : codeHits;
+          const recKey = `${rec.spanCol}:${rec.span}`;
+          if (lineKeys.has(recKey)) {
+            if (m[0].length === 0) re.lastIndex++;
+            continue; // 同一处（落刀区间相同）→ 不重复登记
+          }
+          lineKeys.add(recKey);
           bucket.push(rec);
+          lineSpans.push([s, e]);
           if (m[0].length === 0) re.lastIndex++;
         }
       }
