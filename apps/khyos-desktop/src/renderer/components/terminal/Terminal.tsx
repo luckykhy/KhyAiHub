@@ -1,4 +1,5 @@
-﻿import { useEffect, useRef } from 'react'
+﻿// khy-canary: Khy-20261102-319-SB3H1XB8
+import { useEffect, useRef } from 'react'
 import { Terminal as XTerminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
@@ -124,5 +125,12 @@ export function TerminalPanel() {
       term.dispose()
     }
   }, [])
-  return <div ref={containerRef} className="h-full bg-terminal-bg" />
+  // 双层结构（§5.6）：外层 wrapper 负责收边（p-2 底色缓冲 + 圆角 + 边框），
+  // 内层 containerRef 仍是 FitAddon 的唯一测量容器，class 保持 h-full 不动。
+  // 必须用 box-border + p-2 而不是 m-2：margin 不收缩盒高，h-full 会溢出父容器 16px。
+  return (
+    <div className="h-full box-border p-2 rounded-lg border border-border bg-terminal-bg overflow-hidden">
+      <div ref={containerRef} className="h-full" />
+    </div>
+  )
 }

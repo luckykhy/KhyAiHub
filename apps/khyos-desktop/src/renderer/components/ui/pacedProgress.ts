@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-329-CRHKNRT3
 /**
  * pacedProgress — 进度条「渐进节拍」的桌面端实现（Electron 渲染进程）。
  *

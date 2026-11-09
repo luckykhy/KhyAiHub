@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-330-82258HB2
 /**
  * usePacedPercent — 把 `pacedProgress` 的节拍接进 React：每 PACED_RENDER_MS 重绘一次，
  * 显示值一次只 +1%，向真实值靠拢且永不越过它。

@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-324-CA0SS9NW
 import { usePacedPercent } from './usePacedPercent'
 
 interface ProgressBarProps {
@@ -38,11 +39,21 @@ export function ProgressBar({
     <div className={`w-full ${className}`}>
       {(label || showPercentage) && (
         <div className="flex items-center justify-between mb-1">
-          {label && <span className="text-xs text-foreground/60">{label}</span>}
-          {showPercentage && <span className="text-xs text-foreground/40 tabular-nums">{real}%</span>}
+          {label && <span className="text-xs text-foreground-muted">{label}</span>}
+          {showPercentage && <span className="text-xs text-foreground-muted tabular-nums">{real}%</span>}
         </div>
       )}
-      <div className={`w-full bg-foreground/10 rounded-full overflow-hidden ${heightClass}`}>
+      <div
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        // 报**真实值**而不是条上那个被节拍拉住的显示值：条是渐进动画（产品决定的
+        // 1%/帧 节奏），数字才是事实；屏幕阅读器念的应当是事实。
+        aria-valuenow={real}
+        aria-valuetext={`${real}%`}
+        aria-label={label}
+        className={`w-full bg-foreground/10 rounded-full overflow-hidden ${heightClass}`}
+      >
         <div
           className="h-full bg-brand rounded-full transition-[width] duration-150 ease-linear"
           style={{ width: `${percentage}%` }}
@@ -69,7 +80,7 @@ export function ContextUsageBar({ used, total }: { used: number; total: number }
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <span className="text-xs text-foreground/40 tabular-nums">
+      <span className="text-xs text-foreground-muted tabular-nums">
         {(used / 1000).toFixed(1)}K / {(total / 1000).toFixed(0)}K
       </span>
     </div>
