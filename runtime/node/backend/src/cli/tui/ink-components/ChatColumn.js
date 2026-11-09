@@ -20,6 +20,8 @@ const inkRuntime = require('../inkRuntime');
 
 const { Static } = inkRuntime.get();
 const Transcript = require('./Transcript');
+const AttachmentChips = require('./AttachmentChips').AttachmentChips;
+const pendingImageAttachments = require('../pendingImageAttachments');
 const StreamingBlock = require('./StreamingBlock');
 const PromptFrame = require('./PromptFrame');
 const TaskListPanel = require('./TaskListPanel');
@@ -176,11 +178,7 @@ function ChatColumn({
           )
         : null,
       pendingImages.length > 0
-        ? h(
-            Box,
-            { flexDirection: 'row', flexWrap: 'wrap', columnGap: 1 },
-            h(Text, { color: 'blue' }, `已附加 ${pendingImages.length} 张图片`),
-          )
+        ? h(AttachmentChips, { attachments: pendingImageAttachments.toDisplay(pendingImages) })
         : null,
       // Task panel (full-width, above prompt)
       h(TaskListPanel, {

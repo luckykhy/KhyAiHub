@@ -106,6 +106,7 @@ const GENERAL_SHORTCUTS = [
   { keys: 'Ctrl+E', desc: 'External editor' },             // CcApp.js:580
   { keys: 'Ctrl+V', desc: 'Toggle Vim mode' },             // CcApp.js:586
   { keys: 'Ctrl+Y', desc: 'Copy last reply' },             // CcApp.js:592
+  { keys: 'Ctrl+G', desc: 'Phone link panel' },            // CcApp.js 手机联动状态面板
   { keys: '↑/↓', desc: 'Move caret' },                     // CcPromptInput.js:412 逐字符移光标
   { keys: '?', desc: 'Toggle this menu' },                 // CcApp.js:544
   { keys: 'Esc', desc: 'Close' },                          // 本组件 useInput

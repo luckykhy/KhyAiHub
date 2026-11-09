@@ -50,6 +50,10 @@ const { CcToastContainer } = require('../components/CcToast');
 const { CcScrollIndicators } = require('../components/CcScrollIndicators');
 const { CcMessageBar } = require('../components/CcMessageBar');
 const { CcPermissionPrompt } = require('./CcPermissionPrompt');
+// 多行 notice 的行模型真源 + CC 渲染器：收集式命令输出（khy phone / khy amoo）在
+// 会话里的呈现。两个模块都只吃纯叶子，装载期零 IO。
+const { buildNoticeLines } = require('../utils/ccNoticeLines');
+const { CcNoticeBlock } = require('./CcNoticeBlock');
 // 以下模块仅在覆盖层打开时懒加载，减少首屏 require 时间
 let _AgentTree = null;
 let _CcTranscriptView = null;
@@ -57,6 +61,13 @@ function getAgentTree() { if (!_AgentTree) _AgentTree = require('./AgentTree'); 
 function getCcTranscriptView() {
   if (!_CcTranscriptView) _CcTranscriptView = require('./CcTranscriptView').CcTranscriptView;
   return _CcTranscriptView;
+}
+// 「手机联动」状态面板（Ctrl+G）：连同它的供数器与命令桥一起懒加载。面板没打开过 ⇒
+// 这三棵模块图一个字节都不进启动路径，也不会有任何 adb / 定时器。
+let _CcPhoneLinkPanel = null;
+function getCcPhoneLinkPanel() {
+  if (!_CcPhoneLinkPanel) _CcPhoneLinkPanel = require('./CcPhoneLinkPanel').CcPhoneLinkPanel;
+  return _CcPhoneLinkPanel;
 }
 // Viewport 只在「开了选择」时才用得上（消息段走投影渲染），故同样懒加载。
 let _Viewport = null;
@@ -69,6 +80,11 @@ const { visualRows } = require('../wrapCell');
 const { agentTreePaintRows } = require('../../agentTreeView');
 const { estimateAllAgents, formatDuration } = require('../utils/ccTaskEstimate');
 const { CC_COLORS } = require('../theme/ccTheme');
+// 手机联动：轮询 hook + 供数器工厂 + 收集式命令桥。三个模块装载期都零副作用
+// （ccPhoneLinkSource 只在 getPhoneLinkProvider() 被调用时才 require amoo/phone 栈）。
+const { usePhoneLinkStatus } = require('../hooks/usePhoneLinkStatus');
+const { getPhoneLinkProvider } = require('../ccPhoneLinkSource');
+const { isPhoneLinkCommand, runPhoneLinkCommand } = require('../ccPhoneLinkCommand');
 
 // 消息文本清洗真源，与 Legacy（Transcript.js / StreamingBlock.js）及 topicBar
 // (BUG-33) 用的是同一个 modelTextNormalizer。CC 表面此前把原文直传给 ink：
@@ -134,9 +150,18 @@ function CcApp({ options = {} }) {
   const [vimMode, setVimMode] = React.useState(null); // Vim 模式（null=禁用）
   const [vimEnabled, setVimEnabled] = React.useState(true); // Vim 模式开关（默认启用）
   const [showHistorySearch, setShowHistorySearch] = React.useState(false); // 历史搜索（Ctrl+R，CC 对齐）
+  const [showPhoneLink, setShowPhoneLink] = React.useState(false); // 手机联动状态面板（Ctrl+G）
   // 双击 Ctrl+C 退出（[DESIGN-ARCH-087] 验收项「双击 Ctrl+C 退出：首次提示，二次退出」）。
   // 3s 窗口（ccTimers.doubleTapExit.windowMs）内再按一次才退出；首次只提示。
   const exitTapRef = React.useRef(0);
+  // 子视图状态缓存（[DESIGN-ARCH-085] §1.2「切换视图后恢复位置和状态」/ §0「上下文保持」）：
+  // Ctrl+P 命令面板与 Ctrl+R 历史搜索都是「开即新挂载」的浮层，filter/query/cursor 若只存
+  // 组件本地，Esc 一关就丢。这里按视图 id 缓存最后一次现场，下次打开原样播种。
+  // ref 而非 state：切换视图不该触发整树重渲（只是把现场递给即将挂载的浮层）。
+  const viewStateCache = React.useRef(Object.create(null));
+  const rememberView = React.useCallback((viewId, patch) => {
+    viewStateCache.current[viewId] = { ...(viewStateCache.current[viewId] || {}), ...patch };
+  }, []);
 
   // 初始化权限 profile（从 permissionStore 读取）
   React.useEffect(() => {
@@ -148,6 +173,42 @@ function CcApp({ options = {} }) {
     } catch {
       /* permissionStore unavailable — keep default */
     }
+  }, []);
+
+  // ── noticeInbox 订阅（宿主「不能自己写屏」的一行话，BUG-17）────────────────
+  // sessionWatchdog 的诊断行必须让用户看见（Rule 3），但 ink 拥有终端期间任何绕过
+  // 注入流的写都在帧账本之外、重绘擦不掉。所以订阅收件箱、落成一条 notice。
+  // 与 Legacy App.js:2553 同一范式；卸载时退订并让 push() 报「无人认领」，
+  // watchdog 于是回落到自己的 stderr 写，诊断不丢。
+  React.useEffect(() => {
+    let active = true;
+    let unsubscribe = null;
+    try {
+      unsubscribe = require('../noticeInbox').subscribe((line) => {
+        if (!active || !line) {
+          return false;
+        }
+        setMessages(prev => [...prev, {
+          id: Date.now(),
+          timestamp: Date.now(),
+          role: 'notice',
+          content: String(line),
+        }]);
+        return true;
+      });
+    } catch {
+      /* inbox optional — watchdog keeps its own sink */
+    }
+    return () => {
+      active = false;
+      try {
+        if (typeof unsubscribe === 'function') {
+          unsubscribe();
+        }
+      } catch {
+        /* ignore */
+      }
+    };
   }, []);
 
   // ── 演示用父子 Agent 工具树（KHY_CC_DEMO_AGENTS，默认关）─────────────────
@@ -252,6 +313,14 @@ function CcApp({ options = {} }) {
   // 帧高顶破 rows → 80×24 留 1 次 \x1b[2J、80×12 留 6 次整屏残影
   // (存证 .khy/feedback/tui-ux-audit-20260919/AU/repro-before-bug77.txt)。
   const estimateMessageRows = (msg) => {
+    // notice 是收集式命令输出（khy phone / khy amoo）：CcNoticeBlock 把整段按 \n 拆行、
+    // 每行 clipLine 到内容宽 + wrap:'truncate' ⇒ **一行恰好一行**。所以账本直接数行
+    // 模型的行数即可，不能走下面 visualRows 那条路（msg.text 是 undefined，会恒返 1，
+    // 于是一条 20 行的 khy amoo status 只记 1 行 → 帧高顶破 rows → 整屏残影）。
+    if (msg && msg.role === 'notice') {
+      const lines = buildNoticeLines(msg.content).lines;
+      return (chromePlan.msgGap ? 1 : 0) + Math.max(1, lines.length);
+    }
     if (!msg || typeof msg.text !== 'string') {
       return 1;
     }
@@ -295,7 +364,16 @@ function CcApp({ options = {} }) {
   // 成了「让位判据依赖让位结果」的循环。
   const lastContentRows = React.useMemo(() => {
     const last = messages.length > 0 ? messages[messages.length - 1] : null;
-    if (!last || typeof last.text !== 'string') {
+    if (!last) {
+      return 1;
+    }
+    // notice 的正文在 msg.content 而不是 msg.text，且每行恰好一行（见 estimateMessageRows
+    // 的同款说明）。不走这条分支时一条 20 行的手机状态会被当成 1 行 —— 让位梯的地板
+    // 就此算错，窗口收不下最后一条却以为自己收下了。
+    if (last.role === 'notice') {
+      return Math.max(1, buildNoticeLines(last.content).lines.length);
+    }
+    if (typeof last.text !== 'string') {
       return 1;
     }
     return Math.max(1, visualRows(
@@ -312,6 +390,16 @@ function CcApp({ options = {} }) {
   const logoOn = !capGateOn || chromePlan.banner;
   const logoSubtitle = !capGateOn || chromePlan.subtitle;
   const hintOn = !capGateOn || chromePlan.hint;
+
+  // ── 手机联动面板供数（Ctrl+G）─────────────────────────────────────────────
+  // provider 只在面板第一次打开时才建（getPhoneLinkProvider 是懒单例），hook 也只在
+  // enabled=showPhoneLink 时建定时器：没打开过的面板不该已经有 adb 在跑。关掉再打开，
+  // useMemo 重新取到同一个单例，effect 重跑 → 立刻补一次 refresh。
+  const phoneProvider = React.useMemo(
+    () => (showPhoneLink ? getPhoneLinkProvider() : null),
+    [showPhoneLink],
+  );
+  const phoneSnapshot = usePhoneLinkStatus({ provider: phoneProvider, enabled: showPhoneLink });
 
   const visibleMessages = React.useMemo(() => {
     if (!capGateOn) {
@@ -748,6 +836,21 @@ function CcApp({ options = {} }) {
       return;
     }
 
+    // 手机联动状态面板（Ctrl+G）。互斥守卫照抄既有分支：任何一个独占输入的浮层
+    // 开着时都不接新热键（ink 的 useInput 不互斥，同一按键会送达每个处理器，BUG-90）。
+    if (
+      key.ctrl &&
+      input === 'g' &&
+      !showHelp &&
+      !showCommandPalette &&
+      !showHistorySearch &&
+      !showTranscript &&
+      !editorOpen
+    ) {
+      setShowPhoneLink(true);
+      return;
+    }
+
     // 复制最近助手回复到剪贴板（Ctrl+Y，CC 模式 P1-1 剪贴板统一出口）
     if (key.ctrl && input === 'y') {
       handleCopyLast();
@@ -770,6 +873,43 @@ function CcApp({ options = {} }) {
       role: 'user',
       text,
     }]);
+
+    // 手机联动命令（`khy phone …` / `khy amoo …`）：走收集式命令桥，输出落成一条
+    // notice（与 Legacy 的 commandOutputSink → transcript notice 同一范式）。只放行
+    // phone/amoo —— CcApp 头注明确「完整 CC 复刻未获授权裁决 ⇒ 保持预览」，其它命令
+    // 一律照旧走下面的回声桩。isPhoneLinkCommand 是纯函数，判否时零成本。
+    if (isPhoneLinkCommand(text)) {
+      setInputValue('');
+      runPhoneLinkCommand(text)
+        .then((res) => {
+          if (!res || !res.content) {
+            // 桥不可用（门控关 / handler 抛错 / 无输出）：不回落到回声桩假执行，
+            // 只说清楚没跑成。
+            setMessages(prev => [...prev, {
+              id: Date.now() + 1,
+              timestamp: Date.now(),
+              role: 'notice',
+              content: '⚠ 手机联动命令未执行（CC 模式命令桥不可用或无输出）',
+            }]);
+            return;
+          }
+          setMessages(prev => [...prev, {
+            id: Date.now() + 1,
+            timestamp: Date.now(),
+            role: 'notice',
+            content: res.content,
+          }]);
+        })
+        .catch(() => {
+          setMessages(prev => [...prev, {
+            id: Date.now() + 1,
+            timestamp: Date.now(),
+            role: 'notice',
+            content: '⚠ 手机联动命令执行失败',
+          }]);
+        });
+      return;
+    }
 
     // ⚠ 预览态桩：未连接 AI 网关，用回声模拟助手回复。
     // 诚实起见，回显文本自带「预览」标记 —— 否则用户会把回声误当成真实模型回答。
@@ -879,6 +1019,9 @@ function CcApp({ options = {} }) {
         onClose: () => setShowCommandPalette(false),
         cols,
         rows,
+        // 子视图状态保持：播种上次的 filter/cursor，并把本次现场写回缓存
+        initialState: viewStateCache.current.commandPalette,
+        onStateChange: (patch) => rememberView('commandPalette', patch),
       });
     }
     return React.createElement(CcFuzzyPicker, {
@@ -919,6 +1062,9 @@ function CcApp({ options = {} }) {
       onClose: () => setShowHistorySearch(false),
       cols,
       rows,
+      // 子视图状态保持（同命令面板）：Esc 关掉后再按 Ctrl+R，query/cursor 原样恢复
+      initialState: viewStateCache.current.historySearch,
+      onStateChange: (patch) => rememberView('historySearch', patch),
     });
   }
 
@@ -961,6 +1107,26 @@ function CcApp({ options = {} }) {
         React.createElement(Text, { color: CC_COLORS.dimColor }, '保存并关闭编辑器以继续'),
       ),
     );
+  }
+
+  // 手机联动状态面板覆盖层（Ctrl+G）。整棵树提前返回 ⇒ 不累加 chrome 兄弟高度，
+  // 帧高安全免费得来（与命令面板/历史搜索同一条路）。
+  if (showPhoneLink) {
+    return React.createElement(getCcPhoneLinkPanel(), {
+      snapshot: phoneSnapshot,
+      cols,
+      rows,
+      onClose: () => setShowPhoneLink(false),
+      onRefresh: () => {
+        // 手动刷新键：invalidate 让下一次 refresh 无视 TTL（provider 的既有出口）。
+        if (phoneProvider && typeof phoneProvider.invalidate === 'function') {
+          phoneProvider.invalidate();
+        }
+        if (phoneProvider && typeof phoneProvider.refresh === 'function') {
+          phoneProvider.refresh({ force: true });
+        }
+      },
+    });
   }
 
   // ── 消息段:开了选择时改走投影 <Viewport>([DESIGN-ARCH-124] §3.6)──────────
@@ -1011,7 +1177,17 @@ function CcApp({ options = {} }) {
               })
             )
           : visibleMessages.map(msg =>
-              msg.role === 'user'
+              msg.role === 'notice'
+                // 收集式命令输出（khy phone / khy amoo）：续行悬挂缩进 + 段标题分层，
+                // 行模型真源在 ../utils/ccNoticeLines.js。
+                ? React.createElement(CcNoticeBlock, {
+                    key: msg.id,
+                    content: msg.content,
+                    cols,
+                    // 与账本同源：chromePlan.msgGap 判给帧高时才画那一空行（BUG-91）。
+                    gap: chromePlan.msgGap,
+                  })
+                : msg.role === 'user'
                 ? React.createElement(Box, { key: msg.id, marginTop: chromePlan.msgGap ? 1 : 0 },
                     React.createElement(Text, null, msg.text),
                   )

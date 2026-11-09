@@ -20,6 +20,9 @@
 const React = require('react');
 
 const inkRuntime = require('../inkRuntime');
+// 折行单一真源(纯叶子、零 IO):展开后的全文必须按**渲染列宽**折,否则 ink 二次硬折
+// 会让续行从第 0 列开始、把看板的列几何冲掉。
+const { wrapCell } = require('../wrapCell');
 
 // Status-count + per-line status SSOT: reuse the same icon→status inverse map
 // the task panel header uses, so sidebar styling/counts can never drift.
@@ -298,11 +301,15 @@ function buildSidebarLines(props = {}) {
           argStr = '';
         }
         const isSelected = selectedTool && selectedTool.toolIndex === ti;
+        const toolRaw = `  ${icon} ${nm}${argStr ? ' ' + argStr : ''}`;
+        const toolFitted = t(toolRaw);
         lines.push({
-          text: t(`  ${icon} ${nm}${argStr ? ' ' + argStr : ''}`),
+          text: toolFitted,
           color,
           selected: isSelected,
           dim: !isSelected && done && !isErr,
+          // 被宽度裁掉 → 带上全文,渲染层据此挂「点击展开」(见 SidebarPanel)。
+          ...(toolFitted !== toolRaw ? { full: toolRaw } : null),
         });
       }
     }
@@ -335,12 +342,15 @@ function buildSidebarLines(props = {}) {
         const title = String(n.title || '');
         const detail = String(n.detail || '');
         const text = detail ? (title ? `${title} · ${detail}` : detail) : title;
+        const fitted = t(text);
         // Age-based fade: entries past the fadeRatio fraction of their TTL dim
         // out as they approach expiry (task #4). Skipped entirely when the
         // fade inputs are absent (see _canFade).
         const nline = {
-          text: t(text),
+          text: fitted,
           color: NOTIFY_LEVEL_COLOR[n.level] || NOTIFY_LEVEL_COLOR.info,
+          // 被宽度裁掉 → 带上全文,渲染层据此挂「点击展开」。
+          ...(fitted !== text ? { full: text } : null),
         };
         const ts = Number(n.timestamp);
         if (_canFade && Number.isFinite(ts) && (_now - ts) / _notifyTtl > _fadeRatio) {
@@ -367,6 +377,8 @@ function buildSidebarLines(props = {}) {
           text: t((tail !== cwd ? '…' : '') + tail),
           color: 'gray',
           dim: true,
+          // 保尾截断丢的是路径头部 → 点击展开看完整路径。
+          ...(tail !== cwd ? { full: cwd } : null),
         });
       }
       if (toolsCount > 0) {
@@ -601,7 +613,64 @@ function sidebarShownLines(lines, contentRows, fitContent) {
   return fitContent ? capped : padSidebarLines(capped, contentRows);
 }
 
+/**
+ * Pure: 行内展开 —— 把 `full === expandedFull` 的那一行就地替换成按 `innerW`
+ * 折好的多行(首行保留原样式,续行标 `expandedRow` 让渲染层不再 dim)。
+ *
+ * 为什么 key 是**全文**而不是行下标:看板行数组每帧重算(任务状态/通知 TTL 都在
+ * 变),下标会让「点开第 3 行」在下一帧变成「点开别的行」。全文在条目生命周期内
+ * 稳定,且同一屏不会出现两条一模一样的全文。
+ *
+ * 已展开的行不再参与匹配(否则每帧都会再展开一次)。没有匹配 / 全文为空 /
+ * 折出来只有一行 → 原数组按引用返回,渲染层可据此跳过重算。
+ *
+ * @param {Array<object>} lines
+ * @param {string|null} expandedFull
+ * @param {number} innerW
+ * @param {(s: string, w: number) => string[]} [wrap]
+ * @returns {Array<object>}
+ */
+function expandSidebarRows(lines, expandedFull, innerW, wrap) {
+  const arr = Array.isArray(lines) ? lines : [];
+  const key = typeof expandedFull === 'string' ? expandedFull : '';
+  if (!key) {
+    return arr;
+  }
+  const w = Number(innerW) > 0 ? Math.floor(Number(innerW)) : 0;
+  if (w <= 0) {
+    return arr;
+  }
+  const wrapFn = typeof wrap === 'function' ? wrap : (s, width) => wrapCell(s, width);
+  let hit = false;
+  const out = [];
+  for (const ln of arr) {
+    if (!hit && ln && !ln.expandedRow && typeof ln.full === 'string' && ln.full === key) {
+      const segs = wrapFn(key, w);
+      if (Array.isArray(segs) && segs.length > 1) {
+        hit = true;
+        segs.forEach((seg) => out.push({ ...ln, text: seg, expandedRow: true }));
+        continue;
+      }
+    }
+    out.push(ln);
+  }
+  return hit ? out : arr;
+}
+
+/** 点击总闸(与卡片点击同一判据,不新开 env 门 —— 门预算已透支)。 */
+function _cardClickEnabled() {
+  try {
+    return require('./cardClick').cardClickEnabled(process.env);
+  } catch {
+    return false;
+  }
+}
+
 function SidebarPanel(props = {}) {
+  // 行内展开态（至多一行展开）。hook 必须落在 try 之外、任何提前 return 之前 ——
+  // 条件调用会让 React 的 hook 顺序错乱。key 用**全文**而不是行下标：行数组每帧
+  // 重算（任务/通知状态随时变），下标会让「点开后跳到别的行」。
+  const [expandedFull, setExpandedFull] = React.useState(null);
   try {
     const { Box, Text } = inkRuntime.get();
     const h = React.createElement;
@@ -642,22 +711,40 @@ function SidebarPanel(props = {}) {
     // color block reads as one continuous panel (blank filler rows included).
     const innerW = Math.max(4, width - 2);
     const measure = bg ? _measure() : null;
+    // 行内展开:被宽度裁掉的行(full)点击后就地展开成折好的多行,再点收起。
+    // 展开后行数会变,必须重新过一遍高度上限 —— 否则看板会长过 rows,把
+    // live 区顶穿(见 sidebarShownLines 的注释)。
+    const expandedRows = expandSidebarRows(shown, expandedFull, innerW);
+    const rendered = expandedRows.length > shown.length
+      ? capSidebarLines(expandedRows, contentRows)
+      : expandedRows;
+    const clickOn = _cardClickEnabled();
     return h(
       Box,
       boxProps,
-      ...shown.map((ln, i) =>
-        h(
-          Text,
+      ...rendered.map((ln, i) => {
+        const text = bg ? padLineToWidth(ln.text, innerW, measure) : ln.text || ' ';
+        const textProps = {
+          key: `sb-${i}`,
+          color: ln.color,
+          dimColor: !!ln.dim && !ln.selected && !ln.expandedRow,
+          bold: !!ln.bold,
+          backgroundColor: ln.selected ? '#333333' : undefined,
+        };
+        const full = typeof ln.full === 'string' ? ln.full : '';
+        if (!full || !clickOn) {
+          return h(Text, textProps, text);
+        }
+        // 点击只改展开态;坐标反查一概不做 —— 行下标由闭包携带(cardClick 同一判据)。
+        return h(
+          Box,
           {
             key: `sb-${i}`,
-            color: ln.color,
-            dimColor: !!ln.dim && !ln.selected,
-            bold: !!ln.bold,
-            backgroundColor: ln.selected ? '#333333' : undefined,
+            onClick: () => setExpandedFull((prev) => (prev === full ? null : full)),
           },
-          bg ? padLineToWidth(ln.text, innerW, measure) : ln.text || ' '
-        )
-      )
+          h(Text, textProps, text)
+        );
+      })
     );
   } catch (err) {
     // D5: fail-soft must stay (the sidebar is auxiliary and must never break
@@ -683,6 +770,7 @@ module.exports.padLineToWidth = padLineToWidth;
 module.exports.sidebarContentRows = sidebarContentRows;
 module.exports.sidebarBoxProps = sidebarBoxProps;
 module.exports.sidebarShownLines = sidebarShownLines;
+module.exports.expandSidebarRows = expandSidebarRows;
 module.exports.truncateToWidth = truncateToWidth;
 // 配色/文案具名常量单一真源(供测试断言引用,防止字面量回流散落)。
 module.exports.TASK_GLYPH = TASK_GLYPH;

@@ -179,6 +179,7 @@ function railCols() {
 //     rollbackPicker — /rollback 检查点选择(复用 RewindPicker 组件),同上
 //     formFlow       — /login / /register / /passwd / /apikey 等顺序表单,同上
 //     topologyView   — /topology view 会话森林只读视图,同上
+//     paramPanel     — /命令的参数面板(↑↓选参数·←→调值),与 formFlow 同档
 const OWNING_OVERLAYS = Object.freeze({
   modelPicker: { region: REGION.OVERLAY, ownsInput: true, hideChrome: true },
   khyosOpen: { region: REGION.OVERLAY, ownsInput: true, hideChrome: true },
@@ -186,6 +187,9 @@ const OWNING_OVERLAYS = Object.freeze({
   rollbackPicker: { region: REGION.OVERLAY, ownsInput: true, hideChrome: false },
   formFlow: { region: REGION.OVERLAY, ownsInput: true, hideChrome: false },
   topologyView: { region: REGION.OVERLAY, ownsInput: true, hideChrome: false },
+  // paramPanel — /命令的参数面板(2026-10-10)。与 formFlow 同档:高度随规格数
+  // (1~2 个参数 + 5 条候选窗口 ≈ 12 行)内容相关、未实测贴顶,故 hideChrome=false。
+  paramPanel: { region: REGION.OVERLAY, ownsInput: true, hideChrome: false },
 });
 
 // ── 覆盖层判定(供 App.js / overlayLiveBudget 共用)─────────────────────────

@@ -122,11 +122,28 @@ function historyChromePlan(rows, total) {
   return ccLayout.chromeLadder({ ...HISTORY_CHROME, rows, total });
 }
 
-function CcCommandPalette({ onClose, onExecute, cols, rows }) {
+function CcCommandPalette({ onClose, onExecute, cols, rows, initialState, onStateChange }) {
   // 惰性取 ink 组件（loadInk 之后才安全）：原文漏导 Text/useInput，挂载即 ReferenceError。
   const { Box, Text, useInput } = inkRuntime.get();
-  const [filter, setFilter] = React.useState('');
-  const [cursor, setCursor] = React.useState(0);
+  // 子视图状态保持（[DESIGN-ARCH-085] §1.2「切换视图后恢复位置和状态」/ §0「上下文保持」）：
+  // 浮层每次打开都是新挂载，filter/cursor 若只存本地 useState，Esc 一关就全丢。
+  // initialState 播种 + onStateChange 回写，宿主（ViewProvider / CcApp）持有缓存。
+  // 两个 prop 都不传 → 与改动前逐字节一致（'' / 0）。
+  const [filter, setFilter] = React.useState(initialState && initialState.filter ? initialState.filter : '');
+  const [cursor, setCursor] = React.useState(initialState && Number.isInteger(initialState.cursor) ? initialState.cursor : 0);
+
+  const lastReported = React.useRef(null);
+  React.useEffect(() => {
+    if (typeof onStateChange !== 'function') {
+      return;
+    }
+    const snap = JSON.stringify({ filter, cursor });
+    if (snap === lastReported.current) {
+      return;
+    }
+    lastReported.current = snap;
+    onStateChange({ filter, cursor });
+  }, [filter, cursor, onStateChange]);
 
   const commands = [
     { group: 'Model & Provider', cmd: '/model', desc: 'Switch AI model' },
@@ -253,11 +270,26 @@ function CcCommandPalette({ onClose, onExecute, cols, rows }) {
 
 // ── 历史搜索 ────────────────────────────────────────────────────────────────
 
-function CcHistorySearch({ onSelect, onClose, cols, rows }) {
+function CcHistorySearch({ onSelect, onClose, cols, rows, initialState, onStateChange }) {
   // 惰性取 ink 组件（同 CcCommandPalette）。
   const { Box, Text, useInput } = inkRuntime.get();
-  const [query, setQuery] = React.useState('');
-  const [cursor, setCursor] = React.useState(0);
+  // 子视图状态保持（同 CcCommandPalette）：query/cursor 由宿主缓存，Esc 关闭后再开恢复现场。
+  // 两个 prop 都不传 → 与改动前逐字节一致（'' / 0）。
+  const [query, setQuery] = React.useState(initialState && initialState.query ? initialState.query : '');
+  const [cursor, setCursor] = React.useState(initialState && Number.isInteger(initialState.cursor) ? initialState.cursor : 0);
+
+  const lastReported = React.useRef(null);
+  React.useEffect(() => {
+    if (typeof onStateChange !== 'function') {
+      return;
+    }
+    const snap = JSON.stringify({ query, cursor });
+    if (snap === lastReported.current) {
+      return;
+    }
+    lastReported.current = snap;
+    onStateChange({ query, cursor });
+  }, [query, cursor, onStateChange]);
 
   const allHistory = React.useMemo(() => {
     try {

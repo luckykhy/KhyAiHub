@@ -15,6 +15,7 @@ const inkRuntime = require('../inkRuntime');
 const ProcessGroup = require('./ProcessGroup');
 const { sectionGapEnabled } = require('./sectionGap');
 const ToolLines = require('./ToolLines');
+const { AttachmentChips } = require('./AttachmentChips');
 const { collapseLongUserMessage } = require('./userMessageCollapse');
 // 用户消息的底色 / 字色 / 总闸收敛到单一真源(leaf),两条 TUI 转录路径共用,见其头部。
 const {
@@ -277,6 +278,22 @@ function adaptPersistedTimeline(tl, toolCalls) {
   }
 }
 
+/**
+ * 用户消息下方的附件回显。
+ *
+ * 有 `attachments`（本轮提交时投影出的名字/桶/字节数）→ 出 chip 行，用户能对上号
+ * （尤其是多张时）；没有（历史消息，或只留了计数的旧记录）→ 退回旧 `×N`，
+ * 逐字节不变。两条用户消息分支（白底框 / legacy 透明）共用这一份判词。
+ */
+function buildAttachmentEcho(msg, h, Box, Text) {
+  const list = Array.isArray(msg.attachments) ? msg.attachments : [];
+  if (list.length > 0) {
+    return h(Box, { marginLeft: 2 }, h(AttachmentChips, { attachments: list }));
+  }
+  const count = Number(msg.imageCount);
+  return count > 0 ? h(Text, { color: 'blue' }, `  ×${count}`) : null;
+}
+
 function MessageBlock({ msg, expanded }) {
   const { Box, Text } = inkRuntime.get();
   const h = React.createElement;
@@ -312,7 +329,7 @@ function MessageBlock({ msg, expanded }) {
             )
           )
         ),
-        msg.imageCount > 0 ? h(Text, { color: 'blue' }, `  ×${msg.imageCount}`) : null
+        buildAttachmentEcho(msg, h, Box, Text)
       );
     }
     // Legacy transparent echo — byte-identical when gated off. Same display cap
@@ -326,7 +343,7 @@ function MessageBlock({ msg, expanded }) {
         { bold: true },
         collapseLongUserMessage(String(msg.content == null ? '' : msg.content), process.env)
       ),
-      msg.imageCount > 0 ? h(Text, { color: 'blue' }, `  ×${msg.imageCount}`) : null
+      buildAttachmentEcho(msg, h, Box, Text)
     );
   }
 
