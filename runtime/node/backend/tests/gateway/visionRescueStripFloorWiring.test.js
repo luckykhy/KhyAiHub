@@ -39,14 +39,7 @@ const env = h.envSandbox(['KHY_VISION_FALLBACK_MODEL', 'KHY_VISION_FALLBACK_CASC
 // 模型名 gpt-4o 命中 VISION_NAME_HINTS → decideVisionRouting=keep → 图保留到主级联,
 // 使 404 拒图发生在**运行时**(而非 prep 期被路由改写),精确复现 post-failure 救援网断桥。
 const runner = h.makeRunner({ prompt: '请先描述图片中的关键信息，再推断我想做什么', model: 'gpt-4o', tag: 'rescue-floor' });
-
-let rec;
-function wire() {
-  rec = h.makeRecordingAdapter({ content: '已作答', captureImages: true });
-  h.wireCascade(h.makeRejectAdapter(), rec);
-}
-
-const _OCR_TEXT_DETAIL = [{ text: '发票 金额 100', confidence: 90, needsAiFallback: false, truncated: false, lang: 'chi_sim', requestedLang: 'chi_sim', orientationCorrected: 0, upscaledFactor: 0 }];
+const run = h.makeRescueRun({ genLeaf, runner });
 
 describe('visionOcrFallback 纯叶子:救援网底线门 isRescueStripFloorEnabled', () => {
   test('默认开;仅显式 0/false/off/no 关', () => {
@@ -70,9 +63,7 @@ describe('post-failure 救援网 OCR 无文本 → 剥图必留痕(修「没有�
 
   test('A) 修复点:救援网触发 + OCR 无文本 + 底线门开 → 剥图 + 注入底线,下游文本适配器据实作答', async () => {
     env.set({ KHY_VISION_RESCUE_STRIP_FLOOR: undefined }); // 救援底线门默认开
-    genLeaf.setAiGatewayGenerateMethodDeps({ extractImageOcrDetails: () => [], collectProviderSiblingModels: () => [] });
-    wire();
-    const res = await runner.run();
+    const { res, rec } = await run([]);
     assert.equal(res.success, true);
     assert.ok(h.imagesStripped(rec.finalImages), '不变量:救援网 OCR 无文本时,下游非视觉适配器永不收到裸图');
     assert.match(rec.finalPrompt || '', /\[图像无法读取\]/, '修复:剥图同时留下「图收到但读不出」痕迹,堵「没有附带图片」幻觉');
@@ -81,9 +72,7 @@ describe('post-failure 救援网 OCR 无文本 → 剥图必留痕(修「没有�
 
   test('B) 门关(KHY_VISION_RESCUE_STRIP_FLOOR=off) → 逐字节回退历史行为(裸图存活,无底线痕迹)', async () => {
     env.set({ KHY_VISION_RESCUE_STRIP_FLOOR: 'off' });
-    genLeaf.setAiGatewayGenerateMethodDeps({ extractImageOcrDetails: () => [], collectProviderSiblingModels: () => [] });
-    wire();
-    const res = await runner.run();
+    const { res, rec } = await run([]);
     assert.equal(res.success, true);
     // 历史断桥现场:救援网 OCR 无文本时不剥图 → 下游适配器仍收到裸图。
     assert.ok(Array.isArray(rec.finalImages) && rec.finalImages.length > 0, '门关:裸图存活到下游(逐字节回退)');
@@ -92,9 +81,7 @@ describe('post-failure 救援网 OCR 无文本 → 剥图必留痕(修「没有�
 
   test('C) 无回归:救援网触发 + OCR 有文本 → 走既有 OCR 文本注入,救援底线不登场', async () => {
     env.set({ KHY_VISION_RESCUE_STRIP_FLOOR: undefined });
-    genLeaf.setAiGatewayGenerateMethodDeps({ extractImageOcrDetails: () => _OCR_TEXT_DETAIL, collectProviderSiblingModels: () => [] });
-    wire();
-    const res = await runner.run();
+    const { res, rec } = await run(h.OCR_TEXT_DETAIL);
     assert.equal(res.success, true);
     assert.ok(h.imagesStripped(rec.finalImages), 'OCR 有文本时既有分支同样剥图');
     assert.match(rec.finalPrompt || '', /OCR 图像文本识别结果/, '门开:用既有 OCR 文本注入(证救援底线只在 OCR 无文本时兜底,无回归)');

@@ -57,6 +57,14 @@ function withEnv(mut, fn) {
   finally { for (const k of Object.keys(mut)) { if (saved[k] == null) delete process.env[k]; else process.env[k] = saved[k]; } }
 }
 
+// Windows 上 os.tmpdir() 落在用户 profile 之下（C:\Users\<u>\AppData\Local\Temp），
+// 而门的允许范围本就包含 $HOME/ —— 夹具的「evil 兄弟目录」于是落在允许范围内，
+// 「sibling 必须被拒」这条 Linux 假设在 Windows 恒不成立（门开也放行）。
+// 把 home 钉到一个不覆盖临时目录的 POSIX 路径，只隔离「兄弟名前缀」这一条判据。
+const _realHomedir = os.homedir;
+os.homedir = () => '/home/user';
+test.after(() => { os.homedir = _realHomedir; });
+
 function freshService() {
   delete require.cache[require.resolve('../src/services/instructionFileService')];
   delete require.cache[require.resolve('../src/services/instructionIncludeBoundary')];

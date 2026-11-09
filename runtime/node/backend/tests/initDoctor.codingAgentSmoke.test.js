@@ -83,6 +83,9 @@ describe('doctor coding agent smoke test', () => {
       };
     });
 
+    // doctorReport.js 从 formatters 解构这两个纯文本宽度函数；局部 mock 不给它们，
+    // doctor 渲染时会抛 "truncateToWidth is not a function"。宽度算法取真叶子实现。
+    const actualWidth = jest.requireActual('../src/utils/text/width');
     jest.doMock('../src/cli/formatters', () => ({
       printSuccess: jest.fn(),
       printError: jest.fn(),
@@ -93,6 +96,8 @@ describe('doctor coding agent smoke test', () => {
       MASCOT_MINI: '*',
       ICON_HEART: '+',
       ICON_GEAR: '*',
+      displayWidth: actualWidth.displayWidth,
+      truncateToWidth: actualWidth.truncateToWidth,
     }));
 
     jest.doMock('../src/services/gateway/aiGateway', () => ({
@@ -194,6 +199,18 @@ describe('doctor coding agent smoke test', () => {
 
     jest.doMock('../src/services/userProfile', () => ({
       getProfile: () => ({ skillLevel: 'beginner', commandCount: 0 }),
+    }));
+
+    // 深检专属两组：连接诊断（联网）与驻留资源普查（本机进程/磁盘）。用例要断言的是
+    // 「AI 能力」那组检查项（交付链路 / 语言一致性 / 复盘命令），它们只在 --deep 跑，
+    // 故这两组在测试里桩掉——深检因此既确定又不联网。
+    jest.doMock('../src/cli/handlers/doctorConnectivity', () => ({
+      runConnectivityChecks: async () => [],
+    }));
+
+    jest.doMock('../src/services/runtimeResourceProbe', () => ({
+      collectRuntimeCensus: () => ({}),
+      assessResidency: () => [],
     }));
 
     return { runtimeDiagCalls };
@@ -457,8 +474,10 @@ describe('doctor coding agent smoke test', () => {
 
     const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     try {
+      // 深检路径：交付链路 / 语言一致性这两组检查只在 --deep 跑（默认走本地快检，
+      // 深检丢后台，见 handlers/init.js 的 P1-13 拆分）。
       const { handleDoctor } = require('../src/cli/handlers/init');
-      await handleDoctor({}, []);
+      await handleDoctor({ deep: true }, []);
 
       // 轮二十八: 复盘命令从渲染器特判块移入检查项 fix 字段，经行动清单渲染
       const out = logSpy.mock.calls.map((call) => String(call[0] || '')).join('\n');
@@ -475,7 +494,7 @@ describe('doctor coding agent smoke test', () => {
     const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     try {
       const { handleDoctor } = require('../src/cli/handlers/init');
-      await handleDoctor({ json: true }, []);
+      await handleDoctor({ json: true, deep: true }, []);
 
       const payload = JSON.parse(logSpy.mock.calls.map((call) => String(call[0] || '')).join(''));
       expect(payload.status).toBe('warn');

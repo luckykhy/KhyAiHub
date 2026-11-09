@@ -34,14 +34,7 @@ const un = require(BE + '/src/services/gateway/ocrUsageNotice');
 
 const env = h.envSandbox(['KHY_VISION_FALLBACK_MODEL', 'KHY_VISION_FALLBACK_CASCADE', 'KHY_GLM_VISION_MODEL', 'KHY_VISION_INTERMEDIATE_MESSAGE', 'KHY_VISION_OCR_FALLBACK', 'KHY_OCR_USAGE_DISCLOSURE']);
 const runner = h.makeRunner({ prompt: '请描述图片中的关键信息', model: 'gpt-4o', tag: 'usage-disclosure' });
-
-let rec;
-function wire() {
-  rec = h.makeRecordingAdapter({ content: '已作答', captureImages: true });
-  h.wireCascade(h.makeRejectAdapter(), rec);
-}
-
-const _OCR_TEXT_DETAIL = [{ text: '发票 金额 100', confidence: 90, needsAiFallback: false, truncated: false, lang: 'chi_sim', requestedLang: 'chi_sim', orientationCorrected: 0, upscaledFactor: 0 }];
+const run = h.makeRescueRun({ genLeaf, runner });
 
 describe('ocrUsageNotice 纯叶:披露门 isEnabled', () => {
   test('默认开;仅显式 0/false/off/no 关', () => {
@@ -62,9 +55,7 @@ describe('OCR 成功路径「使用 OCR 透明告知」端到端(OPS-MAN-123)', 
 
   test('A) 修复点:OCR 成功 + 披露门开 → prompt 同含 OCR 文本 + 披露指令,下游文本适配器作答', async () => {
     env.set({ KHY_OCR_USAGE_DISCLOSURE: undefined }); // 默认开
-    genLeaf.setAiGatewayGenerateMethodDeps({ extractImageOcrDetails: () => _OCR_TEXT_DETAIL, collectProviderSiblingModels: () => [] });
-    wire();
-    const res = await runner.run();
+    const { res, rec } = await run(h.OCR_TEXT_DETAIL);
     assert.equal(res.success, true);
     assert.ok(h.imagesStripped(rec.finalImages), '不变量:OCR 成功后下游非视觉适配器收到剥图后的纯文本');
     assert.match(rec.finalPrompt || '', /OCR 图像文本识别结果/, 'OCR 文本仍注入(准确识别不回退)');
@@ -75,9 +66,7 @@ describe('OCR 成功路径「使用 OCR 透明告知」端到端(OPS-MAN-123)', 
 
   test('B) 披露门关(KHY_OCR_USAGE_DISCLOSURE=off) → 逐字节回退(含 OCR 文本但无披露指令)', async () => {
     env.set({ KHY_OCR_USAGE_DISCLOSURE: 'off' });
-    genLeaf.setAiGatewayGenerateMethodDeps({ extractImageOcrDetails: () => _OCR_TEXT_DETAIL, collectProviderSiblingModels: () => [] });
-    wire();
-    const res = await runner.run();
+    const { res, rec } = await run(h.OCR_TEXT_DETAIL);
     assert.equal(res.success, true);
     assert.match(rec.finalPrompt || '', /OCR 图像文本识别结果/, '门关:OCR 文本照旧注入(能力不受影响)');
     assert.doesNotMatch(rec.finalPrompt || '', /通过 OCR 文字识别读取/, '门关:不注入披露(逐字节回退历史行为)');
@@ -85,9 +74,7 @@ describe('OCR 成功路径「使用 OCR 透明告知」端到端(OPS-MAN-123)', 
 
   test('C) 无回归:OCR 无文本(读不出) → 不注入披露(披露仅在 OCR 成功时登场)', async () => {
     env.set({ KHY_OCR_USAGE_DISCLOSURE: undefined });
-    genLeaf.setAiGatewayGenerateMethodDeps({ extractImageOcrDetails: () => [], collectProviderSiblingModels: () => [] });
-    wire();
-    const res = await runner.run();
+    const { res, rec } = await run([]);
     assert.equal(res.success, true);
     assert.doesNotMatch(rec.finalPrompt || '', /通过 OCR 文字识别读取/, 'OCR 无文本 → 无成功可披露,不注入(count>0 才触发)');
   });

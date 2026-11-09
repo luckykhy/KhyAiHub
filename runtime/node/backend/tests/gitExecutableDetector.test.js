@@ -107,6 +107,36 @@ describe('Git Executable Detector', () => {
       expect(gitPath).toBe(customPath);
   });
 
+  test('detectGitExecutable skips PATH entries that are directories named git', () => {
+    // 回归：PATH 上存在名为 `git` 的**目录**（portable Git 的 <root>\Tools\git）。
+    // existsSync 对目录也返回 true，若不判 isFile 就会把目录当成可执行文件
+    // 返回 → 下游 spawn 报 ENOENT → 本机全部 git 能力静默失效且无报错线索。
+    //
+    // 注意：注入模式会整体跳过 PATH 扫描（保持历史字节一致），故此处直接调用
+    // 扫描叶子本身来钉这条规则——否则这条断言在注入模式下永远打不到真路径。
+    const dirPath = 'D:\\Portable\\Tools\\git';
+    const realExe = 'D:\\Portable\\Tools\\git\\cmd\\git.exe';
+    const mockExists = (p) => p === dirPath || p === realExe;
+    const mockStat = (p) => ({
+      isFile: () => p === realExe,
+      isDirectory: () => p === dirPath,
+      mtimeMs: 1,
+      size: 1,
+    });
+
+    // PATH 结构照搬本机实况：先有 <root>\Tools（其下有个名为 git 的**目录**），
+    // 后有 <root>\Tools\git\cmd（真正的 git.exe 在此）。
+    const found = detector._scanPathForGit(
+      { PATH: 'D:\\Portable\\Tools;D:\\Portable\\Tools\\git\\cmd' },
+      'win32',
+      mockExists,
+      mockStat
+    );
+
+    expect(found).toBe(realExe);
+    expect(found).not.toBe(dirPath);
+  });
+
   test('detectGitExecutable handles exceptions gracefully', () => {
       detector.clearCache();
     
