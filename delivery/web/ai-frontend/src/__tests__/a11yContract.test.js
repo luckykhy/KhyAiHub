@@ -25,7 +25,9 @@ const cssFiles = readDirRecursive(srcRoot, '.css');
 
 describe('W8: Keyboard Accessibility — 交互元素键盘可达', () => {
   it('自定义可点击元素应有键盘事件处理（回归基线，只降不升）', () => {
-    const BASELINE = 10;
+    // 0 是实测值（此前挂在 10 上从未收紧过）。从此新增一个不带键盘路径的
+    // 自定义可点击元素就红，棘轮锁住现状。
+    const BASELINE = 0;
     const violations = [];
     for (const file of vueFiles) {
       const src = readFileSync(file, 'utf-8');
@@ -68,6 +70,10 @@ describe('W8: Keyboard Accessibility — 交互元素键盘可达', () => {
 
 describe('W9: ARIA — 状态变化区有 aria-live / aria-busy', () => {
   it('包含动态加载内容的组件应使用 aria-busy 或 aria-live', () => {
+    // 0 是实测值：6 个 gateway 卡（CcAccessCard / CustomProviderCard / ImageModelCard /
+    // MyModelsCard / ProviderConfigDialog / RelayConfigCard）已补 aria-busy。
+    // 此前挂在 20 上，形同虚设 —— 任何组件加个 v-loading 都不会让它动。
+    const BASELINE = 0;
     const loadingPatterns = [
       /v-if="loading|v-if="isLoading|v-loading|ElLoading|:loading/,
     ];
@@ -82,9 +88,9 @@ describe('W9: ARIA — 状态变化区有 aria-live / aria-busy', () => {
       }
     }
     if (violations.length > 0) {
-      console.warn(`[W9] ${violations.length} components with loading states lack aria-busy/aria-live (baseline=20):\n  ${violations.slice(0, 5).join('\n  ')}`);
+      console.warn(`[W9] ${violations.length} components with loading states lack aria-busy/aria-live (baseline=${BASELINE}):\n  ${violations.slice(0, 5).join('\n  ')}`);
     }
-    expect(violations.length).toBeLessThanOrEqual(20);
+    expect(violations.length).toBeLessThanOrEqual(BASELINE);
   });
 
   it('toast/通知相关应通过集中出口（notify.js），不直接 ElMessage（回归基线）', () => {
@@ -148,6 +154,9 @@ describe('A11Y Structure: 语义化 HTML 基线', () => {
 
 describe('A11Y: Form Accessibility — 表单可访问性', () => {
   it('表单输入元素应有 label 关联或 aria-label', () => {
+    // 这个 it 原先只有 console.warn、没有 expect —— 永远绿。棘轮基线取实测值，
+    // 照同文件 W9 的 toBeLessThanOrEqual 同款写法，只降不升。
+    const BASELINE = 12;
     const violations = [];
     for (const file of vueFiles) {
       const src = readFileSync(file, 'utf-8');
@@ -163,9 +172,10 @@ describe('A11Y: Form Accessibility — 表单可访问性', () => {
         }
       }
     }
-    if (violations.length > 0) {
-      console.warn(`[A11Y] ${violations.length} input elements may lack label association:\n  ` +
-        violations.slice(0, 5).map((v) => `${v.file}: ${v.tag}`).join('\n  '));
+    if (violations.length > BASELINE) {
+      console.warn(`[A11Y] ${violations.length} input elements may lack label association (baseline=${BASELINE}):\n  ` +
+        violations.slice(0, 8).map((v) => `${v.file}: ${v.tag}`).join('\n  '));
     }
+    expect(violations.length).toBeLessThanOrEqual(BASELINE);
   });
 });

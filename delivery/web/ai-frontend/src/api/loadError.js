@@ -11,6 +11,10 @@ import { deriveErrorMessage } from '@/api/notify';
 //
 // The composable still resolves (never throws) so the view can keep rendering
 // the last good data; only the error state is new.
+//
+// 共享单槽是**设计选择**，不是竞态缺陷：全站一次只显示一个加载失败。
+// 2026-10-25 裁决维持现状（见 works/record/evidence/01_人类贡献/决策记录.md
+// D-批3 第 4 条 (c)）。若要改成每页各持一份，那是形态变更，不是修 bug。
 
 export function useLoadError() {
   return ref('');
@@ -21,6 +25,15 @@ function statusOf(err) {
   return Number.isFinite(status) && status > 0 ? status : 0;
 }
 
+// 修复建议按状态码分流：401/403 重试一万次结果不变，拖着「请稍后重试」尾巴只会
+// 把用户引向一个无效动作。
+function defaultFix(status) {
+  if (status === 401) return '请重新登录后再试';
+  if (status === 403) return '请联系管理员开通该权限';
+  if (status === 429) return '请稍后重试，或降低请求频率';
+  return '请稍后重试';
+}
+
 /**
  * 把一次加载失败变成一句可显示的话。
  * @param {*} err
@@ -28,7 +41,7 @@ function statusOf(err) {
  * @param {string} [fix] 用户可以做的一个动作（例：运行 khy doctor）
  * @returns {string}
  */
-export function describeLoadError(err, subject, fix = '请稍后重试') {
+export function describeLoadError(err, subject, fix) {
   const status = statusOf(err);
   const base = deriveErrorMessage(err, { fallback: '' });
 
@@ -51,7 +64,7 @@ export function describeLoadError(err, subject, fix = '请稍后重试') {
     reason = base ? base.slice(0, 90) : '请求失败';
   }
 
-  return `${subject}加载失败：${reason}，${fix}`;
+  return `${subject}加载失败：${reason}，${fix || defaultFix(status)}`;
 }
 
 /**

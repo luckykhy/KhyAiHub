@@ -1,0 +1,294 @@
+{
+  "$schemaVersion": "1.0.0",
+  "$artifact": "khyos 外部生态市场编目 · ZCode 生态",
+  "$source": "2026-10-29 六生态勘察与映射收敛（市场设计工作流产物，未入仓）；逐条上游出处以各 entry.upstreamUrl 为准",
+  "$status": "active",
+  "eco": "zcode",
+  "surveyedAt": "2026-10-29",
+  "_note": "ZCode 生态编目：18 条（10 条可评估 + 2 条 compat=covered + 6 条 compat=blocked），收敛自 zcode 映射的 entries 数组（映射 blocked 数组与 entries 中 compat=blocked 者逐条重复，不得二次添加）。2026-11-02 复核：zcode-token-usage-statusbar（tokenUsageService + ProcessMonitorDialog）与 skill-buddy（khy skill / khy mcp）被原生能力覆盖，从 blocked 改为 covered；其「asar 注入」实现路线仍不可移植。来源为 zai-org/zcode-plugins 官方市场 67 条中编目点名的 18 条。形态纪律：同一 upstreamUrl（官方市场仓）托管多条目，name 是生态内主键；UI 面板类（excalidraw/kicad/documents-viewer 等）仍 blocked（khyos 拓展 kind 枚举无 UI 面）；mcp 类三条（image-search adapter-needed 需展开 ${ZCODE_BASE_URL} 与 zcode_official 鉴权，cadpilot 与 zcode-open-bridge 为 direct）。ZCode 后端域名不得写进入仓文件（RUNTIME-001）。",
+  "marketplaces": [
+    {
+      "name": "zai-org/zcode-plugins 官方市场",
+      "url": "https://github.com/zai-org/zcode-plugins",
+      "kind": "marketplace.json 清单（url/zip+sha256 source，CDN 分发）",
+      "note": "官方市场 67 条中本次只映射编目点名的 18 条；本机缓存另有 pdf/presentations/spreadsheets/visualize/android-emulator/ios-simulator/node-repl-host/restore-legacy-sessions 等官方条目未编目"
+    }
+  ],
+  "entries": [
+    {
+      "name": "computer-use",
+      "upstreamUrl": "https://github.com/zai-org/zcode-plugins",
+      "type": "plugin",
+      "khyosMarket": "skill",
+      "targetPath": "works/data/khy/skills/computer-use/SKILL.md（项目级发现链首位，skillLoader.js:164；用户级 getDataHome()/skills/computer-use/）",
+      "compat": "adapter-needed",
+      "compatNote": "格式直认、动作面要重接。plugin.json 只是 skills 目录声明（本机缓存 computer-use/0.6.5/.zcode-plugin/plugin.json 仅 name/version/description/author/license/skills 七字段）；SKILL.md frontmatter 只有 name+description，与 khyos 原生 SKILL.md 最小头同构（对照 runtime/node/backend/src/data/cliAnythingRegistry/skills/cli-anything-adguardhome/SKILL.md:1-5），缺 version/layer/tags/platforms 只触发 validateSkill warning（skillLoader.js:405-422），不阻断发现。但正文 100% 绑 ZCode 运行时：每次调用走 mcp__node_repl__js，bootstrap 从 ZCODE_CUA_PLUGIN_ROOT/ZCODE_PLUGIN_ROOT/CLAUDE_PLUGIN_ROOT 取插件根再 import scripts/computer-use-client.mjs（该 SKILL.md:19-37 实证）。khyos 侧有对等动作面可接，不是从零实现：ComputerUseTool（toolName 'ComputerUse'，observe→think→act→verify 全循环，risk critical，门控 KHY_DESKTOP_CONTROL + safetyGate 预计算界限，tools/ComputerUseTool/index.js:10-33）、DesktopControlTool、REPLTool（aliases 含 node_repl，tools/REPLTool/index.js:9）。适配 = bootstrap 与工具名改接 khyos 自有面，并把 ZCode 的『Main agent only / 不委派子代理』等约束对齐 khyos 门控语义。",
+      "license": "Apache-2.0",
+      "relationship": "adapter",
+      "agentScope": ["zcode"],
+      "what": "ZCode 官方 computer-use 插件：格式直认，正文全绑 ZCode 运行时，需重接到 khyos ComputerUseTool。"
+    },
+    {
+      "name": "browser-use",
+      "upstreamUrl": "https://github.com/zai-org/zcode-plugins",
+      "type": "plugin",
+      "khyosMarket": "skill",
+      "targetPath": "works/data/khy/skills/control-browser/SKILL.md 与 works/data/khy/skills/web-gui-tester/SKILL.md（一个插件两个 skill，缓存 browser-use/0.5.1/.zcode-plugin/plugin.json 的 skills:\"skills\"）",
+      "compat": "adapter-needed",
+      "compatNote": "frontmatter 格式直认（同 computer-use 分析）。control-browser 正文驱动 ZCode 内置浏览器（Desktop IAB 与显式启用的 CLI 管理 headless CDP），走 mcp__node_repl__js、10 处 ZCode 运行时提及（本次对缓存全部 SKILL.md 做的 mcp__ 引用直方图实测）；web-gui-tester 不引 mcp 工具但仍属 ZCode 浏览器测试约定。khyos 承载面存在：WebBrowserTool（runtime/node/backend/src/tools/WebBrowserTool/index.js）与桌面 BrowserPane。适配 = 动作面重接 + 打开/导航/检查/点击/输入/截图/录制 WebM/验证的参数与语义按 khyos 工具重写。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["zcode"],
+      "what": "ZCode 官方 browser-use 插件：含 control-browser 与 web-gui-tester 两技能，驱动 ZCode 内置浏览器。"
+    },
+    {
+      "name": "documents",
+      "upstreamUrl": "https://github.com/zai-org/zcode-plugins",
+      "type": "plugin",
+      "khyosMarket": "skill",
+      "targetPath": "works/data/khy/skills/docx/SKILL.md（连同包内 scripts/ 整目录，khy skill import <目录>，cli/handlers/skill.js:713-724）；docx-viewer 部分不落地",
+      "compat": "adapter-needed",
+      "compatNote": "可移植的只有 docx SKILL.md：自包含 python 脚本技能（SKILL.md:47-68 全部经 $DOCX_SCRIPTS 绝对路径调 scripts/），不引任何 mcp__ 工具（直方图实测 mcp-tools=-），frontmatter name+description 可被 khyos 直接解析。三处不能直接落地：(a) 许可证冲突未解——plugin.json(0.2.1) 写 Apache-2.0，SKILL.md frontmatter 却写 'license: Proprietary. LICENSE.txt has complete terms'（documents/0.2.1/skills/docx/SKILL.md:7），编目记 unknown；按 SOURCING-002 非 A 档，落地前必须打开包内 LICENSE.txt 定档（B 档 warning 需提案复核）。(b) 插件的 mcpServers 是 ZCode.exe 宿主绝对路径 + __zcode-plugin-host + dist/server.mjs + ELECTRON_RUN_AS_NODE（documents/0.2.1/.zcode-plugin/plugin.json:17-31），不是可移植 server。(c) ui.surfaces 声明 ui://documents/panel.html 侧栏面板（同文件:33-47），khyos 无该 UI 契约；docx-viewer skill 绑定查看器面板，随之舍弃。另正文 6 处 ZCode 提及需清理。",
+      "license": "unknown",
+      "relationship": "adapter",
+      "agentScope": ["zcode"],
+      "what": "ZCode 官方 documents 插件：可移植的只有 docx SKILL.md，viewer 面板与宿主 MCP 均不可移植，license 冲突未解。"
+    },
+    {
+      "name": "image-search",
+      "upstreamUrl": "https://github.com/zai-org/zcode-plugins",
+      "type": "mcp",
+      "khyosMarket": "mcp",
+      "targetPath": "works/data/khy/mcp.json → mcpServers[\"zcode-image-search\"]（project 作用域，mcpConfigStore.js:31-33；user 作用域 getDataHome()/mcp.json，:41-43）",
+      "compat": "adapter-needed",
+      "compatNote": "形状接近但有两处 ZCode 私有约定要转（本机缓存 image-search/0.1.1/.zcode-plugin/plugin.json:13-23 实证）：url 是模板 ${ZCODE_BASE_URL}/api/v1/mcp/server/image_search、鉴权是 auth.type=zcode_official(jwt_token)、另有 timeoutMs:90000。khyos mcp.json 只认 {type:'http',url,headers?}（types.js validateUrlConfig:74-83；多余字段不被消费），适配 = 安装时把 base url 展开成字面量、把 jwt 转成 headers.Authorization。两个非格式前提：端点本身是 ZCode 后端（z.ai），khyos 用户须自有 ZCode 账号与 token 才有意义；base url 不得写进入仓编目文件（RUNTIME-001：生产域名只允许落在 constants/serviceDefaults.js）。",
+      "license": "Apache-2.0",
+      "relationship": "adapter",
+      "agentScope": ["zcode"],
+      "what": "ZCode 官方 image-search 的 MCP：形状接近标准 MCP，但 url 模板与 zcode_official 鉴权是私有约定。"
+    },
+    {
+      "name": "plugin-creator",
+      "upstreamUrl": "https://github.com/zai-org/zcode-plugins",
+      "type": "skill",
+      "khyosMarket": "skill",
+      "targetPath": "works/data/khy/skills/plugin-creator/SKILL.md",
+      "compat": "adapter-needed",
+      "compatNote": "格式直认（缓存 plugin-creator/0.1.1 的 skills 目录，frontmatter name+description）；内容全篇教 ZCode 插件开发：.zcode-plugin/plugin.json schema、目录约定、本地 dev 市场安装试用（7 处 ZCode 提及）。khyos 对应契约是另一套，需重写而非翻译：三层清单 khy.extension.json/openclaw.plugin.json/package.json#khy（extensionManifest.js:19-22）、kind 枚举 runtime|ide-bridge|asset|toolchain（:32，runtime 必须有 main 且文件在盘上，check-repo-layout.js:894-904）、拓展 id 必须等于叶子目录名（:891）、核里禁硬编码拓展 id（:1033，当前已有 1 处 promoted error）、khy ext new 的 scaffold 生成 openclaw.plugin.json（extensionMarketplace.js:225），以及 khy-dsh-compat 导入器准入（禁自读模型密钥/禁直网/Cordis 服务白名单，lib/importPlugin.js:47-61）。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["zcode"],
+      "what": "教 ZCode 插件开发的元技能：khyos 拓展契约是另一套，需重写而非翻译。"
+    },
+    {
+      "name": "skill-creator",
+      "upstreamUrl": "https://github.com/zai-org/zcode-plugins",
+      "type": "skill",
+      "khyosMarket": "skill",
+      "targetPath": "works/data/khy/skills/skill-creator/SKILL.md",
+      "compat": "adapter-needed",
+      "compatNote": "格式直认；内容是 ZCode 的 SKILL.md 约定与验证流程（12 处 ZCode 提及）。khyos 侧标准头是 name/version/description/layer/lifecycle/tags/platforms/dependencies（skillLoader.js:4-18），解析器为零依赖 YAML 子集（:65-151，支持标量/行内数组/块列表/布尔/数字/引号串）——比 ZCode 的 name+description 最小头多几个可选字段（缺了只 warning，:405-422）。适配 = 把「怎么写 SKILL.md」的示例与校验步骤换成 khyos 标准头 + khy skill import/add 流程（skillInstallService.js:94-108 的 --skill 子路径定位）；元技能骨架可继承。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["zcode"],
+      "what": "ZCode 的 SKILL.md 写作与验证元技能：格式直认，示例与校验步骤需换成 khyos 标准头。"
+    },
+    {
+      "name": "zcode-guide",
+      "upstreamUrl": "https://github.com/zai-org/zcode-plugins",
+      "type": "skill",
+      "khyosMarket": "skill",
+      "targetPath": "works/data/khy/skills/<六个 skill 各一目录>/SKILL.md（zcode-configuration-guide / diagnosing-plugins / diagnosing-skills / diagnosing-mcp / diagnosing-commands / diagnosing-hooks）",
+      "compat": "adapter-needed",
+      "compatNote": "6 篇全部围绕 ZCode 配置面（各篇 9-38 处 ZCode 提及，直方图实测；diagnosing-mcp 通篇出现 mcp__server__tool 占位符）。khyos 配置面是另一套：三个市场三套 registry 互不相识（勘察 risks：extensionMarketplace 的 registry.khy.dev、skillRegistry 的 cloud endpoint、mcp 的 mcp.json 双作用域）、extensions_state.json 启停态、skills 发现链 project>user>builtin。『按症状定位配置问题』的诊断结构可借鉴，但每篇的路径/命令/文件形状都要换，建议只移植结构与诊断方法论、正文重写。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["zcode"],
+      "what": "ZCode 配置面诊断六篇：诊断结构可借鉴，路径/命令/文件形状都要换成 khyos 配置面。"
+    },
+    {
+      "name": "mimosa",
+      "upstreamUrl": "https://github.com/zai-org/zcode-plugins",
+      "type": "plugin",
+      "khyosMarket": "extension",
+      "targetPath": "delivery/extension/tools/mimosa/ + khy.extension.json（builtin 随包分发，tools 在白名单分类内 check-repo-layout.js:759）；安装态 <dataHome>/extensions/mimosa/（extensionRoots.js:101-103, extensionManager.js:32）；其 hooks 部分另落 .khy/hooks.json（hookConfigSchema.js:4-5）",
+      "compat": "adapter-needed",
+      "compatNote": "四组件齐备的官方样例（本机 marketplace.json:43-80 实证：version 1.0.4、displayName Code Security Protection、componentTypes [command,skill,hook,mcp]、CDN zip 源带 sha256）。逐件对 khyos：(a) hooks——khyos 有对等子系统但形状不同：.khy/hooks.json 收扁平 {event,command,pattern,timeout,priority,enabled}、11 个事件（PreToolUse/PostToolUse/PrePrompt/PostResponse/PreCompact/PostCompact/Stop/SubAgentStart/SubAgentEnd/ToolPermission/PromptSection）、JSON 配置只收 command 型（hookConfigSchema.js:22-42）；ZCode/Claude 式 {event,matcher,hooks:[{type,command}]} 嵌套形状需压平转换，『写入前』对 PreToolUse、『任务收尾复查』对 PostResponse/Stop、『Git 门禁』对 ToolPermission（monotonic-tighten，hookContribSeams.js:16-23）。(b) skill——安全扫描 SKILL.md 走 skill 市场，格式直认（若其 frontmatter 合规）。(c) command——khy.extension.json 有 commands 字段（extensionManifest.js:67），但只有 toolchain 类按 commands[].script 起子进程（:24-31 注释），语义需核对。(d) 可选密封深扫 MCP——编目未给其 mcpServers 内联声明，无法判定 direct。另 license 编目记 unknown，落地前需定 SPDX 档位。",
+      "license": "unknown",
+      "relationship": "adapter",
+      "agentScope": ["zcode"],
+      "what": "ZCode 官方四组件样例（command/skill/hook/mcp）：hooks 有对等子系统但形状要转，license 未定档。"
+    },
+    {
+      "name": "excalidraw",
+      "upstreamUrl": "https://github.com/zai-org/zcode-plugins",
+      "type": "plugin",
+      "khyosMarket": "none",
+      "targetPath": "（不落地）假设解除阻塞后为 delivery/extension/tools/excalidraw/ + khy.extension.json",
+      "compat": "blocked",
+      "compatNote": "阻塞点明确：核心价值是对话侧栏 Excalidraw UI 面板（componentTypes skill+mcp+ui，zip 约 16MB 预编译产物）。khyos 拓展契约没有 UI 面——kind 枚举只有 runtime|ide-bridge|asset|toolchain（extensionManifest.js:32），ui.surfaces + ui:// resourceUri 是 ZCode 宿主协议（同形实例见 documents/0.2.1/.zcode-plugin/plugin.json:33-47）；且 dist/ 是构建产物不入库（编目自述 Git checkout 装不了编译后的 UI 插件），khyos 侧拿不到可加载形态。其 skill/mcp 组件形状未在编目给出，即便拆分也需先读 plugin.json。",
+      "license": "unknown",
+      "relationship": "reference",
+      "agentScope": ["zcode"],
+      "what": "核心是对话侧栏 Excalidraw UI 面板：khyos 拓展契约无 UI 面，16MB 预编译 dist 不入库，无可加载形态。"
+    },
+    {
+      "name": "kicad",
+      "upstreamUrl": "https://github.com/zai-org/zcode-plugins",
+      "type": "plugin",
+      "khyosMarket": "none",
+      "targetPath": "（不落地）假设为 delivery/extension/tools/kicad/",
+      "compat": "blocked",
+      "compatNote": "强绑定两样 khyos 都没有的东西：KiCad 10 原生桌面应用（真实库/自动布线/DRC/Gerber/BOM/CPL）与 ZCode 侧栏 3D 渲染 + DRC 结论展示 UI 契约。Agent 侧只是把电路 spec 喂给插件，可迁移的只剩提示词工程，不构成一个可导入条目。license 亦未定档。",
+      "license": "unknown",
+      "relationship": "reference",
+      "agentScope": ["zcode"],
+      "what": "强绑定 KiCad 10 原生桌面应用与 ZCode 侧栏 3D/DRC UI 契约，khyos 两者皆无，只剩提示词工程可迁移。"
+    },
+    {
+      "name": "zcode-toolkit",
+      "upstreamUrl": "https://github.com/c80361619/zcode-toolkit",
+      "type": "plugin",
+      "khyosMarket": "none",
+      "targetPath": "（不落地）无对应 khyos 落点",
+      "compat": "blocked",
+      "compatNote": "它是给 ZCode 桌面客户端本身打补丁的增强套件（纯 Python 标准库、可还原补丁：TPS 状态栏、思考强度滑条、模型下拉加宽、升级自愈），自身还充当市场源。khyos 是另一套代码库，补丁无落点；勘察 risks 明写『patch app.asar 注入不是市场机制，khyos 不应模仿』。同类能力 khyos 自有：tokenUsageService（以人民币计的用量统计，AGENTS.md 关键入口点表）与桌面 ProcessMonitorDialog。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["zcode"],
+      "what": "给 ZCode 桌面客户端打 app.asar 补丁的增强套件：khyos 代码库不同，补丁无落点。"
+    },
+    {
+      "name": "zcode-token-usage-statusbar",
+      "upstreamUrl": "https://github.com/xhwxt/zcode-token-usage-statusbar",
+      "type": "plugin",
+      "khyosMarket": "none",
+      "targetPath": "（已被原生能力覆盖）tokenUsageService + apps/khyos-desktop/src/renderer/components/layout/ProcessMonitorDialog.tsx",
+      "compat": "covered",
+      "compatNote": "同上路线：向 app.asar 注入 loader、只读 ~/.zcode/cli/db/db.sqlite 不联网。khyos 侧对应能力已存在（tokenUsageService + apps/khyos-desktop/src/renderer/components/layout/ProcessMonitorDialog.tsx）。其附带的 MCP server 与 /usage 命令若形状标准可另行评估，但条目核心（asar 注入）不可映射。",
+      "blockerNote": "khyos 的 tokenUsageService 已按人民币计价统计用量，桌面 ProcessMonitorDialog 展示同粒度数据；无需读 ZCode 私有 sqlite，也不该复制 asar 注入路线。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["zcode"],
+      "what": "向 app.asar 注入 loader 读 ZCode 私有 sqlite 的 token 统计：同类能力 khyos 已自有。"
+    },
+    {
+      "name": "zcode-fox-widget",
+      "upstreamUrl": "https://github.com/pigeon189/zcode-fox-widget",
+      "type": "plugin",
+      "khyosMarket": "none",
+      "targetPath": "（不落地）无对应 khyos 落点",
+      "compat": "blocked",
+      "compatNote": "核心是常驻 ZCode Electron 窗口右下角的浮层（桌宠/余额气泡，每轮对话后汇报花费），khyos 没有该 UI 挂点；余额查询打各家厂商 API（DeepSeek/GLM Plan/CommandCode 额度），需用户自有凭据。编目未给其 hooks/commands/tools/MCP 的形状，无法做部分映射。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["zcode"],
+      "what": "常驻 ZCode Electron 窗口右下角的浮层（桌宠/余额气泡）：khyos 无该 UI 挂点。"
+    },
+    {
+      "name": "zcode-jetbrains-plugin",
+      "upstreamUrl": "https://github.com/csuftt/zcode-jetbrains-plugin",
+      "type": "plugin",
+      "khyosMarket": "none",
+      "targetPath": "（不落地）无对应 khyos 落点",
+      "compat": "blocked",
+      "compatNote": "它是 JetBrains IDE 插件（ZC-GUI），以子进程跑 ZCode app-server、经 stdio JSON-RPC 通信，并内嵌 JCEF 实现 browser-use 宿主协议。对 khyos 无意义：khyos 不提供 ZCode app-server 协议，也不是 JetBrains 插件的服务端；khyos 自己的 IDE 侧承载是 apps/khyos-desktop（Electron）。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["zcode"],
+      "what": "面向 JetBrains IDE 的 ZCode app-server 客户端：khyos 不提供该服务端协议，插件无落点。"
+    },
+    {
+      "name": "skill-buddy",
+      "upstreamUrl": "https://github.com/konnga/skill-buddy",
+      "type": "plugin",
+      "khyosMarket": "none",
+      "targetPath": "（已被原生能力覆盖）khy skill（skillRegistry/skillInstallService/skillPackageService）+ khy mcp（mcpConfigStore 双作用域）",
+      "compat": "covered",
+      "compatNote": "独立 Electron+Vue3 应用，不是 ZCode 插件，没有 .zcode-plugin/plugin.json 可映射。其功能（跨 agent 管理 Skills/MCP/AGENTS.md、漂移检测、团队 Git 库）与 khy 的 khy skill（skillRegistry/skillInstallService/skillPackageService）和 khy mcp（mcpConfigStore 双作用域）重叠——对 khyos 的价值是参考实现，不是可导入条目。",
+      "blockerNote": "khy skill 与 khy mcp 已覆盖跨 agent 的 Skills/MCP 管理；漂移检测与团队 Git 库由仓库状态与 CLI 承担，不需要另装一个桌面应用。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["zcode"],
+      "what": "独立 Electron 应用而非插件制品：功能与 khy skill/khy mcp CLI 重叠，仅可作参考实现。"
+    },
+    {
+      "name": "cadpilot",
+      "upstreamUrl": "https://github.com/LBurny/cadpilot",
+      "type": "mcp",
+      "khyosMarket": "mcp",
+      "targetPath": "works/data/khy/mcp.json → mcpServers[\"cadpilot\"] = {type:\"stdio\", command:\"uvx\", args:[\"cadpilot\"]}（project 作用域 mcpConfigStore.js:31-33；user 作用域 getDataHome()/mcp.json :41-43）",
+      "compat": "direct",
+      "compatNote": "标准 MCP stdio server（编目：stdio 上讲 MCP、uvx cadpilot 安装、经 localhost XML-RPC 连 FreeCAD 插件）。khyos validateStdioConfig 只要求 command 非空、args 为数组（types.js:55-67），`khy mcp add cadpilot -- uvx cadpilot` 即落 mcp.json（cli/handlers/mcp.js:154-190 调 mcpAddSpec.buildServerConfig + mcpConfigStore.addServer；server 名须匹配 ^[a-zA-Z0-9_-]{1,64}$，mcpAddSpec.js:49-52，cadpilot 合规）。安装源 uvx 取 PyPI 官方源，符合 PROCESS-013。运行时依赖本机 FreeCAD 及其 XML-RPC 插件，属运行环境不属兼容判定。MIT 为 SOURCING-002 A 档。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["zcode"],
+      "what": "标准 MCP stdio server（uvx cadpilot，经 XML-RPC 连 FreeCAD）：khy mcp add 即落 mcp.json。"
+    },
+    {
+      "name": "zcode-open-bridge",
+      "upstreamUrl": "https://github.com/tizerluo/zcode-open-bridge",
+      "type": "mcp",
+      "khyosMarket": "mcp",
+      "targetPath": "works/data/khy/mcp.json → mcpServers[\"zcode-open-bridge\"] = {type:\"stdio\", command:\"<git clone 路径>/packages/mcp-server/zcode-mcp-server\", args:[]}（user 作用域 getDataHome()/mcp.json）",
+      "compat": "direct",
+      "compatNote": "本次实读上游 README：zcode-mcp-server 是单文件纯 Python 标准库脚本、基于 stdio 传输、MIT；无 npx/pip/uvx 分发，装法是 git clone 后直接执行（丢执行位用 git update-index --chmod=+x 修），README 给出的注册位置是 ~/.zcode/cli/config.json 的 mcp.servers 且顶层 mcpServers 键不被读取。形状上就是标准 MCP stdio server，khyos mcp.json 直接承载，`khy mcp add zcode-open-bridge -- <脚本路径>` 即可。两个非格式前提：(a) 本机须装有 ZCode 且 CLI 已登录（凭据在 ~/.zcode/v2/config.json，bridge 自己拉起 zcode CLI/headless 进程）；(b) 协议为逆向，ZCode 升级可能失配（编目自述）。同仓 zcode-acp-bridge 转 ACP 给 Zed/JetBrains，对 khyos 无用（khyos 不是 ACP 客户端）。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["zcode"],
+      "what": "单文件纯 Python 标准库的 MCP stdio server：桥接本机 ZCode CLI，协议为逆向，ZCode 升级可能失配。"
+    },
+    {
+      "name": "zcode-figma-mcp",
+      "upstreamUrl": "https://github.com/DarkGenius/zcode-figma-mcp",
+      "type": "mcp",
+      "khyosMarket": "none",
+      "targetPath": "（不落地）假设为 works/data/khy/mcp.json，但无 server 可登记",
+      "compat": "blocked",
+      "compatNote": "它根本不是 MCP server，是凭证注入工具：ZCode 不在 Figma MCP 客户端白名单，脚本以白名单名 Codex 完成 RFC 9700 OAuth+PKCE，把 token 按 ZCode 的 AES-256-GCM 方案写进 ~/.zcode/v2/credentials.json，约 90 天重跑一次。khyos 无该凭证存储格式；冒用白名单身份拿 OAuth token 的做法也不应移植。license 亦未定档。",
+      "license": "unknown",
+      "relationship": "reference",
+      "agentScope": ["zcode"],
+      "what": "不是 MCP server，是 ZCode 专用凭证注入工具（冒用白名单名走 OAuth）：khyos 无该凭证格式，不应移植。"
+    }
+  ],
+  "blocked": [
+    {
+      "name": "excalidraw",
+      "upstreamUrl": "https://github.com/zai-org/zcode-plugins",
+      "reason": "UI 面板类插件：khyos 无 UI surface 拓展契约（kind 枚举无 ui，extensionManifest.js:32），16MB 预编译 dist 不入库、无可加载形态；skill/mcp 组件形状未在编目给出，无法部分映射。"
+    },
+    {
+      "name": "kicad",
+      "upstreamUrl": "https://github.com/zai-org/zcode-plugins",
+      "reason": "强绑定原生 KiCad 10 桌面应用与 ZCode 侧栏 3D/DRC 渲染 UI 契约，khyos 无任一承载；license 未定档。"
+    },
+    {
+      "name": "zcode-toolkit",
+      "upstreamUrl": "https://github.com/c80361619/zcode-toolkit",
+      "reason": "app.asar 补丁式增强，针对 ZCode 客户端本身；khyos 代码库不同、补丁无落点，该路线被勘察明确判为「khyos 不应模仿」。"
+    },
+    {
+      "name": "zcode-fox-widget",
+      "upstreamUrl": "https://github.com/pigeon189/zcode-fox-widget",
+      "reason": "常驻浮层挂在 ZCode Electron 窗口上，khyos 无该 UI 挂点；附带组件形状未在编目给出，厂商配额 API 需用户自有凭据。"
+    },
+    {
+      "name": "zcode-jetbrains-plugin",
+      "upstreamUrl": "https://github.com/csuftt/zcode-jetbrains-plugin",
+      "reason": "面向 JetBrains IDE 的 ZCode app-server 客户端（私有 stdio JSON-RPC 协议），khyos 不提供该服务端协议，插件无落点。"
+    },
+    {
+      "name": "zcode-figma-mcp",
+      "upstreamUrl": "https://github.com/DarkGenius/zcode-figma-mcp",
+      "reason": "非 MCP server，是 ZCode 专用凭证注入工具（冒用白名单名 Codex 走 OAuth、按 ZCode AES-256-GCM 写 ~/.zcode/v2/credentials.json）；khyos 无该凭证格式，该方法不应移植。"
+    }
+  ],
+  "uncertainties": [
+    "mimosa/excalidraw/kicad 及全部社区条目的 plugin.json 不在本机缓存、GitHub raw/API 超时限流，组件形状判断以编目描述为据，缺实证处已在各 compatNote 标注。",
+    "documents 的 license 冲突未解：plugin.json(0.2.1) 写 Apache-2.0，SKILL.md frontmatter 写 Proprietary，编目记 unknown；按 SOURCING-002 非 A 档，落地前必须打开包内 LICENSE.txt 定档。",
+    "image-search 的 ZCode 后端端点与 token 属用户自有凭据，本次未实测；base url 不得写进入仓文件（RUNTIME-001）。",
+    "官方市场 67 条中本次只覆盖编目点名的 18 条；本机缓存里 pdf/presentations/spreadsheets/visualize/android-emulator/ios-simulator/node-repl-host/restore-legacy-sessions 等官方条目未在编目 entries 中，按不臆造条目未补判。",
+    "两个 direct 的 MCP（cadpilot/zcode-open-bridge）未实际安装运行；zcode-open-bridge 协议为逆向，ZCode 升级可能失配。"
+  ]
+}

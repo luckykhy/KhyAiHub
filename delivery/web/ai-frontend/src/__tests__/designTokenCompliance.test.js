@@ -19,9 +19,18 @@ function extractCustomProps(block) {
   return props;
 }
 
-function extractBlock(css, selector) {
-  const idx = css.indexOf(selector);
-  if (idx === -1) return '';
+/**
+ * 取某个选择器块的 body。
+ *
+ * 用**正则按行首**匹配，而不是 indexOf —— 主题表的两个令牌块写作
+ * `html:root` / `html.dark:root`（见 newapi-theme.css 顶部注释：Element Plus 的
+ * 样式按需注入且特异性更高，本表必须抬过它）。用字符串 indexOf 会先撞上注释里
+ * 出现的 `:root` 字样，截出一段错的块 —— 守卫认错块 = 静默不检查。
+ */
+function extractBlock(css, selectorRe) {
+  const m = selectorRe.exec(css);
+  if (!m) return '';
+  const idx = m.index;
   const braceStart = css.indexOf('{', idx);
   let depth = 0;
   let end = braceStart;
@@ -32,12 +41,22 @@ function extractBlock(css, selector) {
   return css.slice(braceStart + 1, end);
 }
 
-const rootBlock = extractBlock(themeCss, ':root');
-const darkBlock = extractBlock(themeCss, 'html.dark');
+const rootBlock = extractBlock(themeCss, /^\s*html:root\s*\{/m);
+const darkBlock = extractBlock(themeCss, /^\s*html\.dark:root\s*\{/m);
 const rootProps = extractCustomProps(rootBlock);
 const darkProps = extractCustomProps(darkBlock);
 
 const HEX_RE = /#[0-9a-fA-F]{3,8}\b/;
+
+// `var(--el-border-color, #dcdfe6)` 里的 #dcdfe6 是**变量缺失时的回退值**，不是
+// 一处设计决策。按裸 hex 计它会把「用了 token、只是给了个兜底」也算成违规 —— 那样
+// 数字对应的是一批不存在的违规，棘轮再怎么收紧都咬不到真东西。所以先剥掉回退位
+// 再判。
+const HEX_FALLBACK_RE = /var\(\s*--[\w-]+\s*,\s*#[0-9a-fA-F]{3,8}\s*\)/g;
+
+function hasBareHex(line) {
+  return HEX_RE.test(line.replace(HEX_FALLBACK_RE, 'var(--x)'));
+}
 
 function collectVueAndCssFiles(dir, acc = []) {
   for (const entry of readdirSync(dir)) {
@@ -131,13 +150,15 @@ describe('W3/W4: Design Token Compliance', () => {
         const line = lines[i].trim();
         if (line.startsWith('//') || line.startsWith('/*') || line.startsWith('*')) continue;
         if (line.startsWith('content:')) continue;
-        if (HEX_RE.test(line)) return true;
+        if (hasBareHex(line)) return true;
       }
       return false;
     });
 
     it('非真源 .vue/.css 文件中不应有硬编码 hex 颜色（回归基线，只降不升）', () => {
-      const BASELINE = 999;
+      // 原为 999：任何文件都能加裸 hex 而测试不动，棘轮形同虚设。
+      // 0 是剥掉 var(--x, #hex) 回退位之后的实测值 —— 现状零违规，从此加一处就红。
+      const BASELINE = 0;
       const count = violatingFiles.length;
       if (count > 0) {
         const detail = violatingFiles.slice(0, 10).map((f) => relative(srcRoot, f)).join('\n  ');
