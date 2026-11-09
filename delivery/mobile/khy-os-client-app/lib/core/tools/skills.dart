@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-095-QVQXJTZ7
 import '../services/device_control.dart';
 
 /// Skill types:
@@ -18,6 +19,9 @@ class Skill {
   final String? deepLink;
   final List<SkillStep>? steps;
 
+  /// SKILL.md frontmatter version; empty for built-ins and when absent.
+  final String version;
+
   const Skill({
     required this.name,
     required this.label,
@@ -28,6 +32,7 @@ class Skill {
     this.alternatePackages,
     this.deepLink,
     this.steps,
+    this.version = '',
   });
 
   /// All possible packages to try (primary + alternates)
@@ -56,7 +61,7 @@ class SkillMatch {
 // Built-in skills
 // ============================================================
 
-const builtinSkills = <Skill>[
+const builtinCoreSkills = <Skill>[
   // App-opening is unified under the single `open_app` tool
   // (DeviceControl.findApp + semantic map handles all apps generically).
   // These are non-app-opening utility skills only.
@@ -98,6 +103,32 @@ const builtinSkills = <Skill>[
     type: SkillType.prompt,
   ),
 ];
+
+/// The one skill table: built-ins plus whatever the local `skills/` directory
+/// contributed. SkillMatcher and the execute_skill enum both read this list, so
+/// a skill that is not in it is invisible to the model however well the UI
+/// renders it.
+final List<Skill> builtinSkills = <Skill>[...builtinCoreSkills];
+
+/// Merge locally scanned skills into [builtinSkills].
+///
+/// Rebuilt from the core list on every call so repeated scans cannot stack
+/// duplicates, and a same-named local skill never shadows a built-in: the
+/// built-in is the compile-time implementation of that capability, while the
+/// local file is a copy the user dropped in. Locals are also de-duplicated
+/// among themselves — two entries with one name would put a repeated value in
+/// the execute_skill enum and execute would silently take the first.
+void registerLocalSkills(Iterable<Skill> locals) {
+  final coreNames = builtinCoreSkills.map((skill) => skill.name).toSet();
+  final added = <String>{};
+  builtinSkills
+    ..clear()
+    ..addAll(builtinCoreSkills)
+    ..addAll(locals.where((skill) =>
+        skill.name.isNotEmpty &&
+        !coreNames.contains(skill.name) &&
+        added.add(skill.name)));
+}
 
 // ============================================================
 // Skill Matcher

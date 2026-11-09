@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-096-E23HSRAS
 import 'dart:async';
 import 'dart:convert';
 
@@ -100,8 +101,20 @@ class ToolEngine {
   }
 
   /// Get permission for a tool
-  PermissionLevel getPermission(String toolName) =>
-      _permissions[toolName] ?? PermissionLevel.auto;
+  ///
+  /// Falls back to what the tool DECLARED, not to `auto`.
+  ///
+  /// This used to default to `PermissionLevel.auto`, which made every declared
+  /// `ask` a lie: nothing ever called `setPermission`, so `getPermission` always
+  /// returned `auto` and a tool marked `ask` ran without a prompt.
+  /// `vision_tap` declares `ask` and was silently auto-approved for exactly this
+  /// reason. The declaration is the tool author's statement about the tool, so
+  /// it has to be the default — an explicit `setPermission` still overrides it.
+  PermissionLevel getPermission(String toolName) {
+    final explicit = _permissions[toolName];
+    if (explicit != null) return explicit;
+    return _tools[toolName]?.permission ?? PermissionLevel.auto;
+  }
 
   /// Check if tool can execute
   bool canExecute(String toolName) =>
@@ -117,7 +130,23 @@ class ToolEngine {
   Future<ToolResult> execute(String toolName, Map<String, dynamic> args) async {
     final tool = _tools[toolName];
     if (tool == null) {
-      return ToolResult.fail('Tool not found: $toolName');
+      // Name what DOES exist.
+      //
+      // This used to be a bare "Tool not found: X", which is the single most
+      // common way a hallucinated tool name surfaces. The model reads it, has no
+      // idea whether it mistyped or invented the tool, and retries the same
+      // name — or worse, concludes the capability is missing and tells the user
+      // it cannot be done.
+      //
+      // Listing the real names costs one string and turns a dead end into a
+      // correction. It also makes the planner sub-agent's validation partly
+      // redundant for this one case, which is why that wiring was deferred
+      // rather than done: the user-visible defect was closable in one line.
+      final known = _tools.keys.toList(growable: false)..sort();
+      return ToolResult.fail(
+        '工具 "$toolName" 不存在。已注册的工具（${_tools.length} 个）：'
+        '${known.join('、')}。请从这些名字里选一个，不要改用别的叫法。',
+      );
     }
 
     if (!canExecute(toolName)) {

@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-092-78P22W4X
 import 'dart:async';
 import 'tool_engine.dart';
 import '../services/device_control.dart';

@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-093-7KZJZ8KY
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/services.dart';
@@ -7,6 +8,7 @@ import '../services/device_control.dart';
 import '../services/file_service.dart';
 import 'skills.dart';
 import 'retry_engine.dart';
+import 'vision_tools.dart';
 import '../config/app_config.dart';
 
 /// All built-in tools for the Flutter client
@@ -223,6 +225,51 @@ List<ToolDef> createBuiltinTools() => [
     },
   ),
 
+  // Added 2026-10-26 because the chat screen's system prompt had been
+  // advertising `a11y_swipe` for a while without the tool existing. A tool
+  // named in the prompt but absent from the registry fails on every call, and
+  // the model has no way to learn that it will — it just retries.
+  //
+  // WHY THE DESCRIPTION WARNS ABOUT THE BOTTOM EDGE. Measured on this device:
+  // a swipe that starts near y=2300 is claimed by the system's back gesture
+  // and navigates away from the current app instead of scrolling. That failure
+  // looks like "the swipe did nothing" from the outside and is very hard to
+  // diagnose, so the constraint is stated where the model will read it.
+  ToolDef(
+    name: 'a11y_swipe',
+    description: '通过无障碍服务模拟滑动。从 (x1,y1) 滑到 (x2,y2)，durationMs 为时长（毫秒）。'
+        '注意：起点不要太靠近屏幕底部（本机约 y=2300 以下）——那一段被系统返回手势占用，'
+        '滑动手势会被当成"返回"而离开当前应用。上翻列表请从屏幕中上部起手。',
+    inputSchema: {
+      'type': 'object',
+      'properties': {
+        'x1': {'type': 'integer', 'description': '起点 X'},
+        'y1': {'type': 'integer', 'description': '起点 Y'},
+        'x2': {'type': 'integer', 'description': '终点 X'},
+        'y2': {'type': 'integer', 'description': '终点 Y'},
+        'durationMs': {
+          'type': 'integer',
+          'description': '时长（毫秒）。默认 300；翻页可用 200-300，慢速拖动可到 800',
+        },
+      },
+      'required': ['x1', 'y1', 'x2', 'y2'],
+    },
+    execute: (args) async {
+      final x1 = (args['x1'] ?? 0) as num;
+      final y1 = (args['y1'] ?? 0) as num;
+      final x2 = (args['x2'] ?? 0) as num;
+      final y2 = (args['y2'] ?? 0) as num;
+      final ms = (args['durationMs'] ?? 300) as int;
+      final ready = await DeviceControl.isAccessibilityReady();
+      if (!ready) return ToolResult.fail('无障碍服务未启用，请先在设置中启用');
+      final ok = await DeviceControl.a11ySwipe(x1.toInt(), y1.toInt(),
+          x2.toInt(), y2.toInt(), durationMs: ms);
+      return ok
+          ? ToolResult.ok('已滑动 ($x1,$y1) → ($x2,$y2)，${ms}ms')
+          : ToolResult.fail('滑动失败');
+    },
+  ),
+
   ToolDef(
     name: 'a11y_find_and_click',
     description: '通过无障碍服务查找并点击 UI 元素。支持 text=xxx / id=xxx / class=xxx 查询。',
@@ -350,6 +397,62 @@ List<ToolDef> createBuiltinTools() => [
       } else {
         return ToolResult.fail('命令失败 (exit=${result.exitCode}): ${result.stderr}');
       }
+    },
+  ),
+
+  // ---- APK Install ----
+  ToolDef(
+    name: 'install_apk',
+    description: '安装一个本地 APK 文件。只接受 /sdcard/Download 和 /sdcard/khy-os 下的 .apk；'
+        '安装前必须先把 apk 下载到本地（pm install 不接受 URL）。'
+        '会经 shell 提权执行，未提权时明确返回而不是假装成功。',
+    inputSchema: {
+      'type': 'object',
+      'properties': {
+        'path': {
+          'type': 'string',
+          'description': 'APK 的绝对路径，必须以 .apk 结尾，且位于 '
+              '/sdcard/Download 或 /sdcard/khy-os 之下',
+        },
+      },
+      'required': ['path'],
+    },
+    execute: (args) async {
+      final path = (args['path'] ?? '').toString().trim();
+      if (path.isEmpty) return ToolResult.fail('请提供 APK 路径');
+      final r = await DeviceControl.installApk(path);
+      if (!r.ok) {
+        // code 是原生层给的分类，直接透出：调用方要能分辨"路径不对"和"没权限"，
+        // 这两种的处理方式完全不同。
+        return ToolResult.fail('安装被拒（${r.code}）：${r.error}');
+      }
+      if (!r.elevated) {
+        // 最常见也最骗人的一种失败：命令跑通了，但跑在 App 自己的 uid 上，
+        // 于是静悄悄地什么也没装上。必须说清，不能只报 stderr。
+        return ToolResult.fail(
+            '未提权，安装不会生效（当前执行身份：App 自身 uid）。'
+            '需要 shell 提权：重启手机后重跑 PC 侧提权命令，或安装 Shizuku。');
+      }
+      final out = r.stdout.trim();
+      if (out.isEmpty) {
+        // pm install 退出码 0 且无输出。这是一个**成功形态但零验证**的结果：
+        // 退出码 0 也可能来自一个静默失败的安装，而我们这里没有做事后查询
+        // （没有比对安装前的 versionCode/lastUpdateTime）。
+        //
+        // 所以不报成"已装好"，而是在 metadata 里显式声明未验证。
+        // ToolVerdictFactory 会读这个字段，把结论写成"未验证"喂回模型——
+        // 否则模型会把这句话当成安装成功的证据，而 UI 上两者一模一样。
+        return ToolResult.ok('安装命令已执行（无输出）',
+            metadata: <String, dynamic>{
+              'via': r.via,
+              'elevated': r.elevated,
+              'verified': false,
+              'verify_why': 'pm install 退出码为 0 且无输出，'
+                  '但未做事后查询（没有比对安装前的版本信息），无法确认装上',
+            });
+      }
+      return ToolResult.ok(out,
+          metadata: <String, dynamic>{'via': r.via, 'elevated': r.elevated});
     },
   ),
 
@@ -677,9 +780,19 @@ List<ToolDef> createBuiltinTools() => [
       if (result['success'] == true) {
         final rawFiles = (result['files'] as List? ?? []).cast<Map>();
         final files = rawFiles.map((f) => f.map((k, v) => MapEntry(k.toString(), v))).toList();
-        if (files.isEmpty) return ToolResult.ok('目录为空: ${path.isEmpty ? "(根)" : path}');
+        final label = path.isEmpty ? '(根)' : path;
+        if (files.isEmpty) return ToolResult.ok('目录为空: $label');
         final lines = files.map((f) => '  ${f['isDir'] == true ? "[D]" : "[F]"} ${f['name']}').join('\n');
-        return ToolResult.ok('目录 ${path.isEmpty ? "(根)" : path} (${files.length} 项):\n$lines');
+        // 截断必须说出来。原来只说"目录 X (N 项)"，而那 N 项是被砍过的也照样说——
+        // 调用方看到的是一个看起来完整的清单。说清"还有多少没看到"，
+        // 它才知道该换一种问法（指定子目录）而不是把这份当成全部。
+        final truncated = result['truncated'] == true;
+        if (truncated) {
+          final total = result['total'];
+          return ToolResult.ok('目录 $label (显示 ${files.length}/$total 项，已截断；'
+              '要看得更全请指定子目录):\n$lines');
+        }
+        return ToolResult.ok('目录 $label (${files.length} 项):\n$lines');
       }
       return ToolResult.fail(result['error'] ?? 'list failed');
     },
@@ -700,8 +813,27 @@ List<ToolDef> createBuiltinTools() => [
       final result = await FileService.readFile(path);
       if (result['success'] == true) {
         final content = result['content'] as String;
-        final truncated = content.length > 5000 ? content.substring(0, 5000) + '\n... (截断)' : content;
-        return ToolResult.ok(truncated, metadata: {'path': path, 'size': result['size']});
+        // 两层截断要分开说，原来混成一句"(截断)"：
+        //   - 原生层截断（文件 > 256KB）：我们只拿到了一个前缀
+        //   - 本层截断（> 5000 字符）：为了不撑爆上下文又砍了一次
+        // 调用方需要知道是哪一层，否则它无法判断"这文件就这么长"还是"还有更多"。
+        final nativeTruncated = result['truncated'] == true;
+        final shown = content.length > 5000
+            ? content.substring(0, 5000)
+            : content;
+        final body = shown.length < content.length
+            ? '$shown\n... (本层截断，仅显示前 $shown.length 字符)'
+            : shown;
+        return ToolResult.ok(
+          body,
+          metadata: <String, dynamic>{
+            'path': path,
+            'size': result['size'],
+            'truncated': nativeTruncated || shown.length < content.length,
+            'source_truncated': nativeTruncated,
+            'shown_chars': shown.length,
+          },
+        );
       }
       return ToolResult.fail(result['error'] ?? 'read failed');
     },
@@ -858,7 +990,16 @@ List<ToolDef> createBuiltinTools() => [
       return ToolResult.fail(r['error']?.toString() ?? 'grep failed');
     },
     tags: ['file', 'search'],
-  ),];
+  ),
+
+  // ---- Vision: locate and tap by screenshot ----
+  //
+  // Kept out of this file on purpose. They are the only tools whose
+  // correctness rests on a coordinate conversion, and the prompt, the parser
+  // and the conversion need to sit next to each other — a change to the
+  // prompt's coordinate space must force a look at the parser that reads it.
+  ...createVisionTools(),
+];
 
 /// Simple expression evaluator
 double _evalExpression(String expr) {
