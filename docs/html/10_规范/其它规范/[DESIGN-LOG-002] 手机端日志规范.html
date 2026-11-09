@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-LOG-002] 手机端日志规范.md -->
+<title>[DESIGN-LOG-002] 手机端日志规范 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>10_规范<span class="sep">›</span>其它规范<span class="sep">›</span>[DESIGN-LOG-002] 手机端日志规范</div>
+      <header class="hero reveal"><h1>[DESIGN-LOG-002] 手机端日志规范</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-log-002-手机端日志规范">[DESIGN-LOG-002] 手机端日志规范</a></li><li class="lvl-2"><a href="#一-概述">一、概述</a></li><li class="lvl-2"><a href="#二-五条红线">二、五条红线</a></li><li class="lvl-3"><a href="#反例-正例">反例 → 正例</a></li><li class="lvl-2"><a href="#三-日志条目格式">三、日志条目格式</a></li><li class="lvl-2"><a href="#四-错误码体系">四、错误码体系</a></li><li class="lvl-2"><a href="#五-留存策略">五、留存策略</a></li><li class="lvl-2"><a href="#六-界面契约">六、界面契约</a></li><li class="lvl-2"><a href="#七-导出-给智能体的分析包">七、导出：给智能体的分析包</a></li><li class="lvl-2"><a href="#八-校验">八、校验</a></li><li class="lvl-2"><a href="#九-版本历史">九、版本历史</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: done --&gt;<br>&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-23 · 手机端日志 v3 已落地：按天分文件 + 错误投影 + 崩溃捕获 + 单测覆盖 --&gt;</p>
+<blockquote><p><strong>标记依据</strong>：本文所述机制已实现于 <code>delivery/mobile/khy-os-client-app/lib/core/services/log_store.dart</code><br>（存储层）、<code>app_logger.dart</code>（日志门面）、<code>lib/main.dart</code>（崩溃捕获）、<br><code>lib/ui/screens/log_viewer_screen.dart</code>（按天界面），判据由<br><code>delivery/mobile/khy-os-client-app/test/log_store_test.dart</code> 覆盖。</p></blockquote>
+<h1 id="design-log-002-手机端日志规范">[DESIGN-LOG-002] 手机端日志规范<a class="anchor" href="#design-log-002-手机端日志规范" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>定位</strong>：规定 khy-os 手机端 APK（Flutter 客户端）的日志形态与查阅方式。<br><strong>边界</strong>：服务端日志由 <a href="[DESIGN-LOG-001]%20%E6%97%A5%E5%BF%97%E8%A7%84%E8%8C%83.html"><code>[DESIGN-LOG-001]</code></a> 管辖，本条不重复其内容。<br><strong>结论</strong>：按天分文件、错误优先、未捕获异常必落盘、导出包自足——四条让「用户报障 → 研发定位」不靠来回追问。</p></blockquote>
+<hr>
+<h2 id="一-概述">一、概述<a class="anchor" href="#一-概述" aria-label="锚点">#</a></h2>
+<p>手机端的日志有两个读者：<strong>用户</strong>（遇到问题要能自己看一眼）和<br><strong>研发</strong>（拿到日志要能直接定位）。两者的诉求相反：用户要的是「哪一天出错了」，<br>研发要的是「错在哪一行」。所以格式以机器可读为底，界面以错误为顶。</p>
+<p>摘要：</p>
+<table><thead><tr><th>项</th><th>约定</th></tr></thead><tbody><tr><td>落盘</td><td>按天分文件，一行一条 JSON（JSONL）</td></tr><tr><td>错误</td><td>error / fatal 双写：主文件保上下文，错误投影文件供快速检索</td></tr><tr><td>崩溃</td><td>FlutterError / 异步错误 / Zone 错误三处必装钩子</td></tr><tr><td>留存</td><td>保留 14 天；单日超上限后只留警告与错误</td></tr><tr><td>查阅</td><td>设置 → 诊断工具 → 日志查看：先看哪天，再看错在哪</td></tr></tbody></table>
+<hr>
+<h2 id="二-五条红线">二、五条红线<a class="anchor" href="#二-五条红线" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>红线</th><th>判据</th></tr></thead><tbody><tr><td>R1</td><td><strong>按天分文件</strong>：一天一个文件，文件名带日期</td><td>不得写进单一无限增长的日志文件</td></tr><tr><td>R2</td><td><strong>错误双写且跨天可查</strong>：error / fatal 条目除主文件外必须进错误投影文件</td><td>进程重启后仍能按天检索到历史错误</td></tr><tr><td>R3</td><td><strong>未捕获异常必须落盘</strong>：FlutterError、PlatformDispatcher、Zone 三处都要装钩子</td><td>崩了但日志里没有，等于没崩</td></tr><tr><td>R4</td><td><strong>错误必须结构化</strong>：带错误码、级别、上下文、原始异常、堆栈</td><td>一句「出错了」不算错误记录</td></tr><tr><td>R5</td><td><strong>导出必须自足</strong>：分析包含版本、平台、错误总览、错误明细与当日日志</td><td>拿到就能分析，不必再问</td></tr></tbody></table>
+<h3 id="反例-正例">反例 → 正例<a class="anchor" href="#反例-正例" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>反例</th><th>正例</th></tr></thead><tbody><tr><td>单文件 <code>khy-os.log</code> 无限增长</td><td><code>khy-os-2026-10-23.jsonl</code> 按天分文件</td></tr><tr><td>错误只存在内存里，重启即丢</td><td>错误投影文件随天落盘，跨重启可查</td></tr><tr><td>只捕获 try/catch 里的异常</td><td>三处全局钩子兜底，崩溃也留证据</td></tr><tr><td>日志里只有「请求失败」</td><td><code>E102</code> + 错误类型 + 上下文 + 堆栈</td></tr><tr><td>导出一坨裸文本给研发</td><td>分析包：环境头 + 错误总览 + 错误明细 + 当日日志</td></tr></tbody></table>
+<hr>
+<h2 id="三-日志条目格式">三、日志条目格式<a class="anchor" href="#三-日志条目格式" aria-label="锚点">#</a></h2>
+<p>一行一条 JSON，字段缺省即不出现（不写 null 占位）。</p>
+<table><thead><tr><th>字段</th><th>含义</th></tr></thead><tbody><tr><td><code>ts</code></td><td>本地时区 ISO 8601 时间戳（毫秒）</td></tr><tr><td><code>seq</code></td><td>会话内自增序号</td></tr><tr><td><code>level</code></td><td><code>debug</code> / <code>info</code> / <code>warn</code> / <code>error</code> / <code>fatal</code></td></tr><tr><td><code>cat</code></td><td>分类：<code>network</code> / <code>dns</code> / <code>auth</code> / <code>ui</code> / <code>config</code> / <code>api</code> / <code>tool</code> / <code>device</code> / <code>system</code> / <code>unknown</code></td></tr><tr><td><code>code</code></td><td>错误码（仅错误类条目）</td></tr><tr><td><code>msg</code></td><td>人类可读描述</td></tr><tr><td><code>ctx</code></td><td>上下文键值对（界面、模式、耗时、状态码等）</td></tr><tr><td><code>err</code></td><td>原始异常文本</td></tr><tr><td><code>stack</code></td><td>堆栈（最多保留调用点若干帧）</td></tr><tr><td><code>screen</code></td><td>记录时所在界面</td></tr></tbody></table>
+<p>级别语义：<code>debug</code> 仅开发期输出，<code>info</code> 正常操作，<code>warn</code> 可恢复异常，<br><code>error</code> 需关注的错误，<code>fatal</code> 致命错误。</p>
+<hr>
+<h2 id="四-错误码体系">四、错误码体系<a class="anchor" href="#四-错误码体系" aria-label="锚点">#</a></h2>
+<p>前两位是域，第三位是序号。新增错误必须落在既有域内，域用尽才开新段。</p>
+<table><thead><tr><th>段</th><th>域</th><th>示例</th></tr></thead><tbody><tr><td>E1xx</td><td>网络</td><td>E101 DNS、E102 连接、E103 超时、E104 4xx、E105 5xx</td></tr><tr><td>E2xx</td><td>API</td><td>E201 认证、E202 参数、E203 模型、E204 限流</td></tr><tr><td>E3xx</td><td>工具</td><td>E301 工具执行、E302 无障碍、E303 截屏、E304 Shell</td></tr><tr><td>E4xx</td><td>系统</td><td>E401 权限、E402 配置、E403 存储</td></tr><tr><td>E5xx</td><td>未知</td><td>E500</td></tr><tr><td>E6xx</td><td>客户端</td><td>E601 崩溃、E602 会话失效、E603 设备能力、E604 本地存储</td></tr></tbody></table>
+<hr>
+<h2 id="五-留存策略">五、留存策略<a class="anchor" href="#五-留存策略" aria-label="锚点">#</a></h2>
+<ul><li>保留 14 天，超期文件在启动时清掉。</li><li>单日文件体积上限 8 MB；超限后普通条目不再落盘，<strong>警告与错误仍须落盘</strong>。</li><li>迁移前的旧版文本日志（<code>khy-os.log</code>）保持可读，界面单列一条，不做格式转换。</li></ul>
+<hr>
+<h2 id="六-界面契约">六、界面契约<a class="anchor" href="#六-界面契约" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>位置</th><th>约定</th></tr></thead><tbody><tr><td>入口</td><td>设置 → 诊断工具 → 日志查看</td></tr><tr><td>天列表</td><td>每行一天：今天 / 昨天 / 日期 + 错误条数 + 体积；当天有错则带红标与计数徽章</td></tr><tr><td>详情页</td><td>默认落在「错误」页签；「全部」页签可按级别筛、按关键词搜</td></tr><tr><td>错误卡</td><td>错误码、描述、时间、分类、界面、上下文、原始异常、堆栈同屏可见</td></tr><tr><td>操作</td><td>复制分析包、清空当日、清空全部（均需二次确认）</td></tr></tbody></table>
+<hr>
+<h2 id="七-导出-给智能体的分析包">七、导出：给智能体的分析包<a class="anchor" href="#七-导出-给智能体的分析包" aria-label="锚点">#</a></h2>
+<p>手机端不引入文件分享依赖，导出即「复制到剪贴板」，由用户粘贴给研发智能体。<br>分析包必须自足，结构固定：</p>
+<ol><li><strong>环境头</strong>——导出时间、应用版本、运行平台、设备、日志范围。</li><li><strong>错误总览</strong>——按错误码聚合的条数与含义。</li><li><strong>错误明细</strong>——逐条列出时间、分类、上下文、原始异常、堆栈，按时间倒序。</li><li><strong>每日日志</strong>——当日全部条目，按时间顺序。</li></ol>
+<p>拿到这段文本的人不必再问「哪个版本」「哪天出的」「错在哪」。</p>
+<hr>
+<h2 id="八-校验">八、校验<a class="anchor" href="#八-校验" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>判据</th><th>载体</th></tr></thead><tbody><tr><td>条目 JSON 往返、错误判定、错误码映射</td><td><code>delivery/mobile/khy-os-client-app/test/log_store_test.dart</code></td></tr><tr><td>按天写入与读取、错误投影、留存清理、分析包内容</td><td>同上</td></tr><tr><td>界面契约与文案</td><td>人工评审</td></tr></tbody></table>
+<p>跑法：在 <code>delivery/mobile/khy-os-client-app</code> 下执行 <code>flutter test</code>。</p>
+<p><strong>刻意不做</strong>：不为本条新建仓库级 CI 门禁。一份规范不值得新增一个阻断机制，<br>判据由已有测试承载即可（见 <code>[DESIGN-PROCESS-002]</code> 新机制四阶段）。</p>
+<hr>
+<h2 id="九-版本历史">九、版本历史<a class="anchor" href="#九-版本历史" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>版本</th><th>日期</th><th>变更</th></tr></thead><tbody><tr><td>1.0.0</td><td>2026-10-23</td><td>初始版本：按天分文件、错误双写、崩溃捕获、错误优先界面、分析包导出</td></tr></tbody></table>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/10_规范/其它规范/[DESIGN-LOG-001] 日志规范.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-LOG-001] 日志规范</div></a><a class="next" href="../../../../docs/html/10_规范/其它规范/[DESIGN-MCP-001] MCP 协议实现规范.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-MCP-001] MCP 协议实现规范</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/10_规范/其它规范/[DESIGN-LOG-002] 手机端日志规范.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
