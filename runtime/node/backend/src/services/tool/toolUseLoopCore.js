@@ -275,31 +275,91 @@ function _buildOutcomeReflectionHint(toolResults, env = process.env) {
   if (!Array.isArray(toolResults) || toolResults.length === 0) {
     return '';
   }
+  // ── [DESIGN-ARCH-198] W5：旁白 occurrence 接线 ──────────────────────────────
+  // 断桥(2026-11-01 实测):此处调 toolOutcomeNarration 时**没传** options.occurrence
+  // → occurrence undefined → _voice 恒取 occ=0 → 一批并行同类工具拿到**同一句**旁白
+  // (实测 3 路 webSearch → 3 句逐字相同,截图可见「外部查到 10 条… 外部查到 7 条…」
+  // 重复三遍)。而 TUI 侧 (queryBridgeTimeline.computeToolOutcome) **传了** occurrence,
+  // 轮换正常 —— 同一件事两处实现、两处行为。
+  // 修法:按**本批次**内同类工具的出现次数传 occurrence(与 TUI 侧同口径:同工具类共享一个计数,
+  // 第一次 0=首发句,之后 1/2/… 轮换续接句)。
+  //
+  // ── W7：逐字相同的旁白折叠为计数（兜底,不是替代 W5）───────────────────────
+  // W5 治「为什么重复」(occurrence 接线),W7 治「万一又重复」。
+  const _flagOn = (name) => {
+    try {
+      const _reg = require('../../utils/flagRegistry');
+      if (typeof _reg.isRegistryEnabled === 'function' && _reg.isRegistryEnabled(env)) {
+        return _reg.isFlagEnabled(name, env);
+      }
+    } catch {
+      /* 注册表不可用 → 本地 CANON */
+    }
+    const _raw = String((env && env[name]) ?? 'true').trim().toLowerCase();
+    return !(_raw === '0' || _raw === 'false' || _raw === 'off' || _raw === 'no');
+  };
+  const _occEnabled = _flagOn('KHY_LOOP_NARRATION_OCCURRENCE');
+  const _dedupEnabled = _flagOn('KHY_OUTCOME_HINT_DEDUP');
+  const _occCounts = new Map();
+  const _occKeyOf = (name) => {
+    try {
+      return _toolPrefaceVoice && typeof _toolPrefaceVoice.occurrenceKey === 'function'
+        ? _toolPrefaceVoice.occurrenceKey(name)
+        : String(name || '').toLowerCase();
+    } catch {
+      return String(name || '').toLowerCase();
+    }
+  };
   const lines = [];
+  const seenLines = new Map(); // 逐字相同 → 出现次数
   for (const tr of toolResults) {
     if (!tr) {
       continue;
     }
     let line = '';
     try {
-      line =
-        _toolPrefaceVoice.toolOutcomeNarration(tr.tool, tr.result || {}, tr.params || {}) || '';
+      const _key = _occKeyOf(tr.tool);
+      const _occ = _occCounts.get(_key) || 0;
+      _occCounts.set(_key, _occ + 1);
+      line = _occEnabled
+        ? _toolPrefaceVoice.toolOutcomeNarration(
+            tr.tool,
+            tr.result || {},
+            tr.params || {},
+            { occurrence: _occ }
+          ) || ''
+        : _toolPrefaceVoice.toolOutcomeNarration(tr.tool, tr.result || {}, tr.params || {}) || '';
     } catch {
       line = '';
     }
     if (line) {
+      if (_dedupEnabled) {
+        const _n = (seenLines.get(line) || 0) + 1;
+        seenLines.set(line, _n);
+        if (_n > 1) {
+          continue; // 重复的那条不再单独成行（末尾如实标出合并数）
+        }
+      }
       lines.push(line);
     }
   }
   if (lines.length === 0) {
     return '';
   }
+  let _tail = lines.join(' ');
+  if (_dedupEnabled) {
+    // 把被折叠的重复条数如实标出来（不静默丢弃）。
+    const _extra = Array.from(seenLines.values()).reduce((acc, n) => acc + (n - 1), 0);
+    if (_extra > 0) {
+      _tail += `（另有 ${_extra} 条同类旁白已合并，避免重复）`;
+    }
+  }
   // Framed as an explicit SUGGESTION so the model treats it as reference, not a
   // line to echo. Mirrors the existing [SYSTEM: …] continuation-signal channel.
   return (
     '[SYSTEM: 以下为可选的参考旁白，你可以自然地采用、改写或忽略，用你自己的话' +
     '承接这一步的结果并点出下一步；不要逐字照搬，也不要提及本提示：' +
-    lines.join(' ') +
+    _tail +
     ']'
   );
 }
@@ -1975,7 +2035,7 @@ async function runToolUseLoop(userMessage, options = {}) {
     // no accumulation effect, assessBudget always 'ok', loop never stops on spend).
     const _tokenBudgetCfg = _tokenBudget
       ? _tokenBudget.resolveBudget(process.env)
-      : { ceiling: 0, warnRatio: 0.8 };
+      : { ceiling: 0, warnRatio: 0.8, costCeilingCNY: 0 };
     // CC in-prompt budget directive (utils/tokenBudget.ts): a "+500k" / "use 2M
     // tokens" typed in the user's OWN prompt sets THIS turn's ceiling, layered over
     // the KHY_TOKEN_BUDGET env default. Gate KHY_PROMPT_TOKEN_BUDGET (default on);
@@ -1993,6 +2053,24 @@ async function runToolUseLoop(userMessage, options = {}) {
       }
     }
     let _tokensSpent = 0;
+    // 金额维度（[RESEARCH-028] P1-1）：门 KHY_TOKEN_BUDGET_COST_CNY，默认 0 = 关
+    // （S1 观察者起步，阈值真源在 constants/serviceDefaults.js）。每轮 tokenUsage
+    // 经 tokenUsageService.calculateCost 人民币计价后累加进 _costSpentCNY；计价服务
+    // 不可达（或门关）时 _costPricing 为 null ⇒ 金额恒 0 ⇒ assessCostBudget 恒 'ok'
+    // ⇒ 自动降级为仅 token 维度，收尾文案里如实说明，绝不假装在管钱。
+    // 计价口径与 recordUsage 一致：provider 级价目（tokenPricing.TOKEN_PRICING），
+    // 不做模型级精确匹配——那属于另一条已登记的成本口径，不搭本门的车。
+    const _costPricing =
+      _tokenBudget && _tokenBudgetCfg.costCeilingCNY > 0
+        ? _tryOr(() => {
+            const _svc = require('../tokenUsageService');
+            return typeof _svc.calculateCost === 'function'
+              ? (provider, inputTokens, outputTokens) =>
+                  _svc.calculateCost(provider, inputTokens, outputTokens).costCNY
+              : null;
+          }, null)
+        : null;
+    let _costSpentCNY = 0;
 
     // ── 动态工具结果预算：根据模型上下文窗口自适应 ─────────────────
     // 每次 loop 启动时探测真实上下文窗口（而非使用回退值128K）。
@@ -2116,6 +2194,30 @@ async function runToolUseLoop(userMessage, options = {}) {
       if (_loopRunId) {
         _iterationJournal.recordIteration(_loopRunId, iteration, toolCallLog);
       }
+      // ── 执行漂移观察（S1 只记录，executionDriftPolicy）─────────────────
+      // 与 doc-grounding 同一落盘通道（既有 toolLoopJournal，默认开）：只写样本，
+      // 不 nudge / 不 continue / 不改输出。判「这一轮的动作还在不在本轮请求的锚点上」，
+      // 与 ToolLoopDetector 的「原地打转」不重叠。
+      if (_loopRunId) {
+        try {
+          const _drift = require('./executionDriftPolicy').observeRound({
+            userMessage,
+            toolCallLog,
+            iteration,
+          });
+          if (_drift.observed) {
+            require('./toolLoopJournal').appendJournal(_loopRunId, {
+              event: 'exec-drift',
+              phase: 'round',
+              iteration,
+              findings: _drift.findings,
+              at: new Date().toISOString(),
+            });
+          }
+        } catch {
+          /* S1 observer is best-effort; never break the loop */
+        }
+      }
       if (interruptSignal) {
         interruptSignal._currentIteration = iteration;
       }
@@ -2163,20 +2265,33 @@ async function runToolUseLoop(userMessage, options = {}) {
       // reached the ceiling — synthesizing a final reply from work already done,
       // with NO extra model call (mirrors the PostToolUse hook-stop above). Disabled
       // (ceiling 0) ⇒ assessBudget always 'ok' ⇒ this branch is never taken ⇒
-      // byte-identical legacy behavior.
-      if (_tokenBudget && _tokenBudgetCfg.ceiling > 0) {
+      // byte-identical legacy behavior. The amount dimension joins here: same
+      // "cumulative spend over the ceiling" rule, checked at the same seam, so an
+      // ACTIVE round is never killed mid-flight — only the NEXT chat() is withheld
+      // (RUNTIME-003 精神：超限是花费事实，不是任务时钟).
+      if (_tokenBudget && (_tokenBudgetCfg.ceiling > 0 || _tokenBudgetCfg.costCeilingCNY > 0)) {
         const _verdict = _tokenBudget.assessBudget({
           spent: _tokensSpent,
           ceiling: _tokenBudgetCfg.ceiling,
           warnRatio: _tokenBudgetCfg.warnRatio,
         });
-        if (_verdict.state === 'stop') {
+        // 计价不可达时 _costSpentCNY 恒 0 ⇒ 恒 'ok' ⇒ 金额维度自动失效（降级），
+        // 是否降级由 buildBudgetStopNotice 据 costPricingAvailable 如实写进收尾文案。
+        const _costVerdict = _tokenBudget.assessCostBudget({
+          spentCNY: _costSpentCNY,
+          ceilingCNY: _tokenBudgetCfg.costCeilingCNY,
+          warnRatio: _tokenBudgetCfg.warnRatio,
+        });
+        if (_verdict.state === 'stop' || _costVerdict.state === 'stop') {
           const stoppedText =
             _stripToolCalls(_stripExecutionPlan(lastResult?.reply || '')) ||
             _buildToolResultMessage(toolResults).text;
           const notice = _tokenBudget.buildBudgetStopNotice({
             spent: _tokensSpent,
             ceiling: _tokenBudgetCfg.ceiling,
+            costSpentCNY: _costSpentCNY,
+            costCeilingCNY: _tokenBudgetCfg.costCeilingCNY,
+            costPricingAvailable: _costPricing != null,
             env: process.env,
           });
           const finalResponse =
@@ -2185,6 +2300,10 @@ async function runToolUseLoop(userMessage, options = {}) {
             iteration,
             spent: _tokensSpent,
             ceiling: _tokenBudgetCfg.ceiling,
+            // S1 观察者要攒的正是「真实累计花费分布」——停没停都记，阈值日后由它定。
+            costSpentCNY: _costSpentCNY,
+            costCeilingCNY: _tokenBudgetCfg.costCeilingCNY,
+            costPricingAvailable: _costPricing != null,
           });
           _jEnd('token-budget-stop', true, iteration);
           _emitDeliveryFinalEvent(traceAudit, traceSessionId, diagTraceId, requestId, {
@@ -2550,9 +2669,31 @@ async function runToolUseLoop(userMessage, options = {}) {
 
       // Phase 7: Create StreamingToolExecutor for pre-execution during streaming
       let _streamingExec = null;
+      let _toolCallHash = null;
+      // 流式阶段已经播报过「开始」的调用不再由主循环重复播报（同一张卡片闪两次）。
+      const _onToolCallOnce = (name, params, iter, toolUseId) => {
+        if (_streamingExec) {
+          let key = '';
+          try {
+            key = _toolCallHash ? _toolCallHash(name, params) : '';
+          } catch {
+            key = '';
+          }
+          if (_streamingExec.wasAnnounced(toolUseId, key)) {
+            return undefined;
+          }
+        }
+        if (typeof onToolCall !== 'function') {
+          return undefined;
+        }
+        return onToolCall(name, params, iter, toolUseId);
+      };
       if (isStreamingExecEnabled(process.env)) {
         try {
-          const { StreamingToolExecutor } = require('../domain/query/query/streamingToolExecutor');
+          const _streamingExecModule = require('../domain/query/query/streamingToolExecutor');
+          const { StreamingToolExecutor } = _streamingExecModule;
+          _toolCallHash = _streamingExecModule.toolCallHash;
+
           const toolCalling = require('./toolCalling');
           let toolRegistry;
           try {
@@ -2568,6 +2709,29 @@ async function runToolUseLoop(userMessage, options = {}) {
                 requestId,
                 ...ctx,
               }),
+            // 预执行一开跑就把「开始」发出去：主循环的 onToolCall 要等 chat() 结束
+            // 且 awaitAll() 归零才发，那时工具早跑完了 —— 三端都表现为「空白很久，
+            // 然后突然一大段答案」，中间看不到任何工具过程。
+            // 名字按主循环同一套规则规范化，保证「开始」和「结果」用同一个名字
+            // 配对（宿主按同名 FIFO 收敛卡片），否则结果永远配不上、卡片卡在运行中。
+            onToolCall: (call) => {
+              if (!call) {
+                return;
+              }
+              const canonical = _canonicalizeToolCall({ name: call.name, params: call.params });
+              _streamingExec.markAnnounced(
+                call.id || null,
+                _toolCallHash(canonical.name, canonical.params)
+              );
+              if (typeof onToolCall !== 'function') {
+                return;
+              }
+              try {
+                onToolCall(canonical.name, canonical.params, iteration, call.id || null);
+              } catch {
+                /* display channel is best-effort */
+              }
+            },
             isConcurrencySafe: (name) => {
               if (toolRegistry) {
                 const rt = toolRegistry.get(name);
@@ -3076,9 +3240,19 @@ async function runToolUseLoop(userMessage, options = {}) {
       // 系统层 D2 — accumulate this round's spend for the budget governor. Disabled
       // (ceiling 0) ⇒ extractTokenCount still runs but the top-of-loop assessBudget
       // is always 'ok', so this is observability-only and byte-identical legacy.
+      // The amount dimension accumulates the same round priced in CNY (same
+      // per-round-total spend notion as the token count: each call re-pays for its
+      // growing input context, which is exactly what a cost ceiling should bound).
       if (_tokenBudget && aiResult && aiResult.tokenUsage) {
         const _round = _tokenBudget.extractTokenCount(aiResult.tokenUsage);
         _tokensSpent += _round;
+        if (_costPricing) {
+          const _buckets = _tokenBudget.extractInputOutputTokens(aiResult.tokenUsage);
+          const _roundCNY = _costPricing(aiResult.provider, _buckets.input, _buckets.output);
+          if (Number.isFinite(_roundCNY) && _roundCNY > 0) {
+            _costSpentCNY += _roundCNY;
+          }
+        }
         if (_tokenBudgetCfg.ceiling > 0 && _round > 0) {
           try {
             require('../advancedDiagnostics').getInstance().recordTokenUsage(_round);
@@ -3406,11 +3580,29 @@ async function runToolUseLoop(userMessage, options = {}) {
         // when the gateway carried a real concrete cause (proxy refused / DNS /
         // HTTP 5xx / model_not_found), lead with it instead of the generic excuse.
         // Gate off or no real cause → byte-identical to the legacy friendly message.
-        const friendlyMsg = resolveFriendlyFailureMessage({
-          errorType: aiResult.errorType,
-          cause: aiResult.failureDetails || aiResult.error,
-          legacyFriendly: _legacyFriendly,
-        });
+        //
+        // ── [DESIGN-ARCH-198] W1：上游已渲染的 CLI 失败信封**必须被沿用** ──────────
+        // 断桥(2026-11-01 实测):RUNTIME-005 要求「CLI/TUI 失败展示必须由结构化失败信封
+        // 渲染」,信封叶子也早已实现(门默认开、渲染正确)。aiChatCore.chat() 在网关失败时
+        // **已经把信封渲染好**并随 reply + failureCode 返回(failureCode **仅**信封分支才有
+        // → 可当「上游已渲染信封」的判别信号)。但此处历史上**弃之不用**,改从
+        // failureDetails 重新拼散文墙 → 用户看到的是「具体原因：真实失败原因: …」压扁的
+        // 一行,信封首屏的机器码/通道名/可执行 hint 全丢。
+        // 修法:上游已渲染信封 → 直接沿用其首屏(机器码 + 通道 + hint),旧诊断墙降级为
+        // 展开层(信息不丢);上游没给信封(老散文路径)/门关 → 逐字节回退今日路径。
+        const _envelope = _tryOr(() => {
+          const _upstreamEnv = require('../gateway/upstreamFailureEnvelope');
+          return _upstreamEnv.splitRenderedEnvelope(aiResult, process.env);
+        }, null);
+        const friendlyMsg = _envelope
+          ? _envelope.rest
+            ? `${_envelope.head}\n\n${_envelope.rest}`
+            : _envelope.head
+          : resolveFriendlyFailureMessage({
+              errorType: aiResult.errorType,
+              cause: aiResult.failureDetails || aiResult.error,
+              legacyFriendly: _legacyFriendly,
+            });
         // 诊断锚定捕获侧:登记这次真实的 gateway 失败(errorType + 具体真因),供下一轮用户追问
         // 「为什么报这个错」时把它 pin 回上下文(见首轮注入点)。fail-soft,登记失败绝不影响本路径。
         try {
@@ -3430,8 +3622,12 @@ async function runToolUseLoop(userMessage, options = {}) {
         // preserving today's behavior.
         const _salvagedOnError =
           succeededExecuted > 0 ? _salvageToolResults(toolCallLog, originalUserMessage) : null;
+        // [DESIGN-ARCH-198] W1：信封首屏**不塞进括号注解里** —— 括号里的多行信封既读不懂
+        // 也抢不到首屏。老路径(无信封)逐字节保持「（注：…）」原形态。
         let finalOnError = _salvagedOnError
-          ? `${_salvagedOnError}\n\n（注：模型在汇总阶段中断：${String(friendlyMsg)}）`
+          ? _envelope
+            ? `${_salvagedOnError}\n\n（注：模型在汇总阶段中断）\n\n${String(friendlyMsg)}`
+            : `${_salvagedOnError}\n\n（注：模型在汇总阶段中断：${String(friendlyMsg)}）`
           : String(friendlyMsg);
         // 断线惯性 · 重连失败收口：此前曾用惯性完成已下达的步骤,但通道未能恢复 → 给用户
         // 一句明确交代「已用惯性完成 N 步,以上为已完成结果」,而非让这次断线悄无声息。
@@ -4993,6 +5189,30 @@ async function runToolUseLoop(userMessage, options = {}) {
             } catch {
               /* journal is best-effort — never break the loop */
             }
+          }
+        } catch {
+          /* S1 observer is best-effort; never break the loop */
+        }
+
+        // ── 执行漂移观察（S1 只记录，executionDriftPolicy）─────────────────
+        // 收尾三条：计划未完成 / 点名的验收命令没跑 / 无证据宣布完成。goal 模式下
+        // 完成判定交给 goalStopGate（它按目标声明的标准逐条核对），这里跳过以免记两遍。
+        try {
+          const _drift = require('./executionDriftPolicy').observeConclusion({
+            userMessage,
+            toolCallLog,
+            plan: executionPlan,
+            draft: _stripToolCalls(_stripExecutionPlan(aiResult.reply)),
+            hasGoal: (gatedInput.activatedModes || []).includes('goal'),
+          });
+          if (_drift.observed && _loopRunId) {
+            require('./toolLoopJournal').appendJournal(_loopRunId, {
+              event: 'exec-drift',
+              phase: 'conclusion',
+              iteration,
+              findings: _drift.findings,
+              at: new Date().toISOString(),
+            });
           }
         } catch {
           /* S1 observer is best-effort; never break the loop */
@@ -6958,9 +7178,10 @@ async function runToolUseLoop(userMessage, options = {}) {
           requestId,
           userMessage: originalUserMessage,
           iteration,
-          onToolCall,
+          onToolCall: _onToolCallOnce,
           onToolResult,
           onControlRequest,
+          streamingExecutor: _streamingExec,
         });
 
         if (onParallelBatch) {
@@ -7183,7 +7404,7 @@ async function runToolUseLoop(userMessage, options = {}) {
                 call._toolUseId = `loop_${Math.random().toString(36).slice(2, 10)}`;
               }
               if (onToolCall) {
-                const _callCtx = onToolCall(
+                const _callCtx = _onToolCallOnce(
                   call.name,
                   call.params,
                   iteration,
@@ -7702,12 +7923,18 @@ async function runToolUseLoop(userMessage, options = {}) {
               let result;
 
               // Phase 7: Check streaming executor cache before executing
-              const _seExec = aiResult?._streamingExecutor;
+              // 用循环自己持有的执行器：适配器不一定把 _streamingExecutor 回传，
+              // 回传缺失时这里会静默退化成「再执行一遍」。
+              const _seExec = _streamingExec || aiResult?._streamingExecutor;
               if (_seExec) {
-                const cached = _seExec.getResultByHash(call.name, call.params);
+                const cached =
+                  _seExec.getResultById(call._toolUseId) ||
+                  _seExec.getResultByHash(call.name, call.params);
                 if (cached) {
                   result = cached.output || cached;
-                  result._preExecuted = true;
+                  if (result && typeof result === 'object') {
+                    result._preExecuted = true;
+                  }
                 }
               }
 
@@ -8084,7 +8311,7 @@ async function runToolUseLoop(userMessage, options = {}) {
               call._toolUseId = `loop_${Math.random().toString(36).slice(2, 10)}`;
             }
             if (onToolCall) {
-              const _callCtx = onToolCall(
+              const _callCtx = _onToolCallOnce(
                 call.name,
                 call.params,
                 iteration,
@@ -8628,12 +8855,16 @@ async function runToolUseLoop(userMessage, options = {}) {
             let toolCalling = null;
 
             // Phase 7: Check streaming executor cache before executing (sequential path)
-            const _seExecSeq = aiResult?._streamingExecutor;
+            const _seExecSeq = _streamingExec || aiResult?._streamingExecutor;
             if (_seExecSeq) {
-              const cached = _seExecSeq.getResultByHash(call.name, call.params);
+              const cached =
+                _seExecSeq.getResultById(call._toolUseId) ||
+                _seExecSeq.getResultByHash(call.name, call.params);
               if (cached) {
                 result = cached.output || cached;
-                result._preExecuted = true;
+                if (result && typeof result === 'object') {
+                  result._preExecuted = true;
+                }
               }
             }
 

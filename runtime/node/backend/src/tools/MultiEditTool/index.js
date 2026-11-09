@@ -98,8 +98,9 @@ When making edits:
             properties: {
               old_string: {
                 type: 'string',
+                minLength: 1,
                 description:
-                  'The text to replace (must be unique within the current file contents unless replace_all is true)',
+                  'The text to replace (must be unique within the current file contents unless replace_all is true; must not be empty)',
               },
               new_string: {
                 type: 'string',
@@ -132,6 +133,23 @@ When making edits:
     return `批量编辑 ${path.basename(input.file_path)}：${n} 处改动`;
   }
 
+  /**
+   * 工具调用管线闸门（execute 之前跑）：拦原始 file_path 的 UNC 与越界路径。
+   * 与 FileEditTool 同款——批量编辑同样能改到项目外的文件。
+   * fail-closed：校验器拿不到就判**拒绝**，绝不 `catch { return { valid: true } }`。
+   */
+  async validateInput(params) {
+    const {
+      validateNotUNCPath,
+      validateNoPathTraversal,
+      composeValidations,
+    } = require('../inputValidators');
+    return composeValidations(
+      validateNotUNCPath(params.file_path),
+      validateNoPathTraversal(params.file_path)
+    );
+  }
+
   async execute(params, context) {
     const { file_path, edits } = params;
 
@@ -152,6 +170,21 @@ When making edits:
         rawPath = path.join(require('os').homedir(), rawPath.slice(1));
       }
       const absPath = path.resolve(cwd, rawPath);
+
+      // [SAFE] 第二层围栏：validateInput() 只看过**原始** file_path，~ 展开后的
+      // 绝对路径才显形真正的落点。这一层在任何 fs 访问之前（UNC 路径会被真的
+      // 喂给 fs，越界文件也会先被 existsSync 探到）。范式同 createDocument.js。
+      {
+        const { validateNotUNCPath, validateNoPathTraversal, composeValidations } =
+          require('../inputValidators');
+        const confineCheck = composeValidations(
+          validateNotUNCPath(absPath),
+          validateNoPathTraversal(absPath)
+        );
+        if (!confineCheck.valid) {
+          return { success: false, error: confineCheck.message };
+        }
+      }
 
       if (!fs.existsSync(absPath)) {
         return { success: false, error: `File not found: ${absPath}` };
@@ -191,6 +224,18 @@ When making edits:
           return {
             success: false,
             error: `Edit #${i + 1}: old_string and new_string must both be strings.`,
+          };
+        }
+        // 空 old_string 必须拒绝：`working.indexOf('')` 恒为 0 → count 恒为 1 →
+        // 「未找到」与「歧义」两道闸门全部放行 → 落到 split('').join(new_string)，
+        // 把替换串插进每个字符之间（真落盘、success:true、replacements 谎报为 1）。
+        // 批量是 all-or-nothing：这一条拒绝即整批中止，文件字节不变。
+        if (old_string.length === 0) {
+          return {
+            success: false,
+            error:
+              `Edit #${i + 1}: old_string must not be empty — provide the exact text to replace ` +
+              '(copy it verbatim from the Read tool output).',
           };
         }
         if (old_string === new_string) {

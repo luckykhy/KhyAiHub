@@ -1,6 +1,73 @@
 const { BaseTool } = require('../_baseTool');
 const { resolveToolTimeoutMs, withDeadline } = require('../_toolTimeout');
 
+// Per-item measured result. The service scores these and never fabricates
+// them: an item without a measured `passed` makes the whole call error out.
+const METRIC_ITEM_SCHEMA = {
+  type: 'object',
+  properties: {
+    metric: { type: 'string', description: 'Metric name (accuracy, relevance, coherence, fluency, safety)' },
+    passed: { type: 'boolean', description: 'Measured outcome for this item' },
+    weight: { type: 'number', description: 'Weight in the weighted aggregate (default 1)' },
+    evidence: { type: 'string', description: 'Why the item passed or failed' },
+  },
+  required: ['metric', 'passed'],
+};
+
+const EVALUATION_CONFIG_SCHEMA = {
+  type: 'object',
+  properties: {
+    model: { type: 'string', description: 'Model to evaluate' },
+    prompt: { type: 'string', description: 'Evaluation prompt' },
+    expectedOutput: { type: 'string', description: 'Expected output for comparison' },
+    metrics: {
+      type: 'array',
+      description: 'Per-item measured results, same shape as the run operation',
+      items: METRIC_ITEM_SCHEMA,
+    },
+  },
+  required: ['model', 'prompt'],
+};
+
+const INPUT_SCHEMA = {
+  type: 'object',
+  properties: {
+    operation: {
+      type: 'string',
+      enum: ['run', 'batch', 'compare', 'list', 'save'],
+      description: 'Operation to perform',
+    },
+    model: {
+      type: 'string',
+      description: 'Model to evaluate (for run operation)',
+    },
+    prompt: {
+      type: 'string',
+      description: 'Evaluation prompt',
+    },
+    expectedOutput: {
+      type: 'string',
+      description: 'Expected output for comparison',
+    },
+    metrics: {
+      type: 'array',
+      description: 'Evaluation metrics with measured results. Each item: { metric: string, passed: boolean, weight?: number, evidence?: string }. Per-item measured results are required — this service has no provider measurement layer and never fabricates scores',
+      items: METRIC_ITEM_SCHEMA,
+    },
+    models: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'Models to compare (for compare operation)',
+    },
+    evaluations: {
+      type: 'array',
+      description: 'Evaluation configs (for batch operation): { model, prompt, expectedOutput?, metrics: [{ metric, passed, weight?, evidence? }] }',
+      items: EVALUATION_CONFIG_SCHEMA,
+    },
+  },
+  required: ['operation'],
+};
+
 class EvalsTool extends BaseTool {
   static toolName = 'Evals';
   static category = 'analysis';
@@ -24,47 +91,15 @@ Operations:
 - "batch" — Run batch evaluations
 - "compare" — Compare multiple models
 - "list" — List evaluation history
-- "save" — Save evaluation result`;
+- "save" — Save evaluation result
+
+metrics carries per-item measured results: [{ metric, passed, weight?, evidence? }].
+There is no provider measurement layer here, so unmeasured input returns an
+error instead of a score — never a simulated number.`;
   }
 
   get inputSchema() {
-    return {
-      type: 'object',
-      properties: {
-        operation: {
-          type: 'string',
-          enum: ['run', 'batch', 'compare', 'list', 'save'],
-          description: 'Operation to perform',
-        },
-        model: {
-          type: 'string',
-          description: 'Model to evaluate (for run operation)',
-        },
-        prompt: {
-          type: 'string',
-          description: 'Evaluation prompt',
-        },
-        expectedOutput: {
-          type: 'string',
-          description: 'Expected output for comparison',
-        },
-        metrics: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Evaluation metrics (accuracy, relevance, coherence, fluency, safety)',
-        },
-        models: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Models to compare (for compare operation)',
-        },
-        evaluations: {
-          type: 'array',
-          description: 'Evaluation configs (for batch operation)',
-        },
-      },
-      required: ['operation'],
-    };
+    return INPUT_SCHEMA;
   }
 
   async execute(params) {
@@ -108,7 +143,10 @@ Operations:
             return { success: false, error: 'models and prompt are required' };
           }
           return await withDeadline(
-            () => evals.compareModels(params.models, params.prompt),
+            () => evals.compareModels(params.models, params.prompt, {
+              expectedOutput: params.expectedOutput,
+              metrics: params.metrics,
+            }),
             timeoutMs
           );
 

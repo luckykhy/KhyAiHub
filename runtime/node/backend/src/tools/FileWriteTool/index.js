@@ -29,7 +29,12 @@ class FileWriteTool extends BaseTool {
       return false;
     }
     try {
-      const resolved = path.resolve(process.env.KHYQUANT_CWD || process.cwd(), input.file_path);
+      // 破坏性判定必须看**真正要写的那个路径**。execute 里会展开 %VAR% / ~ 再写，
+      // 而这里原来直接 resolve 原始串：`%OUTSIDE%\important.conf` 这种写法解析出来
+      // 根本不存在，于是被判成「非破坏性」，覆盖既有文件不被拦——判定口径与落点不一致，
+      // 等于这道闸形同虚设。两处必须用同一套展开（resolveToolPath 是共享单一真源）。
+      const cwd = process.env.KHYQUANT_CWD || process.cwd();
+      const resolved = require('../../utils/resolveToolPath')(input.file_path, cwd);
       return fs.existsSync(resolved);
     } catch {
       return false;
@@ -73,20 +78,23 @@ Usage:
     };
   }
 
+  /**
+   * 工具调用管线闸门（execute 之前跑）：UNC + 越界路径。
+   *
+   * fail-closed：这里原来有 `catch { return { valid: true } }` —— 校验器一旦拿不到
+   * （模块路径变了、初始化异常）就直接**放行**，等于把一道安全闸变成摆设。改成
+   * 不吞异常：拿不到就让调用失败，绝不静默放行。
+   */
   async validateInput(params) {
-    try {
-      const {
-        validateNotUNCPath,
-        validateNoPathTraversal,
-        composeValidations,
-      } = require('../inputValidators');
-      return composeValidations(
-        validateNotUNCPath(params.file_path),
-        validateNoPathTraversal(params.file_path)
-      );
-    } catch {
-      return { valid: true };
-    }
+    const {
+      validateNotUNCPath,
+      validateNoPathTraversal,
+      composeValidations,
+    } = require('../inputValidators');
+    return composeValidations(
+      validateNotUNCPath(params.file_path),
+      validateNoPathTraversal(params.file_path)
+    );
   }
 
   getActivityDescription(input) {
@@ -115,6 +123,22 @@ Usage:
       }
 
       const filePath = path.resolve(cwd, rawPath);
+
+      // [SAFE] 第二层围栏：validateInput() 只看过**原始** file_path，而上面把
+      // %VAR% / ~ 展开成绝对路径后，真正的落点才显形（`%USERPROFILE%\..\..\system32\x`
+      // 这类串能通过闸门里的原始串检查）。这一层必须在任何 fs 访问之前。
+      // 范式同 createDocument.js。
+      {
+        const { validateNotUNCPath, validateNoPathTraversal, composeValidations } =
+          require('../inputValidators');
+        const confineCheck = composeValidations(
+          validateNotUNCPath(filePath),
+          validateNoPathTraversal(filePath)
+        );
+        if (!confineCheck.valid) {
+          return { success: false, error: confineCheck.message };
+        }
+      }
 
       // CC 硬约束: 已存在的文件必须先读后写
       if (fs.existsSync(filePath)) {
@@ -168,6 +192,15 @@ Usage:
 
       fs.writeFileSync(filePath, params.content, 'utf-8');
       const bytes = Buffer.byteLength(params.content, 'utf-8');
+
+      // 写完刷新 readState：刚写进去的内容就是「当前内容」。不刷新的话，下一次 Edit
+      // 会因为「文件已变（stale）」或「本轮没读过」把用户自己刚写的文件拦住，
+      // 而用户明明刚写过它（新建的文件更糟：它压根没被读过，必然被 Edit 顶回来）。
+      try {
+        require('../_readTracker').markRead(filePath);
+      } catch {
+        /* tracker 不可用 → 跳过（best-effort，不影响写入本身） */
+      }
 
       const result = { success: true, path: filePath, bytes };
       // LSP 诊断自动注入：写入后收集编译错误

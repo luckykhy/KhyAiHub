@@ -52,7 +52,7 @@ function _requireWithHeal(indexPath, dirName) {
         .map((c) => `L${c.line} ${c.pattern}`)
         .join(', ');
       console.warn(
-        `[ToolRegistry] Self-healed syntax in ${dir.name}/index.js: ${changeSummary}. Retrying...`
+        `[ToolRegistry] Self-healed syntax in ${dirName}/index.js: ${changeSummary}. Retrying...`
       );
       // Clear require cache so the healed file is re-loaded
       delete require.cache[require.resolve(indexPath)];
@@ -60,7 +60,7 @@ function _requireWithHeal(indexPath, dirName) {
         return require(indexPath);
       } catch (retryErr) {
         console.warn(
-          `[ToolRegistry] Failed to load ${dir.name}/index.js after healing: ${retryErr.message}`
+          `[ToolRegistry] Failed to load ${dirName}/index.js after healing: ${retryErr.message}`
         );
         return undefined;
       }

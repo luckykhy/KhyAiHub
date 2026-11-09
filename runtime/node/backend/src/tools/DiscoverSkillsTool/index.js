@@ -33,9 +33,12 @@ Shows both built-in and user-created skills.`;
   }
 
   async execute(params) {
+    // The cwd-relative `<cwd>/.khy/skills` entry used to sit here. It was the
+    // reason a repo-root `.khy` shadow tree kept getting read (and, via sibling
+    // writers, written); all three candidate dirs measured empty on this box.
+    // Skills now resolve through dataHome below, which follows KHY_DATA_HOME.
     const skillDirs = [
       path.join(__dirname, '..', '..', 'skills', 'built-in'),
-      path.join(process.cwd(), '.khy', 'skills'),
       path.join(require('os').homedir(), '.khy', 'skills'),
     ];
     // Portable-aware user skills dir (dedup: equals ~/.khy/skills in
