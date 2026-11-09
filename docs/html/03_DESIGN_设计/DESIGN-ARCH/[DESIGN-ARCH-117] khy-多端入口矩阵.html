@@ -162,7 +162,10 @@ entrypoints.<span class="hljs-title function_">probeAll</span>();               
 <p><code>router.js</code> 的自注册分支写的是 <code>return __auto.result</code>，<br>   而 <code>bin/khy.js</code> 只按 <code>result.errorType</code> 分流，不读这个数字。<br>   后果是<strong>任何</strong>自注册命令的「返回非 0」都到不了 shell，<code>khy entry probe</code><br>   因此无法被 CI 用 <code>$?</code> 直接消费。这是<strong>全仓自注册命令的共性缺口</strong>，不是本模块独有，<br>   修它要动共用的退出码语义（影响 health / ci / deploy 等全部自注册命令），<br>   超出本文范围。本轮的应对是：文档如实标注 + 提供 <code>--json</code> 作为脚本消费路径。</p>
 <hr>
 <h2 id="八-验证方式">八、验证方式<a class="anchor" href="#八-验证方式" aria-label="锚点">#</a></h2>
-<pre><code class="language-bash"><span class="hljs-comment"># 层级契约本身（改过 §1.2 或 CROSSCUTTING 后必跑——这条是 error 级）</span>
+<pre><code class="language-bash">&lt;!-- IMPL-STATUS: todo --&gt;
+&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;
+&gt; **标记依据**：24 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
+<span class="hljs-comment"># 层级契约本身（改过 §1.2 或 CROSSCUTTING 后必跑——这条是 error 级）</span>
 npm run check:layout
 
 <span class="hljs-comment"># 端矩阵能加载、字段自洽（缺字段 / 重复 id / 未知 kind / 未知 status 都会报出来）</span>
