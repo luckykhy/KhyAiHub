@@ -30,7 +30,10 @@ import java.util.Arrays;
  *     BridgeOverlayService.isEnabled 这个用户偏好闸门（见 onCreate），撤掉只
  *     收「桥自己拉起的那个」，用户主动 show 的那颗不收回；
  *   - 自愈心跳每 10s 体检 accept 环（实测卡死形态：信箱心跳照写、HTTP 全
- *     超时，根因是旧实现每请求读 token 文件撞上存储 IO）。
+ *     超时，根因是旧实现每请求读 token 文件撞上存储 IO）；
+ *   - 信箱命令走 cmd→processing→result 三态：改名占位后才执行，回执发布失败
+ *     时保留 processing 不假装完成；遗留 processing 在启动时登记 recovered，
+ *     运行期由 GC 兜底清理（契约原文见 assets/khy_bridge_guide.md 的 mailbox 主题）。
  *
  * 契约：前台服务（dataSync），START_STICKY；不抛。悬浮框与桥可各自存活：
  * 桥重建（冷启动 / 开机 / PC 唤醒）只把用户还想要的悬浮框拉回来，桥停掉时
@@ -38,10 +41,55 @@ import java.util.Arrays;
  */
 public class BridgeService extends Service {
     public static final String BRIDGE_DIR = "/sdcard/bridge-amoobridge";
+
+    // The worker loop can legitimately block on a single mailbox command for up
+    // to ~120s (exec's own cap), so "stale" must clear that bar — anything
+    // shorter cries wolf during every long exec. Beyond it the loop stopped
+    // ticking: frozen process or dead worker thread.
+    private static final long HEARTBEAT_STALE_MS = 180_000L;
+
+    // Mailbox GC leashes. The consumer deleting result_<id>.json after reading
+    // it is the first-responsibility path (documented in the guide asset);
+    // these are the server-side janitor for callers that never clean up.
+    // processing gets the longest leash: a leftover there means the command's
+    // side effects are unknown and must stay observable.
+    private static final long GC_INTERVAL_MS = 60_000L;
+    private static final long RESULT_RETENTION_MS = 24L * 60 * 60 * 1000;
+    private static final long TMP_RETENTION_MS = 60L * 60 * 1000;
+    private static final long PROCESSING_RETENTION_MS = 72L * 60 * 60 * 1000;
+
     public static final String ACTION_START = "com.khyos.khy_os_client.bridge.START";
     public static final String ACTION_STOP = "com.khyos.khy_os_client.bridge.STOP";
     private volatile boolean running = false;
     private Thread worker;
+
+    // Worker-loop heartbeat: bumped once per loop pass, read by HTTP /ping
+    // cross-thread, hence static volatile.
+    private static volatile long hbSeq = 0;
+    private static volatile long hbTickMs = 0;
+    // Leftover processing files registered once at startup (the mailbox
+    // contract's recovered set). Their side effects are unknown: they are
+    // reported, never replayed or deleted here.
+    private JSONArray recoveredSnapshot = new JSONArray();
+    // Mailbox queue depths from the last scan pass; the same thread publishes
+    // them into status.json right after the scan, so plain fields suffice.
+    private int mbPending = 0;
+    private int mbProcessing = 0;
+    private int mbResults = 0;
+    private int mbTmp = 0;
+
+    /** ms since the last loop tick; -1 before the first tick. */
+    static long heartbeatAgeMs() {
+        long t = hbTickMs;
+        return t == 0 ? -1 : System.currentTimeMillis() - t;
+    }
+
+    static boolean heartbeatStale() {
+        long age = heartbeatAgeMs();
+        return age < 0 || age > HEARTBEAT_STALE_MS;
+    }
+
+    static long heartbeatSeq() { return hbSeq; }
 
     @Override
     public void onCreate() {
@@ -237,19 +285,49 @@ public class BridgeService extends Service {
     private void loop() {
         File dir = new File(BRIDGE_DIR);
         if (!dir.exists()) dir.mkdirs();
+        registerRecovered(dir);
         long lastStatus = 0;
         long lastHeal = 0;
+        long lastGc = 0;
         while (running) {
             try {
+                hbSeq++;
+                long now = System.currentTimeMillis();
+                hbTickMs = now;
                 File[] files = dir.listFiles();
+                int pending = 0, processing = 0, results = 0, tmps = 0;
+                boolean gcDue = now - lastGc > GC_INTERVAL_MS;
+                if (gcDue) lastGc = now;
                 if (files != null) {
                     Arrays.sort(files);
+                    // Count + GC on one pass over the snapshot; handling runs
+                    // after, so the counts describe the queue as it stood, not
+                    // a queue mid-drain.
+                    for (File f : files) {
+                        String n = f.getName();
+                        long age = now - f.lastModified();
+                        if (n.startsWith("cmd_") && n.endsWith(".json")) {
+                            pending++;
+                        } else if (n.startsWith("processing_") && n.endsWith(".json")) {
+                            processing++;
+                            if (gcDue && age > PROCESSING_RETENTION_MS) gcDelete(f, "processing", age);
+                        } else if (n.startsWith("result_") && n.endsWith(".json")) {
+                            results++;
+                            if (gcDue && age > RESULT_RETENTION_MS) gcDelete(f, "result", age);
+                        } else if (n.endsWith(".tmp")) {
+                            tmps++;
+                            if (gcDue && age > TMP_RETENTION_MS) gcDelete(f, "tmp", age);
+                        }
+                    }
                     for (File f : files) {
                         String n = f.getName();
                         if (n.startsWith("cmd_") && n.endsWith(".json")) handle(f);
                     }
                 }
-                long now = System.currentTimeMillis();
+                mbPending = pending;
+                mbProcessing = processing;
+                mbResults = results;
+                mbTmp = tmps;
                 if (now - lastStatus > 2000) {
                     lastStatus = now;
                     writeStatus();
@@ -291,6 +369,11 @@ public class BridgeService extends Service {
             // App 据此决定显示「协作中」还是「独立工作」——不是故障，是两种正常模式。
             o.put("pc_reachable", HttpBridge.pcReachable());
             o.put("pc_idle_ms", HttpBridge.pcIdleMs());
+            // Same heartbeat fields as HTTP /ping: status.json is what the PC
+            // probe actually reads, so /ping alone would leave it blind.
+            o.put("heartbeat_seq", heartbeatSeq());
+            o.put("heartbeat_age_ms", heartbeatAgeMs());
+            o.put("heartbeat_stale", heartbeatStale());
             try {
                 o.put("ver", getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
             } catch (Throwable ignored) {}
@@ -312,41 +395,195 @@ public class BridgeService extends Service {
             for (String t : Tools.availableNamesCached()) a.put(t);
             o.put("tools", a);
             o.put("withheld", Tools.withheldCached());
+            // Queue depths from the last scan pass: the caller's view of
+            // backpressure. A deep pending queue means the loop is busy with a
+            // long command, not that the bridge died.
+            o.put("mailbox", new JSONObject()
+                    .put("pending", mbPending).put("processing", mbProcessing)
+                    .put("results", mbResults).put("tmp", mbTmp));
+            // Recovered leftovers registered at startup: claimed-but-outcome-
+            // unknown commands. Report only; never replayed or deleted here.
+            o.put("recovered", recoveredSnapshot);
             writeAtomic(new File(BRIDGE_DIR, "status.json"), o.toString());
         } catch (Throwable ignored) {}
     }
 
+    /**
+     * Startup registration of leftover processing_<id>.json files — the mailbox
+     * contract's recovered set. These commands were claimed but their outcome
+     * is unknown: report id/tool/age/args-presence only (the args body is never
+     * parsed), keep the file, replay nothing. The caller must check side
+     * effects via the id's result file or the UI itself.
+     */
+    private void registerRecovered(File dir) {
+        JSONArray out = new JSONArray();
+        File[] files = dir.listFiles();
+        if (files != null) {
+            Arrays.sort(files);
+            long now = System.currentTimeMillis();
+            for (File f : files) {
+                if (out.length() >= 20) break;
+                String n = f.getName();
+                if (!n.startsWith("processing_") || !n.endsWith(".json")) continue;
+                try {
+                    JSONObject e = new JSONObject()
+                            .put("id", n.substring("processing_".length(), n.length() - 5))
+                            .put("tool", "")
+                            .put("age_ms", now - f.lastModified())
+                            .put("args_present", false)
+                            .put("side_effects", "unknown");
+                    try {
+                        JSONObject cmd = new JSONObject(readText(f, 16 * 1024));
+                        e.put("tool", cmd.optString("tool", ""))
+                         .put("args_present", cmd.has("args") && !cmd.isNull("args"));
+                    } catch (Throwable ignored) {
+                        // Unreadable envelope: report what the filename tells, nothing more.
+                    }
+                    out.put(e);
+                } catch (Throwable ignored) {
+                    // A registration failure must not take the worker loop down.
+                }
+            }
+        }
+        recoveredSnapshot = out;
+    }
+
+    /**
+     * The mailbox id lives in the FILENAME, never in the body: the caller
+     * polls result_<id>.json by the name it wrote, so a body disagreeing with
+     * the filename would publish a receipt nobody ever reads.
+     */
+    private static boolean isValidMailboxId(String id) {
+        if (id == null || id.length() < 1 || id.length() > 128) return false;
+        for (int i = 0; i < id.length(); i++) {
+            char c = id.charAt(i);
+            boolean ok = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z')
+                    || (c >= 'A' && c <= 'Z') || c == '_' || c == '-';
+            if (!ok) return false;
+        }
+        return true;
+    }
+
+    private void gcDelete(File f, String kind, long ageMs) {
+        if (f.delete()) {
+            Log.i("BridgeService", "信箱 GC：删除 " + kind + " 文件 " + f.getName()
+                    + "（已 " + (ageMs / 60000) + " 分钟无人处理）");
+        }
+    }
+
     private void handle(File f) {
-        String id = null;
-        JSONObject result = new JSONObject();
+        String name = f.getName();
+        String id = name.substring(4, name.length() - 5);
+        if (!isValidMailboxId(id)) {
+            // Never claimed, so never executed and no side effects. It cannot
+            // get a result under a conforming name either, and keeping it
+            // would re-fail every 120ms forever.
+            Log.w("BridgeService", "信箱命令丢弃（文件 " + name + "）：id 不合规范（须 1-128 位字母/数字/下划线/短横线），未执行、无副作用");
+            try { f.delete(); } catch (Throwable ignored) {}
+            return;
+        }
+        File processing = new File(BRIDGE_DIR, "processing_" + id + ".json");
+        File resultFile = new File(BRIDGE_DIR, "result_" + id + ".json");
+        if (processing.exists()) {
+            // Leftover processing = this id was claimed before and its outcome
+            // is unknown (registered as recovered at startup). Re-running would
+            // replay non-idempotent work — refuse and point at the checks. An
+            // existing result_<id>.json is the receipt of that earlier claim;
+            // the rejection must never overwrite it.
+            if (!resultFile.exists()) {
+                JSONObject reject = new JSONObject();
+                try {
+                    reject.put("ok", false)
+                          .put("id", id).put("ts", System.currentTimeMillis())
+                          .put("code", "duplicate_id")
+                          .put("error", "同 id 已有遗留的 processing_" + id + ".json（上次执行结果未知）：先读 result_" + id + ".json 或核对界面副作用，确认后删除该遗留文件再发新命令")
+                          .put("action_dispatched", false)
+                          .put("replay_safe", false)
+                          .put("retry_safe", false);
+                    writeAtomic(resultFile, reject.toString());
+                } catch (Throwable t) {
+                    Log.w("BridgeService", "duplicate_id 回执发布失败（result_" + id + ".json）：" + t.getClass().getSimpleName()
+                            + "；新命令已丢弃未执行，遗留 processing_" + id + ".json 保留，上次命令结果仍未知、副作用需核对");
+                }
+            }
+            try { f.delete(); } catch (Throwable ignored) {}
+            return;
+        }
+        if (!f.renameTo(processing)) {
+            // Transient storage failure: the cmd file stays and the next 120ms pass retries.
+            return;
+        }
+        JSONObject result;
+        String tool = "";
+        JSONObject args = new JSONObject();
+        boolean dispatched = false;
         try {
-            String text = readText(f, 1024 * 512);
-            JSONObject cmd = new JSONObject(text);
-            id = cmd.optString("id", f.getName().substring(4, f.getName().length() - 5));
-            String tool = cmd.optString("tool", "");
-            JSONObject args = cmd.optJSONObject("args");
-            if (args == null) args = new JSONObject();
-            JSONObject out = Tools.dispatch(tool, args);
-            result.put("id", id).put("tool", tool).put("ts", System.currentTimeMillis());
-            java.util.Iterator<String> it = out.keys();
-            while (it.hasNext()) {
-                String k = it.next();
-                result.put(k, out.get(k));
+            JSONObject cmd = new JSONObject(readText(processing, 1024 * 512));
+            String bodyId = cmd.optString("id", id);
+            tool = cmd.optString("tool", "");
+            if (!bodyId.equals(id)) {
+                result = HttpBridge.invalidArguments("信箱命令被拒绝：正文 id（" + bodyId + "）与文件名 id（" + id + "）不一致。修复：两者一致后重写 cmd_" + id + ".json", "mailbox");
+            } else if (tool.length() == 0) {
+                result = HttpBridge.invalidArguments("缺 tool 字段：信箱命令形状为 {\"id\",\"tool\",\"args\"}。修复：补上工具名（可用清单读 GET /agent-guide）后重写 cmd_" + id + ".json", "schema");
+            } else if (cmd.has("args") && cmd.optJSONObject("args") == null) {
+                result = HttpBridge.invalidArguments("args 必须是 JSON 对象：信箱命令形状为 {\"id\",\"tool\",\"args\"}。修复：把 args 改为对象后重写 cmd_" + id + ".json，每工具参数细节读 GET /agent-guide?topic=schema", "schema");
+            } else {
+                if (cmd.has("args")) args = cmd.optJSONObject("args");
+                result = Tools.dispatch(tool, args);
+                dispatched = true;
+                // Same boundary enrichment as HTTP /call: the guide's unknown-
+                // tool receipt promise holds on both channels.
+                HttpBridge.markUnknownTool(result);
             }
         } catch (Throwable t) {
+            result = new JSONObject();
             try {
                 result.put("ok", false).put("error", t.getClass().getSimpleName() + ": " + t.getMessage());
-                if (id == null) {
-                    String n = f.getName();
-                    id = n.substring(4, n.length() - 5);
-                    result.put("id", id);
-                }
             } catch (Throwable ignored) {}
         }
         try {
-            writeAtomic(new File(BRIDGE_DIR, "result_" + id + ".json"), result.toString());
+            result.put("id", id);
+            if (tool.length() > 0) result.put("tool", tool);
+            result.put("ts", System.currentTimeMillis());
+            // Boundary truth for the caller's replay decision: dispatched=false
+            // means nothing reached the tool layer; retry is only safe for a
+            // read-only tool that answered ok. ok=false is never retry-safe —
+            // whether a failed tool acted first is not knowable here.
+            result.put("action_dispatched", dispatched);
+            boolean read = dispatched && result.optBoolean("ok", false) && isReadOnlyCall(tool, args);
+            result.put("replay_safe", read);
+            result.put("retry_safe", read);
         } catch (Throwable ignored) {}
-        try { f.delete(); } catch (Throwable ignored) {}
+        try {
+            writeAtomic(resultFile, result.toString());
+        } catch (Throwable t) {
+            // A receipt that cannot be written (disk full / IO error) must not
+            // be mistaken for success. Keep the processing file: "processing
+            // present, result absent" is the observable that says unconfirmed —
+            // deleting it would pretend the command never ran.
+            Log.w("BridgeService", "回执发布失败（result_" + id + ".json）：" + t.getClass().getSimpleName()
+                    + "；保留 processing_" + id + ".json，命令未确认完成、副作用需核对");
+            return;
+        }
+        try { processing.delete(); } catch (Throwable ignored) {}
+    }
+
+    /**
+     * Tools whose re-run cannot change device state. Mutating args of the dual
+     * tools (level/value/op) flip them to false; anything not listed here is
+     * treated as mutating — an unknown tool must never be called safe.
+     */
+    private static boolean isReadOnlyCall(String tool, JSONObject args) {
+        if (tool.equals("volume")) return !args.has("level");
+        if (tool.equals("brightness")) return !args.has("value");
+        if (tool.equals("clipboard")) return !"set".equals(args.optString("op", "get"));
+        if (tool.equals("amoo_memory")) return !"set".equals(args.optString("op", "get"));
+        return tool.equals("ping") || tool.equals("info") || tool.equals("tools")
+                || tool.equals("ls") || tool.equals("read") || tool.equals("stat")
+                || tool.equals("list_apps") || tool.equals("battery")
+                || tool.equals("loop_status") || tool.equals("amoo_result")
+                || tool.equals("secret_list") || tool.equals("ui_dump")
+                || tool.equals("shot") || tool.equals("shot_b64");
     }
 
     private String readText(File f, int max) throws Exception {
