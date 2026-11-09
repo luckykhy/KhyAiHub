@@ -1,0 +1,48 @@
+{
+  "$meta": {
+    "name": "Khy OS 品牌令牌（五端同步取值）",
+    "source": "delivery/brand/khy-brand-geometry.js（几何与配色单一真源）",
+    "updated": "2026-10-25",
+    "note": "accent = 品牌强调主色。亮暗两端各取一个文本安全值；ink/paper 为负形与底板色。五端真源文件各自引用本表的语义名。"
+  },
+  "color": {
+    "accent": {
+      "value": "#9C4116",
+      "valueDark": "#F0A868"
+    },
+    "accentStrong": {
+      "value": "#9C4116",
+      "valueDark": "#FFC078"
+    },
+    "brand": {
+      "value": "#9C4116",
+      "valueDark": "#F0A868"
+    },
+    "brandGraphic": {
+      "value": "#E2703A",
+      "valueDark": "#E2703A"
+    },
+    "ink": {
+      "value": "#14110E",
+      "valueDark": "#14110E"
+    },
+    "paper": {
+      "value": "#F6F2EC",
+      "valueDark": "#F6F2EC"
+    }
+  },
+  "graphic": {
+    "gradient": [
+      "#FFC078",
+      "#E2703A"
+    ],
+    "tileRadiusRatio": 0.225,
+    "markRatioInTile": 0.7,
+    "compact": {
+      "ringGapDeg": 4,
+      "ringSlantDeg": 8,
+      "coreHalf": 18,
+      "note": "≤32px 场景（favicon / 角标）用的紧凑几何：实心内核，无 K 槽"
+    }
+  }
+}

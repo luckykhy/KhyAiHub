@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Khy OS 桌面</title>
+<style>
+  /* 桌面页只留画布：滚动条既破坏「满屏一帧」的观感，也会让采集视口尺寸漂移。 */
+  :root { color-scheme: dark; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: #05070d;
+    overflow: hidden;
+  }
+  #khyos-stage {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+  }
+  /* 桌面主要是用来看的，光标是客人：3 秒不动它就退场（main.js 切 body.idle）。 */
+  body.idle { cursor: none; }
+  /* HUD 刻意低调——它只报告当前场景与轮播进度，不参与表演。 */
+  #khyos-hud {
+    position: fixed;
+    left: 16px;
+    bottom: 14px;
+    font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: rgba(246, 242, 236, 0.62);
+    text-shadow: 0 1px 2px rgba(5, 7, 13, 0.8);
+    pointer-events: none;
+    user-select: none;
+  }
+  #khyos-hud-track {
+    margin-top: 4px;
+    width: 132px;
+    height: 2px;
+    background: rgba(246, 242, 236, 0.18);
+  }
+  #khyos-hud-progress {
+    width: 0%;
+    height: 100%;
+    background: rgba(226, 112, 58, 0.85);
+  }
+  #khyos-hud[hidden] { display: none; }
+  /* 与 HUD 相反，集成失败必须刺眼：录屏里只有 DOM 能被看见，静默的降级画面比报错更难发现。 */
+  #khyos-error {
+    position: fixed;
+    inset: 0;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8vw;
+    background: rgba(20, 17, 14, 0.92);
+    color: #f6f2ec;
+    font: 14px/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    white-space: pre-wrap;
+    overflow: auto;
+  }
+  #khyos-error[hidden] { display: none; }
+</style>
+</head>
+<body>
+<canvas id="khyos-stage"></canvas>
+<div id="khyos-hud" hidden>
+  <div id="khyos-hud-scene"></div>
+  <div id="khyos-hud-track"><div id="khyos-hud-progress"></div></div>
+</div>
+<div id="khyos-error" hidden></div>
+<script type="module" src="./dist/bundle.js"></script>
+</body>
+</html>

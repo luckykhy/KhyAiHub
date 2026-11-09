@@ -1,0 +1,22 @@
+{
+  "name": "khyos-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Khy OS 品牌 3D 桌面：实时渲染全屏页 → 逐场景帧采集 → 预览片",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  },
+  "dependencies": {
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.12",
+    "ffmpeg-static": "^5.2.0",
+    "pngjs": "^7.0.0",
+    "puppeteer-core": "^23.11.1"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
