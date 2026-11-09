@@ -1,0 +1,68 @@
+{
+  "v": 1,
+  "protocol": "khy-amoon/1",
+  "audience": "phone",
+  "generated_by": "lib/bootstrap.js",
+  "note": "手机侧工具清单。HTTP 通道使用 phone scope token；文件信箱固定映射为 file scope。两者都只能调用下面列出的低权限工具。",
+  "tools": [
+    {
+      "name": "ping",
+      "title": "连通性探测",
+      "description": "最小连通性检查：返回 pong/时间/pid。不访问手机，不触发模型。",
+      "scopes": ["operator", "phone", "file"],
+      "risk": "low",
+      "phase": 1,
+      "input": {}
+    },
+    {
+      "name": "bridge_status",
+      "title": "桥状态",
+      "description": "返回版本/状态机/ADB/reverse/信箱/能力矩阵。phone 与 file scope 会裁剪 serial、路径等敏感字段。",
+      "scopes": ["operator", "phone", "file"],
+      "risk": "low",
+      "phase": 1,
+      "input": {
+        "verbose": "boolean（可选，默认 false）"
+      }
+    },
+    {
+      "name": "mailbox_status",
+      "title": "信箱状态",
+      "description": "返回手机信箱各目录计数、上次轮询时间/错误、adb 是否可用、能力状态。",
+      "scopes": ["operator", "phone", "file"],
+      "risk": "low",
+      "phase": 1,
+      "input": {}
+    }
+  ],
+  "conditional": [
+    {
+      "name": "khy_ask",
+      "title": "一次性提问 KhyOS",
+      "enabled_by": "KHY_AMOON_PHONE_ASK=1 且 capability.json 的 http=true",
+      "default": "disabled",
+      "note": "默认返回 phone_ask_disabled。开启后仍固定 max_turns=1、空 cwd、禁用一切工具。file scope 永不开放。",
+      "input": {
+        "question": "string（必填）"
+      }
+    }
+  ],
+  "file_scope": {
+    "tools": ["ping", "bridge_status", "mailbox_status"],
+    "note": "文件信箱没有 Bearer，任何能写 /sdcard 的应用都能投递；因此永不包含 khy_ask、amoon_send、phone_*、token rotate、audit tail。"
+  },
+  "never_available_to_phone": [
+    "khy_ask（默认关闭，需显式开启）",
+    "phone_screenshot",
+    "phone_ui_dump",
+    "phone_info",
+    "phone_app_list",
+    "phone_ls",
+    "phone_exec",
+    "amoon_send",
+    "amoon_inbox",
+    "token rotate",
+    "audit tail",
+    "phone_shell（不存在这个工具）"
+  ]
+}
