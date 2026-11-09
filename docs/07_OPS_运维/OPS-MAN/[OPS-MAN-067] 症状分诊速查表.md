@@ -878,8 +878,6 @@ npm run test:one -- runtime/node/backend/tests/services/sessionRecapCjk.test.js 
 - the preflight is additive and gated KHY_NPM_NODE_PREFLIGHT default-on; gate off / any error / unparseable version byte-reverts bin/khy.js to the original unconditional spawnSync handoff (preflight must never be more fragile than the launch it protects)
 
 **先读这些文件：**
-- `works/ship/npm/scripts/nodeVersionPreflight.js`
-- `works/ship/npm/test/nodeVersionPreflight.test.js`
 - `works/ship/npm/bin/khy.js`
 
 **参考文档：**
@@ -888,7 +886,7 @@ npm run test:one -- runtime/node/backend/tests/services/sessionRecapCjk.test.js 
 **跑这些验证命令（绿灯＝这块没坏）：**
 
 ```bash
-npm run test:one -- works/ship/npm/test/nodeVersionPreflight.test.js
+node --check works/ship/npm/bin/khy.js
 ```
 
 ---
@@ -1756,7 +1754,6 @@ npm run test:one -- runtime/node/backend/tests/services/memoryOpsNotice.test.js
 ```bash
 npm run test:one -- runtime/node/backend/tests/gateway/ocrConfidenceCaveat.test.js runtime/node/backend/tests/gateway/imageOcrFallbackWiring.test.js runtime/node/backend/tests/gateway/imageOcrFallbackRealImage.test.js
 node --test runtime/node/backend/tests/gateway/imageOcrFallbackRealImage.test.js
-python3 -m unittest tests.unit.test_dochelper_ocr_confidence
 ```
 
 ---
@@ -2333,7 +2330,7 @@ node --check runtime/node/backend/src/services/gateway/aiGatewayGenerateMethod.j
 - `runtime/node/backend/tests/gateway/_ocrGatewayHarness.js`
 - `scripts/lib/duplicationGuard.js`
 - `scripts/ci/check-duplication.js`
-- `.duplication-baseline.json`
+- `scripts/ci/duplication-baseline.json`
 - `scripts/tests/duplicationGuard.test.js`
 - `scripts/tests/check-duplication.test.js`
 
@@ -2785,8 +2782,6 @@ node --check scripts/docs/build_docs_site.js
 node --check scripts/docs/lint_docs_widgets.js
 node --test scripts/docs/build_docs_site.test.js
 node --test scripts/docs/lint_docs_widgets.test.js
-python3 -m unittest tests.unit.test_docs_site_build
-python3 -m py_compile setup.py scripts/release/docs_bundle_regen.py runtime/substrate/platform/khy_platform/docs_site.py
 ```
 
 ---

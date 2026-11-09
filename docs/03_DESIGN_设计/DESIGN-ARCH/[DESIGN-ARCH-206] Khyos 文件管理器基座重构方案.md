@@ -1,0 +1,376 @@
+# [DESIGN-ARCH-206] Khyos 文件管理器基座重构 — 「AI + 人工双模」综合型系统工具
+
+> 状态：v1 设计已定（分期落地中；本轮落地 VFS 基座 + 文件管理器主界面骨架）。
+> 真源范围：本文档是「Khyos APK 形态重构」的设计真源（VFS 命名空间、权限分层、
+> AI 操作计划与安全护栏口径）。通用工程规范仍以 `AGENTS.md` 与 `[OPS-MAN-169]` 为准。
+>
+> **本文档解决的问题**：Khyos APK 当前的形态是「纯 AI 智能体」——对话是入口，
+> 文件/设备/技能都是 AI 的工具。用户诉求原话：
+>
+> > 「将 Khyos APK 从纯 AI 智能体转型为『AI + 人工双模驱动』的综合型系统工具……以文件
+> > 器为基座、AI 为增强层、混合权限为支撑的三位一体架构……确保专业用户可完全脱离 AI
+> > 高效工作。」
+>
+> 这是一次**产品形态**变更，不是功能追加：主界面从「对话」换成「文件浏览器」，
+> AI 从「入口」降为「右键菜单式的智能选项」。
+
+## 1. 定位与非目标
+
+### 1.1 目标形态
+
+| 维度 | 变更前 | 变更后 |
+|---|---|---|
+| 主界面 | 对话（Chat） | 文件管理器（双栏/单栏浏览器） |
+| AI 地位 | 唯一入口，任务靠对话发起 | 可选增强层：上下文建议、自然语言转操作 |
+| 人工路径 | 无独立人工路径，一切经 AI | **全功能人工路径**，AI 关闭后仍是完整可用的专业文件管理器 |
+| 高级能力归属 | 独立模块（工具/技能页） | 全部下沉为文件管理器的上下文能力（右键菜单 / 侧栏面板 / 底部抽屉） |
+| 权限模型 | 单层（存储 + 无障碍 + 悬浮窗） | 分层（基础 / 私有数据 / 系统只读 / 容器 / 提权），逐层可见可关 |
+
+### 1.2 非目标（本轮明确不做）
+
+- **不做** Linux 环境（proot/chroot 运行时）的实际实现——本轮只把「终端与文件联动」
+  的接口位与 CWD 同步语义定好，运行时下载与挂载留给后续分期。
+- **不做** RAR / 7Z 的原生解压——本轮归档能力只覆盖 ZIP / TAR.GZ（Android 自带
+  `java.util.zip` + `tar` 能力），格式扩展留待原生插件化。
+- **不做** 内存数值修改（GameGuardian 式数值搜索）——本轮只把「容器应用分区」与
+  「扫描结果落容器目录」的通路打通，具体扫描器留给后续分期。
+- **不做** AI 自主写盘：AI 永远只产出**计划**，执行必须经过人确认（见 §7）。
+
+### 1.3 人的意愿来源
+
+形态变更由人明确提出（见本文件开头的诉求原文）。本文档中**由 AI 决定**的部分是
+VFS 路径文法、通道契约、权限档位命名——这些是工程选择，依据与理由写在本文件，
+可解释、可推翻；**由人拍板**的部分是形态本身、权限档位的分档边界、以及
+「AI 是否可写盘」的最终口径。
+
+## 2. 架构总览：三位一体
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  基座层：VFS 统一虚拟文件系统（单一目录树 / 单一路径文法）      │
+│    ├── storage 后端：公共存储（Android Storage API）           │
+│    ├── shell  后端：私有目录 / 系统分区（Shizuku 通道）         │
+│    └── container 后端：内置沙盒容器（宿主内，与宿主隔离）        │
+├──────────────────────────────────────────────────────────────┤
+│  增强层：AI 协作者（上下文感知 + 计划制）                      │
+│    ├── 上下文注入：当前路径 / 选中项 / 最近操作                │
+│    ├── 计划制：自然语言 → 操作计划 → 预览 → 逐项确认 → 执行    │
+│    └── 强度四档：关闭 / 被动响应 / 主动建议 / 主动执行（仍需确认）│
+├──────────────────────────────────────────────────────────────┤
+│  支撑层：混合权限（分 5 档 + 安全模式 + 审计日志）              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**关键设计判断：VFS 在下、AI 在上、权限在旁。**
+权限不是 AI 的一个开关，而是贯穿三层的横切面——同一套权限判定同时约束
+「人手动操作」和「AI 计划执行」，避免出现「AI 走不通的路径人能走通」这种
+双轨判定必然漂移的局面。
+
+## 3. VFS 统一虚拟文件系统
+
+### 3.1 命名空间与路由表
+
+呈现给用户的是**一棵树**，但底下是四种访问通道。路由由路径前缀决定，纯函数、可测：
+
+| 虚拟路径 | 通道（`via`） | 需要的权限档 | 说明 |
+|---|---|---|---|
+| `/storage/emulated/0` | `storage` | `basic` | 公共存储；`/storage/emulated/0/Android/data/<pkg>` 受 Android 11+ 限制，自动降级到 `shell` |
+| `/khyos/container` | `storage` | `basic` | 容器空间；真实路径 = 应用私有目录下 `khy-os/container`，与宿主无共享挂载 |
+| `/data/data/<pkg>`、`/data/user/<n>/<pkg>` | `shell` | `privateData` | 应用私有目录，需 Shizuku |
+| `/system`、`/vendor`、`/product`、`/apex`、`/odm` | `shell` | `systemRead` | 只读系统分区；写入一律拒绝（`error='read_only'`） |
+| `/` | — | — | 虚拟根，只列出上述挂载点，不映射真实 `/` |
+
+**路由表是唯一真源**：Dart 侧 `routeVfsPath()` 决定 `via` 与权限档，原生侧
+只按 `via` 执行 IO，**不自己判断路径**。两侧各写一套路由必然漂移，而漂移的表现是
+「有的路径能开有的不能开，且没有报错」——那是最难查的一类 bug。
+
+### 3.2 节点模型
+
+```dart
+class VfsNode {
+  final String name;          // 显示名
+  final String path;          // 虚拟绝对路径
+  final bool isDirectory;
+  final int size;             // 字节；目录为递归占用（可用时）或 0
+  final int modifiedMs;
+  final String mode;          // rwxr-xr-x
+  final String owner;         // u0_a123 / root
+  final String group;
+  final String selinux;       // u:object_r:xxx:s0
+  final String mime;
+  final bool readOnly;
+  final bool accessible;      // false → 灰色占位符 + 「点击激活访问」
+  final String? reason;       // accessible=false 时的原因（人话）
+}
+```
+
+`accessible=false` 不是错误，是**诚实的降级**：Shizuku 没激活时私有目录显示为灰色
+占位符，而不是报错弹窗——报错会让用户以为 App 坏了。
+
+### 3.3 通道契约（原生 ↔ Dart）
+
+通道名 `com.khyos.khy_os_client/vfs`。所有方法返回 `Map<String, dynamic>`，
+必含 `ok: bool`；失败时含 `error`（机器码）与 `message`（中文说明）。
+
+| method | args | 返回 |
+|---|---|---|
+| `status` | — | `{ok, storageGranted, safeMode, shizuku:{installed,running,version,available}, containerRoot, containerInstalled}` |
+| `list` | `{path, via}` | `{ok, nodes:[VfsNode…]}` |
+| `stat` | `{path, via}` | `{ok, node}` |
+| `read` | `{path, via, maxBytes}` | `{ok, content, binary, truncated}`（二进制 `content` 为 base64） |
+| `write` | `{path, via, content, binary}` | `{ok}` |
+| `mkdir` | `{path, via, parents}` | `{ok}` |
+| `delete` | `{path, via, recursive}` | `{ok, deleted}` |
+| `rename` | `{path, to, via, overwrite}` | `{ok}` |
+| `copy` | `{src, dst, via, conflict}` | `{ok, skipped}`；`conflict ∈ skip / overwrite / rename / merge` |
+| `move` | `{src, dst, via, conflict}` | `{ok, skipped}` |
+| `search` | `{dir, via, query, namePattern, maxResults, recursive}` | `{ok, nodes:[…]}` |
+| `hash` | `{path, via, algorithm}` | `{ok, algorithm, digest}` |
+| `space` | `{path}` | `{ok, total, free, used}` |
+| `mounts` | — | `{ok, mounts:[{path,type,readOnly,available}]}` |
+| `packages` | — | `{ok, packages:[{pkg,label,system}]}` |
+
+**错误码**（机器码，中文文案另给 `message`）：
+`not_found` / `denied` / `read_only` / `shizuku_unavailable` / `shell_failed` /
+`storage_denied` / `conflict` / `invalid_path` / `busy` / `unknown`。
+
+**原生侧硬约束**：
+1. shell 命令构造必须单引号转义（`'` → `'\''`），路径一律作为**参数**传给命令，
+   不得拼接成可被注入的字符串。
+2. `via=shell` 的所有操作走 `ShizukuServiceManager.execViaShizuku`；Shizuku 不可用时
+   返回 `shizuku_unavailable`，**不得**静默降级到无权限的普通 shell。
+3. 只读路径（system 分区、容器外部）写入一律 `read_only`。
+4. 主线程不做 IO：所有 `vfs*` 调用经 `exec` 线程池执行。
+
+## 4. 权限分层
+
+| 档 | 名称 | 触发条件 | 用户可感知 |
+|---|---|---|---|
+| `basic` | 基础文件管理 | 存储权限（装机清单已含） | 开箱即用 |
+| `privateData` | 应用私有目录 | Shizuku 已安装 + 已连接 + 已授权 | 首次访问弹风险确认并留痕 |
+| `systemRead` | 系统分区只读 | 同上 | 顶部「只读模式」标识 + 灰色「挂载为可写（需 Root）」 |
+| `container` | 容器空间 | 容器运行时已安装 | 未安装时显示空状态 + 「安装运行时」 |
+| `elevated` | 提权（Root） | 未支持 | 按钮恒灰 + 说明文案 |
+
+**安全模式**：启动选项，禁用 `basic` 之外的全部档位，只保留基础文件管理。
+用于故障排查，也用于「这台设备上我只想要个文件管理器」的用户。
+
+**跨权限操作审计**：从私有目录复制到公共存储这类操作，一律写审计日志。
+
+## 5. 文件操作引擎
+
+- **冲突策略**四选一：`skip` / `overwrite` / `rename` / `merge`，默认 `ask`（UI 层问）。
+- **批量与断点**：复制/移动按文件粒度推进，记录已完成项；断点续传以「目标存在 +
+  大小一致 + 哈希一致」为续传判据，不做字节级续传（本轮不做，见 §1.2）。
+- **属性与哈希**：`stat` 给权限/所有者/SELinux 标签；`hash` 给 MD5/SHA-256。
+- **批量重命名**：正则 / 序号 / 日期 三种模板，均在本地生成预览，不经 AI。
+- **预览与编辑**：文本/图片走内置轻量预览；二进制只读。
+
+## 6. 五大能力的文件管理器集成
+
+| 能力 | 集成位置 | 入口 |
+|---|---|---|
+| 系统管理 | 长按 APK 的上下文菜单 + 侧栏「系统应用管理」面板 | 卸载 / 冻结 / 禁用 / 提取信息；`/system` 顶部只读标识 |
+| 自动化 | 文件管理器内「操作录制器」 | 录制文件操作 → JSON 脚本 → 目录事件绑定 / 定时执行 |
+| 内存修改 | 侧栏「容器应用」分区 | 仅容器内应用显示「内存扫描」，扫描结果落容器目录 |
+| 高级文件访问 | VFS 原生 | 无独立入口，路径即入口 |
+| Linux 环境 | 底部抽屉终端 | CWD 与文件浏览器同步；「在终端中打开当前目录」 |
+
+## 7. AI 与人工的融合
+
+### 7.1 AI 只产计划，不直接写盘
+
+```
+自然语言 → [AI 计划生成] → 结构化操作计划 → 预览（逐项勾选）→ 人确认 → 执行
+```
+
+计划是**结构化数据**（不是命令字符串），每一项带风险等级：
+
+| 风险 | 判定 | 交互 |
+|---|---|---|
+| `safe` | 单文件重命名、建目录 | AI 可直接执行 + toast 提示 |
+| `caution` | 移动、覆盖、跨分区复制 | 必须预览确认，可单项取消 |
+| `destructive` | 删除、批量操作、涉及私有目录 | 逐项勾选，默认全不勾 |
+
+### 7.2 上下文感知
+
+AI 面板拿到的是**当前界面上下文**：所在路径、选中项（文件/目录/多选）、最近操作历史。
+因此建议是针对性的（「检测到 3 个重复照片，是否清理？」），而不是泛泛而谈。
+
+### 7.3 人工路径始终完整
+
+- 每个 AI 建议都同时给出**手动等价路径**（同一操作在上下文菜单里也有）。
+- AI 生成的脚本/命令/操作序列都可编辑、拆解、逐步执行，不强制黑盒运行。
+- **AI 强度四档**（设置页滑块）：`关闭` / `仅被动响应` / `主动建议` / `主动建议+可代执行`。
+  选「关闭」时，AI 面板入口隐藏，App 就是纯文件管理器。
+
+### 7.4 操作日志来源标记
+
+每次文件操作写审计日志，标注来源：`用户手动` / `AI 建议` / `脚本执行` / `系统`。
+这是「AI 是助手不是主角」的可核查证据——用户能看出哪些操作不是自己点的。
+
+## 8. 安全护栏
+
+1. **AI 输出白名单**：计划的操作类型、参数形状都在白名单内；越界的项直接丢弃并
+   记日志，不进入执行队列。
+2. **危险命令拒绝**：`rm -rf /`、`chmod 777 /system`、`mkfs`、`dd of=/dev/block*` 一类
+   命令字符串即使来自 AI 也一律拒绝。
+3. **私有目录写入默认禁止**，需在设置里显式开启「高级数据编辑模式」。
+4. **容器与宿主严格隔离**：容器无共享挂载点，容器内路径不映射到宿主真实路径。
+5. **审计日志**记录所有跨权限操作。
+
+## 9. 分期与落地现状
+
+| 期 | 范围 | 状态 |
+|---|---|---|
+| P1 | VFS 基座：路由/节点/双通道/权限分层/降级语义 + 文件管理器主界面 | **已落地** |
+| P2 | 文件操作引擎：冲突策略、属性、哈希、批量重命名、压缩解压、预览编辑、存储分析 | **已落地**（冲突策略四态、属性、哈希、文本预览、批量重命名（模板/正则）、ZIP/TAR.GZ 浏览与创建、存储分析四维度均已落地） |
+| P3 | AI 融合：上下文面板、计划制、四档强度、审计来源标记 | **已落地** |
+| P4 | 五大能力集成：系统管理 / 自动化 / 容器应用 / 终端 | **已落地（容器运行时除外）**：系统管理（应用管理面板 + 长按 APK 的卸载/冻结/禁用/提取信息）、自动化（操作录制器 + JSON 脚本 + 执行器 + 脚本页）、终端抽屉（CWD 与文件浏览器同步、输出可存为文件）、容器应用分区（空状态 + 诚实降级） |
+| P5 | 安全护栏收口：白名单校验器、危险命令拒绝、审计查询界面、安全模式 | **已落地** |
+
+### 9.1 已落地的关键文件
+
+Dart 侧（`delivery/mobile/khy-os-client-app/lib/`）：
+
+- `core/vfs/vfs_route.dart`——路径文法与路由表（唯一真源）
+- `core/vfs/vfs_node.dart`——节点模型、列表、挂载点、应用条目、空间
+- `core/vfs/vfs_service.dart`——门面（唯一判定入口）
+- `core/vfs/vfs_policy.dart`——安全模式、AI 强度、高级数据编辑、默认冲突策略
+- `core/vfs/vfs_audit.dart`——操作审计与来源标记
+- `core/vfs/ai_plan.dart` / `ai_safety.dart` / `ai_plan_generator.dart` / `vfs_context.dart`——计划制与白名单
+- `core/vfs/app_manager.dart`——应用管理（卸载/冻结/启用/信息）
+- `core/vfs/automation_script.dart` / `operation_recorder.dart` / `automation_runner.dart`——自动化脚本、录制器与执行器
+- `core/vfs/batch_rename.dart`——批量重命名的规则与预检（预览与执行同一套算式）
+- `core/vfs/vfs_archive.dart` / `vfs_analysis.dart`——归档与存储分析
+- `core/vfs/vfs_organization.dart`——书签、最近访问、标签
+- `core/vfs/app_data_browser.dart` / `sqlite_inspector.dart`——应用私有目录的
+  结构化浏览（SharedPreferences / JSON / SQLite）
+- `core/vfs/vfs_watcher.dart`——目录事件监听与「事件 → 脚本」触发
+- `ui/screens/file_manager_screen.dart`——主界面
+- `ui/screens/app_manager_screen.dart` / `vfs_settings_screen.dart` /
+  `storage_analysis_screen.dart` / `container_apps_screen.dart` /
+  `automation_scripts_screen.dart` / `app_data_browser_screen.dart` /
+  `tags_screen.dart`
+- `ui/widgets/vfs/`——侧栏、地址栏、列表行、长按菜单、AI 面板、批量重命名面板、
+  归档面板、终端抽屉、文本编辑器
+
+原生侧：`android/app/src/main/kotlin/com/khyos/khy_os_client/vfs/`
+（`VfsBridge.kt` 通道与派发、`VfsShell.kt` Shizuku 通道、`VfsArchive.kt` 归档、
+`VfsAnalyze.kt` 存储分析、`VfsWatcher.kt` 目录事件），
+`MainActivity.kt` 只加几处接线（通道注册、`else ->` 分支、事件通道绑定）。
+
+### 9.2 应用私有目录的结构化浏览
+
+私有目录不只是「能看见文件」——这一层要回答的是「里面配了什么」。做法：
+
+| 文件形态 | 呈现方式 | 解析位置 |
+|---|---|---|
+| `shared_prefs/*.xml` | 键值表（保留 int / boolean / set 等类型） | Dart 正则解析 |
+| `*.json` | 键值表（嵌套用点号展开、数组用下标展开） | Dart `jsonDecode` |
+| `databases/*.db` | 表名 + 列 + 行（展平成 `表[行].列`） | 复制一份后用 sqflite 只读打开 |
+| 其它 | 文本预览 | 原生 `read` |
+
+**为什么 SQLite 要先复制**：原库可能正被那个 App 开着，直接打开会撞锁；复制一份
+还顺带绕开「只读打开别的 App 私有文件」的权限怪癖。落点在容器空间的 `tmp` 下——
+App 自己可写的地方。
+
+**为什么 SharedPreferences 用正则而不是 XML 库**：格式固定到能写死正则，
+不值得为它给 APK 加一个依赖；且本仓有依赖体积守卫。
+
+### 9.3 目录事件触发器
+「当 Downloads 新增 APK 时自动处理」这类需求需要真正的目录监听：
+
+```
+原生 FileObserver → 800ms 窗口合并（create/delete 合并）→ 推 vfsEvent 给 Dart
+    → Dart 按目录找到绑定的脚本 → 脚本执行（来源标记「脚本执行」）
+```
+
+**去抖只在原生做**：一次文件写入会连着产生 CREATE/MODIFY/DELETE 三四个事件，
+两边都去抖会让触发时机变得不可预期。
+
+**限制如实说**：监听随 App 进程存活（不是后台常驻服务）；只监听一层目录，不递归；
+只监听 App 自己能读的目录（私有目录要 Shizuku，收不到 FileObserver 事件，原生侧
+直接拒绝这类监听）。
+
+### 9.4 复制：异步、多线程、断点续传
+
+一次复制几万个文件是**分钟级**操作。同步接口干等的结果是：用户既看不到进度也
+停不下来——这是「专业文件管理器」与「能复制文件的 App」之间最明显的差别。
+
+```
+copyStart {src, dst, conflict, resume, threads} → {ok, taskId}
+   原生线程池并行复制 → 每 100ms 推一次 vfsProgress {taskId, phase, done, total, files, current}
+copyCancel {taskId} → 中断，保留已复制的部分
+copyStatus {taskId} → {ok, state, done, total, files, error}
+```
+
+**断点续传用「`.part` 半成品」实现**：每个文件先写 `<目标>.khy-part`，写完再改名成
+正式目标名。续传要三条同时成立才续：part 文件存在、meta 旁文件记录的源文件
+size/mtime 与**当前**源一致、part 长度小于源长度。
+
+为什么不用直接写目标名：那样中断后目标文件是个「看起来完整其实不完整」的文件，
+下次无法区分它是不是残缺；part 文件的存在本身就是「未完成」的标记，语义干净。
+为什么 meta 要记 size/mtime：源文件在中断期间被改过时，续传会拼出一个内容错乱的
+文件——**宁可重头拷，也不能拷出一个坏文件**。
+
+**通道只有一个 Dart 侧 handler**：目录事件（`vfsEvent`）与复制进度（`vfsProgress`）
+都要用同一个通道，各装各的 handler 会互相顶掉，表现为「监听偶尔不响」这种极难查的
+偶发故障。因此 Dart 侧有一个**事件总线**（`vfs_event_bus.dart`）：装一次 handler，
+按方法名分发。
+
+### 9.5 预览、编辑与风险确认
+| 能力 | 做法 | 边界 |
+|---|---|---|
+| 文本预览 | 原生 `read` 返回原文 | 超过 256KB 截断并说明 |
+| 文本编辑 | 内置轻量编辑器，保存时**整文件覆写** | 覆写前比对文件大小，发现被别处改动就问一次 |
+| 图片预览 | 原生判定为二进制 → base64 → `Image.memory` | 解不开就明说「读不出来」，不拿坏图糊弄 |
+| 私有目录首次访问 | 弹风险提示并要求确认，**按包名**记住 | 只读也要确认；确认过的不再重复弹 |
+| 敏感子目录 | `shared_prefs/` / `databases/` 下的文件再确认一次 | 明确说明是只读查看 |
+
+**为什么「整文件覆写」也要问**：文件管理器里的编辑器不是 IDE，用户改的是小文件；
+但整文件覆写天然有「把别人刚写的改动抹掉」的风险，所以保存前比一次大小——
+变了就问一句。这比实现增量补丁便宜得多，也挡住了最常见的数据丢失场景。
+
+### 9.6 自证
+
+- 新增 Dart 单测 11 个文件、111 例全绿：路由与路径文法、权限降级与只读语义、
+  AI 计划白名单与风险分级、危险命令拒绝、审计来源标记、批量重命名算式、
+  归档与存储分析契约、组织功能降级、脚本执行器路径护栏、
+  应用数据解析（SharedPreferences / JSON）、目录事件分发、私有目录包名解析与
+  访问确认策略。
+- `flutter analyze`（本次涉及的全部 Dart 文件）：**No issues found**。
+- `gradlew :app:compileDebugKotlin`：**BUILD SUCCESSFUL**（产物
+  `VfsBridge/VfsShell/VfsArchive/VfsAnalyze/VfsWatcher.class` 均生成）。
+- 护栏只有一份：`VfsBridge` 的三个护栏方法改为 `internal`，
+  `VfsArchive` 不再复刻。
+
+### 9.7 还没做的（下一轮）
+
+- **容器运行时**：容器应用分区目前只列容器目录里的应用；「启动」「内存扫描」
+  需要 proot/chroot 运行时插件，本轮明确按「做不到就如实说」处理。
+- **RAR / 7Z**：归档只支持 ZIP 与 TAR.GZ（不引第三方依赖，避免 APK 增重）。
+- **断点续传**：复制/移动按文件粒度推进，尚未做字节级续传。
+- **真机验证**：归档读写往返、Zip Slip 拦截、压缩炸弹闸门、`ls -laZ` 解析、
+  `toybox base64` 换行宽度、目录事件触发都只有编译与契约验证，需要真机跑一遍。
+- **共享存储的 inotify 限制**：部分 ROM 的共享存储走 FUSE 层，不派发 inotify 事件，
+  目录监听在那类设备上可能收不到动静。这不是实现缺陷而是平台行为——真机上要先
+  验证这一点，再决定要不要退化成轮询式监听。
+
+
+## 10. 自证清单
+
+- 路由判据（纯函数）：公共存储 / 私有目录 / 系统只读 / 容器 / 虚拟根 五类前缀，
+  归一化（`..`、重复斜杠、尾斜杠）不越界。
+- 降级语义：Shizuku 不可用时私有目录 → `accessible=false` + 原因文案，不是异常。
+- 只读语义：系统分区写入 → `read_only`。
+- 计划校验：未知操作类型 / 越界参数 / 危险命令 → 拒绝并给出理由。
+- 冲突策略：四策略各自的结果语义。
+- 人工路径完整性：AI 关闭时文件管理器的浏览/复制/移动/删除/重命名全部可用。
+
+## 11. 关联
+
+- `[DESIGN-ARCH-193]` 手机端职责划界与 amoo 原子能力复用方案（手机端职责边界）
+- `[DESIGN-ARCH-196]` 手机侧沙箱直连通道架构选型（沙箱与容器）
+- `[DESIGN-IP-001]` 软件著作权就绪规范（本次形态变更的登记材料影响）
+- `AGENTS.md` 工程规则 1–4 / `CLAUDE.md` 红线 R1–R4

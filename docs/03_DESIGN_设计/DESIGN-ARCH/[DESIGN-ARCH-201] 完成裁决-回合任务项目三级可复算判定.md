@@ -2,6 +2,7 @@
 # [DESIGN-ARCH-201] 完成裁决：回合 / 任务 / 项目三级可复算判定
 
 > **需求来源**：用户原话——「khyos对项目的结束，无法用准确的确认，需要相关方案准确的判断任务是否完成或阶段性的完成」。
+> **姊妹机制**：[`[DESIGN-ARCH-202] 开工裁决`](%5BDESIGN-ARCH-202%5D%20开工裁决-任务与项目两级可复算判定.md) —— 「真的开工了吗」。与本篇同一条纪律：自述封顶 `partial`/`declared`，`unknown` 是合法结论。
 > **定位**：把「完成了吗」从**散文自述**改成**判据可执行 → 系统执行 → 运行记录 → 四值裁决**，任务级与项目级共用同一套读数。
 > **状态**：已落地。纯叶子 `runtime/node/backend/src/cli/acceptanceVerdict.js`、执行面 `runtime/node/backend/src/cli/acceptanceRunner.js`、门 `runtime/node/backend/src/cli/hqStore.js`、命令 `runtime/node/backend/src/cli/handlers/hq.js`。
 > **不改**：不改 `works/record/ai/hq/PROGRESS.json` 的存量任务（迁移由 `khy hq accept <ID> --scaffold` 逐条做）；不新增规则 ID；不新增顶层命令（`hq accept` / `hq close` 挂在既有 `hq` 子命令下，`PROCESS-014` 棘轮不变）。

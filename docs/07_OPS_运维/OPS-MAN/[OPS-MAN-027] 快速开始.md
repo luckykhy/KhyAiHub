@@ -777,11 +777,27 @@ kill <pid>
 | `khy where` | 真实安装位置（backend 目录 / 依赖是否就绪） |
 | `khy gateway config` | 配置 AI 服务商 / Key（canonical） |
 | `khy ai "..."` | 单次 AI 查询 |
-| `khy -p "..."` | 单次 AI 输出（适合管道） |
+| `khy -p "..."` | 单次 AI 输出（适合管道；判交付的退出码见下方说明） |
 | `khy server start` | 启动量化 Web UI（默认端口 3000） |
 | `khy doctor` | 系统诊断（会启动后端） |
 | `khy --version` | 显示版本 |
 | `khy --help` | 显示帮助 |
+
+> **`khy -p` 判交付的退出码（脚本 / CI 必读）**：`KHY_HEADLESS_EXIT_ON_LIMIT` 默认关。任务在
+> 工具循环的迭代上限（默认 10 轮）内做不完时，**退出码仍是 0**，`--output-format json` 也仍报
+> `subtype:"success"` / `is_error:false`——与完全成功的运行无区别。用 `&&` 或 CI step 判交付
+> 会把没做完的任务判成已交付。要如实判定，显式打开它：
+>
+> ```bash
+> KHY_HEADLESS_EXIT_ON_LIMIT=1 khy -p "任务" --output-format json
+> ```
+>
+> ```powershell
+> $env:KHY_HEADLESS_EXIT_ON_LIMIT=1; khy -p "任务" --output-format json
+> ```
+>
+> 撞上限 → 退出码 **3**（可重试，区别于硬错误 2）、json 报 `error_max_turns` / `is_error:true`。
+> 只传 `--max-turns N` 只能让 json 侧如实，退出码仍是 0。
 
 ### 数据与交易
 
