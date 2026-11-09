@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-191-GVHBS56N
 /**
  * Antivirus Service — ClamAV integration for Ubuntu server security.
  *

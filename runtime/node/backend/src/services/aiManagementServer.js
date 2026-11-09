@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-180-X61JKFQ6
 /**
  * AI Management Backend Server
  *
@@ -26,7 +27,7 @@ const VIRUS_SCAN_ENABLED = process.env.KHY_VIRUS_SCAN_ENABLED === 'true';
 // Model-name SSOT: ollama default model flows from constants/models.js
 // (env OLLAMA_MODEL still overrides first).
 const { PRIMARY: MODELS } = require('../constants/models');
-const { OLLAMA_HOST: _OLLAMA_HOST_DEFAULT } = require('../constants/serviceDefaults');
+const { OLLAMA_HOST: _OLLAMA_HOST_DEFAULT, AI_BACKEND_DEFAULT_PORT } = require('../constants/serviceDefaults');
 const { getDataHome } = require('../utils/dataHome');
 const { resolveAnthropicBaseUrl } = require('../utils/proxyBaseUrl');
 
@@ -120,6 +121,7 @@ let _accountPoolOverrideForTest = null;
 let _pluginChain, _tlsSidecar, _protocolConverter, _concurrencySlots;
 let _proxyServer, _customerRegistry, _modelRouter, _paymentGatewayService;
 let _wfApp;
+let _taskMonitorHttp;
 let _daemonApp;
 let _userGatewayApp;
 let _wxApp;
@@ -128,6 +130,7 @@ let _gatewayBillingApp;
 let _aiUploadApp;
 let _marketplaceApp;
 let _pluginsApp;
+let _ecoMarketsApp;
 let _proxySubApp;
 let _commandsApp;
 let _modelMeshApp;
@@ -212,6 +215,15 @@ function getModelRouter() {
 
 function getPaymentGatewayService() {
   return (_paymentGatewayService ??= require('./gateway/paymentGatewayService'));
+}
+
+// 任务监控端点的懒加载：路由模块只在被请求时才 require，守护进程空闲时不额外开销。
+function getTaskMonitorHttp() {
+  return (_taskMonitorHttp ??= require('../routes/taskMonitor'));
+}
+
+function getTaskMonitorService() {
+  return require('./taskMonitorService');
 }
 
 function getWorkflowApp() {
@@ -354,6 +366,25 @@ function getCommandsApp() {
   a.use(express.json({ limit: '256kb' }));
   a.use('/api/commands', require('../routes/commands'));
   return (_commandsApp = a);
+}
+
+// Ecosystem-market namespace: the read-only external-ecosystem catalog the
+// EcoMarkets page fetches (GET /api/eco-markets, GET /api/eco-markets/:eco).
+// Data-root resolution, eco↔file pairing and the degraded payload live in
+// services/ecoMarkets.js; the router is GET-only, so the 64kb body limit only
+// follows the express.json() family convention. Auth is stacked at mount
+// (authenticateToken) like proxy-subscriptions: the catalog is per-install
+// static data with no user scoping, but it is still not a public endpoint.
+function getEcoMarketsApp() {
+  if (_ecoMarketsApp) {
+    return _ecoMarketsApp;
+  }
+  const express = require('express');
+  const a = express();
+  a.use(express.json({ limit: '64kb' }));
+  const { authenticateToken } = require('khy-ai-backend/middleware/auth');
+  a.use('/api/eco-markets', authenticateToken, require('../routes/ecoMarkets'));
+  return (_ecoMarketsApp = a);
 }
 
 // Authenticated node-to-node model routing. Kept in a separate sub-app so its
@@ -2362,10 +2393,23 @@ async function routeRequest(req, res, pathname, searchParams) {
     return getProxySubscriptionApp()(req, res);
   }
 
+  // 任务监控只读快照：本进程在跑的会话/工具 + 文件真源里的队列任务。
+  // 必须挂在守护进程——网页端的聊天与工具事件只存在于本进程的 _sessions 里，
+  // 挂到 web 后端的话「会话在跑」一段会永远是空的。
+  if (method === 'GET' && pathname === '/api/task-monitor/snapshot') {
+    return getTaskMonitorHttp().handleSnapshot(req, res);
+  }
+
   // Command catalog (「功能索引」reference). Public read-only, delegates to the local
   // commands router (same SSOT as the TUI `/features`). Without this the page 404s.
   if (pathname.startsWith('/api/commands')) {
     return getCommandsApp()(req, res);
+  }
+
+  // Ecosystem-market catalog (read-only, GET-only). Must run before any parseBody
+  // so the sub-app can consume the raw request stream, like the siblings above.
+  if (pathname.startsWith('/api/eco-markets')) {
+    return getEcoMarketsApp()(req, res);
   }
 
   // GUI Agent evaluation (task CRUD, run execution, auto-eval, leaderboard).
@@ -2957,6 +3001,16 @@ async function handleWsChat(session, msg) {
   // so traceAudit stamps every stage under it, and echoed on the structured
   // `error` event so the frontend can drill down to the server-side timeline.
   const requestId = _genChatRequestId();
+  // 任务监控：本轮运行登记在 session 上，stop/断连时由 handleWsStop/cleanupSession
+  // 立即收尾；正常出口在 finally 兜底，任何路径都不会留下永远的「在跑」。
+  const monitor = getTaskMonitorService();
+  const monitorKey = monitor.beginRun({
+    scope: 'web',
+    id: `${session.id}:${requestId}`,
+    title: message,
+  });
+  session.taskMonitorKey = monitorKey;
+  let monitorOutcome = { ok: false };
   const wsModel = msg.preferredModel || msg.model || undefined;
   let wsToolRan = false;
 
@@ -2977,6 +3031,7 @@ async function handleWsChat(session, msg) {
         if (!session.isGenerating) {
           return;
         } // stopped
+        monitor.touchRun(monitorKey);
         if (chunk.type === 'thinking') {
           wsSend(session, { type: 'thinking', text: chunk.text });
         } else if (chunk.type === 'reset') {
@@ -3001,6 +3056,11 @@ async function handleWsChat(session, msg) {
             input: chunk.input !== undefined ? chunk.input : {},
             id: String(chunk.id || chunk.toolUseId || ''),
           });
+          monitor.beginToolCall(monitorKey, {
+            callId: String(chunk.id || chunk.toolUseId || ''),
+            tool: String(chunk.tool || chunk.name || 'tool'),
+            input: chunk.input !== undefined ? chunk.input : undefined,
+          });
         } else if (chunk.type === 'tool_result') {
           let success;
           if (typeof chunk.success === 'boolean') {
@@ -3016,6 +3076,12 @@ async function handleWsChat(session, msg) {
             success,
             text: _summarizeToolResultForStream(chunk),
             id: String(chunk.id || chunk.toolUseId || ''),
+          });
+          monitor.endToolCall(monitorKey, {
+            callId: String(chunk.id || chunk.toolUseId || ''),
+            tool: String(chunk.tool || chunk.name || 'tool'),
+            success,
+            result: _summarizeToolResultForStream(chunk),
           });
         } else if (chunk.type === 'cost') {
           wsSend(session, { type: 'cost', data: chunk });
@@ -3085,6 +3151,7 @@ async function handleWsChat(session, msg) {
       }
     }
     if (!wsReply && !wsToolRan) {
+      monitorOutcome = { ok: false, error: '模型无输出' };
       _wsSendStructuredFailure(
         session,
         {
@@ -3096,6 +3163,7 @@ async function handleWsChat(session, msg) {
         requestId
       );
     } else {
+      monitorOutcome = { ok: true };
       wsSend(session, {
         type: 'chat_complete',
         reply: wsReply,
@@ -3107,6 +3175,7 @@ async function handleWsChat(session, msg) {
       });
     }
   } catch (err) {
+    monitorOutcome = { ok: false, error: String((err && err.message) || err) };
     // Classify the thrown error to E0x instead of leaking a raw "Chat failed: …".
     // The structured event carries the same fields as the SSE injector so a single
     // frontend card renders both transports identically.
@@ -3116,6 +3185,9 @@ async function handleWsChat(session, msg) {
     }
   } finally {
     session.isGenerating = false;
+    // endRun 对已收尾的运行返回 false（stop/断连已提前收尾），这里只兜底正常出口。
+    monitor.endRun(monitorKey, monitorOutcome);
+    if (session.taskMonitorKey === monitorKey) session.taskMonitorKey = null;
   }
 }
 
@@ -3159,6 +3231,13 @@ function _wsSendStructuredFailure(session, input, ctx, requestId) {
 
 function handleWsStop(session) {
   session.isGenerating = false;
+  if (session.taskMonitorKey) {
+    getTaskMonitorService().endRun(session.taskMonitorKey, {
+      status: 'cancelled',
+      error: '用户停止生成',
+    });
+    session.taskMonitorKey = null;
+  }
   wsSend(session, {
     type: 'chat_complete',
     reply: '',
@@ -3181,6 +3260,14 @@ function cleanupSession(sessionId) {
   const session = _sessions.get(sessionId);
   if (session) {
     session.isGenerating = false;
+    if (session.taskMonitorKey) {
+      // 断连后 onChunk 全部丢弃（首行 isGenerating 闸门），这轮不会再有可见产出。
+      getTaskMonitorService().endRun(session.taskMonitorKey, {
+        status: 'cancelled',
+        error: '连接已断开',
+      });
+      session.taskMonitorKey = null;
+    }
     stopKhyosDesktopStream(session);
     stopKhyosAgentChannel(session);
     if (session.khyosRunner) {
@@ -3275,7 +3362,7 @@ function start(port, hooks = {}) {
       return reject(new Error('AI management server already running'));
     }
 
-    const listenPort = port || parseInt(process.env.AI_MGMT_PORT, 10) || 9090;
+    const listenPort = port || parseInt(process.env.AI_MGMT_PORT, 10) || AI_BACKEND_DEFAULT_PORT;
 
     // Seed the built-in SenseNova channel idempotently before serving, so its
     // key / provider config is visible on the management page even when the
@@ -3710,7 +3797,7 @@ function isRunning() {
 }
 
 function getPort() {
-  return _port || parseInt(process.env.AI_MGMT_PORT, 10) || 9090;
+  return _port || parseInt(process.env.AI_MGMT_PORT, 10) || AI_BACKEND_DEFAULT_PORT;
 }
 
 // SIGTERM handler for graceful shutdown
@@ -3750,6 +3837,10 @@ module.exports = {
     // exact require-path + mount-prefix the dispatcher uses, so the FeatureCatalog page
     // does not 404 ("Not found / 功能索引暂时加载不出来") as it did when unmounted.
     getCommandsApp,
+    // Ecosystem-market catalog router reachability (GET /api/eco-markets and
+    // /api/eco-markets/:eco) — the same 401-not-404 guard as marketplace/plugins,
+    // so the EcoMarkets page cannot silently 404 when the namespace is unmounted.
+    getEcoMarketsApp,
     getModelMeshApp,
     tryHandleFrontendStatic,
     // Account-pool route dispatch (GET/POST/PUT/DELETE /api/ai-gateway/accounts/*)

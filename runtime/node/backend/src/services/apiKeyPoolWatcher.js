@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-195-HJ7VSGW0
 /**
  * API Key Pool Watcher — hot-reload the key pool when its sources change,
  * WITHOUT a daemon restart.

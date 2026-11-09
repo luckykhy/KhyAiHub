@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-181-EDE2Q0FC
 /**
  * AI Monitor — request/response tracing and real-time monitoring.
  *
