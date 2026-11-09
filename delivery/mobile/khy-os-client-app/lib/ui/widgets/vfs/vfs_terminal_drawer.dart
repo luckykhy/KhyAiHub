@@ -175,33 +175,64 @@ class _VfsTerminalDrawerState extends State<VfsTerminalDrawer> {
           Row(
             children: <Widget>[
               Expanded(
-                child: TextField(
-                  controller: _input,
-                  style: AppText.body.copyWith(color: palette.textPrimary),
-                  textInputAction: TextInputAction.go,
-                  onSubmitted: (_) => _run(),
-                  decoration: InputDecoration(
-                    isDense: true,
-                    hintText: '输入命令',
-                    hintStyle: AppText.body.copyWith(color: palette.textFaint),
-                    prefixText: '\$ ',
-                    prefixStyle:
-                        AppText.body.copyWith(color: palette.textFaint),
-                    filled: true,
-                    fillColor: palette.surfaceHigh,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.cardPad,
-                      vertical: AppSpacing.dense,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: palette.stroke),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: palette.stroke),
-                    ),
-                  ),
+                // 拖拽目标：把文件管理器里的路径拖进来就补全。
+                // 带空格的路径自动加引号——不加的话命令会因为路径被拆成两段而跑飞。
+                child: DragTarget<String>(
+                  onWillAcceptWithDetails: (DragTargetDetails<String> details) =>
+                      true,
+                  onAcceptWithDetails: (DragTargetDetails<String> details) {
+                    final path = details.data;
+                    final quoted = path.contains(' ') ? "'$path'" : path;
+                    final current = _input.text;
+                    final next = current.isEmpty || current.endsWith(' ')
+                        ? '$current$quoted'
+                        : '$current $quoted';
+                    _input.text = next;
+                    _input.selection = TextSelection.collapsed(
+                      offset: next.length,
+                    );
+                  },
+                  builder: (
+                    BuildContext context,
+                    List<String?> candidates,
+                    List<dynamic> rejected,
+                  ) {
+                    final hovering = candidates.isNotEmpty;
+                    return TextField(
+                      controller: _input,
+                      style: AppText.body.copyWith(color: palette.textPrimary),
+                      textInputAction: TextInputAction.go,
+                      onSubmitted: (_) => _run(),
+                      decoration: InputDecoration(
+                        isDense: true,
+                        hintText: hovering ? '松手插入路径' : '输入命令',
+                        hintStyle: AppText.body.copyWith(
+                          color: hovering ? palette.primary : palette.textFaint,
+                        ),
+                        prefixText: '\$ ',
+                        prefixStyle:
+                            AppText.body.copyWith(color: palette.textFaint),
+                        filled: true,
+                        fillColor: hovering
+                            ? palette.primary.withValues(alpha: 0.12)
+                            : palette.surfaceHigh,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.cardPad,
+                          vertical: AppSpacing.dense,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: palette.stroke),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(
+                            color: hovering ? palette.primary : palette.stroke,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
               const SizedBox(width: AppSpacing.dense),

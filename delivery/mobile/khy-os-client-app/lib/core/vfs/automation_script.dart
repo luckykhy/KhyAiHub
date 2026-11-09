@@ -118,6 +118,26 @@ class AutomationScript {
     this.enabled = true,
   });
 
+  AutomationScript copyWith({
+    String? id,
+    String? name,
+    AutomationTrigger? trigger,
+    String? watchDir,
+    String? schedule,
+    List<AutomationStep>? steps,
+    bool? enabled,
+  }) {
+    return AutomationScript(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      trigger: trigger ?? this.trigger,
+      watchDir: watchDir ?? this.watchDir,
+      schedule: schedule ?? this.schedule,
+      steps: steps ?? this.steps,
+      enabled: enabled ?? this.enabled,
+    );
+  }
+
   Map<String, dynamic> toJson() => <String, dynamic>{
         'id': id,
         'name': name,

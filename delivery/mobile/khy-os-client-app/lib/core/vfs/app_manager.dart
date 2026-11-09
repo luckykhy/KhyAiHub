@@ -90,8 +90,88 @@ class ApkInfo {
   }
 }
 
+/// 一个系统应用及其安装包体积。
+class ManagedAppSize {
+  final ManagedApp app;
+
+  /// 安装包字节数；拿不到时为 0。
+  final int apkBytes;
+
+  const ManagedAppSize({required this.app, this.apkBytes = 0});
+}
+
 /// 应用管理入口。
 abstract final class AppManager {
+  /// 列出系统应用，并按**安装包体积**排序。
+  ///
+  /// 为什么按体积而不是「使用频率」：使用频率要 Usage Access 权限（系统级权限，
+  /// 普通应用拿不到），拿不到就不能假装有。安装包体积一次 shell 就能全部拿到，
+  /// 而且对「精简」这个诉求更直接——占空间大的预装包就是该考虑的对象。
+  ///
+  /// 体积靠一次 shell 拿到（循环 pm path + stat），不逐个 App 起进程。
+  static Future<List<ManagedAppSize>> listSystemAppsBySize() async {
+    final packages = await list(onlySystem: true);
+    final byPkg = <String, ManagedApp>{
+      for (final app in packages) app.pkg: app,
+    };
+
+    const script = r'''
+for p in $(pm list packages -s 2>/dev/null | cut -d: -f2); do
+  ap=$(pm path "$p" 2>/dev/null | head -1 | cut -d: -f2)
+  if [ -n "$ap" ]; then
+    s=$(stat -c %s "$ap" 2>/dev/null || echo 0)
+    echo "$p|$s"
+  else
+    echo "$p|0"
+  fi
+done
+''';
+
+    final result = await DeviceControl.execShellElevated(
+      script,
+      timeoutSeconds: 60,
+    );
+    final sizes = parseSizeOutput(result.stdout);
+    if (sizes.isEmpty) {
+      // shell 不可用（没有 Shizuku）：退回按名称排序，体积拿不到就是拿不到。
+      return packages
+          .map((ManagedApp app) => ManagedAppSize(app: app))
+          .toList();
+    }
+
+    final sized = <ManagedAppSize>[];
+    for (final entry in sizes.entries) {
+      final app = byPkg[entry.key];
+      if (app == null) continue;
+      sized.add(ManagedAppSize(app: app, apkBytes: entry.value));
+    }
+    sized.sort((ManagedAppSize a, ManagedAppSize b) =>
+        b.apkBytes.compareTo(a.apkBytes));
+    return sized;
+  }
+
+  /// 解析 `包名|字节数` 的多行输出。
+  ///
+  /// 单独抽出来是为了能测：这段解析错了会让「按体积排序」变成随机序，
+  /// 而随机序的界面看着还挺像正常的。
+  static Map<String, int> parseSizeOutput(String stdout) {
+    final sizes = <String, int>{};
+    for (final line in stdout.split('\n')) {
+      final trimmed = line.trim();
+      if (trimmed.isEmpty) continue;
+      final parts = trimmed.split('|');
+      if (parts.length < 2) continue;
+      final pkg = parts[0].trim();
+      if (pkg.isEmpty) continue;
+      // 字节数解析不出来就跳过整行：把「x|y」当成包名 x、体积 0 收进来，
+      // 会让清单里多出一个不存在的应用——比少一行更糟。
+      final bytes = int.tryParse(parts[1].trim());
+      if (bytes == null) continue;
+      sizes[pkg] = bytes;
+    }
+    return sizes;
+  }
+
   /// 列出已安装应用。
   static Future<List<ManagedApp>> list({
     String query = '',

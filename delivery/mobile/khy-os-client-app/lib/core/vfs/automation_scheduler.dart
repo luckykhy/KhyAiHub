@@ -67,13 +67,16 @@ class ScheduleSpec {
 
   /// 人类可读描述。
   String get label {
+    final interval = this.interval;
     if (interval != null) {
-      final minutes = interval!.inSeconds / 60;
-      if (minutes >= 60 && minutes % 60 == 0) {
-        return '每 ${minutes ~/ 60} 小时';
+      final totalMinutes = interval.inSeconds ~/ 60;
+      if (totalMinutes >= 60 && totalMinutes % 60 == 0) {
+        return '每 ${totalMinutes ~/ 60} 小时';
       }
-      if (minutes >= 1 && minutes % 1 == 0) return '每 $minutes 分钟';
-      return '每 ${interval!.inSeconds} 秒';
+      if (totalMinutes >= 1 && interval.inSeconds % 60 == 0) {
+        return '每 $totalMinutes 分钟';
+      }
+      return '每 ${interval.inSeconds} 秒';
     }
     if (hour != null && minute != null) {
       return '每天 ${hour.toString().padLeft(2, '0')}:'
