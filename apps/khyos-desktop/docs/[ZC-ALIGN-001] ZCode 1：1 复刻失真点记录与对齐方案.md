@@ -1020,3 +1020,52 @@ cmd /c "D:\Portable\Tools\commandcode\npm-global\npm.cmd --version"   # → 10.9
   旧值 `'default'` 已在 App.tsx 恢复逻辑兼容处理，但 settings.json 里的旧
   值未回写清理（下次模式切换时经 setSetting 覆盖，属自愈路径，不另加
   启动清理）。
+
+- [2026-11-01 21:40 第十七轮] **视觉减噪（用户拍板，非 ZCode 对齐项）**：删除
+  消息流底部的「Token 用量（本月配额）」面板。原面板形态（用户截图）：折叠头
+  「Token 用量（本月配额）」+ 右侧「255.5K / 100.0K (255.5%)」+ 满格红色配额
+  进度条 + 红色「本月配额已用完（…）：请等待下月重置或升级订阅」+ 三行分项
+  「输入 token（本月累计）/ 输出 token（本月累计）/ 请求次数（本月）」+ 脚注
+  「本月 39 次请求 / 今日 39 次 / 成本 $0.00」—— 信息密度过高，在对话区形成
+  视觉噪音。
+- 判定依据（三条）：① 该面板是**复刻端自造的展示件** —— ZCode 原版没有独立的
+  月配额面板，用量只在 Composer 右下角「上下文已用 X / 总量 Y」按钮（及其 G0d
+  弹窗）与设置页「使用统计」里呈现（002 清单 E6 / G0d）；② 它显示的是**月配额
+  账本**（`tokenUsageService.getRemainingQuota`），与会话级上下文窗口是两种
+  语义（第十轮 P3-5 已记过这次错配）；③ 第十三轮加的「长按 400ms 拖出为悬浮
+  面板」让消息流底部长期多出一块常驻浮层。
+- 决策：**整体删除**（不是折叠、不是默认隐藏）。保留 Composer「上下文已用/
+  总量」按钮与设置页「使用统计」—— 前者是会话级上下文窗口、后者是月度账本的
+  正式入口，二者都不落在消息流底部。
+- 接线（5 文件）：① `src/renderer/components/message/ContextUsage.tsx` 删除
+  —— `ContextUsagePanel`（长按拖出悬浮 + 进度条 + 分项列表 + 脚注）整体删；
+  同文件的 `CheckpointRewindDialog`（当前仍无消费方）拆出为
+  `src/renderer/components/message/CheckpointRewindDialog.tsx`，组件体逐字节
+  保留；② `src/renderer/App.tsx` 摘掉 lazy import、`showContextUsage` state
+  与渲染块（净减 8 行）；③ `docs/10_规范/registry/CORE-LAYERS.json` 的
+  `visual.lazyLoadSafety.safe` 名单移除 `ContextUsagePanel`（留在名单里会被
+  `check-core-layers.js` 判「不再是懒加载」而红），并在
+  `visual.cuts.desktop.cuts` 补一条删除记录；④ `docs/[ZC-ALIGN-002]` 的 E6 /
+  G0d 两行「复刻现状」同步。
+- **保留不动**：`token:usage` IPC（main）、`preload.getTokenUsage()`、
+  `tokenUsageService` 全部保留 —— 设置页「使用统计」仍在用同一条链路
+  （`getUsageHistory` + `getTokenUsage`）；Composer 的「上下文已用/总量」按钮走
+  `context:size` 桥，与本次删除无关。
+- 检查：桌面端 `npm run typecheck` 既有 4 条 / 实际 4 条、**无新增错误**；
+  `npm test` **350 项全绿**（156 + 194，0 失败）；`check-agent-rules.js`（3 改动
+  文件）零违规；`check-change-safety.js`（同 3 文件）exit 0（唯一 warning 是
+  内置密钥检查缺 Python 解释器，环境问题，与本轮无关）；`check-core-layers.js`
+  **无 `visual-lazy-regression`**；`arch:god` exit 0。
+- 未解决的既有红灯（**与本轮无关**，不在本轮修）：① `check-core-layers.js` 的
+  `visual-budget-*`：App.tsx 冷闭包 39 文件 / 9784 行超预算 37 / 9415 —— 超出的
+  部分来自工作区在途改动（`Composer.tsx` +702 行、`AppLayout.tsx` +192 行），
+  本轮删掉的 `ContextUsage.tsx` 是懒加载边、**不在冷闭包内**（实测删前删后冷闭包
+  均不含该文件；删前 App.tsx 侧约 9792 行，同样超预算），基线待那批改动落地后
+  用 `check-core-layers.js --update` 重定；② `check-repo-layout.js` 的
+  `root-shadow-dir` / `root-junk` / `root-whitelist`：仓库根既有 `.khy`、
+  `.khyos` 影子目录与 `.tmp-*` 临时残留（创建时间 10-27 ~ 10-31，早于本轮），
+  按 B8 需连同制造它们的 cwd 相对写者一起清，属独立一轮。
+- 余留：① `settings.json` 里可能残留 `contextUsagePanelPos`（悬浮位置）——
+  面板删除后该键不再被读写，属无害残留，未做启动清理；② G0d 上下文用量弹窗
+  （分解 7 项 + 缓存命中率）仍未实现，本轮不在范围内。
+
