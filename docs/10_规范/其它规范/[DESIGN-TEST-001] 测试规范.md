@@ -153,6 +153,9 @@ it('should login with valid credentials', () => {
 ### 5.3 覆盖率检查
 
 ```bash
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。
 # 生成覆盖率报告
 npm run test:coverage
 

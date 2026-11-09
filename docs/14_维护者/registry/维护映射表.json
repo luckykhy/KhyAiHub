@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updated": "2026-07-14",
+  "updated": "2026-10-11",
   "purpose": "Route smaller models and novice maintainers to the right files and the smallest useful verification commands before they widen scope.",
   "startupFlow": [
     {
@@ -857,15 +857,13 @@
         "the preflight is additive and gated KHY_NPM_NODE_PREFLIGHT default-on; gate off / any error / unparseable version byte-reverts bin/khy.js to the original unconditional spawnSync handoff (preflight must never be more fragile than the launch it protects)"
       ],
       "paths": [
-        "works/ship/npm/scripts/nodeVersionPreflight.js",
-        "works/ship/npm/test/nodeVersionPreflight.test.js",
         "works/ship/npm/bin/khy.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-081] npm 渠道 Node 版本预检.md"
       ],
       "verify": [
-        "npm run test:one -- works/ship/npm/test/nodeVersionPreflight.test.js"
+        "node --check works/ship/npm/bin/khy.js"
       ]
     },
     {
@@ -1640,16 +1638,14 @@
         "runtime/node/backend/src/services/docHelper.py",
         "runtime/node/backend/tests/gateway/ocrConfidenceCaveat.test.js",
         "runtime/node/backend/tests/gateway/imageOcrFallbackWiring.test.js",
-        "runtime/node/backend/tests/gateway/imageOcrFallbackRealImage.test.js",
-        "tests/unit/test_dochelper_ocr_confidence.py"
+        "runtime/node/backend/tests/gateway/imageOcrFallbackRealImage.test.js"
       ],
       "docs": [
         "docs/07_OPS_运维/OPS-MAN/[OPS-MAN-104] 纯文本模型图片 OCR 兜底与低置信诚实告诫.md"
       ],
       "verify": [
         "npm run test:one -- runtime/node/backend/tests/gateway/ocrConfidenceCaveat.test.js runtime/node/backend/tests/gateway/imageOcrFallbackWiring.test.js runtime/node/backend/tests/gateway/imageOcrFallbackRealImage.test.js",
-        "node --test runtime/node/backend/tests/gateway/imageOcrFallbackRealImage.test.js",
-        "python3 -m unittest tests.unit.test_dochelper_ocr_confidence"
+        "node --test runtime/node/backend/tests/gateway/imageOcrFallbackRealImage.test.js"
       ]
     },
     {
@@ -2169,7 +2165,7 @@
         "runtime/node/backend/tests/gateway/_ocrGatewayHarness.js",
         "scripts/lib/duplicationGuard.js",
         "scripts/ci/check-duplication.js",
-        ".duplication-baseline.json",
+        "scripts/ci/duplication-baseline.json",
         "scripts/tests/duplicationGuard.test.js",
         "scripts/tests/check-duplication.test.js"
       ],
@@ -2560,9 +2556,7 @@
         "docs/19_资产/site/docs-site.js",
         "docs/19_资产/site/nav-data.js",
         "scripts/release/docs_bundle_regen.py",
-        "runtime/substrate/platform/khy_platform/docs_site.py",
-        "setup.py",
-        "tests/unit/test_docs_site_build.py"
+        "runtime/substrate/platform/khy_platform/docs_site.py"
       ],
       "docs": [
         "docs/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.md"
@@ -2574,9 +2568,7 @@
         "node --check scripts/docs/build_docs_site.js",
         "node --check scripts/docs/lint_docs_widgets.js",
         "node --test scripts/docs/build_docs_site.test.js",
-        "node --test scripts/docs/lint_docs_widgets.test.js",
-        "python3 -m unittest tests.unit.test_docs_site_build",
-        "python3 -m py_compile setup.py scripts/release/docs_bundle_regen.py runtime/substrate/platform/khy_platform/docs_site.py"
+        "node --test scripts/docs/lint_docs_widgets.test.js"
       ]
     },
     {

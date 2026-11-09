@@ -2,7 +2,7 @@
 
 > 本夹由 [MGMT-PLAN-009] B9「按标签 `[XXX-YYY-NNN]` 归夹」生成（2026-09-18）。
 > 父目录：[../](../00_INDEX_规范-总目录.md)　就近索引：[00_INDEX_规范-总目录.html](../00_INDEX_规范-总目录.md)
-> 收录 68 篇。
+> 收录 69 篇。
 
 ## 文件清单
 
@@ -41,6 +41,7 @@
 - [[[DESIGN-IP-002] 软著材料生成器与在仓契约]]([DESIGN-IP-002] 软著材料生成器与在仓契约.md)
 - [[[DESIGN-IR-001] 事件响应规范]]([DESIGN-IR-001] 事件响应规范.md)
 - [[[DESIGN-LOG-001] 日志规范]]([DESIGN-LOG-001] 日志规范.md)
+- [[[DESIGN-LOG-002] 手机端日志规范]]([DESIGN-LOG-002] 手机端日志规范.md)
 - [[[DESIGN-MCP-001] MCP 协议实现规范]]([DESIGN-MCP-001] MCP 协议实现规范.md)
 - [[[DESIGN-MIG-001] 数据迁移规范]]([DESIGN-MIG-001] 数据迁移规范.md)
 - [[[DESIGN-MONITOR-001] 监控告警规范]]([DESIGN-MONITOR-001] 监控告警规范.md)

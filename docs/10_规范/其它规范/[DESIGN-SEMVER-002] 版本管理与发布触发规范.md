@@ -164,6 +164,9 @@ services/backend/package.json       # khy --version 上报值
 **如何推（标准动作，三条命令）**：
 
 ```bash
+<!-- IMPL-STATUS: todo -->
+<!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 -->
+> **标记依据**：24 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 # 1) 版本收口：CHANGELOG 段 + bump G1 三源
 node scripts/release/changelog-new.js 1.2.0
 # 编辑三处版本号 → 见 2.2 的落点
