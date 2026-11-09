@@ -5,9 +5,12 @@
  *
  * New user preferences MUST live here, not as new `KHY_*` env gates. The loader
  * is fail-soft: missing/corrupt file → all-defaults, so a bad config can never
- * break startup. Currently one group:
+ * break startup. Currently two groups:
  *   sidebar: { width: 'auto'|'narrow'|'wide', tab: 'tasks', minCols: 120 }
  * (the 3-param convergence of 102 §4.7 — the old 10+ `KHY_SIDEBAR_*` knobs).
+ *   perf:    { tier: 'auto'|'full'|'lean'|'minimal' } — override the static
+ * hardware tier ([DESIGN-PERF-007] T1; 'auto' = 静态定档). The tier names are
+ * validated via services/perfTier.normalizeTier (single source).
  */
 
 const os = require('os');
@@ -20,6 +23,9 @@ const DEFAULTS = Object.freeze({
     tab: 'tasks', // 默认落在任务段
     minCols: 120, // 唯一看板显隐阈值(死区由 R1-2 带宽模型内置)
   }),
+  perf: Object.freeze({
+    tier: 'auto', // 'auto' = 静态定档；其余为显式覆盖（见 services/perfTier）
+  }),
 });
 
 function configPath() {
@@ -29,7 +35,7 @@ function configPath() {
 }
 
 /**
- * @returns {{sidebar: {width:string, tab:string, minCols:number}}}
+ * @returns {{sidebar: {width:string, tab:string, minCols:number}, perf: {tier:string}}}
  *   merged over DEFAULTS. Never throws.
  */
 function loadTuiConfig() {
@@ -48,6 +54,16 @@ function loadTuiConfig() {
       const mc = Number(s.minCols);
       if (Number.isFinite(mc) && mc > 0) {
         out.sidebar.minCols = Math.round(mc);
+      }
+    }
+    if (data && typeof data === 'object' && data.perf && typeof data.perf === 'object') {
+      try {
+        // 档位名的合法集在 services/perfTier（唯一定档处），这里只做校验。
+        const { normalizeTier } = require('../../services/perfTier');
+        const t = normalizeTier(data.perf.tier);
+        if (t) out.perf.tier = t;
+      } catch {
+        /* 叶子不可用 → 保持 auto（fail-soft） */
       }
     }
   } catch {

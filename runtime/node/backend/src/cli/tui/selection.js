@@ -258,16 +258,30 @@ function beginSelection(sel, line, col, fp) {
 /**
  * 拖动：只改活动端，锚点纹丝不动（这是选区的定义）。
  * 未按下过（anchor 为 null）→ 视为从当前位置开始按下（fail-soft）。
+ *
+ * `fp`（可选）= 活动端所在行的原文指纹。**两端都要带**：`relocateSelection` 对
+ * anchor 与 head **各自**重定位（折行重排时两端位移量可能不同），head 没有指纹
+ * 就退化成纯行号 —— D-02 的末行仍会错位。
+ * 不传 → 行为与今天逐字节相同（老调用方零影响）。
+ *
+ * @param {object} sel 当前选区
+ * @param {number} line 0-based 屏幕行（= lines 下标）
+ * @param {number} col 0-based 列
+ * @param {string} [fp] 活动端所在行的原文（用于松手时按内容重定位）
  * @returns {object} 新选区
  */
-function extendSelection(sel, line, col) {
+function extendSelection(sel, line, col, fp) {
   const p = _point({ line, col });
   const anchor = _isPoint(sel && sel.anchor) ? _anchor(sel.anchor) : p;
-  return { anchor, head: p, dragging: true };
+  const head = fp === undefined ? p : { ...p, fp: _fp(fp) };
+  return { anchor, head, dragging: true };
 }
 
 /**
  * 松手：只把 dragging 置假，两端点位不变。
+ *
+ * 两端都经 `_anchor` 规范化 —— **head 的指纹也要带过来**（`_point` 会丢 fp）。
+ * 漏了它，`endSelection` 之后 head 就退化成纯行号，重定位只剩锚点能走。
  * @returns {object} 新选区
  */
 function endSelection(sel) {
@@ -276,7 +290,7 @@ function endSelection(sel) {
   }
   return {
     anchor: _isPoint(sel.anchor) ? _anchor(sel.anchor) : null,
-    head: _isPoint(sel.head) ? _point(sel.head) : null,
+    head: _isPoint(sel.head) ? _anchor(sel.head) : null,
     dragging: false,
   };
 }
