@@ -10,10 +10,11 @@
 ## 三问（规则 9 / `PROCESS-010`）
 
 **谁要？** 人要的是「手机上那个 Amoo 能和 PC 上的 khy-os 互相使唤」，而且两件事
-都得可审计：谁发的、发了什么、拿到了什么。调用方有三类——① 人（经 CLI
-`khy amoo …` 与工具面 `AmooBridgeTool`，2026-10-21 晚间接入，fanIn=2）；
+都得可审计：谁发的、发了什么、拿到了什么。调用方有四类——① 人（经 CLI
+`khy amoo …` 与工具面 `AmooBridgeTool`，2026-10-21 晚间接入，fanIn=3）；
 ② Amoo 自己（经 `client/amoo-khy-client.js`，方向反过来）；
-③ 只读状态消费者（`runner.collectStatus()`）。
+③ 只读状态消费者（`runner.collectStatus()`：CC TUI 的 `ccPhoneLinkSource` 供数器
+与 `khy amoo status`）。
 
 **为什么在这里而不是别处？** 这块业务的知识是「这台手机 + 这个桥 + 这个助手」的
 实测事实，全部集中在一处才有意义：
@@ -39,14 +40,17 @@
 
 **怎么验？** 三层，全部命令可复跑：
 
-1. **语法**：`node --check` 逐个文件（12 个源文件）。
-2. **单元内共置 node:test**：12 个源文件各有同名同目录测试，共 **169 例**：
+1. **语法**：`node --check` 逐个文件（14 个 JS 源文件；另有纯数据文件
+   `amooToolContract.json`，不走 `node --check`）。
+2. **单元内共置 node:test**：14 个 JS 源文件各有同名同目录测试，另加纯数据契约
+   文件的对应测试，共 **15 份 / 208 例**：
    ```bash
    cd runtime/node/backend
    node --test src/services/domain/network/amoo/*.test.js \
               src/services/domain/network/amoo/client/*.test.js
    ```
-   实测 `# tests 169 / # pass 169 / # fail 0`。隔离方式：`HOME`/`USERPROFILE`/
+   实测（**2026-11-02 复跑，命令同上**）：`# tests 208 / # pass 208 / # fail 0`。
+   隔离方式：`HOME`/`USERPROFILE`/
    `KHY_DATA_HOME`/`XDG_CONFIG_HOME` 钉进 `mkdtemp`；`child_process.spawn` 在
    require 之前换成 argv 路由器（`pair` 直接判失败）；桥的 HTTP 端口用**真实
    loopback 临时服务器**（ephemeral port）；provider 测试的 runner / liveness /
@@ -75,6 +79,7 @@ amoo/
 ├── amooCliPlan.js          纯叶子：`khy amoo` 的 argv 解析与中文文案
 ├── amooPanelViewModel.js   纯叶子：collectStatus 快照 + dispatch 结果 → 面板行模型（固定 7 行）
 ├── amooStatusProvider.js   薄 IO：状态 TTL 缓存供数器（单飞/完成时刻起算/deadline/忙位停读屏）
+├── amooToolContract.json   纯数据：工具名/风险契约（五份清单的投影，坐标，不是执行面真源）
 ├── index.js                星形装配 + 测试复位（provider/视图模型只导出引用，不建单例）
 ├── client/
 │   └── amooKhyClient.js    手机侧可执行资产（单文件零依赖，Amoo 工作区里跑）
@@ -84,6 +89,26 @@ amoo/
 
 **新逻辑一律进纯叶子，不要往 IO shell 里加判断。** 判据（argv、参数校验、风险档、
 文案）必须能在**不接手机**的情况下断言。
+
+### 工具名 / 风险契约（`amooToolContract.json`，D1-1 部分）
+
+五份工具清单互不相通：PC 执行闸 `amooBridgePolicy.BRIDGE_TOOLS`（22 项）、
+目录 `phoneBridgeCatalog`（32 项）、协作桥 `contracts.TOOL_SPECS`（12 项 wire 工具）、
+手机端 `Tools.NAMES`（48 项）、手机循环 `LoopModes.KNOWN_TOOLS`（48 项，
+2026-11-03 P0-2 起是前者的**集合镜像**——此前只有 36 项，差的 12 项在循环里被
+静默丢掉）。
+谁改一边另一边都不知道，漂移就是这么攒出来的。
+
+契约是它们的**坐标**（纯数据投影）：`tools_contract_version` + `tools[]`，每条带
+`wireName / displayName / risk / requiresConfirm / scopes / phase / aliases[]`。
+同一能力的其它名字一律进 `aliases[]`（目录的 `phone_*` 命名、`shell_exec` 这类历史
+别名），故**一个能力一条 entry**，桥侧的 `phone_*` 不再被当成另一条能力误报。
+
+只读出口：`index.js` 的 `getAmooToolContract()`（惰性读盘、冻结、缓存一次）。
+**它不驱动运行期行为**：契约不进 `BRIDGE_TOOLS`、不进手机端 `Tools.NAMES`、不进
+桥的 12 项 wire 面，也不新增任何可调用能力。锁步靠
+`amooToolContract.test.js` 的比对测试（钉住五份清单的计数、覆盖与差集）。
+D1-2（三端从契约读、删各自 local 常量）**尚未做**，登记与评审都不得记为完成。
 
 ### 面板供数路径（视图模型 + provider）
 
@@ -104,9 +129,12 @@ useAmooStatus（hook，轮询，间隔唯一真源 utils/ccTimers 的 TIMING）
 自己的 dump 同时跑会把成功的下发伪造成 `screen_unreadable`）。失败语义：一次
 collectStatus 失败不抛不清空，返回上一份好快照 + 陈旧徽章。
 
-**当前状态**：provider 与视图模型已落地并有共置测试（48 例），但**还没有消费方**——
-`src/cli/tui/` 侧的 hook（`useAmooStatus`：轮询 + `TIMING.mcp.interval` 间隔 +
-KHY_CC_TUI 门控）与 `Cc*` 面板是下一批的事，所以 fanIn 仍记 2。dispatch 的实时进度
+**当前状态**：provider 与视图模型已落地并有共置测试（48 例），**已有消费方**——
+`src/cli/tui/ccPhoneLinkSource.js` 的 `getPhoneLinkProvider()`（第一次被调用时才 require
+本单元、只 new 一次 provider；门控 `KHY_CC_TUI` 未设时没有任何代码会 require 它，
+没打开过的面板因此零 IO），hook 是 `src/cli/tui/hooks/usePhoneLinkStatus.js`
+（只订阅 + 定点击发，判废全在 provider），面板是
+`src/cli/tui/ink-components/CcPhoneLinkPanel.js`；fanIn 因此记 3。dispatch 的实时进度
 由 `dispatchTask({ onStep, onPoll })` 喂给 provider 的 `noteStep` / `notePoll` /
 `noteDispatchResult`（三个都零 IO，只入队重画）。
 
@@ -146,9 +174,9 @@ KHY_CC_TUI 门控）与 `Cc*` 面板是下一批的事，所以 fanIn 仍记 2�
   侧载应用（桥服务死了只能用户手点）。日常走方向 1。
 - **`exec` 的 timeout 基本无效**（先读 stdout 到 EOF 才进退出轮询），且一个卡死的
   exec 会冻结整个文件信箱——所以优先 HTTP `/call`，信箱只作兜底。
-- **fanIn=2**：两个 D1 消费方（`cli/handlers/amoo.js`、`src/tools/AmooBridgeTool/index.js`）
-  都经 index.js 单点进入，未形成第二条装配路径。行为契约尚未经真实使用期检验，
-  所以单元仍记 `staged`。
+- **fanIn=3**：三个 D1 消费方（`cli/handlers/amoo.js`、`src/tools/AmooBridgeTool/index.js`、
+  `cli/tui/ccPhoneLinkSource.js`）都经 index.js 单点进入，未形成第二条装配路径。行为契约
+  尚未经真实使用期检验，所以单元仍记 `staged`。
 - **`src/tools/**` 不在 DOMAIN-DEPS 任何 roots 里**：`safeKill` 这一条出边守卫
   看不见（remote 单元已第三次撞上同一登记盲区）。登记缺口属人的裁决，本清单不
   自抬 `mayDependOn`。

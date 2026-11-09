@@ -6,7 +6,9 @@
  * IO: none. The dispatch plan text is produced by amooDispatchPlan (already
  * covered there); what is pinned here is the command-line contract: the default
  * action, that a task text is mandatory for plan/send, that the client
- * passthrough rebuilds flags, and that a reply is rendered verbatim.
+ * passthrough rebuilds flags, that a reply is rendered verbatim, and that the
+ * hand-copied sub-command table in constants/commandSchema stays equal to the
+ * handler manifest's own list.
  */
 
 const { test } = require('node:test');
@@ -99,6 +101,25 @@ test('状态渲染覆盖 adb / 设备 / 转发 / 桥 / 令牌', () => {
   assert.doesNotMatch(text, /[0-9a-f]{32}/);
 });
 
+test('设备未连接时渲染出 reason 与 detail，不只光秃秃一个 reason', () => {
+  // collectStatus 的实测形态：ensureDevice 回 device_not_found，detail 是
+  // 「未发现手机：adb 设备表为空…」。渲染丢掉 detail，排查时就只能猜。
+  const text = leaf.renderStatusText({
+    ok: false,
+    adb: { resolved: true, source: 'env' },
+    device: {
+      connected: false,
+      reason: 'device_not_found',
+      detail: '未发现手机：adb 设备表为空，mDNS 也没有 _adb-tls-connect 实例。',
+    },
+    forwards: { ok: false, ports: [], detail: '设备未连接，未建立 forward' },
+    bridge: { online: false, port: 8896, transport: 'forward', token: null, tokenDetail: '不可用' },
+    screen: null,
+  });
+  assert.match(text, /未连接（device_not_found）/);
+  assert.match(text, /未发现手机/);
+});
+
 test('桥不在线时渲染出原因，而不是光秃秃一句不在线', () => {
   // collectStatus 的实测形态：ping 超时，detail 是 bridge_request_timeout。
   // 渲染丢掉它，排查时就只能猜。
@@ -150,4 +171,17 @@ test('帮助文本写明两条方向与不能无人值守的边界', () => {
   assert.match(help, /--confirm/);
   assert.match(help, /client/);
   assert.match(help, /无人值守/);
+});
+
+test('commandSchema 的 amoo 子命令表与 manifest.subCommands 相等', () => {
+  // handlers/amoo.js 的 manifest.subCommands 就是本叶子的 ACTIONS；schema 里那张
+  // 表是手抄的副本，workspace 就是这样漏掉过的。任一边多一个少一个都红。
+  const { getCommandSchema } = require('../../../../constants/commandSchema');
+  const { extractManifest } = require('../../../../cli/commandManifest');
+  const entry = getCommandSchema().find((item) => item.name === 'amoo');
+  assert.ok(entry, 'commandSchema 里没有 amoo 条目');
+  const { manifest } = extractManifest(require('../../../../cli/handlers/amoo'));
+  assert.ok(manifest, 'cli/handlers/amoo.js 没有导出 command manifest');
+  assert.deepEqual(entry.subCommands, manifest.subCommands);
+  assert.deepEqual(entry.subCommands, [...leaf.ACTIONS]);
 });

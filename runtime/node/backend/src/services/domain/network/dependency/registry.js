@@ -283,12 +283,45 @@ const DEPENDENCIES = {
     matchers: [/rust-analyzer.*not found/i],
   },
 
+  // ── 语言运行时（盘点/开发环境语义）──────────────────────────────
+  // nodejs：JavaScript 运行时。此前 39 项里没有 node/nodejs —— javascript 是
+  // 开发环境盘点点名语言的唯一缺口（npm 依赖装不上时归因 MANAGER_DOCS 已指向
+  // nodejs.org，但「装没装 Node 本体」一直答不了）。
+  nodejs: {
+    id: 'nodejs',
+    label: 'Node.js 运行时 (node / npm)',
+    kind: 'system-command',
+    probe: { type: PROBE.COMMAND, bin: 'node' },
+    install: {
+      manager: 'os',
+      command: ['apt-get', 'install', '-y', 'nodejs', 'npm'],
+      scope: 'global',
+      needsNetwork: true,
+      risk: 'high',
+      requiresElevation: true,
+      platform: {
+        darwin: ['brew', 'install', 'node'],
+        win32: ['winget', 'install', '--id', 'OpenJS.NodeJS.LTS', '-e'],
+      },
+    },
+    docsUrl: 'https://nodejs.org/',
+    matchers: [
+      /\bnode\b.*not (found|installed|recognized)/i,
+      /\bnpm\b.*not (found|installed|recognized)/i,
+      /install node\.?js/i,
+    ],
+  },
+
   // ── Python 生态 ─────────────────────────────────────────────────
   python3: {
     id: 'python3',
     label: 'Python 3.10+ 运行时',
     kind: 'system-command',
-    probe: { type: PROBE.COMMAND, bin: 'python3' },
+    // python.org 安装的 Windows 上只有 python.exe / py.exe，没有 python3.exe；
+    // 单 bin 探针在 win32 会假阴性。多候选沿用 khy doctor init.js 的
+    // ['python3','python','py'] 先例，resolver 逐个试、首中即返；bin 保留为
+    // 规范首选（既有 registry 守卫要求 COMMAND probe 必有 bin 字符串）。
+    probe: { type: PROBE.COMMAND, bin: 'python3', bins: ['python3', 'python', 'py'] },
     install: {
       manager: 'os',
       command: ['apt-get', 'install', '-y', 'python3', 'python3-pip'],
