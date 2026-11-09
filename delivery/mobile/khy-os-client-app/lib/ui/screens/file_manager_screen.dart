@@ -54,13 +54,31 @@ import 'tags_screen.dart';
 
 /// 文件管理器页。
 class FileManagerScreen extends StatefulWidget {
-  const FileManagerScreen({super.key});
+  /// AI 助手按钮的可见性回调。
+  ///
+  /// 按钮放在**外层** Scaffold（它才在玻璃底栏之上），所以「AI 关了要把按钮也收掉」
+  /// 这件事得由本屏告诉外层。
+  final ValueChanged<bool>? onAssistantVisibilityChanged;
+
+  const FileManagerScreen({super.key, this.onAssistantVisibilityChanged});
 
   @override
-  State<FileManagerScreen> createState() => _FileManagerScreenState();
+  State<FileManagerScreen> createState() => FileManagerScreenState();
 }
 
-class _FileManagerScreenState extends State<FileManagerScreen> {
+/// 文件管理器页的状态。
+///
+/// 状态类必须是**公开**的：外层 Scaffold 用 `GlobalKey<FileManagerScreenState>`
+/// 调 [openAiPanel] 唤起 AI 面板。
+class FileManagerScreenState extends State<FileManagerScreen> {
+  /// 本屏 Scaffold 的句柄。
+  ///
+  /// 为什么不能直接用 `Scaffold.of(context)`：State 的 context 在**本屏 Scaffold
+  /// 之上**，而这一屏又嵌在主 Scaffold（main.dart）里——`Scaffold.of(context)` 找到的
+  /// 是**外层**那个没有抽屉的 Scaffold，于是 `openDrawer()` 作用了个寂寞：点了没反应。
+  /// 真机验证时才发现的，所以这里用 GlobalKey 直接拿本屏的 ScaffoldState。
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   final VfsService _vfs = VfsService.instance;
 
   String _path = VfsRoots.storage;
@@ -102,7 +120,13 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
       _bookmarks = bookmarks;
       _history = history;
     });
+    widget.onAssistantVisibilityChanged?.call(_vfs.policy.aiLevel.showsAssistant);
     await _open(_path);
+  }
+
+  /// 供外层 Scaffold 调起 AI 面板。
+  void openAiPanel() {
+    _openAiPanel();
   }
 
   /// 重新读书签与历史（改过之后刷新侧栏）。
@@ -173,10 +197,11 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
             _openAiPanel,
       },
       child: Scaffold(
-      drawer: VfsSidebar(
-        currentPath: _path,
-        status: _status,
-        bookmarks: _bookmarks,
+        key: _scaffoldKey,
+        drawer: VfsSidebar(
+          currentPath: _path,
+          status: _status,
+          bookmarks: _bookmarks,
         history: _history,
         onNavigate: _open,
         onOpenAppManager: () {
@@ -246,13 +271,6 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
           ],
         ),
       ),
-      floatingActionButton: _vfs.policy.aiLevel.showsAssistant
-          ? FloatingActionButton.small(
-              onPressed: _openAiPanel,
-              tooltip: 'AI 助手',
-              child: const Icon(Icons.auto_awesome),
-            )
-          : null,
       backgroundColor: palette.pageBg,
     ),
     );
@@ -272,7 +290,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
       child: Row(
         children: <Widget>[
           IconButton(
-            onPressed: () => Scaffold.of(context).openDrawer(),
+            onPressed: () => _scaffoldKey.currentState?.openDrawer(),
             icon: const Icon(Icons.menu, size: 20),
             color: palette.textSecondary,
             tooltip: '位置',
