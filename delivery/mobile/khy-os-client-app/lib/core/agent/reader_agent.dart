@@ -120,7 +120,7 @@ class ReaderAgent {
         // 所以这里必须是未验证，不能拿异常文本冒充证据。
         observations.add(Observation.unverified(
           step.claim,
-          why: '工具 $step.tool 抛出异常：$e',
+          why: '工具 ${step.tool} 抛出异常：$e',
         ));
         continue;
       }
