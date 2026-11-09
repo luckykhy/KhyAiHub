@@ -263,6 +263,20 @@ function _createOpenAIHandler(adapterName) {
       }
       _applyOpenAISamplingParams(body, options);
 
+      // 流式时主动索取 usage（stream_options.include_usage）。这条管线历史上只设
+      // stream:true 从不带它 → 不肯自愿吐 usage 的网关整条流无 usage → tokenUsage=null
+      // → useQueryBridge 的 contextTokens 永不更新 → 底栏恒显 `0% ctx`。全仓原先只有
+      // multiFreeService 一处补了这个字段（见 services/streamUsageOptions.js），走
+      // 本管线的 8 个适配器（cursor/cursor2api/kiro/claude/relayApi/trae/vscode/ollama）
+      // 一概漏掉。门控 KHY_STREAM_USAGE（默认开）→ 关则逐字节回退今日行为。
+      if (body.stream) {
+        try {
+          require('../../streamUsageOptions').applyStreamUsage(body, options.env || process.env);
+        } catch {
+          /* 叶子缺失 → 不加字段（保持旧行为） */
+        }
+      }
+
       return { body, system };
     },
 
@@ -369,7 +383,12 @@ function _createAnthropicHandler(adapterName) {
         body.system = system;
       }
       if (Array.isArray(options.tools) && options.tools.length > 0) {
-        body.tools = options.tools;
+        // 形状归一：khy 治理清单产出 {name,description,parameters}，Anthropic Messages API
+        // 要求 input_schema。原先这里零转换，relayApiAdapter 的 anthropic 分支把 khy 形状
+        // 原样上线 → 严格端点 400 → 上层只能删 tools 重试 → 该轮模型无工具可用。
+        // 真源与 claudeAdapter/multiFree 共用 ./_anthropicToolWire.js。
+        const _wire = require('./_anthropicToolWire').normalizeAnthropicTools(options.tools);
+        if (_wire.length > 0) body.tools = _wire;
       }
       if (options.temperature != null) {
         body.temperature = options.temperature;

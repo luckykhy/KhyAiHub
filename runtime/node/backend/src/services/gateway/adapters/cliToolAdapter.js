@@ -62,6 +62,56 @@ function _looksLikeCliErrorEcho(text) {
   );
 }
 
+// ── CLI 桥接回合的 token 用量：本地估算，不再写死 0 ──────────────────────────
+// 病灶（底栏恒显 `0% ctx (0/128k)`，用户实测「时不时一直为 0」）：本适配器的成功
+// 出口历史上写死 `tokenUsage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 }`。
+// 下游 useQueryBridge 的 contextTokens **只在占用 > 0 时才更新**
+// （`if (occ > 0) setContextTokens(occ)`，见 hooks/useQueryBridge.js），初值 0 且
+// 无估算兜底 → 桥接回合永远不触发更新 → 底栏停在 0，且此后没有任何路径能救回。
+// 而 zen 免费模型默认走「本机 opencode CLI」这条桥（免费配额按出口 IP 计，见
+// services/zenLocalRoute.js + apiAdapter.js 的 _zenRouteDecision），该路径拿不到
+// 任何上游 usage，所以这个 0 是常态而非偶发。
+//
+// 口径镜像 aiChatCore.js 的同款 fallback（estimateTokens），不臆造精度：这是字符
+// 启发式估值，不是上游真值。因此额外带 `estimated: true`，让记账/诊断侧能区分
+// 真值与估值（mergeTokenUsage 走显式键白名单 + 展开，附加键安全穿透）。
+// 门控 KHY_CLI_TOKEN_ESTIMATE（默认开）：关 → 逐字节回退写死 0 的旧行为。
+const _CLI_TOKEN_ESTIMATE_OFF = ['0', 'false', 'off', 'no'];
+function _cliTokenEstimateEnabled(env = process.env) {
+  const v = String((env && env.KHY_CLI_TOKEN_ESTIMATE) || '')
+    .trim()
+    .toLowerCase();
+  return !_CLI_TOKEN_ESTIMATE_OFF.includes(v);
+}
+
+/** 纯函数：由 prompt/content 文本估一份 tokenUsage。绝不抛（坏输入 → 全 0）。 */
+function estimateCliTokenUsage(prompt, content, env = process.env) {
+  if (!_cliTokenEstimateEnabled(env)) {
+    return { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
+  }
+  let est = null;
+  try {
+    est = require('../tokenUsageService').estimateTokens;
+  } catch {
+    /* 叶子缺失 → 本地粗估 */
+  }
+  const _est =
+    typeof est === 'function' ? est : (t) => Math.ceil(String(t || '').length / 4);
+  let input = 0;
+  let output = 0;
+  try {
+    input = Math.max(0, Math.round(Number(_est(prompt)) || 0));
+    output = Math.max(0, Math.round(Number(_est(content)) || 0));
+  } catch {
+    return { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
+  }
+  // 全 0 时不带 estimated 标记：没有信息可标记，且与「门控关」的返回形状保持一致。
+  if (input === 0 && output === 0) {
+    return { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
+  }
+  return { inputTokens: input, outputTokens: output, totalTokens: input + output, estimated: true };
+}
+
 const TOOLS = [
   {
     name: 'Claude Code',
@@ -1579,7 +1629,9 @@ async function generate(prompt, options = {}) {
           adapter: 'cli',
           provider: tool.name,
           model: options.model || tool.model || tool.cmd || tool.name,
-          tokenUsage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 },
+          // 桥接回合没有上游 usage 可拿 → 本地估算（见 estimateCliTokenUsage 注释）。
+          // 历史写死 0 会让底栏 ctx 永远停在 0；估错精度比恒 0 诚实。
+          tokenUsage: estimateCliTokenUsage(toolPrompt, content, options.env),
           attempts,
         });
       } catch (err) {
@@ -1650,6 +1702,8 @@ module.exports = {
     _cliToolUseStopInputEnabled,
     _cliErrorEchoDetectEnabled,
     _looksLikeCliErrorEcho,
+    _cliTokenEstimateEnabled,
+    estimateCliTokenUsage,
     _wireChildAbort,
     _isCliToolAbortEnabled,
   },

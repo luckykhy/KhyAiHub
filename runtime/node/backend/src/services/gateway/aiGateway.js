@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-139-DQ0B9TGP
 /**
  * aiGateway.js — Central AI request routing through priority-ordered adapters
  *
@@ -253,6 +254,10 @@ function _buildFailureReasonSection(attempts = [], maxLines = 8) {
     uniqueFailedCount += 1;
     if (lines.length < Math.max(1, maxLines)) {
       let line = `- ${adapter}${status}${kind}: ${err}`;
+      // kind 槽当前显示的 token：truth.label 命中则中文标签，否则裸 errType（T 管，未改）。
+      let kindSlot = kind;
+      let kindToken = errType;
+      let bracketIsTruthLabel = false;
       // 上游真因上桌(upstreamTruthLabel 纯叶子,只改展示):429/5xx 的上游故障体被归成
       // network 后,行内改显上游自己写清的原因(如 `上游端点不可用·瞬态`),免得用户被
       // [network] 带去查网络。门关 / 认不出 / 叶子不可用 → 逐字节保持今日行。
@@ -263,7 +268,36 @@ function _buildFailureReasonSection(attempts = [], maxLines = 8) {
         );
         if (truth) {
           const shown = truth.message ? _sanitizeFailureMessage(truth.message) : err;
-          line = `- ${adapter}${status} [${truth.label}${truth.transient ? '·瞬态' : ''}]: ${shown}`;
+          kindSlot = ` [${truth.label}${truth.transient ? '·瞬态' : ''}]`;
+          kindToken = truth.label;
+          bracketIsTruthLabel = true;
+          line = `- ${adapter}${status}${kindSlot}: ${shown}`;
+        }
+      } catch {
+        /* 叶子不可用 → 今日行 */
+      }
+      // [DESIGN-ARCH-198] W8：shown 换固定中文模板。本墙进 result.content → aiChatCore
+      // 状态行 → failureDetails → 散文层，属二次消费，故与信封/CLI 墙同一门同一合成器。
+      // 门 H 关 / 本笔不可转述 / 叶子不可用 → 逐字节保留上面的今日行。
+      try {
+        const desc = require('../cliErrorDescriptor');
+        if (desc.humanTextEnabled(process.env)) {
+          const narrative = desc.humanizeFailure({
+            raw: attempt.error || attempt.message || '',
+            errorType: errTypeSig,
+            statusCode: Number.isFinite(statusNum) && statusNum > 0 ? statusNum : 0,
+            errno: attempt.errno,
+            env: process.env,
+          });
+          if (narrative) {
+            const human = desc.composeHuman(narrative, {
+              bracketToken: kindToken,
+              bracketIsTruthLabel,
+            });
+            if (human) {
+              line = `- ${adapter}${status}${kindSlot}: ${human}`;
+            }
+          }
         }
       } catch {
         /* 叶子不可用 → 今日行 */
@@ -2676,4 +2710,7 @@ module.exports.__test__ = {
   _isProcessSensitiveAdapter,
   _isDeadEndpointErrorType,
   _resolveApiPoolProviderForRequest,
+  // [DESIGN-ARCH-198] W8：网关 content 墙（result.content → aiChatCore 状态行 →
+  // failureDetails → 散文层，二次消费）的人话化挂点，供单测直接覆盖。
+  _buildFailureReasonSection,
 };

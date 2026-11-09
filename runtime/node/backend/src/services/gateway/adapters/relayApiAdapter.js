@@ -901,12 +901,19 @@ async function _generateOnce(prompt, options = {}) {
   } else {
     // ─── OpenAI 兼容协议（SenseNova、通用中转站）───
     // Delegate message building + tool conversion to protocol pipeline
+    // 默认值走 samplingDefaults 叶（懒加载 + fail-soft，理由见叶头注）。
+    let _sd;
+    try {
+      _sd = require('../samplingDefaults').getDefaults('toolCall', 'relayApi');
+    } catch {
+      _sd = null;
+    }
     const pipelineResult = _openaiHandler.buildRequestBody(prompt, {
       ...options,
       model,
       stream: useStream,
       max_tokens: clampMaxTokensForGlmVision(model, options.maxTokens ?? 8192),
-      temperature: options.temperature ?? 0.3,
+      temperature: options.temperature ?? (_sd ? _sd.temperature : 0.3),
       // 剥离 tools 时以 useToolRole=false 降级:消息中的 tool_use/tool_result 块
       // 内联为纯文本,绝不产出 role:'tool'/'tool_calls'(否则上游 400)。
       useToolRole: _willStripTools ? false : options.useToolRole,

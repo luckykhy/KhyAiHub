@@ -3165,6 +3165,22 @@ const AIGatewayGenerateMethod = {
           } catch {
             /* fail-soft: 叶子/池不可用 → 用 process.env,逐字节回退 */
           }
+          // 用户显式配置的视觉端点(vision_endpoint.json):与上方 GLM 默认兜底同一注入
+          // 形态,让 visionRouting 的钉选分支零改动吃到 '<pool>/<model>'(语义 eyes-only:
+          // 视觉模型只描述图片,描述回传当前文本模型作答)。两道注入缺一不可——只给 pin 的
+          // 话,isVisionCapableModel 对带前缀 id 做精确集判定、名字启发式覆盖不了任意
+          // model id,钉选会被静默跳过并退回 OCR;详见 visionRoutingEnvPatch 的注释。
+          // 位置在 GLM 块之后:GLM 那个 if 判 process.env 而非 _routingEnv,放前面会被
+          // 覆盖;放这里也顺带得到正确优先级(用户显式配置 > GLM 默认兜底)。用户手设
+          // KHY_VISION_FALLBACK_MODEL / 池无可用 key / 叶不可用 → 原样返回,逐字节回退。
+          // apiKeyPool 显式传入而非 store 自己 require:store 被本文件引用,而本文件在
+          // 196 成员强连通分量里、apiKeyPool 也在环中,store 静态依赖它就会被拉进环。
+          try {
+            _routingEnv = require('../visionEndpointStore')
+                .applyVisionRoutingEnv(_routingEnv, require('../apiKeyPool'));
+          } catch {
+            /* fail-soft: 叶不可用 → 用 GLM/既有 env,逐字节回退 */
+          }
           const decision = decideVisionRouting({
             hasImage: true,
             currentModel: options.model,
@@ -3307,11 +3323,18 @@ const AIGatewayGenerateMethod = {
                   // 别的通道,而是返回失败结果,由本 _attempts 循环去试下一个 GLM 视觉候选)。
                   // 无 poolHint(裸候选,默认同池)→ 保持原样让级联自然解析(逐字节回退)。
                   const _pinApiAdapter = this._shouldPinApiAdapterForVisionDescribe(_att.poolHint);
+                  // 默认值走 samplingDefaults 叶（懒加载 + fail-soft，理由见叶头注）。
+                  let _sd;
+                  try {
+                    _sd = require('./samplingDefaults').getDefaults('precise', 'visionDescribe');
+                  } catch {
+                    _sd = null;
+                  }
                   const _r = await this.generate(vdr.buildDescribePrompt(), {
                     model: _att.model,
                     images: options.images,
-                    maxTokens: 2048,
-                    temperature: 0.2,
+                    maxTokens: _sd ? _sd.maxTokens : 2048,
+                    temperature: _sd ? _sd.temperature : 0.2,
                     apiPoolProvider: _att.poolHint || undefined,
                     provider: undefined,
                     preferredAdapter: _pinApiAdapter ? 'api' : 'auto',

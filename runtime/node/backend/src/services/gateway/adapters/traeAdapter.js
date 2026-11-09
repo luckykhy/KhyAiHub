@@ -1947,12 +1947,19 @@ async function callTraeBySdk(tokenData, prompt, model, options = {}) {
   if (openaiTools) {
     messages = convertMessagesAnthropicToOpenAI(messages, true);
   }
+  // 默认值走 samplingDefaults 叶（懒加载 + fail-soft，理由见叶头注）。
+  let _sd;
+  try {
+    _sd = require('../samplingDefaults').getDefaults('toolCall', 'trae');
+  } catch {
+    _sd = null;
+  }
   const payload = {
     model,
     messages,
     stream: useStream,
-    max_tokens: options.maxTokens || 2048,
-    temperature: options.temperature || 0.4,
+    max_tokens: options.maxTokens || (_sd ? _sd.maxTokens : 2048),
+    temperature: options.temperature || (_sd ? _sd.temperature : 0.4),
   };
   if (openaiTools) {
     payload.tools = openaiTools;
@@ -2079,12 +2086,19 @@ function callTraeByHttp(tokenData, prompt, model, options = {}) {
   } catch {
     _flattenContent = (c) => String(c || '');
   }
+  // 默认值走 samplingDefaults 叶（懒加载 + fail-soft，理由见叶头注）。
+  let _sd;
+  try {
+    _sd = require('../samplingDefaults').getDefaults('toolCall', 'trae');
+  } catch {
+    _sd = null;
+  }
   const pipelineOpts = {
     ...options,
     model,
     stream: useStream,
-    max_tokens: options.maxTokens || 2048,
-    temperature: options.temperature ?? 0.4,
+    max_tokens: options.maxTokens || (_sd ? _sd.maxTokens : 2048),
+    temperature: options.temperature ?? (_sd ? _sd.temperature : 0.4),
   };
   if (Array.isArray(pipelineOpts.messages)) {
     pipelineOpts.messages = pipelineOpts.messages.map((m) => ({

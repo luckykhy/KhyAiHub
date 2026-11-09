@@ -63,12 +63,68 @@ function _normType(v) {
 }
 
 /**
+ * 脱敏一条上游错误详情（信封的 detail 字段）。
+ *
+ * ⚠ [DESIGN-ARCH-198] §7.9：上游错误串**可能含真 key/token**。本信封此前**无任何脱敏**
+ * → REPL 路径一直把明文 key 透给用户（实测 `sk-proj-…` 原样出现在首屏）。
+ * 复用既有脱敏单一真源 `honestFailureReason.sanitizeCause`（SECRET_PATTERNS + 现代密钥族），
+ * 与老墙路径**同款**口径 ⇒ 两条路径脱敏结果一致，不会出现「信封脱敏、墙不脱敏」的裂缝。
+ *
+ * 注意：sanitizeCause 开了「保留换行」门时会保留换行（列表是结构化信息）；
+ * 但 detail 是**单行**摘要（上游错误串），故这里显式压成单行 —— 信封首屏是逐行渲染的，
+ * 多行 detail 会把首屏结构冲散。
+ *
+ * 绝不抛；任何异常 → 回落一个**绝不泄密**的占位串（而不是原文）。
+ */
+function _redactDetail(raw) {
+  const fallback = 'unknown error';
+  try {
+    const text = raw == null ? '' : String(raw);
+    if (!text.trim()) {
+      return fallback;
+    }
+    let out = text;
+    try {
+      const honest = require('../honestFailureReason');
+      if (honest && typeof honest.sanitizeCause === 'function') {
+        out = honest.sanitizeCause(text, 300, process.env);
+      }
+    } catch {
+      /* 脱敏叶子不可用 → 走下面的本地兜底（宁可少脱一点，也**不泄密**） */
+    }
+    // 兜底：叶子不可用时，至少把常见密钥形态抹掉（不依赖叶子）。
+    if (out === text) {
+      out = out
+        .replace(/\b(sk|pk|ghp|gho|xox[baprs])[-_][A-Za-z0-9]{8,}/g, '***')
+        .replace(/\bbearer\s+[A-Za-z0-9._\-]+/gi, '***')
+        .replace(/\b(api[_-]?key|token|secret|password|authorization)\s*[:=]\s*\S+/gi, '***');
+    }
+    const flat = out.replace(/\s+/g, ' ').trim().slice(0, 300);
+    return flat || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+/**
  * 从 attempts 抽出「主因」——按 failureReasonRanking 的 live-优先语义取首条非缓存记录。
  * 绝不抛;无 attempts → null。
+ *
+ * ⚠ [DESIGN-ARCH-198] §2.6（W6）：**先分层**再取主因。
+ * 断桥(2026-11-01 实测):「本机没装 IDE」这类**恒定环境事实**
+ * (kiro/cursor/trae 的 `unavailable`)与真实失败原因**平级**罗列 → 排序后
+ * kiro 恰好排第一 → 被选成「主因」→ 首屏写「通道: kiro [unavailable] — Kiro IDE unavailable」，
+ * 而真正可行动的真因(上游额度用尽)被埋到末位。
+ * 分层:①**可行动**真因(有 HTTP 状态码 / 有上游真因标签)优先；
+ *      ②「本机未安装/未启用」类**环境事实**次之；
+ *      ③其余兜底。
+ * 门控 KHY_FAILURE_ATTEMPT_TIERS(默认开;关 → 逐字节回退今日的平级取首条)。
+ *
  * @param {Array} attempts
+ * @param {object} [env]
  * @returns {object|null}
  */
-function _pickPrimaryCause(attempts) {
+function _pickPrimaryCause(attempts, env = process.env) {
   try {
     const list = Array.isArray(attempts) ? attempts.filter((a) => a && a.success === false) : [];
     if (!list.length) {
@@ -85,20 +141,166 @@ function _pickPrimaryCause(attempts) {
     } catch {
       /* 排序不可用 → 原序 */
     }
-    const a = ranked.find((x) => !(x && x.virtualSkip === true)) || ranked[0];
+    let picked = ranked.find((x) => !(x && x.virtualSkip === true)) || ranked[0];
+    if (_attemptTiersEnabled(env)) {
+      const tiered = _tierAttempts(ranked);
+      if (tiered) {
+        picked = tiered;
+      }
+    }
+    const a = picked;
+    const detailSource = a && (a.error || a.message);
+    const human = _humanNarrative(detailSource, a, env);
+    const vendor = _vendorView(detailSource);
     return {
       adapter: String((a && (a.adapterKey || a.provider)) || 'unknown').trim() || 'unknown',
       statusCode: Number.isFinite(Number(a && a.statusCode)) ? Number(a.statusCode) : 0,
       errorType: _normType(a && a.errorType) || 'unknown',
-      detail: String((a && (a.error || a.message)) || 'unknown error')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .slice(0, 300),
+      // ⚠ [DESIGN-ARCH-198] §7.9（安全，W1 接线暴露出的**既有**漏洞）：detail 来自上游
+      // 原始错误串，**可能含真 key/token**（实测：上游 401 体里带 `sk-proj-…` 明文）。
+      // 本信封**此前完全没有脱敏** —— REPL 路径（aiChatCore 直接渲染首屏）就一直把它
+      // 原样透给用户；W1 把信封首屏接到 TUI 失败路径后，**同一漏洞被扩到了 TUI**。
+      // ⇒ 在**信封的源头**（这里）脱敏，而不是在每个消费点补 —— 一次修，两条路径都安全，
+      // 未来新增消费点也默认安全（纵深防御：越靠近源头，越不可能漏）。
+      // 复用 honestFailureReason.sanitizeCause（既有脱敏单一真源，含 SECRET_PATTERNS
+      // + 现代密钥 sk-proj-/sk-svcacct-/sk-admin- 那一套），故与老墙路径**同款**脱敏口径。
+      detail: _redactDetail(detailSource),
+      // [DESIGN-ARCH-198] W8：人话叙事。用**未截断**的 attempt.error 算（300 字截断会把
+      // JSON 体腰斩、破坏解析）；门 H 关 / 本笔不可转述 → null，首屏逐字节回落 detail。
+      human,
+      // 上游结构化视图（type/code/param，**不含 message**）——给机器消费者做精确分流，
+      // 免得它们再去解析 detail 文本。
+      vendor,
       virtualSkip: !!(a && a.virtualSkip === true),
     };
   } catch {
     return null;
   }
+}
+
+/** 门 H 开 → 人话叙事；否则 null（调用方逐字节保留今日文案）。绝不抛。 */
+function _humanNarrative(detailSource, attempt, env) {
+  try {
+    const desc = require('../cliErrorDescriptor');
+    if (typeof desc.humanTextEnabled === 'function' && !desc.humanTextEnabled(env)) {
+      return null;
+    }
+    const n = desc.humanizeFailure({
+      raw: detailSource,
+      errorType: attempt && attempt.errorType,
+      statusCode: attempt && attempt.statusCode,
+      errno: attempt && attempt.errno,
+      env,
+    });
+    return n || null;
+  } catch {
+    return null;
+  }
+}
+
+/** 上游 body 的 { type, code, param } 结构化视图（刻意不含 message：它可能带明文密钥）。 */
+function _vendorView(detailSource) {
+  try {
+    const text = detailSource == null ? '' : String(detailSource).trim();
+    if (!text || text[0] !== '{') {
+      return { type: '', code: '', param: '' };
+    }
+    const o = JSON.parse(text);
+    if (!o || typeof o !== 'object') {
+      return { type: '', code: '', param: '' };
+    }
+    const e = o.error && typeof o.error === 'object' ? o.error : o;
+    return {
+      type: String((e && e.type) || ''),
+      code: e && e.code != null ? String(e.code) : '',
+      param: e && e.param != null ? String(e.param) : '',
+    };
+  } catch {
+    return { type: '', code: '', param: '' };
+  }
+}
+
+/**
+ * 「本机未安装 / 未启用」类**环境事实**的判据 —— 这类失败**不是本次请求的失败原因**，
+ * 而是恒定的本机状态（装了 IDE 才可能相关）。故单列一档、排在可行动真因之后。
+ */
+function _isEnvironmentNoise(a) {
+  if (!a) {
+    return false;
+  }
+  const type = _normType(a.errorType);
+  const text = String(a.error || a.message || '').toLowerCase();
+  if (type === 'unavailable') {
+    return true;
+  }
+  return /not installed|not found|未安装|未配置|未启用|no such file|enoent|is not available|unavailable/.test(
+    text
+  );
+}
+
+/**
+ * 「可行动真因」的判据 —— 有真实 HTTP 状态码，或上游自己写明了原因。
+ */
+function _isActionableCause(a) {
+  if (!a) {
+    return false;
+  }
+  const status = Number(a.statusCode);
+  if (Number.isFinite(status) && status > 0) {
+    return true;
+  }
+  const text = String(a.error || a.message || '');
+  try {
+    const { describeUpstream } = require('./upstreamTruthLabel');
+    if (describeUpstream(text, { errorType: _normType(a.errorType), env: process.env })) {
+      return true;
+    }
+  } catch {
+    /* 叶子不可用 → 走下面的文本判据 */
+  }
+  return /quota|usage limit|rate limit|429|401|403|404|500|502|503|504|missing api key|timed out|econnrefused/i.test(
+    text
+  );
+}
+
+/** 分层取主因：可行动 > 环境事实 > 其余。 */
+function _tierAttempts(ranked) {
+  try {
+    const actionable = ranked.find((a) => _isActionableCause(a) && !_isEnvironmentNoise(a));
+    if (actionable) {
+      return actionable;
+    }
+    const envNoise = ranked.find((a) => _isEnvironmentNoise(a));
+    if (envNoise) {
+      return envNoise;
+    }
+    return ranked[0];
+  } catch {
+    return ranked[0];
+  }
+}
+
+/** 分层门控（[DESIGN-ARCH-198] W6）。默认开；关 → 逐字节回退今日的平级取首条。 */
+function _attemptTiersEnabled(env = process.env) {
+  const e = env || {};
+  try {
+    const reg = require('../flagRegistry');
+    if (
+      reg &&
+      typeof reg.isRegistryEnabled === 'function' &&
+      reg.isRegistryEnabled(e) &&
+      typeof reg.isFlagEnabled === 'function'
+    ) {
+      return reg.isFlagEnabled('KHY_FAILURE_ATTEMPT_TIERS', e);
+    }
+  } catch {
+    /* 注册表不可用 → 本地 CANON */
+  }
+  const raw = e.KHY_FAILURE_ATTEMPT_TIERS;
+  const v = String(raw === undefined || raw === null ? 'true' : raw)
+    .trim()
+    .toLowerCase();
+  return !['0', 'false', 'off', 'no'].includes(v);
 }
 
 /**
@@ -410,7 +612,7 @@ function buildCliFailureEnvelope(input) {
     }
     const r = result && typeof result === 'object' ? result : {};
     const attempts = Array.isArray(r.attempts) ? r.attempts : [];
-    const primaryCause = _pickPrimaryCause(attempts);
+    const primaryCause = _pickPrimaryCause(attempts, e);
     const routing = _resolveRouting(r);
     const code = _resolveCode({
       errorType: r.errorType,
@@ -471,6 +673,35 @@ function buildCliFailureEnvelope(input) {
 }
 
 /**
+ * 信封首屏第 3 行的正文：有人话（门 H 开且本笔失败可转述）→ 人话；否则逐字节回落 detail。
+ * bracketToken 传 cause.errorType：信封的 kind 槽恒显裸 errorType，从不是中文真因标签
+ * ⇒ bracketIsTruthLabel 恒 false（墙侧才会传 true，那里 kind 槽可能已是 truth.label）。
+ * 绝不抛；任何人话异常 → 回落 detail。
+ */
+function _renderCauseDetail(cause) {
+  try {
+    const detail = String((cause && cause.detail) || '');
+    const narrative = cause && cause.human;
+    if (!narrative) {
+      return detail;
+    }
+    let out = '';
+    try {
+      const desc = require('../cliErrorDescriptor');
+      out = desc.composeHuman(narrative, {
+        bracketToken: cause.errorType,
+        bracketIsTruthLabel: false,
+      });
+    } catch {
+      /* 人话叶子不可用 → 回落 detail */
+    }
+    return out || detail;
+  } catch {
+    return String((cause && cause.detail) || '');
+  }
+}
+
+/**
  * 渲染信封首屏(≤ 8 行,ARCH-114 §2.2)。绝不抛;空信封 → ''。
  *
  * @param {object} envelope buildCliFailureEnvelope 的产出
@@ -485,7 +716,7 @@ function renderCliFailureEnvelope(envelope) {
     const lines = [`⚠ ${v.title}`, `[${v.code}]`];
     if (v.cause) {
       const sc = v.cause.statusCode ? ` (${v.cause.statusCode})` : '';
-      lines.push(`通道: ${v.cause.adapter}${sc} [${v.cause.errorType}] — ${v.cause.detail}`);
+      lines.push(`通道: ${v.cause.adapter}${sc} [${v.cause.errorType}] — ${_renderCauseDetail(v.cause)}`);
     }
     if (v.routing && v.routing.mode === 'pinned-strict') {
       lines.push(`路由: 钉选 strict(GATEWAY_PREFERRED_ADAPTER=${v.routing.preferred}),本轮不回退`);
