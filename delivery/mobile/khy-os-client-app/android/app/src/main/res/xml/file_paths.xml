@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- khy-canary: Khy-20261101-031-PGMEKMXN -->
+<!-- FileProvider paths.
+     最初只有 files-path：那时它只负责把内置的 Shizuku APK 递给系统安装器。
+
+     后来加了「用文件管理器打开工作目录」，而可选的工作目录全在共享存储上
+     （/sdcard/khy-os、/sdcard/Download、/sdcard/Documents……），所以必须把
+     外部存储也纳入。
+
+     扩到整个外部存储是必要的，不是图省事：FileProvider 是按 root 白名单放行，
+     只放 khy-os/ 一子树，用户选 Download 或 Documents 时 getUriForFile 会抛
+     "Failed to find configured root"，那一行代码就废了。
+
+     爆炸半径没有因此变大——provider 是 exported=false，每次只对单个 URI、
+     单次 intent 授读权限（FLAG_GRANT_READ_URI_PERMISSION），不会把整棵树
+     的读权限交出去。真正被暴露的只有我们显式递出去的那一个目录。 -->
+<paths>
+    <files-path name="shared_files" path="."/>
+    <external-path name="sdcard" path="."/>
+</paths>
