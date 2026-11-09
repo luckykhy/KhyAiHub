@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-DOC-007] 开发版文档地图与层间关系.md -->
+<title>[DESIGN-DOC-007] 开发版文档地图与层间关系 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>10_规范<span class="sep">›</span>DESIGN-DOC<span class="sep">›</span>[DESIGN-DOC-007] 开发版文档地图与层间关系</div>
+      <header class="hero reveal"><h1>[DESIGN-DOC-007] 开发版文档地图与层间关系</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-doc-007-开发版文档地图与层间关系">[DESIGN-DOC-007] 开发版文档地图与层间关系</a></li><li class="lvl-2"><a href="#一-它解决的三个具体症状">一、它解决的三个具体症状</a></li><li class="lvl-2"><a href="#二-唯一入口-四条导航轴的分工">二、唯一入口：四条导航轴的分工</a></li><li class="lvl-3"><a href="#2-1-开发工作的推荐路径">2.1 开发工作的推荐路径</a></li><li class="lvl-3"><a href="#2-2-两条易混的分界">2.2 两条易混的分界</a></li><li class="lvl-2"><a href="#三-层间关系-五域模型与硬约束">三、层间关系：五域模型与硬约束</a></li><li class="lvl-3"><a href="#3-1-五域-物理层-逻辑域的映射">3.1 五域（物理层 ↔ 逻辑域的映射）</a></li><li class="lvl-3"><a href="#3-2-四条硬约束-domain-deps-json-enforced-段-机器判">3.2 四条硬约束（`DOMAIN-DEPS.json` → `enforced` 段，机器判）</a></li><li class="lvl-3"><a href="#3-3-文档放在哪一层">3.3 文档放在哪一层</a></li><li class="lvl-3"><a href="#3-4-已知缺口-写下来免得再当成-没这回事">3.4 已知缺口（写下来免得再当成「没这回事」）</a></li><li class="lvl-2"><a href="#四-我要改-x-路由表">四、「我要改 X」路由表</a></li><li class="lvl-3"><a href="#4-1-三守卫为什么是-必跑">4.1 三守卫为什么是「必跑」</a></li><li class="lvl-3"><a href="#4-2-改文档的额外义务">4.2 改文档的额外义务</a></li><li class="lvl-3"><a href="#4-3-目录搬移之后-路径引用必须一起搬">4.3 目录搬移之后：路径引用必须一起搬</a></li><li class="lvl-3"><a href="#4-4-死代码-怎么认-写好了-生效了">4.4 「死代码」怎么认：写好了 ≠ 生效了</a></li><li class="lvl-2"><a href="#五-冲突时谁赢-文档真源优先级">五、冲突时谁赢（文档真源优先级）</a></li><li class="lvl-2"><a href="#六-维护义务">六、维护义务</a></li><li class="lvl-2"><a href="#附-相关文档">附：相关文档</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="design-doc-007-开发版文档地图与层间关系">[DESIGN-DOC-007] 开发版文档地图与层间关系<a class="anchor" href="#design-doc-007-开发版文档地图与层间关系" aria-label="锚点">#</a></h1>
+<blockquote><p>本文档回答一个问题：<strong>「这仓的文档到底怎么组织、改东西该看哪几篇、文档之间是什么关系」。</strong></p>
+<p>语义真源：<code>docs/10_规范/registry/DOMAIN-DEPS.json</code>（层间依赖与硬约束）、<br><code>docs/00_INDEX_仓库根.md</code>（根层物理盘点）、<br><code>docs/10_规范/registry/RULES-REGISTRY.json</code>（规则与守卫登记）。<br>本篇是<strong>索引之上的索引</strong>：它不重复任何一篇规范的内容，只回答「去哪找、彼此什么关系、冲突时谁赢」。</p>
+<p>状态：常驻规范。改动本文后须同步 <code>docs/10_规范/DESIGN-DOC/00_INDEX_DESIGN-DOC-总目录.md</code><br>与 <code>docs/00_INDEX_文档索引.md</code>（<code>docs-index-complete</code> 规则会盯这两处）。</p></blockquote>
+<hr>
+<h2 id="一-它解决的三个具体症状">一、它解决的三个具体症状<a class="anchor" href="#一-它解决的三个具体症状" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>症状</th><th>实情</th><th>本篇给什么</th></tr></thead><tbody><tr><td>「文档好多，不知道从哪看起」</td><td>全仓 1001 篇 <code>.md</code>，<strong>四条并存的导航轴</strong>，每条都成立</td><td>§二 的唯一入口与推荐路径</td></tr><tr><td>「看完一篇还是不知道它和别的什么关系」</td><td>文档之间<strong>没有显式的依赖图</strong>，只能靠猜</td><td>§三 的层间关系与硬约束</td></tr><tr><td>「改个东西要跑哪些检查」</td><td>守卫有 90+ 个，但没人告诉你这次该跑哪几个</td><td>§四 的「改 X → 读哪篇 → 跑哪几个守卫」路由表</td></tr></tbody></table>
+<hr>
+<h2 id="二-唯一入口-四条导航轴的分工">二、唯一入口：四条导航轴的分工<a class="anchor" href="#二-唯一入口-四条导航轴的分工" aria-label="锚点">#</a></h2>
+<p>四轴<strong>不是重复</strong>，各答一个问题。<strong>先按你的问题选轴，再进文档。</strong></p>
+<table><thead><tr><th>轴</th><th>回答的问题</th><th>入口</th><th>什么时候用</th></tr></thead><tbody><tr><td><strong>① 生命周期轴</strong></td><td>「一个功能怎么落地」</td><td><span class="deadlink" title="目标不存在：../../../10_%E8%A7%84%E8%8C%83/00_INDEX_%E6%96%87%E6%A1%A3%E7%B4%A2%E5%BC%95.html"><code>docs/00_INDEX_文档索引.md</code></span></td><td>找某阶段的成套文档（立项→设计→实现→测试→部署→运维→管理）</td></tr><tr><td><strong>② 意图速查轴</strong></td><td>「<strong>某件事</strong>怎么做」</td><td><a href="../00_INDEX_%E8%A7%84%E8%8C%83-%E6%80%BB%E7%9B%AE%E5%BD%95.html"><code>docs/10_规范/00_INDEX_规范-总目录.md</code></a> §二 情景速查</td><td>手上有一件事要做，要「一条红线」</td></tr><tr><td><strong>③ 认知顺序轴</strong></td><td>「从启动一路读到 Agent-as-OS 愿景」</td><td>[`[DESIGN-ARCH-063] 对照《Claude Code 架构》一书读懂 Khy-OS](../../03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-063] 对照《Claude Code 架构》一书读懂 Khy-OS.md)</td><td><strong>第一次</strong>读这仓；想按理解顺序而不是分类顺序读</td></tr><tr><td><strong>④ 物理层轴</strong></td><td>「根目录那些条目是什么」</td><td><span class="deadlink" title="目标不存在：../../../10_%E8%A7%84%E8%8C%83/00_INDEX_%E4%BB%93%E5%BA%93%E6%A0%B9.html"><code>docs/00_INDEX_仓库根.md</code></span></td><td>动根目录、加/删顶层目录、搞清 <code>runtime/</code> <code>delivery/</code> <code>works/</code> 的归属</td></tr></tbody></table>
+<h3 id="2-1-开发工作的推荐路径">2.1 开发工作的推荐路径<a class="anchor" href="#2-1-开发工作的推荐路径" aria-label="锚点">#</a></h3>
+<pre><code>第一次进仓  →  ③ 认知顺序轴（DESIGN-ARCH-063）
+                 ↓ 建立整体印象
+要动手改    →  ④ 物理层轴（根索引）定位改动落在哪一层
+                 ↓
+具体这件事  →  ② 意图速查轴（情景速查）取「一条红线」
+                 ↓
+找成套材料  →  ① 生命周期轴（文档索引）</code></pre>
+<blockquote><p><strong>AI 接手</strong>：先读仓根 <code>AGENTS.md</code>（工程规则 1–4）与 <code>CLAUDE.md</code>（红线 R1–R4 / 行为准则 B1–B8），<br>再用本篇的 §四 路由表定位「这次该读哪几篇、该跑哪几个守卫」。</p></blockquote>
+<h3 id="2-2-两条易混的分界">2.2 两条易混的分界<a class="anchor" href="#2-2-两条易混的分界" aria-label="锚点">#</a></h3>
+<ul><li><strong>文档轴 vs 机器可读真源</strong>：本文讲「去哪找」，<strong>不</strong>是「值是什么」。</li></ul>
+<p>值（版本号、层依赖、守卫清单、材料选材）一律以 <code>docs/10_规范/registry/*.json</code> 为准。</p>
+<ul><li><strong>人读层 vs 机器层</strong>：<code>docs/</code> 是人读的；<code>works/record/ai/</code> 是机器生成的骨架</li></ul>
+<p>（<code>MAP.md</code> / <code>CONTEXT.yaml</code> / <code>GUARDS.md</code>），由 <code>khy metadata refresh</code> 维护 —— <strong>不要手改</strong>。</p>
+<hr>
+<h2 id="三-层间关系-五域模型与硬约束">三、层间关系：五域模型与硬约束<a class="anchor" href="#三-层间关系-五域模型与硬约束" aria-label="锚点">#</a></h2>
+<h3 id="3-1-五域-物理层-逻辑域的映射">3.1 五域（物理层 ↔ 逻辑域的映射）<a class="anchor" href="#3-1-五域-物理层-逻辑域的映射" aria-label="锚点">#</a></h3>
+<p>真源：<a href="../../../10_%E8%A7%84%E8%8C%83/registry/DOMAIN-DEPS.json"><code>DOMAIN-DEPS.json</code></a> 的 <code>domains</code> 段。<br><strong>依赖方向自上而下，箭头方向 = 允许依赖的方向。</strong></p>
+<pre><code>D4 交付与接入   apps/  delivery/  entries/  works/ship/
+      ↓ 可依赖 D1/D2/D3/D4
+D1 运行时内核   runtime/boot/kernel/  runtime/substrate/platform/
+                runtime/node/backend/{bin,src/cli,src/routes,src/services}
+      ↓ 可依赖 D2/D3
+D2 业务上下文   runtime/node/backend/src/services/domain/   （business/ 未建，见 §3.4）
+      ↓ 可依赖 D3
+D3 共享底座     runtime/node/backend/src/{utils,constants}   ← 温层，被大量依赖
+
+D5 工程与档案   scripts/  docs/  .github/  works/{deploy,patches}
+      ⚠ 任何域都**不得**依赖 D5（D5 只被构建与治理工具读，不被运行时读）</code></pre>
+<p>各域一句职责：</p>
+<table><thead><tr><th>域</th><th>职责</th><th>温度</th></tr></thead><tbody><tr><td><strong>D1</strong> 运行时内核</td><td>平台作为操作系统跑起来：引导、启动器、Node 运行时、CLI 会话</td><td>热</td></tr><tr><td><strong>D2</strong> 业务上下文</td><td>平台对外提供的业务能力，各自内聚一块（messaging / trajectory / project / network / security …）</td><td>热/温</td></tr><tr><td><strong>D3</strong> 共享底座</td><td>被大量复用、只被依赖不反向依赖</td><td>温</td></tr><tr><td><strong>D4</strong> 交付与接入</td><td>面向人的产物与接入面</td><td>热/温</td></tr><tr><td><strong>D5</strong> 工程与档案</td><td>造它 / 验它 / 记它的东西</td><td>冷</td></tr></tbody></table>
+<h3 id="3-2-四条硬约束-domain-deps-json-enforced-段-机器判">3.2 四条硬约束（<code>DOMAIN-DEPS.json</code> → <code>enforced</code> 段，机器判）<a class="anchor" href="#3-2-四条硬约束-domain-deps-json-enforced-段-机器判" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>ID</th><th>谁不能依赖谁</th><th>依据</th></tr></thead><tbody><tr><td><code>d3-purity</code></td><td><strong>D3 不得</strong>依赖 D1/D2/D4/D5</td><td>「基础设施层不得反向知道业务」</td></tr><tr><td><code>no-reach-into-archive</code></td><td><strong>D1/D2/D3/D4 都不得</strong>依赖 D5</td><td>「D5 不被任何域依赖」</td></tr><tr><td><code>d2-no-reach-into-d1</code></td><td><strong>D2 不得</strong>依赖 D1</td><td>「领域层不依赖基础设施层」单向约束</td></tr><tr><td><code>domain-direction-*</code></td><td>各域 <code>mayDependOn</code> 白名单外的边一律禁止</td><td><code>domains.*.mayDependOn</code> 的真实 require 化</td></tr></tbody></table>
+<blockquote><p>执行器：<code>scripts/ci/check-repo-layout.js</code> 的域向规则 + 基线棘轮<br>（<code>scripts/ci/repo-layout-baseline.json</code>，只降不升）。读数用<br><code>node scripts/ci/check-repo-layout.js --list=domain-direction</code>。</p></blockquote>
+<h3 id="3-3-文档放在哪一层">3.3 文档放在哪一层<a class="anchor" href="#3-3-文档放在哪一层" aria-label="锚点">#</a></h3>
+<p>改代码前先想清楚「我改的是哪一层」，文档跟着层走：</p>
+<table><thead><tr><th>域</th><th>文档主要落在</th><th>守卫关注</th></tr></thead><tbody><tr><td>D1</td><td><code>docs/03_DESIGN_设计/DESIGN-ARCH/</code>、<code>docs/04_IMPL_实现/</code></td><td>上帝文件门（<code>arch:god</code>）、分层规则</td></tr><tr><td>D2</td><td><code>docs/03_DESIGN_设计/DESIGN-ARCH/</code>、<code>docs/05_TEST_测试/</code></td><td>域向规则（<code>d2-no-reach-into-d1</code>）</td></tr><tr><td>D3</td><td><code>docs/10_规范/DESIGN-API/</code>、<code>DESIGN-MEM/</code></td><td><code>d3-purity</code></td></tr><tr><td>D4</td><td><code>docs/06_DEPLOY_部署/</code>、<code>docs/03_DESIGN_设计/DESIGN-FE/</code></td><td>前端 token / size 守卫</td></tr><tr><td>D5</td><td><code>docs/10_规范/</code>、<code>docs/08_MGMT_项目管理/</code></td><td>治理规则（<code>check-gov-rules</code>）</td></tr></tbody></table>
+<h3 id="3-4-已知缺口-写下来免得再当成-没这回事">3.4 已知缺口（写下来免得再当成「没这回事」）<a class="anchor" href="#3-4-已知缺口-写下来免得再当成-没这回事" aria-label="锚点">#</a></h3>
+<ul><li><strong><code>business/</code> 域目录未建</strong>：31 个上下文 / 1184 文件仍埋在</li></ul>
+<p><code>runtime/node/backend/src/services/domain/</code>（靠 <code>domains.D1.overrides</code> 逐前缀豁免成 D2）。<br>  缺口全貌见 <a href="../../11_%E6%8A%A5%E5%91%8A/RESEARCH/[RESEARCH-026]%20531%E7%9B%AE%E5%BD%95%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E7%BC%BA%E5%8F%A3%E9%87%8D%E7%AE%97-2026-10-10.html"><code>[RESEARCH-026] 531目录架构设计与缺口重算</code></a>。</p>
+<ul><li><strong>D3 物理上不再是并列根域</strong>：<code>runtime/substrate/</code> 挂在 <code>runtime/</code> 之下，</li></ul>
+<p>但 <code>DOMAIN-DEPS.json</code> 里 <code>targets.D3</code> 仍登记为独立第五域 —— <strong>逻辑域 ≠ 物理目录</strong>，<br>  读文档时别把这两者混为一谈。</p>
+<ul><li><strong>根层仍有四个架构目录未归域</strong>：<code>apps/</code> <code>docs/</code> <code>scripts/</code> <code>entries/</code>（见 <code>00_INDEX_仓库根.md</code> ⑤）。</li></ul>
+<hr>
+<h2 id="四-我要改-x-路由表">四、「我要改 X」路由表<a class="anchor" href="#四-我要改-x-路由表" aria-label="锚点">#</a></h2>
+<p><strong>先按改动类型定位行，再照该行的三列走。</strong> 守卫列是<strong>必跑</strong>（最少集），不是全集。</p>
+<table><thead><tr><th>改什么</th><th>改在哪层</th><th>动手前先读</th><th>必跑守卫（最少集）</th></tr></thead><tbody><tr><td>后端业务逻辑 / 新服务</td><td>D1 或 D2</td><td><code>docs/10_规范/00_INDEX_规范-总目录.md</code> 情景速查 → 对应域规范；该模块的 <code>khy.module.json</code></td><td><code>check-agent-rules --changed</code>、<code>check-repo-layout</code>、<code>check:change-safety --changed</code></td></tr><tr><td>跨域依赖 / 新建跨层调用</td><td>D1↔D2↔D3</td><td><code>DOMAIN-DEPS.json</code> <code>enforced</code> 段 + <code>docs/10_规范/DESIGN-LAY/</code></td><td><code>check-repo-layout</code>（域向规则）、<code>check:cycle-deps</code></td></tr><tr><td>网关 / 模型适配</td><td>D1</td><td><code>docs/03_DESIGN_设计/DESIGN-ARCH/</code> 里 ai-gateway 系列</td><td><code>check:agent-rules --changed</code>、<code>check:model-hardcoding</code>、<code>check:weak-model-guard</code></td></tr><tr><td>CLI / TUI 交互</td><td>D1</td><td><code>runtime/node/backend/src/cli/tui/AGENTS.md</code>（<strong>该子系统的约束真源</strong>）</td><td><code>check:tui-gates</code>、<code>check:tui-cadence</code>、<code>check:no-emoji</code></td></tr><tr><td>前端 / 桌面端</td><td>D4</td><td><code>docs/10_规范/DESIGN-FE/</code></td><td><code>scripts/ci/check-frontend-tokens.js</code>、<code>check:frontend-design-tokens</code>、<code>check:frontend-size</code></td></tr><tr><td>数据家 / 存储路径</td><td>D1</td><td><code>docs/10_规范/DESIGN-LAY/</code> + <code>runtime/node/backend/src/utils/dataHome.js</code> 头注释</td><td><code>check-repo-layout</code>（根层盘点）、<code>check:data-layout</code>、<code>check:path-integrity</code></td></tr><tr><td>目录搬移 / 改顶层结构</td><td>D5</td><td><code>docs/10_规范/DESIGN-LAY/[DESIGN-LAY-008]</code>（方案 R/§13、§17.3 终态树）</td><td><code>check-repo-layout</code>、<code>check:path-integrity</code>、<code>check:runtime-placement</code></td></tr><tr><td>文档（新增/改名/归夹）</td><td>D5</td><td><strong>本文</strong> + <code>[DESIGN-DOC-001] 文档结构规范</code></td><td><code>check:layout</code>（<code>docs-index-complete</code>）、<code>check:doc-drift</code>、<code>check:doc-claims</code>、<code>check:doc-numbers</code></td></tr><tr><td>规则 / 红线 / 治理</td><td>D5</td><td><code>CLAUDE.md</code> 第一、二章 + <code>docs/10_规范/registry/RULES-REGISTRY.json</code></td><td><code>check:gov-rules</code>、<code>check:rules-registry</code>、<code>check-rule-scaffold</code></td></tr><tr><td>版本号 / 发布</td><td>D5</td><td><code>[DESIGN-SEMVER-002]</code> + <code>scripts/release/version-mode.js</code> 的用法</td><td><code>check:version-sync</code>、<code>scripts/ci/check-version-bump-approval.js</code>、<code>scripts/ci/check-version-freshness.js</code></td></tr><tr><td>软著登记材料</td><td>D5</td><td><code>works/record/evidence/06_申报材料/递交核对表.md</code> + <code>scripts/copyright/repo-contract.md</code></td><td><code>check:copyright</code>、<code>scripts/copyright/build-materials.js</code></td></tr><tr><td>密钥 / 凭据</td><td>D1 + D5</td><td><code>CLAUDE.md</code> R2 + <code>scripts/check_builtin_keys.py</code></td><td><code>check:staged-secrets</code>、<code>scripts/ci/check-secrets-staged.js</code>、<code>scripts/ci/security-scan.js</code></td></tr></tbody></table>
+<h3 id="4-1-三守卫为什么是-必跑">4.1 三守卫为什么是「必跑」<a class="anchor" href="#4-1-三守卫为什么是-必跑" aria-label="锚点">#</a></h3>
+<p><code>CLAUDE.md</code> 第三章规定的三道门（任何改动都要过）：</p>
+<pre><code>node scripts/ci/check-change-safety.js --changed
+node scripts/ci/check-agent-rules.js --changed
+node scripts/ci/check-repo-layout.js</code></pre>
+<blockquote><p>三守卫须在<strong>仓库根</strong>跑；untracked 新叶子须<strong>显式</strong>传路径扫描。</p></blockquote>
+<h3 id="4-2-改文档的额外义务">4.2 改文档的额外义务<a class="anchor" href="#4-2-改文档的额外义务" aria-label="锚点">#</a></h3>
+<p>新增/改名/归夹一篇文档时，<strong>同时</strong>做这三件（漏一件 <code>check:layout</code> 亮红）：</p>
+<ol><li>在 <code>docs/00_INDEX_文档索引.md</code> 补一行（或其就近 <code>00_INDEX_*</code> 收录）；</li><li>在<strong>就近</strong> <code>00_INDEX_*</code> 索引收录（<code>docs/10_规范/DESIGN-DOC/00_INDEX_DESIGN-DOC-总目录.md</code> 这类）；</li><li>编号唯一、不复用、不跳号（<code>[XXX-YYY-NNN]</code>）。</li></ol>
+<h3 id="4-3-目录搬移之后-路径引用必须一起搬">4.3 目录搬移之后：路径引用必须一起搬<a class="anchor" href="#4-3-目录搬移之后-路径引用必须一起搬" aria-label="锚点">#</a></h3>
+<p>方案 P（2026-09-30）把 <code>services/</code> <code>platform/</code> <code>kernel/</code> <code>extensions/</code> <code>software/</code> 等<br>整体搬进 <code>runtime/</code> <code>delivery/</code> <code>works/</code>。<strong>搬完目录不等于搬完引用</strong> ——<br>实测搬移后仍残留 <strong>873 处</strong>指向旧布局的路径引用，散在 170 多个文件里：<br>机器读的模块清单（<code>khy.module.json</code> 的 <code>fanInEvidence</code>）、登记真源、规则登记脚本、<br>文档路径索引、测试断言、Python 启动器。</p>
+<p>查法与改法：</p>
+<pre><code>node scripts/maintenance/path-integrity.js --scan-refs        # 只报告
+node scripts/maintenance/path-integrity.js --scan-refs --json  # 机器可读</code></pre>
+<ul><li>判据是<strong>功能性用法</strong>（路径被程序消费）+ 旧路径不存在 + 重映射后存在 → 报「真断」。</li></ul>
+<p>注释、散文、迁移映射表里<strong>刻意保留</strong>的来源列不算缺陷。</p>
+<ul><li><strong>不要自己写正则批量改</strong>：路径 token 会出现子串误匹配（已正确的</li></ul>
+<p><code>runtime/substrate/platform/…</code> 里的 <code>platform/…</code> 被二次重映射）与引号风格被改写（JSON 失效）。<br>  正确做法是按扫描器给出的<strong>精确 span</strong>（<code>spanCol</code> + <code>span</code>）落刀，<br>  并在改后重新 JSON.parse 复核。</p>
+<ul><li><strong>只改机器读的那一类</strong>：模块清单（<code>khy.module.json</code>）、登记真源（<code>docs/10_规范/registry/*.json</code>）、</li></ul>
+<p>机器生成的元数据（<code>works/record/ai/CONTEXT.yaml</code>）、多端入口真源（<code>entries/entries.json</code>）。<br>  <strong>源码与测试一律不自动改</strong> —— 实测全量落刀会改坏 3 个测试套件<br>  （<code>docPathIndex</code> / <code>evolutionPolicy</code> / <code>evolutionSafety</code> 回退后全绿 ⇒ 是自动改写引入的）：<br>  <strong>测试里的旧路径常是「故意夹具」</strong>（被测函数的输入/期望），机械改写会改变被测语义。<br>  仓库自己的设计也是「自动改写源码风险远高于收益，交给人裁决」。</p>
+<ul><li><strong>两类永不得改</strong>：锁文件（<code>package-lock.json</code> / <code>pnpm-lock.yaml</code>，生成物）与</li></ul>
+<p><code>docs/11_报告/历史/</code> 里的 stash 转储（里面的旧路径是<strong>那一次转储的事实</strong>，改了等于造假）。</p>
+<blockquote><p>2026-10-24 实测：873 处 → <strong>401 处</strong>（已安全修复 <strong>472 处 / 49 份机器读配置</strong>，<br>逐批跑相关测试套件确认零回归）。剩余 401 处的分布：<br>历史 stash 转储 104 + 生成锁文件 18 + <strong>源码与测试 279</strong>（路径敏感、被测试断言 → 需逐条人工裁决）。<br>同批还修掉了扫描器自身的重复报告缺陷（计数虚高 76%），记于 <code>works/record/ai/hq/BUGS.json</code> BUG-020。</p></blockquote>
+<h3 id="4-4-死代码-怎么认-写好了-生效了">4.4 「死代码」怎么认：写好了 ≠ 生效了<a class="anchor" href="#4-4-死代码-怎么认-写好了-生效了" aria-label="锚点">#</a></h3>
+<p><strong>症状</strong>：某个修复的纯函数早就写好、单元测试全绿，但<strong>生产代码里一处调用都没有</strong> ——<br>功能根本没上线，而探针测试一直红着、被登记进 <code>tests-debt/DEBT.md</code> 当成「已知缺陷」躺着。</p>
+<p><strong>2026-10-25 的实例</strong>（BUG-022）：TUI 选区锚点漂移的修复，第一期（2026-09-23）已写好<br><code>relocateLine</code> / <code>relocateSelection</code> / <code>extractTextRelocated</code> 并配了 17 条全绿的单测，<br>但 <strong>App 层从未接线</strong> —— 三个函数在生产里是<strong>字面意义的死代码</strong>，而端到端探针<br><code>selectionAnchorDrift.test.js</code> 的 D-02 从 2026-09-23 一直红到 2026-10-25，<strong>躺了一个月</strong>。</p>
+<p><strong>认出它的三条判据</strong>：</p>
+<table><thead><tr><th>#</th><th>判据</th><th>怎么查</th></tr></thead><tbody><tr><td>1</td><td>导出但<strong>无人调用</strong></td><td><code>rg</code> 搜函数名在 <code>runtime/</code> 下的调用点 —— 只有定义与导出就是死代码</td></tr><tr><td>2</td><td>纯函数单测全绿，<strong>端到端探针却红</strong></td><td>两边对不上 ⇒ 中间缺接线（纯函数测的是「能力」，探针测的是「用起来」）</td></tr><tr><td>3</td><td>修复被<strong>分期</strong>且中间态没有出口</td><td>「纯新增 + 未接线」是分期实施的天然中间态 —— 每一期都该有一张「本期是否真的接上了」的判据</td></tr></tbody></table>
+<p><strong>动线</strong>：端到端探针（<code>tests/cli/tui/selectionAnchorDrift.test.js</code> 那种把多层串起来、<br>中途换掉输入的）比纯函数单测更早暴露接线缺失 —— 它红着时不要只当「已知缺陷」登记，<br>要问「<strong>接线的判据在哪</strong>」。</p>
+<p><strong>接线期的验收必须包含「反向变异对照」</strong>：改了判据（守卫/断言）之后，<br>把缺陷重新注入（改真源码 → 跑真测试 → 还原），确认它<strong>真的变红</strong>。<br>2026-10-25 改 <code>viewportDragEdgeScroll</code> 的 T6 时正是这一步救下了场 ——<br>第一版新判据漏抓「调用点挪到分支外」，变异对照当场把它顶出来，换掉才作数。</p>
+<hr>
+<h2 id="五-冲突时谁赢-文档真源优先级">五、冲突时谁赢（文档真源优先级）<a class="anchor" href="#五-冲突时谁赢-文档真源优先级" aria-label="锚点">#</a></h2>
+<p>同一件事有<strong>两处</strong>写法时，按此顺序取信：</p>
+<table><thead><tr><th>序</th><th>层级</th><th>例</th><th>为什么它赢</th></tr></thead><tbody><tr><td>1</td><td><strong>机器可读真源</strong>（registry JSON）</td><td><code>COPYRIGHT.json</code>、<code>DOMAIN-DEPS.json</code>、<code>RULES-REGISTRY.json</code></td><td>守卫直接消费它；散文只是它的说明</td></tr><tr><td>2</td><td><strong>规范</strong>（<code>10_规范/</code>）</td><td><code>[DESIGN-LAY-005]</code>、<code>[DESIGN-IP-001]</code></td><td>判据与红线所在地</td></tr><tr><td>3</td><td><strong>设计文档</strong>（<code>03_DESIGN_设计/</code>）</td><td><code>[DESIGN-ARCH-xxx]</code></td><td>决策与取舍的记录</td></tr><tr><td>4</td><td><strong>索引</strong>（<code>00_INDEX_*</code>）</td><td>本文、<code>docs/00_INDEX_文档索引.md</code></td><td>导航层；索引写错不改变真源</td></tr><tr><td>5</td><td><strong>实现报告 / 叙述性文档</strong></td><td><code>04_IMPL_实现/</code>、<code>07_OPS_运维/</code></td><td>快照，可能过期</td></tr><tr><td>6</td><td><strong>聊天结论 / 历史留档</strong></td><td><code>18_归档/</code>、体检报告</td><td>只作追溯，不作依据</td></tr></tbody></table>
+<blockquote><p>⚠ <strong>第 5、6 级的数字会过期</strong>。第 20 号守卫<br>（<code>check-doc-numbers</code> / DOCS-007）专治「同名常量的值在文档里写错」，<br>报告这类漂移；<code>check-doc-drift</code>（DOCS-005）专治「文档声称的实现路径已不存在」。<br><strong>两者都是 S1 观察者：只记录、不阻断</strong> —— 但它们的读数是「文档正在腐烂」的指标。</p></blockquote>
+<hr>
+<h2 id="六-维护义务">六、维护义务<a class="anchor" href="#六-维护义务" aria-label="锚点">#</a></h2>
+<ul><li>本文的事实若与 <code>DOMAIN-DEPS.json</code> / <code>RULES-REGISTRY.json</code> 冲突，<strong>改本文</strong>（它们是真源）。</li><li>域、守卫、索引轴有增删时，本文相应章节<strong>必须同步</strong> —— 本文的价值全在「不落后」。</li><li>本文的路由表新增一行时，同步补上该行对应的守卫入口确实存在（否则读者照着跑会报错）。</li></ul>
+<hr>
+<h2 id="附-相关文档">附：相关文档<a class="anchor" href="#附-相关文档" aria-label="锚点">#</a></h2>
+<ul><li>根层物理盘点：<span class="deadlink" title="目标不存在：../../../10_%E8%A7%84%E8%8C%83/00_INDEX_%E4%BB%93%E5%BA%93%E6%A0%B9.html"><code>docs/00_INDEX_仓库根.md</code></span></li><li>域依赖真源：<a href="../../../10_%E8%A7%84%E8%8C%83/registry/DOMAIN-DEPS.json"><code>DOMAIN-DEPS.json</code></a></li><li>规则登记真源：<a href="../../../10_%E8%A7%84%E8%8C%83/registry/RULES-REGISTRY.json"><code>RULES-REGISTRY.json</code></a></li><li>文档结构规范：[<code>[DESIGN-DOC-001] 文档结构规范</code>]([DESIGN-DOC-001] 文档结构规范.md)</li><li>意图速查：<a href="../00_INDEX_%E8%A7%84%E8%8C%83-%E6%80%BB%E7%9B%AE%E5%BD%95.html"><code>docs/10_规范/00_INDEX_规范-总目录.md</code></a></li><li>认知顺序读法：[<code>[DESIGN-ARCH-063] 对照《Claude Code 架构》一书读懂 Khy-OS</code>](../../03_DESIGN_设计/DESIGN-ARCH/[DESIGN-ARCH-063] 对照《Claude Code 架构》一书读懂 Khy-OS.md)</li><li>架构缺口体检：<a href="../../11_%E6%8A%A5%E5%91%8A/RESEARCH/[RESEARCH-026]%20531%E7%9B%AE%E5%BD%95%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E7%BC%BA%E5%8F%A3%E9%87%8D%E7%AE%97-2026-10-10.html"><code>[RESEARCH-026] 531目录架构设计与缺口重算</code></a></li></ul>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/10_规范/DESIGN-DOC/[DESIGN-DOC-006] 文档数值主张校验规范.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-DOC-006] 文档数值主张校验规范</div></a><a class="next" href="../../../../docs/html/10_规范/DESIGN-DOC/00_INDEX_DESIGN-DOC-总目录.html"><div class="dir">下一篇 →</div><div class="ttl">DESIGN-DOC</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/10_规范/DESIGN-DOC/[DESIGN-DOC-007] 开发版文档地图与层间关系.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

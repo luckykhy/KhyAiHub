@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-DOC-006] 文档数值主张校验规范.md -->
+<title>[DESIGN-DOC-006] 文档数值主张校验规范 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>10_规范<span class="sep">›</span>DESIGN-DOC<span class="sep">›</span>[DESIGN-DOC-006] 文档数值主张校验规范</div>
+      <header class="hero reveal"><h1>[DESIGN-DOC-006] 文档数值主张校验规范</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-doc-006-文档数值主张校验规范">[DESIGN-DOC-006] 文档数值主张校验规范</a></li><li class="lvl-2"><a href="#一-第三次订正一个判断">一、第三次订正一个判断</a></li><li class="lvl-2"><a href="#二-判据-两条-都不执行任何命令">二、判据（两条，都不执行任何命令）</a></li><li class="lvl-3"><a href="#2-1-实测-2026-10-19">2.1 实测（2026-10-19）</a></li><li class="lvl-2"><a href="#三-修复时为什么改-行号-而不是-追行号">三、修复时为什么改「行号」而不是「追行号」</a></li><li class="lvl-2"><a href="#四-刻意不做的三件事">四、刻意不做的三件事</a></li><li class="lvl-3"><a href="#4-1-不执行文档里的任何命令">4.1 不执行文档里的任何命令</a></li><li class="lvl-3"><a href="#4-2-同名多值不判">4.2 同名多值不判</a></li><li class="lvl-3"><a href="#4-3-纯叙述性数字不判">4.3 纯叙述性数字不判</a></li><li class="lvl-3"><a href="#4-4-布尔型常量不判">4.4 布尔型常量不判</a></li><li class="lvl-2"><a href="#五-覆盖面与局限">五、覆盖面与局限</a></li><li class="lvl-2"><a href="#六-落地阶段与升阶">六、落地阶段与升阶</a></li><li class="lvl-2"><a href="#七-怎么用">七、怎么用</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- DOCS-NUMBERS-EXEMPT: 本文以「过期数值」为题材举例，文中出现的旧值是反例而非当前主张 --&gt;</p>
+<p>&lt;!-- IMPL-STATUS: done --&gt;<br>&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-19 · DOCS-007 自举：本文所述机制已实现 --&gt;</p>
+<blockquote><p><strong>标记依据</strong>：本文规范的是 scripts/ci/check-doc-numbers.js，该脚本已落地并接入 ruleguard（DOCS-007 / doc-numbers-guard / S1 观察者），反向验证通过（注入 MAX_GATES=999 → 计数 0→1 并正确指认真值 237）。</p></blockquote>
+<h1 id="design-doc-006-文档数值主张校验规范">[DESIGN-DOC-006] 文档数值主张校验规范<a class="anchor" href="#design-doc-006-文档数值主张校验规范" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>规则 ID</strong>：<code>DOCS-007</code>　<strong>域</strong>：DOCS　<strong>门档</strong>：pr　<strong>优先级</strong>：P1<br><strong>执行面</strong>：<code>scripts/ci/check-doc-numbers.js</code>（S1 观察者，恒 exit 0）<br><strong>本文是语义真源</strong>；机器可读登记在 <code>docs/10_规范/registry/RULES-REGISTRY.json</code><br>与 <code>docs/10_规范/registry/FEATURE-OWNERSHIP.json</code>。</p>
+<p>与 <a href="[DESIGN-DOC-004]%20%E6%96%87%E6%A1%A3%E5%AE%9E%E7%8E%B0%E7%8A%B6%E6%80%81%E6%A0%87%E6%B3%A8%E8%A7%84%E8%8C%83.html"><code>[DESIGN-DOC-004]</code></a>（路径级）、<br><a href="[DESIGN-DOC-005]%20%E6%96%87%E6%A1%A3%E5%8F%AF%E6%89%A7%E8%A1%8C%E4%B8%BB%E5%BC%A0%E6%A0%A1%E9%AA%8C%E8%A7%84%E8%8C%83.html"><code>[DESIGN-DOC-005]</code></a>（端点级）同范围、互补：<br>这两条判「在不在」，本条判「是多少」。</p></blockquote>
+<!-- RULES-REGISTRY: DOCS-007 -->
+<hr>
+<h2 id="一-第三次订正一个判断">一、第三次订正一个判断<a class="anchor" href="#一-第三次订正一个判断" aria-label="锚点">#</a></h2>
+<p>本仓此前两次就「数值漂移能否机检」下过判断，两次都错：</p>
+<table><thead><tr><th>版本</th><th>判断</th><th>实测结果</th></tr></thead><tbody><tr><td>初版</td><td>「数值、口径、命令与代码不符无法机械判定」</td><td>对<strong>绝大多数</strong>数字成立</td></tr><tr><td>二版</td><td>「内容级漂移不在射程」</td><td>被 DOCS-006 推翻（端点字面量可逐字比对）</td></tr><tr><td>本条</td><td>——</td><td><strong>对「同名常量」这一类成立</strong></td></tr></tbody></table>
+<p><strong>推翻的推理</strong>：文档写下 <code>&lt;常量名&gt; = &lt;值&gt;</code> 时，文档与代码说的是<strong>同一个名字</strong>——<br>这给了机器一个可逐字比对的锚点。文档写 <code>MAX_GATES = 227</code>、代码写<br><code>const MAX_GATES = 237</code>，两者指的是同一个东西，无需任何启发式推断。</p>
+<hr>
+<h2 id="二-判据-两条-都不执行任何命令">二、判据（两条，都不执行任何命令）<a class="anchor" href="#二-判据-两条-都不执行任何命令" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>判据</th><th>说明</th></tr></thead><tbody><tr><td>N1</td><td><strong>常量值</strong>：文档写 <code>&lt;常量名&gt; = &lt;值&gt;</code>，代码里该常量有唯一确定的值</td><td>两者不符即漂移</td></tr><tr><td>N2</td><td><strong>行号</strong>：文档写 <code>file.js:41 MAX_GATES = ...</code>，而该常量实际在第 50 行</td><td>引用的行号已失效</td></tr></tbody></table>
+<h3 id="2-1-实测-2026-10-19">2.1 实测（2026-10-19）<a class="anchor" href="#2-1-实测-2026-10-19" aria-label="锚点">#</a></h3>
+<p>330 份适用范围内文档，<strong>83 处</strong>「常量名 = 数值」主张，其中 <strong>43 处可判定</strong><br>（代码里同名常量的值唯一），<strong>10 处不符——10/10 人工核实为真漂移</strong>：</p>
+<table><thead><tr><th>文档</th><th>文档称</th><th>代码真值</th><th>行号</th></tr></thead><tbody><tr><td><code>[DESIGN-ARCH-132]</code></td><td><code>MAX_GATES = 220</code></td><td><code>237</code></td><td>称 <code>:32</code>，实为 <code>:50</code></td></tr><tr><td><code>[DESIGN-ARCH-133]</code></td><td><code>MAX_GATES = 220</code></td><td><code>237</code></td><td>称 <code>:32</code>，实为 <code>:50</code></td></tr><tr><td><code>[DESIGN-ARCH-134]</code></td><td><code>MAX_GATES = 220</code></td><td><code>237</code></td><td>称 <code>:32</code>，实为 <code>:50</code></td></tr><tr><td><code>[DESIGN-ARCH-135]</code></td><td><code>MAX_GATES = 220</code></td><td><code>237</code></td><td>称 <code>:32</code>，实为 <code>:50</code></td></tr><tr><td><code>[DESIGN-ARCH-136]</code></td><td><code>MAX_GATES = 220</code></td><td><code>237</code></td><td>称 <code>:32</code>，实为 <code>:50</code></td></tr><tr><td><code>[DESIGN-ARCH-137]</code></td><td><code>MAX_GATES = 220</code></td><td><code>237</code></td><td>称 <code>:32</code>，实为 <code>:50</code></td></tr><tr><td><code>[DESIGN-ARCH-176]</code> ×3</td><td><code>MAX_GATES = 227</code></td><td><code>237</code></td><td>称 <code>:41</code>，实为 <code>:50</code></td></tr><tr><td><code>[DESIGN-ARCH-178]</code></td><td><code>MAX_GATES = 227</code></td><td><code>237</code></td><td>称 <code>:41</code>，实为 <code>:50</code></td></tr></tbody></table>
+<p><strong>一个常量、8 份文档、两个不同的过期值、8 处失效行号</strong>——这正是<br><code>[DESIGN-ARCH-020]</code> 声称「R1=28、R3=1、门禁 exit 0」而实跑<br>「R1=9、R3=4、exit 1」同类的漂移，只不过那次漂的是运行读数，<br>这次漂的是<strong>源码里的常量</strong>。</p>
+<hr>
+<h2 id="三-修复时为什么改-行号-而不是-追行号">三、修复时为什么改「行号」而不是「追行号」<a class="anchor" href="#三-修复时为什么改-行号-而不是-追行号" aria-label="锚点">#</a></h2>
+<p><code>[DESIGN-DOC-004]</code> 之外的 <code>[DESIGN-DOC-003]</code>（README 内容规范）与<br><code>RULES-REGISTRY</code> 的 DOCS-004 都已写明：</p>
+<blockquote><p>引用代码与文档位置一律给符号名或小节标题，<strong>不得给行号</strong><br>（行号是最易漂移的副本）</p></blockquote>
+<p>所以修法不是把 <code>:32</code> 追成 <code>:50</code>——下次在文件前部插一行又失效——<br>而是<strong>去掉行号，只留符号名</strong>：<code>check-tui-gates.js</code> 的 <code>MAX_GATES = 237</code>。</p>
+<p><strong>这条守卫同时在守 DOCS-004 的约束</strong>：它把「文档引了失效行号」变成可判定。</p>
+<hr>
+<h2 id="四-刻意不做的三件事">四、刻意不做的三件事<a class="anchor" href="#四-刻意不做的三件事" aria-label="锚点">#</a></h2>
+<h3 id="4-1-不执行文档里的任何命令">4.1 不执行文档里的任何命令<a class="anchor" href="#4-1-不执行文档里的任何命令" aria-label="锚点">#</a></h3>
+<p>文档写 <code>node scripts/foo.js</code> 就跑它，等于<strong>让一份文档获得执行权</strong>——<br>那不是校验，是攻击面。需重跑才能得到的读数（如 <code>archDebtScan</code> 的 R1/R3、<br><code>check-tui-gates</code> 的 token 计数）须由<strong>白名单注册表</strong>显式登记后才可跑，<br>不在本条射程。</p>
+<p>本条只做<strong>读文件 + 逐字比对</strong>，不 spawn 任何进程。</p>
+<h3 id="4-2-同名多值不判">4.2 同名多值不判<a class="anchor" href="#4-2-同名多值不判" aria-label="锚点">#</a></h3>
+<p>代码里 <code>MAX_GATES</code> 若在两处定义为不同值，说明它有上下文差异<br>（配置 vs 默认值），机器判不出——<strong>跳过而不是猜</strong>。</p>
+<h3 id="4-3-纯叙述性数字不判">4.3 纯叙述性数字不判<a class="anchor" href="#4-3-纯叙述性数字不判" aria-label="锚点">#</a></h3>
+<p>「20 条红线」「6 个阶段」「3 个组件」这类数字没有对应的代码字面量，<br>本条不管。实测这类在 330 份文档里约 6900 处——<strong>占了绝大多数</strong>。</p>
+<h3 id="4-4-布尔型常量不判">4.4 布尔型常量不判<a class="anchor" href="#4-4-布尔型常量不判" aria-label="锚点">#</a></h3>
+<p><code>KHY_X = 1</code> 表示「开关打开」，不是可比的数值。实测这类占常量主张的大头<br>（<code>KHY_CC_TUI</code> 46 处、<code>KHY_SELECT</code> 16 处、<code>KHY_FAST_STARTUP</code> 16 处……），<br>全部取值 0/1。<strong>把它们算作漂移会把守卫变成噪声源。</strong></p>
+<hr>
+<h2 id="五-覆盖面与局限">五、覆盖面与局限<a class="anchor" href="#五-覆盖面与局限" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>覆盖</th><th>不覆盖</th></tr></thead><tbody><tr><td>文档写下「同名常量 = 数值」且代码里该常量值唯一的情形</td><td><strong>运行读数类</strong>（<code>R1=28</code>、<code>门禁 exit 0</code>）——需重跑，白名单登记后才可判</td></tr><tr><td>文档引用了失效行号</td><td>纯叙述性数字（约 6900 处）</td></tr><tr><td>——</td><td>布尔型常量（取值 0/1）</td></tr><tr><td>——</td><td>同名多值的常量</td></tr></tbody></table>
+<p><strong>实测可判定率 43/83 ≈ 52%</strong>——即约一半的常量型数值主张机器能判，<br>另一半（同名多值、布尔型、代码里根本没有该常量）<strong>留给人工</strong>。<br>这个比例说明：数值漂移<strong>不是</strong>「全部可机检」，但<strong>有一部分</strong>是，<br>而这一部分恰好是最容易出错的那部分（多个文档引用同一常量却各自记着<br>不同值——它们的过期时刻各不相同，天然会分叉）。</p>
+<hr>
+<h2 id="六-落地阶段与升阶">六、落地阶段与升阶<a class="anchor" href="#六-落地阶段与升阶" aria-label="锚点">#</a></h2>
+<p><code>STAGE = 'S1'</code>：观察者，只记录不阻断、恒 exit 0（<code>[DESIGN-PROCESS-002]</code> PP-1）。<br>升阶须同时改三处：<code>scripts/ci/check-doc-numbers.js</code> 的 <code>STAGE</code>、<br><code>RULES-REGISTRY.json</code> 中 <code>DOCS-007</code> 的 <code>severity</code>、<code>FEATURE-OWNERSHIP.json</code><br>中 <code>doc-numbers-guard</code> 的 <code>stage</code>。一次一阶（PP-6），<strong>由人决定</strong>。</p>
+<p><code>severity</code> 必须显式写 <code>advisory</code>——<code>check-rollout-stage.js:197</code> 的 PP-3<br>会复算 <code>gateStrength()</code>，未声明时 P1 会派生为 blocking 而报 error。</p>
+<hr>
+<h2 id="七-怎么用">七、怎么用<a class="anchor" href="#七-怎么用" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">npm run check:doc-numbers        <span class="hljs-comment"># 人读摘要（恒 exit 0）</span>
+npm run check:doc-numbers:json   <span class="hljs-comment"># 机读</span>
+npm run check:doc-numbers:list   <span class="hljs-comment"># 全量不符清单</span></code></pre>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/10_规范/DESIGN-DOC/[DESIGN-DOC-005] 文档可执行主张校验规范.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-DOC-005] 文档可执行主张校验规范</div></a><a class="next" href="../../../../docs/html/10_规范/DESIGN-DOC/[DESIGN-DOC-007] 开发版文档地图与层间关系.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-DOC-007] 开发版文档地图与层间关系</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/10_规范/DESIGN-DOC/[DESIGN-DOC-006] 文档数值主张校验规范.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

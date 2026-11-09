@@ -145,7 +145,10 @@ s.<span class="hljs-title function_">includes</span>(fs.<span class="hljs-title 
 <blockquote><p><strong>D9 的 4 个场景是成对设计的</strong>（2026-09-17 新增，承载 HQ 丢弃后的替代保障，见 §11.6）：<br><code>mirror-one-way</code> 与 <code>mirror-both-ways</code> 使用<strong>同一对虚拟文件</strong>，只差第二个文件有没有<br>反向声明 —— 缺了放行对照，「单向报错」这个断言就证明不了它不是「凡有 <code>MIRROR</code> 就报」。<br><strong>两个设计陷阱（实测踩过，勿重犯）</strong>：<br>① 场景文件是<strong>虚拟的</strong>（不落盘），孪生面查找必须能命中 <code>--scenario</code> 的文件集，<br>   否则每个场景都退化成「文件不存在」（守卫为此加了 <code>virtualFiles</code> 参数）；<br>② <strong>不要拿仓库真实文件当孪生面</strong> —— <code>AGENTS.html</code> 一旦补上反向声明，<br>   <code>mirror-one-way</code> 就会静默转绿。场景必须自包含、与仓库状态解耦。</p></blockquote>
 <hr>
 <h2 id="10-复现方式">10. 复现方式<a class="anchor" href="#10-复现方式" aria-label="锚点">#</a></h2>
-<pre><code class="language-bash"><span class="hljs-comment"># 全仓扫描（人类可读）</span>
+<pre><code class="language-bash">&lt;!-- IMPL-STATUS: todo --&gt;
+&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;
+&gt; **标记依据**：54 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
+<span class="hljs-comment"># 全仓扫描（人类可读）</span>
 node scripts/ci/check-agent-docs.js --verbose
 
 <span class="hljs-comment"># 机器可读</span>

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-DOC-005] 文档可执行主张校验规范.md -->
+<title>[DESIGN-DOC-005] 文档可执行主张校验规范 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>10_规范<span class="sep">›</span>DESIGN-DOC<span class="sep">›</span>[DESIGN-DOC-005] 文档可执行主张校验规范</div>
+      <header class="hero reveal"><h1>[DESIGN-DOC-005] 文档可执行主张校验规范</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-doc-005-文档可执行主张校验规范">[DESIGN-DOC-005] 文档可执行主张校验规范</a></li><li class="lvl-2"><a href="#一-要纠正的一个判断">一、要纠正的一个判断</a></li><li class="lvl-2"><a href="#二-三条信号-按精度排序">二、三条信号，按精度排序</a></li><li class="lvl-3"><a href="#2-1-为什么-s3-不做成-finding">2.1 为什么 S3 不做成 finding</a></li><li class="lvl-2"><a href="#三-s2-已由既有守卫承担-不重复造">三、S2 已由既有守卫承担，不重复造</a></li><li class="lvl-2"><a href="#四-这一条如何覆盖-代码先走-文档没跟上">四、这一条如何覆盖「代码先走、文档没跟上」</a></li><li class="lvl-2"><a href="#五-落地阶段与升阶">五、落地阶段与升阶</a></li><li class="lvl-2"><a href="#六-怎么用">六、怎么用</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: done --&gt;<br>&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-006 自举：本文所述机制已实现 --&gt;</p>
+<blockquote><p><strong>标记依据</strong>：本文规范的是 scripts/ci/check-doc-claims.js，该脚本已落地并接入 ruleguard（DOCS-006 / doc-claims-guard / S1 观察者），反向验证通过（注入端点 8→9）。</p></blockquote>
+<p>&lt;!-- DOCS-CLAIMS-EXEMPT: 本文以「失效端点」为题材举例，文中出现的旧端点是反例而非当前契约 --&gt;</p>
+<h1 id="design-doc-005-文档可执行主张校验规范">[DESIGN-DOC-005] 文档可执行主张校验规范<a class="anchor" href="#design-doc-005-文档可执行主张校验规范" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>规则 ID</strong>：<code>DOCS-006</code>　<strong>域</strong>：DOCS　<strong>门档</strong>：pr　<strong>优先级</strong>：P1<br><strong>执行面</strong>：<code>scripts/ci/check-doc-claims.js</code>（S1 观察者，恒 exit 0）<br><strong>本文是语义真源</strong>；机器可读登记在 <code>docs/10_规范/registry/RULES-REGISTRY.json</code><br>与 <code>docs/10_规范/registry/FEATURE-OWNERSHIP.json</code>。</p>
+<p>与 <a href="[DESIGN-DOC-004]%20%E6%96%87%E6%A1%A3%E5%AE%9E%E7%8E%B0%E7%8A%B6%E6%80%81%E6%A0%87%E6%B3%A8%E8%A7%84%E8%8C%83.html"><code>[DESIGN-DOC-004] 文档实现状态标注规范</code></a><br>同范围、互补：DOCS-005 管<strong>路径级</strong>漂移（文档声称的实现还在不在），<br>本文管<strong>内容级</strong>漂移（文档写下的字面量在代码里是不是真的）。</p></blockquote>
+<!-- RULES-REGISTRY: DOCS-006 -->
+<hr>
+<h2 id="一-要纠正的一个判断">一、要纠正的一个判断<a class="anchor" href="#一-要纠正的一个判断" aria-label="锚点">#</a></h2>
+<p>此前 <code>[DESIGN-DOC-004]</code> 断言「内容级漂移不在本规则射程」，理由是<br>「数值、口径、命令与代码不符无法机械判定」。<strong>这个判断是错的，已被实测推翻。</strong></p>
+<p>一份文档写下 `<code> </code>/api/v1/large-tasks<code> </code>` 时，它就是在对读者作出一个<br><strong>可验证的承诺</strong>。承诺与仓库现状不符就是漂移——无论谁先谁后，<br>都不需要 git 时间戳来判定。</p>
+<p>实测（2026-10-18）：适用范围内 329 份文档共 <strong>124 条端点主张</strong>，<br>其中 <strong>9 条在源码中查无此串</strong>，逐条人工核实 <strong>9/9 为真漂移</strong>：</p>
+<table><thead><tr><th>文档</th><th>文档写</th><th>代码实际</th><th>结论</th></tr></thead><tbody><tr><td><code>[DESIGN-API-003]</code></td><td><code>/api/v1/large-tasks</code></td><td><code>server.js:674</code> 挂 <code>/api/large-tasks</code></td><td>真漂移</td></tr><tr><td><code>[DESIGN-API-003]</code></td><td><code>/api/v1/remote-ssh/execute</code></td><td>挂 <code>/api/remote/ssh</code></td><td>真漂移</td></tr><tr><td><code>[DESIGN-API-003]</code></td><td><code>/api/v1/payments</code></td><td>挂 <code>/api/ai-gateway/payments</code></td><td>真漂移</td></tr><tr><td><code>[DESIGN-API-003]</code></td><td><code>/api/v1/orders</code></td><td>全仓无 orders 路由</td><td>真漂移</td></tr><tr><td><code>[DESIGN-RL-001]</code></td><td><code>/api/v1/strategies</code></td><td><code>server.js:487</code> 挂 <code>/api/strategies</code></td><td>真漂移</td></tr><tr><td><code>[DESIGN-ARCH-009]</code></td><td><code>/api/block/types</code></td><td>全仓无</td><td>真漂移</td></tr><tr><td><code>[DESIGN-ARCH-080]</code></td><td><code>/api/auth/capabilities.passwordReset.mode</code></td><td>全仓无</td><td>真漂移</td></tr><tr><td><code>[DESIGN-ARCH-080]</code></td><td><code>/api/ai-gateway-admin/health</code></td><td>全仓无</td><td>真漂移</td></tr><tr><td><code>[DESIGN-ARCH-154]</code></td><td><code>/api/free-llm</code></td><td>全仓无该端点</td><td>真漂移</td></tr></tbody></table>
+<p><code>grep -c &quot;api/v1&quot; server.js</code> = <strong>0</strong> —— 后端根本不存在任何 v1 挂载。<br>文档统一写 <code>/api/v1/...</code> 而代码统一无前缀，是一次<strong>系统性的口径分歧</strong>。</p>
+<hr>
+<h2 id="二-三条信号-按精度排序">二、三条信号，按精度排序<a class="anchor" href="#二-三条信号-按精度排序" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>#</th><th>信号</th><th>实测精度</th><th>处置</th></tr></thead><tbody><tr><td>S1</td><td>端点字面量：文档写 `<code> </code>/api/x<code> </code>` 而源码无此串</td><td><strong>9/9 = 100%</strong></td><td><strong>做成 finding</strong></td></tr><tr><td>S2</td><td>npm 目标：文档 <code>npm run X</code> 而 package.json 无此脚本</td><td>已覆盖</td><td><strong>不重复</strong>，见 §三</td></tr><tr><td>S3</td><td>命令内路径：文档 <code>node --test a.test.js</code> 而该文件不可达</td><td><strong>21.9%</strong></td><td><strong>只作线索，不判定</strong></td></tr></tbody></table>
+<h3 id="2-1-为什么-s3-不做成-finding">2.1 为什么 S3 不做成 finding<a class="anchor" href="#2-1-为什么-s3-不做成-finding" aria-label="锚点">#</a></h3>
+<p>实测 726 条原始命中：剔除示例占位 4、绝对路径 1、<strong>搬迁后仍可达 136</strong>，<br>余下 159 条候选——<strong>精度仅 21.9%</strong>。</p>
+<p>噪声的来源不是判据写得不好，而是<strong>文档里的命令行示例天然包含大量已过时<br>但仍有教学意义的历史命令</strong>。一份 2026-06 的设计文档写<br><code>node --test tests/services/foo.test.js</code>，那个测试文件后来搬了家或改名了，<br>这属于文档的历史属性，不是需要修的错。</p>
+<p>仓库引「公理 A4：误报比漏报更贵」。把 78% 命中率的信号做成告警，<br>只会让剩下 22% 的真问题被淹没。故：<code>--list=code-path-lead</code> 可查，<br>默认不输出为 finding，仅 <code>stats.codePathLeads</code> 计数。</p>
+<hr>
+<h2 id="三-s2-已由既有守卫承担-不重复造">三、S2 已由既有守卫承担，不重复造<a class="anchor" href="#三-s2-已由既有守卫承担-不重复造" aria-label="锚点">#</a></h2>
+<p><code>check-repo-layout.js</code> 的 <strong><code>dangling-task</code></strong> 规则做的正是这件事，<br>且已做过充分的误报治理（通配符截断、占位符、测试夹具假名、尖括号形式<br>四类排除，见其源码注释）。它实测报出 101 条悬空目标，其中包括<br><code>[DESIGN-A2A-001]</code> 的三条 <code>npm run test:a2a:*</code>。</p>
+<p>本规则<strong>不重复实现</strong>，只在文档里写明分工。理由：<code>[DESIGN-ARCH-111]</code><br>的绑定层要求「门成员资格从登记表派生」——同一判据有两个执行器，<br>会出现两份口径不一致的真源。</p>
+<hr>
+<h2 id="四-这一条如何覆盖-代码先走-文档没跟上">四、这一条如何覆盖「代码先走、文档没跟上」<a class="anchor" href="#四-这一条如何覆盖-代码先走-文档没跟上" aria-label="锚点">#</a></h2>
+<p><code>[DESIGN-DOC-004]</code> §四实测证伪了 git 时间戳信号（同 commit 配对 80% 是假阳性），<br>因此「代码更新了但文档没跟上」在 DOCS-005 之下只能人工判定。</p>
+<p><strong>本文给出的是另一条路：让文档持续自证。</strong></p>
+<p>只要文档写下的是<strong>可逐字比对的字面量</strong>，那么无论代码什么时候变，<br>「文档说的这个端点现在还在吗」都是一个可以随时回答的问题。<br>本守卫每次运行都重新回答一遍——<strong>代码先走的方向因此不再依赖时序推断</strong>。</p>
+<p>反过来说：<strong>数值类主张</strong>（<code>ARCH-020</code> 声称 R1=28 而实跑 R1=9）<br>仍然无法机检——文档没写下可核对的字面量，只写了一个数字。<br>这类需要人或专门的执行器（<code>archDebtScan.js</code> 本就是那个执行器，<br>问题在于文档的读数没跟着更新），不在本文射程。</p>
+<hr>
+<h2 id="五-落地阶段与升阶">五、落地阶段与升阶<a class="anchor" href="#五-落地阶段与升阶" aria-label="锚点">#</a></h2>
+<p><code>STAGE = 'S1'</code>：观察者，只记录不阻断、恒 exit 0（<code>[DESIGN-PROCESS-002]</code> PP-1）。<br>升阶须同时改三处：<code>scripts/ci/check-doc-claims.js</code> 的 <code>STAGE</code>、<br><code>RULES-REGISTRY.json</code> 中 <code>DOCS-006</code> 的 <code>severity</code>、<code>FEATURE-OWNERSHIP.json</code><br>中 <code>doc-claims-guard</code> 的 <code>stage</code>。一次一阶（PP-6），<strong>由人决定</strong>。</p>
+<p><code>severity</code> 必须显式写 <code>advisory</code>——<code>check-rollout-stage.js:197</code> 的 PP-3<br>会复算 <code>gateStrength()</code>，未声明时 P1 会派生为 blocking 而报 error。</p>
+<hr>
+<h2 id="六-怎么用">六、怎么用<a class="anchor" href="#六-怎么用" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">npm run check:doc-claims        <span class="hljs-comment"># 人读摘要（恒 exit 0）</span>
+npm run check:doc-claims:json   <span class="hljs-comment"># 机读</span>
+npm run check:doc-claims:list   <span class="hljs-comment"># 全量端点主张清单</span>
+node scripts/ci/check-doc-claims.js --list=code-path-lead   <span class="hljs-comment"># 路径类线索（不作判定）</span></code></pre>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/10_规范/DESIGN-DOC/[DESIGN-DOC-004] 文档实现状态标注规范.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-DOC-004] 文档实现状态标注规范</div></a><a class="next" href="../../../../docs/html/10_规范/DESIGN-DOC/[DESIGN-DOC-006] 文档数值主张校验规范.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-DOC-006] 文档数值主张校验规范</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/10_规范/DESIGN-DOC/[DESIGN-DOC-005] 文档可执行主张校验规范.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>

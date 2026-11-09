@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: [DESIGN-DOC-004] 文档实现状态标注规范.md -->
+<title>[DESIGN-DOC-004] 文档实现状态标注规范 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>10_规范<span class="sep">›</span>DESIGN-DOC<span class="sep">›</span>[DESIGN-DOC-004] 文档实现状态标注规范</div>
+      <header class="hero reveal"><h1>[DESIGN-DOC-004] 文档实现状态标注规范</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-doc-004-文档实现状态标注规范">[DESIGN-DOC-004] 文档实现状态标注规范</a></li><li class="lvl-2"><a href="#一-要解决的问题-仓库里没有任何东西能回答-谁先谁后">一、要解决的问题：仓库里没有任何东西能回答「谁先谁后」</a></li><li class="lvl-2"><a href="#二-硬线-标记必须与实现一致">二、硬线：标记必须与实现一致</a></li><li class="lvl-2"><a href="#二之一-适用范围-标记只对-提出设计-规范并声称落码-的文档有意义">二之一、适用范围：标记只对「提出设计/规范并声称落码」的文档有意义</a></li><li class="lvl-2"><a href="#三-判据-锚定路径存在性-信号-a">三、判据：锚定路径存在性（信号 A）</a></li><li class="lvl-3"><a href="#3-0-三个状态值">3.0 三个状态值</a></li><li class="lvl-3"><a href="#3-1-显式排除的误报来源">3.1 显式排除的误报来源</a></li><li class="lvl-3"><a href="#3-2-三条必须写在代码里的判据细节">3.2 三条必须写在代码里的判据细节</a></li><li class="lvl-2"><a href="#四-为什么不用-git-时间戳判先后">四、为什么不用 git 时间戳判先后</a></li><li class="lvl-2"><a href="#五-落地阶段与升阶">五、落地阶段与升阶</a></li><li class="lvl-2"><a href="#六-怎么用">六、怎么用</a></li><li class="lvl-2"><a href="#七-首轮收口结果-2026-10-18">七、首轮收口结果（2026-10-18）</a></li><li class="lvl-2"><a href="#八-覆盖面与其局限-不夸大">八、覆盖面与其局限（不夸大）</a></li><li class="lvl-3"><a href="#8-1-批量补标的判据-可复核-非猜测">8.1 批量补标的判据（可复核，非猜测）</a></li></ul></nav>
+      <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: todo --&gt;<br>&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;</p>
+<blockquote><p><strong>标记依据</strong>：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。</p></blockquote>
+<h1 id="design-doc-004-文档实现状态标注规范">[DESIGN-DOC-004] 文档实现状态标注规范<a class="anchor" href="#design-doc-004-文档实现状态标注规范" aria-label="锚点">#</a></h1>
+<blockquote><p><strong>规则 ID</strong>：<code>DOCS-005</code>　<strong>域</strong>：DOCS　<strong>门档</strong>：pr　<strong>优先级</strong>：P1<br><strong>执行面</strong>：<code>scripts/ci/check-doc-drift.js</code>（S1 观察者，恒 exit 0）<br><strong>本文是语义真源</strong>；机器可读的机制登记在 <code>docs/10_规范/registry/RULES-REGISTRY.json</code><br>与 <code>docs/10_规范/registry/FEATURE-OWNERSHIP.json</code>。</p></blockquote>
+<!-- RULES-REGISTRY: DOCS-005 -->
+<hr>
+<h2 id="一-要解决的问题-仓库里没有任何东西能回答-谁先谁后">一、要解决的问题：仓库里没有任何东西能回答「谁先谁后」<a class="anchor" href="#一-要解决的问题-仓库里没有任何东西能回答-谁先谁后" aria-label="锚点">#</a></h2>
+<p>本仓 991 份文档里只有 <strong>127 份</strong>带 <code>&lt;!-- IMPL-STATUS: ... --&gt;</code> 标记，<br>而<strong>没有任何脚本消费该标记</strong>（grep 全 <code>scripts/</code> 零命中）。也就是说<br>「这份设计落码了没有」从来只是一句人工约定，没有任何东西会因它说错而报警。</p>
+<p>它已经说错了，且不是个别：</p>
+<table><thead><tr><th>文档</th><th>标记</th><th>实情</th></tr></thead><tbody><tr><td><code>[DESIGN-ARCH-131]</code></td><td>首行 <code>done</code></td><td>同一文件第 4 行写「设计提案（未落地）」，第 597 行写「本文档为设计提案，未落地任何代码」；三棵代码树 grep 0 命中</td></tr><tr><td><code>[DESIGN-ARCH-030]</code></td><td><code>done</code></td><td>整套实现（<code>self_healer.js</code>、<code>build.sh</code>、16 例测试、<code>ProgressRenderer</code>）已从仓库消失</td></tr><tr><td><code>[DESIGN-ARCH-001]~[049]</code></td><td>42 篇中 35 篇 <code>done</code></td><td>该标记与实际漂移严重脱节，把 <code>done</code> 当可信信号会踩上面几条</td></tr></tbody></table>
+<p><strong>判据不是「有没有用 AI」，是「标记与代码是否一致」。</strong> 本规范只解决这一件事。</p>
+<hr>
+<h2 id="二-硬线-标记必须与实现一致">二、硬线：标记必须与实现一致<a class="anchor" href="#二-硬线-标记必须与实现一致" aria-label="锚点">#</a></h2>
+<blockquote><p><strong>一份文档标 <code>IMPL-STATUS: done</code>，它声称的实现路径就必须在仓库中真实存在。</strong><br>标 <code>todo</code> 的文档可以写尚不存在的路径——那是规划，不是漂移。</p></blockquote>
+<p>违反者由 <code>check-doc-drift.js</code> 报 <code>impl-status-done-but-missing</code>。</p>
+<p><strong>为什么单独立这条</strong>：本仓此前 93 条规则全部守「仓库内部自洽」，<br>没有一条检查「文档声称的东西是否还在」。一个恒被治理的内部 + 一个从不被测量的外部，<br>正是「治理通过率高但文档不可信」的结构性成因。</p>
+<hr>
+<h2 id="二之一-适用范围-标记只对-提出设计-规范并声称落码-的文档有意义">二之一、适用范围：标记只对「提出设计/规范并声称落码」的文档有意义<a class="anchor" href="#二之一-适用范围-标记只对-提出设计-规范并声称落码-的文档有意义" aria-label="锚点">#</a></h2>
+<p><code>IMPL-STATUS</code> 回答的是「这份设计落码了没有」。对<strong>索引页、修仙学AI 叙事章节、<br>事后报告、立项/概念科普</strong>这类文档，这个问题<strong>本身不成立</strong>——它们不描述实现。<br>给它们硬塞 <code>done</code>/<code>todo</code> 只会制造几百条虚假声明，且这些声明永远无人复核。</p>
+<p>故守卫按板块声明适用范围（实测 993 份 md）：</p>
+<table><thead><tr><th>分类</th><th>份数</th><th>处理</th></tr></thead><tbody><tr><td><strong>适用</strong>：<code>03_DESIGN_设计/</code> + <code>10_规范/</code>，去掉 <code>00_INDEX_*</code> 与规则卡</td><td>329</td><td>必须标注，参与漂移判定</td></tr><tr><td><strong>不适用</strong>：<code>00_INDEX_*</code> 索引页（即便在适用板块内）</td><td>20</td><td>不要求、也不判</td></tr><tr><td><strong>不适用</strong>：规则卡（<code>docs:rules-cards</code> 从登记表生成的渲染产物）</td><td>97</td><td>不要求、也不判</td></tr><tr><td><strong>不适用</strong>：报告 / 修仙学AI / 立项科普 / 素材</td><td>547</td><td>不要求、也不判</td></tr></tbody></table>
+<p>「不适用」不是免责，而是<strong>明确写下这件事无需标记</strong>，好过留一个<br>「不知道它算不算」的模糊地带。若日后某类文档（如运维手册）开始声称落码，<br>再按同一判据纳入适用范围即可。</p>
+<p>范围内未标注者单列 <code>impl-status-missing-in-scope</code>——<strong>缺标记不是错，是账未清</strong>，<br>故不并入漂移 finding，只作为待补清单暴露。</p>
+<hr>
+<h2 id="三-判据-锚定路径存在性-信号-a">三、判据：锚定路径存在性（信号 A）<a class="anchor" href="#三-判据-锚定路径存在性-信号-a" aria-label="锚点">#</a></h2>
+<p>从文档反引号里抽出<strong>根锚定</strong>路径，逐条判其在仓库中是否存在。<br>搬迁过路径的，先过 2026-10-05 方案 P 的 7 组前缀映射，再退到同名兜底<br>（只在 <code>scripts/</code> <code>entries/</code> <code>works/</code> 子树内找，且必须<strong>唯一命中</strong>）。</p>
+<p><strong>实测（2026-10-18 首轮）</strong>：991 份 md、352 条候选路径，映射后仍缺失 <strong>61 条</strong>；<br>其中标 <code>done</code> 的 <strong>54 条</strong>、标 <code>todo</code> 的 <strong>7 条</strong>。<br><code>done</code> 与 <code>todo</code> 的这个不对称就是它有区分力的证据——<br>若两者相当，则标记不携带信息，本守卫无意义。</p>
+<h3 id="3-0-三个状态值">3.0 三个状态值<a class="anchor" href="#3-0-三个状态值" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>状态</th><th>含义</th><th>路径缺失是否算漂移</th></tr></thead><tbody><tr><td><code>done</code></td><td>设计已落码，正文所列实现路径应当存在</td><td><strong>算</strong> —— 这正是本守卫抓的东西</td></tr><tr><td><code>todo</code></td><td>尚未落码（调研 / 提案 / 规划）</td><td>不算：写尚不存在的路径是规划本身</td></tr><tr><td><code>superseded</code></td><td>曾落码，实现已不在仓库；文档保留为设计记录</td><td>不算，但单列 <code>impl-status-superseded-historical</code> 供审计追溯</td></tr></tbody></table>
+<p><code>superseded</code> 是 2026-10-18 收口时新增的第三态：它让「实现曾存在但已被删」<br>与「本就没实现」不再共用一个 <code>todo</code>，从而<strong>保住 <code>done</code> 归零这个可判定的收口信号</strong>。</p>
+<h3 id="3-1-显式排除的误报来源">3.1 显式排除的误报来源<a class="anchor" href="#3-1-显式排除的误报来源" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>排除项</th><th>理由</th></tr></thead><tbody><tr><td><code>.khy</code> / <code>.khyos</code> / <code>.zcode</code> / <code>.claude</code> / <code>node_modules</code></td><td>agent 基础设施与本机态；<code>.khy</code>/<code>.khyos</code> 按 <code>[DESIGN-LAY-007]</code> 是 gitignore 的非交付面</td></tr><tr><td>含空格 / <code>*</code> / Windows 反斜杠的 token</td><td>不是可核验的仓内路径</td></tr><tr><td><strong>命名模板</strong>：<code>&lt;域&gt;.js</code>、<code>{ToolLines,ProcessGroup}.js</code>、<code>...</code></td><td>给读者看的占位写法，判它存在永远是假的</td></tr><tr><td><code>docs/html/</code></td><td>md 的孪生构建产物，同一内容会双报</td></tr><tr><td>相对片段（<code>src/cli/router.js</code>、<code>failsafe/errorCodes.js</code>）</td><td>无根锚点，判不出它指向谁</td></tr><tr><td>同名兜底命中多处</td><td>判不出来，不算 finding</td></tr></tbody></table>
+<h3 id="3-2-三条必须写在代码里的判据细节">3.2 三条必须写在代码里的判据细节<a class="anchor" href="#3-2-三条必须写在代码里的判据细节" aria-label="锚点">#</a></h3>
+<p>它们各自都造成过<strong>假阴性</strong>，即漏掉本守卫最该抓的那类漂移，<br>且都是靠拿已确证的样本反查才发现的：</p>
+<ol><li><strong>搬迁映射必须落到真实存在的文件</strong>，不能只判前缀目录存在。</li></ol>
+<p>否则 <code>packaging/self-heal/build.sh</code> 会因 <code>packaging/</code> 已整体搬到 <code>works/ship/</code><br>   而被判为「已搬迁、存在」，而那份实现其实<strong>在搬迁中丢了</strong>。</p>
+<ol><li><strong>锚定判定必须在搬迁映射之后</strong>，不能放在前面。</li></ol>
+<p><code>packaging/</code> 早已不在仓库根，先锚定会把它当相对片段直接丢掉。</p>
+<ol><li><strong>同名兜底必须覆盖 <code>runtime/</code> <code>delivery/</code> <code>apps/</code></strong>，不能只搜</li></ol>
+<p><code>scripts/</code> <code>entries/</code> <code>works/</code>。domain 化把 <code>src/services/X.js</code> 拆到了<br>   <code>src/services/domain/&lt;域&gt;/X.js</code>——实测 10 条（<code>budgetExecutor.js</code>、<br>   <code>distiller.js</code>、<code>sidebarRail.js</code>、<code>ccMcpBridge.js</code> 等）正是这样被误判成<br>   「实现消失」，而它们的实现其实都在。</p>
+<p>第三条同时把守卫的运行时间从 14s 降到 &lt;1s（一次扫描建索引，供全批复用）。</p>
+<hr>
+<h2 id="四-为什么不用-git-时间戳判先后">四、为什么不用 git 时间戳判先后<a class="anchor" href="#四-为什么不用-git-时间戳判先后" aria-label="锚点">#</a></h2>
+<p>第一版设计的主信号是「同一 commit 改了代码却没改文档」。<strong>实测证伪</strong>：</p>
+<pre><code>both=12  codeOnly=41  docOnly=99  neither=148
+41 笔 codeOnly 里 33 笔（80%）在随后 5 笔内就补上了文档提交</code></pre>
+<p>即该守卫的主要命中对象<strong>正是本仓明文规定的工作流本身</strong><br>（先提交代码、另起一笔落账补文档，见 <code>[DESIGN-PROCESS-001]</code>）。<br>一个把仓库既定约定当主要输出的守卫，唯一教会人的事就是忽略它。</p>
+<p>另有三条机械死因，任一条都能让信号恒空：</p>
+<ul><li><code>pre-commit</code> 时 commit 尚不存在，必须 <code>--cached</code>；</li><li>merge commit 上 <code>git diff-tree</code> 静默返回空，而 CI 的 <code>pull_request</code></li></ul>
+<p>checkout 落在 <code>refs/pull/N/merge</code>；</p>
+<ul><li>本仓对象库 <code>fsck</code> 有洞（22 条 missing，8 个分支推不出去）。</li></ul>
+<p><strong>故 v1 不使用任何依赖 git 历史的信号。</strong> 判据改为纯文件系统操作，<br>对上述三类故障全部免疫，全仓扫描 &lt;15s。</p>
+<hr>
+<h2 id="五-落地阶段与升阶">五、落地阶段与升阶<a class="anchor" href="#五-落地阶段与升阶" aria-label="锚点">#</a></h2>
+<p><code>STAGE = 'S1'</code>：<strong>观察者，只记录不阻断，恒 exit 0</strong>。<br>这是 <code>[DESIGN-PROCESS-002]</code>（<code>PROCESS-006</code>）四阶段制的第一阶，<br><strong>不得直接进门禁档</strong>（PP-1）。</p>
+<p><strong>升阶是人的决定，不是脚本的决定。</strong> 一次只升一阶（PP-6），须同时改三处：</p>
+<table><thead><tr><th>#</th><th>位置</th></tr></thead><tbody><tr><td>1</td><td><code>scripts/ci/check-doc-drift.js</code> 的 <code>STAGE</code> 常量</td></tr><tr><td>2</td><td><code>RULES-REGISTRY.json</code> 中 <code>DOCS-005</code> 的 <code>severity</code></td></tr><tr><td>3</td><td><code>FEATURE-OWNERSHIP.json</code> 中 <code>doc-drift-guard</code> 的 <code>stage</code></td></tr></tbody></table>
+<p>毕业看<strong>样本量不看时间</strong>：S1→S2 需 ≥200 条样本且无解释不了的样本；<br>S2→S3 需 ≥50 条提示后误报率 &lt;10%；S3→S4 需 ≥20 次真实拦截且豁免率 &lt;20%。</p>
+<blockquote><p>⚠ <strong><code>severity</code> 必须显式写 <code>advisory</code></strong>。<code>check-rollout-stage.js:197</code> 的 PP-3<br>会<strong>复算</strong> ruleguard 的 <code>gateStrength()</code>，未声明 severity 时 P1 会<strong>派生</strong>成<br>blocking 而报 error。「没写 severity」与「写了 advisory」字面完全不同、效果可能一样。</p></blockquote>
+<p><strong>S1 期间请勿据本守卫批量改文档</strong>：它有约 10% 已知误报（§3.1），<br>且 864 份无标记文档完全不在其视野内。它的用途是<strong>给出候选清单供人工判断</strong>，<br>不是自动裁决。</p>
+<hr>
+<h2 id="六-怎么用">六、怎么用<a class="anchor" href="#六-怎么用" aria-label="锚点">#</a></h2>
+<pre><code class="language-bash">npm run check:doc-drift          <span class="hljs-comment"># 人读摘要（恒 exit 0）</span>
+npm run check:doc-drift:json     <span class="hljs-comment"># 机读（stats + findings）</span>
+npm run check:doc-drift:list     <span class="hljs-comment"># 全量「标 done 但路径缺失」名单</span></code></pre>
+<hr>
+<h2 id="七-首轮收口结果-2026-10-18">七、首轮收口结果（2026-10-18）<a class="anchor" href="#七-首轮收口结果-2026-10-18" aria-label="锚点">#</a></h2>
+<p>首轮 61 条缺失按「能不能机械修」分四类，逐类处置：</p>
+<table><thead><tr><th>类</th><th>条数</th><th>处置</th><th>依据</th></tr></thead><tbody><tr><td>误报：命名模板 / <code>node_modules</code></td><td>7</td><td>改守卫排除</td><td><code>&lt;域&gt;.js</code> 是占位写法，判它存在永远为假</td></tr><tr><td>路径已迁，仓内唯一同名</td><td>6</td><td>改文档指向真身</td><td><code>archDebtScan.js</code> → <code>runtime/node/backend/scripts/</code> 等</td></tr><tr><td>domain 化后路径变更</td><td>10</td><td>改守卫同名兜底覆盖面</td><td>实现其实都在 <code>domain/&lt;域&gt;/</code> 下</td></tr><tr><td>实现确实不在仓库</td><td>38</td><td>据实改标记 + 写明原因</td><td>见下</td></tr></tbody></table>
+<p>最后一类又分两种，<strong>改法不同</strong>：</p>
+<ul><li><strong><code>todo</code>（2 份）</strong>：文档自述就是「调研 / 提案 / 借鉴清单 / 未实施任何代码改动」，</li></ul>
+<p>原 <code>done</code> 是误标 → 改 <code>todo</code>。</p>
+<ul><li><strong><code>superseded</code>（10 份）</strong>：文档自称已实现、实现却不在仓库 → 改 <code>superseded</code>，</li></ul>
+<p>文档保留为设计记录，并在正文补「标记校正 + 原因」。</p>
+<p><strong>终态</strong>：<code>done</code> 类缺失 <strong>0 条</strong>；<code>superseded</code> 26 处历史路径（预期，单列可查）；<br><code>todo</code> 12 处真规划。</p>
+<p><strong>这一轮改动本身的可信度检验</strong>：每一步都用已确证的样本反查过——<br><code>[DESIGN-ARCH-030]</code>（写 <code>done</code> 而实现已消失）现在被正确判为 <code>superseded</code>，<br><code>[DESIGN-ARCH-105]</code>（自述「未实施任何代码改动」却标 <code>done</code>）被判为 <code>todo</code>。</p>
+<hr>
+<h2 id="八-覆盖面与其局限-不夸大">八、覆盖面与其局限（不夸大）<a class="anchor" href="#八-覆盖面与其局限-不夸大" aria-label="锚点">#</a></h2>
+<p>第二轮补标后（2026-10-18）：</p>
+<table><thead><tr><th>覆盖</th><th>不覆盖</th></tr></thead><tbody><tr><td>适用范围内 <strong>330 份文档 100% 已标注</strong>，其中 <code>done</code> 类漂移 <strong>0</strong></td><td><strong>665 份范围外文档</strong>（索引页 / 规则卡 / 报告 / 叙事 / 科普）——按 §二之一明确判定为不适用</td></tr><tr><td>路径级漂移（实现消失、路径搬迁）</td><td><strong>运行读数类漂移</strong>：需重跑才能得到的数值（如 <code>[DESIGN-ARCH-020]</code> 声称 R1=28 而实跑 R1=9）——须白名单登记后才可跑</td></tr><tr><td>三种状态（<code>done</code> / <code>todo</code> / <code>superseded</code>）分别独立报告</td><td>命令内路径类主张（实测精度 21.9%，见 <code>[DESIGN-DOC-005]</code> §2.1，只作线索）</td></tr><tr><td>—</td><td>212 份保守标 <code>todo</code> 的文档，其真实状态<strong>仍需人工复核</strong>——批量补标只保证「不撒谎」，不保证「判对了」</td></tr></tbody></table>
+<blockquote><p>⚠ <strong>本节经两次订正——两次都是「断言某类漂移不可机检」被实测推翻。</strong></p>
+<p><strong>第一次</strong>：初版断言「内容级漂移不在射程」。已被 <strong><code>DOCS-006</code> /<br><code>check-doc-claims.js</code></strong> 覆盖（见 <a href="[DESIGN-DOC-005]%20%E6%96%87%E6%A1%A3%E5%8F%AF%E6%89%A7%E8%A1%8C%E4%B8%BB%E5%BC%A0%E6%A0%A1%E9%AA%8C%E8%A7%84%E8%8C%83.html"><code>[DESIGN-DOC-005]</code></a>）：<br>文档写下的端点字面量若在源码中查无此串即判漂移，首轮 8 条人工核实 8/8 为真。</p>
+<p><strong>第二次</strong>：二版断言「纯数值类主张仍无自动机制」。<strong>这一条也已被推翻</strong>——<br>文档写下 <code>&lt;常量名&gt; = &lt;值&gt;</code> 时，文档与代码说的是<strong>同一个名字</strong>，<br>这就给了机器一个可逐字比对的锚点。<strong><code>DOCS-007</code> / <code>check-doc-numbers.js</code></strong><br>（见 <a href="[DESIGN-DOC-006]%20%E6%96%87%E6%A1%A3%E6%95%B0%E5%80%BC%E4%B8%BB%E5%BC%A0%E6%A0%A1%E9%AA%8C%E8%A7%84%E8%8C%83.html"><code>[DESIGN-DOC-006]</code></a>）覆盖该类：<br>首轮 83 处主张、43 处可判定、<strong>10 处不符，10/10 人工核实为真</strong>——<br>一个常量 <code>MAX_GATES</code> 在 8 份文档里被写成 220 或 227，代码真值是 237。</p>
+<p>「代码先走、文档没跟上」这一方向由 DOCS-006 与 DOCS-007 共同覆盖——<br>只要文档写的是可逐字比对的字面量，「它说的这个东西现在还是这样吗」<br>就随时可答，不依赖时序推断。</p>
+<p><strong>仍然无自动机制的</strong>：需重跑才能得到的运行读数（archDebtScan 的 R1/R3、<br>门禁退出码）——那要让文档获得执行权，须走白名单注册表。<br>以及纯叙述性数字（「20 条红线」，实测约 6900 处）——无对应字面量可比。</p></blockquote>
+<p><strong>一句话</strong>：本守卫把「标 done 但实现已消失」这一类变成可见并已收口归零；<br>端点级由 DOCS-006 接手；数值级由 DOCS-007 接手；<br>剩下的是<strong>运行读数类</strong>（需白名单）与 212 份 <code>todo</code> 的人工复核，<br>后者是<strong>待清的账</strong>，不是已完成的判定。</p>
+<h3 id="8-1-批量补标的判据-可复核-非猜测">8.1 批量补标的判据（可复核，非猜测）<a class="anchor" href="#8-1-批量补标的判据-可复核-非猜测" aria-label="锚点">#</a></h3>
+<p>对范围内未标注的文档，只用可核验的证据落标记，每份都在正文写明依据：</p>
+<table><thead><tr><th>判据</th><th>落状态</th><th>首轮份数</th></tr></thead><tbody><tr><td>路径主张全部可解析 <strong>且</strong> 文中自述「已实现/已落地/实现完成」</td><td><code>done</code></td><td>3</td></tr><tr><td>路径主张部分失效 <strong>且</strong> 自述已实现</td><td><code>superseded</code></td><td>0</td></tr><tr><td>其余（无自述实现 / 自述为调研提案 / 无任何路径主张）</td><td><code>todo</code>（保守）</td><td>299</td></tr><tr><td><code>00_INDEX_*</code> 索引页</td><td>不标（不适用）</td><td>20</td></tr></tbody></table>
+<p>首轮只有 3 份被判 <code>done</code>，因为判据要求<strong>路径证据与自述同时成立</strong>——<br>多数老文档自述缺失或自相矛盾，一律保守落 <code>todo</code>。<br><strong>宁可 299 份待复核，也不要 299 份虚假声明。</strong></p>
+<p><strong>第二轮人工复核的实测结论（2026-10-19）</strong>：把 212 份 <code>todo</code> 按同一判据重跑，<br><strong>证据充分（路径全可达 + 自述已实现 + 无规划语）的仍只有 2 份</strong>——<br><code>[DESIGN-ARCH-161]</code> 与 <code>[DESIGN-PROCESS-003]</code>，经读正文确认后升为 <code>done</code>。<br>其余分布：自述已实现但有路径不可达 2 份、无任何路径主张 84 份、证据不足 126 份。</p>
+<p><strong>即：首轮的保守判定经复核基本成立，不是判据太松。</strong></p>
+<p>复核中还修掉一个<strong>自我实现的假否定</strong>：批量补标时我写的「标记依据」行本身<br>含「调研 / 提案 / 规划」等词，分类器把自己的说明读成了文档的自述，<br>使 2 份本该升标的文档被误判。修法是分类前先剥掉该行——<br>任何自动化判据读自己的输出，都必须先隔离。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/10_规范/DESIGN-DOC/[DESIGN-DOC-003] README 内容规范.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-DOC-003] README 内容规范</div></a><a class="next" href="../../../../docs/html/10_规范/DESIGN-DOC/[DESIGN-DOC-005] 文档可执行主张校验规范.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-DOC-005] 文档可执行主张校验规范</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/10_规范/DESIGN-DOC/[DESIGN-DOC-004] 文档实现状态标注规范.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
