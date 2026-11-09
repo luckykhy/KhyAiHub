@@ -34,12 +34,15 @@ apps/khy-os-client-app/.dart_tool/
 .git-backup-*/
 
 # Android build artifacts leaked to repo root (never tracked)
+# 注意：只忽略仓库根目录下的泄漏目录；不加前导 / 会把 App 的
+# android/app/src/main/kotlin/ 源码一起忽略（MainActivity.kt 曾因此无法入库）。
 classes*.dex
 AndroidManifest.xml
 META-INF/
-kotlin/
-res/
-assets/
+/kotlin/
+/kotlin
+/res/
+/assets/
 resources.arsc
 DebugProbesKt.bin
 
@@ -214,6 +217,13 @@ dist-electron/
 
 apps/khyos-desktop/dist-electron/
 
+# 变体名的 Electron 构建产物（2026-10-25 实测补）。
+# 上面两条只写了精确目录名 `dist-electron/`，而打包/换包脚本实际会写出
+# `dist-electron-new/`、`dist-electron-pack/` 等变体名——规则没覆盖到，
+# 它们就一路躺在 `git status` 里等着被 `git add -A` 收进仓库。
+# 实测 `dist-electron-pack/` 是 146 个文件、770 MB 的 win-unpacked 产物。
+apps/khyos-desktop/dist-electron-*/
+
 # ── 体积防复发（2026-09-16 体积治理后补）────────────────────────────────
 # 本轮实测的膨胀源中，以下几类**当时未被任何忽略规则覆盖**，因此持续出现在
 # `git status` 里、并有被 `git add -A` 误收的风险。规则留下防复发。
@@ -312,6 +322,10 @@ apps/khy-os-client-app/android/app/src/main/assets/shizuku/*.apk
 .zcode/plans/plan-sess_*.md
 .zcode/plans/plan-sess_*.html
 .zcode/instability-report-*
+#   .zcode/commit-msg*.txt 与 .zcode/guard-runner.cjs —— ZCode 会话本地工件
+#   （提交信息草稿与本机会话守卫运行器），同 instability-report-* 先例，不入库。
+.zcode/commit-msg*.txt
+.zcode/guard-runner.cjs
 
 # --- 2026-10-02 W9′ 数据家迁入 works/data/（B档 §22 R1；本机态，gitignore 派生自 DATA-LOCATIONS roots.rel）---
 works/data/
@@ -335,6 +349,11 @@ apps/khyos-desktop/electron.vite.config.*.mjs
 #   产生 diff（out/main/index.js 一个文件就 +284/-10）。契约件是源码不是产物，
 #   故 git rm --cached 后整目录忽略。
 apps/khyos-desktop/out/
+#   delivery/brand/khyos-desktop/out/ —— 品牌 3D 桌面链路的逐场景帧与预览片
+#   （capture.mjs 落 out/frames/<sceneId>/*.png，一次全量采集近千个文件）。
+#   删了能由 capture + assemble 重建，登记见 BUILD-OUTPUTS.json 的
+#   khyos-desktop-frames 条目；dist/ 已被第 9 行的 dist/ 规则覆盖。
+delivery/brand/khyos-desktop/out/
 #   runtime/node/backend/Microsoft/ —— PowerShell ModuleAnalysisCache 遥测缓存，
 #   在仓内生成，与本仓无关。注意与已存在的 runtime/works/ 不是同一路径。
 runtime/node/backend/Microsoft/
@@ -359,3 +378,16 @@ apps/khyos-desktop/works/
 #   *.cpuprofile —— node --cpu-prof 的采样输出（repl / status / status2 三个），
 #   在仓内生成，与本仓无关。仓内无已跟踪 .cpuprofile，可安全全域罩。
 *.cpuprofile
+
+# --- 2026-11-09 全量整理收口 ---
+#   delivery/mobile/khy-os-client-app/third_party/ —— vendored 第三方树：
+#   llama.cpp 源码 96.9MB + models 77.2MB + quickjs 4.3MB，共 4285 个文件。
+#   它是构建期本地依赖（android/app/src/main/cpp/CMakeLists.txt 按路径引用），
+#   不入库；仓内该路径下无已跟踪文件。llama.cpp/.gitignore:72 的
+#   !models/ggml-vocab-*.gguf* 反忽略规则随之失效——那两个 .gguf（10.4/15MB）
+#   本来也过不了 pre-commit 的 >10MB 检查。
+delivery/mobile/khy-os-client-app/third_party/
+#   delivery/mobile/khy-os-client-app/android/app/.cxx-x/ —— CMake 原生构建缓存
+#   （CMakeCache.txt / .ninja_log / compiler ABI 探针），49.6MB / 306 个生成物，
+#   每次构建重写。注意与第 302 行的 !android/app/src/** 取回规则不同路径，不冲突。
+delivery/mobile/khy-os-client-app/android/app/.cxx-x/
