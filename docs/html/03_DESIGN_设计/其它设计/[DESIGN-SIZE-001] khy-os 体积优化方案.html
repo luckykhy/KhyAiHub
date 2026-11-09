@@ -59,6 +59,9 @@
 <table><thead><tr><th>操作</th><th>路径</th><th>省多少</th></tr></thead><tbody><tr><td>删除测试视频</td><td><code>docs/_ref/*/测试视频.mp4</code></td><td>-12 MB</td></tr></tbody></table>
 <h3 id="3-4-git-历史压缩">3.4 git 历史压缩<a class="anchor" href="#3-4-git-历史压缩" aria-label="锚点">#</a></h3>
 <pre><code class="language-bash">git gc --aggressive --prune=now
+&lt;!-- IMPL-STATUS: todo --&gt;
+&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;
+&gt; **标记依据**：13 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
 <span class="hljs-comment"># 预期从 326 MB → ~200 MB</span></code></pre>
 <hr>
 <h2 id="四-第二层-依赖替代-改配置-不改核心逻辑">四、第二层：依赖替代（改配置，不改核心逻辑）<a class="anchor" href="#四-第二层-依赖替代-改配置-不改核心逻辑" aria-label="锚点">#</a></h2>
