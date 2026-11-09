@@ -10,12 +10,18 @@ const crypto = require('crypto');
 
 const { startWatchdog } = require('../services/resourceGuard');
 
-// Common-floor application lives in constraints.js — the single home for the
-// floor text AND its gate/idempotence policy. The coordinator worker path is
-// the second injection seam alongside AgentTool.buildSubagentSystemPrompt.
+// Common-floor application and the execution-scope rule live in constraints.js —
+// the single home for those texts AND their gate/idempotence policy. The
+// coordinator worker path is the second injection seam alongside
+// AgentTool.buildSubagentSystemPrompt: without the scope rule here, the same
+// Agent entry point hands a coordinator-dispatched worker weaker range rules
+// (no "executor, not strategist" boundary) than a standalone sub-agent.
 let _applyCommonFloor = null;
+let _subagentExecutionScope = '';
 try {
-  _applyCommonFloor = require('../agents/constraints').applyCommonFloor;
+  const constraints = require('../agents/constraints');
+  _applyCommonFloor = constraints.applyCommonFloor;
+  _subagentExecutionScope = constraints.SUBAGENT_EXECUTION_SCOPE || '';
 } catch {
   /* constraints not available — workers keep their bare role prompt */
 }
@@ -52,9 +58,11 @@ function parseAgentOutput(raw) {
 }
 
 /**
- * Compose a worker's full prompt: the role system prompt (common floor
- * applied — gate/idempotence policy lives in constraints.applyCommonFloor),
- * the task, and the structured output contract. Pure; exported for tests.
+ * Compose a worker's full prompt: the sub-agent execution-scope rule, the role
+ * system prompt (common floor applied — gate/idempotence policy lives in
+ * constraints.applyCommonFloor), the task, and the structured output contract.
+ * Scope → floor → role mirrors AgentTool.buildSubagentSystemPrompt so both
+ * spawn seams give the sub-agent the same range rules. Pure; exported for tests.
  * @param {string} roleSystemPrompt - the role's own system prompt
  * @param {string} task - the worker's task description
  * @param {string} [outputContract] - defaults to OUTPUT_CONTRACT
@@ -67,11 +75,12 @@ function buildWorkerPrompt(
   outputContract = OUTPUT_CONTRACT,
   env = process.env
 ) {
-  const base = _applyCommonFloor
+  const floored = _applyCommonFloor
     ? _applyCommonFloor(roleSystemPrompt, env)
     : typeof roleSystemPrompt === 'string'
       ? roleSystemPrompt
       : '';
+  const base = _subagentExecutionScope ? `${_subagentExecutionScope}\n\n${floored}` : floored;
   return `${base}\n\nTask:\n${task}\n${outputContract}`;
 }
 
@@ -461,6 +470,20 @@ async function _executeWorker(worker, opts = {}) {
       const gateway = require('../services/gateway/aiGateway');
       const result = await gateway.generate(prompt);
       guard.touch();
+      // Honest failure envelope: the gateway returns {success:false, errorType,
+      // content:failure wall} instead of throwing. Record the failure instead of
+      // JSON.stringify-ing the envelope into worker.result as a fake completion.
+      // This path deliberately carries NO approval channel (headless fail-closed
+      // rejections from the delegation gate are the expected behavior).
+      if (result && typeof result === 'object' && (result.success === false || result.errorType)) {
+        worker.status = 'error';
+        worker.errorType = result.errorType || 'unknown';
+        worker.error = String(result.error || result.content || 'AI 请求失败');
+        worker.errorDetail = worker.error;
+        worker.completedAt = Date.now();
+        guard.done();
+        return;
+      }
       worker.result =
         typeof result === 'string' ? result : result.text || result.reply || JSON.stringify(result);
       worker.status = 'completed';
@@ -473,6 +496,9 @@ async function _executeWorker(worker, opts = {}) {
     const chatOpts = {
       _isFollowUp: true,
       effort: 'medium',
+      // Host approval channel (delegation gate inside the gateway funnel asks
+      // through it); absent in headless spawns — the gate then fails closed.
+      ...(opts.onControlRequest ? { onControlRequest: opts.onControlRequest } : {}),
     };
     if (preferredAdapter) {
       chatOpts.preferredAdapter = preferredAdapter;
@@ -525,6 +551,44 @@ async function _executeWorker(worker, opts = {}) {
     const result = await aiModule.chat(prompt, chatOpts);
     guard.touch(); // activity after AI call
 
+    // Honest failure envelope: aiModule.chat reports gateway failures as
+    // {success:false, errorType, reply:failure wall} instead of throwing.
+    // Mirror the catch-path closure below — the worker is NOT completed, the
+    // hallucination gate / taskBoard.completeTask must not run on a failure
+    // wall, and the mailbox loop is skipped by the status condition.
+    if (result && (result.success === false || result.errorType)) {
+      worker.status = 'error';
+      worker.errorType = result.errorType || 'unknown';
+      worker.errorDetail = String(result.reply || result.error || 'AI 请求失败');
+      worker.error = result.error || `AI 请求失败（${worker.errorType}）`;
+      worker.completedAt = Date.now();
+
+      if (worker._taskId) {
+        try {
+          const taskBoard = require('./taskBoard');
+          taskBoard.failTask(worker._taskId, worker.errorDetail.slice(0, 2000));
+        } catch {
+          /* best-effort */
+        }
+      }
+
+      try {
+        const hookSystem = require('../cli/hooks/hookSystem');
+        await hookSystem.trigger('SubAgentEnd', {
+          agentId: worker.id,
+          task: worker.task,
+          status: 'error',
+          error: worker.errorDetail,
+          durationMs: (worker.completedAt || Date.now()) - worker.startedAt,
+        });
+      } catch {
+        /* hooks are best-effort */
+      }
+
+      guard.done();
+      return;
+    }
+
     worker.result = result.reply || result.text || '';
     worker.parsedOutput = parseAgentOutput(worker.result);
     worker.tokens = result.tokenUsage?.totalTokens || 0;
@@ -544,8 +608,45 @@ async function _executeWorker(worker, opts = {}) {
         _isFollowUp: true,
         ...(preferredAdapter ? { preferredAdapter } : {}),
         ...(preferredModel ? { preferredModel } : {}),
+        ...(opts.onControlRequest ? { onControlRequest: opts.onControlRequest } : {}),
       });
       guard.touch();
+      // Honest failure closure for follow-ups, mirroring the initial-chat
+      // branch above: a failure wall must not be appended to worker.result as
+      // if the follow-up had been answered (gateway failure / delegation
+      // denial included — aiModule.chat reports those as envelopes, not throws).
+      if (followUp && (followUp.success === false || followUp.errorType)) {
+        worker.status = 'error';
+        worker.errorType = followUp.errorType || 'unknown';
+        worker.errorDetail = String(followUp.reply || followUp.error || 'AI 请求失败');
+        worker.error = followUp.error || `AI 请求失败（${worker.errorType}）`;
+        worker.completedAt = Date.now();
+
+        if (worker._taskId) {
+          try {
+            const taskBoard = require('./taskBoard');
+            taskBoard.failTask(worker._taskId, worker.errorDetail.slice(0, 2000));
+          } catch {
+            /* best-effort */
+          }
+        }
+
+        try {
+          const hookSystem = require('../cli/hooks/hookSystem');
+          await hookSystem.trigger('SubAgentEnd', {
+            agentId: worker.id,
+            task: worker.task,
+            status: 'error',
+            error: worker.errorDetail,
+            durationMs: (worker.completedAt || Date.now()) - worker.startedAt,
+          });
+        } catch {
+          /* hooks are best-effort */
+        }
+
+        guard.done();
+        return;
+      }
       worker.result += '\n---\n' + (followUp.reply || '');
       entry.acked = true;
       worker.mailbox.ackedSeq = Math.max(worker.mailbox.ackedSeq, entry.seq);
@@ -558,20 +659,28 @@ async function _executeWorker(worker, opts = {}) {
 
     // ── 幻觉验证门 (借鉴 Hermes Agent _verify_created_cards) ──────
     // 验证 worker 报告的产出是否真实存在
-    if (worker.result) {
-      const hallucinations = _detectHallucinations(worker.result, worker.id);
-      if (hallucinations.length > 0) {
-        worker._hallucinations = hallucinations;
-        // 注入警告到结果末尾
-        worker.result += '\n\n⚠ 幻觉检测: ' + hallucinations.map((h) => h.detail).join('; ');
-      }
+    const hallucinations = worker.result ? _detectHallucinations(worker.result, worker.id) : [];
+    if (hallucinations.length > 0) {
+      worker._hallucinations = hallucinations;
+      // Append the warning for audit visibility; whether it blocks DONE is the
+      // taskBoard evidence gate's call, not this detector's.
+      worker.result += '\n\n⚠ 幻觉检测: ' + hallucinations.map((h) => h.detail).join('; ');
     }
 
     // ── TaskBoard auto-complete ──────────────────────────────────────
     if (worker._taskId) {
       try {
         const taskBoard = require('./taskBoard');
-        taskBoard.completeTask(worker._taskId, worker.result?.slice(0, 2000) || '');
+        const evidence = (worker.result || '').slice(0, 2000);
+        const gate = taskBoard.completionGate(evidence, { hallucinations });
+        if (gate.ok) {
+          taskBoard.completeTask(worker._taskId, evidence, { hallucinations });
+        } else {
+          // Gate rejected (empty output / hallucination hit) → take the failure
+          // path so the task retries instead of landing done. The reason carries
+          // the hallucination list into result for audit.
+          taskBoard.failTask(worker._taskId, gate.reason.slice(0, 2000));
+        }
       } catch {
         /* best-effort */
       }
@@ -638,9 +747,18 @@ async function _executeWorker(worker, opts = {}) {
 async function _spawnProcessWorker(taskDescription, opts = {}) {
   const { ProcessAgent } = require('./processAgent');
 
+  // The child process feeds the TASK message straight into ai.chat with no
+  // in-process composition, so compose the same scope + floor + role + contract
+  // prompt here via buildWorkerPrompt — otherwise the process-mode worker starts
+  // with a bare task and none of the range rules the in-process path applies.
+  const roleKey = opts.role || 'coder';
+  const { AGENT_ROLES } = require('../services/cliAgentRunner');
+  const roleDef = AGENT_ROLES[roleKey] || AGENT_ROLES.general;
+  const prompt = buildWorkerPrompt(roleDef.systemPrompt, taskDescription);
+
   const currentDepth = opts.parentContext?.depth || 0;
-  const agent = new ProcessAgent(taskDescription, {
-    role: opts.role || 'coder',
+  const agent = new ProcessAgent(prompt, {
+    role: roleKey,
     timeoutMs: opts.timeout || WORKER_DEFAULTS.childTimeoutMs,
     maxHeapMB: opts.maxHeapMB,
     parentContext: opts.parentContext,

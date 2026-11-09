@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-165-QDS6PFAC
 'use strict';
 
 /**
@@ -134,11 +135,17 @@ function createAgenticHarness(options = {}) {
       estimateTokens(systemPrompt) +
       estimateTokens(userMessage);
 
-    // Task-driven read/search scope planning (opt-in, zero-intrusion). Decides
-    // WHAT to read and search from the task + the project's own `.ai/` map,
-    // with a hard budget + sufficiency stop — accurate, not omniscient.
+    // Task-driven read/search scope planning. Decides WHAT to read and search
+    // from the task + the project's own `.ai/` map, with a hard budget +
+    // sufficiency stop — accurate, not omniscient. Default-on: the plan now
+    // reaches the model through _buildLoopInput; KHY_CONTEXT_SCOPE=0 opts out.
     let scopePlan = null;
-    if (process.env.KHY_CONTEXT_SCOPE === '1' || process.env.KHY_CONTEXT_SCOPE === 'on') {
+    const scopePlanningEnabled = !['0', 'false', 'off', 'no'].includes(
+      String(process.env.KHY_CONTEXT_SCOPE || 'true')
+        .trim()
+        .toLowerCase()
+    );
+    if (scopePlanningEnabled) {
       try {
         scopePlan = await contextScopePlanner.planScope({
           task: userMessage,
@@ -837,6 +844,7 @@ function createAgenticHarness(options = {}) {
       // competitor (Claude Code, Cursor) can replicate this — khy-os's multi-vendor
       // gateway is the structural advantage.
       let crossModelVerifyReport = null;
+      let reflectionMemory = null;
       const cmvEnabled = !['0', 'false', 'off', 'no'].includes(
         String(process.env.KHY_CROSS_MODEL_VERIFY || 'true')
           .trim()
@@ -862,6 +870,59 @@ function createAgenticHarness(options = {}) {
 
           if (_cmvResult.performed) {
             crossModelVerifyReport = _cmvResult;
+
+            // ── Reflection capture: 复盘沉淀进 cross_session 记忆 ──
+            // Reflexion 动态记忆 + ExpeL insight 库:issues/suggestedFixes 此前只活在
+            // 回合内(remediation 修完即丢),下次同类任务从零开始踩同一个坑。这里把复盘
+            // 经 memoryTrigger 的 reflection 分类(质量门槛把守低质复盘)判值得记,再由
+            // memoryEngine.addStructuredMemory 落 cross_session——原子写/内容查重/tier
+            // 都在那条公共 API 内部,不改 memoryEngine 实现。门控 KHY_MEMORY_REFLECTION
+            // 默认关;全程 best-effort,沉淀失败绝不影响交付。
+            try {
+              const memoryTrigger = require('./memoryTrigger');
+              const decision = memoryTrigger.classifyReflection({
+                task: userMessage,
+                verdict: _cmvResult.verdict,
+                issues: _cmvResult.issues,
+                suggestedFixes: _cmvResult.suggestedFixes,
+                reviewModel: _cmvResult.reviewModel,
+              });
+              if (decision && decision.kind === 'reflection') {
+                const engine = require('./memoryEngine');
+                const write = engine.addStructuredMemory({
+                  type: decision.type,
+                  name: decision.name,
+                  description: decision.description,
+                  content: decision.note,
+                  tier: decision.tier,
+                });
+                if (write && write.success) {
+                  reflectionMemory = {
+                    action: write.action,
+                    name: decision.name,
+                    tier: decision.tier,
+                    issueCount: _cmvResult.issues.length,
+                    score: decision.score,
+                    filename: write.filename,
+                  };
+                }
+                if (onEvent) {
+                  onEvent({
+                    type: 'reflection_memory',
+                    action: (write && write.action) || 'failed',
+                    name: decision.name,
+                    tier: decision.tier,
+                    issueCount: _cmvResult.issues.length,
+                    score: decision.score,
+                  });
+                }
+              }
+            } catch (reflErr) {
+              // 复盘沉淀失败不影响交付(fail-soft)。
+              if (onEvent) {
+                onEvent({ type: 'reflection_memory_error', error: reflErr?.message });
+              }
+            }
 
             // If the cross-vendor reviewer found issues, trigger one remediation
             // round with the reviewer's feedback fed back to the primary model.
@@ -1376,6 +1437,7 @@ function createAgenticHarness(options = {}) {
               suggestedFixes: crossModelVerifyReport.suggestedFixes,
               stage: crossModelVerifyReport.stage,
               remediated: crossModelVerifyReport.issues.length > 0,
+              reflectionMemory,
             }
           : null,
         analytics: {
@@ -1807,17 +1869,50 @@ async function _tryAutoDecompose(userMessage, ctx) {
       });
     }
 
+    // Sub-agent file-side evidence back onto the loopResult face: the bridge only
+    // carries filesModified (AgentTool/index.js), the raw toolCallLog is dropped in
+    // both layers below it, and the delivery/verification gates read
+    // { tool, params.path } entries (EDIT_TOOL_RE) — so a hardcoded [] here leaves
+    // every file-side criterion and the verification gate with zero evidence.
+    const subtaskResults = result.subtaskResults || [];
+    const mergedToolCallLog = [];
+    for (const item of subtaskResults) {
+      for (const filePath of item?.result?.filesModified || []) {
+        mergedToolCallLog.push({ tool: 'editFile', params: { path: filePath } });
+      }
+    }
+    // orch.execute() wraps a self-reported failure as { success: true, result }
+    // (subAgentOrchestrator.js soft-failure path), so successCount/failCount alone
+    // cannot be trusted — the honest signal is subtaskResults[].result.success.
+    // Mapping it to errorType lets the existing runtime gate in
+    // buildHarnessDeliveryVerdict fail the run instead of passing it.
+    const subtaskFailed =
+      Number(result.failCount || 0) > 0 ||
+      subtaskResults.some((item) => item?.result?.success === false);
+    // OR-fold the per-subtask loop terminal flags (passed through by bp-1's
+    // _loopTerminalFlags) so the runtime gate's unfinished-signal face has
+    // something to read on this path too.
+    const TERMINAL_FLAG_KEYS = ['stopped', 'maxIterationsReached', 'truncated', 'timeLimitReached'];
+    const terminalFlags = {};
+    for (const key of TERMINAL_FLAG_KEYS) {
+      if (subtaskResults.some((item) => item?.result?.[key])) {
+        terminalFlags[key] = true;
+      }
+    }
+
     // Return loopResult-compatible shape
     return {
       finalResponse: mergedOutput,
-      toolCallLog: [],
+      toolCallLog: mergedToolCallLog,
       iterations: result.subtaskCount || 0,
       provider: 'orchestrator',
       decomposed: true,
       decomposePlan: plan,
-      subtaskResults: result.subtaskResults,
+      subtaskResults,
       successCount: result.successCount,
       failCount: result.failCount,
+      ...(subtaskFailed ? { errorType: 'subtask_failed' } : {}),
+      ...terminalFlags,
     };
   } catch (err) {
     // Decomposition failure is non-fatal — fall back to normal execution
@@ -1860,6 +1955,35 @@ function _buildLoopInput(packet) {
         packet.templateHint.instructions,
       ].join('\n')
     );
+  }
+
+  // The scope plan is the planner's answer to "what should I read/search for
+  // this task" — dropping it here is what bp-24 was: computed, then thrown away.
+  const scopePlan = packet.scopePlan;
+  if (scopePlan && scopePlan.readPlan) {
+    const scopeFiles = Array.isArray(scopePlan.readPlan.files) ? scopePlan.readPlan.files : [];
+    const scopeGreps =
+      scopePlan.searchPlan && Array.isArray(scopePlan.searchPlan.grepPatterns)
+        ? scopePlan.searchPlan.grepPatterns
+        : [];
+    if (scopeFiles.length > 0 || scopeGreps.length > 0) {
+      const lines = ['[System Context Scope]'];
+      if (scopeFiles.length > 0) {
+        lines.push('建议优先读取（这是够用的清单，不是候选清单）:');
+        scopeFiles.forEach((file, idx) => {
+          const reasons =
+            Array.isArray(file.reasons) && file.reasons.length > 0
+              ? ` — ${file.reasons.join('; ')}`
+              : '';
+          lines.push(`${idx + 1}. ${file.path}${reasons}`);
+        });
+      }
+      if (scopeGreps.length > 0) {
+        lines.push(`建议搜索: ${scopeGreps.join(', ')}`);
+      }
+      lines.push(`停止原因: ${scopePlan.readPlan.stopReason}; 置信度: ${scopePlan.readPlan.confidence}`);
+      sections.push(lines.join('\n'));
+    }
   }
 
   if (packet.contextRoute.route !== 'fits') {
@@ -2657,5 +2781,8 @@ module.exports = {
     _isRetryableLoopOutcome,
     _collectTemplateHint,
     _buildLoopInput,
+    // 自动分解的 loopResult 返回面是交付门/验证门的输入契约,只能整体驱动才复现得了
+    // (拆开测等于测一件复制品),故经同一逃生阀露出。
+    _tryAutoDecompose,
   },
 };

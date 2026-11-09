@@ -544,7 +544,46 @@ function claimTask(id, workerId, opts = {}) {
   return ok;
 }
 
-function completeTask(id, result) {
+/**
+ * Evidence gate in front of DONE — the coordinator lane's counterpart to hq's
+ * `review → done` hard gate.
+ *
+ * hq demands a non-empty evidence directory plus machine-checkable criteria
+ * before a task may flip to done (hqStore.reviewDoneBlockers, enforced on the
+ * write path in cli/handlers/hq.js). This lane used to write done for any
+ * non-null result, so "an AI self-report", "an empty string" and "a canned
+ * dispatch acknowledgement" were indistinguishable from finished work. Two
+ * narrow criteria, both required:
+ *   1. non-empty result — there is output to audit;
+ *   2. zero hallucination hits — nothing was claimed that does not exist.
+ *
+ * Pure function: judging and routing stay separate, so the caller decides
+ * completeTask vs failTask/requeue from `ok`. completeTask runs the same gate
+ * internally — the store does not trust the caller's own judgement.
+ *
+ * @param {string} result - the completion result about to be persisted
+ * @param {{hallucinations?: Array<{type:string,target:string,detail:string}>}} [opts]
+ * @returns {{ok: boolean, reason: string}}
+ */
+function completionGate(result, opts = {}) {
+  const text = result == null ? '' : String(result);
+  if (!text.trim()) {
+    return { ok: false, reason: '完成证据为空：没有可核对的产出，不标记 done' };
+  }
+  const hits = Array.isArray(opts.hallucinations) ? opts.hallucinations : [];
+  if (hits.length > 0) {
+    const detail = hits.map((h) => (h && h.detail) || String(h)).join('; ');
+    return { ok: false, reason: `幻觉检测命中 ${hits.length} 项：${detail}` };
+  }
+  return { ok: true, reason: '' };
+}
+
+function completeTask(id, result, opts = {}) {
+  const gate = completionGate(result, opts);
+  if (!gate.ok) {
+    _emitTaskEvent('task.complete_rejected', { id, reason: gate.reason });
+    return null;
+  }
   const rec = updateTask(id, {
     status: STATUS.DONE,
     result,
@@ -857,6 +896,7 @@ module.exports = {
   listTasks,
   claimTask,
   completeTask,
+  completionGate,
   failTask,
   requeueTask,
   deadLetterTask,
