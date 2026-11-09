@@ -500,9 +500,18 @@ object VfsBridge {
         val dir = File(real)
         if (!dir.exists()) throw VfsError(ERR_NOT_FOUND, "目录不存在：$vpath")
         if (!dir.isDirectory) throw VfsError(ERR_INVALID_PATH, "不是目录：$vpath")
-        val children = dir.listFiles()
-            ?: throw VfsError(ERR_DENIED, "无权限读取目录：$vpath")
-        val nodes = children.map { storageNode(context, it.absolutePath) }
+        var children = dir.listFiles()
+        if (children == null) {
+            // FUSE 层偶尔会对刚被媒体扫描碰过的目录瞬时返回 null：真机上偶发过一次
+            // 「无权限读取目录：/storage/emulated/0/Android/obb」，冷启动与手动重进
+            // 都正常，且代码里没有任何路径能把 obb 拼出来——查无实据的偶发，
+            // 唯一可能的产生点就是这里的 null。重试一次把这种瞬时抖动吸收掉；
+            // 仍为 null 才是真的读不动，那时报 denied 才是诚实的。
+            Thread.sleep(120)
+            children = dir.listFiles()
+        }
+        val nodes = (children ?: throw VfsError(ERR_DENIED, "无权限读取目录：$vpath"))
+            .map { storageNode(context, it.absolutePath) }
             .sortedWith(compareBy({ !it.isDirectory }, { it.name }))
         return mapOf("ok" to true, "nodes" to nodes.map { it.toMap() })
     }

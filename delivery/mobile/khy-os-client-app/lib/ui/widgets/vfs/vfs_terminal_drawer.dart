@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/services/shell_executor.dart';
 import '../../../core/vfs/vfs_service.dart';
+import '../../../core/vfs/vfs_terminal_command.dart';
 import '../../theme/design_tokens.dart';
 
 /// 终端抽屉。
@@ -261,25 +262,67 @@ class _VfsTerminalDrawerState extends State<VfsTerminalDrawer> {
   }
 
   Future<void> _run() async {
-    final command = _input.text.trim();
-    if (command.isEmpty || _busy) return;
+    final raw = _input.text.trim();
+    if (raw.isEmpty || _busy) return;
     setState(() => _busy = true);
     _input.clear();
 
-    // cwd 用 `cd <dir> && <命令>` 表达：这里没有 PTY 的会话态可依赖，
-    // 每条命令都得自己带上工作目录。目录名带空格时加引号。
-    final quotedCwd = "'${_cwd.replaceAll("'", "'\\''")}'";
-    final result = await ShellExecutor.exec('cd $quotedCwd && $command');
+    // `cd` 是 shell 内建，不在原生的允许清单里，所以在 Dart 侧就地处理成
+    // 「换 cwd」——顺带把目标路径归一化，让顶栏显示的 cwd 与实际落点一致。
+    final parsed = parseTerminalCommand(raw);
+    if (parsed.changesDirectory) {
+      final target = resolveTerminalPath(_cwd, parsed.targetDirectory ?? '');
+      final enterable = await _isDirectory(target);
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        if (enterable) {
+          _cwd = target;
+          _entries.add(_TerminalEntry(
+            command: raw,
+            output: '工作目录已切换到 $target',
+            ok: true,
+          ));
+        } else {
+          _entries.add(_TerminalEntry(
+            command: raw,
+            output: '无法切换到 $target：目录不存在或不可访问',
+            ok: false,
+          ));
+        }
+      });
+      return;
+    }
+
+    // cwd 用**独立参数**传，不拼成 `cd <dir> && cmd`：命令体里出现 `&&` 会被
+    // 原生的控制符禁令整体拒绝——真机实测，终端因此一条命令都发不出去。
+    final result = await ShellExecutor.execTerminal(
+      parsed.shellCommand,
+      cwd: _cwd,
+    );
 
     if (!mounted) return;
     setState(() {
       _busy = false;
       _entries.add(_TerminalEntry(
-        command: command,
+        command: parsed.shellCommand,
         output: '${result.stdout}${result.stderr}'.trim(),
         ok: result.success,
       ));
     });
+  }
+
+  /// 目标是不是一个能进的目录。
+  ///
+  /// 为什么要验：终端顶栏显示的 cwd 决定下一条命令的落点。显示一个进不去的目录，
+  /// 下一条命令就会在别处跑——用户看到的是「目录不对」，却查不出错在哪。
+  Future<bool> _isDirectory(String path) async {
+    try {
+      final node = await VfsService.instance.stat(path);
+      return node != null && node.isDirectory;
+    } catch (_) {
+      return false;
+    }
   }
 
   /// 把一段输出存成文件，落在当前目录——存完就能在文件管理器里直接打开。
