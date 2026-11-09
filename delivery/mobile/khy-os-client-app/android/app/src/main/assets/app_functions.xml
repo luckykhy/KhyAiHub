@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appfunctions>
+  <appfunction>
+    <function_id>com.khyos.khy_os_client.bridge.KhyAppFunctions#tools</function_id>
+    <enabled_by_default>true</enabled_by_default>
+    <description># description
+本桥的完整能力目录：分组列出全部工具，并对配了用法约束的工具附上
+富路由指令（什么时候用我、什么时候别用我、出错会怎样）。
+想知道「这个桥能干什么」或「该用哪个工具」时，先调它。
+
+**动词归一化**：你能做什么 / 有哪些工具 / 该用哪个 / 这个桥能干什么 → 本函数。
+
+# positive_samples
+- 你能对这台手机做什么
+- 有哪些工具可以用
+- 我想点个按钮，该用哪个
+
+# negative_samples
+- 现在屏幕上有什么 → ui_dump（要控件树）或 shot（要画面）
+- 设备现在什么状态 → info
+
+# return
+ok=true 给 groups[]，每组含 tools[]，每个工具有 name/what，
+配了 ROUTING 的还带 routing（多行路由指令）。没有 routing 键的
+工具表示没有额外用法约束，不是约束为空。</description>
+  </appfunction>
+  <appfunction>
+    <function_id>com.khyos.khy_os_client.bridge.KhyAppFunctions#info</function_id>
+    <enabled_by_default>true</enabled_by_default>
+    <description># description
+一次报全：设备型号、系统版本、无障碍服务是否连着、提权通道
+（sidecar / Shizuku）是否就绪、本轮剩余读取预算。
+**判断某个能力此刻能不能用，看这里，不要看工具目录**——目录说的是
+这个桥有什么，info 说的是这台设备现在什么状态，两者答的不是同一个问题。
+
+**动词归一化**：现在什么状态 / 无障碍开着吗 / 能提权吗 / 还能读多少 → 本函数。
+
+# positive_samples
+- 现在无障碍服务连上了吗
+- 提权通道就绪了吗
+- 还剩多少读取预算
+
+# negative_samples
+- 这个桥有哪些工具 → tools
+- 屏幕上有什么 → ui_dump
+
+# return
+ok=true 给 model/brand/device/sdk/ui/elevated/budget 等字段。
+ui=false 时所有界面工具会失败，那时先修无障碍，不要反复调 ui_dump。</description>
+  </appfunction>
+  <appfunction>
+    <function_id>com.khyos.khy_os_client.bridge.KhyAppFunctions#ping</function_id>
+    <enabled_by_default>true</enabled_by_default>
+    <description># description
+探活。回 pong，顺带证明这条通路是通的。
+
+**动词归一化**：在吗 / 通不通 / ping → 本函数。
+
+# positive_samples
+- ping 一下
+
+# negative_samples
+- 看能力状态 → info，ping 只证明活着不证明能用
+
+# return
+ok=true 给 pong。</description>
+  </appfunction>
+  <appfunction>
+    <function_id>com.khyos.khy_os_client.bridge.KhyAppFunctions#ui_dump</function_id>
+    <enabled_by_default>true</enabled_by_default>
+    <description># description
+导出当前界面的控件树：每个可交互节点的文本、content-desc、viewId、
+可点击/可编辑状态与屏幕坐标 bounds。这是所有界面操作的**第一步**——
+不知道控件在哪，ui_tap 就只能猜坐标，而猜错就是点到别的东西上。
+
+**动词归一化**：看界面 / 读屏幕 / 这个页面有什么 / 按钮在哪 /
+找一下输入框 / 控件树 / dump → 本函数。
+
+# positive_samples
+- 现在屏幕上有什么可以点的
+- 微信的输入框在哪里
+- 帮我看看这个页面有哪些按钮
+
+# negative_samples
+- 点一下登录按钮 → 先 ui_dump 拿到 bounds，再 ui_click（按文本）或 ui_tap（按坐标）
+- 现在屏幕上是什么内容 → 要「看懂」用 shot_b64 交给视觉模型；本函数只给结构与坐标，不给语义
+
+# return
+ok=true 时给 nodes[]（含 text/desc/viewId/clickable/editable/bounds）与窗口信息；
+节点数有上限，超出会标 truncated=true——那时按 bounds 分区再 dump，不要当成界面只有这么多。
+无障碍服务未连接时 ok=false，原因见 info 的 ui 字段。</description>
+  </appfunction>
+  <appfunction>
+    <function_id>com.khyos.khy_os_client.bridge.KhyAppFunctions#ui_click</function_id>
+    <enabled_by_default>true</enabled_by_default>
+    <description># description
+**按文本或描述找到控件并点它**，不用自己算坐标。内部就是 ui_dump 加一次
+ui_tap，所以它比手算坐标可靠：文本匹配不上时会明确说没找到，而不是点到一个
+碰巧在那个坐标的东西上。
+
+参数：text 是控件上可见的文字（优先）；id 是 resource-id，文字匹配不上时才
+用它。两者至少给一个。
+
+**动词归一化**：点一下 X / 点击 X 按钮 / 按一下 X / 选 X → 本函数。
+
+# positive_samples
+- 点一下「发送」
+- 点击登录按钮
+- 按一下右上角的更多
+
+# negative_samples
+- 点坐标 (540,1200) → 那是 ui_tap，本函数按文本找
+- 长按 X → ui_longpress
+- 在输入框里写字 → ui_type
+
+# return
+ok=true 已点到；ok=false 且 reason=not_found 表示文本没匹配上——这时先
+ui_dump 看真实文本（可能是 content-desc 而不是 text），不要反复重试同一个词。</description>
+  </appfunction>
+  <appfunction>
+    <function_id>com.khyos.khy_os_client.bridge.KhyAppFunctions#ui_tap</function_id>
+    <enabled_by_default>true</enabled_by_default>
+    <description># description
+按**屏幕坐标**点一下。只在已经知道坐标时用——坐标通常来自 ui_dump 的
+bounds，取中心点。不知道坐标就别用：猜坐标是最容易点到别的东西的一种方式。
+
+**动词归一化**：点这个坐标 / tap x y / 点屏幕这个位置 → 本函数。
+
+# positive_samples
+- 点 (540, 1200)
+- 点一下这个 bounds 的中心
+
+# negative_samples
+- 点一下「发送」→ ui_click，按文本比按坐标可靠
+- 滑动 → ui_swipe
+
+# return
+ok=true 已派发手势；ok=false 多为无障碍未连接或坐标越界。注意 ok=true
+只说明手势派出去了，不说明点中了想要的东西——要确认就再 ui_dump 一次。</description>
+  </appfunction>
+  <appfunction>
+    <function_id>com.khyos.khy_os_client.bridge.KhyAppFunctions#ui_swipe</function_id>
+    <enabled_by_default>true</enabled_by_default>
+    <description># description
+从 (x1,y1) 滑到 (x2,y2)，ms 可选。列表滚动、翻页、拉出抽屉都走它。
+
+**动词归一化**：滑动 / 上滑 / 下滑 / 左滑 / 右滑 / 滚动 / 翻到下一页 → 本函数。
+
+# positive_samples
+- 向上滑一下看更多
+- 把这个列表滚到底
+
+# negative_samples
+- 长按 X → ui_longpress
+- 点 X → ui_click
+
+# return
+ok=true 已派发。横滑条（ViewPager 一类）必须点**垂直中心**，点边缘会
+被当成纵向滚动——这是实测过的失败形态。</description>
+  </appfunction>
+  <appfunction>
+    <function_id>com.khyos.khy_os_client.bridge.KhyAppFunctions#ui_type</function_id>
+    <enabled_by_default>true</enabled_by_default>
+    <description># description
+往当前获得焦点的输入框写文字，**写完会回读校验**。空字符串表示清空。
+
+参数：text 是要写入的文字，不能为空。
+
+**动词归一化**：输入 X / 打字 / 写上 X / 填 X / 搜索 X → 本函数。
+
+# positive_samples
+- 在输入框里写「明天天气」
+- 把搜索框填成 khy-os
+
+# negative_samples
+- 点一下输入框 → 先用 ui_click 或 ui_tap 让它获得焦点，再本函数
+- 把文字发出去 → 本函数只写不发送；发送要另点发送键
+
+# return
+ok=true 且 verified=true 表示回读一致；verified=false 表示**写进去了但
+读回来不一样**——密码框会跳过回读（那时 verified 恒为 false，不是失败）。
+不要把 verified=false 当成已成功，也不要在没确认焦点时就反复写。</description>
+  </appfunction>
+  <appfunction>
+    <function_id>com.khyos.khy_os_client.bridge.KhyAppFunctions#ui_back</function_id>
+    <enabled_by_default>true</enabled_by_default>
+    <description># description
+系统返回键。关当前页、收起键盘、退出二级界面。
+
+**动词归一化**：返回 / 回去 / 关掉这个页面 / 收起键盘 → 本函数。
+
+# positive_samples
+- 返回上一页
+- 收起键盘
+
+# negative_samples
+- 回桌面 → ui_home
+- 看最近任务 → ui_recents
+
+# return
+ok=true 已派发。</description>
+  </appfunction>
+  <appfunction>
+    <function_id>com.khyos.khy_os_client.bridge.KhyAppFunctions#ui_home</function_id>
+    <enabled_by_default>true</enabled_by_default>
+    <description># description
+回桌面。不等同于结束任何进程。
+
+**动词归一化**：回桌面 / 回到主屏 / home → 本函数。
+
+# positive_samples
+- 回桌面
+
+# negative_samples
+- 返回上一页 → ui_back
+- 关掉这个 App → 本函数不结束进程，用 exec 配 pm force-stop（有安全底，需确认）
+
+# return
+ok=true 已派发。</description>
+  </appfunction>
+  <appfunction>
+    <function_id>com.khyos.khy_os_client.bridge.KhyAppFunctions#shot</function_id>
+    <enabled_by_default>true</enabled_by_default>
+    <description># description
+截屏并**存成文件**，返回路径、宽高、字节数。要「看懂屏幕上是什么」时，
+把路径交给视觉模型，不要用 shot_b64——后者会把一整张图塞进对话上下文。
+
+**动词归一化**：截图 / 截个屏 / 保存当前屏幕 → 本函数。
+
+# positive_samples
+- 截个屏保存下来
+- 把当前界面存成图片
+
+# negative_samples
+- 现在屏幕上是什么内容 → 要「理解」就 shot + 视觉模型；要「结构」就 ui_dump
+- 把图直接给我看 → 那是 shot_b64，仅在图很小且确实需要内联时用
+
+# return
+ok=true 给 path/width/height/bytes。path 在 /sdcard 之下，可直接 read。
+不解码、不上传、不记录。</description>
+  </appfunction>
+</appfunctions>

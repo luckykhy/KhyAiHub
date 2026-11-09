@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: AMOO-INTEGRATION.md -->
+<title>khy-os ↔ Amoo 集成说明 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../docs/index.html">首页</a><span class="sep">›</span>delivery<span class="sep">›</span>mobile<span class="sep">›</span>khy-os-client-app<span class="sep">›</span>khy-os ↔ Amoo 集成说明</div>
+      <header class="hero reveal"><h1>khy-os ↔ Amoo 集成说明</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#khy-os-amoo-集成说明">khy-os ↔ Amoo 集成说明</a></li><li class="lvl-2"><a href="#一-两边的真实形态-这是所有设计的前提">一、两边的真实形态（这是所有设计的前提）</a></li><li class="lvl-2"><a href="#二-三条通道-以及各自能干什么">二、三条通道，以及各自能干什么</a></li><li class="lvl-3"><a href="#通道-a-反代对话-已通-主力">通道 A：反代对话（已通，主力）</a></li><li class="lvl-3"><a href="#通道-b-桥的-39-个工具-已通-khy-os-自己用">通道 B：桥的 39 个工具（已通，khy-os 自己用）</a></li><li class="lvl-3"><a href="#通道-c-amoo-的设备通道-半通-最有价值但未打通">通道 C：Amoo 的设备通道（半通，最有价值但未打通）</a></li><li class="lvl-2"><a href="#三-模块地图-为-amoo-加的每一块在哪">三、模块地图（为 Amoo 加的每一块在哪）</a></li><li class="lvl-2"><a href="#四-注入给-amoo-的自描述-amooselfdesc">四、注入给 Amoo 的自描述（`AmooSelfDesc`）</a></li><li class="lvl-2"><a href="#五-已验证-未验证">五、已验证 / 未验证</a></li><li class="lvl-3"><a href="#已验证-真机">已验证（真机）</a></li><li class="lvl-3"><a href="#未验证-做不到">未验证 / 做不到</a></li><li class="lvl-3"><a href="#已知缺陷">已知缺陷</a></li><li class="lvl-3"><a href="#本表当前状态-2026-10-25-裁决">本表当前状态（2026-10-25 裁决）</a></li><li class="lvl-2"><a href="#六-下一步-把桥注册成-local-能力">六、下一步：把桥注册成 LOCAL 能力</a></li><li class="lvl-3"><a href="#6-1-已经试过并且-不通-的一条-android-16-appfunctions">6.1 已经试过并且**不通**的一条：Android 16 AppFunctions</a></li><li class="lvl-2"><a href="#七-怎么用-给下一个接手的人">七、怎么用（给下一个接手的人）</a></li><li class="lvl-2"><a href="#八-这次集成改出来的东西-按-为什么-归档">八、这次集成改出来的东西，按&quot;为什么&quot;归档</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="khy-os-amoo-集成说明">khy-os ↔ Amoo 集成说明<a class="anchor" href="#khy-os-amoo-集成说明" aria-label="锚点">#</a></h1>
+<blockquote><p>这份文档回答一个问题：<strong>khy-os 手机端和 Amoo 到底怎么互相找到、互相使唤、共享记忆。</strong><br>它同时是模块地图——这个 App 里为 Amoo 加的东西散在七八个模块，这份文档是它们的索引。</p>
+<p>真源原则：本文只记录<strong>已验证</strong>的事实。每条都标了验证方式（真机 / 单测 / 读码）。<br>未验证的一律进「未验证」节，不混进结论。</p></blockquote>
+<hr>
+<h2 id="一-两边的真实形态-这是所有设计的前提">一、两边的真实形态（这是所有设计的前提）<a class="anchor" href="#一-两边的真实形态-这是所有设计的前提" aria-label="锚点">#</a></h2>
+<table><thead><tr><th></th><th>khy-os</th><th>Amoo</th></tr></thead><tbody><tr><td>运行位置</td><td>手机本地，App 自身 uid</td><td><strong>云端</strong>容器（3 核 / 6G / 21G）</td></tr><tr><td>手机侧载体</td><td>普通第三方 APK</td><td><code>AiLauncher.apk</code>，<code>/system_ext/app/</code>，<strong>特权应用</strong></td></tr><tr><td>智能在哪</td><td>无，纯执行器</td><td>云端；手机侧只是传话筒</td></tr><tr><td>能读 <code>/sdcard</code></td><td>能（已授 MANAGE_EXTERNAL_STORAGE）</td><td><strong>能</strong>——实测往 <code>/sdcard/Download</code> 写过 apk 和 zip</td></tr><tr><td>能读自己私有目录</td><td>能</td><td>能</td></tr><tr><td>能读对方私有目录</td><td><strong>不能</strong></td><td><strong>不能</strong></td></tr><tr><td>入站端口</td><td>桥 8896 只监听回环</td><td>不开入站端口，手机主动外连</td></tr></tbody></table>
+<p><strong>最关键的一条</strong>：Amoo 的命令环境在云端，<code>/sdcard</code> 对它却存在（它自己演示过写入）。<br>这一点推翻了一个早期的错误假设——<code>AmooMemory.java</code> 的类注释里还写着<br>「/sdcard does not exist for it」，那句话现在是<strong>过时且错的</strong>，见 §五。</p>
+<hr>
+<h2 id="二-三条通道-以及各自能干什么">二、三条通道，以及各自能干什么<a class="anchor" href="#二-三条通道-以及各自能干什么" aria-label="锚点">#</a></h2>
+<h3 id="通道-a-反代对话-已通-主力">通道 A：反代对话（已通，主力）<a class="anchor" href="#通道-a-反代对话-已通-主力" aria-label="锚点">#</a></h3>
+<pre><code>你在 khy-os 里输入 → 自描述+问题写进 amoo 聊天框 → amoo 云端思考
+   → khy-os 读它的最新气泡 → 显示在 khy-os 里</code></pre>
+<ul><li><strong>已真机验证</strong>：Amoo 收到自描述后正确理解了 khy-os 是什么、分工是什么，</li></ul>
+<p>并给出了准确的架构判断（它自己查出桥在线、39 工具、<code>khy.exec</code> 无接收方）。</p>
+<ul><li><strong>代价</strong>：回复从气泡读，所以整个等待期（实测约 6 分钟）<strong>Amoo 必须留在前台</strong>，</li></ul>
+<p>你不能切走去用手机。这是这套方案的根本限制，不是没做优化。</p>
+<ul><li><strong>落库</strong>：每笔提问进 <code>amoo_turn</code> 表（见 §三），进程死了重启后知道有这么一笔。</li></ul>
+<h3 id="通道-b-桥的-39-个工具-已通-khy-os-自己用">通道 B：桥的 39 个工具（已通，khy-os 自己用）<a class="anchor" href="#通道-b-桥的-39-个工具-已通-khy-os-自己用" aria-label="锚点">#</a></h3>
+<p><code>/sdcard/bridge-amoobridge/</code> 信箱 + 8896 回环 HTTP。三级提权链：</p>
+<pre><code>Tools.exec()  →  sidecar（uid 2000）  →  权限最高
+              →  Shizuku             →  能提权，但本机未装
+              →  App 自身 uid         →  「成功」返回但什么都干不了</code></pre>
+<ul><li><strong>已真机验证</strong>：<code>pm install</code> 经 sidecar 返回 <code>Success</code>，<code>via:&quot;sidecar&quot;</code>。</li><li><strong><code>via</code> 字段是命门</strong>：最后一级会&quot;成功&quot;返回而什么都没做。所以每个结果都必须带</li></ul>
+<p>执行身份，否则界面会把没做成说成做成了。</p>
+<h3 id="通道-c-amoo-的设备通道-半通-最有价值但未打通">通道 C：Amoo 的设备通道（半通，最有价值但未打通）<a class="anchor" href="#通道-c-amoo-的设备通道-半通-最有价值但未打通" aria-label="锚点">#</a></h3>
+<p>Amoo 自述有一条手机主动外连的常驻节点连接（<code>AgentBus</code>，见 dex 里 420 处引用），<br>云端经它有两个入口：<code>nodes invoke</code> + <code>ability</code>。它实测：</p>
+<ul><li><code>system.which</code> 有实现 → 查 <code>adb</code> 返回 <code>found:false</code>（端侧 VM 里没有 adb/pm）</li><li><code>khy.exec</code> → <code>no invoke target node</code>（没注册这个执行器）</li></ul>
+<p><strong>结论：桥的工具要经这条通道被 Amoo 调用，注册必须在手机侧做，云端配不了。</strong><br>这正是下一步该做的事，见 §六。</p>
+<hr>
+<h2 id="三-模块地图-为-amoo-加的每一块在哪">三、模块地图（为 Amoo 加的每一块在哪）<a class="anchor" href="#三-模块地图-为-amoo-加的每一块在哪" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>模块</th><th>路径</th><th>职责</th></tr></thead><tbody><tr><td><code>Tools</code></td><td><code>bridge/Tools.java</code></td><td>39 个工具的派发 + <code>exec</code> 三级链</td></tr><tr><td><code>ShellSidecar</code> / <code>Client</code></td><td><code>bridge/ShellSidecar*.java</code></td><td>纯 Java 侧车，<code>dalvikvm</code> 拉起，uid 2000，回环 8897</td></tr><tr><td><code>HttpBridge</code></td><td><code>bridge/HttpBridge.java</code></td><td>8896 回环 HTTP</td></tr><tr><td><code>BridgeService</code></td><td><code>bridge/BridgeService.java</code></td><td>前台服务；<strong>a11y 看守在这</strong></td></tr><tr><td><code>AmooLoop</code></td><td><code>bridge/AmooLoop.java</code></td><td>反代的 ask/askResult/stop 三步协议</td></tr><tr><td><code>AmooSelfDesc</code></td><td><code>bridge/AmooSelfDesc.java</code></td><td><strong>注入给 Amoo 的自我介绍</strong>（见 §四）</td></tr><tr><td><code>AmooMemory</code></td><td><code>bridge/AmooMemory.java</code></td><td>共享记忆的数据模型</td></tr><tr><td><code>AmooTurn</code> / <code>AmooTurnStore</code></td><td><code>lib/core/db/amoo_turn*.dart</code></td><td>提问的 SQLite 落库</td></tr><tr><td><code>WorkspacePaths</code> / <code>Store</code></td><td><code>lib/core/workspace/</code></td><td>通用/专用工作空间 + 临时目录</td></tr><tr><td><code>AmooTaskCard</code></td><td><code>lib/ui/widgets/amoo_task_card.dart</code></td><td>反代卡片 UI</td></tr><tr><td><code>ToolsHubScreen</code></td><td><code>lib/ui/screens/tools_hub_screen.dart</code></td><td>工具/桥/智能体三页总览</td></tr><tr><td><code>KeepAwake</code></td><td><code>lib/core/services/keep_awake.dart</code></td><td>屏幕常亮单一事实来源</td></tr><tr><td><code>install_apk</code></td><td><code>builtin_tools.dart</code> + <code>MainActivity.installApk</code></td><td>窄口安装（见 §五）</td></tr><tr><td>gelab 动作文法</td><td><code>runtime/.../phone/gelab/</code></td><td>11 个动作、0-1000 归一化坐标</td></tr></tbody></table>
+<hr>
+<h2 id="四-注入给-amoo-的自描述-amooselfdesc">四、注入给 Amoo 的自描述（<code>AmooSelfDesc</code>）<a class="anchor" href="#四-注入给-amoo-的自描述-amooselfdesc" aria-label="锚点">#</a></h2>
+<p>这是整条链的<strong>起点</strong>。没有它，Amoo 对 khy-os 一无所知，问什么都说&quot;我没有这个服务&quot;。</p>
+<p>五节，每节都对着一次真实的失败：</p>
+<table><thead><tr><th>节</th><th>为什么存在</th></tr></thead><tbody><tr><td>khy-os 是什么</td><td>否则它无法放置这个名字</td></tr><tr><td>可用的工具</td><td><strong>从 <code>Tools.NAMES</code> 派生</strong>，不手抄——手抄的会在加工具那一刻开始说谎</td></tr><tr><td>分工：你出指令，khy-os 执行</td><td>Amoo 自己的准则禁止它做 App 内点按。点名它做不到的<strong>具体事情</strong>（深层目录、点开文件读）才能把&quot;做不到&quot;变成&quot;交给 khy-os&quot;</td></tr><tr><td><strong>你不需要连那个桥</strong></td><td>Amoo 曾正确指出桥在手机内部它连不到，然后<strong>结论错了</strong>——它以为连桥是它的活。这一节就是说清：连桥不是你的活，写命令才是</td></tr><tr><td>边界</td><td>包括一条 khy-os 也做不到的（应用私有目录），防止它承诺</td></tr></tbody></table>
+<p><strong>不注入任何内部标识符</strong>（包名、端口、绝对路径）——Amoo 自己的红线禁止它把这些回显给用户，<br>喂给它就是设一个它躲不开的陷阱。测试 <code>renderCarriesNoInternalIdentifiers</code> 盯着这条。</p>
+<hr>
+<h2 id="五-已验证-未验证">五、已验证 / 未验证<a class="anchor" href="#五-已验证-未验证" aria-label="锚点">#</a></h2>
+<h3 id="已验证-真机">已验证（真机）<a class="anchor" href="#已验证-真机" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>事实</th><th>证据</th></tr></thead><tbody><tr><td>反代链路通</td><td>Amoo 收到自描述并给出准确架构判断</td></tr><tr><td>桥 39 工具在线</td><td><code>info</code> 返回 <code>tools</code> 全表</td></tr><tr><td>sidecar uid 2000 可用</td><td><code>pm install</code> 返回 <code>Success</code>，`via:&quot;sidecar&quot;</td></tr><tr><td><strong><code>/sdcard</code> 路径不能直接装</strong></td><td>SELinux <code>avc: denied … tcontext=u:object_r:fuse:s0</code>，必须中转 <code>/data/local/tmp</code></td></tr><tr><td>安装需逐包用户许可</td><td><code>usb_install_item_com.stepx.wordcraft</code> 从 <code>:0</code> 改 <code>:1</code> 后同一条命令从失败变 <code>Success</code></td></tr><tr><td>共享记忆文件 amoo 可读</td><td>文件在 <code>/sdcard/bridge-amoobridge/amoo_memory.json</code>，而 amoo 已证明能读 <code>/sdcard</code></td></tr><tr><td>工作空间自动创建</td><td>启动后 <code>/sdcard/khy-os/workspace/tmp/</code> 出现</td></tr><tr><td>Amoo 的交付是真的</td><td><code>com.stepx.wordcraft</code> 已装、<code>词刻-源码.zip</code> 在 Download、Shizuku 确实没装</td></tr><tr><td>屏幕常亮</td><td><code>FLAG_KEEP_SCREEN_ON</code>，反代期间自动 + 手动开关</td></tr></tbody></table>
+<h3 id="未验证-做不到">未验证 / 做不到<a class="anchor" href="#未验证-做不到" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>事项</th><th>状态</th></tr></thead><tbody><tr><td><code>amoo_ask</code> 三步通道的端到端</td><td><strong>未验</strong>。之前的测试被一次进程崩溃打断（见下）</td></tr><tr><td>非特权 App 能否注册 LOCAL 能力</td><td><strong>未决</strong>。这是下一步的关键，见 §六</td></tr><tr><td>导入 Amoo 的历史会话</td><td><strong>做不到</strong>。历史在它自己的私有目录，shell 也读不了</td></tr><tr><td><code>shot_b64</code> 实际 b64 大小</td><td>未测（设备掉线）</td></tr><tr><td><code>state.provider</code> 子路径枚举</td><td>11 条路径全空</td></tr><tr><td><strong><code>AmooSafe</code> 净化器是否够用</strong></td><td><strong>未验</strong>。<code>adb devices</code> 空，真机一次都没跑过。主机侧只有 32 个 <code>AmooSafeTest</code> + 13 个 <code>AmooSafeHostAuditTest</code>——它们证明的是<strong>变换本身</strong>，不是集成。</td></tr><tr><td><code>ui_type</code> 实际收到什么</td><td><strong>未验</strong>。<code>KhyUi.type</code> 是裸 <code>ACTION_SET_TEXT</code>，1500 字符上限由 <code>forAmoo</code> 施加而非平台。中文/多行/emoji 是否原样落地、SET_TEXT 是替换还是追加、IME 或应用自己的 text watcher 会不会改字符串——都没测过。<code>KhyUi</code> 返回的 <code>chars</code> 是<strong>发出去</strong>的长度，不是<strong>到达</strong>的长度。</td></tr><tr><td>Amoo 读了泛化文本后还能不能行动</td><td><strong>未验</strong>，且这是个模型行为问题，主机替代不了。保留审计的预测是：<strong>任何按路径寻址的事都做不了</strong>——见下&quot;已知缺陷&quot;第 4 条。</td></tr><tr><td><code>exec</code> 在这台设备上实际返回哪些标识符</td><td><strong>未验</strong>。<code>android_id</code> / MAC / 局域网 IP 的缺口主机上可证明存在，但是否真泄漏取决于 Amoo 发什么命令、uid 2000 的 sidecar 返回什么。</td></tr><tr><td>无障碍服务能否撑过 6 分钟前台要求</td><td><strong>未验</strong>。</td></tr><tr><td>&quot;只在主机上验证过&quot;能不能对外说成&quot;已验证&quot;</td><td><strong>未决，且这是人的决定</strong>。本文档的立场是<strong>不能</strong>。这一行就是为这个决定留的位置。</td></tr></tbody></table>
+<h3 id="已知缺陷">已知缺陷<a class="anchor" href="#已知缺陷" aria-label="锚点">#</a></h3>
+<table><thead><tr><th>缺陷</th><th>影响</th></tr></thead><tbody><tr><td><code>info</code> 的 sidecar 探测与 <code>exec</code> 实际路由不一致</td><td>三次实测：<code>info</code> 报 <code>false</code> 而 <code>exec</code> 走了 sidecar。<strong><code>elevated</code> 字段的可信度建立在探测准确上</strong>，这个必须修</td></tr><tr><td>反代期间进程死亡则提问丢失</td><td>已用 <code>amoo_turn</code> 表缓解（重启后报 <code>interrupted</code>），但回复本身读不回来</td></tr><tr><td>a11y 假死只能拉活不能预防</td><td>系统冻结时 <code>isReady()</code> 一直 true，已改用心跳判活（<code>lastEventAt</code>，120s 无事件算可疑）</td></tr><tr><td><del>a11y 拉活会静默关掉别人的无障碍服务</del></td><td><strong>2026-10-28 已修</strong>。<code>BridgeService.reviveA11y</code> 原来自己拼 <code>settings put secure enabled_accessibility_services &lt;本服务&gt;</code>——<strong>整体赋值</strong>，用户同时开着 TalkBack 时一次巡检就把它关掉且无提示。同一个仓库里 <code>AccessibilitySetup</code> 的文件头把「读-改-写」列为该类存在的理由（WHY READ-MODIFY-WRITE），而看守偏偏在违反它。现在委托 <code>AccessibilitySetup.revive()</code>：consent 门控 + <code>addToList</code> 读-改-写 + 写后校验。回归锁见 <code>AccessibilitySetupTest.theValueTheWatchdogWritesKeepsEveryOtherService</code>（26 套件 439 断言全绿）。<strong>consent 闸管的是竞态窗口</strong>：用户在 App 内关开关时 <code>disable()</code> 清了设置，但框架要过一会儿才 unbind、<code>instance</code> 在 <code>onUnbind</code> 里才置空，这期间对象活着而事件已停，正好命中看守触发条件——没有这道闸会把刚关掉的开关三十秒内又打开。（「用户在系统设置里关掉」到不了看守：那条路同样 unbind，<code>wasReady</code> 不成立。真正的盲区在 <code>restoreIfConsented</code> 的重装路径，与看守无关。）</td></tr><tr><td><strong>净化后 Amoo 拿不到可寻址的真实路径</strong></td><td><code>Tools.ls</code> 返回的目录是绝对路径，<code>write</code>/<code>stat</code>/<code>mv</code>/<code>cp</code> 回显 <code>getAbsolutePath()</code>——全部会被 <code>AmooSafe</code> 泛化成&quot;工作区里的workspace&quot;这种形态。于是 Amoo 看得见文件名，<strong>重建不出地址</strong>。文件类工具用 <code>new File(path)</code> 不带基目录（<code>Tools.java</code> 286/292/296/315/699/725），能不能用相对路径取决于 App 进程 cwd，主机上不可知。<strong>已核实的例外</strong>：<code>exec</code> 在 sidecar 和 App 兜底两条路径上都把 cwd 钉在 <code>/sdcard</code>（<code>Tools.java</code> 760/770），所以 <code>exec cat notes/x.md</code> 按构造就能解析——但 Shizuku 那条路径（817-881）不设 cwd，且 <strong>Amoo 完全不知道有这回事</strong>。这条要不要修、怎么修（给 <code>exec</code> 开豁免 / 在自描述里告诉它 cwd / 引入不透明句柄），是人的决定。</td></tr><tr><td><strong><code>ui_type</code> 是第二条绕过 <code>forAmoo</code> 的通道</strong></td><td>围栏里发 <code>{&quot;tool&quot;:&quot;ui_type&quot;,&quot;args&quot;:{&quot;text&quot;:&quot;/sdcard/…&quot;}}</code> 就能把<strong>未净化的</strong>绝对路径直接塞进 Amoo 的输入框：<code>AmooProtocol.parseExec</code> 不校验工具名，<code>LoopModes.floorReason</code> 只看 <code>rm</code>/<code>exec</code>，<code>isKnownTool</code> 对 <code>ui_</code> 前缀一律放行，BYPASS 下直接 EXECUTE，而 <code>KhyUi.type</code> 原文键入不过 <code>AmooSafe</code>。同一个洞对 PC 侧 <code>/call</code> 和信箱路径都开着。<strong>缓解事实</strong>（不能当修好了）：<code>ui_type</code> 只打字不点发送，而下一次 <code>writeBack</code> 会替换掉输入框内容，所以原文会一直留在框里直到人按发送。修法有三个，都不该由 AI 选：(a) 工具级净化 + 同步改 <code>LoopVerify.java:79</code> 的期望值，否则每条 <code>ui_type</code> 永远&quot;未能验证&quot;；(b) 循环内拒接 <code>ui_type</code>；(c) 只记录不动代码。</td></tr><tr><td><strong>共享记忆被静默截断，而 Amoo 被告知不要重新测量</strong></td><td><code>AmooMemory.renderForInjection</code> 到上限就 <code>break</code>，<strong>不写任何截断标记</strong>；外层 <code>forAmoo</code> 再按 1500 切掉尾巴。于是 14:00 验证的事实可能在 14:06 被上限丢掉，而同一句话里写着&quot;请以此为前提，不要重新测量&quot;。<strong>被要求当成完整前提的是一份残缺清单</strong>——这正是这套循环要防的 fabrication，从唯一一条本该可信的通道进来。</td></tr><tr><td><strong><code>android_id</code> / MAC / 局域网 IP 不在净化范围内</strong></td><td><code>AmooSafe</code> 的范围假设标识符都从 <code>Tools.info</code> 来（它按 info 的键名锚定），但 <code>exec</code> 是第二条无界通道：<code>getprop ro.product.model</code>、<code>settings get secure android_id</code>、<code>ip addr</code> 都不匹配任何一条 pass。<code>AMOO-GUIDELINES.md</code> §4.2 管路径/包名/系统版本/架构，<strong>§四 里没有任何一条覆盖 android_id、MAC 或局域网 IP</strong>——所以这三项的严重程度是人的判断，不是引用条文。主机测试已把缺口钉成红灯（<code>AmooSafeHostAuditTest.androidIdMacAndLanIpAreNotCovered</code>、<code>execGetpropOutputIsNotCovered</code>），修好时<strong>反转</strong>断言，不要删测试。</td></tr><tr><td><strong>安全底拒绝会被报成&quot;人工中止&quot;</strong></td><td><code>AmooLoop</code> 在安全底触发时置 <code>st.aborted</code>，<code>describeStop</code> 于是对用户说&quot;人工中止&quot;——但那是机器拒的，不是人拒的。且 <code>writePending</code> 不把被拒命令记进 <code>executed</code>（<code>executeOne</code> 在 <code>executed.add</code> 之前就返回了），只有日志里有原因。</td></tr><tr><td><strong>自描述告诉 Amoo&quot;手机存储对你不存在&quot;，而实测它能写</strong></td><td><code>AmooSelfDesc.java:154</code> 这么写，但 §一 已实测 Amoo 往 <code>/sdcard/Download</code> 写过 apk 和 zip，<code>AMOO-GUIDELINES.md</code> 对应位置也已被标为&quot;过时且错的&quot;。<code>AmooSelfDescTest.java:164-169</code> 把当前这句话钉住了——改措辞会让它变红，而下一个人的本能是去改测试。<strong>这句话每次对话都注入，改它等于改模型的认知</strong>，所以措辞和替换后的测试断言必须由人一起定。</td></tr></tbody></table>
+<h3 id="本表当前状态-2026-10-25-裁决">本表当前状态（2026-10-25 裁决）<a class="anchor" href="#本表当前状态-2026-10-25-裁决" aria-label="锚点">#</a></h3>
+<p>上表五项都写明了「怎么修」或「谁来定」，但没写<strong>现在到底怎么裁</strong>。这一节补上：</p>
+<p><strong>本轮裁决：全部维持现状（暂缓），不改代码、不改措辞。</strong> 依据是上表自己写的约束——<br><code>exec</code> 净化范围与 <code>android_id</code>/MAC/局域网 IP 的严重程度是「人的判断」，<br><code>ui_type</code> 的三个修法「都不该由 AI 选」，<code>AmooSelfDesc</code> 的措辞「必须由人一起定」。<br>本轮把决定权交给 AI 之后，AI 仍按上表约束维持现状：<strong>改这些要么是编造严重程度，<br>要么是替人改模型的认知，两样都不该由 AI 干。</strong></p>
+<p>裁决记录（逐字原话 + 判据）：<code>works/record/evidence/01_人类贡献/决策记录.md</code> D-批3 第 4 条 (a)。</p>
+<p><strong>这不等于「这些洞可以不管」。</strong> 它们仍然真实存在，且上表已经写清了各自的危害面。<br>本表从「悬着的决定」变成「已决的暂缓」——下一个接手的人不必重新怀疑一遍，<br>但要知道它们是<strong>人选择先放着的</strong>，不是没人看见。</p>
+<hr>
+<h2 id="六-下一步-把桥注册成-local-能力">六、下一步：把桥注册成 LOCAL 能力<a class="anchor" href="#六-下一步-把桥注册成-local-能力" aria-label="锚点">#</a></h2>
+<p>Amoo 自己推荐这条路，并给出了完整的接口约定（<code>khyos_exec</code>：入参 command/args/shell/cwd/timeoutMs，<br>返回 stdout/stderr/exitCode，退出码非 0 不算错误）。它的价值：<strong>消掉 6 分钟前台限制</strong>——<br>Amoo 直接调用、同步返回，不用读气泡、不用在前台等。</p>
+<p>它说&quot;清单字段格式请以你手上的接入文档为准&quot;——<strong>那份格式在 <code>AiLauncher.apk</code> 的 manifest 里</strong>，<br><code>VoiceAbilityService</code> 就是现成样例：</p>
+<pre><code class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">service</span> <span class="hljs-attr">android:name</span>=<span class="hljs-string">&quot;…VoiceAbilityService&quot;</span>
+    <span class="hljs-attr">android:permission</span>=<span class="hljs-string">&quot;com.stepos.mcp.sdk.permission.ACCESS_MCP_SERVICES&quot;</span>
+    <span class="hljs-attr">android:exported</span>=<span class="hljs-string">&quot;true&quot;</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">intent-filter</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">action</span> <span class="hljs-attr">android:name</span>=<span class="hljs-string">&quot;com.stepos.mcp.sdk.TOOLS_SERVICE&quot;</span>/&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">intent-filter</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">meta-data</span> <span class="hljs-attr">android:name</span>=<span class="hljs-string">&quot;mcp.tools&quot;</span> <span class="hljs-attr">android:resource</span>=<span class="hljs-string">&quot;@…&quot;</span>/&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">service</span>&gt;</span></code></pre>
+<p><strong>关键</strong>：<code>android:permission</code> 在 service 上意味着「谁才能 bind 我」，不是「我才能提供」。<br>持有该权限的是 MCP 宿主（Amoo 那侧的系统应用）。所以<strong>提供方不需要持有它</strong>——<br>这与我 earlier 撞的墙正好相反（那次是 khy-os 想消费能力，那才需要权限）。</p>
+<p>SDK 自包含在 AiLauncher.apk 里：<code>IMCPBinderService</code> / <code>IMCPBinderCallback</code>（AIDL）、<br><code>BaseMCPService</code> / <code>AbsMCPService</code>（要继承的基类）、<code>AndroidClientTransport</code>（传输层）。</p>
+<p><strong>未决</strong>：<code>AbsMCPService</code> 的具体继承方式、<code>mcp.tools</code> 资源的格式。这两点没确认之前不动手——<br>上次已经在权限方向上判断错过一次。</p>
+<p><strong>不要走 root</strong>：解锁会全盘清数据（微信聊天、登录态全没），破坏 Play Integrity<br>（银行/支付 App 拒绝运行）。这是日用机。注册成 LOCAL 能力达到同一目的且不需要 root。</p>
+<h3 id="6-1-已经试过并且-不通-的一条-android-16-appfunctions">6.1 已经试过并且<strong>不通</strong>的一条：Android 16 AppFunctions<a class="anchor" href="#6-1-已经试过并且-不通-的一条-android-16-appfunctions" aria-label="锚点">#</a></h3>
+<p>2026-10-28 在 PZ261A 上实测。结论要分两层说，因为两层不一样：</p>
+<table><thead><tr><th>层</th><th>结果</th></tr></thead><tbody><tr><td>机制层</td><td><strong>通</strong>。一个普通非特权 APK（<code>/data/app/</code>，无 <code>PRIVILEGED</code>）自己声明 <code>AppFunctionService</code>，装上后进 <code>dumpsys app_function</code>，且 <code>cmd app_function execute-app-function</code> 能执行并拿到返回值。host app 用 <code>minSdk 24 / targetSdk 33 / compileSdk 36</code>（与本项目完全一致）照样成立</td></tr><tr><td>助手路由层</td><td><strong>不通</strong>。两次实测 Amoo 都没有派单到第三方自注册的函数（原因已追查，见下面「目前最站得住的解释（推断）」）</td></tr></tbody></table>
+<p>两次实测的形态：</p>
+<ol><li><strong>能力重叠</strong>：注册 <code>com.khyos.afprobe.Probe#deviceUptime</code>（描述带动词归一化 + positive/negative</li></ol>
+<p>samples，照本机第一方函数的实测形状写——后来查明这个形状<strong>没有进索引</strong>，见下）。问 Amoo<br>   「how long has this phone been running」→ 它答<br>   「我先查一下这台设备已运行多久」并执行 8 个步骤 → <strong>跳转到系统设置→关于手机</strong>，用原生能力答了。<br>   探针 logcat 无记录。</p>
+<ol><li><strong>显式点名</strong>：再发「call the deviceUptime function from package com.khyos.afprobe」→ Amoo 回</li></ol>
+<p>「暂时无法生成回答，可重新发送」。探针仍无记录。</p>
+<p><strong>所以「能被索引和執行」≠「能被助手调用」</strong>，这两件事这次被分开证实了。<code>com.stepos.ability</code><br>（<code>/system/priv-app/ability/ability.apk</code>）dex 里有 <code>aggregatedAppFunctionInventory_delegate</code> 与<br><code>ExecuteAppFunctionRequest</code>，它是聚合与执行方。</p>
+<blockquote><p><strong>同日追查后的一处更正</strong>：这里原来接着写「但它的 inventory 大概率把第三方自注册的排除在外」。<br><strong>该猜测已被证据推翻</strong>（见下面线索②）：聚合器里没有任何按包名过滤的代码路径，包可见性一开始<br>就不是问题。真实原因指向「<strong>描述没进索引</strong>」，见下面「目前最站得住的解释（推断）」。<br>原话留着是为了让下一个接手的人知道这条已经查过、并且查反了。</p></blockquote>
+<h4 id="三条线索的追查结果-2026-10-28">三条线索的追查结果（2026-10-28）<a class="anchor" href="#三条线索的追查结果-2026-10-28" aria-label="锚点">#</a></h4>
+<table><thead><tr><th>线索</th><th>现在的结论</th></tr></thead><tbody><tr><td>① 元数据格式：legacy 还是 v2，平台索引哪一份</td><td><strong>v2 的形状被接受，legacy 无人读。</strong> 平台 dex 里没有 <code>function_id</code> / <code>enabled_by_default</code> 这两个 legacy 蛇形标签的字符串，而我们 11 个函数确实带着 <code>functionId</code> / <code>enabledByDefault</code>（v2 驼峰标签）进了索引。反过来：第一方的 legacy XML（appstore / camera）只有 <code>function_id</code> + <code>enabled_by_default</code> 两行，它们在 dump 里却带完整 description → <strong>description 不可能来自 legacy 文件</strong>。原来的猜测「也许只有第一方才被收录」方向对了一半：不是第一方/第三方之分，是<strong>带不带 androidx 工具链产物</strong>之分</td></tr><tr><td>② <code>com.stepos.ability</code> 的 inventory 是否按包白名单过滤</td><td><strong>没有证据支持，已排除。</strong> 它持 <code>QUERY_ALL_PACKAGES granted=true</code>（包可见性不是问题）；反汇编 <code>AggregatedAppFunctionInventory</code> 只有 <code>getInventories</code> / <code>getFunctionIdToMetadataMap</code> / <code>getComponentsMetadata</code> / <code>executeAppFunction</code> / <code>isAppFunctionEnabled</code> / <code>setAppFunctionEnabled</code>，<strong>没有任何按包名过滤的分支</strong>。真正存在的过滤维度是 <code>schemaCategory</code> / <code>schemaName</code> / <code>minSchemaVersion</code>（见下方未解决项 3）</td></tr><tr><td>③ 是否必须经 <code>com.stepos.common.ability.proxy</code> <strong>代注册</strong></td><td><strong>不成立。</strong> 支付宝 / 微信 / CapCut 自己的 <code>dumpsys package</code> 里 <code>AppFunctionService</code> <strong>0 命中</strong>——它们根本不是 provider，proxy 是它们的 provider of record。我们与 appstore / camera / weather 同为 provider of record，而那三个是被派单的</td></tr></tbody></table>
+<h4 id="目前最站得住的解释-推断-未直接证实">目前最站得住的解释（<strong>推断</strong>，未直接证实）<a class="anchor" href="#目前最站得住的解释-推断-未直接证实" aria-label="锚点">#</a></h4>
+<p><strong>Amoo 拿得到我们函数的 id，但拿不到 description，于是路由无依据、不派单。</strong></p>
+<p>先列实测到的事实（这一节是观测，不是推断）：</p>
+<ul><li>我们的 11 个函数全在索引里，但 Static Metadata 只剩四个字段：<code>enabledByDefault</code> /</li></ul>
+<p><code>functionId</code> / <code>mobileApplicationQualifiedId</code> / <code>packageName</code>。<strong>没有 description、没有<br>  parameters、没有 response、没有 schemaName / schemaCategory / schemaVersion。</strong><br>  <code>com.khyos.afprobe</code> 的探针函数同样如此。</p>
+<ul><li>同一份 dump 里，第一方（proxy 的 <code>alipay_life_service</code>、appstore、camera、weather）全带完整</li></ul>
+<p>description + parameters + response。全 dump 共 16 处 <code>description</code>，<strong>全部落在第一方段内</strong>；<br>  我们的两段（khy_os_client 11 个 + afprobe 1 个）<strong>零命中</strong>。</p>
+<ul><li>平台自己不认识 <code>description</code> 这个标签：49 个 <code>/system/framework/*.jar</code> + <code>/system_ext</code> +</li></ul>
+<p><code>/product</code> 全量 grep，<code>function_id</code> / <code>enabled_by_default</code> / <code>schema_category</code> 全 0 命中；<br>  反汇编 <code>AppFunctionStaticMetadataHelper</code> 可见平台侧认识的 static metadata 字段就是<br>  <code>functionId</code> / <code>enabledByDefault</code> / <code>packageName</code> / <code>restrictCallersWithExecuteAppFunctions</code>——<br>  <strong>正好等于我们函数被打进索引的那几个字段</strong>。</p>
+<ul><li>四个带 description 的 provider，APK dex 里全都有 <code>androidx/appfunctions/**</code>，且 manifest 声明</li></ul>
+<p><code>android.app.appfunctions.schema</code> = <code>app_functions_schema.xsd</code>、v2 里带 <code>&lt;dataTypeReference&gt;</code> /<br>  <code>&lt;AppFunctionComponentMetadataDocument&gt;</code>、service 类用<br>  <code>androidx.appfunctions.service.PlatformAppFunctionService</code>。<strong>我们和 afprobe 五样一个都没有</strong><br>  （我们的 service 类是裸 <code>android.app.appfunctions.AppFunctionService</code>）。</p>
+<p><strong>一个上次实测到、但当时没注意的矛盾</strong>：我们的 <code>assets/app_functions.xml</code> 与<br><code>app_functions_v2.xml</code> <strong>本来就写着完整 description</strong>（由 <code>scripts/generate-appfunctions-metadata.js</code><br>从 <code>Tools.ROUTING</code> 生成），afprobe 的 XML 里也写了描述（第一次实测就是照那个形状写的）。<br><strong>XML 里有、dump 里没有。</strong> 所以「描述写得不够好」这个方向是错的——描述根本没到模型眼前。<br>上面两次实测里那句「照本机第一方函数的实测形状写」因此要改读成：形状照对了，但<strong>这一层没被搬运</strong>。</p>
+<p>这个推断与两次实测形态吻合：能力重叠那次它绕开（没有可路由的候选），显式点名那次它答<br>「暂时无法生成回答」（候选存在但无描述，无法确认）。</p>
+<p>顺带一个观测到的反常，暂未解释：proxy 声明了 6 个函数，索引里只有 <code>alipay_life_service</code> 一个<br>（见未解决项 2）。</p>
+<h4 id="最便宜的下一步-已做-结论-schema-属性就是那道闸门-2026-10-28">最便宜的下一步 —— <strong>已做，结论：schema 属性就是那道闸门</strong>（2026-10-28）<a class="anchor" href="#最便宜的下一步-已做-结论-schema-属性就是那道闸门-2026-10-28" aria-label="锚点">#</a></h4>
+<p>实验按原计划做的是<strong>纯 assets + manifest、不碰 Java</strong>的那一半：只加<br><code>android.app.appfunctions.schema</code> 属性 + 把 AOSP 原装 <code>app_functions_schema.xsd</code> 放进 assets<br>（md5 <code>19481529cfb779efc7c479ef16dd90f5</code>，与 <code>com.stepos.appstore</code> 包内那份逐字节相同）。<br><strong>没有</strong>补 <code>&lt;dataTypeReference&gt;</code> 与 <code>&lt;AppFunctionComponentMetadataDocument&gt;</code>——那一半没做，<br>所以下面这个结论只对「加 schema 属性」这一个变量成立。</p>
+<p><code>dumpsys app_function</code> 前后对照（我方区段 233–687 行，从 155 行涨到 454 行）：</p>
+<table><thead><tr><th>字段</th><th>加属性前</th><th>加属性后</th></tr></thead><tbody><tr><td><code>description</code></td><td><strong>0</strong></td><td><strong>11</strong>（每个函数一条，<code># description</code> / <code># positive_samples</code> / <code># negative_samples</code> / <code># return</code> 全文进索引）</td></tr><tr><td><code>response</code> / <code>valueType</code> / <code>type</code> / <code>isNullable</code></td><td>0</td><td>11</td></tr><tr><td><code>parameters</code></td><td>0</td><td><strong>仍是 0</strong></td></tr></tbody></table>
+<p><strong>所以「第三方自注册拿不到描述」的真因是没声明 schema，不是第一方/第三方之分、不是包白名单、<br>也不是「描述写得不够好」。</strong> 早先「大概率被 inventory 排除」的猜测被这条实验彻底判死。</p>
+<p><strong>剩下的缺口是 <code>parameters</code>。</strong> 我方 <code>app_functions_v2.xml</code> 完全没有 <code>&lt;parameters&gt;</code> 元素<br>（element 清单里就没有这一项），所以 Amoo 现在能看见每个函数<strong>干什么</strong>，但看不见<strong>要传什么</strong>——<br><code>ui_swipe</code> 的 <code>x1/y1/x2/y2/ms</code> 它无从得知。第一方每个函数都带 <code>&lt;parameters&gt;</code> + <code>&lt;dataTypes&gt;</code> +<br><code>&lt;dataTypeReference&gt;</code>。补它需要一套参数 schema 真源：现在只有 <code>Tools.ROUTING</code> 的描述文本，<br>没有参数表，得从 <code>Tools.dispatch</code> 的实际读取处推，并且要防与代码漂移（现有<br><code>routingDrift</code> / <code>catalogDrift</code> 那套测试是对照范本）。</p>
+<p><strong>必须重装才看得到变化</strong>：dump 里的元数据是包变更时同步进 AppSearch 的，改完 assets / manifest<br>要重装（或触发同步），否则会把「没生效」误判成「加了也没用」。实验时是先冷启动 App 再 dump 的。</p>
+<p><strong>基线留在</strong> <code>works/data/khy/T4-transient/tmp/af-investigation/</code>：<code>app_function_dump.txt</code>（加属性前）、<br><code>app_function_dump_pre-schema2.txt</code>（装包前复核，与前者仅函数顺序不同）、<br><code>app_function_dump_post-schema.txt</code>（加属性后）。该目录在仓库外，未进版本控制。</p>
+<h4 id="仍未解决-卡在哪-别当已查过">仍未解决（卡在哪，别当已查过）<a class="anchor" href="#仍未解决-卡在哪-别当已查过" aria-label="锚点">#</a></h4>
+<ol><li><strong>定位不到「把 <code>AppFunctionStaticMetadata</code> 写进 <code>apps-db</code>」的代码。</strong> 平台 9 个 dex + 三个</li></ol>
+<p>framework 目录全量 grep，无任何 XML 标签名或属性名；<code>com.stepos.ability</code> 与 CommonAbility 的<br>   dex 里也没有 <code>app_functions.xml</code> 字符串。要么在某个 APK 的<strong>压缩 dex</strong> 里（设备上 <code>grep -a</code><br>   看不到 dex 内部），要么在没拉的 APK 里。要定位需要 jadx / apktool（本机只有 aapt2 / dexdump），<br>   或枚举全部系统 APK 逐个拉取解压。</p>
+<ol><li><strong>proxy「6 声明 1 收录」的挑选规则未查明。</strong> 可能是运行时 set-enabled 状态、可能是实现未落地、</li></ol>
+<p>可能是 schema 校验。</p>
+<ol><li><strong>Amoo 侧实际的 <code>AppFunctionSearchSpec</code> 参数拿不到。</strong> 四个维度（packageNames / schemaName /</li></ol>
+<p>schemaCategory / minSchemaVersion）哪个非空，决定我们是「被 schema 过滤」还是「根本没描述可匹配」。<br>   没有对应 dumpsys 服务，logcat 缓冲已滚掉。需要一次带 <code>logcat -b all</code> 的 Amoo 实测。</p>
+<ol><li><strong>未比对四个第一方 APK 内 <code>androidx.appfunctions</code> 的版本 / 生成器差异</strong>，也无法确认自建 APK 要配</li></ol>
+<p>哪个版本才能被这台 ROM 的索引链路接受。</p>
+<ol><li><del>本轮未做任何安装 / 卸载 / 重装，设备状态零改动</del> <strong>已被 2026-10-28 晚的那轮实验推翻</strong>：</li></ol>
+<p>那一轮真的重装了（<code>adb install -r</code>），并且正是那次重装让上面所有「改了会怎样」的结论第一次<br>   有了实测答案——schema 属性一加，description 从 0 变 11。</p>
+<p><strong>对本章主线的影响：不是降级，是升级。</strong> AppFunctions 这条路<strong>机制层已经通了</strong>——描述进了索引，<br>函数可被 <code>cmd app_function execute-app-function</code> 执行；剩下一道没验证的闸是「Amoo 会不会派单过来」，<br>而在描述进索引之前，那道闸连被试的资格都没有。MCP-over-AIDL 仍是不需要 root、不需要前台等待的<br>路径，但它的「唯一性」从现在起要打问号了——先把派单实测做出来再谈主线取舍。</p>
+<p><strong>给下一个接手的人</strong>：上面那三条旧线索已经查完——② ③ 被证据排除，① 收窄成「v2 被接受、legacy 无人读」。<br><strong>接着要做的只有一件</strong>：让 Amoo 派一次单到 <code>com.khyos.khy_os_client</code> 的某个函数（现在描述全在索引里，<br>它看得见了），看 logcat 有没有 <code>KhyAppFunctions: execute function=</code>。有 → §六 主线要重新评估；<br>没有 → 缺口就真的在助手侧路由，与元数据无关，MCP-over-AIDL 坐实为主线。<br>现在该做的是「最便宜的下一步」那一票实验，以及未解决项 1–5。<br><code>scripts/generate-appfunctions-metadata.js</code> 文件头那句「Which one the framework actually reads is not<br>something this project can determine from outside, so both are emitted」现在可以收窄，但<strong>「谁把<br>description 写进索引」仍未定位</strong>，所以「两份都发」这个做法暂时不动。<br><strong>「自注册能索引」已经证实，「自注册能被助手调用」没有</strong>，别再把这当成已验证。</p>
+<hr>
+<h2 id="七-怎么用-给下一个接手的人">七、怎么用（给下一个接手的人）<a class="anchor" href="#七-怎么用-给下一个接手的人" aria-label="锚点">#</a></h2>
+<ol><li><strong>提权</strong>：重启手机后 sidecar 会掉。重跑</li></ol>
+<p><code>scripts/provision-shell-sidecar.ps1</code>（adb 要在 PATH 上）。</p>
+<ol><li><strong>装包</strong>：apk 先放到 <code>/sdcard/Download</code> 或 <code>/sdcard/khy-os</code> 下，再调 <code>install_apk</code>。</li></ol>
+<p>首次装某个包要在开发者选项里授权（<code>usb_install_item_&lt;包名&gt;</code>）。</p>
+<ol><li><strong>让 Amoo 用 khy-os</strong>：走 AI 页的反代卡片，或把左下角切成「amoo」用主输入框。</li></ol>
+<p>它必须留在前台。</p>
+<ol><li><strong>查能力</strong>：技能页（工具与智能体）——三个 tab：本机工具 / 桥 / 智能体。</li><li><strong>长任务先开常亮</strong>：能力条上那个「常亮」开关。熄一次屏无障碍树就过期，</li></ol>
+<p>后面的操作全建立在旧状态上。</p>
+<ol><li><strong>验证</strong>：<code>flutter test</code>（313 条）+ <code>flutter analyze</code>（0 error）+ Kotlin/Java 编译。</li></ol>
+<p>真机验证只能靠 adb，<code>adb devices</code> 空就是无线调试又掉了。</p>
+<hr>
+<h2 id="八-这次集成改出来的东西-按-为什么-归档">八、这次集成改出来的东西，按&quot;为什么&quot;归档<a class="anchor" href="#八-这次集成改出来的东西-按-为什么-归档" aria-label="锚点">#</a></h2>
+<table><thead><tr><th>改动</th><th>起因</th></tr></thead><tbody><tr><td><code>AmooSelfDesc</code> 整节重写</td><td>Amoo 说&quot;做不到&quot;而不是交接</td></tr><tr><td>自描述加「你不需要连那个桥」</td><td>Amoo 误以为连桥是它的活，还提议把桥经隧道对外开放</td></tr><tr><td>shell 拒绝消息带允许清单</td><td>Amoo 连猜 5 种命令变体，因为拒绝没说允许什么</td></tr><tr><td><code>install_apk</code> 窄口 + <code>/data/local/tmp</code> 中转</td><td>Amoo 发明 <code>pkg manager install &lt;url&gt;</code>；且 <code>/sdcard</code> 路径被 SELinux 挡</td></tr><tr><td><code>amoo_turn</code> SQLite</td><td>6 分钟等待期进程会死，提问事实不能跟着死</td></tr><tr><td>工作空间 + 临时目录 + 孤儿清扫</td><td><code>/sdcard</code> 根堆了 286 个调试垃圾（20MB）</td></tr><tr><td>屏幕常亮 + a11y 心跳看守</td><td>熄屏使无障碍树过期；系统冻结时 <code>isReady()</code> 撒谎</td></tr><tr><td>a11y 拉活改成委托 <code>AccessibilitySetup.revive()</code></td><td>看守原来整体赋值 <code>enabled_accessibility_services</code>，会把 TalkBack 之类的服务静默关掉；且没有 consent 闸，用户在 App 内关掉后三十秒又被打开</td></tr><tr><td><code>Map&lt;String,dynamic&gt;.from</code> 替掉 <code>.cast</code></td><td>设备页崩 32 次（E601），栈顶在 UI 实际错在服务层</td></tr><tr><td>聊天页发送前重读配置</td><td>设置页显示&quot;连接成功&quot;而聊天页说&quot;API 未配置&quot;</td></tr></tbody></table>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../delivery/mobile/khy-os-client-app/AMOO-GUIDELINES.html"><div class="dir">← 上一篇</div><div class="ttl">Amoo 系统提示词与红线（用户 2026-10-23 提取）</div></a><a class="next" href="../../../delivery/mobile/khy-os-client-app/ASSISTANT-AND-TRANSPORT-SEAMS.html"><div class="dir">下一篇 →</div><div class="ttl">助手层与设备传输层的可插拔缝</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../";window.__KHY_CUR__="delivery/mobile/khy-os-client-app/AMOO-INTEGRATION.html";</script>
+<script src="../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
