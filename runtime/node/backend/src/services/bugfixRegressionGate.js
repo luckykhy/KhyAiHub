@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-222-F0GQRJ32
 'use strict';
 
 const fs = require('fs');

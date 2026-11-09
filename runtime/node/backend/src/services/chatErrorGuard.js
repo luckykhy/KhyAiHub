@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-238-39G6EF3K
 'use strict';
 
 // chatErrorGuard.js — 主循环模型调用的「防御纵深」纯叶子(零 IO、绝不抛)。
