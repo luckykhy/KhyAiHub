@@ -330,7 +330,10 @@ updated_at  <span class="hljs-type">TIMESTAMP</span> <span class="hljs-keyword">
 <h3 id="9-1-备份策略">9.1 备份策略<a class="anchor" href="#9-1-备份策略" aria-label="锚点">#</a></h3>
 <table><thead><tr><th>类型</th><th>频率</th><th>保留时间</th></tr></thead><tbody><tr><td>全量备份</td><td>每日</td><td>30 天</td></tr><tr><td>增量备份</td><td>每小时</td><td>7 天</td></tr></tbody></table>
 <h3 id="9-2-sqlite-备份">9.2 SQLite 备份<a class="anchor" href="#9-2-sqlite-备份" aria-label="锚点">#</a></h3>
-<pre><code class="language-bash"><span class="hljs-comment"># 备份</span>
+<pre><code class="language-bash">&lt;!-- IMPL-STATUS: todo --&gt;
+&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;
+&gt; **标记依据**：7 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。
+<span class="hljs-comment"># 备份</span>
 sqlite3 data.db <span class="hljs-string">&quot;.backup backup_<span class="hljs-subst">$(date +%Y%m%d)</span>.db&quot;</span>
 
 <span class="hljs-comment"># 恢复</span>
