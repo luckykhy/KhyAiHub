@@ -20,7 +20,7 @@ const config = require('./phoneBridgeConfig');
 
 test('默认配置与实机测得值一致', () => {
   const resolved = config.resolvePhoneBridgeConfig({});
-  assert.equal(resolved.serial, '192.168.2.46:33743');
+  assert.equal(resolved.serial, '');
   assert.equal(resolved.httpPort, 8896);
   assert.equal(resolved.localPort, 8896);
   assert.equal(resolved.mailboxDir, '/sdcard/bridge-amoobridge');
@@ -102,7 +102,8 @@ test('垃圾 env 值静默回退默认，不抛也不传 NaN', () => {
   assert.equal(resolved.retryCount, 1);
   assert.equal(resolved.mailboxPollMs, 500);
   assert.equal(resolved.mailboxTimeoutMs, 30000);
-  assert.equal(resolved.serial, '192.168.2.46:33743');
+  // 空默认：垃圾 serial env 回退到空串（不再回退到一台开发机的过期地址）。
+  assert.equal(resolved.serial, '');
   for (const value of Object.values(resolved)) {
     assert.ok(!Number.isNaN(value), JSON.stringify(value));
   }
@@ -279,7 +280,7 @@ test('pickMdnsSerial：唯一 _adb-tls-connect 实例才命中，多实例不猜
   assert.equal(config.pickMdnsSerial(['  ', null]).source, 'none');
 });
 
-test('resolveDeviceSerial 自动档：env 显式 > 检测结果 > 旧默认', () => {
+test('resolveDeviceSerial 自动档：env 显式 > 检测结果 > 空默认', () => {
   assert.equal(
     config.resolveDeviceSerial({}, { detectedSerial: ' 192.168.1.117:34103 ' }),
     '192.168.1.117:34103'
@@ -291,8 +292,9 @@ test('resolveDeviceSerial 自动档：env 显式 > 检测结果 > 旧默认', ()
     ),
     '10.0.0.5:5555'
   );
-  assert.equal(config.resolveDeviceSerial({}), '192.168.2.46:33743');
-  assert.equal(config.resolveDeviceSerial({}, { detectedSerial: '   ' }), '192.168.2.46:33743');
+  // 空默认：没有 env、没有检测结果时回空串（IO 层据此走自动探测，而不是连一个坏地址）。
+  assert.equal(config.resolveDeviceSerial({}), '');
+  assert.equal(config.resolveDeviceSerial({}, { detectedSerial: '   ' }), '');
 });
 
 test('serialSource 反映串行号来源（default 才允许 IO 层走自动档）', () => {

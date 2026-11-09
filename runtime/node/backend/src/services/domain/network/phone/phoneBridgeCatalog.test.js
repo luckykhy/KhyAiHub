@@ -14,10 +14,11 @@ const catalog = require('./phoneBridgeCatalog');
 
 const REAL_TOOL_NAMES = Object.freeze([
   'ping', 'info', 'exec', 'ls', 'read', 'write', 'mkdir', 'rm', 'mv', 'cp', 'stat',
+  'zip', 'unzip', 'tools',
   'start_app', 'open_url', 'share_text', 'clipboard', 'toast', 'notify',
   'list_apps', 'battery', 'volume', 'brightness', 'vibrate',
   'loop_start', 'loop_stop', 'loop_status',
-  'amoo_ask', 'amoo_result', 'amoo_memory',
+  'amoo_ask', 'amoo_result', 'amoo_memory', 'amoo_stop',
 ]);
 
 const REAL_UI_TOOL_NAMES = Object.freeze([
@@ -25,8 +26,11 @@ const REAL_UI_TOOL_NAMES = Object.freeze([
   'ui_back', 'ui_home', 'ui_recents', 'shot', 'shot_b64',
 ]);
 
-test('目录收录的正是实机 28 个非 UI 工具，一个不多一个不少', () => {
-  assert.equal(catalog.BRIDGE_TOOLS.length, 28);
+test('目录收录的正是实机 32 个非 UI 工具，一个不多一个不少', () => {
+  // 28 → 31 → 32：zip / unzip / tools 是 2026-10-26 加进安卓侧的；amoo_stop 是
+  // 随后与桥对齐的即时中止工具。这个数字的意义就在于「一个不多一个不少」——
+  // 它就是安卓侧与 PC 侧是否还对齐的哨兵。
+  assert.equal(catalog.BRIDGE_TOOLS.length, 32);
   assert.deepEqual(
     catalog.BRIDGE_TOOLS.map((t) => t.bridgeName).sort(),
     [...REAL_TOOL_NAMES].sort()
@@ -133,8 +137,8 @@ test('写操作集合与桥契约逐条对得上', () => {
     .map((t) => t.bridgeName)
     .sort();
   assert.deepEqual(actuating, [
-    'amoo_ask', 'cp', 'exec', 'loop_start', 'loop_stop', 'mkdir', 'mv', 'notify', 'open_url',
-    'rm', 'share_text', 'start_app', 'toast', 'vibrate', 'write',
+    'amoo_ask', 'amoo_stop', 'cp', 'exec', 'loop_start', 'loop_stop', 'mkdir', 'mv', 'notify', 'open_url',
+    'rm', 'share_text', 'start_app', 'toast', 'unzip', 'vibrate', 'write', 'zip',
   ]);
 });
 
@@ -159,10 +163,32 @@ test('UI 能力缺口有一句固定中文说明，指向 khy-os App 的无障�
   assert.match(catalog.ACCESSIBILITY_GAP_REASON, /无障碍服务/);
 });
 
+test('助手协同（Amoo 反代）工具组被标 optional 并可整组取出', () => {
+  // 7 = 6 个既有 relay（loop_* / amoo_ask/result/memory）+ 新的即时中止 amoo_stop。
+  assert.deepEqual([...catalog.ASSISTANT_RELAY_TOOL_NAMES].sort(), [
+    'amoo_ask', 'amoo_memory', 'amoo_result', 'amoo_stop',
+    'loop_start', 'loop_status', 'loop_stop',
+  ]);
+  const relay = catalog.getPhoneBridgeAssistantRelayTools();
+  assert.equal(relay.length, 7);
+  for (const tool of relay) {
+    assert.equal(tool.optional, 'amoo', tool.bridgeName);
+    assert.ok(tool.khyName.startsWith('phone_'), tool.khyName);
+  }
+  // 组内每个桥侧名都能在目录里找到，且同样带 optional 标记。
+  for (const name of catalog.ASSISTANT_RELAY_TOOL_NAMES) {
+    const hit = catalog.findPhoneBridgeTool(name);
+    assert.ok(hit, `${name} 应在目录里`);
+    assert.equal(hit.optional, 'amoo');
+  }
+  assert.match(catalog.ASSISTANT_GAP_REASON, /Amoo/);
+});
+
 test('toKhyToolDefinition 转译出合法 JSON Schema 与 phone_ 名字', () => {
   const defs = catalog.listKhyToolDefinitions();
-  // 28 = 22 个既有桥工具 + 3 个循环控制 + 3 个反代与记忆。
-  assert.equal(defs.length, 28);
+  // 32 = 22 个既有桥工具 + 3 个循环控制 + 3 个反代与记忆 + zip / unzip / tools + amoo_stop。
+  // zip / unzip / tools 是 2026-10-26 补进来的；amoo_stop 是随后与桥对齐的即时中止。
+  assert.equal(defs.length, 32);
   for (const def of defs) {
     assert.ok(def.name.startsWith('phone_'));
     assert.equal(def.inputSchema.type, 'object');

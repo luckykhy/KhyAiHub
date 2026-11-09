@@ -304,6 +304,23 @@ test('the tool list is offered to the upstream on every round', async () => {
   }
 });
 
+test('includeAssistantRelay is passed through to the schema build', async () => {
+  // 默认不含 relay 组；显式开才含——两轮 toolCount 的差值正好是 relay 组的大小。
+  const { getPhoneBridgeAssistantRelayTools } = require('../phone/phoneBridgeCatalog');
+  const relayCount = getPhoneBridgeAssistantRelayTools().length;
+  const off = makeUpstream([textReply('done')]);
+  await runAgentTurn({
+    upstream: off, bridge: makeBridge(), messages: [{ role: 'user', content: 'x' }],
+    includeAssistantRelay: false,
+  });
+  const on = makeUpstream([textReply('done')]);
+  await runAgentTurn({
+    upstream: on, bridge: makeBridge(), messages: [{ role: 'user', content: 'x' }],
+    includeAssistantRelay: true,
+  });
+  assert.equal(on.seen[0].toolCount - off.seen[0].toolCount, relayCount);
+});
+
 test('a confirm the model puts in arguments is translated into the call option', async () => {
   // THE REGRESSION. confirm is a call option on the bridge, but the model's only
   // channel is the arguments object. Left untranslated, validateBridgeArgs
@@ -369,4 +386,49 @@ test('a caller can replace the system prompt entirely', async () => {
     upstream, bridge: makeBridge(), messages, systemPrompt: '只准用中文',
   });
   assert.equal(messages[0].content, '只准用中文');
+});
+
+// ── project awareness ────────────────────────────────────────────────────────
+//
+// The loop used to ship a system prompt that never mentioned the project at all:
+// the model knew how to drive a phone but had no idea it was maintaining khy-os,
+// so nothing in its context forbade auto-committing or writing a key into source.
+// These assertions exist so that regression cannot come back silently.
+
+test('the default system prompt carries the project profile', async () => {
+  const upstream = makeUpstream([textReply('ok')]);
+  const messages = [{ role: 'user', content: 'x' }];
+  await runAgentTurn({ upstream, bridge: makeBridge(), messages });
+
+  const content = messages[0].content;
+  assert.match(content, /【项目画像：khy-os】/);
+  // Every red line must be present: an agent that does not know R1/R2 can break
+  // them without ever deciding to.
+  assert.match(content, /R1 分支纪律/);
+  assert.match(content, /R2 密钥防泄露/);
+  assert.match(content, /R3 版本同步/);
+  assert.match(content, /R4 上帝文件门/);
+  assert.match(content, /B7 版本递增归人/);
+  // And the device-agent half must survive the concatenation.
+  assert.match(content, /工具才是真正落地动作的地方/);
+});
+
+test('the profile shows the bound workspace root when there is one', async () => {
+  const upstream = makeUpstream([textReply('ok')]);
+  const messages = [{ role: 'user', content: 'x' }];
+  await runAgentTurn({
+    upstream, bridge: makeBridge(), messages, workspaceRoot: '/sdcard/khy-os',
+  });
+  assert.match(messages[0].content, /当前工作目录：\/sdcard\/khy-os/);
+});
+
+test('the profile is omitted for a caller that replaces the prompt', async () => {
+  // A caller-supplied prompt wins outright. Appending the profile behind its back
+  // would make "只准用中文" a lie.
+  const upstream = makeUpstream([textReply('ok')]);
+  const messages = [{ role: 'user', content: 'x' }];
+  await runAgentTurn({
+    upstream, bridge: makeBridge(), messages, systemPrompt: '只准用中文',
+  });
+  assert.doesNotMatch(messages[0].content, /项目画像/);
 });

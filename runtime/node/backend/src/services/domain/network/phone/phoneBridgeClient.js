@@ -28,6 +28,7 @@
 
 const fs = require('fs');
 const http = require('node:http');
+const path = require('path');
 const { spawn } = require('child_process');
 
 const { safeKill } = require('../../../../tools/platformUtils');
@@ -40,6 +41,11 @@ const {
   buildForwardArgv,
   buildTokenReadArgv,
   buildStatusReadArgv,
+  buildSizeArgv,
+  buildStatArgv,
+  buildPullArgv,
+  buildPushArgv,
+  buildMkdirArgv,
   buildReviveArgv,
   classifyBridgeCall,
   planBridgeCall,
@@ -49,11 +55,20 @@ const {
   buildAdbArgv,
 } = require('./phoneBridgePolicy');
 const { createPhoneBridgeMailbox } = require('./phoneBridgeMailbox');
-const { truncateBridgeResultText, isPhoneBridgeUiToolName, ACCESS_READ, uiToolResultFieldCap } = require('./phoneBridgeCatalog');
+const { truncateBridgeResultText, isPhoneBridgeUiToolName, ACCESS_READ, uiToolResultFieldCap, ASSISTANT_RELAY_TOOL_NAMES } = require('./phoneBridgeCatalog');
+const { PHONE_BRIDGE_MAX_TRANSFER_BYTES, PHONE_BRIDGE_MAX_COLLECT_FILES, PHONE_BRIDGE_MAX_COLLECT_BYTES } = require('../../../../constants/serviceDefaults');
+const collect = require('./phoneCollect');
 
 const DEVICE_STATE_DEVICE = 'device';
 const MAX_ADB_OUTPUT_CHARS = 64 * 1024;
 const HTTP_PATHS = Object.freeze({ ping: '/ping', status: '/status', call: '/call' });
+
+// 空 serial（未设 env、自动探测也没命中）时走两条路：拼出来的 `adb connect ''` 与
+// 多设备时的设备串，都能把人的引号错到别的设备上去；所以直接报「未发现手机」。
+const DEVICE_NOT_FOUND_ERROR =
+  '未发现手机：adb 设备表为空，mDNS 也没有 _adb-tls-connect 实例。'
+  + '请确认手机与电脑在同一局域网、无线调试已开启且此前完成过一次配对；'
+  + '本机可用 `adb mdns services` 查看手机广播的连接实例，再重试。';
 
 function _parentGateEnabled(env = process.env) {
   try {
@@ -314,6 +329,40 @@ function _parseMdnsConnectServices(stdout) {
   return out;
 }
 
+/**
+ * 助手协同组（Amoo 反代）的可用性三态，只认桥自报的 status.json：
+ * - withheld 里出现 relay 名 → 缺对应 App → 不可用（false），并把 withheld 原样透出；
+ * - withheld 为空但有 tools → 全部 relay 工具都在 → 可用（true）；一个都不在 → false；
+ * - 两个字段都没有（旧版桥）→ 未知（null），不把「没报到」说成「缺 App」。
+ * @param {object|null} parsed status.json 的解析结果
+ * @returns {{available: boolean|null, withheld: string[]|null}}
+ */
+function _relayAvailability(parsed) {
+  const withheld = parsed && Array.isArray(parsed.withheld)
+    ? parsed.withheld.map((name) => String(name))
+    : null;
+  const toolsArr = parsed && Array.isArray(parsed.tools)
+    ? parsed.tools.map((name) => String(name))
+    : null;
+  if (withheld) {
+    return {
+      available: withheld.some((name) => ASSISTANT_RELAY_TOOL_NAMES.includes(name)) ? false : true,
+      withheld,
+    };
+  }
+  if (toolsArr) {
+    const present = ASSISTANT_RELAY_TOOL_NAMES.filter((name) => toolsArr.includes(name));
+    let available = null;
+    if (present.length === ASSISTANT_RELAY_TOOL_NAMES.length) {
+      available = true;
+    } else if (present.length === 0) {
+      available = false;
+    }
+    return { available, withheld };
+  }
+  return { available: null, withheld };
+}
+
 function createPhoneBridgeClient(options = {}) {
   const env = options.env || process.env;
   // SDK 位置候选要真的被探测：纯叶子自己零 IO，能传真探针的只有这层 IO 壳。
@@ -532,11 +581,29 @@ function createPhoneBridgeClient(options = {}) {
     }
     // Never `adb pair`: this serial's port is the CONNECT port. Pairing
     // against it fails with a protocol fault and pairs nothing.
+    //
+    // 空 serial：adoptAutoSerial 没命中，config.serial 仍是空的。此时
+    // `adb connect ''`（或多设备时设备串）能把人的引号错到别的设备上去，
+    // 直接报「未发现手机」，不猜。
+    if (!config.serial) {
+      state.connected = false;
+      state.lastConnectError = DEVICE_NOT_FOUND_ERROR;
+      return { ok: false, code: 'device_not_found', error: DEVICE_NOT_FOUND_ERROR };
+    }
     const res = await _runAdb(buildConnectArgv(config));
     const stdout = String(res.stdout || '');
     if (!res.ok || /cannot connect|failed|refused|error/i.test(stdout)) {
       state.connected = false;
       state.lastConnectError = redactSecrets(res.stderr || stdout || 'adb connect 失败');
+      // serial 来自旧默认（另一台机器的地址）时，说「没找到设备」而不是
+      // 「连不上 <过期地址>」——后者会让人以为自己的手机坏了。
+      if ((config.serialSource || 'env') === 'default') {
+        return {
+          ok: false,
+          code: 'device_not_found',
+          error: DEVICE_NOT_FOUND_ERROR,
+        };
+      }
       return {
         ok: false,
         code: 'adb_connect_failed',
@@ -639,6 +706,341 @@ function createPhoneBridgeClient(options = {}) {
     state.tokenLoaded = true;
     state.tokenLength = token.length;
     return { ok: true, cached: false };
+  }
+
+  /**
+   * 把设备上的一个文件拉到主机。这是唯一能把图片/视频/音频/JSON 搬进主机的通道
+   * （桥的 HTTP 面只回文本），所以先问体积再动手：超限就说清多大、限额多少，
+   * 而不是拉到一半才失败。
+   */
+  async function pullFile(options = {}) {
+    const remotePath = String(options.remotePath || '').trim();
+    const localPath = String(options.localPath || '').trim();
+    const maxBytes = Number(options.maxBytes) > 0 ? Number(options.maxBytes) : PHONE_BRIDGE_MAX_TRANSFER_BYTES;
+    if (!remotePath.startsWith('/')) {
+      return { ok: false, code: 'invalid_path', error: `设备侧路径必须是绝对路径：${remotePath || '(空)'}` };
+    }
+    if (!localPath) {
+      return { ok: false, code: 'invalid_path', error: '缺少主机侧目标路径' };
+    }
+    const started = await ensureConnected();
+    if (!started.ok) {
+      return started;
+    }
+    const sizeRes = await _runAdb(buildSizeArgv(config, remotePath), 10000);
+    let bytes = null;
+    if (sizeRes.ok) {
+      const matched = /(\d+)/.exec(String(sizeRes.stdout || ''));
+      if (matched) {
+        bytes = Number(matched[1]);
+      }
+    }
+    if (bytes !== null && bytes > maxBytes) {
+      return {
+        ok: false,
+        code: 'too_large',
+        error: `文件 ${remotePath} 有 ${(bytes / 1048576).toFixed(1)} MB，超过单次上限 `
+          + `${(maxBytes / 1048576).toFixed(0)} MB；调 KHY_PHONE_BRIDGE_MAX_TRANSFER_BYTES 或换小文件。`,
+      };
+    }
+    // 拉取耗时随体积走：按 1 MB/s 估，再加 adb 自身超时。视频比 token 大两个数量级，
+    // 固定短超时会把大文件判死。
+    const timeoutMs = Math.max(config.adbTimeoutMs, 60000)
+      + (bytes ? Math.ceil(bytes / (1024 * 1024)) * 1000 : 0);
+    const pulled = await _runAdb(buildPullArgv(config, remotePath, localPath), timeoutMs);
+    if (!pulled.ok) {
+      return {
+        ok: false,
+        code: 'adb_pull_failed',
+        error: `拉取 ${remotePath} 失败：${redactSecrets(pulled.stderr || pulled.stdout || 'adb pull 失败')}`,
+      };
+    }
+    let landed = null;
+    try {
+      landed = fs.statSync(localPath).size;
+    } catch {
+      landed = null;
+    }
+    return { ok: true, remotePath, localPath, bytes: landed === null ? bytes : landed };
+  }
+
+  /**
+   * 问一次文件的大小与修改时间。stat 一次给两个字段；老设备没有 stat 就退回
+   * wc -c（只有大小，mtime 记为未知——时间窗筛不了，但不假装筛过）。
+   */
+  async function _fileMeta(remotePath) {
+    const statRes = await _runAdb(buildStatArgv(config, remotePath), 10000);
+    if (statRes.ok) {
+      const matched = /(\d+)\s+(\d+)/.exec(String(statRes.stdout || ''));
+      if (matched) {
+        return { bytes: Number(matched[1]), mtimeMs: Number(matched[2]) * 1000 };
+      }
+    }
+    const sizeRes = await _runAdb(buildSizeArgv(config, remotePath), 10000);
+    if (sizeRes.ok) {
+      const matched = /(\d+)/.exec(String(sizeRes.stdout || ''));
+      if (matched) {
+        return { bytes: Number(matched[1]), mtimeMs: null };
+      }
+    }
+    return { bytes: null, mtimeMs: null };
+  }
+
+  /**
+   * 只枚举不下载：先看有什么，再决定采不采（视频动辄几百 MB，先看清单更稳）。
+   * 与 collectFiles 共用同一条枚举路径——两条命令看到的必须是同一批文件。
+   */
+  async function scanFiles(options = {}) {
+    const remoteDir = String(options.remoteDir || '').trim();
+    const types = Array.isArray(options.types) ? options.types : [];
+    if (!remoteDir.startsWith('/')) {
+      return { ok: false, code: 'invalid_path', error: `设备侧目录必须是绝对路径：${remoteDir || '(空)'}` };
+    }
+    const started = await ensureConnected();
+    if (!started.ok) {
+      return started;
+    }
+    const findRes = await _runAdb(collect.buildFindArgv(config, remoteDir), config.adbTimeoutMs);
+    if (!findRes.ok) {
+      return {
+        ok: false,
+        code: 'adb_find_failed',
+        error: `枚举 ${remoteDir} 失败：${redactSecrets(findRes.stderr || findRes.stdout || 'adb shell find 失败')}`,
+      };
+    }
+    const found = String(findRes.stdout || '').split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+    const wanted = new Set(
+      (types.length ? types : collect.TYPE_NAMES)
+        .map((t) => String(t).toLowerCase())
+        .filter((t) => collect.TYPE_NAMES.includes(t)),
+    );
+    const skipped = [];
+    const sized = [];
+    for (const candidate of collect.listCandidates({ paths: found, remoteDir, maxDepth: options.maxDepth })) {
+      // 类型没点名或压根不认识的文件也要进清单：用户要知道「枚举到几个、采了几个」。
+      if (!candidate.type) {
+        skipped.push({ remotePath: candidate.remotePath, reason: 'unknown-type' });
+        continue;
+      }
+      if (!wanted.has(candidate.type)) {
+        skipped.push({ remotePath: candidate.remotePath, reason: 'type-not-requested', type: candidate.type });
+        continue;
+      }
+      sized.push({ ...candidate, ...(await _fileMeta(candidate.remotePath)) });
+    }
+    const sinceMs = Number.isFinite(Number(options.sinceMs)) ? Number(options.sinceMs) : null;
+    const window = collect.filterBySince(sized, sinceMs);
+    for (const item of window.dropped) {
+      skipped.push({ remotePath: item.remotePath, reason: 'older-than-window', mtimeMs: item.mtimeMs });
+    }
+    const counts = {};
+    for (const item of window.kept) {
+      counts[item.type] = (counts[item.type] || 0) + 1;
+    }
+    return {
+      ok: true,
+      entries: window.kept,
+      skipped,
+      counts,
+      sinceMs,
+      sinceUnknown: window.unknown,
+    };
+  }
+
+  /**
+   * 按类型批量采集：设备上枚举 → 筛类型 → 逐个拉 → 落清单。
+   *
+   * 单文件上限管不住「200 个大文件」，所以文件数与总字节数各有一道闸；被跳过的
+   * 也要写进清单（skip 原因），否则用户以为采全了。
+   */
+  async function collectFiles(options = {}) {
+    const remoteDir = String(options.remoteDir || '').trim();
+    const localDir = String(options.localDir || '').trim();
+    const types = Array.isArray(options.types) ? options.types : [];
+    const maxFiles = Number(options.maxFiles) > 0
+      ? Number(options.maxFiles)
+      : PHONE_BRIDGE_MAX_COLLECT_FILES;
+    const maxTotal = Number(options.maxTotalBytes) > 0
+      ? Number(options.maxTotalBytes)
+      : PHONE_BRIDGE_MAX_COLLECT_BYTES;
+    const maxPerFile = Number(options.maxBytes) > 0 ? Number(options.maxBytes) : PHONE_BRIDGE_MAX_TRANSFER_BYTES;
+    if (!remoteDir.startsWith('/')) {
+      return { ok: false, code: 'invalid_path', error: `设备侧目录必须是绝对路径：${remoteDir || '(空)'}` };
+    }
+    if (!localDir) {
+      return { ok: false, code: 'invalid_path', error: '缺少主机侧目录' };
+    }
+    const started = await ensureConnected();
+    if (!started.ok) {
+      return started;
+    }
+    // 先把主机侧目录建好：adb pull 不会替我们建父目录。
+    try {
+      fs.mkdirSync(localDir, { recursive: true });
+    } catch (err) {
+      return {
+        ok: false,
+        code: 'local_dir_failed',
+        error: `主机侧目录建不出来：${localDir}（${err && err.message ? err.message : '未知错误'}）`,
+      };
+    }
+    const scan = await scanFiles({
+      remoteDir,
+      types,
+      sinceMs: options.sinceMs,
+      maxDepth: options.maxDepth,
+    });
+    if (!scan.ok) {
+      return scan;
+    }
+    const files = [];
+    const skipped = scan.skipped;
+    const counts = {};
+    let total = 0;
+    let budgetHit = false;
+    for (const item of scan.entries) {
+      if (files.length >= maxFiles || budgetHit) {
+        skipped.push({ remotePath: item.remotePath, reason: 'budget' });
+        continue;
+      }
+      const bytes = item.bytes;
+      if (bytes !== null && bytes > maxPerFile) {
+        skipped.push({ remotePath: item.remotePath, reason: 'too_large', bytes });
+        continue;
+      }
+      if (total + (bytes || 0) > maxTotal) {
+        budgetHit = true;
+        skipped.push({ remotePath: item.remotePath, reason: 'total_cap', bytes });
+        continue;
+      }
+      // 落盘保留相对路径：不同子目录里的同名文件（DCIM/Camera/a.jpg 与
+      // DCIM/Backup/a.jpg）用 basename 会互相覆盖，后一个悄悄盖掉前一个。
+      const relative = item.remotePath.startsWith(`${remoteDir}/`)
+        ? item.remotePath.slice(remoteDir.length + 1)
+        : path.basename(item.remotePath);
+      const localPath = path.join(localDir, relative);
+      try {
+        fs.mkdirSync(path.dirname(localPath), { recursive: true });
+      } catch (err) {
+        skipped.push({
+          remotePath: item.remotePath,
+          reason: 'local_dir_failed',
+          error: err && err.message ? err.message : '未知错误',
+        });
+        continue;
+      }
+      const timeoutMs = Math.max(config.adbTimeoutMs, 60000)
+        + (bytes ? Math.ceil(bytes / (1024 * 1024)) * 1000 : 0);
+      const pulled = await _runAdb(buildPullArgv(config, item.remotePath, localPath), timeoutMs);
+      if (!pulled.ok) {
+        skipped.push({
+          remotePath: item.remotePath,
+          reason: 'pull_failed',
+          error: redactSecrets(pulled.stderr || pulled.stdout || 'adb pull 失败'),
+        });
+        continue;
+      }
+      total += bytes || 0;
+      counts[item.type] = (counts[item.type] || 0) + 1;
+      files.push({
+        remotePath: item.remotePath,
+        localPath,
+        type: item.type,
+        bytes,
+        mtimeMs: item.mtimeMs,
+      });
+    }
+    const manifest = collect.buildManifest({
+      remoteDir,
+      localDir,
+      types,
+      sinceMs: scan.sinceMs,
+      sinceUnknown: scan.sinceUnknown,
+      counts,
+      files,
+      skipped,
+    });
+    try {
+      fs.mkdirSync(localDir, { recursive: true });
+      fs.writeFileSync(
+        path.join(localDir, 'manifest.json'),
+        `${JSON.stringify(manifest, null, 2)}\n`,
+        'utf8',
+      );
+    } catch (err) {
+      return {
+        ok: false,
+        code: 'manifest_write_failed',
+        error: `清单写入失败：${err && err.message ? err.message : '未知错误'}（文件已拉到 ${localDir}）`,
+        files,
+      };
+    }
+    return { ok: true, manifest, totalBytes: total };
+  }
+
+  /**
+   * 把主机上的文件推到设备。pull 的对向：把构建产物/脚本/配置送上手机，
+   * 是「手机当开发机」这条回路的另一半。设备侧父目录要先建——adb push 不会
+   * 替我们建目录，缺目录时它只会报一个含糊的失败。
+   */
+  async function pushFile(options = {}) {
+    const localPath = String(options.localPath || '').trim();
+    const remotePath = String(options.remotePath || '').trim();
+    const maxBytes = Number(options.maxBytes) > 0 ? Number(options.maxBytes) : PHONE_BRIDGE_MAX_TRANSFER_BYTES;
+    if (!localPath) {
+      return { ok: false, code: 'invalid_path', error: '缺少主机侧源文件路径' };
+    }
+    if (!remotePath.startsWith('/')) {
+      return { ok: false, code: 'invalid_path', error: `设备侧路径必须是绝对路径：${remotePath || '(空)'}` };
+    }
+    let bytes = null;
+    try {
+      const stat = fs.statSync(localPath);
+      if (!stat.isFile()) {
+        return { ok: false, code: 'invalid_path', error: `主机侧不是文件：${localPath}` };
+      }
+      bytes = stat.size;
+    } catch (err) {
+      return {
+        ok: false,
+        code: 'local_file_missing',
+        error: `主机侧文件读不到：${localPath}（${err && err.message ? err.message : '未知错误'}）`,
+      };
+    }
+    if (bytes > maxBytes) {
+      return {
+        ok: false,
+        code: 'too_large',
+        error: `文件 ${localPath} 有 ${(bytes / 1048576).toFixed(1)} MB，超过单次上限 `
+          + `${(maxBytes / 1048576).toFixed(0)} MB；调 KHY_PHONE_BRIDGE_MAX_TRANSFER_BYTES 或换小文件。`,
+      };
+    }
+    const started = await ensureConnected();
+    if (!started.ok) {
+      return started;
+    }
+    const remoteDir = remotePath.split('/').slice(0, -1).join('/');
+    if (remoteDir) {
+      const mkdir = await _runAdb(buildMkdirArgv(config, remoteDir), config.adbTimeoutMs);
+      if (!mkdir.ok) {
+        return {
+          ok: false,
+          code: 'adb_mkdir_failed',
+          error: `设备侧目录建不出来：${remoteDir}（${redactSecrets(mkdir.stderr || mkdir.stdout || 'adb shell mkdir 失败')}）`,
+        };
+      }
+    }
+    const timeoutMs = Math.max(config.adbTimeoutMs, 60000)
+      + Math.ceil(bytes / (1024 * 1024)) * 1000;
+    const pushed = await _runAdb(buildPushArgv(config, localPath, remotePath), timeoutMs);
+    if (!pushed.ok) {
+      return {
+        ok: false,
+        code: 'adb_push_failed',
+        error: `推送 ${localPath} → ${remotePath} 失败：${redactSecrets(pushed.stderr || pushed.stdout || 'adb push 失败')}`,
+      };
+    }
+    return { ok: true, localPath, remotePath, bytes };
   }
 
   function _authHeaders() {
@@ -747,6 +1149,11 @@ function createPhoneBridgeClient(options = {}) {
       return blocked;
     }
     await _ensureSerialAdopted();
+    // serial 仍是空的（没设 env、自动探测也没命中）：`adb shell cat` 在多设备时
+    // 会报 more than one device，不如直接说没找到手机。
+    if (!config.serial) {
+      return { ok: false, code: 'device_not_found', error: DEVICE_NOT_FOUND_ERROR };
+    }
     const res = await _runAdb(buildStatusReadArgv(config, config.statusRemotePath));
     if (!res.ok || !res.stdout.trim()) {
       return {
@@ -761,6 +1168,9 @@ function createPhoneBridgeClient(options = {}) {
     } catch {
       parsed = null;
     }
+    // 助手协同组（Amoo 反代）的可用性：只认桥自报的 withheld / tools，
+    // 缺 App → false，桥没报 → null（未知），不替桥编结论。
+    const relay = _relayAvailability(parsed);
     return {
       ok: true,
       channel: 'adb-shell',
@@ -768,6 +1178,8 @@ function createPhoneBridgeClient(options = {}) {
       httpPortBound: !!(parsed && Number(parsed.http_port) > 0),
       canWrite: !!(parsed && parsed.canWrite === true),
       uiAvailable: !!(parsed && parsed.ui === true),
+      assistantAvailable: relay.available,
+      relayWithheld: relay.withheld,
       // 「桥看似在线但 PC 永远 401」的唯一静默成因：令牌没落盘，只剩内存份。
       // 旧版 APK（独立 StepBridge）的 status.json 没有这个字段——缺字段判
       // 「未知」（null），不判失败。
@@ -1049,6 +1461,10 @@ function createPhoneBridgeClient(options = {}) {
     ensureConnected,
     ensureForward,
     readToken,
+    pullFile,
+    pushFile,
+    collectFiles,
+    scanFiles,
     ping,
     status,
     probe,

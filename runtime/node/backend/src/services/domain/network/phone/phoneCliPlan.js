@@ -24,6 +24,10 @@ const ACTIONS = Object.freeze([
   'probe',
   'tools',
   'call',
+  'pull',
+  'push',
+  'collect',
+  'scan',
   'setup',
   'revive',
   'connect',
@@ -159,6 +163,84 @@ function parsePhoneArgv(tokens = [], options = {}) {
   if (action === 'help') {
     return base;
   }
+  if (action === 'pull') {
+    // 设备路径必给，主机路径可省（默认当前目录同名文件）。
+    if (rest.length === 0) {
+      return {
+        ok: false,
+        code: 'missing_args',
+        error: '子命令 pull 需要设备侧路径，例：khy phone pull /sdcard/DCIM/Camera/x.jpg out/x.jpg',
+      };
+    }
+    if (rest.length > 2) {
+      return {
+        ok: false,
+        code: 'unexpected_args',
+        error: `子命令 pull 只接受「设备路径 [主机路径]」两个参数：${rest.join(' ')}`,
+      };
+    }
+    return { ...base, remotePath: rest[0], localPath: rest[1] || '' };
+  }
+  if (action === 'collect') {
+    // 设备目录与主机目录必给；类型可选（逗号分隔），时间窗可选（7d/48h/2w）。
+    if (rest.length < 2) {
+      return {
+        ok: false,
+        code: 'missing_args',
+        error: '子命令 collect 需要「设备目录 主机目录」，例：khy phone collect /sdcard/DCIM out/dcim [image,video] [7d]',
+      };
+    }
+    if (rest.length > 4) {
+      return {
+        ok: false,
+        code: 'unexpected_args',
+        error: `子命令 collect 只接受「设备目录 主机目录 [类型] [时间窗]」四个参数：${rest.join(' ')}`,
+      };
+    }
+    const types = rest[2]
+      ? rest[2].split(',').map((t) => t.trim().toLowerCase()).filter(Boolean)
+      : [];
+    return { ...base, remoteDir: rest[0], localDir: rest[1], types, since: rest[3] || '' };
+  }
+  if (action === 'scan') {
+    // 只枚举不下载：设备目录必给，类型与时间窗可选。
+    if (rest.length === 0) {
+      return {
+        ok: false,
+        code: 'missing_args',
+        error: '子命令 scan 需要设备侧目录，例：khy phone scan /sdcard/DCIM [image,video] [7d]',
+      };
+    }
+    if (rest.length > 3) {
+      return {
+        ok: false,
+        code: 'unexpected_args',
+        error: `子命令 scan 只接受「设备目录 [类型] [时间窗]」三个参数：${rest.join(' ')}`,
+      };
+    }
+    const types = rest[1]
+      ? rest[1].split(',').map((t) => t.trim().toLowerCase()).filter(Boolean)
+      : [];
+    return { ...base, remoteDir: rest[0], types, since: rest[2] || '' };
+  }
+  if (action === 'push') {
+    // 主机源文件与设备目标路径都必给。
+    if (rest.length < 2) {
+      return {
+        ok: false,
+        code: 'missing_args',
+        error: '子命令 push 需要「主机文件 设备路径」，例：khy phone push out/app.apk /sdcard/Download/app.apk',
+      };
+    }
+    if (rest.length > 2) {
+      return {
+        ok: false,
+        code: 'unexpected_args',
+        error: `子命令 push 只接受「主机文件 设备路径」两个参数：${rest.join(' ')}`,
+      };
+    }
+    return { ...base, localPath: rest[0], remotePath: rest[1] };
+  }
   if (action !== 'call') {
     if (rest.length > 0) {
       return {
@@ -187,6 +269,10 @@ function renderPhoneHelp() {
     '  khy phone probe               读 status.json 心跳，区分「服务死了」与「端口死了」',
     '  khy phone tools               列出桥上可调用的工具与参数',
     '  khy phone call <工具> [json]  调用桥上工具',
+    '  khy phone pull <设备路径> [主机路径]  把设备上的文件拉下来（图片/视频/音频/JSON 通用）',
+    '  khy phone push <主机文件> <设备路径>  把本地文件推到手机（构建产物/脚本/配置）',
+    '  khy phone collect <设备目录> <主机目录> [类型]  按类型批量采集并落清单（image,audio,video,json,text）',
+    '  khy phone scan <设备目录> [类型] [时间窗]  只列清单不下载（7d/48h/2w）',
     '  khy phone call <工具> --channel mailbox   强制走文件信箱兜底',
     '  khy phone devices             列出 adb 看到的设备',
     '  khy phone connect             执行 adb connect（设备掉线时）',
@@ -250,6 +336,7 @@ function renderStatusText(input = {}) {
 function renderToolListText(input = {}) {
   const tools = Array.isArray(input.tools) ? input.tools : [];
   const uiTools = Array.isArray(input.unavailableUiTools) ? input.unavailableUiTools : [];
+  const assistantTools = Array.isArray(input.unavailableAssistantTools) ? input.unavailableAssistantTools : [];
   const lines = [];
   lines.push(`可调用工具 ${tools.length} 个：`);
   for (const tool of tools) {
@@ -260,6 +347,13 @@ function renderToolListText(input = {}) {
     lines.push('');
     lines.push(`不可用 ${uiTools.length} 个：${uiTools.join(' / ')}`);
     lines.push(`原因：${input.unavailableUiReason || '当前构建未提供'}`);
+  }
+  // 助手协同（Amoo 反代）组的不可用段，形态与 UI 工具一致：只在桥明确报「 withheld 」
+  // （assistantAvailable===false）时才出现；桥没报到（null）时不渲染，见 phone.js _tools。
+  if (assistantTools.length > 0) {
+    lines.push('');
+    lines.push(`不可用 ${assistantTools.length} 个：${assistantTools.join(' / ')}`);
+    lines.push(`原因：${input.unavailableAssistantReason || '当前构建未提供'}`);
   }
   return lines.join('\n');
 }
@@ -297,13 +391,20 @@ function renderChainText(input = {}) {
 }
 
 /**
- * @param {{grants:object[], serial?:string}} input
+ * @param {{grants:object[], serial?:string, serialSource?:string}} input
  * @returns {string}
  */
 function renderSetupText(input = {}) {
   const grants = Array.isArray(input.grants) ? input.grants : [];
   const serial = input.serial || '<序列号>';
   const lines = [];
+  // serialSource 为 default 时，这个地址是仓库里的历史占位值（另一台机器的），
+  // 不是用户的手机。照抄会报 device not found——必须先说清楚。
+  if (input.serialSource === 'default') {
+    lines.push('未探测到设备：下面的 ' + serial + ' 是历史占位地址，需替换为手机实际地址。');
+    lines.push('查实际地址：adb mdns services（找 _adb-tls-connect._tcp 那一行，形如 192.168.x.x:端口）');
+    lines.push('');
+  }
   lines.push('装机后需要授权的各项（命令需在 PC 上执行，khy 不代跑）：');
   for (const grant of grants) {
     const mark = grant.required ? '必填' : '可选';

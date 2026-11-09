@@ -45,7 +45,14 @@ const DEFAULT_MAX_ROUNDS = 24;
  * It is a parameter, not a constant, so a caller can replace it. It is prepended
  * only when the conversation has no system message already.
  */
-const DEFAULT_SYSTEM_PROMPT = [
+/**
+ * The generic half of the default system prompt: how to behave as a phone agent.
+ *
+ * Kept separate from the project profile so the two concerns stay readable — this
+ * half is about *operating a device*, the profile is about *what project you are
+ * maintaining*. They are concatenated by buildDefaultSystemPrompt.
+ */
+const AGENT_INSTRUCTIONS = [
   '你是一个能在用户手机上执行操作的智能体。',
   '',
   '你能通过工具直接在手机上做事：读写文件、执行 shell 命令、启动应用、操作界面。',
@@ -60,6 +67,29 @@ const DEFAULT_SYSTEM_PROMPT = [
 ].join('\n');
 
 /**
+ * Compose the default system prompt: device-agent behaviour + project profile.
+ *
+ * The profile half is what makes the loop project-aware. Without it the model knows
+ * how to drive a phone but has no idea it is maintaining khy-os, so nothing stops it
+ * from auto-committing or writing a key into source — not because it is careless,
+ * but because nobody told it those were forbidden.
+ *
+ * @param {object} [options]
+ * @param {string} [options.workspaceRoot] current working directory, if one is bound
+ * @param {string} [options.repoRoot] repo root, used to read version tracks live
+ * @returns {string}
+ */
+function buildDefaultSystemPrompt({ workspaceRoot, repoRoot } = {}) {
+  const {
+    readVersionTracks,
+    renderProfileSection,
+  } = require('../../project/projectProfile');
+
+  const versionTracks = repoRoot ? readVersionTracks(repoRoot) : [];
+  return `${AGENT_INSTRUCTIONS}\n\n${renderProfileSection({ versionTracks, workspaceRoot })}`;
+}
+
+/**
  * Run one agent turn to completion.
  *
  * @param {object} deps
@@ -68,7 +98,11 @@ const DEFAULT_SYSTEM_PROMPT = [
  * @param {object} deps.bridge the phone bridge client (call(tool,args,opts))
  * @param {string[]} deps.messages the conversation so far (mutated: appended to)
  * @param {boolean} [deps.includeUi] whether to advertise UI tools
+ * @param {boolean} [deps.includeAssistantRelay] whether to advertise the Amoo relay group (default false)
  * @param {number} [deps.maxRounds]
+ * @param {string} [deps.systemPrompt] overrides the default entirely
+ * @param {string} [deps.workspaceRoot] bound working directory, shown in the profile
+ * @param {string} [deps.repoRoot] repo root, used to read version tracks live
  * @param {(line: string) => void} [deps.onProgress]
  * @returns {Promise<{ok: boolean, message?: object, error?: string, rounds: number,
  *   toolCalls: Array<{name: string, ok: boolean}>, stopped?: string}>}
@@ -78,8 +112,11 @@ async function runAgentTurn({
   bridge,
   messages,
   includeUi = true,
+  includeAssistantRelay = false,
   maxRounds = DEFAULT_MAX_ROUNDS,
-  systemPrompt = DEFAULT_SYSTEM_PROMPT,
+  systemPrompt,
+  workspaceRoot,
+  repoRoot,
   onProgress = () => {},
   resolveToolName = createToolNameResolver(),
 }) {
@@ -90,13 +127,18 @@ async function runAgentTurn({
     return { ok: false, error: 'agentLoop: bridge.call 未提供', rounds: 0, toolCalls: [] };
   }
 
+  // Built here rather than as a module-level default so repoRoot/workspaceRoot are
+  // known by the time the prompt is composed. A caller-supplied prompt still wins
+  // outright and never gets the profile appended.
+  const prompt = systemPrompt || buildDefaultSystemPrompt({ workspaceRoot, repoRoot });
+
   const { buildToolSchemas } = require('./toolSchemas');
-  const tools = buildToolSchemas({ includeUi });
+  const tools = buildToolSchemas({ includeUi, includeAssistantRelay });
 
   // The system prompt goes in only when the caller has not supplied one, so a
   // conversation that already carries its own instructions is not overridden.
-  if (systemPrompt && !messages.some((m) => m && m.role === 'system')) {
-    messages.unshift({ role: 'system', content: systemPrompt });
+  if (prompt && !messages.some((m) => m && m.role === 'system')) {
+    messages.unshift({ role: 'system', content: prompt });
   }
 
   const toolCalls = [];
@@ -247,4 +289,5 @@ async function runAgentTurn({
 module.exports = {
   DEFAULT_MAX_ROUNDS,
   runAgentTurn,
+  buildDefaultSystemPrompt,
 };

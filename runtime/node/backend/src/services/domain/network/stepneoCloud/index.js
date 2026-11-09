@@ -74,6 +74,7 @@ function createStepneoSession({
       maxRounds: resolvedMaxRounds,
       onProgress: opts.onProgress,
       includeUi: opts.includeUi,
+      includeAssistantRelay: opts.includeAssistantRelay,
     }),
   };
 }

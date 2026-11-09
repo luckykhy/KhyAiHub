@@ -442,6 +442,37 @@ function buildStatusReadArgv(config, statusRemotePath) {
 }
 
 /**
+ * 设备文件大小（字节）。拉取前先问一次体积，好过拉到一半才发现超限。
+ * 用 wc -c 而不是 stat：toybox 的 stat 在老版本上并不总在。
+ */
+function buildSizeArgv(config, remotePath) {
+  return buildAdbArgv(config, ['shell', 'wc', '-c', String(remotePath || '')]);
+}
+
+/**
+ * 一次拿到大小与修改时间（stat -c '%s %Y'）。比 wc -c 多一个字段，却不多一次
+ * adb 往返——采集要按时间窗筛文件，光有大小不够。
+ */
+function buildStatArgv(config, remotePath) {
+  return buildAdbArgv(config, ['shell', 'stat', '-c', '%s %Y', String(remotePath || '')]);
+}
+
+/** 拉取设备文件到主机。路径都是参数，不拼进命令串。 */
+function buildPullArgv(config, remotePath, localPath) {
+  return buildAdbArgv(config, ['pull', String(remotePath || ''), String(localPath || '')]);
+}
+
+/** 推送主机文件到设备。设备侧父目录要先建（adb push 不会替我们建）。 */
+function buildPushArgv(config, localPath, remotePath) {
+  return buildAdbArgv(config, ['push', String(localPath || ''), String(remotePath || '')]);
+}
+
+/** 设备侧建目录（-p 递归），供 push 用。 */
+function buildMkdirArgv(config, remoteDir) {
+  return buildAdbArgv(config, ['shell', 'mkdir', '-p', String(remoteDir || '')]);
+}
+
+/**
  * The token is a bearer secret. It is read from the device at call time, never
  * written into the repo, and never echoed into a tool result or a log line —
  * this function is the single choke point every return path goes through.
@@ -493,6 +524,11 @@ module.exports = {
   buildReviveArgv,
   buildTokenReadArgv,
   buildStatusReadArgv,
+  buildSizeArgv,
+  buildStatArgv,
+  buildPullArgv,
+  buildPushArgv,
+  buildMkdirArgv,
   redactSecrets,
   isValidTokenShape,
   normalizeToken,
