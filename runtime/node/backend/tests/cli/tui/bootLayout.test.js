@@ -18,15 +18,15 @@ const {
   BEAT_ROWS,
   PROGRESS_ROWS,
   MIN_CENTER_COLS,
+  MARK_ROWS,
   frameRowsOf,
 } = require('../../../src/cli/tui/bootLayout');
 
 test('阶梯阈值：各档恰好在其 rows 门槛上被选中', () => {
   assert.equal(plan({ rows: 80 }).rung, 'F');
   assert.equal(plan({ rows: 30 }).rung, 'F');
-  assert.equal(plan({ rows: 26 }).rung, 'F');
-  assert.equal(plan({ rows: 25 }).rung, 'G');
-  assert.equal(plan({ rows: 24 }).rung, 'H');
+  assert.equal(plan({ rows: 29 }).rung, 'G');
+  assert.equal(plan({ rows: 28 }).rung, 'H');
   assert.equal(plan({ rows: 17 }).rung, 'H');
   assert.equal(plan({ rows: 16 }).rung, 'I');
   assert.equal(plan({ rows: 15 }).rung, 'J');
@@ -35,16 +35,16 @@ test('阶梯阈值：各档恰好在其 rows 门槛上被选中', () => {
 });
 
 test('降级顺序：brandRows 严格单调递减 F→G→H→I→J', () => {
-  const rows = RUNGS.map((r) => r.clover * 9 + r.wordmark + r.tagline);
+  const rows = RUNGS.map((r) => r.mark * MARK_ROWS + r.wordmark + r.tagline);
   for (let i = 1; i < rows.length; i++) {
     assert.ok(rows[i] < rows[i - 1], `第 ${i} 档 brandRows 必须严格小于上一档`);
   }
-  assert.deepEqual(rows, [11, 10, 2, 1, 0]);
+  assert.deepEqual(rows, [15, 14, 2, 1, 0]);
 });
 
 test('账本闭合：frameRows = FIXED_ROWS + brandRows + TAIL_ROWS（逐档）', () => {
   for (const r of RUNGS) {
-    const brandRows = r.clover * 9 + r.wordmark + r.tagline;
+    const brandRows = r.mark * MARK_ROWS + r.wordmark + r.tagline;
     assert.equal(frameRowsOf(r), FIXED_ROWS + brandRows + TAIL_ROWS, `档 ${r.id}`);
   }
 });
@@ -78,19 +78,19 @@ test('窄终端保护：cols < 40 放弃居中，其余一律居中', () => {
 
 test('plan 返回新对象：改动结果不得污染下一次调用', () => {
   const a = plan({ rows: 30 });
-  a.clover = false;
+  a.mark = false;
   a.brandRows = 999;
   const b = plan({ rows: 30 });
-  assert.equal(b.clover, true);
-  assert.equal(b.brandRows, 11);
+  assert.equal(b.mark, true);
+  assert.equal(b.brandRows, 15);
   assert.notEqual(a, b);
 });
 
-test('每档的 rung 字段自洽：brandRows 与 clover/wordmark/tagline 一致', () => {
+test('每档的 rung 字段自洽：brandRows 与 mark/wordmark/tagline 一致', () => {
   for (const r of RUNGS) {
     const p = plan({ rows: 80, cols: 80 });
     void p;
-    const expected = r.clover * 9 + r.wordmark + r.tagline;
+    const expected = r.mark * MARK_ROWS + r.wordmark + r.tagline;
     assert.equal(frameRowsOf(r) - 13 - 1, expected, `档 ${r.id}`);
   }
 });

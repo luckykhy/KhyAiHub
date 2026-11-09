@@ -42,19 +42,47 @@ test('frameBudget: max ring cap is bounded (no unbounded growth)', () => {
 
 test('frameBudget: maybeWarn() fires exactly once on breach, not on clean windows', () => {
   const notes = [];
-  const clean = createGuard({ windowSize: 10, budgetMs: 16, sink: { warn: (m) => notes.push(m) } });
+  // verbose:true because P0-9b folded the technical notice behind the verbose
+  // gate: a guard built from a bare env no longer warns at all, so this case
+  // has to opt in to keep testing the latch. The "folded by default" half is
+  // asserted in the next test.
+  const clean = createGuard({ windowSize: 10, budgetMs: 16, verbose: true, sink: { warn: (m) => notes.push(m) } });
   for (let i = 0; i < 5; i++) clean.record(2);
   clean.maybeWarn();
   clean.maybeWarn();
   assert.equal(notes.length, 0, 'no warning when p95 is within budget');
 
-  const hot = createGuard({ windowSize: 10, budgetMs: 16, sink: { warn: (m) => notes.push(m) } });
+  const hot = createGuard({ windowSize: 10, budgetMs: 16, verbose: true, sink: { warn: (m) => notes.push(m) } });
   for (let i = 0; i < 5; i++) hot.record(60);
   hot.maybeWarn();
   hot.maybeWarn();
   hot.maybeWarn();
   assert.equal(notes.length, 1, 'breach warns exactly once (latched)');
   assert.match(notes[0], /渲染帧超预算/);
+});
+
+test('frameBudget: technical breach notice is folded by default (P0-9b)', () => {
+  // The old behaviour emitted this line on every TTY startup. It used to tell
+  // the user to tune KHY_TUI_FRAME_BUDGET_MS and to go looking for "streaming
+  // batch / re-render hotspots" -- engineering jargon with zero actionable
+  // value on the user's side, on the same screen as their prompt.
+  const notes = [];
+  const hot = createGuard({ windowSize: 10, budgetMs: 16, env: {}, sink: { warn: (m) => notes.push(m) } });
+  for (let i = 0; i < 5; i++) hot.record(60);
+  hot.maybeWarn();
+  hot.maybeWarn();
+  assert.equal(notes.length, 0, 'default env must stay silent');
+
+  const loud = createGuard({
+    windowSize: 10,
+    budgetMs: 16,
+    env: { KHY_TUI_DIAG: '1' },
+    sink: { warn: (m) => notes.push(m) },
+  });
+  for (let i = 0; i < 5; i++) loud.record(60);
+  loud.maybeWarn();
+  loud.maybeWarn();
+  assert.equal(notes.length, 1, 'an existing verbose switch re-arms it');
 });
 
 test('frameBudget: reset() re-arms the guard and empties the window', () => {

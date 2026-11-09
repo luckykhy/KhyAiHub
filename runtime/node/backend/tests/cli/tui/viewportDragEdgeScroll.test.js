@@ -162,18 +162,98 @@ test('T5 拖到底时回写贴底哨兵,新内容进来继续跟随', () => {
 // App.js 的 `onSelectEvent` 在没有 ink 渲染 harness 的情况下取不到(整棵组件树要
 // 起 stdin),所以这里刮源码守三条**曾经真错过的**接线。纯函数全绿也挡不住接线丢失:
 // 「偏移方向写反」「col 按字符下标切」两次都是三层单测各自自洽、只有端到端才暴露。
+//
+// ⚠ 2026-10-25:判据从「固定字符窗口 + 字符距离」改成**结构性**刮取。
+//   原因(实测):原判据是 `src.slice(start, start + 6000)` 加
+//   `kind === 'move'[\s\S]{0,900}dragAutoScroll`。它把「调用点在同一个分支里」
+//   偷换成「字符距离够近」—— 而**分支里注释多长与接线对错毫无关系**。
+//   实测:2026-10-10 在途改动给 move 分支加了一段说明(206 字符),距离从 734 涨到 940,
+//   这条断言就红了 —— 守卫在抱怨注释长度,而不是抓接线错误。
+//   结构性刮取(花括号配对)表达的是同一条意图,且不受注释长度影响。
+//   覆盖强度不降反升:调用点被挪到分支外(改到 up 分支之前 / down 分支里)照样变红 ——
+//   这两种变异旧的「距离代理」判据**抓不到**(它只看距离),已用变异对照实测确认。
 test('T6 App.js 的拖选接线:走 Viewport 口径 + 真的调用边缘滚动', () => {
   const src = require('node:fs').readFileSync(
     require('node:path').join(__dirname, '../../../src/cli/tui/ink-components/App.js'),
     'utf-8'
   );
-  const start = src.indexOf('const onSelectEvent = React.useCallback');
-  assert.ok(start > 0, 'onSelectEvent 必须存在');
-  const body = src.slice(start, start + 6000);
 
-  // (1) 边缘滚动真的被调用,且只在 move 分支滚
-  assert.match(body, /vp\.dragAutoScroll\(/, 'move 分支必须调用 dragAutoScroll');
-  assert.match(body, /kind === 'move'[\s\S]{0,900}dragAutoScroll/, '滚动必须发生在 move 分支内');
+  // 花括号配对取块内正文(跳过行注释/块注释/字符串;模板串里的 ${} 也按普通字符处理)。
+  // 定位失败返回 null —— 调用方按「fail-closed」处理,绝不静默通过。
+  const blockBody = (text, marker) => {
+    const m = text.indexOf(marker);
+    if (m < 0) return null;
+    const open = text.indexOf('{', m + marker.length);
+    if (open < 0) return null;
+    let depth = 0;
+    let i = open;
+    let inLine = false;
+    let inBlock = false;
+    let quote = null;
+    while (i < text.length) {
+      const c = text[i];
+      const n = text[i + 1];
+      if (inLine) {
+        if (c === '\n') inLine = false;
+        i += 1;
+        continue;
+      }
+      if (inBlock) {
+        if (c === '*' && n === '/') {
+          inBlock = false;
+          i += 2;
+          continue;
+        }
+        i += 1;
+        continue;
+      }
+      if (quote) {
+        if (c === '\\') {
+          i += 2;
+          continue;
+        }
+        if (c === quote) quote = null;
+        i += 1;
+        continue;
+      }
+      if (c === '/' && n === '/') {
+        inLine = true;
+        i += 2;
+        continue;
+      }
+      if (c === '/' && n === '*') {
+        inBlock = true;
+        i += 2;
+        continue;
+      }
+      if (c === "'" || c === '"' || c === '`') {
+        quote = c;
+        i += 1;
+        continue;
+      }
+      if (c === '{') depth += 1;
+      else if (c === '}') {
+        depth -= 1;
+        if (depth === 0) return text.slice(open + 1, i);
+      }
+      i += 1;
+    }
+    return null; // 花括号未闭合 → 定位失败
+  };
+
+  const handler = blockBody(src, 'const onSelectEvent = React.useCallback');
+  assert.ok(handler, '必须能定位 onSelectEvent 的函数体(结构性刮取失败即判红)');
+  const body = handler;
+
+  // (1) 边缘滚动真的被调用,且**只在 move 分支**滚。
+  //     结构性判据:把 move 分支的代码块切出来,要求滚动调用点在其中。
+  const moveBranch = blockBody(body, "kind === 'move'");
+  assert.ok(moveBranch, '必须能定位 move 分支(结构性刮取失败即判红)');
+  assert.match(
+    moveBranch,
+    /vp\.dragAutoScroll\(/,
+    '滚动必须发生在 move 分支内(调用点须在 move 分支体内)'
+  );
 
   // (2) 偏移只能走 Viewport 的解析器。手写的 `Number(rawScroll)` 会把贴底哨兵
   //     `null` 读成 0 ⇒ 选区指向看不见的最早几行(#12 的根因)。

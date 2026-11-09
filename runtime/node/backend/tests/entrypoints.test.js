@@ -20,7 +20,8 @@ const path = require('path');
 const registry = require('../src/services/entrypoints/registry');
 const entrypoints = require('../src/services/entrypoints');
 
-const APP_ROOT = path.resolve(__dirname, '..', '..', '..');
+// backend 位于 <root>/runtime/node/backend（原 <root>/services/backend），故 tests/ 上溯四级才到仓库根。
+const APP_ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 
 describe('端矩阵 · 数据自洽', () => {
   it('真源表加载时零校验错误', () => {
