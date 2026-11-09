@@ -1,0 +1,283 @@
+// 终端抽屉：文件管理器的 Linux 侧入口。
+//
+// 定位要讲清楚：**这是命令控制台，不是完整 PTY**。每次执行是「以当前目录为 cwd
+// 跑一条命令，把输出一次性取回来」，没有交互式会话、没有 Ctrl-C、没有 vim。
+// 目标不是替代 Termux，而是让「看一眼文件结构」「跑一条转换命令」「把输出存成文件」
+// 这三件事不必切出 App。
+//
+// 权限现实：以 App 自己的 uid 执行，看得见公共存储与自己的私有目录，看不见别的
+// App 的私有目录与系统分区（那需要 Shizuku，而 Shizuku 通道由 VFS 负责）。
+// 执行失败时原样显示 stderr——用户要能区分「命令写错了」和「权限不够」。
+//
+// 安全边界：这里执行的是**用户自己敲的命令**。若将来把 AI 产出的命令接进来，
+// 必须先过 [AiSafetyFilter.checkCommand]——那条护栏拦的是 `rm -rf /` 一类东西。
+
+import 'package:flutter/material.dart';
+
+import '../../../core/services/shell_executor.dart';
+import '../../../core/vfs/vfs_service.dart';
+import '../../theme/design_tokens.dart';
+
+/// 终端抽屉。
+class VfsTerminalDrawer extends StatefulWidget {
+  /// 文件浏览器当前所在的目录（终端的 cwd 与它同步）。
+  final String cwd;
+
+  /// 用户点「在终端中打开当前目录」时通知外部（用来更新显示的 cwd）。
+  final ValueChanged<String> onCwdChanged;
+
+  /// 关闭抽屉。
+  final VoidCallback onClose;
+
+  const VfsTerminalDrawer({
+    super.key,
+    required this.cwd,
+    required this.onCwdChanged,
+    required this.onClose,
+  });
+
+  @override
+  State<VfsTerminalDrawer> createState() => _VfsTerminalDrawerState();
+}
+
+class _VfsTerminalDrawerState extends State<VfsTerminalDrawer> {
+  final TextEditingController _input = TextEditingController();
+  final List<_TerminalEntry> _entries = <_TerminalEntry>[];
+
+  String _cwd = '/';
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _cwd = widget.cwd;
+  }
+
+  @override
+  void didUpdateWidget(VfsTerminalDrawer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 文件浏览器换了目录，终端的 cwd 跟着走——这是「文件与终端联动」的核心：
+    // 用户在文件管理器里走，终端里看到的就是同一个地方。
+    if (widget.cwd != oldWidget.cwd) {
+      setState(() => _cwd = widget.cwd);
+    }
+  }
+
+  @override
+  void dispose() {
+    _input.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        border: Border(top: BorderSide(color: palette.stroke)),
+      ),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.page,
+        AppSpacing.cardPad,
+        AppSpacing.page,
+        AppSpacing.page,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Icon(Icons.terminal, size: 18, color: palette.primary),
+              const SizedBox(width: AppSpacing.inner),
+              Expanded(
+                child: Text(
+                  _cwd,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.cardTitle.copyWith(color: palette.textPrimary),
+                ),
+              ),
+              IconButton(
+                onPressed: () => setState(_entries.clear),
+                icon: const Icon(Icons.clear_all, size: 18),
+                color: palette.textSecondary,
+                tooltip: '清空',
+              ),
+              IconButton(
+                onPressed: () => Navigator.of(context).maybePop(),
+                icon: const Icon(Icons.close, size: 18),
+                color: palette.textSecondary,
+                tooltip: '关闭',
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.cardGap),
+          Flexible(
+            child: Container(
+              constraints: const BoxConstraints(maxHeight: 220),
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.cardPadNarrow),
+              decoration: BoxDecoration(
+                color: palette.surfaceHigh,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: palette.stroke),
+              ),
+              child: _entries.isEmpty
+                  ? Text(
+                      '在当前目录执行命令，输出会显示在这里。',
+                      style: AppText.secondary.copyWith(color: palette.textFaint),
+                    )
+                  : ListView(
+                      reverse: true,
+                      children: <Widget>[
+                        for (final entry in _entries.reversed)
+                          Padding(
+                            padding:
+                                const EdgeInsets.only(bottom: AppSpacing.dense),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text(
+                                  '\$ $entry.command',
+                                  style: AppText.micro
+                                      .copyWith(color: palette.primary),
+                                ),
+                                const SizedBox(height: 2),
+                                if (entry.output.isNotEmpty)
+                                  SelectableText(
+                                    entry.output,
+                                    style: AppText.micro.copyWith(
+                                      color: entry.ok
+                                          ? palette.textSecondary
+                                          : palette.error,
+                                    ),
+                                  ),
+                                if (entry.output.isNotEmpty)
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: TextButton(
+                                      onPressed: () => _saveOutput(entry),
+                                      child: const Text('存为文件'),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.cardGap),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: TextField(
+                  controller: _input,
+                  style: AppText.body.copyWith(color: palette.textPrimary),
+                  textInputAction: TextInputAction.go,
+                  onSubmitted: (_) => _run(),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    hintText: '输入命令',
+                    hintStyle: AppText.body.copyWith(color: palette.textFaint),
+                    prefixText: '\$ ',
+                    prefixStyle:
+                        AppText.body.copyWith(color: palette.textFaint),
+                    filled: true,
+                    fillColor: palette.surfaceHigh,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.cardPad,
+                      vertical: AppSpacing.dense,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: palette.stroke),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: palette.stroke),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.dense),
+              FilledButton(
+                onPressed: _busy ? null : _run,
+                child: Text(_busy ? '执行中' : '执行'),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.dense),
+          Row(
+            children: <Widget>[
+              TextButton.icon(
+                onPressed: () {
+                  setState(() => _cwd = widget.cwd);
+                  widget.onCwdChanged(widget.cwd);
+                },
+                icon: const Icon(Icons.folder_open, size: 16),
+                label: const Text('在终端中打开当前目录'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _run() async {
+    final command = _input.text.trim();
+    if (command.isEmpty || _busy) return;
+    setState(() => _busy = true);
+    _input.clear();
+
+    // cwd 用 `cd <dir> && <命令>` 表达：这里没有 PTY 的会话态可依赖，
+    // 每条命令都得自己带上工作目录。目录名带空格时加引号。
+    final quotedCwd = "'${_cwd.replaceAll("'", "'\\''")}'";
+    final result = await ShellExecutor.exec('cd $quotedCwd && $command');
+
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      _entries.add(_TerminalEntry(
+        command: command,
+        output: '${result.stdout}${result.stderr}'.trim(),
+        ok: result.success,
+      ));
+    });
+  }
+
+  /// 把一段输出存成文件，落在当前目录——存完就能在文件管理器里直接打开。
+  Future<void> _saveOutput(_TerminalEntry entry) async {
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+    final name = 'terminal-$stamp.txt';
+    try {
+      await VfsService.instance.write('$_cwd/$name', entry.output);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('已保存为 $name')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('保存失败：$error')),
+      );
+    }
+  }
+}
+
+class _TerminalEntry {
+  final String command;
+  final String output;
+  final bool ok;
+
+  const _TerminalEntry({
+    required this.command,
+    required this.output,
+    required this.ok,
+  });
+}

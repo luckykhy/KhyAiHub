@@ -1,7 +1,7 @@
 name: khy_os_client
 description: "khy-os Client - AI Super Client with Chat, Agent, Floating Window"
 publish_to: 'none'
-version: 1.1.16+1
+version: 1.1.17+2
 
 environment:
   sdk: ^3.13.2
@@ -19,14 +19,26 @@ dependencies:
   go_router: ^14.8.1
 
   # Database
-  drift: ^2.22.1
-  sqlite3_flutter_libs: ^0.5.24
+  # sqflite 是实际在用的那个（lib/core/db/）。drift/sqlite3_flutter_libs 声明了
+  # 却从未解析进 lock、也没有任何 import——启用 drift 要跑 build_runner 代码生成，
+  # 而当前没有可验证它的环境（手机离线、主机无 sqlite3.dll）。先用 sqflite +
+  # 手写 SQL 落地，要迁 drift 时这三行再一起动。
+  sqflite: ^2.4.5
   path_provider: ^2.1.5
   path: ^1.9.0
+  # meta 只为一个 @immutable 标注；不引入也可以（删标注即可），但留着能让
+  # AmooTurn 的不可变性对读代码的人和 lint 都显式。
+  meta: ^1.19.0
 
   # HTTP & WebSocket
   dio: ^5.7.0
   web_socket_channel: ^3.0.1
+  # Directly imported by lib/core/services/local_model_store.dart for the 2.8 GB
+  # model download, which needs `Response.stream` — dio has no equivalent that
+  # exposes the raw byte stream with a Range header on a plain GET. It was
+  # already in the lock as a transitive dep; declaring it makes the import
+  # legitimate rather than accidental.
+  http: ^1.2.0
 
   # Security
   flutter_secure_storage: ^9.2.4
@@ -65,3 +77,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  # 品牌资产（Khy OS 主标）。由 `node scripts/brand/build-brand-assets.js` 落盘，
+  # 几何真源在 delivery/brand/khy-brand-geometry.js —— 不要手改 assets/brand/ 下的 PNG。
+  assets:
+    - assets/brand/
