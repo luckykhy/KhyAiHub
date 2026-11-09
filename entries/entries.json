@@ -3,7 +3,7 @@
     "id": "khy-entrypoints",
     "title": "Khy 多端入口矩阵",
     "version": "1.0.0",
-    "updated": "2026-09-17",
+    "updated": "2026-10-14",
     "ssot": "docs/03_DESIGN_设计/[DESIGN-ARCH-117] khy-多端入口矩阵.md",
     "rootToken": "<appRoot>",
     "notes": [
@@ -105,28 +105,6 @@
       ]
     },
     {
-      "id": "desktop-legacy",
-      "kind": "desktop",
-      "title": "桌面端（根级 electron/ 旧壳）",
-      "artifactKind": "exe",
-      "delivery": "无打包产物（缺 electron-builder 配置与 main 字段）",
-      "source": "electron",
-      "markers": ["main.js", "preload.js"],
-      "toolchain": ["node"],
-      "status": "degraded",
-      "statusNote": "能跑 dev（npm run electron:dev），但产不出 exe——根 package.json 没有 build/appId，也没有 main 字段",
-      "launch": {
-        "default": { "command": "npm", "args": ["run", "electron:dev"], "mode": "detach" }
-      },
-      "build": null,
-      "artifactOutput": "electron-root-dist",
-      "ports": [],
-      "notes": [
-        "登记在 [DESIGN-LAY-005] §1.4 的根级例外目录，与 apps/khyos-desktop 是**两条并行产物线**。",
-        "要产出 exe 必须先补 electron-builder 配置；否则此条目应降为 planned 或整条移除。"
-      ]
-    },
-    {
       "id": "desktop-provider-hub",
       "kind": "desktop",
       "title": "桌面端（Provider Hub 卡片枢纽）",
@@ -200,14 +178,14 @@
     {
       "id": "mobile",
       "kind": "mobile",
-      "title": "移动端（Flutter，可用）",
+      "title": "移动端（Flutter，随身端）",
       "artifactKind": "apk",
       "delivery": "app-release.apk + app-release.aab + SHA256SUMS.txt",
-      "source": "apps/khy-os-client-app",
+      "source": "delivery/mobile/khy-os-client-app",
       "markers": ["pubspec.yaml", "android/app/build.gradle"],
       "toolchain": ["flutter"],
       "status": "ready",
-      "statusNote": "三条移动线里唯一有完整构建链的；签名走 key.properties / KHY_ANDROID_* 环境变量",
+      "statusNote": "源目录指针已于 2026-10-14 修正为 delivery/mobile/khy-os-client-app（原 apps/khy-os-client-app 是方案 P 迁移前的旧路径，目录早已搬走、条目指针未同步）；仓库级四维（源目录/标记文件/构建档）齐备。实机构建/运行还需本机 Flutter SDK + Android SDK + 连接设备，那是本机级事实，不影响仓库级定档（[DESIGN-ARCH-117] §五）",
       "launch": {
         "default": { "command": "flutter", "args": ["run"], "mode": "attach" }
       },

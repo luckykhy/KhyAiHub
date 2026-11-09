@@ -436,10 +436,27 @@ def run_install_cleanup() -> int:
     return total
 
 
+def _backend_dir(project_root: Path) -> Path:
+    """Locate the Node backend tree under a repo/install root (single source).
+
+    The source tree moved from ``services/backend`` to ``runtime/node/backend``
+    (forest layout). Both shapes are still in the wild, so probe the new layout
+    first and fall back to the legacy one instead of assuming either.
+
+    Scope: this helper resolves a *source checkout* backend. Bundled wheel paths
+    (``<bundled_root>/services/backend``) deliberately keep their literal
+    layout - that is the shape the wheel actually ships.
+    """
+    new_layout = project_root / "runtime" / "node" / "backend"
+    if new_layout.exists():
+        return new_layout
+    return project_root / "services" / "backend"
+
+
 def _source_checkout_backend() -> Path | None:
     """Return the editable backend when this module lives inside a Git checkout."""
     project_root = Path(__file__).resolve().parent.parent.parent
-    backend = project_root / "services" / "backend"
+    backend = _backend_dir(project_root)
     if (project_root / ".git").exists() and (backend / "bin" / "khy.js").is_file():
         return backend
     return None
@@ -489,7 +506,7 @@ def get_bundle_dir() -> Path:
     # 方案2：源码开发模式优先（避免仓库内 bundled 与 backend 内容漂移）
     # forest layout: platform/khy_platform/ -> platform -> repo root
     project_root = Path(__file__).parent.parent.parent
-    dev = project_root / "services" / "backend"
+    dev = _backend_dir(project_root)
     if (project_root / ".git").exists() and dev.exists():
         return dev
 
