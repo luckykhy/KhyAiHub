@@ -26,6 +26,8 @@
       <header class="hero reveal"><h1>[DESIGN-DOC-003] README 内容规范</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-doc-003-readme-内容规范">[DESIGN-DOC-003] README 内容规范</a></li><li class="lvl-2"><a href="#1-红线">1. 红线</a></li><li class="lvl-3"><a href="#1-1-全域禁项-不分档位-本文核心">1.1 全域禁项（不分档位，本文核心）</a></li><li class="lvl-3"><a href="#1-2-指针标识-事实副本">1.2 指针标识 ≠ 事实副本</a></li><li class="lvl-3"><a href="#1-3-档位判据-机械可判">1.3 档位判据（机械可判）</a></li><li class="lvl-3"><a href="#1-4-必答清单">1.4 必答清单</a></li><li class="lvl-3"><a href="#1-5-首屏-台账与孪生件">1.5 首屏、台账与孪生件</a></li><li class="lvl-2"><a href="#2-反例-正例">2. 反例 → 正例</a></li><li class="lvl-2"><a href="#3-校验-守卫">3. 校验（守卫）</a></li><li class="lvl-2"><a href="#4-版本历史">4. 版本历史</a></li></ul></nav>
       <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: todo --&gt;<br>&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;</p>
+<blockquote><p><strong>标记依据</strong>：16 条路径可解析，但文中未自述已实现；保守标 todo 待人工复核。</p></blockquote>
 <h1 id="design-doc-003-readme-内容规范">[DESIGN-DOC-003] README 内容规范<a class="anchor" href="#design-doc-003-readme-内容规范" aria-label="锚点">#</a></h1>
 <!-- RULES-REGISTRY: DOCS-004 -->
 <blockquote><p><strong>定位</strong>：管仓库内一切 <code>README.md</code> 及其语言变体<strong>写什么内容</strong>。<br>与 <code>[DESIGN-DOC-002]</code>（AI 指令文件标准，管 <code>AGENTS.md</code>/<code>CLAUDE.md</code>/<code>khy.md</code> 一族）<strong>互斥</strong>，<br>两族无重叠管辖；README 的<strong>位置</strong>归 <code>check-repo-layout.js</code> 的 <code>ROOT_DOC_WHITELIST</code> /<br><code>README_VARIANT_RE</code>，<code>docs/**</code> 内 README 的<strong>命名</strong>归 <code>DOCS-001</code>。<br>实测证据、公理、判据论证与落地设计见 <code>[IMPL-DOC-002]</code>。</p>
@@ -63,7 +65,7 @@
 <h2 id="4-版本历史">4. 版本历史<a class="anchor" href="#4-版本历史" aria-label="锚点">#</a></h2>
 <table><thead><tr><th>版本</th><th>日期</th><th>变更</th></tr></thead><tbody><tr><td>1.0.0</td><td>2026-09-17</td><td>初版。登记为规则 <code>DOCS-004</code>（P2 / <code>gate=manual</code>）；确定全域禁项表、指针标识判据、T0/T1/T2 档位与必答清单；§1.2 补「引用代码给符号名、不给行号」（编写过程中 <code>check-repo-layout.js</code> 行号被并发改动而当场失准，见 <code>[IMPL-DOC-002]</code> §1.3 教训）；实测证据与落地设计移入 <code>[IMPL-DOC-002]</code></td></tr></tbody></table>
       </article>
-      <nav class="pager"><a class="prev" href="../../../../docs/html/10_规范/DESIGN-DOC/[DESIGN-DOC-002] AI 指令文件标准.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-DOC-002] AI 指令文件标准</div></a><a class="next" href="../../../../docs/html/10_规范/DESIGN-DOC/00_INDEX_DESIGN-DOC-总目录.html"><div class="dir">下一篇 →</div><div class="ttl">DESIGN-DOC</div></a></nav>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/10_规范/DESIGN-DOC/[DESIGN-DOC-002] AI 指令文件标准.html"><div class="dir">← 上一篇</div><div class="ttl">[DESIGN-DOC-002] AI 指令文件标准</div></a><a class="next" href="../../../../docs/html/10_规范/DESIGN-DOC/[DESIGN-DOC-004] 文档实现状态标注规范.html"><div class="dir">下一篇 →</div><div class="ttl">[DESIGN-DOC-004] 文档实现状态标注规范</div></a></nav>
       <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
     </div>
   </main>

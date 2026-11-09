@@ -26,6 +26,8 @@
       <header class="hero reveal"><h1>[DESIGN-FE-002] 前端组件库规范</h1></header>
       <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#design-fe-002-前端组件库规范">[DESIGN-FE-002] 前端组件库规范</a></li><li class="lvl-2"><a href="#0-子篇索引-细则入口">0. 子篇索引（细则入口）</a></li><li class="lvl-2"><a href="#1-组件库概述">1. 组件库概述</a></li><li class="lvl-3"><a href="#1-1-组件库架构">1.1 组件库架构</a></li><li class="lvl-3"><a href="#1-2-组件分类">1.2 组件分类</a></li><li class="lvl-3"><a href="#1-3-组件命名规范">1.3 组件命名规范</a></li><li class="lvl-2"><a href="#9-版本历史">9. 版本历史</a></li></ul></nav>
       <article class="doc-body">
+<p>&lt;!-- IMPL-STATUS: todo --&gt;<br>&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;</p>
+<blockquote><p><strong>标记依据</strong>：文中无根锚定路径主张，无从判定是否落码；保守标 todo 待人工复核。</p></blockquote>
 <h1 id="design-fe-002-前端组件库规范">[DESIGN-FE-002] 前端组件库规范<a class="anchor" href="#design-fe-002-前端组件库规范" aria-label="锚点">#</a></h1>
 <blockquote><p><strong>定位</strong>：前端组件库规范的<strong>唯一入口与 scope 裁决真源</strong>。<br><strong>结论</strong>：① 组件库的目录/命名/分类看 §1；② 开发、API、测试、文档发布、质保五类细则各拆子篇（下表）；③ 本族整体是<strong>目标态</strong>——组件库落地前一切以 <code>[DESIGN-FE-001]</code> 为准。</p>
 <p>⚠ <strong>状态标注（2026-09-09）——目标态，非现状</strong>：本文描述的 <code>KhyButton</code>/<code>KhyInput</code>/<code>KhyCard</code> 等独立组件库在当前代码中<strong>不存在</strong>。实测现状（[DESIGN-FE-001] §5）：基座是 Element Plus（不重新封装），共享组件仅 <code>KhyPageHeader</code>/<code>KhyEmpty</code>/<code>KhyIcon</code>/<code>LoadErrorBanner</code>/<code>GlobalProgressBar</code>/<code>KhyFloatBall</code> 六个，跨前端共享逻辑走 <code>@khy/ui-shared</code>（纯 JS 原语，无 UI 组件）。<strong>在组件库真正落地前，一切以 [DESIGN-FE-001] 为准</strong>；本文仅在那时才转为生效规范。</p>
