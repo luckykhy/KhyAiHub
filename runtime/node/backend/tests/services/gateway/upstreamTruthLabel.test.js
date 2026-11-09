@@ -14,12 +14,16 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert');
+const path = require('node:path');
 
 const {
   isEnabled,
   describeUpstream,
   describeFromAttempts,
 } = require('../../../src/services/gateway/upstreamTruthLabel');
+const {
+  buildCliFailureEnvelope,
+} = require('../../../src/services/gateway/cliFailureEnvelope');
 
 const ZEN_429 =
   '{"error":{"type":"server_error","message":"Upstream request failed: Endpoint is unavailable."}}';
@@ -149,4 +153,90 @@ test('describeFromAttempts: 非数组 / 无可提炼项 → null，绝不抛', (
     }),
     null
   );
+});
+
+// ── 判码侧零扰动（[DESIGN-ARCH-198] W8 不变量） ─────────────────────────────
+// W8 的人话化只挂渲染层。判码链 `_isActionableCause` → `_tierAttempts` →
+// `_resolveCode` 的输入必须与今日逐字节相同，否则扩 _RULES 会静默翻机器码
+// （探针实测同一份 attempts 从 `code=RATE_LIMITED, cause.adapter=OpenCode Zen`
+//  翻到 `code=NONE, cause.adapter=api`，且该路径不经任何门）。
+
+const W8_ATTEMPTS = [
+  {
+    success: false,
+    adapterKey: 'api',
+    errorType: 'auth',
+    error: '{"error":{"type":"invalid_request_error","message":"…","code":"invalid_api_key","param":"model"}}',
+  },
+  {
+    success: false,
+    adapterKey: 'OpenCode Zen',
+    errorType: 'network',
+    error: '{"error":{"type":"server_error","message":"Upstream request failed: Endpoint is unavailable."}}',
+    statusCode: 429,
+  },
+];
+
+test('W8 不变量：H × T 四组合下 describeUpstream 与 buildCliFailureEnvelope().code 不变', () => {
+  const combos = [
+    {},
+    { KHY_FAILURE_HUMAN_TEXT: '0' },
+    { KHY_UPSTREAM_TRUTH_LABEL: '0' },
+    { KHY_FAILURE_HUMAN_TEXT: '0', KHY_UPSTREAM_TRUTH_LABEL: '0' },
+  ];
+  const snapshot = (env) => {
+    const e = buildCliFailureEnvelope({
+      result: { success: false, errorType: 'network', attempts: W8_ATTEMPTS, preferredAdapter: 'auto' },
+      env,
+    });
+    return {
+      // 判码/机器字段：H 与 T 都不得影响它们
+      code: e.code,
+      adapter: e.cause.adapter,
+      statusCode: e.cause.statusCode,
+      detail: e.cause.detail,
+      // T 自己的门（预期随 T 变，H 不得影响它）
+      truth: describeUpstream(W8_ATTEMPTS[1].error, { errorType: 'network', env }),
+    };
+  };
+  const base = snapshot({});
+  // 机器字段四组合逐字节相等
+  for (const env of combos) {
+    const s = snapshot(env);
+    assert.strictEqual(s.code, base.code, JSON.stringify(env));
+    assert.strictEqual(s.adapter, base.adapter, JSON.stringify(env));
+    assert.strictEqual(s.statusCode, base.statusCode, JSON.stringify(env));
+    assert.strictEqual(s.detail, base.detail, JSON.stringify(env));
+  }
+  // H 不影响 T 的判码输入：同一 T 下 truth 相同
+  assert.deepStrictEqual(
+    snapshot({ KHY_FAILURE_HUMAN_TEXT: '0' }).truth,
+    base.truth
+  );
+  assert.deepStrictEqual(
+    snapshot({ KHY_UPSTREAM_TRUTH_LABEL: '0' }).truth,
+    snapshot({ KHY_FAILURE_HUMAN_TEXT: '0', KHY_UPSTREAM_TRUTH_LABEL: '0' }).truth
+  );
+  // 今日基线钉死
+  assert.strictEqual(base.code, 'RATE_LIMITED');
+  assert.strictEqual(base.adapter, 'OpenCode Zen');
+  assert.strictEqual(base.statusCode, 429);
+});
+
+test('W8 不变量：判码侧叶子未被本批接线（无任何人话化依赖）', () => {
+  // 原方案要求用 `git diff --exit-code -- src/services/gateway/upstreamTruthLabel.js`
+  // 断言本批零改动。**该形式在本机不可用**：工作区里这个文件已带着上一批 W4 的
+  // 未提交改动（补 FreeUsageLimitError / Missing API key 两条规则 + 规则级门），
+  // `git diff` 对 HEAD 非空与本批无关。故改为行为级不变式：
+  // 判码侧叶子不得依赖人话化叶子，且 _RULES 的匹配结果由上面 15 条既有用例钉死。
+  const fs = require('node:fs');
+  const src = fs.readFileSync(
+    path.resolve(__dirname, '../../../src/services/gateway/upstreamTruthLabel.js'),
+    'utf8'
+  );
+  assert.ok(!src.includes('cliErrorDescriptor'), '判码侧不得 require 人话化叶子');
+  assert.ok(!src.includes('humanizeFailure'), '判码侧不得调用 humanizeFailure');
+  // W4 的两条规则仍在（防本批误删）
+  assert.ok(src.includes('freeusage limite?rror'), 'W4 的额度用尽规则不得被本批误删');
+  assert.ok(src.includes('missing api[ _-]?key'), 'W4 的缺少 API Key 规则不得被本批误删');
 });
