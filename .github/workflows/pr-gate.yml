@@ -135,6 +135,20 @@ jobs:
       - name: Check TUI gate budget
         run: node scripts/ci/check-tui-gates.js
 
+      # 洋葱分层契约（TOOLING-012）：芯纯净 + 冷闭包重量预算 + 视觉侧同构判据。
+      # 全局属性，不传 --changed —— 重量是仓库整体的事实，只看改动集看不见
+      # 「别人在别处加了重量」。静态面可离线跑，故进阻断档。
+      - name: Check onion layer contract
+        run: node scripts/ci/check-core-layers.js
+
+      # 运行时重量（体积轴，同 TOOLING-012）：跑真实命令读真实 require.cache。
+      # **报告档，不阻断** —— 它要跑 `khy ai -p "hi"` 这类真实请求，需要网络与凭据，
+      # CI 环境不稳定；且 ai-lite 场景的读数跨会话会漂（不同模型回复走不同模块集合）。
+      # 阻断档由静态守卫承担，本步的价值是「让重量趋势可见」。
+      - name: Check runtime footprint (report only — needs network and credentials)
+        continue-on-error: true
+        run: node scripts/ci/check-runtime-footprint.js --report
+
       # 规则登记表与真源的双向可达（GOV-TOOL-007），以及逐条规则卡与登记表的
       # 逐字节一致性（GOV-TOOL-008，卡片为 gen-rules-cards.js 的构建产物）。
       # 与上一步同档、同样不传 --changed：登记表是仓库的全局属性，只看改动集会
@@ -162,6 +176,37 @@ jobs:
       # 不传 --changed：同登记表，默认档是仓库全局属性。
       - name: Check delegation boundary
         run: node scripts/ci/check-delegation-boundary.js
+
+      # 数据事实单一真源（LAYOUT-008，判据真源 docs/10_规范/DESIGN-LAY/[DESIGN-LAY-009]）：
+      # 同一份数据被写在两个地方时，改一处另一处就成矛盾 —— 这类漂移没有任何一个
+      # 文件是错的，只有「两个文件对同一件事说法不同」，所以守卫问的是「这件事有
+      # 几处声明」：真源之外的再声明判影子副本、值不同判矛盾、登记的授权镜像与真源
+      # 不一致判镜像失步、真源自报计数与实际条目数不符判自相矛盾。
+      # 不传 --changed：影子副本与真源是仓库全局属性，只看改动集会漏掉「真源改了而
+      # 影子没改」这类对不上的另一半。S1 观察者档：只报告不阻断。
+      - name: Check data single source of truth
+        run: node scripts/ci/check-ssot-data.js
+
+      # HQ 任务/Bug 状态真源自检（`khy hq verify`，判据实现于
+      # runtime/node/backend/src/cli/hqStore.js 的 validateDataset）—— 断言
+      # PROGRESS.json / BUGS.json / ROADMAP.md / MODELS.json / prompts/ 五处数据
+      # 互相对得上：任务 ID 与状态行同步、占用与租约自洽、done 复算可重放、模板
+      # 注册表齐全。多机协作靠的就是这一份状态真源（[DESIGN-ARCH-118]，AGENTS.md
+      # 「多机协作自举」第 2 步），但此前四个 git hook、本文件、qualityGateStages.js
+      # 的 STAGES 与 RULES-REGISTRY.json 的规则全都没有引用它 —— 数据分叉时没有
+      # 任何门会红，只能靠人自觉跑。
+      #
+      # 刻意先以**上报档**接入（continue-on-error），不直接阻断。两条理由均可复核：
+      #   1) 这条执行链此前从未在 CI 跑过，而 HQ 数据带存量 warning（done 复算与
+      #      占用/租约类），一次转阻断等于让此后每个 PR 为存量债买单，失败点也不可预期；
+      #   2) 判据含「本机身份」维度（占用标识大小写、租约过期），CI runner 与提交者
+      #      不是同一台机器，需先观察误报再定棘轮。
+      # 转阻断的前置条件（全部满足后删除 continue-on-error 与本段理由）：
+      #   ① 一次干净检出下 `khy hq verify` 报 0 error；
+      #   ② 存量 warning 逐条处置或登记到期日，且观察期内本步无 error 级输出。
+      - name: Check HQ data self-consistency (report only — shadow mode)
+        continue-on-error: true
+        run: node runtime/node/backend/bin/khy.js hq verify
 
       # 反孤儿守卫（TOOLING-005，[DESIGN-ARCH-111]）：每个 scripts/ci 检查器
       # 必须被至少一个门引用，否则它在 CI 中永远不会运行，等价于没写。
@@ -226,6 +271,22 @@ jobs:
       # （登记表 $schemaNote 自述「check:feature-ownership 尚未落地」），本步补齐。
       - name: Check feature ownership
         run: node scripts/ci/check-feature-ownership.js
+
+      # 原子能力聚合（DESIGN-ARCH-194）：6 个暴露面 336 个暴露名归一到 117 个
+      # 原子能力。新增工具未归组即红（atomic-orphan-exposure），从机制上阻止
+      # 「二级/三级能力另造一份轮子」。真源工件为
+      # docs/10_规范/registry/ATOMIC-CAPABILITIES.json（生成物，漂移即红）。
+      - name: Check atomic capabilities
+        run: node scripts/ci/check-atomic-capabilities.js
+
+      # com.stepos.ailauncher 字面量冻结表：khyos 独立化改造静态面判据
+      # 「只减不增」的执行面。四源码根（Flutter lib / android/app/src /
+      # khy-amoon-bridge/lib / backend/src）非测试非文档 26 处逐行冻结，
+      # 每条含 file:line + 整行文本 + 理由。改造报告曾把计数记成 24 而实测
+      # 26——记录对代码说谎；本步把计数变成机检：出现清单外行、清单行消失、
+      # 清单行文本变更（含把包名打错一个字母的等数变异）即红。
+      - name: Check amoo package literals
+        run: node scripts/ci/check-amoo-package-literals.cjs
 
       # 弱模型改动护栏（SECURITY-003，P1）：行为断言 classifyChangeRisk /
       # assessWeakModelChange，覆盖「6 类红线分类全覆盖」「弱档+红线必拦、
@@ -697,7 +758,9 @@ jobs:
             scripts/tests/bundleLaunchContract.test.js \
             scripts/tests/duplicationGuard.test.js \
             scripts/tests/check-duplication.test.js \
-            scripts/tests/maintainerTriage.test.js
+            scripts/tests/maintainerTriage.test.js \
+            scripts/tests/visualLayerGraph.test.js \
+            scripts/tests/requireGraph.test.js
 
   security-scan:
     name: Security scan (PR gate)

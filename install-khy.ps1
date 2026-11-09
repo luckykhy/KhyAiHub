@@ -42,12 +42,41 @@ if (!(Test-Path -Path $khyEntry)) {
     exit 1
 }
 
+# The generated function used to be a bare `node <entry> $args`, which set none
+# of the KHY_* environment contract. That forked the data home onto a second
+# tree: `khy` from PowerShell saw ~/.khy while `khy` from khy.bat saw
+# works\data\khy -- two caches, two session stores, one machine. The 16 vars
+# below are the same contract khy-env.bat exports for the batch entries; keep
+# the two in sync (khy-env.bat is the single source of truth for the .bat side).
+# $PSScriptRoot is resolved now, at setup time, and baked into the profile --
+# the profile is a per-machine artifact, so that is where the absolute path
+# belongs.
+$khyRepoRoot = $PSScriptRoot
+$khyDataHome = Join-Path $khyRepoRoot 'works\data\khy'
 $khyFunction = @"
 
 # ========================================
 # Khy-OS Global Command
 # ========================================
+# Env contract mirrors khy-os\khy-env.bat. Without it the data home forks onto
+# ~/.khy and this entry stops sharing state with khy.bat / bin\khy.cmd.
 function khy {
+    `$env:KHYQUANT_PORTABLE_ROOT = "$khyRepoRoot"
+    `$env:KHY_PORTABLE_ROOT = "$khyRepoRoot"
+    `$env:KHY_OS_ROOT = "$khyRepoRoot"
+    if (!`$env:KHY_DATA_HOME) { `$env:KHY_DATA_HOME = "$khyDataHome" }
+    if (!`$env:KHY_PROJECT_DATA_HOME) { `$env:KHY_PROJECT_DATA_HOME = "$khyDataHome" }
+    if (!`$env:KHYQUANT_DATA_HOME) { `$env:KHYQUANT_DATA_HOME = `$env:KHY_DATA_HOME }
+    `$env:KHYOS_HOME = "$khyRepoRoot\works\data\khyos"
+    `$env:KHY_COORDINATOR_MODE = "true"
+    `$env:KHY_RUNTIME_HOME = "`$env:KHY_DATA_HOME\runtime"
+    `$env:KHY_CACHE_HOME = "`$env:KHY_DATA_HOME\cache"
+    `$env:KHY_LOG_HOME = "`$env:KHY_DATA_HOME\logs"
+    `$env:KHY_TEMP_HOME = "`$env:KHY_DATA_HOME\tmp"
+    `$env:KHY_PLATFORM_PATH = "$khyRepoRoot\runtime\substrate\platform"
+    `$env:KHY_INVOKED_AS = "khy"
+    `$env:KHYQUANT_ROOT = "$khyRepoRoot\runtime\node\backend"
+    `$env:KHYQUANT_INVOKED_AS = "khy"
     node "$khyEntry" `$args
 }
 "@
