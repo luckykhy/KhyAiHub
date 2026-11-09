@@ -1,0 +1,300 @@
+{
+  "$schemaVersion": "1.0.0",
+  "$artifact": "khyos 外部生态市场编目 · mcode（MiniMax Code）生态",
+  "$source": "2026-10-29 六生态勘察与映射收敛（市场设计工作流产物，未入仓）；逐条上游出处以各 entry.upstreamUrl 为准",
+  "$status": "active",
+  "eco": "mcode",
+  "surveyedAt": "2026-10-29",
+  "_note": "mcode（MiniMax Code）生态编目：18 条 = 映射 entries 13 条 + blocked 数组 5 条（minimax-code 宿主本体三市场均无落点；DraConDev/mcode-plugins 为 AGPL-3.0-or-later；Mcode-webui 为 mcode 前端；huangbh2020/mcode 与 immutex/mcode 为同名宿主、无可导入条目）。direct 6 条全是 SKILL.md 或标准 MCP 形态（设计摘要记 5 条，映射 entries 实为 6 条，以映射为准）；主路径是拆包取货——skills/ 进 skill 市场、MCP server 进 mcp 市场、.minimax-plugin/plugin.json 与 marketplace.json 容器清单丢弃。三个 license unknown 条目（mcode-dynamic-workflows/crossplug/rsktash-mcode）入仓分发前必须补证。mcode-codegraph 同为 license unknown：api.github.com license=null、仓库根无 LICENSE 文件、codegraph.mcp.json 无 license 字段、SUBMISSION.md 无许可提及，零许可证据下不得按 A 档放行入仓。",
+  "marketplaces": [
+    {
+      "name": "MiniMax-AI/mcode-stack",
+      "url": "https://github.com/MiniMax-AI/mcode-stack",
+      "kind": "官方市场（.minimax-plugin/plugin.json + marketplace.json，claude-code-marketplace schema）",
+      "note": "ronny/jiachen 两栈的 skill 已逐条覆盖为条目"
+    },
+    {
+      "name": "MiniMax-AI/MiniMax-Code-Plugins",
+      "url": "https://github.com/MiniMax-AI/MiniMax-Code-Plugins",
+      "kind": "社区注册中心（agent-plugins.org 1.0.0：plugin.json + skills/ + mcp.json，一个文件夹即发布）",
+      "note": "29 个插件本次只抽查 2 个（Hylouis233 9 个、antianqi 6 个未展开），其余 owner 条目待二次编目"
+    },
+    {
+      "name": "MiniApps 市场",
+      "kind": "MiniApp 整目录拷贝市场",
+      "note": "在 khyos 无对应清单层，不作条目"
+    }
+  ],
+  "entries": [
+    {
+      "name": "mcode-stack / ronny",
+      "upstreamUrl": "https://github.com/MiniMax-AI/mcode-stack",
+      "type": "plugin",
+      "khyosMarket": "skill",
+      "targetPath": "works/data/khy/skills/<skill-name>/SKILL.md（用户级即 <dataHome>/skills/<name>/，skillPackageService.js:32,154-162；项目级同路径且在发现链上，skillLoader.js:164）",
+      "compat": "direct",
+      "compatNote": "15 个 skill 全部是 SKILL.md + YAML frontmatter，正是 khyos skillLoader 的原生格式：frontmatter 可选、缺字段只进 validateSkill 的 warning 列表（skillLoader.js:39-58,405-424），platforms 缺省视为通用（:353-356）。装法 `khy skill add MiniMax-AI/mcode-stack --skill stacks/ronny/skills/<name>`——skillInstallService 支持 --skill 指定仓内子目录并校验其中含 SKILL.md（skillInstallService.js:94-108,176），仓库含多个 skill 时必须逐个指定（:148-154）。容器层 .minimax-plugin/plugin.json（schemaVersion 1、apps[]/mcpServers[]/exampleQueries）与 marketplace.json 在 khyos 无对应清单（extensionManifest.js:19-22 只认 khy.extension.json / openclaw.plugin.json / package.json#khy），拆包时丢弃，只取 skills/ 目录。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["mcode"],
+      "what": "mcode 官方市场 ronny 栈的 15 个 skill：SKILL.md 原生格式可逐个 --skill 指定安装，容器清单丢弃。"
+    },
+    {
+      "name": "mcode-stack / jiachen",
+      "upstreamUrl": "https://github.com/MiniMax-AI/mcode-stack",
+      "type": "plugin",
+      "khyosMarket": "skill",
+      "targetPath": "works/data/khy/skills/{lifting-loops,making-content}/SKILL.md（用户级 <dataHome>/skills/<name>/，skillPackageService.js:32）",
+      "compat": "direct",
+      "compatNote": "2 个 skill 同为 SKILL.md 原生格式（skillLoader.js:34,39-58），装法 `khy skill add MiniMax-AI/mcode-stack --skill stacks/jiachen/skills/<name>`（skillInstallService.js:94-108）。内容宿主无关：lifting-loops 找出人给 agent 当手动步骤的循环、making-content 把 AI 味中文稿改写为小红书图文/竖短视频，正文无需改。plugin.json 容器与 marketplace.json 丢弃。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["mcode"],
+      "what": "mcode 官方市场 jiachen 栈的 2 个 skill（lifting-loops/making-content）：内容宿主无关，正文无需改。"
+    },
+    {
+      "name": "independent-review",
+      "upstreamUrl": "https://github.com/MiniMax-AI/mcode-stack/tree/main/stacks/ronny/skills/independent-review",
+      "type": "skill",
+      "khyosMarket": "skill",
+      "targetPath": "works/data/khy/skills/independent-review/SKILL.md（skillPackageService.js:154-162 文件夹整树拷入，skill 名只允许字母数字 . _ -，:71）",
+      "compat": "direct",
+      "compatNote": "ronny 栈内单 skill，SKILL.md 原生格式。装法 `khy skill add MiniMax-AI/mcode-stack --skill stacks/ronny/skills/independent-review`（skillInstallService.js:94-108 子目录定位）。内容是干净上下文独立评审（只给新评审者 diff、需求与真实测试输出），与宿主无关，khyos 直接可用；skill 名 independent-review 符合 _sanitizeName 字符集（skillPackageService.js:71）。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["mcode"],
+      "what": "干净上下文独立评审 skill：只给新评审者 diff、需求与真实测试输出，与宿主无关，khyos 直接可用。"
+    },
+    {
+      "name": "context-tax-audit",
+      "upstreamUrl": "https://github.com/MiniMax-AI/mcode-stack/tree/main/stacks/ronny/skills/context-tax-audit",
+      "type": "skill",
+      "khyosMarket": "skill",
+      "targetPath": "works/data/khy/skills/context-tax-audit/SKILL.md",
+      "compat": "direct",
+      "compatNote": "ronny 栈内单 skill，SKILL.md 原生格式，装法同 independent-review（`khy skill add MiniMax-AI/mcode-stack --skill stacks/ronny/skills/context-tax-audit`）。内容是盘点每轮请求中除用户消息外注入的全部内容（系统提示、skill 列表、工具定义、上下文块）并逐项审必要性/频率/精度/位置与 prompt-cache 影响——khyos 自己有这套注入面（skillLoader 发现链、工具定义、系统提示），skill 正文无需改即可用。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["mcode"],
+      "what": "上下文税审计 skill：盘点每轮请求注入的全部内容并逐项审必要性，khyos 自己有这套注入面，正文无需改。"
+    },
+    {
+      "name": "web-research",
+      "upstreamUrl": "https://github.com/MiniMax-AI/MiniMax-Code-Plugins/tree/main/plugins/stevenjj33/web-research",
+      "type": "skill",
+      "khyosMarket": "skill",
+      "targetPath": "works/data/khy/skills/web-research/（SKILL.md + scripts/ 整树，skillPackageService.js:154-162）",
+      "compat": "adapter-needed",
+      "compatNote": "SKILL.md 格式本身 khyos 直接认识（skillLoader.js:39-58），两处需适配：① 抓取级联的末端降级到 mcode 浏览器（Tavily extract → mcode 浏览器），khyos 没有 mcode 浏览器，需把降级目标换成 khyos 的浏览器/抓取工具或裁掉该级联；② 插件带一个 Python 入口脚本，需确认 khyos 运行环境里 Python 可用。agent-plugins.org 1.0.0 的 plugin.json 在 khyos 无对应清单，只取 skills/ 目录——注册中心「一个文件夹即发布」的形态与 khyos 的 skill 目录发现同构，拆下来即可用。Apache-2.0 属宽松档（check-license-tiers.js:45 permissive），放行。",
+      "license": "Apache-2.0",
+      "relationship": "adapter",
+      "agentScope": ["mcode"],
+      "what": "网页调研 skill：格式直认，但抓取级联末端降级到 mcode 浏览器需换掉，插件带 Python 入口脚本需确认运行环境。"
+    },
+    {
+      "name": "mcodeforlegal",
+      "upstreamUrl": "https://github.com/Hylouis233/mcodeforlegal",
+      "type": "plugin",
+      "khyosMarket": "skill",
+      "targetPath": "works/data/khy/skills/<workflow>/SKILL.md（6 个法律工作流 skill 逐个导入）；其 stdio MCP 连接器另落 works/data/khy/mcp.json 的 mcpServers.flk",
+      "compat": "adapter-needed",
+      "compatNote": "Claude Code 插件容器（/plugin marketplace add Hylouis233/mcodeforlegal）需拆包分头落：① 6 个法律工作流（合同审查/诉讼支持/合规/公司/劳动/IP）的 SKILL.md 可原样进 skill 市场；② flk_server.py（连接官方法规库的 stdio MCP）需单独 `khy mcp add flk -t stdio -- python flk_server.py` 落 mcp.json（stdio 形要求 command 字符串 + args 数组 + env 对象，types.js:55-67）——编目未含它的 command/args/env 细节，安装前须回插件内 mcp 配置读；③ marketplace.json/plugin.json 在 khyos 无对应清单，丢弃。PRC 法条状态校验与交付前引文门是 skill 正文逻辑、宿主无关，可原样保留。Apache-2.0 宽松档放行。",
+      "license": "Apache-2.0",
+      "relationship": "adapter",
+      "agentScope": ["mcode"],
+      "what": "6 个法律工作流 skill + 连官方法规库的 stdio MCP：混合包需拆开，SKILL.md 可原样进 skill 市场。"
+    },
+    {
+      "name": "mcode-dynamic-workflows",
+      "upstreamUrl": "https://github.com/MiniMax-AI/MiniMax-Code-Plugins/tree/main/plugins/hetaoBackend/mcode-dynamic-workflows",
+      "type": "plugin",
+      "khyosMarket": "skill",
+      "targetPath": "works/data/khy/skills/<name>/SKILL.md（若核实后确认由 skills/ 构成；若含运行时代码则改走 delivery/extension/<category>/<id>/khy.extension.json）",
+      "compat": "adapter-needed",
+      "compatNote": "三项缺失，先补再判：① 清单未读到（编目 uncertainty：raw 三次抓取失败/超时），无法确认其 skills/MCP/hooks 构成——注册中心条目默认是 plugin.json + skills/ + 可选 mcp.json，若属实按 skill 落；若实际含运行时代码则改走 extension 适配（khy.extension.json，id 必须等于叶子目录名且 kind=runtime 需 main 在盘上，check-repo-layout.js:891,897-904）；② license 为 unknown，check-license-tiers.js:135-138 对无法归类的许可按最严档处理（warning），入仓前必须补证；③ 无独立仓库（404），只能从注册中心 plugins/hetaoBackend/mcode-dynamic-workflows/ 目录取货，`khy skill add` 的 git 拉取路径用不了，需先 clone 注册中心再 `khy skill import <目录>`（skillPackageService.js:216）。",
+      "license": "unknown",
+      "relationship": "reference",
+      "agentScope": ["mcode"],
+      "what": "注册中心条目：清单未读到、许可 unknown、无独立仓库，三项缺失先补再判。"
+    },
+    {
+      "name": "mcode-codegraph",
+      "upstreamUrl": "https://github.com/SweetSophia/mcode-codegraph",
+      "type": "mcp",
+      "khyosMarket": "mcp",
+      "targetPath": "works/data/khy/mcp.json 的 mcpServers.codegraph 条目（project 作用域，mcpConfigStore.js:31-33；安装 `khy mcp add codegraph -t stdio -- <command> [args]`）",
+      "compat": "direct",
+      "compatNote": "本体是标准 stdio MCP 服务器（工具 mcp__codegraph__explore），khyos 的 mcp.json 原生认这个形：transport 支持 stdio/sse/http/ws（types.js:16-21），stdio 条目即 {type,command,args?,env?}（:55-67,90-106）——本仓 works/data/khy/mcp.json 现有的 deepseek-eyes 就是同形实例。「要求 MiniMax Code 官方插件加载器」只约束插件打包层，服务本身是标准 MCP，可直接装。需从插件内 codegraph.mcp.json 读出真实 command/args 再写入（编目未含该文件内容）；CodeGraph 预索引图谱需另行构建。随包的 skills/codegraph-mcode/SKILL.md 可一并进 skill 市场（direct）。.minimax-plugin/plugin.json 丢弃。许可零证据：api.github.com/repos/SweetSophia/mcode-codegraph 的 license 字段为 null，仓库根 contents 无 LICENSE/LICENSE.md/LICENSE.txt（只有 .github/.gitignore/.minimax-plugin/README.md/SUBMISSION.md/codegraph.mcp.json/icon.png/skills/tests），codegraph.mcp.json 无 license 字段、SUBMISSION.md 无许可提及——按 index.json licenseGate 规则 9 记 unknown，只能本机态安装或作 reference，vendored 进仓前必须补证。",
+      "license": "unknown",
+      "relationship": "reference",
+      "agentScope": ["mcode"],
+      "what": "标准 stdio MCP 服务器（代码图谱探索，工具 mcp__codegraph__explore）：服务本身是标准 MCP 可直接装。"
+    },
+    {
+      "name": "openviking-mcode-plugin",
+      "upstreamUrl": "https://github.com/BENDIT233/openviking-mcode-plugin",
+      "type": "plugin",
+      "khyosMarket": "mcp",
+      "targetPath": "works/data/khy/mcp.json 的 mcpServers.openviking（由 servers.mcp.json 转写）；hooks 部分三个市场内无落点",
+      "compat": "adapter-needed",
+      "compatNote": "拆三块：① servers.mcp.json 的 openviking_* 工具是标准 server 配置，转写进 mcp.json 即可（types.js:90-106）；② hooks/hooks.json（会话开始注入用户画像、按 prompt 召回、轮次捕获入记忆库）在三个市场里没有对应落点——khyos 另有一套本机 hook 机制（hookRegistry.js:20-35 定义 11 个事件：PreToolUse/PostToolUse/PrePrompt/PostResponse/PreCompact/PostCompact/Stop/SubAgentStart/SubAgentEnd/ToolPermission/PromptSection，:38-71 读 <appHome>/hooks.json 或 <projectDir>/works/data/khy/hooks.json），事件面比 mcode hooks 更明确且与 Claude Code 同构，但它在三个市场之外、目录被 .gitignore:342 覆盖（本机态，换机器即丢），要自动注入只能自行维护该文件或把逻辑改写成一个 khyos 拓展；③ skills/openviking-memory/SKILL.md 可原样进 skill 市场。另需自建或连接 OpenViking 记忆库。.minimax-plugin/plugin.json 丢弃。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["mcode"],
+      "what": "记忆库插件三块拆分：servers.mcp.json 转写进 mcp.json、hooks 无落点、SKILL.md 可原样进 skill 市场。"
+    },
+    {
+      "name": "mcode-plugin-cc",
+      "upstreamUrl": "https://github.com/kay404/mcode-plugin-cc",
+      "type": "plugin",
+      "khyosMarket": "skill",
+      "targetPath": "works/data/khy/skills/mcode-delegate/SKILL.md（新写的包装 skill，非上游原物）",
+      "compat": "adapter-needed",
+      "compatNote": "它是 Claude Code 插件（marketplace.json + plugin.json + slash commands + mcode-delegate agent），这套容器概念 khyos 都没有；可复用的只有「经 mcode exec --output-format stream-json 无头调用 mcode、把实现/调研任务委派出去并把结果回灌会话」的协议，需改写成 khyos 的 SKILL.md——委派时机、命令、流式输出解析、回灌格式全部自行编写。前提是 mcode CLI 已安装，而它本身不在 khyos 三市场内（见 blocked 条目 minimax-code）。MIT。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["mcode"],
+      "what": "Claude Code 插件容器：可复用的只有经 mcode exec 无头调用并回灌会话的协议，需改写成 khyos 的 SKILL.md。"
+    },
+    {
+      "name": "crossplug",
+      "upstreamUrl": "https://github.com/Fectivnfy112357/crossplug",
+      "type": "plugin",
+      "khyosMarket": "skill",
+      "targetPath": "works/data/khy/skills/crossplug/SKILL.md（封装其 CLI 调用的包装 skill）",
+      "compat": "adapter-needed",
+      "compatNote": "它是 DSH/MiniMax Code/pi 三方插件转换器，输出 agent-plugins.org 1.0.0 包——khyos 不直接消费该格式，那只是中间态，之后仍要拆 skills/ 与 mcp.json 分别进 khyos 的 skill/mcp 市场，所以它的正确定位是适配器工具而非可安装条目。要用它就自写 SKILL.md 封装调用，安装只能 npx/uvx/git 直取官方源（PROCESS-013 禁镜像主机与 *_MIRROR 开关）。license 为 unknown，check-license-tiers.js:135-138 按最严档处理，用前必须补证；它对不可映射能力生成「带注解桩」的行为对 khyos 无意义（khyos 侧没有对应运行时）。",
+      "license": "unknown",
+      "relationship": "adapter",
+      "agentScope": ["mcode"],
+      "what": "DSH/MiniMax Code/pi 三方插件转换器：正确定位是适配器工具而非可安装条目，license unknown 用前必须补证。"
+    },
+    {
+      "name": "herdr-minimax-code",
+      "upstreamUrl": "https://github.com/erkieh/herdr-minimax-code",
+      "type": "hook",
+      "khyosMarket": "extension",
+      "targetPath": "delivery/extension/tools/herdr-agent-state/khy.extension.json（kind=runtime + main；id 必须等于叶子目录名，check-repo-layout.js:891；runtime 的 main 必须在盘上，:897-904；分类名限 tools/protocols/mcp/scripts/software/bridges，:759）",
+      "compat": "adapter-needed",
+      "compatNote": "纯 hook 插件（.minimax-plugin/plugin.json + hooks/herdr.json，无 skill）。mcode 的 hook 事件表官方文档未记载（编目 uncertainty：仅第三方实证），khyos 侧对应物是自己的 hook 机制（hookRegistry.js:20-35）或拓展 activate(ctx) 的等价接缝；落地要把「mcode hook 事件 → Herdr pane 工作中/阻塞/空闲上报」改写成一个 khyos 拓展（khy.extension.json + main，extensionManifest.js:19-32,45-59），Herdr 上报目标可保留外部 HTTP 或换成 khyos 状态面。另一条不走三市场的路是把 hook 条目直接写进 works/data/khy/hooks.json（本机态、跨机器即丢，且 hooks 不在三个市场内）。插件自带短寿 screen watcher，适配时须按活动式超时重写（RUNTIME-003，禁固定时长硬 kill）。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["mcode"],
+      "what": "纯 hook 插件：把 mcode hook 事件上报到 Herdr pane，需改写为 khyos 拓展，watcher 按活动式超时重写。"
+    },
+    {
+      "name": "mcode（rsktash）——同名候选",
+      "upstreamUrl": "https://github.com/rsktash/mcode",
+      "type": "mcp",
+      "khyosMarket": "mcp",
+      "targetPath": "works/data/khy/mcp.json 的 mcpServers.<name> 条目（{type:'sse'|'http', url, headers?}，types.js:74-83,99-102；安装 `khy mcp add mobile-mcp -t sse -u <url>`，cli/handlers/mcp.js:154-190）",
+      "compat": "direct",
+      "compatNote": "同名候选里唯一有实义的条目：Mobile MCP 中转，非 Claude-Code 智能体经 SSE + MCP 工具（request_approval / get_mobile_input / send_status_update）连接，正是 khyos mcp 市场的原生形态。安装器里的 Claude Code 本地 hooks（活动流入 iTerm2、手机消息注入会话）是 CC 侧机制，khyos 不需要。license 为 unknown：它只落本机 mcp.json（.gitignore:342 覆盖）不触发 check-license-tiers.js，但若要入仓分发必须先补证（:135-138 按最严档处理）。",
+      "license": "unknown",
+      "relationship": "reference",
+      "agentScope": ["mcode"],
+      "what": "同名候选里唯一有实义的条目：Mobile MCP 中转（SSE + request_approval 等三工具），license unknown。"
+    },
+    {
+      "name": "minimax-code（mcode CLI）",
+      "upstreamUrl": "https://github.com/MiniMax-AI/minimax-code",
+      "type": "other",
+      "khyosMarket": "none",
+      "targetPath": "（不落地）宿主本体：extension 要 khy.extension.json+kind+main、skill 要 SKILL.md/manifest.json、mcp 要标准 server 配置，三者皆不满足；调用 mcode 只能在 AI 网关新增适配器或新写封装 mcode exec 的 SKILL.md",
+      "compat": "blocked",
+      "compatNote": "MiniMax Code CLI 是本生态的宿主本体（npm @minimax-ai/code 的终端 agent 二进制），不是插件/Skill/MCP 制品：extension 要 khy.extension.json + kind + main（extensionManifest.js:19-32,45-59），skill 要 SKILL.md/manifest.json（skillInstallService.js:76-79），mcp 要标准 server 配置（types.js:90-106）——三者皆不满足，三个市场都没有它的落点。khyos 自身就是 agent 运行时；要调用 mcode 只能在 AI 网关新增适配器或新写一个封装 mcode exec 的 SKILL.md（mcode-plugin-cc 已验证该协议），两者都是新建而非编目导入。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["mcode"],
+      "what": "MiniMax Code CLI 宿主本体（npm @minimax-ai/code 终端 agent）：非插件/Skill/MCP 制品，三市场均无落点。"
+    },
+    {
+      "name": "mcode-plugins（DraconDev）",
+      "upstreamUrl": "https://github.com/DraconDev/mcode-plugins",
+      "type": "plugin",
+      "khyosMarket": "none",
+      "targetPath": "（不落地）AGPL-3.0-or-later 禁入任何入仓目录；名义形态为 mcode 插件（.minimax-plugin/plugin.json + skills/mcp/hooks），khyos 无该清单层",
+      "compat": "blocked",
+      "compatNote": "许可证 AGPL-3.0-or-later 命中 SOURCING-002 C 档强 copyleft：check-license-tiers.js:42-43 的 copyleft 正则含 AGPL，:129-131 判 error「禁止进入源码目录」，无法落进 delivery/extension 或任何入仓位置。即使许可放行，四个插件还深度绑定 mcode 宿主（驱动真实已登录 Chrome、Agnes/Codex 图像生成需 MiniMax 侧凭据与服务、短寿命重试 hooks 绑 mcode hook 事件表——而该事件表官方未载），khyos 侧要么整体重写要么放弃。",
+      "license": "AGPL-3.0-or-later",
+      "relationship": "reference",
+      "agentScope": ["mcode"],
+      "what": "DraConDev 的 4 个 mcode 插件：AGPL-3.0-or-later 命中 C 档，且深绑 mcode 宿主与 hook 事件表。"
+    },
+    {
+      "name": "Mcode-webui",
+      "upstreamUrl": "https://github.com/Wzdhehe/Mcode-webui",
+      "type": "other",
+      "khyosMarket": "none",
+      "targetPath": "（不落地）mcode 宿主的浏览器前端，khyos 三市场都不是前端市场；仅其 skills 文档部分可拆出进 skill 市场",
+      "compat": "blocked",
+      "compatNote": "mcode 宿主的浏览器前端：消费 mcode acp/exec 的 SSE 会话流、渲染工具调用、读套餐用量接口。khyos 三个市场都不是前端市场（khyos 自己的 UI 在 delivery/web/ai-frontend 与 apps/khyos-desktop），整套协议层要对照 khyos 网关会话 API 重写才可用；仅其 skills 文档部分可拆出进 skill 市场，主体不可映射。",
+      "license": "unknown",
+      "relationship": "reference",
+      "agentScope": ["mcode"],
+      "what": "mcode 宿主的浏览器前端：消费 acp/exec SSE 会话流、渲染工具调用、读套餐用量接口，协议层需整体重写。"
+    },
+    {
+      "name": "mcode（huangbh2020）——同名候选",
+      "upstreamUrl": "https://github.com/huangbh2020/mcode",
+      "type": "other",
+      "khyosMarket": "none",
+      "targetPath": "（不落地）同名候选、桌面 ADE 宿主；编目实测未找到任何公开 marketplace catalog，没有具体条目可映射",
+      "compat": "blocked",
+      "compatNote": "同名候选、非 MiniMax 生态的桌面 ADE 宿主（基于 Claude/Pi/codex Agent SDK）。它本身是 agent 运行时而非可装入三市场的制品；且编目实测未找到任何公开 marketplace catalog（条目为 0），没有具体条目可映射。其 agent plugin 概念（skills/slash commands/subagents/MCP/hooks）与 Claude Code 插件同构，将来做桥接属新建适配器，不在本次编目范围。",
+      "license": "unknown",
+      "relationship": "reference",
+      "agentScope": ["mcode"],
+      "what": "同名候选：基于 Claude/Pi/codex Agent SDK 的桌面 ADE 宿主，本身是 agent 运行时而非可装入三市场的制品。"
+    },
+    {
+      "name": "mcode（immutex）——同名候选",
+      "upstreamUrl": "https://github.com/immutex/mcode",
+      "type": "other",
+      "khyosMarket": "none",
+      "targetPath": "（不落地）同名候选、C++23 单静态二进制 harness；扩展机制是进程内 Luau 虚拟机，无外部市场或插件仓库",
+      "compat": "blocked",
+      "compatNote": "同名候选、非 MiniMax 生态的 C++23 单静态二进制 harness。扩展机制是进程内 Luau 虚拟机（注册工具/hooks/斜杠命令/模型供应器描述符），9 个内置扩展随二进制分发，无外部市场或插件仓库——没有可导入的外部条目；Luau 扩展与 khyos 的 khy.extension.json / SKILL.md / mcp.json 三种落点均不兼容，映射它等于重写。",
+      "license": "unknown",
+      "relationship": "reference",
+      "agentScope": ["mcode"],
+      "what": "同名候选：C++23 单静态二进制 harness，扩展机制是进程内 Luau 虚拟机，与 khyos 三种落点均不兼容。"
+    }
+  ],
+  "blocked": [
+    {
+      "name": "minimax-code（mcode CLI）",
+      "upstreamUrl": "https://github.com/MiniMax-AI/minimax-code",
+      "reason": "MiniMax Code CLI 是本生态的宿主本体（npm @minimax-ai/code 的终端 agent 二进制），不是插件/Skill/MCP 制品：extension 要 khy.extension.json + kind + main（extensionManifest.js:19-32,45-59），skill 要 SKILL.md/manifest.json（skillInstallService.js:76-79），mcp 要标准 server 配置（types.js:90-106）——三者皆不满足，三个市场都没有它的落点。khyos 自身就是 agent 运行时；要调用 mcode 只能在 AI 网关新增适配器或新写一个封装 mcode exec 的 SKILL.md（mcode-plugin-cc 已验证该协议），两者都是新建而非编目导入。"
+    },
+    {
+      "name": "mcode-plugins（DraconDev）",
+      "upstreamUrl": "https://github.com/DraconDev/mcode-plugins",
+      "reason": "许可证 AGPL-3.0-or-later 命中 SOURCING-002 C 档强 copyleft：check-license-tiers.js:42-43 的 copyleft 正则含 AGPL，:129-131 判 error「禁止进入源码目录」，无法落进 delivery/extension 或任何入仓位置。即使许可放行，四个插件还深度绑定 mcode 宿主（驱动真实已登录 Chrome、Agnes/Codex 图像生成需 MiniMax 侧凭据与服务、短寿命重试 hooks 绑 mcode hook 事件表——而该事件表官方未载），khyos 侧要么整体重写要么放弃。"
+    },
+    {
+      "name": "Mcode-webui",
+      "upstreamUrl": "https://github.com/Wzdhehe/Mcode-webui",
+      "reason": "mcode 宿主的浏览器前端：消费 mcode acp/exec 的 SSE 会话流、渲染工具调用、读套餐用量接口。khyos 三个市场都不是前端市场（khyos 自己的 UI 在 delivery/web/ai-frontend 与 apps/khyos-desktop），整套协议层要对照 khyos 网关会话 API 重写才可用；仅其 skills 文档部分可拆出进 skill 市场，主体不可映射。"
+    },
+    {
+      "name": "mcode（huangbh2020）——同名候选",
+      "upstreamUrl": "https://github.com/huangbh2020/mcode",
+      "reason": "同名候选、非 MiniMax 生态的桌面 ADE 宿主（基于 Claude/Pi/codex Agent SDK）。它本身是 agent 运行时而非可装入三市场的制品；且编目实测未找到任何公开 marketplace catalog（条目为 0），没有具体条目可映射。其 agent plugin 概念（skills/slash commands/subagents/MCP/hooks）与 Claude Code 插件同构，将来做桥接属新建适配器，不在本次编目范围。"
+    },
+    {
+      "name": "mcode（immutex）——同名候选",
+      "upstreamUrl": "https://github.com/immutex/mcode",
+      "reason": "同名候选、非 MiniMax 生态的 C++23 单静态二进制 harness。扩展机制是进程内 Luau 虚拟机（注册工具/hooks/斜杠命令/模型供应器描述符），9 个内置扩展随二进制分发，无外部市场或插件仓库——没有可导入的外部条目；Luau 扩展与 khyos 的 khy.extension.json / SKILL.md / mcp.json 三种落点均不兼容，映射它等于重写。"
+    }
+  ],
+  "uncertainties": [
+    "mcode-dynamic-workflows 的清单内容与许可未核实（raw 三次抓取失败/超时），且无独立仓库（404）。",
+    "mcode-codegraph 的许可为 unknown：GitHub API license=null、仓库根无 LICENSE 文件、codegraph.mcp.json 无 license 字段、SUBMISSION.md 无许可提及，零许可证据，入仓分发前必须补证。",
+    "crossplug 与 rsktash/mcode 的许可为 unknown，入仓分发前必须补证。",
+    "mcode hook 事件表官方文档未记载（仅第三方实证）。",
+    "各 MCP 服务器的真实启动命令未读到（codegraph.mcp.json、flk_server.py、openviking servers.mcp.json 的内容均未读到），安装前必须回上游读全。",
+    "设计摘要记 direct 5 条、adapter-needed 8 条；映射 entries 实为 direct 6 条、adapter-needed 7 条，本文件以映射为准。",
+    "MiniMax-Code-Plugins 29 个插件本次只抽查 2 个（Hylouis233 9 个、antianqi 6 个未展开），其余 owner 条目待二次编目。"
+  ]
+}

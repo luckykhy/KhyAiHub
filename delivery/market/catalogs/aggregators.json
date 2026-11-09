@@ -1,0 +1,296 @@
+{
+  "$schemaVersion": "1.0.0",
+  "$artifact": "khyos 外部生态市场编目 · 跨智能体插件市场 + MCP 聚合生态",
+  "$source": "2026-10-29 六生态勘察与映射收敛（市场设计工作流产物，未入仓）；逐条上游出处以各 entry.upstreamUrl 为准",
+  "$status": "active",
+  "eco": "aggregators",
+  "surveyedAt": "2026-10-29",
+  "_note": "跨智能体插件市场 + MCP 服务器目录/聚合市场编目：17 条 = 映射 entries 13 条 + blocked 数组 4 条（modelcontextprotocol/registry 为注册表服务本体、punkpeye/awesome-mcp-servers 为 markdown 目录仓、legioncodeinc/vibe-coding-tools 与 wasp-nest-core 为 AGPL-3.0-or-later）。direct 9 条中 8 条是格式零适配的 MCP（mcp.json 与各家 .mcp.json 映射同形）、1 条是 anthropics/skills（skill）；plugin 类全部 adapter-needed（khyos 无对应导入器，khy-dsh-compat 吃的是 npm/dsh 工具包而非 Claude 插件目录）。github 预设指向已归档的 @modelcontextprotocol/server-github，编目比预设表新；Windows 上 npx 型 stdio 需 cmd /c 包裹。",
+  "marketplaces": [
+    {
+      "name": "modelcontextprotocol/registry",
+      "url": "https://github.com/modelcontextprotocol/registry",
+      "kind": "官方注册表服务本体",
+      "note": "blocked：非可挂载制品，只作编目数据源；服务器总数未知（首页只渲染 Loading servers...）"
+    },
+    {
+      "name": "punkpeye/awesome-mcp-servers",
+      "url": "https://github.com/punkpeye/awesome-mcp-servers",
+      "kind": "markdown awesome-list 目录仓",
+      "note": "blocked：无可安装形态；Aggregators 分类两次提取均失败、未编目具体条目"
+    },
+    {
+      "name": "PulseMCP",
+      "kind": "托管目录站",
+      "note": "两次抓取 403，格式/条目量/安装机制未核实，未编目任何条目"
+    },
+    {
+      "name": "Smithery",
+      "kind": "托管目录站（27,365+）",
+      "note": "无可直接落地 khyos 的开放清单格式"
+    },
+    {
+      "name": "mcp.so",
+      "kind": "托管目录站（≥18,000，分页推算）",
+      "note": "无可直接落地 khyos 的开放清单格式"
+    },
+    {
+      "name": "Glama",
+      "kind": "托管目录站（111,977，有公开 API GET /v1/servers）",
+      "note": "三家中唯一有可编程目录源的"
+    }
+  ],
+  "entries": [
+    {
+      "name": "modelcontextprotocol/servers",
+      "upstreamUrl": "https://github.com/modelcontextprotocol/servers",
+      "type": "mcp",
+      "khyosMarket": "mcp",
+      "targetPath": "works/data/khy/mcp.json 的 mcpServers.<x>（project 作用域，mcpConfigStore.js:31-33）；user 作用域 <dataHome>/mcp.json（:41-43）。7 个参考 server 逐个登记为 stdio 形 {type:'stdio',command:'npx'|'uvx',args:[...],env?}",
+      "compat": "direct",
+      "compatNote": "7 个参考 server 均为标准 stdio MCP server，mcp.json 条目形态 khyos 原生认识（mcpAddSpec.buildServerConfig 产出的就是同形配置）。其中 github/git/filesystem/fetch/memory/sequential-thinking/everything/time 共 8 个已在预设表内（mcpServerPresets.js:55-227），khy mcp add <短名> 免写命令。两点注意：① 预设 github 指向已归档的 @modelcontextprotocol/server-github（:56-64），而 README 已把「浏览已发布服务器」指向官方 Registry；② Windows 上 npx 需 cmd /c 包裹（编目明示），而 khyos _connectStdio 直接 spawn(command) 无 shell 包装（index.js:469-472，仅 bare python 走 pythonCommandResolver 平台解析），本机 win32 需手写 {command:'cmd',args:['/c','npx',...]}。许可 NOASSERTION（README 自述新贡献 Apache-2.0、既有 MIT），只做 reference 编目不触发 SOURCING-001 ledger 的 license 必填。",
+      "license": "NOASSERTION",
+      "relationship": "reference",
+      "agentScope": ["claude-code", "aggregators"],
+      "what": "MCP 协议官方参考服务器集合：8 个已在 khyos 预设表内，github 预设指向已归档旧包，许可 NOASSERTION。"
+    },
+    {
+      "name": "microsoft/playwright-mcp",
+      "upstreamUrl": "https://github.com/microsoft/playwright-mcp",
+      "type": "mcp",
+      "khyosMarket": "mcp",
+      "targetPath": "works/data/khy/mcp.json 的 mcpServers.playwright-mcp = {type:'stdio',command:'cmd',args:['/c','npx','-y','@playwright/mcp@latest']}（win32；POSIX 可省 cmd 包裹）",
+      "compat": "direct",
+      "compatNote": "标准 stdio MCP server，格式零适配。不在预设表内（表里只有 puppeteer，mcpServerPresets.js:128-136），需手打完整命令或后续给 _PRESETS 增补。依赖 Node 20+ 与本机浏览器。许可 Apache-2.0 命中 check-license-tiers.js:45 permissive 正则，A 档放行。",
+      "license": "Apache-2.0",
+      "relationship": "reference",
+      "agentScope": ["aggregators"],
+      "what": "标准 stdio MCP server（Playwright）：格式零适配，不在预设表内，win32 需 cmd /c 包裹 npx。"
+    },
+    {
+      "name": "ChromeDevTools/chrome-devtools-mcp",
+      "upstreamUrl": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+      "type": "mcp",
+      "khyosMarket": "mcp",
+      "targetPath": "works/data/khy/mcp.json 的 mcpServers.chrome-devtools = {type:'stdio',command:'cmd',args:['/c','npx','-y','chrome-devtools-mcp@latest']}",
+      "compat": "direct",
+      "compatNote": "标准 stdio server，格式零适配；需本机 Chrome。预设表无此项（puppeteer 是另一项目），Windows 下同样受 _connectStdio 无 shell 包装影响（index.js:469-472）。许可 Apache-2.0，A 档放行。",
+      "license": "Apache-2.0",
+      "relationship": "reference",
+      "agentScope": ["aggregators"],
+      "what": "标准 stdio MCP server（Chrome DevTools 协议）：格式零适配，需本机 Chrome，win32 同样受 npx 包裹缺口影响。"
+    },
+    {
+      "name": "upstash/context7",
+      "upstreamUrl": "https://github.com/upstash/context7",
+      "type": "mcp",
+      "khyosMarket": "mcp",
+      "targetPath": "works/data/khy/mcp.json 的 mcpServers.context7 = {type:'http',url:'https://mcp.context7.com/mcp',headers?}（远程 Streamable HTTP）；或本地 stdio 形",
+      "compat": "direct",
+      "compatNote": "khyos mcp.json stdio 与 http 两形都收（归一目标形见 mcpEcosystemRegistry.js:587-588，校验单一真源 types.js validateServerConfig）。远程形免 key 或需 API key，-H K:V / --env 均可带入。MIT 属 A 档宽松，check-license-tiers.js 放行。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["opencode", "aggregators"],
+      "what": "远程 Streamable HTTP MCP server（文档检索）：khyos http 形直接承载，OAuth 由 oauthTokenStore 管。"
+    },
+    {
+      "name": "github/github-mcp-server",
+      "upstreamUrl": "https://github.com/github/github-mcp-server",
+      "type": "mcp",
+      "khyosMarket": "mcp",
+      "targetPath": "works/data/khy/mcp.json 的 mcpServers.github = {type:'stdio',command:'cmd',args:['/c','npx','-y','@github/github-mcp-server'],env:{GITHUB_PERSONAL_ACCESS_TOKEN}}",
+      "compat": "direct",
+      "compatNote": "格式零适配，但撞上一处「编目比 khyos 预设表新」的实证漂移：预设表已有 github 短名，指向的却是 servers-archived 中已归档的 @modelcontextprotocol/server-github（mcpServerPresets.js:56-64，homepage 还写着 servers/tree/main/src/github），本条目是其后继。直接 khy mcp add github 装到的是旧包；要装新服务器须手写完整命令（token 经 --env 写入 env 字段），或后续在 _PRESETS 更新包名与 homepage。MIT 属 A 档。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["aggregators"],
+      "what": "GitHub 官方 MCP server：格式零适配，但是预设表 github 短名指向的是已归档旧包，直接 add 装不到这个。"
+    },
+    {
+      "name": "makenotion/notion-mcp-server",
+      "upstreamUrl": "https://github.com/makenotion/notion-mcp-server",
+      "type": "mcp",
+      "khyosMarket": "mcp",
+      "targetPath": "works/data/khy/mcp.json 的 mcpServers.notion（预设已在表内：mcpServerPresets.js:182-190，npx -y @notionhq/notion-mcp-server + NOTION_TOKEN）；远程形 mcpServers.notion-remote = {type:'http',url,headers?}",
+      "compat": "direct",
+      "compatNote": "与 khyos 预设表重合度最高的一条——khy mcp add notion 即得（requiresEnv NOTION_TOKEN，未提供也能写入、handler 提示缺项，:313-315 同款语义）。README 注明本地版已不再积极维护、主推 Remote Notion MCP；远程 http 形同样入 mcp.json，OAuth token 由 mcp 模块的 oauthTokenStore 管。MIT 属 A 档。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["aggregators"],
+      "what": "Notion 官方 MCP：与 khyos 预设表重合度最高（khy mcp add notion 即得），本地版不再积极维护、主推远程形。"
+    },
+    {
+      "name": "firecrawl/firecrawl-mcp-server",
+      "upstreamUrl": "https://github.com/firecrawl/firecrawl-mcp-server",
+      "type": "mcp",
+      "khyosMarket": "mcp",
+      "targetPath": "works/data/khy/mcp.json 的 mcpServers.firecrawl = {type:'stdio',command:'cmd',args:['/c','npx','-y','firecrawl-mcp-server'],env:{FIRECRAWL_API_KEY}}；或远程 {type:'http',url:'https://mcp.firecrawl.dev/<KEY>/v2/mcp'}",
+      "compat": "direct",
+      "compatNote": "本地 stdio 与远程托管两形，khyos mcp.json 两形都收；API key 经 khy mcp add --env K=V 写入 env 字段。MIT 属 A 档。Windows npx 的 cmd /c 缺口同其它 npx 型条目（index.js:469-472 无 shell 包装）。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["aggregators"],
+      "what": "Firecrawl 官方 MCP：本地 stdio 与远程托管两形都收，API key 经 --env 写入 env 字段。"
+    },
+    {
+      "name": "supabase-community/supabase-mcp",
+      "upstreamUrl": "https://github.com/supabase-community/supabase-mcp",
+      "type": "mcp",
+      "khyosMarket": "mcp",
+      "targetPath": "works/data/khy/mcp.json 的 mcpServers.supabase = {type:'http',url:'https://mcp.supabase.com/mcp'}（http + OAuth 2.1）；或本地自托管 {type:'stdio',command:'cmd',args:['/c','npx','-y','@supabase/mcp-server-supabase'],env:{SUPABASE_ACCESS_TOKEN}}",
+      "compat": "direct",
+      "compatNote": "远程与本地两形 khyos 都支持：http 形 + OAuth 的 token 落 mcp 模块 oauthTokenStore.js，stdio 形走标准 env 注入。Apache-2.0 属 A 档。",
+      "license": "Apache-2.0",
+      "relationship": "reference",
+      "agentScope": ["aggregators"],
+      "what": "Supabase MCP：远程 http + OAuth 2.1 与本地自托管两形都支持，token 落 oauthTokenStore 或 env。"
+    },
+    {
+      "name": "IBM/mcp-context-forge",
+      "upstreamUrl": "https://github.com/IBM/mcp-context-forge",
+      "type": "mcp",
+      "khyosMarket": "mcp",
+      "targetPath": "自托管部署后 works/data/khy/mcp.json 的 mcpServers.context-forge = {type:'http',url:'http://<部署地址>/mcp',headers:{Authorization:'Bearer <token>'}}",
+      "compat": "adapter-needed",
+      "compatNote": "它自称 AI Gateway/registry/proxy——把 MCP、A2A、REST/gRPC 联邦到单一端点，不是开箱即挂的 server：需先 pip/容器自托管部署，再把其 streamable HTTP 端点写进 mcp.json。khyos 的 mcp.json 只管连接配置、不管部署生命周期，「部署」这一步在市场外，故记 adapter-needed 而非 direct。另一层保留：其 REST-to-MCP 虚拟化 + 治理/认证/限流/缓存与 khyos 自己的 AI 网关（aiGateway.js）职责重叠，引入前需裁决是否重复造桥。许可 Apache-2.0 无碍。",
+      "license": "Apache-2.0",
+      "relationship": "adapter",
+      "agentScope": ["aggregators"],
+      "what": "自称 AI Gateway/registry/proxy：需先自托管部署再写 http 端点，其治理面与 khyos AI 网关职责重叠需裁决。"
+    },
+    {
+      "name": "docker/mcp-gateway",
+      "upstreamUrl": "https://github.com/docker/mcp-gateway",
+      "type": "mcp",
+      "khyosMarket": "mcp",
+      "targetPath": "works/data/khy/mcp.json 的 mcpServers.docker-mcp-gateway = {type:'stdio',command:'docker',args:['mcp','gateway','run']}（需本机 Docker Desktop）",
+      "compat": "adapter-needed",
+      "compatNote": "形态是 docker CLI 插件驱动的容器化 gateway：khyos 侧最多把 docker mcp gateway run 当一条 stdio 命令登记，但 server 实际跑在容器里，其 secrets/OAuth/catalog/动态发现全由 gateway 管理——khyos 的 mcpGovernance 与工具权限门控够不到容器内执行域，等于开出第二个不受 khyos 门控的执行出口。注意预设表里已有一个同名短名 docker（mcpServerPresets.js:209-217）但那是 ckreiling/mcp-server-docker（另一项目），勿混。本机 win32 还需 Docker Desktop 在位。建议只作 reference，确有容器隔离需求再评估。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["aggregators"],
+      "what": "容器化 MCP gateway：server 跑在容器里，khyos 门控够不到容器内执行域；预设表同名短名 docker 是另一项目勿混。"
+    },
+    {
+      "name": "wshobson/agents",
+      "upstreamUrl": "https://github.com/wshobson/agents",
+      "type": "plugin",
+      "khyosMarket": "extension",
+      "targetPath": "适配后逐插件落 delivery/extension/tools/<plugin-id>/khy.extension.json（id 必须等于叶子目录名，check-repo-layout.js:891）；其中可直接吃的是 skills/ 子目录 → <projectDir>/works/data/khy/skills/<name>/SKILL.md（skillLoader.js:164）或 <dataHome>/skills/<name>/SKILL.md",
+      "compat": "adapter-needed",
+      "compatNote": "三层格式差：① 市场清单 .claude-plugin/marketplace.json（name/owner/plugins[]）khyos 不认识——khyos 的 manifest 是 khy.extension.json（extensionManifest.js:19 MANIFEST_CANONICAL）；② 插件 manifest .claude-plugin/plugin.json + agents/skills/commands 目录也不是 khyos 形态；③ khyos 唯一现成导入器 khy-dsh-compat/lib/importPlugin.js 吃的是 npm/dsh 工具包（package.json + main 导出 apply(ctx)/tools，esbuild 打包到 vendor/<id>.mjs，:78-97），与 Claude 插件目录不同构，直接喂会在 resolvePackage/scanSource 处失败。真正零适配的是 skills/ 子目录：SKILL.md（name+description frontmatter）正是 skillLoader 原生格式（:44-58 frontmatter 可选），甚至可借 CC skill bridge 发现本机 ~/.claude 下已装插件（:260-275）。agents/（markdown + 模型别名 opus/sonnet/haiku/fable/inherit）与 commands/ 在 khyos 三市场没有对应落点，要进来须新写适配层。许可 MIT 属 A 档。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["claude-code", "opencode", "aggregators"],
+      "what": "多 harness 市场清单（Claude 插件格式）：两种清单均非 khyos 形态，skills/ 子目录零适配。"
+    },
+    {
+      "name": "security-scanning（wshobson/agents 插件）",
+      "upstreamUrl": "https://github.com/wshobson/agents/tree/main/plugins/security-scanning",
+      "type": "plugin",
+      "khyosMarket": "extension",
+      "targetPath": "适配后 delivery/extension/tools/security-scanning/khy.extension.json；其 skills/ 子集可直接落 skill 市场 <projectDir>/works/data/khy/skills/<name>/SKILL.md",
+      "compat": "adapter-needed",
+      "compatNote": "与 wshobson/agents 同源、同三层格式差（marketplace.json / plugin.json / dsh 导入器契约不匹配）。额外一层硬约束：该插件的 SAST、依赖漏洞扫描、容器安全工具大概率触发 khy-dsh-compat 导入器的两条准入红线——「自行读取模型密钥或 LLM SDK」与「直接网络访问」（importPlugin.js:45-53 的 scanSource 正则），扫描类工具几乎必然联网抓漏洞库，走 importPlugin 会被拒。若只取其中 skills/（SKILL.md）则零适配。无独立仓库（stars 记 0），版本以 .claude-plugin/plugin.json 的 1.3.2 为准。MIT 属 A 档。",
+      "license": "MIT",
+      "relationship": "adapter",
+      "agentScope": ["aggregators"],
+      "what": "SAST/依赖漏洞/容器安全插件：扫描类工具几乎必然联网，走 importPlugin 会被拒；只取 skills/ 则零适配。"
+    },
+    {
+      "name": "anthropics/skills",
+      "upstreamUrl": "https://github.com/anthropics/skills",
+      "type": "skill",
+      "khyosMarket": "skill",
+      "targetPath": "khy skill add anthropics/skills --skill skills/<name> → <dataHome>/skills/<name>/SKILL.md（user 家，发现链第 2 优先，skillLoader.js:246-256）；project 作用域 <projectDir>/works/data/khy/skills/<name>/SKILL.md（:164）",
+      "compat": "direct",
+      "compatNote": "SKILL.md + YAML frontmatter 是 khyos skillLoader 的原生格式，且 frontmatter 可选——仅 name+description 也能解析（skillLoader.js:44-52；本页抓取 GitHub 已核实该仓 frontmatter 确为仅 name+description 两字段），缺 version/layer/tags/platforms 只让 validateSkill 记警告、不阻断发现（:401-425）。但这是多 skill 合集仓：顶层只有 skills/spec/template/.claude-plugin（已核实），整仓 khy skill add anthropics/skills 会命中「仓库含多个 skill」报错（skillInstallService.js:150-154），必须逐 skill 用 --skill skills/<name> 指定（容器候选序 ['', 'skill', 'skills', '.skills']，skillSourceSpec.js:248）。许可 unknown：GitHub 元数据 null、根目录无 LICENSE（已核实），README 分层表述「多数 Apache-2.0、文档类 docx/pdf/pptx/xlsx 为 source-available 非开源」未经逐条核验——逐条导入前需核实；若升级为 vendored/fork 登记，SOURCING-001 ledger 的 license 字段必填（check-provenance.js:112-117）。",
+      "license": "unknown",
+      "relationship": "reference",
+      "agentScope": ["claude-code", "aggregators"],
+      "what": "Anthropic 官方技能仓：SKILL.md 原生格式但多 skill 合集须逐个 --skill；许可 unknown，根目录无 LICENSE。"
+    },
+    {
+      "name": "modelcontextprotocol/registry",
+      "upstreamUrl": "https://github.com/modelcontextprotocol/registry",
+      "type": "registry",
+      "khyosMarket": "none",
+      "targetPath": "（不落地）注册表服务本体，mcp.json/extension/skill 三市场均无对应形态；价值在编目数据源，只能 reference",
+      "compat": "blocked",
+      "compatNote": "官方注册表服务本体（server.json 数据模型的发布/检索平台），不是可挂载的 MCP server、不是插件也不是 skill，落不进 khyos 任何一格：mcp.json 只收 stdio/sse/http server 连接配置（校验单一真源 types.js validateServerConfig），extension 市场只收带 khy.extension.json 的目录。其发布认证模型（mcp-publisher CLI + GitHub OAuth/OIDC/DNS/HTTP 所有权校验）与 khyos 三套互不相识的 registry（extensionMarketplace 的 DEFAULT_REGISTRY、skillRegistry 的 CLOUD endpoint、mcp.json 文件系统）也对不上。价值在编目数据源，只能以 reference 身份引用。",
+      "license": "unknown",
+      "relationship": "reference",
+      "agentScope": ["aggregators"],
+      "what": "官方注册表服务本体（server.json 数据模型的发布/检索平台）：不是可挂载的 MCP server，落不进 khyos 任何一格。"
+    },
+    {
+      "name": "punkpeye/awesome-mcp-servers",
+      "upstreamUrl": "https://github.com/punkpeye/awesome-mcp-servers",
+      "type": "directory",
+      "khyosMarket": "none",
+      "targetPath": "（不落地）markdown 目录仓，无可安装形态；对本仓的价值是编目数据源",
+      "compat": "blocked",
+      "compatNote": "Markdown awesome-list 目录仓，没有可安装形态——mcp.json 不收目录、extension 市场要 manifest、skill 市场要 SKILL.md。它只收「有 GitHub 仓库、自己装自己跑」的 server 并以 emoji 分类 bullet 组织（编目自述「Aggregators」分类两次提取均失败、未编目具体条目），对本仓的价值是编目数据源，只能 reference。MIT 许可无碍，碍在无可挂载形态。",
+      "license": "MIT",
+      "relationship": "reference",
+      "agentScope": ["aggregators"],
+      "what": "Markdown awesome-list 目录仓：只收自己装自己跑的 server，以 emoji 分类 bullet 组织，无可挂载形态。"
+    },
+    {
+      "name": "legioncodeinc/vibe-coding-tools",
+      "upstreamUrl": "https://github.com/legioncodeinc/vibe-coding-tools",
+      "type": "plugin",
+      "khyosMarket": "none",
+      "targetPath": "（不落地）AGPL-3.0-or-later 禁入任何入仓目录（连 gitignore 的 works/data 运行时态也在扫描面内）；名义形态为跨智能体插件市场（.claude-plugin/.agents 双清单）",
+      "compat": "blocked",
+      "compatNote": "AGPL-3.0-or-later 命中 SOURCING-002 硬门槛：check-license-tiers.js:42 的 copyleft 正则判 error「禁止进入源码目录」。本页实跑 node scripts/ci/check-license-tiers.js → 2 error / 14 warning（存量，与勘察一致），其中一条 error 正在 works/data/khy/ 下（7zip COPYING），证明该守卫的 collectPackageJson 从 cwd 全量递归（:89-103）、连 gitignore 的 works/data 运行时态都扫——所以不光 delivery/extension/ 源码目录落不得，导入 works/data/khy/ 本机态也会被扫红，没有「绕开源码目录就行」的后门。要引入须走 vendored 六条件提案人工裁决，不是格式适配能解决（其 .claude-plugin/.agents 双清单格式与 khyos 也不同构，但许可是硬阻断主因）。",
+      "license": "AGPL-3.0-or-later",
+      "relationship": "reference",
+      "agentScope": ["aggregators"],
+      "what": "AGPL-3.0-or-later 的跨智能体插件市场：命中 C 档硬门槛，且 .claude-plugin/.agents 双清单与 khyos 不同构。"
+    },
+    {
+      "name": "wasp-nest-core（vibe-coding-tools 插件）",
+      "upstreamUrl": "https://github.com/legioncodeinc/vibe-coding-tools/tree/main/plugins/wasp-nest-core",
+      "type": "plugin",
+      "khyosMarket": "none",
+      "targetPath": "（不落地）AGPL-3.0-or-later 禁入任何入仓目录；须人工裁决许可分层之后才谈得上格式适配",
+      "compat": "blocked",
+      "compatNote": "同上：AGPL-3.0-or-later 属 C 档强 copyleft，check-license-tiers.js:42 判 error 禁止进源码目录（本页实跑该守卫 2 error / 14 warning 佐证，works/data 运行时态亦在扫描面内）；须人工裁决许可分层之后才谈得上格式适配。无独立仓库（stars 记 0），第一方材料 AGPL-3.0-or-later、内嵌第三方另有权利。",
+      "license": "AGPL-3.0-or-later",
+      "relationship": "reference",
+      "agentScope": ["aggregators"],
+      "what": "vibe-coding-tools 的 wasp-nest-core 插件：同为 AGPL-3.0-or-later，无独立仓库，内嵌第三方另有权利。"
+    }
+  ],
+  "blocked": [
+    {
+      "name": "modelcontextprotocol/registry",
+      "upstreamUrl": "https://github.com/modelcontextprotocol/registry",
+      "reason": "官方注册表服务本体（server.json 数据模型的发布/检索平台），不是可挂载的 MCP server、不是插件也不是 skill，落不进 khyos 任何一格：mcp.json 只收 stdio/sse/http server 连接配置（校验单一真源 types.js validateServerConfig），extension 市场只收带 khy.extension.json 的目录。其发布认证模型（mcp-publisher CLI + GitHub OAuth/OIDC/DNS/HTTP 所有权校验）与 khyos 三套互不相识的 registry（extensionMarketplace 的 DEFAULT_REGISTRY、skillRegistry 的 CLOUD endpoint、mcp.json 文件系统）也对不上。价值在编目数据源，只能以 reference 身份引用。"
+    },
+    {
+      "name": "punkpeye/awesome-mcp-servers",
+      "upstreamUrl": "https://github.com/punkpeye/awesome-mcp-servers",
+      "reason": "Markdown awesome-list 目录仓，没有可安装形态——mcp.json 不收目录、extension 市场要 manifest、skill 市场要 SKILL.md。它只收「有 GitHub 仓库、自己装自己跑」的 server 并以 emoji 分类 bullet 组织（编目自述「Aggregators」分类两次提取均失败、未编目具体条目），对本仓的价值是编目数据源，只能 reference。MIT 许可无碍，碍在无可挂载形态。"
+    },
+    {
+      "name": "legioncodeinc/vibe-coding-tools",
+      "upstreamUrl": "https://github.com/legioncodeinc/vibe-coding-tools",
+      "reason": "AGPL-3.0-or-later 命中 SOURCING-002 硬门槛：check-license-tiers.js:42 的 copyleft 正则判 error「禁止进入源码目录」。本页实跑 node scripts/ci/check-license-tiers.js → 2 error / 14 warning（存量，与勘察一致），其中一条 error 正在 works/data/khy/ 下（7zip COPYING），证明该守卫的 collectPackageJson 从 cwd 全量递归（:89-103）、连 gitignore 的 works/data 运行时态都扫——所以不光 delivery/extension/ 源码目录落不得，导入 works/data/khy/ 本机态也会被扫红，没有「绕开源码目录就行」的后门。要引入须走 vendored 六条件提案人工裁决，不是格式适配能解决（其 .claude-plugin/.agents 双清单格式与 khyos 也不同构，但许可是硬阻断主因）。"
+    },
+    {
+      "name": "wasp-nest-core（vibe-coding-tools 插件）",
+      "upstreamUrl": "https://github.com/legioncodeinc/vibe-coding-tools/tree/main/plugins/wasp-nest-core",
+      "reason": "同上：AGPL-3.0-or-later 属 C 档强 copyleft，check-license-tiers.js:42 判 error 禁止进源码目录（本页实跑该守卫 2 error / 14 warning 佐证，works/data 运行时态亦在扫描面内）；须人工裁决许可分层之后才谈得上格式适配。无独立仓库（stars 记 0），第一方材料 AGPL-3.0-or-later、内嵌第三方另有权利。"
+    }
+  ],
+  "uncertainties": [
+    "PulseMCP 两次抓取 403，其格式/条目量/安装机制未核实，未编目任何条目。",
+    "Smithery（27,365+）、mcp.so（≥18,000，分页推算）、Glama（111,977，有公开 API）三家托管站只有 Glama 有可编程目录源，三者均无可直接落地 khyos 的开放清单格式。",
+    "官方 MCP Registry 服务器总数未知（首页只渲染 Loading servers...）。",
+    "本环境无 gh CLI、WebSearch 不可用，star/许可均为编目抓取时点值。",
+    "所有 compat 判定基于格式核对与代码路径阅读，未实际安装运行任何上游条目。",
+    "设计摘要记「9 条 MCP direct」；映射 entries 实为 mcp 10 条（8 direct + 2 adapter-needed）、skill 1 条 direct，合计 direct 9 条，本文件以映射为准。"
+  ]
+}

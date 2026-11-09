@@ -110,6 +110,24 @@ function _defaultEmbedBase() {
 }
 
 /**
+ * Ollama 默认端口（来自 serviceDefaults SSOT）。
+ *
+ * SSOT 不可读时返回 '' —— **不猜**：猜出来的端口会让「本地端点」判定失真，
+ * 而失真的判定比没有判定更难发现。
+ * @returns {string} 形如 ':11434' 的匹配片段，或 ''（SSOT 不可读）
+ */
+function _ollamaPortFragment() {
+  try {
+    const mod = require(path.join(
+      REPO_ROOT,
+      'runtime', 'node', 'backend', 'src', 'constants', 'serviceDefaults',
+    ));
+    const port = Number(mod.DEFAULT_OLLAMA_PORT);
+    return Number.isFinite(port) && port > 0 ? `:${port}` : '';
+  } catch { return ''; }
+}
+
+/**
  * Gather per-type facts from the environment. Presence-only for credentials.
  * @returns {object} facts.types map for the leaf
  */
@@ -141,7 +159,10 @@ function _gatherTypeFacts() {
   let vectorLocal = false;
   let vectorHasKey = false;
   if (embedUrl) {
-    vectorLocal = /localhost|127\.0\.0\.1|:11434/.test(embedUrl);
+    const portFragment = _ollamaPortFragment();
+    vectorLocal = portFragment
+      ? new RegExp(`localhost|127\\.0\\.0\\.1|${portFragment}`).test(embedUrl)
+      : /localhost|127\.0\.0\.1/.test(embedUrl);
     vectorHasKey = vectorLocal; // local embed backend needs no key
   } else {
     // Default embed path is the on-box ollama backend — treated as local.

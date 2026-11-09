@@ -12,8 +12,12 @@ const MANIFEST_FILE = path.join(ROOT, 'khy.extension.json');
 const SUPPORTED_INJECT = new Set(['tools', 'core/tools', 'logger', 'core/logger']);
 const UNSUPPORTED_INJECT = new Set([
   'session', 'core/session', 'agent', 'core/agent', 'system-prompt', 'core/system-prompt',
-  'llm', 'core/llm', 'shell', 'core/shell', 'terminals', 'core/terminals',
+  'systemPrompt', 'core/systemPrompt', 'llm', 'core/llm', 'shell', 'core/shell',
+  'terminals', 'core/terminals', 'browser', 'web',
 ]);
+const NETWORK_RE = /\b(?:fetch|axios|https?\.request|WebSocket)\s*[(.]/;
+const MODEL_ACCESS_RE = /(?:@anthropic-ai|@deepseek-ai[\/]dsh-llm|(?:^|[^a-z])openai|ollama)/i;
+const MODEL_KEY_RE = /process\.env\.[A-Z0-9_]*(?:API_KEY|TOKEN|SECRET)/;
 
 function fail(message) {
   throw new Error(`[khy dsh import] ${message}`);
@@ -42,23 +46,84 @@ function packageRoot(entry) {
   return path.dirname(entry);
 }
 
-function scanSource(source, packageJson) {
-  const text = source.join('\n');
-  if (/(?:@anthropic-ai|@deepseek-ai[\/]dsh-llm|(?:^|[^a-z])openai|ollama)/i.test(text)
-      || /process\.env\.[A-Z0-9_]*(?:API_KEY|TOKEN|SECRET)/.test(text)) {
-    fail('插件自行读取模型密钥或 LLM SDK；模型访问必须由 khy-os 提供');
+function readText(file) {
+  try { return fs.readFileSync(file, 'utf8'); } catch { return ''; }
+}
+
+/**
+ * DSH puts the real host inject list in the bundle patch, not in package.json:
+ * `dsh.bundle.patch` points at `cordis.patch.yml`, whose row for this package
+ * carries `inject: [systemPrompt, tools]`. Reading only packageJson.inject made
+ * the gate silently pass plugins that then crashed on a service the host never
+ * offered. The union of every inject row is deliberately conservative — a patch
+ * can insert companion rows, and a false reject is recoverable while a false
+ * pass is not.
+ */
+function parsePatchInject(text) {
+  const names = [];
+  const lines = String(text).split(/\r?\n/);
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    if (/^\s*#/.test(line)) continue;
+    const inline = line.match(/\binject\s*:\s*\[([^\]]*)\]/);
+    if (inline) {
+      for (const part of inline[1].split(',')) {
+        const value = part.trim().replace(/^['"]|['"]$/g, '');
+        if (value) names.push(value);
+      }
+      continue;
+    }
+    if (/^\s*inject\s*:\s*$/.test(line)) {
+      for (let j = i + 1; j < lines.length; j += 1) {
+        const item = lines[j].match(/^\s*-\s*['"]?([A-Za-z0-9_@./-]+)['"]?\s*$/);
+        if (item) {
+          names.push(item[1]);
+          continue;
+        }
+        if (!/^\s*-\s/.test(lines[j])) break;
+      }
+    }
   }
-  if (/\b(?:fetch|axios|https?\.request|WebSocket)\s*[(.]/.test(text)) {
-    fail('插件包含直接网络访问；导入准入只允许工具与日志服务');
-  }
-  const inject = []
+  return [...new Set(names)];
+}
+
+function declaredInject(packageJson, root) {
+  const host = []
     .concat(Array.isArray(packageJson.inject) ? packageJson.inject : [])
     .concat(Array.isArray(packageJson.dsh && packageJson.dsh.inject) ? packageJson.dsh.inject : []);
-  for (const key of inject) {
+  const patchRel = packageJson && packageJson.dsh && packageJson.dsh.bundle
+    && typeof packageJson.dsh.bundle.patch === 'string' ? packageJson.dsh.bundle.patch.trim() : '';
+  const patchFile = patchRel && root ? path.resolve(root, patchRel) : '';
+  const patchInject = patchFile ? parsePatchInject(readText(patchFile)) : [];
+  const clientInject = Array.isArray(packageJson && packageJson.dsh && packageJson.dsh.client
+    && packageJson.dsh.client.inject) ? packageJson.dsh.client.inject : [];
+  return {
+    host: [...new Set([...host, ...patchInject])],
+    patchFile,
+    // Client-side services are provided by the DSH web app, not by the host
+    // Cordis container this adapter runs in; they are recorded, not enforced.
+    client: clientInject,
+  };
+}
+
+function scanSource(source, packageJson, options) {
+  const text = source.join('\n');
+  if (MODEL_ACCESS_RE.test(text) || MODEL_KEY_RE.test(text)) {
+    fail('插件自行读取模型密钥或 LLM SDK；模型访问必须由 khy-os 提供');
+  }
+  const allowNetwork = !!(options && options.allowNetwork);
+  const network = NETWORK_RE.test(text);
+  if (network && !allowNetwork) {
+    fail('插件包含直接网络访问；导入准入默认只允许工具与日志服务。'
+      + '若人已单独裁决放开网络，用 --allow-network 重试（会写入 installed.json 供审计）');
+  }
+  const inject = declaredInject(packageJson || {}, options && options.root);
+  for (const key of inject.host) {
     if (UNSUPPORTED_INJECT.has(key) || !SUPPORTED_INJECT.has(key)) {
       fail(`插件依赖未支持的 Cordis 服务: ${key}`);
     }
   }
+  return { network, inject: inject.host, patchFile: inject.patchFile, clientInject: inject.client };
 }
 
 function collectContext() {
@@ -75,10 +140,7 @@ function schemaIsObject(schema) {
     && (!schema.required || Array.isArray(schema.required));
 }
 
-function buildEntry(entry, packageRootPath, id) {
-  const source = fs.readFileSync(entry, 'utf8');
-  const packageJson = readJson(path.join(packageRootPath, 'package.json'), {});
-  scanSource([source], packageJson);
+function buildEntry(entry, id) {
   const output = path.join(VENDOR, `${id}.mjs`);
   fs.mkdirSync(VENDOR, { recursive: true });
   esbuild.buildSync({ entryPoints: [entry], outfile: output, bundle: true, format: 'esm', platform: 'node', target: 'node20', packages: 'bundle' });
@@ -113,13 +175,26 @@ function declaration(tool) {
   };
 }
 
-async function importPlugin(specifier) {
+function syncPermissions(manifest, installed) {
+  manifest.permissions = {
+    ...(manifest.permissions || {}),
+    network: installed.plugins.some((item) => item && item.network === true),
+  };
+}
+
+async function importPlugin(specifier, options) {
   const resolved = resolvePackage(specifier);
   const root = packageRoot(resolved);
   const pkg = readJson(path.join(root, 'package.json'), {});
   const entry = pkg.main ? path.resolve(root, pkg.main) : resolved;
   const id = String(pkg.name || path.basename(root)).replace(/[^a-zA-Z0-9._-]/g, '_');
-  const bundled = buildEntry(entry, root, id);
+  const bundled = buildEntry(entry, id);
+  // Scan the bundle, not only the entry file: dependencies are where a network
+  // call or an API-key read usually hides. Nothing executes before it passes.
+  const scan = scanSource([fs.readFileSync(bundled, 'utf8')], pkg, {
+    root,
+    allowNetwork: !!(options && options.allowNetwork),
+  });
   const tools = await loadTools(bundled);
   if (!tools.length) fail('插件没有发现可注册工具');
   const installed = readJson(INSTALLED_FILE, { plugins: [] });
@@ -132,12 +207,24 @@ async function importPlugin(specifier) {
   const duplicate = declarations.find((item) => existingNames.has(item.name));
   if (duplicate) fail(`工具名冲突: ${duplicate.name} 已由其他已安装插件声明`);
   installed.plugins = installed.plugins.filter((item) => item && item.id !== id);
-  installed.plugins.push({ id, packageName: pkg.name || specifier, entry: bundled, tools: declarations });
+  const record = {
+    id,
+    packageName: pkg.name || specifier,
+    entry: bundled,
+    network: scan.network,
+    inject: scan.inject,
+    clientInject: scan.clientInject,
+    tools: declarations,
+  };
+  if (scan.network) record.networkApprovedAt = new Date().toISOString();
+  installed.plugins.push(record);
   fs.writeFileSync(INSTALLED_FILE, `${JSON.stringify(installed, null, 2)}\n`);
   const manifest = readJson(MANIFEST_FILE, {});
   manifest.tools = installed.plugins.flatMap((item) => item.tools || []);
+  syncPermissions(manifest, installed);
   fs.writeFileSync(MANIFEST_FILE, `${JSON.stringify(manifest, null, 2)}\n`);
-  console.log(`已导入 ${pkg.name || specifier}: ${declarations.map((item) => item.name).join(', ')}`);
+  const networkNote = scan.network ? '，已记录网络授权' : '';
+  console.log(`已导入 ${pkg.name || specifier}: ${declarations.map((item) => item.name).join(', ')}${networkNote}`);
 }
 
 function removePlugin(id) {
@@ -150,14 +237,19 @@ function removePlugin(id) {
   fs.writeFileSync(INSTALLED_FILE, `${JSON.stringify(installed, null, 2)}\n`);
   const manifest = readJson(MANIFEST_FILE, {});
   manifest.tools = installed.plugins.flatMap((item) => item.tools || []);
+  syncPermissions(manifest, installed);
   fs.writeFileSync(MANIFEST_FILE, `${JSON.stringify(manifest, null, 2)}\n`);
   console.log(`已移除 ${id}`);
 }
 
 async function main(argv) {
   if (argv[0] === '--remove' && argv[1]) return removePlugin(argv[1]);
-  if (!argv[0]) fail('用法: node lib/importPlugin.js <包名或路径> | --remove <插件 id>');
-  return importPlugin(argv[0]);
+  const allowNetwork = argv.includes('--allow-network');
+  const positional = argv.filter((item) => item !== '--allow-network');
+  if (!positional[0]) {
+    fail('用法: node lib/importPlugin.js <包名或路径> [--allow-network] | --remove <插件 id>');
+  }
+  return importPlugin(positional[0], { allowNetwork });
 }
 
 if (require.main === module) main(process.argv.slice(2)).catch((error) => {
@@ -165,4 +257,4 @@ if (require.main === module) main(process.argv.slice(2)).catch((error) => {
   process.exitCode = 1;
 });
 
-module.exports = { importPlugin, removePlugin, scanSource };
+module.exports = { importPlugin, removePlugin, scanSource, declaredInject, parsePatchInject };
