@@ -42,6 +42,15 @@ const bridgeSrc = fs.readFileSync(
   path.join(backendRoot, 'src/cli/tui/hooks/useQueryBridge.js'), 'utf8'
 );
 
+// 断言用**空白宽容**的形状:这些 setMessages 调用早已被 prettier 折成多行
+// (`[...m,` 与对象字面量分行),原先写死的单行正则因此长期不匹配 —— 三条断言
+// 在 2026-11-01 之前就一直红着,而红的原因不是行为变了,是排版变了。
+// 判词只锁「谁被 push、带什么字段」,不锁缩进。
+const USER_LINE = (field) =>
+  new RegExp(
+    `setMessages\\(\\(m\\) => \\[\\s*\\.\\.\\.m,\\s*\\{ role: 'user', content: ${field}`
+  );
+
 // 抠出忙时路由某分支块:从分支条件起到该分支的 `return Promise.resolve(null);`。
 function busyBranch(marker) {
   const start = bridgeSrc.indexOf(marker);
@@ -59,12 +68,12 @@ _describe('TUI 忙时提交 user 行回显守卫', () => {
     const end = bridgeSrc.indexOf("if (route.action === 'interrupt')", start);
     _expect(end >= 0).toBe(true);
     const seg = bridgeSrc.slice(start, end);
-    _expect(seg).toMatch(/setMessages\(\(m\) => \[\.\.\.m, \{ role: 'user', content: route\.text/);
+    _expect(seg).toMatch(USER_LINE('route\\.text'));
   });
 
   _test('urgent 分支把用户原文以 user 角色提交到 transcript', () => {
     const seg = busyBranch("if (route.action === 'urgent')");
-    _expect(seg).toMatch(/setMessages\(\(m\) => \[\.\.\.m, \{ role: 'user', content: route\.text/);
+    _expect(seg).toMatch(USER_LINE('route\\.text'));
   });
 
   _test('重复提交去抖同时覆盖 steer 队尾(防同文本双份回显)', () => {
@@ -81,6 +90,6 @@ _describe('steer 遗留安全网(不静默丢失、不泄漏跨回合)', () => {
 
   _test('_runSubmit 乐观回显被 _echoed 守卫(续跑回合不二次回显)', () => {
     _expect(bridgeSrc).toContain('if (!options._echoed) {');
-    _expect(bridgeSrc).toMatch(/if \(!options\._echoed\) \{\s*\n\s*setMessages\(\(m\) => \[\.\.\.m, \{ role: 'user', content: text, imageCount/);
+    _expect(bridgeSrc).toMatch(USER_LINE('text, imageCount'));
   });
 });
