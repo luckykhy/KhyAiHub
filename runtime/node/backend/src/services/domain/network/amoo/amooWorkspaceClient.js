@@ -39,6 +39,8 @@ function defaultSleep(ms) {
  * @param {object} [opts]
  * @param {object} [opts.config] resolveAmooConfig 的输出（取 adb.serial）
  * @param {NodeJS.ProcessEnv} [opts.env] 默认 process.env；测试显式注入
+ * @param {Function} [opts.resolveSerial] 惰性解析 serial 的注入点；handler 经
+ *   amooBridgeClient.ensureDevice()（带发现+写回）提供。缺省时回落 config.adb.serial。
  * @param {Function} [opts.runAdb] (argv) => Promise<{ok,stdout,stderr,error}>
  * @param {Function} [opts.hashFile] (path) => string sha256（测试注入）
  * @param {Function} [opts.sleep]
@@ -47,7 +49,9 @@ function defaultSleep(ms) {
 function createAmooWorkspaceClient(opts = {}) {
   const config = opts.config || {};
   const env = opts.env || process.env;
-  const serial = config.adb ? config.adb.serial : '';
+  // 注入点：handler 经 amooBridgeClient.ensureDevice()（带发现+写回）提供 serial，
+  // 别处写回的 serial 后续操作也看得见（惰性解析，不是构造期一次性快照）。
+  const resolveSerial = typeof opts.resolveSerial === 'function' ? opts.resolveSerial : null;
   const runAdb = typeof opts.runAdb === 'function' ? opts.runAdb : null;
   const sleep = typeof opts.sleep === 'function' ? opts.sleep : defaultSleep;
   const hashFile =
@@ -66,6 +70,35 @@ function createAmooWorkspaceClient(opts = {}) {
 
   function _noRunner() {
     return { ok: false, code: 'no_adb_runner', error: '没有可用的 adb 执行器（runAdb 未注入）。' };
+  }
+
+  /**
+   * 惰性解析 serial：优先注入的 resolveSerial（handler 经 ensureDevice 发现+写回后
+   * 提供），否则回落 config.adb.serial。空 serial 时返回结构化错误，而不是打出
+   * `adb -s '' push` 这种畸形 argv——workspace 是纯 adb 文件同步，桥卡死时仍要可用，
+   * 但不能从「连过期地址」退化成畸形 argv。
+   * @returns {Promise<{ok:true, serial:string}|{ok:false, code:string, error:string}>}
+   */
+  async function _serial() {
+    if (resolveSerial) {
+      const resolved = await resolveSerial();
+      if (typeof resolved === 'string' && resolved.trim()) {
+        return { ok: true, serial: resolved.trim() };
+      }
+    } else {
+      const fromConfig = config.adb ? config.adb.serial : '';
+      if (typeof fromConfig === 'string' && fromConfig.trim()) {
+        return { ok: true, serial: fromConfig.trim() };
+      }
+    }
+    return {
+      ok: false,
+      code: 'device_not_found',
+      error: '未发现手机：adb 设备表为空，mDNS 也没有 _adb-tls-connect 实例。'
+        + '请确认手机与电脑在同一局域网、无线调试已开启且此前完成过一次配对；'
+        + '本机可用 `adb mdns services` 查看手机广播的连接实例，再重试。'
+        + '（或设 KHY_AMOO_DEVICE_SERIAL 指定设备）',
+    };
   }
 
   /** 本地目录的扁平文件清单（跳过 manifest 与子目录，v1 约定）。 */
@@ -121,7 +154,21 @@ function createAmooWorkspaceClient(opts = {}) {
     const manifest = readManifest(manifestText);
     const plan = planPush(local.files, manifest);
 
-    const uploaded = await _uploadFiles(plan.upload, dir, remoteDir, local.files, manifest);
+    const serialRes = await _serial();
+    if (!serialRes.ok) {
+      return {
+        ok: false,
+        code: serialRes.code,
+        error: serialRes.error,
+        pushed: [],
+        skipped: plan.skip,
+        remove: plan.remove,
+        failed: [],
+        remoteDir,
+        localDir: dir,
+      };
+    }
+    const uploaded = await _uploadFiles(plan.upload, dir, remoteDir, local.files, manifest, serialRes.serial);
     const pushed = uploaded.pushed;
     const failed = uploaded.failed;
 
@@ -150,7 +197,7 @@ function createAmooWorkspaceClient(opts = {}) {
    * 比写一份「半真半假」的 manifest 安全。
    * @returns {Promise<{pushed:string[], failed:{name:string,error:string}[]}>}
    */
-  async function _uploadFiles(names, dir, remoteDir, localFiles, manifest) {
+  async function _uploadFiles(names, dir, remoteDir, localFiles, manifest, serial) {
     const pushed = [];
     const failed = [];
     for (const name of names) {
@@ -183,6 +230,11 @@ function createAmooWorkspaceClient(opts = {}) {
    */
   async function pull(localDir) {
     if (!runAdb) return _noRunner();
+    const serialRes = await _serial();
+    if (!serialRes.ok) {
+      return { ok: false, code: serialRes.code, error: serialRes.error, pulled: [], failed: [] };
+    }
+    const serial = serialRes.serial;
     const remoteDir = _remoteDir('');
     const dir = _clean(localDir) || nodePath.join(process.cwd(), 'amoo-dev-pulled');
     const listed = await runAdb(buildRemoteListArgv(serial, remoteDir));
@@ -233,6 +285,21 @@ function createAmooWorkspaceClient(opts = {}) {
     const localDir = _clean(env.KHY_AMOO_WORKSPACE_LOCAL);
     const local = localDir ? _listLocal(localDir) : { ok: true, files: [], skippedDirs: [] };
 
+    const serialRes = await _serial();
+    if (!serialRes.ok) {
+      return {
+        ok: false,
+        code: serialRes.code,
+        localDir: localDir || '（未设置 KHY_AMOO_WORKSPACE_LOCAL，只显示手机侧）',
+        remoteDir,
+        local: local.files || [],
+        localSkippedDirs: local.skippedDirs || [],
+        remote: [],
+        remoteSource: 'adb',
+        error: serialRes.error,
+      };
+    }
+    const serial = serialRes.serial;
     const listed = await runAdb(buildRemoteListArgv(serial, remoteDir));
     let remote = [];
     let remoteSource = 'adb';

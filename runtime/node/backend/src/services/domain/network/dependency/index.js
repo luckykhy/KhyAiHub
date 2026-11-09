@@ -13,11 +13,15 @@
  */
 
 const healingLoop = require('./healingLoop');
+const installJobs = require('./installJobs');
 const installRunner = require('./installRunner');
 // 同 resolver.js：依赖表真源是同目录 ./registry，不是 cli/commands/registry。
+const inventory = require('./inventory');
+const manifestIo = require('./manifestIo');
 const registry = require('./registry');
 const resolver = require('./resolver');
 const toolchainVersions = require('./toolchainVersions');
+const versionProbe = require('./versionProbe');
 
 module.exports = {
   // registry
@@ -45,10 +49,31 @@ module.exports = {
   supportedVersions: toolchainVersions.supportedVersions,
   listVersionable: toolchainVersions.listVersionable,
   describeVersions: toolchainVersions.describeVersions,
+  // 开发环境盘点/清单（[DESIGN-ARCH-204]）：assertInstallable 是 manual/
+  // informational 短路闸的单点实现，CLI/HTTP/import 三个安装入口共用。
+  devCatalog: inventory.DEV_ENV_CATALOG,
+  normalizeToDepId: inventory.normalizeToDepId,
+  scanInventory: inventory.scanInventory,
+  loadLatestSnapshot: inventory.loadLatestSnapshot,
+  getSnapshotPath: inventory.getSnapshotPath,
+  summarizeInventory: inventory.summarizeInventory,
+  assertInstallable: inventory.assertInstallable,
+  probeVersion: versionProbe.probeVersion,
+  buildManifest: manifestIo.buildManifest,
+  buildManifestFromLatest: manifestIo.buildManifestFromLatest,
+  previewImport: manifestIo.previewImport,
+  applyImport: manifestIo.applyImport,
+  createDevEnvJob: installJobs.createJob,
+  getDevEnvJob: installJobs.getJob,
+  getDevEnvJobView: installJobs.getJobView,
   // sub-modules for advanced use / tests
   registry,
   resolver,
   installRunner,
   healingLoop,
   toolchainVersions,
+  versionProbe,
+  inventory,
+  manifestIo,
+  installJobs,
 };

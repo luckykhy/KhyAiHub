@@ -1,0 +1,483 @@
+{
+  "tools_contract_version": "1.0.0",
+  "$note": "Amoo / 手机桥工具名与风险契约（纯数据投影，不是运行时真源）。**口径：D1-1 部分**——契约 + 比对测试已落地；D1-2（三端从契约读、删各自 local 常量）未做，故本文件当前不驱动任何运行期行为，也**不新增任何可调用能力**：它不进 amooBridgePolicy.BRIDGE_TOOLS 的 22 项白名单，不进手机端 Tools.NAMES 的 48 项，不进协作桥 contracts 的 12 项 wire 面。投影源（各自仍是该执行面的真源）：runtime/node/backend/src/services/domain/network/amoo/amooBridgePolicy.js 的 BRIDGE_TOOLS（PC 侧执行闸，22 项）、runtime/node/backend/src/services/domain/network/phone/phoneBridgeCatalog.js 的 BRIDGE_TOOLS + UI_TOOLS（目录 32 项 + UI 11 项）、delivery/extension/bridges/khy-amoon-bridge/lib/contracts.js 的 TOOL_SPECS（协作桥 12 项 wire 工具）、delivery/mobile/khy-os-client-app/android/app/src/main/java/com/khyos/khy_os_client/bridge/Tools.java 的 NAMES（手机端 48 项）与同目录 LoopModes.java 的 KNOWN_TOOLS（36 项）。口径细则：① wireName 取手机侧执行面的原生工具名（Tools.NAMES），协作桥独有的能力用桥的 wire 名；一个能力一条 entry，同一能力的其它名字一律进 aliases[]（目录的 phone_* 命名与 shell_exec / file_read 等历史别名），故同名能力不写两条。② risk 词表 low/medium/high：进了 PC 执行闸的能力直接取 amooBridgePolicy 的档位（该处是平台闸门的真源），不在闸内的按手机侧语义推导（只读 low / 可逆写与执行 medium / 不可逆 high）。③ requiresConfirm = 现有执行闸强制确认的集合（amooBridgePolicy.requiresConfirm ∪ LoopModes.HIGH_RISK_TOOLS = exec、rm）；契约层不新增确认要求，D1-2 之前没有闸去强制它，secret_* 的确认由一次性投递码承担。④ scopes 词表 operator/phone/file（沿用协作桥 contracts 的 SCOPES），语义是「哪些调用方角色可发起这次调用」：operator = PC 侧持令牌的操作者，phone = 手机侧本地循环，file = 文件信箱通道；手机侧能力由 PC 操作者与手机本地循环两条路调用。⑤ phase 1 = 该能力当前可调用；协作桥的 Phase 2 占位名（contracts.PHASE2_TOOL_NAMES）不在契约内——它们不是任何一端的执行面真源。已知取舍：协作桥的 phone_exec 是白名单诊断（op 子集，只读），与手机桥的 exec（任意 shell）不是同一实现，契约按手机桥的 exec 记 high + 需确认（取更严的一档），桥自己的档位仍以桥 contracts 为准；协作桥的 phone_screenshot（PC 侧 adb 截图、落盘回传）在桥内记 medium，契约按手机侧 shot（只读截图）记 low。",
+  "tools": [
+    {
+      "wireName": "ping",
+      "displayName": "探活",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone", "file"],
+      "phase": 1,
+      "aliases": ["phone_ping"]
+    },
+    {
+      "wireName": "info",
+      "displayName": "读取设备与系统信息",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_info", "phone_sys_info", "sys_info"]
+    },
+    {
+      "wireName": "tools",
+      "displayName": "列出桥的能力目录",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_tools"]
+    },
+    {
+      "wireName": "exec",
+      "displayName": "执行一条 shell 命令",
+      "risk": "high",
+      "requiresConfirm": true,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_exec", "phone_shell_exec", "shell_exec"]
+    },
+    {
+      "wireName": "ls",
+      "displayName": "列出目录",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_ls", "phone_file_list", "file_list"]
+    },
+    {
+      "wireName": "read",
+      "displayName": "读取文件内容",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_read", "phone_file_read", "file_read"]
+    },
+    {
+      "wireName": "write",
+      "displayName": "写入文件",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_write", "phone_file_write", "file_write"]
+    },
+    {
+      "wireName": "mkdir",
+      "displayName": "创建目录",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_mkdir"]
+    },
+    {
+      "wireName": "rm",
+      "displayName": "删除文件或目录",
+      "risk": "high",
+      "requiresConfirm": true,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_rm"]
+    },
+    {
+      "wireName": "mv",
+      "displayName": "移动或重命名",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_mv"]
+    },
+    {
+      "wireName": "cp",
+      "displayName": "复制文件或目录",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_cp"]
+    },
+    {
+      "wireName": "stat",
+      "displayName": "查询路径属性",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_stat"]
+    },
+    {
+      "wireName": "zip",
+      "displayName": "打包为 zip",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_zip"]
+    },
+    {
+      "wireName": "unzip",
+      "displayName": "解开 zip",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_unzip"]
+    },
+    {
+      "wireName": "start_app",
+      "displayName": "启动手机上的应用",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_start_app"]
+    },
+    {
+      "wireName": "open_url",
+      "displayName": "用默认浏览器打开链接",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_open_url"]
+    },
+    {
+      "wireName": "share_text",
+      "displayName": "拉起系统分享面板",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_share_text"]
+    },
+    {
+      "wireName": "list_apps",
+      "displayName": "列出已安装应用",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_list_apps", "phone_app_list"]
+    },
+    {
+      "wireName": "battery",
+      "displayName": "读取电量与充电状态",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_battery"]
+    },
+    {
+      "wireName": "volume",
+      "displayName": "读取或设置媒体音量",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_volume"]
+    },
+    {
+      "wireName": "brightness",
+      "displayName": "读取或设置屏幕亮度",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_brightness"]
+    },
+    {
+      "wireName": "vibrate",
+      "displayName": "让手机震动",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_vibrate"]
+    },
+    {
+      "wireName": "clipboard",
+      "displayName": "读取或写入剪贴板",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_clipboard"]
+    },
+    {
+      "wireName": "toast",
+      "displayName": "弹一条 toast",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_toast"]
+    },
+    {
+      "wireName": "notify",
+      "displayName": "在通知栏发一条通知",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_notify"]
+    },
+    {
+      "wireName": "ui_dump",
+      "displayName": "导出界面节点树",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_ui_dump"]
+    },
+    {
+      "wireName": "ui_tap",
+      "displayName": "点击屏幕坐标",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "ui_click",
+      "displayName": "点击界面控件",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "ui_swipe",
+      "displayName": "滑动界面",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "ui_longpress",
+      "displayName": "长按界面元素",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "ui_type",
+      "displayName": "向输入框输入文本",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "ui_back",
+      "displayName": "触发返回键",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "ui_home",
+      "displayName": "触发主屏键",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "ui_recents",
+      "displayName": "触发最近任务键",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "shot",
+      "displayName": "截屏",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_screenshot"]
+    },
+    {
+      "wireName": "shot_b64",
+      "displayName": "截屏并返回 base64",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "loop_start",
+      "displayName": "启动手机本地拦截循环",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_loop_start"]
+    },
+    {
+      "wireName": "loop_stop",
+      "displayName": "停止手机本地拦截循环",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_loop_stop"]
+    },
+    {
+      "wireName": "loop_status",
+      "displayName": "读取本地拦截循环状态",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_loop_status"]
+    },
+    {
+      "wireName": "amoo_ask",
+      "displayName": "反代：向 Amoo 提问",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_amoo_ask"]
+    },
+    {
+      "wireName": "amoo_result",
+      "displayName": "轮询 amoo_ask 的结果",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_amoo_result"]
+    },
+    {
+      "wireName": "amoo_memory",
+      "displayName": "读写共享记忆",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_amoo_memory"]
+    },
+    {
+      "wireName": "amoo_stop",
+      "displayName": "中止进行中的 Amoo 反代任务",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": ["phone_amoo_stop"]
+    },
+    {
+      "wireName": "adou_signin",
+      "displayName": "调用 a 豆助手",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "secret_code",
+      "displayName": "生成一次性投递码",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "secret_put",
+      "displayName": "凭投递码写入一条沙箱凭据",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "secret_list",
+      "displayName": "列出已存凭据的名字与时间",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "secret_del",
+      "displayName": "删除一条沙箱凭据",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "bridge_status",
+      "displayName": "协作桥状态",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone", "file"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "mailbox_status",
+      "displayName": "手机信箱状态",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone", "file"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "khy_ask",
+      "displayName": "一次性提问 khy-os",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator", "phone"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "amoon_send",
+      "displayName": "发消息给 Amoo",
+      "risk": "medium",
+      "requiresConfirm": false,
+      "scopes": ["operator"],
+      "phase": 1,
+      "aliases": []
+    },
+    {
+      "wireName": "amoon_inbox",
+      "displayName": "读取 Amoo 回执",
+      "risk": "low",
+      "requiresConfirm": false,
+      "scopes": ["operator"],
+      "phase": 1,
+      "aliases": []
+    }
+  ]
+}

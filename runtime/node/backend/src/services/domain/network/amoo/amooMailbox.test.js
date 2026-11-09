@@ -61,6 +61,8 @@ function makeClientDouble(handlers = {}) {
 function makeMailbox(overrides = {}) {
   const config = resolveAmooConfig({
     KHY_AMOO_ADB_PATH: 'C:/fake/adb.exe',
+    // 生产里 mailbox 在 ensureDevice（发现+写回）之后才用；测试显式给串钉住 argv。
+    KHY_AMOO_DEVICE_SERIAL: '192.168.2.46:33743',
     KHY_AMOO_MAILBOX_TIMEOUT_MS: '2000',
     KHY_AMOO_MAILBOX_POLL_MS: '100',
   });

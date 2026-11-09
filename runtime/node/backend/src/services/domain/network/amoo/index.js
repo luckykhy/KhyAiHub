@@ -19,6 +19,11 @@
  * provider is deliberately NOT instantiated here, because a panel that is never
  * opened must never have started a poll timer.
  *
+ * The tool-name / risk contract rides along as a read-only exit too:
+ * `getAmooToolContract()` hands out the frozen `amooToolContract.json`
+ * projection. It changes no runtime behaviour (D1-1 部分) — it exists so the
+ * five tool lists that drifted apart can be compared against one coordinate.
+ *
  * Nothing at module load touches the filesystem or the phone: `getAppDataDir`
  * is passed as a function and only called when a scratch file is actually
  * needed.
@@ -33,6 +38,38 @@ const { AmooDispatchRunner } = require('./amooDispatchRunner');
 const { buildAmooPanelModel } = require('./amooPanelViewModel');
 const { AmooStatusProvider } = require('./amooStatusProvider');
 const dataHome = require('../../../../utils/dataHome');
+const fs = require('fs');
+const path = require('path');
+
+const TOOL_CONTRACT_PATH = path.join(__dirname, 'amooToolContract.json');
+let toolContractCache = null;
+
+function deepFreeze(value) {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    Object.freeze(value);
+    for (const key of Object.keys(value)) deepFreeze(value[key]);
+  }
+  return value;
+}
+
+/**
+ * 只读出口：工具名 / 风险契约（纯数据投影）。
+ *
+ * WHY 惰性读盘：本单元的纪律是「模块装载不碰磁盘不碰手机」，require 本文件
+ * 不该有任何 IO，故第一次调用才读并缓存。WHY 冻结：契约是坐标不是配置，
+ * 谁改它就等于改了坐标 —— 冻结让改动只能发生在那个 JSON 文件里。
+ *
+ * 口径 D1-1 部分：契约不驱动运行期行为，也不新增任何可调用能力。
+ * @returns {{tools_contract_version:string, tools:object[]}}
+ */
+function getAmooToolContract() {
+  if (!toolContractCache) {
+    toolContractCache = deepFreeze(
+      JSON.parse(fs.readFileSync(TOOL_CONTRACT_PATH, 'utf8')),
+    );
+  }
+  return toolContractCache;
+}
 
 /**
  * Build a fresh, fully wired stack. Tests use this with injected fakes.
@@ -84,4 +121,5 @@ module.exports = {
   AmooStatusProvider,
   buildAmooPanelModel,
   dataHome,
+  getAmooToolContract,
 };

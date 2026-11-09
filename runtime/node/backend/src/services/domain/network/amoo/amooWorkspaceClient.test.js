@@ -51,6 +51,8 @@ function fakeAdb(script = {}) {
 function makeClient(localDir, adb, env = {}) {
   const config = resolveAmooConfig({
     KHY_AMOO_ADB_PATH: 'C:/fake/adb.exe',
+    // 默认值改空后显式给串，钉住既有 `-s SERIAL` argv 断言；空 serial 的新闸由专门用例覆盖。
+    KHY_AMOO_DEVICE_SERIAL: SERIAL,
     ...env,
   });
   return createAmooWorkspaceClient({ config, env, runAdb: (argv) => adb.run(argv) });
@@ -173,4 +175,37 @@ test('远端目录可经 KHY_AMOO_WORKSPACE_DIR 覆盖', async () => {
   assert.equal(client.remoteDir, '/sdcard/other-dev');
   const res = await client.push(dir);
   assert.equal(res.remoteDir, '/sdcard/other-dev');
+});
+
+test('serial 为空时回 device_not_found，一个 adb 都不发', async () => {
+  const dir = tmpDir('khy-ws-noserial-');
+  writeFile(dir, 'a.js', 'a\n');
+  const adb = fakeAdb();
+  // 不设 KHY_AMOO_DEVICE_SERIAL（空默认）、不注入 resolveSerial：_serial() 判空 →
+  // device_not_found，绝不打出 `adb -s '' push` 这种畸形 argv。
+  const config = resolveAmooConfig({ KHY_AMOO_ADB_PATH: 'C:/fake/adb.exe' });
+  const client = createAmooWorkspaceClient({ config, env: {}, runAdb: (argv) => adb.run(argv) });
+  const res = await client.push(dir);
+  assert.equal(res.ok, false);
+  assert.equal(res.code, 'device_not_found');
+  assert.match(res.error, /未发现手机/);
+  assert.equal(adb.calls.length, 0);
+});
+
+test('resolveSerial 注入点优先，取到串才发 argv', async () => {
+  const dir = tmpDir('khy-ws-resolve-');
+  writeFile(dir, 'a.js', 'a\n');
+  const adb = fakeAdb();
+  // handler 经 amooBridgeClient.ensureDevice() 提供 resolveSerial：惰性解析让别处
+  // 写回的 serial 被后续操作看见，而不是构造期一次性快照。
+  const config = resolveAmooConfig({ KHY_AMOO_ADB_PATH: 'C:/fake/adb.exe' });
+  const client = createAmooWorkspaceClient({
+    config,
+    env: {},
+    resolveSerial: async () => '192.168.9.9:5555',
+    runAdb: (argv) => adb.run(argv),
+  });
+  const res = await client.push(dir);
+  assert.equal(res.ok, true);
+  assert.deepEqual(adb.calls[0], ['-s', '192.168.9.9:5555', 'push', path.join(dir, 'a.js'), '/sdcard/amoo-dev/a.js']);
 });

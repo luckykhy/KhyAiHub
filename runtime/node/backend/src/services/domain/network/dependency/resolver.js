@@ -150,12 +150,21 @@ function probe(depId, env = defaultEnv()) {
       };
     }
     if (p.type === PROBE.COMMAND) {
-      const found = env.searchExecutable(p.bin);
+      // bins 多候选（如 python3 在 Windows 只有 python.exe/py.exe）：逐个探活，
+      // 首中即返。单 bin 走原路径，heal 链行为不变。
+      const candidates = Array.isArray(p.bins) && p.bins.length ? p.bins : [p.bin];
+      let found = null;
+      for (const bin of candidates) {
+        found = env.searchExecutable(bin);
+        if (found) {
+          break;
+        }
+      }
       return {
         id: depId,
         present: !!found,
         kind: dep.kind,
-        detail: found || `command "${p.bin}" not on PATH`,
+        detail: found || `command "${candidates.join('/')}" not on PATH`,
       };
     }
     if (p.type === PROBE.PYTHON_PACKAGE) {
