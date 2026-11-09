@@ -1,7 +1,7 @@
-<!-- IMPL-STATUS: proposed -->
+<!-- IMPL-STATUS: todo -->
 # [DESIGN-PERF-007] 对标 Claude Code 与 OpenCode 的 khy 启动提速方案
 
-> **状态**：提案（未接线） · **日期**：2026-10-10 · **编号**：[DESIGN-PERF-007] · **落点目录**：`docs/03_DESIGN_设计/DESIGN-PERF/`
+> **状态**：W1/W2 已接线（2026-10-10，见 §九 落地记录）；W3 部分、W4/W5 待人工裁决 · **日期**：2026-10-10 · **编号**：[DESIGN-PERF-007] · **落点目录**：`docs/03_DESIGN_设计/DESIGN-PERF/`
 > **适用层**：`runtime/node/backend`（`khy` CLI / TUI 入口链）
 > **需求来源**（`RUNTIME-008` source）：用户原话「khyos启动太慢，为什么claude code和opencode启动很快需要设计一个方案」（2026-10-10）
 > **关联**：[DESIGN-PERF-002]（KHY_FAST_STARTUP / compile cache，已落地） · [DESIGN-PERF-006]（启动提速 W2/W3 已接线、W1 已证伪更正） · [DESIGN-PERF-003]（TUI 挂载期阻塞归因+探针） · [DESIGN-ARCH-115]（启动板块节拍表） · [DESIGN-PROCESS-002]（`PROCESS-008` 落地阶段）
@@ -120,14 +120,16 @@ PERF-006 §2.4 实测（`khy status`）：CPU 总样本 ~220ms / 墙钟 830ms，
 |---|---|---|---|
 | W1-1 | **预热覆盖 ink**：`repair-portable.js` 的 `warmupAndHint()` 当前 spawn `khy status`——status 不装载 ink，16.4s 冷编译从未被摊薄。改为预热链追加一次 TUI 装载（PTY 下起到 alt-screen 即收，或直接 `node -e "import('ink')"`） | 装机后首次 `khy` 的 ink 窗口 16.4s → <1.5s | 机制层证据：预热前后 `import('ink')` 耗时对照；不得以「跑了 status」充当完成依据 |
 | W1-2 | **挂载期尾巴归因**：按 PERF-003 判据（消化，不平移），先给 PTY 探针的子进程传 `--cpu-prof` 且改为优雅退出后采样，列出 65%→71%、71%→alt-screen 两段的同步 IO / spawn / 网络清单，逐项后台化或预缓存 | 多段秒级停顿逐项消减 | **先列清单再动手，不盲改**（`RUNTIME-007`）；PERF-006 两次取 profile 失败，本次须换采样方式 |
+| W1-2a | **git prewarm 不再堵事件循环**：`replSession.js:410` 的 setImmediate prewarm 在 ink 装载窗口内跑**同步** `collectGitContext`（实测 spawnSync 自耗 524ms），冻住 spinner。改用同模块的异步孪生 `refreshGitContextInBackground`（execAsync，同缓存同去重） | 预热目的不变，ink 窗口不再被堵 | 行为等价重构；异步孪生失败时缓存不填，首轮提交退化成今天的同步路径（fail-soft） |
+| W1-2b | **横幅不再在 render 期内探活**：`WelcomeBanner` 的 render 体调 `getBannerData()` 只为取问候语，却连带触发 `getActiveAdapter()`+`getStatus()` 探活 20 个适配器 + 一条 git execSync（合计 ~1s+ 同步 spawnSync）然后全部丢弃。问候语抽成共享叶子 `resolveGreetingName()`（同一数据源：cliAuth 会话 → OS user 回落），渲染路径只调它 | 首帧前挂载窗口少 ~1s 同步探活；登录后重渲染取新用户名的行为不变 | 展示逐字节不变（问候语同一来源）；classic 模式 startupHeader 仍走全量 getBannerData（无 Ink，不冻首帧） |
 | W1-3 | **首帧窗口内的非首帧工作外移**：核对 `_kickoffGatewayPinStartupCheck` / `_scheduleStartupUpdateCheck` / clipboard bridge 是否在 alt-screen 前占事件循环或同步段；能后移的后移到首帧之后 | 每项 ~百 ms 级〔推测〕 | 行为等价重构；门控保留可回退 |
 
 ### W2（P1）单命令 require 图：status 530ms → 目标 p50 < 300ms
 
 | # | 措施 | 预期收益 | 判据 / 风险 |
 |---|---|---|---|
-| W2-1 | **status 不再装载 aiGateway**：`gatewayStatusView.js:141` 顶层 require 改为按需（只取状态字段），或改读 hudRenderer 已有的磁盘缓存 + 网关快照，不拉 49 个适配器 | -257ms 及其链式（multiFreeService -133ms / cli/ai -102ms 若仅服务 status） | 输出逐字节不变（同一份数据两个来源要对账）；缓存 TTL 沿用 30s |
-| W2-2 | **logger 去重**：CLI 路径同时装载 backend `utils/logger` 与 `@khy/shared` logger 两份 winston 图（84+73+51ms）。让 CLI 共用一份，或延迟到首次真正写日志 | -100~150ms | 文件 transport 全量落盘的行为不许变；warn/error 仍直达用户 |
+| W2-1 | **status 不再装载 aiGateway**：`khy status` 的 Provider 行经 `routerDispatchSlash.js:919` → `ai.getActiveProvider()` → `getGateway()` 顶层 require 整个 aiGateway（连带 cli/ai 与 fallback 链的 multiFreeService）。改为跨进程磁盘快照（TTL 30s + env 钉选对账 + 门控 `KHY_PROVIDER_SNAPSHOT=0` 回退），完整解析处顺手刷新快照 | 实测同刻交错 A/B：530ms 级路径 **-675ms（939→264ms 中位）** | 输出逐字节不变（快照只服务冷单命令的展示行；TUI/交互路径照旧实时解析）；对不上账宁可未命中 |
+| W2-2 | **logger 去重/延迟**：`bin/khy.js _quietConsoleLogsForCli` 旧实现为设一个控制台级别 `require` 整套 winston 图（backend facade 84ms + @khy/shared 73ms + winston 51ms），**每条命令都付**。改为设进程级全局 `__khyCliConsoleLevel`，共享 logger 于**构造时**读取（`vendor/shared/src/utils/logger.js`）。用全局不用 env：env 会被派生的后端服务器子进程继承，把服务端控制台日志一并静音 | 从不在控制台记日志的命令（如 status）整套 winston 不再装载（require 钩子实证） | 文件 transport 行为不变；warn/error 仍直达用户；TUI 路径的 `setConsoleLevel('error')` 照旧 |
 | W2-3 | **JWT 链懒加载**：jsonwebtoken 58ms 出现在 status 路径，查调用方（clAuth/session）按需拉 | -58ms | status 不碰认证语义；交互路径不变 |
 | W2-4 | **router handler 分簇懒加载**（PERF-002 阶段 C 延续）：按命令簇拆 require，`khy status` 不编译 gateway/quant 全簇 handler | 余下 74ms 里再省〔推测 30-50ms〕 | 以 startupProfiler / require 钩子逐项前后对照 |
 
@@ -201,3 +203,33 @@ npm run bench:startup
 - **不为提速牺牲状态透明**（`RUNTIME-002`）：百分比曲线是既有合规形态，W1 各措施只消减其背后的等待，不把曲线改回含糊文案。
 - **不自行启动 W4**：触及发布链（`PROCESS-002`/`PROCESS-013`/`PROCESS-014`）与软著选材（`PROCESS-010` C-X3），须人拍板后独立立项。
 - **不把 claude/opencode 的代码或二进制搬进本仓**：对标只学结构（单体+懒加载+UI 先行），实现仍是本仓自己的事（`[DESIGN-SOURCING-001]`）。
+
+---
+
+## 九、落地记录（2026-10-10 接线）
+
+### 9.1 已接线（W1-1 / W1-2a / W1-2b / W2-1 / W2-2）
+
+| 项 | 改动 | 实测结果（存证 `.khy/feedback/DESIGN-PERF-007/`） |
+|---|---|---|
+| W1-1 | `repair-portable.js` 预热链追加第二步：同条件开 compile cache 后 `import('ink')`（status 预热不覆盖 ink，见 §2.4） | 预热命令实测可解析并装载 ink；装机后首次 `khy` 的 ink 冷装载被摊到装机时刻 |
+| W1-2a | `gitContextService.js` 导出 `refreshGitContextInBackground`（原 `_refreshInBackground`）；`replSession.js:410` prewarm 改调异步孪生 | 同步链从挂载期 profile 消失；异步孪生 316ms 填同一缓存（branch/dirty/log 形状一致） |
+| W1-2b | `bannerDataService.js` 抽出 `resolveGreetingName()`；`WelcomeBanner.js` render 只调它，不再调 `getBannerData()` | profile 中 `bannerDataService ← renderWithHooks` 链消失；PTY 转录验证横幅四行 + 问候语逐字节在位 |
+| W2-1 | 新增 `src/cli/activeProviderSnapshot.js`（TTL 30s + env 钉选对账 + 门控）；`ai.js getActiveProvider()` 完整解析后刷新快照；`routerDispatchSlash.js` status 分支先读快照，未命中才 `require('./ai')` | 快照命中时 aiGateway / cli/ai / multiFreeService **全部不装载**（require 钩子实证）；同刻交错 A/B 10 对：**中位 939ms → 264ms（-675ms）**；env 变化 / 门控关 / TTL 过期均正确回落完整路径 |
+| W2-2 | `vendor/shared/src/utils/logger.js` Console transport 构造时读 `global.__khyCliConsoleLevel`；`bin/khy.js _quietConsoleLogsForCli` 改设全局（不再 require logger） | `khy status` 整套 winston 不再装载；静音机制双向验证（设全局 → info 抑制 warn/error 通行；不设 → 逐字节旧行为）；logger 单测 13/13 |
+
+回归：`khy --version` / `khy status` / `khy help status` / `khy gateway status`（全量表）输出与改前一致；TUI 全帧（横幅、boot screen、页脚、钉选回落标注）在位；`check-agent-rules.js --changed` 0 violations；jest 相关套件全绿。**lint 未跑**——本机 eslint 安装残缺（未改动文件同样 `Cannot find module 'ajv'`），属环境问题。
+
+### 9.2 未接线（清单已列，需单独评审）
+
+挂载期剩余的 spawnSync 链（profile 实证，均需先评审再动）：
+
+| 位置 | 自耗 | 为什么还没动 |
+|---|---|---|
+| `aiGateway.getStatus()` ← `cliToolAdapter.detect`（classic startupHeader 仍走全量 getBannerData；TUI 侧调用点已随 W1-2b 消失） | 841ms | 探活结果有 60s 缓存，首次成本；改缓存策略触及路由可用性语义，须单独 A/B |
+| `App.js:6850` render 期工具探活（pythonAvailable / searchExecutable） | 430ms | 7503 行组件的 render 路径，改法（预计算传 props / useEffect 后移）有视觉回归风险，须逐帧核对 |
+| `selfProfile._detectPython` ← 系统提示词解析 | 271ms | python 探测结果无跨进程缓存；加磁盘缓存要定 TTL 与失效条件 |
+| `traeAdapter.detect` ← `getActiveAdapter` ← classic `getBannerData` | 150ms | 随上一项 classic 路径一并处理 |
+| `updateCoordinator.runGit`（timer 触发） | 169ms | 已在首帧后，仅占后台事件循环，优先级低 |
+
+W3 的 Defender 提示沿用 PERF-006；W4（单体二进制）/ W5（daemon）**未动**——按 §八，W4 触及发布链与软著选材，须人拍板后独立立项。
