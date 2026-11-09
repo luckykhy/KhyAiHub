@@ -74,7 +74,10 @@
 <table><thead><tr><th>✗ 别做</th><th>为什么</th></tr></thead><tbody><tr><td>给表单输入框继续加 <code>min-w</code> 或缩字号硬塞进 272px</td><td>病灶是<strong>容器算术</strong>，不是字号；272px 里塞两个 200px+ 输入框在数学上不可能</td></tr><tr><td>新造 <code>keys:patch</code>/<code>cards:modify</code> 之类的第二个 update IPC</td><td>canonical 已三层齐全（§1.2），再建一个违反「一处真源」（<code>main/index.ts:85-89</code> 注释精神），且要同步改 D6 契约测试两侧</td></tr><tr><td>把编辑做成独立路由页（<code>#/key-manager/edit/...</code>）</td><td>standalone 窗口 hash 路由要动 <code>App.tsx:461</code> 分支，弹窗/抽屉成本更低且不碰路由</td></tr><tr><td>为「好看」删掉 env 叠加层展示（<code>:238-249</code>）</td><td>env 条目是真实数据（filter set 才渲染），删掉会让「这把 key 来自环境变量」失去可见性</td></tr><tr><td>用固定像素给 segmented tabs 定宽</td><td>provider id 长度不定（<code>agnes</code> vs <code>ballian-tokenplan</code>），用内容自适应 + truncate</td></tr></tbody></table>
 <hr>
 <h2 id="7-验收方式">7. 验收方式<a class="anchor" href="#7-验收方式" aria-label="锚点">#</a></h2>
-<pre><code class="language-bash"><span class="hljs-comment"># 类型：改前基线 20 条错误（2026-09-24 实测，全在 src/host/index.ts），改后必须恰为 20、零新增</span>
+<pre><code class="language-bash">&lt;!-- IMPL-STATUS: todo --&gt;
+&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;
+&gt; **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
+<span class="hljs-comment"># 类型：改前基线 20 条错误（2026-09-24 实测，全在 src/host/index.ts），改后必须恰为 20、零新增</span>
 <span class="hljs-string">&quot;&lt;node&gt;&quot;</span> apps/khyos-desktop/node_modules/typescript/bin/tsc -p apps/khyos-desktop/tsconfig.json --noEmit
 
 <span class="hljs-comment"># 桌面 UI 契约（D6 IPC 两侧一致 / D9 品牌文本）——本提案不新增 IPC，必须原样绿</span>

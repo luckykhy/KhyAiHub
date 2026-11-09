@@ -74,7 +74,10 @@
 <table><thead><tr><th>✗ 别做</th><th>为什么</th></tr></thead><tbody><tr><td>在 MessageBubble 里给 system 消息做「折叠显示」而不是不显示</td><td>需求是不泄露；折叠 = 仍可达，一键展开就全泄</td></tr><tr><td>在 renderer 里重写一套 callId 配对逻辑</td><td>host 已 FIFO 配对（registerToolCall/settleToolCall），renderer 按名匹配会张冠李戴（App.tsx:354 注释已记录此教训）</td></tr><tr><td>为「气泡好看」给 AI 卡片加 max-w 以外的宽度硬限制后仍塞代码块</td><td>代码块横向滚动即可，别让 markdown 容器溢出卡片圆角</td></tr><tr><td>把 thinking 塞进正文用引用块渲染</td><td>流式期间正文在增量追加，混入 thinking 会打乱 Markdown 流式解析（isStreaming 光标位置错乱）；独立字段独立渲染</td></tr><tr><td>保留 TrajectoryTimeline「等 trajectory 数据到达」</td><td>数据源已确认不存在（映射处零传参），留空壳违反仓库硬规矩</td></tr></tbody></table>
 <hr>
 <h2 id="7-验收方式">7. 验收方式<a class="anchor" href="#7-验收方式" aria-label="锚点">#</a></h2>
-<pre><code class="language-bash"><span class="hljs-comment"># 类型：改前基线 20 条（2026-09-24 实测，全在 src/host/index.ts，含本次将改的 :617 附近——</span>
+<pre><code class="language-bash">&lt;!-- IMPL-STATUS: todo --&gt;
+&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;
+&gt; **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
+<span class="hljs-comment"># 类型：改前基线 20 条（2026-09-24 实测，全在 src/host/index.ts，含本次将改的 :617 附近——</span>
 <span class="hljs-comment"># 实施后必须仍为 20、零新增；host 过滤处为纯数组操作，不应引入新错误）</span>
 <span class="hljs-string">&quot;&lt;node&gt;&quot;</span> apps/khyos-desktop/node_modules/typescript/bin/tsc -p apps/khyos-desktop/tsconfig.json --noEmit
 

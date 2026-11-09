@@ -87,7 +87,10 @@
 <table><thead><tr><th>✗ 别做</th><th>为什么</th></tr></thead><tbody><tr><td>回滚时先装旧程序、后（或根本不）恢复数据</td><td>旧程序读到已被新迁移改过的数据 + 偏新的版本号 → 跳过补迁移，半迁移态永久化。<strong>顺序必须：先复数据快照，再回滚程序</strong>——因为恢复快照后版本文件也回到旧值，旧程序才能正确地重新走迁移</td></tr><tr><td>快照整个 <code>~/.khy</code> 目录</td><td>体量不可控（缓存/会话历史），拖慢 apply 数秒到数分钟，且违反数据家红线精神。只快照 <code>touches</code> 声明的文件</td></tr><tr><td>给「更新提示」加新环境变量开关</td><td><code>KHY_SELF_UPDATE</code> 已是总开关，再加一个就是第二真源；用户可见偏好应持久化到 state 文件（<code>khy update off</code>），env 只留给 CI/自动化场景</td></tr><tr><td>在 <code>runMigrations</code> 的 try/catch 里加「失败时自动恢复快照」</td><td>迁移层不知道快照存在（分层职责）；恢复是 <code>applyUpdate</code> 失败路径的职责。迁移层自己恢复会在「非更新场景的日常启动」里误触发</td></tr><tr><td>用 <code>pip --force-reinstall</code> 当数据回滚手段</td><td><code>rollbackPackage</code>（:717-738）只管程序包。它已有的职责不动，数据恢复必须走快照</td></tr></tbody></table>
 <hr>
 <h2 id="7-验收方式">7. 验收方式<a class="anchor" href="#7-验收方式" aria-label="锚点">#</a></h2>
-<pre><code class="language-bash"><span class="hljs-comment"># P1a：迁移 touches 检查器</span>
+<pre><code class="language-bash">&lt;!-- IMPL-STATUS: todo --&gt;
+&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;
+&gt; **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
+<span class="hljs-comment"># P1a：迁移 touches 检查器</span>
 node scripts/ci/check-migration-touches.js   <span class="hljs-comment"># 存量 4 条补声明后 0 error</span>
 
 <span class="hljs-comment"># P1b：快照与回滚顺序（node:test，落地即绿）</span>

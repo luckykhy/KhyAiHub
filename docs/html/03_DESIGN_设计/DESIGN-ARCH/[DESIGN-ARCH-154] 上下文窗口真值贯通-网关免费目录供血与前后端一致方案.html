@@ -83,7 +83,10 @@
 <hr>
 <h2 id="7-验收方式">7. 验收方式<a class="anchor" href="#7-验收方式" aria-label="锚点">#</a></h2>
 <p><strong>自动化（每期落地即跑）</strong>：</p>
-<pre><code class="language-bash"><span class="hljs-comment"># 新测试（node:test，落地即绿）</span>
+<pre><code class="language-bash">&lt;!-- IMPL-STATUS: todo --&gt;
+&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;
+&gt; **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
+<span class="hljs-comment"># 新测试（node:test，落地即绿）</span>
 node --<span class="hljs-built_in">test</span> tests/gateway/contextWindowCatalogFeed.test.js        <span class="hljs-comment"># 一期</span>
 <span class="hljs-comment"># 零回归基线（实施时逐文件跑，读 # tests/# pass/# fail 三行，不许估）：</span>
 node --<span class="hljs-built_in">test</span> tests/constants/contextWindowDefaults.test.js          <span class="hljs-comment"># 基线 4 pass</span>

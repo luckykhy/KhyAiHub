@@ -105,6 +105,9 @@
 <h3 id="7-1-期1">7.1 期1<a class="anchor" href="#7-1-期1" aria-label="锚点">#</a></h3>
 <pre><code class="language-bash"><span class="hljs-string">&quot;&lt;node&gt;&quot;</span> --<span class="hljs-built_in">test</span> services/backend/tests/cli/outputBlock.test.js   <span class="hljs-comment"># 全绿（计数以落地实测为准）</span>
 <span class="hljs-string">&quot;&lt;node&gt;&quot;</span> scripts/ci/check-leaf-contract.js services/backend/src/cli/outputBlock.js
+&lt;!-- IMPL-STATUS: todo --&gt;
+&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;
+&gt; **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
 <span class="hljs-comment"># → &quot;Leaf-contract check passed: no violations found.&quot;</span></code></pre>
 <h3 id="7-2-期2">7.2 期2<a class="anchor" href="#7-2-期2" aria-label="锚点">#</a></h3>
 <pre><code class="language-bash"><span class="hljs-string">&quot;&lt;node&gt;&quot;</span> --<span class="hljs-built_in">test</span> services/backend/tests/cli/hqWriteErrno.test.js

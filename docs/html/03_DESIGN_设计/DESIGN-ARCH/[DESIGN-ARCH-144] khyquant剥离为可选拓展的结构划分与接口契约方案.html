@@ -93,7 +93,10 @@ khy-os-khyquant/（未来独立仓库形态）
 <table><thead><tr><th>✗ 别做</th><th>为什么</th></tr></thead><tbody><tr><td>直接 <code>git mv</code> 而不落 manifest</td><td><code>findProvider('quant-app')</code> 落空 + L4 兜底指空 → quant-app 整档静默「未安装」，22 条路由全 404，行为<strong>无声</strong>劣化——正是 [DESIGN-ARCH-078] §10.3 记录过的 L4_DIR 指空事故的重演</td></tr><tr><td>保留 L4 兜底「以防万一」</td><td>兜底写的是磁盘路径不是服务名，留着它 = <code>software/khyquant</code> 这个位置事实在核里永生，<code>quantApp.js:19-21</code> 自己都说「Phase 1 搬完目录即可删掉这一支」</td></tr><tr><td>把 <code>mountOptional</code> 改回硬挂载「为了启动期显式报错」</td><td>推翻 [DESIGN-TOOL-002] §4.1「删目录即卸载」承诺；<code>quantAppServerMount.test.js</code> 6 例直接红，其中含静态防复发断言（量化路由不许绕过 mountOptional）</td></tr><tr><td>在 Phase 1 顺手删 25 个 shim</td><td>shim 有零散第三方 require 方（cli/handlers、aiChatCore 等面广），未全仓核实消费者前删除 = 把「可选」做成「启动崩」；必须先跑消费者扫描（Phase 4 前置）</td></tr><tr><td>让 entry 继续反向 require backend「先跑起来再说」</td><td>反向依赖每 +1 处，独立剥离难度 +1；契约 D 的宿主注入方向 khy-markdown <code>_note</code> 里已经写明，不要再造第三种接法</td></tr><tr><td>改 <code>~/.khyquant</code> / 品牌域名 / bootstrap mode 字符串</td><td>见 §5 第 1-3 条</td></tr></tbody></table>
 <hr>
 <h2 id="7-验收方式">7. 验收方式<a class="anchor" href="#7-验收方式" aria-label="锚点">#</a></h2>
-<pre><code class="language-bash"><span class="hljs-comment"># 基线与回归（Phase 1 后必须全绿，基线数字以实际跑出为准，不许估）</span>
+<pre><code class="language-bash">&lt;!-- IMPL-STATUS: todo --&gt;
+&lt;!-- IMPL-DRIFT-AUDIT: 2026-10-18 · DOCS-005 范围补标，依据见下 --&gt;
+&gt; **标记依据**：文中自述为调研 / 提案 / 规划，尚未落码；标 todo。
+<span class="hljs-comment"># 基线与回归（Phase 1 后必须全绿，基线数字以实际跑出为准，不许估）</span>
 node --<span class="hljs-built_in">test</span> services/backend/tests/extensions/quantAppSeam.test.js
 node --<span class="hljs-built_in">test</span> services/backend/tests/extensions/quantAppServerMount.test.js
 node --<span class="hljs-built_in">test</span> services/backend/tests/routes/quantAppWiring.presets.marketQuotes.test.js
