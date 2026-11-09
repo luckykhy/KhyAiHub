@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: khyos-任务完成度截断评审-20261013.md -->
+<title>Khy-OS 深度代码评审报告：任务完成度截断 · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../docs/index.html">首页</a><span class="sep">›</span>docs<span class="sep">›</span>11_报告<span class="sep">›</span>其它报告<span class="sep">›</span>Khy-OS 深度代码评审报告：任务完成度截断</div>
+      <header class="hero reveal"><h1>Khy-OS 深度代码评审报告：任务完成度截断</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#khy-os-深度代码评审报告-任务完成度截断">Khy-OS 深度代码评审报告：任务完成度截断</a></li><li class="lvl-2"><a href="#一-门禁实测">一、门禁实测</a></li><li class="lvl-2"><a href="#二-全部发现">二、全部发现</a></li><li class="lvl-2"><a href="#三-按片区">三、按片区</a></li><li class="lvl-2"><a href="#四-贯穿性问题">四、贯穿性问题</a></li><li class="lvl-2"><a href="#五-补完优先级建议">五、补完优先级建议</a></li><li class="lvl-3"><a href="#1-复现并定位-code-standards-的失败项-预计改动-0-处代码-1-条命令">1. 复现并定位 `code-standards` 的失败项 —— 预计改动 0 处代码、1 条命令</a></li><li class="lvl-3"><a href="#2-补齐门禁日志留存-让-start-pass-行不再丢失-预计-1-2-处">2. 补齐门禁日志留存，让 `start`/`pass` 行不再丢失 —— 预计 1–2 处</a></li><li class="lvl-3"><a href="#3-让-11-个被-skip-的阶段各自出具一次结论-预计-0-处代码改动">3. 让 11 个被 skip 的阶段各自出具一次结论 —— 预计 0 处代码改动</a></li><li class="lvl-3"><a href="#4-把发现归档流程本身的失败率纳入观察-预计-1-处">4. 把发现归档流程本身的失败率纳入观察 —— 预计 1 处</a></li><li class="lvl-2"><a href="#六-本次没查到的部分">六、本次没查到的部分</a></li><li class="lvl-2"><a href="#附-本次实际执行的命令">附：本次实际执行的命令</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="khy-os-深度代码评审报告-任务完成度截断">Khy-OS 深度代码评审报告：任务完成度截断<a class="anchor" href="#khy-os-深度代码评审报告-任务完成度截断" aria-label="锚点">#</a></h1>
+<ul><li>评审日期：2026-10-13</li><li>明细归档：<code>docs/11_报告/其它报告/khyos-任务完成度截断-明细-20261013.json</code></li><li>报告范围：任务完成度截断（completion-truncation）专项</li></ul>
+<hr>
+<p>本次评审<strong>没有归档任何一条发现</strong>：明细文件内容为 <code>[]</code>，共 0 条，严重度分布 high 0 / medium 0 / low 0，复核状态分布 verified 0 / unconfirmed 0，因此「最严重的问题」这一问在本次数据下<strong>没有答案可给</strong>，而不是「没有问题」。唯一可陈述的硬事实来自门禁实测：<code>mode=pr</code> 跑 13 个阶段，<code>code-standards</code>（第 2 个阶段）红灯 <code>code=1</code>，随后 11 个阶段全部 <code>skip reason=previous-failure</code>，整轮门禁实际只验证了 2 个阶段、其余 11 个阶段的通过与否<strong>未知</strong>。换句话说，本次评审的产出形态是「一次失败的门禁运行 + 一份空的发现清单」，而不是「一次有结论的深度评审」。</p>
+<hr>
+<h2 id="一-门禁实测">一、门禁实测<a class="anchor" href="#一-门禁实测" aria-label="锚点">#</a></h2>
+<p>以下为任务方提供的原始记录，逐行转述，未做增删：</p>
+<pre><code>[quality-gate] action=fail target=code-standards progress=2/13 mode=pr code=1 durationMs=2438
+[quality-gate] action=skip target=security-headers progress=3/13 mode=pr reason=previous-failure
+[quality-gate] action=skip target=auth-session progress=4/13 mode=pr reason=previous-failure
+[quality-gate] action=skip target=api-contracts progress=5/13 mode=pr reason=previous-failure
+[quality-gate] action=skip target=ai-gateway progress=6/13 mode=pr reason=previous-failure
+[quality-gate] action=skip target=data-lifecycle progress=7/13 mode=pr reason=previous-failure
+[quality-gate] action=skip target=ops-health progress=8/13 mode=pr reason=previous-failure
+[quality-gate] action=skip target=upload-safety progress=9/13 mode=pr reason=previous-failure
+[quality-gate] action=skip target=frontend-design-tokens progress=10/13 mode=pr reason=previous-failure
+[quality-gate] action=skip target=provider-contract progress=11/13 mode=pr reason=previous-failure
+[quality-gate] action=skip target=workflow-regression progress=12/13 mode=pr reason=previous-failure
+[quality-gate] action=skip target=backend-coverage progress=13/13 mode=pr reason=previous-failure</code></pre>
+<p><strong>该记录未在本次评审中重新执行。</strong>它由任务方以文字形式提供，本报告只转述、不声称复现。本次也未在仓库内找到对应的归档日志文件（<code>find</code> 未命中任何 <code>*quality-gate*.log</code>），因此除这段转述外没有第二份可交叉验证的原始记录。</p>
+<p>读法与红线：</p>
+<ol><li><strong>红线是 <code>code-standards</code> 这一阶段的退出码 <code>1</code></strong>，耗时 2438ms，属于脚本跑完并自行判定不通过（不是崩溃——崩溃会额外带 <code>error=</code> 字段，本次记录中没有该字段；判定依据见 <code>scripts/quality-gate/index.js:45-49</code>，非零退出码即写 <code>fail</code> 并置 <code>failed=true</code>）。</li><li><strong><code>fail-fast</code> 是设计行为，不是 bug</strong>。<code>scripts/quality-gate/index.js:27-30</code> 里，一旦 <code>failed</code> 为真，后续阶段一律 <code>skip</code>；因此 11 个 <code>skip</code> 是首个失败的<strong>后果</strong>，不构成 12 个独立问题，不应拆成 12 条发现来充数。</li><li><strong><code>progress=2/13</code> 说明第 1 个阶段已经跑过</strong>。按 <code>scripts/quality-gate/lib/qualityGateStages.js:31-45</code> 的 pr 模式阶段表，第 1 个是 <code>agentRules</code>（第 32 行），第 2 个才是 <code>codeStandards</code>（第 33 行）。任务方提供的记录从 <code>fail target=code-standards</code> 这一行开始，<code>agent-rules</code> 的 <code>start</code>/<code>pass</code> 行以及 <code>code-standards</code> 的 <code>start</code> 行不在所给记录内——<strong>这两行我没有拿到，因此 <code>agent-rules</code> 是否通过属未知，不作推断</strong>。</li><li><strong><code>pr</code> 模式只覆盖 13 个阶段</strong>（不含 <code>notify-webhook</code>、<code>version-sync</code>、<code>script-tests</code>，这三个只在 <code>release</code> 模式里，见 <code>scripts/quality-gate/lib/qualityGateStages.js:55</code>、<code>:61</code>、<code>:62</code>；三者定义在 <code>:16</code>、<code>:22</code>、<code>:23-27</code>）。即便这 13 个全绿，<code>release</code> 模式的 16 个阶段仍有 3 个未验证。</li><li><strong>本轮没有取得任何阶段的 <code>durationMs</code> 通过记录</strong>，除失败阶段外无耗时数据，无法据此判断其余阶段是否「跑得动」。</li></ol>
+<p>不为门禁找借口的部分直说：<code>code-standards</code> 红了就是红了，明细文件没有为它登记任何一条发现，所以「它为什么红」在本次数据里<strong>是空白</strong>，不是「已查明且无碍」。</p>
+<hr>
+<h2 id="二-全部发现">二、全部发现<a class="anchor" href="#二-全部发现" aria-label="锚点">#</a></h2>
+<p>按严重度排列的发现清单：<strong>0 条</strong>。</p>
+<p>明细文件 <code>docs/11_报告/其它报告/khyos-任务完成度截断-明细-20261013.json</code> 的完整内容是一个空数组：</p>
+<pre><code class="language-json"><span class="hljs-punctuation">[</span><span class="hljs-punctuation">]</span></code></pre>
+<p>文件大小 3 字节（一个 <code>[</code>、一个 <code>]</code>、一个换行），已整读确认，不存在需要分段读取的大文件，也不存在被截断或未被解析的后续条目。因此：</p>
+<table><thead><tr><th>字段</th><th>值</th></tr></thead><tbody><tr><td>发现总数</td><td>0</td></tr><tr><td>high</td><td>0</td></tr><tr><td>medium</td><td>0</td></tr><tr><td>low</td><td>0</td></tr><tr><td>verified</td><td>0</td></tr><tr><td>unconfirmed</td><td>0</td></tr></tbody></table>
+<p>没有条目可展开，因此本节<strong>不列 where / 问题 / 声明来源 / 证据 / 影响面 / 复核状态</strong>——这些字段一条都不存在，凭印象补写即为编造。</p>
+<p>需要特别区分两件事：<strong>「0 条发现」不等于「0 个问题」</strong>。门禁的 <code>code-standards</code> 红灯是一条已确认的失败事实，它只是没有被写进发现明细；本报告如实记录这一缺口，不把它折算成一条 finding，也不假装它不存在。</p>
+<hr>
+<h2 id="三-按片区">三、按片区<a class="anchor" href="#三-按片区" aria-label="锚点">#</a></h2>
+<p>本节<strong>无内容可写</strong>。明细文件未产出任何片区归属字段（无 <code>area</code> / <code>zone</code> / <code>region</code> 一类的分组），任务方给出的「最高危 0 条速览」「实际干净的片区」两个清单也均为空。</p>
+<p>按要求「段首写该片区最重的一条」在此无法执行，因为不存在任何片区，也不存在任何片区内的条目。</p>
+<p>同样地，<strong>「实际干净的片区：[]」不能被读作「没有任何片区有问题」</strong>——它只表示本次没有做片区级的判定，沉默不等于干净。</p>
+<hr>
+<h2 id="四-贯穿性问题">四、贯穿性问题<a class="anchor" href="#四-贯穿性问题" aria-label="锚点">#</a></h2>
+<p>任务方给出的贯穿性问题清单为 <code>[]</code>，明细文件中也没有任何可支撑跨片区归纳的材料（无共同根因、无重复出现的模式、无涉及多处的同一缺陷）。</p>
+<p>本节结论：<strong>本次评审未能识别出任何贯穿性问题</strong>。这是数据缺失，不是「已排查确认不存在」。要把这一节填实，前提是先有非空的发现清单。</p>
+<hr>
+<h2 id="五-补完优先级建议">五、补完优先级建议<a class="anchor" href="#五-补完优先级建议" aria-label="锚点">#</a></h2>
+<p>以下是<strong>建议顺序</strong>，不是发现，也不是缺陷判定。排序依据只有两条：先解开已经确定失败的那个点，再恢复被 fail-fast 遮住的验证面。</p>
+<h3 id="1-复现并定位-code-standards-的失败项-预计改动-0-处代码-1-条命令">1. 复现并定位 <code>code-standards</code> 的失败项 —— 预计改动 0 处代码、1 条命令<a class="anchor" href="#1-复现并定位-code-standards-的失败项-预计改动-0-处代码-1-条命令" aria-label="锚点">#</a></h3>
+<p>这是唯一有硬证据支撑的失败面，优先级最高且成本最低。<code>scripts/ci/check-code-standards.js</code>（12582 字节，最后修改 2026-10-10）在 <code>pr</code> 模式下被以退出码 1 调用，耗时 2438ms。</p>
+<p>建议动作：单独跑该脚本拿到它自己的失败明细（门禁用 <code>stdio: 'inherit'</code> 透传子进程输出，见 <code>scripts/quality-gate/index.js:35-40</code>，所以逐条规则报错应该在原始运行日志里已经打印出来了，只是本次归档没有留存）。</p>
+<pre><code>node scripts/ci/check-code-standards.js</code></pre>
+<p>预期代价：0 处代码改动；可能的收益是把 1 条「未知红灯」变成 N 条可归档的 finding。</p>
+<h3 id="2-补齐门禁日志留存-让-start-pass-行不再丢失-预计-1-2-处">2. 补齐门禁日志留存，让 <code>start</code>/<code>pass</code> 行不再丢失 —— 预计 1–2 处<a class="anchor" href="#2-补齐门禁日志留存-让-start-pass-行不再丢失-预计-1-2-处" aria-label="锚点">#</a></h3>
+<p>本次记录缺失 <code>agent-rules</code> 的结果行，说明归档的是失败行之后（或被截断的）片段。门禁本身已经用 <code>writeRecord</code> 统一打印所有阶段（<code>scripts/quality-gate/index.js:7-12</code>、<code>:32</code>、<code>:44</code>），把整段 stdout/stderr 落盘即可，不需要改门禁逻辑本身。</p>
+<p>预期代价：1–2 处（归档位置或 runner 配置），不触碰 <code>scripts/quality-gate/</code> 的判定逻辑。</p>
+<h3 id="3-让-11-个被-skip-的阶段各自出具一次结论-预计-0-处代码改动">3. 让 11 个被 skip 的阶段各自出具一次结论 —— 预计 0 处代码改动<a class="anchor" href="#3-让-11-个被-skip-的阶段各自出具一次结论-预计-0-处代码改动" aria-label="锚点">#</a></h3>
+<p>被 <code>previous-failure</code> 跳过的 <code>security-headers</code>、<code>auth-session</code>、<code>api-contracts</code>、<code>ai-gateway</code>、<code>data-lifecycle</code>、<code>ops-health</code>、<code>upload-safety</code>、<code>frontend-design-tokens</code>、<code>provider-contract</code>、<code>workflow-regression</code>、<code>backend-coverage</code> 这 11 项，本次<strong>通过与否完全未知</strong>。等第 1 项修好后重跑一轮 pr 模式即可自然补齐，无需额外动作。</p>
+<p>预期代价：0 处改动，1 次门禁重跑的时间成本；其中 <code>backend-coverage</code> 涉及覆盖率统计，是这 11 项里唯一耗时可能显著偏长的（本次因 skip 未记录耗时）。</p>
+<h3 id="4-把发现归档流程本身的失败率纳入观察-预计-1-处">4. 把发现归档流程本身的失败率纳入观察 —— 预计 1 处<a class="anchor" href="#4-把发现归档流程本身的失败率纳入观察-预计-1-处" aria-label="锚点">#</a></h3>
+<p>明细文件产出 0 条、同时又存在 1 条硬失败，说明「评审/门禁发现问题 → 写入明细」这条链路本次没有跑通或没有产物。这是一个流程问题，不是仓库代码问题；优先级低于上面三项，但值得单独立项确认。</p>
+<p>预期代价：1 处（归档写入环节）。</p>
+<hr>
+<h2 id="六-本次没查到的部分">六、本次没查到的部分<a class="anchor" href="#六-本次没查到的部分" aria-label="锚点">#</a></h2>
+<p>以下内容本次<strong>没有查证</strong>，报告中也没有任何相关结论：</p>
+<ol><li><strong><code>code-standards</code> 具体违反了哪条规则</strong> —— 未取得。脚本本身未在本次评审中执行，门禁输出中对应的规则报错明细未归档。</li><li><strong><code>agent-rules</code> 阶段是否通过</strong> —— 未取得。原始记录从 <code>progress=2/13</code> 起，<code>agent-rules</code> 的 <code>start</code>/<code>pass</code> 行不在记录内。</li><li><strong>11 个 <code>skip</code> 阶段的实际状态</strong> —— 未取得。它们全部未执行，报告中不声称它们通过，也不声称它们有问题。</li><li><strong><code>release</code> 模式的 <code>notify-webhook</code>、<code>version-sync</code>、<code>script-tests</code> 三个阶段</strong> —— 完全未运行，<code>pr</code> 模式不含它们（见 <code>scripts/quality-gate/lib/qualityGateStages.js:31-45</code> 与 <code>:46-63</code> 的两份阶段表对比）。</li><li><strong>任何业务代码层面的问题</strong> —— 未检查。本次没有阅读任何 <code>apps/</code> 下的应用源码，没有静态走查、没有类型检查、没有单测运行；除 <code>scripts/quality-gate/</code> 下的门禁脚本本身外，仓库代码一行未读。</li><li><strong>运行时行为、依赖漏洞、配置与密钥、性能与可访问性</strong> —— 均未覆盖，本次没有任何对应命令被执行。</li><li><strong>发现明细 JSON 为空的原因</strong> —— 未查明。无法判断是「评审确实没发现问题」还是「发现问题但写入环节失败」，两种解释与现有证据都相容。</li></ol>
+<hr>
+<h2 id="附-本次实际执行的命令">附：本次实际执行的命令<a class="anchor" href="#附-本次实际执行的命令" aria-label="锚点">#</a></h2>
+<p>本报告中<strong>没有任何检查是跑出来的</strong>，以下命令只用于读文件与核对引用行号：</p>
+<table><thead><tr><th>命令</th><th>用途</th></tr></thead><tbody><tr><td><code>ls -la docs/11_报告/其它报告/</code></td><td>确认明细文件与本报告的存在与大小</td></tr><tr><td><code>wc -c</code> / <code>wc -l</code> 明细 JSON 与本报告</td><td>核对 3 字节 / 136 行，确认非截断</td></tr><tr><td><code>find . -iname &quot;*quality-gate*.log&quot;</code></td><td>查找门禁原始日志归档（未命中）</td></tr><tr><td><code>ls -la scripts/ci/check-code-standards.js</code></td><td>核对 12582 字节、mtime 2026-10-10</td></tr><tr><td><code>node -e &quot;require('./scripts/quality-gate/lib/qualityGateStages')…&quot;</code></td><td>枚举 pr/release 阶段，确认 13 / 16 与阶段顺序</td></tr><tr><td><code>awk</code> / <code>grep -n</code> 定位阶段表行号</td><td>核对第一节引用的行号</td></tr></tbody></table>
+<p><strong>未执行</strong>：<code>scripts/ci/check-code-standards.js</code>、<code>scripts/quality-gate/index.js</code>、任何测试套件、任何 linter/typecheck。第一节与第五节中关于门禁行为的描述全部来自读源码加任务方提供的运行记录，没有一条来自本次跑出的结果。本报告未做任何「检查通过」的声明。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../docs/html/11_报告/其它报告/2026-09-16_khy-os体积构成分析与瘦身方案.html"><div class="dir">← 上一篇</div><div class="ttl">khy-os 体积构成分析与瘦身方案</div></a><a class="next" href="../../../../docs/html/11_报告/其它报告/NIGHTSHIFT-2026-09-13-夜班组值简报.html"><div class="dir">下一篇 →</div><div class="ttl">夜班组值简报 — khy-os 测试覆盖率</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../";window.__KHY_CUR__="docs/html/11_报告/其它报告/khyos-任务完成度截断评审-20261013.html";</script>
+<script src="../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
