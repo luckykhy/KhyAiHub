@@ -21,6 +21,8 @@ const path = require('path');
 // 隔离任何 best-effort 落盘(如自动检查点),避免污染真实用户目录。
 process.env.KHYOS_HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'khyos-ilinkmig-'));
 process.env.KHY_ILINK_DISABLE_TOOL_LOOP = '1';
+// 显式允许名单(见 ilinkAllowlist.test.js):本文件不注入账号存储,唯一的 peer 是 u1。
+process.env.KHY_ILINK_ALLOWED_PEERS = 'u1';
 process.env.KHY_ILINK_TYPING_KEEPALIVE_MS = '5';
 process.env.KHY_ILINK_QUERY_TIMEOUT_MS = '5000';
 

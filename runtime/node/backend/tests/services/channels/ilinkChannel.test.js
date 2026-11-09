@@ -15,6 +15,13 @@ process.env.KHY_ILINK_TYPING_KEEPALIVE_MS = '5';
 // 测的是通道与 dispatcher 的管道(收发/路由/队列),不是工具执行。关掉结构化工具循环,
 // 让注入的假 chat 直接被调 —— 工具循环的接线由 ilinkToolLoop.test.js 覆盖。
 process.env.KHY_ILINK_DISABLE_TOOL_LOOP = '1';
+// 显式允许名单:本文件不注入账号存储,隐式层(账号自身的 userId)匹配不上,观察期默认放行
+// 才没让这些用例红。列出来是为了:有人把 KHY_ILINK_ALLOW_UNLISTED 默认翻成 fail-closed 时,
+// 这里用到的 peer 仍在名单里 —— 而不是靠「默认放行」这条运气。
+process.env.KHY_ILINK_ALLOWED_PEERS = 'u1';
+// 本文件断言的是「agent 答完直接外发」这条旧路径;出站草稿确认(默认开)会把正文压成
+// 预览。故显式走逃生阀回到直发档 —— 草稿机制本身由 ilinkDraft.test.js 覆盖。
+process.env.KHY_ILINK_DRAFT_CONFIRM = '0';
 
 const { IlinkChannel } = require('../../../src/services/domain/messaging/channels/ilinkChannel.js');
 const { IlinkDispatcher } = require('../../../src/services/domain/messaging/channels/ilinkDispatcher.js');

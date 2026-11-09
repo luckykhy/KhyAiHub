@@ -261,7 +261,6 @@ describe('Prompt On Demand Sections', () => {
           'command_execution',
           'search_exploration',
           'codebase_analysis',
-          'tool_discovery',
           'response_formatting',
           'feature_access_proxy_boundary',
           'git_operations',
@@ -271,10 +270,41 @@ describe('Prompt On Demand Sections', () => {
         ]);
   });
 
+  test('tool_discovery capsule only fires when its tools are actually on the wire', async () => {
+        // 该段宣称「You have access to 100+ tools」并命令用 ToolRecommend/ToolSearch。
+        // 这两个工具不在本次上线清单时（预算裁剪 / 弱模型 curated / 收尾轮）整段必须消失，
+        // 否则就是「提示词命令模型去调线上并不存在的工具」，且「100+」与真实清单公然矛盾。
+        const { listOnDemandPromptSectionIds } = require('../src/constants/prompts');
+        const userMessage = '修复 backend 登录 bug，先搜索 router 和 service，再修改文件并运行 npm test 验证。';
+
+        const bare = new Set(listOnDemandPromptSectionIds({
+          userMessage,
+          taskScale: 'medium',
+          enabledTools: ['Read', 'Edit', 'Write', 'Bash', 'Glob', 'Grep'],
+        }));
+        expect(bare.has('tool_discovery')).toBe(false);
+        // 其它胶囊不受影响
+        expect(bare.has('file_operations')).toBe(true);
+        expect(bare.has('search_exploration')).toBe(true);
+
+        for (const discoveryTool of ['ToolSearch', 'ToolRecommend']) {
+          const withIt = new Set(listOnDemandPromptSectionIds({
+            userMessage,
+            taskScale: 'medium',
+            enabledTools: ['Read', 'Edit', 'Write', 'Bash', 'Glob', 'Grep', discoveryTool],
+          }));
+          expect(withIt.has('tool_discovery')).toBe(true);
+        }
+
+        // 未提供清单（老调用方）→ 行为不变，仍按意图触发
+        const legacy = new Set(listOnDemandPromptSectionIds({ userMessage, taskScale: 'medium' }));
+        expect(legacy.has('tool_discovery')).toBe(true);
+  });
+
   test('avoids triggering safety capsules for generic product or explanation wording', async () => {
         const { listOnDemandPromptSectionIds } = require('../src/constants/prompts');
         const enabledTools = ['Read', 'Edit', 'Write', 'Bash', 'Glob', 'Grep'];
-    
+
         const marketingIds = new Set(listOnDemandPromptSectionIds({
           userMessage: '帮我做一个产品介绍页，强调高权限用户体验。',
           taskScale: 'small',

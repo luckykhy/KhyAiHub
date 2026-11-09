@@ -21,6 +21,8 @@ const path = require('path');
 process.env.KHYOS_HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'khyos-ilinkdisp-'));
 // 关掉结构化工具循环:让注入的假 chat 直接被调,断言的是接线本身而非循环消化返回值。
 process.env.KHY_ILINK_DISABLE_TOOL_LOOP = '1';
+// 显式允许名单(见 ilinkAllowlist.test.js):本文件用到 u1/u2 两个 peer,不做账号注入。
+process.env.KHY_ILINK_ALLOWED_PEERS = 'u1,u2';
 process.env.KHY_ILINK_TYPING_KEEPALIVE_MS = '5';
 // 把墙钟上限放宽,避免并发用例的 30ms 查询被看门狗误砍。
 process.env.KHY_ILINK_QUERY_TIMEOUT_MS = '5000';

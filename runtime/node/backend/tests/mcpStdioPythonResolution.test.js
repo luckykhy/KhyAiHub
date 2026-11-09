@@ -12,8 +12,16 @@
  * a stale absolute path is flagged (fail-fast with an actionable hint) instead
  * of silently ENOENTing. Pure + injectable (fs/path-scan are passed in).
  *
- * TDD: the leaf does not exist yet — this suite is RED (module-not-found)
- * until F8 creates `src/services/domain/messaging/mcp/pythonCommandResolver.js`.
+ * A PATH-scan hit is TRUSTED (exists: true, stale: false): existsSync stats the
+ * link target, and the WindowsApps reparse point throws EACCES — measured
+ * existsSync → false / statSync → EACCES for a path `where python` had just
+ * returned (2026-11-06 `khy mcp test deepseek-eyes` misreported it as a stale
+ * path from another machine). A where/which hit is on THIS machine's PATH by
+ * definition and does not ENOENT at spawn.
+ *
+ * Only the stale hint is gated on a python target: the remedy it names
+ * (VIRTUAL_ENV / PYTHON_PATH) is python-specific, and npx/node/uvx/docker
+ * servers reach the same branch with existsSync false by construction.
  */
 
 const resolverPath = '../src/services/domain/messaging/mcp/pythonCommandResolver';
@@ -78,6 +86,22 @@ describe('MCP stdio python command resolution', () => {
     expect(r.source).toBe('path_scan');
     expect(r.command).toBe('C:\\Python312\\python.exe');
     expect(r.exists).toBe(true);
+  });
+
+  test('PATH hit with fsExists false is trusted, not flagged stale (WindowsApps EACCES)', () => {
+    // 2026-11-06 repro shape: PATH scan hit the Store alias stub, existsSync
+    // threw EACCES on the reparse point, and the resulting stale flag produced a
+    // bogus "stale path from another machine" warning. Only the src suite pinned
+    // this combination; the jest side was a coverage gap.
+    const stub = 'C:\\Users\\25789\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe';
+    const r = resolveStdioCommand('python', makeCtx({
+      pathScanResult: stub,
+      exists: [],
+    }));
+    expect(r.source).toBe('path_scan');
+    expect(r.command).toBe(stub);
+    expect(r.exists).toBe(true);
+    expect(r.stale).toBe(false);
   });
 
   test('a stale absolute path that does not exist is flagged stale (fail-fast hint)', () => {

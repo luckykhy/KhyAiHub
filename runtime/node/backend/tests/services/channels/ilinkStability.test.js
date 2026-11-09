@@ -16,6 +16,12 @@ process.env.KHY_ILINK_TYPING_KEEPALIVE_MS = '5';
 // 让注入的假 chat 就是被调的那一个 —— 否则断言测的是 runToolUseLoop 怎么消化假返回值,
 // 而不是管道本身。工具循环自身的接线由 ilinkToolLoop.test.js 覆盖。
 process.env.KHY_ILINK_DISABLE_TOOL_LOOP = '1';
+// 显式允许名单(见 ilinkAllowlist.test.js):本文件用到的 peer 是 u1 与 u,观察期默认放行才没
+// 让它们红;列出来是为了默认档翻成 fail-closed 时仍测的是管道而不是准入闸门。
+process.env.KHY_ILINK_ALLOWED_PEERS = 'u1,u';
+// 本文件断言的是「agent 答完直接外发」这条旧路径;出站草稿确认(默认开)会把正文压成
+// 预览。故显式走逃生阀回到直发档 —— 草稿机制本身由 ilinkDraft.test.js 覆盖。
+process.env.KHY_ILINK_DRAFT_CONFIRM = '0';
 
 const core = require('../../../src/services/domain/messaging/messaging/ilinkCore.js');
 const { IlinkChannel } = require('../../../src/services/domain/messaging/channels/ilinkChannel.js');
