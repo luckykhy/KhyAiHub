@@ -1,4 +1,5 @@
-﻿// ipc — Key/Endpoint Manager IPC handlers (DESIGN-ARCH-091 §6).
+﻿// khy-canary: Khy-20261102-264-YT8Z1FMK
+// ipc — Key/Endpoint Manager IPC handlers (DESIGN-ARCH-091 §6).
 //
 // Registered once from main/index.ts. All payloads honor the masking
 // invariant: plaintext keys only ever leave via keys:reveal (rate-limited +

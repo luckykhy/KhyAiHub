@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-263-BJFJGQJB
 // health — key health probing (DESIGN-ARCH-091 §5.2 T4 / §7.4).
 //
 // Classification:

@@ -1,21 +1,27 @@
-// agentItemStore — file-backed registry for user-created agent extension
-// items (命令/钩子/技能/子智能体/记忆), powering the settings Pattern-B list
-// pages (ZC-ALIGN-001 P13). Also owns the external-agent migration scan used
-// by the onboarding dialog's 数据迁移向导 (D5/s-8): scans real config dirs of
-// Claude Code / Codex / Cursor under the OS home and imports their definition
-// files into this registry — no fabricated counts, everything on disk.
+// khy-canary: Khy-20261102-317-AGST01BB
+// agentItemStore — settings Pattern-B list pages (命令/钩子/技能/子智能体/记忆)
+// and the onboarding 数据迁移向导.
 //
-// Storage: single agent_items.json under the effective data home
-// (dataHomeFile — honors the user-set 数据存储路径 pointer), atomic .tmp+rename
-// writes, in-memory cache invalidated on write. Writes only arrive through
-// the main IPC 正门 (Rule: never direct state-file writes from renderer).
+// None of these pages are desktop-private: they read and write the exact stores
+// the khy terminal consumes (hooks.json, skills/, agents/, .claude/commands,
+// commands/*.js, <dataHome>/memory + MEMORY.md) through terminalSources (CH-2
+// module reuse). There is no desktop-side registry any more.
+//
+// Every write still arrives through the main IPC 正门; nothing here writes a
+// renderer-supplied path directly.
 
-import { promises as fs, existsSync } from 'node:fs'
+import { promises as fs } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { dataHomeFile, getDataHome } from './keyManager/keyStore'
-
-const ITEMS_FILE = 'agent_items.json'
+import { getDataHome } from './keyManager/keyStore'
+import {
+  listTerminalItems,
+  createTerminalItem,
+  setTerminalItemEnabled,
+  deleteTerminalItem,
+  importTerminalItems,
+} from './terminalSources'
+import { slashCommandItems } from './slashCommandSources'
 
 export const AGENT_ITEM_KINDS = new Set(['command', 'hook', 'skill', 'subagent', 'memory'])
 
@@ -24,47 +30,17 @@ export interface AgentItem {
   kind: string
   name: string
   description: string
-  // Definition body: slash-command prompt / hook script / skill instructions /
-  // subagent config / memory entry text.
   content: string
   enabled: boolean
-  // 'user' | 'imported:<sourceId>' — migration rows carry their origin.
+  // 'user' | 'imported:<sourceId>' | terminal source labels
   source: string
+  sourceLabel?: string
   createdAt: number
   updatedAt: number
-}
-
-interface ItemsDoc {
-  items: AgentItem[]
-}
-
-function itemsPath(): string {
-  return dataHomeFile(ITEMS_FILE)
-}
-
-async function ensureDir(): Promise<void> {
-  const dir = path.dirname(itemsPath())
-  if (!existsSync(dir)) {
-    await fs.mkdir(dir, { recursive: true })
-  }
-}
-
-async function loadDoc(): Promise<ItemsDoc> {
-  try {
-    const raw = await fs.readFile(itemsPath(), 'utf-8')
-    const parsed = JSON.parse(raw) as ItemsDoc
-    if (Array.isArray(parsed.items)) return parsed
-  } catch {
-    // Missing or invalid file → empty registry (defaults on read).
-  }
-  return { items: [] }
-}
-
-async function persist(doc: ItemsDoc): Promise<void> {
-  await ensureDir()
-  const tmpPath = itemsPath() + '.tmp'
-  await fs.writeFile(tmpPath, JSON.stringify(doc, null, 2), 'utf-8')
-  await fs.rename(tmpPath, itemsPath())
+  // Terminal-derived rows that the desktop must not edit in place.
+  readOnly?: boolean
+  toggleable?: boolean
+  deletable?: boolean
 }
 
 function kindError(kind: string): string | null {
@@ -74,30 +50,30 @@ function kindError(kind: string): string | null {
   return null
 }
 
-function normalizeRow(input: unknown): { name: string; description: string; content: string } | null {
-  const row = (input || {}) as { name?: unknown; description?: unknown; content?: unknown }
-  const name = typeof row.name === 'string' ? row.name.trim() : ''
-  if (!name) return null
-  return {
-    name,
-    description: typeof row.description === 'string' ? row.description : '',
-    content: typeof row.content === 'string' ? row.content : '',
-  }
-}
-
-function newId(kind: string): string {
-  return `${kind}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
+function failure(err: unknown): string {
+  const message = err instanceof Error ? err.message : String(err)
+  return message || '操作失败：请重启应用后重试'
 }
 
 // ── Registry CRUD (IPC 正门) ──────────────────────────────────────────
 
-export async function listItems(kind: string): Promise<{ ok: boolean; items?: AgentItem[]; error?: string }> {
+export async function listItems(
+  kind: string
+): Promise<{ ok: boolean; items?: AgentItem[]; error?: string }> {
   const err = kindError(kind)
   if (err) return { ok: false, error: err }
-  const doc = await loadDoc()
-  const items = doc.items.filter((it) => it.kind === kind).sort((a, b) => b.createdAt - a.createdAt)
-  // Shallow copy so callers cannot mutate the cache in place.
-  return { ok: true, items: items.map((it) => ({ ...it })) }
+  try {
+    const items = await listTerminalItems(kind)
+    if (kind === 'command') {
+      // 设置页「命令」页与终端同源：CC 桥/插件行之外，把 khy 斜杠命令面
+      // （内置 + 用户技能触发）整列接入。行只读，排序口径与其它 kind 一致。
+      const khy = slashCommandItems()
+      return { ok: true, items: [...items, ...khy].sort((a, z) => a.name.localeCompare(z.name)) }
+    }
+    return { ok: true, items }
+  } catch (e) {
+    return { ok: false, error: `终端数据读取失败：${failure(e)}` }
+  }
 }
 
 export async function createItem(
@@ -106,29 +82,12 @@ export async function createItem(
 ): Promise<{ ok: boolean; item?: AgentItem; error?: string }> {
   const err = kindError(kind)
   if (err) return { ok: false, error: err }
-  const row = normalizeRow(input)
-  if (!row) {
-    return { ok: false, error: '条目信息无效：名称不能为空，请填写名称后保存' }
+  try {
+    const item = await createTerminalItem(kind, (input || {}) as Record<string, unknown>)
+    return { ok: true, item }
+  } catch (e) {
+    return { ok: false, error: failure(e) }
   }
-  const doc = await loadDoc()
-  if (doc.items.some((it) => it.kind === kind && it.name === row.name)) {
-    return { ok: false, error: `名称「${row.name}」已被使用：请换一个名称，或先删除同名条目` }
-  }
-  const now = Date.now()
-  const item: AgentItem = {
-    id: newId(kind),
-    kind,
-    name: row.name,
-    description: row.description,
-    content: row.content,
-    enabled: true,
-    source: 'user',
-    createdAt: now,
-    updatedAt: now,
-  }
-  doc.items.push(item)
-  await persist(doc)
-  return { ok: true, item }
 }
 
 export async function setItemEnabled(
@@ -138,15 +97,12 @@ export async function setItemEnabled(
 ): Promise<{ ok: boolean; error?: string }> {
   const err = kindError(kind)
   if (err) return { ok: false, error: err }
-  const doc = await loadDoc()
-  const item = doc.items.find((it) => it.kind === kind && it.id === id)
-  if (!item) {
-    return { ok: false, error: '未找到该条目，可能已被删除' }
+  try {
+    await setTerminalItemEnabled(kind, id, enabled)
+    return { ok: true }
+  } catch (e) {
+    return { ok: false, error: failure(e) }
   }
-  item.enabled = !!enabled
-  item.updatedAt = Date.now()
-  await persist(doc)
-  return { ok: true }
 }
 
 export async function deleteItem(
@@ -155,18 +111,16 @@ export async function deleteItem(
 ): Promise<{ ok: boolean; error?: string }> {
   const err = kindError(kind)
   if (err) return { ok: false, error: err }
-  const doc = await loadDoc()
-  const idx = doc.items.findIndex((it) => it.kind === kind && it.id === id)
-  if (idx === -1) {
-    return { ok: false, error: '未找到该条目，可能已被删除' }
+  try {
+    await deleteTerminalItem(kind, id)
+    return { ok: true }
+  } catch (e) {
+    return { ok: false, error: failure(e) }
   }
-  doc.items.splice(idx, 1)
-  await persist(doc)
-  return { ok: true }
 }
 
-// 导入 — rows: [{name, description?, content?, enabled?}]. Invalid rows and
-// duplicate names are skipped (counted), matching the mcpStore import contract.
+// 导入 — rows: [{name, description?, content?}]. Invalid rows and duplicates
+// are skipped (counted), matching the terminal create contract.
 export async function importItems(
   kind: string,
   rows: unknown
@@ -176,38 +130,18 @@ export async function importItems(
   if (!Array.isArray(rows)) {
     return { ok: false, error: '导入内容不是 JSON 数组：请复制 [{name, content}] 形式后重试' }
   }
-  const doc = await loadDoc()
-  const now = Date.now()
-  let created = 0
-  let skipped = 0
-  for (const raw of rows) {
-    const row = normalizeRow(raw)
-    if (!row || doc.items.some((it) => it.kind === kind && it.name === row.name)) {
-      skipped += 1
-      continue
-    }
-    doc.items.push({
-      id: newId(kind),
-      kind,
-      name: row.name,
-      description: row.description,
-      content: row.content,
-      enabled: true,
-      source: 'user',
-      createdAt: now,
-      updatedAt: now,
-    })
-    created += 1
+  try {
+    return { ok: true, ...(await importTerminalItems(kind, rows)) }
+  } catch (e) {
+    return { ok: false, error: failure(e) }
   }
-  if (created > 0) await persist(doc)
-  return { ok: true, created, skipped }
 }
 
 // ── 外部 Agent 迁移（onboarding 数据迁移向导，D5/s-8）──────────────────
 // Scans REAL config directories under the OS home; counts are read from disk
-// at scan time. Import copies the definition files into
-// <dataHome>/agent-items/<kind>/<sourceId>/ and registers registry rows, so
-// the copy the user ends up with lives in KhyOS's own data home.
+// at scan time. 导入 copies definitions into the SAME stores the settings
+// pages read (native skill dirs / CC command markdown), so migrated items stay
+// visible to both the desktop and the terminal.
 
 export interface MigrationSection {
   // Subdirectory under the agent config dir, e.g. 'commands'
@@ -249,13 +183,12 @@ const MIGRATION_SOURCES: MigrationSource[] = [
   },
 ]
 
-async function countDefinitionFiles(dir: string): Promise<number> {
-  // Definition files are markdown (slash commands / skills / rules / prompts).
+async function mdFilesIn(dir: string): Promise<string[]> {
   try {
     const entries = await fs.readdir(dir, { withFileTypes: true })
-    return entries.filter((e) => e.isFile() && e.name.endsWith('.md')).length
+    return entries.filter((e) => e.isFile() && e.name.endsWith('.md')).map((e) => e.name)
   } catch {
-    return 0
+    return []
   }
 }
 
@@ -278,8 +211,8 @@ export async function scanMigrations(): Promise<{
     }
     if (found) {
       for (const section of src.sections) {
-        const count = await countDefinitionFiles(path.join(configDir, section.dir))
-        counts.push({ label: section.label, count })
+        const files = await mdFilesIn(path.join(configDir, section.dir))
+        counts.push({ label: section.label, count: files.length })
       }
     }
     sources.push({ id: src.id, label: src.label, found, counts })
@@ -301,53 +234,36 @@ export async function importMigration(
   } catch {
     return { ok: false, error: `未找到 ${src.label} 的配置目录（${src.homeDir}）：请确认已安装后重试` }
   }
-  const doc = await loadDoc()
-  const now = Date.now()
   let created = 0
   let skipped = 0
   for (const section of src.sections) {
     const sectionDir = path.join(configDir, section.dir)
-    let files: string[] = []
-    try {
-      files = (await fs.readdir(sectionDir, { withFileTypes: true }))
-        .filter((e) => e.isFile() && e.name.endsWith('.md'))
-        .map((e) => e.name)
-    } catch {
-      continue
-    }
+    const files = await mdFilesIn(sectionDir)
     for (const file of files) {
       const name = path.basename(file, '.md')
-      if (doc.items.some((it) => it.kind === section.kind && it.name === name)) {
-        skipped += 1
-        continue
-      }
       try {
         const content = await fs.readFile(path.join(sectionDir, file), 'utf-8')
-        // First non-heading line as description; falls back to empty.
-        const firstLine = content
-          .split('\n')
-          .map((l) => l.trim())
-          .find((l) => l && !l.startsWith('#'))
-        doc.items.push({
-          id: newId(section.kind),
-          kind: section.kind,
+        await createTerminalItem(section.kind, {
           name,
-          description: firstLine ? firstLine.slice(0, 80) : '',
+          description: firstLine(content),
           content,
-          enabled: true,
-          source: `imported:${src.id}`,
-          createdAt: now,
-          updatedAt: now,
         })
         created += 1
       } catch {
-        // Unreadable file: skip honestly rather than abort the whole import.
+        // Duplicate (already shared with khy) or unreadable: skip honestly.
         skipped += 1
       }
     }
   }
-  if (created > 0) await persist(doc)
   return { ok: true, created, skipped }
+}
+
+function firstLine(text: string): string {
+  const line = text
+    .split('\n')
+    .map((l) => l.trim())
+    .find((l) => l && !l.startsWith('#'))
+  return line ? line.slice(0, 80) : ''
 }
 
 // Data home root used by the onboarding dialog's "数据存储位置" hint — exported

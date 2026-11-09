@@ -13,6 +13,7 @@
 //   → { type: 'session.createResult', id, ok, sessionId?, error? }
 //   ← { type: 'session.messages', id, sessionId }
 //   → { type: 'session.messagesResult', id, ok, sessionId?, title?, model?, messages?, error? }
+//     messages[].tools?: [{ name, input, status, result?, error? }]  存档里的工具过程（按消息归属）
 //   ← { type: 'sessionGroup.request', id, op: 'list'|'create'|'update'|'delete'|'move'|'reorder'|'import', ... }
 //   → { type: 'sessionGroup.result', id, ok, result?, error? }
 //   ← { type: 'token.usage', id }
@@ -31,6 +32,25 @@
 //   → { type: 'desktopGate.getResult', id, ok, gate?, error? }
 //   ← { type: 'background.status', id }
 //   → { type: 'background.statusResult', id, ok, status?, error? }
+//   ← { type: 'taskMonitor.snapshot', id }
+//   → { type: 'taskMonitor.snapshotResult', id, ok, snapshot?, error? }
+//     snapshot = { generatedAt, process, counts, runs[], tasks[], tasksError }（只读）
+//   ← { type: 'env.catalog', id }
+//   → { type: 'env.catalogResult', id, ok, catalog?, error? }
+//     catalog = { platform, toolchains[] } —— 后端 dependency 门面 devCatalog 的投影
+//   ← { type: 'env.scan', id }
+//   → { type: 'env.scanResult', id, ok, inventory?, error? }   + 流事件 env.progress / env.jobDone
+//   ← { type: 'env.install', id, depId, version? }
+//   → { type: 'env.installResult', id, ok, result?, code?, installHint?, error? }
+//     + 流事件 env.progress / env.jobDone
+//   ← { type: 'env.importPreview', id, manifestJson }
+//   → { type: 'env.importPreviewResult', id, ok, plan?, error? }  （manifestJson 字符串透传，host 校验）
+//   ← { type: 'env.importApply', id, manifestJson }
+//   → { type: 'env.importApplyResult', id, ok, result?, error? }  + 流事件 env.progress / env.jobDone
+//   ← { type: 'env.export', id }
+//   → { type: 'env.exportResult', id, ok, manifestJson?, error? } （manifest 由 host 经 buildManifest 生成）
+//   流事件（无 id，广播）：{ type: 'env.progress', jobId, progress, items? }
+//                        { type: 'env.jobDone', jobId, state, result?, error? }
 //   ← { type: 'ping' }  →  { type: 'ready', pid }
 //
 // backend 发现顺序（零硬编码）：KHY_OS_DIR env → cwd/../../（apps/khyos-desktop 相对仓库根）。
@@ -40,6 +60,7 @@ import { createRequire } from 'node:module'
 import fs from 'node:fs'
 import { createAmooSecretary } from './amooSecretary'
 import { createAmooSecretaryIpc } from './amooSecretaryIpc'
+import { collectToolCalls } from './transcriptTools'
 import { MAX_DIFF_ROWS, type DiffRow, type ToolDiff } from '../shared/toolDiff'
 
 const nodeRequire = createRequire(import.meta.url)
@@ -91,7 +112,8 @@ type PersistedSession = {
 
 // 主进程 → host 的请求信封。sessionId / contentChars 是既有处理分支一直在读的
 // 两个字段，此前没在类型里声明（TS2339 全是这一条）。
-type HostMsg = { type: string; id?: string; prompt?: string; limit?: number; cwd?: string; text?: string; days?: number; mode?: string; budget?: string; allowedApps?: string; options?: Record<string, unknown>; requestId?: string; response?: unknown; sessionId?: string; contentChars?: number; timeoutMs?: number; op?: string; entryId?: string; verified?: boolean; provenance?: string }
+// depId / version / manifestJson 是 env.* 分支（开发环境页）新读的三个字段。
+type HostMsg = { type: string; id?: string; prompt?: string; limit?: number; cwd?: string; text?: string; days?: number; mode?: string; budget?: string; allowedApps?: string; options?: Record<string, unknown>; requestId?: string; response?: unknown; sessionId?: string; contentChars?: number; timeoutMs?: number; op?: string; entryId?: string; verified?: boolean; provenance?: string; depId?: string; version?: string; manifestJson?: string }
 
 let gateway: { generate: (prompt: string, options?: Record<string, unknown>) => Promise<{ text?: string; model?: string; tokenUsage?: unknown }> } | null = null
 
@@ -562,11 +584,17 @@ const activeGenerations = new Map<string, number>()
 // 工具释放（toolUseLoop 的 abortSignal 语义），而不是干等它跑完自己的超时。
 const activeAborts = new Map<string, AbortController>()
 
-// runToolUseLoop 的 onToolCall/onToolResult 只给工具名，不给调用 id；而同一批次里
-// 同名工具可能并行多个。这里按「同名先进先出」自行配对 —— 循环按派发顺序回结果，
-// 所以 FIFO 是安全口径；不配对则界面只能按名字猜，并行同名会张冠李戴。
+// runToolUseLoop 默认路径随回调给出后端 tool_use id（onToolCall 第 4 参 /
+// onToolResult 第 6 参），但执行引擎路径只播报带 id、回结果不带，文本协议调用
+// 则两头都没有 id —— 这些路径仍按「同名先进先出」配对：循环按派发顺序回结果，
+// FIFO 是安全口径；不配对则界面只能按名字猜，并行同名会张冠李戴。
 const pendingToolCalls = new Map<string, string[]>()
 let toolCallSeq = 0
+
+// 已在 onToolCall 播报过的后端 id。onToolResult 的第 6 参只在真实执行路径上
+// 是 id；合成系统调教（_system_* ）在那里放的是状态文案，所以一个第 6 参只有
+// 先在本表登记过才允许当配对键，否则状态文案会变成 callId 蒙对界面。
+const pendingToolUseIds = new Map<string, Set<string>>()
 
 function registerToolCall(generationId: string, toolName: string): string {
   const callId = `tc_${++toolCallSeq}`
@@ -586,11 +614,31 @@ function settleToolCall(generationId: string, toolName: string): string | null {
   return callId
 }
 
+function registerToolUseId(generationId: string, toolUseId: string): void {
+  let ids = pendingToolUseIds.get(generationId)
+  if (!ids) {
+    ids = new Set()
+    pendingToolUseIds.set(generationId, ids)
+  }
+  ids.add(toolUseId)
+}
+
+// 只有「播报过的 id」才认：合成系统调教的第 6 参是状态文案，见 pendingToolUseIds 注释。
+function takeToolUseId(generationId: string, toolUseId: unknown): string | null {
+  if (typeof toolUseId !== 'string' || !toolUseId) return null
+  const ids = pendingToolUseIds.get(generationId)
+  if (!ids || !ids.has(toolUseId)) return null
+  ids.delete(toolUseId)
+  if (ids.size === 0) pendingToolUseIds.delete(generationId)
+  return toolUseId
+}
+
 function clearToolCallQueue(generationId: string): void {
   const prefix = `${generationId}\u0000`
   for (const key of Array.from(pendingToolCalls.keys())) {
     if (key.startsWith(prefix)) pendingToolCalls.delete(key)
   }
+  pendingToolUseIds.delete(generationId)
 }
 
 // 人在环（P1）：审批 / 提问等待用户应答的 promise 注册表。
@@ -704,12 +752,51 @@ function buildToolDiff(toolResult: unknown): ToolDiff | null {
   }
 }
 
+// 任务监控：登记本进程在跑的工具调用（与后端网页端同一个服务模块，读同一份
+// 队列真源）。跨进程汇总需要先落共享事件日志，不在首版范围。
+type TaskMonitorModule = {
+  beginRun: (input: { scope?: 'web' | 'desktop'; id: string; title?: string }) => string
+  touchRun: (key: string) => boolean
+  beginToolCall: (key: string, input: { callId?: string; tool?: string; input?: unknown }) => string | null
+  endToolCall: (
+    key: string,
+    input: { callId?: string; tool?: string; success?: boolean; elapsedMs?: number; result?: unknown }
+  ) => boolean
+  endRun: (key: string, input?: { ok?: boolean; status?: string; error?: string }) => boolean
+  snapshot: (options?: { scope?: 'web' | 'desktop' }) => unknown
+}
+
+let taskMonitorModule: TaskMonitorModule | null | undefined
+
+function loadTaskMonitor(): TaskMonitorModule | null {
+  if (taskMonitorModule !== undefined) return taskMonitorModule
+  try {
+    const mod = nodeRequire(
+      path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'services', 'taskMonitorService.js')
+    ) as Partial<TaskMonitorModule>
+    taskMonitorModule = typeof mod?.beginRun === 'function' ? (mod as TaskMonitorModule) : null
+    if (!taskMonitorModule) console.log('[host] 后端 taskMonitorService 缺少 beginRun，任务监控不可用')
+  } catch (err) {
+    console.log('[host] 后端 taskMonitorService 加载失败，任务监控不可用:', String(err))
+    taskMonitorModule = null
+  }
+  return taskMonitorModule
+}
+
 function affectedFilesOf(toolName: string, params: unknown): string[] {
   if (!EDITING_TOOL_NAMES.has(String(toolName).toLowerCase())) return []
   const p = (params && typeof params === 'object' ? params : {}) as Record<string, unknown>
   const raw = p.file_path || p.filePath || p.path || p.notebook_path || ''
   const s = typeof raw === 'string' ? raw.trim() : ''
   return s ? [s] : []
+}
+
+// 工具结果的成败各生产方写法不一（success / isError / is_error），监控面板只认
+// 明确的失败标记；认不出就是成功，不猜。
+function toolResultFailed(result: unknown): boolean {
+  if (!result || typeof result !== 'object') return false
+  const r = result as Record<string, unknown>
+  return r.success === false || r.isError === true || r.is_error === true
 }
 
 async function handleAiGenerate(id: string, prompt: string, options: Record<string, unknown> = {}): Promise<void> {
@@ -720,6 +807,10 @@ async function handleAiGenerate(id: string, prompt: string, options: Record<stri
   activeGenerations.set(id, Date.now())
   const controller = new AbortController()
   activeAborts.set(id, controller)
+  // 任务监控登记：工具事件只在本进程，跨进程汇总属二期（见需求边界）。
+  const monitor = loadTaskMonitor()
+  const monitorKey = monitor ? monitor.beginRun({ scope: 'desktop', id, title: prompt }) : null
+  let monitorOutcome: { ok?: boolean; status?: string; error?: string } = { ok: false }
   try {
     loadGatewayEnvFile()
     const chat = loadAiChat()
@@ -744,23 +835,65 @@ async function handleAiGenerate(id: string, prompt: string, options: Record<stri
         preferredAdapter: options.preferredAdapter,
         preferredModel: options.preferredModel,
         images: options.images,
-        onChunk: (chunk: unknown) => send({ type: 'ai.chunk', id, chunk }),
+        onChunk: (chunk: unknown) => {
+          if (monitor && monitorKey) monitor.touchRun(monitorKey)
+          return send({ type: 'ai.chunk', id, chunk })
+        },
+        // chat() 里的内层自然语言工具循环在桌面端是第二个且不可见的执行面：它把
+        // 文本协议模型的 <tool_call> 在 chat() 内部执行掉、返回前剥净标签，外层
+        // runToolUseLoop 因此看不到这次调用，桌面上永远渲染不出对应工具卡片
+        // （唯一还能派发的只剩循环自己注入的 auto-web-search）。CLI（replSession）
+        // / TUI（useQueryBridge）/ AgentTool 都显式关掉了它；派发、截断恢复、去重、
+        // 审批闸门本就由外层循环负责，内层在桌面端只剩重复与不可见。
+        disableNaturalToolLoop: true,
       },
       abortSignal: controller.signal,
       onCost: (usage: unknown) => {
         costSink.usage = usage
       },
-      onToolCall: (name: string, params: unknown) =>
-        send({ type: 'ai.toolCall', id, callId: registerToolCall(id, name), tool: name, input: params || {} }),
-      onToolResult: (name: string, params: unknown, toolResult: unknown, iteration: number, elapsed: number) => {
+      onToolCall: (name: string, params: unknown, _iteration: number, toolUseId?: string | null) => {
+        // FIFO 条目照旧登记：执行引擎路径播报带 id、回结果不带，那条路仍靠 FIFO 配对。
+        const fifoCallId = registerToolCall(id, name)
+        if (toolUseId) registerToolUseId(id, toolUseId)
+        if (monitor && monitorKey) {
+          monitor.beginToolCall(monitorKey, { callId: toolUseId || fifoCallId, tool: name, input: params })
+        }
+        send({
+          type: 'ai.toolCall',
+          id,
+          callId: toolUseId || fifoCallId,
+          tool: name,
+          input: params || {},
+        })
+      },
+      onToolResult: (
+        name: string,
+        params: unknown,
+        toolResult: unknown,
+        iteration: number,
+        elapsed: number,
+        toolUseId?: string | null
+      ) => {
         const diff = buildToolDiff(toolResult)
         // 有 diff 时以回读到的真实路径登记改动文件 —— 它已解析成绝对路径，
         // 与「本轮改动」面板匹配得上；参数里的相对路径只作没有 diff 时的回退。
         const affectedFiles = diff?.filePath ? [diff.filePath] : affectedFilesOf(name, params)
-        send({
+        // 配对键只能取一次：takeToolUseId/settleToolCall 都带消费语义，二次调用会把
+        // 下一次同名调用的结果认到这一条上。
+        const callId = takeToolUseId(id, toolUseId) || settleToolCall(id, name)
+        if (monitor && monitorKey) {
+          monitor.endToolCall(monitorKey, {
+            callId: callId || undefined,
+            tool: name,
+            success: !toolResultFailed(toolResult),
+            elapsedMs: elapsed,
+            result: toolResult,
+          })
+        }
+        return send({
           type: 'ai.toolResult',
           id,
-          callId: settleToolCall(id, name),
+          callId,
           tool: name,
           input: params || {},
           result: toolResult,
@@ -793,6 +926,7 @@ async function handleAiGenerate(id: string, prompt: string, options: Record<stri
     // 纯工具轮次没有正文是正常的（模型只用工具回答）；不能把它当"空回复"报错，
     // 否则每完成一次纯工具任务都会弹「未返回正文」。判空需同时看工具日志。
     const okFlag = !!replyText || toolCallLog.length > 0
+    monitorOutcome = { ok: okFlag }
     send({
       type: 'ai.result',
       id,
@@ -805,6 +939,7 @@ async function handleAiGenerate(id: string, prompt: string, options: Record<stri
       tokenUsage: costSink.usage,
     })
   } catch (error) {
+    monitorOutcome = { ok: false, error: String((error as Error)?.message || error) }
     // 规则 2.2：错误消息 = 问题 + 原因 + 修复建议
     send({
       type: 'ai.result',
@@ -813,6 +948,12 @@ async function handleAiGenerate(id: string, prompt: string, options: Record<stri
       error: `AI 调用失败：${String((error as Error)?.message || error)}，请运行 khy gateway status 检查通道配置`,
     })
   } finally {
+    if (monitor && monitorKey) {
+      monitor.endRun(
+        monitorKey,
+        controller.signal.aborted ? { status: 'cancelled', error: '用户停止生成' } : monitorOutcome
+      )
+    }
     clearToolCallQueue(id)
     failAllControls(id)
     activeAborts.delete(id)
@@ -860,6 +1001,307 @@ function desktopGateState(): { mode: string; budget: string | null; allowedApps:
 // 零 IO（客户端懒加载），host 启动与其它车道不受影响。release 与六个 RPC 的
 // 分派都在 ./amooSecretaryIpc，本文件只留这一处装配挂钩。
 const amooSecretaryIpc = createAmooSecretaryIpc(createAmooSecretary())
+
+// ── 开发环境盘点（桌面「开发环境」页 ↔ `khy devenv` 同一条后端链）────────────
+// 单一真源是后端 dependency 子系统（DESIGN-ARCH-027 + v1 盘点/清单叶子）：探测、
+// 版本、curated 安装表、manual 短路闸全在后端。host 只做 CH-2 适配 —— 桌面端
+// 不自建第二套探测/安装机器（agentItemStore.ts 文件头的既定方向）。
+// 后端模块在 apps/ 之外独立演进：每个导出都要 typeof 兜底（usage:history 先例），
+// 旧后端缺 v1 导出时如实报「版本落后」，绝不静默降级自造数据。
+type EnvProgress = { progress?: string; items?: unknown[] }
+
+type EnvInstallPlan = {
+  manager?: string
+  command?: string[]
+  displayCommand?: string
+  requiresElevation?: boolean
+  label?: string
+  version?: string
+  versionUnavailable?: boolean
+  requestedVersion?: string
+  docsUrl?: string
+}
+
+type DependencyModule = {
+  // v1 新导出（后端缺任一导出 → 分支诚实报错，不做本地替代实现）
+  scanInventory?: (opts?: { onProgress?: (p: EnvProgress) => void }) => unknown
+  buildManifest?: (inventory: unknown) => unknown
+  previewImport?: (manifest: unknown) => unknown
+  applyImport?: (manifest: unknown, opts?: { onProgress?: (p: EnvProgress) => void }) => unknown
+  devCatalog?: unknown
+  assertInstallable?: (depId: string, opts?: { platform?: string }) => { ok?: boolean; code?: string; installHint?: string; message?: string; error?: string } | undefined
+  // 既有导出（单项安装走 deps.js 同一条链：plan → runInstall → probe 复验）
+  defaultEnv?: () => { cwd?: string }
+  buildInstallPlan?: (depId: string, env: unknown, opts?: { version?: string }) => EnvInstallPlan | null
+  runInstall?: (plan: EnvInstallPlan, opts?: { cwd?: string }) => Promise<{ ok?: boolean; error?: string; hint?: string; command?: string } | null>
+  probe?: (depId: string) => { present?: boolean; detail?: string } | Promise<{ present?: boolean; detail?: string }>
+}
+
+let dependencyModule: DependencyModule | null = null
+
+function loadDependency(): DependencyModule {
+  if (dependencyModule) return dependencyModule
+  const depPath = path.join(
+    resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'services', 'domain', 'network', 'dependency', 'index.js'
+  )
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const loaded = nodeRequire(depPath) as DependencyModule
+  dependencyModule = loaded
+  console.log('[host] dependency 门面已加载:', depPath)
+  return loaded
+}
+
+// require 失败（KHY_OS_DIR 指错 / 后端缺文件）与导出缺失（后端旧版）两类失败
+// 要分开说，修法完全相反 —— usage.history 的 usageErrorMessage 同一先例。
+function loadDependencyStrict(): DependencyModule {
+  try {
+    return loadDependency()
+  } catch (error) {
+    const raw = String((error as Error)?.message || error)
+    if ((error as { code?: string })?.code === 'MODULE_NOT_FOUND' || raw.includes('Cannot find module')) {
+      throw new Error(`后端依赖子系统未找到（${raw}）：请确认 KHY_OS_DIR 指向仓库根目录后重启应用`)
+    }
+    throw new Error(`后端依赖子系统加载失败（${raw}）：请查看导出日志排查 host 状态`)
+  }
+}
+
+function requireExport(dep: DependencyModule, name: keyof DependencyModule): boolean {
+  if (typeof dep[name] === 'function') return true
+  throw new Error(`后端服务版本落后（缺 ${String(name)} 导出）：请更新 khyos 后端后重试`)
+}
+
+// 上次盘点快照（可再生缓存，丢失即现场重扫，绝不造假快照）。落点解析经后端
+// dataHome 单一真源；devEnv 逻辑名登记进 DATA_PATHS 之前，getProjectDataPath
+// 会算出 <projectDataHome>/devEnv/... 的错位路径 —— 第二个候选按 T1-domains
+// 字面相对路径兜住，两个候选都读不到返回 null，由调用方降级现场扫描。
+function readLatestInventorySnapshot(): unknown {
+  try {
+    const dhPath = path.join(resolveKhyOsDir(), 'runtime', 'node', 'backend', 'src', 'utils', 'dataHome.js')
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const dh = nodeRequire(dhPath) as { getProjectDataPath?: (...s: string[]) => string; getProjectDataHome?: () => string }
+    const candidates: string[] = []
+    if (typeof dh.getProjectDataPath === 'function') {
+      candidates.push(dh.getProjectDataPath('devEnv', 'scan-latest.json'))
+    }
+    if (typeof dh.getProjectDataHome === 'function') {
+      candidates.push(path.join(dh.getProjectDataHome(), 'T1-domains', 'tools', 'env', 'scan-latest.json'))
+    }
+    for (const p of candidates) {
+      try {
+        return JSON.parse(fs.readFileSync(p, 'utf-8'))
+      } catch {
+        /* 下一个候选 */
+      }
+    }
+  } catch {
+    /* dataHome 模块不可用 → 调用方现场扫描 */
+  }
+  return null
+}
+
+let envJobSeq = 0
+
+function handleEnvCatalog(id: string): void {
+  const send = (m: unknown) => {
+    if (process.send) process.send(m)
+    else console.log('[host]', JSON.stringify(m))
+  }
+  try {
+    const dep = loadDependencyStrict()
+    if (typeof dep.devCatalog !== 'function' && !dep.devCatalog) {
+      throw new Error('后端服务版本落后（缺 devCatalog 导出）：请更新 khyos 后端后重试')
+    }
+    const raw = typeof dep.devCatalog === 'function' ? (dep.devCatalog as () => unknown)() : dep.devCatalog
+    const obj = (raw && typeof raw === 'object' ? raw : {}) as { platform?: string; toolchains?: unknown[] }
+    const toolchains = Array.isArray(obj.toolchains) ? obj.toolchains : Array.isArray(raw) ? raw : []
+    send({ type: 'env.catalogResult', id, ok: true, catalog: { platform: obj.platform || process.platform, toolchains } })
+  } catch (error) {
+    send({ type: 'env.catalogResult', id, ok: false, error: `开发环境目录读取失败：${String((error as Error)?.message || error)}` })
+  }
+}
+
+async function handleEnvScan(id: string): Promise<void> {
+  const send = (m: unknown) => {
+    if (process.send) process.send(m)
+    else console.log('[host]', JSON.stringify(m))
+  }
+  const jobId = `envjob_scan_${Date.now()}_${++envJobSeq}`
+  send({ type: 'env.progress', jobId, progress: '正在盘点开发环境（探测工具链就绪状态与版本）…' })
+  try {
+    const dep = loadDependencyStrict()
+    requireExport(dep, 'scanInventory')
+    const inventory = await dep.scanInventory!({
+      onProgress: (p) => send({ type: 'env.progress', jobId, progress: p?.progress || '', ...(p?.items ? { items: p.items } : {}) }),
+    })
+    console.log('[host] env.scanResult 完成')
+    send({ type: 'env.scanResult', id, ok: true, inventory })
+    send({ type: 'env.jobDone', jobId, state: 'succeeded', result: inventory })
+  } catch (error) {
+    const message = String((error as Error)?.message || error)
+    send({ type: 'env.scanResult', id, ok: false, error: `开发环境盘点失败：${message}` })
+    send({ type: 'env.jobDone', jobId, state: 'failed', error: message })
+  }
+}
+
+async function handleEnvInstall(id: string, depId: string, version?: string): Promise<void> {
+  const send = (m: unknown) => {
+    if (process.send) process.send(m)
+    else console.log('[host]', JSON.stringify(m))
+  }
+  const jobId = `envjob_install_${Date.now()}_${++envJobSeq}`
+  send({ type: 'env.progress', jobId, progress: `正在安装 ${depId}${version ? `（版本 ${version}）` : ''}（第 1/1 项）…` })
+  try {
+    const dep = loadDependencyStrict()
+    // 闸①（单点闸，后端 v1）：manual/informational 条目在此短路，绝不构建安装计划。
+    // 第二参是后端的 {platform?} 形参（平台覆盖），不是版本 —— 版本在 buildInstallPlan 的 opts 里。
+    if (typeof dep.assertInstallable === 'function') {
+      const gate = dep.assertInstallable(depId)
+      if (gate && gate.ok === false) {
+        const message = gate.message || gate.error || `${depId} 不可自动安装`
+        send({ type: 'env.installResult', id, ok: false, code: gate.code, installHint: gate.installHint, error: message })
+        send({ type: 'env.jobDone', jobId, state: 'failed', error: message })
+        return
+      }
+    }
+    requireExport(dep, 'buildInstallPlan')
+    requireExport(dep, 'runInstall')
+    requireExport(dep, 'probe')
+    // 幂等：已就绪免装（deps.js 同款语义，诚实告知）。
+    const before = await dep.probe!(depId)
+    if (before?.present) {
+      send({ type: 'env.installResult', id, ok: true, result: { alreadyPresent: true, probe: before } })
+      send({ type: 'env.jobDone', jobId, state: 'succeeded', result: { alreadyPresent: true } })
+      return
+    }
+    const env = typeof dep.defaultEnv === 'function' ? dep.defaultEnv() : { cwd: process.cwd() }
+    const plan = dep.buildInstallPlan!(depId, env, { version })
+    if (!plan) {
+      throw new Error(`${depId} 无可用安装计划（本平台无预置命令）：请参考官方文档手动安装`)
+    }
+    // 闸②（host 本地兜底）：script 形态（官方一键脚本）永不自动执行 —— 该红线
+    // 不依赖后端是否已带 assertInstallable 闸（旧后端缺导出时这里是唯一防线）。
+    if (plan.manager === 'script') {
+      send({
+        type: 'env.installResult',
+        id,
+        ok: false,
+        code: 'DEV_ENV_MANUAL_ONLY',
+        installHint: plan.displayCommand,
+        error: `${depId} 为手动安装项：khy 不自动执行官方安装脚本。安装命令（供手动复制执行）：${plan.displayCommand || '见官方文档'}`,
+      })
+      send({ type: 'env.jobDone', jobId, state: 'failed', error: `${depId} 需手动安装` })
+      return
+    }
+    // 隔离执行（命令仅来自 curated 计划；runInstall 绝不提权、绝不经 shell 拼接）。
+    const result = await dep.runInstall!(plan, { cwd: env?.cwd || process.cwd() })
+    // 装后复验：必须真就绪才算成功（绝不「装了就当好」；探测不到多半是
+    // PATH 未刷新，由 UI 如实提示重开应用，绝不静默转绿）。
+    const after = await dep.probe!(depId)
+    const okFlag = !!(result && result.ok) && !!after?.present
+    send({
+      type: 'env.installResult',
+      id,
+      ok: okFlag,
+      result: {
+        ok: okFlag,
+        label: plan.label || depId,
+        version: plan.version || null,
+        command: plan.displayCommand || result?.command || '',
+        verified: !!after?.present,
+        needsReopenHint: !!(result && result.ok && !after?.present),
+        requiresElevation: !!plan.requiresElevation,
+        ...(okFlag ? {} : { installError: result?.hint || result?.error || '安装命令执行失败' }),
+      },
+    })
+    send({ type: 'env.jobDone', jobId, state: okFlag ? 'succeeded' : 'failed', result: { depId, ok: okFlag } })
+  } catch (error) {
+    const message = String((error as Error)?.message || error)
+    send({ type: 'env.installResult', id, ok: false, error: message })
+    send({ type: 'env.jobDone', jobId, state: 'failed', error: message })
+  }
+}
+
+async function handleEnvImportPreview(id: string, manifestJson?: string): Promise<void> {
+  const send = (m: unknown) => {
+    if (process.send) process.send(m)
+    else console.log('[host]', JSON.stringify(m))
+  }
+  try {
+    let manifest: unknown
+    try {
+      manifest = JSON.parse(String(manifestJson || ''))
+    } catch {
+      send({ type: 'env.importPreviewResult', id, ok: false, error: '清单不是有效 JSON：请选择 khy 导出的环境清单文件后重试' })
+      return
+    }
+    const dep = loadDependencyStrict()
+    requireExport(dep, 'previewImport')
+    // previewImport 是 async（后端要做本机 probe+版本探测）：必须 await 取到计划
+    // 再回包，否则 process.send 序列化 Promise 只会送出 `{}`。
+    const plan = await dep.previewImport!(manifest)
+    send({ type: 'env.importPreviewResult', id, ok: true, plan })
+  } catch (error) {
+    send({ type: 'env.importPreviewResult', id, ok: false, error: `导入预览失败：${String((error as Error)?.message || error)}` })
+  }
+}
+
+async function handleEnvImportApply(id: string, manifestJson?: string): Promise<void> {
+  const send = (m: unknown) => {
+    if (process.send) process.send(m)
+    else console.log('[host]', JSON.stringify(m))
+  }
+  const jobId = `envjob_import_${Date.now()}_${++envJobSeq}`
+  try {
+    let manifest: unknown
+    try {
+      manifest = JSON.parse(String(manifestJson || ''))
+    } catch {
+      send({ type: 'env.importApplyResult', id, ok: false, error: '清单不是有效 JSON：请选择 khy 导出的环境清单文件后重试' })
+      return
+    }
+    const dep = loadDependencyStrict()
+    requireExport(dep, 'applyImport')
+    send({ type: 'env.progress', jobId, progress: '正在按清单逐项安装（manual 条目自动跳过）…' })
+    const result = await dep.applyImport!(manifest, {
+      onProgress: (p) => send({ type: 'env.progress', jobId, progress: p?.progress || '', ...(p?.items ? { items: p.items } : {}) }),
+    })
+    console.log('[host] env.importApplyResult 完成')
+    send({ type: 'env.importApplyResult', id, ok: true, result })
+    send({ type: 'env.jobDone', jobId, state: 'succeeded', result })
+  } catch (error) {
+    const message = String((error as Error)?.message || error)
+    send({ type: 'env.importApplyResult', id, ok: false, error: `导入安装失败：${message}` })
+    send({ type: 'env.jobDone', jobId, state: 'failed', error: message })
+  }
+}
+
+async function handleEnvExport(id: string): Promise<void> {
+  const send = (m: unknown) => {
+    if (process.send) process.send(m)
+    else console.log('[host]', JSON.stringify(m))
+  }
+  try {
+    const dep = loadDependencyStrict()
+    requireExport(dep, 'buildManifest')
+    let inventory = readLatestInventorySnapshot()
+    if (!inventory && typeof dep.scanInventory === 'function') {
+      // 无快照：现场扫一遍再导出（进度事件可见），比报「先盘点」更省用户一步。
+      const jobId = `envjob_export_${Date.now()}_${++envJobSeq}`
+      send({ type: 'env.progress', jobId, progress: '尚未盘点：正在现场盘点后生成清单…' })
+      inventory = await dep.scanInventory!({
+        onProgress: (p) => send({ type: 'env.progress', jobId, progress: p?.progress || '' }),
+      })
+      send({ type: 'env.jobDone', jobId, state: 'succeeded', result: inventory })
+    }
+    if (!inventory) {
+      send({ type: 'env.exportResult', id, ok: false, error: '尚无盘点快照且无法现场盘点：请先运行扫描后再导出' })
+      return
+    }
+    send({ type: 'env.exportResult', id, ok: true, manifestJson: JSON.stringify(dep.buildManifest!(inventory), null, 2) })
+  } catch (error) {
+    send({ type: 'env.exportResult', id, ok: false, error: `环境清单生成失败：${String((error as Error)?.message || error)}` })
+  }
+}
 
 function handleMessage(msg: HostMsg): void {
   if (!msg || typeof msg !== 'object') return
@@ -1043,7 +1485,12 @@ function handleMessage(msg: HostMsg): void {
         jsonlPathFor?: (sessionId: string) => string
       }
       const restored = sp.restoreSession(msg.sessionId)
-      const messages = (restored.messages || []).map((m) => ({
+      const restoredMessages = restored.messages || []
+      // 工具过程在存档里本来就是结构化块（assistant 的 tool_use + 工具轮里的
+      // tool_result）；只拍平成正文，重开旧会话时就只剩一问一答。按 id 配对后
+      // 随消息返回，渲染层再灌回执行面板。
+      const toolCallsByIndex = collectToolCalls(restoredMessages)
+      const messages = restoredMessages.map((m, index) => ({
         role: m.role === 'assistant' || m.role === 'system' ? m.role : 'user',
         // content may be a string, a content-part array, or an object — flatten
         // to the display text the bubble renders (same normalization as
@@ -1059,6 +1506,8 @@ function handleMessage(msg: HostMsg): void {
         timestamp: typeof m.timestamp === 'number' ? m.timestamp : Date.now(),
         // 思维链独立字段：content 拍平只看 .text，thinking 块的文本只在这里产出。
         reasoning: extractReasoningFromContent(m.content),
+        // 本条消息发起的工具调用（含结果）；没有调用的消息不带这个键。
+        ...(toolCallsByIndex.has(index) ? { tools: toolCallsByIndex.get(index) } : {}),
       }))
       console.log('[host] session.messagesResult:', msg.sessionId, messages.length, 'messages')
       // 会话落盘路径（复制路径/复制 JSONL 路径用）：来自后端 jsonlPathFor 的
@@ -1245,6 +1694,38 @@ function handleMessage(msg: HostMsg): void {
     send({ type: 'background.statusResult', id: msg.id, ok: true, status })
     return
   }
+  if (msg.type === 'taskMonitor.snapshot' && msg.id) {
+    const send = (m: unknown) => {
+      if (process.send) process.send(m)
+      else console.log('[host]', JSON.stringify(m))
+    }
+    const monitor = loadTaskMonitor()
+    if (!monitor) {
+      send({
+        type: 'taskMonitor.snapshotResult',
+        id: msg.id,
+        ok: false,
+        error: '任务监控不可用：后端 taskMonitorService 未加载，请确认 KHY_OS_DIR 指向仓库根目录后重启应用',
+      })
+      return
+    }
+    try {
+      send({
+        type: 'taskMonitor.snapshotResult',
+        id: msg.id,
+        ok: true,
+        snapshot: monitor.snapshot({ scope: 'desktop' }),
+      })
+    } catch (err) {
+      send({
+        type: 'taskMonitor.snapshotResult',
+        id: msg.id,
+        ok: false,
+        error: `任务监控快照失败：${String((err as Error)?.message || err)}，请重启应用后重试`,
+      })
+    }
+    return
+  }
   if (msg.type === 'desktopGate.set' && msg.id) {
     const send = (m: unknown) => {
       if (process.send) process.send(m)
@@ -1269,6 +1750,31 @@ function handleMessage(msg: HostMsg): void {
       else console.log('[host]', JSON.stringify(m))
     }
     send({ type: 'desktopGate.getResult', id: msg.id, ok: true, gate: desktopGateState() })
+    return
+  }
+  // ── 开发环境页（khy devenv 同一条后端链，CH-2 适配）──
+  if (msg.type === 'env.catalog' && msg.id) {
+    handleEnvCatalog(msg.id)
+    return
+  }
+  if (msg.type === 'env.scan' && msg.id) {
+    void handleEnvScan(msg.id)
+    return
+  }
+  if (msg.type === 'env.install' && msg.id && typeof msg.depId === 'string' && msg.depId.trim()) {
+    void handleEnvInstall(msg.id, msg.depId.trim(), typeof msg.version === 'string' && msg.version.trim() ? msg.version.trim() : undefined)
+    return
+  }
+  if (msg.type === 'env.importPreview' && msg.id) {
+    void handleEnvImportPreview(msg.id, msg.manifestJson)
+    return
+  }
+  if (msg.type === 'env.importApply' && msg.id) {
+    void handleEnvImportApply(msg.id, msg.manifestJson)
+    return
+  }
+  if (msg.type === 'env.export' && msg.id) {
+    void handleEnvExport(msg.id)
     return
   }
   // Amoo 秘书的 release 与六个 RPC 分派都在 ./amooSecretaryIpc，这里只留挂钩。

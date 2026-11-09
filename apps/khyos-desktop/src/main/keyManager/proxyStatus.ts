@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261102-266-H0XXY4Z9
 // proxyStatus — khy local proxy (gateway/proxyServer.js) discovery for the
 // Key/Endpoint Manager (DESIGN-ARCH-091 §8b.3 Mode B).
 //
