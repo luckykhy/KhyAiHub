@@ -1,3 +1,4 @@
+// khy-canary: Khy-20261101-137-QXKNBW7T
 /**
  * router.js — CLI command router: parse, resolve, dispatch
  *
@@ -371,6 +372,45 @@ function _isKhyquantAppOnlyMode(context = {}) {
   const mode = String(context.mode || process.env.KHY_RUNTIME_MODE || '').toLowerCase();
   const invokedAs = String(process.env.KHYQUANT_INVOKED_AS || '').toLowerCase();
   return mode === 'khyquant' || invokedAs === 'khyquant';
+}
+
+// ════════════════════════════════════════════════════════════════
+// Quant-app availability gate
+// ════════════════════════════════════════════════════════════════
+
+/**
+ * Honest degradation for quant-app commands (quote / backtest / data / ...).
+ *
+ * `handlers/data` is a re-export shell over quantApp.loadModule('handlers/data');
+ * khyquant is an INDEPENDENT project that connects to Khy OS, not a built-in part
+ * of it, so when it is neither installed nor registered the shell resolves to
+ * `null` and a bare `const { handleQuote } = require(...)` throws a TypeError at
+ * the user. Say what is missing and how to enable it instead.
+ *
+ * @param {object|null} mod - the require() result that was about to be destructured
+ * @param {string} exportName - handler export the caller needs
+ * @param {string} what - user-facing name of the action, e.g. '查询行情'
+ * @returns {boolean} true when the handler is present and the caller can proceed
+ */
+function _quantAppReady(mod, exportName, what) {
+  if (mod && typeof mod[exportName] === 'function') {
+    return true;
+  }
+  fmt().printError(`${what}需要量化应用 khyquant，但它当前未安装或未注册`);
+  console.log('    khyquant 是独立项目，连接 Khy OS 使用，并不是 Khy OS 的内置部分。');
+  console.log('    下一步（任选其一，完成后重试本命令即可）：');
+  console.log('      1) 设置环境变量 KHY_QUANT_APP_DIR=<khyquant 项目目录>');
+  console.log(
+    `      2) 在 ${path.join(getDataHome(), 'quant-app.json')} 写入 {"dir":"<khyquant 项目目录>"}`
+  );
+  console.log('    未安装时，对话 / 网关 / 计划模式等其他功能不受影响。');
+  require('../utils/markProcessFailure')();
+  return false;
+}
+
+/** Lazily resolve the data home so the registration-file hint never hardcodes a path. */
+function getDataHome() {
+  return require('../utils/dataHome').getDataHome();
 }
 
 function _isNumericConversationIndex(raw = '') {
@@ -1054,6 +1094,24 @@ async function route(parsed, context = {}) {
   // so every command honors it uniformly.
   _applyVerbosityFlag(options);
 
+  // ── 推迟登录期间的输入闸门（KHY_DEFER_AUTH，默认关）──
+  // 所有交互入口都汇到这一处派发，所以闸门只写一遍。pending 期间只放行界面自身
+  // 操作（deferredAuth.ALLOWED_WHILE_PENDING），其余挂起到认证落地；落地失败则
+  // 一条也不放行，并给出可执行的修复（RUNTIME-002 2.2）。未启用时 whenSettled()
+  // 立即返回 true，本块对 khy status / one-shot 等路径是零行为变化。
+  try {
+    const deferredAuth = require('./deferredAuth');
+    if (deferredAuth.isPending() && !deferredAuth.isAllowedCommand(command)) {
+      const authOk = await deferredAuth.whenSettled();
+      if (!authOk) {
+        printError('未登录：模型调用与工具执行不可用。输入 /login 登录，或运行 khy gateway config 检查凭据');
+        return true;
+      }
+    }
+  } catch {
+    /* 闸门自身绝不阻断派发 */
+  }
+
   // Typo'd flags used to vanish without a trace (rc=0, wrong-format output).
   // stderr-only, near-miss-gated hint; never throws, never changes behavior.
   try {
@@ -1280,19 +1338,22 @@ async function route(parsed, context = {}) {
       // ── Quote ──
       case 'quote': {
         if (!args[0]) {
-          printError('用法: quote <代码|名称>  (如: hq 茅台, quote sh600519)');
+          printError('用法: quote <代码|名称>  (如: quote 600519, quote sh600519)');
           require('../utils/markProcessFailure')();
           return true;
         }
         const sym = await resolveArg0(args);
-        const { handleQuote } = require('./handlers/data');
-        await handleQuote(sym);
+        const dataHandlers = require('./handlers/data');
+        if (!_quantAppReady(dataHandlers, 'handleQuote', '查询行情')) {
+          return true;
+        }
+        await dataHandlers.handleQuote(sym);
         return true;
       }
 
       // ── Data ──
       case 'data': {
-        const { handleDataFetch, handleDataList } = require('./handlers/data');
+        const dataHandlers = require('./handlers/data');
         if (subCommand === 'fetch') {
           if (!args[0]) {
             printError('用法: data fetch <代码|名称>');
@@ -1300,9 +1361,15 @@ async function route(parsed, context = {}) {
             return true;
           }
           const sym = await resolveArg0(args);
-          await handleDataFetch(sym, options);
+          if (!_quantAppReady(dataHandlers, 'handleDataFetch', '拉取行情数据')) {
+            return true;
+          }
+          await dataHandlers.handleDataFetch(sym, options);
         } else if (subCommand === 'list') {
-          await handleDataList();
+          if (!_quantAppReady(dataHandlers, 'handleDataList', '列出行情数据')) {
+            return true;
+          }
+          await dataHandlers.handleDataList();
         } else if (!subCommand && !args[0]) {
           // 裸命令不是错误：给出该命令的作用域帮助（与 server #9 / hq 同族口径）
           printInfo('可用子命令: data fetch <代码|名称>（拉取行情） | data list（列出已缓存数据）');
@@ -1319,9 +1386,12 @@ async function route(parsed, context = {}) {
       }
 
       case 'cache': {
-        const { handleCacheClear } = require('./handlers/data');
+        const dataHandlers = require('./handlers/data');
         if (subCommand === 'clear') {
-          await handleCacheClear();
+          if (!_quantAppReady(dataHandlers, 'handleCacheClear', '清空行情缓存')) {
+            return true;
+          }
+          await dataHandlers.handleCacheClear();
         } else if (!subCommand && !args[0]) {
           printInfo('可用子命令: cache clear（清空行情缓存）');
           console.log('    别名: hc');
@@ -2102,10 +2172,10 @@ async function route(parsed, context = {}) {
         // 治本应注册进 commandSchema.js(作者脏),此处局部回捞。
         let _plSub = subCommand;
         if (!_plSub && Array.isArray(args) && args.length > 0) {
-          if (['create', 'new', 'develop', 'check', 'validate', 'help'].includes(args[0])) {
+          if (['create', 'new', 'develop', 'check', 'validate', 'help', 'market'].includes(args[0])) {
             _plSub = String(args.shift());
           } else {
-            printError(`未知子命令: plugin ${args[0]}（可用: list|reload|gateway|init|dev|doctor|link|unlink|validate|check|create|help）`);
+            printError(`未知子命令: plugin ${args[0]}（可用: list|market|reload|gateway|init|dev|doctor|link|unlink|validate|check|create|help）`);
             require('../utils/markProcessFailure')();
             return true;
           }
@@ -2129,6 +2199,113 @@ async function route(parsed, context = {}) {
         } else if (_plSub === 'reload') {
           reloadPlugins();
           printSuccess('插件已重新加载');
+        } else if (_plSub === 'market') {
+          // Read-only mirror of the snapshot the web page and the desktop pane
+          // render. Assembly is shared (services/marketCatalog), so ecosystem
+          // counts, source status and freshness cannot drift between surfaces.
+          const marketCatalog = require('../services/marketCatalog');
+          let snapshot;
+          try {
+            snapshot = await marketCatalog.assembleEcoMarkets({ force: options.refresh === true });
+          } catch (err) {
+            printError(
+              `生态市场快照读取失败：${err && err.message ? err.message : String(err)}，` +
+                '运行 khy plugin market 重试；若仍失败请检查后端模块是否完整'
+            );
+            require('../utils/markProcessFailure')();
+            return true;
+          }
+          const rest = Array.isArray(args) ? args : [];
+          const eco = String(rest[0] || '').trim();
+          const markets = Array.isArray(snapshot.ecosystems) ? snapshot.ecosystems : [];
+          if (eco && !markets.some((market) => market && market.eco === eco)) {
+            const available = markets.map((market) => market && market.eco).filter(Boolean).join(' | ') || '无';
+            printError(
+              `未知生态市场「${eco}」（识别码 ECO_MARKET_UNKNOWN_ECO）：当前可用：${available}；` +
+                '运行 khy plugin market 查看全部来源'
+            );
+            require('../utils/markProcessFailure')();
+            return true;
+          }
+          const selected = eco ? markets.filter((market) => market && market.eco === eco) : markets;
+          // A single-eco view must not print the whole snapshot's totals above a
+          // one-row table; recompute so the header and the table agree.
+          const scopeTotals = eco
+            ? selected.reduce(
+                (acc, market) => {
+                  const rows = Array.isArray(market.entries) ? market.entries : [];
+                  acc.ecosystems += 1;
+                  acc.entries += rows.length;
+                  acc.blocked += (Array.isArray(market.blocked) ? market.blocked : []).length;
+                  acc.installed += rows.filter((entry) => entry && entry.installed).length;
+                  if (market.live) acc.live += 1;
+                  return acc;
+                },
+                { ecosystems: 0, entries: 0, blocked: 0, installed: 0, live: 0 }
+              )
+            : snapshot.totals || {};
+          if (options.json === true) {
+            const out = eco ? { ...snapshot, ecosystems: selected, totals: scopeTotals } : snapshot;
+            console.log(JSON.stringify(out, null, 2));
+            return true;
+          }
+          const stamp = (value) => {
+            if (!value) return '—';
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return String(value);
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+          };
+          const sourceStatus = { ok: '实时', stale: '缓存', error: '失败', pending: '拉取中', off: '已关闭' };
+          // Static `ok` = read succeeded, not live; keep the two labels apart.
+          const sourceLabel = (source) =>
+            source.kind === 'static'
+              ? source.status === 'error'
+                ? '读取失败'
+                : '已载入'
+              : sourceStatus[source.status] || source.status || '未知';
+          const totals = scopeTotals;
+          printInfo(
+            `生态市场快照：${totals.ecosystems || selected.length} 个生态 · ${totals.entries || 0} 条 · ` +
+              `阻塞 ${totals.blocked || 0} · 已安装 ${totals.installed || 0}；更新时间 ${stamp(snapshot.fetchedAt)}`
+          );
+          if (snapshot.degraded) printWarn(`静态编目读取降级：${snapshot.degraded}`);
+          const sources = Array.isArray(snapshot.sources) ? snapshot.sources : [];
+          // Source rows count the whole snapshot, so they only make sense next
+          // to the full table; a single-eco view keeps the freshness line and
+          // the warnings (which name the failing source).
+          if (sources.length && !eco) {
+            printTable(
+              ['来源', '类型', '状态', '条目', '阻塞', '更新时间'],
+              sources.map((source) => [
+                source.title || source.id || '',
+                source.kind || '',
+                sourceLabel(source),
+                String(source.entries || 0),
+                String(source.blocked || 0),
+                stamp(source.fetchedAt),
+              ])
+            );
+          }
+          printTable(
+            ['生态', '标题', '条目', '阻塞', '已安装', '来源'],
+            selected.map((market) => {
+              const entries = Array.isArray(market.entries) ? market.entries : [];
+              return [
+                market.eco || '',
+                market.title || '',
+                String(entries.length),
+                String((Array.isArray(market.blocked) ? market.blocked : []).length),
+                String(entries.filter((entry) => entry && entry.installed).length),
+                market.live ? (market.stale ? '实时（缓存）' : '实时') : '静态',
+              ];
+            })
+          );
+          for (const warning of Array.isArray(snapshot.warnings) ? snapshot.warnings : []) {
+            printWarn(warning);
+          }
+          printInfo('详情：khy plugin market <eco> --json；强制刷新：khy plugin market --refresh');
+          printInfo('安装/卸载在桌面端「插件市场」详情页执行，写入与 khy skill / khy mcp 相同的终端存储');
         } else if (_plSub === 'gateway') {
           const gwPlugins = require('../services/gateway/pluginChain');
           const action = args[0];
@@ -2303,7 +2480,7 @@ async function route(parsed, context = {}) {
           await handlePlugin([]);
         } else {
           printInfo(`插件目录: ${PLUGINS_DIR}/`);
-          printInfo('用法: plugin list | reload | gateway | init | dev | doctor | link | unlink');
+          printInfo('用法: plugin list | market | reload | gateway | init | dev | doctor | link | unlink');
         }
         return true;
       }

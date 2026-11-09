@@ -36,6 +36,38 @@ function _resolveSpinnerIntervalMs() {
   return Number.isInteger(n) && n > 0 ? n : 120;
 }
 
+/**
+ * 等待目标解析 —— 「等待模型响应」是空洞的(规则 2.5:等待态必须说清在等什么)。
+ * 先用 HUD 内存态里上一轮已知的模型/通道;首轮请求前 HUD 还没收到模型信息时,
+ * 退回 env 里显式钉选的通道/模型。**全程只读进程内存,不做任何探测** ——
+ * 这条文案在渲染循环里每帧重算,不能带出网络/进程开销。
+ * @returns {string} 例如 `mimo-v2.6-flash-free（trae）`,拿不到则空串
+ */
+function _resolveWaitTarget() {
+  try {
+    const st = require('./hudRenderer').getState();
+    const model = String(st.lastModel || '').trim();
+    const adapter = String(st.lastAdapter || '').trim();
+    if (adapter && model && adapter !== model) {
+      return `${model}（${adapter}）`;
+    }
+    if (adapter || model) {
+      return adapter || model;
+    }
+  } catch {
+    /* HUD 不可用 → 落到 env */
+  }
+  const envAdapter = String(process.env.GATEWAY_PREFERRED_ADAPTER || '').trim();
+  const envModel = String(process.env.GATEWAY_PREFERRED_MODEL || '').trim();
+  if (envAdapter && envAdapter !== 'auto' && envModel) {
+    return `${envModel}（${envAdapter}）`;
+  }
+  if (envAdapter && envAdapter !== 'auto') {
+    return envAdapter;
+  }
+  return envModel;
+}
+
 class DynamicSpinner {
   constructor() {
     this._frame = 0;
@@ -74,6 +106,8 @@ class DynamicSpinner {
     // Token formatting cache: avoid reformatting unchanged token counts each frame.
     this._cachedFmtInput = -1;
     this._cachedFmtInputStr = '';
+    // 等待目标缓存(见 _resolveWaitTarget):拿到非空值后不再每帧重算。
+    this._waitTarget = '';
   }
 
   start(phase = 'init') {
@@ -93,6 +127,7 @@ class DynamicSpinner {
     this._cachedElapsedStr = '';
     this._cachedFmtInput = -1;
     this._cachedFmtInputStr = '';
+    this._waitTarget = ''; // re-resolve the active model/channel for this turn
     this._timer = setInterval(() => this._render(), _resolveSpinnerIntervalMs());
   }
 
@@ -224,13 +259,13 @@ class DynamicSpinner {
     if (this._phase === 'thinking' || this._phase === 'request') {
       // For thinking/request: show action + target + progress.
       // "等待模型响应" is hollow — we need to show WHAT we're waiting for.
-      // If we have detail (tool name from backend), show it; otherwise show
-      // the phase label with elapsed time as progress.
-      if (this._detail) {
-        label = `等待 ${this._detail} 响应`;
-      } else {
-        label = '等待模型响应';
+      // If we have detail (tool name from backend), show it; otherwise resolve the
+      // active channel/model so the line names a real target instead of a bare verb.
+      if (!this._waitTarget) {
+        this._waitTarget = _resolveWaitTarget();
       }
+      const target = this._detail || this._waitTarget;
+      label = target ? `等待 ${target} 响应` : '等待模型响应';
     } else if (
       this._detail &&
       PHASE_LABELS[`tool:${this._detail.toLowerCase().replace(/[\s_-]/g, '')}`]
@@ -297,16 +332,28 @@ class DynamicSpinner {
       effortText = this._effort;
     }
     const _spinnerMeta = require('./spinnerMeta');
+    const _metaOpts = {
+      elapsedMs: nowMs - this._startTime,
+      verbose: false,
+      hasTeammates: false,
+      gateEnabled: _spinnerMeta.isEnabled(process.env),
+    };
     const parts = _spinnerMeta.buildStatusParts({
       timerText: elapsedStr,
       inputTokensText: this._inputTokens > 0 ? `↑ ${fmtTokens(this._inputTokens)} tokens` : '',
       outputTokensText: this._outputTokens > 0 ? `↓ ${fmtTokens(this._outputTokens)} tokens` : '',
       effortText,
-      elapsedMs: nowMs - this._startTime,
-      verbose: false,
-      hasTeammates: false,
-      gateEnabled: _spinnerMeta.isEnabled(process.env),
+      ..._metaOpts,
     });
+    // 等待模型期间, reveal 门(30s)内原本只剩一个动词 —— 规则 2.5 要求等待态带进度。
+    // 计时单独早放(≥2s),token 计数仍留在 reveal 之后(spinnerMeta 的门不动)。
+    if (
+      (this._phase === 'thinking' || this._phase === 'request') &&
+      elapsedSec >= 2 &&
+      !_spinnerMeta.shouldShowTimerAndTokens(_metaOpts)
+    ) {
+      parts.unshift(elapsedStr);
+    }
     const statusStr = parts.join(' · ');
 
     // Active polling indicator: solid dot (Claude-style, no sparkle in main line)
@@ -338,7 +385,9 @@ class DynamicSpinner {
     // Within the first 30s the byline can be empty (just the verb); omit the
     // empty "()" wrapper in that case.
     const plainText = statusStr ? `${label}...${detail} (${statusStr})` : `${label}...${detail}`;
-    const maxCols = Math.max(40, require('./tui/effectiveCols').effectiveCols(80) - 6);
+    // 洋葱下沉：终端尺寸真源已归位到 utils/terminal/（通用能力）。直连逻辑侧，
+    // 切断「逻辑层 → 视觉皮」的倒挂边。
+    const maxCols = Math.max(40, require('../utils/terminal/effectiveCols').effectiveCols(80) - 6);
     const compactPlain =
       displayWidth(plainText) > maxCols ? truncateToWidth(plainText, maxCols) : plainText;
     // Verb "shimmer": CC dims the whole working-verb except a 3-column spot that

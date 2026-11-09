@@ -353,6 +353,13 @@ function _refErrorMessage(error) {
 function handleSessionList(options = {}) {
   const sessions = _scopedSessions(options);
 
+  // --grouped：按后端分组真源分区展示（[DESIGN-ARCH-183] §6）。
+  // 分组数据与桌面端同源（sessionGroupService / SQLite），所以 TUI 看到的
+  // 分组和桌面端侧栏看到的是同一份 —— 不是两套各算一遍的近似值。
+  if (options.grouped) {
+    return handleSessionListGrouped(sessions, options);
+  }
+
   if (options.json) {
     _emitJson({
       ok: true,
@@ -397,6 +404,102 @@ function handleSessionList(options = {}) {
   if (!options.all) {
     console.log(chalk.dim('  查看全部项目: session list --all'));
   }
+  console.log('');
+}
+
+// ── list --grouped ───────────────────────────────────────────────────────
+
+/**
+ * 按分组分区展示会话列表（`session list --grouped`）。
+ *
+ * 归属由后端 sessionGroupService 判定（显式归属 > 来源组 > 时间桶），CLI
+ * 这里只负责排版 —— 不自己算一遍规则，否则两边会漂。
+ *
+ * @param {Array<object>} sessions 已按作用域裁剪并排序的会话
+ * @param {object} [options]
+ */
+function handleSessionListGrouped(sessions, options = {}) {
+  let groups = [];
+  let assignment = {};
+  try {
+    const svc = require('../../services/sessionGroupService');
+    const res = svc.listSessionsWithGroups({ limit: 500 });
+    if (!res.ok) {
+      printError(res.error || '读取会话分组失败：请查看导出日志排查 host 状态');
+      return;
+    }
+    groups = res.groups || [];
+    assignment = res.assignment || {};
+  } catch (err) {
+    printError(`读取会话分组失败：${err && err.message ? err.message : String(err)}，请重试`);
+    return;
+  }
+
+  const buckets = new Map();
+  const ungrouped = [];
+  for (const s of sessions) {
+    const gid = assignment[s.sessionId];
+    if (gid && groups.some((g) => g.id === gid)) {
+      const arr = buckets.get(gid) || [];
+      arr.push(s);
+      buckets.set(gid, arr);
+    } else {
+      ungrouped.push(s);
+    }
+  }
+
+  if (options.json) {
+    _emitJson({
+      ok: true,
+      action: 'list',
+      grouped: true,
+      scope: options.all ? 'all' : 'project',
+      cwd: process.cwd(),
+      count: sessions.length,
+      groups: groups
+        .map((g) => ({
+          id: g.id,
+          title: g.title,
+          kind: g.kind,
+          rule: g.rule || null,
+          count: (buckets.get(g.id) || []).length,
+          sessions: (buckets.get(g.id) || []).map((s, i) => ({ index: i + 1, ...s })),
+        }))
+        .filter((g) => g.count > 0),
+      ungrouped: ungrouped.map((s, i) => ({ index: i + 1, ...s })),
+    });
+    return;
+  }
+
+  if (sessions.length === 0) {
+    printInfo('暂无已保存的会话。开始对话后会自动记录。');
+    return;
+  }
+
+  console.log('');
+  console.log(chalk.bold(`  历史会话 (${sessions.length}) · 按分组`));
+  console.log('');
+  const render = (title, list) => {
+    if (!list.length) return;
+    console.log(chalk.bold(`  [${title}]`));
+    list.forEach((s, i) => {
+      const num = chalk.dim(`  ${String(i + 1).padStart(2)}.`);
+      const t = chalk.white(s.title || '(untitled)');
+      const meta = chalk.dim(
+        `${s.messageCount} 条 · ${_relativeTime(s.updatedAt)}` +
+          (s.model ? ` · ${s.model}` : '') +
+          ` · ${_shortId(s.sessionId)}`
+      );
+      console.log(`${num} ${t}`);
+      console.log(`      ${meta}`);
+    });
+    console.log('');
+  };
+  for (const g of groups) render(g.title, buckets.get(g.id) || []);
+  render('未分组', ungrouped);
+  console.log(
+    chalk.dim('  恢复: session resume <序号|ID>   重命名: session rename <序号|ID> <标题>   删除: session delete <序号|ID>')
+  );
   console.log('');
 }
 
@@ -1080,7 +1183,7 @@ function _printHelp() {
   console.log(chalk.dim('    session search <query>      全文检索历史会话'));
   console.log(chalk.dim('    session stats               检索索引统计'));
   console.log('');
-  console.log('  选项: --all (跨项目)  --limit <n>  --json');
+  console.log('  选项: --all (跨项目)  --limit <n>  --grouped (按分组分区)  --json');
   console.log('');
   console.log('  示例:');
   console.log(chalk.dim('    session list'));

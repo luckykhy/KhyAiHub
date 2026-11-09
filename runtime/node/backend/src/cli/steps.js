@@ -33,6 +33,50 @@ const FOCUS_ANCHOR = '▌';
 
 const _sparkleTimers = new Set();
 
+// 步骤行的宽度预算（与 aiRenderer.js 的 effectiveCols 口径一致）:长命令/长路径
+// 会把行顶到终端软折行,折行后 '  ● ' / '  ⎿ ' 前缀丢掉,步骤树的缩进当场断裂。
+function _stepBudget() {
+  try {
+    // 洋葱下沉：终端尺寸真源已归位到 utils/terminal/（通用能力，非视觉皮专属）。
+    // 直连逻辑侧，切断「逻辑层 → 视觉皮」的倒挂边。
+    return Math.max(24, require('../utils/terminal/effectiveCols').effectiveCols(80) - 6);
+  } catch {
+    return 74;
+  }
+}
+
+// 尾部优先截断:路径截到只剩前缀目录没用,用户要认的是文件名那一段。
+function _truncateTail(text, maxW) {
+  if (maxW <= 0) {
+    return '';
+  }
+  const chars = [...String(text)];
+  let w = 0;
+  let i = chars.length;
+  while (i > 0 && w + displayWidth(chars[i - 1]) <= maxW - 1) {
+    w += displayWidth(chars[i - 1]);
+    i--;
+  }
+  return '…' + chars.slice(i).join('');
+}
+
+// 预算内适配:路径优先保尾部 —— 整段无空格(纯路径),或在 tailIfLastTokenPath
+// 下最后一个词就是路径(「已写入 <路径>」这类结果行)时,用户要认的是文件名那一段;
+// 其余(带参数的命令、说明句)按头部截断。
+function _fitStepText(text, maxW, tailIfLastTokenPath = false) {
+  const s = String(text == null ? '' : text);
+  if (maxW <= 0) {
+    return '';
+  }
+  if (displayWidth(s) <= maxW) {
+    return s;
+  }
+  const hasSep = /[\\/]/.test(s);
+  const lastWord = s.trim().split(/\s+/).pop() || '';
+  const pathLike = hasSep && (!/\s/.test(s) || (tailIfLastTokenPath && /[\\/]/.test(lastWord)));
+  return pathLike ? _truncateTail(s, maxW) : truncateToWidth(s, maxW);
+}
+
 // Ink TUI takeover switch: set to '1' in tui/app.jsx while Ink owns the
 // terminal, deleted on exit. isTTY answers "are we rendering to a terminal";
 // this answers "must the classic renderer yield to the TUI".
@@ -173,8 +217,6 @@ function printStepLine(status, label, target = '', detail = '', opts = {}) {
     dot = c().hex(THEME.text).bold(FOCUS_ANCHOR);
   }
 
-  const targetStr = target ? c().dim(`(${target})`) : '';
-  const detailStr = detail ? ` ${detail}` : '';
   const labelColor =
     status === 'success'
       ? c().hex(THEME.success)(label)
@@ -183,6 +225,21 @@ function printStepLine(status, label, target = '', detail = '', opts = {}) {
         : status === 'active'
           ? c().hex(THEME.text).bold(label)
           : c().dim(label);
+
+  // 按预算收缩 target/detail,整行不超一屏(折行会吃掉 '  ● ' 前缀,步骤树缩进断裂)。
+  const restBudget = Math.max(
+    0,
+    _stepBudget() - 2 - displayWidth(dot) - 1 - displayWidth(label) - 1
+  );
+  const targetFit = target
+    ? _fitStepText(target, Math.max(6, restBudget - 2 - (detail ? 1 : 0)))
+    : '';
+  const usedByTarget = targetFit ? displayWidth(targetFit) + 2 : 0;
+  const detailFit = detail
+    ? _fitStepText(detail, Math.max(4, restBudget - usedByTarget - 1))
+    : '';
+  const targetStr = targetFit ? c().dim(`(${targetFit})`) : '';
+  const detailStr = detailFit ? ` ${detailFit}` : '';
 
   console.log(`  ${dot} ${labelColor} ${targetStr}${detailStr}`);
 }
@@ -201,7 +258,9 @@ function printStepDetail(text, isLast = true) {
   }
   // Claude Code style: ⎿ prefix for result detail lines
   const branch = isLast ? TREE_LAST : TREE_MID;
-  console.log(`  ${c().dim(branch)}  ${text}`);
+  // 长路径同样按预算收缩(保尾部),否则折行会丢掉 '  ⎿ ' 前缀。
+  const fitted = _fitStepText(text, Math.max(4, _stepBudget() - 5), true);
+  console.log(`  ${c().dim(branch)}  ${fitted}`);
 }
 
 /**
@@ -354,23 +413,23 @@ function printCompactingNotice(opts = {}) {
   }
   const parts = [];
   if (opts.elapsed) {
-    parts.push(opts.elapsed);
+    parts.push(`耗时 ${opts.elapsed}`);
   }
   if (opts.tokens) {
     parts.push(`\u2191 ${opts.tokens} tokens`);
   }
   if (opts.thought) {
-    parts.push(`thought for ${opts.thought}`);
+    parts.push(`思考 ${opts.thought}`);
   }
 
   const meta = parts.length > 0 ? c().dim(` (${parts.join(' \u00B7 ')})`) : '';
-  // Claude Code style: ✻ Conversation compacted
+  // Claude Code style: ✻ + 中文一句话(feature 文案已全中文,这里原来漏了)
   console.log(
-    `  ${c().hex(THEME.warning)('\u273B')} ${c().hex(THEME.warning).bold('Conversation compacted')}${meta}`
+    `  ${c().hex(THEME.warning)('\u273B')} ${c().hex(THEME.warning).bold('会话已压缩')}${meta}`
   );
 
   if (opts.tip) {
-    printStepDetail(`Tip: ${opts.tip}`);
+    printStepDetail(`提示: ${opts.tip}`);
   }
 }
 

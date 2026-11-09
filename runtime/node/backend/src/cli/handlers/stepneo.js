@@ -93,10 +93,19 @@ async function handleStepneo(subCommand, args = [], options = {}) {
   }
 
   if (action === 'tools') {
-    const schemas = gw.buildToolSchemas({ includeUi: config.includeUi });
+    const schemas = gw.buildToolSchemas({
+      includeUi: config.includeUi,
+      includeAssistantRelay: config.includeAssistantRelay,
+    });
     printInfo(`交给模型 ${schemas.length} 个工具：`);
     for (const s of schemas) {
       printInfo(`  ${s.function.name}`);
+    }
+    // 关掉不等于隐瞒：告诉用户有这组能力以及怎么打开。
+    if (!config.includeAssistantRelay) {
+      const { getPhoneBridgeAssistantRelayTools } = require('../../services/domain/network/phone');
+      const n = getPhoneBridgeAssistantRelayTools().length;
+      printInfo(`另有 ${n} 个助手协同工具未启用（STEPNEO_INCLUDE_ASSISTANT_RELAY=1 可开）`);
     }
     return 0;
   }
@@ -167,6 +176,7 @@ async function handleStepneo(subCommand, args = [], options = {}) {
   const out = await session.run(messages, {
     onProgress: (line) => printInfo(`  … ${line}`),
     includeUi: config.includeUi,
+    includeAssistantRelay: config.includeAssistantRelay,
   });
 
   // Per-call outcomes, not just a count. A turn that reports "6 calls, 0

@@ -25,6 +25,37 @@ const inquirer = () => (_inquirer ??= require('inquirer'));
 const fmt = () => (_formatters ??= require('../formatters'));
 const ai = () => (_ai ??= require('../ai'));
 
+/**
+ * Honest degradation for quant-app menu actions (quote / backtest / data / ...).
+ *
+ * `handlers/data` is a re-export shell over quantApp.loadModule('handlers/data');
+ * khyquant is an INDEPENDENT project that connects to Khy OS, not a built-in part
+ * of it, so when it is neither installed nor registered the shell resolves to
+ * `null` and a bare `const { handleQuote } = require(...)` throws a TypeError at
+ * the user. Say what is missing and how to enable it instead.
+ *
+ * @param {object|null} mod - the require() result that was about to be destructured
+ * @param {string} exportName - handler export the caller needs
+ * @param {string} what - user-facing name of the action, e.g. '查询行情'
+ * @returns {boolean} true when the handler is present and the caller can proceed
+ */
+function quantAppReady(mod, exportName, what) {
+  if (mod && typeof mod[exportName] === 'function') {
+    return true;
+  }
+  const path = require('path');
+  const { getDataHome } = require('../../utils/dataHome');
+  fmt().printError(`${what}需要量化应用 khyquant，但它当前未安装或未注册`);
+  console.log('    khyquant 是独立项目，连接 Khy OS 使用，并不是 Khy OS 的内置部分。');
+  console.log('    下一步（任选其一，完成后重试本命令即可）：');
+  console.log('      1) 设置环境变量 KHY_QUANT_APP_DIR=<khyquant 项目目录>');
+  console.log(
+    `      2) 在 ${path.join(getDataHome(), 'quant-app.json')} 写入 {"dir":"<khyquant 项目目录>"}`
+  );
+  console.log('    未安装时，对话 / 网关 / 计划模式等其他功能不受影响。');
+  return false;
+}
+
 async function offerModelSelection() {
   const c = chalk();
   try {
@@ -192,8 +223,11 @@ async function executeMenuResult(result) {
 
   switch (result.action) {
     case 'quote': {
-      const { handleQuote } = require('../handlers/data');
-      await handleQuote(result.symbol);
+      const dataHandlers = require('../handlers/data');
+      if (!quantAppReady(dataHandlers, 'handleQuote', '查询行情')) {
+        break;
+      }
+      await dataHandlers.handleQuote(result.symbol);
       break;
     }
     case 'backtest-run': {
@@ -207,18 +241,27 @@ async function executeMenuResult(result) {
       break;
     }
     case 'data-fetch': {
-      const { handleDataFetch } = require('../handlers/data');
-      await handleDataFetch(result.symbol);
+      const dataHandlers = require('../handlers/data');
+      if (!quantAppReady(dataHandlers, 'handleDataFetch', '拉取行情数据')) {
+        break;
+      }
+      await dataHandlers.handleDataFetch(result.symbol);
       break;
     }
     case 'data-list': {
-      const { handleDataList } = require('../handlers/data');
-      await handleDataList();
+      const dataHandlers = require('../handlers/data');
+      if (!quantAppReady(dataHandlers, 'handleDataList', '列出行情数据')) {
+        break;
+      }
+      await dataHandlers.handleDataList();
       break;
     }
     case 'cache-clear': {
-      const { handleCacheClear } = require('../handlers/data');
-      await handleCacheClear();
+      const dataHandlers = require('../handlers/data');
+      if (!quantAppReady(dataHandlers, 'handleCacheClear', '清空行情缓存')) {
+        break;
+      }
+      await dataHandlers.handleCacheClear();
       break;
     }
     case 'server-start': {

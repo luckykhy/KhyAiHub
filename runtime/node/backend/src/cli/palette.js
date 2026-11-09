@@ -20,7 +20,9 @@
  */
 function detectColorDepth() {
   try {
-    const caps = require('./tui/runtime/terminalCapabilities').detectCapabilities();
+    // 洋葱下沉：终端能力探测已从 cli/tui/runtime/ 归位到 utils/terminal/
+    // （该文件自述服务「across ALL surfaces (CLI, TUI)」）。直连逻辑侧。
+    const caps = require('../utils/terminal/terminalCapabilities').detectCapabilities();
     return caps.colorDepthString || 'ansi16';
   } catch {
     // terminalCapabilities 不可用时逐字节回退(保持历史行为)

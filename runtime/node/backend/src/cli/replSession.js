@@ -160,6 +160,9 @@ const {
   buildContextualImagePrompt,
 } = require('./repl/imageIntent');
 const { resolveImageRecognitionAssist } = require('./repl/imageRecognitionIntent');
+// 附件格式判定的终端侧真源（纯叶子）：拖进来的 pdf/docx/xlsx/pptx/mp4 此前落不到
+// 任何分支，路径静默当纯文本发出去，用户看不到「这是 pdf」这个信号。
+const attachmentFormat = require('./attachmentFormat');
 
 const VERSION = require('../../package.json').version;
 const { UNKNOWN_MODEL_CONTEXT_WINDOW } = require('../constants/contextWindowDefaults');
@@ -167,7 +170,24 @@ const _simpleTokenEstimate = require('../utils/simpleTokenEstimate');
 
 const { printLines } = require('./bulkLines');
 const { resolveEscapeCodeTimeout } = require('./escapeTimeoutDetector');
-const { FeatureCapabilityMap } = require('./featureCapabilityMap');
+// FeatureCapabilityMap **lazy require** (P1-2 startup perf): this module sits on the
+// startup graph, and loading featureCapabilityMap reaches commandAutoRegistry's
+// handlers/ prescan a second time via commandSchema.getRouterCommandNames()
+// (measured: the `require('./featureCapabilityMap')` line item alone is 100-290ms,
+// almost all of it readFileSync over 157 sources). Only the interactive REPL needs
+// that map (the one-shot / `khy <command>` paths never build it), so load it on
+// first use: _loadFeatureCapabilityMap() below pays the cost the first time the
+// interactive branch calls it. The prescan itself is additionally covered by the
+// on-disk cache (commandAutoRegistry's KHY_COMMAND_REGISTRY_CACHE); with both
+// layers this path costs next to nothing on the startup graph, and a cache miss
+// only falls back to the historical cost — never to different behaviour.
+let _FeatureCapabilityMapCtor = null;
+function _loadFeatureCapabilityMap() {
+  if (!_FeatureCapabilityMapCtor) {
+    _FeatureCapabilityMapCtor = require('./featureCapabilityMap').FeatureCapabilityMap;
+  }
+  return _FeatureCapabilityMapCtor;
+}
 const { LineBuffer, AdaptiveChunker } = require('./lineBuffer');
 
 // ── Terminal title (ANSI escape) — extracted; owns its own topic/spinner state ──
@@ -373,6 +393,44 @@ function _kickoffGatewayPinStartupCheck({ toTui = false } = {}) {
   }
 }
 
+/**
+ * Whether this invocation is "machine-readable output" — `--output-format json` /
+ * `--output-format stream-json` (including the `--output-format=<v>` form), plus a
+ * bare `--json` (same rule as bin/khy.js's _isMachineReadableInvocation).
+ *
+ * Such calls have a CONTRACTED stdout (text / json / NDJSON, pipe purity asserted
+ * by tests), so a user-facing hint emits not a single byte in those modes — not
+ * even on stderr: better silent than polluting. argv only, no printOutputFormat
+ * dependency: this module's one-shot branch does not parse the output format
+ * itself, and an extra require would only make this call site heavier.
+ * @returns {boolean}
+ */
+function _isMachineReadableOneShot(argv) {
+  const args = Array.isArray(argv) ? argv : [];
+  for (let i = 0; i < args.length; i++) {
+    const tok = String(args[i] || '');
+    if (tok === '--json') {
+      return true;
+    }
+    if (tok === '--output-format') {
+      const v = String(args[i + 1] == null ? '' : args[i + 1])
+        .trim()
+        .toLowerCase();
+      if (v === 'json' || v === 'stream-json') {
+        return true;
+      }
+    } else if (tok.startsWith('--output-format=')) {
+      const v = tok.slice('--output-format='.length)
+        .trim()
+        .toLowerCase();
+      if (v === 'json' || v === 'stream-json') {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 async function startRepl(options = {}) {
   // ── 清除 boot indicator（"⌛ khy 正在启动..."）────────────
   // bin/khy.js main() 在引导阶段向 stderr 输出了启动提示；
@@ -381,64 +439,74 @@ async function startRepl(options = {}) {
     process.stderr.write('\r  \x1b[K');
   }
 
-  // ── Pre-warm the per-submit critical path (interactive sessions only) ──
-  // Pressing Enter on the first prompt would otherwise pay for synchronous,
-  // event-loop-blocking work that freezes the Ink spinner for a beat: the CLI
-  // availability probes (`claude`/`codex`/`aider --version`, re-run several times
-  // by the gateway preflight + getStatus + re-detect passes) and the git context
-  // collection. Both are cached after their first run, so we prime those caches
-  // here — off the hot path, asynchronously — during the seconds the user spends
-  // typing. By submit time the first request is a cache hit with zero blocking
-  // spawnSync. Best-effort and TTY-only; never blocks or fails the session.
-  if (process.stdout.isTTY && !options.oneShot) {
+  // ── TUI decision + boot progress line lit up (P1-9 step 2: kill the dead screen
+  //    between "ready" and the progress line) ────────────────────────────────────────
+  // Where the dead screen comes from: bin/khy.js's 5-step boot ends its transient
+  // progress line at `_bootPhaseLine.end()`, and only then does it
+  // `require('../src/cli/repl')` and enter this function. If the line is re-lit at the
+  // TUI branch below, everything in between (module-graph require + prewarm blocks +
+  // trust-gate await + onboarding; worst case measured 5.1s) is a screen with
+  // nothing moving on it. So the decision and openBootWindow both move up to the
+  // FIRST thing startRepl does: lit right after the boot indicator is cleared,
+  // covering every piece of pre-work inside this function. The remaining slice
+  // (bin/khy.js: end() → require('../src/cli/repl') → entering this function) lives
+  // in bin/khy.js, which this file does not own.
+  //
+  // Nesting with promptOutputGuard: bootPhaseLine owns "erase the transient line
+  // before any output lands"; promptOutputGuard owns "buffer console output while a
+  // prompt is up". Both work by wrapping console.* and each restores its own layer
+  // in end()/finally, so they nest naturally inside-out (see bootPhaseLine's header).
+  // Moving up only installs the outer layer earlier — the inside-out order is
+  // unchanged, so the prompt gate's buffering semantics are not disturbed.
+  //
+  // How the curve is computed and how failures soften live in
+  // bootPhaseLine.openBootWindow's docs (this file is a monolith; the rationale is
+  // not repeated). phase('初始化界面') and close() timing stay with the TUI branch
+  // below; classic mode (KHY_FULL_TUI=0 / non-TTY) opens no line and needs no teardown.
+  // The one-shot early-return branch is further down (`if (options.oneShot && options.prompt)`)
+  // and the TUI branch sits BEFORE it with its own return — so under a TTY
+  // `khy ai "…"` takes the TUI branch, and only non-TTY falls to the one-shot return.
+  // In both cases someone closes the line (the TUI branch's close, or it was never
+  // opened), which is why oneShot must NOT be excluded here: excluding it hands the
+  // "TTY + one-shot" case a null handle inside the TUI branch and phase()/close()
+  // blow up on the spot. The condition is therefore word-for-word the TUI branch's,
+  // which preserves the invariant "_bootWindow is never null inside that branch".
+  const tuiOptOut = process.env.KHY_FULL_TUI === '0' || options.fullTui === false;
+  const tuiRequested = !tuiOptOut && (options.fullTui || process.stdout.isTTY);
+  // ── Ink 之前的那一帧：裸 ANSI 品牌字标 ──
+  // 首帧的品牌图由 Ink 画，而 import('ink') 的求值约 1s 且压不掉（实测
+  // module.enableCompileCache 无效——那是求值不是解析，见 works/data/khy/perf/README.md）。
+  // 那一秒里屏幕只有一行 transient 进度，所以先把字标与 tagline 画出来。
+  // 交接给 Ink 之前必须擦掉（_eraseBootFrame）：Ink 走备用屏，退出时还原主缓冲区，
+  // 未擦的帧会在用户退出后冒充 prompt 留在屏幕上。
+  const _bootFrameLines = (() => {
+    if (!(tuiRequested && process.stdout.isTTY)) return 0;
     try {
-      require('../services/gateway/adapters/_commandAvailability')
-        .prewarm(['claude', 'codex', 'aider'])
-        .catch(() => {});
+      const bootFrame = require('./tui/bootFrameAnsi');
+      if (!bootFrame.isEnabled(process.env)) return 0;
+      const rendered = bootFrame.render({
+        cols: process.stdout.columns,
+        color: !process.env.NO_COLOR,
+      });
+      process.stdout.write(rendered.text);
+      return rendered.lines;
     } catch {
-      /* availability cache is optional */
+      return 0;
     }
-    // 启动 Command Code taste 文件监听（双向共享同步）
-    // 当 .commandcode/taste/ 被外部修改时自动同步到 khy-os
+  })();
+  const _eraseBootFrame = () => {
+    if (!_bootFrameLines) return;
     try {
-      require('../services/tasteWatchService').startProjectTasteWatcher();
+      process.stdout.write(require('./tui/bootFrameAnsi').erase(_bootFrameLines));
     } catch {
-      /* best-effort: 监听器失败不影响启动 */
+      /* 终端可能已关闭 */
     }
-    // git context is collected synchronously (execSync); defer it off the mount
-    // path so it warms its own 60s cache without blocking startup.
-    setImmediate(() => {
-      try {
-        require('../services/gitContextService').collectGitContext(process.cwd());
-      } catch {
-        /* git context is optional */
-      }
-    });
-    // The first submit lazily `require()`s the 8,786-line toolUseLoop (plus its
-    // large transitive graph) in useQueryBridge — that cold load runs AFTER the
-    // user message is pushed but BEFORE the first await, so it freezes the first
-    // paint. Warm it off the hot path while the user is still typing so the first
-    // Enter never pays the cold-require cost. Best-effort; never blocks startup.
-    setImmediate(() => {
-      try {
-        const mod = require('../services/toolUseLoop');
-      } catch (e) {}
-    });
-    // Fire-and-forget geolocation prewarm: fill geolocationService's in-memory
-    // cache in the background while the user types, so the first synchronous
-    // getEnvironmentSection() can inject an approximate city-level location.
-    // NEVER await (must not block startup) and NEVER surface errors.
-    setImmediate(() => {
-      try {
-        const geo = require('../services/geolocationService');
-        if (typeof geo.getLocation === 'function') {
-          geo.getLocation().catch(() => {});
-        }
-      } catch {
-        /* geolocation prewarm is optional */
-      }
-    });
-  }
+  };
+
+  const _bootWindow =
+    tuiRequested && process.stdout.isTTY
+      ? require('./bootPhaseLine').openBootWindow('加载渲染引擎', process.env)
+      : null;
 
   // ── Ink TUI fast path: kick off the ESM import as early as possible ──
   // The dynamic `import('ink')` (react + react-reconciler + yoga graph) is the
@@ -453,6 +521,20 @@ async function startRepl(options = {}) {
   // components only call inkRuntime.get() inside render bodies (verified), so
   // requiring them before the ink namespace resolves is safe. Gate:
   // KHY_TUI_PRELOAD (default on; '0' restores the lazy order for debugging).
+  //
+  // Placement: the FIRST thing startRepl does (fired the moment the boot indicator
+  // is cleared, never awaited). Why not higher: bin/khy.js's 600ms bootstrap
+  // `init()` runs BEFORE `require('../src/cli/repl')` (that require only appears
+  // after init()'s await), and bin/khy.js is not owned by this file — so inside
+  // replSession the top of this function is the earliest point that still has
+  // `options` (and can therefore tell one-shot / fullTui reliably). Higher would
+  // mean sniffing argv at module load, which makes `khy status` / `khy -p` load the
+  // ink graph for nothing and leaves a transient line nobody closes on paths that
+  // never reach the TUI branch — not worth it, so it stops here.
+  // Ordering against the prewarm blocks below (availability probes / taste watcher /
+  // git context): ink's import goes out first and the prewarm blocks' synchronous
+  // requires run after it; ink's module I/O then overlaps every subsequent await
+  // point (trust gate, onboarding), netting hundreds of ms.
   const tuiPlanned =
     process.stdout.isTTY &&
     !options.oneShot &&
@@ -464,18 +546,103 @@ async function startRepl(options = {}) {
       const inkRuntimeEarly = require('./tui/inkRuntime');
       inkRuntimeEarly.loadInk().catch(() => {});
       inkRuntimeEarly.registerJsx();
-      setImmediate(() => {
-        // Pre-warm the App require graph (babel transpile + component tree) so
-        // the TUI branch's require hits the module cache. Best-effort: the TUI
-        // branch re-requires and reports errors itself.
-        try {
-          require('./tui/ink-components/App');
-        } catch {
-          /* reported by the TUI branch */
-        }
-      });
+      // The App graph is deliberately NOT pre-warmed here. tui/app.js requires it
+      // after committing the boot-screen frame (tui/app.js:423), so a prewarm in
+      // this window paid the same ~286ms require a second time — in front of the
+      // first frame instead of behind it. Measured as the `app_graph` stage;
+      // see works/data/khy/perf/README.md.
     } catch {
       /* TUI branch below retries and reports */
+    }
+  }
+
+  // ── Pre-warm the per-submit critical path (interactive sessions only) ──
+  // Pressing Enter on the first prompt would otherwise pay for synchronous,
+  // event-loop-blocking work that freezes the Ink spinner for a beat: the CLI
+  // availability probes (`claude`/`codex`/`aider --version`, re-run several times
+  // by the gateway preflight + getStatus + re-detect passes) and the git context
+  // collection. Both are cached after their first run, so we prime those caches
+  // here — off the hot path, asynchronously — during the seconds the user spends
+  // typing. By submit time the first request is a cache hit with zero blocking
+  // spawnSync. Best-effort and TTY-only; never blocks or fails the session.
+  // ── Post-mount chunked prewarm ────────────────────────────────────────────
+  // Relocation, not reduction: each require stays atomic, so toolUseLoop's
+  // ~183ms freeze is still paid once — after the App is mounted instead of
+  // before the first paint. The timer+immediate gap between chunks lets ink
+  // commit a frame in between.
+  let _prewarmQueueStarted = false;
+  const _deferredPrewarmTasks = [
+    () => require('../services/toolUseLoop'),
+    () => {
+      const geo = require('../services/geolocationService');
+      if (typeof geo.getLocation === 'function') geo.getLocation().catch(() => {});
+    },
+    () => require('../services/tasteWatchService').startProjectTasteWatcher(),
+  ];
+  const _startDeferredPrewarmQueue = () => {
+    if (_prewarmQueueStarted) return;
+    _prewarmQueueStarted = true;
+    const run = (i) => {
+      if (i >= _deferredPrewarmTasks.length) return;
+      try { _deferredPrewarmTasks[i](); } catch { /* best-effort */ }
+      setTimeout(() => setImmediate(() => run(i + 1)), 0);
+    };
+    setImmediate(() => run(0));
+  };
+
+  if (process.stdout.isTTY && !options.oneShot) {
+    try {
+      require('../services/gateway/adapters/_commandAvailability')
+        .prewarm(['claude', 'codex', 'aider'])
+        .catch(() => {});
+    } catch {
+      /* availability cache is optional */
+    }
+    // git context is collected synchronously (execSync); defer it off the mount
+    // path so it warms its own 60s cache without blocking startup.
+    // 2026-10-10（[DESIGN-PERF-007]）：这段 setImmediate 在 ink 装载窗口内触发，
+    // 同步 collectGitContext 冷缓存要跑 5 条 git（实测 spawnSync 自耗 524ms），
+    // 把事件循环冻住——spinner 正是在这段卡的。改用同一个模块的异步孪生
+    // （execAsync，同缓存同去重）：预热目的不变，事件循环不再被堵。
+    setImmediate(() => {
+      try {
+        const gitContext = require('../services/gitContextService');
+        if (typeof gitContext.refreshGitContextInBackground === 'function') {
+          Promise.resolve(gitContext.refreshGitContextInBackground(process.cwd())).catch(() => {});
+        } else {
+          gitContext.collectGitContext(process.cwd());
+        }
+      } catch {
+        /* git context is optional */
+      }
+    });
+    // The three synchronous prewarms (taste watcher, toolUseLoop, geolocation)
+    // used to run in setImmediate, whose check phase lands before the first
+    // paint. In the TUI they now wait for inkRuntime.setApp() — called right
+    // after render(<App/>) returns — and are chunked by the queue above.
+    // Classic REPL has no App mount, so it keeps the old off-hot-path order.
+    if (tuiRequested) {
+      try {
+        const inkRuntime = require('./tui/inkRuntime');
+        if (typeof inkRuntime.setApp === 'function') {
+          inkRuntime.__khyDeferredPrewarmStart = _startDeferredPrewarmQueue;
+          if (!inkRuntime.__khyPrewarmQueueHook) {
+            const origSetApp = inkRuntime.setApp;
+            inkRuntime.setApp = function patchedSetApp(...args) {
+              const out = origSetApp.apply(this, args);
+              try { inkRuntime.__khyDeferredPrewarmStart(); } catch { /* best-effort */ }
+              return out;
+            };
+            inkRuntime.__khyPrewarmQueueHook = true;
+          }
+        } else {
+          _startDeferredPrewarmQueue();
+        }
+      } catch {
+        _startDeferredPrewarmQueue();
+      }
+    } else {
+      _startDeferredPrewarmQueue();
     }
   }
 
@@ -549,6 +716,17 @@ async function startRepl(options = {}) {
         () => trustGate.ensureWorkspaceTrust({ c: chalk() }),
       );
       if (decision && decision.action === 'exit') {
+        // The progress line is already lit at the function entry (P1-9 step 2), and
+        // this path exits the process directly, so nobody reaches the TUI branch's
+        // close() — tear it down first, or a "加载渲染引擎 17%" line is left behind.
+        try {
+          if (_bootWindow) {
+            _bootWindow.close();
+          }
+          _eraseBootFrame();
+        } catch {
+          /* a teardown failure must not change the exit semantics */
+        }
         process.exit(typeof decision.code === 'number' ? decision.code : 0);
       }
     } catch {
@@ -715,16 +893,13 @@ async function startRepl(options = {}) {
   // crash class no longer reaches the user. The legacy readline REPL remains
   // available via KHY_FULL_TUI=0 for the not-yet-ported interactive handlers
   // (e.g. /apikey, /init, /forgot, /pool import).
-  const tuiOptOut = process.env.KHY_FULL_TUI === '0' || options.fullTui === false;
-  const tuiRequested = !tuiOptOut && (options.fullTui || process.stdout.isTTY);
+  // tuiOptOut / tuiRequested moved up to the first thing startRepl does (the
+  // progress line must light before any pre-work; see the P1-9 step 2 note above).
   if (tuiRequested && process.stdout.isTTY) {
-    // ── 启动进度行：覆盖「渲染引擎装载 → 界面初始化」这段 Ink 之前的窗口 ──────
-    // 为什么必须有、曲线怎么算、失败怎么软化，全在 bootPhaseLine.openBootWindow 的
-    // 文档里（本文件是巨石，理由不复述）。一句话：5 步引导行 0.37s 就走完了，而最长的
-    // 两段（ink 装载 / App 首帧）跑在 Ink 挂载**之前**，启动屏结构上显示不了 —— 历史观感
-    // 就是「全黑 ~25s，然后一出场就冻在 67%」。这里用 pre-Ink 渲染器接上同一条实时
-    // 百分比曲线，交棒给 Ink 时 close()。句柄恒非 null、方法永不抛。
-    const _bootWindow = require('./bootPhaseLine').openBootWindow('加载渲染引擎', process.env);
+    // The progress line was already lit at the function entry (see above); this
+    // branch only reuses the handle. Timing is unchanged:
+    // after loadInk the label switches to 初始化界面; close() before handing over to
+    // Ink; the crash path closes in the catch block.
     try {
       const inkRuntime = require('./tui/inkRuntime');
       inkRuntime.registerJsx();
@@ -746,19 +921,29 @@ async function startRepl(options = {}) {
       } catch {
         /* non-critical on unsupported environments */
       }
-      // 启动期网关钉选预检（[DESIGN-ARCH-136] §9.5）：必须在 startInkApp 早返回**之前** ——
-      // 经典模式里那段自检（下方 :1086 一带）TUI 永远走不到。fire-and-forget，非阻断。
-      _kickoffGatewayPinStartupCheck({ toTui: true });
+      // 启动期网关钉选预检（[DESIGN-ARCH-136] §9.5）：必须在 Ink 早返回**之前**登记，
+      // 经典模式里那段自检（下方 :1086 一带）TUI 永远走不到。
+      // 但**不在**这里执行：checkGatewayPreferredOnce 的 require 会把 aiGateway 整张图
+      // 拉进启动的同步前缀（实测 283.6ms，见 works/data/khy/perf/README.md 的
+      // gateway_precheck 段），而它的产物只是一条通知、不参与首帧。所以排进挂载后的
+      // 分片队列：通知照发，首帧不再替它付钱。队列在 TUI 崩溃降级路径也会启动（见下方
+      // catch 里的 _startDeferredPrewarmQueue），所以不会漏跑。
+      _deferredPrewarmTasks.push(() => _kickoffGatewayPinStartupCheck({ toTui: true }));
       // 交棒：必须在 Ink 接管终端**之前**擦掉瞬时行并还原 console.*（bootPhaseLine 契约 ——
       // 它是瞬时行，任何别的输出落地前必须先让位）。之后由 tui/app.js 的轻量启动屏帧
       // 接续同一条百分比曲线。
       _bootWindow.close();
+      _eraseBootFrame();
       const { startInkApp } = require('./tui/app.js');
       await startInkApp(options);
       return;
     } catch (err) {
+      // The App never mounted, so the post-mount queue never started; keep the
+      // prewarm promise on the degradation path (classic fallback below).
+      _startDeferredPrewarmQueue();
       // 失败路径也要收尾，否则瞬时行会残留在屏幕上、console.* 也不会被还原。
       _bootWindow.close();
+      _eraseBootFrame();
       process.stderr.write(`Ink TUI init failed: ${err.message}\n${err.stack}\n`);
       // ── 崩溃归因（RUNTIME-002 2.2「错误消息具体化」）──
       // 裸 stack 只说明「哪里抛的」，不说明「为什么 + 怎么办」：依赖被清/hydrate 中断时
@@ -929,32 +1114,103 @@ async function startRepl(options = {}) {
 
     let thinkingStarted = false;
     const oneShotThinkingState = { thinkingLineOpen: false, thinkingCol: 0 };
-    const result = await ai().chat(options.prompt, {
-      onChunk: (chunk) => {
-        if (chunk.type === 'thinking' && !thinkingStarted) {
-          thinkingStarted = true;
-          if (process.stdout.isTTY) {
-            process.stdout.write('\x1b[1A\r\x1b[K');
-          }
-          renderer.printStepLine('success', '请求 AI', aiProvider);
-          console.log('');
-          console.log(c.yellow(`  ${ICON_BOT} 思考过程:`));
-        }
-        if (chunk.type === 'thinking') {
-          streamThinkingChunk(chunk.text, oneShotThinkingState, c);
-        } else if (chunk.type === 'assistant_message') {
-          // 用户可见的中间消息(如视觉路由说明)——one-shot 下即时打印为一条助手消息行。
-          const msgText = String(chunk.content || chunk.text || '').trim();
-          if (msgText) {
-            if (thinkingStarted && oneShotThinkingState.thinkingLineOpen) {
-              closeThinkingStream(oneShotThinkingState);
+
+    // ── First-response silence-window guard (firstResponseAckVoice; gate
+    //    KHY_FIRST_RESPONSE_ACK) ─────────────────────────────────────────────────────
+    // The interactive REPL has wired this same guard since spinner.start('request')
+    // (see the isomorphic wiring in the interactive branch below), while one-shot has
+    // always been a bare `await ai().chat()`: printStepLine returns immediately when
+    // stdout is not a TTY (steps.js:144) and is only a static step line under a TTY —
+    // so the window between "request sent" and "first chunk" (worst case measured
+    // 59.8s) produces zero terminal output, leaving the user no way to tell a hang
+    // from a slow model. This adds the isomorphic counterpart: arm() before chat(),
+    // markChunk() when onChunk sees the first chunk, and a finally disarm() as the
+    // backstop (otherwise a pending timer would hold the process for up to delay ms).
+    //
+    // Where emit goes (two hard boundaries):
+    //   ① non-TTY only, and on stderr — stdout's text contract is not touched by a
+    //      single byte; under a TTY printStepLine already prints the "请求 AI" step
+    //      line, and stacking a hint on it would only cover each other up.
+    //   ② `--output-format json` / `stream-json` (and a bare `--json`): NOT ONE BYTE,
+    //      not even on stderr — pipe purity is asserted by tests, no exceptions.
+    // Gate off / leaf missing / exception → not wired at all, a byte-for-byte return
+    // to today's "zero output" behaviour.
+    let _oneShotAck = null;
+    try {
+      if (
+        !_isMachineReadableOneShot(process.argv) &&
+        _firstResponseAckVoice &&
+        typeof _firstResponseAckVoice.createFirstResponseAckScheduler === 'function'
+      ) {
+        _oneShotAck = _firstResponseAckVoice.createFirstResponseAckScheduler({
+          turnIndex: 0,
+          env: process.env,
+          variant: 'submit',
+          deps: {
+            emit: (line) => {
+              if (!line || process.stdout.isTTY) {
+                return; // a TTY already has the step-line animation, do not stack
+              }
+              try {
+                console.error(line);
+              } catch {
+                /* a render failure must not affect the main flow */
+              }
+            },
+          },
+        });
+        _oneShotAck.arm();
+      }
+    } catch {
+      _oneShotAck = null; // a guard failure must never affect the request itself
+    }
+
+    let result;
+    try {
+      result = await ai().chat(options.prompt, {
+        onChunk: (chunk) => {
+          // First chunk = the model has started talking → cancel the pending
+          // "still waiting for the model" hint. Idempotent.
+          if (_oneShotAck) {
+            try {
+              _oneShotAck.markChunk();
+            } catch {
+              /* ignore */
             }
-            console.log('');
-            console.log(`  ${ICON_BOT} ${c.cyan(msgText)}`);
           }
+          if (chunk.type === 'thinking' && !thinkingStarted) {
+            thinkingStarted = true;
+            if (process.stdout.isTTY) {
+              process.stdout.write('\x1b[1A\r\x1b[K');
+            }
+            renderer.printStepLine('success', '请求 AI', aiProvider);
+            console.log('');
+            console.log(c.yellow(`  ${ICON_BOT} 思考过程:`));
+          }
+          if (chunk.type === 'thinking') {
+            streamThinkingChunk(chunk.text, oneShotThinkingState, c);
+          } else if (chunk.type === 'assistant_message') {
+            // 用户可见的中间消息(如视觉路由说明)——one-shot 下即时打印为一条助手消息行。
+            const msgText = String(chunk.content || chunk.text || '').trim();
+            if (msgText) {
+              if (thinkingStarted && oneShotThinkingState.thinkingLineOpen) {
+                closeThinkingStream(oneShotThinkingState);
+              }
+              console.log('');
+              console.log(`  ${ICON_BOT} ${c.cyan(msgText)}`);
+            }
+          }
+        },
+      });
+    } finally {
+      if (_oneShotAck) {
+        try {
+          _oneShotAck.disarm();
+        } catch {
+          /* ignore */
         }
-      },
-    });
+      }
+    }
 
     if (thinkingStarted) {
       closeThinkingStream(oneShotThinkingState);
@@ -3704,7 +3960,7 @@ async function startRepl(options = {}) {
       return _m; // No archived content found, leave as-is
     });
   }
-  const _featureCapabilityMap = new FeatureCapabilityMap();
+  const _featureCapabilityMap = new (_loadFeatureCapabilityMap())();
   let _taskMindMap = createIdleTaskMindMap(); // Dual maps are always available: AI navigation + user-visible map
   const _taskMindMapAutoShowEnv = String(process.env.KHY_TASK_MINDMAP_AUTO_SHOW || 'false')
     .trim()
@@ -6571,6 +6827,9 @@ async function startRepl(options = {}) {
               `  ✓ 已记住（${scope === 'global' ? '全局' : '项目'}）: ${res.file}${res.created ? ' (新建)' : ''}`
             )
           );
+          if (res.warning) {
+            console.log(c.yellow(`  ⚠ ${res.warning}`));
+          }
         } else {
           console.log(c.hex('#D77757')(`  记忆未写入: ${res.error}`));
         }
@@ -8115,6 +8374,22 @@ async function startRepl(options = {}) {
           printInfo(`已读取目录结构: ${path.basename(resolvedPath)} (${tree.fileCount} 个文件)`);
           const followUp = finalAiInput.slice(pathCandidate.length).trim();
           finalAiInput = `[项目结构: ${path.basename(resolvedPath)}]\n${tree.text}\n\n${followUp || '请分析这个项目的结构'}`;
+        } else if (
+          // 认得出格式、但既不是可当文本读的格式也不是压缩包：pdf / docx / xlsx / pptx /
+          // mp4 …。此前这条链到目录分支就结束，这些文件落空 —— 路径静默留在消息里当
+          // 纯文本，用户看不到任何「这是一份 pdf」的信号。这里如实报出格式与大小，
+          // 并说明内容未解析（路径仍在消息里，模型可以自己用工具读）。
+          fs.existsSync(resolvedPath) &&
+          fs.statSync(resolvedPath).isFile() &&
+          attachmentFormat.attachmentFormat(resolvedPath) !== 'file'
+        ) {
+          const stat = fs.statSync(resolvedPath);
+          printInfo(
+            `已识别 ${attachmentFormat.formatChipText({
+              name: resolvedPath,
+              size: stat.size,
+            })}（内容未解析，路径已随消息发送）`
+          );
         }
       } catch {
         /* file detection is best-effort, ignore errors */
@@ -8158,9 +8433,12 @@ async function startRepl(options = {}) {
           }))
         );
 
-        // Run agents with progress updates
+        // Run agents with progress updates. handleControlRequest is defined in
+        // startRepl's synchronous body before any line event fires, so passing
+        // it here is the same wiring the main chat call uses (:10140 fallback).
         const agentResults = await agentRunner.runAgents(subtasks, {
           ai: ai(),
+          onControlRequest: handleControlRequest,
           onProgress: (states) => {
             renderedLines = agentDisplay.rerenderAgentDisplay(states, renderedLines);
           },
