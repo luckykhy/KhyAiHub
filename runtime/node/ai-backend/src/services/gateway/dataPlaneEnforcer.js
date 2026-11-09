@@ -144,12 +144,36 @@ async function enforceInbound({ bearer = '', model = '', messages = [], traceId 
     if (userCtx) {
       const relay = userCtx.relay;
       if (relay && relay.baseUrl) {
+        // Routing to the user's OWN upstream/key is not a billing event — the
+        // user pays their own provider — but it IS a gateway resource, so it
+        // goes through the same rate limiter as every other data-plane caller.
+        // Without this the 1.5 rung returned before :215 and the channel was
+        // both unmetered and unthrottled (see repro c in
+        // works/data/khy/feedback/190-saas-p0-stopbleed/repro-before.txt).
+        const rateLimiter = lazy('./rateLimiter');
+        const groupLimits = pricing.getGroupLimits('default');
+        const rl = rateLimiter.tryAcquire(`user:${userCtx.userId}:${model || '*'}`, {
+          estTokens: estInput,
+          limits: { tokenLimits: {}, customerLimits: {}, groupLimits },
+        });
+        if (!rl.ok) {
+          return {
+            ok: false,
+            httpStatus: 429,
+            code: 'RATE_LIMITED',
+            details: { scope: rl.scope, reason: 'rate_limited' },
+            message: `限流 (429)：请求过多（${rl.scope === 'rpm' ? '每分钟请求数' : '每分钟 token 数'}上限），请稍后重试或提高配额`,
+
+            retryAfterMs: rl.retryAfterMs,
+          };
+        }
         return {
           ok: true,
           ctx: {
             ...baseCtx,
             source: 'user',
             userId: userCtx.userId,
+            _rateKey: `user:${userCtx.userId}:${model || '*'}`,
             upstream: {
               apiKey: relay.apiKey || '',
               apiEndpoint: relay.baseUrl,
@@ -162,12 +186,22 @@ async function enforceInbound({ bearer = '', model = '', messages = [], traceId 
         };
       }
       // Recognized user but no usable relay config.
+      //
+      // This stays opt-in. Making it the default was tried and reverted: the
+      // natural "is the gateway armed?" test (global token or managed tokens
+      // present) reads the real data directory, so the same build answered
+      // differently depending on what the operator had configured, and it broke
+      // the documented zero-regression fall-through. Whether an unconfigured
+      // ApiKey may still be served from the owner's keys is a policy call with
+      // real blast radius both ways — see DESIGN-ARCH-190 §八 for the decision
+      // this is waiting on.
       if (String(process.env.GATEWAY_USER_ISOLATION_STRICT || '').toLowerCase() === 'true') {
         return {
           ok: false,
           httpStatus: 403,
-          code: 'gateway_unconfigured',
-          message: 'No per-user gateway configured for this token',
+          code: 'FORBIDDEN',
+          details: { reason: 'gateway_unconfigured' },
+          message: '权限不足 (403)：该密钥所属账号未配置可用的上游通道，请先在账号设置中配置后再调用',
         };
       }
       // Non-strict (default): fall through to the existing ladder unchanged.
@@ -183,8 +217,9 @@ async function enforceInbound({ bearer = '', model = '', messages = [], traceId 
       return {
         ok: false,
         httpStatus: 403,
-        code: 'token_disabled',
-        message: 'Token or customer is disabled',
+        code: 'FORBIDDEN',
+        details: { reason: 'token_disabled' },
+        message: '权限不足 (403)：该密钥或所属客户已被停用，请更换密钥或联系管理员恢复',
       };
     }
 
@@ -193,8 +228,9 @@ async function enforceInbound({ bearer = '', model = '', messages = [], traceId 
       return {
         ok: false,
         httpStatus: 403,
-        code: 'model_forbidden',
-        message: `Model not permitted: ${model}`,
+        code: 'FORBIDDEN',
+        details: { reason: 'model_forbidden' },
+        message: `权限不足 (403)：无权访问模型 ${model}，请检查订阅或更换密钥`,
       };
     }
 
@@ -220,8 +256,9 @@ async function enforceInbound({ bearer = '', model = '', messages = [], traceId 
       return {
         ok: false,
         httpStatus: 429,
-        code: `rate_limited_${rl.scope}`,
-        message: `Rate limit exceeded (${rl.scope})`,
+        code: 'RATE_LIMITED',
+        details: { scope: rl.scope, reason: 'rate_limited' },
+        message: `限流 (429)：请求过多（${rl.scope === 'rpm' ? '每分钟请求数' : '每分钟 token 数'}上限），请稍后重试或提高配额`,
         retryAfterMs: rl.retryAfterMs,
       };
     }
@@ -234,8 +271,9 @@ async function enforceInbound({ bearer = '', model = '', messages = [], traceId 
       return {
         ok: false,
         httpStatus: 429,
-        code: `quota_exceeded_${q.scope}`,
-        message: `Monthly quota exceeded (${q.scope}): ${q.used}/${q.limit}`,
+        code: 'CREDITS_EXHAUSTED',
+        details: { scope: q.scope, reason: 'monthly_quota_exceeded' },
+        message: `额度已用完 (429)：${q.scope === 'requests' ? '月度请求数' : q.scope === 'tokens' ? '月度 token 数' : '月度预算'}已达上限（${q.used}/${q.limit}），请充值或更换模型通道`,
       };
     }
 
@@ -245,21 +283,85 @@ async function enforceInbound({ bearer = '', model = '', messages = [], traceId 
 
   // 3. Bearer provided but unknown, while enforcement is active -> reject.
   if (normalizedBearer && (globalToken || customers.hasManagedTokens())) {
-    return { ok: false, httpStatus: 401, code: 'invalid_token', message: 'Invalid API token' };
+    return {
+      ok: false,
+      httpStatus: 401,
+      code: 'UNAUTHORIZED',
+      details: { reason: 'invalid_token' },
+      message: '认证失败 (401)：API key 无效或已失效，请检查密钥是否复制完整或已被轮换',
+    };
   }
 
   // 3b. A global token is configured but the caller sent nothing matching.
   if (globalToken && !normalizedBearer) {
-    return { ok: false, httpStatus: 401, code: 'missing_token', message: 'Authorization required' };
+    return {
+      ok: false,
+      httpStatus: 401,
+      code: 'UNAUTHORIZED',
+      details: { reason: 'missing_token' },
+      message: '认证失败 (401)：请求缺少 Authorization 头，请在请求中携带 Bearer <API Key>',
+    };
   }
 
   // 4. Open mode: no global token, no managed tokens -> allow (legacy behavior).
+  // Production gets no such luxury: an exposed gateway must never fall through
+  // to anonymous, because "no token configured" is exactly the state a
+  // half-finished deployment is in. Opt back out with
+  // KHY_DATA_PLANE_REQUIRE_TOKEN=false.
+  const requireToken = String(process.env.KHY_DATA_PLANE_REQUIRE_TOKEN || '')
+    .trim()
+    .toLowerCase();
+  if (process.env.NODE_ENV === 'production' && requireToken !== 'false') {
+    return {
+      ok: false,
+      httpStatus: 401,
+      code: 'UNAUTHORIZED',
+      details: { reason: 'missing_token', gateway: 'unconfigured' },
+      message:
+        '认证失败 (401)：本网关未配置任何令牌，出于安全考虑不接受匿名请求；请联系管理员为你的账号签发 API Key',
+    };
+  }
   return { ok: true, ctx: baseCtx };
+}
+
+/**
+ * Settled-request ledger for make-settle-once semantics.
+ *
+ * Both the streaming and the JSON paths call settleOutbound() from a success
+ * branch AND from a catch branch. A request that settles and then throws on the
+ * way out reached both, and with no ledger that billed the customer twice for
+ * one request. Keyed on (subject, traceId); traceId is a per-request UUID minted
+ * by the proxy. Bounded so a long-lived process cannot grow it without limit.
+ */
+const SETTLED_KEYS = new Map();
+const SETTLED_KEYS_MAX = 5000;
+
+function settleKey(ctx) {
+  const subject = String(ctx.customerId || ctx.userId || '');
+  const trace = String(ctx.traceId || '');
+  // No traceId means no safe key — never silently drop metering over it.
+  return subject && trace ? `${subject}::${trace}` : '';
+}
+
+function claimSettle(settlementKey) {
+  if (!settlementKey) {
+    return true;
+  }
+  if (SETTLED_KEYS.has(settlementKey)) {
+    return false;
+  }
+  SETTLED_KEYS.set(settlementKey, true);
+  if (SETTLED_KEYS.size > SETTLED_KEYS_MAX) {
+    SETTLED_KEYS.delete(SETTLED_KEYS.keys().next().value);
+  }
+  return true;
 }
 
 /**
  * Finalize a request: compute cost, meter the customer, reconcile rate limiter,
  * and append the request log. Never throws.
+ *
+ * Settling the same request twice is a no-op — see the ledger above.
  *
  * @param {object} ctx              the req._khy context from enforceInbound
  * @param {object} result
@@ -275,6 +377,10 @@ async function enforceInbound({ bearer = '', model = '', messages = [], traceId 
  */
 function settleOutbound(ctx, result = {}) {
   if (!ctx) return null;
+  const settlementKey = settleKey(ctx);
+  if (!claimSettle(settlementKey)) {
+    return null;
+  }
   try {
     const pricing = lazy('../pricingService');
     const usage = lazy('../customerUsageService');
@@ -343,4 +449,17 @@ function settleOutbound(ctx, result = {}) {
   }
 }
 
-module.exports = { enforceInbound, settleOutbound, deriveUsage, estimateInputTokens };
+module.exports = {
+  enforceInbound,
+  settleOutbound,
+  deriveUsage,
+  estimateInputTokens,
+  __test__: {
+    _resetSettleLedger() {
+      SETTLED_KEYS.clear();
+    },
+    _settledCount() {
+      return SETTLED_KEYS.size;
+    },
+  },
+};
