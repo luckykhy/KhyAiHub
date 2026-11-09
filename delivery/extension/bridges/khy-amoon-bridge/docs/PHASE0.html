@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- MIRROR: PHASE0.md -->
+<title>Phase 0 — amoon 能力门（双向的前提） · Khy-OS 文档</title>
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/hljs-github-dark.min.css">
+<link rel="stylesheet" href="../../../../../docs/19_资产/site/docs-site.css">
+</head>
+<body>
+<div class="topbar">
+  <button class="menu-toggle" aria-label="菜单">☰</button>
+  <a class="brand" href="../../../../../docs/index.html">◆ Khy-OS 文档站</a>
+  <span class="spacer"></span>
+  <a href="../../../../../docs/html/02_CONCEPTS_概念入门/00_INDEX_概念入门-总览.html">▸ 新手先读：核心概念</a>
+</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <input class="search" type="search" placeholder="⌕ 过滤文档标题…" aria-label="过滤文档">
+    <div id="nav-root"></div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <div class="breadcrumb reveal"><a href="../../../../../docs/index.html">首页</a><span class="sep">›</span>delivery<span class="sep">›</span>extension<span class="sep">›</span>bridges<span class="sep">›</span>khy-amoon-bridge<span class="sep">›</span>docs<span class="sep">›</span>Phase 0 — amoon 能力门（双向的前提）</div>
+      <header class="hero reveal"><h1>Phase 0 — amoon 能力门（双向的前提）</h1></header>
+      <nav class="toc reveal"><div class="toc-title">本页目录</div><ul><li class="lvl-1"><a href="#phase-0-amoon-能力门-双向的前提">Phase 0 — amoon 能力门（双向的前提）</a></li><li class="lvl-2"><a href="#为什么需要它">为什么需要它</a></li><li class="lvl-2"><a href="#三项探测">三项探测</a></li><li class="lvl-3"><a href="#a-执行-shell">a) 执行 shell</a></li><li class="lvl-3"><a href="#b-写文件信箱">b) 写文件信箱</a></li><li class="lvl-3"><a href="#c-http">c) HTTP</a></li><li class="lvl-2"><a href="#记录证据">记录证据</a></li><li class="lvl-2"><a href="#不得作为证据的东西">不得作为证据的东西</a></li><li class="lvl-2"><a href="#失败后的交付">失败后的交付</a></li></ul></nav>
+      <article class="doc-body">
+<h1 id="phase-0-amoon-能力门-双向的前提">Phase 0 — amoon 能力门（双向的前提）<a class="anchor" href="#phase-0-amoon-能力门-双向的前提" aria-label="锚点">#</a></h1>
+<p>本文件定义 <code>amoon → PC</code> 方向的唯一证据标准。<strong>没有这里的证据，README、CLI、bridge_status<br>都只能写 <code>unverified</code> / 单向，不能宣称双向。</strong></p>
+<h2 id="为什么需要它">为什么需要它<a class="anchor" href="#为什么需要它" aria-label="锚点">#</a></h2>
+<p>PC 侧 <code>adb shell</code> 能执行命令，只能证明 <strong>PC 的 adb</strong> 能操作手机；它不能证明 amoon 这个<br>Android 应用自己能执行 shell、读写 <code>/sdcard</code> 或发起 HTTP。因此 Phase 0 的三项动作必须由<br><strong>amoon 自己</strong>完成，并由人记录证据。</p>
+<h2 id="三项探测">三项探测<a class="anchor" href="#三项探测" aria-label="锚点">#</a></h2>
+<p>设 <code>ROOT=/sdcard/khy-amoon-bridge</code>，<code>PORT</code> 为 daemon 实际端口（<code>runtime.json</code> 与手机<br><code>port.txt</code>/<code>config.json</code> 中的值）。</p>
+<h3 id="a-执行-shell">a) 执行 shell<a class="anchor" href="#a-执行-shell" aria-label="锚点">#</a></h3>
+<p>在 amoon 中执行：</p>
+<pre><code class="language-sh">sh /sdcard/khy-amoon-bridge/kb health</code></pre>
+<p>期望：输出 JSON（至少包含 <code>ok</code> 与 <code>channel</code>）。</p>
+<h3 id="b-写文件信箱">b) 写文件信箱<a class="anchor" href="#b-写文件信箱" aria-label="锚点">#</a></h3>
+<p>在 amoon 中向 <code>$ROOT/inbox/</code> 写入：</p>
+<pre><code class="language-json"><span class="hljs-punctuation">{</span><span class="hljs-attr">&quot;v&quot;</span><span class="hljs-punctuation">:</span><span class="hljs-number">1</span><span class="hljs-punctuation">,</span><span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span><span class="hljs-string">&quot;probe00001&quot;</span><span class="hljs-punctuation">,</span><span class="hljs-attr">&quot;tool&quot;</span><span class="hljs-punctuation">:</span><span class="hljs-string">&quot;ping&quot;</span><span class="hljs-punctuation">,</span><span class="hljs-attr">&quot;args&quot;</span><span class="hljs-punctuation">:</span><span class="hljs-punctuation">{</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">}</span></code></pre>
+<p>文件名必须是 <code>cmd_probe00001.json</code>，且先写 <code>$ROOT/tmp/</code> 再 <code>mv</code> 到 <code>inbox/</code>（或直接写<br><code>inbox/</code> 但能保证完整写入）。期望：PC 端 poller 在数秒内把 <code>outbox/res_probe00001.json</code><br>写回，且 <code>inbox/</code> 中的命令消失。</p>
+<h3 id="c-http">c) HTTP<a class="anchor" href="#c-http" aria-label="锚点">#</a></h3>
+<p>在 amoon 中执行：</p>
+<pre><code class="language-sh">TOKEN=$(<span class="hljs-built_in">cat</span> /sdcard/khy-amoon-bridge/token)
+curl --noproxy <span class="hljs-string">&#x27;*&#x27;</span> -sS --max-time 5 \
+  -H <span class="hljs-string">&quot;Authorization: Bearer <span class="hljs-variable">$TOKEN</span>&quot;</span> \
+  http://127.0.0.1:PORT/health</code></pre>
+<p>期望：<code>{&quot;ok&quot;:true}</code>，退出码 0。</p>
+<h2 id="记录证据">记录证据<a class="anchor" href="#记录证据" aria-label="锚点">#</a></h2>
+<pre><code class="language-powershell">node scripts\probe<span class="hljs-literal">-amoon</span>.js instructions <span class="hljs-literal">--state-dir</span> &lt;state&gt;
+node scripts\probe<span class="hljs-literal">-amoon</span>.js record <span class="hljs-literal">--shell</span> <span class="hljs-literal">--http</span> <span class="hljs-literal">--file-write</span> <span class="hljs-literal">--by</span> <span class="hljs-string">&quot;&lt;谁在 amoon 中执行&gt;&quot;</span> <span class="hljs-literal">--evidence</span> <span class="hljs-string">&quot;&lt;命令与输出摘要&gt;&quot;</span> <span class="hljs-literal">--state-dir</span> &lt;state&gt;
+node scripts\probe<span class="hljs-literal">-amoon</span>.js show <span class="hljs-literal">--state-dir</span> &lt;state&gt;</code></pre>
+<p>写入 <code>&lt;state&gt;/capability.json</code>，字段：</p>
+<pre><code class="language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;status&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;unverified | partial | verified | unavailable&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;shell&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;http&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;fileWrite&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;fileRead&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;dozeWriter&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;evidence&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;人工记录的命令/输出摘要&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;at&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;ISO 时间&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;by&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;执行者&quot;</span>
+<span class="hljs-punctuation">}</span></code></pre>
+<p>判定：</p>
+<ul><li><code>shell &amp;&amp; http &amp;&amp; fileWrite</code> → <code>verified</code>（可以宣称双向，但仍受 scope/限流约束）；</li><li>任意一项为真但未全满足 → <code>partial</code>（只能按 capability 选择 HTTP 或文件通道）；</li><li>全部为假 → <code>unavailable</code>（只交付 KhyOS→手机 + 人工中转）；</li><li>未运行 → <code>unverified</code>（默认）。</li></ul>
+<h2 id="不得作为证据的东西">不得作为证据的东西<a class="anchor" href="#不得作为证据的东西" aria-label="锚点">#</a></h2>
+<ul><li>PC 侧 <code>adb shell</code> 的输出；</li><li><code>khy mcp test</code>（只 connect + listTools）；</li><li>手机侧 <code>kb health</code> 由 PC 的 adb 代跑；</li><li>截图/UI dump 看到 amoon 界面（只能证明界面存在）。</li></ul>
+<h2 id="失败后的交付">失败后的交付<a class="anchor" href="#失败后的交付" aria-label="锚点">#</a></h2>
+<p>三项全失败：README 与 <code>bridge_status.capabilities.amoonToPc</code> 保持 <code>unavailable</code>/<code>unverified</code>，<br>只承诺 KhyOS→手机与人工中转；不提供“双向可用”的文案。</p>
+<p><code>phone khy_ask</code> 还额外要求 <code>capability.json</code> 的 <code>http: true</code>；只有 <code>status=verified</code> 而没有<br><code>http:true</code> 仍然保持关闭。</p>
+      </article>
+      <nav class="pager"><a class="prev" href="../../../../../delivery/extension/bridges/khy-amoon-bridge/docs/AMOO-INTERACTION.html"><div class="dir">← 上一篇</div><div class="ttl">AMOO 互动入口设计（桌面端 + APK）· v4</div></a><a class="next" href="../../../../../delivery/extension/bridges/khy-amoon-bridge/phone/README.html"><div class="dir">下一篇 →</div><div class="ttl">amoon 手机侧说明（khy-amoon-bridge）</div></a></nav>
+      <div class="footer reveal">本页由 <code>scripts/docs/build_docs_site.js</code> 从对应的 <code>.md</code> 自动生成 · 离线可用 · Khy-OS 文档站</div>
+    </div>
+  </main>
+</div>
+<script>window.__KHY_ROOT__="../../../../../";window.__KHY_CUR__="delivery/extension/bridges/khy-amoon-bridge/docs/PHASE0.html";</script>
+<script src="../../../../../docs/19_资产/site/nav-data.js"></script>
+<script src="../../../../../docs/19_资产/site/mermaid.min.js"></script>
+<script src="../../../../../docs/19_资产/site/docs-site.js"></script>
+</body>
+</html>
